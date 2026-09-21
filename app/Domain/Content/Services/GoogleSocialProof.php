@@ -4,6 +4,7 @@ namespace App\Domain\Content\Services;
 
 use App\Domain\Content\Contracts\OriginalText;
 use App\Domain\Content\Contracts\Rating;
+use App\Domain\Content\Contracts\ReviewSelection;
 use App\Domain\Content\Contracts\SocialProof;
 use App\Domain\Content\Contracts\Testimonial as TestimonialData;
 use App\Domain\Platform\Models\Setting;
@@ -216,6 +217,34 @@ class GoogleSocialProof implements SocialProof
     public function reviewsAwaitConsent(): bool
     {
         return false;
+    }
+
+    /**
+     * **Siempre `true`** (`#732`, §4.3·9): sus opiniones **sí** necesitan el permiso del visitante.
+     *
+     * ❗❗ El motivo es concreto y no una cautela: R3 obliga a mostrar la foto del autor, esa foto vive
+     * en `lh3.googleusercontent.com`, y cargarla **es una petición del visitante a Google** — que es
+     * justo lo que `RGPD-05` gestiona. Es la diferencia con `BusinessProfileSocialProof`, que trae la
+     * foto a casa y por eso no necesita permiso.
+     *
+     * ▶ **Y es lo que impide hoy sacar a Google de `img-src`** (§4.3·12): mientras esta fuente siga
+     * enlazada, el navegador tiene que poder cargar de ahí. El cambio de CSP va con la retirada de
+     * Places, que el owner aún no ha decidido.
+     */
+    public function reviewsNeedConsent(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Siempre `null` (`#732`): **Places no filtra por estrellas.** Devuelve cinco por relevancia y
+     * se publican las que vengan, así que no hay selección que declarar — y por eso la línea del
+     * §4.3·10 **no aparece** mientras responda esta fuente. Si algún día se filtrara aquí, habría
+     * que declararlo: la obligación es del que filtra.
+     */
+    public function selection(): ?ReviewSelection
+    {
+        return null;
     }
 
     /** ¿Está configurada esta instalación? Sin las dos cosas, no hay nada que traer. */

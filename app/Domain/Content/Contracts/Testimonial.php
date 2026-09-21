@@ -62,6 +62,32 @@ final readonly class Testimonial
          * el idioma de la página.
          */
         public ?string $language = null,
+        /**
+         * **La respuesta del parque a esta reseña** (T2·6, §4.3·10), o `null`.
+         *
+         * ⚠️ No es dato de un tercero: lo escribió el propio parque en su ficha. Va aquí y no en un
+         * segundo testimonio porque **cuelga de la reseña**: se pinta debajo, y separarlas dejaría
+         * al lector sin saber a qué contesta.
+         */
+        public ?string $reply = null,
+        /**
+         * Las fotos que el autor adjuntó, **como rutas nuestras ya servibles**.
+         *
+         * ❗❗ **Nunca una URL de un tercero** (§4.3·9, invariante con guarda). Toda la T2 existe para
+         * que la portada deje de pedirle nada a Google; una URL de `lh3.googleusercontent.com` aquí
+         * lo deshace **sin romper nada visible**, porque la foto se vería igual de bien.
+         *
+         * @var list<string>
+         */
+        public array $photos = [],
+        /**
+         * **La firmó alguien que eligió no dar su nombre** (§4.3·5).
+         *
+         * ⚠️ Se DECLARA en vez de deducirse de que `author` esté vacío, porque son dos cosas
+         * distintas: anónima de origen, y sin nombre porque el plazo corto de §4.3·4 lo retiró. La
+         * vista las pinta igual, pero quien lea este objeto no tiene por qué adivinar cuál es.
+         */
+        public bool $anonymous = false,
     ) {}
 
     /**

@@ -158,7 +158,13 @@ class InstanceViews
                 'rateCards', 'ratesFrom', 'ratesSpecialLabel',
                 'partyCards', 'partyFrom',
                 'faqs', 'menuSections',
-                'socialProof', 'socialRating', 'socialLocked',
+                // ⚠️⚠️ **`socialSelection` entra en `#732` y es contrato NUEVO, no opcional.** La
+                // portada enseña las reseñas de cuatro estrellas o más y la Ómnibus (2019/2161)
+                // considera engañoso enseñar solo las positivas sin decirlo, así que una instancia
+                // que no la pinte **está incumpliendo**, no quedándose corta de estilo. Es `null`
+                // mientras responda Places o las opiniones propias —ésas no filtran—, y deja de
+                // serlo el día que la ficha de Google traiga reseñas.
+                'socialProof', 'socialRating', 'socialLocked', 'socialSelection',
                 'guestWaiverOffered', 'noindex', 'scheduleLede',
                 ...self::DEL_COMPOSER,
             ],

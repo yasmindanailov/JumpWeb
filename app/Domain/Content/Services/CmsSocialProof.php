@@ -3,6 +3,7 @@
 namespace App\Domain\Content\Services;
 
 use App\Domain\Content\Contracts\Rating;
+use App\Domain\Content\Contracts\ReviewSelection;
 use App\Domain\Content\Contracts\SocialProof;
 use App\Domain\Content\Contracts\Testimonial as TestimonialData;
 use App\Domain\Content\Models\Testimonial;
@@ -38,6 +39,23 @@ class CmsSocialProof implements SocialProof
     public function reviewsAwaitConsent(): bool
     {
         return false;
+    }
+
+    /** Siempre `false` (`#732`): estas opiniones las escribe el panel y las sirve este servidor. */
+    public function reviewsNeedConsent(): bool
+    {
+        return false;
+    }
+
+    /**
+     * Siempre `null` (`#732`): **las propias no se filtran**, se publican las que el panel activa.
+     *
+     * ⚠️ Pintar la línea del §4.3·10 sobre estas sería avisar de un filtro que no existe — y peor,
+     * atribuirle a la sección una advertencia legal que no le corresponde.
+     */
+    public function selection(): ?ReviewSelection
+    {
+        return null;
     }
 
     /** @return Collection<int, TestimonialData> */

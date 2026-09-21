@@ -38,5 +38,17 @@ final readonly class Rating
         public ?string $url,
         /** Quién lo dice. La atribución que exige R3 depende de esto, así que viaja con el dato. */
         public string $source,
+        /**
+         * **Cuándo se midió esta cifra** (T2·6, §4.3·10: «con *a fecha de …*»), o `null`.
+         *
+         * ❗❗ No es un adorno: con Business Profile la media la trajo **nuestra pasada**, que corre
+         * una vez al día, así que la cifra que se enseña puede tener horas. Publicarla a secas la
+         * presenta como «ahora mismo», que es una afirmación que no podemos sostener sobre un dato
+         * de un tercero. Con la fecha al lado, lo que se dice es verdad.
+         *
+         * ⚠️ `null` en las fuentes que no la tienen —Places la sirve de una caché de minutos— y ahí
+         * la landing no escribe la coletilla. Nulo es «no lo sé», no «es de hoy».
+         */
+        public ?\DateTimeInterface $asOf = null,
     ) {}
 }

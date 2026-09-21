@@ -465,7 +465,10 @@
     @if ($socialProof->isNotEmpty() || $resenasPorPermiso)
         @php($opinionesDeGoogle = $socialProof->contains(fn ($o) => $o->source === \App\Domain\Content\Contracts\Testimonial::SOURCE_GOOGLE))
         @php($cifraDeGoogle = $socialRating?->source === \App\Domain\Content\Contracts\Testimonial::SOURCE_GOOGLE)
-        <section id="reviews" class="section wrap">
+        {{-- ⚠️ `data-nosnippet` (§4.3·10, `#732`): las reseñas son de terceros y **no pueden acabar
+             en el fragmento que Google enseña bajo el resultado del parque**. Atribuírselas al sitio
+             en un buscador es justo lo que su política llama tergiversar. --}}
+        <section id="reviews" class="section wrap" data-nosnippet>
             <div class="rev-sec{{ $socialRating ? ' rev-sec--scored' : '' }}">
                 <div class="sec-head">
                     <p class="sec-head__eyebrow">{{ __('landing.reviews.eyebrow') }}</p>
@@ -476,6 +479,28 @@
                     <p class="sec-head__lede">{{ ($socialProof->first()?->source === \App\Domain\Content\Contracts\Testimonial::SOURCE_GOOGLE || $resenasPorPermiso)
                         ? __('landing.reviews.lede_google')
                         : __('landing.reviews.lede_own') }}</p>
+
+                    {{-- ❗❗❗ **LA LÍNEA DEL FILTRO, Y NO ES DISEÑO: ES LA ÓMNIBUS** (T2·6, §4.3·10,
+                         `#732`). Enseñar solo las reseñas positivas **sin decirlo** es una práctica
+                         engañosa según la directiva 2019/2161, y la sección enseña las de cuatro
+                         estrellas o más. Va **siempre que haya filtro**, no detrás de un desplegable
+                         y no en letra de aviso legal: donde se ven las tarjetas.
+                         ⚠️ `$socialSelection` es `null` cuando la fuente NO filtra —las opiniones
+                         propias, o Places— y entonces esto no se pinta: avisar de un filtro que no se
+                         está aplicando es peor que callar.
+                         ⚠️ Y dice las otras dos cosas que §4.3·10 exige en la misma frase: que nadie
+                         verifica que los autores sean clientes, y dónde están todas. --}}
+                    @if ($socialSelection)
+                        <p class="rev-sec__disclosure">
+                            {{ __('landing.reviews.filtered', ['stars' => $socialSelection->minStars]) }}
+                            @if ($socialSelection->allReviewsUrl)
+                                <a href="{{ $socialSelection->allReviewsUrl }}" rel="noopener nofollow" target="_blank">{{ __('landing.reviews.see_all') }}</a>
+                            @endif
+                            @if ($socialSelection->writeReviewUrl)
+                                <a href="{{ $socialSelection->writeReviewUrl }}" rel="noopener nofollow" target="_blank">{{ __('landing.reviews.write') }}</a>
+                            @endif
+                        </p>
+                    @endif
                 </div>
 
                 @if ($socialRating)

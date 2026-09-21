@@ -198,6 +198,19 @@ class HomeController extends Controller
              */
             'socialLocked' => app(SocialProof::class)->reviewsAwaitConsent(),
             /*
+             * **Qué se está dejando fuera, y dónde está el resto** (T2·6, §4.3·9 y §4.3·10, `#732`).
+             *
+             * ❗❗❗ **Es un requisito LEGAL y por eso es contrato, no adorno.** La portada enseña las
+             * reseñas de cuatro estrellas o más, y la Ómnibus (2019/2161) considera engañoso enseñar
+             * solo las positivas **sin decirlo**. Sin esta variable, la landing no podría decirlo
+             * aunque quisiera — y una instancia que se olvidara de pintarlo no tendría cómo saberlo.
+             * ⚠️ `null` = la fuente que está respondiendo **no filtra** (las propias, o Places), y
+             * entonces no hay nada que declarar: avisar de un filtro que no se aplica es peor que
+             * callar. Las tres peticiones a `SocialProof` de este método las atiende **una sola
+             * instancia** (`scoped`, §4.3·9), así que no son tres recorridos de la cascada.
+             */
+            'socialSelection' => app(SocialProof::class)->selection(),
+            /*
              * **¿Se ofrece el justificante de un menor invitado?** (`#485`, sección 05.)
              *
              * ⚠️⚠️ **Es DATO y no copia fija.** La línea «¿viene un niño que no es de tu familia?»

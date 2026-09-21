@@ -4,6 +4,7 @@ namespace Tests\Feature\Landing;
 
 use App\Domain\Content\Contracts\OriginalText;
 use App\Domain\Content\Contracts\Rating;
+use App\Domain\Content\Contracts\ReviewSelection;
 use App\Domain\Content\Contracts\SocialProof;
 use App\Domain\Content\Contracts\Testimonial as TestimonialData;
 use App\Domain\Content\Services\GoogleSocialProof;
@@ -715,6 +716,19 @@ class GoogleAttributionTest extends TestCase
             public function reviewsAwaitConsent(): bool
             {
                 return false;
+            }
+
+            // ⚠️ Los dos que añadió `#732` (T2·6 de `google-business-profile.md` §4.3·9). El doble
+            // finge la fuente de **Places**, que es de la que va este fichero: sus opiniones SÍ
+            // necesitan permiso y **no filtra por estrellas**, así que no declara selección.
+            public function reviewsNeedConsent(): bool
+            {
+                return true;
+            }
+
+            public function selection(): ?ReviewSelection
+            {
+                return null;
             }
         });
     }

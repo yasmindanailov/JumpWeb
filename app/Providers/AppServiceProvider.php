@@ -34,6 +34,7 @@ use App\Domain\Content\Models\Offer;
 use App\Domain\Content\Models\Page;
 use App\Domain\Content\Models\Testimonial;
 use App\Domain\Content\Models\VenueRule;
+use App\Domain\Content\Services\BusinessProfileSocialProof;
 use App\Domain\Content\Services\CmsSocialProof;
 use App\Domain\Content\Services\FallingBackSocialProof;
 use App\Domain\Content\Services\GoogleSocialProof;
@@ -148,16 +149,36 @@ class AppServiceProvider extends ServiceProvider
         // quien acaba de firmar. La atadura la guarda Identity (`#576`) y el recibo es de Booking.
         $this->app->bind(SignedInvitationReplies::class, GuardianPlaces::class);
 
-        // **La prueba social de la landing** (`#490`, `specs/google-reviews.md` §4.1). Hoy resuelve
-        // a las opiniones PROPIAS y nada más, porque la mitad de Google todavía no existe.
-        // ⚠️⚠️ **El binding es lo que hace que la vista no cambie el día que llegue**: cuando entre
-        // `GoogleSocialProof`, aquí se sustituye por `FallingBackSocialProof` —el decorador que
-        // aplica la cascada de §4.0 en UN solo sitio— y la sección no se toca. Si en vez de esto la
-        // vista preguntara por la fuente, ese día habría que reescribirla.
-        $this->app->bind(SocialProof::class, function (): SocialProof {
+        // **La prueba social de la landing** (`#490`; reescrito en `#732`, T2·6 de
+        // `specs/google-business-profile.md` §4.3·9).
+        //
+        // ❗❗❗ **EL ORDEN DE ESTA LISTA ES LA POLÍTICA, y por eso vive aquí y no en el decorador.**
+        // La cascada solo recorre; quién va delante lo decide el composition root:
+        //
+        //   1. **La ficha de Google** (Business Profile). Se sirve entera desde nuestro servidor
+        //      —imagen incluida—, así que **no necesita consentimiento** y no le pide nada a Google.
+        //   2. **Places**, lo que hay hoy en producción. Sigue enlazado **a propósito** (`[owner]`,
+        //      21-09): retirarlo se valorará más adelante, y mientras tanto esto es lo que evita una
+        //      REGRESIÓN — sin conexión con la ficha, la 1 responde vacío y la portada seguiría
+        //      enseñando lo mismo que hoy en vez de caer a las opiniones propias.
+        //   3. **Las opiniones propias**, que es lo que ve quien no acepta cookies de terceros.
+        //
+        // ⚠️⚠️ **Mientras la 2 siga en la lista, `img-src` NO puede dejar de nombrar a Google**
+        // (§4.3·12): sus fotos de autor las carga el visitante desde `lh3.googleusercontent.com`. El
+        // cambio de CSP va con la retirada de Places, no con esta tanda.
+        //
+        // ⚠️⚠️ **`scoped` y no `bind`** (§4.3·9): la portada le pregunta a esto por las opiniones,
+        // por la selección y por el permiso. Con `bind` serían tres objetos y tres recorridos de la
+        // cascada —con sus consultas— para pintar una sección (`PERF-02`). `scoped` dura la petición
+        // y se reinicia entre peticiones, que es justo lo que hace falta: el consentimiento y las
+        // reseñas cambian entre visitantes.
+        $this->app->scoped(SocialProof::class, function (): SocialProof {
             return new FallingBackSocialProof(
-                $this->app->make(GoogleSocialProof::class),
-                $this->app->make(CmsSocialProof::class),
+                [
+                    $this->app->make(BusinessProfileSocialProof::class),
+                    $this->app->make(GoogleSocialProof::class),
+                    $this->app->make(CmsSocialProof::class),
+                ],
                 // ⚠️⚠️ **El consentimiento se lee AQUÍ y no dentro del decorador**: `CookieConsent`
                 // vive en Identity y **Content no puede mirar a Identity** (`ModuleBoundariesTest`).
                 // La capa de ENTREGA es el composition root y sí ve a los dos — la misma salida que

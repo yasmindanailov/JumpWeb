@@ -1,7 +1,7 @@
 # Carril · Diseño del SPA (el cajón)
 
 > Máquina: **el OTRO ordenador** · Banda: **730–759** (700–729 agotada el 20-09) · Último usado:
-> **`#731`** · La banda está dada de alta en la tabla de `DECISIONES.md` ·
+> **`#732`** · La banda está dada de alta en la tabla de `DECISIONES.md` ·
 > Arranque de la máquina:
 > `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: `sidebar-spa.md` §0 · `celebracion-e-invitacion.md`
 > §0 · `rediseno-desde-canvas.md` §5 (Fase 4) · Actualizado: 2026-09-21.
@@ -10,14 +10,14 @@
 
 ## Foto (2026-09-21, cierre de la sesión)
 
-- ▶▶▶ **LO ÚLTIMO: `google-business-profile.md` (`#524`) va por la T2·5.** La **T1 entera**
-  (`#720`→`#726`, 121 casos, seis arneses) y **T2·1→T2·5** (`#727`→`#731`: las tablas y sus dos
-  plazos · el recorrido y su `coherent()` · la pasada diaria · las imágenes · «Ocultar»). **Ya
-  sincroniza sola y la portada no le pide NADA a Google.** Qué entró en cada tanda, **§4.1 de la
-  spec**; lo que hace falta para retomar, el punto 1 de abajo.
+- ▶▶▶ **LO ÚLTIMO: `google-business-profile.md` (`#524`) va por la T2·6.** La **T1 entera**
+  (`#720`→`#726`) y **T2·1→T2·6** (`#727`→`#732`: las tablas y sus dos plazos · el recorrido y su
+  `coherent()` · la pasada diaria · las imágenes · «Ocultar» · la fuente nueva y la cascada de
+  TRES). **Ya sincroniza sola y la portada no le pide NADA a Google.** Qué entró en cada tanda,
+  **§4.1 de la spec**; lo que hace falta para retomar, el punto 1 de abajo.
   ⚠️ **CUATRO migraciones, solo en la BD local.**
   ▶ **En la T2·5 añadí «dejar de ocultar», que la spec NO pedía**: sin él un clic equivocado es
-  irreversible para siempre, porque la lista de supresión no caduca. El porqué, en `#731`.
+  irreversible para siempre. El porqué, en `#731`.
 - ⚠️ **El techo de un fichero de carril pasó de 24 a 32 KB** (`#724`, `[DECIDIDO owner]`): se cambió el
   gate y la doc compartida. Los otros cuatro carriles **siguen diciendo «24 KB» en su encabezado** y no
   los toco (`#621`); va avisado en el buzón.
@@ -44,7 +44,7 @@
 1. ❗❗ **`google-business-profile.md` (`#524`), reclamada — la fuente REAL de las reseñas.** Sustituye a
    `google-reviews.md` (Places), que queda de registro; desbloquea las reseñas de la landing **y** las
    que plataforma dejó fuera de `/social-proof`. ⚠️ Es del carril de la WEB (580–609), ya avisado.
-   ✅✅ **T1 (`#720`→`#726`) y T2·1→T2·5 (`#727`→`#731`), EN EL ÁRBOL.** Qué entró en cada tanda y
+   ✅✅ **T1 (`#720`→`#726`) y T2·1→T2·6 (`#727`→`#732`), EN EL ÁRBOL.** Qué entró en cada tanda y
    sus trampas, **§4.1 de la spec**, que es donde no caduca.
    ⚠️ **De la pantalla, el owner solo ha visto «sin configurar»** (20-09): el resto de estados, la
    lista de fichas y el botón de desconectar están afirmados por caso, no por ojo. Y **el correo
@@ -52,16 +52,19 @@
    ❗ **RENUNCIA CON RECIBO en la T2·4**: las fotos salen con `no-store` (`NoStoreWebResponses`, global
    por `RGPD-04`), así que **cada visita vuelve a pedir cada foto**. Eximir esa ruta es tocar un
    middleware escrito incondicional a propósito: va a la T2·6.
-   ▶▶ **LO SIGUIENTE ES LA T2·6: EL CONTRATO Y LA SECCIÓN** (§4.3·9 y §4.3·10) — `Testimonial` gana
-   la respuesta del parque, las fotos y el anónimo · `FallingBackSocialProof` cambia: **la fuente
-   declara si necesita consentimiento**, y ésta ya NO lo necesita · binding **`scoped`** con memo ·
-   la **línea del filtro siempre visible** (Ómnibus) · los dos enlaces · atribución **sin el logotipo
-   de Maps** · **nunca `aggregateRating`** · `data-nosnippet`. ⚠️ **En el MISMO despliegue, `img-src`
-   deja de nombrar a Google** (§4.3·12). ▶ Ahí se miden el presupuesto de la portada **y la caché de
-   las fotos**, que la T2·4 dejó anotada.
-   ▶ Y después: el **botón del panel**, `Retry-After` y el gancho que fuerza una pasada al cambiar el
-   mínimo de estrellas · retirar Places (§4.3·13). Toca `PERF-02`, `SEC-01`, `RGPD-05` y un
-   tratamiento de datos NUEVO: **§5 antes**.
+   ❗❗❗ **LO MÁS IMPORTANTE QUE DEJA LA T2·6, Y NO SE CIERRA DESDE AQUÍ**: `#666` mudó la portada a
+   la INSTANCIA, así que la sección que ven los clientes **está en otro repo**. El producto garantiza
+   que `socialSelection` viaja en `CONTRATO_DE_VISTAS` y que su anfitrión mínimo la pinta. ▶ **Antes
+   de que las reseñas de la ficha se vean en producción, la portada de la instancia TIENE que pintar
+   la línea del filtro**, o el parque enseñaría reseñas filtradas sin declararlo (Ómnibus). Avisado a
+   plataforma. ⚠️ Hoy no hay exposición: responde Places, que no filtra.
+   ⚠️⚠️ **`[owner]` 21-09: Places NO se retira todavía**, así que la cascada es de TRES y **`img-src`
+   sigue nombrando a Google** — §4.3·12 va con la retirada, no antes.
+   ▶▶ **LO SIGUIENTE, a elegir**: (a) el **botón del panel** que encola la pasada, `Retry-After` y el
+   gancho que fuerza una pasada al cambiar el mínimo · (b) el **texto de privacidad** y la ponderación
+   de interés legítimo (§4.3·11), lo único de la T2 con parte legal pendiente · (c) la **T6, el
+   horario**, que es la única que ESCRIBE en la ficha · (d) **retirar Places**, y con ello §4.3·12 y
+   la caché de las fotos. Toca `PERF-02`, `SEC-01`, `RGPD-05`: **§5 antes**.
    ⚠️⚠️ **CUATRO migraciones de esta spec, aplicadas SOLO en la BD local.** Empujada ≠ aplicada.
    ⚠️ Lo que queda de la T1 no es código: el ojo del owner y las credenciales. `verify` contra la
    ficha REAL espera al §7·A. **Todo contra un DOBLE**, con `Http::preventStrayRequests()`.
@@ -98,12 +101,10 @@ en el buzón**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama `clie
 ## Trampas vivas
 
 - ⏰⏰ **EL RELOJ: el contenedor va en UTC y el parque en Madrid, y entre las dos medianoches NO es el
-  mismo día.** Dos formas de pagarlo, medidas: (a) **`DisplayTime::dayLabel()` NO convierte de zona**
-  —le pasan un Carbon ya en la del parque, y una columna de BD sale en UTC: sin `setTimezone`, un sello
-  de las 00:30 de Madrid se fecha **el día anterior**—; (b) **un test con reloj propio miente dos horas
-  al día** (`ScheduleFactsTest`, rojo a las 00:07 del 20-09 por abrir el día de `Carbon::now()`; el
-  producto calculaba bien). ▶ En un test de «ahora», el reloj a **`DisplayTime`, nunca a `Carbon`**, y
-  si congela la hora, **afirma primero** que el contenedor va en UTC o no mide nada.
+  mismo día.** Dos formas de pagarlo, medidas: `DisplayTime::dayLabel()` **no convierte de zona**
+  —sin `setTimezone`, un sello de las 00:30 de Madrid se fecha el día anterior—; y **un test con
+  reloj propio miente dos horas al día** (`ScheduleFactsTest`, rojo a las 00:07). ▶ En un test de
+  «ahora», el reloj a **`DisplayTime`, nunca a `Carbon`**.
 - ⚠️ **Lo que desborda a lo ALTO no lo dice una medida de ancho**: un `textarea` con `rows="5"` traía
   su propio scroll y las cifras de la sonda salían verdes. **Lo vio la captura.** Y dos pesos de botón
   en un bloque pequeño compiten con el «Guardar» de la barra.
@@ -116,13 +117,12 @@ en el buzón**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama `clie
   navegador del owner `http://localhost:8081` (`URL::forceRootUrl` antes de firmar). Fixtures locales en la
   carpeta de almacenamiento de la app, no versionados: «probe-postform» (reserva `R-PRBT1A`), las tres sondas
   de ventana «probe-t3-…» y «probe-t3-urls», que imprime los enlaces para el owner.
-- 💥💥 **UN CORTE DE LA VM DE WSL DEJA FICHEROS A CERO BYTES Y ROMPE GIT** (20-09, 14:36): 31 objetos
-  de `.git/objects` vacíos —el commit en curso entre ellos— y medio `public/build`. Síntoma: «*object
+- 💥💥 **UN CORTE DE LA VM DE WSL DEJA FICHEROS A CERO BYTES Y ROMPE GIT** (20-09): 31 objetos de
+  `.git/objects` vacíos —el commit en curso entre ellos— y medio `public/build`. Síntoma: «*object
   file … is empty*», «*bad object HEAD*». ▶ **Receta medida**: apartar (no borrar) los vacíos
-  (`find .git/objects -type f -empty`) · `git update-ref refs/heads/main <último sha ENTERO del
-  reflog>`, que se corta a medias · `git fsck` · `git reset`, porque el *cache-tree* del índice apunta
-  a un objeto muerto · `npm run build` y `build:ssr`. ⚠️ **Lo versionado NO se pierde, y `git status`
-  lo demuestra.** ⚠️ No era ENOSPC —misma firma—: 947 GB libres.
+  (`find .git/objects -type f -empty`) · `git update-ref refs/heads/main <sha ENTERO del reflog>` ·
+  `git fsck` · `git reset` (el *cache-tree* apunta a un objeto muerto) · `npm run build` y
+  `build:ssr`. ⚠️ **Lo versionado NO se pierde.** No era ENOSPC: 947 GB libres.
 - Chromium muere al recrear el contenedor: `node node_modules/playwright-core/cli.js install chromium`
   (con `npx` cae en otra caché, y **no** en `~/.cache/ms-playwright`: vive en `node_modules/…/
   .local-browsers`); `npm install` poda `playwright-core`. ⚠️ **`compose.yaml` ganó un montaje el
@@ -131,11 +131,10 @@ en el buzón**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama `clie
 - `SidebarDomContractTest` renderiza el BUNDLE: `npm run build:ssr` antes de la suite, también tras un arnés
   de mutación (restaura el árbol, no el bundle) **y siempre que toques un `.vue`** (si no, 36 rojos que no
   son tuyos).
-- ⚠️⚠️ **Dos que se pagaron en la invitación y valen fuera de ella** (el caso, en su spec §10): **un
-  COMENTARIO puede romper un censo** —un `grep` que busca la primera llamada se queda con el ejemplo
-  entre comillas y saca el fichero del inventario (`#715`, `#553`, 12 rojos de golpe): si nombras en
-  prosa el patrón que un escáner busca, **cámbialo**—; y **compactar o reordenar filas rompe lo que
-  cuelga de la posición**, así que solo al recortar y **después** de `TicketType::orderGuestRows()`.
+- ⚠️⚠️ **Dos de la invitación que valen fuera** (el caso, en su spec §10): **un COMENTARIO puede
+  romper un censo** —si nombras en prosa el patrón que un escáner busca, cámbialo (`#715`, 12 rojos
+  de golpe)—; y **reordenar filas rompe lo que cuelga de la posición**, así que solo al recortar y
+  **después** de `orderGuestRows()`.
 - **Una combinación que el modelo prohíbe se monta por el CONSTRUCTOR DE CONSULTAS** en el fixture: el
   guard de `saving()` lanza, y el escenario real contra el que defiende es justo ése (una importación,
   un `update()` a mano). Con `create()` el caso no existiría.
@@ -150,26 +149,20 @@ en el buzón**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama `clie
   (b) **`prunable()` declarado `@return Builder<Modelo>` siempre falla** porque `static::query()`
   devuelve `Builder<static>` y la plantilla **no es covariante**. Los cuatro `prunable()` que ya
   existían lo pagaron con una entrada en la base; se arregla escribiendo **`@return Builder<static>`**.
-- ⚠️⚠️⚠️ **UN `catch (Throwable)` ANCHO SE TRAGA EL AVISO DE «petición sin doble»** (`#730`): el
-  descargador de imágenes lo llevaba alrededor de la petición HTTP, así que en las pruebas de la
-  pasada **no se descargaba nada y salía todo verde**. `StrayRequestException` extiende
-  `RuntimeException`, y un `catch` ancho no distingue «la red falló» de «me falta un doble» ni de un
-  error de programación. ▶ Se atrapa **solo `ConnectionException`** en la petición, y el
-  `RuntimeException` del flujo aparte. Un `catch` que parece más seguro suele medir menos.
-- ⚠️⚠️ **UN DOBLE ESTÁTICO DE `Http::response()` SE CONSUME AL LEERLO EN FLUJO** (`#730`): es UN
-  objeto reutilizado en todas las peticiones que casen, así que la segunda lectura llega vacía y el
-  caso acusa al código de no deduplicar. ▶ En cuanto el código lea el cuerpo en flujo, el doble va
-  en un **cierre**.
-- ⚠️⚠️⚠️ **`Http::fake()` FUSIONA los dobles, no los reemplaza** (`#729`): llamarlo dos veces en el
-  mismo caso deja ganando al PRIMERO, y si el primero era un `Http::sequence()` agotado, la segunda
-  pasada revienta con «*response sequence is empty*» **señalando al código**, que no tiene nada que
-  ver. ▶ Receta: **un solo doble en `setUp()`** que delegue en una propiedad; cada caso cambia la
-  propiedad. De regalo se cuentan peticiones y se falla el caso si se pide una de más.
-- ⚠️⚠️ **UNA GUARDA NECESITA QUE EL CASO LLEGUE A ELLA**, y tres formas de que no llegue, todas
+- ⚠️⚠️⚠️ **EL DOBLE DE `Http` MIENTE DE TRES FORMAS, las tres medidas** (`#729`–`#730`):
+  (a) **`Http::fake()` FUSIONA**, no reemplaza — dos llamadas en un caso dejan ganando a la primera,
+  y una `sequence()` agotada revienta «*response sequence is empty*» **señalando al código**;
+  (b) un **`Http::response()` estático se CONSUME** al leerlo en flujo, así que la segunda lectura
+  llega vacía y el caso acusa al código de no deduplicar;
+  (c) un **`catch (Throwable)` ancho se traga el `StrayRequestException`**, así que un descargador
+  «probado» no descargaba nada y salía verde. ▶ Receta: **un solo doble en `setUp()`** que delegue en
+  una propiedad —de regalo cuenta peticiones—, el cuerpo en un **cierre**, y atrapar solo
+  `ConnectionException`. *Un `catch` que parece más seguro suele medir menos.*
+- ⚠️⚠️ **UNA GUARDA NECESITA QUE EL CASO LLEGUE A ELLA**, y cuatro formas de que no llegue, todas
   medidas: un nombre mal formado que **no existe** en disco da 404 por «no existe» (`#730`); un 404
-  de prueba **sin cuerpo** no prueba que se mire el estado (`#730`); y `inProgress()`, que **coge**
-  el candado para mirar, necesita **dos** llamadas —con una, no soltarlo sale igual de verde
-  (`#729`)—.
+  de prueba **sin cuerpo** no prueba que se mire el estado (`#730`); `inProgress()`, que **coge** el
+  candado para mirar, necesita **dos** llamadas (`#729`); y una foto que caduca necesita una reseña
+  **con** foto (`#732`). ▶ Antes de declarar un superviviente, pregunta qué caso falta.
 - ⚠️⚠️ **UN `finally` PUEDE SOLTAR EL CANDADO ANTES DE TIEMPO, y ningún test de un hilo lo ve**
   (`#729`): la lectura iba en el `try` y la escritura DETRÁS del bloque. ▶ Se caza preguntando por el
   candado **desde un evento del modelo** durante la escritura. Mismo patrón para todo lo que tenga
@@ -177,19 +170,13 @@ en el buzón**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama `clie
 - ⚠️ **`lock()` no está en el contrato `Repository` NI en su clase**: vive en el `Store` y el
   repositorio lo reenvía por `__call` (`#729`). La salida es `getStore()` con `@var LockProvider`,
   que además dice lo que de verdad se exige del almacén.
-- ⚠️⚠️ **UNA GUARDA DE HOST NECESITA DOS CASOS, NO UNO** (`#728`, lo destapó un superviviente del
-  arnés): `lh3.googleusercontent.com.malo.net` se cuela con `str_contains` y
-  `evil.lh3.googleusercontent.com` con `str_ends_with`. **Son defectos distintos**, y un test que
-  solo cubre el primero deja la mutación del segundo sin morder — con la guarda buena escrita y
-  todo. ▶ Al escribir una lista blanca de hosts, el caso va por TRIPLICADO: pegado por detrás,
-  pegado por delante, y el control positivo.
-- ⚠️⚠️ **UNA LISTA VACÍA NO DISTINGUE «no hay» de «no sé mirar»** (`#727`): `Schema::getForeignKeys()`
-  devuelve `[]` tanto si la tabla no tiene claves ajenas como si el lector no supiera leerlas en
-  SQLite, y un bucle de reflexión que no recorra nada sale igual de verde. ▶ **Todo caso que afirme
-  una AUSENCIA pide primero lo mismo a algo que SÍ la tiene** —aquí, las FK de
-  `google_business_connections` y las relaciones de `Order`— y si el control no muerde, el caso no
-  mide nada. Es la misma familia que el *«si tu caso apaga o simula algo, aserta primero que lo
-  consiguió»* de más abajo.
+- ⚠️⚠️ **UNA GUARDA DE HOST NECESITA DOS CASOS, NO UNO** (`#728`): `lh3…com.malo.net` se cuela con
+  `str_contains` y `evil.lh3…com` con `str_ends_with` — **son defectos distintos**. ▶ El caso va por
+  TRIPLICADO: pegado por detrás, pegado por delante, y el control positivo.
+- ⚠️⚠️ **UNA LISTA VACÍA NO DISTINGUE «no hay» de «no sé mirar»** (`#727`): `getForeignKeys()`
+  devuelve `[]` tanto si no hay FK como si el lector no sabe leerlas en SQLite, y un bucle de
+  reflexión que no recorra nada sale igual de verde. ▶ **Todo caso que afirme una AUSENCIA pide
+  primero lo mismo a algo que SÍ la tiene**; si el control no muerde, el caso no mide nada.
 - ⚠️⚠️⚠️ **El constructor de consultas de ELOQUENT SÍ escribe `updated_at`** (`Builder::update()` llama
   a `addUpdatedAtColumn()`), así que **no sirve para marcar nada sin mover el testigo** del post-form:
   hay que bajar al crudo con **`toBase()`**. La spec lo afirmaba al revés desde el diseño y nadie lo
@@ -253,12 +240,10 @@ en el buzón**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama `clie
   18-09): el `PRAGMA` de SQLite es un no-op dentro de una transacción, y ese trait abre una. Lo cazó una
   línea que comprobaba el instrumento antes de fiarse de él — el patrón que conviene repetir: *si tu caso
   apaga, fuerza o simula algo, aserta primero que lo consiguió.*
-- **Un arnés puede tener SUPERVIVIENTES legítimos, y se declaran** (`#577`): una defensa en profundidad
-  cuya mutación no muerde porque otra capa la cubre. Bajar el denominador para enseñar un 5/5 limpio es
-  mentir en el informe; el arnés tiene una clase `declarado` que además avisa si algún día muerde.
-- ⚠️⚠️ **Un superviviente del arnés es una pregunta sobre el TEST, no sobre el código** (`#578`): los
-  tres de la T4·6 señalaban guardas que faltaban. Primero se pregunta «¿qué caso me falta?», y solo si no
-  hay ninguno se declara.
+- ⚠️⚠️ **UN SUPERVIVIENTE DEL ARNÉS ES UNA PREGUNTA SOBRE EL TEST, no sobre el código** (`#578`,
+  y se ha repetido en `#728`, `#730` y `#732`): primero «¿qué caso me falta?», y **solo** si no hay
+  ninguno se declara (`#577`, defensa en profundidad que otra capa cubre). Bajar el denominador para
+  enseñar un 5/5 limpio es mentir en el informe.
 - **En OpenAPI 3.0 `nullable` NO atraviesa un `$ref`** y `allOf: [$ref] + nullable` **no valida** con
   Spectator (`#27`, y ya van tres veces). La salida de la casa es **copia INLINE + guarda de divergencia**
   en `ApiContractTest`. ▶ Y un array PHP vacío se serializa `[]`, no `{}`. ▶ Las `responses` reutilizables
@@ -309,6 +294,23 @@ en el buzón**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama `clie
   mutación, en `scripts/mutar-invitacion-t7-1.py`. Quizá merezca tu §0.
 - ▶ **Te queda tu OJO en Gmail/Outlook** de los tres nuevos; en Mailpit no he visto el de la ficha.
   Sondas en almacenamiento (`probe-t7-correo.php`, `probe-t7-vispera.php`).
+
+### ❗❗❗ Para el carril de PLATAFORMA (emisor: SPA, 2026-09-21) — CONTRATO NUEVO EN `portada`
+- ▶ **`CONTRATO_DE_VISTAS['portada']` gana `socialSelection`** (`#732`). Es aditivo: ninguna landing
+  existente se rompe, y vuestro `InstanceViewContractTest` y `AnfitrionPortadaTest` pasan — el
+  anfitrión mínimo ya la pinta.
+- ❗❗❗ **PERO la portada de `instancia-playjump` TIENE que pintarla antes de que las reseñas de la
+  ficha de Google se vean en producción.** Es `ReviewSelection{minStars, allReviewsUrl,
+  writeReviewUrl}` y la frase está en `landing.reviews.filtered|see_all|write`, en los tres idiomas.
+  ⚠️ **No es estilo: la Ómnibus (2019/2161) considera engañoso enseñar solo las reseñas positivas
+  sin decirlo**, y la sección enseña las de 4★ o más. Sin esa línea el parque estaría incumpliendo.
+  ▶ **Hoy no hay exposición** —responde Places, que no filtra— así que hay tiempo; el reloj empieza
+  cuando la ficha real conecte (finales de octubre).
+- ⚠️ Toqué `anfitrion/portada.blade.php` (la línea del filtro y un `data-nosnippet` en `#reviews`),
+  `HomeController`, `InstanceViews` y `lang/*/landing.php`. **Cero bytes movidos de lo demás**; los
+  de `AnfitrionPortadaTest` siguen verdes.
+- ▶ **Places NO se retira** (`[owner]`, 21-09), así que la cascada es de tres y `img-src` sigue
+  nombrando a Google. Cuando se retire, el cambio de CSP va **en el mismo despliegue**.
 
 ### ❗❗ Para el carril de la WEB (emisor: SPA, 2026-09-20) — TE TOMO UNA TAREA
 - ▶ **Me llevo `google-business-profile.md` (`#524`)**, que es tuya (banda 580–609); la numero desde

@@ -3,94 +3,164 @@
 namespace App\Domain\Content\Services;
 
 use App\Domain\Content\Contracts\Rating;
+use App\Domain\Content\Contracts\ReviewSelection;
 use App\Domain\Content\Contracts\SocialProof;
 use App\Domain\Content\Contracts\Testimonial as TestimonialData;
 use Closure;
 use Illuminate\Support\Collection;
 
 /**
- * **La cascada de §4.0, en UN solo sitio** (`DECISIONES #491`, `specs/google-reviews.md` §4.1).
+ * **La cascada, en UN solo sitio** (`DECISIONES #491`; reescrita en `#732`, T2·6 de
+ * `specs/google-business-profile.md` §4.3·9).
  *
- * ❗❗❗ **Es un DECORADOR y no un `if` repartido por la vista, y la spec dice por qué**: un respaldo
- * escrito como condicional en la plantilla acaba con una rama sin cubrir — *«y la rama sin cubrir de
- * un respaldo es, por definición, la que solo se ejecuta cuando algo va mal»*.
+ * ❗❗❗ **Es un DECORADOR y no un `if` repartido por la vista**: un respaldo escrito como condicional
+ * en la plantilla acaba con una rama sin cubrir — *«y la rama sin cubrir de un respaldo es, por
+ * definición, la que solo se ejecuta cuando algo va mal»*.
  *
- *     ¿hay place_id y clave?            ─no→  CMS
- *     ¿la caché tiene datos frescos?    ─no→  CMS        (evicción de `allkeys-lru`, o aún sin refresco)
- *     ¿llega al umbral de reseñas?      ─no→  CMS        (el filtro vive en `GoogleSocialProof`)
- *     ¿el visitante aceptó terceros?    ─no→  CMS **solo para las OPINIONES**
- *               │sí
- *               └─→ Google
+ *     ficha de Google (Business Profile)  ─vacío→  Places  ─vacío o sin permiso→  opiniones propias
  *
- * ⚠️⚠️ **Ninguna de esas salidas es un error y ninguna se registra como tal.** Un log por visitante
+ * ❗❗ **Lo que cambió en `#732`: la cascada ya no sabe quién necesita permiso.** Antes tenía escrito
+ * «Google necesita consentimiento» como una verdad del sistema, y dejó de serlo: las reseñas de la
+ * ficha se sirven **enteras desde nuestro servidor** —imagen incluida— así que el navegador no le
+ * pide nada a Google y no hay nada que consentir; las de Places sí, porque su foto de autor la carga
+ * el visitante. Ahora **cada fuente lo declara** ({@see SocialProof::reviewsNeedConsent()}) y esto
+ * solo recorre la lista. Añadir una cuarta fuente es declarar una propiedad suya, no tocar un `if`.
+ *
+ * ⚠️⚠️ **El ORDEN de las fuentes es la política y vive en el composition root**, no aquí. Aquí solo
+ * se recorre: la primera que tenga opiniones que se puedan enseñar, gana.
+ *
+ * ❗❗❗ **LA CIFRA Y LAS OPINIONES NO SE GOBIERNAN IGUAL** (`#491`, y sigue vigente): la cifra la trae
+ * nuestro servidor, no tiene autor ni foto y una media de un negocio no es dato personal, así que
+ * **no necesita consentimiento**; las opiniones de una fuente que exige cargar la foto del autor
+ * desde un tercero, sí. Por eso {@see self::rating()} recorre las fuentes **sin preguntar por el permiso**
+ * y {@see testimonials()} lo pregunta.
+ *
+ * ⚠️ Ninguna salida de esta cascada es un error y ninguna se registra como tal. Un log por visitante
  * sin consentimiento llenaría el log de ruido y escondería los fallos de verdad.
- *
- * ❗❗❗ **LA CIFRA Y LAS OPINIONES NO SE GOBIERNAN IGUAL, y esto resuelve una ambigüedad que la spec
- * tenía escrita sin argumentar.** §4.4.bis afirmaba «sin consentimiento la cabecera no se pinta»,
- * pero su razón escrita era *no inventar la cifra*, que es otra cosa. Mirado de cerca:
- *
- *  · **La cifra agregada NO necesita consentimiento.** La trae **nuestro servidor** con el comando
- *    programado, así que el visitante **no hace ninguna petición a Google**; no tiene autor ni foto,
- *    de modo que la atribución con foto de R3 no aplica; y una media de un negocio no es dato
- *    personal. Lo que sí exige es acreditar la fuente, y eso es TEXTO («en Google»).
- *  · **Las opiniones SÍ.** R3 obliga a mostrar la foto del autor, esa foto vive en
- *    `lh3.googleusercontent.com` y cargarla **es una petición del visitante a Google** — exactamente
- *    lo que `RGPD-05` gestiona. Y servirlas sin foto incumple R3, así que no hay término medio: o
- *    con consentimiento, o las propias.
- *
- * ▶ De ahí sale lo que el owner pedía —que la chapa se vea siempre que se pueda— **sin romper nada**.
  */
 class FallingBackSocialProof implements SocialProof
 {
     /**
-     * ⚠️⚠️ **El consentimiento entra como CIERRE, no como servicio, y es una consecuencia de la
-     * frontera, no una preferencia**: `CookieConsent` vive en Identity y **Content no puede mirar a
-     * Identity** (`ModuleBoundariesTest`). Lo resuelve el composition root, que sí ve a los dos — la
-     * misma salida que `ReservationPlacesTaken` en `#444`.
-     * ⚠️ Y es un CIERRE y no un `bool` a propósito: así se lee **cuando hace falta** y no cuando el
-     * contenedor construye el objeto, que en una petición cualquiera puede ser antes.
-     *
-     * @param  Closure(): bool  $terceroPermitido
+     * @param  list<SocialProof>  $fuentes  en orden de preferencia; la última es el respaldo.
+     * @param  Closure(): bool  $terceroPermitido  ⚠️⚠️ **Entra como CIERRE, no como servicio, y es
+     *                                             consecuencia de la frontera**: `CookieConsent` vive
+     *                                             en Identity y **Content no puede mirar a Identity**
+     *                                             (`ModuleBoundariesTest`). Lo resuelve el composition
+     *                                             root, que sí ve a los dos. Y es un cierre y no un
+     *                                             `bool` para que se lea **cuando hace falta** y no
+     *                                             cuando el contenedor construye el objeto.
      */
     public function __construct(
-        private readonly GoogleSocialProof $google,
-        private readonly CmsSocialProof $cms,
+        private readonly array $fuentes,
         private readonly Closure $terceroPermitido,
     ) {}
 
     /**
-     * La cifra de Google si la hay, y **nunca una compuesta con opiniones propias**: `CmsSocialProof`
-     * devuelve `null` a propósito, así que aquí no hace falta ningún `if` que lo impida.
+     * La primera cifra que alguna fuente pueda sostener.
+     *
+     * ⚠️ **Sin preguntar por el permiso**, a propósito (ver la cabecera). Y nunca una compuesta con
+     * opiniones propias: `CmsSocialProof` devuelve `null`, así que aquí no hace falta ningún `if`.
      */
     public function rating(): ?Rating
     {
-        return $this->google->rating() ?? $this->cms->rating();
+        foreach ($this->fuentes as $fuente) {
+            $cifra = $fuente->rating();
+
+            if ($cifra !== null) {
+                return $cifra;
+            }
+        }
+
+        return null;
     }
 
     /** @return Collection<int, TestimonialData> */
     public function testimonials(): Collection
     {
-        if (($this->terceroPermitido)()) {
-            $deGoogle = $this->google->testimonials();
-
-            if ($deGoogle->isNotEmpty()) {
-                return $deGoogle;
-            }
-        }
-
-        return $this->cms->testimonials();
+        return $this->elegida()?->testimonials() ?? collect();
     }
 
     /**
-     * **Las reseñas de Google existen y solo falta el permiso** (`#592`).
+     * **La selección de la fuente que está respondiendo**, para que la landing pueda declararla.
      *
-     * ⚠️ **No mira las opiniones propias, a propósito**: con ellas la sección enseña esas (el cruce de
-     * `#491`), y decidir qué va en el hueco de las tarjetas es de la vista, que ya tiene la colección.
-     * Mirarlas aquí costaría una segunda consulta por visita para una respuesta que ya está servida.
-     * ⚠️ El permiso se pregunta PRIMERO: con él dado no hace falta ni leer la caché.
+     * ⚠️ Sale de la MISMA fuente que las opiniones, y no de la primera que tenga una: si la ficha se
+     * queda sin tarjetas y responden las propias, la línea del filtro **no se pinta** — avisaría de
+     * un filtro que no se está aplicando a lo que se ve.
+     */
+    public function selection(): ?ReviewSelection
+    {
+        return $this->elegida()?->selection();
+    }
+
+    /**
+     * **Hay opiniones y solo falta el permiso del visitante** (`#592`).
+     *
+     * ⚠️ Solo lo puede decir la cascada: una fuente sola no sabe si el visitante consintió. Se
+     * recorre buscando una que **necesite permiso**, no la tenga, y aun así tenga algo que enseñar.
+     * Si otra que no lo necesita ya está respondiendo, no hay nada que esperar.
      */
     public function reviewsAwaitConsent(): bool
     {
-        return ! ($this->terceroPermitido)() && $this->google->testimonials()->isNotEmpty();
+        if (($this->terceroPermitido)()) {
+            return false;
+        }
+
+        foreach ($this->fuentes as $fuente) {
+            if (! $fuente->reviewsNeedConsent()) {
+                // Ésta responde sin permiso. Si tiene algo, no se está esperando nada.
+                if ($fuente->testimonials()->isNotEmpty()) {
+                    return false;
+                }
+
+                continue;
+            }
+
+            if ($fuente->testimonials()->isNotEmpty()) {
+                return true;
+            }
+        }
+
+        return false;
     }
+
+    /** La cascada, como propiedad de sí misma: necesita permiso si lo necesita quien responde. */
+    public function reviewsNeedConsent(): bool
+    {
+        return $this->elegida()?->reviewsNeedConsent() ?? false;
+    }
+
+    /**
+     * La primera fuente que puede enseñar algo **ahora mismo**, o `null`.
+     *
+     * ⚠️ Se memoriza por instancia: la portada pregunta por las opiniones, por la selección y por el
+     * permiso, y sin el memo eso serían tres recorridos de la cascada —con sus consultas— para
+     * pintar una sección (`PERF-02`). El binding es `scoped`, así que el memo dura la petición.
+     */
+    private function elegida(): ?SocialProof
+    {
+        if ($this->resuelta !== false) {
+            return $this->resuelta;
+        }
+
+        $permitido = ($this->terceroPermitido)();
+
+        foreach ($this->fuentes as $fuente) {
+            if ($fuente->reviewsNeedConsent() && ! $permitido) {
+                continue;
+            }
+
+            if ($fuente->testimonials()->isNotEmpty()) {
+                return $this->resuelta = $fuente;
+            }
+        }
+
+        return $this->resuelta = null;
+    }
+
+    /**
+     * `false` = todavía no se ha mirado. Se usa `false` y no `null` porque **`null` es una respuesta
+     * legítima** —ninguna fuente tiene nada— y con `null` como centinela se recorrería la cascada
+     * entera en cada pregunta justo en el caso en que no hay nada que encontrar.
+     */
+    private SocialProof|null|false $resuelta = false;
 }

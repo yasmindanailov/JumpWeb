@@ -530,7 +530,23 @@ return [
         'eyebrow' => 'Reseñas',
         'title' => 'Lo dicen los que ya han venido',
         'lede_own' => 'Lo que nos cuentan las familias al salir.',
+        // ⚠️⚠️ **Esta entradilla DEJA DE SER CIERTA con la ficha de Google** (§4.3·10, `#732`): con
+        // Places eran «las que Google pone primero», pero con Business Profile **las elegimos
+        // nosotros**, filtrando por estrellas. Se queda mientras responda Places —que es lo que hay
+        // hoy— y se reescribe en el mismo cambio que la retire. ▶ Lo que la ley exige decir ya lo
+        // dice `filtered`, que se pinta justo debajo.
         'lede_google' => 'No las elegimos nosotros: son las que Google pone primero.',
+        // ── LA LÍNEA DEL FILTRO (T2·6, §4.3·10, `#732`) ────────────────────────────────────
+        // ❗❗❗ **No es copia de marketing: es lo que la Ómnibus (2019/2161) obliga a decir.** Enseñar
+        // solo las reseñas positivas sin declararlo es una práctica engañosa. Dice las tres cosas
+        // que el §4.3·10 enumera: que se filtra y por cuánto, que **nadie verifica** que los autores
+        // sean clientes, y dónde están todas.
+        // ⚠️ «ni el parque ni Google» es literal y va así a propósito: la propia documentación de
+        // Google dice *«Reviews aren't verified by Google»*, y atribuirle una verificación que no
+        // hace es justo lo que su política prohíbe.
+        'filtered' => 'Enseñamos las reseñas de :stars estrellas o más. Ni nosotros ni Google verificamos que quien las escribe haya venido.',
+        'see_all' => 'Ver todas en Google',
+        'write' => 'Escribir una reseña',
         // `role="img"` necesita un nombre que diga la NOTA. Cinco glifos sueltos los lee un lector
         // de pantalla como «estrella estrella estrella…», que no es el dato.
         'stars' => '{1} :n estrella sobre 5|[2,*] :n estrellas sobre 5',

@@ -382,13 +382,47 @@ otra. Con su propio rastro.
 ▶ **`RGPD-01` ya tiene procedimiento**: una petición de supresión de un cliente se atiende buscando
 su reseña en esta pantalla y ocultándola.
 
-▶ **Lo siguiente es la T2·6: EL CONTRATO Y LA SECCIÓN** (§4.3·9 y §4.3·10) — `Testimonial` gana la
-respuesta del parque, las fotos y la marca de anónimo; `FallingBackSocialProof` cambia (**la fuente
-declara si necesita consentimiento**, y ésta no lo necesita); binding **`scoped`** con memo; la
-**línea del filtro siempre visible**; los dos enlaces; la atribución **sin el logotipo de Maps**;
-**nunca `aggregateRating`**; `data-nosnippet`. ⚠️ Y en el MISMO despliegue, `img-src` deja de nombrar
-a Google (§4.3·12). ▶ Ahí se miden el presupuesto de la portada y **la caché de las fotos**, que la
-T2·4 dejó anotada.
+✅ **T2·6 · EL CONTRATO Y LA FUENTE, EN EL ÁRBOL** (2026-09-21, `#732`): `ReviewSelection`,
+`Rating::$asOf`, `Testimonial` con respuesta/fotos/anónimo, `SocialProof` con `reviewsNeedConsent()`
+y `selection()`, `BusinessProfileSocialProof`, la cascada de **tres** y el binding `scoped`.
+26 casos, arnés **25/25**, Larastan 0.
+❗❗❗ **`[DECIDIDO owner, 2026-09-21]` — PLACES NO SE RETIRA TODAVÍA**, se valorará más adelante. Eso
+cambia dos cosas de lo que esta spec daba por hecho:
+- **La cascada es de TRES**: ficha → Places → propias, y el orden vive en el composition root. Sin
+  conexión con la ficha la primera responde vacío, así que la portada **sigue enseñando lo de hoy**
+  en vez de caer a las opiniones propias. Desenchufar Places ya habría sido una **regresión visible**
+  en producción hasta que la conexión real llegue (finales de octubre).
+- ⚠️⚠️ **Por tanto §4.3·12 NO se puede hacer**: mientras Places esté enlazado, sus fotos de autor las
+  carga el visitante desde `lh3.googleusercontent.com`, así que **`img-src` tiene que seguir
+  nombrando a Google**. El cambio de CSP va **con la retirada de Places**, no con esta tanda.
+❗❗ **LA FUENTE DECLARA SI NECESITA CONSENTIMIENTO** (§4.3·9), y es lo que permite que convivan:
+«Google necesita permiso» estaba escrito en la cascada como una verdad del sistema y **dejó de
+serlo** — la ficha se sirve entera desde nuestro servidor. Añadir una cuarta fuente es declarar una
+propiedad suya, no tocar un `if`.
+❗❗❗ **`ReviewSelection` ES UN REQUISITO LEGAL, NO UN ADORNO**: la Ómnibus (2019/2161) considera
+engañoso enseñar solo las positivas sin decirlo. Sin este dato en el contrato **la landing no podría
+declararlo aunque quisiera**. Es `null` cuando la fuente no filtra —las propias, Places— porque
+avisar de un filtro que no se aplica es peor que callar.
+⚠️ **La cifra no se filtra y las tarjetas sí**, y hay cifra **aunque el filtro no deje ninguna
+tarjeta** (§4.3·10, literal). Sale **con su fecha** (`Rating::$asOf`): la trajo una pasada diaria.
+❗ **Lo que enseñó el arnés**: dos guardas sobrevivieron **por falta de caso, no de código** — la foto
+que caduca necesitaba una reseña **con** foto, y «la selección sale de quien responde» solo se
+alcanza con un doble, porque en las tres fuentes reales filtrar y responder van juntos.
+
+❗❗❗ **LO QUE ESTA TANDA NO PUEDE HACER, Y NO ES UNA OMISIÓN: LA SECCIÓN REAL VIVE EN LA INSTANCIA.**
+`#666` mudó las nueve vistas de la landing al paquete de instancia, así que la portada que ven los
+clientes de PlayJump **está en otro repo**. Lo que el producto puede garantizar, y garantiza, es que
+el dato viaja en `CONTRATO_DE_VISTAS` y que **su propio anfitrión mínimo lo pinta** —con su caso—.
+▶ **Antes de que las reseñas de la ficha se vean en producción, la portada de la instancia tiene que
+pintar la línea del filtro**, o el parque estaría enseñando reseñas filtradas sin declararlo. Avisado
+al carril de plataforma. ⚠️ **No hay exposición hoy**: la línea solo existe cuando responde la ficha,
+y hoy responde Places, que **no filtra por estrellas**.
+
+▶ **Lo siguiente, a elegir**: (a) el **botón del panel** que encola la pasada, `Retry-After` y el
+gancho que fuerza una pasada al cambiar el mínimo de estrellas; (b) el **texto de privacidad** y la
+ponderación de interés legítimo (§4.3·11), que es lo único de la T2 con parte legal pendiente; (c) la
+**T6, el horario**; (d) **retirar Places** (§4.3·13) cuando el owner lo decida, y con ello §4.3·12 y
+la caché de las fotos que la T2·4 dejó anotada.
 
 ### 4.2 T1 · La conexión
 

@@ -62,4 +62,32 @@ interface SocialProof
      * `false`, y la cascada lo resuelve en un único sitio.
      */
     public function reviewsAwaitConsent(): bool;
+
+    /**
+     * **¿Las opiniones de ESTA fuente necesitan el permiso del visitante?** (T2·6, §4.3·9).
+     *
+     * ❗❗ **Lo declara la FUENTE, y es lo que permite que convivan dos.** Hasta `#732` la cascada
+     * tenía escrito «Google necesita permiso» como una verdad del sistema, y dejó de serlo: las
+     * reseñas de **Business Profile** se sirven desde nuestro servidor —imagen incluida— así que el
+     * navegador **no le pide nada a Google** y no hay nada que consentir; las de **Places** sí, porque
+     * su foto de autor la carga el visitante desde `lh3.googleusercontent.com` (`RGPD-05`).
+     *
+     * ⚠️ **Esto lo lee la CASCADA, no la landing.** La landing sigue conociendo solo
+     * {@see reviewsAwaitConsent()}, que es la pregunta en sus términos: «hay opiniones y solo falta
+     * el permiso». Que este método exista en el contrato es lo que hace que añadir una fuente sea
+     * declarar una propiedad suya, en vez de tocar un `if` en el decorador.
+     */
+    public function reviewsNeedConsent(): bool;
+
+    /**
+     * **Qué se está dejando fuera y dónde está el resto** (T2·6, §4.3·9 y §4.3·10), o `null`.
+     *
+     * ❗❗❗ **Es un requisito LEGAL y por eso viaja en el contrato.** La portada enseña las reseñas de
+     * cuatro estrellas o más, y la Ómnibus (2019/2161) considera engañoso enseñar solo las positivas
+     * sin decirlo. Si esto no estuviera aquí, la landing **no podría** decirlo aunque quisiera, y
+     * una instancia que se olvidara de pintarlo no tendría forma de enterarse.
+     *
+     * `null` = esta fuente no filtra nada, así que no hay nada que declarar.
+     */
+    public function selection(): ?ReviewSelection;
 }
