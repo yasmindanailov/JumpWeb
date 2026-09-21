@@ -212,6 +212,30 @@ class InstanceViews
         'slot-dudas' => 'web/portada.blade.php · la mancha del lockup de «Dudas» (`#666`)',
         'slot-resenas' => 'web/portada.blade.php · la mancha detrás de la tarjeta de opinión (`#666`)',
         'slot-ico-calcetines' => 'web/portada.blade.php · el icono del aviso de los calcetines (`#666`)',
+        /*
+         * **LAS DIECISIETE DE LA T2c** (`#667`), y son POCAS a propósito: `#665` esperaba 208 y la
+         * medida con el anfitrión real dio éstas. No son deuda que crezca — son las piezas que el
+         * producto NO pinta en su portada mínima: el arte, el vídeo del cliente y el recorte de la
+         * reseña. ⚠️ Su CSS sigue en `public/css/` hasta que la **vía A** se lleve las hojas con las
+         * páginas (`instancia-y-landing-fuera.md` §3), y las vigila `LandingCssHasNoOrphansTest`.
+         */
+        'hero__video' => 'web/portada.blade.php · el vídeo del hero, que es MATERIAL del cliente (`#663`)',
+        'hero__stage-label' => 'web/portada.blade.php · el rótulo del vídeo del hero (`#667`)',
+        'before__device' => 'web/portada.blade.php · el marco del teléfono de la sección 05 (`#667`)',
+        'before__ear' => 'web/portada.blade.php · el auricular del teléfono (`#667`)',
+        'before__chin' => 'web/portada.blade.php · la barbilla del teléfono (`#667`)',
+        'before__i--sock' => 'web/portada.blade.php · la pegatina con el icono de calcetines (`#667`)',
+        'rev__mancha' => 'web/portada.blade.php · la mancha detrás de la tarjeta de opinión (`#667`)',
+        'rev__text--clamp' => 'web/portada.blade.php · el recorte de la reseña, que se mide (`#667`)',
+        'rev__text--open' => 'web/portada.blade.php · la reseña abierta por «Ver más» (`#667`)',
+        'rev__toggle' => 'web/portada.blade.php · el propio «Ver más» de la reseña (`#667`)',
+        'sec-head__lockup' => 'web/portada.blade.php · el lockup de la cabecera de «Dudas» (`#667`)',
+        'sec-head__mancha' => 'web/portada.blade.php · la mancha de ese lockup (`#667`)',
+        'sec-head__mancha--xxl' => 'web/portada.blade.php · su talla (`#667`)',
+        'reserve__tag' => 'web/portada.blade.php · el tag de ciudad del cierre, dibujo del cliente (`#667`)',
+        'contact-form__lede' => 'web/contacto.blade.php · la entradilla del formulario (`#667`)',
+        'contact-form__note' => 'web/contacto.blade.php · el aviso de privacidad como nota (`#667`)',
+        'where__cta' => 'web/contacto.blade.php · la salida al ancla `/#info` de la portada (`#667`)',
     ];
 
     /**

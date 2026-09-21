@@ -390,9 +390,7 @@
    ==================================================================== */
 @media (prefers-reduced-motion: reduce) {
     .nav__period-dot,        /* jjLogoHop */
-    .map-pin,                /* pulse (pin del mapa) */
-    .gallery-marquee__track  /* galleryScroll (marquesina de polaroids) */
-    { animation: none; }
+    .map-pin{ animation: none; }
 }
 
 /* ---------- selector de idioma compacto ---------- */
@@ -657,18 +655,13 @@
 .pagination__btn--disabled { color: var(--fg-mute); opacity: 0.5; pointer-events: none; }
 .pagination__info { font-size: var(--fs-14); color: var(--fg-mute); }
 
-.page__note {
-    max-width: 70ch; margin: 0 0 36px;
-    font-family: var(--font-body); font-size: var(--fs-13); color: var(--fg-mute);
-    background: var(--bg-card); border: 1px dashed var(--line-strong);
-    border-radius: var(--r-sm); padding: var(--sp-10) var(--sp-14);
-}
+
 .page__h2 {
     font-family: var(--font-display); font-weight: 700; font-stretch: 75%;
     letter-spacing: -0.02em; font-size: 24px; color: var(--fg);
     margin: 32px 0 8px;
 }
-.page__cta { display: flex; gap: var(--sp-12); flex-wrap: wrap; margin-top: 48px; }
+
 
 /* ====================================================================
    Página /servicios — diseño v2 «Editorial XL»
@@ -954,7 +947,7 @@
   .svc-ed2__row--flip .svc-ed2__media { order: 0; }
   .svc-ed2__row:not(.svc-ed2__row--flip) .svc-ed2__big { left: -4px; }
   .svc-ed2__row--flip .svc-ed2__big { right: -4px; }
-  .svc-marquee__item { font-size: 19px; }
+  
 }
 
 /* ---------- formulario de contacto ---------- */
@@ -1023,7 +1016,7 @@
 [x-cloak] { display: none !important; }
 
 /* ── Cumpleaños: toggle Jump/Kids (landing, #1 · 2026-05-31) ─────────────── */
-.events__tabs { display: inline-flex; flex-wrap: wrap; gap: var(--sp-8); margin-top: var(--sp-4); }
+
 /* T9: el bloque `.invite-*` (la tarjeta de invitación ANTERIOR al editor `bd-editor`/`bd-inv` de
    `events-section`, objetivo de html2canvas en su día) llevaba MUERTO desde aquel rediseño:
    0 consumidores en blades, Vue y JS — medido con control positivo. Se retira ENTERO, y con él
@@ -1113,11 +1106,7 @@
    justo lo que su regla del mural evita («la pintura no tapa»). La punteada se lee sobre cualquier
    textura sin poner un rectángulo de color delante. El color de zona sigue mandando en la tarjeta.
    ⚠️ Su giro era el segundo más fuerte (−5°): pasa al ángulo único. */
-.ride-card__badge {
-  position: absolute; left: 14px; top: 14px; z-index: 2;
-  color: var(--paper-bg, #fff);
-  --tag-tilt: -2deg;
-}
+
 
 /* ── Normas: 2 columnas (imagen + slider vertical de cards) (#10 · 2026-05-31) ── */
 /* ⚠️⚠️ **ESTO VOLVIÓ** (`#300`, `[DECIDIDO owner, 2026-08-31]`): la T1 del idioma visual lo había
@@ -1178,27 +1167,12 @@
 
 /* ---------- modal genérico ---------- */
 .modal { position: fixed; inset: 0; z-index: 150; display: flex; align-items: flex-start; justify-content: center; overflow-y: auto; padding: clamp(16px, 6vh, 80px) 16px; }
-.modal__backdrop { position: fixed; inset: 0; background: color-mix(in srgb, var(--fg) 55%, transparent); backdrop-filter: blur(2px); }
-.modal__panel {
-    position: relative; z-index: 1; width: 100%; max-width: 520px;
-    background: var(--bg); border: 1px solid var(--line); border-radius: var(--r);
-    box-shadow: var(--shadow-modal);
-    padding: clamp(22px, 4vw, 36px);
-}
-.modal__close {
-    /* Lote 9: caja táctil de 44px (transparente) con el glifo anclado a la esquina
-       superior-derecha → el ✕ se ve donde estaba, pero el toque cubre 44px hacia dentro. */
-    position: absolute; top: 2px; right: 4px;
-    width: var(--tap-min); height: var(--tap-min);
-    display: inline-flex; align-items: flex-start; justify-content: flex-end; padding: var(--sp-8) var(--sp-10);
-    background: none; border: none; color: var(--fg-mute); cursor: pointer;
-    font-size: 26px; line-height: 1; transition: color var(--dur-sale) var(--ease-sale);
-}
-.modal__close:hover { color: var(--fg); }
+
+
 /* Variante "narrow" del modal: para diálogos informativos (no formularios largos)
    como el modal "Gestionar tu reserva" (#117). Max-width algo menor para que el
    contenido se lea más concentrado y el CTA quede a la altura del ojo. */
-.modal__panel--narrow { max-width: 440px; }
+
 
 /* ---------- formulario de autenticación ---------- */
 .auth__head { margin-bottom: var(--sp-18); }
@@ -1342,7 +1316,7 @@
 }
 .account__card-sub { margin: var(--sp-6) 0 var(--sp-18); color: var(--fg-mute); font-size: var(--fs-body-s); line-height: 1.5; }
 .account__card .form { max-width: none; margin-top: 0; }
-.account__danger-btn { width: 100%; justify-content: center; }
+
 /* **LAS CUENTAS VINCULADAS, DENTRO DEL FORMULARIO DE SESIONES** (`specs/auth-con-google.md` §21.4.5).
    Es la única sección del área de cuenta que NO puede ser una tarjeta —comparte el campo de
    contraseña con «cerrar sesión en los demás dispositivos»—, así que la rejilla no la separa y su aire
@@ -1403,7 +1377,7 @@
 .switch__input:checked::before { transform: translateX(18px); background: var(--bg-card); border-color: var(--ok); }
 .switch__input:disabled { opacity: 0.55; cursor: not-allowed; }
 .switch__label { flex: 1 1 auto; }
-.account__export-btn { margin-top: var(--sp-4); }
+
 /* ⚠️ **El borde de la tarjeta de PELIGRO es el rojo PLENO, no su tinte** (`#564`, decisión 7 de
    las doce del owner): «el borde dice lo mismo que el botón que contiene, y en una tarjeta que
    borra una cuenta eso es correcto». Es la única superficie del cajón donde el borde no se atenúa. */
@@ -1603,10 +1577,10 @@ body.no-scroll { overflow: hidden; }
    tiene que ir sobre la superficie, o desaparece (`#551`). */
 .purchase__chip.is-active .purchase__chip-full { color: var(--bg); opacity: 0.78; }
 
-.purchase__entries { display: flex; flex-direction: column; gap: var(--sp-8); }
+
 .entry { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); padding: var(--sp-12) var(--sp-14); border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-card); }
 .entry.is-out { opacity: 0.55; }
-.entry__info { display: flex; flex-direction: column; gap: var(--sp-2); }
+
 /* ❗❗ **El stepper es CUADRADO y grande** (`#557`, artboard `Pasos Compra PJP`): 44×44 con el canto
    del sistema, y **48×48 en la cantidad principal**, que es el control más pulsado del embudo. Eran
    **32 redondos**, o sea doce por debajo del suelo táctil del producto — y en un cajón que se usa con
@@ -2802,7 +2776,7 @@ details > summary.legal-more ~ p { margin-top: var(--sp-10); }
    Pulido visual (demo): fotos de atracciones + hero full-bleed con vídeo.
    ==================================================================== */
 /* Foto de la atracción: cubre la zona visual de la tarjeta. */
-.ride-card__img { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; object-fit: cover; }
+
 
 /* Header/hero a TODO EL ANCHO (full-bleed). Padding superior para que NO quede bajo el nav fijo. */
 /* ════════════════════════════════════════════════════════════════════════════════════
@@ -3668,25 +3642,23 @@ body[data-has-hero].nav--live .hero__pair-slot {
    sobre la fecha/precio (que se quedan en el 13px base). Acotado a la línea principal — NO a los
    complementos (`.orders__line--addon`), para no engordarlos. */
 .orders__line:not(.orders__line--addon) .orders__line-name { font-size: var(--fs-body); font-weight: 700; }
-.orders__line-when { color: var(--fg-mute); text-transform: capitalize; }
+
 .orders__event { list-style: none; margin: var(--sp-4) 0 0; padding: 0; width: 100%; display: flex; flex-direction: column; gap: var(--sp-2); }
 .orders__event li { font-family: var(--font-body); font-size: var(--fs-body); color: var(--fg-mute); line-height: 1.45; }
 .orders__event-label { font-weight: 600; color: var(--fg); }
-.orders__total { display: flex; justify-content: space-between; margin-top: var(--sp-14); padding-top: var(--sp-12); border-top: 1px solid var(--line); font-family: var(--font-body); font-weight: 700; }
-.orders__refund-label { color: var(--fg-mute); }
-.orders__refund-amount { color: var(--fg); font-weight: 700; }
+
+
 /* EL ANCLA DE CAJA (`DECISIONES #128`): lo REALMENTE cobrado, con su método y su fecha. Va NEUTRA
    porque no es una devolución — el bloque entero heredaba el color de reembolso, y mientras solo se
    pintaba habiendo devoluciones no se notaba; desde que el ancla se enseña en todo pedido cobrado,
    un cargo corriente en ámbar se leería como «te devolvimos algo». */
-.orders__refund--anchor .orders__refund-amount { color: var(--fg); }
-.orders__net { display: flex; justify-content: space-between; margin-top: var(--sp-6); padding-top: var(--sp-8); border-top: 1px dashed var(--line); font-family: var(--font-body); font-weight: 700; color: var(--fg); }
+
+
 /* Desglose detallado en Mis pedidos (#196): "A cobrar en el parque" (naranja,
    lo que el cliente pagará en recepción) + su caption, y "Total final" (lo que
    acaba pagando neto). Mismo patrón flex space-between que `.orders__total`. */
-.orders__gate { display: flex; justify-content: space-between; gap: var(--sp-12); margin-top: var(--sp-8); font-family: var(--font-body); font-size: var(--fs-body); color: var(--fg); }
-.orders__gate-label { color: var(--fg-mute); }
-.orders__gate-amount { color: var(--fg); font-weight: 700; }
+
+
 /* Toggle "Ver desglose" del desglose ↳ (#227 F3): link sobrio, sin fondo de botón. */
 .orders__gate-toggle { margin: var(--sp-2) 0 0; padding: 0; background: none; border: 0; cursor: pointer; font-family: var(--font-body); font-size: var(--fs-button); font-weight: 600; color: var(--interactive); text-decoration: underline; }
 .orders__gate-toggle:hover { color: var(--fg); }
@@ -3765,7 +3737,7 @@ body[data-has-hero].nav--live .hero__pair-slot {
 .orders__ledger-note { margin: var(--sp-12) 0 0; padding: var(--sp-10) var(--sp-12); border-radius: var(--r-s, 8px); background: var(--bg-soft, var(--bg-card)); border: 1px solid var(--line); font-family: var(--font-body); font-size: var(--fs-body-s); line-height: 1.45; color: var(--fg); }
 /* Trazabilidad: lo facturado al reservar. Atenuado y al pie porque NO es un canal — pintarlo
    arriba, como hacía el «Subtotal», apilaba dos bases distintas sin decirlo. */
-.orders__ledger-invoiced { margin-top: var(--sp-12); padding-top: var(--sp-10); border-top: 1px dashed var(--line); opacity: 0.85; }
+
 /* EL LIBRO (T3·1 de `specs/desglose-libro.md`, `DECISIONES #305`): una línea por movimiento y por
    liquidación, con su signo delante y su fecha en mudo; el Total y lo Pagado como `.orders__final`.
    Lo negativo (bajadas, cortesías, devoluciones) toma el color de devolución; una devolución en
@@ -3796,7 +3768,6 @@ body[data-has-hero].nav--live .hero__pair-slot {
 .orders__line-badge { display: inline-flex; align-items: center; padding: var(--sp-1) var(--sp-8); border-radius: var(--r-pill); font-size: var(--fs-label); font-weight: 600; line-height: 1.6; }
 .orders__line-badge--finished { background: var(--line); color: var(--fg-mute); }
 .orders__line--finished .orders__line-name,
-.orders__line--finished .orders__line-when,
 .orders__line--finished .orders__line-price { color: var(--fg-mute); }
 /* #172: producto/complemento cancelado — tachado + badge rojo suave para que
    el cliente vea claramente que se canceló/quitó (el reembolso va en el resumen). */
@@ -3807,46 +3778,27 @@ body[data-has-hero].nav--live .hero__pair-slot {
    pero NO queda cruzado por la línea (un icono tachado se leería como glitch). */
 .orders__line--cancelled .orders__line-name,
 .orders__line--cancelled .orders__line-price { color: var(--fg-mute); }
-.orders__line--cancelled .orders__line-text,
+
 .orders__line--cancelled .orders__line-price { text-decoration: line-through; }
 /* #172: badges (pedido y línea) agrupados y alineados a la DERECHA. */
-.orders__head-badges { margin-left: auto; display: inline-flex; align-items: center; gap: var(--sp-8); flex-wrap: wrap; }
-.orders__line-badges { margin-left: auto; display: inline-flex; align-items: center; gap: var(--sp-6); flex-wrap: wrap; }
+
+
 /* Botón "Reintentar el pago" en Mis pedidos (audit edge cases 2026-05-28). Solo
    aparece en Orders pending no expiradas con Payment intentado. Espacio claro vs
    el total, anchura completa para fácil táctil. */
 .orders__retry { margin-top: var(--sp-14); display: flex; flex-direction: column; gap: var(--sp-6); }
-.orders__retry-btn { width: 100%; justify-content: center; }
+
 .orders__retry-hint { font-family: var(--font-body); font-size: var(--fs-body-s); color: var(--fg-mute); margin: 0; line-height: 1.5; }
 
 /* Botón "Gestionar" para Orders pagadas (#117). En la card de la Order: width
    completo, ghost para no competir con el CTA primario de los Orders pending. */
-.orders__manage { margin-top: var(--sp-14); }
-.orders__manage-btn { width: 100%; justify-content: center; }
+
 
 /* Modal "Gestionar tu reserva" (#117). Tono profesional: texto justificado a la
    izquierda, código del pedido en un box destacado (similar a un input readonly
    pero con tipografía display + tamaño grande para fácil copia visual), dos
    acciones con jerarquía clara (primario zone-lg + cerrar ghost). */
-.manage__title {
-    font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
-    letter-spacing: -0.02em; line-height: 1.1;
-    font-size: clamp(24px, 4vw, 30px);
-    margin: var(--sp-8) 0 0;
-}
-.manage__code {
-    margin: var(--sp-18) 0 0; padding: var(--sp-14) var(--sp-16);
-    background: var(--bg-soft); border: 1px solid var(--line); border-radius: var(--r-sm);
-    display: flex; flex-direction: column; gap: var(--sp-4);
-    user-select: all; /* facilita seleccionar el código completo de un click */
-}
-.manage__code-value {
-    font-family: var(--font-display); font-weight: 800; letter-spacing: 0.02em;
-    font-size: clamp(20px, 3vw, 24px); color: var(--fg);
-}
-.manage__actions { margin-top: 22px; display: flex; flex-direction: column; gap: var(--sp-10); }
-.manage__cta { width: 100%; justify-content: center; }
-.manage__cancel { width: 100%; justify-content: center; }
+
 
 /* ====================================================================
    Jerarquía de CTAs — Capa A: iconos base reutilizables.
@@ -4984,28 +4936,8 @@ body[data-has-hero] .nav--over .nav__cta {
    puede añadir). Menos peso visual que la tarjeta principal — texto
    pequeño, tono muted, fondo sutil; etiqueta «Incluido/Gratis» en verde.
    ==================================================================== */
-.addons-mini {
-    margin-top: var(--sp-14);
-    padding-top: var(--sp-12);
-    border-top: 1px dashed var(--line);
-    text-align: left;
-}
-.addons-mini__label {
-    display: block;
-    font-size: var(--fs-11);
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--fg-mute);
-    margin-bottom: var(--sp-8);
-}
-.addons-mini__list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: grid;
-    gap: 9px;
-}
+
+
 /* Lista quieta estilo mockup «seccion cumple» (#231): fila «+ nombre … precio», SIN caja
    (antes era un chip con fondo). La «ver más» y el grupo de elección se apilan debajo. */
 .addons-mini__item {
@@ -5076,24 +5008,7 @@ body[data-has-hero] .nav--over .nav__cta {
 
 /* Grupo de elección excluyente dentro de los complementos (#194): "Elige una
    opción" — los miembros NO se suman, el cliente elige uno (espejo del checkout). */
-.addons-mini__group {
-    border: 1px dashed var(--line-strong);
-    border-radius: var(--r-md);
-    padding: var(--sp-8) var(--sp-10);
-    background: transparent;
-}
-.addons-mini__group-label {
-    display: block;
-    font-size: var(--fs-10);
-    font-weight: 800;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    color: var(--fg-mute);
-    margin-bottom: var(--sp-6);
-}
-.addons-mini__list--group {
-    gap: var(--sp-6);
-}
+
 
 /* ⚠️ Aquí vivía la rejilla de tarjetas de entrada (`.pricing__grid`), con su reparto de cuatro
    columnas y sus dos cortes. Se fue con la tarjeta en `#531`: la página de tarifas es hoy una tabla
@@ -5231,7 +5146,7 @@ body[data-has-hero] .nav--over .nav__cta {
 .acct__alert-arrow { flex: none; color: var(--zone-1); font-weight: 700; }
 
 /* Botón «Cerrar sesión» al pie de /mi-cuenta (#221). */
-.account__logout { margin: var(--sp-8) 0 0; }
+
 
 /* ⚠️ **AQUÍ VIVÍA EL LAYOUT DE `/contacto` y se fue con su página** (`DECISIONES #535`, Fase 3 ·
    T3b): `.contact-quick`, `.contact-quick__label`, `.contact-layout`, `.contact-layout__aside` y
@@ -5245,11 +5160,7 @@ body[data-has-hero] .nav--over .nav__cta {
 /* Post-formulario de datos por invitado de un cumpleaños (#217). Reutiliza el bloque
    `.eventfields` (etiqueta + input) para cada campo; aquí van el contenedor y las tarjetas. */
 .guestform { display: flex; flex-direction: column; gap: var(--sp-28); margin-top: var(--sp-8); }
-.guestform__flash {
-    background: color-mix(in srgb, var(--zone-1) 12%, var(--sheet));
-    border: 1px solid color-mix(in srgb, var(--zone-1) 40%, var(--sheet));
-    color: var(--fg); border-radius: var(--r-md); padding: var(--sp-14) var(--sp-18); font-weight: 600;
-}
+
 /* Aviso de SOLO LECTURA (#217): la reserva ya se celebró → el formulario se muestra pero no se edita. */
 .guestform__readonly {
     background: var(--bg-soft); border: 1px solid var(--line);
@@ -5257,45 +5168,26 @@ body[data-has-hero] .nav--over .nav__cta {
 }
 /* Post-form individualizado POR RESERVA (#217): resumen de la reserva (cuándo · invitados ·
    referencia) + indicador de progreso + nota de privacidad de datos de menores. */
-.guestform__summary {
-    border: 1px solid var(--line); border-radius: var(--r); padding: var(--sp-18) var(--sp-20); background: var(--sheet);
-    display: flex; flex-direction: column; gap: var(--sp-14); margin-top: var(--sp-8);
-}
-.guestform__facts { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 16px 32px; }
-.guestform__fact { display: flex; flex-direction: column; gap: var(--sp-2); min-width: 0; }
-.guestform__fact-label { font-size: var(--fs-12); text-transform: uppercase; letter-spacing: .04em; color: var(--fg-mute); }
-.guestform__fact-value { font-weight: 600; font-size: var(--fs-15); }
-.guestform__progress {
-    align-self: flex-start; font-size: var(--fs-13); font-weight: 600; color: var(--zone-1);
-    background: color-mix(in srgb, var(--zone-1) 10%, var(--sheet)); border-radius: var(--r-pill); padding: 5px 14px;
-}
+
+
 .guestform__progress.is-complete { color: var(--ok); background: color-mix(in srgb, var(--ok) 12%, var(--sheet)); }
 .guestform__privacy { color: var(--fg-mute); font-size: var(--fs-13); line-height: 1.5; margin: 0; }
 
 /* ▶ El JUSTIFICANTE de un menor invitado (`.guardian__*` y `.gf-group__num`) se mudó al bloque de la
    HOJA ENFOCADA en la T3 de `celebracion-e-invitacion.md`: comparte su molde, y allí lo vigilan las
    escalas de `GuestFormSkinTest` y `GuardianSkinTest`. */
-.guestform__section { display: flex; flex-direction: column; gap: var(--sp-14); }
-.guestform__section-title { font-family: var(--font-display); font-size: var(--fs-18); margin: 0; }
-.guestform__general { border-left: 3px solid var(--zone-1); padding-left: var(--sp-16); }
-.guestform__children { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--sp-16); }
-.guestform__child {
-    border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--sp-14) var(--sp-16) var(--sp-16);
-    margin: 0; min-width: 0;
-}
-.guestform__child-legend { font-weight: 700; font-size: var(--fs-14); padding: 0 var(--sp-6); color: var(--zone-1); }
-.guestform__actions { display: flex; flex-direction: column; gap: var(--sp-8); align-items: flex-start; }
-.guestform__hint { color: var(--fg-mute); font-size: var(--fs-13); margin: 0; }
+
+
 .purchase__note--guestform {
     background: color-mix(in srgb, var(--zone-1) 10%, var(--sheet));
     border-radius: var(--r-md); padding: var(--sp-10) var(--sp-12);
 }
 /* Subcard sutil POR PRODUCTO (#217 UX): separa cada reserva del pedido y agrupa producto +
    complementos + su formulario, sin saturar (relleno suave, sin borde — el contraste lo da el fondo). */
-.orders__products { display: flex; flex-direction: column; gap: var(--sp-10); }
-.orders__product { background: var(--bg-soft); border-radius: var(--r-md); padding: var(--sp-12) var(--sp-14); display: flex; flex-direction: column; gap: var(--sp-8); }
+
+
 .orders__product-form { margin-top: var(--sp-2); }
-.orders__product-form-link { font-size: var(--fs-body); color: var(--fg-mute); text-decoration: underline; text-underline-offset: 2px; }
+
 /* Botón del post-form de reserva (#217): ancho completo + texto centrado para que sea una acción
    clara y consistente con el resto de CTAs de ancho completo del flujo. */
 /* ⚠️⚠️ **`white-space: normal` y no `nowrap`, y eso ANULA `.btn` a propósito** (`#403`). El botón de
@@ -5318,7 +5210,7 @@ body[data-has-hero] .nav--over .nav__cta {
 .purchase__reginfo-btn { width: 100%; justify-content: center; }
 
 @media (max-width: 768px) {
-    .guestform__children { grid-template-columns: 1fr; }
+    
 }
 
 /* ── Mantenimiento (#218) ───────────────────────────────────────────────────────
@@ -6116,7 +6008,7 @@ body:has(.gf-savebar) .gf-toast { bottom: calc(var(--book-bar-h) + var(--sp-28) 
 .invitation-card[data-theme="fiesta"] .invitation__age { background: var(--brand-2); color: var(--on-brand); }
 /* En `sereno` la chapa es de trazo, no de relleno: el tema entero va un tono más bajo. */
 .invitation-card[data-theme="sereno"] .invitation__age { background: transparent; border: 2px solid var(--brand); color: var(--ink-fg); }
-.invitation__age-unit { font-size: var(--fs-label); text-transform: uppercase; letter-spacing: 0.08em; }
+
 
 /* El nombre y la chapa, en la misma fila y alineados por su centro. */
 .invitation__who { display: flex; align-items: center; gap: var(--sp-16); }
@@ -7691,8 +7583,13 @@ body[data-has-hero].nav--live .nav:not(.nav--hidden) .nav__brand-logo--inline {
 .tag--punteada { border: 2px dashed currentColor; padding: var(--sp-6) var(--sp-13); }
 
 /* Tinta: la etiqueta que DESTACA una tarjeta. Lee los alias de superficie, no `--fg`: dentro de la
-   tarjeta destacada `--fg` vale el color de la zona (misma cautela que las sombras de `#196`). */
+   tarjeta destacada `--fg` vale el color de la zona (misma cautela que las sombras de `#196`).
+   ⚠️⚠️ **Hoy no la pinta nadie y NO se retira** (`#667`): es una VARIANTE DEL SISTEMA de etiquetas,
+   que `TagSystemTest` declara y vigila junto a `.tag`, `.tag--senal` y `.tag--punteada`. La poda de
+   huérfanas se la llevó y ese test la devolvió en el mismo minuto. *Un sistema declara sus variantes
+   antes de que existan sus consumidores; eso no es una regla muerta, es el sistema.* */
 .tag--tinta { background: var(--fg); color: var(--bg); }
+
 
 /* ⚠️⚠️ **AQUÍ VIVÍA `.tag--dato` —el registro fino de `Landing PJP Modos`— Y SE RETIRÓ EL MISMO DÍA**
    (`[DECIDIDO owner, 2026-08-31]`: «todo al registro del mural»). Sus números eran `1.5px solid
@@ -7820,7 +7717,6 @@ body[data-has-hero].nav--live .nav:not(.nav--hidden) .nav__brand-logo--inline {
    disponible para la tira completa el día que alguien la necesite, sin quedarse huérfano hoy.
    Sus números, los suyos: 3 · 3,4 · 16×10. */
 :root { --dots-tile: radial-gradient(circle, var(--paper-fg) 3px, transparent 3.4px); }
-
 
 
 /* ⚠️⚠️ **AQUÍ HUBO UN FRISO DE CINCO SALTADORES Y SE RETIRÓ**

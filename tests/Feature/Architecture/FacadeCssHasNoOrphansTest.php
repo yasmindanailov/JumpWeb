@@ -241,7 +241,26 @@ class FacadeCssHasNoOrphansTest extends TestCase
      */
     public function test_every_declared_exception_still_has_a_subject(): void
     {
-        $declared = $this->facadeClassesInSelectors();
+        /*
+         * ⚠️⚠️ **Se comparan contra TODAS las clases de las hojas, no solo contra las de FACHADA**
+         * (`#667`). `MATERIAL_CONSUMIDO_POR_LA_INSTANCIA` nació con material de fachada y ranuras
+         * del kit, pero desde la T2c declara también clases de la landing que solo pinta una vista
+         * de la instancia (el vídeo del hero, el marco del teléfono, el recorte de la reseña…), y
+         * con el filtro de familias este caso las daba por «sin sujeto» teniéndolo. ▶ La pregunta
+         * que hace no cambia: *una excepción cuyo selector ya no existe tapa al siguiente que se
+         * llame igual*; solo se mide donde de verdad puede existir.
+         */
+        $declared = [];
+
+        foreach ($this->siteRules() as $rule) {
+            if (preg_match_all('/\.(-?[_a-zA-Z][\w-]*)/', $rule['selector'], $m)) {
+                foreach ($m[1] as $class) {
+                    $declared[$class] = true;
+                }
+            }
+        }
+
+        $declared = array_keys($declared);
         $stale = array_values(array_diff(
             [...array_keys(self::ALLOWED_ORPHANS), ...$this->instanceCssClasses()],
             $declared,

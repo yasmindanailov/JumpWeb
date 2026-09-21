@@ -2,10 +2,10 @@
 
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669** · Último usado: **`#666`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **640–669** · Último usado: **`#667`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, `docs/specs/instancia-y-landing-fuera.md` · Actualizado: **2026-09-21**, cierre de sesión
-> (**la T2b CERRADA**: `home` mudada con huella 0/38, y `resources/views/` ya no tiene ni una landing de
-> cliente).
+> (**T2b y T2c CERRADAS**: `home` mudada con huella 0/38 y el CSS huérfano podado, con trinquete).
+> ⚠️ **Quedan DOS números en la banda** (`#668`, `#669`): la siguiente tanda abre banda nueva.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
 > Techo **32 KB** (check 10; subido de 24 en `#724` con la medida delante). El contador de la suite no
 > vive aquí: va en el trailer del commit.
@@ -64,47 +64,50 @@
    partir pruebas por lo que afirman → anfitrión mínimo → huella 0, con la página DENTRO de la huella—, y
    allí está lo que enseñó cada tanda. Barridos cerrados en `#650`, `#651` y `#653` (arnés 50/50).
    ▶ **LAS OCHO DE `pages/` MUDADAS** (`#654`→`#660`), y **esa carpeta ya no existe**: viven en
-   `instancias/playjump/web/`, el producto sirve su `anfitrion/…` sin paquete, y
-   **la suite corre SIN paquete** (`phpunit.xml`). Medido cada vez: mismo DOM, huella **0/38** y sitemap
-   11=11; su lista de garantías, en `paginas/<nombre>.md` del paquete.
-   ⚠️ El material que solo pinta una vista mudada se declara en
-   `InstanceViews::MATERIAL_CONSUMIDO_POR_LA_INSTANCIA` (spec §4.7) · el separador de MILLARES de `Money`
-   sigue a mano **a propósito** (`#651`): pendiente del owner.
+   `instancias/playjump/web/`, el producto sirve su `anfitrion/…` y **la suite corre SIN paquete**
+   (`phpunit.xml`). Medido cada vez: mismo DOM, huella **0/38**, sitemap 11=11; las garantías de cada una,
+   en `paginas/<nombre>.md` del paquete. ⚠️ El material que solo pinta una vista mudada se declara en
+   `InstanceViews::MATERIAL_CONSUMIDO_POR_LA_INSTANCIA` · el separador de MILLARES de `Money` sigue a mano
+   **a propósito** (`#651`): pendiente del owner.
    ▶ **EL BARRIDO DE `home`, HECHO** (`#661`, `#662`; detalle entero en la spec §4.7): fuera el DINERO
    —`Money::showcaseWithSymbol()` recoge SEIS escrituras—, el servicio de horario y la escala de estrellas,
    con **tres guardas que NO existían**, las tres vistas matar a su mutante: nacieron porque cada cambio
    dejaba la suite ENTERA en verde.
-   ✅ **EL MATERIAL DEL CLIENTE, FUERA DE `main`** (`#663`, `[DECIDIDO owner]`): los 37 ficheros (9,2 MB)
-   viven en `publico/` del paquete y se copian a mano, como `client.css`. Las tres piezas —exclusión del
-   `rsync`, lista blanca de la GUARDA 9, `.gitignore` + `git rm`— van en el MISMO commit, o el primer
-   despliegue borra producción; verificado en seco con control negativo. El porqué, en la spec §4.7.
-   ✅ **Y el paquete tiene REMOTO PRIVADO** (20-09): `yasmindanailov/instancia-playjump`, empujado y
-   verificado —mismo SHA local y remoto, 38 ficheros bajo `publico/`, 404 anónimo—. ⚠️ Se comprobó que
-   era privado ANTES de empujar: 9,2 MB de fotos de un cliente a un repo público no se deshacen.
-   ✅ **LAS CUATRO REGLAS del barrido, RESUELTAS** (`#664`): la de caché del vídeo **no se baja**, y está
-   medido — `@filemtime` sale **37 veces en 15 ficheros** con sufijo uniforme (13 × `}}?v={{ @filemtime`):
-   es el IDIOMA de la casa, no una regla con dos escrituras. Extraerla para un sitio crearía la
-   inconsistencia.
-   ✅✅ **`home` MUDADA y la T2b CERRADA** (`#666`, 21-09; el detalle en la spec **§4.7.ter**, que es
-   donde no caduca). `web/portada.blade.php` en el paquete, `anfitrion/portada.blade.php` en el producto:
-   **huella 0 diferencias en 38 pantallas**, mismo DOM en es/en/fr, sitemap 11=11, suite **5.474**.
-   ❗❗❗ **`#664` había medido 161 rojos y salieron 16**, porque aquella medida usó un anfitrión de NUEVE
-   líneas: *la cifra de rojos mide el anfitrión, no la página.* El criterio pasa a ser que el anfitrión
-   **consuma el CONTRATO ENTERO** —los cuatro rojos de marcado que quedaron eran datos compuestos que
-   nadie pintaba— y que **una OBLIGACIÓN no se muda**: la atribución de Places, el autor, el aviso de
-   traducción con su original y la política se quedan aquí. El vídeo sí se fue.
-   ▶ Con ella `resources/views/` **ya no tiene ni una landing de cliente**: las nueve están fuera.
-   ▶ **Los siete arneses re-apuntados y en verde: 144/144** · nace `AnfitrionPortadaTest`, que convierte
-   el criterio en guarda (contrato entero · las cinco anclas · nada de material del cliente) y que **nació
-   roja enseñando que `CONTRATO_DE_VISTAS` mezcla dos contratos**: el de la PÁGINA y el del ARMAZÓN
-   (`DEL_COMPOSER`, ahora pública). Los tres casos, vistos matar a su mutante.
+   ✅ **EL MATERIAL DEL CLIENTE, FUERA DE `main`** (`#663`, `[DECIDIDO owner]`; spec §4.7): los 37
+   ficheros (9,2 MB) viven en `publico/` del paquete —que por eso ganó **remoto PRIVADO**, verificado con
+   un 404 anónimo ANTES de empujar— y se copian a mano, como `client.css`. ⚠️⚠️ Las tres piezas
+   —exclusión del `rsync`, lista blanca de la GUARDA 9, `.gitignore` + `git rm`— van en el MISMO commit, o
+   el primer despliegue borra producción; verificado en seco con control negativo.
+   ✅ **Y las CUATRO REGLAS del barrido, resueltas** (`#664`): la de caché del vídeo **no se baja** —
+   `@filemtime` sale 37 veces en 15 ficheros con sufijo uniforme: es el IDIOMA de la casa, no una regla
+   con dos escrituras.
+   ✅✅ **`home` MUDADA y la T2b CERRADA** (`#666`, 21-09; el detalle en la spec **§4.7.ter**).
+   `web/portada.blade.php` en el paquete, `anfitrion/portada.blade.php` en el producto: **huella 0 en 38
+   pantallas**, mismo DOM en es/en/fr, sitemap 11=11. Con ella `resources/views/` **ya no tiene ni una
+   landing de cliente**.
+   ❗❗❗ **`#664` había medido 161 rojos y salieron 16**, porque usó un anfitrión de NUEVE líneas: *la cifra
+   de rojos mide el anfitrión, no la página.* De ahí el criterio: un anfitrión **consume el CONTRATO
+   ENTERO**, y **una OBLIGACIÓN no se muda** —la atribución de Places se queda aquí—. El vídeo sí se fue.
+   ▶ Los siete arneses re-apuntados, **144/144**; nace `AnfitrionPortadaTest`, que además destapó que
+   `CONTRATO_DE_VISTAS` mezcla el contrato de la PÁGINA con el del ARMAZÓN (`DEL_COMPOSER`, ya pública).
 
-   ▶▶ **LO SIGUIENTE: LA T2c, EL CSS** (`#665`, `[DECIDIDO owner]`; plan en `instancia-y-landing-fuera.md`
-   §4.6). **208 clases** de `landing.css` y `site.css` se quedaron sin consumidor al mudar la portada, y
-   **la guarda de huérfanos solo ve cuatro piezas** —ya declaradas en `MATERIAL_CONSUMIDO_POR_LA_INSTANCIA`:
-   `trio--events`, `slot-dudas`, `slot-resenas`, `slot-ico-calcetines`—: las otras 207 son invisibles.
-   ⚠️ **No se verifica con huella**: mover reglas toca el orden de CASCADA, que es otra medida. Y ojo al
-   reparto: **son el diseño de la instancia**, no del producto (§4.7.bis).
+   ✅✅ **T2c CERRADA: el CSS huérfano, podado y con TRINQUETE** (`#667`, 21-09; el detalle en la spec
+   hermana **§4.6.bis**). ❗ Las **208** clases de `#665` eran **17**: el anfitrión de `#666` sostiene 174.
+   Lo que sí había era **128 sin consumidor de nadie** —deuda vieja e invisible—: **119 podadas** (−20,3 KB
+   entre `landing.css`, `site.css` y `cajon.css`) con **huella 0 en 38 pantallas**, y las **9 del hero
+   vacío intactas** porque su CSS lo aparcó el owner en `#226`.
+   ❗❗❗ **Y la lección que hay que llevarse: un censo de CSS huérfano que busca el nombre LITERAL miente.**
+   Mintió tres veces (161 → 139 → 128) porque aquí una clase se compone de **tres formas** —concatenación
+   JS, concatenación PHP e **interpolación Blade dentro del atributo**—. La tercera la destapó un control
+   contra el DOM servido, que además enseñó que **el DOM solo tiene la rama de hoy**: `visit__dot--open`
+   salía viva y `--later` muerta porque el parque estaba cerrado.
+   ▶ Lo que queda encendido es `LandingCssHasNoOrphansTest`: mira **todas** las hojas —la guarda vieja solo
+   veía la fachada— con deuda declarada de **15** que **solo encoge**. Sus tres casos, vistos morder.
+
+   ▶▶ **LO SIGUIENTE: LA T3 · EL PANEL ADELGAZA** (spec hermana §4.6·3): los seis recursos que el producto
+   ya no manda —atracciones y el widget de ofertas salen del panel (`#631`, `[DECIDIDO owner]`: «oferta» =
+   hecho de precio)— y las secciones de texto. Después **T4** (`zones` pierde sus cuatro columnas muertas;
+   es migración, confirma el MAYOR) y **T5** (la v2.0.0).
 
    ▶ Medido y SIN tocar: `LandingAddonPresenter::unique()`, sin consumidor en producción desde `#583` y con
    su propio formato de dinero (ficha en `DEUDA.md`). Después, T3–T5 (spec hermana §4.6).
@@ -280,61 +283,30 @@ dueño es el carril de la web/reseñas—) ·
 - ⚠️ **Producción y staging NO se tocan**: `deploy.sh` los excluye del `rsync`, que es además lo que los
   salva de su `--delete`. Verificado en seco con control negativo.
 
-### ❗❗ Para el carril de la web (emisor: plataforma, 2026-09-21) — LA PORTADA YA NO ESTÁ EN `main`
-- ▶ **`resources/views/home.blade.php` NO EXISTE** (`#666`): es `instancia-playjump/web/portada.blade.php`,
-  tal cual, sin un byte de HTML cambiado (huella 0 en 38 pantallas, mismo DOM en es/en/fr). Con ella
-  `resources/views/` se queda **sin ninguna landing de cliente**: las nueve están fuera.
-- ▶ **Dónde se toca ahora el diseño de la portada**: en el paquete. El producto conserva
-  `anfitrion/portada.blade.php`, que es **su** portada —sin fachada, sin manchas, sin trío y **sin
-  vídeo**— y NO es donde se viste PlayJump. Las garantías que viajaron están en `paginas/home.md` del
-  paquete (su carpeta `docs/`, no la de aquí).
-- ⚠️ **Las 208 clases de `landing.css` y `site.css` que se quedaron sin consumidor siguen aquí** hasta la
-  T2c (`#665`): la guarda de huérfanos solo ve cuatro, así que **no te fíes de ella** para saber si algo
-  sigue vivo. Si tocas esas hojas, míralo en el paquete.
-- ⚠️ Tu T6 de copys no cambia: `lang/` sigue en el producto y la portada lo lee igual.
-
-### ❗ Para el carril de la web (emisor: plataforma, 2026-09-20) — EL ESPACIO DEL EURO (`#661`)
-- ⚠️ **He tocado `lang/{es,en,fr}/landing.php`, que es tuyo**: un carácter en `events.reserve_terms`. El
-  espacio antes del «€» pasa a DURO (`\u{00A0}`), porque «Señal de 50 €» **se podía partir de renglón**.
-  **El texto que se lee no cambia ni una letra** y la huella da 0 diferencias en la portada. Si prefieres
-  otra forma de escribirlo, dilo.
-- ✅ **Cerrado el defecto que te fiché el 18-09**: «9,60 €» ya no se parte a 390 px. La regla vive en
+### ❗❗ Para el carril de la WEB (emisor: plataforma, 18→21-09; los CUATRO avisos, fundidos)
+- ▶ **`resources/views/home.blade.php` NO EXISTE** (`#666`), como ya no existe `pages/`: las NUEVE vistas
+  viven en `instancia-playjump/web/`, tal cual y sin un byte de HTML cambiado (huella 0 en 38 pantallas,
+  mismo DOM en es/en/fr). **El diseño de la landing se toca ahí**, no en `main`. El producto conserva sus
+  `anfitrion/*.blade.php`, que son SU versión —sin fachada, sin manchas, sin trío y sin vídeo— y no son
+  donde se viste PlayJump. Las garantías que viajaron están en `paginas/*.md` del paquete.
+- ⚠️ **He tocado lo tuyo, y en tres sitios**: `lang/{es,en,fr}/landing.php` (un carácter: el espacio antes
+  del «€» pasa a DURO en `events.reserve_terms`, porque «Señal de 50 €» se partía de renglón; el texto no
+  cambia ni una letra), `components/site/rate-rail.blade.php` (el «antes» tachado pegaba el «€» a mano
+  mientras su hermano `--special` ya lo traía duro) y la promo de `#628` —tarifas, `/precios`, tres reglas
+  de `landing.css`, `RateCards`/`RateTable`—. Si prefieres otra forma de escribirlo, dilo.
+- ✅ **Cerrado el defecto que te fiché el 18-09**: «9,60 €» ya no se parte a 390 px; la regla vive en
   `Money::showcaseWithSymbol()` y recogió SEIS escrituras sueltas.
-- ⚠️ **Toqué también `components/site/rate-rail.blade.php`**: el «antes» tachado pegaba el «€» a mano con
-  espacio blando **mientras su hermano `--special` ya lo traía duro** — dos importes tachados en la misma
-  tarjeta que se partían distinto. Ahora los dos vienen escritos de `RateCards`.
-- ⚠️ Y en `#661`/`#662` he tocado más de lo tuyo en `home.blade.php`: el sello de la tarjeta de cumpleaños
-  y las dos estrellas. **Cero bytes de HTML movidos, huella 38/38 idéntica.** (Fundo aquí el aviso del
-  19-09 por `#651`, los separadores de la nota en inglés → `LocalNumber`: mismo asunto.)
-- ▶ **Medido y tuyo, sin tocar**: los importes que siguen partibles en `/` y `/normas` son **PROSA del
-  panel** («por 2 €», «un cargo de 10 €»), no los escribe el producto — y esa prosa sale en ESPAÑOL también
-  en en/fr.
-
-### Para el carril de la web (emisor: plataforma, 2026-09-20) — LAS OCHO PÁGINAS, MUDADAS
-**`resources/views/pages/` ya no existe** (`#654`→`#660`): las ocho viven en `instancias/playjump/web/` y
-el producto sirve su anfitrión mínimo. Medido en todas: mismo DOM en es/en/fr, huella 0/38, sitemap 11=11.
-De lo TUYO, por tanda:
-- **Las pruebas se partieron** (`#649`): `Contact/Rules/Bar/Attractions/Pricing/Birthday/ServicesPageTest`
-  afirman ya sobre los DATOS; su marcado vive en el anfitrión (`Anfitrion*Test`) o en `paginas/*.md` del
-  paquete, con la huella de juez. Las filas de `rediseno-desde-canvas.md` lo dicen todas.
-- **Arneses re-apuntados y PODADOS**: `mutar-{contacto,normas,bar,bandas,cabecera,precios,cumple}` apuntan
-  a los anfitriones; se retiraron ocho mutantes que habían perdido su sujeto en `#583`/`#585` y salían «NO
-  APLICADA». Nacen `mutar-atracciones.py` y `mutar-servicios.py`.
-- **Toqué `home.blade.php`** (`#657`): los dos `<img>` del mosaico llaman a `Attraction::imageUrl()`. Ni un
-  byte de HTML cambia, medido en tres idiomas.
-- ❗ **DOS defectos tuyos, vivos y arreglados**: la fecha de `/normas` decía «September de 2026» en inglés
-  (`#656`), y el «desde» de `/servicios` se escribía con el registro de TRANSACCIÓN —en inglés convivía
-  «from 14.95 €» con «12,00 €»— (`#660`). ⚠️ Este segundo **cambia lo que se ve**, con el owner decidiéndolo
-  y la medida delante: «12,00 €» → «12 €». Con él queda cerrada la tercera variante de `Money`.
-- ⚠️ **Guardas que cambian de sujeto, no de fuerza**: la mitad de `PageHeadTest` del abanico se prueba en
-  el componente de fachada; el corpus de `SectionHeadlineTest` y el censo de `SidebarSeamTest` miran los
-  anfitriones; y una aserción de `PublicPagesTest` (la cinta `C3`) se retira: el producto no puede
-  exigirle a una instalación que pinte una decoración. El material que solo pinta la instancia —`trio--page`
-  y las cinco clases de `brand-band`— queda declarado en `InstanceViews`.
-- ⚠️ **Medido y SIN tocar, tuyo**: `LandingAddonPresenter::unique()` no tiene consumidor en producción
-  desde `#583` y escribe el dinero a su manera (ficha en `DEUDA.md`) · `mutar-cabecera.py` tiene cuatro
-  mutantes que ya no aplican y `mutar-bandas.py` uno · el recuento de atracciones se escribe en dos
-  controladores (hoy iguales, y ahora con guarda que los compara).
+- ❗ **Y DOS defectos tuyos, vivos y arreglados**: la fecha de `/normas` decía «September de 2026» en inglés
+  (`#656`) y el «desde» de `/servicios` se escribía con el registro de TRANSACCIÓN —en inglés convivía «from
+  14.95 €» con «12,00 €»— (`#660`). ⚠️ El segundo **cambia lo que se ve** («12,00 €» → «12 €»), con el owner
+  decidiéndolo y la medida delante.
+- ⚠️ **Las clases CSS sin consumidor ya no son invisibles** (`#667`): se podaron 119 (−20,3 KB) y lo que
+  queda lo vigila `LandingCssHasNoOrphansTest`, con deuda declarada de 15. **Las 9 del hero vacío siguen
+  intactas** porque las aparcó el owner (`#226`). Si añades CSS, su consumidor tiene que nacer con él.
+- ▶ **Medido y TUYO, sin tocar**: los importes que siguen partibles en `/` y `/normas` son PROSA del panel
+  («por 2 €», «un cargo de 10 €»), y esa prosa sale en ESPAÑOL también en en/fr ·
+  `LandingAddonPresenter::unique()` no tiene consumidor desde `#583` y escribe el dinero a su manera ·
+  `mutar-cabecera.py` tiene cuatro mutantes que ya no aplican y `mutar-bandas.py` uno.
 
 ### Para TODOS los carriles (emisor: plataforma, 2026-09-19)
 - ⚠️ **`compose.yaml` cambió** (montaje `../instancias:/var/www/instancias` por `SEC-12`, y `name: jumpweb`):

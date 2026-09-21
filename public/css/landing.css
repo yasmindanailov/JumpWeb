@@ -1188,7 +1188,7 @@ img { display: block; max-width: 100%; }
    ▶ La clase NO se retira: la emiten las tarjetas de tarifa y su `:not(.is-focus)` la usa para el
    fantasma. Lo que se retira es el borde. */
 .btn--keyline { border: 0; }
-.btn--sm { padding: var(--sp-10) var(--sp-16); font-size: var(--fs-13); }
+
 /* Estado deshabilitado del sistema (antes inexistente: los botones con
    `wire:loading.attr="disabled"` conservaban el hover pleno). Atenúa y congela el
    hover por variante para que el botón "no responda" mientras carga. */
@@ -2582,7 +2582,6 @@ img { display: block; max-width: 100%; }
 .zone-tab.active { background: var(--zone-1); color: var(--on-brand); }
 
 
-
 /* ══ LA TARJETA DE ATRACCIÓN · foto + título + tag ═════════════════════════════════════════════
    `[DECIDIDO owner, 2026-08-31]` (`#302`): **se amplía y se queda en título y tag; fuera la edad y
    la descripción**. Medido antes: las 23 atracciones traen foto Y descripción (58 caracteres de
@@ -2602,11 +2601,9 @@ img { display: block; max-width: 100%; }
    corte se hace contra el borde de la columna, que no necesita escapar de ella. */
 
 
-
 /* ⚠️ Aquí vivía `@keyframes jj-shine-sweep`, el destello que cruzaba la foto de la atracción
    destacada del carrusel. Se va con su único consumidor (`#482`): una animación sin nadie que la
    invoque es una regla muerta con nombre propio, que es la peor de leer. */
-
 
 
 /* ══════════════════════════════════════════════════════════════════════════════════════════
@@ -2779,9 +2776,8 @@ img { display: block; max-width: 100%; }
   .rate-note__title { font-size: 26px; }
   .holidays__row { padding: var(--sp-14) 24px; }
 
-  .rate-page__birthdays { display: flex; align-items: center; gap: 24px; padding-top: var(--sp-20); }
-  .rate-page__birthdays-text { flex: 1; min-width: 0; }
-  .rate-page__birthdays-link { flex: none; }
+
+  
 }
 
 
@@ -2807,241 +2803,27 @@ img { display: block; max-width: 100%; }
   border-radius: var(--r-lg);
   padding: 60px; position: relative; overflow: hidden;
 }
-.events__title {
-  font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
-  font-size: clamp(44px, 6.4vw, 100px); line-height: 0.88; letter-spacing: -0.035em; margin: 0;
-}
-.events__row { display: grid; grid-template-columns: 1.4fr 1fr; gap: 60px; align-items: center; }
-.events__body { font-size: var(--fs-18); line-height: 1.5; max-width: 380px; }
-.events__list { list-style: none; padding: 0; margin: 24px 0 0; display: grid; gap: var(--sp-12); }
-.events__list li {
-  display: flex; gap: var(--sp-14); align-items: center; font-size: var(--fs-16); font-weight: 500;
-  padding: var(--sp-14) var(--sp-18); background: color-mix(in srgb, var(--sheet) 40%, transparent); border-radius: var(--r);
-  border: 1px solid color-mix(in srgb, var(--fg) 12%, transparent);
-}
-.events__list li::before {
-  content: ""; width: 8px; height: 8px; border-radius: 50%;
-  background: var(--fg); flex-shrink: 0;
-}
-.events__shape { position: absolute; pointer-events: none; background: var(--fg); }
+
 
 /* ---------- birthday RICH layout ---------- */
-.events--rich { padding: 56px clamp(28px, 5vw, 72px); }
-.events--rich .events__head {
-  display: flex; flex-direction: column; gap: var(--sp-18);
-  max-width: 820px; margin-bottom: 40px;
-}
-.events--rich .events__head .events__body {
-  font-size: var(--fs-18); line-height: 1.55; margin: 0;
-  max-width: 56ch;
-}
-.events__grid {
-  display: grid; grid-template-columns: 0.95fr 1.05fr; gap: 36px;
-  align-items: start;
-}
+
 
 /* polaroid photo (image-slot inside) */
-.events__photo {
-  position: relative;
-  background: var(--sheet);
-  padding: 18px 18px 56px;
-  transform: rotate(-2.5deg);
-  box-shadow: none;
-  transition:
-    transform var(--dur-cae) var(--ease-sale),
-    box-shadow var(--dur-cae) var(--ease-sale);
-  align-self: start;
-}
+
 /* La polaroid se ENDEREZA al pasar, pero ya no levita (tanda E, `#435`): el giro es el gesto; los 8 px
    de subida y la sombra difusa eran el «levanta» que el sistema retiró (`#323`). */
-.events__photo:hover {
-  transform: rotate(0deg);
-}
-.events__photo-frame {
-  width: 100%; aspect-ratio: 4 / 5;
-  background:
-    repeating-linear-gradient(135deg, var(--bg-soft) 0 14px, var(--bg) 14px 15px);
-  position: relative; overflow: hidden;
-}
-.events__photo-frame image-slot {
-  width: 100%; height: 100%; display: block;
-}
-.events__photo-cap {
-  position: absolute; left: 0; right: 0; bottom: 18px;
-  text-align: center;
-  font-family: var(--font-body); font-size: var(--fs-11);
-  text-transform: uppercase; letter-spacing: 0.14em;
-  color: var(--fg-mute);
-}
-.events__photo-tape {
-  position: absolute; top: -14px; left: 50%;
-  width: 130px; height: 28px;
-  transform: translateX(-50%) rotate(-3deg);
-  background: color-mix(in srgb, var(--sheet) 55%, transparent);
-  border: 1px dashed color-mix(in srgb, var(--fg) 25%, transparent);
-  z-index: 2;
-}
-.events__photo-sticker {
-  position: absolute; top: 20px; right: -22px;
-  background: var(--fg); color: var(--zone-1);
-  font-family: var(--font-body); font-size: var(--fs-11);
-  text-transform: uppercase; letter-spacing: 0.14em;
-  padding: var(--sp-6) var(--sp-14);
-  transform: rotate(8deg);
-  border-radius: var(--r-pill);
-  font-weight: 700;
-  box-shadow: none;
-  z-index: 3;
-}
+
 
 /* ticket stub — fills the polaroid's bottom-right empty corner */
-.events__ticket {
-  position: absolute;
-  bottom: -26px; right: -32px;
-  background: var(--bg-card);
-  padding: var(--sp-18) var(--sp-28) var(--sp-16);
-  border-radius: var(--r-md);
-  transform: rotate(5deg);
-  box-shadow: none;
-  display: flex; flex-direction: column; align-items: center;
-  z-index: 4;
-  text-align: center;
-  min-width: 140px;
-}
+
 /* perforation cutouts on left & right (mimic zone-1 bg) */
-.events__ticket::before,
-.events__ticket::after {
-  content: ""; position: absolute;
-  top: 50%; transform: translateY(-50%);
-  width: 14px; height: 14px;
-  background: var(--zone-1);
-  border-radius: 50%;
-}
-.events__ticket::before { left: -7px; }
-.events__ticket::after  { right: -7px; }
-.events__ticket-label {
-  font-size: var(--fs-10); text-transform: uppercase;
-  letter-spacing: 0.16em; font-weight: 700;
-  color: var(--fg-mute);
-}
-.events__ticket-num {
-  font-family: var(--font-display); font-stretch: 75%; font-weight: 800;
-  font-size: 42px; line-height: 1; letter-spacing: -0.025em;
-  color: var(--fg);
-  margin-top: var(--sp-4);
-}
-.events__ticket-sub {
-  font-size: var(--fs-11); font-weight: 600;
-  color: var(--fg-mute); margin-top: var(--sp-2);
-  text-transform: uppercase; letter-spacing: 0.12em;
-}
+
 
 /* pack side */
-.events__pack { display: flex; flex-direction: column; gap: 22px; align-items: stretch; }
-.events--rich .events__body {
-  font-size: var(--fs-18); line-height: 1.55; margin: 0;
-  max-width: 460px;
-}
-.events__pack-card {
-  background: var(--bg-card);
-  border-radius: var(--r-lg);
-  padding: 26px 28px 24px;
-  box-shadow: none;
-}
-.events__pack-head {
-  display: flex; align-items: baseline; justify-content: space-between;
-  gap: var(--sp-16);
-  margin-bottom: var(--sp-18);
-  padding-bottom: var(--sp-16);
-  border-bottom: 1px dashed color-mix(in srgb, var(--fg) 18%, transparent);
-}
-.events__pack-label {
-  display: block;
-  font-family: var(--font-body); font-size: var(--fs-11); font-weight: 700;
-  text-transform: uppercase; letter-spacing: 0.16em;
-  color: var(--fg-mute);
-}
-.events__pack-price {
-  display: inline-flex; align-items: baseline; gap: var(--sp-6);
-  white-space: nowrap;
-}
-.events__pack-from {
-  font-family: var(--font-body); font-size: var(--fs-10); font-weight: 600;
-  text-transform: uppercase; letter-spacing: 0.14em;
-  color: var(--fg-mute);
-}
-.events__pack-value {
-  font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
-  font-size: 28px; line-height: 1; letter-spacing: -0.02em;
-  color: var(--fg);
-}
-.events__pack-per {
-  font-family: var(--font-body); font-size: var(--fs-10); font-weight: 600;
-  text-transform: uppercase; letter-spacing: 0.14em;
-  color: var(--fg-mute);
-}
-.events__pack-card ul { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--sp-14); }
-.events__pack-card li {
-  display: flex; align-items: flex-start; gap: var(--sp-14);
-  color: var(--fg);
-  flex-wrap: wrap;
-}
-.events__feat-text { display: flex; flex-direction: column; gap: var(--sp-3); flex: 1; min-width: 0; }
-.events__feat-t { font-size: var(--fs-15); font-weight: 600; line-height: 1.2; }
-.events__feat-s { font-size: var(--fs-12); color: var(--fg-mute); line-height: 1.35; }
-.events__check {
-  width: 22px; height: 22px; border-radius: 50%;
-  background: var(--zone-1); color: var(--on-brand);
-  display: grid; place-items: center; flex-shrink: 0;
-  margin-top: var(--sp-2);
-}
+
 
 /* timeline */
-.events__timeline {
-  margin-top: 56px; padding-top: 32px;
-  border-top: 1px dashed color-mix(in srgb, var(--fg) 28%, transparent);
-  position: relative;
-}
-.events__timeline-label {
-  display: block;
-  font-family: var(--font-body); font-size: var(--fs-11);
-  text-transform: uppercase; letter-spacing: 0.16em;
-  color: color-mix(in srgb, var(--fg) 70%, transparent);
-  margin-bottom: var(--sp-28);
-}
-.events__timeline-steps {
-  list-style: none; padding: 0; margin: 0;
-  display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--sp-12);
-  position: relative;
-}
-.events__timeline-steps::before {
-  content: "";
-  position: absolute;
-  top: 11px; left: 10%; right: 10%; height: 2px;
-  background: color-mix(in srgb, var(--fg) 18%, transparent);
-  z-index: 0;
-}
-.events__timeline-steps li {
-  display: flex; flex-direction: column; align-items: center; gap: var(--sp-8);
-  position: relative; z-index: 1;
-  text-align: center;
-}
-.events__timeline-dot {
-  width: 22px; height: 22px; border-radius: 50%;
-  background: var(--fg);
-  border: 5px solid var(--zone-1);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--fg) 18%, transparent);
-}
-.events__timeline-time {
-  font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
-  font-size: 26px; letter-spacing: -0.02em; line-height: 1;
-  margin-top: var(--sp-4);
-}
-.events__timeline-name {
-  font-family: var(--font-body); font-size: var(--fs-11);
-  text-transform: uppercase; letter-spacing: 0.12em;
-  color: color-mix(in srgb, var(--fg) 72%, transparent);
-}
+
 
 /* ---------- ubicación ----------
    ⚠️ Aquí vivían `.info__grid`, `.info-card`, `.info-card h3` y `.hours` — la rejilla de DOS
@@ -3326,14 +3108,7 @@ img { display: block; max-width: 100%; }
   box-shadow: var(--shadow-float);
   display: flex; flex-direction: column; gap: var(--sp-10);
 }
-.rule__icon {
-  width: 40px; height: 40px; border-radius: var(--r-sm);
-  background: var(--bg-soft); color: var(--paper-fg);
-  display: grid; place-items: center; margin-bottom: var(--sp-6);
-  font-family: var(--font-display); font-weight: 800; font-size: var(--fs-16);
-}
-.rule__name { font-size: var(--fs-18); font-weight: 600; line-height: 1.2; }
-.rule__desc { font-size: var(--fs-13); color: var(--fg-mute); line-height: 1.5; }
+
 
 /* ══════════════════════════════════════════════════════════════════════════════════════════
    SECCIÓN 05 · «ANTES DE VENIR» · el registro ES el QR
@@ -3743,7 +3518,7 @@ img { display: block; max-width: 100%; }
    ⚠️ **`.rev__arrow` ya no tiene marcado que lo emita** —las flechas de «Reseñas» se retiraron en
    `#494`, los puntos hacen su trabajo— pero la regla se queda: la mide `scripts/comparar-seccion.mjs`
    contra el artboard y es la fuente de estos números. */
-.rev__arrow,
+
 .rail-arrow {
   flex: none; width: 48px; height: 48px; padding: 0;
   display: flex; align-items: center; justify-content: center;
@@ -3759,9 +3534,9 @@ img { display: block; max-width: 100%; }
    `#303`, y la auditoría de hovers de `#435`: los catorce públicos responden y ninguno salta).
    ⚠️ `:not(:disabled)` o la flecha del extremo se encendería al pasar por encima diciendo que lleva
    a algún sitio — y no lleva. */
-.rev__arrow:hover:not(:disabled),
+
 .rail-arrow:hover:not(:disabled) { border-color: var(--fg); color: var(--fg); }
-.rev__arrow:disabled,
+
 .rail-arrow:disabled { border-color: var(--line); color: var(--fg-mute); cursor: default; }
 .rev__dots { display: flex; }
 /* 44 × 48: el alto es el del sistema y el ancho es el del artboard. El punto que se ve mide 10. */
@@ -4285,9 +4060,7 @@ a.rev-score__src { display: inline-flex; align-items: center; min-height: 48px; 
 /* ---------- reveal on scroll ---------- */
 .reveal { opacity: 0; transform: translateY(28px); transition: opacity var(--dur-espera) var(--ease-sale), transform var(--dur-espera) var(--ease-sale); }
 .reveal.in { opacity: 1; transform: none; }
-.reveal--d1 { transition-delay: var(--dur-toque); }
-.reveal--d2 { transition-delay: var(--dur-toque); }
-.reveal--d3 { transition-delay: var(--dur-estado); }
+
 
 /* ====================================================================
    INTERACTION STATES — unified hover / active / focus / touch
@@ -4341,7 +4114,7 @@ select:focus-visible {
   /* 200 y no 240: apilado, el mapa ya no tiene que igualar el alto de la columna de datos, y las
      tres pegatinas cuestan ~100 px de chrome que hay que devolver por algún lado. A 200 px la
      chincheta y las dos vías principales siguen leyéndose (comprobado a 390). */
-  .visit-card--map { min-height: 200px; }
+  
   /* ⚠️ Aquí colapsaban las dos columnas de la sección de NORMAS y se apagaba su `sticky`. Se han
      ido con la sección (`#485`), que la sustituye la 05 «Antes de venir» — y aquélla nace
      mobile-first, así que no necesita ninguna regla de colapso. */
@@ -4349,8 +4122,8 @@ select:focus-visible {
   /* ⚠️ Aquí colapsaba `.faq` de `1fr 2fr` a una columna. Se fue con esa rejilla (`#488`): hoy
      `.faq` es la TARJETA del acordeón —no una rejilla— y quien reparte cabecera y acordeón es
      `.faq-sec`, que nace en una columna y solo se abre en `min-width: 1024px`. */
-  .events__row { grid-template-columns: 1fr; }
-  .foot__grid { grid-template-columns: 1fr 1fr; }
+  
+  
 }
 
 @media (max-width: 768px) {
@@ -4381,30 +4154,26 @@ select:focus-visible {
   .zone-tab { flex: 1; text-align: center; }
   /* events */
   .events { padding: 36px 24px; border-radius: var(--r); }
-  .events__title { font-size: clamp(44px, 13vw, 80px); }
-  .events__body { font-size: var(--fs-16); }
-  .events--rich { padding: 32px 22px; }
-  .events--rich .events__head { margin-bottom: var(--sp-28); }
-  .events__grid { grid-template-columns: 1fr; gap: var(--sp-28); }
-  .events__photo { transform: rotate(-1.5deg); align-self: center; max-width: 340px; width: 100%; margin: 0 auto; }
-  .events__photo-sticker { right: -10px; top: 12px; }
-  .events__ticket { bottom: -20px; right: -12px; min-width: 120px; padding: 14px 22px 12px; }
-  .events__ticket-num { font-size: 32px; }
-  .events--rich .events__head .events__body { font-size: var(--fs-16); }
-  .events__pack-card { padding: 22px 22px 20px; }
-  .events__timeline { margin-top: 36px; padding-top: 24px; }
-  .events__timeline-label { margin-bottom: var(--sp-20); }
-  .events__timeline-steps { gap: var(--sp-6); }
-  .events__timeline-dot { width: 16px; height: 16px; border-width: 4px; }
-  .events__timeline-steps::before { top: 8px; left: 6%; right: 6%; }
-  .events__timeline-time { font-size: var(--fs-16); }
-  .events__timeline-name { font-size: var(--fs-10); letter-spacing: 0.1em; }
+
+
+  
+
+
+  
+
+
+  
+
+
+  
+  
+  
   /* ubicación — `.info-card` y su `h3` se fueron con «Visítanos» (`#307`) y `.map-card` con el mapa
      de `/contacto` (`#535`): aquí no queda nada de ese bloque. */
   /* rules */
   .rules-grid { grid-template-columns: 1fr; }
   /* gallery */
-  .polaroid { flex: 0 0 200px; padding: 10px 10px 30px; }
+  
   /* ⚠️ Aquí `.faq` bajaba su `gap` y `.faq__q` su talla a 18. Las dos se fueron con la rejilla
      vieja (`#488`): la tarjeta no tiene `gap`, y 18 dejó de ser el valor de móvil para ser **el
      valor del componente en las dos superficies**, escrito una sola vez en su base. */
@@ -4413,9 +4182,8 @@ select:focus-visible {
   .reserve h2 { font-size: clamp(72px, 22vw, 140px); }
   .reserve p { font-size: var(--fs-16); margin: 20px auto 28px; }
   /* footer */
-  .foot__grid { grid-template-columns: 1fr; gap: var(--sp-28); }
-  .foot__brand { font-size: 44px; }
-  .foot__bottom { flex-direction: column; align-items: flex-start; gap: var(--sp-12); }
+
+
   /* ⚠️ **`#231` p8 puso «configuración de cookies» en su PROPIA línea a ancho completo**, y eso
      lo deshace `#264`: en una tira que se desliza no hay renglones que repartir, y una línea
      propia por debajo del carril volvería a meter el alto que la tira acaba de ahorrar. El botón
@@ -4440,11 +4208,8 @@ select:focus-visible {
   .nav__brand-row { font-size: var(--fs-18); } /* #231 p9: logo grande pero ajustado al ancho mínimo */
   .hero__stage { aspect-ratio: 4 / 5; }
   .hero__title--onvideo { font-size: clamp(48px, 19vw, 80px); }
-  .polaroid { flex: 0 0 168px; }
+  
 }
-
-
-
 
 
 /* ---- 03 · PROCESO ---- */

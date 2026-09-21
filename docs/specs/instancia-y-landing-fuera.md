@@ -401,15 +401,68 @@ de §1.4 es el instrumento, y queda como guarda.
 2. **T2 · el paquete de la instancia**: repo desde plantilla ✅ (T2a, `#647`), la landing actual mudada tal
    cual (vía B) vista a vista —✅ las OCHO de `pages/`, que ya no existe (`#654`→`#660`); queda `home`—
    y el sitemap comparado.
-2.bis. **T2c · el CSS de la landing se muda con ella** (`#665`, `[DECIDIDO owner]`). ❗ **Nace porque faltaba**:
-   al mudar `home` quedan **208 clases sin consumidor** en el producto y la guarda de huérfanos solo ve una,
-   así que 207 serían deuda invisible. Ninguna de las tandas de abajo contemplaba el CSS, aunque la lista de
-   material declarado prometía vaciarse con ellas. ⚠️ Va **aparte de la T2** a propósito: mudar marcado se
-   verifica con la HUELLA y mudar reglas toca el ORDEN DE CASCADA, que es otra medida y otro riesgo.
-   ⚠️ Y **no vale `client.css`**: su README dice «tokens, no reglas». Hace falta mecanismo.
+2.bis. **T2c ✅ · el CSS** (`#665` la abrió, `#667` la cierra). Nació para mudar **208 clases sin
+   consumidor** al paquete; la medida con el anfitrión real dijo otra cosa y la tanda cambió de forma. El
+   detalle, en **§4.6.bis**. ⚠️ El mecanismo de «reglas por instancia» **no se construye**: con 17 clases no
+   lo justifica, y la vía A —el destino (§3)— se las lleva con sus páginas.
 3. **T3 · el panel adelgaza**: los seis recursos y las secciones de texto.
 4. **T4 · `zones` adelgaza** y cae la última marca viva.
 5. **T5 · v2.0.0**: el contrato de instancia cambia, así que la versión sube de MAYOR.
+
+### 4.6.bis · La T2c, medida: 208 huérfanas eran 17 (`#667`, 2026-09-21)
+
+**La premisa de `#665` había caducado, y por lo mismo que la de `#664`**: aquellas 208 clases se midieron
+apuntando el controlador a un anfitrión de **nueve líneas**. El anfitrión real de `#666` **sostiene 174 de
+ellas** —y la instancia pinta esas mismas 174 en su portada—, así que no eran deuda: eran mecanismo
+compartido. Medido sobre las **1.540** clases de `landing.css` + `site.css`:
+
+| | Clases |
+|---|---|
+| Las pinta **solo el producto** | 891 |
+| Las pintan **los dos** | 471 |
+| Las pinta **solo la instancia** | **17** → declaradas en `MATERIAL_CONSUMIDO_POR_LA_INSTANCIA` |
+| No las pinta **nadie** | **128** → 119 podadas, 9 aparcadas por el owner |
+
+❗❗❗ **UN CENSO DE CSS HUÉRFANO QUE BUSCA EL NOMBRE LITERAL MIENTE, Y AQUÍ MINTIÓ TRES VECES** (161 → 139
+→ 128). En esta casa una clase se compone de **tres formas**, y cada una costó una pasada:
+1. **concatenación en JS/Vue** — `:class="'orders__status--' + row.status"` (toda la familia `.orders`);
+2. **concatenación en PHP** — `'jj-spinner--'.$size`;
+3. **interpolación Blade DENTRO del atributo** — `class="visit__dot--{{ $heroStatus['face'] }}"`.
+▶ **La tercera la destapó un control contra el DOM servido**, no el escaneo: de las «muertas», seis
+aparecían en el HTML real. Y enseñó algo más — el control veía `visit__dot--open` y no `visit__dot--later`
+**porque a esa hora el parque estaba cerrado**. *Una medida que solo ve la rama de hoy no ve las otras*, así
+que las familias con modificador compuesto se quedan ENTERAS.
+
+▶ **La poda, con dos controles antes de aplicarla.** El primero —ninguna clase viva puede desaparecer—
+salió ROJO con tres, y al abrirlo apareció la causa: **12 comentarios de esas hojas llevan llaves dentro**
+(citan CSS en la prosa) y desincronizaban el parser. Es la trampa que `ReadsSiteStylesheets` ya tenía
+escrita: *los comentarios se BLANQUEAN conservando longitud, no se borran*. Reescrita así, el control salió
+verde (0 vivas perdidas, llaves equilibradas) y el resultado fue **−9,9 KB en `landing.css`, −8,0 en
+`site.css` y −2,4 en `cajon.css`** —que es generada y se rehace—, con **huella 0 diferencias en 38
+pantallas**.
+
+❗❗ **Y LA PODA DESPERTÓ DOS GUARDAS QUE VIGILABAN REGLAS SIN SUJETO.** Ninguna se rompió: las dos llevaban
+tiempo mirando CSS que ya no pintaba nada.
+- `TagSystemTest` devolvió `.tag--tinta` en el mismo minuto: es una **variante del SISTEMA** de etiquetas,
+  declarada junto a las otras tres tenga o no consumidor. *Un sistema declara sus variantes antes de que
+  existan sus consumidores; eso no es una regla muerta.* Vuelve a la hoja y entra en la deuda declarada.
+- `SemanticFillTextTest` exigía **cinco** importes «pendientes» y dos eran marcado del cajón **Livewire**
+  que la Fase 4 retiró. Se recortó a tres **tras comprobar que esos tres los pinta el cajón de hoy**: la
+  regla —lo pendiente va en tinta, el color es para lo ya cobrado— conserva sus sujetos vivos.
+
+▶ **El TRINQUETE** (`LandingCssHasNoOrphansTest`) es lo que queda encendido: mira **todo** el CSS de la
+landing —la guarda que había solo veía las familias de FACHADA, que es exactamente lo que `#665` llamó «la
+deuda no es la lista, es lo que la lista no mira»— con una **deuda declarada de 15 entradas, cada una con
+su motivo, que solo puede ENCOGER**. Sus tres casos se vieron matar a su mutante, y uno de ellos vigila lo
+que suele pudrir una línea base: que no queden en ella entradas **ya resueltas**.
+⚠️ Usa el trait compartido `ReadsSiteStylesheets` en vez de releer las hojas: *cuando algo está en dos
+sitios, la salida no es retirarlo de uno, es que haya UNA definición* — y así hereda sus tres trampas ya
+pagadas (`client.css` fuera por ser de una instalación, `cajon.css` fuera por ser copia generada).
+
+▶ **Lo que NO se hizo, y con su motivo**: el mecanismo de «hoja de reglas por instancia». Con 17 clases no
+se justifica una hoja más en el `<head>` de todas las páginas, y **profundizaría en la vía B** cuando §3
+dice que la vía A es el destino. Esas 17 siguen en el producto, declaradas, hasta que la vía A se lleve las
+hojas con sus páginas.
 
 ## 5. Impacto en invariantes
 

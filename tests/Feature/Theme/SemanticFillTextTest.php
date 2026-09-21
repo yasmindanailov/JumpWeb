@@ -156,12 +156,20 @@ class SemanticFillTextTest extends TestCase
      */
     public function test_only_what_is_already_collected_wears_the_money_role(): void
     {
+        /*
+         * ⚠️⚠️ **Eran CINCO y son TRES desde `#667`, y no es que la regla se relaje**: `.orders__gate-amount`
+         * y `.orders__refund-amount` eran marcado del cajón **Livewire**, que la Fase 4 retiró. Su CSS se
+         * quedó huérfano en `site.css` y esta guarda lo seguía vigilando: *vigilaba una regla que ya no
+         * pintaba nada*. La poda de huérfanas de la T2c se lo llevó y este caso lo destapó — no se rompió,
+         * se despertó.
+         * ▶ **Comprobado que no pierde fuerza antes de recortar la lista**: los tres que quedan SÍ los
+         * pinta el cajón de hoy (`PurchaseCard.vue`), así que la regla —lo pendiente y lo devuelto van en
+         * tinta, el color es para lo ya cobrado— conserva sus tres sujetos vivos.
+         */
         $pendientes = [
             '.orders__balance--pay_at_park',
             '.orders__balance--refund_at_park',
-            '.orders__gate-amount',
             '.orders__mov--neg',
-            '.orders__refund-amount',
         ];
 
         // ⚠️ Se busca la regla POR SU SELECTOR y no por clave exacta: varias viven en un selector
