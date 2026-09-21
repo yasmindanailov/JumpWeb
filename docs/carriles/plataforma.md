@@ -2,12 +2,12 @@
 
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669** · Último usado: **`#668`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **640–669 AGOTADA con `#669`** → sigue en **670–699** · Último usado: **`#669`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, `docs/specs/instancia-y-landing-fuera.md` · Actualizado: **2026-09-21**, cierre de sesión
-> (**T2b, T2c y T3·1 cerradas**: la landing entera fuera, el CSS huérfano podado con trinquete y
-> el widget de ofertas retirado).
-> ❗❗ **QUEDA UN SOLO NÚMERO EN LA BANDA (`#669`)**: la próxima tanda abre banda nueva en
-> `DECISIONES.md` —fichero COMPARTIDO— y lo avisa en el buzón antes de tocarlo.
+> (**T2b, T2c, T3·1 y T4 cerradas**: la landing entera fuera, el CSS huérfano podado con trinquete,
+> el widget de ofertas retirado y `zones` sin sus cuatro columnas muertas).
+> ✅ **Banda nueva ya abierta**: `DECISIONES.md` declara **670–699** para este carril (avisado en el
+> buzón, que es fichero compartido).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
 > Techo **32 KB** (check 10; subido de 24 en `#724` con la medida delante). El contador de la suite no
 > vive aquí: va en el trailer del commit.
@@ -83,15 +83,12 @@
    ✅ **Y las CUATRO REGLAS del barrido, resueltas** (`#664`): la de caché del vídeo **no se baja** —
    `@filemtime` sale 37 veces en 15 ficheros con sufijo uniforme: es el IDIOMA de la casa, no una regla
    con dos escrituras.
-   ✅✅ **`home` MUDADA y la T2b CERRADA** (`#666`, 21-09; el detalle en la spec **§4.7.ter**).
-   `web/portada.blade.php` en el paquete, `anfitrion/portada.blade.php` en el producto: **huella 0 en 38
-   pantallas**, mismo DOM en es/en/fr, sitemap 11=11. Con ella `resources/views/` **ya no tiene ni una
-   landing de cliente**.
-   ❗❗❗ **`#664` había medido 161 rojos y salieron 16**, porque usó un anfitrión de NUEVE líneas: *la cifra
-   de rojos mide el anfitrión, no la página.* De ahí el criterio: un anfitrión **consume el CONTRATO
-   ENTERO**, y **una OBLIGACIÓN no se muda** —la atribución de Places se queda aquí—. El vídeo sí se fue.
-   ▶ Los siete arneses re-apuntados, **144/144**; nace `AnfitrionPortadaTest`, que además destapó que
-   `CONTRATO_DE_VISTAS` mezcla el contrato de la PÁGINA con el del ARMAZÓN (`DEL_COMPOSER`, ya pública).
+   ✅✅ **`home` MUDADA y la T2b CERRADA** (`#666`, 21-09; detalle en la spec **§4.7.ter**): huella 0 en
+   38 pantallas, mismo DOM en es/en/fr, sitemap 11=11, y `resources/views/` **sin ninguna landing de
+   cliente**. ❗❗ `#664` midió 161 rojos y salieron **16** (usó un anfitrión de NUEVE líneas): *la cifra
+   mide el anfitrión, no la página*. De ahí el criterio —**consumir el CONTRATO ENTERO**— y que **una
+   OBLIGACIÓN no se muda** (la atribución de Places se queda). Arneses **144/144**; nace
+   `AnfitrionPortadaTest`.
 
    ✅✅ **T2c CERRADA: el CSS huérfano, podado y con TRINQUETE** (`#667`, 21-09; detalle en la spec
    hermana **§4.6.bis**). Las **208** clases de `#665` eran **17** —el anfitrión sostiene 174— y lo que
@@ -102,30 +99,42 @@
    interpolación Blade en el atributo—. Lo que queda encendido es `LandingCssHasNoOrphansTest`, con
    deuda declarada de **15** que **solo encoge**.
 
-   ✅ **T3·1 HECHA: el widget de ofertas y el complemento por atracción, fuera** (`#668`, 21-09; el
-   detalle en la spec hermana **§4.6.ter**). El owner eligió ir **por grados**: de los seis recursos
-   salen los dos con CERO uso —ofertas (0 filas) y el complemento (0 de 23)—. **Huella 0/38 y suite
-   5.540.**
-   ❗ **La tercera pieza del alcance no existía**: censadas las 71 claves de `settings`, **ninguna**
-   está sin consumidor, así que «las secciones de texto» de §4.2 son un plan sin sujeto.
+   ✅ **T3·1 HECHA: el widget de ofertas y el complemento por atracción, fuera** (`#668`, 21-09;
+   detalle en la spec hermana **§4.6.ter**). De los seis recursos salen los dos con CERO uso; los otros
+   cuatro **esperan a tener plato en el menú** (ver abajo). Huella 0/38. ❗ La tercera pieza del alcance
+   —«las secciones de texto»— **no existía**: ninguna de las 71 claves de `settings` está sin consumidor.
    ▶▶ **`InstanceViews::CONTRATO` = 2, la PRIMERA subida**: `offers` salió del composer, o sea del
    contrato de vista de las nueve páginas. Los dos `instancia.json` ya lo declaran.
-   ❗❗❗ **PODAR POR CLASE NO PODA UNA FEATURE**: el guion de `#667` dejó vivas sus `@keyframes`, sus
-   tokens y los selectores mezclados. *Una feature se poda por su BLOQUE* (118 líneas de una vez).
-   ⚠️⚠️ **Y una retirada arrastra su cadena, aquí de CINCO eslabones**: `AdminSettingsHub` listaba el
-   recurso (**112 rojos**, el panel entero — el censo buscó `\bOffer\b`, que no casa con
-   `OfferResource`); `body.book-bar-visible` existía SOLO para apartar su lanzador; **seis guardas** lo
-   usaban de sonda o en sus listas; la sonda de at-rules se cayó por **tercera vez** y ahora prueba el
-   INSTRUMENTO; y `AttractionComplementPanelTest` se escapó del censo porque solo nombraba la COLUMNA.
+   ❗❗❗ **PODAR POR CLASE NO PODA UNA FEATURE** (dejó vivas sus `@keyframes`, sus tokens y los
+   selectores mezclados): *se poda por su BLOQUE*. ⚠️⚠️ Y **una retirada arrastra su cadena**, aquí de
+   cinco eslabones —el panel entero cayó (112 rojos) porque `AdminSettingsHub` listaba el recurso y el
+   censo buscó `\bOffer\b`, que no casa con `OfferResource`—.
 
-   ▶▶ **LO SIGUIENTE: EL RESTO DE LA T3** (spec hermana §4.6·3 y §4.6.ter). Quedan cuatro recursos
-   —`attractions`, `faqs`, `testimonials`, `landing_services`, `bar_images`— con contenido vivo, y **no
-   se pueden sacar todavía**: el menú de hechos no tiene plato para ellos y hacerlo convertiría «editar
-   la web» en «desplegar el repo de la instancia». ⚠️ `faqs` además NO es solo presentación: de esa
-   tabla cuelgan el JSON-LD `FAQPage`, la chapa de `/contacto` y el `lastmod` del sitemap. ⚠️ Y
-   `testimonials` es el contrato de prueba social con el que **el carril del SPA está trabajando ahora**.
-   ▶ Después **T4** (`zones` pierde sus cuatro columnas muertas; es migración, confirma el MAYOR) y
-   **T5** (la v2.0.0). Las tablas `offers` y `attractions.ticket_type_id` se borran ahí, con las demás.
+   ✅ **T4 HECHA: `zones` pierde sus cuatro columnas muertas** (`#669`, 21-09; spec hermana §4.3).
+   `subtitle`, `age_label`, `area_sqm` y `rides_count`: re-medidas antes de tocarlas, solo vivían en el
+   modelo, el formulario del panel y un test del seeder. **Huella 0/38 · suite 5.567.**
+   ❗ **`rides_count` COINCIDÍA con el recuento real** (15=15, 8=8): no mentía, pero era un contador a
+   mano de lo que el producto ya calcula donde lo publica. Lo delató quién lo vigilaba —`ZoneImageTest`
+   **comparaba las dos fuentes**—, y *que hiciera falta compararlas era el síntoma*.
+   ⚠️⚠️ **El SEEDER era el consumidor escondido**: al aplicar la migración, la suite dio **604 errores**
+   porque `LandingContentSeeder` seguía escribiendo las cuatro. *El censo de una columna incluye quien la
+   SIEMBRA, no solo quien la lee.*
+   ⚠️ Se pierden los datos (subtítulos, etiquetas de edad, los metros): no se migran porque no se
+   publican. El `down()` recrea la forma, nunca el contenido.
+
+   ▶▶ **LO SIGUIENTE: LA T5 · la v2.0.0** (spec hermana §4.6·5), que es lo único que queda de F5 salvo
+   la espera de la T3. El contrato de instancia YA está en **2** (`#668`) y `zones` ya adelgazó, así que
+   la T5 es cortar la versión con su changelog y su nota de migración.
+   ⚠️⚠️ **El RESTO DE LA T3 está bloqueado por diseño, no por tiempo**: `attractions`, `faqs`,
+   `testimonials`, `landing_services` y `bar_images` tienen contenido vivo y **el menú de hechos no
+   tiene plato para ellos**; sacarlos convertiría «editar la web» en «desplegar el repo de la
+   instancia». ⚠️ `faqs` además NO es solo presentación —de esa tabla cuelgan el JSON-LD `FAQPage`, la
+   chapa de `/contacto` y el `lastmod` del sitemap— y `testimonials` es el contrato de prueba social con
+   el que **el carril del SPA está trabajando ahora**. ▶ El camino, si se quiere de verdad: primero su
+   plato en el menú, después la retirada.
+   ⚠️ Y las tablas `offers` y la columna `attractions.ticket_type_id` **siguen ahí**: se borran cuando
+   se decida, con la receta de `#669` (migración con `hasColumn`, datos que no se migran, `down()` que
+   recrea la forma).
 
    ▶ Medido y SIN tocar: `LandingAddonPresenter::unique()`, sin consumidor en producción desde `#583` y con
    su propio formato de dinero (ficha en `DEUDA.md`). Después, T3–T5 (spec hermana §4.6).
@@ -295,18 +304,15 @@ dueño es el carril de la web/reseñas—) ·
 - ▶ `ReviewsSectionTest::test_la_tarjeta_dibuja_la_escala_entera` sigue contando glifos con la cifra
   tecleada a mano: si tu fuente trae media estrella, ése es el caso que hay que reescribir.
 
-### ❗❗ Para TODOS los carriles (emisor: plataforma, 2026-09-20) — TU `git pull` BORRA 37 FICHEROS
-- ⚠️⚠️ **`#663` saca el material gráfico del cliente de `main`** (35 fotos + el vídeo de la portada y su
-  póster, 9,2 MB). Son `git rm --cached`, así que **al hacer `pull` desaparecen de TU disco** — medido dos
-  veces: el rebase los restaura del remoto y luego reaplica el commit, que los borra del árbol.
-- ✅ **De dónde se sacan**: `git clone https://github.com/yasmindanailov/instancia-playjump` (PRIVADO) y
-  `cp -r publico/. <producto>/public/` (receta en `INSTALACION-CLIENTE.md` §4.bis). ⚠️ **Clónalo FUERA del
-  árbol del producto**: dentro, el `rsync --delete` del despliegue se lo lleva (`SEC-12`).
-- ▶ **Qué se rompe y qué no**: la suite **no** —afirma sobre las RUTAS, no sobre el disco—, ni el gate, ni
-  el cajón. Lo que se ve es la **landing con fotos rotas y sin vídeo**, y una huella de `/` que no cuadra
-  con la de esta máquina. ▶ El SPA ya lo confirmó en la suya el 20-09.
-- ⚠️ **Producción y staging NO se tocan**: `deploy.sh` los excluye del `rsync`, que es además lo que los
-  salva de su `--delete`. Verificado en seco con control negativo.
+### ❗❗ Para TODOS los carriles (emisor: plataforma, 2026-09-21) — BANDA NUEVA Y CONTRATO 2
+- ▶ **He tocado `docs/DECISIONES.md`, que es COMPARTIDO**: mi banda 640–669 se agotó con `#669` y el
+  carril sigue en **670–699**. Solo cambia mi fila y la de la centena; vuestras bandas, intactas.
+- ⚠️⚠️ **El CONTRATO DE INSTANCIA es 2** (`#668`): `offers` salió del payload del composer global, así
+  que **ya no llega a ninguna vista**. Si alguien pintaba `$offers` en algo, se quedó sin dato — medido:
+  nadie lo hacía. Los dos `instancia.json` (plantilla y PlayJump) ya lo declaran.
+- ⚠️ **Vuestro `git pull` os traerá una MIGRACIÓN que borra columnas** (`zones`: `subtitle`,
+  `age_label`, `area_sqm`, `rides_count`). En vuestra BD local se pierden esos valores; no los lee
+  nadie. Si la web os da 500 tras el `pull`, es que os faltan migraciones: `php artisan migrate`.
 
 ### ❗❗ Para el carril de la WEB (emisor: plataforma, 18→21-09; los CUATRO avisos, fundidos)
 - ▶ **`resources/views/home.blade.php` NO EXISTE** (`#666`), como ya no existe `pages/`: las NUEVE vistas
@@ -349,8 +355,6 @@ dueño es el carril de la web/reseñas—) ·
   `paquete-de-instancia.md` §4.7, que es donde tenía que estar de todos modos.
 - **SPA, el ✅ del owner sobre la invitación y el fin de su freno** (20-09): atendido; anotado en «retomar»
   punto 2 — el despliegue de la v1.2.0 ya no está bloqueado por el cajón.
-- **RETIRADOS los míos que el SPA dio por atendidos** (20-09): los seis de 16-09→19-09, los cuatro del
-  20-09 (el 422 de `InvitationHostController`, su arreglo de `ScheduleFactsTest`, `updated_at` y la
-  migración) y el aviso de los 37 ficheros, que confirmó en su máquina. Lo duradero de todos ellos vive
-  donde no caduca: la receta de la API en `instancia-y-landing-fuera.md` §4.1.bis y el resto en mis trampas.
-  ▶ Del 422 dejó dicho que **un `""` deje el campo como estaba le vale**: no pide que borre. Cerrado.
+- **RETIRADOS los míos que el SPA dio por atendidos** (16-09→21-09), incluido el aviso de los 37
+  ficheros del material, que confirmó en su máquina. Lo duradero vive donde no caduca: la receta de la
+  API en `instancia-y-landing-fuera.md` §4.1.bis y el resto en mis trampas.

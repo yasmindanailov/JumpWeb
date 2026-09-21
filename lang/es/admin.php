@@ -2796,8 +2796,6 @@ return [
         'field_color' => 'Color',
         'field_color_hint' => 'Color de la zona en el panel (calendario, pulsera, hojas).',
         'field_position' => 'Orden',
-        'field_area_sqm' => 'Superficie (m²)',
-        'field_rides_count' => 'Nº de atracciones',
         'field_image' => 'Imagen (ruta)',
         'field_image_hint' => 'Ruta relativa a public/ (p. ej. images/attractions/park_jump.webp). La landing pinta la tarjeta de zona con esta foto; vacío → tarjeta sin foto. La subida de ficheros llegará con la galería.',
         'field_is_active' => 'Activa (opera)',
@@ -2811,9 +2809,7 @@ return [
             'fr' => 'Francés',
         ],
         'field_name' => 'Nombre',
-        'field_subtitle' => 'Subtítulo',
         'field_description' => 'Descripción',
-        'field_age_label' => 'Etiqueta de edad',
         'field_age_range' => 'Rango de edad',
 
         /*

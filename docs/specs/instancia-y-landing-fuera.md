@@ -379,10 +379,27 @@ Salen los seis recursos de §1.6 y las secciones de texto de la landing y del ba
 operativos (`producto-e-instancias.md` §4.3), y **`ParkRules` y `Pages`**, porque normas y los cinco
 documentos legales los consume la landing POR LA API: son hechos, no presentación.
 
-### 4.3 `zones` adelgaza
+### 4.3 `zones` adelgaza — ✅ HECHA (`#669`, 2026-09-21)
 
-Los cuatro campos muertos de §1.7 se retiran con su columna. La presentación (`color`, `accent`, `image`)
-sigue el mismo camino que la landing; los hechos (alturas, edades, descripción) salen por el menú.
+Los cuatro campos muertos de §1.7 se retiraron con su columna (`subtitle`, `age_label`, `area_sqm`,
+`rides_count`): re-medido antes de tocarlos, **solo vivían en el modelo, en el formulario del panel y en
+un test del seeder**. La presentación (`color`, `accent`, `image`) sigue el mismo camino que la landing;
+los hechos (alturas, edades, descripción) salen por el menú.
+
+❗❗ **`rides_count` es el caso que conviene recordar**: coincidía con el recuento REAL de atracciones
+activas (15=15, 8=8), así que **no mentía**. Era un contador a mano de algo que el producto ya calcula
+donde lo publica —`ridesTotal` en la portada y la misma cuenta en `AttractionsController`—. *Un contador
+copiado no está mal el día que se copia: está mal el día que alguien añade una atracción y nadie sube el
+número.* ▶ Y lo delató quién lo vigilaba: `ZoneImageTest` **comparaba las dos fuentes**. Que hiciera
+falta compararlas era el síntoma; hoy queda la que se publica.
+
+⚠️⚠️ **Los datos se pierden, y es parte de la decisión** (`#639`·D2): subtítulos traducidos, etiquetas de
+edad y los metros cuadrados. No se migran porque no hay sitio al que migrarlos. El `down()` recrea la
+forma, nunca el contenido.
+
+⚠️ **Y el seeder era el consumidor escondido**: al aplicar la migración, la suite dio **604 errores** de
+golpe —`LandingContentSeeder` seguía escribiendo las cuatro—. *El censo de una columna incluye quien la
+SIEMBRA, no solo quien la lee.*
 
 ### 4.4 Las redes
 
@@ -408,7 +425,7 @@ de §1.4 es el instrumento, y queda como guarda.
 3. **T3 · el panel adelgaza** — **T3·1 ✅** (`#668`): salen los dos recursos con CERO uso; los otros
    cuatro esperan a tener plato en el menú o a la vía A. **Las «secciones de texto» no existen**:
    medido, ninguna de las 71 claves de `settings` está sin consumidor. Detalle en §4.6.ter.
-4. **T4 · `zones` adelgaza** y cae la última marca viva.
+4. **T4 ✅ · `zones` adelgaza** (`#669`): las cuatro columnas muertas, fuera (§4.3). ▶ Queda la última marca viva (`pjp-salta-record`, §4.5).
 5. **T5 · v2.0.0**: el contrato de instancia cambia, así que la versión sube de MAYOR.
 
 ### 4.6.bis · La T2c, medida: 208 huérfanas eran 17 (`#667`, 2026-09-21)

@@ -15,7 +15,7 @@
 | `decisiones/300-399.md` | `#300` → `#354` (banda de Google auth, cerrada) |
 | `decisiones/400-499.md` | `#400` → `#499` (`#430`, `#431` y `#432` están dos veces) |
 | `decisiones/500-599.md` | `#500` → … (correos, SPA y web: bandas vivas) |
-| `decisiones/600-699.md` | `#610` → … (plataforma: la centena viva) |
+| `decisiones/600-699.md` | `#610` → `#699` (plataforma: sus tres bandas) |
 | `decisiones/700-799.md` | `#700` → … (SPA, abierta el 18-09 al agotarse su banda) |
 
 Recuento vivo: `grep -cE '^## #[0-9]+ ·' docs/decisiones/*.md` (al partir, el 2026-09-16, eran 536). Los
@@ -40,7 +40,7 @@ cada uno se conservan, adyacentes.
 
 | Carril | Banda | Máquina |
 |---|---|---|
-| Plataforma · producto e instancias | 610–639 **agotada el 19-09** (`#639`) · sigue en **640–669** | este ordenador |
+| Plataforma · producto e instancias | 610–639 **agotada** (`#639`) · 640–669 **agotada el 21-09** (`#669`) · sigue en **670–699** | este ordenador |
 | Diseño de la web | 580–609 | este ordenador |
 | Diseño del SPA (el cajón) | 550–579 **agotada el 18-09** · 700–729 **agotada el 20-09** (`#729`) · sigue en **730–759** | el otro ordenador |
 | Correos | 500–519 | este ordenador |

@@ -2236,8 +2236,6 @@ return [
         'field_color' => '颜色',
         'field_color_hint' => '该区域在面板中的颜色（日历、手环、单据）。',
         'field_position' => '排序',
-        'field_area_sqm' => '面积（㎡）',
-        'field_rides_count' => '设施数量',
         'field_image' => '图片（路径）',
         'field_image_hint' => '相对于 public/ 的路径（如 images/attractions/park_jump.webp）。落地页用此图片绘制区域卡片；留空则卡片无图片。文件上传将随图库功能一起推出。',
         'field_is_active' => '启用（运营）',
@@ -2251,9 +2249,7 @@ return [
             'fr' => '法语',
         ],
         'field_name' => '名称',
-        'field_subtitle' => '副标题',
         'field_description' => '描述',
-        'field_age_label' => '年龄标签',
         'field_age_range' => '年龄范围',
 
         'section_cupo' => '按区域的派对名额（配额）',

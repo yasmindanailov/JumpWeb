@@ -51,8 +51,12 @@ class ZoneImageTest extends TestCase
         $this->assertSame('images/attractions/kids_zone.webp', $kids->image);
         // Jump: 15 atracciones tras quitar las 2 con nombre repetido (Tobogán de bolas y Circuito de
         // obstáculos, que se conservan en Kids) — decisión clienta 2026-06-13.
-        $this->assertSame(15, $jump->rides_count);
-        $this->assertSame(8, $kids->rides_count);
+        //
+        // ⚠️⚠️ **Este caso comparaba DOS FUENTES del mismo número** —la columna `rides_count`, escrita
+        // a mano en el panel, y el recuento real de atracciones— y en `#669` se queda con la segunda:
+        // la columna se retiró (F5 · T4, `#639`·D2). *Que hiciera falta compararlas era el síntoma*:
+        // el día que alguien añadiera una atracción sin subir el contador, la landing y el panel
+        // habrían dicho cosas distintas. Hoy solo hay un número y lo calcula quien lo publica.
         $this->assertSame(15, $jump->attractions()->count());
         $this->assertSame(8, $kids->attractions()->count());
     }

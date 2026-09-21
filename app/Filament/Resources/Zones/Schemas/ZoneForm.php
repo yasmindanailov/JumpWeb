@@ -69,14 +69,10 @@ class ZoneForm
                             ->numeric()
                             ->minValue(0)
                             ->default(0),
-                        TextInput::make('area_sqm')
-                            ->label(__('admin.zones.field_area_sqm'))
-                            ->numeric()
-                            ->minValue(0),
-                        TextInput::make('rides_count')
-                            ->label(__('admin.zones.field_rides_count'))
-                            ->numeric()
-                            ->minValue(0),
+                        // ⚠️ Aquí estaban «metros cuadrados» y «nº de atracciones», y se fueron con su
+                        // columna en `#669` (F5 · T4). Los metros los enseñaba la tira de cifras que
+                        // `#302` retiró; el recuento lo CALCULA el producto donde lo necesita, así que
+                        // pedirlo a mano era invitar a que un día dijera otra cosa que la realidad.
                         // Foto de zona (feature 2026-06-11): ruta relativa a `public/`, igual que la
                         // de una atracción. La landing pinta la card con la foto integrada; vacío →
                         // card sin foto (fallback). La subida de ficheros llegará con la galería.
@@ -188,16 +184,12 @@ class ZoneForm
                 ->label(__('admin.zones.field_name'))
                 ->required($locale === 'es')
                 ->maxLength(120),
-            TextInput::make("subtitle.{$locale}")
-                ->label(__('admin.zones.field_subtitle'))
-                ->maxLength(255),
             Textarea::make("description.{$locale}")
                 ->label(__('admin.zones.field_description'))
                 ->rows(3)
                 ->maxLength(2000),
-            TextInput::make("age_label.{$locale}")
-                ->label(__('admin.zones.field_age_label'))
-                ->maxLength(60),
+            // ⚠️ Aquí estaban el subtítulo y el rótulo de edad, traducibles los dos: fuera en `#669`.
+            // Lo que la landing SÍ pinta es `age_range`, que va justo debajo.
             TextInput::make("age_range.{$locale}")
                 ->label(__('admin.zones.field_age_range'))
                 ->maxLength(60),

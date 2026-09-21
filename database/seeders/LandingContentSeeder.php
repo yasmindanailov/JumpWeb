@@ -155,24 +155,23 @@ class LandingContentSeeder extends Seeder
         );
     }
 
+    /**
+     * ⚠️ **Aquí se sembraban `subtitle`, `age_label`, `area_sqm` y `rides_count`, y se fueron con su
+     * columna en `#669`** (F5 · T4): ninguna superficie las pintaba. El censo de `#639` las separó de
+     * los HECHOS que sí viajan —`age_range`, la descripción y las dos alturas— y el owner decidió
+     * retirarlas *«porque un campo que el panel pide y que no sale a ningún sitio se vuelve a rellenar
+     * creyendo que sirve»*.
+     */
     private function seedZonesAndAttractions(): void
     {
         $jump = Zone::updateOrCreate(['slug' => 'jump'], [
             'name' => ['es' => 'JUMP', 'en' => 'JUMP', 'fr' => 'JUMP'],
-            'subtitle' => [
-                'es' => 'Para los que ya saltan.',
-                'en' => 'For those who already jump.',
-                'fr' => 'Pour ceux qui sautent déjà.',
-            ],
             'description' => [
                 'es' => 'Trampolines de pared a pared, foam pit, tirolina y free run. Si buscas adrenalina, esta es tu zona. Desde 6 años: si el niño mide menos de 1,30 m, entra con un adulto.',
                 'en' => 'Wall-to-wall trampolines, foam pit, zipline and free run. Pure adrenaline. From age 6: if the child is under 1.30 m, they enter with an adult.',
                 'fr' => 'Trampolines mur à mur, foam pit, tyrolienne et free run. Adrénaline pure. Dès 6 ans : si l\'enfant mesure moins de 1,30 m, il entre avec un adulte.',
             ],
-            'age_label' => ['es' => 'Edad', 'en' => 'Age', 'fr' => 'Âge'],
             'age_range' => ['es' => '+6 años · 1,30 m', 'en' => '+6 yrs · 1.30 m', 'fr' => '+6 ans · 1,30 m'],
-            'area_sqm' => 5000,
-            'rides_count' => 15,
             // Foto de zona (feature 2026-06-11): la landing pinta la card con la foto integrada
             // (patrón A del mockup); editable en el panel. Vacío → card sin foto (fallback).
             'image' => 'images/attractions/park_jump.webp',
@@ -186,20 +185,12 @@ class LandingContentSeeder extends Seeder
 
         $kids = Zone::updateOrCreate(['slug' => 'kids'], [
             'name' => ['es' => 'KIDS', 'en' => 'KIDS', 'fr' => 'KIDS'],
-            'subtitle' => [
-                'es' => 'Para los más peques.',
-                'en' => 'For the little ones.',
-                'fr' => 'Pour les tout-petits.',
-            ],
             'description' => [
                 'es' => 'Piscina de bolas, mini trampolines, toboganes y un circuito blando pensado para los que están aprendiendo. De 1 a 12 años; los menores de 3 años acceden acompañados de un adulto.',
                 'en' => 'Ball pool, mini trampolines, slides and a soft motor circuit designed for first jumps. Ages 1 to 12; under-3s must be with an adult.',
                 'fr' => 'Piscine à balles, mini-trampolines, toboggans et un parcours moteur tout doux pour les premiers sauts. De 1 à 12 ans ; les moins de 3 ans accompagnés d\'un adulte.',
             ],
-            'age_label' => ['es' => 'Edad', 'en' => 'Age', 'fr' => 'Âge'],
             'age_range' => ['es' => '1 — 12 años', 'en' => '1 — 12 yrs', 'fr' => '1 — 12 ans'],
-            'area_sqm' => 2000,
-            'rides_count' => 8,
             'image' => 'images/attractions/kids_zone.webp',
             'accent' => 'kids',
             'color' => '#C6FF3A',
@@ -379,11 +370,6 @@ class LandingContentSeeder extends Seeder
     {
         $zone = Zone::updateOrCreate(['slug' => 'cumpleanos'], [
             'name' => ['es' => 'Cumpleaños', 'en' => 'Birthdays', 'fr' => 'Anniversaires'],
-            'subtitle' => [
-                'es' => 'Su día, su mesa, su monitor.',
-                'en' => 'Their day, their table, their host.',
-                'fr' => 'Leur jour, leur table, leur animateur.',
-            ],
             // Zona operativa de packs (vende cumpleaños) pero NO se muestra como tarjeta de zona
             // en la landing: is_active = opera; show_in_landing = aparece en la landing (#82).
             'is_active' => true,

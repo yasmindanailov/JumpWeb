@@ -17,9 +17,10 @@ class Zone extends Model
 
     protected $casts = [
         'name' => 'array',
-        'subtitle' => 'array',
         'description' => 'array',
-        'age_label' => 'array',
+        // ⚠️ Aquí estaban `subtitle` y `age_label`, traducibles las dos, y se fueron con su columna
+        // en `#669` (F5 · T4): **ninguna superficie las pintaba**. El rótulo de edad que la landing
+        // sí usa es `age_range`, que es hecho y se queda.
         'age_range' => 'array',
         /*
          * La REGLA DE ALTURA (`#478`). Enteros en centímetros, y **`null` significa «esta zona no

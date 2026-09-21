@@ -17,7 +17,8 @@ trait InteractsWithZoneForm
      */
     protected function prepareZoneData(array $data): array
     {
-        foreach (['name', 'subtitle', 'description', 'age_label', 'age_range'] as $field) {
+        // ⚠️ Eran cinco hasta `#669`: `subtitle` y `age_label` se fueron con su columna.
+        foreach (['name', 'description', 'age_range'] as $field) {
             if (! array_key_exists($field, $data)) {
                 continue;
             }
