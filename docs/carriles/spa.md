@@ -18,7 +18,10 @@
   ▶ De los trece hallazgos de aquel ojo quedan **uno**: el aviso de cookies, que va con el texto de
   privacidad por ser texto legal.
   ⚠️ **El fixture SIGUE MONTADO en la BD local** (las cuatro tablas y dos ajustes falsos): se
-  desmonta con su modo, y antes estaba todo VACÍO.
+  desmonta con su modo, y antes estaba todo VACÍO. Hoy tiene **7 reseñas, 1 oculta y 6 ficheros**.
+  ✅ **«Ocultar» quedó VISTO funcionando, y no por un caso**: el owner ocultó una de verdad desde el
+  panel el 21-09 («lo ha pedido quien la escribió»), con su rastro en `audit_logs`. La reseña se fue,
+  su hash quedó y la cifra NO se movió — que es exactamente lo que promete el §4.3·7.
   ❗ Lo demás, **contra un DOBLE**: la ficha de PlayJump no llega a los 60 días (finales de octubre).
   ⚠️ **CUATRO migraciones de esta spec, aplicadas SOLO en la BD local.**
 - **Las 25 pantallas del cajón están construidas** (`#550`→`#568`): el armazón, el catálogo, el día y la
@@ -41,7 +44,9 @@
    ❗❗ **LO SIGUIENTE, la T2·9, que la dirección nueva del owner (21-09: la landing por API) vuelve
    necesaria**:
    `/api/v1/social-proof` sirve solo la cifra —sin `asOf`, sin reseñas, **sin la selección**, que es la
-   Ómnibus—. `#616`: API pública **sin avatares**. Spec §4.1.
+   Ómnibus—; su propia ruta anuncia las reseñas como «clave hermana». Spec §4.1.
+   ▶ **DECISIÓN DEL OWNER ANTES DE ESCRIBIRLA**: `#616` fija API pública **sin avatares**, y ahora hay
+   cara del autor y fotos de la reseña — ¿se sirven, se omiten o van solo como rutas nuestras?
    ❗❗❗ **Lo que no se cierra desde aquí**: la portada REAL vive en la instancia (`#666`) y tiene que
    pintar la línea del filtro —y lo de la T2·8— antes de que las reseñas de la ficha se vean en
    producción (Ómnibus). Avisado a plataforma. Hoy no hay exposición: responde Places, que no filtra.
@@ -52,7 +57,6 @@
    de octubre; el owner monta **JumpSystem** (`#719`, §7·A de la spec).
    ▶▶ **Después, a elegir** (spec §4.1): el botón del panel · el texto de privacidad, con el aviso de
    cookies · la T6 · retirar Places. Toca `PERF-02`, `SEC-01`, `RGPD-05`: **§5 antes**.
-   ❗ La doc ajena miente sobre el umbral: el aviso, en el buzón de la WEB. Manda el código.
 2. ✅ **La invitación no tiene nada pendiente de CÓDIGO** (`#718`, spec §10.18). ▶ Queda **desplegar y
    encender**, y no es mío: T5, T6 y T7 **con la migración** `order_items.eve_notice_at`; los dos
    interruptores son dato del owner, avisado en su buzón.
@@ -66,7 +70,8 @@
    `completeReply()` sigue sin ejercerse; la rama `guest_data`, sin prueba.
 5. De la Fase 4: el **ojo del owner en un teléfono de verdad** (ninguna de las 25 pantallas se ha visto
    en uno) · el **cuaderno de entrega** del cajón · el **botón del sistema** (16/800 con borde).
-6. Del plugin quedan **tres frases** por ver: `/sonda`, `/dod` y `/ligero`.
+6. Del plugin quedan **dos frases** por ver: `/dod` y `/ligero` (`/sonda` se usó el 21-09 y va bien;
+   ⚠️ al recrear el contenedor se pierden Chromium y `socat`: la receta de la skill los repone).
 
 ## Ficheros de este carril
 
@@ -348,11 +353,8 @@ en el buzón**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama `clie
 ### Atendido
 - **Plataforma 21-09** («`home` ya está mudada» y «banda nueva y contrato 2»): **atendidos**. La
   tarjeta del anfitrión va en la T2·8 y la migración de `zones`, aplicada en mi BD local.
-- **Plataforma 16-09→19-09 y Web `#539`/`#540`**: atendidos, **pueden retirarlos**; lo que sobrevive
+- **Plataforma 16-09→20-09 y Web `#539`/`#540`**: atendidos y ya retirados por ellos; lo que sobrevive
   está en «Trampas vivas». ▶ Queda **repasar el `§0` de `sidebar-spa.md`**, que escribió plataforma.
-- **Plataforma 20-09** (`#652` el 422 de `InvitationHostController` · mi arreglo de `ScheduleFactsTest`
-  aceptado · `updated_at` y la migración anotados · `<x-site.turnstile />` existe): **atendido, pueden
-  retirarlo**. ▶ Sobre el 422: **que un `""` deje el campo como estaba me vale**; no pido que borre.
 - **Plataforma 20-09, «tu `git pull` borra 37 ficheros»** (`#663`): **atendido**. Traído y comprobado
   en esta máquina — la suite y el gate no se enteran (afirman sobre RUTAS), y **la landing local se ve
   con las fotos rotas y sin vídeo**. No es un defecto. ▶ **Se recuperan** clonando
