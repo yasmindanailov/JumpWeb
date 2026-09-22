@@ -462,14 +462,26 @@ menor» (el motivo pasa a «nombra **o enseña** a un menor»).
 claves de «Ocultar» (T2·5) salían **en crudo** a un admin en chino. Traducidas, con guarda de
 paridad es↔zh de todo `admin.google_business`, y los motivos pasan al catálogo.
 
-▶ **T2·8 · LA TARJETA DE LA PORTADA, LO SIGUIENTE** (los ocho hallazgos del ojo, en el anfitrión
-mínimo; la portada de la instancia necesitará lo mismo): (1) la **anónima** sale sin nombre y con «·»
-—§4.3·5 manda «Usuario de Google»—; (2) ni la **respuesta** ni las **fotos**; (3) la **entradilla**
-dice «no las elegimos nosotros» encima de la línea del filtro; (4) falta **«a fecha de»** en la
-chapa; (5) la atribución sigue siendo el **logotipo de Google Maps** —§4.3·10 pide la palabra o la
-«G», y sin estrellas pegadas—; (6) se pierden los **saltos de línea** (`pre-line`, `dir="auto"`);
-(7) «ver todas» y «escribir una reseña» **no parecen enlaces**; (8) el **aviso de cookies** sigue
-diciendo que las reseñas de Google necesitan permiso — va con el texto de privacidad (c).
+✅ **T2·8 · LA TARJETA, EN EL ÁRBOL** (2026-09-22, `#734`; **✅ del owner en vivo**). 14 casos, arnés
+**26/26** (`scripts/mutar-gbp-t2-8.py`). Cierra **siete** de los ocho hallazgos del ojo: la **anónima**
+como «Usuario de Google» con su inicial · la **respuesta del parque** debajo · las **fotos** en
+miniatura, cuatro y «+N» · la **entradilla** que ya no dice «no las elegimos nosotros» · **«a fecha
+de»** en la chapa · la **palabra Google** en vez del logotipo de Maps · los **saltos de línea** y
+`dir="auto"` · y los dos enlaces del filtro **aparte y subrayados**.
+❗❗❗ **LA ATRIBUCIÓN SE DECLARA, NO SE DEDUCE**: `Testimonial::ATTRIBUTION_GOOGLE_WORD` (y el mismo
+campo en `Rating`). Las dos fuentes dicen `SOURCE_GOOGLE` y sus licencias piden marcas **distintas**
+—Maps sin mapa (`#494`) contra la palabra (§4.3·10)—, así que `source` no puede decidirlo. `null` es
+el valor de siempre —el logotipo—, y por eso una vista que no conozca el campo **sigue atribuyendo**
+en vez de quedarse sin marca: es lo que protege a la portada de la instancia hasta que se actualice.
+⚠️ La tarjeta pasa a **columna** para anclar la marca al pie: el carril estira todas a la altura de
+la más alta y en una corta quedaba flotando. ⚠️ Tocar `landing.css` obliga a regenerar la hoja del
+cajón (`scripts/hoja-del-cajon.py --aplicar`); aquí solo cambió su sello.
+❗ **Lo que enseñó el arnés**: un superviviente, y era del TEST — la expectativa del rótulo de la
+anónima se construía con `__()`, así que al vaciar esa clave el caso comparaba contra **cadena
+vacía**, que casa siempre. *La expectativa de un rótulo se escribe a mano*, como cualquier otra que
+saldría del código bajo prueba.
+▶ **Queda el octavo**: el **aviso de cookies** sigue diciendo que las reseñas de Google necesitan
+permiso. Con la ficha ya no es verdad —y con Places sí—, así que va con el texto de privacidad (c).
 
 ▶ **T2·9 · LAS RESEÑAS EN LA API PÚBLICA, NECESARIA DESDE EL 21-09**: el owner dio dirección nueva
 (relevo de plataforma, 21-09) — **la landing consumirá la API** (vía A). Medido: `/api/v1/social-proof`

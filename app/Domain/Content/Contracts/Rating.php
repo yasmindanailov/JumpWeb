@@ -50,5 +50,12 @@ final readonly class Rating
          * la landing no escribe la coletilla. Nulo es «no lo sé», no «es de hoy».
          */
         public ?\DateTimeInterface $asOf = null,
+        /**
+         * **Con qué marca exige la licencia atribuir esta cifra** (`#734`), o `null`.
+         *
+         * Los valores son los de {@see Testimonial}: `null` es el comportamiento de siempre —el
+         * logotipo de Google Maps que Places exige sin mapa (`#494`)— y la ficha declara la PALABRA.
+         */
+        public ?string $attribution = null,
     ) {}
 }

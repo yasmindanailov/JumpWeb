@@ -124,6 +124,29 @@ class DisplayTime
         return $carbon->locale(app()->getLocale())->isoFormat('dddd D');
     }
 
+    /**
+     * **«21 de septiembre de 2026»**: la fecha larga, en el idioma de la petición y **en la zona
+     * del parque** (`#734`, el «a fecha de» de la cifra de reseñas).
+     *
+     * ⚠️ A diferencia de {@see dayLabel()}, **sí convierte de zona**: la fecha la puso una pasada que
+     * corre de madrugada en UTC, y sin convertir la cifra diría el día ANTERIOR entre las dos
+     * medianoches — la trampa del reloj del carril, medida.
+     */
+    public static function longDate(DateTimeInterface|string|null $value): string
+    {
+        if ($value === null || $value === '') {
+            return '';
+        }
+
+        try {
+            $carbon = $value instanceof DateTimeInterface ? Carbon::instance($value) : Carbon::parse($value);
+        } catch (\Throwable) {
+            return '';
+        }
+
+        return $carbon->setTimezone(self::timezone())->locale(app()->getLocale())->isoFormat('LL');
+    }
+
     public static function now(): Carbon
     {
         return Carbon::now(self::timezone());

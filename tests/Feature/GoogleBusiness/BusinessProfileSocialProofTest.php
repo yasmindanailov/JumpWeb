@@ -85,6 +85,19 @@ class BusinessProfileSocialProofTest extends TestCase
         $this->assertSame('2026-09-21 08:00:00', $cifra->asOf->format('Y-m-d H:i:s'));
     }
 
+    /**
+     * **La ficha se atribuye con la PALABRA, no con el logotipo de Maps** (`#734`, §4.3·10). Las dos
+     * fuentes dicen `SOURCE_GOOGLE`, así que la marca no se puede deducir: la fuente la declara.
+     */
+    public function test_la_ficha_declara_que_se_atribuye_con_la_palabra(): void
+    {
+        $this->resumen();
+        $this->resena('1');
+
+        $this->assertSame(TestimonialData::ATTRIBUTION_GOOGLE_WORD, $this->fuente()->rating()->attribution);
+        $this->assertSame(TestimonialData::ATTRIBUTION_GOOGLE_WORD, $this->fuente()->testimonials()->first()->attribution);
+    }
+
     public function test_sin_pasada_reciente_no_hay_cifra(): void
     {
         $this->travelTo('2026-09-21 08:00:00');

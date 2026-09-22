@@ -17,6 +17,20 @@ final readonly class Testimonial
 
     public const SOURCE_GOOGLE = 'google';
 
+    /**
+     * **Atribuir con la PALABRA «Google»** (`#734`, §4.3·10): lo que pide la guía de reseñas para los
+     * datos de la ficha (Business Profile) —la palabra o la «G», sin estrellas pegadas—.
+     *
+     * ❗❗ **No es el logotipo de Google Maps**, que es lo que exige la licencia de PLACES sin mapa
+     * (`#494`): ponerlo sobre datos que no son de Maps es atribuirle a Maps lo que no es suyo. Las dos
+     * fuentes dicen `SOURCE_GOOGLE` —las dos son de Google, y la política y la entradilla valen para
+     * las dos—, así que la marca no se puede deducir de `source`: se DECLARA.
+     * ⚠️ `null` es el valor de siempre y significa el logotipo de Maps: así una vista que no conozca
+     * este campo —la de una instancia sin actualizar— sigue atribuyendo, aunque con la marca vieja,
+     * en vez de quedarse sin atribución.
+     */
+    public const ATTRIBUTION_GOOGLE_WORD = 'google_word';
+
     public function __construct(
         /** El texto, en el idioma activo. ⚠️ Nunca se recorta en servidor: R4 prohíbe alterarlo. */
         public string $text,
@@ -88,6 +102,8 @@ final readonly class Testimonial
          * vista las pinta igual, pero quien lea este objeto no tiene por qué adivinar cuál es.
          */
         public bool $anonymous = false,
+        /** Con qué marca se atribuye (`#734`): {@see ATTRIBUTION_GOOGLE_WORD} o `null`, el logotipo de Maps. */
+        public ?string $attribution = null,
     ) {}
 
     /**

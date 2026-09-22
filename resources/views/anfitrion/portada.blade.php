@@ -476,9 +476,14 @@
                     {{-- ⚠️⚠️ La entradilla sigue a la fuente de las OPINIONES, no a la de la chapa —y
                          las dos pueden no coincidir—: atada a la chapa, la sección decía «no las
                          elegimos nosotros» sobre una opinión que sí elegimos. --}}
-                    <p class="sec-head__lede">{{ ($socialProof->first()?->source === \App\Domain\Content\Contracts\Testimonial::SOURCE_GOOGLE || $resenasPorPermiso)
-                        ? __('landing.reviews.lede_google')
-                        : __('landing.reviews.lede_own') }}</p>
+                    {{-- ⚠️⚠️ Y con la FICHA la de Google deja de ser verdad (`#734`): «no las elegimos
+                         nosotros» encima de la línea que dice que filtramos por estrellas. La señal es
+                         la selección, que solo existe cuando la fuente que responde filtra. --}}
+                    <p class="sec-head__lede">{{ $socialSelection
+                        ? __('landing.reviews.lede_profile')
+                        : (($socialProof->first()?->source === \App\Domain\Content\Contracts\Testimonial::SOURCE_GOOGLE || $resenasPorPermiso)
+                            ? __('landing.reviews.lede_google')
+                            : __('landing.reviews.lede_own')) }}</p>
 
                     {{-- ❗❗❗ **LA LÍNEA DEL FILTRO, Y NO ES DISEÑO: ES LA ÓMNIBUS** (T2·6, §4.3·10,
                          `#732`). Enseñar solo las reseñas positivas **sin decirlo** es una práctica
@@ -491,13 +496,20 @@
                          ⚠️ Y dice las otras dos cosas que §4.3·10 exige en la misma frase: que nadie
                          verifica que los autores sean clientes, y dónde están todas. --}}
                     @if ($socialSelection)
+                        {{-- ⚠️ Los dos enlaces van APARTE y con aspecto de enlace (`#734`): pegados al
+                             final de la frase se leían como parte de ella —«…haya venido. Ver todas en
+                             Google Escribir una reseña»— y nadie los pulsaba. --}}
                         <p class="rev-sec__disclosure">
                             {{ __('landing.reviews.filtered', ['stars' => $socialSelection->minStars]) }}
-                            @if ($socialSelection->allReviewsUrl)
-                                <a href="{{ $socialSelection->allReviewsUrl }}" rel="noopener nofollow" target="_blank">{{ __('landing.reviews.see_all') }}</a>
-                            @endif
-                            @if ($socialSelection->writeReviewUrl)
-                                <a href="{{ $socialSelection->writeReviewUrl }}" rel="noopener nofollow" target="_blank">{{ __('landing.reviews.write') }}</a>
+                            @if ($socialSelection->allReviewsUrl || $socialSelection->writeReviewUrl)
+                                <span class="rev-sec__links">
+                                    @if ($socialSelection->allReviewsUrl)
+                                        <a href="{{ $socialSelection->allReviewsUrl }}" rel="noopener nofollow" target="_blank">{{ __('landing.reviews.see_all') }}</a>
+                                    @endif
+                                    @if ($socialSelection->writeReviewUrl)
+                                        <a href="{{ $socialSelection->writeReviewUrl }}" rel="noopener nofollow" target="_blank">{{ __('landing.reviews.write') }}</a>
+                                    @endif
+                                </span>
                             @endif
                         </p>
                     @endif
@@ -525,13 +537,24 @@
                                 </span>
                             @endfor
                         </p>
-                        <p class="rev-score__count">{{ trans_choice('landing.reviews.count', $socialRating->count, ['n' => \App\Domain\Platform\Services\LocalNumber::count($socialRating->count)]) }}</p>
+                        {{-- ⚠️ Con la FICHA la marca es la PALABRA (`#734`, §4.3·10), y va en la propia
+                             línea del recuento: «37 opiniones en Google». El logotipo de Maps es de
+                             Places, y ponerlo aquí atribuiría a Maps un dato que no es suyo. --}}
+                        @php($cifraPorPalabra = $socialRating->attribution === \App\Domain\Content\Contracts\Testimonial::ATTRIBUTION_GOOGLE_WORD)
+                        <p class="rev-score__count">{{ trans_choice($cifraPorPalabra ? 'landing.reviews.count_on_google' : 'landing.reviews.count', $socialRating->count, ['n' => \App\Domain\Platform\Services\LocalNumber::count($socialRating->count)]) }}</p>
+                        {{-- «A fecha de …» (§4.3·10): la trajo una pasada diaria. Solo si la fuente la
+                             DA —Places no—: inventarla sería afirmar algo que no sabemos. --}}
+                        @if ($socialRating->asOf)
+                            <p class="rev-score__asof">{{ __('landing.reviews.as_of', ['date' => \App\Domain\Platform\Services\DisplayTime::longDate($socialRating->asOf)]) }}</p>
+                        @endif
                         {{-- ❗❗❗ **LA ATRIBUCIÓN ES OBLIGATORIA** (`#494`): la cifra es dato de Places
                              y esta vista no enseña ningún mapa de Google, que es exactamente el
                              supuesto de «you must include the Google logo». Va DENTRO de la chapa,
                              que es lo que acredita. ⚠️ Variante BLANCA porque la caja es de tinta:
                              el logotipo no sigue al tema, lo elige el marcado. --}}
-                        @if ($socialRating->url)
+                        @if ($cifraPorPalabra)
+                            {{-- La palabra ya está en el recuento, y «ver todas» en la línea del filtro. --}}
+                        @elseif ($socialRating->url)
                             <a class="rev-score__src" href="{{ $socialRating->url }}"
                                target="_blank" rel="noopener noreferrer nofollow">
                                 <x-site.google-attribution surface="ink" />
@@ -571,6 +594,11 @@
                         <div class="rev__track" x-ref="track">
                         @foreach ($socialProof as $op)
                             <article class="rev__card">
+                                {{-- ⚠️ La ANÓNIMA se pinta como «Usuario de Google» (§4.3·5, `#734`): el
+                                     contrato la DECLARA y `author` llega vacío, así que sin esto salía
+                                     sin nombre y con un «·» de inicial. --}}
+                                @php($autor = $op->anonymous ? __('landing.reviews.anonymous') : $op->author)
+                                @php($porPalabra = $op->attribution === \App\Domain\Content\Contracts\Testimonial::ATTRIBUTION_GOOGLE_WORD)
                                 <div class="rev__who">
                                     {{-- ⚠️⚠️ La foto es OBLIGATORIA cuando la reseña es de Google (R3:
                                          «you must always credit the author»), y por eso llega solo con
@@ -582,7 +610,7 @@
                                              width="56" height="56" loading="lazy" decoding="async"
                                              referrerpolicy="no-referrer" aria-hidden="true">
                                     @else
-                                        <span class="rev__ini" aria-hidden="true">{{ $op->initial() }}</span>
+                                        <span class="rev__ini" aria-hidden="true">{{ $op->anonymous ? mb_strtoupper(mb_substr($autor, 0, 1)) : $op->initial() }}</span>
                                     @endif
                                     <div class="rev__id">
                                         <p class="rev__author">
@@ -591,7 +619,7 @@
                                                    aria-label="{{ __('landing.reviews.author_on_google', ['name' => $op->author]) }}"
                                                    rel="noopener noreferrer nofollow">{{ $op->author }}</a>
                                             @else
-                                                {{ $op->author }}
+                                                {{ $autor }}
                                             @endif
                                         </p>
                                         @if ($op->when)
@@ -603,7 +631,9 @@
                                          del parque salga vestida de Google. --}}
                                     @if ($op->source === \App\Domain\Content\Contracts\Testimonial::SOURCE_GOOGLE || $op->rating)
                                         <div class="rev__mark">
-                                            @if ($op->source === \App\Domain\Content\Contracts\Testimonial::SOURCE_GOOGLE)
+                                            {{-- Con la ficha la marca es la PALABRA y va al pie, lejos
+                                                 de las estrellas (§4.3·10: «sin estrellas pegadas»). --}}
+                                            @if ($op->source === \App\Domain\Content\Contracts\Testimonial::SOURCE_GOOGLE && ! $porPalabra)
                                                 <x-site.google-attribution surface="paper" />
                                             @endif
                                             @if ($op->rating)
@@ -620,7 +650,9 @@
                                     @endif
                                 </div>
                                 <div x-data="{ original: false }">
-                                    <p class="rev__text" x-show="!original"
+                                    {{-- `dir="auto"`: la escribió un desconocido y puede venir en cualquier
+                                         idioma (§4.3·8); los saltos de línea los guarda `pre-line`. --}}
+                                    <p class="rev__text" x-show="!original" dir="auto"
                                        @if ($op->language) lang="{{ $op->language }}" @endif>{{ $op->text }}</p>
                                     @if ($op->isTranslated())
                                         {{-- ❗❗❗ **EL ORIGINAL VIAJA EN EL MARCADO, y eso NO es
@@ -648,6 +680,31 @@
                                         </p>
                                     @endif
                                 </div>
+                                {{-- La respuesta del parque, DEBAJO de la reseña (§4.3·10, `#734`). --}}
+                                @if ($op->reply)
+                                    <div class="rev__reply">
+                                        <p class="rev__reply-label">{{ __('landing.reviews.reply') }}</p>
+                                        <p class="rev__reply-text" dir="auto">{{ $op->reply }}</p>
+                                    </div>
+                                @endif
+                                {{-- Las fotos de la reseña (§4.3·6): rutas NUESTRAS, las pone la fuente.
+                                     Cuatro como mucho, y el resto se dice: la tarjeta es un carril. --}}
+                                @if ($op->photos !== [])
+                                    @php($fotos = count($op->photos))
+                                    <ul class="rev__photos">
+                                        @foreach (array_slice($op->photos, 0, 4) as $k => $foto)
+                                            <li><img class="rev__photo" src="{{ $foto }}"
+                                                     alt="{{ __('landing.reviews.photo_alt', ['n' => $k + 1, 'total' => $fotos, 'name' => $autor]) }}"
+                                                     width="72" height="72" loading="lazy" decoding="async"></li>
+                                        @endforeach
+                                        @if ($fotos > 4)
+                                            <li class="rev__photos-more">+{{ $fotos - 4 }}</li>
+                                        @endif
+                                    </ul>
+                                @endif
+                                @if ($porPalabra)
+                                    <p class="rev__via">{{ __('landing.reviews.via_google') }}</p>
+                                @endif
                                 @if ($op->url)
                                     {{-- ⚠️ La salida a Google NO es opcional cuando la reseña es suya:
                                          R3 exige acreditar al autor y su enlace es parte de eso. --}}

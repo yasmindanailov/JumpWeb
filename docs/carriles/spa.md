@@ -1,7 +1,7 @@
 # Carril · Diseño del SPA (el cajón)
 
 > Máquina: **el OTRO ordenador** · Banda: **730–759** (700–729 agotada el 20-09) · Último usado:
-> **`#733`** · La banda está dada de alta en la tabla de `DECISIONES.md` ·
+> **`#734`** · La banda está dada de alta en la tabla de `DECISIONES.md` ·
 > Arranque de la máquina:
 > `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: `sidebar-spa.md` §0 · `celebracion-e-invitacion.md`
 > §0 · `rediseno-desde-canvas.md` §5 (Fase 4) · Actualizado: 2026-09-21.
@@ -10,11 +10,13 @@
 
 ## Foto (2026-09-21, sesión de noche)
 
-- ▶▶▶ **LA FICHA DE GOOGLE (`#524`), de la T1 a la T2·7, EN EL ÁRBOL** (`#720`→`#733`),
+- ▶▶▶ **LA FICHA DE GOOGLE (`#524`), de la T1 a la T2·8, EN EL ÁRBOL** (`#720`→`#734`),
   `google-business-profile.md` §4.1 (qué entró en cada tanda y qué enseñó). **El 21-09 el owner la
   vio POR PRIMERA VEZ con datos** —fixture local fuera de git, «probe-ojo-resenas» en la carpeta de
   almacenamiento (modos `montar`·`estado`·`caducar`·`correo`·`desmontar`), y la sonda
-  «sonda-resenas/ojo» al lado— y **dio el ✅ al panel** tras la T2·7 (`#733`).
+  «sonda-resenas/ojo» al lado— y **dio el ✅ en vivo al panel (`#733`) y a la tarjeta (`#734`)**.
+  ▶ De los trece hallazgos de aquel ojo quedan **uno**: el aviso de cookies, que va con el texto de
+  privacidad por ser texto legal.
   ⚠️ **El fixture SIGUE MONTADO en la BD local** (las cuatro tablas y dos ajustes falsos): se
   desmonta con su modo, y antes estaba todo VACÍO.
   ❗ Lo demás, **contra un DOBLE**: la ficha de PlayJump no llega a los 60 días (finales de octubre).
@@ -33,14 +35,11 @@
 ## Por dónde retomar, en orden
 
 1. ❗❗ **`google-business-profile.md` (`#524`), reclamada** —es del carril de la WEB, avisado—.
-   ✅ **T1 y T2·1→T2·7 en el árbol** (`#720`→`#733`); cada tanda, **§4.1 de la spec**.
-   ▶▶▶ **LO SIGUIENTE: la T2·8, la TARJETA de la portada** —los ocho hallazgos del ojo del 21-09,
-   listados en la §4.1—: anónima «Usuario de Google» (hoy sale SIN nombre y con «·»), respuesta y
-   fotos, la entradilla, «a fecha de», la palabra Google en vez del logotipo de Maps, los saltos de
-   línea y enlaces que parezcan enlaces. Toca `landing.css`, `lang/*/landing.php` y
-   `google-attribution` de la WEB: **avisado en su buzón**. Guardas que apuntan ahí:
-   `GoogleAttributionTest`, `ReviewsSectionTest`, `ReviewDisclosureTest` y `AnfitrionPortadaTest`.
-   ❗❗ **Y la T2·9, que la dirección nueva del owner (21-09: la landing por API) vuelve necesaria**:
+   ✅ **T1 y T2·1→T2·8 en el árbol** (`#720`→`#734`); cada tanda, **§4.1 de la spec**.
+   ⚠️ **La atribución se DECLARA en el contrato** (`ATTRIBUTION_GOOGLE_WORD`, `#734`), porque las dos
+   fuentes dicen `SOURCE_GOOGLE` y piden marcas distintas. `null` = el logotipo de Maps de siempre.
+   ❗❗ **LO SIGUIENTE, la T2·9, que la dirección nueva del owner (21-09: la landing por API) vuelve
+   necesaria**:
    `/api/v1/social-proof` sirve solo la cifra —sin `asOf`, sin reseñas, **sin la selección**, que es la
    Ómnibus—. `#616`: API pública **sin avatares**. Spec §4.1.
    ❗❗❗ **Lo que no se cierra desde aquí**: la portada REAL vive en la instancia (`#666`) y tiene que
@@ -200,6 +199,8 @@ en el buzón**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama `clie
   (`#713`). Antes de declarar un superviviente, busca ese caso.
 - **Un test que calcula su expectativa desde el código bajo prueba no prueba nada**, y un fixture que usa
   la convención que dice vigilar tampoco: las dos las cazó el arnés de mutación, no una relectura.
+  ▶ **Caso nuevo y barato de repetir** (`#734`): una aserción con `__('clave')` dentro — al vaciar esa
+  clave, `assertStringContainsString('')` **pasa siempre**. El rótulo se escribe a mano en el caso.
 - **Al pivote se le habla por MÉTODO, no por propiedad** (`showsInInvitation()`, `saleStage()`…): un
   `$record->pivot?->columna` suma un `property.notFound` a la línea base de Larastan, **que solo encoge**.
 - ⏰ **La fecha de una decisión sale del reloj del OWNER** (`date` en el host), nunca del contenedor, que
@@ -292,21 +293,26 @@ en el buzón**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama `clie
   de `AnfitrionPortadaTest` siguen verdes.
 - ▶ **Places NO se retira** (`[owner]`, 21-09), así que la cascada es de tres y `img-src` sigue
   nombrando a Google. Cuando se retire, el cambio de CSP va **en el mismo despliegue**.
-- ❗❗ **(21-09, noche) Tu aviso del anfitrión, atendido y ampliado**: el ojo del owner sacó OCHO
-  huecos de la tarjeta (spec §4.1, T2·8) y los cierro en `anfitrion/portada.blade.php`. **La portada
-  de la instancia necesitará los mismos** —anónima «Usuario de Google», respuesta, fotos, «a fecha
-  de», la palabra Google en vez del logotipo de Maps, entradilla nueva— y el anfitrión será la
-  referencia. ▶ Y `ESTADO.md` (tuyo) sigue dando al SPA la banda **550–579**: es **730–759**.
+- ❗❗❗ **(22-09) Tu aviso del anfitrión, ATENDIDO: la T2·8 está hecha** (`#734`) y **la portada de la
+  instancia necesita lo mismo** —anónima «Usuario de Google», respuesta del parque, fotos, «a fecha
+  de», entradilla nueva y la **palabra** Google en vez del logotipo de Maps—. El anfitrión es la
+  referencia, y sus casos están en `ReviewCardTest`.
+- ⚠️⚠️ **Campo NUEVO en el contrato, y aditivo**: `Testimonial::$attribution` / `Rating::$attribution`
+  (`ATTRIBUTION_GOOGLE_WORD`). **`null` = lo de siempre**, el logotipo de Maps, así que la portada de
+  la instancia **no se rompe** mientras no se actualice: seguirá atribuyendo con la marca vieja.
+- ▶ `ESTADO.md` (tuyo) sigue dando al SPA la banda **550–579**: es **730–759**.
 - ⚠️ `GoogleBusinessApi` gana `send()` (`#733`): un corte de red es un fallo **pasajero**, HTTP 0.
 
 ### ❗❗ Para el carril de la WEB (emisor: SPA, 20→21-09) — TE TOMO UNA TAREA, Y VOY A TOCAR LO TUYO
 - ▶ **Me llevo `google-business-profile.md` (`#524`)**, que es tuya (banda 580–609); la numero desde
   la MÍA. Va por la T2·7 (`#720`→`#733`); el estado, en la **§4.1**. Si la quieres, te la devuelvo.
-- ❗ **AVISO ANTES DE TOCAR (21-09)**: la T2·8 —la tarjeta de reseñas del anfitrión— toca
-  `public/css/landing.css` (el bloque `.rev*`, **no** el `:root`), `lang/*/landing.php` (claves
-  `reviews.*`), `components/site/google-attribution.blade.php` y casos de `tests/Feature/Landing/`
-  (`ReviewsSectionTest`, `GoogleAttributionTest`, `ReviewDisclosureTest`). Nada fuera de la sección
-  de reseñas.
+- ❗ **TOCADO EN LA T2·8** (`#734`, 22-09; avisado el 21 antes de empezar): `public/css/landing.css`
+  —el bloque `.rev*` y `.rev__card`, que pasa a **columna** para anclar la marca al pie; **el `:root`
+  NO se toca**—, `lang/{es,en,fr}/landing.php` (siete claves nuevas en `reviews.*`, ninguna cambiada)
+  y `tests/Feature/Landing/ReviewCardTest.php`, nuevo. **`google-attribution` no se ha tocado**: con
+  Places sigue saliendo su logotipo igual que antes, y eso tiene caso propio.
+- ⚠️ **Regenerada `public/css/cajon.css`** (`hoja-del-cajon.py --aplicar`): `landing.css` es una de
+  sus fuentes, así que su sello cambia aunque no entre ninguna regla. Si no, `HojaDelCajonTest` rojo.
 - ❗ **Una línea tuya que miente** (20-09): `google-reviews.md` dice «umbral de **10** reseñas» y el
   código dice **`MIN_REVIEWS = 1`** (`#494`, definitivo). **No la toco yo** (`#621`).
 

@@ -70,6 +70,8 @@ class BusinessProfileSocialProof implements SocialProof
             source: TestimonialData::SOURCE_GOOGLE,
             // §4.3·10: «con *a fecha de …*». La trajo una pasada diaria, no está viva.
             asOf: $resumen->fetched_at,
+            // §4.3·10: la palabra, no el logotipo de Maps — esto no es dato de Places (`#734`).
+            attribution: TestimonialData::ATTRIBUTION_GOOGLE_WORD,
         );
     }
 
@@ -137,6 +139,7 @@ class BusinessProfileSocialProof implements SocialProof
             // Anónima de origen, o sin nombre porque el plazo corto lo retiró: para la tarjeta es
             // lo mismo, y declararlo evita que la vista lo deduzca de una cadena vacía.
             anonymous: $r->anonymous || $r->publishableAuthor() === null,
+            attribution: TestimonialData::ATTRIBUTION_GOOGLE_WORD,
         ))->values();
     }
 

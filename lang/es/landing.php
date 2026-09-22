@@ -530,12 +530,22 @@ return [
         'eyebrow' => 'Reseñas',
         'title' => 'Lo dicen los que ya han venido',
         'lede_own' => 'Lo que nos cuentan las familias al salir.',
-        // ⚠️⚠️ **Esta entradilla DEJA DE SER CIERTA con la ficha de Google** (§4.3·10, `#732`): con
-        // Places eran «las que Google pone primero», pero con Business Profile **las elegimos
-        // nosotros**, filtrando por estrellas. Se queda mientras responda Places —que es lo que hay
-        // hoy— y se reescribe en el mismo cambio que la retire. ▶ Lo que la ley exige decir ya lo
-        // dice `filtered`, que se pinta justo debajo.
+        // ⚠️⚠️ **Esta entradilla SOLO es cierta con Places** (§4.3·10): son «las que Google pone
+        // primero». Con la ficha **las elegimos nosotros**, filtrando por estrellas, y la entradilla es
+        // `lede_profile` (`#734`); lo que la ley exige decir lo dice `filtered`, justo debajo.
         'lede_google' => 'No las elegimos nosotros: son las que Google pone primero.',
+        'lede_profile' => 'Las más recientes de nuestra ficha de Google.',
+        // ── LA TARJETA DE LA FICHA (T2·8, `#734`) ─────────────────────────────────────────
+        // §4.3·5: la anónima, con el rótulo que usa la propia Google.
+        'anonymous' => 'Usuario de Google',
+        // El rótulo de Google Maps para la respuesta del negocio: sirve a cualquier sector.
+        'reply' => 'Respuesta del propietario',
+        'photo_alt' => 'Foto :n de :total de la reseña de :name',
+        // §4.3·10: «con *a fecha de …*». La cifra la trajo una pasada, no está viva.
+        'as_of' => 'A fecha de :date',
+        // §4.3·10: con la ficha, la marca es la PALABRA —no el logotipo de Maps—, y nada de «Google rating».
+        'count_on_google' => '{1} :n opinión en Google|[2,*] :n opiniones en Google',
+        'via_google' => 'Publicada en Google',
         // ── LA LÍNEA DEL FILTRO (T2·6, §4.3·10, `#732`) ────────────────────────────────────
         // ❗❗❗ **No es copia de marketing: es lo que la Ómnibus (2019/2161) obliga a decir.** Enseñar
         // solo las reseñas positivas sin declararlo es una práctica engañosa. Dice las tres cosas
