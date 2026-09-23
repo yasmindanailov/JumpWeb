@@ -2,10 +2,10 @@
 
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669 AGOTADA con `#669`** → **670–699 EN CURSO** · Último usado: **`#672`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **640–669 AGOTADA con `#669`** → **670–699 EN CURSO** · Último usado: **`#673`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, `docs/specs/instancia-y-landing-fuera.md` · Actualizado: **2026-09-23**
-> (`#670`: el owner decide **no desplegar en piezas** · `#671` y `#672`: los platos de las **dudas** y
-> los **servicios**, servidos; contrato **1.13.0**).
+> (`#670`: el owner decide **no desplegar en piezas** · `#671`→`#673`: los platos de las **dudas**, los
+> **servicios** y **el bar**, servidos; contrato **1.14.0**).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
 > Techo **32 KB** (check 10; subido de 24 en `#724` con la medida delante). El contador de la suite no
 > vive aquí: va en el trailer del commit.
@@ -104,9 +104,17 @@
    trampas en §4.1.ter.
    ✅✅ **LA PREGUNTA ABIERTA, CONTESTADA (23-09): se arranca por los PLATOS**, no por el kit de widgets
    —que sigue donde lo dejó `#632`·P2, esperando a que una segunda instancia lo pida—.
-   ▶▶ **DUDAS ✅ (`#671`) y SERVICIOS ✅ (`#672`)**, contrato **1.13.0**; el detalle de los dos en la
-   spec §4.1, que es donde no caduca. **Quedan EL BAR → ATRACCIONES**, en ese orden: atracciones son 23
-   filas con imagen, chapa y etiqueta de edad, y van al final para llegar con la receta rodada.
+   ▶▶ **DUDAS ✅ (`#671`), SERVICIOS ✅ (`#672`) y EL BAR ✅ (`#673`)**, contrato **1.14.0**; el detalle
+   de los tres en la spec §4.1, que es donde no caduca. **Queda ATRACCIONES**, el último y el más gordo:
+   23 filas con imagen, chapa y etiqueta de edad, y `#632`·P3 ya midió que son **presentación pura**
+   —sin aforo ni venta—, así que su plato es editorial entero. Va con la receta ya rodada.
+   ❗❗ **Lo que dejó el bar y sirve para atracciones**: si el dato ya tiene **servicio de dominio**, el
+   recurso **delega** en él en vez de declarar lista blanca —es lo que `PublicFactsBoundaryTest` prescribe
+   en su propio docblock, no un rodeo—; la lista blanca es para quien lee `settings` a pelo.
+   ⚠️⚠️ **Y una trampa de fixture que costó un rojo**: `BarImage` **re-mide** las dimensiones contra el
+   DISCO en su `saving()`, así que un `width` tecleado en un test se sobrescribe con `null` y el caso se
+   queda sin sujeto. Se pone un PNG real (GD) ANTES de crear la fila y se compara con lo medido, con un
+   control que aserta primero que midió algo. Atracciones también tiene imagen: mismo cuidado.
    ❗❗ **Y un QUINTO que no estaba en la lista de cuatro: los TRAMOS DE GRUPO.** `GroupRateTables` los
    compone desde el catálogo y **ninguna ruta los sirve** (medido: su único llamante es
    `ServicesController`). Salieron de `#672` a propósito —son DINERO— y traen consigo la decisión que
@@ -127,17 +135,9 @@
    escribe en §4.1 y §4.6, y de §0 solo se toca la línea de «Estado».
    ⚠️ **La T5 (cortar v2.0.0) ya no es de esta fase**: con `#670` es el final del programa entero.
 
-   ▶ **Lo que se le contestó sobre el CAJÓN** (medido el 21-09, para que no se vuelva a medir):
-   **no tiene que ser un lateral.** Lo que lo ata a esa forma son TRES cosas y las tres son
-   presentación — el CSS generado y scopeado a `:where(.sidecart)` (posición, ancho, telón),
-   `shell.js` (telón, `Escape`, cerrojo de scroll) y el nombre—. El MOTOR es Vue + Pinia contra
-   `/api/v1` y sus modos (`is-catalog`, `is-account`, `is-booking`) son de CONTENIDO, no de forma;
-   `standalone.js` ya construye la carcasa cuando lo monta una página ajena. ⚠️ Lo que sí cuesta:
-   las **25 pantallas** están maquetadas para una columna estrecha y su contrato visual es el ÁRBOL
-   (`specs/sidebar-spa.md` §4.2), así que cambiar de forma es una tanda de DISEÑO, no de arquitectura.
-   ▶ **Y sobre los WIDGETS: el cajón ya ES uno.** El criterio de salida de F4 fue que una página que no
-   es del producto lo monta, lo abre y COMPRA (sonda 42/42, pago real). Un widget nuevo es el mismo
-   patrón con otro payload; lo que falta es el kit declarativo de `#632`·P2.
+   ▶ **Lo que se le contestó al owner sobre la FORMA del cajón y sobre los widgets** (medido el 21-09)
+   vive ahora en `specs/cajon-empaquetable.md` **§4.9**, que es donde no caduca: el cajón no tiene que
+   ser un lateral, ya ES un widget, y cambiar su forma es una tanda de DISEÑO.
 
 4. **Deuda del análisis estático**: bajar la línea base de Larastan por familias (`nullsafe.neverNull` es
    mecánico), bajando `FROZEN_ERRORS` en el mismo commit. Los 12 de ESLint los poda quien los arregle.
@@ -333,17 +333,16 @@ dueño es el carril de la web/reseñas—) ·
   `LandingAddonPresenter::unique()` no tiene consumidor desde `#583` y escribe el dinero a su manera ·
   `mutar-cabecera.py` tiene cuatro mutantes que ya no aplican y `mutar-bandas.py` uno.
 
-### Para TODOS los carriles (emisor: plataforma, 2026-09-19)
-- ⚠️ **`compose.yaml` cambió** (montaje `../instancias:/var/www/instancias` por `SEC-12`, y `name: jumpweb`):
-  tu próximo `docker compose up -d` **recrea el contenedor** y se lleva el Chromium de la sonda (`/sonda` §1).
-  Y en esta máquina el repo se mudó a `~/proyectos/jumpweb/producto` (`#648`); a ti no te afecta.
-
 ### Atendido
 - **SPA `#724`, el techo del carril** (20-09): atendido. Mi encabezado ya dice **32 KB**. ⚠️ Llegó a mitad
   de `#662`, que se cerró rascando contra el techo VIEJO cuatro veces — lo recortado bajó a
   `paquete-de-instancia.md` §4.7, que es donde tenía que estar de todos modos.
 - **SPA, el ✅ del owner sobre la invitación y el fin de su freno** (20-09): atendido; anotado en «retomar»
   punto 2 — el despliegue de la v1.2.0 ya no está bloqueado por el cajón.
+- **El aviso del `compose.yaml` del 19-09, RETIRADO el 23-09**: no por «atendido» sino porque llegó — el
+  carril del SPA lo lleva escrito en sus propias trampas vivas («ganó un montaje el 19-09, el próximo
+  `up -d` recrea el contenedor y se lleva el Chromium»). Un aviso que el otro ya interiorizó no necesita
+  seguir en mi buzón.
 - **RETIRADOS los míos que el SPA dio por atendidos** (16-09→**21-09**, retirada la del 21-09 el 23-09:
   «`home` ya está mudada» y «banda nueva y contrato 2», que su carril declara atendidos —la tarjeta del
   anfitrión fue a su T2·8 y la migración de `zones` está aplicada en su BD—). Incluye el aviso de los 37

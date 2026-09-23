@@ -372,6 +372,25 @@ quien toque este cajón.
   del paquete y un `:root` propio basta para verlo en vivo; si se queda ahí, **la guarda 9 del despliegue
   aborta** (`#638`: lo que git no ve, el `rsync` sí lo sube).
 
+### 4.9 La FORMA del cajón, y por qué ya es un widget — MEDIDO (2026-09-21)
+
+Lo preguntó el owner y se midió entonces; vive aquí y no en un fichero de carril **para que no se vuelva a
+medir** (bajado desde `carriles/plataforma.md` en `#673`, que lo tenía ocupando su techo).
+
+- **El cajón NO tiene que ser un lateral.** Lo que lo ata a esa forma son **tres** cosas, y las tres son
+  presentación: el CSS generado y scopeado a `:where(.sidecart)` (posición, ancho, telón), `shell.js`
+  (telón, `Escape`, cerrojo de scroll) y **el nombre**.
+- **El MOTOR no sabe de forma**: es Vue + Pinia contra `/api/v1`, y sus modos —`is-catalog`,
+  `is-account`, `is-booking`— son de CONTENIDO. `standalone.js` ya construye la carcasa entera cuando lo
+  monta una página que no es del producto.
+- ⚠️ **Lo que sí cuesta cambiar de forma**: las **25 pantallas** están maquetadas para una columna
+  estrecha y su contrato visual es el ÁRBOL del DOM (`specs/sidebar-spa.md` §4.2). O sea que es una tanda
+  de **DISEÑO**, no de arquitectura — y eso la pone en el carril del SPA, no aquí.
+- ▶ **Y el cajón YA ES un widget.** El criterio de salida de esta fase fue exactamente eso: una página
+  ajena lo monta, lo abre y **COMPRA** (sonda 42/42, pago real). Un widget nuevo es el mismo patrón con
+  otro payload; lo único que falta es el **kit declarativo** que `#632`·P2 aplazó hasta que una segunda
+  instancia lo pida.
+
 ## 5. Impacto en invariantes
 `RGPD-04`: `cajon/session` es `no-store` (lleva titular); y la ruta del cargador **hereda** el `no-store` de la
 web en vez de abrirle una excepción (§4.1). `PERF-02`: `cajon/boot` y el menú van con caché pública

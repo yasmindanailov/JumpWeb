@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V1\AuthRegistrationController;
 use App\Http\Controllers\Api\V1\AuthSessionController;
 use App\Http\Controllers\Api\V1\AuthTokenController;
 use App\Http\Controllers\Api\V1\AvailabilityController;
+use App\Http\Controllers\Api\V1\BarFactsController;
 use App\Http\Controllers\Api\V1\BookingStatusController;
 use App\Http\Controllers\Api\V1\CartLineController;
 use App\Http\Controllers\Api\V1\CatalogAddonsController;
@@ -204,6 +205,15 @@ Route::name('api.v1.')->group(function (): void {
     Route::get('/services', ServicesFactsController::class)
         ->middleware('cache.headers:public;max_age=300;etag')
         ->name('services.facts');
+
+    // El BAR: nombre, entradilla, si se entra sin pagar, las caras de la carta y la foto del local.
+    // ⚠️ El NOMBRE gatea la página entera (`BarPage::isPublished()`): sin él la clave `bar` no viaja,
+    // que es como una instalación sin bar dice que no tiene bar — sin emitir un sobre vacío.
+    // ⚠️⚠️ Las imágenes llevan sus DIMENSIONES REALES, medidas al guardar: la carta es la imagen más
+    // grande de la web y sin ellas la página salta al cargarla.
+    Route::get('/bar', BarFactsController::class)
+        ->middleware('cache.headers:public;max_age=300;etag')
+        ->name('bar.facts');
 
     // Los TEXTOS LEGALES: el índice y cada documento, con los marcadores (`:legal_name`…) ya resueltos.
     // ⚠️ Cuelgan de `/legal/documents` y no de `/legal/{clave}` porque `/legal/waiver` ya existe y dice

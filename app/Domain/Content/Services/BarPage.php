@@ -4,6 +4,8 @@ namespace App\Domain\Content\Services;
 
 use App\Domain\Content\Models\BarImage;
 use App\Domain\Platform\Models\Setting;
+use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
 
 /**
@@ -95,6 +97,30 @@ class BarPage
             ->active()
             ->ordered()
             ->first();
+    }
+
+    /**
+     * **Cuándo se tocó por última vez algo del bar**, mirando sus DOS fuentes (F5, `#673`).
+     *
+     * ⚠️ Tiene que mirar las dos o miente. El contenido del bar vive mitad en `settings` —nombre,
+     * entradilla, pie de foto, entrada libre— y mitad en `bar_images`, y una fecha calculada sobre una
+     * sola diría «sin cambios» justo después de que alguien reescribiera la otra. Eso es peor que no
+     * dar fecha: quien la use para decidir si su copia sigue valiendo se quedaría con la vieja.
+     *
+     * ⚠️ Cuenta también las imágenes **inactivas y de cualquier tipo**: retirar una carta del panel es
+     * un cambio del bar, aunque lo que cambie sea que hay menos.
+     */
+    public static function updatedAt(): ?CarbonInterface
+    {
+        $ajustes = Setting::query()
+            ->where('key', 'like', 'bar.%')
+            ->max('updated_at');
+
+        $imagenes = BarImage::query()->max('updated_at');
+
+        $fechas = array_filter([$ajustes, $imagenes]);
+
+        return $fechas === [] ? null : Carbon::parse(max($fechas));
     }
 
     /** Un texto de `settings` por idioma, con respaldo al español y `null` si está vacío. */

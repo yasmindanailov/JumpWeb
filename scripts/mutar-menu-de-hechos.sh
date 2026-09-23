@@ -14,7 +14,7 @@ cd "$(git rev-parse --show-toplevel)"
 SAIL="docker compose exec -u sail -T laravel.test"
 # ⚠️ El último no es una clase sino un MÉTODO: `CatalogEditTest` entero son ~40 casos del panel y el arnés
 # corre esta orden una vez por mutación. Se trae solo la guarda de la foto, que es la de esta tanda.
-TESTS="$SAIL php artisan test --filter='PublicFactsBoundaryTest|SiteFactsTest|ScheduleFactsTest|RulesFactsTest|FaqsFactsTest|ServicesFactsTest|LegalDocumentsTest|PricesFactsTest|SocialProofFactsTest|VenueAddressTest|LocalNumberTest|MetaDescriptionTest|HeroStatusTest|ApiContractTest|CatalogTest|the_ficha_photo_is_editable_from_the_panel'"
+TESTS="$SAIL php artisan test --filter='PublicFactsBoundaryTest|SiteFactsTest|ScheduleFactsTest|RulesFactsTest|FaqsFactsTest|ServicesFactsTest|BarFactsTest|BarPageTest|AnfitrionBarTest|LegalDocumentsTest|PricesFactsTest|SocialProofFactsTest|VenueAddressTest|LocalNumberTest|MetaDescriptionTest|HeroStatusTest|ApiContractTest|CatalogTest|the_ficha_photo_is_editable_from_the_panel'"
 
 LECTOR=app/Domain/Platform/Services/PublicFacts.php
 RECURSO=app/Http/Resources/Api/V1/SiteFactsResource.php
@@ -33,6 +33,11 @@ DUDASCTRL=app/Http/Controllers/Api/V1/FaqsFactsController.php
 # El plato de los SERVICIOS (F5, `#672`).
 SERVICIOS=app/Http/Resources/Api/V1/ServicesFactsResource.php
 SERVICIOSCTRL=app/Http/Controllers/Api/V1/ServicesFactsController.php
+# El plato del BAR (F5, `#673`). ⚠️ Incluye el SERVICIO DE DOMINIO, porque es donde vive la regla:
+# este recurso no declara lista blanca, delega en `BarPage` (lo que su propia guarda prescribe).
+BAR=app/Http/Resources/Api/V1/BarFactsResource.php
+BARCTRL=app/Http/Controllers/Api/V1/BarFactsController.php
+BARPAGE=app/Domain/Content/Services/BarPage.php
 CONTRATO=tests/Feature/Api/ApiContractTest.php
 LEGALES=app/Http/Resources/Api/V1/LegalDocumentsResource.php
 LEGALESCTRL=app/Http/Controllers/Api/V1/LegalDocumentsController.php
@@ -51,7 +56,7 @@ MODELOPROD=app/Domain/Booking/Models/TicketType.php
 YAML=openapi/v1.yaml
 
 TMP="$(mktemp -d)"
-FICHEROS=("$LECTOR" "$RECURSO" "$HORARIO" "$ENVIVO" "$ESTADO" "$NORMAS" "$NORMASCTRL" "$DUDAS" "$DUDASCTRL" "$SERVICIOS" "$SERVICIOSCTRL" "$CONTRATO" "$LEGALES" "$LEGALESCTRL" "$PRECIOS" "$PRECIOSCTRL" "$RUTAS" "$FICHAZONA" "$FICHAPROD" "$LECTORCAT" "$MODELOZONA" "$MODELOPROD" "$YAML" "$PANEL" "$CIFRA" "$DIRECCION" "$NUMERO" "$RESUMEN" "$MONEDA")
+FICHEROS=("$LECTOR" "$RECURSO" "$HORARIO" "$ENVIVO" "$ESTADO" "$NORMAS" "$NORMASCTRL" "$DUDAS" "$DUDASCTRL" "$SERVICIOS" "$SERVICIOSCTRL" "$BAR" "$BARCTRL" "$BARPAGE" "$CONTRATO" "$LEGALES" "$LEGALESCTRL" "$PRECIOS" "$PRECIOSCTRL" "$RUTAS" "$FICHAZONA" "$FICHAPROD" "$LECTORCAT" "$MODELOZONA" "$MODELOPROD" "$YAML" "$PANEL" "$CIFRA" "$DIRECCION" "$NUMERO" "$RESUMEN" "$MONEDA")
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$TMP/$(basename "$f")" "$f"; touch "$f"; done; }
 trap 'restaurar; rm -rf "$TMP"' EXIT
 for f in "${FICHEROS[@]}"; do cp "$f" "$TMP/$(basename "$f")"; done
@@ -417,6 +422,65 @@ mutar "el idioma deja de ser obligatorio en los servicios" \
 
 mutar "el contrato deja de exigir el título y la lista de productos de una sección" \
   "$YAML" "            required: [slug, title, products]" "            required: [slug]"
+
+# ── El BAR (`#673`) ────────────────────────────────────────────────────────────────────────────
+mutar "el bar se publica SIN NOMBRE (una página sin titular)" \
+  "$BAR" "            ...(BarPage::isPublished() ? ['bar' => \$this->bar()] : [])," \
+  "            'bar' => \$this->bar(),"
+
+mutar "\`free_entry\` sale como la CADENA del panel en vez de como booleano" \
+  "$BAR" "['free_entry' => \$entradaLibre === 'yes']" "['free_entry' => \$entradaLibre]"
+
+# ⚠️⚠️ Los dos que prueban que la fecha mira LAS DOS fuentes: cada uno le quita una.
+mutar "\`updated_at\` deja de mirar las IMÁGENES (dice «sin cambios» tras cambiar una carta)" \
+  "$BARPAGE" "        \$imagenes = BarImage::query()->max('updated_at');" "        \$imagenes = null;"
+
+mutar "\`updated_at\` deja de mirar los AJUSTES (dice «sin cambios» tras reescribir el nombre)" \
+  "$BARPAGE" "        \$ajustes = Setting::query()
+            ->where('key', 'like', 'bar.%')
+            ->max('updated_at');" \
+  "        \$ajustes = null;"
+
+mutar "una imagen SIN alt se esconde (esconder la carta no arregla la accesibilidad: quita el menú)" \
+  "$BAR" "        return array_filter([
+            'url' => \$imagen->imageUrl()," \
+  "        if (! is_string(\$alt) || trim(\$alt) === '') {
+            return [];
+        }
+
+        return array_filter([
+            'url' => \$imagen->imageUrl(),"
+
+mutar "las DIMENSIONES dejan de viajar (y la página vuelve a saltar al cargar la carta)" \
+  "$BAR" "            'width' => \$imagen->width,
+            'height' => \$imagen->height," ""
+
+mutar "una carta RETIRADA del panel vuelve a publicarse" \
+  "$BARPAGE" "            ->ofKind(BarImage::KIND_MENU)
+            ->active()" \
+  "            ->ofKind(BarImage::KIND_MENU)"
+
+mutar "el pie se suelta en la raíz del bar y sobrevive a la foto que describe" \
+  "$BAR" "            ...(\$local === null ? [] : ['venue' => [" \
+  "            ...array_filter(['caption' => BarPage::photoCaption()], fn (?string \$v): bool => \$v !== null),
+            ...(\$local === null ? [] : ['venue' => ["
+
+mutar "el bar deja de cachearse en público" \
+  "$RUTAS" "    Route::get('/bar', BarFactsController::class)
+        ->middleware('cache.headers:public;max_age=300;etag')" \
+  "    Route::get('/bar', BarFactsController::class)"
+
+mutar "el idioma deja de ser obligatorio en el bar" \
+  "$BARCTRL" "\$request->validate(['lang' => ['required', 'string', Rule::in(SetLocale::SUPPORTED)]]);" \
+  "\$request->validate(['lang' => ['sometimes', 'string', Rule::in(SetLocale::SUPPORTED)]]) + ['lang' => 'es'];"
+
+mutar "la foto del local DIVERGE de una imagen de la carta en el contrato" \
+  "$YAML" "                width: { type: integer }
+                height: { type: integer }
+                caption:" \
+  "                width: { type: string }
+                height: { type: integer }
+                caption:"
 
 echo
 echo "mutaciones: $muerden/$total muerden"

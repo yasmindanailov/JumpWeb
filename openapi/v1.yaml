@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.13.0
+  version: 1.14.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -696,6 +696,53 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Services'
+        '304':
+          description: Sin cambios desde el `ETag` enviado en `If-None-Match`.
+        '422':
+          description: Falta `lang` o no es uno de los idiomas soportados.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /bar:
+    get:
+      tags: [Instalación]
+      operationId: getBar
+      summary: El bar del recinto, con las caras de su carta y la foto del local
+      description: |
+        Lo que el negocio publica de su bar: cómo se llama, su entradilla, si se puede entrar sin pagar,
+        las caras de la **carta** y la foto del **local** con su pie.
+
+        **El NOMBRE gatea la página entera**: sin él, la clave `bar` no viaja. Así es como una instalación
+        sin bar dice que no tiene bar, en vez de emitir un sobre vacío que cada landing tendría que
+        aprender a distinguir. `updated_at` sí viaja siempre.
+
+        **`free_entry` es un booleano.** En la base es la cadena `yes`/`no`, que es cómo lo guarda el
+        panel; no tienes que aprenderte ese vocabulario. Si la instalación no lo ha configurado —o si hay
+        un valor que el producto no reconoce— **la clave falta**: no se afirma ni que sí ni que no.
+
+        ⚠️ **Las imágenes traen sus dimensiones REALES**, medidas contra el fichero al guardarlo. Úsalas
+        en `width`/`height`: la carta es la imagen más grande de la página y sin ellas el navegador no
+        puede reservar el hueco, así que **la página salta** cuando la imagen termina de cargar.
+
+        ⚠️ **`alt` puede faltar y tienes que contemplarlo.** Es obligatorio en el formulario del panel, así
+        que el hueco solo aparece en filas metidas por SQL o por migración — pero una imagen sin texto
+        alternativo **sigue viajando**, porque el contenido es la imagen: esconder la carta no arregla la
+        accesibilidad, quita el menú.
+
+        `updated_at` mira **las dos fuentes** del bar —sus ajustes y sus imágenes, incluidas las
+        retiradas—, porque una fecha calculada sobre una sola diría «sin cambios» justo después de que
+        alguien reescribiera la otra.
+      parameters:
+        - $ref: '#/components/parameters/SidebarLang'
+      responses:
+        '200':
+          description: El bar, si está publicado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bar'
         '304':
           description: Sin cambios desde el `ETag` enviado en `If-None-Match`.
         '422':
@@ -3726,6 +3773,76 @@ components:
                   `/catalog/products`. Solo los que la cesta puede vender de verdad. **Lista vacía =
                   sección de solo-contacto**: es el único sitio donde se dice, a propósito.
                 items: { type: integer }
+
+    BarImage:
+      type: object
+      additionalProperties: false
+      required: [url]
+      properties:
+        url: { type: string, format: uri }
+        alt:
+          type: string
+          description: |
+            El texto alternativo. **Puede faltar** —solo en filas que no pasaron por el panel— y aun así
+            la imagen viaja: el contenido es la imagen. Contémplalo al pintar.
+        width:
+          type: integer
+          description: |
+            Ancho REAL del fichero, medido al guardarlo. Píntalo en el `<img>`: sin él la página salta
+            cuando la imagen carga. Falta si el fichero no se pudo medir.
+        height:
+          type: integer
+          description: Alto REAL del fichero, medido al guardarlo. Mismo motivo que `width`.
+
+    Bar:
+      type: object
+      additionalProperties: false
+      required: [lang, updated_at]
+      properties:
+        lang:
+          type: string
+          description: El idioma en el que viene el texto, que es el que se pidió.
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: |
+            Lo último que se tocó del bar, mirando **sus dos fuentes**: sus ajustes y sus imágenes
+            —incluidas las retiradas, porque tener menos cartas también es un cambio—. `null` si no hay
+            nada del bar en la instalación.
+        bar:
+          type: object
+          description: |
+            **Ausente cuando el bar no está publicado**, que es lo mismo que decir «sin nombre»: sin
+            titular no hay página. Una instalación sin bar no emite un sobre vacío, no emite nada.
+          additionalProperties: false
+          required: [name, menu]
+          properties:
+            name: { type: string }
+            lede:
+              type: string
+              description: La frase de presentación. Falta si no se escribió.
+            free_entry:
+              type: boolean
+              description: |
+                `true` si se puede entrar al bar sin comprar entrada. **Ausente** si la instalación no lo
+                ha configurado: la ausencia no significa `false`, significa que no se afirma nada.
+            menu:
+              type: array
+              description: 'Las caras de la carta, activas y en el orden del panel. Lista vacía: no hay carta publicada.'
+              items:
+                $ref: '#/components/schemas/BarImage'
+            venue:
+              type: object
+              description: 'La foto del local. **Ausente** si no hay ninguna; su pie va dentro, porque sin foto no hay nada que pie.'
+              additionalProperties: false
+              required: [url]
+              properties:
+                url: { type: string, format: uri }
+                alt: { type: string, description: 'Como en `BarImage`: puede faltar.' }
+                width: { type: integer }
+                height: { type: integer }
+                caption: { type: string, description: El pie de la foto. Falta si no se escribió. }
 
     SocialProofFacts:
       type: object

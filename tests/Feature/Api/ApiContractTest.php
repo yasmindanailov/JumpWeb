@@ -76,6 +76,17 @@ class ApiContractTest extends TestCase
         // `products` fuera opcional, «ausente» y «vacía» significarían lo mismo y la landing tendría que
         // tratar dos casos para una sola realidad.
         'Services.services.items' => ['accent_word', 'body', 'zone_label', 'image_url', 'specs'],
+        // **El BAR** (`#673`). `bar` falta entero cuando no está publicado —sin nombre no hay página—, y
+        // dentro, lo que la instalación puede no haber escrito. ⚠️ `free_entry` es opcional con un motivo
+        // más fuerte que «no lo rellenaron»: su ausencia **no significa `false`**. Emitirlo siempre
+        // obligaría a elegir un valor por defecto, y las dos opciones mienten sobre la mitad de los bares.
+        'Bar' => ['bar'],
+        'Bar.bar' => ['lede', 'free_entry', 'venue'],
+        // De una imagen: el `alt` —obligatorio en el panel, así que solo falta en filas metidas por SQL—
+        // y las dimensiones, que faltan si el fichero no se pudo medir. La `url` va siempre: una imagen
+        // sin URL no es una imagen.
+        'BarImage' => ['alt', 'width', 'height'],
+        'Bar.bar.venue' => ['alt', 'width', 'height', 'caption'],
         // `signed_version` existe SOLO donde hay documento publicado y versionado (hoy `condiciones` y
         // `waiver`): exigirlo obligaría a inventar una versión para la política de cookies.
         // ⚠️ Su `published_at` NO entra aquí: la columna es `NOT NULL` (medido), así que una versión
@@ -616,6 +627,53 @@ class ApiContractTest extends TestCase
             $ficha['required'] ?? null,
             '`CatalogZoneDetail` tiene que exigir exactamente la identidad de `CatalogZone`: '.
             'lo que añade la ficha es opcional por diseño'
+        );
+    }
+
+    /**
+     * **La foto del LOCAL dice lo mismo que una imagen de la carta** (`#673`).
+     *
+     * `Bar.venue` es una copia INLINE de `BarImage` con un `caption` de más, y es inline por la misma
+     * razón de siempre en esta casa: en OpenAPI 3.0 no se puede componer un `$ref` con una propiedad
+     * extra bajo `additionalProperties: false` sin que el validador deje de morder (`#27`, y ya van
+     * cuatro). La salida acordada es copia inline **más guarda de divergencia**, que es ésta.
+     *
+     * Sin ella, el día que `BarImage` gane un campo —o que alguien describa `width` de otra manera— la
+     * carta y la foto del local empezarían a contarse distintas, y quien pinte las dos tendría que
+     * programar dos formas de lo mismo.
+     */
+    public function test_the_inlined_venue_photo_says_the_same_as_a_bar_image(): void
+    {
+        $schemas = $this->contract()['components']['schemas'] ?? [];
+        $imagen = $schemas['BarImage'] ?? null;
+        $local = $schemas['Bar']['properties']['bar']['properties']['venue'] ?? null;
+
+        $this->assertIsArray($imagen, 'falta el componente `BarImage`');
+        $this->assertIsArray($local, '`Bar.bar.venue` ya no se declara inline');
+
+        foreach (array_keys($imagen['properties']) as $campo) {
+            $this->assertArrayHasKey(
+                $campo,
+                $local['properties'] ?? [],
+                "«Bar.venue» perdió «{$campo}», que `BarImage` sí declara"
+            );
+            $this->assertSame(
+                $imagen['properties'][$campo]['type'] ?? null,
+                $local['properties'][$campo]['type'] ?? null,
+                "«Bar.venue.{$campo}» ha divergido de `BarImage`: ya no es del mismo tipo"
+            );
+        }
+
+        $this->assertSame(
+            $imagen['required'],
+            $local['required'] ?? null,
+            '`Bar.venue` tiene que exigir lo mismo que `BarImage`: lo que añade —el pie— es opcional'
+        );
+
+        $this->assertSame(
+            ['caption'],
+            array_values(array_diff(array_keys($local['properties']), array_keys($imagen['properties']))),
+            '`Bar.venue` solo puede añadir el pie a `BarImage`; si añade más, hay que decidir si es de las dos'
         );
     }
 

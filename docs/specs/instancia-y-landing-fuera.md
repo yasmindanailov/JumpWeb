@@ -20,8 +20,8 @@
   - ⚠️ **Dos formas de foto a propósito** (`#645`): el producto la SUBE a `uploads`, la zona guarda ruta a
     `public/`; las dos salen como URL absoluta por su `imageUrl()`.
 - **Estado**: **MENÚ SERVIDO** + **T2a→T2c, T3·1 y T4 hechas**; en marcha la **vía A**, y de sus cuatro
-  platos **dudas ✅ y servicios ✅** (`#671`, `#672`, contrato **1.13.0**). Quedan **el bar y atracciones**,
-  y los **tramos de grupo**, que son dinero y van aparte (§4.1).
+  platos **dudas, servicios y el bar ✅** (`#671`→`#673`, contrato **1.14.0**). Queda **atracciones**, y
+  los **tramos de grupo**, que son dinero y van aparte (§4.1).
   ▶ **Un recurso nuevo se escribe con su lista blanca o no se escribe**; lo no rellenado no viaja, ni lo
   BORRADO (`''` en BD). ❗ Y el filtro de «vacío» va **después** del respaldo de idioma, o el recurso sale
   vacío entero en `en`/`fr` (`#671`, §4.1).
@@ -403,6 +403,62 @@ contenido. *Publicar un dato como hecho es la forma más barata de descubrir que
 200 en es/en con `ETag` distinto por idioma, y ni `price_table` ni `nav_subtitle` en el cuerpo. Contrato
 **1.13.0** (añade, no cambia).
 
+#### `GET /bar?lang=` — EL BAR ✅ (`#673`, 2026-09-23) · el primero que lee `settings` sin lista blanca
+
+Tercero de los cuatro, y el que **estrena un camino que la receta no había usado todavía**: es el primer
+plato cuyo contenido vive en `settings`, y **no declara lista blanca** — delega en `BarPage`.
+▶ **No es un rodeo de `PublicFactsBoundaryTest`, es lo que su propio docblock prescribe**: *«un hecho
+público se pide por `PublicFacts` con la lista de ese recurso; **lo demás lo sirve un servicio de dominio,
+que es quien sabe qué significa su ajuste**»*. `BarPage` es ese servicio: sabe que el NOMBRE gatea la
+publicación, que `bar.free_entry` solo admite `yes`/`no` y cuál es el respaldo de idioma. Declarar sus
+diez claves en el recurso para poder usar `PublicFacts` habría duplicado esas tres reglas, cambiando una
+fuente única por dos que hay que mantener de acuerdo. ▶ **Y eso deja una regla para los platos que
+vengan**: si el ajuste ya tiene servicio de dominio, se delega; la lista blanca es para el recurso que
+lee `settings` a pelo, que es el caso de `/site`.
+
+⚠️ **El NOMBRE gatea la clave `bar` entera** (`BarPage::isPublished()`: «sin él no hay titular, y sin
+titular no hay página»). Una instalación sin bar **no emite un sobre vacío, no emite nada** — el mismo
+patrón que `rating` en `/social-proof`. `updated_at` sí viaja siempre.
+
+⚠️ **`free_entry` sale como BOOLEANO**, no como la cadena `yes`/`no` que guarda el panel: ese vocabulario
+es un detalle de almacenamiento y un cliente no tiene por qué aprendérselo. Sin configurar —o con un valor
+que el dominio no reconoce— **la clave falta, y su ausencia no significa `false`**: significa que no se
+afirma nada. Emitirla siempre obligaría a elegir un valor por defecto, y los dos mienten sobre la mitad de
+los bares.
+
+⚠️⚠️ **Las DIMENSIONES viajan y son media razón de ser del plato.** `BarImage` las mide **contra el disco**
+al guardar, y existen para que el navegador reserve el hueco: la carta es la imagen más grande de la web y
+sin `width`/`height` la página SALTA al cargarla. Una landing que no las reciba recupera ese salto y no
+sabe por qué.
+❗❗ **Y esto puso en rojo el primer caso que las comprobaba, con razón**: el test tecleaba `width` al crear
+la fila y el `saving()` del modelo lo **sobrescribía con `null`**, porque el fichero no existía en el
+disco de pruebas. Un caso que hubiera aceptado ese `null` no habría tenido sujeto. ▶ El fixture pone un
+PNG real (GD) **antes** de crear la fila y **no teclea las dimensiones**: las compara con lo que el modelo
+midió, con un control que aserta primero que midió algo. Su hermano `BarPageTest` ya tenía escrita esa
+receta; conviene leerla antes de escribir un caso sobre una imagen.
+
+▶ **Una imagen SIN `alt` SÍ viaja, y aquí la regla se aparta de la de `#671` a propósito.** Una duda sin
+respuesta no publica nada útil; una carta sin texto alternativo **sigue siendo la carta**, porque el
+contenido ES la imagen. Esconderla no arregla la accesibilidad: quita el menú. El `alt` es obligatorio en
+el formulario, así que el hueco solo aparece en filas metidas por SQL, y el contrato lo declara opcional
+para que quien pinte sepa que tiene que contemplarlo.
+
+❗❗ **`updated_at` mira LAS DOS FUENTES o miente.** El bar vive mitad en `settings` y mitad en
+`bar_images`; una fecha calculada sobre una sola diría «sin cambios» justo después de que alguien
+reescribiera la otra, y quien la use para decidir si su copia sigue valiendo se quedaría la vieja. Cuenta
+además las imágenes **retiradas**: tener menos cartas también es un cambio del bar. ▶ Va en `BarPage` y no
+en el recurso porque «cuándo se tocó el bar» es conocimiento del dominio, y **el arnés lo prueba con dos
+mutantes, uno por fuente** — con uno solo, la mitad de la regla quedaría sin ejercer.
+
+▶ **El pie va DENTRO de la foto del local**: sin foto no hay nada que pie. Y `Bar.venue` es copia INLINE
+de `BarImage` —OpenAPI 3.0 no compone un `$ref` con una propiedad extra bajo `additionalProperties:
+false`, que es la trampa de `#27` por cuarta vez—, así que lleva **guarda de divergencia** en
+`ApiContractTest`, como manda la casa.
+
+**Medido**: `BarFactsTest` (12 casos, 52 aserciones) · `scripts/mutar-menu-de-hechos.sh` con once mutantes
+nuevos · Pint y Larastan sin tocar la línea base · y **en vivo**: 200 en es/en con `ETag` por idioma, la
+carta a 1240×1754 y el local a 1600×900 medidos del fichero real. Contrato **1.14.0** (añade, no cambia).
+
 ### 4.1.bis · La RECETA de un plato nuevo
 
 Siete tandas destilan esto. Vale para **cualquier** recurso público que se añada después, dentro de F5 o
@@ -519,9 +575,9 @@ servidos, la landing nueva los consume, el panel los sigue editando y la T3 se d
 ✅ **CONTESTADO por el owner el 23-09**: se arranca por los PLATOS, no por el kit de widgets —que sigue
 donde lo dejó `#632`·P2, esperando a que una segunda instancia lo pida—. Y con él llegó `#670`: **no se
 despliega en piezas**, así que estos platos no van a producción sueltos; van dentro de la v2.0.0 grande.
-▶ **El orden de los cuatro, y su porqué**: **dudas ✅** (`#671`) → **servicios ✅** (`#672`) → **el bar** →
-**atracciones**. De menos a más: las dudas son cuatro columnas y afinan la plantilla; atracciones son 23
-filas con imagen, chapa y etiqueta de edad, y van al final para llegar con la receta ya rodada.
+▶ **El orden de los cuatro, y su porqué**: **dudas ✅** (`#671`) → **servicios ✅** (`#672`) → **el bar ✅**
+(`#673`) → **atracciones**. De menos a más: las dudas son cuatro columnas y afinan la plantilla;
+atracciones son 23 filas con imagen, chapa y etiqueta de edad, y van al final con la receta ya rodada.
 ❗ **Y el menú tiene un quinto pendiente que no estaba en la lista de cuatro**: los **TRAMOS DE GRUPO**.
 `GroupRateTables` los compone desde el catálogo y **ninguna ruta los sirve** (medido: su único llamante es
 `ServicesController`). Salieron del alcance de `#672` a propósito —son dinero— y con ellos viene la
