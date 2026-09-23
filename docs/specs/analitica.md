@@ -25,8 +25,9 @@
     podan a los 25 meses; el pedido no.
   - ⚠️ Lo compartido (`layout.blade.php`, `app.js`, `resources/js/sidebar/**`, la CSP) **se avisa en el buzón
     ANTES** (`CONVENCIONES §10`).
-- **Estado**: T0 la spec ✅ · T1→T5 ⬜ (§4.7). ❗ `[PENDIENTE: owner]`: el cuándo frente a `#670` y la
-  pregunta «¿cómo nos has conocido?» (§7). `[PENDIENTE: asesoría]`: la LIA y los textos (§4.3).
+- **Estado**: T0 la spec ✅ · T1→T5 ⬜ (§4.7). `[DECIDIDO owner]` 23-09: **todo con la v2.0.0** (sin
+  excepción a `#670`) y **sin** la pregunta «¿cómo nos has conocido?» (§7). `[PENDIENTE: asesoría]`: la LIA
+  y los textos (§4.3).
 - **Invariantes**: `RGPD-05`, `SEC-01`, `PERF-02`, `SUITE-01`, `PAY-14` (§5). Dinero: ninguno cambia;
   `redsys:verify-concurrency` tras T1.
 
@@ -82,7 +83,8 @@ UTM, no la apertura); la app móvil (el contrato ya le sirve; su SDK es de F6); 
   **driver alternativo** para un cliente que exija «ningún tercero» (§4.3).
 - **C · Libro propio + herramienta intercambiable** — **ELEGIDA** (`[DECIDIDO owner]`): la verdad en casa,
   exenta y al 100 %; PostHog nube UE para el «por qué», bajo consentimiento, con un `driver` por instalación.
-- **D · Esperar a la v2.0.0 para todo**. Descartada como diseño; sigue siendo la pregunta del CUÁNDO (§7).
+- **D · Esperar a la v2.0.0 para desplegar**. No es una opción de diseño sino del CUÁNDO, y el owner la
+  eligió (23-09, §7): ninguna excepción a `#670`. La T1 se construye igual y sale con la versión grande.
 
 ## 4. Diseño elegido
 
@@ -148,7 +150,7 @@ como `page_viewed` con esa fuente. La ficha de Google Business Profile enlaza co
 | Landing | `section_viewed` · `reserve_clicked` (product) · `call_clicked` · `whatsapp_clicked` · `map_clicked` · `contact_form_started` |
 | Cajón | `drawer_opened` (page, product) · `step_entered` (from, to) · `product_chosen` · `date_chosen` · `availability_missing` (product, month) · `time_chosen` · `line_added` / `line_removed` (product, qty) · `identify_started` (method: login/register/google) · `identified` · `email_verification_pending` · `pay_started` (amount_cents) · `drawer_closed` (step) |
 | Servidor | `order_created` · `order_paid` · `order_declined` · `order_expired` · `order_cancelled` · `order_refunded` (order_id, amount_cents, product ids) · `user_registered` (method) · `user_logged_in` · `contact_received` (topic) · `guest_form_submitted` · `invitation_replied` · `email_sent` (key) · `consent_updated` (categories) |
-| Después | `email_clicked` (por UTM) · `guest_form_opened` · `visit_checked_in` (cuando la puerta vuelva) · `attribution_answered` (si el owner lo aprueba) · `experiment_exposed` (key, variant) |
+| Después | `email_clicked` (por UTM) · `guest_form_opened` · `visit_checked_in` (cuando la puerta vuelva) · `experiment_exposed` (key, variant) |
 
 **Definición de conversión** (lo que el panel cuenta): *visita* = sesión; *interés* = `drawer_opened` o
 contacto; *intención* = `date_chosen`; *cesta* = `line_added`; *identificado*; *pago iniciado*; **compra** =
@@ -199,8 +201,9 @@ En la ficha de usuario del panel, la **pestaña 360**: primera fuente y campaña
 ingresos totales, última compra, frecuencia, productos, menores a cargo (edades ya guardadas en
 `dependents`), idioma, contactos recibidos, `marketing_opt_in`. **Segmentos** calculados (compró una vez y no
 volvió, cumpleaños en los próximos 60 días, invitado que no compró, contacto sin pedido) exportables **solo
-con opt-in**. Y la pregunta **«¿cómo nos has conocido?»** tras la confirmación, un clic, opcional
-(`attribution_answered`): cierra el hueco del teléfono y de Maps — `[PENDIENTE: owner]`.
+con opt-in**. La pregunta «¿cómo nos has conocido?» tras la confirmación **se descartó** (`[DECIDIDO owner]`,
+23-09): lo offline queda con la fuente que marca el operador en el pedido manual (§4.1), y
+`attribution_answered` sale del contrato.
 
 ### 4.6 Experimentos (T5)
 
@@ -260,11 +263,13 @@ driver externo solo ven a quien consintió.
   atar la navegación al cliente con interés legítimo, anuncios medidos por atribución propia y conversiones
   por servidor con consentimiento, sin remarketing todavía— con las palabras *«Perfecto, vamos a ello, así lo
   haremos»*. Registrado en `#678`.
-- `[PENDIENTE: owner]` **el cuándo**: `#670` manda esperar a la v2.0.0; la alternativa es una excepción
-  mínima —la T1 sobre v1.1.0, de noche— porque cada semana sin medir no vuelve y la landing nueva se
-  diseña mejor con datos. Y **la pregunta «¿cómo nos has conocido?»** (§4.5).
+- **23-09, owner, segunda ronda** (preguntado con opciones cerradas y la recomendada delante): **el cuándo**
+  — todo con la v2.0.0, sin excepción a `#670`, aunque se le puso delante que cada semana sin medir no vuelve;
+  **la pregunta «¿cómo nos has conocido?»** — no; y **sí** a la revisión adversarial con enjambre antes de
+  codificar (unos 14 agentes: siete lentes que intentan refutar el §4 y una verificación cruzada por lente).
 - `[PENDIENTE: asesoría]`: la LIA, los textos de política y banner, y Consent Mode «avanzado».
-- Revisión adversarial de esta spec: se ofrece al owner con su coste (regla 9); no se lanza.
+- **§7.1 · La revisión adversarial**: sus hallazgos confirmados se escriben aquí, y cada corrección va
+  DELANTE del texto que corrige, no se reescribe en silencio (`/spec` §4).
 
 ## Anexo · fila del enrutador
 

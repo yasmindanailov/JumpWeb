@@ -73,8 +73,10 @@
    `/cajon/paquete.js` con `data-track` declarativo, `step_entered` desde `machine.js`, hechos de servidor por
    OBSERVADOR de `Order` (`afterCommit`, nunca tocar el `CRITICAL_RE`), el sello `orders.attribution`, UTM en
    los 26 correos y la poda a 25 meses. Contrato **1.18.0**. ⚠️ Toca ficheros del SPA y de la web: **avisado
-   en el buzón**, abajo. ❗ `[PENDIENTE: owner]`: el cuándo (`#670` vs T1 sobre v1.1.0 de noche) y la
-   pregunta «¿cómo nos has conocido?»; `[PENDIENTE: asesoría]` la LIA y los textos.
+   en el buzón**, abajo. `[DECIDIDO owner]` 23-09: **todo con la v2.0.0** (sin excepción a `#670`) y **sin**
+   la pregunta «¿cómo nos has conocido?»; `[PENDIENTE: asesoría]` la LIA y los textos. ▶ El owner autorizó
+   la **revisión adversarial con enjambre** de la spec (pedida con el coste delante, como manda la regla 9):
+   sus hallazgos confirmados van a la spec §7.1 antes de la T1.
    ⚠️⚠️ **Lo que dejaron los platos y vale para lo que venga** (detalle en la spec §4.1 y §4.1.ter): si
    el dato tiene **servicio de dominio**, el recurso **delega** · el filtro de «lo que no viaja» va
    **DESPUÉS** del respaldo de idioma (`Translated::pick()` encadena con `??`) · lo que decide la MAQUETA
@@ -98,12 +100,11 @@
 6. Después, **F6** (app nativa; hereda del token lo que su spec §2 nombra: Google, alta, dispositivos).
 - **Del owner, HOY**: el **fin de la promo** (es suyo el cuándo) · el **ojo** que le falta a la compra de
   la T5 de F4 · **`topics`**: con la landing fuera, ¿de quién son los asuntos del formulario de contacto?
-  (hoy son constante del producto, y `birthday`/`groups` son vocabulario del SECTOR) · y de la analítica,
-  **el cuándo** (`#670` manda esperar a la v2.0.0; la alternativa es la T1 sola sobre v1.1.0, de noche) y
-  **la pregunta «¿cómo nos has conocido?»** tras pagar (spec §4.5 y §7).
+  (hoy son constante del producto, y `birthday`/`groups` son vocabulario del SECTOR).
   ▶ Contestadas y retiradas de aquí: por dónde arrancar la vía A (los platos, 23-09), cuándo se
-  despliega (`#670`: no en piezas), el registro del dinero en la API (`#677`: céntimos) y **la dirección
-  entera de la analítica** (`#678`). Las TRES de §7 de la spec de F5 lo están desde `#639`.
+  despliega (`#670`: no en piezas), el registro del dinero en la API (`#677`: céntimos) y **la analítica
+  entera** (`#678`: dirección, «todo con la v2.0.0» y sin la pregunta tras pagar). Las TRES de §7 de la
+  spec de F5 lo están desde `#639`.
 
 ## Ficheros de este carril
 
