@@ -14,7 +14,7 @@ cd "$(git rev-parse --show-toplevel)"
 SAIL="docker compose exec -u sail -T laravel.test"
 # ⚠️ El último no es una clase sino un MÉTODO: `CatalogEditTest` entero son ~40 casos del panel y el arnés
 # corre esta orden una vez por mutación. Se trae solo la guarda de la foto, que es la de esta tanda.
-TESTS="$SAIL php artisan test --filter='PublicFactsBoundaryTest|SiteFactsTest|ScheduleFactsTest|RulesFactsTest|FaqsFactsTest|LegalDocumentsTest|PricesFactsTest|SocialProofFactsTest|VenueAddressTest|LocalNumberTest|MetaDescriptionTest|HeroStatusTest|ApiContractTest|CatalogTest|the_ficha_photo_is_editable_from_the_panel'"
+TESTS="$SAIL php artisan test --filter='PublicFactsBoundaryTest|SiteFactsTest|ScheduleFactsTest|RulesFactsTest|FaqsFactsTest|ServicesFactsTest|LegalDocumentsTest|PricesFactsTest|SocialProofFactsTest|VenueAddressTest|LocalNumberTest|MetaDescriptionTest|HeroStatusTest|ApiContractTest|CatalogTest|the_ficha_photo_is_editable_from_the_panel'"
 
 LECTOR=app/Domain/Platform/Services/PublicFacts.php
 RECURSO=app/Http/Resources/Api/V1/SiteFactsResource.php
@@ -30,6 +30,9 @@ NORMASCTRL=app/Http/Controllers/Api/V1/RulesFactsController.php
 # El plato de las DUDAS (F5, `#671`).
 DUDAS=app/Http/Resources/Api/V1/FaqsFactsResource.php
 DUDASCTRL=app/Http/Controllers/Api/V1/FaqsFactsController.php
+# El plato de los SERVICIOS (F5, `#672`).
+SERVICIOS=app/Http/Resources/Api/V1/ServicesFactsResource.php
+SERVICIOSCTRL=app/Http/Controllers/Api/V1/ServicesFactsController.php
 CONTRATO=tests/Feature/Api/ApiContractTest.php
 LEGALES=app/Http/Resources/Api/V1/LegalDocumentsResource.php
 LEGALESCTRL=app/Http/Controllers/Api/V1/LegalDocumentsController.php
@@ -48,7 +51,7 @@ MODELOPROD=app/Domain/Booking/Models/TicketType.php
 YAML=openapi/v1.yaml
 
 TMP="$(mktemp -d)"
-FICHEROS=("$LECTOR" "$RECURSO" "$HORARIO" "$ENVIVO" "$ESTADO" "$NORMAS" "$NORMASCTRL" "$DUDAS" "$DUDASCTRL" "$CONTRATO" "$LEGALES" "$LEGALESCTRL" "$PRECIOS" "$PRECIOSCTRL" "$RUTAS" "$FICHAZONA" "$FICHAPROD" "$LECTORCAT" "$MODELOZONA" "$MODELOPROD" "$YAML" "$PANEL" "$CIFRA" "$DIRECCION" "$NUMERO" "$RESUMEN" "$MONEDA")
+FICHEROS=("$LECTOR" "$RECURSO" "$HORARIO" "$ENVIVO" "$ESTADO" "$NORMAS" "$NORMASCTRL" "$DUDAS" "$DUDASCTRL" "$SERVICIOS" "$SERVICIOSCTRL" "$CONTRATO" "$LEGALES" "$LEGALESCTRL" "$PRECIOS" "$PRECIOSCTRL" "$RUTAS" "$FICHAZONA" "$FICHAPROD" "$LECTORCAT" "$MODELOZONA" "$MODELOPROD" "$YAML" "$PANEL" "$CIFRA" "$DIRECCION" "$NUMERO" "$RESUMEN" "$MONEDA")
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$TMP/$(basename "$f")" "$f"; touch "$f"; done; }
 trap 'restaurar; rm -rf "$TMP"' EXIT
 for f in "${FICHEROS[@]}"; do cp "$f" "$TMP/$(basename "$f")"; done
@@ -366,6 +369,54 @@ mutar "el idioma deja de ser obligatorio en las dudas (y la primera caché fija 
 
 mutar "el contrato deja de exigir los dos campos de una duda" \
   "$YAML" "            required: [question, answer]" "            required: [question]"
+
+# ── Los SERVICIOS (`#672`) ─────────────────────────────────────────────────────────────────────
+mutar "una sección RETIRADA vuelve a la web por la API" \
+  "$SERVICIOSCTRL" "                ->active()
+                ->with(['products.zone', 'products.prices'])" \
+  "                ->with(['products.zone', 'products.prices'])"
+
+mutar "el desempate de dos secciones empatadas se INVIERTE" \
+  "$SERVICIOSCTRL" "                ->orderBy('position')
+                ->orderBy('id')" \
+  "                ->orderBy('position')
+                ->orderByDesc('id')"
+
+mutar "una sección SIN TÍTULO se publica (un ancla a una sección en blanco)" \
+  "$SERVICIOS" "        \$servidos = \$this->servicios
+            ->filter(fn (LandingService \$servicio): bool => \$this->texto(\$servicio, 'title') !== '')
+            ->values();" \
+  "        \$servidos = \$this->servicios->values();"
+
+# ⚠️⚠️ La tabla TECLEADA que el owner jubiló (`#534`): publicarla es servir como HECHO un precio que
+# el checkout podría no cobrar.
+mutar "la tabla de precios TECLEADA se publica como hecho" \
+  "$SERVICIOS" "            'slug' => (string) \$servicio->slug," \
+  "            'slug' => (string) \$servicio->slug,
+            'price_table' => \$servicio->price_table,"
+
+mutar "un campo SIN CONSUMIDOR (\`nav_subtitle\`) se convierte en contrato público" \
+  "$SERVICIOS" "                'zone_label' => \$this->texto(\$servicio, 'zone_label')," \
+  "                'zone_label' => \$this->texto(\$servicio, 'zone_label'),
+                'nav_subtitle' => \$this->texto(\$servicio, 'nav_subtitle'),"
+
+mutar "viajan TODOS los productos enlazados y no solo los que la cesta puede vender" \
+  "$SERVICIOS" "'products' => \$servicio->purchasableProducts()" "'products' => \$servicio->products"
+
+mutar "una ficha a medias viaja (un rótulo sin valor, o al revés)" \
+  "$SERVICIOS" "            if (\$rotulo !== '' && \$valor !== '') {" "            if (\$rotulo !== '' || \$valor !== '') {"
+
+mutar "los servicios dejan de cachearse en público" \
+  "$RUTAS" "    Route::get('/services', ServicesFactsController::class)
+        ->middleware('cache.headers:public;max_age=300;etag')" \
+  "    Route::get('/services', ServicesFactsController::class)"
+
+mutar "el idioma deja de ser obligatorio en los servicios" \
+  "$SERVICIOSCTRL" "\$request->validate(['lang' => ['required', 'string', Rule::in(SetLocale::SUPPORTED)]]);" \
+  "\$request->validate(['lang' => ['sometimes', 'string', Rule::in(SetLocale::SUPPORTED)]]) + ['lang' => 'es'];"
+
+mutar "el contrato deja de exigir el título y la lista de productos de una sección" \
+  "$YAML" "            required: [slug, title, products]" "            required: [slug]"
 
 echo
 echo "mutaciones: $muerden/$total muerden"

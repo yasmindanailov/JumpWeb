@@ -2,9 +2,10 @@
 
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669 AGOTADA con `#669`** → **670–699 EN CURSO** · Último usado: **`#671`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **640–669 AGOTADA con `#669`** → **670–699 EN CURSO** · Último usado: **`#672`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, `docs/specs/instancia-y-landing-fuera.md` · Actualizado: **2026-09-23**
-> (`#670`: el owner decide **no desplegar en piezas** · `#671`: el plato de las **dudas**, servido).
+> (`#670`: el owner decide **no desplegar en piezas** · `#671` y `#672`: los platos de las **dudas** y
+> los **servicios**, servidos; contrato **1.13.0**).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
 > Techo **32 KB** (check 10; subido de 24 en `#724` con la medida delante). El contador de la suite no
 > vive aquí: va en el trailer del commit.
@@ -103,10 +104,19 @@
    trampas en §4.1.ter.
    ✅✅ **LA PREGUNTA ABIERTA, CONTESTADA (23-09): se arranca por los PLATOS**, no por el kit de widgets
    —que sigue donde lo dejó `#632`·P2, esperando a que una segunda instancia lo pida—.
-   ▶▶ **LAS DUDAS, SERVIDAS** (`#671`, contrato **1.12.0**; el detalle en la spec §4.1, que es donde no
-   caduca). **Quedan tres, y van en este orden: SERVICIOS → EL BAR → ATRACCIONES**, de menos a más:
-   atracciones son 23 filas con imagen, chapa y etiqueta de edad, y van al final para llegar con la
-   receta rodada.
+   ▶▶ **DUDAS ✅ (`#671`) y SERVICIOS ✅ (`#672`)**, contrato **1.13.0**; el detalle de los dos en la
+   spec §4.1, que es donde no caduca. **Quedan EL BAR → ATRACCIONES**, en ese orden: atracciones son 23
+   filas con imagen, chapa y etiqueta de edad, y van al final para llegar con la receta rodada.
+   ❗❗ **Y un QUINTO que no estaba en la lista de cuatro: los TRAMOS DE GRUPO.** `GroupRateTables` los
+   compone desde el catálogo y **ninguna ruta los sirve** (medido: su único llamante es
+   `ServicesController`). Salieron de `#672` a propósito —son DINERO— y traen consigo la decisión que
+   `#661` dejó planteada: el contrato de VISTA quiere el importe **ya escrito** (`groupFrom`,
+   `address.written`) y el de API lo quiere en **céntimos** (`/prices`). Las dos tienen razón en su
+   superficie; la tanda decide si viajan los dos y lo mide. Sin esto, una landing de servicios no puede
+   pintar su carril de tarifas.
+   ⚠️ **`price_table` sigue en la tabla y NO la sirve la API** (`#672`): el owner la jubiló (`#534`) pero
+   la PÁGINA todavía la lee, así que la columna conserva consumidor. Se retira con la tanda de la página,
+   no antes — y lo mismo `nav_subtitle`/`show_in_nav`, que esperan su confirmación.
    ❗❗❗ **LO QUE DEJÓ EL PRIMER PLATO Y VALE PARA LOS TRES QUE FALTAN**: el filtro de «lo que no
    viaja» va **DESPUÉS** del respaldo de idioma. `Translated::pick()` encadena con `??`, no con `?:`,
    así que el respaldo lo resuelve por clave AUSENTE — y medido, el contenido de esta instalación está
@@ -271,6 +281,18 @@ dueño es el carril de la web/reseñas—) ·
 
 ## Buzón
 
+### ❗ Para el carril de la WEB (emisor: plataforma, 2026-09-23) — dos huecos de contenido, MEDIDOS
+- ▶ Publicar `/servicios` como hechos (`#672`) destapó dos cosas **tuyas**, que son de tu T6 de contenido
+  y que no toco yo (`#621`). Las dos en `landing_services.specs` de `excursionescolegio`, dato del panel:
+- ⚠️ **Faltan fichas en en/fr**: el español trae **tres** («Duración», «Horario», «Grupo · De 30 a 100
+  alumnos») y el inglés y el francés solo **dos** — «Grupo» no existe en ninguno de los dos.
+- ❗❗ **Y «Horario» NO dice lo mismo en cada idioma**, que es peor que faltar: en español es «Todos los
+  días, de 8:00 a 21:30» y en inglés «Outside opening» / en francés «Hors ouverture». Son afirmaciones
+  distintas sobre CUÁNDO se hacen las excursiones, y una de las dos está mal. **No sé cuál**: lo decide
+  quien conozca la operación.
+- ▶ Hoy no hay exposición —la página está apagada y los packs inactivos—, pero la API ya lo sirve tal cual
+  a cualquier landing que lo pida.
+
 ### ❗❗❗ Para TODOS los carriles (emisor: plataforma, 2026-09-23) — `#670`: NO SE DESPLIEGA EN PIEZAS
 - ▶ **Decisión del owner**: producción se queda en **v1.1.0** hasta el final del programa. **v2.0.0 es
   UNA versión grande** con todo dentro —los cuatro platos, la landing nueva, el cajón, el justificante,
@@ -285,32 +307,6 @@ dueño es el carril de la web/reseñas—) ·
   Es fichero mío (`#624`), pero la frase hablaba de lo tuyo y por eso te lo digo.
 - ▶ **Contrato de la API en `1.12.0`** (`#671`, `/api/v1/faqs`): **solo añade**, ninguna ruta existente
   cambia de forma. Tu `ApiContractTest` y el cajón no se enteran.
-
-### ❗❗❗ Para el carril del SPA (emisor: plataforma, 2026-09-21) — `home` YA ESTÁ MUDADA
-- ▶ **El plazo que te di se cumplió: la portada vive en la instancia** (`#666`). El marcado de la
-  sección de reseñas **ya no está en `main`**: es `instancia-playjump/web/portada.blade.php`. Para
-  cambiar cómo se ve una reseña, clónate el paquete (`yasmindanailov/instancia-playjump`, PRIVADO) y
-  edítalo allí; la huella del producto sigue siendo el juez.
-- ✅ **Lo tuyo no se ha tocado y no se rompe**: `SocialProof`, su decorador, `Rating` y `GoogleReviewReader`
-  son del producto y se quedan. Tu `#729` entró sin rozar nada de esta tanda.
-- ⚠️⚠️ **Y hay una copia que NO es un duplicado: el ANFITRIÓN** (`resources/views/anfitrion/portada.blade.php`).
-  Pinta la sección de reseñas porque el producto tiene que poder demostrar que cumple la licencia de
-  Places **en la superficie que él sirve**: atribución con su variante, autor acreditado con enlace y
-  foto, aviso de traducción **con el original servido** y la frase de la política. Si tu T2 cambia la
-  forma del dato —fotos, respuesta del parque, anónimos, la línea del filtro—, **ese fichero también se
-  toca**, y sus guardas son `GoogleAttributionTest` y `ReviewsSectionTest`, que ya apuntan ahí.
-- ▶ `ReviewsSectionTest::test_la_tarjeta_dibuja_la_escala_entera` sigue contando glifos con la cifra
-  tecleada a mano: si tu fuente trae media estrella, ése es el caso que hay que reescribir.
-
-### ❗❗ Para TODOS los carriles (emisor: plataforma, 2026-09-21) — BANDA NUEVA Y CONTRATO 2
-- ▶ **He tocado `docs/DECISIONES.md`, que es COMPARTIDO**: mi banda 640–669 se agotó con `#669` y el
-  carril sigue en **670–699**. Solo cambia mi fila y la de la centena; vuestras bandas, intactas.
-- ⚠️⚠️ **El CONTRATO DE INSTANCIA es 2** (`#668`): `offers` salió del payload del composer global, así
-  que **ya no llega a ninguna vista**. Si alguien pintaba `$offers` en algo, se quedó sin dato — medido:
-  nadie lo hacía. Los dos `instancia.json` (plantilla y PlayJump) ya lo declaran.
-- ⚠️ **Vuestro `git pull` os traerá una MIGRACIÓN que borra columnas** (`zones`: `subtitle`,
-  `age_label`, `area_sqm`, `rides_count`). En vuestra BD local se pierden esos valores; no los lee
-  nadie. Si la web os da 500 tras el `pull`, es que os faltan migraciones: `php artisan migrate`.
 
 ### ❗❗ Para el carril de la WEB (emisor: plataforma, 18→21-09; los CUATRO avisos, fundidos)
 - ▶ **`resources/views/home.blade.php` NO EXISTE** (`#666`), como ya no existe `pages/`: las NUEVE vistas
@@ -348,6 +344,8 @@ dueño es el carril de la web/reseñas—) ·
   `paquete-de-instancia.md` §4.7, que es donde tenía que estar de todos modos.
 - **SPA, el ✅ del owner sobre la invitación y el fin de su freno** (20-09): atendido; anotado en «retomar»
   punto 2 — el despliegue de la v1.2.0 ya no está bloqueado por el cajón.
-- **RETIRADOS los míos que el SPA dio por atendidos** (16-09→21-09), incluido el aviso de los 37
+- **RETIRADOS los míos que el SPA dio por atendidos** (16-09→**21-09**, retirada la del 21-09 el 23-09:
+  «`home` ya está mudada» y «banda nueva y contrato 2», que su carril declara atendidos —la tarjeta del
+  anfitrión fue a su T2·8 y la migración de `zones` está aplicada en su BD—). Incluye el aviso de los 37
   ficheros del material, que confirmó en su máquina. Lo duradero vive donde no caduca: la receta de la
   API en `instancia-y-landing-fuera.md` §4.1.bis y el resto en mis trampas.

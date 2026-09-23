@@ -69,6 +69,13 @@ class ApiContractTest extends TestCase
         // Y de una norma: el momento —el negocio puede no haberla situado— y los dos textos largos. El
         // nombre va siempre: una norma sin nombre no es una norma.
         'Rules.rules.items' => ['moment', 'description', 'reason'],
+        // De una SECCIÓN de servicios: los adornos editoriales y la foto, que una instalación puede no
+        // haber escrito. ⚠️ `slug`, `title` y `products` NO entran aquí y es deliberado: el slug es el
+        // ancla, una sección sin título no se publica (por eso el título va siempre en lo que viaja), y
+        // `products` es la lista —vacía si es de solo-contacto— que dice si la sección vende algo. Si
+        // `products` fuera opcional, «ausente» y «vacía» significarían lo mismo y la landing tendría que
+        // tratar dos casos para una sola realidad.
+        'Services.services.items' => ['accent_word', 'body', 'zone_label', 'image_url', 'specs'],
         // `signed_version` existe SOLO donde hay documento publicado y versionado (hoy `condiciones` y
         // `waiver`): exigirlo obligaría a inventar una versión para la política de cookies.
         // ⚠️ Su `published_at` NO entra aquí: la columna es `NOT NULL` (medido), así que una versión

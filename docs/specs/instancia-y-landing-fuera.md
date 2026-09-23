@@ -17,12 +17,11 @@
   - ⚠️⚠️ **`contact.phone` y `theme.*` los leen los CORREOS** (§1.2): no pueden bajar al paquete de la
     instancia, porque ahí el CSS del cliente no llega. Mismo motivo que `#209` dio para el color de acción.
   - ⚠️ **Una URL que cambia es SEO perdido y no falla nada**: el sitemap se compara antes y después (§1.5).
-  - ⚠️ «Cero marca en el código» **no es un `grep`**: 166 de sus 167 casos son citas de artboards (§1.4).
   - ⚠️ **Dos formas de foto a propósito** (`#645`): el producto la SUBE a `uploads`, la zona guarda ruta a
     `public/`; las dos salen como URL absoluta por su `imageUrl()`.
 - **Estado**: **MENÚ SERVIDO** + **T2a→T2c, T3·1 y T4 hechas**; en marcha la **vía A**, y de sus cuatro
-  platos **las DUDAS ✅** (`#671`, contrato **1.12.0**). Quedan **atracciones, servicios y el bar**, que son
-  los tres que la T3 sigue sin poder sacar del panel (§4.6).
+  platos **dudas ✅ y servicios ✅** (`#671`, `#672`, contrato **1.13.0**). Quedan **el bar y atracciones**,
+  y los **tramos de grupo**, que son dinero y van aparte (§4.1).
   ▶ **Un recurso nuevo se escribe con su lista blanca o no se escribe**; lo no rellenado no viaja, ni lo
   BORRADO (`''` en BD). ❗ Y el filtro de «vacío» va **después** del respaldo de idioma, o el recurso sale
   vacío entero en `en`/`fr` (`#671`, §4.1).
@@ -362,6 +361,48 @@ mutantes nuevos, ninguno «NO SE APLICÓ») · Pint y Larastan sin tocar la lín
 doce dudas reales: 200 en los tres idiomas con `ETag` distinto por idioma y estable entre peticiones, 304
 con `If-None-Match`, 422 sin `lang` y con un idioma inventado. Contrato **1.12.0** (añade, no cambia).
 
+#### `GET /services?lang=` — LAS SECCIONES DE SERVICIOS ✅ (`#672`, 2026-09-23) · la mitad EDITORIAL
+
+Segundo de los cuatro. **El alcance se partió en dos a propósito**, y conviene el porqué: `LandingService`
+separa lo EDITORIAL —texto, foto, fichas, orden— de lo COMERCIAL, que su propio docblock llama «cero
+drift» porque **se lee en vivo de los productos vinculados**. Esta tanda publica la mitad editorial y
+**referencia** la comercial; los **tramos de grupo** (`GroupRateTables`, hoy sin ninguna ruta que los
+sirva) van en su propia tanda porque son DINERO y arrastran una decisión de registro que merece medirse
+sola. `CONVENCIONES §10.5`: se parte para poder empujar pronto.
+
+⚠️⚠️ **`price_table` NO VIAJA, Y TIENE DUEÑO.** Es un JSON de tramos **tecleado a mano**, y el owner ya
+decidió que se jubila en favor de los precios del catálogo (`DEUDA.md`, `#534`, `[DECIDIDO owner]`).
+Servirlo como hecho sería publicar un precio que el checkout podría no cobrar — el modo de fallo exacto
+que §3 descartó al elegir «hechos por la API» frente a «una landing que teclea precios».
+▶ **Y la medida conviene entera**: hoy en local la tabla tecleada **COINCIDE** con el catálogo (30/70/100
+desde 15,00 €); la contradicción que fichó `#534` se midió contra **producción** (30/75/100 desde 12,00 €),
+que no se puede comprobar desde aquí. *Que hoy coincidan no absuelve al diseño: la definición del problema
+es que son dos fuentes que hay que mantener de acuerdo a mano.*
+
+⚠️ **`nav_subtitle` y `show_in_nav` tampoco viajan**: llevan sin consumidor desde `#521`, conservadas a la
+espera de que el owner confirme que no vuelven. *Estar en la tabla no convierte a un campo en contrato.*
+
+▶▶ **`products` son IDENTIFICADORES y no hay un `purchasable` al lado.** Los ids se resuelven en
+`/catalog/products` —un hecho, un sitio— y solo viajan los que la cesta puede vender de verdad (`#226`:
+pack activo, vendible, zona activa, precio positivo). **La lista vacía YA dice «solo-contacto»**, así que
+un booleano sería el mismo hecho publicado dos veces, con opción a contradecirse. Por eso `products` es
+`required` aunque venga `[]`: si fuera opcional, «ausente» y «vacía» significarían lo mismo y la landing
+tendría que tratar dos casos para una realidad.
+
+⚠️ **Una sección sin TÍTULO no viaja** —el slug es un ancla y un ancla sin encabezado es una sección en
+blanco—, y **una ficha necesita sus dos mitades**: misma familia que la duda sin respuesta de `#671`.
+
+❗ **Lo que destapó publicarlo, y no es de este carril**: en vivo salen **3 fichas en español y 2 en
+inglés y francés** — falta «Grupo · De 30 a 100 alumnos» en las dos—, y **«Horario» dice cosas distintas
+según el idioma**: «Todos los días, de 8:00 a 21:30» en español frente a «Outside opening» / «Hors
+ouverture». No es el filtro: son los datos del panel. Avisado al carril de la WEB, que lleva la T6 de
+contenido. *Publicar un dato como hecho es la forma más barata de descubrir que no lo era.*
+
+**Medido**: `ServicesFactsTest` (13 casos, 44 aserciones) · `scripts/mutar-menu-de-hechos.sh` **68/68**
+(diez mutantes nuevos, ninguno «NO SE APLICÓ») · Pint y Larastan sin tocar la línea base · y **en vivo**:
+200 en es/en con `ETag` distinto por idioma, y ni `price_table` ni `nav_subtitle` en el cuerpo. Contrato
+**1.13.0** (añade, no cambia).
+
 ### 4.1.bis · La RECETA de un plato nuevo
 
 Siete tandas destilan esto. Vale para **cualquier** recurso público que se añada después, dentro de F5 o
@@ -478,11 +519,15 @@ servidos, la landing nueva los consume, el panel los sigue editando y la T3 se d
 ✅ **CONTESTADO por el owner el 23-09**: se arranca por los PLATOS, no por el kit de widgets —que sigue
 donde lo dejó `#632`·P2, esperando a que una segunda instancia lo pida—. Y con él llegó `#670`: **no se
 despliega en piezas**, así que estos platos no van a producción sueltos; van dentro de la v2.0.0 grande.
-▶ **El orden de los cuatro, y su porqué**: **dudas ✅** (`#671`) → **servicios** → **el bar** →
+▶ **El orden de los cuatro, y su porqué**: **dudas ✅** (`#671`) → **servicios ✅** (`#672`) → **el bar** →
 **atracciones**. De menos a más: las dudas son cuatro columnas y afinan la plantilla; atracciones son 23
 filas con imagen, chapa y etiqueta de edad, y van al final para llegar con la receta ya rodada.
-⚠️ **El §0 de esta spec está a 2.044 de 2.048 bytes**: el plato que venga **no cabe ahí**. Su estado se
-escribe aquí y en §4.1, y de §0 solo se toca la línea de «Estado» — o se muda algo antes de añadir.
+❗ **Y el menú tiene un quinto pendiente que no estaba en la lista de cuatro**: los **TRAMOS DE GRUPO**.
+`GroupRateTables` los compone desde el catálogo y **ninguna ruta los sirve** (medido: su único llamante es
+`ServicesController`). Salieron del alcance de `#672` a propósito —son dinero— y con ellos viene la
+decisión de registro que `#661` dejó planteada: el contrato de VISTA quiere el importe **ya escrito**
+(`groupFrom`, `address.written`) y el de API lo quiere en **céntimos** (`/prices`). Las dos tienen razón en
+su superficie, así que la tanda decide si viajan los dos, y lo mide.
 
 ### 4.6.bis · La T2c, medida: 208 huérfanas eran 17 (`#667`, 2026-09-21)
 

@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.12.0
+  version: 1.13.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -653,6 +653,49 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Faqs'
+        '304':
+          description: Sin cambios desde el `ETag` enviado en `If-None-Match`.
+        '422':
+          description: Falta `lang` o no es uno de los idiomas soportados.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /services:
+    get:
+      tags: [Instalación]
+      operationId: getServices
+      summary: Las secciones de servicios, con su texto y los productos que vende cada una
+      description: |
+        Las secciones editoriales que el negocio opera desde el panel —una excursión de colegio, un
+        team building—. Solo las **activas**, en el orden que fija el panel y con el orden de creación
+        como desempate: dos peticiones idénticas devuelven siempre el mismo cuerpo.
+
+        **Una sección sin título no viaja.** El `slug` es el ancla de la sección, y un ancla sin
+        encabezado es una sección en blanco. Todo lo demás es opcional y lo que la instalación no
+        rellenó no sale, así que puedes pintar lo que recibes sin comprobar nada.
+
+        **`products` son IDENTIFICADORES, no copias.** El nombre, el «desde» y la foto de cada producto
+        viven en `/catalog/products`: un hecho, un sitio. Y solo viajan los que la cesta **puede vender
+        de verdad** —pack activo, vendible, en zona activa y con precio positivo—, así que la landing no
+        puede anunciar algo que el checkout rechazaría. **La lista vacía significa que la sección es de
+        solo-contacto** («Pedir información»); no hay un booleano aparte que diga lo mismo.
+
+        ⚠️ **Aquí NO hay precios.** Los tramos de grupo que pinta una sección se componen en vivo desde
+        el catálogo y llegan en su propia clave; mientras tanto, `/prices` publica el precio de cada
+        producto en cada tarifa. Lo que esta ruta **nunca** va a servir es la tabla de tramos *tecleada
+        a mano* que la tabla conserva: el negocio la jubila en favor de los precios del catálogo, porque
+        un precio tecleado envejece solo y acabaría anunciando lo que el checkout no cobra.
+      parameters:
+        - $ref: '#/components/parameters/SidebarLang'
+      responses:
+        '200':
+          description: Las secciones publicables en ese idioma.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Services'
         '304':
           description: Sin cambios desde el `ETag` enviado en `If-None-Match`.
         '422':
@@ -3624,6 +3667,65 @@ components:
             properties:
               question: { type: string }
               answer: { type: string }
+
+    Services:
+      type: object
+      additionalProperties: false
+      required: [lang, updated_at, services]
+      properties:
+        lang:
+          type: string
+          description: El idioma en el que viene el texto, que es el que se pidió.
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: |
+            La sección PUBLICADA tocada más recientemente. Es de lo servido y no de la tabla: una sección
+            sin título no se publica, así que tampoco mueve esta fecha. `null` sin ninguna publicable.
+        services:
+          type: array
+          description: Las secciones activas y con título, ya ordenadas.
+          items:
+            type: object
+            additionalProperties: false
+            required: [slug, title, products]
+            properties:
+              slug:
+                type: string
+                description: 'El ancla de la sección; único y estable. Es lo que enlaza un menú.'
+              title: { type: string }
+              accent_word:
+                type: string
+                description: La palabra que el diseño destaca sobre el título. Falta si no se escribió.
+              body: { type: string }
+              zone_label:
+                type: string
+                description: 'El rótulo de zona de la sección («Kids y Jump»), tal y como lo escribe el panel.'
+              image_url:
+                type: string
+                format: uri
+                description: URL absoluta de la foto. Falta si la instalación no puso ninguna.
+              specs:
+                type: array
+                description: |
+                  Las fichas de la sección («Duración: 2 o 3 horas»). **Una ficha viaja con sus dos
+                  mitades o no viaja**: un rótulo sin valor no dice nada y un valor sin rótulo no se sabe
+                  de qué es. La clave falta entera si no hay ninguna publicable.
+                items:
+                  type: object
+                  additionalProperties: false
+                  required: [label, value]
+                  properties:
+                    label: { type: string }
+                    value: { type: string }
+              products:
+                type: array
+                description: |
+                  Los identificadores de los productos que esta sección vende, resolubles en
+                  `/catalog/products`. Solo los que la cesta puede vender de verdad. **Lista vacía =
+                  sección de solo-contacto**: es el único sitio donde se dice, a propósito.
+                items: { type: integer }
 
     SocialProofFacts:
       type: object
