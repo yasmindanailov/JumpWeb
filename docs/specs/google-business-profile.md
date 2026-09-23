@@ -832,6 +832,58 @@ diaria no escribe · **`validateOnly` contra la ficha real antes de la primera p
 - **El despliegue borra lo que no está protegido bajo `public/`** (`rsync --delete`) → imágenes en disco privado.
 - **Cuota**: 300 consultas/min por proyecto (compartida entre parques) y **10 ediciones/min por ficha**.
 
+### 9.1 Las trampas PAGADAS al construirla (T1→T2·8), mudadas del fichero de carril el 2026-09-24
+
+Valen para cualquier tanda que hable con Google o con `Http`, y por eso se conservan enteras; el carril
+del SPA las cita desde aquí.
+
+- ⚠️⚠️⚠️ **El doble de `Http` miente de tres formas, las tres medidas** (`#729`–`#730`): (a) **`Http::fake()`
+  FUSIONA**, no reemplaza —dos llamadas en un caso dejan ganando a la primera, y una `sequence()` agotada
+  revienta «*response sequence is empty*» señalando al código—; (b) un **`Http::response()` estático se
+  CONSUME** al leerlo en flujo, así que la segunda lectura llega vacía y el caso acusa al código de no
+  deduplicar; (c) un **`catch (Throwable)` ancho se traga el `StrayRequestException`**, así que un
+  descargador «probado» no descargaba nada y salía verde. ▶ Receta: **un solo doble en `setUp()`** que
+  delegue en una propiedad —de regalo cuenta peticiones—, el cuerpo en un cierre, y atrapar solo
+  `ConnectionException`. *Un `catch` que parece más seguro suele medir menos.*
+- ⚠️⚠️ **Una guarda necesita que el caso LLEGUE a ella**, y cuatro formas de que no llegue, todas medidas:
+  un nombre mal formado que **no existe** en disco da 404 por «no existe» (`#730`); un 404 de prueba **sin
+  cuerpo** no prueba que se mire el estado (`#730`); `inProgress()`, que **coge** el candado para mirar,
+  necesita **dos** llamadas (`#729`); y una foto que caduca necesita una reseña **con** foto (`#732`).
+  ▶ Antes de declarar un superviviente, pregunta qué caso falta.
+- ⚠️⚠️ **Un `finally` puede soltar el candado antes de tiempo, y ningún test de un hilo lo ve** (`#729`): la
+  lectura iba en el `try` y la escritura DETRÁS del bloque. ▶ Se caza preguntando por el candado **desde un
+  evento del modelo** durante la escritura. Mismo patrón para todo lo que tenga que pasar «mientras».
+- ⚠️ **`lock()` no está en el contrato `Repository` ni en su clase**: vive en el `Store` y el repositorio lo
+  reenvía por `__call` (`#729`). La salida es `getStore()` con `@var LockProvider`, que además dice lo que de
+  verdad se exige del almacén.
+- ⚠️⚠️ **Una guarda de host necesita DOS casos, no uno** (`#728`): `lh3…com.malo.net` se cuela con
+  `str_contains` y `evil.lh3…com` con `str_ends_with` — son defectos distintos. ▶ El caso va por TRIPLICADO:
+  pegado por detrás, pegado por delante, y el control positivo.
+- ⚠️⚠️ **Una lista vacía no distingue «no hay» de «no sé mirar»** (`#727`): `getForeignKeys()` devuelve `[]`
+  tanto si no hay FK como si el lector no sabe leerlas en SQLite, y un bucle de reflexión que no recorra nada
+  sale igual de verde. ▶ **Todo caso que afirme una AUSENCIA pide primero lo mismo a algo que SÍ la tiene**.
+- ⚠️⚠️⚠️ **Dos APIs de Google nombran la misma ficha de dos formas** (`#726`, medido contra la doc oficial):
+  `locations.list` (v1) devuelve `locations/{id}` **sin cuenta** y `reviews.list` (**v4 y otro host**) exige
+  `accounts/{id}/locations/{id}`. Guardar solo lo primero deja la sincronización sin poder pedir ni una
+  reseña. ▶ Si una tanda cruza dos APIs del mismo proveedor, comprueba cómo nombra cada una lo mismo.
+- ⚠️⚠️ **Eloquent y Larastan, medidas en `#720` y `#727`**: `getRawOriginal()` da lo LEÍDO de la base, no el
+  atributo vigente —entre `$m->campo = 'x'` y su `save()` entrega el ANTERIOR; usa `getAttributes()`—;
+  Larastan declara MUERTO un `catch` tras una propiedad con cast y se equivoca (no ve el `__get`); sobre una
+  columna **NOT NULL** con cast un `!== null` es `alwaysTrue` **y ahí Larastan tiene razón** (lo que decide es
+  si la columna admite `null`); y `prunable()` se declara **`@return Builder<static>`** (la plantilla no es
+  covariante). Cero ignores inline: la salida es que el código **diga** que puede fallar.
+- ⚠️⚠️ **Lo que se afirma que NO pasa hay que hacerlo POSIBLE primero** (`#721`): dos supervivientes negaban
+  una llamada cuyo endpoint **no estaba fingido** —imposible— y con un `catch` que se tragaba el
+  cortafuegos. «No se llamó» era cierto por el motivo equivocado.
+- ⚠️ **Forzar el entorno en un caso** (`#723`): `$this->app['env'] = 'production'` **enciende la verificación
+  de CSRF** que el entorno de pruebas apaga (un POST vuelve 419 y el caso mide el token, no la guarda: se
+  mide por el SERVICIO); y `config(['app.url' => …])` con un host distinto de `localhost` hace saltar
+  «Untrusted Host» de Filament antes de llegar al controlador.
+- ⚠️ **Una aserción con `__('clave')` dentro pasa siempre al vaciar esa clave** (`#734`):
+  `assertStringContainsString('')` no falla nunca. El rótulo se escribe a mano en el caso.
+- ⏰ **En el PANEL, toda hora por `DisplayTime`**: `app.timezone` es UTC, y un caso que calcula su expectativa
+  con él **bendice el defecto** (`#733`: «conectada a las 16:30» sobre una conexión de las 18:30).
+
 ---
 
 ## 10. Registro de la revisión adversarial (2026-09-11)

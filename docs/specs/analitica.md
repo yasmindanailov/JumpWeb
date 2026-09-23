@@ -1,8 +1,9 @@
 # [SPEC] La analítica — medir la conversión en cada sitio y conocer al cliente, dentro del marco legal y a favor del negocio
 
 > Estado: 🟦 **en revisión (v2 tras la revisión adversarial del 23-09, §7.1) — dirección `[DECIDIDO owner]`
-> (`#678`)**; el owner revisa §0 y §4 antes del primer commit de código · Última actualización: 2026-09-23 ·
-> Decisión asociada: `DECISIONES #678`. Carril: **plataforma** (banda 670–699). Origen: el objetivo del owner
+> (`#678`)**; el owner revisa §0 y §4 antes del primer commit de código · Última actualización: 2026-09-24 ·
+> Decisión asociada: `DECISIONES #678`. Carril: **plataforma** (T0–T1, banda 670–699) → **SPA** (T2→T5, banda
+> 730–759, `#735`). Origen: el objetivo del owner
 > del 23-09 —*«medir todo, tener todos los números para tomar decisiones; lo más importante la CONVERSIÓN en
 > cada sitio; lo segundo conocer al cliente»*— y el hueco que `#670` dejó nombrado («las analíticas»).
 
@@ -12,8 +13,8 @@
   regímenes: el **agregado y exento** (sesiones anónimas: embudo, fuentes, campañas, al 100 %; guía AEPD 2024)
   y el **identificado** (navegación atada a la cuenta, PostHog), **solo con la categoría `analytics`**. Toda
   herramienta externa es intercambiable y solo ve lo que se le envía, con consentimiento.
-- **Empieza por** §1 → §4.1 (libro y sello) → §4.2 (contrato) → §4.3 (consentimiento y drivers) → §7.1 (lo
-  que corrigió la revisión). Las tandas, en §4.8.
+- **Empieza por** §1 → §4.1 → §4.2 → §4.3 → §7.1 (lo que corrigió la revisión); para el cuadro, §4.5. Las
+  tandas, en §4.8.
 - **Trampas** (las cinco las destapó la revisión, §7.1):
   - ⚠️⚠️ **Tres hechos de dinero NO son transiciones de `Order`**: rechazado vive en `Payment`, expirado es un
     UPDATE de query builder (`ExpireOrders`) y reembolsado son filas `PaymentRefund`. Y un observador diferido
@@ -25,9 +26,9 @@
   - ⚠️ **`/events` sale del `throttle:api` y del stateful** (`withoutMiddleware`): apilado se come el embudo y
     `sendBeacon` vuelve 419. Un nombre de SERVIDOR desde el cliente se rechaza.
   - ⚠️ **`nullOnDelete` no se dispara nunca**: `anonymize()` y el export cubren las tablas nuevas.
-- **Estado**: T0 ✅ · **T1 ✅ (23-09)** · T2→T5 ⬜ (§4.8). `[DECIDIDO owner]` 23-09: todo con la v2.0.0, sin la pregunta
-  tras pagar. `[PENDIENTE: asesoría]`: los tres puntos de §7.
-- **Invariantes**: `RGPD-01`, `RGPD-05`, `SEC-01`, `PAY-14`, `SUITE-01`; propuesto **`RGPD-07`**. Dinero: ninguno cambia; `redsys:verify-concurrency` tras T1.
+- **Estado**: T0 ✅ · T1 ✅ · **T2→T5 en el carril del SPA** (`#735`; la T2 en cinco, §4.5 y §4.8). `[DECIDIDO
+  owner]` 23-09: todo con la v2.0.0, sin la pregunta tras pagar. `[PENDIENTE: asesoría]`: los tres puntos de §7.
+- **Invariantes**: `RGPD-01`, `RGPD-05`, `RGPD-07`, `SEC-01`, `PAY-14`, `PAY-21`, `SUITE-01`. Dinero: ninguno cambia.
 
 ## 1. Contexto y problema — MEDIDO (2026-09-23)
 
@@ -322,25 +323,85 @@ Tabla `experiments` `(futuro)` (clave, variantes, pesos, activo). La asignación
 contaminados; el panel da conversión por variante con su intervalo. Los experimentos del driver solo ven a
 quien consintió.
 
-### 4.5 El cuadro de mando en el panel (T2)
+### 4.5 El cuadro de mando en el panel (T2) — ampliado el 24-09 (`#735`, carril del SPA)
 
 ⚠️ **Revisión 23-09**: permiso propio, zona horaria del parque, saneado de lo que teclea el visitante,
-agregados diarios desde T2, «anterior a la medición».
+agregados diarios desde T2, «anterior a la medición». ▶ **24-09, owner**: el cuadro cuenta además **el
+dinero al detalle**, **los registros** y **la puerta**; la T2 se parte en cinco (§4.8) en ese orden.
 
-Página `Analítica` con permiso **`analytics.view`** (`PermissionCatalog`, solo `admin` por defecto; `canAccess()`
-en página y widgets; `puerta` recibe 403; `AdminNavigationTest` con los dos casos) y `analytics.export` para
-el CSV, auditado (`AuditLogger`, sin PII, con recuento). Contenido: **embudo** por periodo con su conversión
-paso a paso; **fuentes** y campañas (visitas, compras, ingresos, CPA/ROAS con el gasto tecleado en `ad_spend`
-`(futuro)`: plataforma, campaña, mes, céntimos), con `first_touch` y `last_touch`; **páginas** de entrada y
-salidas; dispositivo, idioma, hora y producto; **abandono por motivo** (derivado, con los fallos técnicos);
-**contacto**; **cobros con incidencia** aparte; **eventos rechazados y descartados** (7 días); bots e internos
-aparte. Todo corte por día/hora en `DisplayTime::timezone()` (test que cruza la medianoche, molde
-`test_reschedule_offer_anchors_today_in_park_timezone_not_utc`). Los pedidos con `attribution IS NULL` se
-rotulan «anterior a la medición». Ventana **en directo ≤ 90 días** con caché de 5 min en Redis; más allá,
-`analytics_daily` `(futuro)` desde T2 (el único sitio para «medir antes» sería producción) y `EXPLAIN` en
-staging (MariaDB) documentado en el carril. Saneado: `utm_*`, `referrer_host` y `route` con longitud ≤ 255 y
-alfabeto acotado en la ingesta; ninguna columna analítica usa `->html()`; el CSV prefija con `'` toda celda
-que empiece por `= + - @ \t \r`. Rótulos en `lang/es/admin.php` y `lang/zh_CN/admin.php`.
+**La página.** `App\Filament\Pages\AnalyticsPage` `(futuro)` (`/admin/analitica`), **quinto sitio del menú
+plano** del admin («Hoy · Calendario · Pedidos · Clientes · Analítica»; `AdminNavigationTest` lo fija) y fuera
+del menú de quien no tenga el permiso. Permiso **`reports.view`** —sembrado en F7.11 («Ver informes y
+exportaciones»), grupo `gestion`, admin por defecto y **sin consumidor hasta hoy**: se le da uno en vez de
+crear un sinónimo—; `canAccess()` en la página y `canView()` en cada widget; `puerta` y `staff` reciben 403
+(`AdminNavigationTest`, dos casos). El CSV con **`reports.export`** (nuevo), auditado (`AuditLogger`, sin PII,
+con recuento). Rótulos en `lang/es/admin.php` y `lang/zh_CN/admin.php` (`analytics.*`). **Filtro de periodo
+propio** (no el de «Hoy»): hoy · ayer · esta semana · la pasada · este mes · el pasado · 30 días · 90 días;
+cada cifra lleva el **Δ contra el periodo anterior** de la misma longitud; granularidad de tablas y gráficos:
+día (≤ 31 días), semana (≤ 90), mes (más largo; solo desde T2e).
+
+**El tiempo.** Todo corte por día u hora es en `DisplayTime::timezone()` (test que cruza la medianoche, molde
+`test_reschedule_offer_anchors_today_in_park_timezone_not_utc`). ⚠️ **Cómo**: el SQL agrupa por **HORA UTC**
+(`Platform\Services\Analytics\Reports\SqlTime::hourBucket()` `(futuro)`: `DATE_FORMAT` en MySQL/MariaDB,
+`strftime` en SQLite) y PHP asigna cada cubo al día, la semana o el mes del parque. Ni `CONVERT_TZ` —exige las
+tablas de zona cargadas en MariaDB, y en el hosting no se controlan— ni un desplazamiento fijo, que miente en
+el cambio de hora. Lo que se corta por **fecha de visita** (`slots.date`, hora de pared) no se convierte.
+
+**T2a · Dinero** (`Reports\MoneyReport` `(futuro)`; en céntimos, de las **mismas filas que el libro**,
+`PAY-16`/`PAY-17`, nunca del catálogo; el cuadro **no compone ningún `OrderBook`**: son agregados SQL con
+presupuesto de consultas):
+- **Cobrado online** = Σ `payments.amount` (`status = paid`) por `paid_at` (I2, el hecho de caja) · **Devuelto**
+  = Σ `payment_refunds.amount_cents` (`succeeded`) por `processed_at` (I4) · **Ingresos** = cobrado − devuelto
+  (§4.1) · **Vendido** = Σ `orders.total` de los pedidos cobrados (`paid`/`refunded`) por `paid_at` (lo
+  facturado al nacer, I1); las **gestiones posteriores** aparte, Σ `edit`+`mixed` por su `created_at`. El valor
+  VIVO de un pedido lo dice su libro, no el cuadro.
+- **La señal**: pedidos con señal y Σ `deposit_split` de líneas vivas de pedidos cobrados, partida en
+  **pendiente de cobrar en el parque** (visita futura) y **liquidado en el parque** (visita pasada: la
+  inferencia D9 del libro, rotulada «inferido»), por `slots.date`.
+- **Nº de pedidos cobrados**, **valor medio del pedido** (vendido / pedidos) y **cobro medio online**.
+- **Por canal** (`attribution_channel`: web · app · panel · «anterior a la medición») · **por método de cobro**
+  (`payments.provider`: pasarela o mostrador, el vocabulario de `Settlement`) · **por producto**
+  (`ticket_types`: unidades y valor, Σ `chargedSubtotalCents` en SQL de líneas vivas; los diez primeros).
+- **Clientes que compran**: compradores distintos, **nuevos** (primer pedido cobrado en el periodo) frente a
+  **recurrentes**, **valor medio por cliente en el periodo** (vendido / compradores) y **valor de vida medio**
+  (Σ vendido histórico / clientes con compra). Solo agregados: **ningún nombre** (la persona es la 360, T4).
+- **Perdido**: pedidos expirados, cancelados y rechazados, con su valor, por `created_at` (histórico) y, desde
+  la medición, por sus hechos (`order_expired`, `order_cancelled`, `order_declined`).
+- **Incidencias de cobro** (`PAY-05`, `audit_logs`) aparte.
+- Serie por día/semana/mes (tabla y gráfico de Filament, Chart.js) de cobrado, devuelto, vendido y pedidos.
+- Índices aditivos en la migración de la T2a: `orders (status, paid_at)`, `payments (status, paid_at)`,
+  `payment_refunds (status, processed_at)`, `users (created_at)`; `EXPLAIN` en staging, en el carril.
+
+**T2b · Registros y puerta** (`Reports\CustomersReport` `(futuro)`):
+- **Registros** por día/semana/mes: cuentas de cliente (`User::customers()`, sin `PANEL_ROLES`) por
+  `created_at`; **verificadas** (`email_verified_at`); **con compra** alguna vez; y el **método**
+  (`user_registered.props.method`, desde la medición; antes, «sin dato»).
+- **La puerta, desde su RASTRO**: `audit_logs` guarda cada búsqueda desde agosto (`registrations.validated` el
+  tecleo, `puerta.card_scanned` el escaneo; `target_id` dice si se encontró; `puerta.profile_viewed` la ficha)
+  y `customer_visits` cada **visita acreditada** (una por cliente y día). El cuadro da por día/semana/mes:
+  **búsquedas** (tecleadas y escaneadas), **encontradas** y **no encontradas**, **clientes distintos**
+  (`COUNT(DISTINCT target_id)`), **fichas abiertas** y **visitas acreditadas**; y la **distribución por hora
+  del parque** (los picos de afluencia). Solo agregados: el `payload` no se lee y ningún nombre sale. ▶ Además
+  `GateVisits::register()` emite `visit_checked_in` (ya en el contrato) para que el libro también lo tenga.
+  ❌ Descartado medir la puerta solo con eventos nuevos: nacerían vacíos, y el rastro ya existe con su
+  índice `(action, created_at)`.
+
+**T2c · Embudo y fuentes** (lo de la spec original, desde `analytics_sessions`/`analytics_events`): **embudo**
+por periodo con su conversión paso a paso (§4.2, sin bots ni internos); **fuentes** y campañas (visitas,
+compras, ingresos con `order_paid.paid_cents`, CPA/ROAS con `ad_spend` desde T2e), con `first_touch` y
+`last_touch`; **páginas** de entrada y salidas; dispositivo, idioma, hora y producto; **abandono por paso y
+motivo** (derivado, con los fallos técnicos); **contacto**; **cobros con incidencia** aparte; **eventos
+rechazados y descartados** (7 días); bots e internos aparte. Los pedidos con `attribution IS NULL` se rotulan
+«anterior a la medición».
+
+**T2d · CSV** de cada tabla con `reports.export`: prefija con `'` toda celda que empiece por `= + - @ \t \r`;
+saneado de `utm_*`, `referrer_host` y `route` (≤ 255 y alfabeto acotado en la ingesta); ninguna columna
+analítica usa `->html()`.
+
+**T2e · `analytics_daily` y `ad_spend`** `(futuro)`: roll-up diario por comando programado (`analytics:rollup`,
++1 tarea en el recuento de `deploy.sh`) para los periodos de más de 90 días y el año (el único sitio para
+«medir antes» sería producción); `ad_spend` tecleado (plataforma, campaña, mes, céntimos). Ventana **en
+directo ≤ 90 días** con caché de 5 min en Redis por informe y periodo.
 
 ### 4.6 Conocer al cliente (T4)
 
@@ -381,7 +442,7 @@ de §4.3.
 | T0 | ✅ spec v2, el contrato de eventos, `#678` y la revisión (§7.1) | | docs-check |
 | T1 | el libro, en cinco sub-tandas: **T1a ✅ (23-09)** tablas y poda, cookie, `ResolveVisitor` y `AttributionContext`, la ingesta stateless con su limitador, los hechos de servidor por fuente, el sello en `creating`, `robots.txt`, contrato **1.18.0** (`POST /events`) · **T1b ✅ (23-09)** `track.js` diferido (2,3 KiB gzip, techo 3) y el cajón · **T1c ✅ (23-09)** UTM en los 24 correos al cliente (pegado tras firmar, ignorado al validar), `email_sent` y `email_clicked` · **T1d ✅ (23-09)** la fuente del pedido manual (cuatro tarjetas, obligatoria, sin defecto; `forPanel()` valida) · **T1e ✅ (23-09)** `anonymize()` desata el libro y el export lleva `analytics` y `attribution` (contrato **1.19.0**) · y el **CIERRE ✅ (23-09)**: `scripts/mutar-analitica.sh` **19/19** (1 control, 1 declarado), `redsys:verify-concurrency --workers=16` ✓, la sonda, y `trustProxies` medido y retirado (`SEC-13`) | contrato **1.19.0** (`experiments` en `/sidebar/session` puede esperar a T5) | tests + arnés + `redsys:verify-concurrency` + sonda |
 | T1·bis | migración de historia: «anterior a la medición», arranque de cuadros en la fecha del despliegue, `model:prune` y recuento de `deploy.sh` 6→7, ensayo en staging con `schedule:run` a mano, `POLICY_VERSION` la misma noche | | ensayo |
-| T2 | el cuadro de mando, `analytics_daily`, `ad_spend`, permisos — **la hace el OTRO ordenador** (`#679`; traspaso en el buzón de plataforma) | | tests + presupuesto de consultas + `EXPLAIN` |
+| T2 | el cuadro de mando, en cinco — **la hace el carril del SPA** (traspaso `#679`, tomado en `#735`, 24-09): **T2a** dinero (permisos `reports.view`/`reports.export`, la página y el filtro, los índices) · **T2b** registros y puerta · **T2c** embudo y fuentes · **T2d** CSV · **T2e** `analytics_daily`, `ad_spend` | | tests + presupuesto de consultas + `EXPLAIN` + el ojo del owner en vivo |
 | T3a | categorías sin quemar, banner, política por sección, aviso a cuentas, `PUT /me/analytics`, driver y PostHog con `Drivers::csp()` | `POLICY_VERSION` | tests + sonda (cero terceros sin consentir; con consentimiento, sin `securitypolicyviolation`) |
 | T3b | píxeles, Consent Mode básico, job de conversiones con relectura del consentimiento, tokens en `.env` | | tests con `Http::fake` |
 | T4 | la 360, los segmentos, el opt-in tras comprar | | tests |
@@ -435,9 +496,13 @@ de §4.3.
   ignorándola y NO valida a secas (la prueba de que va fuera del HMAC); el post-form, la verificación y la
   confirmación de correo abren con UTM y una clave ajena sigue dando 403; `email_sent` solo para clientes;
   `email_clicked` una vez por sesión y solo con claves reales.
-- `AnalyticsDashboardTest` `(futuro)`: cifras contra hechos sembrados; `order_paid` a las 23:30 del parque
-  cuenta en ese día; campaña `=1+1` sale como texto; `<img onerror>` en `utm_campaign` sale escapado; `puerta`
-  y `staff` sin permiso → 403; presupuesto de consultas por pendiente.
+- `AnalyticsDashboardTest` `(futuro)`: cifras contra hechos sembrados (un cobro con señal cuenta `paid_cents`
+  en cobrado y su reparto en «pendiente en el parque»; un reembolso resta; un pedido del panel cuenta en el
+  dinero y no en el embudo); un cobro a las 23:30 del parque cuenta en ese día y uno a las 00:30 de Madrid
+  **no** en el anterior; los registros no cuentan las cuentas del equipo; la puerta desde `audit_logs` con su
+  control (una búsqueda sin `target` cuenta como no encontrada); campaña `=1+1` sale como texto; `<img
+  onerror>` en `utm_campaign` sale escapado; `puerta` y `staff` sin permiso → 403; presupuesto de consultas
+  por pestaña.
 - `PrivacyTest`/`MePrivacyTest`: `anonymize()` y `exportFor()` cubren analytics; `PUT /me/analytics`.
 - `machine.test.js`, `controller.test.js`: transiciones emiten `step_entered`; `drawer_opened` al nacer
   abierto; el banner se suprime con el cajón abierto; `SidebarBundleBudgetTest` con el techo de `track.js`.
@@ -454,6 +519,10 @@ de §4.3.
   haremos»*; y en segunda ronda, con opciones cerradas: **todo con la v2.0.0** (sin excepción a `#670`),
   **no** a la pregunta «¿cómo nos has conocido?», y **sí** a la revisión adversarial con enjambre antes de
   codificar.
+- **24-09, owner**: delega la analítica ENTERA al carril del SPA («el otro agente cerró sesión para delegarte
+  toda la analítica») y amplía la T2 con **el dinero al detalle** (valor medio del cliente, totales por mes y
+  semana, la señal, lo pagado online), **los registros** por día y mes, y **las búsquedas de la puerta** como
+  medida de los clientes del día (`#735`; §4.5).
 - `[PENDIENTE: asesoría]`: (1) que el libro agregado con `order_id` cabe en la exención; (2) los textos de
   política y banner y el aviso a las cuentas; (3) Meta/TikTok como destinatarios con hashes bajo `marketing`.
 

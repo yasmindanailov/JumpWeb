@@ -2066,6 +2066,58 @@ veces» es la sonda, no un defecto.
 ⚠️ Un guion suelto se corre `php artisan tinker --execute="require base_path('storage/app/…')"`: con
 `php storage/app/…` a secas no hay framework y sale «Class not found».
 
+### 10.20 Las TRAMPAS que pagó esta feature (mudadas del fichero de carril, 2026-09-24)
+
+Valen fuera de la invitación y por eso se conservan enteras; el carril del SPA las cita desde aquí.
+
+- ⚠️⚠️⚠️ **El constructor de consultas de Eloquent SÍ escribe `updated_at`** (`Builder::update()` llama a
+  `addUpdatedAtColumn()`), así que **no sirve para marcar nada sin mover el testigo** del post-form: hay que
+  bajar al crudo con **`toBase()`**. La spec lo afirmaba al revés desde el diseño y nadie lo había ejercido
+  (`#717`). Si ves «por el constructor de consultas» en una doc, compruébalo.
+- 💰 **«A pagar en el parque» se monta con la SEÑAL** (`OrderAdjustment` tipo `deposit_split`), no con un
+  cobro parcial a pelo: eso rompe las identidades del libro y el saldo sale **`under_review`**, que también
+  devuelve 0 y deja el caso verde por el motivo contrario. ▶ Y **`pay_online` tiene cifra POSITIVA sin ser
+  dinero del parque**: `max(0, $saldo)` no distingue las clases (`#716`).
+- ⚠️⚠️ **Un COMENTARIO puede romper un censo** —si nombras en prosa el patrón que un escáner busca, cámbialo
+  (`#715`, 12 rojos de golpe en `MailInboxLineTest`)—; y **reordenar filas rompe lo que cuelga de la
+  posición**, así que solo al recortar y **después** de `orderGuestRows()`.
+- **Una combinación que el modelo prohíbe se monta por el CONSTRUCTOR DE CONSULTAS** en el fixture: el guard
+  de `saving()` lanza, y el escenario real contra el que defiende es justo ése (una importación, un
+  `update()` a mano). Con `create()` el caso no existiría.
+- ⚠️⚠️ **`$request->query()` NO lee el cuerpo, y por eso un caso puede pasar sin ejercer nada**: el primer
+  caso de `#704` ponía el `invitation_reply_id` en el POST y «pasaba», pero la guarda que creía probar no se
+  ejecutaba. Lo cazó el ARNÉS (6/7), no una relectura.
+- **Una guarda que ninguna prueba puede poner en rojo es ruido, no defensa**: en `#704` se escribieron dos
+  re-comprobaciones de acceso dentro de ayudantes a los que solo se llega **después** de
+  `authorizeGuardianAccess()`. Se retiraron en vez de declararlas.
+- **Una costura se prueba ANDÁNDOLA**: el defecto más caro de la T5·5 (la vuelta del formulario rechazado
+  perdía la atadura) no lo veía ningún test de dominio, y los tres ya existían. ⚠️⚠️⚠️ **Y una costura puede
+  tener DOS puntas, y leyéndola parece tener una** (`#718`): el borde arreglado en `GuestCountAdjuster`
+  seguía vivo por HTTP, porque el post-form ajusta **y después** guarda las fichas del navegador en el orden
+  viejo. ▶ Antes de cerrar un arreglo del post-form, **escribe el caso que hace el POST de verdad**.
+- ⚠️⚠️ **Un campo de texto vacío llega como `null`**, no como `''` (`ConvertEmptyStringsToNull` corre antes
+  de validar): con `['sometimes','string']` el anfitrión que borra una línea recibe **422 y ningún cambio**.
+  Medido en la T6·1; en la API es contrato.
+- **Un campo traducible sale ARRAY**: concatenarlo en un guion imprime «Array» con un warning. En una sonda,
+  `is_array(...) ? $x['es'] : $x`.
+- ⚠️ **Lo que desborda a lo ALTO no lo dice una medida de ancho**: un `textarea` con `rows="5"` traía su
+  propio scroll y las cifras de la sonda salían verdes; **lo vio la captura**. Y dos pesos de botón en un
+  bloque pequeño compiten con el «Guardar» de la barra. ⚠️ **Una captura de VENTANA sin bajar hasta lo que
+  quieres ver son dos capturas idénticas**: lo delató el tamaño del fichero, no el ojo.
+- ⚠️⚠️ **Un test de datos reales NO distingue «pregunta por el contrato» de «va a mirar»**: en `#576`, hacer
+  que `GuardianPlaces` llamara a `PartyGuestsReader` en vez de al contrato dejó `InvitationPlacesTest` entero
+  en verde. Solo lo caza el DOBLE de `ModuleContractsTest`: si tu tanda cruza una frontera, mete esas guardas
+  en el conjunto del arnés.
+- **Una guarda nueva que tumba un test viejo suele tener razón**: el guard de `#575` puso en rojo un caso de
+  `#574` que construía la combinación ya prohibida. Se reescribe el caso, no se relaja la guarda.
+- ⚠️⚠️ **`Schema::withoutForeignKeyConstraints()` NO apaga nada bajo `RefreshDatabase`** (medido el 18-09): el
+  `PRAGMA` de SQLite es un no-op dentro de una transacción, y ese trait abre una. *Si tu caso apaga, fuerza o
+  simula algo, aserta primero que lo consiguió.*
+- **`Str::ascii()` SÍ translitera cirílico, griego y árabe** (medido el 17-09): los que deja vacíos —y por los
+  que existe `PersonNameKey`— son chino, japonés, coreano, tailandés, hebreo y emoji.
+- **Un fixture que basta para una superficie puede no bastar para otra**: sin una `RateType` en la BD,
+  `GET catalog/products/{id}` responde **404**, no 200 con otro contenido.
+
 ## Anexo · La fila del enrutador, mudada el 2026-09-16
 
 > Lo que decía la fila **«Vestir el formulario de CELEBRACIÓN o el JUSTIFICANTE · la INVITACIÓN digital de un cumpleaños · el «sí / no podemos» de un padre · el pegado de nombres · «¿vas tú con él?»»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila
