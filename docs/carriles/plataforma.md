@@ -67,22 +67,22 @@
    **DATOS** que recibe la vista, no el HTML (§4.5.bis) · `InstanceViews::CONTRATO` = **2** · el
    trinquete de CSS huérfano está encendido, así que **si añades CSS su consumidor nace con él** · la
    migración de `zones` **borra columnas** y viaja en la v2.0.0.
-   ▶▶▶ **LA ANALÍTICA, EN MARCHA** (`specs/analitica.md`, `#678` `[DECIDIDO owner]`, 23-09): T0 la spec ✅ y
-   **su v2 tras la revisión adversarial** (16 agentes, 72 hallazgos confirmados, 1 refutado; todo en §7.1,
-   cada corrección delante del texto que corrige). Lo que cambió de fondo: el libro tiene DOS regímenes (el
-   AGREGADO es exento; el cruce cookie↔cuenta va bajo la categoría `analytics`), tres hechos de dinero no eran
-   transiciones de `Order` (cada uno con su fuente real), el sello nace en `creating` desde
-   `AttributionContext`, y la ingesta sale del `throttle:api` y del stateful. ✅ **T1a→T1e hechas (23-09)**, cada
-   una con su párrafo en la spec §4.8 y su commit: el núcleo del libro (T1a, contrato 1.18.0) · el emisor
-   `cajon/track.js` diferido con buzón, techo 3 KiB gzip y `scripts/sonda-analitica.mjs` (`SONDA_BASE=http://localhost`,
-   sin puente) · los correos con UTM (T1c: pegada TRAS firmar e ignorada al validar; `email_sent`/`email_clicked`)
-   · la fuente del pedido manual (T1d, cuatro tarjetas sin defecto; ⚠️ le falta el OJO del owner en la tablet)
-   · `anonymize()` desata el libro y el export lleva `analytics` + `attribution` (T1e, contrato **1.19.0**).
-   ✅ **CIERRE de T1 (23-09)**: `scripts/mutar-analitica.sh` **19/19** (destapó tres guardas débiles),
-   `redsys:verify-concurrency --workers=16` ✓, `RGPD-07` + `PAY-21`, y **`trustProxies` MEDIDO y RETIRADO**
-   (`SEC-13`): no hay proxy delante de PHP y con `*` una XFF falsa se honraba (el limitador por IP se saltaba),
-   medido en staging Y en producción (con permiso del owner, solo GETs). ⚠️ Queda el OJO del owner en la fuente
-   del pedido manual (tablet). **Lo siguiente: T2** (el cuadro de mando).
+   ▶▶▶ **LA ANALÍTICA** (`specs/analitica.md`, `#678` `[DECIDIDO owner]`, 23-09): T0 la spec ✅ y su v2 tras
+   la revisión adversarial (16 agentes, 72 hallazgos; §7.1). ✅ **T1 ENTERA (23-09)**, cinco commits
+   `f501a990`→`4d4c3aec`, cada tanda con su párrafo en §4.8 (el libro · `cajon/track.js` diferido +
+   `scripts/sonda-analitica.mjs` · correos con UTM tras firmar · la fuente del pedido manual · `anonymize()` y
+   el export; contrato **1.19.0**) y su cierre: `scripts/mutar-analitica.sh` **19/19**, `redsys:verify-concurrency`
+   ✓, `RGPD-07` + `PAY-21`, y **`trustProxies '*'` RETIRADO** (`SEC-13`: sin proxy delante de PHP una XFF falsa
+   se honraba; medido en staging y producción). ⚠️ Queda el OJO del owner en la fuente del pedido manual.
+   ▶ **`[DECIDIDO owner]` 23-09: la analítica sigue en el OTRO ordenador (T2→T5; el traspaso, en mi buzón) y
+   AQUÍ arranca la LANDING NUEVA.** Sus palabras: *«el nuevo diseño no tiene nada que ver con el antiguo, es
+   totalmente diferente y tal vez debamos hacer lógica nueva, no es solo diseño; lo subiré directamente a la
+   instancia o tal vez con DesignSync, es un sistema de diseño completo»*. Lo demás se valora en la PRÓXIMA
+   sesión, con el diseño delante: cómo llega (a la instancia o por `/design-login` + DesignSync — hoy no está
+   autorizado en esta máquina), con qué se construye la vía A (mi recomendación: Astro), cómo entran los hechos
+   (mi recomendación: horneados al construir + refresco en vivo; pidió que se lo explique con la opción más
+   profesional), y la primera tanda (probablemente la portada; «lo iteramos cuando la veas»). ⚠️ Es una SPEC
+   nueva (`/spec`), no una portada más: si trae lógica nueva, primero entra al menú de hechos (§4.1.bis).
    `[DECIDIDO owner]` 23-09: todo con la v2.0.0 y sin la pregunta tras pagar; `[PENDIENTE: asesoría]` los tres
    puntos de la spec §7.
    ⚠️⚠️ **Lo que dejaron los platos y vale para lo que venga** (detalle en la spec §4.1 y §4.1.ter): si
@@ -325,23 +325,22 @@ dueño es el carril de la web/reseñas—) ·
   `LandingAddonPresenter::unique()` no tiene consumidor desde `#583` y escribe el dinero a su manera ·
   `mutar-cabecera.py` tiene cuatro mutantes que ya no aplican y `mutar-bandas.py` uno.
 
+### ❗❗❗ Para el SPA — el OTRO ordenador (emisor: plataforma, 2026-09-23) — TE TRASPASO LA T2 DE LA ANALÍTICA
+- `[DECIDIDO owner]` 23-09: **la T2, el cuadro de mando (`specs/analitica.md` §4.5), la haces TÚ**, con tu
+  banda y en tu carril; aquí arranca el diseño de la landing nueva (vía A). Lee §0, §4.1, §4.5 y §7.1 (rgpd,
+  seguridad y rendimiento del cuadro) de esa spec antes de tocar nada.
+- **Lo que te dejo hecho (T1 ✅, `f501a990`→`4d4c3aec`)**: `analytics_sessions`/`analytics_events` en
+  `Platform\Models` (sin FK, poda a 25 meses por `model:prune`), `Contract::EVENTS` (la verdad de nombres y
+  `props`), `Recorder` (hechos de servidor; **nunca lanza**), el sello `orders.attribution_{channel,source,
+  medium,campaign}` + `attribution` json (`NULL` = «anterior a la medición», nunca «directo»),
+  `AttributionContext::touch()` (fuente/medio/campaña de una sesión, con `first_touch` a 30 días),
+  `email_sent`/`email_clicked` por clave de correo, `is_bot`/`is_internal` en la sesión, `visits` = sesiones.
+- **Lo que la T2 exige** está entero en §4.5 (permisos, zona horaria con test de medianoche, saneado y CSV,
+  caché ≤ 90 días, `analytics_daily`/`ad_spend` nacen contigo, `EXPLAIN` en staging, `es`/`zh_CN`). Ingresos =
+  Σ `paid_cents` − Σ `refunded_cents`; el canal `panel` cuenta en ingresos y **no** en el embudo web.
+- 🪤 **Mis trampas**: observadores como singleton (el dispatcher instancia `Clase@método` por evento) ·
+  `DB::afterCommit` corre en el acto fuera de txn · un literal `sessions` dispara `AccessRevocationTest`.
+
 ### Atendido
-- **SPA 21/22-09, «contrato nuevo en `portada`» (`socialSelection`, la T2·8)** (atendido el 23-09): anotado
-  en «retomar» 2(b) como condición de la v2.0.0. La portada de la instancia aún no pinta la línea del
-  filtro; hoy no hay exposición (responde Places) y producción no se mueve hasta la versión grande
-  (`#670`). ⚠️ Si la landing nueva de la vía A llega antes, la línea va en ELLA. · **Y tu banda en
-  `ESTADO.md`**: corregida a 730–759.
-- **SPA `#724`, el techo del carril** (20-09): atendido. Mi encabezado ya dice **32 KB**. ⚠️ Llegó a mitad
-  de `#662`, que se cerró rascando contra el techo VIEJO cuatro veces — lo recortado bajó a
-  `paquete-de-instancia.md` §4.7, que es donde tenía que estar de todos modos.
-- **SPA, el ✅ del owner sobre la invitación y el fin de su freno** (20-09): atendido; anotado en «retomar»
-  punto 2 — el despliegue de la v1.2.0 ya no está bloqueado por el cajón.
-- **El aviso del `compose.yaml` del 19-09, RETIRADO el 23-09**: no por «atendido» sino porque llegó — el
-  carril del SPA lo lleva escrito en sus propias trampas vivas («ganó un montaje el 19-09, el próximo
-  `up -d` recrea el contenedor y se lleva el Chromium»). Un aviso que el otro ya interiorizó no necesita
-  seguir en mi buzón.
-- **RETIRADOS los míos que el SPA dio por atendidos** (16-09→**21-09**, retirada la del 21-09 el 23-09:
-  «`home` ya está mudada» y «banda nueva y contrato 2», que su carril declara atendidos —la tarjeta del
-  anfitrión fue a su T2·8 y la migración de `zones` está aplicada en su BD—). Incluye el aviso de los 37
-  ficheros del material, que confirmó en su máquina. Lo duradero vive donde no caduca: la receta de la
-  API en `instancia-y-landing-fuera.md` §4.1.bis y el resto en mis trampas.
+- Vaciado el 23-09 (lo de la SPA del 20→22-09): lo duradero vive en «retomar» 2(b) —la línea del filtro de
+  reseñas es condición de la v2.0.0, y si la landing nueva llega antes va en ELLA—, en las trampas y en las specs.
