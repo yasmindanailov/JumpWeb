@@ -67,16 +67,15 @@
    **DATOS** que recibe la vista, no el HTML (§4.5.bis) · `InstanceViews::CONTRATO` = **2** · el
    trinquete de CSS huérfano está encendido, así que **si añades CSS su consumidor nace con él** · la
    migración de `zones` **borra columnas** y viaja en la v2.0.0.
-   ▶▶▶ **LA ANALÍTICA, EN MARCHA** (`specs/analitica.md`, `#678` `[DECIDIDO owner]`, 23-09): T0 la spec ✅.
-   **Lo siguiente es la T1, el libro de eventos** (spec §4.1–§4.2): tablas `analytics_sessions`/`_events`,
-   cookie propia de 13 meses fijos, `POST /events` con limitador propio, `track()` dentro de
-   `/cajon/paquete.js` con `data-track` declarativo, `step_entered` desde `machine.js`, hechos de servidor por
-   OBSERVADOR de `Order` (`afterCommit`, nunca tocar el `CRITICAL_RE`), el sello `orders.attribution`, UTM en
-   los 26 correos y la poda a 25 meses. Contrato **1.18.0**. ⚠️ Toca ficheros del SPA y de la web: **avisado
-   en el buzón**, abajo. `[DECIDIDO owner]` 23-09: **todo con la v2.0.0** (sin excepción a `#670`) y **sin**
-   la pregunta «¿cómo nos has conocido?»; `[PENDIENTE: asesoría]` la LIA y los textos. ▶ El owner autorizó
-   la **revisión adversarial con enjambre** de la spec (pedida con el coste delante, como manda la regla 9):
-   sus hallazgos confirmados van a la spec §7.1 antes de la T1.
+   ▶▶▶ **LA ANALÍTICA, EN MARCHA** (`specs/analitica.md`, `#678` `[DECIDIDO owner]`, 23-09): T0 la spec ✅ y
+   **su v2 tras la revisión adversarial** (16 agentes, 72 hallazgos confirmados, 1 refutado; todo en §7.1,
+   cada corrección delante del texto que corrige). Lo que cambió de fondo: el libro tiene DOS regímenes (el
+   AGREGADO es exento; el cruce cookie↔cuenta va bajo la categoría `analytics`), tres hechos de dinero no eran
+   transiciones de `Order` (cada uno con su fuente real), el sello nace en `creating` desde
+   `AttributionContext`, y la ingesta sale del `throttle:api` y del stateful. **Lo siguiente es la T1** tal
+   como la lista **§4.8** (léela entera: son ~15 piezas), contrato **1.18.0**. ⚠️ Toca ficheros del SPA y de
+   la web: **avisado en el buzón**, abajo. `[DECIDIDO owner]` 23-09: todo con la v2.0.0 y sin la pregunta tras
+   pagar; `[PENDIENTE: asesoría]` los tres puntos de la spec §7.
    ⚠️⚠️ **Lo que dejaron los platos y vale para lo que venga** (detalle en la spec §4.1 y §4.1.ter): si
    el dato tiene **servicio de dominio**, el recurso **delega** · el filtro de «lo que no viaja» va
    **DESPUÉS** del respaldo de idioma (`Translated::pick()` encadena con `??`) · lo que decide la MAQUETA
