@@ -302,6 +302,7 @@ class CreateManualOrderDoneTest extends TestCase
             ->test(Cmo::class)
             ->set('data.customer_id', $cliente->id)
             ->set('data.payment_method', 'cash')
+            ->set('data.source', 'counter')
             ->call('pickProduct', ($producto ?? $this->entrada)->id)
             ->set('data.sel_date', $this->dia)
             ->set('data.sel_time', '10:00:00')

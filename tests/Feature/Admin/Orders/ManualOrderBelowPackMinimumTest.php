@@ -358,6 +358,7 @@ class ManualOrderBelowPackMinimumTest extends TestCase
                 'below_minimum' => true,
             ]])
             ->set('data.payment_method', ManualOrderFulfiller::METHOD_CASH)
+            ->set('data.source', 'counter')
             ->call('create');
 
         $this->assertSame(0, $customer->orders()->count(), 'sin el permiso, el mínimo rechaza aunque la línea venga marcada');
@@ -405,6 +406,7 @@ class ManualOrderBelowPackMinimumTest extends TestCase
                 'below_minimum' => true,
             ]])
             ->set('data.payment_method', ManualOrderFulfiller::METHOD_CASH)
+            ->set('data.source', 'counter')
             ->call('create');
 
         $order = $customer->orders()->first();
@@ -443,6 +445,7 @@ class ManualOrderBelowPackMinimumTest extends TestCase
                 'below_minimum' => false,
             ]])
             ->set('data.payment_method', ManualOrderFulfiller::METHOD_CASH)
+            ->set('data.source', 'counter')
             ->call('create');
 
         $this->assertNotNull($customer->orders()->first());
@@ -480,7 +483,8 @@ class ManualOrderBelowPackMinimumTest extends TestCase
                 'line_total_cents' => 300_00,
                 'below_minimum' => true,
             ]])
-            ->set('data.payment_method', ManualOrderFulfiller::METHOD_CASH);
+            ->set('data.payment_method', ManualOrderFulfiller::METHOD_CASH)
+            ->set('data.source', 'counter');
 
         // El catálogo cambia entre añadir la línea y cobrarla.
         $this->excursion->update(['min_qty' => 10]);

@@ -138,7 +138,9 @@ Las tres se preguntaron con el número y el coste de cada salida delante.
 5 Extras         CONDICIONAL → complementos
                               ⇒ el último paso con algo que preguntar lleva «Añadir al carrito»
 6 Carrito        siempre     → una columna, «Ir a pagar» + «Añadir más productos» (vuelve al 2)
-7 Pago           siempre     → dos columnas, «Cobrar y crear pedido»
+7 Pago           siempre     → dos columnas, «Cobrar y crear pedido»; y POR DÓNDE LLEGÓ el pedido
+                              (teléfono · mostrador · correo · otro), obligatorio y sin defecto: es el
+                              sello de atribución del pedido manual (`analitica.md` §4.1, T1d)
   Hecho                      → pantalla propia de desenlace (T4)
 ```
 

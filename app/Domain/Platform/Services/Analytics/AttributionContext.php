@@ -35,6 +35,14 @@ class AttributionContext
 
     public const CHANNEL_SYSTEM = 'system';
 
+    /**
+     * Por dónde llega un pedido que teclea el operador (T1d): lo elige él en el asistente, obligatorio y sin
+     * valor por defecto — un «mostrador» preseleccionado etiquetaría por teléfono lo que entró por correo.
+     *
+     * @var list<string>
+     */
+    public const PANEL_SOURCES = ['phone', 'counter', 'email', 'other'];
+
     /** Días hacia atrás en los que se busca el PRIMER toque no directo de un visitante. */
     public const FIRST_TOUCH_DAYS = 30;
 
@@ -68,9 +76,18 @@ class AttributionContext
         $this->visitorId = Visitor::fromRequest($request);
     }
 
-    /** Un pedido que teclea el operador: el canal es el panel y la fuente, la que eligió. */
+    /**
+     * Un pedido que teclea el operador: el canal es el panel y la fuente, la que eligió.
+     *
+     * @throws \InvalidArgumentException con una fuente fuera de {@see PANEL_SOURCES}: el asistente la valida
+     *                                   antes, y esto es lo que impide que un valor tecleado llegue al sello.
+     */
     public function forPanel(string $source, ?int $operatorId = null): void
     {
+        if (! in_array($source, self::PANEL_SOURCES, true)) {
+            throw new \InvalidArgumentException("«{$source}» no es una fuente del panel");
+        }
+
         $this->request = null;
         $this->channel = self::CHANNEL_PANEL;
         $this->source = $source;

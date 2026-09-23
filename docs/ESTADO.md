@@ -11,7 +11,7 @@
 
 | Carril | Máquina | Banda | Fichero | Estado |
 |---|---|---|---|---|
-| 🏗️ Plataforma · producto e instancias | este ordenador (`~/proyectos/jumpweb/producto`, `#648`) | **670–699** | `carriles/plataforma.md` | **F0–F4 ✅** · v1.2.0 etiquetada y **sin desplegar**: producción sigue en v1.1.0 hasta la v2.0.0 grande (`#670`) · **F5**: T2a→T2c, T3·1 y T4 hechas; la **vía A** con su **menú de hechos COMPLETO** (`#671`→`#677`, contrato **1.17.0**) · **la analítica** en marcha (`#678`, contrato **1.18.0**): T1a·T1b·T1c ✅, sigue T1d |
+| 🏗️ Plataforma · producto e instancias | este ordenador (`~/proyectos/jumpweb/producto`, `#648`) | **670–699** | `carriles/plataforma.md` | **F0–F4 ✅** · v1.2.0 etiquetada y **sin desplegar**: producción sigue en v1.1.0 hasta la v2.0.0 grande (`#670`) · **F5**: T2a→T2c, T3·1 y T4 hechas; la **vía A** con su **menú de hechos COMPLETO** (`#671`→`#677`, contrato **1.17.0**) · **la analítica** en marcha (`#678`, contrato **1.18.0**): T1a→T1d ✅, sigue T1e |
 | 🎨 Diseño de la web | este ordenador | 580–609 | `carriles/web.md` | todo en producción (13-09); sigue la T6 de copys |
 | 🧩 Diseño del SPA (el cajón) | el otro ordenador | 730–759 (`#729` agotó la 700–729) | `carriles/spa.md` | T1–T2 de celebración en el árbol, sin desplegar; sigue la T3 |
 | 📧 Correos | este ordenador | 500–519 | `carriles/correos.md` | entero en el árbol; quedan cuatro ámbar y el ojo del owner |

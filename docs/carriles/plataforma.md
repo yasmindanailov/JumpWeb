@@ -5,7 +5,7 @@
 > **640–669 AGOTADA con `#669`** → **670–699 EN CURSO** · Último usado: **`#678`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, **`docs/specs/analitica.md`** · Actualizado: **2026-09-23**
 > (**segunda sesión del 23-09**: `#677` los TRAMOS DE GRUPO y el menú COMPLETO, contrato **1.17.0**; `#678` la
-> dirección de la ANALÍTICA, decidida por el owner, con su spec; T1a, T1b y T1c del libro hechas).
+> dirección de la ANALÍTICA, decidida por el owner, con su spec; T1a→T1d del libro hechas).
 > ⚠️ **El techo de 32 KB apretó SIETE veces el 23-09** y se resolvió siempre mudando, nunca subiéndolo (es
 > del owner): **se muda, no se raspa** — y si vuelve a pasar tres veces seguidas, llévaselo con la medida
 > como hizo el SPA en `#724`.
@@ -72,16 +72,19 @@
    cada corrección delante del texto que corrige). Lo que cambió de fondo: el libro tiene DOS regímenes (el
    AGREGADO es exento; el cruce cookie↔cuenta va bajo la categoría `analytics`), tres hechos de dinero no eran
    transiciones de `Order` (cada uno con su fuente real), el sello nace en `creating` desde
-   `AttributionContext`, y la ingesta sale del `throttle:api` y del stateful. ✅ **T1a, T1b y T1c hechas (23-09)**:
+   `AttributionContext`, y la ingesta sale del `throttle:api` y del stateful. ✅ **T1a→T1d hechas (23-09)**:
    el núcleo del libro (tablas y poda, cookie, contexto, sello en `creating`, ingesta stateless con limitador
    propio, hechos de servidor por su fuente, contrato **1.18.0**) · el emisor `cajon/track.js` DIFERIDO (2,3 KiB
    gzip, techo 3; BUZÓN en `index.js`; el cajón cuenta abrir —también al nacer, con motivo—, cada paso y
    cerrar; `api.js` cuenta sus fallos; `JumpWeb.track()` para los stores del SPA), verificado con
    `scripts/sonda-analitica.mjs` (`SONDA_BASE=http://localhost`, sin puente: 16/16 en UNA sesión `is_bot`) · y
    los CORREOS: `new BrandedMailMessage($this)` en los 25 `toMail()`, UTM en botón, logotipo y pie de los 24 al
-   cliente, `email_sent` (`RecordEmailSent`) y `email_clicked` (`RecordEmailClick`, una vez por sesión).
-   **Lo siguiente: T1d** (el `Select` del pedido manual), T1e (`anonymize()` y export), y el cierre con
-   `mutar-analitica.sh`, la sonda y `trustProxies`. Todo en la spec **§4.8**. `[DECIDIDO owner]` 23-09: todo con la v2.0.0 y sin la pregunta
+   cliente, `email_sent` (`RecordEmailSent`) y `email_clicked` (`RecordEmailClick`, una vez por sesión) · y
+   **T1d**: en el paso de pago del asistente, POR DÓNDE LLEGÓ el pedido (cuatro tarjetas, obligatorio y sin
+   defecto; `create()` lo re-exige y fija `forPanel()` antes de `fulfill()`; `PANEL_SOURCES` valida). Probado
+   con Livewire (sello `panel/phone/offline` + `operator_id`); ⚠️ le falta el OJO del owner en la tablet.
+   **Lo siguiente: T1e** (`anonymize()` y export), y el cierre con `mutar-analitica.sh`, la sonda y
+   `trustProxies`. Todo en la spec **§4.8**. `[DECIDIDO owner]` 23-09: todo con la v2.0.0 y sin la pregunta
    tras pagar; `[PENDIENTE: asesoría]` los tres puntos de la spec §7.
    ⚠️⚠️ **Lo que dejaron los platos y vale para lo que venga** (detalle en la spec §4.1 y §4.1.ter): si
    el dato tiene **servicio de dominio**, el recurso **delega** · el filtro de «lo que no viaja» va

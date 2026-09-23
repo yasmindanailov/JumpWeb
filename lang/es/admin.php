@@ -396,6 +396,13 @@ return [
             'payment_method' => 'Método de pago',
             'method_cash' => 'Efectivo',
             'method_datafono' => 'Datáfono',
+            // Por dónde ha llegado el pedido (`specs/analitica.md` §4.1, T1d): sella la atribución del pedido manual.
+            'source' => '¿Por dónde ha llegado el pedido?',
+            'source_phone' => 'Por teléfono',
+            'source_counter' => 'En el mostrador',
+            'source_email' => 'Por correo',
+            'source_other' => 'Otro',
+            'source_required' => 'Di por dónde ha llegado el pedido antes de cobrar.',
             'back' => 'Anterior',
             'next' => 'Siguiente',
             // `#462`, `[DECIDIDO owner]`: en el carrito el botón deja de decir «Siguiente» y dice a

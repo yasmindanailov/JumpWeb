@@ -217,6 +217,7 @@ class CreateManualOrderDependentsTest extends TestCase
             ->test(CreateManualOrderPage::class)
             ->set('data.customer_id', $holder->id)
             ->set('data.payment_method', 'cash')
+            ->set('data.source', 'counter')
             ->set('cart', [$this->cartLine(2, [$lucas->id], ['Lior']), $this->cartLine(1)])
             ->call('create')
             ->assertNotNotified(__('admin.orders.dependents.manual_assign_failed', ['count' => 1]));
@@ -246,6 +247,7 @@ class CreateManualOrderDependentsTest extends TestCase
             ->test(CreateManualOrderPage::class)
             ->set('data.customer_id', $holder->id)
             ->set('data.payment_method', 'cash')
+            ->set('data.source', 'counter')
             ->set('cart', $cart)
             ->call('create')
             ->assertNotified(__('admin.orders.dependents.manual_check_failed', ['reasons' => __('api.dependents.waiver_unsigned')]));
@@ -280,6 +282,7 @@ class CreateManualOrderDependentsTest extends TestCase
             ->test(CreateManualOrderPage::class)
             ->set('data.customer_id', $holder->id)
             ->set('data.payment_method', 'cash')
+            ->set('data.source', 'counter')
             ->set('cart', [$this->cartLine(1, [$lucas->id], ['Lior'])])
             ->call('create')
             ->assertSet('dependentsSkipped', 1)

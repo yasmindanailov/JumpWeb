@@ -256,7 +256,7 @@ class CreateManualOrderCustomerPhoneTest extends TestCase
 
         $cliente->forceFill(['phone' => null])->save();
 
-        $page->set('data.payment_method', 'cash')->call('create');
+        $page->set('data.payment_method', 'cash')->set('data.source', 'counter')->call('create');
 
         $this->assertSame(1, Order::query()->where('user_id', $cliente->id)->count(),
             'La venta de mostrador NO puede bloquearse por un teléfono que falta.');

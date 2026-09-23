@@ -160,6 +160,7 @@ class CreateManualOrderPageTest extends TestCase
             ->test(CreateManualOrderPage::class)
             ->set('data.customer_id', $customer->id)
             ->set('data.payment_method', 'cash')
+            ->set('data.source', 'counter')
             ->set('cart', [$this->cartLine(2)])
             ->call('create');
 
@@ -180,7 +181,59 @@ class CreateManualOrderPageTest extends TestCase
             ->test(CreateManualOrderPage::class)
             ->set('data.customer_id', $customer->id)
             ->set('data.payment_method', 'cash')
+            ->set('data.source', 'counter')
             ->set('cart', [])
+            ->call('create');
+
+        $this->assertSame(0, Order::where('user_id', $customer->id)->count());
+    }
+
+    /**
+     * **POR DÓNDE LLEGÓ EL PEDIDO** (`specs/analitica.md` §4.1, T1d): sin decirlo no se cobra —ni por el botón
+     * ni por `create()` a pelo—, y con ello el pedido nace SELLADO con la fuente del operador, no con la cookie
+     * de su navegador. Sin valor por defecto: una fuente preseleccionada contaría mal justo lo que mide.
+     */
+    public function test_a_manual_order_needs_its_source_and_is_sealed_with_it(): void
+    {
+        Notification::fake();
+        $customer = $this->customer();
+        $staff = $this->staff();
+
+        $page = Livewire::actingAs($staff)
+            ->test(CreateManualOrderPage::class)
+            ->set('data.customer_id', $customer->id)
+            ->set('data.payment_method', 'cash')
+            ->set('cart', [$this->cartLine(2)]);
+
+        $this->assertFalse($page->instance()->hasSource(), 'la fuente no puede venir preseleccionada');
+        $page->call('create');
+        $this->assertSame(0, Order::where('user_id', $customer->id)->count(), 'sin fuente no se cobra');
+
+        $page->set('data.source', 'phone')->call('create');
+
+        $order = Order::where('user_id', $customer->id)->sole();
+        $this->assertSame(Order::STATUS_PAID, $order->status);
+        $this->assertSame('panel', $order->attribution_channel);
+        $this->assertSame('phone', $order->attribution_source);
+        $this->assertSame('offline', $order->attribution_medium);
+        $this->assertSame(['operator_id' => $staff->id], $order->attribution);
+
+        // Y el siguiente pedido vuelve a preguntarlo: el desenlace limpia la fuente con el resto.
+        $page->call('startAnotherOrder');
+        $this->assertFalse($page->instance()->hasSource());
+    }
+
+    public function test_a_source_that_is_not_of_the_panel_never_reaches_the_seal(): void
+    {
+        Notification::fake();
+        $customer = $this->customer();
+
+        Livewire::actingAs($this->staff())
+            ->test(CreateManualOrderPage::class)
+            ->set('data.customer_id', $customer->id)
+            ->set('data.payment_method', 'cash')
+            ->set('data.source', 'fax')
+            ->set('cart', [$this->cartLine(1)])
             ->call('create');
 
         $this->assertSame(0, Order::where('user_id', $customer->id)->count());
@@ -248,6 +301,7 @@ class CreateManualOrderPageTest extends TestCase
             ->test(CreateManualOrderPage::class)
             ->set('data.customer_id', $staffAsTarget->id)
             ->set('data.payment_method', 'cash')
+            ->set('data.source', 'counter')
             ->set('cart', [$this->cartLine(1)])
             ->call('create');
 
@@ -267,6 +321,7 @@ class CreateManualOrderPageTest extends TestCase
             ->test(CreateManualOrderPage::class)
             ->set('data.customer_id', $customer->id)
             ->set('data.payment_method', 'cash')
+            ->set('data.source', 'counter')
             ->set('cart', [$this->cartLine(1)]);
 
         $component->assertActionExists('createOrder');
@@ -350,6 +405,7 @@ class CreateManualOrderPageTest extends TestCase
             ->test(CreateManualOrderPage::class)
             ->set('data.customer_id', $customer->id)
             ->set('data.payment_method', 'cash')
+            ->set('data.source', 'counter')
             ->call('pickProduct', $this->h1->id)
             ->set('data.sel_date', $this->date)
             ->set('data.sel_time', '10:00:00')
@@ -381,6 +437,7 @@ class CreateManualOrderPageTest extends TestCase
             ->test(CreateManualOrderPage::class)
             ->set('data.customer_id', $customer->id)
             ->set('data.payment_method', 'cash')
+            ->set('data.source', 'counter')
             ->call('pickProduct', $this->h1->id);
 
         // Pre-carga: el obligatorio incluido arranca seleccionado a 1 en el view-model.
@@ -473,6 +530,8 @@ class CreateManualOrderPageTest extends TestCase
             ->call('next')->assertSet('step', CreateManualOrderPage::STEP_PAYMENT)
             // Pago. El `customer_id` del paso 1 (oculto desde hace cinco pasos) persiste y se usa.
             ->set('data.payment_method', 'datafono')
+            // …y por dónde llegó (T1d): con el cliente delante, el mostrador.
+            ->set('data.source', 'counter')
             ->call('create');
 
         $order = Order::where('user_id', $customer->id)->first();
@@ -551,6 +610,7 @@ class CreateManualOrderPageTest extends TestCase
             ->test(CreateManualOrderPage::class)
             ->set('data.customer_id', $customer->id)
             ->set('data.payment_method', 'cash')
+            ->set('data.source', 'counter')
             ->set('cart', [$this->cartLine(1)])
             ->call('create');
 

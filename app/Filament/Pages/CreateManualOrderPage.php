@@ -23,6 +23,7 @@ use App\Domain\Identity\Services\CustomerRegistrar;
 use App\Domain\Identity\Services\DependentAssigner;
 use App\Domain\Identity\Services\LegalDocuments;
 use App\Domain\Identity\Services\WaiverSettings;
+use App\Domain\Platform\Services\Analytics\AttributionContext;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Filament\Resources\Orders\OrderResource;
@@ -867,8 +868,37 @@ class CreateManualOrderPage extends Page
                             ->extraAttributes(['class' => 'cmo-pay'])
                             ->default(ManualOrderFulfiller::METHOD_CASH)
                             ->required(),
+                        // POR DÓNDE HA LLEGADO EL PEDIDO (`specs/analitica.md` §4.1, `#678`, T1d): el sello de
+                        // atribución de un pedido del panel es la fuente que dice el operador, y sin ella el
+                        // pedido heredaría la cookie y la campaña de SU navegador. Mismas tarjetas que el
+                        // método de pago —una diana grande por opción, con la tablet en la mano— y, como
+                        // `payment_method`, las claves son las del dominio (`AttributionContext::PANEL_SOURCES`).
+                        // ⚠️ SIN valor por defecto, a propósito: un «mostrador» preseleccionado etiquetaría
+                        // por mostrador lo que entró por teléfono, y el cuadro de mando contaría mal justo
+                        // el dato que este campo existe para dar. Es un toque más, y `create()` lo exige.
+                        ToggleButtons::make('source')
+                            ->label(__('admin.orders.create_manual.source'))
+                            ->options(array_combine(
+                                AttributionContext::PANEL_SOURCES,
+                                array_map(static fn (string $s): string => __('admin.orders.create_manual.source_'.$s), AttributionContext::PANEL_SOURCES),
+                            ))
+                            ->icons([
+                                'phone' => Heroicon::OutlinedPhone,
+                                'counter' => Heroicon::OutlinedBuildingStorefront,
+                                'email' => Heroicon::OutlinedEnvelope,
+                                'other' => Heroicon::OutlinedEllipsisHorizontalCircle,
+                            ])
+                            ->inline()
+                            ->extraAttributes(['class' => 'cmo-pay'])
+                            ->required(),
                     ]),
             ]);
+    }
+
+    /** ¿Eligió el operador por dónde llegó el pedido? Gobierna el botón de cobrar y lo re-exige `create()`. */
+    public function hasSource(): bool
+    {
+        return in_array($this->data['source'] ?? null, AttributionContext::PANEL_SOURCES, true);
     }
 
     // ─── Acciones ─────────────────────────────────────────────────────────
@@ -1404,7 +1434,8 @@ class CreateManualOrderPage extends Page
             ->modalDescription(__('admin.orders.create_manual.confirm_description'))
             ->modalSubmitActionLabel(__('admin.orders.create_manual.submit'))
             ->modalIcon(Heroicon::OutlinedCheckCircle)
-            ->disabled(fn (): bool => $this->cart === [])
+            // Sin carrito o sin decir por dónde llegó el pedido (T1d), no se cobra.
+            ->disabled(fn (): bool => $this->cart === [] || ! $this->hasSource())
             ->action(fn () => $this->create());
     }
 
@@ -1447,6 +1478,18 @@ class CreateManualOrderPage extends Page
         }
 
         $method = (string) ($this->data['payment_method'] ?? '');
+
+        // POR DÓNDE LLEGÓ EL PEDIDO (T1d): se re-exige aquí como el cliente y el carrito —el botón lo bloquea,
+        // pero `create()` es público y el estado viaja al navegador (`SEC-04`)—. Con ella se fija el contexto
+        // de atribución ANTES de `fulfill()`: el sello nace en el `creating` del pedido, dentro de la
+        // transacción, y lo que lee es esto — no la cookie ni la campaña del navegador del operador.
+        if (! $this->hasSource()) {
+            Notification::make()->danger()->title(__('admin.orders.create_manual.source_required'))->send();
+
+            return;
+        }
+
+        app(AttributionContext::class)->forPanel((string) $this->data['source'], (int) auth()->id());
 
         // Menores a cargo (D14·5, D3): FASE 1 ANTES del dinero. Un rechazo —el menor dejó de ser del
         // cliente, no tiene la exención vigente, es adulto ese día— no crea ni cobra NADA: el operador
