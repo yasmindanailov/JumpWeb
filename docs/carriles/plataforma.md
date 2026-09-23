@@ -2,13 +2,12 @@
 
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669 AGOTADA con `#669`** → **670–699 EN CURSO** · Último usado: **`#678`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, **`docs/specs/analitica.md`** · Actualizado: **2026-09-23**
+> **640–669 AGOTADA con `#669`** → **670–699 EN CURSO** · Último usado: **`#680`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, la landing nueva (`#679`; spec por escribir) · Actualizado: **2026-09-24**
 > (**segunda sesión del 23-09**: `#677` los TRAMOS DE GRUPO y el menú COMPLETO, contrato **1.17.0**; `#678` la
 > dirección de la ANALÍTICA, decidida por el owner, con su spec; T1a→T1e del libro hechas, contrato 1.19.0).
-> ⚠️ **El techo de 32 KB apretó SIETE veces el 23-09** y se resolvió siempre mudando, nunca subiéndolo (es
-> del owner): **se muda, no se raspa** — y si vuelve a pasar tres veces seguidas, llévaselo con la medida
-> como hizo el SPA en `#724`.
+> ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
+> llévaselo con la medida, como el SPA en `#724`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
 > Techo **32 KB** (check 10; subido de 24 en `#724` con la medida delante). El contador de la suite no
 > vive aquí: va en el trailer del commit.
@@ -74,15 +73,11 @@
    el export; contrato **1.19.0**) y su cierre: `scripts/mutar-analitica.sh` **19/19**, `redsys:verify-concurrency`
    ✓, `RGPD-07` + `PAY-21`, y **`trustProxies '*'` RETIRADO** (`SEC-13`: sin proxy delante de PHP una XFF falsa
    se honraba; medido en staging y producción). ⚠️ Queda el OJO del owner en la fuente del pedido manual.
-   ▶ **`[DECIDIDO owner]` 23-09: la analítica sigue en el OTRO ordenador (T2→T5; el traspaso, en mi buzón) y
-   AQUÍ arranca la LANDING NUEVA.** Sus palabras: *«el nuevo diseño no tiene nada que ver con el antiguo, es
-   totalmente diferente y tal vez debamos hacer lógica nueva, no es solo diseño; lo subiré directamente a la
-   instancia o tal vez con DesignSync, es un sistema de diseño completo»*. Lo demás se valora en la PRÓXIMA
-   sesión, con el diseño delante: cómo llega (a la instancia o por `/design-login` + DesignSync — hoy no está
-   autorizado en esta máquina), con qué se construye la vía A (mi recomendación: Astro), cómo entran los hechos
-   (mi recomendación: horneados al construir + refresco en vivo; pidió que se lo explique con la opción más
-   profesional), y la primera tanda (probablemente la portada; «lo iteramos cuando la veas»). ⚠️ Es una SPEC
-   nueva (`/spec`), no una portada más: si trae lógica nueva, primero entra al menú de hechos (§4.1.bis).
+   ▶ **`#679` `[DECIDIDO owner]` 23-09: la analítica sigue en el OTRO ordenador (T2→T5; el traspaso, en mi
+   buzón) y AQUÍ arranca la LANDING NUEVA** (el cierre técnico de T1, en `#680`). Lo que dijo y lo APARCADO hasta ver el diseño —cómo llega (DesignSync exige
+   `/design-login` interactivo aquí), con qué se construye la vía A, cómo entran los hechos, la primera tanda,
+   cada uno con mi recomendación— está en `#679`. ⚠️ Es una SPEC nueva (`/spec`), no una portada más; si trae
+   lógica nueva, entra primero al menú de hechos (§4.1.bis).
    `[DECIDIDO owner]` 23-09: todo con la v2.0.0 y sin la pregunta tras pagar; `[PENDIENTE: asesoría]` los tres
    puntos de la spec §7.
    ⚠️⚠️ **Lo que dejaron los platos y vale para lo que venga** (detalle en la spec §4.1 y §4.1.ter): si
@@ -121,6 +116,8 @@
 `.githooks/pre-push` · `scripts/huella-enrutador.py` · `scripts/partir-decisiones.py` · `scripts/deploy.sh` (la
 guarda 8) · `scripts/mutar-guarda8.sh` · `CHANGELOG.md` · `phpstan.neon` · `phpstan-baseline.neon` ·
 `eslint.config.js` · `eslint-suppressions.json` (la poda quien arregla) · `scripts/mutar-analisis-estatico.sh` ·
+**LA ANALÍTICA** (`#678`; sus ficheros los enumera `specs/analitica.md` §4.1, §4.2 y §6: `Platform\Services\Analytics\*`,
+sus observadores y middlewares, `cajon/track.js`, `EmailUtm`; y `scripts/{sonda,mutar}-analitica.*`) ·
 `StaticAnalysisGateTest` · `Tests\TestCase::be()` · **el token y el cajón empaquetado**, cuyos ficheros
 enumera cada spec (`token-bearer.md`, `cajon-empaquetable.md` §0): el emisor, el arranque, la apertura, la
 carcasa, la hoja GENERADA `public/css/cajon.css` y sus cuatro arneses · `scripts/huella-maquetacion.mjs` ·
@@ -326,7 +323,7 @@ dueño es el carril de la web/reseñas—) ·
   `mutar-cabecera.py` tiene cuatro mutantes que ya no aplican y `mutar-bandas.py` uno.
 
 ### ❗❗❗ Para el SPA — el OTRO ordenador (emisor: plataforma, 2026-09-23) — TE TRASPASO LA T2 DE LA ANALÍTICA
-- `[DECIDIDO owner]` 23-09: **la T2, el cuadro de mando (`specs/analitica.md` §4.5), la haces TÚ**, con tu
+- `#679` `[DECIDIDO owner]` 23-09: **la T2, el cuadro de mando (`specs/analitica.md` §4.5), la haces TÚ**, con tu
   banda y en tu carril; aquí arranca el diseño de la landing nueva (vía A). Lee §0, §4.1, §4.5 y §7.1 (rgpd,
   seguridad y rendimiento del cuadro) de esa spec antes de tocar nada.
 - **Lo que te dejo hecho (T1 ✅, `f501a990`→`4d4c3aec`)**: `analytics_sessions`/`analytics_events` en
