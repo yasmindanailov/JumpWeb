@@ -2,10 +2,9 @@
 
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669 AGOTADA con `#669`** → **670–699 EN CURSO** · Último usado: **`#680`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, la landing nueva (`#679`; spec por escribir) · Actualizado: **2026-09-24**
-> (**segunda sesión del 23-09**: `#677` los TRAMOS DE GRUPO y el menú COMPLETO, contrato **1.17.0**; `#678` la
-> dirección de la ANALÍTICA, decidida por el owner, con su spec; T1a→T1e del libro hechas, contrato 1.19.0).
+> **640–669 AGOTADA con `#669`** → **670–699 EN CURSO** · Último usado: **`#682`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`, `#682`) · Actualizado: **2026-09-24**
+> (el sistema nuevo leído por DesignSync; el owner decide Blade en la instancia y la isla como segunda carcasa).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
 > llévaselo con la medida, como el SPA en `#724`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -66,20 +65,16 @@
    **DATOS** que recibe la vista, no el HTML (§4.5.bis) · `InstanceViews::CONTRATO` = **2** · el
    trinquete de CSS huérfano está encendido, así que **si añades CSS su consumidor nace con él** · la
    migración de `zones` **borra columnas** y viaja en la v2.0.0.
-   ▶▶▶ **LA ANALÍTICA** (`specs/analitica.md`, `#678` `[DECIDIDO owner]`, 23-09): T0 la spec ✅ y su v2 tras
-   la revisión adversarial (16 agentes, 72 hallazgos; §7.1). ✅ **T1 ENTERA (23-09)**, cinco commits
-   `f501a990`→`4d4c3aec`, cada tanda con su párrafo en §4.8 (el libro · `cajon/track.js` diferido +
-   `scripts/sonda-analitica.mjs` · correos con UTM tras firmar · la fuente del pedido manual · `anonymize()` y
-   el export; contrato **1.19.0**) y su cierre: `scripts/mutar-analitica.sh` **19/19**, `redsys:verify-concurrency`
-   ✓, `RGPD-07` + `PAY-21`, y **`trustProxies '*'` RETIRADO** (`SEC-13`: sin proxy delante de PHP una XFF falsa
-   se honraba; medido en staging y producción). ⚠️ Queda el OJO del owner en la fuente del pedido manual.
-   ▶ **`#679` `[DECIDIDO owner]` 23-09: la analítica sigue en el OTRO ordenador (T2→T5; el traspaso, en mi
-   buzón) y AQUÍ arranca la LANDING NUEVA** (el cierre técnico de T1, en `#680`). Lo que dijo y lo APARCADO hasta ver el diseño —cómo llega (DesignSync exige
-   `/design-login` interactivo aquí), con qué se construye la vía A, cómo entran los hechos, la primera tanda,
-   cada uno con mi recomendación— está en `#679`. ⚠️ Es una SPEC nueva (`/spec`), no una portada más; si trae
-   lógica nueva, entra primero al menú de hechos (§4.1.bis).
-   `[DECIDIDO owner]` 23-09: todo con la v2.0.0 y sin la pregunta tras pagar; `[PENDIENTE: asesoría]` los tres
-   puntos de la spec §7.
+   ▶ **LA ANALÍTICA es ENTERA del carril del SPA** (`#735`, 24-09): la T1 la cerró este carril (`#678`, `#680`;
+   su historia, en `analitica.md` §4.8) y su traspaso está atendido. ⚠️ Queda el OJO del owner en la fuente del
+   pedido manual.
+   ▶▶▶ **LA LANDING NUEVA** (`specs/isla-y-landing-nueva.md`, ⬜ borrador): el sistema está en Claude Design,
+   proyecto `33397ca2…` («Saltia»), y se lee con DesignSync (autorizado el 24-09). `[DECIDIDO owner]` 24-09:
+   **`#681`** las páginas en **Blade dentro de la instancia**, solo con hechos (Astro descartado, medido) ·
+   **`#682`** la **isla** es una **segunda carcasa** del producto sobre el motor del cajón, apagada por defecto y
+   medida contra él; la hace ESTE carril. ▶ Siguiente: las **cuatro preguntas de su §7** (primera página,
+   iconos, pasos del cajón, lógica nueva en la v2.0.0) y la **T0** (censo de páginas, tokens y URLs; §4.7).
+   ⚠️ **La web nueva cambia las URLs** (§1.5): cada ruta vieja necesita su 301.
    ⚠️⚠️ **Lo que dejaron los platos y vale para lo que venga** (detalle en la spec §4.1 y §4.1.ter): si
    el dato tiene **servicio de dominio**, el recurso **delega** · el filtro de «lo que no viaja» va
    **DESPUÉS** del respaldo de idioma (`Translated::pick()` encadena con `??`) · lo que decide la MAQUETA
@@ -101,8 +96,8 @@
 5. **La promo, cuando el owner la termine** (es suyo el cuándo). La receta y **sus nueve cifras** bajaron a
    `ENTORNOS.md` §6 en `#675`, junto al despliegue que las escribió. Sin desplegar: son datos.
 6. Después, **F6** (app nativa; hereda del token lo que su spec §2 nombra: Google, alta, dispositivos).
-- **Del owner, HOY**: el **fin de la promo** (es suyo el cuándo) · el **ojo** que le falta a la compra de
-  la T5 de F4 · **`topics`**: con la landing fuera, ¿de quién son los asuntos del formulario de contacto?
+- **Del owner, HOY**: las **cuatro preguntas de §7** de `isla-y-landing-nueva.md` · el **fin de la promo** (es
+  suyo el cuándo) · el **ojo** que le falta a la compra de la T5 de F4 · **`topics`**: con la landing fuera, ¿de quién son los asuntos del formulario de contacto?
   (hoy son constante del producto, y `birthday`/`groups` son vocabulario del SECTOR).
   ▶ Contestadas y retiradas de aquí: por dónde arrancar la vía A (los platos, 23-09), cuándo se
   despliega (`#670`: no en piezas), el registro del dinero en la API (`#677`: céntimos) y **la analítica
@@ -116,8 +111,8 @@
 `.githooks/pre-push` · `scripts/huella-enrutador.py` · `scripts/partir-decisiones.py` · `scripts/deploy.sh` (la
 guarda 8) · `scripts/mutar-guarda8.sh` · `CHANGELOG.md` · `phpstan.neon` · `phpstan-baseline.neon` ·
 `eslint.config.js` · `eslint-suppressions.json` (la poda quien arregla) · `scripts/mutar-analisis-estatico.sh` ·
-**LA ANALÍTICA** (`#678`; sus ficheros los enumera `specs/analitica.md` §4.1, §4.2 y §6: `Platform\Services\Analytics\*`,
-sus observadores y middlewares, `cajon/track.js`, `EmailUtm`; y `scripts/{sonda,mutar}-analitica.*`) ·
+**LA ISLA Y LA LANDING NUEVA** (`#681`, `#682`): la spec, la carcasa de la isla `resources/js/isla/**` (futuro) y
+las vistas nuevas de `instancias/playjump/web/`; ⚠️ **el motor del cajón es del SPA**: se le avisa ANTES de tocarlo ·
 `StaticAnalysisGateTest` · `Tests\TestCase::be()` · **el token y el cajón empaquetado**, cuyos ficheros
 enumera cada spec (`token-bearer.md`, `cajon-empaquetable.md` §0): el emisor, el arranque, la apertura, la
 carcasa, la hoja GENERADA `public/css/cajon.css` y sus cuatro arneses · `scripts/huella-maquetacion.mjs` ·
@@ -142,17 +137,10 @@ dueño es el carril de la web/reseñas—) ·
 
 ## Trampas de este carril
 
-- 🪤 **Un teléfono se cuenta por CIFRAS, no por caracteres** (T1b): la regex de PII de T1a tomaba `2026-09-23`
-  por un teléfono y habría rechazado todo `date_chosen` y toda ruta con fecha; lo cazó el primer test de
-  `request_failed`. Y en `track.js`, **el envío por número de eventos tiene que retirar el temporizador**: si
-  no, el reintento con espera doblada no se programa nunca (`schedule` no dobla un temporizador vivo).
-- 🪤 **Firmar CON el UTM dentro e ignorarlo al validar es un 403 seguro** (T1c): el HMAC cubre la query entera
-  y `hasCorrectSignature()` retira lo ignorado antes de recalcularlo. Se pega DESPUÉS de firmar y se ignora
-  (`EmailUtm::IGNORED_QUERY`); la spec lo decía al revés y se corrigió con el framework delante.
-- 🪤 **El dispatcher instancia un observador `Clase@método` EN CADA evento** (T1a de la analítica): un
-  estado capturado en `saving` no llega al `saved` salvo que el observador sea `singleton()`. Medido en
-  tinker: `order_created` entraba y `order_cancelled` no. Y **`postJson` no manda cookies sin
-  `withCredentials()`**: cada lote parecía un visitante nuevo y lo primero que pareció fallar fue la cookie.
+- ▶ Las trampas de la T1 de la analítica (PII por cifras, UTM tras firmar, observadores `singleton()`,
+  `withCredentials()`) se MUDARON con ella: viven en `carriles/spa.md`, `analitica.md` y `#680`.
+- 🪤 **`DesignSync` corta a 256 KiB y el README del diseño se contradice** (`isla-y-landing-nueva.md` §0): el
+  vídeo y el logotipo, del original; y mandan los ficheros, no el índice del README.
 - El harness en modo «auto» ordena preferir Bash a Read/Edit/Write; manda la regla 8 de `CLAUDE.md`.
 - **El clasificador «auto» y producción**: deniega escribir hooks, manifiestos y reglas del plugin salvo con las
   reglas `allow` de `#626`; con la orden del owner EN EL TURNO deja pasar escrituras por `ssh` y el `--go`; deniega
@@ -251,23 +239,19 @@ dueño es el carril de la web/reseñas—) ·
 
 ## Buzón
 
-### ❗❗ Para el SPA y la WEB (emisor: plataforma, 2026-09-23) — LA ANALÍTICA va a tocar lo compartido
-- ▶ `#678` (`specs/analitica.md`): el producto gana un libro de eventos propio. **Aviso previo**, como manda
-  `CONVENCIONES §10`, de lo que la T1 y la T3 tocan de vuestro reparto:
-- **SPA**: `resources/js/sidebar/machine.js` (cada transición emite `step_entered`), `cajon/controller.js`
-  e `index.js` (`drawer_opened`/`drawer_closed` con el paso) y `api.js` (la cabecera `X-Visitor` solo fuera
-  del mismo origen). Lo mínimo, con sus tests, sin mover un píxel. Si preferís emitirlo vosotros desde
-  vuestro carril, decidlo y os paso el contrato de eventos (spec §4.2).
-  ✅ **T1b y T1c hechas (23-09)**: tocados `machine.js`, `sidebar/index.js`, `cajon/controller.js`, `cajon/index.js`
-  y `api.js` (con tests), y los 25 `toMail()` + las vistas del correo (`new BrandedMailMessage($this)`, la UTM
-  se pega tras firmar). Contrato **1.19.0** (T1e): `GET /me/export` gana `analytics` y `orders[].attribution`;
-  la zona de privacidad solo lo descarga, nada que tocar. **Lo vuestro, cuando queráis**:
-  los eventos de los stores (`product_chosen`, `date_chosen`, `line_added`, `identify_started`, `pay_started`…)
-  por `window.JumpWeb.track(name, props)` con las `props` de `Contract::EVENTS` — cualquier otra se descarta.
-- **WEB**: la T1 mete `track.js` dentro de `/cajon/paquete.js` (la landing no añade código) y atributos
-  `data-track` en las vistas de la instancia; la T3 toca el banner (`layout.blade.php`, `app.js`,
-  `consent-frame`), `SecurityHeaders` (orígenes por ajuste) y los textos de la política en tres idiomas, y
-  sube `POLICY_VERSION`: se re-pide el consentimiento a todos.
+### ❗❗ Para el SPA — el OTRO ordenador (emisor: plataforma, 2026-09-24) — LA ISLA, una segunda carcasa sobre TU motor
+- ▶ `#682` `[DECIDIDO owner]`: el sistema de diseño nuevo trae una **isla** (menú, compra y Mi cuenta en una
+  pieza flotante que cambia con el contexto). Va en el producto como **segunda carcasa** sobre el motor del
+  cajón (stores, `machine.js`, `api.js`), **apagada por defecto**, y la construye ESTE carril. Spec:
+  `specs/isla-y-landing-nueva.md` (§4.1 motor y carcasa, §4.3 el contrato con la página, §4.4 la calculadora).
+- **Aviso previo** (`CONVENCIONES §10`): la isla vive en `resources/js/isla/` (futuro) y no toca
+  tus pantallas. Lo que haga falta del motor (reagrupar los pasos, §4.1) te lo propongo AQUÍ antes de tocarlo.
+  Si prefieres hacer tú algún trozo, dilo.
+- ⚠️ **Choca con tu T3 de la analítica**: el aviso de cookies pasa a vivir DENTRO de la isla (su situación 1),
+  y tu T3 toca ese aviso (`layout.blade.php`, `app.js`, `consent-frame`, `POLICY_VERSION`). Hablémoslo antes
+  de que cualquiera de los dos lo mueva.
+- El A/B isla contra cajón espera a tu T5 (`analitica.md` §4.4): la carcasa por instalación irá en
+  `/sidebar/boot` y la variante por visitante en `/sidebar/session`.
 
 ### ❗ Para el carril de la WEB (emisor: plataforma, 2026-09-23) — dos huecos de contenido, MEDIDOS
 - ▶ Publicar `/servicios` como hechos (`#672`) destapó dos cosas **tuyas**, que son de tu T6 de contenido
@@ -322,22 +306,8 @@ dueño es el carril de la web/reseñas—) ·
   `LandingAddonPresenter::unique()` no tiene consumidor desde `#583` y escribe el dinero a su manera ·
   `mutar-cabecera.py` tiene cuatro mutantes que ya no aplican y `mutar-bandas.py` uno.
 
-### ❗❗❗ Para el SPA — el OTRO ordenador (emisor: plataforma, 2026-09-23) — TE TRASPASO LA T2 DE LA ANALÍTICA
-- `#679` `[DECIDIDO owner]` 23-09: **la T2, el cuadro de mando (`specs/analitica.md` §4.5), la haces TÚ**, con tu
-  banda y en tu carril; aquí arranca el diseño de la landing nueva (vía A). Lee §0, §4.1, §4.5 y §7.1 (rgpd,
-  seguridad y rendimiento del cuadro) de esa spec antes de tocar nada.
-- **Lo que te dejo hecho (T1 ✅, `f501a990`→`4d4c3aec`)**: `analytics_sessions`/`analytics_events` en
-  `Platform\Models` (sin FK, poda a 25 meses por `model:prune`), `Contract::EVENTS` (la verdad de nombres y
-  `props`), `Recorder` (hechos de servidor; **nunca lanza**), el sello `orders.attribution_{channel,source,
-  medium,campaign}` + `attribution` json (`NULL` = «anterior a la medición», nunca «directo»),
-  `AttributionContext::touch()` (fuente/medio/campaña de una sesión, con `first_touch` a 30 días),
-  `email_sent`/`email_clicked` por clave de correo, `is_bot`/`is_internal` en la sesión, `visits` = sesiones.
-- **Lo que la T2 exige** está entero en §4.5 (permisos, zona horaria con test de medianoche, saneado y CSV,
-  caché ≤ 90 días, `analytics_daily`/`ad_spend` nacen contigo, `EXPLAIN` en staging, `es`/`zh_CN`). Ingresos =
-  Σ `paid_cents` − Σ `refunded_cents`; el canal `panel` cuenta en ingresos y **no** en el embudo web.
-- 🪤 **Mis trampas**: observadores como singleton (el dispatcher instancia `Clase@método` por evento) ·
-  `DB::afterCommit` corre en el acto fuera de txn · un literal `sessions` dispara `AccessRevocationTest`.
-
 ### Atendido
 - Vaciado el 23-09 (lo de la SPA del 20→22-09): lo duradero vive en «retomar» 2(b) —la línea del filtro de
   reseñas es condición de la v2.0.0, y si la landing nueva llega antes va en ELLA—, en las trampas y en las specs.
+- **Retirados el 24-09** el traspaso de la analítica y su aviso previo: el SPA los atendió y se quedó la
+  analítica ENTERA (`#735`); lo que decían vive en `analitica.md` y en `carriles/spa.md`.

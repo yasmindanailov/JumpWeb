@@ -43,6 +43,7 @@ contador de la suite va en el trailer del commit** (`#618`). Si no salta: `git c
 | Refactor · fases · arquitectura de módulos · fronteras | `docs/00-REFACTOR.md` · `docs/specs/modulos-dominio.md` §0 |
 | **Producto e instancias** · repos · versionado · F0→F6 | `docs/specs/producto-e-instancias.md` §0 · `CHANGELOG.md` |
 | Landing FUERA (F5) · menú de hechos · API pública · paquete de instancia | `docs/specs/instancia-y-landing-fuera.md` §0 · `docs/specs/paquete-de-instancia.md` §0 |
+| **La isla** · la landing nueva (Saltia) | `docs/specs/isla-y-landing-nueva.md` §0 |
 | Analítica · conversión · atribución (UTM, anuncios) · consentimiento `analytics`/`marketing` | `docs/specs/analitica.md` §0 |
 | F4 · cajón empaquetable · token Bearer | `docs/specs/cajon-empaquetable.md` §0 · `docs/specs/token-bearer.md` §0 |
 | La capa de agente · el plugin `jumpweb-agente` · skills · hooks · reglas del owner | `docs/sistemas/CAPA-DE-AGENTE.md` |
@@ -72,7 +73,7 @@ contador de la suite va en el trailer del commit** (`#618`). Si no salta: `git c
 | El libro del pedido · desglose +/− · saldo en el parque · cortesía · reembolso | `docs/specs/desglose-libro.md` §0 |
 | Área de cliente en el cajón · «Mis reservas» por reserva · historial | `docs/specs/area-cliente.md` §0 · `docs/specs/mis-reservas-por-reserva.md` §0 |
 | Bloque de cuenta del cajón (`.acct`) · el `no-store` de la web | `docs/specs/account-context-vue.md` §0 |
-| Sidebar SPA · Vue · las 25 pantallas del cajón · rótulos · el chunk | `docs/specs/sidebar-spa.md` §0 · `docs/CARRIL-SPA.md` |
+| Sidebar SPA · Vue · las 25 pantallas del cajón · rótulos · el chunk · su carril (otro ordenador) | `docs/specs/sidebar-spa.md` §0 · `docs/CARRIL-SPA.md` |
 | Justificante de un menor invitado (waiver offshore) · activación · plazas | `docs/specs/waiver-por-reserva.md` §0 |
 | Waiver (firma, prueba, PDF, versiones del texto) · la firma en la puerta | `docs/specs/waiver-probatorio.md` §0 |
 | Menores a cargo · asignar una entrada a un menor · apellidos y relación | `docs/specs/menores-a-cargo.md` §0 |
@@ -80,7 +81,6 @@ contador de la suite va en el trailer del commit** (`#618`). Si no salta: `git c
 | JumpPoints / vales / lealtad | `docs/specs/lealtad-jumppoints.md` §0 |
 | CMS público (servicios) | `docs/sistemas/SERVICIOS-CMS.md` |
 | Reseñas de Google · Business Profile · prueba social | `docs/specs/google-business-profile.md` §0 · `docs/specs/google-reviews.md` §0 |
-| El carril del SPA en el otro ordenador · reparto por fichero | `docs/CARRIL-SPA.md` · `docs/carriles/spa.md` |
 | Contenido y copys · festivos · jerga de la web | `docs/specs/contenido-y-copys.md` §0 |
 | Diseño previo a implementación (spec) | `docs/specs/PLANTILLA.md` · `docs/CONVENCIONES.md` §5 |
 | Cookies / consentimiento | `docs/sistemas/COOKIES.md` · `docs/SEGURIDAD.md` |
