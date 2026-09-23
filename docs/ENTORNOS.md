@@ -391,6 +391,14 @@ instalación de un cliente. Si se configura a mano deja de ser una prueba del pr
 > `/admin/login` en 200. ⚠️ El ensayo en seco lo denegó el clasificador «auto» una vez («Blind Apply», con la
 > salida redirigida a un fichero) y lo dejó pasar sin redirigir; el `--go` pasó a la primera con la orden del
 > owner en el turno. ▶ Pendiente del carril del SPA: mirar el justificante en producción en móvil y el Turnstile real.
+>
+> ⚠️ **LA RECETA PARA TERMINAR LA PROMO, con sus cifras** (bajada aquí desde `carriles/plataforma.md` en
+> `#675`, que es donde se va a buscar y donde no caduca). Cuando el owner la dé por terminada, **el mismo
+> día**: subir los precios en el panel a los ORIGINALES —los `from` de `audit_logs`: **800, 1000, 1200,
+> 1500, 1800, 1200, 1400, 1800, 2200**—, quitar el badge y **borrar las cuatro filas `promo.*`**. Sin
+> desplegar: son datos. ❗ El «antes» tachado solo es cierto mientras el porcentaje del ajuste sea el que
+> se aplicó al catálogo (`#628`), así que dejar las filas con los precios ya subidos publica un descuento
+> que no existe.
 
 > 🚀 **OCTAVO DESPLIEGUE · HECHO Y VERIFICADO** (2026-09-16, 22:52:26–22:53:03 local, 37 s con la ventana de
 > 503 dentro; el parque cerró a las 21:30, `#594`; ensayado a las 20:20 y aplazado por estar abierto). Subió

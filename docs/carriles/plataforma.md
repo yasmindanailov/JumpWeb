@@ -2,10 +2,10 @@
 
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669 AGOTADA con `#669`** → **670–699 EN CURSO** · Último usado: **`#674`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **640–669 AGOTADA con `#669`** → **670–699 EN CURSO** · Último usado: **`#675`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, `docs/specs/instancia-y-landing-fuera.md` · Actualizado: **2026-09-23**
-> (`#670`: el owner decide **no desplegar en piezas** · `#671`→`#674`: **los CUATRO platos del menú,
-> servidos**; contrato **1.15.0**, y la T3 desbloqueada).
+> (`#670`: **no desplegar en piezas** · `#671`→`#674`: **los CUATRO platos servidos**, contrato
+> **1.15.0**, T3 desbloqueada · `#675`: el CENSO de lo que le falta al menú).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
 > Techo **32 KB** (check 10; subido de 24 en `#724` con la medida delante). El contador de la suite no
 > vive aquí: va en el trailer del commit.
@@ -23,14 +23,12 @@
   TODO es opcional; atracciones y widget de ofertas FUERA del panel («oferta» = hecho de precio).
 - ❗❗❗ **LAS DOS DECISIONES DEL OWNER QUE ORDENAN TODO LO DEMÁS, Y VAN PRIMERO**:
   ▶ **La VÍA A** (21-09): termina su diseño en Claude Design y **estrena la arquitectura nueva con una
-  landing que consuma la API** —el destino que §3 de la spec hermana ya declaraba—. Eso reordenó F5: lo
-  siguiente son **los cuatro platos que le faltan al menú**, que son exactamente los cuatro recursos que
-  la T3 no pudo sacar del panel. ✅ El 23-09 contestó la pregunta que quedaba: **se arranca por los
-  platos**, no por el kit de widgets de `#632`·P2.
-  ▶ **`#670` (23-09): NO SE DESPLIEGA EN PIEZAS.** v1.2.0 se queda sin desplegar y producción sigue en
-  **v1.1.0** hasta el final del programa; **v2.0.0 es UNA versión grande** con todo dentro (los cuatro
-  platos, la landing nueva, el cajón, el justificante, la invitación y las analíticas), de noche y con el
-  owner pendiente. Su motivo: un despliegue cuesta ATENCIÓN aunque salga bien, y la quiere para diseñar.
+  landing que consuma la API** —el destino que §3 de la spec hermana ya declaraba—. ✅ El 23-09 eligió
+  arrancar por **los platos**, no por el kit de widgets de `#632`·P2.
+  ▶ **`#670` (23-09): NO SE DESPLIEGA EN PIEZAS.** Producción sigue en **v1.1.0** hasta el final del
+  programa; **v2.0.0 es UNA versión grande** con todo dentro (los platos, la landing nueva, el cajón, el
+  justificante, la invitación y las analíticas), de noche y con él pendiente. Su motivo: un despliegue
+  cuesta ATENCIÓN aunque salga bien, y la quiere para diseñar.
   ⚠️ Consecuencias en «retomar» 2. `#627`: la app en React Native + Expo.
 - **`#628` · la promo «−20 % online» sigue EN PRODUCCIÓN** (cuatro filas `promo.*`; receta de fin en
   `ENTORNOS.md` §6 y en «retomar» 5).
@@ -103,12 +101,20 @@
    y los juegos. El detalle de cada uno en la spec §4.1, que es donde no caduca.
    ▶▶ **Y con ellos la T3 se desbloquea sola**, que era el punto: los cuatro recursos que no podían
    salir del panel ya tienen plato en el menú. Esa tanda ya no está bloqueada por nada.
-   ❗❗❗ **LO SIGUIENTE ES EL QUINTO, que no estaba en la lista de cuatro: los TRAMOS DE GRUPO.**
-   `GroupRateTables` los compone desde el catálogo y **ninguna ruta los sirve** (medido: su único
-   llamante es `ServicesController`). Sin ellos, una landing de servicios no puede pintar su carril de
-   tarifas. ⚠️ Son DINERO, y traen la decisión que `#661` dejó planteada: el contrato de VISTA quiere el
-   importe **ya escrito** (`groupFrom`, `address.written`) y el de API lo quiere en **céntimos**
-   (`/prices`). Las dos tienen razón en su superficie; la tanda decide si viajan los dos y lo mide.
+   ❗❗❗ **LO SIGUIENTE LO DICE EL CENSO (`#675`), y NO son cuatro platos más**: son **cuatro huecos de
+   HECHO**, y tres son CAMPOS de rutas que ya existen. La tabla entera y lo que descartó —`choices`,
+   `compare`, `holidays`, los derivados— están en la spec **§4.1.quater**, que es donde no caduca. Aquí
+   solo el orden:
+   **(A) Los TRES LOTES DE CAMPOS primero** —aditivos, sin dinero, y desbloquean `/normas`, `/precios`,
+   la portada y `/cumpleanos` de una vez—: alturas y `age_range` a `/catalog/zones` · **qué días son
+   tarifa especial** a `/schedule.weekly` · edad, duración y suplemento a `/catalog/products`.
+   ⚠️⚠️ El del horario no se ve leyendo: `weekly` da horario **sin tarifa** y `/prices` importes **por
+   tarifa sin decir qué día es cuál**. Cada uno tiene una mitad y **ninguno permite juntarlas**.
+   **(B) Los TRAMOS DE GRUPO después, en tanda propia**: `GroupRateTables` no lo sirve ninguna ruta, y
+   son DINERO — traen la decisión de `#661` (la VISTA quiere el importe escrito; la API, céntimos).
+   ❗ **Categoría nueva que dejó el censo: MECANISMO DEL PRODUCTO**, ni hecho ni presentación (cookies,
+   régimen del justificante, y **`topics`, que es una constante del controlador**).
+   `[PENDIENTE: owner]`: con la landing fuera, ¿de quién son los asuntos del formulario de contacto?
    ▶ **Tres reglas que dejaron los cuatro y valen para lo que venga** (detalle en la spec §4.1):
    (1) si el dato tiene **servicio de dominio**, el recurso **delega** en vez de declarar lista blanca;
    (2) el filtro de «lo que no viaja» va **DESPUÉS** del respaldo de idioma, o el recurso se vacía en
@@ -143,9 +149,8 @@
 
 4. **Deuda del análisis estático**: bajar la línea base de Larastan por familias (`nullsafe.neverNull` es
    mecánico), bajando `FROZEN_ERRORS` en el mismo commit. Los 12 de ESLint los poda quien los arregle.
-5. **La promo, cuando el owner la termine** (es suyo el cuándo): subir los precios en el panel (los `from` de
-   `audit_logs`: 800, 1000, 1200, 1500, 1800, 1200, 1400, 1800, 2200), quitar el badge y **borrar las cuatro
-   filas `promo.*` el mismo día**. Sin desplegar. El sistema de ofertas nace como hecho de precio (`#631`).
+5. **La promo, cuando el owner la termine** (es suyo el cuándo). La receta y **sus nueve cifras** bajaron a
+   `ENTORNOS.md` §6 en `#675`, junto al despliegue que las escribió. Sin desplegar: son datos.
 6. Después, **F6** (app nativa; hereda del token lo que su spec §2 nombra: Google, alta, dispositivos).
 - **Del owner, HOY**: el **fin de la promo** (es suyo el cuándo) · el **ojo** que le falta a la compra de
   la T5 de F4 · y, cuando toque, **el contrato de EVENTOS de analíticas**, que hay que decidir ANTES de

@@ -553,6 +553,57 @@ descripción, imagen) y la prueba social **sin avatares** (`RGPD-05`).
 ⚠️ **Todo es opcional para quien pinta la landing** (`#631`): el menú no impone estructura, y el cajón no
 depende de que la landing lea nada.
 
+### 4.1.quater · EL CENSO de lo que le falta al menú (`#675`, 2026-09-23)
+
+Con los cuatro platos servidos, la pregunta útil deja de ser «¿quedan platos?» y pasa a ser **«¿le falta
+algo al menú para que una landing se pinte ENTERA por API?»**. Esto lo contesta, y se hizo del único modo
+que no se autoconfirma: **cruzando las 49 claves de `InstanceViews::CONTRATO_DE_VISTAS`** —lo que reciben
+hoy las nueve vistas— **contra las 16 rutas públicas**, una por una y mirando su composer. Censar solo lo
+que uno sospecha devuelve lo que uno ya sabía.
+
+❗ **Y lo primero que cazó fue un error del censo anterior**: la clase que se dio por no servida se llamaba
+`PackageComparison` y **no existe** —es `BirthdayComparison`—, así que aquel «no lo sirve la API» era
+cierto por el motivo equivocado. *Un `grep` de un nombre inventado siempre sale a cero.*
+
+**El resultado: NO son cuatro platos más. Son cuatro HUECOS DE HECHO, y tres de ellos son campos que le
+faltan a rutas que ya existen.**
+
+| | Hecho que falta | Quién lo necesita | Dónde va |
+|---|---|---|---|
+| 1 | **Tramos de grupo** (`GroupRateTables`) | `/servicios` | **Ruta nueva.** Dinero |
+| 2 | `height_min_cm`, `height_max_cm`, `age_range` de una zona | `/normas` (la escala) y la portada (`ZoneCards`, 8 usos) | Campos en **`/catalog/zones`** |
+| 3 | **Qué días de la semana son tarifa especial** (`plainWeekdays`) | `/precios` | Campo en **`/schedule.weekly`** |
+| 4 | `guest_age_min/max`, `duration_min` y el **suplemento de tarifa especial** | `PartyCards` y la comparativa de cumpleaños | Campos en **`/catalog/products`** |
+
+⚠️⚠️ **El hueco 3 es el que no se ve leyendo**: `/schedule.weekly` publica `weekday`, `closed`, `opens_at`
+y `closes_at` —**sin la tarifa**— y `/prices` publica los importes **por tarifa, sin decir qué día es
+cuál**. Cada endpoint tiene una mitad y **ninguno permite juntarlas**: una landing no puede pintar «lunes a
+jueves» sin ese dato. `rate_label` SÍ viaja, pero solo dentro de `special_days`.
+
+**Lo que NO necesita nada, y era la mitad de la sospecha inicial** (medido, no supuesto):
+
+- **`choices`** — la ficha ya publica **`choice_group`** en cada complemento (`CatalogAddon`). Agrupar es
+  de quien pinta.
+- **`compare` y `form`** — `BirthdayComparison` monta columnas, filas, `kind` y **rótulos traducidos de
+  `lang/*/landing.php`**. Es una tabla: maqueta.
+- **`holidays`** — `ScheduleDisplay::pricingCalendar()` formatea los `special_days` que `/schedule` ya
+  sirve, con `__('landing.info.closed')` dentro.
+- **`ctaMinPriceCents/Label`, `ridesTotal`, `total`, `menuSections`, `active`, `noindex`,
+  `registrationSvg`** — derivados de lo servido, o generados (el QR).
+- **`rideMosaic`** — ya resuelto en `#674`: maqueta.
+
+▶ **Y aparece una categoría que el diseño no tenía nombrada: MECANISMO DEL PRODUCTO.** No son hechos de la
+instalación ni presentación de la landing — son cosas que el producto opera: `cookieBannerEnabled` y
+`cookieConsent` (el gate de cookies, que es suyo por `RGPD-05`), `waiverEnabled` y `guestWaiverOffered`
+(el régimen del justificante; `/legal/waiver` ya lo sirve para el cajón) y **`topics`**, que resultó ser
+una **constante del controlador** (`ContactController::TOPICS`), no dato del panel.
+❗ **`topics` deja una pregunta abierta y es de producto**: con la landing fuera, ¿de quién son los asuntos
+del formulario de contacto — del producto, del panel, o de quien escribe la landing?
+
+**El orden que sale del censo**: primero los **tres lotes de campos** (huecos 2, 3 y 4), que son aditivos,
+no tocan dinero y desbloquean `/normas`, `/precios`, la portada y `/cumpleanos` de una vez; después los
+**tramos de grupo**, en tanda propia porque son dinero y traen la decisión de registro de `#661`.
+
 ### 4.2 Lo que sale del panel, y lo que NO
 
 Salen los seis recursos de §1.6 y las secciones de texto de la landing y del bar. Se quedan los trece
