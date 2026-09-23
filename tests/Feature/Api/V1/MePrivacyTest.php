@@ -15,6 +15,7 @@ use App\Domain\Identity\Services\AccountPrivacy;
 use App\Domain\Platform\Models\AnalyticsEvent;
 use App\Domain\Platform\Models\AnalyticsSession;
 use App\Domain\Platform\Services\Analytics\Visitor;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
@@ -460,6 +461,11 @@ class MePrivacyTest extends ApiTestCase
      */
     public function test_the_export_carries_the_attribution_of_each_order_and_a_summary_of_the_analytics(): void
     {
+        // ⚠️ El reloj se CONGELA: el caso siembra `now()->subDays(10)` y lo vuelve a calcular al asertar, y con
+        // el reloj en marcha las dos lecturas cruzan el segundo (el gate lo vio rojo el 24-09 a las 22:59:00
+        // UTC: esperado `…22:59:00`, real `…22:58:59`). Congelado, las dos salen del mismo instante.
+        Carbon::setTestNow(now());
+
         $user = $this->holder();
         $order = $this->orderFor($user);
         $order->forceFill(['attribution_channel' => 'web', 'attribution_source' => 'google', 'attribution_medium' => 'cpc', 'attribution_campaign' => 'verano', 'attribution' => ['device' => 'mobile']])->saveQuietly();
