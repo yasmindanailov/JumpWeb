@@ -20,8 +20,8 @@
   - ⚠️ **Dos formas de foto a propósito** (`#645`): el producto la SUBE a `uploads`, la zona guarda ruta a
     `public/`; las dos salen como URL absoluta por su `imageUrl()`.
 - **Estado**: **MENÚ SERVIDO** + **T2a→T2c, T3·1 y T4 hechas**; en marcha la **vía A**, y de sus cuatro
-  platos **dudas, servicios y el bar ✅** (`#671`→`#673`, contrato **1.14.0**). Queda **atracciones**, y
-  los **tramos de grupo**, que son dinero y van aparte (§4.1).
+  platos **LOS CUATRO SERVIDOS ✅** (`#671`→`#674`, contrato **1.15.0**): dudas, servicios, bar y juegos.
+  ▶ Queda un quinto que no estaba en la lista: los **tramos de grupo**, que son dinero (§4.1 y §4.6).
   ▶ **Un recurso nuevo se escribe con su lista blanca o no se escribe**; lo no rellenado no viaja, ni lo
   BORRADO (`''` en BD). ❗ Y el filtro de «vacío» va **después** del respaldo de idioma, o el recurso sale
   vacío entero en `en`/`fr` (`#671`, §4.1).
@@ -459,6 +459,49 @@ false`, que es la trampa de `#27` por cuarta vez—, así que lleva **guarda de 
 nuevos · Pint y Larastan sin tocar la línea base · y **en vivo**: 200 en es/en con `ETag` por idioma, la
 carta a 1240×1754 y el local a 1600×900 medidos del fichero real. Contrato **1.14.0** (añade, no cambia).
 
+#### `GET /attractions?lang=` — LOS JUEGOS ✅ (`#674`, 2026-09-23) · **el menú queda COMPLETO**
+
+Cuarto y último de la vía A. `#632`·P3 ya lo había decidido midiendo: **las 23 atracciones son
+PRESENTACIÓN** —nombre, descripción, foto, chapa y edad en TEXTO—, sin aforo ni venta, y las
+restricciones que de verdad importan viven en Normas. Así que el plato es editorial entero.
+
+❗❗❗ **LO QUE MÁS IMPORTA DE ESTE PLATO ES QUÉ INTERRUPTOR GATEA LA ZONA, y son dos que se parecen.**
+`zones.is_active` dice que **la zona OPERA**; `zones.show_in_landing` dice que **sale en la web**. Se
+desacoplaron a propósito en `2026_06_07_000002`, y la medida de hoy enseña por qué: **la zona de
+cumpleaños opera —vende packs— y NO está en la landing**. Gatear por `is_active` publicaría las
+atracciones de una zona que el negocio retiró de su web, sin que fallara nada. ▶ Se gatea por
+`show_in_landing`, que además es **el gate exacto que usa la página**: así la API y la web no pueden
+discrepar sobre qué es público. El arnés lo prueba cambiando un interruptor por el otro.
+⚠️ Y la ambigüedad no es solo conceptual: el `join` con `zones` dejó `is_active` **ambigua en SQL** y
+SQLite lo cantó en rojo. Las dos columnas van cualificadas — *cuando dos tablas comparten el nombre de
+una columna y significan cosas distintas, la que se elige por descuido puede ser la equivocada*.
+
+⚠️⚠️ **LA LISTA VA PLANA, con el `slug` de su zona.** La web de hoy las agrupa por zona con pestañas,
+pero **agrupar es estructura y el menú no impone estructura** (`#631`): una landing que las quiera en
+una rejilla sin zonas no tendría que deshacer el agrupado. El orden entregado **ya es el de la web**
+—zona por su posición y dentro cada juego—, así que agrupar por `zone` lo conserva sin ordenar nada.
+▶ `zone` es una **referencia**: el nombre y la foto de la zona viven en `/catalog/zones`.
+
+❗❗ **EL MOSAICO NO VIAJA, y es lo más fácil de confundir con un hecho.** `RideMosaic` elige **tres con
+nombre y dos veladas** y las coloca en un patrón de celdas. Eso no es un dato del negocio: es una
+decisión de MAQUETA —cuántas caben, cuáles se disuelven— que depende del diseño de quien pinta.
+Publicarlo obligaría a toda landing a heredar el mosaico de ésta. Lo que el producto sabe, y lo que
+viaja, es **qué juegos hay y en qué orden**. *El límite entre hecho y presentación no está en el tipo
+del dato: está en quién tiene derecho a decidirlo.*
+
+⚠️ **`is_special` y `ticket_type_id` no viajan.** Medido: `is_special` solo lo pinta la tabla del panel y
+`ticket_type_id` quedó a **0 de 23** cuando `#668` retiró el complemento por atracción; su columna espera
+la migración conjunta que baja con el MAYOR. Mismo criterio que `nav_subtitle` en `#672`.
+
+▶ **Un efecto lateral que conviene contar**: declarar el genérico de `Attraction::zone()` —lo pidió
+Larastan al leer `$juego->zone?->slug`— **retiró una entrada de la línea base en otro fichero**
+(`AttractionTable`, un `Model::tr()` congelado), y el trinquete obligó a bajar `FROZEN_ERRORS` de **458 a
+457** en el mismo commit. *Arreglar un tipo paga en sitios que no estabas mirando.*
+
+**Medido**: `AttractionsFactsTest` (14 casos, 47 aserciones) · `scripts/mutar-menu-de-hechos.sh` con diez
+mutantes nuevos · Pint ✓ y Larastan con la línea base **más corta** · y **en vivo**: los 23 juegos (15
+`jump` + 8 `kids`), traducidos, sin `is_special` ni rastro del mosaico. Contrato **1.15.0**.
+
 ### 4.1.bis · La RECETA de un plato nuevo
 
 Siete tandas destilan esto. Vale para **cualquier** recurso público que se añada después, dentro de F5 o
@@ -575,9 +618,9 @@ servidos, la landing nueva los consume, el panel los sigue editando y la T3 se d
 ✅ **CONTESTADO por el owner el 23-09**: se arranca por los PLATOS, no por el kit de widgets —que sigue
 donde lo dejó `#632`·P2, esperando a que una segunda instancia lo pida—. Y con él llegó `#670`: **no se
 despliega en piezas**, así que estos platos no van a producción sueltos; van dentro de la v2.0.0 grande.
-▶ **El orden de los cuatro, y su porqué**: **dudas ✅** (`#671`) → **servicios ✅** (`#672`) → **el bar ✅**
-(`#673`) → **atracciones**. De menos a más: las dudas son cuatro columnas y afinan la plantilla;
-atracciones son 23 filas con imagen, chapa y etiqueta de edad, y van al final con la receta ya rodada.
+✅✅ **LOS CUATRO PLATOS, SERVIDOS** (23-09): **dudas** (`#671`) → **servicios** (`#672`) → **el bar**
+(`#673`) → **los juegos** (`#674`), de menos a más para que el último llegara con la receta rodada.
+▶ **Con ellos, la T3 se desbloquea**: los cuatro recursos que no podían salir del panel ya tienen plato.
 ❗ **Y el menú tiene un quinto pendiente que no estaba en la lista de cuatro**: los **TRAMOS DE GRUPO**.
 `GroupRateTables` los compone desde el catálogo y **ninguna ruta los sirve** (medido: su único llamante es
 `ServicesController`). Salieron del alcance de `#672` a propósito —son dinero— y con ellos viene la

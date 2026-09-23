@@ -24,7 +24,7 @@ class StaticAnalysisGateTest extends TestCase
      * el número aquí en el mismo commit. Si el test te pide SUBIRLO, has metido un error nuevo en la
      * línea base en vez de arreglarlo.
      */
-    private const FROZEN_ERRORS = 458;
+    private const FROZEN_ERRORS = 457;
 
     private function config(): string
     {

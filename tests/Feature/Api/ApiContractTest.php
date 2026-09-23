@@ -76,6 +76,9 @@ class ApiContractTest extends TestCase
         // `products` fuera opcional, «ausente» y «vacía» significarían lo mismo y la landing tendría que
         // tratar dos casos para una sola realidad.
         'Services.services.items' => ['accent_word', 'body', 'zone_label', 'image_url', 'specs'],
+        // De un JUEGO (`#674`): los adornos editoriales. ⚠️ `zone` y `name` NO entran: la zona es la
+        // referencia que hace resoluble al juego, y un juego sin nombre no se publica.
+        'Attractions.attractions.items' => ['description', 'age', 'badge', 'image_url'],
         // **El BAR** (`#673`). `bar` falta entero cuando no está publicado —sin nombre no hay página—, y
         // dentro, lo que la instalación puede no haber escrito. ⚠️ `free_entry` es opcional con un motivo
         // más fuerte que «no lo rellenaron»: su ausencia **no significa `false`**. Emitirlo siempre

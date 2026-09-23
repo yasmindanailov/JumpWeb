@@ -14,7 +14,7 @@ cd "$(git rev-parse --show-toplevel)"
 SAIL="docker compose exec -u sail -T laravel.test"
 # ⚠️ El último no es una clase sino un MÉTODO: `CatalogEditTest` entero son ~40 casos del panel y el arnés
 # corre esta orden una vez por mutación. Se trae solo la guarda de la foto, que es la de esta tanda.
-TESTS="$SAIL php artisan test --filter='PublicFactsBoundaryTest|SiteFactsTest|ScheduleFactsTest|RulesFactsTest|FaqsFactsTest|ServicesFactsTest|BarFactsTest|BarPageTest|AnfitrionBarTest|LegalDocumentsTest|PricesFactsTest|SocialProofFactsTest|VenueAddressTest|LocalNumberTest|MetaDescriptionTest|HeroStatusTest|ApiContractTest|CatalogTest|the_ficha_photo_is_editable_from_the_panel'"
+TESTS="$SAIL php artisan test --filter='PublicFactsBoundaryTest|SiteFactsTest|ScheduleFactsTest|RulesFactsTest|FaqsFactsTest|ServicesFactsTest|BarFactsTest|BarPageTest|AnfitrionBarTest|AttractionsFactsTest|LegalDocumentsTest|PricesFactsTest|SocialProofFactsTest|VenueAddressTest|LocalNumberTest|MetaDescriptionTest|HeroStatusTest|ApiContractTest|CatalogTest|the_ficha_photo_is_editable_from_the_panel'"
 
 LECTOR=app/Domain/Platform/Services/PublicFacts.php
 RECURSO=app/Http/Resources/Api/V1/SiteFactsResource.php
@@ -38,6 +38,9 @@ SERVICIOSCTRL=app/Http/Controllers/Api/V1/ServicesFactsController.php
 BAR=app/Http/Resources/Api/V1/BarFactsResource.php
 BARCTRL=app/Http/Controllers/Api/V1/BarFactsController.php
 BARPAGE=app/Domain/Content/Services/BarPage.php
+# El plato de los JUEGOS (F5, `#674`), el último de los cuatro.
+JUEGOS=app/Http/Resources/Api/V1/AttractionsFactsResource.php
+JUEGOSCTRL=app/Http/Controllers/Api/V1/AttractionsFactsController.php
 CONTRATO=tests/Feature/Api/ApiContractTest.php
 LEGALES=app/Http/Resources/Api/V1/LegalDocumentsResource.php
 LEGALESCTRL=app/Http/Controllers/Api/V1/LegalDocumentsController.php
@@ -56,7 +59,7 @@ MODELOPROD=app/Domain/Booking/Models/TicketType.php
 YAML=openapi/v1.yaml
 
 TMP="$(mktemp -d)"
-FICHEROS=("$LECTOR" "$RECURSO" "$HORARIO" "$ENVIVO" "$ESTADO" "$NORMAS" "$NORMASCTRL" "$DUDAS" "$DUDASCTRL" "$SERVICIOS" "$SERVICIOSCTRL" "$BAR" "$BARCTRL" "$BARPAGE" "$CONTRATO" "$LEGALES" "$LEGALESCTRL" "$PRECIOS" "$PRECIOSCTRL" "$RUTAS" "$FICHAZONA" "$FICHAPROD" "$LECTORCAT" "$MODELOZONA" "$MODELOPROD" "$YAML" "$PANEL" "$CIFRA" "$DIRECCION" "$NUMERO" "$RESUMEN" "$MONEDA")
+FICHEROS=("$LECTOR" "$RECURSO" "$HORARIO" "$ENVIVO" "$ESTADO" "$NORMAS" "$NORMASCTRL" "$DUDAS" "$DUDASCTRL" "$SERVICIOS" "$SERVICIOSCTRL" "$BAR" "$BARCTRL" "$BARPAGE" "$JUEGOS" "$JUEGOSCTRL" "$CONTRATO" "$LEGALES" "$LEGALESCTRL" "$PRECIOS" "$PRECIOSCTRL" "$RUTAS" "$FICHAZONA" "$FICHAPROD" "$LECTORCAT" "$MODELOZONA" "$MODELOPROD" "$YAML" "$PANEL" "$CIFRA" "$DIRECCION" "$NUMERO" "$RESUMEN" "$MONEDA")
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$TMP/$(basename "$f")" "$f"; touch "$f"; done; }
 trap 'restaurar; rm -rf "$TMP"' EXIT
 for f in "${FICHEROS[@]}"; do cp "$f" "$TMP/$(basename "$f")"; done
@@ -481,6 +484,60 @@ mutar "la foto del local DIVERGE de una imagen de la carta en el contrato" \
   "                width: { type: string }
                 height: { type: integer }
                 caption:"
+
+# ── Los JUEGOS (`#674`) ────────────────────────────────────────────────────────────────────────
+# ⚠️⚠️ El PRIMERO es el que de verdad importa: confundir los dos interruptores de la zona publica
+# las atracciones de una zona que el negocio retiró de su web.
+mutar "el gate de la zona pasa a \`is_active\` (publica la zona que OPERA pero no sale en la web)" \
+  "$JUEGOSCTRL" "->where('zones.show_in_landing', true)" "->where('zones.is_active', true)"
+
+mutar "el desempate de dos juegos empatados se INVIERTE" \
+  "$JUEGOSCTRL" "->orderBy('attractions.id')" "->orderByDesc('attractions.id')"
+
+mutar "el orden olvida la ZONA y mezcla los juegos de las dos" \
+  "$JUEGOSCTRL" "                ->orderBy('zones.position')
+                ->orderBy('attractions.position')" \
+  "                ->orderBy('attractions.position')"
+
+mutar "un juego DESACTIVADO vuelve a la web por la API" \
+  "$JUEGOSCTRL" "->where('attractions.is_active', true)
+                ->where('zones.show_in_landing', true)" \
+  "->where('zones.show_in_landing', true)"
+
+mutar "un juego SIN NOMBRE se publica" \
+  "$JUEGOS" "        \$servidos = \$this->juegos
+            ->filter(fn (Attraction \$juego): bool => \$this->texto(\$juego, 'name') !== '')
+            ->values();" \
+  "        \$servidos = \$this->juegos->values();"
+
+mutar "un campo SIN CONSUMIDOR público (\`is_special\`) se convierte en contrato" \
+  "$JUEGOS" "                'name' => \$this->texto(\$juego, 'name')," \
+  "                'name' => \$this->texto(\$juego, 'name'),
+                'is_special' => (bool) \$juego->is_special,"
+
+# ⚠️ El MOSAICO es maqueta: si la API recorta a las cinco de la portada, toda landing hereda su diseño.
+mutar "la API recorta al MOSAICO de la portada (cinco juegos) en vez de servirlos todos" \
+  "$JUEGOS" "            ->values();
+
+        return [
+            'lang' => app()->getLocale()," \
+  "            ->take(5)
+            ->values();
+
+        return [
+            'lang' => app()->getLocale(),"
+
+mutar "los juegos dejan de cachearse en público" \
+  "$RUTAS" "    Route::get('/attractions', AttractionsFactsController::class)
+        ->middleware('cache.headers:public;max_age=300;etag')" \
+  "    Route::get('/attractions', AttractionsFactsController::class)"
+
+mutar "el idioma deja de ser obligatorio en los juegos" \
+  "$JUEGOSCTRL" "\$request->validate(['lang' => ['required', 'string', Rule::in(SetLocale::SUPPORTED)]]);" \
+  "\$request->validate(['lang' => ['sometimes', 'string', Rule::in(SetLocale::SUPPORTED)]]) + ['lang' => 'es'];"
+
+mutar "el contrato deja de exigir la zona de un juego (y deja de ser resoluble)" \
+  "$YAML" "            required: [zone, name]" "            required: [name]"
 
 echo
 echo "mutaciones: $muerden/$total muerden"

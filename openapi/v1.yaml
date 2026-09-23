@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.14.0
+  version: 1.15.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -743,6 +743,46 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Bar'
+        '304':
+          description: Sin cambios desde el `ETag` enviado en `If-None-Match`.
+        '422':
+          description: Falta `lang` o no es uno de los idiomas soportados.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /attractions:
+    get:
+      tags: [Instalación]
+      operationId: getAttractions
+      summary: Los juegos del recinto, en el orden de la web y con el slug de su zona
+      description: |
+        Los juegos que el negocio publica. Son **presentación**: nombre, descripción, foto, chapa y edad
+        **en texto** — sin aforo y sin venta. Las restricciones que de verdad importan viven en `/rules`.
+
+        **La lista va PLANA**, cada juego con el `slug` de su zona. Agrupar por zona es estructura, y el
+        menú no impone estructura: si tu diseño los quiere en una rejilla sin zonas, no tienes que
+        deshacer ningún agrupado. **El orden entregado ya es el de la web** —zona por su posición y dentro
+        cada juego por la suya—, así que agrupar por `zone` lo conserva sin tener que ordenar nada. El
+        nombre y la foto de la zona viven en `/catalog/zones`: aquí solo va la referencia.
+
+        ⚠️ **Se publica un juego activo de una zona que el negocio muestra en su web.** Son dos cosas
+        distintas y la segunda no es «la zona opera»: una zona puede operar —vender— sin salir en la web,
+        que es el caso de la de cumpleaños.
+
+        ⚠️ **Aquí no hay mosaico.** Elegir cuántos juegos se enseñan, cuáles llevan nombre y cuáles se
+        disuelven es una decisión de maqueta de cada landing, no un dato del negocio. Lo que el producto
+        sabe —y lo que recibes— es **qué juegos hay y en qué orden**.
+      parameters:
+        - $ref: '#/components/parameters/SidebarLang'
+      responses:
+        '200':
+          description: Los juegos publicables en ese idioma.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attractions'
         '304':
           description: Sin cambios desde el `ETag` enviado en `If-None-Match`.
         '422':
@@ -3793,6 +3833,51 @@ components:
         height:
           type: integer
           description: Alto REAL del fichero, medido al guardarlo. Mismo motivo que `width`.
+
+    Attractions:
+      type: object
+      additionalProperties: false
+      required: [lang, updated_at, attractions]
+      properties:
+        lang:
+          type: string
+          description: El idioma en el que viene el texto, que es el que se pidió.
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: 'El juego publicado tocado más recientemente. `null` sin ninguno publicable.'
+        attractions:
+          type: array
+          description: |
+            Los juegos activos de las zonas que el negocio muestra en su web, **planos** y ya en el orden
+            de la web: zona por su posición y dentro cada juego por la suya.
+          items:
+            type: object
+            additionalProperties: false
+            required: [zone, name]
+            properties:
+              zone:
+                type: string
+                description: |
+                  El `slug` de su zona, resoluble en `/catalog/zones`. Es una **referencia**: el nombre y
+                  la foto de la zona no se copian aquí. Agrupa por este campo si tu diseño lo pide; el
+                  orden que recibes ya lo permite sin reordenar.
+              name: { type: string }
+              description: { type: string }
+              age:
+                type: string
+                description: |
+                  La edad **en texto**, tal y como la escribe el panel («A partir de 6 años»). No es un
+                  número ni una regla: lo que el checkout aplica vive en el producto, y las restricciones
+                  que importan, en `/rules`.
+              badge:
+                type: string
+                description: 'La chapa del juego («Top»). Falta si no lleva.'
+              image_url:
+                type: string
+                format: uri
+                description: URL absoluta de la foto. Falta si la instalación no puso ninguna.
 
     Bar:
       type: object

@@ -2,10 +2,10 @@
 
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669 AGOTADA con `#669`** → **670–699 EN CURSO** · Último usado: **`#673`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **640–669 AGOTADA con `#669`** → **670–699 EN CURSO** · Último usado: **`#674`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, `docs/specs/instancia-y-landing-fuera.md` · Actualizado: **2026-09-23**
-> (`#670`: el owner decide **no desplegar en piezas** · `#671`→`#673`: los platos de las **dudas**, los
-> **servicios** y **el bar**, servidos; contrato **1.14.0**).
+> (`#670`: el owner decide **no desplegar en piezas** · `#671`→`#674`: **los CUATRO platos del menú,
+> servidos**; contrato **1.15.0**, y la T3 desbloqueada).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
 > Techo **32 KB** (check 10; subido de 24 en `#724` con la medida delante). El contador de la suite no
 > vive aquí: va en el trailer del commit.
@@ -43,20 +43,15 @@
 1. **F4 · CERRADA el 19-09** (`specs/cajon-empaquetable.md`: sus cinco tandas y sus seis trampas). ⚠️ **Le
    falta un ojo humano sobre la COMPRA de la T5** (medida, no vista): se enseña con el banco de su §4.8,
    **que se BORRA al terminar** o la guarda 9 del despliegue aborta.
-2. **EL DESPLIEGUE, DECIDIDO Y APARCADO** (`#670`, 23-09): no se despliega nada hasta la v2.0.0. Lo que
-   hay que saber mientras tanto, y son cuatro cosas:
-   ▶ **Producción se queda en v1.1.0.** Un defecto en producción obligaría a `cherry-pick` sobre la
-   etiqueta o a desplegar igualmente: **no hay tercera salida**. Es el precio, y el owner lo conoce.
+2. **EL DESPLIEGUE, DECIDIDO Y APARCADO** (`#670`, 23-09; el porqué, arriba en la Foto). Producción se
+   queda en **v1.1.0**: un defecto allí obliga a `cherry-pick` sobre la etiqueta o a desplegar
+   igualmente, no hay tercera salida.
    ⚠️⚠️ **LOS DOS INTERRUPTORES DE LA INVITACIÓN NO SE TOCAN** (`ticket_types.guest_invitation` y
-   `guardian_authorization`). Medido contra el git: **v1.2.0 lleva T1→T5 y NO lleva T6 ni T7** —la T6
-   (`#708`→`#713`) y la T7 (`#714`→`#717`) entraron DESPUÉS de la etiqueta, igual que `#718`—, así que
-   encenderlos daría media feature: página del padre sin aterrizaje del anfitrión y sin los correos.
-   ❗ El `CHANGELOG.md` de v1.2.0 dice «la invitación entra ENTERA» y **es falso**: corregido en esta
-   tanda, porque es la clase de frase que el siguiente se cree antes de un despliegue.
-   ▶ **Cuando llegue**: se despliega desde la etiqueta **v2.0.0** que se corte entonces —la guarda 8
-   exige etiqueta y rechaza `HEAD`—. Siete migraciones acumuladas y subiendo, **una destructiva**
-   (`zones`), así que ese despliegue pide **ENSAYO en staging** antes, no solo las guardas del script.
-   De noche o con el parque cerrado (`#594`). ▶ v1.2.0 (`f581c791`) queda como etiqueta histórica.
+   `guardian_authorization`). Medido contra el git: **v1.2.0 lleva T1→T5 y NO T6 ni T7** —entraron
+   después de la etiqueta, igual que `#718`—, así que encenderlos daría media feature. ❗ El `CHANGELOG`
+   decía «entra ENTERA» y era **falso**: corregido en `#670`.
+   ▶ **Cuando llegue**: desde la etiqueta **v2.0.0** que se corte entonces (la guarda 8 rechaza `HEAD`),
+   de noche (`#594`), y con **ENSAYO en staging** antes: siete migraciones y subiendo, una destructiva.
 3. **F5 EN CURSO · el MENÚ DE HECHOS, recurso a recurso** (`specs/instancia-y-landing-fuera.md` ✅; censo en
    su §1 y las tres decisiones del owner en `#639`: las redes se quedan en el panel, los cuatro campos
    muertos de `zones` se retiran, «cero marca» se lee como código vivo).
@@ -104,17 +99,24 @@
    trampas en §4.1.ter.
    ✅✅ **LA PREGUNTA ABIERTA, CONTESTADA (23-09): se arranca por los PLATOS**, no por el kit de widgets
    —que sigue donde lo dejó `#632`·P2, esperando a que una segunda instancia lo pida—.
-   ▶▶ **DUDAS ✅ (`#671`), SERVICIOS ✅ (`#672`) y EL BAR ✅ (`#673`)**, contrato **1.14.0**; el detalle
-   de los tres en la spec §4.1, que es donde no caduca. **Queda ATRACCIONES**, el último y el más gordo:
-   23 filas con imagen, chapa y etiqueta de edad, y `#632`·P3 ya midió que son **presentación pura**
-   —sin aforo ni venta—, así que su plato es editorial entero. Va con la receta ya rodada.
-   ❗❗ **Lo que dejó el bar y sirve para atracciones**: si el dato ya tiene **servicio de dominio**, el
-   recurso **delega** en él en vez de declarar lista blanca —es lo que `PublicFactsBoundaryTest` prescribe
-   en su propio docblock, no un rodeo—; la lista blanca es para quien lee `settings` a pelo.
-   ⚠️⚠️ **Y una trampa de fixture que costó un rojo**: `BarImage` **re-mide** las dimensiones contra el
-   DISCO en su `saving()`, así que un `width` tecleado en un test se sobrescribe con `null` y el caso se
-   queda sin sujeto. Se pone un PNG real (GD) ANTES de crear la fila y se compara con lo medido, con un
-   control que aserta primero que midió algo. Atracciones también tiene imagen: mismo cuidado.
+   ✅✅✅ **LOS CUATRO PLATOS, SERVIDOS** (`#671`→`#674`, contrato **1.15.0**): dudas, servicios, el bar
+   y los juegos. El detalle de cada uno en la spec §4.1, que es donde no caduca.
+   ▶▶ **Y con ellos la T3 se desbloquea sola**, que era el punto: los cuatro recursos que no podían
+   salir del panel ya tienen plato en el menú. Esa tanda ya no está bloqueada por nada.
+   ❗❗❗ **LO SIGUIENTE ES EL QUINTO, que no estaba en la lista de cuatro: los TRAMOS DE GRUPO.**
+   `GroupRateTables` los compone desde el catálogo y **ninguna ruta los sirve** (medido: su único
+   llamante es `ServicesController`). Sin ellos, una landing de servicios no puede pintar su carril de
+   tarifas. ⚠️ Son DINERO, y traen la decisión que `#661` dejó planteada: el contrato de VISTA quiere el
+   importe **ya escrito** (`groupFrom`, `address.written`) y el de API lo quiere en **céntimos**
+   (`/prices`). Las dos tienen razón en su superficie; la tanda decide si viajan los dos y lo mide.
+   ▶ **Tres reglas que dejaron los cuatro y valen para lo que venga** (detalle en la spec §4.1):
+   (1) si el dato tiene **servicio de dominio**, el recurso **delega** en vez de declarar lista blanca;
+   (2) el filtro de «lo que no viaja» va **DESPUÉS** del respaldo de idioma, o el recurso se vacía en
+   `en`/`fr`; (3) lo que decide la MAQUETA no es un hecho —ni el mosaico, ni una tabla tecleada—.
+   ⚠️⚠️ **Y dos trampas de FIXTURE, las dos con su rojo delante**: `BarImage` re-mide las dimensiones
+   contra el DISCO, así que un `width` tecleado se sobrescribe con `null` (PNG real ANTES, y control);
+   y **una aserción de subcadena acusa al fixture que la nombra** —un juego «E*special*» tumbó el caso
+   de `is_special` (`#553` otra vez)—: se aserta sobre las CLAVES servidas.
    ❗❗ **Y un QUINTO que no estaba en la lista de cuatro: los TRAMOS DE GRUPO.** `GroupRateTables` los
    compone desde el catálogo y **ninguna ruta los sirve** (medido: su único llamante es
    `ServicesController`). Salieron de `#672` a propósito —son DINERO— y traen consigo la decisión que

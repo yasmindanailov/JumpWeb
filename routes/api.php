@@ -1,6 +1,7 @@
 <?php
 
 use App\Domain\Identity\Services\ApiTokenIssuer;
+use App\Http\Controllers\Api\V1\AttractionsFactsController;
 use App\Http\Controllers\Api\V1\AuthRegistrationController;
 use App\Http\Controllers\Api\V1\AuthSessionController;
 use App\Http\Controllers\Api\V1\AuthTokenController;
@@ -214,6 +215,15 @@ Route::name('api.v1.')->group(function (): void {
     Route::get('/bar', BarFactsController::class)
         ->middleware('cache.headers:public;max_age=300;etag')
         ->name('bar.facts');
+
+    // Los JUEGOS, planos y con el `slug` de su zona: agrupar es estructura, y el menú no la impone.
+    // ⚠️⚠️ El gate de la zona es `show_in_landing` y NO `is_active`: la zona de cumpleaños OPERA
+    // —vende packs— y no sale en la web. Es el mismo gate que usa la página, para que no discrepen.
+    // ⚠️ El MOSAICO de la portada no viaja: elegir tres con nombre y dos veladas es maqueta, no un
+    // hecho del negocio. Lo que el producto sabe es qué juegos hay y en qué orden.
+    Route::get('/attractions', AttractionsFactsController::class)
+        ->middleware('cache.headers:public;max_age=300;etag')
+        ->name('attractions.facts');
 
     // Los TEXTOS LEGALES: el índice y cada documento, con los marcadores (`:legal_name`…) ya resueltos.
     // ⚠️ Cuelgan de `/legal/documents` y no de `/legal/{clave}` porque `/legal/waiver` ya existe y dice

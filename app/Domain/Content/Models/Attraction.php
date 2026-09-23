@@ -22,6 +22,16 @@ class Attraction extends Model
         'is_special' => 'boolean',
     ];
 
+    /**
+     * La zona a la que pertenece el juego.
+     *
+     * ⚠️ El genérico no es adorno: sin él, quien lea `$juego->zone?->slug` está leyendo un `Model` a
+     * secas y Larastan lo canta como `property.notFound` —lo cazó al servir `/attractions` (`#674`)—.
+     * La salida es que el código DIGA de qué es la relación, no una entrada más en la línea base, que
+     * solo encoge.
+     *
+     * @return BelongsTo<Zone, $this>
+     */
     public function zone(): BelongsTo
     {
         return $this->belongsTo(Zone::class);
