@@ -2,9 +2,9 @@
 
 namespace Tests\Feature\Instancia;
 
+use App\Domain\Content\Services\ContactTopics;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\Honeypot;
-use App\Http\Controllers\ContactController;
 use App\Http\Instancia\InstanceViews;
 use Database\Seeders\LandingContentSeeder;
 use DOMDocument;
@@ -67,7 +67,7 @@ class AnfitrionContactoTest extends TestCase
         // El tema no viene elegido (`#535`): la primera opción no afirma nada, y las claves son las
         // del controlador.
         $opciones = $x->query('//select[@name="topic"]/option');
-        $this->assertSame(count(ContactController::TOPICS) + 1, $opciones->length);
+        $this->assertSame(count(ContactTopics::ALL) + 1, $opciones->length);
         $this->assertSame('', (string) $opciones->item(0)?->getAttribute('value'));
 
         // Los DATOS: los canales del panel, los atajos del inventario y la dirección ya escrita.

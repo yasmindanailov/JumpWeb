@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.15.0
+  version: 1.16.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -3592,10 +3592,24 @@ components:
         contact:
           type: object
           additionalProperties: false
+          required: [topics]
           properties:
             email: { type: string, format: email }
             phone: { type: string }
             whatsapp: { type: string }
+            topics:
+              type: array
+              description: |
+                Los asuntos que acepta el formulario de contacto, **como CLAVES y en el orden del
+                selector** (`other` va al final: es el cajón de sastre).
+
+                ⚠️⚠️ **Claves, no rótulos, y es deliberado.** El producto es dueño del vocabulario
+                —valida el POST contra esta lista, y un asunto inventado recibe un 422— y **tú eres
+                dueño de las palabras**: escríbelas en tu idioma, en tu copy. Los dos lectores son
+                distintos, porque el selector lo lee el visitante y el correo lo lee el negocio.
+
+                Va SIEMPRE: una instalación sin asuntos no tendría formulario.
+              items: { type: string, example: birthday }
         social:
           type: object
           additionalProperties: false
@@ -3983,10 +3997,34 @@ components:
           items:
             type: object
             additionalProperties: false
-            required: [key, label]
+            required: [key, label, special]
             properties:
               key: { type: string, example: special }
               label: { type: string, example: 'Viernes, fines de semana, vísperas y festivos' }
+              special:
+                type: boolean
+                description: |
+                  Si es una tarifa ESPECIAL. Va siempre: saber qué tarifa es la especial no puede
+                  depender de que alguien le haya declarado días. ⚠️ No se deduce de la `key`:
+                  llamarse «special» y serlo son cosas distintas.
+              weekdays:
+                type: array
+                description: |
+                  Los días que ESTA tarifa reclama, `0 = domingo` como en `/schedule`. **Ausente** en
+                  la tarifa que no reclama ninguno —la normal—, porque se aplica a lo que sobra y no
+                  a una lista.
+                items: { type: integer, minimum: 0, maximum: 6 }
+        plain_weekdays:
+          type: array
+          description: |
+            Los días en los que rige la tarifa NORMAL, ya derivados: los siete menos los que
+            reclaman las especiales activas.
+
+            ❗❗ **Que falte NO significa «ninguno»: significa «no se puede saber».** Pasa cuando una
+            tarifa especial está activa y no declara sus días — ahí el producto no puede afirmar
+            cuáles son normales. Si restas «7 menos los especiales» por tu cuenta, en ese caso
+            publicarás una semana inventada sin enterarte. Úsalo, y si no está, no lo afirmes.
+          items: { type: integer, minimum: 0, maximum: 6 }
         products:
           type: array
           items:
@@ -6933,6 +6971,36 @@ components:
             URL ABSOLUTA de la foto de la zona. **Ausente** si no tiene. Absoluta porque quien la
             pinta puede estar en otro dominio (una landing de instancia) o no ser un navegador (la
             app nativa).
+        age_range:
+          type: string
+          description: |
+            El rango de edad tal y como lo escribe el panel («+8 años», «4 — 8 años»). **Ausente** si
+            no se escribió. ⚠️ Es TEXTO a propósito: lo que el checkout aplica de verdad son los
+            campos de edad del PRODUCTO, no este rótulo. No calcules con él.
+        height:
+          type: object
+          description: |
+            La regla de altura de la zona. **Ausente entera** si la zona no tiene ninguna — no llega
+            como `{}`, para que el tipo no dependa de si alguien rellenó el panel.
+
+            ⚠️ **Los nombres llevan el sentido dentro, y no es cosmética**: la misma cifra significa
+            lo contrario según cuál sea. 130 en `from_cm` es «a partir de 1,30 m» y 130 en
+            `up_to_cm` es «hasta 1,30 m». Con `min`/`max` el sentido quedaría fuera del nombre.
+          additionalProperties: false
+          properties:
+            from_cm:
+              type: integer
+              description: '«A partir de»: la zona va de esta cifra HACIA ARRIBA. Ausente si no aplica.'
+            up_to_cm:
+              type: integer
+              description: '«Hasta»: la zona va del suelo a esta cifra. Ausente si no aplica.'
+            written:
+              type: string
+              description: |
+                La regla ya redactada en el idioma activo («A partir de 1,30 m»). Viaja **además** de
+                las cifras, no en su lugar: los metros se escriben con el separador decimal del
+                idioma, y una landing que lo escriba sola reproduce el defecto de `#660` («14.95» en
+                una página en español). Úsala salvo que quieras pintar otra cosa.
 
     CatalogProductList:
       type: object
@@ -7052,6 +7120,24 @@ components:
             no ha subido ninguna: no viaja como `""`.
             ⚠️ La foto va en la LISTA y la descripción NO: un catálogo se recorre mirando fotos y la
             prosa se lee al abrir un producto. Cada campo de la lista se paga en todas las filas.
+        guest_age_min:
+          type: integer
+          description: |
+            Edad MÍNIMA del invitado, en años, tal y como la **declara** el producto. **Ausente** si
+            no la declara.
+
+            ⚠️ Es para ESCRIBIR («de 4 a 7 años»), no para decidir: lo que comprueba de verdad el
+            embudo son sus propias reglas, y las restricciones que importan están en `/rules`.
+        guest_age_max:
+          type: integer
+          description: Edad MÁXIMA del invitado, en años. Mismo régimen que la mínima.
+        duration_min:
+          type: integer
+          description: |
+            Duración en MINUTOS. **Ausente** si el producto no la declara.
+
+            ⚠️ No es `period_label`: aquél es el rótulo que escribe el panel («5 × 60 min») y éste es
+            la cifra con la que puedes calcular. Los dos viajan porque contestan preguntas distintas.
 
     CatalogProductDetail:
       type: object
@@ -7130,6 +7216,15 @@ components:
               description: Clave estable de la zona; es la que usa el deep-link de la landing.
             name:
               type: string
+        guest_age_min:
+          type: integer
+          description: 'Igual que en `CatalogProduct` (ver la descripción de allí).'
+        guest_age_max:
+          type: integer
+          description: 'Igual que en `CatalogProduct`.'
+        duration_min:
+          type: integer
+          description: 'Igual que en `CatalogProduct`: minutos, y no es `period_label`.'
         min_quantity:
           type: integer
           description: |

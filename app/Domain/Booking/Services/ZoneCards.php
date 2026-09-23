@@ -273,25 +273,12 @@ final class ZoneCards
     /**
      * La regla de altura de una zona, ya redactada — o `null` si no tiene.
      *
-     * ⚠️ **La misma cifra significa lo contrario según la columna**: 130 en `height_max_cm` es
-     * «hasta» y en `height_min_cm` es «a partir de». Por eso son dos columnas y no un número con el
-     * sentido deducido de qué zona sea, que es el tipo de regla implícita que nadie encuentra luego.
+     * ▶ **La regla se MUDÓ a `ZoneHeightRule` en `#676`** y aquí solo queda la llamada: la API
+     * publica esa misma frase en `/catalog/zones`, y con una copia en cada sitio las dos acabarían
+     * diciendo la altura de dos maneras. El porqué de las dos columnas vive ahora allí.
      */
     private function heightRule(Zone $zone): ?string
     {
-        $min = $zone->height_min_cm;
-        $max = $zone->height_max_cm;
-
-        if ($min === null && $max === null) {
-            return null;
-        }
-
-        if ($min !== null && $max !== null) {
-            return __('landing.zones.height_between', ['a' => $this->metros($min), 'b' => $this->metros($max)]);
-        }
-
-        return $min !== null
-            ? __('landing.zones.height_from', ['h' => $this->metros($min)])
-            : __('landing.zones.height_up_to', ['h' => $this->metros($max)]);
+        return (new ZoneHeightRule)->written($zone->height_min_cm, $zone->height_max_cm);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Api\V1;
 
+use App\Domain\Content\Services\ContactTopics;
 use App\Domain\Platform\Services\PublicFacts;
 use App\Domain\Platform\Services\VenueAddress;
 use Illuminate\Http\Request;
@@ -97,10 +98,23 @@ class SiteFactsResource extends JsonResource
                 'maps_url' => 'address.maps_url',
                 'maps_embed_url' => 'address.maps_embed_url',
             ]) + $this->direccionEscrita($hechos)),
-            'contact' => (object) $hechos->compact([
+            'contact' => (object) ($hechos->compact([
                 'email' => 'contact.email',
                 'phone' => 'contact.phone',
                 'whatsapp' => 'contact.whatsapp',
+            ]) + [
+                // ⚠️⚠️ **Los ASUNTOS del formulario, y viajan como CLAVES** (`#675`, `#676`). Es el
+                // mismo reparto que `/rules` hace con `moments`, y por el mismo motivo (`#533`): el
+                // PRODUCTO es dueño del vocabulario cerrado —lo valida al recibir el POST y podrá
+                // segmentar por él— y **quien pinta es dueño de las palabras**. Los dos lectores son
+                // distintos: el selector lo lee el visitante en su idioma y el correo lo lee el
+                // negocio en el suyo, así que un rótulo único mentiría a uno de los dos.
+                // ▶ Sin esto, una landing fuera del producto no puede saber qué asuntos existen, y
+                // un asunto inventado lo rechaza el `in:` del controlador con un 422.
+                // ❗ DECLARADO y no resuelto: `birthday` y `groups` son vocabulario del SECTOR de
+                // saltos quemado en el producto (`DEUDA.md`). Publicar el catálogo no lo arregla;
+                // muerde el día del segundo cliente de otro sector.
+                'topics' => ContactTopics::ALL,
             ]),
             'social' => (object) $hechos->compact([
                 'instagram' => 'contact.instagram',

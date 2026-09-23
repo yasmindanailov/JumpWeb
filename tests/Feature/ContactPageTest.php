@@ -3,10 +3,10 @@
 namespace Tests\Feature;
 
 use App\Domain\Content\Models\Faq;
+use App\Domain\Content\Services\ContactTopics;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\Honeypot;
 use App\Domain\Platform\Services\Turnstile;
-use App\Http\Controllers\ContactController;
 use App\Mail\ContactMessageMail;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -47,7 +47,7 @@ class ContactPageTest extends TestCase
     {
         $respuesta = $this->get('/contacto')->assertOk();
 
-        $respuesta->assertViewHas('topics', ContactController::TOPICS);
+        $respuesta->assertViewHas('topics', ContactTopics::ALL);
         $respuesta->assertViewHas('answers', function (array $answers): bool {
             $urls = array_column($answers, 'url');
 

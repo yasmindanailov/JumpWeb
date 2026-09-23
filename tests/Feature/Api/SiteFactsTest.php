@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Api;
 
+use App\Domain\Content\Services\ContactTopics;
 use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\Setting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -152,5 +153,37 @@ class SiteFactsTest extends TestCase
         $this->be(User::factory()->create());
 
         $this->assertSame($anonimo, $this->getJson('/api/v1/site')->assertOk()->json());
+    }
+
+    /**
+     * **Los ASUNTOS del formulario viajan como CLAVES, y van SIEMPRE** (`#676`, censo `#675`).
+     *
+     * ⚠️⚠️ El caso que de verdad importa es el segundo: **la lista publicada tiene que ser la MISMA
+     * contra la que el formulario valida**. Si divergieran, una landing pintaría un asunto que el
+     * POST rechaza con un 422 y nadie sabría por qué — y eso no lo ve ninguna prueba del selector.
+     */
+    public function test_the_contact_topics_travel_as_keys_and_match_what_the_form_accepts(): void
+    {
+        $topics = $this->getJson('/api/v1/site')->assertOk()->json('contact.topics');
+
+        $this->assertSame(ContactTopics::ALL, $topics, 'la API publica el vocabulario del producto');
+
+        // Y el formulario ACEPTA cada uno de los publicados: la lista no es decorativa.
+        foreach ($topics as $topic) {
+            $this->post('/contacto', [
+                'name' => 'Quien pregunta',
+                'email' => 'quien@example.com',
+                'message' => 'Una pregunta lo bastante larga para pasar la validación del formulario.',
+                'topic' => $topic,
+            ])->assertSessionHasNoErrors();
+        }
+
+        // CONTROL: uno que NO está publicado sí se rechaza, o el caso de arriba no probaría nada.
+        $this->post('/contacto', [
+            'name' => 'Quien pregunta',
+            'email' => 'quien@example.com',
+            'message' => 'Una pregunta lo bastante larga para pasar la validación del formulario.',
+            'topic' => 'torneos',
+        ])->assertSessionHasErrors('topic');
     }
 }

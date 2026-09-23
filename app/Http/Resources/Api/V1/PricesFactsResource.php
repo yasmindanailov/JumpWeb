@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Api\V1;
 
+use App\Domain\Booking\Concerns\ReadsRateFacts;
 use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\TicketType;
 use Illuminate\Http\Request;
@@ -31,6 +32,11 @@ use Illuminate\Support\Collection;
  */
 class PricesFactsResource extends JsonResource
 {
+    // ⚠️ Se trae la regla de los días normales en vez de re-derivarla (`#676`): el trait ya sabe
+    // que una tarifa especial ACTIVA sin días declarados hace la respuesta INDECIDIBLE, y eso es
+    // lo que una copia se dejaría. La misma que lee la página `/precios`.
+    use ReadsRateFacts;
+
     public static $wrap = null;
 
     /**
@@ -46,6 +52,10 @@ class PricesFactsResource extends JsonResource
 
     public function toArray(Request $request): array
     {
+        // ⚠️ La MISMA regla que usa la página `/precios`, no una copia: `plainWeekdays()` vive en
+        // `ReadsRateFacts` y ya sabe que un «no se puede saber» no es una lista vacía (`#676`).
+        $normales = $this->plainWeekdays();
+
         return [
             'lang' => app()->getLocale(),
             // ⚠️ **La moneda sale de los PRECIOS, que la llevan por fila.** Es lo que se descubre al mirar
@@ -59,10 +69,24 @@ class PricesFactsResource extends JsonResource
             // El catálogo de tarifas CON SU RÓTULO: sin él, una landing tendría que escribir «Viernes,
             // fines de semana, vísperas y festivos» a mano y quedarse desfasada el día que el negocio lo
             // cambie en el panel — que es justo el defecto que este menú existe para no repetir.
-            'rates' => $this->tarifas->map(fn (RateType $tarifa): array => [
+            'rates' => $this->tarifas->map(fn (RateType $tarifa): array => array_filter([
                 'key' => (string) $tarifa->key,
                 'label' => (string) $tarifa->tr('label'),
-            ])->values()->all(),
+                'special' => (bool) $tarifa->is_special,
+                // Los días que ESTA tarifa reclama, `0 = domingo` como en `/schedule`. Falta en la
+                // tarifa que no reclama ninguno —la normal—, porque es la que se aplica a lo que
+                // sobra, no a una lista.
+                'weekdays' => is_array($tarifa->weekdays) && $tarifa->weekdays !== []
+                    ? array_values(array_map('intval', $tarifa->weekdays))
+                    : null,
+            ], fn ($valor): bool => $valor !== null))->values()->all(),
+            // ⚠️⚠️ **La derivación viaja hecha, y `null` NO significa «ninguno»: significa «no se
+            // puede saber»** — el caso es una tarifa especial ACTIVA que no declara sus días, y ahí
+            // el producto no puede afirmar cuáles son normales. Una landing que restara «7 menos los
+            // especiales» publicaría una semana inventada sin enterarse. Es el mismo motivo por el
+            // que `/site` publica `address.written` y `/rules` su `summary`: la regla es del
+            // producto, y tiene un modo de fallo que el cliente no puede ver.
+            ...($normales === null ? [] : ['plain_weekdays' => $normales]),
             'products' => $this->productos->map(fn (TicketType $producto): array => array_filter([
                 'id' => $producto->id,
                 'zone' => $producto->zone?->slug,

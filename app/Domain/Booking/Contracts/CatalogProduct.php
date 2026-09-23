@@ -103,6 +103,31 @@ final readonly class CatalogProduct
          * resuelve `TicketType::imageUrl()` contra el disco de subidas.
          */
         public ?string $imageUrl,
+        /**
+         * Edad MÍNIMA del invitado, en años, o `null` si el producto no la declara (`#676`).
+         *
+         * ⚠️ **Entra en la LISTA y no en la ficha, con la medida delante**: quien las necesita son
+         * las tarjetas de una página —la portada pinta seis de un tirón—, y sacarlas de la ficha
+         * costaría una petición por tarjeta. **Medido en vivo el 23-09**: el payload de
+         * `/catalog/products` pasa de **4.079 a 4.607 bytes (+13 %)** con los nueve productos que
+         * publica. Lejos del **+47 %** que hizo que la ficha de ZONA no se anidara aquí.
+         * ▶ La estimación previa decía +8 % y se quedó corta: se contó sobre los 24 productos
+         * VENDIBLES, y la lista publica 9 —los complementos no salen—, así que cada uno pesa más
+         * en el total. *Una estimación sobre el censo equivocado no es una medida.*
+         *
+         * ⚠️⚠️ **Es lo que el producto DECLARA, no lo que el checkout comprueba.** Sirve para
+         * escribir «de 4 a 7 años» en una tarjeta; la puerta y el embudo miran sus propias reglas.
+         */
+        public ?int $guestAgeMin = null,
+        /** Edad MÁXIMA del invitado, en años, o `null`. Mismo régimen que la mínima. */
+        public ?int $guestAgeMax = null,
+        /**
+         * Duración en MINUTOS, o `null` si no la declara.
+         *
+         * ⚠️ No es `periodLabel`: aquél es el rótulo que escribe el panel («5 × 60 min») y éste es
+         * la cifra con la que se puede calcular. Los dos viajan porque responden preguntas distintas.
+         */
+        public ?int $durationMin = null,
     ) {}
 
     public function isPack(): bool

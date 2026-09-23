@@ -2,10 +2,10 @@
 
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669 AGOTADA con `#669`** → **670–699 EN CURSO** · Último usado: **`#675`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **640–669 AGOTADA con `#669`** → **670–699 EN CURSO** · Último usado: **`#676`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, `docs/specs/instancia-y-landing-fuera.md` · Actualizado: **2026-09-23**
-> (`#670`: **no desplegar en piezas** · `#671`→`#674`: **los CUATRO platos servidos**, contrato
-> **1.15.0**, T3 desbloqueada · `#675`: el CENSO de lo que le falta al menú).
+> (`#670`: **no desplegar en piezas** · `#671`→`#674`: los CUATRO platos · `#675`: el CENSO ·
+> `#676`: sus tres lotes de campos y los asuntos; contrato **1.16.0**).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
 > Techo **32 KB** (check 10; subido de 24 en `#724` con la medida delante). El contador de la suite no
 > vive aquí: va en el trailer del commit.
@@ -101,20 +101,20 @@
    y los juegos. El detalle de cada uno en la spec §4.1, que es donde no caduca.
    ▶▶ **Y con ellos la T3 se desbloquea sola**, que era el punto: los cuatro recursos que no podían
    salir del panel ya tienen plato en el menú. Esa tanda ya no está bloqueada por nada.
-   ❗❗❗ **LO SIGUIENTE LO DICE EL CENSO (`#675`), y NO son cuatro platos más**: son **cuatro huecos de
-   HECHO**, y tres son CAMPOS de rutas que ya existen. La tabla entera y lo que descartó —`choices`,
-   `compare`, `holidays`, los derivados— están en la spec **§4.1.quater**, que es donde no caduca. Aquí
-   solo el orden:
-   **(A) Los TRES LOTES DE CAMPOS primero** —aditivos, sin dinero, y desbloquean `/normas`, `/precios`,
-   la portada y `/cumpleanos` de una vez—: alturas y `age_range` a `/catalog/zones` · **qué días son
-   tarifa especial** a `/schedule.weekly` · edad, duración y suplemento a `/catalog/products`.
-   ⚠️⚠️ El del horario no se ve leyendo: `weekly` da horario **sin tarifa** y `/prices` importes **por
-   tarifa sin decir qué día es cuál**. Cada uno tiene una mitad y **ninguno permite juntarlas**.
-   **(B) Los TRAMOS DE GRUPO después, en tanda propia**: `GroupRateTables` no lo sirve ninguna ruta, y
-   son DINERO — traen la decisión de `#661` (la VISTA quiere el importe escrito; la API, céntimos).
-   ❗ **Categoría nueva que dejó el censo: MECANISMO DEL PRODUCTO**, ni hecho ni presentación (cookies,
-   régimen del justificante, y **`topics`, que es una constante del controlador**).
-   `[PENDIENTE: owner]`: con la landing fuera, ¿de quién son los asuntos del formulario de contacto?
+   ✅ **EL CENSO (`#675`) Y SUS TRES LOTES, HECHOS** (`#676`, contrato **1.16.0**): alturas y `age_range`
+   en `/catalog/zones` · `special`, `weekdays` y `plain_weekdays` en `/prices` · edad y duración en
+   `/catalog/products` · los **asuntos de contacto** en `/site.contact.topics`. La tabla del censo y el
+   detalle de la ejecución, en la spec **§4.1.quater** y **§4.1.quinquies**.
+   ❗❗ **Dos cosas del censo se cayeron al ejecutarlo**: los días **no iban en `/schedule.weekly`**
+   —`RateType` ya tenía columna `weekdays`, o sea que el dato es de la TARIFA— y el «suplemento» **no era
+   un hueco**: `/prices` ya publica los packs con sus dos tarifas. *El sitio de un hecho lo decide de
+   quién es el hecho.*
+   ❗❗❗ **LO SIGUIENTE: LOS TRAMOS DE GRUPO**, en tanda propia. `GroupRateTables` no lo sirve ninguna
+   ruta y son **DINERO**: traen la decisión de `#661` —el contrato de VISTA quiere el importe **escrito**
+   y el de API lo quiere en **céntimos**—. La tanda decide si viajan los dos y lo mide.
+   ▶ **Deuda DECLARADA que destapó el censo**: `birthday`/`groups` son vocabulario del SECTOR quemado en
+   el producto (`ContactTopics`). Publicarlos arregla que una landing de fuera no sepa cuáles existen;
+   **no** arregla que una bolera reciba «cumpleaños». Muerde con el segundo cliente de otro sector.
    ▶ **Tres reglas que dejaron los cuatro y valen para lo que venga** (detalle en la spec §4.1):
    (1) si el dato tiene **servicio de dominio**, el recurso **delega** en vez de declarar lista blanca;
    (2) el filtro de «lo que no viaja» va **DESPUÉS** del respaldo de idioma, o el recurso se vacía en
@@ -147,8 +147,8 @@
    vive ahora en `specs/cajon-empaquetable.md` **§4.9**, que es donde no caduca: el cajón no tiene que
    ser un lateral, ya ES un widget, y cambiar su forma es una tanda de DISEÑO.
 
-4. **Deuda del análisis estático**: bajar la línea base de Larastan por familias (`nullsafe.neverNull` es
-   mecánico), bajando `FROZEN_ERRORS` en el mismo commit. Los 12 de ESLint los poda quien los arregle.
+4. **Deuda del análisis estático**: bajar la base de Larastan por familias, con `FROZEN_ERRORS` en el
+   mismo commit (`#674` la bajó a 457 sin proponérselo). Los 12 de ESLint los poda quien los arregle.
 5. **La promo, cuando el owner la termine** (es suyo el cuándo). La receta y **sus nueve cifras** bajaron a
    `ENTORNOS.md` §6 en `#675`, junto al despliegue que las escribió. Sin desplegar: son datos.
 6. Después, **F6** (app nativa; hereda del token lo que su spec §2 nombra: Google, alta, dispositivos).

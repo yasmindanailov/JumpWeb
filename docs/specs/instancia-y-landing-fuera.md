@@ -604,6 +604,63 @@ del formulario de contacto — del producto, del panel, o de quien escribe la la
 no tocan dinero y desbloquean `/normas`, `/precios`, la portada y `/cumpleanos` de una vez; después los
 **tramos de grupo**, en tanda propia porque son dinero y traen la decisión de registro de `#661`.
 
+### 4.1.quinquies · Los TRES LOTES, servidos ✅ (`#676`, 2026-09-23) · contrato **1.16.0**
+
+Los tres huecos de campo del censo, más los asuntos de contacto. Todo **aditivo**: ninguna ruta cambia de
+forma y ningún importe se mueve.
+
+❗❗ **Y el censo se corrigió a sí mismo en dos sitios al ejecutarlo**, que es lo que pasa cuando se mide
+antes de escribir:
+- **El hueco 3 NO iba en `/schedule.weekly`**, como decía `#675`. El dato es de la TARIFA, no del día:
+  `RateType` ya tiene columna **`weekdays`** (`[5,6,0]` en la especial). Va en `/prices.rates[]`, que es
+  donde vive su dueño. *Un hecho, un sitio — y el sitio lo decide de quién es el hecho.*
+- **El «suplemento de tarifa especial» NO era un hueco**: `/prices` ya publica los packs con sus dos
+  tarifas, así que el suplemento es una resta que el cliente puede hacer. Salió del alcance.
+
+**`/catalog/zones` · altura y edad.** `height` llega como bloque con **`from_cm`, `up_to_cm` y `written`**.
+⚠️⚠️ Los nombres llevan el sentido dentro **a propósito**: la misma cifra significa lo contrario según la
+columna —130 en una es «a partir de 1,30 m» y en la otra «hasta 1,30 m»— y con `min`/`max` el sentido queda
+fuera del nombre. El bloque **falta entero** si la zona no tiene alturas, no viaja `{}`.
+▶ **`written` viaja ADEMÁS de las cifras**, no en su lugar: los metros se escriben con el separador decimal
+del idioma, que es el defecto que `#660` cazó en una landing. Y la escribe **`ZoneHeightRule`**, extraída
+de `ZoneCards` porque la regla ya estaba en dos sitios y la API iba a ser el tercero.
+⚠️ **Lo que NO se hizo y queda declarado**: unificar también `RuleBoard::heightScale()`, que comparte la
+semántica pero produce otra cosa (la escala de `/normas`). Arrastraría esa página a esta tanda.
+
+**`/prices` · los días.** Cada tarifa publica `special` y, si reclama días, sus `weekdays` (`0 = domingo`).
+Y encima viaja `plain_weekdays`, la derivación hecha.
+❗❗ **Que `plain_weekdays` FALTE no significa «ninguno»: significa «no se puede saber»** — el caso es una
+tarifa especial ACTIVA que no declara sus días. Una landing que restara «7 menos los especiales» publicaría
+una semana inventada sin enterarse. Se reusa `ReadsRateFacts::plainWeekdays()`, que ya sabía distinguir los
+dos casos; una copia se habría dejado justo esa parte.
+
+**`/catalog/products` · edad y duración.** `guest_age_min`, `guest_age_max` y `duration_min`, en la LISTA y
+no en la ficha: quien los necesita son tarjetas que se pintan de seis en seis. **Medido en vivo**: el
+payload pasa de **4.079 a 4.607 bytes (+13 %)**, lejos del +47 % que hizo que la ficha de zona no se
+anidara. ⚠️ `duration_min` **no es `period_label`**: aquél es el rótulo del panel («5 × 60 min») y éste la
+cifra. ⚠️⚠️ Y el filtro mira `null` y no «vacío», porque **un 0 es una edad**.
+
+**`/site.contact.topics` · los asuntos, como CLAVES.** Mismo reparto que `/rules` con `moments` (`#533`):
+el producto es dueño del **vocabulario** —lo valida al recibir el POST— y quien pinta es dueño de las
+**palabras**. Los dos lectores son distintos: el selector lo lee el visitante en su idioma y el correo lo
+lee el negocio en el suyo, así que un rótulo único mentiría a uno de los dos. La lista sale de
+`Content\Services\ContactTopics`, extraída del controlador para que un recurso de la API no tuviera que
+leer un controlador de la web.
+❗ **DEUDA DECLARADA, no resuelta**: `birthday` y `groups` son vocabulario del SECTOR de saltos quemado en
+el producto. Publicar el catálogo arregla que una landing de fuera no sepa qué asuntos existen; **no**
+arregla que una bolera reciba «cumpleaños». Muerde el día del segundo cliente de otro sector, y su salida
+es que la lista pase a ser DATO — el día que se haga, la clase cambia de fuente y el contrato no se entera.
+
+🪤 **La trampa que volvió a morder, y el aviso estaba en el fichero que se acababa de leer**: escribir la
+ruta de los ficheros de idioma **con comodín dentro de un docblock** cierra el comentario —la barra tras el
+asterisco— y el fichero deja de compilar. Es `#503`, y su advertencia estaba literalmente en el docblock
+que se movió. *Un aviso leído no es un aviso aplicado.*
+
+**Medido**: `CatalogTest` (+6 casos), `PricesFactsTest` (+2), `SiteFactsTest` (+1) · Pint y Larastan sin
+tocar la línea base · `scripts/mutar-menu-de-hechos.sh` con **once mutantes nuevos** · y **en vivo** los
+cuatro lotes: `jump` con «desde 1,30 m» y `kids` con «hasta 1,50 m», `plain_weekdays: [1,2,3,4]`, 8 de 9
+productos con duración, y los cuatro asuntos.
+
 ### 4.2 Lo que sale del panel, y lo que NO
 
 Salen los seis recursos de §1.6 y las secciones de texto de la landing y del bar. Se quedan los trece

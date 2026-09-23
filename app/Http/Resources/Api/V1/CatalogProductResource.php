@@ -54,6 +54,16 @@ class CatalogProductResource extends JsonResource
             // La DESCRIPCIÓN no está aquí, sino en el detalle: cada campo de la lista se paga en
             // todas las filas, y la prosa se lee al abrir un producto.
             $this->resource->imageUrl === null ? [] : ['image_url' => $this->resource->imageUrl]
+        ) + array_filter(
+            [
+                // La edad y la duración DECLARADAS (`#676`), por el mismo criterio que la foto: lo
+                // que el producto no declara no viaja. Un `0` sí viajaría —es una edad— y por eso
+                // el filtro mira `null` y no lo «vacío».
+                'guest_age_min' => $this->resource->guestAgeMin,
+                'guest_age_max' => $this->resource->guestAgeMax,
+                'duration_min' => $this->resource->durationMin,
+            ],
+            fn (?int $valor): bool => $valor !== null,
         );
     }
 }

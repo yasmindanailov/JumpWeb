@@ -28,10 +28,21 @@ class CatalogZoneDetailResource extends JsonResource
     /** @return array<string, mixed> */
     public function toArray(Request $request): array
     {
+        $altura = array_filter([
+            'from_cm' => $this->resource->heightFromCm,
+            'up_to_cm' => $this->resource->heightUpToCm,
+            'written' => $this->resource->heightWritten,
+        ], fn (mixed $valor): bool => $valor !== null);
+
         return array_filter(
             (new CatalogZoneResource($this->resource->zone))->toArray($request) + [
                 'description' => $this->resource->description,
                 'image_url' => $this->resource->imageUrl,
+                'age_range' => $this->resource->ageRange,
+                // ⚠️ El bloque ENTERO falta cuando la zona no tiene ninguna altura, en vez de viajar
+                // como `{}`. Es la trampa del menú (`§4.1.bis`): un array PHP vacío se serializa `[]`,
+                // y el tipo de una clave no puede depender de si alguien rellenó el panel.
+                'height' => $altura === [] ? null : $altura,
             ],
             fn (mixed $valor): bool => $valor !== null,
         );

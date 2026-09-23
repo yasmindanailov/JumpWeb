@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Domain\Content\Models\Faq;
+use App\Domain\Content\Services\ContactTopics;
 use App\Domain\Content\Services\SiteDestinations;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\Honeypot;
@@ -16,8 +17,11 @@ class ContactController extends Controller
 {
     public function __construct(private readonly InstanceViews $instancia) {}
 
-    /**
-     * Los temas que el desplegable «¿Sobre qué?» ofrece (`DECISIONES #535`).
+    /*
+     * 📜 **AQUÍ VIVÍAN LOS TEMAS del desplegable «¿Sobre qué?»** (`DECISIONES #535`) y se mudaron a
+     * `Content\Services\ContactTopics` en `#676`: son un vocabulario del DOMINIO y `/site` los
+     * publica, así que un recurso de la API tendría que haber leído un controlador de la web para
+     * conseguirlos. Lo que valía y sigue valiendo:
      *
      * ⚠️ **Son claves, no textos**: lo que se valida y lo que viaja al correo es la clave, y el
      * rótulo lo ponen los ficheros de idioma. Con los textos como valor, cambiar una traducción
@@ -27,7 +31,6 @@ class ContactController extends Controller
      * barra tras el asterisco CIERRA el comentario y el fichero deja de compilar (la trampa de
      * `#503`, que ya costó un servicio entero sin compilar y un render devolviendo HTML viejo).
      */
-    public const TOPICS = ['birthday', 'groups', 'booking', 'other'];
 
     public function show()
     {
@@ -54,7 +57,7 @@ class ContactController extends Controller
             'answers' => SiteDestinations::answersItself(
                 withFaq: Faq::where('is_active', true)->exists(),
             ),
-            'topics' => self::TOPICS,
+            'topics' => ContactTopics::ALL,
         ]);
     }
 
@@ -85,7 +88,7 @@ class ContactController extends Controller
              * ausencia no es una afirmación*. Sin elegir, el correo no dice nada del tema.
              * ⚠️ `in:` sobre la lista cerrada: el valor llega de un `<select>`, o sea del cliente.
              */
-            'topic' => ['nullable', 'string', 'in:'.implode(',', self::TOPICS)],
+            'topic' => ['nullable', 'string', 'in:'.implode(',', ContactTopics::ALL)],
             'message' => ['required', 'string', 'min:10', 'max:2000'],
         ]);
 

@@ -14,7 +14,7 @@ cd "$(git rev-parse --show-toplevel)"
 SAIL="docker compose exec -u sail -T laravel.test"
 # ⚠️ El último no es una clase sino un MÉTODO: `CatalogEditTest` entero son ~40 casos del panel y el arnés
 # corre esta orden una vez por mutación. Se trae solo la guarda de la foto, que es la de esta tanda.
-TESTS="$SAIL php artisan test --filter='PublicFactsBoundaryTest|SiteFactsTest|ScheduleFactsTest|RulesFactsTest|FaqsFactsTest|ServicesFactsTest|BarFactsTest|BarPageTest|AnfitrionBarTest|AttractionsFactsTest|LegalDocumentsTest|PricesFactsTest|SocialProofFactsTest|VenueAddressTest|LocalNumberTest|MetaDescriptionTest|HeroStatusTest|ApiContractTest|CatalogTest|the_ficha_photo_is_editable_from_the_panel'"
+TESTS="$SAIL php artisan test --filter='PublicFactsBoundaryTest|SiteFactsTest|ScheduleFactsTest|RulesFactsTest|FaqsFactsTest|ServicesFactsTest|BarFactsTest|BarPageTest|AnfitrionBarTest|AttractionsFactsTest|ContactPageTest|LegalDocumentsTest|PricesFactsTest|SocialProofFactsTest|VenueAddressTest|LocalNumberTest|MetaDescriptionTest|HeroStatusTest|ApiContractTest|CatalogTest|the_ficha_photo_is_editable_from_the_panel'"
 
 LECTOR=app/Domain/Platform/Services/PublicFacts.php
 RECURSO=app/Http/Resources/Api/V1/SiteFactsResource.php
@@ -41,6 +41,13 @@ BARPAGE=app/Domain/Content/Services/BarPage.php
 # El plato de los JUEGOS (F5, `#674`), el último de los cuatro.
 JUEGOS=app/Http/Resources/Api/V1/AttractionsFactsResource.php
 JUEGOSCTRL=app/Http/Controllers/Api/V1/AttractionsFactsController.php
+# Los CUATRO LOTES DE CAMPOS del censo (`#676`): altura y edad de zona, días de tarifa, edad y
+# duración de producto, y los asuntos de contacto.
+ALTURA=app/Domain/Booking/Services/ZoneHeightRule.php
+FICHAZONADTO=app/Domain/Booking/Contracts/CatalogZoneDetail.php
+LECTORZONA=app/Domain/Booking/Services/CatalogReader.php
+ASUNTOS=app/Domain/Content/Services/ContactTopics.php
+CONTACTOCTRL=app/Http/Controllers/ContactController.php
 CONTRATO=tests/Feature/Api/ApiContractTest.php
 LEGALES=app/Http/Resources/Api/V1/LegalDocumentsResource.php
 LEGALESCTRL=app/Http/Controllers/Api/V1/LegalDocumentsController.php
@@ -59,7 +66,7 @@ MODELOPROD=app/Domain/Booking/Models/TicketType.php
 YAML=openapi/v1.yaml
 
 TMP="$(mktemp -d)"
-FICHEROS=("$LECTOR" "$RECURSO" "$HORARIO" "$ENVIVO" "$ESTADO" "$NORMAS" "$NORMASCTRL" "$DUDAS" "$DUDASCTRL" "$SERVICIOS" "$SERVICIOSCTRL" "$BAR" "$BARCTRL" "$BARPAGE" "$JUEGOS" "$JUEGOSCTRL" "$CONTRATO" "$LEGALES" "$LEGALESCTRL" "$PRECIOS" "$PRECIOSCTRL" "$RUTAS" "$FICHAZONA" "$FICHAPROD" "$LECTORCAT" "$MODELOZONA" "$MODELOPROD" "$YAML" "$PANEL" "$CIFRA" "$DIRECCION" "$NUMERO" "$RESUMEN" "$MONEDA")
+FICHEROS=("$LECTOR" "$RECURSO" "$HORARIO" "$ENVIVO" "$ESTADO" "$NORMAS" "$NORMASCTRL" "$DUDAS" "$DUDASCTRL" "$SERVICIOS" "$SERVICIOSCTRL" "$BAR" "$BARCTRL" "$BARPAGE" "$JUEGOS" "$JUEGOSCTRL" "$ALTURA" "$FICHAZONADTO" "$ASUNTOS" "$CONTACTOCTRL" "$CONTRATO" "$LEGALES" "$LEGALESCTRL" "$PRECIOS" "$PRECIOSCTRL" "$RUTAS" "$FICHAZONA" "$FICHAPROD" "$LECTORCAT" "$MODELOZONA" "$MODELOPROD" "$YAML" "$PANEL" "$CIFRA" "$DIRECCION" "$NUMERO" "$RESUMEN" "$MONEDA")
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$TMP/$(basename "$f")" "$f"; touch "$f"; done; }
 trap 'restaurar; rm -rf "$TMP"' EXIT
 for f in "${FICHEROS[@]}"; do cp "$f" "$TMP/$(basename "$f")"; done
@@ -250,8 +257,12 @@ mutar "el producto sin foto publica «image_url: null» en vez de omitir la clav
   "            ['image_url' => \$this->resource->imageUrl]"
 
 # Y las dos guardas del CONTRATO que esta tanda estrena.
+# ⚠️ RE-APUNTADO en `#676`: la entrada ganó la edad y la duración, así que el patrón viejo
+# (`=> ['image_url'],`) dejó de casar y el arnés lo cantó como «NO SE APLICÓ». El mutante conserva su
+# sujeto —vaciar la lista de opcionales—, solo cambió de sitio: se re-apunta, no se poda (`#666`).
 mutar "la foto deja de estar declarada como opcional POR DISEÑO (y nadie exige su porqué)" \
-  "$CONTRATO" "        'CatalogProduct' => ['image_url']," "        'CatalogProduct' => [],"
+  "$CONTRATO" "        'CatalogProduct' => ['image_url', 'guest_age_min', 'guest_age_max', 'duration_min']," \
+  "        'CatalogProduct' => [],"
 
 mutar "la ficha de zona DIVERGE de la identidad que viaja anidada en cada producto" \
   "$YAML" "        name:
@@ -538,6 +549,68 @@ mutar "el idioma deja de ser obligatorio en los juegos" \
 
 mutar "el contrato deja de exigir la zona de un juego (y deja de ser resoluble)" \
   "$YAML" "            required: [zone, name]" "            required: [name]"
+
+# ── Los CUATRO LOTES DE CAMPOS del censo (`#676`) ──────────────────────────────────────────────
+# ⚠️⚠️ El PRIMERO es el que de verdad importa: la misma cifra significa lo contrario según la
+# columna, así que intercambiarlas publica lo opuesto sin que el JSON deje de ser válido.
+mutar "las dos alturas se INTERCAMBIAN («a partir de» pasa a ser «hasta»)" \
+  "$LECTORZONA" "            heightFromCm: \$zone->height_min_cm,
+            heightUpToCm: \$zone->height_max_cm," \
+  "            heightFromCm: \$zone->height_max_cm,
+            heightUpToCm: \$zone->height_min_cm,"
+
+mutar "la regla de altura se redacta al revés («hasta» donde va «a partir de»)" \
+  "$ALTURA" "        return \$minCm !== null
+            ? __('landing.zones.height_from', ['h' => \$this->metros(\$minCm)])
+            : __('landing.zones.height_up_to', ['h' => \$this->metros(\$maxCm)]);" \
+  "        return \$minCm !== null
+            ? __('landing.zones.height_up_to', ['h' => \$this->metros(\$minCm)])
+            : __('landing.zones.height_from', ['h' => \$this->metros(\$maxCm)]);"
+
+mutar "el bloque de altura viaja VACÍO en vez de faltar (y su tipo pasa a ser una lista)" \
+  "$FICHAZONA" "                'height' => \$altura === [] ? null : \$altura," \
+  "                'height' => \$altura,"
+
+# ⚠️ La primera versión mutaba el DTO a `= null` y NO mordía: añadir un valor por defecto no impide
+# que el lector lo pase. Un mutante tiene que quitar el dato de verdad, no dejarlo opcional.
+mutar "el rango de edad de la zona deja de viajar" \
+  "$LECTORZONA" "            ageRange: \$zone->tr('age_range') ?: null," "            ageRange: null,"
+
+mutar "los días de una tarifa dejan de viajar (y nadie puede saber qué día es cuál)" \
+  "$PRECIOS" "                'weekdays' => is_array(\$tarifa->weekdays) && \$tarifa->weekdays !== []
+                    ? array_values(array_map('intval', \$tarifa->weekdays))
+                    : null," \
+  "                'weekdays' => null,"
+
+# ⚠️⚠️ Éste es el que distingue «no hay» de «no se puede saber»: con `[]` la landing publicaría
+# una semana sin días normales en vez de callarse.
+mutar "una semana INDECIDIBLE se publica como lista vacía en vez de callarse" \
+  "$PRECIOS" "            ...(\$normales === null ? [] : ['plain_weekdays' => \$normales])," \
+  "            'plain_weekdays' => \$normales ?? [],"
+
+mutar "\`special\` se deduce de la CLAVE en vez de leerse del dato" \
+  "$PRECIOS" "                'special' => (bool) \$tarifa->is_special," \
+  "                'special' => \$tarifa->key === 'special',"
+
+mutar "la edad y la duración del producto dejan de viajar en la lista" \
+  "$LECTORZONA" "            guestAgeMin: \$product->guest_age_min,
+            guestAgeMax: \$product->guest_age_max,
+            durationMin: \$product->duration_min," \
+  "            guestAgeMin: null,
+            guestAgeMax: null,
+            durationMin: null,"
+
+mutar "una edad de CERO se trata como «no hay» y desaparece del catálogo" \
+  "$FICHAPROD" "            fn (?int \$valor): bool => \$valor !== null," \
+  "            fn (?int \$valor): bool => ! empty(\$valor),"
+
+mutar "los ASUNTOS del formulario dejan de publicarse (y una landing no sabe cuáles existen)" \
+  "$RECURSO" "                'topics' => ContactTopics::ALL," ""
+
+# ⚠️ El que prueba que la lista publicada y la que VALIDA son la misma: si divergen, una landing
+# pinta un asunto que el POST rechaza con 422 y nadie sabe por qué.
+mutar "el formulario valida contra OTRA lista distinta de la publicada" \
+  "$CONTACTOCTRL" "'in:'.implode(',', ContactTopics::ALL)" "'in:otra_cosa'"
 
 echo
 echo "mutaciones: $muerden/$total muerden"

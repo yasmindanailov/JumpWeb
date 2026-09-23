@@ -136,6 +136,11 @@ class CatalogReader implements ProductCatalog
             // La foto de la ficha, ya resuelta a URL absoluta por el modelo (`#632` P1). La
             // DESCRIPCIÓN no está aquí: viaja en el detalle, por lo que explica su DTO.
             imageUrl: $product->imageUrl(),
+            // La edad y la duración que el producto DECLARA (`#676`): lo que hace falta para
+            // escribir una tarjeta, no lo que el checkout comprueba.
+            guestAgeMin: $product->guest_age_min,
+            guestAgeMax: $product->guest_age_max,
+            durationMin: $product->duration_min,
         );
     }
 
@@ -162,6 +167,12 @@ class CatalogReader implements ProductCatalog
             zone: $this->describeZone($zone),
             description: $zone->tr('description') ?: null,
             imageUrl: $zone->imageUrl(),
+            heightFromCm: $zone->height_min_cm,
+            heightUpToCm: $zone->height_max_cm,
+            // La MISMA regla que escribe la web (`ZoneCards`), no una copia: con dos, la altura
+            // acabaría diciéndose de dos maneras (`#676`).
+            heightWritten: (new ZoneHeightRule)->written($zone->height_min_cm, $zone->height_max_cm),
+            ageRange: $zone->tr('age_range') ?: null,
         );
     }
 

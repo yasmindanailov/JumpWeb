@@ -2,6 +2,8 @@
 
 namespace App\Domain\Booking\Contracts;
 
+use App\Domain\Booking\Services\ZoneHeightRule;
+
 /**
  * La FICHA de una zona: su identidad más lo que se cuenta de ella (T6 del menú de hechos,
  * `docs/specs/instancia-y-landing-fuera.md` §4.1; `DECISIONES #632` P1).
@@ -42,5 +44,33 @@ final readonly class CatalogZoneDetail
          * de subidas.
          */
         public ?string $imageUrl,
+        /**
+         * «A partir de» en centímetros, o `null`. **La zona va de esta cifra HACIA ARRIBA.**
+         *
+         * ⚠️⚠️ Se llama `from` y no `min` a propósito (`#676`): la misma cifra significa lo
+         * contrario según la columna —130 aquí es «a partir de 1,30 m» y 130 en la de abajo es
+         * «hasta 1,30 m»— y con `min`/`max` el sentido queda fuera del nombre, que es el tipo de
+         * regla implícita que nadie encuentra después. En el nombre, nadie puede confundirla.
+         */
+        public ?int $heightFromCm,
+        /** «Hasta» en centímetros, o `null`. **La zona va del suelo a esta cifra.** */
+        public ?int $heightUpToCm,
+        /**
+         * La regla de altura YA REDACTADA en el idioma activo, o `null` si la zona no tiene ninguna.
+         *
+         * ⚠️ Viaja además de las cifras, y no en su lugar: los metros se escriben con el separador
+         * decimal del IDIOMA, que es justo lo que `#660` cazó mal escrito en una landing. Quien
+         * quiera pintar otra cosa tiene las cifras; quien solo quiera la frase, la tiene hecha.
+         * La escribe {@see ZoneHeightRule}, la misma que usa la web.
+         */
+        public ?string $heightWritten,
+        /**
+         * El rango de edad tal y como lo escribe el panel («+8 años», «4 — 8 años»), o `null`.
+         *
+         * ⚠️ Es TEXTO y no dos números, y así se queda: lo que el checkout aplica de verdad son los
+         * campos de edad del PRODUCTO, no este rótulo. Publicarlo como cifras invitaría a calcular
+         * con él.
+         */
+        public ?string $ageRange,
     ) {}
 }

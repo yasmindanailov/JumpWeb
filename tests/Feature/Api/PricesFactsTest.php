@@ -21,11 +21,14 @@ class PricesFactsTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function tarifa(string $key, string $label): RateType
+    /**
+     * @param  ?list<int>  $weekdays  los días que ESTA tarifa reclama, `0 = domingo`
+     */
+    private function tarifa(string $key, string $label, bool $especial = false, ?array $weekdays = null): RateType
     {
         return RateType::query()->updateOrCreate(
             ['key' => $key],
-            ['label' => ['es' => $label], 'is_active' => true],
+            ['label' => ['es' => $label], 'is_active' => true, 'is_special' => $especial, 'weekdays' => $weekdays],
         );
     }
 
@@ -74,15 +77,24 @@ class PricesFactsTest extends TestCase
     public function test_it_serves_each_price_in_cents_with_its_rate_label(): void
     {
         $this->tarifa('normal', 'Lunes a jueves');
-        $this->tarifa('special', 'Viernes y festivos');
+        // ⚠️ `especial: true` y no solo la clave «special»: el fixture anterior creaba una tarifa
+        // LLAMADA especial que el dominio no consideraba especial, y por eso no representaba al
+        // catálogo real. Lo destapó publicar `is_special` en `#676`.
+        $this->tarifa('special', 'Viernes y festivos', especial: true);
         $zona = $this->zona(['slug' => 'kids']);
         $this->producto($zona, 'Kids · 1 hora', ['normal' => 640, 'special' => 800]);
 
         $datos = $this->getJson('/api/v1/prices?lang=es')->assertOk()->json();
 
         $this->assertSame('EUR', $datos['currency']);
+        // ⚠️ `special` entra en `#676` y va SIEMPRE: saber si una tarifa es la especial no puede
+        // depender de que alguien le haya declarado días. `weekdays` sí falta aquí, porque este
+        // fixture no se los da a ninguna.
         $this->assertSame(
-            [['key' => 'normal', 'label' => 'Lunes a jueves'], ['key' => 'special', 'label' => 'Viernes y festivos']],
+            [
+                ['key' => 'normal', 'label' => 'Lunes a jueves', 'special' => false],
+                ['key' => 'special', 'label' => 'Viernes y festivos', 'special' => true],
+            ],
             $datos['rates'],
         );
         $this->assertSame('kids', $datos['products'][0]['zone']);
@@ -170,5 +182,76 @@ class PricesFactsTest extends TestCase
 
         $this->assertStringContainsString('public', $cache);
         $this->assertStringContainsString('max-age=300', $cache);
+    }
+
+    /**
+     * **Los DÍAS de una tarifa viajan, y la derivación también** (`#676`). El censo de `#675` lo
+     * fichó como el hueco que no se ve leyendo: `/schedule.weekly` da horario **sin tarifa** y esto
+     * daba importes **por tarifa sin decir qué día es cuál**. Cada endpoint tenía una mitad.
+     */
+    public function test_a_rate_publishes_the_weekdays_it_claims_and_the_plain_ones_are_derived(): void
+    {
+        $this->tarifa('normal', 'Lunes a jueves');
+        $this->tarifa('special', 'Viernes y findes', especial: true, weekdays: [5, 6, 0]);
+        $this->producto($this->zona(), 'Uno', ['normal' => 500]);
+
+        $datos = $this->getJson('/api/v1/prices?lang=es')->assertOk()->json();
+
+        $especial = collect($datos['rates'])->firstWhere('key', 'special');
+        $this->assertSame([5, 6, 0], $especial['weekdays']);
+
+        // La NORMAL no reclama días: se aplica a lo que sobra, así que no lleva la clave.
+        $normal = collect($datos['rates'])->firstWhere('key', 'normal');
+        $this->assertArrayNotHasKey('weekdays', $normal);
+
+        // Y la derivación llega hecha: lunes a jueves.
+        $this->assertSame([1, 2, 3, 4], $datos['plain_weekdays']);
+    }
+
+    /**
+     * ❗❗ **`special` se lee del DATO, no de la clave — y este caso nació de un superviviente.**
+     *
+     * El arnés mutó `$tarifa->is_special` por `$tarifa->key === 'special'` y **no murió**: todos los
+     * fixtures llamaban «special» a la tarifa especial, así que las dos expresiones daban lo mismo.
+     * Un superviviente es una pregunta sobre el TEST, y la que faltaba es ésta: **una instalación
+     * puede llamar a su tarifa especial como quiera**. Con la deducción por clave, un parque cuya
+     * tarifa se llame `finde` publicaría `special: false` y una landing anunciaría el fin de semana
+     * como día normal.
+     */
+    public function test_special_is_read_from_the_data_and_not_deduced_from_the_key(): void
+    {
+        $this->tarifa('normal', 'Lunes a jueves');
+        // La ESPECIAL con otro nombre: es lo que distingue leer el dato de adivinar por la clave.
+        $this->tarifa('finde', 'Findes y festivos', especial: true, weekdays: [5, 6, 0]);
+        $this->producto($this->zona(), 'Uno', ['normal' => 500]);
+
+        $datos = $this->getJson('/api/v1/prices?lang=es')->assertOk()->json();
+
+        $this->assertTrue(
+            collect($datos['rates'])->firstWhere('key', 'finde')['special'],
+            'una tarifa especial que no se llama «special» sigue siendo especial'
+        );
+        // Y la derivación la cuenta como especial, o la semana saldría mal.
+        $this->assertSame([1, 2, 3, 4], $datos['plain_weekdays']);
+    }
+
+    /**
+     * ❗❗ **`plain_weekdays` AUSENTE no significa «ninguno»: significa «no se puede saber».** El caso
+     * es una tarifa especial ACTIVA que no declara sus días — ahí el producto no puede afirmar
+     * cuáles son normales, y una landing que restara «7 menos los especiales» publicaría una semana
+     * inventada. Por eso la clave falta en vez de viajar como lista vacía.
+     */
+    public function test_an_undecidable_week_omits_the_key_instead_of_guessing(): void
+    {
+        $this->tarifa('normal', 'Lunes a jueves');
+        // Especial, activa y SIN días declarados: el caso indecidible.
+        $this->tarifa('special', 'Viernes y findes', especial: true, weekdays: null);
+        $this->producto($this->zona(), 'Uno', ['normal' => 500]);
+
+        $datos = $this->getJson('/api/v1/prices?lang=es')->assertOk()->json();
+
+        $this->assertArrayNotHasKey('plain_weekdays', $datos);
+        // CONTROL: la tarifa sigue ahí y declarada como especial, o el caso mediría otra cosa.
+        $this->assertTrue(collect($datos['rates'])->firstWhere('key', 'special')['special']);
     }
 }

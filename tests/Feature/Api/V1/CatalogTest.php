@@ -174,6 +174,125 @@ class CatalogTest extends ApiTestCase
         $this->assertArrayNotHasKey('image_url', $vaciada);
     }
 
+    /**
+     * **La ALTURA viaja con el sentido en el nombre, y la frase ya escrita** (`#676`).
+     *
+     * ⚠️⚠️ El caso que de verdad muerde es el del SENTIDO: la misma cifra significa lo contrario
+     * según la columna, así que se comprueban **las dos zonas** —una «a partir de» y otra «hasta»—.
+     * Con `min`/`max` en el contrato, una landing que las intercambiara publicaría lo contrario sin
+     * que nada fallara; por eso el caso asevera la CLAVE, no solo el número.
+     */
+    public function test_a_zone_publishes_its_height_with_the_meaning_in_the_key(): void
+    {
+        $this->zone->update(['height_min_cm' => 130, 'height_max_cm' => null]);
+
+        $desde = $this->getJson(self::ROOT.'/catalog/zones')->assertOk()->assertValidResponse(200)->json('data.0');
+
+        $this->assertSame(130, $desde['height']['from_cm']);
+        $this->assertArrayNotHasKey('up_to_cm', $desde['height'], '«a partir de» no puede salir como «hasta»');
+        $this->assertSame(__('landing.zones.height_from', ['h' => '1,30']), $desde['height']['written']);
+
+        // La otra mitad: la misma cifra, la otra columna, el sentido contrario.
+        $this->zone->update(['height_min_cm' => null, 'height_max_cm' => 130]);
+
+        $hasta = $this->getJson(self::ROOT.'/catalog/zones')->assertOk()->assertValidResponse(200)->json('data.0');
+
+        $this->assertSame(130, $hasta['height']['up_to_cm']);
+        $this->assertArrayNotHasKey('from_cm', $hasta['height']);
+        $this->assertNotSame(
+            $desde['height']['written'],
+            $hasta['height']['written'],
+            'la misma cifra en las dos columnas no puede redactarse igual: significan lo contrario'
+        );
+    }
+
+    /**
+     * **La frase la escribe el PRODUCTO, con el separador decimal del idioma** (`#676`). Es la regla
+     * que `#660` cazó mal escrita en una landing: «1.30» en una página en español.
+     */
+    public function test_the_written_height_follows_the_language(): void
+    {
+        $this->zone->update(['height_min_cm' => 130, 'height_max_cm' => 150]);
+
+        $es = $this->getJson(self::ROOT.'/catalog/zones')->assertOk()->json('data.0.height.written');
+        $en = $this->getJson(self::ROOT.'/catalog/zones', ['Accept-Language' => 'en'])
+            ->assertOk()->json('data.0.height.written');
+
+        $this->assertStringContainsString('1,30', (string) $es, 'en español el decimal va con coma');
+        $this->assertStringContainsString('1.30', (string) $en, 'en inglés el decimal va con punto');
+    }
+
+    /** Sin ninguna altura, el bloque falta ENTERO: no viaja `{}` ni una lista vacía. */
+    public function test_a_zone_without_heights_omits_the_whole_block(): void
+    {
+        $this->zone->update(['height_min_cm' => null, 'height_max_cm' => null, 'age_range' => ['es' => '']]);
+
+        $zona = $this->getJson(self::ROOT.'/catalog/zones')->assertOk()->assertValidResponse(200)->json('data.0');
+
+        $this->assertArrayNotHasKey('height', $zona);
+        $this->assertArrayNotHasKey('age_range', $zona);
+        $this->assertStringNotContainsString('"height"', (string) $this->getJson(self::ROOT.'/catalog/zones')->getContent());
+    }
+
+    /** El rango de edad viaja como TEXTO del panel, tal cual, y falta si se borró. */
+    public function test_the_age_range_travels_as_the_panel_wrote_it(): void
+    {
+        $this->zone->update(['age_range' => ['es' => '+8 años']]);
+
+        $this->getJson(self::ROOT.'/catalog/zones')
+            ->assertOk()
+            ->assertValidResponse(200)
+            ->assertJsonPath('data.0.age_range', '+8 años');
+    }
+
+    /**
+     * **La EDAD y la DURACIÓN que el producto declara, en la LISTA** (`#676`). Van aquí y no solo en
+     * la ficha porque quien las necesita son las tarjetas de una página —la portada pinta seis de un
+     * tirón— y sacarlas de la ficha costaría una petición por tarjeta.
+     *
+     * ⚠️ `duration_min` NO es `period_label`: aquél es el rótulo del panel y éste la cifra.
+     */
+    public function test_a_product_publishes_the_age_and_duration_it_declares(): void
+    {
+        $this->priced(
+            $this->product('Pack Cumple', ['guest_age_min' => 4, 'guest_age_max' => 7, 'duration_min' => 120]),
+            1495,
+        );
+
+        $producto = $this->getJson(self::ROOT.'/catalog/products')
+            ->assertOk()
+            ->assertValidResponse(200)
+            ->json('data.0');
+
+        $this->assertSame(4, $producto['guest_age_min']);
+        $this->assertSame(7, $producto['guest_age_max']);
+        $this->assertSame(120, $producto['duration_min']);
+    }
+
+    /**
+     * **Lo que el producto no declara no viaja** — pero un CERO sí, que es una edad.
+     *
+     * ⚠️⚠️ El segundo caso es el que muerde: con un filtro que mirase «vacío» en vez de `null`, una
+     * edad mínima de 0 —«desde bebés»— desaparecería del catálogo sin que nada fallara.
+     */
+    public function test_an_undeclared_age_is_absent_but_a_zero_still_travels(): void
+    {
+        // ⚠️ `duration_min` a `null` EXPLÍCITO: el ayudante pone 60 por defecto, así que sin esto el
+        // caso mediría «el fixture trae duración», no «lo no declarado no viaja».
+        $producto = $this->priced($this->product('Entrada 1 h', ['duration_min' => null]), 900);
+
+        $sinDeclarar = $this->getJson(self::ROOT.'/catalog/products')->assertOk()->json('data.0');
+
+        $this->assertArrayNotHasKey('guest_age_min', $sinDeclarar);
+        $this->assertArrayNotHasKey('duration_min', $sinDeclarar);
+
+        $producto->update(['guest_age_min' => 0]);
+
+        $conCero = $this->getJson(self::ROOT.'/catalog/products')->assertOk()->json('data.0');
+
+        $this->assertSame(0, $conCero['guest_age_min'], 'un 0 es una edad, no un «no hay»');
+    }
+
     /** El catálogo es el escaparate: se mira sin cuenta, igual que en la web. */
     public function test_the_catalog_is_public(): void
     {

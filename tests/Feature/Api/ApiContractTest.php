@@ -52,6 +52,9 @@ class ApiContractTest extends TestCase
         // ⚠️ `written` es la dirección ya compuesta (`#650`) y falta cuando no hay ninguna línea, igual
         // que las líneas mismas: no se puede escribir lo que no existe.
         'SiteFacts.address' => ['line1', 'line2', 'city', 'maps_url', 'maps_embed_url', 'written'],
+        // ⚠️ `topics` NO entra aquí (`#676`): va siempre. Es un vocabulario del PRODUCTO, no un
+        // campo que la instalación rellene, así que no puede faltar — y si faltara, una landing no
+        // sabría qué asuntos existen y el `in:` del formulario le rechazaría cualquiera que inventase.
         'SiteFacts.contact' => ['email', 'phone', 'whatsapp'],
         'SiteFacts.social' => ['instagram', 'tiktok', 'feed_embed_url', 'google_place_id'],
         'SiteFacts.legal' => ['jurisdiction', 'fiscal_address'],
@@ -66,6 +69,14 @@ class ApiContractTest extends TestCase
         'Schedule.special_days.items' => ['opens_at', 'closes_at', 'note', 'rate_label'],
         // El RESUMEN de las normas (`#653`) falta con la tabla vacía: no se resume lo que no existe.
         'Rules' => ['summary'],
+        // ❗❗ `plain_weekdays` es opcional con un motivo que NO es «no lo rellenaron» (`#676`): su
+        // ausencia significa **«no se puede saber»** —una tarifa especial activa sin días
+        // declarados—, y ésa es justo la información que una lista vacía destruiría. Emitirlo
+        // siempre obligaría a elegir entre mentir con `[]` o inventar la semana.
+        'Prices' => ['plain_weekdays'],
+        // Y de una tarifa, los días que reclama: la NORMAL no reclama ninguno —se aplica a lo que
+        // sobra—, así que exigirlos obligaría a declararle una semana que no tiene.
+        'Prices.rates.items' => ['weekdays'],
         // Y de una norma: el momento —el negocio puede no haberla situado— y los dos textos largos. El
         // nombre va siempre: una norma sin nombre no es una norma.
         'Rules.rules.items' => ['moment', 'description', 'reason'],
@@ -101,13 +112,21 @@ class ApiContractTest extends TestCase
         // escribir una descripción por zona y a subir una foto por producto para que su API validara.
         // ⚠️ La identidad de la zona —`id`, `slug`, `name`— NO entra aquí: una zona sin nombre no es una zona,
         // y el `slug` es la clave del deep-link.
-        'CatalogZoneDetail' => ['description', 'image_url'],
+        // ⚠️ `height` y `age_range` entran en `#676` y son opcionales por el mismo principio: una zona
+        // sin restricción de altura no emite un bloque vacío. Dentro de `height`, las dos cifras son
+        // excluyentes en la práctica —«a partir de» o «hasta»—, así que exigir las dos obligaría a
+        // inventar una; `written` falta solo si no hay ninguna, y entonces el bloque tampoco está.
+        'CatalogZoneDetail' => ['description', 'image_url', 'age_range', 'height'],
+        'CatalogZoneDetail.height' => ['from_cm', 'up_to_cm', 'written'],
         // ⚠️ El reparto es asimétrico A PROPÓSITO y por eso las dos entradas dicen cosas distintas: la FOTO va
         // en la lista (un catálogo se recorre mirándolas) y la DESCRIPCIÓN solo en el detalle (es prosa, se lee
         // al abrir). Medido el 19-09: la descripción son ~340 bytes en las 6 que la tienen, sobre un payload de
         // 4.079 bytes con 24 productos.
-        'CatalogProduct' => ['image_url'],
-        'CatalogProductDetail' => ['image_url', 'description'],
+        // ⚠️ La edad y la duración entran en `#676` y son opcionales porque **el producto puede no
+        // declararlas**: medido, de 24 vendibles solo 2 traen edad y 12 duración. Exigirlas obligaría
+        // a inventar una edad para una entrada suelta.
+        'CatalogProduct' => ['image_url', 'guest_age_min', 'guest_age_max', 'duration_min'],
+        'CatalogProductDetail' => ['image_url', 'description', 'guest_age_min', 'guest_age_max', 'duration_min'],
         // **La prueba social** (F5 · T6, `#646`). El sobre puede venir VACÍO —no hay cifra sostenible— y por
         // eso `rating` es opcional; exigirlo obligaría a toda instalación a tener reseñas para que su API
         // validara, y a inventar un `0` cuando no las tiene. ⚠️ Dentro de la cifra, en cambio, solo `url` es
