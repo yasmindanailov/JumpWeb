@@ -29,7 +29,9 @@ import { installShell } from './shell.js';
 export function installCajon({ scrollLock, win = window, doc = document }) {
     const cajon = createCajonController({ scrollLock });
 
-    win.JumpWeb = { ...(win.JumpWeb ?? {}), cajon };
+    // `track` es el BUZÓN hasta que llegue el tracker (abajo): va ANTES de `start()`, que anuncia el cajón que
+    // nace abierto, y eso es justo lo primero que no puede perderse.
+    win.JumpWeb = { ...(win.JumpWeb ?? {}), cajon, track: trackMailbox(doc) };
 
     // ⚠️ Los dos se piden con una FUNCIÓN y no capturan el cajón: con Alpine, `win.JumpWeb.cajon` pasa a ser el
     // proxy reactivo del store tras `alpine:init`, y quien se hubiera quedado con el primero escribiría en el
@@ -43,6 +45,40 @@ export function installCajon({ scrollLock, win = window, doc = document }) {
     installShell(anfitrion, doc);
 
     cajon.start();
+    loadTracker(win, doc);
 
     return cajon;
+}
+
+/**
+ * **El buzón de la analítica** (`docs/specs/analitica.md` §4.2). `track.js` llega DIFERIDO, y lo que el cajón
+ * anuncie antes —que nace abierto, el primer paso de su motor— o lo que alguien quiera contar con
+ * `JumpWeb.track()` no puede perderse: se guarda aquí y el tracker lo vacía, en orden, al instalarse. En cuanto
+ * sustituye a esta función por la suya (que no lleva `pending`), el buzón deja de recoger.
+ */
+function trackMailbox(doc) {
+    const pending = [];
+    const stub = Object.assign((name, props) => { pending.push([name, props]); }, { pending });
+
+    for (const type of ['open', 'step', 'purchased', 'close']) {
+        doc.addEventListener(`jw:cajon:${type}`, (e) => { if (stub.pending) pending.push([e.type, e.detail]); });
+    }
+
+    return stub;
+}
+
+/**
+ * El tracker se trae tras `load` y en un rato ocioso: la página no espera a la analítica, y así el trozo no pesa
+ * en la entrada de ninguna de las dos páginas que montan el cajón (`SidebarBundleBudgetTest` le pone su techo).
+ * Que no cargue no es un fallo del cajón: se calla.
+ */
+function loadTracker(win, doc) {
+    const bring = () => {
+        const idle = (fn) => (win.requestIdleCallback ? win.requestIdleCallback(fn) : win.setTimeout(fn, 1));
+
+        idle(() => import('./track.js').then((m) => m.installTracker({ win, doc })).catch(() => {}));
+    };
+
+    if (doc.readyState === 'complete') bring();
+    else win.addEventListener('load', bring, { once: true });
 }

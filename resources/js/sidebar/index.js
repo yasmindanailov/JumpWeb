@@ -11,6 +11,7 @@ import { useAccountContextStore } from './stores/accountContext.js';
 import { watchTabReturn } from './account/tab-return.js';
 import { useCartStore } from './stores/cart.js';
 import { takeOver } from '../ui/account-host.js';
+import { cajonHost } from './host-bridge.js';
 
 /**
  * El ENTRY del cajón SPA (Fase 4 · paso 4.1, `sidebar-spa.md` §4.7).
@@ -65,7 +66,10 @@ let app = null;
 export function mount(el, boot = {}) {
     if (app) return app._jumpweb;
 
-    const machine = createMachine();
+    // Cada transición se le cuenta al ANFITRIÓN (`step_entered`, analítica §4.2), que es quien le pone nombre:
+    // el motor no conoce el vocabulario del paquete, igual que con `purchased`. Sin anfitrión (un test), nada.
+    // Una «transición» al mismo paso —`restart()` ya en el catálogo— no es un paso: no se cuenta.
+    const machine = createMachine({ onChange: (to, from) => { if (to !== from) cajonHost()?.enteredStep?.(from, to); } });
     const pinia = createPinia();
 
     app = createApp(Sidebar, {

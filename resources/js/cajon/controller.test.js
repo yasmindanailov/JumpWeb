@@ -44,7 +44,7 @@ describe('el cajón sin framework', () => {
 
         assert.equal(cajon.isOpen, true);
         assert.deepEqual(llaves, ['+sidecart']);
-        assert.deepEqual(eventos, [{ tipo: 'jw:cajon:open', detalle: {} }]);
+        assert.deepEqual(eventos, [{ tipo: 'jw:cajon:open', detalle: { reason: 'user', product: undefined } }]);
     });
 
     test('cerrar suelta la llave, lo anuncia y NO recarga si la sesión no cambió', () => {
@@ -95,6 +95,43 @@ describe('el cajón sin framework', () => {
 
         assert.equal(cajon.isOpen, true);
         assert.equal(cajon.accountZone, 'orders');
+    });
+
+    /**
+     * T1b de la analítica (`docs/specs/analitica.md` §4.2): el cajón que NACE abierto no pasa por `open()`, así
+     * que `start()` anuncia la apertura con su motivo — y el motivo lo dice lo que el servidor dejó en la página.
+     */
+    test('nacer abierto se anuncia con su motivo: enlace profundo, puerta de cuenta o vuelta de la pasarela', () => {
+        montar({ dataset: { purchaseOpen: '1' } }).start();
+        assert.deepEqual(eventos.at(-1), { tipo: 'jw:cajon:open', detalle: { reason: 'deeplink' } });
+
+        montar({ dataset: { purchaseOpen: '1', accountZone: 'orders' } }).start();
+        assert.deepEqual(eventos.at(-1), { tipo: 'jw:cajon:open', detalle: { reason: 'door' } });
+
+        montar({ dataset: { purchaseOpen: '1' }, hueco: { dataset: { boot: JSON.stringify({ outcome: 'confirmed' }) } } }).start();
+        assert.deepEqual(eventos.at(-1), { tipo: 'jw:cajon:open', detalle: { reason: 'return' } });
+
+        eventos = [];
+        montar().start();
+        assert.deepEqual(eventos, [], 'cerrado al nacer: nada que anunciar');
+    });
+
+    test('abrir EN un producto lo lleva en el anuncio; abrir en una zona, no', () => {
+        const cajon = montar();
+
+        cajon.openWith({ type: 'product', id: 395 });
+        assert.deepEqual(eventos.at(-1).detalle, { reason: 'user', product: 395 });
+
+        cajon.openWith({ type: 'zone', slug: 'kids' });
+        assert.deepEqual(eventos.at(-1).detalle, { reason: 'user', product: undefined });
+    });
+
+    test('el motor cuenta cada paso al anfitrión y éste lo anuncia', () => {
+        const cajon = montar();
+
+        cajon.enteredStep(1, 2);
+
+        assert.deepEqual(eventos, [{ tipo: 'jw:cajon:step', detalle: { from: 1, to: 2 } }]);
     });
 
     /** La zona de cuenta tiene UN consumidor y se vacía: si no, cerrar y reabrir devolvería siempre a ella. */

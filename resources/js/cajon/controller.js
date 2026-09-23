@@ -138,9 +138,19 @@ export function createCajonController({ scrollLock }) {
         },
         /** Abre el cajón pidiendo algo: `{ type: 'packs' }` · `{ type: 'zone', slug }` · `{ type: 'product', id }`. */
         openWith(intent) {
-            this.open();
+            // El producto viaja en el anuncio de apertura (`drawer_opened`, analítica §4.2): es el único dato
+            // de la intención que una medida de embudo quiere, y solo lo lleva quien abre EN un producto.
+            this.open(intent?.type === 'product' ? { product: intent.id } : {});
             this.intent = intent;
             this.flushIntent();
+        },
+        /**
+         * **El motor cuenta cada paso del embudo** (`step_entered`, analítica §4.2): la máquina sabe de dónde y
+         * a dónde, y el anfitrión le pone nombre — el vocabulario de eventos es del paquete, como con
+         * `purchased()`. El tracker lo oye (o el buzón, si aún no llegó) y una landing que mida su embudo, igual.
+         */
+        enteredStep(from, to) {
+            announce('step', { from, to });
         },
         flushIntent() {
             if (! this.intent || ! this.intentAdapter) return;
@@ -308,13 +318,23 @@ export function createCajonController({ scrollLock }) {
             if (! this.isOpen) return null;
 
             scrollLock.lock('sidecart');
+            // Y se ANUNCIA por qué nació abierto (`drawer_opened`, analítica §4.2), que `open()` no va a contar:
+            // la vuelta de la pasarela trae su desenlace en el `data-boot`, una puerta de cuenta trae su zona y
+            // lo demás es el enlace profundo (`/entradas`).
+            const outcome = inlineBoot(document.getElementById('sidecart-spa'))?.outcome;
+
+            announce('open', { reason: outcome ? 'return' : (this.accountZone ? 'door' : 'deeplink') });
 
             return this.bootSpaEngine();
         },
-        open() {
+        /**
+         * @param {{product?: number}} [detail]  lo que se cuenta con la apertura (`drawer_opened`); un clic
+         *   de la landing no pasa nada, y `openWith()` pasa el producto cuando abre en uno.
+         */
+        open(detail = {}) {
             this.isOpen = true;
             scrollLock.lock('sidecart');
-            announce('open');
+            announce('open', { reason: 'user', product: detail?.product });
             // ⚠️ Al abrir se RELEE el estado de las reservas: el motor SPA se monta una sola vez por
             // carga de página, así que sin esto la pausa solo entraría al recargar. En la primera
             // apertura el propio montaje ya la pide, y `refreshStatus` es un no-op sobre un motor que

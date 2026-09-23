@@ -110,7 +110,8 @@ class SidebarSeamTest extends TestCase
         // pasa dentro del cajón sin espiar su DOM. `purchased` es además el que cuelga de un cable largo —el
         // motor lo publica por `cajonHost()` y lo anuncia el controlador—, así que se exigen los DOS extremos:
         // con uno solo, una landing que mida su embudo deja de contar conversiones y nada falla.
-        foreach (['jw:cajon:${name}', "announce('open')", "announce('close'", "announce('mode'", "announce('purchased'"] as $evento) {
+        // `open` va con su detalle desde la T1b de la analítica (`reason`, `product`): se ancla como sus hermanos.
+        foreach (['jw:cajon:${name}', "announce('open'", "announce('close'", "announce('mode'", "announce('purchased'"] as $evento) {
             $this->assertStringContainsString($evento, $store, "el controlador del cajón ya no anuncia «{$evento}»");
         }
 

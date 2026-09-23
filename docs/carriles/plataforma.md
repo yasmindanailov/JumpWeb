@@ -5,7 +5,7 @@
 > **640–669 AGOTADA con `#669`** → **670–699 EN CURSO** · Último usado: **`#678`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, **`docs/specs/analitica.md`** · Actualizado: **2026-09-23**
 > (**segunda sesión del 23-09**: `#677` los TRAMOS DE GRUPO y el menú COMPLETO, contrato **1.17.0**; `#678` la
-> dirección de la ANALÍTICA, decidida por el owner, con su spec).
+> dirección de la ANALÍTICA, decidida por el owner, con su spec; T1a y T1b del libro hechas).
 > ⚠️ **El techo de 32 KB apretó SIETE veces el 23-09** y se resolvió siempre mudando, nunca subiéndolo (es
 > del owner): **se muda, no se raspa** — y si vuelve a pasar tres veces seguidas, llévaselo con la medida
 > como hizo el SPA en `#724`.
@@ -72,13 +72,17 @@
    cada corrección delante del texto que corrige). Lo que cambió de fondo: el libro tiene DOS regímenes (el
    AGREGADO es exento; el cruce cookie↔cuenta va bajo la categoría `analytics`), tres hechos de dinero no eran
    transiciones de `Order` (cada uno con su fuente real), el sello nace en `creating` desde
-   `AttributionContext`, y la ingesta sale del `throttle:api` y del stateful. ✅ **T1a hecha (23-09)**: el
-   núcleo del libro —tablas y poda, cookie, contexto, sello en `creating`, ingesta stateless con limitador
+   `AttributionContext`, y la ingesta sale del `throttle:api` y del stateful. ✅ **T1a y T1b hechas (23-09)**:
+   el núcleo del libro —tablas y poda, cookie, contexto, sello en `creating`, ingesta stateless con limitador
    propio, hechos de servidor por su fuente, contrato **1.18.0**—, en `Platform` (el grafo de fronteras no
-   cambia). **Lo siguiente: T1b** (`track.js` diferido con techo propio y los eventos del cajón: `machine.js`,
-   `controller.js`, `api.js` — avisado al SPA abajo), después T1c (UTM antes de firmar), T1d (el `Select` del
-   pedido manual), T1e (`anonymize()` y export), y el cierre con `mutar-analitica.sh`, la sonda y
-   `trustProxies`. Todo en la spec **§4.8**. `[DECIDIDO owner]` 23-09: todo con la v2.0.0 y sin la pregunta
+   cambia); y el emisor: `cajon/track.js` DIFERIDO (2,3 KiB gzip, techo 3 en `SidebarBundleBudgetTest`, con
+   BUZÓN en `index.js` para lo que pase antes de que llegue), el cajón cuenta `drawer_opened` (también al
+   nacer, con motivo), `step_entered` (la máquina avisa con el paso anterior) y `drawer_closed`; `api.js`
+   cuenta sus fallos por `jw:api:failed`; `JumpWeb.track(name, props)` es la puerta de los stores (SPA).
+   Verificado en NAVEGADOR con `scripts/sonda-analitica.mjs` (`SONDA_BASE=http://localhost`, sin puente):
+   nueve secciones, cajón abierto en un producto y cerrado, `/entradas` naciendo abierto, 16/16 aceptados en
+   UNA sesión marcada `is_bot`. **Lo siguiente: T1c** (UTM antes de firmar), T1d (el `Select` del pedido manual), T1e (`anonymize()` y
+   export), y el cierre con `mutar-analitica.sh`, la sonda y `trustProxies`. Todo en la spec **§4.8**. `[DECIDIDO owner]` 23-09: todo con la v2.0.0 y sin la pregunta
    tras pagar; `[PENDIENTE: asesoría]` los tres puntos de la spec §7.
    ⚠️⚠️ **Lo que dejaron los platos y vale para lo que venga** (detalle en la spec §4.1 y §4.1.ter): si
    el dato tiene **servicio de dominio**, el recurso **delega** · el filtro de «lo que no viaja» va
@@ -140,6 +144,10 @@ dueño es el carril de la web/reseñas—) ·
 
 ## Trampas de este carril
 
+- 🪤 **Un teléfono se cuenta por CIFRAS, no por caracteres** (T1b): la regex de PII de T1a tomaba `2026-09-23`
+  por un teléfono y habría rechazado todo `date_chosen` y toda ruta con fecha; lo cazó el primer test de
+  `request_failed`. Y en `track.js`, **el envío por número de eventos tiene que retirar el temporizador**: si
+  no, el reintento con espera doblada no se programa nunca (`schedule` no dobla un temporizador vivo).
 - 🪤 **El dispatcher instancia un observador `Clase@método` EN CADA evento** (T1a de la analítica): un
   estado capturado en `saving` no llega al `saved` salvo que el observador sea `singleton()`. Medido en
   tinker: `order_created` entraba y `order_cancelled` no. Y **`postJson` no manda cookies sin
@@ -249,6 +257,11 @@ dueño es el carril de la web/reseñas—) ·
   e `index.js` (`drawer_opened`/`drawer_closed` con el paso) y `api.js` (la cabecera `X-Visitor` solo fuera
   del mismo origen). Lo mínimo, con sus tests, sin mover un píxel. Si preferís emitirlo vosotros desde
   vuestro carril, decidlo y os paso el contrato de eventos (spec §4.2).
+  ✅ **T1b hecha (23-09)**: tocados `machine.js` (`onChange(step, previous)`), `sidebar/index.js` (la máquina
+  avisa al anfitrión), `cajon/controller.js` (`open(detail)`, `enteredStep()`, `start()` anuncia), `cajon/index.js`
+  (buzón + `import('./track.js')`) y `api.js` (`jw:api:failed`), con sus tests. **Lo vuestro, cuando queráis**:
+  los eventos de los stores (`product_chosen`, `date_chosen`, `line_added`, `identify_started`, `pay_started`…)
+  por `window.JumpWeb.track(name, props)` con las `props` de `Contract::EVENTS` — cualquier otra se descarta.
 - **WEB**: la T1 mete `track.js` dentro de `/cajon/paquete.js` (la landing no añade código) y atributos
   `data-track` en las vistas de la instancia; la T3 toca el banner (`layout.blade.php`, `app.js`,
   `consent-frame`), `SecurityHeaders` (orígenes por ajuste) y los textos de la política en tres idiomas, y

@@ -128,9 +128,11 @@ class AccountDoorWiringTest extends TestCase
             'abrirían el cajón en el catálogo de compra, y los 8 correos ya entregados con ellas.'
         );
 
-        // El bloque de `bootSpaEngine()`, que es por donde pasan los DOS caminos.
+        // El bloque de `bootSpaEngine()`, que es por donde pasan los DOS caminos: hasta la DEFINICIÓN de
+        // `open(` (a la sangría de los métodos), sea cual sea su firma — desde la T1b de la analítica lleva
+        // el detalle de la apertura, y anclar en `open() {` dejaba el bloque VACÍO y la guarda en rojo.
         $boot = mb_substr($alpine, (int) mb_strpos($alpine, 'async bootSpaEngine()'));
-        $boot = mb_substr($boot, 0, (int) mb_strpos($boot, 'open() {'));
+        $boot = mb_substr($boot, 0, (int) mb_strpos($boot, "\n        open("));
 
         $this->assertStringContainsString(
             'this.applyAccountZone(this.spaHandle)', $boot,

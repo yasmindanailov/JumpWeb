@@ -25,10 +25,9 @@
   - ⚠️ **`/events` sale del `throttle:api` y del stateful** (`withoutMiddleware`): apilado se come el embudo y
     `sendBeacon` vuelve 419. Un nombre de SERVIDOR desde el cliente se rechaza.
   - ⚠️ **`nullOnDelete` no se dispara nunca**: `anonymize()` y el export cubren las tablas nuevas.
-- **Estado**: T0 spec v2 ✅ · T1→T5 ⬜ (§4.8). `[DECIDIDO owner]` 23-09: todo con la v2.0.0, sin la pregunta
+- **Estado**: T0 ✅ · T1a·T1b ✅ · T1c→T5 ⬜ (§4.8). `[DECIDIDO owner]` 23-09: todo con la v2.0.0, sin la pregunta
   tras pagar. `[PENDIENTE: asesoría]`: los tres puntos de §7.
-- **Invariantes**: `RGPD-01`, `RGPD-05`, `SEC-01`, `PAY-14`, `SUITE-01`; propuesto **`RGPD-07`** (`RGPD-06`
-  ya existe). Dinero: ninguno cambia; `redsys:verify-concurrency` tras T1.
+- **Invariantes**: `RGPD-01`, `RGPD-05`, `SEC-01`, `PAY-14`, `SUITE-01`; propuesto **`RGPD-07`**. Dinero: ninguno cambia; `redsys:verify-concurrency` tras T1.
 
 ## 1. Contexto y problema — MEDIDO (2026-09-23)
 
@@ -211,12 +210,17 @@ techo propio; el contrato cierra NOMBRES (no `props`) en el yaml; `data-jw-track
   en sus presupuestos; **techo propio en `SidebarBundleBudgetTest`** (≤ 3 KiB min+gzip), y el JS lleva solo
   los nombres que EMITE, no el contrato. Cola en `sessionStorage`, envío cada 5 s o 10 eventos, reintento con
   espera exponencial ante 429/5xx/red (máximo 3) y `batch_dropped(count, status)` en el siguiente lote;
-  `fetch(keepalive)` o `sendBeacon` con `Blob` JSON al salir (la ruta es stateless: sin CSRF). No emite si
-  `navigator.webdriver`. Captura sola: `page_viewed` (con entrada, referer, `utm_*`, `ref` y click ids en la
+  `fetch(keepalive)` o `sendBeacon` con `Blob` JSON al salir (la ruta es stateless: sin CSRF). Con
+  `navigator.webdriver` emite igual, marcado en `meta.webdriver` (el servidor lo guarda `is_bot`): así la sonda
+  verifica el camino entero. Captura sola: `page_viewed` (con entrada, referer, `utm_*`, `ref` y click ids en la
   primera vista), `section_viewed` (`IntersectionObserver`, umbral ≥ 0,5 y 500 ms), `request_failed` (desde
   `result(false, …)` de `api.js`: ruta normalizada, `status`, `offline`), `client_error` (hash, ≤ 5 por
   sesión), `consent_shown`/`consent_updated`. Clics que no abren el cajón por **`data-jw-track="call_clicked"`**
-  (el prefijo del paquete, documentado en `declarative.js`); los que lo abren ya producen `drawer_opened`.
+  (el prefijo del paquete, documentado en `declarative.js`; en un `<form>`, al enfocarlo, una vez; los enlaces
+  `tel:`, de WhatsApp y de mapas se reconocen SIN atributo); los que lo abren ya producen `drawer_opened`.
+  Lo que pase antes de que el trozo llegue —el cajón que nace abierto, su primer paso— lo guarda un BUZÓN en
+  `JumpWeb.track.pending` (`index.js`) y el tracker lo vacía al instalarse; `JumpWeb.track(name, props)` es la
+  puerta para los eventos que emiten los stores del motor (`product_chosen`, `date_chosen`…, carril del SPA).
 - **El cajón**: `drawer_opened` lo emite el motor **también al nacer abierto** (`start()`, con `reason:
   user|deeplink|return|restored`); `step_entered(from, to)` desde `machine.js`; `drawer_closed(step, outcome,
   reloading)`; nada en `REDIRECTING` al descargar. **El abandono no es un evento**: lo deriva el servidor
@@ -358,7 +362,7 @@ gana un bloque `analytics` (primera fuente, resumen de sesiones, atribución de 
 | | Tanda | Entrega | Verificación (§6) |
 |---|---|---|---|
 | T0 | ✅ spec v2, el contrato de eventos, `#678` y la revisión (§7.1) | | docs-check |
-| T1 | el libro, en cinco sub-tandas: **T1a ✅ (23-09)** tablas y poda, cookie, `ResolveVisitor` y `AttributionContext`, la ingesta stateless con su limitador, los hechos de servidor por fuente, el sello en `creating`, `robots.txt`, contrato **1.18.0** (`POST /events`) · **T1b** `track.js` diferido y el cajón · **T1c** UTM antes de firmar en los correos · **T1d** el `Select` de fuente del pedido manual · **T1e** `anonymize()` y export · y al cierre el arnés, la sonda y `trustProxies` acotado | contrato **1.18.0** (`experiments` en `/sidebar/session` puede esperar a T5) | tests + arnés + `redsys:verify-concurrency` + sonda |
+| T1 | el libro, en cinco sub-tandas: **T1a ✅ (23-09)** tablas y poda, cookie, `ResolveVisitor` y `AttributionContext`, la ingesta stateless con su limitador, los hechos de servidor por fuente, el sello en `creating`, `robots.txt`, contrato **1.18.0** (`POST /events`) · **T1b ✅ (23-09)** `track.js` diferido (2,3 KiB gzip, techo 3) y el cajón · **T1c** UTM antes de firmar en los correos · **T1d** el `Select` de fuente del pedido manual · **T1e** `anonymize()` y export · y al cierre el arnés, la sonda y `trustProxies` acotado | contrato **1.18.0** (`experiments` en `/sidebar/session` puede esperar a T5) | tests + arnés + `redsys:verify-concurrency` + sonda |
 | T1·bis | migración de historia: «anterior a la medición», arranque de cuadros en la fecha del despliegue, `model:prune` y recuento de `deploy.sh` 6→7, ensayo en staging con `schedule:run` a mano, `POLICY_VERSION` la misma noche | | ensayo |
 | T2 | el cuadro de mando, `analytics_daily`, `ad_spend`, permisos | | tests + presupuesto de consultas + `EXPLAIN` |
 | T3a | categorías sin quemar, banner, política por sección, aviso a cuentas, `PUT /me/analytics`, driver y PostHog con `Drivers::csp()` | `POLICY_VERSION` | tests + sonda (cero terceros sin consentir; con consentimiento, sin `securitypolicyviolation`) |
@@ -388,7 +392,7 @@ gana un bloque `analytics` (primera fuente, resumen de sesiones, atribución de 
   en 200**; `X-Forwarded-For` falsa no estrena cubo; el mismo lote dos veces → una fila; cookie de 13 meses sin
   renovación y acuñada en el `202`; UA de Googlebot → `is_bot`; sesión de `staff` → `is_internal`; `X-Visitor`
   sin Bearer → ignorada.
-- `AnalyticsContractTest` (T1a ✅; PHP↔JS en T1b): PHP↔`enum` y PHP↔JS, con mutante que añade un evento solo en una.
+- `AnalyticsContractTest` (T1a ✅, T1b ✅): PHP↔`enum` y PHP↔JS (`track.js` y los `data-jw-track` de las vistas), con mutante que añade un evento solo en una.
 - `AttributionSealTest` (T1a ✅): el pedido se escribe con UN INSERT que ya lleva el sello (`DB::listen`) y
   ningún UPDATE posterior; pedido manual desde un navegador con `visitor_id` y `utm_source=google` → sello
   `panel/phone`; sin contexto → `panel/unknown`; contexto que lanza → el pedido nace igual, sin sello, con
@@ -411,7 +415,8 @@ gana un bloque `analytics` (primera fuente, resumen de sesiones, atribución de 
 - `machine.test.js`, `controller.test.js`: transiciones emiten `step_entered`; `drawer_opened` al nacer
   abierto; el banner se suprime con el cajón abierto; `SidebarBundleBudgetTest` con el techo de `track.js`.
 - Arnés `scripts/mutar-analitica.sh` `(futuro)` con las diez reglas de `/mutar`.
-- **En vivo**, con la sonda: eventos de landing, cajón y una compra en sandbox (marcada `is_internal`); el
+- **En vivo**, con la sonda (`scripts/sonda-analitica.mjs`, T1b ✅: landing, secciones, cajón, cookie, beacon y
+  segunda vista; los lotes van con `meta.webdriver` y la sesión queda `is_bot`): además, una compra en sandbox (marcada `is_internal`); el
   registro de red **sin ningún dominio de tercero sin consentir**, y con consentimiento **sin ningún
   `securitypolicyviolation`**; el lote de salida llega tras cerrar la pestaña; en la página `standalone` no
   carga ningún driver; LCP con y sin consentimiento; `redsys:verify-concurrency` en verde tras T1.

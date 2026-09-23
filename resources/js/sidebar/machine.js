@@ -177,7 +177,9 @@ export function isOutcome(step) {
 /**
  * Crea la máquina. Estado plano y transiciones explícitas; sin reactividad, que la pone el store.
  *
- * @param {{step?: number, onChange?: (step: number) => void}} options
+ * @param {{step?: number, onChange?: (step: number, previous: number) => void}} options
+ *   `onChange` recibe también el paso ANTERIOR: es lo que `step_entered(from, to)` cuenta (analítica §4.2), y
+ *   la máquina es el único sitio que lo sabe sin guardarlo dos veces.
  */
 export function createMachine({ step = STEPS.CATALOG, onChange = null } = {}) {
     let current = step;
@@ -185,8 +187,11 @@ export function createMachine({ step = STEPS.CATALOG, onChange = null } = {}) {
     /** Intención de entrada pendiente (`{type:'packs'}` · `{type:'zone', slug}`), si llegó antes de estar listos. */
     let pendingIntent = null;
 
-    const notify = () => {
-        if (onChange) onChange(current);
+    const move = (to) => {
+        const previous = current;
+
+        current = to;
+        if (onChange) onChange(current, previous);
     };
 
     return {
@@ -213,8 +218,7 @@ export function createMachine({ step = STEPS.CATALOG, onChange = null } = {}) {
         go(to) {
             if (! canGo(current, to)) return false;
 
-            current = to;
-            notify();
+            move(to);
 
             return true;
         },
@@ -225,8 +229,7 @@ export function createMachine({ step = STEPS.CATALOG, onChange = null } = {}) {
          * los intermedios porque el navegador se fue a otro dominio y volvió.
          */
         enter(to) {
-            current = to;
-            notify();
+            move(to);
         },
 
         /** El desenlace del pago, si lo hay, decide dónde abre el cajón. */

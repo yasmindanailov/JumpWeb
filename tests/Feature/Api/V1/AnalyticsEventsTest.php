@@ -284,4 +284,17 @@ class AnalyticsEventsTest extends ApiTestCase
         // Y el cubo del embudo, intacto: la misma IP sigue leyendo el catálogo.
         $this->getJson(self::ROOT.'/catalog/zones')->assertOk();
     }
+
+    /** La ruta que falló es una ruta (T1b): se enmascara como la del evento, o cada pedido sería un valor distinto. */
+    public function test_the_failed_route_is_masked_like_any_route(): void
+    {
+        $this->lote([
+            $this->event('request_failed', ['route' => '/orders/R-L6UTIA9Z8X7W6V5U4T3S', 'status' => 0, 'offline' => true]),
+            $this->event('request_failed', ['route' => '/availability/395/2026-09-23', 'status' => 500, 'offline' => false]),
+        ])->assertStatus(202)->assertJsonPath('accepted', 2);
+
+        $routes = AnalyticsEvent::query()->where('name', 'request_failed')->orderBy('event_id')->get()->map(fn (AnalyticsEvent $e): array => [$e->props['route'], $e->props['status'], $e->props['offline']])->all();
+
+        $this->assertEqualsCanonicalizing([['/orders/{token}', 0, true], ['/availability/{n}/2026-09-23', 500, false]], $routes);
+    }
 }

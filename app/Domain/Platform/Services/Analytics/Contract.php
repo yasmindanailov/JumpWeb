@@ -90,8 +90,13 @@ final class Contract
      * Valores con pinta de correo o de teléfono, en `props`, `route` o `referrer`: se vacían. Una expresión
      * no es una garantía —por eso la lista de claves va delante—, pero es la red que caza el correo que
      * viaja en la query de un enlace de recuperación (spec §7.1, seguridad-2).
+     *
+     * ⚠️ Un teléfono son **nueve cifras o más** (con separadores entre medias), y se cuenta por CIFRAS: la
+     * primera versión contaba caracteres y tomaba una fecha ISO —`2026-09-23`, ocho cifras y dos guiones— por
+     * un teléfono, con lo que **todo `date_chosen` y toda ruta con fecha se habrían rechazado como PII** (lo
+     * cazó el primer test de `request_failed` en la T1b, no la revisión).
      */
-    public const PII_VALUE_RE = '/[\w.+-]+@[\w-]+\.[\w.-]{2,}|(?<!\d)(?:\+|00)?\d[\d .\-()]{7,}\d(?!\d)/u';
+    public const PII_VALUE_RE = '/[\w.+-]+@[\w-]+\.[\w.-]{2,}|(?<!\d)(?:\+|00)?(?:\d[ .\-()]*){9,}(?!\d)/u';
 
     /** Longitud máxima de un valor escalar de `props` o de `route`. */
     public const MAX_VALUE_LENGTH = 255;

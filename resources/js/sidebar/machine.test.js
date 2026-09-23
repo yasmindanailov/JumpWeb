@@ -200,6 +200,18 @@ describe('avisos de cambio', () => {
 
         assert.deepEqual(seen, [STEPS.DATE, STEPS.CONFIRMED]);
     });
+
+    /** T1b de la analítica: `step_entered(from, to)` sale de aquí, y el paso anterior solo lo sabe la máquina. */
+    test('el aviso lleva también el paso ANTERIOR, tanto al ir como al entrar desde fuera', () => {
+        const seen = [];
+        const machine = createMachine({ onChange: (step, previous) => seen.push([previous, step]) });
+
+        machine.go(STEPS.DATE);
+        machine.enterOutcome('failed');
+        machine.restart();
+
+        assert.deepEqual(seen, [[STEPS.CATALOG, STEPS.DATE], [STEPS.DATE, STEPS.DECLINED], [STEPS.DECLINED, STEPS.CATALOG]]);
+    });
 });
 
 /**

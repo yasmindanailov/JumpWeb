@@ -71,6 +71,17 @@ class SidebarBundleBudgetTest extends TestCase
     private const SALTA_CHUNK_MAX_KB = 14;
 
     /**
+     * Techo del TRACKER (`cajon/track.js`, T1b de `specs/analitica.md` §4.2, `#678`), y es el ÚNICO de este
+     * fichero que se mide **min+gzip**: la spec lo fijó así (≤ 3 KiB) porque es lo que viaja, y un trozo que
+     * es casi todo cadenas y estructura comprime al 40 %. Se trae con `import()` tras `load`, desde el chunk
+     * compartido de `cajon/**`, así que llega a las DOS entradas sin pesar en ninguna — y por eso mismo nadie
+     * lo notaría si engordara: lo paga cada visita, en silencio.
+     *
+     * Medido al nacer (2026-09-23): **2,31 KiB** gzip (4,53 KiB en crudo). El margen es corto a propósito.
+     */
+    private const TRACK_CHUNK_MAX_GZIP_KB = 3;
+
+    /**
      * Techo del chunk del cajón, que se descarga en la PRIMERA apertura. Los once pasos llegan a
      * partir de 4.2, así que este número sube; lo que no puede es subir **sin que nadie lo decida**.
      *
@@ -1019,6 +1030,41 @@ class SidebarBundleBudgetTest extends TestCase
                 'Lo descarga quien llega al final de la portada. Si el juego ha crecido a '.
                 'propósito, sube el techo — es un presupuesto, no un objetivo.',
                 $kb, self::SALTA_CHUNK_MAX_KB,
+            ),
+        );
+    }
+
+    /**
+     * **El tracker es un trozo DIFERIDO que llega a las dos entradas, y pesa lo que dijo pesar** (T1b).
+     *
+     * Las tres cosas a la vez, porque cada una se puede romper sola: que exista como chunk (un `import`
+     * estático lo fundiría con `cajon/**` y lo pagaría toda página pública, dentro del techo de arriba pero sin
+     * que nadie lo decidiera); que lo declare como dinámico el grafo estático de LAS DOS entradas (una landing
+     * ajena que monte el paquete tiene que medir igual que el producto); y su peso min+gzip.
+     */
+    public function test_the_tracker_is_a_deferred_chunk_for_both_entries_under_its_budget(): void
+    {
+        $manifest = $this->manifest();
+
+        $clave = collect(array_keys($manifest))->first(fn (string $k): bool => str_contains($k, 'cajon/track.js'));
+
+        $this->assertNotNull($clave, 'el tracker no está en el manifiesto: o se retiró, o su `import()` dejó de ser dinámico y Rollup lo fundió con el chunk del cajón');
+
+        foreach (['resources/js/app.js', 'resources/js/cajon/paquete.js'] as $entrada) {
+            $this->assertTrue(
+                $this->llegaPorImportDinamico($entrada, $clave),
+                "«{$entrada}» ya no trae el tracker con `import()`: la analítica no llega a esa entrada, o llega estática",
+            );
+        }
+
+        $gzipKb = strlen((string) gzencode((string) file_get_contents(public_path('build/'.$manifest[$clave]['file'])), 9)) / 1024;
+
+        $this->assertLessThanOrEqual(
+            self::TRACK_CHUNK_MAX_GZIP_KB, $gzipKb,
+            sprintf(
+                "El tracker pesa %.2f KiB min+gzip (techo: %d).\nLo paga CADA visita, tras `load`. Si ha crecido a ".
+                'propósito, sube el techo con su medida — es un presupuesto, no un objetivo.',
+                $gzipKb, self::TRACK_CHUNK_MAX_GZIP_KB,
             ),
         );
     }

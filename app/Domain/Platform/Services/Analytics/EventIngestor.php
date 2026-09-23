@@ -165,7 +165,9 @@ final class EventIngestor
                     return false;
                 }
 
-                $value = RouteNormalizer::value($value);
+                // La ruta que falló (`request_failed.route`) es una ruta: se enmascara como la del evento
+                // (`/orders/R-ABC123` → `/orders/{token}`), que si no cada pedido sería un valor distinto.
+                $value = $key === 'route' ? RouteNormalizer::path($value) : RouteNormalizer::value($value);
 
                 if ($value === null) {
                     continue;

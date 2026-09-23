@@ -60,6 +60,23 @@ function result(ok, status, data, error = null, offline = false) {
 }
 
 /**
+ * Un fallo, además de devolverse, se le CUENTA a la página (`jw:api:failed`) para que la analítica lo mida
+ * (`cajon/track.js` → `request_failed`, `docs/specs/analitica.md` §4.2) sin que este cliente sepa que existe.
+ * Viaja la ruta SIN query, el estado y si fue la red: nunca el cuerpo ni el error.
+ *
+ * ⚠️ Guardado para el render en servidor (`scripts/render-sidebar.mjs`), donde no hay `document`.
+ *
+ * @returns {ApiResult}
+ */
+function failed(path, status, data, error = null, offline = false) {
+    if (typeof document !== 'undefined') {
+        document.dispatchEvent(new CustomEvent('jw:api:failed', { detail: { route: path.split('?')[0], status, offline } }));
+    }
+
+    return result(false, status, data, error, offline);
+}
+
+/**
  * Llama a la API.
  *
  * @param {string} path  ruta relativa a `/api/v1`, con barra inicial
@@ -109,7 +126,7 @@ async function call(path, { method, body, signal, locale }, mayRetry) {
         // Abortar es una decisión de quien llama (cambió de pantalla), no un fallo que enseñar.
         if (e?.name === 'AbortError') throw e;
 
-        return result(false, 0, null, null, true);
+        return failed(path, 0, null, null, true);
     }
 
     // 419 = el token de CSRF caducó. Pasa de verdad: una landing puede quedarse abierta horas. Se
@@ -131,7 +148,7 @@ async function call(path, { method, body, signal, locale }, mayRetry) {
             // Un cuerpo que no es JSON en una API que solo emite JSON significa que algo se
             // interpuso (una página de error, un portal cautivo). Se trata como fallo de red: no
             // hay `error.code` que enseñar.
-            return result(false, response.status, null, null, true);
+            return failed(path, response.status, null, null, true);
         }
     }
 
@@ -141,7 +158,7 @@ async function call(path, { method, body, signal, locale }, mayRetry) {
     // que quien llama nunca tenga que comprobar si `error` existe.
     const error = payload?.error ?? { code: 'unknown', message: '' };
 
-    return result(false, response.status, payload, error);
+    return failed(path, response.status, payload, error);
 }
 
 /** Atajos. Existen para que las llamadas se lean, no para esconder nada. */

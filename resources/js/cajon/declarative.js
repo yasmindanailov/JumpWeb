@@ -10,6 +10,11 @@
  *   data-jw-open-product="100"      lo abre en ese producto, listo para elegir día
  *   data-jw-open-account="orders"   lo abre en esa zona de la cuenta
  *
+ * Y uno que NO abre nada: **`data-jw-track="call_clicked"`** cuenta el clic con ese nombre en la analítica
+ * (`docs/specs/analitica.md` §4.2; en un `<form>`, cuenta al enfocarlo, una vez). Lo oye `track.js`, no este
+ * módulo; los enlaces `tel:`, de WhatsApp y de mapas se cuentan solos, sin atributo. Los nombres válidos los
+ * cierra `Platform\Services\Analytics\Contract`: uno que no exista se descarta en el servidor, sin romper nada.
+ *
  * Es UN solo oyente delegado en el documento: vale también para el marcado que llegue después (un carrusel que
  * se pinta tarde, una sección cargada con `fetch`), que es justo lo que un oyente por elemento se deja.
  *
