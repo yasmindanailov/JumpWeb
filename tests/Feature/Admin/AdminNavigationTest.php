@@ -5,6 +5,7 @@ namespace Tests\Feature\Admin;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
 use App\Filament\Pages\AdminSettingsHub;
+use App\Filament\Pages\AnalyticsPage;
 use App\Filament\Pages\CalendarPage;
 use App\Filament\Pages\Dashboard;
 use App\Filament\Resources\Orders\OrderResource;
@@ -51,6 +52,9 @@ class AdminNavigationTest extends TestCase
      * vive fuera del shell de Filament (#119) y entra como `NavigationItem` suelto: se comprueba por
      * su rótulo, y desde `#320` solo le sale a quien atiende ahí — al admin no.
      *
+     * ▶ `#735` — «Analítica» es el QUINTO sitio, solo para quien tenga `reports.view` (el admin): es día a
+     * día para quien dirige, no puesta en marcha. Al empleado no le sale.
+     *
      * @var array<int, class-string>
      */
     private const FLAT_MENU = [
@@ -58,6 +62,7 @@ class AdminNavigationTest extends TestCase
         CalendarPage::class,
         OrderResource::class,
         UserResource::class,
+        AnalyticsPage::class,
     ];
 
     protected function setUp(): void
@@ -113,9 +118,10 @@ class AdminNavigationTest extends TestCase
     public function test_admin_menu_is_flat_and_has_the_four_daily_places_in_order(): void
     {
         // `#320` (`[DECIDIDO owner]`): «Puerta» sale del menú — el gerente no atiende por ella, y la
-        // conserva en «Ajustes → Sistema» (y por tanto en el buscador). El menú vuelve a CUATRO.
+        // conserva en «Ajustes → Sistema» (y por tanto en el buscador). El menú vuelve a CUATRO…
+        // …y `#735` le añade «Analítica», el cuadro de mando, que solo abre `reports.view`.
         $this->assertSame(
-            ['Hoy', 'Calendario', 'Pedidos', 'Clientes'],
+            ['Hoy', 'Calendario', 'Pedidos', 'Clientes', 'Analítica'],
             $this->menuLabelsFor($this->userWithRole('admin')),
         );
     }
@@ -141,7 +147,7 @@ class AdminNavigationTest extends TestCase
     {
         $puerta = $this->userWithRole('puerta');
 
-        foreach ([Dashboard::getUrl(), CalendarPage::getUrl(), OrderResource::getUrl('index'), AdminSettingsHub::getUrl()] as $url) {
+        foreach ([Dashboard::getUrl(), CalendarPage::getUrl(), OrderResource::getUrl('index'), AdminSettingsHub::getUrl(), AnalyticsPage::getUrl()] as $url) {
             $this->actingAs($puerta)
                 ->get($url)
                 ->assertRedirect(route('admin.puerta.validar'));

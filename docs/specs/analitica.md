@@ -371,6 +371,15 @@ presupuesto de consultas):
 - Serie por día/semana/mes (tabla y gráfico de Filament, Chart.js) de cobrado, devuelto, vendido y pedidos.
 - Índices aditivos en la migración de la T2a: `orders (status, paid_at)`, `payments (status, paid_at)`,
   `payment_refunds (status, processed_at)`, `users (created_at)`; `EXPLAIN` en staging, en el carril.
+- ✅ **Lo que enseñó la T2a (24-09)**: el informe vive en `App\Filament\Analytics\MoneyReport` porque cruza
+  cuatro módulos y solo la capa de entrega puede componerlos (`ModuleBoundariesTest`); `reports.view` es el
+  permiso (huérfano desde F7.11); con DOS cuadros en el panel, «Hoy» tiene que DECLARAR sus widgets
+  (`Filament::getWidgets()` devuelve todos los descubiertos); el desglose lleva la **tabla por día/semana**,
+  que es a la vez el «total por mes y semana» pedido y la vista de tabla que la paleta del gráfico exige (el
+  verde-agua queda a 2,74:1; el verde y el violeta se midieron y descartaron); y el `EXPLAIN` local con nueve
+  filas no es veredicto (el optimizador recorre): se repite en staging con volumen. Para el ojo, el fixture local
+  «probe-ojo-analitica» de la carpeta de almacenamiento (fuera de git; `OJO=montar|estado|desmontar`, por
+  `tinker --execute="require base_path('storage/app/…')"`) siembra dos meses deterministas.
 
 **T2b · Registros y puerta** (`Reports\CustomersReport` `(futuro)`):
 - **Registros** por día/semana/mes: cuentas de cliente (`User::customers()`, sin `PANEL_ROLES`) por
@@ -442,7 +451,7 @@ de §4.3.
 | T0 | ✅ spec v2, el contrato de eventos, `#678` y la revisión (§7.1) | | docs-check |
 | T1 | el libro, en cinco sub-tandas: **T1a ✅ (23-09)** tablas y poda, cookie, `ResolveVisitor` y `AttributionContext`, la ingesta stateless con su limitador, los hechos de servidor por fuente, el sello en `creating`, `robots.txt`, contrato **1.18.0** (`POST /events`) · **T1b ✅ (23-09)** `track.js` diferido (2,3 KiB gzip, techo 3) y el cajón · **T1c ✅ (23-09)** UTM en los 24 correos al cliente (pegado tras firmar, ignorado al validar), `email_sent` y `email_clicked` · **T1d ✅ (23-09)** la fuente del pedido manual (cuatro tarjetas, obligatoria, sin defecto; `forPanel()` valida) · **T1e ✅ (23-09)** `anonymize()` desata el libro y el export lleva `analytics` y `attribution` (contrato **1.19.0**) · y el **CIERRE ✅ (23-09)**: `scripts/mutar-analitica.sh` **19/19** (1 control, 1 declarado), `redsys:verify-concurrency --workers=16` ✓, la sonda, y `trustProxies` medido y retirado (`SEC-13`) | contrato **1.19.0** (`experiments` en `/sidebar/session` puede esperar a T5) | tests + arnés + `redsys:verify-concurrency` + sonda |
 | T1·bis | migración de historia: «anterior a la medición», arranque de cuadros en la fecha del despliegue, `model:prune` y recuento de `deploy.sh` 6→7, ensayo en staging con `schedule:run` a mano, `POLICY_VERSION` la misma noche | | ensayo |
-| T2 | el cuadro de mando, en cinco — **la hace el carril del SPA** (traspaso `#679`, tomado en `#735`, 24-09): **T2a** dinero (permisos `reports.view`/`reports.export`, la página y el filtro, los índices) · **T2b** registros y puerta · **T2c** embudo y fuentes · **T2d** CSV · **T2e** `analytics_daily`, `ad_spend` | | tests + presupuesto de consultas + `EXPLAIN` + el ojo del owner en vivo |
+| T2 | el cuadro de mando, en cinco — **la hace el carril del SPA** (traspaso `#679`, tomado en `#735`, 24-09): **T2a ✅ (24-09)** el dinero: `AnalyticsPage` (5.º sitio del menú, `reports.view`; `reports.export` sembrado), `ReportPeriod` · `Window` · `SqlTime` (hora UTC → día del parque), `MoneyReport` en la capa de entrega (17 consultas, caché 5 min), cuatro widgets (tarjetas, gráfico, clientes, desglose con la tabla por día/semana), cuatro índices; 35 casos en `ReportPeriodTest`, `MoneyReportTest` y `AnalyticsPageTest`; `scripts/sonda-analitica-panel.mjs` 9/9 en escritorio y móvil; **queda el OJO del owner** y el `EXPLAIN` con volumen en staging · **T2b** registros y puerta · **T2c** embudo y fuentes · **T2d** CSV · **T2e** `analytics_daily`, `ad_spend` | | tests + presupuesto de consultas + `EXPLAIN` + el ojo del owner en vivo |
 | T3a | categorías sin quemar, banner, política por sección, aviso a cuentas, `PUT /me/analytics`, driver y PostHog con `Drivers::csp()` | `POLICY_VERSION` | tests + sonda (cero terceros sin consentir; con consentimiento, sin `securitypolicyviolation`) |
 | T3b | píxeles, Consent Mode básico, job de conversiones con relectura del consentimiento, tokens en `.env` | | tests con `Http::fake` |
 | T4 | la 360, los segmentos, el opt-in tras comprar | | tests |
@@ -496,13 +505,18 @@ de §4.3.
   ignorándola y NO valida a secas (la prueba de que va fuera del HMAC); el post-form, la verificación y la
   confirmación de correo abren con UTM y una clave ajena sigue dando 403; `email_sent` solo para clientes;
   `email_clicked` una vez por sesión y solo con claves reales.
-- `AnalyticsDashboardTest` `(futuro)`: cifras contra hechos sembrados (un cobro con señal cuenta `paid_cents`
-  en cobrado y su reparto en «pendiente en el parque»; un reembolso resta; un pedido del panel cuenta en el
-  dinero y no en el embudo); un cobro a las 23:30 del parque cuenta en ese día y uno a las 00:30 de Madrid
-  **no** en el anterior; los registros no cuentan las cuentas del equipo; la puerta desde `audit_logs` con su
-  control (una búsqueda sin `target` cuenta como no encontrada); campaña `=1+1` sale como texto; `<img
-  onerror>` en `utm_campaign` sale escapado; `puerta` y `staff` sin permiso → 403; presupuesto de consultas
-  por pestaña.
+- **T2a ✅ (24-09)**: `ReportPeriodTest` (los ocho rangos, el mes pasado desde un 31, la ventana anterior, la
+  granularidad, los cubos sin huecos, y en Madrid los bordes en UTC y el cubo de las 22:30 con su control en
+  UTC); `MoneyReportTest` (un junio sembrado con todo: el cobro de las 00:30 de Madrid del 1 de junio cuenta en
+  junio y el del 1 de julio no —con el control en UTC—, la señal partida por fecha de visita, la línea cancelada
+  y la de crédito, canal · método · producto, nuevos frente a recurrentes y las dos medias, lo perdido, el
+  periodo vacío, **el presupuesto de 17 consultas que no crece con las filas** y la caché); `AnalyticsPageTest`
+  (invitado, cliente, empleado, puerta y admin; el permiso concedido en vivo; cada widget re-pregunta; «Hoy»
+  conserva sus dos widgets; las seis tablas; el gráfico en euros por día). `AdminNavigationTest` fija cinco sitios.
+- `AnalyticsDashboardTest` `(futuro, T2b/T2c)`: los registros no cuentan las cuentas del equipo; la puerta desde
+  `audit_logs` con su control (una búsqueda sin `target` cuenta como no encontrada); campaña `=1+1` sale como
+  texto; `<img onerror>` en `utm_campaign` sale escapado; un pedido del panel cuenta en el dinero y no en el
+  embudo.
 - `PrivacyTest`/`MePrivacyTest`: `anonymize()` y `exportFor()` cubren analytics; `PUT /me/analytics`.
 - `machine.test.js`, `controller.test.js`: transiciones emiten `step_entered`; `drawer_opened` al nacer
   abierto; el banner se suprime con el cajón abierto; `SidebarBundleBudgetTest` con el techo de `track.js`.

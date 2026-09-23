@@ -15,6 +15,11 @@
   para delegarte toda la analítica»). Plataforma dejó la **T1 ✅** (`f501a990`→`4d4c3aec`, contrato 1.19.0,
   arnés 19/19, `RGPD-07`, `PAY-21`, `SEC-13`); su traspaso, atendido. **T2→T5 aquí**; la T2 partida en cinco
   con las tres peticiones del owner delante (dinero al detalle · registros · puerta): `analitica.md` §4.5.
+  ✅ **T2a EN EL ÁRBOL (24-09, madrugada)**: «Analítica» en `/admin/analitica`, el dinero entero (spec §4.8),
+  35 casos, sonda 9/9 en escritorio y móvil. **Queda el OJO del owner** en `localhost:8081/admin/analitica`
+  (admin) y el `EXPLAIN` con volumen en staging. ⚠️ **El fixture «probe-ojo-analitica» está MONTADO en la BD
+  local** (87 pedidos `JW-OJO…`, 74 cobros, 12 devoluciones, 25 clientes `ojo-N@ojo-analitica.jumpweb.test`,
+  dos meses): `OJO=desmontar` lo quita entero; antes había 9 pedidos y 2 cobros.
 - ✅ **La ficha de Google (`#524`), T1 y T2·1→T2·8 en el árbol** (`#720`→`#734`), **vistas por el owner con
   datos y con su ✅ en vivo** (21-09, panel y tarjeta). Lo que enseñó cada tanda: `google-business-profile.md`
   §4.1; lo que pagó: §9.1. ⚠️ **Un fixture SIGUE MONTADO en la BD local** («probe-ojo-resenas», modos
@@ -29,16 +34,20 @@
 ## Por dónde retomar, en orden
 
 1. ❗❗❗ **LA ANALÍTICA, T2→T5** (`specs/analitica.md`; §0, §4.1, §4.2, §4.5, §7.1 antes de tocar). **T2 en
-   cinco, en este orden**: **T2a dinero** (la página `AnalyticsPage`, el filtro de periodo, los permisos
-   `reports.view` —huérfano desde F7.11, gana consumidor— y `reports.export`, los cuatro índices, el informe
-   `MoneyReport`) → **T2b registros y puerta** (`CustomersReport`: `users.created_at` sin equipo; la puerta
-   desde `audit_logs` y `customer_visits`, con historia desde agosto; `visit_checked_in` desde
-   `GateVisits::register()`) → **T2c embudo y fuentes** → **T2d CSV** → **T2e `analytics_daily` + `ad_spend`**.
-   ⚠️ **Los cortes por día van por HORA UTC en SQL y al día del parque en PHP** (`SqlTime::hourBucket()`),
-   nunca `CONVERT_TZ`. ⚠️ El dinero se lee de `payments`, `payment_refunds`, `deposit_split` y `orders.total`:
-   **ningún `OrderBook` por pedido** en el cuadro. ⚠️ «Analítica» es el 5.º sitio del menú del admin:
-   `AdminNavigationTest` cambia (5 para admin, 4 para staff) y la página va en `FLAT_MENU`. Cada tanda:
-   caso + presupuesto de consultas + `EXPLAIN` en staging + **el OJO del owner en `localhost:8081/admin`**.
+   cinco, en este orden**: **T2a dinero ✅ (24-09)** → **T2b registros y puerta** (`CustomersReport` al lado
+   de `MoneyReport` en `App\Filament\Analytics`: `users.created_at` sin equipo (`User::customers()`),
+   verificadas, con compra, método desde `user_registered`; la puerta desde `audit_logs`
+   (`registrations.validated` · `puerta.card_scanned` · `puerta.profile_viewed`, `target_id` = encontrado) y
+   `customer_visits`, con historia desde agosto, por día y por hora del parque; `visit_checked_in` desde
+   `GateVisits::register()`; dos widgets más en `AnalyticsPage::getWidgets()` y sus casos en un
+   `CustomersReportTest` con el molde de `MoneyReportTest`) → **T2c embudo y fuentes** → **T2d CSV**
+   (`reports.export`, auditado) → **T2e `analytics_daily` + `ad_spend`** (+1 tarea del scheduler → `deploy.sh`).
+   ⚠️ **Los cortes por día van por HORA UTC en SQL y al día del parque en PHP** (`SqlTime::hourBucket()`,
+   `Window::bucketKey()`), nunca `CONVERT_TZ`. ⚠️ El dinero se lee de `payments`, `payment_refunds`,
+   `deposit_split` y `orders.total`: **ningún `OrderBook` por pedido**. ⚠️ El informe vive en la CAPA DE
+   ENTREGA (`App\Filament\Analytics`) porque cruza cuatro módulos. Cada tanda: caso + presupuesto de consultas
+   (`DB::enableQueryLog`, con el memo de `Setting` caliente) + sonda `scripts/sonda-analitica-panel.mjs`
+   (credenciales por entorno) + **el OJO del owner en `localhost:8081/admin/analitica`**.
    ▶ Queda de la T1 el **ojo del owner** sobre la fuente del pedido manual (las cuatro tarjetas del paso de
    pago). ▶ Después **T3** (consentimiento y driver: toca `layout.blade.php`, `app.js`, `SecurityHeaders`,
    el banner y la política en tres idiomas —**compartido: aviso dado en el buzón**—), **T4** (la 360 y los
@@ -135,6 +144,17 @@ spec enumera. Lo del cliente va en la rama `cliente/playjump`, nunca a `main`.
   `Clase@método` en cada evento); `DB::afterCommit` corre en el acto fuera de txn; un literal `sessions` en
   código dispara `AccessRevocationTest`; `postJson` no manda cookies sin `withCredentials()`; un teléfono
   se cuenta por CIFRAS (una fecha ISO no lo es); el UTM se pega TRAS firmar y se ignora al validar.
+- 🪤 **De la T2a (24-09), seis pagadas**: (1) `order_adjustments.applied_by` y `payment_refunds.requested_by`
+  son NOT NULL: un fixture los lleva siempre; los timestamps de `Order`/`Payment` no son rellenables, van
+  por `forceFill`. (2) **Tras una petición que renderiza Livewire en el MISMO caso, `redirect()` devuelve el
+  `Redirector` de Livewire** y `RestrictsPuertaRole` revienta con `TypeError` (500): en HTTP real no pasa;
+  el caso de la puerta va SOLO y como primera petición. (3) En un presupuesto de consultas, **la primera
+  lectura de `Setting` cuenta una** (el memo frío): caliéntalo antes de `enableQueryLog`. (4) **Con dos
+  `Dashboard` en el panel, `Filament::getWidgets()` devuelve TODOS los descubiertos** —`allFiles()`, también
+  en subcarpetas—: «Hoy» tiene que declarar los suyos. (5) Pint (`fully_qualified_strict_types`) exige `use`
+  para una clase cualificada en un docblock `@return`. (6) `EXPLAIN` sobre 9 filas elige recorrer: no es
+  veredicto sobre un índice. Y un test que corre con el reloj EN MARCHA cruza el segundo (`MePrivacyTest`
+  puso en rojo un push de solo doc a las 22:59:00 UTC): en un caso que compara `now()` dos veces, congela.
 - 🩹 **En la BD LOCAL hay 19 titulares con la cadena de waiver ROTA** (basura del 26–27 de agosto): si mides
   cadenas, compara ANTES/DESPUÉS.
 - **F4 cerró y el cajón es un PAQUETE** (`specs/cajon-empaquetable.md` §0 y §4.8). Tocar «HOJA ENFOCADA» de

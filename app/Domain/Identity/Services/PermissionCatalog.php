@@ -65,6 +65,7 @@ final class PermissionCatalog
             // audita. No va al staff por defecto: está fuera de toda superficie normal.
             'waiver.view',
             'reports.view',
+            'reports.export',
         ],
         // Sistema (incluye el admin-exclusivo `access.manage`, mostrado pero no asignable).
         'sistema' => [

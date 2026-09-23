@@ -104,6 +104,9 @@ class PermissionSeeder extends Seeder
         'waiver.view' => 'Ver el registro probatorio del waiver (firmas y PDF)',
         'access.manage' => 'Gestionar roles y permisos',
         'reports.view' => 'Ver informes y exportaciones',
+        // La analítica (`specs/analitica.md` §4.5, `#735`): `reports.view` abre el cuadro de mando —llevaba
+        // sembrado desde F7.11 sin consumidor— y el CSV tiene permiso PROPIO, auditado.
+        'reports.export' => 'Exportar la analítica (CSV)',
         'audit.view' => 'Ver registro de auditoría',
     ];
 

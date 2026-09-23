@@ -4,6 +4,8 @@ namespace App\Filament\Pages;
 
 use App\Domain\Platform\Enums\DashboardPeriod;
 use App\Filament\Concerns\PrintsDaySummary;
+use App\Filament\Widgets\DashboardStatsWidget;
+use App\Filament\Widgets\ReservationsWidget;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\ToggleButtons;
@@ -11,6 +13,7 @@ use Filament\Pages\Dashboard as BaseDashboard;
 use Filament\Pages\Dashboard\Concerns\HasFiltersForm;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use Filament\Widgets\Widget;
 
 /**
  * Fase 7.4 iter2 — Dashboard del panel con un filtro de PERIODO compartido
@@ -55,6 +58,21 @@ class Dashboard extends BaseDashboard
     protected function getHeaderActions(): array
     {
         return [$this->printDaySummaryAction()];
+    }
+
+    /**
+     * Los widgets de «Hoy» se DECLARAN desde la T2a de la analítica (`#735`): con un segundo cuadro en el
+     * panel (`AnalyticsPage`), el valor por defecto —`Filament::getWidgets()`, TODOS los descubiertos en
+     * `app/Filament/Widgets`— colgaría aquí también los del dinero.
+     *
+     * @return array<class-string<Widget>>
+     */
+    public function getWidgets(): array
+    {
+        return [
+            DashboardStatsWidget::class,
+            ReservationsWidget::class,
+        ];
     }
 
     public function filtersForm(Schema $schema): Schema
