@@ -4,8 +4,12 @@
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 EN CURSO** · Último usado: **`#676`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, `docs/specs/instancia-y-landing-fuera.md` · Actualizado: **2026-09-23**
-> (`#670`: **no desplegar en piezas** · `#671`→`#674`: los CUATRO platos · `#675`: el CENSO ·
-> `#676`: sus tres lotes de campos y los asuntos; contrato **1.16.0**).
+> (**cierre del 23-09**: `#670` no desplegar en piezas · `#671`→`#674` los CUATRO platos · `#675` el
+> CENSO · `#676` sus tres lotes y los asuntos. Contrato **1.16.0**, arnés 100/100, suite 5.664).
+> ⚠️ **El techo de 32 KB apretó SEIS veces en esa sesión** y se resolvió siempre mudando a la spec, nunca
+> subiéndolo (es del owner). Hoy queda con ~1,3 KB libres tras compactar las tandas cerradas: si vuelve a
+> apretar, **se muda, no se raspa** — y si vuelve a pasar tres veces seguidas, llévaselo con la medida
+> como hizo el SPA en `#724`.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
 > Techo **32 KB** (check 10; subido de 24 en `#724` con la medida delante). El contador de la suite no
 > vive aquí: va en el trailer del commit.
@@ -50,51 +54,33 @@
    decía «entra ENTERA» y era **falso**: corregido en `#670`.
    ▶ **Cuando llegue**: desde la etiqueta **v2.0.0** que se corte entonces (la guarda 8 rechaza `HEAD`),
    de noche (`#594`), y con **ENSAYO en staging** antes: siete migraciones y subiendo, una destructiva.
-3. **F5 EN CURSO · el MENÚ DE HECHOS, recurso a recurso** (`specs/instancia-y-landing-fuera.md` ✅; censo en
-   su §1 y las tres decisiones del owner en `#639`: las redes se quedan en el panel, los cuatro campos
-   muertos de `zones` se retiran, «cero marca» se lee como código vivo).
-   **EL MENÚ, SERVIDO** (`#640`→`#646`, contrato **1.11.0**, `scripts/mutar-menu-de-hechos.sh` **41/41**):
-   los siete platos, uno a uno en la spec §4.1 (`/site`, horario, normas, legales, precios, las dos fichas
-   del catálogo y la prueba social). Aquí queda **lo que hace falta para lo siguiente**.
+3. **F5 · EL MENÚ DE HECHOS** (`specs/instancia-y-landing-fuera.md`). La historia de cada tanda vive en
+   su spec, que es donde no caduca; aquí solo lo que hace falta para seguir.
+   ✅ **T1→T4 cerradas** (`#640`→`#669`) · ✅ **los CUATRO platos de la vía A** (`#671`→`#674`) · ✅ **el
+   CENSO y sus tres lotes de campos** (`#675`, `#676`). Contrato **1.16.0**, arnés **100/100**.
+   ▶ **Lo que hay que saber del estado**: las NUEVE vistas viven en `instancias/playjump/web/` y el
+   producto sirve su `anfitrion/…`; la suite corre SIN paquete. El contrato producto↔instancia son los
+   **DATOS** que recibe la vista, no el HTML (§4.5.bis) · `InstanceViews::CONTRATO` = **2** · el
+   trinquete de CSS huérfano está encendido, así que **si añades CSS su consumidor nace con él** · la
+   migración de `zones` **borra columnas** y viaja en la v2.0.0.
 
-   ▶ **T2a y T2b HECHAS** (`#647`→`#666`; su historia entera en `paquete-de-instancia.md`
-   §4.1→§4.7.ter, que es donde no caduca). Lo que hay que saber para seguir:
-   ⚠️⚠️ **LA REGLA**: el contrato producto↔instancia son los **DATOS** que recibe la vista, no el HTML
-   que produce (§4.5.bis). De ahí salen `CONTRATO_DE_VISTAS` y su guarda.
-   ▶ **Las NUEVE vistas viven en `instancias/playjump/web/`** y el producto sirve su `anfitrion/…`; la
-   suite corre SIN paquete (`phpunit.xml`). El material del cliente (37 ficheros, 9,2 MB) está en
-   `publico/` del paquete, que tiene **remoto PRIVADO**. Medido en todas: huella **0/38**, sitemap 11=11.
-   ❗❗ **`#664` midió 161 rojos y salieron 16** (usó un anfitrión de NUEVE líneas): *la cifra mide el
-   anfitrión, no la página*. Criterio: un anfitrión **consume el CONTRATO ENTERO**, y **una OBLIGACIÓN
-   no se muda** —la atribución de Places se queda aquí—. Arneses **144/144**.
-   ⚠️ El material que solo pinta una vista mudada se declara en
-   `InstanceViews::MATERIAL_CONSUMIDO_POR_LA_INSTANCIA` · el separador de MILLARES de `Money` sigue a
-   mano **a propósito** (`#651`): pendiente del owner.
+   ▶▶▶ **LO SIGUIENTE, Y ES LO ÚNICO QUE QUEDA DE CÓDIGO EN ESTE CARRIL: LOS TRAMOS DE GRUPO.**
+   `GroupRateTables` los compone del catálogo y **ninguna ruta los sirve** (medido: su único llamante es
+   `ServicesController`). Sin ellos, una landing de `/servicios` no puede pintar su carril de tarifas.
+   ⚠️⚠️ **Son DINERO y traen una decisión que se le lleva al owner MEDIDA** (`#661`): el contrato de
+   VISTA quiere el importe **ya escrito** (`groupFrom`, `address.written`) y el de API lo quiere en
+   **céntimos** (`/prices`). Las dos tienen razón en su superficie; la tanda decide si viajan los dos.
+   ▶ El owner cerró la sesión del 23-09 diciendo: *«terminaremos el plato que queda y después iteramos
+   sobre la analítica»*. O sea: **esto primero, y la analítica después**.
 
-   ✅ **T2c, T3·1 y T4 CERRADAS el 21-09** (`#667`, `#668`, `#669`). Su narrativa y sus lecciones
-   —el censo literal que mintió tres veces, podar por BLOQUE y no por clase, el SEEDER como consumidor
-   escondido— viven donde no caducan: spec hermana **§4.6.bis**, **§4.6.ter** y **§4.3**, y sus
-   decisiones. Aquí solo lo que hace falta para seguir:
-   ▶ **T2c**: 119 clases huérfanas podadas (−20,3 KB) y **trinquete** encendido
-   (`LandingCssHasNoOrphansTest`, deuda de **15** que solo encoge). **Si añades CSS, su consumidor nace
-   con él.**
-   ▶ **T3·1**: fuera los dos recursos con cero uso y **`InstanceViews::CONTRATO` = 2**; los otros cuatro
-   esperan a tener plato (abajo). Los dos `instancia.json` ya lo declaran.
-   ▶ **T4**: `zones` sin `subtitle`, `age_label`, `area_sqm` ni `rides_count`. ⚠️ Esa migración **borra
-   columnas** y viaja en la v2.0.0.
-
-   ▶▶▶ **LO SIGUIENTE CAMBIÓ EL 21-09, Y LO CAMBIÓ EL OWNER.** Dijo, con estas palabras: *«estaba
-   pensando en terminar mi trabajo de diseño en Claude Design y estrenar la nueva arquitectura donde la
-   instancia del cliente está separada, y ahí hacer una nueva landing consumiendo desde la API o
-   panel»*. ❗❗ **Eso es la VÍA A**, que §3 de la spec hermana declara **el DESTINO** y que la vía B de
-   hoy —Blade del producto, atada a 29 nombres de componente— solo estaba sosteniendo de forma
-   transitoria.
-   ▶ **Y reordena el trabajo, por una simetría que conviene ver**: al menú le faltan cuatro platos
-   —**atracciones, dudas, servicios y el bar**— y son **exactamente los cuatro recursos que la T3 no
-   pudo sacar del panel**. No es casualidad: están bloqueados PORQUE no tienen plato. En cuanto lo
-   tengan, la landing nueva los consume por API, el panel los sigue editando y **la T3 se desbloquea
-   sola**. Un trabajo resuelve los dos. La receta de un plato está en la spec §4.1.bis y sus ocho
-   trampas en §4.1.ter.
+   ⚠️⚠️ **LAS TRES REGLAS QUE DEJARON LOS CUATRO PLATOS** (detalle en §4.1, y valen para el que queda):
+   (1) si el ajuste ya tiene **servicio de dominio**, el recurso **delega** en vez de declarar lista
+   blanca —lo prescribe el docblock de `PublicFactsBoundaryTest`—; (2) el filtro de «lo que no viaja» va
+   **DESPUÉS** del respaldo de idioma, o el recurso se vacía en `en`/`fr`; (3) lo que decide la MAQUETA
+   no es un hecho: ni el mosaico de la portada, ni una tabla de precios tecleada.
+   ⚠️ Y dos de FIXTURE, las dos con su rojo delante: `BarImage` **re-mide** las dimensiones contra el
+   disco (un `width` tecleado se sobrescribe con `null`), y **una aserción de subcadena acusa al fixture
+   que la nombra** (`#553`): se aserta sobre las CLAVES servidas.
    ✅✅ **LA PREGUNTA ABIERTA, CONTESTADA (23-09): se arranca por los PLATOS**, no por el kit de widgets
    —que sigue donde lo dejó `#632`·P2, esperando a que una segunda instancia lo pida—.
    ✅✅✅ **LOS CUATRO PLATOS, SERVIDOS** (`#671`→`#674`, contrato **1.15.0**): dudas, servicios, el bar
@@ -153,9 +139,11 @@
    `ENTORNOS.md` §6 en `#675`, junto al despliegue que las escribió. Sin desplegar: son datos.
 6. Después, **F6** (app nativa; hereda del token lo que su spec §2 nombra: Google, alta, dispositivos).
 - **Del owner, HOY**: el **fin de la promo** (es suyo el cuándo) · el **ojo** que le falta a la compra de
-  la T5 de F4 · y, cuando toque, **el contrato de EVENTOS de analíticas**, que hay que decidir ANTES de
-  escribir la landing nueva —un evento no emitido no se recupera, y la landing ya vive fuera del producto,
-  así que instrumentarla después es reabrir nueve vistas en otro repo—.
+  la T5 de F4 · **`topics`**: con la landing fuera, ¿de quién son los asuntos del formulario de contacto?
+  (hoy son constante del producto, y `birthday`/`groups` son vocabulario del SECTOR) · y **el contrato de
+  EVENTOS de analíticas**, que hay que decidir ANTES de escribir la landing nueva —un evento no emitido no
+  se recupera, y la landing ya vive fuera, así que instrumentarla después es reabrir nueve vistas en otro
+  repo—. ▶ El owner lo aplazó dos veces el 23-09: primero los tramos de grupo, «después iteramos».
   ▶ Contestadas y retiradas de aquí: por dónde arrancar la vía A (los platos, 23-09) y cuándo se
   despliega (`#670`: no en piezas). Las TRES de §7 de la spec de F5 lo están desde `#639`.
 
