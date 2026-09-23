@@ -47,7 +47,7 @@ class PasswordReset extends ResetPassword implements ShouldQueue
     {
         $minutos = config('auth.passwords.'.config('auth.defaults.passwords').'.expire');
 
-        return (new BrandedMailMessage)
+        return (new BrandedMailMessage($this))
             ->subject(__('emails.password_reset.subject'))
             // Sin RESGUARDO: aquí no hay reserva de la que hablar, como en el resto de los de cuenta.
             ->hero('emails.password_reset', 'warn')

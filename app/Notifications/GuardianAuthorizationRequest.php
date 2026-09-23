@@ -59,7 +59,7 @@ class GuardianAuthorizationRequest extends Notification implements ShouldQueue
         $code = (string) ($this->reservation->order?->code ?? '');
         $product = $this->reservation->displayProductName();
 
-        $message = (new BrandedMailMessage)
+        $message = (new BrandedMailMessage($this))
             ->subject(__('emails.guardian_request.subject', ['product' => $product, 'code' => $code]))
             ->line(__('emails.guardian_request.intro', ['product' => $product, 'code' => $code]))
             ->line(__('emails.guardian_request.body'));

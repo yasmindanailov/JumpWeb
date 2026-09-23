@@ -66,7 +66,7 @@ class OrderItemRefunded extends Notification implements ShouldQueue
 
         $amount = number_format($this->refundedAmountCents / 100, 2, ',', '.');
 
-        $message = (new BrandedMailMessage)
+        $message = (new BrandedMailMessage($this))
             ->subject(__('emails.order_item_refunded.subject', [
                 'code' => $this->order->code,
                 'product' => $productName,

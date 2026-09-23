@@ -17,6 +17,7 @@ use App\Domain\Identity\Services\LegalDocuments;
 use App\Domain\Identity\Services\WaiverAcceptance;
 use App\Domain\Identity\Services\WaiverSettings;
 use App\Domain\Identity\Services\WaiverSignatureRequest;
+use App\Domain\Platform\Services\Analytics\EmailUtm;
 use App\Domain\Platform\Services\Turnstile;
 use App\Http\Concerns\AuthorizesGuardianAuthorization;
 use App\Notifications\GuardianAuthorizationSigned;
@@ -376,7 +377,8 @@ class GuardianAuthorizationController extends Controller
      */
     private function receiptUrl(Request $request, OrderItem $reservation): ?string
     {
-        if (! $request->hasValidSignature()) {
+        // Las claves de atribución no cuentan para la firma (`EmailUtm`): el correo las pega DESPUÉS de firmar.
+        if (! $request->hasValidSignatureWhileIgnoring(EmailUtm::IGNORED_QUERY)) {
             return null;
         }
 

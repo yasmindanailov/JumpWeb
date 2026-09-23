@@ -25,7 +25,7 @@
   - ⚠️ **`/events` sale del `throttle:api` y del stateful** (`withoutMiddleware`): apilado se come el embudo y
     `sendBeacon` vuelve 419. Un nombre de SERVIDOR desde el cliente se rechaza.
   - ⚠️ **`nullOnDelete` no se dispara nunca**: `anonymize()` y el export cubren las tablas nuevas.
-- **Estado**: T0 ✅ · T1a·T1b ✅ · T1c→T5 ⬜ (§4.8). `[DECIDIDO owner]` 23-09: todo con la v2.0.0, sin la pregunta
+- **Estado**: T0 ✅ · T1a·b·c ✅ · T1d→T5 ⬜ (§4.8). `[DECIDIDO owner]` 23-09: todo con la v2.0.0, sin la pregunta
   tras pagar. `[PENDIENTE: asesoría]`: los tres puntos de §7.
 - **Invariantes**: `RGPD-01`, `RGPD-05`, `SEC-01`, `PAY-14`, `SUITE-01`; propuesto **`RGPD-07`**. Dinero: ninguno cambia; `redsys:verify-concurrency` tras T1.
 
@@ -168,7 +168,7 @@ directo, con la nota de método. `attribution IS NULL` = «anterior a la medici�
 | `order_cancelled` | transición a `cancelled` (capturada en `saving`; **dos `save()` en una transacción** se registran cada uno) | `order_id` |
 | `order_refunded` | escritor de `PaymentRefund` al pasar a su estado de éxito (`PAY-17` I4) | `order_id`, `refund_id`, `refunded_cents` |
 | `user_registered`, `user_logged_in` | `SelfSignup`, `PasswordLogin`, Google (con `method`) | `user_id`; **enlazan visitante↔usuario solo con `analytics`** |
-| `contact_received`, `guest_form_submitted`, `invitation_replied`, `email_sent`, `email_clicked` | sus servicios; `email_clicked` lo registra un middleware de llegada del grupo `web` (también en `x-focused-layout`) al ver `utm_medium=email` | claves, nunca texto |
+| `contact_received`, `guest_form_submitted`, `invitation_replied`, `email_sent`, `email_clicked` | sus servicios; `email_sent` desde `NotificationSent` (`RecordEmailSent`); `email_clicked` lo registra el middleware `RecordEmailClick` del grupo `web` (también en `x-focused-layout`) al ver `utm_source=email` con una clave de correo real, una vez por sesión | claves, nunca texto |
 
 **Reglas del recorder**: se captura en el evento SÍNCRONO (escalares, nunca el modelo: patrón de
 `SignPendingWaiverOnVerification`), se difiere con `DB::afterCommit`, y **el callback traga todo** con
@@ -192,13 +192,21 @@ la acuña (la respuesta es `no-store`; el arranque cacheado nunca). `is_bot` por
 quien entra con rol de equipo, por cabecera de la sonda, o por sesión de `PANEL_ROLES`; `robots.txt` cierra
 `/api/`. El cuadro excluye ambos por defecto y los enseña aparte.
 
-**Los correos**: el UTM (`utm_source=email&utm_medium=<clave>`) entra **ANTES de firmar** (como parámetro de
-`temporarySignedRoute` en `signedGuestFormRoute()`, el del tutor y `VerifyPendingEmail`) y, por defensa,
-`validateSignatures(except: [utm_*, ref, gclid, fbclid, ttclid])` en `bootstrap/app.php` y `ignoreQuery` en los
-tres `hasValidSignature()`. Un solo sitio para los no firmados: `BrandedMailMessage` `(futuro: método)`. Solo
-los **23 correos al cliente** (los dos `Mailable` al negocio y `GoogleBusinessLocationChanged` quedan fuera).
-`EmailUtmTest` abre cada enlace firmado con UTM y exige 200. La ficha de Google Business Profile enlaza con
-`?ref=gbp`.
+**Los correos** (T1c ✅ 23-09): el UTM (`utm_source=email&utm_medium=<clave>`, clave = `Str::snake` de la clase,
+`EmailUtm::keyOf()`) lo pega el MOLDE —`new BrandedMailMessage($this)` en cada `toMail()`— al botón, al
+logotipo y a los cuatro enlaces del pie, solo si el enlace es de esta casa. ⚠️ **CORREGIDO en la T1c: el UTM se
+pega DESPUÉS de firmar y la validación lo IGNORA**; «antes de firmar Y `ignoreQuery`» era contradictorio: el
+HMAC cubre la query entera y `hasCorrectSignature()` retira las claves ignoradas antes de recalcularlo, así que
+un enlace firmado con el UTM dentro y validado ignorándolo daría 403 (leído en el framework). Lo ignorado es la
+lista blanca de atribución (`EmailUtm::IGNORED_QUERY` = `RouteNormalizer::QUERY_ALLOWLIST`), en
+`validateSignatures(except:)` (`bootstrap/app.php`, el middleware `signed`) y en los siete
+`hasValidSignatureWhileIgnoring()` de los accesos por firma; cualquier otra clave pegada sigue dando 403. Solo
+los **24 correos al cliente** (25 notificaciones menos `GoogleBusinessLocationChanged`, por clave en
+`EmailUtm::NOT_TO_CUSTOMERS`; los dos `Mailable` al negocio no pasan por el molde). `email_sent(key)` lo
+registra `RecordEmailSent` desde `NotificationSent` (canal `mail`, también en el worker); `email_clicked(key)`
+el middleware `RecordEmailClick` del grupo `web`, una vez por sesión y clave, y solo claves de correos que
+existen. `EmailUtmTest` renderiza, lee las fuentes y abre enlaces firmados con UTM. La ficha de Google Business
+Profile enlaza con `?ref=gbp` (lo escribe el owner en Google; `ref` → fuente `gbp`, medio `referral`).
 
 ### 4.2 `track()` y el CONTRATO de eventos (T1)
 
@@ -362,7 +370,7 @@ gana un bloque `analytics` (primera fuente, resumen de sesiones, atribución de 
 | | Tanda | Entrega | Verificación (§6) |
 |---|---|---|---|
 | T0 | ✅ spec v2, el contrato de eventos, `#678` y la revisión (§7.1) | | docs-check |
-| T1 | el libro, en cinco sub-tandas: **T1a ✅ (23-09)** tablas y poda, cookie, `ResolveVisitor` y `AttributionContext`, la ingesta stateless con su limitador, los hechos de servidor por fuente, el sello en `creating`, `robots.txt`, contrato **1.18.0** (`POST /events`) · **T1b ✅ (23-09)** `track.js` diferido (2,3 KiB gzip, techo 3) y el cajón · **T1c** UTM antes de firmar en los correos · **T1d** el `Select` de fuente del pedido manual · **T1e** `anonymize()` y export · y al cierre el arnés, la sonda y `trustProxies` acotado | contrato **1.18.0** (`experiments` en `/sidebar/session` puede esperar a T5) | tests + arnés + `redsys:verify-concurrency` + sonda |
+| T1 | el libro, en cinco sub-tandas: **T1a ✅ (23-09)** tablas y poda, cookie, `ResolveVisitor` y `AttributionContext`, la ingesta stateless con su limitador, los hechos de servidor por fuente, el sello en `creating`, `robots.txt`, contrato **1.18.0** (`POST /events`) · **T1b ✅ (23-09)** `track.js` diferido (2,3 KiB gzip, techo 3) y el cajón · **T1c ✅ (23-09)** UTM en los 24 correos al cliente (pegado tras firmar, ignorado al validar), `email_sent` y `email_clicked` · **T1d** el `Select` de fuente del pedido manual · **T1e** `anonymize()` y export · y al cierre el arnés, la sonda y `trustProxies` acotado | contrato **1.18.0** (`experiments` en `/sidebar/session` puede esperar a T5) | tests + arnés + `redsys:verify-concurrency` + sonda |
 | T1·bis | migración de historia: «anterior a la medición», arranque de cuadros en la fecha del despliegue, `model:prune` y recuento de `deploy.sh` 6→7, ensayo en staging con `schedule:run` a mano, `POLICY_VERSION` la misma noche | | ensayo |
 | T2 | el cuadro de mando, `analytics_daily`, `ad_spend`, permisos | | tests + presupuesto de consultas + `EXPLAIN` |
 | T3a | categorías sin quemar, banner, política por sección, aviso a cuentas, `PUT /me/analytics`, driver y PostHog con `Drivers::csp()` | `POLICY_VERSION` | tests + sonda (cero terceros sin consentir; con consentimiento, sin `securitypolicyviolation`) |
@@ -407,7 +415,11 @@ gana un bloque `analytics` (primera fuente, resumen de sesiones, atribución de 
 - `ConsentCategoriesTest` `(futuro)`: `OPTIONAL` de punta a punta; sin `analytics` no hay script del driver
   ni orígenes; con él, las directivas EXACTAS; host con `;` no entra; versión vieja re-pide; retirar
   `analytics` desvincula; el job de conversiones aborta si el consentimiento se retiró.
-- `EmailUtmTest` `(futuro)`: los 23 correos al cliente llevan UTM y cada enlace firmado con UTM responde 200.
+- `EmailUtmTest` (T1c ✅): los 25 `toMail()` pasan `$this` al molde (fuentes); los correos de cuenta renderizados
+  llevan la UTM en botón, logotipo y pie y el aviso al negocio no; una URL firmada con UTM pegada valida
+  ignorándola y NO valida a secas (la prueba de que va fuera del HMAC); el post-form, la verificación y la
+  confirmación de correo abren con UTM y una clave ajena sigue dando 403; `email_sent` solo para clientes;
+  `email_clicked` una vez por sesión y solo con claves reales.
 - `AnalyticsDashboardTest` `(futuro)`: cifras contra hechos sembrados; `order_paid` a las 23:30 del parque
   cuenta en ese día; campaña `=1+1` sale como texto; `<img onerror>` en `utm_campaign` sale escapado; `puerta`
   y `staff` sin permiso → 403; presupuesto de consultas por pendiente.

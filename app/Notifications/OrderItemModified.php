@@ -70,7 +70,7 @@ class OrderItemModified extends Notification implements ShouldQueue
         $productName = $this->item->ticketType?->tr('name')
             ?? __('emails.order_item_modified.product_fallback', ['id' => $this->item->id]);
 
-        $message = (new BrandedMailMessage)
+        $message = (new BrandedMailMessage($this))
             ->subject(__('emails.order_item_modified.subject', ['code' => $this->order->code, 'product' => $productName]))
             ->hero('emails.order_item_modified', 'info', EmailSlip::forItem($this->item))
             ->line(__('emails.order_item_modified.intro', [

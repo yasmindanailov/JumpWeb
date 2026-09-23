@@ -518,6 +518,9 @@ la caché de las fotos que la T2·4 dejó anotada.
    **Se revalida en el servidor** que la ficha está en el `locations.list` de ESE token —al guardar y antes de
    cada escritura— y que **el host de su `websiteUri` es el del sitio**. Si cambia el `placeId` respecto a la
    conexión anterior: confirmación explícita, rastro y correo a los admins.
+   ▶ **El `websiteUri` de la ficha se publica con `?ref=gbp`** (`specs/analitica.md` §4.1, `#678`, T1c): la visita
+   que llega desde la ficha se atribuye a la fuente `gbp` (medio `referral`) aunque Google no mande referer. Lo
+   escribe el owner en el panel de Google; el producto solo comprueba el host, así que la query no le estorba.
 5. **Dónde viven las credenciales** (`SEC-11`):
 
    | Dato | Dónde |

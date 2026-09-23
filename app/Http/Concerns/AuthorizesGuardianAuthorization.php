@@ -4,6 +4,7 @@ namespace App\Http\Concerns;
 
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Identity\Services\WaiverSettings;
+use App\Domain\Platform\Services\Analytics\EmailUtm;
 use Illuminate\Http\Request;
 
 /**
@@ -44,7 +45,9 @@ trait AuthorizesGuardianAuthorization
      */
     protected function authorizeGuardianAccess(Request $request, ?OrderItem $reservation): void
     {
-        abort_unless($request->hasValidSignature() || $this->ownsOrder($request, $reservation), 403);
+        // ⚠️ Las claves de atribución no cuentan para la firma (`EmailUtm`, analítica §4.1): el correo las pega
+        // DESPUÉS de firmar. Con `hasValidSignature()` a secas, el enlace del correo daría 403 al padre.
+        abort_unless($request->hasValidSignatureWhileIgnoring(EmailUtm::IGNORED_QUERY) || $this->ownsOrder($request, $reservation), 403);
 
         abort_if($reservation?->order?->user?->isAnonymized() ?? false, 410);
 
@@ -66,6 +69,6 @@ trait AuthorizesGuardianAuthorization
      */
     protected function guardianVia(Request $request): string
     {
-        return $request->hasValidSignature() ? 'signed_link' : 'account';
+        return $request->hasValidSignatureWhileIgnoring(EmailUtm::IGNORED_QUERY) ? 'signed_link' : 'account';
     }
 }

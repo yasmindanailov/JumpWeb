@@ -48,7 +48,7 @@ class OrderExpiredWithoutPayment extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        return (new BrandedMailMessage)
+        return (new BrandedMailMessage($this))
             ->subject(__('emails.order_expired_without_payment.subject', ['code' => $this->order->code]))
             ->hero('emails.order_expired_without_payment', 'warn', EmailSlip::forOrder($this->order))
             ->line(__('emails.order_expired_without_payment.intro', ['code' => $this->order->code]))

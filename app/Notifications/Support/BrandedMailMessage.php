@@ -2,8 +2,10 @@
 
 namespace App\Notifications\Support;
 
+use App\Domain\Platform\Services\Analytics\EmailUtm;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Lang;
 
 /**
@@ -21,9 +23,55 @@ use Illuminate\Support\Facades\Lang;
  * ⚠️ `MailMessage` **no es `Macroable`** (comprobado en el framework), así que una subclase es la
  * única forma de que esto sea encadenable — y encadenable importa: sin ello cada notificación
  * tendría que romper su `return (new MailMessage)->…` en dos.
+ *
+ * ▶ **Y desde la T1c de la analítica (`#678`) el molde sabe QUÉ correo es**: `new BrandedMailMessage($this)`
+ * en cada `toMail()`. De la notificación sale su clave (`EmailUtm::keyOf()`), y con ella el botón, el
+ * logotipo y los enlaces del pie llevan `utm_source=email&utm_medium=<clave>` — el mismo nombre con el que
+ * se cuentan el envío (`email_sent`) y la vuelta (`email_clicked`). Sin `$this` no hay UTM y nada falla;
+ * por eso `EmailUtmTest` lee las fuentes y exige que los veinticinco lo pasen.
  */
 class BrandedMailMessage extends MailMessage
 {
+    /** La clave del correo (`EmailUtm::keyOf()`), o `null` si este correo no lleva UTM (los avisos al negocio). */
+    private ?string $campaign = null;
+
+    /**
+     * @param  Notification|null  $notification  el correo que se está componiendo: **`$this` en `toMail()`**.
+     */
+    public function __construct(?Notification $notification = null)
+    {
+        if ($notification !== null) {
+            $this->campaign(EmailUtm::keyOf($notification));
+        }
+    }
+
+    /**
+     * La clave con la que se etiquetan los enlaces de este correo. Una clave que no sea de un correo al cliente
+     * (`EmailUtm::isCustomerKey()`) deja el correo SIN UTM: el equipo no es audiencia.
+     */
+    public function campaign(?string $key): static
+    {
+        $this->campaign = $key !== null && EmailUtm::isCustomerKey($key) ? $key : null;
+        // Viaja a la vista: el logotipo de la cabecera y los cuatro enlaces del pie se etiquetan allí.
+        $this->viewData['utm'] = $this->campaign;
+
+        return $this;
+    }
+
+    /**
+     * El botón, con el UTM pegado si el enlace es de esta casa. Una URL FIRMADA (post-form, justificante,
+     * verificación) sigue siendo válida: `EmailUtm` explica por qué se pega DESPUÉS de firmar.
+     *
+     * @param  string  $text
+     * @param  string  $url
+     */
+    public function action($text, $url): static
+    {
+        parent::action($text, EmailUtm::tag((string) $url, $this->campaign));
+
+        return $this;
+    }
+
     /**
      * LA CABECERA EN TINTA: chapa de estado, titular y —si se le pasan— las filas del resguardo.
      *

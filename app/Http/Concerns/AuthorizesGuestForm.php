@@ -4,6 +4,7 @@ namespace App\Http\Concerns;
 
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Services\PostFormAddons;
+use App\Domain\Platform\Services\Analytics\EmailUtm;
 use Illuminate\Http\Request;
 
 /**
@@ -79,10 +80,15 @@ trait AuthorizesGuestForm
      *
      * ⚠️ **Un enlace SIN `v` se lee como versión 0**, que es el default de la columna: los enlaces
      * emitidos antes de que esto existiera siguen abriendo. La versión solo separa cuando alguien rota.
+     *
+     * ⚠️ **Las claves de atribución (`utm_*`, `ref`, click ids) NO cuentan para la firma** (analítica §4.1,
+     * `EmailUtm`): el correo las pega DESPUÉS de firmar, y un gestor de correo puede añadir las suyas. Con
+     * `hasValidSignature()` a secas, el enlace del correo daría 403. Cualquier otra clave pegada sigue rompiendo
+     * la firma, que es lo que tiene que pasar.
      */
     protected function hasLiveGuestFormSignature(Request $request, ?OrderItem $reservation): bool
     {
-        if (! $request->hasValidSignature()) {
+        if (! $request->hasValidSignatureWhileIgnoring(EmailUtm::IGNORED_QUERY)) {
             return false;
         }
 
@@ -104,7 +110,7 @@ trait AuthorizesGuestForm
      */
     protected function guestFormVia(Request $request): string
     {
-        return $request->hasValidSignature() ? 'signed_link' : 'account';
+        return $request->hasValidSignatureWhileIgnoring(EmailUtm::IGNORED_QUERY) ? 'signed_link' : 'account';
     }
 
     /**

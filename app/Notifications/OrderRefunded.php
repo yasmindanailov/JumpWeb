@@ -66,7 +66,7 @@ class OrderRefunded extends Notification implements ShouldQueue
             ?? $this->payment?->amount
             ?? $this->order->total;
 
-        $message = (new BrandedMailMessage)
+        $message = (new BrandedMailMessage($this))
             ->subject(__('emails.order_refunded.subject', ['code' => $this->order->code]))
             ->hero('emails.order_refunded', 'neutro', EmailSlip::forOrder($this->order))
             ->line(__('emails.order_refunded.intro', ['code' => $this->order->code]))

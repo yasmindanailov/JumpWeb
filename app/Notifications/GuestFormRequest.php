@@ -75,7 +75,7 @@ class GuestFormRequest extends Notification implements ShouldQueue
         // ⚠️ Y por eso esta nota **no escribe esa llamada entre comillas**: el escáner es un `grep` y
         // se quedaría con el ejemplo del comentario en vez de con el código. Es `#553` otra vez —una
         // aserción por subcadena acusa al texto que la nombra—, ahora del lado del censo.
-        $message = (new BrandedMailMessage)
+        $message = (new BrandedMailMessage($this))
             ->subject($dia !== null
                 ? __('emails.guest_form.subject', ['day' => $dia, 'code' => $code])
                 : __('emails.guest_form.subject_no_date', ['code' => $code]))

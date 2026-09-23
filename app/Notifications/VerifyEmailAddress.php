@@ -42,7 +42,7 @@ class VerifyEmailAddress extends VerifyEmail implements ShouldQueue
 
     protected function buildMailMessage($url): MailMessage
     {
-        return (new BrandedMailMessage)
+        return (new BrandedMailMessage($this))
             ->subject(__('emails.verify_email.subject'))
             ->hero('emails.verify_email', 'warn')
             ->line(Lang::get('Please click the button below to verify your email address.'))

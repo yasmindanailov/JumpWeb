@@ -30,7 +30,7 @@ class EmailChangeRequested extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        return (new BrandedMailMessage)
+        return (new BrandedMailMessage($this))
             ->subject(__('emails.email_change_requested.subject'))
             ->hero('emails.email_change_requested', 'warn')
             ->line(__('emails.email_change_requested.intro', ['new' => $this->newEmailMasked]))

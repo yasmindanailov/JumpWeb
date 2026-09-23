@@ -8,6 +8,7 @@ use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Platform\Models\Setting;
+use App\Domain\Platform\Services\Analytics\EmailUtm;
 use App\Notifications\OrderCancelled;
 use App\Notifications\OrderConfirmation;
 use App\Notifications\OrderExpiredWithoutPayment;
@@ -84,7 +85,8 @@ class OrderNotificationsTest extends TestCase
 
         $this->assertStringContainsString('JJ-DECL01', $mail->subject);
         $this->assertSame(__('emails.order_declined.action'), $mail->actionText);
-        $this->assertSame(route('account.orders'), $mail->actionUrl);
+        // Con la UTM del correo pegada (T1c de la analítica, `EmailUtm`): el destino no cambia.
+        $this->assertSame(EmailUtm::tag(route('account.orders'), 'order_payment_declined'), $mail->actionUrl);
 
         // ⚠️ El motivo (0101 → card_expired) ya no es una línea del cuerpo: desde `#503` vive en su
         // propio AVISO, porque es lo que el cliente busca al abrir este correo y como frase suelta
@@ -112,7 +114,7 @@ class OrderNotificationsTest extends TestCase
 
         $this->assertStringContainsString('JJ-EXP01', $mail['subject']);
         $this->assertSame(__('emails.order_expired_without_payment.action'), $mail['actionText']);
-        $this->assertSame(route('home'), $mail['actionUrl']);
+        $this->assertSame(EmailUtm::tag(route('home'), 'order_expired_without_payment'), $mail['actionUrl']);
         $body = implode("\n", $mail['introLines'] ?? []);
         $this->assertStringContainsString(__('emails.order_expired_without_payment.no_charge'), $body);
     }
@@ -128,7 +130,7 @@ class OrderNotificationsTest extends TestCase
         $mail = (new OrderCancelled($order))->toMail($order->user)->toArray();
 
         $this->assertStringContainsString('JJ-CAN01', $mail['subject']);
-        $this->assertSame(route('account.orders'), $mail['actionUrl']);
+        $this->assertSame(EmailUtm::tag(route('account.orders'), 'order_cancelled'), $mail['actionUrl']);
 
         $body = implode("\n", $mail['introLines'] ?? []);
         // Importe del pedido fuera (era ruidoso si no había devolución asociada).

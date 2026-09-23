@@ -38,7 +38,7 @@ class OrderCancelled extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        return (new BrandedMailMessage)
+        return (new BrandedMailMessage($this))
             ->subject(__('emails.order_cancelled.subject', ['code' => $this->order->code]))
             ->hero('emails.order_cancelled', 'err', EmailSlip::forOrder($this->order))
             ->line(__('emails.order_cancelled.intro', ['code' => $this->order->code]))

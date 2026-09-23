@@ -2,7 +2,9 @@
      del asunto en la bandeja. Viaja como atributo hasta `layout`, que es el único sitio donde
      puede ir ANTES de la cabecera: metida en el cuerpo, lo primero que se lee sigue siendo el
      `alt` del logotipo. La notificación no la escribe: la deriva `hero()` de su grupo. --}}
-<x-mail::message :preheader="$preheader ?? null">
+{{-- `:utm` es la CLAVE del correo (`EmailUtm`, analítica §4.1): con ella el logotipo y los enlaces del pie
+     llevan `utm_source=email&utm_medium=<clave>`, como el botón. La pone el molde (`BrandedMailMessage($this)`). --}}
+<x-mail::message :preheader="$preheader ?? null" :utm="$utm ?? null">
 {{-- LA CABECERA EN TINTA (`#503`) — chapa + titular + resguardo, la caja oscura que abre el correo.
      La notificación aporta DATOS (`viewData['hero']`), no HTML: componer marcado dentro de una
      notificación es cómo se acaba con veintitrés moldes en vez de uno.

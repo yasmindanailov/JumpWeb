@@ -10,6 +10,7 @@ use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Models\User;
+use App\Domain\Platform\Services\Analytics\EmailUtm;
 use App\Notifications\GuestFormRequest;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -66,7 +67,10 @@ class GuestFormRequestInvitationTest extends TestCase
 
         // ⚠️ El ancla va al FINAL y no toca la query: un `?algo=` pegado a una URL firmada la
         // invalidaría —la firma cubre la query—, y un `#fragmento` ni siquiera se envía al servidor.
-        $this->assertSame($plain.'#gf-invite', $url);
+        // ▶ Desde la T1c de la analítica el botón lleva además la UTM del correo, pegada DESPUÉS de la
+        // firma y ANTES del ancla; la firma sobrevive porque la validación la ignora (`EmailUtm`).
+        $this->assertSame(EmailUtm::tag($plain, 'guest_form_request').'#gf-invite', $url);
+        $this->get(EmailUtm::tag($plain, 'guest_form_request'))->assertOk();
 
         // El instrumento primero: que el enlace sin ancla efectivamente abre. Sin esto, la aserción
         // de arriba sería una comparación de cadenas que no prueba que el enlace sirva para nada.

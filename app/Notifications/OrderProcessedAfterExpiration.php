@@ -48,7 +48,7 @@ class OrderProcessedAfterExpiration extends Notification implements ShouldQueue
         // reembolso prometido reflejan lo realmente cobrado, no el valor pleno.
         $this->order->loadMissing(['items', 'adjustments']);
 
-        return (new BrandedMailMessage)
+        return (new BrandedMailMessage($this))
             ->subject(__('emails.order_after_expiration.subject', ['code' => $this->order->code]))
             ->hero('emails.order_after_expiration', 'warn', EmailSlip::forOrder($this->order))
             ->line(__('emails.order_after_expiration.intro', ['code' => $this->order->code]))

@@ -33,7 +33,7 @@ class CustomerAccountCreated extends Notification implements ShouldQueue
     {
         $park = (string) Setting::businessName();
 
-        return (new BrandedMailMessage)
+        return (new BrandedMailMessage($this))
             ->subject(__('emails.customer_account_created.subject'))
             ->hero('emails.customer_account_created', 'ok')
             ->line(__('emails.customer_account_created.intro', ['park' => $park]))

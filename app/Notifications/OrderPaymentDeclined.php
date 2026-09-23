@@ -48,7 +48,7 @@ class OrderPaymentDeclined extends Notification implements ShouldQueue
     {
         $reasonText = RedsysResponseCode::reasonText($this->dsResponse);
 
-        return (new BrandedMailMessage)
+        return (new BrandedMailMessage($this))
             ->subject(__('emails.order_declined.subject', ['code' => $this->order->code]))
             ->hero('emails.order_declined', 'err', EmailSlip::forOrder($this->order))
             ->line(__('emails.order_declined.intro', ['code' => $this->order->code]))

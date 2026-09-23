@@ -57,7 +57,7 @@ class GuardianAuthorizationSigned extends Notification implements ShouldQueue
             $minor = $proof->subjectName() ?? '—';
             $code = $proof->orderCode();
 
-            $mail = (new BrandedMailMessage)
+            $mail = (new BrandedMailMessage($this))
                 // ⚠️⚠️ **El asunto NO nombra al menor** (`#406`): `guardian_email` lo teclea un adulto
                 // sin cuenta y nadie comprueba que ese buzón sea suyo, así que una errata manda esto a
                 // un desconocido. El asunto se replica donde el adjunto no llega —previsualización de

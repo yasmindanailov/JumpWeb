@@ -50,7 +50,7 @@ class PostFormAddonsChanged extends Notification implements ShouldQueue
         $code = $this->item->order?->code ?? '—';
         $currency = $this->item->order?->currency ?? 'EUR';
 
-        $message = (new BrandedMailMessage)
+        $message = (new BrandedMailMessage($this))
             ->subject(__('emails.postform_addons.subject', ['code' => $code]))
             ->hero('emails.postform_addons', 'ok', EmailSlip::forItem($this->item))
             ->line(__('emails.postform_addons.intro', ['code' => $code]))

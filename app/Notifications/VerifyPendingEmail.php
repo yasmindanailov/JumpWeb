@@ -44,7 +44,7 @@ class VerifyPendingEmail extends Notification implements ShouldQueue
 
         $park = (string) Setting::businessName();
 
-        return (new BrandedMailMessage)
+        return (new BrandedMailMessage($this))
             ->subject(__('emails.verify_pending_email.subject'))
             ->hero('emails.verify_pending_email', 'warn')
             ->line(__('emails.verify_pending_email.intro'))

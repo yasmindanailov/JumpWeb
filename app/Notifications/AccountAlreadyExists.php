@@ -38,7 +38,7 @@ class AccountAlreadyExists extends Notification implements ShouldQueue
         // único** en un test del modal hasta que la auditoría de A8 lo re-apuntó.
         $park = (string) Setting::businessName();
 
-        return (new BrandedMailMessage)
+        return (new BrandedMailMessage($this))
             ->subject(__('account.exists_mail.subject'))
             ->hero('account.exists_mail', 'info')
             ->line(__('account.exists_mail.line1'))

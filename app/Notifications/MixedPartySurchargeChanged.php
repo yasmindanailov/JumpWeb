@@ -69,7 +69,7 @@ class MixedPartySurchargeChanged extends Notification implements ShouldQueue
         // celebración, y esto es un dato del dinero.
         $tono = $this->newCents > 0 ? 'warn' : 'info';
 
-        $message = (new BrandedMailMessage)
+        $message = (new BrandedMailMessage($this))
             ->subject(__('emails.mixed_party_surcharge.subject', ['code' => $code]))
             ->hero('emails.mixed_party_surcharge', $tono, EmailSlip::forItem($this->item))
             ->line(__($this->byCustomer

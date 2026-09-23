@@ -41,7 +41,7 @@ class EmailChangeCompleted extends Notification implements ShouldQueue
     {
         $park = (string) Setting::businessName();
 
-        return (new BrandedMailMessage)
+        return (new BrandedMailMessage($this))
             ->subject(__('emails.email_change_completed.subject'))
             ->hero('emails.email_change_completed', 'ok')
             ->line(__('emails.email_change_completed.intro', ['new' => $this->newEmailMasked, 'park' => $park]))

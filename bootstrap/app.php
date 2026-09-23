@@ -1,6 +1,7 @@
 <?php
 
 use App\Domain\Identity\Services\CookieConsent;
+use App\Domain\Platform\Services\Analytics\EmailUtm;
 use App\Domain\Platform\Services\Analytics\Visitor;
 use App\Http\Api\ApiExceptionRenderer;
 use App\Http\Api\ApiSurface;
@@ -9,6 +10,7 @@ use App\Http\Middleware\Api\NoStoreWhenAuthenticated;
 use App\Http\Middleware\EnsureSiteAvailable;
 use App\Http\Middleware\NoStore;
 use App\Http\Middleware\NoStoreWebResponses;
+use App\Http\Middleware\RecordEmailClick;
 use App\Http\Middleware\RequiresPanelRole;
 use App\Http\Middleware\ResolveAttribution;
 use App\Http\Middleware\ResolveVisitor;
@@ -47,6 +49,15 @@ return Application::configure(basePath: dirname(__DIR__))
         // El propio middleware es NO-OP en `local` y bajo tests (`shouldSpecifyTrustedHosts`).
         $middleware->trustHosts();
 
+        // ── Las claves de atribución no cuentan para una FIRMA (`specs/analitica.md` §4.1, `#678` T1c) ──
+        // Los correos pegan `utm_source=email&utm_medium=<clave>` DESPUÉS de firmar cada enlace, y un gestor
+        // de correo puede añadir las suyas de la misma lista. El middleware `signed` (verificación de correo,
+        // confirmación de cambio de correo, el recibo de la invitación) las ignora al validar; los accesos
+        // que validan a mano usan `hasValidSignatureWhileIgnoring()` con la MISMA lista (`EmailUtm`). Cualquier
+        // otra clave pegada sigue dando 403 — y firmar CON el UTM dentro e ignorarlo aquí sería un 403 seguro:
+        // el HMAC cubre la query entera y la validación retira lo ignorado antes de recalcularlo.
+        $middleware->validateSignatures(except: EmailUtm::IGNORED_QUERY);
+
         // ── `no-store` en la web (`RGPD-04`), 2026-08-23 ────────────────────────────────────────
         // Repone una cabecera que hasta hoy ponía un ACCIDENTE: no la emitía ningún middleware de
         // este proyecto sino **Livewire**, cuyo hook de componente enciende un flag que un
@@ -73,6 +84,9 @@ return Application::configure(basePath: dirname(__DIR__))
             // atribución (sin consultar nada) y ACUÑA la cookie del visitante si no la trae —solo aquí,
             // en la web: una respuesta de la API puede ser pública y cacheable, y no lleva `Set-Cookie`.
             ResolveVisitor::class.':'.ResolveVisitor::MINT,
+            // `email_clicked` (T1c): la llegada desde un correo, por su `utm_source=email`. DESPUÉS del
+            // visitante, que es quien deja el contexto al que el hecho se ata (solo con `analytics`).
+            RecordEmailClick::class,
         ]);
 
         // ── Grupo `api` — declarado PIEZA A PIEZA (Fase 3 · paso 0, spec §4.7) ────────────────

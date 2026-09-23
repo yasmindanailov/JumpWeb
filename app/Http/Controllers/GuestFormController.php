@@ -14,6 +14,7 @@ use App\Domain\Booking\Services\MixedPartySettings;
 use App\Domain\Booking\Services\MixedPartySurcharge;
 use App\Domain\Booking\Services\PartyInvitations;
 use App\Domain\Booking\Services\PostFormAddons;
+use App\Domain\Platform\Services\Analytics\EmailUtm;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Domain\Platform\Services\Money;
 use App\Domain\Platform\Services\PublicFreeText;
@@ -135,7 +136,10 @@ class GuestFormController extends Controller
             // ⚠️ La firma la compone el DOMINIO (`guestFormSignedStoreUrl`), no esta capa: desde D14
             // toda URL firmada del post-form lleva además la VERSIÓN del enlace, y una compuesta a
             // mano aquí sería la que se queda sin ella.
-            'formAction' => $request->hasValidSignature()
+            // ⚠️ Ignorando las claves de atribución (`EmailUtm`): el enlace del correo las trae pegadas
+            // DESPUÉS de la firma, y con `hasValidSignature()` a secas el formulario POSTearía a la ruta
+            // de cuenta — y el padre sin sesión se quedaría fuera al enviar.
+            'formAction' => $request->hasValidSignatureWhileIgnoring(EmailUtm::IGNORED_QUERY)
                 ? $reservation->guestFormSignedStoreUrl()
                 : route('reservation.guests.store', ['reservation' => $reservation]),
         ]);
@@ -505,7 +509,7 @@ class GuestFormController extends Controller
         }
 
         $deadline = app(GuestCountPolicy::class)->deadlineFor($reservation);
-        $signed = $request->hasValidSignature();
+        $signed = $request->hasValidSignatureWhileIgnoring(EmailUtm::IGNORED_QUERY);
 
         return [
             'invitation' => $invitation,

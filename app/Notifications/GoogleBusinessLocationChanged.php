@@ -49,7 +49,8 @@ class GoogleBusinessLocationChanged extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        $message = (new BrandedMailMessage)
+        // Sin UTM ni `email_sent` aunque pase `$this`: su clave está en `EmailUtm::NOT_TO_CUSTOMERS`.
+        $message = (new BrandedMailMessage($this))
             // ❗ El dato delante (`#506`): en el corte de una lista de móvil tiene que entrar el
             // rótulo de la ficha, no la palabra «aviso».
             ->subject(__('emails.google_business_location.subject', ['name' => $this->locationTitle]))

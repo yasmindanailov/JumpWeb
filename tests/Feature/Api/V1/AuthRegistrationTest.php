@@ -11,6 +11,7 @@ use App\Domain\Identity\Services\LegalDocumentPublisher;
 use App\Domain\Identity\Services\SelfSignup;
 use App\Domain\Identity\Services\TermsAcceptance;
 use App\Domain\Platform\Models\Setting;
+use App\Domain\Platform\Services\Analytics\EmailUtm;
 use App\Domain\Platform\Services\Turnstile;
 use App\Notifications\AccountAlreadyExists;
 use App\Notifications\VerifyEmailAddress;
@@ -187,7 +188,8 @@ class AuthRegistrationTest extends ApiTestCase
         Notification::assertSentTo($existing, AccountAlreadyExists::class, function ($notification) use ($existing) {
             $mail = $notification->toMail($existing)->toArray();
 
-            $this->assertSame(route('login'), $mail['actionUrl'], 'el CTA del correo ya no lleva a identificarse');
+            // Con la UTM del correo pegada (T1c de la analítica, `EmailUtm`): el destino sigue siendo `login`.
+            $this->assertSame(EmailUtm::tag(route('login'), 'account_already_exists'), $mail['actionUrl'], 'el CTA del correo ya no lleva a identificarse');
             $this->assertSame(__('account.exists_mail.action'), $mail['actionText']);
 
             return true;

@@ -56,7 +56,7 @@ class OrderConfirmation extends Notification implements ShouldQueue
         // sale de una sola derivación, así que asunto y titular no se pueden contradecir.
         $fecha = $this->order->singleVisitDate();
         $dia = $this->day();
-        $message = (new BrandedMailMessage)
+        $message = (new BrandedMailMessage($this))
             ->subject($fecha !== null
                 ? __('emails.order_confirmation.subject', [
                     'day' => DisplayTime::dayLabel($fecha),

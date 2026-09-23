@@ -50,7 +50,7 @@ class VisitEveNotice extends Notification implements ShouldQueue
     {
         $code = (string) $this->reservation->order->code;
 
-        $message = (new BrandedMailMessage)
+        $message = (new BrandedMailMessage($this))
             // ❗ El dato DELANTE (`#506`): en el corte de una lista de móvil tiene que entrar el
             // código, no la instrucción.
             ->subject(__('emails.visit_eve.subject', ['code' => $code]))

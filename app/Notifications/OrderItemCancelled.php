@@ -57,7 +57,7 @@ class OrderItemCancelled extends Notification implements ShouldQueue
         $productName = $this->item->ticketType?->tr('name')
             ?? __('emails.order_item_cancelled.product_fallback', ['id' => $this->item->id]);
 
-        $message = (new BrandedMailMessage)
+        $message = (new BrandedMailMessage($this))
             ->subject(__('emails.order_item_cancelled.subject', ['code' => $this->order->code, 'product' => $productName]))
             ->hero('emails.order_item_cancelled', 'err', EmailSlip::forItem($this->item))
             ->line(__('emails.order_item_cancelled.intro', [

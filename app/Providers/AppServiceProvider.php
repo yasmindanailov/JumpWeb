@@ -63,6 +63,7 @@ use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Models\PaymentRefund;
 use App\Domain\Payments\Services\PaymentSettings;
 use App\Domain\Platform\Listeners\ApplyBusinessSender;
+use App\Domain\Platform\Listeners\RecordEmailSent;
 use App\Domain\Platform\Models\AnalyticsEvent;
 use App\Domain\Platform\Models\AnalyticsSession;
 use App\Domain\Platform\Models\AuditLog;
@@ -78,6 +79,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Mail\Events\MessageSending;
+use Illuminate\Notifications\Events\NotificationSent;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
@@ -240,6 +242,10 @@ class AppServiceProvider extends ServiceProvider
         // framework, que disparan todas las puertas (contraseña, Google, verificación). El listener vive en
         // Identity por el mismo motivo que el de arriba.
         Event::listen(Login::class, RecordLoginFact::class);
+
+        // Y `email_sent` desde el `NotificationSent` del framework (T1c): cada correo al cliente que sale, con
+        // la misma clave que llevan sus enlaces (`EmailUtm`), también cuando lo manda el worker de la cola.
+        Event::listen(NotificationSent::class, RecordEmailSent::class);
 
         // El REMITENTE de todo correo sale del PANEL y no del `.env` (`#500`, T2 de
         // `specs/correos-desde-canvas.md`). Va como listener y no como `Mail::alwaysFrom()` para no
