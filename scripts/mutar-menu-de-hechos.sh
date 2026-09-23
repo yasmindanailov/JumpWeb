@@ -14,7 +14,7 @@ cd "$(git rev-parse --show-toplevel)"
 SAIL="docker compose exec -u sail -T laravel.test"
 # ⚠️ El último no es una clase sino un MÉTODO: `CatalogEditTest` entero son ~40 casos del panel y el arnés
 # corre esta orden una vez por mutación. Se trae solo la guarda de la foto, que es la de esta tanda.
-TESTS="$SAIL php artisan test --filter='PublicFactsBoundaryTest|SiteFactsTest|ScheduleFactsTest|RulesFactsTest|LegalDocumentsTest|PricesFactsTest|SocialProofFactsTest|VenueAddressTest|LocalNumberTest|MetaDescriptionTest|HeroStatusTest|ApiContractTest|CatalogTest|the_ficha_photo_is_editable_from_the_panel'"
+TESTS="$SAIL php artisan test --filter='PublicFactsBoundaryTest|SiteFactsTest|ScheduleFactsTest|RulesFactsTest|FaqsFactsTest|LegalDocumentsTest|PricesFactsTest|SocialProofFactsTest|VenueAddressTest|LocalNumberTest|MetaDescriptionTest|HeroStatusTest|ApiContractTest|CatalogTest|the_ficha_photo_is_editable_from_the_panel'"
 
 LECTOR=app/Domain/Platform/Services/PublicFacts.php
 RECURSO=app/Http/Resources/Api/V1/SiteFactsResource.php
@@ -27,6 +27,9 @@ ENVIVO=app/Http/Resources/Api/V1/OpeningNowResource.php
 ESTADO=app/Domain/Content/Services/OpeningState.php
 NORMAS=app/Http/Resources/Api/V1/RulesFactsResource.php
 NORMASCTRL=app/Http/Controllers/Api/V1/RulesFactsController.php
+# El plato de las DUDAS (F5, `#671`).
+DUDAS=app/Http/Resources/Api/V1/FaqsFactsResource.php
+DUDASCTRL=app/Http/Controllers/Api/V1/FaqsFactsController.php
 CONTRATO=tests/Feature/Api/ApiContractTest.php
 LEGALES=app/Http/Resources/Api/V1/LegalDocumentsResource.php
 LEGALESCTRL=app/Http/Controllers/Api/V1/LegalDocumentsController.php
@@ -45,7 +48,7 @@ MODELOPROD=app/Domain/Booking/Models/TicketType.php
 YAML=openapi/v1.yaml
 
 TMP="$(mktemp -d)"
-FICHEROS=("$LECTOR" "$RECURSO" "$HORARIO" "$ENVIVO" "$ESTADO" "$NORMAS" "$NORMASCTRL" "$CONTRATO" "$LEGALES" "$LEGALESCTRL" "$PRECIOS" "$PRECIOSCTRL" "$RUTAS" "$FICHAZONA" "$FICHAPROD" "$LECTORCAT" "$MODELOZONA" "$MODELOPROD" "$YAML" "$PANEL" "$CIFRA" "$DIRECCION" "$NUMERO" "$RESUMEN" "$MONEDA")
+FICHEROS=("$LECTOR" "$RECURSO" "$HORARIO" "$ENVIVO" "$ESTADO" "$NORMAS" "$NORMASCTRL" "$DUDAS" "$DUDASCTRL" "$CONTRATO" "$LEGALES" "$LEGALESCTRL" "$PRECIOS" "$PRECIOSCTRL" "$RUTAS" "$FICHAZONA" "$FICHAPROD" "$LECTORCAT" "$MODELOZONA" "$MODELOPROD" "$YAML" "$PANEL" "$CIFRA" "$DIRECCION" "$NUMERO" "$RESUMEN" "$MONEDA")
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$TMP/$(basename "$f")" "$f"; touch "$f"; done; }
 trap 'restaurar; rm -rf "$TMP"' EXIT
 for f in "${FICHEROS[@]}"; do cp "$f" "$TMP/$(basename "$f")"; done
@@ -327,6 +330,42 @@ mutar "el resumen de las normas sale en el orden de la TABLA y no en el de la vi
 mutar "el resumen de un texto legal sale de los TITULARES y no del primer párrafo" \
   "$LEGALES" "                collect(\$secciones)->pluck('p')->filter()->first()," \
   "                collect(\$secciones)->pluck('h')->filter()->first(),"
+
+# ── Las DUDAS (`#671`) ─────────────────────────────────────────────────────────────────────────
+mutar "una duda DESACTIVADA vuelve a la web por la API" \
+  "$DUDASCTRL" "Faq::query()->where('is_active', true)->orderBy('position')->orderBy('id')->get()" \
+  "Faq::query()->orderBy('position')->orderBy('id')->get()"
+
+mutar "el desempate de dos dudas empatadas se INVIERTE" \
+  "$DUDASCTRL" "->orderBy('position')->orderBy('id')" "->orderBy('position')->orderByDesc('id')"
+
+mutar "una duda A MEDIAS se publica (una pregunta que el negocio no contesta)" \
+  "$DUDAS" "        \$servidas = \$this->dudas->filter(
+            fn (Faq \$duda): bool => \$this->pregunta(\$duda) !== '' && \$this->respuesta(\$duda) !== '',
+        )->values();" \
+  "        \$servidas = \$this->dudas->values();"
+
+# ⚠️⚠️ ÉSTE es el defecto que casi entra: filtrar «vacío» por el idioma PEDIDO, antes del respaldo.
+# No rompe nada en español y deja el recurso VACÍO ENTERO en inglés y francés.
+mutar "el texto se lee del idioma PEDIDO sin respaldo (y en/fr se quedan sin ninguna duda)" \
+  "$DUDAS" "        return trim((string) \$duda->tr('question'));" \
+  "        return trim((string) (\$duda->question[app()->getLocale()] ?? ''));"
+
+mutar "\`updated_at\` sale de la TABLA y no de lo servido (una duda que no se publica fecha lo que sí)" \
+  "$DUDAS" "'updated_at' => \$servidas->max('updated_at')?->toIso8601String()," \
+  "'updated_at' => \$this->dudas->max('updated_at')?->toIso8601String(),"
+
+mutar "las dudas dejan de cachearse en público" \
+  "$RUTAS" "    Route::get('/faqs', FaqsFactsController::class)
+        ->middleware('cache.headers:public;max_age=300;etag')" \
+  "    Route::get('/faqs', FaqsFactsController::class)"
+
+mutar "el idioma deja de ser obligatorio en las dudas (y la primera caché fija el idioma de todos)" \
+  "$DUDASCTRL" "\$request->validate(['lang' => ['required', 'string', Rule::in(SetLocale::SUPPORTED)]]);" \
+  "\$request->validate(['lang' => ['sometimes', 'string', Rule::in(SetLocale::SUPPORTED)]]) + ['lang' => 'es'];"
+
+mutar "el contrato deja de exigir los dos campos de una duda" \
+  "$YAML" "            required: [question, answer]" "            required: [question]"
 
 echo
 echo "mutaciones: $muerden/$total muerden"

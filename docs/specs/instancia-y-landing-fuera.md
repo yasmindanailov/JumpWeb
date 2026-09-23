@@ -10,22 +10,22 @@
 - **Regla que ordena todo**: la landing SALE del producto. El producto se queda con el dominio, el panel, el
   cajón empaquetado y **una API pública de HECHOS**; quien diseña una landing usa lo que quiera de ese menú y
   **todo es opcional** (`#631`). Nada de presentación vuelve al producto.
-- **Empieza por** §1 (el censo) → §4.1 (el menú) → §4.2 (lo que sale del panel) → §7 (lo del owner).
+- **Empieza por** §1 (censo) → §4.1 (el menú y su receta) → §4.2 (lo que sale del panel).
 - **Trampas, antes de tocar**:
   - ⚠️⚠️ **`settings` mezcla el secreto de Redsys con el correo de contacto** (71 filas, medidas en §1.3):
     la API publica una **lista blanca por recurso**, nunca la tabla. Un volcado filtra `redsys_secret_key`.
   - ⚠️⚠️ **`contact.phone` y `theme.*` los leen los CORREOS** (§1.2): no pueden bajar al paquete de la
     instancia, porque ahí el CSS del cliente no llega. Mismo motivo que `#209` dio para el color de acción.
-  - ⚠️ **Una URL que cambia es SEO perdido y no falla nada**: el sitemap se compara antes y después (11 URLs,
-    capturadas en §1.5).
-  - ⚠️ El criterio «cero marca del cliente en el código» **no se puede leer como un `grep` a secas**: 166 de
-    sus 167 apariciones son citas de artboards en comentarios (§1.4).
+  - ⚠️ **Una URL que cambia es SEO perdido y no falla nada**: el sitemap se compara antes y después (§1.5).
+  - ⚠️ «Cero marca en el código» **no es un `grep`**: 166 de sus 167 casos son citas de artboards (§1.4).
   - ⚠️ **Dos formas de foto a propósito** (`#645`): el producto la SUBE a `uploads`, la zona guarda ruta a
     `public/`; las dos salen como URL absoluta por su `imageUrl()`.
-- **Estado**: **MENÚ SERVIDO** (`#640`→`#646`, contrato 1.9.0): `site`, horario, normas, legales, precios,
-  la ficha de producto y zona, y la cifra de prueba social —**sin reseñas: esperan a su fuente** (`#646`)—.
-  ▶ Sigue la **T2**, el paquete de la instancia. **Un recurso público nuevo se escribe con su lista blanca o
-  no se escribe**, y lo no rellenado no viaja — tampoco lo rellenado y BORRADO, que en BD es `''`.
+- **Estado**: **MENÚ SERVIDO** + **T2a→T2c, T3·1 y T4 hechas**; en marcha la **vía A**, y de sus cuatro
+  platos **las DUDAS ✅** (`#671`, contrato **1.12.0**). Quedan **atracciones, servicios y el bar**, que son
+  los tres que la T3 sigue sin poder sacar del panel (§4.6).
+  ▶ **Un recurso nuevo se escribe con su lista blanca o no se escribe**; lo no rellenado no viaja, ni lo
+  BORRADO (`''` en BD). ❗ Y el filtro de «vacío» va **después** del respaldo de idioma, o el recurso sale
+  vacío entero en `en`/`fr` (`#671`, §4.1).
 - **Invariantes que toca**: `RGPD-05` (prueba social sin avatares), `PERF-02` (la lectura pública se cachea),
   `SEC-01` (rutas nuevas dentro del grupo `api`). Dinero y aforo: ninguno; esta fase no toca el embudo.
 
@@ -322,6 +322,46 @@ no una valoración que el negocio declare—.
 
 **Medido**: `SocialProofFactsTest` (4), `scripts/mutar-menu-de-hechos.sh` **38/38**.
 
+#### `GET /faqs?lang=` — LAS DUDAS ✅ (`#671`, 2026-09-23) · el primero de los cuatro que faltaban
+
+El primer plato de la tanda que abre la **vía A** (§4.6): los cuatro que le faltan al menú son exactamente
+los cuatro recursos que la T3 no pudo sacar del panel. Las dudas son la pieza más simple de las cuatro
+—`faqs` son cuatro columnas: `question`, `answer`, `position`, `is_active`— y por eso van primero: afinan la
+plantilla antes de entrar en atracciones, que es la gorda.
+
+**Lo que decide este plato, y no es código**: qué duda es PUBLICABLE. Una pregunta sin respuesta publica
+algo que el negocio no contesta, así que **una duda a medias no viaja**. Hoy las dos portadas —la del
+anfitrión y la de la instancia— pintan el acordeón entero sin mirar y **solo `StructuredData::faqPage()`
+salta las inservibles**, o sea que el `FAQPage` y lo que se ve YA divergen. Aquí la regla baja al DATO: lo
+que sale por la API es el conjunto publicable y una landing puede pintarlo entero sin comprobar nada. De ahí
+que `question` y `answer` sean **`required` sin excepción** — este plato no necesita entrada en
+`OPTIONAL_BY_DESIGN`, y eso no es casualidad: es la misma decisión vista desde el contrato.
+
+❗❗❗ **LA TRAMPA QUE CASI ENTRA, Y LA CAZÓ UNA MEDIDA, NO UNA RELECTURA: el filtro de «vacío» va DESPUÉS
+del respaldo de idioma.** `Translated::pick()` encadena con `??`, no con `?:`, así que resuelve el respaldo
+por clave **ausente**. Las doce dudas de esta instalación están escritas **solo en español** y sus claves
+`en`/`fr` **no existen** (medido fila a fila antes de escribir nada). Una versión que comprobara si el
+idioma pedido está relleno **antes** de pasar por `tr()` habría dejado este recurso **vacío entero en inglés
+y en francés** —doce dudas dentro, cero publicadas—, con el JSON válido y todos los casos en verde salvo el
+que se escribió para eso. ▶ *Se filtra por lo que `tr()` DEVUELVE, que es el texto que el cliente recibe.*
+▶ Y el caso `''` sigue vivo por el otro lado: el panel escribe cadena vacía cuando alguien rellena y BORRA
+(§4.1.ter), y ahí `??` sí la entrega. Los dos casos van en la misma guarda.
+
+⚠️ **El desempate por `id` no es cosmético.** `position` no es única —ni el panel ni la migración lo
+impiden—, y sin segundo criterio el orden de un empate lo decide el motor: dos peticiones idénticas podrían
+devolver dos cuerpos y dos `ETag` distintos **sin que nadie tocara el panel**. Medido: las doce van de 1 a
+12 sin empates, o sea que hoy no se nota — que es justo por lo que conviene fijarlo antes.
+
+⚠️ **`updated_at` es de lo SERVIDO y no de la tabla**: una duda que no se publica no puede fechar lo que sí.
+▶ **No se publica el `FAQPage` de schema.org**, a propósito: es MARCADO, y el producto no le impone a una
+landing qué estándar de datos estructurados usa. Lo que sí es conocimiento del producto —qué duda es
+publicable— viaja ya aplicado dentro del dato, que es donde no caduca.
+
+**Medido**: `FaqsFactsTest` (10 casos, 36 aserciones) · `scripts/mutar-menu-de-hechos.sh` **58/58** (ocho
+mutantes nuevos, ninguno «NO SE APLICÓ») · Pint y Larastan sin tocar la línea base · y **en vivo** contra las
+doce dudas reales: 200 en los tres idiomas con `ETag` distinto por idioma y estable entre peticiones, 304
+con `If-None-Match`, 422 sin `lang` y con un idioma inventado. Contrato **1.12.0** (añade, no cambia).
+
 ### 4.1.bis · La RECETA de un plato nuevo
 
 Siete tandas destilan esto. Vale para **cualquier** recurso público que se añada después, dentro de F5 o
@@ -435,8 +475,14 @@ la API** —la vía A de §3, el destino—, así que lo siguiente son **los cua
 menú: atracciones, dudas, servicios y el bar**. ▶ Y no es una tanda más: son **exactamente los cuatro
 recursos que la T3 no pudo sacar del panel** (§4.6.ter), bloqueados PORQUE no tienen plato. Con ellos
 servidos, la landing nueva los consume, el panel los sigue editando y la T3 se desbloquea sola.
-⚠️ `[PENDIENTE: owner]`: si antes de los platos se construye el **kit declarativo de widgets**, que
-`#632`·P2 aplazó «hasta que una segunda instancia lo pida» — y esta landing es ese validador.
+✅ **CONTESTADO por el owner el 23-09**: se arranca por los PLATOS, no por el kit de widgets —que sigue
+donde lo dejó `#632`·P2, esperando a que una segunda instancia lo pida—. Y con él llegó `#670`: **no se
+despliega en piezas**, así que estos platos no van a producción sueltos; van dentro de la v2.0.0 grande.
+▶ **El orden de los cuatro, y su porqué**: **dudas ✅** (`#671`) → **servicios** → **el bar** →
+**atracciones**. De menos a más: las dudas son cuatro columnas y afinan la plantilla; atracciones son 23
+filas con imagen, chapa y etiqueta de edad, y van al final para llegar con la receta ya rodada.
+⚠️ **El §0 de esta spec está a 2.044 de 2.048 bytes**: el plato que venga **no cabe ahí**. Su estado se
+escribe aquí y en §4.1, y de §0 solo se toca la línea de «Estado» — o se muda algo antes de añadir.
 
 ### 4.6.bis · La T2c, medida: 208 huérfanas eran 17 (`#667`, 2026-09-21)
 

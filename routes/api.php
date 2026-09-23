@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\V1\CatalogAddonsController;
 use App\Http\Controllers\Api\V1\CatalogProductsController;
 use App\Http\Controllers\Api\V1\CatalogZonesController;
 use App\Http\Controllers\Api\V1\ConfigController;
+use App\Http\Controllers\Api\V1\FaqsFactsController;
 use App\Http\Controllers\Api\V1\GoogleSignupController;
 use App\Http\Controllers\Api\V1\GuestFormController;
 use App\Http\Controllers\Api\V1\InvitationHostController;
@@ -183,6 +184,15 @@ Route::name('api.v1.')->group(function (): void {
     Route::get('/rules', RulesFactsController::class)
         ->middleware('cache.headers:public;max_age=300;etag')
         ->name('rules.facts');
+
+    // Las DUDAS que el negocio contesta. Mismo régimen que las normas —`?lang=` obligatorio, cinco
+    // minutos, `ETag`— porque son la misma clase de cosa: texto que el panel opera y la web consume.
+    // ⚠️ **Una duda a medias no viaja**: una pregunta sin respuesta publica algo que el negocio no
+    // contesta. Hoy las portadas pintan el acordeón entero y solo el `FAQPage` salta las inservibles;
+    // aquí la regla baja al DATO, que es donde una landing no la puede incumplir.
+    Route::get('/faqs', FaqsFactsController::class)
+        ->middleware('cache.headers:public;max_age=300;etag')
+        ->name('faqs.facts');
 
     // Los TEXTOS LEGALES: el índice y cada documento, con los marcadores (`:legal_name`…) ya resueltos.
     // ⚠️ Cuelgan de `/legal/documents` y no de `/legal/{clave}` porque `/legal/waiver` ya existe y dice

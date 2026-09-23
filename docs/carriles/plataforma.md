@@ -2,12 +2,9 @@
 
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669 AGOTADA con `#669`** → sigue en **670–699** · Último usado: **`#669`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, `docs/specs/instancia-y-landing-fuera.md` · Actualizado: **2026-09-21**, cierre de sesión
-> (**T2b, T2c, T3·1 y T4 cerradas**: la landing entera fuera, el CSS huérfano podado con trinquete,
-> el widget de ofertas retirado y `zones` sin sus cuatro columnas muertas).
-> ✅ **Banda nueva ya abierta**: `DECISIONES.md` declara **670–699** para este carril (avisado en el
-> buzón, que es fichero compartido).
+> **640–669 AGOTADA con `#669`** → **670–699 EN CURSO** · Último usado: **`#671`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, `docs/specs/instancia-y-landing-fuera.md` · Actualizado: **2026-09-23**
+> (`#670`: el owner decide **no desplegar en piezas** · `#671`: el plato de las **dudas**, servido).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
 > Techo **32 KB** (check 10; subido de 24 en `#724` con la medida delante). El contador de la suite no
 > vive aquí: va en el trailer del commit.
@@ -23,13 +20,17 @@
   **solo encoge**.
 - **F5, su principio `[DECIDIDO owner]`** (`#631`, `#632`): la landing consume un MENÚ DE HECHOS por API y
   TODO es opcional; atracciones y widget de ofertas FUERA del panel («oferta» = hecho de precio).
-- ❗❗❗ **DIRECCIÓN NUEVA DEL OWNER (21-09), y es lo primero que hay que leer**: va a terminar su
-  diseño en Claude Design y **estrenar la arquitectura nueva con una landing que consuma la API** —o
-  sea, la **VÍA A**, que §3 de la spec hermana declara el destino—. Eso reordena F5: lo siguiente
-  dejan de ser la T5 y pasan a ser **los cuatro platos que le faltan al menú**, que son exactamente
-  los cuatro recursos que la T3 no pudo sacar. El detalle y la pregunta abierta, en «retomar» 3.
-- **v1.2.0 CORTADA el 19-09 y SIN DESPLEGAR** — el detalle, en el punto 2 de «por dónde retomar», que es
-  donde hay que leerlo. `#627`: la app en React Native + Expo.
+- ❗❗❗ **LAS DOS DECISIONES DEL OWNER QUE ORDENAN TODO LO DEMÁS, Y VAN PRIMERO**:
+  ▶ **La VÍA A** (21-09): termina su diseño en Claude Design y **estrena la arquitectura nueva con una
+  landing que consuma la API** —el destino que §3 de la spec hermana ya declaraba—. Eso reordenó F5: lo
+  siguiente son **los cuatro platos que le faltan al menú**, que son exactamente los cuatro recursos que
+  la T3 no pudo sacar del panel. ✅ El 23-09 contestó la pregunta que quedaba: **se arranca por los
+  platos**, no por el kit de widgets de `#632`·P2.
+  ▶ **`#670` (23-09): NO SE DESPLIEGA EN PIEZAS.** v1.2.0 se queda sin desplegar y producción sigue en
+  **v1.1.0** hasta el final del programa; **v2.0.0 es UNA versión grande** con todo dentro (los cuatro
+  platos, la landing nueva, el cajón, el justificante, la invitación y las analíticas), de noche y con el
+  owner pendiente. Su motivo: un despliegue cuesta ATENCIÓN aunque salga bien, y la quiere para diseñar.
+  ⚠️ Consecuencias en «retomar» 2. `#627`: la app en React Native + Expo.
 - **`#628` · la promo «−20 % online» sigue EN PRODUCCIÓN** (cuatro filas `promo.*`; receta de fin en
   `ENTORNOS.md` §6 y en «retomar» 5).
 - ⚠️ **Tras la mudanza de `#648` una sesión ya abierta PIERDE skills y hooks** (el registro del plugin se
@@ -41,16 +42,20 @@
 1. **F4 · CERRADA el 19-09** (`specs/cajon-empaquetable.md`: sus cinco tandas y sus seis trampas). ⚠️ **Le
    falta un ojo humano sobre la COMPRA de la T5** (medida, no vista): se enseña con el banco de su §4.8,
    **que se BORRA al terminar** o la guarda 9 del despliegue aborta.
-2. **LO SIGUIENTE: DESPLEGAR la v1.2.0, y eso lo decide el owner.** Etiqueta cortada y empujada
-   (`v1.2.0` = `f581c791`, anotada, 19-09) con su changelog de dos mitades. **Para las instancias no hay
-   nada que hacer**: sin migraciones, sin claves de `.env`, sin ajustes. ⚠️ Producción, de noche o con el
-   parque cerrado (`#594`); sería el **décimo**. Cortar la versión y desplegarla son dos actos, y el
-   segundo es suyo. ▶ El SPA cerró el borde §7.1·5 (`#718`) y dio la invitación por cerrada con el ✅ del
-   owner (20-09): su freno ya no aplica; le quedan el `.ics` en un móvil real y Turnstile real en producción.
-   ▶ **`main` ya se movió tras etiquetar**, así que la guarda 8 dice «HEAD no es una versión»: se despliega
-   desde **`git checkout v1.2.0`** y se vuelve con `git checkout main`. Comprobado en seco: desde la
-   etiqueta, el pre-vuelo contesta «versión a desplegar: v1.2.0».
-   ▶ Lo hecho DESPUÉS de esa etiqueta (F5 entera, contrato **1.11.0**) va en la siguiente versión.
+2. **EL DESPLIEGUE, DECIDIDO Y APARCADO** (`#670`, 23-09): no se despliega nada hasta la v2.0.0. Lo que
+   hay que saber mientras tanto, y son cuatro cosas:
+   ▶ **Producción se queda en v1.1.0.** Un defecto en producción obligaría a `cherry-pick` sobre la
+   etiqueta o a desplegar igualmente: **no hay tercera salida**. Es el precio, y el owner lo conoce.
+   ⚠️⚠️ **LOS DOS INTERRUPTORES DE LA INVITACIÓN NO SE TOCAN** (`ticket_types.guest_invitation` y
+   `guardian_authorization`). Medido contra el git: **v1.2.0 lleva T1→T5 y NO lleva T6 ni T7** —la T6
+   (`#708`→`#713`) y la T7 (`#714`→`#717`) entraron DESPUÉS de la etiqueta, igual que `#718`—, así que
+   encenderlos daría media feature: página del padre sin aterrizaje del anfitrión y sin los correos.
+   ❗ El `CHANGELOG.md` de v1.2.0 dice «la invitación entra ENTERA» y **es falso**: corregido en esta
+   tanda, porque es la clase de frase que el siguiente se cree antes de un despliegue.
+   ▶ **Cuando llegue**: se despliega desde la etiqueta **v2.0.0** que se corte entonces —la guarda 8
+   exige etiqueta y rechaza `HEAD`—. Siete migraciones acumuladas y subiendo, **una destructiva**
+   (`zones`), así que ese despliegue pide **ENSAYO en staging** antes, no solo las guardas del script.
+   De noche o con el parque cerrado (`#594`). ▶ v1.2.0 (`f581c791`) queda como etiqueta histórica.
 3. **F5 EN CURSO · el MENÚ DE HECHOS, recurso a recurso** (`specs/instancia-y-landing-fuera.md` ✅; censo en
    su §1 y las tres decisiones del owner en `#639`: las redes se quedan en el panel, los cuatro campos
    muertos de `zones` se retiran, «cero marca» se lee como código vivo).
@@ -72,37 +77,17 @@
    `InstanceViews::MATERIAL_CONSUMIDO_POR_LA_INSTANCIA` · el separador de MILLARES de `Money` sigue a
    mano **a propósito** (`#651`): pendiente del owner.
 
-   ✅✅ **T2c CERRADA: el CSS huérfano, podado y con TRINQUETE** (`#667`, 21-09; detalle en la spec
-   hermana **§4.6.bis**). Las **208** clases de `#665` eran **17** —el anfitrión sostiene 174— y lo que
-   sí había eran **128 sin consumidor de nadie**: **119 podadas** (−20,3 KB) con **huella 0/38**, y las
-   **9 del hero vacío intactas** porque su CSS lo aparcó el owner en `#226`.
-   ❗❗❗ **Un censo de CSS huérfano que busca el nombre LITERAL miente**: mintió tres veces (161 → 139 →
-   128) porque aquí una clase se compone de **tres formas** —concatenación JS, concatenación PHP e
-   interpolación Blade en el atributo—. Lo que queda encendido es `LandingCssHasNoOrphansTest`, con
-   deuda declarada de **15** que **solo encoge**.
-
-   ✅ **T3·1 HECHA: el widget de ofertas y el complemento por atracción, fuera** (`#668`, 21-09;
-   detalle en la spec hermana **§4.6.ter**). De los seis recursos salen los dos con CERO uso; los otros
-   cuatro **esperan a tener plato en el menú** (ver abajo). Huella 0/38. ❗ La tercera pieza del alcance
-   —«las secciones de texto»— **no existía**: ninguna de las 71 claves de `settings` está sin consumidor.
-   ▶▶ **`InstanceViews::CONTRATO` = 2, la PRIMERA subida**: `offers` salió del composer, o sea del
-   contrato de vista de las nueve páginas. Los dos `instancia.json` ya lo declaran.
-   ❗❗❗ **PODAR POR CLASE NO PODA UNA FEATURE** (dejó vivas sus `@keyframes`, sus tokens y los
-   selectores mezclados): *se poda por su BLOQUE*. ⚠️⚠️ Y **una retirada arrastra su cadena**, aquí de
-   cinco eslabones —el panel entero cayó (112 rojos) porque `AdminSettingsHub` listaba el recurso y el
-   censo buscó `\bOffer\b`, que no casa con `OfferResource`—.
-
-   ✅ **T4 HECHA: `zones` pierde sus cuatro columnas muertas** (`#669`, 21-09; spec hermana §4.3).
-   `subtitle`, `age_label`, `area_sqm` y `rides_count`: re-medidas antes de tocarlas, solo vivían en el
-   modelo, el formulario del panel y un test del seeder. **Huella 0/38 · suite 5.567.**
-   ❗ **`rides_count` COINCIDÍA con el recuento real** (15=15, 8=8): no mentía, pero era un contador a
-   mano de lo que el producto ya calcula donde lo publica. Lo delató quién lo vigilaba —`ZoneImageTest`
-   **comparaba las dos fuentes**—, y *que hiciera falta compararlas era el síntoma*.
-   ⚠️⚠️ **El SEEDER era el consumidor escondido**: al aplicar la migración, la suite dio **604 errores**
-   porque `LandingContentSeeder` seguía escribiendo las cuatro. *El censo de una columna incluye quien la
-   SIEMBRA, no solo quien la lee.*
-   ⚠️ Se pierden los datos (subtítulos, etiquetas de edad, los metros): no se migran porque no se
-   publican. El `down()` recrea la forma, nunca el contenido.
+   ✅ **T2c, T3·1 y T4 CERRADAS el 21-09** (`#667`, `#668`, `#669`). Su narrativa y sus lecciones
+   —el censo literal que mintió tres veces, podar por BLOQUE y no por clase, el SEEDER como consumidor
+   escondido— viven donde no caducan: spec hermana **§4.6.bis**, **§4.6.ter** y **§4.3**, y sus
+   decisiones. Aquí solo lo que hace falta para seguir:
+   ▶ **T2c**: 119 clases huérfanas podadas (−20,3 KB) y **trinquete** encendido
+   (`LandingCssHasNoOrphansTest`, deuda de **15** que solo encoge). **Si añades CSS, su consumidor nace
+   con él.**
+   ▶ **T3·1**: fuera los dos recursos con cero uso y **`InstanceViews::CONTRATO` = 2**; los otros cuatro
+   esperan a tener plato (abajo). Los dos `instancia.json` ya lo declaran.
+   ▶ **T4**: `zones` sin `subtitle`, `age_label`, `area_sqm` ni `rides_count`. ⚠️ Esa migración **borra
+   columnas** y viaja en la v2.0.0.
 
    ▶▶▶ **LO SIGUIENTE CAMBIÓ EL 21-09, Y LO CAMBIÓ EL OWNER.** Dijo, con estas palabras: *«estaba
    pensando en terminar mi trabajo de diseño en Claude Design y estrenar la nueva arquitectura donde la
@@ -116,12 +101,21 @@
    tengan, la landing nueva los consume por API, el panel los sigue editando y **la T3 se desbloquea
    sola**. Un trabajo resuelve los dos. La receta de un plato está en la spec §4.1.bis y sus ocho
    trampas en §4.1.ter.
-   ⚠️ **La T5 (cortar la v2.0.0) se aparca a propósito**: cortar la versión antes de estrenar la
-   arquitectura sería versionar un estado que va a cambiar entero. No está bloqueada, está esperando.
-   ▶ **`[PENDIENTE: owner]` — la pregunta que quedó sin contestar al cerrar**: ¿se arranca por los
-   cuatro platos, o antes por el **KIT DE WIDGETS** para poder montar piezas sueltas mientras diseña?
-   `#632`·P2 aplazó ese kit *«hasta que una segunda instancia lo pida»* —su motivo: «diseñarlo hoy es
-   diseñarlo sin quien lo valide»— y la landing nueva es justo ese validador.
+   ✅✅ **LA PREGUNTA ABIERTA, CONTESTADA (23-09): se arranca por los PLATOS**, no por el kit de widgets
+   —que sigue donde lo dejó `#632`·P2, esperando a que una segunda instancia lo pida—.
+   ▶▶ **LAS DUDAS, SERVIDAS** (`#671`, contrato **1.12.0**; el detalle en la spec §4.1, que es donde no
+   caduca). **Quedan tres, y van en este orden: SERVICIOS → EL BAR → ATRACCIONES**, de menos a más:
+   atracciones son 23 filas con imagen, chapa y etiqueta de edad, y van al final para llegar con la
+   receta rodada.
+   ❗❗❗ **LO QUE DEJÓ EL PRIMER PLATO Y VALE PARA LOS TRES QUE FALTAN**: el filtro de «lo que no
+   viaja» va **DESPUÉS** del respaldo de idioma. `Translated::pick()` encadena con `??`, no con `?:`,
+   así que el respaldo lo resuelve por clave AUSENTE — y medido, el contenido de esta instalación está
+   **solo en español**, con `en`/`fr` ausentes. Comprobar «¿está relleno el idioma pedido?» antes de
+   `tr()` vacía el recurso ENTERO en inglés y francés, con el JSON válido y todo en verde. Los tres
+   platos que quedan son traducibles: *se filtra por lo que `tr()` DEVUELVE.*
+   ⚠️ **El §0 de la spec está a 2.044 de 2.048 bytes**: el plato siguiente no cabe ahí. Su estado se
+   escribe en §4.1 y §4.6, y de §0 solo se toca la línea de «Estado».
+   ⚠️ **La T5 (cortar v2.0.0) ya no es de esta fase**: con `#670` es el final del programa entero.
 
    ▶ **Lo que se le contestó sobre el CAJÓN** (medido el 21-09, para que no se vuelva a medir):
    **no tiene que ser un lateral.** Lo que lo ata a esa forma son TRES cosas y las tres son
@@ -141,9 +135,12 @@
    `audit_logs`: 800, 1000, 1200, 1500, 1800, 1200, 1400, 1800, 2200), quitar el badge y **borrar las cuatro
    filas `promo.*` el mismo día**. Sin desplegar. El sistema de ofertas nace como hecho de precio (`#631`).
 6. Después, **F6** (app nativa; hereda del token lo que su spec §2 nombra: Google, alta, dispositivos).
-- **Del owner, HOY**: por dónde arrancar la vía A —los cuatro platos o el kit de widgets— · el fin de
-  la promo · cuándo se despliega (⚠️ la próxima versión lleva una MIGRACIÓN que borra columnas, `#669`).
-  ▶ Las TRES de §7 de la spec de F5 ya están contestadas desde `#639`: esa línea estaba caducada.
+- **Del owner, HOY**: el **fin de la promo** (es suyo el cuándo) · el **ojo** que le falta a la compra de
+  la T5 de F4 · y, cuando toque, **el contrato de EVENTOS de analíticas**, que hay que decidir ANTES de
+  escribir la landing nueva —un evento no emitido no se recupera, y la landing ya vive fuera del producto,
+  así que instrumentarla después es reabrir nueve vistas en otro repo—.
+  ▶ Contestadas y retiradas de aquí: por dónde arrancar la vía A (los platos, 23-09) y cuándo se
+  despliega (`#670`: no en piezas). Las TRES de §7 de la spec de F5 lo están desde `#639`.
 
 ## Ficheros de este carril
 
@@ -274,6 +271,21 @@ dueño es el carril de la web/reseñas—) ·
 
 ## Buzón
 
+### ❗❗❗ Para TODOS los carriles (emisor: plataforma, 2026-09-23) — `#670`: NO SE DESPLIEGA EN PIEZAS
+- ▶ **Decisión del owner**: producción se queda en **v1.1.0** hasta el final del programa. **v2.0.0 es
+  UNA versión grande** con todo dentro —los cuatro platos, la landing nueva, el cajón, el justificante,
+  la invitación y las analíticas—, de noche y con él pendiente. Su motivo: un despliegue cuesta ATENCIÓN
+  aunque salga bien, y la quiere para diseñar. **No pidáis despliegues sueltos.**
+- ❗❗ **SPA, esto te toca directo: los dos interruptores de la invitación NO se encienden todavía.**
+  Medido contra el git, y corrige lo que dice el `CHANGELOG`: **v1.2.0 lleva T1→T5 y NO lleva T6 ni T7**
+  —tu T6 (`#708`→`#713`), tu T7 (`#714`→`#717`) y `#718` entraron DESPUÉS de la etiqueta del 19-09 a las
+  09:52—. Encenderlos sobre esa etiqueta daría media feature: la página del padre sin el aterrizaje del
+  anfitrión y sin los tres correos. ▶ Tu trabajo no está en cuestión: está esperando a la versión grande.
+- ⚠️ **He corregido el `CHANGELOG.md` de v1.2.0**, que afirmaba «la invitación digital entra ENTERA».
+  Es fichero mío (`#624`), pero la frase hablaba de lo tuyo y por eso te lo digo.
+- ▶ **Contrato de la API en `1.12.0`** (`#671`, `/api/v1/faqs`): **solo añade**, ninguna ruta existente
+  cambia de forma. Tu `ApiContractTest` y el cajón no se enteran.
+
 ### ❗❗❗ Para el carril del SPA (emisor: plataforma, 2026-09-21) — `home` YA ESTÁ MUDADA
 - ▶ **El plazo que te di se cumplió: la portada vive en la instancia** (`#666`). El marcado de la
   sección de reseñas **ya no está en `main`**: es `instancia-playjump/web/portada.blade.php`. Para
@@ -329,11 +341,6 @@ dueño es el carril de la web/reseñas—) ·
 - ⚠️ **`compose.yaml` cambió** (montaje `../instancias:/var/www/instancias` por `SEC-12`, y `name: jumpweb`):
   tu próximo `docker compose up -d` **recrea el contenedor** y se lleva el Chromium de la sonda (`/sonda` §1).
   Y en esta máquina el repo se mudó a `~/proyectos/jumpweb/producto` (`#648`); a ti no te afecta.
-
-### Para el carril de la web (emisor: plataforma, 2026-09-18)
-- **Toqué lo tuyo por orden del owner** (`#628`, la promo): tarifas, `/precios`, tres reglas de `landing.css`,
-  `RateCards`/`RateTable`; sin `promo.*` no cambia un byte. ⚠️ Defecto tuyo previo, sin tocar: «9,60 €» se
-  parte en dos renglones a 390 px en `/precios` (hoy, en la vista de la instancia).
 
 ### Atendido
 - **SPA `#724`, el techo del carril** (20-09): atendido. Mi encabezado ya dice **32 KB**. ⚠️ Llegó a mitad

@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.11.0
+  version: 1.12.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -611,6 +611,48 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Rules'
+        '304':
+          description: Sin cambios desde el `ETag` enviado en `If-None-Match`.
+        '422':
+          description: Falta `lang` o no es uno de los idiomas soportados.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /faqs:
+    get:
+      tags: [Instalación]
+      operationId: getFaqs
+      summary: Las dudas que el negocio contesta, en el orden que fija el panel
+      description: |
+        Las preguntas frecuentes que el negocio opera desde el panel. Solo las **activas**: una duda
+        desactivada es una duda retirada, y publicarla aquí la devolvería a la web por la puerta de atrás.
+
+        **Una duda a medias no viaja.** Una pregunta sin respuesta publica algo que el negocio no contesta,
+        así que si el texto de cualquiera de los dos campos queda vacío —porque no se escribió, o porque se
+        escribió y se BORRÓ, que en la base es `""`— esa duda no sale. Lo que recibes es el conjunto
+        publicable: puedes pintarlo entero sin comprobar nada.
+
+        **El orden lo fija el panel** (`position`), con el orden de creación como desempate. Dos peticiones
+        idénticas devuelven siempre el mismo cuerpo: una respuesta cacheable con `ETag` no puede barajar.
+
+        **El idioma viaja en la URL** (`lang`, obligatorio), como en `/rules` y por lo mismo: la respuesta se
+        cachea. La cadena de respaldo cuando una duda no está traducida —idioma → respaldo → la primera que
+        haya— la resuelve el servidor; el cliente recibe texto, no un mapa de idiomas.
+
+        ⚠️ **No se publica el `FAQPage` de schema.org**: eso es marcado, y el producto no le impone a una
+        landing qué estándar de datos estructurados usa. Lo que sí es conocimiento del producto —qué duda es
+        publicable— ya viene aplicado en el dato.
+      parameters:
+        - $ref: '#/components/parameters/SidebarLang'
+      responses:
+        '200':
+          description: Las dudas publicables en ese idioma.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Faqs'
         '304':
           description: Sin cambios desde el `ETag` enviado en `If-None-Match`.
         '422':
@@ -3553,6 +3595,35 @@ components:
               name: { type: string }
               description: { type: string }
               reason: { type: string, description: 'El PORQUÉ de la norma, que es lo que hace que se cumpla.' }
+
+    Faqs:
+      type: object
+      additionalProperties: false
+      required: [lang, updated_at, faqs]
+      properties:
+        lang:
+          type: string
+          description: El idioma en el que viene el texto, que es el que se pidió.
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: |
+            La duda PUBLICADA tocada más recientemente. Es de lo servido y no de la tabla: una duda a
+            medias no se publica, así que tampoco puede mover esta fecha. `null` sin ninguna publicable:
+            no se inventa una revisión que nadie hizo.
+        faqs:
+          type: array
+          description: |
+            Las dudas publicables, ya ordenadas. Las dos claves van siempre: una duda a la que le falte
+            cualquiera de las dos no está en esta lista.
+          items:
+            type: object
+            additionalProperties: false
+            required: [question, answer]
+            properties:
+              question: { type: string }
+              answer: { type: string }
 
     SocialProofFacts:
       type: object

@@ -27,8 +27,13 @@ carril del SPA la invitación digital completa, todavía apagada.
 - **Recomendado, no obligatorio** (`docs/INSTALACION-CLIENTE.md` §4): en `client.css`, declarar el bloque de
   tokens en `:root, .sidecart` en vez de solo `:root`. Hoy no cambia nada; el día que la landing sea de la
   instalación, es lo que hace que su tema llegue también al cajón.
-- **La invitación digital de cumpleaños entra entera en el código y sigue APAGADA**: sus dos interruptores los
+- **La invitación digital de cumpleaños entra HASTA LA T5 y sigue APAGADA**: sus dos interruptores los
   enciende el panel. Hasta entonces el embudo es exactamente el de v1.1.0.
+  ❗ **CORREGIDO el 2026-09-23** (`#670`): esta línea decía «entra ENTERA» y era **falsa**. Medido contra el
+  git: la etiqueta se cortó el 19-09 a las 09:52 y **la T6 (`#708`→`#713`), la T7 (`#714`→`#717`) y `#718`
+  entraron después**. Con esta versión en producción, encender los interruptores daría **media feature**
+  —la página pública del padre, sin el aterrizaje del anfitrión y sin los tres correos—. Se deja escrito
+  aquí y no se borra: la frase original era la que alguien se iba a creer antes de un despliegue.
 - La promo de `#628` (precio anterior tachado y recuadro de oferta) sigue como está: son filas de `settings`, y
   esta versión no las toca.
 
