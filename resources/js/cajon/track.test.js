@@ -74,14 +74,19 @@ function montar({ dataset = {}, search = '', referrer = '', pathname = '/entrada
 
 describe('el identificador y el hash', () => {
     test('ulid() da 26 caracteres Crockford —lo que `Visitor::isValid` admite— y el tiempo va delante', () => {
-        const a = ulid(AHORA, new Uint8Array(16).fill(0));
-        const b = ulid(AHORA + 1000, new Uint8Array(16).fill(31));
+        const ceros = new Uint8Array(16).fill(0);
+        const a = ulid(AHORA, ceros);
+        const b = ulid(AHORA + 1000, ceros);
 
         assert.match(a, /^[0-9A-HJKMNP-TV-Z]{26}$/);
-        assert.match(b, /^[0-9A-HJKMNP-TV-Z]{26}$/);
+        assert.match(ulid(AHORA, new Uint8Array(16).fill(31)), /^[0-9A-HJKMNP-TV-Z]{26}$/);
+        // ⚠️ Con el MISMO azar: si el orden viniera de los 16 caracteres aleatorios y no de los 10 del tiempo,
+        // este caso pasaría igual (lo dijo el arnés de mutación: la primera versión ordenaba por el azar).
         assert.ok(a < b, 'ordena por tiempo');
+        assert.notEqual(a.slice(0, 10), b.slice(0, 10), 'los diez primeros son el tiempo');
+        assert.equal(ulid(32, ceros).slice(0, 10), '0000000010', 'base 32 Crockford, el tiempo delante');
         assert.equal(a.slice(10), '0000000000000000');
-        assert.equal(b.slice(10), 'ZZZZZZZZZZZZZZZZ');
+        assert.equal(ulid(AHORA, new Uint8Array(16).fill(31)).slice(10), 'ZZZZZZZZZZZZZZZZ');
     });
 
     test('hash() es estable, corto y no contiene el texto', () => {

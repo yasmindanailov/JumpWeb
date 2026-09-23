@@ -206,10 +206,11 @@ class CreateManualOrderPageTest extends TestCase
             ->set('cart', [$this->cartLine(2)]);
 
         $this->assertFalse($page->instance()->hasSource(), 'la fuente no puede venir preseleccionada');
+        $page->assertActionDisabled('createOrder');
         $page->call('create');
         $this->assertSame(0, Order::where('user_id', $customer->id)->count(), 'sin fuente no se cobra');
 
-        $page->set('data.source', 'phone')->call('create');
+        $page->set('data.source', 'phone')->assertActionEnabled('createOrder')->call('create');
 
         $order = Order::where('user_id', $customer->id)->sole();
         $this->assertSame(Order::STATUS_PAID, $order->status);

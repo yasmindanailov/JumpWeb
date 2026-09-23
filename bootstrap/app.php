@@ -36,13 +36,18 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // Producción (Fase 4): la app corre detrás del proxy de Enhance (y posiblemente Cloudflare),
-        // que termina el TLS. Confiar en los proxies para que Laravel lea `X-Forwarded-Proto/Host`
-        // y detecte HTTPS — sin esto, `SESSION_SECURE_COOKIE`, las URLs absolutas y la firma de
-        // Redsys (que depende de la URL) se romperían tras el balanceador. `at: '*'` confía en el
-        // proxy inmediato del host gestionado; se puede acotar a los rangos de Enhance/Cloudflare
-        // cuando se conozcan. Sin efecto en peticiones sin cabeceras `X-Forwarded-*` (tests/local).
-        $middleware->trustProxies(at: '*');
+        // ── NINGÚN PROXY DE CONFIANZA (`SEC-13`, `specs/analitica.md` §4.1, medido el 2026-09-23) ──────
+        // Hasta la T1 de la analítica aquí había `trustProxies(at: '*')`, escrito en la Fase 4 SUPONIENDO
+        // que la app corría detrás de un proxy de Enhance «y posiblemente Cloudflare» que terminaba el TLS.
+        // MEDIDO en staging y en producción: PHP habla con **LiteSpeed en el mismo host** (`lsphp`), no hay
+        // CDN delante (`server: LiteSpeed`, sin `cf-ray`), y LiteSpeed pone `HTTPS=on` él mismo — una
+        // `X-Forwarded-Proto: http` del cliente no cambia ni una URL. Pero la `X-Forwarded-For` del cliente
+        // **sí llegaba a PHP y con `*` se honraba**: con cubos limpios, 65 peticiones con XFF falsa rotatoria
+        // → 0 × 429, y 65 sin cabecera → 429 desde la #61. O sea que el limitador por IP se saltaba y la IP
+        // de auditoría se falsificaba desde cualquier navegador.
+        // ▶ Sin `at:` no se confía en nadie y las `X-Forwarded-*` se ignoran, que es lo correcto cuando el
+        // par de PHP ES el cliente. Si un día se pone un CDN o un balanceador delante, se acota a SUS
+        // rangos aquí (`trustProxies(at: [...])`), nunca a `*`. Lo vigila `TrustedProxiesTest`.
 
         // Protección anti host-header injection: solo se aceptan Host = dominio de `APP_URL` y sus
         // subdominios (deriva de la config, así que vale para cualquier dominio que ponga la clienta).

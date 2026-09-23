@@ -31,6 +31,14 @@ real de un cliente, será otra cosa distinta y con otras reglas (`INSTALACION-CL
 > «denegada» del banco da la excepción `SIS0093`, no una denegación (§5.undecies del e2e).
 
 - **Infra propia** del owner, gestionada desde el panel **enhanceCP**.
+- **La pila, MEDIDA (2026-09-23, `SEC-13`)**: PHP corre como `lsphp` bajo **LiteSpeed en el mismo host**
+  (`server: LiteSpeed`, IP privada `10.169.0.63`, sin CDN: ninguna cabecera `cf-*`/`via`); LiteSpeed termina el
+  TLS y pone `HTTPS=on`, así que **no hay proxy al que confiar** y `bootstrap/app.php` no declara ninguno. El
+  sondeo que lo decidió, y que se repite si algún día se pone un CDN delante: con los cubos del limitador
+  limpios, 65 `GET /api/v1/catalog/zones` con `X-Forwarded-For` falsa rotatoria → 0 × 429 (con `*` la app la
+  honraba) y 65 sin cabecera → 429 desde la #61 (el limitador existe); y `X-Forwarded-Proto: http` no cambia
+  ninguna URL absoluta de la home. **Producción dio los mismos números** (§6; sondeo de solo lectura autorizado
+  por el owner). ⚠️ Un CDN delante exige acotar `trustProxies` a **sus** rangos, nunca a `*`.
 - **Acceso**: `ssh jumpweb-staging` (alias configurado en `~/.ssh/config`, clave dedicada
   `~/.ssh/jumpweb_staging_ed25519`). Solo por CLAVE — **verificado el 2026-08-15**.
   ⚠️ **Ningún secreto vive en este repo**: ni contraseñas, ni claves privadas, ni `.env`.

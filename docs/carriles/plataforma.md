@@ -78,8 +78,11 @@
    sin puente) · los correos con UTM (T1c: pegada TRAS firmar e ignorada al validar; `email_sent`/`email_clicked`)
    · la fuente del pedido manual (T1d, cuatro tarjetas sin defecto; ⚠️ le falta el OJO del owner en la tablet)
    · `anonymize()` desata el libro y el export lleva `analytics` + `attribution` (T1e, contrato **1.19.0**).
-   **Lo siguiente: el CIERRE de T1** — `scripts/mutar-analitica.sh`, `trustProxies` acotado,
-   `redsys:verify-concurrency` (`VERIFY_CONC=1`) y la sonda tras el cierre; después T2 (el cuadro).
+   ✅ **CIERRE de T1 (23-09)**: `scripts/mutar-analitica.sh` **19/19** (destapó tres guardas débiles),
+   `redsys:verify-concurrency --workers=16` ✓, `RGPD-07` + `PAY-21`, y **`trustProxies` MEDIDO y RETIRADO**
+   (`SEC-13`): no hay proxy delante de PHP y con `*` una XFF falsa se honraba (el limitador por IP se saltaba),
+   medido en staging Y en producción (con permiso del owner, solo GETs). ⚠️ Queda el OJO del owner en la fuente
+   del pedido manual (tablet). **Lo siguiente: T2** (el cuadro de mando).
    `[DECIDIDO owner]` 23-09: todo con la v2.0.0 y sin la pregunta tras pagar; `[PENDIENTE: asesoría]` los tres
    puntos de la spec §7.
    ⚠️⚠️ **Lo que dejaron los platos y vale para lo que venga** (detalle en la spec §4.1 y §4.1.ter): si

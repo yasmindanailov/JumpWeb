@@ -25,7 +25,7 @@
   - ⚠️ **`/events` sale del `throttle:api` y del stateful** (`withoutMiddleware`): apilado se come el embudo y
     `sendBeacon` vuelve 419. Un nombre de SERVIDOR desde el cliente se rechaza.
   - ⚠️ **`nullOnDelete` no se dispara nunca**: `anonymize()` y el export cubren las tablas nuevas.
-- **Estado**: T0 ✅ · T1a→e ✅ · cierre de T1 y T2→T5 ⬜ (§4.8). `[DECIDIDO owner]` 23-09: todo con la v2.0.0, sin la pregunta
+- **Estado**: T0 ✅ · **T1 ✅ (23-09)** · T2→T5 ⬜ (§4.8). `[DECIDIDO owner]` 23-09: todo con la v2.0.0, sin la pregunta
   tras pagar. `[PENDIENTE: asesoría]`: los tres puntos de §7.
 - **Invariantes**: `RGPD-01`, `RGPD-05`, `SEC-01`, `PAY-14`, `SUITE-01`; propuesto **`RGPD-07`**. Dinero: ninguno cambia; `redsys:verify-concurrency` tras T1.
 
@@ -180,8 +180,10 @@ El canal `panel` cuenta en ingresos por canal y **no** en el embudo web.
 `->withoutMiddleware(['throttle:api', EnsureFrontendRequestsAreStateful::class])`: **sin sesión, sin CSRF, con
 limitador propio** que SUSTITUYE al del grupo (única ruta así; se escribe en `SEC-01`). `RateLimiter::for('events')`:
 clave `visitor_id` (cookie) con respaldo por IP, **30 lotes/min**, ≤ 50 eventos, cuerpo ≤ 64 KB, `props` ≤ 2 KB,
-tope diario por visitante; `trustProxies` se acota a los rangos del proxy real antes de T1 (medido en
-staging con `X-Forwarded-For` falsa). Anónima: el `user_id` **nunca viene del cliente**; lo pone el servidor
+tope diario por visitante; `trustProxies` **MEDIDO al cerrar T1 (`SEC-13`)**: no hay proxy delante de PHP
+(LiteSpeed en el mismo host) y con el `*` heredado una `X-Forwarded-For` falsa del cliente **se honraba**
+(65 con XFF rotatoria → 0 × 429; 65 sin cabecera → 429 en la #61, en staging Y en producción), así que se
+retiró el `*` y no se confía en nadie; un CDN futuro se acota a sus rangos. Anónima: el `user_id` **nunca viene del cliente**; lo pone el servidor
 al enlazar. Validación **por evento**: acepta los válidos, descarta los inválidos con `Log::warning` y contador
 diario, responde `202 {accepted, rejected: [{index, reason}]}`; `422` solo con el sobre malformado. Un nombre
 de **servidor** desde el cliente → rechazado. `route` y `referrer` se normalizan en `track.js` Y en el servidor
@@ -377,7 +379,7 @@ de §4.3.
 | | Tanda | Entrega | Verificación (§6) |
 |---|---|---|---|
 | T0 | ✅ spec v2, el contrato de eventos, `#678` y la revisión (§7.1) | | docs-check |
-| T1 | el libro, en cinco sub-tandas: **T1a ✅ (23-09)** tablas y poda, cookie, `ResolveVisitor` y `AttributionContext`, la ingesta stateless con su limitador, los hechos de servidor por fuente, el sello en `creating`, `robots.txt`, contrato **1.18.0** (`POST /events`) · **T1b ✅ (23-09)** `track.js` diferido (2,3 KiB gzip, techo 3) y el cajón · **T1c ✅ (23-09)** UTM en los 24 correos al cliente (pegado tras firmar, ignorado al validar), `email_sent` y `email_clicked` · **T1d ✅ (23-09)** la fuente del pedido manual (cuatro tarjetas, obligatoria, sin defecto; `forPanel()` valida) · **T1e ✅ (23-09)** `anonymize()` desata el libro y el export lleva `analytics` y `attribution` (contrato **1.19.0**) · y al cierre el arnés, la sonda y `trustProxies` acotado | contrato **1.19.0** (`experiments` en `/sidebar/session` puede esperar a T5) | tests + arnés + `redsys:verify-concurrency` + sonda |
+| T1 | el libro, en cinco sub-tandas: **T1a ✅ (23-09)** tablas y poda, cookie, `ResolveVisitor` y `AttributionContext`, la ingesta stateless con su limitador, los hechos de servidor por fuente, el sello en `creating`, `robots.txt`, contrato **1.18.0** (`POST /events`) · **T1b ✅ (23-09)** `track.js` diferido (2,3 KiB gzip, techo 3) y el cajón · **T1c ✅ (23-09)** UTM en los 24 correos al cliente (pegado tras firmar, ignorado al validar), `email_sent` y `email_clicked` · **T1d ✅ (23-09)** la fuente del pedido manual (cuatro tarjetas, obligatoria, sin defecto; `forPanel()` valida) · **T1e ✅ (23-09)** `anonymize()` desata el libro y el export lleva `analytics` y `attribution` (contrato **1.19.0**) · y el **CIERRE ✅ (23-09)**: `scripts/mutar-analitica.sh` **19/19** (1 control, 1 declarado), `redsys:verify-concurrency --workers=16` ✓, la sonda, y `trustProxies` medido y retirado (`SEC-13`) | contrato **1.19.0** (`experiments` en `/sidebar/session` puede esperar a T5) | tests + arnés + `redsys:verify-concurrency` + sonda |
 | T1·bis | migración de historia: «anterior a la medición», arranque de cuadros en la fecha del despliegue, `model:prune` y recuento de `deploy.sh` 6→7, ensayo en staging con `schedule:run` a mano, `POLICY_VERSION` la misma noche | | ensayo |
 | T2 | el cuadro de mando, `analytics_daily`, `ad_spend`, permisos | | tests + presupuesto de consultas + `EXPLAIN` |
 | T3a | categorías sin quemar, banner, política por sección, aviso a cuentas, `PUT /me/analytics`, driver y PostHog con `Drivers::csp()` | `POLICY_VERSION` | tests + sonda (cero terceros sin consentir; con consentimiento, sin `securitypolicyviolation`) |
@@ -395,9 +397,9 @@ de §4.3.
 - `SEC-01`: `/events` es la única ruta del grupo `api` fuera del limitador y del stateful, escrito ahí.
 - `PERF-02`: nada por visitante en el arranque cacheado (experimentos en `/sidebar/session`). `AFORO-09`:
   agregados en la zona del parque. `SUITE-01`: PostHog, Meta y TikTok con `Http::fake`.
-- **Propuestas** al cerrar T1/T3: **`RGPD-07`** (*ningún dato personal en `props`; ninguna petición a un
-  tercero sin su categoría consentida; el libro exento no lleva persona*) y una fila de dinero (*el fallo de la
-  analítica nunca alcanza al pago*), con el número que toque en §1.
+- **Escritas al cerrar T1 (23-09)**: **`RGPD-07`** (*el libro exento no lleva persona y ninguna `prop` es dato
+  personal*; la cláusula del tercero marcada **[T3]** hasta que exista el driver) y **`PAY-21`** (*el fallo de la
+  analítica nunca alcanza al pago*). Las dos con su mutante en `scripts/mutar-analitica.sh`.
 
 ## 6. Plan de verificación empírica
 
@@ -422,6 +424,12 @@ de §4.3.
 - `ConsentCategoriesTest` `(futuro)`: `OPTIONAL` de punta a punta; sin `analytics` no hay script del driver
   ni orígenes; con él, las directivas EXACTAS; host con `;` no entra; versión vieja re-pide; retirar
   `analytics` desvincula; el job de conversiones aborta si el consentimiento se retiró.
+- `TrustedProxiesTest` (cierre de T1 ✅, `SEC-13`): las `X-Forwarded-For/Proto/Host/Port` del cliente no cambian
+  IP, esquema ni host, y el `*` no vuelve al fuente. `scripts/mutar-analitica.sh`: **19/19** muerden (PII en
+  claves, ruta sin enmascarar, `server_only`, el sello, el recorder que re-lanza, `forPanel('fax')`, cobrar sin
+  fuente, el botón, la UTM sin pegar, la firma sin ignorar, el `signed`, los dos de `email_clicked`, los tres de
+  la supresión —uno SIN ACOTAR con control—, el export sin `analytics`, el temporizador y el ULID del tracker),
+  1 control, 1 declarado (el `Log` de rechazos). `redsys:verify-concurrency --workers=16` ✓ tras T1.
 - `EmailUtmTest` (T1c ✅): los 25 `toMail()` pasan `$this` al molde (fuentes); los correos de cuenta renderizados
   llevan la UTM en botón, logotipo y pie y el aviso al negocio no; una URL firmada con UTM pegada valida
   ignorándola y NO valida a secas (la prueba de que va fuera del HMAC); el post-form, la verificación y la

@@ -89,6 +89,14 @@ class AttributionSealTest extends TestCase
         $this->assertSame(['operator_id' => 7], $order->attribution);
     }
 
+    /** Y solo una fuente DEL PANEL (T1d): un valor tecleado en el estado del asistente no llega al sello. */
+    public function test_the_panel_context_refuses_a_source_that_is_not_of_the_panel(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        app(AttributionContext::class)->forPanel('fax', 7);
+    }
+
     /**
      * ❗ **Primer toque no directo, a 30 días** (spec §7.1, medicion-3): la cesta vive en `localStorage`,
      * así que quien vuelve días después llega en una sesión «directa». El sello guarda el anuncio.
