@@ -5,6 +5,8 @@ namespace App\Domain\Identity\Models;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\Ticket;
+use App\Domain\Platform\Models\AnalyticsEvent;
+use App\Domain\Platform\Models\AnalyticsSession;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Notifications\PasswordReset;
 use App\Notifications\VerifyEmailAddress;
@@ -420,6 +422,23 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference,
             // A10: el token de reset aún lleva el email ORIGINAL en claro → rastro identificable tras
             // la supresión. Se borra dentro de la misma transacción.
             DB::table('password_reset_tokens')->where('email', $originalEmail)->delete();
+
+            // LA ANALÍTICA (`specs/analitica.md` §4.7, `#678`, T1e): el régimen IDENTIFICADO se desata. Las
+            // sesiones y los hechos que se ataron a esta cuenta —solo con la categoría `analytics`— pierden su
+            // `user_id` y pasan al agregado, que es exento y no es de nadie; y el SELLO de sus pedidos pierde
+            // los identificadores —`visitor_id`, `session_id`, `click_ids`— y CONSERVA la capa de campaña: de
+            // dónde vino una venta es un dato del pedido, no de la persona (spec §7.1, rgpd-2 y rgpd-5).
+            // ⚠️ Las tablas no tienen FK a `users` a propósito (la poda las borra por edad y la fila de
+            // `users` sobrevive), así que el `nullOnDelete` no se dispara nunca por esta vía: se hace aquí.
+            // ⚠️ `saveQuietly()`: sin observadores. El `OrderAnalyticsObserver` volvería a sellar o contaría
+            // una transición, y esto no es ninguna de las dos cosas.
+            AnalyticsSession::query()->where('user_id', $this->getKey())->update(['user_id' => null]);
+            AnalyticsEvent::query()->where('user_id', $this->getKey())->update(['user_id' => null]);
+            $this->orders()->whereNotNull('attribution')->get(['id', 'attribution'])->each(function (Order $order): void {
+                $order->forceFill([
+                    'attribution' => array_diff_key((array) $order->attribution, array_flip(['visitor_id', 'session_id', 'click_ids'])),
+                ])->saveQuietly();
+            });
 
             $this->forceFill([
                 'name' => 'Cliente eliminado',

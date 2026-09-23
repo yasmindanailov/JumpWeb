@@ -33,7 +33,8 @@ interface CustomerOrderHistory
     /**
      * Los pedidos del cliente con el detalle que el art. 20 obliga a entregar: código, estado,
      * importes en céntimos, fechas, líneas con su franja y sus datos de evento, complementos
-     * anidados y entradas emitidas.
+     * anidados, entradas emitidas y —desde `#678` (T1e)— por dónde llegó el pedido (`attribution`:
+     * canal, fuente, medio y campaña; `null` si es anterior a la medición).
      *
      * ⚠️ **Incluye `event_data`** —nombre y ALERGIAS del homenajeado, art. 9— y por eso el consumidor
      * está obligado a servirlo con `no-store` (`RGPD-04`). Que `GET /me/orders` lo excluya a

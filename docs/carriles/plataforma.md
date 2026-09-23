@@ -5,7 +5,7 @@
 > **640–669 AGOTADA con `#669`** → **670–699 EN CURSO** · Último usado: **`#678`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, **`docs/specs/analitica.md`** · Actualizado: **2026-09-23**
 > (**segunda sesión del 23-09**: `#677` los TRAMOS DE GRUPO y el menú COMPLETO, contrato **1.17.0**; `#678` la
-> dirección de la ANALÍTICA, decidida por el owner, con su spec; T1a→T1d del libro hechas).
+> dirección de la ANALÍTICA, decidida por el owner, con su spec; T1a→T1e del libro hechas, contrato 1.19.0).
 > ⚠️ **El techo de 32 KB apretó SIETE veces el 23-09** y se resolvió siempre mudando, nunca subiéndolo (es
 > del owner): **se muda, no se raspa** — y si vuelve a pasar tres veces seguidas, llévaselo con la medida
 > como hizo el SPA en `#724`.
@@ -72,20 +72,16 @@
    cada corrección delante del texto que corrige). Lo que cambió de fondo: el libro tiene DOS regímenes (el
    AGREGADO es exento; el cruce cookie↔cuenta va bajo la categoría `analytics`), tres hechos de dinero no eran
    transiciones de `Order` (cada uno con su fuente real), el sello nace en `creating` desde
-   `AttributionContext`, y la ingesta sale del `throttle:api` y del stateful. ✅ **T1a→T1d hechas (23-09)**:
-   el núcleo del libro (tablas y poda, cookie, contexto, sello en `creating`, ingesta stateless con limitador
-   propio, hechos de servidor por su fuente, contrato **1.18.0**) · el emisor `cajon/track.js` DIFERIDO (2,3 KiB
-   gzip, techo 3; BUZÓN en `index.js`; el cajón cuenta abrir —también al nacer, con motivo—, cada paso y
-   cerrar; `api.js` cuenta sus fallos; `JumpWeb.track()` para los stores del SPA), verificado con
-   `scripts/sonda-analitica.mjs` (`SONDA_BASE=http://localhost`, sin puente: 16/16 en UNA sesión `is_bot`) · y
-   los CORREOS: `new BrandedMailMessage($this)` en los 25 `toMail()`, UTM en botón, logotipo y pie de los 24 al
-   cliente, `email_sent` (`RecordEmailSent`) y `email_clicked` (`RecordEmailClick`, una vez por sesión) · y
-   **T1d**: en el paso de pago del asistente, POR DÓNDE LLEGÓ el pedido (cuatro tarjetas, obligatorio y sin
-   defecto; `create()` lo re-exige y fija `forPanel()` antes de `fulfill()`; `PANEL_SOURCES` valida). Probado
-   con Livewire (sello `panel/phone/offline` + `operator_id`); ⚠️ le falta el OJO del owner en la tablet.
-   **Lo siguiente: T1e** (`anonymize()` y export), y el cierre con `mutar-analitica.sh`, la sonda y
-   `trustProxies`. Todo en la spec **§4.8**. `[DECIDIDO owner]` 23-09: todo con la v2.0.0 y sin la pregunta
-   tras pagar; `[PENDIENTE: asesoría]` los tres puntos de la spec §7.
+   `AttributionContext`, y la ingesta sale del `throttle:api` y del stateful. ✅ **T1a→T1e hechas (23-09)**, cada
+   una con su párrafo en la spec §4.8 y su commit: el núcleo del libro (T1a, contrato 1.18.0) · el emisor
+   `cajon/track.js` diferido con buzón, techo 3 KiB gzip y `scripts/sonda-analitica.mjs` (`SONDA_BASE=http://localhost`,
+   sin puente) · los correos con UTM (T1c: pegada TRAS firmar e ignorada al validar; `email_sent`/`email_clicked`)
+   · la fuente del pedido manual (T1d, cuatro tarjetas sin defecto; ⚠️ le falta el OJO del owner en la tablet)
+   · `anonymize()` desata el libro y el export lleva `analytics` + `attribution` (T1e, contrato **1.19.0**).
+   **Lo siguiente: el CIERRE de T1** — `scripts/mutar-analitica.sh`, `trustProxies` acotado,
+   `redsys:verify-concurrency` (`VERIFY_CONC=1`) y la sonda tras el cierre; después T2 (el cuadro).
+   `[DECIDIDO owner]` 23-09: todo con la v2.0.0 y sin la pregunta tras pagar; `[PENDIENTE: asesoría]` los tres
+   puntos de la spec §7.
    ⚠️⚠️ **Lo que dejaron los platos y vale para lo que venga** (detalle en la spec §4.1 y §4.1.ter): si
    el dato tiene **servicio de dominio**, el recurso **delega** · el filtro de «lo que no viaja» va
    **DESPUÉS** del respaldo de idioma (`Translated::pick()` encadena con `??`) · lo que decide la MAQUETA
@@ -264,7 +260,8 @@ dueño es el carril de la web/reseñas—) ·
   vuestro carril, decidlo y os paso el contrato de eventos (spec §4.2).
   ✅ **T1b y T1c hechas (23-09)**: tocados `machine.js`, `sidebar/index.js`, `cajon/controller.js`, `cajon/index.js`
   y `api.js` (con tests), y los 25 `toMail()` + las vistas del correo (`new BrandedMailMessage($this)`, la UTM
-  se pega tras firmar). **Lo vuestro, cuando queráis**:
+  se pega tras firmar). Contrato **1.19.0** (T1e): `GET /me/export` gana `analytics` y `orders[].attribution`;
+  la zona de privacidad solo lo descarga, nada que tocar. **Lo vuestro, cuando queráis**:
   los eventos de los stores (`product_chosen`, `date_chosen`, `line_added`, `identify_started`, `pay_started`…)
   por `window.JumpWeb.track(name, props)` con las `props` de `Contract::EVENTS` — cualquier otra se descarta.
 - **WEB**: la T1 mete `track.js` dentro de `/cajon/paquete.js` (la landing no añade código) y atributos

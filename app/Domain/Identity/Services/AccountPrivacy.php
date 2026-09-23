@@ -10,6 +10,9 @@ use App\Domain\Identity\Models\Consent;
 use App\Domain\Identity\Models\Dependent;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Models\UserIdentity;
+use App\Domain\Platform\Models\AnalyticsEvent;
+use App\Domain\Platform\Models\AnalyticsSession;
+use App\Domain\Platform\Services\Analytics\AttributionContext;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -233,6 +236,43 @@ class AccountPrivacy
                     'added_at' => $dependent->created_at?->toIso8601String(),
                 ])->values()->all(),
             'orders' => $this->withAssignedDependents($this->orders->exportFor((int) $user->id)),
+            'analytics' => $this->analyticsFor($user),
+        ];
+    }
+
+    /**
+     * **Lo que el libro de eventos sabe DE ÉL** (`specs/analitica.md` §4.7, `#678`, T1e): solo lo que se ató a
+     * su cuenta con la categoría `analytics` —cuántas sesiones y entre qué fechas, cuántos hechos, y la primera
+     * fuente por la que llegó—. Lo anónimo no es suyo y no se exporta; la atribución de cada pedido va con el
+     * pedido (`orders[].attribution`, que la compone Booking).
+     *
+     * ⚠️ Resumen y no volcado, a propósito: cada hecho es una fila con ruta y `props`, y volcarlos convertiría
+     * el documento del art. 20 en un registro de navegación de miles de líneas que nadie ha pedido. Si un
+     * titular quiere el detalle, es una petición de acceso (art. 15), no el fichero de portabilidad.
+     *
+     * ⚠️ La clave es `visits` y no «sesiones»: es el vocabulario de la spec (§4.2: *visita = sesión*), y además
+     * el escáner de `AccessRevocationTest` toma cualquier literal `sessions` por la tabla de credenciales.
+     *
+     * @return array{visits: array{count: int, first_seen_at: ?string, last_seen_at: ?string}, events_count: int, first_source: ?array{source: string, medium: string, campaign: ?string}}
+     */
+    private function analyticsFor(User $user): array
+    {
+        $visits = AnalyticsSession::query()->where('user_id', $user->getKey())->orderBy('started_at')->get();
+        $first = $visits->first();
+        $touch = $first === null ? null : AttributionContext::touch($first);
+
+        return [
+            'visits' => [
+                'count' => $visits->count(),
+                'first_seen_at' => $first?->started_at->toIso8601String(),
+                'last_seen_at' => $visits->max('last_seen_at')?->toIso8601String(),
+            ],
+            'events_count' => AnalyticsEvent::query()->where('user_id', $user->getKey())->count(),
+            'first_source' => $touch === null ? null : [
+                'source' => $touch['source'],
+                'medium' => $touch['medium'],
+                'campaign' => $touch['campaign'],
+            ],
         ];
     }
 

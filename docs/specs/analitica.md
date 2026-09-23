@@ -25,7 +25,7 @@
   - ⚠️ **`/events` sale del `throttle:api` y del stateful** (`withoutMiddleware`): apilado se come el embudo y
     `sendBeacon` vuelve 419. Un nombre de SERVIDOR desde el cliente se rechaza.
   - ⚠️ **`nullOnDelete` no se dispara nunca**: `anonymize()` y el export cubren las tablas nuevas.
-- **Estado**: T0 ✅ · T1a·b·c·d ✅ · T1e→T5 ⬜ (§4.8). `[DECIDIDO owner]` 23-09: todo con la v2.0.0, sin la pregunta
+- **Estado**: T0 ✅ · T1a→e ✅ · cierre de T1 y T2→T5 ⬜ (§4.8). `[DECIDIDO owner]` 23-09: todo con la v2.0.0, sin la pregunta
   tras pagar. `[PENDIENTE: asesoría]`: los tres puntos de §7.
 - **Invariantes**: `RGPD-01`, `RGPD-05`, `SEC-01`, `PAY-14`, `SUITE-01`; propuesto **`RGPD-07`**. Dinero: ninguno cambia; `redsys:verify-concurrency` tras T1.
 
@@ -359,18 +359,25 @@ fuente del operador en el pedido manual (§4.1).
 
 ⚠️ **Revisión 23-09** (rgpd-2, seguridad-3, faltas-2): esta sección no existía.
 
-`User::anonymize()` pone `user_id = null` en `analytics_sessions` y `analytics_events`, vacía `visitor_id` y
-`click_ids` del sello de sus pedidos (conserva la capa de campaña), borra `users.first_attribution` y encola
-`ForgetPersonInDriver`; la celda `RGPD-01` se amplía y un test propio lo cubre. `AccountPrivacy::exportFor()`
-gana un bloque `analytics` (primera fuente, resumen de sesiones, atribución de cada pedido) con su esquema en
-`PersonalDataExport`. La oposición es el interruptor de §4.3.
+**T1e ✅ (23-09)**: `User::anonymize()` pone `user_id = null` en `analytics_sessions` y `analytics_events` y
+vacía `visitor_id`, `session_id` y `click_ids` del sello de sus pedidos (conserva la capa de campaña: es del
+pedido, no de la persona), con `saveQuietly()` para no volver a sellar; la celda `RGPD-01` se amplía y
+`MePrivacyTest` lo cubre con un control (la sesión de otro titular no se toca). `AccountPrivacy::exportFor()`
+gana el bloque `analytics` (`visits` —las sesiones atadas, en el vocabulario de §4.2—: cuántas y entre qué
+fechas; hechos; la primera fuente) y cada
+pedido exportado lleva `attribution` (canal, fuente, medio, campaña; `null` = anterior a la medición) — lo
+compone Booking, que es su dueño—; esquemas `ExportedAnalytics`, `ExportedFirstSource` y `ExportedAttribution`,
+contrato **1.19.0**. Resumen y no volcado: el detalle es una petición de acceso (art. 15), no el fichero del
+art. 20. Quedan para sus tandas: `ForgetPersonInDriver` (T3, con el driver) y `users.first_attribution` si T4
+la crea (el censo `AnonymizeCoversEveryUserColumnTest` obligará a declararla). La oposición es el interruptor
+de §4.3.
 
 ### 4.8 El orden de las tandas
 
 | | Tanda | Entrega | Verificación (§6) |
 |---|---|---|---|
 | T0 | ✅ spec v2, el contrato de eventos, `#678` y la revisión (§7.1) | | docs-check |
-| T1 | el libro, en cinco sub-tandas: **T1a ✅ (23-09)** tablas y poda, cookie, `ResolveVisitor` y `AttributionContext`, la ingesta stateless con su limitador, los hechos de servidor por fuente, el sello en `creating`, `robots.txt`, contrato **1.18.0** (`POST /events`) · **T1b ✅ (23-09)** `track.js` diferido (2,3 KiB gzip, techo 3) y el cajón · **T1c ✅ (23-09)** UTM en los 24 correos al cliente (pegado tras firmar, ignorado al validar), `email_sent` y `email_clicked` · **T1d ✅ (23-09)** la fuente del pedido manual (cuatro tarjetas, obligatoria, sin defecto; `forPanel()` valida) · **T1e** `anonymize()` y export · y al cierre el arnés, la sonda y `trustProxies` acotado | contrato **1.18.0** (`experiments` en `/sidebar/session` puede esperar a T5) | tests + arnés + `redsys:verify-concurrency` + sonda |
+| T1 | el libro, en cinco sub-tandas: **T1a ✅ (23-09)** tablas y poda, cookie, `ResolveVisitor` y `AttributionContext`, la ingesta stateless con su limitador, los hechos de servidor por fuente, el sello en `creating`, `robots.txt`, contrato **1.18.0** (`POST /events`) · **T1b ✅ (23-09)** `track.js` diferido (2,3 KiB gzip, techo 3) y el cajón · **T1c ✅ (23-09)** UTM en los 24 correos al cliente (pegado tras firmar, ignorado al validar), `email_sent` y `email_clicked` · **T1d ✅ (23-09)** la fuente del pedido manual (cuatro tarjetas, obligatoria, sin defecto; `forPanel()` valida) · **T1e ✅ (23-09)** `anonymize()` desata el libro y el export lleva `analytics` y `attribution` (contrato **1.19.0**) · y al cierre el arnés, la sonda y `trustProxies` acotado | contrato **1.19.0** (`experiments` en `/sidebar/session` puede esperar a T5) | tests + arnés + `redsys:verify-concurrency` + sonda |
 | T1·bis | migración de historia: «anterior a la medición», arranque de cuadros en la fecha del despliegue, `model:prune` y recuento de `deploy.sh` 6→7, ensayo en staging con `schedule:run` a mano, `POLICY_VERSION` la misma noche | | ensayo |
 | T2 | el cuadro de mando, `analytics_daily`, `ad_spend`, permisos | | tests + presupuesto de consultas + `EXPLAIN` |
 | T3a | categorías sin quemar, banner, política por sección, aviso a cuentas, `PUT /me/analytics`, driver y PostHog con `Drivers::csp()` | `POLICY_VERSION` | tests + sonda (cero terceros sin consentir; con consentimiento, sin `securitypolicyviolation`) |

@@ -46,6 +46,16 @@ class CustomerOrderHistoryReader implements CustomerOrderHistory
                 'created_at' => $order->created_at?->toIso8601String(),
                 'paid_at' => $order->paid_at?->toIso8601String(),
                 'expires_at' => $order->expires_at?->toIso8601String(),
+                // POR DÓNDE LLEGÓ el pedido (`specs/analitica.md` §4.7, T1e): la capa de campaña del sello, que
+                // es un dato del pedido y por eso va con él. `null` = anterior a la medición, nunca «directo».
+                // Los IDENTIFICADORES del sello (`visitor_id`, `session_id`, click ids) no se exportan: son la
+                // navegación de una cookie, y el titular los tiene en el bloque `analytics`, resumidos.
+                'attribution' => $order->attribution_channel === null ? null : [
+                    'channel' => (string) $order->attribution_channel,
+                    'source' => $order->attribution_source,
+                    'medium' => $order->attribution_medium,
+                    'campaign' => $order->attribution_campaign,
+                ],
                 'items' => $order->items->whereNull('parent_item_id')->values()
                     ->map(fn (OrderItem $item): array => $this->line($item))->all(),
                 'tickets' => $order->tickets->map(fn (Ticket $ticket): array => [

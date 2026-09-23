@@ -12,6 +12,9 @@ use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Models\UserIdentity;
 use App\Domain\Identity\Services\AccountCredentials;
 use App\Domain\Identity\Services\AccountPrivacy;
+use App\Domain\Platform\Models\AnalyticsEvent;
+use App\Domain\Platform\Models\AnalyticsSession;
+use App\Domain\Platform\Services\Analytics\Visitor;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
@@ -137,6 +140,51 @@ class MePrivacyTest extends ApiTestCase
         $this->assertNull($fresh->phone);
 
         $this->assertDatabaseHas('orders', ['user_id' => $user->id, 'code' => 'JW-EXPORT', 'total' => 9800]);
+    }
+
+    /**
+     * **LA ANALÍTICA SE DESATA** (`specs/analitica.md` §4.7, T1e, `RGPD-01` ampliada): las sesiones y los hechos
+     * que se ataron a la cuenta con su consentimiento pierden el `user_id` —pasan al agregado, que no es de
+     * nadie—, y el sello de sus pedidos pierde los IDENTIFICADORES y conserva la CAMPAÑA: de dónde vino la venta
+     * es un dato del pedido, no de la persona. Con CONTROL: la sesión de otro titular no se toca.
+     */
+    public function test_anonymizing_unlinks_the_analytics_and_keeps_only_the_campaign_of_the_seal(): void
+    {
+        $user = $this->holder();
+        $other = User::factory()->create();
+        $order = $this->orderFor($user);
+        $order->forceFill([
+            'attribution_channel' => 'web', 'attribution_source' => 'google', 'attribution_medium' => 'cpc', 'attribution_campaign' => 'verano',
+            'attribution' => ['first_touch' => ['source' => 'google', 'medium' => 'cpc', 'campaign' => 'verano'], 'device' => 'mobile', 'visitor_id' => Visitor::mint(), 'session_id' => 7, 'click_ids' => ['gclid' => 'g-1']],
+        ])->saveQuietly();
+        [$mine, $theirs] = [$this->sesionAtada($user->id), $this->sesionAtada($other->id)];
+        $event = AnalyticsEvent::query()->create(['event_id' => Visitor::mint(), 'session_id' => $mine->id, 'visitor_id' => $mine->visitor_id, 'user_id' => $user->id, 'name' => 'order_paid', 'occurred_at' => now(), 'received_at' => now()]);
+
+        $this->actingAs($user)->deleteJson(self::ROOT.'/me', ['current_password' => self::PASSWORD])->assertNoContent();
+
+        $this->assertNull($mine->fresh()->user_id, 'la sesión del titular sigue atada a él');
+        $this->assertNull($event->fresh()->user_id, 'el hecho del titular sigue atado a él');
+        $this->assertSame($other->id, $theirs->fresh()->user_id, 'el CONTROL: la sesión de otro titular no se toca');
+
+        $sealed = $order->fresh();
+        $this->assertSame(['first_touch' => ['source' => 'google', 'medium' => 'cpc', 'campaign' => 'verano'], 'device' => 'mobile'], $sealed->attribution, 'los identificadores del sello sobreviven a la supresión');
+        $this->assertSame('google', $sealed->attribution_source, 'la capa de campaña es del pedido y se conserva');
+        // Los hechos no se borran: son agregado (el `order_created` del fixture lo puso el observador, sin titular).
+        $this->assertSame(1, AnalyticsEvent::query()->where('name', 'order_paid')->count());
+        $this->assertSame(0, AnalyticsEvent::query()->whereNotNull('user_id')->count());
+    }
+
+    /**
+     * Una sesión del libro atada a una cuenta (`analytics` consentido), como la deja `SessionResolver`.
+     * ⚠️ No se llama `session()`: `TestCase` ya tiene uno público y PHP no deja estrecharlo.
+     */
+    private function sesionAtada(int $userId, array $extra = []): AnalyticsSession
+    {
+        return AnalyticsSession::query()->create(array_merge([
+            'visitor_id' => Visitor::mint(), 'user_id' => $userId, 'started_at' => now()->subDays(3), 'last_seen_at' => now()->subDays(3)->addMinutes(9),
+            'surface' => 'web', 'utm_source' => 'google', 'utm_medium' => 'cpc', 'utm_campaign' => 'verano',
+            'consent' => ['analytics' => true], 'is_bot' => false, 'is_internal' => false,
+        ], $extra));
     }
 
     /**
@@ -377,7 +425,9 @@ class MePrivacyTest extends ApiTestCase
             'type' => 'privacy', 'accepted_at' => now(), 'ip' => '127.0.0.1',
             'version' => Consent::CURRENT_VERSION,
         ]);
-        $this->orderFor($user);
+        // Un pedido ANTERIOR a la medición: nace sellado (`system`, el observador) y se le quita el sello, que
+        // es exactamente lo que la migración deja en los pedidos viejos.
+        $this->orderFor($user)->forceFill(['attribution_channel' => null])->saveQuietly();
 
         $response = $this->actingAs($user)->getJson(self::ROOT.'/me/export');
 
@@ -395,6 +445,37 @@ class MePrivacyTest extends ApiTestCase
         $this->assertSame('10:00:00', $response->json('orders.0.items.0.time'));
         $this->assertSame('Calcetines', $response->json('orders.0.items.0.addons.0.product'));
         $this->assertSame(400, $response->json('orders.0.items.0.addons.0.unit_price_cents'));
+
+        // Un pedido anterior a la medición no dice «directo»: dice que no se sabe (T1e).
+        $this->assertNull($response->json('orders.0.attribution'));
+        $this->assertSame(['count' => 0, 'first_seen_at' => null, 'last_seen_at' => null], $response->json('analytics.visits'));
+        $this->assertSame(0, $response->json('analytics.events_count'));
+        $this->assertNull($response->json('analytics.first_source'));
+    }
+
+    /**
+     * **Y con analítica ATADA, el documento la resume** (`specs/analitica.md` §4.7, T1e): la atribución de cada
+     * pedido va con el pedido, y lo que el libro sabe del titular —sesiones, hechos y su primera fuente— va en
+     * `analytics`, resumido y no volcado. ⚠️ Solo lo suyo: la sesión de otro titular no entra.
+     */
+    public function test_the_export_carries_the_attribution_of_each_order_and_a_summary_of_the_analytics(): void
+    {
+        $user = $this->holder();
+        $order = $this->orderFor($user);
+        $order->forceFill(['attribution_channel' => 'web', 'attribution_source' => 'google', 'attribution_medium' => 'cpc', 'attribution_campaign' => 'verano', 'attribution' => ['device' => 'mobile']])->saveQuietly();
+        $first = $this->sesionAtada($user->id, ['started_at' => now()->subDays(10), 'last_seen_at' => now()->subDays(10)->addMinutes(5), 'utm_source' => 'email', 'utm_medium' => 'order_confirmation', 'utm_campaign' => null]);
+        $this->sesionAtada($user->id);
+        $this->sesionAtada(User::factory()->create()->id);
+        AnalyticsEvent::query()->create(['event_id' => Visitor::mint(), 'session_id' => $first->id, 'visitor_id' => $first->visitor_id, 'user_id' => $user->id, 'name' => 'user_logged_in', 'occurred_at' => now(), 'received_at' => now()]);
+
+        $response = $this->actingAs($user)->getJson(self::ROOT.'/me/export')->assertOk()->assertValidResponse(200);
+
+        $this->assertSame(['channel' => 'web', 'source' => 'google', 'medium' => 'cpc', 'campaign' => 'verano'], $response->json('orders.0.attribution'));
+        $this->assertSame(2, $response->json('analytics.visits.count'));
+        $this->assertSame(now()->subDays(10)->toIso8601String(), $response->json('analytics.visits.first_seen_at'));
+        $this->assertSame(now()->subDays(3)->addMinutes(9)->toIso8601String(), $response->json('analytics.visits.last_seen_at'));
+        $this->assertSame(1, $response->json('analytics.events_count'));
+        $this->assertSame(['source' => 'email', 'medium' => 'order_confirmation', 'campaign' => null], $response->json('analytics.first_source'));
     }
 
     // ── PUT /me/marketing — el art. 7.3 ───────────────────────────────────────────────────────

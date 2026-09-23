@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.18.0
+  version: 1.19.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -4611,7 +4611,7 @@ components:
 
         Su forma la componen dos módulos: Identity pone perfil, consentimientos y roles, y Booking
         pone `orders` por contrato (`Booking\Contracts\CustomerOrderHistory`) — porque son sus datos.
-      required: [exported_at, profile, consents, roles, identities, dependents, orders]
+      required: [exported_at, profile, consents, roles, identities, dependents, orders, analytics]
       additionalProperties: false
       properties:
         exported_at:
@@ -4652,6 +4652,8 @@ components:
           description: Los pedidos del titular, del más antiguo al más reciente.
           items:
             $ref: '#/components/schemas/ExportedOrder'
+        analytics:
+          $ref: '#/components/schemas/ExportedAnalytics'
 
     ExportedProfile:
       type: object
@@ -4796,6 +4798,7 @@ components:
       required:
         - code
         - status
+        - attribution
         - subtotal_cents
         - tax_cents
         - total_cents
@@ -4814,6 +4817,32 @@ components:
           description: |
             El estado GUARDADO, sin el `expired` calculado que sí publica `GET /me/orders`: aquí se
             entrega el dato, no su lectura.
+        attribution:
+          type: object
+          nullable: true
+          description: |
+            Por dónde llegó el pedido (desde 1.19.0; `docs/specs/analitica.md` §4.7): la capa de
+            CAMPAÑA del sello de atribución, que es un dato del pedido. `null` = anterior a la
+            medición, nunca «directo». Los identificadores del sello (la cookie del visitante, su
+            sesión, los click ids) no se entregan aquí: el titular los tiene resumidos en `analytics`.
+            Inline y no `$ref`, como toda forma nullable de este contrato (OpenAPI 3.0, `DECISIONES #27`).
+          required: [channel, source, medium, campaign]
+          additionalProperties: false
+          properties:
+            channel:
+              type: string
+              description: '`web` · `app` · `panel` · `system`.'
+            source:
+              type: string
+              nullable: true
+              description: 'De dónde: `google`, `email`, `direct`, un `ref`, el host del referer o —en el panel— `phone` · `counter` · `email` · `other`.'
+            medium:
+              type: string
+              nullable: true
+              description: '`cpc` · `email` · `referral` · `none` · `offline`…'
+            campaign:
+              type: string
+              nullable: true
         subtotal_cents:
           type: integer
         tax_cents:
@@ -4929,6 +4958,53 @@ components:
           type: string
           format: date-time
           nullable: true
+
+    ExportedAnalytics:
+      type: object
+      description: |
+        Lo que el libro de eventos sabe DEL TITULAR (desde 1.19.0; `docs/specs/analitica.md` §4.7):
+        solo lo que se ató a su cuenta con la categoría `analytics`. Resumen y no volcado, a propósito:
+        cada hecho es una fila con ruta y propiedades, y volcarlos haría del documento de
+        portabilidad un registro de navegación de miles de líneas. El detalle es una petición de
+        acceso (art. 15), no este fichero.
+      required: [visits, events_count, first_source]
+      additionalProperties: false
+      properties:
+        visits:
+          type: object
+          description: Las visitas (sesiones del libro, §4.2) atadas a la cuenta, y entre qué fechas.
+          required: [count, first_seen_at, last_seen_at]
+          additionalProperties: false
+          properties:
+            count:
+              type: integer
+            first_seen_at:
+              type: string
+              format: date-time
+              nullable: true
+            last_seen_at:
+              type: string
+              format: date-time
+              nullable: true
+        events_count:
+          type: integer
+          description: Cuántos hechos llevan su `user_id`.
+        first_source:
+          type: object
+          nullable: true
+          description: |
+            La fuente de la PRIMERA sesión atada a la cuenta, o `null` si no hay ninguna. Inline, como
+            toda forma nullable de este contrato (OpenAPI 3.0, `DECISIONES #27`).
+          required: [source, medium, campaign]
+          additionalProperties: false
+          properties:
+            source:
+              type: string
+            medium:
+              type: string
+            campaign:
+              type: string
+              nullable: true
 
     ConsentList:
       type: object
