@@ -19,9 +19,9 @@
   - ⚠️ **Una URL que cambia es SEO perdido y no falla nada**: el sitemap se compara antes y después (§1.5).
   - ⚠️ **Dos formas de foto a propósito** (`#645`): el producto la SUBE a `uploads`, la zona guarda ruta a
     `public/`; las dos salen como URL absoluta por su `imageUrl()`.
-- **Estado**: **MENÚ SERVIDO** + **T2a→T2c, T3·1 y T4 hechas**; en marcha la **vía A**, y de sus cuatro
-  platos **LOS CUATRO SERVIDOS ✅** (`#671`→`#674`, contrato **1.15.0**): dudas, servicios, bar y juegos.
-  ▶ Queda un quinto que no estaba en la lista: los **tramos de grupo**, que son dinero (§4.1 y §4.6).
+- **Estado**: **T2a→T2c, T3·1 y T4 hechas**; en marcha la **vía A**, y su **MENÚ, COMPLETO ✅**: cuatro
+  platos (`#671`→`#674`), el censo y sus lotes (`#675`, `#676`) y los **tramos de grupo** en `/prices`,
+  en céntimos (`#677`, contrato **1.17.0**, §4.1.sexies).
   ▶ **Un recurso nuevo se escribe con su lista blanca o no se escribe**; lo no rellenado no viaja, ni lo
   BORRADO (`''` en BD). ❗ Y el filtro de «vacío» va **después** del respaldo de idioma, o el recurso sale
   vacío entero en `en`/`fr` (`#671`, §4.1).
@@ -661,6 +661,68 @@ tocar la línea base · `scripts/mutar-menu-de-hechos.sh` con **once mutantes nu
 cuatro lotes: `jump` con «desde 1,30 m» y `kids` con «hasta 1,50 m», `plain_weekdays: [1,2,3,4]`, 8 de 9
 productos con duración, y los cuatro asuntos.
 
+### 4.1.sexies · Los TRAMOS DE GRUPO, servidos ✅ (`#677`, 2026-09-23) · contrato **1.17.0**
+
+El cuarto hueco del censo, el que era dinero. **Con él, el menú queda COMPLETO**: las 49 claves de
+`CONTRATO_DE_VISTAS` tienen hecho servido o son maqueta o mecanismo (§4.1.quater).
+
+❗❗ **El censo se corrigió una TERCERA vez al ejecutarlo: no era una ruta nueva.** `/prices` ya publicaba
+los dos packs de excursión, con el precio de su MÍNIMO (15 € y 17 €), y le faltaban justo los tramos de 70
+y 100. El tramo es un hecho del PRECIO del producto, así que va en **`/prices.products[].tiers`**. Es la
+regla de `#676` otra vez: *el sitio de un hecho lo decide de quién es.*
+
+**La decisión de registro de `#661`, contestada** (`[DECIDIDO owner]`, 23-09, con la medida delante):
+**céntimos, y escribe la landing**. Ningún importe «ya escrito» viaja al lado. Lo medido:
+
+| | 12 € | 14,95 € | 1.234 € |
+|---|---|---|---|
+| el producto (escaparate), es/en/fr | 12 € | 14,95 € / 14.95 € | 1.234 € en los tres |
+| `Intl.NumberFormat`, es · en · fr | 12 € · €12 · 12 € | 14,95 € · €14.95 · 14,95 € | 1234 € · €1,234 · 1 234 € |
+
+Por qué: los 86 importes del contrato ya iban en céntimos y ninguno escrito; **una sola mano escribe el
+dinero de una página** —mezclar tramos escritos por el producto con packs de `/prices` escritos por la
+landing es el defecto de `#660` en la misma pantalla—; el producto no impone presentación (`#631`); y el
+«1.234 €» en inglés y francés —el pendiente del owner sobre los millares— se habría congelado en contrato.
+⚠️ **El contrato de VISTA no cambia**: `groupRates` y `groupFrom` siguen llegando escritos al anfitrión.
+
+**La forma.** `tiers: [{from_quantity, prices: [{rate, cents}]}]`, de menor a mayor.
+- La **primera fila es el mínimo contratable y repite `prices` por construcción** (las dos preguntan a
+  `priceCentsForRate()` por la misma cantidad): la escalera se pinta sin juntar dos listas.
+- **Sin escalera, la clave FALTA**, y eso afirma que el precio no depende de la cantidad; una escalera de
+  una fila sería esa afirmación con más bytes. `from_quantity` y no `from`, que se leería «precio desde».
+- Cada tarifa se resuelve **por separado** en cada fila, como la cesta: la que no tiene tramos conserva su
+  precio de siempre; la que no se vende se calla. Una cantidad sin precio en NINGUNA tarifa no abre fila.
+- Un **complemento** nunca tiene escalera: los tramos no le aplican (`tierPriceCents()`).
+
+▶ **Las filas las decide `GroupRateTables::quantities()`, y la comparten la vista y la API** (regla 1 de los
+platos: se delega en el servicio de dominio). Si cada uno derivara las suyas, la web y la API anunciarían
+escaleras distintas del mismo producto el día que una aprendiera una regla.
+
+❗❗ **Y aprendió una: un tramo por encima del MÁXIMO del pack no se publica.** `OrderCreator` rechaza esa
+cantidad —también al operador—, así que su fila anunciaba un precio que nadie puede comprar, y el «desde»
+podía salir de él. El panel deja guardar ese tramo (`CatalogForm` no lo valida). ⚠️ **Cambia también lo que
+pinta `/servicios`**, porque la regla es compartida: medido en local, **ningún dato cambia** (máximo 100,
+tramos hasta 100); lo destapó el fixture de `ServicesPageTest`, que describía un grupo «de 30 a 20».
+⚠️ **Producción no se puede medir desde aquí**: antes de la v2.0.0, contar los tramos cuyo `min_qty` supera
+el `max_qty` de su pack — la tabla dejaría de anunciarlos.
+
+❗ **La trampa del «desde», escrita en los dos campos del contrato**: `/catalog/products.from_price_cents`
+es el mínimo del catálogo de COMPRA (**15 €** en la excursión de 2 h) y el «desde» que se anuncia es el
+tramo más barato (**12 €**, `#324`). Conviven a propósito (`api-v1.md` §10·18); una landing que tome el
+campo que se llama «desde» anunciaría 15.
+
+⚠️ **`/prices` no se validaba contra su esquema**: sus casos heredaban de `TestCase`, así que el contrato
+solo vigilaba que el esquema fuera estricto. `PricesFactsTest` hereda ya de `ApiTestCase`, y el arnés lleva
+un mutante del YAML que solo puede matar esa validación.
+▶ **Declarado, no arreglado**: un producto activo **sin ningún precio** sale sin la clave `prices`, que el
+contrato exige (`array_filter` la quita). Hoy 9 de 9 tienen precio; su salida es decidir si ese producto
+se lista.
+
+**Medido**: `PricesFactsTest` (+8 casos, 17) y `ServicesPageTest` (+1) · suite **5.673** · Pint ✓ y Larastan
+sin tocar la línea base · `mutar-menu-de-hechos.sh` **110/110** (diez nuevos, uno del YAML que solo mata la
+validación del esquema) y `mutar-servicios.py` **12/12** (+1) · y **en vivo**: las dos excursiones con su
+escalera 30/70/100 en las dos tarifas —la misma que pinta `/servicios`— y 7 de 9 productos sin ella.
+
 ### 4.2 Lo que sale del panel, y lo que NO
 
 Salen los seis recursos de §1.6 y las secciones de texto de la landing y del bar. Se quedan los trece
@@ -735,6 +797,8 @@ despliega en piezas**, así que estos platos no van a producción sueltos; van d
 decisión de registro que `#661` dejó planteada: el contrato de VISTA quiere el importe **ya escrito**
 (`groupFrom`, `address.written`) y el de API lo quiere en **céntimos** (`/prices`). Las dos tienen razón en
 su superficie, así que la tanda decide si viajan los dos, y lo mide.
+✅✅ **SERVIDO en `#677`, y no como ruta nueva**: dentro de `/prices`, en céntimos y sin importe escrito
+(`[DECIDIDO owner]`). El detalle, la medida y lo que destapó, en **§4.1.sexies**. **El menú queda completo.**
 
 ### 4.6.bis · La T2c, medida: 208 huérfanas eran 17 (`#667`, 2026-09-21)
 

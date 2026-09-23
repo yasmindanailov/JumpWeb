@@ -95,7 +95,10 @@ class ServicesPageTest extends TestCase
 
         foreach ($packs as $pack) {
             // Tramos y familia de edades son excluyentes (`#329`): el fixture de cumpleaños la trae.
-            $pack->update(['guest_age_family' => null, 'guest_age_min' => null, 'guest_age_max' => null, 'min_qty' => 30]);
+            // ⚠️ Y el MÁXIMO va con el mínimo (`#677`): el seeder los deja en 20, así que este fixture
+            // describía un grupo «de 30 a 20» —que la cesta no vende a ninguna cantidad— y su tramo de 70
+            // era inalcanzable. Lo destapó la regla que deja de anunciar esos tramos.
+            $pack->update(['guest_age_family' => null, 'guest_age_min' => null, 'guest_age_max' => null, 'min_qty' => 30, 'max_qty' => 100]);
             PriceTier::create(['ticket_type_id' => $pack->id, 'rate_type_id' => $normal->id, 'min_qty' => 30, 'amount_cents' => 1500]);
             PriceTier::create(['ticket_type_id' => $pack->id, 'rate_type_id' => $normal->id, 'min_qty' => 70, 'amount_cents' => 1300]);
         }
@@ -113,6 +116,38 @@ class ServicesPageTest extends TestCase
         $filas = collect($tablas)->flatMap(fn (array $t): array => $t['rows']);
         $this->assertContains(70, $filas->pluck('from')->all(), 'el tramo de 70 no viaja');
         $this->assertContains("13\u{00A0}€", $filas->pluck('normal')->all(), 'el precio del tramo no viaja escrito');
+    }
+
+    /**
+     * ❗❗ **La tabla no anuncia un tramo que la cesta no alcanza, y el «desde» no sale de él** (`#677`).
+     * Por encima del máximo de un pack `OrderCreator` rechaza la cantidad, así que la fila de 150 —y su
+     * «desde 10 €»— serían un precio que nadie puede comprar. Las filas son las MISMAS que publica
+     * `/api/v1/prices` (`GroupRateTables::quantities()`): la web y la API no pueden anunciar escaleras
+     * distintas del mismo producto.
+     */
+    public function test_a_tier_above_the_pack_maximum_is_not_announced(): void
+    {
+        $normal = RateType::where('key', RateType::KEY_NORMAL)->firstOrFail();
+        $pack = TicketType::ofType(TicketType::TYPE_PACK)->orderBy('position')->firstOrFail();
+
+        $pack->update(['guest_age_family' => null, 'guest_age_min' => null, 'guest_age_max' => null, 'min_qty' => 30, 'max_qty' => 100]);
+        $pack->prices()->delete();
+        $pack->prices()->create(['rate_type_id' => $normal->id, 'amount_cents' => 1500]);
+        foreach ([30 => 1500, 70 => 1300, 150 => 1000] as $desde => $cents) {
+            PriceTier::create(['ticket_type_id' => $pack->id, 'rate_type_id' => $normal->id, 'min_qty' => $desde, 'amount_cents' => $cents]);
+        }
+
+        LandingService::query()->delete();
+        LandingService::create(['slug' => 'excursiones', 'title' => ['es' => 'Excursiones'], 'is_active' => true])
+            ->products()->attach([$pack->id]);
+
+        $datos = $this->datos();
+        $servicio = $datos['services']->firstWhere('slug', 'excursiones');
+        $tabla = $datos['groupRates'][$servicio->id][0] ?? null;
+
+        $this->assertNotNull($tabla, 'el caso nace sin sujeto: no hay tabla');
+        $this->assertSame([30, 70], array_column($tabla['rows'], 'from'), 'la tabla anuncia el tramo de 150 de un pack de 100');
+        $this->assertSame("13\u{00A0}€", $datos['groupFrom'][$servicio->id], 'el «desde» sale de un tramo que no se puede comprar');
     }
 
     /**

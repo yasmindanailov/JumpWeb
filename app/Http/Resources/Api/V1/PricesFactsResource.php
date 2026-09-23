@@ -5,6 +5,7 @@ namespace App\Http\Resources\Api\V1;
 use App\Domain\Booking\Concerns\ReadsRateFacts;
 use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Services\GroupRateTables;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Collection;
@@ -28,7 +29,14 @@ use Illuminate\Support\Collection;
  *
  * ⚠️ Los importes viajan en **céntimos enteros**, nunca en euros con coma: un `12.40` en coma flotante es
  * dinero que se redondea solo en algún cliente. El símbolo y el formato los pone quien pinta, que es quien
- * sabe en qué idioma y con qué separador escribe.
+ * sabe en qué idioma y con qué separador escribe. ▶ **`[DECIDIDO owner]` en `#677`, con la medida delante**:
+ * tampoco viaja un importe «ya escrito» al lado. Una sola mano escribe el dinero de una página —la de la
+ * landing—, que es lo único que impide que en ella convivan dos registros (el defecto de `#660`).
+ *
+ * ▶ **Los TRAMOS DE GRUPO viven aquí** (`#677`) y no en una ruta propia, que es lo que el censo de `#675`
+ * había previsto: medido, esta ruta ya publicaba los packs de excursión con el precio de su MÍNIMO y le
+ * faltaban justo los de 70 y 100. El tramo es un hecho del PRECIO del producto, así que va donde vive su
+ * dueño — la misma corrección que `#676` hizo con los días de la tarifa.
  */
 class PricesFactsResource extends JsonResource
 {
@@ -46,6 +54,10 @@ class PricesFactsResource extends JsonResource
     public function __construct(
         private readonly Collection $productos,
         private readonly Collection $tarifas,
+        // ⚠️ Las FILAS de la escalera las decide el servicio de dominio, el mismo que compone la tabla
+        // de `/servicios`: si el recurso las derivara, la web y la API podrían anunciar escaleras
+        // distintas del mismo producto (la regla 1 de los platos: se DELEGA en el servicio).
+        private readonly GroupRateTables $escaleras,
     ) {
         parent::__construct(null);
     }
@@ -95,8 +107,40 @@ class PricesFactsResource extends JsonResource
                 // suelto no dice qué se compra.
                 'unit' => $producto->tr('period_label') ?: null,
                 'prices' => $this->porTarifa($producto),
+                'tiers' => $this->escalera($producto),
             ], fn ($valor): bool => $valor !== null && $valor !== []))->values()->all(),
         ];
+    }
+
+    /**
+     * **La escalera de precio por CANTIDAD de un producto** (`#677`): una fila por cada cantidad que abre
+     * un tramo, con el precio por unidad de cada tarifa desde ahí.
+     *
+     * ⚠️⚠️ **La primera fila es el MÍNIMO contratable y repite `prices`**, a propósito y por construcción
+     * —las dos preguntan a `priceCentsForRate()` por la misma cantidad—: la escalera se pinta entera sin
+     * juntar dos listas, y su primera cantidad dice desde cuántos se contrata.
+     * ⚠️ **Sin escalera, la clave FALTA**, y eso afirma algo: que el precio no depende de cuántos se
+     * compren. Una escalera de una sola fila sería esa misma afirmación dicha con más bytes.
+     * ❗ **El «desde» que anuncia una landing sale de AQUÍ, no de `/catalog/products.from_price_cents`**:
+     * aquél es el mínimo del catálogo de COMPRA (15 € en la excursión de 2 h) y el que se anuncia es el
+     * tramo más barato (12 €, `[DECIDIDO owner]` en `#324`). Conviven a propósito (`api-v1.md` §10·18).
+     *
+     * @return list<array{from_quantity: int, prices: list<array{rate: string, cents: int}>}>
+     */
+    private function escalera(TicketType $producto): array
+    {
+        $filas = [];
+
+        foreach ($this->escaleras->quantities($producto) as $cantidad) {
+            $precios = $this->porTarifa($producto, $cantidad);
+
+            // Una cantidad en la que ninguna tarifa tiene precio no es un tramo: es que ahí no se vende.
+            if ($precios !== []) {
+                $filas[] = ['from_quantity' => $cantidad, 'prices' => $precios];
+            }
+        }
+
+        return count($filas) > 1 ? $filas : [];
     }
 
     /**
@@ -124,15 +168,17 @@ class PricesFactsResource extends JsonResource
      *
      * ⚠️ **Una tarifa sin precio NO viaja como `0`.** Un cero es un precio —y uno muy llamativo—; lo que
      * pasa de verdad es que ese producto no se vende en esa tarifa, y eso se dice callando.
+     * ⚠️ Con la cantidad por defecto, un pack sale al precio de su MÍNIMO: `priceCentsForRate()` sube la
+     * cantidad al mínimo contratable antes de elegir tramo (`#329`).
      *
      * @return list<array{rate: string, cents: int}>
      */
-    private function porTarifa(TicketType $producto): array
+    private function porTarifa(TicketType $producto, int $cantidad = 1): array
     {
         $salida = [];
 
         foreach ($this->tarifas as $tarifa) {
-            $cents = $producto->priceCentsForRate($tarifa);
+            $cents = $producto->priceCentsForRate($tarifa, $cantidad);
 
             if ($cents !== null) {
                 $salida[] = ['rate' => (string) $tarifa->key, 'cents' => (int) $cents];

@@ -199,7 +199,7 @@ Route::name('api.v1.')->group(function (): void {
 
     // Las SECCIONES de servicios: la mitad EDITORIAL (texto, foto, fichas) y una REFERENCIA a los
     // productos que cada una vende. ⚠️ Lo que cuesta NO se copia aquí: los ids se resuelven en
-    // `/catalog/products`, y los tramos de grupo llegan en su propia tanda porque son dinero.
+    // `/catalog/products`, y los tramos de grupo viven en `/prices` (`tiers`, `#677`).
     // ⚠️⚠️ `price_table` —la tabla TECLEADA— no sale: el owner ya decidió que se jubila en favor de los
     // precios del catálogo (`#534`), y publicar a mano un precio que el checkout podría no cobrar es el
     // modo de fallo que §3 de la spec descartó al elegir hechos por API.

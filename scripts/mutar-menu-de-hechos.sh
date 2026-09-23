@@ -53,6 +53,9 @@ LEGALES=app/Http/Resources/Api/V1/LegalDocumentsResource.php
 LEGALESCTRL=app/Http/Controllers/Api/V1/LegalDocumentsController.php
 PRECIOS=app/Http/Resources/Api/V1/PricesFactsResource.php
 PRECIOSCTRL=app/Http/Controllers/Api/V1/PricesFactsController.php
+# Los TRAMOS DE GRUPO (`#677`): las filas de la escalera las decide el SERVICIO DE DOMINIO, el mismo que
+# compone la tabla de `/servicios`, así que sus mutantes viven aquí y también en `mutar-servicios.py`.
+ESCALERAS=app/Domain/Booking/Services/GroupRateTables.php
 RUTAS=routes/api.php
 # T6 · la ficha de producto y de zona (`#632` P1).
 PANEL=app/Filament/Resources/Catalog/Schemas/CatalogForm.php
@@ -66,7 +69,7 @@ MODELOPROD=app/Domain/Booking/Models/TicketType.php
 YAML=openapi/v1.yaml
 
 TMP="$(mktemp -d)"
-FICHEROS=("$LECTOR" "$RECURSO" "$HORARIO" "$ENVIVO" "$ESTADO" "$NORMAS" "$NORMASCTRL" "$DUDAS" "$DUDASCTRL" "$SERVICIOS" "$SERVICIOSCTRL" "$BAR" "$BARCTRL" "$BARPAGE" "$JUEGOS" "$JUEGOSCTRL" "$ALTURA" "$FICHAZONADTO" "$ASUNTOS" "$CONTACTOCTRL" "$CONTRATO" "$LEGALES" "$LEGALESCTRL" "$PRECIOS" "$PRECIOSCTRL" "$RUTAS" "$FICHAZONA" "$FICHAPROD" "$LECTORCAT" "$MODELOZONA" "$MODELOPROD" "$YAML" "$PANEL" "$CIFRA" "$DIRECCION" "$NUMERO" "$RESUMEN" "$MONEDA")
+FICHEROS=("$LECTOR" "$RECURSO" "$HORARIO" "$ENVIVO" "$ESTADO" "$NORMAS" "$NORMASCTRL" "$DUDAS" "$DUDASCTRL" "$SERVICIOS" "$SERVICIOSCTRL" "$BAR" "$BARCTRL" "$BARPAGE" "$JUEGOS" "$JUEGOSCTRL" "$ALTURA" "$FICHAZONADTO" "$ASUNTOS" "$CONTACTOCTRL" "$CONTRATO" "$LEGALES" "$LEGALESCTRL" "$PRECIOS" "$PRECIOSCTRL" "$ESCALERAS" "$RUTAS" "$FICHAZONA" "$FICHAPROD" "$LECTORCAT" "$MODELOZONA" "$MODELOPROD" "$YAML" "$PANEL" "$CIFRA" "$DIRECCION" "$NUMERO" "$RESUMEN" "$MONEDA")
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$TMP/$(basename "$f")" "$f"; touch "$f"; done; }
 trap 'restaurar; rm -rf "$TMP"' EXIT
 for f in "${FICHEROS[@]}"; do cp "$f" "$TMP/$(basename "$f")"; done
@@ -611,6 +614,52 @@ mutar "los ASUNTOS del formulario dejan de publicarse (y una landing no sabe cu�
 # pinta un asunto que el POST rechaza con 422 y nadie sabe por qué.
 mutar "el formulario valida contra OTRA lista distinta de la publicada" \
   "$CONTACTOCTRL" "'in:'.implode(',', ContactTopics::ALL)" "'in:otra_cosa'"
+
+# ── Los TRAMOS DE GRUPO (`#677`): la escalera dice lo que cobra la cesta, y solo lo alcanzable ──
+# El modo de fallo es DINERO anunciado que no se cobra: una fila con el precio de otra cantidad, un
+# tramo que la compra no alcanza o una tabla de descuentos que la cesta no aplica. El JSON sigue válido.
+mutar "cada fila de la escalera pregunta el precio del MÍNIMO en vez del de su cantidad" \
+  "$PRECIOS" "            \$precios = \$this->porTarifa(\$producto, \$cantidad);" \
+  "            \$precios = \$this->porTarifa(\$producto);"
+
+mutar "una escalera de UNA sola fila se publica (y la ausencia deja de afirmar nada)" \
+  "$PRECIOS" "        return count(\$filas) > 1 ? \$filas : [];" "        return \$filas;"
+
+mutar "una cantidad sin precio en ninguna tarifa abre una fila vacía" \
+  "$PRECIOS" "            if (\$precios !== []) {" "            if (true) {"
+
+mutar "un tramo por encima del MÁXIMO del pack se publica (un precio que nadie puede comprar)" \
+  "$ESCALERAS" "            ->filter(fn (int \$q): bool => \$q >= \$minimo && (\$maximo === null || \$q <= \$maximo))" \
+  "            ->filter(fn (int \$q): bool => \$q >= \$minimo)"
+
+mutar "un tramo por DEBAJO del mínimo abre fila (se anuncia una cantidad que no se vende)" \
+  "$ESCALERAS" "            ->filter(fn (int \$q): bool => \$q >= \$minimo && (\$maximo === null || \$q <= \$maximo))" \
+  "            ->filter(fn (int \$q): bool => \$maximo === null || \$q <= \$maximo)"
+
+mutar "la escalera deja de empezar en el MÍNIMO contratable" \
+  "$ESCALERAS" "            ->push(\$minimo)" ""
+
+mutar "la escalera sale en el orden en que se guardaron los tramos" \
+  "$ESCALERAS" "            ->unique()->sort()->values();" "            ->unique()->values();"
+
+mutar "un COMPLEMENTO publica escalera (una tabla de descuentos que la cesta no aplica)" \
+  "$ESCALERAS" "        if (\$product->isAddon()) {" "        if (false) {"
+
+mutar "los tramos dejan de precargarse (una consulta por producto)" \
+  "$PRECIOSCTRL" "            ->with(['prices.rateType', 'priceTiers', 'zone'])" \
+  "            ->with(['prices.rateType', 'zone'])"
+
+# ⚠️ Éste no toca el código: toca el CONTRATO, y lo mata SOLO la validación de la respuesta contra el
+# esquema (`assertValidResponse`), que `/prices` no tenía hasta esta tanda. Renombra el `required` Y la
+# propiedad a la vez para que el esquema siga ESTRICTO: si solo cambiara uno, lo mataría la guarda de
+# rigor de `ApiContractTest` y el mutante no probaría que la validación muerde.
+mutar "el contrato llama \`from\` a la cantidad y el código publica \`from_quantity\`" \
+  "$YAML" "                  required: [from_quantity, prices]
+                  properties:
+                    from_quantity:" \
+  "                  required: [from, prices]
+                  properties:
+                    from:"
 
 echo
 echo "mutaciones: $muerden/$total muerden"

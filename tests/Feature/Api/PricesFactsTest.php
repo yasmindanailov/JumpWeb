@@ -3,12 +3,12 @@
 namespace Tests\Feature\Api;
 
 use App\Domain\Booking\Models\Price;
+use App\Domain\Booking\Models\PriceTier;
 use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Platform\Models\Setting;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
+use Illuminate\Support\Facades\DB;
 
 /**
  * **Los PRECIOS por tarifa del menú de hechos** (F5 · T5, `docs/specs/instancia-y-landing-fuera.md` §4.1).
@@ -16,11 +16,14 @@ use Tests\TestCase;
  * Lo que se vigila: que los importes viajen en **céntimos enteros**, que una tarifa en la que un producto
  * **no se vende** se calle en vez de mandar un `0`, que lo apagado en el panel **no tenga precio público**,
  * y que el rótulo de la tarifa salga del panel y no de una cadena escrita en el cliente.
+ *
+ * ▶ Y desde `#677`, **la escalera de los TRAMOS DE GRUPO**: que diga lo mismo que cobra la cesta, que no
+ * anuncie una fila que la compra no alcanza, y que falte cuando el precio no depende de la cantidad.
+ * ⚠️ Hereda de `ApiTestCase` desde esa tanda para validar la respuesta contra `openapi/v1.yaml`: hasta
+ * entonces ningún test comprobaba que `/prices` casara con su esquema, solo que el esquema fuera estricto.
  */
-class PricesFactsTest extends TestCase
+class PricesFactsTest extends ApiTestCase
 {
-    use RefreshDatabase;
-
     /**
      * @param  ?list<int>  $weekdays  los días que ESTA tarifa reclama, `0 = domingo`
      */
@@ -61,6 +64,14 @@ class PricesFactsTest extends TestCase
         // ⚠️⚠️ Y el tipo es el ALIAS del morphMap forzado (`ticket_type`), no el FQCN: con la clase entera
         // la fila se escribe, el test no falla al insertar… y el producto sale SIN precios, que es como se
         // pierde media hora buscando en el sitio equivocado.
+        $this->precios($producto, $precios);
+
+        return $producto;
+    }
+
+    /** @param  array<string, int>  $precios  céntimos por clave de tarifa */
+    private function precios(TicketType $producto, array $precios): void
+    {
         foreach ($precios as $key => $cents) {
             Price::query()->create([
                 'priceable_type' => 'ticket_type',
@@ -70,6 +81,52 @@ class PricesFactsTest extends TestCase
                 'currency' => 'EUR',
             ]);
         }
+    }
+
+    /**
+     * Un pack de GRUPO, con su mínimo y su máximo de personas. ⚠️ Sin familia de edades: tramos y sello
+     * son excluyentes (`#324`), y el modelo lo hace cumplir al guardar un tramo.
+     *
+     * @param  array<string, int>  $precios  el precio «de siempre», por clave de tarifa
+     */
+    private function grupo(string $nombre, int $minimo, ?int $maximo, array $precios = [], string $tipo = TicketType::TYPE_PACK): TicketType
+    {
+        $grupo = TicketType::create([
+            'zone_id' => $this->zona()->id,
+            'name' => ['es' => $nombre],
+            'type' => $tipo,
+            'min_qty' => $minimo,
+            'max_qty' => $maximo,
+            'seats_per_unit' => 1,
+            'is_sellable' => true,
+            'is_active' => true,
+        ]);
+
+        $this->precios($grupo, $precios);
+
+        return $grupo;
+    }
+
+    /** @param  array<int, int>  $escalera  céntimos por unidad «desde N» */
+    private function tramos(TicketType $producto, string $tarifa, array $escalera): void
+    {
+        foreach ($escalera as $desde => $cents) {
+            PriceTier::create([
+                'ticket_type_id' => $producto->id,
+                'rate_type_id' => RateType::query()->where('key', $tarifa)->value('id'),
+                'min_qty' => $desde,
+                'amount_cents' => $cents,
+            ]);
+        }
+    }
+
+    /** @return array<string, mixed> el producto servido con ese nombre */
+    private function servido(string $nombre): array
+    {
+        $producto = collect($this->getJson('/api/v1/prices?lang=es')->assertOk()->json('products'))
+            ->firstWhere('name', $nombre);
+
+        $this->assertNotNull($producto, "«{$nombre}» no se sirve: el caso nace sin sujeto");
 
         return $producto;
     }
@@ -253,5 +310,188 @@ class PricesFactsTest extends TestCase
         $this->assertArrayNotHasKey('plain_weekdays', $datos);
         // CONTROL: la tarifa sigue ahí y declarada como especial, o el caso mediría otra cosa.
         $this->assertTrue(collect($datos['rates'])->firstWhere('key', 'special')['special']);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────────────
+    //  Los TRAMOS DE GRUPO (`#677`)
+    // ─────────────────────────────────────────────────────────────────────────────────
+
+    /**
+     * ❗❗ **LA ESCALERA DICE LO MISMO QUE COBRA LA CESTA, EN CÉNTIMOS.** Es el cuadro real de la excursión
+     * de 2 h (`PriceTierTest`), con un precio «de siempre» de 99 € que con tramos no gana nunca: si la
+     * escalera saliera de `prices` en vez de preguntar por cada cantidad, las tres filas dirían 99 €.
+     *
+     * ⚠️ Los valores esperados van TECLEADOS: derivarlos de los mismos datos compararía el código consigo
+     * mismo. Y la respuesta se valida contra el contrato, que es quien dice que la cantidad se llama
+     * `from_quantity` y no `from` —que se confundiría con un «precio desde»—.
+     */
+    public function test_a_group_product_publishes_its_price_ladder_in_cents(): void
+    {
+        $this->tarifa('normal', 'Lunes a jueves');
+        $this->tarifa('special', 'Viernes y festivos', especial: true);
+        $excursion = $this->grupo('Excursión 2 h', 30, 100, ['normal' => 9900, 'special' => 9900]);
+        $this->tramos($excursion, 'normal', [30 => 1500, 70 => 1300, 100 => 1200]);
+        $this->tramos($excursion, 'special', [30 => 1700, 70 => 1500, 100 => 1400]);
+
+        $this->getJson(self::ROOT.'/prices?lang=es')->assertOk()->assertValidRequest()->assertValidResponse(200);
+        $producto = $this->servido('Excursión 2 h');
+
+        $this->assertSame([
+            ['from_quantity' => 30, 'prices' => [['rate' => 'normal', 'cents' => 1500], ['rate' => 'special', 'cents' => 1700]]],
+            ['from_quantity' => 70, 'prices' => [['rate' => 'normal', 'cents' => 1300], ['rate' => 'special', 'cents' => 1500]]],
+            ['from_quantity' => 100, 'prices' => [['rate' => 'normal', 'cents' => 1200], ['rate' => 'special', 'cents' => 1400]]],
+        ], $producto['tiers']);
+
+        // ⚠️ La primera fila REPITE `prices` a propósito y por construcción: las dos preguntan a la cesta por
+        // el mínimo. Si un día divergen, una de las dos está anunciando un precio que no se cobra.
+        $this->assertSame([['rate' => 'normal', 'cents' => 1500], ['rate' => 'special', 'cents' => 1700]], $producto['prices']);
+        $this->assertSame($producto['prices'], $producto['tiers'][0]['prices']);
+    }
+
+    /**
+     * **Sin escalera, la clave FALTA — y eso afirma que el precio no depende de la cantidad.** Una escalera
+     * de UNA fila sería esa misma afirmación dicha con más bytes: la de un grupo con un solo tramo, en su
+     * mínimo, que ya es lo que dice `prices`.
+     */
+    public function test_a_price_that_does_not_depend_on_the_quantity_publishes_no_ladder(): void
+    {
+        $this->tarifa('normal', 'Lunes a jueves');
+        $this->producto($this->zona(), 'Entrada suelta', ['normal' => 800]);
+        $unTramo = $this->grupo('Grupo de un tramo', 20, 60, ['normal' => 1400]);
+        $this->tramos($unTramo, 'normal', [20 => 1100]);
+        // CONTROL: con un segundo tramo sí hay escalera, o el caso pasaría con la escalera apagada entera.
+        $dosTramos = $this->grupo('Grupo de dos tramos', 20, 60, ['normal' => 1400]);
+        $this->tramos($dosTramos, 'normal', [20 => 1100, 40 => 900]);
+
+        $this->assertArrayNotHasKey('tiers', $this->servido('Entrada suelta'));
+        $this->assertArrayNotHasKey('tiers', $this->servido('Grupo de un tramo'));
+        $this->assertSame([['rate' => 'normal', 'cents' => 1100]], $this->servido('Grupo de un tramo')['prices']);
+        $this->assertCount(2, $this->servido('Grupo de dos tramos')['tiers']);
+    }
+
+    /**
+     * ❗ **La escalera empieza en el MÍNIMO contratable** (`#329`): un tramo por debajo no abre fila —por
+     * debajo del mínimo no se vende—, pero SÍ pone el precio del mínimo, porque es el tramo que lo cubre.
+     * Si la fila del mínimo faltara, la escalera empezaría en 50 y nadie sabría desde cuántos se contrata.
+     */
+    public function test_the_ladder_starts_at_the_contractable_minimum(): void
+    {
+        $this->tarifa('normal', 'Lunes a jueves');
+        $grupo = $this->grupo('Grupo desde 30', 30, 100, ['normal' => 9900]);
+        $this->tramos($grupo, 'normal', [10 => 2000, 50 => 1500]);
+
+        $this->assertSame([
+            ['from_quantity' => 30, 'prices' => [['rate' => 'normal', 'cents' => 2000]]],
+            ['from_quantity' => 50, 'prices' => [['rate' => 'normal', 'cents' => 1500]]],
+        ], $this->servido('Grupo desde 30')['tiers']);
+    }
+
+    /**
+     * ❗❗ **Una fila que la compra no alcanza NO se publica.** Por encima del máximo de un pack
+     * `OrderCreator` rechaza la cantidad —también al operador—, así que el tramo de 150 anunciaría 10 € a
+     * quien no puede comprarlos, y una landing sacaría de ahí su «desde». El panel deja guardar ese tramo;
+     * la escalera no lo enseña.
+     */
+    public function test_a_tier_the_cart_cannot_reach_is_not_published(): void
+    {
+        $this->tarifa('normal', 'Lunes a jueves');
+        $conTope = $this->grupo('Grupo hasta 100', 30, 100, ['normal' => 1500]);
+        $this->tramos($conTope, 'normal', [30 => 1500, 70 => 1300, 150 => 1000]);
+        // CONTROL: el MISMO cuadro sin máximo sí publica el de 150. Sin él, un filtro que tirase cualquier
+        // tramo alto —y no los inalcanzables— pasaría este caso.
+        $sinTope = $this->grupo('Grupo sin tope', 30, null, ['normal' => 1500]);
+        $this->tramos($sinTope, 'normal', [30 => 1500, 70 => 1300, 150 => 1000]);
+
+        $this->assertSame([30, 70], array_column($this->servido('Grupo hasta 100')['tiers'], 'from_quantity'));
+        $this->assertSame([30, 70, 150], array_column($this->servido('Grupo sin tope')['tiers'], 'from_quantity'));
+    }
+
+    /**
+     * **Cada tarifa se resuelve POR SEPARADO en cada fila**, que es lo que hace la cesta: una tarifa sin
+     * tramos propios conserva su precio de siempre en todas las filas, y una en la que el grupo no se vende
+     * se CALLA en todas —ni un `0`, ni la fila entera fuera—.
+     */
+    public function test_each_rate_is_resolved_on_its_own_in_every_row(): void
+    {
+        $this->tarifa('normal', 'Lunes a jueves');
+        $this->tarifa('special', 'Viernes y festivos', especial: true);
+        $this->tarifa('festivo', 'Festivos', especial: true);
+        // `special` tiene precio pero NO tramos; `festivo` no tiene ninguno de los dos.
+        $grupo = $this->grupo('Grupo mixto', 30, 100, ['normal' => 1600, 'special' => 1900]);
+        $this->tramos($grupo, 'normal', [30 => 1500, 70 => 1300]);
+
+        $this->assertSame([
+            ['from_quantity' => 30, 'prices' => [['rate' => 'normal', 'cents' => 1500], ['rate' => 'special', 'cents' => 1900]]],
+            ['from_quantity' => 70, 'prices' => [['rate' => 'normal', 'cents' => 1300], ['rate' => 'special', 'cents' => 1900]]],
+        ], $this->servido('Grupo mixto')['tiers']);
+    }
+
+    /**
+     * **Una cantidad en la que ninguna tarifa tiene precio NO abre fila**: no es un tramo, es que ahí no se
+     * vende. El grupo no tiene precio de siempre y su primer tramo empieza en 50, así que en su mínimo (30)
+     * la cesta no encuentra precio; una fila `{30, []}` diría «desde 30» de algo que no se puede comprar.
+     */
+    public function test_a_quantity_with_no_price_in_any_rate_opens_no_row(): void
+    {
+        $this->tarifa('normal', 'Lunes a jueves');
+        $grupo = $this->grupo('Grupo sin precio base', 30, 100);
+        $this->tramos($grupo, 'normal', [50 => 1500, 70 => 1300]);
+
+        $this->assertSame([
+            ['from_quantity' => 50, 'prices' => [['rate' => 'normal', 'cents' => 1500]]],
+            ['from_quantity' => 70, 'prices' => [['rate' => 'normal', 'cents' => 1300]]],
+        ], $this->servido('Grupo sin precio base')['tiers']);
+    }
+
+    /**
+     * ⚠️ **Un COMPLEMENTO no tiene escalera aunque tenga filas en `price_tiers`**: los tramos no le aplican
+     * (`TicketType::tierPriceCents()`), así que cada fila diría su precio de siempre y la landing pintaría
+     * una tabla de descuentos que la cesta no hace.
+     */
+    public function test_an_addon_never_publishes_a_ladder(): void
+    {
+        $this->tarifa('normal', 'Lunes a jueves');
+        $tarta = $this->grupo('Tarta', 1, null, ['normal' => 1000], TicketType::TYPE_ADDON);
+        $this->tramos($tarta, 'normal', [10 => 800]);
+
+        $tarta = $this->servido('Tarta');
+
+        $this->assertArrayNotHasKey('tiers', $tarta);
+        $this->assertSame([['rate' => 'normal', 'cents' => 1000]], $tarta['prices']);
+    }
+
+    /**
+     * **La escalera no cuesta una consulta por producto.** Se mide por PENDIENTE (`api-v1.md` §10·17): el
+     * mismo número de consultas con un grupo que con cuatro. Los tramos llegan con la precarga del
+     * controlador, y sin ella cada fila de cada producto preguntaría a la base.
+     */
+    public function test_the_ladder_does_not_query_per_product(): void
+    {
+        $this->tarifa('normal', 'Lunes a jueves');
+        $consultas = function (): int {
+            // ⚠️ Se calienta antes: la primera petición paga el `select` de `settings` que `PERF-02` memoiza.
+            $this->getJson('/api/v1/prices?lang=es')->assertOk();
+            DB::flushQueryLog();
+            DB::enableQueryLog();
+            $this->getJson('/api/v1/prices?lang=es')->assertOk();
+            DB::disableQueryLog();
+
+            return count(DB::getQueryLog());
+        };
+
+        $grupo = $this->grupo('Grupo 1', 30, 100, ['normal' => 1500]);
+        $this->tramos($grupo, 'normal', [30 => 1500, 70 => 1300]);
+        $conUno = $consultas();
+
+        foreach ([2, 3, 4] as $n) {
+            $grupo = $this->grupo("Grupo {$n}", 30, 100, ['normal' => 1500]);
+            $this->tramos($grupo, 'normal', [30 => 1500, 70 => 1300]);
+        }
+
+        $this->assertCount(4, array_filter(
+            $this->getJson('/api/v1/prices?lang=es')->json('products'),
+            fn (array $p): bool => isset($p['tiers']),
+        ), 'el caso nace sin sujeto: no hay cuatro escaleras');
+        $this->assertSame($conUno, $consultas(), 'la escalera consulta por producto');
     }
 }

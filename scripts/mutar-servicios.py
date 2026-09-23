@@ -39,6 +39,14 @@ MUTACIONES = [
     # así que quitar el `filter()` no cambia la conducta y ningún test puede matarlo. Un mutante que no se
     # puede matar no mide una guarda floja: mide que el mutante estaba mal pensado.
 
+    # ── Las FILAS: solo lo que la cesta alcanza (`#677`) ────────────────────────────────────────────
+    # ⚠️ La regla la comparte `/api/v1/prices` (`GroupRateTables::quantities()`), y su propio arnés
+    # (`mutar-menu-de-hechos.sh`) la muta también: aquí se prueba que la VISTA la consume.
+    ("un tramo por encima del MÁXIMO del pack se anuncia en la tabla (y el «desde» sale de él)",
+     SERVICIO,
+     "->filter(fn (int $q): bool => $q >= $minimo && ($maximo === null || $q <= $maximo))",
+     "->filter(fn (int $q): bool => $q >= $minimo)"),
+
     # ── El «desde»: CÓMO se escribe (el defecto de `#660`) ─────────────────────────────────────────
     ("el «desde» vuelve al registro de TRANSACCIÓN (dos decimales fijos y coma en inglés)",
      SERVICIO,

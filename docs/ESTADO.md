@@ -11,9 +11,9 @@
 
 | Carril | Máquina | Banda | Fichero | Estado |
 |---|---|---|---|---|
-| 🏗️ Plataforma · producto e instancias | este ordenador (`~/proyectos/jumpweb/producto`, `#648`) | **670–699** | `carriles/plataforma.md` | **F0–F4 ✅**. **v1.2.0 etiquetada y SIN DESPLEGAR** — lo decide el owner. **F5**: menú de hechos SERVIDO (contrato 1.11.0) · **T2a, T2b y T2c HECHAS** (`#666`, `#667`): las NUEVE vistas viven en la instancia y el CSS huérfano está podado y con trinquete · **T3·1 y T4 hechas** (`#668`, `#669`; contrato de instancia **2**) · ❗ **dirección nueva del owner (21-09): landing nueva sobre la API (vía A)** → lo siguiente son los cuatro platos que faltan del menú, no la T5 |
+| 🏗️ Plataforma · producto e instancias | este ordenador (`~/proyectos/jumpweb/producto`, `#648`) | **670–699** | `carriles/plataforma.md` | **F0–F4 ✅** · v1.2.0 etiquetada y **sin desplegar**: producción sigue en v1.1.0 hasta la v2.0.0 grande (`#670`) · **F5**: T2a→T2c, T3·1 y T4 hechas; la **vía A** con su **menú de hechos COMPLETO** (`#671`→`#677`, contrato **1.17.0**) · sigue **la analítica**, que empieza por el contrato de eventos (del owner) |
 | 🎨 Diseño de la web | este ordenador | 580–609 | `carriles/web.md` | todo en producción (13-09); sigue la T6 de copys |
-| 🧩 Diseño del SPA (el cajón) | el otro ordenador | 550–579 | `carriles/spa.md` | T1–T2 de celebración en el árbol, sin desplegar; sigue la T3 |
+| 🧩 Diseño del SPA (el cajón) | el otro ordenador | 730–759 (`#729` agotó la 700–729) | `carriles/spa.md` | T1–T2 de celebración en el árbol, sin desplegar; sigue la T3 |
 | 📧 Correos | este ordenador | 500–519 | `carriles/correos.md` | entero en el árbol; quedan cuatro ámbar y el ojo del owner |
 | 🏦 Pasarela / producto | este ordenador | 4xx (libres `#455`–`#459`) | `carriles/pasarela.md` | go-live hecho el 13-09; staging es la validación del banco |
 | Google auth | el portátil | `#34x` | cerrado (`specs/auth-con-google.md` §0) | en producción desde el 02-09 |

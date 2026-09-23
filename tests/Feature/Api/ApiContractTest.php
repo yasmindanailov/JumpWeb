@@ -140,7 +140,10 @@ class ApiContractTest extends TestCase
         'LegalDocument.sections.items' => ['h', 'p'],
         // De un producto con precio: la zona —un producto puede no tenerla— y la unidad de venta, que el
         // panel deja vacía cuando no aplica. El id, el nombre y los precios van siempre.
-        'Prices.products.items' => ['zone', 'unit'],
+        // ❗ Y la ESCALERA de tramos (`#677`), cuya ausencia AFIRMA algo: que el precio no depende de la
+        // cantidad. Emitirla siempre obligaría a una fila única que repite `prices`, y la landing tendría
+        // que distinguir «escalera de una fila» de «sin escalera» para una sola realidad.
+        'Prices.products.items' => ['zone', 'unit', 'tiers'],
         // El sobre de error omite estos dos cuando están vacíos (spec §4.3): un `"fields": {}` en
         // cada 500 sería ruido que todo cliente tendría que aprender a ignorar.
         'Error.error' => ['params', 'fields'],

@@ -21,7 +21,7 @@ use Illuminate\Support\Collection;
  * (`DEUDA.md`, `#534`, `[DECIDIDO owner]`). Publicarlo aquí sería servir como HECHO un precio que el
  * checkout podría no cobrar — que es exactamente el modo de fallo que §3 de la spec descartó al elegir
  * «hechos por la API» frente a «una landing que teclea precios». Los tramos REALES los compone
- * `GroupRateTables` desde el catálogo y salen en su propia tanda, porque son dinero.
+ * `GroupRateTables` desde el catálogo y los publica `/api/v1/prices` en `tiers` (`#677`).
  * ▶ Medido hoy en local, y conviene decirlo entero: la tabla tecleada **coincide** con el catálogo
  * (30/70/100 desde 15,00 €). La contradicción que fichó `#534` se midió contra **producción** (30/75/100
  * desde 12,00 €), que no se puede comprobar desde aquí. *Que hoy coincidan no es una garantía: es la

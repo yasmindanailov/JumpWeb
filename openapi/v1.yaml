@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.16.0
+  version: 1.17.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -808,10 +808,16 @@ paths:
 
         Solo productos y zonas **activos**: lo que no se vende hoy no tiene precio público.
 
-        Los importes van en **céntimos enteros**. El símbolo y el formato los pone quien pinta.
+        Los importes van en **céntimos enteros**. El símbolo y el formato los pone quien pinta, y no
+        viaja ninguna versión «ya escrita» al lado (`#677`): que una sola mano escriba todo el dinero de
+        una página es lo que impide que en ella convivan dos formatos del mismo precio.
 
         ⚠️ Un producto que no se vende en una tarifa **omite esa entrada**; no viaja con `0`, que sería un
         precio, y uno muy llamativo.
+
+        ▶ **Los tramos de grupo** (`tiers`, desde 1.17.0): un producto cuyo precio por unidad baja con la
+        cantidad publica su escalera —«desde 30», «desde 70», «desde 100»—. El «desde» que se ANUNCIA de un
+        producto así es su tramo más barato, que no es `from_price_cents` de `/catalog/products`.
       parameters:
         - $ref: '#/components/parameters/SidebarLang'
       responses:
@@ -4038,7 +4044,9 @@ components:
               unit: { type: string, example: por persona, description: La unidad de venta que escribe el panel. }
               prices:
                 type: array
-                description: 'Solo las tarifas en las que ese producto SE VENDE.'
+                description: |
+                  Solo las tarifas en las que ese producto SE VENDE. En un producto de grupo es el
+                  precio de su cantidad MÍNIMA contratable.
                 items:
                   type: object
                   additionalProperties: false
@@ -4046,6 +4054,41 @@ components:
                   properties:
                     rate: { type: string }
                     cents: { type: integer, description: Céntimos enteros. }
+              tiers:
+                type: array
+                description: |
+                  La escalera de precio por CANTIDAD: una fila por cada cantidad desde la que cambia el
+                  precio por unidad, de menor a mayor. El precio es UNIFORME: 70 personas a 13 € son
+                  910 €, no 30 a 15 € más 40 a 13 €.
+
+                  **Ausente** = el precio no depende de cuántos se compren. La primera fila es la
+                  cantidad mínima contratable, así que repite `prices` por construcción: la escalera se
+                  pinta entera sin juntar dos listas. No se publica una fila que la compra no pueda
+                  alcanzar (por encima del máximo del grupo).
+
+                  ❗ **El «desde» que se anuncia de este producto es el precio más bajo de su escalera**
+                  (el del tramo mayor), no `from_price_cents` de `/catalog/products`, que es el mínimo del
+                  catálogo de compra. Las dos cifras son distintas a propósito.
+                items:
+                  type: object
+                  additionalProperties: false
+                  required: [from_quantity, prices]
+                  properties:
+                    from_quantity:
+                      type: integer
+                      minimum: 1
+                      example: 70
+                      description: A partir de cuántas unidades rige esta fila.
+                    prices:
+                      type: array
+                      description: 'El precio por unidad en cada tarifa en la que se vende a esa cantidad.'
+                      items:
+                        type: object
+                        additionalProperties: false
+                        required: [rate, cents]
+                        properties:
+                          rate: { type: string }
+                          cents: { type: integer, description: Céntimos enteros. }
 
     LegalDocumentIndex:
       type: object
@@ -7069,6 +7112,9 @@ components:
             Precio MÍNIMO configurado. Es un «precio desde», **no** lo que se cobrará: el importe
             real lo decide la tarifa del día y lo confirma `POST orders/quote`. `null` = el producto
             no tiene ningún precio configurado.
+
+            ⚠️ Es el «desde» del EMBUDO. En un producto con tramos de grupo, el que se anuncia en una
+            landing es el tramo más barato de `/prices` (`tiers`), y es más bajo que éste.
         price_varies:
           type: boolean
           description: |

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Services\GroupRateTables;
 use App\Http\Controllers\Controller;
 use App\Http\Middleware\SetLocale;
 use App\Http\Resources\Api\V1\PricesFactsResource;
@@ -21,7 +22,7 @@ use Illuminate\Validation\Rule;
  */
 class PricesFactsController extends Controller
 {
-    public function __invoke(Request $request): PricesFactsResource
+    public function __invoke(Request $request, GroupRateTables $escaleras): PricesFactsResource
     {
         $datos = $request->validate(['lang' => ['required', 'string', Rule::in(SetLocale::SUPPORTED)]]);
 
@@ -37,6 +38,7 @@ class PricesFactsController extends Controller
         return new PricesFactsResource(
             $productos,
             RateType::query()->where('is_active', true)->orderBy('id')->get()->collect(),
+            $escaleras,
         );
     }
 }

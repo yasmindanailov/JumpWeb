@@ -2,13 +2,11 @@
 
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669 AGOTADA con `#669`** → **670–699 EN CURSO** · Último usado: **`#676`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **640–669 AGOTADA con `#669`** → **670–699 EN CURSO** · Último usado: **`#677`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, `docs/specs/instancia-y-landing-fuera.md` · Actualizado: **2026-09-23**
-> (**cierre del 23-09**: `#670` no desplegar en piezas · `#671`→`#674` los CUATRO platos · `#675` el
-> CENSO · `#676` sus tres lotes y los asuntos. Contrato **1.16.0**, arnés 100/100, suite 5.664).
-> ⚠️ **El techo de 32 KB apretó SEIS veces en esa sesión** y se resolvió siempre mudando a la spec, nunca
-> subiéndolo (es del owner). Hoy queda con ~1,3 KB libres tras compactar las tandas cerradas: si vuelve a
-> apretar, **se muda, no se raspa** — y si vuelve a pasar tres veces seguidas, llévaselo con la medida
+> (**segunda sesión del 23-09**: `#677` los TRAMOS DE GRUPO y el menú COMPLETO, contrato **1.17.0**).
+> ⚠️ **El techo de 32 KB apretó SIETE veces el 23-09** y se resolvió siempre mudando, nunca subiéndolo (es
+> del owner): **se muda, no se raspa** — y si vuelve a pasar tres veces seguidas, llévaselo con la medida
 > como hizo el SPA en `#724`.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
 > Techo **32 KB** (check 10; subido de 24 en `#724` con la medida delante). El contador de la suite no
@@ -54,80 +52,34 @@
    decía «entra ENTERA» y era **falso**: corregido en `#670`.
    ▶ **Cuando llegue**: desde la etiqueta **v2.0.0** que se corte entonces (la guarda 8 rechaza `HEAD`),
    de noche (`#594`), y con **ENSAYO en staging** antes: siete migraciones y subiendo, una destructiva.
-3. **F5 · EL MENÚ DE HECHOS** (`specs/instancia-y-landing-fuera.md`). La historia de cada tanda vive en
-   su spec, que es donde no caduca; aquí solo lo que hace falta para seguir.
-   ✅ **T1→T4 cerradas** (`#640`→`#669`) · ✅ **los CUATRO platos de la vía A** (`#671`→`#674`) · ✅ **el
-   CENSO y sus tres lotes de campos** (`#675`, `#676`). Contrato **1.16.0**, arnés **100/100**.
+   ❗ **Y dos comprobaciones ANTES de cortarla**: (a) contar en PRODUCCIÓN los tramos cuyo `min_qty`
+   supera el `max_qty` de su pack —desde `#677` la tabla de `/servicios` deja de anunciarlos, y aquí no se
+   puede medir—; (b) la portada que vaya a producción pinta la línea del FILTRO de reseñas
+   (`socialSelection`, la Ómnibus) y la tarjeta de la T2·8 — buzón del SPA del 21/22-09, abajo en Atendido.
+3. **F5 · EL MENÚ DE HECHOS, COMPLETO ✅** (`specs/instancia-y-landing-fuera.md`; la historia de cada tanda
+   vive allí, que es donde no caduca). T1→T4 (`#640`→`#669`) · los cuatro platos de la vía A
+   (`#671`→`#674`) · el censo y sus lotes (`#675`, `#676`) · y **los TRAMOS DE GRUPO** (`#677`, contrato
+   **1.17.0**): dentro de `/prices` y no en ruta propia, en **céntimos** y sin importe escrito —
+   `[DECIDIDO owner]`: el dinero de una página lo escribe una sola mano, la de la landing— (§4.1.sexies).
    ▶ **Lo que hay que saber del estado**: las NUEVE vistas viven en `instancias/playjump/web/` y el
    producto sirve su `anfitrion/…`; la suite corre SIN paquete. El contrato producto↔instancia son los
    **DATOS** que recibe la vista, no el HTML (§4.5.bis) · `InstanceViews::CONTRATO` = **2** · el
    trinquete de CSS huérfano está encendido, así que **si añades CSS su consumidor nace con él** · la
    migración de `zones` **borra columnas** y viaja en la v2.0.0.
-
-   ▶▶▶ **LO SIGUIENTE, Y ES LO ÚNICO QUE QUEDA DE CÓDIGO EN ESTE CARRIL: LOS TRAMOS DE GRUPO.**
-   `GroupRateTables` los compone del catálogo y **ninguna ruta los sirve** (medido: su único llamante es
-   `ServicesController`). Sin ellos, una landing de `/servicios` no puede pintar su carril de tarifas.
-   ⚠️⚠️ **Son DINERO y traen una decisión que se le lleva al owner MEDIDA** (`#661`): el contrato de
-   VISTA quiere el importe **ya escrito** (`groupFrom`, `address.written`) y el de API lo quiere en
-   **céntimos** (`/prices`). Las dos tienen razón en su superficie; la tanda decide si viajan los dos.
-   ▶ El owner cerró la sesión del 23-09 diciendo: *«terminaremos el plato que queda y después iteramos
-   sobre la analítica»*. O sea: **esto primero, y la analítica después**.
-
-   ⚠️⚠️ **LAS TRES REGLAS QUE DEJARON LOS CUATRO PLATOS** (detalle en §4.1, y valen para el que queda):
-   (1) si el ajuste ya tiene **servicio de dominio**, el recurso **delega** en vez de declarar lista
-   blanca —lo prescribe el docblock de `PublicFactsBoundaryTest`—; (2) el filtro de «lo que no viaja» va
-   **DESPUÉS** del respaldo de idioma, o el recurso se vacía en `en`/`fr`; (3) lo que decide la MAQUETA
-   no es un hecho: ni el mosaico de la portada, ni una tabla de precios tecleada.
-   ⚠️ Y dos de FIXTURE, las dos con su rojo delante: `BarImage` **re-mide** las dimensiones contra el
-   disco (un `width` tecleado se sobrescribe con `null`), y **una aserción de subcadena acusa al fixture
-   que la nombra** (`#553`): se aserta sobre las CLAVES servidas.
-   ✅✅ **LA PREGUNTA ABIERTA, CONTESTADA (23-09): se arranca por los PLATOS**, no por el kit de widgets
-   —que sigue donde lo dejó `#632`·P2, esperando a que una segunda instancia lo pida—.
-   ✅✅✅ **LOS CUATRO PLATOS, SERVIDOS** (`#671`→`#674`, contrato **1.15.0**): dudas, servicios, el bar
-   y los juegos. El detalle de cada uno en la spec §4.1, que es donde no caduca.
-   ▶▶ **Y con ellos la T3 se desbloquea sola**, que era el punto: los cuatro recursos que no podían
-   salir del panel ya tienen plato en el menú. Esa tanda ya no está bloqueada por nada.
-   ✅ **EL CENSO (`#675`) Y SUS TRES LOTES, HECHOS** (`#676`, contrato **1.16.0**): alturas y `age_range`
-   en `/catalog/zones` · `special`, `weekdays` y `plain_weekdays` en `/prices` · edad y duración en
-   `/catalog/products` · los **asuntos de contacto** en `/site.contact.topics`. La tabla del censo y el
-   detalle de la ejecución, en la spec **§4.1.quater** y **§4.1.quinquies**.
-   ❗❗ **Dos cosas del censo se cayeron al ejecutarlo**: los días **no iban en `/schedule.weekly`**
-   —`RateType` ya tenía columna `weekdays`, o sea que el dato es de la TARIFA— y el «suplemento» **no era
-   un hueco**: `/prices` ya publica los packs con sus dos tarifas. *El sitio de un hecho lo decide de
-   quién es el hecho.*
-   ❗❗❗ **LO SIGUIENTE: LOS TRAMOS DE GRUPO**, en tanda propia. `GroupRateTables` no lo sirve ninguna
-   ruta y son **DINERO**: traen la decisión de `#661` —el contrato de VISTA quiere el importe **escrito**
-   y el de API lo quiere en **céntimos**—. La tanda decide si viajan los dos y lo mide.
-   ▶ **Deuda DECLARADA que destapó el censo**: `birthday`/`groups` son vocabulario del SECTOR quemado en
-   el producto (`ContactTopics`). Publicarlos arregla que una landing de fuera no sepa cuáles existen;
-   **no** arregla que una bolera reciba «cumpleaños». Muerde con el segundo cliente de otro sector.
-   ▶ **Tres reglas que dejaron los cuatro y valen para lo que venga** (detalle en la spec §4.1):
-   (1) si el dato tiene **servicio de dominio**, el recurso **delega** en vez de declarar lista blanca;
-   (2) el filtro de «lo que no viaja» va **DESPUÉS** del respaldo de idioma, o el recurso se vacía en
-   `en`/`fr`; (3) lo que decide la MAQUETA no es un hecho —ni el mosaico, ni una tabla tecleada—.
-   ⚠️⚠️ **Y dos trampas de FIXTURE, las dos con su rojo delante**: `BarImage` re-mide las dimensiones
-   contra el DISCO, así que un `width` tecleado se sobrescribe con `null` (PNG real ANTES, y control);
-   y **una aserción de subcadena acusa al fixture que la nombra** —un juego «E*special*» tumbó el caso
-   de `is_special` (`#553` otra vez)—: se aserta sobre las CLAVES servidas.
-   ❗❗ **Y un QUINTO que no estaba en la lista de cuatro: los TRAMOS DE GRUPO.** `GroupRateTables` los
-   compone desde el catálogo y **ninguna ruta los sirve** (medido: su único llamante es
-   `ServicesController`). Salieron de `#672` a propósito —son DINERO— y traen consigo la decisión que
-   `#661` dejó planteada: el contrato de VISTA quiere el importe **ya escrito** (`groupFrom`,
-   `address.written`) y el de API lo quiere en **céntimos** (`/prices`). Las dos tienen razón en su
-   superficie; la tanda decide si viajan los dos y lo mide. Sin esto, una landing de servicios no puede
-   pintar su carril de tarifas.
-   ⚠️ **`price_table` sigue en la tabla y NO la sirve la API** (`#672`): el owner la jubiló (`#534`) pero
-   la PÁGINA todavía la lee, así que la columna conserva consumidor. Se retira con la tanda de la página,
-   no antes — y lo mismo `nav_subtitle`/`show_in_nav`, que esperan su confirmación.
-   ❗❗❗ **LO QUE DEJÓ EL PRIMER PLATO Y VALE PARA LOS TRES QUE FALTAN**: el filtro de «lo que no
-   viaja» va **DESPUÉS** del respaldo de idioma. `Translated::pick()` encadena con `??`, no con `?:`,
-   así que el respaldo lo resuelve por clave AUSENTE — y medido, el contenido de esta instalación está
-   **solo en español**, con `en`/`fr` ausentes. Comprobar «¿está relleno el idioma pedido?» antes de
-   `tr()` vacía el recurso ENTERO en inglés y francés, con el JSON válido y todo en verde. Los tres
-   platos que quedan son traducibles: *se filtra por lo que `tr()` DEVUELVE.*
-   ⚠️ **El §0 de la spec está a 2.044 de 2.048 bytes**: el plato siguiente no cabe ahí. Su estado se
-   escribe en §4.1 y §4.6, y de §0 solo se toca la línea de «Estado».
-   ⚠️ **La T5 (cortar v2.0.0) ya no es de esta fase**: con `#670` es el final del programa entero.
+   ▶▶▶ **LO SIGUIENTE: LA ANALÍTICA.** El owner cerró el 23-09 con *«terminaremos el plato que queda y
+   después iteramos sobre la analítica»*, y el plato ya está. Empieza por **el contrato de EVENTOS**, que
+   es suyo y va ANTES de escribir la landing nueva (abajo, «Del owner»).
+   ⚠️⚠️ **Lo que dejaron los platos y vale para lo que venga** (detalle en la spec §4.1 y §4.1.ter): si
+   el dato tiene **servicio de dominio**, el recurso **delega** · el filtro de «lo que no viaja» va
+   **DESPUÉS** del respaldo de idioma (`Translated::pick()` encadena con `??`) · lo que decide la MAQUETA
+   no es un hecho · `BarImage` re-mide contra el DISCO · una aserción de subcadena acusa al fixture que
+   la nombra (`#553`): se aserta sobre CLAVES · y una regla compartida **cambia las dos superficies**: la
+   del máximo de `#677` la destapó un fixture de «30 a 20» en `ServicesPageTest`.
+   ▶ **Deuda declarada** (en la spec): `birthday`/`groups` son vocabulario del SECTOR (`ContactTopics`) ·
+   `price_table`, `nav_subtitle` y `show_in_nav` se retiran con la tanda de la PÁGINA, no antes · un
+   producto activo sin NINGÚN precio sale de `/prices` sin la clave `prices` que el contrato exige (`#677`).
+   ⚠️ El §0 de la spec está a **1.925 de 2.048 B**: de ahí solo se toca la línea de «Estado». La **T5**
+   (cortar v2.0.0) es el final del programa entero, no de esta fase (`#670`).
 
    ▶ **Lo que se le contestó al owner sobre la FORMA del cajón y sobre los widgets** (medido el 21-09)
    vive ahora en `specs/cajon-empaquetable.md` **§4.9**, que es donde no caduca: el cajón no tiene que
@@ -143,9 +95,10 @@
   (hoy son constante del producto, y `birthday`/`groups` son vocabulario del SECTOR) · y **el contrato de
   EVENTOS de analíticas**, que hay que decidir ANTES de escribir la landing nueva —un evento no emitido no
   se recupera, y la landing ya vive fuera, así que instrumentarla después es reabrir nueve vistas en otro
-  repo—. ▶ El owner lo aplazó dos veces el 23-09: primero los tramos de grupo, «después iteramos».
-  ▶ Contestadas y retiradas de aquí: por dónde arrancar la vía A (los platos, 23-09) y cuándo se
-  despliega (`#670`: no en piezas). Las TRES de §7 de la spec de F5 lo están desde `#639`.
+  repo—. ▶ Ya no tiene nada delante: era «después de los tramos», y los tramos están (`#677`).
+  ▶ Contestadas y retiradas de aquí: por dónde arrancar la vía A (los platos, 23-09), cuándo se
+  despliega (`#670`: no en piezas) y el registro del dinero en la API (`#677`: céntimos). Las TRES de §7
+  de la spec de F5 lo están desde `#639`.
 
 ## Ficheros de este carril
 
@@ -300,8 +253,9 @@ dueño es el carril de la web/reseñas—) ·
   anfitrión y sin los tres correos. ▶ Tu trabajo no está en cuestión: está esperando a la versión grande.
 - ⚠️ **He corregido el `CHANGELOG.md` de v1.2.0**, que afirmaba «la invitación digital entra ENTERA».
   Es fichero mío (`#624`), pero la frase hablaba de lo tuyo y por eso te lo digo.
-- ▶ **Contrato de la API en `1.12.0`** (`#671`, `/api/v1/faqs`): **solo añade**, ninguna ruta existente
-  cambia de forma. Tu `ApiContractTest` y el cajón no se enteran.
+- ▶ **Contrato de la API en `1.17.0`** (`#671`→`#677`; el último, `tiers` en `/prices`): **solo añade**,
+  ninguna ruta existente cambia de forma. `ApiContractTest` gana una entrada en `OPTIONAL_BY_DESIGN`; el
+  cajón no se entera.
 
 ### ❗❗ Para el carril de la WEB (emisor: plataforma, 18→21-09; los CUATRO avisos, fundidos)
 - ▶ **`resources/views/home.blade.php` NO EXISTE** (`#666`), como ya no existe `pages/`: las NUEVE vistas
@@ -329,6 +283,11 @@ dueño es el carril de la web/reseñas—) ·
   `mutar-cabecera.py` tiene cuatro mutantes que ya no aplican y `mutar-bandas.py` uno.
 
 ### Atendido
+- **SPA 21/22-09, «contrato nuevo en `portada`» (`socialSelection`, la T2·8)** (atendido el 23-09): anotado
+  en «retomar» 2(b) como condición de la v2.0.0. La portada de la instancia aún no pinta la línea del
+  filtro; hoy no hay exposición (responde Places) y producción no se mueve hasta la versión grande
+  (`#670`). ⚠️ Si la landing nueva de la vía A llega antes, la línea va en ELLA. · **Y tu banda en
+  `ESTADO.md`**: corregida a 730–759.
 - **SPA `#724`, el techo del carril** (20-09): atendido. Mi encabezado ya dice **32 KB**. ⚠️ Llegó a mitad
   de `#662`, que se cerró rascando contra el techo VIEJO cuatro veces — lo recortado bajó a
   `paquete-de-instancia.md` §4.7, que es donde tenía que estar de todos modos.

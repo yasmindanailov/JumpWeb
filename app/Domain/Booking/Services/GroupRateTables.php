@@ -20,6 +20,11 @@ use Illuminate\Support\Collection;
  * (`#329`), así que la tabla dice lo mismo que cobra la cesta.
  * ⚠️ Un tramo por debajo del mínimo contratable no se escribe: por debajo del mínimo manda el primer
  * tramo (`#329`) y esa fila repetiría la del mínimo. Sin tramos, la tabla tiene una sola fila.
+ *
+ * ▶ **Las FILAS las comparten dos lectores** (`#677`): esta tabla, que la vista recibe escrita, y
+ * `/api/v1/prices`, que publica la misma escalera en céntimos. Por eso {@see quantities} es pública: si
+ * cada uno derivara sus filas, el día que uno aprendiera una regla (el mínimo de `#329`, el máximo de
+ * `#677`) la web y la API anunciarían escaleras distintas del mismo producto.
  */
 final class GroupRateTables
 {
@@ -36,17 +41,7 @@ final class GroupRateTables
         $special = $this->specialRate();
 
         return $products->map(function (TicketType $product) use ($normal, $special): array {
-            $minimo = $product->contractableMinimum();
-
-            // ⚠️ `toBase()`: sin tramos, `map()` devuelve una colección ELOQUENT vacía, y su `unique()`
-            // compara por `getKey()` — con el entero del mínimo dentro revienta con un 500.
-            $desde = $product->priceTiers->toBase()
-                ->map(fn ($tier): int => (int) $tier->min_qty)
-                ->push($minimo)
-                ->filter(fn (int $q): bool => $q >= $minimo)
-                ->unique()->sort()->values();
-
-            $filas = $desde->map(fn (int $q): array => [
+            $filas = $this->quantities($product)->map(fn (int $q): array => [
                 'from' => $q,
                 'normal' => $normal ? $product->priceCentsForRate($normal, $q) : null,
                 'special' => $special ? $product->priceCentsForRate($special, $q) : null,
@@ -69,6 +64,41 @@ final class GroupRateTables
                 ])->all(),
             ];
         })->values()->all();
+    }
+
+    /**
+     * **Las cantidades que abren una fila de la escalera**: el mínimo contratable y cada tramo que la
+     * cesta puede alcanzar, de menor a mayor.
+     *
+     * ⚠️ Solo decide CUÁNTOS; el precio de cada fila lo pone quien la lee, preguntando a
+     * `priceCentsForRate()`, así que la escalera dice lo mismo que cobra la cesta.
+     * ⚠️ **Por debajo del mínimo no se escribe** (`#329`): ahí manda el primer tramo y la fila repetiría la
+     * del mínimo.
+     * ❗ **Y por encima del MÁXIMO de un pack tampoco** (`#677`): `OrderCreator` rechaza esa cantidad —también
+     * al operador—, así que su fila anunciaría un precio que nadie puede comprar, y el «desde» saldría de
+     * él. El panel deja guardar ese tramo; la escalera no lo publica.
+     * ⚠️ Un COMPLEMENTO no tiene escalera: los tramos no le aplican (`TicketType::tierPriceCents()`), así que
+     * aunque tuviera filas en `price_tiers` todas dirían su precio de siempre.
+     *
+     * @return Collection<int, int>
+     */
+    public function quantities(TicketType $product): Collection
+    {
+        $minimo = $product->contractableMinimum();
+
+        if ($product->isAddon()) {
+            return collect([$minimo]);
+        }
+
+        $maximo = $product->isPack() ? $product->max_qty : null;
+
+        // ⚠️ `toBase()`: sin tramos, `map()` devuelve una colección ELOQUENT vacía, y su `unique()`
+        // compara por `getKey()` — con el entero del mínimo dentro revienta con un 500.
+        return $product->priceTiers->toBase()
+            ->map(fn ($tier): int => (int) $tier->min_qty)
+            ->push($minimo)
+            ->filter(fn (int $q): bool => $q >= $minimo && ($maximo === null || $q <= $maximo))
+            ->unique()->sort()->values();
     }
 
     /**
