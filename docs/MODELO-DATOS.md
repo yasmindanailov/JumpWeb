@@ -202,6 +202,7 @@ fecha lo pone cada llamador). El aforo real se cuenta por OCUPACIÓN desde los p
 | `expires_at` | retención de plaza durante el pago; index `(status, expires_at)` (job `orders:expire`) |
 | `paid_at` | — |
 | `refunded_at` + `refund_amount_cents` | **dimensión de reembolso ORTOGONAL al status**: `paid`+refund (devolvieron dinero, servicio sigue), `cancelled` sin refund, etc. Trait `OrderRefundFlags` |
+| `attribution_channel` · `attribution_source` · `attribution_medium` · `attribution_campaign` + `attribution` json | **El sello de origen** (`specs/analitica.md` §4.1, `#678`): de dónde vino la compra, escrito en `creating` por `Booking\Observers\OrderAnalyticsObserver` desde `Platform\Services\Analytics\AttributionContext`, en el mismo INSERT. Las cuatro planas son la capa de CAMPAÑA (indexada `(attribution_source, created_at)`, se queda con el pedido); el json lleva `first_touch`/`last_touch`, entrada, dispositivo, consentimiento y —solo con `analytics`/`marketing` consentidos— `visitor_id`, `session_id` y `click_ids`, que `anonymize()` vacía. `channel` ∈ `web|app|panel|system`; `NULL` en todo = «anterior a la medición» |
 
 Relaciones: `hasMany OrderItem/Ticket/OrderAdjustment` · `morphMany Payment` · `belongsTo User`.
 Traits: `OrderOperativeStatus` (estado operativo CALCULADO `active|in_progress|finished`, no
@@ -535,6 +536,22 @@ idempotencia por construcción y `Identity\Services\GateVisits::register()` audi
 index `(action, created_at)`. Crear SOLO vía `App\Domain\Platform\Services\AuditLogger::log()`.
 `AuditLog::CRITICAL_ACTIONS` = incidencias que destaca la página del panel
 (`payments.duplicate_capture`, `payments.overbooked_capture`, `orders.refund_failed`…).
+
+### `analytics_sessions` · `analytics_events` (AnalyticsSession, AnalyticsEvent — **MassPrunable**) — el LIBRO DE EVENTOS · `#678`
+
+`specs/analitica.md` §4.1. Viven en `Platform` como `audit_logs`: todos los módulos escriben con escalares y el libro no
+mira a nadie. **Sin claves foráneas** a propósito (la poda es por `model:prune` a los 25 meses, eventos antes que
+sesiones; `user_id` lo vacía `anonymize()` por tabla, porque un `nullOnDelete` no se dispara nunca, `RGPD-01`).
+- `analytics_sessions`: `visitor_id` (la cookie propia de 13 meses, `Visitor::COOKIE`), `user_id` **nullable y solo con la
+  categoría `analytics`** (régimen identificado; sin ella la fila es estadística anónima del editor: la exención AEPD 2024),
+  `started_at`/`last_seen_at` (30 min de inactividad cierran la sesión), `surface`, `entry_route` (patrón, sin query),
+  `referrer_host`, `utm_*`, `ref`, `click_ids` json (solo con `marketing`), `device`, `locale`, `consent` json (la foto),
+  `is_bot`, `is_internal`. Índices `(visitor_id, last_seen_at)` y `(last_seen_at)`. **Sin IP ni user agent.**
+- `analytics_events`: `event_id` (ULID del cliente, **único con `visitor_id`**: reenviar un lote no duplica), `session_id`,
+  `visitor_id`, `user_id`, `name` (clave de `Platform\Services\Analytics\Contract`; los de servidor solo los escribe el
+  `Recorder`), `route` (patrón), `props` json (≤ 2 KB, lista blanca por evento, sin PII), `occurred_at` (reloj del cliente,
+  acotado a ±5 min), `received_at` (la verdad temporal), `order_id`/`payment_id`/`refund_id`. Índices `(received_at)`,
+  `(name, received_at, session_id)`, `(session_id)`, `(order_id)`.
 
 ### `google_business_connections` (GoogleBusinessConnection) — la ficha de Google del parque · `#720`
 **Fila ÚNICA**: `singleton` bool con índice **UNIQUE** (invariante de BD, no convención: una

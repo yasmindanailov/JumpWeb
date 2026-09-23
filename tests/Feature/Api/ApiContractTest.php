@@ -144,6 +144,13 @@ class ApiContractTest extends TestCase
         // cantidad. Emitirla siempre obligaría a una fila única que repite `prices`, y la landing tendría
         // que distinguir «escalera de una fila» de «sin escalera» para una sola realidad.
         'Prices.products.items' => ['zone', 'unit', 'tiers'],
+        // El lote del libro de eventos (`#678`): de un evento, `route`, `props` y `occurred_at` son opcionales
+        // porque no todo hecho tiene página, propiedades ni reloj (un `call_clicked` no lleva nada), y el
+        // sobre `meta` entero porque solo viaja cuando hay algo que decir del lote. Lo que va siempre es lo
+        // que hace al evento un evento: su id y su nombre.
+        'EventsBatch' => ['meta'],
+        'EventsBatch.events.items' => ['route', 'props', 'occurred_at'],
+        'EventsBatch.meta' => ['webdriver', 'internal', 'consent'],
         // El sobre de error omite estos dos cuando están vacíos (spec §4.3): un `"fields": {}` en
         // cada 500 sería ruido que todo cliente tendría que aprender a ignorar.
         'Error.error' => ['params', 'fields'],

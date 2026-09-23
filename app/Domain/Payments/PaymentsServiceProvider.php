@@ -4,6 +4,10 @@ namespace App\Domain\Payments;
 
 use App\Domain\Booking\Contracts\PaymentInitiation;
 use App\Domain\Payments\Contracts\RefundGateway;
+use App\Domain\Payments\Models\Payment;
+use App\Domain\Payments\Models\PaymentRefund;
+use App\Domain\Payments\Observers\PaymentAnalyticsObserver;
+use App\Domain\Payments\Observers\PaymentRefundAnalyticsObserver;
 use App\Domain\Payments\Services\PaymentInitiator;
 use App\Domain\Payments\Services\Redsys;
 use Illuminate\Support\ServiceProvider;
@@ -35,5 +39,18 @@ class PaymentsServiceProvider extends ServiceProvider
         // `fn () => new PaymentInitiator(...)` esa sustitución dejaría de aplicarse y los dos tests
         // de la compensación asimétrica seguirían VERDES sin probar nada.
         $this->app->bind(PaymentInitiation::class, PaymentInitiator::class);
+    }
+
+    public function boot(): void
+    {
+        // El libro de eventos (`specs/analitica.md` §4.1, `#678`): el rechazo del banco y la devolución
+        // NO son transiciones del pedido —viven en `Payment` y en `PaymentRefund`—, así que se
+        // escuchan aquí, sin tocar `RedsysReturnHandler` (`CRITICAL_RE`).
+        // ⚠️ Singleton: el dispatcher instancia `Clase@método` en cada evento, y la transición capturada en
+        // `saving` tiene que llegar al `saved` de la MISMA instancia (ver `BookingServiceProvider`).
+        $this->app->singleton(PaymentAnalyticsObserver::class);
+        $this->app->singleton(PaymentRefundAnalyticsObserver::class);
+        Payment::observe(PaymentAnalyticsObserver::class);
+        PaymentRefund::observe(PaymentRefundAnalyticsObserver::class);
     }
 }

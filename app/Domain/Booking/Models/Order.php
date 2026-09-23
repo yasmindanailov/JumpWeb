@@ -86,6 +86,9 @@ class Order extends Model
         'expires_at' => 'datetime',
         'paid_at' => 'datetime',
         'refunded_at' => 'datetime',
+        // El sello de origen (`specs/analitica.md` §4.1, `#678`): lo escribe `OrderAnalyticsObserver`
+        // en `creating`; las cuatro columnas planas van aparte y no se cast-ean.
+        'attribution' => 'array',
     ];
 
     /**

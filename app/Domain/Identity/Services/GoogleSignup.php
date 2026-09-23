@@ -10,6 +10,7 @@ use App\Domain\Identity\Models\LegalDocumentVersion;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Models\UserIdentity;
+use App\Domain\Platform\Services\Analytics\Recorder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -124,6 +125,9 @@ final class GoogleSignup
 
             return $user;
         });
+
+        // El libro de eventos (`specs/analitica.md` §4.1, `#678`): el alta es un hecho del servidor.
+        app(Recorder::class)->fact('user_registered', ['method' => 'google'], ['user_id' => (int) $user->getKey()]);
 
         // ⚠️⚠️ **La firma va FUERA de la transacción de arriba y eso es deliberado.** `WaiverSigner`
         // abre la suya y bloquea la fila del titular: anidarla dentro de la que acaba de crear esa

@@ -8,6 +8,7 @@ use App\Domain\Identity\Models\LegalDocumentVersion;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Models\WaiverSignature;
+use App\Domain\Platform\Services\Analytics\Recorder;
 use App\Domain\Platform\Services\Turnstile;
 use App\Notifications\AccountAlreadyExists;
 use Illuminate\Support\Facades\DB;
@@ -131,6 +132,9 @@ class SelfSignup
         }
 
         Log::info('auth.registered', ['user_id' => $user->id, 'ip' => $ip, 'purchase' => ! $notifyByEmail]);
+
+        // El libro de eventos (`specs/analitica.md` §4.1, `#678`): el alta es un hecho del servidor.
+        app(Recorder::class)->fact('user_registered', ['method' => 'password'], ['user_id' => (int) $user->id]);
 
         return SignupResult::created($user);
     }

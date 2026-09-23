@@ -72,10 +72,14 @@
    cada corrección delante del texto que corrige). Lo que cambió de fondo: el libro tiene DOS regímenes (el
    AGREGADO es exento; el cruce cookie↔cuenta va bajo la categoría `analytics`), tres hechos de dinero no eran
    transiciones de `Order` (cada uno con su fuente real), el sello nace en `creating` desde
-   `AttributionContext`, y la ingesta sale del `throttle:api` y del stateful. **Lo siguiente es la T1** tal
-   como la lista **§4.8** (léela entera: son ~15 piezas), contrato **1.18.0**. ⚠️ Toca ficheros del SPA y de
-   la web: **avisado en el buzón**, abajo. `[DECIDIDO owner]` 23-09: todo con la v2.0.0 y sin la pregunta tras
-   pagar; `[PENDIENTE: asesoría]` los tres puntos de la spec §7.
+   `AttributionContext`, y la ingesta sale del `throttle:api` y del stateful. ✅ **T1a hecha (23-09)**: el
+   núcleo del libro —tablas y poda, cookie, contexto, sello en `creating`, ingesta stateless con limitador
+   propio, hechos de servidor por su fuente, contrato **1.18.0**—, en `Platform` (el grafo de fronteras no
+   cambia). **Lo siguiente: T1b** (`track.js` diferido con techo propio y los eventos del cajón: `machine.js`,
+   `controller.js`, `api.js` — avisado al SPA abajo), después T1c (UTM antes de firmar), T1d (el `Select` del
+   pedido manual), T1e (`anonymize()` y export), y el cierre con `mutar-analitica.sh`, la sonda y
+   `trustProxies`. Todo en la spec **§4.8**. `[DECIDIDO owner]` 23-09: todo con la v2.0.0 y sin la pregunta
+   tras pagar; `[PENDIENTE: asesoría]` los tres puntos de la spec §7.
    ⚠️⚠️ **Lo que dejaron los platos y vale para lo que venga** (detalle en la spec §4.1 y §4.1.ter): si
    el dato tiene **servicio de dominio**, el recurso **delega** · el filtro de «lo que no viaja» va
    **DESPUÉS** del respaldo de idioma (`Translated::pick()` encadena con `??`) · lo que decide la MAQUETA
@@ -136,6 +140,10 @@ dueño es el carril de la web/reseñas—) ·
 
 ## Trampas de este carril
 
+- 🪤 **El dispatcher instancia un observador `Clase@método` EN CADA evento** (T1a de la analítica): un
+  estado capturado en `saving` no llega al `saved` salvo que el observador sea `singleton()`. Medido en
+  tinker: `order_created` entraba y `order_cancelled` no. Y **`postJson` no manda cookies sin
+  `withCredentials()`**: cada lote parecía un visitante nuevo y lo primero que pareció fallar fue la cookie.
 - El harness en modo «auto» ordena preferir Bash a Read/Edit/Write; manda la regla 8 de `CLAUDE.md`.
 - **El clasificador «auto» y producción**: deniega escribir hooks, manifiestos y reglas del plugin salvo con las
   reglas `allow` de `#626`; con la orden del owner EN EL TURNO deja pasar escrituras por `ssh` y el `--go`; deniega

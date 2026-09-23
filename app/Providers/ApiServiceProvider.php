@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Domain\Platform\Services\Analytics\Visitor;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -82,6 +83,21 @@ class ApiServiceProvider extends ServiceProvider
             $token = $request->route('token');
 
             return Limit::perMinute(10)->by('invitation-reply:'.(is_scalar($token) ? (string) $token : ''));
+        });
+
+        // La INGESTA del libro de eventos (`specs/analitica.md` §4.1, `#678`). ⚠️ **Sustituye al suelo, no
+        // se suma**: `POST /events` sale del `throttle:api` con `withoutMiddleware`, porque apilado cada
+        // lote descontaría del mismo cubo de 60/min que pagan catálogo y disponibilidad, y una familia
+        // tras un NAT vería un 429 en el calendario provocado por la propia medición (spec §7.1,
+        // producto-1). La clave es el VISITANTE (la cookie), con respaldo por IP; y un tope diario que
+        // acota lo que un visitante puede meter en una tabla de 25 meses.
+        RateLimiter::for('events', static function (Request $request): array {
+            $key = 'events:'.(Visitor::fromRequest($request) ?? 'ip:'.$request->ip());
+
+            return [
+                Limit::perMinute((int) config('api.events.per_minute'))->by($key),
+                Limit::perDay((int) config('api.events.per_day'))->by('day:'.$key),
+            ];
         });
     }
 }

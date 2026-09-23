@@ -6,6 +6,8 @@ use App\Domain\Identity\Models\CookieConsentLog;
 use App\Domain\Identity\Models\Dependent;
 use App\Domain\Identity\Models\GuardianAuthorization;
 use App\Domain\Identity\Models\WaiverSignature;
+use App\Domain\Platform\Models\AnalyticsEvent;
+use App\Domain\Platform\Models\AnalyticsSession;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -125,7 +127,13 @@ Schedule::command('business-profile:sweep-photos')->dailyAt('05:00')->withoutOve
  * lee, que es limpieza. Si algún día alguien decide quitar el filtro «porque ya está la purga», que
  * encuentre esto escrito.
  */
-Schedule::command('model:prune', ['--model' => [CookieConsentLog::class, WaiverSignature::class, GuardianAuthorization::class, Dependent::class, InvitationReply::class, GoogleBusinessReview::class]])
+/*
+ * El LIBRO DE EVENTOS (`specs/analitica.md` §4.1, `DECISIONES #678`): eventos y sesiones de más de 25
+ * meses, que es la condición de la exención de la guía AEPD 2024 y por eso una obligación, no una limpieza.
+ * ⚠️ Los EVENTOS van antes que las SESIONES: sin claves foráneas, el orden es lo único que evita eventos
+ * huérfanos entre las dos pasadas. Y es la misma tarea de siempre: el recuento de `deploy.sh` no cambia.
+ */
+Schedule::command('model:prune', ['--model' => [CookieConsentLog::class, WaiverSignature::class, GuardianAuthorization::class, Dependent::class, InvitationReply::class, GoogleBusinessReview::class, AnalyticsEvent::class, AnalyticsSession::class]])
     ->daily()
     ->withoutOverlapping();
 

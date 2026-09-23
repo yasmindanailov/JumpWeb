@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Domain\Booking\Models\Order;
 use App\Domain\Payments\Models\Payment;
+use App\Domain\Platform\Services\Analytics\Recorder;
 use App\Notifications\OrderExpiredWithoutPayment;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
@@ -29,6 +30,11 @@ class ExpireOrders extends Command
     protected $signature = 'orders:expire';
 
     protected $description = 'Caduca los pedidos pendientes cuya retención de plaza expiró (libera aforo).';
+
+    public function __construct(private readonly Recorder $recorder)
+    {
+        parent::__construct();
+    }
 
     public function handle(): int
     {
@@ -62,6 +68,11 @@ class ExpireOrders extends Command
             }
             $order->status = Order::STATUS_EXPIRED; // refleja en memoria para el resto del bucle.
             $count++;
+
+            // El libro de eventos (`specs/analitica.md` §4.1, `#678`): la caducidad es un UPDATE de query
+            // builder (arriba, y a propósito), así que ningún observador de `Order` la ve. Se registra
+            // aquí, en el mismo `if` que la cuenta. El recorder nunca lanza.
+            $this->recorder->fact('order_expired', ['channel' => $order->attribution_channel], ['order_id' => (int) $order->id]);
 
             // ¿Notificar? Solo si HAY Payment `pending` (intento que nunca se completó).
             // El cliente NO sabe que su reserva caducó; necesita feedback (G2). Si el

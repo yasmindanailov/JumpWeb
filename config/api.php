@@ -34,6 +34,24 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | La ingesta del libro de eventos
+    |--------------------------------------------------------------------------
+    |
+    | `POST /events` (`specs/analitica.md` §4.1, `#678`) lleva SU limitador (`events`, por visitante) en vez
+    | del suelo de arriba: apilado, la analítica se comería el cubo del embudo. El emisor manda un lote
+    | cada 5 s o cada 10 eventos, así que 30 lotes/min sobra para una pestaña y frena a un script. El
+    | tope diario acota lo que un solo visitante puede meter en una tabla que se conserva 25 meses.
+    |
+    */
+
+    'events' => [
+        'per_minute' => (int) env('API_EVENTS_PER_MINUTE', 30),
+        'per_day' => (int) env('API_EVENTS_PER_DAY', 2000),
+        'batch_max' => 50,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Especificación OpenAPI
     |--------------------------------------------------------------------------
     |

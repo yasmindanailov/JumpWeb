@@ -41,6 +41,7 @@ use App\Domain\Content\Services\HeroStatus;
 use App\Domain\Content\Services\MapsEmbed;
 use App\Domain\Content\Services\ScheduleDisplay;
 use App\Domain\Content\Services\SocialEmbed;
+use App\Domain\Identity\Listeners\RecordLoginFact;
 use App\Domain\Identity\Listeners\SignPendingWaiverOnVerification;
 use App\Domain\Identity\Models\Consent;
 use App\Domain\Identity\Models\CookieConsentLog;
@@ -62,12 +63,16 @@ use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Models\PaymentRefund;
 use App\Domain\Payments\Services\PaymentSettings;
 use App\Domain\Platform\Listeners\ApplyBusinessSender;
+use App\Domain\Platform\Models\AnalyticsEvent;
+use App\Domain\Platform\Models\AnalyticsSession;
 use App\Domain\Platform\Models\AuditLog;
 use App\Domain\Platform\Models\GoogleBusinessConnection;
 use App\Domain\Platform\Models\Setting;
+use App\Domain\Platform\Services\Analytics\AttributionContext;
 use App\Domain\Platform\Services\Money;
 use App\Domain\Platform\Services\QrLogo;
 use App\Http\Instancia\InstanceViews;
+use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Model;
@@ -95,6 +100,11 @@ class AppServiceProvider extends ServiceProvider
         // Contexto de cuenta del cliente (#221): singleton para memoizar por petición — el nav
         // (puntito de aviso) y el sidebar lo piden por separado y comparten una única consulta.
         $this->app->singleton(CustomerAccountContext::class);
+
+        // El contexto de atribución del libro de eventos (`specs/analitica.md` §4.1, `#678`): UNO por
+        // petición (`scoped`), lo rellena `ResolveVisitor` y lo copia el `creating` de `Order` en el
+        // sello. El estado inicial es «sistema»: consola, cola y verificadores sellan sin navegante.
+        $this->app->scoped(AttributionContext::class);
 
         /*
          * **Horario para mostrar: memoizado en la PETICIÓN, no en el contenedor** (`#662`).
@@ -226,6 +236,11 @@ class AppServiceProvider extends ServiceProvider
         // listener vive en Identity (el arch-test no deja dominio fuera de `app/Domain`) y se registra aquí.
         Event::listen(Verified::class, SignPendingWaiverOnVerification::class);
 
+        // El libro de eventos (`specs/analitica.md` §4.1, `#678`): `user_logged_in` desde el `Login` del
+        // framework, que disparan todas las puertas (contraseña, Google, verificación). El listener vive en
+        // Identity por el mismo motivo que el de arriba.
+        Event::listen(Login::class, RecordLoginFact::class);
+
         // El REMITENTE de todo correo sale del PANEL y no del `.env` (`#500`, T2 de
         // `specs/correos-desde-canvas.md`). Va como listener y no como `Mail::alwaysFrom()` para no
         // consultar `settings` en peticiones que no envían nada: `MessageSending` solo se dispara
@@ -242,6 +257,9 @@ class AppServiceProvider extends ServiceProvider
         Relation::enforceMorphMap([
             'attraction' => Attraction::class,
             'audit_log' => AuditLog::class,
+            // El libro de eventos (`#678`): sin relaciones polimórficas hoy, pero todo modelo lleva alias.
+            'analytics_session' => AnalyticsSession::class,
+            'analytics_event' => AnalyticsEvent::class,
             // `#536`: las imágenes de `/bar` (la carta y la foto del local). Todo modelo necesita
             // alias de morfo — lo exige `MorphMapTest` y es lo que hace que el AUDIT guarde `bar_image`
             // y no el nombre de clase, que se rompe al mover el fichero de sitio.

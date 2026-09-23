@@ -1,6 +1,7 @@
 <?php
 
 use App\Domain\Identity\Services\CookieConsent;
+use App\Domain\Platform\Services\Analytics\Visitor;
 use App\Http\Api\ApiExceptionRenderer;
 use App\Http\Api\ApiSurface;
 use App\Http\Middleware\Api\ApiLocale;
@@ -9,6 +10,8 @@ use App\Http\Middleware\EnsureSiteAvailable;
 use App\Http\Middleware\NoStore;
 use App\Http\Middleware\NoStoreWebResponses;
 use App\Http\Middleware\RequiresPanelRole;
+use App\Http\Middleware\ResolveAttribution;
+use App\Http\Middleware\ResolveVisitor;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
@@ -66,6 +69,10 @@ return Application::configure(basePath: dirname(__DIR__))
             // `SecurityHeaders` (que añade sus cabeceras a la respuesta 503). Es fail-safe y
             // excluye `/admin`, `/pago/redsys`, `/lang` y `/up` por path.
             EnsureSiteAvailable::class,
+            // El libro de eventos (`specs/analitica.md` §4.1, `#678`): deja la petición en el contexto de
+            // atribución (sin consultar nada) y ACUÑA la cookie del visitante si no la trae —solo aquí,
+            // en la web: una respuesta de la API puede ser pública y cacheable, y no lleva `Set-Cookie`.
+            ResolveVisitor::class.':'.ResolveVisitor::MINT,
         ]);
 
         // ── Grupo `api` — declarado PIEZA A PIEZA (Fase 3 · paso 0, spec §4.7) ────────────────
@@ -97,6 +104,12 @@ return Application::configure(basePath: dirname(__DIR__))
         //     verdad necesita techo —login, registro, reset, catálogo, disponibilidad, quote— es
         //     público, así que sí lo recibe. Cubierto por `ApiEnvelopeTest`.
         //  7. `SubstituteBindings` — resolución de parámetros de ruta, lo más adentro posible.
+        //  8. `ResolveVisitor` — el libro de eventos (`#678`): lee la cookie del visitante y deja la
+        //     petición en el contexto de atribución. Sin consultas (`ApiOverheadTest`) y sin acuñar
+        //     cookie: en la API solo la escribe el `202` de `POST /events`, que es `no-store`.
+        //     ⚠️ `POST /events` es la ÚNICA ruta del grupo que sale del `throttle:api` y del modo
+        //     stateful (`withoutMiddleware` en su ruta): apilado, la analítica se comería el cubo del
+        //     embudo, y `sendBeacon` no puede llevar cabecera CSRF (`SEC-01`, spec §7.1).
         $middleware->group('api', [
             SecurityHeaders::class,
             EnsureFrontendRequestsAreStateful::class,
@@ -105,6 +118,7 @@ return Application::configure(basePath: dirname(__DIR__))
             NoStoreWhenAuthenticated::class,
             'throttle:api',
             SubstituteBindings::class,
+            ResolveVisitor::class,
         ]);
 
         // Panel admin (Fase 7): alias para rutas que exigen rol admin o staff.
@@ -117,6 +131,9 @@ return Application::configure(basePath: dirname(__DIR__))
             // F4 (`DECISIONES #630`): la ability que exige toda ruta autenticada de `/api/v1`. Sanctum
             // trae el middleware pero NO registra su alias; sin esta línea `abilities:` no resuelve.
             'abilities' => CheckAbilities::class,
+            // El sello de origen del pedido (`#678`): resuelve el contexto de atribución ANTES de que el
+            // dominio abra su transacción. Solo lo lleva la ruta que crea pedidos.
+            'attribution' => ResolveAttribution::class,
         ]);
 
         // Cookie de consentimiento de cookies (#219): NO se cifra → la leen el servidor
@@ -125,6 +142,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // visitante. Ver `docs/PLAN-COOKIES.md` §4 (D4).
         $middleware->encryptCookies(except: [
             CookieConsent::COOKIE_NAME,
+            // La cookie del visitante del libro de eventos (`#678`): un ULID opaco que no abre nada. Sin
+            // cifrar por el mismo motivo que la de consentimiento, y además porque la ruta de ingesta es
+            // stateless —fuera del grupo con `EncryptCookies`— y tiene que leerla tal cual.
+            Visitor::COOKIE,
         ]);
 
         // Vuelta/notificación de Redsys (Fase 5.5b/5.5c/5.5d): POST cross-site firmado por

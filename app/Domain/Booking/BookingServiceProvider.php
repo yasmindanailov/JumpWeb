@@ -17,6 +17,8 @@ use App\Domain\Booking\Contracts\ProductCatalog;
 use App\Domain\Booking\Contracts\ReservationAdmission;
 use App\Domain\Booking\Contracts\ReservationCheckout;
 use App\Domain\Booking\Contracts\ZonePalette;
+use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Observers\OrderAnalyticsObserver;
 use App\Domain\Booking\Services\AddonOfferReader;
 use App\Domain\Booking\Services\AuthorizableReservationsReader;
 use App\Domain\Booking\Services\AvailabilityReader;
@@ -113,5 +115,19 @@ class BookingServiceProvider extends ServiceProvider
         // 2026-08-31 iba en `scoped` porque memoizaba la familia y los precios del catálogo — y ese
         // memo era la trampa de §17.6·2: dentro de un test un cambio de catálogo no se veía y las
         // guardas nacían ciegas sin `forgetScopedInstances()`. Con el sello no hay nada que memoizar.
+    }
+
+    public function boot(): void
+    {
+        // El libro de eventos (`specs/analitica.md` §4.1, `#678`): el sello de origen en `creating` y los
+        // hechos de un pedido desde sus transiciones. Se escucha al MODELO porque `OrderCreator`,
+        // `CheckoutOrchestrator` y `RedsysReturnHandler` son `CRITICAL_RE` y no se tocan.
+        //
+        // ⚠️⚠️ **Singleton, y no es un detalle**: el dispatcher resuelve `Clase@método` del contenedor EN
+        // CADA evento, así que la transición que `saving` captura en una instancia la leería un `saved` de
+        // OTRA instancia, vacía — medido en tinker: `order_created` llegaba y `order_cancelled` no. Con una
+        // sola instancia, el `de → a` sobrevive del evento síncrono al siguiente.
+        $this->app->singleton(OrderAnalyticsObserver::class);
+        Order::observe(OrderAnalyticsObserver::class);
     }
 }

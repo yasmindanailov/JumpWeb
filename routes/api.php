@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\V1\CatalogAddonsController;
 use App\Http\Controllers\Api\V1\CatalogProductsController;
 use App\Http\Controllers\Api\V1\CatalogZonesController;
 use App\Http\Controllers\Api\V1\ConfigController;
+use App\Http\Controllers\Api\V1\EventsController;
 use App\Http\Controllers\Api\V1\FaqsFactsController;
 use App\Http\Controllers\Api\V1\GoogleSignupController;
 use App\Http\Controllers\Api\V1\GuestFormController;
@@ -47,6 +48,7 @@ use App\Http\Controllers\Api\V1\SiteFactsController;
 use App\Http\Controllers\Api\V1\SocialProofFactsController;
 use App\Http\Middleware\EnsureOnlineSalesEnabled;
 use Illuminate\Support\Facades\Route;
+use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
 
 /*
 |--------------------------------------------------------------------------
@@ -251,6 +253,19 @@ Route::name('api.v1.')->group(function (): void {
     Route::get('/social-proof', SocialProofFactsController::class)
         ->middleware('cache.headers:public;max_age=300;etag')
         ->name('social.proof.facts');
+
+    // ── El LIBRO DE EVENTOS (`specs/analitica.md` §4.1, `#678`) — PÚBLICO y STATELESS ────────────────
+    // La ingesta de lo que el visitante hace en la landing y en el cajón, en lotes. ⚠️⚠️ **Es la ÚNICA
+    // ruta del grupo que sale del `throttle:api` y del modo stateful de Sanctum** (`SEC-01`): apilado,
+    // cada lote descontaría del cubo de 60/min que pagan catálogo y disponibilidad —y una familia tras un
+    // NAT vería un 429 en el calendario provocado por la propia medición—; y `sendBeacon` no puede llevar
+    // la cabecera CSRF, así que el lote de salida (el abandono) volvía 419 en silencio. Lleva su limitador
+    // por VISITANTE (`throttle:events`), es `no-store`, responde `202` y nunca lee la sesión: el `user_id`
+    // lo ata el servidor, y solo con la categoría `analytics`. Un nombre de SERVIDOR aquí se rechaza.
+    Route::post('/events', EventsController::class)
+        ->withoutMiddleware(['throttle:api', EnsureFrontendRequestsAreStateful::class])
+        ->middleware(['throttle:events', 'no-store'])
+        ->name('events.store');
 
     // ── Estado de las reservas (Fase 4 · paso 4.0b) — PÚBLICO ──────────────────────────────
     // Si se puede reservar online ahora, y qué enseñar si no (#218). Hasta este paso la pausa solo
@@ -555,8 +570,10 @@ Route::name('api.v1.')->group(function (): void {
         // operación que abre un cobro real contra la pasarela, y el suelo genérico no basta. El
         // número es el mismo que ya aplica la web (spec §4.7); `PAY-15` (120/min) es otra cosa —el
         // throttle de las callbacks de Redsys— y confundirlos deja el reintento 20× más laxo.
+        // `attribution` (`#678`): resuelve el contexto del sello de origen ANTES de entrar en el dominio,
+        // para que el `creating` del pedido no consulte nada bajo el lock de aforo.
         Route::post('/orders', [OrdersController::class, 'store'])
-            ->middleware(EnsureOnlineSalesEnabled::class)
+            ->middleware([EnsureOnlineSalesEnabled::class, 'attribution'])
             ->name('orders.store');
         Route::get('/orders/{code}', [OrdersController::class, 'show'])->name('orders.show');
         // Las respuestas del pack (Fase 4 · paso 4.0b·4b), APARTE del pedido y a propósito: son

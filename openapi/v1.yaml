@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.17.0
+  version: 1.18.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -870,6 +870,55 @@ paths:
                 $ref: '#/components/schemas/SocialProofFacts'
         '304':
           description: Sin cambios desde el `ETag` enviado en `If-None-Match`.
+
+  /events:
+    post:
+      tags: [Instalación]
+      operationId: ingestEvents
+      summary: Un lote de eventos del libro de analítica
+      description: |
+        La ingesta del **libro de eventos** del producto (desde 1.18.0; `docs/specs/analitica.md`): lo que
+        el visitante hace en la landing y en el cajón, en lotes de hasta 50. Anónima: no lleva sesión ni
+        CSRF, y el visitante se identifica por su cookie propia `visitor_id` (13 meses) o, un cliente sin
+        cookies (la app), por la cabecera `X-Visitor` junto a su Bearer. Sin cookie, la respuesta la acuña.
+
+        **Se valida evento a evento**: los válidos entran, los inválidos vuelven con su índice y su motivo
+        en `rejected`, y la respuesta es `202` igualmente. Un lote con el sobre malformado es el único 422.
+
+        ⚠️ Solo admite los nombres de CLIENTE del contrato (el `enum` de `name`): un hecho de servidor
+        —`order_paid`, `user_registered`…— se rechaza aunque esté bien formado. Y ninguna `prop` puede ser
+        un dato personal: una clave o un valor con pinta de nombre, correo o teléfono rechaza el evento.
+
+        ⚠️ `event_id` es un ULID que genera el emisor y es único por visitante: reenviar un lote no lo
+        duplica. `route` viaja como patrón (sin query ni tokens) y `occurred_at` es el reloj del cliente
+        en milisegundos, que el servidor acota a ±5 minutos del suyo.
+
+        Limitador propio, por visitante: 30 lotes por minuto y un tope diario.
+      parameters:
+        - in: header
+          name: X-Visitor
+          required: false
+          description: 'El id del visitante de un cliente SIN cookies (ULID o UUID). Solo cuenta junto a un Bearer; en el mismo origen manda la cookie.'
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventsBatch'
+      responses:
+        '202':
+          description: Lo aceptado y lo rechazado del lote.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventsAccepted'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
 
   /legal/documents:
     get:
@@ -4089,6 +4138,76 @@ components:
                         properties:
                           rate: { type: string }
                           cents: { type: integer, description: Céntimos enteros. }
+
+    EventsBatch:
+      type: object
+      additionalProperties: false
+      required: [events]
+      properties:
+        events:
+          type: array
+          minItems: 1
+          maxItems: 50
+          items:
+            type: object
+            additionalProperties: false
+            required: [event_id, name]
+            properties:
+              event_id:
+                type: string
+                description: 'ULID generado por el emisor; único por visitante (reenviar no duplica).'
+                example: 01J8Z0K2QW7X3Y4M5N6P7R8S9T
+              name:
+                type: string
+                description: 'Un nombre de CLIENTE del contrato de eventos. Un hecho de servidor se rechaza.'
+                enum: [page_viewed, section_viewed, call_clicked, whatsapp_clicked, map_clicked, contact_form_started, drawer_opened, step_entered, product_chosen, date_chosen, availability_missing, time_chosen, line_added, line_removed, identify_started, identified, email_verification_pending, pay_started, drawer_closed, request_failed, client_error, consent_shown, consent_updated, batch_dropped, experiment_exposed]
+              route:
+                type: string
+                description: 'La ruta como PATRÓN: sin query ni tokens. El servidor la vuelve a normalizar.'
+                example: /entradas
+              props:
+                type: object
+                additionalProperties: true
+                description: 'Las propiedades que el contrato permite para ese evento; las demás se descartan y una con pinta de dato personal rechaza el evento. Lo decide el servidor, por evento.'
+              occurred_at:
+                type: integer
+                description: 'El reloj del cliente, en milisegundos desde la época. Se acota a ±5 minutos del servidor.'
+        meta:
+          type: object
+          additionalProperties: false
+          description: Lo que viaja fuera de los eventos y vale para el lote entero.
+          properties:
+            webdriver:
+              type: boolean
+              description: '`navigator.webdriver`: un navegador automatizado marca la sesión como robot.'
+            internal:
+              type: boolean
+              description: 'Tráfico del propio negocio (la sonda, el equipo): se guarda aparte del real.'
+            consent:
+              type: object
+              additionalProperties: true
+              description: 'La foto de las categorías de cookies consentidas, por clave. Decide si los identificadores se guardan.'
+
+    EventsAccepted:
+      type: object
+      additionalProperties: false
+      required: [accepted, rejected]
+      properties:
+        accepted:
+          type: integer
+          description: Eventos escritos (los repetidos por `event_id` no cuentan).
+        rejected:
+          type: array
+          description: Los que no entraron, con su posición en el lote y el motivo.
+          items:
+            type: object
+            additionalProperties: false
+            required: [index, reason]
+            properties:
+              index: { type: integer }
+              reason:
+                type: string
+                enum: [malformed, unknown_event, server_only, bad_event_id, pii]
 
     LegalDocumentIndex:
       type: object

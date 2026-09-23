@@ -139,15 +139,25 @@ directa del `visitor_id` en los últimos **30 días** (resuelta en servidor); `g
 `ttclid` cuentan como pago **solo con `utm_medium` de pago** (plantilla de UTM obligatoria en los anuncios,
 §4.3); `ref` se normaliza a `utm_source`. El panel enseña las dos y calcula CPA/ROAS sobre `first_touch` no
 directo, con la nota de método. `attribution IS NULL` = «anterior a la medición», nunca «directo».
-- **Cómo nace**: `Domain\Analytics\AttributionContext` `(futuro)` es un singleton **de petición** (`scoped`)
-  que rellena el middleware `ResolveVisitor` `(futuro)` (grupos `web` y `api`) desde la cookie y
-  `analytics_sessions`, memoizado por petición (`PERF-02`); `CreateManualOrderPage` lo fija a `{channel: panel,
-  source: <Select obligatorio phone|counter|email|other>, operator_id}` ANTES de llamar a `fulfill()` (la
-  firma no cambia); consola y jobs → `{channel: system}`; Bearer → `{channel: app}`. Un observador
-  **`creating`** de `Order` copia el contexto en el modelo antes del INSERT: **cero consultas, cero UPDATE
-  bajo el lock de aforo**, `try/catch` con `Log` (`analytics.seal_failed`) y el pedido nace igual.
+- **Cómo nace**: `Platform\Services\Analytics\AttributionContext` es un singleton **de petición** (`scoped`)
+  que rellena el middleware `ResolveVisitor` (grupos `web` y `api`; en `web` acuña además la cookie) desde
+  la cookie, y que resuelve la sesión y el primer toque PEREZOSAMENTE: la ruta `POST /orders` lleva el
+  middleware `attribution`, que lo resuelve antes de entrar en el dominio (el controlador es `CRITICAL_RE`
+  y no se toca). `CreateManualOrderPage` lo fija a `{channel: panel, source: <Select obligatorio
+  phone|counter|email|other>, operator_id}` ANTES de llamar a `fulfill()` (la firma no cambia; T1d);
+  consola y jobs → `{channel: system}`; Bearer → `{channel: app}`. `Booking\Observers\OrderAnalyticsObserver`
+  copia el contexto en el modelo en **`creating`**, antes del INSERT: **cero consultas, cero UPDATE bajo
+  el lock de aforo**, `try/catch` con `Log` (`analytics.seal_failed`) y el pedido nace igual.
+- ⚠️ **Dónde vive el módulo, y por qué**: en `Platform` (`Platform\Models\Analytics*`,
+  `Platform\Services\Analytics\*`), como `AuditLogger`: todos los módulos pueden mirar a Platform y Platform
+  no mira a nadie, así que Booking, Payments e Identity le escriben con ESCALARES y el grafo de
+  `ModuleBoundariesTest` no cambia. Los observadores viven en el módulo del modelo que observan.
+- ⚠️⚠️ **Los observadores son SINGLETON, y lo destapó la T1a**: el dispatcher resuelve `Clase@método` del
+  contenedor EN CADA evento, así que la transición capturada en `saving` la leía un `saved` de otra
+  instancia, vacía (medido en tinker: `order_created` llegaba y `order_cancelled` no). Los tres se
+  registran con `singleton()` antes de `observe()`, y resuelven el contexto y el recorder al usarse.
 
-**Los hechos de servidor** (`Domain\Analytics\Recorder` `(futuro)`), cada uno con su FUENTE:
+**Los hechos de servidor** (`Platform\Services\Analytics\Recorder`), cada uno con su FUENTE:
 
 | Hecho | Fuente | Lleva |
 |---|---|---|
@@ -167,7 +177,7 @@ directo, con la nota de método. `attribution IS NULL` = «anterior a la medici�
 esté confirmado—. Ingresos del panel = Σ `paid_cents` − Σ `refunded_cents`; valor vendido = Σ `total_cents`.
 El canal `panel` cuenta en ingresos por canal y **no** en el embudo web.
 
-**La ingesta**: `POST /api/v1/events` `(futuro)`, dentro del grupo `api` pero
+**La ingesta**: `POST /api/v1/events` (`EventsController` → `Platform\Services\Analytics\EventIngestor`), dentro del grupo `api` pero
 `->withoutMiddleware(['throttle:api', EnsureFrontendRequestsAreStateful::class])`: **sin sesión, sin CSRF, con
 limitador propio** que SUSTITUYE al del grupo (única ruta así; se escribe en `SEC-01`). `RateLimiter::for('events')`:
 clave `visitor_id` (cookie) con respaldo por IP, **30 lotes/min**, ≤ 50 eventos, cuerpo ≤ 64 KB, `props` ≤ 2 KB,
@@ -213,9 +223,9 @@ techo propio; el contrato cierra NOMBRES (no `props`) en el yaml; `data-jw-track
   (sesión con `step_entered` cuyo último paso no es desenlace y sin `order_paid` del visitante en 24 h).
 - **La app móvil**: mismo endpoint con Bearer; `X-Visitor` **solo** con Bearer (UUID v4 validado); en el mismo
   origen la cookie gana y la cabecera se ignora.
-- **El contrato**: `Domain\Analytics\Contract::EVENTS` `(futuro)` (PHP, la verdad) declara por evento `source:
+- **El contrato**: `Platform\Services\Analytics\Contract::EVENTS` (PHP, la verdad) declara por evento `source:
   client|server` y sus `props` permitidas. El yaml cierra `name` con un `enum` y deja `props` como objeto
-  abierto (como `SidebarBoot.messages`); `AnalyticsContractTest` `(futuro)` compara PHP↔`enum` (molde:
+  abierto (como `SidebarBoot.messages`); `AnalyticsContractTest` compara PHP↔`enum` (molde:
   `test_the_event_field_types_are_the_same_in_the_domain_and_in_the_contract`) y PHP↔JS leyendo `track.js`
   (molde: `SidebarMountTest` con `file_get_contents`) para los nombres emitidos. **Ninguna `prop` es dato
   personal**: lista negra de CLAVES y de VALORES (regex de correo y teléfono) en cliente y servidor.
@@ -348,7 +358,7 @@ gana un bloque `analytics` (primera fuente, resumen de sesiones, atribución de 
 | | Tanda | Entrega | Verificación (§6) |
 |---|---|---|---|
 | T0 | ✅ spec v2, el contrato de eventos, `#678` y la revisión (§7.1) | | docs-check |
-| T1 | el libro: tablas y poda, cookie, `ResolveVisitor` y `AttributionContext`, la ingesta stateless, `track.js` diferido, el cajón, los hechos de servidor por fuente, el sello en `creating`, el `Select` de fuente del pedido manual, UTM antes de firmar, `anonymize()` y export, `trustProxies` acotado | contrato **1.18.0** (`POST /events`, `experiments` en `/sidebar/session` puede esperar a T5) | tests + arnés + `redsys:verify-concurrency` + sonda |
+| T1 | el libro, en cinco sub-tandas: **T1a ✅ (23-09)** tablas y poda, cookie, `ResolveVisitor` y `AttributionContext`, la ingesta stateless con su limitador, los hechos de servidor por fuente, el sello en `creating`, `robots.txt`, contrato **1.18.0** (`POST /events`) · **T1b** `track.js` diferido y el cajón · **T1c** UTM antes de firmar en los correos · **T1d** el `Select` de fuente del pedido manual · **T1e** `anonymize()` y export · y al cierre el arnés, la sonda y `trustProxies` acotado | contrato **1.18.0** (`experiments` en `/sidebar/session` puede esperar a T5) | tests + arnés + `redsys:verify-concurrency` + sonda |
 | T1·bis | migración de historia: «anterior a la medición», arranque de cuadros en la fecha del despliegue, `model:prune` y recuento de `deploy.sh` 6→7, ensayo en staging con `schedule:run` a mano, `POLICY_VERSION` la misma noche | | ensayo |
 | T2 | el cuadro de mando, `analytics_daily`, `ad_spend`, permisos | | tests + presupuesto de consultas + `EXPLAIN` |
 | T3a | categorías sin quemar, banner, política por sección, aviso a cuentas, `PUT /me/analytics`, driver y PostHog con `Drivers::csp()` | `POLICY_VERSION` | tests + sonda (cero terceros sin consentir; con consentimiento, sin `securitypolicyviolation`) |
@@ -372,20 +382,20 @@ gana un bloque `analytics` (primera fuente, resumen de sesiones, atribución de 
 
 ## 6. Plan de verificación empírica
 
-- `AnalyticsEventsTest` `(futuro)`: lote mixto → `202` con rechazados; nombre de servidor → rechazado; PII en
+- `AnalyticsEventsTest` (T1a ✅): lote mixto → `202` con rechazados; nombre de servidor → rechazado; PII en
   claves y en valores (correo en `route`) → vaciado; tokens de invitación/reset/firma no se guardan; POST sin
   `X-XSRF-TOKEN` con `Referer` propio → `202`; **60 lotes seguidos y `GET /availability` desde la misma IP sigue
   en 200**; `X-Forwarded-For` falsa no estrena cubo; el mismo lote dos veces → una fila; cookie de 13 meses sin
   renovación y acuñada en el `202`; UA de Googlebot → `is_bot`; sesión de `staff` → `is_internal`; `X-Visitor`
   sin Bearer → ignorada.
-- `AnalyticsContractTest` `(futuro)`: PHP↔`enum` y PHP↔JS, con mutante que añade un evento solo en una.
-- `AttributionSealTest` `(futuro)`: el pedido se escribe con UN INSERT que ya lleva el sello (`DB::listen`) y
+- `AnalyticsContractTest` (T1a ✅; PHP↔JS en T1b): PHP↔`enum` y PHP↔JS, con mutante que añade un evento solo en una.
+- `AttributionSealTest` (T1a ✅): el pedido se escribe con UN INSERT que ya lleva el sello (`DB::listen`) y
   ningún UPDATE posterior; pedido manual desde un navegador con `visitor_id` y `utm_source=google` → sello
   `panel/phone`; sin contexto → `panel/unknown`; contexto que lanza → el pedido nace igual, sin sello, con
   `analytics.seal_failed`; `first_touch` no directo a 30 días; usuario anonimizado → sin `visitor_id` ni
   `click_ids`; visitante anónimo con UTM que se registra dos sesiones después (con `analytics`) hereda su
   primera fuente; sin `analytics`, nada se ata.
-- `ServerEventsTest` `(futuro)`: `orders:expire` real → `order_expired`; `Payment` fallido → `order_declined`;
+- `ServerEventsTest` (T1a ✅): `orders:expire` real → `order_expired`; `Payment` fallido → `order_declined`;
   devolución parcial real → `order_refunded` con su importe; reembolso+cancelación en una transacción → un
   `order_cancelled` y un `order_refunded`; `AuthorizedAfterExpiration` → `order_paid_incident`, no `order_paid`;
   **el recorder lanza → el pago queda pagado Y la petición termina sin excepción** (`RedsysReturnHandlerTest`

@@ -6,6 +6,7 @@ use App\Domain\Content\Models\Faq;
 use App\Domain\Content\Services\ContactTopics;
 use App\Domain\Content\Services\SiteDestinations;
 use App\Domain\Platform\Models\Setting;
+use App\Domain\Platform\Services\Analytics\Recorder;
 use App\Domain\Platform\Services\Honeypot;
 use App\Domain\Platform\Services\Turnstile;
 use App\Http\Instancia\InstanceViews;
@@ -61,7 +62,7 @@ class ContactController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request, Recorder $recorder)
     {
         // Anti-spam: honeypot. Si el campo oculto viene relleno, es un bot: respondemos como si todo
         // fuera bien, pero no enviamos nada. ⚠️ El nombre del campo vive en `Honeypot` (`#654`): la
@@ -107,6 +108,10 @@ class ContactController extends Controller
                 'locale' => app()->getLocale(),
             ]));
         }
+
+        // El libro de eventos (`specs/analitica.md` §4.1, `#678`): el contacto es un hecho de SERVIDOR,
+        // con la clave del tema y nada más — ni nombre, ni correo, ni mensaje.
+        $recorder->fact('contact_received', ['topic' => $data['topic'] ?? null]);
 
         return redirect()->route('contacto')->with('contact_sent', true);
     }
