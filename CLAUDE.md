@@ -42,7 +42,8 @@ contador de la suite va en el trailer del commit** (`#618`). Si no salta: `git c
 |---|---|
 | Refactor · fases · arquitectura de módulos · fronteras | `docs/00-REFACTOR.md` · `docs/specs/modulos-dominio.md` §0 |
 | **Producto e instancias** · repos · versionado · F0→F6 | `docs/specs/producto-e-instancias.md` §0 · `CHANGELOG.md` |
-| La landing FUERA (F5) · menú de hechos · API pública · el paquete de instancia | `docs/specs/instancia-y-landing-fuera.md` §0 · `docs/specs/paquete-de-instancia.md` §0 |
+| Landing FUERA (F5) · menú de hechos · API pública · paquete de instancia | `docs/specs/instancia-y-landing-fuera.md` §0 · `docs/specs/paquete-de-instancia.md` §0 |
+| Analítica · conversión · atribución (UTM, anuncios) · consentimiento `analytics`/`marketing` | `docs/specs/analitica.md` §0 |
 | F4 · cajón empaquetable · token Bearer | `docs/specs/cajon-empaquetable.md` §0 · `docs/specs/token-bearer.md` §0 |
 | La capa de agente · el plugin `jumpweb-agente` · skills · hooks · reglas del owner | `docs/sistemas/CAPA-DE-AGENTE.md` |
 | Dinero / pagos / Redsys / reembolsos | `docs/INVARIANTES.md` §1 + §6 · `docs/sistemas/REDSYS.md` · `docs/MODELO-DATOS.md` §2 |
@@ -53,27 +54,26 @@ contador de la suite va en el trailer del commit** (`#618`). Si no salta: `git c
 | Compra / carrito / catálogo de productos | `docs/sistemas/COMPRA-PRODUCTOS.md` · `docs/FLUJOS.md` · `docs/MODELO-DATOS.md` §1 |
 | Google: entrar, registrarse, vincular · el `sub` · condiciones | `docs/specs/auth-con-google.md` §0 |
 | Auth / cuentas / RGPD | `docs/SEGURIDAD.md` · `docs/INVARIANTES.md` §3 + §4 · `docs/FLUJOS.md` |
-| El teléfono de un cliente · cuenta de Google sin número · pedirlo en el pedido manual | `docs/specs/telefono-del-cliente.md` §0 |
+| El teléfono del cliente · cuenta de Google sin número · pedido manual | `docs/specs/telefono-del-cliente.md` §0 |
 | Firmar la exención al declarar un menor · el 409 de la tarjeta | `docs/specs/firma-al-declarar-menor.md` §0 |
 | Auth dentro del cajón · retirar el modal de la cabecera | `docs/specs/auth-en-cajon.md` §0 |
 | Landing · tema visual (tokens) · CMS de contenido · white-label por cliente | `docs/specs/landing-white-label.md` §0 |
-| Capa de tema · superficies · radios · sombras · foco · fuentes · logotipo · área táctil | `docs/specs/tema-por-instalacion.md` §0 |
+| Capa de tema · superficies · radios · sombras · foco · fuentes · logotipo · táctil | `docs/specs/tema-por-instalacion.md` §0 |
 | El armazón · barra · menú · hamburguesa · CTA de la esquina · cajón móvil | `docs/specs/armazon-y-menu.md` §0 |
 | Dónde van los elementos de diseño · la pasada de vestido · presupuesto de marcado | `docs/specs/pasada-de-vestido.md` §0 |
 | Material gráfico del mural · manchas · poses · texturas · iconos de zona | `docs/specs/elementos-fachada.md` §0 |
-| Rediseño desde el canvas · las 8 secciones · las 7 páginas | `docs/specs/rediseno-desde-canvas.md` §0 |
+| Rediseño desde el canvas · 8 secciones · 7 páginas | `docs/specs/rediseno-desde-canvas.md` §0 |
 | Idioma visual heredado · badges · auditoría de diseño | `docs/specs/auditoria-diseno.md` §0 · `docs/specs/idioma-visual-heredado.md` §0 |
 | La hora extra · complemento que ocupa aforo · su precio por día · mover fecha · su sello | `docs/specs/hora-extra.md` §0 |
 | Añadir o quitar invitados de una reserva pagada · el plazo | `docs/specs/invitados-en-post-form.md` §0 |
-| Un complemento que se vende después de reservar · el post-form · plazo de corte | `docs/specs/complementos-post-reserva.md` §0 |
+| Complemento vendido después de reservar · el post-form · plazo de corte | `docs/specs/complementos-post-reserva.md` §0 |
 | El hueco de ilustración por instalación · `client-kit.svg` · `<use>` externo | `docs/specs/hueco-ilustracion.md` §0 |
 | `/servicios` · precios por tramo de grupo · reservas de grupo | `docs/specs/landing-white-label.md` §0 · `docs/sistemas/SERVICIOS-CMS.md` |
 | El libro del pedido · desglose +/− · saldo en el parque · cortesía · reembolso | `docs/specs/desglose-libro.md` §0 |
-| «Mis reservas» por reserva · historial | `docs/specs/mis-reservas-por-reserva.md` §0 |
-| Área de cliente en el cajón (mis pedidos / mis reservas) | `docs/specs/area-cliente.md` §0 |
+| Área de cliente en el cajón · «Mis reservas» por reserva · historial | `docs/specs/area-cliente.md` §0 · `docs/specs/mis-reservas-por-reserva.md` §0 |
 | Bloque de cuenta del cajón (`.acct`) · el `no-store` de la web | `docs/specs/account-context-vue.md` §0 |
 | Sidebar SPA · Vue · las 25 pantallas del cajón · rótulos · el chunk | `docs/specs/sidebar-spa.md` §0 · `docs/CARRIL-SPA.md` |
-| Justificante de un menor invitado (waiver offshore) · activación · plazas libres | `docs/specs/waiver-por-reserva.md` §0 |
+| Justificante de un menor invitado (waiver offshore) · activación · plazas | `docs/specs/waiver-por-reserva.md` §0 |
 | Waiver (firma, prueba, PDF, versiones del texto) · la firma en la puerta | `docs/specs/waiver-probatorio.md` §0 |
 | Menores a cargo · asignar una entrada a un menor · apellidos y relación | `docs/specs/menores-a-cargo.md` §0 |
 | Carné QR · pantalla de puerta · «Mi carné» · rotar carné | `docs/specs/identidad-qr-puerta.md` §0 |
@@ -94,7 +94,7 @@ contador de la suite va en el trailer del commit** (`#618`). Si no salta: `git c
 | Post-form de invitados | `docs/sistemas/POSTFORM-INVITADOS.md` |
 | Vestir el formulario de celebración o el justificante · la invitación digital | `docs/specs/celebracion-e-invitacion.md` §0 |
 | Tests / suite / fakes / datos de prueba | `docs/TESTING.md` · `docs/CONVENCIONES.md` §3.bis/§3.ter |
-| Desmontar `ViewOrder` · edición, reembolso y calendario de un pedido en el panel | `docs/specs/desmontar-view-order.md` §0 |
+| Desmontar `ViewOrder` · edición, reembolso y calendario de un pedido | `docs/specs/desmontar-view-order.md` §0 |
 | Retirar código viejo / auditar sus tests | `docs/CONVENCIONES.md` §3.quater |
 | Staging / desplegar / producción `playjump.es` / la validación del banco | `docs/ENTORNOS.md` §4 y §6 · `docs/carriles/pasarela.md` |
 | Validar el cajón en vivo (navegador + pasarela) | `docs/VERIFICACION-E2E-CAJON.md` · `docs/sistemas/REDSYS.md` §11–§12 |

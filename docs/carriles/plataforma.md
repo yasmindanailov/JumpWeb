@@ -2,9 +2,10 @@
 
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669 AGOTADA con `#669`** → **670–699 EN CURSO** · Último usado: **`#677`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, `docs/specs/instancia-y-landing-fuera.md` · Actualizado: **2026-09-23**
-> (**segunda sesión del 23-09**: `#677` los TRAMOS DE GRUPO y el menú COMPLETO, contrato **1.17.0**).
+> **640–669 AGOTADA con `#669`** → **670–699 EN CURSO** · Último usado: **`#678`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, **`docs/specs/analitica.md`** · Actualizado: **2026-09-23**
+> (**segunda sesión del 23-09**: `#677` los TRAMOS DE GRUPO y el menú COMPLETO, contrato **1.17.0**; `#678` la
+> dirección de la ANALÍTICA, decidida por el owner, con su spec).
 > ⚠️ **El techo de 32 KB apretó SIETE veces el 23-09** y se resolvió siempre mudando, nunca subiéndolo (es
 > del owner): **se muda, no se raspa** — y si vuelve a pasar tres veces seguidas, llévaselo con la medida
 > como hizo el SPA en `#724`.
@@ -66,9 +67,14 @@
    **DATOS** que recibe la vista, no el HTML (§4.5.bis) · `InstanceViews::CONTRATO` = **2** · el
    trinquete de CSS huérfano está encendido, así que **si añades CSS su consumidor nace con él** · la
    migración de `zones` **borra columnas** y viaja en la v2.0.0.
-   ▶▶▶ **LO SIGUIENTE: LA ANALÍTICA.** El owner cerró el 23-09 con *«terminaremos el plato que queda y
-   después iteramos sobre la analítica»*, y el plato ya está. Empieza por **el contrato de EVENTOS**, que
-   es suyo y va ANTES de escribir la landing nueva (abajo, «Del owner»).
+   ▶▶▶ **LA ANALÍTICA, EN MARCHA** (`specs/analitica.md`, `#678` `[DECIDIDO owner]`, 23-09): T0 la spec ✅.
+   **Lo siguiente es la T1, el libro de eventos** (spec §4.1–§4.2): tablas `analytics_sessions`/`_events`,
+   cookie propia de 13 meses fijos, `POST /events` con limitador propio, `track()` dentro de
+   `/cajon/paquete.js` con `data-track` declarativo, `step_entered` desde `machine.js`, hechos de servidor por
+   OBSERVADOR de `Order` (`afterCommit`, nunca tocar el `CRITICAL_RE`), el sello `orders.attribution`, UTM en
+   los 26 correos y la poda a 25 meses. Contrato **1.18.0**. ⚠️ Toca ficheros del SPA y de la web: **avisado
+   en el buzón**, abajo. ❗ `[PENDIENTE: owner]`: el cuándo (`#670` vs T1 sobre v1.1.0 de noche) y la
+   pregunta «¿cómo nos has conocido?»; `[PENDIENTE: asesoría]` la LIA y los textos.
    ⚠️⚠️ **Lo que dejaron los platos y vale para lo que venga** (detalle en la spec §4.1 y §4.1.ter): si
    el dato tiene **servicio de dominio**, el recurso **delega** · el filtro de «lo que no viaja» va
    **DESPUÉS** del respaldo de idioma (`Translated::pick()` encadena con `??`) · lo que decide la MAQUETA
@@ -92,13 +98,12 @@
 6. Después, **F6** (app nativa; hereda del token lo que su spec §2 nombra: Google, alta, dispositivos).
 - **Del owner, HOY**: el **fin de la promo** (es suyo el cuándo) · el **ojo** que le falta a la compra de
   la T5 de F4 · **`topics`**: con la landing fuera, ¿de quién son los asuntos del formulario de contacto?
-  (hoy son constante del producto, y `birthday`/`groups` son vocabulario del SECTOR) · y **el contrato de
-  EVENTOS de analíticas**, que hay que decidir ANTES de escribir la landing nueva —un evento no emitido no
-  se recupera, y la landing ya vive fuera, así que instrumentarla después es reabrir nueve vistas en otro
-  repo—. ▶ Ya no tiene nada delante: era «después de los tramos», y los tramos están (`#677`).
+  (hoy son constante del producto, y `birthday`/`groups` son vocabulario del SECTOR) · y de la analítica,
+  **el cuándo** (`#670` manda esperar a la v2.0.0; la alternativa es la T1 sola sobre v1.1.0, de noche) y
+  **la pregunta «¿cómo nos has conocido?»** tras pagar (spec §4.5 y §7).
   ▶ Contestadas y retiradas de aquí: por dónde arrancar la vía A (los platos, 23-09), cuándo se
-  despliega (`#670`: no en piezas) y el registro del dinero en la API (`#677`: céntimos). Las TRES de §7
-  de la spec de F5 lo están desde `#639`.
+  despliega (`#670`: no en piezas), el registro del dinero en la API (`#677`: céntimos) y **la dirección
+  entera de la analítica** (`#678`). Las TRES de §7 de la spec de F5 lo están desde `#639`.
 
 ## Ficheros de este carril
 
@@ -228,6 +233,18 @@ dueño es el carril de la web/reseñas—) ·
   esté en `origin/main`; y un test sobre una «casi versión» tiene que EMPUJARLA antes de medir.
 
 ## Buzón
+
+### ❗❗ Para el SPA y la WEB (emisor: plataforma, 2026-09-23) — LA ANALÍTICA va a tocar lo compartido
+- ▶ `#678` (`specs/analitica.md`): el producto gana un libro de eventos propio. **Aviso previo**, como manda
+  `CONVENCIONES §10`, de lo que la T1 y la T3 tocan de vuestro reparto:
+- **SPA**: `resources/js/sidebar/machine.js` (cada transición emite `step_entered`), `cajon/controller.js`
+  e `index.js` (`drawer_opened`/`drawer_closed` con el paso) y `api.js` (la cabecera `X-Visitor` solo fuera
+  del mismo origen). Lo mínimo, con sus tests, sin mover un píxel. Si preferís emitirlo vosotros desde
+  vuestro carril, decidlo y os paso el contrato de eventos (spec §4.2).
+- **WEB**: la T1 mete `track.js` dentro de `/cajon/paquete.js` (la landing no añade código) y atributos
+  `data-track` en las vistas de la instancia; la T3 toca el banner (`layout.blade.php`, `app.js`,
+  `consent-frame`), `SecurityHeaders` (orígenes por ajuste) y los textos de la política en tres idiomas, y
+  sube `POLICY_VERSION`: se re-pide el consentimiento a todos.
 
 ### ❗ Para el carril de la WEB (emisor: plataforma, 2026-09-23) — dos huecos de contenido, MEDIDOS
 - ▶ Publicar `/servicios` como hechos (`#672`) destapó dos cosas **tuyas**, que son de tu T6 de contenido
