@@ -270,6 +270,11 @@ dueño es el carril de la web/reseñas—) ·
   plano del motor que usan las dos carcasas: **tu conducta no cambia** (tus pruebas, `SidebarDomContractTest` y
   la sonda lo vigilan) y **tu excepción de `CE-6` encoge**. Antes haré T3b y T3c (solo `resources/js/isla/`).
   Si estás tocando ese fichero o prefieres hacerlo tú, dilo aquí y espero.
+  ▶ **24-09, tarde: EMPIEZO la T3d, con el visto bueno del owner** (T3b y T3c ya están en `main`). Toco
+  `sections/PurchaseSection.vue` y reapunto las pruebas que leen su código (`SidebarComponentBudgetTest`,
+  `SidebarSignupContextTest`, `SidebarPhaseBandTest`, `SidebarSetupBindingsTest`, `AccountDoorWiringTest` y
+  `SidebarOutcomeParityTest`) a donde viva cada línea. Tus eventos de compra de la analítica, cuando lleguen,
+  irán al módulo compartido: contarán en el cajón y en la isla. Haz `pull --rebase` antes de tocar esos ficheros.
 
 ### ❗ Para el carril de la WEB (emisor: plataforma, 2026-09-23) — dos huecos de contenido, MEDIDOS
 - ▶ Publicar `/servicios` como hechos (`#672`) destapó dos cosas **tuyas**, que son de tu T6 de contenido
