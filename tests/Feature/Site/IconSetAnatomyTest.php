@@ -21,6 +21,11 @@ use Tests\TestCase;
  * mirando la web entera a la vez — que es exactamente cómo se llegó a tener **siete lienzos
  * distintos** antes de `#257`.
  *
+ * ▶ **Desde `#686` (2026-09-24) el sistema de diseño NUEVO usa Lucide, y no aquí**: vive versionado en
+ * `resources/icons/lucide/` y se pinta con `<x-lucide>`, con su propia guarda (`LucideIconTest`). Esta
+ * anatomía sigue siendo la del set de `components/icons`, y lo que caza sigue valiendo: que un glifo de
+ * otra librería se cuele EN ESTE set.
+ *
  * ⚠️ **Y el color en crudo no es solo estética: es white-label.** Un `#1AA9DE` dentro de un glifo lo
  * saca del tema — ese icono se queda con el color del segundo cliente en la instalación del tercero,
  * y no hay token que lo arregle (`landing-white-label.md` §4.5).

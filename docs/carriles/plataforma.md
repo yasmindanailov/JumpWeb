@@ -78,10 +78,11 @@
    producto, pack o complemento, y un aviso arriba), con spec propia y modelo a iterar con el owner.
    ✅ **T0 hecha para Kids y Jump** (§1.6: cada dato con su fuente, los tokens y el mapa de URLs). FALTAN como
    dato: el precio de antes y la oferta (→ `#684`), el plazo de cambio y cancelación y los 90 cm con adulto.
-   ▶ **T1** (§4.8, `#685`): el juez de «idéntico» es `scripts/pixel.mjs` · ✅ **T1b las fuentes**, servidas desde
-   `public/instancia/` (0 píxeles distintos contra Google) · ✅ **T1a la referencia**, byte a byte en
-   `instancias/playjump/diseno/playjump-design-system/` (zip del owner; DesignSync corta a 256 KiB) · siguen
-   **T1c** (hoja y layout limpio) y **T1d** (Lucide). ⚠️ Tras un `pull`: `cp -r ../instancias/playjump/publico/instancia public/`.
+   ✅ **T1 ENTERA** (§4.8, `#685`, `#686`), juzgada con `scripts/pixel.mjs`: la referencia byte a byte en
+   `instancias/playjump/diseno/playjump-design-system/` · las fuentes desde `public/instancia/` · la hoja
+   `saltia.css`, **82 de 82 páginas del diseño con 0 píxeles distintos** · Lucide 0.544.0 con `<x-lucide>`, 84
+   iconos con 0 píxeles. ▶ Siguiente: **T2**, la isla en reposo. ⚠️ Tras un `pull`: `cp -r
+   ../instancias/playjump/publico/instancia public/`; y el lote se rehace con `tema/lote-fichas.py`.
    ⚠️ **La web nueva cambia las URLs** (§1.5): cada ruta vieja necesita su 301.
    ⚠️⚠️ **Lo que dejaron los platos y vale para lo que venga** (detalle en la spec §4.1 y §4.1.ter): si
    el dato tiene **servicio de dominio**, el recurso **delega** · el filtro de «lo que no viaja» va

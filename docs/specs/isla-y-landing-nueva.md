@@ -22,8 +22,8 @@
   - ⚠️ El aviso de cookies pasa a la isla, y la T3 de la analítica (carril del SPA, `#735`) toca ese aviso:
     se avisa en el buzón antes.
   - Tras tocar un `.vue`, `npm run build:ssr` antes de la suite (`sidebar-spa.md` §0).
-- **Estado**: §7 contestado (`#683`), promociones en `#684`, T0 hecha (§1.6). **T1** (§4.8): ✅ las fuentes, 0
-  píxeles contra Google (`scripts/pixel.mjs`); ✅ la referencia byte a byte en `instancias/playjump/diseno/`.
+- **Estado**: §7 contestado (`#683`), promociones en `#684`, T0 hecha (§1.6). **T1 ✅** (§4.8): referencia byte a
+  byte, fuentes, hoja (82 de 82 páginas del diseño, 0 píxeles) e iconos (84, 0 píxeles). Sigue la T2.
 - **Invariantes**: `PAY-*` si entra Bizum (`VERIFY_CONC=1`), `SEC-12` (la ruta de las vistas), `SEC-01`,
   `RGPD-*` (consentimiento dentro de la isla, Apple como proveedor), `PERF-02` (la carcasa por instalación va en
   el arranque cacheado; la variante del A/B, en la sesión).
@@ -305,7 +305,7 @@ deja de decir «nada de otra librería» en la T1.
 | Tanda | Qué | Dónde |
 |---|---|---|
 | T0 ✅ | Kids y Jump contra el menú de hechos, los tokens y las URLs (§1.6). Cumpleaños y la portada, con su tanda | Esta spec |
-| T1 | El tema: tokens en la instancia, roles nuevos en el producto, fuentes locales, iconos | Producto + instancia |
+| T1 ✅ | El tema: la referencia, las fuentes, la hoja de tokens y los iconos (§4.8); los roles nuevos del producto van con la isla (T2) | Producto + instancia |
 | T2 | La isla en reposo (apagada por defecto): menú, situaciones 2, 3, 5 y 15, y el aviso de cookies dentro | Producto |
 | T3 | La compra en la isla sobre el motor, con tarjeta; sonda de compra | Producto |
 | T4 | **Kids y Jump** (`#683`), un molde y dos páginas, con su calculadora y sus 301 | Instancia + producto |
@@ -339,12 +339,28 @@ distintos. Idéntico = **0**. El arnés tiene control negativo: una B sin fuente
   dos descargas, mismos sha256) y los deja en `publico/instancia/`. **Medido**: la muestra de las nueve caras
   (`tema/muestra-fuentes.html`) con las de Google y con las propias da **0 píxeles distintos** a 390×844 y
   1440×900, y **0 de 4.578.120** a densidad ×3.
-- **T1c · la hoja y el layout limpio** (siguiente). Las páginas nuevas cargan SOLO los tokens de Saltia, tal
-  cual, más el paquete de la isla: sin `landing.css` ni `site.css` ni el `client.css` viejo, que traen el sistema
-  anterior. El producto gana un layout para vistas de instancia que no impone hojas. Las páginas viejas siguen
-  con las suyas hasta que se sustituyan.
-- **T1d · los iconos**: `lucide-static@0.544.0`, la versión exacta que carga el diseño, vendorizada; un
-  componente que los mete en línea y `IconSetAnatomyTest` que admite la librería (`#683`).
+- **T1c · la hoja** ✅ (24-09). `tema/construir-hoja.py` de la instancia escribe `publico/instancia/css/saltia.css`
+  (30 KB): los siete ficheros de tokens TAL CUAL, en el orden de su `styles.css`, con las fuentes propias en lugar
+  del `@import` de Google (el único cambio, y comprobado). **Medido**: las **82 páginas** del diseño que cargan
+  `styles.css` (22 guías, 9 fichas de componentes, 31 secciones, 6 páginas montadas, 8 hojas de revisión y 6
+  más) servidas con su hoja (A) y con ésta (B, `scripts/pixel-referencia.php` cambia solo el enlace) → **82 de
+  82 con 0 píxeles distintos**; 77 a la primera y 5 al reintentar.
+  ▶ **El layout limpio sale de la T1c**: un layout sin página que lo use sería código muerto. Nace con su
+  primera página (T4) y lleva las hojas nuevas SOLO: nada de `landing.css`, `site.css` ni el `client.css` viejo.
+  ⚠️ **El instrumento tuvo que madurar antes de fiarse de él**, y cada paso tiene su trampa escrita en
+  `scripts/pixel.mjs`: comparada consigo misma, la referencia daba 11 páginas distintas, y ninguna por la
+  hoja. Las causas, medidas: el reloj (páginas que dicen «hoy»; `--reloj`), el `fullPage` que agranda la
+  ventana a mitad de la foto y cambia el estado de la isla, su re-medida a los 420 ms (quietud de un segundo),
+  el `localStorage` compartido entre capturas (un contexto por captura), los `iframe` de las hojas de revisión
+  sin asentar, y el reloj de la RED: la fuente de Google llega a los 215 ms y mueve medio píxel el borde de un
+  botón (lo externo se sirve desde una caché en memoria).
+- **T1d · los iconos** ✅ (24-09, `#686`): `lucide-static@0.544.0`, la versión exacta que carga el diseño,
+  versionado en `resources/icons/lucide/` por `scripts/traer-lucide.py` (integridad `sha512` de npm comprobada;
+  sin tocar `package.json`, que es compartido). `<x-lucide>` y `Lucide::svg()` repiten `Icon.jsx`: mismas
+  sustituciones, solo en la primera aparición, mismo `<span>` y ni un espacio alrededor. **Medido** con
+  `scripts/banco-lucide.php`: los 84 iconos que usa el diseño a 16, 20 y 24 px, más relleno, nombre, chip y
+  color, contra el `Icon` del diseño → **0 píxeles distintos** en 1280 y 390; un trazo alterado da 99 y código 1.
+  `LucideIconTest` (9 casos) con sus mutaciones en rojo. `IconSetAnatomyTest` sigue guardando el set ANTIGUO.
 
 **`public/instancia/`** es desde la T1b el sitio del material NUEVO de una instalación (fuentes, hojas y medios
 de sus páginas): se copia desde `publico/instancia/` del paquete, lo ignora git y lo excluye el `rsync`

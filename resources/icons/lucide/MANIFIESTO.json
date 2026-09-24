@@ -1,0 +1,9 @@
+{
+  "paquete": "lucide-static",
+  "version": "0.544.0",
+  "tarball": "https://registry.npmjs.org/lucide-static/-/lucide-static-0.544.0.tgz",
+  "integridad": "sha512-2PkMTYcjQkIzYbd5u2g7UtRaNDP7dLQT107MmYBdvnZZCO3Vj0nqH6HA5AkUS2Era8D1ITb/UxrOkfdH/qN2Ag==",
+  "iconos": 1865,
+  "sha256_del_set": "b908dd21227ee04a780184d92cfc4e4d8947ad9aea615658fa32221a6b6cc6ce",
+  "licencia": "ISC"
+}
