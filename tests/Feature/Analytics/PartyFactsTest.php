@@ -53,7 +53,7 @@ class PartyFactsTest extends TestCase
 
         $fact = $this->fact('guest_form_opened');
         $this->assertIsOfTheReservationAndOfNobody($fact, $party['order']->id);
-        $this->assertEquals(['days_before' => self::DAYS_BEFORE, 'device' => 'desktop', 'locale' => 'es'], $fact->props);
+        $this->assertEquals(['reservation' => $party['reservation']->id, 'days_before' => self::DAYS_BEFORE, 'device' => 'desktop', 'locale' => 'es'], $fact->props);
     }
 
     public function test_the_host_with_her_session_open_leaves_no_user_on_the_fact(): void
@@ -77,7 +77,7 @@ class PartyFactsTest extends TestCase
 
         $fact = $this->fact('guest_form_submitted');
         $this->assertIsOfTheReservationAndOfNobody($fact, $party['order']->id);
-        $this->assertEquals(['days_before' => self::DAYS_BEFORE, 'guests_delta' => 0, 'extras_cents' => 0, 'replies_adopted' => 0], $fact->props);
+        $this->assertEquals(['reservation' => $party['reservation']->id, 'days_before' => self::DAYS_BEFORE, 'guests_delta' => 0, 'extras_cents' => 0, 'replies_adopted' => 0], $fact->props);
     }
 
     // ─── La invitación ────────────────────────────────────────────────────────
@@ -93,17 +93,18 @@ class PartyFactsTest extends TestCase
             ->assertRedirect()
             ->assertSessionHas('invitation_status', 'yes');
 
+        $id = $party['reservation']->id;
         $viewed = $this->fact('invitation_viewed');
         $this->assertIsOfTheReservationAndOfNobody($viewed, $party['order']->id);
-        $this->assertEquals(['days_before' => self::DAYS_BEFORE, 'device' => 'desktop', 'locale' => 'es'], $viewed->props);
+        $this->assertEquals(['reservation' => $id, 'days_before' => self::DAYS_BEFORE, 'device' => 'desktop', 'locale' => 'es'], $viewed->props);
 
         $calendar = $this->fact('invitation_calendar_downloaded');
         $this->assertIsOfTheReservationAndOfNobody($calendar, $party['order']->id);
-        $this->assertEquals(['days_before' => self::DAYS_BEFORE], $calendar->props);
+        $this->assertEquals(['reservation' => $id, 'days_before' => self::DAYS_BEFORE], $calendar->props);
 
         $replied = $this->fact('invitation_replied');
         $this->assertIsOfTheReservationAndOfNobody($replied, $party['order']->id);
-        $this->assertEquals(['attending' => 'yes', 'companion' => false, 'days_before' => self::DAYS_BEFORE], $replied->props);
+        $this->assertEquals(['reservation' => $id, 'attending' => 'yes', 'companion' => false, 'days_before' => self::DAYS_BEFORE], $replied->props);
     }
 
     public function test_a_no_is_a_reply_too_and_says_no(): void
@@ -145,7 +146,7 @@ class PartyFactsTest extends TestCase
 
         $opened = $this->fact('authorization_opened');
         $this->assertIsOfTheReservationAndOfNobody($opened, $party['order']->id);
-        $this->assertEquals(['via' => 'link', 'days_before' => self::DAYS_BEFORE, 'device' => 'desktop'], $opened->props);
+        $this->assertEquals(['reservation' => $party['reservation']->id, 'via' => 'link', 'days_before' => self::DAYS_BEFORE, 'device' => 'desktop'], $opened->props);
 
         $signed = $this->fact('authorization_signed');
         $this->assertIsOfTheReservationAndOfNobody($signed, $party['order']->id);

@@ -33,7 +33,12 @@
   visitante, sesión ni titular), `Contract` +4, `PartyFacts::daysBefore()` en días del parque, el trait
   `RecordsPartyFacts` (robots fuera) y los siete hechos desde los controladores; `FocusedPagesAreCookieFreeTest` 4
   + `PartyFactsTest` 13; `scripts/mutar-analitica-fiesta.sh` **9/9 + 1 control**; probado en vivo con `curl`
-  (spec §4.6). **Sigue T2** (el informe y la pestaña «Fiestas») → T3 (el segmento y la 360).
+  (spec §4.6). ▶ **T2 EN EL ÁRBOL (24-09, noche)**: `PartiesReport` (capa de entrega; por DÍA DE LA FIESTA; 14
+  consultas y 28 ms con 32 fiestas; los hechos ganan la prop `reservation`), la cuarta pestaña «Fiestas» con nueve
+  tarjetas, tres gráficos y siete tablas plegadas, el cuarto informe del CSV, rótulos es/zh_CN;
+  `PartiesReportTest` 10 (igualdad con las tablas de negocio), sonda **31/31** con capturas
+  (`storage/app/audit/analitica-panel-fiesta-t2-*.png`). **✅ El owner la vio en vivo (24-09: «muy bien,
+  validado»)** → sigue **T3** (el segmento `guest_became_customer` y el bloque «fiestas» de la 360).
 - ⚠️⚠️ **LO MONTADO EN LA BD LOCAL para el ojo del owner (24-09), todo reversible**: (1) cinco ajustes FALSOS
   en `settings` (`analytics.driver=posthog`, `analytics.posthog_project` inventado y los tres ids de píxeles
   `marketing.*`): se quitan borrando esas filas; (2) el aviso de la analítica ENVIADO a las 57 cuentas de
@@ -41,8 +46,12 @@
   experimento de demostración **`carcasa` VIVO** (cajon 50 / isla 50) con 143 sesiones `OJOEXP…`, 24 sellos
   `JW-OJO…` con `visitor_id` y 3 contaminados: guion `/home/sail/e2e/ojo-experimento.php` en el contenedor,
   `OJO=desmontar` lo quita entero; (4) un pase de la vuelta de Redsys para la casilla tras comprar (caduca en 6 h,
-  un solo uso). Y siguen montados el fixture «probe-ojo-analitica» (90 pedidos `JW-OJO…`, 25 clientes, 506
-  sesiones) y el de reseñas «probe-ojo-resenas». ⚠️ **Plataforma dejó la local preparada para que el owner
+  un solo uso); (5) **el fixture «probe-ojo-fiesta»** (`probe-ojo-fiesta.php` en la carpeta de almacenamiento,
+  fuera de git, al lado de «probe-ojo-analitica»): 32
+  fiestas `JW-FIESTA…` de agosto y septiembre con formularios, extras, invitaciones, firmas, cobros en el parque y
+  323 hechos, 32 anfitriones `fiesta-N@ojo-fiesta.jumpweb.test`; `OJO=desmontar` lo quita entero. Y siguen
+  montados el fixture «probe-ojo-analitica» (90 pedidos `JW-OJO…`, 25 clientes, 506 sesiones) y el de reseñas
+  «probe-ojo-resenas». ⚠️ **Plataforma dejó la local preparada para que el owner
   pruebe la ISLA** (24-09 noche, `694529a8`): `sidebar.shell = isla` por el panel, `public/_isla-prueba.html`, la
   invitación ENCENDIDA en los packs 105/106 — **«no deshacer sin él»**; el cajón local abre ahora en la isla.
 - ✅ **La ficha de Google (`#524`), T1 y T2·1→T2·8 en el árbol** (`#720`→`#734`), vistas por el owner con su ✅
@@ -54,18 +63,14 @@
 
 ## Por dónde retomar, en orden
 
-1. ❗❗❗ **LA FIESTA, T2** (`specs/analitica-fiesta.md` §0 → §1 → §4.3 → §4.6; y `analitica.md` §4.5 por el molde
-   de la T2 del cuadro): `PartiesReport` `(futuro)` en la capa de entrega (`app/Filament/Analytics/`), **día de la
-   FIESTA** como unidad, el dinero del libro (`order_adjustments` `type = edit` con `reason` ∈ `postform_addon` ·
-   `guest_count_*` · `guest_form`; las `null` son del panel y van aparte) y el cobro en el parque (`payments`
-   `cash`|`datafono`), el embudo por reserva, los tiempos y los dispositivos; cinco widgets en la pestaña
-   `parties` («Fiestas») de `AnalyticsPage` (la lista EXACTA de `AnalyticsPageTest`; la tabla plegada cierra la
-   pestaña), `CsvExport::REPORT_PARTIES` `(futuro)` con «Comparado con»; `PartiesReportTest` `(futuro)` de
-   IGUALDAD con las tablas de negocio; presupuesto ≤ 20 consultas y `EXPLAIN`; ampliar el fixture del ojo con
-   fiestas; la sonda `scripts/sonda-fiesta.mjs` `(futuro)` (red sin terceros en las tres páginas + el cuadro); el
-   OJO del owner en `/admin/analitica?pestana=parties`. Después **T3**: `SegmentsReport::GUEST_BECAME_CUSTOMER`
-   `(futuro)` y el bloque «fiestas» de la 360. ⚠️ Trampas de la T1 (spec §4.6): el reenvío del mismo padre es
-   IDEMPOTENTE («signed», `created = false`); `order_id` nunca es nulo (Larastan); son DOCE rutas.
+1. ❗❗❗ **LA FIESTA, T3** (`specs/analitica-fiesta.md` §0 → §4.4 → §4.6; la T2 tiene el ✅ del owner en vivo del
+   24-09). **T3**:
+   `SegmentsReport::GUEST_BECAME_CUSTOMER` `(futuro)` (un `guardian_email` que DESPUÉS de la fiesta tiene cuenta y
+   pedido cobrado; se exporta con opt-in como los demás, `#739`), `SegmentsWidget` +1 fila, `SegmentsReportTest`
+   +1, y el bloque «fiestas» de `CustomerInsights` (desde los pedidos del cliente) con `UserInsightsInfolistTest`
+   +1; el OJO. ⚠️ Trampas de la T1 y la T2 (spec §4.6): el reenvío del mismo padre es IDEMPOTENTE; `order_id` nunca
+   es nulo; son DOCE rutas; los invitados añadidos NO son «extras»; una edición sin `reason` es del panel; un
+   ayudante `seed()` en un test es FATAL; la sonda del panel censa TRES «Por día».
 2. **T2e** (`analytics_daily` + `ad_spend`) SOLO si el `EXPLAIN` con volumen dice que el año en directo no
    aguanta (`analitica.md` §4.5). **T5c** cuando el owner nombre la hipótesis (`#738`). Queda el `EXPLAIN` con
    volumen en staging para la T2.

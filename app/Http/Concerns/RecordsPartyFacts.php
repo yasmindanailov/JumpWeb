@@ -33,6 +33,7 @@ trait RecordsPartyFacts
         }
 
         app(Recorder::class)->factOfOrder($name, (int) $reservation->order_id, $props + [
+            'reservation' => (int) $reservation->getKey(),
             'days_before' => PartyFacts::daysBefore($reservation->slot?->date),
             'device' => Device::classify($request->userAgent()),
             'locale' => app()->getLocale(),

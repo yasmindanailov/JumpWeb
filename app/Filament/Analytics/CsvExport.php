@@ -9,6 +9,7 @@ use App\Filament\Widgets\Analytics\CustomersBreakdownWidget;
 use App\Filament\Widgets\Analytics\FunnelWidget;
 use App\Filament\Widgets\Analytics\MoneyBreakdownWidget;
 use App\Filament\Widgets\Analytics\PagesWidget;
+use App\Filament\Widgets\Analytics\PartiesBreakdownWidget;
 use App\Filament\Widgets\Analytics\SourcesWidget;
 
 /**
@@ -32,8 +33,11 @@ final class CsvExport
 
     public const REPORT_FUNNEL = 'funnel';
 
+    /** La fiesta (`specs/analitica-fiesta.md` §4.3, T2): por día de la FIESTA. */
+    public const REPORT_PARTIES = 'parties';
+
     /** @var list<string> */
-    public const REPORTS = [self::REPORT_MONEY, self::REPORT_CUSTOMERS, self::REPORT_FUNNEL];
+    public const REPORTS = [self::REPORT_MONEY, self::REPORT_CUSTOMERS, self::REPORT_FUNNEL, self::REPORT_PARTIES];
 
     public const SEPARATOR = ';';
 
@@ -120,8 +124,38 @@ final class CsvExport
                 ...(new SourcesWidget)->tablesFor($window, $comparison),
                 ...(new PagesWidget)->tablesFor($window, $comparison),
             ],
+            self::REPORT_PARTIES => [
+                $this->partiesSummary($window, $comparison),
+                ...(new PartiesBreakdownWidget)->tablesFor($window, $comparison),
+            ],
             default => throw new \InvalidArgumentException("«{$report}» no es un informe del cuadro"),
         };
+    }
+
+    /** @return array{heading: string, columns: list<string>, rows: list<list<string>>} */
+    private function partiesSummary(Window $window, Comparison $comparison): array
+    {
+        $r = PartiesReport::for($window, $comparison);
+        /** @var array<string, mixed> $m */
+        $m = $r['money'];
+        /** @var array<string, int> $f */
+        $f = $r['forms'];
+        /** @var array<string, int> $i */
+        $i = $r['invitations'];
+        /** @var array<string, int> $a */
+        $a = $r['authorizations'];
+
+        return $this->summary([
+            [__('admin.analytics.parties.parties'), (string) $r['parties']],
+            [__('admin.analytics.parties.sold_after'), Money::format((int) $m['sold_after_booking'])],
+            [__('admin.analytics.parties.collected_in_park'), Money::format((int) $m['collected_in_park'])],
+            [__('admin.analytics.parties.with_extras'), (string) $m['with_extras']],
+            [__('admin.analytics.parties.avg_extras'), Money::format((int) $m['avg_extras'])],
+            [__('admin.analytics.parties.completed'), (string) $f['completed']],
+            [__('admin.analytics.parties.on_time'), number_format($f['on_time_bp'] / 100, 1, ',', '.').' %'],
+            [__('admin.analytics.parties.replies_yes'), (string) $i['replies_yes']],
+            [__('admin.analytics.parties.signatures'), (string) $a['signatures']],
+        ]);
     }
 
     /** @return array{heading: string, columns: list<string>, rows: list<list<string>>} */

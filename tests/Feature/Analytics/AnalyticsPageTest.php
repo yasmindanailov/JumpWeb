@@ -28,6 +28,11 @@ use App\Filament\Widgets\Analytics\MoneyOverviewWidget;
 use App\Filament\Widgets\Analytics\MoneyProductsChart;
 use App\Filament\Widgets\Analytics\MoneySeriesChart;
 use App\Filament\Widgets\Analytics\PagesWidget;
+use App\Filament\Widgets\Analytics\PartiesBreakdownWidget;
+use App\Filament\Widgets\Analytics\PartiesFunnelChart;
+use App\Filament\Widgets\Analytics\PartiesMoneyChart;
+use App\Filament\Widgets\Analytics\PartiesOverviewWidget;
+use App\Filament\Widgets\Analytics\PartiesTimingChart;
 use App\Filament\Widgets\Analytics\RegistrationMethodsChart;
 use App\Filament\Widgets\Analytics\RegistrationsWidget;
 use App\Filament\Widgets\Analytics\SegmentsWidget;
@@ -96,7 +101,7 @@ class AnalyticsPageTest extends TestCase
         $this->actingAs($this->withRole('puerta'))->get(AnalyticsPage::getUrl())->assertRedirect(route('admin.puerta.validar'));
     }
 
-    public function test_admin_opens_the_page_with_its_filters_and_its_three_tabs(): void
+    public function test_admin_opens_the_page_with_its_filters_and_its_four_tabs(): void
     {
         $this->actingAs($this->withRole('admin'))
             ->get(AnalyticsPage::getUrl())
@@ -111,6 +116,7 @@ class AnalyticsPageTest extends TestCase
             ->assertSeeText(__('admin.analytics.tabs.money'))
             ->assertSeeText(__('admin.analytics.tabs.customers'))
             ->assertSeeText(__('admin.analytics.tabs.traffic'))
+            ->assertSeeText(__('admin.analytics.tabs.parties'))
             ->assertSee('role="tablist"', escape: false);
     }
 
@@ -169,6 +175,12 @@ class AnalyticsPageTest extends TestCase
         FunnelWidget::class,
         SourcesWidget::class,
         PagesWidget::class,
+        // T2 de la fiesta (`specs/analitica-fiesta.md` §4.3): la cuarta pestaña, con su tabla plegada al final.
+        PartiesOverviewWidget::class,
+        PartiesFunnelChart::class,
+        PartiesMoneyChart::class,
+        PartiesTimingChart::class,
+        PartiesBreakdownWidget::class,
     ];
 
     public function test_each_widget_asks_the_permission_again(): void
@@ -191,12 +203,14 @@ class AnalyticsPageTest extends TestCase
         $this->assertSame(self::WIDGETS, $analytics);
         $this->assertEmpty(array_intersect($analytics, (new Dashboard)->getWidgets()));
 
-        // T2f: tres pestañas, cada widget en una sola, y las tablas plegadas al final de cada una.
-        $this->assertSame(['money', 'customers', 'traffic'], array_keys(AnalyticsPage::TABS));
+        // T2f: cuatro pestañas (la de la fiesta desde la T2 de `analitica-fiesta.md`), cada widget en una sola, y las
+        // tablas plegadas al final de cada una.
+        $this->assertSame(['money', 'customers', 'traffic', 'parties'], array_keys(AnalyticsPage::TABS));
         $this->assertSame($analytics, array_unique($analytics), 'ningún widget en dos pestañas');
         $this->assertSame(MoneyBreakdownWidget::class, array_last(AnalyticsPage::TABS['money']));
         $this->assertSame(CustomersBreakdownWidget::class, array_last(AnalyticsPage::TABS['customers']));
         $this->assertSame(PagesWidget::class, array_last(AnalyticsPage::TABS['traffic']));
+        $this->assertSame(PartiesBreakdownWidget::class, array_last(AnalyticsPage::TABS['parties']));
     }
 
     /**
@@ -214,7 +228,7 @@ class AnalyticsPageTest extends TestCase
             return (new \ReflectionMethod($chart, 'getData'))->invoke($chart);
         };
 
-        foreach ([new MoneyProductsChart, new MoneyChannelsChart, new RegistrationMethodsChart, new FunnelChart, new SourcesChart, new DevicesChart] as $chart) {
+        foreach ([new MoneyProductsChart, new MoneyChannelsChart, new RegistrationMethodsChart, new FunnelChart, new SourcesChart, new DevicesChart, new PartiesFunnelChart, new PartiesMoneyChart, new PartiesTimingChart] as $chart) {
             $this->assertSame([], $data($chart), $chart::class.' sin datos');
         }
         $this->assertSame(__('admin.analytics.money.empty'), (string) (new FunnelChart)->getEmptyStateHeading());

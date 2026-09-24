@@ -96,7 +96,7 @@ class AnalyticsExportTest extends TestCase
         $this->assertStringContainsString(__('admin.analytics.money.col.day').';', $csv);
     }
 
-    public function test_the_three_reports_download_and_each_carries_its_own_tables(): void
+    public function test_the_four_reports_download_and_each_carries_its_own_tables(): void
     {
         $admin = $this->withRole('admin');
 
@@ -109,6 +109,16 @@ class AnalyticsExportTest extends TestCase
         $this->assertStringContainsString(__('admin.analytics.traffic.first_touch'), $funnel);
         $this->assertStringContainsString(__('admin.analytics.traffic.entries'), $funnel);
         $this->assertStringContainsString('"'.__('admin.analytics.traffic.step.pay_started').'";', $funnel);
+
+        // T2 de la fiesta: el cuarto informe, con el resumen de sus tarjetas y las tablas de su desglose.
+        $parties = $this->actingAs($admin)->get($this->url('parties'))->assertOk()->getContent();
+        $this->assertStringContainsString(__('admin.analytics.export.report.parties'), $parties);
+        $this->assertStringContainsString('"'.__('admin.analytics.parties.sold_after').'";', $parties);
+        $this->assertStringContainsString(__('admin.analytics.parties.funnel'), $parties);
+        $this->assertStringContainsString(__('admin.analytics.parties.money_heading'), $parties);
+        $this->assertStringContainsString(__('admin.analytics.parties.invitation_heading'), $parties);
+        $this->assertStringContainsString(__('admin.analytics.parties.timing_heading'), $parties);
+        $this->assertStringContainsString('"'.__('admin.analytics.parties.step.signed').'";', $parties);
     }
 
     /** Una campaña que empiece por un signo de fórmula no se ejecuta al abrir el fichero: lleva el apóstrofo. */

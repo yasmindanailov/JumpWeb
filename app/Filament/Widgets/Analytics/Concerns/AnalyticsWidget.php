@@ -10,6 +10,7 @@ use App\Filament\Analytics\CustomersReport;
 use App\Filament\Analytics\Delta;
 use App\Filament\Analytics\FunnelReport;
 use App\Filament\Analytics\MoneyReport;
+use App\Filament\Analytics\PartiesReport;
 use App\Filament\Pages\AnalyticsPage;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
@@ -87,6 +88,12 @@ trait AnalyticsWidget
     protected function funnel(): array
     {
         return FunnelReport::for($this->window(), $this->comparison());
+    }
+
+    /** El informe de la fiesta (`specs/analitica-fiesta.md` §4.3, T2). @return array<string, mixed> */
+    protected function parties(): array
+    {
+        return PartiesReport::for($this->window(), $this->comparison());
     }
 
     /** Puntos básicos → «12,3 %». */

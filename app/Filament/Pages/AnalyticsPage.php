@@ -21,6 +21,11 @@ use App\Filament\Widgets\Analytics\MoneyOverviewWidget;
 use App\Filament\Widgets\Analytics\MoneyProductsChart;
 use App\Filament\Widgets\Analytics\MoneySeriesChart;
 use App\Filament\Widgets\Analytics\PagesWidget;
+use App\Filament\Widgets\Analytics\PartiesBreakdownWidget;
+use App\Filament\Widgets\Analytics\PartiesFunnelChart;
+use App\Filament\Widgets\Analytics\PartiesMoneyChart;
+use App\Filament\Widgets\Analytics\PartiesOverviewWidget;
+use App\Filament\Widgets\Analytics\PartiesTimingChart;
 use App\Filament\Widgets\Analytics\RegistrationMethodsChart;
 use App\Filament\Widgets\Analytics\RegistrationsWidget;
 use App\Filament\Widgets\Analytics\SegmentsWidget;
@@ -51,9 +56,9 @@ use Filament\Widgets\Widget;
  * diferida vienen resueltos—, con su propia ruta (`/admin/analitica`) y sus propios widgets: desde que hay dos
  * cuadros, «Hoy» declara los suyos, o `Filament::getWidgets()` le colgaría también estos.
  *
- * **Tres pestañas** (T2f, `#736`: lo pidió el owner el 24-09 al ver T2a–T2d en escritorio): Dinero, Clientes y
- * Conversión (`self::TABS`), y dentro de cada una el mismo orden de lectura: las tarjetas, los gráficos y, plegadas
- * al pie, las tablas. El filtro es común a las tres: el periodo (del día al año, o dos fechas a medida) y contra
+ * **Cuatro pestañas** (T2f, `#736`: lo pidió el owner el 24-09 al ver T2a–T2d en escritorio; la cuarta, «Fiestas»,
+ * es la T2 de `specs/analitica-fiesta.md`, `#739`): Dinero, Clientes, Conversión y Fiestas (`self::TABS`), y dentro
+ * de cada una el mismo orden de lectura: las tarjetas, los gráficos y, plegadas al pie, las tablas. El filtro es común a las tres: el periodo (del día al año, o dos fechas a medida) y contra
  * qué se compara (el periodo anterior o el mismo periodo del año pasado). La pestaña viaja en la URL.
  *
  * ⚠️ **Permiso `reports.view`**: sembrado en F7.11 («Ver informes y exportaciones») y sin consumidor hasta esta
@@ -119,6 +124,14 @@ class AnalyticsPage extends BaseDashboard
             SourcesWidget::class,
             PagesWidget::class,
         ],
+        // T2 de la fiesta (`specs/analitica-fiesta.md` §4.3, `#739`): de reservar a celebrar, por DÍA DE LA FIESTA.
+        'parties' => [
+            PartiesOverviewWidget::class,
+            PartiesFunnelChart::class,
+            PartiesMoneyChart::class,
+            PartiesTimingChart::class,
+            PartiesBreakdownWidget::class,
+        ],
     ];
 
     /** @var array<string, Heroicon> */
@@ -126,6 +139,7 @@ class AnalyticsPage extends BaseDashboard
         'money' => Heroicon::OutlinedBanknotes,
         'customers' => Heroicon::OutlinedUsers,
         'traffic' => Heroicon::OutlinedFunnel,
+        'parties' => Heroicon::OutlinedCake,
     ];
 
     /** La clave de la pestaña en la URL (`?pestana=…`): se puede enlazar y sobrevive a recargar. */
