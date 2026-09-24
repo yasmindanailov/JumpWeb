@@ -425,6 +425,26 @@ return [
         'action' => 'Escribirnos',
     ],
 
+    // T3a·4 de la analítica (`specs/analitica.md` §4.3): el aviso a las cuentas que existían antes de la v3 de
+    // la política de cookies. Información sobre un tratamiento nuevo (art. 13.3), no marketing.
+    'analytics_mail' => [
+        'badge' => 'Novedad en tu privacidad',
+        'headline' => 'Tu navegación y tu cuenta',
+        'subject' => 'Un cambio en tu privacidad',
+        'preheader' => 'Solo si aceptas «análisis» en el aviso de cookies. Puedes oponerte desde tu cuenta.',
+        'line1' => 'Hemos actualizado nuestra política de privacidad. A partir de ahora, si aceptas la categoría «análisis» en el aviso de cookies de la web de :park, lo que navegues puede vincularse a tu cuenta para entender mejor cómo se usa la web y mejorarla.',
+        'line2' => 'No pasa nada si no la aceptas: el aviso de cookies te lo pregunta la próxima vez que entres, y hasta entonces no se vincula nada.',
+        'line3' => 'Y si prefieres que nunca se vincule, puedes oponerte desde «Mi cuenta → Privacidad y datos», sin contraseña y cuando quieras.',
+        'action' => 'Ver mi privacidad',
+    ],
+
+    // El mismo aviso, en el índice del área de cliente: viaja en el CONTEXTO de cuenta solo mientras está
+    // pendiente, así que no lo paga cada página con sesión (no va en la poda de `SidebarBoot`).
+    'analytics_notice' => [
+        'text' => 'Novedad: si aceptas «análisis» en el aviso de cookies, tu navegación puede vincularse a tu cuenta para mejorar la web. Puedes oponerte en «Privacidad y datos».',
+        'dismiss' => 'Entendido',
+    ],
+
     'orders' => [
         // Las respuestas del pack, BAJO DEMANDA (tanda 3): son datos de un menor
         // (art. 9) y por eso no se pintan solas ni viajan en la lista de pedidos.

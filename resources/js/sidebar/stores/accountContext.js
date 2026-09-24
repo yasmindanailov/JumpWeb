@@ -101,5 +101,30 @@ export const useAccountContextStore = defineStore('accountContext', {
                 this.loading = false;
             }
         },
+
+        /**
+         * **Despide el aviso de que la navegación puede vincularse a la cuenta** (T3a·4 de la analítica,
+         * `specs/analitica.md` §4.3): el titular lo leyó, o fue a «Privacidad y datos» desde él.
+         *
+         * ⚠️ El aviso se quita del contexto SOLO cuando el servidor lo confirma (`204`): si la petición
+         * falla, sigue pintado y el titular puede volver a intentarlo. Ocultarlo antes lo dejaría sin
+         * aviso y con la marca sin poner, que es la peor de las dos mentiras: en la próxima carga
+         * volvería a aparecer como si no lo hubiera leído.
+         * ⚠️ Sin aviso pendiente no se llama a nadie: un `DELETE` de más sería idempotente en el
+         * servidor, pero una petición que no cambia nada no se manda.
+         *
+         * @returns {Promise<boolean>} si el servidor lo dio por despedido
+         */
+        async dismissAnalyticsNotice({ api = httpClient } = {}) {
+            if (! this.context?.analytics_notice) return false;
+
+            const response = await api.delete('/me/analytics-notice');
+
+            if (response.ok) {
+                this.context = { ...this.context, analytics_notice: null };
+            }
+
+            return Boolean(response.ok);
+        },
     },
 });

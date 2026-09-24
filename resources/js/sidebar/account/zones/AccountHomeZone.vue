@@ -63,6 +63,13 @@ watch(notice, (n) => {
 
 const resend = () => auth.resendVerification({ api });
 
+// T3a·4 de la analítica (`specs/analitica.md` §4.3): el aviso de que la navegación puede vincularse a la
+// cuenta, para las cuentas que existían antes de la v3 de la política. Viene CON su texto en el contexto y
+// solo mientras está pendiente; despedirlo es un `DELETE` que el store confirma antes de quitarlo (la
+// decisión vive en `stores/accountContext.js`, con sus `node --test`; aquí solo se pinta y se llama).
+const analyticsNotice = computed(() => context.context?.analytics_notice ?? null);
+const dismissAnalyticsNotice = () => context.dismissAnalyticsNotice({ api });
+
 // `#332` — **cerrar sesión DESDE aquí** (`[DECIDIDO owner]`). El botón del bloque `.acct` existe, pero
 // **dentro de esta sección ese bloque se colapsa** (modo `account`, medido en `VERIFICACION-E2E-CAJON`
 // V4: altura 0), así que el cliente entraba a su cuenta y se quedaba sin salida a la vista.
@@ -180,6 +187,26 @@ const leave = async () => {
             </template>
         </button>
     </div>
+
+    <!--
+      T3a·4 de la analítica · el aviso de que la navegación puede vincularse a la cuenta, a las cuentas que
+      existían antes de la v3 de la política de cookies (`specs/analitica.md` §4.3). ⚠️ **Va DEBAJO de las
+      tarjetas y FUERA de la cadena de avisos de arriba**, y las dos cosas se midieron: en la cadena —«un solo
+      aviso a la vez», `#331`— lo tapaba cualquier waiver sin firmar, que puede quedarse semanas así, y con él
+      se perdía en silencio el segundo canal de un aviso legal (la sonda lo encontró en la primera cuenta que
+      probó). Aquí es información, no una tarea: no compite con lo que tiene plazo y no apila dos alertas en la
+      cabecera. Se queda hasta que el titular lo despide; el texto y el rótulo de despedir viajan en el
+      contexto, y el botón que lleva a «Privacidad y datos» se llama como la zona, que ya viaja.
+    -->
+    <!-- ⚠️ Los dos botones van en UNA línea con el punto medio entre ellos: Vue condensa el espacio entre
+         elementos y RETIRA el que lleva un salto de línea, así que en dos líneas salían pegados
+         («Privacidad y datosEntendido»; lo vio la captura de la sonda). Ir a «Privacidad y datos» desde el
+         aviso también lo despide: quien ha ido a donde se opone ya lo ha leído (dos llamadas en el manejador,
+         no una función más en el `<script>`: el componente PINTA, `CE-6`). -->
+    <p v-if="analyticsNotice" class="auth__switch" role="status">
+        {{ analyticsNotice.text }}
+        <button type="button" @click="dismissAnalyticsNotice(); emit('go', ZONES.PRIVACY)">{{ translate(account, 'account.privacy.title') }}</button> · <button type="button" @click="dismissAnalyticsNotice">{{ analyticsNotice.dismiss }}</button>
+    </p>
 
     <!--
       `#332` — la salida. Va DEBAJO de las tarjetas y como acción de texto, no como una tarjeta más:

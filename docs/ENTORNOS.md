@@ -713,6 +713,17 @@ clave `jumpweb_staging_ed25519` — la misma que staging, registrada en el panel
 | Post-despliegue | `~/post-deploy.sh` (import si `zones` vacía · Turnstile · usuarios · `post-deploy.php`: roles de puerta + publicar la descarga v1 · cachés · `up`) | idempotente |
 | Redsys | ~~`redsys_environment=test`, comercio de pruebas~~ → **`live` desde el 2026-09-13** (TPV real configurado por el owner en el panel; `#594`) | la compra online está **abierta** (`sales.online_enabled=1`); la GUARDA 1 del despliegue admite `live` solo en producción |
 
+> ▶ **RUNBOOK DEL DESPLIEGUE DE LA V3 DE LA POLÍTICA DE COOKIES** (T3a de `specs/analitica.md` §4.3; pendiente
+> de desplegar): de noche, como siempre (`#594`). Tras `deploy.sh --go` (la migración de `users` con las marcas
+> del aviso) y con el correo saliendo por la cola: **`php artisan analytics:notify-accounts --dry-run`** (dice a
+> cuántas cuentas avisaría: clientes existentes, sin el equipo, sin quien se opuso, sin filas anónimas) y, si el
+> número cuadra con los clientes, **`php artisan analytics:notify-accounts`**. Es idempotente
+> (`users.analytics_notified_at`): se puede repetir y no escribe dos veces a nadie. Desde esa noche el aviso
+> del índice del cajón lo ven esas mismas cuentas hasta que lo despiden; una cuenta creada después no recibe
+> ninguno de los dos. ⚠️ El enlace sesión↔cuenta solo existe para quien acepte «análisis» en el banner nuevo
+> (`POLICY_VERSION` `2026-09-24`: todo visitante vuelve a decidir), así que el orden correcto es desplegar → avisar
+> → dejar que el banner pregunte, y no configurar la herramienta de análisis (Ajustes) hasta después del aviso.
+
 ## Anexo · La fila del enrutador, mudada el 2026-09-16
 
 > Lo que decía la fila **«Staging / desplegar / aprovisionar · PRODUCCIÓN playjump.es»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila

@@ -116,4 +116,21 @@ class AccountAnalytics
 
         return true;
     }
+
+    /**
+     * **Despedir el aviso del cajón** (T3a·4): el titular lo ha leído, o ha ido a «Privacidad y datos» desde él.
+     * Idempotente: la primera vez deja la fecha, las siguientes no la mueven (la marca es «cuándo lo vio»).
+     *
+     * @return bool si el estado ha CAMBIADO
+     */
+    public function markNoticeSeen(User $user): bool
+    {
+        if ($user->analytics_notice_seen_at !== null) {
+            return false;
+        }
+
+        $user->forceFill(['analytics_notice_seen_at' => now()])->save();
+
+        return true;
+    }
 }

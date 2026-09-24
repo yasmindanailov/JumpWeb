@@ -108,6 +108,14 @@ class AccountContextResource extends JsonResource
                 'product_name' => (string) $context['extrasInvite']['productName'],
                 'url' => (string) $context['extrasInvite']['url'],
             ],
+            // T3a·4 de la analítica: el aviso de que la navegación puede vincularse a la cuenta, CON su texto en
+            // el idioma de la petición, solo mientras está pendiente (`DELETE /me/analytics-notice` lo despide).
+            // `null` el resto del tiempo, y la clave viaja siempre: el cliente no distingue «no está» de «vacío».
+            // A la COLA, como `extras_invite`: `ApiContractTest` compara `required` con las propiedades EN ORDEN.
+            'analytics_notice' => ($context['analyticsNotice'] ?? null) === null ? null : [
+                'text' => (string) $context['analyticsNotice']['text'],
+                'dismiss' => (string) $context['analyticsNotice']['dismiss'],
+            ],
         ];
     }
 }

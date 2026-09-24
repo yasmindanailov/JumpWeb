@@ -33,6 +33,7 @@ use Laravel\Sanctum\PersonalAccessToken;
 #[Fillable([
     'name', 'email', 'password', 'phone', 'locale', 'panel_locale', 'last_login_at',
     'marketing_opt_in', 'analytics_opt_out', 'first_attribution', 'privacy_accepted_at', 'terms_accepted_at', 'waiver_accepted_at',
+    'analytics_notified_at', 'analytics_notice_seen_at',
     'pending_email', 'pending_email_sent_at',
 ])]
 #[Hidden(['password', 'remember_token'])]
@@ -92,6 +93,9 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference,
             // T3a·3 de la analítica: la oposición al régimen identificado y la primera atribución (inmutable).
             'analytics_opt_out' => 'boolean',
             'first_attribution' => 'array',
+            // T3a·4: las dos marcas del aviso a las cuentas existentes (el correo salió · el aviso del cajón se despidió).
+            'analytics_notified_at' => 'datetime',
+            'analytics_notice_seen_at' => 'datetime',
             'password' => 'hashed',
         ];
     }
@@ -459,6 +463,9 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference,
                 // T3a·3: la oposición y la primera atribución son del régimen identificado, que se desata aquí.
                 'analytics_opt_out' => false,
                 'first_attribution' => null,
+                // T3a·4: las marcas del aviso vuelven a neutro; una fila anónima no tiene a quién avisar.
+                'analytics_notified_at' => null,
+                'analytics_notice_seen_at' => null,
                 'privacy_accepted_at' => null,
                 'terms_accepted_at' => null,
                 'waiver_accepted_at' => null,

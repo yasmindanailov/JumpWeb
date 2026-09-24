@@ -39,9 +39,15 @@
   al cobro, solo con la categoría), la oposición (`users.analytics_opt_out`, `PUT /me/analytics`: desvincula,
   sella la prueba `consents.analytics`, olvido en el driver), `first_attribution` una vez, el segundo
   interruptor en «Privacidad» del cajón, contrato **1.20.0**; migración de `users` aplicada en la local.
-  **Queda el ojo del owner** sobre el interruptor. ▶ Sigue la **T3a·4** (el aviso en el cajón y el correo
-  a las cuentas existentes: correos, avisar) y después la **T3b** (píxeles); la **T2e** solo si el volumen lo
-  pide. ⚠️ **El fixture «probe-ojo-analitica» está
+  **Queda el ojo del owner** sobre el interruptor. ▶ **T3a·4 EN EL ÁRBOL (24-09)**: el aviso a las cuentas
+  existentes por dos canales —el correo `AnalyticsLinkNotice` (molde de correos, tres idiomas) que manda
+  `analytics:notify-accounts` una vez por cuenta (`users.analytics_notified_at`; runbook en `ENTORNOS.md` §6,
+  la noche del despliegue de la v3) y el aviso del índice del cajón, que viaja CON su texto en el contexto de
+  cuenta (`analytics_notice`, contrato **1.21.0**) hasta que se despide (`DELETE /me/analytics-notice`,
+  `users.analytics_notice_seen_at`)—; migración aplicada en la local; `sonda-driver.mjs` 31/31. **Queda el
+  ojo del owner**: el aviso en `/mi-cuenta` (la cuenta de prueba, con `analytics_notified_at` puesto por
+  tinker) y el correo en Mailpit `:8028` (hay uno mandado a la cuenta de prueba, en español). ▶ Sigue la
+  **T3b** (píxeles); la **T2e** solo si el volumen lo pide. ⚠️ **El fixture «probe-ojo-analitica» está
   MONTADO en la BD local** (90 pedidos `JW-OJO…`, 81 cobros, 9 devoluciones, 25 clientes
   `ojo-N@ojo-analitica.jumpweb.test`, 506 sesiones, dos meses): `OJO=desmontar` lo quita entero.
 - ✅ **La ficha de Google (`#524`), T1 y T2·1→T2·8 en el árbol** (`#720`→`#734`), **vistas por el owner con
@@ -65,11 +71,7 @@
    `for()` cosen «días cerrados desde el diario + hoy en directo»; `ad_spend` —plataforma, campaña, mes,
    céntimos— tecleado en un Resource pequeño de «Ajustes» para el CPA/ROAS de `SourcesWidget`). ✅ El owner vio
    la T2f en vivo (24-09). ▶ **La T3 en marcha** (spec §4.3 y §4.8): **T3a·1 ✅ · T3a·2 ✅ · T3a·3 ✅ (24-09)**
-   → **T3a·4 el aviso a las cuentas existentes** ANTES de activar el enlace en producción: (a) el aviso en el
-   cajón (bloque de cuenta / índice del área de cliente, una vez, con enlace a «Privacidad»; una marca
-   `users.analytics_notice_seen_at` o equivalente), (b) el correo a las cuentas creadas antes de la v3 de la
-   política (molde y censo del carril de CORREOS: `BrandedMailMessage`, `MailInboxLineTest` 27→28; comando
-   idempotente `analytics:notify-accounts` que corre el runbook la noche del despliegue) → **T3b** píxeles
+   → **T3a·4 ✅ (24-09)** el aviso a las cuentas existentes (correo + aviso del índice; ver la foto) → **T3b** píxeles
    (`marketing`: gtag Consent Mode básico, Meta, TikTok; `SendConversionToPlatforms` con relectura del
    consentimiento; tokens en `.env`). Lo compartido de la web: aviso dado y repetido al empezar (buzón).
    ⚠️ El fixture del ojo siembra también TRÁFICO (506 sesiones, 2.294 hechos, sellos con primer y último toque).
@@ -244,6 +246,11 @@ spec enumera. Lo del cliente va en la rama `cliente/playjump`, nunca a `main`.
   dependen del árbol entero, no solo de `tests/`**: el commit del otro carril no tocó ningún test y la puerta
   midió +90 aserciones (censos que recorren `resources/js/isla/*`); tras rebasar se re-mide SIEMPRE o se
   toma la cifra de la puerta, aunque el rebase no traiga tests.
+- 🪤 **De la T3a·4**: un aviso en la cadena `v-if/v-else-if` del índice lo tapa cualquier waiver sin firmar
+  (lo cazó la sonda): lo que no es tarea va DEBAJO de las tarjetas, fuera de la cadena. Vue retira el espacio
+  entre dos elementos si lleva salto de línea: dos botones en dos líneas salen pegados. `CustomerAccountContext`
+  memoriza por usuario en el proceso: entre dos peticiones de un test, `forgetInstance`. Lo que viaja solo a
+  veces se mide en su caso CARO (la semilla, 800). Un aviso transitorio viaja en el CONTEXTO, no en el montaje.
 - 🩹 **En la BD LOCAL hay 19 titulares con la cadena de waiver ROTA** (basura del 26–27 de agosto): si mides
   cadenas, compara ANTES/DESPUÉS.
 - **F4 cerró y el cajón es un PAQUETE** (`specs/cajon-empaquetable.md` §0 y §4.8). Tocar «HOJA ENFOCADA» de
@@ -262,6 +269,8 @@ spec enumera. Lo del cliente va en la rama `cliente/playjump`, nunca a `main`.
   nuevo; `reports.view` gana consumidor) y `AdminNavigationTest` (el admin pasa a CINCO sitios: «Analítica»).
   En T3, lo que tú ya avisaste a la web el 23-09 (banner, `layout`, `app.js`, `SecurityHeaders`, política).
 - ⚠️ Tres migraciones de la analítica estaban **pendientes en esta máquina** hasta hoy; aplicadas.
+- ✅ **Tu aviso de la T3d (24-09, tarde), ATENDIDO**: no toco `PurchaseSection.vue` ni sus seis pruebas;
+  la T3a·4 va por el índice de cuenta, el contexto y los correos. Mis eventos de compra llegarán con la T3b.
 
 ### ❗ Para el carril de CORREOS (emisor: SPA, 19→20-09; pendiente de tu «atendido»)
 - ✅ **Tu censo pasa de 25 a 27**: `VisitEveNotice` (`#717`) y `GoogleBusinessLocationChanged` (`#725`), con sus
@@ -286,15 +295,22 @@ spec enumera. Lo del cliente va en la rama `cliente/playjump`, nunca a `main`.
   y `.env.example` (`POSTHOG_*`, `MATOMO_TOKEN_AUTH`), `docs/SEGURIDAD.md` (la lista de orígenes de la CSP).
   **T3a·3 (24-09), en `main`, tocado**: `layout.blade.php` (la persona del `<body>` respeta la oposición de la
   cuenta), `openapi/v1.yaml` → **1.20.0** (`PUT /me/analytics`, `analytics_opt_out` en `GET /me`, el export).
-  ▶ **Viene T3a·4**: el aviso en el cajón y el correo a las cuentas existentes. Si tu landing nueva (Saltia)
+  **T3a·4 (24-09), tocado**: `openapi/v1.yaml` → **1.21.0** (`analytics_notice` en `GET /me/account-context`,
+  `DELETE /me/analytics-notice`), `AccountContextResource` y `CustomerAccountContext` (una clave más, a la
+  cola), `AccountHomeZone.vue` (el aviso DEBAJO de las tarjetas, fuera de la cadena de avisos),
+  `stores/accountContext.js` (`dismissAnalyticsNotice`), `SidebarMountTest` (la semilla: clave nueva y techo
+  640 → 800 medido con y sin aviso), `docs/ENTORNOS.md` §6 (el runbook de la v3). Si tu landing nueva (Saltia)
   pinta el banner o lee `cookieConsent`, cuenta con cuatro claves; si pinta el `<body>`, los
   `data-analytics-*` los da `Drivers::forBody()`.
 
-### ❗ Para el carril de CORREOS (emisor: SPA, 24-09) — aviso previo de la T3a·4
-- ▶ La **T3a·4** de la analítica necesita **un correo nuevo** a las cuentas existentes («tu navegación puede
-  vincularse a tu cuenta si aceptas la categoría "análisis"; puedes oponerte en Privacidad»), en tres idiomas,
-  con tu molde (`BrandedMailMessage`, cabecera y línea de adelanto) y en tu censo (`MailInboxLineTest`
-  27→28). Lo escribo yo siguiendo tu molde salvo que prefieras hacerlo tú: dímelo por buzón.
+### ❗ Para el carril de CORREOS (emisor: SPA, 24-09) — la T3a·4 trae un correo nuevo sobre tu molde
+- ▶ **Hecho (24-09)**: `app/Notifications/AnalyticsLinkNotice.php` (el aviso a las cuentas existentes de la
+  analítica, `specs/analitica.md` §4.3) sobre `BrandedMailMessage` **sin tocarlo** —`hero('account.analytics_mail',
+  'info')`, tres líneas, botón a `/mi-cuenta`—, textos en `lang/{es,en,fr}/account.php` (`analytics_mail.*`:
+  chapa, titular, asunto, línea de adelanto ≤ 85 sin dato, tres líneas y el botón). Entra solo en tu censo
+  (`MailInboxLineTest` y `MailMoldTest` leen la carpeta; `EmailUtmTest` pasa de 25 a 26) y lo manda
+  `analytics:notify-accounts` una vez por cuenta. Una línea en `correos-desde-canvas.md` (estado). Si quieres
+  revisar el texto o el tono, es tuyo; hay uno mandado a Mailpit `:8028` en la local (cuenta de prueba, es).
 
 ### ❗ Para el carril de la WEB (emisor: SPA, 20→22-09; pendiente de tu «atendido»)
 - ▶ **Me llevo `google-business-profile.md` (`#524`)**, tuya de banda; la numero desde la mía. Si la quieres,

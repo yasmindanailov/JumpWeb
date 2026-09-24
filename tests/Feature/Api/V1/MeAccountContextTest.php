@@ -122,6 +122,9 @@ class MeAccountContextTest extends ApiTestCase
                 // misma regla que `next_reservation` —el consumidor no distingue «no está» de
                 // «está vacío»— y lo que permite que esta aserción sea EXACTA.
                 'extras_invite' => null,
+                // T3a·4 · el aviso del enlace con la analítica solo lo tienen las cuentas que recibieron el
+                // correo (`analytics_notified_at`) y no lo han despedido; una cuenta de fábrica no lo tiene.
+                'analytics_notice' => null,
             ]);
     }
 

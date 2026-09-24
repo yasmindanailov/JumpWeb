@@ -348,6 +348,22 @@ return [
         'action' => 'Contact us',
     ],
 
+    'analytics_mail' => [
+        'badge' => 'Privacy update',
+        'headline' => 'Your browsing and your account',
+        'subject' => 'A change to your privacy',
+        'preheader' => 'Only if you allow «analytics» in the cookie notice. You can object at any time.',
+        'line1' => 'We have updated our privacy policy. From now on, if you allow the «analytics» category in the cookie notice on the :park website, what you browse may be linked to your account so we can understand how the site is used and improve it.',
+        'line2' => "Nothing happens if you don't allow it: the cookie notice will ask you next time you visit, and until then nothing is linked.",
+        'line3' => 'And if you would rather it never be linked, you can object from “My account → Privacy & data”, with no password and whenever you like.',
+        'action' => 'View my privacy',
+    ],
+
+    'analytics_notice' => [
+        'text' => 'New: if you allow «analytics» in the cookie notice, your browsing may be linked to your account to improve the site. You can object under “Privacy & data”.',
+        'dismiss' => 'Got it',
+    ],
+
     'orders' => [
         // Las respuestas del pack, BAJO DEMANDA (tanda 3): son datos de un menor
         // (art. 9) y por eso no se pintan solas ni viajan en la lista de pedidos.

@@ -15,6 +15,9 @@
  *         node scripts/sonda-driver.mjs [etiqueta]
  *   (las credenciales son de un CLIENTE de prueba con sesión web; sin ellas se salta la identificación).
  *   Base: `SONDA_BASE` o `http://localhost`. Salida: `storage/app/audit/driver-<etiqueta>.json`.
+ *   Para el paso 3c (T3a·4, el aviso del índice) la cuenta de prueba tiene que tener el correo marcado y el
+ *   aviso sin despedir (tinker; se deja como estaba al acabar, también por tinker: la sonda solo lo despide):
+ *     User::where('email', '…')->update(['analytics_notified_at' => now(), 'analytics_notice_seen_at' => null]);
  *
  * ⚠️ **No se habla con PostHog de verdad**: las peticiones a `*.posthog.com` se interceptan y se sirve un
  *    DOBLE del script que apunta lo que la página le pide (`init`, `capture`, `identify`, `opt_out`). La CSP
@@ -201,6 +204,31 @@ const consentir = (page, prefs) => page.evaluate((p) => window.Alpine.store('coo
             return res.status;
         });
         ok('volver a permitirlo (PUT /me/analytics) quita la oposición', vuelta === 204 && (await me())?.analytics_opt_out === false, `status ${vuelta}`);
+
+        // ── 3c. El AVISO del índice a las cuentas existentes (T3a·4): viaja con su texto y se despide ─────
+        const contextoCuenta = async () => page.evaluate(async () => (await (await fetch('/api/v1/me/account-context', { credentials: 'include', headers: { Accept: 'application/json' } })).json()));
+        const aviso = (await contextoCuenta())?.analytics_notice ?? null;
+        if (aviso !== null) {
+            await page.goto(`${BASE}/mi-cuenta`, { waitUntil: 'load' });
+            await page.waitForSelector('#sidecart-spa .sidebar, #sidecart-spa [class*="account"]', { timeout: 15000 }).catch(() => null);
+            const texto = page.getByText(aviso.text, { exact: false }).first();
+            await texto.waitFor({ timeout: 15000 }).catch(() => null);
+            ok('el índice pinta el aviso con el texto que viaja en el contexto', await texto.count() > 0);
+            const despedir = page.getByRole('button', { name: aviso.dismiss }).first();
+            ok('con «Privacidad y datos» y el botón de despedir', await page.getByRole('button', { name: 'Privacidad y datos' }).count() >= 1 && await despedir.count() === 1);
+            await page.mouse.move(0, 0);
+            await page.screenshot({ path: `${SALIDA}/driver-${ETIQUETA}-aviso.png` });
+
+            await despedir.click();
+            await espera(1500);
+            ok('despedirlo lo quita del índice', await page.getByText(aviso.text, { exact: false }).count() === 0);
+            ok('y el servidor lo confirma: el contexto ya no lo trae', (await contextoCuenta())?.analytics_notice === null);
+            await page.reload({ waitUntil: 'load' });
+            await espera(1200);
+            ok('tras recargar sigue despedido (la marca es del servidor)', await page.getByText(aviso.text, { exact: false }).count() === 0);
+        } else {
+            ok('el aviso del índice (saltado: la cuenta no lo tiene pendiente; ver la cabecera)', true, 'analytics_notice null');
+        }
     } else {
         ok('identificación con sesión (saltada: sin credenciales de cliente)', true, 'SONDA_PANEL_EMAIL/PASSWORD vacías');
     }

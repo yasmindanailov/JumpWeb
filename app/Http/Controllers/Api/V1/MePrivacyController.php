@@ -134,6 +134,21 @@ class MePrivacyController extends Controller
     }
 
     /**
+     * `DELETE /me/analytics-notice` — **despedir el aviso** de que la navegación puede vincularse a la cuenta
+     * (T3a·4). El aviso viaja en el contexto de cuenta mientras está pendiente; esto deja la marca de que el
+     * titular lo vio. 204 siempre, también cuando ya estaba despedido: el titular pide un ESTADO.
+     */
+    public function dismissAnalyticsNotice(Request $request, AccountAnalytics $analytics): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        $analytics->markNoticeSeen($user);
+
+        return response()->json(status: 204);
+    }
+
+    /**
      * `GET /me/export` — derecho de portabilidad (art. 20).
      *
      * ⚠️ **Devuelve el documento, no un fichero adjunto.** El `Content-Disposition` de la página web

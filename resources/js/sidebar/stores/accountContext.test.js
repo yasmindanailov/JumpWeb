@@ -13,8 +13,16 @@ function fakeApi(respuestas) {
 
             return respuestas[url] ?? { ok: false, status: 500, data: null };
         },
+        delete: async (url) => {
+            llamadas.push(`DELETE ${url}`);
+
+            return respuestas[`DELETE ${url}`] ?? { ok: false, status: 500, data: null };
+        },
     };
 }
+
+/** T3a·4 · el aviso de que la navegación puede vincularse a la cuenta, tal como viaja en el contexto. */
+const AVISO = { text: 'Novedad: tu navegación puede vincularse a tu cuenta.', dismiss: 'Entendido' };
 
 const CONTEXTO = {
     first_name: 'Ada',
@@ -126,5 +134,43 @@ describe('el contexto de cuenta', () => {
         await Promise.all([store.refresh({ api }), store.refresh({ api })]);
 
         assert.equal(api.llamadas.length, 1, 'la segunda llamada tiene que salir por la guarda');
+    });
+
+    /**
+     * T3a·4 de la analítica (`specs/analitica.md` §4.3): el aviso a las cuentas que existían antes de la v3 de
+     * la política viaja en el contexto mientras está pendiente, y despedirlo es un `DELETE` que el servidor
+     * confirma con 204. Solo entonces desaparece del contexto: un fallo lo deja pintado, que es lo honesto.
+     */
+    describe('el aviso del enlace con la analítica', () => {
+        test('despedirlo pide el DELETE y, confirmado, lo quita del contexto', async () => {
+            const store = useAccountContextStore();
+            store.seed({ ...CONTEXTO, analytics_notice: AVISO });
+            const api = fakeApi({ 'DELETE /me/analytics-notice': { ok: true, status: 204, data: null } });
+
+            assert.equal(await store.dismissAnalyticsNotice({ api }), true);
+
+            assert.deepEqual(api.llamadas, ['DELETE /me/analytics-notice']);
+            assert.equal(store.context.analytics_notice, null);
+            assert.equal(store.context.first_name, 'Ada', 'el resto del contexto no se toca');
+        });
+
+        test('si el servidor no lo confirma, el aviso sigue en pie', async () => {
+            const store = useAccountContextStore();
+            store.seed({ ...CONTEXTO, analytics_notice: AVISO });
+
+            assert.equal(await store.dismissAnalyticsNotice({ api: fakeApi({}) }), false); // 500
+
+            assert.deepEqual(store.context.analytics_notice, AVISO);
+        });
+
+        test('sin aviso pendiente no se llama a nadie', async () => {
+            const store = useAccountContextStore();
+            store.seed({ ...CONTEXTO, analytics_notice: null });
+            const api = fakeApi({ 'DELETE /me/analytics-notice': { ok: true, status: 204, data: null } });
+
+            assert.equal(await store.dismissAnalyticsNotice({ api }), false);
+
+            assert.deepEqual(api.llamadas, []);
+        });
     });
 });

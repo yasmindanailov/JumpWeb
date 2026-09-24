@@ -484,6 +484,9 @@ Route::name('api.v1.')->group(function (): void {
         // o volver a permitirlo. Sin `current_password` por la misma razón que el marketing: retirar es tan
         // fácil como dar. Retirar desvincula, sella la prueba y dispara el olvido en el driver.
         Route::put('/me/analytics', [MePrivacyController::class, 'analytics'])->name('me.analytics.update');
+        // T3a·4 · despedir el aviso de que la navegación puede vincularse a la cuenta (viaja en el contexto de
+        // cuenta mientras está pendiente). 204 siempre.
+        Route::delete('/me/analytics-notice', [MePrivacyController::class, 'dismissAnalyticsNotice'])->name('me.analytics-notice.destroy');
 
         // ── Mi waiver (Fase 6, `specs/waiver-probatorio.md` §4.4, §4.5, §4.8) ──────────────────
         // Estado según el modo · ACEPTAR el texto vigente con el `document_id` que se sirvió (si

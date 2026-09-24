@@ -7,6 +7,7 @@ use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Services\CustomerAccountContext;
 use App\Http\Middleware\SetLocale;
 use App\Http\Sidebar\SidebarEntry;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -1224,8 +1225,14 @@ class SidebarMountTest extends TestCase
         // es justo cuando le quedan extras por elegir—. Es `null` salvo cuando hay algo que ofrecer,
         // y viene acotado a UNA reserva: la lista es la única parte del contexto sin cota, y por eso
         // `pending_forms` se poda aquí.
+        // ▶ **`analytics_notice` entró a propósito el 2026-09-24** (T3a·4 de `specs/analitica.md` §4.3): el
+        // aviso de que la navegación puede vincularse a la cuenta, a las cuentas que existían antes de la v3 de
+        // la política. Es `null` salvo para quien recibió el correo y no lo ha despedido; ENTONCES viaja con
+        // su texto —y eso es a propósito: lo paga un puñado de cuentas una vez, en vez de una clave más en
+        // el montaje de cada página con sesión de todo el mundo—. El endpoint lo publica igual
+        // (`MeAnalyticsNoticeTest`, contrato 1.21.0).
         $this->assertSame(
-            ['first_name', 'email_verified', 'upcoming_count', 'next_reservation', 'pending_forms', 'pending_forms_count', 'waiver', 'terms_pending', 'terms_updated', 'phone_missing', 'extras_invite'],
+            ['first_name', 'email_verified', 'upcoming_count', 'next_reservation', 'pending_forms', 'pending_forms_count', 'waiver', 'terms_pending', 'terms_updated', 'phone_missing', 'extras_invite', 'analytics_notice'],
             array_keys($seed),
             'La semilla ha cambiado de forma. Cada campo nuevo viaja en el HTML de TODA página con '.
             'sesión: si hace falta, que entre a propósito — y comprueba antes que el endpoint lo '.
@@ -1241,13 +1248,34 @@ class SidebarMountTest extends TestCase
         // ajustarse al barato, que es como un trinquete acaba saltando con el producto sano.
         // ⚠️ La clave viaja SIEMPRE aunque valga `null`: podarla por CAMPO daría dos formas del mismo
         // contexto —`AccountContextSeed` lo tiene escrito— y la poda de aquí es por CARDINALIDAD.
+        // ▶ **640 → 800 el 2026-09-24** (T3a·4, `analytics_notice`), y el número está MEDIDO en los dos
+        // casos: este fixture pesa **576 B** con la clave a `null` (+24 B) y **770 B** con el aviso
+        // pendiente (+194 B: el texto y el rótulo de despedir, en español). El techo deja sitio al caso
+        // caro —**30 B**—, que es el de un puñado de cuentas una vez; el normal queda con 224 de holgura
+        // a propósito, porque el trinquete lo aprieta el caso (3) de abajo.
         $this->assertLessThan(
-            640, $bytes,
+            800, $bytes,
             "La semilla del contexto de cuenta pesa {$bytes} B en el HTML de cada página con sesión, ".
             "sobre 320 medidos.\n".
             '⚠️ Mira primero si lo que ha crecido es una LISTA: la de formularios pendientes se poda '.
             'por cardinalidad justamente porque no tiene cota. Subir el techo sin mirar eso es '.
             'subirlo para que el histórico del cliente quepa.'
+        );
+
+        // (3) Y el caso CARO del aviso (T3a·4): la cuenta que recibió el correo y no lo ha despedido lleva
+        // el texto en la semilla. Se mide aquí, y no solo el `null`, porque «el techo deja sitio al caso
+        // caro en vez de ajustarse al barato». ⚠️ El contexto se memoriza por usuario dentro del proceso:
+        // se olvida a mano, como en `MeAccountContextTest`.
+        $user->forceFill(['analytics_notified_at' => now()])->save();
+        app()->forgetInstance(CustomerAccountContext::class);
+        $withNotice = $this->bootPayload($this->actingAs($user)->get('/')->getContent())['accountContext'];
+        $bytesWithNotice = strlen((string) json_encode($withNotice, JSON_UNESCAPED_UNICODE));
+
+        $this->assertNotNull($withNotice['analytics_notice'], 'CONTROL: sin aviso en la semilla este caso no mide nada');
+        $this->assertLessThan(
+            800, $bytesWithNotice,
+            "La semilla CON el aviso del enlace con la analítica pesa {$bytesWithNotice} B (sin él, {$bytes} B). ".
+            'Lo pagan solo las cuentas que recibieron el correo y hasta que lo despiden.'
         );
     }
 

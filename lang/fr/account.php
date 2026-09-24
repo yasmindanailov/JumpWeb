@@ -348,6 +348,22 @@ return [
         'action' => 'Nous écrire',
     ],
 
+    'analytics_mail' => [
+        'badge' => 'Mise à jour de confidentialité',
+        'headline' => 'Ta navigation et ton compte',
+        'subject' => 'Un changement de confidentialité',
+        'preheader' => "Seulement si tu acceptes «analyse» dans l'avis sur les cookies. Tu peux t'y opposer.",
+        'line1' => "Nous avons mis à jour notre politique de confidentialité. Désormais, si tu acceptes la catégorie «analyse» dans l'avis sur les cookies du site de :park, ta navigation peut être liée à ton compte pour mieux comprendre l'usage du site et l'améliorer.",
+        'line2' => "Rien ne se passe si tu ne l'acceptes pas : l'avis sur les cookies te le demandera à ta prochaine visite, et d'ici là rien n'est lié.",
+        'line3' => "Et si tu préfères que rien ne soit jamais lié, tu peux t'y opposer depuis « Mon compte → Confidentialité et données », sans mot de passe et quand tu veux.",
+        'action' => 'Voir ma confidentialité',
+    ],
+
+    'analytics_notice' => [
+        'text' => "Nouveau : si tu acceptes «analyse» dans l'avis sur les cookies, ta navigation peut être liée à ton compte pour améliorer le site. Tu peux t'y opposer dans « Confidentialité et données ».",
+        'dismiss' => 'Compris',
+    ],
+
     'orders' => [
         // Las respuestas del pack, BAJO DEMANDA (tanda 3): son datos de un menor
         // (art. 9) y por eso no se pintan solas ni viajan en la lista de pedidos.

@@ -63,7 +63,7 @@ class CustomerAccountContext
      * ⚠️ Es una PISTA para saber qué pintar, nunca la autoridad: quien decide es el servidor al crear
      * el pedido (`OrdersController`), y por eso el cliente sabe además reaccionar a su 422.
      *
-     * @return array{firstName: string, emailVerified: bool, upcomingCount: int, nextReservation: ?UpcomingReservation, pendingForms: list<array{productName: string, url: string}>, pendingFormsCount: int, hasPendingForm: bool, extrasInvite: ?array{productName: string, url: string}, waiver: array{mode: string, required: bool, pending: bool, outdated: bool, documentId: ?int, dependentsPending: bool}, termsPending: bool, termsUpdated: bool, phoneMissing: bool}
+     * @return array{firstName: string, emailVerified: bool, upcomingCount: int, nextReservation: ?UpcomingReservation, pendingForms: list<array{productName: string, url: string}>, pendingFormsCount: int, hasPendingForm: bool, extrasInvite: ?array{productName: string, url: string}, waiver: array{mode: string, required: bool, pending: bool, outdated: bool, documentId: ?int, dependentsPending: bool}, termsPending: bool, termsUpdated: bool, phoneMissing: bool, analyticsNotice: ?array{text: string, dismiss: string}}
      */
     /**
      * ¿Le queda algún menor ACTIVO sin firma de la versión vigente? (`#441`)
@@ -120,6 +120,18 @@ class CustomerAccountContext
             // que la pantalla de pagar pinte un campo en vez de una casilla. El valor lo resuelve
             // `CheckoutDuties` dentro del `try`; esto es el respaldo si el contexto se cae.
             'phoneMissing' => false,
+            // T3a·4 de la analítica (`specs/analitica.md` §4.3): **el aviso de que la navegación puede
+            // vincularse a la cuenta**, solo a las cuentas que recibieron el correo (`analytics_notified_at`)
+            // y no lo han despedido (`analytics_notice_seen_at`). Fuera del `try`: son dos campos del usuario.
+            // ⚠️ Viaja CON SU TEXTO, y no como una clave del montaje: el texto solo lo paga quien lo tiene
+            // pendiente —un puñado de cuentas, una vez— en lugar de cada página con sesión de todo el mundo.
+            // El botón que lleva a «Privacidad y datos» reutiliza el título de la zona, que ya viaja.
+            'analyticsNotice' => $user->analytics_notified_at !== null && $user->analytics_notice_seen_at === null
+                ? [
+                    'text' => (string) __('account.analytics_notice.text'),
+                    'dismiss' => (string) __('account.analytics_notice.dismiss'),
+                ]
+                : null,
         ];
 
         try {

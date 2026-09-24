@@ -34,7 +34,7 @@ use Tests\TestCase;
  * dando 403, porque la firma no se ha relajado, solo ignora la atribución—; y que los dos hechos se cuenten
  * con la misma clave que viaja en la URL.
  *
- * ⚠️ Como `MailMoldTest`, la exhaustividad viene de LEER LAS FUENTES (los 25 `toMail()` pasan `$this`); lo que
+ * ⚠️ Como `MailMoldTest`, la exhaustividad viene de LEER LAS FUENTES (los 26 `toMail()` pasan `$this`); lo que
  * se renderiza son los correos de cuenta, que solo necesitan un `User`.
  */
 class EmailUtmTest extends TestCase
@@ -48,7 +48,8 @@ class EmailUtmTest extends TestCase
         $this->assertTrue(EmailUtm::isCustomerKey('order_confirmation'));
         $this->assertFalse(EmailUtm::isCustomerKey('google_business_location_changed'), 'el aviso al negocio no es audiencia');
         $this->assertFalse(EmailUtm::isCustomerKey('lo_que_sea'), 'una clave que no es de un correo no cuenta');
-        $this->assertCount(25, EmailUtm::keys());
+        // 26 desde la T3a·4 (`AnalyticsLinkNotice`, el aviso a las cuentas existentes).
+        $this->assertCount(26, EmailUtm::keys());
     }
 
     public function test_the_tag_only_touches_our_own_links_and_keeps_the_fragment(): void

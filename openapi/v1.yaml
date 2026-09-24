@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.20.0
+  version: 1.21.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -2610,6 +2610,32 @@ paths:
         '503':
           $ref: '#/components/responses/Maintenance'
 
+  /me/analytics-notice:
+    delete:
+      tags: [Cuenta]
+      operationId: dismissMyAnalyticsNotice
+      summary: Despedir el aviso de que la navegación puede vincularse a la cuenta
+      description: |
+        **Despide el aviso** que `GET /me/account-context` publica en `analytics_notice` a las cuentas que
+        existían antes de la v3 de la política de cookies (`docs/specs/analitica.md` §4.3, T3a·4). El
+        titular lo ha leído, o ha ido a «Privacidad y datos» desde él: a partir de aquí el contexto lo
+        devuelve como `null`.
+
+        Responde **204 siempre**, también cuando ya estaba despedido: el titular pide un ESTADO. No
+        cambia la oposición ni el consentimiento — para eso está `PUT /me/analytics`.
+      security:
+        - sessionCookie: []
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Aviso despedido.
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
   /me/export:
     get:
       tags: [Cuenta]
@@ -5134,7 +5160,7 @@ components:
       description: |
         El contexto de cuenta del titular: saludo, próxima reserva, cuántas quedan y qué formularios
         de invitados están pendientes.
-      required: [first_name, email_verified, upcoming_count, next_reservation, pending_forms, pending_forms_count, waiver, terms_pending, terms_updated, phone_missing, extras_invite]
+      required: [first_name, email_verified, upcoming_count, next_reservation, pending_forms, pending_forms_count, waiver, terms_pending, terms_updated, phone_missing, extras_invite, analytics_notice]
       additionalProperties: false
       properties:
         first_name:
@@ -5317,6 +5343,29 @@ components:
                 La ruta WEB del post-form de esa reserva, **sin firmar** — la misma que
                 `pending_forms[].url`, con las mismas razones y la misma prohibición: aquí NUNCA
                 viaja la URL firmada.
+        analytics_notice:
+          type: object
+          nullable: true
+          description: |
+            **El aviso de que la navegación puede vincularse a la cuenta**, o `null` si no hay ninguno
+            pendiente (`docs/specs/analitica.md` §4.3, T3a·4).
+
+            Lo reciben las cuentas que existían antes de la v3 de la política de cookies —las que
+            recibieron el correo `analytics:notify-accounts`— hasta que lo despiden con
+            `DELETE /me/analytics-notice`. Una cuenta creada después nunca lo ve: se registró bajo la
+            política nueva y el aviso de cookies le pregunta.
+
+            ⚠️ **Viaja CON SU TEXTO, en el idioma de la petición**, y no como una clave de traducción del
+            cliente: el texto lo paga solo quien lo tiene pendiente, una vez, en lugar de cada página con
+            sesión de todo el mundo. `dismiss` es el rótulo del botón que lo despide; el que lleva a
+            «Privacidad y datos» es el título de esa zona, que el cliente ya tiene.
+          required: [text, dismiss]
+          additionalProperties: false
+          properties:
+            text:
+              type: string
+            dismiss:
+              type: string
 
     PendingGuestForm:
       type: object
