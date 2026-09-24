@@ -136,7 +136,7 @@ class DeployScriptGateTest extends TestCase
             'protege las subidas del panel' => ["--exclude='/public/uploads/'", 'Con `--delete`, el segundo despliegue borraría las imágenes subidas desde el panel.'],
             'protege las fotos del catálogo de la instalación' => ["--exclude='/public/images/attractions/'", 'Desde `#663` no están en el repo (viven en el paquete de la instancia): sin la exclusión, el `--delete` deja la web del cliente SIN UNA SOLA FOTO y nada en el diff lo avisa. Medido en seco: sin ella el fichero muere, con ella sobrevive y el logotipo de `providers/` sigue actualizándose.'],
             'protege el vídeo de la portada de la instalación' => ["--exclude='/public/videos/'", 'Mismo motivo exacto que la línea de arriba y que `client.css`: material de la instalación, fuera de git desde `#663`. El `--delete` se lo lleva y la portada se queda sin vídeo, sin error y sin aviso.'],
-            'protege el material nuevo de la instalación' => ["--exclude='/public/instancia/'", 'Las fuentes, las hojas y los medios de las páginas nuevas de la instancia (`#681`) viven en `public/instancia/`, fuera de git. Sin la exclusión, la guarda 9 aborta el despliegue; y si alguien la esquiva, el `--delete` deja las páginas sin tipografía ni tema, sin error.'],
+            'protege el material nuevo de la instalación' => ["--exclude='/public/instancia/'", 'Las fuentes, las hojas y los medios de las páginas nuevas de la instancia (`#681`) viven en `public/instancia/`, fuera de git. Sin la exclusión, el `--delete` deja las páginas sin tipografía ni tema si en la máquina que despliega falta la copia, sin error. (La guarda 9 no depende de esto: pregunta a git, y lo deja pasar por su lista blanca, `#697`.)'],
             'excluye public/hot' => ["--exclude='/public/hot'", 'Si llega, Vite sirve todo desde localhost:5274 y la web queda muda SIN error de servidor.'],
             'excluye vendor/' => ["--exclude='/vendor/'", 'Lo construye composer allí; excluirlo además lo salva del `--delete`.'],
             'excluye node_modules/' => ["--exclude='/node_modules/'", '97 MB que no sirven de nada: en el servidor no hay node.'],
@@ -660,7 +660,10 @@ class DeployScriptGateTest extends TestCase
         // salió del repo y ahora vive fuera de git, como el paquete de tema. Sin ellas en la lista, la
         // guarda 9 abortaría **todos** los despliegues — y este caso, que enumera a mano lo legítimo,
         // habría seguido en verde sin verlo.
-        foreach (['public/build/', 'public/uploads/', 'public/storage', 'public/hot', 'public/css/client.css', 'public/img/', 'public/videos/', 'public/images/attractions/'] as $legitimo) {
+        // ⚠️ Y `instancia/` (`#681`, cazado en `#697`): el material nuevo de la instalación vive ahí fuera de git, y la
+        // exclusión del rsync NO lo salva de esta guarda, que pregunta a git, no al rsync. Sin él en la lista, el
+        // despliegue de la v2.0.0 habría abortado por su propia tipografía.
+        foreach (['public/build/', 'public/uploads/', 'public/storage', 'public/hot', 'public/css/client.css', 'public/img/', 'public/videos/', 'public/images/attractions/', 'public/instancia/'] as $legitimo) {
             $this->assertSame(
                 1, preg_match($patron, $legitimo),
                 "la guarda 9 abortaría el despliegue por «{$legitimo}», que vive fuera de git a propósito",

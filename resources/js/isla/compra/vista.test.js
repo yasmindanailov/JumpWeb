@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { diaCorto, diaLargo, euros, horasDelSelector, pantallaCuando, tiraDias, zonasConEntradas } from './vista.js';
+import { diaCorto, diaLargo, euros, horasCercanas, horasDelSelector, pantallaCuando, tiraDias, zonasConEntradas } from './vista.js';
 
 /**
  * La vista pura de la compra de la isla (T3e de `specs/isla-y-landing-nueva.md` §4.10): del estado del motor a las
@@ -73,6 +73,21 @@ describe('la tira de días y el selector de horas', () => {
             { time: '18:00', left: 1, disabled: true, note: 'Quedan 1' },
             { time: '19:00', left: 0, disabled: true },
         ]);
+    });
+
+    test('las horas cercanas: las cuatro con sitio más próximas a la perdida, en orden de reloj (T3e·6)', () => {
+        const libres = ['16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00'].map((time) => ({ time, left: 5 }));
+        const dia = libres.map((s) => (s.time === '17:00' ? { ...s, left: 0, disabled: true } : s));
+
+        // 16:00 y 22:00 quedan a la misma distancia de las 19:00, y solo cabe una: gana la de antes.
+        assert.deepEqual(horasCercanas(dia, '19:00').map((s) => s.time), ['16:00', '18:00', '20:00', '21:00']);
+        // Una hora apagada no se ofrece aunque le quede alguna plaza (no cabe la gente que se pide).
+        const justa = dia.map((s) => (s.time === '18:00' ? { ...s, left: 1, disabled: true, note: 'Quedan 1' } : s));
+
+        assert.deepEqual(horasCercanas(justa, '19:00').map((s) => s.time), ['16:00', '20:00', '21:00', '22:00']);
+        // Si la perdida ya no sale en la lista, las primeras del día; sin horas, ninguna.
+        assert.deepEqual(horasCercanas(libres.slice(0, 5), '15:00').map((s) => s.time), ['16:00', '17:00', '18:00', '19:00']);
+        assert.deepEqual(horasCercanas([], '17:00'), []);
     });
 });
 

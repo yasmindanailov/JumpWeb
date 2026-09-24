@@ -16,10 +16,11 @@ const textos = {
         entrar: { continuar: 'Continuar', cargando: 'Entrando' },
         pagar: { banda: 'Pagar', tarjeta: 'Pagar :importe con tarjeta', saliendo_boton: 'Continuar al pago' },
         fallido: { tarjeta: 'Volver a intentar con tarjeta' },
+        perdida: { boton: 'Elegir esta hora' },
         listo: { mi_qr: 'Ir a Mi QR', menores: 'Añade a tus hijos…', menores_boton: 'Añadir a mis hijos' },
     },
 };
-const acciones = { volver: () => 'volver', continuar: () => 'continuar', entrar: () => 'entrar', pagar: () => 'pagar', salir: () => 'salir', reintentar: () => 'reintentar', miQr: () => 'miQr', cerrar: () => 'cerrar' };
+const acciones = { volver: () => 'volver', continuar: () => 'continuar', entrar: () => 'entrar', pagar: () => 'pagar', salir: () => 'salir', reintentar: () => 'reintentar', elegirHora: () => 'elegirHora', miQr: () => 'miQr', cerrar: () => 'cerrar' };
 const resumen = { summary: 'Kids · 1 hora · sáb 26, 17:00 · 2 entradas', total: '16 €' };
 const ck = (paso, extra = {}) => ckDelPaso({ paso, textos, acciones, resumen, importe: '16 €', ...extra });
 
@@ -104,6 +105,23 @@ describe('la descripción de cada paso', () => {
         assert.equal(ck('fallido').action.label, 'Volver a intentar con tarjeta');
         assert.equal(ck('fallido').action.onClick(), 'reintentar');
         assert.equal(ck('verificando').action, null);
+    });
+
+    test('la hora se llenó al pagar (T3e·6): banda de «Pagar», sin flecha, y «Elegir esta hora» apagado hasta elegir', () => {
+        const sin = ck('perdida');
+
+        assert.equal(`${sin.stepStrong}${sin.step}`, 'Paso 2 de 2 · Pagar');
+        assert.equal(sin.onBack, null);
+        assert.equal(sin.action.label, 'Elegir esta hora');
+        assert.equal(sin.action.disabled, true);
+        assert.equal(sin.summary, resumen.summary, 'el resumen sigue debajo: la línea que se estaba pagando');
+
+        const con = ck('perdida', { horaNueva: '18:00', ocupado: 'perdida' });
+
+        assert.equal(con.action.disabled, false);
+        assert.equal(con.action.onClick(), 'elegirHora');
+        assert.equal(con.action.loading, 'Cargando');
+        assert.equal(direccion(rango('pagar'), rango('perdida')), 'fwd');
     });
 
     test('«Listo»: sin banda ni resumen, y «Ir a Mi QR»', () => {

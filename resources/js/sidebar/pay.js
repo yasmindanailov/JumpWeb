@@ -148,13 +148,15 @@ export function confirmError(response, messages = {}) {
 
     const key = ERROR_KEYS[code] ?? null;
 
+    // El CÓDIGO viaja con el aviso: la isla distingue con él «la hora se llenó» (`line_sold_out`) de cualquier otro
+    // «no» y ofrece las horas cercanas (T3e·6, `isla-y-landing-nueva.md` §4.10). El cajón no lo lee.
     if (key === null) {
         // Un código que este cajón no conoce, un 5xx o un corte de red. No puede quedarse mudo en la
         // pantalla donde el cliente espera pagar.
-        return { error: t(messages, 'errors.try_later'), rereadStatus: false };
+        return { error: t(messages, 'errors.try_later'), rereadStatus: false, code };
     }
 
-    return { error: tp(messages, key, response?.error?.params ?? {}), rereadStatus: false };
+    return { error: tp(messages, key, response?.error?.params ?? {}), rereadStatus: false, code };
 }
 
 /**

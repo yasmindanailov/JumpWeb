@@ -14,6 +14,7 @@ import PantallaPagar from './PantallaPagar.vue';
 import PantallaSaliendo from './PantallaSaliendo.vue';
 import PantallaFallido from './PantallaFallido.vue';
 import PantallaVerificando from './PantallaVerificando.vue';
+import PantallaPerdida from './PantallaPerdida.vue';
 import PantallaListo from './PantallaListo.vue';
 import CajaAntiBot from './CajaAntiBot.vue';
 import FormularioPasarela from './FormularioPasarela.vue';
@@ -21,6 +22,7 @@ import CabeceraDesenlace from '../ui/CabeceraDesenlace.vue';
 
 const {
     paso, esperando, authStore, outcomeStore, datos, pantallaDatos, pantallaEntrar, aGoogle, pago, listo, recibo, fallido,
+    perdida, elegirNueva,
 } = inject(COMPRA);
 // Apple sigue de corchete apagado (`#683`): su botón no se pinta, así que solo Google llega aquí.
 const proveedor = (via) => via === 'google' && aGoogle();
@@ -82,6 +84,11 @@ const proveedor = (via) => via === 'google' && aGoogle();
         v-bind="fallido"
     />
     <PantallaVerificando v-else-if="paso === 'verificando'" />
+    <PantallaPerdida
+        v-else-if="paso === 'perdida'"
+        v-bind="perdida"
+        @hora="elegirNueva"
+    />
     <PantallaListo
         v-else-if="paso === 'listo'"
         v-bind="listo"

@@ -709,7 +709,9 @@ export function usePurchaseFlow(props) {
                 // donde el cliente puede arreglarlo —quitar una línea, cambiar una franja—.
                 goToVerdict(STEPS.CART);
 
-                return;
+                // El «no» se DEVUELVE con su código: la isla ofrece las horas cercanas si la hora se llenó
+                // (T3e·6, `isla-y-landing-nueva.md` §4.10). El cajón no lo lee.
+                return result;
             }
 
             // La reserva es firme: la cesta se vacía y se persiste vacía, para que una recarga no la

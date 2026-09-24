@@ -55,8 +55,8 @@ export function direccion(antes, ahora) {
  * @param {object} e
  *   `paso` · `vista` (`descargo` · `entrar`, dentro de «Tus datos») · `entrada` (el estado de «Entra»: `paso`,
  *   `valor`, `clave`) · `textos` · `resumen` ({ summary, total }) · `importe` (lo que cobra la pasarela, ya escrito) ·
- *   `ocupado` (el paso que espera al servidor) · `acciones` ({ volver, continuar, entrar, pagar, salir, reintentar,
- *   miQr, cerrar }).
+ *   `ocupado` (el paso que espera al servidor) · `horaNueva` (la elegida en «perdida») · `acciones` ({ volver,
+ *   continuar, entrar, pagar, salir, reintentar, elegirHora, miQr, cerrar }).
  */
 export function ckDelPaso(e) {
     const t = (clave) => texto(e.textos, clave);
@@ -114,6 +114,15 @@ export function ckDelPaso(e) {
     }
 
     if (e.paso === 'verificando') return { ...ck, ...pasoN(2, t('compra.pagar.banda')) };
+
+    // La hora se llenó al pagar (T3e·6, `PjcPerdida`): no se cobró nada, y «Elegir esta hora» vuelve a «Pagar» con la
+    // línea rehecha. Sin flecha, como el diseño: la salida es elegir otra hora o cerrar.
+    if (e.paso === 'perdida') {
+        return {
+            ...ck, ...pasoN(2, t('compra.pagar.banda')),
+            action: { label: t('compra.perdida.boton'), onClick: a.elegirHora, disabled: ! e.horaNueva, loading: e.ocupado === 'perdida' ? t('pieza.cargando') : false },
+        };
+    }
 
     if (e.paso === 'listo') return { ...ck, summary: null, total: null, today: null, action: { label: t('compra.listo.mi_qr'), onClick: a.miQr } };
 

@@ -880,11 +880,14 @@ class SidebarBundleBudgetTest extends TestCase
     // `#697`: el sistema de diseño nuevo rehízo el selector de plan (el destacado con su foto, [Hoy] y el pie con la
     // garantía), portado 1:1 con sus estilos en línea: +5.838 B medidos con el selector de antes y el de ahora (123,96 →
     // 129,66); el resto, el `opcional` del campo y un icono. Medido 129,66.
-    private const ISLA_COMPRA_CHUNK_MAX_KB = 130;
+    // T3e·6 (`#698`): la hora que se llena al pagar —recargar las horas del día, las cercanas (`vista.js::horasCercanas`)
+    // y «Elegir esta hora», que rehace la línea—. Medido 130,90.
+    private const ISLA_COMPRA_CHUNK_MAX_KB = 131;
 
     // T3e·3 (`#694`): las pantallas de después de la pantalla 0, en su trozo (`isla/compra/pasos-diferidos.js`), que la
     // compra pide al montarse. Medido 36,92 KiB. T3e·4 (`#695`): «Entra» con sus eventos y la «G» de Google, 37,66.
-    private const ISLA_PASOS_CHUNK_MAX_KB = 38;
+    // T3e·6 (`#698`): «Esa hora ya no está libre» (`PantallaPerdida`, con su selector de horas), 38,56.
+    private const ISLA_PASOS_CHUNK_MAX_KB = 39;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

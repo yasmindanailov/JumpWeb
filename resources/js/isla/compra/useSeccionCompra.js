@@ -25,7 +25,7 @@ import { useDatosCompra } from './useDatosCompra.js';
 import { usePagoCompra } from './usePagoCompra.js';
 import { usePantallaCero } from './usePantallaCero.js';
 import { borradorDeIntencion } from './oferta.js';
-import { euros } from './vista.js';
+import { euros, horasCercanas, horasDelSelector } from './vista.js';
 import { meterLinea, pedidoDe } from './linea.js';
 import { lineaListo, reciboDe, resumenDeLaCesta, resumenDelPedido } from './recibo.js';
 import { ckDelPaso, direccion, empiezaOtra, pantallaListo, pasoDelMotor, rango } from './pasos.js';
@@ -50,7 +50,7 @@ export function useSeccionCompra(props) {
     const { abierta, cerrar: cerrarSuperficie } = useSuperficie();
     const compra = reactive({
         borrador: borradorDeIntencion(null, []), precios: {}, fichas: {}, grupos: [], cargandoHoras: false, intencion: null,
-        paso: 'cuando', aviso: '', ocupado: null, pedido: null, pagado: null, dir: null,
+        paso: 'cuando', aviso: '', ocupado: null, pedido: null, pagado: null, dir: null, cercanas: [], horaNueva: null,
     });
 
     /**
@@ -61,7 +61,7 @@ export function useSeccionCompra(props) {
     const enCola = (tarea) => (cola = cola.then(tarea, tarea));
 
     const datos = useDatosCompra({ flow, props, textos });
-    const pago = usePagoCompra({ flow, props, textos, compra, enCola, alPagarMal });
+    const pago = usePagoCompra({ flow, props, textos, compra, enCola, alPagarMal, alLlenarse });
     const { vista, situar, cambiar, cargarHoras, extrasDelPedido } = usePantallaCero({ flow, compra, enCola, textos });
 
     /**
@@ -223,6 +223,46 @@ export function useSeccionCompra(props) {
         Object.assign(datos.estado, { vista: null, errores: { telefono: errores.phone ?? '' }, aviso: errores.accept_terms ?? '' });
     }
 
+    /**
+     * **La hora se llenó al pagar** (T3e·6, `PjcPerdida`). Las horas del día, otra vez del servidor (`cargarHoras`, que
+     * además vacía la hora del borrador si ya no cabe), y las cuatro con sitio más cercanas a la perdida. El paso cambia
+     * cuando ya están: mientras, «Pagar» sigue esperando. ⚠️ Sin ninguna libre ese día, a la pantalla 0 con el aviso del
+     * servidor, que es donde se elige otro día: una pantalla que dice «Estas sí:» y no enseña ninguna mentiría.
+     */
+    async function alLlenarse(aviso) {
+        const perdida = compra.pedido?.hora ?? compra.borrador.hora;
+
+        await enCola(cargarHoras);
+        const cercanas = horasCercanas(horasDelSelector(timeStore.offered, { gente: compra.borrador.n, textos }), perdida);
+
+        cartStore.setError('');
+        if (cercanas.length === 0) {
+            await aCuando();
+            compra.aviso = aviso;
+
+            return;
+        }
+        Object.assign(compra, { paso: 'perdida', cercanas, horaNueva: null, aviso: '' });
+    }
+
+    /** «Elegir esta hora»: la línea, rehecha a esa hora, y de vuelta a «Pagar». Si también se llenó, otra vez. */
+    async function elegirHora() {
+        if (compra.ocupado || ! compra.horaNueva) return;
+        compra.ocupado = 'perdida';
+
+        try {
+            const hora = compra.horaNueva;
+
+            if (await enCola(() => pago.rehacer({ hora }))) {
+                Object.assign(compra, { paso: 'pagar', cercanas: [], horaNueva: null });
+            } else {
+                await alLlenarse(compra.aviso);
+            }
+        } finally {
+            compra.ocupado = null;
+        }
+    }
+
     /** Volver de «Tus datos» a la pantalla 0: la línea sale de la cesta, y la pantalla 0 sigue como estaba. */
     async function aCuando() {
         Object.assign(compra, { paso: 'cuando', pedido: null, aviso: '' });
@@ -259,9 +299,12 @@ export function useSeccionCompra(props) {
     // La foto de la última cesta presupuestada: se vacía al crear el pedido, y «saliendo al banco» sigue enseñándola.
     watch(() => cartStore.quote, (quote) => { if (quote?.lines?.length) compra.pagado = deLaCesta(quote); }, { immediate: true });
 
-    /** Lo de debajo: la línea, el total y la señal de la cesta mientras se compra; del pedido, cuando ya existe. */
+    /**
+     * Lo de debajo: la línea, el total y la señal de la cesta mientras se compra (también con la hora llena: el diseño
+     * la deja a la vista); del pedido, cuando ya existe.
+     */
     const resumen = computed(() => {
-        if (paso.value === 'datos' || paso.value === 'pagar') return deLaCesta(cartStore.quote);
+        if (['datos', 'pagar', 'perdida'].includes(paso.value)) return deLaCesta(cartStore.quote);
         if (outcomeStore.confirmation) return resumenDelPedido(outcomeStore.confirmation, { textos, locale: flow.locale });
 
         return paso.value === 'banco' ? (compra.pagado ?? {}) : {};
@@ -283,11 +326,12 @@ export function useSeccionCompra(props) {
             ...ckDelPaso({
                 paso: paso.value, vista: datos.estado.vista, entrada: datos.estado.ent, textos, resumen: resumen.value,
                 ocupado: compra.ocupado, importe: euros(cartStore.quote?.online_amount_cents ?? 0, flow.locale),
+                horaNueva: compra.horaNueva,
                 acciones: {
                     cerrar,
                     volver: paso.value === 'pagar' ? () => { compra.paso = 'datos'; } : datos.estado.vista ? datos.volver : aCuando,
                     continuar: continuarDatos, entrar: entrarDatos,
-                    pagar: pago.pagar, salir: pago.salir, reintentar: pago.reintentar, miQr: pago.miQr,
+                    pagar: pago.pagar, salir: pago.salir, reintentar: pago.reintentar, elegirHora, miQr: pago.miQr,
                 },
             }),
             dir: compra.dir,
@@ -339,6 +383,8 @@ export function useSeccionCompra(props) {
         datos, pantallaDatos, pantallaEntrar, aGoogle, pago, listo,
         recibo: computed(() => ({ ...reciboDe({ quote: cartStore.quote, pedido: compra.pedido, textos, locale: flow.locale }), aviso: compra.aviso })),
         fallido: computed(() => ({ hora: outcomeStore.holdUntil, motivo: outcomeStore.declinedReason, aviso: compra.aviso })),
+        perdida: computed(() => ({ cercanas: compra.cercanas, horaNueva: compra.horaNueva })),
+        elegirNueva: (hora) => { compra.horaNueva = hora; },
         otraReserva: () => empezar(null),
         rotuloOtra: t(textos, 'compra.listo.otra'),
         urls: props.urls ?? {},

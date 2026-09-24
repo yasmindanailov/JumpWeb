@@ -256,9 +256,11 @@ fi
 # ⚠️ `images/attractions/` y `videos/` entran en la lista con `#663`: el material gráfico de la
 # instalación salió de `main` y ahora vive fuera de git, como el paquete de tema. Sin estas dos
 # entradas la guarda los llamaría andamios y **abortaría todos los despliegues**.
+# ⚠️ Y `instancia/` (`#681`; cazado en `#697`): el material nuevo de la instalación. Su `--exclude` del rsync no
+# lo salva de ESTA guarda, que pregunta a git: sin la entrada, la v2.0.0 abortaba por su propia tipografía.
 mapfile -t intrusos < <(
     git ls-files --others --directory public/ \
-        | grep -Ev '^public/(build/|uploads/|storage$|hot$|css/client\.css$|img/|videos/|images/attractions/)$' || true
+        | grep -Ev '^public/(build/|uploads/|storage$|hot$|css/client\.css$|img/|videos/|images/attractions/|instancia/)$' || true
 )
 if [[ ${#intrusos[@]} -gt 0 ]]; then
     warn "GUARDA 9 · en public/ hay ficheros que git NO conoce y que rsync SÍ subiría:"

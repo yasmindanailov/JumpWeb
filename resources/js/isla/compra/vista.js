@@ -120,6 +120,21 @@ export function horasDelSelector(ofrecidas, { gente, textos }) {
 }
 
 /**
+ * Las horas CERCANAS del mismo día, por si la elegida se llena al pagar (T3e·6; `cercanas()` de
+ * `paginas/compra/datos.js` del diseño): las cuatro con sitio más próximas a la perdida, en orden de reloj.
+ */
+export function horasCercanas(slots, hora) {
+    const lista = Array.isArray(slots) ? slots : [];
+    const k = lista.findIndex((s) => s.time === hora);
+    const minutos = (h) => Number(h.slice(0, 2)) * 60 + Number(h.slice(3));
+
+    return lista.filter((s) => s.time !== hora && s.left > 0 && ! s.disabled)
+        .sort((a, b) => Math.abs(lista.indexOf(a) - k) - Math.abs(lista.indexOf(b) - k))
+        .slice(0, 4)
+        .sort((a, b) => minutos(a.time) - minutos(b.time));
+}
+
+/**
  * La PANTALLA 0 de las entradas, «Cuándo y cuántos» (`PjcCuando`): sus props y la descripción del paso.
  *
  * @param {object} e  el estado, todo plano:

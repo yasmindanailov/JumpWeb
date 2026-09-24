@@ -2,9 +2,10 @@
 
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669 AGOTADA con `#669`** → **670–699 EN CURSO** · Último usado: **`#697`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#697`) · Actualizado: **2026-09-24**
-> noche (el sistema de diseño nuevo, dentro y la isla al día: `#697`).
+> **640–669 AGOTADA con `#669`** → **670–699 EN CURSO, queda `#699`** → **760–789 reclamada** (24-09; su centena,
+> `decisiones/700-799.md`) · Último usado: **`#698`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#698`) · Actualizado: **2026-09-24**
+> noche (el sistema de diseño nuevo, dentro; la T3 cerrada: `#697`, `#698`).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
 > llévaselo con la medida, como el SPA en `#724`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -40,9 +41,10 @@
 
 ## Por dónde retomar, en orden
 
-▶▶ **AHORA (24-09 noche)**: el sistema de diseño nuevo está dentro y la isla, al día (`#697`, spec §4.11). El orden,
-`[DECIDIDO owner]`: la **T3e·6** (la sonda, en 3) → la **T4** (Kids y Jump) → las tres páginas de la FIESTA, que viste
-ESTE carril avisando al SPA ANTES. Si el owner trae su prueba de la isla en local (3: ❗LOCAL), va primero.
+▶▶ **AHORA (24-09 noche)**: el sistema de diseño nuevo está dentro y la isla, al día (`#697`, spec §4.11); la **T3,
+cerrada** (`#698`: la hora que se llena al pagar y `scripts/sonda-isla.mjs`, 19/19). El orden, `[DECIDIDO owner]`: la
+**T4** (Kids y Jump, en 3) → las tres páginas de la FIESTA, que viste ESTE carril avisando al SPA ANTES. Si el owner
+trae su prueba de la isla en local (3: ❗LOCAL), va primero.
 
 1. **F4 · CERRADA el 19-09** (`specs/cajon-empaquetable.md`: sus cinco tandas y sus seis trampas). ⚠️ **Le
    falta un ojo humano sobre la COMPRA de la T5** (medida, no vista): se enseña con el banco de su §4.8,
@@ -83,11 +85,11 @@ ESTE carril avisando al SPA ANTES. Si el owner trae su prueba de la isla en loca
    noche): el zip nuevo (la fiesta, Mi cuenta, correos) entra por `diseno/actualizar.py`; la isla vuelve a 0 px con
    el selector de plan rehecho (54/54, piezas 18/18); el censo de la fiesta, en §4.11. ⚠️ Zip SIN contrastar con el
    vivo (`DesignSync` pide `/design-login`): se hace en la próxima sesión interactiva.
-   ▶▶ **T3, la compra** (§4.10; la historia de cada tanda vive allí): T3a→T3d ✅ (`#689`→`#691`) → **T3e** (`#692`):
-   ·1→·5 ✅ (`#693` la carcasa elegible · `#694` la isla compra hasta el banco · `#695` «Entra» y Google, que vuelve
-   a la compra · `#696` los cumpleaños con señal) → **·6 la sonda versionada** (una entrada y un cumpleaños, la
-   vuelta sin datos y el rechazo; después, staging). Probar la isla: `sidebar.shell = isla` en local,
-   `public/_isla-prueba.html` (se BORRA al terminar: guarda 9), `storage/app/sonda-isla-t3e{3,4,5}.mjs` y el banco
+   ▶▶ **T3, la compra ✅** (§4.10; la historia de cada tanda vive allí): T3a→T3d (`#689`→`#691`) → T3e (`#692`): `#693`
+   la carcasa elegible · `#694` la isla compra hasta el banco · `#695` «Entra» y Google · `#696` los cumpleaños con
+   señal · `#698` la hora que se llena al pagar y la sonda. Queda: la sonda en STAGING, con el ensayo de la v2.0.0.
+   Probar la isla: `sidebar.shell = isla` en local, **`scripts/sonda-isla.mjs [390|1280]`** (monta y borra su página;
+   19/19), `public/_isla-prueba.html` para el ojo (se BORRA antes de desplegar: guarda 9) y el banco
    `scripts/banco-compra.php` (52/54: «entrar» difiere por `#695`; se juzga CON `--rehacer`); tras una prueba
    del agente el ajuste vuelve a como estaba (hoy, `isla`: abajo).
    ▶ `lint:js` con `isla/` (el SPA: «hazlo tú», 24-09; hoy limpia a mano): `package.json`, la cadena de
@@ -139,11 +141,11 @@ ESTE carril avisando al SPA ANTES. Si el owner trae su prueba de la isla en loca
 
 `CLAUDE.md` · `docs/ESTADO.md` · `docs/00-REFACTOR.md` · `docs/CONVENCIONES.md` · `docs/README.md` ·
 `docs/DECISIONES.md` y la estructura de `docs/decisiones/` y `docs/carriles/` · `scripts/docs-check.sh` ·
-`.githooks/pre-push` · `scripts/huella-enrutador.py` · `scripts/partir-decisiones.py` · `scripts/deploy.sh` (la
-guarda 8) · `scripts/mutar-guarda8.sh` · `CHANGELOG.md` · `phpstan.neon` · `phpstan-baseline.neon` ·
+`.githooks/pre-push` · `scripts/huella-enrutador.py` · `scripts/partir-decisiones.py` · `scripts/deploy.sh` (las
+guardas 8 y 9) · `scripts/mutar-guarda8.sh` · `CHANGELOG.md` · `phpstan.neon` · `phpstan-baseline.neon` ·
 `eslint.config.js` · `eslint-suppressions.json` (la poda quien arregla) · `scripts/mutar-analisis-estatico.sh` ·
 **LA ISLA Y LA LANDING NUEVA** (`#681`, `#682`): la spec, la isla `resources/js/isla/**`, sus bancos y sondas
-(`scripts/banco-{isla,piezas,compra}*`, `scripts/pixel.mjs`, `scripts/sonda-embudo.mjs`), `sidebar/reanudar.js`,
+(`scripts/banco-{isla,piezas,compra}*`, `scripts/pixel.mjs`, `scripts/sonda-{embudo,isla}.mjs`), `sidebar/reanudar.js`,
 `sidebar/marca-compra.js`, `app/Http/Sidebar/PurchaseResume.php` y
 las vistas nuevas de `instancias/playjump/web/`; ⚠️ **el motor del cajón es del SPA**: se le avisa ANTES de tocarlo ·
 `StaticAnalysisGateTest` · `Tests\TestCase::be()` · **el token y el cajón empaquetado**, cuyos ficheros
@@ -262,6 +264,11 @@ dueño es el carril de la web/reseñas—) ·
   pedía al montarse). Contrato **1.25.0**: `OrderItem.guest_count_deadline` e `invitation_url` (requeridos,
   anulables) y `PublicConfig.guest_count_cutoff_hours`; con ellos tu «Mis reservas» podría decir el plazo sin
   calcularlo. Traza del cajón, idéntica. El motor, 294,70: techo **295**.
+- ▶▶ **24-09 noche · T3e·6 (`#698`), dos líneas en lo tuyo, solo añaden**: `pay.js::confirmError` devuelve también
+  el `code` del «no», y `usePurchaseFlow::confirmReservation` DEVUELVE el resultado cuando el servidor dice que no.
+  El cajón no lee ninguno de los dos; la isla, con `line_sold_out`, ofrece las horas cercanas. Su caso, en
+  `pay.test.js`. ⚠️ **Y la BANDA**: la mía (670–699) se acaba en `#699`; **reclamo 760–789** (índice de
+  `DECISIONES.md`). Cuando agotes la 730–759, la tuya sería **790–819**.
 
 ### ❗ Para el carril de la WEB (emisor: plataforma, 2026-09-23) — dos huecos de contenido, MEDIDOS
 - ▶ Publicar `/servicios` como hechos (`#672`) destapó dos cosas **tuyas**, que son de tu T6 de contenido

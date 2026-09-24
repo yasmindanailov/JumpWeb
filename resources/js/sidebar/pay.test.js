@@ -129,6 +129,16 @@ describe('los «no» del checkout', () => {
         assert.equal(error, '«Cumpleaños» del 15 ago 10:00 se ha agotado.');
     });
 
+    /**
+     * El CÓDIGO viaja con el aviso (T3e·6 de la isla, `isla-y-landing-nueva.md` §4.10): la isla distingue «la hora se
+     * llenó» de cualquier otro «no» y ofrece las horas cercanas. El cajón no lo lee.
+     */
+    test('el código del «no» viaja con su aviso, también el que el cajón no conoce', () => {
+        assert.equal(confirmError(fail(422, { code: 'line_sold_out', params: {} }), MESSAGES).code, 'line_sold_out');
+        assert.equal(confirmError(fail(409, { code: 'algo_nuevo' }), MESSAGES).code, 'algo_nuevo');
+        assert.equal(confirmError(offline(), MESSAGES).code, null);
+    });
+
     test('el tope de pendientes lleva su máximo', () => {
         const { error } = confirmError(fail(409, { code: 'too_many_pending_orders', params: { max: 5 } }), MESSAGES);
 

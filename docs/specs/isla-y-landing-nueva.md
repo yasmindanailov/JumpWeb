@@ -23,11 +23,10 @@
   - ⚠️ El aviso de cookies pasa a la isla, y la T3 de la analítica (carril del SPA, `#735`) toca ese aviso:
     se avisa en el buzón antes.
   - Tras tocar un `.vue`, `npm run build:ssr` antes de la suite (`sidebar-spa.md` §0).
-- **Estado**: §7 contestado (`#683`), promociones en `#684`, T0 hecha (§1.6). **T1 ✅** (§4.8) y **T2 ✅**
-  (§4.9): la isla en Vue, 52 de 52 situaciones idénticas al diseño. **T3** (la compra, §4.10): T3a→T3d ✅;
-  la secuencia de compra vive en `sidebar/usePurchaseFlow.js`. T3e en seis sub-tandas (`#692`): ·1→·5 ✅, la isla
-  compra con tarjeta hasta el banco (`#694`), con «Entra» y Google (`#695`), y los cumpleaños con señal (`#696`).
-  El sistema nuevo del 24-09 tarde, dentro y al día (§4.11, `#697`).
+- **Estado**: §7 contestado (`#683`), promociones en `#684`, T0 hecha (§1.6). **T1 ✅** (§4.8), **T2 ✅** (§4.9:
+  la isla en Vue, idéntica al diseño) y **T3 ✅** (§4.10, `#689`→`#698`): la isla compra con tarjeta hasta el banco,
+  con «Entra» y Google, cumpleaños con señal y la hora que se llena; su sonda, `scripts/sonda-isla.mjs`; la
+  secuencia, en `sidebar/usePurchaseFlow.js`. El sistema nuevo del 24-09 tarde, dentro (§4.11, `#697`).
 - **Invariantes**: `PAY-*` si entra Bizum (`VERIFY_CONC=1`), `SEC-12` (la ruta de las vistas), `SEC-01`,
   `RGPD-*` (consentimiento dentro de la isla, Apple como proveedor), `PERF-02` (la carcasa por instalación va en
   el arranque cacheado; la variante del A/B, en la sesión).
@@ -313,7 +312,7 @@ deja de decir «nada de otra librería» en la T1.
 | T0 ✅ | Kids y Jump contra el menú de hechos, los tokens y las URLs (§1.6). Cumpleaños y la portada, con su tanda | Esta spec |
 | T1 ✅ | El tema: la referencia, las fuentes, la hoja de tokens y los iconos (§4.8); los roles nuevos del producto van con la isla (T2) | Producto + instancia |
 | T2 ✅ | La isla en Vue, idéntica al diseño en 26 situaciones (§4.9); los datos reales, con la T4 | Producto |
-| T3 | La compra en la isla sobre el motor, con tarjeta; sonda de compra (§4.10: T3a→T3d ✅ → T3e) | Producto |
+| T3 ✅ | La compra en la isla sobre el motor, con tarjeta; sonda de compra (§4.10; la sonda en staging, con el ensayo de la v2.0.0) | Producto |
 | T4 | **Kids y Jump** (`#683`), un molde y dos páginas, con su calculadora y sus 301 | Instancia + producto |
 | T5 | Mi cuenta en la isla | Producto |
 | T6 | El resto de páginas, las tres de la fiesta (las viste este carril: `#697`, §4.11) y la lógica nueva que apruebe el owner | Los dos |
@@ -707,8 +706,28 @@ guion del diseño (`paginas/compra/compra.jsx`, `usePjcCompra`):
   en producción**: pasar el nombre del homenajeado de los dos packs a la fase «formulario de invitados» (`#692`·1).
   ⚠️ **Pendiente**: la vuelta del banco aterriza en la landing de hoy, sin las hojas de Saltia (letra y fondo del
   «Listo» sin sus tokens): lo arregla la página nueva (T4).
-- **T3e·6** la sonda de la isla: una entrada y un cumpleaños con señal hasta la pasarela, en local, y los
-  desenlaces con la vuelta sin datos y el rechazo (como `scripts/sonda-embudo.mjs`); después, en staging.
+- **T3e·6 ✅** (`#698`) la hora que se llena al pagar, y la sonda versionada:
+  · **la hora llena**: con la hora guardada al pagar (`#688`), el «no» (`line_sold_out`, `line_pack_sold_out` en una
+    fiesta) llega en «Pagar», y la isla pasa a la pantalla del diseño para ese momento, `PjcPerdida` («Esa hora ya no
+    está libre. No se ha cobrado nada. Estas sí:»), en la banda de «Pagar», sin flecha y con la línea debajo. Las
+    horas se piden otra vez al servidor y salen las cuatro con sitio más cercanas (`vista.js::horasCercanas`, la
+    `cercanas()` del diseño); «Elegir esta hora» rehace la línea (`usePagoCompra::rehacer`) y vuelve a «Pagar»; si
+    esa también se llenó, otra vez. ⚠️ Sin ninguna libre ese día, a la pantalla 0 con el aviso del servidor: «Estas
+    sí:» sin horas mentiría. El motor devuelve el «no» con su código (`pay.js::confirmError`, `confirmReservation`):
+    solo añade, el cajón no lo lee (aviso al SPA en el buzón);
+  · **la sonda**: `scripts/sonda-isla.mjs`, que sustituye a las desechables de `storage/app/`. Monta su propia página
+    y la BORRA (guarda 9); llena en la BD la franja de la línea antes de pagar y la devuelve a su cupo exacto aunque
+    se corte. Una entrada (la hora llena, las cercanas, la pasarela), los desenlaces por la vuelta REAL del banco
+    (sin datos, el rechazo con su motivo y reintentar, «¡Reservado!» con el QR) y un cumpleaños con la señal de 5000
+    céntimos hasta «¡Fiesta reservada!». **19/19 en 390 y 1280**; un mutante sin el código de la hora llena da
+    rojo (código 1). Cazó el resumen que faltaba bajo la hora perdida y un 429 de la PROPIA sonda: el `throttle:6,1`
+    del reintento tiene como clave `sha1(id)`, compartida con los demás `throttle` numéricos;
+  · **de paso, la guarda 9** (`scripts/deploy.sh`): abortaba cualquier despliegue con `public/instancia/` en el
+    disco —pregunta a git, y la exclusión del rsync no la salva—; entra en su lista blanca, con su caso en
+    `DeployScriptGateTest` (rojo antes del arreglo);
+  · **el peso**: la compra de la isla 130,90 KiB (techo 131); sus pasos 38,56 (techo 39).
+  ▶ **Queda**: la sonda en STAGING, con el ensayo de la v2.0.0 (`#670`); «atrás» del navegador; las tareas de «Listo»
+  por zona, con la T4.
 
 ### 4.11 El sistema nuevo del 24-09 (tarde): lo que cambió, lo medido y el censo de la fiesta (`#697`)
 

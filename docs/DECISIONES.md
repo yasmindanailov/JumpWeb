@@ -16,7 +16,7 @@
 | `decisiones/400-499.md` | `#400` → `#499` (`#430`, `#431` y `#432` están dos veces) |
 | `decisiones/500-599.md` | `#500` → … (correos, SPA y web: bandas vivas) |
 | `decisiones/600-699.md` | `#610` → `#699` (plataforma: sus tres bandas) |
-| `decisiones/700-799.md` | `#700` → … (SPA, abierta el 18-09 al agotarse su banda) |
+| `decisiones/700-799.md` | `#700` → … (SPA, abierta el 18-09 al agotarse su banda; plataforma desde `#760`) |
 
 Recuento vivo: `grep -cE '^## #[0-9]+ ·' docs/decisiones/*.md` (al partir, el 2026-09-16, eran 536). Los
 cuatro números repetidos son colisiones de la época sin bandas (`CONVENCIONES §10.6`); las dos entradas de
@@ -40,7 +40,7 @@ cada uno se conservan, adyacentes.
 
 | Carril | Banda | Máquina |
 |---|---|---|
-| Plataforma · producto e instancias | 610–639 **agotada** (`#639`) · 640–669 **agotada el 21-09** (`#669`) · sigue en **670–699** | este ordenador |
+| Plataforma · producto e instancias | 610–639 **agotada** (`#639`) · 640–669 **agotada el 21-09** (`#669`) · 670–699 (queda `#699`) · la siguiente, **760–789** (reclamada el 24-09) | este ordenador |
 | Diseño de la web | 580–609 | este ordenador |
 | Diseño del SPA (el cajón) | 550–579 **agotada el 18-09** · 700–729 **agotada el 20-09** (`#729`) · sigue en **730–759** | el otro ordenador |
 | Correos | 500–519 | este ordenador |

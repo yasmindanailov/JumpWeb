@@ -1,7 +1,7 @@
 <script setup>
 /**
- * La hora perdida al volver del banco (`PjcPerdida` del diseño): no se ha cobrado nada, y estas horas cercanas
- * del mismo día sí están libres.
+ * La hora perdida (`PjcPerdida` del diseño): no se ha cobrado nada, y estas horas cercanas del mismo día sí están
+ * libres. En el producto la hora se guarda AL PAGAR (`#688`), así que sale cuando «Pagar» encuentra la hora llena (T3e·6).
  */
 import { useTextos } from '../piezas/textos.js';
 import { PASO } from './estilos.js';
