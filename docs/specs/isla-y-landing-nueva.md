@@ -22,8 +22,8 @@
   - ⚠️ El aviso de cookies pasa a la isla, y la T3 de la analítica (carril del SPA, `#735`) toca ese aviso:
     se avisa en el buzón antes.
   - Tras tocar un `.vue`, `npm run build:ssr` antes de la suite (`sidebar-spa.md` §0).
-- **Estado**: ⬜ borrador, con §7 contestado (`#683`) y promociones en `#684` (spec propia). **T0 hecha para
-  Kids y Jump** (§1.6: sus datos, los tokens y las URLs); ⚠️ Kids es «4 — 8 años» en el panel y 4–7 en el diseño.
+- **Estado**: §7 contestado (`#683`), promociones en `#684`, T0 hecha (§1.6). **T1** (§4.8): ✅ las fuentes, 0
+  píxeles contra Google (`scripts/pixel.mjs`); ⏳ la referencia exacta, a publicar por el owner; ⚠️ Kids 4–7.
 - **Invariantes**: `PAY-*` si entra Bizum (`VERIFY_CONC=1`), `SEC-12` (la ruta de las vistas), `SEC-01`,
   `RGPD-*` (consentimiento dentro de la isla, Apple como proveedor), `PERF-02` (la carcasa por instalación va en
   el arranque cacheado; la variante del A/B, en la sesión).
@@ -140,8 +140,9 @@ se queda vieja la primera vez que alguien cambie el panel.
 #### 1.6.2 Datos del panel que contradicen al diseño
 
 - ⚠️ **Kids es «4 — 8 años» en el panel** (`age_range` de la zona y los `features` de sus tres productos: «De 4 a
-  8 años»), y **de 4 a 7 en todos los briefs** (decisión del 23-09 en el README del diseño). Hay que corregir
-  el dato antes de la T4, o la página y la API dirán cosas distintas.
+  8 años»), y **de 4 a 7 en todos los briefs**. `[DECIDIDO owner]` 2026-09-24: **de 4 a 7**, y los menores de 4
+  que midan más de 90 cm entran con un adulto. El dato se corrige en el panel antes de la T4, o la página y la
+  API dirán cosas distintas.
 - Los productos ya llevan una etiqueta: `badge` = «−20 % online» en `/catalog/products`. Es el germen de las
   promociones (`#684`), igual que `gifts`.
 - Los briefs dan **155 reseñas** en Kids y Jump y **148** en Cumpleaños y la portada: con la cifra de la API, las
@@ -311,6 +312,37 @@ deja de decir «nada de otra librería» en la T1.
 | T6 | El resto de páginas y la lógica nueva que apruebe el owner | Los dos |
 
 Después, la v2.0.0 (`#670`): con la isla encendida para PlayJump, y el A/B cuando la T5 de la analítica exista.
+
+### 4.8 La T1, en cuatro pasos — y cómo se demuestra «idéntico» (`#685`)
+
+El owner lo pide «píxel por píxel, idéntico, sin falta». Eso no se juzga a ojo: se juzga con **`scripts/pixel.mjs`**,
+que pinta la referencia (A) y lo nuestro (B) en el mismo Chromium, con la pieza asentada, y cuenta los píxeles
+distintos. Idéntico = **0**. El arnés tiene control negativo: una B sin fuentes da 97.956 distintos y sale con 1.
+
+- **T1a · la referencia, byte a byte** (⏳ espera al owner). ⚠️ **`DesignSync` no sirve para esto**, medido:
+  `_ds_bundle.js` (los 71 componentes compilados, que es lo que pinta cada ficha) llega cortado en 262.144 B,
+  justo 256 KiB, y pierde el final, donde vive `ParkIsland`; el vídeo y el logotipo pasan del tope igual. La vía
+  es que el owner publique el proyecto como artifact «Design System», como hizo el 20-09 con el intermedio:
+  `Artifact read` guarda cada fichero en disco, entero y con su sha256, sin pasar por el contexto. El espejo
+  vive en la instancia (`instancias/playjump/diseno/`, futuro), con su manifiesto.
+- **T1b · las fuentes** ✅ (24-09). Los nueve `woff2` que Google entrega al `@import` del diseño (Archivo
+  variable en peso y anchura, Figtree variable, DM Mono 400 y 500; 290 KB), servidos desde el propio dominio
+  —la CSP ya admite `font-src 'self'`— y no desde `fonts.bunny.net` como `ThemeFonts`: Bunny sirve pesos
+  sueltos y los héroes usan el eje de anchura. Los trae `tema/traer-fuentes.py` de la instancia (repetible:
+  dos descargas, mismos sha256) y los deja en `publico/instancia/`. **Medido**: la muestra de las nueve caras
+  (`tema/muestra-fuentes.html`) con las de Google y con las propias da **0 píxeles distintos** a 390×844 y
+  1440×900, y **0 de 4.578.120** a densidad ×3.
+- **T1c · la hoja y el layout limpio** (siguiente). Las páginas nuevas cargan SOLO los tokens de Saltia, tal
+  cual, más el paquete de la isla: sin `landing.css` ni `site.css` ni el `client.css` viejo, que traen el sistema
+  anterior. El producto gana un layout para vistas de instancia que no impone hojas. Las páginas viejas siguen
+  con las suyas hasta que se sustituyan.
+- **T1d · los iconos**: `lucide-static@0.544.0`, la versión exacta que carga el diseño, vendorizada; un
+  componente que los mete en línea y `IconSetAnatomyTest` que admite la librería (`#683`).
+
+**`public/instancia/`** es desde la T1b el sitio del material NUEVO de una instalación (fuentes, hojas y medios
+de sus páginas): se copia desde `publico/instancia/` del paquete, lo ignora git y lo excluye el `rsync`
+(`DeployScriptGateTest` lo exige; mutado: sin la exclusión, rojo). Una carpeta para todo lo que venga, en vez
+de una exclusión por fichero como el paquete de tema.
 
 ## 5. Impacto en invariantes
 

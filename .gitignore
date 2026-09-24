@@ -102,6 +102,9 @@ __pycache__/
 # pinta un componente del PRODUCTO y siguen versionados.
 /public/videos/
 /public/images/attractions/
+# El material NUEVO de la instalación (`#681`): fuentes, hojas y medios de las páginas de la instancia,
+# copiados desde `publico/instancia/` de su paquete. Una carpeta para todo, con su exclusión en `deploy.sh`.
+/public/instancia/
 
 # Fotos ORIGINALES de atracciones (~67 MB, fuente del cliente): NO se versionan. ⚠️ Desde `#663`
 # tampoco las optimizadas, que están arriba: esta línea es solo para las fuentes del canvas.

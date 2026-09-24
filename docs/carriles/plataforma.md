@@ -2,7 +2,7 @@
 
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669 AGOTADA con `#669`** → **670–699 EN CURSO** · Último usado: **`#684`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **640–669 AGOTADA con `#669`** → **670–699 EN CURSO** · Último usado: **`#685`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#684`) · Actualizado: **2026-09-24**
 > (el sistema nuevo leído por DesignSync; el owner decide Blade en la instancia y la isla como segunda carcasa).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
@@ -78,7 +78,10 @@
    producto, pack o complemento, y un aviso arriba), con spec propia y modelo a iterar con el owner.
    ✅ **T0 hecha para Kids y Jump** (§1.6: cada dato con su fuente, los tokens y el mapa de URLs). FALTAN como
    dato: el precio de antes y la oferta (→ `#684`), el plazo de cambio y cancelación y los 90 cm con adulto.
-   ▶ Siguiente: **T1** (el tema) y **T2** (la isla en reposo), §4.7.
+   ▶ **T1** (§4.8, `#685`): el juez de «idéntico» es `scripts/pixel.mjs` · ✅ **T1b las fuentes**, servidas desde
+   `public/instancia/` (0 píxeles distintos contra Google) · ⏳ **T1a la referencia** espera a que el owner
+   publique el diseño como artifact (DesignSync corta a 256 KiB) · siguen **T1c** (hoja y layout limpio) y **T1d**
+   (Lucide). ⚠️ Tras un `pull`: `cp -r ../instancias/playjump/publico/instancia public/`.
    ⚠️ **La web nueva cambia las URLs** (§1.5): cada ruta vieja necesita su 301.
    ⚠️⚠️ **Lo que dejaron los platos y vale para lo que venga** (detalle en la spec §4.1 y §4.1.ter): si
    el dato tiene **servicio de dominio**, el recurso **delega** · el filtro de «lo que no viaja» va

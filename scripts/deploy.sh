@@ -419,6 +419,10 @@ RSYNC_EXCLUDES=(
     # los pinta un componente del PRODUCTO y siguen versionados.
     --exclude='/public/images/attractions/'
     --exclude='/public/videos/'
+    --exclude='/public/instancia/'      # el material NUEVO de la instalación (#681: fuentes, hojas y medios
+                                        # de sus páginas), copiado desde `publico/instancia/` de su paquete.
+                                        # Una carpeta para todo lo que venga, en vez de una línea por fichero
+
     --exclude='/public/css/client.css'  # paquete de tema DEL CLIENTE (#143): gitignorado, vive solo
                                         # en el servidor. Sin esta línea el --delete se lo lleva en el
                                         # primer despliegue y la web vuelve al tema del producto
