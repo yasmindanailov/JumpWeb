@@ -44,7 +44,7 @@ contador de la suite va en el trailer del commit** (`#618`). Si no salta: `git c
 | **Producto e instancias** · repos · versionado · F0→F6 | `docs/specs/producto-e-instancias.md` §0 · `CHANGELOG.md` |
 | Landing FUERA (F5) · menú de hechos · API pública · paquete de instancia | `docs/specs/instancia-y-landing-fuera.md` §0 · `docs/specs/paquete-de-instancia.md` §0 |
 | **La isla** · la landing nueva (Saltia) | `docs/specs/isla-y-landing-nueva.md` §0 |
-| Analítica · conversión · atribución (UTM, anuncios) · consentimiento `analytics`/`marketing` | `docs/specs/analitica.md` §0 |
+| Analítica · conversión · atribución · consentimiento · la fiesta (invitados, justificante, invitación) | `docs/specs/analitica.md` §0 · `docs/specs/analitica-fiesta.md` §0 |
 | F4 · cajón empaquetable · token Bearer | `docs/specs/cajon-empaquetable.md` §0 · `docs/specs/token-bearer.md` §0 |
 | La capa de agente · el plugin `jumpweb-agente` · skills · hooks · reglas del owner | `docs/sistemas/CAPA-DE-AGENTE.md` |
 | Dinero / pagos / Redsys / reembolsos | `docs/INVARIANTES.md` §1 + §6 · `docs/sistemas/REDSYS.md` · `docs/MODELO-DATOS.md` §2 |
@@ -53,7 +53,7 @@ contador de la suite va en el trailer del commit** (`#618`). Si no salta: `git c
 | Excursiones de colegio · horario por zona · precio por tramo | `docs/specs/precio-por-tramo.md` §0 · `docs/specs/horario-por-zona.md` §0 |
 | Aforo · franjas · la rejilla · disponibilidad · calendario · `SlotOffer` | `docs/sistemas/AFORO-FRANJAS.md` · `docs/INVARIANTES.md` §2 |
 | Compra / carrito / catálogo de productos | `docs/sistemas/COMPRA-PRODUCTOS.md` · `docs/FLUJOS.md` · `docs/MODELO-DATOS.md` §1 |
-| Google: entrar, registrarse, vincular · el `sub` · condiciones | `docs/specs/auth-con-google.md` §0 |
+| Google: entrar, registrarse, vincular · el `sub` | `docs/specs/auth-con-google.md` §0 |
 | Auth / cuentas / RGPD | `docs/SEGURIDAD.md` · `docs/INVARIANTES.md` §3 + §4 · `docs/FLUJOS.md` |
 | El teléfono del cliente · cuenta de Google sin número · pedido manual | `docs/specs/telefono-del-cliente.md` §0 |
 | Firmar la exención al declarar un menor · el 409 de la tarjeta | `docs/specs/firma-al-declarar-menor.md` §0 |
@@ -73,7 +73,7 @@ contador de la suite va en el trailer del commit** (`#618`). Si no salta: `git c
 | El libro del pedido · desglose +/− · saldo en el parque · cortesía · reembolso | `docs/specs/desglose-libro.md` §0 |
 | Área de cliente en el cajón · «Mis reservas» por reserva · historial | `docs/specs/area-cliente.md` §0 · `docs/specs/mis-reservas-por-reserva.md` §0 |
 | Bloque de cuenta del cajón (`.acct`) · el `no-store` de la web | `docs/specs/account-context-vue.md` §0 |
-| Sidebar SPA · Vue · las 25 pantallas del cajón · rótulos · el chunk · su carril (otro ordenador) | `docs/specs/sidebar-spa.md` §0 · `docs/CARRIL-SPA.md` |
+| Sidebar SPA · Vue · las pantallas del cajón · rótulos · el chunk | `docs/specs/sidebar-spa.md` §0 · `docs/CARRIL-SPA.md` |
 | Justificante de un menor invitado (waiver offshore) · activación · plazas | `docs/specs/waiver-por-reserva.md` §0 |
 | Waiver (firma, prueba, PDF, versiones del texto) · la firma en la puerta | `docs/specs/waiver-probatorio.md` §0 |
 | Menores a cargo · asignar una entrada a un menor · apellidos y relación | `docs/specs/menores-a-cargo.md` §0 |
@@ -96,7 +96,7 @@ contador de la suite va en el trailer del commit** (`#618`). Si no salta: `git c
 | Tests / suite / fakes / datos de prueba | `docs/TESTING.md` · `docs/CONVENCIONES.md` §3.bis/§3.ter |
 | Desmontar `ViewOrder` · edición, reembolso y calendario de un pedido | `docs/specs/desmontar-view-order.md` §0 |
 | Retirar código viejo / auditar sus tests | `docs/CONVENCIONES.md` §3.quater |
-| Staging / desplegar / producción `playjump.es` / la validación del banco | `docs/ENTORNOS.md` §4 y §6 · `docs/carriles/pasarela.md` |
+| Staging / desplegar / producción / la validación del banco | `docs/ENTORNOS.md` §4 y §6 · `docs/carriles/pasarela.md` |
 | Validar el cajón en vivo (navegador + pasarela) | `docs/VERIFICACION-E2E-CAJON.md` · `docs/sistemas/REDSYS.md` §11–§12 |
 | API v1 / el contrato / app móvil | `docs/specs/api-v1.md` §0 · `openapi/v1.yaml` |
 | Vocabulario de dominio | `docs/GLOSARIO.md` · `docs/specs/vocabulario-dominio.md` §0 |
