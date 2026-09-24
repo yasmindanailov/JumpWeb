@@ -21,6 +21,9 @@
  *
  * **Por lotes**: `--lote lista.json`, con `[{ "nombre", "a", "b", "viewport": "700x430", "completa": true,
  * "clics": ["[aria-label=\"Menú\"]"] }]` (los `clics` son selectores de Playwright que se tocan antes de la foto).
+ * Para juzgar un `hover`, `"pasar": "text=Ver precios"` pone el puntero encima justo antes de la foto (después de
+ * asentar y de rehacer, que lo apartan) y espera a que acaben sus transiciones; y `"movimiento": true` captura SIN
+ * reducir el movimiento, porque con él reducido el tema anula el levantamiento del `hover` (`--lift-hover: 0px`).
  * Juzga todos los pares en un solo navegador, deja cada uno en `<salida>/<nombre>/` y acaba con el resumen.
  * Antes de creerse una diferencia, el mismo lote con B = A dice qué páginas no son deterministas.
  *
@@ -185,7 +188,7 @@ async function servirExternos(context) {
     });
 }
 
-async function capturar(navegador, ajustes, url, completa, clics = []) {
+async function capturar(navegador, ajustes, url, completa, clics = [], pasar = null) {
     // ⚠️ Un contexto NUEVO por captura (medido el 24-09): con A y B en el mismo contexto, la segunda visita
     // heredaba el `localStorage` y la caché de la primera —el diseño guarda allí el aviso de cookies y el
     // cálculo— y pintaba 124 píxeles distintos, siempre los mismos. Cada captura es una primera visita.
@@ -211,6 +214,17 @@ async function capturar(navegador, ajustes, url, completa, clics = []) {
     if (arg.rehacer) {
         await rehacerCajas(page);
         await asentar(page);
+    }
+    if (pasar) {
+        // El puntero ENCIMA, lo último: asentar y rehacer lo apartan. El diseño enciende su `hover` con
+        // `onMouseEnter` y lo nuestro con `:hover`; el mismo movimiento dispara los dos.
+        await page.hover(pasar);
+        await page.evaluate(() => new Promise((listo) => {
+            const paso = () => (document.getAnimations().every((a) => a.playState !== 'running')
+                ? requestAnimationFrame(() => requestAnimationFrame(listo))
+                : requestAnimationFrame(paso));
+            requestAnimationFrame(paso);
+        }));
     }
     const png = await page.screenshot({ animations: 'disabled', caret: 'hide' });
     await context.close();
@@ -254,8 +268,8 @@ const aVentana = (v) => { const [width, height] = v.split('x').map(Number); retu
 const sha = (buf) => createHash('sha256').update(buf).digest('hex').slice(0, 16);
 
 /** Un par A/B en una ventana: captura las dos, compara, guarda las imágenes y dice si pasa. */
-async function juzgar(navegador, { nombre, a, b, viewport, completa, clics = [] }) {
-    const ajustes = { viewport, deviceScaleFactor: Number(arg.dpr), reducedMotion: 'reduce' };
+async function juzgar(navegador, { nombre, a, b, viewport, completa, clics = [], pasar = null, movimiento = false }) {
+    const ajustes = { viewport, deviceScaleFactor: Number(arg.dpr), reducedMotion: movimiento ? 'no-preference' : 'reduce' };
     const context = await navegador.newContext();
     const etiqueta = `${nombre ? `${nombre} ` : ''}${viewport.width}x${viewport.height} @${arg.dpr}x`;
     try {
@@ -263,7 +277,7 @@ async function juzgar(navegador, { nombre, a, b, viewport, completa, clics = [] 
         const maximo = 1 + Number(arg.reintentos ?? 0);
         do {
             intento++;
-            [pngA, pngB] = [await capturar(navegador, ajustes, a, completa, clics), await capturar(navegador, ajustes, b, completa, clics)];
+            [pngA, pngB] = [await capturar(navegador, ajustes, a, completa, clics, pasar), await capturar(navegador, ajustes, b, completa, clics, pasar)];
             r = await comparar(context, pngA, pngB);
         } while (intento < maximo && !(r.mide && r.distintos <= umbral));
         const cuando = maximo > 1 ? ` · intento ${intento} de ${maximo}` : '';

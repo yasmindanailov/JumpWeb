@@ -27,7 +27,7 @@
   la isla en Vue, idéntica al diseño) y **T3 ✅** (§4.10, `#689`→`#698`): la isla compra con tarjeta hasta el banco,
   con «Entra» y Google, cumpleaños con señal y la hora que se llena; su sonda, `scripts/sonda-isla.mjs`; la
   secuencia, en `sidebar/usePurchaseFlow.js`. El sistema nuevo del 24-09 tarde, dentro (§4.11, `#697`). **T4 🟦**
-  (§4.12, `#761`): T4a·1 y T4b·1 ✅; sigue la T4c.
+  (§4.12, `#762`): T4a·1, T4b·1, T4c·0 y ·1 ✅.
 - **Invariantes**: `PAY-*` si entra Bizum (`VERIFY_CONC=1`), `SEC-12` (la ruta de las vistas), `SEC-01`,
   `RGPD-*` (consentimiento dentro de la isla, Apple como proveedor), `PERF-02` (la carcasa por instalación va en
   el arranque cacheado; la variante del A/B, en la sesión).
@@ -886,6 +886,15 @@ juzga «idéntico», con los datos del diseño.
   - **Sub-tandas**: ·0 la guarda · ·1 el banco y las piezas 1-2 · ·2 la 8 y el pie · ·3 la 7 · ·4 la 6 · ·5 la 5 · ·6
     la 4 (los clips) · ·7 la 3 con el hueco de la calculadora (T4d) · ·8 el modelo: `/kids` y `/jump` enteras en local
     con los datos reales, en es/en/fr.
+  - ▶ **·0 y ·1, hechas (24-09 noche)**. ·0: el caso de `InstancePagesTest` y su mutante (`prependLocation`, muerto).
+    ·1: seis componentes (`button`, `link`, `day-rates`, `rating-summary`, `reassurance-strip`, `video-hero`), la pieza
+    `web/entradas/piezas-1-2.blade.php`, `entradas.css`, el logotipo y `lang/*/piezas.php` (instancia `649fd66`); el
+    banco, `scripts/banco-entradas.php`. **Medido: 16 de 16 pares a 0** (dos zonas, 390 apilada y 1280 superpuesta, en
+    reposo y con el puntero sobre el botón, «Ver precios» y las reseñas). El juez aprendió a juzgar un `hover`
+    (`pixel.mjs`: `pasar` y `movimiento`, porque con el movimiento reducido el tema anula el levantamiento). Controles:
+    sin el botón a todo el ancho al apilar, 7.873 píxeles solo a 390; sin el `hover` del primario, caen solo sus 4.
+    ⚠️ Al escribir la hoja: con `:hover` en la regla BASE, esa regla pesaba más que las de talla y variante, y un
+    botón `xl` volvía al `gap` de 9 px al pasar; se declaran con `:hover` solo el color y el subrayado.
 - **T4a · los datos** (producto): las dos columnas de `#699` con su campo en el panel, sus hechos en
   `/catalog/products` y `/catalog/zones` (contrato 1.26.0), sus pruebas y su mutante; y la LISTA de reseñas en
   `/social-proof`, con la misma regla de permiso y la misma línea legal que la portada de hoy. El texto del paso de
