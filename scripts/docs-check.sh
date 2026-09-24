@@ -107,7 +107,10 @@ anchor_errors=$(perl -e '
 # ── 3 · Rutas de código citadas existen (escape: líneas «(futuro)»/«(ejemplo)») ───────
 while IFS= read -r path; do
     [[ -f "$path" ]] || err "código citado inexistente: «$path» (si es diseño, marca la línea con «(futuro)»)"
+# ⚠️ Una ruta de OTRO repositorio —el paquete de una instancia, `instancias/<slug>/…`— no se puede comprobar desde
+# éste, y su `config/paginas.php` casaba con el patrón como si fuera del producto (T4b): se quita antes de buscar.
 done < <(grep -h . "${DOCS[@]}" | grep -vE "$ESCAPE_RE" \
+         | sed -E 's#instancias/[A-Za-z0-9_-]+/[A-Za-z0-9_/.-]+##g' \
          | grep -oE '(app|database|routes|tests|config)/[A-Za-z0-9_/.-]+\.php' \
          | grep -v '\*' | grep -v '\.\.\.' | sort -u)
 

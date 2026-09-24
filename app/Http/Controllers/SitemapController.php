@@ -9,8 +9,10 @@ use App\Domain\Content\Models\Faq;
 use App\Domain\Content\Models\LandingService;
 use App\Domain\Content\Models\Page;
 use App\Domain\Content\Models\VenueRule;
+use App\Http\Instancia\InstancePages;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 
 class SitemapController extends Controller
@@ -23,7 +25,7 @@ class SitemapController extends Controller
      * inventadas: una fecha falsa hace que Google desconfíe de la señal). Todo guardado por
      * `Schema::hasTable` para no romper en CI / instalación limpia.
      */
-    public function __invoke()
+    public function __invoke(InstancePages $paginas)
     {
         // Modificación más reciente del catálogo/contenido que comparten home, precios y cumpleaños.
         $catalog = $this->latestUpdate([TicketType::class, Zone::class, Attraction::class, Faq::class]);
@@ -45,6 +47,15 @@ class SitemapController extends Controller
             ['legal.cookies', '0.3', 'yearly', $legalMods['cookies'] ?? null],
             ['legal.aviso-legal', '0.3', 'yearly', $legalMods['aviso-legal'] ?? null],
         ];
+
+        // Las páginas que declara el paquete de la instancia (T4b, `specs/isla-y-landing-nueva.md` §4.2), con la
+        // prioridad y la frecuencia que ella declara. Solo las que tienen ruta de verdad: una que pisaba una ruta del
+        // producto se descartó al registrarlas, y aquí tampoco entra.
+        foreach ($paginas->todas() as $pagina) {
+            if (Route::has($pagina->ruta())) {
+                $entries[] = [$pagina->ruta(), $pagina->prioridad, $pagina->frecuencia, $catalog];
+            }
+        }
 
         $xml = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
         $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n";

@@ -4,6 +4,7 @@ namespace App\Http\Instancia;
 
 use Illuminate\Contracts\View\Factory as ViewFactory;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Translation\Translator;
 
 /**
  * **Las vistas de la INSTANCIA** — la vía B de `docs/specs/paquete-de-instancia.md` §4.1.
@@ -272,7 +273,21 @@ class InstanceViews
         'site', 'heroStatus', 'ctaMinPriceCents', 'ctaMinPriceLabel', 'cookieBannerEnabled', 'cookieConsent',
     ];
 
-    public function __construct(private readonly ViewFactory $vistas) {}
+    /**
+     * **EL CONTRATO DE UNA PÁGINA DECLARADA** (T4b de `isla-y-landing-nueva.md` §4.2): lo que recibe la vista de
+     * CUALQUIER página de `config/paginas.php` del paquete. `pagina` (su slug y su URL) y `hechos` (los que pidió, con
+     * el MISMO JSON que la API, `PageFacts`) los pone el controlador genérico; lo demás, el composer, como en toda
+     * vista. Lo vigila `InstancePagesTest` con un paquete de prueba, porque sin paquete no hay página que pedir.
+     *
+     * ⚠️ **Y `CONTRATO` NO sube por esto**: las páginas son una capacidad NUEVA y aditiva —un paquete sin
+     * `config/paginas.php` sigue exactamente igual—, y el aviso compara por igualdad, así que subirlo llenaría de
+     * avisos el log de toda instalación por un cambio que no rompe ninguna. El mismo criterio que la API: menor.
+     *
+     * @var list<string>
+     */
+    public const CONTRATO_DE_PAGINA = ['pagina', 'hechos', ...self::DEL_COMPOSER];
+
+    public function __construct(private readonly ViewFactory $vistas, private readonly Translator $textos) {}
 
     /**
      * Registra el namespace si hay un paquete VÁLIDO. Se llama una vez, al arrancar.
@@ -302,6 +317,14 @@ class InstanceViews
         $this->avisarSiElContratoNoCuadra($raiz);
 
         $this->vistas->addNamespace(self::NAMESPACE, $web);
+
+        // Los TEXTOS del paquete (T4b, `isla-y-landing-nueva.md` §4.2): las páginas nuevas escriben en tres idiomas y
+        // esos textos son de la instancia, así que viven en SU `lang/`, con el mismo namespace que sus vistas
+        // (`__('instancia::kids.titular')`). Desde la misma raíz validada (`SEC-12`): un fichero de idioma es PHP.
+        $lang = $raiz.DIRECTORY_SEPARATOR.'lang';
+        if (is_dir($lang)) {
+            $this->textos->addNamespace(self::NAMESPACE, $lang);
+        }
 
         return $web;
     }

@@ -75,6 +75,7 @@ use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\Analytics\AttributionContext;
 use App\Domain\Platform\Services\Money;
 use App\Domain\Platform\Services\QrLogo;
+use App\Http\Instancia\InstancePages;
 use App\Http\Instancia\InstanceViews;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Verified;
@@ -105,6 +106,10 @@ class AppServiceProvider extends ServiceProvider
         // Contexto de cuenta del cliente (#221): singleton para memoizar por petición — el nav
         // (puntito de aviso) y el sidebar lo piden por separado y comparten una única consulta.
         $this->app->singleton(CustomerAccountContext::class);
+
+        // Las páginas que declara el paquete de la instancia (T4b, `specs/isla-y-landing-nueva.md` §4.2): su
+        // fichero se lee UNA vez —al registrar las rutas— y el controlador pregunta al mismo registro.
+        $this->app->singleton(InstancePages::class);
 
         // El contexto de atribución del libro de eventos (`specs/analitica.md` §4.1, `#678`): UNO por
         // petición (`scoped`), lo rellena `ResolveVisitor` y lo copia el `creating` de `Order` en el

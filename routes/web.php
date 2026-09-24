@@ -31,6 +31,7 @@ use App\Http\Controllers\PricingController;
 use App\Http\Controllers\ReviewPhotoController;
 use App\Http\Controllers\ServicesController;
 use App\Http\Controllers\SitemapController;
+use App\Http\Instancia\InstancePages;
 use App\Http\Middleware\ResolveVisitor;
 use App\Http\Middleware\SetAdminLocale;
 use App\Http\Middleware\SetLocale;
@@ -514,3 +515,11 @@ if (app()->environment('local')) {
     Route::get('/_diseno/splash', fn () => view('lab.splash'))->name('lab.splash');
     Route::get('/_diseno/siluetas', fn () => view('lab.siluetas'))->name('lab.siluetas');
 }
+
+/*
+ * **LAS PÁGINAS QUE DECLARA EL PAQUETE DE LA INSTANCIA** (T4b de `specs/isla-y-landing-nueva.md` §4.2; `#681`):
+ * «kids» o «jump» son nombres de un cliente, no rutas del producto. Van las ÚLTIMAS a propósito: así ven todas las
+ * del producto y descartan la página que pisaría una (`InstancePages::registrarRutas()`). ⚠️ Las rutas se cachean
+ * al desplegar: una página nueva en el paquete necesita volver a construir esa caché.
+ */
+app(InstancePages::class)->registrarRutas(app('router'));

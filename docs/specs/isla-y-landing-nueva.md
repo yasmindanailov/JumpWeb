@@ -846,6 +846,19 @@ juzga «idéntico», con los datos del diseño.
   (`/prices`, `/schedule`, `/site`, `/catalog/*`…) y le pasa a la vista **el mismo JSON que la API** —sin copiar
   lógica: si la API cambia, la página lo ve—. El layout limpio necesita el MISMO estado del `<body>` que el de hoy
   (consentimiento, analítica, píxeles): se saca tal cual a un componente compartido, avisado antes al SPA.
+  ▶ **T4b·1, hecha (24-09 noche)**: `Http\Instancia\InstancePages` lee `instancias/playjump/config/paginas.php` (el del paquete) DESDE la raíz
+  que `InstanceViews` validó (`SEC-12`: el fichero se ejecuta), valida cada página (slug, vista que exista, hechos de
+  la lista blanca `PageFacts::HECHOS`, sitemap) y registra su ruta AL FINAL de `routes/web.php` —dentro del grupo
+  `web`—, descartando la que pise el PRIMER segmento de una ruta del producto (`precios`, `api`, `admin`); lo que no
+  cuadra se queda fuera con aviso en el log y lo demás sigue en pie. `InstancePageController` le pasa a la vista
+  `pagina` y `hechos` (`PageFacts` invoca los controladores de la API: el mismo JSON). La instancia gana su espacio de
+  TEXTOS (`instancia::…`, su `lang/`). El sitemap publica sus páginas. `components/pagina.blade.php`, el layout
+  limpio: solo las hojas que la página declara. ⚠️ `InstanceViews::CONTRATO` NO sube: es aditivo (un paquete sin
+  páginas sigue igual) y el aviso compara por igualdad; se declara `CONTRATO_DE_PAGINA`. **Medido**: 5 casos con un
+  paquete de prueba (el mismo JSON que la API, colisiones, hechos fuera de lista, sitemap, sin declaración) y 3
+  mutantes muertos (sin colisiones, sin lista blanca, sin textos); en local, `/kids` y `/jump` de PlayJump en 200 con
+  `no-store` y su CSP, en es/en/fr y en el sitemap. ⚠️ El caso registraba las rutas FUERA del grupo `web` y salía sin
+  CSP: el arranque las registra dentro, y el caso ahora también. Queda **·4** (el estado del `<body>`, con el SPA).
 - **T4a · los datos** (producto): las dos columnas de `#699` con su campo en el panel, sus hechos en
   `/catalog/products` y `/catalog/zones` (contrato 1.26.0), sus pruebas y su mutante; y la LISTA de reseñas en
   `/social-proof`, con la misma regla de permiso y la misma línea legal que la portada de hoy. El texto del paso de

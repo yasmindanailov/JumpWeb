@@ -41,14 +41,12 @@
 
 ## Por dónde retomar, en orden
 
-▶▶ **AHORA (24-09 noche)**: el sistema de diseño nuevo está dentro y la isla, al día (`#697`, spec §4.11); la **T3,
-cerrada** (`#698`: la hora que se llena al pagar y `scripts/sonda-isla.mjs`, 19/19). La **T4** (Kids y Jump) está
-MEDIDA y planificada (spec §4.12, `#761`): T4a los datos (**·1 ✅** 24-09 noche: las reglas de «con un adulto» y el
-plazo, contrato 1.26.0; **·2** las reseñas en la API y **·3** el paso de pagar son del SPA: PEDIDOS en su buzón) →
-**T4b la ruta y el layout (la SIGUIENTE)** → T4c las piezas → T4d la calculadora → T4e la isla viva → T4f la sonda; después, las tres páginas de la
-FIESTA (ESTE carril, avisando al SPA ANTES). Si el owner trae su prueba de la isla en local (3: ❗LOCAL), va primero.
-⚠️ En la BD LOCAL, puestos los valores de `#699`/`#761` (Kids 90 cm con adulto; Jump <1,30 m con adulto y SIN altura
-mínima; entradas 4–7 y 8+; plazo 24 h y 72 h); lo de antes, en el commit de la T4a·1. En PRODUCCIÓN, el owner.
+▶▶ **AHORA (24-09 noche)**: sistema de diseño nuevo dentro (`#697`); **T3 cerrada** (`#698`); **T4** (Kids y Jump,
+spec §4.12, `#761`): **T4a·1 ✅** (reglas de «con un adulto» y plazo, contrato 1.26.0; T4a·2 y ·3, del SPA: pedidas)
+→ **T4b·1 ✅** (las páginas que declara el paquete: `/kids` y `/jump` en local con el layout limpio; queda **·4**, el
+estado del `<body>`, esperando al SPA) → **T4c las piezas (la SIGUIENTE)** → T4d la calculadora → T4e la isla viva →
+T4f la sonda; después, las tres páginas de la FIESTA (avisando al SPA ANTES). La prueba del owner en local, primero.
+⚠️ BD LOCAL con los valores de `#699`/`#761` (lo de antes, en el commit de la T4a·1); en PRODUCCIÓN, el owner.
 
 1. **F4 · CERRADA el 19-09** (`specs/cajon-empaquetable.md`: sus cinco tandas y sus seis trampas). ⚠️ **Le
    falta un ojo humano sobre la COMPRA de la T5** (medida, no vista): se enseña con el banco de su §4.8,
@@ -153,8 +151,9 @@ las vistas nuevas de `instancias/playjump/web/`; ⚠️ **el motor del cajón es
 `StaticAnalysisGateTest` · `Tests\TestCase::be()` · **el token y el cajón empaquetado**, cuyos ficheros
 enumera cada spec (`token-bearer.md`, `cajon-empaquetable.md` §0): el emisor, el arranque, la apertura, la
 carcasa, la hoja GENERADA `public/css/cajon.css` y sus cuatro arneses · `scripts/huella-maquetacion.mjs` ·
-**EL PAQUETE DE INSTANCIA** (`#647`→`#656`: `config/instancia.php`, `Http\Instancia\InstanceViews` con el
-CONTRATO DE VISTAS y `MATERIAL_CONSUMIDO_POR_LA_INSTANCIA`, `plantilla/`, `phpunit.xml` (`INSTANCIA_RUTA`
+**EL PAQUETE DE INSTANCIA** (`#647`→`#656`: `config/instancia.php`, `Http\Instancia\*` —`InstanceViews` con el
+CONTRATO DE VISTAS; desde la T4b, `InstancePages` y `PageFacts`, con `InstancePageController`, `components/pagina`
+y `InstancePagesTest`—, `plantilla/`, `phpunit.xml` (`INSTANCIA_RUTA`
 vacía), los anfitriones `resources/views/anfitrion/**` con sus `Anfitrion*Test`, `InstanceViewPathTest`,
 `InstanceViewContractTest`, `AnfitrionPortadaTest` (`#666`), `scripts/mutar-paquete-instancia.sh`, el `name:` y el montaje de `compose.yaml`;
 **y el repo `instancias/playjump`**, `web/` y `docs/paginas/`) · **las reglas bajadas en la T2b**
