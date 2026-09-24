@@ -3,9 +3,9 @@
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 EN CURSO** (su centena,
-> `decisiones/700-799.md`) · Último usado: **`#760`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`) · Actualizado: **2026-09-24**
-> noche (el sistema de diseño nuevo, dentro; la T3 cerrada; los datos de la T4, decididos; el zip, única fuente).
+> `decisiones/700-799.md`) · Último usado: **`#761`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`, `#761`) · Actualizado: **2026-09-24**
+> noche (la T3 cerrada; la T4 medida y planificada, §4.12 y `#761`; empieza la T4a).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
 > llévaselo con la medida, como el SPA en `#724`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -42,9 +42,10 @@
 ## Por dónde retomar, en orden
 
 ▶▶ **AHORA (24-09 noche)**: el sistema de diseño nuevo está dentro y la isla, al día (`#697`, spec §4.11); la **T3,
-cerrada** (`#698`: la hora que se llena al pagar y `scripts/sonda-isla.mjs`, 19/19). El orden, `[DECIDIDO owner]`: la
-**T4** (Kids y Jump, en 3) → las tres páginas de la FIESTA, que viste ESTE carril avisando al SPA ANTES. Si el owner
-trae su prueba de la isla en local (3: ❗LOCAL), va primero.
+cerrada** (`#698`: la hora que se llena al pagar y `scripts/sonda-isla.mjs`, 19/19). La **T4** (Kids y Jump) está
+MEDIDA y planificada (spec §4.12, `#761`): T4a los datos → T4b la ruta y el layout → T4c las piezas → T4d la
+calculadora → T4e la isla viva → T4f la sonda; después, las tres páginas de la FIESTA (ESTE carril, avisando al SPA
+ANTES). Si el owner trae su prueba de la isla en local (3: ❗LOCAL), va primero.
 
 1. **F4 · CERRADA el 19-09** (`specs/cajon-empaquetable.md`: sus cinco tandas y sus seis trampas). ⚠️ **Le
    falta un ojo humano sobre la COMPRA de la T5** (medida, no vista): se enseña con el banco de su §4.8,

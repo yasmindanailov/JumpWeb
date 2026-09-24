@@ -313,7 +313,7 @@ deja de decir «nada de otra librería» en la T1.
 | T1 ✅ | El tema: la referencia, las fuentes, la hoja de tokens y los iconos (§4.8); los roles nuevos del producto van con la isla (T2) | Producto + instancia |
 | T2 ✅ | La isla en Vue, idéntica al diseño en 26 situaciones (§4.9); los datos reales, con la T4 | Producto |
 | T3 ✅ | La compra en la isla sobre el motor, con tarjeta; sonda de compra (§4.10; la sonda en staging, con el ensayo de la v2.0.0) | Producto |
-| T4 | **Kids y Jump** (`#683`), un molde y dos páginas, con su calculadora y sus 301 | Instancia + producto |
+| T4 | **Kids y Jump** (`#683`), un molde y dos páginas, con su calculadora y la isla viva en la página (§4.12: T4a→T4f); los 301, con la T6 | Instancia + producto |
 | T5 | Mi cuenta en la isla | Producto |
 | T6 | El resto de páginas, las tres de la fiesta (las viste este carril: `#697`, §4.11) y la lógica nueva que apruebe el owner | Los dos |
 
@@ -781,6 +781,70 @@ del propio diseño). Cada una se le lleva al owner y se habla con el SPA antes d
 invitado no es un visitante*, sin banner, driver ni píxeles en ellas).
 ▶ Contestado por el SPA el 24-09: el aviso de cookies dentro de la isla pinta su tarjeta sobre el MISMO almacén
 (`ui/cookie-consent.js`, `createCookiesStore`) y dispara `cookies-updated`; y `lint:js` con `isla/`, «hazlo tú».
+
+### 4.12 La T4: Kids y Jump — el censo (MEDIDO 24-09) y el plan
+
+**Lo que pide el diseño** (`paginas/kids.card.html`, `jump.card.html` y `paginas/entradas/`): UN molde y dos textos
+(`contenido.js`, 25 KB: cada texto del brief; cada cifra, un hecho). Ocho piezas y el pie, con la isla VIVA encima:
+1-2 cabecera y garantías (`VideoHero`, `DayRates`, `RatingSummary`, `ReassuranceStrip`) · 3 precio y reserva
+(`RateTable` y la CALCULADORA: cinco preguntas, `AvailabilityCalendar` de mes, `PriceSummary` con «Reservar y
+pagar», `ShareRow`, `InfoCallout`, `Accordion`) · 4 la zona (`ClipTile`, `ClipList`, `ClipViewer`) · 5 tranquilidad
+(`ProofList`, `ReviewPanel`) · 6 dónde y cuándo (`ParkLocation`, `OpeningHours`, `BookingCTA`) · 7 dudas (`Accordion`)
+· 8 cierre (`CTABand`) · pie (`SiteFooter`). Un solo destino: todo botón lleva a la pieza 3, y «Reservar para hoy»
+llega con hoy elegido. Cada pieza tiene su ficha suelta en `sections/{kids,jump}-*.card.html` (14): contra ellas se
+juzga «idéntico», con los datos del diseño.
+
+**Lo que hay, medido**:
+
+| Pieza del trabajo | Hoy | Veredicto |
+|---|---|---|
+| Los hechos de la página (precios, días especiales, horas libres, horario, dirección, nota, atracciones, zona, calcetines, total) | El menú de hechos (§1.6.1) | **HAY** |
+| El plazo de cambio y cancelación; los 90 cm con adulto | Frases sueltas; `zones.height_min_cm`/`height_max_cm` sin la excepción | **FALTA** (`#699`: columna por producto y de la zona) |
+| El precio de antes, la oferta, JumpPoints, [Jump Club], [Bono] | Promociones aparcadas (`#684`, `#699`); JumpPoints con el código SIN empezar | **APAGADOS**: corchetes sin hueco |
+| Las tres reseñas reales de la pieza 5 | El producto las TIENE (`Content\Contracts\SocialProof::testimonials()`: Business Profile, Places y el panel, con su permiso, `#592`, y la línea de la Ómnibus, `selection()`); la portada de hoy las pinta; `/social-proof` publica la nota y el número, **no la lista** | **PARCIAL**: publicar la lista, con la T4a |
+| El material (vídeos y fotos de cada zona) | Las 23 atracciones tienen su FOTO en el panel (`/attractions`, medido 23/23); faltan los vídeos de las 4 destacadas de cada zona, la cabecera de cada zona (el clip del parque no vale: mezcla zonas) y la foto de la pieza 5 | **PARCIAL** (encargo del owner) |
+| Servir `/kids` y `/jump` | Las nueve vistas de hoy tienen cada una su controlador; `instancia/config/` está vacío | **FALTA**: la declaración de páginas y el controlador genérico (§4.2), `InstanceViews::CONTRATO` 3 |
+| El layout limpio (solo las hojas de Saltia) | Ninguno: nace con su primera página (§4.8, T1c) | **FALTA** |
+| Las ~22 piezas de presentación en Blade | `<x-lucide>` (T1d); nada más | **FALTA** (~120 KB de JSX de origen) |
+| La calculadora | La pantalla 0 de la isla (`usePantallaCero`, `vista.js`) y cuatro piezas Vue (`TarjetasOpcion`, `ContadorCantidad`, `SelectorHoras`, `ResumenPrecio`) | **PARCIAL**: falta el calendario de mes y el montaje en la página |
+| **La isla EN REPOSO en una página real** | Solo existe en el banco: en una página se monta la de la COMPRA, al abrirla (`SeccionCompra`, `v-if="abierta"`) | **FALTA**: montarla al cargar, darle los hechos (hoy, huecos, ayuda, cuenta, cookies) y que se transforme en la compra |
+| El contrato página↔isla (§4.3) | No se fijó en la T2: la isla recibe `page` como prop | **FALTA** |
+| «Hoy» de la isla | `/schedule/now` da solo `open_now` y `closes_at`; la apertura sale de `/schedule` y los huecos, de las horas del día del producto | **HAY** componiendo; el agregado de TODA la instalación, con la portada |
+| Los textos en inglés y francés | El diseño da solo español | **FALTA** (decisión del owner) |
+| Los 301 (§1.6.4) | Llevan a la portada nueva, que es de la T6 | **Con la T6**: nada se despliega antes de la v2.0.0 (`#670`) |
+
+**El plan, en seis sub-tandas** (`[DECIDIDO owner]` `#761`, en este orden; cada una con su prueba y su medida):
+- ▶ **La T4a, afinada al medirla (24-09)**. La regla de altura estaba escrita TRES veces y no decían lo mismo: la zona
+  (Jump «desde 1,30 m», Kids «4 — 7» y «hasta 1,50»), `/normas` (`park_rules`: Kids «de 4 a 8»; Jump «entre 1,10 y
+  1,30, con un adulto») y el diseño (Jump «con menos de 1,30 m, con un adulto»). Manda el diseño (`#761`·4). Por
+  eso la zona gana dos reglas explícitas de «con un adulto» —`escort_under_age_from_cm` (por debajo de la edad
+  mínima, desde esa altura: Kids, 90) y `escort_below_cm` (por debajo de esa altura: Jump, 130)—, y el producto,
+  `cancellation_cutoff_hours` con su frase («hasta 24 h antes», «hasta 3 días antes»). ⚠️ La edad en NÚMEROS ya
+  existe y es del PRODUCTO (`guest_age_min`/`max`, `#676`, publicada para escribir «de 4 a 7 años»), pero el panel
+  solo la dejaba editar en los packs: se abre a las entradas; la zona no la duplica. Todo NULO por defecto: los
+  valores los pone el panel. `age_range` (el rótulo libre de la zona) sigue igual. En tres pasos: **·1** la zona y el producto (contrato 1.26.0) · **·2** la lista de reseñas
+  en `/social-proof` (el permiso depende de la cookie del visitante y la API es pública: se mide antes) · **·3** el
+  paso de pagar del cajón leyendo el plazo (fichero del SPA, avisado antes).
+- **T4a · los datos** (producto): las dos columnas de `#699` con su campo en el panel, sus hechos en
+  `/catalog/products` y `/catalog/zones` (contrato 1.26.0), sus pruebas y su mutante; y la LISTA de reseñas en
+  `/social-proof`, con la misma regla de permiso y la misma línea legal que la portada de hoy. El texto del paso de
+  pagar del cajón (`tickets.pay_policy`, 5 días) pasa a leer el dato: fichero del SPA, avisado ANTES.
+- **T4b · la ruta y el layout** (producto + instancia): `config/paginas.php` (futuro) de la instancia (slug, vista, hechos,
+  título, descripción e imagen para Google y WhatsApp), el controlador genérico en el grupo `web`, el layout limpio
+  y el sitemap; `CONTRATO` 3. Se demuestra con `/kids` y `/jump` sirviendo un esqueleto y las guardas de siempre
+  (`no-store`, visitante, CSP) en verde.
+- **T4c · las piezas** (instancia): las ~22 piezas y el molde en Blade, con sus textos en `lang` de la instancia y
+  cada cifra de su hecho. Se juzga con un banco de la página: cada ficha de `sections/` contra la nuestra con los
+  mismos datos → 0 píxeles, como en la T1→T3. Lo interactivo (el visor de clips, el acordeón) en JS mínimo de la
+  instancia.
+- **T4d · la calculadora** (producto): la pieza 3 en Vue sobre el motor y la lógica de la pantalla 0, el calendario
+  de mes, «Reservar y pagar» a «Tus datos» de la isla con la línea ya en la cesta, y «Reservar para hoy» con hoy
+  elegido. El total, siempre de `/orders/quote`. Banco de sus estados → 0 px.
+- **T4e · la isla en la página** (producto): montada al cargar en su propio trozo (el motor, 295 KiB, sigue
+  llegando al pulsar), el contrato de §4.3 fijado, sus hechos reales, cede su botón con uno de la página a la vista,
+  y se transforma en la compra. Techo de peso con su prueba; aviso al SPA (su T5c y el consentimiento).
+- **T4f · la sonda de las dos páginas** (`scripts/sonda-isla.mjs` crece): llegar, la isla en reposo, calcular,
+  «Reservar y pagar», la pasarela; en 390 y 1280.
 
 ## 5. Impacto en invariantes
 
