@@ -381,6 +381,26 @@ class DailySummaryTest extends TestCase
         $this->assertNull($rows[1]['celebrant']);
     }
 
+    /**
+     * ⚠️⚠️ **Con el nombre en el FORMULARIO DE INVITADOS** (`DECISIONES #692`): mientras el anfitrión no
+     * lo rellena, la columna se queda vacía —antes salía la EDAD, que pasaba a ser el primer campo con
+     * valor—, y en cuanto lo rellena sale el nombre aunque ya no sea un campo de la reserva.
+     */
+    public function test_the_celebrant_column_follows_the_name_into_the_guest_form(): void
+    {
+        $this->pack->forceFill(['event_fields' => [
+            ['key' => 'celebrant', 'type' => 'text', 'required' => true, 'stage' => TicketType::EVENT_STAGE_POSTFORM, 'label' => ['es' => 'Homenajeado']],
+            ['key' => 'age', 'type' => 'celebrant_age', 'required' => true, 'stage' => TicketType::EVENT_STAGE_BOOKING, 'label' => ['es' => 'Edad']],
+        ]])->save();
+        $this->makeItem($this->makeOrder(), $this->pack, $this->makeSlot(self::DAY, '16:00:00', '18:00:00'), ['quantity' => 8, 'seats' => 8, 'event_data' => ['age' => '7']]);
+        $this->makeItem($this->makeOrder(), $this->pack, $this->makeSlot(self::DAY, '18:00:00', '20:00:00'), ['quantity' => 8, 'seats' => 8, 'event_data' => ['age' => '7', 'celebrant' => 'Lucía']]);
+
+        $rows = DailyReservationsSummary::for(self::DAY)->rows();
+
+        $this->assertNull($rows[0]['celebrant'], 'sin el nombre todavía, la columna no puede enseñar la edad');
+        $this->assertSame('Lucía', $rows[1]['celebrant']);
+    }
+
     public function test_locale_is_forced_to_spanish(): void
     {
         $staff = $this->staff();

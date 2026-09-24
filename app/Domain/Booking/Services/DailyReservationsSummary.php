@@ -157,23 +157,18 @@ final class DailyReservationsSummary
     }
 
     /**
-     * Nombre del homenajeado de un pack: el PRIMER campo del esquema del evento
-     * con valor (por convención, el cumpleañero). null si no hay datos del evento.
+     * Nombre del homenajeado de un pack, por la regla única de {@see TicketType::celebrantNameFieldKey()}.
+     * null si el pack no lo declara o aún no está contestado.
+     *
+     * ⚠️ **Antes era «el primer campo del esquema con valor»**, y eso ponía la EDAD en la columna
+     * «Homenajeado» en cuanto el nombre se pedía en el formulario de invitados y aún no estaba
+     * rellenado (`DECISIONES #692`): el primer campo con valor pasaba a ser otro.
      */
     private function celebrantOf(OrderItem $item): ?string
     {
-        $data = $item->event_data;
-        if (! is_array($data) || $data === []) {
-            return null;
-        }
+        $key = $item->ticketType?->celebrantNameFieldKey();
+        $value = $key === null ? null : ($item->event_data[$key] ?? null);
 
-        foreach ($item->ticketType?->eventFields() ?? [] as $field) {
-            $value = $data[$field['key']] ?? null;
-            if ($value !== null && $value !== '' && is_scalar($value)) {
-                return (string) $value;
-            }
-        }
-
-        return null;
+        return is_scalar($value) && trim((string) $value) !== '' ? (string) $value : null;
     }
 }

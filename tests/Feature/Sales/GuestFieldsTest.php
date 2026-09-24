@@ -257,6 +257,25 @@ class GuestFieldsTest extends TestCase
         $this->assertFalse($item->needsGuestForm());
     }
 
+    /**
+     * ⚠️⚠️ **Un dato GENERAL obligatorio del formulario también cuenta** (`DECISIONES #692`): el panel deja
+     * pedir ahí el nombre del homenajeado en vez de al comprar. Con las fichas completas y sin él, el
+     * formulario salía «OK» —sin recordatorio y sin distintivo pendiente—; los opcionales no cuentan.
+     */
+    public function test_a_required_general_field_keeps_the_form_pending(): void
+    {
+        $pack = $this->makePack(TicketType::DEFAULT_GUEST_FIELDS, ['event_fields' => [
+            ['key' => 'celebrant', 'type' => 'text', 'required' => true, 'stage' => TicketType::EVENT_STAGE_POSTFORM, 'label' => ['es' => 'Homenajeado']],
+            ['key' => 'notes', 'type' => 'textarea', 'required' => false, 'stage' => TicketType::EVENT_STAGE_POSTFORM, 'label' => ['es' => 'Notas']],
+        ]]);
+        $item = $this->packItem($pack, 2, [['name' => 'Ana'], ['name' => 'Leo']]);
+
+        $this->assertSame(OrderItem::GUEST_FORM_STATUS_PENDING, $item->guestFormStatus(), 'fichas completas y sin el nombre: pendiente');
+
+        $item->update(['event_data' => ['celebrant' => 'Lucía']]);
+        $this->assertSame(OrderItem::GUEST_FORM_STATUS_OK, $item->fresh()->load('ticketType')->guestFormStatus(), 'con el nombre, y sin las notas opcionales: OK');
+    }
+
     public function test_raising_quantity_reverts_status_to_pending(): void
     {
         $pack = $this->makePack(TicketType::DEFAULT_GUEST_FIELDS);

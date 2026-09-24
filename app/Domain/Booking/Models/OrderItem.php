@@ -544,8 +544,13 @@ class OrderItem extends Model
         // ▶ `[DECIDIDO owner, 2026-08-31]` (`#284` D6, spec §22.2): una edad SIN PRODUCTO en las
         // condiciones selladas de la reserva no deja completar el formulario. Se guarda lo escrito y
         // no toca el desglose, pero la ficha no está resuelta hasta que el parque decida (T3).
+        // ⚠️⚠️ **Y los datos GENERALES obligatorios del formulario** (`DECISIONES #692`): el panel deja
+        // pedir ahí el nombre del homenajeado en vez de al comprar, y «obligatorio» tiene que significar
+        // lo mismo que en la compra. Mirando solo las fichas, el formulario salía COMPLETO sin él: sin
+        // recordatorio, sin distintivo pendiente y con la hoja de sala sin nombre.
         return $type->guestDataComplete($this->guestData(), (int) $this->quantity)
-            && $this->guestAgesWithoutProduct() === [];
+            && $this->guestAgesWithoutProduct() === []
+            && $type->missingRequiredEventFields($this->event_data ?? [], TicketType::EVENT_STAGE_POSTFORM) === [];
     }
 
     /**

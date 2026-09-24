@@ -24,7 +24,7 @@
   - Tras tocar un `.vue`, `npm run build:ssr` antes de la suite (`sidebar-spa.md` §0).
 - **Estado**: §7 contestado (`#683`), promociones en `#684`, T0 hecha (§1.6). **T1 ✅** (§4.8) y **T2 ✅**
   (§4.9): la isla en Vue, 52 de 52 situaciones idénticas al diseño. **T3** (la compra, §4.10): T3a→T3d ✅;
-  la secuencia de compra vive en `sidebar/usePurchaseFlow.js`, compartida por las dos carcasas.
+  la secuencia de compra vive en `sidebar/usePurchaseFlow.js`. T3e en seis sub-tandas (`#692`).
 - **Invariantes**: `PAY-*` si entra Bizum (`VERIFY_CONC=1`), `SEC-12` (la ruta de las vistas), `SEC-01`,
   `RGPD-*` (consentimiento dentro de la isla, Apple como proveedor), `PERF-02` (la carcasa por instalación va en
   el arranque cacheado; la variante del A/B, en la sesión).
@@ -465,7 +465,7 @@ vigilan) y encogiendo su excepción. Es un fichero del carril del SPA: se avisó
   banco con clics y con sus mismos datos. Las pantallas reciben todo por props: no conocen el motor.
 - **T3d ✅** la secuencia compartida, extraída de `PurchaseSection.vue` a `sidebar/usePurchaseFlow.js`.
 - **T3e** la isla compra de verdad con tarjeta: el cableado, la prueba del orden de la máquina y `/sonda` en
-  local con la pasarela de pruebas.
+  local con la pasarela de pruebas. Su plan, medido y en seis sub-tandas, abajo (`#692`).
 
 **T3b hecha el 24-09 (`#689`)**:
 - **Las piezas**, en `resources/js/isla/ui/`: `CampoSistema`, `CasillaSistema`, `SelectorHoras`,
@@ -545,6 +545,54 @@ vigilan) y encogiendo su excepción. Es un fichero del carril del SPA: se avisó
 - ⚠️ En local, un 500 al abrir el cajón con «Deadlock found» en el log es la caché en BD (`CACHE_STORE=database`)
   con el limitador escribiendo desde tres peticiones en paralelo: dos corridas de la sonda de seis. Se vuelve a
   correr; producción usa Redis (`#137`).
+
+**T3e, el plan (24-09, MEDIDO; decisiones del owner en `#692`)**. Lo que el motor ya da, contra lo que pide el
+guion del diseño (`paginas/compra/compra.jsx`, `usePjcCompra`):
+- **Catálogo**: las «filas de tiempo» de una zona son sus productos (Kids 100/101/102, Jump 103/104); los
+  calcetines, su complemento 110; los cumpleaños, dos packs de la zona `cumpleanos` (Kids 4–7, Jump 8+; 8 a 20
+  niños; señal 50 €) con el menú como grupo de elección. La edad es su campo `celebrant_age`.
+- **La máquina admite el orden**: pantalla 0 → `TIME → CART` (validar y añadir la línea); «Tus datos» →
+  `IDENTIFY`, o nada con sesión; «Pagar» → `PAY`; la vuelta de «Pagar» a «Tus datos» son dos saltos que existen
+  (`PAY → CART → IDENTIFY`). Pero **la pantalla 0 es un formulario, no un embudo**: el tiempo (el producto)
+  cambia después de elegir la hora, y `selectProduct()` borra día y hora. La isla lleva su borrador y pide la
+  oferta a los stores (`dateStore`, `timeStore`, `selectionStore`) sin pasar por esos pasos.
+- **El alta con un correo que ya existe** responde 422 con el literal `account.register.already_exists` en
+  `fields.email`, sin código legible: la isla lo reconoce comparando con el literal del grupo `account` que ya
+  viaja en el arranque. **Entrar solo admite correo** (`LoginRequest`): «correo o teléfono» del diseño, a
+  preguntar al llegar a «Entra».
+- **El teléfono lo exige el servidor en toda compra** si la cuenta no lo tiene (`CheckoutDuties`) y **las
+  condiciones**, con casilla, si no están aceptadas (`#349`). Tras `#692`: el teléfono en «Tus datos» siempre
+  que falte; las condiciones, aceptadas al pulsar pagar en la isla.
+- ⚠️ **Hallazgos al medir `#692`·1, arreglados en la T3e·1**: `celebrantNameFieldKey()` solo miraba la fase de
+  reserva (el prerrelleno de la invitación se quedaba sin nombre), la hoja del día ponía el primer campo CON
+  VALOR —la edad— en la columna «Homenajeado», y el «formulario completo» no contaba los datos generales
+  obligatorios. Con el nombre movido de fase, los tres fallaban sin avisar.
+
+**La arquitectura**. Un solo motor, y la carcasa se elige por instalación (§4.1):
+- **Superficie por apertura**: el controlador del paquete (`cajon/controller.js`) sabe la carcasa (`shell` del
+  arranque). Con `isla`, **la compra abre la isla** y **la cuenta abre el lateral** hasta la T5; los eventos
+  `jw:cajon:*` dicen la superficie y la carcasa del lateral solo se pinta abierta para la suya.
+- **Una sola app de Vue y un solo Pinia**: la raíz del cajón monta `PurchaseSection` o la compra de la isla
+  (asíncrona, en su trozo, teletransportada a `<body>`), con el mismo puente (`ref="purchase"`): la pausa, el
+  titular y el anti-bot de la cuenta siguen saliendo de ahí.
+- **La compra de la isla**: `IslaCompra.vue` pinta; `compra/useCompraIsla.js` lleva el estado de la isla (su
+  paso, el borrador de la pantalla 0, el formulario de datos) sobre `usePurchaseFlow()`; y `compra/vista.js`,
+  módulo PLANO con su `node --test`, traduce todo eso a lo que el banco de la T3c ya pinta (`ck` y las props de
+  cada pantalla). Es el adaptador de `scripts/banco-compra/entrada.js`, pero con el motor en vez del diseño.
+- **Los textos de las preguntas** («¿Cuántos niños vienen?»…) son de la página (T4); hasta entonces, los del
+  producto con las cifras de los datos.
+
+**Las sub-tandas**:
+- **T3e·1** ✅ los lectores del homenajeado y el «formulario completo» (arriba).
+- **T3e·2** la carcasa elegible: el ajuste `sidebar.shell` (panel, `cajon` por defecto), el arranque, la
+  superficie por apertura y la raíz. Con `cajon`, nada cambia: la sonda del embudo da la MISMA traza.
+- **T3e·3** la vista pura (`vista.js`) de las entradas y el controlador de la isla: pantalla 0, «Tus datos»
+  (alta, «ya existe», descargo, con sesión), «Pagar» con su recibo del presupuesto, la salida al banco y los
+  desenlaces. Juez: el banco de la T3c alimentado por `vista.js` con datos del motor, contra el diseño.
+- **T3e·4** «Entra» (con la pregunta del teléfono) y Google; Apple y Bizum siguen de corchete apagado.
+- **T3e·5** los cumpleaños: la edad elige el pack de su familia, niños, día, hora, menú y la señal.
+- **T3e·6** la sonda de la isla: una entrada y un cumpleaños con señal hasta la pasarela, en local, y los
+  desenlaces con la vuelta sin datos y el rechazo (como `scripts/sonda-embudo.mjs`); después, en staging.
 
 ## 5. Impacto en invariantes
 

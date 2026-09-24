@@ -715,19 +715,28 @@ class TicketType extends Model
 
     /**
      * **La CLAVE del nombre del HOMENAJEADO**, con la misma regla: la primera columna `text` de los
-     * campos del evento en fase de RESERVA.
+     * campos del evento, en fase de RESERVA y, si allí no hay ninguna, en la del FORMULARIO DE
+     * INVITADOS.
      *
      * ⚠️ La spec decía «se prerrellena desde `event_data` por las claves `celebrant` y `age`». Medido
      * el 2026-09-17: **la edad sí tiene lector canónico por TIPO** ({@see celebrantAgeFieldKey()}),
      * pero el nombre no — `celebrant` es una clave del sembrado (`LandingContentSeeder`,
      * `ProductionSeeder`), igual que `name` en el esquema por invitado. Se lee por la misma regla que
      * su hermana en vez de quemar la clave, que es lo que `#588` ya hizo con la edad.
+     *
+     * ⚠️⚠️ **Las DOS fases, y la de reserva primero** (`DECISIONES #692`): el panel deja pedir el nombre
+     * en el formulario de invitados en vez de al comprar —`[DECIDIDO owner]`, cero fricción en la
+     * compra—, y el formulario lo guarda en el MISMO `event_data`. Mirando solo la reserva, ese cambio
+     * de un desplegable dejaba sin nombre, EN SILENCIO, el prerrelleno de la invitación y la columna
+     * «Homenajeado» de la hoja del día.
      */
     public function celebrantNameFieldKey(): ?string
     {
-        foreach ($this->eventFields(self::EVENT_STAGE_BOOKING) as $field) {
-            if ($field['type'] === self::FIELD_TYPE_TEXT) {
-                return (string) $field['key'];
+        foreach ([self::EVENT_STAGE_BOOKING, self::EVENT_STAGE_POSTFORM] as $stage) {
+            foreach ($this->eventFields($stage) as $field) {
+                if ($field['type'] === self::FIELD_TYPE_TEXT) {
+                    return (string) $field['key'];
+                }
             }
         }
 

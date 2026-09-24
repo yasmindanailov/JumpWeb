@@ -112,6 +112,23 @@ class PartyInvitationsTest extends TestCase
         $this->assertFalse($invitation->show_host_phone, 'el teléfono solo si el anfitrión lo marca (D13)');
     }
 
+    /**
+     * ⚠️⚠️ **El nombre pedido en el FORMULARIO DE INVITADOS también prerrellena** (`DECISIONES #692`).
+     * El panel deja moverlo ahí desde un desplegable —`[DECIDIDO owner]`, cero fricción al comprar—, y
+     * el formulario lo guarda en el mismo `event_data`. Leyendo solo la fase de reserva, la invitación
+     * nacía sin nombre y nada fallaba.
+     */
+    public function test_the_prefill_finds_the_name_when_the_guest_form_asks_it(): void
+    {
+        $reservation = $this->reservation(eventFields: [
+            ['key' => 'celebrant', 'type' => 'text', 'required' => true, 'stage' => TicketType::EVENT_STAGE_POSTFORM, 'label' => ['es' => 'Homenajeado']],
+            ['key' => 'celebrant_age', 'type' => 'celebrant_age', 'required' => true, 'stage' => TicketType::EVENT_STAGE_BOOKING, 'label' => ['es' => 'Edad']],
+        ], eventData: ['celebrant' => 'Lucía', 'celebrant_age' => '8']);
+
+        $this->assertSame('celebrant', $reservation->ticketType->celebrantNameFieldKey());
+        $this->assertSame('Lucía', $this->service()->forReservation($reservation)->honoree_name);
+    }
+
     /** `SEC-07`: lo que se publica bajo el dominio del parque no puede traer un enlace. */
     public function test_a_celebrant_name_with_a_link_is_not_published(): void
     {

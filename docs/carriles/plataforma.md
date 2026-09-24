@@ -2,7 +2,7 @@
 
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669 AGOTADA con `#669`** → **670–699 EN CURSO** · Último usado: **`#691`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **640–669 AGOTADA con `#669`** → **670–699 EN CURSO** · Último usado: **`#692`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#684`) · Actualizado: **2026-09-24**
 > (el sistema nuevo leído por DesignSync; el owner decide Blade en la instancia y la isla como segunda carcasa).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
@@ -77,8 +77,9 @@
    52/52 a 0 px, `CE-6` sin excepción; en/fr de `lang/*/isla.php` a revisar por el owner).
    ▶▶ **T3, la compra** (§4.10): T3a→T3d ✅ (`#689` las 14 piezas, 18/18 a 0 px · `#690` el tamaño «Compra» y
    sus pantallas, 54/54 con `scripts/banco-compra.php`, y `--rehacer` en el juez · `#691` la secuencia en
-   `sidebar/usePurchaseFlow.js`, misma traza en navegador con `scripts/sonda-embudo.mjs`) → **T3e** la isla compra
-   de verdad: sus pantallas sobre ese composable, el orden de la máquina y `/sonda` con tarjeta. FALTAN como dato (T0): el precio de antes (→ `#684`),
+   `sidebar/usePurchaseFlow.js`, misma traza en navegador con `scripts/sonda-embudo.mjs`) → **T3e** en seis
+   sub-tandas (spec §4.10, `#692`): ·1 ✅ el homenajeado en el formulario de invitados → **·2 la carcasa elegible**
+   (`sidebar.shell`; superficie por apertura) → ·3 vista y controlador → ·4 «Entra» → ·5 cumpleaños → ·6 sonda. FALTAN como dato (T0): el precio de antes (→ `#684`),
    el plazo de cancelación y los 90 cm con adulto. ⚠️ Tras un `pull`: `cp -r ../instancias/playjump/publico/instancia
    public/`; los bancos se rehacen con `tema/lote-fichas.py` y `scripts/banco-{isla,piezas,compra}.php` (su lado B, antes).
    ⚠️ **La web nueva cambia las URLs** (§1.5): cada ruta vieja necesita su 301.
@@ -103,7 +104,8 @@
 5. **La promo, cuando el owner la termine** (es suyo el cuándo). La receta y **sus nueve cifras** bajaron a
    `ENTORNOS.md` §6 en `#675`, junto al despliegue que las escribió. Sin desplegar: son datos.
 6. Después, **F6** (app nativa; hereda del token lo que su spec §2 nombra: Google, alta, dispositivos).
-- **Del owner, HOY**: el **modelo de las promociones**
+- **Del owner, HOY**: en el panel de PRODUCCIÓN, el campo del homenajeado de los dos packs a «formulario de
+  invitados» (`#692`; en local ya está) · el **modelo de las promociones**
   (`#684`: dónde va cada etiqueta en la landing) · el **fin de la promo** (es suyo el cuándo) · el **ojo** que le falta a la compra de la T5 de F4 · **`topics`**: con la landing fuera, ¿de quién son los asuntos del formulario de contacto?
   (hoy son constante del producto, y `birthday`/`groups` son vocabulario del SECTOR).
   ▶ Contestadas y retiradas de aquí: por dónde arrancar la vía A (los platos, 23-09), cuándo se
