@@ -165,6 +165,8 @@ class CreateCatalog extends CreateRecord
 
         // Familia y tramo de edad (`specs/cumple-mixto.md` §9): normaliza, anula fuera del pack y
         // bloquea el guardado si el tramo pisa al de un hermano. Misma llamada en `EditCatalog`.
-        return $this->normalizeGuestAgeFields($data, $type === TicketType::TYPE_PACK);
+        $data = $this->normalizeCancellationCutoff($data, $type);
+
+        return $this->normalizeGuestAgeFields($data, $type);
     }
 }

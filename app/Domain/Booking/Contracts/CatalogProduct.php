@@ -128,6 +128,13 @@ final readonly class CatalogProduct
          * la cifra con la que se puede calcular. Los dos viajan porque responden preguntas distintas.
          */
         public ?int $durationMin = null,
+        /**
+         * **Hasta cuántas horas antes se cambia o se cancela**, o `null` si el producto no lo publica (T4a·1,
+         * `#699`). ⚠️ Lo INFORMA, no lo aplica: los cambios y las cancelaciones los hace el personal.
+         */
+        public ?int $cancellationCutoffHours = null,
+        /** El plazo ya redactado («hasta 24 h antes», «hasta 3 días antes»), o `null` ({@see CancellationCutoffRule}). */
+        public ?string $cancellationWritten = null,
     ) {}
 
     public function isPack(): bool

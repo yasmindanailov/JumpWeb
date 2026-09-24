@@ -128,7 +128,24 @@ return [
         'height_up_to' => 'hasta :h m',
         'height_from' => 'desde :h m',
         'height_between' => 'de :a a :b m',
+        /*
+         * Las reglas de «con un adulto» (`#699`, `#761`), redactadas por `ZoneEscortRule`. Dos formas por lo mismo
+         * que la altura: por debajo de la EDAD (desde una altura) y por debajo de una ALTURA. ⚠️ No nombran la
+         * edad: la zona no la guarda en números (es del producto, `#676`); quien quiera «los menores de 4» la
+         * tiene en el catálogo.
+         */
+        'escort_under_age_from' => 'por debajo de la edad, con un adulto desde :h m',
+        'escort_below' => 'con menos de :h m, con un adulto',
         'intro' => 'Diseñamos dos universos diferentes: uno para los que vuelan sin frenos y otro para los que están descubriendo el salto. Elige el tuyo.',
+    ],
+    /*
+     * El plazo de cambio y cancelación de un producto (`#699`), redactado por `CancellationCutoffRule`: en horas
+     * por debajo de dos días («hasta 24 h antes») y en días a partir de ahí («hasta 3 días antes»).
+     */
+    'products' => [
+        'cancellation_hours' => 'hasta :n h antes',
+        'cancellation_days' => 'hasta :n días antes',
+        'cancellation_at_start' => 'hasta la hora reservada',
     ],
     /*
      * La sección 03 «Qué hay dentro» (`#482`). ⚠️ El RÓTULO no lleva número —decisión del canvas,

@@ -2572,6 +2572,12 @@ return [
         'guest_age_min_hint' => 'Primera edad que cubre este pack, INCLUIDA. Vacío = sin tope por abajo.',
         'field_guest_age_max' => 'Edad máxima',
         'guest_age_max_hint' => 'Última edad que cubre este pack, INCLUIDA: con 6, el niño de 6 entra y el de 7 corresponde al pack siguiente. Vacío = sin tope por arriba.',
+        // La edad de una ENTRADA (`#761`): la que se DICE («de 4 a 7 años»), no la que comprueba la puerta.
+        'entry_age_min_hint' => 'Para quién es esta entrada: la edad desde la que se dice, INCLUIDA («de 4 a 7 años»). Vacío = sin tope por abajo. Se publica; no bloquea ninguna compra.',
+        'entry_age_max_hint' => 'La última edad que se dice, INCLUIDA. Vacío = sin tope por arriba («desde 8 años»).',
+        // El plazo de cambio y cancelación (`#699`): lo que la web DICE; los cambios los sigue haciendo el personal.
+        'field_cancellation_cutoff_hours' => 'Cambio o cancelación, hasta',
+        'cancellation_cutoff_hint' => 'Horas antes de la hora reservada: 24 en las entradas; 72 son los «3 días» de un cumpleaños. La web lo dice así («hasta 24 h antes», «hasta 3 días antes»). Vacío: no se publica. No bloquea nada: los cambios los hace el personal.',
         'guest_age_range_required' => 'Si el pack declara una familia por edad, tiene que declarar también su tramo (al menos la edad mínima o la máxima).',
         'guest_age_range_inverted' => 'La edad máxima no puede ser menor que la mínima.',
         'guest_age_range_overlap' => 'El tramo de edad pisa al de «:name», que está en la misma familia. Dos packs no pueden cubrir la misma edad: no habría forma de saber a cuál corresponde un invitado.',
@@ -3375,6 +3381,11 @@ return [
         'field_height_min_hint' => 'Hay que medir al menos esto para entrar. Ej.: 130.',
         'field_height_max_cm' => 'Altura máxima',
         'field_height_max_hint' => 'No se puede pasar de aquí. Ej.: 130 en la zona pequeña.',
+        // Las reglas de «CON UN ADULTO» (`#699`, `#761`). Vacías = esta zona no tiene esa excepción.
+        'field_escort_under_age_from_cm' => 'Menores de su edad, con un adulto desde',
+        'field_escort_under_age_from_hint' => 'Los que no llegan a la edad de la zona entran con un adulto si miden al menos esto. Ej.: 90 en Kids (los menores de 4). Vacío: no entran.',
+        'field_escort_below_cm' => 'Por debajo de esta altura, con un adulto',
+        'field_escort_below_hint' => 'Con menos de esto se entra acompañado de un adulto. Ej.: 130 en Jump. No es la altura mínima: aquélla deja fuera; ésta deja entrar acompañado.',
 
         'section_cupo' => 'Aforo de packs (cupo) por zona',
         'section_cupo_hint' => 'Solo aplica si la zona aloja packs (cumpleaños). Vacío = usa el valor global de Configuración; un valor manda sobre el global. La ocupación se cuenta por zona.',

@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.25.0
+  version: 1.26.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -7407,6 +7407,30 @@ components:
                 las cifras, no en su lugar: los metros se escriben con el separador decimal del
                 idioma, y una landing que lo escriba sola reproduce el defecto de `#660` («14.95» en
                 una página en español). Úsala salvo que quieras pintar otra cosa.
+        escort:
+          type: object
+          description: |
+            Las reglas de «CON UN ADULTO» de la zona (1.26.0, `#699`, `#761`). **Ausente entera** si la
+            zona no tiene ninguna, igual que `height`.
+
+            ⚠️ Dos reglas que dicen cosas distintas, con el sentido en el nombre: por debajo de la EDAD
+            de la zona se entra con un adulto DESDE una altura (`under_age_from_cm`: «los menores de 4,
+            desde 90 cm»), y por debajo de una ALTURA se entra con un adulto (`below_cm`: «con menos de
+            1,30 m»). `below_cm` no es `height.from_cm`: aquélla deja FUERA a quien no llega; ésta lo deja
+            entrar acompañado. La edad de la zona en números es del producto (`guest_age_min`).
+          additionalProperties: false
+          properties:
+            under_age_from_cm:
+              type: integer
+              description: 'Por debajo de la edad de la zona, con un adulto desde esta altura. Ausente si no aplica.'
+            below_cm:
+              type: integer
+              description: 'Por debajo de esta altura, con un adulto. Ausente si no aplica.'
+            written:
+              type: string
+              description: |
+                Las reglas ya redactadas en el idioma activo, con los metros en su separador decimal
+                (el mismo motivo que `height.written`).
 
     CatalogProductList:
       type: object
@@ -7547,6 +7571,24 @@ components:
 
             ⚠️ No es `period_label`: aquél es el rótulo que escribe el panel («5 × 60 min») y éste es
             la cifra con la que puedes calcular. Los dos viajan porque contestan preguntas distintas.
+        cancellation:
+          type: object
+          description: |
+            El plazo de CAMBIO Y CANCELACIÓN del producto (1.26.0, `#699`). **Ausente entero** si el
+            producto no lo publica. ⚠️ Lo INFORMA, no lo aplica: los cambios y las cancelaciones los hace
+            el personal del parque.
+          required: [cutoff_hours, written]
+          additionalProperties: false
+          properties:
+            cutoff_hours:
+              type: integer
+              minimum: 0
+              description: 'Hasta cuántas horas antes de la hora reservada. `0` es «hasta la hora reservada».'
+            written:
+              type: string
+              description: |
+                El plazo ya redactado en el idioma activo: en horas por debajo de dos días («hasta 24 h
+                antes») y en días justos a partir de ahí («hasta 3 días antes»).
 
     CatalogProductDetail:
       type: object
@@ -7634,6 +7676,17 @@ components:
         duration_min:
           type: integer
           description: 'Igual que en `CatalogProduct`: minutos, y no es `period_label`.'
+        cancellation:
+          type: object
+          description: 'Igual que en `CatalogProduct` (1.26.0): el plazo de cambio y cancelación, ausente si no se publica.'
+          required: [cutoff_hours, written]
+          additionalProperties: false
+          properties:
+            cutoff_hours:
+              type: integer
+              minimum: 0
+            written:
+              type: string
         min_quantity:
           type: integer
           description: |

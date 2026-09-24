@@ -64,6 +64,13 @@ class CatalogProductResource extends JsonResource
                 'duration_min' => $this->resource->durationMin,
             ],
             fn (?int $valor): bool => $valor !== null,
+        ) + (
+            // El plazo de cambio y cancelación (T4a·1, `#699`), como la altura de una zona: la cifra y su frase,
+            // en un bloque que falta ENTERO si el producto no lo publica. Un `0` sí viaja: «hasta la hora reservada».
+            $this->resource->cancellationCutoffHours === null ? [] : ['cancellation' => [
+                'cutoff_hours' => $this->resource->cancellationCutoffHours,
+                'written' => $this->resource->cancellationWritten,
+            ]]
         );
     }
 }

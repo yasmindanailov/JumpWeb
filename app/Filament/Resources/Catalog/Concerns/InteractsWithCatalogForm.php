@@ -297,11 +297,13 @@ trait InteractsWithCatalogForm
      *
      * Hace tres cosas y las tres importan:
      *
-     *  1. **Fuera del pack, no existen.** Se anulan las tres en cualquier otro tipo de producto —
-     *     el veredicto se deriva de las edades del post-form y una entrada no tiene post-form, así
-     *     que ahí serían letra muerta que alguien leería como configuración viva. Simétrico con lo
-     *     que ya se hace con `event_fields`/`guest_fields` (regla 12: no se confía en que el form
-     *     oculte lo que no debe llegar).
+     *  1. **Fuera del pack, la FAMILIA no existe.** Se anula en cualquier otro tipo de producto —el
+     *     veredicto se deriva de las edades del post-form y una entrada no tiene post-form, así que
+     *     ahí sería letra muerta que alguien leería como configuración viva—. Simétrico con lo que ya
+     *     se hace con `event_fields`/`guest_fields` (regla 12: no se confía en que el form oculte lo
+     *     que no debe llegar). ▶ **Desde `#761` la EDAD de una ENTRADA sí se guarda**: es lo que dice
+     *     («de 4 a 7 años», publicado en el catálogo desde `#676`) y ningún veredicto la mira fuera de
+     *     un pack (`participatesInAgeFamily()` exige familia). En un COMPLEMENTO se anulan las tres.
      *  2. **La familia se normaliza al guardar** (recorte + minúsculas). Es lo que permite buscarla
      *     por igualdad —usando su índice— y lo que evita que la conducta dependa del motor: MySQL
      *     cotejaría «Cumple» y «cumple» como iguales y SQLite, donde corre la suite, no.
@@ -322,9 +324,19 @@ trait InteractsWithCatalogForm
      * @param  array<string,mixed>  $data
      * @return array<string,mixed>
      */
-    protected function normalizeGuestAgeFields(array $data, bool $isPack): array
+    protected function normalizeGuestAgeFields(array $data, string $type): array
     {
-        if (! $isPack) {
+        if ($type === TicketType::TYPE_ENTRY) {
+            $min = $this->nullableAge($data['guest_age_min'] ?? null);
+            $max = $this->nullableAge($data['guest_age_max'] ?? null);
+            if ($min !== null && $max !== null && $max < $min) {
+                $this->haltWith('admin.catalog.guest_age_range_inverted');
+            }
+
+            return array_merge($data, ['guest_age_family' => null, 'guest_age_min' => $min, 'guest_age_max' => $max]);
+        }
+
+        if ($type !== TicketType::TYPE_PACK) {
             return array_merge($data, [
                 'guest_age_family' => null,
                 'guest_age_min' => null,
@@ -385,6 +397,24 @@ trait InteractsWithCatalogForm
         }
 
         return max(0, min(255, (int) $raw));
+    }
+
+    /**
+     * **El plazo de cambio y cancelación** (`#699`): vacío = `null` («no se publica»), y un `0` se QUEDA —es «hasta
+     * la hora reservada»—. En un complemento no existe: no se reserva con hora propia (regla 12).
+     *
+     * @param  array<string,mixed>  $data
+     * @return array<string,mixed>
+     */
+    protected function normalizeCancellationCutoff(array $data, string $type): array
+    {
+        $raw = $data['cancellation_cutoff_hours'] ?? null;
+
+        $data['cancellation_cutoff_hours'] = ($type === TicketType::TYPE_ADDON || $raw === null || $raw === '')
+            ? null
+            : max(0, min(8760, (int) $raw));
+
+        return $data;
     }
 
     /** Aviso rojo + parada del guardado, que es el patrón de bloqueo de esta pantalla. */

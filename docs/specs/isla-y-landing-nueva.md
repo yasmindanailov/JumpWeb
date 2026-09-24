@@ -822,9 +822,22 @@ juzga «idéntico», con los datos del diseño.
   `cancellation_cutoff_hours` con su frase («hasta 24 h antes», «hasta 3 días antes»). ⚠️ La edad en NÚMEROS ya
   existe y es del PRODUCTO (`guest_age_min`/`max`, `#676`, publicada para escribir «de 4 a 7 años»), pero el panel
   solo la dejaba editar en los packs: se abre a las entradas; la zona no la duplica. Todo NULO por defecto: los
-  valores los pone el panel. `age_range` (el rótulo libre de la zona) sigue igual. En tres pasos: **·1** la zona y el producto (contrato 1.26.0) · **·2** la lista de reseñas
+  valores los pone el panel. `age_range` (el rótulo libre de la zona) sigue igual. En tres pasos: **·1 ✅** la zona y el producto (contrato 1.26.0) · **·2** la lista de reseñas
   en `/social-proof` (el permiso depende de la cookie del visitante y la API es pública: se mide antes) · **·3** el
   paso de pagar del cajón leyendo el plazo (fichero del SPA, avisado antes).
+  ▶ **·1, hecho (24-09 noche)**: migración `2026_09_24_180000` (tres columnas nulas); `ZoneEscortRule` y
+  `CancellationCutoffRule` redactan (metros en el decimal del idioma; el plazo en horas por debajo de 48 y en días
+  justos a partir de ahí; `0` = «hasta la hora reservada»); `/catalog/zones` gana `escort {under_age_from_cm,
+  below_cm, written}` y `/catalog/products` (y su ficha) `cancellation {cutoff_hours, written}`, los dos bloques
+  ausentes enteros si no hay dato; el panel expone las dos reglas en la sección de altura de la zona, el plazo en la
+  operativa del producto y la edad de una ENTRADA (mismas columnas que el pack, nunca visibles a la vez; la
+  normalización pasa a ser por TIPO: la entrada conserva la edad y pierde la familia, el complemento pierde las
+  tres). **Medido**: 10 casos nuevos y 1 reescrito (API, contrato, panel; la suite, de 5.960 a 5.970), 6 mutantes —5 muertos a la primera; el que
+  sobrevivía (la normalización de la zona, que el campo numérico de Filament ya hacía) muerto con un caso que
+  conduce la puerta del servidor—; en vivo, `curl` a la API en es/en/fr con los valores de PlayJump puestos en la BD
+  local («con menos de 1,30 m, con un adulto», «under 1.30 m…», «hasta 3 días antes»…) y la landing de hoy en 200,
+  ya sin «desde 1,30 m» en Jump. ⚠️ De paso, `MODELO-DATOS.md` listaba en `zones` cuatro columnas borradas en `#669`
+  y no tenía las de altura: al día.
 - **T4a · los datos** (producto): las dos columnas de `#699` con su campo en el panel, sus hechos en
   `/catalog/products` y `/catalog/zones` (contrato 1.26.0), sus pruebas y su mutante; y la LISTA de reseñas en
   `/social-proof`, con la misma regla de permiso y la misma línea legal que la portada de hoy. El texto del paso de

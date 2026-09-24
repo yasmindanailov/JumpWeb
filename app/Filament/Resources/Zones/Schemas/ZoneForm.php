@@ -124,6 +124,21 @@ class ZoneForm
                             ->minValue(1)
                             ->maxValue(250)
                             ->suffix('cm'),
+                        // Las reglas de «CON UN ADULTO» (`#699`, `#761`): vacías, la zona no tiene esa excepción.
+                        TextInput::make('escort_under_age_from_cm')
+                            ->label(__('admin.zones.field_escort_under_age_from_cm'))
+                            ->helperText(__('admin.zones.field_escort_under_age_from_hint'))
+                            ->numeric()
+                            ->minValue(1)
+                            ->maxValue(250)
+                            ->suffix('cm'),
+                        TextInput::make('escort_below_cm')
+                            ->label(__('admin.zones.field_escort_below_cm'))
+                            ->helperText(__('admin.zones.field_escort_below_hint'))
+                            ->numeric()
+                            ->minValue(1)
+                            ->maxValue(250)
+                            ->suffix('cm'),
                     ]),
 
                 Section::make(__('admin.zones.section_cupo'))

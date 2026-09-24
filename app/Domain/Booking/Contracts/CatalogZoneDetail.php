@@ -72,5 +72,17 @@ final readonly class CatalogZoneDetail
          * con él.
          */
         public ?string $ageRange,
+        /**
+         * **Por debajo de la edad de la zona, con un adulto DESDE esta altura**, en centímetros, o `null` si la zona
+         * no tiene esa excepción (T4a·1, `#699`, `#761`; Kids: 90).
+         */
+        public ?int $escortUnderAgeFromCm = null,
+        /**
+         * **Por debajo de esta altura, con un adulto**, en centímetros, o `null` (Jump: 130). ⚠️ No es
+         * `heightFromCm`: aquélla deja FUERA a quien no llega; ésta lo deja entrar acompañado.
+         */
+        public ?int $escortBelowCm = null,
+        /** Las dos reglas ya redactadas en el idioma activo, o `null` si no hay ninguna ({@see ZoneEscortRule}). */
+        public ?string $escortWritten = null,
     ) {}
 }

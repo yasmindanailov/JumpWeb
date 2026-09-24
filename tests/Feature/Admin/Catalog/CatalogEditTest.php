@@ -141,6 +141,56 @@ class CatalogEditTest extends TestCase
         $this->assertSame(2, $fresh->seats_per_unit);
     }
 
+    /**
+     * **Una ENTRADA declara su edad y su plazo de cambio y cancelación desde el panel** (T4a·1, `#699`, `#761`).
+     * Hasta `#761` la edad solo se editaba en los packs, así que «de 4 a 7 años» no tenía dónde vivir. El plazo:
+     * vacío es «no se publica» y un `0` se queda («hasta la hora reservada»).
+     */
+    public function test_an_entry_declares_its_age_and_its_cancellation_cutoff(): void
+    {
+        $entry = $this->makeEntry();
+
+        Livewire::actingAs($this->admin())
+            ->test(EditCatalog::class, ['record' => $entry->id])
+            ->fillForm(['guest_age_min' => '4', 'guest_age_max' => '7', 'cancellation_cutoff_hours' => '24'])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $fresh = $entry->fresh();
+        $this->assertSame(4, $fresh->guest_age_min);
+        $this->assertSame(7, $fresh->guest_age_max);
+        $this->assertNull($fresh->guest_age_family, 'una entrada no participa en una familia de edades');
+        $this->assertSame(24, $fresh->cancellation_cutoff_hours);
+
+        Livewire::actingAs($this->admin())
+            ->test(EditCatalog::class, ['record' => $entry->id])
+            ->fillForm(['cancellation_cutoff_hours' => ''])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertNull($entry->fresh()->cancellation_cutoff_hours, 'vacío = no se publica');
+    }
+
+    /**
+     * **Y un PACK sigue guardando su edad desde SU sección**, junto a su familia. Los dos pares de campos apuntan a
+     * las mismas columnas y nunca se ven a la vez: este caso es el que demuestra que no se pisan.
+     */
+    public function test_a_pack_still_saves_its_age_from_the_pack_section(): void
+    {
+        $pack = $this->makePack();
+
+        Livewire::actingAs($this->admin())
+            ->test(EditCatalog::class, ['record' => $pack->id])
+            ->fillForm(['guest_age_min' => '8', 'guest_age_max' => '', 'cancellation_cutoff_hours' => '72'])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $fresh = $pack->fresh();
+        $this->assertSame(8, $fresh->guest_age_min);
+        $this->assertNull($fresh->guest_age_max);
+        $this->assertSame(72, $fresh->cancellation_cutoff_hours);
+    }
+
     public function test_addon_edit_page_renders_without_zone_or_pack_sections(): void
     {
         // Para un complemento, el form oculta zona/aforo/pack → solo contenido + estado + precio.

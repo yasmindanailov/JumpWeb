@@ -229,6 +229,9 @@ class TicketType extends Model
         'prep_after_min' => 'integer',
         'guest_age_min' => 'integer',
         'guest_age_max' => 'integer',
+        // Hasta cuántas horas antes se cambia o se cancela (`#699`): lo INFORMA, no lo aplica (cancela el
+        // personal). La frase la escribe `CancellationCutoffRule`.
+        'cancellation_cutoff_hours' => 'integer',
         'featured' => 'boolean',
         'is_sellable' => 'boolean',
         'is_active' => 'boolean',

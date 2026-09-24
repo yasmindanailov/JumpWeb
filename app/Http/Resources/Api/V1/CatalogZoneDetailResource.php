@@ -34,6 +34,14 @@ class CatalogZoneDetailResource extends JsonResource
             'written' => $this->resource->heightWritten,
         ], fn (mixed $valor): bool => $valor !== null);
 
+        // Las reglas de «con un adulto» (T4a·1, `#699`, `#761`), con el MISMO patrón que la altura: los nombres
+        // llevan el sentido dentro, la frase viaja además de las cifras y el bloque falta entero si no hay ninguna.
+        $adulto = array_filter([
+            'under_age_from_cm' => $this->resource->escortUnderAgeFromCm,
+            'below_cm' => $this->resource->escortBelowCm,
+            'written' => $this->resource->escortWritten,
+        ], fn (mixed $valor): bool => $valor !== null);
+
         return array_filter(
             (new CatalogZoneResource($this->resource->zone))->toArray($request) + [
                 'description' => $this->resource->description,
@@ -43,6 +51,7 @@ class CatalogZoneDetailResource extends JsonResource
                 // como `{}`. Es la trampa del menú (`§4.1.bis`): un array PHP vacío se serializa `[]`,
                 // y el tipo de una clave no puede depender de si alguien rellenó el panel.
                 'height' => $altura === [] ? null : $altura,
+                'escort' => $adulto === [] ? null : $adulto,
             ],
             fn (mixed $valor): bool => $valor !== null,
         );

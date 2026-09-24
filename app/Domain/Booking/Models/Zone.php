@@ -31,6 +31,15 @@ class Zone extends Model
          */
         'height_min_cm' => 'integer',
         'height_max_cm' => 'integer',
+        /*
+         * Las reglas de «CON UN ADULTO» (`#699`, `#761`), también en centímetros y `null` = «sin esa excepción».
+         * Dos columnas por lo mismo que las de arriba: la cifra dice cosas distintas según cuál sea.
+         * `escort_under_age_from_cm`: por debajo de la edad de la zona, con un adulto desde esta altura (90).
+         * `escort_below_cm`: por debajo de esta altura, con un adulto (130). ⚠️ No es `height_min_cm`: aquélla
+         * deja FUERA a quien no llega; ésta lo deja entrar acompañado.
+         */
+        'escort_under_age_from_cm' => 'integer',
+        'escort_below_cm' => 'integer',
         'is_active' => 'boolean',
         'show_in_landing' => 'boolean',
         // Cupo de packs POR ZONA (override del ajuste global; null = usa el global).

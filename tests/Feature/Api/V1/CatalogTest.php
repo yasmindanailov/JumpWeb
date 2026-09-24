@@ -234,6 +234,82 @@ class CatalogTest extends ApiTestCase
         $this->assertStringNotContainsString('"height"', (string) $this->getJson(self::ROOT.'/catalog/zones')->getContent());
     }
 
+    /**
+     * **Las reglas de «CON UN ADULTO» de una zona** (T4a·1, `#699`, `#761`): Kids, los menores de su edad desde
+     * 90 cm; Jump, con menos de 1,30 m. ⚠️ Como la altura, el SENTIDO va en la clave: `below_cm` no es
+     * `height.from_cm` —aquélla deja entrar acompañado a quien no llega; ésta lo deja fuera—, y por eso el caso
+     * asevera que una no sale como la otra.
+     */
+    public function test_a_zone_publishes_its_escort_rules_with_the_meaning_in_the_key(): void
+    {
+        $this->zone->update(['escort_under_age_from_cm' => 90, 'escort_below_cm' => null]);
+
+        $kids = $this->getJson(self::ROOT.'/catalog/zones')->assertOk()->assertValidResponse(200)->json('data.0');
+
+        $this->assertSame(90, $kids['escort']['under_age_from_cm']);
+        $this->assertArrayNotHasKey('below_cm', $kids['escort']);
+        $this->assertSame(__('landing.zones.escort_under_age_from', ['h' => '0,90']), $kids['escort']['written']);
+
+        $this->zone->update(['escort_under_age_from_cm' => null, 'escort_below_cm' => 130]);
+
+        $jump = $this->getJson(self::ROOT.'/catalog/zones')->assertOk()->assertValidResponse(200)->json('data.0');
+
+        $this->assertSame(130, $jump['escort']['below_cm']);
+        $this->assertArrayNotHasKey('under_age_from_cm', $jump['escort']);
+        $this->assertArrayNotHasKey('height', $jump, '«con menos de 1,30 m, con un adulto» no es una altura MÍNIMA');
+        $this->assertSame(__('landing.zones.escort_below', ['h' => '1,30']), $jump['escort']['written']);
+    }
+
+    /** Sin ninguna regla de «con un adulto», el bloque falta ENTERO; y la frase va en el decimal del idioma. */
+    public function test_the_escort_block_is_absent_without_rules_and_follows_the_language(): void
+    {
+        $this->assertArrayNotHasKey('escort', $this->getJson(self::ROOT.'/catalog/zones')->assertOk()->assertValidResponse(200)->json('data.0'));
+
+        $this->zone->update(['escort_below_cm' => 130]);
+
+        $en = $this->getJson(self::ROOT.'/catalog/zones', ['Accept-Language' => 'en'])->assertOk()->json('data.0.escort.written');
+
+        $this->assertStringContainsString('1.30', (string) $en, 'en inglés el decimal va con punto');
+    }
+
+    /**
+     * **El plazo de CAMBIO Y CANCELACIÓN de un producto** (T4a·1, `#699`): la cifra y su frase, como la altura.
+     * En horas por debajo de dos días, en días JUSTOS a partir de ahí; un plazo que no es de días justos se queda
+     * en horas (redondear sería prometer otro), y un `0` es «hasta la hora reservada», no «sin plazo».
+     */
+    public function test_a_product_publishes_its_cancellation_cutoff_written_as_a_person_says_it(): void
+    {
+        $producto = $this->priced($this->product('Entrada 1 h'), 800);
+
+        $casos = [
+            24 => __('landing.products.cancellation_hours', ['n' => 24]),
+            72 => __('landing.products.cancellation_days', ['n' => 3]),
+            30 => __('landing.products.cancellation_hours', ['n' => 30]),
+            0 => __('landing.products.cancellation_at_start'),
+        ];
+
+        foreach ($casos as $horas => $frase) {
+            $producto->update(['cancellation_cutoff_hours' => $horas]);
+
+            $publicado = $this->getJson(self::ROOT.'/catalog/products')->assertOk()->assertValidResponse(200)->json('data.0.cancellation');
+
+            $this->assertSame(['cutoff_hours' => $horas, 'written' => $frase], $publicado, "con {$horas} h");
+        }
+
+        $this->assertSame('hasta 3 días antes', __('landing.products.cancellation_days', ['n' => 3]));
+        $this->getJson(self::ROOT.'/catalog/products/'.$producto->id)->assertOk()->assertValidResponse(200)
+            ->assertJsonPath('cancellation.cutoff_hours', 0);
+    }
+
+    /** Un producto que no publica su plazo no emite el bloque, ni en la lista ni en su ficha. */
+    public function test_an_unpublished_cancellation_cutoff_is_absent(): void
+    {
+        $producto = $this->priced($this->product('Entrada 1 h'), 800);
+
+        $this->assertArrayNotHasKey('cancellation', $this->getJson(self::ROOT.'/catalog/products')->assertOk()->assertValidResponse(200)->json('data.0'));
+        $this->assertArrayNotHasKey('cancellation', $this->getJson(self::ROOT.'/catalog/products/'.$producto->id)->assertOk()->json());
+    }
+
     /** El rango de edad viaja como TEXTO del panel, tal cual, y falta si se borró. */
     public function test_the_age_range_travels_as_the_panel_wrote_it(): void
     {

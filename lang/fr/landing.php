@@ -78,7 +78,14 @@ return [
         'height_up_to' => "jusqu'à :h m",
         'height_from' => 'à partir de :h m',
         'height_between' => 'de :a à :b m',
+        'escort_under_age_from' => "en dessous de l'âge, avec un adulte à partir de :h m",
+        'escort_below' => 'moins de :h m, avec un adulte',
         'intro' => 'On a conçu deux univers différents — un pour ceux qui sautent déjà sans freins, un pour ceux qui apprennent. Choisis le tien.',
+    ],
+    'products' => [
+        'cancellation_hours' => "jusqu'à :n h avant",
+        'cancellation_days' => "jusqu'à :n jours avant",
+        'cancellation_at_start' => "jusqu'à l'heure réservée",
     ],
     'rides' => [
         'eyebrow' => 'Ce qu’il y a dedans',

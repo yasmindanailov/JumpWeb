@@ -43,9 +43,12 @@
 
 ▶▶ **AHORA (24-09 noche)**: el sistema de diseño nuevo está dentro y la isla, al día (`#697`, spec §4.11); la **T3,
 cerrada** (`#698`: la hora que se llena al pagar y `scripts/sonda-isla.mjs`, 19/19). La **T4** (Kids y Jump) está
-MEDIDA y planificada (spec §4.12, `#761`): T4a los datos → T4b la ruta y el layout → T4c las piezas → T4d la
-calculadora → T4e la isla viva → T4f la sonda; después, las tres páginas de la FIESTA (ESTE carril, avisando al SPA
-ANTES). Si el owner trae su prueba de la isla en local (3: ❗LOCAL), va primero.
+MEDIDA y planificada (spec §4.12, `#761`): T4a los datos (**·1 ✅** 24-09 noche: las reglas de «con un adulto» y el
+plazo, contrato 1.26.0; **·2** la lista de reseñas; **·3** el paso de pagar del cajón, AVISADO al SPA) → T4b la ruta y
+el layout → T4c las piezas → T4d la calculadora → T4e la isla viva → T4f la sonda; después, las tres páginas de la
+FIESTA (ESTE carril, avisando al SPA ANTES). Si el owner trae su prueba de la isla en local (3: ❗LOCAL), va primero.
+⚠️ En la BD LOCAL, puestos los valores de `#699`/`#761` (Kids 90 cm con adulto; Jump <1,30 m con adulto y SIN altura
+mínima; entradas 4–7 y 8+; plazo 24 h y 72 h); lo de antes, en el commit de la T4a·1. En PRODUCCIÓN, el owner.
 
 1. **F4 · CERRADA el 19-09** (`specs/cajon-empaquetable.md`: sus cinco tandas y sus seis trampas). ⚠️ **Le
    falta un ojo humano sobre la COMPRA de la T5** (medida, no vista): se enseña con el banco de su §4.8,
@@ -192,14 +195,10 @@ dueño es el carril de la web/reseñas—) ·
   spec 2). Cada tanda obliga a rascar, y rascar tres veces seguidas es la señal de que algo tiene que MUDARSE
   a su spec —no de que el techo esté mal—: así se fueron las seis trampas del cajón a `cajon-empaquetable.md`
   §4.8 y el historial del menú a `instancia-y-landing-fuera.md` §4.1.
-- **Una guarda transversal se da por buena con la SUITE ENTERA, no con sus tests**: la ability `api-v1` dio 24
-  rojos en cinco carpetas, todos un 401 de mentira — tras UNA petición a la API, `sanctum` queda como guard por
-  defecto del test y `actingAs($u)` planta al titular SIN token, cosa que el guard real no hace (adjunta un
-  `TransientToken`). Arreglado en `Tests\TestCase::be()`; producción sigue fallando cerrado. Con tokens REALES,
-  `Auth::forgetGuards()` entre peticiones o un token revocado sigue entrando por la caché del guard.
 - ▶ **Las trampas de MEDIDA y de ARNESES viven en `TESTING.md` §2.octies** (mudadas el 24-09): la captura
   asentada, el gate saturado, el arnés que restaura por copia, la línea base antes del controlador, los
-  manifiestos de Vite, el «NO SE APLICÓ», la salida truncada y la base que cruza un umbral del horario.
+  manifiestos de Vite, el «NO SE APLICÓ», la salida truncada, la base que cruza un umbral del horario y la guarda
+  transversal que se juzga con la SUITE ENTERA (`TestCase::be()`).
 - **`SHELL` es una variable del propio bash**: llamar así a una ruta en un guion se la cambia a todo lo que se
   lance después. En `mutar-cajon-apertura.sh` se llama `CARCASA`.
 - **Mover código que unas guardas leen como TEXTO**: se mueve TAL CUAL, se re-apunta cada guarda al fichero
@@ -216,15 +215,9 @@ dueño es el carril de la web/reseñas—) ·
   a `priceCents()`: una rebaja «solo online» como dato es imposible y un descuento por canal es `CRITICAL_RE`.
 - `rm -rf` está en el deny del repo y un comando compuesto que lo lleve se deniega entero: `git rm -r` para lo
   versionado, carpeta nueva para lo demás. `claude plugin details` no acepta `--plugin-dir`.
-- 💥💥 **`git rm --cached` CONSERVA el fichero, pero el commit REGISTRA UN BORRADO** (`#663`): al rebasar,
-  git resetea a `origin/main` —donde sigue rastreado, así que lo **restaura**— y después reaplica tu
-  commit, que lo **borra del árbol de trabajo**. Medido: los 37 ficheros del cliente desaparecieron en el
-  `pull --rebase` y la web pasó a 404. ▶ **Sacar ficheros del repo tiene un paso previo que no es
-  opcional: copiarlos FUERA antes de retirarlos**, y reponerlos verificando con `cmp`.
-- ⚠️⚠️ **Y sacar ficheros destapa quién dependía de ellos EN DISCO**: `LandingContentSeeder` hace
-  `file_exists()` y guarda `null` si falta, así que tres casos habrían salido **verdes aquí y rojos en el
-  otro ordenador** tras su `pull` — §4.5 otra vez, y esta vez en el gate. Antes de retirar material, se
-  corre la suite **con** y **sin** él: las dos tienen que estar verdes.
+- 💥💥 **Sacar ficheros del repo** (`#663`): `git rm --cached` REGISTRA un borrado que el `pull --rebase` aplica
+  al disco (se copian FUERA antes), y lo que dependía de ellos en disco sale verde aquí y rojo en el otro
+  ordenador (la suite, con y sin ellos). Las dos, enteras, en `paquete-de-instancia.md` (la trampa que costó la tanda).
 - **«The command 'docker' could not be found» es Docker Desktop APAGADO**: se arranca desde WSL con
   `"/mnt/c/Program Files/Docker/Docker/Docker Desktop.exe"` en segundo plano y `until docker info`.
 - Una etiqueta no pasa por el gate (`pre-push` solo mira `refs/heads/main`): `/release` exige que el commit ya
@@ -268,6 +261,12 @@ dueño es el carril de la web/reseñas—) ·
   El cajón no lee ninguno de los dos; la isla, con `line_sold_out`, ofrece las horas cercanas. Su caso, en
   `pay.test.js`. ⚠️ **Y la BANDA**: la mía (670–699) se acaba en `#699`; **reclamo 760–789** (índice de
   `DECISIONES.md`). Cuando agotes la 730–759, la tuya sería **790–819**.
+- ❗ **24-09 noche · AVISO PREVIO de la T4a·3 (`#699`, `#761`)**: tu paso de pagar dice `tickets.pay_policy` —«Cumpleaños
+  y excursiones: te devolvemos la señal si cancelas con **5 días**»— y el owner fijó **3 días naturales** (mandan las
+  condiciones). Desde el contrato **1.26.0** el plazo es un dato POR PRODUCTO (`/catalog/products`: `cancellation
+  {cutoff_hours, written}`; y la zona gana `escort`, las reglas de «con un adulto»). Te propongo que el paso lea
+  `cancellation.written` de sus líneas en vez de la frase fija; no lo toco sin tu visto bueno. Si prefieres hacerlo
+  tú, dilo.
 
 ### ❗ Para el carril de la WEB (emisor: plataforma, 2026-09-23) — dos huecos de contenido, MEDIDOS
 - ▶ Publicar `/servicios` como hechos (`#672`) destapó dos cosas **tuyas**, que son de tu T6 de contenido

@@ -48,6 +48,8 @@ class EditCatalog extends EditRecord
         // §9): moverlos cambia el veredicto de fiestas ya vendidas, así que se auditan como el
         // resto de la configuración con consecuencias económicas.
         'guest_age_family', 'guest_age_min', 'guest_age_max',
+        // Lo que la web DICE del plazo de cambio y cancelación (`#699`).
+        'cancellation_cutoff_hours',
         'featured', 'is_active', 'is_sellable',
     ];
 
@@ -167,7 +169,8 @@ class EditCatalog extends EditRecord
 
         // Familia y tramo de edad (`specs/cumple-mixto.md` §9): la MISMA puerta que en la creación
         // —normalizar, anular fuera del pack y bloquear tramos solapados—, no una copia.
-        $data = $this->normalizeGuestAgeFields($data, $record->isPack());
+        $data = $this->normalizeGuestAgeFields($data, (string) $record->type);
+        $data = $this->normalizeCancellationCutoff($data, (string) $record->type);
 
         // 3) Capturar el diff para auditar tras guardar.
         $this->auditPayload = $this->buildAuditDiff($record, $data);

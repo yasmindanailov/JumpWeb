@@ -141,6 +141,9 @@ class CatalogReader implements ProductCatalog
             guestAgeMin: $product->guest_age_min,
             guestAgeMax: $product->guest_age_max,
             durationMin: $product->duration_min,
+            // El plazo de cambio y cancelación (`#699`), con su frase: lo que la página y la isla DICEN.
+            cancellationCutoffHours: $product->cancellation_cutoff_hours,
+            cancellationWritten: (new CancellationCutoffRule)->written($product->cancellation_cutoff_hours),
         );
     }
 
@@ -173,6 +176,10 @@ class CatalogReader implements ProductCatalog
             // acabaría diciéndose de dos maneras (`#676`).
             heightWritten: (new ZoneHeightRule)->written($zone->height_min_cm, $zone->height_max_cm),
             ageRange: $zone->tr('age_range') ?: null,
+            // Las reglas de «con un adulto» (`#699`, `#761`), con su frase por la misma razón que la altura.
+            escortUnderAgeFromCm: $zone->escort_under_age_from_cm,
+            escortBelowCm: $zone->escort_below_cm,
+            escortWritten: (new ZoneEscortRule)->written($zone->escort_under_age_from_cm, $zone->escort_below_cm),
         );
     }
 

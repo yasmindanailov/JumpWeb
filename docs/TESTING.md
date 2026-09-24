@@ -346,6 +346,12 @@ son de cualquiera que mida, no de un carril.
   hoy»— que no eran del cambio. ▶ Se retoma con el reloj lejos del borde y **apartando el cambio con `git stash
   -u`**: revertir solo el controlador no basta, la vista tiene que volver a su sitio. *Una medida con dos días
   dentro no es un juez: es ruido con forma de diferencia.*
+- **Una guarda TRANSVERSAL se da por buena con la SUITE ENTERA, no con sus tests** (mudada del carril de plataforma
+  el 24-09): la ability `api-v1` dio 24 rojos en cinco carpetas, todos un 401 de mentira — tras UNA petición a la
+  API, `sanctum` queda como guard por defecto del test y `actingAs($u)` planta al titular SIN token, cosa que el
+  guard real no hace (adjunta un `TransientToken`). Arreglado en `Tests\TestCase::be()`; producción sigue fallando
+  cerrado. Con tokens REALES, `Auth::forgetGuards()` entre peticiones, o un token revocado sigue entrando por la
+  caché del guard.
 
 ### 3. Guardas de arquitectura — `tests/Feature/Architecture/`
 Tests que no prueban una feature sino una REGLA estructural; sin ellos el refactor de Fase 2 se

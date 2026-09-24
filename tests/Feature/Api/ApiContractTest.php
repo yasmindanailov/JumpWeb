@@ -119,8 +119,12 @@ class ApiContractTest extends TestCase
         // sin restricción de altura no emite un bloque vacío. Dentro de `height`, las dos cifras son
         // excluyentes en la práctica —«a partir de» o «hasta»—, así que exigir las dos obligaría a
         // inventar una; `written` falta solo si no hay ninguna, y entonces el bloque tampoco está.
-        'CatalogZoneDetail' => ['description', 'image_url', 'age_range', 'height'],
+        'CatalogZoneDetail' => ['description', 'image_url', 'age_range', 'height', 'escort'],
         'CatalogZoneDetail.height' => ['from_cm', 'up_to_cm', 'written'],
+        // ⚠️ `escort` entra en 1.26.0 (`#699`, `#761`) por el mismo principio que `height`: una zona sin regla de
+        // «con un adulto» no emite un bloque vacío, y dentro las dos cifras son independientes (Kids tiene una, Jump
+        // la otra); `written` falta solo si no hay ninguna, y entonces el bloque tampoco está.
+        'CatalogZoneDetail.escort' => ['under_age_from_cm', 'below_cm', 'written'],
         // ⚠️ El reparto es asimétrico A PROPÓSITO y por eso las dos entradas dicen cosas distintas: la FOTO va
         // en la lista (un catálogo se recorre mirándolas) y la DESCRIPCIÓN solo en el detalle (es prosa, se lee
         // al abrir). Medido el 19-09: la descripción son ~340 bytes en las 6 que la tienen, sobre un payload de
@@ -128,8 +132,10 @@ class ApiContractTest extends TestCase
         // ⚠️ La edad y la duración entran en `#676` y son opcionales porque **el producto puede no
         // declararlas**: medido, de 24 vendibles solo 2 traen edad y 12 duración. Exigirlas obligaría
         // a inventar una edad para una entrada suelta.
-        'CatalogProduct' => ['image_url', 'guest_age_min', 'guest_age_max', 'duration_min'],
-        'CatalogProductDetail' => ['image_url', 'description', 'guest_age_min', 'guest_age_max', 'duration_min'],
+        // ⚠️ `cancellation` entra en 1.26.0 (`#699`): el producto puede no publicar su plazo. Dentro del bloque, en
+        // cambio, las dos claves van siempre: una cifra sin su frase no se escribe sola sin el defecto de `#660`.
+        'CatalogProduct' => ['image_url', 'guest_age_min', 'guest_age_max', 'duration_min', 'cancellation'],
+        'CatalogProductDetail' => ['image_url', 'description', 'guest_age_min', 'guest_age_max', 'duration_min', 'cancellation'],
         // **La prueba social** (F5 · T6, `#646`). El sobre puede venir VACÍO —no hay cifra sostenible— y por
         // eso `rating` es opcional; exigirlo obligaría a toda instalación a tener reseñas para que su API
         // validara, y a inventar un `0` cuando no las tiene. ⚠️ Dentro de la cifra, en cambio, solo `url` es

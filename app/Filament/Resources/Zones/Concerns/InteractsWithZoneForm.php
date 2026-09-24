@@ -34,6 +34,14 @@ trait InteractsWithZoneForm
             $data['image'] = ($image === '' || str_contains($image, '..') || str_contains($image, '\\')) ? null : $image;
         }
 
+        // Las reglas de «con un adulto» (`#699`, `#761`): vacío = null, «esta zona no tiene esa excepción».
+        foreach (['escort_under_age_from_cm', 'escort_below_cm'] as $field) {
+            if (array_key_exists($field, $data)) {
+                $value = $data[$field];
+                $data[$field] = ($value === null || $value === '') ? null : (int) $value;
+            }
+        }
+
         // Cupo por zona: vacío = null (usa el global). 0 es un override válido ("sin tope").
         foreach (['max_per_slot', 'max_guests_per_slot'] as $field) {
             $value = $data[$field] ?? null;

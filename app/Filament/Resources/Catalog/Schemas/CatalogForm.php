@@ -385,7 +385,39 @@ class CatalogForm
                             TicketType::UNIT_DAYS => __('admin.catalog.min_advance_units.days'),
                             TicketType::UNIT_HOURS => __('admin.catalog.min_advance_units.hours'),
                         ]),
+
+                    // EL PLAZO DE CAMBIO Y CANCELACIÓN (`#699`): lo que la página, la isla y el pago DICEN. No
+                    // bloquea nada —los cambios los hace el personal—, así que no hay candado por ventas.
+                    TextInput::make('cancellation_cutoff_hours')
+                        ->label(__('admin.catalog.field_cancellation_cutoff_hours'))
+                        ->numeric()
+                        ->minValue(0)
+                        ->maxValue(8760)
+                        ->suffix('h')
+                        ->helperText(__('admin.catalog.cancellation_cutoff_hint')),
                 ]),
+
+                // LA EDAD DE UNA ENTRADA (`#761`): la que se DICE («de 4 a 7 años»). Son las MISMAS columnas que la
+                // sección del pack (`guest_age_min`/`max`, publicadas en el catálogo desde `#676`), que en un pack
+                // además deciden el tramo de su familia; aquí solo aparecen en las entradas, y en un pack solo
+                // aparecen allí: nunca se ven las dos a la vez. Hasta `#761` una entrada no podía declararla.
+                Grid::make(['default' => 1, 'sm' => 2])
+                    ->visible(fn (Get $get): bool => $get('type') === TicketType::TYPE_ENTRY)
+                    ->schema([
+                        TextInput::make('guest_age_min')
+                            ->label(__('admin.catalog.field_guest_age_min'))
+                            ->numeric()
+                            ->minValue(TicketType::GUEST_AGE_MIN)
+                            ->maxValue(TicketType::GUEST_AGE_MAX)
+                            ->helperText(__('admin.catalog.entry_age_min_hint')),
+                        TextInput::make('guest_age_max')
+                            ->label(__('admin.catalog.field_guest_age_max'))
+                            ->numeric()
+                            ->minValue(TicketType::GUEST_AGE_MIN)
+                            ->maxValue(TicketType::GUEST_AGE_MAX)
+                            ->gte('guest_age_min')
+                            ->helperText(__('admin.catalog.entry_age_max_hint')),
+                    ]),
 
                 // EL JUSTIFICANTE de un menor invitado (`specs/waiver-por-reserva.md` §12.2,
                 // `[DECIDIDO owner, 2026-09-01]`). Vive AQUÍ y no en la sección del pack a propósito:

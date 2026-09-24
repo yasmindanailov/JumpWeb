@@ -217,6 +217,53 @@ class ZoneResourceTest extends TestCase
         $this->assertNull(Zone::where('slug', 'eventos')->value('image'), 'una ruta con .. se sanea a null');
     }
 
+    /**
+     * **Las reglas de «con un adulto» se editan DESDE EL PANEL** (T4a·1, `#699`, `#761`), y vacías se guardan como
+     * `null` («la zona no tiene esa excepción»), nunca como 0. Es la guarda de `#322`: una columna que solo se toca
+     * por SQL no está hecha.
+     */
+    public function test_the_escort_rules_are_edited_from_the_panel(): void
+    {
+        $zone = Zone::create(['slug' => 'kids', 'name' => ['es' => 'Kids']]);
+
+        Livewire::actingAs($this->admin())
+            ->test(EditZone::class, ['record' => $zone->id])
+            ->fillForm(['escort_under_age_from_cm' => '90', 'escort_below_cm' => ''])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $zone->refresh();
+        $this->assertSame(90, $zone->escort_under_age_from_cm);
+        $this->assertNull($zone->escort_below_cm, 'vacío es «sin esa excepción», no un 0');
+
+        Livewire::actingAs($this->admin())
+            ->test(EditZone::class, ['record' => $zone->id])
+            ->fillForm(['escort_under_age_from_cm' => '', 'escort_below_cm' => '130'])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $zone->refresh();
+        $this->assertNull($zone->escort_under_age_from_cm);
+        $this->assertSame(130, $zone->escort_below_cm);
+    }
+
+    /**
+     * **Y la normalización del guardado no se fía del formulario** (regla 12). El campo numérico de Filament ya
+     * convierte el vacío en `null`, así que el caso de arriba pasaría sin ella —medido: el mutante que la quita
+     * sobrevivía—; éste conduce la puerta del servidor directamente, con lo que llegaría en un payload a mano.
+     */
+    public function test_the_escort_rules_are_normalised_by_the_server_not_by_the_form(): void
+    {
+        $page = new EditZone;
+        $method = new \ReflectionMethod($page::class, 'prepareZoneData');
+        $method->setAccessible(true);
+
+        $out = $method->invoke($page, ['escort_under_age_from_cm' => '', 'escort_below_cm' => '130']);
+
+        $this->assertNull($out['escort_under_age_from_cm'], 'una cadena vacía es «sin esa excepción», no un 0');
+        $this->assertSame(130, $out['escort_below_cm'], 'y la cifra se guarda como entero, no como texto');
+    }
+
     public function test_edit_preserves_false_prep_blocks_cupo_override(): void
     {
         // Regresión: el tri-estado (null/true/false) debe sobrevivir a una edición que NO toca

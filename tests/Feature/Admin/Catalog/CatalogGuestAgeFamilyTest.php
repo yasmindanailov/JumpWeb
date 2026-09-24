@@ -57,7 +57,7 @@ class CatalogGuestAgeFamilyTest extends TestCase
     }
 
     /** Ejecuta la puerta como lo hace el guardado, con o sin producto en edición. */
-    private function normalize(array $data, bool $isPack = true, ?TicketType $record = null): array
+    private function normalize(array $data, string $type = TicketType::TYPE_PACK, ?TicketType $record = null): array
     {
         $page = $record !== null ? new EditCatalog : new CreateCatalog;
         if ($record !== null) {
@@ -67,7 +67,7 @@ class CatalogGuestAgeFamilyTest extends TestCase
         $method = new ReflectionMethod($page::class, 'normalizeGuestAgeFields');
         $method->setAccessible(true);
 
-        return $method->invoke($page, $data, $isPack);
+        return $method->invoke($page, $data, $type);
     }
 
     /** Ejecuta el saneo de esquemas del panel, que es la puerta por la que entra un `type`. */
@@ -148,18 +148,47 @@ class CatalogGuestAgeFamilyTest extends TestCase
         $this->assertSame(6, $out['guest_age_max']);
     }
 
-    public function test_outside_a_pack_the_three_columns_are_wiped(): void
+    public function test_in_an_addon_the_three_columns_are_wiped(): void
     {
-        // Defensa en profundidad (regla 12): la sección está oculta para no-packs, pero un payload
-        // manipulado no debe dejar configuración viva donde el veredicto nunca la mirará.
+        // Defensa en profundidad (regla 12): la sección está oculta para complementos, pero un payload
+        // manipulado no debe dejar configuración viva donde nadie la mirará.
         $out = $this->normalize(
             ['guest_age_family' => 'cumple', 'guest_age_min' => 1, 'guest_age_max' => 6],
-            isPack: false,
+            type: TicketType::TYPE_ADDON,
         );
 
         $this->assertNull($out['guest_age_family']);
         $this->assertNull($out['guest_age_min']);
         $this->assertNull($out['guest_age_max']);
+    }
+
+    /**
+     * **Una ENTRADA declara su edad, pero no tiene familia** (`#761`). La edad es lo que se DICE («de 4 a 7 años»,
+     * publicado en el catálogo desde `#676`); la familia decide un veredicto de fiesta mixta que una entrada no
+     * tiene, así que se sigue anulando aunque llegue en el payload.
+     */
+    public function test_an_entry_keeps_its_declared_age_but_never_a_family(): void
+    {
+        $out = $this->normalize(
+            ['guest_age_family' => 'cumple', 'guest_age_min' => '4', 'guest_age_max' => '7'],
+            type: TicketType::TYPE_ENTRY,
+        );
+
+        $this->assertNull($out['guest_age_family'], 'una entrada no participa en una familia de edades');
+        $this->assertSame(4, $out['guest_age_min']);
+        $this->assertSame(7, $out['guest_age_max']);
+
+        $abierta = $this->normalize(['guest_age_min' => '8', 'guest_age_max' => ''], type: TicketType::TYPE_ENTRY);
+
+        $this->assertSame(8, $abierta['guest_age_min']);
+        $this->assertNull($abierta['guest_age_max'], '«desde 8 años»: sin tope por arriba, no un cero');
+    }
+
+    public function test_an_inverted_entry_age_is_blocked(): void
+    {
+        $this->expectException(Halt::class);
+
+        $this->normalize(['guest_age_min' => 10, 'guest_age_max' => 4], type: TicketType::TYPE_ENTRY);
     }
 
     // ─── Bloqueos ────────────────────────────────────────────────────────────
