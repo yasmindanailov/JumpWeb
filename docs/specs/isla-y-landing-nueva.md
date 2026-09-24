@@ -23,7 +23,7 @@
     se avisa en el buzón antes.
   - Tras tocar un `.vue`, `npm run build:ssr` antes de la suite (`sidebar-spa.md` §0).
 - **Estado**: §7 contestado (`#683`), promociones en `#684`, T0 hecha (§1.6). **T1 ✅** (§4.8) y **T2 ✅**
-  (§4.9): la isla en Vue, 52 de 52 situaciones idénticas al diseño. Sigue la T3 (la compra en la isla).
+  (§4.9): la isla en Vue, 52 de 52 situaciones idénticas al diseño. **T3** (la compra): censo y plan en §4.10.
 - **Invariantes**: `PAY-*` si entra Bizum (`VERIFY_CONC=1`), `SEC-12` (la ruta de las vistas), `SEC-01`,
   `RGPD-*` (consentimiento dentro de la isla, Apple como proveedor), `PERF-02` (la carcasa por instalación va en
   el arranque cacheado; la variante del A/B, en la sesión).
@@ -307,7 +307,7 @@ deja de decir «nada de otra librería» en la T1.
 | T0 ✅ | Kids y Jump contra el menú de hechos, los tokens y las URLs (§1.6). Cumpleaños y la portada, con su tanda | Esta spec |
 | T1 ✅ | El tema: la referencia, las fuentes, la hoja de tokens y los iconos (§4.8); los roles nuevos del producto van con la isla (T2) | Producto + instancia |
 | T2 ✅ | La isla en Vue, idéntica al diseño en 26 situaciones (§4.9); los datos reales, con la T4 | Producto |
-| T3 | La compra en la isla sobre el motor, con tarjeta; sonda de compra | Producto |
+| T3 | La compra en la isla sobre el motor, con tarjeta; sonda de compra (§4.10: T3a ✅ → T3e) | Producto |
 | T4 | **Kids y Jump** (`#683`), un molde y dos páginas, con su calculadora y sus 301 | Instancia + producto |
 | T5 | Mi cuenta en la isla | Producto |
 | T6 | El resto de páginas y la lógica nueva que apruebe el owner | Los dos |
@@ -419,6 +419,53 @@ de sus páginas): se copia desde `publico/instancia/` del paquete, lo ignora git
 (`DeployScriptGateTest` lo exige; mutado: sin la exclusión, rojo). Una carpeta para todo lo que venga, en vez
 de una exclusión por fichero como el paquete de tema.
 
+### 4.10 La T3: la compra en la isla — el censo (MEDIDO 24-09) y el plan
+
+**La fuente**: el brief de la compra y su diseño, `paginas/compra/*.jsx` montado en `isla-compra.card.html` (un
+banco que hace la compra entera con datos de prueba y la pasarela simulada). ⚠️ **El diseño corrige al brief**,
+por decisión del owner del 23-09 escrita en su `datos.js`: se entra con **contraseña, Google o Apple** (sin
+código al teléfono), **sin registro exprés** (los adultos se registran desde casa o en el mostrador) y en Listo,
+de la cuenta, solo «Tu cuenta ya está creada con tu correo». Manda el diseño.
+
+| Pieza de la compra | Lo que pide | El motor hoy | Veredicto |
+|---|---|---|---|
+| Pantalla 0 · cuándo y cuántos | Día, horas, tiempo, cantidad, calcetines, [Hora extra], la otra zona | `/availability/{product}/dates` y `/times`, los productos de la zona (`/catalog`), sus complementos, `cart.js::addLine` | **HAY**: las filas de «tiempo» son los productos de la zona |
+| Tus datos, sin sesión | Nombre, correo, teléfono, contraseña, la casilla del descargo, Google, «¿Ya has venido? Entra» | `POST /auth/register` (con `accept_waiver`: la aceptación en espera, firmada al pagar), `POST /auth/login`, Google | **HAY**; Apple **FALTA** (corchete apagado) |
+| «Esta cuenta ya existe» | Al teclear el correo | El alta lo dice **al enviar** (`#31a`, 3 por hora y correo) | **Al enviar** (`#688`) |
+| Tus datos, con sesión | «Hola, Ana»; el teléfono si falta en cumpleaños; la casilla si nunca firmó | `/me`, `buyer-due.js` (`phone`), `account/waiver.js` | **HAY** |
+| Pagar · el recibo | Cantidades y calcetines sin salir; «Añadir otra entrada» | La cesta y `/orders/quote` | **HAY** |
+| Pagar · «Tu hora queda guardada hasta las 18:42» | La retención ANTES de pagar | La retención nace con el pedido, en `POST /orders`, que en el mismo acto abre el cobro (`AFORO-10`, `#37`) | **Al pagar** (`#688`): la línea no sale en «Pagar» |
+| «Esa hora ya no está libre. Estas sí» | Al continuar | El aforo se comprueba en `POST /orders` (`line_sold_out`); las cercanas, de `/times` | **HAY, al pagar** (`#688`) |
+| Pagar con tarjeta · saliendo al banco | El formulario a la pasarela | `pay.js::runConfirm` y el paso `REDIRECTING` | **HAY** |
+| Bizum · Apple Pay y Google Pay | Botón y marcas | — | **FALTA** (v2.0.0, `#683`): corchete apagado, sin hueco |
+| Pago no completado | Con el motivo del banco; «Pagar con nuestra ayuda» y «Escribirnos» | `DECLINED` con `declined_reason`; el contacto de `/site` | **HAY** |
+| Verificando | | `VERIFYING` y su sondeo | **HAY** |
+| Hora perdida al volver | Y las horas cercanas | Pedido `expired` (`pollVerdict`, `order_not_retryable`) | **PARCIAL**: las cercanas son pantalla nueva sobre `/times` |
+| Listo | La línea, el QR, «Guardar en el móvil», las tareas | `CONFIRMED`; el carné (`GET /me/card/png`, los bytes del correo) y su descarga; menores a cargo, post-form, invitación | **HAY**; el QR real es el del servidor, `QrPass` pinta su marco |
+| La dirección de cada paso | `#compra/datos`…, y «atrás» del navegador | — | Carcasa, sin servidor |
+
+**La máquina no cambia**, y se prueba en la T3e: «cuándo y cuántos» es `DATE`/`TIME`; «Continuar» mete la
+línea (`TIME → CART`); «Tus datos» es `IDENTIFY` (o se salta con sesión: `CART → PAY`); «Pagar» es `PAY` con la
+cesta editable; «atrás» es `PAY → CART → IDENTIFY`. Todas esas transiciones ya existen.
+
+**La secuencia vive hoy en `PurchaseSection.vue`** (1.391 líneas, 464 de guion con su excepción de `CE-6`):
+elegir, añadir, admitir, alta y acceso, confirmar, desenlace, sondeo y reintento. La isla necesita LA MISMA, y
+copiarla serían dos sitios donde recordar cada ⚠️ de esa secuencia. **Se extrae a un módulo del motor** que
+usan las dos carcasas, sin cambiar la conducta del cajón (sus pruebas, su contrato de árbol y su sonda lo
+vigilan) y encogiendo su excepción. Es un fichero del carril del SPA: se avisa en su buzón antes de tocarlo.
+
+**Las tandas de la T3**:
+- **T3a ✅** el censo y el plan (esto).
+- **T3b** las 14 piezas del sistema que usa la compra, en Vue e idénticas: `Field`, `Checkbox`, `InfoCallout`,
+  `TimeSlotPicker`, `DayStrip`, `OptionCards`, `QuantityStepper`, `PriceSummary`, `SocialSignIn`,
+  `OutcomeHeader`, `QrPass`, `TaskCard`, `Skeleton` y `BounceLoader`, más los iconos del `Button` y del
+  `Link`. Un banco con cada pieza en sus estados, sobre claro y sobre tinta → 0 píxeles.
+- **T3c** el tamaño «Compra» de la isla y sus pantallas, idénticos a `isla-compra.card.html` recorriendo su
+  banco con clics y con sus mismos datos. Las pantallas reciben todo por props: no conocen el motor.
+- **T3d** la secuencia compartida, extraída de `PurchaseSection.vue`.
+- **T3e** la isla compra de verdad con tarjeta: el cableado, la prueba del orden de la máquina y `/sonda` en
+  local con la pasarela de pruebas.
+
 ## 5. Impacto en invariantes
 
 - `PAY-*`: solo si entra Bizum; entonces `VERIFY_CONC=1` y la lista del `CRITICAL_RE`.
@@ -456,6 +503,16 @@ por defecto, hecha en este carril).
 **El aviso de arriba**, `[DECIDIDO owner]` 2026-09-24 (`#684`): es para **noticias y avisos generales** (un
 cierre, un horario especial), y **cada oferta va en la página de su producto**, como pide la regla 5 del brief
 base. **Por iterar con el owner**: el modelo de las promociones (dónde va cada etiqueta en la landing).
+
+**Para la T3, contestadas por el owner el 24-09** (`#688`, §4.10), las dos con la recomendación delante:
+
+5. **La hora guardada en «Pagar»**: `[DECIDIDO owner]` **se guarda al pagar, como hoy**. La línea «Tu hora queda
+   guardada hasta…» sale donde es verdad (saliendo al banco, pago no completado, «Sigue con tu reserva») y no en
+   «Pagar». Guardarla al continuar obligaba a crear el pedido al salir de «Tus datos» y a soltarlo y rehacerlo
+   con cada cambio del recibo.
+6. **Cuándo dice «Esta cuenta ya existe»**: `[DECIDIDO owner]` **al pulsar «Continuar al pago»**, con el aspecto
+   del diseño: es la respuesta del alta de `#31a`, con su límite de 3 por hora. Decirlo al teclear exigía un
+   servicio que respondiera si un correo tiene cuenta, sin ese límite.
 
 **Revisión**: la spec la revisa el owner; la revisión adversarial se le pide con el coste delante (regla 9).
 

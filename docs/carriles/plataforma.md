@@ -2,7 +2,7 @@
 
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669 AGOTADA con `#669`** → **670–699 EN CURSO** · Último usado: **`#687`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **640–669 AGOTADA con `#669`** → **670–699 EN CURSO** · Último usado: **`#688`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#684`) · Actualizado: **2026-09-24**
 > (el sistema nuevo leído por DesignSync; el owner decide Blade en la instancia y la isla como segunda carcasa).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
@@ -68,24 +68,18 @@
    ▶ **LA ANALÍTICA es ENTERA del carril del SPA** (`#735`, 24-09): la T1 la cerró este carril (`#678`, `#680`;
    su historia, en `analitica.md` §4.8) y su traspaso está atendido. ⚠️ Queda el OJO del owner en la fuente del
    pedido manual.
-   ▶▶▶ **LA LANDING NUEVA** (`specs/isla-y-landing-nueva.md`, ⬜ borrador): el sistema está en Claude Design,
-   proyecto `33397ca2…` («Saltia»), y se lee con DesignSync (autorizado el 24-09). `[DECIDIDO owner]` 24-09:
-   **`#681`** las páginas en **Blade dentro de la instancia**, solo con hechos (Astro descartado, medido) ·
-   **`#682`** la **isla** es una **segunda carcasa** del producto sobre el motor del cajón, apagada por defecto y
-   medida contra él; la hace ESTE carril. **`#683`** contestó su §7: **Kids y Jump** primero, **Lucide**,
-   el cajón **adopta los pasos nuevos**, y **Bizum, Apple y el aviso de día liberado** en la v2.0.0.
-   **`#684`**: un **sistema de PROMOCIONES** en su propia página del panel (etiquetas de texto e icono en
-   producto, pack o complemento, y un aviso arriba), con spec propia y modelo a iterar con el owner.
-   ✅ **T0 hecha para Kids y Jump** (§1.6: cada dato con su fuente, los tokens y el mapa de URLs). FALTAN como
-   dato: el precio de antes y la oferta (→ `#684`), el plazo de cambio y cancelación y los 90 cm con adulto.
-   ✅ **T1 ENTERA** (§4.8, `#685`, `#686`), juzgada con `scripts/pixel.mjs`: la referencia byte a byte en
-   `instancias/playjump/diseno/playjump-design-system/` · las fuentes desde `public/instancia/` · la hoja
-   `saltia.css`, **82 de 82 páginas del diseño con 0 píxeles distintos** · Lucide 0.544.0 con `<x-lucide>`, 84
-   iconos con 0 píxeles. ✅ **T2** (§4.9, `#687`): la isla portada 1:1 a Vue en `resources/js/isla/`, con roles
-   `--isla-*` y textos en `lang/*/isla.php` (en/fr a revisar por el owner), **52 de 52 situaciones idénticas**
-   (`scripts/banco-isla.php`) y `CE-6` sin excepción (el estado en `useIsla.js`). ▶ Siguiente: **T3**, la compra en la isla. ⚠️ Tras un `pull`: `cp -r
-   ../instancias/playjump/publico/instancia public/`; los lotes se rehacen con `tema/lote-fichas.py` y
-   `scripts/banco-isla.php` (el lado B se compila antes con `scripts/banco-isla/vite.config.mjs`).
+   ▶▶▶ **LA LANDING NUEVA** (`specs/isla-y-landing-nueva.md`, ⬜): el sistema «Saltia» (Claude Design,
+   `33397ca2…`), con su referencia byte a byte en `instancias/playjump/diseno/`. `[DECIDIDO owner]` 24-09: `#681`
+   las páginas en **Blade dentro de la instancia** · `#682` la **isla**, segunda carcasa del producto, apagada
+   por defecto · `#683` Kids y Jump primero, Lucide, pasos compartidos; Bizum, Apple y el aviso en la v2.0.0 ·
+   `#684` promociones (modelo a iterar) · `#688` la compra guarda la hora **al pagar** y dice «Esta cuenta ya
+   existe» **al enviar**. ✅ T0 (§1.6) · ✅ T1 (§4.8: 82/82 páginas y 84 iconos a 0 px) · ✅ T2 (§4.9: la isla,
+   52/52 a 0 px, `CE-6` sin excepción; en/fr de `lang/*/isla.php` a revisar por el owner).
+   ▶▶ **T3, la compra** (§4.10): T3a ✅ (censo y plan) → **T3b** las 14 piezas del sistema en Vue → T3c el tamaño
+   «Compra» y sus pantallas → T3d la secuencia de `PurchaseSection.vue` a un módulo del motor (aviso en el
+   buzón) → T3e comprar de verdad con tarjeta y `/sonda`. FALTAN como dato (T0): el precio de antes (→ `#684`),
+   el plazo de cancelación y los 90 cm con adulto. ⚠️ Tras un `pull`: `cp -r ../instancias/playjump/publico/instancia
+   public/`; los bancos se rehacen con `tema/lote-fichas.py` y `scripts/banco-isla.php` (su lado B, antes).
    ⚠️ **La web nueva cambia las URLs** (§1.5): cada ruta vieja necesita su 301.
    ⚠️⚠️ **Lo que dejaron los platos y vale para lo que venga** (detalle en la spec §4.1 y §4.1.ter): si
    el dato tiene **servicio de dominio**, el recurso **delega** · el filtro de «lo que no viaja» va
@@ -269,6 +263,12 @@ dueño es el carril de la web/reseñas—) ·
   resources/js/cajon resources/js/isla`); `eslint.config.js` ya la incluye y hoy pasa limpia a mano. No lo toco
   hasta que lo veas: si te parece bien, dilo en tu carril, o hazlo tú al pasar.
 - La isla importa `t()`/`tp()` de `resources/js/sidebar/i18n.js`: tu módulo, solo leído, sin cambiarlo.
+- ▶▶ **24-09, AVISO PREVIO: voy a entrar en `sections/PurchaseSection.vue`** (T3d, `isla-y-landing-nueva.md`
+  §4.10). La isla necesita la MISMA secuencia de compra que vive ahí (elegir, añadir, admitir, alta y acceso,
+  confirmar, desenlace, sondeo y reintento), y copiarla serían dos sitios con cada ⚠️. La saco a un módulo
+  plano del motor que usan las dos carcasas: **tu conducta no cambia** (tus pruebas, `SidebarDomContractTest` y
+  la sonda lo vigilan) y **tu excepción de `CE-6` encoge**. Antes haré T3b y T3c (solo `resources/js/isla/`).
+  Si estás tocando ese fichero o prefieres hacerlo tú, dilo aquí y espero.
 
 ### ❗ Para el carril de la WEB (emisor: plataforma, 2026-09-23) — dos huecos de contenido, MEDIDOS
 - ▶ Publicar `/servicios` como hechos (`#672`) destapó dos cosas **tuyas**, que son de tu T6 de contenido
