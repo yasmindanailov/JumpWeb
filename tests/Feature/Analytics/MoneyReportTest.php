@@ -287,17 +287,33 @@ class MoneyReportTest extends TestCase
         $this->seedJune();
         Cache::flush();
 
-        $first = MoneyReport::for(ReportPeriod::ThisMonth);
+        $window = ReportPeriod::ThisMonth->window();
+        $first = MoneyReport::for($window);
 
         DB::flushQueryLog();
         DB::enableQueryLog();
-        $second = MoneyReport::for(ReportPeriod::ThisMonth);
+        $second = MoneyReport::for($window);
         $queries = count(DB::getQueryLog());
         DB::disableQueryLog();
 
         $this->assertSame($first, $second);
         $this->assertSame(0, $queries, 'la segunda lectura sale de la caché');
-        $this->assertTrue(Cache::has(MoneyReport::cacheKey(ReportPeriod::ThisMonth->window())));
+        $this->assertTrue(Cache::has(MoneyReport::cacheKey($window, $window->previous())));
+    }
+
+    /** «Frente al mismo periodo del año pasado»: junio de 2026 contra junio de 2025, que aquí está vacío. */
+    public function test_the_comparison_can_be_the_same_period_a_year_ago(): void
+    {
+        $this->seedJune();
+        $window = ReportPeriod::ThisMonth->window();
+
+        $previous = (new MoneyReport)->compute($window, $window->previous());
+        $yearAgo = (new MoneyReport)->compute($window, $window->yearAgo());
+
+        $this->assertSame(2000, $previous['previous']['sold'], 'mayo');
+        $this->assertSame(0, $yearAgo['previous']['sold'], 'junio de 2025, vacío');
+        $this->assertSame($previous['totals'], $yearAgo['totals'], 'el periodo es el mismo; solo cambia con qué se compara');
+        $this->assertNotSame(MoneyReport::cacheKey($window, $window->previous()), MoneyReport::cacheKey($window, $window->yearAgo()));
     }
 
     // ─── Los ayudantes del fixture ──────────────────────────────────────────────────────────────

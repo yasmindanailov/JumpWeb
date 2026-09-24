@@ -2,9 +2,8 @@
 
 namespace App\Filament\Widgets\Analytics;
 
-use App\Domain\Platform\Services\Analytics\Reports\Window;
+use App\Filament\Analytics\BucketLabel;
 use App\Filament\Widgets\Analytics\Concerns\AnalyticsWidget;
-use Carbon\CarbonImmutable;
 use Filament\Widgets\ChartWidget;
 use Filament\Widgets\Concerns\InteractsWithPageFilters;
 use Illuminate\Contracts\Support\Htmlable;
@@ -55,7 +54,7 @@ class CustomersSeriesChart extends ChartWidget
         $granularity = (string) $report['window']['granularity'];
 
         return [
-            'labels' => array_map(static fn (array $row): string => self::label($row['key'], $granularity), $series),
+            'labels' => array_map(static fn (array $row): string => BucketLabel::short($row['key'], $granularity), $series),
             'datasets' => [
                 self::dataset('registrations', $series),
                 self::dataset('customers', $series),
@@ -93,14 +92,5 @@ class CustomersSeriesChart extends ChartWidget
             'borderRadius' => 4,
             'maxBarThickness' => 18,
         ];
-    }
-
-    private static function label(string $key, string $granularity): string
-    {
-        $day = CarbonImmutable::createFromFormat('!Y-m-d', $key, 'UTC')->format('d/m');
-
-        return $granularity === Window::GRANULARITY_WEEK
-            ? __('admin.analytics.money.week_of', ['day' => $day])
-            : $day;
     }
 }

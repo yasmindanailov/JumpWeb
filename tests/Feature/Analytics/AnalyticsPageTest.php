@@ -12,17 +12,24 @@ use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\Analytics\Visitor;
 use App\Filament\Pages\AnalyticsPage;
 use App\Filament\Pages\Dashboard;
+use App\Filament\Widgets\Analytics\CategoryChart;
 use App\Filament\Widgets\Analytics\CustomersBreakdownWidget;
 use App\Filament\Widgets\Analytics\CustomersSeriesChart;
+use App\Filament\Widgets\Analytics\DevicesChart;
+use App\Filament\Widgets\Analytics\FunnelChart;
 use App\Filament\Widgets\Analytics\FunnelWidget;
 use App\Filament\Widgets\Analytics\GateHoursChart;
 use App\Filament\Widgets\Analytics\GateWidget;
 use App\Filament\Widgets\Analytics\MoneyBreakdownWidget;
+use App\Filament\Widgets\Analytics\MoneyChannelsChart;
 use App\Filament\Widgets\Analytics\MoneyCustomersWidget;
 use App\Filament\Widgets\Analytics\MoneyOverviewWidget;
+use App\Filament\Widgets\Analytics\MoneyProductsChart;
 use App\Filament\Widgets\Analytics\MoneySeriesChart;
 use App\Filament\Widgets\Analytics\PagesWidget;
+use App\Filament\Widgets\Analytics\RegistrationMethodsChart;
 use App\Filament\Widgets\Analytics\RegistrationsWidget;
+use App\Filament\Widgets\Analytics\SourcesChart;
 use App\Filament\Widgets\Analytics\SourcesWidget;
 use App\Filament\Widgets\Analytics\TrafficHoursChart;
 use App\Filament\Widgets\Analytics\TrafficSeriesChart;
@@ -87,7 +94,7 @@ class AnalyticsPageTest extends TestCase
         $this->actingAs($this->withRole('puerta'))->get(AnalyticsPage::getUrl())->assertRedirect(route('admin.puerta.validar'));
     }
 
-    public function test_admin_opens_the_page_with_its_period_filter(): void
+    public function test_admin_opens_the_page_with_its_filters_and_its_three_tabs(): void
     {
         $this->actingAs($this->withRole('admin'))
             ->get(AnalyticsPage::getUrl())
@@ -95,7 +102,14 @@ class AnalyticsPageTest extends TestCase
             ->assertSee('/admin/analitica', escape: false)
             ->assertSeeText('Analítica')
             ->assertSee(__('admin.analytics.period.this_month'))
-            ->assertSee(__('admin.analytics.period.last_90'));
+            ->assertSee(__('admin.analytics.period.last_90'))
+            ->assertSee(__('admin.analytics.period.this_year'))
+            ->assertSee(__('admin.analytics.period.custom'))
+            ->assertSee(__('admin.analytics.compare.year_ago'))
+            ->assertSeeText(__('admin.analytics.tabs.money'))
+            ->assertSeeText(__('admin.analytics.tabs.customers'))
+            ->assertSeeText(__('admin.analytics.tabs.traffic'))
+            ->assertSee('role="tablist"', escape: false);
     }
 
     /** El permiso existe sembrado, es de gestión (no del staff) y el CSV tiene el suyo. */
@@ -123,22 +137,31 @@ class AnalyticsPageTest extends TestCase
 
     // ─── Los widgets ────────────────────────────────────────────────────────────────────────────
 
-    /** Los widgets del cuadro, en su orden: el dinero (T2a), los registros y la puerta (T2b) y la conversión (T2c). */
+    /**
+     * Los widgets del cuadro, pestaña a pestaña y en su orden de lectura (tarjetas → gráficos → tablas): el dinero
+     * (T2a), los registros y la puerta (T2b) y la conversión (T2c), con los gráficos de categorías de la T2f.
+     */
     private const WIDGETS = [
         MoneyOverviewWidget::class,
         MoneySeriesChart::class,
+        MoneyProductsChart::class,
+        MoneyChannelsChart::class,
         MoneyCustomersWidget::class,
         MoneyBreakdownWidget::class,
         RegistrationsWidget::class,
         GateWidget::class,
         CustomersSeriesChart::class,
         GateHoursChart::class,
+        RegistrationMethodsChart::class,
         CustomersBreakdownWidget::class,
         TrafficWidget::class,
-        FunnelWidget::class,
-        SourcesWidget::class,
+        FunnelChart::class,
+        SourcesChart::class,
         TrafficSeriesChart::class,
         TrafficHoursChart::class,
+        DevicesChart::class,
+        FunnelWidget::class,
+        SourcesWidget::class,
         PagesWidget::class,
     ];
 
@@ -161,6 +184,56 @@ class AnalyticsPageTest extends TestCase
         $analytics = (new AnalyticsPage)->getWidgets();
         $this->assertSame(self::WIDGETS, $analytics);
         $this->assertEmpty(array_intersect($analytics, (new Dashboard)->getWidgets()));
+
+        // T2f: tres pestañas, cada widget en una sola, y las tablas plegadas al final de cada una.
+        $this->assertSame(['money', 'customers', 'traffic'], array_keys(AnalyticsPage::TABS));
+        $this->assertSame($analytics, array_unique($analytics), 'ningún widget en dos pestañas');
+        $this->assertSame(MoneyBreakdownWidget::class, array_last(AnalyticsPage::TABS['money']));
+        $this->assertSame(CustomersBreakdownWidget::class, array_last(AnalyticsPage::TABS['customers']));
+        $this->assertSame(PagesWidget::class, array_last(AnalyticsPage::TABS['traffic']));
+    }
+
+    /**
+     * T2f: los gráficos de categorías leen de los informes. Sin datos devuelven VACÍO (el estado vacío de Filament,
+     * no unos ejes en blanco); con una sesión móvil de Google, el embudo lleva el % de las visitas en el rótulo, las
+     * fuentes se suman por fuente y el anillo de dispositivos tiene su porción.
+     */
+    public function test_the_category_charts_read_their_reports_and_are_empty_without_data(): void
+    {
+        $this->actingAs($this->withRole('admin'));
+        $filters = ['period' => ReportPeriod::Last30->value];
+        $data = static function (CategoryChart $chart) use ($filters): array {
+            $chart->pageFilters = $filters;
+
+            return (new \ReflectionMethod($chart, 'getData'))->invoke($chart);
+        };
+
+        foreach ([new MoneyProductsChart, new MoneyChannelsChart, new RegistrationMethodsChart, new FunnelChart, new SourcesChart, new DevicesChart] as $chart) {
+            $this->assertSame([], $data($chart), $chart::class.' sin datos');
+        }
+        $this->assertSame(__('admin.analytics.money.empty'), (string) (new FunnelChart)->getEmptyStateHeading());
+
+        AnalyticsSession::query()->create([
+            'visitor_id' => Visitor::mint(), 'started_at' => now()->subDay(), 'last_seen_at' => now()->subDay(),
+            'utm_source' => 'google', 'utm_medium' => 'cpc', 'device' => 'mobile', 'is_bot' => false, 'is_internal' => false,
+        ]);
+        Cache::flush();
+
+        $funnel = $data(new FunnelChart);
+        $this->assertSame(__('admin.analytics.traffic.step_short.visits').' · 100,0'."\u{00A0}%", $funnel['labels'][0]);
+        $this->assertSame(__('admin.analytics.traffic.step_short.pay_started').' · 0,0'."\u{00A0}%", $funnel['labels'][5]);
+        $this->assertSame([1, 0, 0, 0, 0, 0], $funnel['datasets'][0]['data']);
+        $this->assertSame(MoneySeriesChart::COLORS['collected'], $funnel['datasets'][0]['backgroundColor']);
+
+        $sources = $data(new SourcesChart);
+        $this->assertSame(['google'], $sources['labels']);
+        $this->assertSame([1], $sources['datasets'][0]['data']);
+
+        $devices = new DevicesChart;
+        $this->assertSame([__('admin.analytics.traffic.device.mobile')], $data($devices)['labels']);
+        $this->assertSame([CategoryChart::PALETTE[0]], $data($devices)['datasets'][0]['backgroundColor']);
+        $this->assertSame('doughnut', (new \ReflectionMethod($devices, 'getType'))->invoke($devices));
+        $this->assertSame('bar', (new \ReflectionMethod($funnel = new FunnelChart, 'getType'))->invoke($funnel));
     }
 
     public function test_the_gate_hours_chart_has_the_24_park_hours_and_the_customers_breakdown_its_tables(): void
@@ -230,7 +303,7 @@ class AnalyticsPageTest extends TestCase
         $this->assertCount(6, $stats);
         $this->assertSame(__('admin.analytics.money.collected'), (string) $stats[0]->getLabel());
         $this->assertSame('0,00 €', (string) $stats[0]->getValue());
-        $this->assertSame(__('admin.analytics.delta.no_previous'), (string) $stats[0]->getDescription());
+        $this->assertSame(__('admin.analytics.delta.none_previous'), (string) $stats[0]->getDescription());
         $this->assertSame(ReportPeriod::ThisMonth, ReportPeriod::fromValue(null));
     }
 

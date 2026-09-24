@@ -150,8 +150,22 @@ class AnalyticsExportTest extends TestCase
         $this->assertNull($audit->target_id);
         $this->assertSame('customers', $audit->payload['report']);
         $this->assertSame('last_week', $audit->payload['period']);
+        $this->assertSame('previous', $audit->payload['compare']);
         $this->assertGreaterThan(10, $audit->payload['rows']);
-        $this->assertSame(['report', 'period', 'rows'], array_keys($audit->payload));
+        $this->assertSame(['report', 'period', 'from', 'to', 'compare', 'rows'], array_keys($audit->payload));
+    }
+
+    /** Dos fechas a medida y la comparación con el año pasado viajan en la URL y salen en el fichero. */
+    public function test_a_custom_range_and_the_year_ago_comparison_reach_the_file(): void
+    {
+        $csv = $this->actingAs($this->withRole('admin'))
+            ->get(route('admin.analitica.csv', ['report' => 'money', 'period' => 'custom', 'from' => '2026-04-01', 'to' => '2026-06-15', 'compare' => 'year_ago']))
+            ->assertOk()
+            ->assertHeader('Content-Disposition', 'attachment; filename="analitica-money-2026-04-01-2026-06-15.csv"')
+            ->getContent();
+
+        $this->assertStringContainsString(__('admin.analytics.export.compare_line', ['comparison' => __('admin.analytics.compare.year_ago')]), $csv);
+        $this->assertStringContainsString(__('admin.analytics.money.by_week'), $csv, '76 días se agrupan por semana');
     }
 
     // ─── El botón ───────────────────────────────────────────────────────────────────────────────
@@ -173,7 +187,7 @@ class AnalyticsExportTest extends TestCase
 
     public function test_the_default_period_of_the_file_is_this_month(): void
     {
-        $built = (new CsvExport)->build(CsvExport::REPORT_MONEY, ReportPeriod::fromValue(null));
+        $built = (new CsvExport)->build(CsvExport::REPORT_MONEY, ReportPeriod::fromValue(null)->window());
 
         $this->assertSame('analitica-money-2026-06-01-2026-06-30.csv', $built['filename']);
         $this->assertSame([__('admin.analytics.export.title', ['report' => __('admin.analytics.export.report.money')])], $built['rows'][0]);

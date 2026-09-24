@@ -179,11 +179,11 @@ class CustomersReportTest extends TestCase
         $this->seedJune();
         Cache::flush();
 
-        $first = CustomersReport::for(ReportPeriod::ThisMonth);
+        $first = CustomersReport::for(ReportPeriod::ThisMonth->window());
 
         DB::flushQueryLog();
         DB::enableQueryLog();
-        $second = CustomersReport::for(ReportPeriod::ThisMonth);
+        $second = CustomersReport::for(ReportPeriod::ThisMonth->window());
         $queries = count(DB::getQueryLog());
         DB::disableQueryLog();
 

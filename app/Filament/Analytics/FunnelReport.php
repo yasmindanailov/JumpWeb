@@ -4,7 +4,7 @@ namespace App\Filament\Analytics;
 
 use App\Domain\Booking\Models\Order;
 use App\Domain\Payments\Models\Payment;
-use App\Domain\Platform\Enums\ReportPeriod;
+use App\Domain\Platform\Enums\Comparison;
 use App\Domain\Platform\Services\Analytics\AttributionContext;
 use App\Domain\Platform\Services\Analytics\RejectedEvents;
 use App\Domain\Platform\Services\Analytics\Reports\SqlJson;
@@ -68,21 +68,22 @@ final class FunnelReport
     private const WEB_CHANNELS = [AttributionContext::CHANNEL_WEB, AttributionContext::CHANNEL_APP];
 
     /** @return array<string, mixed> */
-    public static function for(ReportPeriod $period): array
+    public static function for(Window $window, Comparison $comparison = Comparison::Previous): array
     {
-        $window = $period->window();
+        $baseline = $comparison->baseline($window);
 
-        return Cache::remember(self::cacheKey($window), self::CACHE_SECONDS, fn (): array => (new self)->compute($window));
+        return Cache::remember(self::cacheKey($window, $baseline), self::CACHE_SECONDS, fn (): array => (new self)->compute($window, $baseline));
     }
 
-    public static function cacheKey(Window $window): string
+    public static function cacheKey(Window $window, Window $baseline): string
     {
-        return 'analytics:funnel:v1:'.$window->timezone.':'.$window->dateFrom().':'.$window->dateTo().':'.app()->getLocale();
+        return 'analytics:funnel:v2:'.$window->timezone.':'.$window->dateFrom().':'.$window->dateTo().':'.$baseline->dateFrom().':'.$baseline->dateTo().':'.app()->getLocale();
     }
 
-    /** @return array<string, mixed> */
-    public function compute(Window $window): array
+    /** @param  Window|null  $baseline  con qué se compara; sin ella, el periodo anterior */
+    public function compute(Window $window, ?Window $baseline = null): array
     {
+        $baseline ??= $window->previous();
         $sessionRows = $this->sessionsByBucket($window);
         $sessions = $this->foldSessions($window, $sessionRows);
         $visits = $sessions['visits'];
@@ -133,7 +134,7 @@ final class FunnelReport
             'products' => $this->products($window),
             'contact' => $this->contact($window),
             'rejected' => RejectedEvents::lastDays() + ['dropped_events' => $this->droppedEvents($window)],
-            'previous' => $this->totalsOnly($window->previous()),
+            'previous' => $this->totalsOnly($baseline),
             'series' => $this->series($window, $sessions['by_key'], $purchasesByKey),
         ];
     }

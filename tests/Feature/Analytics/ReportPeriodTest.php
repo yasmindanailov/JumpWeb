@@ -171,9 +171,59 @@ class ReportPeriodTest extends TestCase
     public function test_options_keep_the_order_of_the_cases(): void
     {
         $this->assertSame(
-            ['today', 'yesterday', 'this_week', 'last_week', 'this_month', 'last_month', 'last_30', 'last_90'],
+            ['today', 'yesterday', 'this_week', 'last_week', 'this_month', 'last_month', 'this_quarter', 'last_quarter', 'this_year', 'last_year', 'last_30', 'last_90', 'custom'],
             array_keys(ReportPeriod::options()),
         );
+    }
+
+    // ─── Trimestres, años y a medida (lo que pidió el owner al ver el cuadro, 24-09) ────────────
+
+    public function test_quarters_and_years_run_whole_and_group_by_month(): void
+    {
+        $this->assertSame(['2026-04-01', '2026-06-30'], $this->days(ReportPeriod::ThisQuarter));
+        $this->assertSame(['2026-01-01', '2026-03-31'], $this->days(ReportPeriod::LastQuarter));
+        $this->assertSame(['2026-01-01', '2026-12-31'], $this->days(ReportPeriod::ThisYear));
+        $this->assertSame(['2025-01-01', '2025-12-31'], $this->days(ReportPeriod::LastYear));
+
+        $this->assertSame(Window::GRANULARITY_WEEK, ReportPeriod::ThisQuarter->window()->granularity(), '91 días: por semana');
+        $this->assertSame(Window::GRANULARITY_MONTH, ReportPeriod::ThisYear->window()->granularity());
+
+        $months = ReportPeriod::ThisYear->window()->bucketKeys();
+        $this->assertCount(12, $months);
+        $this->assertSame('2026-01-01', $months[0]);
+        $this->assertSame('2026-12-01', $months[11]);
+        $this->assertSame('2026-06-01', ReportPeriod::ThisYear->window()->bucketKey(CarbonImmutable::parse('2026-06-15 10:00:00', 'UTC')));
+    }
+
+    public function test_the_year_ago_window_keeps_the_same_civil_days(): void
+    {
+        $june = ReportPeriod::ThisMonth->window();
+        $this->assertSame(['2025-06-01', '2025-06-30'], [$june->yearAgo()->dateFrom(), $june->yearAgo()->dateTo()]);
+
+        $quarter = ReportPeriod::ThisQuarter->window();
+        $this->assertSame(['2025-04-01', '2025-06-30'], [$quarter->yearAgo()->dateFrom(), $quarter->yearAgo()->dateTo()]);
+
+        // Un 29 de febrero cae al 28.
+        Carbon::setTestNow(Carbon::parse('2028-02-29 09:00:00'));
+        $this->assertSame(['2027-02-01', '2027-02-28'], [ReportPeriod::ThisMonth->window()->yearAgo()->dateFrom(), ReportPeriod::ThisMonth->window()->yearAgo()->dateTo()]);
+    }
+
+    public function test_a_custom_range_orders_its_dates_caps_at_a_year_and_falls_back_when_unreadable(): void
+    {
+        $this->assertSame(['2026-03-01', '2026-04-15'], $this->daysOf(ReportPeriod::Custom->window('2026-03-01', '2026-04-15')));
+        $this->assertSame(['2026-03-01', '2026-04-15'], $this->daysOf(ReportPeriod::Custom->window('2026-04-15', '2026-03-01')), 'al revés, se ordenan');
+        $this->assertSame(['2026-03-01', '2026-03-01'], $this->daysOf(ReportPeriod::Custom->window('2026-03-01', null)), 'sin «hasta», un día');
+        $this->assertSame(['2024-01-01', '2024-12-31'], $this->daysOf(ReportPeriod::Custom->window('2024-01-01', '2026-01-01')), 'más de un año se acorta al año');
+        $this->assertSame(['2026-06-01', '2026-06-30'], $this->daysOf(ReportPeriod::Custom->window('ayer', 'hoy')), 'ilegible: el periodo por defecto');
+        $this->assertSame(['2026-06-01', '2026-06-30'], $this->daysOf(ReportPeriod::Custom->window(null, null)));
+        $this->assertSame(['2026-03-01', '2026-03-05'], $this->daysOf(ReportPeriod::Custom->window('2026-03-01 00:00:00', '2026-03-05T12:00')), 'un datetime del selector se recorta a la fecha');
+        $this->assertSame(Window::GRANULARITY_DAY, ReportPeriod::Custom->window('2026-03-01', '2026-03-31')->granularity());
+    }
+
+    /** @return array{0: string, 1: string} */
+    private function daysOf(Window $window): array
+    {
+        return [$window->dateFrom(), $window->dateTo()];
     }
 
     public function test_a_window_needs_at_least_one_day(): void

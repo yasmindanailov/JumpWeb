@@ -4,7 +4,7 @@ namespace App\Filament\Analytics;
 
 use App\Domain\Booking\Models\Order;
 use App\Domain\Identity\Models\User;
-use App\Domain\Platform\Enums\ReportPeriod;
+use App\Domain\Platform\Enums\Comparison;
 use App\Domain\Platform\Services\Analytics\Reports\SqlJson;
 use App\Domain\Platform\Services\Analytics\Reports\SqlTime;
 use App\Domain\Platform\Services\Analytics\Reports\Window;
@@ -52,21 +52,22 @@ final class CustomersReport
     private const BUYER_STATUSES = [Order::STATUS_PAID, Order::STATUS_REFUNDED];
 
     /** @return array<string, mixed> */
-    public static function for(ReportPeriod $period): array
+    public static function for(Window $window, Comparison $comparison = Comparison::Previous): array
     {
-        $window = $period->window();
+        $baseline = $comparison->baseline($window);
 
-        return Cache::remember(self::cacheKey($window), self::CACHE_SECONDS, fn (): array => (new self)->compute($window));
+        return Cache::remember(self::cacheKey($window, $baseline), self::CACHE_SECONDS, fn (): array => (new self)->compute($window, $baseline));
     }
 
-    public static function cacheKey(Window $window): string
+    public static function cacheKey(Window $window, Window $baseline): string
     {
-        return 'analytics:customers:v1:'.$window->timezone.':'.$window->dateFrom().':'.$window->dateTo();
+        return 'analytics:customers:v2:'.$window->timezone.':'.$window->dateFrom().':'.$window->dateTo().':'.$baseline->dateFrom().':'.$baseline->dateTo();
     }
 
-    /** @return array<string, mixed> */
-    public function compute(Window $window): array
+    /** @param  Window|null  $baseline  con qué se compara; sin ella, el periodo anterior */
+    public function compute(Window $window, ?Window $baseline = null): array
     {
+        $baseline ??= $window->previous();
         $registrations = $this->foldBy($window, $this->registrationsByBucket($window), ['n', 'verified', 'buyers']);
         $lookupRows = $this->lookupsByBucket($window);
         $lookups = $this->foldBy($window, $lookupRows, ['n', 'typed', 'found']);
@@ -106,7 +107,7 @@ final class CustomersReport
                 'visits' => array_sum($visits),
                 'visitors' => $this->visitors($window),
             ],
-            'previous' => $this->totalsOnly($window->previous()),
+            'previous' => $this->totalsOnly($baseline),
             'series' => $this->series($window, $registrations, $lookups, $customersByKey, $visits),
             'hours' => $hours,
         ];

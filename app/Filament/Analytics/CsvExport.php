@@ -2,7 +2,8 @@
 
 namespace App\Filament\Analytics;
 
-use App\Domain\Platform\Enums\ReportPeriod;
+use App\Domain\Platform\Enums\Comparison;
+use App\Domain\Platform\Services\Analytics\Reports\Window;
 use App\Domain\Platform\Services\Money;
 use App\Filament\Widgets\Analytics\CustomersBreakdownWidget;
 use App\Filament\Widgets\Analytics\FunnelWidget;
@@ -44,17 +45,16 @@ final class CsvExport
      *
      * @return array{filename: string, rows: list<list<string>>}
      */
-    public function build(string $report, ReportPeriod $period): array
+    public function build(string $report, Window $window, Comparison $comparison = Comparison::Previous): array
     {
-        $window = $period->window();
-
         $rows = [
             [__('admin.analytics.export.title', ['report' => __('admin.analytics.export.report.'.$report)])],
             [__('admin.analytics.export.period_line', ['from' => $window->dateFrom(), 'to' => $window->dateTo()])],
+            [__('admin.analytics.export.compare_line', ['comparison' => $comparison->label()])],
             [],
         ];
 
-        foreach ($this->sections($report, $period) as $table) {
+        foreach ($this->sections($report, $window, $comparison) as $table) {
             $rows[] = [(string) $table['heading']];
             $rows[] = array_map(static fn ($c): string => (string) $c, $table['columns']);
             foreach ($table['rows'] as $row) {
@@ -103,31 +103,31 @@ final class CsvExport
      *
      * @return list<array{heading: string, columns: list<string>, rows: list<list<string>>}>
      */
-    private function sections(string $report, ReportPeriod $period): array
+    private function sections(string $report, Window $window, Comparison $comparison): array
     {
         return match ($report) {
             self::REPORT_MONEY => [
-                $this->moneySummary($period),
-                ...(new MoneyBreakdownWidget)->tablesFor($period),
+                $this->moneySummary($window, $comparison),
+                ...(new MoneyBreakdownWidget)->tablesFor($window, $comparison),
             ],
             self::REPORT_CUSTOMERS => [
-                $this->customersSummary($period),
-                ...(new CustomersBreakdownWidget)->tablesFor($period),
+                $this->customersSummary($window, $comparison),
+                ...(new CustomersBreakdownWidget)->tablesFor($window, $comparison),
             ],
             self::REPORT_FUNNEL => [
-                $this->funnelSummary($period),
-                ...(new FunnelWidget)->tablesFor($period),
-                ...(new SourcesWidget)->tablesFor($period),
-                ...(new PagesWidget)->tablesFor($period),
+                $this->funnelSummary($window, $comparison),
+                ...(new FunnelWidget)->tablesFor($window, $comparison),
+                ...(new SourcesWidget)->tablesFor($window, $comparison),
+                ...(new PagesWidget)->tablesFor($window, $comparison),
             ],
             default => throw new \InvalidArgumentException("«{$report}» no es un informe del cuadro"),
         };
     }
 
     /** @return array{heading: string, columns: list<string>, rows: list<list<string>>} */
-    private function moneySummary(ReportPeriod $period): array
+    private function moneySummary(Window $window, Comparison $comparison): array
     {
-        $r = MoneyReport::for($period);
+        $r = MoneyReport::for($window, $comparison);
         /** @var array<string, int> $t */
         $t = $r['totals'];
         /** @var array<string, int> $c */
@@ -151,9 +151,9 @@ final class CsvExport
     }
 
     /** @return array{heading: string, columns: list<string>, rows: list<list<string>>} */
-    private function customersSummary(ReportPeriod $period): array
+    private function customersSummary(Window $window, Comparison $comparison): array
     {
-        $r = CustomersReport::for($period);
+        $r = CustomersReport::for($window, $comparison);
         /** @var array<string, mixed> $reg */
         $reg = $r['registrations'];
         /** @var array<string, int> $g */
@@ -175,9 +175,9 @@ final class CsvExport
     }
 
     /** @return array{heading: string, columns: list<string>, rows: list<list<string>>} */
-    private function funnelSummary(ReportPeriod $period): array
+    private function funnelSummary(Window $window, Comparison $comparison): array
     {
-        $r = FunnelReport::for($period);
+        $r = FunnelReport::for($window, $comparison);
         /** @var array<string, int> $t */
         $t = $r['traffic'];
         /** @var array<string, int> $p */

@@ -26,7 +26,7 @@
   - ⚠️ **`/events` sale del `throttle:api` y del stateful** (`withoutMiddleware`): apilado se come el embudo y
     `sendBeacon` vuelve 419. Un nombre de SERVIDOR desde el cliente se rechaza.
   - ⚠️ **`nullOnDelete` no se dispara nunca**: `anonymize()` y el export cubren las tablas nuevas.
-- **Estado**: T0 ✅ · T1 ✅ · **T2→T5 en el carril del SPA** (`#735`; la T2 en cinco, §4.5 y §4.8). `[DECIDIDO
+- **Estado**: T0 ✅ · T1 ✅ · **T2→T5 en el carril del SPA** (`#735`, `#736`; la T2 en seis, §4.5, §4.8). `[DECIDIDO
   owner]` 23-09: todo con la v2.0.0, sin la pregunta tras pagar. `[PENDIENTE: asesoría]`: los tres puntos de §7.
 - **Invariantes**: `RGPD-01`, `RGPD-05`, `RGPD-07`, `SEC-01`, `PAY-14`, `PAY-21`, `SUITE-01`. Dinero: ninguno cambia.
 
@@ -335,10 +335,16 @@ del menú de quien no tenga el permiso. Permiso **`reports.view`** —sembrado e
 exportaciones»), grupo `gestion`, admin por defecto y **sin consumidor hasta hoy**: se le da uno en vez de
 crear un sinónimo—; `canAccess()` en la página y `canView()` en cada widget; `puerta` y `staff` reciben 403
 (`AdminNavigationTest`, dos casos). El CSV con **`reports.export`** (nuevo), auditado (`AuditLogger`, sin PII,
-con recuento). Rótulos en `lang/es/admin.php` y `lang/zh_CN/admin.php` (`analytics.*`). **Filtro de periodo
-propio** (no el de «Hoy»): hoy · ayer · esta semana · la pasada · este mes · el pasado · 30 días · 90 días;
-cada cifra lleva el **Δ contra el periodo anterior** de la misma longitud; granularidad de tablas y gráficos:
-día (≤ 31 días), semana (≤ 90), mes (más largo; solo desde T2e).
+con recuento). Rótulos en `lang/es/admin.php` y `lang/zh_CN/admin.php` (`analytics.*`). **Filtro propio** (no
+el de «Hoy»): hoy · ayer · esta semana · la pasada · este mes · el pasado · **este trimestre · el pasado · este
+año · el pasado** · 30 días · 90 días · **a medida** (dos fechas, hasta un año; al revés se ordenan, ilegibles
+caen al defecto) (T2f, `#736`); **contra qué se compara, elegible**: el periodo anterior de la misma longitud o
+**el mismo periodo del año pasado** (`Comparison`; el 29 de febrero cae al 28), y cada cifra lleva su Δ contra
+esa ventana; granularidad de tablas y gráficos: día (≤ 31 días), semana (≤ 92), mes (hasta el año), **todo en
+directo** contra las tablas de siempre con caché de 5 min por ventana Y comparación (el roll-up de la T2e queda
+para cuando el volumen lo pida). **Tres pestañas** (Dinero · Clientes · Conversión, `AnalyticsPage::TABS`, la
+pestaña en la URL `?pestana=`), y dentro de cada una el mismo orden de lectura: tarjetas → gráficos → tablas
+plegadas.
 
 **El tiempo.** Todo corte por día u hora es en `DisplayTime::timezone()` (test que cruza la medianoche, molde
 `test_reschedule_offer_anchors_today_in_park_timezone_not_utc`). ⚠️ **Cómo**: el SQL agrupa por **HORA UTC**
@@ -436,10 +442,34 @@ analítica usa `->html()`.
   espacio, y el apóstrofo del saneado va DENTRO de las comillas (`"'=1+1"`), que es lo que la hoja de cálculo lee
   como texto. Un importe negativo también lleva apóstrofo: es el precio de la regla y se paga a sabiendas.
 
+**T2f · La forma del cuadro** (`#736`; el owner, 24-09, tras ver T2a–T2d en escritorio: «ordenar y organizar
+mejor todos esos números, mejorar las gráficas, hay demasiadas tablas; ¿el filtro podrá comparar este año con
+el anterior, por mes, año, trimestres?»): las **tres pestañas** y el orden tarjetas → gráficos → **tablas
+plegadas** (`x-filament::section` `collapsible collapsed persist-collapsed`: recuerdan si se abrieron, por
+widget y navegador; siguen en el DOM como vista de tabla de los gráficos y como lo que lleva el CSV); **seis
+gráficos de categorías** sobre una base (`CategoryChart`: barras HORIZONTALES —los rótulos son palabras— o
+anillo; sin datos, el estado vacío de Filament con el texto de las tablas; los tres colores validados y un gris
+para «sin dato»): vendido por producto (10), vendido y cobrado por canal, cómo se registran (anillo), el embudo
+con el % de las visitas en el rótulo de cada barra, visitas por fuente (las filas del informe sumadas por
+FUENTE, 8) y por dispositivo (anillo); las horas del parque pasan a media rejilla junto a un anillo. Los
+periodos, la comparación y la agrupación por mes, arriba: `Comparison`, `Delta::describe(…, Comparison)`,
+`BucketLabel` (un solo sitio para el rótulo de un cubo: día, semana, mes), `Window::yearAgo()`,
+`ReportPeriod::window($from, $to)` (nunca lanza: es la entrada de un filtro), `tablesFor(Window, Comparison)`
+en el rasgo común; el CSV lleva la línea «Comparado con» y `from`/`to`/`compare` en la URL y en el rastro.
+- ✅ **Lo que enseñó la T2f (24-09)**: **las pestañas inactivas de Filament NO son `display: none`** (`invisible
+  absolute h-0 overflow-hidden`), así que el observador de intersección de Livewire da por visibles sus widgets
+  y los pide también: abrir la página cuesta **10 peticiones** de Livewire (medido), no las de una pestaña; y
+  `offsetParent` no distingue una pestaña oculta: la sonda cuenta tarjetas y `canvas` dentro del panel
+  `.fi-active`. La URL lleva el `key` de la pestaña (`->key('money')`), no su `id`: sin fijarlo iba el slug del
+  rótulo traducido (`conversion::tab`). `ChartWidget::getHeading()` no es abstracto y no puede volverse abstracto
+  en una hija. `end()` sobre una constante no compila (`array_last`). Con la comparación «año pasado» y sin
+  datos de 2025, TODAS las tarjetas dicen «Sin datos el año pasado»: correcto, y la sonda lo acepta como válido.
+
 **T2e · `analytics_daily` y `ad_spend`** `(futuro)`: roll-up diario por comando programado (`analytics:rollup`,
-+1 tarea en el recuento de `deploy.sh`) para los periodos de más de 90 días y el año (el único sitio para
-«medir antes» sería producción); `ad_spend` tecleado (plataforma, campaña, mes, céntimos). Ventana **en
-directo ≤ 90 días** con caché de 5 min en Redis por informe y periodo.
++1 tarea en el recuento de `deploy.sh`) para cuando el `EXPLAIN` con volumen diga que el año en directo (T2f) no
+aguanta (el único sitio para «medir antes» sería producción); `ad_spend` tecleado (plataforma, campaña, mes,
+céntimos) para el CPA/ROAS. Hoy la ventana va **en directo hasta un año** con caché de 5 min por informe,
+ventana y comparación.
 
 ### 4.6 Conocer al cliente (T4)
 
@@ -480,7 +510,7 @@ de §4.3.
 | T0 | ✅ spec v2, el contrato de eventos, `#678` y la revisión (§7.1) | | docs-check |
 | T1 | el libro, en cinco sub-tandas: **T1a ✅ (23-09)** tablas y poda, cookie, `ResolveVisitor` y `AttributionContext`, la ingesta stateless con su limitador, los hechos de servidor por fuente, el sello en `creating`, `robots.txt`, contrato **1.18.0** (`POST /events`) · **T1b ✅ (23-09)** `track.js` diferido (2,3 KiB gzip, techo 3) y el cajón · **T1c ✅ (23-09)** UTM en los 24 correos al cliente (pegado tras firmar, ignorado al validar), `email_sent` y `email_clicked` · **T1d ✅ (23-09)** la fuente del pedido manual (cuatro tarjetas, obligatoria, sin defecto; `forPanel()` valida) · **T1e ✅ (23-09)** `anonymize()` desata el libro y el export lleva `analytics` y `attribution` (contrato **1.19.0**) · y el **CIERRE ✅ (23-09)**: `scripts/mutar-analitica.sh` **19/19** (1 control, 1 declarado), `redsys:verify-concurrency --workers=16` ✓, la sonda, y `trustProxies` medido y retirado (`SEC-13`) | contrato **1.19.0** (`experiments` en `/sidebar/session` puede esperar a T5) | tests + arnés + `redsys:verify-concurrency` + sonda |
 | T1·bis | migración de historia: «anterior a la medición», arranque de cuadros en la fecha del despliegue, `model:prune` y recuento de `deploy.sh` 6→7, ensayo en staging con `schedule:run` a mano, `POLICY_VERSION` la misma noche | | ensayo |
-| T2 | el cuadro de mando, en cinco — **la hace el carril del SPA** (traspaso `#679`, tomado en `#735`, 24-09): **T2a ✅ (24-09)** el dinero: `AnalyticsPage` (5.º sitio del menú, `reports.view`; `reports.export` sembrado), `ReportPeriod` · `Window` · `SqlTime` (hora UTC → día del parque), `MoneyReport` en la capa de entrega (17 consultas, caché 5 min), cuatro widgets (tarjetas, gráfico, clientes, desglose con la tabla por día/semana), cuatro índices; 35 casos en `ReportPeriodTest`, `MoneyReportTest` y `AnalyticsPageTest`; `scripts/sonda-analitica-panel.mjs` 9/9 en escritorio y móvil; **queda el OJO del owner** y el `EXPLAIN` con volumen en staging · **T2b ✅ (24-09)** registros y puerta: `CustomersReport` (10 consultas), `SqlJson` (el método del alta desde `props`, sin `->>` porque MariaDB no lo tiene), `visit_checked_in` desde `GateVisits::register()`, cinco widgets más (registros, la puerta, la serie, las horas del parque, el desglose); `CustomersReportTest` (7 casos) + el hecho en `GateVisitsTest`; sonda ampliada a nueve widgets; **queda el ojo del owner** · **T2c ✅ (24-09)** embudo y fuentes: `FunnelReport` (20 consultas), el embudo por sesión y la compra por pedido, el abandono por paso con los fallos técnicos, fuentes por primer y último toque (`AttributionContext::touchOf()`, un solo dueño de la regla), entradas y salidas, dispositivo, idioma, horas, productos, contacto, y los rechazados de la semana (`RejectedEvents`, contadores en caché desde la ingesta); seis widgets más (quince en total); `FunnelReportTest` (8 casos); sonda 14/14; **queda el ojo del owner** · **T2d ✅ (24-09)** el CSV: `GET /admin/analitica/csv?report=money|customers|funnel&period=…` (`AnalyticsExportController`, permiso `reports.export` en el controlador, `no-store`), `CsvExport` (BOM + `;` + CRLF, el resumen de las tarjetas y las MISMAS tablas de los widgets por `tablesFor()`, toda celda que empiece por `= + - @ \t \r` con apóstrofo), auditado como `reports.exported` con informe, periodo y recuento; el botón «Descargar CSV» en la cabecera; `AnalyticsExportTest` (8 casos); sonda 14/14 con las tres descargas · **T2e** `analytics_daily`, `ad_spend` | | tests + presupuesto de consultas + `EXPLAIN` + el ojo del owner en vivo |
+| T2 | el cuadro de mando, en cinco — **la hace el carril del SPA** (traspaso `#679`, tomado en `#735`, 24-09): **T2a ✅ (24-09)** el dinero: `AnalyticsPage` (5.º sitio del menú, `reports.view`; `reports.export` sembrado), `ReportPeriod` · `Window` · `SqlTime` (hora UTC → día del parque), `MoneyReport` en la capa de entrega (17 consultas, caché 5 min), cuatro widgets (tarjetas, gráfico, clientes, desglose con la tabla por día/semana), cuatro índices; 35 casos en `ReportPeriodTest`, `MoneyReportTest` y `AnalyticsPageTest`; `scripts/sonda-analitica-panel.mjs` 9/9 en escritorio y móvil; **queda el OJO del owner** y el `EXPLAIN` con volumen en staging · **T2b ✅ (24-09)** registros y puerta: `CustomersReport` (10 consultas), `SqlJson` (el método del alta desde `props`, sin `->>` porque MariaDB no lo tiene), `visit_checked_in` desde `GateVisits::register()`, cinco widgets más (registros, la puerta, la serie, las horas del parque, el desglose); `CustomersReportTest` (7 casos) + el hecho en `GateVisitsTest`; sonda ampliada a nueve widgets; **queda el ojo del owner** · **T2c ✅ (24-09)** embudo y fuentes: `FunnelReport` (20 consultas), el embudo por sesión y la compra por pedido, el abandono por paso con los fallos técnicos, fuentes por primer y último toque (`AttributionContext::touchOf()`, un solo dueño de la regla), entradas y salidas, dispositivo, idioma, horas, productos, contacto, y los rechazados de la semana (`RejectedEvents`, contadores en caché desde la ingesta); seis widgets más (quince en total); `FunnelReportTest` (8 casos); sonda 14/14; **queda el ojo del owner** · **T2d ✅ (24-09)** el CSV: `GET /admin/analitica/csv?report=money|customers|funnel&period=…` (`AnalyticsExportController`, permiso `reports.export` en el controlador, `no-store`), `CsvExport` (BOM + `;` + CRLF, el resumen de las tarjetas y las MISMAS tablas de los widgets por `tablesFor()`, toda celda que empiece por `= + - @ \t \r` con apóstrofo), auditado como `reports.exported` con informe, periodo y recuento; el botón «Descargar CSV» en la cabecera; `AnalyticsExportTest` (8 casos); sonda 14/14 con las tres descargas · **T2f ✅ (24-09)** la forma (`#736`, pedida por el owner al ver T2a–T2d): tres pestañas (`?pestana=`), seis gráficos de categorías (`CategoryChart`) donde había tablas, las tablas plegadas al pie, trimestre · año · a medida en directo (por mes más allá de 92 días, techo un año), la comparación elegible (`Comparison`: periodo anterior o mismo periodo del año pasado) en tarjetas y CSV; `ReportPeriodTest` +3, `MoneyReportTest` +1, `AnalyticsExportTest` +1, `AnalyticsPageTest` +1 y ampliado; sonda 27/27 por pestaña, escritorio y móvil; **queda el ojo del owner** · **T2e** `analytics_daily`, `ad_spend` (cuando el `EXPLAIN` con volumen lo pida) | | tests + presupuesto de consultas + `EXPLAIN` + el ojo del owner en vivo |
 | T3a | categorías sin quemar, banner, política por sección, aviso a cuentas, `PUT /me/analytics`, driver y PostHog con `Drivers::csp()` | `POLICY_VERSION` | tests + sonda (cero terceros sin consentir; con consentimiento, sin `securitypolicyviolation`) |
 | T3b | píxeles, Consent Mode básico, job de conversiones con relectura del consentimiento, tokens en `.env` | | tests con `Http::fake` |
 | T4 | la 360, los segmentos, el opt-in tras comprar | | tests |
@@ -561,6 +591,16 @@ de §4.3.
   el resumen y las tablas de los tres informes; `=1+1`, `@`, `-` y `+` con apóstrofo, y la regla sola con los
   seis prefijos y sus controles; el rastro con informe, periodo y recuento y NADA más; el botón solo con el
   permiso; el periodo por defecto del fichero).
+- **T2f ✅ (24-09)**: `ReportPeriodTest` (trimestres y años enteros y por mes, con sus 12 claves; el año pasado
+  con los mismos días civiles y el 29 de febrero al 28; a medida: al revés se ordena, sin «hasta» un día, más de
+  un año se acorta, ilegible cae al defecto, un datetime del selector se recorta); `MoneyReportTest` (la
+  comparación con el año pasado: mismo periodo, otra base y otra clave de caché); `AnalyticsExportTest` (a
+  medida y `compare=year_ago` en la URL, en el nombre del fichero, en la línea «Comparado con» y en el rastro
+  con `from`/`to`/`compare`); `AnalyticsPageTest` (los tres rótulos de pestaña y `role="tablist"`, cada widget en
+  UNA pestaña y las tablas al final de cada una; los seis gráficos de categorías vacíos sin datos y, con una
+  sesión móvil de Google, el embudo con «Visitas · 100,0 %», las fuentes sumadas por fuente y el anillo de
+  dispositivos con su color; `doughnut` frente a `bar`). Sonda por pestaña (tarjetas y `canvas` del panel
+  activo), 90 días → semanas, el año → meses, año pasado, a medida con sus dos fechas, móvil sin scroll lateral.
 - `PrivacyTest`/`MePrivacyTest`: `anonymize()` y `exportFor()` cubren analytics; `PUT /me/analytics`.
 - `machine.test.js`, `controller.test.js`: transiciones emiten `step_entered`; `drawer_opened` al nacer
   abierto; el banner se suprime con el cajón abierto; `SidebarBundleBudgetTest` con el techo de `track.js`.

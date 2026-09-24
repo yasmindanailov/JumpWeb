@@ -6,7 +6,7 @@ use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderAdjustment;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Models\PaymentRefund;
-use App\Domain\Platform\Enums\ReportPeriod;
+use App\Domain\Platform\Enums\Comparison;
 use App\Domain\Platform\Models\AuditLog;
 use App\Domain\Platform\Services\Analytics\Reports\SqlTime;
 use App\Domain\Platform\Services\Analytics\Reports\Window;
@@ -57,22 +57,23 @@ final class MoneyReport
     private const COLLECTED_STATUSES = [Order::STATUS_PAID, Order::STATUS_REFUNDED];
 
     /** @return array<string, mixed> */
-    public static function for(ReportPeriod $period): array
+    public static function for(Window $window, Comparison $comparison = Comparison::Previous): array
     {
-        $window = $period->window();
+        $baseline = $comparison->baseline($window);
 
-        return Cache::remember(self::cacheKey($window), self::CACHE_SECONDS, fn (): array => (new self)->compute($window));
+        return Cache::remember(self::cacheKey($window, $baseline), self::CACHE_SECONDS, fn (): array => (new self)->compute($window, $baseline));
     }
 
-    /** La clave lleva la zona y el idioma: los nombres de producto salen traducidos y el día del parque depende de la zona. */
-    public static function cacheKey(Window $window): string
+    /** La clave lleva la zona, las dos ventanas y el idioma: los nombres de producto salen traducidos y el día del parque depende de la zona. */
+    public static function cacheKey(Window $window, Window $baseline): string
     {
-        return 'analytics:money:v1:'.$window->timezone.':'.$window->dateFrom().':'.$window->dateTo().':'.app()->getLocale();
+        return 'analytics:money:v2:'.$window->timezone.':'.$window->dateFrom().':'.$window->dateTo().':'.$baseline->dateFrom().':'.$baseline->dateTo().':'.app()->getLocale();
     }
 
-    /** @return array<string, mixed> */
-    public function compute(Window $window): array
+    /** @param  Window|null  $baseline  con qué se compara; sin ella, el periodo anterior */
+    public function compute(Window $window, ?Window $baseline = null): array
     {
+        $baseline ??= $window->previous();
         $collected = $this->fold($window, $this->paymentsByBucket($window));
         $refunded = $this->fold($window, $this->refundsByBucket($window));
         $sold = $this->fold($window, $this->ordersByBucket($window));
@@ -97,7 +98,7 @@ final class MoneyReport
                 'granularity' => $window->granularity(),
             ],
             'totals' => $totals,
-            'previous' => $this->totalsOnly($window->previous()),
+            'previous' => $this->totalsOnly($baseline),
             'series' => $this->series($window, $collected, $refunded, $sold),
             'deposit' => $this->deposit($window),
             'by_channel' => $this->byChannel($window),

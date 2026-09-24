@@ -273,11 +273,11 @@ class FunnelReportTest extends TestCase
         $this->seedJune();
         Cache::flush();
 
-        $first = FunnelReport::for(ReportPeriod::ThisMonth);
+        $first = FunnelReport::for(ReportPeriod::ThisMonth->window());
 
         DB::flushQueryLog();
         DB::enableQueryLog();
-        $second = FunnelReport::for(ReportPeriod::ThisMonth);
+        $second = FunnelReport::for(ReportPeriod::ThisMonth->window());
         $queries = count(DB::getQueryLog());
         DB::disableQueryLog();
 

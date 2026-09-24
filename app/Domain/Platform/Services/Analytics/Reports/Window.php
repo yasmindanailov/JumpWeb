@@ -14,8 +14,8 @@ use InvalidArgumentException;
  *
  * De aquí salen las tres cosas que el SQL y el gráfico necesitan y que no pueden divergir:
  *  - los bordes en UTC ({@see utcFrom()} / {@see utcTo()}), que es lo que va en el `WHERE`;
- *  - la granularidad ({@see granularity()}): por DÍA hasta 31 días y por SEMANA hasta 90 —más largo es la
- *    T2e, con `analytics_daily`—;
+ *  - la granularidad ({@see granularity()}): por DÍA hasta 31 días, por SEMANA hasta 92 y por MES hasta el año
+ *    (T2f, `#736`: en directo contra las tablas de siempre; el roll-up diario de la T2e queda para el volumen);
  *  - y la clave de cubo de un instante cualquiera ({@see bucketKey()}), que es cómo un cobro a las 00:30 de
  *    Madrid cae en SU día y no en el anterior, que es donde lo pondría `DATE(paid_at)`.
  */
@@ -25,8 +25,15 @@ final readonly class Window
 
     public const GRANULARITY_WEEK = 'week';
 
-    /** Hasta cuántos días se agrupa por día; más allá, por semana. */
+    public const GRANULARITY_MONTH = 'month';
+
+    /** Hasta cuántos días se agrupa por día; más allá, por semana; y más allá de un trimestre, por mes. */
     public const MAX_DAYS_BY_DAY = 31;
+
+    public const MAX_DAYS_BY_WEEK = 92;
+
+    /** Una ventana no pasa de un año y un día: el cuadro es en directo y el año es el periodo más largo. */
+    public const MAX_DAYS = 366;
 
     private function __construct(
         /** El primer instante de la ventana, en la zona del parque (inclusive). */
@@ -46,7 +53,13 @@ final readonly class Window
             throw new InvalidArgumentException('A window needs at least one day: the last day is before the first.');
         }
 
-        return new self($from, $to, $timezone);
+        $window = new self($from, $to, $timezone);
+
+        if ($window->days() > self::MAX_DAYS) {
+            throw new InvalidArgumentException('A window is at most a year and a day long: the dashboard is live, and the year is the longest period.');
+        }
+
+        return $window;
     }
 
     /**
@@ -64,6 +77,15 @@ final readonly class Window
         $lastDay = $this->from->subDay();
 
         return self::ofDays($lastDay->subDays($this->days() - 1), $lastDay, $this->timezone);
+    }
+
+    /**
+     * Los MISMOS días civiles un año antes (para el «frente al mismo periodo del año pasado»): junio contra
+     * junio, el segundo trimestre contra el segundo trimestre. Un 29 de febrero cae al 28.
+     */
+    public function yearAgo(): self
+    {
+        return self::ofDays($this->from->subYearNoOverflow(), $this->to->subDay()->subYearNoOverflow(), $this->timezone);
     }
 
     public function utcFrom(): CarbonImmutable
@@ -90,7 +112,13 @@ final readonly class Window
 
     public function granularity(): string
     {
-        return $this->days() <= self::MAX_DAYS_BY_DAY ? self::GRANULARITY_DAY : self::GRANULARITY_WEEK;
+        $days = $this->days();
+
+        return match (true) {
+            $days <= self::MAX_DAYS_BY_DAY => self::GRANULARITY_DAY,
+            $days <= self::MAX_DAYS_BY_WEEK => self::GRANULARITY_WEEK,
+            default => self::GRANULARITY_MONTH,
+        };
     }
 
     public function contains(CarbonInterface $instant): bool
@@ -109,9 +137,11 @@ final readonly class Window
     {
         $local = CarbonImmutable::instance($instant)->setTimezone($this->timezone);
 
-        return $this->granularity() === self::GRANULARITY_DAY
-            ? $local->toDateString()
-            : $local->startOfWeek(CarbonInterface::MONDAY)->toDateString();
+        return match ($this->granularity()) {
+            self::GRANULARITY_DAY => $local->toDateString(),
+            self::GRANULARITY_WEEK => $local->startOfWeek(CarbonInterface::MONDAY)->toDateString(),
+            default => $local->startOfMonth()->toDateString(),
+        };
     }
 
     /**

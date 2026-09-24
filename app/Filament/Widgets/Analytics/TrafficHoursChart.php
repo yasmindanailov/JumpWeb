@@ -18,7 +18,8 @@ class TrafficHoursChart extends ChartWidget
 
     protected static ?int $sort = 14;
 
-    protected int|string|array $columnSpan = 'full';
+    /** Media rejilla en escritorio (T2f): al lado va el anillo de dispositivos. */
+    protected int|string|array $columnSpan = 1;
 
     protected ?string $maxHeight = '260px';
 

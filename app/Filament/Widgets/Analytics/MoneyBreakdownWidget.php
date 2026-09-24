@@ -2,11 +2,9 @@
 
 namespace App\Filament\Widgets\Analytics;
 
-use App\Domain\Platform\Enums\ReportPeriod;
-use App\Domain\Platform\Services\Analytics\Reports\Window;
 use App\Domain\Platform\Services\Money;
+use App\Filament\Analytics\BucketLabel;
 use App\Filament\Widgets\Analytics\Concerns\AnalyticsWidget;
-use Carbon\CarbonImmutable;
 use Filament\Widgets\Concerns\InteractsWithPageFilters;
 use Filament\Widgets\Widget;
 
@@ -30,18 +28,6 @@ class MoneyBreakdownWidget extends Widget
     protected int|string|array $columnSpan = 'full';
 
     protected string $view = 'filament.widgets.analytics.tables';
-
-    /**
-     * Las mismas tablas, para el CSV (T2d): el periodo viene de fuera, no del filtro de la página.
-     *
-     * @return list<array{heading: string, columns: list<string>, rows: list<list<string>>}>
-     */
-    public function tablesFor(ReportPeriod $period): array
-    {
-        $this->pageFilters = ['period' => $period->value];
-
-        return $this->getViewData()['tables'];
-    }
 
     /** @return array<string, mixed> */
     protected function getViewData(): array
@@ -70,13 +56,9 @@ class MoneyBreakdownWidget extends Widget
      */
     private function series(array $series, string $granularity): array
     {
-        $byWeek = $granularity === Window::GRANULARITY_WEEK;
-
-        $rows = array_map(static function (array $r) use ($byWeek): array {
-            $day = CarbonImmutable::createFromFormat('!Y-m-d', $r['key'], 'UTC')->format('d/m/Y');
-
+        $rows = array_map(static function (array $r) use ($granularity): array {
             return [
-                $byWeek ? __('admin.analytics.money.week_of', ['day' => $day]) : $day,
+                BucketLabel::long($r['key'], $granularity),
                 (string) $r['orders'],
                 Money::format($r['sold']),
                 Money::format($r['collected']),
@@ -93,9 +75,9 @@ class MoneyBreakdownWidget extends Widget
         ];
 
         return [
-            'heading' => __($byWeek ? 'admin.analytics.money.by_week' : 'admin.analytics.money.by_day'),
+            'heading' => BucketLabel::heading($granularity),
             'columns' => [
-                __($byWeek ? 'admin.analytics.money.col.week' : 'admin.analytics.money.col.day'),
+                BucketLabel::column($granularity),
                 __('admin.analytics.money.col.orders'),
                 __('admin.analytics.money.col.sold'),
                 __('admin.analytics.money.col.collected'),

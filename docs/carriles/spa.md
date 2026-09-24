@@ -1,7 +1,7 @@
 # Carril · Diseño del SPA (el cajón) — y, desde el 24-09, LA ANALÍTICA
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb`) · Banda: **730–759** (700–729 agotada el 20-09)
-> · Último usado: **`#735`** · La banda está dada de alta en la tabla de `DECISIONES.md` ·
+> · Último usado: **`#736`** · La banda está dada de alta en la tabla de `DECISIONES.md` ·
 > Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: **`analitica.md` §0 y §4.5** ·
 > `google-business-profile.md` §0 · `sidebar-spa.md` §0 · `celebracion-e-invitacion.md` §0 · Actualizado: 2026-09-24.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`). El
@@ -9,21 +9,24 @@
 > una feature baja a su spec (las trampas de la ficha de Google viven en su §9.1 y las de la invitación en
 > su §10.20, mudadas el 24-09).
 
-## Foto (2026-09-24, madrugada)
+## Foto (2026-09-24, mañana)
 
 - ▶▶▶ **LA ANALÍTICA ES MÍA ENTERA desde `#735`** (`[DECIDIDO owner]` 24-09: «el otro agente cerró sesión
   para delegarte toda la analítica»). Plataforma dejó la **T1 ✅** (`f501a990`→`4d4c3aec`, contrato 1.19.0,
-  arnés 19/19, `RGPD-07`, `PAY-21`, `SEC-13`); su traspaso, atendido. **T2→T5 aquí**; la T2 partida en cinco
+  arnés 19/19, `RGPD-07`, `PAY-21`, `SEC-13`); su traspaso, atendido. **T2→T5 aquí**; la T2 partida en seis
   con las tres peticiones del owner delante (dinero al detalle · registros · puerta): `analitica.md` §4.5.
-  ✅ **T2a, T2b, T2c y T2d EN EL ÁRBOL (24-09)**: «Analítica» en `/admin/analitica` con QUINCE widgets — el
-  dinero entero; los registros y la puerta; y la conversión: visitas, compras, conversión, el embudo por sesión,
-  el abandono por paso, fuentes por primer y último toque, entradas y salidas, dispositivo, idioma, horas,
-  productos, contacto y los rechazados de la semana — y el botón **«Descargar CSV»** (los tres informes, con
-  `reports.export`, auditado) (spec §4.8), 60 casos, sonda 15/15 en escritorio y móvil. **Queda el OJO del
-  owner** en `localhost:8081/admin/analitica` (admin) y el `EXPLAIN` con volumen en staging. ▶ Sigue la
-  **T2e** (`analytics_daily` + `ad_spend`) y después la **T3**. ⚠️ **El fixture «probe-ojo-analitica» está MONTADO en la BD
-  local** (87 pedidos `JW-OJO…`, 74 cobros, 12 devoluciones, 25 clientes `ojo-N@ojo-analitica.jumpweb.test`,
-  dos meses): `OJO=desmontar` lo quita entero; antes había 9 pedidos y 2 cobros.
+  ✅ **T2a→T2d y T2f EN EL ÁRBOL (24-09)**: «Analítica» en `/admin/analitica` en **tres pestañas** (Dinero ·
+  Clientes · Conversión, `?pestana=`) con 21 widgets — tarjetas, gráficos (once: series, horas, y seis de
+  categorías: producto, canal, cómo se registran, embudo, fuentes, dispositivo) y las tablas **plegadas** al
+  pie —, el filtro con **trimestre · año · a medida** (hasta un año, por mes más allá de 92 días, en directo) y
+  **«Comparar con»** (periodo anterior · mismo periodo del año pasado), y el botón **«Descargar CSV»** (los tres
+  informes, con `reports.export`, auditado, con la línea «Comparado con»). Spec §4.8; 100 casos en
+  `tests/Feature/Analytics`; sonda 27/27 por pestaña, escritorio y móvil. **El owner vio T2a–T2d en escritorio
+  («está muy bien») y pidió la T2f (`#736`)**: queda SU OJO sobre la T2f en `localhost:8081/admin/analitica`
+  (admin; móvil también) y el `EXPLAIN` con volumen en staging. ▶ Sigue la **T2e** (`analytics_daily` +
+  `ad_spend`, solo si el volumen lo pide) y después la **T3**. ⚠️ **El fixture «probe-ojo-analitica» está
+  MONTADO en la BD local** (90 pedidos `JW-OJO…`, 81 cobros, 9 devoluciones, 25 clientes
+  `ojo-N@ojo-analitica.jumpweb.test`, 506 sesiones, dos meses): `OJO=desmontar` lo quita entero.
 - ✅ **La ficha de Google (`#524`), T1 y T2·1→T2·8 en el árbol** (`#720`→`#734`), **vistas por el owner con
   datos y con su ✅ en vivo** (21-09, panel y tarjeta). Lo que enseñó cada tanda: `google-business-profile.md`
   §4.1; lo que pagó: §9.1. ⚠️ **Un fixture SIGUE MONTADO en la BD local** («probe-ojo-resenas», modos
@@ -38,14 +41,15 @@
 ## Por dónde retomar, en orden
 
 1. ❗❗❗ **LA ANALÍTICA, T2→T5** (`specs/analitica.md`; §0, §4.1, §4.2, §4.5, §7.1 antes de tocar). **T2 en
-   cinco, en este orden**: **T2a dinero ✅ (24-09)** → **T2b registros y puerta ✅ (24-09)** → **T2c embudo y
-   fuentes ✅ (24-09)** → **T2d CSV ✅ (24-09)** → **T2e `analytics_daily` + `ad_spend`** (roll-up diario por
-   comando programado `analytics:rollup` con `Window` de UN día por informe, guardado como JSON por día e informe;
-   +1 tarea del scheduler → `deploy.sh` «esperadas 6→7»; `ReportPeriod` gana `this_year`/`last_year` y los tres
-   `for()` cosen «días cerrados desde el diario + hoy en directo» cuando la ventana pasa de 90 días; `ad_spend`
-   —plataforma, campaña, mes, céntimos— tecleado en una tabla del panel (Resource pequeño en «Ajustes») para el
-   CPA/ROAS de `SourcesWidget` sobre el primer toque no directo). Después, la **T3** (consentimiento y driver:
-   toca lo compartido, aviso dado).
+   seis**: **T2a dinero ✅** → **T2b registros y puerta ✅** → **T2c embudo y fuentes ✅** → **T2d CSV ✅** →
+   **T2f la forma ✅ (todo 24-09)** → **T2e `analytics_daily` + `ad_spend`**, SOLO si el `EXPLAIN` con volumen
+   dice que el año en directo no aguanta (roll-up diario por comando programado `analytics:rollup` con `Window`
+   de UN día por informe, JSON por día e informe; +1 tarea del scheduler → `deploy.sh` «esperadas 6→7»; los tres
+   `for()` cosen «días cerrados desde el diario + hoy en directo»; `ad_spend` —plataforma, campaña, mes,
+   céntimos— tecleado en un Resource pequeño de «Ajustes» para el CPA/ROAS de `SourcesWidget`). ▶ **Antes de
+   nada: el OJO del owner sobre la T2f** (pestañas, gráficos nuevos, tablas plegadas, «Comparar con», trimestre
+   y año, a medida; escritorio y móvil) y lo que pida. Después, la **T3** (consentimiento y driver: toca lo
+   compartido, aviso dado).
    ⚠️ El fixture del ojo siembra también TRÁFICO (506 sesiones, 2.294 hechos, sellos con primer y último toque).
    ⚠️ **Los cortes por día van por HORA UTC en SQL y al día del parque en PHP** (`SqlTime::hourBucket()`,
    `Window::bucketKey()`), nunca `CONVERT_TZ`. ⚠️ El dinero se lee de `payments`, `payment_refunds`,
@@ -175,6 +179,15 @@ spec enumera. Lo del cliente va en la rama `cliente/playjump`, nunca a `main`.
   (la web), no a `/admin/login` (Filament). El `#` de una referencia como `#685` dentro de un `sed 's#…#…#'`
   rompe la expresión y una cadena `&&` para en silencio: el mensaje del commit se escribe con Write y se pasa
   con `-F`.
+- 🪤 **De la T2f**: **las pestañas inactivas de Filament no son `display: none`** (`invisible absolute h-0`):
+  Livewire carga sus widgets igual (10 peticiones al abrir, medido) y `offsetParent` no las distingue; la sonda
+  mide dentro de `.fi-sc-tabs-tab.fi-active`. La URL lleva el `key` de la pestaña, no el `id`. Pint
+  (`fully_qualified_strict_types`) reescribe un `{@see TABS}` como `{@see Tabs}` (¡otra clase!): las constantes
+  se citan con comillas. `ChartWidget::getHeading()` no puede volverse abstracto; `end(CONSTANTE)` no compila
+  (`array_last`). Un `throw` de algo que no es `Error` llega a Playwright como `pageerror` «Object» sin más: la
+  sonda apunta nombre, mensaje y pila. ⚠️ **Cinco `pageerror` «Object» INTERMITENTES en el paso del filtro**
+  (dos tandas de tres con la sonda de antes de apuntar la pila; después, dos tandas limpias): causa NO
+  verificada; si reaparecen, la sonda ya dice de dónde.
 - 🩹 **En la BD LOCAL hay 19 titulares con la cadena de waiver ROTA** (basura del 26–27 de agosto): si mides
   cadenas, compara ANTES/DESPUÉS.
 - **F4 cerró y el cajón es un PAQUETE** (`specs/cajon-empaquetable.md` §0 y §4.8). Tocar «HOJA ENFOCADA» de

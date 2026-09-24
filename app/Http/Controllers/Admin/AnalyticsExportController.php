@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Domain\Platform\Enums\Comparison;
 use App\Domain\Platform\Enums\ReportPeriod;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Filament\Analytics\CsvExport;
@@ -27,11 +28,18 @@ class AnalyticsExportController extends Controller
         abort_unless(in_array($report, CsvExport::REPORTS, true), 404);
 
         $period = ReportPeriod::fromValue($request->query('period'));
-        $built = $export->build($report, $period);
+        $from = $request->query('from');
+        $to = $request->query('to');
+        $window = $period->window(is_string($from) ? $from : null, is_string($to) ? $to : null);
+        $comparison = Comparison::fromValue($request->query('compare'));
+        $built = $export->build($report, $window, $comparison);
 
         AuditLogger::log('reports.exported', null, [
             'report' => $report,
             'period' => $period->value,
+            'from' => $window->dateFrom(),
+            'to' => $window->dateTo(),
+            'compare' => $comparison->value,
             'rows' => count($built['rows']),
         ]);
 
