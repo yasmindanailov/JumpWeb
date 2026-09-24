@@ -137,6 +137,47 @@ class AttributionSealTest extends TestCase
         $this->assertArrayNotHasKey('visitor_id', $order->attribution);
         $this->assertArrayNotHasKey('session_id', $order->attribution);
         $this->assertArrayNotHasKey('click_ids', $order->attribution);
+        $this->assertArrayNotHasKey('browser_ids', $order->attribution);
+    }
+
+    /**
+     * T3b·2: con SOLO `marketing`, el sello lleva al visitante (la llave con la que la cola relee su decisión
+     * viva) y las cookies de los píxeles con su forma —nunca la sesión, que es de `analytics`—; una cookie con
+     * otra forma no viaja, y sin `marketing` no viaja ninguna.
+     */
+    public function test_with_marketing_only_the_seal_carries_the_visitor_and_the_pixel_cookies_with_their_shape(): void
+    {
+        $visitor = Visitor::mint();
+        $this->sesion($visitor, ['consent' => ['analytics' => false, 'marketing' => true], 'click_ids' => ['ttclid' => 'E.C.P.abc123']]);
+
+        $request = Request::create('/api/v1/orders', 'POST');
+        $request->cookies->set(Visitor::COOKIE, $visitor);
+        $request->cookies->set('_fbp', 'fb.1.1727170000000.1234567890');
+        $request->cookies->set('_fbc', 'fb.1.1727170000000.IwAR0abcdef');
+        $request->cookies->set('_ttp', 'no vale: tiene espacios');
+        $context = app(AttributionContext::class);
+        $context->resolveFrom($request);
+        $context->resolve();
+
+        $order = $this->order('JJ-MKT');
+
+        $this->assertSame($visitor, $order->attribution['visitor_id']);
+        $this->assertArrayNotHasKey('session_id', $order->attribution, 'la sesión es de `analytics`');
+        $this->assertSame(['ttclid' => 'E.C.P.abc123'], $order->attribution['click_ids']);
+        $this->assertSame(['fbp' => 'fb.1.1727170000000.1234567890', 'fbc' => 'fb.1.1727170000000.IwAR0abcdef'], $order->attribution['browser_ids'], 'la `_ttp` malformada no viaja');
+
+        // Con `analytics` y sin `marketing`: el visitante sí (es suyo), las cookies de los píxeles no.
+        $otro = Visitor::mint();
+        $this->sesion($otro, ['consent' => ['analytics' => true, 'marketing' => false]]);
+        $request = Request::create('/api/v1/orders', 'POST');
+        $request->cookies->set(Visitor::COOKIE, $otro);
+        $request->cookies->set('_fbp', 'fb.1.1727170000000.1234567890');
+        $context->resolveFrom($request);
+        $context->resolve();
+
+        $order = $this->order('JJ-ANA');
+        $this->assertSame($otro, $order->attribution['visitor_id']);
+        $this->assertArrayNotHasKey('browser_ids', $order->attribution);
     }
 
     /** `gclid` sin UTM es `google/cpc`; un `ref` es la fuente; sin nada, directo (reglas del contrato). */

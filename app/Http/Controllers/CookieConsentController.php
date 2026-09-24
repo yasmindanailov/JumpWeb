@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Domain\Identity\Models\CookieConsentLog;
 use App\Domain\Identity\Services\CookieConsent;
+use App\Domain\Platform\Services\Analytics\Visitor;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -32,6 +33,9 @@ class CookieConsentController extends Controller
 
         CookieConsentLog::create([
             'user_id' => $request->user()?->id,
+            // T3b·2: el visitante del libro de eventos, para RELEER su consentimiento vivo desde la cola antes de
+            // comunicar una compra a un anunciante. Sin cookie válida, `null`: entonces no hay conversión de servidor.
+            'visitor_id' => Visitor::fromRequest($request),
             'categories' => $cats,
             'version' => CookieConsent::POLICY_VERSION,
             'ip' => $request->ip(),

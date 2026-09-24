@@ -1,6 +1,7 @@
 <?php
 
 use App\Domain\Identity\Services\CookieConsent;
+use App\Domain\Platform\Services\Analytics\AttributionContext;
 use App\Domain\Platform\Services\Analytics\EmailUtm;
 use App\Domain\Platform\Services\Analytics\Visitor;
 use App\Http\Api\ApiExceptionRenderer;
@@ -165,6 +166,11 @@ return Application::configure(basePath: dirname(__DIR__))
             // cifrar por el mismo motivo que la de consentimiento, y además porque la ruta de ingesta es
             // stateless —fuera del grupo con `EncryptCookies`— y tiene que leerla tal cual.
             Visitor::COOKIE,
+            // Las cookies de los píxeles de Meta y TikTok (T3b·2): no son nuestras y no están cifradas, y
+            // `EncryptCookies` deja a `null` toda cookie que no consigue descifrar. El sello del pedido las
+            // copia SOLO con la categoría `marketing` (`AttributionContext::seal()`), para que la API de
+            // conversiones del servidor empareje la compra con el clic (`fbp`/`fbc`/`ttp`).
+            ...AttributionContext::BROWSER_COOKIES,
         ]);
 
         // Vuelta/notificación de Redsys (Fase 5.5b/5.5c/5.5d): POST cross-site firmado por

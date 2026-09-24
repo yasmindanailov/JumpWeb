@@ -57,6 +57,7 @@ use App\Domain\Content\Services\ScheduleDisplay;
 use App\Domain\Content\Services\ThemeSettings;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Services\CookieConsentLedger;
 use App\Domain\Identity\Services\CustomerAccountContext;
 use App\Domain\Identity\Services\DependentAssigner;
 use App\Domain\Identity\Services\DependentRegistry;
@@ -67,6 +68,7 @@ use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Models\PaymentRefund;
 use App\Domain\Payments\Services\PaymentInitiator;
 use App\Domain\Payments\Services\Redsys;
+use App\Domain\Platform\Contracts\ConsentLedger;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
@@ -119,6 +121,9 @@ class ModuleContractsTest extends TestCase
         // que su bind vive en `PaymentsServiceProvider` y no en el de Booking.
         $this->assertInstanceOf(CheckoutOrchestrator::class, app(ReservationCheckout::class));
         $this->assertInstanceOf(PaymentInitiator::class, app(PaymentInitiation::class));
+        // El consentimiento VIVO de un visitante (T3b·2 de la analítica): el contrato es de Platform —que no
+        // ve a nadie— y lo implementa Identity, dueña de la prueba (`cookie_consent_logs`).
+        $this->assertInstanceOf(CookieConsentLedger::class, app(ConsentLedger::class));
     }
 
     /**

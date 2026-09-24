@@ -444,7 +444,7 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference,
             AnalyticsEvent::query()->where('user_id', $this->getKey())->update(['user_id' => null]);
             $this->orders()->whereNotNull('attribution')->get(['id', 'attribution'])->each(function (Order $order): void {
                 $order->forceFill([
-                    'attribution' => array_diff_key((array) $order->attribution, array_flip(['visitor_id', 'session_id', 'click_ids'])),
+                    'attribution' => array_diff_key((array) $order->attribution, array_flip(['visitor_id', 'session_id', 'click_ids', 'browser_ids'])),
                 ])->saveQuietly();
             });
 

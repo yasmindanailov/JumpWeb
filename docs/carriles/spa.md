@@ -29,27 +29,25 @@
   (el banner en escritorio y móvil; `/cookies` y `/privacidad`). ▶ **T3a·2 EN `main` (24-09)**: `Drivers`
   (PostHog nube EU o Matomo, desde «Ajustes»), CSP solo con driver, `data-analytics-*` y la persona OPACA solo
   con sesión y categoría, `cajon/driver.js` solo con la categoría, `/cookies` lo nombra, `ForgetPersonInDriver`.
-  ⚠️ **En la BD local NO hay driver ni píxeles** (la sonda los pone y los quita). ▶ **T3a·3 EN EL ÁRBOL (24-09)**:
-  el enlace sesión↔cuenta (`AccountLinker` en Platform + `AccountAnalytics` en Identity; al entrar, al alta y
-  al cobro, solo con la categoría), la oposición (`users.analytics_opt_out`, `PUT /me/analytics`: desvincula,
-  sella la prueba `consents.analytics`, olvido en el driver), `first_attribution` una vez, el segundo
-  interruptor en «Privacidad» del cajón, contrato **1.20.0**; migración de `users` aplicada en la local.
-  **Queda el ojo del owner** sobre el interruptor. ▶ **T3a·4 EN EL ÁRBOL (24-09)**: el aviso a las cuentas
-  existentes por dos canales —el correo `AnalyticsLinkNotice` (molde de correos, tres idiomas) que manda
-  `analytics:notify-accounts` una vez por cuenta (`users.analytics_notified_at`; runbook en `ENTORNOS.md` §6,
-  la noche del despliegue de la v3) y el aviso del índice del cajón, que viaja CON su texto en el contexto de
-  cuenta (`analytics_notice`, contrato **1.21.0**) hasta que se despide (`DELETE /me/analytics-notice`,
-  `users.analytics_notice_seen_at`)—; migración aplicada en la local; `sonda-driver.mjs` 31/31. **Queda el
-  ojo del owner**: el aviso en `/mi-cuenta` (la cuenta de prueba, con `analytics_notified_at` puesto por
-  tinker) y el correo en Mailpit `:8028` (hay uno mandado a la cuenta de prueba, en español). ▶ **T3b·1 EN EL
-  ÁRBOL (24-09)**: los píxeles de anuncios —`Pixels` (ids públicos en «Ajustes → Píxeles de anuncios»: Google
+  ⚠️ **En la BD local NO hay driver ni píxeles** (la sonda los pone y los quita). ▶ **T3a·3 EN `main` (24-09)**:
+  el enlace sesión↔cuenta (`AccountLinker` Platform + `AccountAnalytics` Identity; al entrar, al alta y al cobro,
+  solo con la categoría), la oposición (`users.analytics_opt_out`, `PUT /me/analytics`), el segundo interruptor
+  en «Privacidad», contrato **1.20.0**. **Queda el ojo del owner** sobre el interruptor. ▶ **T3a·4 EN `main`
+  (24-09)**: el aviso a las cuentas existentes —el correo `AnalyticsLinkNotice` por `analytics:notify-accounts`
+  (una vez por cuenta; runbook `ENTORNOS.md` §6) y el aviso del índice del cajón, con su texto en el contexto
+  (`analytics_notice`, contrato **1.21.0**, `DELETE /me/analytics-notice`)—. **Queda el ojo del owner**: el aviso
+  en `/mi-cuenta` (cuenta de prueba con `analytics_notified_at` por tinker) y el correo en Mailpit `:8028`.
+  ▶ **T3b·1 EN `main` (24-09)**: los píxeles de anuncios —`Pixels` (ids públicos en «Ajustes → Píxeles de anuncios»: Google
   Ads con id y ETIQUETA de conversión, Meta, TikTok; `csp()` por plataforma y directiva; `forBody()`),
   `cajon/pixels.js` (solo con `marketing`; gtag con Consent Mode v2 básico, `analytics_storage` siempre
   denegado; vista, inicio del pago y la compra con el código del pedido como id), tokens de las APIs en
-  `config/services.php` desde `.env`—; `sonda-driver.mjs` 41/41. ▶ Sigue la
-  **T3b·2** (`SendConversionToPlatforms`: relee el consentimiento vivo, `cookie_consent_logs.visitor_id`,
-  `em`/`ph` hasheados, `Http::fake`) y la **T3b·3** (textos con los destinatarios —`[asesoría]`—, `/cookies`
-  nombra los píxeles, plantilla de UTM); la **T2e** solo si el volumen lo pide. ⚠️ **El fixture «probe-ojo-analitica» está
+  `config/services.php` desde `.env`—; `sonda-driver.mjs` 41/41. ▶ **T3b·2 EN EL ÁRBOL (24-09)**: la API de
+  conversiones del servidor —`Booking\Jobs\SendConversionToPlatforms` (encolado al pagar con tickets), que
+  relee el consentimiento VIVO por `Platform\Contracts\ConsentLedger` ← `Identity\CookieConsentLedger`
+  (`cookie_consent_logs.visitor_id`, migración aplicada en la local) y manda por `Platform\ConversionSender`
+  a Meta CAPI y TikTok Events con `event_id` = código, lo pagado, `em`/`ph` hasheados y `browser_ids` del
+  sello—; `Http::fake` + humo en el contenedor. ▶ Sigue la **T3b·3** (textos con los destinatarios
+  —`[asesoría]`—, `/cookies` nombra los píxeles, plantilla de UTM); la **T2e** solo si el volumen lo pide. ⚠️ **El fixture «probe-ojo-analitica» está
   MONTADO en la BD local** (90 pedidos `JW-OJO…`, 81 cobros, 9 devoluciones, 25 clientes
   `ojo-N@ojo-analitica.jumpweb.test`, 506 sesiones, dos meses): `OJO=desmontar` lo quita entero.
 - ✅ **La ficha de Google (`#524`), T1 y T2·1→T2·8 en el árbol** (`#720`→`#734`), **vistas por el owner con
@@ -73,11 +71,13 @@
    `for()` cosen «días cerrados desde el diario + hoy en directo»; `ad_spend` —plataforma, campaña, mes,
    céntimos— tecleado en un Resource pequeño de «Ajustes» para el CPA/ROAS de `SourcesWidget`). ✅ El owner vio
    la T2f en vivo (24-09). ▶ **La T3 en marcha** (spec §4.3 y §4.8): **T3a·1 ✅ · T3a·2 ✅ · T3a·3 ✅ (24-09)**
-   → **T3a·4 ✅ (24-09)** el aviso a las cuentas existentes → **T3b·1 ✅ (24-09)** los píxeles → **T3b·2** el job
-   `SendConversionToPlatforms` (`order_paid` en `OrderAnalyticsObserver`; relee la última fila de
-   `cookie_consent_logs` del visitante —gana `visitor_id`—; Meta CAPI y TikTok Events con `event_id` = código,
-   `value`, `fbc`/`fbp`/`ttclid` del sello, `em`/`ph` SHA-256 normalizados; `Http::fake`) → **T3b·3** textos y
-   `/cookies`. Lo compartido de la web: aviso dado y repetido (buzón).
+   → **T3a·4 ✅ (24-09)** el aviso a las cuentas existentes → **T3b·1 ✅ (24-09)** los píxeles → **T3b·2 ✅
+   (24-09)** la API de conversiones → **T3b·3** los textos: nombrar a Meta Platforms Ireland y TikTok
+   Technology Ltd como destinatarios con su base de transferencia en `CookiePolicyContent` (migración
+   quirúrgica, tres idiomas) y en `COOKIES.md` §1, `/cookies` nombra los píxeles ACTIVOS al pintar
+   (`Pixels::name()`, como el driver), el texto de `marketing` del banner dice que la compra se comunica, y la
+   plantilla de UTM obligatoria para el operador (`utm_medium` de pago en los tres anunciantes; `OPERATIVA`
+   o `INSTALACION-CLIENTE.md`). `[PENDIENTE: asesoría]` se deja escrito, no decidido. Después **T4** (la 360).
    ⚠️ El fixture del ojo siembra también TRÁFICO (506 sesiones, 2.294 hechos, sellos con primer y último toque).
    ⚠️ **Los cortes por día van por HORA UTC en SQL y al día del parque en PHP** (`SqlTime::hourBucket()`,
    `Window::bucketKey()`), nunca `CONVERT_TZ`. ⚠️ El dinero se lee de `payments`, `payment_refunds`,
@@ -240,6 +240,11 @@ spec enumera. Lo del cliente va en la rama `cliente/playjump`, nunca a `main`.
   importe de `pay_started` guardado en `sessionStorage` (lo pagado en línea). Google Ads necesita la ETIQUETA
   de conversión además del id (la spec no la listaba). La sonda intercepta los tres hosts con dobles vacíos y
   lee `dataLayer`, `fbq.queue` y `ttq._q`: lo que la página les dice.
+- 🪤 **De la T3b·2**: Platform no ve a nadie → quien habla con el tercero recibe un VALOR ya hasheado, el
+  consentimiento vivo se pregunta por un contrato de Platform implementado en Identity y atado en
+  `AppServiceProvider`, y el job que ve el pedido vive en Booking. `EncryptCookies` deja a `null` toda cookie
+  ajena que no descifra: las de los píxeles van en su `except`. `postJson` sin `withCredentials()` no manda
+  cookies (tercera vez). El sello del pedido no es asignable en masa: `forceFill()->saveQuietly()` en el fixture.
 - 🩹 **En la BD LOCAL hay 19 titulares con la cadena de waiver ROTA** (basura del 26–27 de agosto): si mides
   cadenas, compara ANTES/DESPUÉS.
 - **F4 cerró y el cajón es un PAQUETE** (`specs/cajon-empaquetable.md` §0 y §4.8). Tocar «HOJA ENFOCADA» de
@@ -268,26 +273,17 @@ spec enumera. Lo del cliente va en la rama `cliente/playjump`, nunca a `main`.
   los píxeles los leen del `<body>` y oyen `cookies-updated`, así que una carcasa que respete eso no me toca.
 
 ### ❗ Para el carril de CORREOS (emisor: SPA, 19→20-09; pendiente de tu «atendido»)
-- ✅ **Tu censo pasa de 25 a 27**: `VisitEveNotice` (`#717`) y `GoogleBusinessLocationChanged` (`#725`), con sus
-  piezas en los tres idiomas; tocado `GuestFormRequest` (cuerpo y llamada **solo** con invitación). **Ni tema,
-  ni remitente, ni modo oscuro.** ❗ Un comentario mío con la llamada de cabecera entre comillas dejó tu
-  `MailInboxLineTest` con **12 avisos en rojo**: tu guarda funciona (mutación en `scripts/mutar-invitacion-t7-1.py`).
-- ▶ Te queda tu OJO en Gmail/Outlook de los tres nuevos (sondas `probe-t7-correo.php`, `probe-t7-vispera.php`).
+- ✅ Tu censo pasa de 25 a 27 (`VisitEveNotice` `#717`, `GoogleBusinessLocationChanged` `#725`, tres idiomas);
+  tocado `GuestFormRequest` (solo con invitación). Te queda tu OJO en Gmail/Outlook de los tres nuevos.
 
 ### ❗❗ Para el carril de la WEB (emisor: SPA, 24-09) — LA T3 DE LA ANALÍTICA HA EMPEZADO: tocado lo tuyo
-- **T3a·1 (24-09), en `main`**: `resources/views/components/layout.blade.php` (los `data-cookie-*` del
-  `<body>` ahora se recorren desde `CookieConsent::OPTIONAL` + `data-consent-categories`),
-  `resources/js/app.js` (el almacén `cookies` se va a `resources/js/ui/cookie-consent.js`),
-  `resources/views/components/site/cookie-banner.blade.php` (un toggle por categoría; `x-show` por
-  `showing`; foco al título), `lang/{es,en,fr}/cookies.php` (texto del banner y cuatro finalidades),
-  `Content\Services\{CookiePolicyContent,LegalContent}` (tres secciones y el párrafo de perfiles, con dos
-  migraciones quirúrgicas) y `docs/sistemas/COOKIES.md`. **`POLICY_VERSION` sube a `2026-09-24`**: todo
-  visitante vuelve a decidir. **T3a·2 (24-09), en `main`, tocado**: `Http/Middleware/SecurityHeaders.php`
-  (`img-src` pasa a array y los orígenes del driver entran por `Drivers::csp()` solo con driver activo),
-  `Filament/Pages/Settings.php` (sección «Herramienta de análisis», cuatro ajustes `analytics.*`, guarda
-  cruzada en `save()`), `resources/views/anfitrion/legal.blade.php` (un párrafo al pie de `/cookies` que
-  nombra la herramienta activa), `lang/{es,zh_CN}/admin.php` (`settings.analytics_*`), `config/services.php`
-  y `.env.example` (`POSTHOG_*`, `MATOMO_TOKEN_AUTH`), `docs/SEGURIDAD.md` (la lista de orígenes de la CSP).
+- **T3a·1 (24-09), en `main`**: `layout.blade.php` (los `data-cookie-*` se recorren desde `CookieConsent::OPTIONAL`
+  + `data-consent-categories`), `app.js` (el almacén `cookies` → `ui/cookie-consent.js`), `site/cookie-banner.blade.php`
+  (un toggle por categoría), `lang/{es,en,fr}/cookies.php`, `Content\Services\{CookiePolicyContent,LegalContent}`
+  (migraciones quirúrgicas), `COOKIES.md`. **`POLICY_VERSION` = `2026-09-24`**: todo visitante vuelve a decidir.
+  **T3a·2 (24-09), en `main`**: `SecurityHeaders.php` (orígenes del driver por `Drivers::csp()`),
+  `Filament/Pages/Settings.php` («Herramienta de análisis»), `anfitrion/legal.blade.php` (`/cookies` nombra la
+  herramienta), `lang/{es,zh_CN}/admin.php`, `config/services.php` y `.env.example`, `docs/SEGURIDAD.md`.
   **T3a·3 (24-09), en `main`, tocado**: `layout.blade.php` (la persona del `<body>` respeta la oposición de la
   cuenta), `openapi/v1.yaml` → **1.20.0** (`PUT /me/analytics`, `analytics_opt_out` en `GET /me`, el export).
   **T3a·4 (24-09), tocado**: `openapi/v1.yaml` → **1.21.0** (`analytics_notice` en `GET /me/account-context`,
@@ -300,7 +296,11 @@ spec enumera. Lo del cliente va en la rama `cliente/playjump`, nunca a `main`.
   de anuncios», cuatro ajustes `marketing.*`), `lang/{es,zh_CN}/admin.php` (`settings.section_ads*`,
   `ads_*`), `config/services.php` y `.env.example` (`META_CAPI_*`, `TIKTOK_EVENTS_ACCESS_TOKEN`),
   `cajon/track.js` (trae `pixels.js` si hay `data-pixel-*`), `cajon/controller.js` (`purchased(code, extra)`),
-  `specs/cajon-empaquetable.md` (el detalle de `purchased`). Si tu landing nueva (Saltia)
+  `specs/cajon-empaquetable.md` (el detalle de `purchased`). **T3b·2 (24-09), tocado**: `bootstrap/app.php`
+  (`_fbp`/`_fbc`/`_ttp` en el `except` de `EncryptCookies`), `AppServiceProvider` (bind de
+  `Platform\Contracts\ConsentLedger` → `Identity\CookieConsentLedger`), `CookieConsentController` (escribe
+  `visitor_id`), `User::anonymize()` (`browser_ids` fuera del sello), `AttributionContext::seal()`
+  (`visitor_id` también con `marketing`; `browser_ids`), `OrderAnalyticsObserver` (encola el job). Si tu landing nueva (Saltia)
   pinta el banner o lee `cookieConsent`, cuenta con cuatro claves; si pinta el `<body>`, los
   `data-analytics-*` los da `Drivers::forBody()`.
 

@@ -2,6 +2,7 @@
 
 namespace App\Domain\Booking\Observers;
 
+use App\Domain\Booking\Jobs\SendConversionToPlatforms;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\Ticket;
 use App\Domain\Platform\Services\Analytics\AccountLinker;
@@ -133,6 +134,21 @@ final class OrderAnalyticsObserver
                             app(AccountLinker::class)->link($userId, $this->context(), $optedOut);
                         } catch (Throwable $e) {
                             Log::warning('analytics.account_link_failed', ['user_id' => $userId, 'error' => $e->getMessage()]);
+                        }
+                    }
+
+                    // La compra se comunica a los anunciantes desde la cola (T3b·2), solo si es una compra de
+                    // verdad (con tickets) y el sello trae al visitante: el job relee su consentimiento vivo
+                    // antes de hablar con nadie. Nunca tumba el cobro.
+                    if ($fulfilled) {
+                        try {
+                            $order = Order::query()->find($orderId);
+                            $job = $order === null ? null : SendConversionToPlatforms::forOrder($order, $paidCents);
+                            if ($job !== null) {
+                                dispatch($job);
+                            }
+                        } catch (Throwable $e) {
+                            Log::warning('analytics.conversion_not_queued', ['order_id' => $orderId, 'error' => $e->getMessage()]);
                         }
                     }
                 });

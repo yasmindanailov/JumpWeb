@@ -46,6 +46,23 @@ class AttributionContext
     /** Días hacia atrás en los que se busca el PRIMER toque no directo de un visitante. */
     public const FIRST_TOUCH_DAYS = 30;
 
+    /**
+     * Las cookies que los píxeles dejan en el navegador y que la API de conversiones del servidor devuelve
+     * a su plataforma para emparejar la compra con el clic (T3b·2): Meta (`_fbp` el navegador, `_fbc` el
+     * clic) y TikTok (`_ttp`). Van SIN cifrar en `bootstrap/app.php` —no son nuestras— y al sello solo con la
+     * categoría `marketing` y con su forma.
+     *
+     * @var list<string>
+     */
+    public const BROWSER_COOKIES = ['_fbp', '_fbc', '_ttp'];
+
+    /** @var array<string, string> cookie → su forma; lo que no case, no viaja */
+    private const BROWSER_COOKIE_RE = [
+        '_fbp' => '/^fb\.[0-9]\.\d{10,16}\.\d{6,20}$/',
+        '_fbc' => '/^fb\.[0-9]\.\d{10,16}\.[A-Za-z0-9_-]{6,512}$/',
+        '_ttp' => '/^[A-Za-z0-9_-]{10,64}$/',
+    ];
+
     private string $channel = self::CHANNEL_SYSTEM;
 
     private ?Request $request = null;
@@ -202,10 +219,15 @@ class AttributionContext
             'first_touch' => $first,
             'last_touch' => $last,
             'consent' => $session->consent,
-            // Los identificadores, SOLO con la categoría que los cubre.
-            'visitor_id' => $this->consented('analytics') ? $session->visitor_id : null,
+            // Los identificadores, SOLO con la categoría que los cubre. El visitante viaja también con
+            // `marketing` (T3b·2): es la llave con la que la cola RELEE su consentimiento vivo antes de comunicar
+            // la compra a un anunciante, y sin él no hay conversión de servidor.
+            'visitor_id' => $this->consented('analytics') || $this->consented('marketing') ? $session->visitor_id : null,
             'session_id' => $this->consented('analytics') ? $session->id : null,
             'click_ids' => $this->consented('marketing') && $session->click_ids !== null && $session->click_ids !== [] ? $session->click_ids : null,
+            // Las cookies de los píxeles (`_fbp`, `_fbc`, `_ttp`), solo con `marketing` y solo con su forma: es
+            // lo que empareja la conversión del servidor con el clic en la plataforma (T3b·2).
+            'browser_ids' => $this->consented('marketing') ? $this->browserIds() : null,
         ], static fn ($value): bool => $value !== null && $value !== '' && $value !== []);
 
         return [
@@ -215,6 +237,26 @@ class AttributionContext
             'attribution_campaign' => $first['campaign'] ?? null,
             'attribution' => $json,
         ];
+    }
+
+    /**
+     * Las cookies de los píxeles que trae ESTA petición, sin el prefijo `_` y solo las que tienen su forma.
+     *
+     * @return array<string, string>
+     */
+    private function browserIds(): array
+    {
+        $ids = [];
+
+        foreach (self::BROWSER_COOKIE_RE as $cookie => $re) {
+            $value = $this->request?->cookie($cookie);
+
+            if (is_string($value) && preg_match($re, $value) === 1) {
+                $ids[ltrim($cookie, '_')] = $value;
+            }
+        }
+
+        return $ids;
     }
 
     /**

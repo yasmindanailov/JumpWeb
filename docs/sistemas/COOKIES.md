@@ -253,8 +253,11 @@ del producto). La PRIVACIDAD (`LegalContent::PROFILING_P`) deja de decir «ni el
   `analytics:notify-accounts`, una vez por cuenta, y el aviso del índice del cajón, que viaja con su texto en
   el contexto de cuenta hasta que se despide con `DELETE /me/analytics-notice`—); los píxeles bajo
   `marketing` (T3b·1 ✅: `cajon/pixels.js` solo con `data-cookie-marketing="1"`, gtag con Consent Mode v2
-  básico, Meta y TikTok; sus orígenes en la CSP solo con el píxel configurado, `Pixels::csp()`; quedan la API
-  de conversiones del servidor, T3b·2, y los textos que nombran a los destinatarios, T3b·3).
+  básico, Meta y TikTok; sus orígenes en la CSP solo con el píxel configurado, `Pixels::csp()`); la API de
+  conversiones del servidor (T3b·2 ✅: `cookie_consent_logs` gana `visitor_id`, y `SendConversionToPlatforms`
+  RELEE la última decisión del visitante por `Platform\Contracts\ConsentLedger` antes de comunicar la compra a
+  Meta o TikTok con el código del pedido como id y el correo y el teléfono hasheados; retirar `marketing`
+  después de comprar deja la compra sin comunicar); quedan los textos que nombran a los destinatarios (T3b·3).
 - **Refactor de marca**: HECHO en Fase 1 (cookie renombrada a `cookie_consent`); quedan las
   referencias históricas «#219 / PLAN-COOKIES.md» en comentarios (tabla de equivalencias en
   `docs/README.md`).

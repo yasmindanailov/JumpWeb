@@ -5,6 +5,7 @@ namespace Tests\Feature\Cookies;
 use App\Domain\Identity\Models\CookieConsentLog;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\CookieConsent;
+use App\Domain\Platform\Services\Analytics\Visitor;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
@@ -41,6 +42,24 @@ class CookieConsentEndpointTest extends TestCase
         $log = CookieConsentLog::firstOrFail();
         $this->assertSame($decision, $log->categories);
         $this->assertNotNull($log->accepted_at);
+        $this->assertNull($log->visitor_id, 'sin cookie del visitante, la prueba no lo lleva');
+    }
+
+    /**
+     * T3b·2: la prueba lleva al VISITANTE del libro de eventos cuando la petición trae su cookie, y es lo que
+     * permite releer su decisión viva desde la cola; una cookie con otra forma no vale.
+     */
+    public function test_the_log_carries_the_visitor_of_the_request(): void
+    {
+        $visitor = Visitor::mint();
+        $decision = ['maps' => false, 'social' => false, 'analytics' => false, 'marketing' => true];
+
+        // ⚠️ `postJson` no manda cookies sin `withCredentials()` (la trampa de la T1 y de la T3a·3, otra vez).
+        $this->withCredentials()->withUnencryptedCookie(Visitor::COOKIE, $visitor)->postJson('/cookies/consentimiento', $decision)->assertOk();
+        $this->assertSame($visitor, CookieConsentLog::latest('id')->firstOrFail()->visitor_id);
+
+        $this->withCredentials()->withUnencryptedCookie(Visitor::COOKIE, 'no-es-un-ulid')->postJson('/cookies/consentimiento', $decision)->assertOk();
+        $this->assertNull(CookieConsentLog::latest('id')->firstOrFail()->visitor_id);
     }
 
     public function test_cookie_value_round_trips_to_state(): void

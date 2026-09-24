@@ -57,11 +57,13 @@ use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Models\UserIdentity;
 use App\Domain\Identity\Models\WaiverSignature;
 use App\Domain\Identity\Services\CookieConsent;
+use App\Domain\Identity\Services\CookieConsentLedger;
 use App\Domain\Identity\Services\CustomerAccountContext;
 use App\Domain\Identity\Services\GuardianPlaces;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Models\PaymentRefund;
 use App\Domain\Payments\Services\PaymentSettings;
+use App\Domain\Platform\Contracts\ConsentLedger;
 use App\Domain\Platform\Listeners\ApplyBusinessSender;
 use App\Domain\Platform\Listeners\RecordEmailSent;
 use App\Domain\Platform\Models\AnalyticsEvent;
@@ -158,6 +160,12 @@ class AppServiceProvider extends ServiceProvider
         // invitación necesita saber si esa respuesta ya tiene justificante para no ofrecerle firmar a
         // quien acaba de firmar. La atadura la guarda Identity (`#576`) y el recibo es de Booking.
         $this->app->bind(SignedInvitationReplies::class, GuardianPlaces::class);
+
+        // **El consentimiento vivo de un visitante** (`specs/analitica.md` §4.3, T3b·2): la cola relee la
+        // última decisión de cookies antes de comunicar una compra a un anunciante. La prueba es de Identity
+        // (`cookie_consent_logs`) y quien pregunta es Platform, que no ve a nadie: el contrato es de Platform,
+        // lo implementa Identity y la atadura vive aquí, en el composition root.
+        $this->app->bind(ConsentLedger::class, CookieConsentLedger::class);
 
         // **La prueba social de la landing** (`#490`; reescrito en `#732`, T2·6 de
         // `specs/google-business-profile.md` §4.3·9).

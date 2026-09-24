@@ -723,6 +723,9 @@ clave `jumpweb_staging_ed25519` — la misma que staging, registrada en el panel
 > ninguno de los dos. ⚠️ El enlace sesión↔cuenta solo existe para quien acepte «análisis» en el banner nuevo
 > (`POLICY_VERSION` `2026-09-24`: todo visitante vuelve a decidir), así que el orden correcto es desplegar → avisar
 > → dejar que el banner pregunte, y no configurar la herramienta de análisis (Ajustes) hasta después del aviso.
+> ▶ **Los píxeles (T3b)**: los ids públicos van en «Ajustes → Píxeles de anuncios»; los tokens de las APIs de
+> conversiones (`META_CAPI_ACCESS_TOKEN`, `TIKTOK_EVENTS_ACCESS_TOKEN`) en el `.env` con `config:cache`, ANTES de
+> poner los ids: sin token el job de conversiones anota y no manda, y el cron ya corre `queue:work` (`PAY-14`).
 
 ## Anexo · La fila del enrutador, mudada el 2026-09-16
 
