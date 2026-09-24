@@ -26,6 +26,17 @@ describe('el store del catálogo', () => {
         assert.equal(c.product, null, 'la ficha todavía viaja');
     });
 
+    /** La isla agrupa por ZONA (T3e·2): guarda el listado tal cual llegó, y lo que no es una lista no entra. */
+    test('el listado se guarda tal cual, con su zona, y lo que no es una lista se queda vacío', () => {
+        const c = store();
+
+        c.setProducts([{ id: 100, type: 'entry', zone: { slug: 'kids' } }]);
+        assert.equal(c.products[0].zone.slug, 'kids');
+
+        c.setProducts(null);
+        assert.deepEqual(c.products, []);
+    });
+
     test('elegir un id que no está deja la fila en `null` sin romper', () => {
         const c = store();
         c.setSections(SECCIONES);

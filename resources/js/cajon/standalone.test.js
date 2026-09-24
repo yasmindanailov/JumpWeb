@@ -95,7 +95,22 @@ describe('fundir las dos mitades', () => {
     test('conserva el orden de claves del layout', () => {
         const fundido = mergeBoot({ messages: {}, ui: {}, account: {}, auth: {}, urls: {} }, { outcome: null, orderCode: null, account: {}, locales: [], userId: null, accountContext: null, urls: {} });
 
-        assert.deepEqual(Object.keys(fundido), ['outcome', 'orderCode', 'messages', 'ui', 'account', 'auth', 'userId', 'accountContext', 'urls']);
+        assert.deepEqual(Object.keys(fundido), ['outcome', 'orderCode', 'messages', 'ui', 'account', 'auth', 'userId', 'accountContext', 'urls', 'shell']);
+    });
+
+    /**
+     * ⚠️⚠️ **La carcasa y los rótulos de la isla SOBREVIVEN a la fusión** (T3e·2, `DECISIONES #682`): la primera
+     * versión los perdía, y en una página ajena la isla no se encendía nunca. Sin carcasa en el arranque, el cajón.
+     */
+    test('la carcasa y los rótulos de la isla pasan, al final; sin carcasa, el cajón', () => {
+        const isla = mergeBoot({ shell: 'isla', isla: { compra: {} } }, {});
+        assert.equal(isla.shell, 'isla');
+        assert.deepEqual(isla.isla, { compra: {} });
+        assert.deepEqual(Object.keys(isla).slice(-2), ['shell', 'isla']);
+
+        const cajon = mergeBoot({}, {});
+        assert.equal(cajon.shell, 'cajon');
+        assert.equal('isla' in cajon, false);
     });
 
     /** `locales` solo viaja con sesión, igual que en el layout: sin ella la clave no está, no está vacía. */

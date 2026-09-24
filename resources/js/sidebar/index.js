@@ -12,6 +12,7 @@ import { watchTabReturn } from './account/tab-return.js';
 import { useCartStore } from './stores/cart.js';
 import { takeOver } from '../ui/account-host.js';
 import { cajonHost } from './host-bridge.js';
+import { CARCASA, ISLA, TEXTOS_ISLA, carcasaDe } from './carcasa.js';
 
 /**
  * El ENTRY del cajón SPA (Fase 4 · paso 4.1, `sidebar-spa.md` §4.7).
@@ -90,6 +91,14 @@ export function mount(el, boot = {}) {
         urls: boot.urls ?? {},
     });
     app.use(pinia);
+
+    // ⚠️ **La CARCASA de la compra** (T3e·2, `DECISIONES #682`): la raíz monta la compra del cajón o la de la isla,
+    // y la isla recibe sus rótulos (`boot.isla`, que solo viajan con ella). Va por `provide` y no como prop: la
+    // raíz hace `v-bind="props"` sobre la sección de compra, y una prop que ésta no declara acabaría de ATRIBUTO
+    // en el DOM del cajón.
+    const carcasa = carcasaDe(boot);
+    app.provide(CARCASA, carcasa);
+    app.provide(TEXTOS_ISLA, boot.isla ?? {});
 
     // El desenlace de la pasarela decide en qué paso ABRE el cajón. Lo posee `Http\Sidebar\SidebarEntry`
     // en servidor (paso 4.0a) y llega ya consumido: mirarlo dos veces reabriría el cajón en cada
@@ -196,6 +205,11 @@ export function mount(el, boot = {}) {
          */
         applyIntent(intent) {
             machine.queueIntent(intent);
+
+            // ⚠️ Con la ISLA, la intención la aplica SU compra (T3e·2): la toma de la máquina en cuanto existe —ya,
+            // o cuando llegue su trozo, que se trae aparte—, así que aquí se queda en la cola. Las anclas del
+            // catálogo del cajón, que es lo que maneja lo de abajo, no existen en ella.
+            if (carcasa === ISLA) return root.applyIntent?.();
 
             return applyIntentToCatalog(machine.takeIntent(), {
                 goToCatalog: () => {

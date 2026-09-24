@@ -42,6 +42,10 @@ defineProps({
     calcetines: { type: Object, default: null },
     horaExtra: { type: Boolean, default: false },
     otra: { type: Object, default: null },
+    // Con el motor (T3e·2), de los DATOS: `cuantos.min`/`max`, `calcetines.max`, el umbral de «quedan» (el aviso de
+    // «casi llena» del panel) y si hay otra zona que ofrecer. Sin ellos, los valores del diseño (el banco).
+    umbral: { type: Number, default: 6 },
+    otraZona: { type: Boolean, default: true },
 });
 const emit = defineEmits(['cambiar', 'otra', 'quitarOtra']);
 const { t } = useTextos();
@@ -107,7 +111,7 @@ const { t } = useTextos();
                     :slots="horas"
                     :model-value="hora"
                     counts="low"
-                    :low-threshold="6"
+                    :low-threshold="umbral"
                     @update:model-value="emit('cambiar', 'hora', $event)"
                 />
             </PreguntaCompra>
@@ -129,8 +133,8 @@ const { t } = useTextos();
             >
                 <CantidadCompra
                     :model-value="cuantos.n"
-                    :min="1"
-                    :max="20"
+                    :min="cuantos.min ?? 1"
+                    :max="cuantos.max ?? 20"
                     :uno="cuantos.uno"
                     :varios="cuantos.varios"
                     @update:model-value="emit('cambiar', 'n', $event)"
@@ -145,7 +149,7 @@ const { t } = useTextos();
                 <CantidadCompra
                     :model-value="calcetines.n"
                     :min="0"
-                    :max="40"
+                    :max="calcetines.max ?? 40"
                     :uno="calcetines.uno"
                     :varios="calcetines.varios"
                     @update:model-value="emit('cambiar', 'cal', $event)"
@@ -178,7 +182,7 @@ const { t } = useTextos();
                     />
                 </section>
                 <EnlaceSistema
-                    v-else
+                    v-else-if="otraZona"
                     :style="{ justifySelf: 'start' }"
                     @click="emit('otra')"
                 >

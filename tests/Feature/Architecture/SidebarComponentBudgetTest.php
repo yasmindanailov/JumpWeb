@@ -447,6 +447,13 @@ class SidebarComponentBudgetTest extends TestCase
             "puente de señales hacia fuera del cajón, y el `GET /config` del que sale la clave del\n".
             'anti-bot que necesita el alta del área de cliente.',
         );
+
+        // ⚠️ Y con la ISLA como carcasa (T3e·2, `DECISIONES #682`), su compra ocupa ese sitio con el MISMO `ref`: el
+        // puente y el `GET /config` salen entonces de ella. Sin el `ref`, las señales se las comería el `?.`.
+        $this->assertMatchesRegularExpression(
+            '/<IslaSeccionCompra\s+v-else\s+ref="purchase"/', $source,
+            'La compra de la isla ha dejado de ocupar el sitio de la del cajón con su mismo `ref="purchase"`.',
+        );
     }
 
     private function codeLines(string $path): int

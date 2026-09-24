@@ -106,6 +106,22 @@ return [
             'buscando_horas' => 'Buscando horas libres',
             'ahorro' => ':importe menos que dos de 1 hora',
             'continuar' => 'Continuar',
+            // T3e (§4.10): lo que la compra de la isla escribe con los DATOS del motor mientras la página no traiga
+            // sus propias preguntas (T4). Las cifras (el precio del par) llegan del complemento.
+            'titulo_zona' => 'Entrada :zona',
+            'hoy' => 'hoy',
+            'tarifa_especial' => 'tarifa especial',
+            'pregunta_dia' => '¿Qué día venís?',
+            'pregunta_hora' => '¿A qué hora?',
+            'pregunta_tiempo' => '¿Cuánto tiempo?',
+            'pregunta_cuantos' => '¿Cuántos venís?',
+            'pregunta_calcetines' => '¿Calcetines antideslizantes?',
+            'pista_calcetines' => ':precio el par. Si ya los tenéis, traedlos.',
+            'entrada' => 'entrada',
+            'entradas' => 'entradas',
+            'par' => 'par',
+            'pares' => 'pares',
+            'no_disponible' => 'No se vende este día',
         ],
         'datos' => [
             'banda' => 'Tus datos',

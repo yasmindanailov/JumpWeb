@@ -90,6 +90,31 @@ describe('la carcasa sin framework', () => {
     });
 
     /**
+     * **Solo para SU superficie** (T3e·2, `DECISIONES #682`): con la isla como carcasa, una compra se abre en la
+     * isla y este lateral no se mueve; si estaba enseñando la cuenta, se cierra. Sin superficie en el evento —un
+     * anfitrión anterior a la T3e— se abre, que es la conducta de siempre.
+     */
+    test('una apertura en la isla no abre el lateral, y lo cierra si estaba abierto', () => {
+        const { root, doc } = montar();
+
+        doc.disparar('jw:cajon:open', { detail: { surface: 'isla' } });
+        assert.deepEqual(root.clases(), []);
+
+        doc.disparar('jw:cajon:open', { detail: { surface: 'cajon' } });
+        assert.deepEqual(root.clases(), ['is-open']);
+
+        doc.disparar('jw:cajon:open', { detail: { surface: 'isla' } });
+        assert.deepEqual(root.clases(), [], 'de la cuenta a la compra: el lateral se cierra y abre la isla');
+    });
+
+    test('un cajón que nace abierto EN LA ISLA no pinta abierto el lateral', () => {
+        const { root, cierre } = montar({ cajon: { isOpen: true, surface: 'isla', mode: 'catalog', close() {} } });
+
+        assert.deepEqual(root.clases(), []);
+        assert.equal(cierre.enfocado, 0);
+    });
+
+    /**
      * ⚠️⚠️ El puente del MODO (`DECISIONES #118`): `is-{modo}` es lo que colapsa el bloque de cuenta. Si se
      * pierde, el panel se queda en `is-catalog` para siempre y NADA falla. Y la clase anterior se RETIRA: dos
      * modos a la vez es peor que ninguno.

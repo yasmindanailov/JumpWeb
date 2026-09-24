@@ -6,12 +6,13 @@
  */
 import { onMounted, ref, watch } from 'vue';
 
-export function useCompraCapa({ islandRef, inCheckout, clave }) {
+export function useCompraCapa({ islandRef, inCheckout, clave, bloquea = () => true }) {
     const anuncio = ref('');
     let abridor = null;
 
+    // La página quieta, salvo que la bloquee su dueño (el controlador del paquete, T3e·2): ver `bloqueaPagina`.
     watch(inCheckout, (dentro, _antes, alLimpiar) => {
-        if (! dentro || typeof document === 'undefined') return;
+        if (! dentro || typeof document === 'undefined' || ! bloquea()) return;
         const raiz = document.documentElement;
         const previo = raiz.style.overflow;
         raiz.style.overflow = 'hidden';

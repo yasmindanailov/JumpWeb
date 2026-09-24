@@ -27,6 +27,12 @@ export const PROPS_ISLA = {
     bookingToday: { type: Object, default: null },
     /** La compra (situación 10): la isla pasa a ser su contenedor. Qué pinta, en `piezas/CompraIsla.vue`. */
     checkout: { type: Object, default: null },
+    /**
+     * Con la compra abierta, ¿la isla deja quieta la página de detrás? Sí en el diseño (y en su banco). Montada sobre
+     * el paquete del cajón, NO (T3e·2): ahí el scroll lo bloquea el controlador, que es su dueño único
+     * (`ui/scroll-lock.js`), y dos escritores sobre la página es el fallo que ese dueño existe para evitar.
+     */
+    bloqueaPagina: { type: Boolean, default: true },
     help: { type: Object, default: null },
     notice: { type: String, default: null },
     account: { type: Object, default: () => ({ state: 'guest', pending: false }) },

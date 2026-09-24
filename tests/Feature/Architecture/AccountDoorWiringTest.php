@@ -189,10 +189,12 @@ class AccountDoorWiringTest extends TestCase
         $bridge = mb_substr($alpine, (int) mb_strpos($alpine, 'openAccount(event, zone)'));
         $bridge = mb_substr($bridge, 0, (int) mb_strpos($bridge, 'applyAccountZone(handle) {'));
 
+        // ⚠️ Y lo abre COMO CUENTA (T3e·2, `DECISIONES #682`): con la isla como carcasa, la compra se abre en ella y
+        // la cuenta sigue en el lateral hasta la T5; sin la marca, la cuenta se abriría en una isla sin cuenta.
         $this->assertStringContainsString(
-            'this.open()', $bridge,
-            'El puente de la cabecera ya no ABRE el cajón: conmutaría la sección de un panel que '.
-            'sigue cerrado, y el clic no enseñaría nada.'
+            'this.open({ cuenta: true })', $bridge,
+            'El puente de la cabecera ya no ABRE el cajón como CUENTA: conmutaría la sección de un panel que '.
+            'sigue cerrado, o la abriría en la isla, y el clic no enseñaría nada.'
         );
 
         $this->assertStringContainsString(

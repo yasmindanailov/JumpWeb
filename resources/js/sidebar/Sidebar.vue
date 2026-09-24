@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue';
+import { defineAsyncComponent, inject, ref, watch } from 'vue';
 import PurchaseSection from './sections/PurchaseSection.vue';
 import AccountSection from './sections/AccountSection.vue';
 import AccountPanel from './account/AccountPanel.vue';
@@ -8,6 +8,8 @@ import { usePurchaseStore } from './stores/purchase.js';
 import { useOutcomeStore } from './stores/outcome.js';
 import { publishedIdentifying, publishedMode, publishedPurchase } from './section.js';
 import { cajonHost } from './host-bridge.js';
+import { CARCASA, ISLA } from './carcasa.js';
+import { PROPS_MOTOR } from './props.js';
 
 /**
  * La RAÍZ del cajón: monta, enruta secciones y publica hacia fuera. Nada más.
@@ -21,25 +23,19 @@ import { cajonHost } from './host-bridge.js';
  * ⚠️ El movimiento fue posible **porque el estado ya vivía en stores**: una sección no necesita que
  * la raíz le pase su estado por props —lo pide con `useXStore()`—, así que partir el componente no
  * obligó a inventar un puente de props entre padre e hijo. Ese es el orden correcto y no al revés.
+ *
+ * ⚠️ Sus props viven en `props.js` desde la T3e·2: son también las de la compra de la isla, que las recibe con
+ * `v-bind="props"`, y dos listas que tienen que coincidir se escriben una vez.
  */
-const props = defineProps({
-    /** El grupo `tickets` del locale activo, inyectado por el servidor en el montaje (§4.5). */
-    messages: { type: Object, default: () => ({}) },
-    /** Textos de interfaz que no son del grupo `tickets` (velo de carga, etiquetas del armazón). */
-    ui: { type: Object, default: () => ({}) },
-    /** El grupo `account`, podado a lo que el paso de identificación y el área de cliente pintan. */
-    account: { type: Object, default: () => ({}) },
-    /** El grupo `auth`, con los textos de login y alta. */
-    auth: { type: Object, default: () => ({}) },
-    /** Los idiomas que ofrece el selector del perfil (`Platform\Services\SiteLocales`). */
-    locales: { type: Array, default: () => [] },
-    /** Quién pintó la página, para que la cesta sepa de quién es antes de preguntar a nadie. */
-    userId: { type: [Number, String], default: null },
-    /** El pedido del que habla el desenlace. Llega ya CONSUMIDO por `Http\Sidebar\SidebarEntry`. */
-    orderCode: { type: String, default: '' },
-    /** Las rutas que pintan las pantallas de desenlace, compuestas con `route()` en el servidor. */
-    urls: { type: Object, default: () => ({}) },
-});
+const props = defineProps(PROPS_MOTOR);
+
+/**
+ * ⚠️ **La compra de la ISLA** (T3e·2, `DECISIONES #682`): con la isla como carcasa de la instalación, sustituye a
+ * la sección de compra del cajón —y como ella vive montada toda la página, con el mismo `ref`—. Va en su trozo y se
+ * trae solo con la isla: una instalación con el cajón no paga sus bytes.
+ */
+const IslaSeccionCompra = defineAsyncComponent(() => import('../isla/SeccionCompra.vue'));
+const enIsla = inject(CARCASA, null) === ISLA;
 
 const purchase = ref(null);
 const section = useSectionStore();
@@ -93,6 +89,8 @@ defineExpose({
     refreshIdentity: () => purchase.value?.refreshIdentity(),
     // `#568` · abrir el cajón EN un producto desde la landing. Mismo reenvío, mismo motivo.
     openProduct: (id) => purchase.value?.openProduct(id),
+    // T3e·2 · con la isla, la intención de la landing la toma SU compra de la máquina (`index.js`).
+    applyIntent: () => purchase.value?.applyIntent?.(),
 });
 </script>
 
@@ -127,7 +125,13 @@ defineExpose({
       Partiría la cadena de HIJOS DIRECTOS que sostiene el panel (§4.9) **sin que falte una sola
       clase**, y ningún test puede verlo — lo dice el propio CSS.
     -->
-    <PurchaseSection v-show="section.onPurchase" ref="purchase" v-bind="props" />
+    <PurchaseSection v-show="section.onPurchase" v-if="! enIsla" ref="purchase" v-bind="props" />
+    <!--
+      Con la ISLA como carcasa (T3e·2), su compra ocupa el lugar de la del cajón: montada toda la página y con el
+      mismo `ref`, así que el puente de señales y el `GET /config` del anti-bot siguen saliendo de aquí. La elección
+      no cambia nunca dentro de una página: es de la instalación.
+    -->
+    <IslaSeccionCompra v-else ref="purchase" v-bind="props" />
 
     <AccountSection v-if="section.onAccount" v-bind="props" />
 

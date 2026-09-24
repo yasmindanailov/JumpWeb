@@ -94,8 +94,10 @@ mutar "la fachada de intención pierde \`flushIntent\`" "$CTRL" \
   "        vaciarIntencion() {"
 
 # ── Lo que AÑADE la tanda ──────────────────────────────────────────────────────────────────────
+# ⚠️ Re-apuntado en la T3e·2 (24-09): desde la analítica el anuncio lleva su motivo, y desde la T3e·2 su
+# superficie; el patrón viejo (`announce('open');`) llevaba caducado desde entonces sin que nadie lo leyera.
 mutar "abrir deja de anunciarse a la página (\`jw:cajon:open\`)" "$CTRL" \
-  "            announce('open');
+  "            announce('open', { reason: 'user', product: detail?.product, surface: this.surface });
 " ""
 
 mutar "el cierre se anuncia DESPUÉS de decidir la recarga, sin decir que recarga" "$CTRL" \
@@ -147,8 +149,8 @@ mutar "la trampa de foco vuelve a contar los controles con \`visibility: hidden\
   "    const canFocus = (el) => el.offsetParent !== null;"
 
 mutar "el cajón que NACE abierto deja de meter el foco (\`#634\`: con teclado, el panel delante y el foco detrás)" "$CARCASA" \
-  "    if (cajon?.isOpen) paintOpen(true);" \
-  "    if (cajon?.isOpen) root.classList.add('is-open');"
+  "    if (cajon?.isOpen && cajon.surface !== ISLA) paintOpen(true);" \
+  "    if (cajon?.isOpen && cajon.surface !== ISLA) root.classList.add('is-open');"
 
 mutar "el panel del layout vuelve a llevar un atributo de Alpine" "$LAYOUT" \
   "<aside class=\"sidecart__panel\" role=\"dialog\"" \
@@ -207,11 +209,24 @@ mutar "el cajón que NACE abierto deja de arrancar el motor (el hueco VACÍO de 
   "            return this.bootSpaEngine();" \
   "            return null;"
 
+# ⚠️ Re-apuntado en la T3e·2: desde la analítica, entre la llave y el arranque va el anuncio con su motivo.
 mutar "el cajón que NACE abierto no pide la llave del cerrojo (la página de detrás sigue rodando)" "$CTRL" \
-  "            scrollLock.lock('sidecart');
+  "            this.surface = superficieDe(this.carcasaActual(), { cuenta: Boolean(this.accountZone) });
+            scrollLock.lock('sidecart');" \
+  "            this.surface = superficieDe(this.carcasaActual(), { cuenta: Boolean(this.accountZone) });"
 
-            return this.bootSpaEngine();" \
-  "            return this.bootSpaEngine();"
+# ── La carcasa elegible (T3e·2, `DECISIONES #682`) ─────────────────────────────────────────────
+mutar "la carcasa del lateral se abre también para una compra en la ISLA" "$CARCASA" \
+  "paintOpen(event.detail?.surface !== ISLA)" \
+  "paintOpen(true)"
+
+mutar "con la isla como carcasa, la cuenta deja de abrirse en el lateral" "$CTRL" \
+  "            this.open({ cuenta: true });" \
+  "            this.open();"
+
+mutar "la fusión del arranque de una página ajena pierde la carcasa (la isla no se enciende nunca)" "$BOOT" \
+  "        shell: shared.shell ?? 'cajon',
+" ""
 
 echo
 echo "mutaciones que muerden: ${muerden}/${total}"

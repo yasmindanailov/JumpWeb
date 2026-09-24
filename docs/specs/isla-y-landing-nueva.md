@@ -593,6 +593,22 @@ guion del diseño (`paginas/compra/compra.jsx`, `usePjcCompra`):
   existe» del alta tendrá su código (T3e·3). ⚠️ **Y el sitio de la prueba**: las hojas de Saltia definen tokens
   en `:root` que chocarían con los de la landing de hoy, así que la isla NO se enciende sobre ella; se prueba
   en una página temporal que carga el paquete como lo hará una página nueva, y sale de verdad con la T4.
+  **·2b ✅** (`#693`) la superficie por apertura y la raíz, y la PANTALLA 0 de las entradas sobre el motor:
+  · el controlador (`cajon/controller.js`) lee la carcasa del arranque y abre cada cosa en su superficie; la
+    carcasa del lateral (`shell.js`) solo se pinta para la suya; `sidebar/carcasa.js` es la regla, con su test;
+  · la raíz (`Sidebar.vue`) monta `isla/SeccionCompra.vue` —asíncrona, en su trozo— con el mismo `ref`; sus props
+    y las de la raíz son una lista (`sidebar/props.js`); con la isla, la intención espera en la máquina y la toma
+    su compra; si la cuenta pide la compra desde el lateral, se abre la isla (`compra/useSuperficie.js`);
+  · la pantalla 0 (`compra/useSeccionCompra.js` + `compra/vista.js` + `compra/oferta.js`, 17 casos de `node --test`):
+    los días de TODAS las filas de la zona, cada fila con su precio del día y el «menos que dos de 1 hora», las
+    horas con la cesta, la cantidad y el complemento por cantidad (los calcetines, por su forma y no por su
+    nombre) con los límites de los datos, y el total de la línea del servidor. «Continuar», apagado hasta la ·3.
+  **Lo que cazó el navegador y ninguna prueba**: la fusión del arranque de una página ajena (`mergeBoot`) se comía
+  `shell` y la isla no se encendía nunca; mientras llegaban los días, las filas decían «No se vende este día»; y
+  dos cambios seguidos podían pintar el total VIEJO (ahora, en cola). ⚠️ Rollup sacó a un trozo común lo que
+  comparten el motor y la isla: el fichero del motor bajó a 211 KiB sin que el cajón descargara menos, así que el
+  presupuesto mide ahora la DESCARGA (292; la isla, 94). ▶ Anotado para el SPA: la raíz deja un `locales=""`
+  suelto en el DOM de la sección de compra (lo pasa con `v-bind` y ella no lo declara), de antes de esto.
 - **T3e·3** la vista pura (`vista.js`) de las entradas y el controlador de la isla: pantalla 0, «Tus datos»
   (alta, «ya existe», descargo, con sesión), «Pagar» con su recibo del presupuesto, la salida al banco y los
   desenlaces. Juez: el banco de la T3c alimentado por `vista.js` con datos del motor, contra el diseño.

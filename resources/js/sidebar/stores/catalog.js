@@ -13,6 +13,15 @@ export const useCatalogStore = defineStore('catalog', {
         /** Las dos secciones (`entries` · `services`), tal y como las agrupa `catalog.js`. */
         sections: [],
 
+        /**
+         * El listado TAL CUAL llegó (`GET /catalog/products`), con la zona y la duración de cada producto.
+         *
+         * ⚠️ Las secciones se quedan con lo que el catálogo del cajón pinta (`catalog.js::toItem`) y pierden la
+         * zona; la pantalla 0 de la ISLA agrupa por zona (T3e·2, `specs/isla-y-landing-nueva.md` §4.10). Es la
+         * misma respuesta: ni una petición más.
+         */
+        products: [],
+
         /** ¿Se enseña el buscador? Lo decide el umbral que publica `GET /config`. */
         searchEnabled: false,
 
@@ -51,6 +60,10 @@ export const useCatalogStore = defineStore('catalog', {
     actions: {
         setSections(sections) {
             this.sections = Array.isArray(sections) ? sections : [];
+        },
+
+        setProducts(products) {
+            this.products = Array.isArray(products) ? products : [];
         },
 
         setSearchEnabled(enabled) {

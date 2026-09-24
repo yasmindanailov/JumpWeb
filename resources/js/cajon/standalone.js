@@ -76,6 +76,11 @@ export function mergeBoot(shared = {}, personal = {}) {
         userId: personal.userId ?? null,
         accountContext: personal.accountContext ?? null,
         urls: { ...(shared.urls ?? {}), ...(personal.urls ?? {}) },
+        // ⚠️⚠️ **La carcasa y los rótulos de la isla, al final como en PHP** (T3e·2, `DECISIONES #682`). Sin estas
+        // dos líneas la fusión se los comía, y en una página ajena la isla no se encendía NUNCA: el controlador
+        // leía la carcasa de este arranque y encontraba el cajón. Lo cazó el navegador, no una prueba.
+        shell: shared.shell ?? 'cajon',
+        ...(shared.isla ? { isla: shared.isla } : {}),
     };
 }
 

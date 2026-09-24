@@ -20,6 +20,8 @@
  * aquí sería cambiar el cajón, que es lo que esta tanda promete no hacer.
  */
 
+import { ISLA } from '../sidebar/carcasa.js';
+
 const FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]):not([type=hidden]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
 
 // ⚠️ **`createShell()` NO vive aquí, y no es por orden**: construir la carcasa solo hace falta en una página
@@ -97,7 +99,9 @@ export function installShell(getCajon, doc = document, construida = null) {
         if (open) (doc.defaultView?.requestAnimationFrame ?? ((fn) => fn()))(focusFirst);
     };
 
-    doc.addEventListener('jw:cajon:open', () => paintOpen(true));
+    // ⚠️ Solo para SU superficie (T3e·2): con la isla como carcasa, una compra se abre en la isla y este lateral
+    // se queda cerrado —o se cierra, si estaba enseñando la cuenta—.
+    doc.addEventListener('jw:cajon:open', (event) => paintOpen(event.detail?.surface !== ISLA));
     doc.addEventListener('jw:cajon:close', () => paintOpen(false));
     doc.addEventListener('jw:cajon:mode', (event) => paintMode(event.detail?.mode));
 
@@ -142,7 +146,7 @@ export function installShell(getCajon, doc = document, construida = null) {
     // owner vio y aprobó; la captura de `/entradas` cambia por eso y solo por eso.
     const cajon = getCajon();
     paintMode(cajon?.mode);
-    if (cajon?.isOpen) paintOpen(true);
+    if (cajon?.isOpen && cajon.surface !== ISLA) paintOpen(true);
 
     return { root };
 }

@@ -836,7 +836,16 @@ class SidebarBundleBudgetTest extends TestCase
     // nombres que el composable devuelve y la sección desestructura, porque las claves de un objeto no se minifican. Se
     // midió la poda obvia —que la sección tome sus diez stores ella misma en vez de recibirlos— y ahorra 0,20 KiB por
     // diez `import` duplicados, sin bajar del techo. No se queda.
-    private const SIDEBAR_CHUNK_MAX_KB = 291;
+    // T3e·2 (`#692`): la carcasa elegible. Desde aquí se mide la DESCARGA del motor (`descargaDelMotor()`): la compra de
+    // la isla es un `import()` que comparte con él stores y secuencia, y Rollup los sacó a un chunk común —el fichero
+    // del motor pasó a 211 KiB y el común a 80—. Medido 291,69 KiB (HEAD `c7cf521d`: 290,09; +1,60): el pegamento de
+    // importaciones entre los dos chunks y la raíz que elige carcasa. Un `manualChunks` no lo quita (el pegamento se
+    // queda) y rompería el `import()` del alta con Google que el carril SPA separó a propósito. No se fuerza.
+    private const SIDEBAR_CHUNK_MAX_KB = 292;
+
+    // T3e·2: la compra de la isla, chunk diferido del motor que solo trae una instalación con la isla. Medido 93,36 KiB
+    // (la sección, sus diez pantallas de la T3c, la isla y sus piezas); su hoja va aparte (7,2 KiB).
+    private const ISLA_COMPRA_CHUNK_MAX_KB = 94;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un
@@ -910,6 +919,52 @@ class SidebarBundleBudgetTest extends TestCase
         $recorrer($clave);
 
         return $suma;
+    }
+
+    /** Las claves del manifiesto que una entrada trae de forma ESTÁTICA, ella incluida, en transitivo. */
+    private function alcanceEstatico(string $clave): array
+    {
+        $manifest = $this->manifest();
+        $vistos = [];
+        $pendientes = [$clave];
+
+        while ($pendientes !== []) {
+            $k = array_pop($pendientes);
+
+            if (isset($vistos[$k]) || ! isset($manifest[$k])) {
+                continue;
+            }
+
+            $vistos[$k] = true;
+            array_push($pendientes, ...array_map('strval', $manifest[$k]['imports'] ?? []));
+        }
+
+        return array_keys($vistos);
+    }
+
+    /**
+     * **Lo que se descarga al ABRIR el cajón por primera vez**: el chunk del motor y los que importa de forma
+     * estática, MENOS los que la landing ya trajo (el paquete, que comparte `sidebar/carcasa.js`).
+     *
+     * ⚠️⚠️ **Desde la T3e·2 (`#692`) el fichero del motor ya no es todo el motor.** La compra de la isla es un
+     * `import()` del motor que comparte con él sus stores y su secuencia, y Rollup los sacó a un chunk COMÚN: el
+     * fichero pasó de 290 a 211 KiB sin que el cajón descargara un byte menos (292 entre los dos). Medir el
+     * fichero a secas habría aprobado solo —es la trampa que `pesoConImportesKb()` ya documenta para la landing—,
+     * y las firmas de `ENGINE_MUST_KNOW` se habrían ido al chunk común sin que el caso las encontrara.
+     *
+     * @return list<string>
+     */
+    private function descargaDelMotor(): array
+    {
+        return array_values(array_diff($this->alcanceEstatico('resources/js/sidebar/index.js'), $this->alcanceEstatico('resources/js/app.js')));
+    }
+
+    /** El JS de esa descarga, junto: donde se buscan las firmas del motor. */
+    private function jsDelMotor(): string
+    {
+        $manifest = $this->manifest();
+
+        return implode("\n", array_map(fn (string $k): string => (string) file_get_contents(public_path('build/'.$manifest[$k]['file'])), $this->descargaDelMotor()));
     }
 
     /**
@@ -1104,7 +1159,8 @@ class SidebarBundleBudgetTest extends TestCase
             'los chunks que importa de forma estática.'
         );
 
-        $kb = $this->sizeKb($manifest['resources/js/sidebar/index.js']['file']);
+        // ⚠️ La DESCARGA del motor, no su fichero (T3e·2): ver `descargaDelMotor()`.
+        $kb = array_sum(array_map(fn (string $k): float => $this->sizeKb((string) $manifest[$k]['file']), $this->descargaDelMotor()));
 
         $this->assertLessThanOrEqual(
             self::SIDEBAR_CHUNK_MAX_KB, $kb,
@@ -1114,6 +1170,32 @@ class SidebarBundleBudgetTest extends TestCase
                 $kb, self::SIDEBAR_CHUNK_MAX_KB
             )
         );
+    }
+
+    /**
+     * **La compra de la ISLA es un chunk DIFERIDO del motor, con su propio techo** (T3e·2, `DECISIONES #682`).
+     *
+     * Solo la trae una instalación con la isla como carcasa, en la primera apertura: ni la landing ni el cajón la
+     * descargan. Si un día se importara de forma estática —en la raíz, en `index.js`—, el cajón de TODAS las
+     * instalaciones pagaría sus ~93 KiB sin enseñarla nunca.
+     */
+    public function test_the_isla_purchase_is_a_deferred_chunk_of_the_engine_under_its_budget(): void
+    {
+        $manifest = $this->manifest();
+        $clave = 'resources/js/isla/SeccionCompra.vue';
+
+        $this->assertArrayHasKey($clave, $manifest, 'La compra de la isla ya no es un chunk propio.');
+        $this->assertTrue(
+            $this->llegaPorImportDinamico('resources/js/sidebar/index.js', $clave),
+            'El motor ya no trae la compra de la isla con `import()`.'
+        );
+        $this->assertNotContains($clave, $this->descargaDelMotor(), 'La compra de la isla viaja con el motor: la paga cada cajón.');
+        $this->assertNotContains($clave, $this->alcanceEstatico('resources/js/app.js'), 'La compra de la isla viaja con la landing.');
+
+        $kb = $this->sizeKb((string) $manifest[$clave]['file']);
+        $this->assertLessThanOrEqual(self::ISLA_COMPRA_CHUNK_MAX_KB, $kb, sprintf(
+            'La compra de la isla pesa %.2f kB (techo: %s kB).', $kb, self::ISLA_COMPRA_CHUNK_MAX_KB
+        ));
     }
 
     public function test_vue_never_travels_with_the_landing(): void
@@ -1220,9 +1302,8 @@ class SidebarBundleBudgetTest extends TestCase
 
     public function test_the_engine_chunk_asks_the_server_what_it_must_not_decide(): void
     {
-        $manifest = $this->manifest();
-        $chunk = (string) $manifest['resources/js/sidebar/index.js']['file'];
-        $js = (string) file_get_contents(public_path('build/'.$chunk));
+        // La DESCARGA del motor (T3e·2): sus firmas pueden vivir en el chunk que comparte con la isla.
+        $js = $this->jsDelMotor();
 
         foreach (self::ENGINE_MUST_KNOW as $needle => $what) {
             $this->assertStringContainsString(
@@ -1243,9 +1324,7 @@ class SidebarBundleBudgetTest extends TestCase
      */
     public function test_the_runtime_signatures_actually_exist_in_the_engine_chunk(): void
     {
-        $manifest = $this->manifest();
-        $chunk = (string) $manifest['resources/js/sidebar/index.js']['file'];
-        $js = (string) file_get_contents(public_path('build/'.$chunk));
+        $js = $this->jsDelMotor();
 
         foreach (self::NEVER_IN_LANDING as $signature) {
             $this->assertStringContainsString(

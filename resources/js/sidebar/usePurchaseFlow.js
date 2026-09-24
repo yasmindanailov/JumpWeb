@@ -183,7 +183,11 @@ export function usePurchaseFlow(props) {
             refreshBookingStatus(),
         ]));
 
-        if (catalog.ok) catalogStore.setSections(sectionsFrom(catalog.data?.data ?? []));
+        if (catalog.ok) {
+            catalogStore.setSections(sectionsFrom(catalog.data?.data ?? []));
+            // Y la lista tal cual, con su zona: la pantalla 0 de la isla agrupa por ella (T3e·2). Misma respuesta.
+            catalogStore.setProducts(catalog.data?.data ?? []);
+        }
 
         // El umbral lo decide el SERVIDOR y viaja con su operador en la descripción del contrato
         // (`total > umbral`): el cliente compara, no reinventa la regla.

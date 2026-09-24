@@ -44,7 +44,7 @@ describe('el cajón sin framework', () => {
 
         assert.equal(cajon.isOpen, true);
         assert.deepEqual(llaves, ['+sidecart']);
-        assert.deepEqual(eventos, [{ tipo: 'jw:cajon:open', detalle: { reason: 'user', product: undefined } }]);
+        assert.deepEqual(eventos, [{ tipo: 'jw:cajon:open', detalle: { reason: 'user', product: undefined, surface: 'cajon' } }]);
     });
 
     test('cerrar suelta la llave, lo anuncia y NO recarga si la sesión no cambió', () => {
@@ -103,13 +103,13 @@ describe('el cajón sin framework', () => {
      */
     test('nacer abierto se anuncia con su motivo: enlace profundo, puerta de cuenta o vuelta de la pasarela', () => {
         montar({ dataset: { purchaseOpen: '1' } }).start();
-        assert.deepEqual(eventos.at(-1), { tipo: 'jw:cajon:open', detalle: { reason: 'deeplink' } });
+        assert.deepEqual(eventos.at(-1), { tipo: 'jw:cajon:open', detalle: { reason: 'deeplink', surface: 'cajon' } });
 
         montar({ dataset: { purchaseOpen: '1', accountZone: 'orders' } }).start();
-        assert.deepEqual(eventos.at(-1), { tipo: 'jw:cajon:open', detalle: { reason: 'door' } });
+        assert.deepEqual(eventos.at(-1), { tipo: 'jw:cajon:open', detalle: { reason: 'door', surface: 'cajon' } });
 
         montar({ dataset: { purchaseOpen: '1' }, hueco: { dataset: { boot: JSON.stringify({ outcome: 'confirmed' }) } } }).start();
-        assert.deepEqual(eventos.at(-1), { tipo: 'jw:cajon:open', detalle: { reason: 'return' } });
+        assert.deepEqual(eventos.at(-1), { tipo: 'jw:cajon:open', detalle: { reason: 'return', surface: 'cajon' } });
 
         eventos = [];
         montar().start();
@@ -120,10 +120,56 @@ describe('el cajón sin framework', () => {
         const cajon = montar();
 
         cajon.openWith({ type: 'product', id: 395 });
-        assert.deepEqual(eventos.at(-1).detalle, { reason: 'user', product: 395 });
+        assert.deepEqual(eventos.at(-1).detalle, { reason: 'user', product: 395, surface: 'cajon' });
 
         cajon.openWith({ type: 'zone', slug: 'kids' });
-        assert.deepEqual(eventos.at(-1).detalle, { reason: 'user', product: undefined });
+        assert.deepEqual(eventos.at(-1).detalle, { reason: 'user', product: undefined, surface: 'cajon' });
+    });
+
+    /**
+     * **La SUPERFICIE de cada apertura** (T3e·2, `DECISIONES #682`): con la isla como carcasa, la compra se abre
+     * en la isla y la cuenta en el lateral (hasta la T5). El anuncio lo dice, y es lo que oyen la carcasa del
+     * lateral y la compra de la isla para saber cuál de las dos se enseña.
+     */
+    test('con la isla como carcasa, la compra se abre en la isla y la cuenta en el lateral', () => {
+        const cajon = montar({ hueco: { dataset: { boot: JSON.stringify({ shell: 'isla' }) } } });
+
+        cajon.openWith({ type: 'zone', slug: 'kids' });
+        assert.equal(cajon.surface, 'isla');
+        assert.equal(eventos.at(-1).detalle.surface, 'isla');
+
+        cajon.openAccount({ preventDefault() {} }, 'orders');
+        assert.equal(cajon.surface, 'cajon');
+        assert.equal(eventos.at(-1).detalle.surface, 'cajon');
+
+        cajon.close();
+        assert.equal(cajon.surface, null, 'cerrado no está en ninguna');
+    });
+
+    test('nacer abierto con la isla: una compra (la vuelta del banco, `/entradas`) en la isla; una puerta de cuenta, en el lateral', () => {
+        const isla = JSON.stringify({ shell: 'isla', outcome: 'failed' });
+
+        const vuelta = montar({ dataset: { purchaseOpen: '1' }, hueco: { dataset: { boot: isla } } });
+        vuelta.bootSpaEngine = async () => null;
+        vuelta.start();
+        assert.equal(vuelta.surface, 'isla');
+        assert.deepEqual(eventos.at(-1).detalle, { reason: 'return', surface: 'isla' });
+
+        const puerta = montar({ dataset: { purchaseOpen: '1', accountZone: 'orders' }, hueco: { dataset: { boot: isla } } });
+        puerta.bootSpaEngine = async () => null;
+        puerta.start();
+        assert.equal(puerta.surface, 'cajon');
+    });
+
+    /**
+     * ⚠️ En una página ajena no hay `data-boot`: la carcasa la dirá el arranque de la API. Hasta entonces se abre
+     * en el lateral, pero NO se da por sabida: guardarla aquí dejaría la isla de esa instalación sin abrirse nunca.
+     */
+    test('sin arranque en la página, la carcasa aún no se sabe y no se da por sabida', () => {
+        const cajon = montar();
+
+        assert.equal(cajon.carcasaActual(), 'cajon');
+        assert.equal(cajon.carcasa, null);
     });
 
     test('el motor cuenta cada paso al anfitrión y éste lo anuncia', () => {

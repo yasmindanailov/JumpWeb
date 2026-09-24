@@ -45,7 +45,9 @@ export function useIsla(props, { wrapRef, islandRef, sizerRef, panelRef }) {
     const scrolledDown = useCompacta(props, wrapRef);
     const shownNotice = useAviso(props, isOpen);
     const { alTeclear } = useCapa({ islandRef, panelRef, isOpen, inCheckout, checkout: () => props.checkout, pila });
-    const { anuncio } = useCompraCapa({ islandRef, inCheckout, clave: computed(() => (inCheckout.value && props.checkout ? props.checkout.key : null)) });
+    const { anuncio } = useCompraCapa({
+        islandRef, inCheckout, clave: computed(() => (inCheckout.value && props.checkout ? props.checkout.key : null)), bloquea: () => props.bloqueaPagina,
+    });
 
     // ── Reparto de la línea de situación ──
     const r = computed(() => reparto({

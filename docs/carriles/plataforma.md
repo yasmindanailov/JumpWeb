@@ -2,7 +2,7 @@
 
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669 AGOTADA con `#669`** → **670–699 EN CURSO** · Último usado: **`#692`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **640–669 AGOTADA con `#669`** → **670–699 EN CURSO** · Último usado: **`#693`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#684`) · Actualizado: **2026-09-24**
 > (el sistema nuevo leído por DesignSync; el owner decide Blade en la instancia y la isla como segunda carcasa).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
@@ -79,7 +79,10 @@
    sus pantallas, 54/54 con `scripts/banco-compra.php`, y `--rehacer` en el juez · `#691` la secuencia en
    `sidebar/usePurchaseFlow.js`, misma traza en navegador con `scripts/sonda-embudo.mjs`) → **T3e** en seis
    sub-tandas (spec §4.10, `#692`): ·1 ✅ el homenajeado en el formulario de invitados → **·2 la carcasa elegible**
-   (·2a ✅ el ajuste y el arranque, contrato 1.22.0 · ·2b la superficie por apertura y la raíz, aviso en el buzón) → ·3 vista y controlador → ·4 «Entra» → ·5 cumpleaños → ·6 sonda. FALTAN como dato (T0): el precio de antes (→ `#684`),
+   (·2a ✅ el ajuste y el arranque, contrato 1.22.0 · ·2b ✅ `#693` la superficie por apertura, la raíz y la pantalla 0
+   de las entradas) → **·3 «Tus datos», «Pagar», el banco y los desenlaces** (encender «Continuar»; el «ya existe»
+   con `code`). Probar la isla: `sidebar.shell = isla` en local y una página ajena servida por la sonda; al
+   terminar, el ajuste vuelve a `cajon`. → ·3 vista y controlador → ·4 «Entra» → ·5 cumpleaños → ·6 sonda. FALTAN como dato (T0): el precio de antes (→ `#684`),
    el plazo de cancelación y los 90 cm con adulto. ⚠️ Tras un `pull`: `cp -r ../instancias/playjump/publico/instancia
    public/`; los bancos se rehacen con `tema/lote-fichas.py` y `scripts/banco-{isla,piezas,compra}.php` (su lado B, antes).
    ⚠️ **La web nueva cambia las URLs** (§1.5): cada ruta vieja necesita su 301.
@@ -242,6 +245,12 @@ dueño es el carril de la web/reseñas—) ·
   `v-show` y su guarda se quedan) y **`sidebar/index.js`** (le da la carcasa a la raíz con `provide`). Con
   `cajon` no cambia NADA: lo demuestro con `scripts/sonda-embudo.mjs` (misma traza) y tu suite. El resto va en
   `resources/js/isla/` y en `cajon/` (el controlador abre la compra en la isla y la cuenta en el lateral).
+  ▶ **HECHO (`#693`)**, y lo que tocó de lo tuyo: las props de la raíz, a **`sidebar/props.js`** (las comparte la
+  compra de la isla); `index.js` da la carcasa con `provide` y, con la isla, deja la intención en la máquina;
+  `stores/catalog.js` guarda también el listado tal cual (`products`, misma respuesta) y `usePurchaseFlow` lo
+  rellena; `SidebarBundleBudgetTest` mide la DESCARGA del motor (Rollup sacó un trozo común: techo **292**).
+  Con `cajon`, traza idéntica. ⚠️ **Tuyo, de antes**: la raíz deja `locales=""` de atributo en la sección de
+  compra (se lo pasa con `v-bind="props"` y ella no lo declara).
 
 ### ❗ Para el carril de la WEB (emisor: plataforma, 2026-09-23) — dos huecos de contenido, MEDIDOS
 - ▶ Publicar `/servicios` como hechos (`#672`) destapó dos cosas **tuyas**, que son de tu T6 de contenido
