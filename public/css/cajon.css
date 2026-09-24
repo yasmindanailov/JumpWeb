@@ -1,7 +1,7 @@
 /* GENERADO por scripts/hoja-del-cajon.py desde public/css/{site,landing,spinner}.css. NO se edita a mano:
  * se toca la regla en su fuente y se vuelve a generar. `HojaDelCajonTest` vigila que no se separen.
  * Qué entra y por qué: la cabecera de ese guion y `specs/cajon-empaquetable.md` §4.3.
- * FUENTES landing.css:075c01f32ca8 spinner.css:8270bcfe03ab site.css:a3b551b0dfe8 */
+ * FUENTES landing.css:075c01f32ca8 spinner.css:8270bcfe03ab site.css:6baa1ce9c5e6 */
 /* La BASE del paquete: lo que el cajón heredaba del `<body>` del producto y ahora se da
  * a sí mismo, para no tocar el documento del anfitrión. Ver la cabecera del generador. */
 :where(.sidecart), :where(.sidecart) * {
@@ -3096,6 +3096,10 @@ details > summary.legal-more ~ p {
 }
 .purchase__reginfo-btn {
     width: 100%; justify-content: center;
+}
+.purchase__optin {
+    margin-top: var(--sp-16); padding-top: var(--sp-14); border-top: 1px solid var(--line);
+    display: flex; flex-direction: column; gap: var(--sp-4); text-align: left;
 }
 .purchase__maint {
     text-align: center; padding: var(--sp-28) var(--sp-4) var(--sp-12);

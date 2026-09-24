@@ -5209,6 +5209,16 @@ body[data-has-hero] .nav--over .nav__cta {
 .purchase__reginfo-text { margin: 0; font-family: var(--font-body); font-size: var(--fs-body); line-height: 1.5; color: var(--fg); }
 .purchase__reginfo-btn { width: 100%; justify-content: center; }
 
+/* El opt-in de comunicaciones en la pantalla de «reserva creada» (`specs/analitica.md` §4.3, T4c): la MISMA
+   pieza `.switch` + `.form__hint` de «Mi cuenta → Privacidad», separada de lo de arriba por una línea y
+   alineada a la izquierda — `.purchase__done` centra TODO el texto, y un interruptor con su rótulo centrado
+   y la pista centrada debajo se lee como un titular, no como una casilla. Sin esta regla la clase estaba
+   muerta y lo cazó `SidebarStyleWiringTest`, no el ojo. */
+.purchase__optin {
+    margin-top: var(--sp-16); padding-top: var(--sp-14); border-top: 1px solid var(--line);
+    display: flex; flex-direction: column; gap: var(--sp-4); text-align: left;
+}
+
 @media (max-width: 768px) {
     
 }

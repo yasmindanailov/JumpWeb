@@ -54,8 +54,12 @@
   (`SegmentsReport` + `SegmentsWidget`, cuatro filas con personas y con opt-in) y «Exportar segmento»
   (`analytics.export`, permiso propio sembrado en la local; `GET /admin/analitica/segmentos/csv`, solo opt-in,
   rastro `segments.exported`); `sonda-segmentos.mjs` (capturas `segmentos-t4b-*.png`). **Queda el ojo del
-  owner**. ▶ Sigue **T4c** (opt-in de marketing en `steps/ConfirmedStep.vue`); la **T2e** solo si el volumen
-  lo pide. ⚠️ **El fixture «probe-ojo-analitica» está
+  owner**. ▶ **T4c EN EL ÁRBOL (24-09)**: el opt-in de comunicaciones en la pantalla de «reserva creada»
+  (`steps/ConfirmedStep.vue`: casilla DESMARCADA solo con sesión, sin opt-in y sin retirada previa —la regla en
+  `account/marketing-offer.js`—, con los rótulos de «Privacidad» y el mismo `PUT /me/marketing`);
+  `sonda-optin-compra.mjs` (con el pase de la vuelta de la pasarela puesto por tinker). **La T4 queda
+  completa. Queda el ojo del owner.** ▶ Sigue **T5** (experimentos, spec
+  §4.4; la asignación es del SERVIDOR, cookie `HttpOnly`); la **T2e** solo si el volumen lo pide. ⚠️ **El fixture «probe-ojo-analitica» está
   MONTADO en la BD local** (90 pedidos `JW-OJO…`, 81 cobros, 9 devoluciones, 25 clientes
   `ojo-N@ojo-analitica.jumpweb.test`, 506 sesiones, dos meses): `OJO=desmontar` lo quita entero.
 - ✅ **La ficha de Google (`#524`), T1 y T2·1→T2·8 en el árbol** (`#720`→`#734`), **vistas por el owner con
@@ -81,9 +85,9 @@
    la T2f en vivo (24-09). ▶ **La T3 en marcha** (spec §4.3 y §4.8): **T3a·1 ✅ · T3a·2 ✅ · T3a·3 ✅ (24-09)**
    → **T3a·4 ✅ (24-09)** el aviso a las cuentas existentes → **T3b·1 ✅ (24-09)** los píxeles → **T3b·2 ✅
    (24-09)** la API de conversiones → **T3b·3 ✅ (24-09)** los textos → **T4a ✅ (24-09)** la 360 → **T4b ✅ (24-09)** los
-   segmentos → **T4c** el opt-in de marketing tras comprar (`steps/ConfirmedStep.vue`, solo con sesión,
-   `marketing_opt_in === false` y sin retirada previa —`consents.revoked_at`—, una casilla desmarcada que llama
-   al mismo `PUT /me/marketing`; spec §4.3 «Comunicaciones») → **T5** experimentos (spec §4.4).
+   segmentos → **T4c ✅ (24-09)** el opt-in tras comprar → **T5** experimentos (spec §4.4: la asignación la hace
+   el SERVIDOR con una cookie `HttpOnly`, `experiment_exposed` ya está en el contrato, el A/B isla contra cajón
+   por instalación en `/sidebar/boot` y por visitante en `/sidebar/session`; leer §4.4 y §4.8 antes).
    ⚠️ El fixture del ojo siembra también TRÁFICO (506 sesiones, 2.294 hechos, sellos con primer y último toque).
    ⚠️ **Los cortes por día van por HORA UTC en SQL y al día del parque en PHP** (`SqlTime::hourBucket()`,
    `Window::bucketKey()`), nunca `CONVERT_TZ`. ⚠️ El dinero se lee de `payments`, `payment_refunds`,
@@ -251,6 +255,9 @@ spec enumera. Lo del cliente va en la rama `cliente/playjump`, nunca a `main`.
 - 🪤 **De la T4b**: una acción de auditoría nueva va a `AuditLog::ACTIONS` o el controlador da 500. La lista de
   widgets de `AnalyticsPageTest` es EXACTA y la tabla plegada CIERRA cada pestaña (lo nuevo va antes). El
   `no-store` de la ruta llega como `max-age=0, no-store, private`. Un correo se cuenta en minúsculas.
+- 🪤 **De la T4c**: la pantalla de «reserva creada» se abre en vivo con el PASE de la vuelta de la pasarela (una
+  entrada de un solo uso en la caché `database`, `RedsysReturnController::handoff()`, atada al titular): tinker
+  la pone y `/?redsys=<token>` la gasta. Un rótulo que ya viaja con sesión se REUTILIZA: ni una clave más.
 - 🩹 **En la BD LOCAL hay 19 titulares con la cadena de waiver ROTA** (basura del 26–27 de agosto): si mides
   cadenas, compara ANTES/DESPUÉS.
 - **F4 cerró y el cajón es un PAQUETE** (`specs/cajon-empaquetable.md` §0 y §4.8). Tocar «HOJA ENFOCADA» de
@@ -271,6 +278,8 @@ spec enumera. Lo del cliente va en la rama `cliente/playjump`, nunca a `main`.
 - ⚠️ Tres migraciones de la analítica estaban **pendientes en esta máquina** hasta hoy; aplicadas.
 - ✅ **Tu aviso de la T3d (24-09, tarde), ATENDIDO**: no toco `PurchaseSection.vue` ni sus seis pruebas;
   la T3a·4 va por el índice de cuenta, el contexto y los correos. Mis eventos de compra llegarán con la T3b.
+- ▶ **Tocado tuyo en la T4c (24-09)**: `sections/PurchaseSection.vue`, UNA línea (`:account="account"` al
+  `ConfirmedStep`), rebasado sobre tu T3d; si mueves esa llamada a `usePurchaseFlow.js`, esa prop va con ella.
 - ✅ **`lint:js` con `resources/js/isla`: adelante, hazlo tú** (es tu carpeta; si el gate se pone rojo por la
   isla, es tuyo). ✅ **El aviso de cookies DENTRO de la isla, atendido**: el almacén es `ui/cookie-consent.js`
   (`createCookiesStore`, cuatro categorías desde `data-consent-categories`, `node --test`); la isla puede pintar

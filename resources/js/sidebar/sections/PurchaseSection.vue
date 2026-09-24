@@ -353,6 +353,7 @@ function goBack() {
             :registration="outcomeStore.registration"
             :has-session="hasSession"
             :messages="messages"
+            :account="account"
             :locale="locale"
             @add-another="addAnother"
             @go-account="goToAccount" />

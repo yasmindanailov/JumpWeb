@@ -841,7 +841,14 @@ class SidebarBundleBudgetTest extends TestCase
     // del motor pasó a 211 KiB y el común a 80—. Medido 291,69 KiB (HEAD `c7cf521d`: 290,09; +1,60): el pegamento de
     // importaciones entre los dos chunks y la raíz que elige carcasa. Un `manualChunks` no lo quita (el pegamento se
     // queda) y rompería el `import()` del alta con Google que el carril SPA separó a propósito. No se fuerza.
-    private const SIDEBAR_CHUNK_MAX_KB = 292;
+    // T4c de la analítica (24-09): la casilla del opt-in de comunicaciones en la pantalla de «reserva creada» —la regla
+    // en `account/marketing-offer.js`, el interruptor con los rótulos de «Privacidad» que ya viajan, y el `watch` que
+    // pide el perfil y los consentimientos solo cuando pueden cambiar la respuesta—. Medida sola sobre `54aafbc0`:
+    // +2,46 kB (290,09 → 291,27); las dos tandas del mismo día (T3e·2 + T4c) se encontraron en el rebase y el techo se
+    // pone con la medida de las dos juntas, la que dice este test: 292,96 KiB. Lo paga un DERECHO en su momento (art. 7
+    // RGPD: el consentimiento se pide, no se presupone) y no hay poda: los rótulos se reutilizan y la regla vive fuera
+    // del componente a propósito (CE-6).
+    private const SIDEBAR_CHUNK_MAX_KB = 293;
 
     // T3e·2: la compra de la isla, chunk diferido del motor que solo trae una instalación con la isla. Medido 93,36 KiB
     // (la sección, sus diez pantallas de la T3c, la isla y sus piezas); su hoja va aparte (7,2 KiB).

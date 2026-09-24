@@ -1,6 +1,10 @@
 <script setup>
 import { t as translate } from '../i18n.js';
 import { money } from '../money.js';
+import { computed, watch } from 'vue';
+import { useProfileStore } from '../stores/profile.js';
+import { usePrivacyStore } from '../stores/privacy.js';
+import { needsConsentsToDecide, offersMarketingOptIn } from '../account/marketing-offer.js';
 import SummaryLine from './SummaryLine.vue';
 
 /**
@@ -49,12 +53,24 @@ const props = defineProps({
     registration: { type: Object, default: null },
 
     messages: { type: Object, default: () => ({}) },
+    /** El grupo `account`: la casilla del opt-in REUTILIZA los rótulos de «Privacidad» (T4c), que ya viajan con sesión. */
+    account: { type: Object, default: () => ({}) },
     locale: { type: String, default: 'es' },
 });
 
 defineEmits(['add-another', 'go-account']);
 
 const t = (key) => translate(props.messages, key);
+
+// T4c (`specs/analitica.md` §4.3 «Comunicaciones»): el opt-in de marketing, en el MOMENTO de la reserva creada.
+// La regla vive en `account/marketing-offer.js` (con sus `node --test`); aquí solo se pide lo que falta y se pinta.
+const profile = useProfileStore();
+const privacy = usePrivacyStore();
+const offer = computed(() => offersMarketingOptIn({ hasSession: props.hasSession, user: profile.user, consents: privacy.consents }));
+watch(() => [props.hasSession, profile.user, privacy.consents], () => {
+    if (props.hasSession && ! profile.user) profile.ensure();
+    if (needsConsentsToDecide({ hasSession: props.hasSession, user: profile.user, consents: privacy.consents })) privacy.ensureConsents();
+}, { immediate: true });
 </script>
 
 <template>
@@ -127,6 +143,23 @@ const t = (key) => translate(props.messages, key);
         <div v-if="registration" class="purchase__reginfo">
             <p class="purchase__reginfo-text">{{ registration.description }}</p>
             <a :href="registration.url" target="_blank" rel="noopener" class="btn btn--ghost purchase__reginfo-btn">{{ registration.label }} →</a>
+        </div>
+
+        <!--
+          T4c (`specs/analitica.md` §4.3 «Comunicaciones»): el opt-in de comunicaciones, ofrecido DESMARCADO en el
+          momento de la reserva creada, solo con sesión, sin opt-in dado y sin retirada previa (la regla,
+          `account/marketing-offer.js`). Es la MISMA pieza y los MISMOS rótulos que «Mi cuenta → Privacidad»
+          (`account.privacy.marketing_*`, que ya viajan con sesión: ni una clave más en el montaje) y el mismo
+          `PUT /me/marketing`, único escritor. Quien lo marca ve la casilla marcada, y puede desmarcarla aquí mismo.
+        -->
+        <div v-if="offer || (hasSession && profile.user?.marketing_opt_in === true && privacy.consents !== null)" class="purchase__optin" data-marketing-offer>
+            <label class="switch">
+                <input class="switch__input" type="checkbox" role="switch"
+                       :checked="profile.user?.marketing_opt_in === true" :disabled="privacy.busy"
+                       @change="privacy.setMarketing($event.target.checked)">
+                <span class="switch__label">{{ translate(account, 'account.privacy.marketing_label') }}</span>
+            </label>
+            <small class="form__hint">{{ translate(account, 'account.privacy.marketing_hint') }}</small>
         </div>
 
         <!--
