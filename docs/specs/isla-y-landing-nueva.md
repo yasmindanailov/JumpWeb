@@ -22,8 +22,8 @@
   - ⚠️ El aviso de cookies pasa a la isla, y la T3 de la analítica (carril del SPA, `#735`) toca ese aviso:
     se avisa en el buzón antes.
   - Tras tocar un `.vue`, `npm run build:ssr` antes de la suite (`sidebar-spa.md` §0).
-- **Estado**: ⬜ borrador, con §7 contestado (`#683`: Kids y Jump primero, Lucide, pasos compartidos; Bizum,
-  Apple y el aviso en la v2.0.0). Promociones: `#684`, spec propia. Sigue la T0 (páginas, tokens, URLs).
+- **Estado**: ⬜ borrador, con §7 contestado (`#683`) y promociones en `#684` (spec propia). **T0 hecha para
+  Kids y Jump** (§1.6: sus datos, los tokens y las URLs); ⚠️ Kids es «4 — 8 años» en el panel y 4–7 en el diseño.
 - **Invariantes**: `PAY-*` si entra Bizum (`VERIFY_CONC=1`), `SEC-12` (la ruta de las vistas), `SEC-01`,
   `RGPD-*` (consentimiento dentro de la isla, Apple como proveedor), `PERF-02` (la carcasa por instalación va en
   el arranque cacheado; la variante del A/B, en la sesión).
@@ -93,10 +93,9 @@ El diseño trae primitivos (`--ink-*`, `--flare-*`, `--aqua-*`, `--volt-*`, `--b
 alias semánticos (`--bg-*`, `--surface-*`, `--text-*`, `--action-*`, `--control-*`, `--notice-*`, `--band-*`,
 `--scrim-*`), y redefine los de lectura bajo `[data-surface="ink"]`. El producto tiene su propia capa de tema
 (`tema-por-instalacion.md`: seis mecanismos, `[data-surface]`, `theme.action` en el panel). **Choques ya
-visibles**, a resolver en la T0: la columna (1240 en el diseño, 1120 en el producto), el mínimo táctil (44 contra
-48), la escala de radios (6/10/14/20/28/36 contra la de `ShapeScaleTest`), los **iconos** (Lucide contra
-`IconSetAnatomyTest`, «nada de otra librería») y las **fuentes** (Google Fonts por `@import`: se sirven desde el
-propio dominio, porque cargarlas de Google envía la IP del visitante).
+visibles**, medidos en §1.6.3: la columna, el mínimo táctil, la escala de radios, los **iconos** (Lucide
+contra `IconSetAnatomyTest`, resuelto en `#683`) y las **fuentes** (Google Fonts por `@import`: se sirven desde
+el propio dominio, porque cargarlas de Google envía la IP del visitante).
 
 ### 1.5 Las URLs cambian
 
@@ -104,6 +103,88 @@ La landing de hoy sirve nueve vistas (`instancias/playjump/web/`): portada, atra
 cumpleaños, legal, normas, precios y servicios. El diseño ordena la web por comprador: portada, Cumpleaños,
 Kids, Jump, Colegios, Normas y seguridad, Visítanos y las legales. **Rutas como `/precios`, `/atracciones` o
 `/bar` desaparecen**: cada una necesita su 301 al sitio nuevo o se pierde lo que Google ya tiene indexado.
+
+### 1.6 La T0, medida (2026-09-24): Kids y Jump, los tokens y las URLs
+
+Medido contra la API en local (`curl` a `/api/v1/*` con la BD de desarrollo) y contra los briefs de Kids y
+Jump y su `paginas/entradas/contenido.js`. Las cifras de los briefs «vendrán del panel»: esta tabla dice de
+dónde. **HAY** = la API lo da · **FALTA** = no existe como dato · **INSTANCIA** = texto o material de PlayJump.
+
+#### 1.6.1 Cada dato de Kids y Jump, con su fuente
+
+| Dato (pieza) | Fuente | Veredicto |
+|---|---|---|
+| Precio de 1 h, 2 h e ilimitada por tarifa (1, 3) | `/prices`: `products[].prices[]` con `rate` normal/especial | **HAY**; la ilimitada solo trae tarifa normal, y eso ya dice «de lunes a jueves» |
+| Qué días son tarifa especial (3) | `/prices.rates[].weekdays` y, día a día, `/availability/{product}/dates` (`rate_key`, `price_cents`) | **HAY**: el punto del calendario está servido |
+| «Hoy, 1 hora cuesta…» (1, 6) | `/availability/{product}/dates` del día | **HAY** |
+| «Quedan huecos esta tarde» (1, 6, isla) | `/availability/{product}/times` del día (`available`) | **HAY**, con una lectura por producto; sin agregado |
+| Horario y festivos (6) | `/schedule` (`weekly`, `special_days`) y `/schedule/now` | **HAY** |
+| Dirección, «Cómo llegar», teléfono (6, 8) | `/site` (`address.written`, `address.maps_url`, `contact.phone`) | **HAY**; WhatsApp usa el mismo número (no hay campo propio) |
+| Nota y número de reseñas (1, 5, 8) | `/social-proof` | **HAY** (vacío en local); la **lista** de reseñas aún no se publica: **PARCIAL** |
+| Las 23 atracciones: nombre, línea y foto (4) | `/attractions` (15 de Jump, 8 de Kids) | **HAY**; el orden, las destacadas y los vídeos son **INSTANCIA** |
+| Edad y altura de cada zona (1, 5, 7) | `/catalog/zones` (`age_range`, `height`) | **HAY**, pero ver §1.6.2 |
+| Duración del producto | `/catalog/products` (`duration_min`) | **HAY** |
+| Calcetines a 2 € (3, 7) | `POST /catalog/products/{product}/addons` | **HAY** al resolver la selección |
+| Total de la calculadora (3) | `/orders/quote` | **HAY** |
+| **Precio de antes (tachado) y texto y fecha de la oferta** (1, 3, 8, isla) | Ninguna: la tabla `prices` ya guarda el precio rebajado y solo las vistas Blade de hoy reconstruyen el de antes (`WritesLandingValues::antes()`) | **FALTA** → las promociones (`#684`) |
+| **Plazo de cambio y cancelación**: 24 h en entradas, 5 días en cumpleaños (2, 3, 7) | Solo como frase fija del producto (`pay_policy` en `lang`) | **FALTA** como dato; y hay que medir qué regla lo hace cumplir |
+| **Los menores de 4 entran con un adulto desde 90 cm** (1, 3, 5, 7) | `height` de Kids solo trae el máximo (150 cm) | **FALTA** |
+| JumpPoints (3) | Ningún ajuste lo enciende | **A MEDIR** con `lealtad-jumppoints.md` |
+| «Mínimo 3 monitores», parking gratis, cafetería (5, 6) | — | **INSTANCIA** (texto de PlayJump) |
+| Los textos de cada pieza, las dudas y el SEO (título, descripción, imagen) | — | **INSTANCIA**, con las cifras de dentro sacadas de sus hechos |
+
+▶ **La regla de los textos**: las frases de los briefs son de la instancia, pero **cada cifra que llevan sale
+de su hecho** («2 €» del complemento, «1,30 m» de la zona, «24 h» del plazo). Una cifra tecleada en una frase
+se queda vieja la primera vez que alguien cambie el panel.
+
+#### 1.6.2 Datos del panel que contradicen al diseño
+
+- ⚠️ **Kids es «4 — 8 años» en el panel** (`age_range` de la zona y los `features` de sus tres productos: «De 4 a
+  8 años»), y **de 4 a 7 en todos los briefs** (decisión del 23-09 en el README del diseño). Hay que corregir
+  el dato antes de la T4, o la página y la API dirán cosas distintas.
+- Los productos ya llevan una etiqueta: `badge` = «−20 % online» en `/catalog/products`. Es el germen de las
+  promociones (`#684`), igual que `gifts`.
+- Los briefs dan **155 reseñas** en Kids y Jump y **148** en Cumpleaños y la portada: con la cifra de la API, las
+  dos páginas dirán la misma.
+- El README del diseño pone de ejemplo calcetines a «2,50 €» y los briefs a «2 €»: manda el complemento.
+
+#### 1.6.3 Los tokens: los dos vocabularios, medidos
+
+El producto declara **164** nombres entre `public/css/site.css` y `client.css`; Saltia, unos **200** en sus siete
+ficheros. Por familias:
+
+| Familia | Producto | Saltia | Lectura |
+|---|---|---|---|
+| Columna | `--col-max` 1176 por defecto; **1120** en el `client.css` de PlayJump | `--container` 1240 | Valor de la instancia: cabe sin tocar el producto |
+| Táctil | `--tap-min` 48 | «nunca por debajo de 44»; controles de 40/48/56/64 | **Se queda 48**: es el suelo del producto y el de 40 se agranda |
+| Radios | 4 valores distintos (10, 16 y píldora; `ShapeScaleTest`) | 7 (6, 10, 14, 20, 28, 36 y píldora) | **Choca**: la escala es del producto; la T1 decide si se amplía |
+| Sombras | 3 roles (`lift`, `float`, `modal`) | una escala (`xs`→`lg`) más `island` y `cta` | La isla necesita `island`; el resto se mapea a los roles |
+| Movimiento | 8 duraciones y 4 curvas con nombre propio (`--dur-entra`…) | 6 duraciones y 4 curvas (`--dur-island`, `--ease-spring`…) | Valores de la instancia sobre los roles del producto |
+| Fuentes | 4 roles (`display`, `body`, `mono`, `accent`) | 3 (`display`, `ui`, `mono`) | Encajan; `accent` queda vacío |
+| Color | superficie, tintes y semánticos (`--bg`, `--tint-*`, `--ok`…) | primitivos más alias (`--control-*`, `--notice-*`, `--text-*`, `--surface-glass*`, `--scrim-*`, `--band-*`) | Los alias de control y aviso son lo que la isla necesita sobre tinta: **roles nuevos del producto** |
+
+▶ **La estrategia para la T1**: la isla (producto) se escribe contra **roles del producto**, y los que le
+faltan (control, aviso, cristal, velo, carga) los declara el producto con nombre genérico y un valor neutro.
+El `client.css` de PlayJump pone los primitivos de Saltia y asigna los roles. Las páginas de la instancia
+pueden usar los alias de Saltia directamente, porque son su CSS.
+
+#### 1.6.4 Las URLs: de las de hoy a las nuevas
+
+El idioma no va en la URL (lo lleva `lang/{locale}`), así que hay un mapa, no tres. El sitemap de hoy sirve 11
+URLs; `/atracciones`, `/bar` y `/entradas` existen fuera de él.
+
+| Hoy | Nueva | Qué pasa |
+|---|---|---|
+| `/` | `/` | La portada nueva |
+| `/cumpleanos`, `/normas` | Igual | La página nueva, en su sitio |
+| Las cinco legales (`/privacidad`, `/condiciones`, `/waiver`, `/cookies`, `/aviso-legal`) | Igual | Sin cambio de URL |
+| `/contacto`, `/bar` | `/visitanos` | 301: la dirección, el horario, el contacto y la cafetería viven ahí |
+| `/precios`, `/entradas`, `/atracciones` | `/` | 301 **propuesto** a la portada, que reparte hacia Kids, Jump y Cumpleaños |
+| `/servicios` | `/colegios` | 301 cuando exista Colegios; hasta entonces sigue su vista de hoy |
+| — | `/kids`, `/jump` | Nuevas, y las primeras en la T4 |
+
+▶ Los 301 «propuestos» son de SEO y se pueden afinar: `/precios` podría llevar a Kids o a Jump según lo que
+Google tenga indexado, y eso se mira en Search Console antes de fijarlos.
 
 ## 2. Objetivo y criterios de éxito
 
@@ -221,7 +302,7 @@ deja de decir «nada de otra librería» en la T1.
 
 | Tanda | Qué | Dónde |
 |---|---|---|
-| T0 | Censo de las páginas (cada pieza contra el menú de hechos), mapa de tokens y mapa de URLs viejas → nuevas | Esta spec |
+| T0 ✅ | Kids y Jump contra el menú de hechos, los tokens y las URLs (§1.6). Cumpleaños y la portada, con su tanda | Esta spec |
 | T1 | El tema: tokens en la instancia, roles nuevos en el producto, fuentes locales, iconos | Producto + instancia |
 | T2 | La isla en reposo (apagada por defecto): menú, situaciones 2, 3, 5 y 15, y el aviso de cookies dentro | Producto |
 | T3 | La compra en la isla sobre el motor, con tarjeta; sonda de compra | Producto |
@@ -265,9 +346,9 @@ por defecto, hecha en este carril).
 4. **La lógica nueva en la v2.0.0**: **Bizum, Apple y el aviso de día liberado** (§4.5). En lugar de la fecha
    de fin de oferta, el owner abrió un **sistema de promociones** (`#684`), con spec propia.
 
-**Por iterar con el owner**: el modelo de las promociones (dónde va cada etiqueta en la landing) y el aviso de
-arriba. ⚠️ El brief base (regla 5) dice que no hay ofertas generales en todas las páginas y que un aviso general
-es solo para lo que afecta a todos (un cierre, un horario especial); hay que casarlo con el aviso de ofertas.
+**El aviso de arriba**, `[DECIDIDO owner]` 2026-09-24 (`#684`): es para **noticias y avisos generales** (un
+cierre, un horario especial), y **cada oferta va en la página de su producto**, como pide la regla 5 del brief
+base. **Por iterar con el owner**: el modelo de las promociones (dónde va cada etiqueta en la landing).
 
 **Revisión**: la spec la revisa el owner; la revisión adversarial se le pide con el coste delante (regla 9).
 
