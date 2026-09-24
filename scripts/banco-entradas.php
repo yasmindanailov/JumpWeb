@@ -67,16 +67,56 @@ $diaSemana = (int) (new DateTimeImmutable(RELOJ))->format('w');
 $filaHoy = $diaSemana >= 1 && $diaSemana <= 4 ? 0 : 1;
 
 /**
- * Las piezas: su `.jsx` (bajo `paginas/`), cómo la monta la página del diseño (`pagina.jsx`, con nuestros corchetes) y
- * la vista de la instancia que la pinta, con lo que recibe además de `$z`.
+ * Lo que el diseño deja escrito en sus `.jsx` y no en `contenido.js` (el teléfono, las URL, el pie entero de
+ * `piezas-7-9.jsx`): el lado B lo recibe con los mismos valores, como se lo dará el modelo del molde.
+ */
+$contacto = ['telefono' => '641 99 57 14', 'tel' => 'tel:+34641995714', 'whatsapp' => 'https://wa.me/34641995714'];
+$pie = static function (string $zona): array {
+    $actual = $zona === 'jump' ? 'Jump' : 'Kids';
+    $paginas = [['Cumpleaños', '#cumpleanos'], ['Kids', '#kids'], ['Jump', '#jump'], ['Colegios', '#colegios'], ['Visítanos', '#visitanos'], ['Normas y seguridad', '#normas'], ['Mi cuenta', '#cuenta']];
+
+    return [
+        'brand' => ['src' => '../instancia/img/logo-playjump-sm.png', 'alt' => 'Play Jump Park', 'href' => '#portada', 'height' => 46],
+        'address' => ['lines' => ['Pol. Ind. Los Peñones', 'Ctra. de Granada, km 163', 'Lorca, Murcia'], 'note' => 'Parking gratis', 'mapsHref' => 'https://maps.google.com'],
+        'hours' => [
+            ['label' => 'De lunes a viernes', 'hours' => '16:30–21:30', 'days' => [1, 2, 3, 4, 5]],
+            ['label' => 'Sábados, domingos y festivos', 'hours' => '11:00–21:30', 'days' => [0, 6]],
+        ],
+        'contact' => ['phone' => '641 99 57 14', 'whatsappHref' => 'https://wa.me/34641995714'],
+        'nav' => array_map(fn (array $p): array => ['label' => $p[0], 'href' => $p[0] === $actual ? '#' : $p[1]], $paginas),
+        'legal' => [['label' => 'Aviso legal', 'href' => '#legal'], ['label' => 'Privacidad', 'href' => '#privacidad'], ['label' => 'Accesibilidad', 'href' => '#accesibilidad'], ['label' => 'Configurar cookies']],
+        'payment' => 'Pago con tarjeta o Bizum',
+        'social' => [['label' => 'Instagram', 'href' => 'https://instagram.com'], ['label' => 'TikTok', 'href' => 'https://tiktok.com']],
+        'language' => ['current' => 'Español'],
+        'copyright' => '© 2026 Play Jump Park',
+    ];
+};
+
+/**
+ * Las piezas: su `.jsx` (bajo `paginas/`), cómo la monta la página del diseño (`pagina.jsx`, con nuestros corchetes),
+ * la vista de la instancia que la pinta con lo que recibe además de `$z`, y los botones y enlaces cuyo `hover` se juzga.
  */
 $piezas = [
     'cabecera' => [
         'jsx' => ['entradas/piezas-1-2.jsx'],
         'react' => '<section className="sec sec--top"><div className="wrap"><CabeceraEntradas z={z} ofertas={false} /></div></section>',
         'vista' => 'instancia::entradas.piezas-1-2',
-        'datos' => ['hoy' => $filaHoy, 'huecos' => true, 'logo' => '../instancia/img/logo-playjump-sm.png', 'logoAlt' => 'Play Jump Park', 'google' => 'https://www.google.com/maps'],
+        'datos' => fn (string $zona): array => ['hoy' => $filaHoy, 'huecos' => true, 'logo' => '../instancia/img/logo-playjump-sm.png', 'logoAlt' => 'Play Jump Park', 'google' => 'https://www.google.com/maps'],
         'pasar' => ['boton' => 'text=Reservar para hoy', 'enlace' => 'text=Ver precios', 'resenas' => 'text=155 reseñas'],
+    ],
+    'cierre' => [
+        'jsx' => ['entradas/pieza-8.jsx'],
+        'react' => '<section className="sec sec--cierre"><div className="wrap"><CierreEntradas z={z} ofertas={false} /></div></section>',
+        'vista' => 'instancia::entradas.pieza-8',
+        'datos' => fn (string $zona): array => ['hoy' => $filaHoy, 'huecos' => true, 'bizum' => true, 'google' => 'https://www.google.com/maps', 'contacto' => $contacto],
+        'pasar' => ['boton' => 'text=Reservar para hoy', 'resenas' => 'text=155 reseñas', 'whatsapp' => 'text=escríbenos por WhatsApp', 'telefono' => 'a >> text=641 99 57 14'],
+    ],
+    'pie' => [
+        'jsx' => ['piezas-7-9.jsx'],
+        'react' => '<section className="sec sec--pie"><div className="wrap"><Pie actual={z.zona === "jump" ? "Jump" : "Kids"} /></div></section>',
+        'vista' => 'instancia::entradas.pie',
+        'datos' => fn (string $zona): array => ['hoy' => $diaSemana, 'pie' => $pie($zona)],
+        'pasar' => ['llegar' => 'text=Cómo llegar', 'pagina' => 'text=Cumpleaños', 'cookies' => 'text=Configurar cookies', 'telefono' => 'text=641 99 57 14', 'idioma' => 'text=Español', 'red' => 'text=Instagram'],
     ],
 ];
 
@@ -112,7 +152,7 @@ foreach ($piezas as $nombre => $pieza) {
 </body></html>
 HTML);
 
-        $cuerpo = view($pieza['vista'], ['z' => $contenido[$zona], ...$pieza['datos']])->render();
+        $cuerpo = view($pieza['vista'], ['z' => $contenido[$zona], ...$pieza['datos']($zona)])->render();
         file_put_contents($salida."/b/{$zona}-{$nombre}.html", <<<HTML
 <!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="../instancia/css/fuentes.css"><link rel="stylesheet" href="../instancia/css/saltia.css"><link rel="stylesheet" href="../instancia/css/isla.css"><link rel="stylesheet" href="../instancia/css/entradas.css">

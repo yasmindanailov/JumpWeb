@@ -895,6 +895,14 @@ juzga «idéntico», con los datos del diseño.
     sin el botón a todo el ancho al apilar, 7.873 píxeles solo a 390; sin el `hover` del primario, caen solo sus 4.
     ⚠️ Al escribir la hoja: con `:hover` en la regla BASE, esa regla pesaba más que las de talla y variante, y un
     botón `xl` volvía al `gap` de 9 px al pasar; se declaran con `:hover` solo el color y el subrayado.
+  - ▶ **·2, hecha (24-09 noche)**: `booking-cta`, `cta-band`, `opening-hours` y `site-footer`; las piezas
+    `pieza-8.blade.php` (el cierre) y `pie.blade.php` (instancia `566ee64`). **Medido: 64 de 64 pares a 0** (las tres
+    piezas, dos zonas, dos anchos, en reposo y con el puntero sobre cada botón y enlace). Dos trampas, las dos pagadas:
+    (1) **los enlaces van DENTRO de frases** («Llámanos o <enlace> al <enlace>.»): un salto de línea al final del
+    componente se pinta como espacio —su control da 806 y 4.596 píxeles en reposo—, así que `link` y `button` van sin
+    nada alrededor, como `<x-lucide>`; y la frase se escapa y los enlaces se cosen en sus marcadores. (2) **El
+    subrayado que aparece al pasar lleva el grosor `auto`**, medido en el diseño vivo: React reescribe
+    `style.textDecoration` y ese atajo borra el 1,5 px (24 `hover` daban 60–179 píxeles hasta copiarlo).
 - **T4a · los datos** (producto): las dos columnas de `#699` con su campo en el panel, sus hechos en
   `/catalog/products` y `/catalog/zones` (contrato 1.26.0), sus pruebas y su mutante; y la LISTA de reseñas en
   `/social-proof`, con la misma regla de permiso y la misma línea legal que la portada de hoy. El texto del paso de
