@@ -24,8 +24,12 @@
  *       /var/www/instancias/playjump/diseno/playjump-design-system storage/app/pixel/banco-entradas http://127.0.0.1:8131
  *   docker compose exec -u sail -T laravel.test php -S 127.0.0.1:8131 -t storage/app/pixel/banco-entradas   # aparte
  *   docker compose exec -u sail -T -e PLAYWRIGHT_BROWSERS_PATH=/home/sail/pw-browsers laravel.test node scripts/pixel.mjs \
- *       --lote storage/app/pixel/banco-entradas/lote.json --reloj 2026-09-23T16:05:00+02:00 --rehacer \
+ *       --lote storage/app/pixel/banco-entradas/lote.json --reloj 2026-09-23T16:05:00+02:00 --rehacer --reintentos 2 \
  *       --salida storage/app/pixel/banco-entradas/juicio
+ *
+ * ⚠️ `--reintentos 2`, medido (24-09): con el puntero sobre una puerta con flecha, el DISEÑO contra sí mismo da un
+ * píxel distinto en el primer intento (la flecha que se desplaza, trampa 6 del juez) y su captura estable es idéntica
+ * a la nuestra. Reintentar solo demuestra identidad: un 0 exige que coincidan todos los píxeles.
  *
  * Con nombres de pieza al final, solo esas (`… http://127.0.0.1:8131 cabecera`).
  */
@@ -93,8 +97,19 @@ $pie = static function (string $zona): array {
 };
 
 /**
+ * Un estado con el puntero encima de un botón o enlace, para juzgar su `hover`. Con `movimiento`, SIN reducirlo: solo
+ * en los BOTONES, porque su levantamiento es un token que el movimiento reducido anula (`--lift-hover: 0px`). Un enlace
+ * se juzga con él reducido: sus duraciones pasan a 1 ms y el `hover` (color, subrayado, la flecha) sale entero y quieto
+ * —medido: con movimiento, la flecha que se desplaza dejaba al propio DISEÑO distinto de sí mismo en el 1.er intento—.
+ */
+$pasar = static fn (string $selector, array $clics = [], bool $movimiento = false): array => ['pasar' => $selector, 'clics' => $clics, 'movimiento' => $movimiento];
+$pasarBoton = static fn (string $selector): array => $pasar($selector, [], true);
+
+/**
  * Las piezas: su `.jsx` (bajo `paginas/`), cómo la monta la página del diseño (`pagina.jsx`, con nuestros corchetes),
- * la vista de la instancia que la pinta con lo que recibe además de `$z`, y los botones y enlaces cuyo `hover` se juzga.
+ * la vista de la instancia que la pinta con lo que recibe además de `$z`, y sus ESTADOS además del de reposo: lo que se
+ * pulsa antes de la foto (`clics`, abrir una duda) y dónde se deja el puntero (`pasar`). Los selectores valen en los dos
+ * lados: el A no tiene nuestras clases, así que van por texto, por rol o por atributo.
  */
 $piezas = [
     'cabecera' => [
@@ -102,21 +117,35 @@ $piezas = [
         'react' => '<section className="sec sec--top"><div className="wrap"><CabeceraEntradas z={z} ofertas={false} /></div></section>',
         'vista' => 'instancia::entradas.piezas-1-2',
         'datos' => fn (string $zona): array => ['hoy' => $filaHoy, 'huecos' => true, 'logo' => '../instancia/img/logo-playjump-sm.png', 'logoAlt' => 'Play Jump Park', 'google' => 'https://www.google.com/maps'],
-        'pasar' => ['boton' => 'text=Reservar para hoy', 'enlace' => 'text=Ver precios', 'resenas' => 'text=155 reseñas'],
+        'estados' => ['boton' => $pasarBoton('text=Reservar para hoy'), 'enlace' => $pasar('text=Ver precios'), 'resenas' => $pasar('text=155 reseñas')],
+    ],
+    'dudas' => [
+        'jsx' => ['entradas/pieza-7.jsx'],
+        'react' => '<section className="sec"><div className="wrap"><DudasEntradas z={z} /></div></section>',
+        'vista' => 'instancia::entradas.pieza-7',
+        'datos' => fn (string $zona): array => [],
+        'estados' => [
+            'otra' => ['clics' => ['button[aria-expanded] >> nth=1']],
+            'cerrada' => ['clics' => ['button[aria-expanded] >> nth=0']],
+            // ⚠️ `a:has-text`, no `a:text-is`: éste casa con el elemento MÁS PEQUEÑO que tiene el texto (el `<span>` de
+            // dentro del enlace), y el puntero esperaba 30 s a un `<a>` que no llegaba.
+            'aqui' => $pasar('a:has-text("aquí")', ['button:has-text("¿Puedo comprar la entrada para hoy?")']),
+            'puerta' => $pasar('a:has-text("Ver el cumpleaños")', ['button:has-text("¿Hacéis cumpleaños")']),
+        ],
     ],
     'cierre' => [
         'jsx' => ['entradas/pieza-8.jsx'],
         'react' => '<section className="sec sec--cierre"><div className="wrap"><CierreEntradas z={z} ofertas={false} /></div></section>',
         'vista' => 'instancia::entradas.pieza-8',
         'datos' => fn (string $zona): array => ['hoy' => $filaHoy, 'huecos' => true, 'bizum' => true, 'google' => 'https://www.google.com/maps', 'contacto' => $contacto],
-        'pasar' => ['boton' => 'text=Reservar para hoy', 'resenas' => 'text=155 reseñas', 'whatsapp' => 'text=escríbenos por WhatsApp', 'telefono' => 'a >> text=641 99 57 14'],
+        'estados' => ['boton' => $pasarBoton('text=Reservar para hoy'), 'resenas' => $pasar('text=155 reseñas'), 'whatsapp' => $pasar('text=escríbenos por WhatsApp'), 'telefono' => $pasar('a >> text=641 99 57 14')],
     ],
     'pie' => [
         'jsx' => ['piezas-7-9.jsx'],
         'react' => '<section className="sec sec--pie"><div className="wrap"><Pie actual={z.zona === "jump" ? "Jump" : "Kids"} /></div></section>',
         'vista' => 'instancia::entradas.pie',
         'datos' => fn (string $zona): array => ['hoy' => $diaSemana, 'pie' => $pie($zona)],
-        'pasar' => ['llegar' => 'text=Cómo llegar', 'pagina' => 'text=Cumpleaños', 'cookies' => 'text=Configurar cookies', 'telefono' => 'text=641 99 57 14', 'idioma' => 'text=Español', 'red' => 'text=Instagram'],
+        'estados' => ['llegar' => $pasar('text=Cómo llegar'), 'pagina' => $pasar('text=Cumpleaños'), 'cookies' => $pasar('text=Configurar cookies'), 'telefono' => $pasar('text=641 99 57 14'), 'idioma' => $pasar('text=Español'), 'red' => $pasar('text=Instagram')],
     ],
 ];
 
@@ -158,20 +187,22 @@ HTML);
 <link rel="stylesheet" href="../instancia/css/fuentes.css"><link rel="stylesheet" href="../instancia/css/saltia.css"><link rel="stylesheet" href="../instancia/css/isla.css"><link rel="stylesheet" href="../instancia/css/entradas.css">
 </head><body><main class="pj-pagina">
 {$cuerpo}
-</main></body></html>
+</main>
+<script src="../instancia/js/entradas.js"></script>
+</body></html>
 HTML);
 
-        // En reposo y, por cada pieza con estado de `hover` (botones y enlaces), con el puntero encima y SIN reducir el
-        // movimiento: con él reducido, el tema anula el levantamiento y la foto no lo juzgaría (`pixel.mjs`).
+        // En reposo y en cada estado (lo que se pulsa, dónde se deja el puntero y si se reduce el movimiento).
         foreach (['390x844', '1280x900'] as $ventana) {
-            foreach (['' => null, ...($pieza['pasar'] ?? [])] as $estado => $selector) {
+            foreach (['' => [], ...($pieza['estados'] ?? [])] as $estado => $pasos) {
                 $lote[] = [
                     'nombre' => "{$zona}-{$nombre}-".strtok($ventana, 'x').($estado !== '' ? "-{$estado}" : ''),
                     'a' => "{$base}/a/{$zona}-{$nombre}.html",
                     'b' => "{$base}/b/{$zona}-{$nombre}.html",
                     'viewport' => $ventana,
                     'completa' => true,
-                    ...($selector ? ['pasar' => $selector, 'movimiento' => true] : []),
+                    'clics' => $pasos['clics'] ?? [],
+                    ...(isset($pasos['pasar']) ? ['pasar' => $pasos['pasar'], 'movimiento' => $pasos['movimiento']] : []),
                 ];
             }
         }

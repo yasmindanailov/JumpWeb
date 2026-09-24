@@ -903,6 +903,17 @@ juzga «idéntico», con los datos del diseño.
     nada alrededor, como `<x-lucide>`; y la frase se escapa y los enlaces se cosen en sus marcadores. (2) **El
     subrayado que aparece al pasar lleva el grosor `auto`**, medido en el diseño vivo: React reescribe
     `style.textDecoration` y ese atajo borra el 1,5 px (24 `hover` daban 60–179 píxeles hasta copiarlo).
+  - ▶ **·3, hecha (25-09)**: `section-header` y `accordion` —el MISMO DOM del diseño: `<h3><button aria-expanded>` y el
+    panel que anima `grid-template-rows`; se descartó `<details>`, que quita el encabezado y la animación—, la pieza
+    `pieza-7.blade.php` y el primer JS de la instancia, `publico/instancia/js/entradas.js` (abre y cierra: `aria-expanded`
+    y `data-abierta`). El banco gana ESTADOS por pieza (`clics` y `pasar`): abrir otra duda, cerrar la primera y pasar
+    por «aquí» y por la puerta al cumpleaños. **Medido: 84 de 84 pares a 0**. Lo aprendido: `a:text-is()` de Playwright
+    casa con el elemento MÁS PEQUEÑO (el `<span>` de dentro) y el puntero esperaba 30 s; el enlace llevaba un espacio al
+    final («aquí »: el de entre dos directivas de Blade, que no se pinta en un `inline-flex` pero es otro texto), fuera
+    con un eco vacío; y con el movimiento sin reducir, el `hover` de una flecha dejaba al DISEÑO distinto de sí mismo
+    en el 1.er intento, así que el movimiento solo se juzga en los botones (su levantamiento es un token): el lote cuadra
+    sin reintentar y `--reintentos 2` queda de red. Control: si el clic no cambia `data-abierta`, caen los 16 estados
+    con interacción y los 4 de reposo siguen en 0 (instancia `e6b2028`).
 - **T4a · los datos** (producto): las dos columnas de `#699` con su campo en el panel, sus hechos en
   `/catalog/products` y `/catalog/zones` (contrato 1.26.0), sus pruebas y su mutante; y la LISTA de reseñas en
   `/social-proof`, con la misma regla de permiso y la misma línea legal que la portada de hoy. El texto del paso de

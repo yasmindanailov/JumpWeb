@@ -44,8 +44,8 @@
 ▶▶ **AHORA (24-09 noche)**: sistema de diseño nuevo dentro (`#697`); **T3 cerrada** (`#698`); **T4** (Kids y Jump,
 spec §4.12, `#761`): **T4a·1 ✅** (reglas de «con un adulto» y plazo, contrato 1.26.0; T4a·2 y ·3, del SPA: pedidas)
 → **T4b·1 ✅** (las páginas que declara el paquete: `/kids` y `/jump` en local, hoy un ESQUELETO —solo el titular—;
-queda **·4**, el estado del `<body>`, esperando al SPA) → **T4c las piezas** (`#762`, spec §4.12: ·0→·2 ✅, cabecera, cierre
-y pie a 0 px con `scripts/banco-entradas.php`; sigue ·3, las dudas) → T4d la calculadora → T4e la isla viva → T4f la sonda; después, la FIESTA.
+queda **·4**, el estado del `<body>`, esperando al SPA) → **T4c las piezas** (`#762`, spec §4.12: ·0→·3 ✅, cabecera, dudas,
+cierre y pie a 0 px con `scripts/banco-entradas.php`; sigue ·4) → T4d la calculadora → T4e la isla viva → T4f la sonda; después, la FIESTA.
 ⚠️ BD LOCAL con los valores de `#699`/`#761` (lo de antes, en el commit de la T4a·1); en PRODUCCIÓN, el owner.
 
 1. **F4 · CERRADA el 19-09** (`specs/cajon-empaquetable.md`: sus cinco tandas y sus seis trampas). ⚠️ **Le
