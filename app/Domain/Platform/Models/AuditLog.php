@@ -175,6 +175,10 @@ class AuditLog extends Model
         // T4b de la analítica: la descarga de un SEGMENTO (una lista de personas con opt-in), con el segmento y
         // el recuento en el payload, sin PII.
         'segments.exported',
+        // T5b de la analítica: un experimento se crea, se cambia (encender, apagar, ventana) o se borra desde
+        // «Ajustes»; el payload lleva la clave, las variantes y el estado, sin PII.
+        'experiments.saved',
+        'experiments.deleted',
 
         // ── Incidencias de cobro (llegan por CONSTANTE, no por literal) ────────────────────
         self::ACTION_DUPLICATE_CAPTURE,

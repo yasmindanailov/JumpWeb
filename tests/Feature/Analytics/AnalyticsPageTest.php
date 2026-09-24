@@ -16,6 +16,7 @@ use App\Filament\Widgets\Analytics\CategoryChart;
 use App\Filament\Widgets\Analytics\CustomersBreakdownWidget;
 use App\Filament\Widgets\Analytics\CustomersSeriesChart;
 use App\Filament\Widgets\Analytics\DevicesChart;
+use App\Filament\Widgets\Analytics\ExperimentsWidget;
 use App\Filament\Widgets\Analytics\FunnelChart;
 use App\Filament\Widgets\Analytics\FunnelWidget;
 use App\Filament\Widgets\Analytics\GateHoursChart;
@@ -163,6 +164,8 @@ class AnalyticsPageTest extends TestCase
         TrafficSeriesChart::class,
         TrafficHoursChart::class,
         DevicesChart::class,
+        // T5b: los experimentos, antes de las tablas plegadas que cierran «Conversión».
+        ExperimentsWidget::class,
         FunnelWidget::class,
         SourcesWidget::class,
         PagesWidget::class,

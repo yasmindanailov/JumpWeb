@@ -44,6 +44,7 @@ return [
             'pages' => ['label' => '法律页面', 'description' => '法律声明、隐私、Cookie 与条款。'],
             'google_business' => ['label' => 'Google 商家资料', 'description' => '与商家资料的连接，评价由此而来。'],
             'settings' => ['label' => '设置', 'description' => '企业与税务资料、销售、门口与支付。'],
+            'experiments' => ['label' => '实验', 'description' => '网站的 A/B 测试：变体、权重与生效时间。结果见「分析 → 转化」。'],
             // `#320`：门口从侧边菜单移到这里。
             'puerta' => ['label' => '门口', 'description' => '验证入园：扫描会员码并查看客户资料。'],
             'team' => ['label' => '团队', 'description' => '在此工作并可进入后台的账号。'],
@@ -268,6 +269,18 @@ return [
             'money' => '收入',
             'customers' => '客户',
             'traffic' => '转化',
+        ],
+        'experiments' => [
+            'heading' => '实验',
+            'note' => '对时间范围内有曝光的每个实验：看到各变体的访客数（每人计一次）、看到后购买的人数，以及带 95% 置信区间（Wilson）的转化率。购买通过订单印记关联到访客，而印记仅在同意「分析」或「广告」类别时存在：因此数字反映的是已同意者的转化，各变体一致。看到两个变体的访客视为受污染，不计入任何变体。区间重叠的两个变体尚不可区分。',
+            'none' => '该时间范围内没有有曝光的实验。',
+            'table_heading' => ':name（:key）· 受污染：:visitors 位访客，:users 个账户',
+            'col' => [
+                'variant' => '变体',
+                'exposed' => '曝光',
+                'converted' => '购买',
+                'rate' => '转化率（95% 置信区间）',
+            ],
         ],
         'segments' => [
             'heading' => '客户分群',
@@ -2812,6 +2825,54 @@ return [
                 'modal_description' => '此操作不可撤销。如果关联了套餐，它将返回“生日”板块。',
                 'submit' => '删除',
                 'success' => '服务已删除。',
+            ],
+        ],
+    ],
+
+    'experiments' => [
+        'nav_label' => '实验',
+        'model_label_singular' => '实验',
+        'model_label_plural' => '实验',
+        'subheading' => '每个 A/B 测试：带权重的变体及生效时间。变体由服务器分配给每位访客；结果见「分析 → 转化」。',
+
+        'col_name' => '名称',
+        'col_key' => '键',
+        'col_variants' => '变体（权重）',
+        'col_state' => '状态',
+        'col_window' => '时间窗',
+        'state' => [
+            'running' => '进行中',
+            'inactive' => '已关闭',
+            'scheduled' => '已排期',
+            'finished' => '已结束',
+        ],
+
+        'section_experiment' => '实验',
+        'field_key' => '键',
+        'field_key_hint' => '小写字母、数字和连字符。它会传给客户端并记入事件日志；实验启用后不可更改。',
+        'field_name' => '名称',
+        'field_active' => '启用',
+        'field_active_hint' => '进行中 = 已启用且在时间窗内。关闭后立即停止分配变体；已测得的数据保留。',
+        'field_started_at' => '开始',
+        'field_ended_at' => '结束',
+        'field_window_hint' => '留空 = 不限。',
+        'section_variants' => '变体',
+        'variants_hint' => '至少两个，按分配顺序排列。权重为整数：1 和 1 表示各占一半；90 和 10 表示十分之九。更改权重或顺序会对所有访客重新分配，因此实验启用时不可编辑：请先关闭，或新建一个。',
+        'field_variant_key' => '变体',
+        'field_variant_weight' => '权重',
+
+        'create_title' => '新建实验',
+        'edit_title' => '编辑实验：:name',
+
+        'actions' => [
+            'create' => '新建实验',
+            'add_variant' => '添加变体',
+            'delete' => [
+                'label' => '删除实验',
+                'modal_heading' => '删除此实验',
+                'modal_description' => '立即停止分配变体。已记录的曝光仍保留在事件日志和分析中。',
+                'submit' => '删除',
+                'success' => '实验已删除。',
             ],
         ],
     ],

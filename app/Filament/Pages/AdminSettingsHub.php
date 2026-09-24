@@ -6,6 +6,7 @@ use App\Filament\Resources\Attractions\AttractionResource;
 use App\Filament\Resources\AuditLogs\AuditLogResource;
 use App\Filament\Resources\BarImages\BarImageResource;
 use App\Filament\Resources\Catalog\CatalogResource;
+use App\Filament\Resources\Experiments\ExperimentResource;
 use App\Filament\Resources\Faqs\FaqResource;
 use App\Filament\Resources\LandingServices\LandingServiceResource;
 use App\Filament\Resources\Pages\PageResource;
@@ -128,6 +129,10 @@ class AdminSettingsHub extends Page
             ],
             'system' => [
                 ['key' => 'settings', 'class' => Settings::class],
+                // Los experimentos (`specs/analitica.md` §4.4, T5b): alta, encendido y cierre de las pruebas A/B.
+                // Van en «Sistema» con `settings.manage`: es configuración del producto; los resultados se miran en
+                // «Analítica → Conversión».
+                ['key' => 'experiments', 'class' => ExperimentResource::class],
                 // `#320`: la PUERTA, y esta tarjeta es el ESPEJO EXACTO del ítem de menú. Al admin se
                 // le retiró del menú (`[DECIDIDO owner]`: no atiende por ahí, atiende por el buscador)
                 // y aparece aquí; a quien sí lo tiene en el menú —el empleado— no se le repite, o

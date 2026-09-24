@@ -47,6 +47,9 @@ return [
             'pages' => ['label' => 'Páginas legales', 'description' => 'Aviso legal, privacidad, cookies y condiciones.'],
             'google_business' => ['label' => 'Ficha de Google', 'description' => 'La conexión con el perfil de empresa, de donde salen las reseñas.'],
             'settings' => ['label' => 'Configuración', 'description' => 'Datos del negocio, fiscales, venta, puerta y pagos.'],
+            // T5b de la analítica: las pruebas A/B. La descripción nombra «A/B», «prueba» y «variante» porque el
+            // buscador global busca también en la descripción.
+            'experiments' => ['label' => 'Experimentos', 'description' => 'Pruebas A/B de la web: variantes, pesos y cuándo están vivas. Los resultados, en Analítica → Conversión.'],
             // `#320`: la puerta sale del menú lateral y su puerta de entrada pasa a ser ésta. La
             // descripción menciona «entrada», «validar» y «escanear» porque el buscador global busca
             // también dentro de la descripción, y nadie recuerda cómo se llama una pantalla.
@@ -303,6 +306,19 @@ return [
             'money' => 'Dinero',
             'customers' => 'Clientes',
             'traffic' => 'Conversión',
+        ],
+        // Los experimentos (`specs/analitica.md` §4.4, T5b): por variante, expuestos, compras y conversión con Wilson.
+        'experiments' => [
+            'heading' => 'Experimentos',
+            'note' => 'Por cada experimento con exposiciones en el periodo: los visitantes que vieron cada variante (cada uno una vez), cuántos compraron después de verla y la conversión con su intervalo de confianza al 95 % (Wilson). La compra se ata al visitante por el sello del pedido, que solo existe con la categoría «análisis» o «anuncios»: la cifra es la de quienes consintieron, igual en todas las variantes. Quien vio dos variantes es contaminado y no cuenta en ninguna. Dos intervalos que se solapan no se distinguen todavía.',
+            'none' => 'Ningún experimento con exposiciones en el periodo.',
+            'table_heading' => ':name (:key) · contaminados: :visitors visitantes, :users cuentas',
+            'col' => [
+                'variant' => 'Variante',
+                'exposed' => 'Expuestos',
+                'converted' => 'Compraron',
+                'rate' => 'Conversión (IC 95 %)',
+            ],
         ],
         // Los segmentos (`specs/analitica.md` §4.6, T4b): cuatro listas de personas, desde los PEDIDOS y el libro;
         // la exportación solo lleva a quien dio el opt-in y tiene permiso propio (`analytics.export`).
@@ -3387,6 +3403,55 @@ return [
                 'modal_description' => 'Esta acción es irreversible. Si tenía un pack vinculado, volverá a la sección Cumpleaños.',
                 'submit' => 'Borrar',
                 'success' => 'Servicio borrado.',
+            ],
+        ],
+    ],
+
+    // T5b de la analítica (`specs/analitica.md` §4.4): los experimentos desde «Ajustes → Sistema».
+    'experiments' => [
+        'nav_label' => 'Experimentos',
+        'model_label_singular' => 'experimento',
+        'model_label_plural' => 'Experimentos',
+        'subheading' => 'Cada prueba A/B: sus variantes con peso y cuándo está viva. La variante la asigna el servidor a cada visitante; los resultados están en Analítica → Conversión.',
+
+        'col_name' => 'Nombre',
+        'col_key' => 'Clave',
+        'col_variants' => 'Variantes (peso)',
+        'col_state' => 'Estado',
+        'col_window' => 'Ventana',
+        'state' => [
+            'running' => 'Vivo',
+            'inactive' => 'Apagado',
+            'scheduled' => 'Programado',
+            'finished' => 'Acabado',
+        ],
+
+        'section_experiment' => 'El experimento',
+        'field_key' => 'Clave',
+        'field_key_hint' => 'Minúsculas, números y guiones. Es lo que viaja al cliente y lo que lleva el libro de eventos; con el experimento activo no se cambia.',
+        'field_name' => 'Nombre',
+        'field_active' => 'Activo',
+        'field_active_hint' => 'Vivo = activo y dentro de la ventana. Apagarlo deja de asignar variantes al instante; lo ya medido se queda.',
+        'field_started_at' => 'Empieza',
+        'field_ended_at' => 'Acaba',
+        'field_window_hint' => 'Vacío = sin límite.',
+        'section_variants' => 'Variantes',
+        'variants_hint' => 'Al menos dos, en el orden del reparto. Los pesos son enteros: 1 y 1 es mitad y mitad; 90 y 10, nueve de cada diez. Cambiar los pesos o el orden REBARAJA a todos los visitantes, así que con el experimento activo no se editan: apágalo, o crea otro.',
+        'field_variant_key' => 'Variante',
+        'field_variant_weight' => 'Peso',
+
+        'create_title' => 'Crear experimento',
+        'edit_title' => 'Editar experimento: :name',
+
+        'actions' => [
+            'create' => 'Crear experimento',
+            'add_variant' => 'Añadir variante',
+            'delete' => [
+                'label' => 'Borrar experimento',
+                'modal_heading' => 'Borrar este experimento',
+                'modal_description' => 'Deja de asignar variantes al instante. Las exposiciones ya contadas siguen en el libro de eventos y en Analítica.',
+                'submit' => 'Borrar',
+                'success' => 'Experimento borrado.',
             ],
         ],
     ],

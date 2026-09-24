@@ -40,17 +40,18 @@
   owner** sobre `/cookies` con píxeles puestos. ▶ **T4a EN `main` (24-09)**: la sección «Cliente 360» en la
   ficha del cliente (`customers.insights`, permiso propio, sembrado en la local): `CustomerInsights` (capa de
   entrega) + partial; `sonda-cliente-360.mjs` (captura `cliente-360-t4a.png`, cliente 2074). **Queda el ojo
-  del owner** (`/admin/users/2074`). ▶ **T4b y T4c EN `main` (24-09, `54aafbc0` y `3c54fc78`)**: los segmentos en
-  «Analítica → Clientes» (`SegmentsReport` + `SegmentsWidget`) y «Exportar segmento» (`analytics.export`, permiso
-  sembrado en la local, solo opt-in, rastro `segments.exported`; `sonda-segmentos.mjs`); el opt-in de comunicaciones
-  en «reserva creada» (`ConfirmedStep.vue`, regla en `account/marketing-offer.js`, rótulos de «Privacidad», mismo
-  `PUT /me/marketing`; `sonda-optin-compra.mjs` con el pase de la pasarela por tinker). **La T4 queda completa.
-  Queda el ojo del owner.** ▶ **T5a EN EL ÁRBOL (24-09, `#737`)**: el mecanismo de los experimentos —tabla
-  `experiments`, `Platform\Services\Analytics\Experiments` (`hash(clave | sujeto)`, sujeto = visitante > titular),
-  `experiments` en `/sidebar/session` (contrato 1.23.0) y en el `data-boot` solo con vivos, la cookie acuñada ANTES
-  de componer la página, `sidebar/experiments.js` (`variant`/`expose`); `ExperimentsTest` 8,
-  `sonda-experimentos.mjs` 9/9—. ▶ Siguen **T5b** (panel: alta/cierre y conversión por variante) y **T5c** (la prueba
-  real, la elige el owner); la **T2e** solo si el volumen lo pide. ⚠️ **El fixture «probe-ojo-analitica» está
+  del owner** (`/admin/users/2074`). ▶ **T4b y T4c EN `main` (24-09)**: los segmentos y «Exportar segmento» en
+  «Analítica → Clientes» (`SegmentsReport`, `analytics.export`; `sonda-segmentos.mjs`); el
+  opt-in de comunicaciones en «reserva creada» (`ConfirmedStep.vue`, regla en `account/marketing-offer.js`;
+  `sonda-optin-compra.mjs`). **La T4 queda completa. Queda el ojo del owner.** ▶ **T5a EN `main` (24-09,
+  `a0670c33`, `#737`)**: el mecanismo de los experimentos —tabla `experiments`, `Experiments` (`hash(clave |
+  sujeto)`, sujeto = visitante > titular), `experiments` en `/sidebar/session` (1.23.0) y en el `data-boot` solo con
+  vivos, la cookie acuñada ANTES de componer la página; `ExperimentsTest` 8,
+  `sonda-experimentos.mjs` 9/9—. ▶ **T5b EN EL ÁRBOL (24-09)**: el panel —`ExperimentResource` en «Ajustes →
+  Sistema» (`settings.manage`, rastro `experiments.saved/deleted`; con el experimento vivo la clave y las variantes
+  van bloqueadas) y `ExperimentsWidget` en «Conversión» (`ExperimentsReport`: expuestos, compras por el SELLO,
+  Wilson 95 %, contaminados)—; `sonda-experimentos-panel.mjs`. **Queda el ojo del owner.** ▶ Sigue **T5c**
+  (la prueba real, la elige el owner); la **T2e** solo si el volumen lo pide. ⚠️ **El fixture «probe-ojo-analitica» está
   MONTADO en la BD local** (90 pedidos `JW-OJO…`, 81 cobros, 9 devoluciones, 25 clientes
   `ojo-N@ojo-analitica.jumpweb.test`, 506 sesiones, dos meses): `OJO=desmontar` lo quita entero.
 - ✅ **La ficha de Google (`#524`), T1 y T2·1→T2·8 en el árbol** (`#720`→`#734`), **vistas por el owner con
@@ -76,12 +77,12 @@
    la T2f en vivo (24-09). ▶ **La T3 en marcha** (spec §4.3 y §4.8): **T3a·1 ✅ · T3a·2 ✅ · T3a·3 ✅ (24-09)**
    → **T3a·4 ✅ (24-09)** el aviso a las cuentas existentes → **T3b·1 ✅ (24-09)** los píxeles → **T3b·2 ✅
    (24-09)** la API de conversiones → **T3b·3 ✅ (24-09)** los textos → **T4a ✅ (24-09)** la 360 → **T4b ✅ (24-09)** los
-   segmentos → **T4c ✅ (24-09)** el opt-in tras comprar → **T5a ✅ (24-09, `#737`)** el mecanismo de los
-   experimentos → **T5b** el panel (alta y cierre en «Ajustes»; en «Conversión», expuestos → `order_paid` del mismo
-   visitante tras la exposición, por variante con Wilson 95 %, y los `user_id` con dos variantes como contaminados)
-   → **T5c** la prueba real (la elige el owner; candidata la carcasa: `shell` por instalación en `/sidebar/boot`, la
-   variante por visitante en `/sidebar/session`, exposición al abrir la compra; `carcasa.js` es de la plataforma →
-   por buzón). Leer §4.4 y §4.8 antes.
+   segmentos → **T4c ✅ (24-09)** el opt-in tras comprar → **T5a ✅ (24-09, `#737`)** el mecanismo → **T5b ✅
+   (24-09)** el panel (`ExperimentResource` en «Ajustes»; `ExperimentsWidget` en «Conversión», la compra por el
+   SELLO del pedido: la cifra es la de quien consintió) → **T5c** la prueba
+   real (la elige el owner; candidata la carcasa: `shell` por instalación en `/sidebar/boot`, la variante por
+   visitante en `/sidebar/session`, exposición al abrir la compra; `carcasa.js` es de la plataforma → por buzón).
+   Leer §4.4 y §4.8 antes.
    ⚠️ El fixture del ojo siembra también TRÁFICO (506 sesiones, 2.294 hechos, sellos con primer y último toque).
    ⚠️ **Los cortes por día van por HORA UTC en SQL y al día del parque en PHP** (`SqlTime::hourBucket()`,
    `Window::bucketKey()`), nunca `CONVERT_TZ`. ⚠️ El dinero se lee de `payments`, `payment_refunds`,
@@ -255,9 +256,9 @@ spec enumera. Lo del cliente va en la rama `cliente/playjump`, nunca a `main`.
   clase nueva en un `.vue` pide su regla en `site.css` Y regenerar `cajon.css`: la sonda dio 8/8 con la clase
   muerta (compara árbol) y lo cazaron `SidebarStyleWiringTest` y `HojaDelCajonTest`. Dos tandas del mismo día que
   suben el mismo techo del chunk chocan en el rebase: el techo se pone con la medida de las DOS juntas.
-- 🪤 **De la T5a**: la API no acuña la cookie del visitante (grupo `api`): un test de `/sidebar/session` que espere
-  variante manda la cookie con `withCredentials()`. `navigator.webdriver` marca `is_bot`: la exposición de la sonda
-  se comprueba en `analytics_events` por `visitor_id`, no por el cuadro. Cachear FILAS y mirar la ventana al leer.
+- 🪤 **De la T5**: la API no acuña la cookie: un test de `/sidebar/session` la manda con `withCredentials()`.
+  `navigator.webdriver` marca `is_bot`: la exposición de una sonda se busca en `analytics_events`, no en el cuadro.
+  Los campos de Filament se localizan por `form.<ruta>` (el rótulo lleva el asterisco dentro).
 - 🩹 **En la BD LOCAL hay 19 titulares con la cadena de waiver ROTA** (basura del 26–27 de agosto): si mides
   cadenas, compara ANTES/DESPUÉS.
 - **F4 cerró y el cajón es un PAQUETE** (`specs/cajon-empaquetable.md` §0 y §4.8). Tocar «HOJA ENFOCADA» de

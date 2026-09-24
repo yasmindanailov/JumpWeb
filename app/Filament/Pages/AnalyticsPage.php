@@ -9,6 +9,7 @@ use App\Filament\Analytics\SegmentsReport;
 use App\Filament\Widgets\Analytics\CustomersBreakdownWidget;
 use App\Filament\Widgets\Analytics\CustomersSeriesChart;
 use App\Filament\Widgets\Analytics\DevicesChart;
+use App\Filament\Widgets\Analytics\ExperimentsWidget;
 use App\Filament\Widgets\Analytics\FunnelChart;
 use App\Filament\Widgets\Analytics\FunnelWidget;
 use App\Filament\Widgets\Analytics\GateHoursChart;
@@ -111,6 +112,9 @@ class AnalyticsPage extends BaseDashboard
             TrafficSeriesChart::class,
             TrafficHoursChart::class,
             DevicesChart::class,
+            // T5b: los experimentos, por variante y con su intervalo. Antes de las tablas plegadas que cierran la
+            // pestaña (la regla de la T2f: la última es `PagesWidget`).
+            ExperimentsWidget::class,
             FunnelWidget::class,
             SourcesWidget::class,
             PagesWidget::class,
