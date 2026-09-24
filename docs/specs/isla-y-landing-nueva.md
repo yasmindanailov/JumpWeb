@@ -26,7 +26,8 @@
 - **Estado**: §7 contestado (`#683`), promociones en `#684`, T0 hecha (§1.6). **T1 ✅** (§4.8), **T2 ✅** (§4.9:
   la isla en Vue, idéntica al diseño) y **T3 ✅** (§4.10, `#689`→`#698`): la isla compra con tarjeta hasta el banco,
   con «Entra» y Google, cumpleaños con señal y la hora que se llena; su sonda, `scripts/sonda-isla.mjs`; la
-  secuencia, en `sidebar/usePurchaseFlow.js`. El sistema nuevo del 24-09 tarde, dentro (§4.11, `#697`).
+  secuencia, en `sidebar/usePurchaseFlow.js`. El sistema nuevo del 24-09 tarde, dentro (§4.11, `#697`). **T4 🟦**
+  (§4.12, `#761`): T4a·1 y T4b·1 ✅; sigue la T4c.
 - **Invariantes**: `PAY-*` si entra Bizum (`VERIFY_CONC=1`), `SEC-12` (la ruta de las vistas), `SEC-01`,
   `RGPD-*` (consentimiento dentro de la isla, Apple como proveedor), `PERF-02` (la carcasa por instalación va en
   el arranque cacheado; la variante del A/B, en la sesión).
@@ -859,6 +860,15 @@ juzga «idéntico», con los datos del diseño.
   mutantes muertos (sin colisiones, sin lista blanca, sin textos); en local, `/kids` y `/jump` de PlayJump en 200 con
   `no-store` y su CSP, en es/en/fr y en el sitemap. ⚠️ El caso registraba las rutas FUERA del grupo `web` y salía sin
   CSP: el arranque las registra dentro, y el caso ahora también. Queda **·4** (el estado del `<body>`, con el SPA).
+- ▶▶ **Para EMPEZAR la T4c** (siguiente sesión): (1) **el A** son las 14 fichas `sections/{kids,jump}-*.card.html`
+  de la referencia (una por pieza y zona) más el pie de `piezas-7-9.jsx`; (2) **el banco** sigue el patrón de
+  `scripts/banco-piezas.php` —A la ficha con su React, B la pieza Blade con LOS MISMOS datos (`contenido.js`)— y se
+  juzga con `scripts/pixel.mjs --rehacer` a 390 y 1280 hasta 0; (3) **dónde**: los componentes de presentación son
+  de la instancia (§4.2), en `instancias/playjump/web/componentes/` con un espacio de componentes anónimos
+  `instancia::` que registra el producto junto al de vistas (la primera sub-tanda, ·0); el molde,
+  `web/entradas.blade.php`; los textos, `lang/*/paginas.php`; (4) **las cifras**, de `$hechos` (nunca tecleadas);
+  (5) **apagados**: la oferta, el precio de antes, JumpPoints, [Jump Club], [Bono] y las tres reseñas hasta la T2·9
+  del SPA; sin material, las fotos del panel (`#761`·3). La calculadora de la pieza 3 es la T4d: aquí, su hueco.
 - **T4a · los datos** (producto): las dos columnas de `#699` con su campo en el panel, sus hechos en
   `/catalog/products` y `/catalog/zones` (contrato 1.26.0), sus pruebas y su mutante; y la LISTA de reseñas en
   `/social-proof`, con la misma regla de permiso y la misma línea legal que la portada de hoy. El texto del paso de
