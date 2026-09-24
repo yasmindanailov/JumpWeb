@@ -352,6 +352,8 @@ son de cualquiera que mida, no de un carril.
   guard real no hace (adjunta un `TransientToken`). Arreglado en `Tests\TestCase::be()`; producción sigue fallando
   cerrado. Con tokens REALES, `Auth::forgetGuards()` entre peticiones, o un token revocado sigue entrando por la
   caché del guard.
+- **`SHELL` es una variable del propio bash** (mudada del carril de plataforma el 25-09): llamar así a una ruta en
+  un guion se la cambia a todo lo que se lance después. En `mutar-cajon-apertura.sh` se llama `CARCASA`.
 
 ### 3. Guardas de arquitectura — `tests/Feature/Architecture/`
 Tests que no prueban una feature sino una REGLA estructural; sin ellos el refactor de Fase 2 se

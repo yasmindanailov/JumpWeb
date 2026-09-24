@@ -914,6 +914,13 @@ juzga «idéntico», con los datos del diseño.
     en el 1.er intento, así que el movimiento solo se juzga en los botones (su levantamiento es un token): el lote cuadra
     sin reintentar y `--reintentos 2` queda de red. Control: si el clic no cambia `data-abierta`, caen los 16 estados
     con interacción y los 4 de reposo siguen en 0 (instancia `e6b2028`).
+  - ▶ **·4, hecha (25-09)**: `park-location` (en cristal sobre el mapa o, por debajo de 560 px, debajo y en tinta: el
+    diseño se mide, aquí `@container`), `media-frame` en su forma de imagen y `pieza-6.blade.php` (instancia `b1e7728`).
+    ❗ **El MAPA es material que no existe**: el diseño pinta su hueco de «Mapa pendiente» y la web nunca (`#761`·3),
+    así que sin `mapa` va solo el panel, en tinta. Para juzgar la forma CON mapa, el `ParkLocation` del diseño recibe la
+    misma imagen que el nuestro, envuelto en su espacio antes de montar (`antes` en el banco). **Medido: 12 de 12 a 0**
+    a la primera; control: sin el `grid` de la forma estrecha, caen justo los 6 pares de 390. ▶ Del owner: la
+    captura estática del mapa (con el pin y la salida de la carretera de Granada, como pide el diseño).
 - **T4a · los datos** (producto): las dos columnas de `#699` con su campo en el panel, sus hechos en
   `/catalog/products` y `/catalog/zones` (contrato 1.26.0), sus pruebas y su mutante; y la LISTA de reseñas en
   `/social-proof`, con la misma regla de permiso y la misma línea legal que la portada de hoy. El texto del paso de

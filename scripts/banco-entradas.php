@@ -133,6 +133,17 @@ $piezas = [
             'puerta' => $pasar('a:has-text("Ver el cumpleaños")', ['button:has-text("¿Hacéis cumpleaños")']),
         ],
     ],
+    'donde' => [
+        'jsx' => ['entradas/pieza-6.jsx'],
+        // ⚠️ El mapa es material que NO EXISTE (el diseño pinta su hueco de «pendiente», y la web nunca: `#761`·3). Para
+        // juzgar la forma CON mapa, el `ParkLocation` del propio diseño recibe una imagen que hace de mapa, envuelto en
+        // su espacio antes de montar (la pieza lo lee al pintarse); el lado B, la misma. Su código no se toca.
+        'antes' => 'const DS6 = window.SaltiaDesignSystem_33397c; const PL6 = DS6.ParkLocation; DS6.ParkLocation = (p) => React.createElement(PL6, Object.assign({}, p, { src: "../assets/media/foto-113.png", alt: "Mapa del parque" }));',
+        'react' => '<section className="sec"><div className="wrap"><DondeEntradas z={z} ofertas={false} /></div></section>',
+        'vista' => 'instancia::entradas.pieza-6',
+        'datos' => fn (string $zona): array => ['hoy' => $filaHoy, 'huecos' => true, 'diaSemana' => $diaSemana, 'mapsHref' => 'https://maps.google.com', 'mapa' => ['src' => '../assets/media/foto-113.png', 'alt' => 'Mapa del parque']],
+        'estados' => ['llegar' => $pasarBoton('text=Cómo llegar'), 'boton' => $pasarBoton('text=Reservar para hoy')],
+    ],
     'cierre' => [
         'jsx' => ['entradas/pieza-8.jsx'],
         'react' => '<section className="sec sec--cierre"><div className="wrap"><CierreEntradas z={z} ofertas={false} /></div></section>',
@@ -166,6 +177,7 @@ foreach ($piezas as $nombre => $pieza) {
     }
     foreach (['kids', 'jump'] as $zona) {
         $scripts = implode("\n", array_map(fn (string $jsx): string => '<script type="text/babel" src="../diseno/paginas/'.$jsx.'"></script>', $pieza['jsx']));
+        $antes = $pieza['antes'] ?? '';
         file_put_contents($salida."/a/{$zona}-{$nombre}.html", <<<HTML
 <!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="../diseno/styles.css">
@@ -177,7 +189,7 @@ foreach ($piezas as $nombre => $pieza) {
 </head><body><div id="root"></div>
 <script src="../diseno/paginas/entradas/contenido.js"></script>
 {$scripts}
-<script type="text/babel">const z = window.PJ_ENTRADAS["{$zona}"]; ReactDOM.createRoot(document.getElementById("root")).render({$pieza['react']});</script>
+<script type="text/babel">{$antes}const z = window.PJ_ENTRADAS["{$zona}"]; ReactDOM.createRoot(document.getElementById("root")).render({$pieza['react']});</script>
 </body></html>
 HTML);
 

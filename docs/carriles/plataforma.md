@@ -44,8 +44,8 @@
 ▶▶ **AHORA (24-09 noche)**: sistema de diseño nuevo dentro (`#697`); **T3 cerrada** (`#698`); **T4** (Kids y Jump,
 spec §4.12, `#761`): **T4a·1 ✅** (reglas de «con un adulto» y plazo, contrato 1.26.0; T4a·2 y ·3, del SPA: pedidas)
 → **T4b·1 ✅** (las páginas que declara el paquete: `/kids` y `/jump` en local, hoy un ESQUELETO —solo el titular—;
-queda **·4**, el estado del `<body>`, esperando al SPA) → **T4c las piezas** (`#762`, spec §4.12: ·0→·3 ✅, cabecera, dudas,
-cierre y pie a 0 px con `scripts/banco-entradas.php`; sigue ·4) → T4d la calculadora → T4e la isla viva → T4f la sonda; después, la FIESTA.
+queda **·4**, el estado del `<body>`, esperando al SPA) → **T4c las piezas** (`#762`, spec §4.12: ·0→·4 ✅, piezas 1-2, 6-8 y pie
+a 0 px con `scripts/banco-entradas.php`; sigue ·5) → T4d la calculadora → T4e la isla viva → T4f la sonda; después, la FIESTA.
 ⚠️ BD LOCAL con los valores de `#699`/`#761` (lo de antes, en el commit de la T4a·1); en PRODUCCIÓN, el owner.
 
 1. **F4 · CERRADA el 19-09** (`specs/cajon-empaquetable.md`: sus cinco tandas y sus seis trampas). ⚠️ **Le
@@ -128,7 +128,8 @@ cierre y pie a 0 px con `scripts/banco-entradas.php`; sigue ·4) → T4d la calc
 5. **La promo, cuando el owner la termine** (es suyo el cuándo). La receta y **sus nueve cifras** bajaron a
    `ENTORNOS.md` §6 en `#675`, junto al despliegue que las escribió. Sin desplegar: son datos.
 6. Después, **F6** (app nativa; hereda del token lo que su spec §2 nombra: Google, alta, dispositivos).
-- **Del owner, HOY**: **probar la isla en local** (sus accesos se le dieron en el chat del 24-09) · en su diseño,
+- **Del owner, HOY**: **probar la isla en local** (sus accesos se le dieron en el chat del 24-09) · la **captura del
+  MAPA** de la pieza 6 (sin ella, solo el panel: spec §4.12 ·4) · en su diseño,
   **cumpleaños a 3 días** y no 5 (`#699`), y bajar el zip DESPUÉS del último cambio (`#760`) · pasar a su
   diseño las dos de `#695` («Entra» solo con correo; la «G» de Google) · en el panel de PRODUCCIÓN, el campo del
   homenajeado de los dos packs a «formulario de invitados» (`#692`; en local ya está) · el **modelo de las promociones**
@@ -197,9 +198,7 @@ dueño es el carril de la web/reseñas—) ·
 - ▶ **Las trampas de MEDIDA y de ARNESES viven en `TESTING.md` §2.octies** (mudadas el 24-09): la captura
   asentada, el gate saturado, el arnés que restaura por copia, la línea base antes del controlador, los
   manifiestos de Vite, el «NO SE APLICÓ», la salida truncada, la base que cruza un umbral del horario y la guarda
-  transversal que se juzga con la SUITE ENTERA (`TestCase::be()`).
-- **`SHELL` es una variable del propio bash**: llamar así a una ruta en un guion se la cambia a todo lo que se
-  lance después. En `mutar-cajon-apertura.sh` se llama `CARCASA`.
+  transversal que se juzga con la SUITE ENTERA (`TestCase::be()`) y la variable `SHELL` de bash.
 - **Mover código que unas guardas leen como TEXTO**: se mueve TAL CUAL, se re-apunta cada guarda al fichero
   nuevo y se MUTA allí (el método entero, en `paquete-de-instancia.md` §4.7).
 - **El tipo que Sanctum declara para `currentAccessToken()` miente con cookie** (dice `PersonalAccessToken`,
