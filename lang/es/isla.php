@@ -71,4 +71,24 @@ return [
         'fuera' => 'Te contestamos mañana a partir de las :hora.',
         'whatsapp' => 'Escribir por WhatsApp',
     ],
+    // Lo que las piezas del sistema de diseño escribían a mano (T3b): el campo, las horas, la cantidad, el
+    // resumen, la carga, entrar con Google o Apple y el QR.
+    'pieza' => [
+        'mostrar_clave' => 'Mostrar la contraseña',
+        'ocultar_clave' => 'Ocultar la contraseña',
+        'completo' => 'Completo',
+        'quedan' => 'Quedan :n',
+        'libres' => ':n libres',
+        'quitar_uno' => 'Quitar uno',
+        'anadir_uno' => 'Añadir uno',
+        'total' => 'Total',
+        'desde' => 'Desde',
+        'cargando' => 'Cargando',
+        'continuar_google' => 'Continuar con Google',
+        'continuar_apple' => 'Continuar con Apple',
+        'entrar_google' => 'Entrar con Google',
+        'entrar_apple' => 'Entrar con Apple',
+        'qr' => 'QR',
+        'qr_de' => 'QR :codigo',
+    ],
 ];

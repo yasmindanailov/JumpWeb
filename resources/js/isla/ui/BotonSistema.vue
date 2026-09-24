@@ -4,12 +4,16 @@
  *
  * Solo las variantes que se escriben con ROLES (`primary`, `secondary`, `outline`, `ghost`, `quiet`): las
  * del diseño que nombraban la paleta de su marca (`volt`, `inverse`, `glass`) no entran en el producto. Las
- * de control pasan solas a blanco dentro de la isla (`data-surface="ink"`). `loading` bloquea el botón: un
- * segundo toque no paga dos veces (la bola de carga llega con la T3). El estilo lo compone `estiloBoton()`
- * (`estilos.js`): un componente pinta, y las tablas van en un módulo plano (`CE-6`).
+ * de control pasan solas a blanco dentro de la isla (`data-surface="ink"`). `loading` bloquea el botón —un
+ * segundo toque no paga dos veces— y pone la bola pequeña en lugar del icono de la izquierda, leyendo
+ * `loadingLabel` o el texto del botón. El estilo lo compone `estiloBoton()` (`estilos.js`): un componente pinta,
+ * y las tablas van en un módulo plano (`CE-6`).
  */
-import { computed, ref } from 'vue';
+import { computed, ref, useSlots } from 'vue';
 import { estiloBoton } from './estilos.js';
+import { textoDeRanura } from './piezas.js';
+import { useTextos } from '../piezas/textos.js';
+import CargaRebote from './CargaRebote.vue';
 
 defineOptions({ inheritAttrs: false });
 
@@ -21,8 +25,11 @@ const props = defineProps({
     href: { type: String, default: undefined },
     type: { type: String, default: 'button' },
     loading: { type: Boolean, default: false },
+    loadingLabel: { type: String, default: '' },
 });
 const emit = defineEmits(['click']);
+const slots = useSlots();
+const { t } = useTextos();
 
 const hover = ref(false);
 const press = ref(false);
@@ -37,6 +44,8 @@ const estilo = computed(() => estiloBoton({
     hover: hover.value,
     press: press.value,
 }));
+
+const textoCarga = () => props.loadingLabel || textoDeRanura(slots.default?.()) || t('pieza.cargando');
 
 function pulsar(e) {
     if (!bloqueado.value) emit('click', e);
@@ -58,7 +67,15 @@ function pulsar(e) {
         @pointerdown="press = true"
         @pointerup="press = false"
     >
-        <slot name="icono-izquierda" />
+        <CargaRebote
+            v-if="loading"
+            size="sm"
+            :label="textoCarga()"
+        />
+        <slot
+            v-else
+            name="icono-izquierda"
+        />
         <slot />
         <slot name="icono-derecha" />
     </component>

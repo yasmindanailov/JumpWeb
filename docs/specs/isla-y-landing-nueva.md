@@ -23,7 +23,7 @@
     se avisa en el buzón antes.
   - Tras tocar un `.vue`, `npm run build:ssr` antes de la suite (`sidebar-spa.md` §0).
 - **Estado**: §7 contestado (`#683`), promociones en `#684`, T0 hecha (§1.6). **T1 ✅** (§4.8) y **T2 ✅**
-  (§4.9): la isla en Vue, 52 de 52 situaciones idénticas al diseño. **T3** (la compra): censo y plan en §4.10.
+  (§4.9): la isla en Vue, 52 de 52 situaciones idénticas al diseño. **T3** (la compra, §4.10): T3a y T3b ✅.
 - **Invariantes**: `PAY-*` si entra Bizum (`VERIFY_CONC=1`), `SEC-12` (la ruta de las vistas), `SEC-01`,
   `RGPD-*` (consentimiento dentro de la isla, Apple como proveedor), `PERF-02` (la carcasa por instalación va en
   el arranque cacheado; la variante del A/B, en la sesión).
@@ -307,7 +307,7 @@ deja de decir «nada de otra librería» en la T1.
 | T0 ✅ | Kids y Jump contra el menú de hechos, los tokens y las URLs (§1.6). Cumpleaños y la portada, con su tanda | Esta spec |
 | T1 ✅ | El tema: la referencia, las fuentes, la hoja de tokens y los iconos (§4.8); los roles nuevos del producto van con la isla (T2) | Producto + instancia |
 | T2 ✅ | La isla en Vue, idéntica al diseño en 26 situaciones (§4.9); los datos reales, con la T4 | Producto |
-| T3 | La compra en la isla sobre el motor, con tarjeta; sonda de compra (§4.10: T3a ✅ → T3e) | Producto |
+| T3 | La compra en la isla sobre el motor, con tarjeta; sonda de compra (§4.10: T3a y T3b ✅ → T3e) | Producto |
 | T4 | **Kids y Jump** (`#683`), un molde y dos páginas, con su calculadora y sus 301 | Instancia + producto |
 | T5 | Mi cuenta en la isla | Producto |
 | T6 | El resto de páginas y la lógica nueva que apruebe el owner | Los dos |
@@ -456,7 +456,7 @@ vigilan) y encogiendo su excepción. Es un fichero del carril del SPA: se avisa 
 
 **Las tandas de la T3**:
 - **T3a ✅** el censo y el plan (esto).
-- **T3b** las 14 piezas del sistema que usa la compra, en Vue e idénticas: `Field`, `Checkbox`, `InfoCallout`,
+- **T3b ✅** las 14 piezas del sistema que usa la compra, en Vue e idénticas: `Field`, `Checkbox`, `InfoCallout`,
   `TimeSlotPicker`, `DayStrip`, `OptionCards`, `QuantityStepper`, `PriceSummary`, `SocialSignIn`,
   `OutcomeHeader`, `QrPass`, `TaskCard`, `Skeleton` y `BounceLoader`, más los iconos del `Button` y del
   `Link`. Un banco con cada pieza en sus estados, sobre claro y sobre tinta → 0 píxeles.
@@ -465,6 +465,29 @@ vigilan) y encogiendo su excepción. Es un fichero del carril del SPA: se avisa 
 - **T3d** la secuencia compartida, extraída de `PurchaseSection.vue`.
 - **T3e** la isla compra de verdad con tarjeta: el cableado, la prueba del orden de la máquina y `/sonda` en
   local con la pasarela de pruebas.
+
+**T3b hecha el 24-09 (`#689`)**:
+- **Las piezas**, en `resources/js/isla/ui/`: `CampoSistema`, `CasillaSistema`, `SelectorHoras`,
+  `TarjetasOpcion`, `ContadorCantidad` (con `ControlesCantidad`), `ResumenPrecio`, `AvisoDestacado`,
+  `TiraDias`, `AccesoSocial`, `CabeceraDesenlace`, `PaseQr`, `TarjetaTarea`, `EsqueletoCarga` y `CargaRebote`;
+  el botón gana su bola de carga y el registro de iconos pasa a 32. Lo que decide, en `ui/piezas.js` y
+  `ui/qr-muestra.js` (11 pruebas). **Su API es la de Vue**: lo que en React era un elemento en una prop es una
+  ranura, y `value`/`checked` es `v-model`; la tabla de equivalencias es `scripts/banco-piezas/entrada.js`, y el
+  juez la comprueba. Sin el `icon` por opción de `OptionCards` (ninguna pantalla lo usa). El QR real es la imagen
+  del carné (`src`); el de muestra del diseño, solo sin ella.
+- **Del producto, no de PlayJump**: 11 roles nuevos (`--isla-obligatorio`, `-franja-peligro`, `-especial`,
+  `-error-fondo`, `-fiesta-1…4`, `-qr-fondo`, `-qr-tinta`, `-qr-sombra`) y el respaldo de todo lo que las piezas
+  llaman por su función (letra, forma, movimiento, controles, avisos, carga), sobre claro y sobre tinta: con
+  `isla.css` solo, la isla se ve entera y neutra. **Medido**: ningún nombre que comparte con las hojas del
+  producto queda sin declarar en ellas, así que cargarla no cambia nada fuera. Los textos que las piezas
+  escribían a mano, al grupo `pieza` de `lang/*/isla.php` (16 claves; en/fr a revisar).
+- **El juez**: `scripts/banco-piezas.php` pinta cada pieza en sus estados, en claro y en tinta, con los casos
+  de `tema/piezas-compra.json` de la instancia (los de las pantallas de la compra): **16 páginas y 2 con clics
+  (el foco y ver la contraseña) = 18 pares, 18 con 0 píxeles distintos** (17 a la primera; el otro, una primera
+  captura anómala del lado A, cuyo hash al repetir es el de B). Controles negativos: 1px de relleno en la casilla
+  da 27.997 y un rol cambiado (`--isla-especial`) 432, los dos con código 1. La T2 sigue en 52 de 52.
+- ⚠️ `defineProps` no puede nombrar una constante del propio `<script setup>` (se eleva fuera de él): va en un
+  módulo y se importa.
 
 ## 5. Impacto en invariantes
 
