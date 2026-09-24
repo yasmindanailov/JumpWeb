@@ -264,12 +264,13 @@ describe('el mapa del naranja: quién vende', () => {
  * un salto imposible— y el botón era mudo. `machine.test.js` probaba la máquina sola y este fichero
  * probaba el pie solo; el fallo vivía exactamente entre los dos.
  *
- * Lo que se cruza: para cada paso con pie, la acción que publica y **a dónde lleva** esa acción en
- * `PurchaseSection.vue` (`runAction`). Una acción con varios destinos posibles pasa si la máquina
- * admite AL MENOS uno; una sin destino de máquina (ninguna hoy) tendría que declararse aquí.
+ * Lo que se cruza: para cada paso con pie, la acción que publica y **a dónde lleva** esa acción: la
+ * reparte `PurchaseSection.vue` (`runAction`) y la función que llama vive en `usePurchaseFlow.js`
+ * desde `#691`. Una acción con varios destinos posibles pasa si la máquina admite AL MENOS uno; una
+ * sin destino de máquina (ninguna hoy) tendría que declararse aquí.
  */
 describe('cada CTA del pie es una transición que la máquina admite', () => {
-    /** A dónde lleva cada acción del pie, leído de `PurchaseSection.vue` — no de la máquina. */
+    /** A dónde lleva cada acción del pie, leído de `usePurchaseFlow.js` — no de la máquina. */
     const DESTINATIONS = {
         goToCart: [STEPS.CART],
         goToTime: [STEPS.TIME],

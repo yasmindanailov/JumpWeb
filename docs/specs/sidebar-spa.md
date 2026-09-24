@@ -622,7 +622,8 @@ solo enrutan, y la compra vive en `sections/PurchaseSection.vue`. El ÁREA DE CL
 `node --test` y se compare contra el servidor desde PHP ejecutándolo en Node.
 
     Sidebar.vue                16 líneas · 0 llamadas a la API   ← enruta y expone hacia fuera
-    sections/PurchaseSection    438 líneas · 2 llamadas          ← el embudo entero
+    sections/PurchaseSection     89 líneas · 0 llamadas          ← la carcasa del embudo en el cajón
+    usePurchaseFlow.js          la secuencia de compra           ← desde `#691`, la comparte con la isla
     stores/  (nueve)                                             ← el estado, por dominio
     steps/   (once)             3 a 33 líneas cada uno           ← pintan y solo pintan
 
@@ -681,8 +682,10 @@ un atributo del DOM, así que los dos botones salían idénticos con y sin cable
 `scripts/render-sidebar.mjs` **NO importa la raíz del cajón** —no puede, lee `window.Alpine` y el
 idioma del documento— y monta los ONCE componentes de paso con props que construyen los módulos
 planos. O sea que el contrato prueba **los pasos y los módulos**, y **no ejerce el orquestador**.
-▶ Para un cambio en el orquestador (`sections/PurchaseSection.vue`, `Sidebar.vue`) la red es el
-NAVEGADOR: receta en `VERIFICACION-E2E-CAJON.md` §5.bis.
+▶ Para un cambio en el orquestador (`usePurchaseFlow.js`, `sections/PurchaseSection.vue`, `Sidebar.vue`)
+la red es el NAVEGADOR: receta en `VERIFICACION-E2E-CAJON.md` §5.bis, y desde `#691`
+`scripts/sonda-embudo.mjs`, que anota cada pantalla y cada petición de una compra entera para comparar el
+build de antes con el de después.
 
 ## Anexo · La fila del enrutador, mudada el 2026-09-16
 

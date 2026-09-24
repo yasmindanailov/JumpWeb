@@ -119,8 +119,12 @@ class StaticAnalysisGateTest extends TestCase
      * ▶ **12 → 10 el 2026-09-19** (`DECISIONES #707`): declarar el `addBtn` que faltaba en
      * `DependentsZone.vue` no arregló un error, sino DOS —la referencia aparecía en `closeAdd()` y en
      * el alta correcta—. El trinquete solo baja.
+     *
+     * ▶ **10 → 8 el 2026-09-24** (`DECISIONES #691`): al mudar la secuencia de compra a
+     * `usePurchaseFlow.js` no viajaron los dos símbolos que `PurchaseSection.vue` declaraba sin usar
+     * —el import `minQuantityFor` y el ayudante `tp`—. Una mudanza no lleva lo que nadie lee.
      */
-    private const FROZEN_JS_ERRORS = 10;
+    private const FROZEN_JS_ERRORS = 8;
 
     private function jsConfig(): string
     {

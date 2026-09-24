@@ -160,7 +160,15 @@ class SidebarComponentBudgetTest extends TestCase
         // un producto desde la landing. La DECISIÓN —qué intención es un producto y qué se hace si no
         // se puede abrir— vive en `intent.js` con su `node --test`; aquí queda lo que solo la sección
         // sabe: si la pausa está puesta, si el catálogo publica esa fila y cuándo terminó de montar.
-        'sidebar/sections/PurchaseSection.vue' => ['code' => 464, 'api' => 2],
+        // ⚠️⚠️ **464 → 89 y 2 → 0 llamadas en `#691` (2026-09-24), y no es una poda: es una MUDANZA.**
+        // La secuencia de compra —el montaje, la cesta, el día y la hora, la admisión, el alta, el
+        // cobro, el sondeo y el reintento— bajó entera a `usePurchaseFlow.js`, línea a línea y en el
+        // mismo orden de registro, porque la necesita una SEGUNDA carcasa: la isla de la landing nueva
+        // (`#682`). Con dos copias, cada ⚠️ de esa secuencia habría que recordarlo en dos sitios.
+        // ▶ Lo que queda aquí es del cajón y de nadie más: la banda, el aviso de pausa, el pie y su
+        // reparto de acciones, «Volver», la puerta a la cuenta y lo que la raíz pide por `ref`. Las dos
+        // llamadas a la API (el catálogo y `/config` del montaje) se fueron con la secuencia.
+        'sidebar/sections/PurchaseSection.vue' => ['code' => 89, 'api' => 0],
 
         // ⚠️ **`TimeStep.vue` estrena excepción el 2026-09-01 (`#327`): 44 sobre un techo de 40.**
         // Son cuatro líneas y son TRABAJO DE DOM, que es justo lo que un módulo plano no puede hacer:

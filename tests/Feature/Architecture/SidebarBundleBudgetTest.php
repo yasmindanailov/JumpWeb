@@ -831,7 +831,12 @@ class SidebarBundleBudgetTest extends TestCase
     // T3a·3 de la analítica (24-09): el segundo interruptor de «Privacidad» (vincular la navegación a la cuenta)
     // y su acción en el store suman 0,69 kB; medido 288,28 KiB (HEAD sin ellos: 287,60). Es un presupuesto, no un
     // objetivo: se sube con su medida y con un margen mínimo.
-    private const SIDEBAR_CHUNK_MAX_KB = 289;
+    // T3d de la landing nueva (`#691`, 24-09): la secuencia de compra se muda a `usePurchaseFlow.js` para que la
+    // compartan el cajón y la isla. Medido 290,09 KiB (HEAD `cb2adb1a` sin la mudanza: 288,86; +1.256 B): son los ~40
+    // nombres que el composable devuelve y la sección desestructura, porque las claves de un objeto no se minifican. Se
+    // midió la poda obvia —que la sección tome sus diez stores ella misma en vez de recibirlos— y ahorra 0,20 KiB por
+    // diez `import` duplicados, sin bajar del techo. No se queda.
+    private const SIDEBAR_CHUNK_MAX_KB = 291;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

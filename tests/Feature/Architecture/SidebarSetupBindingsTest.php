@@ -47,6 +47,8 @@ use Tests\TestCase;
  *    `false` (`{ immediate: true }`, `{immediate:true}`, `{ immediate }`), se cruzan con las
  *    `const`/`let` declaradas en una línea posterior. No cuentan las propiedades (`store.user`),
  *    las cadenas, los parámetros de las funciones del ámbito ni las claves de objeto.
+ *  · y lo mismo en el CUERPO de cada `export function use…` de un módulo `.js` (`#691`): un
+ *    composable corre dentro del setup de quien lo llama, y la secuencia de compra vive en uno.
  * `test_the_scanner_sees_both_families` es la guarda de la guarda: cada forma de fallo escrita a
  * mano tiene que ser cazada, y cada forma correcta que se parece a un fallo tiene que pasar. Sin
  * ella, un escáner que no encontrara el bloque `<script setup>` pasaría los dos casos en verde.
@@ -87,6 +89,16 @@ class SidebarSetupBindingsTest extends TestCase
 
         foreach ($this->components() as $relative => $path) {
             foreach ($this->watchersBeforeTheirBindings($path) as $offence) {
+                $offenders[] = "{$relative}:{$offence}";
+            }
+        }
+
+        // ⚠️ **Y el cuerpo de cada composable** (`export function use…`), que corre DENTRO del setup de
+        // quien lo llama: el mismo TDZ, tragado igual. Desde `#691` la secuencia de compra vive en
+        // `sidebar/usePurchaseFlow.js`, con el `watch` inmediato sobre el titular que dio nombre a esta
+        // guarda; dejar el módulo fuera habría sido llevarse el fallo a donde nadie mira.
+        foreach ($this->composables() as $relative => $path) {
+            foreach ($this->composableWatchersBeforeTheirBindings($path) as $offence) {
                 $offenders[] = "{$relative}:{$offence}";
             }
         }
@@ -232,6 +244,32 @@ class SidebarSetupBindingsTest extends TestCase
 
         $this->assertSame([], $this->withSample($clean, fn (string $path): array => $this->shadowedProps($path)));
         $this->assertSame([], $this->withSample($clean, fn (string $path): array => $this->watchersBeforeTheirBindings($path)));
+
+        // El composable: su CUERPO es el setup. El primero lee su store debajo del `watch`; el segundo
+        // es la forma correcta —el store arriba, una función izada y un parámetro— y tiene que pasar.
+        $composable = <<<'JS'
+            import { watch } from 'vue';
+
+            /** Un comentario con `watch(() => cartStore.owner` dentro no es un observador. */
+            export function useMal(props) {
+                watch(() => cartStore.owner, (owner) => { if (owner !== null) load(); }, { immediate: true });
+                const cartStore = useCartStore();
+            }
+
+            export function useBien(props, { isOpen }) {
+                const cartStore = useCartStore();
+                watch(() => cartStore.owner, () => { stop(); }, { immediate: true });
+                watch(() => props.step + isOpen.value, () => {});
+                function stop() {}
+            }
+            JS;
+
+        $this->assertSame(
+            ['5: el `watch` lee `cartStore`, declarada en la línea 6'],
+            $this->withSample($composable, fn (string $path): array => $this->composableWatchersBeforeTheirBindings($path), '.js'),
+            'el escáner no ve el TDZ dentro de un composable, o confunde un parámetro, una función izada '.
+            'o un comentario con una lectura'
+        );
     }
 
     /**
@@ -276,6 +314,32 @@ class SidebarSetupBindingsTest extends TestCase
             return [];
         }
 
+        return $this->tdzOffences($script, $offset);
+    }
+
+    /**
+     * Lo mismo, en el cuerpo de cada `export function use…` de un módulo `.js`.
+     *
+     * @return list<string> `línea: mensaje`, con la línea del FICHERO
+     */
+    private function composableWatchersBeforeTheirBindings(string $path): array
+    {
+        $offences = [];
+
+        foreach ($this->composableBodies($path) as [$body, $offset]) {
+            array_push($offences, ...$this->tdzOffences($body, $offset));
+        }
+
+        return $offences;
+    }
+
+    /**
+     * El cruce de los dos: cada `watch` de profundidad 0 contra las `const`/`let` declaradas debajo.
+     *
+     * @return list<string>
+     */
+    private function tdzOffences(string $script, int $offset): array
+    {
         // Las funciones y los imports se izan: leerlos antes de su línea no es un TDZ.
         $bindings = array_filter(
             $this->topLevelBindings($script),
@@ -312,6 +376,30 @@ class SidebarSetupBindingsTest extends TestCase
         }
 
         return [$this->withoutComments($match[1][0]), substr_count(substr($source, 0, $match[1][1]), "\n")];
+    }
+
+    /**
+     * El cuerpo de cada `export function use…(…) { … }` de un módulo, SIN comentarios, y el número de
+     * líneas que lo preceden: a efectos del TDZ, ese cuerpo es el `<script setup>` de quien lo llama.
+     * Los dos pasos de limpieza conservan la longitud, así que las posiciones valen en los tres textos.
+     *
+     * @return list<array{0: string, 1: int}>
+     */
+    private function composableBodies(string $path): array
+    {
+        $source = (string) file_get_contents($path);
+        $clean = $this->withoutComments($source);
+        $flat = $this->withoutStrings($clean);
+        $bodies = [];
+
+        preg_match_all('/\bexport\s+(?:async\s+)?function\s+use\w*\s*\([^)]*\)\s*\{/', $flat, $headers, PREG_OFFSET_CAPTURE);
+
+        foreach ($headers[0] as [$header, $at]) {
+            $open = $at + strlen($header);
+            $bodies[] = [substr($clean, $open, strlen($this->callArguments($flat, $open))), substr_count($source, "\n", 0, $open)];
+        }
+
+        return $bodies;
     }
 
     /**
@@ -758,6 +846,36 @@ class SidebarSetupBindingsTest extends TestCase
     }
 
     /**
+     * Los módulos `.js` con algún `export function use…` (sin sus `.test.js`), por ruta relativa a
+     * `resources/js/`.
+     *
+     * @return array<string, string>
+     */
+    private function composables(): array
+    {
+        $root = resource_path('js');
+        $found = [];
+
+        $files = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($root, \FilesystemIterator::SKIP_DOTS));
+
+        foreach ($files as $file) {
+            $path = $file->getPathname();
+
+            if ($file->getExtension() !== 'js' || str_ends_with($path, '.test.js')) {
+                continue;
+            }
+
+            if (preg_match('/\bexport\s+(?:async\s+)?function\s+use\w*\s*\(/', (string) file_get_contents($path))) {
+                $found[str_replace($root.DIRECTORY_SEPARATOR, '', $path)] = $path;
+            }
+        }
+
+        ksort($found);
+
+        return $found;
+    }
+
+    /**
      * Escribe una muestra en un fichero temporal, la escanea y lo borra.
      *
      * @template T
@@ -765,9 +883,9 @@ class SidebarSetupBindingsTest extends TestCase
      * @param  callable(string): T  $scan
      * @return T
      */
-    private function withSample(string $source, callable $scan): mixed
+    private function withSample(string $source, callable $scan, string $extension = '.vue'): mixed
     {
-        $path = tempnam(sys_get_temp_dir(), 'vue').'.vue';
+        $path = tempnam(sys_get_temp_dir(), 'vue').$extension;
         file_put_contents($path, $source);
 
         try {

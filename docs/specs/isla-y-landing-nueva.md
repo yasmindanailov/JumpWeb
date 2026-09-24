@@ -23,7 +23,8 @@
     se avisa en el buzón antes.
   - Tras tocar un `.vue`, `npm run build:ssr` antes de la suite (`sidebar-spa.md` §0).
 - **Estado**: §7 contestado (`#683`), promociones en `#684`, T0 hecha (§1.6). **T1 ✅** (§4.8) y **T2 ✅**
-  (§4.9): la isla en Vue, 52 de 52 situaciones idénticas al diseño. **T3** (la compra, §4.10): T3a→T3c ✅.
+  (§4.9): la isla en Vue, 52 de 52 situaciones idénticas al diseño. **T3** (la compra, §4.10): T3a→T3d ✅;
+  la secuencia de compra vive en `sidebar/usePurchaseFlow.js`, compartida por las dos carcasas.
 - **Invariantes**: `PAY-*` si entra Bizum (`VERIFY_CONC=1`), `SEC-12` (la ruta de las vistas), `SEC-01`,
   `RGPD-*` (consentimiento dentro de la isla, Apple como proveedor), `PERF-02` (la carcasa por instalación va en
   el arranque cacheado; la variante del A/B, en la sesión).
@@ -307,7 +308,7 @@ deja de decir «nada de otra librería» en la T1.
 | T0 ✅ | Kids y Jump contra el menú de hechos, los tokens y las URLs (§1.6). Cumpleaños y la portada, con su tanda | Esta spec |
 | T1 ✅ | El tema: la referencia, las fuentes, la hoja de tokens y los iconos (§4.8); los roles nuevos del producto van con la isla (T2) | Producto + instancia |
 | T2 ✅ | La isla en Vue, idéntica al diseño en 26 situaciones (§4.9); los datos reales, con la T4 | Producto |
-| T3 | La compra en la isla sobre el motor, con tarjeta; sonda de compra (§4.10: T3a→T3c ✅ → T3e) | Producto |
+| T3 | La compra en la isla sobre el motor, con tarjeta; sonda de compra (§4.10: T3a→T3d ✅ → T3e) | Producto |
 | T4 | **Kids y Jump** (`#683`), un molde y dos páginas, con su calculadora y sus 301 | Instancia + producto |
 | T5 | Mi cuenta en la isla | Producto |
 | T6 | El resto de páginas y la lógica nueva que apruebe el owner | Los dos |
@@ -448,11 +449,11 @@ de la cuenta, solo «Tu cuenta ya está creada con tu correo». Manda el diseño
 línea (`TIME → CART`); «Tus datos» es `IDENTIFY` (o se salta con sesión: `CART → PAY`); «Pagar» es `PAY` con la
 cesta editable; «atrás» es `PAY → CART → IDENTIFY`. Todas esas transiciones ya existen.
 
-**La secuencia vive hoy en `PurchaseSection.vue`** (1.391 líneas, 464 de guion con su excepción de `CE-6`):
+**La secuencia vivía en `PurchaseSection.vue`** (1.391 líneas, 464 de guion con su excepción de `CE-6`):
 elegir, añadir, admitir, alta y acceso, confirmar, desenlace, sondeo y reintento. La isla necesita LA MISMA, y
-copiarla serían dos sitios donde recordar cada ⚠️ de esa secuencia. **Se extrae a un módulo del motor** que
+copiarla serían dos sitios donde recordar cada ⚠️ de esa secuencia. **Se extrajo a un módulo del motor** que
 usan las dos carcasas, sin cambiar la conducta del cajón (sus pruebas, su contrato de árbol y su sonda lo
-vigilan) y encogiendo su excepción. Es un fichero del carril del SPA: se avisa en su buzón antes de tocarlo.
+vigilan) y encogiendo su excepción. Es un fichero del carril del SPA: se avisó en su buzón antes de tocarlo.
 
 **Las tandas de la T3**:
 - **T3a ✅** el censo y el plan (esto).
@@ -462,7 +463,7 @@ vigilan) y encogiendo su excepción. Es un fichero del carril del SPA: se avisa 
   `Link`. Un banco con cada pieza en sus estados, sobre claro y sobre tinta → 0 píxeles.
 - **T3c ✅** el tamaño «Compra» de la isla y sus pantallas, idénticos a `isla-compra.card.html` recorriendo su
   banco con clics y con sus mismos datos. Las pantallas reciben todo por props: no conocen el motor.
-- **T3d** la secuencia compartida, extraída de `PurchaseSection.vue`.
+- **T3d ✅** la secuencia compartida, extraída de `PurchaseSection.vue` a `sidebar/usePurchaseFlow.js`.
 - **T3e** la isla compra de verdad con tarjeta: el cableado, la prueba del orden de la máquina y `/sonda` en
   local con la pasarela de pruebas.
 
@@ -518,6 +519,32 @@ vigilan) y encogiendo su excepción. Es un fichero del carril del SPA: se avisa 
   de la compra: un texto del `lang` cambiado da 923 píxeles y 1px de separación da 10, los dos con código 1.
 - ⚠️ Vue deja un espacio entre `</template>` y un `{{ … }}` en la línea siguiente (no es texto entre dos
   elementos, así que no se quita): se escriben pegados.
+
+**T3d hecha el 24-09 (`#691`)**:
+- **La mudanza**: `usePurchaseFlow(props)` (`resources/js/sidebar/usePurchaseFlow.js`) lleva la secuencia entera
+  —el montaje, la cesta, el día y la hora, la admisión, el alta y el acceso, el cobro, el sondeo y el reintento—
+  **línea a línea**: comparadas las líneas de código de antes y de después, solo cambian las rutas de los `import`
+  y faltan dos símbolos que nadie usaba (`minQuantityFor`, `tp`). Los stores van arriba y los observadores se
+  registran en el mismo orden. En `PurchaseSection.vue` queda lo que es solo del cajón (la banda, el aviso de
+  pausa, el pie y su reparto, «Volver», la puerta a la cuenta, el `ref` de la raíz) y su plantilla, idéntica byte
+  a byte: **464 → 89 líneas de guion y 2 → 0 llamadas a la API** (`CE-6`).
+- **Las guardas, reapuntadas**: `SidebarSignupContextTest` mira el alta en el módulo; `SidebarSetupBindingsTest`
+  escanea además el cuerpo de todo `export function use…` (una muestra en su guarda de la guarda, y una mutación
+  en el módulo real —el store declarado debajo de su `watch`— la pone en rojo con su línea). ESLint pierde dos errores
+  congelados (10 → 8, podados en el mismo commit).
+- **El peso**: el chunk del cajón sube **+1.256 B** (288,86 → 290,09 KiB): son los nombres que el composable
+  devuelve y la sección desestructura. La poda obvia (la sección toma sus stores) ahorra 0,20 y no baja del
+  techo; el techo pasa a 291 con su medida.
+- **La prueba de que no cambia una conducta**, en navegador: `scripts/sonda-embudo.mjs` recorre la compra entera
+  en el cajón —del catálogo al pago, la recarga con cesta, entrar en el paso 5, la salida al banco, la vuelta sin
+  datos con un sondeo, el rechazo con su motivo y el reintento— y anota cada pantalla y cada petición. Con el
+  build de antes y con el de después: **13 pasos, 39 peticiones, trazas idénticas**. Control negativo: sin la
+  petición de los campos del pack al restaurar, el diff la señala.
+- ⚠️ **Heredado, no arreglado** (se mudó tal cual): `loadOutcome()` lee `props.locale`, que la sección no
+  declara, así que la hora de retención del paso 10 sale siempre con formato `es`. Está en el buzón del SPA.
+- ⚠️ En local, un 500 al abrir el cajón con «Deadlock found» en el log es la caché en BD (`CACHE_STORE=database`)
+  con el limitador escribiendo desde tres peticiones en paralelo: dos corridas de la sonda de seis. Se vuelve a
+  correr; producción usa Redis (`#137`).
 
 ## 5. Impacto en invariantes
 

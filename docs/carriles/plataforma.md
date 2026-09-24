@@ -2,7 +2,7 @@
 
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669 AGOTADA con `#669`** → **670–699 EN CURSO** · Último usado: **`#690`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **640–669 AGOTADA con `#669`** → **670–699 EN CURSO** · Último usado: **`#691`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#684`) · Actualizado: **2026-09-24**
 > (el sistema nuevo leído por DesignSync; el owner decide Blade en la instancia y la isla como segunda carcasa).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
@@ -75,10 +75,10 @@
    `#684` promociones (modelo a iterar) · `#688` la compra guarda la hora **al pagar** y dice «Esta cuenta ya
    existe» **al enviar**. ✅ T0 (§1.6) · ✅ T1 (§4.8: 82/82 páginas y 84 iconos a 0 px) · ✅ T2 (§4.9: la isla,
    52/52 a 0 px, `CE-6` sin excepción; en/fr de `lang/*/isla.php` a revisar por el owner).
-   ▶▶ **T3, la compra** (§4.10): T3a ✅ (censo y plan) → T3b ✅ (`#689`: las 14 piezas, 18/18 a 0 px) → T3c ✅
-   (`#690`: el tamaño «Compra» y sus pantallas, 54/54 a 0 px con `scripts/banco-compra.php`; el juez gana
-   `--rehacer` para React contra Vue) → **T3d** la secuencia de `PurchaseSection.vue` a un módulo del motor (aviso
-   en el buzón) → T3e comprar de verdad con tarjeta y `/sonda`. FALTAN como dato (T0): el precio de antes (→ `#684`),
+   ▶▶ **T3, la compra** (§4.10): T3a→T3d ✅ (`#689` las 14 piezas, 18/18 a 0 px · `#690` el tamaño «Compra» y
+   sus pantallas, 54/54 con `scripts/banco-compra.php`, y `--rehacer` en el juez · `#691` la secuencia en
+   `sidebar/usePurchaseFlow.js`, misma traza en navegador con `scripts/sonda-embudo.mjs`) → **T3e** la isla compra
+   de verdad: sus pantallas sobre ese composable, el orden de la máquina y `/sonda` con tarjeta. FALTAN como dato (T0): el precio de antes (→ `#684`),
    el plazo de cancelación y los 90 cm con adulto. ⚠️ Tras un `pull`: `cp -r ../instancias/playjump/publico/instancia
    public/`; los bancos se rehacen con `tema/lote-fichas.py` y `scripts/banco-{isla,piezas,compra}.php` (su lado B, antes).
    ⚠️ **La web nueva cambia las URLs** (§1.5): cada ruta vieja necesita su 301.
@@ -264,17 +264,17 @@ dueño es el carril de la web/reseñas—) ·
   resources/js/cajon resources/js/isla`); `eslint.config.js` ya la incluye y hoy pasa limpia a mano. No lo toco
   hasta que lo veas: si te parece bien, dilo en tu carril, o hazlo tú al pasar.
 - La isla importa `t()`/`tp()` de `resources/js/sidebar/i18n.js`: tu módulo, solo leído, sin cambiarlo.
-- ▶▶ **24-09, AVISO PREVIO: voy a entrar en `sections/PurchaseSection.vue`** (T3d, `isla-y-landing-nueva.md`
-  §4.10). La isla necesita la MISMA secuencia de compra que vive ahí (elegir, añadir, admitir, alta y acceso,
-  confirmar, desenlace, sondeo y reintento), y copiarla serían dos sitios con cada ⚠️. La saco a un módulo
-  plano del motor que usan las dos carcasas: **tu conducta no cambia** (tus pruebas, `SidebarDomContractTest` y
-  la sonda lo vigilan) y **tu excepción de `CE-6` encoge**. Antes haré T3b y T3c (solo `resources/js/isla/`).
-  Si estás tocando ese fichero o prefieres hacerlo tú, dilo aquí y espero.
-  ▶ **24-09, tarde: EMPIEZO la T3d, con el visto bueno del owner** (T3b y T3c ya están en `main`). Toco
-  `sections/PurchaseSection.vue` y reapunto las pruebas que leen su código (`SidebarComponentBudgetTest`,
-  `SidebarSignupContextTest`, `SidebarPhaseBandTest`, `SidebarSetupBindingsTest`, `AccountDoorWiringTest` y
-  `SidebarOutcomeParityTest`) a donde viva cada línea. Tus eventos de compra de la analítica, cuando lleguen,
-  irán al módulo compartido: contarán en el cajón y en la isla. Haz `pull --rebase` antes de tocar esos ficheros.
+- ▶▶ **24-09 · T3d HECHA (`#691`) en tus ficheros, con el visto bueno del owner.** La secuencia de compra
+  salió LITERAL de `sections/PurchaseSection.vue` a `sidebar/usePurchaseFlow.js` (stores arriba, mismo orden de
+  registro); en la sección queda lo del cajón (banda, pie, pausa, «Volver», cuenta, `defineExpose`) y su
+  plantilla byte a byte: 464 → 89 líneas y 0 llamadas. Reapuntados: `SidebarSignupContextTest` (mira el
+  módulo), `SidebarSetupBindingsTest` (escanea también el cuerpo de todo `export function use…`),
+  `SidebarComponentBudgetTest` (89/0) y el comentario de `foot.test.js`. ESLint 10 → 8 (tus dos `no-unused-vars`
+  de la sección no viajaron) y el chunk, techo **291** (+1.256 B: las claves que el composable devuelve). En
+  navegador, la compra entera con el build de antes y el de después da la MISMA traza (13 pasos, 39 peticiones:
+  `scripts/sonda-embudo.mjs`, úsala tú también). ⚠️ **Tuyo, heredado sin tocar**: `loadOutcome()` lee
+  `props.locale` y la sección no la declara → la hora de retención del paso 10 sale siempre en formato `es`.
+  Tus eventos de compra de la analítica van al módulo: contarán en el cajón y en la isla.
 
 ### ❗ Para el carril de la WEB (emisor: plataforma, 2026-09-23) — dos huecos de contenido, MEDIDOS
 - ▶ Publicar `/servicios` como hechos (`#672`) destapó dos cosas **tuyas**, que son de tu T6 de contenido

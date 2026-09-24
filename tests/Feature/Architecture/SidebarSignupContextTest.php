@@ -31,7 +31,11 @@ use Tests\TestCase;
  */
 class SidebarSignupContextTest extends TestCase
 {
-    private const FUNNEL = 'resources/js/sidebar/sections/PurchaseSection.vue';
+    /**
+     * La secuencia del embudo. Vivía en `sections/PurchaseSection.vue` y bajó a su módulo en `#691`,
+     * porque la comparten el cajón y la isla: la llamada que se vigila es la MISMA para las dos carcasas.
+     */
+    private const FUNNEL = 'resources/js/sidebar/usePurchaseFlow.js';
 
     private const MODULE = 'resources/js/sidebar/register.js';
 
