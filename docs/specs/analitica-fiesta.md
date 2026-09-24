@@ -1,8 +1,8 @@
 # [SPEC] La analítica de la fiesta — la lista de invitados, el justificante y la invitación, sin cookies para el invitado
 
-> Estado: ⬜ borrador (24-09, carril del SPA) · Última actualización: 2026-09-24 · Decisión asociada: `#739` al
-> aprobarse (banda del SPA). Es la **T6** de `analitica.md` (§4.8): vive aparte porque cambia el RÉGIMEN de tres
-> páginas y porque la spec madre ya no cabe en su §0.
+> Estado: ✅ **aprobada por el owner el 24-09** (`#739`: las tres recomendaciones de §7) → **a implementar, T1 en
+> curso** (carril del SPA) · Última actualización: 2026-09-24 · Decisión asociada: `#739`. Es la **T6** de
+> `analitica.md` (§4.8): vive aparte porque cambia el RÉGIMEN de tres páginas y porque la spec madre ya no cabe en su §0.
 
 ## §0 · Antes de tocar
 
@@ -19,9 +19,10 @@
   dentro; el `Recorder` se llama desde el CONTROLADOR tras el éxito y nunca tumba una firma ni una compra.
   (4) El dinero del post-form se paga EN EL PARQUE (`#244`): «vendido» sale del libro (`order_adjustments`) y
   «cobrado» de `payments` por `provider` (`cash`|`datafono`); `MoneyReport` no ve lo vendido sin cobrar.
-  (5) La sesión y el XSRF son técnicas y se quedan (el POST las necesita); lo que se retira es la de medición.
-  (6) La invitación local está APAGADA (404 por producto): la sonda la enciende en el producto y la apaga.
-- **Estado**: ⬜ borrador, en revisión del owner (sus tres preguntas en §7). Queda: su ✅ → `#739` → T1→T3.
+  (5) La sesión y el XSRF (técnicas) se quedan; solo se retira la de medición. (6) En la local la invitación solo
+  está encendida en los packs 105/106 (plataforma; no deshacer sin el owner).
+- **Estado**: ✅ `#739` (día de la FIESTA · pestaña «Fiestas» · los que vuelven se exportan con opt-in). **T1 ✅
+  (24-09)**, arnés 9/9, en vivo (§4.6). Quedan **T2** y T3.
 - **Invariantes**: `RGPD-01`, `RGPD-02`, `RGPD-05`, `RGPD-07`, `SEC-01`, `SUITE-01`. Dinero y aforo: **ninguno
   cambia** (solo se LEE el libro). Ningún fichero del `CRITICAL_RE` se toca.
 
@@ -91,15 +92,19 @@ enlace); la landing y la app; cualquier dato personal en el libro (`RGPD-02`); l
 
 ### 4.1 El régimen del invitado
 
-- **Rutas enfocadas** = las que montan `focused-layout`: `reservation.guests` (GET y POST y sus tres POST de la
-  invitación), `reservation.authorization` (GET y POST), `invitation.show`, `invitation.reply`,
-  `invitation.calendar`, `invitation.receipt` y `invitation.receipt.save`. Van bajo un grupo de rutas con el
-  middleware `visitor.silent` `(futuro)`: `ResolveVisitor` ve la marca en la petición y **ni lee ni acuña**; el hecho
-  de una enfocada nace sin `visitor_id` aunque el navegador traiga una cookie de otra visita (uniforme: todo
-  invitado igual). La sesión y el XSRF (técnicas) siguen: los formularios las necesitan.
-- **Guarda**: `FocusedPagesAreCookieFreeTest` `(futuro)` en `tests/Feature/Analytics/` `(futuro)` recorre las ocho
-  rutas con enlace firmado o token y asevera cero `visitor_id` en `Set-Cookie`, cero `<script src>` no exento y
-  cero `data-cookie-*`; el arnés la ve morder quitando el grupo.
+- **Rutas enfocadas** = las DOCE de los tres controladores: `reservation.guests` (GET y POST y sus tres POST de
+  la invitación), `reservation.authorization` (GET y POST), `invitation.show`, `invitation.reply`,
+  `invitation.calendar`, `invitation.receipt` y `invitation.receipt.save`. **T1 (24-09): van en un grupo
+  `Route::withoutMiddleware([ResolveVisitor:mint])`** en `routes/web.php` —se eligió la exclusión de ruta y no el
+  middleware `visitor.silent` que esta spec proponía: una pieza menos y el mismo efecto—: `ResolveVisitor` no corre
+  ahí, así que **ni lee ni acuña**, y `Recorder::factOfOrder()` no mira el contexto de atribución a propósito: el
+  hecho nace sin `visitor_id` aunque el navegador traiga una cookie de otra visita (uniforme: todo invitado igual).
+  La sesión y el XSRF (técnicas) siguen: los formularios las necesitan.
+- **Guarda**: `FocusedPagesAreCookieFreeTest` en `tests/Feature/Analytics/` recorre las cinco páginas con GET
+  (post-form, justificante, invitación, calendario, recibo) y asevera cero `visitor_id` en `Set-Cookie`, cero
+  `<script src>` no exento y cero `data-cookie-*`/`data-analytics-*`; censa por estructura que las DOCE rutas de los
+  tres controladores llevan la exclusión (una ruta nueva no puede olvidarse); prueba que una cookie de otra visita
+  no llega al hecho; y su CONTROL: la portada SIGUE acuñando.
 - **Sin dato personal**: ningún hecho lleva nombres, correos, `child_key` ni `minor_key`; las props son enteros y
   enumerados. El `device` y el `locale` del invitado salen del `User-Agent` y del `Accept-Language` en la petición
   (agregado, como `SessionResolver` hace con la primera vista) y un UA de robot no emite (`is_bot` de la T1).
@@ -165,7 +170,7 @@ del post-form es cliente, pero su hecho tampoco lleva `user_id`: es un hecho del
 
 | | Tanda | Entrega | Verificación (§6) |
 |---|---|---|---|
-| T1 | **el régimen y los hechos**: `visitor.silent` en las ocho rutas, `ResolveVisitor` que lo respeta, la guarda del invitado sin cookie, `Contract` +4, los siete hechos desde los controladores con `days_before` y sin PII | ningún fichero del `CRITICAL_RE` | `FocusedPagesAreCookieFreeTest` + `PartyFactsTest` `(futuro)` + arnés + `curl -D` |
+| T1 | **✅ (24-09) el régimen y los hechos**: las DOCE rutas de los tres controladores en un grupo `withoutMiddleware(ResolveVisitor:mint)` (§4.1); `Recorder::factOfOrder()` (sin visitante, sesión ni titular, y solo nombres de servidor); `Contract` +4 y props en los 3 que ya existían; `PartyFacts::daysBefore()` en días del parque; el trait `Http\Concerns\RecordsPartyFacts` (robots fuera, `device`/`locale` de la petición) y los siete hechos desde `GuestFormController`, `InvitationPageController` y `GuardianAuthorizationController` tras el éxito (`authorization_signed` solo con `created`; `hours_since_open` desde la sesión técnica). **Lo que enseñó**: el reenvío del mismo padre es IDEMPOTENTE («signed», no «already») y por eso el hecho mira `created`; eran doce rutas y no ocho; el arnés cazó que ningún caso llamaba a `factOfOrder()` con un nombre que no fuera de servidor (caso añadido); `order_id` nunca es nulo (Larastan) | ningún fichero del `CRITICAL_RE`; el contrato de la API no cambia (los nombres de servidor no van en su `enum`) | `FocusedPagesAreCookieFreeTest` (4) + `PartyFactsTest` (13) · `scripts/mutar-analitica-fiesta.sh` **9/9 + 1 control** · en vivo con `curl -A Chrome`: `/autorizacion/925` firmada → 200, cookies solo XSRF y sesión, cero `<script>`, hecho `authorization_opened` en el pedido 755 sin nadie y `days_before` 14; `/invitacion/{token}` como iPhone → `invitation_viewed` (`mobile`, 24 días) y como vista previa de WhatsApp → nada. La sonda de navegador llega con la T2 (el ojo del owner) |
 | T2 | **el informe y la pestaña «Fiestas»**: `PartiesReport`, los cinco widgets, el CSV, la comparación, permisos `reports.view`/`reports.export` (los mismos) | | `PartiesReportTest` `(futuro)` (igualdad con las tablas), presupuesto, `EXPLAIN`, `sonda-analitica-panel.mjs` ampliada, el OJO del owner |
 | T3 | **los segmentos y la 360**: `GUEST_BECAME_CUSTOMER`, el bloque «fiestas» de la 360 | | `SegmentsReportTest` +1, `UserInsightsInfolistTest` +1, el OJO |
 
@@ -202,8 +207,10 @@ dos regímenes; estos hechos son del contrato) · `SEC-01` (los enlaces firmados
   2. **Dónde vive**: (a) pestaña propia «Fiestas», recomendado (cuatro pestañas; su CSV) · (b) dentro de «Conversión».
   3. **Los invitados que vuelven**: (a) contarlos y exportarlos con opt-in como cualquier cliente, recomendado ·
      (b) solo contarlos.
+- **24-09, owner**: «acepto tu recomendación profesional sobre las tres preguntas; todo lo demás está validado y
+  OK»: **1(a) el día de la fiesta · 2(a) pestaña «Fiestas» · 3(a) contar y exportar con opt-in** → `#739`, estado ✅.
 - `[PENDIENTE: asesoría]` (4): el hecho de la reserva sin identidad del invitado, junto a los tres de `analitica.md` §7.
-- Al aprobarse: estado ✅, `#739`, y la casilla T6 del tracker.
+- Aprobada: `#739`; la casilla T6 del tracker dice «spec ✅ · T1 ⬜» hasta que la T1 entre en `main`.
 
 ## Anexo · fila del enrutador
 

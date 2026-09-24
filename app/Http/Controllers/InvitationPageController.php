@@ -10,6 +10,7 @@ use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\CalendarFile;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Domain\Platform\Services\Turnstile;
+use App\Http\Concerns\RecordsPartyFacts;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -45,6 +46,8 @@ use Illuminate\Validation\Rule;
  */
 class InvitationPageController extends Controller
 {
+    use RecordsPartyFacts;
+
     public function __construct(private readonly PartyInvitations $invitations) {}
 
     /**
@@ -86,6 +89,15 @@ class InvitationPageController extends Controller
             (string) $data['child_name'],
             $data['attending'] === '1',
         );
+
+        // El hecho de la RESERVA (`specs/analitica-fiesta.md` §4.2): solo lo que el dominio ACEPTÓ, y de ello
+        // solo el sí o el no y si viene acompañado. El nombre del niño no viaja.
+        if ($outcome->accepted && $invitation->reservation !== null) {
+            $this->partyFact($request, $invitation->reservation, 'invitation_replied', [
+                'attending' => $data['attending'] === '1' ? 'yes' : 'no',
+                'companion' => (bool) ($outcome->reply->companion ?? false),
+            ]);
+        }
 
         return $volver
             ->with('invitation_status', $outcome->accepted
@@ -175,7 +187,7 @@ class InvitationPageController extends Controller
             ->with('receipt_status', $saved ? 'saved' : 'closed');
     }
 
-    public function show(string $token, Response $response): Response
+    public function show(Request $request, string $token, Response $response): Response
     {
         $invitation = $this->invitations->resolvePublic($token);
 
@@ -184,6 +196,10 @@ class InvitationPageController extends Controller
         $reservation = $invitation->reservation;
 
         abort_if($reservation === null, 404);
+
+        // La analítica de la fiesta (`specs/analitica-fiesta.md` §4.2): una apertura, como hecho de la RESERVA
+        // y sin visitante. Las vistas previas de los chats (robots) no cuentan.
+        $this->partyFact($request, $reservation, 'invitation_viewed');
 
         $date = $reservation->slot?->date;
 
@@ -230,7 +246,7 @@ class InvitationPageController extends Controller
      * ruta distinguiera un token caducado de uno inventado, sería la rendija que §4.5·12 cerró en la
      * página. Y no lleva el token dentro del fichero: el `UID` se compone con el id de la invitación.
      */
-    public function calendar(string $token): Response
+    public function calendar(Request $request, string $token): Response
     {
         $invitation = $this->invitations->resolvePublic($token);
 
@@ -241,7 +257,9 @@ class InvitationPageController extends Controller
 
         // Sin hora o sin duración no hay evento que dar. Es el mismo criterio que el bloque de la
         // página: «sin dato, sin bloque».
-        abort_if($evento === null, 404);
+        abort_if($reservation === null || $evento === null, 404);
+
+        $this->partyFact($request, $reservation, 'invitation_calendar_downloaded');
 
         [$inicio, $fin] = $evento;
         $negocio = trim((string) Setting::businessName());

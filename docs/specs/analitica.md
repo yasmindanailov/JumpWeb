@@ -747,6 +747,80 @@ de §4.3.
 | T5 | en tres: **T5a ✅ (24-09)** el mecanismo: tabla `experiments`, la asignación en el servidor por `hash(clave \| sujeto)` (`Experiments`), `experiments` en `/sidebar/session` (contrato 1.23.0) y en el `data-boot` solo con vivos, la cookie acuñada ANTES de componer la página (`#737`), `sidebar/experiments.js` (`variant`/`expose` → `experiment_exposed` una vez) · **T5b ✅ (24-09)** el panel: `ExperimentResource` en «Ajustes → Sistema» (`settings.manage`, rastro, clave y variantes bloqueadas con el experimento vivo) y `ExperimentsWidget`/`ExperimentsReport` en «Conversión» (expuestos, compras por el SELLO del pedido, Wilson 95 %, contaminados) · **T5c ⬜** una prueba real (`#738`: codificada a medida, cuando el owner nombre la hipótesis con datos reales; candidata: la carcasa) | `#737`, `#738` | `ExperimentResourceTest` (6: gating y tarjeta, alta con orden y rastro, forma de clave y variantes, bloqueo del vivo y apagado, borrado, estados), `ExperimentsReportTest` (5: Wilson de libro, exposición única y compra sellada posterior, contaminados, ventana y caché, el widget), `sonda-experimentos-panel.mjs`; `ExperimentsTest` (8: mismo sujeto → misma variante, pesos 90/10 sobre 2.000, sujeto visitante > titular, solo vivos y bien formados, la caché se olvida al guardar, la caché SERIALIZADA devuelve filas, la primera vista trae variante Y cookie, sin vivos 0 B, el titular sin cookie por la API), `SidebarBootTest` (+1, contrato), `sonda-experimentos.mjs` 9/9 (la exposición encontrada en `analytics_events`) |
 | T6 | **la fiesta** —la lista de invitados, el justificante y la invitación, SIN cookie ni script para el invitado; hechos de la RESERVA desde los controladores, el dinero de después de reservar desde el libro, la pestaña «Fiestas» y el segmento de los invitados que vuelven—: spec propia `specs/analitica-fiesta.md` (⬜ borrador 24-09, en revisión del owner), tres tandas allí | `#739` al aprobarse | los de su §6 |
 
+### 4.9 Trampas pagadas por tanda (mudadas de `carriles/spa.md` el 24-09, verbatim)
+
+- 🪤 **De la T1 de la analítica (plataforma)**: los observadores van `singleton()` (el dispatcher instancia
+  `Clase@método` en cada evento); `DB::afterCommit` corre en el acto fuera de txn; un literal `sessions` en
+  código dispara `AccessRevocationTest`; `postJson` no manda cookies sin `withCredentials()`; un teléfono
+  se cuenta por CIFRAS (una fecha ISO no lo es); el UTM se pega TRAS firmar y se ignora al validar.
+- 🪤 **De la T2a (24-09), seis pagadas**: (1) `order_adjustments.applied_by` y `payment_refunds.requested_by`
+  son NOT NULL: un fixture los lleva siempre; los timestamps de `Order`/`Payment` no son rellenables, van
+  por `forceFill`. (2) **Tras una petición que renderiza Livewire en el MISMO caso, `redirect()` devuelve el
+  `Redirector` de Livewire** y `RestrictsPuertaRole` revienta con `TypeError` (500): en HTTP real no pasa;
+  el caso de la puerta va SOLO y como primera petición. (3) En un presupuesto de consultas, **la primera
+  lectura de `Setting` cuenta una** (el memo frío): caliéntalo antes de `enableQueryLog`. (4) **Con dos
+  `Dashboard` en el panel, `Filament::getWidgets()` devuelve TODOS los descubiertos** —`allFiles()`, también
+  en subcarpetas—: «Hoy» tiene que declarar los suyos. (5) Pint (`fully_qualified_strict_types`) exige `use`
+  para una clase cualificada en un docblock `@return`. (6) `EXPLAIN` sobre 9 filas elige recorrer: no es
+  veredicto sobre un índice. Y un test que corre con el reloj EN MARCHA cruza el segundo (`MePrivacyTest`
+  puso en rojo un push de solo doc a las 22:59:00 UTC): en un caso que compara `now()` dos veces, congela.
+- 🪤 **De la T2b**: el operador JSON `->>` funciona en MySQL 8 y en SQLite 3.45 **y NO en MariaDB** (el
+  hosting): `SqlJson::string()` escribe la forma larga por motor. `AuditLogger::log*()` devuelve el modelo, así
+  que un fixture le fija `created_at` con `forceFill` después. Los tres colores validados del gráfico se
+  reutilizan en orden fijo por serie (`CustomersSeriesChart::COLORS` apunta a los del dinero).
+- 🪤 **De la T2c→T3a·2**: un ayudante privado `session()`/`seed()` en un test es un FATAL (el `TestCase` los
+  tiene públicos) y `php artisan test` sale 255 sin que un filtro por «FAIL» enseñe nada: ante un 255, salida
+  cruda. Las pestañas inactivas de Filament no son `display: none` (Livewire carga sus widgets igual; la sonda
+  mide dentro de `.fi-active`). Pint reescribe un `{@see TABS}` como `{@see Tabs}`: las constantes se citan con
+  comillas. `fputcsv` entrecomilla toda celda con espacio. El `#` de un `#685` dentro de un `sed 's#…#…#'` rompe
+  la expresión: el mensaje del commit va con Write y `-F`. Un `lang/*/` dentro de un docblock CIERRA el
+  comentario: `lang/{es,en,fr}/`. Un atributo del `<body>` que empiece por `cookie` es «categoría» para
+  `track.js`. En un test, la sesión de `actingAs` y la cookie de `withUnencryptedCookie` se QUEDAN para las
+  peticiones siguientes (los casos van del menos al más). Una sonda que cuente terceros EXCLUYE los exentos y
+  vacía su registro antes de cada página. Un `.env` nuevo va a `.env.example` con su porqué. ⚠️ Cinco
+  `pageerror` «Object» intermitentes en el filtro del cuadro (T2f): causa NO verificada; la sonda ya apunta la pila.
+- 🪤 **De la T3a·3**: Larastan tipa una columna JSON como `string|null`: se lee por `getAttribute()`. El chunk
+  del cajón se mide en KiB y Vite lo enseña en kB. Un getter de Pinia que la vista usa y el store no define es
+  `undefined` sin ruido. `ApiContractTest` exige `required` EN EL ORDEN de `properties`. **La suite entera caza
+  lo que los tests enfocados no ven**: un literal `'sessions'` en `app/` es la tabla de credenciales para
+  `AccessRevocationTest`; un campo nuevo en `/me` va a la lista blanca de `MeTest`; un rótulo `account.*` nuevo
+  va a la poda de `SidebarBoot::personal()` y `SidebarMountTest` censa `privacy` clave a clave y PESA el montaje
+  (se poda ANTES de subir; techo a lo medido, holgura estrecha). **Las ASERCIONES dependen del árbol entero, no
+  solo de `tests/`** (+90 sin tocar un test): tras rebasar se re-mide SIEMPRE o se toma la cifra de la puerta.
+- 🪤 **De la T3a·4**: un aviso en la cadena `v-if/v-else-if` del índice lo tapa cualquier waiver sin firmar
+  (lo cazó la sonda): lo que no es tarea va DEBAJO de las tarjetas, fuera de la cadena. Vue retira el espacio
+  entre dos elementos si lleva salto de línea: dos botones en dos líneas salen pegados. `CustomerAccountContext`
+  memoriza por usuario en el proceso: entre dos peticiones de un test, `forgetInstance`. Lo que viaja solo a
+  veces se mide en su caso CARO (la semilla, 800). Un aviso transitorio viaja en el CONTEXTO, no en el montaje.
+- 🪤 **De la T3b·1**: gtag lee objetos `arguments` (`dataLayer.push(arguments)`, como su fragmento), no arrays.
+  La compra se anuncia al VOLVER de la pasarela y ANTES del resumen del pedido: el valor del `Purchase` es el
+  importe de `pay_started` guardado en `sessionStorage` (lo pagado en línea). Google Ads necesita la ETIQUETA
+  de conversión además del id (la spec no la listaba). La sonda intercepta los tres hosts con dobles vacíos y
+  lee `dataLayer`, `fbq.queue` y `ttq._q`: lo que la página les dice.
+- 🪤 **De la T3b·2**: Platform no ve a nadie → quien habla con el tercero recibe un VALOR ya hasheado, el
+  consentimiento vivo se pregunta por un contrato de Platform implementado en Identity y atado en
+  `AppServiceProvider`, y el job que ve el pedido vive en Booking. `EncryptCookies` deja a `null` toda cookie
+  ajena que no descifra: las de los píxeles van en su `except`. `postJson` sin `withCredentials()` no manda
+  cookies (tercera vez). El sello del pedido no es asignable en masa: `forceFill()->saveQuietly()` en el fixture.
+- 🪤 **De la T3b·3**: un `[PENDIENTE]` para el asesor NO va en un texto que se publica (la T3a·1 lo dejó a la
+  vista en `/cookies`): lo variable se nombra al PINTAR y el marcador vive en la doc. Cambiar un texto sembrado
+  obliga a ENCADENAR sus migraciones en `CookiePolicyContentTest` («lo migrado = lo sembrado» ya no sale con una).
+- 🪤 **De la T4a**: `order_items.seats` y `payment_refunds.{currency,mode,requested_at}` son NOT NULL: un fixture
+  a mano los lleva. Una tanda a medias se APARCA fuera del árbol mientras corre la puerta (mide el árbol, no
+  el commit).
+- 🪤 **De la T4b**: una acción de auditoría nueva va a `AuditLog::ACTIONS` o el controlador da 500. La lista de
+  widgets de `AnalyticsPageTest` es EXACTA y la tabla plegada CIERRA cada pestaña (lo nuevo va antes). El
+  `no-store` de la ruta llega como `max-age=0, no-store, private`. Un correo se cuenta en minúsculas.
+- 🪤 **De la T4c**: la pantalla de «reserva creada» se abre en vivo con el PASE de la vuelta de la pasarela (una
+  entrada de un solo uso en la caché `database`, `RedsysReturnController::handoff()`, atada al titular): tinker
+  la pone y `/?redsys=<token>` la gasta. Un rótulo que ya viaja con sesión se REUTILIZA: ni una clave más. Una
+  clase nueva en un `.vue` pide su regla en `site.css` Y regenerar `cajon.css`: la sonda dio 8/8 con la clase
+  muerta (compara árbol) y lo cazaron `SidebarStyleWiringTest` y `HojaDelCajonTest`. Dos tandas del mismo día que
+  suben el mismo techo del chunk chocan en el rebase: el techo se pone con la medida de las DOS juntas.
+- 🪤 **De la T5**: la API no acuña la cookie: un test de `/sidebar/session` la manda con `withCredentials()`.
+  `navigator.webdriver` marca `is_bot`: la exposición de una sonda se busca en `analytics_events`, no en el cuadro.
+  Los campos de Filament se localizan por `form.<ruta>` (el rótulo lleva el asterisco dentro).
+
 ## 5. Impacto en invariantes
 
 - `PAY-01`, `PAY-02`, `PAY-05`, `PAY-16`, `PAY-17`: no cambian; se capturan escalares en el evento síncrono y

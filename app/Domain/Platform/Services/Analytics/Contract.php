@@ -70,9 +70,17 @@ final class Contract
         'user_registered' => ['source' => self::SERVER, 'props' => ['method']],
         'user_logged_in' => ['source' => self::SERVER, 'props' => ['method']],
         'contact_received' => ['source' => self::SERVER, 'props' => ['topic']],
-        'guest_form_opened' => ['source' => self::SERVER, 'props' => []],
-        'guest_form_submitted' => ['source' => self::SERVER, 'props' => []],
-        'invitation_replied' => ['source' => self::SERVER, 'props' => []],
+        // ── La fiesta (`specs/analitica-fiesta.md` §4.2): HECHOS DE LA RESERVA, sin visitante ─────
+        // Los emite el controlador de cada página enfocada por `Recorder::factOfOrder()`: `order_id` y nada
+        // más. `days_before` son los días del PARQUE que faltan para la fiesta; `device` y `locale` salen de
+        // la petición (agregado). Ni nombres, ni correos, ni claves de un menor: `PII_KEYS` lo vigila.
+        'guest_form_opened' => ['source' => self::SERVER, 'props' => ['days_before', 'device', 'locale']],
+        'guest_form_submitted' => ['source' => self::SERVER, 'props' => ['days_before', 'guests_delta', 'extras_cents', 'replies_adopted']],
+        'invitation_viewed' => ['source' => self::SERVER, 'props' => ['days_before', 'device', 'locale']],
+        'invitation_replied' => ['source' => self::SERVER, 'props' => ['attending', 'companion', 'days_before']],
+        'invitation_calendar_downloaded' => ['source' => self::SERVER, 'props' => ['days_before']],
+        'authorization_opened' => ['source' => self::SERVER, 'props' => ['via', 'days_before', 'device']],
+        'authorization_signed' => ['source' => self::SERVER, 'props' => ['via', 'days_before', 'hours_since_open']],
         'email_sent' => ['source' => self::SERVER, 'props' => ['key']],
         'email_clicked' => ['source' => self::SERVER, 'props' => ['key']],
         'visit_checked_in' => ['source' => self::SERVER, 'props' => []],

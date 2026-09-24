@@ -40,22 +40,74 @@ class Recorder
             return;
         }
 
-        $allowed = array_flip(Contract::allowedProps($name));
-        $props = array_filter(array_intersect_key($props, $allowed), static fn ($value): bool => $value !== null);
-
-        $row = [
-            'event_id' => Visitor::mint(),
+        $this->write($name, $this->allowed($name, $props), [
             'session_id' => $refs['session_id'] ?? ($this->linksToVisitor() ? $this->context->sessionId() : null),
             'visitor_id' => $refs['visitor_id'] ?? ($this->linksToVisitor() ? $this->context->visitorId() : null),
             'user_id' => $refs['user_id'] ?? null,
+            'order_id' => $refs['order_id'] ?? null,
+            'payment_id' => $refs['payment_id'] ?? null,
+            'refund_id' => $refs['refund_id'] ?? null,
+        ]);
+    }
+
+    /**
+     * **Un hecho de la RESERVA** (`docs/specs/analitica-fiesta.md` §4.1): lo que hace un invitado en el post-form,
+     * el justificante o la invitación se anota contra el PEDIDO y nada más —sin visitante, sin sesión y sin
+     * titular—, porque **el invitado no es un visitante**: en esas páginas no hay cookie de medición.
+     *
+     * ⚠️ No mira el contexto de atribución A PROPÓSITO: aunque el navegador trajera la cookie de otra visita, el
+     * hecho no se ata a ella. Un invitado que vino antes a la web y otro que no, iguales en el libro.
+     *
+     * @param  array<string, scalar|null>  $props  solo las claves que el contrato permite para `$name`
+     */
+    public function factOfOrder(string $name, int $orderId, array $props = []): void
+    {
+        if (! Contract::isServer($name)) {
+            Log::warning('analytics.record_refused', ['event' => $name, 'reason' => 'not a server fact']);
+
+            return;
+        }
+
+        $this->write($name, $this->allowed($name, $props), [
+            'session_id' => null,
+            'visitor_id' => null,
+            'user_id' => null,
+            'order_id' => $orderId,
+            'payment_id' => null,
+            'refund_id' => null,
+        ]);
+    }
+
+    /**
+     * @param  array<string, scalar|null>  $props
+     * @return array<string, scalar>
+     */
+    private function allowed(string $name, array $props): array
+    {
+        $allowed = array_flip(Contract::allowedProps($name));
+
+        return array_filter(array_intersect_key($props, $allowed), static fn ($value): bool => $value !== null);
+    }
+
+    /**
+     * @param  array<string, scalar>  $props
+     * @param  array{session_id: ?int, visitor_id: ?string, user_id: ?int, order_id: ?int, payment_id: ?int, refund_id: ?int}  $refs
+     */
+    private function write(string $name, array $props, array $refs): void
+    {
+        $row = [
+            'event_id' => Visitor::mint(),
+            'session_id' => $refs['session_id'],
+            'visitor_id' => $refs['visitor_id'],
+            'user_id' => $refs['user_id'],
             'name' => $name,
             'route' => null,
             'props' => $props === [] ? null : $props,
             'occurred_at' => now(),
             'received_at' => now(),
-            'order_id' => $refs['order_id'] ?? null,
-            'payment_id' => $refs['payment_id'] ?? null,
-            'refund_id' => $refs['refund_id'] ?? null,
+            'order_id' => $refs['order_id'],
+            'payment_id' => $refs['payment_id'],
+            'refund_id' => $refs['refund_id'],
         ];
 
         DB::afterCommit(static function () use ($row): void {

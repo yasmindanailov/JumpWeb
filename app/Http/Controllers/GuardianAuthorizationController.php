@@ -20,6 +20,7 @@ use App\Domain\Identity\Services\WaiverSignatureRequest;
 use App\Domain\Platform\Services\Analytics\EmailUtm;
 use App\Domain\Platform\Services\Turnstile;
 use App\Http\Concerns\AuthorizesGuardianAuthorization;
+use App\Http\Concerns\RecordsPartyFacts;
 use App\Notifications\GuardianAuthorizationSigned;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -50,6 +51,13 @@ use Illuminate\View\View;
 class GuardianAuthorizationController extends Controller
 {
     use AuthorizesGuardianAuthorization;
+    use RecordsPartyFacts;
+
+    /**
+     * Cuándo abrió ESTA persona el justificante de ESTA reserva, en su sesión técnica: de ahí sale
+     * `hours_since_open` al firmar (`specs/analitica-fiesta.md` §4.2). Es un sello de tiempo, no un dato suyo.
+     */
+    private const OPENED_AT_SESSION_KEY = 'analytics.authorization_opened_at.';
 
     public function show(Request $request, OrderItem $reservation): View
     {
@@ -65,6 +73,13 @@ class GuardianAuthorizationController extends Controller
 
         $user = $request->user();
         $desdeLaInvitacion = $this->invitationExtras($request);
+
+        // La analítica de la fiesta (`specs/analitica-fiesta.md` §4.2): una apertura, como hecho de la RESERVA y
+        // sin visitante; `via` dice si llegó desde su respuesta a la invitación o por el enlace repartido.
+        $this->partyFact($request, $reservation, 'authorization_opened', [
+            'via' => isset($desdeLaInvitacion['invitation_reply_id']) ? 'invitation' : 'link',
+        ]);
+        $request->session()->put(self::OPENED_AT_SESSION_KEY.$reservation->getKey(), now()->getTimestamp());
 
         return view('reservation.authorization', [
             'reservation' => $reservation,
@@ -239,6 +254,17 @@ class GuardianAuthorizationController extends Controller
             return $this->back($request, $reservation, 'already', $e->minorName);
         } catch (GuardianAuthorizationRefusedException $e) {
             return $this->back($request, $reservation, $e->reason);
+        }
+
+        // El hecho de la RESERVA (`specs/analitica-fiesta.md` §4.2), solo cuando la autorización se ACABA de
+        // crear: el reenvío del mismo padre no es una firma nueva. Las horas desde que abrió la hoja salen
+        // de su sesión técnica; sin apertura en esta sesión, sin dato.
+        if ($result['created']) {
+            $opened = $request->session()->pull(self::OPENED_AT_SESSION_KEY.$reservation->getKey());
+            $this->partyFact($request, $reservation, 'authorization_signed', [
+                'via' => isset($data['invitation_reply_id']) ? 'invitation' : 'link',
+                'hours_since_open' => is_int($opened) ? round((now()->getTimestamp() - $opened) / 3600, 2) : null,
+            ]);
         }
 
         // La COPIA para quien firma (§4.15, `[DECIDIDO owner]` §7·7), **fuera de la transacción y

@@ -31,6 +31,7 @@ use App\Http\Controllers\PricingController;
 use App\Http\Controllers\ReviewPhotoController;
 use App\Http\Controllers\ServicesController;
 use App\Http\Controllers\SitemapController;
+use App\Http\Middleware\ResolveVisitor;
 use App\Http\Middleware\SetAdminLocale;
 use App\Http\Middleware\SetLocale;
 use App\Livewire\Admin\Puerta\ValidarRegistro;
@@ -221,151 +222,163 @@ Route::post('/contacto', [ContactController::class, 'store'])
     ->middleware('throttle:5,1') // A5/A4 auditoría Fase 1: corta el mail-bombing al admin (envío SMTP síncrono)
     ->name('contacto.store');
 
-// Post-formulario de datos por invitado de un cumpleaños (#217): el cliente rellena los datos de
-// cada niño DESPUÉS de reservar. INDIVIDUALIZADO POR RESERVA — el parámetro es el `OrderItem` del
-// pack (1 post-form por reserva, no por pedido). Acceso por enlace FIRMADO del email (sin sesión; la
-// firma prueba la titularidad de ESA reserva) o autenticado desde "Mis pedidos" — el controlador
-// valida AMBOS (no usa el middleware `signed` para no excluir al dueño autenticado). POST con CSRF
-// estándar + throttle. `no-store` (L1): la página lleva nombres+alergias de menores (art. 9).
-//
-// ⚠️⚠️ **`->missing()` NO es cosmético: sostiene la escalada 403 → 410 → 404** (`RGPD-03`,
-// `Http\Concerns\AuthorizesGuestForm`). Con el *route model binding* implícito a secas, un id
-// INEXISTENTE responde 404 **antes** de que corra la autorización, y uno existente 403: la
-// diferencia le cuenta a cualquier desconocido qué reservas hay. Medido con `curl` el 2026-09-03,
-// antes de este cambio: id existente → 403, id inventado → 404, mientras la API respondía 403 a los
-// dos porque su controlador resuelve a mano. *El orden de la escalada solo se sostiene si nada
-// responde antes que ella.*
-Route::get('/reserva/{reservation}/datos-invitados', [GuestFormController::class, 'show'])
-    ->middleware('no-store')
-    ->missing(fn () => abort(403))
-    ->name('reservation.guests');
-// ⚠️ **DOS limitadores y no uno** (`SEC-06`, D12 de `specs/complementos-post-reserva.md`): el de
-// siempre —por IP, contra el barrido— y `guest-form`, que limita **por RESERVA**. Desde que aquí se
-// compran extras este formulario mueve dinero, y su enlace viaja por correo y se reenvía: sin el
-// segundo, treinta peticiones por minuto **por cada IP** caben sobre la misma reserva, con sus
-// treinta correos al titular — que es la única señal de que alguien está encargando en su nombre.
-Route::post('/reserva/{reservation}/datos-invitados', [GuestFormController::class, 'store'])
-    ->middleware(['throttle:30,1', 'throttle:guest-form', 'no-store'])
-    ->missing(fn () => abort(403))
-    ->name('reservation.guests.store');
-// PERSONALIZAR la invitación digital de esa reserva (T6·1, `specs/celebracion-e-invitacion.md` §4.7).
-//
-// ⚠️⚠️ **Endpoint APARTE del de guardar, y no por comodidad**: personalizar escribe SOLO
-// `party_invitations`, mientras que `order_items.updated_at` es el testigo con el que el formulario
-// detecta que el parque movió la reserva. Metido dentro del POST de siempre, cambiar el color de una
-// banda dejaría obsoleta la página que el anfitrión tiene abierta y le tumbaría los extras. Es la
-// misma separación que la API tomó en `InvitationHostController`, por el mismo motivo.
-//
-// ⚠️ Mismos dos limitadores, misma escalada y mismo `no-store` que el formulario: es su misma puerta
-// —el trait `AuthorizesGuestForm`— y lo que se sirve al volver sigue llevando datos de menores.
-Route::post('/reserva/{reservation}/invitacion', [GuestFormController::class, 'updateInvitation'])
-    ->middleware(['throttle:30,1', 'throttle:guest-form', 'no-store'])
-    ->missing(fn () => abort(403))
-    ->name('reservation.invitation.update');
-// «No lo apuntes» (T6·3, §7.2·R11): el anfitrión retira una respuesta de su lista.
-//
-// ⚠️⚠️ **Es su propio POST por el mismo motivo que personalizar**: descartar escribe SOLO
-// `invitation_replies`, y meterlo en el guardado de siempre movería el testigo de los extras. Y es el
-// gesto que evita que se quede ATRAPADO: desde `#576` un «sí» pendiente sube el suelo por debajo del
-// cual no puede bajar el número de invitados, así que sin esto no tendría forma de retirarlo.
-Route::post('/reserva/{reservation}/invitacion/descartar', [GuestFormController::class, 'dismissReply'])
-    ->middleware(['throttle:30,1', 'throttle:guest-form', 'no-store'])
-    ->missing(fn () => abort(403))
-    ->name('reservation.invitation.dismiss');
-// «Escribir el recordatorio» (T6·6, §4.7): compone el texto para que el anfitrión lo pegue donde ya
-// repartió el enlace, y deja escrito que avisó.
-//
-// ❗❗ **NO ENVÍA NADA** (§2.2): del padre no tenemos correo y no se le pide. Por eso es un POST y no
-// un GET —escribe `reminded_at` y `reminded_count`—, pero lo único que viaja de vuelta es un texto.
-//
-// ⚠️ Su propio POST, como sus dos hermanas y por lo mismo: escribe SOLO `party_invitations` y meterlo
-// en el guardado de siempre movería `order_items.updated_at`, que es el testigo de los extras.
-Route::post('/reserva/{reservation}/invitacion/recordatorio', [GuestFormController::class, 'writeReminder'])
-    ->middleware(['throttle:30,1', 'throttle:guest-form', 'no-store'])
-    ->missing(fn () => abort(403))
-    ->name('reservation.invitation.remind');
+// ═══ LAS PÁGINAS ENFOCADAS DE LA FIESTA: EL INVITADO NO ES UN VISITANTE ═══════════════════════════
+// (`specs/analitica-fiesta.md` §4.1, `DECISIONES #739`). El post-form, el justificante y la invitación
+// salen del acuñado de la cookie del visitante: `ResolveVisitor:mint` no corre aquí, así que quien abre
+// una de estas páginas no recibe `visitor_id` ni se ata a la que traiga de otra visita. Lo que hace queda
+// como HECHO DE LA RESERVA (`Recorder::factOfOrder()`), sin cookie. Las técnicas (sesión, XSRF) siguen:
+// los formularios las necesitan. `FocusedPagesAreCookieFreeTest` vigila que ninguna ruta de estos tres
+// controladores se quede fuera del grupo.
+Route::withoutMiddleware([ResolveVisitor::class.':'.ResolveVisitor::MINT])->group(function (): void {
 
-// El JUSTIFICANTE de un menor INVITADO a una reserva («waiver offshore», `#328`): un adulto SIN
-// cuenta autoriza a un menor que no es menor a cargo de quien reservó. Va por PEDIDO —es «el papelito
-// de la excursión», uno solo que el responsable reparte— y el acceso lo da la firma HMAC del enlace,
-// porque quien lo abre no tiene sesión.
-//
-// ⚠️ El POST es la superficie MÁS expuesta del producto: pública, sin sesión y **crea personas**.
-// Lleva `throttle` por IP además de Turnstile y del honeypot (`SEC-06`): un CAPTCHA resuelto no es una
-// barrera de volumen. El tope por pedido y la ventana temporal los impone el DOMINIO bajo el lock.
-// `no-store` (`RGPD-04`): la pantalla lleva el nombre y la fecha de nacimiento de un menor.
-//
-// ⚠️ Y el mismo `->missing()` que el post-form, por el mismo motivo: `AuthorizesGuardianAuthorization`
-// repite la escalada 403 → 410 → 404 y el binding implícito la cortocircuitaba igual.
-Route::get('/autorizacion/{reservation}', [GuardianAuthorizationController::class, 'show'])
-    ->middleware('no-store')
-    ->missing(fn () => abort(403))
-    ->name('reservation.authorization');
-Route::post('/autorizacion/{reservation}', [GuardianAuthorizationController::class, 'store'])
-    ->middleware(['throttle:10,1', 'no-store'])
-    ->missing(fn () => abort(403))
-    ->name('reservation.authorization.store');
+    // Post-formulario de datos por invitado de un cumpleaños (#217): el cliente rellena los datos de
+    // cada niño DESPUÉS de reservar. INDIVIDUALIZADO POR RESERVA — el parámetro es el `OrderItem` del
+    // pack (1 post-form por reserva, no por pedido). Acceso por enlace FIRMADO del email (sin sesión; la
+    // firma prueba la titularidad de ESA reserva) o autenticado desde "Mis pedidos" — el controlador
+    // valida AMBOS (no usa el middleware `signed` para no excluir al dueño autenticado). POST con CSRF
+    // estándar + throttle. `no-store` (L1): la página lleva nombres+alergias de menores (art. 9).
+    //
+    // ⚠️⚠️ **`->missing()` NO es cosmético: sostiene la escalada 403 → 410 → 404** (`RGPD-03`,
+    // `Http\Concerns\AuthorizesGuestForm`). Con el *route model binding* implícito a secas, un id
+    // INEXISTENTE responde 404 **antes** de que corra la autorización, y uno existente 403: la
+    // diferencia le cuenta a cualquier desconocido qué reservas hay. Medido con `curl` el 2026-09-03,
+    // antes de este cambio: id existente → 403, id inventado → 404, mientras la API respondía 403 a los
+    // dos porque su controlador resuelve a mano. *El orden de la escalada solo se sostiene si nada
+    // responde antes que ella.*
+    Route::get('/reserva/{reservation}/datos-invitados', [GuestFormController::class, 'show'])
+        ->middleware('no-store')
+        ->missing(fn () => abort(403))
+        ->name('reservation.guests');
+    // ⚠️ **DOS limitadores y no uno** (`SEC-06`, D12 de `specs/complementos-post-reserva.md`): el de
+    // siempre —por IP, contra el barrido— y `guest-form`, que limita **por RESERVA**. Desde que aquí se
+    // compran extras este formulario mueve dinero, y su enlace viaja por correo y se reenvía: sin el
+    // segundo, treinta peticiones por minuto **por cada IP** caben sobre la misma reserva, con sus
+    // treinta correos al titular — que es la única señal de que alguien está encargando en su nombre.
+    Route::post('/reserva/{reservation}/datos-invitados', [GuestFormController::class, 'store'])
+        ->middleware(['throttle:30,1', 'throttle:guest-form', 'no-store'])
+        ->missing(fn () => abort(403))
+        ->name('reservation.guests.store');
+    // PERSONALIZAR la invitación digital de esa reserva (T6·1, `specs/celebracion-e-invitacion.md` §4.7).
+    //
+    // ⚠️⚠️ **Endpoint APARTE del de guardar, y no por comodidad**: personalizar escribe SOLO
+    // `party_invitations`, mientras que `order_items.updated_at` es el testigo con el que el formulario
+    // detecta que el parque movió la reserva. Metido dentro del POST de siempre, cambiar el color de una
+    // banda dejaría obsoleta la página que el anfitrión tiene abierta y le tumbaría los extras. Es la
+    // misma separación que la API tomó en `InvitationHostController`, por el mismo motivo.
+    //
+    // ⚠️ Mismos dos limitadores, misma escalada y mismo `no-store` que el formulario: es su misma puerta
+    // —el trait `AuthorizesGuestForm`— y lo que se sirve al volver sigue llevando datos de menores.
+    Route::post('/reserva/{reservation}/invitacion', [GuestFormController::class, 'updateInvitation'])
+        ->middleware(['throttle:30,1', 'throttle:guest-form', 'no-store'])
+        ->missing(fn () => abort(403))
+        ->name('reservation.invitation.update');
+    // «No lo apuntes» (T6·3, §7.2·R11): el anfitrión retira una respuesta de su lista.
+    //
+    // ⚠️⚠️ **Es su propio POST por el mismo motivo que personalizar**: descartar escribe SOLO
+    // `invitation_replies`, y meterlo en el guardado de siempre movería el testigo de los extras. Y es el
+    // gesto que evita que se quede ATRAPADO: desde `#576` un «sí» pendiente sube el suelo por debajo del
+    // cual no puede bajar el número de invitados, así que sin esto no tendría forma de retirarlo.
+    Route::post('/reserva/{reservation}/invitacion/descartar', [GuestFormController::class, 'dismissReply'])
+        ->middleware(['throttle:30,1', 'throttle:guest-form', 'no-store'])
+        ->missing(fn () => abort(403))
+        ->name('reservation.invitation.dismiss');
+    // «Escribir el recordatorio» (T6·6, §4.7): compone el texto para que el anfitrión lo pegue donde ya
+    // repartió el enlace, y deja escrito que avisó.
+    //
+    // ❗❗ **NO ENVÍA NADA** (§2.2): del padre no tenemos correo y no se le pide. Por eso es un POST y no
+    // un GET —escribe `reminded_at` y `reminded_count`—, pero lo único que viaja de vuelta es un texto.
+    //
+    // ⚠️ Su propio POST, como sus dos hermanas y por lo mismo: escribe SOLO `party_invitations` y meterlo
+    // en el guardado de siempre movería `order_items.updated_at`, que es el testigo de los extras.
+    Route::post('/reserva/{reservation}/invitacion/recordatorio', [GuestFormController::class, 'writeReminder'])
+        ->middleware(['throttle:30,1', 'throttle:guest-form', 'no-store'])
+        ->missing(fn () => abort(403))
+        ->name('reservation.invitation.remind');
 
-// ── La INVITACIÓN DIGITAL de una fiesta (`specs/celebracion-e-invitacion.md` §4.6, T5·1) ──────────
-//
-// La tercera página enfocada y pública del producto, y la que tiene la credencial más rara de las
-// tres: un TOKEN en la URL. Las otras dos se abren con una firma HMAC sobre la URL exacta; ésta con
-// doce caracteres opacos que son una fila, porque su enlace se reparte **a un grupo de clase entero**
-// por un chat de padres y tiene que poder anularse sin esperar a ninguna caducidad.
-//
-// ⚠️ **El nombre `invitation.show` es contrato**: `PartyInvitations::PUBLIC_ROUTE` pregunta por él
-// para componer el enlace que reparte el anfitrión, y por eso el campo `url` de la API se rellena
-// solo desde que esta línea existe. Renombrarla lo devuelve a `null` **sin romper ningún test** — hay
-// un caso que lo vigila (`InvitationPageTest`).
-//
-// ⚠️ `no-store` (`RGPD-04`): se entra sin sesión y lo que se sirve es el nombre y la edad de un menor.
-// El `Referrer-Policy: no-referrer` lo pone el controlador — sin él, «Cómo llegar» le mandaría el
-// token a Google en el `Referer`.
-//
-// ⚠️ El regex del token va en la ruta: un identificador que no tiene su forma ni llega a mirarse
-// contra la base de datos.
-Route::get('/invitacion/{token}', [InvitationPageController::class, 'show'])
-    ->where('token', '[A-Za-z0-9]{12}')
-    ->middleware(['throttle:60,1', 'no-store'])
-    ->name(PartyInvitations::PUBLIC_ROUTE);
-// Contestar. ⚠️ Es la superficie MÁS expuesta de esta feature: pública, sin sesión y **escribe en
-// nombre de un desconocido**. Lleva las tres defensas que no se sustituyen entre sí — Turnstile en el
-// controlador, límite por IP aquí y el tope `3 × invitados` en el DOMINIO, que es el único que no se
-// puede esperar a que expire. Y el `throttle:invitation-reply` por TOKEN, porque el enlace lo tiene un
-// grupo de clase entero y un techo por IP no dice gran cosa entre familias distintas.
-Route::post('/invitacion/{token}', [InvitationPageController::class, 'reply'])
-    ->where('token', '[A-Za-z0-9]{12}')
-    ->middleware(['throttle:20,1', 'throttle:invitation-reply', 'no-store'])
-    ->name('invitation.reply');
+    // El JUSTIFICANTE de un menor INVITADO a una reserva («waiver offshore», `#328`): un adulto SIN
+    // cuenta autoriza a un menor que no es menor a cargo de quien reservó. Va por PEDIDO —es «el papelito
+    // de la excursión», uno solo que el responsable reparte— y el acceso lo da la firma HMAC del enlace,
+    // porque quien lo abre no tiene sesión.
+    //
+    // ⚠️ El POST es la superficie MÁS expuesta del producto: pública, sin sesión y **crea personas**.
+    // Lleva `throttle` por IP además de Turnstile y del honeypot (`SEC-06`): un CAPTCHA resuelto no es una
+    // barrera de volumen. El tope por pedido y la ventana temporal los impone el DOMINIO bajo el lock.
+    // `no-store` (`RGPD-04`): la pantalla lleva el nombre y la fecha de nacimiento de un menor.
+    //
+    // ⚠️ Y el mismo `->missing()` que el post-form, por el mismo motivo: `AuthorizesGuardianAuthorization`
+    // repite la escalada 403 → 410 → 404 y el binding implícito la cortocircuitaba igual.
+    Route::get('/autorizacion/{reservation}', [GuardianAuthorizationController::class, 'show'])
+        ->middleware('no-store')
+        ->missing(fn () => abort(403))
+        ->name('reservation.authorization');
+    Route::post('/autorizacion/{reservation}', [GuardianAuthorizationController::class, 'store'])
+        ->middleware(['throttle:10,1', 'no-store'])
+        ->missing(fn () => abort(403))
+        ->name('reservation.authorization.store');
 
-// «Añadir al calendario» (§4.6, T5·4): el `.ics` de la fiesta, servido por el servidor.
-//
-// ⚠️ Mismo portero y mismo 404 que la página —`resolvePublic()` en el controlador—: una ruta que
-// distinguiera un token caducado de uno inventado abriría la rendija que §4.5·12 cerró. Y `no-store`
-// porque el fichero lleva el nombre del niño y la dirección del parque.
-Route::get('/invitacion/{token}/calendario.ics', [InvitationPageController::class, 'calendar'])
-    ->where('token', '[A-Za-z0-9]{12}')
-    ->middleware(['throttle:60,1', 'no-store'])
-    ->name('invitation.calendar');
+    // ── La INVITACIÓN DIGITAL de una fiesta (`specs/celebracion-e-invitacion.md` §4.6, T5·1) ──────────
+    //
+    // La tercera página enfocada y pública del producto, y la que tiene la credencial más rara de las
+    // tres: un TOKEN en la URL. Las otras dos se abren con una firma HMAC sobre la URL exacta; ésta con
+    // doce caracteres opacos que son una fila, porque su enlace se reparte **a un grupo de clase entero**
+    // por un chat de padres y tiene que poder anularse sin esperar a ninguna caducidad.
+    //
+    // ⚠️ **El nombre `invitation.show` es contrato**: `PartyInvitations::PUBLIC_ROUTE` pregunta por él
+    // para componer el enlace que reparte el anfitrión, y por eso el campo `url` de la API se rellena
+    // solo desde que esta línea existe. Renombrarla lo devuelve a `null` **sin romper ningún test** — hay
+    // un caso que lo vigila (`InvitationPageTest`).
+    //
+    // ⚠️ `no-store` (`RGPD-04`): se entra sin sesión y lo que se sirve es el nombre y la edad de un menor.
+    // El `Referrer-Policy: no-referrer` lo pone el controlador — sin él, «Cómo llegar» le mandaría el
+    // token a Google en el `Referer`.
+    //
+    // ⚠️ El regex del token va en la ruta: un identificador que no tiene su forma ni llega a mirarse
+    // contra la base de datos.
+    Route::get('/invitacion/{token}', [InvitationPageController::class, 'show'])
+        ->where('token', '[A-Za-z0-9]{12}')
+        ->middleware(['throttle:60,1', 'no-store'])
+        ->name(PartyInvitations::PUBLIC_ROUTE);
+    // Contestar. ⚠️ Es la superficie MÁS expuesta de esta feature: pública, sin sesión y **escribe en
+    // nombre de un desconocido**. Lleva las tres defensas que no se sustituyen entre sí — Turnstile en el
+    // controlador, límite por IP aquí y el tope `3 × invitados` en el DOMINIO, que es el único que no se
+    // puede esperar a que expire. Y el `throttle:invitation-reply` por TOKEN, porque el enlace lo tiene un
+    // grupo de clase entero y un techo por IP no dice gran cosa entre familias distintas.
+    Route::post('/invitacion/{token}', [InvitationPageController::class, 'reply'])
+        ->where('token', '[A-Za-z0-9]{12}')
+        ->middleware(['throttle:20,1', 'throttle:invitation-reply', 'no-store'])
+        ->name('invitation.reply');
 
-// El RECIBO de una respuesta (§4.5·6): **DOS HORAS** y no es un enlace de edición (D9).
-//
-// ⚠️⚠️ Lo autoriza la FIRMA de la URL, **no el token de la invitación**: son dos alcances distintos —
-// el token abre la fiesta entera, esto abre UNA respuesta—. Mezclarlos le daría a cualquiera con el
-// enlace de la fiesta los datos de todos los niños.
-//
-// ⚠️ `signed` va en la ruta: pasadas las dos horas Laravel responde 403 **antes** de que el
-// controlador mire nada. Y `no-store` porque lo que se sirve son las alergias de un menor (art. 9).
-Route::get('/invitacion/recibo/{reply}', [InvitationPageController::class, 'receipt'])
-    ->whereNumber('reply')
-    ->middleware(['signed', 'throttle:60,1', 'no-store'])
-    ->missing(fn () => abort(403))
-    ->name(PartyInvitations::RECEIPT_ROUTE);
-Route::post('/invitacion/recibo/{reply}', [InvitationPageController::class, 'saveReceipt'])
-    ->whereNumber('reply')
-    ->middleware(['signed', 'throttle:20,1', 'no-store'])
-    ->missing(fn () => abort(403))
-    ->name('invitation.receipt.save');
+    // «Añadir al calendario» (§4.6, T5·4): el `.ics` de la fiesta, servido por el servidor.
+    //
+    // ⚠️ Mismo portero y mismo 404 que la página —`resolvePublic()` en el controlador—: una ruta que
+    // distinguiera un token caducado de uno inventado abriría la rendija que §4.5·12 cerró. Y `no-store`
+    // porque el fichero lleva el nombre del niño y la dirección del parque.
+    Route::get('/invitacion/{token}/calendario.ics', [InvitationPageController::class, 'calendar'])
+        ->where('token', '[A-Za-z0-9]{12}')
+        ->middleware(['throttle:60,1', 'no-store'])
+        ->name('invitation.calendar');
+
+    // El RECIBO de una respuesta (§4.5·6): **DOS HORAS** y no es un enlace de edición (D9).
+    //
+    // ⚠️⚠️ Lo autoriza la FIRMA de la URL, **no el token de la invitación**: son dos alcances distintos —
+    // el token abre la fiesta entera, esto abre UNA respuesta—. Mezclarlos le daría a cualquiera con el
+    // enlace de la fiesta los datos de todos los niños.
+    //
+    // ⚠️ `signed` va en la ruta: pasadas las dos horas Laravel responde 403 **antes** de que el
+    // controlador mire nada. Y `no-store` porque lo que se sirve son las alergias de un menor (art. 9).
+    Route::get('/invitacion/recibo/{reply}', [InvitationPageController::class, 'receipt'])
+        ->whereNumber('reply')
+        ->middleware(['signed', 'throttle:60,1', 'no-store'])
+        ->missing(fn () => abort(403))
+        ->name(PartyInvitations::RECEIPT_ROUTE);
+    Route::post('/invitacion/recibo/{reply}', [InvitationPageController::class, 'saveReceipt'])
+        ->whereNumber('reply')
+        ->middleware(['signed', 'throttle:20,1', 'no-store'])
+        ->missing(fn () => abort(403))
+        ->name('invitation.receipt.save');
+
+});
+// ═══ fin de las páginas enfocadas de la fiesta ════════════════════════════════════════════════════
 
 // SEO: mapa del sitio para buscadores.
 Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');

@@ -19,6 +19,7 @@ use App\Domain\Platform\Services\DisplayTime;
 use App\Domain\Platform\Services\Money;
 use App\Domain\Platform\Services\PublicFreeText;
 use App\Http\Concerns\AuthorizesGuestForm;
+use App\Http\Concerns\RecordsPartyFacts;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -44,10 +45,14 @@ use Illuminate\View\View;
 class GuestFormController extends Controller
 {
     use AuthorizesGuestForm;
+    use RecordsPartyFacts;
 
     public function show(Request $request, OrderItem $reservation): View
     {
         $this->authorizeGuestFormAccess($request, $reservation);
+
+        // La analítica de la fiesta (`specs/analitica-fiesta.md` §4.2): un hecho de la RESERVA, sin visitante.
+        $this->partyFact($request, $reservation, 'guest_form_opened');
 
         $type = $reservation->ticketType;
         $ageMix = app(GuestAgeMixReader::class)->for($reservation);
@@ -233,6 +238,7 @@ class GuestFormController extends Controller
             ? 'guest-count-'.$countChange->reason
             : 'guest-form-saved';
         $desired = $this->submittedGuestFormArray($request, 'addons');
+        $extrasCents = 0;
         if ($desired !== null) {
             $fresh = $reservation->fresh(['ticketType.addons', 'order', 'slot', 'children']);
             $changes = app(PostFormAddons::class)->reconcile(
@@ -247,6 +253,8 @@ class GuestFormController extends Controller
                 ),
             );
 
+            $extrasCents = $changes->deltaCents;
+
             if ($changes->blocked !== []) {
                 // Se le dice, no se calla: quien creyó pedir tapas tiene que enterarse aquí y no en
                 // la puerta del parque. Sus datos SÍ se guardaron, y el aviso lo separa.
@@ -255,6 +263,14 @@ class GuestFormController extends Controller
                     : 'guest-form-extras-blocked';
             }
         }
+
+        // El hecho de la RESERVA (`specs/analitica-fiesta.md` §4.2), con lo que esta petición movió: invitados
+        // (solo si el ajuste se aplicó), céntimos de extras (con signo) y respuestas adoptadas. Sin nombres.
+        $this->partyFact($request, $reservation, 'guest_form_submitted', [
+            'guests_delta' => ($countChange !== null && $countChange->applied) ? $countChange->to - $countChange->from : 0,
+            'extras_cents' => $extrasCents,
+            'replies_adopted' => count($adopt),
+        ]);
 
         return redirect()
             ->to($this->backUrl($request, $reservation))
