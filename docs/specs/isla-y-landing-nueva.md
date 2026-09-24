@@ -3,9 +3,9 @@
 > Estado: ⬜ **borrador** · Última actualización: 2026-09-24 · Decisiones: `#681` (las páginas), `#682` (la
 > isla), `#683` (las cuatro de §7), `#684` (promociones), `#697` (el sistema nuevo del 24-09 tarde) y `#699` (los
 > datos de Kids y Jump), todas `[DECIDIDO owner]`; la spec se aprueba con la suya.
-> Carril: **plataforma** (banda 670–699). Fuente del diseño: el proyecto de Claude Design
+> Carril: **plataforma** (bandas 670–699 y 760–789). Fuente del diseño: el proyecto de Claude Design
 > `33397ca2-c67c-4049-8b09-ade20425f32a`, «Saltia Design System» (nombre provisional; la marca es Play Jump
-> Park), leído con `DesignSync` (`list_files` / `get_file`). Hermanas: `instancia-y-landing-fuera.md` (el menú
+> Park), que entra SOLO por su zip, en `instancias/playjump/diseno/` (`#760`: sin `DesignSync`). Hermanas: `instancia-y-landing-fuera.md` (el menú
 > de hechos), `cajon-empaquetable.md` (el motor y su §4.9), `analitica.md` §4.4 (los experimentos).
 
 ## §0 · Antes de tocar
@@ -336,7 +336,8 @@ distintos. Idéntico = **0**. El arnés tiene control negativo: una B sin fuente
   artifact «Design System» descartado: su migración renombra tres ficheros (`_ds_bundle.js` entre ellos) y
   rehace la hoja de tokens para su visor, que es justo lo que el owner vio «romperse» el 20-09. El espejo vive en
   la instancia (`instancias/playjump/diseno/`, futuro) con un manifiesto de sha256, y se contrasta con
-  `DesignSync`: los primeros 262.144 B del compilado tienen que coincidir con lo que entrega el MCP.
+  `DesignSync`: los primeros 262.144 B del compilado tienen que coincidir con lo que entrega el MCP. ▶ Sustituido
+  por `#760` (24-09 noche): sin contraste; el guion rechaza un zip más viejo que el puesto.
 - **T1b · las fuentes** ✅ (24-09). Los nueve `woff2` que Google entrega al `@import` del diseño (Archivo
   variable en peso y anchura, Figtree variable, DM Mono 400 y 500; 290 KB), servidos desde el propio dominio
   —la CSP ya admite `font-src 'self'`— y no desde `fonts.bunny.net` como `ThemeFonts`: Bunny sirve pesos
@@ -732,9 +733,10 @@ guion del diseño (`paginas/compra/compra.jsx`, `usePjcCompra`):
 ### 4.11 El sistema nuevo del 24-09 (tarde): lo que cambió, lo medido y el censo de la fiesta (`#697`)
 
 **De dónde**: `Saltia Design System (1).zip` (entradas de las 17:43:20–22, bajado a las 19:43; sha256 `f1d9855e…`), puesto con
-`diseno/actualizar.py` de la instancia: **468 ficheros, 70 nuevos, 50 cambiados y ninguno retirado**. ⚠️ Sin
-contrastar con el proyecto vivo: `DesignSync` pidió `/design-login`, que solo corre en una sesión interactiva; se
-hace en la siguiente (el README de `diseno/` dice cómo).
+`diseno/actualizar.py` de la instancia: **468 ficheros, 70 nuevos, 50 cambiados y ninguno retirado**. Sin contraste
+con el proyecto vivo, y desde ahora nunca (`#760`): la cuenta de Claude Design del owner no es la de desarrollo. El
+zip es la única fuente; el guion rechaza uno más viejo que el puesto (por la hora de sus entradas) y no toca nada
+con el mismo.
 
 **Qué trae**: la familia `components/invitados/` (`InviteCard`, `ThemePicker`, `RsvpBar`, `AuthForm`, `GuestRow`,
 `GuestComposer`, `PlacesMeter`, `AddonCard`) y `forms/SaveBar`; las páginas montadas de la **lista de invitados**, la

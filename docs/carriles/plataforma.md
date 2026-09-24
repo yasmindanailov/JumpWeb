@@ -3,9 +3,9 @@
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 EN CURSO** (su centena,
-> `decisiones/700-799.md`; el siguiente, `#760`) · Último usado: **`#699`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`) · Actualizado: **2026-09-24**
-> noche (el sistema de diseño nuevo, dentro; la T3 cerrada; los datos de la T4, decididos: `#697`→`#699`).
+> `decisiones/700-799.md`) · Último usado: **`#760`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`) · Actualizado: **2026-09-24**
+> noche (el sistema de diseño nuevo, dentro; la T3 cerrada; los datos de la T4, decididos; el zip, única fuente).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
 > llévaselo con la medida, como el SPA en `#724`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -83,8 +83,8 @@ trae su prueba de la isla en local (3: ❗LOCAL), va primero.
    existe» **al enviar**. ✅ T0 (§1.6) · ✅ T1 (§4.8: 82/82 páginas y 84 iconos a 0 px) · ✅ T2 (§4.9: la isla,
    52/52 a 0 px, `CE-6` sin excepción; en/fr de `lang/*/isla.php` a revisar por el owner). ▶ **`#697`** (24-09
    noche): el zip nuevo (la fiesta, Mi cuenta, correos) entra por `diseno/actualizar.py`; la isla vuelve a 0 px con
-   el selector de plan rehecho (54/54, piezas 18/18); el censo de la fiesta, en §4.11. ⚠️ Zip SIN contrastar con el
-   vivo (`DesignSync` pide `/design-login`): se hace en la próxima sesión interactiva.
+   el selector de plan rehecho (54/54, piezas 18/18); el censo de la fiesta, en §4.11. El zip es la ÚNICA fuente,
+   sin contraste con el vivo (`#760`: la cuenta de Claude Design es otra); `actualizar.py` rechaza uno más viejo.
    ▶▶ **T3, la compra ✅** (§4.10; la historia de cada tanda vive allí): T3a→T3d (`#689`→`#691`) → T3e (`#692`): `#693`
    la carcasa elegible · `#694` la isla compra hasta el banco · `#695` «Entra» y Google · `#696` los cumpleaños con
    señal · `#698` la hora que se llena al pagar y la sonda. Queda: la sonda en STAGING, con el ensayo de la v2.0.0.
@@ -124,9 +124,8 @@ trae su prueba de la isla en local (3: ❗LOCAL), va primero.
 5. **La promo, cuando el owner la termine** (es suyo el cuándo). La receta y **sus nueve cifras** bajaron a
    `ENTORNOS.md` §6 en `#675`, junto al despliegue que las escribió. Sin desplegar: son datos.
 6. Después, **F6** (app nativa; hereda del token lo que su spec §2 nombra: Google, alta, dispositivos).
-- **Del owner, HOY**: **probar la isla en local** (sus accesos se le dieron en el chat del 24-09) · `/design-login`
-  una vez, en el `claude` de una TERMINAL (escrito en el chat de VS Code no se ejecuta; para contrastar el zip,
-  `#697`) · en su diseño, **cumpleaños a 3 días** y no 5 (`#699`) · pasar a su
+- **Del owner, HOY**: **probar la isla en local** (sus accesos se le dieron en el chat del 24-09) · en su diseño,
+  **cumpleaños a 3 días** y no 5 (`#699`), y bajar el zip DESPUÉS del último cambio (`#760`) · pasar a su
   diseño las dos de `#695` («Entra» solo con correo; la «G» de Google) · en el panel de PRODUCCIÓN, el campo del
   homenajeado de los dos packs a «formulario de invitados» (`#692`; en local ya está) · el **modelo de las promociones**
   (`#684`: dónde va cada etiqueta en la landing) · el **fin de la promo** (es suyo el cuándo) · el **ojo** que le falta a la compra de la T5 de F4 · **`topics`**: con la landing fuera, ¿de quién son los asuntos del formulario de contacto?
