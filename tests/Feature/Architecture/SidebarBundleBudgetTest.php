@@ -848,7 +848,10 @@ class SidebarBundleBudgetTest extends TestCase
     // pone con la medida de las dos juntas, la que dice este test: 292,96 KiB. Lo paga un DERECHO en su momento (art. 7
     // RGPD: el consentimiento se pide, no se presupone) y no hay poda: los rótulos se reutilizan y la regla vive fuera
     // del componente a propósito (CE-6).
-    private const SIDEBAR_CHUNK_MAX_KB = 293;
+    // T5a de la analítica (24-09): los experimentos en el motor —`sidebar/experiments.js` (leer la variante, contar la
+    // exposición una vez) y su `provide` en `index.js`—. Medido 293,39 KiB (HEAD `3c54fc78`: 292,96; +0,43 kB). Es el
+    // mecanismo entero del lado del cliente: la asignación vive en el servidor a propósito (cookie `HttpOnly`).
+    private const SIDEBAR_CHUNK_MAX_KB = 294;
 
     // T3e·2: la compra de la isla, chunk diferido del motor que solo trae una instalación con la isla. Medido 93,36 KiB
     // (la sección, sus diez pantallas de la T3c, la isla y sus piezas); su hoja va aparte (7,2 KiB).

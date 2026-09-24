@@ -4,6 +4,7 @@ namespace App\Http\Sidebar;
 
 use App\Domain\Content\Services\ShellSettings;
 use App\Domain\Identity\Services\GoogleAuth;
+use App\Domain\Platform\Services\Analytics\Experiments;
 use App\Domain\Platform\Services\SiteLocales;
 use Illuminate\Support\Arr;
 
@@ -67,6 +68,10 @@ final class SidebarBoot
             'userId' => $personal['userId'],
             'accountContext' => $personal['accountContext'],
             'urls' => $shared['urls'] + $personal['urls'],
+            // Las variantes de los experimentos vivos para quien mira (`specs/analitica.md` §4.4, T5a). Solo cuando
+            // hay alguna: sin experimentos la clave no viaja en cada página pública (la API la manda siempre, vacía,
+            // porque una respuesta con forma fija es un campo menos que comprobar — la misma regla que `locales`).
+            ...($personal['experiments'] !== [] ? ['experiments' => $personal['experiments']] : []),
             // La carcasa, la ÚLTIMA: las claves de antes conservan su orden y su byte (`#631`, T1). Y los rótulos
             // de la isla, solo cuando la carcasa es ella.
             'shell' => $shared['shell'],
@@ -286,7 +291,7 @@ final class SidebarBoot
      * La mitad que SÍ depende de quién mira. **Nunca se cachea**, y leerla tiene un efecto: el
      * desenlace del pago se CONSUME.
      *
-     * @return array{outcome: ?string, orderCode: ?string, account: array<string, mixed>, locales?: array<int|string, mixed>, userId: int|string|null, accountContext: mixed, urls: array<string, string>}
+     * @return array{outcome: ?string, orderCode: ?string, account: array<string, mixed>, locales?: array<int|string, mixed>, userId: int|string|null, accountContext: mixed, urls: array<string, string>, experiments: array<string, string>}
      */
     public static function personal(): array
     {
@@ -425,6 +430,11 @@ final class SidebarBoot
             'urls' => GoogleAuth::enabled() && auth()->check()
                 ? ['google_link' => route('auth.google.link')]
                 : [],
+            // · `experiments` — la variante de cada experimento vivo para QUIEN MIRA (`specs/analitica.md`
+            //   §4.4, T5a): la asigna el servidor con el visitante (`ResolveVisitor` acuña la cookie ANTES de
+            //   componer esto, así que la primera vista ya trae la suya) o, sin él, con el titular. Vacío sin
+            //   experimentos vivos; `forCurrentRequest()` no lo pinta entonces y la API lo manda como `{}`.
+            'experiments' => Experiments::forRequest(),
         ];
     }
 }

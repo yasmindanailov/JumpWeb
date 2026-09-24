@@ -4,7 +4,9 @@ namespace Tests\Feature\Api\V1;
 
 use App\Domain\Content\Services\ShellSettings;
 use App\Domain\Identity\Models\User;
+use App\Domain\Platform\Models\Experiment;
 use App\Domain\Platform\Models\Setting;
+use App\Domain\Platform\Services\Analytics\Visitor;
 use Illuminate\Testing\TestResponse;
 use Tests\Feature\Api\ApiTestCase;
 
@@ -52,6 +54,9 @@ class SidebarBootTest extends ApiTestCase
             'userId' => $session['userId'],
             'accountContext' => $session['accountContext'],
             'urls' => $boot['urls'] + $session['urls'],
+            // Las variantes de los experimentos (T5a, `specs/analitica.md` §4.4): en la API van siempre (`{}` sin
+            // ninguno vivo); en el layout la clave solo viaja cuando hay alguna, como `locales`.
+            ...($session['experiments'] !== [] ? ['experiments' => $session['experiments']] : []),
             // La carcasa de la compra (`DECISIONES #682`): de la mitad compartida, y la última en el layout; con la
             // isla, sus rótulos detrás.
             'shell' => $boot['shell'],
@@ -142,6 +147,26 @@ class SidebarBootTest extends ApiTestCase
             ->assertValidResponse(200)
             ->assertJsonPath('userId', $holder->id)
             ->assertJsonStructure(['account' => ['account' => ['title', 'password', 'privacy', 'dependents', 'card'], 'orders', 'purchases'], 'locales', 'accountContext']);
+    }
+
+    /**
+     * **Las variantes de los experimentos van en la mitad PERSONAL** (T5a, `specs/analitica.md` §4.4): cambian
+     * por visitante, así que no pueden ir en el arranque cacheado. Sin experimentos vivos la clave viaja igual y
+     * VACÍA como diccionario (`{}`, no `[]`): la forma no cambia según haya o no.
+     */
+    public function test_the_personal_half_carries_the_variant_of_each_live_experiment_as_a_dictionary(): void
+    {
+        $empty = $this->getJson(self::ROOT.'/sidebar/session?lang=es')->assertOk()->assertValidResponse(200);
+        $this->assertStringContainsString('"experiments":{}', (string) $empty->getContent());
+
+        Experiment::create(['key' => 'shell', 'name' => 'Cajón o isla', 'active' => true, 'variants' => [['key' => 'cajon', 'weight' => 1], ['key' => 'isla', 'weight' => 1]]]);
+
+        // ⚠️ La API no acuña la cookie (una respuesta pública no lleva `Set-Cookie`): el visitante de la SPA la trae
+        // de la página. Y `getJson` solo adjunta cookies con `withCredentials()`.
+        $variant = $this->withCredentials()->withUnencryptedCookie(Visitor::COOKIE, Visitor::mint())
+            ->getJson(self::ROOT.'/sidebar/session?lang=es')->assertOk()->assertValidResponse(200)->json('experiments.shell');
+
+        $this->assertContains($variant, ['cajon', 'isla'], 'el visitante de la API recibe SU variante');
     }
 
     /** Leer CONSUME el desenlace del pago, como lo consume pintar la página: si no, el cajón se reabriría siempre. */

@@ -42,7 +42,13 @@ class CookieConsentEndpointTest extends TestCase
         $log = CookieConsentLog::firstOrFail();
         $this->assertSame($decision, $log->categories);
         $this->assertNotNull($log->accepted_at);
-        $this->assertNull($log->visitor_id, 'sin cookie del visitante, la prueba no lo lleva');
+
+        // T5a (`#737`): la web acuña la cookie del visitante ANTES de atender la petición, así que la PRUEBA de
+        // quien decide sin cookie lleva ya el id que su misma respuesta le pone — y la decisión se puede releer
+        // esa noche por `ConsentLedger`. Hasta la T5a esta prueba iba sin visitante.
+        $minted = collect($response->headers->getCookies())->first(fn ($c): bool => $c->getName() === Visitor::COOKIE);
+        $this->assertNotNull($minted, 'la respuesta acuña la cookie del visitante');
+        $this->assertSame($minted->getValue(), $log->visitor_id, 'la prueba lleva el visitante que la misma respuesta acuña');
     }
 
     /**
@@ -59,7 +65,11 @@ class CookieConsentEndpointTest extends TestCase
         $this->assertSame($visitor, CookieConsentLog::latest('id')->firstOrFail()->visitor_id);
 
         $this->withCredentials()->withUnencryptedCookie(Visitor::COOKIE, 'no-es-un-ulid')->postJson('/cookies/consentimiento', $decision)->assertOk();
-        $this->assertNull(CookieConsentLog::latest('id')->firstOrFail()->visitor_id);
+        // T5a (`#737`): una cookie que no es un ULID vale como ninguna, y la web acuña una NUEVA antes de atender la
+        // petición: la prueba lleva ese id recién acuñado (válido), nunca la basura que llegó.
+        $reminted = CookieConsentLog::latest('id')->firstOrFail()->visitor_id;
+        $this->assertTrue(Visitor::isValid($reminted), 'la prueba lleva el visitante recién acuñado, no la basura');
+        $this->assertNotSame($visitor, $reminted);
     }
 
     public function test_cookie_value_round_trips_to_state(): void

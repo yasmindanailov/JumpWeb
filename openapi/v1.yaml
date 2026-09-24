@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.22.0
+  version: 1.23.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -4378,13 +4378,22 @@ components:
       type: object
       description: La parte del arranque del cajón que es de quien mira. Nunca se cachea.
       additionalProperties: false
-      required: [outcome, orderCode, account, locales, userId, accountContext, urls]
+      required: [outcome, experiments, orderCode, account, locales, userId, accountContext, urls]
       properties:
         outcome:
           type: string
           nullable: true
           enum: [confirmed, failed, verifying, null]
           description: En qué quedó el último pago, si está pendiente de enseñar. Se consume al leerlo.
+        experiments:
+          type: object
+          additionalProperties:
+            type: string
+          description: |
+            La variante de cada experimento vivo para quien mira (`specs/analitica.md` §4.4): clave del
+            experimento → clave de la variante. La asigna el servidor con el visitante (su cookie) o, sin él,
+            con el titular; el cliente solo pinta la variante y cuenta `experiment_exposed` cuando la enseña.
+            Vacío sin experimentos vivos. Cambia por visitante: por eso viaja aquí y no en el arranque cacheado.
         orderCode:
           type: string
           nullable: true

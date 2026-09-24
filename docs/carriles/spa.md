@@ -1,7 +1,7 @@
 # Carril · Diseño del SPA (el cajón) — y, desde el 24-09, LA ANALÍTICA
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb`) · Banda: **730–759** (700–729 agotada el 20-09)
-> · Último usado: **`#736`** · La banda está dada de alta en la tabla de `DECISIONES.md` ·
+> · Último usado: **`#737`** · La banda está dada de alta en la tabla de `DECISIONES.md` ·
 > Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: **`analitica.md` §0 y §4.5** ·
 > `google-business-profile.md` §0 · `sidebar-spa.md` §0 · `celebracion-e-invitacion.md` §0 · Actualizado: 2026-09-24.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`). El
@@ -26,40 +26,31 @@
   finalidades sin quemar (`CookieConsent::OPTIONAL`), el banner que informa y espera al cajón, `consent_shown`,
   política y privacidad por migración quirúrgica, `POLICY_VERSION` v3 = `2026-09-24` (todos vuelven a decidir),
   el almacén `ui/cookie-consent.js` con `node --test`; `sonda-cookies.mjs` 22/22. **Queda el ojo del owner**
-  (el banner en escritorio y móvil; `/cookies` y `/privacidad`). ▶ **T3a·2 EN `main` (24-09)**: `Drivers`
-  (PostHog nube EU o Matomo, desde «Ajustes»), CSP solo con driver, `data-analytics-*` y la persona OPACA solo
-  con sesión y categoría, `cajon/driver.js` solo con la categoría, `/cookies` lo nombra, `ForgetPersonInDriver`.
-  ⚠️ **En la BD local NO hay driver ni píxeles** (la sonda los pone y los quita). ▶ **T3a·3 EN `main` (24-09)**:
-  el enlace sesión↔cuenta (`AccountLinker` Platform + `AccountAnalytics` Identity; al entrar, al alta y al cobro,
-  solo con la categoría), la oposición (`users.analytics_opt_out`, `PUT /me/analytics`), el segundo interruptor
-  en «Privacidad», contrato **1.20.0**. **Queda el ojo del owner** sobre el interruptor. ▶ **T3a·4 EN `main`
-  (24-09)**: el aviso a las cuentas existentes —el correo `AnalyticsLinkNotice` por `analytics:notify-accounts`
-  (una vez por cuenta; runbook `ENTORNOS.md` §6) y el aviso del índice del cajón, con su texto en el contexto
-  (`analytics_notice`, contrato **1.21.0**, `DELETE /me/analytics-notice`)—. **Queda el ojo del owner**: el aviso
-  en `/mi-cuenta` (cuenta de prueba con `analytics_notified_at` por tinker) y el correo en Mailpit `:8028`.
-  ▶ **T3b·1 EN `main` (24-09)**: los píxeles —`Pixels` (ids en «Ajustes → Píxeles de anuncios»; `csp()`;
-  `forBody()`), `cajon/pixels.js` (solo con `marketing`; gtag con Consent Mode v2 básico; la compra con el
-  código del pedido como id), tokens en `config/services.php`—; `sonda-driver.mjs` 41/41. ▶ **T3b·2 EN `main`
-  (24-09)**: la API de conversiones —`Booking\Jobs\SendConversionToPlatforms` relee el consentimiento VIVO por
-  `Platform\Contracts\ConsentLedger` ← `Identity\CookieConsentLedger` (`cookie_consent_logs.visitor_id`) y
-  `Platform\ConversionSender` manda a Meta CAPI y TikTok Events—; `Http::fake` + humo en el contenedor.
-  ▶ **T3b·3 EN EL ÁRBOL (24-09)**: el «[PENDIENTE: asesoría]» sale del texto de `/cookies` (migración quirúrgica
-  `2026_09_24_160000`, aplicada en la local), `/cookies` nombra las plataformas ACTIVAS al pintar con su
-  empresa y su garantía (`policy.ads_*`), plantilla de UTM en `INSTALACION-CLIENTE.md` §3.bis. **La T3 queda
-  completa.** `[PENDIENTE: asesoría]` solo en `COOKIES.md` §1 (validar las garantías). **Queda el ojo del
+  (el banner en escritorio y móvil; `/cookies` y `/privacidad`). ▶ **T3 COMPLETA EN `main` (24-09)** —el detalle
+  en la spec §4.6 «Lo que enseñó»—: T3a·2 `Drivers` (PostHog EU o Matomo desde «Ajustes», CSP solo con driver,
+  persona OPACA, `cajon/driver.js`, `ForgetPersonInDriver`); T3a·3 el enlace sesión↔cuenta (`AccountLinker` +
+  `AccountAnalytics`), la oposición `PUT /me/analytics` y el segundo interruptor (contrato 1.20.0); T3a·4 el aviso a
+  las cuentas existentes (`analytics:notify-accounts`, runbook `ENTORNOS.md` §6; el aviso del índice, contrato
+  1.21.0); T3b·1 los píxeles (`Pixels`, `cajon/pixels.js` solo con `marketing`, Consent Mode básico;
+  `sonda-driver.mjs` 41/41); T3b·2 la API de conversiones (`SendConversionToPlatforms` relee el consentimiento VIVO
+  por `ConsentLedger`); T3b·3 `/cookies` nombra las plataformas ACTIVAS y el «[PENDIENTE: asesoría]» sale del texto
+  (queda solo en `COOKIES.md` §1). ⚠️ **En la BD local NO hay driver ni píxeles** (la sonda los pone y los quita).
+  **Queda el ojo del owner**: banner, interruptor, aviso en `/mi-cuenta` (cuenta de prueba con
+  `analytics_notified_at`), correo en Mailpit `:8028`, y **queda el ojo del
   owner** sobre `/cookies` con píxeles puestos. ▶ **T4a EN `main` (24-09)**: la sección «Cliente 360» en la
   ficha del cliente (`customers.insights`, permiso propio, sembrado en la local): `CustomerInsights` (capa de
   entrega) + partial; `sonda-cliente-360.mjs` (captura `cliente-360-t4a.png`, cliente 2074). **Queda el ojo
-  del owner** (`/admin/users/2074`). ▶ **T4b EN EL ÁRBOL (24-09)**: los segmentos en «Analítica → Clientes»
-  (`SegmentsReport` + `SegmentsWidget`, cuatro filas con personas y con opt-in) y «Exportar segmento»
-  (`analytics.export`, permiso propio sembrado en la local; `GET /admin/analitica/segmentos/csv`, solo opt-in,
-  rastro `segments.exported`); `sonda-segmentos.mjs` (capturas `segmentos-t4b-*.png`). **Queda el ojo del
-  owner**. ▶ **T4c EN EL ÁRBOL (24-09)**: el opt-in de comunicaciones en la pantalla de «reserva creada»
-  (`steps/ConfirmedStep.vue`: casilla DESMARCADA solo con sesión, sin opt-in y sin retirada previa —la regla en
-  `account/marketing-offer.js`—, con los rótulos de «Privacidad» y el mismo `PUT /me/marketing`);
-  `sonda-optin-compra.mjs` (con el pase de la vuelta de la pasarela puesto por tinker). **La T4 queda
-  completa. Queda el ojo del owner.** ▶ Sigue **T5** (experimentos, spec
-  §4.4; la asignación es del SERVIDOR, cookie `HttpOnly`); la **T2e** solo si el volumen lo pide. ⚠️ **El fixture «probe-ojo-analitica» está
+  del owner** (`/admin/users/2074`). ▶ **T4b y T4c EN `main` (24-09, `54aafbc0` y `3c54fc78`)**: los segmentos en
+  «Analítica → Clientes» (`SegmentsReport` + `SegmentsWidget`) y «Exportar segmento» (`analytics.export`, permiso
+  sembrado en la local, solo opt-in, rastro `segments.exported`; `sonda-segmentos.mjs`); el opt-in de comunicaciones
+  en «reserva creada» (`ConfirmedStep.vue`, regla en `account/marketing-offer.js`, rótulos de «Privacidad», mismo
+  `PUT /me/marketing`; `sonda-optin-compra.mjs` con el pase de la pasarela por tinker). **La T4 queda completa.
+  Queda el ojo del owner.** ▶ **T5a EN EL ÁRBOL (24-09, `#737`)**: el mecanismo de los experimentos —tabla
+  `experiments`, `Platform\Services\Analytics\Experiments` (`hash(clave | sujeto)`, sujeto = visitante > titular),
+  `experiments` en `/sidebar/session` (contrato 1.23.0) y en el `data-boot` solo con vivos, la cookie acuñada ANTES
+  de componer la página, `sidebar/experiments.js` (`variant`/`expose`); `ExperimentsTest` 8,
+  `sonda-experimentos.mjs` 9/9—. ▶ Siguen **T5b** (panel: alta/cierre y conversión por variante) y **T5c** (la prueba
+  real, la elige el owner); la **T2e** solo si el volumen lo pide. ⚠️ **El fixture «probe-ojo-analitica» está
   MONTADO en la BD local** (90 pedidos `JW-OJO…`, 81 cobros, 9 devoluciones, 25 clientes
   `ojo-N@ojo-analitica.jumpweb.test`, 506 sesiones, dos meses): `OJO=desmontar` lo quita entero.
 - ✅ **La ficha de Google (`#524`), T1 y T2·1→T2·8 en el árbol** (`#720`→`#734`), **vistas por el owner con
@@ -85,9 +76,12 @@
    la T2f en vivo (24-09). ▶ **La T3 en marcha** (spec §4.3 y §4.8): **T3a·1 ✅ · T3a·2 ✅ · T3a·3 ✅ (24-09)**
    → **T3a·4 ✅ (24-09)** el aviso a las cuentas existentes → **T3b·1 ✅ (24-09)** los píxeles → **T3b·2 ✅
    (24-09)** la API de conversiones → **T3b·3 ✅ (24-09)** los textos → **T4a ✅ (24-09)** la 360 → **T4b ✅ (24-09)** los
-   segmentos → **T4c ✅ (24-09)** el opt-in tras comprar → **T5** experimentos (spec §4.4: la asignación la hace
-   el SERVIDOR con una cookie `HttpOnly`, `experiment_exposed` ya está en el contrato, el A/B isla contra cajón
-   por instalación en `/sidebar/boot` y por visitante en `/sidebar/session`; leer §4.4 y §4.8 antes).
+   segmentos → **T4c ✅ (24-09)** el opt-in tras comprar → **T5a ✅ (24-09, `#737`)** el mecanismo de los
+   experimentos → **T5b** el panel (alta y cierre en «Ajustes»; en «Conversión», expuestos → `order_paid` del mismo
+   visitante tras la exposición, por variante con Wilson 95 %, y los `user_id` con dos variantes como contaminados)
+   → **T5c** la prueba real (la elige el owner; candidata la carcasa: `shell` por instalación en `/sidebar/boot`, la
+   variante por visitante en `/sidebar/session`, exposición al abrir la compra; `carcasa.js` es de la plataforma →
+   por buzón). Leer §4.4 y §4.8 antes.
    ⚠️ El fixture del ojo siembra también TRÁFICO (506 sesiones, 2.294 hechos, sellos con primer y último toque).
    ⚠️ **Los cortes por día van por HORA UTC en SQL y al día del parque en PHP** (`SqlTime::hourBucket()`,
    `Window::bucketKey()`), nunca `CONVERT_TZ`. ⚠️ El dinero se lee de `payments`, `payment_refunds`,
@@ -257,7 +251,13 @@ spec enumera. Lo del cliente va en la rama `cliente/playjump`, nunca a `main`.
   `no-store` de la ruta llega como `max-age=0, no-store, private`. Un correo se cuenta en minúsculas.
 - 🪤 **De la T4c**: la pantalla de «reserva creada» se abre en vivo con el PASE de la vuelta de la pasarela (una
   entrada de un solo uso en la caché `database`, `RedsysReturnController::handoff()`, atada al titular): tinker
-  la pone y `/?redsys=<token>` la gasta. Un rótulo que ya viaja con sesión se REUTILIZA: ni una clave más.
+  la pone y `/?redsys=<token>` la gasta. Un rótulo que ya viaja con sesión se REUTILIZA: ni una clave más. Una
+  clase nueva en un `.vue` pide su regla en `site.css` Y regenerar `cajon.css`: la sonda dio 8/8 con la clase
+  muerta (compara árbol) y lo cazaron `SidebarStyleWiringTest` y `HojaDelCajonTest`. Dos tandas del mismo día que
+  suben el mismo techo del chunk chocan en el rebase: el techo se pone con la medida de las DOS juntas.
+- 🪤 **De la T5a**: la API no acuña la cookie del visitante (grupo `api`): un test de `/sidebar/session` que espere
+  variante manda la cookie con `withCredentials()`. `navigator.webdriver` marca `is_bot`: la exposición de la sonda
+  se comprueba en `analytics_events` por `visitor_id`, no por el cuadro. Cachear FILAS y mirar la ventana al leer.
 - 🩹 **En la BD LOCAL hay 19 titulares con la cadena de waiver ROTA** (basura del 26–27 de agosto): si mides
   cadenas, compara ANTES/DESPUÉS.
 - **F4 cerró y el cajón es un PAQUETE** (`specs/cajon-empaquetable.md` §0 y §4.8). Tocar «HOJA ENFOCADA» de

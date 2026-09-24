@@ -27,6 +27,13 @@ final class Visitor
 
     public const HEADER = 'X-Visitor';
 
+    /**
+     * El id que `ResolveVisitor` ACUÑA en esta misma petición (web, sin cookie todavía). Es un atributo de la
+     * petición —lo pone el servidor, no lo manda nadie—, y hace que la primera vista ya sepa quién mira: la
+     * variante de un experimento (spec §4.4) tiene que estar en la primera página, no en la segunda.
+     */
+    public const ATTRIBUTE = 'analytics.visitor_id';
+
     /** 13 meses: el techo de la guía para una cookie de medición exenta. */
     public const LIFETIME_MONTHS = 13;
 
@@ -52,6 +59,12 @@ final class Visitor
      */
     public static function fromRequest(Request $request): ?string
     {
+        $minted = $request->attributes->get(self::ATTRIBUTE);
+
+        if (self::isValid($minted)) {
+            return (string) $minted;
+        }
+
         $cookie = $request->cookie(self::COOKIE);
 
         if (self::isValid($cookie)) {

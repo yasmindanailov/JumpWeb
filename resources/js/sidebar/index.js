@@ -13,6 +13,7 @@ import { useCartStore } from './stores/cart.js';
 import { takeOver } from '../ui/account-host.js';
 import { cajonHost } from './host-bridge.js';
 import { CARCASA, ISLA, TEXTOS_ISLA, carcasaDe } from './carcasa.js';
+import { EXPERIMENTOS, createExperiments } from './experiments.js';
 
 /**
  * El ENTRY del cajón SPA (Fase 4 · paso 4.1, `sidebar-spa.md` §4.7).
@@ -99,6 +100,12 @@ export function mount(el, boot = {}) {
     const carcasa = carcasaDe(boot);
     app.provide(CARCASA, carcasa);
     app.provide(TEXTOS_ISLA, boot.isla ?? {});
+
+    // Los experimentos (T5a, `specs/analitica.md` §4.4): la variante de cada uno llegó asignada por el servidor en el
+    // arranque; una pantalla la pide con `variant(clave)` y avisa con `expose(clave)` cuando la enseña, que es lo que
+    // cuenta `experiment_exposed`. El hecho sale por `JumpWeb.track` resuelto en cada llamada: antes de que llegue
+    // `track.js` es el buzón de `cajon/index.js`, y capturarlo al montar se quedaría con el stub.
+    app.provide(EXPERIMENTOS, createExperiments({ boot, track: (name, props) => window.JumpWeb?.track?.(name, props) }));
 
     // El desenlace de la pasarela decide en qué paso ABRE el cajón. Lo posee `Http\Sidebar\SidebarEntry`
     // en servidor (paso 4.0a) y llega ya consumido: mirarlo dos veces reabriría el cajón en cada

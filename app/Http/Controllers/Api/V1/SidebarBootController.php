@@ -48,6 +48,9 @@ class SidebarBootController extends Controller
         // siempre diccionarios. (`SidebarBoot` los deja como arrays porque el layout los funde en PHP.)
         $personal['account'] = (object) $personal['account'];
         $personal['urls'] = (object) $personal['urls'];
+        // Y las variantes de los experimentos (spec §4.4, T5a): un diccionario clave → variante, vacío sin
+        // experimentos vivos. En el layout la clave solo viaja cuando hay alguno.
+        $personal['experiments'] = (object) $personal['experiments'];
         // Y `locales` va SIEMPRE, vacío sin sesión: en el layout la clave no viaja para el anónimo
         // (son bytes en cada página pública), pero una respuesta de API con forma fija es un campo
         // menos que el cliente tiene que comprobar antes de leer — y el contrato lo exige.

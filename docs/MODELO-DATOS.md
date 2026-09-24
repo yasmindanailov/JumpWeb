@@ -553,6 +553,15 @@ sesiones; `user_id` lo vacía `anonymize()` por tabla, porque un `nullOnDelete` 
   acotado a ±5 min), `received_at` (la verdad temporal), `order_id`/`payment_id`/`refund_id`. Índices `(received_at)`,
   `(name, received_at, session_id)`, `(session_id)`, `(order_id)`.
 
+### `experiments` (Experiment) — los experimentos · `#678` T5a, `#737`
+
+`specs/analitica.md` §4.4. Configuración del producto en `Platform`, como `settings`: **sin asignaciones guardadas**
+(se calculan con `hash(key | sujeto)` en cada petición) y sin PII. `key` string(48) **unique** (`[a-z][a-z0-9_-]{0,47}`;
+viaja al cliente y al libro en `experiment_exposed`) · `name` · `variants` json, lista ORDENADA de `{key, weight}` (pesos
+enteros positivos, no porcentajes; el orden es el reparto: cambiarlo rebaraja, así que un experimento vivo se cierra y
+se abre otro) · `active` bool · `started_at`/`ended_at` nullable (vivo = activo y dentro de la ventana) · timestamps.
+Guardar o borrar una fila olvida la caché de 60 s de los vivos.
+
 ### `google_business_connections` (GoogleBusinessConnection) — la ficha de Google del parque · `#720`
 **Fila ÚNICA**: `singleton` bool con índice **UNIQUE** (invariante de BD, no convención: una
 instalación es un parque y un parque es una ficha). `status` (enum `GoogleBusinessStatus`, default

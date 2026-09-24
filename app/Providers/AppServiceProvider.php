@@ -69,6 +69,7 @@ use App\Domain\Platform\Listeners\RecordEmailSent;
 use App\Domain\Platform\Models\AnalyticsEvent;
 use App\Domain\Platform\Models\AnalyticsSession;
 use App\Domain\Platform\Models\AuditLog;
+use App\Domain\Platform\Models\Experiment;
 use App\Domain\Platform\Models\GoogleBusinessConnection;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\Analytics\AttributionContext;
@@ -284,6 +285,8 @@ class AppServiceProvider extends ServiceProvider
             'customer_visit' => CustomerVisit::class,
             'dependent' => Dependent::class,
             'dependent_assignment' => DependentAssignment::class,
+            // Los experimentos (`#678` T5a): sin relaciones polimórficas, pero todo modelo lleva alias.
+            'experiment' => Experiment::class,
             'faq' => Faq::class,
             // La conexión con la ficha de Google (`#524`). Alias como todo modelo nuevo: lo exige
             // `MorphMapTest`, y es lo que hace que el audit de «conectar»/«desconectar» guarde

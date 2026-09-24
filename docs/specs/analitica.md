@@ -140,8 +140,9 @@ directa del `visitor_id` en los últimos **30 días** (resuelta en servidor); `g
 §4.3); `ref` se normaliza a `utm_source`. El panel enseña las dos y calcula CPA/ROAS sobre `first_touch` no
 directo, con la nota de método. `attribution IS NULL` = «anterior a la medición», nunca «directo».
 - **Cómo nace**: `Platform\Services\Analytics\AttributionContext` es un singleton **de petición** (`scoped`)
-  que rellena el middleware `ResolveVisitor` (grupos `web` y `api`; en `web` acuña además la cookie) desde
-  la cookie, y que resuelve la sesión y el primer toque PEREZOSAMENTE: la ruta `POST /orders` lleva el
+  que rellena el middleware `ResolveVisitor` (grupos `web` y `api`; en `web` acuña además la cookie, y desde
+  la T5a la acuña ANTES de componer la página y deja el id en la petición, `#737`: la primera vista ya sabe
+  quién mira) desde la cookie, y que resuelve la sesión y el primer toque PEREZOSAMENTE: la ruta `POST /orders` lleva el
   middleware `attribution`, que lo resuelve antes de entrar en el dominio (el controlador es `CRITICAL_RE`
   y no se toca). `CreateManualOrderPage` lo fija a `{channel: panel, source: <Select obligatorio
   phone|counter|email|other>, operator_id}` ANTES de llamar a `fulfill()` (la firma no cambia; T1d);
@@ -457,12 +458,27 @@ banner conserva sus tres acciones; el job relee el consentimiento vivo; `marketi
 
 ⚠️ **Revisión 23-09**: la cookie es `HttpOnly`, así que la asignación es del SERVIDOR, no del cliente.
 
-Tabla `experiments` `(futuro)` (clave, variantes, pesos, activo). La asignación la calcula el servidor con
-`hash(visitor_id, clave)` —o `hash(user_id, clave)` en el régimen identificado— y viaja en **`/sidebar/session`**
-(`no-store`, por visitante; el arranque cacheado no cambia) y en los datos de vista de las páginas SSR;
-`experiment_exposed` es anónimo. Los `user_id` expuestos a dos variantes se cuentan y se enseñan como
-contaminados; el panel da conversión por variante con su intervalo. Los experimentos del driver solo ven a
-quien consintió.
+**T5a ✅ (24-09) — el mecanismo.** Tabla `experiments` (`key`, `name`, `variants` json `[{key, weight}]` EN ORDEN,
+`active`, `started_at`/`ended_at`; `Platform\Models\Experiment`). La asignación la calcula
+`Platform\Services\Analytics\Experiments` en cada petición con `hash(clave | sujeto)` —32 bits del SHA-256 módulo la
+suma de pesos, reparto acumulado en el orden guardado; **no se guarda ninguna asignación**— y viaja en
+**`/sidebar/session`** (`experiments: {clave: variante}`, `{}` sin vivos; contrato **1.23.0**) y en el `data-boot` de
+las páginas SSR **solo cuando hay alguno** (0 B si no, como `locales`). `[DECIDIDO 24-09]` **El sujeto es el
+VISITANTE cuando hay cookie y el titular solo sin ella** (`#737`; la letra del 23-09 —`user_id` en el régimen
+identificado— cambiaría la variante a mitad de compra a quien se identifica en el paso 5). `[DECIDIDO 24-09]` **La
+cookie se acuña ANTES de componer la página** (`ResolveVisitor`, `Visitor::ATTRIBUTE`; `#737`): si no, la primera
+vista de todo el mundo sería la de control. En el motor, `sidebar/experiments.js` por `provide(EXPERIMENTOS)`:
+`variant(clave, porDefecto)` y `expose(clave)` → `experiment_exposed` (anónimo: `key` y `variant`) **una vez por
+carga y solo con variante asignada** (caer al valor por defecto no es que te hayan enseñado algo distinto). Los
+vivos van cacheados 60 s y guardar o borrar uno olvida la caché; **cambiar pesos u orden REBARAJA**: un
+experimento vivo se cierra y se abre otro.
+**T5b ⬜ — el panel**: alta y cierre de experimentos en «Ajustes» (hasta entonces, tinker), y en «Analítica →
+Conversión» la conversión por variante —expuestos → `order_paid` del MISMO visitante después de la exposición—
+con su intervalo (Wilson 95 %); los `user_id` expuestos a dos variantes se cuentan y se enseñan como contaminados.
+Los experimentos del driver solo ven a quien consintió.
+**T5c ⬜ — una prueba real**: la decide el owner. La candidata natural es la carcasa (isla contra cajón): `shell` por
+instalación en `/sidebar/boot`, la variante por visitante en `/sidebar/session`, el punto de exposición es abrir la
+compra, y `carcasa.js` es del carril de la plataforma (por buzón; `isla-y-landing-nueva.md`).
 
 ### 4.5 El cuadro de mando en el panel (T2) — ampliado el 24-09 (`#735`, carril del SPA)
 
@@ -673,6 +689,15 @@ fuente del operador en el pedido manual (§4.1).
   árbol era el esperado), pero `.purchase__done` centra todo el texto y el interruptor salía con el rótulo y la
   pista centrados, pegado al aviso de arriba; lo paró `SidebarStyleWiringTest`, no el ojo. La regla vive en
   `site.css` junto a `.purchase__reginfo` (línea de separación, a la izquierda, la misma pieza que «Privacidad»).
+- ✅ **Lo que enseñó la T5a (24-09: el mecanismo de los experimentos)**: la asignación es una FUNCIÓN, no una fila
+  —`hash(clave | sujeto)` en cada petición—, y eso obliga a dos cosas que la spec del 23-09 no decía. (1) El sujeto
+  tiene que ser el mismo antes y después de identificarse, o la variante cambia en el paso 5: manda la cookie del
+  visitante y el titular solo entra sin ella (`#737`). (2) La primera vista tiene que traer ya la variante, así que
+  `ResolveVisitor` acuña la cookie ANTES de `$next` y deja el id en la petición (`Visitor::ATTRIBUTE`): hasta hoy la
+  primera petición de un visitante se resolvía SIN visitante (y su sello, si compraba en ella, sin `visitor_id`). 🪤
+  Cachear las FILAS y no la lista de vivos: un experimento que acaba dentro de los 60 s de caché seguiría asignando;
+  la ventana se mira en cada lectura. 🪤 La exposición se cuenta solo con variante ASIGNADA: caer al valor por
+  defecto porque el experimento no existe no es que te hayan enseñado algo distinto, y contarlo inflaría el control.
 
 ### 4.7 Derechos del interesado
 
@@ -702,7 +727,7 @@ de §4.3.
 | T3a | en tres: **T3a·1 ✅ (24-09)** categorías sin quemar (`OPTIONAL` ×4), el banner con las cuatro finalidades y el texto que informa, la tarjeta que espera al cajón, `consent_shown`, la política por sección y la privacidad con sus migraciones quirúrgicas, `POLICY_VERSION` v3 `2026-09-24`, el almacén en `ui/cookie-consent.js` con `node --test`; `sonda-cookies.mjs` 22/22 (escritorio, móvil, cajón abierto; con cuatro finalidades el panel superaba la ventana: tope de alto con scroll en la tarjeta); **queda el ojo del owner** · **T3a·2 ✅ (24-09)** el driver: `Drivers` (ajuste `analytics.driver` ∈ `posthog|matomo|none`, token público, host de Matomo reconstruido + id de sitio; `csp()` por directiva; `personId()` opaco), `SecurityHeaders` abre `*.posthog.com`/el host solo con driver, el `<body>` con `data-analytics-*` y la persona solo con sesión y categoría, `cajon/driver.js` (chunk diferido: PostHog/Matomo con la configuración de la spec, reenvío de `jw:tracked`, máscaras, sin cargar en URL con credenciales, `opt_out` al retirar), `/cookies` nombra la herramienta al pintar, «Ajustes → Herramienta de análisis» con guarda cruzada, `ForgetPersonInDriver` (cola, `Http::fake`); `DriversTest` 8, `AnalyticsSettingsTest` 5, `ForgetPersonInDriverTest` 6, `driver.test.js` 22; `sonda-driver.mjs` 19/19 · **T3a·3 ✅ (24-09)** la cuenta: `AccountLinker` (Platform: ata 90 días de sesiones y hechos, `unlink()`) + `AccountAnalytics` (Identity: `first_attribution` una vez, la prueba `consents.analytics`, la oposición `users.analytics_opt_out`), enganchado al login, al alta y al cobro; `PUT /me/analytics` (retirar = desvincular + sellar + `ForgetPersonInDriver`), `analytics_opt_out` en `GET /me`, `opted_out`/`first_attribution` en el export (contrato 1.20.0); `anonymize()` olvida en el driver; el segundo interruptor en «Privacidad» del cajón; `AccountLinkTest` 7, `MeAnalyticsTest` 8 · **T3a·4 ✅ (24-09)** el aviso a las cuentas existentes: `AnalyticsLinkNotice` (molde de correos, tres idiomas) por `analytics:notify-accounts` (idempotente por `analytics_notified_at`, `--dry-run`; runbook `ENTORNOS.md` §6) y el aviso del índice del cajón, que viaja CON su texto en `account-context.analytics_notice` mientras está pendiente y se despide con `DELETE /me/analytics-notice` (contrato 1.21.0); `AnalyticsLinkNoticeTest` 3, `MeAnalyticsNoticeTest` 7; `sonda-driver.mjs` 31/31 | `POLICY_VERSION` | tests + sonda (cero terceros sin consentir; con consentimiento, sin `securitypolicyviolation`) |
 | T3b | en tres: **T3b·1 ✅ (24-09)** los píxeles: `Pixels` (ids públicos en «Ajustes → Píxeles de anuncios», `csp()` por plataforma y directiva, `forBody()`), `cajon/pixels.js` (solo con `marketing`; gtag con Consent Mode v2 básico, Meta, TikTok; vista, inicio del pago y compra con el código del pedido como id), tokens en `config/services.php` desde `.env`; `PixelsTest` 6, `AnalyticsSettingsTest` +1, `pixels.test.js` 17; `sonda-driver.mjs` 41/41 · **T3b·2 ✅ (24-09)** `Booking\Jobs\SendConversionToPlatforms` (`ShouldQueue`; encolado por `OrderAnalyticsObserver` al pagar con tickets; relee el consentimiento vivo por `Platform\Contracts\ConsentLedger` ← `Identity\CookieConsentLedger`, `cookie_consent_logs` gana `visitor_id`; `Platform\ConversionSender` manda a Meta CAPI y TikTok Events `event_id` = código, lo pagado, `em`/`ph` SHA-256, `fbp`/`fbc`/`ttp` del sello —`browser_ids`, bajo `marketing`— y `ttclid`); `SendConversionToPlatformsTest` 8 con `Http::fake`, `AttributionSealTest` +1, `CookieConsentEndpointTest` +1, `ModuleContractsTest` +1 · **T3b·3 ✅ (24-09)** los textos: el «[PENDIENTE]» sale del texto guardado (migración quirúrgica `2026_09_24_160000`), `/cookies` nombra las plataformas ACTIVAS al pintar con su empresa y su garantía de transferencia (`policy.ads_*`, tres idiomas; `[asesoría]` solo en la doc), plantilla de UTM en `INSTALACION-CLIENTE.md` §3.bis; `PixelsTest` +1, `CookiePolicyContentTest` +1 | | tests con `Http::fake` |
 | T4 | en tres: **T4a ✅ (24-09)** la 360 en la ficha del cliente (`customers.insights`, permiso propio fuera del staff): lo del CONTRATO desde los pedidos cobrados (compras, vendido, cobrado, devuelto, primera y última, frecuencia, productos) y lo de la NAVEGACIÓN solo en el régimen identificado (primera fuente, visitas antes de comprar, contactos); `CustomerInsights` (capa de entrega) + partial; `UserInsightsInfolistTest` 5 · **T4b ✅ (24-09)** los segmentos: `SegmentsReport` (capa de entrega; compró una vez y lleva 90 días sin volver · su última fiesta —un pack— fue hace 10–12 meses, desde los PEDIDOS · responsable de un menor invitado cuyo correo no compró, solo se cuenta · escribió y no tiene pedido), `SegmentsWidget` al final de «Clientes» (personas y con opt-in), `GET /admin/analitica/segmentos/csv` con permiso propio `analytics.export` (catálogo + seeder), solo con opt-in, celdas saneadas y rastro `segments.exported` con el recuento; `SegmentsReportTest` 7, `SegmentsExportTest` 5 · **T4c ✅ (24-09)** el opt-in de marketing tras comprar: `steps/ConfirmedStep.vue` ofrece la casilla DESMARCADA solo con sesión, sin opt-in y sin retirada previa (`account/marketing-offer.js`, `node --test`), con los rótulos de «Privacidad» y el mismo `PUT /me/marketing`; `sonda-optin-compra.mjs` | | tests |
-| T5 | experimentos | | tests + una prueba real |
+| T5 | en tres: **T5a ✅ (24-09)** el mecanismo: tabla `experiments`, la asignación en el servidor por `hash(clave \| sujeto)` (`Experiments`), `experiments` en `/sidebar/session` (contrato 1.23.0) y en el `data-boot` solo con vivos, la cookie acuñada ANTES de componer la página (`#737`), `sidebar/experiments.js` (`variant`/`expose` → `experiment_exposed` una vez) · **T5b ⬜** el panel: alta y cierre en «Ajustes», conversión por variante con intervalo y contaminados en «Conversión» · **T5c ⬜** una prueba real (la elige el owner; candidata: la carcasa) | `#737` | `ExperimentsTest` (8: mismo sujeto → misma variante, pesos 90/10 sobre 2.000, sujeto visitante > titular, solo vivos y bien formados, la caché se olvida al guardar, la caché SERIALIZADA devuelve filas, la primera vista trae variante Y cookie, sin vivos 0 B, el titular sin cookie por la API), `SidebarBootTest` (+1, contrato), `sonda-experimentos.mjs` 9/9 (la exposición encontrada en `analytics_events`) |
 
 ## 5. Impacto en invariantes
 
