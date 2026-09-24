@@ -4,6 +4,7 @@ namespace Tests\Feature\Admin\Settings;
 
 use App\Domain\Booking\Services\AvailabilitySettings;
 use App\Domain\Booking\Services\CatalogSettings;
+use App\Domain\Content\Services\ShellSettings;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Services\Redsys;
@@ -174,6 +175,23 @@ class SettingsPageTest extends TestCase
 
         $this->assertSame('6', Setting::value('catalog.search_min_items'));
         $this->assertSame(6, CatalogSettings::searchMinItems());
+    }
+
+    /**
+     * **La carcasa de la compra** (`DECISIONES #682`, T3e·2): sin fila, el desplegable nace en el CAJÓN —la
+     * conducta efectiva—, así que un Guardar cualquiera no la cambia; elegir la isla la persiste, y un valor
+     * que no es ninguna de las dos no se guarda.
+     */
+    public function test_the_shell_is_hydrated_with_the_effective_one_and_saved(): void
+    {
+        $page = Livewire::actingAs($this->admin())->test(Settings::class)
+            ->assertSet('data.sidebar.shell', ShellSettings::CAJON);
+
+        $page->fillForm(['sidebar.shell' => ShellSettings::ISLA])->call('save')->assertHasNoFormErrors();
+        $this->assertSame(ShellSettings::ISLA, ShellSettings::shell());
+
+        $page->fillForm(['sidebar.shell' => 'lateral'])->call('save')->assertHasFormErrors(['sidebar.shell']);
+        $this->assertSame(ShellSettings::ISLA, ShellSettings::shell(), 'un valor fuera de las opciones no se guarda');
     }
 
     public function test_save_rejects_catalog_search_threshold_out_of_range(): void

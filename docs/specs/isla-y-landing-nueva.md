@@ -586,6 +586,13 @@ guion del diseño (`paginas/compra/compra.jsx`, `usePjcCompra`):
 - **T3e·1** ✅ los lectores del homenajeado y el «formulario completo» (arriba).
 - **T3e·2** la carcasa elegible: el ajuste `sidebar.shell` (panel, `cajon` por defecto), el arranque, la
   superficie por apertura y la raíz. Con `cajon`, nada cambia: la sonda del embudo da la MISMA traza.
+  **·2a ✅** el ajuste (`ShellSettings`, «Ajustes → Aspecto y opciones de la web»: «Dónde se hace la compra»)
+  y el arranque: `shell` en la mitad compartida (API y `data-boot`, la última clave) y los rótulos de la isla
+  (`isla`) SOLO con la isla — contrato **1.22.0**. ⚠️ **Corrige al plan**: el literal `already_exists` NO viaja
+  en el arranque (se podó en `#166`), y el contrato manda programar contra `code`, no contra un texto: el «ya
+  existe» del alta tendrá su código (T3e·3). ⚠️ **Y el sitio de la prueba**: las hojas de Saltia definen tokens
+  en `:root` que chocarían con los de la landing de hoy, así que la isla NO se enciende sobre ella; se prueba
+  en una página temporal que carga el paquete como lo hará una página nueva, y sale de verdad con la T4.
 - **T3e·3** la vista pura (`vista.js`) de las entradas y el controlador de la isla: pantalla 0, «Tus datos»
   (alta, «ya existe», descargo, con sesión), «Pagar» con su recibo del presupuesto, la salida al banco y los
   desenlaces. Juez: el banco de la T3c alimentado por `vista.js` con datos del motor, contra el diseño.

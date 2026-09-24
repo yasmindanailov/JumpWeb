@@ -2,6 +2,7 @@
 
 namespace App\Http\Sidebar;
 
+use App\Domain\Content\Services\ShellSettings;
 use App\Domain\Identity\Services\GoogleAuth;
 use App\Domain\Platform\Services\SiteLocales;
 use Illuminate\Support\Arr;
@@ -66,13 +67,17 @@ final class SidebarBoot
             'userId' => $personal['userId'],
             'accountContext' => $personal['accountContext'],
             'urls' => $shared['urls'] + $personal['urls'],
+            // La carcasa, la ÚLTIMA: las claves de antes conservan su orden y su byte (`#631`, T1). Y los rótulos
+            // de la isla, solo cuando la carcasa es ella.
+            'shell' => $shared['shell'],
+            ...(array_key_exists('isla', $shared) ? ['isla' => $shared['isla']] : []),
         ];
     }
 
     /**
      * La mitad que NO depende de quién mira: rótulos del idioma activo y rutas. Cacheable.
      *
-     * @return array{messages: array<string, mixed>, ui: array<string, mixed>, account: array<string, mixed>, auth: array<string, mixed>, urls: array<string, string>}
+     * @return array{messages: array<string, mixed>, ui: array<string, mixed>, account: array<string, mixed>, auth: array<string, mixed>, urls: array<string, string>, shell: string, isla?: mixed}
      */
     public static function shared(bool $withGoogleSignup): array
     {
@@ -264,6 +269,16 @@ final class SidebarBoot
                 // que leerlo sería el `if` que un día discrepa.
                 ...(GoogleAuth::enabled() ? ['google' => route('auth.google.redirect')] : []),
             ],
+            // · `shell` — la CARCASA de la compra de esta instalación (`ShellSettings`, `DECISIONES #682`): el
+            //   cajón lateral o la isla. Es igual para todos, así que va en esta mitad y se cachea con ella. La
+            //   lee el controlador del paquete para decidir DÓNDE abre cada cosa: con la isla, la compra en la
+            //   isla y la cuenta en el lateral (hasta la T5). Son 16 bytes en cada página.
+            'shell' => ShellSettings::shell(),
+            // · `isla` — el grupo `isla` de `lang/`, SOLO con la isla como carcasa: son sus rótulos (la compra, las
+            //   piezas, el menú) y una instalación con el cajón no los pinta nunca. Mandarlos siempre sería pagar
+            //   sus bytes en cada página para nada, que es lo que el presupuesto del montaje anónimo existe
+            //   para cazar (`SidebarMountTest`).
+            ...(ShellSettings::shell() === ShellSettings::ISLA ? ['isla' => __('isla')] : []),
         ];
     }
 

@@ -6,6 +6,7 @@ use App\Domain\Booking\Services\AvailabilitySettings;
 use App\Domain\Booking\Services\CatalogSettings;
 use App\Domain\Booking\Services\GuestCountPolicy;
 use App\Domain\Content\Services\MapsEmbed;
+use App\Domain\Content\Services\ShellSettings;
 use App\Domain\Content\Services\SocialEmbed;
 use App\Domain\Identity\Services\DependentSettings;
 use App\Domain\Identity\Services\PuertaSettings;
@@ -228,6 +229,9 @@ class Settings extends Page
         // Catálogo del sidebar de compra (#226): nº de productos a partir del cual aparece el
         // buscador. Vacío → default de `CatalogSettings` (12). El helper clampa el valor leído.
         'catalog.search_min_items' => 'catalog',
+        // La CARCASA de la compra (`DECISIONES #682`, `specs/isla-y-landing-nueva.md` §4.10): el cajón lateral de
+        // siempre o la isla del sistema nuevo. Sin fila es el cajón (`ShellSettings`).
+        ShellSettings::KEY => 'theme',
         // Aviso de «casi llena» en el paso de hora del cajón (`#239`): plazas libres a partir de las
         // cuales la hora deja de anunciarse. Vacío → default de `AvailabilitySettings` (8); `0`
         // apaga el aviso. NO es una regla de aforo: no vende ni retiene una plaza (`AFORO-02`).
@@ -285,6 +289,10 @@ class Settings extends Page
             // El driver sin fila es «ninguno»: que el desplegable no arranque vacío ni un Guardar lo cambie.
             if ($key === Drivers::KEY_DRIVER && ! in_array($raw, Drivers::ALL, true)) {
                 $raw = Drivers::NONE;
+            }
+            // La carcasa, igual: sin fila (o con un valor que no es ninguna) se hidrata con la EFECTIVA.
+            if ($key === ShellSettings::KEY) {
+                $raw = ShellSettings::shell();
             }
             $value = in_array($key, self::BOOL_KEYS, true)
                 ? ((string) $raw === '1')
@@ -994,6 +1002,18 @@ class Settings extends Page
                 Toggle::make('cookies.banner_enabled')
                     ->label(__('admin.settings.cookies_banner_enabled'))
                     ->helperText(__('admin.settings.cookies_banner_enabled_hint')),
+                // La CARCASA de la compra (`DECISIONES #682`): con la isla, la compra se abre en ella y la cuenta
+                // sigue en el lateral hasta la T5. Es una elección de la instalación, y la ayuda dice su condición:
+                // la isla se viste con las hojas de las páginas nuevas.
+                Select::make(ShellSettings::KEY)
+                    ->label(__('admin.settings.shell'))
+                    ->helperText(__('admin.settings.shell_hint'))
+                    ->options([
+                        ShellSettings::CAJON => __('admin.settings.shell_options.cajon'),
+                        ShellSettings::ISLA => __('admin.settings.shell_options.isla'),
+                    ])
+                    ->required()
+                    ->selectablePlaceholder(false),
             ]);
     }
 

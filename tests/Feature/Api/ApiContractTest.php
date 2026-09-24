@@ -41,6 +41,9 @@ class ApiContractTest extends TestCase
      * @var array<string, list<string>>
      */
     private const OPTIONAL_BY_DESIGN = [
+        // Los rótulos de la isla viajan SOLO con la isla como carcasa (`DECISIONES #682`, T3e·2): una instalación
+        // con el cajón no los pinta nunca, y mandarlos siempre los pagaría cada página pública.
+        'SidebarBoot' => ['isla'],
         // ⚠️⚠️ **El menú de hechos es opcional POR DEFINICIÓN** (F5 · T1, `#631`, `#639`): `/site` publica lo
         // que la instalación ha rellenado y **omite lo demás**, en vez de emitir `"tiktok": ""`. Exigir aquí
         // los campos obligaría a toda instalación a tener TikTok, WhatsApp y una imagen de `og:` — o a que el

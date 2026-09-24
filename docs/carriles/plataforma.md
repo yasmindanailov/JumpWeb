@@ -79,7 +79,7 @@
    sus pantallas, 54/54 con `scripts/banco-compra.php`, y `--rehacer` en el juez · `#691` la secuencia en
    `sidebar/usePurchaseFlow.js`, misma traza en navegador con `scripts/sonda-embudo.mjs`) → **T3e** en seis
    sub-tandas (spec §4.10, `#692`): ·1 ✅ el homenajeado en el formulario de invitados → **·2 la carcasa elegible**
-   (`sidebar.shell`; superficie por apertura) → ·3 vista y controlador → ·4 «Entra» → ·5 cumpleaños → ·6 sonda. FALTAN como dato (T0): el precio de antes (→ `#684`),
+   (·2a ✅ el ajuste y el arranque, contrato 1.22.0 · ·2b la superficie por apertura y la raíz, aviso en el buzón) → ·3 vista y controlador → ·4 «Entra» → ·5 cumpleaños → ·6 sonda. FALTAN como dato (T0): el precio de antes (→ `#684`),
    el plazo de cancelación y los 90 cm con adulto. ⚠️ Tras un `pull`: `cp -r ../instancias/playjump/publico/instancia
    public/`; los bancos se rehacen con `tema/lote-fichas.py` y `scripts/banco-{isla,piezas,compra}.php` (su lado B, antes).
    ⚠️ **La web nueva cambia las URLs** (§1.5): cada ruta vieja necesita su 301.
@@ -172,19 +172,11 @@ dueño es el carril de la web/reseñas—) ·
   defecto del test y `actingAs($u)` planta al titular SIN token, cosa que el guard real no hace (adjunta un
   `TransientToken`). Arreglado en `Tests\TestCase::be()`; producción sigue fallando cerrado. Con tokens REALES,
   `Auth::forgetGuards()` entre peticiones o un token revocado sigue entrando por la caché del guard.
-- **Una captura solo vale con la pieza ASENTADA, y el limitador de la API puede falsearla**: dos corridas del
-  MISMO código daban imágenes distintas (panel a medio entrar, incluso con `reducedMotion`), y tres corridas
-  seguidas agotaron el limitador (60/min por IP) hasta que `/entradas` se capturó con «No hay días
-  disponibles» — que parecía una diferencia del cambio. Se espera a dos fotogramas con la misma caja + fuentes
-  cargadas, se cuentan los 429 como fila de la sonda, y se compara ANTES/DESPUÉS con control de dos corridas.
+- ▶ **Las trampas de MEDIDA y de ARNESES viven en `TESTING.md` §2.octies** (mudadas el 24-09): la captura
+  asentada, el gate saturado, el arnés que restaura por copia, la línea base antes del controlador, los
+  manifiestos de Vite, el «NO SE APLICÓ», la salida truncada y la base que cruza un umbral del horario.
 - **`SHELL` es una variable del propio bash**: llamar así a una ruta en un guion se la cambia a todo lo que se
   lance después. En `mutar-cajon-apertura.sh` se llama `CARCASA`.
-- **El gate puede fallar por SATURACIÓN, y su síntoma parece un defecto**: 49 errores de golpe con
-  «ProcessTimedOutException … render-sidebar.js exceeded the timeout of 300 seconds» (18-09). No era el
-  producto: `--parallel` levanta un proceso por núcleo y cada test de paridad lanza un `node` que renderiza el
-  SSR; con la carga a 92 en 20 núcleos, 300 s no bastan. Medido después con la máquina tranquila: los 45 tests
-  de paridad en 7,7 s y un render suelto en 0,2 s. Antes de tocar nada se mira `uptime` y se reintenta; la
-  salida completa de la suite queda en el `/tmp/tmp.*` que el propio hook nombra.
 - **Mover código que unas guardas leen como TEXTO**: se mueve TAL CUAL, se re-apunta cada guarda al fichero
   nuevo y se MUTA allí (el método entero, en `paquete-de-instancia.md` §4.7).
 - **El tipo que Sanctum declara para `currentAccessToken()` miente con cookie** (dice `PersonalAccessToken`,
@@ -195,14 +187,6 @@ dueño es el carril de la web/reseñas—) ·
   se pierde al recrear el contenedor (~2 min montarlo; `PLAYWRIGHT_BROWSERS_PATH=/home/sail/pw-browsers`).
 - **ESLint o cualquier herramienta se MIDE fuera del árbol** si el gate está corriendo: instalación desechable
   en el `/tmp` del contenedor y `--config` apuntándola, con el cwd en el repo.
-- **Un arnés de mutación RESTAURA POR COPIA al terminar** (`#181`): editar uno de sus `FICHEROS` mientras corre
-  es perder la edición, y cambiar una línea que un mutante busca lo deja en «NO SE APLICÓ». Se espera, y el
-  mutante se re-apunta en el mismo commit.
-- **La línea base se toma ANTES de tocar el controlador que elige la vista** (`#654`): con `pick()` ya
-  apuntando al anfitrión, «la vista de antes» capturada era el respaldo nuevo, comparado consigo mismo. La
-  huella sí era de antes; el diff de DOM se repitió sirviendo las dos versiones desde la instancia.
-- **Comparar manifiestos de Vite enteros da un falso «hay algo que desplegar»**: `app.css` cambia de hash con el
-  árbol (Tailwind escanea docs y mockups). Se compara entrada a entrada.
 - **Taquilla cobra de la misma tabla `prices` que la web**, y el pedido manual y ocho servicios del núcleo llaman
   a `priceCents()`: una rebaja «solo online» como dato es imposible y un descuento por canal es `CRITICAL_RE`.
 - `rm -rf` está en el deny del repo y un comando compuesto que lo lleve se deniega entero: `git rm -r` para lo
@@ -218,31 +202,6 @@ dueño es el carril de la web/reseñas—) ·
   corre la suite **con** y **sin** él: las dos tienen que estar verdes.
 - **«The command 'docker' could not be found» es Docker Desktop APAGADO**: se arranca desde WSL con
   `"/mnt/c/Program Files/Docker/Docker/Docker Desktop.exe"` en segundo plano y `until docker info`.
-- 🧪🧪 **UN «NO SE APLICÓ» NO ROMPE EL GATE, Y EL ARNÉS SIGUE CANTANDO SU VEREDICTO** (`#666`). Al
-  re-apuntar `mutar-dudas.sh` salió que **dos de sus mutantes llevaban caducados desde `#537`**, que había
-  cambiado los tokens del CSS (`--bg-soft`/`--line` → `--tint-attn-border`): los patrones dejaron de casar
-  y el arnés seguía diciendo 19/19 con dos guardas del acordeón que no miraban nada. ▶ **El veredicto de
-  un arnés solo vale si sus mutaciones se APLICAN**, y esa línea hay que leerla: no es un aviso menor, es
-  el veredicto entero. ⚠️ Y distingue los dos casos: un mutante que perdió su SUJETO se poda con su
-  motivo; uno cuyo patrón solo cambió de sitio se RE-APUNTA.
-- 🔤 **Un arnés que decodifica la salida de otro puede reventar antes de dar veredicto** (`#666`):
-  `mutar-pie.py` murió con `UnicodeDecodeError` porque el HTML que PHPUnit vuelca al fallar lo **trunca
-  por longitud**, a media secuencia UTF-8. Se lee con `encoding='utf-8', errors='replace'`. *Quien
-  decodifica la salida de otro no puede dar por hecho que está bien formada.*
-- ⏰⏰⏰ **UNA LÍNEA BASE QUE CRUZA UN UMBRAL DEL HORARIO MIDE DOS ESTADOS** (`#666`, ampliada en
-  `#668`). No es «la medianoche»: son **los dos umbrales de CADA DÍA**. En `#668` la huella «antes»
-  se tomó a las 20:40 con el parque ABIERTO y la comparación a las 21:57, ya CERRADO: **1.603 nodos
-  distintos en 38 pantallas** que no eran del cambio —el verde de «abierto» pasaba a gris, la
-  sección crecía 32 px—. ▶ Antes de creerse una diferencia se mira `GET /api/v1/schedule/now`, y si
-  el estado cambió **se retoma la base dentro de la misma franja**. La de la noche dura hasta que
-  abre, así que es la ventana cómoda. *Una medida con dos estados dentro no es un juez.*
-- ⏰⏰ **Y el caso original, que sigue valiendo** (`#666`). La huella «antes» empezó un
-  domingo a las 23:52 y acabó el lunes a las 00:00: el estado del horario (`heroStatus`) viaja en el menú
-  de **las doce vistas**, así que las 38 pantallas quedaron contaminadas y el DOM daba 18 líneas de
-  diferencia —«Ya hemos cerrado» → «Abre hoy»— que no eran del cambio. ▶ Se retoma con el reloj lejos del
-  borde y **apartando el cambio con `git stash -u`**: revertir solo el controlador no basta, la vista
-  tiene que volver a su sitio. *Una medida con dos días dentro no es un juez: es ruido con forma de
-  diferencia.*
 - Una etiqueta no pasa por el gate (`pre-push` solo mira `refs/heads/main`): `/release` exige que el commit ya
   esté en `origin/main`; y un test sobre una «casi versión» tiene que EMPUJARLA antes de medir.
 
@@ -277,6 +236,12 @@ dueño es el carril de la web/reseñas—) ·
   `scripts/sonda-embudo.mjs`, úsala tú también). ⚠️ **Tuyo, heredado sin tocar**: `loadOutcome()` lee
   `props.locale` y la sección no la declara → la hora de retención del paso 10 sale siempre en formato `es`.
   Tus eventos de compra de la analítica van al módulo: contarán en el cajón y en la isla.
+- ▶▶ **24-09, AVISO PREVIO de la T3e·2b** (spec §4.10): la CARCASA se elige por instalación (`sidebar.shell`,
+  ya en el arranque, contrato **1.22.0**; `cajon` por defecto). Voy a tocar **`sidebar/Sidebar.vue`** (monta
+  `PurchaseSection` o la compra de la isla, asíncrona y en su trozo, con el MISMO `ref="purchase"`; tu
+  `v-show` y su guarda se quedan) y **`sidebar/index.js`** (le da la carcasa a la raíz con `provide`). Con
+  `cajon` no cambia NADA: lo demuestro con `scripts/sonda-embudo.mjs` (misma traza) y tu suite. El resto va en
+  `resources/js/isla/` y en `cajon/` (el controlador abre la compra en la isla y la cuenta en el lateral).
 
 ### ❗ Para el carril de la WEB (emisor: plataforma, 2026-09-23) — dos huecos de contenido, MEDIDOS
 - ▶ Publicar `/servicios` como hechos (`#672`) destapó dos cosas **tuyas**, que son de tu T6 de contenido

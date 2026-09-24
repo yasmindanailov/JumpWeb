@@ -2,7 +2,9 @@
 
 namespace Tests\Feature\Api\V1;
 
+use App\Domain\Content\Services\ShellSettings;
 use App\Domain\Identity\Models\User;
+use App\Domain\Platform\Models\Setting;
 use Illuminate\Testing\TestResponse;
 use Tests\Feature\Api\ApiTestCase;
 
@@ -50,6 +52,10 @@ class SidebarBootTest extends ApiTestCase
             'userId' => $session['userId'],
             'accountContext' => $session['accountContext'],
             'urls' => $boot['urls'] + $session['urls'],
+            // La carcasa de la compra (`DECISIONES #682`): de la mitad compartida, y la última en el layout; con la
+            // isla, sus rótulos detrás.
+            'shell' => $boot['shell'],
+            ...(array_key_exists('isla', $boot) ? ['isla' => $boot['isla']] : []),
         ];
     }
 
@@ -200,6 +206,30 @@ class SidebarBootTest extends ApiTestCase
         $this->assertNotSame('', (string) ($boot['ui']['loading'] ?? ''), 'sin esto, el velo de carga de la carcasa construida no dice nada');
         $this->assertSame(route('logout'), $boot['urls']['logout'] ?? null, 'sin la ruta, el suelo de cerrar sesión no se puede construir');
         $this->assertNotSame('', (string) ($boot['account']['nav']['sign_out'] ?? ''), 'y su botón se quedaría sin rótulo');
+    }
+
+    /**
+     * **La CARCASA de la compra viaja en la mitad compartida** (`DECISIONES #682`, T3e·2 de
+     * `specs/isla-y-landing-nueva.md` §4.10): sin ajuste es el cajón, con `isla` es la isla —en la API y en el
+     * `data-boot` que pinta el layout—, y un valor que no es ninguno de los dos cae al CAJÓN, que es la
+     * conducta de siempre: un ajuste corrupto no puede dejar a una instalación sin sitio donde comprar.
+     */
+    public function test_the_shared_half_says_which_shell_the_installation_chose(): void
+    {
+        $cajon = $this->getJson(self::ROOT.'/sidebar/boot?lang=es')->json();
+        $this->assertSame(ShellSettings::CAJON, $cajon['shell'], 'sin ajuste, el cajón');
+        $this->assertArrayNotHasKey('isla', $cajon, 'con el cajón, los rótulos de la isla no viajan');
+
+        Setting::updateOrCreate(['key' => ShellSettings::KEY], ['value' => ShellSettings::ISLA, 'group' => 'theme']);
+        $isla = $this->getJson(self::ROOT.'/sidebar/boot?lang=en')->assertValidResponse(200)->json();
+        $this->assertSame(ShellSettings::ISLA, $isla['shell']);
+        $this->assertSame(__('isla.compra.cuando.continuar', [], 'en'), $isla['isla']['compra']['cuando']['continuar'] ?? null, 'con la isla, sus rótulos, en el idioma de la URL');
+        $layout = $this->layoutBoot($this->get('/')->assertOk());
+        $this->assertSame(ShellSettings::ISLA, $layout['shell'] ?? null, 'y el layout pinta la misma');
+        $this->assertArrayHasKey('isla', $layout);
+
+        Setting::updateOrCreate(['key' => ShellSettings::KEY], ['value' => 'lateral']);
+        $this->assertSame(ShellSettings::CAJON, $this->getJson(self::ROOT.'/sidebar/boot?lang=es')->json('shell'), 'un valor desconocido es el cajón');
     }
 
     /** El payload no vuelve a componerse DENTRO de la plantilla: sería la segunda fuente que un día discrepa. */

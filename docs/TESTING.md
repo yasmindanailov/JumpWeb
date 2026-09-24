@@ -298,6 +298,55 @@ pase es en serie y tarda bastante más.
 —`DEUDA.md` lo recoge—, así que el barrido depende de que se corra al cerrar. La alternativa medida
 (meterlo en el `pre-push`) multiplicaría por diez el tiempo de cada push.
 
+### 2.octies. Trampas de MEDIDA y de ARNESES — cada una costó una pasada
+
+Vivían en `carriles/plataforma.md`, que es efímero y tiene techo; se mudaron aquí el 2026-09-24 (`#692`) porque
+son de cualquiera que mida, no de un carril.
+
+- **Una captura solo vale con la pieza ASENTADA, y el limitador de la API puede falsearla**: dos corridas del
+  MISMO código daban imágenes distintas (panel a medio entrar, incluso con `reducedMotion`), y tres corridas
+  seguidas agotaron el limitador (60/min por IP) hasta que `/entradas` se capturó con «No hay días
+  disponibles» — que parecía una diferencia del cambio. Se espera a dos fotogramas con la misma caja + fuentes
+  cargadas, se cuentan los 429 como fila de la sonda, y se compara ANTES/DESPUÉS con control de dos corridas.
+- **El gate puede fallar por SATURACIÓN, y su síntoma parece un defecto**: 49 errores de golpe con
+  «ProcessTimedOutException … render-sidebar.js exceeded the timeout of 300 seconds» (18-09). No era el
+  producto: `--parallel` levanta un proceso por núcleo y cada test de paridad lanza un `node` que renderiza el
+  SSR; con la carga a 92 en 20 núcleos, 300 s no bastan. Medido después con la máquina tranquila: los 45 tests
+  de paridad en 7,7 s y un render suelto en 0,2 s. Antes de tocar nada se mira `uptime` y se reintenta; la
+  salida completa de la suite queda en el `/tmp/tmp.*` que el propio hook nombra.
+- **Un arnés de mutación RESTAURA POR COPIA al terminar** (`#181`): editar uno de sus `FICHEROS` mientras corre
+  es perder la edición, y cambiar una línea que un mutante busca lo deja en «NO SE APLICÓ». Se espera, y el
+  mutante se re-apunta en el mismo commit.
+- **La línea base se toma ANTES de tocar el controlador que elige la vista** (`#654`): con `pick()` ya
+  apuntando al anfitrión, «la vista de antes» capturada era el respaldo nuevo, comparado consigo mismo. La
+  huella sí era de antes; el diff de DOM se repitió sirviendo las dos versiones desde la instancia.
+- **Comparar manifiestos de Vite enteros da un falso «hay algo que desplegar»**: `app.css` cambia de hash con el
+  árbol (Tailwind escanea docs y mockups). Se compara entrada a entrada.
+- 🧪🧪 **UN «NO SE APLICÓ» NO ROMPE EL GATE, Y EL ARNÉS SIGUE CANTANDO SU VEREDICTO** (`#666`). Al
+  re-apuntar `mutar-dudas.sh` salió que **dos de sus mutantes llevaban caducados desde `#537`**, que había
+  cambiado los tokens del CSS (`--bg-soft`/`--line` → `--tint-attn-border`): los patrones dejaron de casar
+  y el arnés seguía diciendo 19/19 con dos guardas del acordeón que no miraban nada. ▶ **El veredicto de
+  un arnés solo vale si sus mutaciones se APLICAN**, y esa línea hay que leerla: no es un aviso menor, es
+  el veredicto entero. ⚠️ Y distingue los dos casos: un mutante que perdió su SUJETO se poda con su
+  motivo; uno cuyo patrón solo cambió de sitio se RE-APUNTA.
+- 🔤 **Un arnés que decodifica la salida de otro puede reventar antes de dar veredicto** (`#666`):
+  `mutar-pie.py` murió con `UnicodeDecodeError` porque el HTML que PHPUnit vuelca al fallar lo **trunca
+  por longitud**, a media secuencia UTF-8. Se lee con `encoding='utf-8', errors='replace'`. *Quien
+  decodifica la salida de otro no puede dar por hecho que está bien formada.*
+- ⏰⏰⏰ **UNA LÍNEA BASE QUE CRUZA UN UMBRAL DEL HORARIO MIDE DOS ESTADOS** (`#666`, ampliada en
+  `#668`). No es «la medianoche»: son **los dos umbrales de CADA DÍA**. En `#668` la huella «antes»
+  se tomó a las 20:40 con el parque ABIERTO y la comparación a las 21:57, ya CERRADO: **1.603 nodos
+  distintos en 38 pantallas** que no eran del cambio —el verde de «abierto» pasaba a gris, la
+  sección crecía 32 px—. ▶ Antes de creerse una diferencia se mira `GET /api/v1/schedule/now`, y si
+  el estado cambió **se retoma la base dentro de la misma franja**. La de la noche dura hasta que
+  abre, así que es la ventana cómoda. *Una medida con dos estados dentro no es un juez.*
+  ⏰⏰ **Y el caso original, que sigue valiendo** (`#666`): la huella «antes» empezó un domingo a las 23:52 y
+  acabó el lunes a las 00:00; el estado del horario (`heroStatus`) viaja en el menú de **las doce vistas**, así
+  que las 38 pantallas quedaron contaminadas y el DOM daba 18 líneas de diferencia —«Ya hemos cerrado» → «Abre
+  hoy»— que no eran del cambio. ▶ Se retoma con el reloj lejos del borde y **apartando el cambio con `git stash
+  -u`**: revertir solo el controlador no basta, la vista tiene que volver a su sitio. *Una medida con dos días
+  dentro no es un juez: es ruido con forma de diferencia.*
+
 ### 3. Guardas de arquitectura — `tests/Feature/Architecture/`
 Tests que no prueban una feature sino una REGLA estructural; sin ellos el refactor de Fase 2 se
 degrada en silencio.

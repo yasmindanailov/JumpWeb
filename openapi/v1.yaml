@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.21.0
+  version: 1.22.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -4340,7 +4340,7 @@ components:
         diccionarios de rótulos o de rutas: su contenido lo decide `lang/` y no este contrato, así
         que se declaran abiertos.
       additionalProperties: false
-      required: [messages, ui, account, auth, urls]
+      required: [messages, ui, account, auth, urls, shell]
       properties:
         messages:
           type: object
@@ -4361,6 +4361,18 @@ components:
           additionalProperties:
             type: string
           description: Las rutas que pinta el cajón (contacto, condiciones, privacidad…). Las compone el servidor.
+        shell:
+          type: string
+          enum: [cajon, isla]
+          description: |
+            La carcasa de la compra de esta instalación (ajuste `sidebar.shell`, sin él `cajon`). Con `isla`,
+            la compra se abre en la isla y la cuenta sigue en el cajón lateral.
+        isla:
+          type: object
+          additionalProperties: true
+          description: |
+            Los rótulos de la isla (la compra, sus piezas, su menú). Viajan **solo con `shell: isla`**: una
+            instalación con el cajón no los pinta nunca.
 
     SidebarSession:
       type: object
