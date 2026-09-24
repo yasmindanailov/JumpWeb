@@ -2260,7 +2260,7 @@ return [
         'section_operational' => 'Aforo y horario',
         'section_operational_hint' => 'Cuánto dura, cuántas plazas ocupa cada unidad y en qué tramo del horario se puede empezar.',
         'section_pack' => 'Pack (cumpleaños)',
-        'section_pack_hint' => 'Invitados, señal y tiempos de montaje/limpieza. Nota: la señal hoy solo se muestra en la web; el cobro actual es el importe total (pendiente de conectar el cobro parcial).',
+        'section_pack_hint' => 'Invitados, señal y tiempos de montaje/limpieza. Con señal, al reservar online se cobra solo la señal; el resto se paga en el parque.',
         'section_price' => 'Precio',
         'price_section_hint' => 'El precio del día se decide por la tarifa aplicable. Deja un importe vacío para no vender ese producto los días de esa tarifa.',
         'price_rate_normal_hint' => 'Precio para los días normales.',
