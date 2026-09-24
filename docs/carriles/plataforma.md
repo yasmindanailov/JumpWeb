@@ -3,8 +3,8 @@
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 EN CURSO** · Último usado: **`#696`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#684`) · Actualizado: **2026-09-24**
-> (el sistema nuevo leído por DesignSync; el owner decide Blade en la instancia y la isla como segunda carcasa).
+> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#696`) · Actualizado: **2026-09-24**
+> noche (T3e·5 hecha; el local, preparado para que el owner pruebe la isla).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
 > llévaselo con la medida, como el SPA en `#724`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -34,10 +34,14 @@
 - **`#628` · la promo «−20 % online» sigue EN PRODUCCIÓN** (cuatro filas `promo.*`; receta de fin en
   `ENTORNOS.md` §6 y en «retomar» 5).
 - ⚠️ **Tras la mudanza de `#648` una sesión ya abierta PIERDE skills y hooks** (el registro del plugin se
-  resuelve al arrancar): basta con sesión nueva en `producto/`. ⚠️ Y en la sesión del 20-09 el harness no
-  listó las skills del plugin: `/carril` y `/handoff` se siguieron a mano desde su `SKILL.md`.
+  resuelve al arrancar): basta con sesión nueva en `producto/`. ⚠️ Y en las sesiones del 20-09 y del 24-09 el
+  harness no listó las skills del plugin: `/carril` y `/handoff` se siguieron a mano desde su `SKILL.md`
+  (`~/proyectos/jumpweb-agente/plugins/jumpweb-agente/skills/<skill>/SKILL.md`).
 
 ## Por dónde retomar, en orden
+
+▶▶ **AHORA (24-09)**: lo que el owner traiga de SU prueba de la isla en local (preparada abajo, en 3: ❗LOCAL) va
+primero; después, la **T3e·6** (la sonda versionada de la isla, en 3). Lo demás de esta lista está aparcado.
 
 1. **F4 · CERRADA el 19-09** (`specs/cajon-empaquetable.md`: sus cinco tandas y sus seis trampas). ⚠️ **Le
    falta un ojo humano sobre la COMPRA de la T5** (medida, no vista): se enseña con el banco de su §4.8,
@@ -80,7 +84,8 @@
    a la compra · `#696` los cumpleaños con señal) → **·6 la sonda versionada** (una entrada y un cumpleaños, la
    vuelta sin datos y el rechazo; después, staging). Probar la isla: `sidebar.shell = isla` en local,
    `public/_isla-prueba.html` (se BORRA al terminar: guarda 9), `storage/app/sonda-isla-t3e{3,4,5}.mjs` y el banco
-   `scripts/banco-compra.php` (52/54: «entrar» difiere por `#695`; se juzga CON `--rehacer`); el ajuste vuelve a `cajon`.
+   `scripts/banco-compra.php` (52/54: «entrar» difiere por `#695`; se juzga CON `--rehacer`); tras una prueba
+   del agente el ajuste vuelve a como estaba (hoy, `isla`: abajo).
    ▶ `lint:js` con `isla/` (el SPA: «hazlo tú», 24-09; hoy limpia a mano): `package.json`, la cadena de
    `StaticAnalysisGateTest` y las tres de `scripts/mutar-analisis-estatico.sh`, en su commit y con `/mutar`.
    ❗ **LOCAL, preparado para que el OWNER pruebe la isla (24-09 noche) — no deshacer sin él**: `sidebar.shell =
@@ -89,8 +94,8 @@
    se toca hasta la v2.0.0). Medido de verdad por la isla: la pasarela pública de pruebas (pide ya el TITULAR;
    3DS simulado; vuelta firmada → «¡Reservado!», `storage/app/sonda-isla-pasarela.mjs`) y Google, que acepta la
    vuelta de `localhost:8081` y no la del 80 del contenedor. ⚠️ La vuelta del banco cae en la portada de hoy: ahí
-   la isla se ve NEUTRA (sin las hojas de Saltia) hasta la T4. La contraseña del admin local la tiene el owner. Google ya está en la
-   local (claves en `settings`): la sonda corta la ida en `accounts.google.com`. FALTAN como dato (T0): el precio de antes (→ `#684`),
+   la isla se ve NEUTRA (sin las hojas de Saltia) hasta la T4. La contraseña del admin local la tiene el owner.
+   FALTAN como dato (T0): el precio de antes (→ `#684`),
    el plazo de cancelación y los 90 cm con adulto. ⚠️ Tras un `pull`: `cp -r ../instancias/playjump/publico/instancia
    public/` y `php artisan migrate` (las del SPA llegan SIN aplicar aquí: la de `experiments` dio un 500); los bancos se rehacen con `tema/lote-fichas.py` y `scripts/banco-{isla,piezas,compra}.php` (su lado B, antes).
    ⚠️ **La web nueva cambia las URLs** (§1.5): cada ruta vieja necesita su 301.
@@ -115,8 +120,9 @@
 5. **La promo, cuando el owner la termine** (es suyo el cuándo). La receta y **sus nueve cifras** bajaron a
    `ENTORNOS.md` §6 en `#675`, junto al despliegue que las escribió. Sin desplegar: son datos.
 6. Después, **F6** (app nativa; hereda del token lo que su spec §2 nombra: Google, alta, dispositivos).
-- **Del owner, HOY**: en el panel de PRODUCCIÓN, el campo del homenajeado de los dos packs a «formulario de
-  invitados» (`#692`; en local ya está) · el **modelo de las promociones**
+- **Del owner, HOY**: **probar la isla en local** (sus accesos se le dieron en el chat del 24-09) · pasar a su
+  diseño las dos de `#695` («Entra» solo con correo; la «G» de Google) · en el panel de PRODUCCIÓN, el campo del
+  homenajeado de los dos packs a «formulario de invitados» (`#692`; en local ya está) · el **modelo de las promociones**
   (`#684`: dónde va cada etiqueta en la landing) · el **fin de la promo** (es suyo el cuándo) · el **ojo** que le falta a la compra de la T5 de F4 · **`topics`**: con la landing fuera, ¿de quién son los asuntos del formulario de contacto?
   (hoy son constante del producto, y `birthday`/`groups` son vocabulario del SECTOR).
   ▶ Contestadas y retiradas de aquí: por dónde arrancar la vía A (los platos, 23-09), cuándo se
@@ -131,7 +137,9 @@
 `.githooks/pre-push` · `scripts/huella-enrutador.py` · `scripts/partir-decisiones.py` · `scripts/deploy.sh` (la
 guarda 8) · `scripts/mutar-guarda8.sh` · `CHANGELOG.md` · `phpstan.neon` · `phpstan-baseline.neon` ·
 `eslint.config.js` · `eslint-suppressions.json` (la poda quien arregla) · `scripts/mutar-analisis-estatico.sh` ·
-**LA ISLA Y LA LANDING NUEVA** (`#681`, `#682`): la spec, la carcasa de la isla `resources/js/isla/**` (futuro) y
+**LA ISLA Y LA LANDING NUEVA** (`#681`, `#682`): la spec, la isla `resources/js/isla/**`, sus bancos y sondas
+(`scripts/banco-{isla,piezas,compra}*`, `scripts/pixel.mjs`, `scripts/sonda-embudo.mjs`), `sidebar/reanudar.js`,
+`sidebar/marca-compra.js`, `app/Http/Sidebar/PurchaseResume.php` y
 las vistas nuevas de `instancias/playjump/web/`; ⚠️ **el motor del cajón es del SPA**: se le avisa ANTES de tocarlo ·
 `StaticAnalysisGateTest` · `Tests\TestCase::be()` · **el token y el cajón empaquetado**, cuyos ficheros
 enumera cada spec (`token-bearer.md`, `cajon-empaquetable.md` §0): el emisor, el arranque, la apertura, la
