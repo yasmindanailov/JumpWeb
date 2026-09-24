@@ -192,13 +192,20 @@ final class WaiverStatus
             return new self($mode, false, null, null, null, false);
         }
 
+        // ⚠️ Una firma cuya VERSIÓN ya no está no puede pasar. La FK es RESTRICT y la versión es inmutable, así
+        // que solo ocurre con datos importados o retocados por debajo — y ocurrió (la BD local del 24-09: la
+        // ficha del cliente caía con un 500). Sin texto contra el que probarla cuenta como firma de una versión
+        // ANTERIOR: se SEÑALA y se pide la re-firma en la siguiente compra o inicio de sesión (§4.8), que es lo
+        // que repara la cadena. Callarla como «vigente» sería inventar una prueba; tumbar la ficha, no enseñarla.
+        $version = $last->version;
+
         return new self(
             $mode,
             true,
             $last->accepted_at,
-            (int) $last->version->version,
-            (string) $last->version->locale,
-            $latest !== null && (int) $last->version->version === $latest,
+            $version === null ? null : (int) $version->version,
+            $version === null ? null : (string) $version->locale,
+            $version !== null && $latest !== null && (int) $version->version === $latest,
             (int) $last->getKey(),
         );
     }

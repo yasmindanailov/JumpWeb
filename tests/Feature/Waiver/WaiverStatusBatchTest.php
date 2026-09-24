@@ -15,6 +15,7 @@ use App\Domain\Platform\Models\Setting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Tests\Support\DeclaresDependents;
 use Tests\TestCase;
 
@@ -144,5 +145,54 @@ class WaiverStatusBatchTest extends TestCase
         $this->assertSame('externo', $batch[$lucas->id]->mode);
         $this->assertEquals(WaiverStatus::forDependent($lucas), $batch[$lucas->id]);
         $this->assertSame([], WaiverStatus::forDependents([]));
+    }
+
+    /**
+     * 24-09 · **una firma cuya VERSIÓN ya no está no tumba la ficha.** La FK es RESTRICT y la versión es
+     * inmutable, pero la BD local trajo firmas huérfanas (retocadas por debajo) y la ficha del cliente caía
+     * con «Attempt to read property "version" on null». Sin texto contra el que probarla, la firma cuenta
+     * como de una versión ANTERIOR: señalada, sin bloquear, y la re-firma se pide en la siguiente compra
+     * (§4.8). Vale para el titular (`for()`) y para el lote de menores (`build()` es común).
+     *
+     * ⚠️ El instrumento: dentro de la transacción de `RefreshDatabase`, `foreign_keys = OFF` es un NO-OP en
+     * SQLite (`InvitationPrivacyTest` lo midió); lo que sí vale es DIFERIR la comprobación al commit, que aquí
+     * no llega. Se comprueba que la fila quedó huérfana de verdad antes de preguntar. Quita la guarda de
+     * `build()` y este caso rompe por la propia excepción: se discrimina solo.
+     */
+    public function test_a_signature_whose_version_is_gone_answers_outdated_instead_of_crashing(): void
+    {
+        $this->mode('interno');
+        $holder = User::factory()->create();
+        $lucas = $this->add($holder, 'Lucas');
+        $version = $this->publish();
+
+        $holderSignature = app(WaiverSigner::class)->sign($holder, $version, new WaiverSignatureRequest(
+            channel: WaiverSignature::CHANNEL_WEB,
+            ip: '10.0.0.7',
+            userAgent: 'test',
+        ));
+        $minorSignature = $this->sign($holder, $lucas, $version);
+        $ids = [(int) $holderSignature->getKey(), (int) $minorSignature->getKey()];
+
+        DB::getDriverName() === 'sqlite'
+            ? DB::statement('PRAGMA defer_foreign_keys = ON')
+            : Schema::disableForeignKeyConstraints();
+        DB::table('waiver_signatures')->whereIn('id', $ids)->update(['legal_document_version_id' => 999999]);
+
+        $this->assertNull(LegalDocumentVersion::query()->find(999999));
+        $this->assertSame([999999, 999999], DB::table('waiver_signatures')->whereIn('id', $ids)->pluck('legal_document_version_id')->map(fn ($v): int => (int) $v)->all(),
+            'El instrumento no huérfano las firmas: sin eso el caso no mide nada.');
+
+        $status = WaiverStatus::for($holder);
+        $this->assertTrue($status->signed);
+        $this->assertNull($status->version);
+        $this->assertNull($status->locale);
+        $this->assertFalse($status->isCurrent);
+        $this->assertTrue($status->isOutdated());
+        $this->assertSame((int) $holderSignature->getKey(), $status->signatureId);
+
+        $batch = WaiverStatus::forDependents([$lucas]);
+        $this->assertSame(WaiverStatus::MINOR_OUTDATED, $batch[$lucas->id]->minorState());
+        $this->assertEquals(WaiverStatus::forDependent($lucas), $batch[$lucas->id]);
     }
 }
