@@ -22,8 +22,8 @@
   - ⚠️ El aviso de cookies pasa a la isla, y la T3 de la analítica (carril del SPA, `#735`) toca ese aviso:
     se avisa en el buzón antes.
   - Tras tocar un `.vue`, `npm run build:ssr` antes de la suite (`sidebar-spa.md` §0).
-- **Estado**: §7 contestado (`#683`), promociones en `#684`, T0 hecha (§1.6). **T1 ✅** (§4.8): referencia byte a
-  byte, fuentes, hoja (82 de 82 páginas del diseño, 0 píxeles) e iconos (84, 0 píxeles). Sigue la T2.
+- **Estado**: §7 contestado (`#683`), promociones en `#684`, T0 hecha (§1.6). **T1 ✅** (§4.8) y **T2 ✅**
+  (§4.9): la isla en Vue, 52 de 52 situaciones idénticas al diseño. Sigue la T3 (la compra en la isla).
 - **Invariantes**: `PAY-*` si entra Bizum (`VERIFY_CONC=1`), `SEC-12` (la ruta de las vistas), `SEC-01`,
   `RGPD-*` (consentimiento dentro de la isla, Apple como proveedor), `PERF-02` (la carcasa por instalación va en
   el arranque cacheado; la variante del A/B, en la sesión).
@@ -306,7 +306,7 @@ deja de decir «nada de otra librería» en la T1.
 |---|---|---|
 | T0 ✅ | Kids y Jump contra el menú de hechos, los tokens y las URLs (§1.6). Cumpleaños y la portada, con su tanda | Esta spec |
 | T1 ✅ | El tema: la referencia, las fuentes, la hoja de tokens y los iconos (§4.8); los roles nuevos del producto van con la isla (T2) | Producto + instancia |
-| T2 | La isla en reposo (apagada por defecto): menú, situaciones 2, 3, 5 y 15, y el aviso de cookies dentro | Producto |
+| T2 ✅ | La isla en Vue, idéntica al diseño en 26 situaciones (§4.9); los datos reales, con la T4 | Producto |
 | T3 | La compra en la isla sobre el motor, con tarjeta; sonda de compra | Producto |
 | T4 | **Kids y Jump** (`#683`), un molde y dos páginas, con su calculadora y sus 301 | Instancia + producto |
 | T5 | Mi cuenta en la isla | Producto |
@@ -361,6 +361,58 @@ distintos. Idéntico = **0**. El arnés tiene control negativo: una B sin fuente
   `scripts/banco-lucide.php`: los 84 iconos que usa el diseño a 16, 20 y 24 px, más relleno, nombre, chip y
   color, contra el `Icon` del diseño → **0 píxeles distintos** en 1280 y 390; un trazo alterado da 99 y código 1.
   `LucideIconTest` (9 casos) con sus mutaciones en rojo. `IconSetAnatomyTest` sigue guardando el set ANTIGUO.
+
+### 4.9 La T2, en cuatro pasos: la isla en reposo, idéntica y del producto
+
+La fuente es `components/navigation/ParkIsland.jsx` de la referencia (968 líneas) y lo que usa: `Icon`, `Button`
+(`quiet`), `Link`. Se porta **1:1 a Vue** —la misma tabla de prioridades, la misma medida y el mismo morfeo, el
+mismo árbol y los mismos estilos en línea—, para que un cambio del diseño se traslade comparando fichero con
+fichero. Lo que la isla hace en la compra (situación 10), en Mi QR (su `QrPass`) y en el pago fallido va con la
+T3 y la T5, que es cuando tiene detrás el motor; el componente deja su sitio hecho.
+
+- **T2a · el contrato**: la isla es del producto y **no puede nombrar la paleta de un cliente**. Medido
+  (`grep` de sus `var()` y literales): usa seis primitivos de PlayJump (`--snow` 14 veces, `--volt-500` 10,
+  `--ink-900` 4, `--flare-400` 3, `--flare-500` 2, `--aqua-400` 2) y siete colores de marca escritos a mano
+  (la sombra y el velo en `rgb(9,46,74)`, el borde de alerta naranja, el aviso y el destacado en lima). Pasan a
+  **roles `--isla-*`** que el producto declara con un valor neutro y que PlayJump asigna a sus valores exactos
+  en su instancia. Lo que ya es rol en Saltia (`--action-bg`, `--text-muted`, `--r-pill`, `--dur-slow`…) se
+  queda con su nombre, con respaldo en el producto. Los `@keyframes` del diseño se llaman `pj-*`: en el
+  producto, `isla-*`, con la misma definición. Los textos van a `lang/{es,en,fr}`; el español, el del diseño.
+- **T2b · el componente**, en `resources/js/isla/` (futuro): la lógica pura (qué situación manda) con sus
+  pruebas de `node --test`, y las piezas en Vue.
+- **T2c · el juez**: un banco con la isla del diseño (A) y la nuestra (B) con las MISMAS props, por situación
+  (el «desde», las cuatro de «hoy», la frase de un miedo, la oferta, cediendo la acción, compacta, con el
+  menú, el selector de plan, la ayuda, las cookies y un aviso), abajo a 390 y arriba a 1280. Idéntico = 0.
+- **T2d · los datos**: de dónde sale cada prop en una página real (el «desde» de `/prices`, «hoy» de
+  `/schedule/now` y `/availability/{product}/times`, la frase de `data-isla-frase`, la cesión de `data-isla-cta`).
+  Se monta de verdad con la primera página (T4), que es su consumidor.
+
+**Hecho el 24-09 (`#687`)**: T2a, T2b y T2c ✅; la T2d va con la T4.
+- **El contrato**: 13 roles `--isla-*` y los respaldos de lo que ya era rol, todo en `:where()` (pesa cero) en
+  `resources/js/isla/isla.css`; los valores de PlayJump, en `publico/instancia/css/isla.css` de su instancia;
+  los movimientos, `isla-swap`, `isla-pulse` e `isla-fade-in`. Los textos, en `lang/{es,en,fr}/isla.php` (47
+  claves; el inglés y el francés, propuestos y **a revisar por el owner**); las horas llegan con `:hora`, que el
+  diseño escribía a mano («a partir de las 16:30»).
+- **El componente**: `resources/js/isla/` — la lógica pura en `situacion.js` (17 pruebas de `node --test`), la
+  isla en `IslaFlotante.vue` y sus piezas en `piezas/` y `ui/` (el `Icon`, el `Button` con sus variantes de rol y
+  el `Link`). ⚠️ Dos cosas del port que muerden en silencio: React pone `px` a los números de los estilos y Vue
+  no (un `width: 46` sería una declaración inválida, ignorada), y la plantilla de Vue convierte un salto de
+  línea entre un texto y un elemento en un espacio que JSX no deja. `IslaTextosTest` (mismas claves en los tres
+  idiomas, ninguna clave pedida que no exista, ningún marcador perdido; tres mutaciones en rojo). ESLint limpio.
+- **`CE-6` sin excepción** (el techo de 40 líneas de código por `.vue` de `SidebarComponentBudgetTest`): el port
+  de una pieza tenía 285 y el botón 72. Ahora `IslaFlotante.vue` solo pinta (el JSX del diseño, y la plantilla
+  quedó idéntica byte a byte); el estado y los efectos, en `useIsla.js`, que llama a `useColocacion.js`,
+  `usePaneles.js`, `useMorfeo.js` y `useAviso.js` en el orden del port (los `onMounted` y los `watch` corren
+  en el orden de registro); sus estilos, en `forma.js` (6 pruebas); sus props, en `props.js`; los del botón y
+  el enlace, en `ui/estilos.js`. El banco, tras el cambio: 52/52 a 0 píxeles y los 52 a la primera; control
+  negativo (1px de relleno en `forma.js`): 11.885 píxeles y código 1.
+- **El juez**: `scripts/banco-isla.php` escribe, por situación, la isla del diseño (A) y la nuestra (B, compilada
+  aparte por `scripts/banco-isla/vite.config.mjs`) en el mismo marco, sobre una foto del parque; las situaciones
+  viven en la instancia (`tema/isla-situaciones.json`). **26 situaciones × abajo 390 y arriba 1280 = 52 pares,
+  52 con 0 píxeles distintos** (50 a la primera, 2 al reintentar): el «desde» de cinco páginas, las cuatro de
+  «hoy», la acción cedida, dos miedos, la oferta, compacta, cookies, aviso, calculado y su resumen abierto,
+  elegido, a medias, tarea, pago fallido, reserva de hoy, el menú sin y con sesión, la ayuda y el selector de
+  plan. Control negativo: un solo rol cambiado (`--isla-vivo`) da 60 píxeles y código 1.
 
 **`public/instancia/`** es desde la T1b el sitio del material NUEVO de una instalación (fuentes, hojas y medios
 de sus páginas): se copia desde `publico/instancia/` del paquete, lo ignora git y lo excluye el `rsync`

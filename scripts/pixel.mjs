@@ -18,7 +18,8 @@
  * Sale con código 1 si una ventana supera el umbral, si las dos capturas no miden lo mismo, o si una página
  * no carga. Deja `a.png`, `b.png` y `dif.png` por ventana: en `dif.png` lo distinto va en rojo sobre A en gris.
  *
- * **Por lotes**: `--lote lista.json`, con `[{ "nombre", "a", "b", "viewport": "700x430", "completa": true }]`.
+ * **Por lotes**: `--lote lista.json`, con `[{ "nombre", "a", "b", "viewport": "700x430", "completa": true,
+ * "clics": ["[aria-label=\"Menú\"]"] }]` (los `clics` son selectores de Playwright que se tocan antes de la foto).
  * Juzga todos los pares en un solo navegador, deja cada uno en `<salida>/<nombre>/` y acaba con el resumen.
  * Antes de creerse una diferencia, el mismo lote con B = A dice qué páginas no son deterministas.
  *
@@ -144,7 +145,7 @@ async function servirExternos(context) {
     });
 }
 
-async function capturar(navegador, ajustes, url, completa) {
+async function capturar(navegador, ajustes, url, completa, clics = []) {
     // ⚠️ Un contexto NUEVO por captura (medido el 24-09): con A y B en el mismo contexto, la segunda visita
     // heredaba el `localStorage` y la caché de la primera —el diseño guarda allí el aviso de cookies y el
     // cálculo— y pintaba 124 píxeles distintos, siempre los mismos. Cada captura es una primera visita.
@@ -155,6 +156,12 @@ async function capturar(navegador, ajustes, url, completa) {
     const respuesta = await page.goto(url, { waitUntil: 'load', timeout: 60000 });
     if (!respuesta || !respuesta.ok()) throw new Error(`no carga (${respuesta ? respuesta.status() : 'sin respuesta'}): ${url}`);
     await asentar(page);
+    // Lo que se toca antes de la foto (abrir el menú, un panel): cada toque, y la página se vuelve a asentar.
+    for (const selector of clics) {
+        await page.click(selector);
+        await page.mouse.move(-1, -1);
+        await asentar(page);
+    }
     if (completa) {
         const ventana = page.viewportSize();
         const [ancho, alto] = await page.evaluate(() => [document.documentElement.scrollWidth, document.documentElement.scrollHeight]);
@@ -203,7 +210,7 @@ const aVentana = (v) => { const [width, height] = v.split('x').map(Number); retu
 const sha = (buf) => createHash('sha256').update(buf).digest('hex').slice(0, 16);
 
 /** Un par A/B en una ventana: captura las dos, compara, guarda las imágenes y dice si pasa. */
-async function juzgar(navegador, { nombre, a, b, viewport, completa }) {
+async function juzgar(navegador, { nombre, a, b, viewport, completa, clics = [] }) {
     const ajustes = { viewport, deviceScaleFactor: Number(arg.dpr), reducedMotion: 'reduce' };
     const context = await navegador.newContext();
     const etiqueta = `${nombre ? `${nombre} ` : ''}${viewport.width}x${viewport.height} @${arg.dpr}x`;
@@ -212,7 +219,7 @@ async function juzgar(navegador, { nombre, a, b, viewport, completa }) {
         const maximo = 1 + Number(arg.reintentos ?? 0);
         do {
             intento++;
-            [pngA, pngB] = [await capturar(navegador, ajustes, a, completa), await capturar(navegador, ajustes, b, completa)];
+            [pngA, pngB] = [await capturar(navegador, ajustes, a, completa, clics), await capturar(navegador, ajustes, b, completa, clics)];
             r = await comparar(context, pngA, pngB);
         } while (intento < maximo && !(r.mide && r.distintos <= umbral));
         const cuando = maximo > 1 ? ` · intento ${intento} de ${maximo}` : '';

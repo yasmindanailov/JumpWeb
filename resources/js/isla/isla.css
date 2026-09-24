@@ -1,0 +1,99 @@
+/*
+ * LA ISLA — sus roles de tema y sus movimientos (`specs/isla-y-landing-nueva.md` §4.9, T2a).
+ *
+ * La isla es del PRODUCTO, así que no nombra la paleta de nadie. El diseño del que sale (el de Play Jump Park)
+ * pintaba con seis colores de su marca y siete escritos a mano; aquí son ROLES `--isla-*`, con un valor neutro
+ * que cada instalación sustituye por los suyos (PlayJump: `publico/instancia/css/isla.css` de su paquete).
+ * Lo que el sistema de diseño ya llamaba por su función (`--action-bg`, `--text-muted`, `--r-pill`,
+ * `--dur-slow`…) conserva el nombre y trae aquí un respaldo, por si la instalación no lo declara.
+ *
+ * ⚠️ TODO va en `:where()`, que pesa CERO: cualquier declaración de la instalación gana, y ésta solo rellena lo
+ * que falte. Por eso tampoco hay reglas de maquetación: la isla pinta con estilos en línea, como el diseño.
+ * ⚠️ Los movimientos del diseño se llaman `pj-*` (Play Jump); aquí `isla-*`, con la MISMA definición.
+ */
+:where(:root) {
+    /* Roles de la isla: neutros. */
+    --isla-sobre: #ffffff;
+    --isla-tinta: #101418;
+    --isla-vivo: #3fa34d;
+    --isla-alerta: #e4550a;
+    --isla-alerta-texto: #ff8f4d;
+    --isla-foco: #74ddfa;
+    --isla-sombra: 0 18px 44px -18px rgba(16, 20, 24, 0.72), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+    --isla-velo: rgba(16, 20, 24, 0.44);
+    --isla-borde-alerta: rgba(228, 85, 10, 0.5);
+    --isla-aviso-fondo: rgba(63, 163, 77, 0.14);
+    --isla-aviso-borde: rgba(63, 163, 77, 0.35);
+    --isla-destacado-fondo: rgba(63, 163, 77, 0.12);
+    --isla-punto-borde: rgba(16, 20, 24, 0.92);
+
+    /* Respaldo de lo que el sistema de diseño llama por su función. */
+    --font-ui: system-ui, -apple-system, sans-serif;
+    --font-display: system-ui, sans-serif;
+    --font-mono: ui-monospace, monospace;
+    --fw-semibold: 600;
+    --fw-bold: 700;
+    --fw-black: 900;
+    --fs-caption: 0.8125rem;
+    --fs-body-sm: 0.9375rem;
+    --fs-body: 1rem;
+    --r-sm: 10px;
+    --r-md: 14px;
+    --r-lg: 20px;
+    --r-pill: 999px;
+    --control-md: 48px;
+    --dur-base: 240ms;
+    --dur-slow: 380ms;
+    --dur-island: 520ms;
+    --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+    --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+    --ease-island: cubic-bezier(0.32, 1.35, 0.3, 1);
+    --dur-fast: 150ms;
+    --t-hover: all var(--dur-fast) var(--ease-out);
+    --t-island: width var(--dur-island) var(--ease-island), height var(--dur-island) var(--ease-island), border-radius var(--dur-island) var(--ease-island), transform var(--dur-base) var(--ease-out);
+    --scale-press: 0.97;
+    --lift-hover: -3px;
+    --blur-island: saturate(160%) blur(20px);
+    --blur-veil: saturate(120%) blur(8px);
+    --ink-surface: rgba(16, 20, 24, 0.94);
+    --surface-glass-ink-border: rgba(255, 255, 255, 0.16);
+    --action-bg: #101418;
+    --action-bg-hover: #2a3037;
+    --action-fg: #ffffff;
+    --shadow-cta: 0 10px 24px -8px rgba(16, 20, 24, 0.55);
+    --focus-ring: #101418;
+}
+
+/* Dentro de la isla (su caja lleva `data-surface="ink"`): el texto y los controles, sobre tinta. */
+:where([data-isla] [data-surface="ink"]) {
+    --text-strong: #ffffff;
+    --text-body: rgba(255, 255, 255, 0.88);
+    --text-muted: rgba(255, 255, 255, 0.72);
+    --text-link: #74ddfa;
+    --text-link-hover: #ffffff;
+    --control-bg-hover: rgba(255, 255, 255, 0.14);
+    --action-quiet-bg: rgba(255, 255, 255, 0.1);
+    --action-quiet-fg: #ffffff;
+    --action-quiet-border: rgba(255, 255, 255, 0.38);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :where(:root) {
+        --dur-fast: 1ms;
+        --dur-base: 1ms;
+        --dur-slow: 1ms;
+        --dur-island: 1ms;
+        --lift-hover: 0px;
+        --scale-press: 1;
+    }
+    :where([data-isla], [data-isla] *) {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Los movimientos, con la definición del diseño (`tokens/base.css`: `pj-pulse`, `pj-island-swap`, `pj-fade-in`). */
+@keyframes isla-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.45; transform: scale(0.78); } }
+@keyframes isla-swap { from { opacity: 0; transform: translateY(5px) scale(0.985); filter: blur(6px); } 55% { filter: blur(0); } to { opacity: 1; transform: none; filter: blur(0); } }
+@keyframes isla-fade-in { from { opacity: 0; } to { opacity: 1; } }

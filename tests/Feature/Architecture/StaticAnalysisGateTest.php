@@ -145,7 +145,9 @@ class StaticAnalysisGateTest extends TestCase
             $config,
             'Sin un juego de reglas de Vue, ESLint no entiende una plantilla: `flat/essential` es el suelo (`#625`).',
         );
-        $this->assertStringContainsString("'resources/js/{sidebar,cajon}/**/*.{js,vue}'", $config, 'La config ya no declara el cajón entero: el motor (`sidebar/`) y lo que lo abre sin framework (`cajon/`, F4 · T2), `.js` y `.vue`.');
+        // `isla/` entra el 2026-09-24 (`#687`): la carcasa nueva del motor. El comando del gate la sumará a
+        // `lint:js` cuando el carril del SPA vea el aviso de `package.json` (compartido); hasta entonces se pasa a mano.
+        $this->assertStringContainsString("'resources/js/{sidebar,cajon,isla}/**/*.{js,vue}'", $config, 'La config ya no declara el cajón entero: el motor (`sidebar/`), lo que lo abre sin framework (`cajon/`, F4 · T2) y la isla (`isla/`, `#687`), `.js` y `.vue`.');
         $this->assertMatchesRegularExpression(
             "/'no-use-before-define':\s*\[\s*'error'/",
             $config,

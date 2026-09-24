@@ -2,7 +2,7 @@
 
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669 AGOTADA con `#669`** → **670–699 EN CURSO** · Último usado: **`#685`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **640–669 AGOTADA con `#669`** → **670–699 EN CURSO** · Último usado: **`#687`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#684`) · Actualizado: **2026-09-24**
 > (el sistema nuevo leído por DesignSync; el owner decide Blade en la instancia y la isla como segunda carcasa).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
@@ -81,8 +81,11 @@
    ✅ **T1 ENTERA** (§4.8, `#685`, `#686`), juzgada con `scripts/pixel.mjs`: la referencia byte a byte en
    `instancias/playjump/diseno/playjump-design-system/` · las fuentes desde `public/instancia/` · la hoja
    `saltia.css`, **82 de 82 páginas del diseño con 0 píxeles distintos** · Lucide 0.544.0 con `<x-lucide>`, 84
-   iconos con 0 píxeles. ▶ Siguiente: **T2**, la isla en reposo. ⚠️ Tras un `pull`: `cp -r
-   ../instancias/playjump/publico/instancia public/`; y el lote se rehace con `tema/lote-fichas.py`.
+   iconos con 0 píxeles. ✅ **T2** (§4.9, `#687`): la isla portada 1:1 a Vue en `resources/js/isla/`, con roles
+   `--isla-*` y textos en `lang/*/isla.php` (en/fr a revisar por el owner), **52 de 52 situaciones idénticas**
+   (`scripts/banco-isla.php`) y `CE-6` sin excepción (el estado en `useIsla.js`). ▶ Siguiente: **T3**, la compra en la isla. ⚠️ Tras un `pull`: `cp -r
+   ../instancias/playjump/publico/instancia public/`; los lotes se rehacen con `tema/lote-fichas.py` y
+   `scripts/banco-isla.php` (el lado B se compila antes con `scripts/banco-isla/vite.config.mjs`).
    ⚠️ **La web nueva cambia las URLs** (§1.5): cada ruta vieja necesita su 301.
    ⚠️⚠️ **Lo que dejaron los platos y vale para lo que venga** (detalle en la spec §4.1 y §4.1.ter): si
    el dato tiene **servicio de dominio**, el recurso **delega** · el filtro de «lo que no viaja» va
@@ -261,6 +264,11 @@ dueño es el carril de la web/reseñas—) ·
   de que cualquiera de los dos lo mueva.
 - El A/B isla contra cajón espera a tu T5 (`analitica.md` §4.4): la carcasa por instalación irá en
   `/sidebar/boot` y la variante por visitante en `/sidebar/session`.
+- ▶ **24-09, aviso previo de lo compartido**: la isla vive en `resources/js/isla/` (Vue, `node --test`, ya
+  la recoge `test:js`). Quiero sumarla a `lint:js` de **`package.json`** (`eslint resources/js/sidebar
+  resources/js/cajon resources/js/isla`); `eslint.config.js` ya la incluye y hoy pasa limpia a mano. No lo toco
+  hasta que lo veas: si te parece bien, dilo en tu carril, o hazlo tú al pasar.
+- La isla importa `t()`/`tp()` de `resources/js/sidebar/i18n.js`: tu módulo, solo leído, sin cambiarlo.
 
 ### ❗ Para el carril de la WEB (emisor: plataforma, 2026-09-23) — dos huecos de contenido, MEDIDOS
 - ▶ Publicar `/servicios` como hechos (`#672`) destapó dos cosas **tuyas**, que son de tu T6 de contenido
