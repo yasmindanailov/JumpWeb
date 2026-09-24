@@ -8,6 +8,10 @@
  *
  * Pinta y avisa (`cambiar(campo, valor)`, `entrar(modo)`, `descargo`, `proveedor(via)`, `hora(valor)`): quién es,
  * qué falta y si la hora se llenó lo decide quien lleva la compra.
+ *
+ * Con el motor (T3e·3): `aviso` es un «no» del servidor que no es de ningún campo (el limitador, un corte), en el
+ * mismo aviso de arriba; `entrar` y `social` apagan «¿Ya has venido? Entra» y Google/Apple mientras no entran de
+ * verdad (T3e·4); la ranura `antibot` lleva el anti-bot del alta, si la instalación lo tiene. Sin ellos, el diseño.
  */
 import { computed } from 'vue';
 import { useTextos } from '../piezas/textos.js';
@@ -33,19 +37,22 @@ const props = defineProps({
     cercanas: { type: Array, default: () => [] },
     horaNueva: { type: String, default: null },
     enApp: { type: Boolean, default: null },
+    aviso: { type: String, default: '' },
+    entrar: { type: Boolean, default: true },
+    social: { type: Boolean, default: true },
 });
 const emit = defineEmits(['cambiar', 'entrar', 'descargo', 'proveedor', 'hora']);
 const { t, tp } = useTextos();
 
 const fallos = computed(() => Object.values(props.errores).filter(Boolean).length);
-const revisa = computed(() => (fallos.value === 1 ? t('compra.datos.revisa_uno') : tp('compra.datos.revisa', { n: fallos.value })));
+const revisa = computed(() => props.aviso || (fallos.value === 1 ? t('compra.datos.revisa_uno') : tp('compra.datos.revisa', { n: fallos.value })));
 const cambiar = (campo) => (valor) => emit('cambiar', campo, valor);
 </script>
 
 <template>
     <PasoCompra :titulo="cuenta === 'dentro' ? tp('compra.datos.hola', { nombre: nombrePila }) : t('compra.datos.titular')">
         <template
-            v-if="cuenta !== 'dentro'"
+            v-if="cuenta !== 'dentro' && entrar"
             #antes
         >
             <p :style="PASO.cuerpo">{{ `${t('compra.datos.ya')} ` }}<EnlaceSistema
@@ -54,7 +61,7 @@ const cambiar = (campo) => (valor) => emit('cambiar', campo, valor);
             >{{ t('compra.datos.entra') }}</EnlaceSistema></p>
         </template>
         <AvisoDestacado
-            v-if="fallos"
+            v-if="fallos || aviso"
             tone="danger"
             size="sm"
             role="alert"
@@ -67,6 +74,7 @@ const cambiar = (campo) => (valor) => emit('cambiar', campo, valor);
         </AvisoDestacado>
         <template v-if="cuenta !== 'dentro'">
             <AccesoSocial
+                v-if="social"
                 :in-app="enApp"
                 :labels="{ google: t('compra.datos.google'), apple: t('compra.datos.apple') }"
                 @google="emit('proveedor', 'google')"
@@ -169,6 +177,7 @@ const cambiar = (campo) => (valor) => emit('cambiar', campo, valor);
             >{{ t('compra.datos.leer') }}</EnlaceSistema>
             <p :style="PASO.pista">{{ t('compra.datos.pista_descargo') }}</p>
         </CasillaSistema>
+        <slot name="antibot" />
         <AvisoDestacado
             v-if="lineaMenores"
             tone="neutral"

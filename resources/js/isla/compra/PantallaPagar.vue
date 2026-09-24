@@ -23,6 +23,8 @@ defineProps({
     nota: { type: String, default: '' },
     otraEntrada: { type: Boolean, default: false },
     calcetines: { type: Object, default: null },
+    // El «no» del servidor al pagar o al cambiar una cantidad (T3e·3): la hora se llenó, la cantidad no cabe…
+    aviso: { type: String, default: '' },
 });
 const emit = defineEmits(['cantidad', 'otra', 'calcetines']);
 const { t } = useTextos();
@@ -30,6 +32,18 @@ const { t } = useTextos();
 
 <template>
     <PasoCompra :titulo="t('compra.pagar.titular')">
+        <AvisoDestacado
+            v-if="aviso"
+            tone="danger"
+            size="sm"
+            role="alert"
+            :title="aviso"
+        >
+            <template #icono><IconoLucide
+                name="circle-alert"
+                :size="18"
+            /></template>
+        </AvisoDestacado>
         <ResumenPrecio
             size="md"
             :lines="lineas"

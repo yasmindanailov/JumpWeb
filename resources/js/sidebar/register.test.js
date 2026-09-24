@@ -69,6 +69,22 @@ describe('el reparto de los avisos', () => {
         assert.deepEqual(errors.summary, ['nombre', 'correo', 'pass', 'términos']);
     });
 
+    /**
+     * **El «no» sobre la CUENTA trae su código** (T3e·3, `DECISIONES #692`): la isla pide la contraseña allí mismo
+     * cuando ya existe, y eso se programa contra `params.signup`, no contra el texto. Sin él, ni rastro.
+     */
+    test('el «no» sobre la cuenta lleva su código, y el de un campo, no', () => {
+        const existe = errorsOf(fail(422, {
+            code: 'validation_failed', message: 'x', params: { signup: 'already_registered' },
+            fields: { email: ['Ya tienes una cuenta con este correo.'] },
+        }));
+        assert.equal(existe.signup, 'already_registered');
+        assert.equal(existe.fields.email, 'Ya tienes una cuenta con este correo.', 'y el mensaje sigue bajo el correo, para el cajón');
+
+        const campo = errorsOf(fail(422, { code: 'validation_failed', message: 'x', fields: { name: ['obligatorio'] } }));
+        assert.equal('signup' in campo, false);
+    });
+
     /** Un campo que el cliente no conoce se pinta igual: el servidor manda, y el banner lo lista. */
     test('un campo desconocido no se pierde', () => {
         const errors = errorsOf(fail(422, {

@@ -24,7 +24,8 @@
   - Tras tocar un `.vue`, `npm run build:ssr` antes de la suite (`sidebar-spa.md` §0).
 - **Estado**: §7 contestado (`#683`), promociones en `#684`, T0 hecha (§1.6). **T1 ✅** (§4.8) y **T2 ✅**
   (§4.9): la isla en Vue, 52 de 52 situaciones idénticas al diseño. **T3** (la compra, §4.10): T3a→T3d ✅;
-  la secuencia de compra vive en `sidebar/usePurchaseFlow.js`. T3e en seis sub-tandas (`#692`).
+  la secuencia de compra vive en `sidebar/usePurchaseFlow.js`. T3e en seis sub-tandas (`#692`): ·1→·3 ✅, la isla
+  compra con tarjeta hasta el banco y sus desenlaces (`#694`).
 - **Invariantes**: `PAY-*` si entra Bizum (`VERIFY_CONC=1`), `SEC-12` (la ruta de las vistas), `SEC-01`,
   `RGPD-*` (consentimiento dentro de la isla, Apple como proveedor), `PERF-02` (la carcasa por instalación va en
   el arranque cacheado; la variante del A/B, en la sesión).
@@ -609,9 +610,40 @@ guion del diseño (`paginas/compra/compra.jsx`, `usePjcCompra`):
   comparten el motor y la isla: el fichero del motor bajó a 211 KiB sin que el cajón descargara menos, así que el
   presupuesto mide ahora la DESCARGA (292; la isla, 94). ▶ Anotado para el SPA: la raíz deja un `locales=""`
   suelto en el DOM de la sección de compra (lo pasa con `v-bind` y ella no lo declara), de antes de esto.
-- **T3e·3** la vista pura (`vista.js`) de las entradas y el controlador de la isla: pantalla 0, «Tus datos»
-  (alta, «ya existe», descargo, con sesión), «Pagar» con su recibo del presupuesto, la salida al banco y los
-  desenlaces. Juez: el banco de la T3c alimentado por `vista.js` con datos del motor, contra el diseño.
+- **T3e·3 ✅** (`#694`) la isla compra con tarjeta, de la pantalla 0 al banco y sus desenlaces:
+  · **el orden, sobre la máquina**: «Continuar» mete la línea (`→ CART`) y admite (`checkout()`: `IDENTIFY` o `PAY`);
+    «Tus datos» identifica (`→ PAY`); «Pagar» crea el pedido y sale (`→ REDIRECTING`); volver a la pantalla 0
+    quita la línea (`→ CATALOG`). Los pasos del cobro los manda la máquina (`compra/pasos.js::pasoDelMotor`),
+    porque llegan también de fuera: la vuelta del banco recarga la página y aterriza en su desenlace;
+  · **la cesta de la isla es SU pedido** (`compra/linea.js`): meter la línea la SUSTITUYE, validada con la cesta
+    vacía como contexto —no hay pantalla de cesta ni «quitar», y lo que quedara se compraría a ciegas—, y el
+    recibo de «Pagar» la REHACE al cambiar gente o pares: complementos resueltos, `validate-line` y presupuesto
+    (3 peticiones por clic; pasar por la máquina eran 7). La cantidad cambia al pulsar y el dinero, al llegar;
+  · **«Tus datos»** (`compra/useDatosCompra.js` + `datos.js`): el alta pay-first del motor; si la cuenta ya existe,
+    su contraseña allí mismo —el 422 del alta lleva su código, `error.params.signup` (`already_registered` ·
+    `pending_verification` · `bot_check_failed`), contrato **1.24.0**—; el olvido; con sesión, «Hola» y solo lo que
+    falta (el teléfono, `#692`·3, y la casilla a quien nunca firmó: `POST /me/waiver`). En el navegador se mira que
+    cada campo ESTÉ; el formato lo juzga el servidor, y su mensaje va bajo su campo. El anti-bot, si está activo;
+  · **«Pagar»** (`usePagoCompra.js` + `recibo.js`): el recibo del presupuesto (`PAY-12`: aquí no se suma nada),
+    `accept_terms` siempre (`#692`·2), sin «tu hora queda guardada» (`#688`); junto a la acción, la pasarela y las
+    condiciones (en otra pestaña); sin Bizum ni marcas (`#683`, datos de la instalación: T4);
+  · **los desenlaces**: saliendo al banco (el formulario firmado tal cual, `FormularioPasarela.vue`), verificando,
+    el pago no completado (su motivo, su hora, reintentar con tarjeta, «Escribirnos») y «¡Reservado!» (la línea del
+    pedido, el QR del CARNÉ, el correo, «Ir a Mi QR» y «Hacer otra reserva»);
+  · **el peso**: las pantallas de después de la pantalla 0 van en su trozo (`compra/pasos-diferidos.js`, 36,92 KiB)
+    que la compra pide al montarse; la compra, 110,35 KiB; el motor, 293,84 (+0,45 del chunk común);
+  · **la prueba**: 38 casos nuevos de `node --test` (los cuatro módulos puros y el código del alta), 3 aserciones del
+    contrato del alta; banco de la T3c **54/54**; una sonda en local de
+    la compra entera, en 390 y en 1280, **29/29**: los errores, «ya existe», la contraseña mala, el recibo, volver
+    dos pasos y seguir, la pasarela con su firma, y los desenlaces por la vuelta REAL del banco (la portada del
+    producto nace con la isla abierta).
+  **Lo que cazó el navegador y ninguna prueba**: la vuelta del banco montaba el motor sin intención, y la isla
+  EMPEZABA otra compra: borraba «¡Reservado!» a quien acababa de pagar (`pasos.js::empiezaOtra`, con su prueba). Y
+  si el estado del pago no llega (la red, el limitador), el pago no completado decía «hasta las . Motivo:»: ahora
+  va sin hora y sin motivo, como el cajón. El «no» de un reintento se DICE (el cajón lo calla: deuda de la web).
+  ⚠️ **Pendiente, a su sub-tanda**: «Entra» y Google (T3e·4: hasta entonces, sin sus botones); las horas cercanas
+  cuando la hora se llena al pagar (hoy, el aviso del servidor en el paso: T3e·6); las tareas de «Listo» que
+  dependen de la zona (adultos, calcetines) y las marcas de pago (T4, datos de la página); «atrás» del navegador.
 - **T3e·4** «Entra» (con la pregunta del teléfono) y Google; Apple y Bizum siguen de corchete apagado.
 - **T3e·5** los cumpleaños: la edad elige el pack de su familia, niños, día, hora, menú y la señal.
 - **T3e·6** la sonda de la isla: una entrada y un cumpleaños con señal hasta la pasarela, en local, y los

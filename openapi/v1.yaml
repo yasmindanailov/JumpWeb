@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.23.0
+  version: 1.24.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -3609,6 +3609,9 @@ components:
                 Datos para interpolar el mensaje en el cliente. Presente solo cuando aporta algo:
                 hoy, `retry_after` en el 429; desde el paso 4, `product`/`when` de las reglas de
                 reserva, sin los cuales el cliente pintaría «El producto — no está disponible».
+                En el 422 de `POST /auth/register` por la CUENTA (no por la forma de un campo),
+                `signup` dice cuál fue: `already_registered`, `pending_verification` o
+                `bot_check_failed` — para el cliente que hace algo distinto con cada una.
               additionalProperties: true
             fields:
               type: object

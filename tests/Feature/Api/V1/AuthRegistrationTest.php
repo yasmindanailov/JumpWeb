@@ -175,7 +175,9 @@ class AuthRegistrationTest extends ApiTestCase
         $this->register()
             ->assertStatus(422)
             ->assertValidResponse(422)
-            ->assertJsonStructure(['error' => ['fields' => ['email']]]);
+            ->assertJsonStructure(['error' => ['fields' => ['email']]])
+            // T3e·3 (`#692`): el desenlace, como CÓDIGO —la isla pide ahí la contraseña—, no solo como texto.
+            ->assertJsonPath('error.params.signup', 'already_registered');
 
         $this->assertSame(1, User::where('email', 'nuevo@jumpweb.test')->count(), 'no puede duplicar la cuenta');
         // ⚠️⚠️ **Y el CTA de ese correo apunta a `login`, no a la home.** Se comprueba aquí desde la
@@ -201,7 +203,7 @@ class AuthRegistrationTest extends ApiTestCase
     {
         $existing = User::factory()->create(['email' => 'nuevo@jumpweb.test', 'email_verified_at' => null]);
 
-        $this->register()->assertStatus(422);
+        $this->register()->assertStatus(422)->assertJsonPath('error.params.signup', 'pending_verification');
 
         Notification::assertSentTo($existing, VerifyEmailAddress::class);
         $this->assertSame(1, User::where('email', 'nuevo@jumpweb.test')->count());
@@ -306,7 +308,8 @@ class AuthRegistrationTest extends ApiTestCase
 
         $this->register(['turnstile_token' => ''])
             ->assertStatus(422)
-            ->assertValidResponse(422);
+            ->assertValidResponse(422)
+            ->assertJsonPath('error.params.signup', 'bot_check_failed');
 
         $this->assertDatabaseMissing('users', ['email' => 'nuevo@jumpweb.test']);
     }

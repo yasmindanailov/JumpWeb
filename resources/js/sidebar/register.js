@@ -107,7 +107,12 @@ export function registerErrors(response, { messages = {}, auth = {} } = {}) {
             if (message !== '') fields[key] = message;
         }
 
-        return { summary: summaryOf(fields), fields };
+        // `signup` (T3e·3, `DECISIONES #692`): CUÁL fue el «no» sobre la cuenta —`already_registered`,
+        // `pending_verification` o `bot_check_failed`—, como código y no como texto. El cajón no lo necesita (le
+        // basta el mensaje bajo el correo); la isla, sí: ante una cuenta que ya existe pide su contraseña allí mismo.
+        const signup = response?.error?.params?.signup;
+
+        return { summary: summaryOf(fields), fields, ...(typeof signup === 'string' ? { signup } : {}) };
     }
 
     // ⚠️ Bajo el campo EMAIL, no en el banner: es donde lo pone `Register`, y difiere del login a

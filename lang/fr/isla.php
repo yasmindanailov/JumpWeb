@@ -174,6 +174,8 @@ return [
             'retencion' => 'Votre horaire est réservé jusqu\'à :hora.',
             'senal' => 'Aujourd\'hui vous payez :senal d\'acompte ; le reste, :resto, le jour de la fête.',
             'hoy_pagas' => 'Aujourd\'hui vous payez :importe',
+            'precio_por' => ':precio par :unidad',
+            'precio_el' => ':precio la :unidad',
             'saliendo' => 'Nous vous emmenons vers la passerelle de votre banque. Si elle ne s\'ouvre pas dans quelques secondes, appuyez sur le bouton.',
             'saliendo_boton' => 'Continuer vers le paiement',
         ],
@@ -202,6 +204,7 @@ return [
         'fallido' => [
             'titular' => 'Le paiement n\'a pas abouti.',
             'texto' => 'Votre banque n\'a pas autorisé le paiement et rien n\'a été débité. Votre horaire reste réservé jusqu\'à :hora.',
+            'texto_sin_hora' => 'Votre banque n\'a pas autorisé le paiement et rien n\'a été débité.',
             'motivo' => 'Motif : :motivo',
             'bizum' => 'Payer avec Bizum',
             'tarjeta' => 'Réessayer avec la carte',

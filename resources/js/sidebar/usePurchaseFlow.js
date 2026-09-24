@@ -534,9 +534,12 @@ export function usePurchaseFlow(props) {
     async function submitLogin() {
         const result = await tracked(authStore.login({ api, messages: props.messages, auth: props.auth }));
 
-        if (! result.ok) return;
+        // El resultado se DEVUELVE (T3e·3): el cajón no lo mira, y la isla lee de él el código del «no».
+        if (! result.ok) return result;
 
         await enterWith(result.response);
+
+        return result;
     }
 
     /**
@@ -557,17 +560,20 @@ export function usePurchaseFlow(props) {
     async function submitRegister() {
         const result = await tracked(authStore.register({ api, messages: props.messages, auth: props.auth, context: CONTEXT_PURCHASE }));
 
-        if (! result.ok) return;
+        // Devuelto como el del acceso (T3e·3): la isla lee de él si la cuenta ya existía (`errors.signup`).
+        if (! result.ok) return result;
 
         if (! result.identified) {
             // El señuelo actuó: misma pantalla que ve un alta legítima sin sesión. No se distingue.
             authStore.reset();
             goToVerdict(STEPS.VERIFY_EMAIL);
 
-            return;
+            return result;
         }
 
         await enterWith(result.me);
+
+        return result;
     }
 
     /**

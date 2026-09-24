@@ -22,6 +22,7 @@ import TiraDias from '../ui/TiraDias.vue';
 import SelectorHoras from '../ui/SelectorHoras.vue';
 import TarjetasOpcion from '../ui/TarjetasOpcion.vue';
 import EsqueletoCarga from '../ui/EsqueletoCarga.vue';
+import AvisoDestacado from '../ui/AvisoDestacado.vue';
 
 defineProps({
     titulo: { type: String, required: true },
@@ -46,6 +47,8 @@ defineProps({
     // «casi llena» del panel) y si hay otra zona que ofrecer. Sin ellos, los valores del diseño (el banco).
     umbral: { type: Number, default: 6 },
     otraZona: { type: Boolean, default: true },
+    // El «no» del servidor al continuar (T3e·3): la línea no cabe, las reservas en pausa… Arriba, como el de «Tus datos».
+    aviso: { type: String, default: '' },
 });
 const emit = defineEmits(['cambiar', 'otra', 'quitarOtra']);
 const { t } = useTextos();
@@ -53,6 +56,18 @@ const { t } = useTextos();
 
 <template>
     <PasoCompra :titulo="titulo">
+        <AvisoDestacado
+            v-if="aviso"
+            tone="danger"
+            size="sm"
+            role="alert"
+            :title="aviso"
+        >
+            <template #icono><IconoLucide
+                name="circle-alert"
+                :size="18"
+            /></template>
+        </AvisoDestacado>
         <DatoFijo
             v-if="otraEntrada"
             icono="calendar-check"

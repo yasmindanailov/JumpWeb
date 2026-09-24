@@ -2,7 +2,7 @@
 
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669 AGOTADA con `#669`** → **670–699 EN CURSO** · Último usado: **`#693`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **640–669 AGOTADA con `#669`** → **670–699 EN CURSO** · Último usado: **`#694`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#684`) · Actualizado: **2026-09-24**
 > (el sistema nuevo leído por DesignSync; el owner decide Blade en la instancia y la isla como segunda carcasa).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
@@ -80,11 +80,13 @@
    `sidebar/usePurchaseFlow.js`, misma traza en navegador con `scripts/sonda-embudo.mjs`) → **T3e** en seis
    sub-tandas (spec §4.10, `#692`): ·1 ✅ el homenajeado en el formulario de invitados → **·2 la carcasa elegible**
    (·2a ✅ el ajuste y el arranque, contrato 1.22.0 · ·2b ✅ `#693` la superficie por apertura, la raíz y la pantalla 0
-   de las entradas) → **·3 «Tus datos», «Pagar», el banco y los desenlaces** (encender «Continuar»; el «ya existe»
-   con `code`). Probar la isla: `sidebar.shell = isla` en local y una página ajena servida por la sonda; al
-   terminar, el ajuste vuelve a `cajon`. → ·3 vista y controlador → ·4 «Entra» → ·5 cumpleaños → ·6 sonda. FALTAN como dato (T0): el precio de antes (→ `#684`),
+   de las entradas) → ·3 ✅ `#694` «Tus datos», «Pagar», el banco y los desenlaces (la isla compra con tarjeta; su
+   cesta es SU pedido; sonda 29/29 en 390 y 1280, banco 54/54) → **·4 «Entra» y Google** (❓ al owner: el diseño
+   dice «correo o teléfono» y el acceso solo admite correo) → ·5 cumpleaños → ·6 la sonda versionada. Probar la
+   isla: `sidebar.shell = isla` en local, `public/_isla-prueba.html` (se BORRA al terminar: guarda 9) y
+   `storage/app/sonda-isla-t3e3.mjs`; el ajuste vuelve a `cajon`. FALTAN como dato (T0): el precio de antes (→ `#684`),
    el plazo de cancelación y los 90 cm con adulto. ⚠️ Tras un `pull`: `cp -r ../instancias/playjump/publico/instancia
-   public/`; los bancos se rehacen con `tema/lote-fichas.py` y `scripts/banco-{isla,piezas,compra}.php` (su lado B, antes).
+   public/` y `php artisan migrate` (las del SPA llegan SIN aplicar aquí: la de `experiments` dio un 500); los bancos se rehacen con `tema/lote-fichas.py` y `scripts/banco-{isla,piezas,compra}.php` (su lado B, antes).
    ⚠️ **La web nueva cambia las URLs** (§1.5): cada ruta vieja necesita su 301.
    ⚠️⚠️ **Lo que dejaron los platos y vale para lo que venga** (detalle en la spec §4.1 y §4.1.ter): si
    el dato tiene **servicio de dominio**, el recurso **delega** · el filtro de «lo que no viaja» va
@@ -95,7 +97,7 @@
    ▶ **Deuda declarada** (en la spec): `birthday`/`groups` son vocabulario del SECTOR (`ContactTopics`) ·
    `price_table`, `nav_subtitle` y `show_in_nav` se retiran con la tanda de la PÁGINA, no antes · un
    producto activo sin NINGÚN precio sale de `/prices` sin la clave `prices` que el contrato exige (`#677`).
-   ⚠️ El §0 de la spec está a **1.925 de 2.048 B**: de ahí solo se toca la línea de «Estado». La **T5**
+   ⚠️ El §0 de la spec está a **1.918 de 2.048 B**: de ahí solo se toca la línea de «Estado». La **T5**
    (cortar v2.0.0) es el final del programa entero, no de esta fase (`#670`).
 
    ▶ **Lo que se le contestó al owner sobre la FORMA del cajón y sobre los widgets** (medido el 21-09)
@@ -251,6 +253,13 @@ dueño es el carril de la web/reseñas—) ·
   rellena; `SidebarBundleBudgetTest` mide la DESCARGA del motor (Rollup sacó un trozo común: techo **292**).
   Con `cajon`, traza idéntica. ⚠️ **Tuyo, de antes**: la raíz deja `locales=""` de atributo en la sección de
   compra (se lo pasa con `v-bind="props"` y ella no lo declara).
+- ▶▶ **24-09 · T3e·3 (`#694`), lo que tocó de lo tuyo, mínimo y sin cambiar una conducta del cajón**:
+  `register.js::registerErrors()` devuelve además `signup` (el CÓDIGO del «no» sobre la cuenta, que el servidor
+  manda ahora en `error.params.signup`, contrato **1.24.0**, sobre tu 1.23.0; tu mensaje bajo el correo sigue igual) con su caso
+  en `register.test.js`; y `usePurchaseFlow.js`: `submitLogin()`/`submitRegister()` DEVUELVEN su resultado (el
+  cajón no lo mira). `account/card.js` y `turnstile.js` pasan al trozo común (los usa la isla): la descarga del
+  motor, 293,84 con tu T5a: cabe en tu techo **294**. La isla, además, DICE el «no» de un reintento del paso 10; en el
+  cajón sigue callado (tu deuda en `DEUDA.md`), por si quieres el mismo aviso.
 
 ### ❗ Para el carril de la WEB (emisor: plataforma, 2026-09-23) — dos huecos de contenido, MEDIDOS
 - ▶ Publicar `/servicios` como hechos (`#672`) destapó dos cosas **tuyas**, que son de tu T6 de contenido

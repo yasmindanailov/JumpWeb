@@ -174,6 +174,8 @@ return [
             'retencion' => 'Your time is held until :hora.',
             'senal' => 'Today you pay :senal as a deposit; the rest, :resto, on the day of the party.',
             'hoy_pagas' => 'Today you pay :importe',
+            'precio_por' => ':precio per :unidad',
+            'precio_el' => ':precio per :unidad',
             'saliendo' => 'Taking you to your bank\'s gateway. If it does not open in a few seconds, press the button.',
             'saliendo_boton' => 'Continue to payment',
         ],
@@ -202,6 +204,7 @@ return [
         'fallido' => [
             'titular' => 'The payment was not completed.',
             'texto' => 'Your bank did not authorise the charge and nothing has been taken. Your time is still held until :hora.',
+            'texto_sin_hora' => 'Your bank did not authorise the charge and nothing has been taken.',
             'motivo' => 'Reason: :motivo',
             'bizum' => 'Pay with Bizum',
             'tarjeta' => 'Try the card again',

@@ -262,9 +262,14 @@ class AuthRegistrationController extends Controller
         // web las pinta bajo el input del correo: la cuenta ya existe (verificada o no) o el
         // anti-bot no pasó. Reutilizar el 422 de validación evita inventar códigos que un cliente
         // tendría que aprender para hacer exactamente lo mismo: enseñar el mensaje junto al campo.
+        // ⚠️ **Y `params.signup` dice CUÁL de las tres fue** (T3e·3, `DECISIONES #692`): quien sí hace algo
+        // distinto —la isla, que ante una cuenta que ya existe pide su contraseña en el mismo sitio— tiene que
+        // programar contra un código y no contra el texto de una traducción (lo manda el contrato). No revela
+        // nada que el mensaje no diga ya, y el alta sigue con su techo de tres por hora (`#31a`).
         return ApiErrorResponse::make(
             ApiErrorCode::ValidationFailed,
             422,
+            params: ['signup' => $result->outcome],
             fields: ['email' => [$this->messageFor($result)]],
         );
     }

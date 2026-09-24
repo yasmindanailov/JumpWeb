@@ -851,11 +851,23 @@ class SidebarBundleBudgetTest extends TestCase
     // T5a de la analítica (24-09): los experimentos en el motor —`sidebar/experiments.js` (leer la variante, contar la
     // exposición una vez) y su `provide` en `index.js`—. Medido 293,39 KiB (HEAD `3c54fc78`: 292,96; +0,43 kB). Es el
     // mecanismo entero del lado del cliente: la asignación vive en el servidor a propósito (cookie `HttpOnly`).
+    // T3e·3 (`#694`): «Tus datos», «Pagar» y los desenlaces de la isla usan dos módulos del motor que antes solo usaba
+    // él —la URL del carné (`account/card.js`) y el anti-bot (`turnstile.js`)—, que pasan al chunk común con su
+    // pegamento; y el alta y el acceso DEVUELVEN su resultado. Medido sobre `3c54fc78`: 292,96 → 293,41 KiB (+0,45); las
+    // dos tandas juntas, sobre `a0670c33`: 293,84 KiB, dentro del techo. Copiarlos en la isla para no moverlos sería la
+    // segunda copia de dos reglas (la versión de la imagen, el montaje del widget); no se hace.
     private const SIDEBAR_CHUNK_MAX_KB = 294;
 
     // T3e·2: la compra de la isla, chunk diferido del motor que solo trae una instalación con la isla. Medido 93,36 KiB
-    // (la sección, sus diez pantallas de la T3c, la isla y sus piezas); su hoja va aparte (7,2 KiB).
-    private const ISLA_COMPRA_CHUNK_MAX_KB = 94;
+    // (la sección, la pantalla 0, la isla y sus piezas); su hoja va aparte (7,2 KiB).
+    // T3e·3 (`#694`): la secuencia de «Tus datos», «Pagar» y los desenlaces (sus `use*` y sus módulos puros), que corre
+    // desde el montaje —la vuelta del banco aterriza en un desenlace—. Medido 110,35 KiB. Sus PANTALLAS no: van en su
+    // propio trozo (abajo), para que quien abre la compra vea la pantalla 0 sin esperarlas.
+    private const ISLA_COMPRA_CHUNK_MAX_KB = 111;
+
+    // T3e·3 (`#694`): las pantallas de después de la pantalla 0, en su trozo (`isla/compra/pasos-diferidos.js`), que la
+    // compra pide al montarse. Medido 36,92 KiB.
+    private const ISLA_PASOS_CHUNK_MAX_KB = 37;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un
@@ -1205,6 +1217,31 @@ class SidebarBundleBudgetTest extends TestCase
         $kb = $this->sizeKb((string) $manifest[$clave]['file']);
         $this->assertLessThanOrEqual(self::ISLA_COMPRA_CHUNK_MAX_KB, $kb, sprintf(
             'La compra de la isla pesa %.2f kB (techo: %s kB).', $kb, self::ISLA_COMPRA_CHUNK_MAX_KB
+        ));
+    }
+
+    /**
+     * **Las pantallas de después de la pantalla 0 son OTRO trozo, pedido aparte** (T3e·3, `#694`).
+     *
+     * Quien abre la compra quiere elegir día y hora: «Tus datos», «Pagar» y los desenlaces no le hacen falta hasta
+     * que pulse «Continuar», y la sección los pide al montarse. Si se importaran de forma estática, cada apertura de
+     * la isla esperaría sus ~37 KiB antes de pintar la pantalla 0.
+     */
+    public function test_the_isla_steps_after_the_first_screen_are_their_own_deferred_chunk(): void
+    {
+        $manifest = $this->manifest();
+        $clave = 'resources/js/isla/compra/pasos-diferidos.js';
+
+        $this->assertArrayHasKey($clave, $manifest, 'Los pasos de la compra de la isla ya no son un trozo propio.');
+        $this->assertTrue(
+            $this->llegaPorImportDinamico('resources/js/isla/SeccionCompra.vue', $clave),
+            'La compra de la isla ya no pide sus pasos con `import()`.'
+        );
+        $this->assertNotContains($clave, $this->alcanceEstatico('resources/js/isla/SeccionCompra.vue'), 'Los pasos viajan con la pantalla 0.');
+
+        $kb = $this->sizeKb((string) $manifest[$clave]['file']);
+        $this->assertLessThanOrEqual(self::ISLA_PASOS_CHUNK_MAX_KB, $kb, sprintf(
+            'Los pasos de la compra de la isla pesan %.2f kB (techo: %s kB).', $kb, self::ISLA_PASOS_CHUNK_MAX_KB
         ));
     }
 

@@ -59,7 +59,10 @@ const { t, tp } = useTextos();
             <p :style="PASO.pista">{{ tp('compra.listo.enviado', { correo }) + (whatsapp ? ` ${t('compra.listo.whatsapp')}` : '') }}</p>
         </div>
 
-        <section :style="[{ display: 'grid', gap: '10px' }, subir(380)]">
+        <section
+            v-if="tareas.length"
+            :style="[{ display: 'grid', gap: '10px' }, subir(380)]"
+        >
             <h2 :style="PASO.pregunta">{{ t('compra.listo.antes') }}</h2>
             <TarjetaTarea
                 v-for="tarea in tareas"

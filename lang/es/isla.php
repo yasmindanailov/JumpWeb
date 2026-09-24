@@ -182,6 +182,9 @@ return [
             'retencion' => 'Tu hora queda guardada hasta las :hora.',
             'senal' => 'Hoy pagas :senal de señal; el resto, :resto, el día de la fiesta.',
             'hoy_pagas' => 'Hoy pagas :importe',
+            // T3e·3: el precio publicado bajo cada línea del recibo («8 € por entrada», «2 € el par»), como el diseño.
+            'precio_por' => ':precio por :unidad',
+            'precio_el' => ':precio el :unidad',
             'saliendo' => 'Te llevamos a la pasarela de tu banco. Si no salta en unos segundos, pulsa el botón.',
             'saliendo_boton' => 'Continuar al pago',
         ],
@@ -210,6 +213,8 @@ return [
         'fallido' => [
             'titular' => 'El pago no se ha completado.',
             'texto' => 'Tu banco no ha autorizado el cobro y no se ha cargado nada. Tu hora sigue guardada hasta las :hora.',
+            // T3e·3: la misma, cuando no se ha podido leer hasta cuándo (la red, el limitador): no se inventa la hora.
+            'texto_sin_hora' => 'Tu banco no ha autorizado el cobro y no se ha cargado nada.',
             'motivo' => 'Motivo: :motivo',
             'bizum' => 'Pagar con Bizum',
             'tarjeta' => 'Volver a intentar con tarjeta',
