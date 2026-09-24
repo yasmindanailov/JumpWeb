@@ -2,8 +2,8 @@
 
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669 AGOTADA con `#669`** → **670–699 EN CURSO** · Último usado: **`#682`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`, `#682`) · Actualizado: **2026-09-24**
+> **640–669 AGOTADA con `#669`** → **670–699 EN CURSO** · Último usado: **`#684`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#684`) · Actualizado: **2026-09-24**
 > (el sistema nuevo leído por DesignSync; el owner decide Blade en la instancia y la isla como segunda carcasa).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
 > llévaselo con la medida, como el SPA en `#724`).
@@ -72,8 +72,11 @@
    proyecto `33397ca2…` («Saltia»), y se lee con DesignSync (autorizado el 24-09). `[DECIDIDO owner]` 24-09:
    **`#681`** las páginas en **Blade dentro de la instancia**, solo con hechos (Astro descartado, medido) ·
    **`#682`** la **isla** es una **segunda carcasa** del producto sobre el motor del cajón, apagada por defecto y
-   medida contra él; la hace ESTE carril. ▶ Siguiente: las **cuatro preguntas de su §7** (primera página,
-   iconos, pasos del cajón, lógica nueva en la v2.0.0) y la **T0** (censo de páginas, tokens y URLs; §4.7).
+   medida contra él; la hace ESTE carril. **`#683`** contestó su §7: **Kids y Jump** primero, **Lucide**,
+   el cajón **adopta los pasos nuevos**, y **Bizum, Apple y el aviso de día liberado** en la v2.0.0.
+   **`#684`**: un **sistema de PROMOCIONES** en su propia página del panel (etiquetas de texto e icono en
+   producto, pack o complemento, y un aviso arriba), con spec propia y modelo a iterar con el owner.
+   ▶ Siguiente: la **T0** (censo de páginas, tokens y URLs; §4.7).
    ⚠️ **La web nueva cambia las URLs** (§1.5): cada ruta vieja necesita su 301.
    ⚠️⚠️ **Lo que dejaron los platos y vale para lo que venga** (detalle en la spec §4.1 y §4.1.ter): si
    el dato tiene **servicio de dominio**, el recurso **delega** · el filtro de «lo que no viaja» va
@@ -96,8 +99,8 @@
 5. **La promo, cuando el owner la termine** (es suyo el cuándo). La receta y **sus nueve cifras** bajaron a
    `ENTORNOS.md` §6 en `#675`, junto al despliegue que las escribió. Sin desplegar: son datos.
 6. Después, **F6** (app nativa; hereda del token lo que su spec §2 nombra: Google, alta, dispositivos).
-- **Del owner, HOY**: las **cuatro preguntas de §7** de `isla-y-landing-nueva.md` · el **fin de la promo** (es
-  suyo el cuándo) · el **ojo** que le falta a la compra de la T5 de F4 · **`topics`**: con la landing fuera, ¿de quién son los asuntos del formulario de contacto?
+- **Del owner, HOY**: el **modelo de las promociones** (`#684`: dónde va cada etiqueta en la landing, y el
+  aviso de arriba frente a la regla 5 del brief base) · el **fin de la promo** (es suyo el cuándo) · el **ojo** que le falta a la compra de la T5 de F4 · **`topics`**: con la landing fuera, ¿de quién son los asuntos del formulario de contacto?
   (hoy son constante del producto, y `birthday`/`groups` son vocabulario del SECTOR).
   ▶ Contestadas y retiradas de aquí: por dónde arrancar la vía A (los platos, 23-09), cuándo se
   despliega (`#670`: no en piezas), el registro del dinero en la API (`#677`: céntimos) y **la analítica

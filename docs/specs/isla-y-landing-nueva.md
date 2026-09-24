@@ -1,7 +1,7 @@
 # [SPEC] La isla y la landing nueva — las páginas en la instancia y una segunda carcasa de compra en el producto
 
-> Estado: ⬜ **borrador** · Última actualización: 2026-09-24 · Decisiones: `#681` (las páginas) y `#682` (la
-> isla), las dos `[DECIDIDO owner]`; la spec se aprueba con la suya.
+> Estado: ⬜ **borrador** · Última actualización: 2026-09-24 · Decisiones: `#681` (las páginas), `#682` (la
+> isla), `#683` (las cuatro de §7) y `#684` (promociones), todas `[DECIDIDO owner]`; la spec se aprueba con la suya.
 > Carril: **plataforma** (banda 670–699). Fuente del diseño: el proyecto de Claude Design
 > `33397ca2-c67c-4049-8b09-ade20425f32a`, «Saltia Design System» (nombre provisional; la marca es Play Jump
 > Park), leído con `DesignSync` (`list_files` / `get_file`). Hermanas: `instancia-y-landing-fuera.md` (el menú
@@ -22,7 +22,8 @@
   - ⚠️ El aviso de cookies pasa a la isla, y la T3 de la analítica (carril del SPA, `#735`) toca ese aviso:
     se avisa en el buzón antes.
   - Tras tocar un `.vue`, `npm run build:ssr` antes de la suite (`sidebar-spa.md` §0).
-- **Estado**: ⬜ borrador. Censo de la isla hecho (§1.3); el de las páginas y el de tokens son la T0. Sin código.
+- **Estado**: ⬜ borrador, con §7 contestado (`#683`: Kids y Jump primero, Lucide, pasos compartidos; Bizum,
+  Apple y el aviso en la v2.0.0). Promociones: `#684`, spec propia. Sigue la T0 (páginas, tokens, URLs).
 - **Invariantes**: `PAY-*` si entra Bizum (`VERIFY_CONC=1`), `SEC-12` (la ruta de las vistas), `SEC-01`,
   `RGPD-*` (consentimiento dentro de la isla, Apple como proveedor), `PERF-02` (la carcasa por instalación va en
   el arranque cacheado; la variante del A/B, en la sesión).
@@ -157,7 +158,7 @@ correos) · el post-form, la invitación y el justificante (briefs propios, desp
   `CONFIRMED`, `DECLINED`, `VERIFYING`. Hay que medir en la T3 si la máquina admite ese orden sin tocar sus
   transiciones.
 - **Para acotar el coste de dos carcasas**, el contenido de cada paso se escribe una vez y lo montan las dos.
-  Si el cajón adopta los pasos nuevos o conserva los suyos es la pregunta 3 de §7.
+  `[DECIDIDO owner]` 2026-09-24 (`#683`): el cajón clásico **adopta los pasos nuevos** dentro de su lateral.
 
 ### 4.2 Las páginas en la instancia
 
@@ -196,21 +197,25 @@ ingenua da 73,60 € y la real 74,40 €.
 
 | Pieza | Situación | Estado | Nota |
 |---|---|---|---|
-| Fecha de fin de la oferta | 4 | FALTA | Un dato junto a `promo.percent`; lo pide también `OfferTag` |
-| Bizum | 11 y Pagar | FALTA | Dinero: `INVARIANTES` §1, `REDSYS.md`, `VERIFY_CONC=1` |
-| Entrar con Apple | Tus datos | FALTA | Un proveedor más junto a Google (`auth-con-google.md`) |
-| Aviso de día liberado | 8 | FALTA | Es un corchete: puede faltar sin dejar hueco |
-| Cálculo guardado y compartible | 9 | FALTA | Sin servidor si el enlace lleva los parámetros |
-| ¿Quedan huecos hoy? | 3 | PARCIAL | Un agregado de lectura; `PERF-02` |
-| Tareas con plazo por reserva | 13 | A MEDIR | Los plazos existen repartidos por sus specs |
+| Pieza | Situación | Estado | v2.0.0 (`#683`) | Nota |
+|---|---|---|---|---|
+| Promociones con fechas (la fecha de fin incluida) | 4 | FALTA | Spec propia (`#684`) | Etiquetas de texto e icono en producto, pack o complemento, y un aviso arriba |
+| Bizum | 11 y Pagar | FALTA | **Entra** | Dinero: `INVARIANTES` §1, `REDSYS.md`, `VERIFY_CONC=1` |
+| Entrar con Apple | Tus datos | FALTA | **Entra** | Un proveedor más junto a Google (`auth-con-google.md`) |
+| Aviso de día liberado | 8 | FALTA | **Entra** | Es un corchete: puede faltar sin dejar hueco |
+| Cálculo guardado y compartible | 9 | FALTA | Después | Sin servidor si el enlace lleva los parámetros |
+| ¿Quedan huecos hoy? | 3 | PARCIAL | Con la T2 | Un agregado de lectura; `PERF-02` |
+| Tareas con plazo por reserva | 13 | A MEDIR | Con la T5 | Los plazos existen repartidos por sus specs |
 
-Qué entra en la v2.0.0 lo decide el owner (§7, pregunta 4). Lo que no entre se queda como corchete apagado.
+Lo que no entre se queda como corchete apagado, sin dejar hueco.
 
 ### 4.6 El tema
 
 Los valores de Saltia son de PlayJump y van a su `tema/client.css`. Los **roles** que el producto no tenga los
 declara el producto con nombre genérico, y el mapa rol a rol se hace en la T0. Las fuentes se sirven desde el
-dominio (en `publico/` de la instancia). Los iconos dependen de la pregunta 2 de §7.
+dominio (en `publico/` de la instancia). Los iconos, `[DECIDIDO owner]` 2026-09-24 (`#683`): **Lucide**,
+metidos en el HTML al construir y solo los que se usan, en la isla y en las páginas; `IconSetAnatomyTest`
+deja de decir «nada de otra librería» en la T1.
 
 ### 4.7 Las tandas (propuestas)
 
@@ -220,7 +225,7 @@ dominio (en `publico/` de la instancia). Los iconos dependen de la pregunta 2 de
 | T1 | El tema: tokens en la instancia, roles nuevos en el producto, fuentes locales, iconos | Producto + instancia |
 | T2 | La isla en reposo (apagada por defecto): menú, situaciones 2, 3, 5 y 15, y el aviso de cookies dentro | Producto |
 | T3 | La compra en la isla sobre el motor, con tarjeta; sonda de compra | Producto |
-| T4 | La primera página en la instancia, con su calculadora y sus 301 | Instancia + producto |
+| T4 | **Kids y Jump** (`#683`), un molde y dos páginas, con su calculadora y sus 301 | Instancia + producto |
 | T5 | Mi cuenta en la isla | Producto |
 | T6 | El resto de páginas y la lógica nueva que apruebe el owner | Los dos |
 
@@ -251,18 +256,18 @@ Después, la v2.0.0 (`#670`): con la isla encendida para PlayJump, y el A/B cuan
 **Decidido por el owner el 24-09**: `#681` (Blade en la instancia) y `#682` (la isla, segunda carcasa, apagada
 por defecto, hecha en este carril).
 
-**Pendiente del owner** (con la recomendación primero):
+**Contestadas por el owner el 24-09** (`#683`), las cuatro con la recomendación delante:
 
-1. **La primera página (T4)**. Recomendado: **Kids y Jump**, porque un molde da dos páginas y su compra no
-   lleva señal, así que es el camino del dinero más corto para estrenar la cadena entera. Alternativa:
-   Cumpleaños, que vale más pero lleva señal, dos edades y el formulario después.
-2. **Los iconos**. Recomendado: **Lucide, metido en el HTML al construir** (el diseño entero está hecho con
-   él), relajando «nada de otra librería» de `IconSetAnatomyTest`. Alternativa: redibujar los que falten en el
-   set del producto.
-3. **Los pasos del cajón clásico**. Recomendado: que **adopte los pasos nuevos** dentro de su lateral, para
-   mantener un solo contenido. Alternativa: que conserve sus 25 pantallas y solo reciba lo mínimo.
-4. **La lógica nueva en la v2.0.0**. Recomendado: **fecha de fin de oferta y Bizum** dentro; Apple, aviso de
-   día liberado y cálculo compartible, después.
+1. **La primera página (T4)**: **Kids y Jump**. Un molde da dos páginas y su compra no lleva señal: es el
+   camino del dinero más corto para estrenar la cadena entera.
+2. **Los iconos**: **Lucide**, metido en el HTML al construir (§4.6).
+3. **Los pasos del cajón clásico**: **adopta los pasos nuevos** (§4.1).
+4. **La lógica nueva en la v2.0.0**: **Bizum, Apple y el aviso de día liberado** (§4.5). En lugar de la fecha
+   de fin de oferta, el owner abrió un **sistema de promociones** (`#684`), con spec propia.
+
+**Por iterar con el owner**: el modelo de las promociones (dónde va cada etiqueta en la landing) y el aviso de
+arriba. ⚠️ El brief base (regla 5) dice que no hay ofertas generales en todas las páginas y que un aviso general
+es solo para lo que afecta a todos (un cierre, un horario especial); hay que casarlo con el aviso de ofertas.
 
 **Revisión**: la spec la revisa el owner; la revisión adversarial se le pide con el coste delante (regla 9).
 
