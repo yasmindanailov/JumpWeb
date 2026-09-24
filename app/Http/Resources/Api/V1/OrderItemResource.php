@@ -5,6 +5,7 @@ namespace App\Http\Resources\Api\V1;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Services\Balance;
+use App\Domain\Booking\Services\GuestCountPolicy;
 use App\Domain\Booking\Services\OrderBook;
 use App\Domain\Booking\Services\PostFormAddons;
 use App\Domain\Booking\Services\ProductIcon;
@@ -150,6 +151,20 @@ class OrderItemResource extends JsonResource
             // plazos vencidos y en la instalación que no configura ninguno —el caso por defecto—.
             // Publicar «el catálogo tiene extras» habría invitado a comprar donde ya no se puede.
             'can_add_extras' => app(PostFormAddons::class)->offerableFor($item)->isNotEmpty(),
+            // ⚠️ **Hasta cuándo se rellena el formulario y se ajustan los invitados** (T3e·5 de
+            // `specs/isla-y-landing-nueva.md`): el MISMO instante que publica el formulario
+            // (`GuestFormResource::guest_count_deadline`), del mismo método del dominio, y con la misma condición
+            // que `guest_form_url` —sin formulario no hay plazo que decir—. Va a la COLA, como los de arriba.
+            'guest_count_deadline' => $item->acceptsGuestForm()
+                ? app(GuestCountPolicy::class)->deadlineFor($item)?->toIso8601String()
+                : null,
+            // Dónde se COMPARTE la invitación digital de esta reserva, o `null` si no la ofrece: vive dentro del
+            // formulario, en su bloque (`reservation/guests.blade.php`, `#gf-invite`), y el ancla la pone el
+            // servidor, que es quien conoce la vista. La regla es del producto (`offersGuestInvitation()`:
+            // interruptor, pack y columna de nombre) y la del formulario (`acceptsGuestForm()`), no del cliente.
+            'invitation_url' => $item->acceptsGuestForm() && ($item->ticketType?->offersGuestInvitation() ?? false)
+                ? route('reservation.guests', ['reservation' => $item]).'#gf-invite'
+                : null,
         ];
     }
 }

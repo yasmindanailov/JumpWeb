@@ -4,6 +4,7 @@ namespace App\Http\Resources\Api\V1;
 
 use App\Domain\Booking\Services\AvailabilitySettings;
 use App\Domain\Booking\Services\CatalogSettings;
+use App\Domain\Booking\Services\GuestCountPolicy;
 use App\Domain\Booking\Services\OrderCreator;
 use App\Domain\Platform\Services\Turnstile;
 use App\Http\Sidebar\RegistrationLink;
@@ -81,6 +82,10 @@ class PublicConfigResource extends JsonResource
             // ninguna defensa. Lo destapó el paso de registro de la SPA, que es el primer cliente que
             // lee este campo para decidir.
             'turnstile_site_key' => Turnstile::enabled() ? Turnstile::siteKey() : null,
+            // Hasta cuántas horas antes de la fiesta se ajustan los invitados (`GuestCountPolicy`, T3e·5 de
+            // `specs/isla-y-landing-nueva.md`): la pantalla de un cumpleaños lo dice ANTES de reservar («reserva
+            // con 8 y ajusta hasta 24 h antes»), y el número es el del plazo que después aplica el servidor.
+            'guest_count_cutoff_hours' => app(GuestCountPolicy::class)->cutoffHours(),
         ];
     }
 }

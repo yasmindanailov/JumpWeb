@@ -861,6 +861,9 @@ class SidebarBundleBudgetTest extends TestCase
     // la isla) y el motor dice cuándo terminó de montarse (`ready`). Medido sobre `77a4b3fb`: 293,84 → 294,42 (+0,58).
     // Mirar la vuelta en el NAVEGADOR costaba 0,57 KiB a la entrada de toda página pública: la decide el servidor
     // (`Http\Sidebar\PurchaseResume`) y la entrada sube solo 0,07 (el motivo `resume`).
+    // T3e·5 (`#696`): el motor deja a la vista la configuración que ya pide al montarse (`configuracion`: el plazo de
+    // ajuste de las fiestas, sin otra petición) y la línea confirmada lleva el formulario, su plazo y la invitación
+    // (`outcome.js`). Medido sobre `efbeb18c`: 294,42 → 294,70 (+0,28), dentro del techo.
     private const SIDEBAR_CHUNK_MAX_KB = 295;
 
     // T3e·2: la compra de la isla, chunk diferido del motor que solo trae una instalación con la isla. Medido 93,36 KiB
@@ -870,7 +873,11 @@ class SidebarBundleBudgetTest extends TestCase
     // propio trozo (abajo), para que quien abre la compra vea la pantalla 0 sin esperarlas.
     // T3e·4 (`#695`): «Entra», la ida a Google y reanudar la compra a la vuelta (`sidebar/reanudar.js`). Medido 113,65
     // (110,35 en `77a4b3fb`).
-    private const ISLA_COMPRA_CHUNK_MAX_KB = 114;
+    // T3e·5 (`#696`): las FIESTAS en la pantalla 0 (`usePantallaCero.js`, `fiesta.js` y `PantallaCuandoFiesta`) y su
+    // recibo y su «Listo». Medido 123,46 como DESCARGA (desde aquí se mide la descarga: ver `descargaDe()`). Diferir la
+    // pantalla de la fiesta a su trozo ahorraba solo 1,6 KiB a quien compra entradas y costaba una petición más a quien
+    // abre un cumpleaños: Rollup sacó sus piezas comunes a un trozo compartido. Va en la compra.
+    private const ISLA_COMPRA_CHUNK_MAX_KB = 124;
 
     // T3e·3 (`#694`): las pantallas de después de la pantalla 0, en su trozo (`isla/compra/pasos-diferidos.js`), que la
     // compra pide al montarse. Medido 36,92 KiB. T3e·4 (`#695`): «Entra» con sus eventos y la «G» de Google, 37,66.
@@ -1221,10 +1228,26 @@ class SidebarBundleBudgetTest extends TestCase
         $this->assertNotContains($clave, $this->descargaDelMotor(), 'La compra de la isla viaja con el motor: la paga cada cajón.');
         $this->assertNotContains($clave, $this->alcanceEstatico('resources/js/app.js'), 'La compra de la isla viaja con la landing.');
 
-        $kb = $this->sizeKb((string) $manifest[$clave]['file']);
+        $kb = $this->descargaDe($clave, $this->alcanceEstatico('resources/js/sidebar/index.js'));
         $this->assertLessThanOrEqual(self::ISLA_COMPRA_CHUNK_MAX_KB, $kb, sprintf(
             'La compra de la isla pesa %.2f kB (techo: %s kB).', $kb, self::ISLA_COMPRA_CHUNK_MAX_KB
         ));
+    }
+
+    /**
+     * Lo que se DESCARGA al llegar a una entrada diferida: su fichero y los chunks estáticos que importa, menos lo que
+     * ya se tenía (T3e·5). ⚠️ Medir el fichero a secas dejaba pasar una partición de Rollup: al diferir una pantalla de
+     * la isla, sacó sus piezas comunes a un chunk COMPARTIDO de 25,9 KiB y el fichero de la compra «bajó» de 123 a 96
+     * KiB sin que quien la abre descargara un byte menos (medido). Es la trampa que este test ya pagó con la landing.
+     *
+     * @param  list<string>  $yaDescargado
+     */
+    private function descargaDe(string $clave, array $yaDescargado): float
+    {
+        $manifest = $this->manifest();
+        $propio = array_diff($this->alcanceEstatico($clave), $yaDescargado);
+
+        return array_sum(array_map(fn (string $k): float => $this->sizeKb((string) $manifest[$k]['file']), $propio));
     }
 
     /**
@@ -1246,7 +1269,10 @@ class SidebarBundleBudgetTest extends TestCase
         );
         $this->assertNotContains($clave, $this->alcanceEstatico('resources/js/isla/SeccionCompra.vue'), 'Los pasos viajan con la pantalla 0.');
 
-        $kb = $this->sizeKb((string) $manifest[$clave]['file']);
+        $kb = $this->descargaDe($clave, [
+            ...$this->alcanceEstatico('resources/js/sidebar/index.js'),
+            ...$this->alcanceEstatico('resources/js/isla/SeccionCompra.vue'),
+        ]);
         $this->assertLessThanOrEqual(self::ISLA_PASOS_CHUNK_MAX_KB, $kb, sprintf(
             'Los pasos de la compra de la isla pesan %.2f kB (techo: %s kB).', $kb, self::ISLA_PASOS_CHUNK_MAX_KB
         ));

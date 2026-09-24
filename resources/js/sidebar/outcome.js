@@ -132,6 +132,11 @@ export function confirmationLine(item, answers = [], dependents = []) {
         })),
         event: answers,
         dependents: Array.isArray(dependents) ? dependents : [],
+        // T3e·5 (`specs/isla-y-landing-nueva.md` §4.10): lo que «¡Fiesta reservada!» de la isla ofrece hacer después
+        // —el formulario de invitados hasta su plazo y la invitación—, tal cual lo compone el SERVIDOR (URL y plazo).
+        guest_form_url: typeof item?.guest_form_url === 'string' ? item.guest_form_url : null,
+        guest_count_deadline: typeof item?.guest_count_deadline === 'string' ? item.guest_count_deadline : null,
+        invitation_url: typeof item?.invitation_url === 'string' ? item.invitation_url : null,
     };
 }
 

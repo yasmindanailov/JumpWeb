@@ -8,6 +8,7 @@
  */
 import { STEPS, isOutcome } from '../../sidebar/machine.js';
 import { t as texto, tp as textoCon } from '../../sidebar/i18n.js';
+import { diaDelPlazo } from './vista.js';
 
 /**
  * ¿Una apertura empieza una compra NUEVA? Con intención (la landing pidió una zona o un producto), sí, aunque la
@@ -70,7 +71,8 @@ export function ckDelPaso(e) {
         onClose: a.cerrar ?? null,
         summary: e.resumen?.summary ?? null,
         total: e.resumen?.total ?? null,
-        today: null,
+        // La SEÑAL de una fiesta («Hoy pagas 50 €»), del presupuesto o del pedido (`recibo.js::hoyPagas`).
+        today: e.resumen?.today ?? null,
         note: null,
         action: null,
     };
@@ -113,29 +115,62 @@ export function ckDelPaso(e) {
 
     if (e.paso === 'verificando') return { ...ck, ...pasoN(2, t('compra.pagar.banda')) };
 
-    if (e.paso === 'listo') return { ...ck, summary: null, total: null, action: { label: t('compra.listo.mi_qr'), onClick: a.miQr } };
+    if (e.paso === 'listo') return { ...ck, summary: null, total: null, today: null, action: { label: t('compra.listo.mi_qr'), onClick: a.miQr } };
 
     return ck;
 }
 
 /**
- * «Listo» (`PjcListo`): la línea, el QR del carné, a dónde se envió y las tareas de «Antes de venir».
- *
- * ⚠️ De las tareas del diseño, aquí va la que sale de los DATOS del motor: añadir a los hijos y firmar por ellos, si
- * la instalación firma el descargo dentro (modo `interno`). Los adultos que vienen y los calcetines dependen de qué
- * zona es cada entrada y del texto del parque: son de la página (T4).
+ * La tarea de una FIESTA en «Listo» (T3e·5): el formulario de invitados hasta su plazo y, si el producto la ofrece, la
+ * invitación. Todo lo dice el SERVIDOR por reserva (`guest_form_url`, `guest_count_deadline`, `invitation_url`): sin
+ * formulario no hay tarea; sin plazo, la frase va sin fecha; sin invitación, una cosa y no dos.
  */
-export function pantallaListo({ linea, confirmacion, correo, qrSrc = '', cuentaNueva = false, firmaDentro = false, textos = {} }) {
-    const t = (clave) => texto(textos, clave);
+export function tareaDeFiesta(linea, { textos = {}, locale = 'es' } = {}) {
+    if (! linea?.guest_form_url) return null;
+    const t = (clave) => texto(textos, `compra.listo.${clave}`);
+    const fecha = diaDelPlazo(linea.guest_count_deadline, locale);
+    const invitacion = Boolean(linea.invitation_url);
 
     return {
-        fiesta: false,
+        id: 'fiesta',
+        icon: 'party-popper',
+        title: invitacion ? t('fiesta_intro') : t('fiesta_intro_una'),
+        steps: [
+            fecha ? textoCon(textos, 'compra.listo.fiesta_invitados', { fecha }) : t('fiesta_invitados_sin_fecha'),
+            ...(invitacion ? [t('fiesta_invitacion')] : []),
+        ],
+        botones: [t('fiesta_formulario'), ...(invitacion ? [t('fiesta_compartir')] : [])],
+    };
+}
+
+/** A dónde lleva cada botón de la tarea de la fiesta: el formulario, o su invitación (`null`: no es de la fiesta). */
+export function destinoDeTarea(linea, boton, textos = {}) {
+    if (! linea) return null;
+
+    return boton === texto(textos, 'compra.listo.fiesta_compartir') ? (linea.invitation_url ?? null) : (linea.guest_form_url ?? null);
+}
+
+/**
+ * «Listo» (`PjcListo`): la línea, el QR del carné, a dónde se envió y las tareas de «Antes de venir».
+ *
+ * ⚠️ De las tareas del diseño, aquí van las que salen de los DATOS del motor: la de la FIESTA (arriba) y, en las
+ * entradas, añadir a los hijos y firmar por ellos si la instalación firma el descargo dentro (modo `interno`). Los
+ * adultos que vienen y los calcetines dependen de qué zona es cada entrada y del texto del parque: son de la página (T4).
+ */
+export function pantallaListo({ linea, confirmacion, correo, qrSrc = '', cuentaNueva = false, firmaDentro = false, textos = {}, locale = 'es' }) {
+    const t = (clave) => texto(textos, clave);
+    const pack = (confirmacion?.lines ?? []).find((l) => l.is_pack) ?? null;
+    const fiesta = tareaDeFiesta(pack, { textos, locale });
+    const menores = firmaDentro ? { id: 'menores', icon: 'user-round-plus', texto: t('compra.listo.menores'), botones: [t('compra.listo.menores_boton')] } : null;
+
+    return {
+        fiesta: pack !== null,
         linea,
         codigo: confirmacion?.code ?? '',
         qrSrc,
         correo: correo ?? '',
         whatsapp: false,
-        tareas: firmaDentro ? [{ id: 'menores', icon: 'user-round-plus', texto: t('compra.listo.menores'), botones: [t('compra.listo.menores_boton')] }] : [],
+        tareas: [pack ? fiesta : menores].filter(Boolean),
         cuentaNueva,
     };
 }

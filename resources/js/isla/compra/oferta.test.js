@@ -1,6 +1,8 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { borradorDeIntencion, calcetinDe, cargarDiasDeFilas, horaDelMotor, horaQueCabe, primerDia } from './oferta.js';
+import {
+    borradorDeIntencion, calcetinDe, cargarDiasDeFilas, cargarFichas, cargarGrupos, horaDelMotor, horaQueCabe, primerDia,
+} from './oferta.js';
 
 /**
  * Lo que la pantalla 0 de la isla pide al motor (T3e de `specs/isla-y-landing-nueva.md` §4.10). La API se dobla:
@@ -67,11 +69,47 @@ describe('la intención de la landing', () => {
         assert.deepEqual([b.zona, b.fila], ['jump', 103]);
     });
 
-    test('sin intención, con un pack (T3e·5) o con algo que el catálogo no tiene: «Para hoy», eligiendo zona', () => {
-        for (const intencion of [null, { type: 'packs' }, { type: 'product', id: 105 }, { type: 'zone', slug: 'bar' }, { type: 'product', id: 999 }]) {
+    test('sin intención o con algo que el catálogo no tiene: «Para hoy», eligiendo zona', () => {
+        for (const intencion of [null, { type: 'zone', slug: 'bar' }, { type: 'product', id: 999 }]) {
             const b = borradorDeIntencion(intencion, productos);
             assert.deepEqual([b.zona, b.fila, b.elegirZona], [null, null, true], JSON.stringify(intencion));
         }
+    });
+
+    test('un pack, «los packs» o una zona que solo vende packs abren su FIESTA (T3e·5): sin edad, sin día', () => {
+        for (const intencion of [{ type: 'packs' }, { type: 'product', id: 105 }, { type: 'zone', slug: 'cumpleanos' }]) {
+            const b = borradorDeIntencion(intencion, productos);
+
+            assert.deepEqual([b.fiesta, b.zona, b.fila, b.edad, b.dia, b.elegirZona], [true, 'cumpleanos', 105, null, null, false], JSON.stringify(intencion));
+        }
+    });
+});
+
+describe('lo que la fiesta pide al motor (T3e·5)', () => {
+    const api = (respuestas) => {
+        const llamadas = [];
+
+        return {
+            llamadas,
+            get: async (ruta) => { llamadas.push(['get', ruta]); return respuestas[ruta] ?? { ok: false }; },
+            post: async (ruta, cuerpo) => { llamadas.push(['post', ruta, cuerpo]); return respuestas[ruta] ?? { ok: false }; },
+        };
+    };
+
+    test('las fichas de los packs, en paralelo; la que falla se queda fuera', async () => {
+        const a = api({ '/catalog/products/105': { ok: true, data: { id: 105 } } });
+
+        assert.deepEqual(await cargarFichas({ api: a, ids: [105, 106, 105] }), { 105: { id: 105 } });
+        assert.equal(a.llamadas.length, 2, 'sin repetir');
+    });
+
+    test('los menús SIN día ni hora: el cuerpo no los lleva (el servidor rechaza `null` en ellos)', async () => {
+        const a = api({ '/catalog/products/105/addons': { ok: true, data: { groups: [{ key: 'menu', options: [] }] } } });
+
+        assert.deepEqual(await cargarGrupos({ api: a, productId: 105, quantity: 8 }), [{ key: 'menu', options: [] }]);
+        assert.deepEqual(a.llamadas[0][2], { quantity: 8, addons: [], choices: [] });
+        assert.equal('date' in a.llamadas[0][2] || 'time' in a.llamadas[0][2], false);
+        assert.deepEqual(await cargarGrupos({ api: api({}), productId: 105, quantity: 8 }), [], 'un fallo, sin menús: no revienta');
     });
 });
 

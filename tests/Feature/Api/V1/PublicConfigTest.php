@@ -4,6 +4,7 @@ namespace Tests\Feature\Api\V1;
 
 use App\Domain\Booking\Services\AvailabilitySettings;
 use App\Domain\Booking\Services\CatalogSettings;
+use App\Domain\Booking\Services\GuestCountPolicy;
 use App\Domain\Booking\Services\OrderCreator;
 use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\Setting;
@@ -36,7 +37,28 @@ class PublicConfigTest extends ApiTestCase
             ->assertJsonPath('turnstile_site_key', null)
             ->assertJsonPath('catalog_search_min_items', CatalogSettings::searchMinItems())
             ->assertJsonPath('cart_max_lines', OrderCreator::MAX_LINES_PER_CART)
-            ->assertJsonPath('low_availability_max', AvailabilitySettings::LOW_MAX_DEFAULT);
+            ->assertJsonPath('low_availability_max', AvailabilitySettings::LOW_MAX_DEFAULT)
+            ->assertJsonPath('guest_count_cutoff_hours', GuestCountPolicy::DEFAULT_CUTOFF_HOURS);
+    }
+
+    /**
+     * T3e·5 (`specs/isla-y-landing-nueva.md` §4.10): el corte del ajuste de invitados, que la compra de una fiesta
+     * dice ANTES de reservar («ajusta hasta N h antes»). Es el del DOMINIO —su lector defensivo, el mismo que aplica
+     * el plazo—: un valor raro cae al suelo del producto en vez de viajar tal cual.
+     */
+    public function test_it_publishes_the_guest_count_cutoff_the_domain_applies(): void
+    {
+        Setting::updateOrCreate(['key' => GuestCountPolicy::SETTING_CUTOFF_HOURS], ['value' => '48', 'group' => 'packs']);
+        Setting::flushMemo();
+
+        $this->getJson(self::PATH)->assertOk()->assertValidResponse(200)
+            ->assertJsonPath('guest_count_cutoff_hours', 48);
+
+        Setting::updateOrCreate(['key' => GuestCountPolicy::SETTING_CUTOFF_HOURS], ['value' => 'mañana', 'group' => 'packs']);
+        Setting::flushMemo();
+
+        $this->getJson(self::PATH)->assertOk()->assertValidResponse(200)
+            ->assertJsonPath('guest_count_cutoff_hours', GuestCountPolicy::DEFAULT_CUTOFF_HOURS);
     }
 
     /**

@@ -12,8 +12,12 @@ import CantidadCompra from './CantidadCompra.vue';
 import TiraDias from '../ui/TiraDias.vue';
 import SelectorHoras from '../ui/SelectorHoras.vue';
 import TarjetasOpcion from '../ui/TarjetasOpcion.vue';
+import AvisoDestacado from '../ui/AvisoDestacado.vue';
+import IconoLucide from '../ui/IconoLucide.vue';
 
 defineProps({
+    // El «no» del servidor al continuar (T3e·5): la edad fuera de tramo, las reservas en pausa… Arriba, como en las entradas.
+    aviso: { type: String, default: '' },
     titulo: { type: String, required: true },
     preguntas: { type: Array, required: true },
     edades: { type: Array, required: true },
@@ -32,6 +36,18 @@ const emit = defineEmits(['cambiar']);
 
 <template>
     <PasoCompra :titulo="titulo">
+        <AvisoDestacado
+            v-if="aviso"
+            tone="danger"
+            size="sm"
+            role="alert"
+            :title="aviso"
+        >
+            <template #icono><IconoLucide
+                name="circle-alert"
+                :size="18"
+            /></template>
+        </AvisoDestacado>
         <PreguntaCompra
             id="pjc-q-edad"
             :titulo="preguntas[0]"

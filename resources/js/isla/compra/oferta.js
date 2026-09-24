@@ -40,23 +40,67 @@ export function calcetinDe(producto) {
 export const borradorVacio = () => ({ modo: 'nuevo', zona: null, elegirZona: false, dia: null, hora: null, fila: null, n: 1, cal: 0, otra: null });
 
 /**
+ * El de una FIESTA (T3e·5, `fiesta.js`): sin edad, sin día —una fiesta no nace «para hoy»—, los niños en el mínimo del
+ * pack (se sabe con su ficha) y el menú que deje elegido el servidor.
+ */
+export const borradorDeFiesta = (zona, fila) => ({ ...borradorVacio(), fiesta: true, zona, fila, edad: null, n: null, menu: null });
+
+/**
  * **La intención de la landing → el borrador con el que abre la pantalla 0** (`intent.js` del cajón, en isla).
  *
- *  · `{ type: 'product', id }` de una ENTRADA: su zona, con esa fila ya elegida;
- *  · `{ type: 'zone', slug }`: esa zona, con su primera fila;
- *  · sin intención, o con una que la isla aún no sabe abrir (los packs de cumpleaños, T3e·5) o que no casa con el
- *    catálogo: «Para hoy», eligiendo zona. Nunca inventa una fila: sale del listado del servidor.
+ *  · `{ type: 'product', id }` de una ENTRADA: su zona, con esa fila ya elegida; de un PACK, su fiesta;
+ *  · `{ type: 'packs' }`: la fiesta del primer pack del catálogo;
+ *  · `{ type: 'zone', slug }`: esa zona, con su primera fila; si solo vende packs, su fiesta;
+ *  · sin intención, o con una que no casa con el catálogo: «Para hoy», eligiendo zona. Nunca inventa una fila: sale
+ *    del listado del servidor. ⚠️ Que el pack sea DE FIESTA (pregunta la edad) lo dice su ficha, que aún no está: lo
+ *    comprueba la pantalla al llegar (`fiesta.js::packsDeFiesta`).
  *
  * @param {{type?: string, id?: number, slug?: string}|null} intencion
  * @param {Array<object>} productos  el catálogo tal cual
  */
 export function borradorDeIntencion(intencion, productos) {
-    const entradas = (Array.isArray(productos) ? productos : []).filter((p) => p?.type === 'entry');
+    const lista = Array.isArray(productos) ? productos : [];
+    const entradas = lista.filter((p) => p?.type === 'entry');
+    const packs = lista.filter((p) => p?.type === 'pack');
+    const zonaPedida = intencion?.type === 'zone' ? intencion.slug : null;
+    const pack = (intencion?.type === 'product' && packs.find((p) => p.id === intencion.id))
+        || (intencion?.type === 'packs' && packs[0])
+        || (zonaPedida && ! entradas.some((p) => p.zone?.slug === zonaPedida) && packs.find((p) => p.zone?.slug === zonaPedida))
+        || null;
+
+    if (pack) return borradorDeFiesta(pack.zone.slug, pack.id);
+
     const producto = intencion?.type === 'product' ? entradas.find((p) => p.id === intencion.id) : null;
-    const zona = producto?.zone?.slug ?? (intencion?.type === 'zone' ? intencion.slug : null);
+    const zona = producto?.zone?.slug ?? zonaPedida;
     const fila = producto ?? entradas.find((p) => p.zone?.slug === zona) ?? null;
 
     return fila ? { ...borradorVacio(), zona: fila.zone.slug, fila: fila.id } : { ...borradorVacio(), elegirZona: true };
+}
+
+/**
+ * Las FICHAS de varios productos (los packs de una fiesta: sus tramos de edad, mínimos y campos), EN PARALELO. Una que
+ * falla se queda fuera en vez de tumbar la pantalla.
+ *
+ * @returns {Promise<Record<number, object>>}
+ */
+export async function cargarFichas({ api, ids }) {
+    const unicos = [...new Set(Array.isArray(ids) ? ids : [])];
+    const respuestas = await Promise.all(unicos.map((id) => api.get(`/catalog/products/${id}`)));
+
+    return Object.fromEntries(unicos.flatMap((id, i) => (respuestas[i].ok ? [[id, respuestas[i].data]] : [])));
+}
+
+/**
+ * Los grupos de ELECCIÓN de un pack (el menú) resueltos por el servidor ANTES de tener hora: el endpoint de
+ * complementos los da sin día ni hora, pero rechaza `null` en ellos, y el store del motor siempre los manda
+ * (`selection.js::loadAddons`). Sin línea: el dinero llega cuando hay hora.
+ *
+ * @returns {Promise<Array<object>>}
+ */
+export async function cargarGrupos({ api, productId, quantity, choices = [] }) {
+    const r = await api.post(`/catalog/products/${productId}/addons`, { quantity, addons: [], choices });
+
+    return r.ok ? (r.data?.groups ?? []) : [];
 }
 
 /** El primer día que se vende de una fila, o `null`. Es el día con el que la pantalla 0 nace elegida. */

@@ -139,6 +139,12 @@ export function usePurchaseFlow(props) {
      * con un booleano la primera en volver apagaría el velo mientras la otra sigue.
      */
     const inFlight = ref(0);
+
+    /**
+     * `GET /config` tal cual llegó al montar, o `null` (T3e·5): la compra de la isla lee de ahí lo que el cajón no usa
+     * —las horas de ajuste de los invitados de una fiesta— sin pedirla dos veces. Es de la INSTALACIÓN y estática.
+     */
+    const configuracion = ref(null);
     const busy = computed(() => inFlight.value > 0);
 
     /** Envuelve una llamada para que cuente en el velo. No cambia el resultado ni traga errores. */
@@ -192,6 +198,7 @@ export function usePurchaseFlow(props) {
         // El umbral lo decide el SERVIDOR y viaja con su operador en la descripción del contrato
         // (`total > umbral`): el cliente compara, no reinventa la regla.
         if (config.ok) {
+            configuracion.value = config.data ?? null;
             const threshold = config.data?.catalog_search_min_items;
             catalogStore.setSearchEnabled(searchIsEnabled(catalogStore.sections, threshold));
             // El tope de líneas lo publica el servidor: quemarlo aquí sería el cuarto sitio del que leer
@@ -993,7 +1000,7 @@ export function usePurchaseFlow(props) {
         store, catalogStore, selectionStore, bookingStore, dateStore, timeStore, dependentsStore, cartStore, authStore, outcomeStore,
         // El fin del MONTAJE (catálogo, cesta restaurada, desenlace), para quien tenga que esperarlo como `openProduct()`:
         // la isla, al reanudar una compra que volvió de Google (T3e·4).
-        ready: mounted,
+        ready: mounted, configuracion,
         busy, locale, unitPriceCents, guardianMode, buyerDue, buyerNeed,
         refreshBookingStatus, refreshIdentity, openProduct,
         selectProduct, selectDate, selectTime, applyQuantity, chooseAddon, setAddonQuantity,

@@ -3,9 +3,9 @@
  *
  * La secuencia es la del cajón (`usePurchaseFlow()`, `#691`): el montaje —catálogo, `/config`, la pausa, la cesta y
  * el desenlace—, la admisión, el alta, el cobro y el sondeo son LOS MISMOS. Lo que es de la isla vive aquí y en los
- * dos que llama: su borrador de la pantalla 0 (un formulario, no un embudo: el tiempo cambia después de la hora),
- * «Tus datos» (`useDatosCompra.js`), «Pagar» y los desenlaces (`usePagoCompra.js`); la traducción a sus pantallas,
- * sin estado y con su `node --test`, en `vista.js`, `pasos.js`, `recibo.js`, `datos.js` y `linea.js`.
+ * tres que llama: la pantalla 0 de entradas y de fiestas (`usePantallaCero.js`), «Tus datos» (`useDatosCompra.js`),
+ * «Pagar» y los desenlaces (`usePagoCompra.js`); la traducción a sus pantallas, sin estado y con su `node --test`, en
+ * `vista.js`, `fiesta.js`, `pasos.js`, `recibo.js`, `datos.js` y `linea.js`.
  *
  * El orden, sobre la máquina (que no cambia): «Continuar» mete la línea (`→ CART`) y admite (`checkout()`: `IDENTIFY`
  * sin sesión, `PAY` con ella); «Tus datos» identifica (`→ PAY`); «Pagar» crea el pedido y sale al banco
@@ -20,14 +20,14 @@ import { TEXTOS_ISLA } from '../../sidebar/carcasa.js';
 import { STEPS, isOutcome } from '../../sidebar/machine.js';
 import { api } from '../../sidebar/api.js';
 import { t } from '../../sidebar/i18n.js';
-import { todayIso } from '../../sidebar/cart.js';
 import { useSuperficie } from './useSuperficie.js';
 import { useDatosCompra } from './useDatosCompra.js';
 import { usePagoCompra } from './usePagoCompra.js';
-import { borradorDeIntencion, calcetinDe, cargarDiasDeFilas, horaDelMotor, horaQueCabe, primerDia } from './oferta.js';
-import { euros, filasDeZona, pantallaCuando } from './vista.js';
+import { usePantallaCero } from './usePantallaCero.js';
+import { borradorDeIntencion } from './oferta.js';
+import { euros } from './vista.js';
 import { meterLinea, pedidoDe } from './linea.js';
-import { lineaListo, reciboDe, resumenDe, resumenDelPedido } from './recibo.js';
+import { lineaListo, reciboDe, resumenDeLaCesta, resumenDelPedido } from './recibo.js';
 import { ckDelPaso, direccion, empiezaOtra, pantallaListo, pasoDelMotor, rango } from './pasos.js';
 import {
     almacenDeLaPestana, conVuelta, esVuelta, marcarSalida, sinVuelta, tomarMarca, vueltaDe, vuelveAqui,
@@ -49,7 +49,7 @@ export function useSeccionCompra(props) {
     const { store, catalogStore, timeStore, selectionStore, cartStore, outcomeStore, authStore } = flow;
     const { abierta, cerrar: cerrarSuperficie } = useSuperficie();
     const compra = reactive({
-        borrador: borradorDeIntencion(null, []), precios: {}, cargandoHoras: false, intencion: null,
+        borrador: borradorDeIntencion(null, []), precios: {}, fichas: {}, grupos: [], cargandoHoras: false, intencion: null,
         paso: 'cuando', aviso: '', ocupado: null, pedido: null, pagado: null, dir: null,
     });
 
@@ -61,7 +61,8 @@ export function useSeccionCompra(props) {
     const enCola = (tarea) => (cola = cola.then(tarea, tarea));
 
     const datos = useDatosCompra({ flow, props, textos });
-    const pago = usePagoCompra({ flow, props, compra, enCola, alPagarMal });
+    const pago = usePagoCompra({ flow, props, textos, compra, enCola, alPagarMal });
+    const { vista, situar, cambiar, cargarHoras, extrasDelPedido } = usePantallaCero({ flow, compra, enCola, textos });
 
     /**
      * La compra que salió a Google y VUELVE a esta página (T3e·4, `sidebar/reanudar.js`): el servidor la sirve con la
@@ -81,69 +82,6 @@ export function useSeccionCompra(props) {
 
     /** El paso que se ve: el que manda la máquina (el cobro y los desenlaces) o el de la isla. */
     const paso = computed(() => pasoDelMotor(store.step) ?? compra.paso);
-
-    // ── La pantalla 0 ────────────────────────────────────────────────────────────────────────────────
-
-    /** La línea que resuelve el SERVIDOR con la selección de ahora (el dinero, con los calcetines dentro). */
-    async function resolverLinea() {
-        const b = compra.borrador;
-
-        if (! b.hora) { selectionStore.setLine(null); return; }
-        timeStore.select(b.hora);
-        selectionStore.setQuantity(b.n);
-        const calcetin = calcetinDe(catalogStore.product);
-        selectionStore.setQuantities(calcetin && b.cal > 0 ? [{ product_id: calcetin.id, quantity: b.cal }] : []);
-        await selectionStore.loadAddons({ api, productId: b.fila, date: b.dia, time: b.hora });
-    }
-
-    /** Las horas de la fila y el día, con la cesta (`AFORO-02`). Una hora que ya no cabe se vacía. */
-    async function cargarHoras() {
-        const b = compra.borrador;
-
-        if (! b.fila || ! b.dia) return;
-        compra.cargandoHoras = true;
-        await timeStore.loadOffer({ api, productId: b.fila, date: b.dia, cartLines: cartStore.lines });
-        compra.cargandoHoras = false;
-        if (b.hora && ! horaQueCabe(timeStore.offered, b.hora, b.n)) b.hora = null;
-        await resolverLinea();
-    }
-
-    /** La ficha de la fila (su complemento por cantidad) y sus horas. */
-    async function cargarFila() {
-        catalogStore.select(compra.borrador.fila);
-        await catalogStore.loadProduct({ api, id: compra.borrador.fila });
-        await cargarHoras();
-    }
-
-    /** Sitúa la pantalla 0 en un borrador: los días de TODAS las filas de su zona, y con ellos el día y la fila. */
-    async function situar(borrador) {
-        compra.borrador = borrador;
-        compra.precios = {};
-        if (! borrador.zona) return;
-        const filas = filasDeZona(catalogStore.products, borrador.zona);
-
-        // Mientras llegan los días, las horas enseñan su hueco (el esqueleto del diseño): nada salta después.
-        compra.cargandoHoras = true;
-        compra.precios = await cargarDiasDeFilas({ api, ids: filas.map((p) => p.id) });
-        const dias = compra.precios[borrador.fila] ?? [];
-        if (! dias.some((d) => d.date === borrador.dia)) compra.borrador.dia = dias.some((d) => d.date === todayIso()) ? todayIso() : primerDia(dias);
-        await cargarFila();
-    }
-
-    /** Lo que la pantalla avisa que ha cambiado. */
-    function cambiar(campo, valor) {
-        const b = compra.borrador;
-
-        compra.aviso = '';
-        if (campo === 'zona') return enCola(() => situar({ ...borradorDeIntencion({ type: 'zone', slug: valor }, catalogStore.products), elegirZona: b.elegirZona, dia: b.dia, n: b.n }));
-        if (campo === 'dia') { b.dia = valor; return enCola(cargarHoras); }
-        if (campo === 'fila') { b.fila = Number(valor); return enCola(cargarFila); }
-        if (campo === 'hora') { b.hora = horaDelMotor(timeStore.offered, valor); return enCola(resolverLinea); }
-        if (campo === 'n') { b.n = valor; return b.hora ? enCola(cargarHoras) : null; }
-        if (campo === 'cal') { b.cal = valor; return enCola(resolverLinea); }
-
-        return null;
-    }
 
     /**
      * La intención de la landing (`index.js` la deja en la cola de la máquina): se toma una vez y, si el catálogo aún
@@ -231,7 +169,7 @@ export function useSeccionCompra(props) {
             await enCola(() => {});
             const pedido = pedidoDe(compra.borrador, {
                 minimo: catalogStore.minQuantity, maximo: timeStore.maxQuantity,
-                calcetin: calcetinDe(catalogStore.product), guardian: catalogStore.product?.guardian_authorization,
+                guardian: catalogStore.product?.guardian_authorization, ...extrasDelPedido(),
             });
 
             cartStore.setError('');
@@ -316,20 +254,14 @@ export function useSeccionCompra(props) {
 
     // ── Lo que se pinta ──────────────────────────────────────────────────────────────────────────────
 
-    const vista = computed(() => pantallaCuando({
-        borrador: compra.borrador, productos: catalogStore.products, precios: compra.precios, horas: timeStore.offered,
-        cargandoHoras: compra.cargandoHoras, maximo: compra.borrador.hora ? timeStore.maxQuantity : null, minimo: catalogStore.minQuantity,
-        umbral: timeStore.lowMax, calcetin: calcetinDe(catalogStore.product), linea: selectionStore.line, textos, locale: flow.locale, hoy: todayIso(),
-    }));
-
-    const deLaCesta = (quote) => ({ summary: resumenDe(quote.lines, { textos, locale: flow.locale }), total: euros(quote.total_cents, flow.locale) });
+    const deLaCesta = (quote) => resumenDeLaCesta(quote, { textos, locale: flow.locale });
 
     // La foto de la última cesta presupuestada: se vacía al crear el pedido, y «saliendo al banco» sigue enseñándola.
     watch(() => cartStore.quote, (quote) => { if (quote?.lines?.length) compra.pagado = deLaCesta(quote); }, { immediate: true });
 
-    /** Lo de debajo: la línea y el total de la cesta mientras se compra; del pedido, cuando ya existe. */
+    /** Lo de debajo: la línea, el total y la señal de la cesta mientras se compra; del pedido, cuando ya existe. */
     const resumen = computed(() => {
-        if (paso.value === 'datos' || paso.value === 'pagar') return cartStore.quote?.lines?.length ? deLaCesta(cartStore.quote) : {};
+        if (paso.value === 'datos' || paso.value === 'pagar') return deLaCesta(cartStore.quote);
         if (outcomeStore.confirmation) return resumenDelPedido(outcomeStore.confirmation, { textos, locale: flow.locale });
 
         return paso.value === 'banco' ? (compra.pagado ?? {}) : {};
@@ -388,7 +320,7 @@ export function useSeccionCompra(props) {
     const listo = computed(() => pantallaListo({
         linea: lineaListo(outcomeStore.confirmation, { textos, locale: flow.locale }),
         confirmacion: outcomeStore.confirmation, correo: pago.listo.correo, qrSrc: pago.qrSrc.value, cuentaNueva: pago.listo.cuentaNueva,
-        firmaDentro: datos.contexto.context?.waiver?.mode === 'interno', textos,
+        firmaDentro: datos.contexto.context?.waiver?.mode === 'interno', textos, locale: flow.locale,
     }));
     watch(paso, (ahora) => { if (ahora === 'listo') pago.listo.cuentaNueva = datos.cuentaNueva(); }, { immediate: true });
 
@@ -402,6 +334,7 @@ export function useSeccionCompra(props) {
 
     return {
         abierta, textos, ck, paso, esperando, compra, flow, authStore, outcomeStore,
+        fiesta: computed(() => Boolean(compra.borrador.fiesta)),
         cuando: computed(() => ({ ...vista.value.props, aviso: compra.aviso })), cambiar,
         datos, pantallaDatos, pantallaEntrar, aGoogle, pago, listo,
         recibo: computed(() => ({ ...reciboDe({ quote: cartStore.quote, pedido: compra.pedido, textos, locale: flow.locale }), aviso: compra.aviso })),

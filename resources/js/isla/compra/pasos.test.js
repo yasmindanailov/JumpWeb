@@ -1,7 +1,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { STEPS } from '../../sidebar/machine.js';
-import { ckDelPaso, direccion, empiezaOtra, pantallaListo, pasoDelMotor, rango } from './pasos.js';
+import { ckDelPaso, destinoDeTarea, direccion, empiezaOtra, pantallaListo, pasoDelMotor, rango, tareaDeFiesta } from './pasos.js';
 
 /**
  * Los pasos de la compra de la isla tras la pantalla 0 (T3e·3 de `specs/isla-y-landing-nueva.md` §4.10): la banda, la
@@ -114,6 +114,59 @@ describe('la descripción de cada paso', () => {
         assert.equal(c.total, null);
         assert.equal(c.action.onClick(), 'miQr');
         assert.equal(c.onClose(), 'cerrar');
+    });
+});
+
+describe('«¡Fiesta reservada!» (T3e·5)', () => {
+    const textosFiesta = {
+        compra: {
+            listo: {
+                fiesta_intro: 'Ahora, dos cosas.', fiesta_intro_una: 'Ahora, una cosa.',
+                fiesta_invitados: 'Rellena el formulario de invitados, hasta el :fecha.', fiesta_invitados_sin_fecha: 'Rellena el formulario de invitados.',
+                fiesta_invitacion: 'Comparte la invitación por WhatsApp: los padres confirman y firman ellos.',
+                fiesta_formulario: 'Rellenar el formulario', fiesta_compartir: 'Compartir la invitación',
+            },
+        },
+    };
+    const pack = {
+        is_pack: true, guest_form_url: '/reserva/7/datos-invitados', guest_count_deadline: '2026-09-25T17:00:00+02:00',
+        invitation_url: '/reserva/7/datos-invitados#gf-invite',
+    };
+
+    test('dos cosas: el formulario hasta su plazo (el día del parque) y la invitación', () => {
+        assert.deepEqual(tareaDeFiesta(pack, { textos: textosFiesta }), {
+            id: 'fiesta', icon: 'party-popper', title: 'Ahora, dos cosas.',
+            steps: ['Rellena el formulario de invitados, hasta el viernes 25.', 'Comparte la invitación por WhatsApp: los padres confirman y firman ellos.'],
+            botones: ['Rellenar el formulario', 'Compartir la invitación'],
+        });
+    });
+
+    test('sin invitación, una cosa; sin plazo, la frase sin fecha; sin formulario, ninguna tarea', () => {
+        const sola = tareaDeFiesta({ ...pack, invitation_url: null, guest_count_deadline: null }, { textos: textosFiesta });
+
+        assert.equal(sola.title, 'Ahora, una cosa.');
+        assert.deepEqual(sola.steps, ['Rellena el formulario de invitados.']);
+        assert.deepEqual(sola.botones, ['Rellenar el formulario']);
+        assert.equal(tareaDeFiesta({ ...pack, guest_form_url: null }, { textos: textosFiesta }), null);
+    });
+
+    test('cada botón lleva a lo suyo, con la URL del servidor', () => {
+        assert.equal(destinoDeTarea(pack, 'Rellenar el formulario', textosFiesta), '/reserva/7/datos-invitados');
+        assert.equal(destinoDeTarea(pack, 'Compartir la invitación', textosFiesta), '/reserva/7/datos-invitados#gf-invite');
+        assert.equal(destinoDeTarea(null, 'Rellenar el formulario', textosFiesta), null);
+    });
+
+    test('«Listo» de una fiesta: su titular, su tarea y nada de «añade a tus hijos»', () => {
+        const listo = pantallaListo({ linea: 'x', confirmacion: { code: 'R-1', lines: [pack] }, correo: 'a@b.es', firmaDentro: true, textos: textosFiesta });
+
+        assert.equal(listo.fiesta, true);
+        assert.deepEqual(listo.tareas.map((x) => x.id), ['fiesta']);
+    });
+
+    test('debajo de cada paso, la SEÑAL («Hoy pagas…») cuando la hay', () => {
+        assert.equal(ck('pagar', { resumen: { ...resumen, today: 'Hoy pagas 50 €' } }).today, 'Hoy pagas 50 €');
+        assert.equal(ck('datos').today, null);
+        assert.equal(ck('listo', { resumen: { ...resumen, today: 'Hoy pagas 50 €' } }).today, null, '«Listo» no lleva resumen');
     });
 });
 

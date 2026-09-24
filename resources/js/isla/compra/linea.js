@@ -8,9 +8,10 @@
  * sigue siendo del servidor (`POST /cart/validate-line`, con la cesta vacía como contexto) y el precio, de su
  * presupuesto (`PAY-12`).
  *
- * ⚠️ Es el `addToCart()` del motor (`usePurchaseFlow`) sin lo que la isla no pregunta ANTES de pagar: respuestas del
- * pack, menores asignados y el justificante opcional (el diseño los deja para después: `compra.datos.linea`). El
- * justificante OBLIGATORIO sí viaja, como en el cajón. Y no mueve la máquina: quien llama sabe si es la primera vez
+ * ⚠️ Es el `addToCart()` del motor (`usePurchaseFlow`) sin lo que la isla no pregunta ANTES de pagar: las demás
+ * respuestas del pack —van al formulario de invitados, `#692`—, menores asignados y el justificante opcional (el diseño
+ * los deja para después: `compra.datos.linea`). La EDAD de quien cumple sí viaja (elige el pack), y el justificante
+ * OBLIGATORIO, como en el cajón. Y no mueve la máquina: quien llama sabe si es la primera vez
  * («Continuar», `→ CART`) o un cambio en «Pagar», que se queda donde está.
  */
 import { addLine } from '../../sidebar/cart.js';
@@ -20,8 +21,10 @@ import { t } from '../../sidebar/i18n.js';
 /**
  * Lo que la isla recuerda del pedido al salir de la pantalla 0: el borrador y lo que en ese momento decían los datos
  * (el mínimo, lo que cabe a esa hora, el complemento por cantidad y el justificante), que el motor olvida al añadir.
+ * De una FIESTA (T3e·5), además, su respuesta de reserva —la edad de quien cumple, en la clave de su campo— y su
+ * elección de grupo —el menú—: el recibo los necesita para rehacer la línea sin perderlos.
  */
-export function pedidoDe(borrador, { minimo = 1, maximo = null, calcetin = null, guardian = 'none' } = {}) {
+export function pedidoDe(borrador, { minimo = 1, maximo = null, calcetin = null, guardian = 'none', evento = {}, elecciones = [] } = {}) {
     return {
         fila: borrador.fila,
         dia: borrador.dia,
@@ -32,6 +35,8 @@ export function pedidoDe(borrador, { minimo = 1, maximo = null, calcetin = null,
         maximo,
         calcetin: calcetin ? { id: calcetin.id, price_cents: calcetin.price_cents, max_quantity: calcetin.max_quantity ?? null } : null,
         guardian: guardian === 'required',
+        evento: { ...evento },
+        elecciones: [...elecciones],
     };
 }
 
@@ -45,7 +50,7 @@ export function lineaDe(p, resueltos) {
         date: p.dia,
         time: p.hora,
         quantity: p.n,
-        event_data: {},
+        event_data: { ...(p.evento ?? {}) },
         addons: Array.isArray(resueltos) ? resueltos : [],
         dependent_ids: [],
         guardian_authorization: p.guardian === true,

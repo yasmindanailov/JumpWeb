@@ -19,8 +19,9 @@ import { cardImageUrl } from '../../sidebar/account/card.js';
 import { cajonHost } from '../../sidebar/host-bridge.js';
 import { complementosDe, meterLinea } from './linea.js';
 import { cambioDe } from './recibo.js';
+import { destinoDeTarea } from './pasos.js';
 
-export function usePagoCompra({ flow, props, compra, enCola, alPagarMal }) {
+export function usePagoCompra({ flow, props, textos = {}, compra, enCola, alPagarMal }) {
     const { store, cartStore, selectionStore, outcomeStore, buyerDue } = flow;
     const cardStore = useCardStore();
     const listo = reactive({ correo: '', cuentaNueva: false });
@@ -39,6 +40,8 @@ export function usePagoCompra({ flow, props, compra, enCola, alPagarMal }) {
         compra.aviso = '';
         selectionStore.setQuantity(p.n);
         selectionStore.setQuantities(complementosDe(p));
+        // El menú de una fiesta se conserva: sin él, el servidor resolvería el incluido (y se perdería el elegido).
+        selectionStore.setChoices(p.elecciones ?? []);
 
         const resuelto = await selectionStore.loadAddons({ api, productId: p.fila, date: p.dia, time: p.hora });
         const r = resuelto
@@ -151,6 +154,19 @@ export function usePagoCompra({ flow, props, compra, enCola, alPagarMal }) {
     /** «Añadir a mis hijos», en la cuenta: sus menores a cargo. */
     const menores = () => cajonHost()?.openAccount?.({ preventDefault() {} }, 'dependents');
 
+    /**
+     * Un botón de «Antes de venir»: el de los hijos, a la cuenta; los de la FIESTA (T3e·5), a su formulario de invitados
+     * o a su invitación, con la URL que compone el servidor (`pasos.js::destinoDeTarea`). La compra ya terminó: se sale.
+     */
+    function tarea(id, boton) {
+        if (id === 'menores') return menores();
+        const destino = destinoDeTarea((outcomeStore.confirmation?.lines ?? []).find((l) => l.is_pack), boton, textos);
+
+        if (destino) window.location.assign(destino);
+
+        return null;
+    }
+
     /** «Escribirnos», en otra pestaña: la compra sigue aquí. La dirección la compone el servidor (`urls.contact`). */
     const escribir = () => props.urls?.contact && window.open(props.urls.contact, '_blank', 'noopener');
 
@@ -160,5 +176,5 @@ export function usePagoCompra({ flow, props, compra, enCola, alPagarMal }) {
         if (props.urls?.terms) window.open(props.urls.terms, '_blank', 'noopener');
     }
 
-    return { listo, qrSrc, salidas, cantidad, calcetines, pagar, salir, reintentar, guardarQr, miQr, menores, escribir, condiciones };
+    return { listo, qrSrc, salidas, cantidad, calcetines, pagar, salir, reintentar, guardarQr, miQr, menores, tarea, escribir, condiciones };
 }

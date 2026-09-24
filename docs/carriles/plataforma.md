@@ -2,7 +2,7 @@
 
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669 AGOTADA con `#669`** → **670–699 EN CURSO** · Último usado: **`#695`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **640–669 AGOTADA con `#669`** → **670–699 EN CURSO** · Último usado: **`#696`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#684`) · Actualizado: **2026-09-24**
 > (el sistema nuevo leído por DesignSync; el owner decide Blade en la instancia y la isla como segunda carcasa).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
@@ -76,10 +76,13 @@
    existe» **al enviar**. ✅ T0 (§1.6) · ✅ T1 (§4.8: 82/82 páginas y 84 iconos a 0 px) · ✅ T2 (§4.9: la isla,
    52/52 a 0 px, `CE-6` sin excepción; en/fr de `lang/*/isla.php` a revisar por el owner).
    ▶▶ **T3, la compra** (§4.10; la historia de cada tanda vive allí): T3a→T3d ✅ (`#689`→`#691`) → **T3e** (`#692`):
-   ·1→·4 ✅ (`#693` la carcasa elegible · `#694` la isla compra hasta el banco · `#695` «Entra» y Google, que vuelve
-   a la compra) → **·5 cumpleaños** → ·6 la sonda versionada. Probar la isla: `sidebar.shell = isla` en local,
-   `public/_isla-prueba.html` (se BORRA al terminar: guarda 9), `storage/app/sonda-isla-t3e{3,4}.mjs` y el banco
-   `scripts/banco-compra.php` (52/54: «entrar» difiere por `#695`); el ajuste vuelve a `cajon`. Google ya está en la
+   ·1→·5 ✅ (`#693` la carcasa elegible · `#694` la isla compra hasta el banco · `#695` «Entra» y Google, que vuelve
+   a la compra · `#696` los cumpleaños con señal) → **·6 la sonda versionada** (una entrada y un cumpleaños, la
+   vuelta sin datos y el rechazo; después, staging). Probar la isla: `sidebar.shell = isla` en local,
+   `public/_isla-prueba.html` (se BORRA al terminar: guarda 9), `storage/app/sonda-isla-t3e{3,4,5}.mjs` y el banco
+   `scripts/banco-compra.php` (52/54: «entrar» difiere por `#695`; se juzga CON `--rehacer`); el ajuste vuelve a `cajon`.
+   ▶ `lint:js` con `isla/` (el SPA: «hazlo tú», 24-09; hoy limpia a mano): `package.json`, la cadena de
+   `StaticAnalysisGateTest` y las tres de `scripts/mutar-analisis-estatico.sh`, en su commit y con `/mutar`. Google ya está en la
    local (claves en `settings`): la sonda corta la ida en `accounts.google.com`. FALTAN como dato (T0): el precio de antes (→ `#684`),
    el plazo de cancelación y los 90 cm con adulto. ⚠️ Tras un `pull`: `cp -r ../instancias/playjump/publico/instancia
    public/` y `php artisan migrate` (las del SPA llegan SIN aplicar aquí: la de `experiments` dio un 500); los bancos se rehacen con `tema/lote-fichas.py` y `scripts/banco-{isla,piezas,compra}.php` (su lado B, antes).
@@ -93,7 +96,7 @@
    ▶ **Deuda declarada** (en la spec): `birthday`/`groups` son vocabulario del SECTOR (`ContactTopics`) ·
    `price_table`, `nav_subtitle` y `show_in_nav` se retiran con la tanda de la PÁGINA, no antes · un
    producto activo sin NINGÚN precio sale de `/prices` sin la clave `prices` que el contrato exige (`#677`).
-   ⚠️ El §0 de la spec está a **1.958 de 2.048 B**: de ahí solo se toca la línea de «Estado». La **T5**
+   ⚠️ El §0 de la spec está a **1.973 de 2.048 B**: de ahí solo se toca la línea de «Estado». La **T5**
    (cortar v2.0.0) es el final del programa entero, no de esta fase (`#670`).
 
    ▶ **Lo que se le contestó al owner sobre la FORMA del cajón y sobre los widgets** (medido el 21-09)
@@ -237,31 +240,21 @@ dueño es el carril de la web/reseñas—) ·
   `scripts/sonda-embudo.mjs`, úsala tú también). ⚠️ **Tuyo, heredado sin tocar**: `loadOutcome()` lee
   `props.locale` y la sección no la declara → la hora de retención del paso 10 sale siempre en formato `es`.
   Tus eventos de compra de la analítica van al módulo: contarán en el cajón y en la isla.
-- ▶▶ **24-09, AVISO PREVIO de la T3e·2b** (spec §4.10): la CARCASA se elige por instalación (`sidebar.shell`,
-  ya en el arranque, contrato **1.22.0**; `cajon` por defecto). Voy a tocar **`sidebar/Sidebar.vue`** (monta
-  `PurchaseSection` o la compra de la isla, asíncrona y en su trozo, con el MISMO `ref="purchase"`; tu
-  `v-show` y su guarda se quedan) y **`sidebar/index.js`** (le da la carcasa a la raíz con `provide`). Con
-  `cajon` no cambia NADA: lo demuestro con `scripts/sonda-embudo.mjs` (misma traza) y tu suite. El resto va en
-  `resources/js/isla/` y en `cajon/` (el controlador abre la compra en la isla y la cuenta en el lateral).
-  ▶ **HECHO (`#693`)**, y lo que tocó de lo tuyo: las props de la raíz, a **`sidebar/props.js`** (las comparte la
-  compra de la isla); `index.js` da la carcasa con `provide` y, con la isla, deja la intención en la máquina;
-  `stores/catalog.js` guarda también el listado tal cual (`products`, misma respuesta) y `usePurchaseFlow` lo
-  rellena; `SidebarBundleBudgetTest` mide la DESCARGA del motor (Rollup sacó un trozo común: techo **292**).
-  Con `cajon`, traza idéntica. ⚠️ **Tuyo, de antes**: la raíz deja `locales=""` de atributo en la sección de
-  compra (se lo pasa con `v-bind="props"` y ella no lo declara).
-- ▶▶ **24-09 · T3e·3 (`#694`), lo que tocó de lo tuyo, mínimo y sin cambiar una conducta del cajón**:
-  `register.js::registerErrors()` devuelve además `signup` (el CÓDIGO del «no» sobre la cuenta, que el servidor
-  manda ahora en `error.params.signup`, contrato **1.24.0**, sobre tu 1.23.0; tu mensaje bajo el correo sigue igual) con su caso
-  en `register.test.js`; y `usePurchaseFlow.js`: `submitLogin()`/`submitRegister()` DEVUELVEN su resultado (el
-  cajón no lo mira). `account/card.js` y `turnstile.js` pasan al trozo común (los usa la isla): la descarga del
-  motor, 293,84 con tu T5a: cabe en tu techo **294**. La isla, además, DICE el «no» de un reintento del paso 10; en el
-  cajón sigue callado (tu deuda en `DEUDA.md`), por si quieres el mismo aviso.
+- ✅ **T3e·2b (`#693`: la carcasa elegible, `sidebar/props.js`, `Sidebar.vue`, `index.js`) y T3e·3 (`#694`:
+  `registerErrors()` con `signup`, contrato 1.24.0; el alta y el acceso DEVUELVEN su resultado)**: ATENDIDOS por
+  el SPA el 24-09; el `locales=""` suelto y el «no» callado del reintento del paso 10, deuda suya. Detalle: §4.10.
 - ▶▶ **24-09 · T3e·4 (`#695`), lo que tocó de lo tuyo**: `account/after-auth.js::landOnAccount()` gana `reanudar` (la
   cuenta nueva con Google que salió de una COMPRA vuelve a ella; solo lo pasa `GoogleSignupZone.vue`), con sus casos
   en `after-auth.test.js`; `usePurchaseFlow` devuelve `ready` (su montaje); y **la ANALÍTICA, tuya**: `drawer_opened`
   tiene un motivo nuevo, **`resume`** (la página que vuelve de Google con `?compra=reanudar` nace abierta; el
   controlador lo lee de `data-purchase-resume`). El motor, 294,42: techo **295**. ⚠️ **Y una idea para tu cajón**: su
   Google (paso 5) vuelve a `/mi-cuenta` y no a la compra; el mecanismo (`sidebar/reanudar.js`) le serviría igual.
+- ▶▶ **24-09 · T3e·5 (`#696`), lo que tocó de lo tuyo, sin cambiar una conducta del cajón**:
+  `outcome.js::confirmationLine()` lleva además `guest_form_url`, `guest_count_deadline` e `invitation_url` (la
+  tarea de la fiesta en «Listo»), con su caso; `usePurchaseFlow` devuelve `configuracion` (el `GET /config` que ya
+  pedía al montarse). Contrato **1.25.0**: `OrderItem.guest_count_deadline` e `invitation_url` (requeridos,
+  anulables) y `PublicConfig.guest_count_cutoff_hours`; con ellos tu «Mis reservas» podría decir el plazo sin
+  calcularlo. Traza del cajón, idéntica. El motor, 294,70: techo **295**.
 
 ### ❗ Para el carril de la WEB (emisor: plataforma, 2026-09-23) — dos huecos de contenido, MEDIDOS
 - ▶ Publicar `/servicios` como hechos (`#672`) destapó dos cosas **tuyas**, que son de tu T6 de contenido

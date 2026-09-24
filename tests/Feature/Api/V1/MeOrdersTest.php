@@ -8,6 +8,7 @@ use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Services\DisplayTime;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Tests\Feature\Api\ApiTestCase;
 
@@ -198,6 +199,59 @@ class MeOrdersTest extends ApiTestCase
         $this->assertStringNotContainsString('Producto fantasma', (string) $response->getContent());
     }
 
+    /**
+     * T3e·5 (`specs/isla-y-landing-nueva.md` §4.10): una FIESTA pagada publica hasta cuándo se rellena su formulario
+     * y se ajustan sus invitados —el MISMO instante que el formulario, del mismo método del dominio
+     * (`GuestCountPolicy::deadlineFor`: el inicio menos el corte, 24 h si no se configura)— y si ofrece la invitación
+     * digital, que es una regla del PRODUCTO (el interruptor, pack y columna de nombre).
+     */
+    public function test_a_paid_party_publishes_its_guest_deadline_and_whether_it_offers_the_invitation(): void
+    {
+        $user = $this->verifiedUser();
+        $zone = Zone::create([
+            'slug' => 'cumpleanos', 'name' => ['es' => 'Cumpleaños'], 'accent' => 'jump',
+            'color' => '#FF5B22', 'position' => 1, 'is_active' => true,
+        ]);
+        $date = now()->addDays(10)->toDateString();
+        $slot = Slot::create([
+            'zone_id' => $zone->id, 'date' => $date,
+            'start_time' => '17:00:00', 'end_time' => '19:00:00',
+            'capacity' => 60, 'online_capacity' => 60,
+        ]);
+        $pack = TicketType::create([
+            'name' => ['es' => 'Pack cumple'], 'type' => TicketType::TYPE_PACK,
+            'zone_id' => $zone->id, 'duration_min' => 120, 'seats_per_unit' => 1,
+            'is_sellable' => true, 'is_active' => true, 'position' => 1,
+            'guest_fields' => [['key' => 'nombre', 'label' => ['es' => 'Nombre'], 'type' => 'text', 'phase' => 'booking', 'required' => true]],
+            'guest_invitation' => true,
+        ]);
+        $order = $this->makeOrder($user);
+        $item = $order->items()->create([
+            'ticket_type_id' => $pack->id, 'slot_id' => $slot->id,
+            'quantity' => 8, 'unit_price' => 1500, 'seats' => 8,
+        ]);
+
+        $plazo = Carbon::parse("{$date} 17:00:00", DisplayTime::timezone())->subHours(24)->toIso8601String();
+        $formulario = route('reservation.guests', ['reservation' => $item]);
+
+        $this->actingAs($user)->getJson(self::ROOT.'/me/orders')
+            ->assertOk()
+            ->assertValidResponse(200)
+            ->assertJsonPath('data.0.items.0.guest_count_deadline', $plazo)
+            ->assertJsonPath('data.0.items.0.invitation_url', $formulario.'#gf-invite');
+
+        // ⚠️ El ancla es de la VISTA del formulario: si su bloque cambiara de id, el botón «Compartir la invitación»
+        // dejaría al cliente arriba del formulario sin que nada fallara.
+        $this->assertStringContainsString('id="gf-invite"', (string) file_get_contents(resource_path('views/reservation/guests.blade.php')));
+
+        // La invitación es del producto: con su interruptor apagado, la misma fiesta no la ofrece.
+        $pack->update(['guest_invitation' => false]);
+
+        $this->actingAs($user)->getJson(self::ROOT.'/me/orders')
+            ->assertJsonPath('data.0.items.0.invitation_url', null)
+            ->assertJsonPath('data.0.items.0.guest_count_deadline', $plazo);
+    }
+
     public function test_it_serialises_lines_with_their_slot_and_addons(): void
     {
         $user = $this->verifiedUser();
@@ -253,7 +307,10 @@ class MeOrdersTest extends ApiTestCase
             ->assertJsonPath('data.0.items.0.addons.0.product_name', 'Calcetines')
             ->assertJsonPath('data.0.items.0.addons.0.quantity', 2)
             // Una ENTRADA no admite post-form, así que no se le ofrece dónde rellenarlo.
-            ->assertJsonPath('data.0.items.0.guest_form_url', null);
+            ->assertJsonPath('data.0.items.0.guest_form_url', null)
+            // …ni plazo que decir, ni invitación (T3e·5).
+            ->assertJsonPath('data.0.items.0.guest_count_deadline', null)
+            ->assertJsonPath('data.0.items.0.invitation_url', null);
 
         // Y la etiqueta NO es la fecha cruda ni va vacía: sin esto, publicar `''` pasaría el contrato.
         $this->assertNotSame('', $response->json('data.0.items.0.date_label'));

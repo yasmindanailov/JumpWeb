@@ -26,7 +26,18 @@ describe('el pedido de la pantalla 0', () => {
     test('recuerda lo que los datos decían al salir: mínimo, lo que cabe, los calcetines y el justificante', () => {
         const p = pedidoDe(borrador, { minimo: 1, maximo: 12, calcetin, guardian: 'required' });
 
-        assert.deepEqual(p, { fila: 100, dia: '2026-09-26', hora: '17:00:00', n: 2, cal: 1, minimo: 1, maximo: 12, calcetin: { id: 110, price_cents: 200, max_quantity: 40 }, guardian: true });
+        assert.deepEqual(p, {
+            fila: 100, dia: '2026-09-26', hora: '17:00:00', n: 2, cal: 1, minimo: 1, maximo: 12,
+            calcetin: { id: 110, price_cents: 200, max_quantity: 40 }, guardian: true, evento: {}, elecciones: [],
+        });
+    });
+
+    test('de una FIESTA (T3e·5): la edad de quien cumple viaja en la línea, y el menú se recuerda para rehacerla', () => {
+        const p = pedidoDe({ ...borrador, fila: 105, n: 10, cal: 0 }, { evento: { age: 5 }, elecciones: [{ group: 'menu', product_id: 108 }] });
+
+        assert.deepEqual(lineaDe(p, [{ product_id: 108, quantity: 10 }]).event_data, { age: 5 });
+        assert.deepEqual(p.elecciones, [{ group: 'menu', product_id: 108 }]);
+        assert.equal(p.calcetin, null, 'una fiesta no ofrece calcetines antes de pagar (`#692`·4)');
     });
 
     test('sin complemento por cantidad, sin pares; y el justificante OPCIONAL no viaja (la isla no lo pregunta)', () => {

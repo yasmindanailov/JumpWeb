@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { cambioDe, lineaListo, reciboDe, resumenDe, resumenDelPedido } from './recibo.js';
+import { cambioDe, hoyPagas, lineaListo, reciboDe, resumenDe, resumenDeLaCesta, resumenDelPedido } from './recibo.js';
 
 /**
  * El recibo y las líneas de la compra de la isla (T3e·3 de `specs/isla-y-landing-nueva.md` §4.10). El presupuesto y
@@ -10,10 +10,13 @@ import { cambioDe, lineaListo, reciboDe, resumenDe, resumenDelPedido } from './r
 const textos = {
     compra: {
         cuando: {
-            entrada: 'entrada', entradas: 'entradas', par: 'par', pares: 'pares',
+            entrada: 'entrada', entradas: 'entradas', par: 'par', pares: 'pares', nino: 'niño', ninos: 'niños',
             pregunta_calcetines: '¿Calcetines antideslizantes?', pista_calcetines: ':precio el par. Si ya los tenéis, traedlos.',
         },
-        pagar: { precio_por: ':precio por :unidad', precio_el: ':precio el :unidad' },
+        pagar: {
+            precio_por: ':precio por :unidad', precio_el: ':precio el :unidad', hoy_pagas: 'Hoy pagas :importe',
+            senal: 'Hoy pagas :senal de señal; el resto, :resto, el día de la fiesta.',
+        },
         listo: { pedido: 'Nº de pedido :codigo' },
     },
 };
@@ -92,8 +95,48 @@ describe('las líneas de la isla', () => {
 
         assert.equal(lineaListo(confirmacion, { textos }), 'Sábado 26 de septiembre · 17:00 · Kids · 1 hora · 1 entrada · Nº de pedido R-7K2P4');
         assert.deepEqual({ ...resumenDelPedido(confirmacion, { textos }), total: nb(resumenDelPedido(confirmacion, { textos }).total) }, {
-            summary: 'Kids · 1 hora · sáb 26, 17:00 · 1 entrada', total: '16 €',
+            summary: 'Kids · 1 hora · sáb 26, 17:00 · 1 entrada', total: '16 €', today: null,
         });
-        assert.deepEqual(resumenDelPedido(null, { textos }), { summary: null, total: null });
+        assert.deepEqual(resumenDelPedido(null, { textos }), { summary: null, total: null, today: null });
+    });
+});
+
+describe('el recibo de una FIESTA (T3e·5)', () => {
+    const pedido = { fila: 105, dia: '2026-09-26', hora: '17:00:00', n: 10, cal: 0, minimo: 8, maximo: 20, calcetin: null, elecciones: [{ group: 'menu', product_id: 107 }] };
+    const lineaPack = (menu) => ({
+        index: 0, product_id: 105, product_name: 'Pack Kids', is_pack: true, date: '2026-09-26', time: '17:00:00', quantity: 10,
+        unit_price_cents: 1495, subtotal_cents: 14950, has_deposit: true, deposit_cents: 5000, gate_remainder_cents: menu.resto,
+        addons: [{ product_id: menu.id, product_name: menu.nombre, quantity: 10, free_quantity: menu.gratis, subtotal_cents: menu.importe }], icon: 'party',
+    });
+    const quote = (menu, total) => ({ lines: [lineaPack(menu)], total_cents: total, online_amount_cents: 5000 });
+
+    test('el menú incluido va en el rótulo del pack; los niños, entre su mínimo y su máximo; debajo, la SEÑAL', () => {
+        const r = reciboDe({ quote: quote({ id: 107, nombre: 'Menú 1', importe: 0, gratis: 10, resto: 9950 }, 14950), pedido, textos });
+
+        assert.equal(r.lineas.length, 1, 'el menú sin coste no ocupa fila');
+        assert.equal(r.lineas[0].label, 'Pack Kids · Menú 1');
+        assert.equal(nb(r.lineas[0].sub), '14,95 € por niño');
+        assert.deepEqual(r.lineas[0].control, { n: 10, min: 8, max: 20, uno: 'niño', varios: 'niños' });
+        assert.equal(nb(r.nota), 'Hoy pagas 50 € de señal; el resto, 99,50 €, el día de la fiesta.');
+        assert.equal(r.calcetines, null, 'una fiesta no ofrece calcetines aquí (`#692`·4)');
+    });
+
+    test('un menú que cuesta, en su propia fila con su importe del servidor (sin sumarlo al precio por niño)', () => {
+        const r = reciboDe({ quote: quote({ id: 108, nombre: 'Menú 2', importe: 2000, gratis: 0, resto: 11950 }, 16950), pedido: { ...pedido, elecciones: [{ group: 'menu', product_id: 108 }] }, textos });
+
+        assert.equal(r.lineas[0].label, 'Pack Kids');
+        assert.deepEqual({ ...r.lineas[1], value: nb(r.lineas[1].value) }, { id: 'a0-108', label: 'Menú 2', sub: '', value: '20 €', control: null });
+        assert.equal(nb(r.nota), 'Hoy pagas 50 € de señal; el resto, 119,50 €, el día de la fiesta.');
+    });
+
+    test('debajo, la línea en niños y «Hoy pagas» la señal; en «Listo», también en niños', () => {
+        const q = quote({ id: 107, nombre: 'Menú 1', importe: 0, gratis: 10, resto: 9950 }, 14950);
+
+        assert.deepEqual({ ...resumenDeLaCesta(q, { textos }), total: nb(resumenDeLaCesta(q, { textos }).total), today: nb(resumenDeLaCesta(q, { textos }).today) }, {
+            summary: 'Pack Kids · sáb 26, 17:00 · 10 niños', total: '149,50 €', today: 'Hoy pagas 50 €',
+        });
+        assert.equal(hoyPagas(1600, 1600, { textos }), null, 'sin señal no hay «hoy pagas»');
+        assert.equal(lineaListo({ code: 'R-1', lines: [{ product_name: 'Pack Kids', quantity: 10, is_pack: true, date: '2026-09-26', time: '17:00:00' }] }, { textos }),
+            'Sábado 26 de septiembre · 17:00 · Pack Kids · 10 niños · Nº de pedido R-1');
     });
 });

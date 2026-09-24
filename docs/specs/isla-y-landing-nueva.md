@@ -24,8 +24,8 @@
   - Tras tocar un `.vue`, `npm run build:ssr` antes de la suite (`sidebar-spa.md` §0).
 - **Estado**: §7 contestado (`#683`), promociones en `#684`, T0 hecha (§1.6). **T1 ✅** (§4.8) y **T2 ✅**
   (§4.9): la isla en Vue, 52 de 52 situaciones idénticas al diseño. **T3** (la compra, §4.10): T3a→T3d ✅;
-  la secuencia de compra vive en `sidebar/usePurchaseFlow.js`. T3e en seis sub-tandas (`#692`): ·1→·4 ✅, la isla
-  compra con tarjeta hasta el banco (`#694`), con «Entra» y Google, que vuelve a la compra (`#695`).
+  la secuencia de compra vive en `sidebar/usePurchaseFlow.js`. T3e en seis sub-tandas (`#692`): ·1→·5 ✅, la isla
+  compra con tarjeta hasta el banco (`#694`), con «Entra» y Google (`#695`), y los cumpleaños con señal (`#696`).
 - **Invariantes**: `PAY-*` si entra Bizum (`VERIFY_CONC=1`), `SEC-12` (la ruta de las vistas), `SEC-01`,
   `RGPD-*` (consentimiento dentro de la isla, Apple como proveedor), `PERF-02` (la carcasa por instalación va en
   el arranque cacheado; la variante del A/B, en la sesión).
@@ -670,7 +670,39 @@ guion del diseño (`paginas/compra/compra.jsx`, `usePjcCompra`):
     banco, 52/54 —solo «entrar», 571 píxeles: la frase decidida— y **54/54 con el literal del diseño** (control).
   ⚠️ **Pendiente**: el aviso de Google rechazado o cancelado lo pinta hoy el layout (`session('status')`); la
   landing nueva (T4) tiene que pintarlo también. Sincronizar el diseño con las dos decisiones (texto y «G»).
-- **T3e·5** los cumpleaños: la edad elige el pack de su familia, niños, día, hora, menú y la señal.
+- **T3e·5 ✅** (`#696`) los cumpleaños, de la pantalla 0 a «¡Fiesta reservada!», con la señal:
+  · **la pantalla 0 de una fiesta** (`compra/fiesta.js`, sin estado, y `compra/usePantallaCero.js`, que es la pantalla
+    0 entera —entradas y fiestas— salida del orquestador): la EDAD elige el pack por su tramo (`guest_age_min`–`max` de
+    cada ficha; el tramo abierto, «desde 8», ofrece cinco años más, la rejilla del diseño: lo único que no es un dato);
+    los niños nacen en el mínimo del pack, con la pista «ajusta hasta N h antes» de `GET /config`
+    (`guest_count_cutoff_hours`, contrato **1.25.0**; el motor ya la pedía al montarse: `configuracion`, sin otra
+    petición); los días de todos los packs de la zona; sin día elegido (una fiesta no nace «para hoy»). Los menús, el
+    grupo de elección que resuelve el servidor, ANTES de la hora (`oferta.js::cargarGrupos`: el endpoint de
+    complementos los da sin día ni hora pero rechaza `null` en ellos). Del resto de complementos, nada (`#692`·4);
+  · **la línea** lleva la edad en el campo `celebrant_age` de su pack (su clave, de la ficha) y el menú como elección;
+    el total, «Hoy pagas 50 €» y el precio de cada menú llegan del servidor (`PAY-12`);
+  · **«Pagar»** (`recibo.js`): el pack «por niño», el menú en el rótulo si es gratis o en su fila si cuesta, la nota
+    «Hoy pagas 50 € de señal; el resto, X, el día de la fiesta» (lo que queda es el `gate_remainder_cents` de cada
+    línea) y «Pagar 50 € con tarjeta». Al rehacer el recibo por un niño más, el menú elegido se conserva;
+  · **«¡Fiesta reservada!»** con su tarea, que dice el SERVIDOR por reserva (`OrderItem`, contrato 1.25.0):
+    `guest_form_url`, `guest_count_deadline` (el plazo de `GuestCountPolicy`, el mismo instante que publica el
+    formulario) e `invitation_url` (la invitación, DENTRO del formulario, `#gf-invite`, solo si el producto la
+    ofrece). Sin invitación, «Ahora, una cosa.» y un botón. Los botones salen a esas URLs (`pasos.js::destinoDeTarea`);
+  · **el peso**: la compra, 123,46 KiB (techo 124) medida como DESCARGA, igual que sus pasos (37,66): diferir la
+    pantalla de la fiesta hizo a Rollup sacar sus piezas a un trozo compartido y el fichero «bajó» 27 KiB sin que se
+    descargara menos (ahorraba 1,6 a quien compra entradas a cambio de una petición más): va en la compra. El motor,
+    294,70 (+0,28);
+  · **la prueba**: 23 casos nuevos de `node --test` (`fiesta`, `linea`, `recibo`, `pasos`, `oferta` y `outcome`), el
+    contrato del plazo y la invitación (`MeOrdersTest`, con la vista que tiene `#gf-invite`) y del corte
+    (`PublicConfigTest`); una sonda en 390 y 1280, **21/21** —la pantalla 0 (edades 4–13, 8 niños y su pista, los dos
+    menús), la edad que cambia de pack, el Menú 2 que cambia el total, la línea con `age` y el 108, el recibo y su
+    señal, un niño más que conserva el menú, la pasarela con 5000 céntimos, la vuelta REAL del banco y la tarea que
+    lleva al formulario de ESA reserva—; las de entradas y «Entra», 29/29 y 20/20; la traza del cajón, idéntica; el
+    banco, 52/54 (las cinco situaciones de fiesta, idénticas; «entrar», la frase de `#695`).
+  ⚠️ **En local ningún pack ofrece invitación**: la tarea de dos cosas solo la prueba `node --test`. **Del owner,
+  en producción**: pasar el nombre del homenajeado de los dos packs a la fase «formulario de invitados» (`#692`·1).
+  ⚠️ **Pendiente**: la vuelta del banco aterriza en la landing de hoy, sin las hojas de Saltia (letra y fondo del
+  «Listo» sin sus tokens): lo arregla la página nueva (T4).
 - **T3e·6** la sonda de la isla: una entrada y un cumpleaños con señal hasta la pasarela, en local, y los
   desenlaces con la vuelta sin datos y el rechazo (como `scripts/sonda-embudo.mjs`); después, en staging.
 

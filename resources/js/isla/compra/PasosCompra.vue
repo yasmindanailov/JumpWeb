@@ -86,6 +86,6 @@ const proveedor = (via) => via === 'google' && aGoogle();
         v-else-if="paso === 'listo'"
         v-bind="listo"
         @guardar="pago.guardarQr"
-        @tarea="pago.menores"
+        @tarea="pago.tarea"
     />
 </template>

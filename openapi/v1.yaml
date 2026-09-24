@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.24.0
+  version: 1.25.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -4443,7 +4443,7 @@ components:
     PublicConfig:
       type: object
       additionalProperties: false
-      required: [registration, catalog_search_min_items, cart_max_lines, low_availability_max, turnstile_site_key]
+      required: [registration, catalog_search_min_items, cart_max_lines, low_availability_max, turnstile_site_key, guest_count_cutoff_hours]
       properties:
         registration:
           type: object
@@ -4521,6 +4521,15 @@ components:
             con solo una configurada no está activo, el servidor no verifica ningún token y aquí viaja
             `null`. Dibujar el widget con media configuración pondría al usuario a resolver un captcha
             que su propio servidor deja pasar.
+        guest_count_cutoff_hours:
+          type: integer
+          minimum: 0
+          description: |
+            Cuántas horas antes del inicio de una fiesta se cierra el ajuste de invitados
+            (`packs.guest_count_cutoff_hours`; 24 si el operador no lo ha configurado). Con él, la
+            compra dice ANTES de reservar lo que el servidor aplicará después: «reserva con el mínimo y
+            ajusta hasta N h antes». El plazo exacto de cada reserva viaja con ella
+            (`OrderItem.guest_count_deadline`); esto es la regla, para pintar. Desde 1.25.0.
     ReservationEligibility:
       type: object
       additionalProperties: false
@@ -5838,6 +5847,8 @@ components:
         - quantity_label
         - icon
         - can_add_extras
+        - guest_count_deadline
+        - invitation_url
       additionalProperties: false
       properties:
         id:
@@ -5977,6 +5988,25 @@ components:
             `false` cuando la fiesta ya pasó, cuando el pedido no está pagado, cuando todos los
             plazos vencieron y en la instalación que no configura ninguno — que es el caso por
             defecto.
+        guest_count_deadline:
+          type: string
+          format: date-time
+          nullable: true
+          description: |
+            **Hasta cuándo se rellena el formulario de invitados de esta reserva y se ajusta cuántos
+            vienen** (`GuestCountPolicy::deadlineFor`: el inicio de la franja menos las horas de corte,
+            en la zona del parque), o `null` cuando la reserva no lo admite —la misma condición que
+            `guest_form_url`—. Es el MISMO instante que publica el formulario (`GuestForm.guest_count_deadline`):
+            aquí viaja para decirlo en cuanto la fiesta está reservada («rellénalo hasta el…»). Desde 1.25.0.
+        invitation_url:
+          type: string
+          nullable: true
+          description: |
+            Dónde se **comparte la invitación digital** de esta reserva, o `null` si no la ofrece
+            (`TicketType::offersGuestInvitation()`: el interruptor del producto, que sea un pack y que su
+            formulario tenga columna de nombre; y que la reserva admita formulario). La invitación vive
+            DENTRO del formulario de invitados, en su bloque: es `guest_form_url` con su ancla, compuesta
+            por el servidor, que es quien conoce la vista. Desde 1.25.0.
     OrderItemAddon:
       type: object
       description: |

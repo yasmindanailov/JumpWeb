@@ -126,7 +126,24 @@ test('traduce la línea del pedido a la forma del presupuesto', () => {
         addons: [{ product_name: 'Tarta', quantity: 2, free_quantity: 1, subtotal_cents: 1000 }],
         event: [{ key: 'celebrant', label: 'Homenajeado', value: 'Mara' }],
         dependents: [],
+        guest_form_url: null,
+        guest_count_deadline: null,
+        invitation_url: null,
     });
+});
+
+/** T3e·5: lo que la fiesta ofrece hacer después, tal cual lo compone el servidor (y `null` si no viene). */
+test('transporta el formulario de invitados, su plazo y la invitación, sin componer nada', () => {
+    const line = confirmationLine(item({
+        guest_form_url: '/reserva/7/datos-invitados',
+        guest_count_deadline: '2026-08-14T10:00:00+02:00',
+        invitation_url: '/reserva/7/datos-invitados#gf-invite',
+    }));
+
+    assert.equal(line.guest_form_url, '/reserva/7/datos-invitados');
+    assert.equal(line.guest_count_deadline, '2026-08-14T10:00:00+02:00');
+    assert.equal(line.invitation_url, '/reserva/7/datos-invitados#gf-invite');
+    assert.equal(confirmationLine(item({ guest_form_url: 42 })).guest_form_url, null, 'lo que no es una cadena no es una URL');
 });
 
 /** Los menores asignados (Fase 6 · tanda 4) llegan por `event-data` con la misma llave que las respuestas. */

@@ -14,6 +14,7 @@ import { defineAsyncComponent, onMounted, provide } from 'vue';
 import './isla.css';
 import IslaFlotante from './IslaFlotante.vue';
 import PantallaCuando from './compra/PantallaCuando.vue';
+import PantallaCuandoFiesta from './compra/PantallaCuandoFiesta.vue';
 import { PROPS_MOTOR } from '../sidebar/props.js';
 import { COMPRA, useSeccionCompra } from './compra/useSeccionCompra.js';
 
@@ -25,7 +26,7 @@ const JuntoCompra = defineAsyncComponent(() => diferidos().then((m) => m.JuntoCo
 defineOptions({ inheritAttrs: false });
 const props = defineProps(PROPS_MOTOR);
 const compra = useSeccionCompra(props);
-const { abierta, textos, ck, paso, cuando, cambiar, refreshBookingStatus, refreshIdentity, openProduct, applyIntent } = compra;
+const { abierta, textos, ck, paso, fiesta, cuando, cambiar, refreshBookingStatus, refreshIdentity, openProduct, applyIntent } = compra;
 
 provide(COMPRA, compra);
 onMounted(diferidos);
@@ -40,8 +41,13 @@ defineExpose({ refreshBookingStatus, refreshIdentity, openProduct, applyIntent }
             :checkout="ck"
             :bloquea-pagina="false"
         >
+            <PantallaCuandoFiesta
+                v-if="paso === 'cuando' && fiesta"
+                v-bind="cuando"
+                @cambiar="cambiar"
+            />
             <PantallaCuando
-                v-if="paso === 'cuando'"
+                v-else-if="paso === 'cuando'"
                 v-bind="cuando"
                 @cambiar="cambiar"
             />

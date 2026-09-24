@@ -47,6 +47,19 @@ export function diaLargo(iso, locale = 'es') {
     return escrito.charAt(0).toUpperCase() + escrito.slice(1);
 }
 
+/**
+ * «viernes 25»: el día de un plazo, como lo escribe el diseño («hasta el domingo 24»). De un instante del servidor
+ * (ISO con su desfase, en la zona del parque): se toma SU fecha, no la del reloj de quien mira.
+ */
+export function diaDelPlazo(iso, locale = 'es') {
+    const fechaDelParque = typeof iso === 'string' ? iso.slice(0, 10) : '';
+
+    if (! /^\d{4}-\d{2}-\d{2}$/.test(fechaDelParque)) return '';
+    const p = partes(fechaDelParque, locale, { weekday: 'long', day: 'numeric' });
+
+    return `${p.find((x) => x.type === 'weekday')?.value ?? ''} ${p.find((x) => x.type === 'day')?.value ?? ''}`.trim();
+}
+
 /** Las entradas de una zona, en el orden del catálogo. */
 export function filasDeZona(productos, zona) {
     return (Array.isArray(productos) ? productos : []).filter((p) => p?.type === 'entry' && p?.zone?.slug === zona);
