@@ -172,6 +172,9 @@ class AuditLog extends Model
         'panel.locale_changed',
         // La descarga del CSV de «Analítica» (`specs/analitica.md` §4.5, T2d): informe, periodo y recuento; sin PII.
         'reports.exported',
+        // T4b de la analítica: la descarga de un SEGMENTO (una lista de personas con opt-in), con el segmento y
+        // el recuento en el payload, sin PII.
+        'segments.exported',
 
         // ── Incidencias de cobro (llegan por CONSTANTE, no por literal) ────────────────────
         self::ACTION_DUPLICATE_CAPTURE,

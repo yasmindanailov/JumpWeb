@@ -69,6 +69,9 @@ final class PermissionCatalog
             // La 360 del cliente en su ficha (`specs/analitica.md` §4.6, T4a): permiso PROPIO, porque junta la
             // historia comercial de una persona con su navegación; no va al staff por defecto.
             'customers.insights',
+            // Exportar un SEGMENTO de clientes (T4b): una lista de personas —solo con opt-in—, auditada. Permiso
+            // propio y distinto del CSV de agregados (`reports.export`).
+            'analytics.export',
         ],
         // Sistema (incluye el admin-exclusivo `access.manage`, mostrado pero no asignable).
         'sistema' => [

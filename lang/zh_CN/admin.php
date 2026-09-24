@@ -269,6 +269,35 @@ return [
             'customers' => '客户',
             'traffic' => '转化',
         ],
+        'segments' => [
+            'heading' => '客户分群',
+            'note' => '四个用于再次联系客户的名单，今天根据订单计算（绝不依据未成年人的年龄）：只购买过一次且已 :days 天未再来；上一次派对在 :from 到 :to 个月前；作为受邀者来过但从未购买；曾联系但没有订单。仅导出已同意接收通讯的人，每次下载均记录在审计日志中。',
+            'table_heading' => '今日人数',
+            'col' => [
+                'segment' => '分群',
+                'size' => '人数',
+                'opt_in' => '已同意通讯',
+            ],
+            'name' => [
+                'once_never_back' => '只买过一次未再来',
+                'party_year_ago' => '一年前办过派对（生日将至）',
+                'guest_no_purchase' => '受邀但未购买',
+                'contact_no_order' => '曾联系但无订单',
+            ],
+            'export' => [
+                'button' => '导出分群',
+                'modal_heading' => '导出客户分群',
+                'modal_description' => '仅包含已同意接收通讯的人：姓名、邮箱、电话和最近购买。无账户的受邀者不会导出。下载会记录在审计日志中。',
+                'segment_label' => '分群',
+                'submit' => '下载',
+            ],
+            'csv' => [
+                'name' => '姓名',
+                'email' => '邮箱',
+                'phone' => '电话',
+                'last_purchase' => '最近购买',
+            ],
+        ],
         'period' => [
             'label' => '时间范围',
             'today' => '今天',
@@ -1695,6 +1724,7 @@ return [
             'reports_view' => '查看分析报表',
             'reports_export' => '导出分析数据(CSV)',
             'customers_insights' => '在客户档案中查看客户360',
+            'analytics_export' => '导出客户分群（仅限已同意接收通讯者）',
             'audit_view' => '查看审计日志',
             'access_manage' => '管理角色与权限',
         ],

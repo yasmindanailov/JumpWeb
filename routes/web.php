@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\DailySummaryController;
 use App\Http\Controllers\Admin\GoogleBusinessConnectController;
 use App\Http\Controllers\Admin\PanelLocaleController;
 use App\Http\Controllers\Admin\ReservationSlipController;
+use App\Http\Controllers\Admin\SegmentsExportController;
 use App\Http\Controllers\Admin\WaiverProofController;
 use App\Http\Controllers\AttractionsController;
 use App\Http\Controllers\Auth\EmailVerificationController;
@@ -474,6 +475,11 @@ Route::get('/admin/calendario/resumen-dia', DailySummaryController::class)
 Route::get('/admin/analitica/csv', AnalyticsExportController::class)
     ->middleware(['web', 'auth', 'panel_role', SetAdminLocale::class, 'throttle:30,1', 'no-store'])
     ->name('admin.analitica.csv');
+// Y la exportación de un SEGMENTO (`specs/analitica.md` §4.6, T4b): una lista de personas, solo las que dieron el
+// opt-in de comunicaciones, con permiso PROPIO `analytics.export` en el controlador y rastro con el recuento.
+Route::get('/admin/analitica/segmentos/csv', SegmentsExportController::class)
+    ->middleware(['web', 'auth', 'panel_role', SetAdminLocale::class, 'throttle:30,1', 'no-store'])
+    ->name('admin.analitica.segmentos.csv');
 
 /*
  * ══ EL LABORATORIO DE FACHADA ══════════════════════════════════════════════════════════════════

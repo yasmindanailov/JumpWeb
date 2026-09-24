@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Domain\Platform\Enums\Comparison;
 use App\Domain\Platform\Enums\ReportPeriod;
 use App\Filament\Analytics\CsvExport;
+use App\Filament\Analytics\SegmentsReport;
 use App\Filament\Widgets\Analytics\CustomersBreakdownWidget;
 use App\Filament\Widgets\Analytics\CustomersSeriesChart;
 use App\Filament\Widgets\Analytics\DevicesChart;
@@ -21,6 +22,7 @@ use App\Filament\Widgets\Analytics\MoneySeriesChart;
 use App\Filament\Widgets\Analytics\PagesWidget;
 use App\Filament\Widgets\Analytics\RegistrationMethodsChart;
 use App\Filament\Widgets\Analytics\RegistrationsWidget;
+use App\Filament\Widgets\Analytics\SegmentsWidget;
 use App\Filament\Widgets\Analytics\SourcesChart;
 use App\Filament\Widgets\Analytics\SourcesWidget;
 use App\Filament\Widgets\Analytics\TrafficHoursChart;
@@ -71,6 +73,12 @@ class AnalyticsPage extends BaseDashboard
     public const PERMISSION_EXPORT = 'reports.export';
 
     /**
+     * Exportar un SEGMENTO (T4b): una lista de PERSONAS —solo con opt-in—, no agregados; por eso es otro permiso,
+     * propio y fuera del staff por defecto, y cada descarga deja rastro con el segmento y el recuento.
+     */
+    public const PERMISSION_SEGMENTS_EXPORT = 'analytics.export';
+
+    /**
      * Los widgets de cada pestaña, en su orden de lectura: tarjetas, gráficos (los de media rejilla van de dos en
      * dos) y, plegadas al final, las tablas. La clave es también la del rótulo (`admin.analytics.tabs.*`).
      *
@@ -91,6 +99,9 @@ class AnalyticsPage extends BaseDashboard
             CustomersSeriesChart::class,
             GateHoursChart::class,
             RegistrationMethodsChart::class,
+            // T4b: los segmentos, un estado de HOY (no dependen del periodo). Van ANTES de la tabla plegada del
+            // detalle: la regla de la T2f es que la tabla del gráfico cierra la pestaña.
+            SegmentsWidget::class,
             CustomersBreakdownWidget::class,
         ],
         'traffic' => [
@@ -181,6 +192,31 @@ class AnalyticsPage extends BaseDashboard
                         'from' => is_string($filters['from'] ?? null) ? substr($filters['from'], 0, 10) : null,
                         'to' => is_string($filters['to'] ?? null) ? substr($filters['to'], 0, 10) : null,
                     ], static fn ($v): bool => $v !== null)));
+                }),
+            // «Exportar segmento» (T4b): una lista de personas con opt-in. Se esconde sin `analytics.export`; el
+            // controlador de la ruta vuelve a comprobarlo y audita cada descarga.
+            Action::make('exportSegment')
+                ->label(__('admin.analytics.segments.export.button'))
+                ->icon(Heroicon::OutlinedUserGroup)
+                ->color('gray')
+                ->visible(fn (): bool => auth()->user()?->hasPermission(self::PERMISSION_SEGMENTS_EXPORT) ?? false)
+                ->modalHeading(__('admin.analytics.segments.export.modal_heading'))
+                ->modalDescription(__('admin.analytics.segments.export.modal_description'))
+                ->modalSubmitActionLabel(__('admin.analytics.segments.export.submit'))
+                ->modalWidth('md')
+                ->schema([
+                    Select::make('segment')
+                        ->label(__('admin.analytics.segments.export.segment_label'))
+                        ->options(array_combine(SegmentsReport::SEGMENTS, array_map(static fn (string $s): string => __('admin.analytics.segments.name.'.$s), SegmentsReport::SEGMENTS)))
+                        ->default(SegmentsReport::ONCE_NEVER_BACK)
+                        ->required()
+                        ->selectablePlaceholder(false)
+                        ->native(false),
+                ])
+                ->action(function (array $data): void {
+                    $this->dispatch('open-url-new-tab', url: route('admin.analitica.segmentos.csv', [
+                        'segment' => (string) ($data['segment'] ?? SegmentsReport::ONCE_NEVER_BACK),
+                    ]));
                 }),
         ];
     }

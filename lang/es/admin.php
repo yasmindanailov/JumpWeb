@@ -304,6 +304,37 @@ return [
             'customers' => 'Clientes',
             'traffic' => 'Conversión',
         ],
+        // Los segmentos (`specs/analitica.md` §4.6, T4b): cuatro listas de personas, desde los PEDIDOS y el libro;
+        // la exportación solo lleva a quien dio el opt-in y tiene permiso propio (`analytics.export`).
+        'segments' => [
+            'heading' => 'Segmentos de clientes',
+            'note' => 'Cuatro listas para volver a hablar con alguien, calculadas hoy desde los pedidos (nunca desde la edad de un menor): compró una vez y lleva :days días sin volver; su última fiesta fue hace entre :from y :to meses; vino invitado y nunca compró; escribió y no tiene pedido. Solo se exporta a quien dio el opt-in de comunicaciones, y cada descarga queda en la auditoría.',
+            'table_heading' => 'Cuántos son hoy',
+            'col' => [
+                'segment' => 'Segmento',
+                'size' => 'Personas',
+                'opt_in' => 'Con opt-in',
+            ],
+            'name' => [
+                'once_never_back' => 'Compró una vez y no volvió',
+                'party_year_ago' => 'Fiesta hace un año (cumple a la vista)',
+                'guest_no_purchase' => 'Invitado que no ha comprado',
+                'contact_no_order' => 'Escribió y no tiene pedido',
+            ],
+            'export' => [
+                'button' => 'Exportar segmento',
+                'modal_heading' => 'Exportar un segmento de clientes',
+                'modal_description' => 'Solo las personas con opt-in de comunicaciones: nombre, correo, teléfono y última compra. Los invitados sin cuenta no se exportan. La descarga queda en la auditoría.',
+                'segment_label' => 'Segmento',
+                'submit' => 'Descargar',
+            ],
+            'csv' => [
+                'name' => 'Nombre',
+                'email' => 'Correo',
+                'phone' => 'Teléfono',
+                'last_purchase' => 'Última compra',
+            ],
+        ],
         'period' => [
             'label' => 'Periodo',
             'today' => 'Hoy',
@@ -2154,6 +2185,7 @@ return [
             'reports_view' => 'Ver la analítica (informes)',
             'reports_export' => 'Exportar la analítica en CSV',
             'customers_insights' => 'Ver la 360 del cliente en su ficha',
+            'analytics_export' => 'Exportar segmentos de clientes (solo con opt-in)',
             'audit_view' => 'Ver registro de auditoría',
             'access_manage' => 'Gestionar roles y permisos',
         ],

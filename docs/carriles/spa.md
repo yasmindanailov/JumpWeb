@@ -47,12 +47,15 @@
   `2026_09_24_160000`, aplicada en la local), `/cookies` nombra las plataformas ACTIVAS al pintar con su
   empresa y su garantía (`policy.ads_*`), plantilla de UTM en `INSTALACION-CLIENTE.md` §3.bis. **La T3 queda
   completa.** `[PENDIENTE: asesoría]` solo en `COOKIES.md` §1 (validar las garantías). **Queda el ojo del
-  owner** sobre `/cookies` con píxeles puestos. ▶ **T4a EN EL ÁRBOL (24-09)**: la sección «Cliente 360» en la
+  owner** sobre `/cookies` con píxeles puestos. ▶ **T4a EN `main` (24-09)**: la sección «Cliente 360» en la
   ficha del cliente (`customers.insights`, permiso propio, sembrado en la local): `CustomerInsights` (capa de
-  entrega) + partial; lo del contrato desde los pedidos cobrados, lo de la navegación solo en el régimen
-  identificado; `sonda-cliente-360.mjs` (captura `cliente-360-t4a.png`, cliente 2074 de la BD local). **Queda
-  el ojo del owner** (`/admin/users/2074`). ▶ Sigue **T4b** (segmentos + export con `analytics.export` y
-  rastro) y **T4c** (opt-in de marketing en `ConfirmedStep`); la **T2e** solo si el volumen lo pide. ⚠️ **El fixture «probe-ojo-analitica» está
+  entrega) + partial; `sonda-cliente-360.mjs` (captura `cliente-360-t4a.png`, cliente 2074). **Queda el ojo
+  del owner** (`/admin/users/2074`). ▶ **T4b EN EL ÁRBOL (24-09)**: los segmentos en «Analítica → Clientes»
+  (`SegmentsReport` + `SegmentsWidget`, cuatro filas con personas y con opt-in) y «Exportar segmento»
+  (`analytics.export`, permiso propio sembrado en la local; `GET /admin/analitica/segmentos/csv`, solo opt-in,
+  rastro `segments.exported`); `sonda-segmentos.mjs` (capturas `segmentos-t4b-*.png`). **Queda el ojo del
+  owner**. ▶ Sigue **T4c** (opt-in de marketing en `steps/ConfirmedStep.vue`); la **T2e** solo si el volumen
+  lo pide. ⚠️ **El fixture «probe-ojo-analitica» está
   MONTADO en la BD local** (90 pedidos `JW-OJO…`, 81 cobros, 9 devoluciones, 25 clientes
   `ojo-N@ojo-analitica.jumpweb.test`, 506 sesiones, dos meses): `OJO=desmontar` lo quita entero.
 - ✅ **La ficha de Google (`#524`), T1 y T2·1→T2·8 en el árbol** (`#720`→`#734`), **vistas por el owner con
@@ -77,9 +80,10 @@
    céntimos— tecleado en un Resource pequeño de «Ajustes» para el CPA/ROAS de `SourcesWidget`). ✅ El owner vio
    la T2f en vivo (24-09). ▶ **La T3 en marcha** (spec §4.3 y §4.8): **T3a·1 ✅ · T3a·2 ✅ · T3a·3 ✅ (24-09)**
    → **T3a·4 ✅ (24-09)** el aviso a las cuentas existentes → **T3b·1 ✅ (24-09)** los píxeles → **T3b·2 ✅
-   (24-09)** la API de conversiones → **T3b·3 ✅ (24-09)** los textos → **T4a ✅ (24-09)** la 360 → **T4b** los
-   segmentos (spec §4.6; exportables solo con opt-in, permiso `analytics.export` y rastro) → **T4c** el opt-in
-   de marketing tras comprar (`steps/ConfirmedStep.vue`, `PUT /me/marketing`; spec §4.3 «Comunicaciones»).
+   (24-09)** la API de conversiones → **T3b·3 ✅ (24-09)** los textos → **T4a ✅ (24-09)** la 360 → **T4b ✅ (24-09)** los
+   segmentos → **T4c** el opt-in de marketing tras comprar (`steps/ConfirmedStep.vue`, solo con sesión,
+   `marketing_opt_in === false` y sin retirada previa —`consents.revoked_at`—, una casilla desmarcada que llama
+   al mismo `PUT /me/marketing`; spec §4.3 «Comunicaciones») → **T5** experimentos (spec §4.4).
    ⚠️ El fixture del ojo siembra también TRÁFICO (506 sesiones, 2.294 hechos, sellos con primer y último toque).
    ⚠️ **Los cortes por día van por HORA UTC en SQL y al día del parque en PHP** (`SqlTime::hourBucket()`,
    `Window::bucketKey()`), nunca `CONVERT_TZ`. ⚠️ El dinero se lee de `payments`, `payment_refunds`,
@@ -244,6 +248,9 @@ spec enumera. Lo del cliente va en la rama `cliente/playjump`, nunca a `main`.
 - 🪤 **De la T4a**: `order_items.seats` y `payment_refunds.{currency,mode,requested_at}` son NOT NULL: un fixture
   a mano los lleva. Una tanda a medias se APARCA fuera del árbol mientras corre la puerta (mide el árbol, no
   el commit).
+- 🪤 **De la T4b**: una acción de auditoría nueva va a `AuditLog::ACTIONS` o el controlador da 500. La lista de
+  widgets de `AnalyticsPageTest` es EXACTA y la tabla plegada CIERRA cada pestaña (lo nuevo va antes). El
+  `no-store` de la ruta llega como `max-age=0, no-store, private`. Un correo se cuenta en minúsculas.
 - 🩹 **En la BD LOCAL hay 19 titulares con la cadena de waiver ROTA** (basura del 26–27 de agosto): si mides
   cadenas, compara ANTES/DESPUÉS.
 - **F4 cerró y el cajón es un PAQUETE** (`specs/cajon-empaquetable.md` §0 y §4.8). Tocar «HOJA ENFOCADA» de
@@ -276,33 +283,18 @@ spec enumera. Lo del cliente va en la rama `cliente/playjump`, nunca a `main`.
   tocado `GuestFormRequest` (solo con invitación). Te queda tu OJO en Gmail/Outlook de los tres nuevos.
 
 ### ❗❗ Para el carril de la WEB (emisor: SPA, 24-09) — LA T3 DE LA ANALÍTICA HA EMPEZADO: tocado lo tuyo
-- **T3a·1 (24-09), en `main`**: `layout.blade.php` (los `data-cookie-*` se recorren desde `CookieConsent::OPTIONAL`
-  + `data-consent-categories`), `app.js` (el almacén `cookies` → `ui/cookie-consent.js`), `site/cookie-banner.blade.php`
-  (un toggle por categoría), `lang/{es,en,fr}/cookies.php`, `Content\Services\{CookiePolicyContent,LegalContent}`
-  (migraciones quirúrgicas), `COOKIES.md`. **`POLICY_VERSION` = `2026-09-24`**: todo visitante vuelve a decidir.
-  **T3a·2 (24-09), en `main`**: `SecurityHeaders.php` (orígenes del driver por `Drivers::csp()`),
-  `Filament/Pages/Settings.php` («Herramienta de análisis»), `anfitrion/legal.blade.php` (`/cookies` nombra la
-  herramienta), `lang/{es,zh_CN}/admin.php`, `config/services.php` y `.env.example`, `docs/SEGURIDAD.md`.
-  **T3a·3 (24-09), en `main`, tocado**: `layout.blade.php` (la persona del `<body>` respeta la oposición de la
-  cuenta), `openapi/v1.yaml` → **1.20.0** (`PUT /me/analytics`, `analytics_opt_out` en `GET /me`, el export).
-  **T3a·4 (24-09), tocado**: `openapi/v1.yaml` → **1.21.0** (`analytics_notice` en `GET /me/account-context`,
-  `DELETE /me/analytics-notice`), `AccountContextResource` y `CustomerAccountContext` (una clave más, a la
-  cola), `AccountHomeZone.vue` (el aviso DEBAJO de las tarjetas, fuera de la cadena de avisos),
-  `stores/accountContext.js` (`dismissAnalyticsNotice`), `SidebarMountTest` (la semilla: clave nueva y techo
-  640 → 800 medido con y sin aviso), `docs/ENTORNOS.md` §6 (el runbook de la v3). **T3b·1 (24-09), tocado**:
-  `layout.blade.php` (un `data-pixel-*` por píxel configurado, `Pixels::forBody()`), `SecurityHeaders.php`
-  (los orígenes de los píxeles se funden con los del driver), `Filament/Pages/Settings.php` (sección «Píxeles
-  de anuncios», cuatro ajustes `marketing.*`), `lang/{es,zh_CN}/admin.php` (`settings.section_ads*`,
-  `ads_*`), `config/services.php` y `.env.example` (`META_CAPI_*`, `TIKTOK_EVENTS_ACCESS_TOKEN`),
-  `cajon/track.js` (trae `pixels.js` si hay `data-pixel-*`), `cajon/controller.js` (`purchased(code, extra)`),
-  `specs/cajon-empaquetable.md` (el detalle de `purchased`). **T3b·2 (24-09), tocado**: `bootstrap/app.php`
-  (`_fbp`/`_fbc`/`_ttp` en el `except` de `EncryptCookies`), `AppServiceProvider` (bind de
-  `Platform\Contracts\ConsentLedger` → `Identity\CookieConsentLedger`), `CookieConsentController` (escribe
-  `visitor_id`), `User::anonymize()` (`browser_ids` fuera del sello), `AttributionContext::seal()`
-  (`visitor_id` también con `marketing`; `browser_ids`), `OrderAnalyticsObserver` (encola el job). **T3b·3
-  (24-09), tocado**: `anfitrion/legal.blade.php` (un párrafo más al pie de `/cookies`, los píxeles activos),
-  `lang/{es,en,fr}/cookies.php` (`policy.ads_*`), `Content\Services\CookiePolicyContent` (dos párrafos sin el
-  «[PENDIENTE]») con migración quirúrgica. ❗ **Tuyo y a la vista**: el «[PENDIENTE: confirmar adhesión…]» del
+- **La T3 entera está en `main` (24-09)** y tocó lo tuyo; el detalle por tanda, en `analitica.md` §4.3 («Lo que
+  enseñó»). En una línea: `layout.blade.php` (los `data-cookie-*` desde `CookieConsent::OPTIONAL`,
+  `data-analytics-*`, `data-pixel-*`), `app.js` (el almacén `cookies` → `ui/cookie-consent.js`),
+  `site/cookie-banner.blade.php` (un toggle por categoría), `lang/{es,en,fr}/cookies.php` (banner, `policy.tool_*`
+  y `policy.ads_*`), `Content\Services\{CookiePolicyContent,LegalContent}` (tres migraciones quirúrgicas),
+  `SecurityHeaders.php` (orígenes del driver y de los píxeles por `Drivers::csp()`/`Pixels::csp()`),
+  `Filament/Pages/Settings.php` (dos secciones nuevas), `anfitrion/legal.blade.php` (`/cookies` nombra la
+  herramienta y los píxeles activos), `bootstrap/app.php` (`_fbp`/`_fbc`/`_ttp` sin cifrar),
+  `AppServiceProvider` (bind de `ConsentLedger`), `CookieConsentController` (`visitor_id`), `openapi/v1.yaml`
+  → **1.21.0**, `AccountHomeZone.vue` y `stores/accountContext.js` (el aviso del índice), `cajon/track.js` y
+  `cajon/controller.js`. **`POLICY_VERSION` = `2026-09-24`**: todo visitante vuelve a decidir. ❗ **Tuyo y a la
+  vista**: el «[PENDIENTE: confirmar adhesión…]» del
   proveedor del FEED SOCIAL en el párrafo de transferencias de `/cookies` (`#592`) sigue publicado; yo no lo
   toco. Si tu landing nueva (Saltia)
   pinta el banner o lee `cookieConsent`, cuenta con cuatro claves; si pinta el `<body>`, los

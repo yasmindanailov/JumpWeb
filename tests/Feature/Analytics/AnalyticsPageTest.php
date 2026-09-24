@@ -29,6 +29,7 @@ use App\Filament\Widgets\Analytics\MoneySeriesChart;
 use App\Filament\Widgets\Analytics\PagesWidget;
 use App\Filament\Widgets\Analytics\RegistrationMethodsChart;
 use App\Filament\Widgets\Analytics\RegistrationsWidget;
+use App\Filament\Widgets\Analytics\SegmentsWidget;
 use App\Filament\Widgets\Analytics\SourcesChart;
 use App\Filament\Widgets\Analytics\SourcesWidget;
 use App\Filament\Widgets\Analytics\TrafficHoursChart;
@@ -153,6 +154,8 @@ class AnalyticsPageTest extends TestCase
         CustomersSeriesChart::class,
         GateHoursChart::class,
         RegistrationMethodsChart::class,
+        // T4b: los segmentos, antes de la tabla plegada que cierra «Clientes».
+        SegmentsWidget::class,
         CustomersBreakdownWidget::class,
         TrafficWidget::class,
         FunnelChart::class,
