@@ -860,15 +860,32 @@ juzga «idéntico», con los datos del diseño.
   mutantes muertos (sin colisiones, sin lista blanca, sin textos); en local, `/kids` y `/jump` de PlayJump en 200 con
   `no-store` y su CSP, en es/en/fr y en el sitemap. ⚠️ El caso registraba las rutas FUERA del grupo `web` y salía sin
   CSP: el arranque las registra dentro, y el caso ahora también. Queda **·4** (el estado del `<body>`, con el SPA).
-- ▶▶ **Para EMPEZAR la T4c** (siguiente sesión): (1) **el A** son las 14 fichas `sections/{kids,jump}-*.card.html`
-  de la referencia (una por pieza y zona) más el pie de `piezas-7-9.jsx`; (2) **el banco** sigue el patrón de
-  `scripts/banco-piezas.php` —A la ficha con su React, B la pieza Blade con LOS MISMOS datos (`contenido.js`)— y se
-  juzga con `scripts/pixel.mjs --rehacer` a 390 y 1280 hasta 0; (3) **dónde**: los componentes de presentación son
-  de la instancia (§4.2), en `instancias/playjump/web/componentes/` con un espacio de componentes anónimos
-  `instancia::` que registra el producto junto al de vistas (la primera sub-tanda, ·0); el molde,
-  `web/entradas.blade.php`; los textos, `lang/*/paginas.php`; (4) **las cifras**, de `$hechos` (nunca tecleadas);
-  (5) **apagados**: la oferta, el precio de antes, JumpPoints, [Jump Club], [Bono] y las tres reseñas hasta la T2·9
-  del SPA; sin material, las fotos del panel (`#761`·3). La calculadora de la pieza 3 es la T4d: aquí, su hueco.
+- ▶▶ **La T4c, diseñada al medirla (24-09, `#762`)**. Medido en los 20 componentes que usan las piezas (~107 KB de
+  JSX con estilo en línea): **cuatro deciden su forma MIDIÉNDOSE** (`VideoHero` apila por debajo de 720 px con OTRO
+  DOM; `ProofList`, `ReviewPanel` y `ParkLocation`, con `ResizeObserver`), **seis abren y cierran con estado**
+  (`Accordion`, `ClipList`, `ClipTile`, `ClipViewer`, `ShareRow`, `CTABand`) y el `hover`/`press` de botones y
+  enlaces es estado de React. De ahí la forma:
+  - **·0 no lleva código**: Laravel ya resuelve `<x-instancia::nombre>` contra `web/components/` del espacio de
+    vistas que registra `InstanceViews` (medido con un paquete de prueba: `<x-paqx::pieza>` y `<x-paqx::grupo.hija>`).
+    Registrar otro espacio (`componentes/`, lo que proponía esta spec) daría lo mismo con un mecanismo más y otra ruta
+    que validar (`SEC-12`). Entra la GUARDA, porque es promesa hacia la instancia (`InstancePagesTest`).
+  - **Tres capas, todas de la instancia**: (1) **componentes** en `web/components/` = los del diseño (su nombre en
+    kebab, sus props y su DOM); (2) **piezas** en `web/entradas/`, que componen desde `$z`, un arreglo con la forma
+    EXACTA de `PJ_ENTRADAS[zona]` de `contenido.js`; (3) **el modelo** del molde, que saca `$z` de `$hechos` y
+    `lang/*/paginas.php` (cada cifra de su hecho, `:marcadores` en los textos). Así lo que se VE se juzga con los
+    datos del diseño, y las cifras se prueban aparte contra `contenido.js`.
+  - **Estilo por CLASES** (`publico/instancia/css/entradas.css`, prefijo `pj-`), no en línea: un `:hover` no puede con
+    un `style`, y el de la página (`a:hover`) pesa más que una clase sola. Lo que se mide, con `@container` sobre UN
+    DOM (nunca dos `<h1>`); lo que abre, con `<details>` donde el DOM lo admita y, si no, JS mínimo de la instancia.
+  - **El banco** (`scripts/banco-entradas.php`): A = la pieza React del diseño (su `.jsx` con Babel, `_ds_bundle.js`,
+    `contenido.js`, `styles.css`) dentro del marco de la PÁGINA (`paginas/kids.card.html`: `.sec`, `.wrap`) y no el de
+    las fichas de `sections/`, que llevan la isla (T4e) y los interruptores; B = la pieza Blade con el MISMO `$z`, la
+    hoja de Saltia y `entradas.css`. Los dos con los corchetes como en nuestra página: sin oferta, precio de antes,
+    JumpPoints, [Jump Club] ni [Bono] (`#699`); y sin las tres reseñas hasta la T2·9 del SPA. `pixel.mjs --rehacer
+    --reloj` a 390 y 1280, por zona → **0**. Sin material, las fotos del panel (`#761`·3).
+  - **Sub-tandas**: ·0 la guarda · ·1 el banco y las piezas 1-2 · ·2 la 8 y el pie · ·3 la 7 · ·4 la 6 · ·5 la 5 · ·6
+    la 4 (los clips) · ·7 la 3 con el hueco de la calculadora (T4d) · ·8 el modelo: `/kids` y `/jump` enteras en local
+    con los datos reales, en es/en/fr.
 - **T4a · los datos** (producto): las dos columnas de `#699` con su campo en el panel, sus hechos en
   `/catalog/products` y `/catalog/zones` (contrato 1.26.0), sus pruebas y su mutante; y la LISTA de reseñas en
   `/social-proof`, con la misma regla de permiso y la misma línea legal que la portada de hoy. El texto del paso de

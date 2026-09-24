@@ -3,7 +3,7 @@
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 EN CURSO** (su centena,
-> `decisiones/700-799.md`) · Último usado: **`#761`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> `decisiones/700-799.md`) · Último usado: **`#762`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`, `#761`) · Actualizado: **2026-09-24**
 > noche (la T3 cerrada; la T4 medida y planificada, §4.12 y `#761`; empieza la T4a).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
@@ -35,17 +35,17 @@
 - **`#628` · la promo «−20 % online» sigue EN PRODUCCIÓN** (cuatro filas `promo.*`; receta de fin en
   `ENTORNOS.md` §6 y en «retomar» 5).
 - ⚠️ **Tras la mudanza de `#648` una sesión ya abierta PIERDE skills y hooks** (el registro del plugin se
-  resuelve al arrancar): basta con sesión nueva en `producto/`. ⚠️ Y en las sesiones del 20-09 y del 24-09 el
-  harness no listó las skills del plugin: `/carril` y `/handoff` se siguieron a mano desde su `SKILL.md`
-  (`~/proyectos/jumpweb-agente/plugins/jumpweb-agente/skills/<skill>/SKILL.md`).
+  resuelve al arrancar). ⚠️ **Medido el 24-09**: el plugin sigue registrado con la ruta VIEJA (`projectPath`
+  `~/proyectos/JumpWeb` en `~/.claude/plugins/installed_plugins.json`), por eso aquí no carga: `/carril` y
+  `/handoff` van a mano desde su `SKILL.md` (`~/.claude/plugins/marketplaces/jumpweb-agente/…`) hasta reinstalarlo.
 
 ## Por dónde retomar, en orden
 
 ▶▶ **AHORA (24-09 noche)**: sistema de diseño nuevo dentro (`#697`); **T3 cerrada** (`#698`); **T4** (Kids y Jump,
 spec §4.12, `#761`): **T4a·1 ✅** (reglas de «con un adulto» y plazo, contrato 1.26.0; T4a·2 y ·3, del SPA: pedidas)
 → **T4b·1 ✅** (las páginas que declara el paquete: `/kids` y `/jump` en local, hoy un ESQUELETO —solo el titular—;
-queda **·4**, el estado del `<body>`, esperando al SPA) → **T4c las piezas: la SIGUIENTE SESIÓN, empezando por spec
-§4.12 «Para EMPEZAR la T4c»** → T4d la calculadora → T4e la isla viva → T4f la sonda; después, la FIESTA.
+queda **·4**, el estado del `<body>`, esperando al SPA) → **T4c las piezas** (`#762`, su diseño en spec §4.12: ·0 ✅,
+sigue ·1, el banco y la cabecera) → T4d la calculadora → T4e la isla viva → T4f la sonda; después, la FIESTA.
 ⚠️ BD LOCAL con los valores de `#699`/`#761` (lo de antes, en el commit de la T4a·1); en PRODUCCIÓN, el owner.
 
 1. **F4 · CERRADA el 19-09** (`specs/cajon-empaquetable.md`: sus cinco tandas y sus seis trampas). ⚠️ **Le

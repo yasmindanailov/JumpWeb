@@ -156,6 +156,32 @@ BLADE);
         $this->assertSame(1, substr_count($xml, '<loc>'.route('precios').'</loc>'), '/precios sale una sola vez: la del producto');
     }
 
+    /**
+     * **Los componentes del paquete se pintan como `<x-instancia::…>`, desde su `web/components/`** (T4c·0, `#762`).
+     * No hay mecanismo propio: Laravel resuelve un componente con espacio contra la carpeta `components/` de ese
+     * espacio de vistas, subcarpetas incluidas. Lo que se guarda es la PROMESA hacia la instancia, que escribe sus
+     * piezas contra ella. ❗ Y la otra mitad, que es de seguridad (`SEC-12`, como la de las vistas): un componente del
+     * paquete que se llame como uno del producto NO lo suplanta; `<x-lucide>` sigue siendo el del producto.
+     */
+    public function test_the_package_components_are_painted_under_its_namespace_and_never_shadow_the_product_ones(): void
+    {
+        File::ensureDirectoryExists($this->paquete.'/web/components/grupo');
+        File::put($this->paquete.'/web/components/pieza.blade.php', "@props(['n'])\n<b data-n=\"{{ \$n }}\">{{ \$slot }}</b>");
+        File::put($this->paquete.'/web/components/grupo/hija.blade.php', '<i {{ $attributes }}>hija</i>');
+        File::put($this->paquete.'/web/components/lucide.blade.php', 'el icono del intruso');
+        // Una vista con nombre PROPIO: los demás casos compilan `kids` y, reescrita en el mismo segundo, Blade no la
+        // daría por caducada (compara fechas de fichero) y pintaría la compilada de antes.
+        File::put($this->paquete.'/web/con-piezas.blade.php', '<x-instancia::pieza n="7">hola</x-instancia::pieza><x-instancia::grupo.hija class="z" /><x-lucide name="clock" />');
+        $this->declarar(['kids' => ['vista' => 'con-piezas', 'hechos' => []]]);
+
+        $html = (string) $this->get('/kids')->assertOk()->getContent();
+
+        $this->assertStringContainsString('<b data-n="7">hola</b>', $html);
+        $this->assertStringContainsString('<i class="z">hija</i>', $html);
+        $this->assertStringNotContainsString('el icono del intruso', $html);
+        $this->assertStringContainsString('<svg', $html, '<x-lucide> es el del producto');
+    }
+
     /** Sin paquete, o con un paquete que no declara páginas, no hay ninguna: el estado normal, no un error. */
     public function test_without_a_declaration_there_are_no_pages(): void
     {
