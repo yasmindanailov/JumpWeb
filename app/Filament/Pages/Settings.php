@@ -14,6 +14,7 @@ use App\Domain\Payments\Services\PaymentSettings;
 use App\Domain\Payments\Services\Redsys;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\Analytics\Drivers;
+use App\Domain\Platform\Services\Analytics\Pixels;
 use App\Domain\Platform\Services\AuditLogger;
 use BackedEnum;
 use Filament\Forms\Components\ColorPicker;
@@ -237,6 +238,12 @@ class Settings extends Page
         Drivers::KEY_POSTHOG_PROJECT => 'analytics',
         Drivers::KEY_MATOMO_HOST => 'analytics',
         Drivers::KEY_MATOMO_SITE_ID => 'analytics',
+        // Los píxeles de anuncios (T3b·1): ids PÚBLICOS; cargan solo con la categoría `marketing`. Los tokens de
+        // las APIs de conversiones van en `.env` (`services.meta`, `services.tiktok`), nunca aquí.
+        Pixels::KEY_GOOGLE_ADS_ID => 'marketing',
+        Pixels::KEY_GOOGLE_ADS_LABEL => 'marketing',
+        Pixels::KEY_META_PIXEL_ID => 'marketing',
+        Pixels::KEY_TIKTOK_PIXEL_ID => 'marketing',
     ];
 
     public static function canAccess(): bool
@@ -509,6 +516,7 @@ class Settings extends Page
                 $this->capacitySection(),
                 $this->redsysSection(),
                 $this->analyticsSection(),
+                $this->adsSection(),
             ]);
     }
 
@@ -549,6 +557,42 @@ class Settings extends Page
                     ->label(__('admin.settings.analytics_matomo_site_id'))
                     ->regex('/^$|^[1-9]\d{0,8}$/')
                     ->maxLength(9),
+            ]);
+    }
+
+    /**
+     * Los píxeles de anuncios (`specs/analitica.md` §4.3, T3b·1): ids PÚBLICOS por plataforma. Solo cargan con la
+     * categoría `marketing` del banner; sus orígenes entran en la CSP con el píxel configurado. Un id con otra
+     * forma no pasa el campo (`Pixels::*_RE`), y vacío es «sin píxel».
+     */
+    private function adsSection(): Section
+    {
+        return Section::make(__('admin.settings.section_ads'))
+            ->description(__('admin.settings.section_ads_hint'))
+            ->collapsible()
+            ->collapsed()
+            ->columns(2)
+            ->schema([
+                TextInput::make(Pixels::KEY_GOOGLE_ADS_ID)
+                    ->label(__('admin.settings.ads_google_conversion_id'))
+                    ->helperText(__('admin.settings.ads_google_conversion_id_hint'))
+                    ->regex('/^$|^AW-\d{6,12}$/')
+                    ->maxLength(16),
+                TextInput::make(Pixels::KEY_GOOGLE_ADS_LABEL)
+                    ->label(__('admin.settings.ads_google_conversion_label'))
+                    ->helperText(__('admin.settings.ads_google_conversion_label_hint'))
+                    ->regex('/^$|^[A-Za-z0-9_-]{6,40}$/')
+                    ->maxLength(40),
+                TextInput::make(Pixels::KEY_META_PIXEL_ID)
+                    ->label(__('admin.settings.ads_meta_pixel_id'))
+                    ->helperText(__('admin.settings.ads_meta_pixel_id_hint'))
+                    ->regex('/^$|^\d{10,20}$/')
+                    ->maxLength(20),
+                TextInput::make(Pixels::KEY_TIKTOK_PIXEL_ID)
+                    ->label(__('admin.settings.ads_tiktok_pixel_id'))
+                    ->helperText(__('admin.settings.ads_tiktok_pixel_id_hint'))
+                    ->regex('/^$|^[A-Z0-9]{16,24}$/')
+                    ->maxLength(24),
             ]);
     }
 

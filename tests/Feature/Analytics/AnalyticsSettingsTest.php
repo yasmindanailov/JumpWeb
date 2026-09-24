@@ -5,6 +5,7 @@ namespace Tests\Feature\Analytics;
 use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\Analytics\Drivers;
+use App\Domain\Platform\Services\Analytics\Pixels;
 use App\Filament\Pages\Settings;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -99,5 +100,28 @@ class AnalyticsSettingsTest extends TestCase
 
         Setting::flushMemo();
         $this->assertSame(['driver' => 'matomo', 'key' => '7', 'host' => 'https://stats.parque.es'], Drivers::config());
+    }
+
+    /** T3b·1: los píxeles de anuncios, ids públicos con su forma; vacío es «sin píxel». */
+    public function test_the_pixel_ids_are_saved_with_their_shape_and_a_malformed_one_fails_its_field(): void
+    {
+        $admin = $this->admin();
+
+        Livewire::actingAs($admin)->test(Settings::class)
+            ->assertFormSet([Pixels::KEY_GOOGLE_ADS_ID => null, Pixels::KEY_META_PIXEL_ID => null])
+            ->fillForm([Pixels::KEY_GOOGLE_ADS_ID => 'G-ABC123', Pixels::KEY_META_PIXEL_ID => 'pixel', Pixels::KEY_TIKTOK_PIXEL_ID => 'c9abc'])
+            ->call('save')
+            ->assertHasFormErrors([Pixels::KEY_GOOGLE_ADS_ID, Pixels::KEY_META_PIXEL_ID, Pixels::KEY_TIKTOK_PIXEL_ID]);
+
+        Livewire::actingAs($admin)->test(Settings::class)
+            ->fillForm([
+                Pixels::KEY_GOOGLE_ADS_ID => 'AW-123456789', Pixels::KEY_GOOGLE_ADS_LABEL => 'AbCdEfGh',
+                Pixels::KEY_META_PIXEL_ID => '1234567890123456', Pixels::KEY_TIKTOK_PIXEL_ID => '',
+            ])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        Setting::flushMemo();
+        $this->assertSame([Pixels::GOOGLE_ADS => 'AW-123456789/AbCdEfGh', Pixels::META => '1234567890123456'], Pixels::config());
     }
 }

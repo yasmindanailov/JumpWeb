@@ -120,8 +120,9 @@ credenciales cruzadas: otra historia, y no es la de esta fase.
 - **Montaje**: el cargador crea la carcasa al final de `<body>` si no existe `[data-jw-cajon]`.
 - **Abrir**: `window.JumpWeb.cajon.open()`, `.openWith({product, date})`, `.openAccount(zone)`, `.close()`; y
   declarativo, `data-jw-open`, `data-jw-open-account="orders"`, `data-jw-open-product="<slug>"`: sin JS en la landing.
-- **Eventos** en `document`: `jw:cajon:open`, `jw:cajon:close`, `jw:cajon:purchased` (con el código del pedido) —
-  para que la landing mida o reaccione sin tocar el motor.
+- **Eventos** en `document`: `jw:cajon:open`, `jw:cajon:close`, `jw:cajon:purchased` (con el código del pedido y,
+  si el motor los tiene, `total_cents` y `currency`, opcionales desde la T3b·1 de la analítica) — para que la
+  landing mida o reaccione sin tocar el motor.
 - **Idioma**: `<html lang>`; **tema**: `client.css` cargada DESPUÉS de la hoja del cajón.
 - La landing del producto conserva `$store.purchase` como ADAPTADOR sobre esa API: sus 23 usos no se tocan en F4.
 

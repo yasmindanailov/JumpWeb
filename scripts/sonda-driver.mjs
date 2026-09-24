@@ -15,6 +15,10 @@
  *         node scripts/sonda-driver.mjs [etiqueta]
  *   (las credenciales son de un CLIENTE de prueba con sesión web; sin ellas se salta la identificación).
  *   Base: `SONDA_BASE` o `http://localhost`. Salida: `storage/app/audit/driver-<etiqueta>.json`.
+ *   Para el paso 5 (T3b·1, los píxeles) hacen falta los tres ids en Ajustes (tinker; se quitan al acabar):
+ *     Setting::updateOrCreate(['key'=>'marketing.google_ads.conversion_id'],['value'=>'AW-123456789','group'=>'marketing']);
+ *     Setting::updateOrCreate(['key'=>'marketing.meta.pixel_id'],['value'=>'1234567890123456','group'=>'marketing']);
+ *     Setting::updateOrCreate(['key'=>'marketing.tiktok.pixel_id'],['value'=>'C9ABCDEFGHIJKLMNOPQR','group'=>'marketing']);
  *   Para el paso 3c (T3a·4, el aviso del índice) la cuenta de prueba tiene que tener el correo marcado y el
  *   aviso sin despedir (tinker; se deja como estaba al acabar, también por tinker: la sonda solo lo despide):
  *     User::where('email', '…')->update(['analytics_notified_at' => now(), 'analytics_notice_seen_at' => null]);
@@ -36,6 +40,8 @@ const SALIDA = 'storage/app/audit';
 const LOTE_MS = 5000;
 /** Terceros EXENTOS y sin cookies que la web carga siempre (`COOKIES.md` §1): no son «el driver». */
 const EXENTOS = /fonts\.bunny\.net|challenges\.cloudflare\.com/;
+/** Los hosts de los píxeles de anuncios (T3b·1): se interceptan y solo pueden aparecer con `marketing`. */
+const PIXELES = /googletagmanager\.com|connect\.facebook\.net|analytics\.tiktok\.com|googleads\.g\.doubleclick\.net|www\.facebook\.com\/tr/;
 
 const DOBLE = `
 window.__ph = [];
@@ -57,7 +63,7 @@ const espera = (ms) => new Promise((r) => setTimeout(r, ms));
 async function contexto() {
     const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 }, locale: 'es-ES' });
     const page = await ctx.newPage();
-    const red = { terceros: [], eventos: [], excepciones: [] };
+    const red = { terceros: [], eventos: [], excepciones: [], pixeles: [] };
 
     await page.addInitScript(() => {
         window.__csp = [];
@@ -67,9 +73,15 @@ async function contexto() {
         red.terceros.push(route.request().url());
         route.fulfill({ status: 200, contentType: 'application/javascript', body: DOBLE });
     });
+    // Los píxeles (T3b·1): tampoco se habla con Google, Meta ni TikTok; sus scripts se sirven vacíos y se
+    // apunta qué se pidió. Lo que la página les dice queda en `dataLayer`, `fbq.queue` y `ttq._q`.
+    await page.route(PIXELES, (route) => {
+        red.pixeles.push(route.request().url());
+        route.fulfill({ status: 200, contentType: 'application/javascript', body: '/* doble del píxel */' });
+    });
     page.on('request', (req) => {
         const url = req.url();
-        if (! url.startsWith(BASE) && ! /posthog\.com/.test(url) && ! url.startsWith('data:') && ! EXENTOS.test(url)) red.terceros.push(url);
+        if (! url.startsWith(BASE) && ! /posthog\.com/.test(url) && ! PIXELES.test(url) && ! url.startsWith('data:') && ! EXENTOS.test(url)) red.terceros.push(url);
         if (url.includes('/api/v1/events')) {
             try { red.eventos.push(...(JSON.parse(req.postData() ?? '{}').events ?? []).map((e) => e.name)); } catch { /* keepalive */ }
         }
@@ -247,6 +259,41 @@ const consentir = (page, prefs) => page.evaluate((p) => window.Alpine.store('coo
     await page.goto(`${BASE}/invitacion/01HZX8K4N2P7Q9R3S5T6V8W0YA`, { waitUntil: 'load' }).catch(() => null);
     await espera(LOTE_MS + 1500);
     ok('en /invitacion/{token} no se pide el driver (la URL lleva una credencial)', ! red.terceros.some((u) => /array\.js/.test(u)), red.terceros.join(' | '));
+    await ctx.close();
+}
+
+// ── 5. Los píxeles de anuncios (T3b·1): nada sin `marketing`; con ella, los tres y el Consent Mode básico ──
+{
+    const { ctx, page, red } = await contexto();
+    await page.goto(`${BASE}/`, { waitUntil: 'load' });
+    await espera(LOTE_MS + 1500);
+    const ids = await page.evaluate(() => ({ g: document.body.dataset.pixelGoogleAds ?? null, m: document.body.dataset.pixelMeta ?? null, t: document.body.dataset.pixelTiktok ?? null }));
+    if (ids.g && ids.m && ids.t) {
+        ok('el body publica los tres píxeles configurados (ids públicos)', /^AW-\d+/.test(ids.g) && /^\d+$/.test(ids.m) && /^[A-Z0-9]+$/.test(ids.t), JSON.stringify(ids));
+        ok('sin la categoría «marketing»: ni una petición a Google, Meta o TikTok', red.pixeles.length === 0, red.pixeles.join(' '));
+        ok('Consent Mode BÁSICO: gtag no existe en el DOM sin marketing', await page.evaluate(() => window.dataLayer === undefined && window.fbq === undefined && window.ttq === undefined));
+
+        await consentir(page, { maps: false, social: false, analytics: false, marketing: true });
+        await espera(2500);
+        const hosts = ['googletagmanager.com', 'connect.facebook.net', 'analytics.tiktok.com'];
+        ok('con «marketing» concedida, los tres scripts se piden a sus hosts', hosts.every((h) => red.pixeles.some((u) => u.includes(h))), red.pixeles.join(' '));
+        ok('y la CSP no protesta (sus orígenes entraron con el píxel)', (await csp(page)).length === 0, (await csp(page)).join(' '));
+        const capas = await page.evaluate(() => (window.dataLayer ?? []).map((a) => Array.from(a)));
+        ok('gtag: el consent default va todo DENEGADO y antes de todo', capas[0]?.[0] === 'consent' && capas[0]?.[1] === 'default' && Object.values(capas[0]?.[2] ?? {}).every((v) => v === 'denied'), JSON.stringify(capas[0]));
+        ok('gtag: el update concede solo lo de anuncios y deja analytics_storage denegado', capas[1]?.[1] === 'update' && capas[1]?.[2]?.ad_storage === 'granted' && capas[1]?.[2]?.analytics_storage === 'denied', JSON.stringify(capas[1]));
+        ok('Meta: init con su id y PageView; TikTok: page', await page.evaluate(() => {
+            const fb = (window.fbq?.queue ?? []).map((a) => Array.from(a));
+            return fb[0]?.[0] === 'init' && fb[1]?.[1] === 'PageView' && (window.ttq?._q ?? [])[0]?.[0] === 'page';
+        }));
+        ok('y ningún tercero fuera de los píxeles y el driver', red.terceros.every((u) => /posthog\.com/.test(u)), red.terceros.join(' '));
+
+        await consentir(page, { maps: false, social: false, analytics: false, marketing: false });
+        await espera(1000);
+        const ultimo = await page.evaluate(() => Array.from((window.dataLayer ?? []).at(-1) ?? []));
+        ok('retirar «marketing» deniega de nuevo en gtag y revoca en Meta', ultimo[1] === 'update' && ultimo[2]?.ad_storage === 'denied' && (await page.evaluate(() => Array.from((window.fbq?.queue ?? []).at(-1) ?? []))).join(',') === 'consent,revoke', JSON.stringify(ultimo));
+    } else {
+        ok('los píxeles (saltado: sin los tres ids en Ajustes; ver la cabecera)', true, JSON.stringify(ids));
+    }
     await ctx.close();
 }
 

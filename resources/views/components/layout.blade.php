@@ -133,6 +133,11 @@
       data-analytics-host="{{ $analyticsBody['host'] }}"
       @if ($analyticsBody['person'] !== null) data-analytics-person="{{ $analyticsBody['person'] }}" @endif
       @endif
+      {{-- Los píxeles de anuncios (`specs/analitica.md` §4.3, T3b·1): un atributo por píxel CONFIGURADO, y el
+           cargador (`cajon/pixels.js`) solo los trae con `data-cookie-marketing="1"`. Sin píxeles, nada. --}}
+      @foreach (\App\Domain\Platform\Services\Analytics\Pixels::forBody() as $pixelAttribute => $pixelId)
+      {{ $pixelAttribute }}="{{ $pixelId }}"
+      @endforeach
       @if ($hasHero) data-has-hero="1" @endif>
     {{-- Banner de BYPASS de mantenimiento (#218): si la web está en mantenimiento de sitio y quien
          la ve es personal del panel (admin/staff), se le muestra la web real con este aviso de que

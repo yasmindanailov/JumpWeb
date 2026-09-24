@@ -66,6 +66,22 @@ return [
     ],
 
     /*
+     * **Los tokens de las APIs de conversiones** (`specs/analitica.md` §4.3, T3b): Meta Conversions API y
+     * TikTok Events API, que usa el job `SendConversionToPlatforms` (T3b·2) para comunicar la compra desde el
+     * servidor con el código del pedido como id (dedup con el píxel). ⚠️ En `.env`, nunca en `settings`
+     * (`PAY-06`): los ids PÚBLICOS de los píxeles sí viven en el panel (`marketing.*`), porque viajan en cada
+     * página igualmente. Sin token, el job no manda nada y lo anota.
+     */
+    'meta' => [
+        'access_token' => env('META_CAPI_ACCESS_TOKEN'),
+        'api_version' => env('META_CAPI_VERSION', 'v21.0'),
+    ],
+
+    'tiktok' => [
+        'access_token' => env('TIKTOK_EVENTS_ACCESS_TOKEN'),
+    ],
+
+    /*
      * **La clave de Places API (New)** para las reseñas de la landing (`DECISIONES #491`,
      * `specs/google-reviews.md` §4.4).
      *

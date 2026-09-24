@@ -2914,6 +2914,17 @@ return [
         'analytics_matomo_site_id' => 'Id del sitio en Matomo',
         'analytics_posthog_requires_token' => 'No se puede activar PostHog sin el token público del proyecto (empieza por «phc_»). No se ha guardado ningún cambio.',
         'analytics_matomo_requires_host' => 'No se puede activar Matomo sin el servidor (https://…) y el id del sitio. No se ha guardado ningún cambio.',
+        // Los píxeles de anuncios (T3b·1): ids públicos por plataforma; cargan solo con la categoría «marketing».
+        'section_ads' => 'Píxeles de anuncios',
+        'section_ads_hint' => 'Google Ads, Meta (Facebook e Instagram) y TikTok. Cada píxel se carga solo si el visitante acepta la categoría «marketing» del aviso de cookies, y la compra se comunica con el código del pedido. Vacío = sin píxel. Las claves privadas de las APIs de conversiones viven en el servidor.',
+        'ads_google_conversion_id' => 'Id de conversión de Google Ads',
+        'ads_google_conversion_id_hint' => 'Con la forma «AW-123456789». Es público.',
+        'ads_google_conversion_label' => 'Etiqueta de la conversión de compra',
+        'ads_google_conversion_label_hint' => 'La parte tras la barra en «AW-123456789/AbCdEfGh»: sin ella, Google Ads no ata la compra a ninguna acción.',
+        'ads_meta_pixel_id' => 'Id del píxel de Meta',
+        'ads_meta_pixel_id_hint' => 'Solo cifras (15–16). Es público.',
+        'ads_tiktok_pixel_id' => 'Id del píxel de TikTok',
+        'ads_tiktok_pixel_id_hint' => 'Mayúsculas y cifras (p. ej. «C9ABCDEFGHIJKLMNOPQR»). Es público.',
 
         'section_redsys' => 'Pagos (Redsys)',
         'section_redsys_hint' => 'Configuración del TPV. La CLAVE SECRETA no se gestiona aquí (vive en el servidor por seguridad). Cambia estos valores solo si sabes lo que haces: un error puede impedir los cobros.',

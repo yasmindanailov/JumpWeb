@@ -22,19 +22,14 @@
   **«Comparar con»** (periodo anterior · mismo periodo del año pasado), y el botón **«Descargar CSV»** (los tres
   informes, con `reports.export`, auditado, con la línea «Comparado con»). Spec §4.8; 100 casos en
   `tests/Feature/Analytics`; sonda 27/27 por pestaña, escritorio y móvil. **✅ El owner vio T2a–T2f en escritorio
-  (24-09): «está perfecto»**; queda el `EXPLAIN` con volumen en staging. ▶ **T3a·1 EN EL ÁRBOL (24-09)**: el
-  consentimiento con CUATRO finalidades (`maps`, `social`, `analytics`, `marketing`) sin quemar, el banner
-  que informa y espera al cajón, `consent_shown`, la política y la privacidad con sus migraciones quirúrgicas
-  (aplicadas en la BD local), `POLICY_VERSION` v3 = `2026-09-24` (re-consentimiento para todos con la
-  v2.0.0), el almacén en `ui/cookie-consent.js` con `node --test`; `scripts/sonda-cookies.mjs` 22/22 (el
-  panel con cuatro finalidades superaba la ventana: tope de alto en `.cookie` y `cajon.css` regenerada).
-  **Queda el ojo del owner** en `localhost:8081` (el banner, escritorio y móvil; `/cookies` y `/privacidad`).
-  ▶ **T3a·2 EN EL ÁRBOL (24-09)**: el driver de análisis (`Drivers`: PostHog nube EU o Matomo propio, desde
-  «Ajustes → Herramienta de análisis»; sus orígenes en la CSP solo con driver activo; el `<body>` con
-  `data-analytics-*` y la persona OPACA solo con sesión y categoría; `cajon/driver.js` solo con la categoría
-  y nunca en una URL con credenciales; `/cookies` lo nombra al pintar; `ForgetPersonInDriver` en cola con
-  credenciales en `.env`); `sonda-driver.mjs` 19/19 con un doble de PostHog y la sesión del cliente de
-  prueba. ⚠️ **En la BD local NO hay driver** (la sonda lo pone y lo quita). ▶ **T3a·3 EN EL ÁRBOL (24-09)**:
+  (24-09): «está perfecto»**; queda el `EXPLAIN` con volumen en staging. ▶ **T3a·1 EN `main` (24-09)**: cuatro
+  finalidades sin quemar (`CookieConsent::OPTIONAL`), el banner que informa y espera al cajón, `consent_shown`,
+  política y privacidad por migración quirúrgica, `POLICY_VERSION` v3 = `2026-09-24` (todos vuelven a decidir),
+  el almacén `ui/cookie-consent.js` con `node --test`; `sonda-cookies.mjs` 22/22. **Queda el ojo del owner**
+  (el banner en escritorio y móvil; `/cookies` y `/privacidad`). ▶ **T3a·2 EN `main` (24-09)**: `Drivers`
+  (PostHog nube EU o Matomo, desde «Ajustes»), CSP solo con driver, `data-analytics-*` y la persona OPACA solo
+  con sesión y categoría, `cajon/driver.js` solo con la categoría, `/cookies` lo nombra, `ForgetPersonInDriver`.
+  ⚠️ **En la BD local NO hay driver ni píxeles** (la sonda los pone y los quita). ▶ **T3a·3 EN EL ÁRBOL (24-09)**:
   el enlace sesión↔cuenta (`AccountLinker` en Platform + `AccountAnalytics` en Identity; al entrar, al alta y
   al cobro, solo con la categoría), la oposición (`users.analytics_opt_out`, `PUT /me/analytics`: desvincula,
   sella la prueba `consents.analytics`, olvido en el driver), `first_attribution` una vez, el segundo
@@ -46,8 +41,15 @@
   cuenta (`analytics_notice`, contrato **1.21.0**) hasta que se despide (`DELETE /me/analytics-notice`,
   `users.analytics_notice_seen_at`)—; migración aplicada en la local; `sonda-driver.mjs` 31/31. **Queda el
   ojo del owner**: el aviso en `/mi-cuenta` (la cuenta de prueba, con `analytics_notified_at` puesto por
-  tinker) y el correo en Mailpit `:8028` (hay uno mandado a la cuenta de prueba, en español). ▶ Sigue la
-  **T3b** (píxeles); la **T2e** solo si el volumen lo pide. ⚠️ **El fixture «probe-ojo-analitica» está
+  tinker) y el correo en Mailpit `:8028` (hay uno mandado a la cuenta de prueba, en español). ▶ **T3b·1 EN EL
+  ÁRBOL (24-09)**: los píxeles de anuncios —`Pixels` (ids públicos en «Ajustes → Píxeles de anuncios»: Google
+  Ads con id y ETIQUETA de conversión, Meta, TikTok; `csp()` por plataforma y directiva; `forBody()`),
+  `cajon/pixels.js` (solo con `marketing`; gtag con Consent Mode v2 básico, `analytics_storage` siempre
+  denegado; vista, inicio del pago y la compra con el código del pedido como id), tokens de las APIs en
+  `config/services.php` desde `.env`—; `sonda-driver.mjs` 41/41. ▶ Sigue la
+  **T3b·2** (`SendConversionToPlatforms`: relee el consentimiento vivo, `cookie_consent_logs.visitor_id`,
+  `em`/`ph` hasheados, `Http::fake`) y la **T3b·3** (textos con los destinatarios —`[asesoría]`—, `/cookies`
+  nombra los píxeles, plantilla de UTM); la **T2e** solo si el volumen lo pide. ⚠️ **El fixture «probe-ojo-analitica» está
   MONTADO en la BD local** (90 pedidos `JW-OJO…`, 81 cobros, 9 devoluciones, 25 clientes
   `ojo-N@ojo-analitica.jumpweb.test`, 506 sesiones, dos meses): `OJO=desmontar` lo quita entero.
 - ✅ **La ficha de Google (`#524`), T1 y T2·1→T2·8 en el árbol** (`#720`→`#734`), **vistas por el owner con
@@ -71,9 +73,11 @@
    `for()` cosen «días cerrados desde el diario + hoy en directo»; `ad_spend` —plataforma, campaña, mes,
    céntimos— tecleado en un Resource pequeño de «Ajustes» para el CPA/ROAS de `SourcesWidget`). ✅ El owner vio
    la T2f en vivo (24-09). ▶ **La T3 en marcha** (spec §4.3 y §4.8): **T3a·1 ✅ · T3a·2 ✅ · T3a·3 ✅ (24-09)**
-   → **T3a·4 ✅ (24-09)** el aviso a las cuentas existentes (correo + aviso del índice; ver la foto) → **T3b** píxeles
-   (`marketing`: gtag Consent Mode básico, Meta, TikTok; `SendConversionToPlatforms` con relectura del
-   consentimiento; tokens en `.env`). Lo compartido de la web: aviso dado y repetido al empezar (buzón).
+   → **T3a·4 ✅ (24-09)** el aviso a las cuentas existentes → **T3b·1 ✅ (24-09)** los píxeles → **T3b·2** el job
+   `SendConversionToPlatforms` (`order_paid` en `OrderAnalyticsObserver`; relee la última fila de
+   `cookie_consent_logs` del visitante —gana `visitor_id`—; Meta CAPI y TikTok Events con `event_id` = código,
+   `value`, `fbc`/`fbp`/`ttclid` del sello, `em`/`ph` SHA-256 normalizados; `Http::fake`) → **T3b·3** textos y
+   `/cookies`. Lo compartido de la web: aviso dado y repetido (buzón).
    ⚠️ El fixture del ojo siembra también TRÁFICO (506 sesiones, 2.294 hechos, sellos con primer y último toque).
    ⚠️ **Los cortes por día van por HORA UTC en SQL y al día del parque en PHP** (`SqlTime::hourBucket()`,
    `Window::bucketKey()`), nunca `CONVERT_TZ`. ⚠️ El dinero se lee de `payments`, `payment_refunds`,
@@ -196,38 +200,18 @@ spec enumera. Lo del cliente va en la rama `cliente/playjump`, nunca a `main`.
   hosting): `SqlJson::string()` escribe la forma larga por motor. `AuditLogger::log*()` devuelve el modelo, así
   que un fixture le fija `created_at` con `forceFill` después. Los tres colores validados del gráfico se
   reutilizan en orden fijo por serie (`CustomersSeriesChart::COLORS` apunta a los del dinero).
-- 🪤 **De la T2c**: **un ayudante privado `session()` en un test es un FATAL al cargar la clase** (choca con el
-  `session()` público del `TestCase` de Laravel; se llama `visit()`), y `php artisan test` sale 255 sin que un
-  filtro por «FAIL» enseñe nada: ante un 255, salida cruda. **Los widgets perezosos de Filament cargan al
-  entrar en pantalla**: la sonda recorre la página por PANTALLAS de 600 px en tres pasadas —un salto al final
-  se deja atrás los del medio—. Y un lote ingerido con `webdriver` abre una sesión BOT que cuenta en «fuera
-  del recuento»: el fixture del test la incluye a propósito.
-- 🪤 **De la T2d**: `fputcsv` entrecomilla toda celda con un ESPACIO (un `assertStringContainsString('Rótulo;')`
-  falla aunque el rótulo esté): se aserta `"Rótulo";`. Una ruta `auth` del enrutador manda al invitado a `/login`
-  (la web), no a `/admin/login` (Filament). El `#` de una referencia como `#685` dentro de un `sed 's#…#…#'`
-  rompe la expresión y una cadena `&&` para en silencio: el mensaje del commit se escribe con Write y se pasa
-  con `-F`.
-- 🪤 **De la T2f**: **las pestañas inactivas de Filament no son `display: none`** (`invisible absolute h-0`):
-  Livewire carga sus widgets igual (10 peticiones al abrir, medido) y `offsetParent` no las distingue; la sonda
-  mide dentro de `.fi-sc-tabs-tab.fi-active`. La URL lleva el `key` de la pestaña, no el `id`. Pint
-  (`fully_qualified_strict_types`) reescribe un `{@see TABS}` como `{@see Tabs}` (¡otra clase!): las constantes
-  se citan con comillas. `ChartWidget::getHeading()` no puede volverse abstracto; `end(CONSTANTE)` no compila
-  (`array_last`). Un `throw` de algo que no es `Error` llega a Playwright como `pageerror` «Object» sin más: la
-  sonda apunta nombre, mensaje y pila. ⚠️ **Cinco `pageerror` «Object» INTERMITENTES en el paso del filtro**
-  (dos tandas de tres con la sonda de antes de apuntar la pila; después, dos tandas limpias): causa NO
-  verificada; si reaparecen, la sonda ya dice de dónde.
-- 🪤 **De la T3a·1**: **un `lang/*/` dentro de un docblock CIERRA el comentario** (`*/`) y es un parse error
-  que Pint no llega a leer y `php artisan test` enseña como 255: se escribe `lang/{es,en,fr}/`. `track.js`
-  manda al libro TODAS las `data-cookie-*` del `<body>` como foto del consentimiento: un atributo nuevo que
-  empiece por `cookie` se convierte en «categoría» (por eso `data-consent-categories`). `CustomEvent` se
-  toma de `win` para que el almacén se pruebe en Node. Las categorías del banner NO se prueban contra una
-  lista escrita en el test: se recorren desde `OPTIONAL` y se exige que ninguna clave salga sin traducir.
-- 🪤 **De la T3a·2**: **en un test, la sesión de `actingAs` y la cookie de `withUnencryptedCookie` se QUEDAN
-  para las peticiones siguientes**: un «anónimo» después de `actingAs` no lo es y un «sin categoría» después
-  de consentir tampoco (dos casos, del menos al más). Una sonda que cuente «terceros» tiene que EXCLUIR los
-  exentos (Bunny Fonts) y vaciar su registro antes de cada página que juzga. El `<body>` no cambia sin
-  recargar: lo concedido por `cookies-updated` se recuerda en el cargador. Una `Notification` de Filament
-  en un test se afirma con `assertNotified(texto)`. Un `.env` nuevo va a `.env.example` con su porqué.
+- 🪤 **De la T2c→T3a·2** (el detalle, en «Lo que enseñó» de `analitica.md` §4.3/§4.5): un ayudante privado
+  `session()`/`seed()` en un test es un FATAL (el `TestCase` los tiene públicos) y `php artisan test` sale 255
+  sin que un filtro por «FAIL» enseñe nada: ante un 255, salida cruda. Las pestañas inactivas de Filament no
+  son `display: none` (Livewire carga sus widgets igual; la sonda mide dentro de `.fi-active`). Pint reescribe
+  un `{@see TABS}` como `{@see Tabs}`: las constantes se citan con comillas. `fputcsv` entrecomilla toda celda
+  con espacio. El `#` de un `#685` dentro de un `sed 's#…#…#'` rompe la expresión: el mensaje del commit va
+  con Write y `-F`. Un `lang/*/` dentro de un docblock CIERRA el comentario: `lang/{es,en,fr}/`. Un atributo
+  del `<body>` que empiece por `cookie` es «categoría» para `track.js`. En un test, la sesión de `actingAs` y
+  la cookie de `withUnencryptedCookie` se QUEDAN para las peticiones siguientes (los casos van del menos al
+  más). Una sonda que cuente terceros EXCLUYE los exentos y vacía su registro antes de cada página. Un `.env`
+  nuevo va a `.env.example` con su porqué. ⚠️ Cinco `pageerror` «Object» intermitentes en el filtro del
+  cuadro (T2f): causa NO verificada; la sonda ya apunta la pila.
 - 🪤 **De la T3a·3**: **un ayudante privado `seed()` o `session()` en un test es un FATAL** (el `TestCase` los
   tiene públicos; la T2c ya pagó `session()` y hoy se pagó `seed()`): `fixture()`/`visit()`. **`putJson` no
   manda cookies sin `withCredentials()`** (la trampa de la T1, pagada otra vez: el visitante no llegaba al
@@ -251,6 +235,11 @@ spec enumera. Lo del cliente va en la rama `cliente/playjump`, nunca a `main`.
   entre dos elementos si lleva salto de línea: dos botones en dos líneas salen pegados. `CustomerAccountContext`
   memoriza por usuario en el proceso: entre dos peticiones de un test, `forgetInstance`. Lo que viaja solo a
   veces se mide en su caso CARO (la semilla, 800). Un aviso transitorio viaja en el CONTEXTO, no en el montaje.
+- 🪤 **De la T3b·1**: gtag lee objetos `arguments` (`dataLayer.push(arguments)`, como su fragmento), no arrays.
+  La compra se anuncia al VOLVER de la pasarela y ANTES del resumen del pedido: el valor del `Purchase` es el
+  importe de `pay_started` guardado en `sessionStorage` (lo pagado en línea). Google Ads necesita la ETIQUETA
+  de conversión además del id (la spec no la listaba). La sonda intercepta los tres hosts con dobles vacíos y
+  lee `dataLayer`, `fbq.queue` y `ttq._q`: lo que la página les dice.
 - 🩹 **En la BD LOCAL hay 19 titulares con la cadena de waiver ROTA** (basura del 26–27 de agosto): si mides
   cadenas, compara ANTES/DESPUÉS.
 - **F4 cerró y el cajón es un PAQUETE** (`specs/cajon-empaquetable.md` §0 y §4.8). Tocar «HOJA ENFOCADA» de
@@ -271,6 +260,12 @@ spec enumera. Lo del cliente va en la rama `cliente/playjump`, nunca a `main`.
 - ⚠️ Tres migraciones de la analítica estaban **pendientes en esta máquina** hasta hoy; aplicadas.
 - ✅ **Tu aviso de la T3d (24-09, tarde), ATENDIDO**: no toco `PurchaseSection.vue` ni sus seis pruebas;
   la T3a·4 va por el índice de cuenta, el contexto y los correos. Mis eventos de compra llegarán con la T3b.
+- ✅ **`lint:js` con `resources/js/isla`: adelante, hazlo tú** (es tu carpeta; si el gate se pone rojo por la
+  isla, es tuyo). ✅ **El aviso de cookies DENTRO de la isla, atendido**: el almacén es `ui/cookie-consent.js`
+  (`createCookiesStore`, cuatro categorías desde `data-consent-categories`, `node --test`); la isla puede pintar
+  su propia tarjeta sobre el MISMO almacén y disparar `cookies-updated` igual. El `<body>` lleva
+  `data-cookie-*`, `data-analytics-*` (T3a·2) y desde la T3b·1 `data-pixel-*`: los cargadores del driver y de
+  los píxeles los leen del `<body>` y oyen `cookies-updated`, así que una carcasa que respete eso no me toca.
 
 ### ❗ Para el carril de CORREOS (emisor: SPA, 19→20-09; pendiente de tu «atendido»)
 - ✅ **Tu censo pasa de 25 a 27**: `VisitEveNotice` (`#717`) y `GoogleBusinessLocationChanged` (`#725`), con sus
@@ -299,7 +294,13 @@ spec enumera. Lo del cliente va en la rama `cliente/playjump`, nunca a `main`.
   `DELETE /me/analytics-notice`), `AccountContextResource` y `CustomerAccountContext` (una clave más, a la
   cola), `AccountHomeZone.vue` (el aviso DEBAJO de las tarjetas, fuera de la cadena de avisos),
   `stores/accountContext.js` (`dismissAnalyticsNotice`), `SidebarMountTest` (la semilla: clave nueva y techo
-  640 → 800 medido con y sin aviso), `docs/ENTORNOS.md` §6 (el runbook de la v3). Si tu landing nueva (Saltia)
+  640 → 800 medido con y sin aviso), `docs/ENTORNOS.md` §6 (el runbook de la v3). **T3b·1 (24-09), tocado**:
+  `layout.blade.php` (un `data-pixel-*` por píxel configurado, `Pixels::forBody()`), `SecurityHeaders.php`
+  (los orígenes de los píxeles se funden con los del driver), `Filament/Pages/Settings.php` (sección «Píxeles
+  de anuncios», cuatro ajustes `marketing.*`), `lang/{es,zh_CN}/admin.php` (`settings.section_ads*`,
+  `ads_*`), `config/services.php` y `.env.example` (`META_CAPI_*`, `TIKTOK_EVENTS_ACCESS_TOKEN`),
+  `cajon/track.js` (trae `pixels.js` si hay `data-pixel-*`), `cajon/controller.js` (`purchased(code, extra)`),
+  `specs/cajon-empaquetable.md` (el detalle de `purchased`). Si tu landing nueva (Saltia)
   pinta el banner o lee `cookieConsent`, cuenta con cuatro claves; si pinta el `<body>`, los
   `data-analytics-*` los da `Drivers::forBody()`.
 
@@ -313,13 +314,10 @@ spec enumera. Lo del cliente va en la rama `cliente/playjump`, nunca a `main`.
   revisar el texto o el tono, es tuyo; hay uno mandado a Mailpit `:8028` en la local (cuenta de prueba, es).
 
 ### ❗ Para el carril de la WEB (emisor: SPA, 20→22-09; pendiente de tu «atendido»)
-- ▶ **Me llevo `google-business-profile.md` (`#524`)**, tuya de banda; la numero desde la mía. Si la quieres,
-  te la devuelvo. **Tocado en la T2·8** (`#734`): `public/css/landing.css` (el bloque `.rev*`; el `:root` NO),
-  `lang/{es,en,fr}/landing.php` (siete claves nuevas en `reviews.*`), `ReviewCardTest` nuevo, y regenerada
-  `public/css/cajon.css` (o `HojaDelCajonTest` rojo). ❗ **Una línea tuya que miente**: `google-reviews.md` dice
-  «umbral de 10 reseñas» y el código dice `MIN_REVIEWS = 1` (`#494`). No la toco yo.
-- ▶ **Aviso previo (24-09)**: la T3 de la analítica tocará el banner de cookies, `layout.blade.php`, `app.js`,
-  `SecurityHeaders` y la política en tres idiomas, y sube `POLICY_VERSION`. Te aviso otra vez al empezarla.
+- ▶ **Me llevo `google-business-profile.md` (`#524`)**, tuya de banda; la numero desde la mía. **Tocado en la
+  T2·8** (`#734`): `public/css/landing.css` (el bloque `.rev*`), `lang/{es,en,fr}/landing.php` (`reviews.*`),
+  `ReviewCardTest`, `public/css/cajon.css` regenerada. ❗ `google-reviews.md` dice «umbral de 10 reseñas» y el
+  código `MIN_REVIEWS = 1` (`#494`): no la toco yo.
 
 ### Para TODOS (emisor: SPA, 20-09): el techo del carril es **32 KB** (`#724`); si vuestro encabezado aún
 dice 24, actualizadlo al pasar.

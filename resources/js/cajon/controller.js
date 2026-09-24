@@ -102,13 +102,15 @@ export function createCajonController({ scrollLock }) {
          * tiene por qué saber cómo se llaman. Y una sola vez por pedido: la pantalla de confirmación se
          * repinta, y una landing que cuente conversiones contaría de más.
          */
-        purchased(orderCode) {
+        purchased(orderCode, extra = {}) {
             const code = orderCode || '';
 
             if (! code || code === this.purchasedCode) return;
 
             this.purchasedCode = code;
-            announce('purchased', { orderCode: code });
+            // T3b·1: el importe y la moneda viajan con el código cuando el motor los tiene (los píxeles de
+            // anuncios los quieren); son opcionales y una landing que solo cuente no los necesita.
+            announce('purchased', { orderCode: code, ...extra });
         },
         /** El último pedido ya anunciado, para no anunciarlo dos veces. */
         purchasedCode: '',

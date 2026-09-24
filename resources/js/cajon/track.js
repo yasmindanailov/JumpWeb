@@ -358,6 +358,10 @@ export function createTracker({
         // Ella misma comprueba la categoría `analytics`; que no cargue no es un fallo del tracker.
         if (doc.body?.dataset?.analyticsDriver) import('./driver.js').then((m) => m.installDriver({ win, doc })).catch(() => {});
 
+        // Los píxeles de anuncios (T3b·1): otro trozo diferido, y solo si el `<body>` trae algún `data-pixel-*`.
+        // Él mismo comprueba la categoría `marketing`.
+        if (Object.keys(doc.body?.dataset ?? {}).some((k) => k.startsWith('pixel'))) import('./pixels.js').then((m) => m.installPixels({ win, doc })).catch(() => {});
+
         return api;
     }
 

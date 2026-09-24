@@ -47,7 +47,7 @@ en la sesión server-side, [SetLocale.php](../../app/Http/Middleware/SetLocale.p
 |---|---|---|---|---|
 | `visitor_id` (13 meses, no se renueva) | Propia | **Medición de audiencia exenta** (guía AEPD 2024: estadística anónima del editor, sin cruce ni cesión, datos ≤ 25 meses) | **No** (se declara en la política y en «Necesarias») | Siempre (`ResolveVisitor`, `specs/analitica.md` §4.1) |
 | Herramienta de análisis (PostHog/Matomo) | Tercero | **`analytics`** | **SÍ** | Solo con la categoría y el driver configurado (T3a·2) |
-| Píxeles (Google Ads, Meta, TikTok) | Tercero | **`marketing`** | **SÍ** | Solo con la categoría y el id configurado (T3b) |
+| Píxeles (Google Ads, Meta, TikTok) | Tercero | **`marketing`** | **SÍ** | Solo con la categoría y el id configurado en «Ajustes → Píxeles de anuncios» (T3b·1 ✅: gtag con Consent Mode v2 básico —`analytics_storage` siempre denegado—, Meta y TikTok; la compra viaja con el código del pedido como id). `[PENDIENTE: asesoría]` nombrar a Meta Platforms Ireland y TikTok Technology Ltd como destinatarios, con su base de transferencia (T3b·3) |
 
 **Exentas** (sin consentimiento, pero **sí transparencia** en la política): sesión, XSRF,
 `remember_web` (acción del usuario), Turnstile (seguridad), Redsys (técnica, en su dominio) y la
@@ -252,7 +252,9 @@ del producto). La PRIVACIDAD (`LegalContent::PROFILING_P`) deja de decir «ni el
   anteriores a la v3 se INFORMAN antes de activar el enlace —el correo `AnalyticsLinkNotice` por
   `analytics:notify-accounts`, una vez por cuenta, y el aviso del índice del cajón, que viaja con su texto en
   el contexto de cuenta hasta que se despide con `DELETE /me/analytics-notice`—); los píxeles bajo
-  `marketing` (T3b).
+  `marketing` (T3b·1 ✅: `cajon/pixels.js` solo con `data-cookie-marketing="1"`, gtag con Consent Mode v2
+  básico, Meta y TikTok; sus orígenes en la CSP solo con el píxel configurado, `Pixels::csp()`; quedan la API
+  de conversiones del servidor, T3b·2, y los textos que nombran a los destinatarios, T3b·3).
 - **Refactor de marca**: HECHO en Fase 1 (cookie renombrada a `cookie_consent`); quedan las
   referencias históricas «#219 / PLAN-COOKIES.md» en comentarios (tabla de equivalencias en
   `docs/README.md`).

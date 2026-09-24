@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Domain\Content\Services\SocialEmbed;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\Analytics\Drivers;
+use App\Domain\Platform\Services\Analytics\Pixels;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -71,7 +72,10 @@ class SecurityHeaders
         // (`Drivers::csp()`, por driver y directiva) y entran SOLO con el driver activo y completo. El gate
         // real es no inyectar su script sin la categoría `analytics` (`COOKIES.md` D8); esta es la segunda
         // cerradura, y sin driver no se abre para nadie.
-        foreach (Drivers::csp() as $directive => $origins) {
+        // **Los píxeles de anuncios** (T3b·1) siguen la misma regla con `Pixels::csp()`: sus orígenes viven en
+        // código, por plataforma y directiva, y entran SOLO con el píxel configurado; el gate real es no
+        // inyectar su script sin la categoría `marketing`.
+        foreach (array_merge_recursive(Drivers::csp(), Pixels::csp()) as $directive => $origins) {
             match ($directive) {
                 'script-src' => array_push($script, ...$origins),
                 'connect-src' => array_push($connect, ...$origins),
