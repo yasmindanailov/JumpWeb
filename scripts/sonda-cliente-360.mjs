@@ -53,6 +53,12 @@ ok('lo de la navegación se pinta o se dice que no hay (nunca en blanco)', ident
     ? await page.locator('[data-insights="navigation"]').count() === 1
     : await page.locator('[data-insights="not-identified"]').count() === 1, `identificado=${identificado}`);
 ok('la sección no enseña ningún nombre de menor ni una edad', ! /data-dependent-age/.test(await seccion.evaluate((el) => el.closest('section')?.outerHTML ?? '')));
+// T3 de la fiesta (`specs/analitica-fiesta.md` §4.4): el bloque «Fiestas», siempre pintado (régimen del contrato), con
+// sus cifras en `data-*` y si vino invitado antes de comprar.
+const fiestas = page.locator('[data-insights="parties"]');
+const nFiestas = await fiestas.getAttribute('data-insights-parties').catch(() => null);
+const vinoInvitado = await fiestas.getAttribute('data-insights-came-as-guest').catch(() => null);
+ok('el bloque «Fiestas» se pinta con sus cifras', await fiestas.count() === 1 && /^\d+$/.test(nFiestas ?? '') && ['0', '1'].includes(vinoInvitado ?? ''), `fiestas=${nFiestas} vino_invitado=${vinoInvitado}`);
 
 await page.locator('[data-insights]').first().scrollIntoViewIfNeeded();
 await page.mouse.move(0, 0);

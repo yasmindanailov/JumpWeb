@@ -20,9 +20,9 @@
   (4) El dinero del post-form se paga EN EL PARQUE (`#244`): «vendido» sale del libro (`order_adjustments`) y
   «cobrado» de `payments` por `provider` (`cash`|`datafono`); `MoneyReport` no ve lo vendido sin cobrar.
   (5) La sesión y el XSRF (técnicas) se quedan; solo se retira la de medición. (6) En la local la invitación solo
-  está encendida en los packs 105/106 (plataforma; no deshacer sin el owner).
-- **Estado**: ✅ `#739` (día de la FIESTA · pestaña «Fiestas» · exportar con opt-in). **T1 ✅**, arnés 9/9. **T2 ✅
-  (24-09, ✅ del owner en vivo: «validado»)**. Sigue **T3** (§4.4, §4.6).
+  está encendida en los packs 105/106 (plataforma; no deshacer).
+- **Estado**: ✅ `#739` (día de la FIESTA · pestaña «Fiestas» · exportar con opt-in). **T1·T2·T3 ✅** (arnés 9/9; el
+  owner lo vio en vivo). **Código COMPLETO** (§4.6); sin desplegar hasta la v2.0.0.
 - **Invariantes**: `RGPD-01`, `RGPD-02`, `RGPD-05`, `RGPD-07`, `SEC-01`, `SUITE-01`. Dinero y aforo: **ninguno
   cambia** (solo se LEE el libro). Ningún fichero del `CRITICAL_RE` se toca.
 
@@ -152,11 +152,14 @@ del post-form es cliente, pero su hecho tampoco lleva `user_id`: es un hecho del
 
 ### 4.4 Los segmentos y la 360 del anfitrión (T3)
 
-- `SegmentsReport::GUEST_BECAME_CUSTOMER` `(futuro)`: un `guardian_email` (o el correo de una respuesta adoptada,
-  si algún día lo lleva) que DESPUÉS de la fiesta tiene cuenta y pedido cobrado. Son clientes con cuenta: se
-  exportan si dieron opt-in, como los demás (§7·3). Sigue vivo `GUEST_NO_PURCHASE`.
-- `CustomerInsights` gana un bloque «fiestas» `(futuro)`: fiestas, formularios completados, invitados, respuestas,
-  extras vendidos; solo desde los pedidos del cliente (régimen del contrato).
+- **T3 (24-09, en el árbol)** · `SegmentsReport::GUEST_BECAME_CUSTOMER`: una cuenta de cliente cuyo correo (en
+  minúsculas) firmó un justificante de menor invitado ANTES de su primera compra cobrada; quien firmó siendo ya
+  cliente no cuenta, y quien firmó y no compró sigue en `GUEST_NO_PURCHASE`. Son clientes con cuenta: se exportan
+  con opt-in como los demás (§7·3), por el mismo CSV y el mismo permiso. Quinto segmento, cuarto en la lista.
+- `CustomerInsights` gana el bloque **«Fiestas»** (régimen del contrato, sale siempre): fiestas reservadas (reservas
+  de pack de sus pedidos cobrados), formularios completados, invitaciones activadas, respuestas «sí», justificantes
+  firmados, extras vendidos después de reservar (los mismos motivos del libro que `PartiesReport`) y **si vino
+  invitado antes de comprar** (la regla del segmento, con la fecha de esa firma). La vista lo lleva en `data-*`.
 
 ### 4.5 Transparencia, retención y rendimiento
 
@@ -173,7 +176,7 @@ del post-form es cliente, pero su hecho tampoco lleva `user_id`: es un hecho del
 |---|---|---|---|
 | T1 | **✅ (24-09) el régimen y los hechos**: las DOCE rutas de los tres controladores en un grupo `withoutMiddleware(ResolveVisitor:mint)` (§4.1); `Recorder::factOfOrder()` (sin visitante, sesión ni titular, y solo nombres de servidor); `Contract` +4 y props en los 3 que ya existían; `PartyFacts::daysBefore()` en días del parque; el trait `Http\Concerns\RecordsPartyFacts` (robots fuera, `device`/`locale` de la petición) y los siete hechos desde `GuestFormController`, `InvitationPageController` y `GuardianAuthorizationController` tras el éxito (`authorization_signed` solo con `created`; `hours_since_open` desde la sesión técnica). **Lo que enseñó**: el reenvío del mismo padre es IDEMPOTENTE («signed», no «already») y por eso el hecho mira `created`; eran doce rutas y no ocho; el arnés cazó que ningún caso llamaba a `factOfOrder()` con un nombre que no fuera de servidor (caso añadido); `order_id` nunca es nulo (Larastan) | ningún fichero del `CRITICAL_RE`; el contrato de la API no cambia (los nombres de servidor no van en su `enum`) | `FocusedPagesAreCookieFreeTest` (4) + `PartyFactsTest` (13) · `scripts/mutar-analitica-fiesta.sh` **9/9 + 1 control** · en vivo con `curl -A Chrome`: `/autorizacion/925` firmada → 200, cookies solo XSRF y sesión, cero `<script>`, hecho `authorization_opened` en el pedido 755 sin nadie y `days_before` 14; `/invitacion/{token}` como iPhone → `invitation_viewed` (`mobile`, 24 días) y como vista previa de WhatsApp → nada. La sonda de navegador llega con la T2 (el ojo del owner) |
 | T2 | **✅ (24-09; el owner la vio en vivo en escritorio y móvil: «muy bien, validado») el informe y la pestaña «Fiestas»**: `app/Filament/Analytics/PartiesReport.php` (capa de entrega, caché 5 min, **14 consultas y 28 ms** con 32 fiestas en MySQL; la población por `slots.date`, los hechos por `order_id` + `props.reservation`, el libro por `COALESCE(parent_item_id, id)`), los cinco widgets (`PartiesOverviewWidget` 9 tarjetas · `PartiesFunnelChart` · `PartiesMoneyChart` · `PartiesTimingChart` · `PartiesBreakdownWidget` con siete tablas), la cuarta pestaña `?pestana=parties` (icono tarta), `CsvExport::REPORT_PARTIES` con la línea «Comparado con», rótulos en es y zh_CN. **Retoque de la T1**: los siete hechos llevan `reservation` (el id de la línea del pack) porque un pedido puede tener dos fiestas y el embudo cuenta por reserva. **Lo que enseñó**: los invitados añadidos NO son «extras» (no entran en «reservas con extras» ni en su media); una edición sin `reason` es del panel y va aparte; un ayudante privado `seed()` en un test es FATAL otra vez (→ `seedJune()`); un parámetro nombrado que se llama como el primero revienta la llamada; la sonda censaba dos «Por día» y ahora hay tres; el rótulo largo de «invitados añadidos y quitados» se recortaba en el eje del gráfico (rótulo corto propio); el `EXPLAIN` no pide índice nuevo (los de `order_id`, `order_item_id` y `parent_item_id` ya existen). Fixture del ojo: `probe-ojo-fiesta.php` en la carpeta de almacenamiento, fuera de git (32 fiestas, 323 hechos; `OJO=desmontar`) | | `PartiesReportTest` (10: igualdad con las tablas de negocio, embudo, tiempos en días del parque, serie, periodo anterior, vacío, presupuesto ≤ 20 sin crecer, caché) · `AnalyticsPageTest`, `AnalyticsExportTest` y `PartyFactsTest` ampliados · `scripts/sonda-analitica-panel.mjs` **31/31** (cuatro pestañas, 9 tarjetas, 3 gráficos, las tablas, el CSV, móvil sin scroll horizontal) · ✅ el OJO del owner en `/admin/analitica?pestana=parties` (24-09) |
-| T3 | **los segmentos y la 360**: `GUEST_BECAME_CUSTOMER`, el bloque «fiestas» de la 360 | | `SegmentsReportTest` +1, `UserInsightsInfolistTest` +1, el OJO |
+| T3 | **✅ (24-09; el owner lo vio en vivo: «buen trabajo, validado») los segmentos y la 360**: `SegmentsReport::GUEST_BECAME_CUSTOMER` (quinto segmento; la nota del widget pasa a «cinco listas», es y zh_CN), el bloque «Fiestas» de `CustomerInsights` con su vista y sus rótulos (es y zh_CN). **Lo que enseñó**: la comparación de correos va en minúsculas en los dos lados; «vino invitado» exige la firma ANTES de la primera compra (si no, un cliente que firma por un invitado de otra fiesta contaría como convertido); la 360 no tiene presupuesto de consultas con guarda (cinco consultas más solo cuando hay fiestas) | | `SegmentsReportTest` +1 (el segmento, el caso «ya era cliente», el «nunca compró» sigue en el suyo, los miembros con opt-in), `SegmentsExportTest` +1 (se exporta como cualquier cliente), `UserInsightsInfolistTest` +1 (el bloque desde los pedidos, la entrada suelta no es fiesta, la edición del panel no es un extra, «vino invitada el 01/09», y los ceros), el widget censa cinco; `scripts/sonda-segmentos.mjs` **9/9** (cinco filas) y `scripts/sonda-cliente-360.mjs` **6/6** (el bloque con `data-insights-parties` y `data-insights-came-as-guest`); fixture del ojo con tres invitadas que luego compraron · ✅ el OJO del owner (24-09) en `/admin/analitica?pestana=customers` (segmentos) y en la ficha de una convertida |
 
 ## 5. Impacto en invariantes
 

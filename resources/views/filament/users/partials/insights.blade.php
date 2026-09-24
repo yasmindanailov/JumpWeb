@@ -55,6 +55,43 @@
         </div>
     </dl>
 
+    {{-- Las FIESTAS de este cliente (T3 de `specs/analitica-fiesta.md` §4.4): desde sus pedidos, régimen del contrato;
+         y si vino invitado antes de comprar (su correo firmó un justificante de menor invitado). --}}
+    @php($p = $i['parties'])
+    <div class="mt-4 border-t border-gray-200 pt-3 dark:border-gray-700">
+        <p class="mb-2 text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ __('admin.users.insights.parties') }}</p>
+        <dl class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm md:grid-cols-3" data-insights="parties" data-insights-parties="{{ $p['count'] }}" data-insights-signatures="{{ $p['signatures'] }}" data-insights-came-as-guest="{{ $p['came_as_guest'] === null ? '0' : '1' }}">
+            <div>
+                <dt class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ __('admin.users.insights.parties_count') }}</dt>
+                <dd class="font-medium text-gray-800 dark:text-gray-200">{{ $p['count'] }}</dd>
+            </div>
+            <div>
+                <dt class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ __('admin.users.insights.forms_completed') }}</dt>
+                <dd class="font-medium text-gray-800 dark:text-gray-200">{{ $p['forms_completed'] }}</dd>
+            </div>
+            <div>
+                <dt class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ __('admin.users.insights.invitations') }}</dt>
+                <dd class="font-medium text-gray-800 dark:text-gray-200">{{ $p['invitations'] }}</dd>
+            </div>
+            <div>
+                <dt class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ __('admin.users.insights.replies_yes') }}</dt>
+                <dd class="font-medium text-gray-800 dark:text-gray-200">{{ $p['replies_yes'] }}</dd>
+            </div>
+            <div>
+                <dt class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ __('admin.users.insights.signatures') }}</dt>
+                <dd class="font-medium text-gray-800 dark:text-gray-200">{{ $p['signatures'] }}</dd>
+            </div>
+            <div>
+                <dt class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ __('admin.users.insights.extras_after') }}</dt>
+                <dd class="font-medium text-gray-800 dark:text-gray-200">{{ $p['extras_after'] }}</dd>
+            </div>
+            <div class="col-span-2 md:col-span-3">
+                <dt class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ __('admin.users.insights.came_as_guest') }}</dt>
+                <dd class="font-medium text-gray-800 dark:text-gray-200">{{ $p['came_as_guest'] === null ? __('admin.users.insights.came_as_guest_no') : __('admin.users.insights.came_as_guest_yes', ['date' => $p['came_as_guest']]) }}</dd>
+            </div>
+        </dl>
+    </div>
+
     {{-- Lo de la NAVEGACIÓN: solo en el régimen identificado (`analytics` consentida y sin oposición). Si la
          cuenta no tiene sesiones atadas, se dice y no se inventa (§4.6). --}}
     <div class="mt-4 border-t border-gray-200 pt-3 dark:border-gray-700">

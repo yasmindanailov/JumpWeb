@@ -3,6 +3,7 @@
 namespace Tests\Feature\Admin\Users;
 
 use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\OrderAdjustment;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
@@ -14,12 +15,14 @@ use App\Domain\Payments\Models\Payment;
 use App\Domain\Platform\Models\AnalyticsEvent;
 use App\Domain\Platform\Models\AnalyticsSession;
 use App\Domain\Platform\Services\Analytics\Visitor;
+use App\Domain\Platform\Services\Money;
 use App\Filament\Resources\Users\Pages\ViewUser;
 use App\Filament\Resources\Users\Support\CustomerInsights;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Livewire\Features\SupportTesting\Testable;
 use Livewire\Livewire;
@@ -163,6 +166,63 @@ class UserInsightsInfolistTest extends TestCase
         $this->assertSame('2', $this->attribute($html, 'data-insights-visits-before'));
         $this->assertSame('1', $this->attribute($html, 'data-insights-contacts'));
         $this->assertStringContainsString('google / cpc · verano', $html);
+    }
+
+    /**
+     * T3 de la fiesta (`specs/analitica-fiesta.md` §4.4): el bloque «Fiestas» sale de los pedidos del cliente (régimen
+     * del contrato) —reservas de pack, formularios, invitaciones, «sí», firmas, extras de después de reservar— y dice
+     * si vino invitado antes de comprar (su correo firmó un justificante de menor invitado antes de su primera compra).
+     */
+    public function test_the_parties_block_comes_from_the_customer_reservations_and_says_if_she_came_as_a_guest(): void
+    {
+        [$jump, , $slot] = $this->catalog();
+        $pack = TicketType::create(['name' => ['es' => 'Cumpleaños Jump'], 'zone_id' => $slot->zone_id, 'type' => TicketType::TYPE_PACK, 'is_sellable' => true, 'is_active' => true, 'seats_per_unit' => 1, 'position' => 3]);
+        $customer = $this->userWithRole('customer');
+        $customer->forceFill(['email' => 'Ana@Example.test'])->save();
+
+        // Vino invitada a OTRA fiesta el 1 de septiembre, y compró la suya el 10.
+        $other = $this->purchase($this->userWithRole('customer'), '2026-08-20 10:00:00', 9000, [[$pack, $slot, 6]]);
+        DB::table('guardian_authorizations')->insert([
+            'order_item_id' => $other->items()->value('id'), 'minor_name' => 'Peque', 'minor_surname' => 'Invitado', 'minor_key' => 'peque-1', 'minor_born_on' => '2018-05-05',
+            'guardian_name' => 'Ana', 'guardian_surname' => 'Gómez', 'guardian_relationship' => 'mother', 'guardian_email' => 'ana@example.test', 'guardian_phone' => null, 'created_at' => '2026-09-01 10:00:00',
+        ]);
+        $party = $this->purchase($customer, '2026-09-10 10:00:00', 12000, [[$pack, $slot, 8]]);
+        $this->purchase($customer, '2026-09-12 10:00:00', 3000, [[$jump, $slot, 3]]);   // una entrada suelta: no es fiesta
+        /** @var OrderItem $reservation */
+        $reservation = $party->items()->firstOrFail();
+        $reservation->forceFill(['guest_form_completed_at' => '2026-09-15 10:00:00'])->saveQuietly();
+        $invitation = DB::table('party_invitations')->insertGetId(['order_item_id' => $reservation->id, 'token' => 'tok3nInvitac', 'theme' => 'jump', 'honoree_name' => 'Lucía', 'host_line' => 'Te invita Ana', 'show_host_phone' => false, 'reminded_count' => 0, 'created_at' => now(), 'updated_at' => now()]);
+        foreach ([['Hugo', true], ['Vera', true], ['Noa', false]] as [$child, $attending]) {
+            DB::table('invitation_replies')->insert(['party_invitation_id' => $invitation, 'order_item_id' => $reservation->id, 'attending' => $attending, 'child_name' => $child, 'child_key' => strtolower($child), 'created_at' => now(), 'updated_at' => now()]);
+        }
+        DB::table('guardian_authorizations')->insert([
+            'order_item_id' => $reservation->id, 'minor_name' => 'Hugo', 'minor_surname' => 'Ruiz', 'minor_key' => 'hugo-ruiz', 'minor_born_on' => '2018-05-05',
+            'guardian_name' => 'Marta', 'guardian_surname' => 'Ruiz', 'guardian_relationship' => 'mother', 'guardian_email' => 'marta@example.test', 'guardian_phone' => null, 'created_at' => now(),
+        ]);
+        $cake = OrderItem::create(['order_id' => $party->id, 'ticket_type_id' => $jump->id, 'parent_item_id' => $reservation->id, 'slot_id' => $slot->id, 'quantity' => 2, 'seats' => 0, 'unit_price' => 1000]);
+        OrderAdjustment::create(['order_id' => $party->id, 'order_item_id' => $cake->id, 'type' => OrderAdjustment::TYPE_EDIT, 'amount_cents' => 2000, 'currency' => 'EUR', 'reason' => 'postform_addon', 'applied_by' => $customer->id]);
+        OrderAdjustment::create(['order_id' => $party->id, 'order_item_id' => $reservation->id, 'type' => OrderAdjustment::TYPE_EDIT, 'amount_cents' => -500, 'currency' => 'EUR', 'reason' => null, 'applied_by' => $customer->id]);
+
+        $p = CustomerInsights::forCustomer($customer)['parties'];
+
+        $this->assertSame(1, $p['count'], 'la entrada suelta no es una fiesta');
+        $this->assertSame(1, $p['forms_completed']);
+        $this->assertSame(1, $p['invitations']);
+        $this->assertSame(2, $p['replies_yes']);
+        $this->assertSame(1, $p['signatures']);
+        $this->assertSame(Money::format(2000), $p['extras_after'], 'la edición del panel no es un extra');
+        $this->assertSame('01/09/2026', $p['came_as_guest']);
+
+        $html = $this->sheet($this->userWithRole('admin'), $customer)->html();
+        $this->assertSame('1', $this->attribute($html, 'data-insights-parties'));
+        $this->assertSame('1', $this->attribute($html, 'data-insights-signatures'));
+        $this->assertSame('1', $this->attribute($html, 'data-insights-came-as-guest'));
+        $this->assertStringContainsString(__('admin.users.insights.came_as_guest_yes', ['date' => '01/09/2026']), $html);
+
+        // Quien nunca vino invitado ni tiene fiestas: ceros y «No».
+        $plain = CustomerInsights::forCustomer($this->userWithRole('customer'))['parties'];
+        $this->assertSame(0, $plain['count']);
+        $this->assertNull($plain['came_as_guest']);
     }
 
     public function test_an_anonymized_account_shows_nothing(): void

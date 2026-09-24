@@ -3,6 +3,8 @@
 namespace Tests\Feature\Analytics;
 
 use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Models\Permission;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
@@ -13,6 +15,7 @@ use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -107,6 +110,29 @@ class SegmentsExportTest extends TestCase
 
         $lines = array_values(array_filter(explode("\n", str_replace("\r", '', (string) $response->getContent()))));
         $this->assertCount(1, $lines, 'solo la cabecera');
+    }
+
+    /** T3 de la fiesta: quien vino invitado y luego compró tiene cuenta, y con opt-in se exporta como cualquier cliente. */
+    public function test_the_guests_who_became_customers_export_with_their_opt_in(): void
+    {
+        $host = User::factory()->create();
+        $party = Order::create(['user_id' => $host->id, 'code' => 'JJ-FIESTA', 'status' => Order::STATUS_PAID, 'paid_at' => now()->subDays(120), 'total' => 9000, 'expires_at' => now()->addMinutes(30)]);
+        $zone = Zone::create(['slug' => 'z-exp', 'name' => ['es' => 'Z']]);
+        $pack = TicketType::create(['name' => ['es' => 'Cumple'], 'zone_id' => $zone->id, 'type' => TicketType::TYPE_PACK, 'is_sellable' => true, 'is_active' => true, 'seats_per_unit' => 1, 'position' => 1]);
+        $reservation = $party->items()->create(['ticket_type_id' => $pack->id, 'quantity' => 6, 'seats' => 6, 'unit_price' => 1500]);
+        DB::table('guardian_authorizations')->insert([
+            'order_item_id' => $reservation->id, 'minor_name' => 'Peque', 'minor_surname' => 'Invitado', 'minor_key' => 'peque-invitado', 'minor_born_on' => '2018-05-05',
+            'guardian_name' => 'Marie', 'guardian_surname' => 'Curie', 'guardian_relationship' => 'mother', 'guardian_email' => 'marie@example.test', 'guardian_phone' => null, 'created_at' => now()->subDays(100),
+        ]);
+        $converted = User::factory()->create(['name' => 'Marie Curie', 'email' => 'MARIE@example.test', 'marketing_opt_in' => true, 'phone' => '600333444']);
+        Order::create(['user_id' => $converted->id, 'code' => 'JJ-MARIE', 'status' => Order::STATUS_PAID, 'paid_at' => now()->subDays(10), 'total' => 3000, 'expires_at' => now()->addMinutes(30)]);
+
+        $response = $this->actingAs($this->withRole('admin'))->get($this->url(SegmentsReport::GUEST_BECAME_CUSTOMER))->assertOk();
+
+        $lines = array_values(array_filter(explode("\n", str_replace("\r", '', (string) $response->getContent()))));
+        $this->assertCount(2, $lines, 'la cabecera y la persona que vino invitada y luego compró');
+        $this->assertStringContainsString('Marie Curie', $lines[1]);
+        $this->assertStringContainsString('600333444', $lines[1]);
     }
 
     /** El botón vive en la página de «Analítica» y solo lo ve quien tiene el permiso. */

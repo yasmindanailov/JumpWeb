@@ -3,12 +3,15 @@
 namespace App\Filament\Resources\Users\Support;
 
 use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\OrderAdjustment;
+use App\Domain\Booking\Models\TicketType;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Platform\Models\AnalyticsEvent;
 use App\Domain\Platform\Models\AnalyticsSession;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Domain\Platform\Services\Money;
+use App\Filament\Analytics\PartiesReport;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -47,6 +50,7 @@ final class CustomerInsights
      *   products: list<array{name: string, units: int}>,
      *   marketing: bool,
      *   identified: bool, first_source: ?string, visits_before: ?int, contacts: ?int,
+     *   parties: array{count: int, forms_completed: int, invitations: int, replies_yes: int, signatures: int, extras_after: string, came_as_guest: ?string},
      * }
      */
     public static function forCustomer(User $customer): array
@@ -112,7 +116,73 @@ final class CustomerInsights
             'first_source' => is_array($firstAttribution) ? self::source($firstAttribution) : null,
             'visits_before' => $visitsBefore,
             'contacts' => $contacts,
+            'parties' => self::parties($customer, $orderIds->all(), $first),
         ];
+    }
+
+    /**
+     * **Las FIESTAS de este cliente** (T3 de `specs/analitica-fiesta.md` §4.4): desde sus pedidos cobrados —las
+     * reservas de pack, los formularios completados, las invitaciones activadas, las respuestas «sí», los
+     * justificantes firmados y los extras vendidos después de reservar (los mismos motivos del libro que
+     * `PartiesReport`)— y si VINO INVITADO antes de comprar: su correo firmó un justificante de menor invitado
+     * antes de su primera compra (la regla del segmento `guest_became_customer`). Régimen del contrato: sale siempre.
+     *
+     * @param  list<int>  $orderIds
+     * @return array{count: int, forms_completed: int, invitations: int, replies_yes: int, signatures: int, extras_after: string, came_as_guest: ?string}
+     */
+    private static function parties(User $customer, array $orderIds, ?Carbon $firstPurchase): array
+    {
+        $out = self::noParties();
+
+        $email = strtolower(trim((string) $customer->email));
+        if ($email !== '') {
+            $guest = DB::table('guardian_authorizations')
+                ->whereNotNull('guardian_email')
+                ->whereRaw('lower(guardian_email) = ?', [$email])
+                ->when($firstPurchase !== null, static fn ($query) => $query->where('created_at', '<', $firstPurchase))
+                ->min('created_at');
+            $out['came_as_guest'] = $guest === null ? null : DisplayTime::format((string) $guest, 'd/m/Y');
+        }
+
+        if ($orderIds === []) {
+            return $out;
+        }
+
+        $reservations = DB::table('order_items as i')
+            ->join('ticket_types as t', 't.id', '=', 'i.ticket_type_id')
+            ->whereIn('i.order_id', $orderIds)
+            ->whereNull('i.parent_item_id')
+            ->whereNull('i.cancelled_at')
+            ->where('t.type', TicketType::TYPE_PACK)
+            ->select(['i.id', 'i.guest_form_completed_at'])
+            ->get();
+        $ids = $reservations->pluck('id')->map(static fn ($id): int => (int) $id)->all();
+
+        if ($ids === []) {
+            return $out;
+        }
+
+        $out['count'] = count($ids);
+        $out['forms_completed'] = $reservations->whereNotNull('guest_form_completed_at')->count();
+        $out['invitations'] = (int) DB::table('party_invitations')->whereIn('order_item_id', $ids)->count();
+        $out['replies_yes'] = (int) DB::table('invitation_replies')->whereIn('order_item_id', $ids)->where('attending', true)->whereNull('dismissed_at')->count();
+        $out['signatures'] = (int) DB::table('guardian_authorizations')->whereIn('order_item_id', $ids)->count();
+        $out['extras_after'] = Money::format((int) DB::table('order_adjustments as a')
+            ->join('order_items as ai', 'ai.id', '=', 'a.order_item_id')
+            ->where('a.type', OrderAdjustment::TYPE_EDIT)
+            ->whereIn('a.reason', PartiesReport::EXTRA_REASONS)
+            ->where(static function ($query) use ($ids): void {
+                $query->whereIn('ai.parent_item_id', $ids)->orWhereIn('ai.id', $ids);
+            })
+            ->sum('a.amount_cents'));
+
+        return $out;
+    }
+
+    /** @return array{count: int, forms_completed: int, invitations: int, replies_yes: int, signatures: int, extras_after: string, came_as_guest: ?string} */
+    private static function noParties(): array
+    {
+        return ['count' => 0, 'forms_completed' => 0, 'invitations' => 0, 'replies_yes' => 0, 'signatures' => 0, 'extras_after' => Money::format(0), 'came_as_guest' => null];
     }
 
     /**
@@ -172,7 +242,7 @@ final class CustomerInsights
         return is_string($campaign) && $campaign !== '' ? $line.' · '.$campaign : $line;
     }
 
-    /** @return array{anonymized: bool, orders: int, sold: string, collected: string, refunded: ?string, first_purchase: ?string, last_purchase: ?string, frequency: ?string, products: list<array{name: string, units: int}>, marketing: bool, identified: bool, first_source: ?string, visits_before: ?int, contacts: ?int} */
+    /** @return array{anonymized: bool, orders: int, sold: string, collected: string, refunded: ?string, first_purchase: ?string, last_purchase: ?string, frequency: ?string, products: list<array{name: string, units: int}>, marketing: bool, identified: bool, first_source: ?string, visits_before: ?int, contacts: ?int, parties: array{count: int, forms_completed: int, invitations: int, replies_yes: int, signatures: int, extras_after: string, came_as_guest: ?string}} */
     private static function empty(bool $anonymized): array
     {
         return [
@@ -180,6 +250,7 @@ final class CustomerInsights
             'orders' => 0, 'sold' => Money::format(0), 'collected' => Money::format(0), 'refunded' => null,
             'first_purchase' => null, 'last_purchase' => null, 'frequency' => null, 'products' => [],
             'marketing' => false, 'identified' => false, 'first_source' => null, 'visits_before' => null, 'contacts' => null,
+            'parties' => self::noParties(),
         ];
     }
 }

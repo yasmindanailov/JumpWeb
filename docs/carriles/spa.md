@@ -38,7 +38,18 @@
   tarjetas, tres gráficos y siete tablas plegadas, el cuarto informe del CSV, rótulos es/zh_CN;
   `PartiesReportTest` 10 (igualdad con las tablas de negocio), sonda **31/31** con capturas
   (`storage/app/audit/analitica-panel-fiesta-t2-*.png`). **✅ El owner la vio en vivo (24-09: «muy bien,
-  validado»)** → sigue **T3** (el segmento `guest_became_customer` y el bloque «fiestas» de la 360).
+  validado»)**, en `main` (`d1233a85`). ▶ **T3 EN EL ÁRBOL (24-09, noche)**: el quinto segmento
+  `guest_became_customer` (firma de invitado ANTES de la primera compra, correo en minúsculas; exportable con
+  opt-in) y el bloque «Fiestas» de la 360 (`CustomerInsights`, régimen del contrato, con «vino invitado el …»);
+  `SegmentsReportTest` +1, `SegmentsExportTest` +1, `UserInsightsInfolistTest` +1; `sonda-segmentos.mjs` 9/9 y
+  `sonda-cliente-360.mjs` 6/6 (capturas `segmentos-fiesta-t3-*.png`, `cliente-360-fiesta-t3.png`). **✅ El owner
+  lo vio en vivo (24-09: «buen trabajo, validado»)** → **LA T6 QUEDA COMPLETA**: la analítica entera (T1→T6) espera
+  solo la v2.0.0. La spec sigue viva (no se archiva): guarda el régimen del invitado, el `[PENDIENTE: asesoría]` (4)
+  y el despliegue pendiente; el ciclo de vida de la doc (`CONVENCIONES §11`) se aplica tras la v2.0.0.
+- ▶ **T7, ENCUESTAS** (idea del owner, 24-09, «para que no se me olvide»): internas en la puerta al escanear el QR
+  (el empleado pregunta en persona y marca con el dedo) y externas por correo al día siguiente; se crean en el
+  panel (interna/externa, activa, fecha límite…) y salen en el cuadro. Registrada con sus palabras en
+  `analitica.md` §4.10 y como T7 en §4.8: **`/spec` antes de tocar código**; no se ha diseñado nada.
 - ⚠️⚠️ **LO MONTADO EN LA BD LOCAL para el ojo del owner (24-09), todo reversible**: (1) cinco ajustes FALSOS
   en `settings` (`analytics.driver=posthog`, `analytics.posthog_project` inventado y los tres ids de píxeles
   `marketing.*`): se quitan borrando esas filas; (2) el aviso de la analítica ENVIADO a las 57 cuentas de
@@ -49,7 +60,8 @@
   un solo uso); (5) **el fixture «probe-ojo-fiesta»** (`probe-ojo-fiesta.php` en la carpeta de almacenamiento,
   fuera de git, al lado de «probe-ojo-analitica»): 32
   fiestas `JW-FIESTA…` de agosto y septiembre con formularios, extras, invitaciones, firmas, cobros en el parque y
-  323 hechos, 32 anfitriones `fiesta-N@ojo-fiesta.jumpweb.test`; `OJO=desmontar` lo quita entero. Y siguen
+  323 hechos, 32 anfitriones `fiesta-N@ojo-fiesta.jumpweb.test` y TRES de ellas que «vinieron invitadas» a una
+  fiesta de agosto antes de comprar; `OJO=desmontar` lo quita entero. Y siguen
   montados el fixture «probe-ojo-analitica» (90 pedidos `JW-OJO…`, 25 clientes, 506 sesiones) y el de reseñas
   «probe-ojo-resenas». ⚠️ **Plataforma dejó la local preparada para que el owner
   pruebe la ISLA** (24-09 noche, `694529a8`): `sidebar.shell = isla` por el panel, `public/_isla-prueba.html`, la
@@ -63,14 +75,15 @@
 
 ## Por dónde retomar, en orden
 
-1. ❗❗❗ **LA FIESTA, T3** (`specs/analitica-fiesta.md` §0 → §4.4 → §4.6; la T2 tiene el ✅ del owner en vivo del
-   24-09). **T3**:
-   `SegmentsReport::GUEST_BECAME_CUSTOMER` `(futuro)` (un `guardian_email` que DESPUÉS de la fiesta tiene cuenta y
-   pedido cobrado; se exporta con opt-in como los demás, `#739`), `SegmentsWidget` +1 fila, `SegmentsReportTest`
-   +1, y el bloque «fiestas» de `CustomerInsights` (desde los pedidos del cliente) con `UserInsightsInfolistTest`
-   +1; el OJO. ⚠️ Trampas de la T1 y la T2 (spec §4.6): el reenvío del mismo padre es IDEMPOTENTE; `order_id` nunca
-   es nulo; son DOCE rutas; los invitados añadidos NO son «extras»; una edición sin `reason` es del panel; un
-   ayudante `seed()` en un test es FATAL; la sonda del panel censa TRES «Por día».
+1. ❗❗ **LA T7 DE LA ANALÍTICA: LAS ENCUESTAS, spec primero** (`analitica.md` §4.10 con las palabras del owner y
+   §4.8): `/spec` → una spec nueva de encuestas con su §0, alta en `README.md` y en el enrutador, y el ✅ del
+   owner ANTES de codificar. Las preguntas de diseño están listadas en §4.10 (dónde viven preguntas y
+   respuestas; el banner en la pantalla de la puerta sin estorbar el escaneo; el correo del día siguiente sobre el
+   molde y su opt-in; el régimen RGPD de las respuestas; una por visita y el plazo; su sitio en el cuadro).
+   ⚠️ Trampas de la fiesta, por si se reutiliza su molde (spec §4.6): el reenvío del mismo padre es IDEMPOTENTE;
+   `order_id` nunca es nulo; son DOCE rutas enfocadas; los invitados añadidos NO son «extras»; una edición sin
+   `reason` es del panel; un ayudante `seed()` en un test es FATAL; la sonda del panel censa TRES «Por día»; «vino
+   invitado» exige la firma ANTES de la primera compra.
 2. **T2e** (`analytics_daily` + `ad_spend`) SOLO si el `EXPLAIN` con volumen dice que el año en directo no
    aguanta (`analitica.md` §4.5). **T5c** cuando el owner nombre la hipótesis (`#738`). Queda el `EXPLAIN` con
    volumen en staging para la T2.

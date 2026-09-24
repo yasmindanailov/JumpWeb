@@ -388,7 +388,7 @@ return [
         ],
         'segments' => [
             'heading' => '客户分群',
-            'note' => '四个用于再次联系客户的名单，今天根据订单计算（绝不依据未成年人的年龄）：只购买过一次且已 :days 天未再来；上一次派对在 :from 到 :to 个月前；作为受邀者来过但从未购买；曾联系但没有订单。仅导出已同意接收通讯的人，每次下载均记录在审计日志中。',
+            'note' => '五个用于再次联系客户的名单，今天根据订单计算（绝不依据未成年人的年龄）：只购买过一次且已 :days 天未再来；上一次派对在 :from 到 :to 个月前；作为受邀者来过但从未购买；作为受邀者来过之后用账户购买；曾联系但没有订单。仅导出已同意接收通讯的人，每次下载均记录在审计日志中。',
             'table_heading' => '今日人数',
             'col' => [
                 'segment' => '分群',
@@ -399,6 +399,7 @@ return [
                 'once_never_back' => '只买过一次未再来',
                 'party_year_ago' => '一年前办过派对（生日将至）',
                 'guest_no_purchase' => '受邀但未购买',
+                'guest_became_customer' => '受邀后成为客户',
                 'contact_no_order' => '曾联系但无订单',
             ],
             'export' => [
@@ -1717,6 +1718,16 @@ return [
             'first_source' => '首次来源',
             'visits_before' => '购买前的访问次数',
             'contacts' => '收到的联系',
+            'parties' => '派对',
+            'parties_count' => '预订的派对',
+            'forms_completed' => '已完成的表单',
+            'invitations' => '已启用的邀请函',
+            'replies_yes' => '回复「参加」',
+            'signatures' => '已签署的授权书',
+            'extras_after' => '预订后售出的加购项',
+            'came_as_guest' => '购买前曾作为受邀者',
+            'came_as_guest_yes' => '是：于 :date 签署了受邀未成年人授权书',
+            'came_as_guest_no' => '否',
         ],
 
         'orders_summary' => [

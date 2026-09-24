@@ -21,6 +21,8 @@ use Illuminate\Support\Facades\DB;
  *    Calculado desde los pedidos, nunca desde la fecha de nacimiento de un menor.
  *  - `guest_no_purchase` — vino invitado (un responsable que autorizó a un menor invitado, con correo) y ese
  *    correo no tiene ninguna compra. Cuenta personas SIN cuenta: solo se cuentan, no se exportan.
+ *  - `guest_became_customer` — vino invitado (su correo firmó un justificante de menor invitado) y DESPUÉS compró
+ *    con una cuenta (T3 de `specs/analitica-fiesta.md`): la invitación trajo un cliente. Se exporta con opt-in.
  *  - `contact_no_order` — escribió (`contact_received` en el régimen identificado) y no tiene pedido cobrado.
  *
  * Dos cifras por segmento: cuántos son y cuántos tienen `marketing_opt_in`, porque **la exportación solo lleva
@@ -40,8 +42,15 @@ final class SegmentsReport
 
     public const CONTACT_NO_ORDER = 'contact_no_order';
 
+    /**
+     * Vino INVITADO y DESPUÉS compró (T3 de `specs/analitica-fiesta.md` §4.4, `#739`): una cuenta de cliente cuyo
+     * correo firmó un justificante de menor invitado ANTES de su primera compra cobrada. Son clientes con cuenta:
+     * se exportan con opt-in como los demás.
+     */
+    public const GUEST_BECAME_CUSTOMER = 'guest_became_customer';
+
     /** @var list<string> */
-    public const SEGMENTS = [self::ONCE_NEVER_BACK, self::PARTY_YEAR_AGO, self::GUEST_NO_PURCHASE, self::CONTACT_NO_ORDER];
+    public const SEGMENTS = [self::ONCE_NEVER_BACK, self::PARTY_YEAR_AGO, self::GUEST_NO_PURCHASE, self::GUEST_BECAME_CUSTOMER, self::CONTACT_NO_ORDER];
 
     /** Días sin volver para que «compró una vez» cuente como «y no volvió»: una temporada. */
     public const ONCE_DAYS = 90;
@@ -140,6 +149,10 @@ final class SegmentsReport
                     ...self::COLLECTED_STATUSES, TicketType::TYPE_PACK,
                     $now->copy()->subMonths(self::PARTY_TO_MONTHS), $now->copy()->subMonths(self::PARTY_FROM_MONTHS),
                 ]),
+            // El correo se compara en minúsculas (la misma persona escrita de dos formas) y la firma tiene que ser
+            // ANTERIOR a la primera compra: quien firmó siendo ya cliente no «vino invitado y luego compró».
+            self::GUEST_BECAME_CUSTOMER => $this->customers()
+                ->whereRaw('(select min(orders.paid_at) from orders where orders.user_id = users.id and orders.status in (?, ?)) > (select min(ga.created_at) from guardian_authorizations ga where ga.guardian_email is not null and lower(ga.guardian_email) = lower(users.email))', self::COLLECTED_STATUSES),
             self::CONTACT_NO_ORDER => $this->customers()
                 ->whereExists(function (Builder $query): void {
                     $query->select(DB::raw(1))->from('analytics_events')->whereColumn('analytics_events.user_id', 'users.id')->where('analytics_events.name', 'contact_received');

@@ -57,10 +57,11 @@ ok('la pestaña «Clientes» pinta la sección de segmentos', await cabecera.cou
 await cabecera.scrollIntoViewIfNeeded();
 await cabecera.click();   // la sección nace plegada
 await page.waitForTimeout(600);
-const filas = ['Compró una vez y no volvió', 'Fiesta hace un año', 'Invitado que no ha comprado', 'Escribió y no tiene pedido'];
+// Cinco desde la T3 de la fiesta (`specs/analitica-fiesta.md` §4.4): «vino invitado y luego compró».
+const filas = ['Compró una vez y no volvió', 'Fiesta hace un año', 'Invitado que no ha comprado', 'Vino invitado y luego compró', 'Escribió y no tiene pedido'];
 const presentes = [];
 for (const f of filas) presentes.push(await page.getByText(f, { exact: false }).count() > 0);
-ok('las cuatro filas, con sus dos cifras', presentes.every(Boolean), JSON.stringify(presentes));
+ok('las cinco filas, con sus dos cifras', presentes.every(Boolean), JSON.stringify(presentes));
 await asentar();
 await page.screenshot({ path: `${SALIDA}/segmentos-${ETIQUETA}-tabla.png` });
 

@@ -429,7 +429,7 @@ return [
         // la exportación solo lleva a quien dio el opt-in y tiene permiso propio (`analytics.export`).
         'segments' => [
             'heading' => 'Segmentos de clientes',
-            'note' => 'Cuatro listas para volver a hablar con alguien, calculadas hoy desde los pedidos (nunca desde la edad de un menor): compró una vez y lleva :days días sin volver; su última fiesta fue hace entre :from y :to meses; vino invitado y nunca compró; escribió y no tiene pedido. Solo se exporta a quien dio el opt-in de comunicaciones, y cada descarga queda en la auditoría.',
+            'note' => 'Cinco listas para volver a hablar con alguien, calculadas hoy desde los pedidos (nunca desde la edad de un menor): compró una vez y lleva :days días sin volver; su última fiesta fue hace entre :from y :to meses; vino invitado y nunca compró; vino invitado y luego compró con su cuenta; escribió y no tiene pedido. Solo se exporta a quien dio el opt-in de comunicaciones, y cada descarga queda en la auditoría.',
             'table_heading' => 'Cuántos son hoy',
             'col' => [
                 'segment' => 'Segmento',
@@ -440,6 +440,7 @@ return [
                 'once_never_back' => 'Compró una vez y no volvió',
                 'party_year_ago' => 'Fiesta hace un año (cumple a la vista)',
                 'guest_no_purchase' => 'Invitado que no ha comprado',
+                'guest_became_customer' => 'Vino invitado y luego compró',
                 'contact_no_order' => 'Escribió y no tiene pedido',
             ],
             'export' => [
@@ -2136,6 +2137,17 @@ return [
             'first_source' => 'Primera fuente',
             'visits_before' => 'Visitas antes de comprar',
             'contacts' => 'Contactos recibidos',
+            // Las fiestas (T3 de `specs/analitica-fiesta.md` §4.4): desde los pedidos del cliente.
+            'parties' => 'Fiestas',
+            'parties_count' => 'Fiestas reservadas',
+            'forms_completed' => 'Formularios completados',
+            'invitations' => 'Invitaciones activadas',
+            'replies_yes' => 'Respuestas «sí»',
+            'signatures' => 'Justificantes firmados',
+            'extras_after' => 'Extras vendidos después de reservar',
+            'came_as_guest' => 'Vino invitado antes de comprar',
+            'came_as_guest_yes' => 'Sí: firmó un justificante de menor invitado el :date',
+            'came_as_guest_no' => 'No',
         ],
 
         'orders_summary' => [

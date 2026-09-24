@@ -138,6 +138,39 @@ class SegmentsReportTest extends TestCase
         $this->assertSame([], (new SegmentsReport)->members(SegmentsReport::GUEST_NO_PURCHASE), 'sin cuenta no hay opt-in: no se exporta a nadie');
     }
 
+    /**
+     * T3 de la fiesta: vino invitado (su correo firmó un justificante de menor invitado) y DESPUÉS compró con su
+     * cuenta. El correo se compara en minúsculas; quien firmó siendo ya cliente no cuenta; quien firmó y no compró
+     * es el otro segmento. Son cuentas: se exportan con opt-in.
+     */
+    public function test_a_guest_who_later_bought_is_a_guardian_email_that_became_an_account_with_a_collected_order(): void
+    {
+        $host = $this->customer();
+        $party = $this->order($host, '2026-05-10 10:00:00', $this->pack);
+
+        $converted = $this->customer(optIn: true, attributes: ['email' => 'Madre@Example.test', 'name' => 'Madre Convertida']);
+        $this->guest('madre@example.test', $party);                        // firmó el 24-09 (now)…
+        $this->order($converted, '2026-09-30 10:00:00');                   // …y compró después
+        Carbon::setTestNow(Carbon::parse('2026-10-05 12:00:00'));
+
+        $already = $this->customer(attributes: ['email' => 'cliente@example.test']);
+        $this->order($already, '2026-03-01 10:00:00');                      // ya era cliente cuando firmó
+        $this->guest('cliente@example.test', $party);
+
+        $neverBought = 'sinpedido@example.test';
+        $this->guest($neverBought, $party);
+
+        Cache::flush();
+        $counts = SegmentsReport::counts();
+
+        $this->assertSame(['size' => 1, 'opt_in' => 1], $counts[SegmentsReport::GUEST_BECAME_CUSTOMER]);
+        $this->assertSame(['size' => 1, 'opt_in' => 0], $counts[SegmentsReport::GUEST_NO_PURCHASE], 'el que nunca compró sigue en su segmento');
+        $members = (new SegmentsReport)->members(SegmentsReport::GUEST_BECAME_CUSTOMER);
+        $this->assertCount(1, $members);
+        $this->assertSame('Madre@Example.test', $members[0]['email']);
+        $this->assertSame('30/09/2026', $members[0]['last_purchase']);
+    }
+
     public function test_a_contact_without_an_order_is_an_identified_contact_fact_and_no_collected_order(): void
     {
         $in = $this->customer(optIn: true);
@@ -175,7 +208,7 @@ class SegmentsReportTest extends TestCase
     }
 
     /** El widget de la pestaña «Clientes» pinta los cuatro segmentos con sus dos cifras. */
-    public function test_the_widget_lists_the_four_segments_with_their_counts(): void
+    public function test_the_widget_lists_the_five_segments_with_their_counts(): void
     {
         $in = $this->customer(optIn: true);
         $this->order($in, '2026-03-01 10:00:00');
@@ -187,6 +220,7 @@ class SegmentsReportTest extends TestCase
             ->assertSee(__('admin.analytics.segments.name.once_never_back'))
             ->assertSee(__('admin.analytics.segments.name.party_year_ago'))
             ->assertSee(__('admin.analytics.segments.name.guest_no_purchase'))
+            ->assertSee(__('admin.analytics.segments.name.guest_became_customer'))
             ->assertSee(__('admin.analytics.segments.name.contact_no_order'));
     }
 }
