@@ -66,6 +66,9 @@ final class PermissionCatalog
             'waiver.view',
             'reports.view',
             'reports.export',
+            // La 360 del cliente en su ficha (`specs/analitica.md` §4.6, T4a): permiso PROPIO, porque junta la
+            // historia comercial de una persona con su navegación; no va al staff por defecto.
+            'customers.insights',
         ],
         // Sistema (incluye el admin-exclusivo `access.manage`, mostrado pero no asignable).
         'sistema' => [

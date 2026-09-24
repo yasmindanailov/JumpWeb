@@ -47,8 +47,12 @@
   `2026_09_24_160000`, aplicada en la local), `/cookies` nombra las plataformas ACTIVAS al pintar con su
   empresa y su garantía (`policy.ads_*`), plantilla de UTM en `INSTALACION-CLIENTE.md` §3.bis. **La T3 queda
   completa.** `[PENDIENTE: asesoría]` solo en `COOKIES.md` §1 (validar las garantías). **Queda el ojo del
-  owner** sobre `/cookies` con píxeles puestos. ▶ Sigue **T4** (la 360, los segmentos, el opt-in tras comprar;
-  spec §4.4) y la **T2e** solo si el volumen lo pide. ⚠️ **El fixture «probe-ojo-analitica» está
+  owner** sobre `/cookies` con píxeles puestos. ▶ **T4a EN EL ÁRBOL (24-09)**: la sección «Cliente 360» en la
+  ficha del cliente (`customers.insights`, permiso propio, sembrado en la local): `CustomerInsights` (capa de
+  entrega) + partial; lo del contrato desde los pedidos cobrados, lo de la navegación solo en el régimen
+  identificado; `sonda-cliente-360.mjs` (captura `cliente-360-t4a.png`, cliente 2074 de la BD local). **Queda
+  el ojo del owner** (`/admin/users/2074`). ▶ Sigue **T4b** (segmentos + export con `analytics.export` y
+  rastro) y **T4c** (opt-in de marketing en `ConfirmedStep`); la **T2e** solo si el volumen lo pide. ⚠️ **El fixture «probe-ojo-analitica» está
   MONTADO en la BD local** (90 pedidos `JW-OJO…`, 81 cobros, 9 devoluciones, 25 clientes
   `ojo-N@ojo-analitica.jumpweb.test`, 506 sesiones, dos meses): `OJO=desmontar` lo quita entero.
 - ✅ **La ficha de Google (`#524`), T1 y T2·1→T2·8 en el árbol** (`#720`→`#734`), **vistas por el owner con
@@ -73,9 +77,9 @@
    céntimos— tecleado en un Resource pequeño de «Ajustes» para el CPA/ROAS de `SourcesWidget`). ✅ El owner vio
    la T2f en vivo (24-09). ▶ **La T3 en marcha** (spec §4.3 y §4.8): **T3a·1 ✅ · T3a·2 ✅ · T3a·3 ✅ (24-09)**
    → **T3a·4 ✅ (24-09)** el aviso a las cuentas existentes → **T3b·1 ✅ (24-09)** los píxeles → **T3b·2 ✅
-   (24-09)** la API de conversiones → **T3b·3 ✅ (24-09)** los textos → **T4** la 360 (spec §4.4 y §4.8: la
-   ficha del cliente con su navegación, los segmentos, el opt-in de marketing tras comprar en `ConfirmedStep`
-   con el mismo `PUT /me/marketing`): leer §4.4 entero y §0 antes; toca el panel (`Filament`) y el cajón.
+   (24-09)** la API de conversiones → **T3b·3 ✅ (24-09)** los textos → **T4a ✅ (24-09)** la 360 → **T4b** los
+   segmentos (spec §4.6; exportables solo con opt-in, permiso `analytics.export` y rastro) → **T4c** el opt-in
+   de marketing tras comprar (`steps/ConfirmedStep.vue`, `PUT /me/marketing`; spec §4.3 «Comunicaciones»).
    ⚠️ El fixture del ojo siembra también TRÁFICO (506 sesiones, 2.294 hechos, sellos con primer y último toque).
    ⚠️ **Los cortes por día van por HORA UTC en SQL y al día del parque en PHP** (`SqlTime::hourBucket()`,
    `Window::bucketKey()`), nunca `CONVERT_TZ`. ⚠️ El dinero se lee de `payments`, `payment_refunds`,
@@ -237,6 +241,9 @@ spec enumera. Lo del cliente va en la rama `cliente/playjump`, nunca a `main`.
 - 🪤 **De la T3b·3**: un `[PENDIENTE]` para el asesor NO va en un texto que se publica (la T3a·1 lo dejó a la
   vista en `/cookies`): lo variable se nombra al PINTAR y el marcador vive en la doc. Cambiar un texto sembrado
   obliga a ENCADENAR sus migraciones en `CookiePolicyContentTest` («lo migrado = lo sembrado» ya no sale con una).
+- 🪤 **De la T4a**: `order_items.seats` y `payment_refunds.{currency,mode,requested_at}` son NOT NULL: un fixture
+  a mano los lleva. Una tanda a medias se APARCA fuera del árbol mientras corre la puerta (mide el árbol, no
+  el commit).
 - 🩹 **En la BD LOCAL hay 19 titulares con la cadena de waiver ROTA** (basura del 26–27 de agosto): si mides
   cadenas, compara ANTES/DESPUÉS.
 - **F4 cerró y el cajón es un PAQUETE** (`specs/cajon-empaquetable.md` §0 y §4.8). Tocar «HOJA ENFOCADA» de

@@ -210,6 +210,11 @@ Acciones: **«Marcar preparada»** y **«Marcar canjeada»**.
     —el del correo y el impreso— deja de valer EN EL ACTO y el cliente ve el nuevo en «Mi carné» o en
     su próxima confirmación; NO cierra sesiones: para eso está anonimizar/bloquear,
     `specs/identidad-qr-puerta.md` §9.6 B·5) · anonimizar (`users.anonymize`).
+  - **Sección «Cliente 360»** (`customers.insights`, permiso propio que el staff no lleva por defecto;
+    `specs/analitica.md` §4.6, T4a): compras, vendido, cobrado y devuelto, primera y última compra, frecuencia
+    y productos —siempre, desde los pedidos cobrados—; y, solo si el cliente consintió «análisis» y no se opuso,
+    su primera fuente y campaña, las visitas antes de comprar y los contactos recibidos. Una cuenta anonimizada
+    no enseña nada.
 - **Pedidos y reembolsos:** ver compras, reembolsar, reenviar entradas.
 
 ---

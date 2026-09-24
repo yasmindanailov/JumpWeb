@@ -107,6 +107,9 @@ class PermissionSeeder extends Seeder
         // La analítica (`specs/analitica.md` §4.5, `#735`): `reports.view` abre el cuadro de mando —llevaba
         // sembrado desde F7.11 sin consumidor— y el CSV tiene permiso PROPIO, auditado.
         'reports.export' => 'Exportar la analítica (CSV)',
+        // La 360 del cliente (`specs/analitica.md` §4.6, T4a): la historia comercial y, en el régimen
+        // identificado, la navegación de UNA persona; permiso propio, fuera del staff por defecto.
+        'customers.insights' => 'Ver la 360 del cliente en su ficha',
         'audit.view' => 'Ver registro de auditoría',
     ];
 

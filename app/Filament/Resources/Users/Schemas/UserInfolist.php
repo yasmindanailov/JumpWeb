@@ -131,6 +131,17 @@ class UserInfolist
                         ->schema([
                             View::make('filament.users.partials.dependents-list'),
                         ]),
+
+                    // **La 360 del cliente** (`specs/analitica.md` §4.6, T4a): la historia comercial de esta
+                    // persona y, solo en el régimen identificado, su navegación. Con permiso PROPIO
+                    // (`customers.insights`, fuera del staff por defecto) porque junta las dos cosas: quien
+                    // atiende un pedido no necesita saber de qué campaña vino el cliente. Es una sección de esta
+                    // columna y no una pestaña: la ficha no tiene pestañas y una sola para esto la partiría.
+                    Section::make(__('admin.users.section_insights'))
+                        ->visible(fn (): bool => auth()->user()?->hasPermission('customers.insights') ?? false)
+                        ->schema([
+                            View::make('filament.users.partials.insights'),
+                        ]),
                 ]),
             ])
                 ->from('lg')

@@ -1963,6 +1963,27 @@ return [
         // SOLO LECTURA — el panel no los declara ni los edita (`[DECIDIDO owner, 2026-08-28]`).
         'section_dependents' => 'Menores a cargo',
         'section_orders' => 'Pedidos',
+        // La 360 del cliente (`specs/analitica.md` §4.6, T4a): lo del CONTRATO sale siempre de los pedidos; lo
+        // de la NAVEGACIÓN, solo en el régimen identificado. Permiso `customers.insights`.
+        'section_insights' => 'Cliente 360',
+        'insights' => [
+            'anonymized' => 'Cuenta anonimizada: no hay historia que enseñar.',
+            'orders' => 'Compras',
+            'sold' => 'Vendido',
+            'collected' => 'Cobrado',
+            'refunded' => 'devuelto :amount',
+            'first_purchase' => 'Primera compra',
+            'last_purchase' => 'Última compra',
+            'frequency' => 'Frecuencia',
+            'frequency_per_year' => ':n compras al año',
+            'frequency_burst' => ':n compras en :days días',
+            'products' => 'Productos',
+            'navigation' => 'Navegación (solo con la categoría «análisis» y sin oposición)',
+            'not_identified' => 'Sin navegación vinculada: esta cuenta no ha consentido «análisis» o se ha opuesto.',
+            'first_source' => 'Primera fuente',
+            'visits_before' => 'Visitas antes de comprar',
+            'contacts' => 'Contactos recibidos',
+        ],
 
         'orders_summary' => [
             'empty' => 'Este cliente todavía no tiene pedidos.',
@@ -2132,6 +2153,7 @@ return [
             'waiver_view' => 'Ver el registro probatorio del descargo (firmas y PDF)',
             'reports_view' => 'Ver la analítica (informes)',
             'reports_export' => 'Exportar la analítica en CSV',
+            'customers_insights' => 'Ver la 360 del cliente en su ficha',
             'audit_view' => 'Ver registro de auditoría',
             'access_manage' => 'Gestionar roles y permisos',
         ],
