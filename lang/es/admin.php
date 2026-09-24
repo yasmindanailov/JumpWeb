@@ -314,6 +314,22 @@ return [
             'same' => 'Igual que el periodo anterior',
             'no_previous' => 'Sin datos en el periodo anterior',
         ],
+        // T2d: el CSV.
+        'export' => [
+            'button' => 'Descargar CSV',
+            'modal_heading' => 'Descargar la analítica en CSV',
+            'modal_description' => 'El periodo es el del filtro de la página. Solo agregados: ningún nombre. Las celdas que empiezan por un signo de fórmula van escapadas con un apóstrofo.',
+            'report_label' => 'Informe',
+            'submit' => 'Descargar',
+            'report' => [
+                'money' => 'El dinero',
+                'customers' => 'Registros y puerta',
+                'funnel' => 'La conversión',
+            ],
+            'title' => 'Analítica · :report',
+            'period_line' => 'Periodo: del :from al :to',
+            'summary' => 'Resumen',
+        ],
         'money' => [
             'heading' => 'Dinero',
             'collected' => 'Cobrado online',

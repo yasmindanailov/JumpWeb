@@ -170,6 +170,8 @@ class AuditLog extends Model
 
         // ── Panel ──────────────────────────────────────────────────────────────────────────
         'panel.locale_changed',
+        // La descarga del CSV de «Analítica» (`specs/analitica.md` §4.5, T2d): informe, periodo y recuento; sin PII.
+        'reports.exported',
 
         // ── Incidencias de cobro (llegan por CONSTANTE, no por literal) ────────────────────
         self::ACTION_DUPLICATE_CAPTURE,

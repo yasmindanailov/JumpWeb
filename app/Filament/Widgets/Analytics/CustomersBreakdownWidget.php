@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets\Analytics;
 
+use App\Domain\Platform\Enums\ReportPeriod;
 use App\Domain\Platform\Services\Analytics\Reports\Window;
 use App\Filament\Analytics\CustomersReport;
 use App\Filament\Widgets\Analytics\Concerns\AnalyticsWidget;
@@ -24,6 +25,18 @@ class CustomersBreakdownWidget extends Widget
     protected int|string|array $columnSpan = 'full';
 
     protected string $view = 'filament.widgets.analytics.tables';
+
+    /**
+     * Las mismas tablas, para el CSV (T2d): el periodo viene de fuera, no del filtro de la página.
+     *
+     * @return list<array{heading: string, columns: list<string>, rows: list<list<string>>}>
+     */
+    public function tablesFor(ReportPeriod $period): array
+    {
+        $this->pageFilters = ['period' => $period->value];
+
+        return $this->getViewData()['tables'];
+    }
 
     /** @return array<string, mixed> */
     protected function getViewData(): array

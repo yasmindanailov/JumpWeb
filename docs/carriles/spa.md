@@ -15,12 +15,13 @@
   para delegarte toda la analítica»). Plataforma dejó la **T1 ✅** (`f501a990`→`4d4c3aec`, contrato 1.19.0,
   arnés 19/19, `RGPD-07`, `PAY-21`, `SEC-13`); su traspaso, atendido. **T2→T5 aquí**; la T2 partida en cinco
   con las tres peticiones del owner delante (dinero al detalle · registros · puerta): `analitica.md` §4.5.
-  ✅ **T2a, T2b y T2c EN EL ÁRBOL (24-09)**: «Analítica» en `/admin/analitica` con QUINCE widgets — el dinero
-  entero; los registros y la puerta; y la conversión: visitas, compras, conversión, el embudo por sesión, el
-  abandono por paso, fuentes por primer y último toque, entradas y salidas, dispositivo, idioma, horas,
-  productos, contacto y los rechazados de la semana — (spec §4.8), 52 casos, sonda 14/14 en escritorio y
-  móvil. **Queda el OJO del owner** en `localhost:8081/admin/analitica` (admin) y el `EXPLAIN` con volumen en
-  staging. ▶ Sigue la **T2d (CSV)**. ⚠️ **El fixture «probe-ojo-analitica» está MONTADO en la BD
+  ✅ **T2a, T2b, T2c y T2d EN EL ÁRBOL (24-09)**: «Analítica» en `/admin/analitica` con QUINCE widgets — el
+  dinero entero; los registros y la puerta; y la conversión: visitas, compras, conversión, el embudo por sesión,
+  el abandono por paso, fuentes por primer y último toque, entradas y salidas, dispositivo, idioma, horas,
+  productos, contacto y los rechazados de la semana — y el botón **«Descargar CSV»** (los tres informes, con
+  `reports.export`, auditado) (spec §4.8), 60 casos, sonda 15/15 en escritorio y móvil. **Queda el OJO del
+  owner** en `localhost:8081/admin/analitica` (admin) y el `EXPLAIN` con volumen en staging. ▶ Sigue la
+  **T2e** (`analytics_daily` + `ad_spend`) y después la **T3**. ⚠️ **El fixture «probe-ojo-analitica» está MONTADO en la BD
   local** (87 pedidos `JW-OJO…`, 74 cobros, 12 devoluciones, 25 clientes `ojo-N@ojo-analitica.jumpweb.test`,
   dos meses): `OJO=desmontar` lo quita entero; antes había 9 pedidos y 2 cobros.
 - ✅ **La ficha de Google (`#524`), T1 y T2·1→T2·8 en el árbol** (`#720`→`#734`), **vistas por el owner con
@@ -38,12 +39,13 @@
 
 1. ❗❗❗ **LA ANALÍTICA, T2→T5** (`specs/analitica.md`; §0, §4.1, §4.2, §4.5, §7.1 antes de tocar). **T2 en
    cinco, en este orden**: **T2a dinero ✅ (24-09)** → **T2b registros y puerta ✅ (24-09)** → **T2c embudo y
-   fuentes ✅ (24-09)** → **T2d CSV** (`reports.export`, auditado con `AuditLogger` —acción nueva en el catálogo
-   de `AuditLog::ACTIONS`— y con recuento, sin PII; una descarga por informe y periodo desde una acción de la
-   página; el saneado de fórmulas: prefijar con `'` toda celda que empiece por `= + - @ \t \r`; los tres
-   informes ya devuelven arrays listos para volcar) → **T2e `analytics_daily` + `ad_spend`** (roll-up diario
-   por comando programado, +1 tarea del scheduler → `deploy.sh`; los periodos de más de 90 días y el año;
-   `ad_spend` tecleado por plataforma, campaña y mes para CPA/ROAS en `SourcesWidget`).
+   fuentes ✅ (24-09)** → **T2d CSV ✅ (24-09)** → **T2e `analytics_daily` + `ad_spend`** (roll-up diario por
+   comando programado `analytics:rollup` con `Window` de UN día por informe, guardado como JSON por día e informe;
+   +1 tarea del scheduler → `deploy.sh` «esperadas 6→7»; `ReportPeriod` gana `this_year`/`last_year` y los tres
+   `for()` cosen «días cerrados desde el diario + hoy en directo» cuando la ventana pasa de 90 días; `ad_spend`
+   —plataforma, campaña, mes, céntimos— tecleado en una tabla del panel (Resource pequeño en «Ajustes») para el
+   CPA/ROAS de `SourcesWidget` sobre el primer toque no directo). Después, la **T3** (consentimiento y driver:
+   toca lo compartido, aviso dado).
    ⚠️ El fixture del ojo siembra también TRÁFICO (506 sesiones, 2.294 hechos, sellos con primer y último toque).
    ⚠️ **Los cortes por día van por HORA UTC en SQL y al día del parque en PHP** (`SqlTime::hourBucket()`,
    `Window::bucketKey()`), nunca `CONVERT_TZ`. ⚠️ El dinero se lee de `payments`, `payment_refunds`,
@@ -168,6 +170,11 @@ spec enumera. Lo del cliente va en la rama `cliente/playjump`, nunca a `main`.
   entrar en pantalla**: la sonda recorre la página por PANTALLAS de 600 px en tres pasadas —un salto al final
   se deja atrás los del medio—. Y un lote ingerido con `webdriver` abre una sesión BOT que cuenta en «fuera
   del recuento»: el fixture del test la incluye a propósito.
+- 🪤 **De la T2d**: `fputcsv` entrecomilla toda celda con un ESPACIO (un `assertStringContainsString('Rótulo;')`
+  falla aunque el rótulo esté): se aserta `"Rótulo";`. Una ruta `auth` del enrutador manda al invitado a `/login`
+  (la web), no a `/admin/login` (Filament). El `#` de una referencia como `#685` dentro de un `sed 's#…#…#'`
+  rompe la expresión y una cadena `&&` para en silencio: el mensaje del commit se escribe con Write y se pasa
+  con `-F`.
 - 🩹 **En la BD LOCAL hay 19 titulares con la cadena de waiver ROTA** (basura del 26–27 de agosto): si mides
   cadenas, compara ANTES/DESPUÉS.
 - **F4 cerró y el cajón es un PAQUETE** (`specs/cajon-empaquetable.md` §0 y §4.8). Tocar «HOJA ENFOCADA» de

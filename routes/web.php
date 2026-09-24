@@ -3,6 +3,7 @@
 use App\Domain\Booking\Services\PartyInvitations;
 use App\Http\Controllers\Account\AccountController;
 use App\Http\Controllers\Account\EmailChangeController;
+use App\Http\Controllers\Admin\AnalyticsExportController;
 use App\Http\Controllers\Admin\CalendarEventsController;
 use App\Http\Controllers\Admin\DailySummaryController;
 use App\Http\Controllers\Admin\GoogleBusinessConnectController;
@@ -466,6 +467,13 @@ Route::get('/admin/calendario/eventos', CalendarEventsController::class)
 Route::get('/admin/calendario/resumen-dia', DailySummaryController::class)
     ->middleware(['web', 'auth', 'panel_role', SetAdminLocale::class, 'throttle:30,1', 'no-store'])
     ->name('admin.calendario.resumen-dia'); // L1: el resumen lista clientes/teléfonos/cumpleañeros (PII).
+
+// Panel admin — «Analítica», el CSV (`specs/analitica.md` §4.5, T2d): un informe (dinero · registros y puerta ·
+// conversión) y un periodo. Permiso `reports.export` en el controlador (el botón solo lo esconde), auditado con
+// recuento y sin PII: el fichero solo lleva agregados. `no-store`: son las cifras del parque.
+Route::get('/admin/analitica/csv', AnalyticsExportController::class)
+    ->middleware(['web', 'auth', 'panel_role', SetAdminLocale::class, 'throttle:30,1', 'no-store'])
+    ->name('admin.analitica.csv');
 
 /*
  * ══ EL LABORATORIO DE FACHADA ══════════════════════════════════════════════════════════════════

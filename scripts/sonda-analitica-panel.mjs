@@ -143,6 +143,14 @@ ok('las tablas del dinero', ['Por día', 'Por canal', 'Por método de cobro', 'P
 ok('las tablas de registros y puerta', informe.tablas.includes('Cómo se registran') && informe.tablas.filter((t) => t === 'Por día').length === 2, informe.tablas.join(' · '));
 ok('las tablas de la conversión', ['Paso a paso', 'Dónde se quedan', 'Por primer toque', 'Páginas de entrada', 'Contacto'].every((t) => informe.tablas.includes(t)), informe.tablas.join(' · '));
 ok('ninguna tarjeta vacía', informe.stats.every((s) => s.label !== '' && s.value !== ''));
+// T2d: el botón del CSV (el admin tiene `reports.export` por `Gate::before`) y la descarga de verdad, con la
+// sesión del navegador: estado, tipo y el BOM que abre bien la hoja de cálculo.
+ok('el botón «Descargar CSV»', await page.getByText('Descargar CSV').count() > 0);
+for (const informeCsv of ['money', 'customers', 'funnel']) {
+    const csv = await page.request.get(`${BASE}/admin/analitica/csv?report=${informeCsv}&period=this_month`);
+    const cuerpo = await csv.text();
+    ok(`CSV «${informeCsv}»`, csv.status() === 200 && (csv.headers()['content-type'] ?? '').startsWith('text/csv') && cuerpo.startsWith('﻿') && cuerpo.includes('Resumen'), `${csv.status()} ${csv.headers()['content-type'] ?? ''} ${cuerpo.length} B`);
+}
 
 /** Baja hasta un texto si está; si no, la captura se hace donde esté la página. */
 async function bajaHasta(texto) {

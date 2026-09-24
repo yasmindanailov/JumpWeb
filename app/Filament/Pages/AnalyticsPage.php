@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Domain\Platform\Enums\ReportPeriod;
+use App\Filament\Analytics\CsvExport;
 use App\Filament\Widgets\Analytics\CustomersBreakdownWidget;
 use App\Filament\Widgets\Analytics\CustomersSeriesChart;
 use App\Filament\Widgets\Analytics\FunnelWidget;
@@ -19,6 +20,7 @@ use App\Filament\Widgets\Analytics\TrafficHoursChart;
 use App\Filament\Widgets\Analytics\TrafficSeriesChart;
 use App\Filament\Widgets\Analytics\TrafficWidget;
 use BackedEnum;
+use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Pages\Dashboard as BaseDashboard;
 use Filament\Pages\Dashboard\Concerns\HasFiltersForm;
@@ -77,6 +79,43 @@ class AnalyticsPage extends BaseDashboard
     public function getSubheading(): ?string
     {
         return __('admin.analytics.subheading');
+    }
+
+    /**
+     * «Descargar CSV» (T2d): el botón se esconde sin `reports.export` y el controlador de la ruta vuelve a
+     * exigirlo (esconder no es autorizar). El periodo es el del filtro de la página; el informe se elige en el
+     * modal. Abre la URL en otra pestaña por el mismo camino que el resumen del día.
+     *
+     * @return array<int, Action>
+     */
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('exportCsv')
+                ->label(__('admin.analytics.export.button'))
+                ->icon(Heroicon::OutlinedArrowDownTray)
+                ->color('gray')
+                ->visible(fn (): bool => auth()->user()?->hasPermission(self::PERMISSION_EXPORT) ?? false)
+                ->modalHeading(__('admin.analytics.export.modal_heading'))
+                ->modalDescription(__('admin.analytics.export.modal_description'))
+                ->modalSubmitActionLabel(__('admin.analytics.export.submit'))
+                ->modalWidth('md')
+                ->schema([
+                    Select::make('report')
+                        ->label(__('admin.analytics.export.report_label'))
+                        ->options(array_combine(CsvExport::REPORTS, array_map(static fn (string $r): string => __('admin.analytics.export.report.'.$r), CsvExport::REPORTS)))
+                        ->default(CsvExport::REPORT_MONEY)
+                        ->required()
+                        ->selectablePlaceholder(false)
+                        ->native(false),
+                ])
+                ->action(function (array $data): void {
+                    $this->dispatch('open-url-new-tab', url: route('admin.analitica.csv', [
+                        'report' => (string) ($data['report'] ?? CsvExport::REPORT_MONEY),
+                        'period' => ReportPeriod::fromValue($this->filters['period'] ?? null)->value,
+                    ]));
+                }),
+        ];
     }
 
     public function filtersForm(Schema $schema): Schema

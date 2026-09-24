@@ -280,6 +280,22 @@ return [
             'same' => '与上一时段持平',
             'no_previous' => '上一时段无数据',
         ],
+        // T2d: el CSV.
+        'export' => [
+            'button' => '下载 CSV',
+            'modal_heading' => '下载分析数据(CSV)',
+            'modal_description' => '时间范围为页面筛选器所选。仅为汇总数据,不含姓名。以公式符号开头的单元格会加上撇号转义。',
+            'report_label' => '报表',
+            'submit' => '下载',
+            'report' => [
+                'money' => '收入',
+                'customers' => '注册与入口',
+                'funnel' => '转化',
+            ],
+            'title' => '数据分析 · :report',
+            'period_line' => '时间范围: :from 至 :to',
+            'summary' => '摘要',
+        ],
         'money' => [
             'heading' => '收入',
             'collected' => '线上收款',
