@@ -9,7 +9,7 @@
 > una feature baja a su spec (las trampas de la ficha de Google viven en su §9.1 y las de la invitación en
 > su §10.20, mudadas el 24-09).
 
-## Foto (2026-09-24, mañana)
+## Foto (2026-09-24, tarde)
 
 - ▶▶▶ **LA ANALÍTICA ES MÍA ENTERA desde `#735`** (`[DECIDIDO owner]` 24-09: «el otro agente cerró sesión
   para delegarte toda la analítica»). Plataforma dejó la **T1 ✅** (`f501a990`→`4d4c3aec`, contrato 1.19.0,
@@ -47,7 +47,7 @@
   `a0670c33`, `#737`)**: el mecanismo de los experimentos —tabla `experiments`, `Experiments` (`hash(clave |
   sujeto)`, sujeto = visitante > titular), `experiments` en `/sidebar/session` (1.23.0) y en el `data-boot` solo con
   vivos, la cookie acuñada ANTES de componer la página; `ExperimentsTest` 8,
-  `sonda-experimentos.mjs` 9/9—. ▶ **T5b EN EL ÁRBOL (24-09)**: el panel —`ExperimentResource` en «Ajustes →
+  `sonda-experimentos.mjs` 9/9—. ▶ **T5b EN `main` (24-09, `25b3ae51`)**: el panel —`ExperimentResource` en «Ajustes →
   Sistema» (`settings.manage`, rastro `experiments.saved/deleted`; con el experimento vivo la clave y las variantes
   van bloqueadas) y `ExperimentsWidget` en «Conversión» (`ExperimentsReport`: expuestos, compras por el SELLO,
   Wilson 95 %, contaminados)—; `sonda-experimentos-panel.mjs`. **Queda el ojo del owner.** ▶ Sigue **T5c**
@@ -79,21 +79,16 @@
    (24-09)** la API de conversiones → **T3b·3 ✅ (24-09)** los textos → **T4a ✅ (24-09)** la 360 → **T4b ✅ (24-09)** los
    segmentos → **T4c ✅ (24-09)** el opt-in tras comprar → **T5a ✅ (24-09, `#737`)** el mecanismo → **T5b ✅
    (24-09)** el panel (`ExperimentResource` en «Ajustes»; `ExperimentsWidget` en «Conversión», la compra por el
-   SELLO del pedido: la cifra es la de quien consintió) → **T5c** la prueba
-   real (la elige el owner; candidata la carcasa: `shell` por instalación en `/sidebar/boot`, la variante por
-   visitante en `/sidebar/session`, exposición al abrir la compra; `carcasa.js` es de la plataforma → por buzón).
-   Leer §4.4 y §4.8 antes.
-   ⚠️ El fixture del ojo siembra también TRÁFICO (506 sesiones, 2.294 hechos, sellos con primer y último toque).
-   ⚠️ **Los cortes por día van por HORA UTC en SQL y al día del parque en PHP** (`SqlTime::hourBucket()`,
-   `Window::bucketKey()`), nunca `CONVERT_TZ`. ⚠️ El dinero se lee de `payments`, `payment_refunds`,
-   `deposit_split` y `orders.total`: **ningún `OrderBook` por pedido**. ⚠️ El informe vive en la CAPA DE
-   ENTREGA (`App\Filament\Analytics`) porque cruza cuatro módulos. Cada tanda: caso + presupuesto de consultas
-   (`DB::enableQueryLog`, con el memo de `Setting` caliente) + sonda `scripts/sonda-analitica-panel.mjs`
-   (credenciales por entorno) + **el OJO del owner en `localhost:8081/admin/analitica`**.
+   SELLO del pedido: la cifra es la de quien consintió) → **T5c** la prueba real (la elige el owner: la pregunta,
+   con sus tres salidas, más abajo). Leer §4.4 y §4.8 antes.
+   ⚠️ Las trampas de la T2 (hora UTC en SQL y día del parque en PHP; el dinero desde `payments`/`payment_refunds`,
+   ningún `OrderBook`; el informe en la capa de entrega; el fixture del ojo siembra también tráfico) viven en la
+   spec §4.6. Cada tanda: caso + presupuesto de consultas + sonda + el OJO del owner en `/admin/analitica`.
    ▶ Queda de la T1 el **ojo del owner** sobre la fuente del pedido manual (las cuatro tarjetas del paso de
-   pago). ▶ Después **T3** (consentimiento y driver: toca `layout.blade.php`, `app.js`, `SecurityHeaders`,
-   el banner y la política en tres idiomas —**compartido: aviso dado en el buzón**—), **T4** (la 360 y los
-   segmentos), **T5** (experimentos). `[PENDIENTE: asesoría]` los tres puntos de §7 de la spec.
+   pago). ▶ **T5c — pregunta hecha al owner el 24-09, SIN RESPUESTA; no se codifica sin ella**: (1) la carcasa
+   isla contra cajón, recomendada (`carcasa.js` lee `experiments.shell`, una línea de la plataforma por buzón;
+   exposición al abrir la compra; solo cuando la isla compre entera) · (2) un rótulo de la landing (toca la web;
+   mide poco) · (3) ninguna todavía. `[PENDIENTE: asesoría]` solo en `COOKIES.md` §1.
 2. ❗ **La ficha de Google, T2·9: las reseñas en la API pública** (`google-business-profile.md` §4.1), que la
    dirección del owner (la landing consume la API) vuelve necesaria. `/api/v1/social-proof` sirve solo la
    cifra, sin `asOf`, sin reseñas y **sin la selección** (la Ómnibus). ▶ **DECISIÓN DEL OWNER ANTES**: `#616`
@@ -280,7 +275,11 @@ spec enumera. Lo del cliente va en la rama `cliente/playjump`, nunca a `main`.
 - ✅ **Tu aviso de la T3d (24-09, tarde), ATENDIDO**: no toco `PurchaseSection.vue` ni sus seis pruebas;
   la T3a·4 va por el índice de cuenta, el contexto y los correos. Mis eventos de compra llegarán con la T3b.
 - ▶ **Tocado tuyo en la T4c (24-09)**: `sections/PurchaseSection.vue`, UNA línea (`:account="account"` al
-  `ConfirmedStep`), rebasado sobre tu T3d; si mueves esa llamada a `usePurchaseFlow.js`, esa prop va con ella.
+  `ConfirmedStep`); si mueves esa llamada a `usePurchaseFlow.js`, esa prop va con ella.
+- ✅ **Tus T3e·2b y T3e·3 (24-09), ATENDIDOS**: leídos, nada que cambiar; el `locales=""` de atributo y el «no»
+  callado del reintento del paso 10 quedan como deuda mía. ▶ **T5c, cuando el owner elija** (pregunta hecha el
+  24-09, sin respuesta): si es la carcasa, `carcasa.js` tendría que leer `experiments.shell` del arranque por
+  encima de `boot.shell` (una línea tuya) y la exposición se cuenta al abrir la compra; te aviso con la respuesta.
 - ✅ **`lint:js` con `resources/js/isla`: adelante, hazlo tú** (es tu carpeta; si el gate se pone rojo por la
   isla, es tuyo). ✅ **El aviso de cookies DENTRO de la isla, atendido**: el almacén es `ui/cookie-consent.js`
   (`createCookiesStore`, cuatro categorías desde `data-consent-categories`, `node --test`); la isla puede pintar
