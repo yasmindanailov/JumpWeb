@@ -8,6 +8,7 @@ use App\Domain\Booking\Models\Ticket;
 use App\Domain\Platform\Jobs\ForgetPersonInDriver;
 use App\Domain\Platform\Models\AnalyticsEvent;
 use App\Domain\Platform\Models\AnalyticsSession;
+use App\Domain\Platform\Models\SurveyResponse;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Notifications\PasswordReset;
 use App\Notifications\VerifyEmailAddress;
@@ -32,7 +33,7 @@ use Laravel\Sanctum\PersonalAccessToken;
 
 #[Fillable([
     'name', 'email', 'password', 'phone', 'locale', 'panel_locale', 'last_login_at',
-    'marketing_opt_in', 'analytics_opt_out', 'first_attribution', 'privacy_accepted_at', 'terms_accepted_at', 'waiver_accepted_at',
+    'marketing_opt_in', 'analytics_opt_out', 'surveys_opt_out', 'first_attribution', 'privacy_accepted_at', 'terms_accepted_at', 'waiver_accepted_at',
     'analytics_notified_at', 'analytics_notice_seen_at',
     'pending_email', 'pending_email_sent_at',
 ])]
@@ -92,6 +93,7 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference,
             'marketing_opt_in' => 'boolean',
             // T3a·3 de la analítica: la oposición al régimen identificado y la primera atribución (inmutable).
             'analytics_opt_out' => 'boolean',
+            'surveys_opt_out' => 'boolean',
             'first_attribution' => 'array',
             // T3a·4: las dos marcas del aviso a las cuentas existentes (el correo salió · el aviso del cajón se despidió).
             'analytics_notified_at' => 'datetime',
@@ -442,6 +444,9 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference,
             // una transición, y esto no es ninguna de las dos cosas.
             AnalyticsSession::query()->where('user_id', $this->getKey())->update(['user_id' => null]);
             AnalyticsEvent::query()->where('user_id', $this->getKey())->update(['user_id' => null]);
+            // LAS ENCUESTAS (`specs/encuestas.md` §4.5, `#740`): sus respuestas dejan de ser suyas y el texto libre
+            // se borra; los agregados de elección y escala sobreviven sin persona.
+            SurveyResponse::forgetPerson((int) $this->getKey());
             $this->orders()->whereNotNull('attribution')->get(['id', 'attribution'])->each(function (Order $order): void {
                 $order->forceFill([
                     'attribution' => array_diff_key((array) $order->attribution, array_flip(['visitor_id', 'session_id', 'click_ids', 'browser_ids'])),
@@ -462,6 +467,7 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference,
                 'marketing_opt_in' => false,
                 // T3a·3: la oposición y la primera atribución son del régimen identificado, que se desata aquí.
                 'analytics_opt_out' => false,
+                'surveys_opt_out' => false,
                 'first_attribution' => null,
                 // T3a·4: las marcas del aviso vuelven a neutro; una fila anónima no tiene a quién avisar.
                 'analytics_notified_at' => null,

@@ -179,6 +179,10 @@ class AuditLog extends Model
         // «Ajustes»; el payload lleva la clave, las variantes y el estado, sin PII.
         'experiments.saved',
         'experiments.deleted',
+        // T1 de las encuestas (`specs/encuestas.md` §4.4): una encuesta se crea, se cambia o se borra desde
+        // «Ajustes»; el payload lleva la clave, la clase, el estado y cuántas preguntas, sin PII.
+        'surveys.saved',
+        'surveys.deleted',
 
         // ── Incidencias de cobro (llegan por CONSTANTE, no por literal) ────────────────────
         self::ACTION_DUPLICATE_CAPTURE,

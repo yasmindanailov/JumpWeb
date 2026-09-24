@@ -1,7 +1,7 @@
 # [SPEC] Las encuestas — internas en la puerta y externas por correo, creadas en el panel, medidas en el cuadro
 
-> Estado: ✅ **aprobada por el owner el 24-09** (`#740`: sus cinco respuestas en §7) → **a implementar, T1 en curso**
-> (carril del SPA) · Última actualización: 2026-09-24 · Decisión asociada: `#740`. Es la **T7** de `analitica.md`
+> Estado: ✅ **aprobada por el owner el 24-09** (`#740`: sus cinco respuestas en §7) → **en implementación: T1 en
+> `main`, T2 en curso** (carril del SPA) · Última actualización: 2026-09-25 · Decisión asociada: `#740`. Es la **T7** de `analitica.md`
 > (§4.8 y §4.10, las palabras del owner).
 
 ## §0 · Antes de tocar
@@ -17,12 +17,13 @@
   visita. (2) **La visita acreditada es idempotente por (cliente, día)** (`GateVisits::register()`,
   `customer_visits`): la externa se dispara desde esa fila. (3) **Todo correo nace por partida doble** sobre
   `BrandedMailMessage`, con sus piezas de bandeja en tres idiomas (`MailInboxLineTest`); `EmailUtm::keys()` lo censa
-  por estar en `app/Notifications/`. (4) **Una tarea nueva del planificador sube el recuento de `deploy.sh`** (hoy
-  espera 6 y `schedule:list` registra 9: avisado a plataforma). (5) Un Resource nuevo va a
+  por estar en `app/Notifications/`. (4) **Una tarea nueva del planificador sube el recuento de `deploy.sh`** (espera 6,
+  hay 9: avisado a plataforma). (5) Un Resource nuevo va a
   `AdminSettingsHub::areas()` o `AdminNavigationTest` se pone rojo. (6) `RGPD-01`: purga y export cubren las
   tablas nuevas; `RGPD-04`: la página del correo va `no-store`.
 - **Estado**: ✅ `#740` (atadas al cliente y a la visita · una por cliente y encuesta · todos los tipos de pregunta
-  · correo de servicio con baja de un toque · una viva por clase). **T1 en curso**; quedan T2→T4 (§4.6).
+  · correo de servicio con baja de un toque · una viva por clase). **T1 en `main`** (25-09; queda el ✅ del owner,
+  §4.6). **T2 en curso**; luego T3 y T4.
 - **Invariantes**: `RGPD-01`, `RGPD-04`, `RGPD-07`, `SEC-04`, `SEC-05`, `PAY-14`, `SUITE-01`. Dinero y aforo:
   ninguno. Ningún fichero del `CRITICAL_RE`.
 
@@ -190,7 +191,7 @@ WhatsApp; recompensas (JumpPoints) por contestar.
 
 | | Tanda | Entrega | Verificación (§6) |
 |---|---|---|---|
-| T1 | **el modelo y el panel**: migraciones, `Survey` y `SurveyResponse`, `QuestionSchema`, `SurveyResource` con su formulario y bloqueos, `AuditLog::ACTIONS` +2, `AdminSettingsHub`, `Contract` +3, `anonymize()`/export/prune | `#740` | `SurveyResourceTest`, `QuestionSchemaTest`, `SurveyPrivacyTest` `(futuro)` |
+| T1 | **🟦 (25-09, en `main`; queda el ✅ del owner en `/admin/encuestas`, con dos ejemplos sembrados en local) el modelo y el panel**: la migración `create_surveys_tables` (`surveys`, `survey_responses`, `users.surveys_opt_out`), `Platform\Models\Survey` (`isRunning()`, `runningOfKind()`, `anotherRunning()`, `questionList()`) y `SurveyResponse` (`MassPrunable` a 24 meses, `forgetPerson()`), `Platform\Services\Surveys\QuestionSchema` (cinco tipos, `normalize()`, `accepts()`), `SurveyResource` en «Ajustes → Sistema» (`/admin/encuestas`, `settings.manage`; formulario con pestañas es/en/fr, el Repeater de preguntas con sus opciones; con respuestas la clave, la clase y la estructura van bloqueadas PERO dehidratadas para que los rótulos editados casen con su pregunta —`GuardsSurveyForm`—; una viva por clase al encender; sin respuestas se borra con rastro, con respuestas no), `AuditLog::ACTIONS` +2, alias de morfo, `Contract` +3 (`survey_sent`, `survey_answered`, `survey_declined`), `anonymize()` y `model:prune`. **El export del cliente (contrato `PersonalDataExport`) entra en la T2**, con las primeras respuestas. **Lo que enseñó**: un campo `disabled()` no viaja al guardar y sin la clave el Repeater no puede casar los rótulos: `disabled()->dehydrated()` y la guarda del servidor decide; el censo de tarjetas de «Ajustes» (`AdminNavigationTest`) se teclea a mano (23 → 24) | `#740` | `SurveyResourceTest` (7), `QuestionSchemaTest` (3), `SurveyPrivacyTest` (4); `MorphMapTest`, `AdminNavigationTest`, `AuditActionCatalogTest`, `AnalyticsContractTest` en verde · el OJO del owner en `/admin/encuestas` |
 | T2 | **la puerta**: la tarjeta y el formulario táctil en `ValidarRegistro`, la oferta tras la visita, «No preguntar», hechos y auditoría | | `GateSurveyTest` `(futuro)`; la sonda de la puerta (kiosco, ≥ 44 px, el lector sigue libre); el OJO en la tablet |
 | T3 | **el correo y la página**: `surveys:send-external` (+1 tarea, `deploy.sh`), `SurveyInvitation`, `/encuesta/{token}` y la baja, `surveys_opt_out` con su interruptor y `PUT /me/surveys` (contrato de la API +1) | contrato de la API | `SurveySendTest`, `SurveyPageTest` `(futuro)`; los censos de correos; `curl -D` sin `visitor_id`; el OJO en Mailpit |
 | T4 | **el cuadro**: `SurveysReport`, la pestaña, el CSV, la 360; fixture del ojo | | `SurveysReportTest` `(futuro)` (igualdad con las tablas), presupuesto, sonda del panel, el OJO |

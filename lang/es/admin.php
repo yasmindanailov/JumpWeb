@@ -50,6 +50,8 @@ return [
             // T5b de la analítica: las pruebas A/B. La descripción nombra «A/B», «prueba» y «variante» porque el
             // buscador global busca también en la descripción.
             'experiments' => ['label' => 'Experimentos', 'description' => 'Pruebas A/B de la web: variantes, pesos y cuándo están vivas. Los resultados, en Analítica → Conversión.'],
+            // T1 de las encuestas: la descripción nombra «encuesta», «preguntas», «puerta» y «correo» para el buscador.
+            'surveys' => ['label' => 'Encuestas', 'description' => 'Las encuestas a los clientes: internas en la puerta al validar la entrada y externas por correo al día siguiente; sus preguntas, en tres idiomas. Los resultados, en Analítica → Encuestas.'],
             // `#320`: la puerta sale del menú lateral y su puerta de entrada pasa a ser ésta. La
             // descripción menciona «entrada», «validar» y «escanear» porque el buscador global busca
             // también dentro de la descripción, y nadie recuerda cómo se llama una pantalla.
@@ -3537,6 +3539,78 @@ return [
     ],
 
     // T5b de la analítica (`specs/analitica.md` §4.4): los experimentos desde «Ajustes → Sistema».
+    // Las encuestas (`specs/encuestas.md` §4.4, T1; `#740`): el Resource de «Ajustes → Sistema».
+    'surveys' => [
+        'nav_label' => 'Encuestas',
+        'model_label_singular' => 'encuesta',
+        'model_label_plural' => 'Encuestas',
+        'subheading' => 'Internas: el empleado pregunta en la puerta al validar la entrada. Externas: un correo al día siguiente de la visita. Una viva de cada clase como máximo; los resultados, en Analítica → Encuestas.',
+        'create_title' => 'Nueva encuesta',
+        'edit_title' => 'Encuesta «:name»',
+        'locked_hint' => 'Esta encuesta ya tiene respuestas: la clave, la clase y la estructura de las preguntas están bloqueadas. Los rótulos y el encendido se pueden cambiar; para otra estructura, crea una encuesta nueva.',
+        'section_survey' => 'La encuesta',
+        'section_texts' => 'Nombre y cabecera',
+        'section_questions' => 'Preguntas',
+        'questions_hint' => 'En orden. Elección única o múltiple con sus opciones, escala de 1 a 5, sí/no, o texto libre (hasta 300 caracteres). Con respuestas guardadas, las claves y los tipos quedan fijos.',
+        'field_key' => 'Clave',
+        'field_key_hint' => 'Identificador estable: minúsculas, números, guiones. Es lo que lleva el libro de eventos.',
+        'field_kind' => 'Clase',
+        'kind' => [
+            'internal' => 'Interna (en la puerta)',
+            'external' => 'Externa (por correo)',
+        ],
+        'field_active' => 'Encendida',
+        'field_active_hint' => 'Solo una interna y una externa pueden estar vivas a la vez.',
+        'field_starts_at' => 'Desde',
+        'field_ends_at' => 'Hasta',
+        'field_window_hint' => 'Vacío = sin límite.',
+        'field_name' => 'Nombre',
+        'field_intro' => 'Frase de cabecera',
+        'field_intro_hint' => 'Lo que lee el cliente antes de las preguntas: en la tablet o en el correo.',
+        'field_question_key' => 'Clave',
+        'field_question_type' => 'Tipo',
+        'type' => [
+            'choice' => 'Elección única',
+            'multi' => 'Elección múltiple',
+            'scale' => 'Escala de 1 a 5',
+            'yesno' => 'Sí / No',
+            'text' => 'Texto libre',
+        ],
+        'field_required' => 'Obligatoria',
+        'field_label' => 'Pregunta',
+        'field_options' => 'Opciones',
+        'field_option_key' => 'Clave',
+        'option_label' => 'Opción',
+        'col_name' => 'Nombre',
+        'col_key' => 'Clave',
+        'col_kind' => 'Clase',
+        'col_state' => 'Estado',
+        'col_responses' => 'Respuestas',
+        'col_window' => 'Ventana',
+        'state' => [
+            'running' => 'Viva',
+            'scheduled' => 'Programada',
+            'finished' => 'Terminada',
+            'inactive' => 'Apagada',
+        ],
+        'errors' => [
+            'one_live_per_kind' => 'Ya hay una encuesta viva de esta clase: apágala antes de encender otra.',
+            'no_questions' => 'Una encuesta necesita al menos una pregunta válida.',
+        ],
+        'actions' => [
+            'create' => 'Nueva encuesta',
+            'add_question' => 'Añadir pregunta',
+            'add_option' => 'Añadir opción',
+            'delete' => [
+                'label' => 'Borrar encuesta',
+                'modal_heading' => '¿Borrar esta encuesta?',
+                'modal_description' => 'Solo se puede borrar una encuesta sin respuestas. Queda rastro en la auditoría.',
+                'submit' => 'Borrar',
+                'success' => 'Encuesta borrada.',
+            ],
+        ],
+    ],
+
     'experiments' => [
         'nav_label' => 'Experimentos',
         'model_label_singular' => 'experimento',

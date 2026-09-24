@@ -59,6 +59,8 @@ class AnonymizeCoversEveryUserColumnTest extends TestCase
         'last_login_at',
         'marketing_opt_in',
         'analytics_opt_out',
+        // T1 de las encuestas (`#740`): «no quiero recibir más encuestas» vuelve a neutro con la cuenta.
+        'surveys_opt_out',
         'first_attribution',
         // T3a·4: las dos marcas del aviso (el correo salió · el aviso del cajón se despidió). No son PII, pero
         // una fila anónima no tiene a quién avisar: vuelven a neutro con el resto del régimen identificado.
@@ -195,6 +197,7 @@ class AnonymizeCoversEveryUserColumnTest extends TestCase
             'marketing_opt_in' => true,
             // T3a·3 de la analítica: la oposición y la primera atribución, con valor para que la purga se vea.
             'analytics_opt_out' => true,
+            'surveys_opt_out' => true,
             'first_attribution' => ['source' => 'google', 'medium' => 'cpc', 'campaign' => 'censo'],
             // T3a·4: las dos marcas del aviso, con fecha para que se vea que la purga las devuelve a neutro.
             'analytics_notified_at' => now()->subDay(),

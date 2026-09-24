@@ -8,6 +8,7 @@ use App\Domain\Identity\Models\GuardianAuthorization;
 use App\Domain\Identity\Models\WaiverSignature;
 use App\Domain\Platform\Models\AnalyticsEvent;
 use App\Domain\Platform\Models\AnalyticsSession;
+use App\Domain\Platform\Models\SurveyResponse;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -133,7 +134,7 @@ Schedule::command('business-profile:sweep-photos')->dailyAt('05:00')->withoutOve
  * ⚠️ Los EVENTOS van antes que las SESIONES: sin claves foráneas, el orden es lo único que evita eventos
  * huérfanos entre las dos pasadas. Y es la misma tarea de siempre: el recuento de `deploy.sh` no cambia.
  */
-Schedule::command('model:prune', ['--model' => [CookieConsentLog::class, WaiverSignature::class, GuardianAuthorization::class, Dependent::class, InvitationReply::class, GoogleBusinessReview::class, AnalyticsEvent::class, AnalyticsSession::class]])
+Schedule::command('model:prune', ['--model' => [CookieConsentLog::class, WaiverSignature::class, GuardianAuthorization::class, Dependent::class, InvitationReply::class, GoogleBusinessReview::class, AnalyticsEvent::class, AnalyticsSession::class, SurveyResponse::class]])
     ->daily()
     ->withoutOverlapping();
 

@@ -2,9 +2,9 @@
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb`) · Banda: **730–759** (700–729 agotada el 20-09)
 > · Último usado: **`#740`** · La banda está dada de alta en la tabla de `DECISIONES.md` ·
-> Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: **`analitica-fiesta.md` §0**
-> (la tarea en curso) · `analitica.md` §0 y §4.5 · `google-business-profile.md` §0 · `sidebar-spa.md` §0 ·
-> `celebracion-e-invitacion.md` §0 · Actualizado: 2026-09-24 (noche).
+> Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: **`encuestas.md` §0** (la
+> tarea en curso) · `analitica-fiesta.md` §0 · `analitica.md` §0 y §4.5 · `google-business-profile.md` §0 ·
+> `sidebar-spa.md` §0 · `celebracion-e-invitacion.md` §0 · Actualizado: 2026-09-25 (madrugada).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`). El
 > contador de la suite va en el trailer del commit (`#618`), no aquí. **Se muda, no se raspa**: el detalle de
 > una feature baja a su spec (las trampas por tanda de la analítica T1→T5 viven en `analitica.md` §4.9,
@@ -46,10 +46,13 @@
   lo vio en vivo (24-09: «buen trabajo, validado»)** → **LA T6 QUEDA COMPLETA**: la analítica entera (T1→T6) espera
   solo la v2.0.0. La spec sigue viva (no se archiva): guarda el régimen del invitado, el `[PENDIENTE: asesoría]` (4)
   y el despliegue pendiente; el ciclo de vida de la doc (`CONVENCIONES §11`) se aplica tras la v2.0.0.
-- ▶ **T7, ENCUESTAS** (idea del owner, 24-09, «para que no se me olvide»): internas en la puerta al escanear el QR
-  (el empleado pregunta en persona y marca con el dedo) y externas por correo al día siguiente; se crean en el
-  panel (interna/externa, activa, fecha límite…) y salen en el cuadro. Registrada con sus palabras en
-  `analitica.md` §4.10 y como T7 en §4.8: **`/spec` antes de tocar código**; no se ha diseñado nada.
+- ▶▶ **T7, ENCUESTAS** (`specs/encuestas.md` **✅ `#740`**, 24-09 noche, con las cinco respuestas del owner en
+  su §7). **T1 EN `main` (25-09, madrugada)**: la migración (`surveys`, `survey_responses`, `users.surveys_opt_out`),
+  `Survey` y `SurveyResponse` (poda a 24 meses, `forgetPerson()`), `QuestionSchema` (cinco tipos), `SurveyResource`
+  en «Ajustes → Sistema» (`/admin/encuestas`) con bloqueo con respuestas y «una viva por clase», `AuditLog`, el hub,
+  el morfo, `Contract` +3, `anonymize()`; 14 tests. **Dos encuestas de EJEMPLO en la BD local** (`visita-de-hoy`
+  interna y `que-tal-ayer` externa, sembradas por tinker; se borran desde el panel). El owner las tuvo delante y
+  preguntó por la puerta y el correo (T2 y T3): su ✅ explícito a la T1 no llegó. Sigue la **T2**.
 - ⚠️⚠️ **LO MONTADO EN LA BD LOCAL para el ojo del owner (24-09), todo reversible**: (1) cinco ajustes FALSOS
   en `settings` (`analytics.driver=posthog`, `analytics.posthog_project` inventado y los tres ids de píxeles
   `marketing.*`): se quitan borrando esas filas; (2) el aviso de la analítica ENVIADO a las 57 cuentas de
@@ -75,13 +78,12 @@
 
 ## Por dónde retomar, en orden
 
-1. ❗❗ **LA T7 DE LA ANALÍTICA: LAS ENCUESTAS** — `specs/encuestas.md` **✅ aprobada (`#740`, 24-09 noche)** con las
-   cinco respuestas del owner en su §7. **T1 en curso**: el modelo (`surveys`, `survey_responses`,
-   `users.surveys_opt_out`), `QuestionSchema`, `SurveyResource` en «Ajustes → Sistema» con bloqueos, `AuditLog`,
-   `AdminSettingsHub`, `Contract` +3, `anonymize()`/export/prune → T2 la puerta (kiosco, tarjeta debajo de «Hoy» tras
-   acreditar la visita) → T3 el correo del día siguiente (comando a las 10:00, +1 tarea del planificador: aviso a
-   plataforma por `deploy.sh`) → T4 el cuadro (quinta pestaña, «Por atender», la 360). Después, el experimento real
-   (T5c), que el owner quiere iterar tras las encuestas.
+1. ❗❗ **LA T7 DE LA ANALÍTICA: LAS ENCUESTAS** — `specs/encuestas.md` **✅ aprobada (`#740`)**; **T1 en `main`**
+   (25-09). ▶ **Sigue la T2, la puerta** (spec §4.2): la tarjeta táctil debajo de «Hoy» tras `registerVisit()`,
+   nunca sobre el lector; «No preguntar»; los hechos `survey_*`; el export del cliente (contrato). → T3 el correo
+   del día siguiente (comando a las 10:00, +1 tarea del planificador: aviso a plataforma por `deploy.sh`; página
+   firmada SIN cookie de medición; baja de un toque) → T4 el cuadro (quinta pestaña, «Por atender», la 360).
+   Después, el experimento real (T5c), que el owner quiere iterar tras las encuestas.
    ⚠️ Trampas de la fiesta, por si se reutiliza su molde (spec §4.6): el reenvío del mismo padre es IDEMPOTENTE;
    `order_id` nunca es nulo; son DOCE rutas enfocadas; los invitados añadidos NO son «extras»; una edición sin
    `reason` es del panel; un ayudante `seed()` en un test es FATAL; la sonda del panel censa TRES «Por día»; «vino
@@ -138,7 +140,12 @@ y las clases `.gf-*` y `.guardian__*` · `tests/Feature/Sidebar/**`, `tests/Feat
 - 🐳 **«The command 'docker' could not be found» es Docker Desktop APAGADO** (24-09, medido). En ESTA máquina
   el ejecutable es `/mnt/c/Users/yasmi/AppData/Local/Programs/DockerDesktop/Docker Desktop.exe` (no el de
   `Program Files` de la otra): `nohup "…/Docker Desktop.exe" &` y esperar a `docker info` (tardó ~60 s).
-  `wsl.exe -l -v` lo delata: la distro `docker-desktop` en «Stopped».
+  `wsl.exe -l -v` lo delata: la distro `docker-desktop` en «Stopped». 🐳 **Y el motor COLGADO** (24-09 noche):
+  `docker compose`, `docker info`, el `_ping` del socket y el `docker.exe` de Windows se quedan sin respuesta
+  mientras los contenedores SIGUEN sirviendo (web 200, `wsl.exe -l -v` todo «Running»); sin la CLI no hay suite ni
+  gate: lo arregla el owner reiniciando Docker Desktop. `pkill -f 'docker compose exec'` mata tu propia shell.
+- 📜 El `laravel.log` local llegó a **1,35 GB** (trazas de 270 KB desde el 12-08); borrado con el sí del owner el
+  25-09 y el `.env` local rota a diario desde entonces (`LOG_STACK=daily`, 14 días).
 - ⏰⏰ **EL RELOJ: el contenedor va en UTC y el parque en Madrid, y entre las dos medianoches NO es el mismo
   día.** `DisplayTime::dayLabel()` **no convierte de zona**; **un test con reloj propio miente dos horas al día**
   (`ScheduleFactsTest`, rojo a las 00:07). ▶ En un test de «ahora», el reloj a **`DisplayTime`, nunca a `Carbon`**;
@@ -194,8 +201,12 @@ y las clases `.gf-*` y `.guardian__*` · `tests/Feature/Sidebar/**`, `tests/Feat
 - ⏰ **Techos que mide `docs-check`**: decisión 1,5 KB, §0 2048 B **sin la línea del título**, tracker 16 KB,
   carril 32 KB, enrutador 12 KB. Mídelos con `wc -c`/`awk` antes del commit (el §0 de `analitica.md` va a 2.000 B
   y el enrutador a 12.270: para meter una fila se recorta otra).
-- 🩹 **En la BD LOCAL hay 19 titulares con la cadena de waiver ROTA** (basura del 26–27 de agosto): si mides
-  cadenas, compara ANTES/DESPUÉS.
+- 🩹 **En la BD LOCAL hay 19 firmas de waiver HUÉRFANAS (15 titulares; basura del 26–27 de agosto)**: apuntan a
+  versiones legales 10…34 que no existen (solo viven las tres v1; la FK RESTRICT está, así que fue un reseteo por
+  debajo). La ficha del cliente 70 caía con un 500 («version on null» en `WaiverStatus::build()`); desde el 25-09
+  una firma sin versión cuenta como ANTERIOR (señalada, re-firma en la siguiente compra), con test y mutación
+  (`WaiverStatusBatchTest`). Sonda de solo lectura: `probe-waiver-70.php` en la carpeta de almacenamiento. Si
+  mides cadenas, compara ANTES/DESPUÉS.
 - **F4 cerró y el cajón es un PAQUETE** (`specs/cajon-empaquetable.md` §0 y §4.8). Tocar «HOJA ENFOCADA» de
   `site.css` obliga a regenerar `public/css/cajon.css` (`python3 scripts/hoja-del-cajon.py --aplicar`). Las
   reglas de botón apuntan al `button` y **no a `.btn`**.

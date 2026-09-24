@@ -72,6 +72,8 @@ use App\Domain\Platform\Models\AuditLog;
 use App\Domain\Platform\Models\Experiment;
 use App\Domain\Platform\Models\GoogleBusinessConnection;
 use App\Domain\Platform\Models\Setting;
+use App\Domain\Platform\Models\Survey;
+use App\Domain\Platform\Models\SurveyResponse;
 use App\Domain\Platform\Services\Analytics\AttributionContext;
 use App\Domain\Platform\Services\Money;
 use App\Domain\Platform\Services\QrLogo;
@@ -292,6 +294,9 @@ class AppServiceProvider extends ServiceProvider
             'dependent_assignment' => DependentAssignment::class,
             // Los experimentos (`#678` T5a): sin relaciones polimórficas, pero todo modelo lleva alias.
             'experiment' => Experiment::class,
+            // Las encuestas (`#740` T1): el audit guarda `survey`, no un nombre de clase.
+            'survey' => Survey::class,
+            'survey_response' => SurveyResponse::class,
             'faq' => Faq::class,
             // La conexión con la ficha de Google (`#524`). Alias como todo modelo nuevo: lo exige
             // `MorphMapTest`, y es lo que hace que el audit de «conectar»/«desconectar» guarde

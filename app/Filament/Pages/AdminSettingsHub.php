@@ -17,6 +17,7 @@ use App\Filament\Resources\Seasons\SeasonResource;
 use App\Filament\Resources\Slots\SlotResource;
 use App\Filament\Resources\SlotTemplates\SlotTemplateResource;
 use App\Filament\Resources\SpecialDates\SpecialDateResource;
+use App\Filament\Resources\Surveys\SurveyResource;
 use App\Filament\Resources\Testimonials\TestimonialResource;
 use App\Filament\Resources\Users\Pages\ListUsers;
 use App\Filament\Resources\Users\UserResource;
@@ -133,6 +134,9 @@ class AdminSettingsHub extends Page
                 // Van en «Sistema» con `settings.manage`: es configuración del producto; los resultados se miran en
                 // «Analítica → Conversión».
                 ['key' => 'experiments', 'class' => ExperimentResource::class],
+                // Las encuestas (`specs/encuestas.md` §4.4, T1): internas en la puerta y externas por correo; se
+                // crean aquí con `settings.manage` y sus resultados se miran en «Analítica → Encuestas».
+                ['key' => 'surveys', 'class' => SurveyResource::class],
                 // `#320`: la PUERTA, y esta tarjeta es el ESPEJO EXACTO del ítem de menú. Al admin se
                 // le retiró del menú (`[DECIDIDO owner]`: no atiende por ahí, atiende por el buscador)
                 // y aparece aquí; a quien sí lo tiene en el menú —el empleado— no se le repite, o
