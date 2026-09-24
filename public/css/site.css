@@ -5316,7 +5316,12 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
     width: 416px; max-width: calc(100vw - 32px);
     background: var(--bg-card); border: 1px solid var(--line-strong); border-radius: var(--r-lg);
     box-shadow: var(--shadow-modal);
-    overflow: hidden;
+    /* T3a de la analítica (`specs/analitica.md` §4.3): con CUATRO finalidades el panel abierto supera la
+       ventana —medido el 24-09: en 1440×900 y en 390×844 el título y «Necesarias» quedaban por encima del
+       borde, inalcanzables—. Tope de alto y scroll DENTRO de la tarjeta; el eje X sigue oculto por las
+       esquinas redondeadas. `dvh` para que la barra del navegador móvil no se coma el pie de la tarjeta. */
+    max-height: calc(100dvh - 48px);
+    overflow: hidden auto;
 }
 .cookie__pad { position: relative; padding: 22px 22px; }
 .cookie__x {
@@ -5391,7 +5396,7 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
 .foot__cookie-config:hover { text-decoration: underline; }
 
 @media (max-width: 520px) {
-    .cookie { left: 12px; right: 12px; bottom: 12px; width: auto; }
+    .cookie { left: 12px; right: 12px; bottom: 12px; width: auto; max-height: calc(100dvh - 24px); }
 }
 
 /* ── Chip de estado de apertura del hero (App\Support\HeroStatus, 2026-06-14) ───────────────────

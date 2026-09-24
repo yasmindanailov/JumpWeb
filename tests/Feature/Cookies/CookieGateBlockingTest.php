@@ -99,12 +99,30 @@ class CookieGateBlockingTest extends TestCase
     {
         $this->get('/')->assertOk()
             ->assertSee('data-cookie-enabled="1"', false)
-            ->assertSee('data-cookie-decided=""', false);
+            ->assertSee('data-cookie-decided=""', false)
+            // T3a: una clave por categoría de `OPTIONAL` y la lista que lee el almacén.
+            ->assertSee('data-cookie-analytics=""', false)
+            ->assertSee('data-cookie-marketing=""', false)
+            ->assertSee('data-consent-categories="'.implode(',', CookieConsent::OPTIONAL).'"', false);
 
         $this->consent(maps: true, social: false)->get('/')->assertOk()
             ->assertSee('data-cookie-decided="1"', false)
             ->assertSee('data-cookie-maps="1"', false)
-            ->assertSee('data-cookie-social=""', false);
+            ->assertSee('data-cookie-social=""', false)
+            ->assertSee('data-cookie-analytics=""', false);
+    }
+
+    /**
+     * T3a (`specs/analitica.md` §4.3): la tarjeta se pinta por `showing` —que calla con el cajón de compra
+     * delante— y el título recibe el foco al reabrir el panel (anuncio accesible). La lógica vive en
+     * `ui/cookie-consent.js` y la prueba `cookie-consent.test.js`; aquí, que el marcado la engancha.
+     */
+    public function test_the_card_shows_by_the_store_rule_that_waits_for_the_drawer_and_can_take_focus(): void
+    {
+        $this->get('/')->assertOk()
+            ->assertSee('x-show="$store.cookies.showing"', false)
+            ->assertSee('$store.cookies.noteShown()', false)
+            ->assertSee('class="cookie__title" tabindex="-1" x-ref="title"', false);
     }
 
     public function test_banner_is_wrapped_in_an_alpine_root(): void
@@ -137,13 +155,20 @@ class CookieGateBlockingTest extends TestCase
     public function test_banner_uses_the_card_layout_with_the_real_categories(): void
     {
         // Rediseño #222 (mockup «Banner Cookies»): UNA tarjeta (tira de bloques + chip + toggles),
-        // y las finalidades son las REALES del inventario #219 (Mapa Google + Redes), NO categorías
-        // inventadas como «Analíticas/Marketing» (cero analítica → consentimiento inexacto).
-        $this->get('/')->assertOk()
+        // y las finalidades son las REALES del inventario: hasta la T3a de la analítica, Mapa + Redes
+        // (cero analítica → un permiso de «analítica» habría sido inexacto); desde ella, también el
+        // análisis de uso IDENTIFICADO y la PUBLICIDAD, que ahora sí existen (`specs/analitica.md` §4.3).
+        $response = $this->get('/')->assertOk()
             ->assertSee('cookie__chip', false)              // tarjeta del mockup (chip + título)
             ->assertSee('ck-tgl', false)                    // toggles de finalidad
-            ->assertSee(__('cookies.banner.title'))         // título de la tarjeta
-            ->assertSee(__('cookies.panel.maps_title'))     // categoría real: Mapa
-            ->assertSee(__('cookies.panel.social_title'));  // categoría real: Redes
+            ->assertSee(__('cookies.banner.title'));        // título de la tarjeta
+
+        foreach (CookieConsent::OPTIONAL as $category) {
+            $response->assertSee('data-consent-category="'.$category.'"', false)
+                ->assertSee(__('cookies.panel.'.$category.'_title'))
+                ->assertSee(__('cookies.panel.'.$category.'_desc'));
+        }
+        // Y ninguna se queda sin texto: una clave sin traducir saldría literal.
+        $response->assertDontSee('cookies.panel.');
     }
 }

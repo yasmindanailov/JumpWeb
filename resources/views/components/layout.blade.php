@@ -110,11 +110,17 @@
            una y otra vez — la misma trampa que `SidebarEntry` pagó en 4.0a. --}}
       data-account-zone="{{ \App\Http\Sidebar\AccountDoor::zone() }}"
       {{-- Estado inicial del consentimiento de cookies (#219), calculado por el servidor → lo lee el
-           store `cookies` de Alpine (app.js), igual que `purchase`/`auth`. --}}
+           store `cookies` de Alpine (`ui/cookie-consent.js`), igual que `purchase`/`auth`. Una clave
+           `data-cookie-<categoría>` por cada una de `CookieConsent::OPTIONAL` (T3a: cuatro, ya no dos
+           escritas aquí) y la lista en `data-consent-categories`, que es de donde el almacén las lee.
+           ⚠️ El tracker (`cajon/track.js`) manda al libro TODAS las `data-cookie-*` como foto del
+           consentimiento; `data-consent-categories` no empieza por `cookie` a propósito. --}}
       data-cookie-enabled="{{ ($cookieBannerEnabled ?? false) ? '1' : '' }}"
       data-cookie-decided="{{ ($cookieConsent['decided'] ?? false) ? '1' : '' }}"
-      data-cookie-maps="{{ ($cookieConsent['maps'] ?? false) ? '1' : '' }}"
-      data-cookie-social="{{ ($cookieConsent['social'] ?? false) ? '1' : '' }}"
+      @foreach (\App\Domain\Identity\Services\CookieConsent::OPTIONAL as $consentCategory)
+      data-cookie-{{ $consentCategory }}="{{ ($cookieConsent[$consentCategory] ?? false) ? '1' : '' }}"
+      @endforeach
+      data-consent-categories="{{ implode(',', \App\Domain\Identity\Services\CookieConsent::OPTIONAL) }}"
       data-cookie-endpoint="{{ route('cookies.consent') }}"
       @if ($hasHero) data-has-hero="1" @endif>
     {{-- Banner de BYPASS de mantenimiento (#218): si la web está en mantenimiento de sitio y quien

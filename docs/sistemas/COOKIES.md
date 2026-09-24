@@ -36,12 +36,22 @@ arquitectónica del universo cerrado de orígenes externos.
 | Redsys | Tercero (en SU dominio) | Técnica necesaria | **No** | Solo al pagar (redirección, no iframe) |
 | Bunny Fonts | Tercero | **Sin cookies** | **No** | Siempre (elegido GDPR-friendly) |
 
-**Únicas 2 categorías con consentimiento: `maps` y `social`** (ambos iframes opcionales,
-configurables desde el panel). El idioma **no añade cookie** (vive en la sesión server-side,
-[SetLocale.php](../../app/Http/Middleware/SetLocale.php)).
+**Cuatro categorías con consentimiento** (`CookieConsent::OPTIONAL`, en el orden del panel): `maps` y
+`social` (iframes opcionales, configurables desde el panel) y, desde la **T3a de la analítica**
+(`specs/analitica.md` §4.3, 2026-09-24), **`analytics`** (análisis de uso IDENTIFICADO: atar la navegación a
+la cuenta al entrar o comprar, y la herramienta de análisis con id opaco) y **`marketing`** (píxeles de
+anuncios y comunicación de la compra; los píxeles llegan en la T3b). El idioma **no añade cookie** (vive
+en la sesión server-side, [SetLocale.php](../../app/Http/Middleware/SetLocale.php)).
+
+| Cookie | Origen | Categoría | ¿Consentimiento? | Cuándo |
+|---|---|---|---|---|
+| `visitor_id` (13 meses, no se renueva) | Propia | **Medición de audiencia exenta** (guía AEPD 2024: estadística anónima del editor, sin cruce ni cesión, datos ≤ 25 meses) | **No** (se declara en la política y en «Necesarias») | Siempre (`ResolveVisitor`, `specs/analitica.md` §4.1) |
+| Herramienta de análisis (PostHog/Matomo) | Tercero | **`analytics`** | **SÍ** | Solo con la categoría y el driver configurado (T3a·2) |
+| Píxeles (Google Ads, Meta, TikTok) | Tercero | **`marketing`** | **SÍ** | Solo con la categoría y el id configurado (T3b) |
 
 **Exentas** (sin consentimiento, pero **sí transparencia** en la política): sesión, XSRF,
-`remember_web` (acción del usuario), Turnstile (seguridad), Redsys (técnica, en su dominio).
+`remember_web` (acción del usuario), Turnstile (seguridad), Redsys (técnica, en su dominio) y la
+medición de audiencia propia (`visitor_id`).
 
 ## 2. Marco legal (resumen accionable — AEPD mayo 2024 + LSSI 22.2 + RGPD)
 
@@ -67,8 +77,12 @@ solo de cookies técnicas exentas). Test que lo protege: `CookieWallInvariantTes
   aislado tras el composer ([AppServiceProvider.php](../../app/Providers/AppServiceProvider.php),
   `$site['maps_embed']`/`$site['social_feed']`). Un CMP metería otro script/cookie/transferencia,
   chocaría con la CSP y rompería data-driven/white-label/i18n.
-- **D2 — Categorías separadas:** `maps` y `social`. Declarables a futuro (hoy sin construir):
-  `analytics`, `preferences`.
+- **D2 — Categorías separadas, y SIN QUEMAR desde la T3a** (2026-09-24): `maps`, `social`, `analytics`
+  y `marketing` viven SOLO en `CookieConsent::OPTIONAL`; `state()`, `encode()`, el controlador, los
+  `data-cookie-*` del `<body>`, el almacén de Alpine (`ui/cookie-consent.js`, que lee
+  `data-consent-categories`) y el panel del banner las RECORREN. Añadir una finalidad es añadirla ahí,
+  darle sus textos (`lang/{es,en,fr}/cookies.php` `panel.<cat>_title/_desc`, `CookiePolicyContent`) y
+  subir `POLICY_VERSION`. `preferences` sigue sin construir.
 - **D3 — Fail-safe a privacidad:** sin cookie / corrupta / versión caducada ⇒ **NO** consentido ⇒
   no se cargan terceros + banner visible. (Opuesto a `MaintenanceSettings`, fail-safe a
   «disponible»: aquí el fallo seguro es **no** instalar cookies.)
@@ -83,7 +97,10 @@ solo de cookies técnicas exentas). Test que lo protege: `CookieWallInvariantTes
   `Consent::CURRENT_VERSION`): subirla fuerza re-consentir (el gate la ve caducada). v1 = `2026-06-08`.
   v2 = `2026-09-13` (`#592`, `[DECIDIDO owner]`): la categoría `maps` pasa a cubrir también las
   reseñas de Google y la foto de quien las escribe —dependían de ella desde `#491` sin que el banner lo
-  dijera—, así que se vuelve a pedir. La clave `maps` NO se renombra.
+  dijera—, así que se vuelve a pedir. La clave `maps` NO se renombra. **v3 = `2026-09-24`** (T3a de
+  `specs/analitica.md`, `#678`): dos finalidades nuevas (`analytics`, `marketing`) y la medición propia
+  declarada exenta → consentimiento nuevo para todos, la misma noche que la v2.0.0; el controlador
+  exige las CUATRO claves (un banner de la v2 que mande dos recibe 422, no un «no» tácito).
 - **D6 — Acreditación en tabla propia `cookie_consent_logs`** (NO reutiliza `consents`: su
   `user_id` es FK NOT NULL y no tiene `user_agent` → no cubre al visitante anónimo). Modelo
   `App\Domain\Identity\Models\CookieConsentLog` (nombre distinto del helper `App\Domain\Identity\Services\CookieConsent` para no
@@ -100,10 +117,11 @@ solo de cookies técnicas exentas). Test que lo protege: `CookieWallInvariantTes
 
 **Autoridad única — [`App\Domain\Identity\Services\CookieConsent`](../../app/Domain/Identity/Services/CookieConsent.php)**
 (helper estático, sin BD):
-- `COOKIE_NAME='cookie_consent'` · `POLICY_VERSION='2026-09-13'` · `OPTIONAL=['maps','social']`
-  · `LIFETIME_MINUTES` (24 meses).
-- `state(Request): array{maps:bool,social:bool,decided:bool}` — defensivo: base64/JSON inválido o
-  versión distinta ⇒ todo `false`, `decided=false`. Nunca lanza (se invoca en cada render).
+- `COOKIE_NAME='cookie_consent'` · `POLICY_VERSION='2026-09-24'` ·
+  `OPTIONAL=['maps','social','analytics','marketing']` · `LIFETIME_MINUTES` (24 meses).
+- `state(Request): array<string,bool>` — una clave por categoría de `OPTIONAL` más `decided`; defensivo:
+  base64/JSON inválido o versión distinta ⇒ todo `false`, `decided=false`. Nunca lanza (se invoca en
+  cada render). `allSetTo(bool)` da el mapa entero a un valor.
 - `encode(array $cats): string` — valor de cookie (base64 JSON con versión); lo usa el endpoint.
 - `bannerEnabled(): bool` — lee `cookies.banner_enabled`, default `'1'`; solo el literal `'0'`
   apaga. **Apagar el banner NO desactiva el bloqueo previo** (los iframes siguen gateados por
@@ -130,26 +148,32 @@ rama sin tabla `settings` (CI/instalación limpia): no decidido + banner off.
 
 **Banner —
 [`<x-site.cookie-banner>`](../../resources/views/components/site/cookie-banner.blade.php) +
-`Alpine.store('cookies')`** ([app.js](../../resources/js/app.js)):
+`Alpine.store('cookies')`** ([ui/cookie-consent.js](../../resources/js/ui/cookie-consent.js), registrado
+desde [app.js](../../resources/js/app.js)):
 - Inyectado en [layout.blade.php](../../resources/views/components/layout.blade.php) para todos;
-  el estado inicial servidor→cliente viaja por atributos `data-cookie-*` del `<body>`.
-- Store: `{decided, enabled, prefs:{maps,social}, panel, visible}` + `acceptAll`, `rejectAll`,
-  `grant(cat)`, `openPanel`, **`closePanel`**, **`savePanel`**, **`persist`**.
-  ⚠️ **No existen `reopen()` ni `save(prefs)`** (corregido 2026-08-19): la superficie real de
-  `Alpine.store('cookies')` está en `resources/js/app.js`.
-- **Capa 1**: 3 botones en igualdad «Aceptar» · «Rechazar» · «Configurar» + texto breve + enlace
-  a la política. Sin preselección.
-- **Capa 2** (panel): Necesarias (ON, disabled) · Mapa (toggle) · Redes sociales (toggle) +
-  «Guardar preferencias».
-- `save()` → `fetch POST /cookies/consentimiento` (el servidor registra y escribe la cookie) +
-  actualiza prefs en memoria (los frames cargan por el effect).
+  el estado inicial servidor→cliente viaja por atributos `data-cookie-<categoría>` del `<body>` (uno por
+  `OPTIONAL`) más `data-consent-categories` (la lista, que es de donde el almacén las lee; no empieza por
+  `cookie` a propósito: `track.js` manda al libro todas las `data-cookie-*` como foto del consentimiento).
+- Store: `{categories, decided, enabled, prefs:{<cat>…}, panel, visible, showing}` + `acceptAll`,
+  `rejectAll`, `grant(cat)`, `openPanel`, `closePanel`, `savePanel`, `persist`, `noteShown`.
+  **`showing`** es lo que se pinta: la primera capa o el panel, y **nunca con el cajón de compra abierto**
+  (`$store.purchase.isOpen`; el aviso espera a que se cierre). **`noteShown()`** cuenta `consent_shown`
+  UNA vez por página por `JumpWeb.track()` (el buzón que el tracker vacía al llegar). Probado con
+  `node --test` (`cookie-consent.test.js`): la atomicidad de `RGPD-05` tiene test desde la T3a.
+- **Capa 1**: 3 botones en igualdad «Aceptar» · «Rechazar» · «Configurar» + texto breve que INFORMA
+  (qué se mide y para qué) + enlace a la política. Sin preselección.
+- **Capa 2** (panel): Necesarias (ON, disabled; explica la medición exenta) · un toggle por categoría
+  de `OPTIONAL` (`data-consent-category`) + «Guardar preferencias». Al reabrir desde el pie el foco va al
+  título (`tabindex="-1"`): anuncio accesible.
+- `persist()` → `fetch POST /cookies/consentimiento` con las CUATRO claves (el servidor registra y
+  escribe la cookie) + actualiza prefs en memoria (los frames cargan por el effect).
 
 **Endpoint — `POST /cookies/consentimiento`**
 ([CookieConsentController](../../app/Http/Controllers/CookieConsentController.php), name
 `cookies.consent`, [routes/web.php](../../routes/web.php)):
 - Grupo `web` (CSRF por cabecera `X-CSRF-TOKEN` desde el `<meta name="csrf-token">` del layout),
   `throttle:30,1`. **Controlador plano, no Livewire** → funciona para anónimos.
-- Valida `{maps:bool, social:bool}`; crea fila en `cookie_consent_logs` (`user_id` nullable,
+- Valida un booleano OBLIGATORIO por categoría de `OPTIONAL`; crea fila en `cookie_consent_logs` (`user_id` nullable,
   `categories`, `version`, `ip`, `user_agent` truncado a 512, `accepted_at`); responde
   `{ok:true}` con la cookie (`CookieConsent::encode`, httpOnly=false, SameSite=Lax, 24 meses).
 
@@ -179,21 +203,36 @@ permanente «Configuración de cookies» → `$store.cookies.openPanel()` (revoc
 contiene el marcador `[PENDIENTE]/[PENDING]/[À COMPLÉTER]` → no pisa ediciones del operador).
 Los datos fiscales del responsable van como tokens `:legal_name/:legal_nif/...` que
 `LegalIdentity::interpolate()` sustituye en el render con los settings del panel.
+**T3a (2026-09-24)**: tres secciones nuevas —la medición propia exenta, el análisis identificado y la
+publicidad— y el párrafo de transferencias que las nombra, en constantes públicas de la clase; llegan a
+una BD ya sembrada por la migración quirúrgica `2026_09_24_120000_cookie_policy_adds_analytics_and_marketing`
+(inserta detrás de «Cookies técnicas» solo si ninguna está; sustituye transferencias solo si es el texto
+del producto). La PRIVACIDAD (`LegalContent::PROFILING_P`) deja de decir «ni elaboramos perfiles» a secas
+(`2026_09_24_120100_privacy_policy_names_identified_analytics`, mismo criterio).
 
 ## 5. Tests (existen todos)
 
 - [tests/Unit/CookieConsentStateTest.php](../../tests/Unit/CookieConsentStateTest.php) (sin BD):
-  parseo válido/corrupto/ausente/versión caducada → fail-safe; round-trip `encode`/`state`;
-  `bannerEnabled` defensivo.
+  parseo válido/corrupto/ausente/versión caducada (la v2 incluida) → fail-safe; round-trip
+  `encode`/`state` con las cuatro; `bannerEnabled` defensivo.
+- `resources/js/ui/cookie-consent.test.js` (`node --test`): categorías desde el body, «aceptar todo»
+  acepta TODAS, solo `res.ok` decide (`RGPD-05`), la tarjeta calla con el cajón abierto, `consent_shown`
+  una vez.
 - `tests/Feature/Cookies/`:
-  - `CookieGateBlockingTest` — sin cookie, `/` y `/contacto` no contienen el `src` de
-    Maps/social (placeholder presente); con consentimiento por categoría, sí.
-  - `CookieConsentEndpointTest` — POST escribe cookie + crea fila (anónimo/autenticado);
-    validación; throttle.
+  - `CookieGateBlockingTest` — sin cookie, `/` no contiene el `src` de Maps (placeholder presente);
+    con consentimiento por categoría, sí; los `data-cookie-*` y `data-consent-categories` del body; un
+    toggle por categoría con su texto; el marcado engancha `showing`, `noteShown()` y el foco al título.
+  - `CookieConsentEndpointTest` — POST escribe cookie + crea fila (anónimo/autenticado); las cuatro
+    claves obligatorias (dos → 422); de punta a punta POST → cookie → `state()` → `data-*`; prune.
   - `CookieBannerSettingTest` — visibilidad del banner según decisión y setting.
   - `CookiePolicyContentTest` — `/cookies` sin marcadores `[PENDIENTE]…`; proveedores reales;
-    i18n; migración de reparación idempotente que no pisa ediciones.
+    i18n; las tres secciones de la T3a en los tres idiomas y su orden; migraciones de reparación
+    idempotentes que no pisan ediciones (`#592` y la de la T3a).
+  - `PrivacyPolicyProfilingTest` — la privacidad nombra el análisis identificado y cómo retirarlo; su
+    migración quirúrgica.
   - `CookieWallInvariantTest` — sin consentimiento, comprar/reservar sigue accesible.
+- En vivo: `scripts/sonda-cookies.mjs` (tarjeta, panel con las cuatro, guardar, `consent_shown` y
+  `consent_updated` en el libro, recarga, el pie con el foco, móvil, y la espera al cajón abierto).
 
 ## 6. Pendientes reales / fuera de alcance
 
@@ -204,8 +243,10 @@ Los datos fiscales del responsable van como tokens `:legal_name/:legal_nif/...` 
   `[PENDIENTE: confirmar adhesión al DPF o SCC]` que cada operador/su asesoría debe cerrar.
 - **Redacción legal definitiva**: el texto de la política es técnico-orientativo y refleja las
   cookies reales; la validación jurídica corresponde a la asesoría de cada cliente del producto.
-- **Analítica**: no existe. Si se añade, cargarla condicionada al consentimiento por el mismo
-  gate (`OPTIONAL` + composer + consent-frame/script gateado) + su origen en la CSP.
+- **Analítica**: el libro propio existe (`specs/analitica.md`, T1) y es exento; el análisis
+  IDENTIFICADO y la herramienta externa van bajo `analytics` (T3a·1 hecho: categoría, banner, política;
+  T3a·2: el driver con su origen en la CSP solo con la categoría, `Drivers::csp()`; T3a·3: `PUT
+  /me/analytics` y el aviso a las cuentas); los píxeles bajo `marketing` (T3b).
 - **Refactor de marca**: HECHO en Fase 1 (cookie renombrada a `cookie_consent`); quedan las
   referencias históricas «#219 / PLAN-COOKIES.md» en comentarios (tabla de equivalencias en
   `docs/README.md`).

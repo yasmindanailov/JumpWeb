@@ -6,11 +6,13 @@ use App\Domain\Platform\Models\Setting;
 use Illuminate\Http\Request;
 
 /**
- * Autoridad única del consentimiento de cookies (decisión #219, `docs/PLAN-COOKIES.md`).
+ * Autoridad única del consentimiento de cookies (decisión #219, `docs/sistemas/COOKIES.md`).
  *
  * Resuelve, a partir de la cookie `cookie_consent`, qué categorías NO necesarias ha aceptado
  * el visitante. La consume el composer (`AppServiceProvider`) para gobernar el **bloqueo previo**
- * de los iframes de tercero (mapa de Google, feed social) y el banner.
+ * de los contenidos de tercero (mapa y reseñas de Google, feed social), el banner y —desde la T3
+ * de la analítica (`specs/analitica.md` §4.3)— el régimen identificado del libro de eventos y la
+ * herramienta de análisis (`analytics`) y los píxeles de anuncios (`marketing`).
  *
  * **Fail-safe a privacidad:** ante cookie ausente, corrupta o de una versión de política caducada,
  * devuelve TODO en `false` (no consentido) → no se cargan terceros y el banner reaparece. Es lo
@@ -20,6 +22,11 @@ use Illuminate\Http\Request;
  * La cookie va **sin cifrar** (la leen el servidor —aquí— y Alpine —UI—): está en la lista
  * `encryptCookies(except:)` de `bootstrap/app.php`. La ESCRIBE siempre el servidor (el
  * `CookieConsentController`) con `encode()`; Alpine solo mantiene el estado en memoria para la UI.
+ *
+ * ⚠️ **Las categorías viven SOLO en {@see OPTIONAL}** (T3a): `state()`, `encode()`, el controlador, los
+ * `data-cookie-*` del `<body>`, el almacén de Alpine (`ui/cookie-consent.js`, que lee
+ * `data-consent-categories`) y el panel del banner las recorren. Añadir una finalidad es añadirla aquí,
+ * darle sus textos (`lang/{es,en,fr}/cookies.php`, `CookiePolicyContent`) y subir {@see POLICY_VERSION}.
  */
 class CookieConsent
 {
@@ -31,26 +38,33 @@ class CookieConsent
      * volverá a pedir el consentimiento (Guía AEPD: re-pedir si cambian finalidades/terceros).
      *
      * ▶ v1 `2026-06-08`. v2 `2026-09-13` (`#592`, `[DECIDIDO owner]`): la categoría `maps` pasa a
-     * cubrir también las RESEÑAS de Google y la foto de quien las escribe. Ya dependían de este
-     * permiso desde `#491` sin que el banner lo dijera, así que se vuelve a pedir con el texto nuevo.
-     * ⚠️ La CLAVE `maps` no se renombra: el texto cambia, el identificador guardado no.
+     * cubrir también las RESEÑAS de Google y la foto de quien las escribe. v3 `2026-09-24` (T3a de
+     * `specs/analitica.md`, `#678`): dos finalidades NUEVAS —`analytics` (análisis de uso identificado)
+     * y `marketing` (píxeles y comunicación de la compra)— y la medición de audiencia propia declarada
+     * como exenta: finalidad nueva, consentimiento nuevo para todos, la misma noche que la v2.0.0.
+     * ⚠️ Las CLAVES no se renombran: el texto cambia, el identificador guardado no.
      */
-    public const POLICY_VERSION = '2026-09-13';
+    public const POLICY_VERSION = '2026-09-24';
 
-    /** Categorías NO necesarias gobernables (granularidad por finalidad). El resto son exentas. */
-    public const OPTIONAL = ['maps', 'social'];
+    /**
+     * Categorías NO necesarias gobernables (granularidad por finalidad), en el orden en que el panel las
+     * enseña. El resto son exentas y se declaran en la política, no se piden.
+     *
+     * @var list<string>
+     */
+    public const OPTIONAL = ['maps', 'social', 'analytics', 'marketing'];
 
     /** Vida del consentimiento: 24 meses (máximo de la Guía AEPD), en minutos. */
     public const LIFETIME_MINUTES = 60 * 24 * 365 * 2;
 
     /**
-     * Estado de consentimiento del visitante.
+     * Estado de consentimiento del visitante: una clave por categoría de {@see OPTIONAL} y `decided`.
      *
-     * @return array{maps:bool,social:bool,decided:bool}
+     * @return array<string, bool>
      */
     public static function state(Request $request): array
     {
-        $default = ['maps' => false, 'social' => false, 'decided' => false];
+        $default = self::allSetTo(false) + ['decided' => false];
 
         $raw = $request->cookie(self::COOKIE_NAME);
         if (! is_string($raw) || $raw === '') {
@@ -70,11 +84,12 @@ class CookieConsent
 
         $cats = is_array($data['cats'] ?? null) ? $data['cats'] : [];
 
-        return [
-            'maps' => (bool) ($cats['maps'] ?? false),
-            'social' => (bool) ($cats['social'] ?? false),
-            'decided' => true,
-        ];
+        $state = [];
+        foreach (self::OPTIONAL as $category) {
+            $state[$category] = (bool) ($cats[$category] ?? false);
+        }
+
+        return $state + ['decided' => true];
     }
 
     /**
@@ -94,9 +109,19 @@ class CookieConsent
     }
 
     /**
+     * Todas las categorías a un mismo valor (lo que «Aceptar todo» y «Rechazar todo» escriben).
+     *
+     * @return array<string, bool>
+     */
+    public static function allSetTo(bool $value): array
+    {
+        return array_fill_keys(self::OPTIONAL, $value);
+    }
+
+    /**
      * ¿Mostrar el banner de cookies? Default ON (`'1'`); solo el literal `'0'` lo apaga (fallback no
      * destructivo, patrón `PuertaSettings::waiverCheckEnabled`). Apagarlo NO desactiva el bloqueo
-     * previo (los iframes siguen gateados por `state()`): solo oculta el banner.
+     * previo (los contenidos siguen gateados por `state()`): solo oculta el banner.
      */
     public static function bannerEnabled(): bool
     {

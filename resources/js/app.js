@@ -1,4 +1,5 @@
 import { installScrollLock } from './ui/scroll-lock.js';
+import { createCookiesStore } from './ui/cookie-consent.js';
 import { installCajon } from './cajon/index.js';
 import { shouldHideNav } from './ui/nav-choreography.js';
 import { installScrollMagnet } from './ui/scroll-magnet.js';
@@ -86,75 +87,18 @@ document.addEventListener('alpine:init', () => {
     // abrían el cajón en el catálogo raíz. Sin este adaptador, `flushIntent()` sale por
     // `! this.intentAdapter` CONSERVANDO la intención, que espera al `useIntentAdapter` de la SPA.
 
-    // Consentimiento de cookies (#219): banner de 2 capas + bloqueo previo de iframes de tercero.
+    // Consentimiento de cookies (#219): banner de 2 capas + bloqueo previo de los contenidos de tercero.
     // El estado inicial lo calcula el SERVIDOR (`CookieConsent::state`) y llega por `data-*` del body
     // (mismo patrón que `purchase`/`auth`). El servidor es la AUTORIDAD: este store solo refleja la
     // UI y dispara el POST que persiste la cookie canónica + registra la prueba (`cookie_consent_logs`).
-    window.Alpine.store('cookies', {
-        enabled: document.body.dataset.cookieEnabled === '1',
-        decided: document.body.dataset.cookieDecided === '1',
-        panel: false, // 2.ª capa (preferencias) abierta
-        prefs: {
-            maps: document.body.dataset.cookieMaps === '1',
-            social: document.body.dataset.cookieSocial === '1',
-        },
-        get visible() {
-            // Banner de 1.ª capa: solo si está habilitado y aún no hay una decisión registrada.
-            return this.enabled && !this.decided;
-        },
-        acceptAll() {
-            this.persist({ maps: true, social: true });
-        },
-        rejectAll() {
-            this.persist({ maps: false, social: false });
-        },
-        // Conceder una categoría desde el placeholder del propio iframe («Cargar mapa/feed»).
-        grant(category) {
-            this.persist({ ...this.prefs, [category]: true });
-        },
-        openPanel() {
-            this.panel = true;
-        },
-        closePanel() {
-            this.panel = false;
-        },
-        savePanel(prefs) {
-            this.persist(prefs);
-        },
-        persist(prefs) {
-            this.prefs = { maps: !!prefs.maps, social: !!prefs.social };
-            this.panel = false;
-            const meta = document.querySelector('meta[name="csrf-token"]');
-            // La URI llega por data-attr del body (route('cookies.consent')) → un rename de la ruta
-            // no rompe la persistencia en silencio. Fallback defensivo a la ruta conocida.
-            const endpoint = document.body.dataset.cookieEndpoint || '/cookies/consentimiento';
-            // Atomicidad «iframe de tercero cargado ⇔ prueba RGPD persistida» (auditoría Fase 1 ·
-            // Sistema 6 · W6): solo damos la decisión por buena —ocultamos el banner (`decided`) y
-            // cargamos los iframes de tercero (`cookies-updated`)— si el SERVIDOR confirmó (`res.ok`).
-            // `fetch` NO rechaza ante un HTTP de error, así que comprobamos `res.ok`: un 419 (CSRF
-            // caducado tras la sesión), 429 (throttle) o 500 deja el banner visible y los terceros
-            // bloqueados → no se instalan cookies de tercero sin su prueba acreditativa, y la próxima
-            // visita vuelve a pedir la decisión. El `.catch` cubre además los fallos de red.
-            fetch(endpoint, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Accept: 'application/json',
-                    'X-CSRF-TOKEN': meta ? meta.content : '',
-                },
-                body: JSON.stringify(this.prefs),
-            })
-                .then((res) => {
-                    if (! res.ok) {
-                        return;
-                    }
-                    this.decided = true;
-                    // Avisa a los iframes ya pintados (consentFrame) para que carguen sin recargar.
-                    window.dispatchEvent(new CustomEvent('cookies-updated', { detail: this.prefs }));
-                })
-                .catch(() => {});
-        },
-    });
+    // ⚠️ El objeto vive en `ui/cookie-consent.js` desde la T3a de la analítica (`specs/analitica.md` §4.3):
+    // las categorías se leen del `<body>` (cuatro, ya no dos escritas aquí) y el módulo se prueba con
+    // `node --test` — la atomicidad de `RGPD-05` tiene test, no solo revisión.
+    window.Alpine.store('cookies', createCookiesStore({
+        doc: document,
+        win: window,
+        purchase: () => window.Alpine.store('purchase'),
+    }));
 
     // Bloqueo previo de un iframe de tercero (#219): solo carga con consentimiento. `consented`
     // (server) fija el estado inicial; si más tarde se concede la categoría (banner «Aceptar» o el

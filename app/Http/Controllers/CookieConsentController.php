@@ -8,26 +8,27 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
- * Registra la decisión de consentimiento de cookies del visitante (#219, `docs/PLAN-COOKIES.md`).
+ * Registra la decisión de consentimiento de cookies del visitante (#219, `docs/sistemas/COOKIES.md`).
  *
  * Controlador PLANO (no Livewire) → funciona para visitantes ANÓNIMOS sin fricción. Lo llama el
  * banner por `fetch` (CSRF por cabecera `X-CSRF-TOKEN` desde el `<meta>`). Hace dos cosas:
  *   1) Escribe la cookie canónica `cookie_consent` (sin cifrar; la lee el servidor y Alpine).
  *   2) Deja una fila de PRUEBA en `cookie_consent_logs` (acreditación, RGPD art. 5.2/7.1).
+ *
+ * ⚠️ Valida UNA clave por categoría de {@see CookieConsent::OPTIONAL}, todas obligatorias: el banner manda
+ * siempre la decisión completa, y una categoría que falte no puede darse por rechazada en silencio ni
+ * por aceptada.
  */
 class CookieConsentController extends Controller
 {
     public function store(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'maps' => ['required', 'boolean'],
-            'social' => ['required', 'boolean'],
-        ]);
+        $validated = $request->validate(array_fill_keys(CookieConsent::OPTIONAL, ['required', 'boolean']));
 
-        $cats = [
-            'maps' => (bool) $validated['maps'],
-            'social' => (bool) $validated['social'],
-        ];
+        $cats = [];
+        foreach (CookieConsent::OPTIONAL as $category) {
+            $cats[$category] = (bool) $validated[$category];
+        }
 
         CookieConsentLog::create([
             'user_id' => $request->user()?->id,

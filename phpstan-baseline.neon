@@ -1975,12 +1975,6 @@ parameters:
 			path: app/Notifications/Support/BrandedMailMessage.php
 
 		-
-			message: '#^Offset ''maps'' on array\{maps\: bool, social\: bool, decided\: bool\} on left side of \?\? always exists and is not nullable\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: app/Providers/AppServiceProvider.php
-
-		-
 			message: '#^Offset ''es''\|''zh_CN'' on array\{es\: ''Español'', zh_CN\: ''中文''\} on left side of \?\? always exists and is not nullable\.$#'
 			identifier: nullCoalesce.offset
 			count: 1

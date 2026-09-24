@@ -22,8 +22,14 @@
   **«Comparar con»** (periodo anterior · mismo periodo del año pasado), y el botón **«Descargar CSV»** (los tres
   informes, con `reports.export`, auditado, con la línea «Comparado con»). Spec §4.8; 100 casos en
   `tests/Feature/Analytics`; sonda 27/27 por pestaña, escritorio y móvil. **✅ El owner vio T2a–T2f en escritorio
-  (24-09): «está perfecto»**; queda el `EXPLAIN` con volumen en staging. ▶ Sigue la **T3** (consentimiento y
-  driver); la **T2e** (`analytics_daily` + `ad_spend`) solo si el volumen lo pide. ⚠️ **El fixture «probe-ojo-analitica» está
+  (24-09): «está perfecto»**; queda el `EXPLAIN` con volumen en staging. ▶ **T3a·1 EN EL ÁRBOL (24-09)**: el
+  consentimiento con CUATRO finalidades (`maps`, `social`, `analytics`, `marketing`) sin quemar, el banner
+  que informa y espera al cajón, `consent_shown`, la política y la privacidad con sus migraciones quirúrgicas
+  (aplicadas en la BD local), `POLICY_VERSION` v3 = `2026-09-24` (re-consentimiento para todos con la
+  v2.0.0), el almacén en `ui/cookie-consent.js` con `node --test`; `scripts/sonda-cookies.mjs` 22/22 (el
+  panel con cuatro finalidades superaba la ventana: tope de alto en `.cookie` y `cajon.css` regenerada).
+  **Queda el ojo del owner** en `localhost:8081` (el banner, escritorio y móvil; `/cookies` y `/privacidad`).
+  ▶ Sigue la **T3a·2** (el driver) y la **T3a·3** (la cuenta); la **T2e** solo si el volumen lo pide. ⚠️ **El fixture «probe-ojo-analitica» está
   MONTADO en la BD local** (90 pedidos `JW-OJO…`, 81 cobros, 9 devoluciones, 25 clientes
   `ojo-N@ojo-analitica.jumpweb.test`, 506 sesiones, dos meses): `OJO=desmontar` lo quita entero.
 - ✅ **La ficha de Google (`#524`), T1 y T2·1→T2·8 en el árbol** (`#720`→`#734`), **vistas por el owner con
@@ -46,9 +52,20 @@
    de UN día por informe, JSON por día e informe; +1 tarea del scheduler → `deploy.sh` «esperadas 6→7»; los tres
    `for()` cosen «días cerrados desde el diario + hoy en directo»; `ad_spend` —plataforma, campaña, mes,
    céntimos— tecleado en un Resource pequeño de «Ajustes» para el CPA/ROAS de `SourcesWidget`). ✅ El owner vio
-   la T2f en vivo (24-09). ▶ **Ahora la T3** (consentimiento y driver, spec §4.3 y §4.8 T3a/T3b: toca lo
-   compartido —banner, `layout`, `app.js`, `SecurityHeaders`, la política en tres idiomas—, aviso dado y
-   repetido al empezar).
+   la T2f en vivo (24-09). ▶ **La T3 en marcha** (spec §4.3 y §4.8): **T3a·1 ✅ (24-09)** → **T3a·2 el
+   driver**: `analytics.driver` ∈ `posthog|matomo|none`, `analytics.posthog_project`, `analytics.matomo_host`
+   en «Ajustes» (`Settings.php`, `MANAGED`), `Platform\Services\Analytics\Drivers::csp()` por driver y
+   directiva, `SecurityHeaders` lo añade solo con driver activo, el cargador (chunk propio, tras `load`, solo
+   con `data-cookie-analytics="1"` o al `cookies-updated`), PostHog con `person_profiles: identified_only`,
+   sin IP, entradas enmascaradas, sin vista automática, los eventos de `track()` reenviados, `identify` con
+   id opaco (`hash(user_id, APP_KEY)` que pone el servidor en el `<body>` SOLO en el régimen identificado),
+   `/cookies` nombra al driver EN EL RENDER, `ForgetPersonInDriver` (job, `Http::fake`), sonda con el registro
+   de red (cero terceros sin consentir; con consentimiento, sin `securitypolicyviolation`) → **T3a·3 la
+   cuenta**: `PUT /me/analytics` (`Consent::TYPE_ANALYTICS`, sellado al retirar), el enlace sesión↔cuenta al
+   entrar/comprar con los 90 días y `users.first_attribution`, retirar = desvincular (`user_id = null`) y el
+   olvido en el driver, el interruptor en «Mi cuenta → Privacidad» del cajón (Vue: `PrivacyZone.vue`,
+   `stores/privacy.js`, `build:ssr`), el aviso en el cajón y el correo a las cuentas existentes (correos:
+   avisar) → **T3b** píxeles. Lo compartido de la web: aviso dado y repetido al empezar (buzón).
    ⚠️ El fixture del ojo siembra también TRÁFICO (506 sesiones, 2.294 hechos, sellos con primer y último toque).
    ⚠️ **Los cortes por día van por HORA UTC en SQL y al día del parque en PHP** (`SqlTime::hourBucket()`,
    `Window::bucketKey()`), nunca `CONVERT_TZ`. ⚠️ El dinero se lee de `payments`, `payment_refunds`,
@@ -187,6 +204,12 @@ spec enumera. Lo del cliente va en la rama `cliente/playjump`, nunca a `main`.
   sonda apunta nombre, mensaje y pila. ⚠️ **Cinco `pageerror` «Object» INTERMITENTES en el paso del filtro**
   (dos tandas de tres con la sonda de antes de apuntar la pila; después, dos tandas limpias): causa NO
   verificada; si reaparecen, la sonda ya dice de dónde.
+- 🪤 **De la T3a·1**: **un `lang/*/` dentro de un docblock CIERRA el comentario** (`*/`) y es un parse error
+  que Pint no llega a leer y `php artisan test` enseña como 255: se escribe `lang/{es,en,fr}/`. `track.js`
+  manda al libro TODAS las `data-cookie-*` del `<body>` como foto del consentimiento: un atributo nuevo que
+  empiece por `cookie` se convierte en «categoría» (por eso `data-consent-categories`). `CustomEvent` se
+  toma de `win` para que el almacén se pruebe en Node. Las categorías del banner NO se prueban contra una
+  lista escrita en el test: se recorren desde `OPTIONAL` y se exige que ninguna clave salga sin traducir.
 - 🩹 **En la BD LOCAL hay 19 titulares con la cadena de waiver ROTA** (basura del 26–27 de agosto): si mides
   cadenas, compara ANTES/DESPUÉS.
 - **F4 cerró y el cajón es un PAQUETE** (`specs/cajon-empaquetable.md` §0 y §4.8). Tocar «HOJA ENFOCADA» de
@@ -212,6 +235,18 @@ spec enumera. Lo del cliente va en la rama `cliente/playjump`, nunca a `main`.
   ni remitente, ni modo oscuro.** ❗ Un comentario mío con la llamada de cabecera entre comillas dejó tu
   `MailInboxLineTest` con **12 avisos en rojo**: tu guarda funciona (mutación en `scripts/mutar-invitacion-t7-1.py`).
 - ▶ Te queda tu OJO en Gmail/Outlook de los tres nuevos (sondas `probe-t7-correo.php`, `probe-t7-vispera.php`).
+
+### ❗❗ Para el carril de la WEB (emisor: SPA, 24-09) — LA T3 DE LA ANALÍTICA HA EMPEZADO: tocado lo tuyo
+- **T3a·1 (24-09), en `main`**: `resources/views/components/layout.blade.php` (los `data-cookie-*` del
+  `<body>` ahora se recorren desde `CookieConsent::OPTIONAL` + `data-consent-categories`),
+  `resources/js/app.js` (el almacén `cookies` se va a `resources/js/ui/cookie-consent.js`),
+  `resources/views/components/site/cookie-banner.blade.php` (un toggle por categoría; `x-show` por
+  `showing`; foco al título), `lang/{es,en,fr}/cookies.php` (texto del banner y cuatro finalidades),
+  `Content\Services\{CookiePolicyContent,LegalContent}` (tres secciones y el párrafo de perfiles, con dos
+  migraciones quirúrgicas) y `docs/sistemas/COOKIES.md`. **`POLICY_VERSION` sube a `2026-09-24`**: todo
+  visitante vuelve a decidir. ▶ **Viene T3a·2**: `SecurityHeaders` (orígenes del driver solo con driver
+  activo) y `Settings.php` (tres ajustes `analytics.*`); y **T3a·3**: el correo a las cuentas (correos).
+  Si tu landing nueva (Saltia) pinta el banner o lee `cookieConsent`, cuenta con cuatro claves.
 
 ### ❗ Para el carril de la WEB (emisor: SPA, 20→22-09; pendiente de tu «atendido»)
 - ▶ **Me llevo `google-business-profile.md` (`#524`)**, tuya de banda; la numero desde la mía. Si la quieres,

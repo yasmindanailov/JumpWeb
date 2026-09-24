@@ -142,4 +142,78 @@ class CookiePolicyContentTest extends TestCase
         $page->refresh();
         $this->assertSame($tras, $page->body, 'la migración no es idempotente');
     }
+
+    // ─── T3a de la analítica (`specs/analitica.md` §4.3): tres secciones nuevas ──────────────────
+
+    /** La política declara lo exento (la audiencia propia) y explica las dos categorías nuevas, en los tres idiomas. */
+    public function test_policy_declares_the_exempt_measurement_and_the_two_new_purposes(): void
+    {
+        $this->seed(LandingContentSeeder::class);
+
+        foreach (['es', 'en', 'fr'] as $locale) {
+            $this->withSession(['locale' => $locale])->get('/cookies')->assertOk()
+                ->assertSee(CookiePolicyContent::AUDIENCE_H[$locale])
+                ->assertSee('visitor_id')
+                ->assertSee(CookiePolicyContent::ANALYTICS_H[$locale])
+                ->assertSee(CookiePolicyContent::MARKETING_H[$locale])
+                ->assertSee('Data Privacy Framework');
+        }
+
+        // El orden: lo exento y las dos categorías van detrás de las cookies técnicas, antes del mapa.
+        $headings = array_column(CookiePolicyContent::body()['es'], 'h');
+        $this->assertSame(
+            ['Cookies técnicas y de seguridad (necesarias)', CookiePolicyContent::AUDIENCE_H['es'], CookiePolicyContent::ANALYTICS_H['es'], CookiePolicyContent::MARKETING_H['es'], 'Mapa y reseñas (Google)'],
+            array_slice($headings, 2, 5),
+        );
+    }
+
+    /**
+     * La migración INSERTA las tres secciones detrás de las cookies técnicas y renombra el párrafo de
+     * transferencias en una BD sembrada con la v2, solo donde el texto sigue siendo el del producto; deja lo
+     * que la clienta reescribió; es idempotente; y deja EXACTAMENTE lo que sembraría una instalación nueva.
+     */
+    public function test_analytics_migration_inserts_the_sections_only_where_the_text_is_the_products(): void
+    {
+        $nuevo = CookiePolicyContent::body()['es'];
+        $nuevoEn = CookiePolicyContent::body()['en'];
+        $transfersOld = str_replace(
+            ['Si activas el mapa y las reseñas, el contenido de redes sociales, el análisis de uso identificado o la publicidad', 'Google LLC (mapa, reseñas y Google Ads)', 'Respecto al proveedor del feed social, a la herramienta de análisis y a las demás plataformas de anuncios, la garantía'],
+            ['Si activas el mapa y las reseñas o el contenido de redes sociales', 'Google LLC (mapa y reseñas)', 'Respecto al proveedor del feed social, la garantía'],
+            CookiePolicyContent::TRANSFERS_P['es'],
+        );
+        $this->assertNotSame(CookiePolicyContent::TRANSFERS_P['es'], $transfersOld, 'el párrafo viejo tiene que ser distinto del nuevo');
+
+        // La v2: el cuerpo nuevo SIN las tres secciones y con el párrafo viejo de transferencias.
+        $v2 = array_map(
+            static fn (array $s): array => $s['h'] === 'Transferencias internacionales de datos' ? ['h' => $s['h'], 'p' => $transfersOld] : $s,
+            array_values(array_filter($nuevo, static fn (array $s): bool => ! in_array($s['h'], [CookiePolicyContent::AUDIENCE_H['es'], CookiePolicyContent::ANALYTICS_H['es'], CookiePolicyContent::MARKETING_H['es']], true))),
+        );
+        $this->assertCount(count($nuevo) - 3, $v2);
+
+        // Y la clienta reescribió el inglés entero (ni ancla ni transferencias del producto).
+        $deLaClienta = [['h' => 'Cookies', 'p' => 'Rewritten by the client.']];
+        // El francés sembrado con la v2 pero YA con la sección de analítica puesta a mano: no se duplica.
+        $frConAnalitica = [['h' => 'Cookies techniques et de sécurité (nécessaires)', 'p' => 'x'], ['h' => CookiePolicyContent::ANALYTICS_H['fr'], 'p' => 'y']];
+
+        $page = Page::create([
+            'slug' => 'cookies',
+            'title' => CookiePolicyContent::title(),
+            'body' => ['es' => $v2, 'en' => $deLaClienta, 'fr' => $frConAnalitica],
+            'is_active' => true,
+        ]);
+
+        $migration = require database_path('migrations/2026_09_24_120000_cookie_policy_adds_analytics_and_marketing.php');
+        $migration->up();
+        $page->refresh();
+
+        $this->assertSame($nuevo, $page->body['es'], 'el español migrado no queda como lo siembra una instalación nueva');
+        $this->assertSame($deLaClienta, $page->body['en'], 'la migración reescribe un texto que editó la clienta');
+        $this->assertSame($frConAnalitica, $page->body['fr'], 'con una de las tres secciones ya puesta no se inserta nada');
+        $this->assertNotSame($nuevoEn, $page->body['en']);
+
+        $tras = $page->body;
+        $migration->up();
+        $page->refresh();
+        $this->assertSame($tras, $page->body, 'la migración no es idempotente');
+    }
 }

@@ -24,7 +24,7 @@ class StaticAnalysisGateTest extends TestCase
      * el número aquí en el mismo commit. Si el test te pide SUBIRLO, has metido un error nuevo en la
      * línea base en vez de arreglarlo.
      */
-    private const FROZEN_ERRORS = 457;
+    private const FROZEN_ERRORS = 456;   // T3a·1 de la analítica: `CookieConsent::state()` cambió de tipo y su entrada dejó de casar
 
     private function config(): string
     {
