@@ -73,6 +73,21 @@ Por grupos (fuentes: `Settings::MANAGED`, seeds):
 | `packs` | `packs.max_per_slot` · `max_guests_per_slot` · `prep_blocks_cupo` (+ override por zona) | Decisión de negocio por cliente |
 | resto | `sales.hold_minutes` (seed 15; fallback de código sin fila: 20) · `purchase_horizon_months` (6) · `payment.tax_rate` (21) · `incidents.alert_email` (→ `contact.email`) · `puerta.*` · `waiver.mode` (`externo` por defecto; `interno` exige publicar una versión firmable del texto desde el panel) · `waiver.retention_months` y `waiver.dependent_retention_months` (vacío = sin poda; **`[DECIDIDO owner]` 60 y 60 para PlayJump**, art. 1964 CC — ⚠️ **requisito de salida desde `#441`**: con la exención firmándose al declarar un menor, sin plazo se conservan datos de niños sin caducidad) · `display_timezone` · `maintenance.*` · `cookies.banner_enabled` · `registration.*` (waiver externo) · `social.*` · `landing.tagline/footer_rights` · `catalog.search_min_items` | Default sano. Fuente de verdad exhaustiva: `Settings::MANAGED` |
 | **no tocar** | `redsys_next_gateway_order` (contador vivo) · `sales.manual_hold_minutes` (no expuesto) | — |
+| `analytics` · `marketing` | «Ajustes → Herramienta de análisis» (`analytics.driver`, `posthog_project` o `matomo_host` + `matomo_site_id`) y «Ajustes → Píxeles de anuncios» (`marketing.google_ads.conversion_id` + `conversion_label`, `marketing.meta.pixel_id`, `marketing.tiktok.pixel_id`). Los ids son PÚBLICOS; los tokens (`POSTHOG_PERSONAL_API_KEY`, `MATOMO_TOKEN_AUTH`, `META_CAPI_ACCESS_TOKEN`, `TIKTOK_EVENTS_ACCESS_TOKEN`) van en el `.env` (`PAY-06`), ANTES que los ids. Vacío = nada se carga (`specs/analitica.md` §4.3) | Opcional; solo si el cliente anuncia |
+
+### 3.bis · La plantilla de UTM del operador (T3b·3, `specs/analitica.md` §4.3)
+Cada enlace de campaña que apunte a la web lleva UTM, o el libro de eventos atribuye la visita a «directo» y
+el cuadro de mando no sabe qué anuncio la trajo. Es obligatoria en los tres anunciantes, y `utm_medium` es
+el de PAGO (así el panel separa lo pagado de lo orgánico y calcula CPA/ROAS con `ad_spend`):
+
+| Anunciante | `utm_source` | `utm_medium` | `utm_campaign` | Nota |
+|---|---|---|---|---|
+| Google Ads | `google` | `cpc` | el nombre de la campaña, sin espacios (`verano-2026`) | con `gclid` automático basta para `google/cpc`, pero la campaña solo llega por UTM |
+| Meta (Facebook e Instagram) | `meta` | `paid_social` | ídem | el `fbclid` llega solo; la campaña, por UTM |
+| TikTok | `tiktok` | `paid_social` | ídem | el `ttclid` llega solo; la campaña, por UTM |
+
+`utm_content` y `utm_term` son opcionales (el creativo y la palabra clave). Un enlace sin UTM desde un anuncio
+se cuenta como referral o directo: no se recupera después.
 
 - ✅ **[RESUELTO 2026-08-20, `DECISIONES #109`]** `security.turnstile_*` están excluidas del panel
   **a propósito** (son secretos), y ya no hay que meterlas con un INSERT a mano: la vía es

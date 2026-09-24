@@ -41,6 +41,12 @@ return [
         'tool_active' => 'Herramienta de análisis de uso activa en esta web: :tool. Solo se carga si autorizas la categoría «análisis», y nunca recibe tu nombre, tu correo ni tu dirección IP.',
         'tool_posthog' => 'PostHog (PostHog Inc.; los datos se alojan en servidores de la Unión Europea)',
         'tool_matomo' => 'Matomo (instalación propia en :host)',
+        // T3b·3: las plataformas de anuncios activas, nombradas al pintar con su empresa responsable y su garantía
+        // de transferencia. `[PENDIENTE: asesoría]` validar la garantía de cada una (ver `COOKIES.md` §1).
+        'ads_active' => 'Plataformas de anuncios activas en esta web: :platforms. Solo se cargan si autorizas la categoría «publicidad»; reciben la compra con un identificador y tus datos de contacto solo como huella irreversible (hash), nunca en claro.',
+        'ads_google_ads' => 'Google Ads (Google Ireland Limited; transferencias a Estados Unidos bajo el EU-US Data Privacy Framework)',
+        'ads_meta' => 'Meta, para Facebook e Instagram (Meta Platforms Ireland Limited; transferencias a Estados Unidos bajo el EU-US Data Privacy Framework)',
+        'ads_tiktok' => 'TikTok (TikTok Technology Limited; transferencias fuera del EEE bajo cláusulas contractuales tipo)',
     ],
 
     'frame' => [

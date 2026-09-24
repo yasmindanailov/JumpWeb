@@ -33,6 +33,13 @@
             @if ($page->slug === 'cookies' && ($analyticsTool = \App\Domain\Platform\Services\Analytics\Drivers::config()) !== null)
                 <p class="page__tool" data-analytics-tool="{{ $analyticsTool['driver'] }}">{{ __('cookies.policy.tool_active', ['tool' => __('cookies.policy.tool_'.$analyticsTool['driver'], ['host' => $analyticsTool['host']])]) }}</p>
             @endif
+            {{-- Y las plataformas de anuncios ACTIVAS, igual (T3b·3): la política dice «se nombran más abajo»,
+                 y los ids de los píxeles son ajustes que cambian sin migrar la página. Cada una con su empresa
+                 responsable y su garantía de transferencia (`lang/*/cookies.php`, `policy.ads_*`). Sin píxeles,
+                 nada. --}}
+            @if ($page->slug === 'cookies' && ($activePixels = \App\Domain\Platform\Services\Analytics\Pixels::active()) !== [])
+                <p class="page__tool" data-analytics-pixels="{{ implode(',', $activePixels) }}">{{ __('cookies.policy.ads_active', ['platforms' => implode('; ', array_map(static fn (string $platform): string => __('cookies.policy.ads_'.$platform), $activePixels))]) }}</p>
+            @endif
         </div>
 
         <a href="{{ url('/') }}" class="page__back" data-tap>{{ __('site.back_home') }}</a>

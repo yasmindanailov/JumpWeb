@@ -124,6 +124,31 @@ class PixelsTest extends TestCase
             ->assertDontSee('data-pixel-tiktok', false);
     }
 
+    /**
+     * T3b·3: `/cookies` nombra las plataformas ACTIVAS al pintar, con su empresa responsable y su garantía de
+     * transferencia, en los tres idiomas; sin píxeles, nada; y ningún «[PENDIENTE…]» de la analítica a la vista.
+     */
+    public function test_the_cookie_policy_names_the_active_advertisers_at_render_time(): void
+    {
+        $this->withSession(['locale' => 'es'])->get('/cookies')->assertOk()
+            ->assertDontSee('data-analytics-pixels', false)
+            ->assertDontSee('nombrar a las plataformas activas', 'el «[PENDIENTE: asesoría]» de la publicidad ya no está en el texto guardado');
+
+        $this->setting(Pixels::KEY_META_PIXEL_ID, '1234567890123456');
+        $this->setting(Pixels::KEY_TIKTOK_PIXEL_ID, 'C9ABCDEFGHIJKLMNOPQR');
+
+        $this->withSession(['locale' => 'es'])->get('/cookies')->assertOk()
+            ->assertSee('data-analytics-pixels="meta,tiktok"', false)
+            ->assertSee('Meta Platforms Ireland Limited')
+            ->assertSee('TikTok Technology Limited')
+            ->assertDontSee('Google Ireland Limited', 'Google Ads no está configurado');
+        $this->withSession(['locale' => 'en'])->get('/cookies')->assertOk()->assertSee('Advertising platforms active on this site');
+        $this->withSession(['locale' => 'fr'])->get('/cookies')->assertOk()->assertSee('Plateformes publicitaires actives sur ce site');
+
+        // La página de privacidad no cambia: el texto guardado no nombra a nadie.
+        $this->withSession(['locale' => 'es'])->get('/privacidad')->assertOk()->assertDontSee('data-analytics-pixels', false);
+    }
+
     /** Los tokens de las APIs de conversiones (T3b·2) viven en `config/services.php` desde `.env` (`PAY-06`). */
     public function test_the_conversion_api_tokens_live_in_config_and_not_in_settings(): void
     {

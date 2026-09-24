@@ -40,6 +40,10 @@ return [
         'tool_active' => 'Outil d\'analyse d\'usage actif sur ce site : :tool. Il ne se charge que si tu autorises la catégorie «analyse», et il ne reçoit jamais ton nom, ton e-mail ni ton adresse IP.',
         'tool_posthog' => 'PostHog (PostHog Inc. ; les données sont hébergées sur des serveurs de l\'Union européenne)',
         'tool_matomo' => 'Matomo (installation propre sur :host)',
+        'ads_active' => 'Plateformes publicitaires actives sur ce site : :platforms. Elles ne se chargent que si tu autorises la catégorie «publicité» ; elles reçoivent l\'achat avec un identifiant et tes coordonnées uniquement sous forme d\'empreinte irréversible (hachage), jamais en clair.',
+        'ads_google_ads' => 'Google Ads (Google Ireland Limited ; transferts vers les États-Unis dans le cadre du EU-US Data Privacy Framework)',
+        'ads_meta' => 'Meta, pour Facebook et Instagram (Meta Platforms Ireland Limited ; transferts vers les États-Unis dans le cadre du EU-US Data Privacy Framework)',
+        'ads_tiktok' => 'TikTok (TikTok Technology Limited ; transferts hors EEE sous clauses contractuelles types)',
     ],
 
     'frame' => [

@@ -37,17 +37,18 @@
   (una vez por cuenta; runbook `ENTORNOS.md` §6) y el aviso del índice del cajón, con su texto en el contexto
   (`analytics_notice`, contrato **1.21.0**, `DELETE /me/analytics-notice`)—. **Queda el ojo del owner**: el aviso
   en `/mi-cuenta` (cuenta de prueba con `analytics_notified_at` por tinker) y el correo en Mailpit `:8028`.
-  ▶ **T3b·1 EN `main` (24-09)**: los píxeles de anuncios —`Pixels` (ids públicos en «Ajustes → Píxeles de anuncios»: Google
-  Ads con id y ETIQUETA de conversión, Meta, TikTok; `csp()` por plataforma y directiva; `forBody()`),
-  `cajon/pixels.js` (solo con `marketing`; gtag con Consent Mode v2 básico, `analytics_storage` siempre
-  denegado; vista, inicio del pago y la compra con el código del pedido como id), tokens de las APIs en
-  `config/services.php` desde `.env`—; `sonda-driver.mjs` 41/41. ▶ **T3b·2 EN EL ÁRBOL (24-09)**: la API de
-  conversiones del servidor —`Booking\Jobs\SendConversionToPlatforms` (encolado al pagar con tickets), que
-  relee el consentimiento VIVO por `Platform\Contracts\ConsentLedger` ← `Identity\CookieConsentLedger`
-  (`cookie_consent_logs.visitor_id`, migración aplicada en la local) y manda por `Platform\ConversionSender`
-  a Meta CAPI y TikTok Events con `event_id` = código, lo pagado, `em`/`ph` hasheados y `browser_ids` del
-  sello—; `Http::fake` + humo en el contenedor. ▶ Sigue la **T3b·3** (textos con los destinatarios
-  —`[asesoría]`—, `/cookies` nombra los píxeles, plantilla de UTM); la **T2e** solo si el volumen lo pide. ⚠️ **El fixture «probe-ojo-analitica» está
+  ▶ **T3b·1 EN `main` (24-09)**: los píxeles —`Pixels` (ids en «Ajustes → Píxeles de anuncios»; `csp()`;
+  `forBody()`), `cajon/pixels.js` (solo con `marketing`; gtag con Consent Mode v2 básico; la compra con el
+  código del pedido como id), tokens en `config/services.php`—; `sonda-driver.mjs` 41/41. ▶ **T3b·2 EN `main`
+  (24-09)**: la API de conversiones —`Booking\Jobs\SendConversionToPlatforms` relee el consentimiento VIVO por
+  `Platform\Contracts\ConsentLedger` ← `Identity\CookieConsentLedger` (`cookie_consent_logs.visitor_id`) y
+  `Platform\ConversionSender` manda a Meta CAPI y TikTok Events—; `Http::fake` + humo en el contenedor.
+  ▶ **T3b·3 EN EL ÁRBOL (24-09)**: el «[PENDIENTE: asesoría]» sale del texto de `/cookies` (migración quirúrgica
+  `2026_09_24_160000`, aplicada en la local), `/cookies` nombra las plataformas ACTIVAS al pintar con su
+  empresa y su garantía (`policy.ads_*`), plantilla de UTM en `INSTALACION-CLIENTE.md` §3.bis. **La T3 queda
+  completa.** `[PENDIENTE: asesoría]` solo en `COOKIES.md` §1 (validar las garantías). **Queda el ojo del
+  owner** sobre `/cookies` con píxeles puestos. ▶ Sigue **T4** (la 360, los segmentos, el opt-in tras comprar;
+  spec §4.4) y la **T2e** solo si el volumen lo pide. ⚠️ **El fixture «probe-ojo-analitica» está
   MONTADO en la BD local** (90 pedidos `JW-OJO…`, 81 cobros, 9 devoluciones, 25 clientes
   `ojo-N@ojo-analitica.jumpweb.test`, 506 sesiones, dos meses): `OJO=desmontar` lo quita entero.
 - ✅ **La ficha de Google (`#524`), T1 y T2·1→T2·8 en el árbol** (`#720`→`#734`), **vistas por el owner con
@@ -72,12 +73,9 @@
    céntimos— tecleado en un Resource pequeño de «Ajustes» para el CPA/ROAS de `SourcesWidget`). ✅ El owner vio
    la T2f en vivo (24-09). ▶ **La T3 en marcha** (spec §4.3 y §4.8): **T3a·1 ✅ · T3a·2 ✅ · T3a·3 ✅ (24-09)**
    → **T3a·4 ✅ (24-09)** el aviso a las cuentas existentes → **T3b·1 ✅ (24-09)** los píxeles → **T3b·2 ✅
-   (24-09)** la API de conversiones → **T3b·3** los textos: nombrar a Meta Platforms Ireland y TikTok
-   Technology Ltd como destinatarios con su base de transferencia en `CookiePolicyContent` (migración
-   quirúrgica, tres idiomas) y en `COOKIES.md` §1, `/cookies` nombra los píxeles ACTIVOS al pintar
-   (`Pixels::name()`, como el driver), el texto de `marketing` del banner dice que la compra se comunica, y la
-   plantilla de UTM obligatoria para el operador (`utm_medium` de pago en los tres anunciantes; `OPERATIVA`
-   o `INSTALACION-CLIENTE.md`). `[PENDIENTE: asesoría]` se deja escrito, no decidido. Después **T4** (la 360).
+   (24-09)** la API de conversiones → **T3b·3 ✅ (24-09)** los textos → **T4** la 360 (spec §4.4 y §4.8: la
+   ficha del cliente con su navegación, los segmentos, el opt-in de marketing tras comprar en `ConfirmedStep`
+   con el mismo `PUT /me/marketing`): leer §4.4 entero y §0 antes; toca el panel (`Filament`) y el cajón.
    ⚠️ El fixture del ojo siembra también TRÁFICO (506 sesiones, 2.294 hechos, sellos con primer y último toque).
    ⚠️ **Los cortes por día van por HORA UTC en SQL y al día del parque en PHP** (`SqlTime::hourBucket()`,
    `Window::bucketKey()`), nunca `CONVERT_TZ`. ⚠️ El dinero se lee de `payments`, `payment_refunds`,
@@ -212,24 +210,15 @@ spec enumera. Lo del cliente va en la rama `cliente/playjump`, nunca a `main`.
   más). Una sonda que cuente terceros EXCLUYE los exentos y vacía su registro antes de cada página. Un `.env`
   nuevo va a `.env.example` con su porqué. ⚠️ Cinco `pageerror` «Object» intermitentes en el filtro del
   cuadro (T2f): causa NO verificada; la sonda ya apunta la pila.
-- 🪤 **De la T3a·3**: **un ayudante privado `seed()` o `session()` en un test es un FATAL** (el `TestCase` los
-  tiene públicos; la T2c ya pagó `session()` y hoy se pagó `seed()`): `fixture()`/`visit()`. **`putJson` no
-  manda cookies sin `withCredentials()`** (la trampa de la T1, pagada otra vez: el visitante no llegaba al
-  contexto y el caso decía «no se enlaza»). Larastan tipa una columna JSON como `string|null` aunque el cast
-  la devuelva array: se lee por `getAttribute()`. `orders.user_id` no es nullable para Larastan: `(int)` y
-  `> 0`. El chunk del cajón se mide en KiB (`filesize/1024`, techo 289) y Vite lo enseña en kB. Un getter
-  de Pinia que la vista usa y el store no define es `undefined` sin ruido: el de `marketing` no existía.
-  `ApiContractTest` exige `required` EN EL ORDEN de `properties`. Platform no ve a Identity: lo que la
-  CUENTA guarda del enlace lo escribe Identity, y Booking pasa la oposición por parámetro. **La suite entera
-  cazó tres más que los tests enfocados no ven**: un literal `'sessions'` en `app/` (aunque sea la clave de
-  un array o de un `Log`) lo toma `AccessRevocationTest` por la tabla de credenciales (→ `visits`); un campo
-  nuevo en `/me` va a la lista blanca de `MeTest`; un rótulo `account.*` nuevo en el cajón va a la poda de
-  `SidebarBoot::personal()` o `SidebarTranslationKeysExistTest` lo tira, y `SidebarMountTest` censa `privacy`
-  clave a clave y PESA el montaje con sesión (10.343 → 10.566 B; techo 10.400 → 10.600 tras podar la pista
-  −20 B: se poda ANTES de subir, y se sube a lo medido con la estrechez de siempre). **Las ASERCIONES
-  dependen del árbol entero, no solo de `tests/`**: el commit del otro carril no tocó ningún test y la puerta
-  midió +90 aserciones (censos que recorren `resources/js/isla/*`); tras rebasar se re-mide SIEMPRE o se
-  toma la cifra de la puerta, aunque el rebase no traiga tests.
+- 🪤 **De la T3a·3** (detalle en `analitica.md` §4.3): Larastan tipa una columna JSON como `string|null`: se lee
+  por `getAttribute()`. El chunk del cajón se mide en KiB y Vite lo enseña en kB. Un getter de Pinia que la
+  vista usa y el store no define es `undefined` sin ruido. `ApiContractTest` exige `required` EN EL ORDEN de
+  `properties`. **La suite entera caza lo que los tests enfocados no ven**: un literal `'sessions'` en `app/`
+  es la tabla de credenciales para `AccessRevocationTest`; un campo nuevo en `/me` va a la lista blanca de
+  `MeTest`; un rótulo `account.*` nuevo va a la poda de `SidebarBoot::personal()` y `SidebarMountTest` censa
+  `privacy` clave a clave y PESA el montaje (se poda ANTES de subir; techo a lo medido, holgura estrecha).
+  **Las ASERCIONES dependen del árbol entero, no solo de `tests/`** (+90 sin tocar un test): tras rebasar se
+  re-mide SIEMPRE o se toma la cifra de la puerta.
 - 🪤 **De la T3a·4**: un aviso en la cadena `v-if/v-else-if` del índice lo tapa cualquier waiver sin firmar
   (lo cazó la sonda): lo que no es tarea va DEBAJO de las tarjetas, fuera de la cadena. Vue retira el espacio
   entre dos elementos si lleva salto de línea: dos botones en dos líneas salen pegados. `CustomerAccountContext`
@@ -245,6 +234,9 @@ spec enumera. Lo del cliente va en la rama `cliente/playjump`, nunca a `main`.
   `AppServiceProvider`, y el job que ve el pedido vive en Booking. `EncryptCookies` deja a `null` toda cookie
   ajena que no descifra: las de los píxeles van en su `except`. `postJson` sin `withCredentials()` no manda
   cookies (tercera vez). El sello del pedido no es asignable en masa: `forceFill()->saveQuietly()` en el fixture.
+- 🪤 **De la T3b·3**: un `[PENDIENTE]` para el asesor NO va en un texto que se publica (la T3a·1 lo dejó a la
+  vista en `/cookies`): lo variable se nombra al PINTAR y el marcador vive en la doc. Cambiar un texto sembrado
+  obliga a ENCADENAR sus migraciones en `CookiePolicyContentTest` («lo migrado = lo sembrado» ya no sale con una).
 - 🩹 **En la BD LOCAL hay 19 titulares con la cadena de waiver ROTA** (basura del 26–27 de agosto): si mides
   cadenas, compara ANTES/DESPUÉS.
 - **F4 cerró y el cajón es un PAQUETE** (`specs/cajon-empaquetable.md` §0 y §4.8). Tocar «HOJA ENFOCADA» de
@@ -300,7 +292,12 @@ spec enumera. Lo del cliente va en la rama `cliente/playjump`, nunca a `main`.
   (`_fbp`/`_fbc`/`_ttp` en el `except` de `EncryptCookies`), `AppServiceProvider` (bind de
   `Platform\Contracts\ConsentLedger` → `Identity\CookieConsentLedger`), `CookieConsentController` (escribe
   `visitor_id`), `User::anonymize()` (`browser_ids` fuera del sello), `AttributionContext::seal()`
-  (`visitor_id` también con `marketing`; `browser_ids`), `OrderAnalyticsObserver` (encola el job). Si tu landing nueva (Saltia)
+  (`visitor_id` también con `marketing`; `browser_ids`), `OrderAnalyticsObserver` (encola el job). **T3b·3
+  (24-09), tocado**: `anfitrion/legal.blade.php` (un párrafo más al pie de `/cookies`, los píxeles activos),
+  `lang/{es,en,fr}/cookies.php` (`policy.ads_*`), `Content\Services\CookiePolicyContent` (dos párrafos sin el
+  «[PENDIENTE]») con migración quirúrgica. ❗ **Tuyo y a la vista**: el «[PENDIENTE: confirmar adhesión…]» del
+  proveedor del FEED SOCIAL en el párrafo de transferencias de `/cookies` (`#592`) sigue publicado; yo no lo
+  toco. Si tu landing nueva (Saltia)
   pinta el banner o lee `cookieConsent`, cuenta con cuatro claves; si pinta el `<body>`, los
   `data-analytics-*` los da `Drivers::forBody()`.
 
@@ -319,11 +316,7 @@ spec enumera. Lo del cliente va en la rama `cliente/playjump`, nunca a `main`.
   `ReviewCardTest`, `public/css/cajon.css` regenerada. ❗ `google-reviews.md` dice «umbral de 10 reseñas» y el
   código `MIN_REVIEWS = 1` (`#494`): no la toco yo.
 
-### Para TODOS (emisor: SPA, 20-09): el techo del carril es **32 KB** (`#724`); si vuestro encabezado aún
-dice 24, actualizadlo al pasar.
-
 ### Atendido
 - **Plataforma 23-09** (traspaso de la T2, `#670` «no se despliega en piezas», aviso de lo compartido de la
   T1): atendidos. **Plataforma 21-09** («`home` mudada», banda y contrato 2): atendidos.
-- **Web `#540`** (ningún botón con fondo negro, 12-09): atendido el 13-09; puedes retirarlo.
-- Lo de plataforma del 16→22-09 que sobrevive está en «Trampas vivas» o en las specs.
+- **Web `#540`** (12-09): atendido el 13-09.

@@ -176,9 +176,11 @@ class CookiePolicyContentTest extends TestCase
     {
         $nuevo = CookiePolicyContent::body()['es'];
         $nuevoEn = CookiePolicyContent::body()['en'];
+        // El párrafo de transferencias de la v2 (anterior a la T3a·1), reconstruido desde el sembrado de HOY (que
+        // desde la T3b·3 ya nombra la herramienta y los anuncios «más abajo»).
         $transfersOld = str_replace(
-            ['Si activas el mapa y las reseñas, el contenido de redes sociales, el análisis de uso identificado o la publicidad', 'Google LLC (mapa, reseñas y Google Ads)', 'Respecto al proveedor del feed social, a la herramienta de análisis y a las demás plataformas de anuncios, la garantía'],
-            ['Si activas el mapa y las reseñas o el contenido de redes sociales', 'Google LLC (mapa y reseñas)', 'Respecto al proveedor del feed social, la garantía'],
+            ['Si activas el mapa y las reseñas, el contenido de redes sociales, el análisis de uso identificado o la publicidad', 'Google LLC (mapa, reseñas y Google Ads)', 'La herramienta de análisis y las plataformas de anuncios activas en esta web se nombran más abajo con su empresa responsable y su garantía de transferencia. '],
+            ['Si activas el mapa y las reseñas o el contenido de redes sociales', 'Google LLC (mapa y reseñas)', ''],
             CookiePolicyContent::TRANSFERS_P['es'],
         );
         $this->assertNotSame(CookiePolicyContent::TRANSFERS_P['es'], $transfersOld, 'el párrafo viejo tiene que ser distinto del nuevo');
@@ -202,14 +204,64 @@ class CookiePolicyContentTest extends TestCase
             'is_active' => true,
         ]);
 
+        // ⚠️ ENCADENADAS: desde la T3b·3 el sembrado ya no es lo que deja la migración de la T3a·1 sola (que
+        // insertaba el «[PENDIENTE]» que la T3b·3 quita). Una instalación vieja pasa por las dos.
         $migration = require database_path('migrations/2026_09_24_120000_cookie_policy_adds_analytics_and_marketing.php');
+        $textos = require database_path('migrations/2026_09_24_160000_cookie_policy_names_the_active_advertisers_at_render.php');
         $migration->up();
+        $textos->up();
         $page->refresh();
 
         $this->assertSame($nuevo, $page->body['es'], 'el español migrado no queda como lo siembra una instalación nueva');
         $this->assertSame($deLaClienta, $page->body['en'], 'la migración reescribe un texto que editó la clienta');
         $this->assertSame($frConAnalitica, $page->body['fr'], 'con una de las tres secciones ya puesta no se inserta nada');
         $this->assertNotSame($nuevoEn, $page->body['en']);
+
+        $tras = $page->body;
+        $migration->up();
+        $textos->up();
+        $page->refresh();
+        $this->assertSame($tras, $page->body, 'la migración no es idempotente');
+    }
+
+    /**
+     * T3b·3: la migración quita el «[PENDIENTE: asesoría]» de los párrafos de publicidad y de transferencias SOLO
+     * donde siguen como los sembró la T3a·1 (una instalación desplegada con ella), respeta lo editado y es
+     * idempotente; el «[PENDIENTE]» del feed social, anterior y ajeno, se conserva.
+     */
+    public function test_the_advertisers_migration_replaces_the_two_paragraphs_only_where_they_are_the_products(): void
+    {
+        $nuevo = CookiePolicyContent::body()['es'];
+        // Lo que dejó la T3a·1: reconstruido desde el sembrado de hoy.
+        $marketingT3a1 = str_replace('Las plataformas activas en esta web, con la empresa responsable y su garantía de transferencia, se nombran más abajo.', '[PENDIENTE: asesoría — nombrar a las plataformas activas como destinatarias y su garantía de transferencia].', CookiePolicyContent::MARKETING_P['es']);
+        $transfersT3a1 = str_replace('La herramienta de análisis y las plataformas de anuncios activas en esta web se nombran más abajo con su empresa responsable y su garantía de transferencia. Respecto al proveedor del feed social, la garantía', 'Respecto al proveedor del feed social, a la herramienta de análisis y a las demás plataformas de anuncios, la garantía', CookiePolicyContent::TRANSFERS_P['es']);
+        $this->assertNotSame(CookiePolicyContent::MARKETING_P['es'], $marketingT3a1);
+        $this->assertNotSame(CookiePolicyContent::TRANSFERS_P['es'], $transfersT3a1);
+        $this->assertStringContainsString('[PENDIENTE: asesoría', $marketingT3a1, 'CONTROL: el texto viejo lleva el marcador');
+
+        $viejo = array_map(static fn (array $s): array => match ($s['h']) {
+            CookiePolicyContent::MARKETING_H['es'] => ['h' => $s['h'], 'p' => $marketingT3a1],
+            'Transferencias internacionales de datos' => ['h' => $s['h'], 'p' => $transfersT3a1],
+            default => $s,
+        }, $nuevo);
+        $deLaClienta = [['h' => 'Cookies', 'p' => 'Rewritten by the client, [PENDING] included.']];
+
+        $page = Page::create([
+            'slug' => 'cookies',
+            'title' => CookiePolicyContent::title(),
+            'body' => ['es' => $viejo, 'en' => $deLaClienta, 'fr' => CookiePolicyContent::body()['fr']],
+            'is_active' => true,
+        ]);
+
+        $migration = require database_path('migrations/2026_09_24_160000_cookie_policy_names_the_active_advertisers_at_render.php');
+        $migration->up();
+        $page->refresh();
+
+        $this->assertSame($nuevo, $page->body['es'], 'el español migrado no queda como lo siembra una instalación nueva');
+        $this->assertStringNotContainsString('[PENDIENTE: asesoría', json_encode($page->body['es'], JSON_UNESCAPED_UNICODE), 'el marcador de la analítica sigue a la vista');
+        $this->assertStringContainsString('[PENDIENTE: confirmar adhesión', json_encode($page->body['es'], JSON_UNESCAPED_UNICODE), 'el del feed social no es de esta tanda y se conserva');
+        $this->assertSame($deLaClienta, $page->body['en'], 'la migración reescribe un texto que editó la clienta');
+        $this->assertSame(CookiePolicyContent::body()['fr'], $page->body['fr'], 'un texto ya nuevo no se toca');
 
         $tras = $page->body;
         $migration->up();
