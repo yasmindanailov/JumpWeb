@@ -47,6 +47,9 @@ class UserResource extends JsonResource
             'phone' => $this->phone,
             'locale' => $this->locale,
             'marketing_opt_in' => (bool) $this->marketing_opt_in,
+            // La OPOSICIÓN al régimen identificado (`specs/analitica.md` §4.3, T3a·3): lo que pinta el
+            // interruptor de «Mi cuenta → Privacidad». `true` = no vincular mi navegación a mi cuenta.
+            'analytics_opt_out' => (bool) $this->analytics_opt_out,
             'email_verified_at' => $this->email_verified_at?->toIso8601String(),
             'pending_email' => $this->pending_email,
             'pending_email_sent_at' => $this->pending_email_sent_at?->toIso8601String(),

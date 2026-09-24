@@ -5,6 +5,7 @@ namespace App\Domain\Identity\Models;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\Ticket;
+use App\Domain\Platform\Jobs\ForgetPersonInDriver;
 use App\Domain\Platform\Models\AnalyticsEvent;
 use App\Domain\Platform\Models\AnalyticsSession;
 use App\Domain\Platform\Services\AuditLogger;
@@ -31,7 +32,7 @@ use Laravel\Sanctum\PersonalAccessToken;
 
 #[Fillable([
     'name', 'email', 'password', 'phone', 'locale', 'panel_locale', 'last_login_at',
-    'marketing_opt_in', 'privacy_accepted_at', 'terms_accepted_at', 'waiver_accepted_at',
+    'marketing_opt_in', 'analytics_opt_out', 'first_attribution', 'privacy_accepted_at', 'terms_accepted_at', 'waiver_accepted_at',
     'pending_email', 'pending_email_sent_at',
 ])]
 #[Hidden(['password', 'remember_token'])]
@@ -88,6 +89,9 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference,
             'waiver_accepted_at' => 'datetime',
             'pending_email_sent_at' => 'datetime',
             'marketing_opt_in' => 'boolean',
+            // T3a·3 de la analítica: la oposición al régimen identificado y la primera atribución (inmutable).
+            'analytics_opt_out' => 'boolean',
+            'first_attribution' => 'array',
             'password' => 'hashed',
         ];
     }
@@ -452,6 +456,9 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference,
                 'pending_email_sent_at' => null,
                 'last_login_at' => null,
                 'marketing_opt_in' => false,
+                // T3a·3: la oposición y la primera atribución son del régimen identificado, que se desata aquí.
+                'analytics_opt_out' => false,
+                'first_attribution' => null,
                 'privacy_accepted_at' => null,
                 'terms_accepted_at' => null,
                 'waiver_accepted_at' => null,
@@ -469,6 +476,14 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference,
             // Fase 6 · A (`RGPD-06` ampliada): aquí solo se le pone el motivo.
             $this->revokeAllAccess(CustomerCard::REASON_ANONYMIZED);
         });
+
+        // Y el OLVIDO en la herramienta de análisis (`specs/analitica.md` §4.3, T3a·3): lo que el driver sabía de
+        // esta persona bajo su id opaco se borra allí también. En cola y FUERA de la transacción: un tercero no
+        // puede retrasar ni tumbar la supresión. Sin driver, no hay job.
+        $forget = ForgetPersonInDriver::forUser((int) $this->getKey());
+        if ($forget !== null) {
+            dispatch($forget);
+        }
 
         return true;
     }

@@ -71,6 +71,7 @@ class MeTest extends ApiTestCase
             'phone',
             'locale',
             'marketing_opt_in',
+            'analytics_opt_out',
             'email_verified_at',
             'pending_email',
             'pending_email_sent_at',

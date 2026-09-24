@@ -135,6 +135,9 @@ class SelfSignup
 
         // El libro de eventos (`specs/analitica.md` §4.1, `#678`): el alta es un hecho del servidor.
         app(Recorder::class)->fact('user_registered', ['method' => 'password'], ['user_id' => (int) $user->id]);
+        // Y el régimen identificado (§4.3, T3a·3): con la categoría `analytics`, la navegación que trajo el alta
+        // se ata a la cuenta recién creada. Desde el panel no hay visitante y no ata nada.
+        app(AccountAnalytics::class)->linkIfConsented($user, $ip);
 
         return SignupResult::created($user);
     }

@@ -179,6 +179,20 @@ async function sign() {
             </label>
             <small class="form__hint">{{ a('account.privacy.marketing_hint') }}</small>
 
+            <!--
+              **El análisis de uso vinculado a la cuenta** (art. 21, `specs/analitica.md` §4.3, T3a·3): el
+              segundo interruptor, con la misma pieza y por las mismas razones. Encendido = «vincula»; el
+              consentimiento real es la categoría «análisis» del aviso de cookies, y esto es la puerta de la
+              cuenta para retirarlo. Al apagarlo el servidor desvincula, sella la prueba y pide el olvido.
+            -->
+            <label class="switch">
+                <input class="switch__input" type="checkbox" role="switch"
+                       :checked="store.analytics" :disabled="store.busy"
+                       @change="store.setAnalytics($event.target.checked)">
+                <span class="switch__label">{{ a('account.privacy.analytics_label') }}</span>
+            </label>
+            <small class="form__hint">{{ a('account.privacy.analytics_hint') }}</small>
+
             <!-- El derecho de PORTABILIDAD (art. 20). No pide contraseña: descargarse los datos propios
                  no destruye ni cede nada, y es lo que hace hoy la web. -->
             <button type="button" class="btn btn--ink auth__submit" :disabled="store.busy" @click="store.exportData(ctx())">

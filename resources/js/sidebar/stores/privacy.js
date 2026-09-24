@@ -53,6 +53,12 @@ export const usePrivacyStore = defineStore('privacy', {
     getters: {
         /** ¿Ya se pidió la lista de consentimientos? Distingue «no hay» de «aún no se sabe». */
         consentsLoaded: (state) => state.consents !== null,
+
+        /** El interruptor de marketing: de dónde sale es el perfil (`marketing_opt_in` de `GET /me`). */
+        marketing: () => Boolean(useProfileStore().user?.marketing_opt_in),
+
+        /** El interruptor del análisis identificado: encendido = NO se opuso (`analytics_opt_out` de `GET /me`). */
+        analytics: () => ! useProfileStore().user?.analytics_opt_out,
     },
 
     actions: {
@@ -117,6 +123,30 @@ export const usePrivacyStore = defineStore('privacy', {
             // (`marketing_opt_in` de `GET /me`), y pedirla otra vez solo añadiría una espera.
             const profile = useProfileStore();
             if (profile.user) profile.user.marketing_opt_in = accepted;
+
+            this.consents = null;
+            await this.ensureConsents({ api });
+
+            return true;
+        },
+
+        /**
+         * **Vincular la navegación a la cuenta, o OPONERSE** (art. 21, `specs/analitica.md` §4.3, T3a·3).
+         *
+         * El interruptor pinta `! analytics_opt_out`: encendido = «vincula». El consentimiento real es la
+         * categoría «análisis» del aviso de cookies; esto es la puerta de la cuenta para retirarlo —tan fácil
+         * como darlo, sin contraseña— y el servidor, al apagarlo, desvincula y pide el olvido al driver.
+         * Al salir bien se releen los consentimientos: la fila `analytics` queda sellada, y la lista lo dice.
+         *
+         * @returns {Promise<boolean>} si el servidor lo aplicó
+         */
+        async setAnalytics(linked, { api = httpClient } = {}) {
+            const response = await api.put('/me/analytics', { accepted: linked });
+
+            if (! response.ok) return false;
+
+            const profile = useProfileStore();
+            if (profile.user) profile.user.analytics_opt_out = ! linked;
 
             this.consents = null;
             await this.ensureConsents({ api });

@@ -253,13 +253,16 @@ class AccountPrivacy
      * ⚠️ La clave es `visits` y no «sesiones»: es el vocabulario de la spec (§4.2: *visita = sesión*), y además
      * el escáner de `AccessRevocationTest` toma cualquier literal `sessions` por la tabla de credenciales.
      *
-     * @return array{visits: array{count: int, first_seen_at: ?string, last_seen_at: ?string}, events_count: int, first_source: ?array{source: string, medium: string, campaign: ?string}}
+     * @return array{visits: array{count: int, first_seen_at: ?string, last_seen_at: ?string}, events_count: int, first_source: ?array{source: string, medium: string, campaign: ?string}, opted_out: bool, first_attribution: ?array{source: string, medium: string, campaign: ?string}}
      */
     private function analyticsFor(User $user): array
     {
         $visits = AnalyticsSession::query()->where('user_id', $user->getKey())->orderBy('started_at')->get();
         $first = $visits->first();
         $touch = $first === null ? null : AttributionContext::touch($first);
+        // Por `getAttribute()`: la columna es JSON y Larastan la tipa como texto aunque el cast la devuelva array.
+        $raw = $user->getAttribute('first_attribution');
+        $attribution = is_array($raw) ? $raw : null;
 
         return [
             'visits' => [
@@ -272,6 +275,14 @@ class AccountPrivacy
                 'source' => $touch['source'],
                 'medium' => $touch['medium'],
                 'campaign' => $touch['campaign'],
+            ],
+            // T3a·3: la OPOSICIÓN del titular (art. 21) y la primera atribución que se le escribió al primer
+            // enlace (inmutable): las dos son suyas y van en el documento.
+            'opted_out' => (bool) $user->analytics_opt_out,
+            'first_attribution' => $attribution === null ? null : [
+                'source' => (string) ($attribution['source'] ?? ''),
+                'medium' => (string) ($attribution['medium'] ?? ''),
+                'campaign' => isset($attribution['campaign']) ? (string) $attribution['campaign'] : null,
             ],
         ];
     }

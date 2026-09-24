@@ -163,6 +163,44 @@ const consentir = (page, prefs) => page.evaluate((p) => window.Alpine.store('coo
         const persona = await page.evaluate(() => document.body.dataset.analyticsPerson ?? null);
         ok('con sesión y categoría, el body lleva la persona OPACA (64 hex)', /^[0-9a-f]{64}$/.test(persona ?? ''), persona ?? 'sin persona');
         ok('y el driver la identifica', (await ph(page)).some((c) => c[0] === 'identify' && c[1] === persona));
+
+        // ── 3b. La OPOSICIÓN desde «Mi cuenta → Privacidad» (T3a·3): el segundo interruptor ───────────────
+        const me = async () => page.evaluate(async () => (await (await fetch('/api/v1/me', { credentials: 'include', headers: { Accept: 'application/json' } })).json()));
+        await page.goto(`${BASE}/mi-cuenta`, { waitUntil: 'load' });
+        await page.waitForSelector('#sidecart-spa .sidebar, #sidecart-spa [class*="account"]', { timeout: 15000 }).catch(() => null);
+        await espera(1200);
+        const tarjeta = page.getByText('Privacidad y datos').first();
+        if (await tarjeta.count() > 0) await tarjeta.click();
+        await page.locator('input[role="switch"]').nth(1).waitFor({ timeout: 15000 }).catch(() => null);
+        const interruptores = await page.locator('input[role="switch"]').count();
+        ok('«Privacidad» lleva DOS interruptores (marketing y análisis)', interruptores === 2, String(interruptores));
+        const analisis = page.locator('input[role="switch"]').nth(1);
+        ok('el de análisis arranca encendido (la cuenta no se opuso)', await analisis.isChecked());
+        await page.mouse.move(0, 0);
+        await page.screenshot({ path: `${SALIDA}/driver-${ETIQUETA}-privacidad.png` });
+
+        await analisis.click();
+        await espera(1500);
+        const tras = await me();
+        ok('apagarlo escribe la oposición en la cuenta (GET /me)', tras?.analytics_opt_out === true, JSON.stringify({ analytics_opt_out: tras?.analytics_opt_out }));
+        ok('y la lista de consentimientos enseña el de análisis retirado', await page.locator('.account__consent--revoked').count() >= 1);
+        await page.mouse.move(0, 0);
+        await page.screenshot({ path: `${SALIDA}/driver-${ETIQUETA}-privacidad-opuesto.png` });
+
+        await page.goto(`${BASE}/`, { waitUntil: 'load' });
+        await espera(LOTE_MS + 2500);
+        ok('con la oposición, el body ya no lleva la persona aunque la categoría siga', (await page.evaluate(() => document.body.dataset.analyticsPerson ?? null)) === null);
+        ok('y el driver carga (la categoría sigue) pero no identifica a nadie', (await ph(page)).some((c) => c[0] === 'init') && ! (await ph(page)).some((c) => c[0] === 'identify'));
+
+        // Se deja como estaba: la cuenta de prueba vuelve a permitirlo (por la API, con la sesión del navegador;
+        // el camino de la UI ya quedó probado al apagarlo).
+        const vuelta = await page.evaluate(async () => {
+            const xsrf = decodeURIComponent((document.cookie.match(/XSRF-TOKEN=([^;]+)/) ?? [])[1] ?? '');
+            const res = await fetch('/api/v1/me/analytics', { method: 'PUT', credentials: 'include', headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-XSRF-TOKEN': xsrf }, body: JSON.stringify({ accepted: true }) });
+
+            return res.status;
+        });
+        ok('volver a permitirlo (PUT /me/analytics) quita la oposición', vuelta === 204 && (await me())?.analytics_opt_out === false, `status ${vuelta}`);
     } else {
         ok('identificación con sesión (saltada: sin credenciales de cliente)', true, 'SONDA_PANEL_EMAIL/PASSWORD vacías');
     }

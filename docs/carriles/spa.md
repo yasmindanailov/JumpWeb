@@ -34,8 +34,14 @@
   `data-analytics-*` y la persona OPACA solo con sesión y categoría; `cajon/driver.js` solo con la categoría
   y nunca en una URL con credenciales; `/cookies` lo nombra al pintar; `ForgetPersonInDriver` en cola con
   credenciales en `.env`); `sonda-driver.mjs` 19/19 con un doble de PostHog y la sesión del cliente de
-  prueba. ⚠️ **En la BD local NO hay driver** (la sonda lo pone y lo quita). ▶ Sigue la **T3a·3** (la
-  cuenta); la **T2e** solo si el volumen lo pide. ⚠️ **El fixture «probe-ojo-analitica» está
+  prueba. ⚠️ **En la BD local NO hay driver** (la sonda lo pone y lo quita). ▶ **T3a·3 EN EL ÁRBOL (24-09)**:
+  el enlace sesión↔cuenta (`AccountLinker` en Platform + `AccountAnalytics` en Identity; al entrar, al alta y
+  al cobro, solo con la categoría), la oposición (`users.analytics_opt_out`, `PUT /me/analytics`: desvincula,
+  sella la prueba `consents.analytics`, olvido en el driver), `first_attribution` una vez, el segundo
+  interruptor en «Privacidad» del cajón, contrato **1.20.0**; migración de `users` aplicada en la local.
+  **Queda el ojo del owner** sobre el interruptor. ▶ Sigue la **T3a·4** (el aviso en el cajón y el correo
+  a las cuentas existentes: correos, avisar) y después la **T3b** (píxeles); la **T2e** solo si el volumen lo
+  pide. ⚠️ **El fixture «probe-ojo-analitica» está
   MONTADO en la BD local** (90 pedidos `JW-OJO…`, 81 cobros, 9 devoluciones, 25 clientes
   `ojo-N@ojo-analitica.jumpweb.test`, 506 sesiones, dos meses): `OJO=desmontar` lo quita entero.
 - ✅ **La ficha de Google (`#524`), T1 y T2·1→T2·8 en el árbol** (`#720`→`#734`), **vistas por el owner con
@@ -58,15 +64,14 @@
    de UN día por informe, JSON por día e informe; +1 tarea del scheduler → `deploy.sh` «esperadas 6→7»; los tres
    `for()` cosen «días cerrados desde el diario + hoy en directo»; `ad_spend` —plataforma, campaña, mes,
    céntimos— tecleado en un Resource pequeño de «Ajustes» para el CPA/ROAS de `SourcesWidget`). ✅ El owner vio
-   la T2f en vivo (24-09). ▶ **La T3 en marcha** (spec §4.3 y §4.8): **T3a·1 ✅ · T3a·2 ✅ (24-09)** →
-   **T3a·3 la cuenta**: `PUT /me/analytics` (`Consent::TYPE_ANALYTICS` nuevo, sellado al retirar como
-   `setMarketing()`; contrato OpenAPI), el enlace sesión↔cuenta al entrar/comprar con los 90 días de
-   `visitor_id` y `users.first_attribution` (inmutable, al primer enlace), la persona del `<body>` respeta la
-   oposición de la cuenta, retirar = desvincular (`user_id = null` en sesiones y hechos) y disparar
-   `ForgetPersonInDriver::forUser()` (también desde `anonymize()`), el interruptor en «Mi cuenta → Privacidad»
-   del cajón (Vue: `PrivacyZone.vue`, `stores/privacy.js`, `build:ssr`), el aviso en el cajón y el correo a
-   las cuentas existentes ANTES de activar el enlace (correos: avisar) → **T3b** píxeles (`marketing`).
-   Lo compartido de la web: aviso dado y repetido al empezar (buzón).
+   la T2f en vivo (24-09). ▶ **La T3 en marcha** (spec §4.3 y §4.8): **T3a·1 ✅ · T3a·2 ✅ · T3a·3 ✅ (24-09)**
+   → **T3a·4 el aviso a las cuentas existentes** ANTES de activar el enlace en producción: (a) el aviso en el
+   cajón (bloque de cuenta / índice del área de cliente, una vez, con enlace a «Privacidad»; una marca
+   `users.analytics_notice_seen_at` o equivalente), (b) el correo a las cuentas creadas antes de la v3 de la
+   política (molde y censo del carril de CORREOS: `BrandedMailMessage`, `MailInboxLineTest` 27→28; comando
+   idempotente `analytics:notify-accounts` que corre el runbook la noche del despliegue) → **T3b** píxeles
+   (`marketing`: gtag Consent Mode básico, Meta, TikTok; `SendConversionToPlatforms` con relectura del
+   consentimiento; tokens en `.env`). Lo compartido de la web: aviso dado y repetido al empezar (buzón).
    ⚠️ El fixture del ojo siembra también TRÁFICO (506 sesiones, 2.294 hechos, sellos con primer y último toque).
    ⚠️ **Los cortes por día van por HORA UTC en SQL y al día del parque en PHP** (`SqlTime::hourBucket()`,
    `Window::bucketKey()`), nunca `CONVERT_TZ`. ⚠️ El dinero se lee de `payments`, `payment_refunds`,
@@ -221,6 +226,24 @@ spec enumera. Lo del cliente va en la rama `cliente/playjump`, nunca a `main`.
   exentos (Bunny Fonts) y vaciar su registro antes de cada página que juzga. El `<body>` no cambia sin
   recargar: lo concedido por `cookies-updated` se recuerda en el cargador. Una `Notification` de Filament
   en un test se afirma con `assertNotified(texto)`. Un `.env` nuevo va a `.env.example` con su porqué.
+- 🪤 **De la T3a·3**: **un ayudante privado `seed()` o `session()` en un test es un FATAL** (el `TestCase` los
+  tiene públicos; la T2c ya pagó `session()` y hoy se pagó `seed()`): `fixture()`/`visit()`. **`putJson` no
+  manda cookies sin `withCredentials()`** (la trampa de la T1, pagada otra vez: el visitante no llegaba al
+  contexto y el caso decía «no se enlaza»). Larastan tipa una columna JSON como `string|null` aunque el cast
+  la devuelva array: se lee por `getAttribute()`. `orders.user_id` no es nullable para Larastan: `(int)` y
+  `> 0`. El chunk del cajón se mide en KiB (`filesize/1024`, techo 289) y Vite lo enseña en kB. Un getter
+  de Pinia que la vista usa y el store no define es `undefined` sin ruido: el de `marketing` no existía.
+  `ApiContractTest` exige `required` EN EL ORDEN de `properties`. Platform no ve a Identity: lo que la
+  CUENTA guarda del enlace lo escribe Identity, y Booking pasa la oposición por parámetro. **La suite entera
+  cazó tres más que los tests enfocados no ven**: un literal `'sessions'` en `app/` (aunque sea la clave de
+  un array o de un `Log`) lo toma `AccessRevocationTest` por la tabla de credenciales (→ `visits`); un campo
+  nuevo en `/me` va a la lista blanca de `MeTest`; un rótulo `account.*` nuevo en el cajón va a la poda de
+  `SidebarBoot::personal()` o `SidebarTranslationKeysExistTest` lo tira, y `SidebarMountTest` censa `privacy`
+  clave a clave y PESA el montaje con sesión (10.343 → 10.566 B; techo 10.400 → 10.600 tras podar la pista
+  −20 B: se poda ANTES de subir, y se sube a lo medido con la estrechez de siempre). **Las ASERCIONES
+  dependen del árbol entero, no solo de `tests/`**: el commit del otro carril no tocó ningún test y la puerta
+  midió +90 aserciones (censos que recorren `resources/js/isla/*`); tras rebasar se re-mide SIEMPRE o se
+  toma la cifra de la puerta, aunque el rebase no traiga tests.
 - 🩹 **En la BD LOCAL hay 19 titulares con la cadena de waiver ROTA** (basura del 26–27 de agosto): si mides
   cadenas, compara ANTES/DESPUÉS.
 - **F4 cerró y el cajón es un PAQUETE** (`specs/cajon-empaquetable.md` §0 y §4.8). Tocar «HOJA ENFOCADA» de
@@ -261,9 +284,17 @@ spec enumera. Lo del cliente va en la rama `cliente/playjump`, nunca a `main`.
   cruzada en `save()`), `resources/views/anfitrion/legal.blade.php` (un párrafo al pie de `/cookies` que
   nombra la herramienta activa), `lang/{es,zh_CN}/admin.php` (`settings.analytics_*`), `config/services.php`
   y `.env.example` (`POSTHOG_*`, `MATOMO_TOKEN_AUTH`), `docs/SEGURIDAD.md` (la lista de orígenes de la CSP).
-  ▶ **Viene T3a·3**: el correo a las cuentas existentes (correos) y el aviso en el cajón. Si tu landing
-  nueva (Saltia) pinta el banner o lee `cookieConsent`, cuenta con cuatro claves; si pinta el `<body>`, los
+  **T3a·3 (24-09), en `main`, tocado**: `layout.blade.php` (la persona del `<body>` respeta la oposición de la
+  cuenta), `openapi/v1.yaml` → **1.20.0** (`PUT /me/analytics`, `analytics_opt_out` en `GET /me`, el export).
+  ▶ **Viene T3a·4**: el aviso en el cajón y el correo a las cuentas existentes. Si tu landing nueva (Saltia)
+  pinta el banner o lee `cookieConsent`, cuenta con cuatro claves; si pinta el `<body>`, los
   `data-analytics-*` los da `Drivers::forBody()`.
+
+### ❗ Para el carril de CORREOS (emisor: SPA, 24-09) — aviso previo de la T3a·4
+- ▶ La **T3a·4** de la analítica necesita **un correo nuevo** a las cuentas existentes («tu navegación puede
+  vincularse a tu cuenta si aceptas la categoría "análisis"; puedes oponerte en Privacidad»), en tres idiomas,
+  con tu molde (`BrandedMailMessage`, cabecera y línea de adelanto) y en tu censo (`MailInboxLineTest`
+  27→28). Lo escribo yo siguiendo tu molde salvo que prefieras hacerlo tú: dímelo por buzón.
 
 ### ❗ Para el carril de la WEB (emisor: SPA, 20→22-09; pendiente de tu «atendido»)
 - ▶ **Me llevo `google-business-profile.md` (`#524`)**, tuya de banda; la numero desde la mía. Si la quieres,

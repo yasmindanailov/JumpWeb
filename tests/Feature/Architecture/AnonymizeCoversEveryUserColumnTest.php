@@ -58,6 +58,8 @@ class AnonymizeCoversEveryUserColumnTest extends TestCase
         'locale',
         'last_login_at',
         'marketing_opt_in',
+        'analytics_opt_out',
+        'first_attribution',
         'privacy_accepted_at',
         'terms_accepted_at',
         'waiver_accepted_at',
@@ -187,6 +189,9 @@ class AnonymizeCoversEveryUserColumnTest extends TestCase
             'phone' => '600111222',
             'locale' => 'fr',
             'marketing_opt_in' => true,
+            // T3a·3 de la analítica: la oposición y la primera atribución, con valor para que la purga se vea.
+            'analytics_opt_out' => true,
+            'first_attribution' => ['source' => 'google', 'medium' => 'cpc', 'campaign' => 'censo'],
         ]);
 
         // Fase 6 · waiver (#179): la aceptación PENDIENTE del alta también es PII y se purga; la FK exige

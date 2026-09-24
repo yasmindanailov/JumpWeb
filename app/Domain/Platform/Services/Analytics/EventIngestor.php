@@ -67,6 +67,14 @@ final class EventIngestor
         $session = $this->sessions->current($visitorId, $request, create: true, entry: $entry ?? $this->entryFrom([], $meta, $request));
         $this->sessions->touch($session);
 
+        // La foto del consentimiento se toma al abrir la sesión y se REFRESCA con cada lote que la traiga distinta
+        // (T3a·3): quien acepta «análisis» a mitad de visita —y su siguiente lote lo dice— tiene que contar como
+        // consentido en el sello y en el enlace con su cuenta, no en la sesión de mañana.
+        $consent = is_array($meta['consent'] ?? null) ? array_map(static fn ($v): bool => (bool) $v, $meta['consent']) : null;
+        if ($consent !== null && $consent !== [] && $session->consent !== $consent) {
+            $session->forceFill(['consent' => $consent])->save();
+        }
+
         $inserted = AnalyticsEvent::query()->insertOrIgnore(array_map(static fn (array $row): array => [
             'event_id' => $row['event_id'],
             'session_id' => $session->id,

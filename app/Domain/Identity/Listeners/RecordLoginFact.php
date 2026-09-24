@@ -3,6 +3,7 @@
 namespace App\Domain\Identity\Listeners;
 
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Services\AccountAnalytics;
 use App\Domain\Platform\Services\Analytics\Recorder;
 use Illuminate\Auth\Events\Login;
 
@@ -16,7 +17,7 @@ use Illuminate\Auth\Events\Login;
  */
 final class RecordLoginFact
 {
-    public function __construct(private readonly Recorder $recorder) {}
+    public function __construct(private readonly Recorder $recorder, private readonly AccountAnalytics $analytics) {}
 
     public function handle(Login $event): void
     {
@@ -31,5 +32,9 @@ final class RecordLoginFact
         }
 
         $this->recorder->fact('user_logged_in', ['method' => $event->guard], ['user_id' => (int) $user->getAuthIdentifier()]);
+
+        // El régimen IDENTIFICADO (`specs/analitica.md` §4.3, T3a·3): al entrar, si esta petición trae la
+        // categoría `analytics` y la cuenta no se opuso, su navegación se ata a la cuenta. Nunca tumba el login.
+        $this->analytics->linkIfConsented($user, request()->ip());
     }
 }

@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.19.0
+  version: 1.20.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -2571,6 +2571,45 @@ paths:
         '503':
           $ref: '#/components/responses/Maintenance'
 
+  /me/analytics:
+    put:
+      tags: [Cuenta]
+      operationId: updateMyAnalyticsLink
+      summary: Vincular la navegación a la cuenta, u oponerse
+      description: |
+        **Oponerse** (art. 21) a que la navegación se vincule a la cuenta, o volver a permitirlo
+        (`docs/specs/analitica.md` §4.3, T3a·3). El consentimiento es la categoría «análisis» del aviso
+        de cookies; esto es la puerta de la CUENTA para retirarlo, tan fácil como darlo (art. 7.3): sin
+        contraseña.
+
+        `accepted: false` **desvincula** lo registrado (sesiones y hechos vuelven al agregado), **sella**
+        la prueba (`consents` de tipo `analytics`, `revoked_at`) y pide el **olvido** en la herramienta
+        de análisis, si hay una. `accepted: true` quita la oposición y, si esta petición trae la categoría,
+        enlaza en el acto con una prueba nueva.
+
+        Responde **204 siempre**, incluida la llamada que no cambia nada: el titular pide un ESTADO.
+        El estado actual se lee en `GET /me` (`analytics_opt_out`).
+      security:
+        - sessionCookie: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnalyticsLinkRequest'
+      responses:
+        '204':
+          description: Estado aplicado.
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
   /me/export:
     get:
       tags: [Cuenta]
@@ -4475,6 +4514,7 @@ components:
         - phone
         - locale
         - marketing_opt_in
+        - analytics_opt_out
         - email_verified_at
         - pending_email
         - pending_email_sent_at
@@ -4499,6 +4539,12 @@ components:
           nullable: true
         marketing_opt_in:
           type: boolean
+        analytics_opt_out:
+          type: boolean
+          description: |
+            La OPOSICIÓN (art. 21) a que la navegación se vincule a la cuenta (`docs/specs/analitica.md`
+            §4.3, T3a·3): `true` = no vincular. Se cambia con `PUT /me/analytics`. El consentimiento real
+            es la categoría «análisis» del aviso de cookies; esto es la puerta de la cuenta para retirarlo.
         email_verified_at:
           type: string
           format: date-time
@@ -4721,7 +4767,7 @@ components:
       properties:
         type:
           type: string
-          description: '`privacy` · `terms` · `waiver` · `marketing`.'
+          description: '`privacy` · `terms` · `waiver` · `marketing` · `analytics` (T3a·3: la prueba de que la navegación se vinculó a la cuenta bajo la categoría «análisis»; se sella al oponerse).'
         accepted_at:
           type: string
           format: date-time
@@ -4967,9 +5013,28 @@ components:
         cada hecho es una fila con ruta y propiedades, y volcarlos haría del documento de
         portabilidad un registro de navegación de miles de líneas. El detalle es una petición de
         acceso (art. 15), no este fichero.
-      required: [visits, events_count, first_source]
+      required: [opted_out, first_attribution, visits, events_count, first_source]
       additionalProperties: false
       properties:
+        opted_out:
+          type: boolean
+          description: La OPOSICIÓN del titular (art. 21, T3a·3) a que su navegación se vincule a la cuenta.
+        first_attribution:
+          type: object
+          nullable: true
+          description: |
+            La primera fuente y campaña con la que llegó, escrita UNA vez al primer enlace sesión↔cuenta
+            (`users.first_attribution`, inmutable), o `null` si nunca se enlazó. Inline por ser nullable.
+          required: [source, medium, campaign]
+          additionalProperties: false
+          properties:
+            source:
+              type: string
+            medium:
+              type: string
+            campaign:
+              type: string
+              nullable: true
         visits:
           type: object
           description: Las visitas (sesiones del libro, §4.2) atadas a la cuenta, y entre qué fechas.
@@ -8069,6 +8134,18 @@ components:
         accepted:
           type: boolean
           description: '`true` los quiere; `false` los retira (art. 7.3).'
+
+    AnalyticsLinkRequest:
+      type: object
+      description: |
+        El ESTADO que el titular pide para el vínculo entre su navegación y su cuenta (T3a·3). Un solo
+        campo, como `MarketingConsentRequest`, y por la misma razón.
+      required: [accepted]
+      additionalProperties: false
+      properties:
+        accepted:
+          type: boolean
+          description: '`true` permite el vínculo (quita la oposición); `false` se opone (art. 21) y desvincula.'
 
     GoogleSignupPending:
       type: object

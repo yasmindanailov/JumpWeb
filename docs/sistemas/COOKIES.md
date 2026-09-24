@@ -246,8 +246,10 @@ del producto). La PRIVACIDAD (`LegalContent::PROFILING_P`) deja de decir «ni el
 - **Analítica**: el libro propio existe (`specs/analitica.md`, T1) y es exento; el análisis
   IDENTIFICADO y la herramienta externa van bajo `analytics` (T3a·1 ✅: categoría, banner, política; T3a·2 ✅:
   el driver —`Drivers`, «Ajustes → Herramienta de análisis», `cajon/driver.js` solo con la categoría, sus
-  orígenes en la CSP solo con driver activo, `/cookies` lo nombra al pintar, `ForgetPersonInDriver`—;
-  T3a·3: `PUT /me/analytics` y el aviso a las cuentas); los píxeles bajo `marketing` (T3b).
+  orígenes en la CSP solo con driver activo, `/cookies` lo nombra al pintar, `ForgetPersonInDriver`—; T3a·3 ✅:
+  el enlace sesión↔cuenta al entrar, al alta y al cobro solo con la categoría, la oposición desde «Mi cuenta →
+  Privacidad» y `PUT /me/analytics`, que desvincula, sella la prueba y pide el olvido; T3a·4: el aviso en el
+  cajón y el correo a las cuentas existentes); los píxeles bajo `marketing` (T3b).
 - **Refactor de marca**: HECHO en Fase 1 (cookie renombrada a `cookie_consent`); quedan las
   referencias históricas «#219 / PLAN-COOKIES.md» en comentarios (tabla de equivalencias en
   `docs/README.md`).

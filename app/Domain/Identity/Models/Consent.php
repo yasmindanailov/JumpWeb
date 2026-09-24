@@ -14,9 +14,12 @@ class Consent extends Model
     public const CURRENT_VERSION = '2026-05-23';
 
     /**
-     * Los cuatro tipos que el sistema escribe. **Solo `marketing` se puede RETIRAR** (art. 7.3): los
-     * otros tres no son consentimientos revocables en el sentido del RGPD —privacidad y condiciones
-     * son la base contractual de la reserva, y el descargo es una prueba que el parque conserva—.
+     * Los cinco tipos que el sistema escribe. **Solo `marketing` y `analytics` se pueden RETIRAR** (art.
+     * 7.3): los otros tres no son consentimientos revocables en el sentido del RGPD —privacidad y
+     * condiciones son la base contractual de la reserva, y el descargo es una prueba que el parque
+     * conserva—. `analytics` (`specs/analitica.md` §4.3, T3a·3) es la PRUEBA de que la navegación se
+     * vinculó a la cuenta bajo la categoría `analytics` del banner: se escribe al primer enlace y se
+     * sella al oponerse desde la cuenta.
      */
     public const TYPE_PRIVACY = 'privacy';
 
@@ -25,6 +28,8 @@ class Consent extends Model
     public const TYPE_WAIVER = 'waiver';
 
     public const TYPE_MARKETING = 'marketing';
+
+    public const TYPE_ANALYTICS = 'analytics';
 
     protected $guarded = [];
 

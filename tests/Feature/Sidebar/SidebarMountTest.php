@@ -654,6 +654,9 @@ class SidebarMountTest extends TestCase
                 // aquí —con sesión— porque nadie los pinta sin haber entrado, y en este orden porque
                 // `Arr::only` conserva el de `lang/`.
                 'consent_revoked', 'marketing_label', 'marketing_hint',
+                // El interruptor del art. 21 (`specs/analitica.md` §4.3, T3a·3): oponerse al enlace
+                // de la navegación con la cuenta, con la misma pieza y la misma regla que el de marketing.
+                'analytics_label', 'analytics_hint',
                 'delete_title', 'delete_intro', 'delete_password',
                 // ⚠️ Los dos rótulos de la PREGUNTA entran en `#565`, cuando borrar la cuenta dejó de
                 // confirmarse con `window.confirm`. Sin ellos aquí el botón que borra la cuenta sale
@@ -949,8 +952,17 @@ class SidebarMountTest extends TestCase
         // dinámicamente (`'relationship_' + key`) y cuatro se leen con notación de propiedad
         // (`account?.account?.dependents?.assigned_hide`), que ningún patrón de cadena literal ve.
         // *Que un `grep` no encuentre una clave no es que nadie la pinte.*
+        // ▶ **10.400 → 10.600 el 2026-09-24, y lo paga otro DERECHO** (art. 21; `specs/analitica.md` §4.3,
+        // T3a·3): el interruptor que permite **oponerse** a que la navegación se vincule a la cuenta, con
+        // su pista, y el tipo `analytics` en la lista de consentimientos (`consent_types` viaja entero).
+        // Medido: **10.343 → 10.566 B (+223)**, tres rótulos.
+        // ▶ **La poda se hizo ANTES y está medida (−20 B)**: la pista perdió «pasa», «la categoría» y
+        // «si hay una» → «si la hay» sin perder lo que dice (solo con «análisis» en las cookies; apagar
+        // = desvincular + pedir el borrado a la herramienta). El rótulo del interruptor NO reutiliza el
+        // tipo de la lista porque dicen cosas distintas: una fila del historial y una petición en primera
+        // persona, como pasa con `marketing_label` y `consent_types.marketing`. **10.600 deja 34 B.**
         $this->assertLessThan(
-            10400, $bytes,
+            10600, $bytes,
             "Los textos del montaje con sesión pesan {$bytes} B. Poda antes de subir el techo: el ".
             'grupo `account` entero son 9,6 kB, y la diferencia la paga cada página que el cliente abre.'
         );

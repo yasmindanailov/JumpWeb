@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Domain\Identity\Exceptions\AccountHasUpcomingReservationsException;
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Services\AccountAnalytics;
 use App\Domain\Identity\Services\AccountPrivacy;
 use App\Http\Api\ApiCollection;
 use App\Http\Api\ApiErrorCode;
@@ -108,6 +109,26 @@ class MePrivacyController extends Controller
         $user = $request->user();
 
         $privacy->setMarketing($user, (bool) $data['accepted'], (string) $request->ip());
+
+        return response()->json(status: 204);
+    }
+
+    /**
+     * `PUT /me/analytics` — vincular la navegación a la cuenta, o **OPONERSE** a ello (art. 21 y 7.3,
+     * `specs/analitica.md` §4.3, T3a·3).
+     *
+     * El consentimiento es la categoría `analytics` del banner; esto es la puerta de la CUENTA para
+     * retirarlo —desvincula lo registrado, sella la prueba y dispara el olvido en el driver— o para volver
+     * a darlo. Sin contraseña y con 204 pase lo que pase, por las mismas dos razones que `marketing()`.
+     */
+    public function analytics(Request $request, AccountAnalytics $analytics): JsonResponse
+    {
+        $data = $request->validate(['accepted' => ['required', 'boolean']]);
+
+        /** @var User $user */
+        $user = $request->user();
+
+        $analytics->setLinked($user, (bool) $data['accepted'], (string) $request->ip());
 
         return response()->json(status: 204);
     }

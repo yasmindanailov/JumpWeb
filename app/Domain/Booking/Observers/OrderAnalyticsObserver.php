@@ -4,6 +4,7 @@ namespace App\Domain\Booking\Observers;
 
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\Ticket;
+use App\Domain\Platform\Services\Analytics\AccountLinker;
 use App\Domain\Platform\Services\Analytics\AttributionContext;
 use App\Domain\Platform\Services\Analytics\Recorder;
 use Illuminate\Support\Facades\DB;
@@ -103,11 +104,15 @@ final class OrderAnalyticsObserver
         $channel = $order->getAttribute('attribution_channel');
         $orderId = (int) $order->id;
         $totalCents = (int) $order->total;
+        // El régimen IDENTIFICADO (`specs/analitica.md` §4.3, T3a·3): «al identificarse O COMPRAR». La oposición
+        // de la cuenta se lee aquí —`User` es kernel compartido— y viaja al enlazador de Platform por parámetro.
+        $userId = (int) $order->user_id;
+        $optedOut = (bool) ($order->user?->getAttribute('analytics_opt_out') ?? false);
 
         switch ($transition['to']) {
             case Order::STATUS_PAID:
                 // Con o sin tickets solo se sabe tras el commit: `TicketIssuer` corre después del `save()`.
-                DB::afterCommit(function () use ($orderId, $totalCents, $channel, $refs): void {
+                DB::afterCommit(function () use ($orderId, $totalCents, $channel, $refs, $userId, $optedOut): void {
                     try {
                         $fulfilled = Ticket::query()->where('order_id', $orderId)->exists();
                         $paidCents = $this->paidCents($orderId);
@@ -120,6 +125,16 @@ final class OrderAnalyticsObserver
                     $fulfilled
                         ? $this->recorder()->fact('order_paid', ['paid_cents' => $paidCents, 'total_cents' => $totalCents, 'channel' => $channel], $refs)
                         : $this->recorder()->fact('order_paid_incident', ['kind' => 'late_capture', 'paid_cents' => $paidCents, 'channel' => $channel], $refs);
+
+                    // Y la navegación que trajo la compra se ata a la cuenta, solo con la categoría `analytics`
+                    // de esta petición y sin la oposición de la cuenta. Nunca tumba el cobro.
+                    if ($userId > 0) {
+                        try {
+                            app(AccountLinker::class)->link($userId, $this->context(), $optedOut);
+                        } catch (Throwable $e) {
+                            Log::warning('analytics.account_link_failed', ['user_id' => $userId, 'error' => $e->getMessage()]);
+                        }
+                    }
                 });
                 break;
             case Order::STATUS_CANCELLED:

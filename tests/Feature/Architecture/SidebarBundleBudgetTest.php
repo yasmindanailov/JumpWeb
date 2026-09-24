@@ -828,7 +828,10 @@ class SidebarBundleBudgetTest extends TestCase
      * se paga el centenar de bytes para que la regla tenga su caso de `node --test`. Con los regalos
      * también en la tarjeta del catálogo medía 287,14; el owner los retiró de ahí.
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 288;
+    // T3a·3 de la analítica (24-09): el segundo interruptor de «Privacidad» (vincular la navegación a la cuenta)
+    // y su acción en el store suman 0,69 kB; medido 288,28 KiB (HEAD sin ellos: 287,60). Es un presupuesto, no un
+    // objetivo: se sube con su medida y con un margen mínimo.
+    private const SIDEBAR_CHUNK_MAX_KB = 289;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

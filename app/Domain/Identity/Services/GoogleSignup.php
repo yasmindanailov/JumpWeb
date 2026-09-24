@@ -128,6 +128,8 @@ final class GoogleSignup
 
         // El libro de eventos (`specs/analitica.md` §4.1, `#678`): el alta es un hecho del servidor.
         app(Recorder::class)->fact('user_registered', ['method' => 'google'], ['user_id' => (int) $user->getKey()]);
+        // Y el régimen identificado (§4.3, T3a·3): con la categoría `analytics`, la navegación se ata a la cuenta.
+        app(AccountAnalytics::class)->linkIfConsented($user, request()->ip());
 
         // ⚠️⚠️ **La firma va FUERA de la transacción de arriba y eso es deliberado.** `WaiverSigner`
         // abre la suya y bloquea la fila del titular: anidarla dentro de la que acaba de crear esa

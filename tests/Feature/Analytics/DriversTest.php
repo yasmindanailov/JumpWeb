@@ -172,6 +172,10 @@ class DriversTest extends TestCase
         $this->actingAs($user)->consent(true)->get('/')->assertOk()
             ->assertSee('data-analytics-person="'.Drivers::personId((int) $user->id).'"', false)
             ->assertDontSee('data-analytics-person="'.$user->id.'"', false);
+
+        // T3a·3: la OPOSICIÓN de la cuenta manda sobre la categoría: sin persona.
+        $user->forceFill(['analytics_opt_out' => true])->save();
+        $this->actingAs($user->fresh())->consent(true)->get('/')->assertOk()->assertDontSee('data-analytics-person', false);
     }
 
     public function test_the_cookie_policy_names_the_active_tool_at_render_time(): void
