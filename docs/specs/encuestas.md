@@ -1,8 +1,8 @@
 # [SPEC] Las encuestas — internas en la puerta y externas por correo, creadas en el panel, medidas en el cuadro
 
-> Estado: ⬜ borrador (24-09, carril del SPA) · Última actualización: 2026-09-24 · Decisión asociada: `#740` al
-> aprobarse (banda del SPA). Es la **T7** de `analitica.md` (§4.8 y §4.10, las palabras del owner). **Cinco preguntas
-> al owner en §7**; el diseño de abajo asume la opción recomendada de cada una y se corrige con su respuesta.
+> Estado: ✅ **aprobada por el owner el 24-09** (`#740`: sus cinco respuestas en §7) → **a implementar, T1 en curso**
+> (carril del SPA) · Última actualización: 2026-09-24 · Decisión asociada: `#740`. Es la **T7** de `analitica.md`
+> (§4.8 y §4.10, las palabras del owner).
 
 ## §0 · Antes de tocar
 
@@ -21,7 +21,8 @@
   espera 6 y `schedule:list` registra 9: avisado a plataforma). (5) Un Resource nuevo va a
   `AdminSettingsHub::areas()` o `AdminNavigationTest` se pone rojo. (6) `RGPD-01`: purga y export cubren las
   tablas nuevas; `RGPD-04`: la página del correo va `no-store`.
-- **Estado**: ⬜ borrador con cinco `[PENDIENTE: owner]` (§7). Queda: sus respuestas → `#740` → T1→T4 (§4.6).
+- **Estado**: ✅ `#740` (atadas al cliente y a la visita · una por cliente y encuesta · todos los tipos de pregunta
+  · correo de servicio con baja de un toque · una viva por clase). **T1 en curso**; quedan T2→T4 (§4.6).
 - **Invariantes**: `RGPD-01`, `RGPD-04`, `RGPD-07`, `SEC-04`, `SEC-05`, `PAY-14`, `SUITE-01`. Dinero y aforo:
   ninguno. Ningún fichero del `CRITICAL_RE`.
 
@@ -97,9 +98,9 @@ WhatsApp; recompensas (JumpPoints) por contestar.
   frase de cabecera del correo o de la tablet), `questions` json, `created_by`, timestamps. **Vivo** = activa y
   dentro de su ventana (la regla de `Experiment::isRunning()`). `[PENDIENTE: owner]` §7·5: **una viva por clase**
   (recomendado; el panel lo valida al encender) o varias.
-- `questions`: lista ordenada de `{key, type, required, label{es,en,fr}, options?}` con `type` ∈ `choice` (una
-  opción de una lista `options: [{key, label{es,en,fr}}]`), `scale` (1 a 5, con rótulos de extremos opcionales) y
-  `text` (libre, ≤ 300 caracteres) — `[PENDIENTE: owner]` §7·3. Normalizada por `Platform\Services\Surveys\
+- `questions`: lista ordenada de `{key, type, required, label{es,en,fr}, options?}` con `type` ∈ `choice` (UNA
+  opción de `options: [{key, label{es,en,fr}}]`), `multi` (varias de la lista), `scale` (1 a 5), `yesno` y `text`
+  (libre, ≤ 300 caracteres) — `[DECIDIDO owner]` §7·3: todos los formatos. Normalizada por `Platform\Services\Surveys\
   QuestionSchema` `(futuro)` con la misma disciplina que `normalizeFieldSchema()` (sin clave → fuera; tipo inválido →
   `choice`; claves únicas). **Con respuestas guardadas, las claves y los tipos se BLOQUEAN** (los textos siguen
   editables): cambiar una pregunta a mitad mezcla lo medido, como los pesos de un experimento.
@@ -107,8 +108,9 @@ WhatsApp; recompensas (JumpPoints) por contestar.
   (el día de la visita que la originó), `channel` (`internal`|`external`), `answered_by` (el empleado, solo interna),
   `token` (40 caracteres, solo externa: abre la página), `sent_at`, `answered_at`, `declined_at`, `answers` json
   `{clave: valor}`, `locale`. Índices: `(survey_id, user_id)` ÚNICO —**una respuesta por cliente y encuesta**,
-  `[PENDIENTE: owner]` §7·2— y `(survey_id, answered_at)`. `[PENDIENTE: owner]` §7·1: atadas al cliente (recomendado)
-  o anónimas (entonces `user_id` no se guarda y la unicidad va por `visited_on` + un hash).
+  `[DECIDIDO owner]` §7·2— y `(survey_id, answered_at)`. **Atadas al cliente y a su visita** (`[DECIDIDO owner]`
+  §7·1, con la recomendación de §7): el cuadro solo enseña agregados; la persona aparece en dos sitios y con permiso
+  propio (`customers.insights`): en su ficha 360 y en la lista de «puntuaciones bajas por atender» (§4.4).
 - `users.surveys_opt_out` `(futuro)` bool: «no quiero recibir más encuestas», con su interruptor en «Privacidad» del
   cajón (`PUT /me/surveys` `(futuro)`, el molde de `PUT /me/marketing`) y el enlace firmado del correo.
 - El libro: `Contract` gana `survey_sent`, `survey_answered` y `survey_declined` (servidor; props `survey`, `channel`;
@@ -144,8 +146,9 @@ WhatsApp; recompensas (JumpPoints) por contestar.
 - **La notificación** `SurveyInvitation` `(futuro)` sobre `BrandedMailMessage`: `hero('surveys.mail', 'info')`, la
   `intro` de la encuesta en el idioma del cliente, el botón «Contestar» a la página firmada, y al pie el enlace
   «No quiero recibir más encuestas» (firmado, un toque). Piezas de bandeja en tres idiomas en `lang/{es,en,fr}/
-  surveys.php` `(futuro)`. `[PENDIENTE: owner]` §7·4: correo de servicio a todo visitante con opt-out (recomendado)
-  o solo con `marketing_opt_in`. `[PENDIENTE: asesoría]` (5): la naturaleza del correo (servicio, no comercial).
+  surveys.php` `(futuro)`. `[DECIDIDO owner]` §7·4: **correo de servicio a todo el que visitó**, con la baja de un
+  toque y SIN una sola línea comercial dentro (ni oferta, ni producto, ni enlace a comprar: eso lo convertiría en
+  comunicación comercial y exigiría el opt-in). `[PENDIENTE: asesoría]` (5): confirmar esa lectura.
 - **La página** `GET /encuesta/{token}` `(futuro)` en `focused-layout` (sin banner, sin tracker, sin `visitor_id`,
   como las de la fiesta: el grupo `withoutMiddleware(ResolveVisitor:mint)`), `no-store` (`RGPD-04`), en el idioma
   del cliente; `POST` guarda una sola vez (`answered_at` cierra el token) y el hecho `survey_answered` (`channel =
@@ -165,7 +168,11 @@ WhatsApp; recompensas (JumpPoints) por contestar.
   `(futuro)` (tarjetas: contestadas, tasa interna, tasa externa, enviadas, declinadas, media de la primera escala),
   `SurveyQuestionsChart` `(futuro)` (una barra por opción de la encuesta elegida), `SurveysBreakdownWidget` `(futuro)`
   (por encuesta y pregunta, plegada). `CsvExport::REPORT_SURVEYS` `(futuro)`: agregados sin texto libre.
-- La 360 gana «Encuestas contestadas: n · última: fecha» (contrato; sin las respuestas, que se ven en la fila).
+- La 360 gana el bloque «Encuestas»: contestadas, la última (fecha, canal, su puntuación de escala si la hay y su
+  texto libre), bajo `customers.insights`. Y la pestaña lleva **«Por atender»**: las respuestas con una escala ≤ 2 de
+  los últimos 30 días, con el día, el canal, la puntuación, el texto y el enlace a la ficha del cliente (solo con
+  `customers.insights`; sin él, la fila sale sin persona). Es el valor de atar la respuesta a la persona (§7): una
+  mala visita se puede llamar y arreglar; un agregado no.
 - `SurveyResource` `(futuro)` en «Ajustes → Sistema» (`settings.manage`): lista con clase, estado, respuestas;
   formulario con clave, nombre e intro en tres idiomas, clase, encendido, ventana, y el Repeater de preguntas (tipo,
   rótulos, opciones); con respuestas, claves y tipos bloqueados; una viva por clase (§7·5). Rastro `surveys.saved` /
@@ -212,16 +219,22 @@ notificación en cola) · `SUITE-01`. Dinero, aforo: ninguno.
   persona; él marca con el dedo— y externas —al escanear el QR, al día siguiente un correo amigable—; se crean en el
   panel (interna o externa, activa o desactivada, con fecha límite o sin ella) y salen en las analíticas». Y: «crea
   la spec, procede con rigor, cualquier ambigüedad me preguntas de manera simple».
-- **Cinco preguntas, la recomendada primero** (`[PENDIENTE: owner]`; el diseño asume la (a) de cada una):
-  1. **Las respuestas**: (a) atadas al cliente y a su visita, visibles en su ficha y anonimizadas con su cuenta ·
-     (b) anónimas: solo agregados, sin ficha.
-  2. **Cuántas veces**: (a) una respuesta por cliente y encuesta, aunque vuelva · (b) una por visita.
-  3. **Tipos de pregunta**: (a) elección única, escala de 1 a 5 y texto libre opcional · (b) sin texto libre.
-  4. **El correo externo**: (a) a todo el que visitó, como correo de servicio, con «no quiero más encuestas» de un
-     toque · (b) solo a quien dio el opt-in de comunicaciones comerciales.
-  5. **Encuestas vivas a la vez**: (a) una interna y una externa como máximo · (b) varias por clase.
-- `[PENDIENTE: asesoría]` (5): el correo de encuesta como comunicación de servicio.
-- Al aprobarse: estado ✅, `#740`, y la casilla T7 del tracker.
+- **Cinco preguntas y sus respuestas (24-09, `[DECIDIDO owner]`, `#740`)**:
+  1. **Las respuestas**: el owner no lo tenía claro («si están atadas al cliente podrían darnos más info, pero no
+     estoy seguro: ¿cómo sería hacerlo profesional y que de verdad aporte valor?») y aceptó la recomendación: **atadas
+     al cliente y a su visita**. Por qué: (i) una mala puntuación con nombre se puede llamar y arreglar («Por
+     atender», §4.4); un agregado anónimo no; (ii) permite cruzar la satisfacción con lo que el negocio ya sabe de esa
+     persona —primera visita o habitual, fiesta o entrada, si VOLVIÓ después de puntuar bajo—, que es la información
+     de valor; (iii) es lo que hace posible «una vez por cliente» (§7·2) sin preguntar dos veces; (iv) la persona no
+     entra en el cuadro: solo en su ficha y en «Por atender», con permiso propio, y se borra con su cuenta. Lo
+     profesional no es no atar, sino atar y ENSEÑAR agregados por defecto.
+  2. **Cuántas veces**: una respuesta por cliente y encuesta, «una vez nada más».
+  3. **Tipos de pregunta**: todos —elección única, elección múltiple, escala de 1 a 5, sí/no y texto libre—.
+  4. **El correo externo**: «la opción legal que nos lo permita, priorizando el interés de tener esa información y
+     dar valor al cliente» → correo de SERVICIO a todo el que visitó, sin contenido comercial, con baja de un toque;
+     `[PENDIENTE: asesoría]` (5) lo confirma.
+  5. **Encuestas vivas a la vez**: una interna y una externa como máximo.
+- Aprobada: `#740`; la casilla T7 del tracker dice «spec ✅ · T1 ⬜» hasta que la T1 entre en `main`.
 
 ## Anexo · fila del enrutador
 

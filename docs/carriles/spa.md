@@ -1,7 +1,7 @@
 # Carril · Diseño del SPA (el cajón) — y, desde el 24-09, LA ANALÍTICA
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb`) · Banda: **730–759** (700–729 agotada el 20-09)
-> · Último usado: **`#739`** · La banda está dada de alta en la tabla de `DECISIONES.md` ·
+> · Último usado: **`#740`** · La banda está dada de alta en la tabla de `DECISIONES.md` ·
 > Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: **`analitica-fiesta.md` §0**
 > (la tarea en curso) · `analitica.md` §0 y §4.5 · `google-business-profile.md` §0 · `sidebar-spa.md` §0 ·
 > `celebracion-e-invitacion.md` §0 · Actualizado: 2026-09-24 (noche).
@@ -75,12 +75,13 @@
 
 ## Por dónde retomar, en orden
 
-1. ❗❗ **LA T7 DE LA ANALÍTICA: LAS ENCUESTAS** — `specs/encuestas.md` ⬜ escrita el 24-09 (noche) con **cinco
-   preguntas al owner en su §7** (las respuestas atadas al cliente · una por cliente y encuesta · elección, escala y
-   texto libre · correo de servicio con baja de un toque · una viva por clase). **Sin su respuesta no se codifica.**
-   Con ella: `#740`, estado ✅ y T1→T4 (§4.6): el modelo y el panel → la puerta (kiosco, tarjeta debajo de «Hoy»,
-   tras acreditar la visita) → el correo del día siguiente (comando a las 10:00, +1 tarea del planificador) → el
-   cuadro (quinta pestaña). Después, el experimento real (T5c), que el owner quiere iterar tras las encuestas.
+1. ❗❗ **LA T7 DE LA ANALÍTICA: LAS ENCUESTAS** — `specs/encuestas.md` **✅ aprobada (`#740`, 24-09 noche)** con las
+   cinco respuestas del owner en su §7. **T1 en curso**: el modelo (`surveys`, `survey_responses`,
+   `users.surveys_opt_out`), `QuestionSchema`, `SurveyResource` en «Ajustes → Sistema» con bloqueos, `AuditLog`,
+   `AdminSettingsHub`, `Contract` +3, `anonymize()`/export/prune → T2 la puerta (kiosco, tarjeta debajo de «Hoy» tras
+   acreditar la visita) → T3 el correo del día siguiente (comando a las 10:00, +1 tarea del planificador: aviso a
+   plataforma por `deploy.sh`) → T4 el cuadro (quinta pestaña, «Por atender», la 360). Después, el experimento real
+   (T5c), que el owner quiere iterar tras las encuestas.
    ⚠️ Trampas de la fiesta, por si se reutiliza su molde (spec §4.6): el reenvío del mismo padre es IDEMPOTENTE;
    `order_id` nunca es nulo; son DOCE rutas enfocadas; los invitados añadidos NO son «extras»; una edición sin
    `reason` es del panel; un ayudante `seed()` en un test es FATAL; la sonda del panel censa TRES «Por día»; «vino
