@@ -383,6 +383,10 @@ instalación de un cliente. Si se configura a mano deja de ser una prueba del pr
   que ya demostró que sirve.
 - **Lo que el owner tiene que hacer se documenta igual**, aunque lo ejecute un agente: este repo es
   agent-first y el siguiente agente no puede adivinar qué se tocó en un panel.
+- **Un guion de datos contra producción** (mudado del carril de plataforma el 24-09) lleva valor ESPERADO por fila y
+  transacción, se prueba antes en local y se corre dos veces para ver que la segunda aborta; escribe por Eloquent y
+  olvida `cta.min_price_cents` (`PERF-05`). A tinker por `ssh`: `tail -n +2 guion.php | ssh host 'cd public_html &&
+  php artisan tinker --execute="$(cat)"'`; `require "php://stdin"` NO funciona.
 
 ## 6 · PRODUCCIÓN · playjump.es, MEDIDO (2026-09-01, `DECISIONES #325`)
 

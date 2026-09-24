@@ -838,6 +838,14 @@ juzga «idéntico», con los datos del diseño.
   local («con menos de 1,30 m, con un adulto», «under 1.30 m…», «hasta 3 días antes»…) y la landing de hoy en 200,
   ya sin «desde 1,30 m» en Jump. ⚠️ De paso, `MODELO-DATOS.md` listaba en `zones` cuatro columnas borradas en `#669`
   y no tenía las de altura: al día.
+  ▶ **·2 y ·3 son del SPA, medido al llegar**: publicar las reseñas en `/social-proof` es la **T2·9** de
+  `google-business-profile.md` (su carril; con la selección de la Ómnibus y una decisión del owner sobre caras y
+  fotos, `#616`), y el paso de pagar es suyo. Los dos, pedidos en su buzón (24-09 noche). La pieza 5 se construye
+  en la T4c contra el banco y se conecta cuando esté la T2·9.
+- ▶ **La T4b, afinada al medirla**: el controlador genérico INVOCA los controladores de hechos que la página declara
+  (`/prices`, `/schedule`, `/site`, `/catalog/*`…) y le pasa a la vista **el mismo JSON que la API** —sin copiar
+  lógica: si la API cambia, la página lo ve—. El layout limpio necesita el MISMO estado del `<body>` que el de hoy
+  (consentimiento, analítica, píxeles): se saca tal cual a un componente compartido, avisado antes al SPA.
 - **T4a · los datos** (producto): las dos columnas de `#699` con su campo en el panel, sus hechos en
   `/catalog/products` y `/catalog/zones` (contrato 1.26.0), sus pruebas y su mutante; y la LISTA de reseñas en
   `/social-proof`, con la misma regla de permiso y la misma línea legal que la portada de hoy. El texto del paso de

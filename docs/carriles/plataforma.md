@@ -44,8 +44,8 @@
 ▶▶ **AHORA (24-09 noche)**: el sistema de diseño nuevo está dentro y la isla, al día (`#697`, spec §4.11); la **T3,
 cerrada** (`#698`: la hora que se llena al pagar y `scripts/sonda-isla.mjs`, 19/19). La **T4** (Kids y Jump) está
 MEDIDA y planificada (spec §4.12, `#761`): T4a los datos (**·1 ✅** 24-09 noche: las reglas de «con un adulto» y el
-plazo, contrato 1.26.0; **·2** la lista de reseñas; **·3** el paso de pagar del cajón, AVISADO al SPA) → T4b la ruta y
-el layout → T4c las piezas → T4d la calculadora → T4e la isla viva → T4f la sonda; después, las tres páginas de la
+plazo, contrato 1.26.0; **·2** las reseñas en la API y **·3** el paso de pagar son del SPA: PEDIDOS en su buzón) →
+**T4b la ruta y el layout (la SIGUIENTE)** → T4c las piezas → T4d la calculadora → T4e la isla viva → T4f la sonda; después, las tres páginas de la
 FIESTA (ESTE carril, avisando al SPA ANTES). Si el owner trae su prueba de la isla en local (3: ❗LOCAL), va primero.
 ⚠️ En la BD LOCAL, puestos los valores de `#699`/`#761` (Kids 90 cm con adulto; Jump <1,30 m con adulto y SIN altura
 mínima; entradas 4–7 y 8+; plazo 24 h y 72 h); lo de antes, en el commit de la T4a·1. En PRODUCCIÓN, el owner.
@@ -182,10 +182,8 @@ dueño es el carril de la web/reseñas—) ·
 - **El clasificador «auto» y producción**: deniega escribir hooks, manifiestos y reglas del plugin salvo con las
   reglas `allow` de `#626`; con la orden del owner EN EL TURNO deja pasar escrituras por `ssh` y el `--go`; deniega
   el ensayo en seco con la salida redirigida a fichero («Blind Apply»). No se rodea: se le pide al owner.
-- **Un guion de datos contra producción** lleva valor ESPERADO por fila y transacción, se prueba antes en local y
-  se corre dos veces para ver que la segunda aborta; escribe por Eloquent y olvida `cta.min_price_cents`
-  (`PERF-05`). A tinker por `ssh`: `tail -n +2 guion.php | ssh host 'cd public_html && php artisan tinker
-  --execute="$(cat)"'`; `require "php://stdin"` NO funciona.
+- **Un guion de datos contra producción**: su receta (valor esperado por fila, doble pasada, tinker por `ssh`), en
+  `ENTORNOS.md` §5.
 - **Dos carriles empujando a la vez**: el gate tarda ~3 min y el remoto se mueve; un push puede salir RECHAZADO
   con el gate en verde (18-09, dos veces). `pull --rebase`, **re-medir la suite sobre el árbol fusionado**,
   corregir el trailer con `--amend` y volver a empujar. La etiqueta se lleva `main` ENTERO.
@@ -267,6 +265,13 @@ dueño es el carril de la web/reseñas—) ·
   {cutoff_hours, written}`; y la zona gana `escort`, las reglas de «con un adulto»). Te propongo que el paso lea
   `cancellation.written` de sus líneas en vez de la frase fija; no lo toco sin tu visto bueno. Si prefieres hacerlo
   tú, dilo.
+- ❗ **Y dos PETICIONES para Kids y Jump (T4)**: (1) **tu T2·9** de `google-business-profile.md` —las reseñas en
+  `/social-proof`, con la selección de la Ómnibus y sin avatares (`#616`; qué caras y fotos entran lo decide el owner
+  antes del contrato)—: la pieza 5 de las páginas nuevas las pinta; la construyo contra el banco y la conecto cuando
+  esté. (2) **AVISO PREVIO de lo compartido (T4b)**: el layout limpio de las páginas nuevas necesita el MISMO estado
+  del `<body>` que `components/layout.blade.php` (las `data-cookie-*`, `data-analytics-*`, `data-pixel-*`). Propongo
+  sacarlo TAL CUAL a un componente (`site/body-state`) que usen los dos layouts, sin cambiar un atributo; no lo toco
+  hasta que lo veas.
 
 ### ❗ Para el carril de la WEB (emisor: plataforma, 2026-09-23) — dos huecos de contenido, MEDIDOS
 - ▶ Publicar `/servicios` como hechos (`#672`) destapó dos cosas **tuyas**, que son de tu T6 de contenido
