@@ -25,6 +25,8 @@ export const PROPS_ISLA = {
     payment: { type: String, default: null },
     paymentText: { type: String, default: null },
     bookingToday: { type: Object, default: null },
+    /** La compra (situación 10): la isla pasa a ser su contenedor. Qué pinta, en `piezas/CompraIsla.vue`. */
+    checkout: { type: Object, default: null },
     help: { type: Object, default: null },
     notice: { type: String, default: null },
     account: { type: Object, default: () => ({ state: 'guest', pending: false }) },

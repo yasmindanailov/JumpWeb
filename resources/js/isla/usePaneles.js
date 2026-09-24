@@ -40,8 +40,11 @@ export function usePila() {
     return { stack, view, plansFromToday, cerrar, apilarPanel, atras, alternarPanel, alAbrirDesdeLaPagina };
 }
 
-/** La capa de un panel abierto. Durante la compra no se cierra ni con Esc ni tocando fuera: hay dinero en juego. */
-export function useCapa({ islandRef, panelRef, isOpen, inCheckout, pila }) {
+/**
+ * La capa de un panel abierto. La compra no se cierra tocando fuera (hay dinero en juego); con Escape, sí: es su
+ * X, que cierra sin perder nada (`checkout.onClose`).
+ */
+export function useCapa({ islandRef, panelRef, isOpen, inCheckout, checkout, pila }) {
     function alTocarFuera(e) {
         if (islandRef.value && !islandRef.value.contains(e.target)) pila.stack.value = [];
     }
@@ -59,6 +62,7 @@ export function useCapa({ islandRef, panelRef, isOpen, inCheckout, pila }) {
 
     function alTeclear(e) {
         if (e.key === 'Escape' && isOpen.value && !inCheckout.value) { e.stopPropagation(); pila.cerrar(); return; }
+        if (e.key === 'Escape' && inCheckout.value && checkout()?.onClose) { e.stopPropagation(); checkout().onClose(); return; }
         if (e.key !== 'Tab' || !isOpen.value || !islandRef.value) return;
         const f = islandRef.value.querySelectorAll('a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])');
         if (!f.length) return;

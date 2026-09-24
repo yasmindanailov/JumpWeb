@@ -16,6 +16,7 @@ import { useAncho, useCompacta } from './useColocacion.js';
 import { useMorfeo } from './useMorfeo.js';
 import { useAviso } from './useAviso.js';
 import { useCapa, usePila } from './usePaneles.js';
+import { useCompraCapa } from './useCompraCapa.js';
 
 export function useIsla(props, { wrapRef, islandRef, sizerRef, panelRef }) {
     const t = (clave) => texto(props.textos, clave);
@@ -27,7 +28,7 @@ export function useIsla(props, { wrapRef, islandRef, sizerRef, panelRef }) {
     const entrada = (ctaVisible) => ({
         page: props.page, today: props.today, offer: props.offer, reassurance: props.reassurance, quote: props.quote,
         chosen: props.chosen, filling: props.filling, task: props.task, resume: props.resume, payment: props.payment,
-        paymentText: props.paymentText, bookingToday: props.bookingToday, ctaVisible,
+        paymentText: props.paymentText, bookingToday: props.bookingToday, checkout: props.checkout, ctaVisible,
         onRetry: props.onRetry, onPayBizum: props.onPayBizum, onManual: props.onManual, onDismiss: props.onDismiss,
     });
     const s0 = computed(() => resolverSituacion(entrada(props.ctaVisible), props.textos));
@@ -43,7 +44,8 @@ export function useIsla(props, { wrapRef, islandRef, sizerRef, panelRef }) {
     const { box, animate, calmNow, remedirCuando } = useMorfeo({ wrapRef, sizerRef, isOpen });
     const scrolledDown = useCompacta(props, wrapRef);
     const shownNotice = useAviso(props, isOpen);
-    const { alTeclear } = useCapa({ islandRef, panelRef, isOpen, inCheckout, pila });
+    const { alTeclear } = useCapa({ islandRef, panelRef, isOpen, inCheckout, checkout: () => props.checkout, pila });
+    const { anuncio } = useCompraCapa({ islandRef, inCheckout, clave: computed(() => (inCheckout.value && props.checkout ? props.checkout.key : null)) });
 
     // ── Reparto de la línea de situación ──
     const r = computed(() => reparto({
@@ -98,13 +100,13 @@ export function useIsla(props, { wrapRef, islandRef, sizerRef, panelRef }) {
 
     return {
         t, s, stack, view, top, r, isOpen, inCheckout, openRow, stretch, pendiente, titleInRow, panelTitle, shownNotice,
-        hayLinea, lineaAbre, accion, accionHref, accionAbierta, pulsarAccion, alTeclear, alternarPanel, panelProps,
+        hayLinea, lineaAbre, accion, accionHref, accionAbierta, pulsarAccion, alTeclear, alternarPanel, panelProps, anuncio,
         cerrar: pila.cerrar, atras: pila.atras, apilarPanel: pila.apilarPanel, elegirPlan, abrirCapa, navegar,
         tamano: computed(() => tamano({ inCheckout: inCheckout.value, isOpen: isOpen.value, notice: shownNotice.value, isCompact: r.value.isCompact })),
-        estiloRaiz: computed(() => estiloRaiz({ gutter: props.gutter, top: top.value })),
+        estiloRaiz: computed(() => estiloRaiz({ gutter: props.gutter, top: top.value, inCheckout: inCheckout.value })),
         estiloIsla: computed(() => estiloIsla({
             row: r.value.row, box: box.value, alert: s.value.tone === 'alert', grown: grown.value, animate: animate.value, calm: calmNow.value,
         })),
-        estiloMedida: computed(() => estiloMedida({ row: r.value.row, top: top.value, isOpen: isOpen.value, cap: box.value.cap, maxWidth: props.maxWidth })),
+        estiloMedida: computed(() => estiloMedida({ row: r.value.row, top: top.value, isOpen: isOpen.value, cap: box.value.cap, maxWidth: props.maxWidth, inCheckout: inCheckout.value })),
     };
 }

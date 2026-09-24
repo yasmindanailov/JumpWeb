@@ -1,9 +1,11 @@
 <script setup>
 /**
  * La acción de la isla (`ActionButton` del diseño): una sola, naranja, en la fila. En móvil puede llevar la
- * línea de situación dentro (`sublabel`). `loading` la bloquea; la bola de carga llega con la compra (T3).
+ * línea de situación dentro (`sublabel`). `loading` la bloquea y pone la bola pequeña delante del texto; si es
+ * un texto, es lo que se espera («Comprobando tus datos y guardando tu hora»), para el lector de pantalla.
  */
 import { computed, ref } from 'vue';
+import CargaRebote from '../ui/CargaRebote.vue';
 
 const props = defineProps({
     top: { type: Boolean, default: false },
@@ -59,7 +61,11 @@ function click(e) {
         <span
             :key="label"
             :style="{ display: 'inline-flex', alignItems: 'center', gap: '10px', whiteSpace: 'nowrap', animation: 'isla-swap var(--dur-base) var(--ease-island) both' }"
-        >{{ label }}</span>
+        ><CargaRebote
+            v-if="loading"
+            size="sm"
+            :label="loading === true ? label : loading"
+        />{{ label }}</span>
         <small
             v-if="sublabel"
             :style="{ maxWidth: '100%', fontSize: '11px', lineHeight: 1.2, fontWeight: 'var(--fw-semibold)', textAlign: 'center', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }"

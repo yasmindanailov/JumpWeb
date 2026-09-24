@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { estiloIsla, estiloMedida, tamano } from './forma.js';
+import { estiloIsla, estiloMedida, estiloRaiz, tamano } from './forma.js';
 
 const caja = (w, h, cap = 0) => ({ w, h, cap });
 
@@ -41,6 +41,25 @@ test('el techo del medidor: el contenedor o `maxWidth` arriba; abajo, la pantall
     assert.equal(estiloMedida({ row: true, top: true, isOpen: false, cap: 0, maxWidth: 760 }).maxWidth, '760px');
     assert.equal(estiloMedida({ row: true, top: false, isOpen: false, cap: 390, maxWidth: 760 }).maxWidth, 'calc(100vw - 32px)');
     assert.equal(estiloMedida({ row: false, top: false, isOpen: false, cap: 390, maxWidth: 760 }).maxWidth, '100%');
+});
+
+test('en la compra la raíz deja de ir pegada: fija sobre la página, con aire arriba o a pantalla completa abajo', () => {
+    const reposo = estiloRaiz({ gutter: '16px', top: false });
+    assert.equal(reposo.position, 'sticky');
+    assert.equal(reposo.pointerEvents, 'none');
+
+    const arriba = estiloRaiz({ gutter: '16px', top: true, inCheckout: true });
+    assert.deepEqual([arriba.position, arriba.alignItems, arriba.paddingTop, arriba.pointerEvents], ['fixed', 'flex-start', 'max(16px, 4vh)', 'auto']);
+
+    const abajo = estiloRaiz({ gutter: '16px', top: false, inCheckout: true });
+    assert.deepEqual([abajo.position, abajo.alignItems, abajo.paddingLeft, abajo.bottom], ['fixed', 'flex-end', '8px', 0]);
+    // Abajo, tocar fuera no la cierra: la raíz sigue sin recoger punteros, y el velo es de la isla.
+    assert.equal(abajo.pointerEvents, 'none');
+});
+
+test('en la compra el medidor mide 600px como mucho arriba y el ancho entero abajo, aunque sea fila', () => {
+    assert.equal(estiloMedida({ row: true, top: true, isOpen: true, cap: 1200, maxWidth: 760, inCheckout: true }).width, 'min(600px, calc(100vw - 32px))');
+    assert.equal(estiloMedida({ row: false, top: false, isOpen: true, cap: 390, maxWidth: 760, inCheckout: true }).width, '100%');
 });
 
 test('el tamaño que declara la raíz, de más a menos: compra, panel, aviso, compacta, reposo', () => {

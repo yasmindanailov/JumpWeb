@@ -2,7 +2,7 @@
 
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669 AGOTADA con `#669`** → **670–699 EN CURSO** · Último usado: **`#689`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **640–669 AGOTADA con `#669`** → **670–699 EN CURSO** · Último usado: **`#690`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#684`) · Actualizado: **2026-09-24**
 > (el sistema nuevo leído por DesignSync; el owner decide Blade en la instancia y la isla como segunda carcasa).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
@@ -75,11 +75,12 @@
    `#684` promociones (modelo a iterar) · `#688` la compra guarda la hora **al pagar** y dice «Esta cuenta ya
    existe» **al enviar**. ✅ T0 (§1.6) · ✅ T1 (§4.8: 82/82 páginas y 84 iconos a 0 px) · ✅ T2 (§4.9: la isla,
    52/52 a 0 px, `CE-6` sin excepción; en/fr de `lang/*/isla.php` a revisar por el owner).
-   ▶▶ **T3, la compra** (§4.10): T3a ✅ (censo y plan) → T3b ✅ (`#689`: las 14 piezas en Vue, 18/18 a 0 px con
-   `scripts/banco-piezas.php`) → **T3c** el tamaño «Compra» y sus pantallas → T3d la secuencia de
-   `PurchaseSection.vue` a un módulo del motor (aviso en el buzón) → T3e comprar de verdad con tarjeta y `/sonda`. FALTAN como dato (T0): el precio de antes (→ `#684`),
+   ▶▶ **T3, la compra** (§4.10): T3a ✅ (censo y plan) → T3b ✅ (`#689`: las 14 piezas, 18/18 a 0 px) → T3c ✅
+   (`#690`: el tamaño «Compra» y sus pantallas, 54/54 a 0 px con `scripts/banco-compra.php`; el juez gana
+   `--rehacer` para React contra Vue) → **T3d** la secuencia de `PurchaseSection.vue` a un módulo del motor (aviso
+   en el buzón) → T3e comprar de verdad con tarjeta y `/sonda`. FALTAN como dato (T0): el precio de antes (→ `#684`),
    el plazo de cancelación y los 90 cm con adulto. ⚠️ Tras un `pull`: `cp -r ../instancias/playjump/publico/instancia
-   public/`; los bancos se rehacen con `tema/lote-fichas.py`, `scripts/banco-isla.php` y `banco-piezas.php` (su lado B, antes).
+   public/`; los bancos se rehacen con `tema/lote-fichas.py` y `scripts/banco-{isla,piezas,compra}.php` (su lado B, antes).
    ⚠️ **La web nueva cambia las URLs** (§1.5): cada ruta vieja necesita su 301.
    ⚠️⚠️ **Lo que dejaron los platos y vale para lo que venga** (detalle en la spec §4.1 y §4.1.ter): si
    el dato tiene **servicio de dominio**, el recurso **delega** · el filtro de «lo que no viaja» va

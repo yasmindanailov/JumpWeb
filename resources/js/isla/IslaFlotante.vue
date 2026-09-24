@@ -11,9 +11,9 @@
  * fichero con fichero. Se juzga contra él píxel a píxel (`scripts/pixel.mjs`, banco de la isla). Este fichero
  * PINTA (`CE-6`): el JSX del diseño está aquí; su estado y sus efectos, en `useIsla.js` y los `use*` que llama;
  * sus estilos en línea, en `forma.js`; sus props, en `props.js`.
- * ⚠️ Lo que la isla hace en la COMPRA (situación 10: el contenedor de la reserva) llega con la T3, con el motor
- * detrás; aquí no se acepta `checkout`. El panel «Mi QR» se pinta vacío hasta la T5 (necesita el carné), y
- * sin sesión no se llega a él.
+ * En la COMPRA (situación 10, `checkout`) la isla es el contenedor de la reserva (`piezas/CompraIsla.vue`): el
+ * paso va en la ranura de siempre y lo que acompaña a su acción, en la ranura `junto` (§4.10, T3c). El panel
+ * «Mi QR» se pinta vacío hasta la T5 (necesita el carné), y sin sesión no se llega a él.
  */
 import { provide, ref } from 'vue';
 import { PROPS_ISLA } from './props.js';
@@ -26,6 +26,7 @@ import PanelIsla from './piezas/PanelIsla.vue';
 import BloqueCookies from './piezas/BloqueCookies.vue';
 import BloqueAviso from './piezas/BloqueAviso.vue';
 import BloqueFallo from './piezas/BloqueFallo.vue';
+import CompraIsla from './piezas/CompraIsla.vue';
 
 const props = defineProps(PROPS_ISLA);
 provide(CLAVE_TEXTOS, () => props.textos);
@@ -38,7 +39,7 @@ const panelRef = ref(null);
 
 const {
     t, s, stack, view, top, r, isOpen, inCheckout, openRow, stretch, pendiente, titleInRow, panelTitle, shownNotice,
-    hayLinea, lineaAbre, accion, accionHref, accionAbierta, pulsarAccion, alTeclear, alternarPanel, panelProps,
+    hayLinea, lineaAbre, accion, accionHref, accionAbierta, pulsarAccion, alTeclear, alternarPanel, panelProps, anuncio,
     cerrar, atras, apilarPanel, elegirPlan, abrirCapa, navegar, tamano, estiloRaiz, estiloIsla, estiloMedida,
 } = useIsla(props, { wrapRef, islandRef, sizerRef, panelRef });
 </script>
@@ -61,140 +62,156 @@ const {
             ref="islandRef"
             data-surface="ink"
             :style="estiloIsla"
+            :role="inCheckout ? 'dialog' : undefined"
+            :aria-modal="inCheckout ? 'true' : undefined"
+            :aria-labelledby="inCheckout ? 'isla-compra-paso' : undefined"
             @keydown="alTeclear"
         >
             <span
                 role="status"
                 aria-live="polite"
                 :style="{ position: 'absolute', width: '1px', height: '1px', overflow: 'hidden', clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap' }"
-            />
+            >{{ inCheckout ? anuncio : '' }}</span>
             <div
                 ref="sizerRef"
                 :style="estiloMedida"
             >
-                <BloqueCookies
-                    v-if="!top && cookies"
+                <CompraIsla
+                    v-if="inCheckout"
+                    :ck="checkout"
+                    :top="top"
                     :cookies="cookies"
-                    :top="top"
-                />
-                <PanelIsla
-                    v-if="!top && isOpen"
-                    :key="view"
-                    ref="panelRef"
-                    v-bind="panelProps"
-                    @abrir="apilarPanel"
-                    @capa="abrirCapa"
-                    @navegar="navegar"
-                    @elegir="elegirPlan"
-                />
-                <BloqueAviso
-                    v-if="!top && shownNotice"
-                    :texto="shownNotice"
-                    :top="top"
-                />
-                <div
-                    v-if="!r.row && hayLinea"
-                    :style="{ padding: '2px 4px 7px', display: 'flex', alignItems: 'flex-start', gap: '6px' }"
                 >
-                    <div :style="{ flex: '1 1 auto', minWidth: 0 }">
-                        <LineaContexto
-                            :key="s.id"
-                            :situation="s"
-                            :top="top"
-                            :abrir="lineaAbre"
-                            :expanded="Boolean(s.opens) && view === s.opens"
-                        />
-                    </div>
-                </div>
-                <BloqueFallo
-                    v-if="!top && s.extra"
-                    :extra="s.extra"
-                    :top="top"
-                />
-
-                <div :style="{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }">
-                    <ControlIcono
-                        v-if="openRow && stack.length > 1"
-                        :label="t('control.volver')"
-                        icon="chevron-left"
-                        @click="atras"
+                    <slot />
+                    <template #junto>
+                        <slot name="junto" />
+                    </template>
+                </CompraIsla>
+                <template v-else>
+                    <BloqueCookies
+                        v-if="!top && cookies"
+                        :cookies="cookies"
+                        :top="top"
                     />
-                    <ControlIcono
-                        v-else-if="!openRow"
-                        :label="t('control.menu')"
-                        icon="menu"
-                        :expanded="view === 'menu'"
-                        :dot="pendiente && !isOpen ? (bookingToday ? 'var(--isla-vivo)' : 'var(--isla-alerta)') : null"
-                        @click="(e) => alternarPanel('menu', e)"
+                    <PanelIsla
+                        v-if="!top && isOpen"
+                        :key="view"
+                        ref="panelRef"
+                        v-bind="panelProps"
+                        @abrir="apilarPanel"
+                        @capa="abrirCapa"
+                        @navegar="navegar"
+                        @elegir="elegirPlan"
                     />
-                    <span
-                        v-if="titleInRow"
-                        :style="{ flex: '1 1 auto', minWidth: 0, padding: '0 6px', fontFamily: 'var(--font-ui)', fontWeight: 'var(--fw-bold)', fontSize: '15px', color: 'var(--isla-sobre)' }"
-                    >{{ panelTitle }}</span>
+                    <BloqueAviso
+                        v-if="!top && shownNotice"
+                        :texto="shownNotice"
+                        :top="top"
+                    />
                     <div
-                        v-if="r.row && hayLinea"
-                        :style="{ flex: '1 1 auto', minWidth: 0, maxWidth: top ? 'min(420px, 46vw)' : 'calc(100vw - 110px)', display: 'flex', justifyContent: top ? 'flex-end' : 'flex-start', paddingRight: top ? 0 : '8px' }"
+                        v-if="!r.row && hayLinea"
+                        :style="{ padding: '2px 4px 7px', display: 'flex', alignItems: 'flex-start', gap: '6px' }"
                     >
-                        <LineaContexto
-                            :key="s.id"
-                            :situation="s"
-                            :top="top"
-                            :abrir="lineaAbre"
-                            :expanded="Boolean(s.opens) && view === s.opens"
+                        <div :style="{ flex: '1 1 auto', minWidth: 0 }">
+                            <LineaContexto
+                                :key="s.id"
+                                :situation="s"
+                                :top="top"
+                                :abrir="lineaAbre"
+                                :expanded="Boolean(s.opens) && view === s.opens"
+                            />
+                        </div>
+                    </div>
+                    <BloqueFallo
+                        v-if="!top && s.extra"
+                        :extra="s.extra"
+                        :top="top"
+                    />
+
+                    <div :style="{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }">
+                        <ControlIcono
+                            v-if="openRow && stack.length > 1"
+                            :label="t('control.volver')"
+                            icon="chevron-left"
+                            @click="atras"
+                        />
+                        <ControlIcono
+                            v-else-if="!openRow"
+                            :label="t('control.menu')"
+                            icon="menu"
+                            :expanded="view === 'menu'"
+                            :dot="pendiente && !isOpen ? (bookingToday ? 'var(--isla-vivo)' : 'var(--isla-alerta)') : null"
+                            @click="(e) => alternarPanel('menu', e)"
+                        />
+                        <span
+                            v-if="titleInRow"
+                            :style="{ flex: '1 1 auto', minWidth: 0, padding: '0 6px', fontFamily: 'var(--font-ui)', fontWeight: 'var(--fw-bold)', fontSize: '15px', color: 'var(--isla-sobre)' }"
+                        >{{ panelTitle }}</span>
+                        <div
+                            v-if="r.row && hayLinea"
+                            :style="{ flex: '1 1 auto', minWidth: 0, maxWidth: top ? 'min(420px, 46vw)' : 'calc(100vw - 110px)', display: 'flex', justifyContent: top ? 'flex-end' : 'flex-start', paddingRight: top ? 0 : '8px' }"
+                        >
+                            <LineaContexto
+                                :key="s.id"
+                                :situation="s"
+                                :top="top"
+                                :abrir="lineaAbre"
+                                :expanded="Boolean(s.opens) && view === s.opens"
+                            />
+                        </div>
+                        <span
+                            v-if="(top || openRow) && !hayLinea && !inCheckout && !(stretch && accion) && !titleInRow"
+                            :style="{ flex: '1 1 auto', minWidth: '8px' }"
+                        />
+                        <BotonAccion
+                            v-if="accion"
+                            :top="stretch ? false : top"
+                            :label="accion.label"
+                            :sublabel="r.lineInButton ? s.line : null"
+                            :href="accionHref"
+                            :expanded="accionAbierta"
+                            :pulsar="pulsarAccion"
+                        />
+                        <ControlIcono
+                            v-if="openRow"
+                            :label="t('control.cerrar')"
+                            icon="x"
+                            @click="cerrar"
+                        />
+                        <ControlIcono
+                            v-else-if="s.extra && s.extra.onDismiss"
+                            :label="t('control.cerrar')"
+                            icon="x"
+                            @click="s.extra.onDismiss"
                         />
                     </div>
-                    <span
-                        v-if="(top || openRow) && !hayLinea && !inCheckout && !(stretch && accion) && !titleInRow"
-                        :style="{ flex: '1 1 auto', minWidth: '8px' }"
-                    />
-                    <BotonAccion
-                        v-if="accion"
-                        :top="stretch ? false : top"
-                        :label="accion.label"
-                        :sublabel="r.lineInButton ? s.line : null"
-                        :href="accionHref"
-                        :expanded="accionAbierta"
-                        :pulsar="pulsarAccion"
-                    />
-                    <ControlIcono
-                        v-if="openRow"
-                        :label="t('control.cerrar')"
-                        icon="x"
-                        @click="cerrar"
-                    />
-                    <ControlIcono
-                        v-else-if="s.extra && s.extra.onDismiss"
-                        :label="t('control.cerrar')"
-                        icon="x"
-                        @click="s.extra.onDismiss"
-                    />
-                </div>
 
-                <BloqueFallo
-                    v-if="top && s.extra"
-                    :extra="s.extra"
-                    :top="top"
-                />
-                <BloqueAviso
-                    v-if="top && shownNotice"
-                    :texto="shownNotice"
-                    :top="top"
-                />
-                <PanelIsla
-                    v-if="top && isOpen"
-                    :key="view"
-                    ref="panelRef"
-                    v-bind="panelProps"
-                    @abrir="apilarPanel"
-                    @capa="abrirCapa"
-                    @navegar="navegar"
-                    @elegir="elegirPlan"
-                />
-                <BloqueCookies
-                    v-if="top && cookies"
-                    :cookies="cookies"
-                    :top="top"
-                />
+                    <BloqueFallo
+                        v-if="top && s.extra"
+                        :extra="s.extra"
+                        :top="top"
+                    />
+                    <BloqueAviso
+                        v-if="top && shownNotice"
+                        :texto="shownNotice"
+                        :top="top"
+                    />
+                    <PanelIsla
+                        v-if="top && isOpen"
+                        :key="view"
+                        ref="panelRef"
+                        v-bind="panelProps"
+                        @abrir="apilarPanel"
+                        @capa="abrirCapa"
+                        @navegar="navegar"
+                        @elegir="elegirPlan"
+                    />
+                    <BloqueCookies
+                        v-if="top && cookies"
+                        :cookies="cookies"
+                        :top="top"
+                    />
+                </template>
             </div>
         </div>
     </div>

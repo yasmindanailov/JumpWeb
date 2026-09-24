@@ -23,7 +23,7 @@
     se avisa en el buzón antes.
   - Tras tocar un `.vue`, `npm run build:ssr` antes de la suite (`sidebar-spa.md` §0).
 - **Estado**: §7 contestado (`#683`), promociones en `#684`, T0 hecha (§1.6). **T1 ✅** (§4.8) y **T2 ✅**
-  (§4.9): la isla en Vue, 52 de 52 situaciones idénticas al diseño. **T3** (la compra, §4.10): T3a y T3b ✅.
+  (§4.9): la isla en Vue, 52 de 52 situaciones idénticas al diseño. **T3** (la compra, §4.10): T3a→T3c ✅.
 - **Invariantes**: `PAY-*` si entra Bizum (`VERIFY_CONC=1`), `SEC-12` (la ruta de las vistas), `SEC-01`,
   `RGPD-*` (consentimiento dentro de la isla, Apple como proveedor), `PERF-02` (la carcasa por instalación va en
   el arranque cacheado; la variante del A/B, en la sesión).
@@ -307,7 +307,7 @@ deja de decir «nada de otra librería» en la T1.
 | T0 ✅ | Kids y Jump contra el menú de hechos, los tokens y las URLs (§1.6). Cumpleaños y la portada, con su tanda | Esta spec |
 | T1 ✅ | El tema: la referencia, las fuentes, la hoja de tokens y los iconos (§4.8); los roles nuevos del producto van con la isla (T2) | Producto + instancia |
 | T2 ✅ | La isla en Vue, idéntica al diseño en 26 situaciones (§4.9); los datos reales, con la T4 | Producto |
-| T3 | La compra en la isla sobre el motor, con tarjeta; sonda de compra (§4.10: T3a y T3b ✅ → T3e) | Producto |
+| T3 | La compra en la isla sobre el motor, con tarjeta; sonda de compra (§4.10: T3a→T3c ✅ → T3e) | Producto |
 | T4 | **Kids y Jump** (`#683`), un molde y dos páginas, con su calculadora y sus 301 | Instancia + producto |
 | T5 | Mi cuenta en la isla | Producto |
 | T6 | El resto de páginas y la lógica nueva que apruebe el owner | Los dos |
@@ -460,7 +460,7 @@ vigilan) y encogiendo su excepción. Es un fichero del carril del SPA: se avisa 
   `TimeSlotPicker`, `DayStrip`, `OptionCards`, `QuantityStepper`, `PriceSummary`, `SocialSignIn`,
   `OutcomeHeader`, `QrPass`, `TaskCard`, `Skeleton` y `BounceLoader`, más los iconos del `Button` y del
   `Link`. Un banco con cada pieza en sus estados, sobre claro y sobre tinta → 0 píxeles.
-- **T3c** el tamaño «Compra» de la isla y sus pantallas, idénticos a `isla-compra.card.html` recorriendo su
+- **T3c ✅** el tamaño «Compra» de la isla y sus pantallas, idénticos a `isla-compra.card.html` recorriendo su
   banco con clics y con sus mismos datos. Las pantallas reciben todo por props: no conocen el motor.
 - **T3d** la secuencia compartida, extraída de `PurchaseSection.vue`.
 - **T3e** la isla compra de verdad con tarjeta: el cableado, la prueba del orden de la máquina y `/sonda` en
@@ -488,6 +488,36 @@ vigilan) y encogiendo su excepción. Es un fichero del carril del SPA: se avisa 
   da 27.997 y un rol cambiado (`--isla-especial`) 432, los dos con código 1. La T2 sigue en 52 de 52.
 - ⚠️ `defineProps` no puede nombrar una constante del propio `<script setup>` (se eleva fuera de él): va en un
   módulo y se importa.
+
+**T3c hecha el 24-09 (`#690`)**:
+- **El tamaño «Compra»** de la isla (`piezas/CompraIsla.vue`): la raíz fija sobre la página (con aire en
+  escritorio, a pantalla completa en móvil), la caja como diálogo, el medidor a 600px, la página quieta detrás,
+  el foco al titular de cada paso con su anuncio y de vuelta a quien abrió, y Escape como la X
+  (`useCompraCapa.js`); el botón de la acción gana su bola de carga.
+- **Las pantallas**, en `resources/js/isla/compra/`: la pantalla 0 (`PantallaCuando`, `PantallaCuandoFiesta`),
+  `PantallaDatos`, `PantallaEntrar`, `PantallaDescargo`, `PantallaPagar` (con `JuntoPagar`), `PantallaSaliendo`,
+  `PantallaFallido` (con `JuntoFallido`), `PantallaVerificando`, `PantallaPerdida` y `PantallaListo`, sobre
+  `PasoCompra`, `PreguntaCompra`, `DatoFijo` y `CantidadCompra`. **Pintan y avisan**: todo llega hecho —de
+  dinero, ni una cuenta (`PAY-12`)—; los textos fijos, del grupo `compra` de `lang/*/isla.php` (el literal del
+  diseño; en/fr a revisar) y lo que depende del parque (zonas, precios, preguntas del widget, plazos de las
+  condiciones, sus calcetines), como dato. El recuadro rayado de la [Hora extra] y el texto del descargo son
+  ranuras: el diseño deja un hueco y la compra real pone el control y el documento.
+- **El juez**: `scripts/banco-compra.php`, 27 estados —los del §5 del brief (cada pantalla, con y sin sesión,
+  errores, cuenta existente, hora llena, Instagram, entradas y cumpleaños, los cuatro desenlaces) y la pantalla
+  0— abajo a 390 y arriba a 1280: **54 pares, 54 con 0 píxeles, todos a la primera**. A pinta con la vista del
+  hook del diseño transcrita (`vista-diseno.jsx`) y B con el adaptador (`entrada.js`), que hace con los datos
+  de prueba lo que la T3e hará con el motor; los dos parten del mismo estado (`estado.js`).
+- **La trampa 8 del juez, medida**: con el MISMO DOM y el mismo estilo calculado —el HTML de las dos islas,
+  reinsertado en la misma página, da 0— React y Vue dejaban de 4 a 1.007 píxeles de antialias distinto,
+  estables en cada lado. `--rehacer` rehace las cajas antes de la foto (oculta y muestra el `body`, devuelve foco
+  y desplazamientos). Opción y no defecto: en las hojas de revisión con `iframe` estropeaba dos páginas.
+  **Regresión con el juez nuevo**: la isla (52/52) y las piezas (18/18), con `--rehacer`, todas a la primera; las
+  82 páginas (sin él), los 84 iconos y las fuentes, a 0. ⚠️ Dos hojas de revisión («Así es la zona», «Dudas»)
+  necesitan más intentos (`--reintentos 8`: cuadran al 3.º y al 4.º) porque su propia referencia no pinta igual
+  dos veces (medido A contra A: 1.330 píxeles; su isla mide su ancho al llegar las fuentes). Controles negativos
+  de la compra: un texto del `lang` cambiado da 923 píxeles y 1px de separación da 10, los dos con código 1.
+- ⚠️ Vue deja un espacio entre `</template>` y un `{{ … }}` en la línea siguiente (no es texto entre dos
+  elementos, así que no se quita): se escriben pegados.
 
 ## 5. Impacto en invariantes
 

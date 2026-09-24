@@ -17,6 +17,8 @@
  *       /var/www/instancias/playjump/tema/isla-situaciones.json storage/app/pixel/banco-isla http://127.0.0.1:8128
  *
  * Los textos del lado B son los de `lang/es/isla.php`: si una coma no es la del diseño, el juez lo ve.
+ * Se juzga con `scripts/pixel.mjs --lote …/lote.json --reloj 2026-09-23T16:05:00+02:00 --rehacer`: A lo monta
+ * React y B Vue (trampa 8 del juez).
  */
 
 use Illuminate\Contracts\Console\Kernel;

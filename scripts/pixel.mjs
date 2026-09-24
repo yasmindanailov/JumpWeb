@@ -14,6 +14,7 @@
  *       node scripts/pixel.mjs --a <url> --b <url> [--viewport 390x844,1440x900] [--dpr 1]
  *                              [--umbral 0] [--completa] [--salida storage/app/pixel/<nombre>]
  *                              [--reloj 2026-09-23T16:05:00+02:00] [--lote lista.json] [--reintentos 2]
+ *                              [--rehacer]
  *
  * Sale con código 1 si una ventana supera el umbral, si las dos capturas no miden lo mismo, o si una página
  * no carga. Deja `a.png`, `b.png` y `dif.png` por ventana: en `dif.png` lo distinto va en rojo sobre A en gris.
@@ -43,6 +44,18 @@
  *     local que llega en 0,5 ms dejaban el borde de un botón 2 píxeles distinto. Lo externo (Google Fonts,
  *     unpkg, jsDelivr) se sirve desde una caché en MEMORIA: se baja una vez de la red, con sus bytes y sus
  *     cabeceras, y todas las capturas lo reciben igual y al instante. Una pasada de calentamiento la llena.
+ *  8. **El motor de pintura recuerda CÓMO se montó la página** (medido el 24-09 con la compra en la isla, T3c).
+ *     Con el MISMO DOM y el MISMO estilo calculado —probado: el HTML de las dos islas, reinsertado en la misma
+ *     página, da 0 píxeles distintos— la isla del diseño (React) y la nuestra (Vue) daban de 4 a 1.007 píxeles
+ *     de antialias distinto en bordes redondeados (±1–6 niveles), estables en cada lado: montar y cambiar los
+ *     nodos en otro orden deja otro estado de pintura (un contenedor con scroll que entra animando `filter`).
+ *     No lo arreglan repintar entero ni cancelar las animaciones; sí REHACER LAS CAJAS: antes de la foto, a los
+ *     dos lados igual, se oculta y se vuelve a mostrar el `body` —sin tocar el DOM ni el estado de la página— y
+ *     se devuelven el foco (con su `:focus-visible`, que se comprueba) y los desplazamientos. Va con
+ *     `--rehacer`, para cuando A y B los montan CÓDIGOS DISTINTOS (los bancos de la isla, las piezas y la
+ *     compra). ⚠️ **No por defecto, medido**: con la misma página a los dos lados no hace falta, y en las hojas
+ *     de revisión, que montan sus fichas en `iframe`, ocultar el `body` deja los marcos un instante a tamaño
+ *     cero y sus prototipos reaccionan (dos de las 82 páginas pasaron de 0 a 16.692 y 17.322 píxeles).
  */
 import { chromium } from 'playwright-core';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
@@ -53,6 +66,7 @@ function argumentos(argv) {
     for (let i = 0; i < argv.length; i++) {
         const k = argv[i];
         if (k === '--completa') { a.completa = true; continue; }
+        if (k === '--rehacer') { a.rehacer = true; continue; }
         if (!k.startsWith('--') || argv[i + 1] === undefined) throw new Error(`argumento suelto: ${k}`);
         a[k.slice(2)] = argv[++i];
     }
@@ -122,6 +136,32 @@ async function asentar(page) {
 }
 
 /**
+ * Rehace las cajas de la página antes de la foto (trampa 8): oculta y vuelve a mostrar el `body`, y devuelve el
+ * foco y los desplazamientos como estaban. Si el foco no recupera su `:focus-visible`, se para: la foto sería
+ * de otro estado.
+ */
+async function rehacerCajas(page) {
+    const igual = await page.evaluate(() => {
+        const activo = document.activeElement && document.activeElement !== document.body ? document.activeElement : null;
+        const visible = activo ? activo.matches(':focus-visible') : null;
+        const desplazados = [...document.querySelectorAll('*')].filter((el) => el.scrollTop || el.scrollLeft).map((el) => [el, el.scrollTop, el.scrollLeft]);
+        const [x, y] = [window.scrollX, window.scrollY];
+        const original = document.body.style.getPropertyValue('display');
+        const prioridad = document.body.style.getPropertyPriority('display');
+        document.body.style.setProperty('display', 'none', 'important');
+        void document.body.offsetHeight;
+        if (original) document.body.style.setProperty('display', original, prioridad);
+        else document.body.style.removeProperty('display');
+        void document.body.offsetHeight;
+        for (const [el, t, l] of desplazados) { el.scrollTop = t; el.scrollLeft = l; }
+        window.scrollTo(x, y);
+        if (activo) activo.focus({ preventScroll: true });
+        return activo ? activo.matches(':focus-visible') === visible : true;
+    });
+    if (!igual) throw new Error('rehacer las cajas cambió el :focus-visible del elemento activo (trampa 8)');
+}
+
+/**
  * ⚠️ **La página completa se captura con la ventana YA de su tamaño, nunca con `fullPage`** (medido el 24-09).
  * `fullPage` agranda la ventana EN el momento de la foto; la isla del diseño ve entonces «un botón de la
  * página a la vista», cede el suyo y se transforma a mitad de la captura: 4–7 % de píxeles distintos entre
@@ -166,6 +206,10 @@ async function capturar(navegador, ajustes, url, completa, clics = []) {
         const ventana = page.viewportSize();
         const [ancho, alto] = await page.evaluate(() => [document.documentElement.scrollWidth, document.documentElement.scrollHeight]);
         await page.setViewportSize({ width: Math.max(ventana.width, ancho), height: Math.min(Math.max(ventana.height, alto), 16000) });
+        await asentar(page);
+    }
+    if (arg.rehacer) {
+        await rehacerCajas(page);
         await asentar(page);
     }
     const png = await page.screenshot({ animations: 'disabled', caret: 'hide' });

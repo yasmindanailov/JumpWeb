@@ -5,8 +5,12 @@
  * diseño (`row`, `box`, `grown`…), como el resto del port.
  */
 
-/** La raíz: una banda propia, pegada abajo (al alcance del pulgar) o arriba (desde 900px). */
-export function estiloRaiz({ gutter, top }) {
+/**
+ * La raíz: una banda propia, pegada abajo (al alcance del pulgar) o arriba (desde 900px). En la compra se separa
+ * de la página: fija sobre el velo, con aire arriba y abajo en escritorio y a pantalla completa en móvil, donde
+ * tocar fuera no la cierra.
+ */
+export function estiloRaiz({ gutter, top, inCheckout = false }) {
     return {
         // La isla es su propia banda: ocupa el ancho del contenedor de scroll y se pega al borde. Si la metes en un
         // div de su alto, sticky no tiene recorrido y se va con el scroll: por eso el hueco lateral es suyo.
@@ -14,6 +18,8 @@ export function estiloRaiz({ gutter, top }) {
         width: '100%', boxSizing: 'border-box', paddingLeft: gutter, paddingRight: gutter,
         pointerEvents: 'none',
         ...(top ? { top: 0, paddingTop: 'max(14px, env(safe-area-inset-top))' } : { bottom: 0, paddingBottom: 'max(14px, env(safe-area-inset-bottom))' }),
+        ...(inCheckout && top ? { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 90, alignItems: 'flex-start', paddingTop: 'max(16px, 4vh)', paddingBottom: 'max(16px, 4vh)', pointerEvents: 'auto' } : {}),
+        ...(inCheckout && ! top ? { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 90, alignItems: 'flex-end', paddingTop: 'max(8px, env(safe-area-inset-top))', paddingBottom: 'max(8px, env(safe-area-inset-bottom))', paddingLeft: '8px', paddingRight: '8px' } : {}),
     };
 }
 
@@ -41,12 +47,12 @@ export function estiloIsla({ row, box, alert, grown, animate, calm }) {
     };
 }
 
-/** El medidor: el bloque cuyo tamaño persigue la isla. */
-export function estiloMedida({ row, top, isOpen, cap, maxWidth }) {
+/** El medidor: el bloque cuyo tamaño persigue la isla. En la compra, 600px arriba y el ancho entero abajo. */
+export function estiloMedida({ row, top, isOpen, cap, maxWidth, inCheckout = false }) {
     return {
         boxSizing: 'border-box',
         padding: '8px',
-        width: row ? 'max-content' : '100%',
+        width: inCheckout ? (top ? 'min(600px, calc(100vw - 32px))' : '100%') : row ? 'max-content' : '100%',
         // Abierta en escritorio la isla se ensancha hasta un mínimo cómodo. En píxeles, nunca en %: un % se mide
         // contra la isla, que es quien se anima, y los dos se perseguían 2px por fotograma.
         minWidth: top && isOpen ? `${Math.min(cap || maxWidth, maxWidth, 390)}px` : undefined,
