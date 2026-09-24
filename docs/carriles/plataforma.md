@@ -79,9 +79,9 @@
    ✅ **T0 hecha para Kids y Jump** (§1.6: cada dato con su fuente, los tokens y el mapa de URLs). FALTAN como
    dato: el precio de antes y la oferta (→ `#684`), el plazo de cambio y cancelación y los 90 cm con adulto.
    ▶ **T1** (§4.8, `#685`): el juez de «idéntico» es `scripts/pixel.mjs` · ✅ **T1b las fuentes**, servidas desde
-   `public/instancia/` (0 píxeles distintos contra Google) · ⏳ **T1a la referencia** espera a que el owner
-   publique el diseño como artifact (DesignSync corta a 256 KiB) · siguen **T1c** (hoja y layout limpio) y **T1d**
-   (Lucide). ⚠️ Tras un `pull`: `cp -r ../instancias/playjump/publico/instancia public/`.
+   `public/instancia/` (0 píxeles distintos contra Google) · ✅ **T1a la referencia**, byte a byte en
+   `instancias/playjump/diseno/playjump-design-system/` (zip del owner; DesignSync corta a 256 KiB) · siguen
+   **T1c** (hoja y layout limpio) y **T1d** (Lucide). ⚠️ Tras un `pull`: `cp -r ../instancias/playjump/publico/instancia public/`.
    ⚠️ **La web nueva cambia las URLs** (§1.5): cada ruta vieja necesita su 301.
    ⚠️⚠️ **Lo que dejaron los platos y vale para lo que venga** (detalle en la spec §4.1 y §4.1.ter): si
    el dato tiene **servicio de dominio**, el recurso **delega** · el filtro de «lo que no viaja» va
@@ -104,7 +104,7 @@
 5. **La promo, cuando el owner la termine** (es suyo el cuándo). La receta y **sus nueve cifras** bajaron a
    `ENTORNOS.md` §6 en `#675`, junto al despliegue que las escribió. Sin desplegar: son datos.
 6. Después, **F6** (app nativa; hereda del token lo que su spec §2 nombra: Google, alta, dispositivos).
-- **Del owner, HOY**: la **edad de Kids** (el panel dice 4–8 y el diseño 4–7) · el **modelo de las promociones**
+- **Del owner, HOY**: el **modelo de las promociones**
   (`#684`: dónde va cada etiqueta en la landing) · el **fin de la promo** (es suyo el cuándo) · el **ojo** que le falta a la compra de la T5 de F4 · **`topics`**: con la landing fuera, ¿de quién son los asuntos del formulario de contacto?
   (hoy son constante del producto, y `birthday`/`groups` son vocabulario del SECTOR).
   ▶ Contestadas y retiradas de aquí: por dónde arrancar la vía A (los platos, 23-09), cuándo se

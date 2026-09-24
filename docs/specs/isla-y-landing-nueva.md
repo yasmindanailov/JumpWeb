@@ -23,7 +23,7 @@
     se avisa en el buzón antes.
   - Tras tocar un `.vue`, `npm run build:ssr` antes de la suite (`sidebar-spa.md` §0).
 - **Estado**: §7 contestado (`#683`), promociones en `#684`, T0 hecha (§1.6). **T1** (§4.8): ✅ las fuentes, 0
-  píxeles contra Google (`scripts/pixel.mjs`); ⏳ la referencia exacta, a publicar por el owner; ⚠️ Kids 4–7.
+  píxeles contra Google (`scripts/pixel.mjs`); ✅ la referencia byte a byte en `instancias/playjump/diseno/`.
 - **Invariantes**: `PAY-*` si entra Bizum (`VERIFY_CONC=1`), `SEC-12` (la ruta de las vistas), `SEC-01`,
   `RGPD-*` (consentimiento dentro de la isla, Apple como proveedor), `PERF-02` (la carcasa por instalación va en
   el arranque cacheado; la variante del A/B, en la sesión).
@@ -140,9 +140,10 @@ se queda vieja la primera vez que alguien cambie el panel.
 #### 1.6.2 Datos del panel que contradicen al diseño
 
 - ⚠️ **Kids es «4 — 8 años» en el panel** (`age_range` de la zona y los `features` de sus tres productos: «De 4 a
-  8 años»), y **de 4 a 7 en todos los briefs**. `[DECIDIDO owner]` 2026-09-24: **de 4 a 7**, y los menores de 4
-  que midan más de 90 cm entran con un adulto. El dato se corrige en el panel antes de la T4, o la página y la
-  API dirán cosas distintas.
+  8 años»), y **de 4 a 7 en todos los briefs**. `[DECIDIDO owner]` 2026-09-24: **de 4 a 7**; un menor de 4 que
+  mida más de 90 cm entra con un adulto, **el niño paga su entrada Kids y el adulto entra gratis** (lo que dice
+  el brief: «Cuenta también a los menores de 4»). ✅ Corregido por el owner en producción y aquí en local
+  (zona y los tres productos, en es/en/fr; el inglés ya decía «Ages 4 to 7»).
 - Los productos ya llevan una etiqueta: `badge` = «−20 % online» en `/catalog/products`. Es el germen de las
   promociones (`#684`), igual que `gifts`.
 - Los briefs dan **155 reseñas** en Kids y Jump y **148** en Cumpleaños y la portada: con la cifra de la API, las
@@ -319,12 +320,18 @@ El owner lo pide «píxel por píxel, idéntico, sin falta». Eso no se juzga a 
 que pinta la referencia (A) y lo nuestro (B) en el mismo Chromium, con la pieza asentada, y cuenta los píxeles
 distintos. Idéntico = **0**. El arnés tiene control negativo: una B sin fuentes da 97.956 distintos y sale con 1.
 
-- **T1a · la referencia, byte a byte** (⏳ espera al owner). ⚠️ **`DesignSync` no sirve para esto**, medido:
+- **T1a · la referencia, byte a byte** ✅ (24-09): `instancias/playjump/diseno/playjump-design-system/`, del zip
+  de las 06:19:20 (398 ficheros, 72 MB; instancia `b0a3632`), puesta por `diseno/actualizar.py` con su
+  `sha256sum -c`. Contrastada con el proyecto VIVO: `readme.md` idéntico y los 262.144 B que da `DesignSync` del
+  compilado son el principio exacto de sus 753.287. Las fichas se pintan en Chromium sin un error.
+  ⚠️ **`DesignSync` no sirve para esto**, medido:
   `_ds_bundle.js` (los 71 componentes compilados, que es lo que pinta cada ficha) llega cortado en 262.144 B,
-  justo 256 KiB, y pierde el final, donde vive `ParkIsland`; el vídeo y el logotipo pasan del tope igual. La vía
-  es que el owner publique el proyecto como artifact «Design System», como hizo el 20-09 con el intermedio:
-  `Artifact read` guarda cada fichero en disco, entero y con su sha256, sin pasar por el contexto. El espejo
-  vive en la instancia (`instancias/playjump/diseno/`, futuro), con su manifiesto.
+  justo 256 KiB, y pierde el final, donde vive `ParkIsland`; el vídeo y el logotipo pasan del tope igual. La vía,
+  `[DECIDIDO owner]` 24-09: **un zip descargado de Claude Design**, con los nombres y las rutas originales. El
+  artifact «Design System» descartado: su migración renombra tres ficheros (`_ds_bundle.js` entre ellos) y
+  rehace la hoja de tokens para su visor, que es justo lo que el owner vio «romperse» el 20-09. El espejo vive en
+  la instancia (`instancias/playjump/diseno/`, futuro) con un manifiesto de sha256, y se contrasta con
+  `DesignSync`: los primeros 262.144 B del compilado tienen que coincidir con lo que entrega el MCP.
 - **T1b · las fuentes** ✅ (24-09). Los nueve `woff2` que Google entrega al `@import` del diseño (Archivo
   variable en peso y anchura, Figtree variable, DM Mono 400 y 500; 290 KB), servidos desde el propio dominio
   —la CSP ya admite `font-src 'self'`— y no desde `fonts.bunny.net` como `ThemeFonts`: Bunny sirve pesos
