@@ -1,8 +1,8 @@
 # [SPEC] La isla y la landing nueva — las páginas en la instancia y una segunda carcasa de compra en el producto
 
 > Estado: ⬜ **borrador** · Última actualización: 2026-09-24 · Decisiones: `#681` (las páginas), `#682` (la
-> isla), `#683` (las cuatro de §7), `#684` (promociones) y `#697` (el sistema nuevo del 24-09 tarde), todas
-> `[DECIDIDO owner]`; la spec se aprueba con la suya.
+> isla), `#683` (las cuatro de §7), `#684` (promociones), `#697` (el sistema nuevo del 24-09 tarde) y `#699` (los
+> datos de Kids y Jump), todas `[DECIDIDO owner]`; la spec se aprueba con la suya.
 > Carril: **plataforma** (banda 670–699). Fuente del diseño: el proyecto de Claude Design
 > `33397ca2-c67c-4049-8b09-ade20425f32a`, «Saltia Design System» (nombre provisional; la marca es Play Jump
 > Park), leído con `DesignSync` (`list_files` / `get_file`). Hermanas: `instancia-y-landing-fuera.md` (el menú
@@ -130,9 +130,9 @@ dónde. **HAY** = la API lo da · **FALTA** = no existe como dato · **INSTANCIA
 | Duración del producto | `/catalog/products` (`duration_min`) | **HAY** |
 | Calcetines a 2 € (3, 7) | `POST /catalog/products/{product}/addons` | **HAY** al resolver la selección |
 | Total de la calculadora (3) | `/orders/quote` | **HAY** |
-| **Precio de antes (tachado) y texto y fecha de la oferta** (1, 3, 8, isla) | Ninguna: la tabla `prices` ya guarda el precio rebajado y solo las vistas Blade de hoy reconstruyen el de antes (`WritesLandingValues::antes()`) | **FALTA** → las promociones (`#684`) |
-| **Plazo de cambio y cancelación**: 24 h en entradas, 5 días en cumpleaños (2, 3, 7) | Solo como frase fija del producto (`pay_policy` en `lang`) | **FALTA** como dato; y hay que medir qué regla lo hace cumplir |
-| **Los menores de 4 entran con un adulto desde 90 cm** (1, 3, 5, 7) | `height` de Kids solo trae el máximo (150 cm) | **FALTA** |
+| **Precio de antes (tachado) y texto y fecha de la oferta** (1, 3, 8, isla) | Ninguna: la tabla `prices` ya guarda el precio rebajado y solo las vistas Blade de hoy reconstruyen el de antes (`WritesLandingValues::antes()`) | **NO VA** (`#699`): el precio tal cual; las promociones (`#684`), aparcadas |
+| **Plazo de cambio y cancelación**: 24 h en entradas; en cumpleaños, **3 días naturales** (`#699`: mandan las condiciones; el cajón y el diseño decían 5) (2, 3, 7) | Solo como frase (`pay_policy` en `lang`, y la de las condiciones); **ninguna regla lo aplica**: cancela el personal | **FALTA** → un campo POR PRODUCTO (`#699`), con la T4 |
+| **Los menores de 4 entran con un adulto desde 90 cm** (1, 3, 5, 7) | `height` de Kids solo trae el máximo (150 cm) | **FALTA** → un campo de la ZONA, junto a su edad y su altura (`#699`) |
 | JumpPoints (3) | Ningún ajuste lo enciende | **A MEDIR** con `lealtad-jumppoints.md` |
 | «Mínimo 3 monitores», parking gratis, cafetería (5, 6) | — | **INSTANCIA** (texto de PlayJump) |
 | Los textos de cada pieza, las dudas y el SEO (título, descripción, imagen) | — | **INSTANCIA**, con las cifras de dentro sacadas de sus hechos |
@@ -293,7 +293,7 @@ ingenua da 73,60 € y la real 74,40 €.
 | Cálculo guardado y compartible | 9 | FALTA | Después | Sin servidor si el enlace lleva los parámetros |
 | ¿Quedan huecos hoy? | 3 | PARCIAL | Con la T2 | Un agregado de lectura; `PERF-02` |
 | Tareas con plazo por reserva | 13 | A MEDIR | Con la T5 | Los plazos existen repartidos por sus specs |
-| El plan destacado del selector | Selector de plan | FALTA (dato) | Con la T4 | `featured`, etiqueta y foto: uno solo, del panel (§4.11) |
+| El plan destacado del selector | Selector de plan | **HAY** (`#699`) | Con la T4 | El `featured` del producto (un pack es un producto), su foto y su `badge` |
 
 Lo que no entre se queda como corchete apagado, sin dejar hueco.
 
@@ -762,8 +762,8 @@ El port: `piezas/SelectorPlan.vue` (los cuatro trozos del JSX en un fichero), el
 de ahora; son sus estilos en línea, como en el JSX. **Nacen con su consumidor**, sin portar aún: `TaskCard` en fila y con `overline` (Mi
 cuenta, T5), `QuantityStepper` con `name` (sin JavaScript: la lista), `AddonList` con plazos (Cumpleaños) y el
 `boxShadow` de `Textarea`. `--shadow-island-float` vale lo mismo que `--isla-sombra`: nada que cambiar.
-⚠️ **El plan destacado es un DATO** (`featured`, `badge`, `image`, `focus`, `offer` y `plans.footer`): uno solo,
-del panel; llega con la T4.
+⚠️ **El plan destacado es un DATO** (`featured`, `badge`, `image`, `focus` y `plans.footer`): `#699`, el `featured`
+que ya tiene el producto, con su foto y su `badge`; llega con la T4. `offer`, apagado (sin promociones).
 
 **El censo de la fiesta** (medido buscando en el código el 24-09; se confirma al empezar su tanda). La lógica es del
 SPA (`celebracion-e-invitacion.md`, `waiver-por-reserva.md`, `complementos-post-reserva.md`), y los briefs lo dicen:

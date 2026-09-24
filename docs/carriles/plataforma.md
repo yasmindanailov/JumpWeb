@@ -2,10 +2,10 @@
 
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669 AGOTADA con `#669`** → **670–699 EN CURSO, queda `#699`** → **760–789 reclamada** (24-09; su centena,
-> `decisiones/700-799.md`) · Último usado: **`#698`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#698`) · Actualizado: **2026-09-24**
-> noche (el sistema de diseño nuevo, dentro; la T3 cerrada: `#697`, `#698`).
+> **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 EN CURSO** (su centena,
+> `decisiones/700-799.md`; el siguiente, `#760`) · Último usado: **`#699`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`) · Actualizado: **2026-09-24**
+> noche (el sistema de diseño nuevo, dentro; la T3 cerrada; los datos de la T4, decididos: `#697`→`#699`).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
 > llévaselo con la medida, como el SPA en `#724`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -101,16 +101,14 @@ trae su prueba de la isla en local (3: ❗LOCAL), va primero.
    3DS simulado; vuelta firmada → «¡Reservado!», `storage/app/sonda-isla-pasarela.mjs`) y Google, que acepta la
    vuelta de `localhost:8081` y no la del 80 del contenedor. ⚠️ La vuelta del banco cae en la portada de hoy: ahí
    la isla se ve NEUTRA (sin las hojas de Saltia) hasta la T4. La contraseña del admin local la tiene el owner.
-   FALTAN como dato (T0): el precio de antes (→ `#684`),
-   el plazo de cancelación y los 90 cm con adulto. ⚠️ Tras un `pull`: `cp -r ../instancias/playjump/publico/instancia
+   Los datos que faltaban (T0), decididos en `#699`: sin precio de antes ni oferta; el plazo de cambio y
+   cancelación, POR PRODUCTO (cumpleaños 3 días naturales); los 90 cm con adulto, en la ZONA; el destacado, el
+   `featured` del producto. ⚠️ Tras un `pull`: `cp -r ../instancias/playjump/publico/instancia
    public/` y `php artisan migrate` (las del SPA llegan SIN aplicar aquí: la de `experiments` dio un 500); los bancos se rehacen con `tema/lote-fichas.py` y `scripts/banco-{isla,piezas,compra}.php` (su lado B, antes).
    ⚠️ **La web nueva cambia las URLs** (§1.5): cada ruta vieja necesita su 301.
-   ⚠️⚠️ **Lo que dejaron los platos y vale para lo que venga** (detalle en la spec §4.1 y §4.1.ter): si
-   el dato tiene **servicio de dominio**, el recurso **delega** · el filtro de «lo que no viaja» va
-   **DESPUÉS** del respaldo de idioma (`Translated::pick()` encadena con `??`) · lo que decide la MAQUETA
-   no es un hecho · `BarImage` re-mide contra el DISCO · una aserción de subcadena acusa al fixture que
-   la nombra (`#553`): se aserta sobre CLAVES · y una regla compartida **cambia las dos superficies**: la
-   del máximo de `#677` la destapó un fixture de «30 a 20» en `ServicesPageTest`.
+   ⚠️⚠️ **Lo que dejaron los platos y vale para lo que venga** (delegar en el servicio, el filtro tras el respaldo
+   de idioma, lo que decide la maqueta no es un hecho, `BarImage`, una regla compartida cambia las dos
+   superficies): `instancia-y-landing-fuera.md` §4.1 y §4.1.ter; la subcadena que acusa al fixture, `TESTING.md` §2.ter.
    ▶ **Deuda declarada** (en la spec): `birthday`/`groups` son vocabulario del SECTOR (`ContactTopics`) ·
    `price_table`, `nav_subtitle` y `show_in_nav` se retiran con la tanda de la PÁGINA, no antes · un
    producto activo sin NINGÚN precio sale de `/prices` sin la clave `prices` que el contrato exige (`#677`).
@@ -127,7 +125,8 @@ trae su prueba de la isla en local (3: ❗LOCAL), va primero.
    `ENTORNOS.md` §6 en `#675`, junto al despliegue que las escribió. Sin desplegar: son datos.
 6. Después, **F6** (app nativa; hereda del token lo que su spec §2 nombra: Google, alta, dispositivos).
 - **Del owner, HOY**: **probar la isla en local** (sus accesos se le dieron en el chat del 24-09) · `/design-login`
-  una vez, en una sesión interactiva (para contrastar el zip con el vivo, `#697`) · pasar a su
+  una vez, en el `claude` de una TERMINAL (escrito en el chat de VS Code no se ejecuta; para contrastar el zip,
+  `#697`) · en su diseño, **cumpleaños a 3 días** y no 5 (`#699`) · pasar a su
   diseño las dos de `#695` («Entra» solo con correo; la «G» de Google) · en el panel de PRODUCCIÓN, el campo del
   homenajeado de los dos packs a «formulario de invitados» (`#692`; en local ya está) · el **modelo de las promociones**
   (`#684`: dónde va cada etiqueta en la landing) · el **fin de la promo** (es suyo el cuándo) · el **ojo** que le falta a la compra de la T5 de F4 · **`topics`**: con la landing fuera, ¿de quién son los asuntos del formulario de contacto?
