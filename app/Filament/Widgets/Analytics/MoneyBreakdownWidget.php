@@ -4,7 +4,7 @@ namespace App\Filament\Widgets\Analytics;
 
 use App\Domain\Platform\Services\Analytics\Reports\Window;
 use App\Domain\Platform\Services\Money;
-use App\Filament\Widgets\Analytics\Concerns\ReadsMoneyReport;
+use App\Filament\Widgets\Analytics\Concerns\AnalyticsWidget;
 use Carbon\CarbonImmutable;
 use Filament\Widgets\Concerns\InteractsWithPageFilters;
 use Filament\Widgets\Widget;
@@ -21,28 +21,32 @@ use Filament\Widgets\Widget;
  */
 class MoneyBreakdownWidget extends Widget
 {
+    use AnalyticsWidget;
     use InteractsWithPageFilters;
-    use ReadsMoneyReport;
 
     protected static ?int $sort = 4;
 
     protected int|string|array $columnSpan = 'full';
 
-    protected string $view = 'filament.widgets.analytics.money-breakdown';
+    protected string $view = 'filament.widgets.analytics.tables';
 
     /** @return array<string, mixed> */
     protected function getViewData(): array
     {
-        $report = $this->report();
+        $report = $this->money();
 
-        return ['tables' => [
-            $this->series($report['series'], (string) $report['window']['granularity']),
-            $this->channels($report['by_channel']),
-            $this->methods($report['by_method']),
-            $this->products($report['by_product']),
-            $this->deposit($report['deposit']),
-            $this->lost($report['lost']),
-        ]];
+        return [
+            'heading' => __('admin.analytics.money.breakdown_heading'),
+            'description' => __('admin.analytics.money.method_note'),
+            'tables' => [
+                $this->series($report['series'], (string) $report['window']['granularity']),
+                $this->channels($report['by_channel']),
+                $this->methods($report['by_method']),
+                $this->products($report['by_product']),
+                $this->deposit($report['deposit']),
+                $this->lost($report['lost']),
+            ],
+        ];
     }
 
     /**

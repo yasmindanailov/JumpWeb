@@ -15,9 +15,11 @@
   para delegarte toda la analítica»). Plataforma dejó la **T1 ✅** (`f501a990`→`4d4c3aec`, contrato 1.19.0,
   arnés 19/19, `RGPD-07`, `PAY-21`, `SEC-13`); su traspaso, atendido. **T2→T5 aquí**; la T2 partida en cinco
   con las tres peticiones del owner delante (dinero al detalle · registros · puerta): `analitica.md` §4.5.
-  ✅ **T2a EN EL ÁRBOL (24-09, madrugada)**: «Analítica» en `/admin/analitica`, el dinero entero (spec §4.8),
-  35 casos, sonda 9/9 en escritorio y móvil. **Queda el OJO del owner** en `localhost:8081/admin/analitica`
-  (admin) y el `EXPLAIN` con volumen en staging. ⚠️ **El fixture «probe-ojo-analitica» está MONTADO en la BD
+  ✅ **T2a y T2b EN EL ÁRBOL (24-09, madrugada)**: «Analítica» en `/admin/analitica` con nueve widgets — el
+  dinero entero, los registros (cuentas nuevas, verificadas, compradoras, cómo se registran) y la puerta
+  (búsquedas tecleadas y escaneadas, encontradas o no, clientes distintos, fichas, visitas acreditadas, por
+  hora del parque) — (spec §4.8), 44 casos, sonda 10/10 en escritorio y móvil. **Queda el OJO del owner** en
+  `localhost:8081/admin/analitica` (admin) y el `EXPLAIN` con volumen en staging. ▶ Sigue la **T2c**. ⚠️ **El fixture «probe-ojo-analitica» está MONTADO en la BD
   local** (87 pedidos `JW-OJO…`, 74 cobros, 12 devoluciones, 25 clientes `ojo-N@ojo-analitica.jumpweb.test`,
   dos meses): `OJO=desmontar` lo quita entero; antes había 9 pedidos y 2 cobros.
 - ✅ **La ficha de Google (`#524`), T1 y T2·1→T2·8 en el árbol** (`#720`→`#734`), **vistas por el owner con
@@ -34,14 +36,14 @@
 ## Por dónde retomar, en orden
 
 1. ❗❗❗ **LA ANALÍTICA, T2→T5** (`specs/analitica.md`; §0, §4.1, §4.2, §4.5, §7.1 antes de tocar). **T2 en
-   cinco, en este orden**: **T2a dinero ✅ (24-09)** → **T2b registros y puerta** (`CustomersReport` al lado
-   de `MoneyReport` en `App\Filament\Analytics`: `users.created_at` sin equipo (`User::customers()`),
-   verificadas, con compra, método desde `user_registered`; la puerta desde `audit_logs`
-   (`registrations.validated` · `puerta.card_scanned` · `puerta.profile_viewed`, `target_id` = encontrado) y
-   `customer_visits`, con historia desde agosto, por día y por hora del parque; `visit_checked_in` desde
-   `GateVisits::register()`; dos widgets más en `AnalyticsPage::getWidgets()` y sus casos en un
-   `CustomersReportTest` con el molde de `MoneyReportTest`) → **T2c embudo y fuentes** → **T2d CSV**
-   (`reports.export`, auditado) → **T2e `analytics_daily` + `ad_spend`** (+1 tarea del scheduler → `deploy.sh`).
+   cinco, en este orden**: **T2a dinero ✅ (24-09)** → **T2b registros y puerta ✅ (24-09)** → **T2c embudo y
+   fuentes** (desde `analytics_sessions`/`analytics_events`, spec §4.5: `FunnelReport` al lado de los otros dos
+   en `App\Filament\Analytics`; la definición de conversión está en §4.2; sin bots ni internos; fuentes y
+   campañas con `first_touch`/`last_touch` del sello; ingresos por campaña = `order_paid.paid_cents`; abandono
+   derivado por paso; eventos rechazados de 7 días; «anterior a la medición» para `attribution IS NULL`;
+   ⚠️ el libro local está VACÍO salvo lo que emita la sonda `sonda-analitica.mjs`: el fixture del ojo tendrá
+   que sembrar sesiones y eventos) → **T2d CSV** (`reports.export`, auditado, celdas saneadas) → **T2e
+   `analytics_daily` + `ad_spend`** (+1 tarea del scheduler → `deploy.sh`).
    ⚠️ **Los cortes por día van por HORA UTC en SQL y al día del parque en PHP** (`SqlTime::hourBucket()`,
    `Window::bucketKey()`), nunca `CONVERT_TZ`. ⚠️ El dinero se lee de `payments`, `payment_refunds`,
    `deposit_split` y `orders.total`: **ningún `OrderBook` por pedido**. ⚠️ El informe vive en la CAPA DE
@@ -155,6 +157,10 @@ spec enumera. Lo del cliente va en la rama `cliente/playjump`, nunca a `main`.
   para una clase cualificada en un docblock `@return`. (6) `EXPLAIN` sobre 9 filas elige recorrer: no es
   veredicto sobre un índice. Y un test que corre con el reloj EN MARCHA cruza el segundo (`MePrivacyTest`
   puso en rojo un push de solo doc a las 22:59:00 UTC): en un caso que compara `now()` dos veces, congela.
+- 🪤 **De la T2b**: el operador JSON `->>` funciona en MySQL 8 y en SQLite 3.45 **y NO en MariaDB** (el
+  hosting): `SqlJson::string()` escribe la forma larga por motor. `AuditLogger::log*()` devuelve el modelo, así
+  que un fixture le fija `created_at` con `forceFill` después. Los tres colores validados del gráfico se
+  reutilizan en orden fijo por serie (`CustomersSeriesChart::COLORS` apunta a los del dinero).
 - 🩹 **En la BD LOCAL hay 19 titulares con la cadena de waiver ROTA** (basura del 26–27 de agosto): si mides
   cadenas, compara ANTES/DESPUÉS.
 - **F4 cerró y el cajón es un PAQUETE** (`specs/cajon-empaquetable.md` §0 y §4.8). Tocar «HOJA ENFOCADA» de

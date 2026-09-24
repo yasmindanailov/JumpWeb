@@ -3,7 +3,7 @@
 namespace App\Filament\Widgets\Analytics;
 
 use App\Domain\Platform\Services\Money;
-use App\Filament\Widgets\Analytics\Concerns\ReadsMoneyReport;
+use App\Filament\Widgets\Analytics\Concerns\AnalyticsWidget;
 use Filament\Widgets\Concerns\InteractsWithPageFilters;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -15,8 +15,8 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
  */
 class MoneyCustomersWidget extends StatsOverviewWidget
 {
+    use AnalyticsWidget;
     use InteractsWithPageFilters;
-    use ReadsMoneyReport;
 
     protected static ?int $sort = 3;
 
@@ -32,10 +32,11 @@ class MoneyCustomersWidget extends StatsOverviewWidget
     /** @return array<int, Stat> */
     protected function getStats(): array
     {
+        $report = $this->money();
         /** @var array<string, int> $c */
-        $c = $this->report()['customers'];
+        $c = $report['customers'];
         /** @var array<string, int> $t */
-        $t = $this->report()['totals'];
+        $t = $report['totals'];
 
         return [
             Stat::make(__('admin.analytics.money.buyers'), (string) $c['buyers'])->color('primary'),

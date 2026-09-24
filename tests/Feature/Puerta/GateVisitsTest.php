@@ -5,6 +5,7 @@ namespace Tests\Feature\Puerta;
 use App\Domain\Identity\Models\CustomerVisit;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\GateVisits;
+use App\Domain\Platform\Models\AnalyticsEvent;
 use App\Domain\Platform\Models\AuditLog;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -45,6 +46,28 @@ class GateVisitsTest extends TestCase
         // Otro día es otra visita.
         $this->assertTrue($visits->register($customer, $operator, $today->addDay()));
         $this->assertSame(2, CustomerVisit::where('user_id', $customer->id)->count());
+    }
+
+    /**
+     * T2b de la analítica (`specs/analitica.md` §4.2): la visita acreditada es un hecho del libro, y se anota
+     * UNA vez por (cliente, día), como la fila — la segunda pulsación no escribe fila ni hecho.
+     */
+    public function test_a_written_visit_is_also_a_fact_of_the_analytics_ledger_once(): void
+    {
+        $customer = User::factory()->create();
+        $operator = User::factory()->create();
+        $today = CarbonImmutable::parse('2026-09-05');
+        $this->actingAs($operator);
+
+        app(GateVisits::class)->register($customer, $operator, $today);
+        app(GateVisits::class)->register($customer, $operator, $today);
+
+        $facts = AnalyticsEvent::query()->where('name', 'visit_checked_in')->get();
+        $this->assertCount(1, $facts);
+        $this->assertSame($customer->id, (int) $facts->first()->user_id);
+
+        app(GateVisits::class)->register($customer, $operator, $today->addDay());
+        $this->assertSame(2, AnalyticsEvent::query()->where('name', 'visit_checked_in')->count(), 'otro día, otro hecho');
     }
 
     public function test_the_visit_survives_the_operator_and_falls_with_the_customer(): void

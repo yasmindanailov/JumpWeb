@@ -3,7 +3,7 @@
 namespace App\Filament\Widgets\Analytics;
 
 use App\Domain\Platform\Services\Money;
-use App\Filament\Widgets\Analytics\Concerns\ReadsMoneyReport;
+use App\Filament\Widgets\Analytics\Concerns\AnalyticsWidget;
 use Filament\Widgets\Concerns\InteractsWithPageFilters;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -16,8 +16,8 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
  */
 class MoneyOverviewWidget extends StatsOverviewWidget
 {
+    use AnalyticsWidget;
     use InteractsWithPageFilters;
-    use ReadsMoneyReport;
 
     protected static ?int $sort = 1;
 
@@ -33,7 +33,7 @@ class MoneyOverviewWidget extends StatsOverviewWidget
     /** @return array<int, Stat> */
     protected function getStats(): array
     {
-        $report = $this->report();
+        $report = $this->money();
         /** @var array<string, int> $t */
         $t = $report['totals'];
         /** @var array<string, int> $p */

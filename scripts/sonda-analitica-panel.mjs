@@ -1,9 +1,9 @@
 /**
  * SONDA DEL CUADRO DE MANDO — el navegador real entrando al panel y mirando «Analítica»
- * (`docs/specs/analitica.md` §4.5, T2a; `DECISIONES #735`). Es el guion que va ANTES del ojo del owner: que la
- * página abra con permiso, que los cuatro widgets lleguen (Filament los carga en diferido), que el gráfico
- * pinte un `canvas`, que el desglose traiga sus seis tablas, que el filtro cambie el periodo y que la consola
- * quede limpia; y deja las capturas de escritorio y móvil para mirarlas.
+ * (`docs/specs/analitica.md` §4.5, T2a y T2b; `DECISIONES #735`). Es el guion que va ANTES del ojo del owner:
+ * que la página abra con permiso, que los nueve widgets lleguen (Filament los carga en diferido), que los tres
+ * gráficos pinten su `canvas`, que los desgloses traigan sus tablas, que el filtro cambie el periodo y que la
+ * consola quede limpia; y deja las capturas de escritorio y móvil para mirarlas.
  *
  * ── CÓMO SE CORRE ────────────────────────────────────────────────────────────────────────────────
  *   Chromium en el contenedor (receta de la skill `sonda`), un admin local, y después:
@@ -16,6 +16,8 @@
  * ⚠️ El login del panel tiene limitador: UNA sesión y se cambia el viewport dentro de ella, nunca una entrada
  *    por tamaño. Si mide la pantalla de LOGIN, es el limitador: `php artisan cache:clear`.
  * ⚠️ Capturas de VENTANA con el ratón apartado y tras esperar a que Livewire asiente; nunca `fullPage`.
+ * ⚠️ Los widgets cargan al entrar en pantalla (Livewire perezoso): la sonda recorre la página hasta el final
+ *    antes de medir, o los últimos no existen para ella.
  */
 import { chromium } from 'playwright-core';
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -41,9 +43,30 @@ const page = await contexto.newPage();
 const consola = [];
 page.on('console', (m) => { if (m.type() === 'error') consola.push(m.text()); });
 page.on('pageerror', (e) => consola.push(String(e)));
+// ⚠️ Un widget que revienta al cargar no rompe la página: Livewire responde 5xx a `/livewire/update` y el
+// hueco se queda vacío. Sin esto, la sonda solo veía «no llega» y moría sin decir por qué.
+page.on('response', async (res) => {
+    if (res.status() < 500) return;
+    let cuerpo = '';
+    try { cuerpo = (await res.text()).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').slice(0, 400); } catch { /* sin cuerpo */ }
+    consola.push(`HTTP ${res.status()} ${res.url()} — ${cuerpo}`);
+});
 
 const informe = { base: BASE, etiqueta: ETIQUETA, login: null, status: null, titulo: null, stats: [], tablas: [], canvas: 0, periodo: {}, capturas: [], consola, comprobaciones: [] };
 const ok = (nombre, cond, detalle = '') => informe.comprobaciones.push({ nombre, ok: Boolean(cond), detalle });
+
+/** Espera a un texto y, si no llega, lo apunta como comprobación en rojo en vez de matar la sonda. */
+async function llega(texto) {
+    try {
+        await page.getByText(texto).first().waitFor({ timeout: ESPERA_WIDGETS_MS });
+
+        return true;
+    } catch {
+        ok(`llega «${texto}»`, false, `no visible en ${ESPERA_WIDGETS_MS} ms`);
+
+        return false;
+    }
+}
 
 async function asentar(ms = 900) {
     await page.mouse.move(0, 0);
@@ -83,29 +106,53 @@ informe.status = respuesta?.status() ?? null;
 informe.titulo = await page.title();
 ok('status 200', informe.status === 200, String(informe.status));
 
-await page.getByText('Cobrado online').first().waitFor({ timeout: ESPERA_WIDGETS_MS });
-await page.locator('canvas').first().waitFor({ timeout: ESPERA_WIDGETS_MS });
-await page.getByText('El desglose').first().waitFor({ timeout: ESPERA_WIDGETS_MS });
+await llega('Cobrado online');
+// ⚠️ Los widgets de Filament son PEREZOSOS al modo de Livewire 3: se piden cuando ENTRAN EN PANTALLA, no al
+// cargar la página. Con cuatro widgets sus marcadores cabían en la primera pantalla y llegaban todos; con
+// nueve, los últimos quedaban fuera y la sonda los daba por perdidos (24-09, T2b). En un navegador de verdad
+// los trae el scroll del owner; aquí se recorre la página hasta el final antes de medir.
+for (let i = 0; i < 12; i++) {
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await page.waitForTimeout(700);
+    if (await page.getByText('Registros y puerta, al detalle').count() > 0) break;
+}
+await page.evaluate(() => window.scrollTo(0, 0));
+await llega('El desglose');
+await llega('Registros de clientes');
+await llega('La puerta');
+// T2b: el último widget es el desglose de registros y puerta; cuando llega, han llegado todos.
+await llega('Registros y puerta, al detalle');
 await asentar(1200);
 
 informe.stats = await leerStats();
 informe.canvas = await page.locator('canvas').count();
 informe.tablas = await page.$$eval('h3', (els) => els.map((el) => el.textContent?.trim() ?? '').filter(Boolean));
-ok('doce tarjetas (dinero + clientes)', informe.stats.length === 12, String(informe.stats.length));
-ok('un gráfico', informe.canvas >= 1, String(informe.canvas));
-ok('seis tablas del desglose', ['Por día', 'Por canal', 'Por método de cobro', 'Por producto', 'La señal', 'Perdido'].every((t) => informe.tablas.includes(t)), informe.tablas.join(' · '));
+ok('veintitrés tarjetas (dinero 12 · registros 3 · puerta 8)', informe.stats.length === 23, String(informe.stats.length));
+ok('tres gráficos', informe.canvas >= 3, String(informe.canvas));
+ok('las tablas del dinero', ['Por día', 'Por canal', 'Por método de cobro', 'Por producto', 'La señal', 'Perdido'].every((t) => informe.tablas.includes(t)), informe.tablas.join(' · '));
+ok('las tablas de registros y puerta', informe.tablas.includes('Cómo se registran') && informe.tablas.filter((t) => t === 'Por día').length === 2, informe.tablas.join(' · '));
 ok('ninguna tarjeta vacía', informe.stats.every((s) => s.label !== '' && s.value !== ''));
 
-// 3. Capturas de escritorio: arriba, y bajando hasta el desglose.
+/** Baja hasta un texto si está; si no, la captura se hace donde esté la página. */
+async function bajaHasta(texto) {
+    const el = page.getByText(texto).first();
+    if (await el.count() > 0) await el.scrollIntoViewIfNeeded();
+}
+
+// 3. Capturas de escritorio: arriba, bajando hasta el desglose del dinero, y hasta la puerta.
 await captura('escritorio-arriba');
-await page.getByText('El desglose').first().scrollIntoViewIfNeeded();
+await bajaHasta('El desglose');
 await captura('escritorio-desglose');
+await bajaHasta('Registros de clientes');
+await captura('escritorio-registros-y-puerta');
+await bajaHasta('Búsquedas en la puerta por hora del parque');
+await captura('escritorio-horas');
 
 // 4. Móvil, en la MISMA sesión.
 await page.setViewportSize({ width: 390, height: 844 });
 await page.evaluate(() => window.scrollTo(0, 0));
 await captura('movil-arriba');
-await page.getByText('Por canal').first().scrollIntoViewIfNeeded();
+await bajaHasta('Por canal');
 await captura('movil-desglose');
 const anchoDoc = await page.evaluate(() => document.documentElement.scrollWidth);
 ok('sin scroll horizontal en móvil', anchoDoc <= 390, String(anchoDoc));
@@ -115,10 +162,10 @@ await page.setViewportSize({ width: 1440, height: 900 });
 await page.evaluate(() => window.scrollTo(0, 0));
 const select = page.locator('select').first();
 await select.selectOption('last_90');
-await page.getByText('Por semana').first().waitFor({ timeout: ESPERA_WIDGETS_MS });
+const porSemana = await llega('Por semana');
 await asentar(1200);
 informe.periodo = { valor: await select.inputValue(), stats: await leerStats(), tablas: await page.$$eval('h3', (els) => els.map((el) => el.textContent?.trim() ?? '')) };
-ok('90 días agrupa por semana', informe.periodo.tablas.includes('Por semana'));
+ok('90 días agrupa por semana', porSemana && informe.periodo.tablas.includes('Por semana'));
 await captura('escritorio-90-dias');
 
 ok('consola limpia', consola.length === 0, consola.join(' | '));

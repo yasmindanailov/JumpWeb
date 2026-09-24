@@ -4,6 +4,7 @@ namespace App\Domain\Identity\Services;
 
 use App\Domain\Identity\Models\CustomerVisit;
 use App\Domain\Identity\Models\User;
+use App\Domain\Platform\Services\Analytics\Recorder;
 use App\Domain\Platform\Services\AuditLogger;
 use Carbon\CarbonInterface;
 
@@ -31,6 +32,11 @@ final class GateVisits
 
         if ($written > 0) {
             AuditLogger::log('puerta.visit_registered', $customer, ['visited_on' => $day->toDateString()]);
+
+            // El libro de eventos (`specs/analitica.md` §4.2, T2b): la visita acreditada es un hecho del
+            // servidor, y se anota UNA vez por (cliente, día), igual que la fila: la idempotencia de arriba
+            // es la suya. El recorder nunca lanza (`PAY-21`), así que la visita no depende de él.
+            app(Recorder::class)->fact('visit_checked_in', [], ['user_id' => (int) $customer->getKey()]);
         }
 
         return $written > 0;

@@ -10,10 +10,15 @@ use App\Domain\Platform\Enums\ReportPeriod;
 use App\Domain\Platform\Models\Setting;
 use App\Filament\Pages\AnalyticsPage;
 use App\Filament\Pages\Dashboard;
+use App\Filament\Widgets\Analytics\CustomersBreakdownWidget;
+use App\Filament\Widgets\Analytics\CustomersSeriesChart;
+use App\Filament\Widgets\Analytics\GateHoursChart;
+use App\Filament\Widgets\Analytics\GateWidget;
 use App\Filament\Widgets\Analytics\MoneyBreakdownWidget;
 use App\Filament\Widgets\Analytics\MoneyCustomersWidget;
 use App\Filament\Widgets\Analytics\MoneyOverviewWidget;
 use App\Filament\Widgets\Analytics\MoneySeriesChart;
+use App\Filament\Widgets\Analytics\RegistrationsWidget;
 use App\Filament\Widgets\DashboardStatsWidget;
 use App\Filament\Widgets\ReservationsWidget;
 use Database\Seeders\PermissionSeeder;
@@ -109,9 +114,22 @@ class AnalyticsPageTest extends TestCase
 
     // ─── Los widgets ────────────────────────────────────────────────────────────────────────────
 
+    /** Los widgets del cuadro, en su orden: el dinero (T2a) y los registros y la puerta (T2b). */
+    private const WIDGETS = [
+        MoneyOverviewWidget::class,
+        MoneySeriesChart::class,
+        MoneyCustomersWidget::class,
+        MoneyBreakdownWidget::class,
+        RegistrationsWidget::class,
+        GateWidget::class,
+        CustomersSeriesChart::class,
+        GateHoursChart::class,
+        CustomersBreakdownWidget::class,
+    ];
+
     public function test_each_widget_asks_the_permission_again(): void
     {
-        foreach ([MoneyOverviewWidget::class, MoneySeriesChart::class, MoneyCustomersWidget::class, MoneyBreakdownWidget::class] as $widget) {
+        foreach (self::WIDGETS as $widget) {
             $this->actingAs($this->withRole('staff'));
             $this->assertFalse($widget::canView(), "{$widget} se abre sin permiso");
 
@@ -126,8 +144,26 @@ class AnalyticsPageTest extends TestCase
         $this->assertSame([DashboardStatsWidget::class, ReservationsWidget::class], (new Dashboard)->getWidgets());
 
         $analytics = (new AnalyticsPage)->getWidgets();
-        $this->assertSame([MoneyOverviewWidget::class, MoneySeriesChart::class, MoneyCustomersWidget::class, MoneyBreakdownWidget::class], $analytics);
+        $this->assertSame(self::WIDGETS, $analytics);
         $this->assertEmpty(array_intersect($analytics, (new Dashboard)->getWidgets()));
+    }
+
+    public function test_the_gate_hours_chart_has_the_24_park_hours_and_the_customers_breakdown_its_tables(): void
+    {
+        $this->actingAs($this->withRole('admin'));
+
+        $chart = new GateHoursChart;
+        $chart->pageFilters = ['period' => ReportPeriod::ThisMonth->value];
+        $data = (new \ReflectionMethod(GateHoursChart::class, 'getData'))->invoke($chart);
+        $this->assertCount(24, $data['labels']);
+        $this->assertSame('00 h', $data['labels'][0]);
+        $this->assertSame(array_fill(0, 24, 0), $data['datasets'][0]['data']);
+
+        Livewire::test(CustomersBreakdownWidget::class, ['pageFilters' => ['period' => ReportPeriod::Last30->value]])
+            ->assertOk()
+            ->assertSee(__('admin.analytics.customers.by_method'))
+            ->assertSee(__('admin.analytics.customers.method.unknown'))
+            ->assertSee(__('admin.analytics.money.by_day'));
     }
 
     public function test_the_overview_renders_six_money_tiles_with_the_default_period(): void

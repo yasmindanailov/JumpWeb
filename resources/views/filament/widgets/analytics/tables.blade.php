@@ -1,13 +1,12 @@
 {{--
-    El desglose del dinero (`specs/analitica.md` §4.5, T2a): la serie por día o semana (a todo el ancho) y
-    cinco tablas pequeñas —canal, método, producto, la señal y lo perdido— con celdas YA formateadas por el
-    widget. Aquí no se calcula nada y todo va escapado: ninguna columna analítica pasa por `->html()`.
+    Tablas de un informe de «Analítica» (`specs/analitica.md` §4.5): el widget entrega el título, la nota y
+    una lista de tablas con celdas YA formateadas; aquí no se calcula nada y todo va escapado (ninguna
+    columna analítica pasa por `->html()`). Una tabla `wide` ocupa las dos columnas. Los importes no se parten
+    (la captura móvil del 24-09 los mostraba en dos líneas): las celdas numéricas van sin salto y cada tabla
+    se desplaza sola si no cabe.
 --}}
 <x-filament-widgets::widget>
-    <x-filament::section
-        :heading="__('admin.analytics.money.breakdown_heading')"
-        :description="__('admin.analytics.money.method_note')"
-    >
+    <x-filament::section :heading="$heading" :description="$description">
         <div class="grid gap-6 md:grid-cols-2">
             @foreach ($tables as $table)
                 <div @class(['md:col-span-2' => $table['wide'] ?? false])>
@@ -16,8 +15,6 @@
                     @if ($table['rows'] === [])
                         <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">{{ __('admin.analytics.money.empty') }}</p>
                     @else
-                        {{-- Los importes no se parten (la captura móvil del 24-09 los mostraba en dos líneas):
-                             las celdas numéricas van sin salto y la tabla se desplaza sola si no cabe. --}}
                         <div class="mt-2 overflow-x-auto">
                             <table class="w-full text-sm">
                                 <thead>

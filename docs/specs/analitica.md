@@ -394,6 +394,15 @@ presupuesto de consultas):
   `GateVisits::register()` emite `visit_checked_in` (ya en el contrato) para que el libro también lo tenga.
   ❌ Descartado medir la puerta solo con eventos nuevos: nacerían vacíos, y el rastro ya existe con su
   índice `(action, created_at)`.
+- ✅ **Lo que enseñó la T2b (24-09)**: el método del alta se lee del JSON de `props` con `SqlJson::string()`
+  —`JSON_UNQUOTE(JSON_EXTRACT())` en MySQL/MariaDB y `json_extract()` en SQLite— porque **el operador `->>` no
+  existe en MariaDB**, que es el hosting; «cuentas de cliente» es la regla de `User::customers()` escrita en
+  SQL (`NOT EXISTS` sobre `role_user`); los CLIENTES DISTINTOS buscados salen de una consulta agrupada por
+  (hora, `target_id`) que PHP pliega por día y en total, así que una persona buscada dos veces el mismo día
+  cuenta una; las visitas se cortan por `visited_on` (fecha civil del parque) sin convertir; y las horas del
+  parque salen de los mismos cubos por hora UTC que la serie, convertidos: una búsqueda a las 22:30 UTC es la
+  hora 0 del día siguiente en Madrid. Las cuentas dadas de alta desde el panel o antes de la medición salen
+  como «sin dato», nunca como «contraseña».
 
 **T2c · Embudo y fuentes** (lo de la spec original, desde `analytics_sessions`/`analytics_events`): **embudo**
 por periodo con su conversión paso a paso (§4.2, sin bots ni internos); **fuentes** y campañas (visitas,
@@ -451,7 +460,7 @@ de §4.3.
 | T0 | ✅ spec v2, el contrato de eventos, `#678` y la revisión (§7.1) | | docs-check |
 | T1 | el libro, en cinco sub-tandas: **T1a ✅ (23-09)** tablas y poda, cookie, `ResolveVisitor` y `AttributionContext`, la ingesta stateless con su limitador, los hechos de servidor por fuente, el sello en `creating`, `robots.txt`, contrato **1.18.0** (`POST /events`) · **T1b ✅ (23-09)** `track.js` diferido (2,3 KiB gzip, techo 3) y el cajón · **T1c ✅ (23-09)** UTM en los 24 correos al cliente (pegado tras firmar, ignorado al validar), `email_sent` y `email_clicked` · **T1d ✅ (23-09)** la fuente del pedido manual (cuatro tarjetas, obligatoria, sin defecto; `forPanel()` valida) · **T1e ✅ (23-09)** `anonymize()` desata el libro y el export lleva `analytics` y `attribution` (contrato **1.19.0**) · y el **CIERRE ✅ (23-09)**: `scripts/mutar-analitica.sh` **19/19** (1 control, 1 declarado), `redsys:verify-concurrency --workers=16` ✓, la sonda, y `trustProxies` medido y retirado (`SEC-13`) | contrato **1.19.0** (`experiments` en `/sidebar/session` puede esperar a T5) | tests + arnés + `redsys:verify-concurrency` + sonda |
 | T1·bis | migración de historia: «anterior a la medición», arranque de cuadros en la fecha del despliegue, `model:prune` y recuento de `deploy.sh` 6→7, ensayo en staging con `schedule:run` a mano, `POLICY_VERSION` la misma noche | | ensayo |
-| T2 | el cuadro de mando, en cinco — **la hace el carril del SPA** (traspaso `#679`, tomado en `#735`, 24-09): **T2a ✅ (24-09)** el dinero: `AnalyticsPage` (5.º sitio del menú, `reports.view`; `reports.export` sembrado), `ReportPeriod` · `Window` · `SqlTime` (hora UTC → día del parque), `MoneyReport` en la capa de entrega (17 consultas, caché 5 min), cuatro widgets (tarjetas, gráfico, clientes, desglose con la tabla por día/semana), cuatro índices; 35 casos en `ReportPeriodTest`, `MoneyReportTest` y `AnalyticsPageTest`; `scripts/sonda-analitica-panel.mjs` 9/9 en escritorio y móvil; **queda el OJO del owner** y el `EXPLAIN` con volumen en staging · **T2b** registros y puerta · **T2c** embudo y fuentes · **T2d** CSV · **T2e** `analytics_daily`, `ad_spend` | | tests + presupuesto de consultas + `EXPLAIN` + el ojo del owner en vivo |
+| T2 | el cuadro de mando, en cinco — **la hace el carril del SPA** (traspaso `#679`, tomado en `#735`, 24-09): **T2a ✅ (24-09)** el dinero: `AnalyticsPage` (5.º sitio del menú, `reports.view`; `reports.export` sembrado), `ReportPeriod` · `Window` · `SqlTime` (hora UTC → día del parque), `MoneyReport` en la capa de entrega (17 consultas, caché 5 min), cuatro widgets (tarjetas, gráfico, clientes, desglose con la tabla por día/semana), cuatro índices; 35 casos en `ReportPeriodTest`, `MoneyReportTest` y `AnalyticsPageTest`; `scripts/sonda-analitica-panel.mjs` 9/9 en escritorio y móvil; **queda el OJO del owner** y el `EXPLAIN` con volumen en staging · **T2b ✅ (24-09)** registros y puerta: `CustomersReport` (10 consultas), `SqlJson` (el método del alta desde `props`, sin `->>` porque MariaDB no lo tiene), `visit_checked_in` desde `GateVisits::register()`, cinco widgets más (registros, la puerta, la serie, las horas del parque, el desglose); `CustomersReportTest` (7 casos) + el hecho en `GateVisitsTest`; sonda ampliada a nueve widgets; **queda el ojo del owner** · **T2c** embudo y fuentes · **T2d** CSV · **T2e** `analytics_daily`, `ad_spend` | | tests + presupuesto de consultas + `EXPLAIN` + el ojo del owner en vivo |
 | T3a | categorías sin quemar, banner, política por sección, aviso a cuentas, `PUT /me/analytics`, driver y PostHog con `Drivers::csp()` | `POLICY_VERSION` | tests + sonda (cero terceros sin consentir; con consentimiento, sin `securitypolicyviolation`) |
 | T3b | píxeles, Consent Mode básico, job de conversiones con relectura del consentimiento, tokens en `.env` | | tests con `Http::fake` |
 | T4 | la 360, los segmentos, el opt-in tras comprar | | tests |
@@ -513,10 +522,14 @@ de §4.3.
   periodo vacío, **el presupuesto de 17 consultas que no crece con las filas** y la caché); `AnalyticsPageTest`
   (invitado, cliente, empleado, puerta y admin; el permiso concedido en vivo; cada widget re-pregunta; «Hoy»
   conserva sus dos widgets; las seis tablas; el gráfico en euros por día). `AdminNavigationTest` fija cinco sitios.
-- `AnalyticsDashboardTest` `(futuro, T2b/T2c)`: los registros no cuentan las cuentas del equipo; la puerta desde
-  `audit_logs` con su control (una búsqueda sin `target` cuenta como no encontrada); campaña `=1+1` sale como
-  texto; `<img onerror>` en `utm_campaign` sale escapado; un pedido del panel cuenta en el dinero y no en el
-  embudo.
+- **T2b ✅ (24-09)**: `CustomersReportTest` (las cuentas de cliente sin el equipo ni la de mayo, verificadas y
+  compradoras, el método desde el libro con «sin dato» para el alta del panel, el alta de las 22:30 UTC que es
+  del 10 en el parque; la puerta desde `audit_logs` con su control —una búsqueda sin `target` cuenta como no
+  encontrada, la misma persona dos veces el mismo día cuenta una—, las fichas, las visitas y los clientes con
+  visita, las 24 horas del parque, el periodo vacío, el presupuesto de 10 consultas y la caché) y
+  `GateVisitsTest` (la visita escrita es un hecho `visit_checked_in`, una vez por cliente y día).
+- `AnalyticsDashboardTest` `(futuro, T2c)`: campaña `=1+1` sale como texto; `<img onerror>` en `utm_campaign`
+  sale escapado; un pedido del panel cuenta en el dinero y no en el embudo.
 - `PrivacyTest`/`MePrivacyTest`: `anonymize()` y `exportFor()` cubren analytics; `PUT /me/analytics`.
 - `machine.test.js`, `controller.test.js`: transiciones emiten `step_entered`; `drawer_opened` al nacer
   abierto; el banner se suprime con el cajón abierto; `SidebarBundleBudgetTest` con el techo de `track.js`.

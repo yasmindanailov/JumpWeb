@@ -3,10 +3,15 @@
 namespace App\Filament\Pages;
 
 use App\Domain\Platform\Enums\ReportPeriod;
+use App\Filament\Widgets\Analytics\CustomersBreakdownWidget;
+use App\Filament\Widgets\Analytics\CustomersSeriesChart;
+use App\Filament\Widgets\Analytics\GateHoursChart;
+use App\Filament\Widgets\Analytics\GateWidget;
 use App\Filament\Widgets\Analytics\MoneyBreakdownWidget;
 use App\Filament\Widgets\Analytics\MoneyCustomersWidget;
 use App\Filament\Widgets\Analytics\MoneyOverviewWidget;
 use App\Filament\Widgets\Analytics\MoneySeriesChart;
+use App\Filament\Widgets\Analytics\RegistrationsWidget;
 use BackedEnum;
 use Filament\Forms\Components\Select;
 use Filament\Pages\Dashboard as BaseDashboard;
@@ -81,7 +86,8 @@ class AnalyticsPage extends BaseDashboard
     }
 
     /**
-     * Los widgets de ESTE cuadro, en orden. La T2b añade los de registros y puerta; la T2c, los del embudo.
+     * Los widgets de ESTE cuadro, en orden: el dinero (T2a), los registros y la puerta (T2b); la T2c añade los
+     * del embudo y las fuentes.
      *
      * @return array<class-string<Widget>>
      */
@@ -92,6 +98,11 @@ class AnalyticsPage extends BaseDashboard
             MoneySeriesChart::class,
             MoneyCustomersWidget::class,
             MoneyBreakdownWidget::class,
+            RegistrationsWidget::class,
+            GateWidget::class,
+            CustomersSeriesChart::class,
+            GateHoursChart::class,
+            CustomersBreakdownWidget::class,
         ];
     }
 

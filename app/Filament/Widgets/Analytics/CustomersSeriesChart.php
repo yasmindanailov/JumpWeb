@@ -10,33 +10,23 @@ use Filament\Widgets\Concerns\InteractsWithPageFilters;
 use Illuminate\Contracts\Support\Htmlable;
 
 /**
- * **Cobrado, devuelto y vendido por día (o por semana)** (`specs/analitica.md` §4.5, T2a): tres series en
- * EUROS sobre UN solo eje, barras finas con hueco y esquinas suaves en el extremo, leyenda siempre (son tres)
- * y el tooltip por columna de Chart.js, que Filament trae.
- *
- * ⚠️ Un solo eje: las tres cifras son la misma magnitud. Dos ejes para dos escalas es el error número uno de
- * un gráfico, y aquí no hace falta.
- * ⚠️ Los colores son los tres primeros huecos de una paleta categórica VALIDADA para daltonismo (ΔE ≥ 8 entre
- * vecinos, medido con el validador el 24-09: 9,2 en deuteranopía): azul, naranja y verde-agua, en orden FIJO —la
- * identidad sigue a la serie, nunca a su posición—. El verde-agua queda a 2,74:1 sobre fondo claro y la regla
- * de la paleta pide entonces una VISTA DE TABLA con los mismos datos: es la tabla «Por día» del desglose. Se
- * midieron y descartaron el verde (ΔE 3,2 contra el naranja en protanopía: indistinguibles) y el violeta (2,04:1
- * en oscuro). En modo oscuro Filament no cambia los colores de serie; el naranja roza el borde de luminosidad
- * (0,671 frente a 0,67). Lo que se ve lo juzga el owner en vivo.
+ * **Cuentas nuevas, clientes buscados en la puerta y visitas acreditadas por día (o semana)**
+ * (`specs/analitica.md` §4.5, T2b): tres recuentos sobre un solo eje, con los mismos tres colores validados
+ * del gráfico del dinero en orden fijo, y la tabla por día del desglose como vista de tabla.
  */
-class MoneySeriesChart extends ChartWidget
+class CustomersSeriesChart extends ChartWidget
 {
     use AnalyticsWidget;
     use InteractsWithPageFilters;
 
-    /** @var array<string, string> serie → color (paleta categórica validada, huecos 1–3, modo claro) */
+    /** @var array<string, string> serie → color (los huecos 1–3 de la paleta validada, como en el dinero) */
     public const COLORS = [
-        'collected' => '#2a78d6',
-        'refunded' => '#eb6834',
-        'sold' => '#1baf7a',
+        'registrations' => MoneySeriesChart::COLORS['collected'],
+        'customers' => MoneySeriesChart::COLORS['refunded'],
+        'visits' => MoneySeriesChart::COLORS['sold'],
     ];
 
-    protected static ?int $sort = 2;
+    protected static ?int $sort = 7;
 
     protected int|string|array $columnSpan = 'full';
 
@@ -44,9 +34,9 @@ class MoneySeriesChart extends ChartWidget
 
     public function getHeading(): string|Htmlable|null
     {
-        $granularity = (string) $this->money()['window']['granularity'];
+        $granularity = (string) $this->customers()['window']['granularity'];
 
-        return __('admin.analytics.money.series_heading', [
+        return __('admin.analytics.customers.series_heading', [
             'granularity' => __('admin.analytics.money.granularity.'.$granularity),
         ]);
     }
@@ -59,17 +49,17 @@ class MoneySeriesChart extends ChartWidget
     /** @return array<string, mixed> */
     protected function getData(): array
     {
-        $report = $this->money();
-        /** @var list<array{key: string, collected: int, refunded: int, sold: int, orders: int}> $series */
+        $report = $this->customers();
+        /** @var list<array{key: string, registrations: int, verified: int, lookups: int, found: int, customers: int, visits: int}> $series */
         $series = $report['series'];
         $granularity = (string) $report['window']['granularity'];
 
         return [
             'labels' => array_map(static fn (array $row): string => self::label($row['key'], $granularity), $series),
             'datasets' => [
-                self::dataset('collected', $series),
-                self::dataset('refunded', $series),
-                self::dataset('sold', $series),
+                self::dataset('registrations', $series),
+                self::dataset('customers', $series),
+                self::dataset('visits', $series),
             ],
         ];
     }
@@ -90,14 +80,14 @@ class MoneySeriesChart extends ChartWidget
     }
 
     /**
-     * @param  list<array{key: string, collected: int, refunded: int, sold: int, orders: int}>  $series
+     * @param  list<array{key: string, registrations: int, verified: int, lookups: int, found: int, customers: int, visits: int}>  $series
      * @return array<string, mixed>
      */
     private static function dataset(string $key, array $series): array
     {
         return [
-            'label' => __('admin.analytics.money.'.$key),
-            'data' => array_map(static fn (array $row): float => round($row[$key] / 100, 2), $series),
+            'label' => __('admin.analytics.customers.series.'.$key),
+            'data' => array_map(static fn (array $row): int => $row[$key], $series),
             'backgroundColor' => self::COLORS[$key],
             'borderColor' => self::COLORS[$key],
             'borderRadius' => 4,
@@ -105,7 +95,6 @@ class MoneySeriesChart extends ChartWidget
         ];
     }
 
-    /** `01/06` por día; «Sem. del 01/06» por semana (su lunes). */
     private static function label(string $key, string $granularity): string
     {
         $day = CarbonImmutable::createFromFormat('!Y-m-d', $key, 'UTC')->format('d/m');
