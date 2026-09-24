@@ -15,11 +15,12 @@
   para delegarte toda la analítica»). Plataforma dejó la **T1 ✅** (`f501a990`→`4d4c3aec`, contrato 1.19.0,
   arnés 19/19, `RGPD-07`, `PAY-21`, `SEC-13`); su traspaso, atendido. **T2→T5 aquí**; la T2 partida en cinco
   con las tres peticiones del owner delante (dinero al detalle · registros · puerta): `analitica.md` §4.5.
-  ✅ **T2a y T2b EN EL ÁRBOL (24-09, madrugada)**: «Analítica» en `/admin/analitica` con nueve widgets — el
-  dinero entero, los registros (cuentas nuevas, verificadas, compradoras, cómo se registran) y la puerta
-  (búsquedas tecleadas y escaneadas, encontradas o no, clientes distintos, fichas, visitas acreditadas, por
-  hora del parque) — (spec §4.8), 44 casos, sonda 10/10 en escritorio y móvil. **Queda el OJO del owner** en
-  `localhost:8081/admin/analitica` (admin) y el `EXPLAIN` con volumen en staging. ▶ Sigue la **T2c**. ⚠️ **El fixture «probe-ojo-analitica» está MONTADO en la BD
+  ✅ **T2a, T2b y T2c EN EL ÁRBOL (24-09)**: «Analítica» en `/admin/analitica` con QUINCE widgets — el dinero
+  entero; los registros y la puerta; y la conversión: visitas, compras, conversión, el embudo por sesión, el
+  abandono por paso, fuentes por primer y último toque, entradas y salidas, dispositivo, idioma, horas,
+  productos, contacto y los rechazados de la semana — (spec §4.8), 52 casos, sonda 14/14 en escritorio y
+  móvil. **Queda el OJO del owner** en `localhost:8081/admin/analitica` (admin) y el `EXPLAIN` con volumen en
+  staging. ▶ Sigue la **T2d (CSV)**. ⚠️ **El fixture «probe-ojo-analitica» está MONTADO en la BD
   local** (87 pedidos `JW-OJO…`, 74 cobros, 12 devoluciones, 25 clientes `ojo-N@ojo-analitica.jumpweb.test`,
   dos meses): `OJO=desmontar` lo quita entero; antes había 9 pedidos y 2 cobros.
 - ✅ **La ficha de Google (`#524`), T1 y T2·1→T2·8 en el árbol** (`#720`→`#734`), **vistas por el owner con
@@ -37,13 +38,13 @@
 
 1. ❗❗❗ **LA ANALÍTICA, T2→T5** (`specs/analitica.md`; §0, §4.1, §4.2, §4.5, §7.1 antes de tocar). **T2 en
    cinco, en este orden**: **T2a dinero ✅ (24-09)** → **T2b registros y puerta ✅ (24-09)** → **T2c embudo y
-   fuentes** (desde `analytics_sessions`/`analytics_events`, spec §4.5: `FunnelReport` al lado de los otros dos
-   en `App\Filament\Analytics`; la definición de conversión está en §4.2; sin bots ni internos; fuentes y
-   campañas con `first_touch`/`last_touch` del sello; ingresos por campaña = `order_paid.paid_cents`; abandono
-   derivado por paso; eventos rechazados de 7 días; «anterior a la medición» para `attribution IS NULL`;
-   ⚠️ el libro local está VACÍO salvo lo que emita la sonda `sonda-analitica.mjs`: el fixture del ojo tendrá
-   que sembrar sesiones y eventos) → **T2d CSV** (`reports.export`, auditado, celdas saneadas) → **T2e
-   `analytics_daily` + `ad_spend`** (+1 tarea del scheduler → `deploy.sh`).
+   fuentes ✅ (24-09)** → **T2d CSV** (`reports.export`, auditado con `AuditLogger` —acción nueva en el catálogo
+   de `AuditLog::ACTIONS`— y con recuento, sin PII; una descarga por informe y periodo desde una acción de la
+   página; el saneado de fórmulas: prefijar con `'` toda celda que empiece por `= + - @ \t \r`; los tres
+   informes ya devuelven arrays listos para volcar) → **T2e `analytics_daily` + `ad_spend`** (roll-up diario
+   por comando programado, +1 tarea del scheduler → `deploy.sh`; los periodos de más de 90 días y el año;
+   `ad_spend` tecleado por plataforma, campaña y mes para CPA/ROAS en `SourcesWidget`).
+   ⚠️ El fixture del ojo siembra también TRÁFICO (506 sesiones, 2.294 hechos, sellos con primer y último toque).
    ⚠️ **Los cortes por día van por HORA UTC en SQL y al día del parque en PHP** (`SqlTime::hourBucket()`,
    `Window::bucketKey()`), nunca `CONVERT_TZ`. ⚠️ El dinero se lee de `payments`, `payment_refunds`,
    `deposit_split` y `orders.total`: **ningún `OrderBook` por pedido**. ⚠️ El informe vive en la CAPA DE
@@ -161,6 +162,12 @@ spec enumera. Lo del cliente va en la rama `cliente/playjump`, nunca a `main`.
   hosting): `SqlJson::string()` escribe la forma larga por motor. `AuditLogger::log*()` devuelve el modelo, así
   que un fixture le fija `created_at` con `forceFill` después. Los tres colores validados del gráfico se
   reutilizan en orden fijo por serie (`CustomersSeriesChart::COLORS` apunta a los del dinero).
+- 🪤 **De la T2c**: **un ayudante privado `session()` en un test es un FATAL al cargar la clase** (choca con el
+  `session()` público del `TestCase` de Laravel; se llama `visit()`), y `php artisan test` sale 255 sin que un
+  filtro por «FAIL» enseñe nada: ante un 255, salida cruda. **Los widgets perezosos de Filament cargan al
+  entrar en pantalla**: la sonda recorre la página por PANTALLAS de 600 px en tres pasadas —un salto al final
+  se deja atrás los del medio—. Y un lote ingerido con `webdriver` abre una sesión BOT que cuenta en «fuera
+  del recuento»: el fixture del test la incluye a propósito.
 - 🩹 **En la BD LOCAL hay 19 titulares con la cadena de waiver ROTA** (basura del 26–27 de agosto): si mides
   cadenas, compara ANTES/DESPUÉS.
 - **F4 cerró y el cajón es un PAQUETE** (`specs/cajon-empaquetable.md` §0 y §4.8). Tocar «HOJA ENFOCADA» de

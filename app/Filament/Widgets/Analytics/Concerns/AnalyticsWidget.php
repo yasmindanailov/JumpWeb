@@ -6,6 +6,7 @@ use App\Domain\Platform\Enums\ReportPeriod;
 use App\Domain\Platform\Services\Money;
 use App\Filament\Analytics\CustomersReport;
 use App\Filament\Analytics\Delta;
+use App\Filament\Analytics\FunnelReport;
 use App\Filament\Analytics\MoneyReport;
 use App\Filament\Pages\AnalyticsPage;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -40,6 +41,18 @@ trait AnalyticsWidget
     protected function customers(): array
     {
         return CustomersReport::for($this->period());
+    }
+
+    /** El informe del embudo y las fuentes (T2c). @return array<string, mixed> */
+    protected function funnel(): array
+    {
+        return FunnelReport::for($this->period());
+    }
+
+    /** Puntos básicos → «12,3 %». */
+    protected static function percent(int $basisPoints): string
+    {
+        return number_format($basisPoints / 100, 1, ',', '.')."\u{00A0}%";
     }
 
     /** Una tarjeta de DINERO con su variación frente al periodo anterior. */

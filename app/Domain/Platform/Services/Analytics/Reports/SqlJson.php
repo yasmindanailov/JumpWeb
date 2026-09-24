@@ -12,6 +12,10 @@ use Illuminate\Support\Facades\DB;
  * es `LONGTEXT`—, así que se escribe la forma larga en cada motor: `JSON_UNQUOTE(JSON_EXTRACT(…))` para
  * MySQL/MariaDB y `json_extract(…)` para SQLite, que ya devuelve el texto sin comillas.
  *
+ * ⚠️ **Un `null` de JSON no es un NULL de SQL en MySQL**: `JSON_UNQUOTE(JSON_EXTRACT(…))` devuelve la CADENA
+ * `'null'`, y la campaña de un pedido sin campaña salía escrita «null» en el cuadro (visto en la captura del
+ * 24-09; SQLite devuelve NULL y la suite no lo ve). El `NULLIF` lo devuelve a NULL; una campaña que se llame
+ * literalmente «null» perdería el nombre, y es un precio que se paga a sabiendas.
  * ⚠️ `$column` y `$path` son literales de confianza escritos en el informe, nunca una entrada.
  */
 final class SqlJson
@@ -20,7 +24,7 @@ final class SqlJson
     {
         return match (DB::connection()->getDriverName()) {
             'sqlite' => "json_extract({$column}, '{$path}')",
-            default => "JSON_UNQUOTE(JSON_EXTRACT({$column}, '{$path}'))",
+            default => "NULLIF(JSON_UNQUOTE(JSON_EXTRACT({$column}, '{$path}')), 'null')",
         };
     }
 }

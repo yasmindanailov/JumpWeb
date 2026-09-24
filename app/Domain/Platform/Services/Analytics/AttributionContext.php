@@ -225,26 +225,42 @@ class AttributionContext
      */
     public static function touch(AnalyticsSession $session): array
     {
-        $clickIds = $session->click_ids ?? [];
+        return self::touchOf(
+            $session->utm_source,
+            $session->utm_medium,
+            $session->utm_campaign,
+            $session->ref,
+            $session->referrer_host,
+            isset(($session->click_ids ?? [])['gclid']),
+        );
+    }
 
-        if ($session->utm_source !== null) {
+    /**
+     * La misma regla sobre ESCALARES: es lo que el cuadro de mando aplica a las sesiones agrupadas en SQL
+     * (T2c), y así la regla tiene un solo dueño y no dos.
+     *
+     * @return array{source: string, medium: string, campaign: ?string}
+     */
+    public static function touchOf(?string $utmSource, ?string $utmMedium, ?string $utmCampaign, ?string $ref, ?string $referrerHost, bool $hasGclid): array
+    {
+        if ($utmSource !== null && $utmSource !== '') {
             return [
-                'source' => $session->utm_source,
-                'medium' => $session->utm_medium ?? (isset($clickIds['gclid']) ? 'cpc' : 'referral'),
-                'campaign' => $session->utm_campaign,
+                'source' => $utmSource,
+                'medium' => ($utmMedium !== null && $utmMedium !== '') ? $utmMedium : ($hasGclid ? 'cpc' : 'referral'),
+                'campaign' => $utmCampaign,
             ];
         }
 
-        if (isset($clickIds['gclid'])) {
-            return ['source' => 'google', 'medium' => 'cpc', 'campaign' => $session->utm_campaign];
+        if ($hasGclid) {
+            return ['source' => 'google', 'medium' => 'cpc', 'campaign' => $utmCampaign];
         }
 
-        if ($session->ref !== null) {
-            return ['source' => $session->ref, 'medium' => 'referral', 'campaign' => null];
+        if ($ref !== null && $ref !== '') {
+            return ['source' => $ref, 'medium' => 'referral', 'campaign' => null];
         }
 
-        if ($session->referrer_host !== null) {
-            return ['source' => $session->referrer_host, 'medium' => 'referral', 'campaign' => null];
+        if ($referrerHost !== null && $referrerHost !== '') {
+            return ['source' => $referrerHost, 'medium' => 'referral', 'campaign' => null];
         }
 
         return ['source' => 'direct', 'medium' => 'none', 'campaign' => null];

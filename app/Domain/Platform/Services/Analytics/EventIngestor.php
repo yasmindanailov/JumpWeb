@@ -57,6 +57,9 @@ final class EventIngestor
             $rows[] = $result;
         }
 
+        // El cuadro de mando enseña los rechazados de la semana (T2c): contadores en caché por día y motivo.
+        RejectedEvents::record($rejected);
+
         if ($rows === []) {
             return ['accepted' => 0, 'rejected' => $rejected];
         }

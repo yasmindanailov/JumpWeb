@@ -5,13 +5,19 @@ namespace App\Filament\Pages;
 use App\Domain\Platform\Enums\ReportPeriod;
 use App\Filament\Widgets\Analytics\CustomersBreakdownWidget;
 use App\Filament\Widgets\Analytics\CustomersSeriesChart;
+use App\Filament\Widgets\Analytics\FunnelWidget;
 use App\Filament\Widgets\Analytics\GateHoursChart;
 use App\Filament\Widgets\Analytics\GateWidget;
 use App\Filament\Widgets\Analytics\MoneyBreakdownWidget;
 use App\Filament\Widgets\Analytics\MoneyCustomersWidget;
 use App\Filament\Widgets\Analytics\MoneyOverviewWidget;
 use App\Filament\Widgets\Analytics\MoneySeriesChart;
+use App\Filament\Widgets\Analytics\PagesWidget;
 use App\Filament\Widgets\Analytics\RegistrationsWidget;
+use App\Filament\Widgets\Analytics\SourcesWidget;
+use App\Filament\Widgets\Analytics\TrafficHoursChart;
+use App\Filament\Widgets\Analytics\TrafficSeriesChart;
+use App\Filament\Widgets\Analytics\TrafficWidget;
 use BackedEnum;
 use Filament\Forms\Components\Select;
 use Filament\Pages\Dashboard as BaseDashboard;
@@ -86,8 +92,8 @@ class AnalyticsPage extends BaseDashboard
     }
 
     /**
-     * Los widgets de ESTE cuadro, en orden: el dinero (T2a), los registros y la puerta (T2b); la T2c añade los
-     * del embudo y las fuentes.
+     * Los widgets de ESTE cuadro, en orden: el dinero (T2a), los registros y la puerta (T2b), y la conversión —el
+     * embudo, las fuentes y las páginas— (T2c).
      *
      * @return array<class-string<Widget>>
      */
@@ -103,6 +109,12 @@ class AnalyticsPage extends BaseDashboard
             CustomersSeriesChart::class,
             GateHoursChart::class,
             CustomersBreakdownWidget::class,
+            TrafficWidget::class,
+            FunnelWidget::class,
+            SourcesWidget::class,
+            TrafficSeriesChart::class,
+            TrafficHoursChart::class,
+            PagesWidget::class,
         ];
     }
 

@@ -111,26 +111,37 @@ await llega('Cobrado online');
 // cargar la página. Con cuatro widgets sus marcadores cabían en la primera pantalla y llegaban todos; con
 // nueve, los últimos quedaban fuera y la sonda los daba por perdidos (24-09, T2b). En un navegador de verdad
 // los trae el scroll del owner; aquí se recorre la página hasta el final antes de medir.
-for (let i = 0; i < 12; i++) {
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-    await page.waitForTimeout(700);
-    if (await page.getByText('Registros y puerta, al detalle').count() > 0) break;
+const ULTIMO_WIDGET = 'Páginas, dispositivos, productos y contacto';
+// ⚠️ Por PANTALLAS, no de un salto al final: un salto se deja atrás los marcadores del medio, que nunca entran
+// en el viewport y nunca cargan (medido el 24-09: llegaban el dinero y la conversión, y no los registros).
+// La página crece mientras cargan, así que la altura se relee en cada paso; tres pasadas bastan.
+for (let pasada = 0; pasada < 3; pasada++) {
+    for (let y = 0; y < await page.evaluate(() => document.body.scrollHeight); y += 600) {
+        await page.evaluate((top) => window.scrollTo(0, top), y);
+        await page.waitForTimeout(350);
+    }
+    await page.waitForTimeout(800);
+    if (await page.getByText(ULTIMO_WIDGET).count() > 0 && await page.getByText('Registros y puerta, al detalle').count() > 0) break;
 }
 await page.evaluate(() => window.scrollTo(0, 0));
 await llega('El desglose');
 await llega('Registros de clientes');
 await llega('La puerta');
-// T2b: el último widget es el desglose de registros y puerta; cuando llega, han llegado todos.
 await llega('Registros y puerta, al detalle');
+await llega('La conversión en la web');
+await llega('Fuentes y campañas');
+// T2c: el último widget son las páginas; cuando llega, han llegado todos.
+await llega(ULTIMO_WIDGET);
 await asentar(1200);
 
 informe.stats = await leerStats();
 informe.canvas = await page.locator('canvas').count();
 informe.tablas = await page.$$eval('h3', (els) => els.map((el) => el.textContent?.trim() ?? '').filter(Boolean));
-ok('veintitrés tarjetas (dinero 12 · registros 3 · puerta 8)', informe.stats.length === 23, String(informe.stats.length));
-ok('tres gráficos', informe.canvas >= 3, String(informe.canvas));
+ok('veintinueve tarjetas (dinero 12 · registros 3 · puerta 8 · conversión 6)', informe.stats.length === 29, String(informe.stats.length));
+ok('cinco gráficos', informe.canvas >= 5, String(informe.canvas));
 ok('las tablas del dinero', ['Por día', 'Por canal', 'Por método de cobro', 'Por producto', 'La señal', 'Perdido'].every((t) => informe.tablas.includes(t)), informe.tablas.join(' · '));
 ok('las tablas de registros y puerta', informe.tablas.includes('Cómo se registran') && informe.tablas.filter((t) => t === 'Por día').length === 2, informe.tablas.join(' · '));
+ok('las tablas de la conversión', ['Paso a paso', 'Dónde se quedan', 'Por primer toque', 'Páginas de entrada', 'Contacto'].every((t) => informe.tablas.includes(t)), informe.tablas.join(' · '));
 ok('ninguna tarjeta vacía', informe.stats.every((s) => s.label !== '' && s.value !== ''));
 
 /** Baja hasta un texto si está; si no, la captura se hace donde esté la página. */
@@ -147,6 +158,12 @@ await bajaHasta('Registros de clientes');
 await captura('escritorio-registros-y-puerta');
 await bajaHasta('Búsquedas en la puerta por hora del parque');
 await captura('escritorio-horas');
+await bajaHasta('La conversión en la web');
+await captura('escritorio-conversion');
+await bajaHasta('Fuentes y campañas');
+await captura('escritorio-fuentes');
+await bajaHasta(ULTIMO_WIDGET);
+await captura('escritorio-paginas');
 
 // 4. Móvil, en la MISMA sesión.
 await page.setViewportSize({ width: 390, height: 844 });

@@ -7,18 +7,26 @@ use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\PermissionCatalog;
 use App\Domain\Platform\Enums\ReportPeriod;
+use App\Domain\Platform\Models\AnalyticsSession;
 use App\Domain\Platform\Models\Setting;
+use App\Domain\Platform\Services\Analytics\Visitor;
 use App\Filament\Pages\AnalyticsPage;
 use App\Filament\Pages\Dashboard;
 use App\Filament\Widgets\Analytics\CustomersBreakdownWidget;
 use App\Filament\Widgets\Analytics\CustomersSeriesChart;
+use App\Filament\Widgets\Analytics\FunnelWidget;
 use App\Filament\Widgets\Analytics\GateHoursChart;
 use App\Filament\Widgets\Analytics\GateWidget;
 use App\Filament\Widgets\Analytics\MoneyBreakdownWidget;
 use App\Filament\Widgets\Analytics\MoneyCustomersWidget;
 use App\Filament\Widgets\Analytics\MoneyOverviewWidget;
 use App\Filament\Widgets\Analytics\MoneySeriesChart;
+use App\Filament\Widgets\Analytics\PagesWidget;
 use App\Filament\Widgets\Analytics\RegistrationsWidget;
+use App\Filament\Widgets\Analytics\SourcesWidget;
+use App\Filament\Widgets\Analytics\TrafficHoursChart;
+use App\Filament\Widgets\Analytics\TrafficSeriesChart;
+use App\Filament\Widgets\Analytics\TrafficWidget;
 use App\Filament\Widgets\DashboardStatsWidget;
 use App\Filament\Widgets\ReservationsWidget;
 use Database\Seeders\PermissionSeeder;
@@ -26,6 +34,7 @@ use Database\Seeders\RoleSeeder;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -114,7 +123,7 @@ class AnalyticsPageTest extends TestCase
 
     // ─── Los widgets ────────────────────────────────────────────────────────────────────────────
 
-    /** Los widgets del cuadro, en su orden: el dinero (T2a) y los registros y la puerta (T2b). */
+    /** Los widgets del cuadro, en su orden: el dinero (T2a), los registros y la puerta (T2b) y la conversión (T2c). */
     private const WIDGETS = [
         MoneyOverviewWidget::class,
         MoneySeriesChart::class,
@@ -125,6 +134,12 @@ class AnalyticsPageTest extends TestCase
         CustomersSeriesChart::class,
         GateHoursChart::class,
         CustomersBreakdownWidget::class,
+        TrafficWidget::class,
+        FunnelWidget::class,
+        SourcesWidget::class,
+        TrafficSeriesChart::class,
+        TrafficHoursChart::class,
+        PagesWidget::class,
     ];
 
     public function test_each_widget_asks_the_permission_again(): void
@@ -164,6 +179,43 @@ class AnalyticsPageTest extends TestCase
             ->assertSee(__('admin.analytics.customers.by_method'))
             ->assertSee(__('admin.analytics.customers.method.unknown'))
             ->assertSee(__('admin.analytics.money.by_day'));
+    }
+
+    /** T2c: el embudo, las fuentes y las páginas renderizan vacíos sin romperse, y una campaña con fórmula sale como texto. */
+    public function test_the_traffic_widgets_render_and_escape_what_an_advertiser_typed(): void
+    {
+        $this->actingAs($this->withRole('admin'));
+
+        Livewire::test(FunnelWidget::class, ['pageFilters' => ['period' => ReportPeriod::Last30->value]])
+            ->assertOk()
+            ->assertSee(__('admin.analytics.traffic.step.pay_started'))
+            ->assertSee(__('admin.analytics.traffic.left_at.cart'));
+
+        Livewire::test(PagesWidget::class, ['pageFilters' => ['period' => ReportPeriod::Last30->value]])
+            ->assertOk()
+            ->assertSee(__('admin.analytics.traffic.entries'))
+            ->assertSee(__('admin.analytics.traffic.rejected_reason.pii'));
+
+        // Una campaña llamada `=1+1` y otra con una etiqueta: texto, nunca HTML ni fórmula viva.
+        AnalyticsSession::query()->create([
+            'visitor_id' => Visitor::mint(), 'started_at' => now()->subDay(), 'last_seen_at' => now()->subDay(),
+            'utm_source' => 'google', 'utm_medium' => 'cpc', 'utm_campaign' => '<img src=x onerror=alert(1)>', 'is_bot' => false, 'is_internal' => false,
+        ]);
+        AnalyticsSession::query()->create([
+            'visitor_id' => Visitor::mint(), 'started_at' => now()->subDay(), 'last_seen_at' => now()->subDay(),
+            'utm_source' => 'meta', 'utm_medium' => 'paid_social', 'utm_campaign' => '=1+1', 'is_bot' => false, 'is_internal' => false,
+        ]);
+        Cache::flush();
+
+        Livewire::test(SourcesWidget::class, ['pageFilters' => ['period' => ReportPeriod::Last30->value]])
+            ->assertOk()
+            ->assertSee('=1+1')
+            ->assertSee('&lt;img src=x onerror=alert(1)&gt;', escape: false)
+            ->assertDontSee('<img src=x onerror=alert(1)>', escape: false);
+
+        $chart = new TrafficHoursChart;
+        $chart->pageFilters = ['period' => ReportPeriod::Last30->value];
+        $this->assertCount(24, (new \ReflectionMethod(TrafficHoursChart::class, 'getData'))->invoke($chart)['labels']);
     }
 
     public function test_the_overview_renders_six_money_tiles_with_the_default_period(): void
