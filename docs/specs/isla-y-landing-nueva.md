@@ -1,7 +1,8 @@
 # [SPEC] La isla y la landing nueva — las páginas en la instancia y una segunda carcasa de compra en el producto
 
 > Estado: ⬜ **borrador** · Última actualización: 2026-09-24 · Decisiones: `#681` (las páginas), `#682` (la
-> isla), `#683` (las cuatro de §7) y `#684` (promociones), todas `[DECIDIDO owner]`; la spec se aprueba con la suya.
+> isla), `#683` (las cuatro de §7), `#684` (promociones) y `#697` (el sistema nuevo del 24-09 tarde), todas
+> `[DECIDIDO owner]`; la spec se aprueba con la suya.
 > Carril: **plataforma** (banda 670–699). Fuente del diseño: el proyecto de Claude Design
 > `33397ca2-c67c-4049-8b09-ade20425f32a`, «Saltia Design System» (nombre provisional; la marca es Play Jump
 > Park), leído con `DesignSync` (`list_files` / `get_file`). Hermanas: `instancia-y-landing-fuera.md` (el menú
@@ -26,6 +27,7 @@
   (§4.9): la isla en Vue, 52 de 52 situaciones idénticas al diseño. **T3** (la compra, §4.10): T3a→T3d ✅;
   la secuencia de compra vive en `sidebar/usePurchaseFlow.js`. T3e en seis sub-tandas (`#692`): ·1→·5 ✅, la isla
   compra con tarjeta hasta el banco (`#694`), con «Entra» y Google (`#695`), y los cumpleaños con señal (`#696`).
+  El sistema nuevo del 24-09 tarde, dentro y al día (§4.11, `#697`).
 - **Invariantes**: `PAY-*` si entra Bizum (`VERIFY_CONC=1`), `SEC-12` (la ruta de las vistas), `SEC-01`,
   `RGPD-*` (consentimiento dentro de la isla, Apple como proveedor), `PERF-02` (la carcasa por instalación va en
   el arranque cacheado; la variante del A/B, en la sesión).
@@ -46,7 +48,8 @@ Medido con `DesignSync list_files` y leyendo entero su `readme.md` (125 KB, 693 
 - **Decisiones de marca del owner (20-09)**: ambiente claro, cian de marca, **el naranja del logo como único
   color de acción**, sin color por zona y el héroe en tarjeta, nunca a sangre.
 - **Lo que no está**: Colegios (el `Mapa` lo deja fuera), las páginas de Normas, Visítanos y legales (tienen
-  brief pero no página), el post-form, la invitación y el justificante (tienen brief propio).
+  brief pero no página), el post-form, la invitación y el justificante (tienen brief propio). ▶ Estos tres llegan
+  montados el 24-09 por la tarde (§4.11).
 
 ### 1.2 El SPA de hoy, medido
 
@@ -291,6 +294,7 @@ ingenua da 73,60 € y la real 74,40 €.
 | Cálculo guardado y compartible | 9 | FALTA | Después | Sin servidor si el enlace lleva los parámetros |
 | ¿Quedan huecos hoy? | 3 | PARCIAL | Con la T2 | Un agregado de lectura; `PERF-02` |
 | Tareas con plazo por reserva | 13 | A MEDIR | Con la T5 | Los plazos existen repartidos por sus specs |
+| El plan destacado del selector | Selector de plan | FALTA (dato) | Con la T4 | `featured`, etiqueta y foto: uno solo, del panel (§4.11) |
 
 Lo que no entre se queda como corchete apagado, sin dejar hueco.
 
@@ -312,7 +316,7 @@ deja de decir «nada de otra librería» en la T1.
 | T3 | La compra en la isla sobre el motor, con tarjeta; sonda de compra (§4.10: T3a→T3d ✅ → T3e) | Producto |
 | T4 | **Kids y Jump** (`#683`), un molde y dos páginas, con su calculadora y sus 301 | Instancia + producto |
 | T5 | Mi cuenta en la isla | Producto |
-| T6 | El resto de páginas y la lógica nueva que apruebe el owner | Los dos |
+| T6 | El resto de páginas, las tres de la fiesta (las viste este carril: `#697`, §4.11) y la lógica nueva que apruebe el owner | Los dos |
 
 Después, la v2.0.0 (`#670`): con la isla encendida para PlayJump, y el A/B cuando la T5 de la analítica exista.
 
@@ -705,6 +709,57 @@ guion del diseño (`paginas/compra/compra.jsx`, `usePjcCompra`):
   «Listo» sin sus tokens): lo arregla la página nueva (T4).
 - **T3e·6** la sonda de la isla: una entrada y un cumpleaños con señal hasta la pasarela, en local, y los
   desenlaces con la vuelta sin datos y el rechazo (como `scripts/sonda-embudo.mjs`); después, en staging.
+
+### 4.11 El sistema nuevo del 24-09 (tarde): lo que cambió, lo medido y el censo de la fiesta (`#697`)
+
+**De dónde**: `Saltia Design System (1).zip` (entradas de las 17:43:20–22, bajado a las 19:43; sha256 `f1d9855e…`), puesto con
+`diseno/actualizar.py` de la instancia: **468 ficheros, 70 nuevos, 50 cambiados y ninguno retirado**. ⚠️ Sin
+contrastar con el proyecto vivo: `DesignSync` pidió `/design-login`, que solo corre en una sesión interactiva; se
+hace en la siguiente (el README de `diseno/` dice cómo).
+
+**Qué trae**: la familia `components/invitados/` (`InviteCard`, `ThemePicker`, `RsvpBar`, `AuthForm`, `GuestRow`,
+`GuestComposer`, `PlacesMeter`, `AddonCard`) y `forms/SaveBar`; las páginas montadas de la **lista de invitados**, la
+**invitación** con su recibo y la **autorización**, `mi-cuenta-reglas`, la plantilla de correo y quince correos; los
+briefs de app, autorización, Colegios, invitación y lista. En lo ya montado: Mi cuenta rehecha (entrar sin sesión,
+ajustes, «una tarea cada vez», la cuenta nueva, la visita de hoy ya terminada), **el selector de plan rehecho**
+(destacado configurable con foto y etiqueta, [Hoy] en lima, filas con el «desde» grande, la garantía al pie), la
+hora extra fuera de los extras y **un plazo por extra** (tarta 48 h; bebidas y combos, el mismo día), 155 reseñas en
+toda la web y «Colegios» en el menú. El README del diseño lista sus «Por confirmar con el cliente» (dos plazos en la
+misma fiesta, si quien cumple cuenta en el número, el asunto del correo 2…): se leen al empezar cada página.
+
+**Lo medido sobre lo construido**, con los tres bancos contra la referencia nueva:
+
+| Qué | Antes del port | Causa | Después |
+|---|---|---|---|
+| La hoja `saltia.css` | — | Solo AÑADE: `--surface-glass-ink-float`, `--shadow-island-float`, las animaciones de la invitación, `[tabindex="-1"]` sin anillo | Reconstruida |
+| Isla | 50/52 | `selector-plan`: el diseño lo rehízo | **54/54** (+`selector-plan-portada`, el de la portada entero) |
+| Piezas | 17/18 | `campo-foco`: `Field` pone `boxShadow: none` al campo (el foco global pintaba un segundo anillo) | **18/18** |
+| Compra | 52/54 | `entrar`, la frase de `#695`: sin cambio | 52/54 |
+
+El port: `piezas/SelectorPlan.vue` (los cuatro trozos del JSX en un fichero), el rol `--isla-destacado-fondo-hover`
+(neutro en el producto; lima en PlayJump), `shield-check` en `ui/iconos.js`, y los textos `panel.plan_desde` y
+`pieza.opcional` en es/en/fr. **El peso**: la compra de la isla, que se descarga con la carcasa, pasa de 123,96 a
+**129,66 KiB** (techo 130 en `SidebarBundleBudgetTest`): +5.838 B medidos compilando con el selector de antes y el
+de ahora; son sus estilos en línea, como en el JSX. **Nacen con su consumidor**, sin portar aún: `TaskCard` en fila y con `overline` (Mi
+cuenta, T5), `QuantityStepper` con `name` (sin JavaScript: la lista), `AddonList` con plazos (Cumpleaños) y el
+`boxShadow` de `Textarea`. `--shadow-island-float` vale lo mismo que `--isla-sombra`: nada que cambiar.
+⚠️ **El plan destacado es un DATO** (`featured`, `badge`, `image`, `focus`, `offer` y `plans.footer`): uno solo,
+del panel; llega con la T4.
+
+**El censo de la fiesta** (medido buscando en el código el 24-09; se confirma al empezar su tanda). La lógica es del
+SPA (`celebracion-e-invitacion.md`, `waiver-por-reserva.md`, `complementos-post-reserva.md`), y los briefs lo dicen:
+«la mecánica viene decidida del sistema». **HAY**: la lista con las respuestas que el anfitrión ADOPTA al guardar, el
+borrador en el móvil, «La reserva ha cambiado», la hoja en blanco, el menor sin rellenar (`#706`), los TRES temas
+(`PartyInvitation::theme`: confeti, fiesta, sereno), el nombre de quien cumple, el `.ics`, el recordatorio y el corte
+por complemento (`TicketType::postform_cutoff_hours`). **FALTA**, lógica que trae el diseño: «Pegar una lista»,
+combos y cubos «para N adultos» con «¿Cuántos adultos se quedan?», la tarta por raciones (la grande), «Contestar por
+otro hijo» con las respuestas 24 h en el móvil, «Crear mi QR» desde el recibo, la casilla «Avísame de fechas»
+(consentimiento comercial: `RGPD-*`), el QR de la fiesta en la puerta para firmar allí y «Ver el parque» (propuesta
+del propio diseño). Cada una se le lleva al owner y se habla con el SPA antes de empezarla.
+⚠️ Las tres páginas van **sin isla ni menú** (así las dibuja el diseño), y encaja con la regla del SPA (`#739`: *el
+invitado no es un visitante*, sin banner, driver ni píxeles en ellas).
+▶ Contestado por el SPA el 24-09: el aviso de cookies dentro de la isla pinta su tarjeta sobre el MISMO almacén
+(`ui/cookie-consent.js`, `createCookiesStore`) y dispara `cookies-updated`; y `lint:js` con `isla/`, «hazlo tú».
 
 ## 5. Impacto en invariantes
 

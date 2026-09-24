@@ -33,6 +33,7 @@ return [
     'panel' => [
         'menu' => 'Menú',
         'planes' => '¿Qué quieres reservar?',
+        'plan_desde' => 'desde',
         'calculo' => 'Tu cálculo',
         'qr' => 'Mi QR',
         'ayuda' => '¿Lo hablamos?',
@@ -76,6 +77,7 @@ return [
     'pieza' => [
         'mostrar_clave' => 'Mostrar la contraseña',
         'ocultar_clave' => 'Ocultar la contraseña',
+        'opcional' => 'opcional',
         'completo' => 'Completo',
         'quedan' => 'Quedan :n',
         'libres' => ':n libres',

@@ -32,6 +32,7 @@ return [
     'panel' => [
         'menu' => 'Menu',
         'planes' => 'What would you like to book?',
+        'plan_desde' => 'from',
         'calculo' => 'Your quote',
         'qr' => 'My QR',
         'ayuda' => 'Shall we talk?',
@@ -73,6 +74,7 @@ return [
     'pieza' => [
         'mostrar_clave' => 'Show password',
         'ocultar_clave' => 'Hide password',
+        'opcional' => 'optional',
         'completo' => 'Full',
         'quedan' => 'Only :n left',
         'libres' => ':n free',

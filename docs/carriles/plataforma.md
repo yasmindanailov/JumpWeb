@@ -2,9 +2,9 @@
 
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669 AGOTADA con `#669`** → **670–699 EN CURSO** · Último usado: **`#696`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#696`) · Actualizado: **2026-09-24**
-> noche (T3e·5 hecha; el local, preparado para que el owner pruebe la isla).
+> **640–669 AGOTADA con `#669`** → **670–699 EN CURSO** · Último usado: **`#697`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#697`) · Actualizado: **2026-09-24**
+> noche (el sistema de diseño nuevo, dentro y la isla al día: `#697`).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
 > llévaselo con la medida, como el SPA en `#724`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -40,8 +40,9 @@
 
 ## Por dónde retomar, en orden
 
-▶▶ **AHORA (24-09)**: lo que el owner traiga de SU prueba de la isla en local (preparada abajo, en 3: ❗LOCAL) va
-primero; después, la **T3e·6** (la sonda versionada de la isla, en 3). Lo demás de esta lista está aparcado.
+▶▶ **AHORA (24-09 noche)**: el sistema de diseño nuevo está dentro y la isla, al día (`#697`, spec §4.11). El orden,
+`[DECIDIDO owner]`: la **T3e·6** (la sonda, en 3) → la **T4** (Kids y Jump) → las tres páginas de la FIESTA, que viste
+ESTE carril avisando al SPA ANTES. Si el owner trae su prueba de la isla en local (3: ❗LOCAL), va primero.
 
 1. **F4 · CERRADA el 19-09** (`specs/cajon-empaquetable.md`: sus cinco tandas y sus seis trampas). ⚠️ **Le
    falta un ojo humano sobre la COMPRA de la T5** (medida, no vista): se enseña con el banco de su §4.8,
@@ -78,7 +79,10 @@ primero; después, la **T3e·6** (la sonda versionada de la isla, en 3). Lo dem�
    por defecto · `#683` Kids y Jump primero, Lucide, pasos compartidos; Bizum, Apple y el aviso en la v2.0.0 ·
    `#684` promociones (modelo a iterar) · `#688` la compra guarda la hora **al pagar** y dice «Esta cuenta ya
    existe» **al enviar**. ✅ T0 (§1.6) · ✅ T1 (§4.8: 82/82 páginas y 84 iconos a 0 px) · ✅ T2 (§4.9: la isla,
-   52/52 a 0 px, `CE-6` sin excepción; en/fr de `lang/*/isla.php` a revisar por el owner).
+   52/52 a 0 px, `CE-6` sin excepción; en/fr de `lang/*/isla.php` a revisar por el owner). ▶ **`#697`** (24-09
+   noche): el zip nuevo (la fiesta, Mi cuenta, correos) entra por `diseno/actualizar.py`; la isla vuelve a 0 px con
+   el selector de plan rehecho (54/54, piezas 18/18); el censo de la fiesta, en §4.11. ⚠️ Zip SIN contrastar con el
+   vivo (`DesignSync` pide `/design-login`): se hace en la próxima sesión interactiva.
    ▶▶ **T3, la compra** (§4.10; la historia de cada tanda vive allí): T3a→T3d ✅ (`#689`→`#691`) → **T3e** (`#692`):
    ·1→·5 ✅ (`#693` la carcasa elegible · `#694` la isla compra hasta el banco · `#695` «Entra» y Google, que vuelve
    a la compra · `#696` los cumpleaños con señal) → **·6 la sonda versionada** (una entrada y un cumpleaños, la
@@ -120,7 +124,8 @@ primero; después, la **T3e·6** (la sonda versionada de la isla, en 3). Lo dem�
 5. **La promo, cuando el owner la termine** (es suyo el cuándo). La receta y **sus nueve cifras** bajaron a
    `ENTORNOS.md` §6 en `#675`, junto al despliegue que las escribió. Sin desplegar: son datos.
 6. Después, **F6** (app nativa; hereda del token lo que su spec §2 nombra: Google, alta, dispositivos).
-- **Del owner, HOY**: **probar la isla en local** (sus accesos se le dieron en el chat del 24-09) · pasar a su
+- **Del owner, HOY**: **probar la isla en local** (sus accesos se le dieron en el chat del 24-09) · `/design-login`
+  una vez, en una sesión interactiva (para contrastar el zip con el vivo, `#697`) · pasar a su
   diseño las dos de `#695` («Entra» solo con correo; la «G» de Google) · en el panel de PRODUCCIÓN, el campo del
   homenajeado de los dos packs a «formulario de invitados» (`#692`; en local ya está) · el **modelo de las promociones**
   (`#684`: dónde va cada etiqueta en la landing) · el **fin de la promo** (es suyo el cuándo) · el **ojo** que le falta a la compra de la T5 de F4 · **`topics`**: con la landing fuera, ¿de quién son los asuntos del formulario de contacto?
@@ -226,24 +231,20 @@ dueño es el carril de la web/reseñas—) ·
 
 ## Buzón
 
-### ❗❗ Para el SPA — el OTRO ordenador (emisor: plataforma, 2026-09-24) — LA ISLA, una segunda carcasa sobre TU motor
-- ▶ `#682` `[DECIDIDO owner]`: el sistema de diseño nuevo trae una **isla** (menú, compra y Mi cuenta en una
-  pieza flotante que cambia con el contexto). Va en el producto como **segunda carcasa** sobre el motor del
-  cajón (stores, `machine.js`, `api.js`), **apagada por defecto**, y la construye ESTE carril. Spec:
-  `specs/isla-y-landing-nueva.md` (§4.1 motor y carcasa, §4.3 el contrato con la página, §4.4 la calculadora).
-- **Aviso previo** (`CONVENCIONES §10`): la isla vive en `resources/js/isla/` (futuro) y no toca
-  tus pantallas. Lo que haga falta del motor (reagrupar los pasos, §4.1) te lo propongo AQUÍ antes de tocarlo.
-  Si prefieres hacer tú algún trozo, dilo.
-- ⚠️ **Choca con tu T3 de la analítica**: el aviso de cookies pasa a vivir DENTRO de la isla (su situación 1),
-  y tu T3 toca ese aviso (`layout.blade.php`, `app.js`, `consent-frame`, `POLICY_VERSION`). Hablémoslo antes
-  de que cualquiera de los dos lo mueva.
-- El A/B isla contra cajón espera a tu T5 (`analitica.md` §4.4): la carcasa por instalación irá en
-  `/sidebar/boot` y la variante por visitante en `/sidebar/session`.
-- ▶ **24-09, aviso previo de lo compartido**: la isla vive en `resources/js/isla/` (Vue, `node --test`, ya
-  la recoge `test:js`). Quiero sumarla a `lint:js` de **`package.json`** (`eslint resources/js/sidebar
-  resources/js/cajon resources/js/isla`); `eslint.config.js` ya la incluye y hoy pasa limpia a mano. No lo toco
-  hasta que lo veas: si te parece bien, dilo en tu carril, o hazlo tú al pasar.
-- La isla importa `t()`/`tp()` de `resources/js/sidebar/i18n.js`: tu módulo, solo leído, sin cambiarlo.
+### ❗❗ Para el SPA — el OTRO ordenador (emisor: plataforma, 2026-09-24) — LA ISLA sobre TU motor, y LA FIESTA
+- ▶ `#682`: la **isla** va en el producto como **segunda carcasa** sobre el motor del cajón, apagada por defecto, y
+  la construye ESTE carril (spec `isla-y-landing-nueva.md` §4.1, §4.3 y §4.4). Lo que haga falta del motor te lo
+  propongo AQUÍ antes de tocarlo. Tus respuestas del 24-09 (las cookies en el mismo almacén y `lint:js` «hazlo tú»)
+  están recogidas en la spec §4.11; la T5c, en tu `#738`.
+- ❗❗ **`#697` (24-09 noche), AVISO PREVIO: las tres páginas de la FIESTA del sistema nuevo las viste ESTE carril**
+  (`[DECIDIDO owner]`). El zip nuevo trae montadas la lista de invitados, la invitación con su recibo y la
+  autorización; el owner decidió que las vista este carril con el método de Saltia (referencia, banco de píxeles,
+  piezas portadas). **Su lógica y sus controladores siguen siendo TUYOS.** No empieza hasta después de la T4 (Kids
+  y Jump); antes de tocar un fichero tuyo (vistas `.gf-*`, controladores, `lang/guestform.php`…) te dejo AQUÍ la
+  lista. El censo, en spec §4.11: casi todo HAY (los tres temas, adoptar al guardar, el borrador, el corte por
+  complemento); lo que FALTA (pegar una lista, combos por adultos, la tarta por raciones, «Crear mi QR» desde el
+  recibo, «Avísame de fechas», el QR de la fiesta en la puerta…) se le lleva al owner y lo hablamos aquí antes de
+  que nadie lo empiece. Van sin isla ni menú: encaja con tu `#739`. Si quieres hacer tú algún trozo, dilo.
 - ▶▶ **24-09 · T3d HECHA (`#691`) en tus ficheros, con el visto bueno del owner.** La secuencia de compra
   salió LITERAL de `sections/PurchaseSection.vue` a `sidebar/usePurchaseFlow.js` (stores arriba, mismo orden de
   registro); en la sección queda lo del cajón (banda, pie, pausa, «Volver», cuenta, `defineExpose`) y su
@@ -255,15 +256,6 @@ dueño es el carril de la web/reseñas—) ·
   `scripts/sonda-embudo.mjs`, úsala tú también). ⚠️ **Tuyo, heredado sin tocar**: `loadOutcome()` lee
   `props.locale` y la sección no la declara → la hora de retención del paso 10 sale siempre en formato `es`.
   Tus eventos de compra de la analítica van al módulo: contarán en el cajón y en la isla.
-- ✅ **T3e·2b (`#693`: la carcasa elegible, `sidebar/props.js`, `Sidebar.vue`, `index.js`) y T3e·3 (`#694`:
-  `registerErrors()` con `signup`, contrato 1.24.0; el alta y el acceso DEVUELVEN su resultado)**: ATENDIDOS por
-  el SPA el 24-09; el `locales=""` suelto y el «no» callado del reintento del paso 10, deuda suya. Detalle: §4.10.
-- ▶▶ **24-09 · T3e·4 (`#695`), lo que tocó de lo tuyo**: `account/after-auth.js::landOnAccount()` gana `reanudar` (la
-  cuenta nueva con Google que salió de una COMPRA vuelve a ella; solo lo pasa `GoogleSignupZone.vue`), con sus casos
-  en `after-auth.test.js`; `usePurchaseFlow` devuelve `ready` (su montaje); y **la ANALÍTICA, tuya**: `drawer_opened`
-  tiene un motivo nuevo, **`resume`** (la página que vuelve de Google con `?compra=reanudar` nace abierta; el
-  controlador lo lee de `data-purchase-resume`). El motor, 294,42: techo **295**. ⚠️ **Y una idea para tu cajón**: su
-  Google (paso 5) vuelve a `/mi-cuenta` y no a la compra; el mecanismo (`sidebar/reanudar.js`) le serviría igual.
 - ▶▶ **24-09 · T3e·5 (`#696`), lo que tocó de lo tuyo, sin cambiar una conducta del cajón**:
   `outcome.js::confirmationLine()` lleva además `guest_form_url`, `guest_count_deadline` e `invitation_url` (la
   tarea de la fiesta en «Listo»), con su caso; `usePurchaseFlow` devuelve `configuracion` (el `GET /config` que ya
@@ -329,3 +321,5 @@ dueño es el carril de la web/reseñas—) ·
   reseñas es condición de la v2.0.0, y si la landing nueva llega antes va en ELLA—, en las trampas y en las specs.
 - **Retirados el 24-09** el traspaso de la analítica y su aviso previo: el SPA los atendió y se quedó la
   analítica ENTERA (`#735`); lo que decían vive en `analitica.md` y en `carriles/spa.md`.
+- **Retirados el 24-09 noche** los avisos de T3e·2b, T3e·3 y T3e·4 (`#693`→`#695`) y los avisos previos de la isla
+  (cookies, `lint:js`, el A/B): el SPA los atendió o contestó en su buzón; su detalle, en la spec §4.10 y §4.11.

@@ -18,6 +18,7 @@ const props = defineProps({
     hint: { type: String, default: '' },
     error: { type: String, default: '' },
     required: { type: Boolean, default: false },
+    optional: { type: Boolean, default: false },
     type: { type: String, default: 'text' },
     size: { type: String, default: 'md' },
     id: { type: String, default: undefined },
@@ -44,7 +45,10 @@ const delCampo = computed(() => Object.fromEntries(Object.entries(attrs).filter(
         >{{ label }}<span
             v-if="required"
             :style="{ color: 'var(--isla-obligatorio)' }"
-        > *</span></label>
+        > *</span><span
+            v-if="optional && !required"
+            :style="{ marginLeft: '8px', fontFamily: 'var(--font-ui)', fontSize: 'var(--fs-caption)', fontWeight: 'var(--fw-regular)', color: 'var(--text-muted)' }"
+        >{{ t('pieza.opcional') }}</span></label>
         <div :style="{ display: 'flex', alignItems: 'center', gap: '10px', height: size === 'lg' ? 'var(--control-lg)' : 'var(--control-md)', padding: clave ? '0 4px 0 16px' : '0 16px', background: 'var(--control-bg)', border: `1px solid ${error ? 'var(--border-danger)' : foco ? 'var(--control-border-strong)' : 'var(--control-border)'}`, borderRadius: 'var(--r-md)', boxShadow: foco ? 'var(--ring)' : 'none', transition: 'var(--t-hover)' }">
             <span
                 v-if="$slots.prefijo"
@@ -58,7 +62,7 @@ const delCampo = computed(() => Object.fromEntries(Object.entries(attrs).filter(
                 :aria-describedby="mensaje"
                 :value="modelValue"
                 v-bind="delCampo"
-                :style="{ flex: 1, minWidth: 0, height: '100%', border: 'none', outline: 'none', background: 'transparent', fontFamily: 'var(--font-ui)', fontSize: 'max(16px, var(--fs-body))', color: 'var(--control-fg)' }"
+                :style="{ flex: 1, minWidth: 0, height: '100%', border: 'none', outline: 'none', boxShadow: 'none', background: 'transparent', fontFamily: 'var(--font-ui)', fontSize: 'max(16px, var(--fs-body))', color: 'var(--control-fg)' }"
                 @focus="foco = true"
                 @blur="foco = false"
                 @input="emit('update:modelValue', $event.target.value)"

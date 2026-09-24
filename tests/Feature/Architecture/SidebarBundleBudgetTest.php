@@ -877,7 +877,10 @@ class SidebarBundleBudgetTest extends TestCase
     // recibo y su «Listo». Medido 123,46 como DESCARGA (desde aquí se mide la descarga: ver `descargaDe()`). Diferir la
     // pantalla de la fiesta a su trozo ahorraba solo 1,6 KiB a quien compra entradas y costaba una petición más a quien
     // abre un cumpleaños: Rollup sacó sus piezas comunes a un trozo compartido. Va en la compra.
-    private const ISLA_COMPRA_CHUNK_MAX_KB = 124;
+    // `#697`: el sistema de diseño nuevo rehízo el selector de plan (el destacado con su foto, [Hoy] y el pie con la
+    // garantía), portado 1:1 con sus estilos en línea: +5.838 B medidos con el selector de antes y el de ahora (123,96 →
+    // 129,66); el resto, el `opcional` del campo y un icono. Medido 129,66.
+    private const ISLA_COMPRA_CHUNK_MAX_KB = 130;
 
     // T3e·3 (`#694`): las pantallas de después de la pantalla 0, en su trozo (`isla/compra/pasos-diferidos.js`), que la
     // compra pide al montarse. Medido 36,92 KiB. T3e·4 (`#695`): «Entra» con sus eventos y la «G» de Google, 37,66.

@@ -34,6 +34,7 @@ import partyPopper from '../../../icons/lucide/icons/party-popper.svg?raw';
 import phone from '../../../icons/lucide/icons/phone.svg?raw';
 import plus from '../../../icons/lucide/icons/plus.svg?raw';
 import qrCode from '../../../icons/lucide/icons/qr-code.svg?raw';
+import shieldCheck from '../../../icons/lucide/icons/shield-check.svg?raw';
 import userRound from '../../../icons/lucide/icons/user-round.svg?raw';
 import userRoundPlus from '../../../icons/lucide/icons/user-round-plus.svg?raw';
 import users from '../../../icons/lucide/icons/users.svg?raw';
@@ -68,6 +69,7 @@ const SVG = {
     phone,
     plus,
     'qr-code': qrCode,
+    'shield-check': shieldCheck,
     'user-round': userRound,
     'user-round-plus': userRoundPlus,
     users,

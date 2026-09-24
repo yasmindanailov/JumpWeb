@@ -27,6 +27,7 @@
     --isla-aviso-fondo: rgba(63, 163, 77, 0.14);
     --isla-aviso-borde: rgba(63, 163, 77, 0.35);
     --isla-destacado-fondo: rgba(63, 163, 77, 0.12);
+    --isla-destacado-fondo-hover: rgba(63, 163, 77, 0.2);
     --isla-punto-borde: rgba(16, 20, 24, 0.92);
     /* …y los de las piezas de la compra (T3b). */
     --isla-obligatorio: #c2410c;
