@@ -21,10 +21,9 @@
   pie —, el filtro con **trimestre · año · a medida** (hasta un año, por mes más allá de 92 días, en directo) y
   **«Comparar con»** (periodo anterior · mismo periodo del año pasado), y el botón **«Descargar CSV»** (los tres
   informes, con `reports.export`, auditado, con la línea «Comparado con»). Spec §4.8; 100 casos en
-  `tests/Feature/Analytics`; sonda 27/27 por pestaña, escritorio y móvil. **El owner vio T2a–T2d en escritorio
-  («está muy bien») y pidió la T2f (`#736`)**: queda SU OJO sobre la T2f en `localhost:8081/admin/analitica`
-  (admin; móvil también) y el `EXPLAIN` con volumen en staging. ▶ Sigue la **T2e** (`analytics_daily` +
-  `ad_spend`, solo si el volumen lo pide) y después la **T3**. ⚠️ **El fixture «probe-ojo-analitica» está
+  `tests/Feature/Analytics`; sonda 27/27 por pestaña, escritorio y móvil. **✅ El owner vio T2a–T2f en escritorio
+  (24-09): «está perfecto»**; queda el `EXPLAIN` con volumen en staging. ▶ Sigue la **T3** (consentimiento y
+  driver); la **T2e** (`analytics_daily` + `ad_spend`) solo si el volumen lo pide. ⚠️ **El fixture «probe-ojo-analitica» está
   MONTADO en la BD local** (90 pedidos `JW-OJO…`, 81 cobros, 9 devoluciones, 25 clientes
   `ojo-N@ojo-analitica.jumpweb.test`, 506 sesiones, dos meses): `OJO=desmontar` lo quita entero.
 - ✅ **La ficha de Google (`#524`), T1 y T2·1→T2·8 en el árbol** (`#720`→`#734`), **vistas por el owner con
@@ -46,10 +45,10 @@
    dice que el año en directo no aguanta (roll-up diario por comando programado `analytics:rollup` con `Window`
    de UN día por informe, JSON por día e informe; +1 tarea del scheduler → `deploy.sh` «esperadas 6→7»; los tres
    `for()` cosen «días cerrados desde el diario + hoy en directo»; `ad_spend` —plataforma, campaña, mes,
-   céntimos— tecleado en un Resource pequeño de «Ajustes» para el CPA/ROAS de `SourcesWidget`). ▶ **Antes de
-   nada: el OJO del owner sobre la T2f** (pestañas, gráficos nuevos, tablas plegadas, «Comparar con», trimestre
-   y año, a medida; escritorio y móvil) y lo que pida. Después, la **T3** (consentimiento y driver: toca lo
-   compartido, aviso dado).
+   céntimos— tecleado en un Resource pequeño de «Ajustes» para el CPA/ROAS de `SourcesWidget`). ✅ El owner vio
+   la T2f en vivo (24-09). ▶ **Ahora la T3** (consentimiento y driver, spec §4.3 y §4.8 T3a/T3b: toca lo
+   compartido —banner, `layout`, `app.js`, `SecurityHeaders`, la política en tres idiomas—, aviso dado y
+   repetido al empezar).
    ⚠️ El fixture del ojo siembra también TRÁFICO (506 sesiones, 2.294 hechos, sellos con primer y último toque).
    ⚠️ **Los cortes por día van por HORA UTC en SQL y al día del parque en PHP** (`SqlTime::hourBucket()`,
    `Window::bucketKey()`), nunca `CONVERT_TZ`. ⚠️ El dinero se lee de `payments`, `payment_refunds`,
