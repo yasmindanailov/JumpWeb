@@ -162,7 +162,8 @@ return [
         ],
         'entrar' => [
             'titular' => 'Entra',
-            'texto' => 'Escribe tu correo o tu teléfono.',
+            // `#695` `[DECIDIDO owner]`: solo correo. El diseño decía «correo o teléfono»; el acceso no admite teléfono.
+            'texto' => 'Escribe tu correo.',
             'continuar' => 'Continuar',
             'google' => 'Entrar con Google',
             'apple' => 'Entrar con Apple',

@@ -13,12 +13,13 @@ const textos = {
     compra: {
         paso: 'Paso :n de :total',
         datos: { banda: 'Tus datos', continuar: 'Continuar al pago', cargando: 'Comprobando tus datos y guardando tu hora' },
+        entrar: { continuar: 'Continuar', cargando: 'Entrando' },
         pagar: { banda: 'Pagar', tarjeta: 'Pagar :importe con tarjeta', saliendo_boton: 'Continuar al pago' },
         fallido: { tarjeta: 'Volver a intentar con tarjeta' },
         listo: { mi_qr: 'Ir a Mi QR', menores: 'Añade a tus hijos…', menores_boton: 'Añadir a mis hijos' },
     },
 };
-const acciones = { volver: () => 'volver', continuar: () => 'continuar', pagar: () => 'pagar', salir: () => 'salir', reintentar: () => 'reintentar', miQr: () => 'miQr', cerrar: () => 'cerrar' };
+const acciones = { volver: () => 'volver', continuar: () => 'continuar', entrar: () => 'entrar', pagar: () => 'pagar', salir: () => 'salir', reintentar: () => 'reintentar', miQr: () => 'miQr', cerrar: () => 'cerrar' };
 const resumen = { summary: 'Kids · 1 hora · sáb 26, 17:00 · 2 entradas', total: '16 €' };
 const ck = (paso, extra = {}) => ckDelPaso({ paso, textos, acciones, resumen, importe: '16 €', ...extra });
 
@@ -43,6 +44,8 @@ test('la dirección: avanzar entra por la derecha, volver por la izquierda, y la
     assert.equal(direccion(null, rango('cuando')), null);
     assert.equal(direccion(rango('cuando'), rango('datos')), 'fwd');
     assert.equal(direccion(rango('datos'), rango('datos', 'descargo')), 'fwd');
+    assert.equal(direccion(rango('datos', 'entrar', 'id'), rango('datos', 'entrar', 'olvido')), 'fwd', 'el olvido, detrás de «Entra»');
+    assert.equal(direccion(rango('datos', 'entrar', 'olvido'), rango('datos', 'entrar', 'id')), 'back');
     assert.equal(direccion(rango('pagar'), rango('datos')), 'back');
     assert.equal(direccion(rango('pagar'), rango('banco')), 'fwd');
     assert.equal(direccion(rango('fallido'), rango('listo')), 'fwd');
@@ -65,6 +68,24 @@ describe('la descripción de cada paso', () => {
     test('dentro de «Tus datos» (el descargo, el olvido) no hay acción: se vuelve con la flecha', () => {
         assert.equal(ck('datos', { vista: 'descargo' }).action, null);
         assert.equal(ck('datos', { vista: 'descargo' }).key, 'datosdescargo');
+        assert.equal(ck('datos', { vista: 'entrar', entrada: { paso: 'olvido' } }).action, null);
+        assert.equal(ck('datos', { vista: 'entrar', entrada: { paso: 'olvido' } }).key, 'datosentrarolvido');
+    });
+
+    test('«Entra» (T3e·4): «Continuar», apagado hasta tener correo y contraseña, con su espera', () => {
+        const vacia = ck('datos', { vista: 'entrar', entrada: { paso: 'id', valor: '  ', clave: '' } });
+
+        assert.equal(vacia.action.label, 'Continuar');
+        assert.equal(vacia.action.disabled, true);
+        assert.equal(vacia.key, 'datosentrarid');
+        assert.equal(ck('datos', { vista: 'entrar', entrada: { paso: 'id', valor: 'ana@correo.es', clave: '' } }).action.disabled, true);
+
+        const lista = ck('datos', { vista: 'entrar', entrada: { paso: 'id', valor: 'ana@correo.es', clave: 'x' }, ocupado: 'entrar' });
+
+        assert.equal(lista.action.disabled, false);
+        assert.equal(lista.action.onClick(), 'entrar');
+        assert.equal(lista.action.loading, 'Entrando');
+        assert.equal(lista.onBack(), 'volver');
     });
 
     test('«Pagar»: paso 2 de 2, sin «tu hora queda guardada» (`#688`) y el importe que cobra la pasarela', () => {

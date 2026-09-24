@@ -991,6 +991,9 @@ export function usePurchaseFlow(props) {
 
     return {
         store, catalogStore, selectionStore, bookingStore, dateStore, timeStore, dependentsStore, cartStore, authStore, outcomeStore,
+        // El fin del MONTAJE (catálogo, cesta restaurada, desenlace), para quien tenga que esperarlo como `openProduct()`:
+        // la isla, al reanudar una compra que volvió de Google (T3e·4).
+        ready: mounted,
         busy, locale, unitPriceCents, guardianMode, buyerDue, buyerNeed,
         refreshBookingStatus, refreshIdentity, openProduct,
         selectProduct, selectDate, selectTime, applyQuantity, chooseAddon, setAddonQuantity,

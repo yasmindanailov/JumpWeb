@@ -28,10 +28,13 @@ export function pasoDelMotor(step) {
     return null;
 }
 
-/** El orden de los pasos, del diseño: avanzar entra por la derecha y volver, por la izquierda. */
-export function rango(paso, vista = null) {
+/**
+ * El orden de los pasos, del diseño: avanzar entra por la derecha y volver, por la izquierda. Dentro de «Tus datos»,
+ * sus vistas (el descargo, «Entra») van detrás, y el olvido de «Entra», un poco más.
+ */
+export function rango(paso, vista = null, pasoEntrada = null) {
     if (paso === 'cuando') return 0;
-    if (paso === 'datos') return vista ? 1.5 : 1;
+    if (paso === 'datos') return vista ? 1.5 + (vista === 'entrar' && pasoEntrada === 'olvido' ? 0.2 : 0) : 1;
     if (paso === 'pagar') return 2;
     if (paso === 'listo') return 4;
 
@@ -49,9 +52,10 @@ export function direccion(antes, ahora) {
  * La descripción del paso para `CompraIsla`, fuera de la pantalla 0.
  *
  * @param {object} e
- *   `paso` · `vista` (`descargo` · `olvido`, dentro de «Tus datos») · `textos` · `resumen` ({ summary, total }) ·
- *   `importe` (lo que cobra la pasarela, ya escrito) · `ocupado` (el paso que espera al servidor) ·
- *   `acciones` ({ volver, continuar, pagar, salir, reintentar, miQr, cerrar }).
+ *   `paso` · `vista` (`descargo` · `entrar`, dentro de «Tus datos») · `entrada` (el estado de «Entra»: `paso`,
+ *   `valor`, `clave`) · `textos` · `resumen` ({ summary, total }) · `importe` (lo que cobra la pasarela, ya escrito) ·
+ *   `ocupado` (el paso que espera al servidor) · `acciones` ({ volver, continuar, entrar, pagar, salir, reintentar,
+ *   miQr, cerrar }).
  */
 export function ckDelPaso(e) {
     const t = (clave) => texto(e.textos, clave);
@@ -72,10 +76,23 @@ export function ckDelPaso(e) {
     };
 
     if (e.paso === 'datos') {
+        const entrada = e.entrada ?? {};
+        // «Entra» lleva su propia acción (`PjcEntrar`); su olvido y el descargo, ninguna: se vuelve con la flecha.
+        const entrando = e.vista === 'entrar' && entrada.paso === 'id';
+        const action = entrando
+            ? {
+                label: t('compra.entrar.continuar'),
+                onClick: a.entrar,
+                disabled: ! (String(entrada.valor ?? '').trim() && entrada.clave),
+                loading: e.ocupado === 'entrar' ? t('compra.entrar.cargando') : false,
+            }
+            : (e.vista ? null : { label: t('compra.datos.continuar'), onClick: a.continuar, loading: e.ocupado === 'datos' ? t('compra.datos.cargando') : false });
+
         return {
             ...ck, ...pasoN(1, t('compra.datos.banda')),
+            key: `datos${e.vista ?? ''}${e.vista === 'entrar' ? entrada.paso ?? '' : ''}`,
             onBack: a.volver ?? null,
-            action: e.vista ? null : { label: t('compra.datos.continuar'), onClick: a.continuar, loading: e.ocupado === 'datos' ? t('compra.datos.cargando') : false },
+            action,
         };
     }
 

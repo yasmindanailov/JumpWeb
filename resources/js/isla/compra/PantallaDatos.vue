@@ -40,6 +40,9 @@ const props = defineProps({
     aviso: { type: String, default: '' },
     entrar: { type: Boolean, default: true },
     social: { type: Boolean, default: true },
+    // T3e·4 (`#695`): Apple, apagado hasta que exista (`#683`); y la «G» del botón de Google.
+    apple: { type: Boolean, default: true },
+    marcaGoogle: { type: String, default: '' },
 });
 const emit = defineEmits(['cambiar', 'entrar', 'descargo', 'proveedor', 'hora']);
 const { t, tp } = useTextos();
@@ -76,6 +79,8 @@ const cambiar = (campo) => (valor) => emit('cambiar', campo, valor);
             <AccesoSocial
                 v-if="social"
                 :in-app="enApp"
+                :apple="apple"
+                :marca="marcaGoogle"
                 :labels="{ google: t('compra.datos.google'), apple: t('compra.datos.apple') }"
                 @google="emit('proveedor', 'google')"
                 @apple="emit('proveedor', 'apple')"

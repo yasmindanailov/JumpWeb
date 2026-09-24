@@ -154,7 +154,7 @@ return [
         ],
         'entrar' => [
             'titular' => 'Connectez-vous',
-            'texto' => 'Écrivez votre e-mail ou votre téléphone.',
+            'texto' => 'Écrivez votre e-mail.',
             'continuar' => 'Continuer',
             'google' => 'Se connecter avec Google',
             'apple' => 'Se connecter avec Apple',

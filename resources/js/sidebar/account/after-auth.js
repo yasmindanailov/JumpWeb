@@ -27,6 +27,7 @@
  * Módulo PLANO con el `window` **por parámetro** (`CE-6`, mismo patrón que `account/privacy.js`): es
  * lo que permite probarlo con `node --test` sin navegador.
  */
+import { almacenDeLaPestana, marcaViva } from '../marca-compra.js';
 
 /**
  * Lleva al cliente a su cuenta. Devuelve la URL a la que se fue.
@@ -37,10 +38,22 @@
  * degradación honesta: la sesión ya está puesta, así que el cliente ve la página que estaba mirando,
  * pero identificado.
  *
- * @param {{urls?: {account?: string}, win?: Window}} deps
+ * ⚠️ **`reanudar`** (T3e·4, `sidebar/reanudar.js`): la cuenta nueva con Google que nació saliendo DE UNA COMPRA
+ * vuelve a ella —a la página donde estaba, que la abre sola— y no a «Mi cuenta». Lo pide solo el alta con Google:
+ * es la única vuelta de ese viaje que no pasa por el `next` del servidor.
+ *
+ * @param {{urls?: {account?: string}, win?: Window, reanudar?: boolean}} deps
  * @returns {string} la URL a la que se navegó, o `''` si solo se recargó
  */
-export function landOnAccount({ urls = {}, win = window } = {}) {
+export function landOnAccount({ urls = {}, win = window, reanudar = false } = {}) {
+    const compra = reanudar ? marcaViva(almacenDeLaPestana(win), Date.now()) : null;
+
+    if (compra !== null) {
+        win.location.assign(compra.vuelta);
+
+        return compra.vuelta;
+    }
+
     const url = typeof urls?.account === 'string' ? urls.account : '';
 
     if (url === '') {

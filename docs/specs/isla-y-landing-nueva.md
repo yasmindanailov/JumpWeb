@@ -24,8 +24,8 @@
   - Tras tocar un `.vue`, `npm run build:ssr` antes de la suite (`sidebar-spa.md` §0).
 - **Estado**: §7 contestado (`#683`), promociones en `#684`, T0 hecha (§1.6). **T1 ✅** (§4.8) y **T2 ✅**
   (§4.9): la isla en Vue, 52 de 52 situaciones idénticas al diseño. **T3** (la compra, §4.10): T3a→T3d ✅;
-  la secuencia de compra vive en `sidebar/usePurchaseFlow.js`. T3e en seis sub-tandas (`#692`): ·1→·3 ✅, la isla
-  compra con tarjeta hasta el banco y sus desenlaces (`#694`).
+  la secuencia de compra vive en `sidebar/usePurchaseFlow.js`. T3e en seis sub-tandas (`#692`): ·1→·4 ✅, la isla
+  compra con tarjeta hasta el banco (`#694`), con «Entra» y Google, que vuelve a la compra (`#695`).
 - **Invariantes**: `PAY-*` si entra Bizum (`VERIFY_CONC=1`), `SEC-12` (la ruta de las vistas), `SEC-01`,
   `RGPD-*` (consentimiento dentro de la isla, Apple como proveedor), `PERF-02` (la carcasa por instalación va en
   el arranque cacheado; la variante del A/B, en la sesión).
@@ -644,7 +644,32 @@ guion del diseño (`paginas/compra/compra.jsx`, `usePjcCompra`):
   ⚠️ **Pendiente, a su sub-tanda**: «Entra» y Google (T3e·4: hasta entonces, sin sus botones); las horas cercanas
   cuando la hora se llena al pagar (hoy, el aviso del servidor en el paso: T3e·6); las tareas de «Listo» que
   dependen de la zona (adultos, calcetines) y las marcas de pago (T4, datos de la página); «atrás» del navegador.
-- **T3e·4** «Entra» (con la pregunta del teléfono) y Google; Apple y Bizum siguen de corchete apagado.
+- **T3e·4 ✅** (`#695`) «Entra» y Google:
+  · **`[DECIDIDO owner]`**: «Entra» pide solo CORREO («Escribe tu correo.», `type="email"`): el acceso del producto no
+    admite teléfono. El botón de Google es el del sistema CON la «G» oficial (sus normas de marca; `#345`). Apple,
+    apagado (`#683`): quien monta `AccesoSocial` lo decide (`apple`), y sin ningún botón la pieza no deja hueco;
+  · **«Entra»** (`useDatosCompra.js`): correo y contraseña con el acceso del motor; al entrar, de vuelta a «Tus datos»
+    con «Hola» (el diseño); el error, en su única línea (`datos.js::errorDeEntrar`); el olvido desde «Entra» vuelve
+    a «Entra», y desde «Esta cuenta ya existe», a «Tus datos» (`solo`);
+  · **Google con vuelta a la compra**: la ida es la redirección del servidor (`urls.google`), con `next` = la misma
+    página + `?compra=reanudar` (`sidebar/reanudar.js`). Con ese parámetro el layout la sirve con la compra abierta,
+    como `/entradas` (`Http\Sidebar\PurchaseResume`), y la apertura se cuenta como `resume`; dónde estaba la compra
+    va en la PESTAÑA (`sessionStorage`: sin datos personales, caduca a los 30 min) y la isla, al montarse en la
+    vuelta, la toma y sigue en «Tus datos» —con sesión si entró, como invitado si canceló—, y limpia la barra. La
+    cuenta NUEVA completa su alta en `/registro/google` (el lateral) y vuelve a esa vuelta (`after-auth.js`,
+    `reanudar`). ⚠️ La marca solo se toma en la vuelta: el motor también se monta en `/registro/google`;
+  · **el peso**: mirar la vuelta en el navegador costaba 0,57 KiB en la entrada de TODA página pública; decidirla en
+    el servidor, 0,07 (el motivo `resume`). El motor, +0,58 (leer la marca: `sidebar/marca-compra.js`, la otra mitad
+    va con la isla): techo 295. La isla, 113,65 (techo 114); sus pasos, 37,66 (38);
+  · **la prueba**: `node --test` de la marca y la vuelta (`reanudar.test.js`), el motivo `resume`, el aterrizaje y
+    «Entra»; `PurchaseResumeTest` (el parámetro abre y marca; sin él o sin venta online, no; y el nombre del parámetro
+    es el mismo en el navegador y en el servidor), con su mutante del layout en rojo; una sonda en 390 y 1280,
+    **20/20** —«Entra» (apagado, credenciales malas, olvido y volver, entrar → «Hola» → «Pagar»), el olvido desde «ya
+    existe», la ida a Google con su `next`, la vuelta CON cuenta (nace abierta, «Hola», la línea, la barra limpia,
+    `resume`, → «Pagar»), la vuelta SIN cuenta y el parámetro sin marca (pantalla 0)—; la compra entera, 29/29; el
+    banco, 52/54 —solo «entrar», 571 píxeles: la frase decidida— y **54/54 con el literal del diseño** (control).
+  ⚠️ **Pendiente**: el aviso de Google rechazado o cancelado lo pinta hoy el layout (`session('status')`); la
+  landing nueva (T4) tiene que pintarlo también. Sincronizar el diseño con las dos decisiones (texto y «G»).
 - **T3e·5** los cumpleaños: la edad elige el pack de su familia, niños, día, hora, menú y la señal.
 - **T3e·6** la sonda de la isla: una entrada y un cumpleaños con señal hasta la pasarela, en local, y los
   desenlaces con la vuelta sin datos y el rechazo (como `scripts/sonda-embudo.mjs`); después, en staging.

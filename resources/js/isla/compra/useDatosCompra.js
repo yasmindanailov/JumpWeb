@@ -18,7 +18,8 @@ import { t } from '../../sidebar/i18n.js';
 import { useWaiverStore } from '../../sidebar/stores/waiver.js';
 import { useAccountContextStore } from '../../sidebar/stores/accountContext.js';
 import {
-    cuentaQueYaExiste, datosVacios, erroresDelAcceso, erroresDelServidor, firmaPendiente, formularioDeAlta, revisarDatos,
+    cuentaQueYaExiste, datosVacios, entradaVacia, errorDeEntrar, erroresDelAcceso, erroresDelServidor, firmaPendiente,
+    formularioDeAlta, revisarDatos,
 } from './datos.js';
 
 /** La marca de «la cuenta nace en esta compra», que sobrevive al viaje al banco (misma pestaña) y no lleva datos. */
@@ -28,8 +29,11 @@ export function useDatosCompra({ flow, props, textos }) {
     const { store, authStore, cartStore, buyerDue } = flow;
     const waiverStore = useWaiverStore();
     const contexto = useAccountContextStore();
-    /** `f`, el formulario; `vista`, lo que se abre dentro del paso (`descargo` · `olvido`); `token`, el del anti-bot. */
-    const estado = reactive({ f: datosVacios(), errores: {}, aviso: '', vista: null, token: '' });
+    /**
+     * `f`, el formulario; `vista`, lo que se abre dentro del paso (`descargo` · `entrar`); `ent`, «Entra» y su olvido
+     * (`datos.js::entradaVacia`); `token`, el del anti-bot.
+     */
+    const estado = reactive({ f: datosVacios(), errores: {}, aviso: '', vista: null, ent: entradaVacia(), token: '' });
     const aviso = (clave) => t(props.messages, clave);
 
     // Con sesión manda la sesión; sin ella, lo que diga el alta («nueva», o «existe» tras su «no»).
@@ -39,7 +43,7 @@ export function useDatosCompra({ flow, props, textos }) {
 
     /** Al llegar desde la pantalla 0: el formulario en blanco y el texto del descargo pedido ya. */
     function preparar() {
-        Object.assign(estado, { f: datosVacios(), errores: {}, aviso: '', vista: null });
+        Object.assign(estado, { f: datosVacios(), errores: {}, aviso: '', vista: null, ent: entradaVacia() });
         waiverStore.ensureLegal();
     }
 
@@ -155,18 +159,71 @@ export function useDatosCompra({ flow, props, textos }) {
         return f.cuenta === 'existe' ? entrar() : alta();
     }
 
-    /** «¿Has olvidado tu contraseña?»: el enlace al correo, y la confirmación que no dice si existe (`SEC-06`). */
-    async function olvido() {
-        authStore.form.email = estado.f.correo.trim();
+    /**
+     * «¿Has olvidado tu contraseña?»: el enlace al correo, y la confirmación que no dice si existe (`SEC-06`). Desde
+     * «Esta cuenta ya existe» (`solo`), con el correo del formulario, y su «volver» regresa a «Tus datos»; desde
+     * «Entra», con el suyo, y vuelve a «Entra» (`PjcEntrar` del diseño).
+     */
+    async function olvido({ correo, solo }) {
+        authStore.form.email = String(correo ?? '').trim();
         const r = await authStore.requestPasswordLink({ api, messages: props.messages, auth: props.auth });
 
         if (r?.sent) {
-            estado.vista = 'olvido';
+            Object.assign(estado, { vista: 'entrar', ent: { ...entradaVacia(authStore.form.email), paso: 'olvido', solo } });
 
             return;
         }
 
-        fallar(r?.errors?.fields?.email ? { correo: r.errors.fields.email } : {}, r?.errors?.global ?? '');
+        const error = r?.errors?.fields?.email || r?.errors?.global || '';
+
+        if (solo) fallar(r?.errors?.fields?.email ? { correo: error } : {}, r?.errors?.fields?.email ? '' : error);
+        else estado.ent.error = error;
+    }
+
+    /** Lo que avisa «Tus datos» de «Entra»: abrirlo (con el correo que ya hubiera) o, desde «ya existe», el olvido. */
+    function abrirEntrar(modo) {
+        if (modo === 'olvido') return olvido({ correo: estado.f.correo, solo: true });
+
+        Object.assign(estado, { vista: 'entrar', ent: entradaVacia(estado.f.correo.trim()), errores: {}, aviso: '' });
+
+        return null;
+    }
+
+    function cambiarEntrada(campo, valor) {
+        estado.ent[campo] = valor;
+        estado.ent.error = '';
+    }
+
+    /**
+     * «Continuar» de «Entra»: el acceso del motor. Al entrar se vuelve a «Tus datos» ya con sesión —«Hola» y solo lo
+     * que falte—, como el diseño (`PjcEntrar`: «al entrar vuelve a Tus datos con todo relleno»), y la contraseña
+     * no se queda en memoria.
+     */
+    async function entrarConClave() {
+        Object.assign(authStore.form, { email: estado.ent.valor.trim(), password: estado.ent.clave });
+        const r = await flow.submitLogin();
+
+        if (! r?.ok) {
+            estado.ent.error = errorDeEntrar(r, textos);
+
+            return false;
+        }
+
+        Object.assign(estado, { vista: null, ent: entradaVacia() });
+        await trasIdentificarse();
+
+        return true;
+    }
+
+    /** La flecha dentro del paso: del olvido pedido en «Entra», a «Entra»; de lo demás, a «Tus datos». */
+    function volver() {
+        if (estado.vista === 'entrar' && estado.ent.paso === 'olvido' && ! estado.ent.solo) {
+            estado.ent.paso = 'id';
+
+            return;
+        }
+
+        Object.assign(estado, { vista: null, ent: entradaVacia() });
     }
 
     /** Si «Listo» debe decir que la cuenta se creó en esta compra. Se lee UNA vez. */
@@ -182,5 +239,8 @@ export function useDatosCompra({ flow, props, textos }) {
         }
     }
 
-    return { estado, cuenta, firma, pedirTelefono, contexto, waiverStore, preparar, cambiar, continuar, olvido, cuentaNueva };
+    return {
+        estado, cuenta, firma, pedirTelefono, contexto, waiverStore,
+        preparar, cambiar, continuar, olvido, abrirEntrar, cambiarEntrada, entrarConClave, volver, cuentaNueva,
+    };
 }

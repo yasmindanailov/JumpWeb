@@ -2,7 +2,7 @@
 
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669 AGOTADA con `#669`** → **670–699 EN CURSO** · Último usado: **`#694`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **640–669 AGOTADA con `#669`** → **670–699 EN CURSO** · Último usado: **`#695`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#684`) · Actualizado: **2026-09-24**
 > (el sistema nuevo leído por DesignSync; el owner decide Blade en la instancia y la isla como segunda carcasa).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
@@ -75,16 +75,12 @@
    `#684` promociones (modelo a iterar) · `#688` la compra guarda la hora **al pagar** y dice «Esta cuenta ya
    existe» **al enviar**. ✅ T0 (§1.6) · ✅ T1 (§4.8: 82/82 páginas y 84 iconos a 0 px) · ✅ T2 (§4.9: la isla,
    52/52 a 0 px, `CE-6` sin excepción; en/fr de `lang/*/isla.php` a revisar por el owner).
-   ▶▶ **T3, la compra** (§4.10): T3a→T3d ✅ (`#689` las 14 piezas, 18/18 a 0 px · `#690` el tamaño «Compra» y
-   sus pantallas, 54/54 con `scripts/banco-compra.php`, y `--rehacer` en el juez · `#691` la secuencia en
-   `sidebar/usePurchaseFlow.js`, misma traza en navegador con `scripts/sonda-embudo.mjs`) → **T3e** en seis
-   sub-tandas (spec §4.10, `#692`): ·1 ✅ el homenajeado en el formulario de invitados → **·2 la carcasa elegible**
-   (·2a ✅ el ajuste y el arranque, contrato 1.22.0 · ·2b ✅ `#693` la superficie por apertura, la raíz y la pantalla 0
-   de las entradas) → ·3 ✅ `#694` «Tus datos», «Pagar», el banco y los desenlaces (la isla compra con tarjeta; su
-   cesta es SU pedido; sonda 29/29 en 390 y 1280, banco 54/54) → **·4 «Entra» y Google** (❓ al owner: el diseño
-   dice «correo o teléfono» y el acceso solo admite correo) → ·5 cumpleaños → ·6 la sonda versionada. Probar la
-   isla: `sidebar.shell = isla` en local, `public/_isla-prueba.html` (se BORRA al terminar: guarda 9) y
-   `storage/app/sonda-isla-t3e3.mjs`; el ajuste vuelve a `cajon`. FALTAN como dato (T0): el precio de antes (→ `#684`),
+   ▶▶ **T3, la compra** (§4.10; la historia de cada tanda vive allí): T3a→T3d ✅ (`#689`→`#691`) → **T3e** (`#692`):
+   ·1→·4 ✅ (`#693` la carcasa elegible · `#694` la isla compra hasta el banco · `#695` «Entra» y Google, que vuelve
+   a la compra) → **·5 cumpleaños** → ·6 la sonda versionada. Probar la isla: `sidebar.shell = isla` en local,
+   `public/_isla-prueba.html` (se BORRA al terminar: guarda 9), `storage/app/sonda-isla-t3e{3,4}.mjs` y el banco
+   `scripts/banco-compra.php` (52/54: «entrar» difiere por `#695`); el ajuste vuelve a `cajon`. Google ya está en la
+   local (claves en `settings`): la sonda corta la ida en `accounts.google.com`. FALTAN como dato (T0): el precio de antes (→ `#684`),
    el plazo de cancelación y los 90 cm con adulto. ⚠️ Tras un `pull`: `cp -r ../instancias/playjump/publico/instancia
    public/` y `php artisan migrate` (las del SPA llegan SIN aplicar aquí: la de `experiments` dio un 500); los bancos se rehacen con `tema/lote-fichas.py` y `scripts/banco-{isla,piezas,compra}.php` (su lado B, antes).
    ⚠️ **La web nueva cambia las URLs** (§1.5): cada ruta vieja necesita su 301.
@@ -97,7 +93,7 @@
    ▶ **Deuda declarada** (en la spec): `birthday`/`groups` son vocabulario del SECTOR (`ContactTopics`) ·
    `price_table`, `nav_subtitle` y `show_in_nav` se retiran con la tanda de la PÁGINA, no antes · un
    producto activo sin NINGÚN precio sale de `/prices` sin la clave `prices` que el contrato exige (`#677`).
-   ⚠️ El §0 de la spec está a **1.918 de 2.048 B**: de ahí solo se toca la línea de «Estado». La **T5**
+   ⚠️ El §0 de la spec está a **1.958 de 2.048 B**: de ahí solo se toca la línea de «Estado». La **T5**
    (cortar v2.0.0) es el final del programa entero, no de esta fase (`#670`).
 
    ▶ **Lo que se le contestó al owner sobre la FORMA del cajón y sobre los widgets** (medido el 21-09)
@@ -260,6 +256,12 @@ dueño es el carril de la web/reseñas—) ·
   cajón no lo mira). `account/card.js` y `turnstile.js` pasan al trozo común (los usa la isla): la descarga del
   motor, 293,84 con tu T5a: cabe en tu techo **294**. La isla, además, DICE el «no» de un reintento del paso 10; en el
   cajón sigue callado (tu deuda en `DEUDA.md`), por si quieres el mismo aviso.
+- ▶▶ **24-09 · T3e·4 (`#695`), lo que tocó de lo tuyo**: `account/after-auth.js::landOnAccount()` gana `reanudar` (la
+  cuenta nueva con Google que salió de una COMPRA vuelve a ella; solo lo pasa `GoogleSignupZone.vue`), con sus casos
+  en `after-auth.test.js`; `usePurchaseFlow` devuelve `ready` (su montaje); y **la ANALÍTICA, tuya**: `drawer_opened`
+  tiene un motivo nuevo, **`resume`** (la página que vuelve de Google con `?compra=reanudar` nace abierta; el
+  controlador lo lee de `data-purchase-resume`). El motor, 294,42: techo **295**. ⚠️ **Y una idea para tu cajón**: su
+  Google (paso 5) vuelve a `/mi-cuenta` y no a la compra; el mecanismo (`sidebar/reanudar.js`) le serviría igual.
 
 ### ❗ Para el carril de la WEB (emisor: plataforma, 2026-09-23) — dos huecos de contenido, MEDIDOS
 - ▶ Publicar `/servicios` como hechos (`#672`) destapó dos cosas **tuyas**, que son de tu T6 de contenido

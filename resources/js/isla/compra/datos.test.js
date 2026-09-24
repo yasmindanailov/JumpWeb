@@ -1,7 +1,8 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-    cuentaQueYaExiste, datosVacios, erroresDelAcceso, erroresDelServidor, firmaPendiente, formularioDeAlta, revisarDatos,
+    cuentaQueYaExiste, datosVacios, entradaVacia, errorDeEntrar, erroresDelAcceso, erroresDelServidor, firmaPendiente,
+    formularioDeAlta, revisarDatos,
 } from './datos.js';
 
 /**
@@ -85,6 +86,18 @@ describe('los «no» del servidor', () => {
 
         assert.deepEqual(erroresDelAcceso(limite, textos), { errores: {}, aviso: 'Espera 30 segundos.' });
         assert.deepEqual(erroresDelAcceso(campo, textos), { errores: { correo: 'Correo no válido.' }, aviso: '' });
+    });
+
+    test('«Entra» (T3e·4) tiene UNA línea de error: la de las credenciales, la del campo o la del limitador', () => {
+        const credenciales = { ok: false, response: { error: { code: 'invalid_credentials' } }, errors: { global: '', fields: {} } };
+        const limite = { ok: false, response: { error: { code: 'too_many_requests' } }, errors: { global: 'Espera 30 segundos.', fields: {} } };
+        const campo = { ok: false, response: { error: { code: 'validation_failed' } }, errors: { global: '', fields: { email: 'Correo no válido.' } } };
+
+        assert.equal(errorDeEntrar(credenciales, textos), 'Revisa el correo o la contraseña.');
+        assert.equal(errorDeEntrar(limite, textos), 'Espera 30 segundos.');
+        assert.equal(errorDeEntrar(campo, textos), 'Correo no válido.');
+        assert.equal(errorDeEntrar({ ok: false, skipped: true }, textos), '', 'un doble clic no inventa un error');
+        assert.deepEqual(entradaVacia('ana@correo.es'), { paso: 'id', valor: 'ana@correo.es', clave: '', error: '', solo: false });
     });
 });
 

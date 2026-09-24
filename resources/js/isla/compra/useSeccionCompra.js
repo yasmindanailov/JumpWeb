@@ -29,9 +29,19 @@ import { euros, filasDeZona, pantallaCuando } from './vista.js';
 import { meterLinea, pedidoDe } from './linea.js';
 import { lineaListo, reciboDe, resumenDe, resumenDelPedido } from './recibo.js';
 import { ckDelPaso, direccion, empiezaOtra, pantallaListo, pasoDelMotor, rango } from './pasos.js';
+import {
+    almacenDeLaPestana, conVuelta, esVuelta, marcarSalida, sinVuelta, tomarMarca, vueltaDe, vuelveAqui,
+} from '../../sidebar/reanudar.js';
 
 /** Lo que `SeccionCompra.vue` da a los pasos de después de la pantalla 0, que viajan en otro trozo (`PasosCompra.vue`). */
 export const COMPRA = Symbol('la compra de la isla');
+
+/**
+ * La «G» de Google en el botón del diseño (`#695`, `[DECIDIDO owner]`: la forma del sistema, con el logotipo que exigen
+ * sus normas). Es el MISMO fichero que pinta el botón oficial del cajón (`sidebar/steps/GoogleButton.vue`, con su
+ * porqué: raíz-relativa, en `public/`, inerte dentro de un `<img>`).
+ */
+const MARCA_GOOGLE = '/images/providers/google.svg';
 
 export function useSeccionCompra(props) {
     const textos = inject(TEXTOS_ISLA, {});
@@ -52,6 +62,22 @@ export function useSeccionCompra(props) {
 
     const datos = useDatosCompra({ flow, props, textos });
     const pago = usePagoCompra({ flow, props, compra, enCola, alPagarMal });
+
+    /**
+     * La compra que salió a Google y VUELVE a esta página (T3e·4, `sidebar/reanudar.js`): el servidor la sirve con la
+     * compra abierta (`?compra=reanudar`) y aquí se toma su marca, UNA vez y solo en la vuelta. ⚠️ En otra página no
+     * se toca: la cuenta nueva completa su alta en `/registro/google`, donde este motor también se monta, y la marca
+     * tiene que seguir viva para que el alta vuelva a la compra. Y la barra de direcciones se deja limpia: recargar
+     * no reabre nada.
+     */
+    const { pathname, search, hash } = window.location;
+    let reanudacion = vuelveAqui(almacenDeLaPestana(), { ruta: pathname, busqueda: search }, Date.now())
+        ? tomarMarca(almacenDeLaPestana(), Date.now())
+        : null;
+
+    if (esVuelta(search)) {
+        try { window.history.replaceState(window.history.state, '', `${pathname}${sinVuelta(search)}${hash}`); } catch { /* sin historial */ }
+    }
 
     /** El paso que se ve: el que manda la máquina (el cobro y los desenlaces) o el de la isla. */
     const paso = computed(() => pasoDelMotor(store.step) ?? compra.paso);
@@ -134,7 +160,50 @@ export function useSeccionCompra(props) {
         const intencion = compra.intencion;
 
         compra.intencion = null;
-        if (empiezaOtra(intencion, store.step)) empezar(intencion);
+
+        // La vuelta de Google sigue donde estaba; una intención nueva de la landing la deja atrás.
+        const marca = intencion === null ? reanudacion : null;
+
+        reanudacion = null;
+        if (marca !== null) reanudar(marca);
+        else if (empiezaOtra(intencion, store.step)) empezar(intencion);
+    }
+
+    /**
+     * Reanuda en «Tus datos» la compra que volvió de Google: el borrador y el pedido de la marca, la línea de la cesta
+     * guardada (que el montaje restauró) y la admisión del motor (`IDENTIFY` si canceló, `PAY` si entró). Mientras,
+     * la acción espera. Si la línea ya no está (caducó, otro titular la purgó), a la pantalla 0 con el borrador.
+     */
+    async function reanudar({ compra: guardada }) {
+        if (! guardada?.borrador?.zona) return empezar(null);
+        Object.assign(compra, { borrador: { ...guardada.borrador }, pedido: guardada.pedido ?? null, paso: 'datos', ocupado: 'datos', aviso: '' });
+        datos.preparar();
+
+        try {
+            await flow.ready;
+            if (compra.pedido && cartStore.lines.length > 0) {
+                compra.pedido = { ...compra.pedido, n: cartStore.lines[0].quantity ?? compra.pedido.n };
+                if (store.step === STEPS.CART) await flow.checkout();
+                if (store.step === STEPS.IDENTIFY || store.step === STEPS.PAY) return;
+            }
+        } finally {
+            compra.ocupado = null;
+        }
+
+        Object.assign(compra, { paso: 'cuando', pedido: null, aviso: cartStore.error });
+        enCola(() => situar(compra.borrador));
+    }
+
+    /**
+     * «Continuar con Google» (`#695`): la ida es una redirección del SERVIDOR (`urls.google`, solo si la instalación
+     * lo tiene) y vuelve a ESTA página (`next`, que el servidor valida contra el mismo sitio) con `?compra=reanudar`,
+     * que la sirve con la compra abierta; la marca que se deja ahora en la pestaña dice dónde se estaba.
+     */
+    function aGoogle() {
+        const vuelta = vueltaDe(window.location.pathname, window.location.search);
+
+        marcarSalida(almacenDeLaPestana(), { vuelta, compra: { borrador: compra.borrador, pedido: compra.pedido }, ahora: Date.now() });
+        window.location.assign(conVuelta(props.urls?.google, vuelta));
     }
 
     function empezar(intencion) {
@@ -198,6 +267,18 @@ export function useSeccionCompra(props) {
         }
     }
 
+    /** «Continuar» de «Entra»: al entrar, de vuelta a «Tus datos» con sesión. */
+    async function entrarDatos() {
+        if (compra.ocupado) return;
+        compra.ocupado = 'entrar';
+
+        try {
+            await datos.entrarConClave();
+        } finally {
+            compra.ocupado = null;
+        }
+    }
+
     /** El «no» del pago sobre lo que el comprador debe (el teléfono): a «Tus datos», con el error en su campo. */
     function alPagarMal(errores) {
         compra.paso = 'datos';
@@ -209,7 +290,8 @@ export function useSeccionCompra(props) {
         Object.assign(compra, { paso: 'cuando', pedido: null, aviso: '' });
         cartStore.setError('');
         await flow.removeLine(0);
-        enCola(cargarHoras);
+        // Tras una vuelta de Google la pantalla 0 no se había pintado en esta página: se sitúa entera en su borrador.
+        enCola(catalogStore.product?.id === compra.borrador.fila ? cargarHoras : () => situar({ ...compra.borrador }));
     }
 
     // Lo que la máquina hace sola —el sondeo que caduca, un reintento que ya no puede, el titular que cambió— devuelve
@@ -253,7 +335,7 @@ export function useSeccionCompra(props) {
         return paso.value === 'banco' ? (compra.pagado ?? {}) : {};
     });
 
-    watch(() => rango(paso.value, datos.estado.vista), (ahora, antes) => { compra.dir = direccion(antes, ahora); });
+    watch(() => rango(paso.value, datos.estado.vista, datos.estado.ent.paso), (ahora, antes) => { compra.dir = direccion(antes, ahora); });
 
     const ck = computed(() => {
         if (paso.value === 'cuando') {
@@ -267,17 +349,21 @@ export function useSeccionCompra(props) {
 
         return {
             ...ckDelPaso({
-                paso: paso.value, vista: datos.estado.vista, textos, resumen: resumen.value, ocupado: compra.ocupado,
-                importe: euros(cartStore.quote?.online_amount_cents ?? 0, flow.locale),
+                paso: paso.value, vista: datos.estado.vista, entrada: datos.estado.ent, textos, resumen: resumen.value,
+                ocupado: compra.ocupado, importe: euros(cartStore.quote?.online_amount_cents ?? 0, flow.locale),
                 acciones: {
                     cerrar,
-                    volver: paso.value === 'pagar' ? () => { compra.paso = 'datos'; } : datos.estado.vista ? () => { datos.estado.vista = null; } : aCuando,
-                    continuar: continuarDatos, pagar: pago.pagar, salir: pago.salir, reintentar: pago.reintentar, miQr: pago.miQr,
+                    volver: paso.value === 'pagar' ? () => { compra.paso = 'datos'; } : datos.estado.vista ? datos.volver : aCuando,
+                    continuar: continuarDatos, entrar: entrarDatos,
+                    pagar: pago.pagar, salir: pago.salir, reintentar: pago.reintentar, miQr: pago.miQr,
                 },
             }),
             dir: compra.dir,
         };
     });
+
+    // Google, solo si la instalación lo tiene (`urls.google`); Apple sigue de corchete apagado (`#683`).
+    const social = computed(() => ({ social: Boolean(props.urls?.google), apple: false, marcaGoogle: MARCA_GOOGLE }));
 
     const pantallaDatos = computed(() => ({
         cuenta: datos.cuenta.value,
@@ -289,10 +375,15 @@ export function useSeccionCompra(props) {
         aviso: datos.estado.aviso,
         // Lo de después de pagar (los hijos, los adultos) solo tiene sentido si la instalación firma dentro y viene más gente.
         lineaMenores: (datos.contexto.context?.waiver?.mode ?? datos.waiverStore.legal?.mode) === 'interno' && (compra.pedido?.n ?? 0) > 1,
-        // T3e·4: «Entra» y Google (y Apple, corchete apagado). Hasta entonces, sin los botones que aún no entran.
-        entrar: false,
-        social: false,
+        ...social.value,
     }));
+
+    /** «Entra» (`PjcEntrar`): solo correo (`#695`), su contraseña, su olvido y Google. */
+    const pantallaEntrar = computed(() => {
+        const { paso: pasoEntrada, valor, clave, error } = datos.estado.ent;
+
+        return { paso: pasoEntrada, valor, clave, error, ...social.value };
+    });
 
     const listo = computed(() => pantallaListo({
         linea: lineaListo(outcomeStore.confirmation, { textos, locale: flow.locale }),
@@ -312,7 +403,7 @@ export function useSeccionCompra(props) {
     return {
         abierta, textos, ck, paso, esperando, compra, flow, authStore, outcomeStore,
         cuando: computed(() => ({ ...vista.value.props, aviso: compra.aviso })), cambiar,
-        datos, pantallaDatos, pago, listo,
+        datos, pantallaDatos, pantallaEntrar, aGoogle, pago, listo,
         recibo: computed(() => ({ ...reciboDe({ quote: cartStore.quote, pedido: compra.pedido, textos, locale: flow.locale }), aviso: compra.aviso })),
         fallido: computed(() => ({ hora: outcomeStore.holdUntil, motivo: outcomeStore.declinedReason, aviso: compra.aviso })),
         otraReserva: () => empezar(null),

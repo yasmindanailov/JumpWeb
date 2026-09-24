@@ -1,6 +1,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { landOnAccount } from './after-auth.js';
+import { CLAVE_REANUDAR, VIGENCIA_MS } from '../marca-compra.js';
 
 /**
  * La red del ATERRIZAJE tras conseguir sesión dentro del cajón (`specs/auth-en-cajon.md` §3.3).
@@ -76,5 +77,38 @@ describe('el aterrizaje', () => {
 
         assert.equal(landOnAccount({ win }), '');
         assert.deepEqual(win.acciones, [{ tipo: 'reload' }]);
+    });
+});
+
+/**
+ * T3e·4 (`sidebar/reanudar.js`): la cuenta nueva con Google que salió de una compra vuelve a ELLA. Solo cuando lo
+ * pide el alta con Google, y solo con una marca viva: el resto de aterrizajes sigue yendo a «Mi cuenta».
+ */
+describe('la vuelta a la compra tras un alta con Google', () => {
+    const conMarca = (marca) => {
+        const win = fakeWindow();
+        const datos = new Map(marca ? [[CLAVE_REANUDAR, JSON.stringify(marca)]] : []);
+
+        win.sessionStorage = { getItem: (k) => datos.get(k) ?? null, setItem: (k, v) => datos.set(k, v), removeItem: (k) => datos.delete(k) };
+
+        return win;
+    };
+
+    test('con la marca viva, a la vuelta de la compra (que el servidor sirve abierta), no a la cuenta', () => {
+        const win = conMarca({ vuelta: '/kids?compra=reanudar', en: Date.now() - 60_000 });
+
+        assert.equal(landOnAccount({ urls: { account: '/mi-cuenta' }, win, reanudar: true }), '/kids?compra=reanudar');
+        assert.deepEqual(win.acciones, [{ tipo: 'assign', url: '/kids?compra=reanudar' }]);
+    });
+
+    test('sin pedirlo, o con la marca caducada o ajena, a la cuenta como siempre', () => {
+        const viva = { vuelta: '/kids', en: Date.now() };
+
+        for (const [marca, reanudar] of [[viva, false], [{ vuelta: '/kids', en: Date.now() - VIGENCIA_MS - 1000 }, true], [{ vuelta: '//evil.test', en: Date.now() }, true], [null, true]]) {
+            const win = conMarca(marca);
+
+            landOnAccount({ urls: { account: '/mi-cuenta' }, win, reanudar });
+            assert.deepEqual(win.acciones, [{ tipo: 'assign', url: '/mi-cuenta' }]);
+        }
     });
 });

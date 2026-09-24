@@ -84,8 +84,9 @@ async function submit() {
     if (result.stale) { store.form.accept_waiver = false; await waiverStore.reloadLegal({ api }); }
 
     // Con sesión recién abierta se NAVEGA: los textos del área viajan solo con sesión, así que
-    // quedarse aquí dejaría la cuenta en blanco. Misma salida que el alta suelta.
-    if (result.ok) landOnAccount({ urls: props.urls });
+    // quedarse aquí dejaría la cuenta en blanco. Misma salida que el alta suelta, salvo que se saliera de una
+    // COMPRA a Google: entonces se vuelve a ella (T3e·4, `sidebar/reanudar.js`).
+    if (result.ok) landOnAccount({ urls: props.urls, reanudar: true });
 }
 </script>
 

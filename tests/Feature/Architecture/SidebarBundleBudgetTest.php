@@ -856,18 +856,25 @@ class SidebarBundleBudgetTest extends TestCase
     // pegamento; y el alta y el acceso DEVUELVEN su resultado. Medido sobre `3c54fc78`: 292,96 → 293,41 KiB (+0,45); las
     // dos tandas juntas, sobre `a0670c33`: 293,84 KiB, dentro del techo. Copiarlos en la isla para no moverlos sería la
     // segunda copia de dos reglas (la versión de la imagen, el montaje del widget); no se hace.
-    private const SIDEBAR_CHUNK_MAX_KB = 294;
+    // T3e·4 (`#695`): la cuenta nueva con Google que salió de una compra VUELVE a ella (`account/after-auth.js` lee la
+    // marca de la pestaña: `sidebar/marca-compra.js`, solo la mitad de LEER; escribirla y la vuelta van en el trozo de
+    // la isla) y el motor dice cuándo terminó de montarse (`ready`). Medido sobre `77a4b3fb`: 293,84 → 294,42 (+0,58).
+    // Mirar la vuelta en el NAVEGADOR costaba 0,57 KiB a la entrada de toda página pública: la decide el servidor
+    // (`Http\Sidebar\PurchaseResume`) y la entrada sube solo 0,07 (el motivo `resume`).
+    private const SIDEBAR_CHUNK_MAX_KB = 295;
 
     // T3e·2: la compra de la isla, chunk diferido del motor que solo trae una instalación con la isla. Medido 93,36 KiB
     // (la sección, la pantalla 0, la isla y sus piezas); su hoja va aparte (7,2 KiB).
     // T3e·3 (`#694`): la secuencia de «Tus datos», «Pagar» y los desenlaces (sus `use*` y sus módulos puros), que corre
     // desde el montaje —la vuelta del banco aterriza en un desenlace—. Medido 110,35 KiB. Sus PANTALLAS no: van en su
     // propio trozo (abajo), para que quien abre la compra vea la pantalla 0 sin esperarlas.
-    private const ISLA_COMPRA_CHUNK_MAX_KB = 111;
+    // T3e·4 (`#695`): «Entra», la ida a Google y reanudar la compra a la vuelta (`sidebar/reanudar.js`). Medido 113,65
+    // (110,35 en `77a4b3fb`).
+    private const ISLA_COMPRA_CHUNK_MAX_KB = 114;
 
     // T3e·3 (`#694`): las pantallas de después de la pantalla 0, en su trozo (`isla/compra/pasos-diferidos.js`), que la
-    // compra pide al montarse. Medido 36,92 KiB.
-    private const ISLA_PASOS_CHUNK_MAX_KB = 37;
+    // compra pide al montarse. Medido 36,92 KiB. T3e·4 (`#695`): «Entra» con sus eventos y la «G» de Google, 37,66.
+    private const ISLA_PASOS_CHUNK_MAX_KB = 38;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

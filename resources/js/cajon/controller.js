@@ -63,6 +63,12 @@ export function createCajonController({ scrollLock }) {
     return {
         isOpen: document.body.dataset.purchaseOpen === '1',
         /**
+         * La compra que salió a Google VUELVE a esta página (T3e·4, `sidebar/reanudar.js`): el servidor la abre como
+         * `/entradas` (`Http\Sidebar\PurchaseResume`, `?compra=reanudar`) y lo dice en el `<body>`, para que la
+         * apertura se anuncie con su propio motivo (`resume`) y no como un enlace profundo.
+         */
+        reanudando: document.body.dataset.purchaseResume === '1',
+        /**
          * **DÓNDE está abierto** (`DECISIONES #682`, T3e·2 de `specs/isla-y-landing-nueva.md` §4.10): `cajon` —el
          * lateral— o `isla`. Con la isla como carcasa, la compra se abre en ella y la cuenta en el lateral hasta la
          * T5, así que se decide en CADA apertura (`sidebar/carcasa.js`). La carcasa del lateral (`shell.js`) solo
@@ -355,8 +361,9 @@ export function createCajonController({ scrollLock }) {
             // la vuelta de la pasarela trae su desenlace en el `data-boot`, una puerta de cuenta trae su zona y
             // lo demás es el enlace profundo (`/entradas`).
             const outcome = inlineBoot(document.getElementById('sidecart-spa'))?.outcome;
+            const reason = outcome ? 'return' : (this.accountZone ? 'door' : (this.reanudando ? 'resume' : 'deeplink'));
 
-            announce('open', { reason: outcome ? 'return' : (this.accountZone ? 'door' : 'deeplink'), surface: this.surface });
+            announce('open', { reason, surface: this.surface });
 
             return this.bootSpaEngine();
         },

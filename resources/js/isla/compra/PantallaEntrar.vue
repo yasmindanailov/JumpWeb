@@ -1,8 +1,12 @@
 <script setup>
 /**
- * «Entra», dentro de la compra (`PjcEntrar` del diseño): correo o teléfono y contraseña, o Google o Apple. Al
- * entrar vuelve a «Tus datos» con todo relleno. `paso: 'olvido'` es la confirmación de «¿Has olvidado tu
- * contraseña?», que por la regla de siempre no dice si el correo existe (`SEGURIDAD.md` §2).
+ * «Entra», dentro de la compra (`PjcEntrar` del diseño): el correo y la contraseña, o Google o Apple. Al entrar
+ * vuelve a «Tus datos» con todo relleno. `paso: 'olvido'` es la confirmación de «¿Has olvidado tu contraseña?», que
+ * por la regla de siempre no dice si el correo existe (`SEC-06`).
+ *
+ * ⚠️ **Solo CORREO** (`#695`, `[DECIDIDO owner]`): el diseño decía «correo o teléfono» y el acceso del producto solo
+ * admite correo; el texto es del `lang` y el campo, `type="email"`. Con el motor (T3e·4), `social`, `apple` y
+ * `marcaGoogle` como en «Tus datos»; sin ellos, el diseño.
  */
 import { useTextos } from '../piezas/textos.js';
 import { PASO } from './estilos.js';
@@ -17,6 +21,9 @@ defineProps({
     clave: { type: String, default: '' },
     error: { type: String, default: '' },
     enApp: { type: Boolean, default: null },
+    social: { type: Boolean, default: true },
+    apple: { type: Boolean, default: true },
+    marcaGoogle: { type: String, default: '' },
 });
 const emit = defineEmits(['cambiar', 'olvido', 'proveedor']);
 const { t } = useTextos();
@@ -40,7 +47,7 @@ const { t } = useTextos();
             <CampoSistema
                 id="pjc-ent"
                 :label="t('compra.entrar.texto')"
-                type="text"
+                type="email"
                 inputmode="email"
                 autocomplete="username"
                 :model-value="valor"
@@ -63,8 +70,11 @@ const { t } = useTextos();
             </div>
         </div>
         <AccesoSocial
+            v-if="social"
             mode="signin"
             :in-app="enApp"
+            :apple="apple"
+            :marca="marcaGoogle"
             :labels="{ google: t('compra.entrar.google'), apple: t('compra.entrar.apple') }"
             @google="emit('proveedor', 'google')"
             @apple="emit('proveedor', 'apple')"

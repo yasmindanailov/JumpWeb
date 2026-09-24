@@ -19,7 +19,11 @@ import CajaAntiBot from './CajaAntiBot.vue';
 import FormularioPasarela from './FormularioPasarela.vue';
 import CabeceraDesenlace from '../ui/CabeceraDesenlace.vue';
 
-const { paso, esperando, authStore, outcomeStore, datos, pantallaDatos, pago, listo, recibo, fallido } = inject(COMPRA);
+const {
+    paso, esperando, authStore, outcomeStore, datos, pantallaDatos, pantallaEntrar, aGoogle, pago, listo, recibo, fallido,
+} = inject(COMPRA);
+// Apple sigue de corchete apagado (`#683`): su botón no se pinta, así que solo Google llega aquí.
+const proveedor = (via) => via === 'google' && aGoogle();
 </script>
 
 <template>
@@ -29,15 +33,19 @@ const { paso, esperando, authStore, outcomeStore, datos, pantallaDatos, pago, li
             :secciones="datos.waiverStore.document?.sections ?? []"
         />
         <PantallaEntrar
-            v-else-if="datos.estado.vista === 'olvido'"
-            paso="olvido"
+            v-else-if="datos.estado.vista === 'entrar'"
+            v-bind="pantallaEntrar"
+            @cambiar="datos.cambiarEntrada"
+            @olvido="datos.olvido({ correo: datos.estado.ent.valor, solo: false })"
+            @proveedor="proveedor"
         />
         <PantallaDatos
             v-else
             v-bind="pantallaDatos"
             @cambiar="datos.cambiar"
             @descargo="datos.estado.vista = 'descargo'"
-            @entrar="(modo) => modo === 'olvido' && datos.olvido()"
+            @entrar="datos.abrirEntrar"
+            @proveedor="proveedor"
         >
             <template
                 v-if="authStore.signupSiteKey && pantallaDatos.cuenta === 'nueva'"

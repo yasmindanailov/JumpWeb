@@ -116,6 +116,22 @@ describe('el cajón sin framework', () => {
         assert.deepEqual(eventos, [], 'cerrado al nacer: nada que anunciar');
     });
 
+    /**
+     * T3e·4 (`sidebar/reanudar.js`): la compra que salió a Google y vuelve a su página nace abierta porque lo dice el
+     * servidor (`?compra=reanudar`), y la analítica lo sabe distinguir de un enlace profundo. El desenlace del pago y
+     * la puerta de cuenta mandan sobre ella.
+     */
+    test('la vuelta de Google se anuncia como `resume`; el desenlace y la puerta mandan', () => {
+        montar({ dataset: { purchaseOpen: '1', purchaseResume: '1' } }).start();
+        assert.deepEqual(eventos.at(-1), { tipo: 'jw:cajon:open', detalle: { reason: 'resume', surface: 'cajon' } });
+
+        montar({ dataset: { purchaseOpen: '1', purchaseResume: '1', accountZone: 'orders' } }).start();
+        assert.equal(eventos.at(-1).detalle.reason, 'door');
+
+        montar({ dataset: { purchaseOpen: '1', purchaseResume: '1' }, hueco: { dataset: { boot: JSON.stringify({ outcome: 'failed' }) } } }).start();
+        assert.equal(eventos.at(-1).detalle.reason, 'return');
+    });
+
     test('abrir EN un producto lo lleva en el anuncio; abrir en una zona, no', () => {
         const cajon = montar();
 

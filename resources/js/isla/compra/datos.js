@@ -13,6 +13,13 @@ import { INVALID_CREDENTIALS } from '../../sidebar/login.js';
 /** El formulario en blanco. `cuenta`: `nueva` (alta), `existe` (su contraseña) o `dentro` (con sesión). */
 export const datosVacios = () => ({ nombre: '', correo: '', telefono: '', contrasena: '', descargo: false, cuenta: 'nueva' });
 
+/**
+ * «Entra» en blanco (`PjcEntrar`, T3e·4): `paso` `id` (correo y contraseña) u `olvido` (la confirmación del enlace);
+ * `solo`, si el olvido se pidió desde «Esta cuenta ya existe» y «volver» regresa a «Tus datos», no a «Entra».
+ * ⚠️ Solo CORREO (`#695`, `[DECIDIDO owner]`): el acceso del producto no admite teléfono (`LoginRequest`).
+ */
+export const entradaVacia = (valor = '') => ({ paso: 'id', valor, clave: '', error: '', solo: false });
+
 const vacio = (valor) => String(valor ?? '').trim() === '';
 
 /**
@@ -89,6 +96,13 @@ export function erroresDelAcceso(resultado, textos = {}) {
     if (campos.password) errores.contrasena = campos.password;
 
     return { errores, aviso: resultado?.errors?.global ?? '' };
+}
+
+/** El mismo «no», en la ÚNICA línea de error de «Entra» (bajo la contraseña, como la pinta el diseño). */
+export function errorDeEntrar(resultado, textos = {}) {
+    const { errores, aviso } = erroresDelAcceso(resultado, textos);
+
+    return errores.contrasena || errores.correo || aviso || '';
 }
 
 /**

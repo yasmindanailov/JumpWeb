@@ -154,7 +154,7 @@ return [
         ],
         'entrar' => [
             'titular' => 'Sign in',
-            'texto' => 'Write your email or your phone.',
+            'texto' => 'Write your email.',
             'continuar' => 'Continue',
             'google' => 'Sign in with Google',
             'apple' => 'Sign in with Apple',
