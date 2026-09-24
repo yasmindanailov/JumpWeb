@@ -36,6 +36,12 @@ return [
         'policy_link' => 'Lire la politique de cookies',
     ],
 
+    'policy' => [
+        'tool_active' => 'Outil d\'analyse d\'usage actif sur ce site : :tool. Il ne se charge que si tu autorises la catégorie «analyse», et il ne reçoit jamais ton nom, ton e-mail ni ton adresse IP.',
+        'tool_posthog' => 'PostHog (PostHog Inc. ; les données sont hébergées sur des serveurs de l\'Union européenne)',
+        'tool_matomo' => 'Matomo (installation propre sur :host)',
+    ],
+
     'frame' => [
         'maps_text' => 'Pour voir la carte, il faut charger du contenu de Google Maps, qui peut installer des cookies.',
         'maps_btn' => 'Charger la carte',

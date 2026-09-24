@@ -13,6 +13,7 @@ use App\Domain\Identity\Services\WaiverSettings;
 use App\Domain\Payments\Services\PaymentSettings;
 use App\Domain\Payments\Services\Redsys;
 use App\Domain\Platform\Models\Setting;
+use App\Domain\Platform\Services\Analytics\Drivers;
 use App\Domain\Platform\Services\AuditLogger;
 use BackedEnum;
 use Filament\Forms\Components\ColorPicker;
@@ -230,6 +231,12 @@ class Settings extends Page
         // cuales la hora deja de anunciarse. Vacío → default de `AvailabilitySettings` (8); `0`
         // apaga el aviso. NO es una regla de aforo: no vende ni retiene una plaza (`AFORO-02`).
         'booking.low_availability_max' => 'booking',
+        // La herramienta de análisis (`specs/analitica.md` §4.3, T3a·2): el driver y sus datos PÚBLICOS.
+        // Las credenciales privadas del olvido van en `.env` (`services.posthog`, `services.matomo`).
+        Drivers::KEY_DRIVER => 'analytics',
+        Drivers::KEY_POSTHOG_PROJECT => 'analytics',
+        Drivers::KEY_MATOMO_HOST => 'analytics',
+        Drivers::KEY_MATOMO_SITE_ID => 'analytics',
     ];
 
     public static function canAccess(): bool
@@ -267,6 +274,10 @@ class Settings extends Page
             // hay fila), por la misma razón que los toggles: que un Guardar no cambie la conducta.
             if ($key === WaiverSettings::KEY_MODE) {
                 $raw = WaiverSettings::mode();
+            }
+            // El driver sin fila es «ninguno»: que el desplegable no arranque vacío ni un Guardar lo cambie.
+            if ($key === Drivers::KEY_DRIVER && ! in_array($raw, Drivers::ALL, true)) {
+                $raw = Drivers::NONE;
             }
             $value = in_array($key, self::BOOL_KEYS, true)
                 ? ((string) $raw === '1')
@@ -306,6 +317,21 @@ class Settings extends Page
 
         /** @var array<string,mixed> $flat */
         $flat = Arr::dot($state);
+
+        // Guarda cruzada (T3a·2): un driver de análisis sin sus datos no se guarda. `Drivers::config()` lo
+        // trataría como «ninguno» igualmente, pero el operador tiene que verlo aquí, no descubrirlo porque
+        // la herramienta nunca aparece.
+        $driver = (string) ($flat[Drivers::KEY_DRIVER] ?? Drivers::NONE);
+        if ($driver === Drivers::POSTHOG && Drivers::posthogProject($flat[Drivers::KEY_POSTHOG_PROJECT] ?? null) === null) {
+            Notification::make()->title(__('admin.settings.analytics_posthog_requires_token'))->danger()->persistent()->send();
+
+            return;
+        }
+        if ($driver === Drivers::MATOMO && (Drivers::matomoHost($flat[Drivers::KEY_MATOMO_HOST] ?? null) === null || Drivers::matomoSiteId($flat[Drivers::KEY_MATOMO_SITE_ID] ?? null) === null)) {
+            Notification::make()->title(__('admin.settings.analytics_matomo_requires_host'))->danger()->persistent()->send();
+
+            return;
+        }
 
         // Guarda cruzada: no permitir pasar Redsys a producción ('live') sin las credenciales
         // no-secretas mínimas (código de comercio + terminal). El default sandbox solo aplica
@@ -482,6 +508,47 @@ class Settings extends Page
                 $this->doorSection(),
                 $this->capacitySection(),
                 $this->redsysSection(),
+                $this->analyticsSection(),
+            ]);
+    }
+
+    /**
+     * La herramienta de análisis (`specs/analitica.md` §4.3, T3a·2): el driver y sus datos PÚBLICOS. Solo se
+     * carga con la categoría `analytics` del banner; sus orígenes entran en la CSP con el driver activo.
+     */
+    private function analyticsSection(): Section
+    {
+        return Section::make(__('admin.settings.section_analytics'))
+            ->description(__('admin.settings.section_analytics_hint'))
+            ->collapsible()
+            ->collapsed()
+            ->columns(2)
+            ->schema([
+                Select::make(Drivers::KEY_DRIVER)
+                    ->label(__('admin.settings.analytics_driver'))
+                    ->helperText(__('admin.settings.analytics_driver_hint'))
+                    ->options([
+                        Drivers::NONE => __('admin.settings.analytics_driver_none'),
+                        Drivers::POSTHOG => __('admin.settings.analytics_driver_posthog'),
+                        Drivers::MATOMO => __('admin.settings.analytics_driver_matomo'),
+                    ])
+                    ->default(Drivers::NONE)
+                    ->selectablePlaceholder(false)
+                    ->required(),
+                TextInput::make(Drivers::KEY_POSTHOG_PROJECT)
+                    ->label(__('admin.settings.analytics_posthog_project'))
+                    ->helperText(__('admin.settings.analytics_posthog_project_hint'))
+                    ->regex('/^$|^phc_[A-Za-z0-9]{20,}$/')
+                    ->maxLength(80),
+                TextInput::make(Drivers::KEY_MATOMO_HOST)
+                    ->label(__('admin.settings.analytics_matomo_host'))
+                    ->helperText(__('admin.settings.analytics_matomo_host_hint'))
+                    ->regex('#^$|^https://[A-Za-z0-9.-]+(:\d+)?/?$#')
+                    ->maxLength(255),
+                TextInput::make(Drivers::KEY_MATOMO_SITE_ID)
+                    ->label(__('admin.settings.analytics_matomo_site_id'))
+                    ->regex('/^$|^[1-9]\d{0,8}$/')
+                    ->maxLength(9),
             ]);
     }
 

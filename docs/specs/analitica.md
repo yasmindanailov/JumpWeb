@@ -325,6 +325,29 @@ banner conserva sus tres acciones; el job relee el consentimiento vivo; `marketi
   docblock CIERRA el comentario (`*/`): parse error en un fichero que Pint no llega a leer. `/cookies` nombrará
   al driver en la T3a·2, en el render, no en el texto guardado. Queda para T3a·2 el driver y `Drivers::csp()`;
   para T3a·3 `PUT /me/analytics`, el enlace sesión↔cuenta con los 90 días, el aviso a las cuentas y el correo.
+- ✅ **Lo que enseñó la T3a·2 (24-09: el driver)**: `Platform\Services\Analytics\Drivers` es el único dueño de
+  lo que depende del driver —si está activo y con qué datos (`config()`: un ajuste INCOMPLETO es «ninguno»,
+  aunque el panel también lo rechace), sus orígenes en la CSP por directiva (`csp()`, en código), su nombre
+  en `/cookies` (en el RENDER: `anfitrion/legal.blade.php`, no el texto guardado) y el id OPACO de una
+  persona (`personId()`: HMAC del id con `APP_KEY`)—. **Matomo necesita un id de sitio** que la spec no
+  listaba: `analytics.matomo_site_id`, y su host se RECONSTRUYE (`https://` + host + puerto; nada más viaja
+  a la CSP ni al `<script>`). El `<body>` publica `data-analytics-{driver,key,host}` solo con driver, y
+  `data-analytics-person` solo con sesión Y la categoría (T3a·3 añade la oposición de la cuenta). El cargador
+  (`cajon/driver.js`, chunk propio de 1,26 KiB que `track.js` pide solo si el `<body>` dice que hay driver)
+  inyecta el script `async` únicamente con `data-cookie-analytics="1"` —o al `cookies-updated`, que se
+  recuerda porque el `<body>` no cambia sin recargar—, **no carga en una URL con credenciales** (un segmento
+  opaco o `signature=`/`token=`: la grabación vería la barra), arranca PostHog con `person_profiles:
+  identified_only`, sin vista automática ni autocaptura, sin IP, entradas enmascaradas y un
+  `sanitize_properties` que enmascara `$current_url`/`$pathname`/`$referrer` como `RouteNormalizer`; reenvía
+  los eventos del libro (`jw:tracked`, que `track()` despacha) con la ruta enmascarada, identifica solo con la
+  persona del `<body>` y hace `opt_out` al retirar. `ForgetPersonInDriver` (job en cola, credenciales
+  PRIVADAS en `.env`: `POSTHOG_PERSONAL_API_KEY` + `POSTHOG_PROJECT_ID`, `MATOMO_TOKEN_AUTH`) borra a la
+  persona por su id opaco; sin credenciales anota y no inventa; T3a·3 lo dispara. Sonda `sonda-driver.mjs`
+  19/19 con un DOBLE de PostHog por `page.route` (la CSP se evalúa antes de la intercepción, así que una
+  violación se vería igual): sin la categoría ni una petición a un tercero (Bunny Fonts es exento y se
+  filtra), con ella el script al host EU y cero `securitypolicyviolation`, la persona opaca con la sesión del
+  cliente de prueba. 🪤 En un test, la sesión de `actingAs` y la cookie de `withUnencryptedCookie` se QUEDAN
+  para las peticiones siguientes: un «anónimo» después de `actingAs` no lo es (dos casos, del menos al más).
 
 ### 4.4 Experimentos (T5)
 
@@ -525,7 +548,7 @@ de §4.3.
 | T1 | el libro, en cinco sub-tandas: **T1a ✅ (23-09)** tablas y poda, cookie, `ResolveVisitor` y `AttributionContext`, la ingesta stateless con su limitador, los hechos de servidor por fuente, el sello en `creating`, `robots.txt`, contrato **1.18.0** (`POST /events`) · **T1b ✅ (23-09)** `track.js` diferido (2,3 KiB gzip, techo 3) y el cajón · **T1c ✅ (23-09)** UTM en los 24 correos al cliente (pegado tras firmar, ignorado al validar), `email_sent` y `email_clicked` · **T1d ✅ (23-09)** la fuente del pedido manual (cuatro tarjetas, obligatoria, sin defecto; `forPanel()` valida) · **T1e ✅ (23-09)** `anonymize()` desata el libro y el export lleva `analytics` y `attribution` (contrato **1.19.0**) · y el **CIERRE ✅ (23-09)**: `scripts/mutar-analitica.sh` **19/19** (1 control, 1 declarado), `redsys:verify-concurrency --workers=16` ✓, la sonda, y `trustProxies` medido y retirado (`SEC-13`) | contrato **1.19.0** (`experiments` en `/sidebar/session` puede esperar a T5) | tests + arnés + `redsys:verify-concurrency` + sonda |
 | T1·bis | migración de historia: «anterior a la medición», arranque de cuadros en la fecha del despliegue, `model:prune` y recuento de `deploy.sh` 6→7, ensayo en staging con `schedule:run` a mano, `POLICY_VERSION` la misma noche | | ensayo |
 | T2 | el cuadro de mando, en cinco — **la hace el carril del SPA** (traspaso `#679`, tomado en `#735`, 24-09): **T2a ✅ (24-09)** el dinero: `AnalyticsPage` (5.º sitio del menú, `reports.view`; `reports.export` sembrado), `ReportPeriod` · `Window` · `SqlTime` (hora UTC → día del parque), `MoneyReport` en la capa de entrega (17 consultas, caché 5 min), cuatro widgets (tarjetas, gráfico, clientes, desglose con la tabla por día/semana), cuatro índices; 35 casos en `ReportPeriodTest`, `MoneyReportTest` y `AnalyticsPageTest`; `scripts/sonda-analitica-panel.mjs` 9/9 en escritorio y móvil; ✅ owner en escritorio (24-09); queda el `EXPLAIN` con volumen en staging · **T2b ✅ (24-09)** registros y puerta: `CustomersReport` (10 consultas), `SqlJson` (el método del alta desde `props`, sin `->>` porque MariaDB no lo tiene), `visit_checked_in` desde `GateVisits::register()`, cinco widgets más (registros, la puerta, la serie, las horas del parque, el desglose); `CustomersReportTest` (7 casos) + el hecho en `GateVisitsTest`; sonda ampliada a nueve widgets; ✅ owner (24-09) · **T2c ✅ (24-09)** embudo y fuentes: `FunnelReport` (20 consultas), el embudo por sesión y la compra por pedido, el abandono por paso con los fallos técnicos, fuentes por primer y último toque (`AttributionContext::touchOf()`, un solo dueño de la regla), entradas y salidas, dispositivo, idioma, horas, productos, contacto, y los rechazados de la semana (`RejectedEvents`, contadores en caché desde la ingesta); seis widgets más (quince en total); `FunnelReportTest` (8 casos); sonda 14/14; ✅ owner (24-09) · **T2d ✅ (24-09)** el CSV: `GET /admin/analitica/csv?report=money|customers|funnel&period=…` (`AnalyticsExportController`, permiso `reports.export` en el controlador, `no-store`), `CsvExport` (BOM + `;` + CRLF, el resumen de las tarjetas y las MISMAS tablas de los widgets por `tablesFor()`, toda celda que empiece por `= + - @ \t \r` con apóstrofo), auditado como `reports.exported` con informe, periodo y recuento; el botón «Descargar CSV» en la cabecera; `AnalyticsExportTest` (8 casos); sonda 14/14 con las tres descargas; ✅ owner («lo de exportar está perfecto») · **T2f ✅ (24-09)** la forma (`#736`, pedida por el owner al ver T2a–T2d): tres pestañas (`?pestana=`), seis gráficos de categorías (`CategoryChart`) donde había tablas, las tablas plegadas al pie, trimestre · año · a medida en directo (por mes más allá de 92 días, techo un año), la comparación elegible (`Comparison`: periodo anterior o mismo periodo del año pasado) en tarjetas y CSV; `ReportPeriodTest` +3, `MoneyReportTest` +1, `AnalyticsExportTest` +1, `AnalyticsPageTest` +1 y ampliado; sonda 27/27 por pestaña, escritorio y móvil; **✅ owner en vivo (24-09: «está perfecto»)** · **T2e** `analytics_daily`, `ad_spend` (cuando el `EXPLAIN` con volumen lo pida) | | tests + presupuesto de consultas + `EXPLAIN` + el ojo del owner en vivo |
-| T3a | en tres: **T3a·1 ✅ (24-09)** categorías sin quemar (`OPTIONAL` ×4), el banner con las cuatro finalidades y el texto que informa, la tarjeta que espera al cajón, `consent_shown`, la política por sección y la privacidad con sus migraciones quirúrgicas, `POLICY_VERSION` v3 `2026-09-24`, el almacén en `ui/cookie-consent.js` con `node --test`; `sonda-cookies.mjs` 22/22 (escritorio, móvil, cajón abierto; con cuatro finalidades el panel superaba la ventana: tope de alto con scroll en la tarjeta); **queda el ojo del owner** · **T3a·2** driver y PostHog con `Drivers::csp()`, `/cookies` nombra al driver · **T3a·3** `PUT /me/analytics`, el enlace sesión↔cuenta (90 días), aviso a cuentas y correo | `POLICY_VERSION` | tests + sonda (cero terceros sin consentir; con consentimiento, sin `securitypolicyviolation`) |
+| T3a | en tres: **T3a·1 ✅ (24-09)** categorías sin quemar (`OPTIONAL` ×4), el banner con las cuatro finalidades y el texto que informa, la tarjeta que espera al cajón, `consent_shown`, la política por sección y la privacidad con sus migraciones quirúrgicas, `POLICY_VERSION` v3 `2026-09-24`, el almacén en `ui/cookie-consent.js` con `node --test`; `sonda-cookies.mjs` 22/22 (escritorio, móvil, cajón abierto; con cuatro finalidades el panel superaba la ventana: tope de alto con scroll en la tarjeta); **queda el ojo del owner** · **T3a·2 ✅ (24-09)** el driver: `Drivers` (ajuste `analytics.driver` ∈ `posthog|matomo|none`, token público, host de Matomo reconstruido + id de sitio; `csp()` por directiva; `personId()` opaco), `SecurityHeaders` abre `*.posthog.com`/el host solo con driver, el `<body>` con `data-analytics-*` y la persona solo con sesión y categoría, `cajon/driver.js` (chunk diferido: PostHog/Matomo con la configuración de la spec, reenvío de `jw:tracked`, máscaras, sin cargar en URL con credenciales, `opt_out` al retirar), `/cookies` nombra la herramienta al pintar, «Ajustes → Herramienta de análisis» con guarda cruzada, `ForgetPersonInDriver` (cola, `Http::fake`); `DriversTest` 8, `AnalyticsSettingsTest` 5, `ForgetPersonInDriverTest` 6, `driver.test.js` 22; `sonda-driver.mjs` 19/19 · **T3a·3** `PUT /me/analytics`, el enlace sesión↔cuenta (90 días), aviso a cuentas y correo | `POLICY_VERSION` | tests + sonda (cero terceros sin consentir; con consentimiento, sin `securitypolicyviolation`) |
 | T3b | píxeles, Consent Mode básico, job de conversiones con relectura del consentimiento, tokens en `.env` | | tests con `Http::fake` |
 | T4 | la 360, los segmentos, el opt-in tras comprar | | tests |
 | T5 | experimentos | | tests + una prueba real |
@@ -615,6 +638,19 @@ de §4.3.
   sesión móvil de Google, el embudo con «Visitas · 100,0 %», las fuentes sumadas por fuente y el anillo de
   dispositivos con su color; `doughnut` frente a `bar`). Sonda por pestaña (tarjetas y `canvas` del panel
   activo), 90 días → semanas, el año → meses, año pasado, a medida con sus dos fechas, móvil sin scroll lateral.
+- **T3a·1 ✅ (24-09)**: `CookieConsentStateTest` (cuatro categorías, la v2 caducada), `CookieConsentEndpointTest`
+  (las cuatro obligatorias, de punta a punta POST → cookie → `state()` → `data-*`), `CookieGateBlockingTest`
+  (un toggle por categoría, `showing`, foco), `CookiePolicyContentTest` y `PrivacyPolicyProfilingTest` (las
+  secciones y las migraciones quirúrgicas), `cookie-consent.test.js` 15 (`RGPD-05` con test); `sonda-cookies.mjs`
+  22/22.
+- **T3a·2 ✅ (24-09)**: `DriversTest` (incompleto = ninguno; PostHog con su host EU y sus orígenes; el host de
+  Matomo reconstruido y lo que se rechaza; el HMAC; la CSP solo con driver y solo en script/connect/img; el
+  `<body>` con el driver y la persona solo con sesión Y categoría; `/cookies` nombra la herramienta al pintar),
+  `AnalyticsSettingsTest` (arranca en «ninguno», PostHog sin token se rechaza y no escribe, token mal formado,
+  Matomo sin id o con `http://`), `ForgetPersonInDriverTest` (`Http::fake`: buscar y borrar en PostHog con
+  `Bearer`, sin credenciales anota y no habla, Matomo busca y borra sus visitas, un 500 relanza),
+  `driver.test.js` 22 (el gate, la configuración, las máscaras, la persona, `opt_out`, Matomo); en vivo,
+  `scripts/sonda-driver.mjs` 19/19 con el doble de PostHog y la sesión del cliente de prueba.
 - `PrivacyTest`/`MePrivacyTest`: `anonymize()` y `exportFor()` cubren analytics; `PUT /me/analytics`.
 - `machine.test.js`, `controller.test.js`: transiciones emiten `step_entered`; `drawer_opened` al nacer
   abierto; el banner se suprime con el cajón abierto; `SidebarBundleBudgetTest` con el techo de `track.js`.

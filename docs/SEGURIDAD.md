@@ -111,7 +111,11 @@ Implementación real heredada: middleware **`app/Http/Middleware/SecurityHeaders
   diferida en el origen (#54).
 - Orígenes externos permitidos (gotchas al editar la CSP): Bunny Fonts (`fonts.bunny.net`),
   Turnstile (`challenges.cloudflare.com` en script/connect/frame), mapa embebido de Google
-  (`frame-src`) y el feed social vía `SocialEmbed::cspFrameSrc()`.
+  (`frame-src`), el feed social vía `SocialEmbed::cspFrameSrc()`, las fotos de autor de las reseñas
+  (`lh3.googleusercontent.com`, solo `img-src`) y **la herramienta de análisis SOLO con el driver activo**
+  (`specs/analitica.md` §4.3, T3a·2): `Drivers::csp()` da sus orígenes por directiva —`https://*.posthog.com`
+  o el host de Matomo, reconstruido— en script/connect/img; sin driver la CSP no cambia. El gate real es no
+  inyectar el script sin la categoría `analytics` (`COOKIES.md` D8); esto es la segunda cerradura.
 - **`form-action` limitado al origen Redsys del entorno configurado** (setting
   `redsys_environment`): en producción el navegador rechaza envíos al TPV sandbox y viceversa —
   hardening de defensa en profundidad (origen #113): un entorno mal configurado falla de forma

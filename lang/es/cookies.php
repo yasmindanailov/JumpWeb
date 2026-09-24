@@ -36,6 +36,13 @@ return [
         'policy_link' => 'Leer la política de cookies',
     ],
 
+    // T3a·2: la herramienta de análisis activa, nombrada en `/cookies` al pintar (no en el texto guardado).
+    'policy' => [
+        'tool_active' => 'Herramienta de análisis de uso activa en esta web: :tool. Solo se carga si autorizas la categoría «análisis», y nunca recibe tu nombre, tu correo ni tu dirección IP.',
+        'tool_posthog' => 'PostHog (PostHog Inc.; los datos se alojan en servidores de la Unión Europea)',
+        'tool_matomo' => 'Matomo (instalación propia en :host)',
+    ],
+
     'frame' => [
         'maps_text' => 'Para ver el mapa hay que cargar contenido de Google Maps, que puede instalar cookies.',
         'maps_btn' => 'Cargar el mapa',

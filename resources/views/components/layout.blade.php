@@ -122,6 +122,17 @@
       @endforeach
       data-consent-categories="{{ implode(',', \App\Domain\Identity\Services\CookieConsent::OPTIONAL) }}"
       data-cookie-endpoint="{{ route('cookies.consent') }}"
+      {{-- La herramienta de análisis (`specs/analitica.md` §4.3, T3a·2): solo con driver activo y completo
+           viajan sus datos, y el cargador (`cajon/driver.js`) solo la trae con `data-cookie-analytics="1"`.
+           `data-analytics-person` —el id OPACO de la cuenta, un HMAC— va únicamente con sesión Y con la
+           categoría consentida: es lo que permite el `identify` del régimen identificado. --}}
+      @php($analyticsBody = \App\Domain\Platform\Services\Analytics\Drivers::forBody(auth()->id() === null ? null : (int) auth()->id(), (bool) ($cookieConsent['analytics'] ?? false)))
+      @if ($analyticsBody !== null)
+      data-analytics-driver="{{ $analyticsBody['driver'] }}"
+      data-analytics-key="{{ $analyticsBody['key'] }}"
+      data-analytics-host="{{ $analyticsBody['host'] }}"
+      @if ($analyticsBody['person'] !== null) data-analytics-person="{{ $analyticsBody['person'] }}" @endif
+      @endif
       @if ($hasHero) data-has-hero="1" @endif>
     {{-- Banner de BYPASS de mantenimiento (#218): si la web está en mantenimiento de sitio y quien
          la ve es personal del panel (admin/staff), se le muestra la web real con este aviso de que

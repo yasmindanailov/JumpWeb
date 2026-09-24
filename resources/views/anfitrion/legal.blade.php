@@ -26,6 +26,13 @@
                 @endif
                 <p>{{ \App\Domain\Content\Services\LegalIdentity::interpolate($section['p'] ?? '') }}</p>
             @endforeach
+
+            {{-- La herramienta de análisis ACTIVA se nombra en el RENDER, no en el texto guardado (T3a·2,
+                 `specs/analitica.md` §4.3): el texto de la política dice «si está activa, la nombramos más
+                 abajo», y el driver es un ajuste que cambia sin migrar la página. Sin driver, nada. --}}
+            @if ($page->slug === 'cookies' && ($analyticsTool = \App\Domain\Platform\Services\Analytics\Drivers::config()) !== null)
+                <p class="page__tool" data-analytics-tool="{{ $analyticsTool['driver'] }}">{{ __('cookies.policy.tool_active', ['tool' => __('cookies.policy.tool_'.$analyticsTool['driver'], ['host' => $analyticsTool['host']])]) }}</p>
+            @endif
         </div>
 
         <a href="{{ url('/') }}" class="page__back" data-tap>{{ __('site.back_home') }}</a>

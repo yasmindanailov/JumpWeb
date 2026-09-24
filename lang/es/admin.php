@@ -2899,6 +2899,22 @@ return [
         'packs_prep_blocks_cupo' => 'El montaje/limpieza bloquea el cupo',
         'packs_prep_blocks_cupo_hint' => 'Si está activo, la ventana de montaje y limpieza ocupa cupo en las franjas vecinas (no solo la de inicio).',
 
+        // T3a·2 de la analítica: la herramienta de análisis externa.
+        'section_analytics' => 'Herramienta de análisis',
+        'section_analytics_hint' => 'Grabaciones de sesión y mapas de calor con una herramienta externa. Solo se carga si el visitante acepta la categoría «análisis» del aviso de cookies, nunca recibe nombres ni correos, y la política de cookies la nombra sola. Las credenciales privadas del borrado viven en el servidor.',
+        'analytics_driver' => 'Herramienta',
+        'analytics_driver_hint' => '«Ninguna» no carga nada. PostHog usa su nube europea; Matomo, tu propia instalación.',
+        'analytics_driver_none' => 'Ninguna',
+        'analytics_driver_posthog' => 'PostHog (nube europea)',
+        'analytics_driver_matomo' => 'Matomo (instalación propia)',
+        'analytics_posthog_project' => 'Token público del proyecto de PostHog',
+        'analytics_posthog_project_hint' => 'Empieza por «phc_». Es público: viaja en cada página, como en cualquier web que use PostHog.',
+        'analytics_matomo_host' => 'Servidor de Matomo',
+        'analytics_matomo_host_hint' => 'Solo el origen, con https:// (p. ej. https://stats.tuparque.es). Sin ruta.',
+        'analytics_matomo_site_id' => 'Id del sitio en Matomo',
+        'analytics_posthog_requires_token' => 'No se puede activar PostHog sin el token público del proyecto (empieza por «phc_»). No se ha guardado ningún cambio.',
+        'analytics_matomo_requires_host' => 'No se puede activar Matomo sin el servidor (https://…) y el id del sitio. No se ha guardado ningún cambio.',
+
         'section_redsys' => 'Pagos (Redsys)',
         'section_redsys_hint' => 'Configuración del TPV. La CLAVE SECRETA no se gestiona aquí (vive en el servidor por seguridad). Cambia estos valores solo si sabes lo que haces: un error puede impedir los cobros.',
         'redsys_live_requires_credentials' => 'No se puede cambiar a Real (producción) sin el Código de comercio y el Terminal del banco. Configúralos primero. No se ha guardado ningún cambio.',

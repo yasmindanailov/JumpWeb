@@ -49,6 +49,23 @@ return [
     ],
 
     /*
+     * **Las credenciales PRIVADAS de la herramienta de análisis** (`specs/analitica.md` §4.3, T3a·2): las que
+     * usa `ForgetPersonInDriver` para borrar a una persona en el driver cuando retira el consentimiento o se
+     * anonimiza. ⚠️ Van en `.env` y nunca en `settings` (`PAY-06`, la misma razón que Redsys): el token PÚBLICO
+     * de proyecto sí vive en el panel (`analytics.posthog_project`), porque viaja en cada página igualmente.
+     * `POSTHOG_API_HOST` es la API de la nube (eu.posthog.com), distinta del host de ingesta (eu.i.posthog.com).
+     */
+    'posthog' => [
+        'personal_api_key' => env('POSTHOG_PERSONAL_API_KEY'),
+        'project_id' => env('POSTHOG_PROJECT_ID'),
+        'api_host' => env('POSTHOG_API_HOST', 'https://eu.posthog.com'),
+    ],
+
+    'matomo' => [
+        'token_auth' => env('MATOMO_TOKEN_AUTH'),
+    ],
+
+    /*
      * **La clave de Places API (New)** para las reseñas de la landing (`DECISIONES #491`,
      * `specs/google-reviews.md` §4.4).
      *

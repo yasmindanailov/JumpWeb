@@ -126,8 +126,13 @@ export function createTracker({
     }
 
     function track(name, props = {}) {
-        queue.push(event(name, props));
+        const e = event(name, props);
+
+        queue.push(e);
         save();
+
+        // El mismo hecho, para el driver de análisis (`driver.js`, T3a·2): lo oye solo si está cargado.
+        if (doc.dispatchEvent && win.CustomEvent) doc.dispatchEvent(new win.CustomEvent('jw:tracked', { detail: { name, props: e.props } }));
 
         if (queue.length >= FLUSH_AT) flush();
         else schedule(FLUSH_MS);
@@ -348,6 +353,10 @@ export function createTracker({
         if (stub) stub.pending = null;
 
         sections();
+
+        // La herramienta de análisis (T3a·2): otro trozo diferido, y solo si el `<body>` dice que hay driver.
+        // Ella misma comprueba la categoría `analytics`; que no cargue no es un fallo del tracker.
+        if (doc.body?.dataset?.analyticsDriver) import('./driver.js').then((m) => m.installDriver({ win, doc })).catch(() => {});
 
         return api;
     }

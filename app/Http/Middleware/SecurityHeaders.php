@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Domain\Content\Services\SocialEmbed;
 use App\Domain\Platform\Models\Setting;
+use App\Domain\Platform\Services\Analytics\Drivers;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -56,6 +57,28 @@ class SecurityHeaders
         $script = ["'self'", "'unsafe-inline'", "'unsafe-eval'", 'https://challenges.cloudflare.com'];
         $style = ["'self'", "'unsafe-inline'", 'https://fonts.bunny.net'];
         $connect = ["'self'", 'https://challenges.cloudflare.com'];
+        // ⚠️⚠️ **`lh3.googleusercontent.com` entra por las FOTOS DE AUTOR de las reseñas**
+        // (`#491`, `specs/google-reviews.md` §3.3), y esto **relaja la CSP del sitio entero**,
+        // no solo de esa sección: es una decisión, no un ajuste (`SEC-01`).
+        // ▶ De las tres salidas posibles es la ÚNICA que cumple las dos normas a la vez:
+        // proxear la foto sería «store» de contenido de Places —prohibido por R2— y servir la
+        // reseña sin foto incumple la atribución obligatoria de R3.
+        // ⚠️ Es un host concreto y solo para IMÁGENES; y la foto únicamente se pide cuando el
+        // visitante ha aceptado cookies de terceros, que es lo que exige `RGPD-05`.
+        $img = ["'self'", 'data:', 'https://lh3.googleusercontent.com'];
+
+        // **La herramienta de análisis** (`specs/analitica.md` §4.3, T3a·2): sus orígenes viven en CÓDIGO
+        // (`Drivers::csp()`, por driver y directiva) y entran SOLO con el driver activo y completo. El gate
+        // real es no inyectar su script sin la categoría `analytics` (`COOKIES.md` D8); esta es la segunda
+        // cerradura, y sin driver no se abre para nadie.
+        foreach (Drivers::csp() as $directive => $origins) {
+            match ($directive) {
+                'script-src' => array_push($script, ...$origins),
+                'connect-src' => array_push($connect, ...$origins),
+                'img-src' => array_push($img, ...$origins),
+                default => null,
+            };
+        }
 
         // `form-action`: el cliente envía el formulario auto-POST al TPV de Redsys (5.5b, #104).
         // Limitamos al origen Redsys del **entorno configurado** — defensa en profundidad
@@ -90,15 +113,7 @@ class SecurityHeaders
             "object-src 'none'",
             "frame-ancestors 'self'",
             'form-action '.implode(' ', $formAction),
-            // ⚠️⚠️ **`lh3.googleusercontent.com` entra por las FOTOS DE AUTOR de las reseñas**
-            // (`#491`, `specs/google-reviews.md` §3.3), y esto **relaja la CSP del sitio entero**,
-            // no solo de esa sección: es una decisión, no un ajuste (`SEC-01`).
-            // ▶ De las tres salidas posibles es la ÚNICA que cumple las dos normas a la vez:
-            // proxear la foto sería «store» de contenido de Places —prohibido por R2— y servir la
-            // reseña sin foto incumple la atribución obligatoria de R3.
-            // ⚠️ Es un host concreto y solo para IMÁGENES; y la foto únicamente se pide cuando el
-            // visitante ha aceptado cookies de terceros, que es lo que exige `RGPD-05`.
-            "img-src 'self' data: https://lh3.googleusercontent.com",
+            'img-src '.implode(' ', $img),
             "font-src 'self' https://fonts.bunny.net data:",
             'style-src '.implode(' ', $style),
             'script-src '.implode(' ', $script),
