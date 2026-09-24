@@ -44,7 +44,7 @@ contador de la suite va en el trailer del commit** (`#618`). Si no salta: `git c
 | **Producto e instancias** · repos · versionado · F0→F6 | `docs/specs/producto-e-instancias.md` §0 · `CHANGELOG.md` |
 | Landing FUERA (F5) · menú de hechos · API pública · paquete de instancia | `docs/specs/instancia-y-landing-fuera.md` §0 · `docs/specs/paquete-de-instancia.md` §0 |
 | **La isla** · la landing nueva (Saltia) | `docs/specs/isla-y-landing-nueva.md` §0 |
-| Analítica · conversión · atribución · consentimiento · encuestas · la fiesta (invitados, justificante, invitación) | `docs/specs/analitica.md` §0 · `docs/specs/analitica-fiesta.md` §0 |
+| Analítica · conversión · atribución · consentimiento · la fiesta · encuestas | `docs/specs/analitica.md` §0 · `docs/specs/analitica-fiesta.md` §0 · `docs/specs/encuestas.md` §0 |
 | F4 · cajón empaquetable · token Bearer | `docs/specs/cajon-empaquetable.md` §0 · `docs/specs/token-bearer.md` §0 |
 | La capa de agente · el plugin `jumpweb-agente` · skills · hooks · reglas del owner | `docs/sistemas/CAPA-DE-AGENTE.md` |
 | Dinero / pagos / Redsys / reembolsos | `docs/INVARIANTES.md` §1 + §6 · `docs/sistemas/REDSYS.md` · `docs/MODELO-DATOS.md` §2 |

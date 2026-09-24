@@ -75,11 +75,12 @@
 
 ## Por dónde retomar, en orden
 
-1. ❗❗ **LA T7 DE LA ANALÍTICA: LAS ENCUESTAS, spec primero** (`analitica.md` §4.10 con las palabras del owner y
-   §4.8): `/spec` → una spec nueva de encuestas con su §0, alta en `README.md` y en el enrutador, y el ✅ del
-   owner ANTES de codificar. Las preguntas de diseño están listadas en §4.10 (dónde viven preguntas y
-   respuestas; el banner en la pantalla de la puerta sin estorbar el escaneo; el correo del día siguiente sobre el
-   molde y su opt-in; el régimen RGPD de las respuestas; una por visita y el plazo; su sitio en el cuadro).
+1. ❗❗ **LA T7 DE LA ANALÍTICA: LAS ENCUESTAS** — `specs/encuestas.md` ⬜ escrita el 24-09 (noche) con **cinco
+   preguntas al owner en su §7** (las respuestas atadas al cliente · una por cliente y encuesta · elección, escala y
+   texto libre · correo de servicio con baja de un toque · una viva por clase). **Sin su respuesta no se codifica.**
+   Con ella: `#740`, estado ✅ y T1→T4 (§4.6): el modelo y el panel → la puerta (kiosco, tarjeta debajo de «Hoy»,
+   tras acreditar la visita) → el correo del día siguiente (comando a las 10:00, +1 tarea del planificador) → el
+   cuadro (quinta pestaña). Después, el experimento real (T5c), que el owner quiere iterar tras las encuestas.
    ⚠️ Trampas de la fiesta, por si se reutiliza su molde (spec §4.6): el reenvío del mismo padre es IDEMPOTENTE;
    `order_id` nunca es nulo; son DOCE rutas enfocadas; los invitados añadidos NO son «extras»; una edición sin
    `reason` es del panel; un ayudante `seed()` en un test es FATAL; la sonda del panel censa TRES «Por día»; «vino
@@ -221,6 +222,13 @@ y las clases `.gf-*` y `.guardian__*` · `tests/Feature/Sidebar/**`, `tests/Feat
   isla: el almacén es `ui/cookie-consent.js` (`createCookiesStore`, cuatro categorías desde
   `data-consent-categories`); la isla puede pintar su tarjeta sobre el MISMO almacén y disparar `cookies-updated`.
   Los cargadores del driver y de los píxeles leen `data-analytics-*`/`data-pixel-*` del `<body>`.
+
+### ❗ Para el carril de PLATAFORMA (emisor: SPA, 24-09, noche) — el recuento del planificador en `deploy.sh`
+- ⚠️ **Medido**: `php artisan schedule:list` registra **9** tareas en la local (`orders:expire`, `social-proof:refresh`,
+  `business-profile:sync`, `business-profile:sweep-photos`, `model:prune`, `slots:generate-rolling`, `queue:work`,
+  `sanctum:prune-expired`, `reservations:eve-notice`) y `deploy.sh` comprueba «esperadas 6» con `grep -c artisan`.
+  Es tu fichero: o el despliegue sale en rojo con el sitio sano, o el `grep` cuenta distinto en el servidor. La T3 de
+  las encuestas (`specs/encuestas.md`) añadirá una tarea diaria más: te aviso antes de tocar la cifra.
 
 ### ❗ Para el carril de CORREOS (emisor: SPA, 19→24-09; pendiente de tu «atendido»)
 - ✅ Tu censo pasa de 25 a 27 (`VisitEveNotice` `#717`, `GoogleBusinessLocationChanged` `#725`, tres idiomas);
