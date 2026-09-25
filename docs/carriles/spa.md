@@ -4,13 +4,13 @@
 > · Último usado: **`#742`** · La banda está dada de alta en la tabla de `DECISIONES.md` ·
 > Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: **`encuestas.md` §0** (la
 > tarea en curso) · `analitica-fiesta.md` §0 · `analitica.md` §0 y §4.5 · `google-business-profile.md` §0 ·
-> `sidebar-spa.md` §0 · `celebracion-e-invitacion.md` §0 · Actualizado: 2026-09-25 (madrugada).
+> `sidebar-spa.md` §0 · `celebracion-e-invitacion.md` §0 · Actualizado: 2026-09-25 (mañana, cierre).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`). El
 > contador de la suite va en el trailer del commit (`#618`), no aquí. **Se muda, no se raspa**: el detalle de
 > una feature baja a su spec (las trampas por tanda de la analítica T1→T5 viven en `analitica.md` §4.9,
 > mudadas verbatim el 24-09; las de la ficha de Google en su §9.1; las de la invitación en su §10.20).
 
-## Foto (2026-09-24, noche)
+## Foto (2026-09-25, mañana)
 
 - ▶▶▶ **LA ANALÍTICA ES MÍA ENTERA desde `#735`** (`[DECIDIDO owner]` 24-09). **T1 ✅** (plataforma) · **T2a→T2d
   y T2f ✅** (el cuadro en tres pestañas, 21 widgets, CSV, comparación; queda el `EXPLAIN` con volumen en
@@ -46,38 +46,26 @@
   lo vio en vivo (24-09: «buen trabajo, validado»)** → **LA T6 QUEDA COMPLETA**: la analítica entera (T1→T6) espera
   solo la v2.0.0. La spec sigue viva (no se archiva): guarda el régimen del invitado, el `[PENDIENTE: asesoría]` (4)
   y el despliegue pendiente; el ciclo de vida de la doc (`CONVENCIONES §11`) se aplica tras la v2.0.0.
-- ▶▶ **T7, ENCUESTAS** (`specs/encuestas.md` **✅ `#740`**, 24-09 noche, con las cinco respuestas del owner en
-  su §7). **T1 EN `main` (25-09, madrugada)**: la migración (`surveys`, `survey_responses`, `users.surveys_opt_out`),
-  `Survey` y `SurveyResponse` (poda a 24 meses, `forgetPerson()`), `QuestionSchema` (cinco tipos), `SurveyResource`
-  en «Ajustes → Sistema» (`/admin/encuestas`) con bloqueo con respuestas y «una viva por clase», `AuditLog`, el hub,
-  el morfo, `Contract` +3, `anonymize()`; 14 tests. **Dos encuestas de EJEMPLO en la BD local** (`visita-de-hoy`
-  interna y `que-tal-ayer` externa, sembradas por tinker; se borran desde el panel). El owner las tuvo delante y
-  preguntó por la puerta y el correo (T2 y T3): su ✅ explícito a la T1 no llegó. ▶ **T2 EN EL ÁRBOL (25-09,
-  madrugada)**: `SurveyResponses`, `QuestionSchema::fromForm()/validate()`, la tarjeta `gate-survey` en la puerta,
-  rastro, export (contrato 1.27.0); `GateSurveyTest` 10, arnés `mutar-encuestas.sh` 9/9 + control. ❗ **HALLAZGO
-  → `#741`**: el botón «Registrar visita» NO existía desde `#234` (la spec lo daba por vivo); desde `#741` **el
-  ESCANEO acredita la visita** (la búsqueda tecleada no) y la tarjeta sale en el mismo gesto; el owner aceptó la
-  recomendada («Perfecto, continúa»). **El owner la contestó EN VIVO** (25-09, desde su cuenta 70, con la encuesta
-  de ejemplo sobre el cliente 593). Sonda `scripts/sonda-puerta.mjs` **28/28** (tablet y móvil; arregló el foco tras
-  «Nueva búsqueda»). ⚠️ Montado en local para la sonda: el cliente `sonda-puerta@jumpweb.test` (id 2179) y las
-  visitas de HOY de 593 y 2179 en `customer_visits`; la respuesta del owner en `survey_responses` (se borran al
-  desmontar). Chromium en el contenedor va con `node node_modules/playwright-core/cli.js install chromium`
-  (`npx playwright install` cae en la caché de npx y no se encuentra: medido). ▶ **T3 EN EL ÁRBOL (25-09)**:
-  `SendExternalSurveys` (cada hora desde las 10:00 del parque, la fila es la marca), `SurveyInvitation`
-  (`List-Unsubscribe`), `SurveyPageController` (cinco rutas enfocadas: página por token, respuesta, gracias, baja
-  con UN botón y su confirmación), `PUT /me/surveys` y el tercer interruptor de «Privacidad» (contrato 1.28.0),
-  `surveys.cooldown_days` en «Ajustes → Puerta»; 13 tests nuevos, arnés +4; `deploy.sh` espera 10. **Demo local**:
-  el cliente 2179 tiene la visita de AYER y la externa `que-tal-ayer` vive → `surveys:send-external --force` deja
-  el correo en Mailpit `:8028` y su página abre por el token de la fila. ▶ **T4 EN EL ÁRBOL (25-09)**: `SurveysReport`
-  (por día de la respuesta, las dos tasas, por encuesta y pregunta, «Por atender», seis consultas), la quinta pestaña
-  «Encuestas» (cuatro widgets; la persona de «Por atender» solo con `customers.insights`), el CSV `surveys` sin
-  textos, el bloque «Encuestas» de la 360; `SurveysReportTest` 5; la sonda del panel con la quinta pestaña.
-  **Fixture local `probe-ojo-encuestas`** (64 respuestas sobre los 32 anfitriones de la fiesta, `OJO=desmontar` lo
-  quita). ⚠️ Un ayudante `seed()` en un test es FATAL (tercera vez en este carril: `seedJune()`). ▶ **Revisión del
-  25-09**: la tasa de la puerta se mide sobre OFRECIDAS, la `intro` del correo solo en el idioma del cliente,
-  `SiteLocales` en la página, el ajuste del plazo probado; y **`#742`** (el owner tomó las cuatro recomendadas): el
-  correo no repite a quien contestó en la puerta, «Por atender» sin permiso va sin texto, la baja no calla la puerta,
-  el gráfico sin selector. Queda `[PENDIENTE: asesoría]` (5) sobre el correo de servicio y el ojo del owner.
+- ▶▶ **T7, ENCUESTAS — LAS CUATRO TANDAS EN `main` (25-09)** (`specs/encuestas.md` ✅ `#740`; el detalle por tanda y
+  «lo que enseñó», en su §4.6): T1 el modelo y `/admin/encuestas` (`7c359050`) · T2 la tarjeta en la puerta y
+  **`#741`: el ESCANEO acredita la visita** —el botón «Registrar visita» no existía desde `#234` y la spec lo daba por
+  vivo— (`fd72b400`) · T3 el correo del día siguiente, la página por token, la baja con UN botón, `PUT /me/surveys`
+  y el tercer interruptor de «Privacidad», contrato 1.28.0, `deploy.sh` espera 10 (`0d9a54db`) · T4 el cuadro: la
+  quinta pestaña, «Por atender», el CSV y la 360 (`ae818b97`). **Revisión** (`99578672`): la tasa de la puerta sobre
+  OFRECIDAS, la `intro` del correo solo en el idioma del cliente, `SiteLocales`, el ajuste del plazo probado; y
+  **`#742`** (`88f8e8f3`, el owner tomó las cuatro recomendadas): el correo no repite a quien contestó en la puerta,
+  «Por atender» sin `customers.insights` va sin persona ni texto, la baja no calla la puerta, el gráfico sin selector.
+  Guardas: `GateSurveyTest` 10 · `SurveySendTest` 7 · `SurveyPageTest` 5 · `SurveysReportTest` 5 · arnés
+  `mutar-encuestas.sh` **15/15 + control** · sondas `sonda-puerta.mjs` 28/28 y `sonda-analitica-panel.mjs` con la
+  quinta pestaña. **Visto por el owner**: contestó una en vivo desde la puerta (cuenta 70) y recibió las 15 capturas
+  del circuito entero (`storage/app/audit/ojo-encuestas-*.png`; guion `ojo-encuestas.mjs` al lado, fuera de git):
+  cerró con «buen trabajo», sin un ✅ formal por tanda. Queda `[PENDIENTE: asesoría]` (5) sobre el correo de servicio.
+  ⚠️ Trampas pagadas: un ayudante `seed()` en un test es FATAL (tercera vez: `seedJune()`); el asunto de un correo no
+  lleva el parque y «oferta» no entra ni para negarla (`MailInboxLineTest`, `SurveySendTest`); `PersonalDataExport`
+  y `User` del contrato son `additionalProperties: false`; los techos del cajón subieron con nota (chunk 296 kB,
+  textos del montaje 10.800 B); Chromium del contenedor: `node node_modules/playwright-core/cli.js install chromium`
+  (`npx playwright install` cae en la caché de npx); el motor de Docker puede colgarse con los contenedores vivos
+  (reinicia Docker Desktop); la sonda del panel censa CINCO pestañas y CUATRO «Por día».
 - ⚠️⚠️ **LO MONTADO EN LA BD LOCAL para el ojo del owner (24-09), todo reversible**: (1) cinco ajustes FALSOS
   en `settings` (`analytics.driver=posthog`, `analytics.posthog_project` inventado y los tres ids de píxeles
   `marketing.*`): se quitan borrando esas filas; (2) el aviso de la analítica ENVIADO a las 57 cuentas de
@@ -89,7 +77,11 @@
   fuera de git, al lado de «probe-ojo-analitica»): 32
   fiestas `JW-FIESTA…` de agosto y septiembre con formularios, extras, invitaciones, firmas, cobros en el parque y
   323 hechos, 32 anfitriones `fiesta-N@ojo-fiesta.jumpweb.test` y TRES de ellas que «vinieron invitadas» a una
-  fiesta de agosto antes de comprar; `OJO=desmontar` lo quita entero. Y siguen
+  fiesta de agosto antes de comprar; `OJO=desmontar` lo quita entero; (6) **lo de las encuestas** (25-09): las dos de
+  ejemplo (`visita-de-hoy`, `que-tal-ayer`; se borran desde el panel), el cliente `sonda-puerta@jumpweb.test` (2179)
+  con dos respuestas y visitas, la respuesta del owner (cuenta 70 sobre el cliente 593) y las visitas de 593 y 2179,
+  el fixture `probe-ojo-encuestas` (64 filas sobre los anfitriones de la fiesta; `OJO=desmontar` lo quita) y el correo
+  en Mailpit. Y siguen
   montados el fixture «probe-ojo-analitica» (90 pedidos `JW-OJO…`, 25 clientes, 506 sesiones) y el de reseñas
   «probe-ojo-resenas». ⚠️ **Plataforma dejó la local preparada para que el owner
   pruebe la ISLA** (24-09 noche, `694529a8`): `sidebar.shell = isla` por el panel, `public/_isla-prueba.html`, la
