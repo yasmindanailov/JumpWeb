@@ -2,6 +2,8 @@
 
 namespace App\Http\Instancia;
 
+use App\Domain\Booking\Contracts\CatalogProduct;
+use App\Domain\Booking\Contracts\ProductCatalog;
 use App\Http\Controllers\Api\V1\AttractionsFactsController;
 use App\Http\Controllers\Api\V1\CatalogProductsController;
 use App\Http\Controllers\Api\V1\CatalogZonesController;
@@ -46,7 +48,18 @@ final class PageFacts
         'social_proof' => [SocialProofFactsController::class, '__invoke', false],
         'zones' => [CatalogZonesController::class, 'index', false],
         'products' => [CatalogProductsController::class, 'index', false],
+        // Las FICHAS del catálogo (T4c·8, `#763`): una por producto, en el orden de `products`. El precio de un
+        // complemento («2 € el par» de calcetines) solo vive aquí (`addons[].price_cents`).
+        'product_details' => [CatalogProductsController::class, 'show', false],
     ];
+
+    /**
+     * Los hechos que son una FICHA por producto del catálogo: se invoca su controlador una vez por producto, con el
+     * mismo JSON que `GET /catalog/products/{id}`, y llegan en una lista en el orden del catálogo.
+     *
+     * @var list<string>
+     */
+    private const POR_PRODUCTO = ['product_details'];
 
     /**
      * @param  list<string>  $nombres
@@ -64,9 +77,13 @@ final class PageFacts
 
             [$controlador, $metodo, $conIdioma] = self::HECHOS[$nombre];
             $peticion = Request::create('/', 'GET', $conIdioma ? ['lang' => $idioma] : []);
-            $recurso = app()->call([app($controlador), $metodo], ['request' => $peticion]);
+            $pedir = fn (array $argumentos = []): array => app()
+                ->call([app($controlador), $metodo], ['request' => $peticion, ...$argumentos])
+                ->toResponse($peticion)->getData(true);
 
-            $hechos[$nombre] = $recurso->toResponse($peticion)->getData(true);
+            $hechos[$nombre] = in_array($nombre, self::POR_PRODUCTO, true)
+                ? array_map(fn (CatalogProduct $producto): array => $pedir(['product' => $producto->id]), app(ProductCatalog::class)->products(null))
+                : $pedir();
         }
 
         app()->setLocale($idioma);

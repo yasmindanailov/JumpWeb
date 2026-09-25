@@ -352,6 +352,9 @@ son de cualquiera que mida, no de un carril.
   guard real no hace (adjunta un `TransientToken`). Arreglado en `Tests\TestCase::be()`; producción sigue fallando
   cerrado. Con tokens REALES, `Auth::forgetGuards()` entre peticiones, o un token revocado sigue entrando por la
   caché del guard.
+- **Un mutante a mano se revierte con la MISMA edición al revés, nunca con `git checkout <fichero>`** (25-09, T4c·8):
+  si el fichero tenía cambios propios sin commit, el `checkout` se los lleva con el mutante —costó reescribir la
+  implementación que el mutante estaba probando—. `checkout` solo vale sobre un fichero limpio.
 - **`SHELL` es una variable del propio bash** (mudada del carril de plataforma el 25-09): llamar así a una ruta en
   un guion se la cambia a todo lo que se lance después. En `mutar-cajon-apertura.sh` se llama `CARCASA`.
 

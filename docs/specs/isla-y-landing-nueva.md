@@ -945,6 +945,12 @@ juzga «idéntico», con los datos del diseño.
     si es entero—, medido con los mismos bytes que el diseño en español («8 €», «14,40 €», con U+00A0). **Medido: 8 de
     8 a 0**; control: con dos decimales siempre («8,00 €»), caen los 8. ⚠️ Su botón va a `#reservar`, como en el
     diseño: abrir la compra desde ahí es de la T4e.
+  - ▶ **·8, el modelo, con tres respuestas del owner** (`#763`, 25-09): el precio de los calcetines sale de un HECHO
+    (ya existía: la ficha de cada producto publica `addons[].price_cents`); las edades de 14 y 16 son texto de
+    PlayJump (el sistema no aplica esos umbrales); los días de cada tarifa, con la etiqueta del panel. **·8a ✅**:
+    `PageFacts` gana `product_details` —las fichas del catálogo, una por producto y en su orden, con el mismo JSON que
+    `GET /catalog/products/{id}`— sin API nueva ni contrato (`InstancePagesTest`, su mutante —la lista en vez de las
+    fichas— muere). Sigue **·8b**: el modelo de la instancia (`$z` desde los hechos y `lang`) y las páginas enteras.
 - **T4a · los datos** (producto): las dos columnas de `#699` con su campo en el panel, sus hechos en
   `/catalog/products` y `/catalog/zones` (contrato 1.26.0), sus pruebas y su mutante; y la LISTA de reseñas en
   `/social-proof`, con la misma regla de permiso y la misma línea legal que la portada de hoy. El texto del paso de

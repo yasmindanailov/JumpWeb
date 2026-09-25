@@ -2,6 +2,9 @@
 
 namespace Tests\Feature\Instancia;
 
+use App\Domain\Booking\Models\RateType;
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Models\Zone;
 use App\Http\Instancia\InstancePages;
 use App\Http\Instancia\InstanceViews;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -154,6 +157,43 @@ BLADE);
 
         $this->assertMatchesRegularExpression('#<loc>'.preg_quote(route('instancia.kids'), '#').'</loc>.*?<changefreq>daily</changefreq><priority>0.9</priority>#', $xml);
         $this->assertSame(1, substr_count($xml, '<loc>'.route('precios').'</loc>'), '/precios sale una sola vez: la del producto');
+    }
+
+    /**
+     * **Una página puede pedir las FICHAS del catálogo, con el mismo JSON que la API** (T4c·8, `#763`). El precio de un
+     * complemento («2 € el par» de calcetines) no está en ninguna lista: vive en la ficha de cada producto
+     * (`GET /catalog/products/{id}`, `addons[].price_cents`). `product_details` las trae todas, en el orden del
+     * catálogo y sin copiar lógica: el controlador de la ficha, una vez por producto.
+     */
+    public function test_a_page_can_ask_for_the_product_details_with_the_same_json_as_the_api(): void
+    {
+        $tarifa = RateType::create(['key' => RateType::KEY_NORMAL, 'label' => ['es' => 'Normal'], 'weekdays' => null, 'priority' => 0]);
+        $zona = Zone::create(['slug' => 'kids', 'name' => ['es' => 'Kids'], 'position' => 1, 'is_active' => true]);
+        $entrada = TicketType::create([
+            'name' => ['es' => 'Kids · 1 hora'], 'type' => TicketType::TYPE_ENTRY, 'zone_id' => $zona->id,
+            'duration_min' => 60, 'is_sellable' => true, 'is_active' => true, 'seats_per_unit' => 1, 'position' => 1,
+        ]);
+        $entrada->prices()->create(['rate_type_id' => $tarifa->id, 'amount_cents' => 800]);
+        $calcetines = TicketType::create([
+            'name' => ['es' => 'Calcetines'], 'type' => TicketType::TYPE_ADDON, 'zone_id' => null,
+            'is_sellable' => true, 'is_active' => true, 'seats_per_unit' => 0, 'position' => 2,
+        ]);
+        $calcetines->prices()->create(['rate_type_id' => $tarifa->id, 'amount_cents' => 200]);
+        $entrada->addons()->attach($calcetines->id, [
+            'position' => 1, 'is_included' => false, 'included_quantity' => 1, 'is_mandatory' => false,
+            'quantity_mode' => 'fixed', 'allow_extra' => true, 'choice_group' => null, 'max_qty' => null, 'requires_addon_id' => null,
+        ]);
+        $this->declarar(['kids' => ['vista' => 'kids', 'hechos' => ['product_details']]]);
+
+        $fichas = $this->hechosDe('/kids')['product_details'];
+
+        $ids = array_column($this->getJson('/api/v1/catalog/products')->assertOk()->json('data'), 'id');
+        $this->assertSame([$entrada->id], $ids);
+        $this->assertSame(
+            array_map(fn (int $id): array => $this->getJson("/api/v1/catalog/products/{$id}")->assertOk()->json(), $ids),
+            $fichas,
+        );
+        $this->assertSame(200, $fichas[0]['addons'][0]['price_cents'], 'el precio del complemento, el de su ficha');
     }
 
     /**
