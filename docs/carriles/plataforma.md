@@ -46,7 +46,7 @@ piezas y el pie a 0 px, `/kids` y `/jump` ENTERAS con los hechos en es/en/fr) y 
 «Reservar y pagar» → «Tus datos», `scripts/sonda-calculadora.mjs`; le falta el ojo del owner). **T4b·4 ✅** (el
 `<body>` de las páginas nuevas, igual al de siempre: `site/body-state`); la T4a·3 es MÍA (el SPA, 25-09 tarde) y la
 T4a·2 espera al owner (`#616`). El contrato de hojas para la fiesta del SPA, hecho (`#769`). **T4e ✅** (·1 y ·2: la isla VIVA
-en `/kids` y `/jump`, se transforma en la compra y su menú abre la cuenta; spec §4.12); sigue la verificación final. ✅ El zip del 25-09, dentro y portado (spec
+en `/kids` y `/jump`, se transforma en la compra y su menú abre la cuenta) y **verificación final 40/40 a 0** (§4.12). ✅ El zip del 25-09, dentro y portado (spec
 §4.11, «en lo construido»). ⚠️ **`#768`: sin bancos por tanda; la identidad se verifica UNA vez al final de cada
 página, ligera**, y un zip nuevo se lee con el `git diff`. «Dónde y cuándo» y el pie, a esa verificación. → T4e la isla viva (con ella,
 «Hoy, 1 hora cuesta…» y «Reservar para hoy»: el owner ESPERA a la isla) → T4f la sonda → la portada, Cumpleaños y el

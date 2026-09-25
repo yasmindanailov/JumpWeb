@@ -1200,6 +1200,10 @@ juzga «idéntico», con los datos del diseño.
     · 8 €» sin botón (el de la calculadora se ve); «Reservar y pagar» → una sola isla, la de la compra, en «Paso 1 de 2 ·
     Tus datos»; consola limpia. ⚠️ **El lateral de la cuenta se ve con el tema NEUTRO del producto** (los botones negros
     del producto, no Saltia): lo arregla la T5 (Mi cuenta en la isla), que el owner decide si entra en la v2.0.0.
+- ▶▶ **LA VERIFICACIÓN FINAL de Kids y Jump (25-09, `#768`): 40 de 40 a 0 píxeles** contra el mockup del 25-09 —cada
+  pieza en reposo a 390 y 1280, sin estados, ~5 min—. Cazó un defecto del port del zip: el margen del icono del parking
+  iba al `svg` y `<x-lucide>` pinta una `<span>` que lo envuelve (instancia `d1114ad`). La isla, 60/60 en su banco; la
+  compra, 52/54 («entrar», `#695`).
 - **T4f · la sonda de las dos páginas** (`scripts/sonda-isla.mjs` crece): llegar, la isla en reposo, calcular,
   «Reservar y pagar», la pasarela; en 390 y 1280.
 
