@@ -12,7 +12,9 @@ use App\Filament\Resources\Attractions\Pages\EditAttraction;
 use App\Filament\Resources\Attractions\Pages\ListAttractions;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
+use Filament\Forms\Components\FileUpload;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -59,6 +61,29 @@ class AttractionResourceTest extends TestCase
             'position' => 1,
             'is_active' => true,
         ], $overrides);
+    }
+
+    /**
+     * **El VÍDEO se sube desde el panel, al hueco de la instalación, y lo guardado vuelve al formulario** (el «play» de
+     * las atracciones, 25-09). Sin el campo, la API publicaría `video_url` y nadie podría rellenarlo.
+     */
+    public function test_the_video_is_uploaded_from_the_panel_into_the_installation_space(): void
+    {
+        // El disco FALSO y con el fichero dentro: `FileUpload` descarta al hidratar lo que no existe en el disco.
+        Storage::fake(Attraction::VIDEO_DISK);
+        Storage::disk(Attraction::VIDEO_DISK)->put('atracciones/bolas.mp4', 'x');
+        $juego = Attraction::create(['zone_id' => $this->zone->id, 'name' => ['es' => 'Bolas'], 'position' => 1, 'is_active' => true, 'video' => 'atracciones/bolas.mp4']);
+
+        $campo = Livewire::actingAs($this->admin())
+            ->test(EditAttraction::class, ['record' => $juego->id])
+            ->assertSuccessful()
+            ->instance()->getSchema('form')
+            ?->getComponent(fn ($c): bool => $c instanceof FileUpload && $c->getName() === 'video');
+
+        $this->assertInstanceOf(FileUpload::class, $campo, 'el formulario de atracciones ya no deja subir el vídeo');
+        $this->assertSame(Attraction::VIDEO_DISK, $campo->getDiskName(), 'el vídeo tiene que ir al hueco de la instalación, no al repo');
+        $this->assertSame(['video/mp4', 'video/webm'], $campo->getAcceptedFileTypes());
+        $this->assertContains('atracciones/bolas.mp4', array_values((array) $campo->getState()), 'lo guardado tiene que volver al formulario: si no, editar la atracción le BORRA el vídeo');
     }
 
     public function test_gating(): void

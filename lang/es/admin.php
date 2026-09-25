@@ -3528,6 +3528,8 @@ return [
         'field_position_hint' => 'Orden de aparición dentro de su zona (menor primero).',
         'field_image' => 'Imagen (ruta)',
         'field_image_hint' => 'Ruta relativa a public/ (p. ej. images/attractions/attraction-01.jpg). La subida de ficheros llegará con la galería.',
+        'field_video' => 'Vídeo',
+        'field_video_hint' => 'Un plano VERTICAL (9:16) de 4 a 6 segundos, en MP4, hasta 12 MB. Con vídeo, la web le pone el botón de play y lo reproduce en grande; sin él, sale la foto, sin play. La foto sigue siendo la portada del vídeo.',
         'field_is_active' => 'Activa',
         'field_is_active_hint' => 'Si se desactiva, la atracción no aparece en la landing.',
         'field_is_special' => 'Destacada',

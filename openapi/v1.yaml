@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.29.0
+  version: 1.30.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -4124,6 +4124,14 @@ components:
                 type: string
                 format: uri
                 description: URL absoluta de la foto. Falta si la instalación no puso ninguna.
+              video_url:
+                type: string
+                format: uri
+                description: |
+                  URL absoluta del VÍDEO del juego (1.30.0): un plano vertical corto que la instalación sube en el
+                  panel. **Falta si no tiene**, y eso decide la cara: con vídeo lleva el botón de «play» y la foto
+                  es su portada; sin él, la foto va sola y SIN play (un triángulo sobre una foto promete un vídeo
+                  que no existe).
 
     Bar:
       type: object

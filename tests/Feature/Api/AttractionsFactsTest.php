@@ -5,6 +5,7 @@ namespace Tests\Feature\Api;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Content\Models\Attraction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 /**
@@ -201,6 +202,39 @@ class AttractionsFactsTest extends TestCase
         $this->getJson('/api/v1/attractions?lang=es')
             ->assertOk()
             ->assertJsonPath('attractions.0.image_url', asset('images/attractions/camas.webp'));
+    }
+
+    /**
+     * **El VÍDEO viaja como URL absoluta del hueco de la instalación, y sin él la clave FALTA** (1.30.0): es lo que
+     * decide si la web pinta el «play». ⚠️ A diferencia de la foto, es una SUBIDA (`uploads/`), no una ruta de
+     * `public/`: resolverlo como la foto daría una URL que no existe.
+     */
+    public function test_the_video_travels_from_the_uploads_and_is_absent_without_one(): void
+    {
+        $zona = $this->zona();
+        $this->juego($zona, ['name' => ['es' => 'Con vídeo'], 'image' => 'images/attractions/camas.webp', 'video' => 'atracciones/camas.mp4', 'position' => 1]);
+        $this->juego($zona, ['name' => ['es' => 'Sin vídeo'], 'image' => 'images/attractions/bolas.webp', 'position' => 2]);
+
+        $juegos = $this->getJson('/api/v1/attractions?lang=es')->assertOk()->json('attractions');
+
+        $this->assertSame(asset('uploads/atracciones/camas.mp4'), $juegos[0]['video_url']);
+        $this->assertArrayNotHasKey('video_url', $juegos[1]);
+    }
+
+    /** Cambiar o borrar el vídeo en el panel no deja el viejo en el disco: un vídeo pesa lo que cien fotos. */
+    public function test_replacing_or_deleting_the_video_removes_the_old_file(): void
+    {
+        Storage::fake(Attraction::VIDEO_DISK);
+        $disco = Storage::disk(Attraction::VIDEO_DISK);
+        $disco->put('atracciones/viejo.mp4', 'v');
+        $disco->put('atracciones/nuevo.mp4', 'n');
+        $juego = $this->juego($this->zona(), ['video' => 'atracciones/viejo.mp4']);
+
+        $juego->update(['video' => 'atracciones/nuevo.mp4']);
+        $this->assertFalse($disco->exists('atracciones/viejo.mp4'));
+
+        $juego->delete();
+        $this->assertFalse($disco->exists('atracciones/nuevo.mp4'));
     }
 
     /** El mismo respaldo que en el resto del menú: escrito solo en español, se sirve en inglés (`#671`). */

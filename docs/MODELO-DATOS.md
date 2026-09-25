@@ -77,7 +77,9 @@ modelo): el sello de `#288` congela el precio por edad al vender y un tramo lo m
 Relaciones: `hasMany Attraction` (ordenadas por `position`).
 
 ### `attractions` — atracción (Attraction)
-`zone_id` FK cascade · `name`/`description`/`age`/`badge` JSON i18n · `image` · `position` ·
+`zone_id` FK cascade · `name`/`description`/`age`/`badge` JSON i18n · `image` (ruta de `public/`) · `video`
+(2026-09-26, nullable: ruta dentro del disco `uploads`, la SUBE el panel; con él la web pone el «play» —`videoUrl()`,
+`video_url` de `/attractions`—; `booted()` borra el fichero viejo al cambiarlo o borrar la fila) · `position` ·
 `is_active` · `is_special` (resalte visual, no implica pago) ·
 `ticket_type_id` FK nullable `nullOnDelete` → vincula la atracción a un **complemento
 vendible** (`TYPE_ADDON`): si `Attraction::complementIsPurchasable()` (addon activo+vendible,

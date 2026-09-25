@@ -1223,6 +1223,14 @@ juzga «idéntico», con los datos del diseño.
     1280 y 390: el panel con sus cuatro finalidades apagadas, encender «Mapa y reseñas» → POST 200, «Guardado» y el mapa
     de «dónde y cuándo» cargado; menú y pie → «Tus cookies»; consola limpia. `pagina.test.js` +2. El panel va
     DIFERIDO (su trozo, 4,74 KiB, llega al abrirlo): estático, la isla en reposo y la compra pasaban sus techos.
+  - ▶ **·5 🟦 (26-09, el owner: «falta el botón de play en las atracciones»)**: el triángulo va SOLO sobre un vídeo de
+    verdad (`ClipTile.jsx`), así que el play llega con el DATO: `attractions.video` (ruta del disco `uploads`), su
+    subida en el panel («Vídeo», MP4/WebM hasta 12 MB, el tope de Livewire), `video_url` en `/attractions` (contrato
+    **1.30.0**) y, en la instancia, la tarjeta con el círculo de cristal y su triángulo, la miniatura de la lista con el
+    suyo y el visor que lo reproduce (con sonido o, si el navegador no deja, en silencio; un toque pausa; pasar o cerrar
+    lo para). En vivo a 1280 y 390 con una muestra en «Piscina de bolas» (Kids, LOCAL). ⚠️ La sonda usa Chromium sin
+    H.264: prueba con WebM; los navegadores de verdad reproducen el MP4 que pide el panel. Falta el MATERIAL: los 4
+    vídeos verticales de 4–6 s del brief, que sube el owner.
 - ▶▶ **LA VERIFICACIÓN FINAL de Kids y Jump (25-09, `#768`): 40 de 40 a 0 píxeles** contra el mockup del 25-09 —cada
   pieza en reposo a 390 y 1280, sin estados, ~5 min—. Cazó un defecto del port del zip: el margen del icono del parking
   iba al `svg` y `<x-lucide>` pinta una `<span>` que lo envuelve (instancia `d1114ad`). La isla, 60/60 en su banco; la

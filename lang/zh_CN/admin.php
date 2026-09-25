@@ -2931,6 +2931,8 @@ return [
         'field_position_hint' => '在所属区域内的显示顺序（数字小的在前）。',
         'field_image' => '图片（路径）',
         'field_image_hint' => '相对于 public/ 的路径（如 images/attractions/attraction-01.jpg）。文件上传将随图库功能一起推出。',
+        'field_video' => '视频',
+        'field_video_hint' => '竖版（9:16）4 至 6 秒的短片，MP4 格式，不超过 12 MB。有视频时，网站会显示播放按钮并放大播放；没有视频时只显示图片，不带播放按钮。图片仍作为视频封面。',
         'field_is_active' => '启用',
         'field_is_active_hint' => '停用后该设施不在落地页显示。',
         'field_is_special' => '特色',

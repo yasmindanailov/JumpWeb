@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\Attractions\Schemas;
 
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Content\Models\Attraction;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -61,6 +63,22 @@ class AttractionForm
                             ->label(__('admin.attractions.field_image'))
                             ->helperText(__('admin.attractions.field_image_hint'))
                             ->maxLength(255)
+                            ->columnSpanFull(),
+                        /*
+                         * EL VÍDEO (el owner, 25-09: el «play» de las atracciones). Con él, la web pone el triángulo de
+                         * «play» y el visor lo reproduce; sin él, la foto va sin play (`ClipTile.jsx`: un triángulo sobre
+                         * una foto promete un vídeo que no existe). Un plano VERTICAL y corto (4–6 s del brief).
+                         * ⚠️ 12 MB: el tope de la subida temporal de Livewire, que es quien la recibe; subirlo es tocar
+                         * su configuración Y el servidor, así que el formulario lo dice en vez de fallar después.
+                         */
+                        FileUpload::make('video')
+                            ->label(__('admin.attractions.field_video'))
+                            ->helperText(__('admin.attractions.field_video_hint'))
+                            ->disk(Attraction::VIDEO_DISK)
+                            ->directory('atracciones')
+                            ->visibility('public')
+                            ->maxSize(12288)
+                            ->acceptedFileTypes(['video/mp4', 'video/webm'])
                             ->columnSpanFull(),
                         Toggle::make('is_active')
                             ->label(__('admin.attractions.field_is_active'))

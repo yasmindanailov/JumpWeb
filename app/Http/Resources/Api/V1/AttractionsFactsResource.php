@@ -63,6 +63,8 @@ class AttractionsFactsResource extends JsonResource
                     'age' => $this->texto($juego, 'age'),
                     'badge' => $this->texto($juego, 'badge'),
                     'image_url' => $juego->imageUrl(),
+                    // El VÍDEO (1.30.0): con él, quien pinta pone el «play»; sin él, la clave falta y la foto va sola.
+                    'video_url' => $juego->videoUrl(),
                 ], fn (?string $valor): bool => $valor !== null && $valor !== ''),
             ])->all(),
         ];

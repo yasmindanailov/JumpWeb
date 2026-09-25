@@ -6,10 +6,17 @@ use App\Domain\Booking\Models\Zone;
 use App\Domain\Platform\Concerns\HasTranslations;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Storage;
 
 class Attraction extends Model
 {
     use HasTranslations;
+
+    /**
+     * Disco del VÍDEO de la atracción: `public/uploads`, el hueco de la instalación (gitignorado y fuera del
+     * `rsync --delete`), el mismo que la foto de la ficha del producto (`TicketType::IMAGE_DISK`).
+     */
+    public const VIDEO_DISK = 'uploads';
 
     protected $guarded = [];
 
@@ -59,6 +66,39 @@ class Attraction extends Model
         $ruta = trim((string) ($this->image ?? ''));
 
         return $ruta === '' ? null : asset($ruta);
+    }
+
+    /**
+     * **URL pública del VÍDEO de la atracción, o `null` si no tiene** (el owner, 25-09: el «play» de las atracciones).
+     *
+     * ⚠️ Al revés que la foto, el vídeo SÍ es una subida del panel: vive en el disco `uploads` y se resuelve como la foto
+     * de la ficha del producto (`asset('uploads/'.…)`, que el servidor web sirve de forma nativa sin el symlink de
+     * `public/storage`). Con él, la web pone el triángulo de «play»; sin él, la foto va sin play (`ClipTile.jsx`).
+     */
+    public function videoUrl(): ?string
+    {
+        $ruta = trim((string) ($this->video ?? ''));
+
+        return $ruta === '' ? null : asset('uploads/'.$ruta);
+    }
+
+    protected static function booted(): void
+    {
+        /*
+         * La limpieza de huérfanos del vídeo, la misma que la foto de la ficha (`TicketType::booted()`): `FileUpload`
+         * sube el nuevo y NO borra el viejo, y un vídeo pesa lo que cien fotos.
+         */
+        static::updating(function (self $juego): void {
+            if ($juego->isDirty('video') && ($anterior = $juego->getOriginal('video'))) {
+                Storage::disk(self::VIDEO_DISK)->delete($anterior);
+            }
+        });
+
+        static::deleted(function (self $juego): void {
+            if ($juego->video) {
+                Storage::disk(self::VIDEO_DISK)->delete($juego->video);
+            }
+        });
     }
 
     /*

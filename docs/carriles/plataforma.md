@@ -47,7 +47,8 @@ dibujada con el sistema); verificación final 40/40 y banco de la isla 60/60 a 0
 un zip nuevo se lee con el `git diff`. **El encargo del owner del 25-09, en este orden**: (1) **PROMOCIONES 🟦 T1 en el
 árbol** (`specs/promociones.md` §8: modelo, «Ajustes → Venta → Promociones», hecho `promotions` 1.29.0, los regalos
 migrados con `gifts` idéntico, Kids y Jump; le falta el OJO del owner; en LOCAL quedan dos ofertas de muestra) → (2) el
-**play** de los vídeos de las atracciones → (3) las **reseñas elegidas a mano** por página (tomadas y
+**play** de los vídeos de las atracciones 🟦 (spec §4.12 T4e·5: vídeo por atracción subido en el panel, 1.30.0; falta
+el MATERIAL del owner; en LOCAL, una muestra WebM en «Piscina de bolas») → (3) las **reseñas elegidas a mano** por página (tomadas y
 ordenadas por mí; sin raspar Google) → (4) **T5 Mi cuenta**, dentro de la v2 → T4f la sonda → portada, Cumpleaños,
 Colegios; Visítanos y Normas cuando el owner las cierre. **La FIESTA la viste el SPA** (`#765`). Nota de Google en
 LOCAL: sembrada a mano (4,9 / 155).
