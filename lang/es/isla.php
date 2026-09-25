@@ -21,6 +21,8 @@ return [
         'abierto_con_huecos' => 'Abierto hasta las :hora. Quedan huecos.',
         'completo' => 'Hoy está completo. Mira mañana.',
         'cerrado' => 'Abrimos mañana a las :hora.',
+        // Situación 15, las páginas que no venden (Visítanos, Normas): el horario de hoy, entero y sin punto.
+        'apoyo' => "Hoy abrimos de :abre\u{00A0}a\u{00A0}:cierra",
     ],
     'pago' => [
         'no_cobrado' => 'No se ha cobrado nada.',

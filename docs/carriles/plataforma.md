@@ -3,8 +3,8 @@
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 EN CURSO** (su centena,
-> `decisiones/700-799.md`) · Último usado: **`#767`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#767`) · Actualizado: **2026-09-25**
+> `decisiones/700-799.md`) · Último usado: **`#768`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#768`) · Actualizado: **2026-09-25**
 > tarde (la T4d cerrada; la fiesta pasa al SPA, `#765`; llega un zip nuevo del owner).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
 > llévaselo con la medida, como el SPA en `#724`).
@@ -45,9 +45,9 @@
 piezas y el pie a 0 px, `/kids` y `/jump` ENTERAS con los hechos en es/en/fr) y **T4d ✅** (la calculadora EN VIVO:
 «Reservar y pagar» → «Tus datos», `scripts/sonda-calculadora.mjs`; le falta el ojo del owner). Esperan al SPA la
 T4a·2 y ·3 y la **T4b·4**: el layout nuevo lleva el `<body>` DESNUDO (medido: sin aviso de cookies, analítica ni
-píxeles), así que **sin ella las páginas nuevas no salen a producción**. ▶ **PRIMERO, el ZIP NUEVO del owner**:
-`diseno/actualizar.py` → `tema/construir-hoja.py` → los bancos (isla, piezas, compra, entradas) ANTES de seguir; lo
-que cambie se porta, y el repo de la instancia se EMPUJA (el SPA lee de ahí, `#765`). → T4e la isla viva (con ella,
+píxeles), así que **sin ella las páginas nuevas no salen a producción**. ✅ El zip del 25-09, dentro y portado (spec
+§4.11, «en lo construido»). ⚠️ **`#768`: sin bancos por tanda; la identidad se verifica UNA vez al final de cada
+página, ligera**, y un zip nuevo se lee con el `git diff`. «Dónde y cuándo» y el pie, a esa verificación. → T4e la isla viva (con ella,
 «Hoy, 1 hora cuesta…» y «Reservar para hoy»: el owner ESPERA a la isla) → T4f la sonda → la portada, Cumpleaños y el
 resto de la T6; la forma de VÍDEO de las atracciones, cuando haya vídeos. **La FIESTA la viste el SPA** (`#765`).
 Nota de Google en LOCAL: sembrada a mano (4,9 / 155, la clave da 403 aquí).
@@ -243,7 +243,7 @@ dueño es el carril de la web/reseñas—) ·
   puede), pídelo aquí antes. ▶ Y mi **T4b·4** espera tu visto bueno (la petición (2), abajo): sin ella las páginas
   nuevas no salen a producción.
   ▶▶ **Al día (25-09 tarde), en la misma spec**: el **zip del 25-09** NO toca la fiesta (medido; instancia
-  `52f6fac`) · ⚠️ **`#767`: el diseño SOLO del mockup**; los briefs (instancia, `docs/estrategia/`, `feb6d1a`)
+  `52f6fac`) · ⚠️ **`#768`: sin banco por tanda, una verificación ligera al final** · ⚠️ **`#767`: el diseño SOLO del mockup**; los briefs (instancia, `docs/estrategia/`, `feb6d1a`)
   son referencia para algunos casos, nunca fuente · y **`#766`**, contestadas por el owner: quien cumple es UNO del número, el asunto de «Fiesta
   reservada» va sin nombre, y un solo plazo (el de hoy, 24 h) para la lista y el número.
 - ▶▶ **24-09 · T3d HECHA (`#691`) en tus ficheros, con el visto bueno del owner.** La secuencia de compra

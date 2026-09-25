@@ -176,16 +176,28 @@ const EXTERNOS = /^https:\/\/(fonts\.googleapis\.com|fonts\.gstatic\.com|unpkg\.
 const memoria = new Map();
 async function servirExternos(context) {
     await context.route(EXTERNOS, async (route) => {
-        const url = route.request().url();
-        if (!memoria.has(url)) {
-            const r = await route.fetch();
-            // El cuerpo ya viene descomprimido: sus cabeceras de compresión y longitud mentirían.
-            const headers = Object.fromEntries(Object.entries(r.headers()).filter(([k]) => !['content-encoding', 'content-length'].includes(k)));
-            memoria.set(url, { status: r.status(), headers, body: await r.body() });
+        try {
+            const url = route.request().url();
+            if (!memoria.has(url)) {
+                const r = await route.fetch();
+                // El cuerpo ya viene descomprimido: sus cabeceras de compresión y longitud mentirían.
+                const headers = Object.fromEntries(Object.entries(r.headers()).filter(([k]) => !['content-encoding', 'content-length'].includes(k)));
+                memoria.set(url, { status: r.status(), headers, body: await r.body() });
+            }
+            const c = memoria.get(url);
+            await route.fulfill({ status: c.status, headers: c.headers, body: c.body });
+        } catch (e) {
+            // ⚠️ Medido el 25-09: con el diseño nuevo, la isla pide un icono de la CDN DESPUÉS de la captura, y el
+            // contexto ya cerrado tumbaba el proceso entero a mitad del lote. Solo eso se calla; lo demás, sube.
+            if (!/closed/i.test(String(e && e.message))) throw e;
         }
-        const c = memoria.get(url);
-        await route.fulfill({ status: c.status, headers: c.headers, body: c.body });
     });
+}
+
+/** Cierra un contexto sin dejar rutas en vuelo (lo que pide Playwright para no romper con una petición tardía). */
+async function cerrar(context) {
+    await context.unrouteAll({ behavior: 'ignoreErrors' });
+    await context.close();
 }
 
 async function capturar(navegador, ajustes, url, completa, clics = [], pasar = null) {
@@ -227,7 +239,7 @@ async function capturar(navegador, ajustes, url, completa, clics = [], pasar = n
         }));
     }
     const png = await page.screenshot({ animations: 'disabled', caret: 'hide' });
-    await context.close();
+    await cerrar(context);
     return png;
 }
 
@@ -299,7 +311,7 @@ async function juzgar(navegador, { nombre, a, b, viewport, completa, clics = [],
         console.log(`✗ ${etiqueta}: ${e.message.split('\n')[0]}`);
         return false;
     } finally {
-        await context.close();
+        await cerrar(context);
     }
 }
 

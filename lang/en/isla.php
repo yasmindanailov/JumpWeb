@@ -20,6 +20,7 @@ return [
         'abierto_con_huecos' => 'Open until :hora. Spots left.',
         'completo' => 'Today is full. Try tomorrow.',
         'cerrado' => 'We open tomorrow at :hora.',
+        'apoyo' => "Open today from :abre\u{00A0}to\u{00A0}:cierra",
     ],
     'pago' => [
         'no_cobrado' => 'Nothing has been charged.',

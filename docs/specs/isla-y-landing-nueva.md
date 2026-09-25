@@ -798,11 +798,12 @@ ordenador y en paralelo con la web pública. Lo que necesita para empezar, medid
   comprueba con `cd diseno && sha256sum -c --quiet playjump-design-system.sha256`. ⚠️ El zip entra SOLO por el
   ordenador de plataforma (`diseno/actualizar.py`) y llega con un `git pull` del repo de la instancia: nunca se
   pone a mano en el otro.
-- **El método** (el de la T1→T4, `#685`): el banco A/B con `scripts/pixel.mjs` (`--rehacer --reloj`, a 390 y
-  1280) → 0 píxeles. A = la ficha del diseño con sus datos de prueba; B = nuestra página con los MISMOS datos. Los
-  modelos que ya existen: `scripts/banco-entradas.php` (JSX con Babel contra Blade, con estados pulsados por pieza:
-  `clics` y `pasar`) y `scripts/banco-isla.php` (contra Vue). Cada tanda con su CONTROL: una mutación de 1 px tiene
-  que tumbar sus pares. Las trampas del juez, en `TESTING.md` §2.octies.
+- **El método**: ⚠️ **`#768` (owner, 25-09): se construye sin banco por tanda y la identidad se verifica UNA vez,
+  al final de cada página y ligera** (piezas en reposo a 390 y 1280, sin estados ni reintentos salvo lo que falle).
+  La herramienta es el banco A/B con `scripts/pixel.mjs` (`--rehacer --reloj`) → 0 píxeles: A = la ficha del
+  diseño con sus datos de prueba; B = nuestra página con los MISMOS datos. Los modelos: `scripts/banco-entradas.php`
+  (JSX con Babel contra Blade) y `scripts/banco-isla.php` (contra Vue). Controles (mutantes), solo en dinero, aforo o
+  seguridad. Las trampas del juez, en `TESTING.md` §2.octies.
 - **Dónde viven, recomendación técnica a medir en su T0** (`#630`): en el PRODUCTO, como la isla (`#682`), porque
   son funciones de toda instalación con fiestas y «la mecánica viene decidida del sistema». La estructura va en el
   producto con roles genéricos de valor neutro, y los valores de PlayJump van en una hoja de la instancia cargada tras
@@ -828,6 +829,22 @@ ordenador y en paralelo con la web pública. Lo que necesita para empezar, medid
   (c) **`#766`**, contestadas por el owner: quien cumple es UNO del número (ocupa aforo y se cobra; el diseño ya lo
   dibuja así), el asunto de «Fiesta reservada» va SIN nombre, y hay UN solo plazo para la lista y el número, el que
   ya existe (`packs.guest_count_cutoff_hours`, 24 h), con el suyo en cada extra.
+
+▶▶ **El zip del 25-09 en lo construido** (instancia `52f6fac`). El `git diff` dio 11 componentes cambiados; los bancos
+(la última vez con el método de `#685`) dijeron cuáles mueven lo que pintamos: **antes del port**, Kids y Jump 95/170
+(fallaban las dudas, la calculadora, «dónde y cuándo» y el pie), la isla 48/48 (el juez se CAYÓ: una petición a la CDN
+en vuelo con el contexto cerrado; arreglado en `pixel.mjs` con `unrouteAll` antes de cerrar), las piezas 25/25 y la
+compra 52/54 («entrar», `#695`: sin cambio). **Portado**: en la instancia `accordion` (la pista baja bajo la pregunta),
+`opening-hours` (las horas marcadas solas en mono dentro de la frase, el rango sin partirse —la expresión del diseño,
+más en/fr y el espacio duro—, la línea de hoy con su parte viva en su renglón, filas `closed`), `park-location`
+(`<address>`, el mapa como atajo a la ruta fuera del teclado, el parking antes del botón y partible, «Cómo llegar» en
+otra pestaña) y la nota partible de `proof-list`; en la isla, el contador que envuelve, la **situación 15** (páginas de
+apoyo, `hoy.apoyo` en es/en/fr) y el cálculo con alerta (`situacion.test.js` +2). **Después del port**: la isla 60/60
+(con tres situaciones nuevas en `tema/isla-situaciones.json`) y Kids y Jump 65/65 hasta cortar la pasada por `#768`
+(la calculadora y las dudas, de vuelta a 0); «dónde y cuándo» y el pie, a la verificación final. **Sin portar, nacen
+con su consumidor**: `QuantityStepper editable`, `ShareRow download`, `RateTable sm`, `CTABand` sin botón y con
+`link`, la oferta de `ProofList`, `OpeningHours` `lg`/`specialNote`/`exceptions`, `VideoHero today`, `StepsPanel`,
+`DocPreview` y `NextDays` (Colegios, Visítanos, la portada).
 
 ### 4.12 La T4: Kids y Jump — el censo (MEDIDO 24-09) y el plan
 

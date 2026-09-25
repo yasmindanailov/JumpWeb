@@ -59,11 +59,12 @@ const poner = (n) => emit('update:modelValue', acotar(n, props.min, props.max));
             >{{ sublabel }}</span>
         </div>
         <!-- Envuelve: con el precio al lado, la fila pide ~395px y en un móvil de 390 estiraba la página; si no
-             cabe, precio y botones bajan juntos debajo de la etiqueta, a la derecha. -->
-        <div :style="{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)', marginLeft: 'auto' }">
+             cabe, precio y botones bajan juntos debajo de la etiqueta, a la derecha; y si tampoco caben juntos, el
+             precio sube encima de los botones (diseño del 25-09). -->
+        <div :style="{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'flex-end', gap: 'var(--space-2) var(--space-4)', marginLeft: 'auto', minWidth: 0, maxWidth: '100%' }">
             <span
                 v-if="price"
-                :style="{ fontFamily: 'var(--font-mono)', fontSize: 'var(--fs-body-sm)', fontWeight: 500, color: 'var(--text-strong)', whiteSpace: 'nowrap' }"
+                :style="{ fontFamily: 'var(--font-mono)', fontSize: 'var(--fs-body-sm)', fontWeight: 'var(--fw-medium)', color: 'var(--text-strong)', whiteSpace: 'nowrap' }"
             >{{ price }}</span>
             <ControlesCantidad
                 v-bind="controles"

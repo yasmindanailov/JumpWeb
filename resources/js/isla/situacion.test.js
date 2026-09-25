@@ -14,7 +14,7 @@ const m = {
         manual: 'O lo reservamos nosotros y pagas por Bizum' },
     hoy: { antes: 'Hoy abrimos a las :hora.', antes_con_huecos: 'Hoy abrimos a las :hora. Quedan huecos esta tarde.',
         abierto: 'Abierto hasta las :hora.', abierto_con_huecos: 'Abierto hasta las :hora. Quedan huecos.',
-        completo: 'Hoy está completo. Mira mañana.', cerrado: 'Abrimos mañana a las :hora.' },
+        completo: 'Hoy está completo. Mira mañana.', cerrado: 'Abrimos mañana a las :hora.', apoyo: 'Hoy abrimos de :abre a :cierra' },
     pago: { no_cobrado: 'No se ha cobrado nada.' },
 };
 
@@ -56,6 +56,29 @@ describe('qué dice la isla', () => {
         const cerrado = resolverSituacion({ page: pagina, today: hoy('cerrado') }, m);
         assert.equal(cerrado.line, 'Abrimos mañana a las 16:30.');
         assert.equal(cerrado.tone, 'neutral', 'Cerrado no es algo vivo.');
+    });
+
+    test('una página que no vende (situación 15): el horario de hoy entero y SU acción, nunca «Reservar para hoy»', () => {
+        const apoyo = { kind: 'apoyo', action: { label: 'Reservar', panel: 'plan' } };
+        const s = resolverSituacion({ page: apoyo, today: hoy('antes') }, m);
+        assert.equal(s.id, 'hoy');
+        assert.equal(s.line, 'Hoy abrimos de 16:30 a 21:30', 'El rango con espacio duro: no se parte.');
+        assert.equal(s.tone, 'live', 'Con huecos, vivo.');
+        assert.deepEqual(s.action, apoyo.action, 'El selector ya ofrece «Para hoy»: la acción no cambia.');
+        assert.equal(resolverSituacion({ page: apoyo, today: hoy('abierto', false) }, m).tone, 'neutral');
+        assert.equal(resolverSituacion({ page: apoyo, today: hoy('completo') }, m).tone, 'neutral', 'Completo no es vivo.');
+        const cerrado = resolverSituacion({ page: apoyo, today: hoy('cerrado') }, m);
+        assert.equal(cerrado.line, 'Abrimos mañana a las 16:30.', 'Cerrado, «Hoy abrimos…» no sería verdad.');
+        assert.equal(cerrado.tone, 'neutral');
+    });
+
+    test('un cálculo con aviso se dice en alerta y no abre el resumen; sin aviso, neutro y lo abre', () => {
+        const con = resolverSituacion({ page: pagina, quote: { text: 'Faltan 2 niños para el mínimo', alert: true } }, m);
+        assert.equal(con.tone, 'alert');
+        assert.equal(con.opens, null);
+        const sin = resolverSituacion({ page: pagina, quote: { text: '10 niños · 169,50 €' } }, m);
+        assert.equal(sin.tone, 'neutral');
+        assert.equal(sin.opens, 'resumen');
     });
 
     test('con un botón de la página a la vista, la isla cede la acción y «hoy» no la resucita', () => {

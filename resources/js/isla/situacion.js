@@ -15,6 +15,14 @@ import { t, tp } from '../sidebar/i18n.js';
 /** «Hoy» (situación 3): la frase y, si quedan huecos, «Reservar para hoy». */
 function leerHoy(p, act, m) {
     const hoy = p.today;
+    // Situación 15 · las páginas que no venden (`kind: 'apoyo'`: Visítanos, Normas): el horario de hoy, entero, y
+    // la acción de la página. «Quedan huecos» y «Reservar para hoy» son de la situación 3: aquí el selector ya
+    // ofrece «Para hoy» si hay huecos. Cerrado hoy, «Hoy abrimos…» no sería verdad y va la frase de cerrado.
+    if (p.page.kind === 'apoyo') {
+        if (hoy.state === 'cerrado') return { line: tp(m, 'hoy.cerrado', { hora: hoy.opensAt }), tone: 'neutral', action: act };
+        return { line: tp(m, 'hoy.apoyo', { abre: hoy.opensAt, cierra: hoy.closesAt }),
+            tone: hoy.slots && hoy.state !== 'completo' ? 'live' : 'neutral', action: act };
+    }
     const antes = hoy.state === 'antes';
     const abierto = hoy.state === 'abierto';
     const line = antes
@@ -54,8 +62,9 @@ const REGLAS = [
     { id: 'elegido', when: (p) => p.chosen,
         read: (p, act, m) => ({ line: p.chosen.text, note: p.filling ? p.filling.text : null, noteTone: 'live',
             action: (p.chosen.widgetVisible || p.ctaVisible) ? null : { label: p.chosen.label || t(m, 'accion.pagar_senal'), onClick: p.chosen.onClick } }) },
+    // Un cálculo con aviso (`quote.alert`) se dice en alerta y no abre el resumen.
     { id: 'calculado', when: (p) => p.quote,
-        read: (p, act) => ({ line: p.quote.text, opens: 'resumen', action: act }) },
+        read: (p, act) => ({ line: p.quote.text, opens: p.quote.alert ? null : 'resumen', tone: p.quote.alert ? 'alert' : 'neutral', action: act }) },
     { id: 'hoy', when: (p) => p.today, read: leerHoy },
     { id: 'oferta', when: (p) => p.offer, read: (p) => ({ line: p.offer }) },
     { id: 'miedo', when: (p) => p.reassurance, read: (p) => ({ line: p.reassurance }) },

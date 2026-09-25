@@ -20,6 +20,7 @@ return [
         'abierto_con_huecos' => 'Ouvert jusqu’à :hora. Il reste des places.',
         'completo' => 'Aujourd’hui c’est complet. Voyez demain.',
         'cerrado' => 'Nous ouvrons demain à :hora.',
+        'apoyo' => "Ouvert aujourd’hui de :abre\u{00A0}à\u{00A0}:cierra",
     ],
     'pago' => [
         'no_cobrado' => 'Rien n’a été débité.',
