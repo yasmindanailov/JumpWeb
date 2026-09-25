@@ -58,7 +58,8 @@ class InvitationPageTest extends TestCase
 
         $response->assertOk()
             ->assertSee('Lucía')
-            ->assertSee('Cumple 8 años')
+            // La frase del brief, entera: «Lucía cumple 8 años y te invita a saltar» (`fiesta-sistema-nuevo.md` T2).
+            ->assertSee('cumple 8 años y te invita a saltar')
             ->assertSee('Te invita Marta');
 
         // ❗❗ Lo que NO puede estar: ni una respuesta de otro padre.
@@ -241,16 +242,16 @@ class InvitationPageTest extends TestCase
     }
 
     /**
-     * **El «Más info» de cada plato** (`[DECIDIDO owner, 2026-09-18]`): la MISMA pieza `<details>` que
-     * el post-form usa para sus complementos (`#416`), **sin una línea de JS** — que es la condición
-     * de esta página.
+     * **La merienda, por lo que es** (el diseño del 24-09; `fiesta-sistema-nuevo.md` T2, antes el `<details>` de
+     * `#416`): cada plato MARCADO y comprado es un grupo de `inv-merienda`, con su nombre de rótulo y sus detalles
+     * en línea, **sin una línea de JS** — que es la condición de esta página.
      *
-     * ⚠️⚠️ **Un plato SIN detalles no lleva desplegable**, y el caso lo comprueba con los dos a la vez:
-     * un `<details>` vacío se abre para no enseñar nada, que es peor que no ofrecerlo.
+     * ⚠️⚠️ **Un plato SIN detalles pinta solo su rótulo**, y el caso lo comprueba con los dos a la vez: una lista de
+     * cosas vacía sería un hueco con separadores huérfanos.
      *
      * ⚠️ Y `features` se lee normalizada: un campo traducible llega **como lista o como texto suelto**
      * según quién lo escribiera (la trampa de `#463`). El fixture usa **texto suelto** a propósito —
-     * leerlo a pelo devolvería las LETRAS de la cadena, una por viñeta.
+     * leerlo a pelo devolvería las LETRAS de la cadena, una por cosa.
      */
     public function test_a_dish_with_details_gets_the_systems_disclosure_and_one_without_does_not(): void
     {
@@ -262,19 +263,19 @@ class InvitationPageTest extends TestCase
         $html = $this->get(route(PartyInvitations::PUBLIC_ROUTE, ['token' => $invitation->token]))
             ->assertOk()
             ->assertSee('Pizza, patatas y bebida')
-            ->assertSee('Ver qué lleva')
             ->getContent();
 
-        $this->assertStringContainsString('<details class="gf-extra__more">', (string) $html, 'no usa la pieza del sistema');
-        // Una sola viñeta: el texto suelto NO se recorrió letra a letra.
-        $this->assertSame(1, substr_count((string) $html, '<li>Pizza, patatas y bebida</li>'));
+        $this->assertStringContainsString('data-invitation-menu', (string) $html, 'no está el bloque de la merienda');
+        $this->assertStringContainsString('<span class="rot">Menú Pizza</span>', (string) $html, 'el plato no es el rótulo de su grupo');
+        // Una sola cosa: el texto suelto NO se recorrió letra a letra.
+        $this->assertSame(1, substr_count((string) $html, '<span>Pizza, patatas y bebida</span>'));
 
-        // Y sin detalles, ningún desplegable.
+        // Y sin detalles, solo el rótulo: ninguna lista de cosas.
         TicketType::query()->where('name->es', 'Menú Pizza')->update(['features' => null]);
 
         $this->get(route(PartyInvitations::PUBLIC_ROUTE, ['token' => $invitation->token]))
             ->assertOk()
-            ->assertDontSee('<details class="gf-extra__more">', escape: false)
+            ->assertDontSee('class="cosas"', escape: false)
             ->assertSee('Menú Pizza');
 
         $this->assertNotNull($reservation->fresh());
@@ -286,21 +287,24 @@ class InvitationPageTest extends TestCase
     {
         [$reservation, $invitation] = $this->party();
 
+        // El desenlace es el RECIBO, directo (`#744`): una credencial firmada sobre SU respuesta, en la redirección.
         $this->post(route('invitation.reply', ['token' => $invitation->token]), [
             'child_name' => 'Hugo Ruiz', 'attending' => '1',
-        ])->assertRedirect();
+        ])->assertRedirectContains('/invitacion/recibo/');
 
         $this->assertSame(1, InvitationReply::query()->where('order_item_id', $reservation->id)->count());
         $this->assertTrue((bool) InvitationReply::query()->value('attending'));
 
-        // El desenlace viaja por flash y lo pinta el GET siguiente (POST-redirect-GET).
+        // Tras «No podemos», la misma tarjeta con «Gracias por avisar.» y quien lo verá, sin ficha (POST-redirect-GET).
         $this->followingRedirects()
             ->post(route('invitation.reply', ['token' => $invitation->token]), [
                 'child_name' => 'Lía Fernández', 'attending' => '0',
             ])
             ->assertOk()
-            ->assertSee('Gracias por avisar')
-            ->assertSee('Otra vez será');
+            ->assertSee('Gracias por avisar.')
+            ->assertSee('Marta lo verá en su lista.')
+            ->assertSee('data-receipt="no"', escape: false)
+            ->assertDontSee('data-receipt-fields', escape: false);
     }
 
     /**
@@ -326,25 +330,25 @@ class InvitationPageTest extends TestCase
                 ['child_name' => 'Hugo Ruiz', 'attending' => '1'])
             ->assertOk()->getContent();
 
-        // Se neutraliza lo que es PROPIO de cada padre —su nombre y la URL firmada de SU recibo— y se
-        // compara el resto del aviso.
+        // El desenlace es el RECIBO entero (`#744`). Se neutraliza lo que es PROPIO de cada padre —su nombre, el id
+        // y la firma de SU recibo (la URL de la ficha y la de la autorización atada)— y se compara TODO lo demás.
         //
-        // ⚠️⚠️ **Normalizar la URL no debilita la aserción, y conviene ver por qué**: si uno llevara
-        // recibo y el otro no, la diferencia seguiría ahí —uno tendría el `<a>` entero y el otro no—.
-        // Lo único que se tapa es el id y la firma, que son de quien contesta y no dicen nada sobre
-        // quién está en la lista. Sin esta normalización el caso salía ROJO por dos credenciales
-        // distintas, que es justo lo que TIENEN que ser.
-        $aviso = static fn (string $html): string => preg_match(
-            '#<div class="gf-notice[^"]*"[^>]*data-invitation-outcome="[^"]*">.*?</div>#s', $html, $m
-        ) ? preg_replace(
-            ['/Ana Gil|Hugo Ruiz/', '#/invitacion/recibo/\d+\?[^"]*#'],
-            ['NOMBRE', '/invitacion/recibo/RECIBO'],
-            $m[0]
-        ) : 'SIN AVISO';
+        // ⚠️⚠️ **Normalizar las credenciales no debilita la aserción, y conviene ver por qué**: si uno llevara
+        // ficha y el otro no, o una tarjeta distinta, la diferencia seguiría ahí. Lo único que se tapa es lo que es
+        // de quien contesta y no dice nada sobre quién está en la lista. Sin esta normalización el caso salía ROJO
+        // por dos credenciales distintas, que es justo lo que TIENEN que ser.
+        // ⚠️ Se compara lo que el padre VE (`<main>`), no el documento entero: Livewire inyecta sus estilos en la cabecera
+        // de UNA de las dos respuestas según qué corrió antes en la suite, y eso no es un desenlace.
+        $recibo = static fn (string $html): string => (string) preg_replace(
+            ['/Ana Gil|Hugo Ruiz|Ana(?:%20|\+)Gil|Hugo(?:%20|\+)Ruiz/', '#/invitacion/recibo/\d+\?[^"]*#', '/invitation_reply_id=\d+/', '/(signature|expires)=[^&"]+/', '/name="_token" value="[^"]+"/'],
+            ['NOMBRE', '/invitacion/recibo/RECIBO', 'invitation_reply_id=N', '$1=X', 'name="_token" value="T"'],
+            preg_match('#<main class="inv">.*?</main>#s', $html, $m) ? $m[0] : 'SIN PÁGINA'
+        );
 
+        $this->assertStringContainsString('data-receipt="si"', (string) $nuevo, 'el desenlace no es el recibo');
         $this->assertSame(
-            $aviso((string) $conocido),
-            $aviso((string) $nuevo),
+            $recibo((string) $conocido),
+            $recibo((string) $nuevo),
             'el desenlace distingue quién está en la lista: es un oráculo de pertenencia'
         );
         $this->assertStringContainsString('Contamos con vosotros', (string) $nuevo);
@@ -373,7 +377,8 @@ class InvitationPageTest extends TestCase
         $this->get(route(PartyInvitations::PUBLIC_ROUTE, ['token' => $invitation->token]))
             ->assertOk()
             ->assertSee('Lucía')
-            ->assertSee('El plazo para confirmar ya ha pasado')
+            // La barra se queda con su línea, que nombra a quien organiza por su nombre de pila (`#744`).
+            ->assertSee('El plazo pasó: habla con Marta.')
             ->assertDontSee('name="child_name"', escape: false);
     }
 
@@ -388,7 +393,8 @@ class InvitationPageTest extends TestCase
 
         $this->get(route(PartyInvitations::PUBLIC_ROUTE, ['token' => $invitation->token]))
             ->assertOk()
-            ->assertSee('quien organiza la fiesta')
+            // Quién lo ve, por su nombre (`#744`): un tercero, el anfitrión; y cuándo se borra.
+            ->assertSee('Marta verá el nombre de tu hijo')
             ->assertSee('14 días')
             ->assertSee(route('legal.privacidad'), escape: false)
             // Sin casilla: el consentimiento no se pide con un checkbox aquí.

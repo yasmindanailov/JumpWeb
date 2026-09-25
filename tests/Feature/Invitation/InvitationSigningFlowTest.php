@@ -76,7 +76,8 @@ class InvitationSigningFlowTest extends TestCase
         $html = (string) $this->get(app(PartyInvitations::class)->receiptUrl($reply))
             ->assertOk()->getContent();
 
-        $this->assertStringNotContainsString('invitation__go', $html, 'el recibo sigue ofreciendo firmar a quien ya firmó');
+        // ⚠️ La marca del botón es `data-receipt-firmar`, no `data-receipt-sign`: esa es SUBCADENA de `data-receipt-signed`.
+        $this->assertStringNotContainsString('data-receipt-firmar', $html, 'el recibo sigue ofreciendo firmar a quien ya firmó');
         $this->assertStringContainsString('data-receipt-signed', $html, 'el recibo no dice que ya está firmado');
     }
 

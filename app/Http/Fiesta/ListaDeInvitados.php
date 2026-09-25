@@ -503,11 +503,6 @@ final class ListaDeInvitados
      */
     private static function logo(array $site): array
     {
-        $svg = @filemtime(public_path('img/client-logo.svg'));
-
-        return [
-            'src' => $svg ? asset('img/client-logo.svg').'?v='.$svg : null,
-            'alt' => (string) ($site['name'] ?? config('app.name')),
-        ];
+        return Marca::logo($site);
     }
 }

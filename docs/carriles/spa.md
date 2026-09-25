@@ -2,11 +2,11 @@
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb` a secas; la instancia al lado, en
 > `~/proyectos/instancias/playjump`, clon de `github.com/yasmindanailov/instancia-playjump`, montada el 25-09) ·
-> Banda: **730–759** (700–729 agotada el 20-09) · Último usado: **`#743`** · La banda está dada de alta en la tabla de
+> Banda: **730–759** (700–729 agotada el 20-09) · Último usado: **`#744`** · La banda está dada de alta en la tabla de
 > `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: **`isla-y-landing-nueva.md`
 > §4.11 «El traspaso al SPA»** (la tarea en curso, `#765`) · `celebracion-e-invitacion.md` §0 · `waiver-por-reserva.md` §0 ·
 > `encuestas.md` §0 · `analitica-fiesta.md` §0 · `analitica.md` §0 y §4.5 · `google-business-profile.md` §0 ·
-> `sidebar-spa.md` §0 · Actualizado: 2026-09-25 (noche, la T1a de la fiesta en `main`).
+> `sidebar-spa.md` §0 · Actualizado: 2026-09-25 (noche, T1a y T2 de la fiesta en `main`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`). El
 > contador de la suite va en el trailer del commit (`#618`), no aquí. **Se muda, no se raspa**: el detalle de
 > una feature baja a su spec (las trampas por tanda de la analítica T1→T5 viven en `analitica.md` §4.9,
@@ -43,16 +43,16 @@
   (ruta DEL CONTENEDOR), `public/instancia/` copiado de `publico/instancia/` (ignorado por git), `laravel.test` RECREADO
   para que el montaje `../instancias` viera la carpeta nueva, `socat` repuesto, Chromium vivo, `optimize:clear`, 0
   migraciones pendientes; `/`, `/kids`, `/jump` y `/cumpleanos` en 200 y `/kids` carga `instancia/css/saltia.css`.
-- ✅ **T1a DE LA FIESTA EN `main` (25-09 noche)**: la lista con lo que HAY, portada 1:1 —el modelo de página
-  `app/Http/Fiesta/ListaDeInvitados`, `x-pagina-enfocada`, 12 piezas del núcleo (`components/pieza/`) + 7 de la fiesta
-  (`components/fiesta/`), las zonas de `views/fiesta/lista/`, `resources/js/fiesta/{fiesta.css,lista.js,logica.js}`,
-  `lang/*/fiesta.php`; `store()` personaliza la invitación con el único Guardar— con el banco de PIEZAS a **0 px en 46
-  pares** (390 y 1280) y control de 1 px, `PaletaNeutraTest` (cazó cuatro valores de PlayJump en los respaldos
-  «neutros»), `ListaDeInvitadosTest`, seis guardas de piel re-apuntadas; la hoja de PlayJump
-  `publico/instancia/css/fiesta.css` en el repo de la instancia (`a3da88c`). **La página viva YA SE VISTE con PlayJump**
-  (`#769` de plataforma: `InstanceViews::hojas('fiesta')` en `show()`): el ojo del owner puede pasar por
-  `localhost:8081`. Lo que enseñó: spec §4.7. ⚠️ **`#768` (owner)**: sin banco por tanda; la T1a ya venía con el suyo.
-  ▶ Sigue **T1b**: la pasada ligera de la página (un par por ventana) y el ojo del owner.
+- ✅ **LA FIESTA DEL SISTEMA NUEVO: T1a y T2 EN `main` (25-09 noche)**. **T1a**, la lista con lo que HAY, portada 1:1
+  (`ListaDeInvitados`, `x-pagina-enfocada`, 12 piezas del núcleo + 7 de la fiesta, las zonas, la hoja con roles,
+  `lista.js`/`logica.js`, `lang/*/fiesta.php`): 46 pares a **0 px** con control, `PaletaNeutraTest` (cazó cuatro valores
+  de PlayJump en los respaldos «neutros»), seis guardas re-apuntadas; la hoja de PlayJump en el repo de la instancia
+  (`a3da88c`). **T2**, la invitación y su recibo con lo que HAY (**`#744`**: recibo directo tras contestar, nombre de
+  pila de la cuenta, descripción del pack): `InvitacionPagina`, `x-fiesta.rsvp-bar`, `views/fiesta/invitacion/*`,
+  `invitacion.js`, el bloque `.inv-*`; 24 h y caducado sin 403; idioma por `lang.switch`; «Su ficha» que se guarda sola;
+  sin «¿vas tú con él?». **Pasada ligera** (`#768`): viva y cerrada a 390 y 1280, **0 px** en los pares de diagnóstico y
+  4.566–5.082 px en los reales, todos en la línea de privacidad que el mockup no dibuja. Las páginas vivas se visten
+  con PlayJump (`#769`). Lo que enseñó: spec §4.7. ▶ Sigue **T3 la autorización** y el ojo del owner sobre las tres.
 - ✅ **LA ANALÍTICA, ENTERA (`#735`), T1→T7 en `main` y vista por el owner en vivo** (24 y 25-09): T2 (el cuadro), T3
   (consentimiento, driver, píxeles, `/cookies`), T4 (la 360, segmentos, opt-in), T5a·T5b (experimentos; **T5c decidida en
   `#738`**: sin mecanismo de textos, la hipótesis la nombra el owner tras la v2.0.0), **T6 la fiesta** (`#739`: *el invitado
@@ -91,11 +91,11 @@
 
 1. ❗❗❗ **LA FIESTA DEL SISTEMA NUEVO (`#765`) — `specs/fiesta-sistema-nuevo.md` ✅ APROBADA (`#743`, 25-09: las
    ocho respuestas en su §7; ❗ «Ver el parque» va ENCENDIDO con el vídeo de portada, no la recomendada)**. Orden:
-   T1a ✅ (25-09: las piezas a 0 px y la página viva vestida) → **T1b la pasada LIGERA de la lista** (`#768`: la
-   página en reposo a 390 y 1280, A `PliPagina` y B la Blade con el modelo mapeado desde el MISMO `datos.js`;
-   `FiestaModeloTest`; spec §4.4 y §4.6) y **el ojo del owner en `localhost:8081`** → **T2 la invitación y su
-   recibo** (sin banco por tanda; la pasada ligera al cerrarla) → **T3 la autorización** (ídem; ANTES, el censo de
-   campos contra los cuatro del brief) → **T4 retirar la piel vieja** (`.gf-*`, `.guardian__*`, `focused-layout` si
+   T1a ✅ · T2 ✅ (25-09: la lista y la invitación con lo que HAY; la invitación a 0 px en su pasada ligera) → **T3 la
+   autorización** (la pasada ligera al cerrarla, como `invitacion-viva` en `banco-fiesta.php`; ANTES, el censo de
+   campos contra los cuatro del brief) → **T1b la pasada LIGERA de la lista** (A `PliPagina`, B la Blade con el modelo
+   desde el MISMO `datos.js`) y **el ojo del owner en `localhost:8081`** (la lista de la 1076, `/invitacion/XezlOftP36QI`
+   y su recibo) → **T4 retirar la piel vieja** (`.gf-*`, `.guardian__*`, `focused-layout` si
    nadie lo usa, `cajon.css` regenerada; `CONVENCIONES §3.quater`) → **F1…Fn, lo que FALTA**, una pieza por tanda con la
    decisión del owner. Cada tanda: `git pull` de la instancia + `sha256sum -c`, el banco con control, las guardas de
    piel re-apuntadas o retiradas con su motivo, sonda de VENTANA de las tres y el ojo del owner en `localhost:8081`
@@ -125,8 +125,8 @@
 
 **La fiesta del sistema nuevo (`#765`)**: las tres páginas enfocadas —`resources/views/reservation/**`,
 `resources/views/invitation/**`, `focused-layout`, las clases `.gf-*` y `.guardian__*`, `lang/*/guestform.php`,
-`guardian.php`, `invitation.php`, `resources/js/guest-form/`— y lo nuevo (T1a): `app/Http/Fiesta/`,
-`resources/views/fiesta/**`, `components/{fiesta,pieza}/`, `components/pagina-enfocada.blade.php`,
+`guardian.php`, `invitation.php`, `resources/js/guest-form/`— y lo nuevo (T1a, T2): `app/Http/Fiesta/` (los modelos de
+página, `Temas`, `Marca`), `resources/views/fiesta/**`, `components/{fiesta,pieza}/`, `components/pagina-enfocada.blade.php`,
 `resources/js/fiesta/`, `lang/*/fiesta.php`, `tests/Feature/Fiesta/`, `scripts/banco-fiesta.php`, `mutar-fiesta.sh`;
 los valores de PlayJump, en `publico/instancia/` del repo de la instancia (se empuja allí, nunca a `main`). ⚠️ El
 mecanismo de «una vista del producto carga una hoja de la instancia» es de plataforma: se pide antes.

@@ -39,19 +39,27 @@ class InvitationReceiptTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** ❗❗ El plazo: dentro de dos horas abre; pasadas, la firma caduca y no hay página. */
-    public function test_the_receipt_lasts_two_hours_and_not_a_minute_more(): void
+    /**
+     * ❗❗ El plazo (`#743`·4, el diseño del 24-09): 24 horas abre; pasadas, la firma caduca y el recibo DEVUELVE a la
+     * invitación con su aviso en la barra («el recibo caduca a las 24 horas y la respuesta no se edita»). No es un
+     * 403: la invitación sigue sirviendo para la hora y el sitio. Una firma que no cuadra sí es 403 (el caso de abajo).
+     */
+    public function test_the_receipt_lasts_a_day_and_then_sends_back_to_the_invitation(): void
     {
-        [, , $reply] = $this->partyWithReply();
+        [, $invitation, $reply] = $this->partyWithReply();
         $url = app(PartyInvitations::class)->receiptUrl($reply);
 
-        $this->get($url)->assertOk()->assertSee('Contamos con Hugo Ruiz');
+        $this->assertSame(24, PartyInvitations::RECEIPT_HOURS);
+        $this->get($url)->assertOk()->assertSee('Contamos con vosotros')->assertSee('Contamos con Hugo Ruiz');
 
-        // A las dos horas y un minuto, la firma ya no vale. Lo para Laravel antes del controlador.
+        // A las 24 horas y un minuto, la firma ya no vale: de vuelta a la invitación, y se dice.
         $this->travel(PartyInvitations::RECEIPT_HOURS)->hours();
         $this->travel(1)->minutes();
 
-        $this->get($url)->assertForbidden();
+        $this->get($url)
+            ->assertRedirect(route(PartyInvitations::PUBLIC_ROUTE, ['token' => $invitation->token]))
+            ->assertSessionHas('invitation_status', 'expired');
+        $this->followingRedirects()->get($url)->assertOk()->assertSee('El recibo caduca a las 24 horas');
     }
 
     /**
@@ -134,32 +142,18 @@ class InvitationReceiptTest extends TestCase
     }
 
     /**
-     * ❗❗ **«Voy con él» no pide firma** (D4), y la pantalla tiene que decir lo mismo que el texto que
-     * el padre acaba de leer dos líneas antes. Hasta `#703` el botón de firmar se enseñaba con las
-     * tres opciones, así que la pantalla se contradecía a sí misma.
-     *
-     * ⚠️ Lo resuelve el CSS con `:has()` sobre el propio radio —esta página funciona entera **sin una
-     * línea de JS**—, así que lo que se comprueba aquí es que la REGLA existe y apunta a lo que dice:
-     * un test de servidor no puede observar un `display` calculado por el navegador.
+     * ❗ **«¿Vas tú con él?» ya no se pregunta** (`#743`·5, el diseño del 24-09): la autorización es una oferta sin
+     * pregunta y la puerta se queda con dos estados. El caso que vigilaba el `:has()` de `companion` (`#703`) se retiró
+     * con la pregunta; lo que se afirma ahora es que el recibo no la hace y sigue ofreciendo firmar.
      */
-    public function test_staying_with_the_child_hides_the_signing_button(): void
+    public function test_the_receipt_no_longer_asks_whether_the_parent_stays(): void
     {
-        $css = (string) file_get_contents(public_path('css/site.css'));
-
-        $this->assertStringContainsString(
-            '.gf-group:has(input[name="companion"][value="with_adult"]:checked) .invitation__go',
-            $css,
-            'la regla que esconde el botón de firmar con «voy con él» ya no está'
-        );
-
-        // Y el marcado que esa regla necesita: el radio y el botón dentro del mismo grupo.
         [, , $reply] = $this->partyWithReply();
         $html = (string) $this->get(app(PartyInvitations::class)->receiptUrl($reply))->assertOk()->getContent();
 
-        $this->assertTrue(
-            (bool) preg_match('#<div class="gf-group" data-receipt-companion>.*?value="with_adult".*?invitation__go.*?</div>#s', $html),
-            'el radio y el botón dejaron de estar en el mismo grupo: la regla ya no los alcanza'
-        );
+        $this->assertStringNotContainsString('name="companion"', $html, 'la pregunta volvió al recibo');
+        $this->assertStringContainsString('data-receipt-firmar', $html, 'sin la pregunta, la oferta de firmar tiene que seguir');
+        $this->assertStringContainsString('Firmarla no te compromete', $html, 'la frase que quita la duda va junto al botón');
     }
 
     /** Una respuesta que el anfitrión DESCARTÓ no se resucita por el recibo. */

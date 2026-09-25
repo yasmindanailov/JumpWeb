@@ -27,6 +27,7 @@
  * Con nombres de pieza al final, solo esas (`… http://127.0.0.1:8132 invitacion-confeti filas`).
  */
 
+use App\Http\Fiesta\Temas;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Support\Facades\Blade;
 
@@ -164,7 +165,7 @@ $piezas = [
 ];
 
 is_dir($salida) || mkdir($salida, 0775, true);
-foreach (['diseno' => realpath($diseno), 'assets' => realpath($diseno.'/assets'), 'instancia' => public_path('instancia'), 'fuente' => resource_path('js')] as $nombre => $destino) {
+foreach (['diseno' => realpath($diseno), 'assets' => realpath($diseno.'/assets'), 'instancia' => public_path('instancia'), 'fuente' => resource_path('js'), 'build' => public_path('build')] as $nombre => $destino) {
     if (! file_exists($salida.'/'.$nombre)) {
         symlink($destino, $salida.'/'.$nombre);
     }
@@ -223,6 +224,88 @@ HTML);
                 'completa' => true,
                 'clics' => $pasos['clics'] ?? [],
                 ...(isset($pasos['pasar']) ? ['pasar' => $pasos['pasar'], 'movimiento' => $pasos['movimiento']] : []),
+            ];
+        }
+    }
+}
+
+// ── LAS PÁGINAS: la pasada LIGERA (`#768`) — la invitación en reposo, con los datos del diseño a los dos lados ────────
+// A es el propio `paginas/invitacion.card.html` (la misma fuente, nunca una copia) con sus rutas apuntando al diseño
+// enlazado, en español y montando `InvPagina` sin la barra de pruebas; B es `fiesta.invitacion` con el modelo mapeado a
+// mano desde `invitacion/datos.js` (`FIESTA`, `T.es`, `P.es`), con el logotipo del diseño. Sin los bloques opcionales
+// (`opc=false`: sin merienda, palabras, pistas ni teléfono), que son dato que el producto aún no tiene (spec §1.4).
+// ⚠️ Se juzga la VENTANA (`completa: false`), no la página entera: el aviso de privacidad bajo la barra (spec hermana
+//    §7.2·R7) es del producto y el diseño no lo dibuja en la invitación. El recibo se juzga sin A hasta T3 (`AuthForm`).
+$card = (string) file_get_contents($diseno.'/paginas/invitacion.card.html');
+$paginas = ['invitacion-viva' => 'viva', 'invitacion-cerrada' => 'cerrada'];
+$textoFiesta = 'Dos horas saltando en su zona, con monitores, merienda y tarta. Los padres podéis quedaros en la cafetería o venir a recogerlos.';
+$modeloInvitacion = static fn (bool $abierta): array => [
+    'titulo_pagina' => 'Vera cumple 7 años y te invita a saltar · Play Jump Park',
+    'marca' => ['src' => '../assets/logo/logo-playjump.png', 'alt' => 'Play Jump Park'],
+    'idiomas' => ['actual' => 'es', 'actual_corto' => 'ES', 'lista' => [
+        ['clave' => 'es', 'corto' => 'ES', 'nombre' => 'Español', 'enlace' => '#es'],
+        ['clave' => 'en', 'corto' => 'EN', 'nombre' => 'English', 'enlace' => '#en'],
+        ['clave' => 'fr', 'corto' => 'FR', 'nombre' => 'Français', 'enlace' => '#fr'],
+    ]],
+    'tema' => ['clave' => 'confeti', 'tinte' => Temas::de('confeti')['tint'], 'acento' => Temas::de('confeti')['accent']],
+    'cumple' => ['nombre' => 'Vera', 'edad' => '7'],
+    'fecha' => 'Sábado 26 de septiembre',
+    'hora' => 'De 17:00 a 19:00',
+    'lugar' => 'Play Jump Park, Lorca',
+    'anfitrion' => ['linea' => 'Lucía, la madre de Vera', 'nombre' => 'Lucía', 'telefono' => '', 'tel' => ''],
+    'enlaces' => ['mapa' => 'https://www.google.com/maps/search/?api=1&query=Play+Jump+Park+Lorca', 'calendario' => '#calendario', 'ics' => 'cumple-vera.ics'],
+    'texto' => [$textoFiesta],
+    'merienda' => [],
+    'merienda_alergias' => '¿Alergias o menú especial? Lo apuntas al contestar, y lo ven Lucía y los monitores.',
+    'respuestas' => ['abiertas' => $abierta, 'plazo' => 'Confirma antes del viernes 25 a las 17:00.', 'accion' => '#contestar', 'cerrado' => 'El plazo pasó: habla con Lucía.', 'error' => ''],
+    'aviso' => null,
+    'turnstile' => ['activo' => false, 'clave' => '', 'rotulo' => ''],
+    'og' => ['sitio' => 'Play Jump Park', 'title' => '', 'description' => '', 'image' => null, 'width' => null, 'height' => null],
+    'privacidad' => ['texto' => 'Lucía verá el nombre de tu hijo, su edad y sus alergias para organizar la fiesta; el parque, para atenderle. Lo borramos a los 14 días de la fiesta.', 'politica' => 'Política de privacidad', 'enlace' => '#privacidad'],
+    'recibo' => null,
+];
+foreach ($paginas as $nombre => $estado) {
+    if ($solo !== [] && ! in_array($nombre, $solo, true)) {
+        continue;
+    }
+    // A: la ficha del diseño, tal cual, con sus rutas al diseño enlazado y el montaje de la página en reposo.
+    $a = str_replace(
+        ['"../styles.css"', '"invitacion/datos.js"', '"invitacion/invitacion.css"', '"invitacion/vistas.jsx"', '"../components/', '"../_ds_bundle.js"'],
+        ['"../diseno/styles.css"', '"../diseno/paginas/invitacion/datos.js"', '"../diseno/paginas/invitacion/invitacion.css"', '"../diseno/paginas/invitacion/vistas.jsx"', '"../diseno/components/', '"../diseno/_ds_bundle.js"'],
+        $card,
+    );
+    $montaje = 'localStorage.setItem("pj-invitacion-idioma", JSON.stringify("es")); localStorage.removeItem("pj-invitacion-respuestas"); '
+        .'window.invCargar(FUENTES).then(() => ReactDOM.createRoot(document.getElementById("root")).render(<InvPagina estado="'.$estado.'" tema="confeti" opc={false} foto={false} />));';
+    $a = (string) preg_replace('/window\.invCargar\(FUENTES\)\.then\(\(\) => ReactDOM\.createRoot\(document\.getElementById\("root"\)\)\.render\(<InvBanco \/>\)\);/', $montaje, $a, 1, $n);
+    if ($n !== 1) {
+        fwrite(STDERR, "la ficha de la invitación cambió: no encuentro su montaje\n");
+        exit(1);
+    }
+    file_put_contents($salida."/a/{$nombre}.html", $a);
+
+    // B: la página del producto, entera, con el modelo del diseño y las hojas de la instancia por el contrato.
+    $b = view('fiesta.invitacion', [
+        'm' => $modeloInvitacion($estado === 'viva'),
+        'hojas' => ['instancia/css/fuentes.css', 'instancia/css/saltia.css', 'instancia/css/fiesta.css'],
+    ])->render();
+    // ⚠️ Los assets van por el MISMO origen que la página del banco (`../build`, `../instancia`, enlazados): servidos
+    //    desde `APP_URL` el navegador bloquea las fuentes y el módulo de Vite (CORS) y B sale sin `js` y con la
+    //    fuente del sistema. Medido: 35 % de píxeles distintos que no eran de la piel.
+    $b = str_replace(rtrim((string) config('app.url'), '/').'/', '../', $b);
+    file_put_contents($salida."/b/{$nombre}.html", $b);
+    // El par de DIAGNÓSTICO: la misma B sin el aviso de privacidad (que el diseño no dibuja en la invitación y el
+    // producto exige). Tiene que dar 0: así el par real solo puede diferir en esa línea, y se ve cuánto.
+    file_put_contents($salida."/b/{$nombre}-sin-legal.html", (string) preg_replace('#<p class="inv-legal"[^>]*>.*?</p>#s', '', $b));
+
+    foreach (['390x844', '1280x900'] as $ventana) {
+        foreach (['', '-sin-legal'] as $variante) {
+            $lote[] = [
+                'nombre' => "{$nombre}-".strtok($ventana, 'x').$variante,
+                'a' => "{$base}/a/{$nombre}.html",
+                'b' => "{$base}/b/{$nombre}{$variante}.html",
+                'viewport' => $ventana,
+                'completa' => false,
+                'clics' => [],
             ];
         }
     }

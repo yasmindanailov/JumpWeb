@@ -57,11 +57,12 @@ final class PartyInvitations
     public const RECEIPT_ROUTE = 'invitation.receipt';
 
     /**
-     * Las DOS HORAS del recibo (D9). No es un plazo elegido al peso: es el tiempo en que un padre que
-     * acaba de contestar sigue con el móvil en la mano. Más allá, el enlace sería una credencial viva
-     * sobre los datos de un menor viajando por un chat de padres.
+     * Las 24 HORAS del recibo (`#743`·4, el diseño del 24-09; antes DOS, D9). El padre que acaba de
+     * contestar vuelve esa misma noche a dejar la ficha o a firmar. Más allá, el enlace sería una
+     * credencial viva sobre los datos de un menor viajando por un chat de padres. Sigue sin ser un
+     * enlace de edición: caducado, devuelve a la invitación con su aviso.
      */
-    public const RECEIPT_HOURS = 2;
+    public const RECEIPT_HOURS = 24;
 
     /**
      * El techo de `reminded_count`, que es el de su columna (`unsignedSmallInteger`, T4·1). Se lee de

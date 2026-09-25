@@ -365,7 +365,10 @@ Reglas estructurales:
       pero es decisión de producto, no omisión: **pendiente de que el owner la confirme o la cambie**.
     - ▶ `[DECIDIDO owner, 2026-09-25]` **`#743`: «¿Vas tú con él?» SE QUITA** (el diseño del sistema nuevo,
       `fiesta-sistema-nuevo.md` §7·5): `companion` deja de recogerse y la puerta queda con DOS estados (firmada ·
-      sin resolver). Se cambia en la tanda F que vista el recibo; hasta entonces el código sigue como está.
+      sin resolver). ▶ Desde la T2 de esa spec (25-09) el recibo YA NO la pregunta (el dominio sigue admitiendo la
+      columna hasta que se retire con la puerta). Y `[DECIDIDO owner, 2026-09-25]` **`#743`·4: el recibo dura 24 h**
+      (no 2, D9) y **`#744`**: tras contestar el padre ve SU recibo directo (no la invitación con un aviso), los textos
+      nombran a quien organiza por el nombre de pila de la cuenta y «qué es la fiesta» es la descripción del pack.
 11. **Anular.** El operador rota el token desde el panel, con rastro. El anfitrión no, en esta versión.
 12. **Anti-abuso y seguridad** (T4).
     - Honeypot silencioso y Turnstile que **lo dice** (la asimetría de `#335`).

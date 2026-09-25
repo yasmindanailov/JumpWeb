@@ -101,12 +101,13 @@ Medido en `GuestFormController::show()` (sus 30 claves), `InvitationPageControll
   disponible), la barra con el nombre y dos botones, el tema que pinta la página, cuándo y dónde, «Cómo llegar»,
   el `.ics`, el menú por `show_in_invitation`, quién invita y «Llamar», la vista previa (`og:*`), «Su ficha» en el
   recibo (G2), la firma desde el recibo (G3 «Lo dejo y me voy»), el aviso de privacidad, es/en/fr.
-- **FALTA**: la firma DENTRO del recibo (`AuthForm` en la misma página, hoy es un enlace a la autorización), «el
-  recibo dura 24 horas» (hoy la URL firmada dura **2 h**, `celebracion-e-invitacion.md` §4.5·6: §7·4), «Contestar
-  por otro hijo» y «Tus respuestas» en el móvil (JS), «Crear mi QR» (Mi cuenta), «Avísame de fechas» (§7·8), «Ver el
-  parque» (§7·7), el menú agrupado «Para beber / Para comer / Y para terminar» (DATO del enganche), la nota de
-  Google en la cabecera. ❗ **El diseño QUITA «¿Vas tú con él?»** (`companion`, D4/D5): la autorización es una
-  oferta sin pregunta. Afecta al estado «con un adulto» de la puerta (§4.5·10 de la spec hermana): §7·5.
+- **FALTA** (tras T2): la firma DENTRO del recibo (`AuthForm`, T3; hoy «Firmar» es un enlace a la autorización), «Tus
+  respuestas» en el móvil (JS; «Contestar por otro hijo» ya es un enlace), «Crear mi QR» (Mi cuenta), «Avísame de
+  fechas» (§7·8), «Ver el parque» (§7·7), los grupos de la merienda con su icono (DATO del enganche; hoy cada
+  complemento marcado es un grupo, con icono neutro), las palabras de la familia y las pistas (dato nuevo de la
+  invitación), la nota de Google en la cabecera. ✅ **En T2**: el recibo dura 24 h (§7·4); «¿Vas tú con él?» fuera del
+  recibo (§7·5; `companion` se retira con la puerta); el recibo directo, el nombre de pila y la descripción del pack
+  (`#744`).
 
 **La autorización**
 - **HAY**: la hoja en blanco por reserva, los cinco desenlaces, la firma con el descargo entero, el anti-bot con
@@ -197,8 +198,8 @@ Medido en `GuestFormController::show()` (sus 30 claves), `InvitationPageControll
 - Una pieza Blade por componente del diseño, **1:1 con su JSX** (mismo árbol, mismos estilos en línea, mismas
   clases): `invite-card`, `guest-row`, `guest-composer`, `places-meter`, `rsvp-bar`, `auth-form`, `addon-card`,
   `theme-picker`, `save-bar`. Cada una con su ficha de estados en el banco (como `banco-piezas`).
-- La lista, por zonas: `lista/primero`, `lista/zona-1`…`zona-5`, sobre `x-pagina-enfocada`. La invitación:
-  `invitacion/tarjeta`, `invitacion/recibo`. La autorización: `autorizacion/pagina`.
+- La lista, por zonas: `lista/primero`, `lista/zona-1`…`zona-5`, sobre `x-pagina-enfocada`. La invitación (T2):
+  `invitacion/{cabecera,invitacion,recibo}`, la misma página con el recibo dentro. La autorización: `autorizacion/pagina`.
 - El `<style>` de cada `*.card.html` del diseño (las `.pli-*`, `invitacion.css`) pasa **tal cual** a la hoja del
   producto, con los primitivos sustituidos por roles (§4.3). La regla de la isla: lo que JSX escribe en línea se
   escribe en línea; lo del `<style>` va a la hoja.
@@ -259,7 +260,7 @@ Medido en `GuestFormController::show()` (sus 30 claves), `InvitationPageControll
 | **T0** ✅ | Esta spec: medir, decidir dónde viven, pedir el contrato de hojas, las preguntas al owner. | Guardas de frontera 47/47 · el censo de tokens · docs-check. |
 | **T1a** ✅ | La lista con lo que HAY (25-09): el modelo de página, `x-pagina-enfocada`, 12 piezas del núcleo (`pieza/`) y 7 de la fiesta (`fiesta/`), las zonas, la hoja con roles, el JS portado, `lang/*/fiesta.php`, la hoja de la instancia; `store()` acepta la personalización con el único Guardar. | Banco de PIEZAS: **46 pares × (390, 1280) a 0 px** + control (1 px tumba 5 pares; restaura byte a byte) · `ListaDeInvitadosTest` 7 · `PaletaNeutraTest` 4 con su mutación · `node --test` 8 · seis guardas de piel re-apuntadas · sonda de ventana 390/1280 (`storage/app/audit/fiesta-lista-viva-*.png`) · suite. |
 | **T1b** | La pasada LIGERA de la lista (`#768`): la página entera en reposo con los datos del diseño, a 390 y 1280, una vez; A monta `PliPagina`, B la Blade con el modelo mapeado desde el MISMO `datos.js` (`FiestaModeloTest`: el banco y el controlador producen la misma forma). Los estados, solo si esa pasada señala algo. | Un par por ventana a 0 · **el ojo del owner en `localhost:8081`** (la página viva ya carga las hojas de PlayJump, `#769`). |
-| **T2** | La invitación y su recibo con lo que HAY (`InviteCard`, `RsvpBar`; la firma sigue como enlace hasta §7·5). | Seis estados a 0 · `InvitationPageTest` y `InvitationPrivacyTest` intactos · hoja en blanco · `og:*` · el owner se manda el enlace al teléfono. |
+| **T2** ✅ | La invitación y su recibo con lo que HAY (25-09; `#744`): `InvitacionPagina`, `x-fiesta.rsvp-bar`, `views/fiesta/invitacion/{cabecera,invitacion,recibo}`, `invitacion.js`, el bloque `.inv-*` de la hoja, `lang/*/fiesta.php` (`invitacion_pagina`, `recibo`); el recibo directo tras contestar, 24 h y caducado sin 403, el idioma, «Su ficha» que se guarda sola, la autorización como oferta sin pregunta (la firma, enlace hasta T3), el aviso de privacidad con sus tres cosas. | Pasada ligera (`#768`): la invitación viva y cerrada, A el propio `invitacion.card.html` y B la página entera, 390 y 1280 → **0 px** en los pares de diagnóstico y 4.566–5.082 px en los reales, todos en la línea de privacidad que el mockup no dibuja (`banco-fiesta.php invitacion-viva invitacion-cerrada`) · `InvitacionPaginaTest` 7 · `InvitationPageTest`, `InvitationReceiptTest`, `InvitationSigningFlowTest` re-apuntadas (la hoja en blanco, `og:*`, `no-referrer` intactas) · suite · el recibo, sin A hasta T3 · el owner se manda el enlace al teléfono. |
 | **T3** | La autorización con lo que HAY (`AuthForm`, la tarjeta arriba). Antes, el censo de campos (§1.4). | Tres estados a 0 · `GuardianSkinTest` re-apuntada · los cinco desenlaces · suite. |
 | **T4** | Retirar la piel vieja: el bloque `.gf-*` y `.guardian__*` de `site.css`, `focused-layout` si ya no lo usa nadie, `public/js/guest-form/logic.js` si el port lo absorbe; regenerar `cajon.css`. `CONVENCIONES §3.quater`. | Auditoría de los tests que afirmaban la piel vieja · `hoja-del-cajon.py --aplicar` · suite. |
 | **F1…Fn** | Lo que FALTA (§1.4), una pieza por tanda, en el orden que fije el owner (§7). Cada una con su spec de sección aquí, su decisión y, si toca aforo, `VERIFY_CONC=1`. | Por pieza. |
@@ -286,6 +287,24 @@ Medido en `GuestFormController::show()` (sus 30 claves), `InvitationPageControll
   `php -S 127.0.0.1:8132` desprendido; las sondas del navegador entran por `socat` 8081→80. `GuardianAuthorization`
   no tiene `order_id` (esta spec lo daba por hecho): `forceCreate` sin él. La suite COMPLETA cazó cuatro guardas de
   piel que el filtro de la tanda no ejecutaba (`GuestCountSurfacesTest`, `InvitationProposalsTest`).
+
+**La T2 (25-09)**:
+- **Blade, otra vez**: `</x-slot:x>@endif` compila a `@endslot@endif` y Blade no ve el `@endif` (el mismo mordisco de la
+  T1a con texto): `{{ '' }}` entre el cierre del slot y la directiva. Una marca `data-receipt-sign` es SUBCADENA de
+  `data-receipt-signed` y una guarda con `assertStringNotContainsString` la acusó: las marcas se nombran sin prefijos
+  comunes (`data-receipt-firmar`).
+- **Laravel**: `$request->hasCorrectSignature()` y `signatureHasNotExpired()` son macros que Larastan no ve: por la
+  fachada `URL::…($request)`. `lang.switch` vuelve por `url()->previous()`, que sin `Referer` (esta página manda
+  `no-referrer`) sale de la SESIÓN (`_previous.url`, que `StartSession` guarda en cada GET): el selector de idioma
+  funciona sin ruta nueva, y un test lo afirma (`InvitacionPaginaTest`).
+- **El banco de PÁGINA**: B es la página entera (`view()->render()`), y sus assets tienen que ir por el MISMO origen que
+  el banco (`../build`, `../instancia`, enlazados): servidos desde `APP_URL` el navegador bloquea las fuentes y el módulo
+  de Vite (CORS) y B sale sin `js` y con la fuente del sistema (35 % de píxeles que no eran de la piel). A monta la
+  ficha del diseño tal cual con las rutas reescritas, en español (`localStorage` antes de montar: Playwright habla `en`)
+  y `InvPagina` sin la barra de pruebas. El `opc` del diseño enciende CUATRO cosas a la vez (merienda, palabras, pistas
+  y teléfono): solo la pasada sin `opc` es comparable hasta que las palabras y las pistas sean dato.
+- **La diferencia que queda es del producto**: la línea de privacidad bajo la barra (spec hermana §7.2·R7) no está en el
+  mockup de la invitación (sí en el recibo); el par de diagnóstico sin ella da 0 y el real, 4.566–5.082 px, todos ahí.
 
 ## 5. Impacto en invariantes
 
@@ -349,6 +368,13 @@ la casilla en `00-REFACTOR.md`. Lo que la revisión corrija se escribe aquí DEL
 - **25-09 (plataforma, `#766`)**: el owner confirmó por el otro carril lo mismo que aquí en 1, 2 y 4 (quien cumple
   cuenta; el asunto sin nombre; un solo plazo, 24 h, para la lista y el número). `#767` (manda solo el mockup) y
   `#768` (sin banco por tanda: una pasada ligera al final) ajustan el método de esta spec (§0 y §4.4).
+- **25-09 (T2), `[DECIDIDO owner]` `#744`, tres preguntas con opciones**: (1) tras «Vamos» o «No podemos», **el recibo,
+  directo** (no la invitación con un aviso y el botón «Dejar sus datos»); (2) los textos nombran a quien organiza por
+  **el nombre de pila del titular de la cuenta** (sin él, «quien organiza la fiesta»); (3) «qué es la fiesta» es **la
+  descripción pública del pack** (vacía, sin bloque). Sin pregunta: la merienda con lo que HAY (un grupo por complemento
+  marcado, icono neutro), «Los calcetines van incluidos» fuera (texto del parque), el recibo caducado devuelve a la
+  invitación con su aviso, y el aviso de privacidad de la invitación conserva «cuándo se borra» (§7.2·R7 de la hermana)
+  aunque el mockup no lo diga.
 
 ## Anexo · fila del enrutador
 

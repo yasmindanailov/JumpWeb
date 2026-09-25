@@ -24,6 +24,7 @@ export default defineConfig({
                 // invitados, con su hoja `fiesta.css` (roles neutros + piezas). La carga `<x-pagina-enfocada>`; no
                 // entra en el chunk del cajón ni en `app.js`.
                 'resources/js/fiesta/lista.js',
+                'resources/js/fiesta/invitacion.js',
             ],
             refresh: true,
         }),

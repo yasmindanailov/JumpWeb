@@ -5,18 +5,24 @@ namespace App\Http\Controllers;
 use App\Domain\Booking\Models\InvitationReply;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\PartyInvitation;
+use App\Domain\Booking\Services\GuestCountPolicy;
 use App\Domain\Booking\Services\PartyInvitations;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\CalendarFile;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Domain\Platform\Services\Turnstile;
 use App\Http\Concerns\RecordsPartyFacts;
+use App\Http\Fiesta\InvitacionPagina;
+use App\Http\Instancia\InstanceViews;
 use Carbon\CarbonImmutable;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
+use Illuminate\Support\ViewErrorBag;
 use Illuminate\Validation\Rule;
 
 /**
@@ -99,19 +105,20 @@ class InvitationPageController extends Controller
             ]);
         }
 
-        return $volver
-            ->with('invitation_status', $outcome->accepted
-                ? ($data['attending'] === '1' ? 'yes' : 'no')
-                : (string) $outcome->reason)
-            // ⚠️ Solo el nombre que ACABA de escribir quien contesta, y solo en SU sesión: es para
-            // decirle «contamos con Hugo» y nada más. La página no lista ni una respuesta.
-            ->with('invitation_child', trim((string) $data['child_name']))
-            // El RECIBO, solo tras un «sí» y solo si de verdad se guardó una fila. Va por flash y no
-            // en la página: es una credencial de dos horas sobre los datos de un menor, y publicarla
-            // en el HTML de una página que ve cualquiera con el enlace sería regalarla.
-            ->with('invitation_receipt', $outcome->accepted && $data['attending'] === '1' && $outcome->reply !== null
-                ? $this->invitations->receiptUrl($outcome->reply)
-                : null);
+        // EL RECIBO, DIRECTO (`#744`, el diseño del 24-09): tras «Vamos» o «No podemos», el padre ve SU recibo —la
+        // misma tarjeta con su titular y, tras el sí, su ficha y la autorización como oferta—. Es una credencial de
+        // 24 horas sobre los datos de UN menor (§4.5·6): viaja en la redirección a quien acaba de contestar y nunca
+        // en el HTML de la página, que la ve cualquiera con el enlace de la fiesta.
+        // ⚠️ El desenlace es el MISMO para un nombre que ya estaba y para uno nuevo (`#700`): los dos van a su recibo.
+        if ($outcome->accepted && $outcome->reply !== null) {
+            // El desenlace sigue viajando por flash (lo leen la analítica de la fiesta y sus guardas); el recibo no lo pinta.
+            return redirect()->to($this->invitations->receiptUrl($outcome->reply))
+                ->with('invitation_status', $data['attending'] === '1' ? 'yes' : 'no');
+        }
+
+        return $volver->with('invitation_status', $outcome->accepted
+            ? ($data['attending'] === '1' ? 'yes' : 'no')
+            : (string) $outcome->reason);
     }
 
     /**
@@ -124,50 +131,82 @@ class InvitationPageController extends Controller
      * ⚠️ Pasadas las dos horas, la firma caduca y Laravel responde 403 antes de llegar aquí. No es un
      * enlace de edición (D9): lo que se dejó se queda como está.
      */
-    public function receipt(InvitationReply $reply, Response $response): Response
+    public function receipt(Request $request, InvitationReply $reply, Response $response): Response|RedirectResponse
     {
-        $reservation = $reply->reservation;
+        // La FIRMA de la URL se mira AQUÍ y no en la ruta (`signed`), para distinguir sus dos «no»: una firma que
+        // no cuadra es un 403 (nadie fabrica un recibo desde el token de la fiesta); una firma que cuadra y CADUCÓ
+        // (24 h, `#743`·4) devuelve a la invitación —que sigue sirviendo para la hora y el sitio— con su aviso en la
+        // barra: la respuesta no se edita y se habla con quien organiza (el estado «caducado» del diseño).
+        abort_unless(URL::hasCorrectSignature($request), 403);
 
-        abort_if($reservation === null || $reply->dismissed_at !== null, 404);
+        if (! URL::signatureHasNotExpired($request)) {
+            $token = (string) ($reply->invitation->token ?? '');
+            abort_if($token === '', 403);
+
+            return redirect()->route(PartyInvitations::PUBLIC_ROUTE, ['token' => $token])
+                ->with('invitation_status', 'expired');
+        }
+
+        $reservation = $reply->reservation;
+        $invitation = $reply->invitation;
+
+        abort_if($reservation === null || $invitation === null || $reply->dismissed_at !== null, 404);
 
         $type = $reservation->ticketType;
         $nameKey = $type?->guestNameFieldKey();
+        // Las columnas del pack **menos la del nombre**, que ya se contestó: volver a pedirlo aquí sería preguntar
+        // dos veces lo mismo y abrir la puerta a que no coincidan. El esquema normalizado garantiza la clave.
+        $fields = collect($type?->guestFields() ?? [])
+            ->reject(fn (array $f): bool => $f['key'] === $nameKey)
+            ->values()->all();
+        $labels = [];
+        foreach ($fields as $field) {
+            $labels[(string) $field['key']] = (string) ($type?->guestFieldLabel($field) ?? $field['key']);
+        }
 
-        return response()
-            ->view('invitation.receipt', [
+        // El modelo de página (T2): la misma vista que la invitación, con el recibo dentro.
+        $m = InvitacionPagina::componer([
+            'invitation' => $invitation,
+            'reservation' => $reservation,
+            'hostPhone' => $invitation->show_host_phone ? ($reservation->order?->user?->phone ?: null) : null,
+            'timeWindow' => $reservation->displayTimeWindow(),
+            'calendarUrl' => $this->calendarEventOf($reservation) === null
+                ? null
+                : route('invitation.calendar', ['token' => $invitation->token]),
+            'receipt' => [
                 'reply' => $reply,
-                'childName' => (string) $reply->child_name,
-                // Las columnas del pack **menos la del nombre**, que ya se contestó: volver a pedirlo
-                // aquí sería preguntar dos veces lo mismo y abrir la puerta a que no coincidan.
-                'fields' => collect($type?->guestFields() ?? [])
-                    // El esquema normalizado garantiza la clave: un `?? null` afirmaría una duda que el
-                    // contrato ya cierra, y Larastan lo dice.
-                    ->reject(fn (array $f): bool => $f['key'] === $nameKey)
-                    ->values()->all(),
+                'fields' => $fields,
+                'labels' => $labels,
                 'data' => (array) ($reply->data ?? []),
-                'companion' => $reply->companion,
-                // ❗ **Si ya firmó, no se le vuelve a ofrecer** (`#704`, §10.6·C). La pregunta cruza la
-                // frontera con Identity y va por contrato; el implementador responde por la ATADURA de
-                // `#576`, no por el nombre.
-                'signed' => app(PartyInvitations::class)->waiverSignedFor($reply),
-                // «Lo dejo y me voy» lleva al justificante de ESTA reserva con la respuesta atada, y
-                // el nombre del menor entero — sin partirlo en nombre y apellidos (`#236`).
-                // ⚠️⚠️ Los dos extras viajan **DENTRO** de la firma: medido, pegar un `&x=y` a una URL
-                // ya firmada la invalida, y el padre que acaba de decir que sí habría recibido un 403.
+                // ❗ **Si ya firmó, no se le vuelve a ofrecer** (`#704`, §10.6·C). La pregunta cruza la frontera con
+                // Identity y va por contrato; el implementador responde por la ATADURA de `#576`, no por el nombre.
+                'signed' => $this->invitations->waiverSignedFor($reply),
+                // «Firmar» lleva a la autorización de ESTA reserva con la respuesta atada, y el nombre del menor
+                // entero — sin partirlo en nombre y apellidos (`#236`). ⚠️⚠️ Los dos extras viajan **DENTRO** de la
+                // firma: medido, pegar un `&x=y` a una URL ya firmada la invalida.
                 'waiverUrl' => $reservation->guardianAuthorizationSignedUrl([
                     'invitation_reply_id' => (int) $reply->getKey(),
                     'minor' => (string) $reply->child_name,
                 ]),
-                'open' => app(PartyInvitations::class)->repliesOpenFor($reservation),
-            ])
+                'open' => $this->invitations->repliesOpenFor($reservation),
+                // «Su ficha» se guarda contra la MISMA URL firmada: `back()` perdería la firma.
+                'action' => $request->fullUrl(),
+                'status' => $request->session()->get('receipt_status'),
+            ],
+        ], (array) (view()->shared('site') ?? []));
+
+        return response()
+            ->view('fiesta.invitacion', ['m' => $m, 'hojas' => InstanceViews::hojas('fiesta')])
             ->header('Referrer-Policy', 'no-referrer');
     }
 
     /** Guarda las dos ofertas. La firma de la URL es lo que autoriza; el plazo lo re-mira el dominio. */
-    public function saveReceipt(Request $request, InvitationReply $reply): RedirectResponse
+    public function saveReceipt(Request $request, InvitationReply $reply): RedirectResponse|JsonResponse
     {
         abort_if($reply->reservation === null, 404);
 
+        // ⚠️ `companion` ya no se pregunta en el recibo (`#743`·5: «¿Vas tú con él?» desaparece; la autorización es
+        // una oferta sin pregunta). El dominio sigue admitiéndolo hasta que se retire con su columna (T4/F).
         $data = $request->validate([
             'companion' => ['sometimes', 'nullable', 'string', Rule::in(InvitationReply::COMPANIONS)],
             'guest_data' => ['sometimes', 'nullable', 'array'],
@@ -179,6 +218,11 @@ class InvitationPageController extends Controller
             is_string($data['companion'] ?? null) ? $data['companion'] : null,
             is_array($data['guest_data'] ?? null) ? $data['guest_data'] : [],
         );
+
+        // «Su ficha» se guarda sola al salir de cada campo (el JS de la página, por `fetch`): la respuesta corta.
+        if ($request->expectsJson()) {
+            return response()->json(['saved' => $saved]);
+        }
 
         // ⚠️ Se vuelve a la MISMA URL firmada: `back()` perdería la firma y el padre acabaría en un 403
         // justo después de que le hayamos guardado los datos.
@@ -202,40 +246,47 @@ class InvitationPageController extends Controller
         $this->partyFact($request, $reservation, 'invitation_viewed');
 
         $date = $reservation->slot?->date;
+        $errores = $request->session()->get('errors');
+
+        // El modelo de página (`App\Http\Fiesta\InvitacionPagina`, T2 de `fiesta-sistema-nuevo.md`): la vista lee SOLO
+        // `$m`, y el banco pinta lo mismo con los datos del diseño. Lo que aquí se calcula es lo de siempre.
+        $m = InvitacionPagina::componer([
+            'invitation' => $invitation,
+            'reservation' => $reservation,
+            // De la CUENTA y solo si el anfitrión lo marcó (§4.5·12): en la invitación no hay
+            // ningún campo donde teclear un teléfono, y eso es deliberado.
+            'hostPhone' => $invitation->show_host_phone
+                ? ($reservation->order?->user?->phone ?: null)
+                : null,
+            // Compuesta por el dominio: base + hora extra. El fin de la FRANJA diría una hora de
+            // menos en una fiesta de dos horas (la trampa de `#426`).
+            'timeWindow' => $reservation->displayTimeWindow(),
+            'menu' => $this->invitations->menuFor($reservation),
+            // La tarjeta se ve igual pasado el plazo (§7.2·R8): lo único que cierra son las
+            // respuestas, y la información de la fiesta hace falta **el día de la fiesta**.
+            'repliesOpen' => $this->invitations->repliesOpenFor($reservation),
+            // El plazo, escrito en la barra («Confirma antes del viernes 25 a las 17:00»): el ÚNICO plazo de la
+            // fiesta (`#766`), el mismo que gobierna las respuestas.
+            'deadline' => app(GuestCountPolicy::class)->deadlineFor($reservation),
+            'replyAction' => route('invitation.reply', ['token' => $invitation->token]),
+            'error' => $errores instanceof ViewErrorBag ? (string) $errores->first('child_name') : '',
+            'status' => $request->session()->get('invitation_status'),
+            // ── Lo que se ve al PEGAR el enlace en un chat (§4.6, T5·4) ──
+            //
+            // ⚠️⚠️ **Solo nombre, edad, día, hora y negocio.** La vista previa la pinta el chat de
+            // la clase entera —y a veces la caja de un buscador que nadie controla—, así que aquí
+            // no entran ni la dirección, ni el menú, ni una sola respuesta. La página lleva
+            // `noindex`; esto es lo único que sale de ella sin que nadie la abra.
+            'preview' => $this->previewOf($invitation, $reservation, $date),
+            // «Añadir al calendario»: `null` cuando falta la hora o la duración —sin dato, sin
+            // bloque—, y así el botón no existe en vez de ofrecer un fichero vacío.
+            'calendarUrl' => $this->calendarEventOf($reservation) === null
+                ? null
+                : route('invitation.calendar', ['token' => $invitation->token]),
+        ], (array) (view()->shared('site') ?? []));
 
         return response()
-            ->view('invitation.show', [
-                'invitation' => $invitation,
-                'honoreeName' => (string) $invitation->honoree_name,
-                'honoreeAge' => $invitation->honoree_age === null ? null : (int) $invitation->honoree_age,
-                'hostLine' => (string) $invitation->host_line,
-                // De la CUENTA y solo si el anfitrión lo marcó (§4.5·12): en la invitación no hay
-                // ningún campo donde teclear un teléfono, y eso es deliberado.
-                'hostPhone' => $invitation->show_host_phone
-                    ? ($reservation->order?->user?->phone ?: null)
-                    : null,
-                'dayLabel' => $date === null ? null : DisplayTime::dayLabel(Carbon::parse($date->toDateString())),
-                // Compuesta por el dominio: base + hora extra. El fin de la FRANJA diría una hora de
-                // menos en una fiesta de dos horas (la trampa de `#426`).
-                'timeWindow' => $reservation->displayTimeWindow(),
-                'productName' => $reservation->displayProductName(),
-                'menu' => $this->invitations->menuFor($reservation),
-                // La tarjeta se ve igual pasado el plazo (§7.2·R8): lo único que cierra son las
-                // respuestas, y la información de la fiesta hace falta **el día de la fiesta**.
-                'repliesOpen' => $this->invitations->repliesOpenFor($reservation),
-                // ── Lo que se ve al PEGAR el enlace en un chat (§4.6, T5·4) ──
-                //
-                // ⚠️⚠️ **Solo nombre, edad, día, hora y negocio.** La vista previa la pinta el chat de
-                // la clase entera —y a veces la caja de un buscador que nadie controla—, así que aquí
-                // no entran ni la dirección, ni el menú, ni una sola respuesta. La página lleva
-                // `noindex`; esto es lo único que sale de ella sin que nadie la abra.
-                'preview' => $this->previewOf($invitation, $reservation, $date),
-                // «Añadir al calendario»: `null` cuando falta la hora o la duración —sin dato, sin
-                // bloque—, y así el botón no existe en vez de ofrecer un fichero vacío.
-                'calendarUrl' => $this->calendarEventOf($reservation) === null
-                    ? null
-                    : route('invitation.calendar', ['token' => $invitation->token]),
-            ])
+            ->view('fiesta.invitacion', ['m' => $m, 'hojas' => InstanceViews::hojas('fiesta')])
             ->header('Referrer-Policy', 'no-referrer');
     }
 

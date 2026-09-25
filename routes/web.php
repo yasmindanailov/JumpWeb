@@ -389,17 +389,18 @@ Route::withoutMiddleware([ResolveVisitor::class.':'.ResolveVisitor::MINT])->grou
         ->middleware(['throttle:20,1', 'no-store'])
         ->name('survey.optout.confirm');
 
-    // El RECIBO de una respuesta (§4.5·6): **DOS HORAS** y no es un enlace de edición (D9).
+    // El RECIBO de una respuesta (§4.5·6): **24 HORAS** (`#743`·4) y no es un enlace de edición (D9).
     //
     // ⚠️⚠️ Lo autoriza la FIRMA de la URL, **no el token de la invitación**: son dos alcances distintos —
     // el token abre la fiesta entera, esto abre UNA respuesta—. Mezclarlos le daría a cualquiera con el
     // enlace de la fiesta los datos de todos los niños.
     //
-    // ⚠️ `signed` va en la ruta: pasadas las dos horas Laravel responde 403 **antes** de que el
-    // controlador mire nada. Y `no-store` porque lo que se sirve son las alergias de un menor (art. 9).
+    // ⚠️ La firma la mira el CONTROLADOR y no `signed`, para distinguir sus dos «no»: la que no cuadra es 403; la
+    // que cuadra y CADUCÓ devuelve a la invitación con su aviso (T2 de `fiesta-sistema-nuevo.md`). El POST sí lleva
+    // `signed`. Y `no-store` porque lo que se sirve son las alergias de un menor (art. 9).
     Route::get('/invitacion/recibo/{reply}', [InvitationPageController::class, 'receipt'])
         ->whereNumber('reply')
-        ->middleware(['signed', 'throttle:60,1', 'no-store'])
+        ->middleware(['throttle:60,1', 'no-store'])
         ->missing(fn () => abort(403))
         ->name(PartyInvitations::RECEIPT_ROUTE);
     Route::post('/invitacion/recibo/{reply}', [InvitationPageController::class, 'saveReceipt'])

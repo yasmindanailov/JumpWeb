@@ -7,11 +7,8 @@
      * seis (cada tema es una entrada más, con su `art`). Cada tema trae su entrada, una vez: confeti cae; fiesta
      * cuelga banderines y el confeti estalla desde la chapa; sereno sube burbujas. Nunca lleva foto del menor.
      */
-    $temas = [
-        'confeti' => ['band' => 'var(--fiesta-agua-500)', 'chip' => 'var(--fiesta-sol-500)', 'chipFg' => 'var(--fiesta-tinta-900)', 'accent' => 'var(--fiesta-agua-700)', 'tint' => 'var(--fiesta-agua-100)', 'bits' => ['var(--fiesta-sol-500)', 'var(--fiesta-baya-500)', 'var(--fiesta-lima-500)', 'var(--fiesta-nieve)'], 'decor' => 'confeti', 'entrance' => 'fall'],
-        'fiesta' => ['band' => 'var(--fiesta-baya-500)', 'chip' => 'var(--fiesta-lima-500)', 'chipFg' => 'var(--fiesta-tinta-900)', 'accent' => 'var(--fiesta-baya-700)', 'tint' => 'var(--fiesta-baya-100)', 'bits' => ['var(--fiesta-sol-500)', 'var(--fiesta-lima-500)', 'var(--fiesta-agua-400)', 'var(--fiesta-nieve)'], 'decor' => 'fiesta', 'entrance' => 'pop'],
-        'sereno' => ['band' => 'var(--fiesta-agua-100)', 'chip' => 'var(--fiesta-tinta-900)', 'chipFg' => 'var(--fiesta-nieve)', 'accent' => 'var(--fiesta-agua-700)', 'tint' => 'var(--fiesta-tinta-050)', 'bits' => ['var(--fiesta-agua-600)', 'var(--fiesta-agua-400)', 'var(--fiesta-tinta-300)'], 'decor' => 'burbujas', 'entrance' => 'rise'],
-    ];
+    // Los temas viven en `App\Http\Fiesta\Temas` (una sola tabla: la página de la invitación toma de ahí su tinte).
+    $temas = \App\Http\Fiesta\Temas::MAPA;
     // Confeti fijo (siempre cae igual): x e y en %, tamaño, forma y giro. Burbujas de sereno: pocas y grandes.
     $bits = [[6, 22, 8, 'dot', 0], [14, 64, 12, 'bar', 28], [22, 30, 9, 'sq', 18], [31, 72, 7, 'dot', 0], [38, 18, 13, 'bar', -32], [46, 54, 8, 'sq', 40], [53, 26, 7, 'dot', 0], [60, 70, 12, 'bar', 64], [67, 36, 9, 'sq', -14], [74, 16, 8, 'dot', 0], [80, 60, 13, 'bar', -52], [87, 30, 8, 'sq', 30], [93, 68, 7, 'dot', 0], [10, 44, 6, 'dot', 0], [42, 82, 7, 'dot', 0], [70, 86, 6, 'sq', 12], [97, 12, 9, 'bar', 80], [27, 52, 6, 'dot', 0]];
     $bubbles = [[7, 34, 22], [18, 64, 12], [31, 22, 16], [45, 60, 26], [59, 24, 12], [71, 62, 18], [83, 20, 24], [93, 58, 10]];
