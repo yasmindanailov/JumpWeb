@@ -333,6 +333,8 @@ Reglas estructurales:
    - «Quién viene» escribe `data` con las columnas del pack, en su orden y todas opcionales (G2).
    - «¿Vas tú con él?» escribe `companion` (G3).
    - Pasadas las 2 horas las ofertas desaparecen. No es un enlace de edición (D9).
+   - ▶ `[DECIDIDO owner, 2026-09-25]` **`#743`: el recibo pasa a durar 24 horas** (el diseño del sistema nuevo,
+     `fiesta-sistema-nuevo.md` §7·4); sigue sin editar. Se cambia en la tanda F que vista el recibo, no antes.
 7. **«Lo dejo y me voy»** lleva al justificante de esa reserva con la respuesta atada (URL firmada),
    el nombre del menor prerrelleno **sin partirlo en nombre y apellidos** (`#236`) y
    `invitation_reply_id` en la firma.
@@ -361,6 +363,9 @@ Reglas estructurales:
       correcto**: no es un defecto. ▶ Y **el anfitrión NO ve `companion`** en su formulario (medido: 0
       ocurrencias en `guests.blade.php`); la API sí lo expone. Está así por diseño —§4.7 no lo lista—,
       pero es decisión de producto, no omisión: **pendiente de que el owner la confirme o la cambie**.
+    - ▶ `[DECIDIDO owner, 2026-09-25]` **`#743`: «¿Vas tú con él?» SE QUITA** (el diseño del sistema nuevo,
+      `fiesta-sistema-nuevo.md` §7·5): `companion` deja de recogerse y la puerta queda con DOS estados (firmada ·
+      sin resolver). Se cambia en la tanda F que vista el recibo; hasta entonces el código sigue como está.
 11. **Anular.** El operador rota el token desde el panel, con rastro. El anfitrión no, en esta versión.
 12. **Anti-abuso y seguridad** (T4).
     - Honeypot silencioso y Turnstile que **lo dice** (la asimetría de `#335`).

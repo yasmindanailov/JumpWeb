@@ -103,8 +103,9 @@ programa «producto e instancias» separa el producto de sus instancias.
 - [x] T3 · la piel del justificante (`#572`), con el ✅ del owner en vivo (17-09).
 - [x] Desplegada la T3 en **v1.1.0** (18-09, noveno despliegue): la barra de firmar ya no está rota en producción.
 - [x] T4 · la invitación digital, **cerrada** en seis unidades verdes (spec §10.4, `#573`→`#578`; concurrencia verificada sobre InnoDB, RGPD al día, la API). ⚠️ En producción desde v1.1.0 **con los dos interruptores APAGADOS**: encenderlos es DATO del owner.
-- [x] **T5, T6, T7 y el borde `§7.1·5`: la invitación digital, CERRADA ENTERA** (`#701`→`#718`, spec §10.5–§10.18, con el ✅ del owner en vivo el 20-09): la página pública, el aterrizaje de la celebración, los tres correos (inventario **26**, cruzó al carril de correos) y el orden de las fichas al recortar. Doce arneses verdes y concurrencia sobre InnoDB; el detalle de cada unidad, en su § de la spec. ⚠️⚠️ **SIN DESPLEGAR**, y con **una migración** (`order_items.eve_notice_at`).
-- [ ] ▶ **La invitación: código completo y ✅ del owner en vivo** (20-09; los tres huecos que ese ✅ no cubre, en el §0 de la spec). Solo falta **desplegar** (T5–T7 + migración) y **encender** (dato del owner).
+- [x] **T5, T6, T7 y el borde `§7.1·5`: la invitación digital, CERRADA ENTERA** (`#701`→`#718`, spec §10.5–§10.18, ✅ del owner en vivo el 20-09): la página pública, el aterrizaje, los tres correos y el orden de las fichas al recortar; el detalle, en su § de la spec. ⚠️ **SIN DESPLEGAR**, con **una migración** (`order_items.eve_notice_at`).
+- [ ] La invitación: solo falta **desplegar** (T5–T7 + migración) y **encender** (dato del owner); los tres huecos del ✅, en el §0 de la spec.
+- [ ] ▶ **LA FIESTA DEL SISTEMA NUEVO** (`specs/fiesta-sistema-nuevo.md` ✅ `#743`): T0 ✅ → **T1 la lista** → T2 la invitación → T3 la autorización → T4 la piel vieja fuera → F1…Fn.
 - [ ] El OJO del owner en un teléfono de verdad · el cuaderno de entrega del cajón · el botón del sistema.
 
 ### El PANEL: la exención del menor y el ROL DE PUERTA ✅ código — `#320`

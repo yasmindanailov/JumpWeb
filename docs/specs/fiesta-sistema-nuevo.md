@@ -1,7 +1,8 @@
 # [SPEC] La fiesta del sistema nuevo — vestir la lista de invitados, la invitación y la autorización
 
-> Estado: ⬜ **borrador (T0 medida el 2026-09-25)** · Última actualización: 2026-09-25 · Decisión asociada: `#765`
-> (el traspaso, `[DECIDIDO owner]`); la de esta spec, de la banda 730–759 al aprobarse.
+> Estado: ✅ **APROBADA por el owner el 2026-09-25 con sus ocho respuestas (`#743`)** · en ejecución: T0 ✅, sigue
+> la T1 · Última actualización: 2026-09-25 · Decisiones: `#765` (el traspaso) · **`#743`** (la aprobación y las ocho
+> respuestas de §7).
 > Carril: 🧩 **SPA** (banda 730–759). Fuente del diseño: `instancias/playjump/diseno/playjump-design-system/`
 > (el zip de Claude Design, `#760`): `paginas/lista-invitados.card.html`, `paginas/invitacion.card.html`,
 > `paginas/autorizacion.card.html`, `components/invitados/*`, `components/forms/SaveBar.jsx`, el `readme.md`
@@ -277,6 +278,15 @@ Medido en `GuestFormController::show()` (sus 30 claves), `InvitationPageControll
   una pieza → rojo).
 
 ## 7. Revisión y decisión
+
+**CONTESTADAS por el owner el 2026-09-25 (`#743`), con opciones delante** — la corrección va DELANTE del texto:
+1 **sí, quien cumple cuenta como uno más** · 2 **el asunto del correo 2 va sin nombre** · 3 **la zona 3 sube el número
+desde la lista, en su propia tanda con `VERIFY_CONC=1`** · 4 **el recibo dura 24 horas** (la URL firmada pasa de 2 h a
+24 h; sigue sin ser un enlace de edición) · 5 **«¿Vas tú con él?» se quita; la puerta queda con dos estados** (firmada ·
+sin resolver; `companion` deja de recogerse) · 6 **tres campos por niño, como dato del panel** (se funden alergia y menú
+especial; observaciones se retira de los dos packs) · 7 ❗ **«Ver el parque» ENCENDIDO con el vídeo de portada** (14,8 MB,
+se descarga solo al tocar; NO la recomendada, que era apagado hasta el clip corto) · 8 **«Avísame de fechas» entra, sin
+marcar y con su texto legal**. Con esto la spec pasa a ✅ y las F1…Fn de §4.6 tienen su decisión.
 
 **Preguntas al owner (25-09), con la recomendada primero.** Ninguna bloquea T1→T4.
 1. **¿Quien cumple cuenta como uno más en el número?** Recomendada: **sí** (lo asume el diseño y la mayoría de packs).

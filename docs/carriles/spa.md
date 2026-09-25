@@ -2,7 +2,7 @@
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb` a secas; la instancia al lado, en
 > `~/proyectos/instancias/playjump`, clon de `github.com/yasmindanailov/instancia-playjump`, montada el 25-09) ·
-> Banda: **730–759** (700–729 agotada el 20-09) · Último usado: **`#742`** · La banda está dada de alta en la tabla de
+> Banda: **730–759** (700–729 agotada el 20-09) · Último usado: **`#743`** · La banda está dada de alta en la tabla de
 > `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: **`isla-y-landing-nueva.md`
 > §4.11 «El traspaso al SPA»** (la tarea en curso, `#765`) · `celebracion-e-invitacion.md` §0 · `waiver-por-reserva.md` §0 ·
 > `encuestas.md` §0 · `analitica-fiesta.md` §0 · `analitica.md` §0 y §4.5 · `google-business-profile.md` §0 ·
@@ -82,8 +82,8 @@
 
 ## Por dónde retomar, en orden
 
-1. ❗❗❗ **LA FIESTA DEL SISTEMA NUEVO (`#765`) — `specs/fiesta-sistema-nuevo.md`** (⬜ borrador con la T0 medida;
-   **el owner revisa §0, §4 y contesta las ocho de §7** → ✅, `/decision` de la banda, casilla en el tracker). Orden:
+1. ❗❗❗ **LA FIESTA DEL SISTEMA NUEVO (`#765`) — `specs/fiesta-sistema-nuevo.md` ✅ APROBADA (`#743`, 25-09: las
+   ocho respuestas en su §7; ❗ «Ver el parque» va ENCENDIDO con el vídeo de portada, no la recomendada)**. Orden:
    **T1 la lista** (modelo de página `app/Http/Fiesta/`, `x-pagina-enfocada`, las piezas de `components/invitados/`
    portadas 1:1, la hoja `resources/js/fiesta/fiesta.css` con roles `--fiesta-*`, el JS portado de `estado.jsx`, la hoja
    `publico/instancia/css/fiesta.css` en el repo de la instancia; banco `scripts/banco-fiesta.php` con sus cuatro estados
