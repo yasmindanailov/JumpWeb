@@ -48,8 +48,9 @@ class EmailUtmTest extends TestCase
         $this->assertTrue(EmailUtm::isCustomerKey('order_confirmation'));
         $this->assertFalse(EmailUtm::isCustomerKey('google_business_location_changed'), 'el aviso al negocio no es audiencia');
         $this->assertFalse(EmailUtm::isCustomerKey('lo_que_sea'), 'una clave que no es de un correo no cuenta');
-        // 26 desde la T3a·4 (`AnalyticsLinkNotice`, el aviso a las cuentas existentes).
-        $this->assertCount(26, EmailUtm::keys());
+        // 26 desde la T3a·4 (`AnalyticsLinkNotice`, el aviso a las cuentas existentes); 27 desde la T3 de las
+        // encuestas (`SurveyInvitation`, el correo del día siguiente).
+        $this->assertCount(27, EmailUtm::keys());
     }
 
     public function test_the_tag_only_touches_our_own_links_and_keeps_the_fragment(): void

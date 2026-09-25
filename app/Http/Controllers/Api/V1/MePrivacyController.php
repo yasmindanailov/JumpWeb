@@ -114,6 +114,23 @@ class MePrivacyController extends Controller
     }
 
     /**
+     * `PUT /me/surveys` — recibir la encuesta del día siguiente, o no (`specs/encuestas.md` §4.3, T3). Es un correo
+     * de servicio: sin contraseña (apagarlo es tan fácil como encenderlo) y sin consentimiento que sellar, solo la
+     * preferencia. 204 siempre: el titular pide un ESTADO, no una transición.
+     */
+    public function surveys(Request $request, AccountPrivacy $privacy): JsonResponse
+    {
+        $data = $request->validate(['accepted' => ['required', 'boolean']]);
+
+        /** @var User $user */
+        $user = $request->user();
+
+        $privacy->setSurveys($user, (bool) $data['accepted']);
+
+        return response()->json(status: 204);
+    }
+
+    /**
      * `PUT /me/analytics` — vincular la navegación a la cuenta, o **OPONERSE** a ello (art. 21 y 7.3,
      * `specs/analitica.md` §4.3, T3a·3).
      *

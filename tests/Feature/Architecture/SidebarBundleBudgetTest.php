@@ -864,7 +864,11 @@ class SidebarBundleBudgetTest extends TestCase
     // T3e·5 (`#696`): el motor deja a la vista la configuración que ya pide al montarse (`configuracion`: el plazo de
     // ajuste de las fiestas, sin otra petición) y la línea confirmada lleva el formulario, su plazo y la invitación
     // (`outcome.js`). Medido sobre `efbeb18c`: 294,42 → 294,70 (+0,28), dentro del techo.
-    private const SIDEBAR_CHUNK_MAX_KB = 295;
+    // T3 de las encuestas (`specs/encuestas.md` §4.3, `#740`): el tercer interruptor de «Privacidad» —el getter y la
+    // acción `setSurveys` del store y su etiqueta en la zona—. Medido sobre `fd72b400`: 294,70 → 295,28 (+0,58), y
+    // el techo sube a 296 a propósito: es un presupuesto, no un objetivo, y el interruptor es la salida
+    // proporcionada de un correo de servicio (la baja también vive en el propio correo).
+    private const SIDEBAR_CHUNK_MAX_KB = 296;
 
     // T3e·2: la compra de la isla, chunk diferido del motor que solo trae una instalación con la isla. Medido 93,36 KiB
     // (la sección, la pantalla 0, la isla y sus piezas); su hoja va aparte (7,2 KiB).

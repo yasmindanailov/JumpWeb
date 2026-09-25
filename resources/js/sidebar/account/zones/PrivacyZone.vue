@@ -193,6 +193,19 @@ async function sign() {
             </label>
             <small class="form__hint">{{ a('account.privacy.analytics_hint') }}</small>
 
+            <!--
+              **La encuesta del día siguiente** (`specs/encuestas.md` §4.3, T3): el tercer interruptor, con la
+              misma pieza. Es un correo de SERVICIO, no marketing: sin consentimiento que sellar, solo la
+              preferencia; la baja de un toque del propio correo apaga esto mismo.
+            -->
+            <label class="switch">
+                <input class="switch__input" type="checkbox" role="switch"
+                       :checked="store.surveys" :disabled="store.busy"
+                       @change="store.setSurveys($event.target.checked)">
+                <span class="switch__label">{{ a('account.privacy.surveys_label') }}</span>
+            </label>
+            <small class="form__hint">{{ a('account.privacy.surveys_hint') }}</small>
+
             <!-- El derecho de PORTABILIDAD (art. 20). No pide contraseña: descargarse los datos propios
                  no destruye ni cede nada, y es lo que hace hoy la web. -->
             <button type="button" class="btn btn--ink auth__submit" :disabled="store.busy" @click="store.exportData(ctx())">

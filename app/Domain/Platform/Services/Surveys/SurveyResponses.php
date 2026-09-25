@@ -6,6 +6,8 @@ use App\Domain\Platform\Models\Survey;
 use App\Domain\Platform\Models\SurveyResponse;
 use App\Domain\Platform\Services\Analytics\Recorder;
 use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 /**
  * **Las respuestas de una encuesta: a quién se le ofrece y cómo se escribe una** (`docs/specs/encuestas.md`
@@ -24,7 +26,83 @@ use Illuminate\Database\UniqueConstraintViolationException;
  */
 final class SurveyResponses
 {
+    /** El token de la página del correo: la credencial entera, como el de la invitación (§4.3). */
+    public const TOKEN_LENGTH = 40;
+
+    public const TOKEN_RE = '/^[A-Za-z0-9]{40}$/';
+
     public function __construct(private readonly Recorder $recorder) {}
+
+    /**
+     * T3 · el correo del día siguiente: la fila nace MANDADA (`sent_at`, su token) y deja el hecho `survey_sent`.
+     * `null` si el cliente ya tenía fila para esta encuesta: es la idempotencia del comando, por construcción.
+     */
+    public function send(Survey $survey, int $userId, ?string $visitedOn, ?string $locale): ?SurveyResponse
+    {
+        $response = $this->insert($survey, $userId, [
+            'channel' => SurveyResponse::CHANNEL_EXTERNAL,
+            'visited_on' => $visitedOn,
+            'token' => Str::random(self::TOKEN_LENGTH),
+            'sent_at' => now(),
+            'locale' => $locale,
+        ]);
+
+        if ($response !== null) {
+            $this->recorder->fact('survey_sent', ['survey' => $survey->key, 'channel' => SurveyResponse::CHANNEL_EXTERNAL], ['user_id' => $userId]);
+        }
+
+        return $response;
+    }
+
+    /**
+     * La fila que ABRE un token: mandada, sin contestar ni declinar, con titular, de una encuesta viva. Todo lo
+     * demás —inventado, contestado, apagada, anonimizado— es el mismo `null`, y la página el mismo 404 (§4.3).
+     */
+    public function openByToken(string $token): ?SurveyResponse
+    {
+        if (preg_match(self::TOKEN_RE, $token) !== 1) {
+            return null;
+        }
+
+        $response = SurveyResponse::query()
+            ->where('token', $token)
+            ->whereNull('answered_at')
+            ->whereNull('declined_at')
+            ->whereNotNull('user_id')
+            ->with('survey')
+            ->first();
+
+        if ($response === null || $response->survey === null || ! $response->survey->isRunning()) {
+            return null;
+        }
+
+        return $response;
+    }
+
+    /**
+     * Contestar desde el correo: cierra la fila UNA sola vez —bajo candado: dos pestañas con la misma página no
+     * escriben dos veces— y deja el hecho. `false` si ya estaba cerrada.
+     *
+     * @param  array<string, mixed>  $answers  ya tipadas y válidas ({@see QuestionSchema::validate()})
+     */
+    public function answerSent(SurveyResponse $response, array $answers, string $locale): bool
+    {
+        $written = DB::transaction(static function () use ($response, $answers, $locale): bool {
+            $fresh = SurveyResponse::query()->whereKey($response->getKey())->lockForUpdate()->first();
+            if ($fresh === null || $fresh->answered_at !== null || $fresh->declined_at !== null) {
+                return false;
+            }
+            $fresh->forceFill(['answered_at' => now(), 'answers' => $answers, 'locale' => $locale])->save();
+
+            return true;
+        });
+
+        if ($written && $response->survey !== null && $response->user_id !== null) {
+            $this->recorder->fact('survey_answered', ['survey' => $response->survey->key, 'channel' => SurveyResponse::CHANNEL_EXTERNAL], ['user_id' => (int) $response->user_id]);
+        }
+
+        return $written;
+    }
 
     /** La encuesta VIVA de esa clase que este cliente aún no tiene (ni contestada ni declinada), o `null`. */
     public function offerFor(string $kind, int $userId): ?Survey

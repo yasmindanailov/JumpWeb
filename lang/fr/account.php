@@ -87,6 +87,8 @@ return [
             'consent_revoked' => 'retiré le',
             'marketing_label' => 'Je veux recevoir les actualités et les offres du parc.',
             'marketing_hint' => "Tu peux le retirer quand tu veux, en un clic. Nous gardons la date pour qu'il en reste une trace, et nous cessons de t'écrire.",
+            'surveys_label' => "Recevoir l'enquête le lendemain d'une visite.",
+            'surveys_hint' => "Un e-mail de service, sans offres : comment ça s'est passé. Éteins-le et nous n'en enverrons plus.",
             'analytics_label' => 'Lier ma navigation à mon compte pour améliorer le site.',
             'analytics_hint' => "Seulement si tu acceptes aussi «analyse» dans l'avis sur les cookies. Quand tu l'éteins, nous délions ce qui a été enregistré et demandons sa suppression à l'outil d'analyse, s'il y en a un.",
             'delete_title' => 'Supprimer mon compte',

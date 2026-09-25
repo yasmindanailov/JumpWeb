@@ -226,3 +226,18 @@ Schedule::command('sanctum:prune-expired --hours=24')
 Schedule::command('reservations:eve-notice')
     ->hourly()
     ->withoutOverlapping();
+
+/*
+ * T3 de `specs/encuestas.md` (§4.3, `DECISIONES #740`) — LA ENCUESTA DEL DÍA SIGUIENTE, por correo, a quien
+ * acreditó su visita AYER (el escaneo del carné la acredita, `#741`).
+ *
+ * ⚠️ CADA HORA y la hora la decide el COMANDO (desde las 10:00 del PARQUE), por las dos razones de
+ * `reservations:eve-notice`: la zona del parque es un AJUSTE que se resuelve en la EJECUCIÓN, y una hora de
+ * cron caído no se lleva la encuesta por delante — la fila de `survey_responses` (una por cliente y encuesta)
+ * es la marca, así que la siguiente pasada recupera y nunca duplica.
+ * ⚠️ `withoutOverlapping` porque manda correos. ❗ En staging el scheduler no corre (`#115`): allí, `--force`.
+ * ❗ Una tarea MÁS del planificador: las «esperadas» de `deploy.sh` suben en este mismo commit (spec §0·4).
+ */
+Schedule::command('surveys:send-external')
+    ->hourly()
+    ->withoutOverlapping();

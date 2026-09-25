@@ -31,6 +31,7 @@ use App\Http\Controllers\PricingController;
 use App\Http\Controllers\ReviewPhotoController;
 use App\Http\Controllers\ServicesController;
 use App\Http\Controllers\SitemapController;
+use App\Http\Controllers\SurveyPageController;
 use App\Http\Instancia\InstancePages;
 use App\Http\Middleware\ResolveVisitor;
 use App\Http\Middleware\SetAdminLocale;
@@ -358,6 +359,35 @@ Route::withoutMiddleware([ResolveVisitor::class.':'.ResolveVisitor::MINT])->grou
         ->where('token', '[A-Za-z0-9]{12}')
         ->middleware(['throttle:60,1', 'no-store'])
         ->name('invitation.calendar');
+
+    // ── LA ENCUESTA POR CORREO (`specs/encuestas.md` §4.3, T3; `#740`) ──
+    // El token de 40 caracteres es la credencial entera (como en la invitación): sin sesión, sin cookie de
+    // medición (este grupo), `no-store` (`RGPD-04`) y UN solo 404 para lo inventado, lo contestado y lo apagado.
+    // El regex va en la ruta: lo que no tiene su forma ni llega a mirarse contra la base de datos.
+    Route::get('/encuesta/{token}', [SurveyPageController::class, 'show'])
+        ->where('token', '[A-Za-z0-9]{40}')
+        ->middleware(['throttle:60,1', 'no-store'])
+        ->name('survey.show');
+    // Contestar: escribe UNA sola vez (bajo candado en el dominio); limitador por IP (`SEC-06`), el token acota.
+    Route::post('/encuesta/{token}', [SurveyPageController::class, 'answer'])
+        ->where('token', '[A-Za-z0-9]{40}')
+        ->middleware(['throttle:20,1', 'no-store'])
+        ->name('survey.answer');
+    // «Gracias» en su propia URL (POST → redirect → GET): recargar no reenvía nada.
+    Route::get('/encuesta/{token}/gracias', [SurveyPageController::class, 'thanks'])
+        ->where('token', '[A-Za-z0-9]{40}')
+        ->middleware(['throttle:60,1', 'no-store'])
+        ->name('survey.thanks');
+    // «No quiero recibir más encuestas»: una página con UN botón y su confirmación. Un enlace que escribiera al
+    // abrirse lo pulsarían los escáneres de enlaces de los gestores de correo.
+    Route::get('/encuesta/{token}/baja', [SurveyPageController::class, 'optOut'])
+        ->where('token', '[A-Za-z0-9]{40}')
+        ->middleware(['throttle:60,1', 'no-store'])
+        ->name('survey.optout');
+    Route::post('/encuesta/{token}/baja', [SurveyPageController::class, 'confirmOptOut'])
+        ->where('token', '[A-Za-z0-9]{40}')
+        ->middleware(['throttle:20,1', 'no-store'])
+        ->name('survey.optout.confirm');
 
     // El RECIBO de una respuesta (§4.5·6): **DOS HORAS** y no es un enlace de edición (D9).
     //

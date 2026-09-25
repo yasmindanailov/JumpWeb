@@ -7,10 +7,13 @@ use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\PartyInvitation;
 use App\Domain\Booking\Services\PartyInvitations;
 use App\Domain\Platform\Models\AnalyticsEvent;
+use App\Domain\Platform\Models\Survey;
 use App\Domain\Platform\Services\Analytics\Visitor;
+use App\Domain\Platform\Services\Surveys\SurveyResponses;
 use App\Http\Controllers\GuardianAuthorizationController;
 use App\Http\Controllers\GuestFormController;
 use App\Http\Controllers\InvitationPageController;
+use App\Http\Controllers\SurveyPageController;
 use App\Http\Middleware\ResolveVisitor;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
@@ -35,8 +38,12 @@ class FocusedPagesAreCookieFreeTest extends TestCase
     use MountsAParty;
     use RefreshDatabase;
 
-    /** Las doce rutas de los tres controladores: GET y POST del post-form y sus tres POST de la invitación (5), GET y POST del justificante (2), y la invitación: página, respuesta, calendario, recibo y su guardado (5). */
-    private const FOCUSED_ROUTES = 12;
+    /**
+     * Las diecisiete rutas de los cuatro controladores: GET y POST del post-form y sus tres POST de la invitación
+     * (5), GET y POST del justificante (2), la invitación: página, respuesta, calendario, recibo y su guardado (5),
+     * y la encuesta del correo (T3 de `specs/encuestas.md`): página, respuesta, gracias, baja y su confirmación (5).
+     */
+    private const FOCUSED_ROUTES = 17;
 
     /**
      * @param  array{order: Order, reservation: OrderItem, invitation: PartyInvitation}  $party
@@ -52,7 +59,21 @@ class FocusedPagesAreCookieFreeTest extends TestCase
             'invitación' => route(PartyInvitations::PUBLIC_ROUTE, ['token' => $party['invitation']->token]),
             'calendario' => route('invitation.calendar', ['token' => $party['invitation']->token]),
             'recibo' => app(PartyInvitations::class)->receiptUrl($reply),
+            // La encuesta del correo (T3 de `specs/encuestas.md`): el cliente no es un invitado, pero entra sin
+            // sesión desde un correo, y su página se rige igual: sin cookie de medición, sin banner, sin tercero.
+            'encuesta' => route('survey.show', ['token' => $this->surveyTokenFor($party['order'])]),
         ];
+    }
+
+    /** Una encuesta externa viva, ya MANDADA al titular del pedido: su token abre la página. */
+    private function surveyTokenFor(Order $order): string
+    {
+        $survey = Survey::create([
+            'key' => 'que-tal-ayer', 'name' => ['es' => '¿Qué tal ayer?'], 'kind' => Survey::KIND_EXTERNAL, 'active' => true,
+            'questions' => [['key' => 'ambiente', 'type' => 'scale', 'label' => ['es' => 'Ambiente']]],
+        ]);
+
+        return (string) app(SurveyResponses::class)->send($survey, (int) $order->user_id, '2026-09-25', 'es')?->token;
     }
 
     /** @return list<string> */
@@ -92,7 +113,7 @@ class FocusedPagesAreCookieFreeTest extends TestCase
     public function test_every_route_of_the_three_controllers_is_out_of_the_minting(): void
     {
         $mint = ResolveVisitor::class.':'.ResolveVisitor::MINT;
-        $controllers = [GuestFormController::class, GuardianAuthorizationController::class, InvitationPageController::class];
+        $controllers = [GuestFormController::class, GuardianAuthorizationController::class, InvitationPageController::class, SurveyPageController::class];
         $seen = 0;
 
         foreach (Route::getRoutes() as $route) {

@@ -59,9 +59,26 @@ export const usePrivacyStore = defineStore('privacy', {
 
         /** El interruptor del análisis identificado: encendido = NO se opuso (`analytics_opt_out` de `GET /me`). */
         analytics: () => ! useProfileStore().user?.analytics_opt_out,
+        /** El interruptor de la encuesta del día siguiente: encendido = se manda (`surveys_opt_out` de `GET /me`). */
+        surveys: () => ! useProfileStore().user?.surveys_opt_out,
     },
 
     actions: {
+        /**
+         * **Recibir la encuesta del día siguiente, o no** (`specs/encuestas.md` §4.3, T3). Es un correo de
+         * servicio, así que aquí no hay consentimiento que releer: solo la preferencia, que `GET /me` refleja.
+         * La baja de un toque del propio correo escribe lo mismo.
+         */
+        async setSurveys(wants, { api = httpClient } = {}) {
+            const response = await api.put('/me/surveys', { accepted: wants });
+
+            if (! response.ok) return false;
+
+            const profile = useProfileStore();
+            if (profile.user) profile.user.surveys_opt_out = ! wants;
+
+            return true;
+        },
         /**
          * Deja el estado como si nunca se hubiera intentado nada. Se llama al ENTRAR en la zona.
          *

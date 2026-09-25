@@ -2528,6 +2528,8 @@ return [
         'puerta_lookup_rate_limit_hint' => '按员工和小时计。扫描会员卡不计入。员工在一小时内手动输入数十个邮箱并非在接待客户：拒绝时会通知运营方。',
         'puerta_profile_ttl' => '已打开档案的有效期（分钟）',
         'puerta_profile_ttl_hint' => '超过此时间后，档案将在服务器端自动关闭，即使标签页仍打开。任何操作都会重置计时。',
+        'surveys_cooldown' => '同一人两次问卷邮件的间隔天数',
+        'surveys_cooldown_hint' => '每周到访的客户不会每周收到问卷：发送一封问卷邮件后，需间隔这些天数才会再发。0 = 无间隔。',
         'puerta_window_days' => '预订窗口（± 天）',
         'puerta_window_days_hint' => '除今天外，档案还会在后台显示前后这些天的预订（提前或推迟一天到达的客户）。0 = 仅今天。',
         'puerta_waiver_check' => '在门口检查免责声明',

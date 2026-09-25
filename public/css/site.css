@@ -6047,6 +6047,26 @@ body:has(.gf-savebar) .gf-toast { bottom: calc(var(--book-bar-h) + var(--sp-28) 
    párrafo con un enlace subrayado se leía igual que la dirección de encima. */
 .invitation__go { align-self: flex-start; }
 
+/* ── LA ENCUESTA por correo (`specs/encuestas.md` §4.3, T3) ──
+   Misma hoja enfocada que la invitación. Cada opción es un radio/checkbox OCULTO con su etiqueta vestida de
+   píldora táctil (≥ 44 px), sin una línea de JS; el color del «elegido» es el de la marca de la instalación. */
+.survey { display: flex; flex-direction: column; gap: var(--sp-16); }
+.survey__lede { margin-top: var(--sp-8); font-size: var(--fs-lede); }
+.survey__q { min-width: 0; margin: 0; padding: 0; border: 0; }
+.survey__label { display: block; margin: 0 0 var(--sp-12); font-size: var(--fs-body); font-weight: 600; color: var(--ink); }
+.survey__req { margin-left: var(--sp-8); font-size: var(--fs-label); font-weight: 500; opacity: .7; }
+.survey__options { display: flex; flex-wrap: wrap; gap: var(--sp-8); }
+.survey__input { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.survey__pill { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; padding: var(--sp-8) var(--sp-16); border: 1px solid var(--line); border-radius: var(--r-pill); background: var(--bg-soft); color: var(--ink); font-size: var(--fs-button); font-weight: 500; cursor: pointer; user-select: none; }
+.survey__pill--scale { min-width: 3.25rem; font-size: var(--fs-18); font-weight: 600; }
+.survey__input:checked + .survey__pill { background: var(--brand); border-color: var(--brand); color: var(--on-brand); }
+/* El anillo de foco es el del sistema (`ShapeScaleTest`): el control está oculto y el anillo lo lleva su etiqueta. */
+.survey__input:focus-visible + .survey__pill { outline: var(--focus-outline); outline-offset: 2px; }
+.survey__text { width: 100%; min-height: 44px; padding: var(--sp-8) var(--sp-12); border: 1px solid var(--line); border-radius: var(--r-md); background: #fff; font: inherit; font-size: var(--fs-body); color: var(--ink); }
+.survey__text:focus-visible { outline: var(--focus-outline); outline-offset: 2px; }
+.survey__error { margin: var(--sp-8) 0 0; font-size: var(--fs-body-s); color: #b42318; }
+.survey__actions { display: flex; flex-wrap: wrap; gap: var(--sp-12); }
+
 /* ── CONTESTAR (T5·2) ──
    ⚠️⚠️ **Barra PROPIA y no `.gf-savebar`, aunque hablen el mismo idioma.** Esa clase es de TRES
    páginas y resuelve otro problema —un «guardar» en fila—; aquí hay un campo y DOS botones del mismo

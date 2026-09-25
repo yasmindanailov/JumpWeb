@@ -87,6 +87,8 @@ return [
             'consent_revoked' => 'withdrawn on',
             'marketing_label' => 'I want to receive news and offers from the park.',
             'marketing_hint' => 'You can withdraw it whenever you like, in one click. We keep the date on record and stop writing to you.',
+            'surveys_label' => 'Receive the survey the day after a visit.',
+            'surveys_hint' => 'A service e-mail, no offers: how it went. Switch it off and we will send no more.',
             'analytics_label' => 'Link my browsing to my account to improve the site.',
             'analytics_hint' => 'Only if you also allow «analytics» in the cookie notice. When you switch it off we unlink what was recorded and ask the analytics tool, if any, to delete it.',
             'delete_title' => 'Delete my account',

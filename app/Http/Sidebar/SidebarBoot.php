@@ -367,6 +367,8 @@ final class SidebarBoot
                         // El interruptor del enlace con la analítica (art. 21, `specs/analitica.md`
                         // §4.3, T3a·3): la misma zona y la misma regla que el de marketing.
                         'analytics_label', 'analytics_hint',
+                        // T3 de las encuestas (`specs/encuestas.md` §4.3): el tercer interruptor de «Privacidad».
+                        'surveys_label', 'surveys_hint',
                     ]),
                     // ⚠️ **Menores a cargo** entra ENTERO (Fase 6 · C, `specs/menores-a-cargo.md`
                     // §9.8): 17 rótulos que la zona y sus tarjetas pintan todos. Y primero se

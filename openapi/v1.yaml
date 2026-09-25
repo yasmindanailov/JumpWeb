@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.27.0
+  version: 1.28.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -2571,6 +2571,39 @@ paths:
         '503':
           $ref: '#/components/responses/Maintenance'
 
+  /me/surveys:
+    put:
+      tags: [Cuenta]
+      operationId: updateMySurveysPreference
+      summary: Recibir la encuesta del día siguiente, o no
+      description: |
+        Enciende o apaga la encuesta que llega por correo al día siguiente de una visita (1.28.0,
+        `specs/encuestas.md` §4.3, `#740`). Es un correo de SERVICIO, no marketing: sin contraseña (apagarlo es
+        tan fácil como encenderlo) y sin consentimiento que sellar, solo la preferencia. El estado actual se lee
+        en `GET /me` (`surveys_opt_out`). El propio correo lleva la baja de un toque, que escribe lo mismo.
+
+        Responde **204 siempre**, incluida la llamada que no cambia nada.
+      security:
+        - sessionCookie: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SurveysPreferenceRequest'
+      responses:
+        '204':
+          description: Estado aplicado.
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
   /me/analytics:
     put:
       tags: [Cuenta]
@@ -4574,6 +4607,7 @@ components:
         - locale
         - marketing_opt_in
         - analytics_opt_out
+        - surveys_opt_out
         - email_verified_at
         - pending_email
         - pending_email_sent_at
@@ -4604,6 +4638,12 @@ components:
             La OPOSICIÓN (art. 21) a que la navegación se vincule a la cuenta (`docs/specs/analitica.md`
             §4.3, T3a·3): `true` = no vincular. Se cambia con `PUT /me/analytics`. El consentimiento real
             es la categoría «análisis» del aviso de cookies; esto es la puerta de la cuenta para retirarlo.
+        surveys_opt_out:
+          type: boolean
+          description: |
+            «No quiero recibir más encuestas» (1.28.0, `specs/encuestas.md` §4.3, `#740`): `true` = no mandar la
+            encuesta del día siguiente. Es un correo de SERVICIO, no marketing. Se cambia con `PUT /me/surveys`
+            o con la baja de un toque del propio correo.
         email_verified_at:
           type: string
           format: date-time
@@ -8327,6 +8367,18 @@ components:
         linked_label:
           type: string
           description: La fecha ya compuesta, en la zona horaria de la instalación.
+
+    SurveysPreferenceRequest:
+      type: object
+      description: |
+        El ESTADO que el titular pide para la encuesta del día siguiente (1.28.0). Un solo campo, como
+        `MarketingConsentRequest`, y por lo mismo `additionalProperties: false`.
+      required: [accepted]
+      additionalProperties: false
+      properties:
+        accepted:
+          type: boolean
+          description: '`true` la quiere recibir; `false` es la baja («no quiero recibir más encuestas»).'
 
     MarketingConsentRequest:
       type: object

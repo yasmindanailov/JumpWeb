@@ -657,6 +657,8 @@ class SidebarMountTest extends TestCase
                 'consent_revoked', 'marketing_label', 'marketing_hint',
                 // El interruptor del art. 21 (`specs/analitica.md` §4.3, T3a·3): oponerse al enlace
                 // de la navegación con la cuenta, con la misma pieza y la misma regla que el de marketing.
+                // T3 de las encuestas (`specs/encuestas.md` §4.3): el tercer interruptor de «Privacidad».
+                'surveys_label', 'surveys_hint',
                 'analytics_label', 'analytics_hint',
                 'delete_title', 'delete_intro', 'delete_password',
                 // ⚠️ Los dos rótulos de la PREGUNTA entran en `#565`, cuando borrar la cuenta dejó de
@@ -962,8 +964,12 @@ class SidebarMountTest extends TestCase
         // = desvincular + pedir el borrado a la herramienta). El rótulo del interruptor NO reutiliza el
         // tipo de la lista porque dicen cosas distintas: una fila del historial y una petición en primera
         // persona, como pasa con `marketing_label` y `consent_types.marketing`. **10.600 deja 34 B.**
+        // T3 de las encuestas (`specs/encuestas.md` §4.3, `#740`): el tercer interruptor de «Privacidad» trae dos
+        // rótulos (`surveys_label`, `surveys_hint`), ya podados a una frase cada uno (+135 B sobre los 34 que
+        // quedaban). El techo sube a 10.800 a propósito: es un presupuesto, y el interruptor es la salida
+        // proporcionada de un correo de servicio (la baja también vive en el propio correo).
         $this->assertLessThan(
-            10600, $bytes,
+            10800, $bytes,
             "Los textos del montaje con sesión pesan {$bytes} B. Poda antes de subir el techo: el ".
             'grupo `account` entero son 9,6 kB, y la diferencia la paga cada página que el cliente abre.'
         );

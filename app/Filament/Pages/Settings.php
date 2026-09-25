@@ -17,6 +17,7 @@ use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\Analytics\Drivers;
 use App\Domain\Platform\Services\Analytics\Pixels;
 use App\Domain\Platform\Services\AuditLogger;
+use App\Domain\Platform\Services\Surveys\SurveySettings;
 use BackedEnum;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\Select;
@@ -190,6 +191,8 @@ class Settings extends Page
         'puerta.lookup_rate_limit_per_hour' => 'puerta',
         'puerta.profile_ttl_minutes' => 'puerta',
         'puerta.window_days' => 'puerta',
+        // T3 de las encuestas (`specs/encuestas.md` §4.3): el plazo entre dos correos de encuesta a la misma persona.
+        'surveys.cooldown_days' => 'puerta',
         // Fase 6 · waiver (`DECISIONES #142`): el MODO sustituye al interruptor de #216 —externo (el
         // sistema del parque; aquí solo el sello) · interno (se firma aquí) · desactivado— y el
         // plazo de conservación del registro firmado (vacío = no se poda; `[PENDIENTE: owner]`).
@@ -1096,6 +1099,14 @@ class Settings extends Page
                     ->integer()
                     ->minValue(PuertaSettings::WINDOW_DAYS_MIN)
                     ->maxValue(PuertaSettings::WINDOW_DAYS_MAX),
+                // T3 de las encuestas (`specs/encuestas.md` §4.3): la encuesta por correo nace de la visita
+                // acreditada aquí, y este es el plazo entre dos correos a la misma persona. Vacío = 30.
+                TextInput::make(SurveySettings::KEY_COOLDOWN_DAYS)
+                    ->label(__('admin.settings.surveys_cooldown'))
+                    ->helperText(__('admin.settings.surveys_cooldown_hint'))
+                    ->integer()
+                    ->minValue(SurveySettings::COOLDOWN_DAYS_MIN)
+                    ->maxValue(SurveySettings::COOLDOWN_DAYS_MAX),
                 // Fase 6 · waiver: los TRES modos (`DECISIONES #142`) en lugar del toggle de #216.
                 Select::make(WaiverSettings::KEY_MODE)
                     ->label(__('admin.waiver.settings_mode'))

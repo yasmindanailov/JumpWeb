@@ -21,8 +21,8 @@
   `AdminSettingsHub::areas()` (`AdminNavigationTest`). (6) `RGPD-01`: purga y export cubren las tablas nuevas;
   `RGPD-04`: `no-store` en la página del correo.
 - **Estado**: ✅ `#740` (atadas al cliente y a la visita · una por cliente y encuesta · todos los tipos de pregunta
-  · correo de servicio con baja de un toque · una viva por clase). **T1 en `main`, T2 en el árbol** (25-09): quedan
-  su ✅ en la tablet; el ESCANEO acredita la visita (`#741`, §1). Luego T3, T4.
+  · correo de servicio con baja de un toque · una viva por clase). **T1·T2 en `main`, T3 en el árbol**
+  (25-09): queda su ✅ (tablet, Mailpit, página); el ESCANEO acredita la visita (`#741`, §1). Luego T4.
 - **Invariantes**: `RGPD-01`, `RGPD-04`, `RGPD-07`, `SEC-04`, `SEC-05`, `PAY-14`, `SUITE-01`. Dinero y aforo:
   ninguno. Ningún fichero del `CRITICAL_RE`.
 
@@ -160,18 +160,35 @@ WhatsApp; recompensas (JumpPoints) por contestar.
   30 días** (`surveys.cooldown_days` `(futuro)`, ajuste de «Ajustes → Puerta», 30 por defecto). Por cada uno: fila
   `survey_responses` (`sent_at`, `token`) y la notificación en cola. `--dry-run` cuenta sin mandar. Idempotente:
   reejecutar no manda dos veces (la fila ya existe).
+  **Como se construyó (T3)**: `SendExternalSurveys` corre **cada hora y la hora la decide él** (desde las 10:00 del
+  parque, `--force` la salta), por las dos razones de `reservations:eve-notice`: la zona del parque se resuelve en
+  la ejecución y una hora de cron caído no se lleva la encuesta. La elegibilidad va entera en la consulta
+  (`whereExists`/`whereNotExists`); la fila nace ANTES de encolar (`SurveyResponses::send()`); el plazo es
+  `SurveySettings::cooldownDays()`. `deploy.sh` espera **10** tareas (9 registradas + ésta; decía 6 desde antes).
 - **La notificación** `SurveyInvitation` `(futuro)` sobre `BrandedMailMessage`: `hero('surveys.mail', 'info')`, la
   `intro` de la encuesta en el idioma del cliente, el botón «Contestar» a la página firmada, y al pie el enlace
   «No quiero recibir más encuestas» (firmado, un toque). Piezas de bandeja en tres idiomas en `lang/{es,en,fr}/
   surveys.php` `(futuro)`. `[DECIDIDO owner]` §7·4: **correo de servicio a todo el que visitó**, con la baja de un
   toque y SIN una sola línea comercial dentro (ni oferta, ni producto, ni enlace a comprar: eso lo convertiría en
   comunicación comercial y exigiría el opt-in). `[PENDIENTE: asesoría]` (5): confirmar esa lectura.
+  **Como se construyó (T3)**: `SurveyInvitation` (`ShouldQueue`, `hero('surveys.mail')`, piezas en
+  `lang/{es,en,fr}/surveys.php`); la primera línea es la `intro` de la encuesta si el panel la escribió; el botón
+  abre la página por su **TOKEN** de 40 caracteres, la credencial entera como en la invitación (no hay firma que
+  caducar); la baja al pie y en la cabecera `List-Unsubscribe`; el asunto SIN el nombre del parque (regla de la
+  bandeja) y **sin la palabra «oferta» ni para negarla** (`SurveySendTest` la busca).
 - **La página** `GET /encuesta/{token}` `(futuro)` en `focused-layout` (sin banner, sin tracker, sin `visitor_id`,
   como las de la fiesta: el grupo `withoutMiddleware(ResolveVisitor:mint)`), `no-store` (`RGPD-04`), en el idioma
   del cliente; `POST` guarda una sola vez (`answered_at` cierra el token) y el hecho `survey_answered` (`channel =
   external`); después, «Gracias». Un token inexistente, contestado o de una encuesta apagada: el mismo 404 (el
-  patrón de la invitación). Limitador por IP en el `POST`. `GET /encuesta/baja/{token}` `(futuro)` pone
-  `surveys_opt_out` y confirma.
+  patrón de la invitación). Limitador por IP en el `POST`.
+  **Como se construyó (T3)** —y corrige lo de arriba—: `SurveyPageController` en el grupo enfocado (`no-store`,
+  `Referrer-Policy: no-referrer`, el idioma es el de `survey_responses.locale`); `POST` tipa y valida con
+  `QuestionSchema` y escribe bajo candado (`answerSent()`); «Gracias» vive en `/encuesta/{token}/gracias`
+  (POST → redirect → GET). **La baja NO es un enlace que escribe al abrirse**: es `/encuesta/{token}/baja`, una
+  página con UN botón (`POST`), porque los escáneres de enlaces de los gestores de correo abren los GET y darían de
+  baja a quien no pidió nada; funciona aunque la encuesta ya se contestara. Lo mismo desde «Privacidad» del cajón:
+  el tercer interruptor y `PUT /me/surveys` (`AccountPrivacy::setSurveys()`, contrato **1.28.0**,
+  `users.surveys_opt_out` en `GET /me`).
 
 ### 4.4 El cuadro y la 360
 
@@ -209,7 +226,7 @@ WhatsApp; recompensas (JumpPoints) por contestar.
 |---|---|---|---|
 | T1 | **🟦 (25-09, en `main`; queda el ✅ del owner en `/admin/encuestas`, con dos ejemplos sembrados en local) el modelo y el panel**: la migración `create_surveys_tables` (`surveys`, `survey_responses`, `users.surveys_opt_out`), `Platform\Models\Survey` (`isRunning()`, `runningOfKind()`, `anotherRunning()`, `questionList()`) y `SurveyResponse` (`MassPrunable` a 24 meses, `forgetPerson()`), `Platform\Services\Surveys\QuestionSchema` (cinco tipos, `normalize()`, `accepts()`), `SurveyResource` en «Ajustes → Sistema» (`/admin/encuestas`, `settings.manage`; formulario con pestañas es/en/fr, el Repeater de preguntas con sus opciones; con respuestas la clave, la clase y la estructura van bloqueadas PERO dehidratadas para que los rótulos editados casen con su pregunta —`GuardsSurveyForm`—; una viva por clase al encender; sin respuestas se borra con rastro, con respuestas no), `AuditLog::ACTIONS` +2, alias de morfo, `Contract` +3 (`survey_sent`, `survey_answered`, `survey_declined`), `anonymize()` y `model:prune`. **El export del cliente (`AccountPrivacy::exportFor()`, contrato `PersonalDataExport` 1.27.0) entró en la T2.** **Lo que enseñó**: un campo `disabled()` no viaja al guardar y sin la clave el Repeater no puede casar los rótulos: `disabled()->dehydrated()` y la guarda del servidor decide; el censo de tarjetas de «Ajustes» (`AdminNavigationTest`) se teclea a mano (23 → 24) | `#740` | `SurveyResourceTest` (7), `QuestionSchemaTest` (3), `SurveyPrivacyTest` (4); `MorphMapTest`, `AdminNavigationTest`, `AuditActionCatalogTest`, `AnalyticsContractTest` en verde · el OJO del owner en `/admin/encuestas` |
 | T2 | **🟦 (25-09, en `main`; disparador `#741`: el ESCANEO acredita la visita; el owner la contestó EN VIVO desde la puerta con la encuesta de ejemplo; queda su ✅ en la tablet del mostrador) la puerta**: `Platform\Services\Surveys\SurveyResponses` (la oferta —viva y sin fila del cliente—, `answer()`/`decline()` con el índice único como árbitro y el hecho; Platform no mira a Identity: el cliente es un `int`), `QuestionSchema::fromForm()`/`validate()` (tipa y valida en el servidor), la tarjeta `gate-survey` DEBAJO de «Hoy» en `ValidarRegistro` (`$survey` con estados `offer`/`open`/`answered`/`declined`, `$surveyId` bloqueado, radios ocultos con etiqueta-botón ≥ 44 px y `wire:model` diferido; muere con la ficha), `puerta.survey_answered`/`puerta.survey_declined` (target el cliente), el export (`surveys`, contrato 1.27.0), rótulos es/zh_CN. **Lo que enseñó**: el botón de la visita no existe (§1); los errores de validación de Livewire sobreviven al siguiente intento si no se resetean (`resetErrorBag()` antes de juzgar); `PersonalDataExport` es `additionalProperties: false`, así que un campo nuevo en el export es contrato | `#740` | `GateSurveyTest` (9), `SurveyPrivacyTest` +1 (el export), `scripts/mutar-encuestas.sh` **9/9 + 1 control**; `MePrivacyTest`, `ApiContractTest`, `GateKioskTest`, `ModuleBoundariesTest` en verde · `scripts/sonda-puerta.mjs` **28/28** (tablet 1080×810 y móvil 390: la tarjeta DEBAJO de «Hoy» y lejos del buscador, el lector con el cursor antes, con la ficha, tras cerrar la encuesta y tras «Nueva búsqueda» —ese último lo arregló la sonda: `clear()` no devolvía el foco—, 11 objetivos ≥ 44 px, sin desborde; dos controles). **Lo que enseñó la sonda**: el cliente de sonda de siempre ya tenía respuesta (la del owner) y la tarjeta no salía: una por cliente funciona; la sonda usa un cliente propio (`sonda-puerta@jumpweb.test`) |
-| T3 | **el correo y la página**: `surveys:send-external` (+1 tarea, `deploy.sh`), `SurveyInvitation`, `/encuesta/{token}` y la baja, `surveys_opt_out` con su interruptor y `PUT /me/surveys` (contrato de la API +1) | contrato de la API | `SurveySendTest`, `SurveyPageTest` `(futuro)`; los censos de correos; `curl -D` sin `visitor_id`; el OJO en Mailpit |
+| T3 | **🟦 (25-09, en el árbol; queda el OJO del owner: el correo en Mailpit, la página y el interruptor) el correo y la página**: `surveys:send-external` (`SendExternalSurveys`, cada hora desde las 10:00 del parque; +1 tarea: `deploy.sh` espera 10), `SurveyInvitation` sobre el molde con `List-Unsubscribe`, `SurveyResponses::send()/openByToken()/answerSent()`, `SurveyPageController` (página, respuesta, gracias, baja con UN botón y su confirmación: 5 rutas en el grupo enfocado), `surveys.cooldown_days` en «Ajustes → Puerta» (`SurveySettings`), `PUT /me/surveys` + `surveys_opt_out` en `GET /me` (contrato 1.28.0) + el tercer interruptor de «Privacidad» (`privacy.js`, `PrivacyZone.vue`), textos es/en/fr (`surveys.php`) y es/zh_CN. **Lo que enseñó**: el asunto no lleva el nombre del parque (`MailInboxLineTest`); la palabra «oferta» no entra ni para negarla; el token es la credencial y no hace falta firmar la URL; la baja de «un toque» es un botón en una página, no un GET que escribe | contrato 1.28.0 | `SurveySendTest` (6), `SurveyPageTest` (5), `MeSurveysTest` (2), `FocusedPagesAreCookieFreeTest` (17 rutas), `EmailUtmTest` (27), `MailMoldTest`, `MailInboxLineTest`, `ApiContractTest` en verde; `mutar-encuestas.sh` +4 · queda el OJO en Mailpit y en la página |
 | T4 | **el cuadro**: `SurveysReport`, la pestaña, el CSV, la 360; fixture del ojo | | `SurveysReportTest` `(futuro)` (igualdad con las tablas), presupuesto, sonda del panel, el OJO |
 
 ## 5. Impacto en invariantes

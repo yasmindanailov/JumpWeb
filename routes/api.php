@@ -484,6 +484,9 @@ Route::name('api.v1.')->group(function (): void {
         // o volver a permitirlo. Sin `current_password` por la misma razón que el marketing: retirar es tan
         // fácil como dar. Retirar desvincula, sella la prueba y dispara el olvido en el driver.
         Route::put('/me/analytics', [MePrivacyController::class, 'analytics'])->name('me.analytics.update');
+        // T3 de las encuestas (`specs/encuestas.md` §4.3): recibir la encuesta del día siguiente, o no. Correo de
+        // servicio: sin `current_password` y sin consentimiento que sellar. 204 siempre.
+        Route::put('/me/surveys', [MePrivacyController::class, 'surveys'])->name('me.surveys.update');
         // T3a·4 · despedir el aviso de que la navegación puede vincularse a la cuenta (viaja en el contexto de
         // cuenta mientras está pendiente). 204 siempre.
         Route::delete('/me/analytics-notice', [MePrivacyController::class, 'dismissAnalyticsNotice'])->name('me.analytics-notice.destroy');

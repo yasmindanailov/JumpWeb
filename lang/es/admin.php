@@ -3103,6 +3103,9 @@ return [
         'puerta_lookup_rate_limit_hint' => 'Por empleado y hora. El escaneo del carné no cuenta aquí. Un empleado que teclea decenas de correos en una hora no está atendiendo: el rechazo avisa al operador.',
         'puerta_profile_ttl' => 'Caducidad de la ficha abierta (minutos)',
         'puerta_profile_ttl_hint' => 'La ficha se cierra sola en el SERVIDOR pasado este tiempo, aunque la pestaña siga abierta. Cualquier interacción reinicia el reloj.',
+        // T3 de las encuestas (`specs/encuestas.md` §4.3): el plazo entre dos correos de encuesta a la misma persona.
+        'surveys_cooldown' => 'Días entre dos encuestas por correo a la misma persona',
+        'surveys_cooldown_hint' => 'Quien visita cada semana no recibe una encuesta cada semana: tras un correo de encuesta, no se le manda otro hasta pasar estos días. 0 = sin plazo.',
         'puerta_window_days' => 'Ventana de reservas (± días)',
         'puerta_window_days_hint' => 'Además de las de hoy, la ficha enseña en segundo plano las reservas de estos días alrededor (el que llega un día antes o después). 0 = solo hoy.',
         'puerta_waiver_check' => 'Comprobar el descargo en la puerta',

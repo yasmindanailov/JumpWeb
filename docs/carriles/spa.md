@@ -62,7 +62,13 @@
   «Nueva búsqueda»). ⚠️ Montado en local para la sonda: el cliente `sonda-puerta@jumpweb.test` (id 2179) y las
   visitas de HOY de 593 y 2179 en `customer_visits`; la respuesta del owner en `survey_responses` (se borran al
   desmontar). Chromium en el contenedor va con `node node_modules/playwright-core/cli.js install chromium`
-  (`npx playwright install` cae en la caché de npx y no se encuentra: medido).
+  (`npx playwright install` cae en la caché de npx y no se encuentra: medido). ▶ **T3 EN EL ÁRBOL (25-09)**:
+  `SendExternalSurveys` (cada hora desde las 10:00 del parque, la fila es la marca), `SurveyInvitation`
+  (`List-Unsubscribe`), `SurveyPageController` (cinco rutas enfocadas: página por token, respuesta, gracias, baja
+  con UN botón y su confirmación), `PUT /me/surveys` y el tercer interruptor de «Privacidad» (contrato 1.28.0),
+  `surveys.cooldown_days` en «Ajustes → Puerta»; 13 tests nuevos, arnés +4; `deploy.sh` espera 10. **Demo local**:
+  el cliente 2179 tiene la visita de AYER y la externa `que-tal-ayer` vive → `surveys:send-external --force` deja
+  el correo en Mailpit `:8028` y su página abre por el token de la fila.
 - ⚠️⚠️ **LO MONTADO EN LA BD LOCAL para el ojo del owner (24-09), todo reversible**: (1) cinco ajustes FALSOS
   en `settings` (`analytics.driver=posthog`, `analytics.posthog_project` inventado y los tres ids de píxeles
   `marketing.*`): se quitan borrando esas filas; (2) el aviso de la analítica ENVIADO a las 57 cuentas de
@@ -89,10 +95,10 @@
 ## Por dónde retomar, en orden
 
 1. ❗❗ **LA T7 DE LA ANALÍTICA: LAS ENCUESTAS** — `specs/encuestas.md` **✅ aprobada (`#740`)**; **T1 en `main`**
-   (25-09); **T2 en `main`** con el disparador de `#741` (el escaneo acredita) y la sonda 28/28. ▶ **Sigue la T3**,
-   el correo
-   del día siguiente (comando a las 10:00, +1 tarea del planificador: aviso a plataforma por `deploy.sh`; página
-   firmada SIN cookie de medición; baja de un toque) → T4 el cuadro (quinta pestaña, «Por atender», la 360).
+   (25-09); **T2 en `main`** con el disparador de `#741` (el escaneo acredita) y la sonda 28/28; **T3 en el
+   árbol** (el correo cada hora desde las 10:00 del parque, la página por token, la baja con UN botón,
+   `PUT /me/surveys` y el interruptor, contrato 1.28.0; `deploy.sh` espera 10). ▶ El ojo del owner en Mailpit y en
+   la página → commit y push → **T4 el cuadro** (quinta pestaña, «Por atender», la 360).
    Después, el experimento real (T5c), que el owner quiere iterar tras las encuestas.
    ⚠️ Trampas de la fiesta, por si se reutiliza su molde (spec §4.6): el reenvío del mismo padre es IDEMPOTENTE;
    `order_id` nunca es nulo; son DOCE rutas enfocadas; los invitados añadidos NO son «extras»; una edición sin
@@ -251,6 +257,9 @@ y las clases `.gf-*` y `.guardian__*` · `tests/Feature/Sidebar/**`, `tests/Feat
   `sanctum:prune-expired`, `reservations:eve-notice`) y `deploy.sh` comprueba «esperadas 6» con `grep -c artisan`.
   Es tu fichero: o el despliegue sale en rojo con el sitio sano, o el `grep` cuenta distinto en el servidor. La T3 de
   las encuestas (`specs/encuestas.md`) añadirá una tarea diaria más: te aviso antes de tocar la cifra.
+  ▶ **25-09 (T3 de las encuestas)**: la cifra ya está tocada — `deploy.sh` espera **10** (las 9 registradas más
+  `surveys:send-external`), en el mismo commit que la tarea, como pide la spec §0·4. Si tu `grep -c artisan` cuenta
+  distinto en el servidor, la cifra es tuya.
 
 ### ❗ Para el carril de CORREOS (emisor: SPA, 19→24-09; pendiente de tu «atendido»)
 - ✅ Tu censo pasa de 25 a 27 (`VisitEveNotice` `#717`, `GoogleBusinessLocationChanged` `#725`, tres idiomas);

@@ -258,6 +258,24 @@ class AccountPrivacy
      * @return array{visits: array{count: int, first_seen_at: ?string, last_seen_at: ?string}, events_count: int, first_source: ?array{source: string, medium: string, campaign: ?string}, opted_out: bool, first_attribution: ?array{source: string, medium: string, campaign: ?string}}
      */
     /**
+     * **La encuesta del día siguiente: recibirla o no** (`specs/encuestas.md` §4.3, T3). `$wants = false` es la baja
+     * («no quiero recibir más encuestas»), desde el correo o desde «Privacidad» del cajón; `true` la vuelve a
+     * encender. Es un correo de servicio, no marketing: no hay consentimiento que sellar, solo la preferencia.
+     * `false` si no cambia nada.
+     */
+    public function setSurveys(User $user, bool $wants): bool
+    {
+        if ((bool) $user->surveys_opt_out === ! $wants) {
+            return false;
+        }
+
+        $user->forceFill(['surveys_opt_out' => ! $wants])->save();
+        Log::info('account.surveys_changed', ['user_id' => $user->getKey(), 'wants' => $wants]);
+
+        return true;
+    }
+
+    /**
      * Las encuestas del titular (`specs/encuestas.md` §4.5, T2; `RGPD-01`): lo que contestó —o declinó—, cuándo
      * y por qué canal, con la clave de la encuesta. Es dato SUYO y el export lo lleva entero, texto libre incluido.
      *

@@ -50,6 +50,9 @@ class UserResource extends JsonResource
             // La OPOSICIÓN al régimen identificado (`specs/analitica.md` §4.3, T3a·3): lo que pinta el
             // interruptor de «Mi cuenta → Privacidad». `true` = no vincular mi navegación a mi cuenta.
             'analytics_opt_out' => (bool) $this->analytics_opt_out,
+            // La encuesta del día siguiente (`specs/encuestas.md` §4.3, T3): `true` = no mandarla. El tercer
+            // interruptor de «Privacidad»; se cambia con `PUT /me/surveys`.
+            'surveys_opt_out' => (bool) $this->surveys_opt_out,
             'email_verified_at' => $this->email_verified_at?->toIso8601String(),
             'pending_email' => $this->pending_email,
             'pending_email_sent_at' => $this->pending_email_sent_at?->toIso8601String(),

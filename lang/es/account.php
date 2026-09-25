@@ -95,6 +95,11 @@ return [
             'consent_revoked' => 'retirado el',
             'marketing_label' => 'Quiero recibir novedades y ofertas del parque.',
             'marketing_hint' => 'Puedes retirarlo cuando quieras y con un solo clic. Guardamos la fecha para que quede constancia, y dejamos de escribirte.',
+            // La encuesta del día siguiente (`specs/encuestas.md` §4.3, T3): un correo de SERVICIO, sin ofertas.
+            // Encendido = se manda (`surveys_opt_out` a falso); la baja de un toque del correo apaga esto mismo.
+            // ⚠️ Cortos a propósito: los textos del montaje con sesión tienen techo (`SidebarMountTest`).
+            'surveys_label' => 'Recibir la encuesta del día siguiente a una visita.',
+            'surveys_hint' => 'Un correo de servicio, sin ofertas: qué tal fue. Apágalo y no te mandaremos más.',
             'analytics_label' => 'Vincular mi navegación a mi cuenta para mejorar la web.',
             'analytics_hint' => 'Solo si además aceptas «análisis» en el aviso de cookies. Al apagarlo desvinculamos lo registrado y pedimos su borrado a la herramienta de análisis, si la hay.',
             'delete_title' => 'Eliminar mi cuenta',

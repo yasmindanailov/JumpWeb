@@ -72,6 +72,8 @@ class MeTest extends ApiTestCase
             'locale',
             'marketing_opt_in',
             'analytics_opt_out',
+            // T3 de las encuestas (`specs/encuestas.md` §4.3, contrato 1.28.0): el tercer interruptor de «Privacidad».
+            'surveys_opt_out',
             'email_verified_at',
             'pending_email',
             'pending_email_sent_at',

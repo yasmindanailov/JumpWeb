@@ -18,8 +18,9 @@ LW=app/Livewire/Admin/Puerta/ValidarRegistro.php
 RES=app/Domain/Platform/Services/Surveys/SurveyResponses.php
 SCH=app/Domain/Platform/Services/Surveys/QuestionSchema.php
 EXP=app/Domain/Identity/Services/AccountPrivacy.php
+CMD=app/Console/Commands/SendExternalSurveys.php
 TMP="$(mktemp -d)"
-FICHEROS=("$LW" "$RES" "$SCH" "$EXP")
+FICHEROS=("$LW" "$RES" "$SCH" "$EXP" "$CMD")
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$TMP/$(basename "$f")" "$f"; touch "$f"; done; }
 trap 'restaurar; rm -rf "$TMP"' EXIT
 for f in "${FICHEROS[@]}"; do cp "$f" "$TMP/$(basename "$f")"; done
@@ -27,7 +28,7 @@ SHA_ANTES="$(sha1sum "${FICHEROS[@]}" | sha1sum)"
 
 # Las guardas de la T2, más las del esquema y de la privacidad de la T1.
 verde() { docker compose exec -u sail -T laravel.test php artisan test \
-    --filter='GateSurveyTest|SurveyPrivacyTest|QuestionSchemaTest' >/dev/null 2>&1; }
+    --filter='GateSurveyTest|SurveyPrivacyTest|QuestionSchemaTest|SurveySendTest|SurveyPageTest' >/dev/null 2>&1; }
 
 if ! verde; then
     echo '✗ la base NO está verde antes de mutar: el veredicto de abajo no valdría nada.' >&2
@@ -130,6 +131,26 @@ mutar "la respuesta no deja su hecho en el libro" "$RES" \
 mutar "el export del titular olvida sus encuestas" "$EXP" \
   "            'surveys' => \$this->surveysFor(\$user)," \
   ""
+
+echo '── T3 · el correo del día siguiente: la hora del parque, la baja, el plazo, el token cerrado ──────'
+
+mutar "el comando manda a cualquier hora, sin esperar a las 10:00 del parque" "$CMD" \
+  "        if (\$now->hour < self::FROM_HOUR && ! \$this->option('force')) {" \
+  "        if (false) {"
+
+mutar "el comando manda a quien se dio de baja" "$CMD" \
+  "            ->where('surveys_opt_out', false)
+" \
+  ""
+
+mutar "el plazo entre dos encuestas se ignora" "$CMD" \
+  "        \$cooldownSince = Carbon::now()->subDays(SurveySettings::cooldownDays());" \
+  "        \$cooldownSince = Carbon::now();"
+
+mutar "un token ya contestado vuelve a abrir la página" "$RES" \
+  "            ->where('token', \$token)
+            ->whereNull('answered_at')" \
+  "            ->where('token', \$token)"
 
 echo '── CONTROL ──────────────────────────────────────────────────────────────────────────────────────'
 
