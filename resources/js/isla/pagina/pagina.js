@@ -46,6 +46,8 @@ export function propsDeLaIsla({ config, estado, acciones, textos }) {
         today: conHoy ? { ...config.today, slots: huecos } : null,
         chosen: calculo?.elegido ? { text: calculo.elegido, label: calculo.boton, widgetVisible: estado.vista.cta, onClick: acciones.irAlResumen } : null,
         ctaVisible: estado.vista.cta,
+        // La oferta de la página en sus 3 últimos días (situación `oferta`): la decide la página, que sabe su fecha.
+        offer: config.offer ?? null,
         compact: false,
         homeLabel: config.homeLabel ?? null,
         menuItems: config.menuItems ?? [],

@@ -87,6 +87,10 @@ class AuditLog extends Model
         'catalog.delete_blocked',
         'catalog.deleted',
         'catalog.prices_updated',
+        // Las PROMOCIONES (`specs/promociones.md`, `#770`): ofertas y regalos.
+        'catalog.promotion_created',
+        'catalog.promotion_deleted',
+        'catalog.promotion_updated',
         'catalog.update_blocked',
         'catalog.updated',
 

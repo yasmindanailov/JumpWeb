@@ -206,6 +206,8 @@ final class PostFormAddons
 
         $order = $principal->order;
         $order?->loadMissing('adjustments');
+        // Los regalos de cada complemento (`#770`) en una consulta, no una por fila.
+        $type->loadMissing('addons.giftPromotions');
 
         $lines = [];
         foreach ($principal->children as $child) {

@@ -83,6 +83,10 @@ class ApiContractTest extends TestCase
         // Y de una norma: el momento —el negocio puede no haberla situado— y los dos textos largos. El
         // nombre va siempre: una norma sin nombre no es una norma.
         'Rules.rules.items' => ['moment', 'description', 'reason'],
+        // De una PROMOCIÓN (`#770`): el fin falta en la que no acaba (un regalo permanente) —emitirlo obligaría a
+        // inventar una fecha—, y el objetivo lleva la zona O el producto según su `type`, nunca los dos.
+        'Promotions.promotions.items' => ['ends_on'],
+        'Promotions.promotions.items.target' => ['zone', 'product'],
         // De una SECCIÓN de servicios: los adornos editoriales y la foto, que una instalación puede no
         // haber escrito. ⚠️ `slug`, `title` y `products` NO entran aquí y es deliberado: el slug es el
         // ancla, una sección sin título no se publica (por eso el título va siempre en lo que viaja), y

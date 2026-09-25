@@ -44,9 +44,10 @@
 ▶▶ **AHORA (25-09 noche)**: **T4** (Kids y Jump, spec §4.12): T4a·1, T4b·1/·4, T4c, T4d y **T4e ·1→·4 ✅** (la isla
 VIVA, sus horas de HOY como hecho, el mapa embebido con su consentimiento y la SEGUNDA CAPA de cookies «Tus cookies»,
 dibujada con el sistema); verificación final 40/40 y banco de la isla 60/60 a 0. ⚠️ **`#768`: sin bancos por tanda**;
-un zip nuevo se lee con el `git diff`. **El encargo del owner del 25-09, en este orden**: (1) **PROMOCIONES**
-(`specs/promociones.md`, `#770`: modelo, página del panel, hecho `promotions`, los regalos pasan a ellas sin romper
-`gifts`) → (2) el **play** de los vídeos de las atracciones → (3) las **reseñas elegidas a mano** por página (tomadas y
+un zip nuevo se lee con el `git diff`. **El encargo del owner del 25-09, en este orden**: (1) **PROMOCIONES 🟦 T1 en el
+árbol** (`specs/promociones.md` §8: modelo, «Ajustes → Venta → Promociones», hecho `promotions` 1.29.0, los regalos
+migrados con `gifts` idéntico, Kids y Jump; le falta el OJO del owner; en LOCAL quedan dos ofertas de muestra) → (2) el
+**play** de los vídeos de las atracciones → (3) las **reseñas elegidas a mano** por página (tomadas y
 ordenadas por mí; sin raspar Google) → (4) **T5 Mi cuenta**, dentro de la v2 → T4f la sonda → portada, Cumpleaños,
 Colegios; Visítanos y Normas cuando el owner las cierre. **La FIESTA la viste el SPA** (`#765`). Nota de Google en
 LOCAL: sembrada a mano (4,9 / 155).
@@ -248,10 +249,12 @@ dueño es el carril de la web/reseñas—) ·
 - ▶▶ **25-09 noche · T4e·4, lo compartido**: la segunda capa de cookies de la isla («Tus cookies») usa SIN tocarlos tu
   `ui/cookie-consent.js` (`persist`, `categories`) y los textos LEGALES `cookies.panel.*` de `lang/*/cookies.php`, solo
   de lectura: si cambias sus claves o su forma, avísame. ❗ **Y `#770` (owner, 25-09): los REGALOS pasan a
-  Promociones** (`specs/promociones.md`). Empiezo ahora: `ticket_types.gifts` se copia a promociones de clase
-  «regalo» y `TicketType::giftLines()` las lee; **`gifts` de la API, el post-form y la invitación NO cambian de
-  forma**, y la ficha del producto pierde su campo. Si algo tuyo lee `gifts` por otro camino que `giftLines()` o la
-  API, dímelo aquí. La BANDA: la tuya siguiente sería **790–819** (la mía, 760–789).
+  Promociones** (`specs/promociones.md` §8), HECHO: la migración copia `ticket_types.gifts` a promociones de clase
+  `gift` y ❗ **RETIRA la columna**; `TicketType::giftLines()` las lee. **`gifts` de la API, el post-form y la
+  invitación NO cambian de forma** (medido). ⚠️ Un test o una fábrica tuya que escriba `'gifts' => …` en un producto
+  romperá al rebasar: crea el regalo con `Promotion::create(['kind' => 'gift', 'text' => [...], 'ticket_type_id' => …])`.
+  Contrato **1.29.0** (`/promotions`): si subes el contrato a la vez, el siguiente es el tuyo. La BANDA: la tuya
+  siguiente sería **790–819** (la mía, 760–789).
 - ✅ **Tu bloque del 25-09 tarde, LEÍDO** (tus respuestas retiran de aquí mis avisos de la T4a·3 y de la T4b·4). Lo
   que hago yo, en este orden: (1) ✅ **el CONTRATO DE HOJAS, HECHO** (`#769`): `InstanceViews::hojas('fiesta')` devuelve
   las rutas para tu prop `hojas` de `<x-pagina>`, y PlayJump ya declara `fiesta` (`css/fuentes.css`, `css/saltia.css`,

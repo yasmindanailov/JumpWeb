@@ -39,6 +39,7 @@ use App\Http\Controllers\Api\V1\OrderPaymentStatusController;
 use App\Http\Controllers\Api\V1\OrdersController;
 use App\Http\Controllers\Api\V1\PasswordRecoveryController;
 use App\Http\Controllers\Api\V1\PricesFactsController;
+use App\Http\Controllers\Api\V1\PromotionsFactsController;
 use App\Http\Controllers\Api\V1\QuoteController;
 use App\Http\Controllers\Api\V1\RulesFactsController;
 use App\Http\Controllers\Api\V1\ScheduleFactsController;
@@ -189,6 +190,13 @@ Route::name('api.v1.')->group(function (): void {
     Route::get('/rules', RulesFactsController::class)
         ->middleware('cache.headers:public;max_age=300;etag')
         ->name('rules.facts');
+
+    // Las PROMOCIONES de hoy (`specs/promociones.md` §4.3, `#770`): ofertas con fecha y regalos, con su objetivo.
+    // Mismo régimen que las normas —`?lang=` obligatorio, cinco minutos, `ETag`—. ⚠️ Una oferta que acaba hoy puede
+    // seguir en una caché hasta cinco minutos pasada la medianoche: es texto, no un precio que se cobre.
+    Route::get('/promotions', PromotionsFactsController::class)
+        ->middleware('cache.headers:public;max_age=300;etag')
+        ->name('promotions.facts');
 
     // Las DUDAS que el negocio contesta. Mismo régimen que las normas —`?lang=` obligatorio, cinco
     // minutos, `ETag`— porque son la misma clase de cosa: texto que el panel opera y la web consume.

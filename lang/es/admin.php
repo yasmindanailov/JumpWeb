@@ -30,6 +30,7 @@ return [
         ],
         'items' => [
             'catalog' => ['label' => 'Catálogo', 'description' => 'Entradas, packs y complementos que se venden.'],
+            'promotions' => ['label' => 'Promociones', 'description' => 'Ofertas con fecha y regalos, y dónde salen en la web.'],
             'rate_types' => ['label' => 'Tarifas', 'description' => 'Tipos de precio y a qué días se aplica cada uno.'],
             'zones' => ['label' => 'Zonas', 'description' => 'Áreas del recinto, su aforo y su color.'],
             'weekly_schedule' => ['label' => 'Horario semanal', 'description' => 'A qué hora se abre y se cierra cada día de la semana.'],
@@ -2485,7 +2486,9 @@ return [
         'field_features' => 'Ventajas',
         'features_hint' => 'Una ventaja por línea.',
         'field_gifts' => 'Regalos',
-        'gifts_hint' => 'Un regalo por línea: lo que se da sin cobrar («Cono de chuches», «Calcetines antideslizantes para todos»). La web y el cajón destacan cada uno en una etiqueta amarilla, así que no lo repitas en las ventajas.',
+        // `#770`: los regalos se gestionan en Promociones; la ficha solo los enseña.
+        'gifts_hint' => 'Lo que se da sin cobrar con este producto. Se crea y se cambia en Ajustes → Promociones (clase «Regalo»), no aquí.',
+        'gifts_none' => 'Sin regalos.',
 
         'field_is_active' => 'Visible en la web',
         'is_active_hint' => 'Si se desactiva, deja de mostrarse en la web pública.',
@@ -3978,6 +3981,92 @@ return [
                 'modal_description' => 'Esta acción es irreversible.',
                 'submit' => 'Borrar',
                 'success' => 'Norma borrada.',
+            ],
+        ],
+    ],
+
+    /*
+     * PROMOCIONES (`specs/promociones.md`, `#770`): ofertas con fecha y regalos, en una sola página. Una promoción es
+     * TEXTO: no cambia ningún precio, y así lo dicen las ayudas.
+     */
+    'promotions' => [
+        'nav_label' => 'Promociones',
+        'model_label_singular' => 'promoción',
+        'model_label_plural' => 'Promociones',
+
+        'section_what' => 'Qué es',
+        'field_kind' => 'Clase',
+        'field_kind_hint' => 'Una oferta tiene fecha de fin y sale encima del precio. Un regalo es lo que se da sin cobrar.',
+        'kinds' => [
+            'offer' => 'Oferta',
+            'gift' => 'Regalo',
+        ],
+        'field_is_active' => 'Activa',
+        'field_is_active_hint' => 'Apagada no sale en ningún sitio, aunque esté dentro de sus fechas.',
+
+        'section_where' => 'Dónde sale',
+        'field_target' => 'A qué va',
+        'field_target_hint' => 'La web la pone sola en todos los sitios de lo que elijas: la página de esa zona, la ficha de ese producto o todas.',
+        'targets' => [
+            'installation' => 'Toda la instalación',
+            'zone' => 'Una zona',
+            'product' => 'Un producto',
+        ],
+        'field_zone' => 'Zona',
+        'field_product' => 'Producto',
+
+        'section_when' => 'Cuándo',
+        'field_starts_on' => 'Desde',
+        'field_starts_on_hint' => 'Vacío: desde hoy.',
+        'field_ends_on' => 'Hasta',
+        'field_ends_on_hint_offer' => 'Obligatoria en una oferta: el último día que vale, que la web escribe al lado.',
+        'field_ends_on_hint_gift' => 'Vacío: siempre.',
+        'field_position' => 'Orden',
+        'field_position_hint' => 'Entre las que acaban el mismo día, la menor primero.',
+
+        'lang' => [
+            'es' => 'Español',
+            'en' => 'Inglés',
+            'fr' => 'Francés',
+        ],
+        'field_text' => 'Texto',
+        'field_text_hint_offer' => 'Sin la fecha: la web la pone delante («Hasta el 30 de septiembre, −20 % si reservas online»). Sin traducir, la oferta no sale en ese idioma. No cambia ningún precio.',
+        'field_text_hint_gift' => 'Una frase corta («Cono de chuches para cada niño»). Sin traducir, sale en español.',
+
+        'create_title' => 'Crear promoción',
+        'edit_title' => 'Editar promoción: :name',
+
+        'col_text' => 'Texto',
+        'col_kind' => 'Clase',
+        'col_target' => 'A qué va',
+        'target_zone' => 'Zona: :name',
+        'target_product' => 'Producto: :name',
+        'col_dates' => 'Fechas',
+        'dates_between' => 'Del :from al :to',
+        'dates_until' => 'Hasta el :to',
+        'dates_from' => 'Desde el :from',
+        'dates_always' => 'Siempre',
+        'col_state' => 'Estado',
+        'states' => [
+            'current' => 'Vigente',
+            'scheduled' => 'Programada',
+            'ended' => 'Acabada',
+            'inactive' => 'Apagada',
+        ],
+        'col_languages' => 'Idiomas',
+        'languages_all' => 'Completa',
+        'languages_missing' => 'Falta :langs',
+        'empty_heading' => 'Sin promociones',
+        'empty_description' => 'Crea una oferta con su fecha de fin o un regalo, y elige a qué va.',
+
+        'actions' => [
+            'create' => 'Crear promoción',
+            'delete' => [
+                'label' => 'Borrar promoción',
+                'modal_heading' => 'Borrar esta promoción',
+                'modal_description' => 'Deja de salir en la web y no se puede deshacer. Para quitarla un tiempo, apágala.',
+                'submit' => 'Borrar',
+                'success' => 'Promoción borrada.',
             ],
         ],
     ],

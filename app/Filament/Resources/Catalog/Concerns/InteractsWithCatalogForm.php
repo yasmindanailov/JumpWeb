@@ -15,8 +15,8 @@ use Filament\Support\Exceptions\Halt;
  * `AddonResolver` con el precio de complementos): así no divergen las dos páginas.
  *
  * Cubre lo NO específico de una u otra operación:
- *  - **i18n con listas**: las "ventajas" (`features`) y los "regalos" (`gifts`, `#589`) se
- *    editan como texto (uno por línea) y se guardan como `{es:[…],en:[…],fr:[…]}`.
+ *  - **i18n con listas**: las "ventajas" (`features`) se editan como texto (una por línea) y se
+ *    guardan como `{es:[…],en:[…],fr:[…]}`. Los "regalos" se fueron a Promociones (`#770`).
  *  - **Limpieza i18n**: los textos traducibles vacíos no se persisten como `''`.
  *  - **Editor de `event_fields`**: saneo + claves únicas (bloquea el guardado si hay
  *    duplicados).
@@ -35,7 +35,7 @@ trait InteractsWithCatalogForm
      * lista para guardar (aquí) y para rellenar (`EditCatalog`): con dos, un campo nuevo se guardaría
      * y no volvería a salir en el formulario, o al revés, sin que nada fallara.
      */
-    protected const I18N_LIST_FIELDS = ['features', 'gifts'];
+    protected const I18N_LIST_FIELDS = ['features'];
 
     /** @var array<int,?string> Importes (€) por rate_type_id capturados del form para el upsert. */
     protected array $priceInputs = [];

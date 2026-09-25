@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\V1\CatalogProductsController;
 use App\Http\Controllers\Api\V1\CatalogZonesController;
 use App\Http\Controllers\Api\V1\FaqsFactsController;
 use App\Http\Controllers\Api\V1\PricesFactsController;
+use App\Http\Controllers\Api\V1\PromotionsFactsController;
 use App\Http\Controllers\Api\V1\RulesFactsController;
 use App\Http\Controllers\Api\V1\ScheduleFactsController;
 use App\Http\Controllers\Api\V1\SiteFactsController;
@@ -49,6 +50,8 @@ final class PageFacts
         'prices' => [PricesFactsController::class, '__invoke', true],
         'attractions' => [AttractionsFactsController::class, '__invoke', true],
         'rules' => [RulesFactsController::class, '__invoke', true],
+        // Las PROMOCIONES de hoy (`specs/promociones.md` §4.3): la página las reparte por los sitios de su objetivo.
+        'promotions' => [PromotionsFactsController::class, '__invoke', true],
         'faqs' => [FaqsFactsController::class, '__invoke', true],
         'social_proof' => [SocialProofFactsController::class, '__invoke', false],
         'zones' => [CatalogZonesController::class, 'index', false],

@@ -29,6 +29,7 @@ return [
         ],
         'items' => [
             'catalog' => ['label' => '商品目录', 'description' => '在售的门票、套餐与附加项目。'],
+            'promotions' => ['label' => '促销', 'description' => '有期限的优惠与赠品，以及它们在网站上的位置。'],
             'rate_types' => ['label' => '费率', 'description' => '价格类型及其适用的日期。'],
             'zones' => ['label' => '区域', 'description' => '场地区域及其容量与颜色。'],
             'weekly_schedule' => ['label' => '营业时间', 'description' => '每周各日的开门与关门时间。'],
@@ -2015,7 +2016,8 @@ return [
         'field_features' => '亮点',
         'features_hint' => '每行一个亮点。',
         'field_gifts' => '赠品',
-        'gifts_hint' => '每行一个赠品：免费赠送的内容（例如“糖果筒”“全员防滑袜”）。网站和预订面板会用黄色标签逐个突出显示，请勿在亮点中重复填写。',
+        'gifts_hint' => '随此产品免费赠送的内容。请在「设置 → 促销」（类型「赠品」）中创建和修改，不在此处。',
+        'gifts_none' => '无赠品。',
 
         'field_is_active' => '在网站上显示',
         'is_active_hint' => '停用后将不再显示在公开网站上。',
@@ -3267,6 +3269,89 @@ return [
                 'modal_description' => '此操作不可撤销。',
                 'submit' => '删除',
                 'success' => '规则已删除。',
+            ],
+        ],
+    ],
+
+    // 促销（`specs/promociones.md`，`#770`）：有期限的优惠与赠品。促销只是文字，不改变任何价格。
+    'promotions' => [
+        'nav_label' => '促销',
+        'model_label_singular' => '促销',
+        'model_label_plural' => '促销',
+
+        'section_what' => '内容',
+        'field_kind' => '类型',
+        'field_kind_hint' => '优惠有结束日期，显示在价格上方。赠品是免费赠送的内容。',
+        'kinds' => [
+            'offer' => '优惠',
+            'gift' => '赠品',
+        ],
+        'field_is_active' => '启用',
+        'field_is_active_hint' => '关闭后在任何地方都不显示，即使在有效日期内。',
+
+        'section_where' => '显示位置',
+        'field_target' => '适用于',
+        'field_target_hint' => '网站会自动在所选对象的所有位置显示：该区域的页面、该产品的卡片，或全部。',
+        'targets' => [
+            'installation' => '整个场馆',
+            'zone' => '一个区域',
+            'product' => '一个产品',
+        ],
+        'field_zone' => '区域',
+        'field_product' => '产品',
+
+        'section_when' => '时间',
+        'field_starts_on' => '开始',
+        'field_starts_on_hint' => '留空：从今天起。',
+        'field_ends_on' => '结束',
+        'field_ends_on_hint_offer' => '优惠必填：有效的最后一天，网站会在旁边显示。',
+        'field_ends_on_hint_gift' => '留空：一直有效。',
+        'field_position' => '顺序',
+        'field_position_hint' => '同一天结束的促销中，数字小的在前。',
+
+        'lang' => [
+            'es' => '西班牙语',
+            'en' => '英语',
+            'fr' => '法语',
+        ],
+        'field_text' => '文字',
+        'field_text_hint_offer' => '不要写日期：网站会自动加在前面（“至9月30日，网上预订优惠20%”）。未翻译的语言不显示此优惠。不改变任何价格。',
+        'field_text_hint_gift' => '一句简短的话（“每个孩子一个糖果筒”）。未翻译时显示西班牙语。',
+
+        'create_title' => '创建促销',
+        'edit_title' => '编辑促销：:name',
+
+        'col_text' => '文字',
+        'col_kind' => '类型',
+        'col_target' => '适用于',
+        'target_zone' => '区域：:name',
+        'target_product' => '产品：:name',
+        'col_dates' => '日期',
+        'dates_between' => ':from 至 :to',
+        'dates_until' => '至 :to',
+        'dates_from' => '自 :from 起',
+        'dates_always' => '一直',
+        'col_state' => '状态',
+        'states' => [
+            'current' => '进行中',
+            'scheduled' => '已排期',
+            'ended' => '已结束',
+            'inactive' => '已关闭',
+        ],
+        'col_languages' => '语言',
+        'languages_all' => '完整',
+        'languages_missing' => '缺少 :langs',
+        'empty_heading' => '暂无促销',
+        'empty_description' => '创建一个带结束日期的优惠或一个赠品，并选择适用对象。',
+
+        'actions' => [
+            'create' => '创建促销',
+            'delete' => [
+                'label' => '删除促销',
+                'modal_heading' => '删除此促销',
+                'modal_description' => '将不再在网站上显示，且无法撤销。如需暂时下架，请关闭它。',
+                'submit' => '删除',
+                'success' => '促销已删除。',
             ],
         ],
     ],

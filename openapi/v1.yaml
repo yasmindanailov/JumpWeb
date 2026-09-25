@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.28.0
+  version: 1.29.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -611,6 +611,43 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Rules'
+        '304':
+          description: Sin cambios desde el `ETag` enviado en `If-None-Match`.
+        '422':
+          description: Falta `lang` o no es uno de los idiomas soportados.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /promotions:
+    get:
+      tags: [Instalación]
+      operationId: getPromotions
+      summary: Las promociones de hoy —ofertas con fecha y regalos—, con su objetivo y en el orden en que se apilan
+      description: |
+        Lo que el negocio anuncia HOY desde «Promociones» del panel (1.29.0, `specs/promociones.md` §4.3). Solo las
+        **vigentes**: activas, con hoy —el día del parque— dentro de sus fechas, y con su zona o su producto vivos.
+
+        **Es TEXTO, no dinero**: ninguna promoción cambia un precio y aquí no viaja ninguno; un descuento de verdad
+        está en los precios de `/prices`. Cada una dice a qué va (`target`): toda la instalación, una zona por su
+        `slug` o un producto por su `id`. **Qué sitio de la página le toca lo decide quien pinta.**
+
+        **El orden es parte del dato**: la que acaba antes primero, las que no acaban al final y, entre iguales,
+        juntas por objetivo y en el orden del panel. Las de un mismo objetivo se apilan en ese orden.
+
+        **El idioma viaja en la URL** (`lang`, obligatorio), como en `/rules`. Una **oferta** sin texto en ese
+        idioma NO viaja (quien pinta le pone su fecha en el idioma de la visita); un **regalo** cae al idioma de
+        respaldo.
+      parameters:
+        - $ref: '#/components/parameters/SidebarLang'
+      responses:
+        '200':
+          description: Las promociones vigentes en ese idioma.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Promotions'
         '304':
           description: Sin cambios desde el `ETag` enviado en `If-None-Match`.
         '422':
@@ -3895,6 +3932,45 @@ components:
               name: { type: string }
               description: { type: string }
               reason: { type: string, description: 'El PORQUÉ de la norma, que es lo que hace que se cumpla.' }
+
+    Promotions:
+      type: object
+      additionalProperties: false
+      required: [lang, promotions]
+      properties:
+        lang:
+          type: string
+          description: El idioma en el que viene el texto, que es el que se pidió.
+        promotions:
+          type: array
+          description: Las vigentes hoy, ya en el orden en que se apilan. Vacía si no hay ninguna.
+          items:
+            type: object
+            additionalProperties: false
+            required: [id, kind, text, target]
+            properties:
+              id: { type: integer }
+              kind:
+                type: string
+                enum: [offer, gift]
+                description: '`offer`: con fecha de fin, va encima del precio. `gift`: lo que se da sin cobrar.'
+              text:
+                type: string
+                example: '−20 % si reservas online'
+                description: 'Sin la fecha: quien pinta la escribe en su idioma con `ends_on`.'
+              ends_on:
+                type: string
+                format: date
+                example: '2026-09-30'
+                description: 'El ÚLTIMO día que vale, del calendario del parque. Falta si no acaba (un regalo permanente).'
+              target:
+                type: object
+                additionalProperties: false
+                required: [type]
+                properties:
+                  type: { type: string, enum: [installation, zone, product] }
+                  zone: { type: string, description: 'Con `type: zone`: el `slug` de la zona, el de `/catalog/zones`.' }
+                  product: { type: integer, description: 'Con `type: product`: el `id` del producto, el de `/catalog/products`.' }
 
     Faqs:
       type: object
@@ -7579,7 +7655,8 @@ components:
           description: |
             Lo que el parque da SIN COBRAR (`DECISIONES #589`), ya normalizado y traducido. Va aparte de
             `features` porque se pinta distinto: **cada regalo en su etiqueta**, no unido a las ventajas.
-            Lista vacía si el producto no declara ninguno.
+            Lista vacía si el producto no declara ninguno. Desde 1.29.0 salen de las promociones de clase
+            regalo de este producto vigentes hoy (`/promotions`, `#770`); la forma no cambia.
           items:
             type: string
         from_price_cents:

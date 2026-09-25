@@ -26,7 +26,7 @@ class LandingAddonPresenter
     public static function rows(TicketType $product, bool $isPack): array
     {
         // Defensa anti-N+1 si el controlador no los precargó (no-op si ya están cargados).
-        $product->loadMissing('addons.prices.rateType');
+        $product->loadMissing(['addons.prices.rateType', 'addons.giftPromotions']);
 
         $rows = [];
         // El eje de FASE (`specs/complementos-post-reserva.md` §4.4, `#413`): esta pantalla anuncia lo

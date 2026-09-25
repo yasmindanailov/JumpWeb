@@ -11,6 +11,7 @@ use App\Filament\Resources\Faqs\FaqResource;
 use App\Filament\Resources\LandingServices\LandingServiceResource;
 use App\Filament\Resources\Pages\PageResource;
 use App\Filament\Resources\ParkRules\ParkRuleResource;
+use App\Filament\Resources\Promotions\PromotionResource;
 use App\Filament\Resources\RateTypes\RateTypeResource;
 use App\Filament\Resources\Roles\RoleResource;
 use App\Filament\Resources\Seasons\SeasonResource;
@@ -99,6 +100,8 @@ class AdminSettingsHub extends Page
         return [
             'sales' => [
                 ['key' => 'catalog', 'class' => CatalogResource::class],
+                // Las ofertas y los regalos (`#770`), junto a lo que anuncian.
+                ['key' => 'promotions', 'class' => PromotionResource::class],
                 ['key' => 'rate_types', 'class' => RateTypeResource::class],
                 ['key' => 'zones', 'class' => ZoneResource::class],
             ],

@@ -2,19 +2,22 @@
 
 namespace Tests\Feature\Catalog;
 
+use App\Domain\Booking\Models\Promotion;
 use App\Domain\Booking\Models\TicketType;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 /**
  * **LOS REGALOS DE UN PRODUCTO** (`DECISIONES #589`, `[DECIDIDO owner]`): lo que el parque da sin
- * cobrar va en su propio campo (`ticket_types.gifts`) y se pinta cada uno en su etiqueta, en la web y
- * en el cajón.
+ * cobrar se pinta cada uno en su etiqueta, en la web y en el cajón. ▶ Desde `#770` son PROMOCIONES de
+ * clase regalo del producto (`specs/promociones.md` §4.4) y `giftLines()` las lee: esta guarda es la que
+ * dice que las superficies no notaron el cambio.
  *
  * ▶ Lo que se vigila es lo que se rompería EN SILENCIO, con la página cargando:
- *  · la normalización es UNA (`TicketType::giftLines()`): sin vacíos y en el idioma activo;
+ *  · la normalización es UNA (`TicketType::giftLines()`): sin vacíos, en el idioma activo y solo lo VIGENTE;
  *  · cada superficie pinta UNA etiqueta por regalo, y sin regalos no deja contenedor;
  *  · en la comparativa de `/cumpleanos` los regalos comunes NO bajan a «Igual»;
  *  · la API los publica APARTE de las ventajas — mezclarlos es el defecto que motivó el campo.
@@ -23,7 +26,8 @@ class ProductGiftsTest extends TestCase
 {
     use RefreshDatabase;
 
-    private const GIFTS = ['es' => ['Cono de chuches', '  ', ' Calcetines para todos '], 'en' => ['Sweet cone']];
+    /** Tres regalos, uno de ellos vacío, y solo el primero traducido. */
+    private const GIFTS = [['es' => 'Cono de chuches', 'en' => 'Sweet cone'], ['es' => '  '], ['es' => ' Calcetines para todos ']];
 
     protected function setUp(): void
     {
@@ -38,6 +42,14 @@ class ProductGiftsTest extends TestCase
         return TicketType::birthdaySurfacePacks()->orderBy('position')->firstOrFail();
     }
 
+    /** @param  list<array<string, string>>  $regalos */
+    private function regalar(TicketType $producto, array $regalos = self::GIFTS): void
+    {
+        foreach ($regalos as $i => $texto) {
+            Promotion::create(['kind' => Promotion::KIND_GIFT, 'text' => $texto, 'ticket_type_id' => $producto->id, 'position' => $i]);
+        }
+    }
+
     /** El recorte de la sección de cumpleaños de la portada. */
     private function homeSection(): string
     {
@@ -49,25 +61,42 @@ class ProductGiftsTest extends TestCase
     public function test_the_gift_list_is_normalised_once_in_the_active_locale(): void
     {
         $pack = $this->pack();
-        $pack->update(['gifts' => self::GIFTS]);
+        $this->regalar($pack);
 
         $this->assertSame(['Cono de chuches', 'Calcetines para todos'], $pack->fresh()->giftLines());
 
+        // Cada regalo cae a su respaldo, como hacía la columna: el que no está en inglés sale en español.
         app()->setLocale('en');
-        $this->assertSame(['Sweet cone'], $pack->fresh()->giftLines());
+        $this->assertSame(['Sweet cone', 'Calcetines para todos'], $pack->fresh()->giftLines());
 
-        $pack->update(['gifts' => null]);
+        Promotion::query()->delete();
         $this->assertSame([], $pack->fresh()->giftLines());
+    }
+
+    public function test_only_the_current_active_gifts_of_that_product_count(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-09-25 12:00', 'Europe/Madrid'));
+        $pack = $this->pack();
+        $otro = TicketType::birthdaySurfacePacks()->orderBy('position')->skip(1)->firstOrFail();
+
+        $this->regalar($pack, [['es' => 'Vigente']]);
+        Promotion::create(['kind' => Promotion::KIND_GIFT, 'text' => ['es' => 'Apagado'], 'ticket_type_id' => $pack->id, 'is_active' => false]);
+        Promotion::create(['kind' => Promotion::KIND_GIFT, 'text' => ['es' => 'Acabó ayer'], 'ticket_type_id' => $pack->id, 'ends_on' => '2026-09-24']);
+        Promotion::create(['kind' => Promotion::KIND_GIFT, 'text' => ['es' => 'Empieza mañana'], 'ticket_type_id' => $pack->id, 'starts_on' => '2026-09-26']);
+        Promotion::create(['kind' => Promotion::KIND_GIFT, 'text' => ['es' => 'Acaba hoy'], 'ticket_type_id' => $pack->id, 'ends_on' => '2026-09-25', 'position' => 5]);
+        Promotion::create(['kind' => Promotion::KIND_OFFER, 'text' => ['es' => 'Una oferta'], 'ticket_type_id' => $pack->id, 'ends_on' => '2026-09-30']);
+        $this->regalar($otro, [['es' => 'De otro pack']]);
+
+        $this->assertSame(['Vigente', 'Acaba hoy'], $pack->fresh()->giftLines(), 'solo los regalos vigentes y activos DE ESE producto, en su orden');
     }
 
     public function test_the_home_party_card_paints_one_label_per_gift_and_nothing_without_them(): void
     {
-        TicketType::query()->update(['gifts' => null]);
         $sin = $this->homeSection();
         $this->assertStringContainsString('party-card', $sin, 'el recorte no enmarca la sección de cumpleaños');
         $this->assertStringNotContainsString('gifts', $sin, 'sin regalos no se pinta ni el contenedor');
 
-        $this->pack()->update(['gifts' => self::GIFTS]);
+        $this->regalar($this->pack());
         $seccion = $this->homeSection();
 
         $this->assertSame(2, substr_count($seccion, '<span class="gift">'), 'una etiqueta por regalo, sin los vacíos');
@@ -78,12 +107,11 @@ class ProductGiftsTest extends TestCase
 
     public function test_the_birthday_comparison_keeps_shared_gifts_in_their_own_row(): void
     {
-        TicketType::query()->update(['gifts' => null]);
         $this->assertStringNotContainsString('party-compare__row--gifts', (string) $this->get('/cumpleanos')->getContent());
 
         $packs = TicketType::birthdaySurfacePacks()->get();
         foreach ($packs as $pack) {
-            $pack->update(['gifts' => self::GIFTS]);
+            $this->regalar($pack);
         }
 
         $html = (string) $this->get('/cumpleanos')->assertOk()->getContent();
@@ -98,7 +126,8 @@ class ProductGiftsTest extends TestCase
     public function test_the_catalog_api_publishes_gifts_apart_from_features(): void
     {
         $pack = $this->pack();
-        $pack->update(['gifts' => self::GIFTS, 'features' => ['es' => ['Merienda']]]);
+        $pack->update(['features' => ['es' => ['Merienda']]]);
+        $this->regalar($pack);
 
         $item = collect($this->getJson('/api/v1/catalog/products')->assertOk()->json('data'))->firstWhere('id', $pack->id);
 

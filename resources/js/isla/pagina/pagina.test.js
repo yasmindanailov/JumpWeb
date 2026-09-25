@@ -54,6 +54,12 @@ describe('las props de la isla', () => {
         assert.equal(props({}, false).today.slots, false, 'Sin huecos, la isla no los promete.');
     });
 
+    test('la oferta de la página, tal cual la da la página; sin ella, ninguna', () => {
+        assert.equal(props({}).offer, null);
+        const p = propsDeLaIsla({ config: { ...config, offer: 'Hasta el 30 de septiembre, −20 % si reservas online' }, estado: estado(), acciones, textos });
+        assert.equal(p.offer, 'Hasta el 30 de septiembre, −20 % si reservas online');
+    });
+
     test('calla [Hoy] cuando la pieza 6 lo dice o mientras se calcula', () => {
         assert.equal(props({ vista: { cta: false, hoy: true } }).today, null);
         assert.equal(props({ calculo: { falta: 'hora', elegido: null } }).today, null);

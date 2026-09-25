@@ -208,7 +208,7 @@ class TicketType extends Model
         'description' => 'array',
         'period_label' => 'array',
         'features' => 'array',
-        'gifts' => 'array',
+        // ⚠️ Aquí estaba `gifts` (`#589`): los regalos viven en PROMOCIONES desde `#770` ({@see giftLines()}).
         'conditions' => 'array',
         'badge' => 'array',
         'event_fields' => 'array',
@@ -307,20 +307,32 @@ class TicketType extends Model
      *
      * ⚠️ Una sola normalización para todas las superficies —portada, `/cumpleanos`, `/servicios`, el
      * post-form, el panel y la API—: cada una pinta la lista tal cual, cada regalo en su etiqueta.
-     * ⚠️ Admite el texto suelto además de la lista, como `CatalogReader::features()`: un campo
-     * traducible puede llegar de las dos formas según quién lo haya escrito.
+     * ▶ **Desde `#770` son PROMOCIONES** de clase regalo de este producto, vigentes hoy y en su orden
+     * (`giftPromotions`): se gestionan en «Promociones» del panel y la forma de `gifts` no cambia. Cada
+     * regalo cae al idioma de respaldo, como hacía la columna.
+     * ⚠️ Quien recorre una LISTA de productos carga `giftPromotions` con ellos: sin eso, una consulta por
+     * producto.
      *
      * @return list<string>
      */
     public function giftLines(): array
     {
-        $gifts = $this->tr('gifts');
-        $gifts = is_array($gifts) ? $gifts : [$gifts];
+        $regalos = $this->relationLoaded('giftPromotions') ? $this->giftPromotions : $this->giftPromotions()->get();
 
         return array_values(array_filter(
-            array_map(fn (mixed $gift): string => is_scalar($gift) ? trim((string) $gift) : '', $gifts),
+            $regalos->map(fn (Promotion $regalo): string => trim((string) $regalo->tr('text')))->all(),
             fn (string $gift): bool => $gift !== '',
         ));
+    }
+
+    /**
+     * Los REGALOS de este producto que están vigentes hoy, en el orden del panel ({@see giftLines()}).
+     *
+     * @return HasMany<Promotion, $this>
+     */
+    public function giftPromotions(): HasMany
+    {
+        return $this->hasMany(Promotion::class, 'ticket_type_id')->gifts()->current()->orderBy('position')->orderBy('id');
     }
 
     /**
@@ -330,7 +342,7 @@ class TicketType extends Model
      * suelto—, y ésa es «la trampa de `features`» que la spec de la invitación cita (`#463`). Leerlo a
      * pelo y recorrerlo devuelve las LETRAS de la cadena cuando vino suelto.
      *
-     * ▶ Gemelo exacto de {@see giftLines()} y con su misma normalización. Nace aquí, en el modelo,
+     * ▶ Nació gemelo de {@see giftLines()}, cuando los regalos eran una columna. Nace aquí, en el modelo,
      * porque ya era la cuarta copia de la misma regla —`CatalogReader`, `PostFormAddons`,
      * `CreateManualOrderPage`— y la quinta la pedía la invitación digital (`#521`). Los otros tres
      * siguen con la suya: migrarlos es otra tanda, y se anota en vez de hacerse de paso.

@@ -345,7 +345,7 @@ class AddonOfferReader implements AddonOffer
         return TicketType::sellable()
             ->inOperationalZone()
             ->whereIn('type', [TicketType::TYPE_ENTRY, TicketType::TYPE_PACK])
-            ->with('addons.prices.rateType')
+            ->with(['addons.prices.rateType', 'addons.giftPromotions'])
             ->whereKey($productId)
             ->first();
     }

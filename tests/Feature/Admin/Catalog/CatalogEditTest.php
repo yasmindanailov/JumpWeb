@@ -3,6 +3,7 @@
 namespace Tests\Feature\Admin\Catalog;
 
 use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\Promotion;
 use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
@@ -276,22 +277,23 @@ class CatalogEditTest extends TestCase
     }
 
     /**
-     * Los REGALOS (`#589`) se editan como las ventajas: uno por línea, y lo guardado vuelve al
-     * formulario. ⚠️ Las dos mitades: con una sola lista de campos para guardar y otra para rellenar,
-     * un campo nuevo se guardaría y no volvería a salir en el formulario.
+     * Los REGALOS (`#589`) se gestionan en PROMOCIONES desde `#770`: la ficha ya no los edita, los
+     * ENSEÑA (los vigentes) y dice dónde se cambian. ⚠️ Guardar la ficha no los toca.
      */
-    public function test_gifts_textarea_is_stored_as_i18n_list_and_filled_back(): void
+    public function test_gifts_are_shown_read_only_and_saving_the_product_keeps_them(): void
     {
-        $entry = $this->makeEntry(['gifts' => ['es' => ['Cono'], 'en' => ['Cone']]]);
+        $entry = $this->makeEntry();
+        Promotion::create(['kind' => Promotion::KIND_GIFT, 'text' => ['es' => 'Cono de chuches'], 'ticket_type_id' => $entry->id]);
 
         Livewire::actingAs($this->admin())
             ->test(EditCatalog::class, ['record' => $entry->id])
-            ->assertFormSet(['gifts_es' => 'Cono', 'gifts_en' => 'Cone', 'gifts_fr' => ''])
-            ->fillForm(['gifts_es' => "Calcetines\n  Cono  \n\n", 'gifts_en' => ''])
+            ->assertSee('Cono de chuches')
+            ->assertSee(__('admin.catalog.gifts_hint'))
+            ->assertFormFieldDoesNotExist('gifts_es')
             ->call('save')
             ->assertHasNoFormErrors();
 
-        $this->assertSame(['es' => ['Calcetines', 'Cono']], $entry->fresh()->gifts, 'un idioma vacío no se guarda');
+        $this->assertSame(['Cono de chuches'], $entry->fresh()->giftLines(), 'guardar la ficha no toca sus regalos');
     }
 
     public function test_empty_i18n_strings_are_compacted_to_null(): void

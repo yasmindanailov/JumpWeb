@@ -110,7 +110,8 @@ class CatalogReader implements ProductCatalog
             ->sellable()
             ->inOperationalZone()
             ->whereIn('type', [TicketType::TYPE_ENTRY, TicketType::TYPE_PACK])
-            ->with(['zone', 'prices.rateType'])
+            // `giftPromotions`: los regalos de cada ficha (`#770`), en la misma pasada.
+            ->with(['zone', 'prices.rateType', 'giftPromotions'])
             ->orderBy('position');
     }
 
@@ -253,7 +254,7 @@ class CatalogReader implements ProductCatalog
         // reservar. ⚠️ Este método REPLICA la normalización de `AddonResolver::viewModel()` en vez
         // de llamarla, así que el eje no llegaba aquí solo — por eso el filtro va explícito.
         $offered = AddonResolver::forStage(
-            $product->addons()->with('prices.rateType')->get(),
+            $product->addons()->with(['prices.rateType', 'giftPromotions'])->get(),
             ProductAddon::STAGE_BOOKING,
         );
 

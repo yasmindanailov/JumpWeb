@@ -13,6 +13,7 @@ use App\Domain\Booking\Models\PartyInvitation;
 use App\Domain\Booking\Models\Price;
 use App\Domain\Booking\Models\PriceTier;
 use App\Domain\Booking\Models\ProductAddon;
+use App\Domain\Booking\Models\Promotion;
 use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Room;
 use App\Domain\Booking\Models\Season;
@@ -336,6 +337,8 @@ class AppServiceProvider extends ServiceProvider
             'price' => Price::class,
             'price_tier' => PriceTier::class,
             'product_addon' => ProductAddon::class,
+            // Las promociones (`#770`): el audit de crear, cambiar y borrar guarda `promotion`.
+            'promotion' => Promotion::class,
             'rate_type' => RateType::class,
             'role' => Role::class,
             'room' => Room::class,

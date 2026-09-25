@@ -226,12 +226,15 @@ class CatalogForm
                 ->rows(4)
                 ->helperText(__('admin.catalog.features_hint')),
 
-            // LOS REGALOS (`#589`): lo que se da sin cobrar, aparte de lo que incluye. La web y el cajón
-            // los destacan cada uno en su etiqueta; escritos entre las ventajas no se distinguían.
-            Textarea::make("gifts_{$locale}")
+            // LOS REGALOS (`#589`) viven en PROMOCIONES desde `#770`: aquí solo se ENSEÑAN, para que quien edita
+            // la ficha sepa qué se anuncia con ella y dónde cambiarlo. Una sola vez, en la pestaña del español.
+            Placeholder::make('gifts_managed_in_promotions')
                 ->label(__('admin.catalog.field_gifts'))
-                ->rows(3)
-                ->helperText(__('admin.catalog.gifts_hint')),
+                ->content(fn (?TicketType $record): string => $record !== null && $record->giftLines() !== []
+                    ? implode(' · ', $record->giftLines())
+                    : __('admin.catalog.gifts_none'))
+                ->helperText(__('admin.catalog.gifts_hint'))
+                ->visible($locale === 'es'),
         ]);
     }
 
