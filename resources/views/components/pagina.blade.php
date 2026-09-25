@@ -5,9 +5,9 @@
     `public/`, las del paquete de la instancia). Nada de `landing.css`, `site.css` ni el `client.css` viejo: el tema
     de estas páginas es el de su paquete, y el producto no nombra el de ningún cliente.
 
-    ⚠️ PENDIENTE, avisado al SPA (T4b·4): el estado del `<body>` —consentimiento, analítica y píxeles— compartido con
-    `components/layout.blade.php` por un componente. Hasta entonces estas páginas no cargan analítica ni píxeles, y no
-    salen de local: nada se despliega antes de la v2.0.0 (`#670`).
+    ▶ El estado del `<body>` —consentimiento, analítica y píxeles— es el MISMO que el de `components/layout.blade.php`
+    (T4b·4, con el visto bueno del SPA): los dos incluyen `components/site/body-state.blade.php`. Lo que LO LEE —el
+    aviso de cookies dentro de la isla y los cargadores del driver y los píxeles— llega con la T4e.
 --}}
 @props(['titulo', 'descripcion' => null, 'imagen' => null, 'hojas' => [], 'scripts' => [], 'noindex' => false])
 @php
@@ -63,7 +63,10 @@
         @vite($entradas)
     @endif
 </head>
-<body>
+{{-- T4b·4: el MISMO estado del `<body>` que las páginas de siempre —consentimiento, analítica y píxeles— para que los
+     lean el aviso de cookies y los cargadores (`components/site/body-state.blade.php`). --}}
+<body
+      @include('components.site.body-state')>
     {{ $slot }}
     @if ($motorCalculadora !== null)
         <script type="application/json" id="jw-calculadora-motor">@json($motorCalculadora)</script>

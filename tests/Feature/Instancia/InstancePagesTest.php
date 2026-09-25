@@ -6,6 +6,8 @@ use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Models\User;
+use App\Domain\Platform\Models\Setting;
+use App\Domain\Platform\Services\Analytics\Pixels;
 use App\Http\Instancia\InstancePages;
 use App\Http\Instancia\InstanceViews;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -259,6 +261,31 @@ BLADE);
         $sin = (string) $this->get('/jump')->assertOk()->getContent();
         $this->assertStringNotContainsString('jw-calculadora-motor', $sin);
         $this->assertDoesNotMatchRegularExpression('#/build/assets/(montar|paquete)-#', $sin);
+    }
+
+    /**
+     * **El `<body>` de una página nueva lleva EXACTAMENTE el estado de la web de siempre** (T4b·4 de §4.12): el
+     * consentimiento, la analítica y los píxeles que leen el aviso de cookies y sus cargadores. Sin él, las páginas
+     * nuevas saldrían sin aviso y ciegas para la analítica. Se compara atributo a atributo con la portada (el layout de
+     * siempre), con un píxel configurado para que la lista no sea solo la de cookies.
+     */
+    public function test_a_page_carries_exactly_the_same_body_state_as_the_classic_layout(): void
+    {
+        Setting::updateOrCreate(['key' => Pixels::KEY_META_PIXEL_ID], ['value' => '1234567890123456', 'group' => 'marketing']);
+        File::put($this->paquete.'/web/limpia.blade.php', '<x-pagina titulo="Kids"><p>hola</p></x-pagina>');
+        $this->declarar(['kids' => ['vista' => 'limpia', 'hechos' => []]]);
+
+        $estado = function (string $html): array {
+            preg_match('#<body\b([^>]*)>#s', $html, $body) === 1 || $this->fail('sin <body>');
+            preg_match_all('#\b(data-(?:cookie|consent|analytics|pixel)[\w-]*)="([^"]*)"#', $body[1], $m, PREG_SET_ORDER);
+
+            return array_column($m, 2, 1);
+        };
+
+        $nueva = $estado((string) $this->get('/kids')->assertOk()->getContent());
+        $this->assertSame($estado((string) $this->get('/')->assertOk()->getContent()), $nueva);
+        $this->assertSame('1234567890123456', $nueva['data-pixel-meta'] ?? null, 'El píxel configurado viaja también en la página nueva.');
+        $this->assertArrayHasKey('data-consent-categories', $nueva);
     }
 
     /** Sin paquete, o con un paquete que no declara páginas, no hay ninguna: el estado normal, no un error. */

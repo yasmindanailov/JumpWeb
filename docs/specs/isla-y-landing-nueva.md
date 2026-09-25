@@ -922,7 +922,13 @@ juzga «idéntico», con los datos del diseño.
   paquete de prueba (el mismo JSON que la API, colisiones, hechos fuera de lista, sitemap, sin declaración) y 3
   mutantes muertos (sin colisiones, sin lista blanca, sin textos); en local, `/kids` y `/jump` de PlayJump en 200 con
   `no-store` y su CSP, en es/en/fr y en el sitemap. ⚠️ El caso registraba las rutas FUERA del grupo `web` y salía sin
-  CSP: el arranque las registra dentro, y el caso ahora también. Queda **·4** (el estado del `<body>`, con el SPA).
+  CSP: el arranque las registra dentro, y el caso ahora también.
+  ▶ **·4 ✅ (25-09, con el visto bueno del SPA)**: el estado del `<body>` —consentimiento, analítica y píxeles— sale TAL
+  CUAL de `components/layout.blade.php` a `components/site/body-state.blade.php`, que los dos layouts incluyen dentro
+  de su etiqueta; la fiesta NO (`#739`). Las guardas del SPA (`CookieGateBlockingTest`, `PixelsTest`…) siguen en verde
+  sin tocarlas, y `InstancePagesTest` gana la guarda de igualdad: el `<body>` de una página nueva, atributo a atributo,
+  el de la portada (con un píxel configurado); control: sin la inclusión, cae. En vivo, `/kids` lo sirve. Lo que LO LEE
+  (el aviso de cookies dentro de la isla y los cargadores), con la T4e.
 - ▶▶ **La T4c, diseñada al medirla (24-09, `#762`)**. Medido en los 20 componentes que usan las piezas (~107 KB de
   JSX con estilo en línea): **cuatro deciden su forma MIDIÉNDOSE** (`VideoHero` apila por debajo de 720 px con OTRO
   DOM; `ProofList`, `ReviewPanel` y `ParkLocation`, con `ResizeObserver`), **seis abren y cierran con estado**
