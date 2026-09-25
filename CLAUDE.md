@@ -44,6 +44,7 @@ contador de la suite va en el trailer del commit** (`#618`). Si no salta: `git c
 | **Producto e instancias** · repos · versionado · F0→F6 | `docs/specs/producto-e-instancias.md` §0 · `CHANGELOG.md` |
 | Landing FUERA (F5) · menú de hechos · API pública · paquete de instancia | `docs/specs/instancia-y-landing-fuera.md` §0 · `docs/specs/paquete-de-instancia.md` §0 |
 | **La isla** · la landing nueva (Saltia) | `docs/specs/isla-y-landing-nueva.md` §0 |
+| Promociones · ofertas y regalos · la etiqueta de oferta | `docs/specs/promociones.md` §0 |
 | Analítica · conversión · atribución · consentimiento · la fiesta · encuestas | `docs/specs/analitica.md` §0 · `docs/specs/analitica-fiesta.md` §0 · `docs/specs/encuestas.md` §0 |
 | F4 · cajón empaquetable · token Bearer | `docs/specs/cajon-empaquetable.md` §0 · `docs/specs/token-bearer.md` §0 |
 | La capa de agente · el plugin `jumpweb-agente` · skills · hooks · reglas del owner | `docs/sistemas/CAPA-DE-AGENTE.md` |
@@ -58,11 +59,11 @@ contador de la suite va en el trailer del commit** (`#618`). Si no salta: `git c
 | El teléfono del cliente · cuenta de Google sin número · pedido manual | `docs/specs/telefono-del-cliente.md` §0 |
 | Firmar la exención al declarar un menor · el 409 de la tarjeta | `docs/specs/firma-al-declarar-menor.md` §0 |
 | Auth dentro del cajón · retirar el modal de la cabecera | `docs/specs/auth-en-cajon.md` §0 |
-| Landing · tema visual (tokens) · CMS de contenido · white-label por cliente | `docs/specs/landing-white-label.md` §0 |
+| Landing · tema (tokens) · CMS · white-label | `docs/specs/landing-white-label.md` §0 |
 | Capa de tema · superficies · radios · sombras · foco · fuentes · logotipo · táctil | `docs/specs/tema-por-instalacion.md` §0 |
 | El armazón · barra · menú · hamburguesa · CTA de la esquina · cajón móvil | `docs/specs/armazon-y-menu.md` §0 |
-| Dónde van los elementos de diseño · la pasada de vestido · presupuesto de marcado | `docs/specs/pasada-de-vestido.md` §0 |
-| Material gráfico del mural · manchas · poses · texturas · iconos de zona | `docs/specs/elementos-fachada.md` §0 |
+| La pasada de vestido · presupuesto de marcado | `docs/specs/pasada-de-vestido.md` §0 |
+| Material del mural · manchas · poses · iconos de zona | `docs/specs/elementos-fachada.md` §0 |
 | Rediseño desde el canvas · 8 secciones · 7 páginas | `docs/specs/rediseno-desde-canvas.md` §0 |
 | Idioma visual heredado · badges · auditoría de diseño | `docs/specs/auditoria-diseno.md` §0 · `docs/specs/idioma-visual-heredado.md` §0 |
 | La hora extra · complemento que ocupa aforo · su precio por día · mover fecha · su sello | `docs/specs/hora-extra.md` §0 |

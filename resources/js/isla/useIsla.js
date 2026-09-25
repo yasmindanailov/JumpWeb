@@ -68,7 +68,8 @@ export function useIsla(props, { wrapRef, islandRef, sizerRef, panelRef }) {
                 : view.value === 'resumen' ? t('panel.calculo')
                     : view.value === 'qr' ? t('panel.qr')
                         : view.value === 'help' ? t('panel.ayuda')
-                            : view.value === 'cuenta' ? t('panel.cuenta') : null));
+                            : view.value === 'cuenta' ? t('panel.cuenta')
+                                : view.value === 'cookies' ? t('panel.cookies') : null));
 
     const hayLinea = computed(() => r.value.hasLine);
     const lineaAbre = computed(() => (s.value.opens ? (e) => alternarPanel(s.value.opens, e) : null));
@@ -97,7 +98,7 @@ export function useIsla(props, { wrapRef, islandRef, sizerRef, panelRef }) {
         vista: view.value, titulo: panelTitle.value, tituloEnFila: titleInRow.value, top: top.value,
         menuItems: props.menuItems, homeLabel: props.homeLabel, contact: props.contact, lang: props.lang,
         account: props.account, bookingToday: props.bookingToday, help: props.help, cookies: props.cookies,
-        plans: props.plans, plansFromToday: plansFromToday.value, quote: props.quote,
+        preferencias: props.cookiePrefs, plans: props.plans, plansFromToday: plansFromToday.value, quote: props.quote,
     }));
 
     return {

@@ -1211,6 +1211,18 @@ juzga «idéntico», con los datos del diseño.
     con el panel encima; es de la categoría `maps` —consentido, el iframe desde el servidor; si no, un hueco con «Cargar
     el mapa» que se lo pide a la isla (`jw:cookies:conceder`) y carga al confirmarlo el servidor (`cookies-updated`)—.
     En vivo a 1280 y 390: hueco → consentimiento 200 → el mapa, sin recargar; consola limpia.
+  - ▶ **·4 ✅ (25-09, encargo del owner: «dibújala tú con el sistema»)**: **la SEGUNDA CAPA de las cookies**, que el
+    mockup no dibuja, dentro de la isla: el panel «Tus cookies» (`piezas/PreferenciasCookies.vue`) con las mismas piezas
+    que la primera capa —los dos botones tranquilos al MISMO nivel, «Aceptar todo» y «Rechazar todo» (AEPD), y sus
+    enlaces— y cada finalidad con el **interruptor del sistema** (`ui/InterruptorSistema.vue`, el `Switch` del mockup,
+    portado con su forma sobre tinta: roles de la isla); la regla del `Switch` decide el resto: se aplica AL MOMENTO, sin
+    «Guardar», con el aviso «Guardado» de la isla, y si el servidor no confirma el interruptor vuelve a como estaba. Los
+    textos de cada finalidad, los LEGALES de siempre (`cookies.panel`). La abren «Configurar» del aviso, «Cookies» del
+    menú y «Configurar cookies» del pie —estos dos, TAMBIÉN ya decidido: retirar el consentimiento tiene que ser tan fácil
+    como darlo; el mockup solo lo abría con el aviso pendiente—; con ella abierta, la primera capa se esconde. En vivo a
+    1280 y 390: el panel con sus cuatro finalidades apagadas, encender «Mapa y reseñas» → POST 200, «Guardado» y el mapa
+    de «dónde y cuándo» cargado; menú y pie → «Tus cookies»; consola limpia. `pagina.test.js` +2. El panel va
+    DIFERIDO (su trozo, 4,74 KiB, llega al abrirlo): estático, la isla en reposo y la compra pasaban sus techos.
 - ▶▶ **LA VERIFICACIÓN FINAL de Kids y Jump (25-09, `#768`): 40 de 40 a 0 píxeles** contra el mockup del 25-09 —cada
   pieza en reposo a 390 y 1280, sin estados, ~5 min—. Cazó un defecto del port del zip: el margen del icono del parking
   iba al `svg` y `<x-lucide>` pinta una `<span>` que lo envuelve (instancia `d1114ad`). La isla, 60/60 en su banco; la

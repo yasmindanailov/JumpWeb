@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { medirVista, propsDeLaIsla } from './pagina.js';
+import { medirVista, preferenciasDeCookies, propsDeLaIsla } from './pagina.js';
 
 /**
  * T4e — la isla viva en una página declarada (`pagina.js`), contra lo que hace `paginas/entradas/pagina.jsx` del diseño.
@@ -84,5 +84,35 @@ describe('las props de la isla', () => {
         sesion.onQr();
         sesion.onClick();
         assert.deepEqual(llamadas, [['cuenta', 'login'], ['cuenta', 'card'], ['cuenta', 'home']], 'Entrar, Mi QR y Mi cuenta, cada uno a su zona.');
+    });
+});
+
+describe('la segunda capa de las cookies', () => {
+    const legales = {
+        necessary_title: 'Necesarias', necessary_desc: 'Imprescindibles.', always_on: 'Siempre activas',
+        maps_title: 'Mapa y reseñas (Google)', maps_desc: 'El mapa.', analytics_title: 'Análisis', analytics_desc: 'Uso.',
+        accept_all: 'Aceptar todo', reject_all: 'Rechazar todo', policy_link: 'Leer la política de cookies',
+    };
+    const hechas = [];
+    const accionesCookies = { cambiar: (id, v) => hechas.push([id, v]), aceptarTodas: () => hechas.push(['todas', true]), rechazarTodas: () => hechas.push(['todas', false]), politica: () => {} };
+
+    test('cada finalidad de la instalación, con su texto LEGAL y su estado; las necesarias, sin interruptor', () => {
+        const p = preferenciasDeCookies({ categorias: ['maps', 'analytics'], prefs: { maps: true }, legales, textos: { cookies: { si: 'Sí', no: 'No' } }, acciones: accionesCookies });
+        assert.deepEqual(p.necesarias, { titulo: 'Necesarias', texto: 'Imprescindibles.', etiqueta: 'Siempre activas' });
+        assert.deepEqual(p.categorias, [
+            { id: 'maps', titulo: 'Mapa y reseñas (Google)', texto: 'El mapa.', activa: true },
+            { id: 'analytics', titulo: 'Análisis', texto: 'Uso.', activa: false },
+        ]);
+        assert.deepEqual([p.textos.aceptar, p.textos.rechazar, p.textos.si, p.textos.no], ['Aceptar todo', 'Rechazar todo', 'Sí', 'No']);
+    });
+
+    test('una finalidad sin título legal sale con su nombre, nunca un interruptor mudo; y cada botón hace lo suyo', () => {
+        const p = preferenciasDeCookies({ categorias: ['social'], prefs: {}, legales, acciones: accionesCookies });
+        assert.equal(p.categorias[0].titulo, 'social');
+        hechas.length = 0;
+        p.onCambiar('social', true);
+        p.onAceptarTodas();
+        p.onRechazarTodas();
+        assert.deepEqual(hechas, [['social', true], ['todas', true], ['todas', false]]);
     });
 });

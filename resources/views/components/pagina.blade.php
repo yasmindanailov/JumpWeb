@@ -27,7 +27,8 @@
     // ellas), si hay sesión y dónde está la política de cookies.
     $islaDePagina = in_array('isla', $scripts, true) && is_array($isla)
         ? [
-            'config' => $isla + ['owner' => auth()->id(), 'cookiesUrl' => route('legal.cookies')],
+            // `cookiesPanel`: los textos LEGALES de cada finalidad (los de la web de siempre) para la segunda capa.
+            'config' => $isla + ['owner' => auth()->id(), 'cookiesUrl' => route('legal.cookies'), 'cookiesPanel' => __('cookies.panel')],
             'textos' => \Illuminate\Support\Arr::except((array) __('isla'), ['compra', 'calculadora']),
         ]
         : null;

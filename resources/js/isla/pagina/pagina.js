@@ -57,6 +57,29 @@ export function propsDeLaIsla({ config, estado, acciones, textos }) {
             ? { state: 'session', onQr: () => acciones.abrirCuenta('card'), onClick: () => acciones.abrirCuenta('home') }
             : { state: 'guest', onClick: () => acciones.abrirCuenta('login') },
         cookies: estado.cookies ? { onAccept: acciones.aceptarCookies, onReject: acciones.rechazarCookies, onConfigure: acciones.configurarCookies, onPolicy: acciones.politicaCookies } : null,
+        cookiePrefs: estado.preferencias ?? null,
+        notice: estado.aviso ?? null,
         onNavigate: acciones.navegar,
+    };
+}
+
+/**
+ * **La segunda capa de las cookies** («Tus cookies»): las necesarias, que no se apagan, y cada finalidad OPCIONAL de la
+ * instalación (`categorias`, las del `<body>`) con su estado, su título y su texto LEGALES (`legales`: el grupo `panel`
+ * de `lang/<idioma>/cookies.php`, los de la web de siempre) y lo que hace cada botón. Una finalidad sin título legal
+ * sale con su nombre: nunca un interruptor sin decir qué enciende.
+ */
+export function preferenciasDeCookies({ categorias = [], prefs = {}, legales = {}, textos = {}, acciones }) {
+    return {
+        necesarias: { titulo: legales.necessary_title ?? '', texto: legales.necessary_desc ?? '', etiqueta: legales.always_on ?? '' },
+        categorias: categorias.map((id) => ({ id, titulo: legales[`${id}_title`] ?? id, texto: legales[`${id}_desc`] ?? '', activa: Boolean(prefs[id]) })),
+        textos: {
+            si: textos?.cookies?.si ?? '', no: textos?.cookies?.no ?? '',
+            aceptar: legales.accept_all ?? '', rechazar: legales.reject_all ?? '', politica: legales.policy_link ?? '',
+        },
+        onCambiar: acciones.cambiar,
+        onAceptarTodas: acciones.aceptarTodas,
+        onRechazarTodas: acciones.rechazarTodas,
+        onPolitica: acciones.politica,
     };
 }

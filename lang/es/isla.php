@@ -43,6 +43,8 @@ return [
         'qr' => 'Mi QR',
         'ayuda' => '¿Lo hablamos?',
         'cuenta' => 'Mi cuenta',
+        // La segunda capa de las cookies (T4e: el mockup no la dibuja; el owner la encargó con el sistema).
+        'cookies' => 'Tus cookies',
     ],
     'menu' => [
         'qr' => 'Mi QR',
@@ -63,6 +65,9 @@ return [
         'rechazar' => 'Rechazar',
         'configurar' => 'Configurar',
         'politica' => 'Política de cookies',
+        'guardado' => 'Guardado',
+        'si' => 'Sí',
+        'no' => 'No',
     ],
     'resumen' => [
         'cambiar' => 'Cambiar',

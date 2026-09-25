@@ -40,6 +40,7 @@ return [
         'qr' => 'My QR',
         'ayuda' => 'Shall we talk?',
         'cuenta' => 'My account',
+        'cookies' => 'Your cookies',
     ],
     'menu' => [
         'qr' => 'My QR',
@@ -60,6 +61,9 @@ return [
         'rechazar' => 'Reject',
         'configurar' => 'Configure',
         'politica' => 'Cookie policy',
+        'guardado' => 'Saved',
+        'si' => 'Yes',
+        'no' => 'No',
     ],
     'resumen' => [
         'cambiar' => 'Change',

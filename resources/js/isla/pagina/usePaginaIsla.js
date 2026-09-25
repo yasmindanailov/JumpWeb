@@ -14,13 +14,28 @@
  *   · **La compra**: mientras el cajón la tiene abierta (`jw:cajon:open` / `jw:cajon:close`), esta isla se aparta y
  *     la de la compra ocupa su sitio.
  */
-import { computed, onBeforeUnmount, onMounted, reactive, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, watch } from 'vue';
 import { createCookiesStore } from '../../ui/cookie-consent.js';
-import { medirVista, propsDeLaIsla } from './pagina.js';
+import { medirVista, preferenciasDeCookies, propsDeLaIsla } from './pagina.js';
 
 export function usePaginaIsla({ config, textos, doc = document, win = window }) {
-    const e = reactive({ vista: { cta: false, hoy: false }, calculo: null, compraAbierta: false });
+    const e = reactive({ vista: { cta: false, hoy: false }, calculo: null, compraAbierta: false, aviso: null });
     const cookies = reactive(createCookiesStore({ doc, win, purchase: () => ({ isOpen: e.compraAbierta }) }));
+
+    // «Guardado»: el aviso de la isla, que se enseña al CAMBIAR su texto (por eso se vacía antes).
+    const avisar = (texto) => { e.aviso = null; nextTick(() => { e.aviso = texto; }); };
+    /**
+     * La segunda capa guarda al momento, con el POST atómico del almacén (`RGPD-05`). Si el servidor no lo confirma,
+     * las finalidades vuelven a como estaban: el interruptor no puede decir algo que no se ha guardado.
+     */
+    const guardar = (decidir) => {
+        const antes = { ...cookies.prefs };
+
+        return decidir().then((confirmado) => {
+            if (confirmado) avisar(textos?.cookies?.guardado ?? '');
+            else cookies.prefs = antes;
+        });
+    };
 
     let ctas = [];
     let fotograma = 0;
@@ -53,9 +68,8 @@ export function usePaginaIsla({ config, textos, doc = document, win = window }) 
         irAlResumen: () => irA('[data-jw-calculadora-lado]'),
         aceptarCookies: () => cookies.acceptAll(),
         rechazarCookies: () => cookies.rejectAll(),
-        // ⚠️ El mockup no dibuja la segunda capa (las categorías una a una): hasta que la dibuje, la política, donde se
-        // configuran (pendiente del owner, spec §4.12 T4e).
-        configurarCookies: () => { win.location.href = config.cookiesUrl; },
+        // «Configurar»: la segunda capa, dentro de la isla («Tus cookies»; el mockup no la dibuja y el owner la encargó).
+        configurarCookies: () => { win.dispatchEvent(new win.CustomEvent('isla:abrir', { detail: { panel: 'cookies' } })); },
         politicaCookies: () => { win.location.href = config.cookiesUrl; },
         navegar: (it) => { if (it?.href) win.location.href = it.href; },
         // La cuenta, en su zona del lateral (`cajon.openAccount`, el mismo camino que el menú de siempre); sin el
@@ -67,9 +81,19 @@ export function usePaginaIsla({ config, textos, doc = document, win = window }) 
         },
     };
 
+    const preferencias = computed(() => preferenciasDeCookies({
+        categorias: cookies.categories, prefs: cookies.prefs, legales: config.cookiesPanel ?? {}, textos,
+        acciones: {
+            cambiar: (id, activa) => guardar(() => cookies.persist({ ...cookies.prefs, [id]: activa })),
+            aceptarTodas: () => guardar(() => cookies.acceptAll()),
+            rechazarTodas: () => guardar(() => cookies.rejectAll()),
+            politica: () => { win.location.href = config.cookiesUrl; },
+        },
+    }));
+
     const props = computed(() => propsDeLaIsla({
         config, textos, acciones,
-        estado: { vista: e.vista, calculo: e.calculo, cookies: cookies.showing },
+        estado: { vista: e.vista, calculo: e.calculo, cookies: cookies.showing, preferencias: preferencias.value, aviso: e.aviso },
     }));
 
     // El hecho `consent_shown`, una vez por página y cuando el aviso se enseña de verdad (como el banner de siempre).

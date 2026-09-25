@@ -42,6 +42,11 @@ export const PROPS_ISLA = {
     lang: { type: String, default: '' },
     plans: { type: Object, default: null },
     cookies: { type: Object, default: null },
+    /**
+     * La SEGUNDA capa de las cookies («Tus cookies», T4e): sus finalidades con su estado y lo que hace cada interruptor.
+     * Aparte de `cookies` (la primera capa, que se va al decidir): así el menú la abre también después.
+     */
+    cookiePrefs: { type: Object, default: null },
     onNavigate: { type: Function, default: null },
     onRetry: { type: Function, default: null },
     onPayBizum: { type: Function, default: null },

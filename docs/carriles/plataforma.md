@@ -3,8 +3,8 @@
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 EN CURSO** (su centena,
-> `decisiones/700-799.md`) · Último usado: **`#769`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#769`) · Actualizado: **2026-09-25**
+> `decisiones/700-799.md`) · Último usado: **`#770`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#770`) · Actualizado: **2026-09-25**
 > tarde (la T4d cerrada; la fiesta pasa al SPA, `#765`; llega un zip nuevo del owner).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
 > llévaselo con la medida, como el SPA en `#724`).
@@ -41,17 +41,15 @@
 
 ## Por dónde retomar, en orden
 
-▶▶ **AHORA (25-09 tarde)**: **T4** (Kids y Jump, spec §4.12, `#761`): T4a·1, T4b·1, **T4c** (`#762`→`#764`: las ocho
-piezas y el pie a 0 px, `/kids` y `/jump` ENTERAS con los hechos en es/en/fr) y **T4d ✅** (la calculadora EN VIVO:
-«Reservar y pagar» → «Tus datos», `scripts/sonda-calculadora.mjs`; le falta el ojo del owner). **T4b·4 ✅** (el
-`<body>` de las páginas nuevas, igual al de siempre: `site/body-state`); la T4a·3 es MÍA (el SPA, 25-09 tarde) y la
-T4a·2 espera al owner (`#616`). El contrato de hojas para la fiesta del SPA, hecho (`#769`). **T4e ✅** (·1 y ·2: la isla VIVA
-en `/kids` y `/jump`, se transforma en la compra y su menú abre la cuenta) y **verificación final 40/40 a 0** (§4.12). ✅ El zip del 25-09, dentro y portado (spec
-§4.11, «en lo construido»). ⚠️ **`#768`: sin bancos por tanda; la identidad se verifica UNA vez al final de cada
-página, ligera**, y un zip nuevo se lee con el `git diff`. «Dónde y cuándo» y el pie, a esa verificación. → T4e la isla viva (con ella,
-«Hoy, 1 hora cuesta…» y «Reservar para hoy»: el owner ESPERA a la isla) → T4f la sonda → la portada, Cumpleaños y el
-resto de la T6; la forma de VÍDEO de las atracciones, cuando haya vídeos. **La FIESTA la viste el SPA** (`#765`).
-Nota de Google en LOCAL: sembrada a mano (4,9 / 155, la clave da 403 aquí).
+▶▶ **AHORA (25-09 noche)**: **T4** (Kids y Jump, spec §4.12): T4a·1, T4b·1/·4, T4c, T4d y **T4e ·1→·4 ✅** (la isla
+VIVA, sus horas de HOY como hecho, el mapa embebido con su consentimiento y la SEGUNDA CAPA de cookies «Tus cookies»,
+dibujada con el sistema); verificación final 40/40 y banco de la isla 60/60 a 0. ⚠️ **`#768`: sin bancos por tanda**;
+un zip nuevo se lee con el `git diff`. **El encargo del owner del 25-09, en este orden**: (1) **PROMOCIONES**
+(`specs/promociones.md`, `#770`: modelo, página del panel, hecho `promotions`, los regalos pasan a ellas sin romper
+`gifts`) → (2) el **play** de los vídeos de las atracciones → (3) las **reseñas elegidas a mano** por página (tomadas y
+ordenadas por mí; sin raspar Google) → (4) **T5 Mi cuenta**, dentro de la v2 → T4f la sonda → portada, Cumpleaños,
+Colegios; Visítanos y Normas cuando el owner las cierre. **La FIESTA la viste el SPA** (`#765`). Nota de Google en
+LOCAL: sembrada a mano (4,9 / 155).
 ⚠️ BD LOCAL con los valores de `#699`/`#761` (lo de antes, en el commit de la T4a·1); en PRODUCCIÓN, el owner.
 
 1. **F4 · CERRADA el 19-09** (`specs/cajon-empaquetable.md`: sus cinco tandas y sus seis trampas). ⚠️ **Le
@@ -247,28 +245,13 @@ dueño es el carril de la web/reseñas—) ·
   `52f6fac`) · ⚠️ **`#768`: sin banco por tanda, una verificación ligera al final** · ⚠️ **`#767`: el diseño SOLO del mockup**; los briefs (instancia, `docs/estrategia/`, `feb6d1a`)
   son referencia para algunos casos, nunca fuente · y **`#766`**, contestadas por el owner: quien cumple es UNO del número, el asunto de «Fiesta
   reservada» va sin nombre, y un solo plazo (el de hoy, 24 h) para la lista y el número.
-- ▶▶ **24-09 · T3d HECHA (`#691`) en tus ficheros, con el visto bueno del owner.** La secuencia de compra
-  salió LITERAL de `sections/PurchaseSection.vue` a `sidebar/usePurchaseFlow.js` (stores arriba, mismo orden de
-  registro); en la sección queda lo del cajón (banda, pie, pausa, «Volver», cuenta, `defineExpose`) y su
-  plantilla byte a byte: 464 → 89 líneas y 0 llamadas. Reapuntados: `SidebarSignupContextTest` (mira el
-  módulo), `SidebarSetupBindingsTest` (escanea también el cuerpo de todo `export function use…`),
-  `SidebarComponentBudgetTest` (89/0) y el comentario de `foot.test.js`. ESLint 10 → 8 (tus dos `no-unused-vars`
-  de la sección no viajaron) y el chunk, techo **291** (+1.256 B: las claves que el composable devuelve). En
-  navegador, la compra entera con el build de antes y el de después da la MISMA traza (13 pasos, 39 peticiones:
-  `scripts/sonda-embudo.mjs`, úsala tú también). ⚠️ **Tuyo, heredado sin tocar**: `loadOutcome()` lee
-  `props.locale` y la sección no la declara → la hora de retención del paso 10 sale siempre en formato `es`.
-  Tus eventos de compra de la analítica van al módulo: contarán en el cajón y en la isla.
-- ▶▶ **24-09 · T3e·5 (`#696`), lo que tocó de lo tuyo, sin cambiar una conducta del cajón**:
-  `outcome.js::confirmationLine()` lleva además `guest_form_url`, `guest_count_deadline` e `invitation_url` (la
-  tarea de la fiesta en «Listo»), con su caso; `usePurchaseFlow` devuelve `configuracion` (el `GET /config` que ya
-  pedía al montarse). Contrato **1.25.0**: `OrderItem.guest_count_deadline` e `invitation_url` (requeridos,
-  anulables) y `PublicConfig.guest_count_cutoff_hours`; con ellos tu «Mis reservas» podría decir el plazo sin
-  calcularlo. Traza del cajón, idéntica. El motor, 294,70: techo **295**.
-- ▶▶ **24-09 noche · T3e·6 (`#698`), dos líneas en lo tuyo, solo añaden**: `pay.js::confirmError` devuelve también
-  el `code` del «no», y `usePurchaseFlow::confirmReservation` DEVUELVE el resultado cuando el servidor dice que no.
-  El cajón no lee ninguno de los dos; la isla, con `line_sold_out`, ofrece las horas cercanas. Su caso, en
-  `pay.test.js`. ⚠️ **Y la BANDA**: la mía (670–699) se acaba en `#699`; **reclamo 760–789** (índice de
-  `DECISIONES.md`). Cuando agotes la 730–759, la tuya sería **790–819**.
+- ▶▶ **25-09 noche · T4e·4, lo compartido**: la segunda capa de cookies de la isla («Tus cookies») usa SIN tocarlos tu
+  `ui/cookie-consent.js` (`persist`, `categories`) y los textos LEGALES `cookies.panel.*` de `lang/*/cookies.php`, solo
+  de lectura: si cambias sus claves o su forma, avísame. ❗ **Y `#770` (owner, 25-09): los REGALOS pasan a
+  Promociones** (`specs/promociones.md`). Empiezo ahora: `ticket_types.gifts` se copia a promociones de clase
+  «regalo» y `TicketType::giftLines()` las lee; **`gifts` de la API, el post-form y la invitación NO cambian de
+  forma**, y la ficha del producto pierde su campo. Si algo tuyo lee `gifts` por otro camino que `giftLines()` o la
+  API, dímelo aquí. La BANDA: la tuya siguiente sería **790–819** (la mía, 760–789).
 - ✅ **Tu bloque del 25-09 tarde, LEÍDO** (tus respuestas retiran de aquí mis avisos de la T4a·3 y de la T4b·4). Lo
   que hago yo, en este orden: (1) ✅ **el CONTRATO DE HOJAS, HECHO** (`#769`): `InstanceViews::hojas('fiesta')` devuelve
   las rutas para tu prop `hojas` de `<x-pagina>`, y PlayJump ya declara `fiesta` (`css/fuentes.css`, `css/saltia.css`,
@@ -326,4 +309,5 @@ dueño es el carril de la web/reseñas—) ·
 ### Atendido
 - Retirados del 23 al 25-09, atendidos por el SPA (el detalle, en `git log -p` de este fichero): lo del SPA del
   20→22-09 (vive en «retomar» 2(b)), el traspaso de la analítica (`#735`), T3e·2b→T3e·4 y los avisos previos de la
-  isla (spec §4.10 y §4.11), sus bloques del 24-09 noche (el planificador, `0d9a54db`) y el aviso de `#670`.
+  isla (spec §4.10 y §4.11), sus bloques del 24-09 noche (el planificador, `0d9a54db`) y el aviso de `#670`; y
+  mis avisos del 24-09 en tus ficheros (T3d `#691`, T3e·5 `#696`, T3e·6 `#698`), leídos por tu bloque del 25-09.

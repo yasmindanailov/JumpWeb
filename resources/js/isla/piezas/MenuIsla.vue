@@ -17,9 +17,13 @@ const props = defineProps({
     bookingToday: { type: Object, default: null },
     help: { type: Object, default: null },
     cookies: { type: Object, default: null },
+    // Con la segunda capa en la página (T4e), «Cookies» la abre SIEMPRE, también ya decidido: retirar el consentimiento
+    // tiene que ser tan fácil como darlo. Sin ella, el `onConfigure` del aviso, como el diseño.
+    preferencias: { type: Object, default: null },
 });
 const emit = defineEmits(['abrir', 'capa', 'navegar']);
 const { t } = useTextos();
+const configurar = computed(() => (props.preferencias ? () => emit('abrir', 'cookies') : (props.cookies ? props.cookies.onConfigure : null)));
 
 const sesion = computed(() => props.account.state === 'session');
 const portada = computed(() => props.homeLabel || t('menu.portada'));
@@ -82,7 +86,7 @@ const notaQr = computed(() => (props.bookingToday
             <span :style="{ color: 'rgba(255,255,255,0.3)' }">·</span>
             <EnlaceIsla
                 :label="t('menu.cookies')"
-                :pulsar="cookies ? cookies.onConfigure : null"
+                :pulsar="configurar"
             />
         </div>
     </div>

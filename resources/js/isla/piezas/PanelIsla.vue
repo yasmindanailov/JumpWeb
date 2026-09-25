@@ -4,11 +4,15 @@
  * con su título (salvo que el título suba a la fila) y su propio scroll. La isla le pone la `key` de la vista:
  * cambiar de panel lo vuelve a montar, y así entra con su movimiento.
  */
-import { ref } from 'vue';
+import { defineAsyncComponent, ref } from 'vue';
 import CabeceraPanel from './CabeceraPanel.vue';
 import MenuIsla from './MenuIsla.vue';
 import SelectorPlan from './SelectorPlan.vue';
 import HojasIsla from './HojasIsla.vue';
+
+// «Tus cookies» se abre poco: diferida, ni la isla en reposo ni la compra pagan sus interruptores (medido, +4,2 y
+// +5,9 KiB estáticas).
+const PreferenciasCookies = defineAsyncComponent(() => import('./PreferenciasCookies.vue'));
 
 defineProps({
     vista: { type: String, required: true },
@@ -23,6 +27,7 @@ defineProps({
     bookingToday: { type: Object, default: null },
     help: { type: Object, default: null },
     cookies: { type: Object, default: null },
+    preferencias: { type: Object, default: null },
     plans: { type: Object, default: null },
     plansFromToday: { type: Boolean, default: false },
     quote: { type: Object, default: null },
@@ -60,6 +65,7 @@ defineExpose({ enfocar: () => raiz.value && raiz.value.focus({ preventScroll: tr
             :booking-today="bookingToday"
             :help="help"
             :cookies="cookies"
+            :preferencias="preferencias"
             @abrir="(id) => emit('abrir', id)"
             @capa="(fn) => emit('capa', fn)"
             @navegar="(it, e) => emit('navegar', it, e)"
@@ -69,6 +75,10 @@ defineExpose({ enfocar: () => raiz.value && raiz.value.focus({ preventScroll: tr
             :plans="plans"
             :from-today="plansFromToday"
             @elegir="(o) => emit('elegir', o)"
+        />
+        <PreferenciasCookies
+            v-else-if="vista === 'cookies' && preferencias"
+            :preferencias="preferencias"
         />
         <HojasIsla
             v-else-if="vista === 'resumen' || vista === 'cuenta' || vista === 'help'"

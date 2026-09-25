@@ -897,7 +897,10 @@ class SidebarBundleBudgetTest extends TestCase
     // +0,71 de costura. Medido 131,89. ⚠️ Lo que SOLO usa la calculadora (el calendario, el chip, compartir, el cargo
     // de los calcetines) vive en módulos aparte (`ui/calendario.js`, `ui/compartir.js`, `calculadora/cargo.js`): en
     // `piezas.js`, `estilos.js` y `oferta.js` viajaba con la compra, y medía 136,48. El techo, a 133.
-    private const ISLA_COMPRA_CHUNK_MAX_KB = 133;
+    // T4e·4 (la segunda capa de cookies, «Tus cookies»): el panel viaja DIFERIDO (`PanelIsla.vue`, su trozo de 4,74
+    // KiB llega al abrirlo); estático, la compra medía 137,78. Queda lo que el menú y el panel comparten para abrirlo
+    // desde cualquier sitio (el título, `preferencias` y el cargador): medido 133,57. El techo, a 134.
+    private const ISLA_COMPRA_CHUNK_MAX_KB = 134;
 
     // T4d·4 (`specs/isla-y-landing-nueva.md` §4.12): la CALCULADORA de una página, entrada propia que la página pide
     // (`scripts` de `<x-pagina>`) y se monta al acercarse su pieza. Su DESCARGA entera, como la mide el navegador que

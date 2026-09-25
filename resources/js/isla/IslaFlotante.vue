@@ -89,7 +89,7 @@ const {
                 </CompraIsla>
                 <template v-else>
                     <BloqueCookies
-                        v-if="!top && cookies"
+                        v-if="!top && cookies && view !== 'cookies'"
                         :cookies="cookies"
                         :top="top"
                     />
@@ -207,7 +207,7 @@ const {
                         @elegir="elegirPlan"
                     />
                     <BloqueCookies
-                        v-if="top && cookies"
+                        v-if="top && cookies && view !== 'cookies'"
                         :cookies="cookies"
                         :top="top"
                     />
