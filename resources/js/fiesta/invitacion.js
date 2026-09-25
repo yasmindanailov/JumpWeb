@@ -8,31 +8,13 @@
  */
 /* global document, location, fetch, FormData, setTimeout, clearTimeout */
 import './fiesta.css';
-
-const de = document.documentElement;
-const q = (sel, raiz = document) => raiz.querySelector(sel);
-const qa = (sel, raiz = document) => [...raiz.querySelectorAll(sel)];
-
-/* ── El idioma: el desplegable nativo lleva en cada opción el enlace que lo cambia. ────────────────────────────── */
-function idioma() {
-    const select = q('[data-idioma-select]');
-    if (!select) return;
-    select.addEventListener('change', () => {
-        const destino = select.value;
-        if (destino) location.href = destino;
-    });
-}
+import { arranca, enterNoEnvia, idioma, q, qa } from './comun.js';
 
 /* ── La barra: Intro cierra el teclado y no contesta; al pulsar, «Enviando» y el otro botón se bloquea. ──────── */
 function barra() {
     const form = q('[data-rsvp]');
     if (!form) return;
-    const nombre = q('[data-rsvp-nombre]', form);
-    if (nombre) {
-        nombre.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') { e.preventDefault(); nombre.blur(); }
-        });
-    }
+    enterNoEnvia(q('[data-rsvp-nombre]', form));
     form.addEventListener('submit', (e) => {
         const pulsado = e.submitter;
         if (!pulsado) return;
@@ -103,14 +85,4 @@ function foco() {
     if (campo) setTimeout(() => campo.focus({ preventScroll: false }), 60);
 }
 
-try {
-    idioma();
-    barra();
-    ficha();
-    foco();
-    de.classList.remove('no-js');
-    de.classList.add('js');
-} catch {
-    de.classList.remove('js');
-    de.classList.add('no-js');
-}
+arranca(idioma, barra, ficha, foco);

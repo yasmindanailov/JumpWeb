@@ -25,6 +25,7 @@ export default defineConfig({
                 // entra en el chunk del cajón ni en `app.js`.
                 'resources/js/fiesta/lista.js',
                 'resources/js/fiesta/invitacion.js',
+                'resources/js/fiesta/autorizacion.js',
                 // T4e — la ISLA EN REPOSO de una página declarada: entrada propia, la pide la página (`isla`) y se monta
                 // al cargar; el motor del cajón sigue llegando al pulsar.
                 'resources/js/isla/pagina/montar.js',

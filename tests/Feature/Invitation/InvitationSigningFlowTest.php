@@ -219,7 +219,7 @@ class InvitationSigningFlowTest extends TestCase
         $html = (string) $this->get($this->waiverLink($reply))->assertOk()->getContent();
 
         $this->assertTrue(
-            (bool) preg_match('#<form class="gf-form" method="POST" action="([^"]+)"#', $html, $m),
+            (bool) preg_match('#<form method="post" action="([^"]+)"[^>]*data-firma#', $html, $m),
             'el formulario del justificante no se pintó'
         );
 

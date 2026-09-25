@@ -13,6 +13,7 @@ use App\Domain\Platform\Services\DisplayTime;
 use App\Domain\Platform\Services\Turnstile;
 use App\Http\Concerns\RecordsPartyFacts;
 use App\Http\Fiesta\InvitacionPagina;
+use App\Http\Fiesta\Sitio;
 use App\Http\Instancia\InstanceViews;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
@@ -193,7 +194,7 @@ class InvitationPageController extends Controller
                 'action' => $request->fullUrl(),
                 'status' => $request->session()->get('receipt_status'),
             ],
-        ], (array) (view()->shared('site') ?? []));
+        ], Sitio::datos());
 
         return response()
             ->view('fiesta.invitacion', ['m' => $m, 'hojas' => InstanceViews::hojas('fiesta')])
@@ -283,7 +284,7 @@ class InvitationPageController extends Controller
             'calendarUrl' => $this->calendarEventOf($reservation) === null
                 ? null
                 : route('invitation.calendar', ['token' => $invitation->token]),
-        ], (array) (view()->shared('site') ?? []));
+        ], Sitio::datos());
 
         return response()
             ->view('fiesta.invitacion', ['m' => $m, 'hojas' => InstanceViews::hojas('fiesta')])
@@ -432,9 +433,8 @@ class InvitationPageController extends Controller
         }
 
         // La del panel, que es una URL externa ya saneada: se publica sin medidas porque no se pueden
-        // medir sin salir a buscarla.
-        $site = (array) (view()->shared('site') ?? []);
-        $externa = trim((string) ($site['og_image'] ?? ''));
+        // medir sin salir a buscarla. ⚠️ Leída de los ajustes, no de `view()->shared('site')`, que aquí es `null`.
+        $externa = trim((string) (Sitio::datos()['og_image'] ?? ''));
 
         return ['image' => $externa === '' ? null : $externa, 'width' => null, 'height' => null];
     }

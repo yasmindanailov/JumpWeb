@@ -113,11 +113,13 @@ Medido en `GuestFormController::show()` (sus 30 claves), `InvitationPageControll
 - **HAY**: la hoja en blanco por reserva, los cinco desenlaces, la firma con el descargo entero, el anti-bot con
   rótulo, la llegada desde el recibo con la respuesta atada (`fromInvitation`, `prefill`), el enlace que no vale
   (404 uniforme), es/en/fr.
-- **A medir en T3**: los campos de hoy contra los CUATRO del brief (nombre y apellidos del niño, tu nombre y
-  apellidos, tu teléfono, la casilla, el correo opcional): la vista consume `relationships`, `dependents`,
-  `responsible`. Si hoy pide más (relación, fecha de nacimiento), es una pregunta al owner ANTES de vestirla.
-- **FALTA**: la tarjeta de la fiesta arriba (`InviteCard` con su tema), el foco al primer campo desde el QR de la
-  puerta, el QR de la fiesta en la puerta (lógica nueva, `identidad-qr-puerta.md`).
+- **Medido en T3 (`#745`)**: hoy pedía tres cosas que el brief no (la fecha de nacimiento del menor, la relación con
+  el menor, el apellido del adulto aparte) y dejaba opcional el teléfono. La fecha entra en la prueba firmada
+  (`WaiverSigner`, `CRITICAL_RE`) y da la edad a la puerta; la relación entra en la prueba; el apellido solo compone un
+  nombre completo. Decidido: **se quedan la fecha y la relación**, el adulto va en UNA casilla, el teléfono es
+  obligatorio; el descargo se presenta en el flujo (`waiver-probatorio.md` §4.4). ✅ En T3: la tarjeta arriba.
+- **FALTA**: la firma DENTRO del recibo (`x-fiesta.firma` ya existe: es enchufarla), el foco al primer campo desde el
+  QR de la puerta, el QR de la fiesta en la puerta (lógica nueva, `identidad-qr-puerta.md`).
 
 ## 2. Objetivo
 
@@ -261,7 +263,7 @@ Medido en `GuestFormController::show()` (sus 30 claves), `InvitationPageControll
 | **T1a** ✅ | La lista con lo que HAY (25-09): el modelo de página, `x-pagina-enfocada`, 12 piezas del núcleo (`pieza/`) y 7 de la fiesta (`fiesta/`), las zonas, la hoja con roles, el JS portado, `lang/*/fiesta.php`, la hoja de la instancia; `store()` acepta la personalización con el único Guardar. | Banco de PIEZAS: **46 pares × (390, 1280) a 0 px** + control (1 px tumba 5 pares; restaura byte a byte) · `ListaDeInvitadosTest` 7 · `PaletaNeutraTest` 4 con su mutación · `node --test` 8 · seis guardas de piel re-apuntadas · sonda de ventana 390/1280 (`storage/app/audit/fiesta-lista-viva-*.png`) · suite. |
 | **T1b** | La pasada LIGERA de la lista (`#768`): la página entera en reposo con los datos del diseño, a 390 y 1280, una vez; A monta `PliPagina`, B la Blade con el modelo mapeado desde el MISMO `datos.js` (`FiestaModeloTest`: el banco y el controlador producen la misma forma). Los estados, solo si esa pasada señala algo. | Un par por ventana a 0 · **el ojo del owner en `localhost:8081`** (la página viva ya carga las hojas de PlayJump, `#769`). |
 | **T2** ✅ | La invitación y su recibo con lo que HAY (25-09; `#744`): `InvitacionPagina`, `x-fiesta.rsvp-bar`, `views/fiesta/invitacion/{cabecera,invitacion,recibo}`, `invitacion.js`, el bloque `.inv-*` de la hoja, `lang/*/fiesta.php` (`invitacion_pagina`, `recibo`); el recibo directo tras contestar, 24 h y caducado sin 403, el idioma, «Su ficha» que se guarda sola, la autorización como oferta sin pregunta (la firma, enlace hasta T3), el aviso de privacidad con sus tres cosas. | Pasada ligera (`#768`): la invitación viva y cerrada, A el propio `invitacion.card.html` y B la página entera, 390 y 1280 → **0 px** en los pares de diagnóstico y 4.566–5.082 px en los reales, todos en la línea de privacidad que el mockup no dibuja (`banco-fiesta.php invitacion-viva invitacion-cerrada`) · `InvitacionPaginaTest` 7 · `InvitationPageTest`, `InvitationReceiptTest`, `InvitationSigningFlowTest` re-apuntadas (la hoja en blanco, `og:*`, `no-referrer` intactas) · suite · el recibo, sin A hasta T3 · el owner se manda el enlace al teléfono. |
-| **T3** | La autorización con lo que HAY (`AuthForm`, la tarjeta arriba). Antes, el censo de campos (§1.4). | Tres estados a 0 · `GuardianSkinTest` re-apuntada · los cinco desenlaces · suite. |
+| **T3** ✅ | La autorización con lo que HAY (25-09; `#745`): `Autorizacion` (modelo de página), `x-fiesta.firma` (`AuthForm` 1:1, con ranuras para lo del producto), `x-pieza.selector`, `views/fiesta/autorizacion`, `autorizacion.js` + `comun.js`, el bloque `.aut-*`, `lang/*/fiesta.php` (`firma`, `autorizacion`); la tarjeta arriba con el titular y quien responde; el descargo en el flujo; el Listo del brief; los bloqueos con la forma del «enlace que no vale». Censo: el adulto en UNA casilla, teléfono obligatorio, nacimiento y relación se quedan. | Pasada ligera: `recibo` y `firmada` a 390 y 1280 → **0 px en `firmada`** y en los diagnósticos; el `recibo` real difiere solo en nacimiento, relación y el descargo (5.958–21.622 px) · `AutorizacionPaginaTest` 5 · `GuardianSkinTest` reescrita a la piel nueva · los cinco desenlaces, la hoja en blanco y las defensas intactas (`GuardianAuthorizationScreenTest`, `GuestMinorAuthorizationTest`) · el flujo real con `curl` (`sonda-aut.sh`) · suite. |
 | **T4** | Retirar la piel vieja: el bloque `.gf-*` y `.guardian__*` de `site.css`, `focused-layout` si ya no lo usa nadie, `public/js/guest-form/logic.js` si el port lo absorbe; regenerar `cajon.css`. `CONVENCIONES §3.quater`. | Auditoría de los tests que afirmaban la piel vieja · `hoja-del-cajon.py --aplicar` · suite. |
 | **F1…Fn** | Lo que FALTA (§1.4), una pieza por tanda, en el orden que fije el owner (§7). Cada una con su spec de sección aquí, su decisión y, si toca aforo, `VERIFY_CONC=1`. | Por pieza. |
 
@@ -305,6 +307,23 @@ Medido en `GuestFormController::show()` (sus 30 claves), `InvitationPageControll
   y teléfono): solo la pasada sin `opc` es comparable hasta que las palabras y las pistas sean dato.
 - **La diferencia que queda es del producto**: la línea de privacidad bajo la barra (spec hermana §7.2·R7) no está en el
   mockup de la invitación (sí en el recibo); el par de diagnóstico sin ella da 0 y el real, 4.566–5.082 px, todos ahí.
+
+**La T3 (25-09)**:
+- ❗ **`view()->shared('site')` en un controlador es `null`**: el `site` de las vistas lo pone un *view composer*
+  (`AppServiceProvider`), que corre al PINTAR, y los modelos de página se componen antes. La T1a y la T2 lo leían ahí:
+  las páginas vivas decían «JumpWeb» (el nombre de la aplicación) en vez de «Play Jump Park, Lorca» y no tenían «Cómo
+  llegar», y el ojo lo tomó por un ajuste local vacío. Lo cazó la T3; `App\Http\Fiesta\Sitio::datos()` lee los mismos
+  ajustes con las mismas reglas para los tres controladores.
+- **El bag de errores y el arnés**: con `session.serialization = json` el bag de un POST rechazado llega VACÍO a la
+  petición siguiente en los tests (driver `array`, atributos en memoria: `marshalErrorBag()` itera un objeto), aunque
+  `assertSessionHasErrors` lo vea; ninguna guarda de la piel vieja pintó nunca un error. El flujo real sí lo pinta
+  (medido con `curl` y cookies: `sonda-aut.sh`); la guarda mete el bag en sesión con la forma con la que viaja.
+- **Blade, tercera vez**: `@if ($x) attr="…" @endif` deja dos espacios y una guarda con `role="status" style=` no lo ve
+  (`aviso`, `enlace`): las piezas escriben `@if ($x)attr="…" @endif{{ '' }}`. `--filter='ya_estaba'` no corre un caso
+  cuyo nombre de datos lleva espacios: la salida vacía (27 B) parecía un test verde.
+- **El censo antes de vestir (`#745`)**: la fecha de nacimiento entra en la prueba firmada (`WaiverSigner`, `CRITICAL_RE`)
+  y da la edad a la puerta; la relación entra en la prueba; el apellido del adulto solo compone un nombre completo. El
+  descargo se PRESENTA en el flujo (`waiver-probatorio.md` §4.4): «Leer el descargo» es un ancla, no el modal del mockup.
 
 ## 5. Impacto en invariantes
 
@@ -375,6 +394,12 @@ la casilla en `00-REFACTOR.md`. Lo que la revisión corrija se escribe aquí DEL
   marcado, icono neutro), «Los calcetines van incluidos» fuera (texto del parque), el recibo caducado devuelve a la
   invitación con su aviso, y el aviso de privacidad de la invitación conserva «cuándo se borra» (§7.2·R7 de la hermana)
   aunque el mockup no lo diga.
+- **25-09 (T3), `[DECIDIDO owner]` `#745`, el censo de campos con opciones**: (1) **la fecha de nacimiento se
+  mantiene** (el owner preguntó si la edad del recibo servía: no, es opcional, vive en la respuesta y no entra en la
+  prueba); (2) **la relación con el menor se mantiene** (el desplegable); (3) **el adulto escribe nombre y apellidos
+  en UNA casilla** (el apellido queda vacío, como con la cuenta). Sin pregunta: el teléfono obligatorio (el brief),
+  quien responde con su teléfono en la tarjeta (§12.4 de la hermana), el descargo en el flujo (§4.4 de
+  `waiver-probatorio.md`), el bloqueo con la forma del «enlace que no vale».
 
 ## Anexo · fila del enrutador
 

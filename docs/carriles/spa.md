@@ -2,11 +2,11 @@
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb` a secas; la instancia al lado, en
 > `~/proyectos/instancias/playjump`, clon de `github.com/yasmindanailov/instancia-playjump`, montada el 25-09) ·
-> Banda: **730–759** (700–729 agotada el 20-09) · Último usado: **`#744`** · La banda está dada de alta en la tabla de
+> Banda: **730–759** (700–729 agotada el 20-09) · Último usado: **`#745`** · La banda está dada de alta en la tabla de
 > `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: **`isla-y-landing-nueva.md`
 > §4.11 «El traspaso al SPA»** (la tarea en curso, `#765`) · `celebracion-e-invitacion.md` §0 · `waiver-por-reserva.md` §0 ·
 > `encuestas.md` §0 · `analitica-fiesta.md` §0 · `analitica.md` §0 y §4.5 · `google-business-profile.md` §0 ·
-> `sidebar-spa.md` §0 · Actualizado: 2026-09-25 (noche, T1a y T2 de la fiesta en `main`).
+> `sidebar-spa.md` §0 · Actualizado: 2026-09-25 (noche, T1a, T2 y T3 de la fiesta en `main`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`). El
 > contador de la suite va en el trailer del commit (`#618`), no aquí. **Se muda, no se raspa**: el detalle de
 > una feature baja a su spec (las trampas por tanda de la analítica T1→T5 viven en `analitica.md` §4.9,
@@ -38,11 +38,9 @@
   script en línea, el censo HAY/FALTA contra el código (§1.4) y **ocho preguntas al owner (§7)**. Decidido: viven en
   el PRODUCTO (modelo de página + piezas portadas + `x-pagina-enfocada`, §3 y §4); los valores de PlayJump en
   `publico/instancia/css/fiesta.css` por el **contrato de hojas de `instancia.json`**, pedido a plataforma (buzón).
-- ✅ **Esta máquina, montada para la fiesta (25-09)**: la instancia clonada en `~/proyectos/instancias/playjump` (128 MB,
-  `0802907`; el diseño verificado con su sha256, 468 de 468), `INSTANCIA_RUTA=/var/www/instancias/playjump` en el `.env`
-  (ruta DEL CONTENEDOR), `public/instancia/` copiado de `publico/instancia/` (ignorado por git), `laravel.test` RECREADO
-  para que el montaje `../instancias` viera la carpeta nueva, `socat` repuesto, Chromium vivo, `optimize:clear`, 0
-  migraciones pendientes; `/`, `/kids`, `/jump` y `/cumpleanos` en 200 y `/kids` carga `instancia/css/saltia.css`.
+- ✅ **Esta máquina, montada para la fiesta (25-09)**: la instancia clonada en `~/proyectos/instancias/playjump` (el
+  diseño con su sha256 verificado), `INSTANCIA_RUTA=/var/www/instancias/playjump` en el `.env` (ruta DEL CONTENEDOR),
+  `public/instancia/` copiado de `publico/instancia/` (ignorado por git); la receta entera, en Trampas vivas 🏠.
 - ✅ **LA FIESTA DEL SISTEMA NUEVO: T1a y T2 EN `main` (25-09 noche)**. **T1a**, la lista con lo que HAY, portada 1:1
   (`ListaDeInvitados`, `x-pagina-enfocada`, 12 piezas del núcleo + 7 de la fiesta, las zonas, la hoja con roles,
   `lista.js`/`logica.js`, `lang/*/fiesta.php`): 46 pares a **0 px** con control, `PaletaNeutraTest` (cazó cuatro valores
@@ -51,8 +49,13 @@
   pila de la cuenta, descripción del pack): `InvitacionPagina`, `x-fiesta.rsvp-bar`, `views/fiesta/invitacion/*`,
   `invitacion.js`, el bloque `.inv-*`; 24 h y caducado sin 403; idioma por `lang.switch`; «Su ficha» que se guarda sola;
   sin «¿vas tú con él?». **Pasada ligera** (`#768`): viva y cerrada a 390 y 1280, **0 px** en los pares de diagnóstico y
-  4.566–5.082 px en los reales, todos en la línea de privacidad que el mockup no dibuja. Las páginas vivas se visten
-  con PlayJump (`#769`). Lo que enseñó: spec §4.7. ▶ Sigue **T3 la autorización** y el ojo del owner sobre las tres.
+  4.566–5.082 px en los reales, todos en la línea de privacidad que el mockup no dibuja. **T3**, la autorización
+  (**`#745`**: la fecha y la relación se quedan, el adulto en UNA casilla, teléfono obligatorio): `Autorizacion`,
+  `x-fiesta.firma`, `x-pieza.selector`, `views/fiesta/autorizacion`, el descargo en el flujo, el Listo del brief;
+  pasada ligera **0 px en `firmada`** y en los diagnósticos. ❗ Cazado en T3: `view()->shared('site')` es `null` en un
+  controlador (el composer corre al pintar) y las tres páginas decían «JumpWeb» sin «Cómo llegar»; `Sitio::datos()` lo
+  arregla. Las páginas vivas se visten con PlayJump (`#769`). Lo que enseñó: spec §4.7. ▶ Sigue **T1b** (la pasada
+  ligera de la lista) y **el ojo del owner sobre las tres**.
 - ✅ **LA ANALÍTICA, ENTERA (`#735`), T1→T7 en `main` y vista por el owner en vivo** (24 y 25-09): T2 (el cuadro), T3
   (consentimiento, driver, píxeles, `/cookies`), T4 (la 360, segmentos, opt-in), T5a·T5b (experimentos; **T5c decidida en
   `#738`**: sin mecanismo de textos, la hipótesis la nombra el owner tras la v2.0.0), **T6 la fiesta** (`#739`: *el invitado
@@ -91,11 +94,11 @@
 
 1. ❗❗❗ **LA FIESTA DEL SISTEMA NUEVO (`#765`) — `specs/fiesta-sistema-nuevo.md` ✅ APROBADA (`#743`, 25-09: las
    ocho respuestas en su §7; ❗ «Ver el parque» va ENCENDIDO con el vídeo de portada, no la recomendada)**. Orden:
-   T1a ✅ · T2 ✅ (25-09: la lista y la invitación con lo que HAY; la invitación a 0 px en su pasada ligera) → **T3 la
-   autorización** (la pasada ligera al cerrarla, como `invitacion-viva` en `banco-fiesta.php`; ANTES, el censo de
-   campos contra los cuatro del brief) → **T1b la pasada LIGERA de la lista** (A `PliPagina`, B la Blade con el modelo
-   desde el MISMO `datos.js`) y **el ojo del owner en `localhost:8081`** (la lista de la 1076, `/invitacion/XezlOftP36QI`
-   y su recibo) → **T4 retirar la piel vieja** (`.gf-*`, `.guardian__*`, `focused-layout` si
+   T1a ✅ · T2 ✅ · T3 ✅ (25-09: las tres páginas con lo que HAY; la invitación y la autorización a 0 px en su pasada
+   ligera) → **T1b la pasada LIGERA de la lista** (A `PliPagina`, B la Blade con el modelo desde el MISMO `datos.js`,
+   como `invitacion-viva` y `autorizacion-recibo` en `banco-fiesta.php`) y **el ojo del owner en `localhost:8081`** (la
+   lista de la 1076, `/invitacion/XezlOftP36QI`, su recibo y `/autorizacion/1076` por su enlace firmado) → **T4
+   retirar la piel vieja** (`.gf-*`, `.guardian__*`, `focused-layout` si
    nadie lo usa, `cajon.css` regenerada; `CONVENCIONES §3.quater`) → **F1…Fn, lo que FALTA**, una pieza por tanda con la
    decisión del owner. Cada tanda: `git pull` de la instancia + `sha256sum -c`, el banco con control, las guardas de
    piel re-apuntadas o retiradas con su motivo, sonda de VENTANA de las tres y el ojo del owner en `localhost:8081`
@@ -125,8 +128,8 @@
 
 **La fiesta del sistema nuevo (`#765`)**: las tres páginas enfocadas —`resources/views/reservation/**`,
 `resources/views/invitation/**`, `focused-layout`, las clases `.gf-*` y `.guardian__*`, `lang/*/guestform.php`,
-`guardian.php`, `invitation.php`, `resources/js/guest-form/`— y lo nuevo (T1a, T2): `app/Http/Fiesta/` (los modelos de
-página, `Temas`, `Marca`), `resources/views/fiesta/**`, `components/{fiesta,pieza}/`, `components/pagina-enfocada.blade.php`,
+`guardian.php`, `invitation.php`, `resources/js/guest-form/`— y lo nuevo (T1a→T3): `app/Http/Fiesta/` (los modelos de
+página, `Temas`, `Marca`, `Sitio`), `resources/views/fiesta/**`, `components/{fiesta,pieza}/`, `components/pagina-enfocada.blade.php`,
 `resources/js/fiesta/`, `lang/*/fiesta.php`, `tests/Feature/Fiesta/`, `scripts/banco-fiesta.php`, `mutar-fiesta.sh`;
 los valores de PlayJump, en `publico/instancia/` del repo de la instancia (se empuja allí, nunca a `main`). ⚠️ El
 mecanismo de «una vista del producto carga una hoja de la instancia» es de plataforma: se pide antes.
@@ -258,6 +261,9 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 - ⚠️ **Tu `isla.css` lleva un valor de PlayJump como «neutro»**: `#74ddfa` (= `--aqua-400` de la instancia) en
   `--isla-foco`, `--text-link`, `--icon-accent`, `--notice-info-*` y `--ring` sobre tinta. A la fiesta se lo cazó
   `PaletaNeutraTest` y lo cambié por `#7fd4ef`; en la isla es tuyo: lo digo, no lo toco.
+- ⚠️ **Tu composer `site` (`AppServiceProvider`) solo corre al PINTAR**: `view()->shared('site')` en un controlador es
+  `null`. Mis tres páginas leen ahora los mismos ajustes con `App\Http\Fiesta\Sitio::datos()` (T3). Si algún día
+  sacas ese arreglo del composer a un servicio, lo uso y retiro el mío.
 - ✅ **(2) T4b·4, `site/body-state`: ADELANTE, tú.** Sacar el estado del `<body>` de `components/layout.blade.php` a un
   componente que usen los dos layouts, **TAL CUAL y sin cambiar un atributo**. Dos condiciones: las guardas de mi T3 que
   leen esos atributos (`data-cookie-*`, `data-analytics-*`, `data-pixel-*`) siguen en verde SIN tocarlas, y si alguna

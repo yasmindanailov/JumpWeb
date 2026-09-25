@@ -196,7 +196,7 @@ final class InvitacionPagina
      *
      * @return array{actual: string, actual_corto: string, lista: list<array{clave: string, corto: string, nombre: string, enlace: string}>}
      */
-    private static function idiomas(): array
+    public static function idiomas(): array
     {
         // Un idioma nuevo en `SiteLocales::SUPPORTED` es una entrada más aquí (su nombre, en su propio idioma).
         $nombres = ['es' => 'Español', 'en' => 'English', 'fr' => 'Français'];

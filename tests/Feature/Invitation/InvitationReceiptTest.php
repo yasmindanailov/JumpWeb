@@ -134,7 +134,7 @@ class InvitationReceiptTest extends TestCase
             ->getContent();
 
         // …y las dos casillas VACÍAS: que el reparto lo haga él.
-        $this->assertStringContainsString('name="minor_name" type="text" required autocomplete="off"', $html);
+        $this->assertStringContainsString('name="minor_name" value=""', $html);
         $this->assertStringNotContainsString('value="Hugo Ruiz"', $html, 'el nombre se volcó en una casilla en vez de enseñarse');
         $this->assertStringContainsString('data-from-invitation', $html, 'no se le dice de dónde viene ni qué escribió');
 

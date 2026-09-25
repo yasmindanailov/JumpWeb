@@ -237,4 +237,38 @@ return [
         'sin_firma' => 'Y sin firma, la autorización se hace en la puerta con un QR: treinta segundos.',
         'cerrado' => 'Esta fiesta ya no admite cambios. Lo que nos dijiste antes sigue guardado.',
     ],
+    // LA FIRMA (`invitados/AuthForm.jsx`, T3): la comparten la página de la autorización y el recibo. `:h` es quien
+    // organiza, por su nombre de pila (`#744`). Lo que el producto pide y el brief no (`#745`): nacimiento y relación.
+    'firma' => [
+        'tu_nombre' => 'Tu nombre y apellidos',
+        'tu_telefono' => 'Tu teléfono',
+        'casilla' => 'Como su padre, madre o tutor, autorizo a que se quede a cargo de :h durante la fiesta y acepto el descargo de responsabilidad en su nombre.',
+        'leer_descargo' => 'Leer el descargo',
+        'correo' => 'Correo',
+        'correo_ayuda' => 'Te mandamos una copia.',
+        'compromiso' => 'Firmar ahora no te compromete: si al final te quedas, no hace falta nada.',
+        'firmar' => 'Firmar',
+        'firmando' => 'Firmando',
+        'firmada' => 'Firmada. El día de la fiesta lo acompañas hasta la puerta y listo, sin esperas.',
+        'err_nombre' => 'Escribe tu nombre y apellidos.',
+        'err_tel' => 'Escribe tu teléfono.',
+        'err_casilla' => 'Marca la casilla para firmar.',
+        'nacimiento' => 'Fecha de nacimiento',
+        'relacion' => 'Relación con el menor',
+    ],
+    // LA PÁGINA de la autorización (`autorizacion/datos.js`, T3).
+    'autorizacion' => [
+        'titulo_pagina' => 'Autorización',
+        'titular' => 'Autorización para la fiesta de :n',
+        'titular_visita' => 'Autorización para la visita',
+        'numero' => 'Nº :codigo',
+        'que' => 'Si dejas a tu hijo en la fiesta y no te quedas, queda a cargo de :h, como en cualquier cumpleaños. Esta autorización lo dice por escrito, e incluye el descargo de responsabilidad: la hoja que firma todo el que entra a saltar, con las normas y los riesgos.',
+        'nino_nombre' => 'Nombre del niño o la niña',
+        'nino_apellidos' => 'Apellidos del niño o la niña',
+        'privacidad' => ':h verá el nombre de tu hijo y que su autorización está firmada; el parque, tus datos para atenderle.',
+        'caducado' => 'Este enlace ya no vale.',
+        'caducado_texto' => 'Pídele el enlace nuevo a quien te invitó a la fiesta.',
+        'err_nino_nombre' => 'Escribe su nombre.',
+        'err_nino_apellidos' => 'Escribe sus apellidos.',
+    ],
 ];

@@ -302,7 +302,7 @@ class GuestMinorSurfacesTest extends TestCase
             'minor_name' => 'Luis', 'minor_surname' => 'Pérez Soto',
             'minor_born_on' => now()->subYears(9)->toDateString(),
             'guardian_name' => 'Carlos', 'guardian_surname' => 'Pérez Gil',
-            'guardian_relationship' => 'father', 'guardian_email' => 'carlos@example.com',
+            'guardian_relationship' => 'father', 'guardian_email' => 'carlos@example.com', 'guardian_phone' => '600333444',
         ])->assertSessionHas('guardian_status', 'signed');
 
         Notification::assertSentOnDemand(
@@ -324,7 +324,8 @@ class GuestMinorSurfacesTest extends TestCase
             'minor_name' => 'Luis', 'minor_surname' => 'Pérez Soto',
             'minor_born_on' => now()->subYears(9)->toDateString(),
             'guardian_name' => 'Carlos', 'guardian_surname' => 'Pérez Gil',
-            'guardian_relationship' => 'father',
+            // Sin correo, pero con teléfono: desde `#745` es obligatorio (el brief), la copia por correo sigue siendo opcional.
+            'guardian_relationship' => 'father', 'guardian_phone' => '600333444',
         ])->assertSessionHas('guardian_status', 'signed');
 
         // ⚠️ El correo es una CORTESÍA: la prueba existe igual. Que no haya buzón no puede impedir
@@ -362,7 +363,7 @@ class GuestMinorSurfacesTest extends TestCase
             'minor_name' => 'Luis', 'minor_surname' => 'Pérez Soto',
             'minor_born_on' => now()->subYears(9)->toDateString(),
             'guardian_name' => 'Carlos', 'guardian_surname' => 'Pérez Gil',
-            'guardian_relationship' => 'father', 'guardian_email' => 'carlos@example.com',
+            'guardian_relationship' => 'father', 'guardian_email' => 'carlos@example.com', 'guardian_phone' => '600333444',
         ])->assertSessionHas('guardian_status', 'signed');
 
         Notification::assertSentOnDemand(
@@ -397,7 +398,7 @@ class GuestMinorSurfacesTest extends TestCase
             'minor_name' => 'Luis', 'minor_surname' => 'Pérez Soto',
             'minor_born_on' => now()->subYears(9)->toDateString(),
             'guardian_name' => 'Carlos', 'guardian_surname' => 'Pérez Gil',
-            'guardian_relationship' => 'father', 'guardian_email' => 'carlos@example.com',
+            'guardian_relationship' => 'father', 'guardian_email' => 'carlos@example.com', 'guardian_phone' => '600333444',
         ];
         $url = fn (): string => URL::temporarySignedRoute('reservation.authorization.store', now()->addDays(14), ['reservation' => $order->items()->whereNull('parent_item_id')->orderBy('id')->firstOrFail()]);
 

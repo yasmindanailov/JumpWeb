@@ -311,5 +311,79 @@ foreach ($paginas as $nombre => $estado) {
     }
 }
 
+// ── LA AUTORIZACIÓN (T3): el formulario en reposo (`recibo`) y el Listo (`firmada`), con los datos del diseño ──────────
+// B lleva lo que el producto pide y el brief no (`#745`: nacimiento y relación) y el descargo en el flujo; el par de
+// DIAGNÓSTICO (`$m['diagnostico']`) los omite y tiene que dar 0: así el par real solo puede diferir en eso.
+$cardAut = (string) file_get_contents($diseno.'/paginas/autorizacion.card.html');
+$modeloAutorizacion = static fn (string $estado, bool $diagnostico): array => [
+    'diagnostico' => $diagnostico,
+    'titulo_pagina' => 'Autorización para la fiesta de Vera · Play Jump Park',
+    'marca' => ['src' => '../assets/logo/logo-playjump.png', 'alt' => 'Play Jump Park'],
+    'idiomas' => ['actual' => 'es', 'actual_corto' => 'ES', 'lista' => [
+        ['clave' => 'es', 'corto' => 'ES', 'nombre' => 'Español', 'enlace' => '#es'],
+        ['clave' => 'en', 'corto' => 'EN', 'nombre' => 'English', 'enlace' => '#en'],
+        ['clave' => 'fr', 'corto' => 'FR', 'nombre' => 'Français', 'enlace' => '#fr'],
+    ]],
+    'tema' => ['clave' => 'confeti', 'tinte' => Temas::de('confeti')['tint'], 'acento' => Temas::de('confeti')['accent']],
+    'tarjeta' => [
+        'edad' => '7',
+        'titulo' => 'Autorización para la fiesta de Vera',
+        'linea' => 'Sábado 26 de septiembre · 17:00 · Play Jump Park, Lorca.',
+        'que' => 'Si dejas a tu hijo en la fiesta y no te quedas, queda a cargo de Lucía, como en cualquier cumpleaños. Esta autorización lo dice por escrito, e incluye el descargo de responsabilidad: la hoja que firma todo el que entra a saltar, con las normas y los riesgos.',
+    ],
+    'anfitrion' => ['etiqueta' => 'Va con', 'linea' => '', 'nombre' => 'Lucía', 'telefono' => '', 'tel' => ''],
+    'bloqueado' => null,
+    'listo' => $estado !== 'firmada' ? null : ['texto' => 'Firmada. El día de la fiesta lo acompañas hasta la puerta y listo, sin esperas.', 'quien' => 'Hugo Martín Sáez', 'firmante' => 'Ana Sáez Ruiz · 611 204 118'],
+    'aviso' => null,
+    'formulario' => $estado === 'firmada' ? null : [
+        'accion' => '#firmar', 'documento_id' => 0, 'respuesta_id' => null, 'desde_invitacion' => '', 'menores' => [],
+        'valores' => ['ninoNombre' => '', 'ninoApellidos' => '', 'nombre' => '', 'telefono' => '', 'correo' => '', 'casilla' => ''],
+        'fallos' => ['ninoNombre' => '', 'ninoApellidos' => '', 'nombre' => '', 'telefono' => '', 'correo' => '', 'casilla' => ''],
+        'nacimiento' => ['label' => 'Fecha de nacimiento', 'hint' => 'La usamos para saber su edad el día de la visita.', 'value' => '', 'error' => ''],
+        'relacion' => ['label' => 'Relación con el menor', 'opciones' => [['value' => '', 'label' => 'Elige una opción'], ['value' => 'mother', 'label' => 'Madre']], 'value' => '', 'error' => ''],
+        'descargo' => ['titulo' => 'El descargo', 'version' => '', 'cuerpo' => [['h' => '', 'p' => 'Aquí va el texto del descargo, el que da el parque.']]],
+        'casilla' => 'Como su padre, madre o tutor, autorizo a que se quede a cargo de Lucía durante la fiesta y acepto el descargo de responsabilidad en su nombre.',
+    ],
+    'privacidad' => ['texto' => 'Lucía verá el nombre de tu hijo y que su autorización está firmada; el parque, tus datos para atenderle.', 'datos' => 'Los datos que escribes aquí los declaras tú y no los comprobamos con ningún documento. Se conservan como prueba de esta autorización.', 'politica' => 'Política de privacidad', 'enlace' => '#privacidad'],
+    'turnstile' => ['activo' => false, 'clave' => '', 'rotulo' => ''],
+];
+foreach (['autorizacion-recibo' => 'recibo', 'autorizacion-firmada' => 'firmada'] as $nombre => $estado) {
+    if ($solo !== [] && ! in_array($nombre, $solo, true)) {
+        continue;
+    }
+    $a = str_replace(
+        ['"../styles.css"', '"invitacion/datos.js"', '"autorizacion/datos.js"', '"invitacion/invitacion.css"', '"invitacion/vistas.jsx"', '"../components/', '"../_ds_bundle.js"'],
+        ['"../diseno/styles.css"', '"../diseno/paginas/invitacion/datos.js"', '"../diseno/paginas/autorizacion/datos.js"', '"../diseno/paginas/invitacion/invitacion.css"', '"../diseno/paginas/invitacion/vistas.jsx"', '"../diseno/components/', '"../diseno/_ds_bundle.js"'],
+        $cardAut,
+    );
+    $montaje = 'localStorage.setItem("pj-invitacion-idioma", JSON.stringify("es")); '
+        .'window.invCargar(FUENTES).then(() => ReactDOM.createRoot(document.getElementById("root")).render(<AutPagina estado="'.$estado.'" tema="confeti" />));';
+    $a = (string) preg_replace('/window\.invCargar\(FUENTES\)\.then\(\(\) => ReactDOM\.createRoot\(document\.getElementById\("root"\)\)\.render\(<AutBanco \/>\)\);/', $montaje, $a, 1, $n);
+    if ($n !== 1) {
+        fwrite(STDERR, "la ficha de la autorización cambió: no encuentro su montaje\n");
+        exit(1);
+    }
+    file_put_contents($salida."/a/{$nombre}.html", $a);
+
+    foreach (['' => false, '-diagnostico' => true] as $variante => $diagnostico) {
+        $b = view('fiesta.autorizacion', [
+            'm' => $modeloAutorizacion($estado, $diagnostico),
+            'hojas' => ['instancia/css/fuentes.css', 'instancia/css/saltia.css', 'instancia/css/fiesta.css'],
+        ])->render();
+        $b = str_replace(rtrim((string) config('app.url'), '/').'/', '../', $b);
+        file_put_contents($salida."/b/{$nombre}{$variante}.html", $b);
+        foreach (['390x844', '1280x900'] as $ventana) {
+            $lote[] = [
+                'nombre' => "{$nombre}-".strtok($ventana, 'x').$variante,
+                'a' => "{$base}/a/{$nombre}.html",
+                'b' => "{$base}/b/{$nombre}{$variante}.html",
+                'viewport' => $ventana,
+                'completa' => false,
+                'clics' => [],
+            ];
+        }
+    }
+}
+
 file_put_contents($salida.'/lote.json', json_encode($lote, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
 echo '✓ '.count($lote).' pares en '.$salida."/lote.json\n";

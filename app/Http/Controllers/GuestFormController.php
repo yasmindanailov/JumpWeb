@@ -21,6 +21,7 @@ use App\Domain\Platform\Services\PublicFreeText;
 use App\Http\Concerns\AuthorizesGuestForm;
 use App\Http\Concerns\RecordsPartyFacts;
 use App\Http\Fiesta\ListaDeInvitados;
+use App\Http\Fiesta\Sitio;
 use App\Http\Instancia\InstanceViews;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -158,7 +159,7 @@ class GuestFormController extends Controller
         return view('fiesta.lista', [
             'm' => ListaDeInvitados::componer(
                 $datos,
-                (array) (view()->shared('site') ?? []),
+                Sitio::datos(),
                 is_string(session('status')) ? session('status') : null,
                 is_string(session('reminder_text')) ? session('reminder_text') : null,
             ),

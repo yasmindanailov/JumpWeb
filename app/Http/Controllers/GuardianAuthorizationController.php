@@ -21,6 +21,9 @@ use App\Domain\Platform\Services\Analytics\EmailUtm;
 use App\Domain\Platform\Services\Turnstile;
 use App\Http\Concerns\AuthorizesGuardianAuthorization;
 use App\Http\Concerns\RecordsPartyFacts;
+use App\Http\Fiesta\Autorizacion;
+use App\Http\Fiesta\Sitio;
+use App\Http\Instancia\InstanceViews;
 use App\Notifications\GuardianAuthorizationSigned;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -81,10 +84,19 @@ class GuardianAuthorizationController extends Controller
         ]);
         $request->session()->put(self::OPENED_AT_SESSION_KEY.$reservation->getKey(), now()->getTimestamp());
 
-        return view('reservation.authorization', [
+        // El modelo de página (`App\Http\Fiesta\Autorizacion`, T3 de `fiesta-sistema-nuevo.md`): la vista lee SOLO `$m`,
+        // y el banco pinta lo mismo con los datos del diseño. Lo que aquí se calcula es lo de siempre.
+        $m = Autorizacion::componer([
             'reservation' => $reservation,
             'context' => $context,
             'document' => $document,
+            // La invitación de la fiesta, si la hay: su tema pinta la página y quien cumple da el titular.
+            'invitation' => app(PartyInvitations::class)->existingFor($reservation),
+            'status' => $request->session()->get('guardian_status'),
+            'minorName' => $request->session()->get('guardian_minor'),
+            'signer' => $request->session()->get('guardian_signer'),
+            'errors' => $request->session()->get('errors'),
+            'old' => $request->old(),
             // Por qué NO se puede firmar, si es el caso. Se decide aquí solo para PINTAR: la puerta
             // que manda está en el dominio, bajo el lock.
             'blocked' => $this->blockedReason($context),
@@ -174,7 +186,9 @@ class GuardianAuthorizationController extends Controller
                 $context->linkExpiresAt,
                 ['reservation' => $reservation] + $desdeLaInvitacion,
             ),
-        ]);
+        ], Sitio::datos());
+
+        return view('fiesta.autorizacion', ['m' => $m, 'hojas' => InstanceViews::hojas('fiesta')]);
     }
 
     public function store(Request $request, OrderItem $reservation): RedirectResponse
@@ -236,10 +250,12 @@ class GuardianAuthorizationController extends Controller
                     'minor_surname' => $data['minor_surname'],
                     'minor_born_on' => $data['minor_born_on'],
                     'guardian_name' => $data['guardian_name'],
-                    'guardian_surname' => $data['guardian_surname'],
+                    // `#745`: el adulto escribe «tu nombre y apellidos» en UNA casilla (el brief); el apellido queda
+                    // vacío, como ya pasaba con el prellenado de la cuenta. Quien aún mande los dos, se le guardan.
+                    'guardian_surname' => (string) ($data['guardian_surname'] ?? ''),
                     'guardian_relationship' => $data['guardian_relationship'],
                     'guardian_email' => $data['guardian_email'] ?? null,
-                    'guardian_phone' => $data['guardian_phone'] ?? null,
+                    'guardian_phone' => $data['guardian_phone'],
                 ],
                 WaiverSignatureRequest::web($request->ip(), (string) $request->userAgent()),
                 // «Lo dejo y me voy» (§4.5·7, `#576`): el padre llega desde su respuesta a la
@@ -290,7 +306,14 @@ class GuardianAuthorizationController extends Controller
             return redirect()->to($recibo);
         }
 
-        return $this->back($request, $reservation, 'signed', $result['authorization']->minorFullName());
+        // El Listo del brief nombra al niño y a quien firma (nombre · teléfono): lo que acaba de escribir, por flash.
+        return $this->back(
+            $request,
+            $reservation,
+            'signed',
+            $result['authorization']->minorFullName(),
+            trim($result['authorization']->guardianFullName().' · '.(string) $result['authorization']->guardian_phone, ' ·'),
+        );
     }
 
     /**
@@ -319,21 +342,31 @@ class GuardianAuthorizationController extends Controller
                 'after:'.now()->subYears(Dependent::ADULT_AGE)->toDateString(),
             ],
 
+            // `#745` (T3 del sistema nuevo): «tu nombre y apellidos» en UNA casilla —el apellido aparte ya no se pide,
+            // pero se admite— y el TELÉFONO es obligatorio, como en el brief: es lo que permite localizar al padre el
+            // día de la visita.
             'guardian_name' => ['required', 'string', 'max:'.GuardianAuthorization::NAME_MAX],
-            'guardian_surname' => ['required', 'string', 'max:'.GuardianAuthorization::SURNAME_MAX],
+            'guardian_surname' => ['nullable', 'string', 'max:'.GuardianAuthorization::SURNAME_MAX],
             'guardian_relationship' => ['required', 'string', 'in:'.implode(',', Dependent::RELATIONSHIPS)],
             'guardian_email' => ['nullable', 'email:filter', 'max:'.GuardianAuthorization::EMAIL_MAX],
-            'guardian_phone' => ['nullable', 'string', 'max:'.GuardianAuthorization::PHONE_MAX],
+            'guardian_phone' => ['required', 'string', 'max:'.GuardianAuthorization::PHONE_MAX],
         ];
     }
 
     /**
+     * Los errores, con las palabras del brief (`fiesta.firma.*`, `fiesta.autorizacion.*`): se dicen al pintar, junto a
+     * su campo, y nunca dicen si otro nombre ya firmó.
+     *
      * @return array<string, string>
      */
     private function messages(): array
     {
         return [
-            'accept_waiver.accepted' => __('guardian.errors.accept_waiver'),
+            'accept_waiver.accepted' => __('fiesta.firma.err_casilla'),
+            'minor_name.required' => __('fiesta.autorizacion.err_nino_nombre'),
+            'minor_surname.required' => __('fiesta.autorizacion.err_nino_apellidos'),
+            'guardian_name.required' => __('fiesta.firma.err_nombre'),
+            'guardian_phone.required' => __('fiesta.firma.err_tel'),
             // Los dos extremos de la fecha dicen cosas distintas y merecen frases distintas: una fecha
             // futura es una errata; una de hace veinte años dice que esa persona ya es adulta.
             'minor_born_on.before' => __('guardian.errors.born_on_future'),
@@ -360,11 +393,12 @@ class GuardianAuthorizationController extends Controller
         return null;
     }
 
-    private function back(Request $request, OrderItem $reservation, string $status, ?string $minorName = null): RedirectResponse
+    private function back(Request $request, OrderItem $reservation, string $status, ?string $minorName = null, ?string $signer = null): RedirectResponse
     {
         return redirect()->to($this->backUrl($request, $reservation))
             ->with('guardian_status', $status)
-            ->with('guardian_minor', $minorName);
+            ->with('guardian_minor', $minorName)
+            ->with('guardian_signer', $signer);
     }
 
     /**

@@ -21,8 +21,9 @@
 
 ## §0 · Antes de tocar
 
-- **`WaiverSigner` está en el `CRITICAL_RE`** → `VERIFY_CONC=1` y `waiver:verify-chain`. T1–T3 y la activación
-  (T5→T8) en el árbol; queda el OJO del owner (guion `VERIFICACION-E2E-CAJON.md` §5.septies).
+- **`WaiverSigner` está en el `CRITICAL_RE`** → `VERIFY_CONC=1` y `waiver:verify-chain`. Todo en el árbol; queda el
+  OJO del owner (`VERIFICACION-E2E-CAJON.md` §5.septies). Piel nueva por `#745` (T3 de `fiesta-sistema-nuevo.md`:
+  el adulto en UNA casilla, teléfono obligatorio; fecha y relación se quedan).
 - **EMPIEZA POR §13 (`#401`): el justificante cuelga de la RESERVA, no del pedido.** Lo cazó el owner con un
   pedido de dos visitas: de esa raíz salían cuatro síntomas. `guardian_authorizations.order_item_id`, ruta
   `/autorizacion/{reservation}`, un correo por reserva marcada, enlace en «Mis reservas». **Plazas libres =
