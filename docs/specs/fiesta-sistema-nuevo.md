@@ -1,0 +1,304 @@
+# [SPEC] La fiesta del sistema nuevo — vestir la lista de invitados, la invitación y la autorización
+
+> Estado: ⬜ **borrador (T0 medida el 2026-09-25)** · Última actualización: 2026-09-25 · Decisión asociada: `#765`
+> (el traspaso, `[DECIDIDO owner]`); la de esta spec, de la banda 730–759 al aprobarse.
+> Carril: 🧩 **SPA** (banda 730–759). Fuente del diseño: `instancias/playjump/diseno/playjump-design-system/`
+> (el zip de Claude Design, `#760`): `paginas/lista-invitados.card.html`, `paginas/invitacion.card.html`,
+> `paginas/autorizacion.card.html`, `components/invitados/*`, `components/forms/SaveBar.jsx`, el `readme.md`
+> 752→816 y los tres briefs de `uploads/`. Hermanas: `celebracion-e-invitacion.md` (la lógica, §3.1 y §4.5),
+> `waiver-por-reserva.md` (la autorización), `isla-y-landing-nueva.md` §4.8, §4.9 y §4.11 (el método y el traspaso).
+
+## §0 · Antes de tocar
+
+- **Regla que ordena todo (`#765`)**: el método de la isla —la referencia byte a byte del zip, el banco A/B con
+  `scripts/pixel.mjs` a **0 píxeles** con control de 1 px, las piezas portadas— y **primero lo que HAY**; lo que
+  FALTA (§1.4), **una pieza cada vez y con la decisión del owner delante** (§7). El zip entra SOLO por plataforma:
+  `git pull` de la instancia antes de cada tanda y `cd diseno && sha256sum -c --quiet playjump-design-system.sha256`.
+- **Dónde viven (T0, §3.1)**: en el **PRODUCTO** —vistas, piezas, JS y la hoja de estructura con **roles
+  `--fiesta-*` neutros**—; los valores de PlayJump, en `publico/instancia/css/fiesta.css` de su instancia (futuro),
+  tras `saltia.css`, por el **contrato de hojas** de `instancia.json` (§3.3, de plataforma: se pide, no se toca).
+- **Empieza por** §1.4 (el censo HAY/FALTA contra el código) → §4.1 (el modelo de página) → §4.4 (el banco).
+- **Trampas antes de tocar**: la lógica NO se toca (`celebracion-e-invitacion.md` §0: `#700`, `#706`, `#718`,
+  §7.2·R1 hoja en blanco) · `#739` sin banner, driver ni píxeles · las `.gf-*` son un molde de TRES páginas (sonda
+  de VENTANA de las tres) · `hoja-del-cajon.py` lee «HOJA ENFOCADA» de `site.css`: retirarlo obliga a regenerar
+  `cajon.css` · React pone `px` a los números y Blade no; un salto de línea entre texto y elemento es un espacio
+  que JSX no deja · el juez: `--reloj`, `--rehacer`, `--reintentos 2` y sus ocho trampas en `scripts/pixel.mjs`.
+- **Invariantes y `CRITICAL_RE`**: vestir no toca dinero ni aforo. ⚠️ La zona 3 del diseño **sube el número desde
+  la lista** y admite más niños que plazas: `GuestCountAdjuster` (`CRITICAL_RE`), aforo y cobro en el parque →
+  `INVARIANTES` §1–§2, `VERIFY_CONC=1`, solo con el sí del owner (la pregunta 3, abajo). `RGPD-*` en la firma y el recibo.
+
+## 1. Contexto y problema — MEDIDO (2026-09-25)
+
+### 1.1 Lo que hay hoy
+
+| Pieza | Medida |
+|---|---|
+| `resources/views/reservation/guests.blade.php` | **1.279 líneas / 92 KB**, con un `<script type="module">` en línea de **350 líneas** (928→1278) y `public/js/guest-form/logic.js` (el pegado, con `resources/js/guest-form/logic.test.js`). Consume **57 variables** del controlador. |
+| `resources/views/invitation/show.blade.php` · `receipt.blade.php` | 338 y 145 líneas; 18 y 13 variables. |
+| `resources/views/reservation/authorization.blade.php` | 463 líneas, 20 variables; Turnstile como `<script>` externo. |
+| `components/focused-layout.blade.php` | 61 líneas: carga `landing.css` + el tema (`ThemeSettings`) + `site.css` + `client.css` si existe. Lo usan las tres páginas **y las de las encuestas** (`survey/*`). |
+| Controladores | `GuestFormController` 673 líneas (`show` compone 30 claves) · `InvitationPageController` 390 · `GuardianAuthorizationController` 444. |
+| CSS viejo en `site.css` | el bloque «Formulario post-reserva — HOJA ENFOCADA» (líneas 5454→5529, **196 reglas `.gf-*`**) y **24 `.guardian__*`**. |
+| Guardas de piel | `GuestFormSkinTest` (4) y `GuardianSkinTest` (6): cero `--zone-1`, tallas y radios en escala, una sombra, política ≥ 48, cinco desenlaces con cuatro tonos, anti-bot con rótulo. Afirman la piel VIEJA. |
+| Fronteras | `ModuleBoundariesTest|ModuleContractsTest|ApiBoundariesTest`: **47 en verde** antes de tocar. `module-deps.php` no censa controladores (escanea `Support`, `Models` y `Domain`): las dependencias de la fiesta son las que ya lista `celebracion-e-invitacion.md` §1.3. |
+
+### 1.2 Lo que trae el diseño
+
+| Pieza | Medida |
+|---|---|
+| La lista | `lista-invitados.card.html` (187 líneas: el `<style>` de la página, 88 reglas `.pli-*`) + `datos.js` (275: los textos del brief `T`, los propios `P`, `RESERVA`, `EXTRAS`, **cuatro `ESTADOS`** y las `LLEGADAS`) + `estado.jsx` (199: `usePliLista`, el borrador, las cuentas, fusionar una respuesta, guardar) + `zonas-1-2.jsx` (265) + `zonas-3-5.jsx` (290). |
+| La invitación | `invitacion.card.html` (147) + `datos.js` (159) + `vistas.jsx` (237) + `invitacion.css` (63, compartida con la autorización). Seis estados. |
+| La autorización | `autorizacion.card.html` (143) + `datos.js` (40). Tres estados. |
+| Los componentes | `components/invitados/`: `InviteCard` (197), `GuestRow` (123), `AuthForm` (69), `GuestComposer` (63), `RsvpBar` (60), `AddonCard` (53), `ThemePicker` (45), `PlacesMeter` (34); `forms/SaveBar` (40). **Estilos en línea con `var()`**, como la isla. |
+| Tokens | **77 distintos**: **20 primitivos** de la paleta de PlayJump (`--ink-050…900`, `--ink-surface`, `--snow`, `--aqua-100/400/500/600/700`, `--sun-100/500/600`, `--volt-500`), **51 roles** de Saltia (45 ya con respaldo neutro en `resources/js/isla/isla.css`; faltan `--bg-muted`, `--gutter`, `--shadow-island-float`, `--surface-glass-ink-float`, `--success-500`, `--warn-500`), **3 locales** del tema de la invitación (`--inv-accent`, `--inv-tint`, `--invite-radius`). Colores a mano: solo `#000`, `#fff` y `rgba(255,255,255,.14)`. |
+| Fuentes | `--font-display` (Archivo), `--font-ui` (Figtree), `--font-mono` (DM Mono): las nueve caras de `publico/instancia/fuentes/`, servidas por `instancia/css/fuentes.css`. |
+
+### 1.3 El método, ya pagado
+
+`scripts/pixel.mjs` (324 líneas, ocho trampas escritas) y dos moldes de banco: `scripts/banco-entradas.php`
+(JSX con Babel contra Blade, con el `<style>` de la página del diseño copiado tal cual, `clics` y `pasar` por
+pieza, `lote.json` a 390 y 1280) y `scripts/banco-isla.php` (contra Vue). Chromium 1148, `playwright-core`
+1.49.0 y `socat` viven en el contenedor. `public/instancia/` es el sitio del material nuevo de una instalación
+(ignorado por git, excluido del `rsync`).
+
+### 1.4 El censo HAY / FALTA, contra el CÓDIGO (no contra la spec)
+
+Medido en `GuestFormController::show()` (sus 30 claves), `InvitationPageController` y
+`GuardianAuthorizationController`. **HAY** = existe y solo hay que pintarlo · **DATO** = lo decide el panel ·
+**FALTA** = lógica nueva, con el owner delante (§7).
+
+**La lista (cinco zonas)**
+- Z1 · **HAY**: la invitación (tres temas `confeti/fiesta/sereno`, quien cumple y su edad, «te invita», el teléfono
+  por casilla, el enlace, `shareable`, `replies_open`, el plazo escrito, el resumen N/M/K) y «Compartir». **FALTA
+  (pantalla)**: «¿Cómo se llama quien cumple?» como PRIMERA pantalla —el mecanismo existe (`updateInvitation`
+  escribe `honoree_name`; sin él no se comparte), lo nuevo es la pantalla con la vista previa que se escribe sola—.
+  **FALTA**: «unas palabras de la familia» y «pistas para el regalo» (columnas nuevas de `party_invitations`).
+  Las cifras como filtro: JS de la página, sin lógica de servidor.
+- Z2 · **HAY**: las fichas de `guest_data` con su estado, las respuestas por repasar (`proposals`, con «repetida»),
+  la chapa «por la invitación», «No lo apuntes» (`dismissReply`), firmada/falta por niño (`guestRegimes`), el
+  pegado de nombres (`logic.js`), la línea de las edades (`ageMix`, `ageSurcharge`). **FALTA**: quien cumple como
+  FILA de la lista («Es su cumple»; hoy vive en `event_data` y no cuenta como ficha), la lista **sin filas vacías y
+  sin tope** (hoy `sanitizeGuestData()` es posicional y acotada a `quantity`: §7·3), «Al final viene» (una respuesta
+  «no» que el anfitrión vuelve a contar), «Quitar» con deshacer, el `GuestComposer` (añadir de uno en uno con
+  Intro), **tres campos y ni uno más** (los packs de PlayJump tienen cinco columnas: §7·6, DATO).
+- Z3 · **HAY**: el número con su plazo, subir y bajar dentro del suelo (`guestCount`, `#444`), «Solo pagas los niños
+  que vengan». **FALTA**: el `PlacesMeter` con más niños que plazas (ámbar), «Seréis N… ¿Es correcto?» que SUBE el
+  número desde la lista, «Invitar a más» (§7·3, aforo).
+- Z4 · **HAY**: los complementos con su plazo por enganche (`PostFormAddonView`), «fuera de plazo» con motivo, la
+  tarta como grupo excluyente. **FALTA**: la tarta por raciones y «la grande», combos y cubos «para N adultos»
+  con «¿Cuántos adultos se quedan?» (DATO nuevo del enganche + regla), el aviso de la tarta bajo la cabecera.
+- Z5 · **HAY**: un solo Guardar, el testigo («La reserva ha cambiado»), el recordatorio (`writeReminder`). **FALTA**:
+  el borrador en el móvil (JS de la página; sin servidor), «Guardado hoy a las 16:05» (el `guest_form_submitted_at`
+  o equivalente: se mide en T1).
+- Fuera del diseño y del producto: los **campos generales** del post-form (`generalFields`: adultos y observaciones),
+  los avisos de edad sin producto (`noProductNotices`), el modo **solo lectura**, el bloque legal (`gfLegal`). Se
+  pintan con las piezas del sistema en su zona y **se juzgan sin A** (§4.4).
+
+**La invitación y su recibo**
+- **HAY**: los seis estados (viva, plazo pasado, «Contamos con vosotros», «Gracias por avisar», anti-bot, no
+  disponible), la barra con el nombre y dos botones, el tema que pinta la página, cuándo y dónde, «Cómo llegar»,
+  el `.ics`, el menú por `show_in_invitation`, quién invita y «Llamar», la vista previa (`og:*`), «Su ficha» en el
+  recibo (G2), la firma desde el recibo (G3 «Lo dejo y me voy»), el aviso de privacidad, es/en/fr.
+- **FALTA**: la firma DENTRO del recibo (`AuthForm` en la misma página, hoy es un enlace a la autorización), «el
+  recibo dura 24 horas» (hoy la URL firmada dura **2 h**, `celebracion-e-invitacion.md` §4.5·6: §7·4), «Contestar
+  por otro hijo» y «Tus respuestas» en el móvil (JS), «Crear mi QR» (Mi cuenta), «Avísame de fechas» (§7·8), «Ver el
+  parque» (§7·7), el menú agrupado «Para beber / Para comer / Y para terminar» (DATO del enganche), la nota de
+  Google en la cabecera. ❗ **El diseño QUITA «¿Vas tú con él?»** (`companion`, D4/D5): la autorización es una
+  oferta sin pregunta. Afecta al estado «con un adulto» de la puerta (§4.5·10 de la spec hermana): §7·5.
+
+**La autorización**
+- **HAY**: la hoja en blanco por reserva, los cinco desenlaces, la firma con el descargo entero, el anti-bot con
+  rótulo, la llegada desde el recibo con la respuesta atada (`fromInvitation`, `prefill`), el enlace que no vale
+  (404 uniforme), es/en/fr.
+- **A medir en T3**: los campos de hoy contra los CUATRO del brief (nombre y apellidos del niño, tu nombre y
+  apellidos, tu teléfono, la casilla, el correo opcional): la vista consume `relationships`, `dependents`,
+  `responsible`. Si hoy pide más (relación, fecha de nacimiento), es una pregunta al owner ANTES de vestirla.
+- **FALTA**: la tarjeta de la fiesta arriba (`InviteCard` con su tema), el foco al primer campo desde el QR de la
+  puerta, el QR de la fiesta en la puerta (lógica nueva, `identidad-qr-puerta.md`).
+
+## 2. Objetivo
+
+### 2.1 Criterios de éxito, medibles
+
+- **Idéntico = 0**: cada estado de cada página (§4.4) contra la ficha del diseño con los mismos datos, a 390 y a
+  1280, con `--rehacer --reloj --reintentos 2`, y un **control** por tanda: una mutación de 1 px tumba sus pares y
+  el juez sale con 1.
+- **Cero paleta de un cliente en el producto**: ninguna vista, pieza ni hoja del producto nombra `--ink-*`,
+  `--snow`, `--aqua-*`, `--sun-*`, `--volt-*` ni un hex de PlayJump; con la hoja del producto sola, las tres
+  páginas se ven **enteras y neutras** (la misma guarda que la isla).
+- **La lógica no cambia**: los tests de dominio de la fiesta (`tests/Feature/Invitation/**`,
+  `tests/Feature/Reservation/**`, `MountsAParty`) siguen en verde sin tocar una aserción de dominio; solo se
+  re-apuntan o retiran, con su motivo, los de PIEL.
+- **Sin JavaScript sigue funcionando**: un `<form>` de verdad, Guardar es su botón de enviar, las fichas abiertas.
+- **`#739`**: las tres páginas sin banner, driver ni píxeles (`FocusedPagesAreCookieFreeTest` sigue en verde).
+- **Presupuestos**: la entrada nueva de Vite con su techo en test; `SidebarBundleBudgetTest` no se mueve (la fiesta
+  no entra en el chunk del cajón).
+
+### 2.2 Fuera de alcance
+
+- Toda la lógica de §1.4 FALTA: entra después, una pieza por tanda y con su decisión (§7).
+- Los correos del diseño (quince, `paginas/correos/`): del carril de correos.
+- Mi cuenta en la isla (T5 de la spec hermana) y «Crear mi QR» (`identidad-qr-puerta.md`).
+- Las páginas de las encuestas (`survey/*`): siguen en `focused-layout` hasta que tengan diseño.
+- El panel (la ficha del pedido, la puerta): sin cambio de forma.
+
+## 3. Opciones consideradas
+
+### 3.1 Dónde viven las tres páginas
+
+| | Qué es | Por qué sí / por qué no |
+|---|---|---|
+| **(a) Vistas de la INSTANCIA** sobre un contrato de datos (`#681`, como `/kids`) | El producto da los hechos; `instancias/playjump/web/` pinta. | ❌ La lista lleva **199 líneas de lógica de estado** en el navegador (borrador, fusionar respuestas, cuentas, suelo, pegar) y 673 en el servidor: acabarían en la instancia, y cada cliente las reharía. «La mecánica viene decidida del sistema» (los tres briefs). Descartada también por plataforma (`#765`). |
+| **(b) En el PRODUCTO, con roles neutros** ✅ | Vistas, piezas y JS del producto; la estructura con `--fiesta-*` de valor neutro; PlayJump asigna sus valores en una hoja de su instancia (como `--isla-*`, `isla-y-landing-nueva.md` §4.9 T2a). | ✅ Es la regla de la isla, ya medida: **20 primitivos → roles**, 51 roles de Saltia con respaldo (45 ya existen). Coste: el producto necesita cargar una hoja de la instancia en una vista suya (§3.3). |
+| (c) Híbrido: la hoja entera de Saltia en el producto | Copiar `saltia.css` al producto. | ❌ Clava la paleta de un cliente en `main` (`#610`). |
+
+### 3.2 La vista: reestilar lo que hay o portar las piezas
+
+| | Por qué sí / por qué no |
+|---|---|
+| (a) Cambiar las clases `.gf-*` por las del diseño sobre la vista de 1.279 líneas | ❌ El marcado del diseño es OTRO árbol (zonas, `GuestRow`, `PlacesMeter`, `SaveBar`): a 0 píxeles no se llega retocando; y la lógica en línea de 350 líneas seguiría dentro de la vista. |
+| **(b) Un modelo de página + piezas portadas** ✅ | Un presentador compone UN arreglo con la forma de `datos.js` (§4.1); las zonas y las piezas son Blade que solo leen ese arreglo; el JS de la página porta `estado.jsx` a `resources/js/fiesta/` (futuro) con casos de `node --test`. El banco pinta B con el MISMO arreglo, mapeado desde `datos.js`. ✅ Es lo que hizo la isla (`forma.js`, `props.js`, `situacion.js`). |
+
+### 3.3 Cómo carga una vista del producto la hoja de la instancia
+
+| | Por qué sí / por qué no |
+|---|---|
+| (a) Por convención: si existe `public/instancia/css/fiesta.css`, se carga (como `client.css`) | Cero contrato. ❌ El producto nombra un fichero de la instancia; la instancia no puede añadir una segunda hoja (las fuentes, `saltia.css`) sin `@import` en cadena. |
+| **(b) Contrato de HOJAS por superficie en `instancia.json`** ✅ (propuesta a plataforma) | `"hojas": { "fiesta": ["css/fuentes.css", "css/saltia.css", "css/fiesta.css"] }` (futuro), leído por `InstanceViews` (validado bajo `public/instancia/`, vacío sin paquete) y consumido por el layout con la misma prop `hojas` de `x-pagina`. ✅ La instancia nombra sus ficheros, el producto no; sirve para cualquier superficie que venga (Mi cuenta, las encuestas). Es de plataforma (`paquete-de-instancia.md`, contrato 2 → 3). |
+
+### 3.4 El layout
+
+| | Por qué sí / por qué no |
+|---|---|
+| (a) Reusar `x-pagina` (el limpio de la instancia) | ❌ Lleva `og:*` y JSON-LD siempre (la lista es privada), no tiene `Referrer-Policy` ni el `head` de la invitación, y su mapa de `scripts` es de plataforma. |
+| (b) Reescribir `focused-layout` | ❌ Lo usan las encuestas, que perderían su piel. |
+| **(c) `x-pagina-enfocada`** ✅ (futuro) | La hoja limpia de una página enfocada: `noindex`, CSRF, favicon, `Referrer-Policy: no-referrer`, SIN `landing.css`/`site.css`/`client.css`, las `hojas` del contrato, la entrada de Vite de la fiesta y un `head` para la invitación. `focused-layout` se retira cuando las encuestas se vistan. |
+
+## 4. Diseño elegido
+
+### 4.1 El modelo de página (futuro: `app/Http/Fiesta/`)
+
+- `ListaDeInvitados` (futuro) compone, desde lo que hoy calcula `GuestFormController::show()`, un arreglo con la
+  forma de `datos.js`: `reserva` (código, día, hora, fin, pack, plazas), `cumple` (nombre, edad), `invitacion`
+  (tema, invita, teléfono, enlace, compartida, plazo, respuestas abiertas), `cuentas` (confirmados, no pueden,
+  sin contestar), `ninos[]` (id, nombre, edad, alergias, origen `mano|invitacion`, respuesta, firmada,
+  pendiente, repetida), `numero` (valor, suelo, plazo, cerrado), `extras` (por enganche, con plazo y motivo),
+  `generales`, `guardar` (estado, guardado en), `plazos`, `solo_lectura`, `accion` (la URL firmada).
+  `InvitacionPagina` e `Autorizacion` (futuro), igual, desde sus controladores.
+- Los controladores **no cambian de firma ni de reglas**: componen el modelo y pintan. Lo que hoy calcula la vista
+  en Blade (estados de ficha, `firstEmpty`, `pendingIdx`…) baja al presentador, con su test.
+- **Contrato del modelo** (`FiestaModeloTest`, futuro): las claves y sus tipos, y que el banco y el controlador
+  producen la MISMA forma (el mapeo de `datos.js` y el del controlador pasan por la misma guarda).
+
+### 4.2 Las piezas y las zonas (futuro: `resources/views/fiesta/` y `components/fiesta/`)
+
+- Una pieza Blade por componente del diseño, **1:1 con su JSX** (mismo árbol, mismos estilos en línea, mismas
+  clases): `invite-card`, `guest-row`, `guest-composer`, `places-meter`, `rsvp-bar`, `auth-form`, `addon-card`,
+  `theme-picker`, `save-bar`. Cada una con su ficha de estados en el banco (como `banco-piezas`).
+- La lista, por zonas: `lista/primero`, `lista/zona-1`…`zona-5`, sobre `x-pagina-enfocada`. La invitación:
+  `invitacion/tarjeta`, `invitacion/recibo`. La autorización: `autorizacion/pagina`.
+- El `<style>` de cada `*.card.html` del diseño (las `.pli-*`, `invitacion.css`) pasa **tal cual** a la hoja del
+  producto, con los primitivos sustituidos por roles (§4.3). La regla de la isla: lo que JSX escribe en línea se
+  escribe en línea; lo del `<style>` va a la hoja.
+- Los textos: `lang/{es,en,fr}/guestform.php`, `invitation.php`, `guardian.php` ganan las claves de `T` y `P` del
+  diseño (`P` es texto aprobado por el owner el 24-09; en/fr propuestos y **a revisar por el owner**). Los de hoy
+  que el diseño sustituye se retiran con su guarda de claves (mismas claves en los tres idiomas).
+
+### 4.3 La hoja: roles `--fiesta-*` y el contrato de hojas
+
+- `resources/js/fiesta/fiesta.css` (futuro), en `:where()`: los **20 primitivos → roles por función**
+  (`--fiesta-tinta`, `--fiesta-tinta-suave`, `--fiesta-sobre`, `--fiesta-acento`, `--fiesta-acento-suave`,
+  `--fiesta-vivo`, `--fiesta-sol`, `--fiesta-borde`…; el nombre exacto sale de leer dónde se usa cada primitivo,
+  en T1), los seis roles de Saltia sin respaldo, y los tres locales del tema con su valor por tema
+  (`--inv-accent`, `--inv-tint`, `--invite-radius` los pone la tarjeta por `data-tema`). Los movimientos del
+  diseño (`pj-*`) se llaman `fiesta-*` con la misma definición. Lo que ya respalda `isla.css` **no se duplica**: la
+  entrada de la fiesta importa `isla.css` primero (son respaldos en `:where()`, pesan cero) o las 45 declaraciones
+  suben a un `resources/js/ui/saltia-respaldo.css` (futuro) que importan las dos: se decide en T1 midiendo el peso.
+- `publico/instancia/css/fiesta.css` de la instancia (futuro): `--fiesta-tinta: var(--ink-900)` etc., **cargada
+  después de `saltia.css`**, como `isla.css`. Se empuja al repo de la instancia, nunca a `main`.
+- El contrato de hojas (§3.3·b) es de plataforma: hasta que exista, `x-pagina-enfocada` recibe `hojas` vacío y la
+  página viva sale neutra; el banco carga las tres hojas a mano en B (como `banco-entradas`).
+
+### 4.4 El banco: `scripts/banco-fiesta.php` (futuro)
+
+- Por página y **estado**, dos HTML en el mismo marco: **A** monta la página del diseño SIN su barra de prueba
+  (`PliPagina` con el `id` del estado; en la invitación y la autorización, sus vistas con su estado), con
+  `styles.css`, React, Babel, `_ds_bundle.js` y `datos.js`; **B** es nuestra Blade con el modelo mapeado desde
+  el MISMO `datos.js` y las tres hojas de la instancia. `lote.json` a 390 y 1280, `--completa`.
+- Estados: la lista, sus cuatro (`recien`, `respuestas`, `guardado`, `fuera`) más «llega una respuesta» y «la
+  reserva ha cambiado» (`clics`); la invitación, seis; la autorización, tres; y las fichas de las nueve piezas.
+- Lo que el diseño no dibuja (§1.4, «fuera del diseño») se pinta sin A y lo juzga la sonda de ventana
+  (`scripts/sonda-fiesta.mjs`, futuro) y el ojo del owner.
+- **Control**: `scripts/mutar-fiesta.sh` (futuro) mueve 1 px en la hoja del producto y exige que el juez salga
+  con 1 en los pares de esa pieza, y 0 al restaurar.
+
+### 4.5 El JS de la página (futuro: `resources/js/fiesta/lista.js`)
+
+- Porta `estado.jsx` a JavaScript plano sin React: el borrador en `localStorage` por reserva (clave con el id de
+  la reserva y la versión del testigo), las cuentas, el filtro por cifra, abrir y cerrar fichas, el `GuestComposer`,
+  el pegado (reusa `logic.js`), la barra de Guardar con su estado, «llega una respuesta» (sin servidor en T1: el
+  render trae las pendientes). Casos con `node --test` como `logic.test.js`.
+- El suelo sin JavaScript no cambia: el HTML del servidor trae las fichas abiertas y `no-js`; el script pone `js`
+  al final de inicializar (`#264`).
+- Entrada de Vite `fiesta` en `vite.config.js` (compartido: aviso en el buzón) que importa `fiesta.css`.
+
+### 4.6 Las tandas
+
+| Tanda | Qué | Verificación |
+|---|---|---|
+| **T0** ✅ | Esta spec: medir, decidir dónde viven, pedir el contrato de hojas, las preguntas al owner. | Guardas de frontera 47/47 · el censo de tokens · docs-check. |
+| **T1** | La lista con lo que HAY: modelo de página, `x-pagina-enfocada`, las piezas de la lista, la hoja con roles, el JS portado, la hoja de la instancia; los textos. | Banco: cuatro estados × 2 ventanas a 0 con control · `FiestaModeloTest` · `node --test` · `GuestFormSkinTest` re-apuntada a la piel nueva · suite · sonda de ventana · **el ojo del owner en `localhost:8081`** (cuando exista el contrato de hojas). |
+| **T2** | La invitación y su recibo con lo que HAY (`InviteCard`, `RsvpBar`; la firma sigue como enlace hasta §7·5). | Seis estados a 0 · `InvitationPageTest` y `InvitationPrivacyTest` intactos · hoja en blanco · `og:*` · el owner se manda el enlace al teléfono. |
+| **T3** | La autorización con lo que HAY (`AuthForm`, la tarjeta arriba). Antes, el censo de campos (§1.4). | Tres estados a 0 · `GuardianSkinTest` re-apuntada · los cinco desenlaces · suite. |
+| **T4** | Retirar la piel vieja: el bloque `.gf-*` y `.guardian__*` de `site.css`, `focused-layout` si ya no lo usa nadie, `public/js/guest-form/logic.js` si el port lo absorbe; regenerar `cajon.css`. `CONVENCIONES §3.quater`. | Auditoría de los tests que afirmaban la piel vieja · `hoja-del-cajon.py --aplicar` · suite. |
+| **F1…Fn** | Lo que FALTA (§1.4), una pieza por tanda, en el orden que fije el owner (§7). Cada una con su spec de sección aquí, su decisión y, si toca aforo, `VERIFY_CONC=1`. | Por pieza. |
+
+## 5. Impacto en invariantes
+
+| ID | Cómo |
+|---|---|
+| `RGPD-01…04` | Sin cambio en T1–T4: las páginas siguen `noindex`, `no-store`, `no-referrer`; ninguna respuesta de la invitación enseña otros nombres (§7.2·R1 de la spec hermana, `InvitationPrivacyTest`). |
+| `SEC-07` | Los textos del anfitrión se escapan al pintar, como hoy. |
+| `SEC-12` | El contrato de hojas valida cada ruta bajo `public/instancia/` (plataforma). |
+| `PERF-02` | La página lee `settings` por el composer memoizado; la hoja de la instancia es estática. |
+| `AFORO-*`, `PAY-*` | **Ninguno en T1–T4.** Solo la pieza «el número sube desde la lista» (§7·3) los toca, y entonces `GuestCountAdjuster` (`CRITICAL_RE`) con `VERIFY_CONC=1` y `purchase:verify-oversell`. |
+
+## 6. Plan de verificación empírica
+
+- Por tanda: `php scripts/banco-fiesta.php <diseño> storage/app/pixel/banco-fiesta http://127.0.0.1:8131` +
+  `php -S` aparte + `node scripts/pixel.mjs --lote … --reloj 2026-09-23T16:05:00+02:00 --rehacer --reintentos 2`
+  → 0 en todos los pares; `bash scripts/mutar-fiesta.sh` → 1 px tumba sus pares y el árbol vuelve byte a byte.
+- `php artisan test --filter='Fiesta|GuestForm|Invitation|Guardian'` y la suite entera antes del push.
+- `node --test resources/js/fiesta/*.test.js` (futuro).
+- La sonda de ventana de las tres páginas a 390 y 1280 (`scripts/sonda-fiesta.mjs`, futuro), con capturas en
+  `storage/app/audit/`, y el ojo del owner en `localhost:8081` en móvil y escritorio ANTES de cada commit visible.
+- La guarda de paleta: un test que recorre las vistas y hojas de la fiesta en el producto y rechaza `--ink-`,
+  `--snow`, `--aqua-`, `--sun-`, `--volt-`, `--berry-`, `--flare-` y hex de PlayJump (mutación: un `--ink-900` en
+  una pieza → rojo).
+
+## 7. Revisión y decisión
+
+**Preguntas al owner (25-09), con la recomendada primero.** Ninguna bloquea T1→T4.
+1. **¿Quien cumple cuenta como uno más en el número?** Recomendada: **sí** (lo asume el diseño y la mayoría de packs).
+   Si no: la frase vuelve al brief y el mínimo son 8 invitados.
+2. **El asunto del correo «Fiesta reservada» lleva el nombre de quien cumple y sale antes de saberlo.**
+   Recomendada: **sin nombre en el asunto**. Alternativa: pedir el nombre en «Listo», tras pagar.
+3. **La zona 3 sube el número desde la lista y admite más niños que plazas** (aforo y cobro en el parque).
+   Recomendada: **sí, en su propia tanda con `VERIFY_CONC=1`**. Alternativas: la lista no supera la reserva y el
+   número sube por el selector de hoy (`#444`); o después de vestir lo que hay.
+4. **El recibo: 24 h (diseño) o 2 h (spec, URL firmada).** Recomendada: **24 h** (el padre vuelve a firmar esa
+   noche). Alternativa: 2 h como está.
+5. **«¿Vas tú con él?» desaparece** (la autorización como oferta sin pregunta). Recomendada: **quitarla**; la puerta
+   se queda con dos estados (firmada · sin resolver). Alternativa: mantenerla opcional en el recibo.
+6. **Tres campos por niño** (nombre, edad, alergias o menú especial) contra las cinco columnas de los packs de
+   PlayJump. Recomendada: **tres, como dato del panel** (se funden alergia y menú especial; observaciones se
+   retira). Alternativa: cinco y la ficha las pinta todas (se aparta del diseño).
+7. **«Ver el parque» con vídeo en la invitación** (propuesta del diseño). Recomendada: **apagado hasta el clip corto**.
+8. **«Avísame de fechas»** (consentimiento comercial). Recomendada: **entra, casilla sin marcar con su texto legal**.
+
+**Revisión**: el owner (es de producto) sobre §0, §4 y §7; después, estado ✅, `/decision` de la banda 730–759 y
+la casilla en `00-REFACTOR.md`. Lo que la revisión corrija se escribe aquí DELANTE del texto que corrige.
+
+## Anexo · fila del enrutador
+
+`| Vestir la fiesta con el sistema nuevo · post-form · justificante · invitación | docs/specs/fiesta-sistema-nuevo.md §0 |`

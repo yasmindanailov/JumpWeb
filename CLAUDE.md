@@ -92,7 +92,7 @@ contador de la suite va en el trailer del commit** (`#618`). Si no salta: `git c
 | Cumpleaños mixto · edad de los invitados · el suplemento · el sello · solapes de tramos | `docs/specs/cumple-mixto.md` §0 |
 | Los correos · tema · firma y remitente · línea de adelanto · el libro en un correo | `docs/specs/correos-desde-canvas.md` §0 |
 | Post-form de invitados | `docs/sistemas/POSTFORM-INVITADOS.md` |
-| Vestir el formulario de celebración o el justificante · la invitación digital | `docs/specs/celebracion-e-invitacion.md` §0 |
+| Vestir la fiesta con el sistema nuevo · post-form · justificante · invitación | `docs/specs/fiesta-sistema-nuevo.md` §0 |
 | Tests / suite / fakes / datos de prueba | `docs/TESTING.md` · `docs/CONVENCIONES.md` §3.bis/§3.ter |
 | Desmontar `ViewOrder` · edición, reembolso y calendario de un pedido | `docs/specs/desmontar-view-order.md` §0 |
 | Retirar código viejo / auditar sus tests | `docs/CONVENCIONES.md` §3.quater |

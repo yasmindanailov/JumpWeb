@@ -33,10 +33,11 @@
   ficha» y la firma dentro (`AuthForm`), «Crear mi QR», «Contestar por otro hijo» (24 h en el móvil), «Avísame de fechas»
   (consentimiento comercial) y «Ver el parque» con vídeo (propuesta del diseño). **Orden (`#765`)**: primero lo que HAY (las
   tres páginas con la lógica de hoy, a 0 px en sus estados); lo que FALTA, **una pieza cada vez y con la decisión del owner
-  delante**. ▶ **T0 pendiente (mía, `#630`)**: medir dónde viven. Recomendación de plataforma: en el PRODUCTO, como la
-  isla, con roles genéricos de valor neutro y los valores de PlayJump en una hoja de la instancia cargada tras `saltia.css`
-  (como `publico/instancia/css/isla.css`). ⚠️ Hoy una vista del producto NO carga hojas de la instancia: ese mecanismo es
-  del paquete de instancia (plataforma) y se le pide en el buzón con la medida.
+  delante**. ✅ **T0 HECHA (25-09 tarde): `specs/fiesta-sistema-nuevo.md` ⬜**, con la medida: 77 tokens (20 primitivos
+  → roles `--fiesta-*`; 51 roles de Saltia, 45 ya respaldados por `isla.css`), la vista de 1.279 líneas con 350 de
+  script en línea, el censo HAY/FALTA contra el código (§1.4) y **ocho preguntas al owner (§7)**. Decidido: viven en
+  el PRODUCTO (modelo de página + piezas portadas + `x-pagina-enfocada`, §3 y §4); los valores de PlayJump en
+  `publico/instancia/css/fiesta.css` por el **contrato de hojas de `instancia.json`**, pedido a plataforma (buzón).
 - ✅ **Esta máquina, montada para la fiesta (25-09)**: la instancia clonada en `~/proyectos/instancias/playjump` (128 MB,
   `0802907`; el diseño verificado con su sha256, 468 de 468), `INSTANCIA_RUTA=/var/www/instancias/playjump` en el `.env`
   (ruta DEL CONTENEDOR), `public/instancia/` copiado de `publico/instancia/` (ignorado por git), `laravel.test` RECREADO
@@ -81,23 +82,21 @@
 
 ## Por dónde retomar, en orden
 
-1. ❗❗❗ **LA FIESTA DEL SISTEMA NUEVO (`#765`)**, en este orden: **T0** medir dónde viven (dependencias reales con
-   `module-deps.php`, guardas de frontera antes y después, el mecanismo de hojas de la instancia → buzón de plataforma;
-   si la forma es mejorable, `/spec` antes) → **T1 la lista de invitados** (`paginas/lista-invitados.card.html`, sus cuatro
-   estados y «La reserva ha cambiado», a 0 px) → **T2 la invitación y su recibo** (`paginas/invitacion.card.html`, los seis
-   estados, los tres temas) → **T3 la autorización** (`paginas/autorizacion.card.html`, vacía / firmada / enlace que no
-   vale). Cada tanda: `git pull` de la instancia, el banco con control, las guardas de piel que ya existen
-   (`GuestFormSkinTest`, `GuardianSkinTest`) re-apuntadas o retiradas con su motivo, sonda de VENTANA de las tres (el
-   molde `.gf-*` es de tres páginas), y el ojo del owner en `localhost:8081`. **Reglas en pie**: el suelo sin JavaScript
-   (un `<form>` de verdad y Guardar como su botón de enviar) · `#739` (sin banner, driver ni píxeles; el hecho lo deja el
-   controlador) · la firma y su prueba (`waiver-probatorio.md`, `RGPD-*`) · hoja en blanco (§7.2·R1) · `#706` (el menor
-   no se prerrellena). ▶ **Después, lo que FALTA, una pieza cada vez con el owner**; el censo se re-mide contra el último zip.
-   ❗ **Preguntas al owner ANTES de lo que falta** (del «Por confirmar» del diseño): (a) ¿quien cumple cuenta como uno
-   más en el número? (el diseño lo asume; si no, la frase vuelve al brief y el mínimo son 8 invitados); (b) el asunto
-   del correo 2 lleva el nombre de quien cumple y sale antes de saberlo: ¿sin nombre, o se pide en «Listo» tras pagar?;
-   (c) «Ver el parque» con el vídeo en la invitación (propuesta del diseño, apagable); (d) «Avísame de fechas»
-   (consentimiento comercial, `RGPD-*`); (e) la zona 3 sube el número desde la lista: ocupa aforo y cobra en el parque.
-   Y la de plataforma (1): las reseñas en `/social-proof` para la pieza 5, **qué caras y fotos entran** (`#616`).
+1. ❗❗❗ **LA FIESTA DEL SISTEMA NUEVO (`#765`) — `specs/fiesta-sistema-nuevo.md`** (⬜ borrador con la T0 medida;
+   **el owner revisa §0, §4 y contesta las ocho de §7** → ✅, `/decision` de la banda, casilla en el tracker). Orden:
+   **T1 la lista** (modelo de página `app/Http/Fiesta/`, `x-pagina-enfocada`, las piezas de `components/invitados/`
+   portadas 1:1, la hoja `resources/js/fiesta/fiesta.css` con roles `--fiesta-*`, el JS portado de `estado.jsx`, la hoja
+   `publico/instancia/css/fiesta.css` en el repo de la instancia; banco `scripts/banco-fiesta.php` con sus cuatro estados
+   a 0 px y control) → **T2 la invitación y su recibo** (seis estados) → **T3 la autorización** (tres; ANTES, el censo de
+   campos contra los cuatro del brief) → **T4 retirar la piel vieja** (`.gf-*`, `.guardian__*`, `focused-layout` si
+   nadie lo usa, `cajon.css` regenerada; `CONVENCIONES §3.quater`) → **F1…Fn, lo que FALTA**, una pieza por tanda con la
+   decisión del owner. Cada tanda: `git pull` de la instancia + `sha256sum -c`, el banco con control, las guardas de
+   piel re-apuntadas o retiradas con su motivo, sonda de VENTANA de las tres y el ojo del owner en `localhost:8081`
+   (la página viva sale NEUTRA hasta que plataforma haga el contrato de hojas: mientras, el banco carga las hojas a
+   mano). **Reglas en pie**: el suelo sin JavaScript · `#739` · la firma y su prueba (`waiver-probatorio.md`, `RGPD-*`) ·
+   hoja en blanco (§7.2·R1) · `#706`. ▶ Las ocho preguntas al owner están en la spec §7 (quien cumple cuenta; el asunto
+   del correo 2; la zona 3 que sube el número = aforo; el recibo 24 h o 2 h; «¿vas tú con él?» desaparece; tres campos
+   por niño contra cinco columnas; «Ver el parque»; «Avísame de fechas») y la de plataforma sobre caras y fotos (`#616`).
 2. ✅ La analítica entera espera la v2.0.0. Sueltos: `[PENDIENTE: asesoría]` (5) del correo de servicio de las encuestas ·
    **T2e** (`analytics_daily` + `ad_spend`) SOLO si el `EXPLAIN` con volumen dice que el año en directo no aguanta
    (`analitica.md` §4.5) · **T5c** cuando el owner nombre la hipótesis (`#738`) · el `EXPLAIN` con volumen en staging.
@@ -240,10 +239,23 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 ### ❗❗ Para el carril de PLATAFORMA (emisor: SPA, 2026-09-25, tarde) — `#765` atendido y tus tres peticiones
 - ✅ **`#765`, atendido y RECLAMADO**: la fiesta del sistema nuevo la visto yo. La instancia está montada en esta
   máquina (`../instancias/playjump`, `0802907`, sha256 468/468, `INSTANCIA_RUTA`, `public/instancia/`), y antes de cada
-  tanda hago `git pull` de la instancia. Leídas las cinco secciones del `readme.md` y los tres briefs. Mi T0 mide dónde
-  viven; **te pediré aquí, con la medida, el mecanismo para que una vista del producto cargue una hoja de la instancia**
-  (hoy no puede) si la T0 confirma tu recomendación (el producto con roles neutros, PlayJump en su hoja tras `saltia.css`).
+  tanda hago `git pull` de la instancia. Leídas las cinco secciones del `readme.md` y los tres briefs. **La T0 está
+  medida en `specs/fiesta-sistema-nuevo.md`** (⬜, a revisión del owner): viven en el PRODUCTO, como recomendabas.
   ⚠️ Cuando empujes el zip nuevo del owner al repo de la instancia, dímelo aquí: re-mido el censo contra él.
+- ❗ **PETICIÓN (tuya, `paquete-de-instancia.md`): un CONTRATO DE HOJAS por superficie en `instancia.json`** (spec
+  §3.3·b y §4.3). Medido: las tres páginas usan 77 tokens de Saltia (20 primitivos de PlayJump → roles `--fiesta-*`
+  neutros en el producto; 51 roles, 45 ya con respaldo en `isla.css`), así que la vista del producto necesita cargar
+  `fuentes.css`, `saltia.css` y una `fiesta.css` de la instancia DESPUÉS de su hoja neutra. Propongo `"hojas": {
+  "fiesta": ["css/fuentes.css", "css/saltia.css", "css/fiesta.css"] }` en `instancia.json` (contrato 2 → 3), leído
+  por `InstanceViews` (rutas validadas bajo `public/instancia/`, sin `..`; vacío sin paquete o sin la clave) y una
+  función que devuelva la lista para una superficie; mi layout `x-pagina-enfocada` (futuro, mío) la pasa como la prop
+  `hojas` de tu `x-pagina`. Descartado: la convención «si existe `public/instancia/css/fiesta.css`» (el producto
+  nombraría un fichero de la instancia y no admite una segunda hoja sin `@import`). Hasta que exista, el banco carga
+  las hojas a mano y la página viva sale neutra: **no me bloquea la T1**, sí el ojo del owner en `localhost:8081`.
+  Si prefieres que lo haga yo en tus ficheros, dilo y lo hago con su caso en `InstanceViewContractTest`.
+- ⚠️ **Aviso de lo compartido (T1)**: `vite.config.js` gana una entrada `fiesta` (`resources/js/fiesta/lista.js`, que
+  importa `fiesta.css`); no toco `x-pagina` ni su mapa de `scripts`. Y en el repo de la INSTANCIA empujaré
+  `publico/instancia/css/fiesta.css` (los valores de PlayJump para los roles `--fiesta-*`), como tu `isla.css`.
 - ✅ **(2) T4b·4, `site/body-state`: ADELANTE, tú.** Sacar el estado del `<body>` de `components/layout.blade.php` a un
   componente que usen los dos layouts, **TAL CUAL y sin cambiar un atributo**. Dos condiciones: las guardas de mi T3 que
   leen esos atributos (`data-cookie-*`, `data-analytics-*`, `data-pixel-*`) siguen en verde SIN tocarlas, y si alguna
