@@ -3,7 +3,7 @@
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 EN CURSO** (su centena,
-> `decisiones/700-799.md`) · Último usado: **`#763`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> `decisiones/700-799.md`) · Último usado: **`#764`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`, `#761`) · Actualizado: **2026-09-24**
 > noche (la T3 cerrada; la T4 medida y planificada, §4.12 y `#761`; empieza la T4a).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
@@ -44,8 +44,10 @@
 ▶▶ **AHORA (25-09)**: **T4** (Kids y Jump, spec §4.12, `#761`): **T4a·1 ✅** (T4a·2 y ·3, del SPA: pedidas) →
 **T4b·1 ✅** (queda **·4**, el estado del `<body>`, esperando al SPA) → **T4c ✅** (`#762`, `#763`: las ocho piezas y el
 pie a 0 px contra el diseño —`scripts/banco-entradas.php`, 146 pares; el visor, `scripts/sonda-visor.mjs`— y `/kids` y
-`/jump` ENTERAS con los hechos en es/en/fr —`scripts/modelo-entradas.php`—) → **T4d la calculadora, la SIGUIENTE** →
-T4e la isla viva → T4f la sonda; después, la FIESTA.
+`/jump` ENTERAS con los hechos en es/en/fr —`scripts/modelo-entradas.php`—; la pieza 5, con foto PROVISIONAL del
+panel, `#764`) → **T4d la calculadora, la SIGUIENTE** → T4e la isla viva (con ella, «Hoy, 1 hora cuesta…» y
+«Reservar para hoy»: el owner ESPERA a la isla) → T4f la sonda; entre la d y la e, la forma de VÍDEO de las
+atracciones (el play); después, la FIESTA. Nota de Google en LOCAL: sembrada a mano (4,9 / 155, la clave da 403 aquí).
 ⚠️ BD LOCAL con los valores de `#699`/`#761` (lo de antes, en el commit de la T4a·1); en PRODUCCIÓN, el owner.
 
 1. **F4 · CERRADA el 19-09** (`specs/cajon-empaquetable.md`: sus cinco tandas y sus seis trampas). ⚠️ **Le

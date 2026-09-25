@@ -803,7 +803,7 @@ juzga «idéntico», con los datos del diseño.
 | El plazo de cambio y cancelación; los 90 cm con adulto | Frases sueltas; `zones.height_min_cm`/`height_max_cm` sin la excepción | **FALTA** (`#699`: columna por producto y de la zona) |
 | El precio de antes, la oferta, JumpPoints, [Jump Club], [Bono] | Promociones aparcadas (`#684`, `#699`); JumpPoints con el código SIN empezar | **APAGADOS**: corchetes sin hueco |
 | Las tres reseñas reales de la pieza 5 | El producto las TIENE (`Content\Contracts\SocialProof::testimonials()`: Business Profile, Places y el panel, con su permiso, `#592`, y la línea de la Ómnibus, `selection()`); la portada de hoy las pinta; `/social-proof` publica la nota y el número, **no la lista** | **PARCIAL**: publicar la lista, con la T4a |
-| El material (vídeos y fotos de cada zona) | Las 23 atracciones tienen su FOTO en el panel (`/attractions`, medido 23/23); faltan los vídeos de las 4 destacadas de cada zona, la cabecera de cada zona (el clip del parque no vale: mezcla zonas) y la foto de la pieza 5 | **PARCIAL** (encargo del owner) |
+| El material (vídeos y fotos de cada zona) | Las 23 atracciones tienen su FOTO en el panel (`/attractions`, medido 23/23); faltan los vídeos de las 4 destacadas de cada zona, la cabecera de cada zona (el clip del parque no vale: mezcla zonas) y la foto de la pieza 5 (hoy, una provisional del panel: `#764`) | **PARCIAL** (encargo del owner) |
 | Servir `/kids` y `/jump` | Las nueve vistas de hoy tienen cada una su controlador; `instancia/config/` está vacío | **FALTA**: la declaración de páginas y el controlador genérico (§4.2), `InstanceViews::CONTRATO` 3 |
 | El layout limpio (solo las hojas de Saltia) | Ninguno: nace con su primera página (§4.8, T1c) | **FALTA** |
 | Las ~22 piezas de presentación en Blade | `<x-lucide>` (T1d); nada más | **FALTA** (~120 KB de JSX de origen) |
@@ -965,6 +965,11 @@ juzga «idéntico», con los datos del diseño.
     `CatalogTest`. Dos trampas del traductor: un `false` suelto en un fichero de textos devuelve la CLAVE (verdadera), y
     un `null` dentro de un arreglo pasa por `strtr()` (obsoleto). ▶ Del owner: escribir «De lunes a jueves» en la etiqueta
     de la tarifa normal (hoy «Lunes a jueves»), ordenar las atracciones como el brief en el panel, y revisar en/fr.
+  - ▶ **La foto de la pieza 5, PROVISIONAL** (`#764`, el owner, 25-09; corrige `#761`·3 solo aquí): la de una atracción
+    del panel que enseña cómo se cuida —Kids, el circuito de obstáculos (el suelo acolchado); Jump, los cascos junto al
+    rocódromo (Circuito High)—, elegida por el modelo (material de PlayJump, no un hecho), con su texto alternativo en
+    es/en/fr y el encuadre mirado a 1280 y a 390. La forma con foto ya era 16 de 16 a 0 (re-juzgada: igual); el modelo
+    contra el brief, igual (la foto no va en `$z`: `p5.foto` del diseño es una nota). Se cambia al llegar la del brief.
 - **T4a · los datos** (producto): las dos columnas de `#699` con su campo en el panel, sus hechos en
   `/catalog/products` y `/catalog/zones` (contrato 1.26.0), sus pruebas y su mutante; y la LISTA de reseñas en
   `/social-proof`, con la misma regla de permiso y la misma línea legal que la portada de hoy. El texto del paso de
