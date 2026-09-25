@@ -87,6 +87,9 @@ class ApiContractTest extends TestCase
         // inventar una fecha—, y el objetivo lleva la zona O el producto según su `type`, nunca los dos.
         'Promotions.promotions.items' => ['ends_on'],
         'Promotions.promotions.items.target' => ['zone', 'product'],
+        // De una OPINIÓN (`#771`): lo que la reseña puede no tener —la línea del autor, su foto, la nota, el día, el
+        // enlace (solo las copiadas de Google lo llevan) y la respuesta del parque—. Las listas van siempre.
+        'Reviews.reviews.items' => ['author_meta', 'avatar_url', 'rating', 'date', 'url', 'reply'],
         // De una SECCIÓN de servicios: los adornos editoriales y la foto, que una instalación puede no
         // haber escrito. ⚠️ `slug`, `title` y `products` NO entran aquí y es deliberado: el slug es el
         // ancla, una sección sin título no se publica (por eso el título va siempre en lo que viaja), y

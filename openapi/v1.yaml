@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.30.0
+  version: 1.31.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -648,6 +648,37 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Promotions'
+        '304':
+          description: Sin cambios desde el `ETag` enviado en `If-None-Match`.
+        '422':
+          description: Falta `lang` o no es uno de los idiomas soportados.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /reviews:
+    get:
+      tags: [Instalación]
+      operationId: getReviews
+      summary: Las opiniones publicadas en el panel, cada una con las páginas en que sale
+      description: |
+        Lo que el parque publica desde «Opiniones» del panel (1.31.0, `DECISIONES #771`): las reseñas **copiadas de su
+        ficha de Google** (`origin: google`: van con la marca de Google y el enlace a la ficha, `url`) y las **escritas
+        a mano** (`origin: own`: sin marca ni enlace). Solo las publicadas, en el orden del panel.
+
+        **Cada una dice en qué páginas sale** (`tags`: «kids», «jump», «cumpleanos»…): quien pinta una página toma las
+        de su etiqueta. **Las imágenes son del propio servidor** —se descargaron al importar—, así que pintarlas no le
+        pide nada a un tercero. `date` es un día: la frase «hace 2 meses» la escribe quien pinta, en su idioma.
+      parameters:
+        - $ref: '#/components/parameters/SidebarLang'
+      responses:
+        '200':
+          description: Las opiniones publicadas.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reviews'
         '304':
           description: Sin cambios desde el `ETag` enviado en `If-None-Match`.
         '422':
@@ -3971,6 +4002,44 @@ components:
                   type: { type: string, enum: [installation, zone, product] }
                   zone: { type: string, description: 'Con `type: zone`: el `slug` de la zona, el de `/catalog/zones`.' }
                   product: { type: integer, description: 'Con `type: product`: el `id` del producto, el de `/catalog/products`.' }
+
+    Reviews:
+      type: object
+      additionalProperties: false
+      required: [lang, reviews]
+      properties:
+        lang:
+          type: string
+          description: El idioma en el que viene el texto, que es el que se pidió.
+        reviews:
+          type: array
+          description: Las publicadas, en el orden del panel. Vacía si no hay ninguna.
+          items:
+            type: object
+            additionalProperties: false
+            required: [id, origin, author, text, photos, tags]
+            properties:
+              id: { type: integer }
+              origin:
+                type: string
+                enum: [google, own]
+                description: '`google`: copiada de la ficha del parque, con su marca y su enlace. `own`: escrita en el panel.'
+              author: { type: string }
+              author_meta: { type: string, description: 'La línea del autor en Google («Local Guide · 12 reseñas»). Falta si no hay.' }
+              avatar_url: { type: string, format: uri, description: 'Su foto, servida desde el propio servidor. Falta sin ella: se pinta la inicial.' }
+              rating: { type: integer, minimum: 1, maximum: 5, description: 'Las estrellas. Falta en una opinión sin nota.' }
+              date: { type: string, format: date, description: 'El día de la reseña. Falta si no se sabe.' }
+              text: { type: string, description: 'Entera, sin recortar.' }
+              photos:
+                type: array
+                description: Las fotos que adjuntó, servidas desde el propio servidor.
+                items: { type: string, format: uri }
+              url: { type: string, format: uri, description: 'Con `origin: google`, la ficha en Google («Ver en Google»).' }
+              reply: { type: string, description: 'La respuesta del parque, tal cual. Falta si no contestó.' }
+              tags:
+                type: array
+                description: 'Las páginas en que sale («kids», «jump»…). Vacía: publicada, pero en ninguna página nueva.'
+                items: { type: string }
 
     Faqs:
       type: object

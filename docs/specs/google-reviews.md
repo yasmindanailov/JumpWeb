@@ -74,6 +74,8 @@
   terceros; desde `#592` la sección no desaparece sin cookies (nota + «Elegir cookies»). `rating()` es `null`
   en el CMS a propósito; `SEC-07` se sanea DONDE NACE el dato; una reseña sin autor no se publica.
 - **Cinco restricciones DURAS** en §1.3. Anexo al final con la fila del enrutador.
+- ▶ **`#771` (owner, 26-09): las reseñas de SU ficha se COPIAN a «Opiniones»** (`origin = google`, imágenes en
+  casa) y cada página nueva enseña las etiquetadas con ella (`/reviews`). Cómo, en §9.
 
 ## 1. Contexto y problema — MEDIDO, no supuesto
 
@@ -512,3 +514,23 @@ Sin esto no puede llegar a ✅ (`/dod` §3.bis).
   de la clave —la que hay es la de su conexión, verificado midiendo nuestra IP de salida— y **rotar
   la clave**, que se pegó en un chat.
 - **Entrada final**: `DECISIONES #490` (mitad `a`).
+
+## 9. Las reseñas copiadas de la ficha del parque (`#771`, 2026-09-26)
+
+- **Qué**: el owner copia las reseñas de SU ficha de Google a «Opiniones» del panel mientras Google no aprueba el
+  Perfil de Empresa, y elige en qué páginas sale cada una (`tags`). Corrige `#616`: el CMS se queda y el hecho lleva
+  caras y fotos, porque son NUESTRAS (se descargan al importar; nada se pide a Google).
+- **Copiar**: `scripts/resenas-google.mjs '<enlace>' storage/app/resenas/ficha.json` (navegador automático: pasa el
+  aviso de cookies de Google, «Más recientes», baja hasta el final, despliega los «Más») o `scripts/resenas-google-
+  consola.js`, pegado en la consola del navegador sobre la ficha abierta (descarga `resenas.json`). ⚠️ Las clases de
+  Google cambian sin aviso: si sale vacío, se ajustan los selectores del `evaluate`.
+- **Importar**: `php artisan reviews:import <json>` (`CopiedReviewImport`): la clave es el id de Google; una nueva entra
+  APAGADA y sin páginas; reimportar actualiza lo de Google y conserva lo que eligió el parque; sin texto no entra; la
+  fecha relativa se guarda como día. Las imágenes, con las reglas de `GoogleReviewImages` (hosts exactos, sin
+  redirecciones, tope, tipo por bytes), al disco `uploads` (`resenas/`); se borran cuando ninguna fila las usa.
+- **Publicar**: «Ajustes → Web → Opiniones»: activarla y darle páginas («kids», «jump»…) y orden. `GET /api/v1/reviews`
+  (1.31.0, hecho de página `reviews`) sirve las publicadas con sus páginas; Kids y Jump pintan las tres primeras de su
+  zona en el panel de la nota (`review-card`, el `ReviewCard` del mockup), firmadas «Nombre I.».
+- **Lo que NO cambia**: la cascada `SocialProof` (Perfil de Empresa → Places → propias) lee solo las `own`.
+- **Riesgos, dichos al owner**: las condiciones de uso de Google (copiar su contenido) y el nombre y la cara de
+  terceros (`RGPD`): se firman con nombre e inicial y se retira la que su autor pida.

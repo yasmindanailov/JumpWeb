@@ -111,6 +111,11 @@ class AuditLog extends Model
         'content.rule_created',
         'content.rule_deleted',
         'content.rule_updated',
+        // Las OPINIONES del panel (`#490`). ⚠️ Faltaban desde que nacieron: crear o editar una opinión reventaba
+        // fuera de producción, y ninguna prueba abría ese panel (lo destapó `#771`).
+        'content.testimonial_created',
+        'content.testimonial_deleted',
+        'content.testimonial_updated',
         'content.zone_created',
         'content.zone_delete_blocked',
         'content.zone_deleted',

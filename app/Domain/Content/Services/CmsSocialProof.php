@@ -63,6 +63,9 @@ class CmsSocialProof implements SocialProof
     {
         return Testimonial::query()
             ->where('is_active', true)
+            // Solo las ESCRITAS en el panel: las copiadas de la ficha (`#771`) salen por su hecho, con su marca y sus
+            // páginas, y aquí se pintarían como propias. Esta cascada queda como estaba.
+            ->where('origin', Testimonial::ORIGIN_OWN)
             ->orderBy('position')
             ->orderBy('id')
             ->get()

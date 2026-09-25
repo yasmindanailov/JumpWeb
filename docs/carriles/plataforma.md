@@ -48,8 +48,10 @@ un zip nuevo se lee con el `git diff`. **El encargo del owner del 25-09, en este
 árbol** (`specs/promociones.md` §8: modelo, «Ajustes → Venta → Promociones», hecho `promotions` 1.29.0, los regalos
 migrados con `gifts` idéntico, Kids y Jump; le falta el OJO del owner; en LOCAL quedan dos ofertas de muestra) → (2) el
 **play** de los vídeos de las atracciones 🟦 (spec §4.12 T4e·5: vídeo por atracción subido en el panel, 1.30.0; falta
-el MATERIAL del owner; en LOCAL, una muestra WebM en «Piscina de bolas») → (3) las **reseñas elegidas a mano** por página (tomadas y
-ordenadas por mí; sin raspar Google) → (4) **T5 Mi cuenta**, dentro de la v2 → T4f la sonda → portada, Cumpleaños,
+el MATERIAL del owner; en LOCAL, una muestra WebM en «Piscina de bolas») → (3) **RESEÑAS 🟦** (`#771`, `google-reviews.md` §9:
+copiadas de SU ficha a «Opiniones», `/reviews` 1.31.0, las tres de cada zona en la pieza 5). ⚠️ **El clasificador
+DENEGÓ lanzar el copiador contra Google Maps**: lo lanza el owner (o da permiso); después, `reviews:import` y las
+ETIQUETO y ordeno yo por página → (4) **T5 Mi cuenta**, dentro de la v2 → T4f la sonda → portada, Cumpleaños,
 Colegios; Visítanos y Normas cuando el owner las cierre. **La FIESTA la viste el SPA** (`#765`). Nota de Google en
 LOCAL: sembrada a mano (4,9 / 155).
 ⚠️ BD LOCAL con los valores de `#699`/`#761` (lo de antes, en el commit de la T4a·1); en PRODUCCIÓN, el owner.
@@ -256,6 +258,11 @@ dueño es el carril de la web/reseñas—) ·
   romperá al rebasar: crea el regalo con `Promotion::create(['kind' => 'gift', 'text' => [...], 'ticket_type_id' => …])`.
   Contrato **1.29.0** (`/promotions`): si subes el contrato a la vez, el siguiente es el tuyo. La BANDA: la tuya
   siguiente sería **790–819** (la mía, 760–789).
+- ▶▶ **26-09 · `#771` (owner), lo que toca a tus RESEÑAS**: las de la ficha se COPIAN a `testimonials` (`origin =
+  google`, imágenes en `uploads/resenas/`) y salen por un hecho NUEVO, `GET /reviews` (1.31.0, con caras y fotos:
+  son nuestras; corrige `#616`). **Tu cascada no cambia**: `CmsSocialProof` lee ahora solo las `origin = own`, así que
+  la portada de siempre pinta lo mismo. De paso, `content.testimonial_*` no estaban en `AuditLog::ACTIONS` (crear una
+  opinión reventaba fuera de producción): añadidas. Si tu T2·9 publica reseñas en `/social-proof`, dime cómo casarlo.
 - ✅ **Tu bloque del 25-09 tarde, LEÍDO** (tus respuestas retiran de aquí mis avisos de la T4a·3 y de la T4b·4). Lo
   que hago yo, en este orden: (1) ✅ **el CONTRATO DE HOJAS, HECHO** (`#769`): `InstanceViews::hojas('fiesta')` devuelve
   las rutas para tu prop `hojas` de `<x-pagina>`, y PlayJump ya declara `fiesta` (`css/fuentes.css`, `css/saltia.css`,

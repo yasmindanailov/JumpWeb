@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Testimonials\Tables;
 use App\Domain\Content\Models\Testimonial;
 use App\Filament\Resources\Testimonials\TestimonialResource;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 
@@ -27,6 +28,18 @@ class TestimonialTable
                     ->label(__('admin.testimonials.col_rating'))
                     ->formatStateUsing(fn (?int $state): string => $state === null ? '—' : str_repeat('★', $state)),
 
+                // De dónde es y en qué páginas sale (`#771`): lo que el parque decide al elegir.
+                TextColumn::make('origin')
+                    ->label(__('admin.testimonials.col_origin'))
+                    ->badge()
+                    ->formatStateUsing(fn (string $state): string => __('admin.testimonials.origins.'.$state))
+                    ->color(fn (string $state): string => $state === Testimonial::ORIGIN_GOOGLE ? 'info' : 'gray'),
+
+                TextColumn::make('tags')
+                    ->label(__('admin.testimonials.col_tags'))
+                    ->badge()
+                    ->placeholder(__('admin.testimonials.tags_none')),
+
                 TextColumn::make('is_active')
                     ->label(__('admin.testimonials.col_active'))
                     ->badge()
@@ -40,6 +53,12 @@ class TestimonialTable
             ->recordUrl(fn (Testimonial $record): string => TestimonialResource::getUrl('edit', ['record' => $record]))
             ->filters([
                 TernaryFilter::make('is_active')->label(__('admin.testimonials.col_active')),
+                SelectFilter::make('origin')
+                    ->label(__('admin.testimonials.col_origin'))
+                    ->options([
+                        Testimonial::ORIGIN_GOOGLE => __('admin.testimonials.origins.google'),
+                        Testimonial::ORIGIN_OWN => __('admin.testimonials.origins.own'),
+                    ]),
             ])
             ->toolbarActions([]);
     }

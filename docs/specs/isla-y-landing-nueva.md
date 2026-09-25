@@ -1231,6 +1231,11 @@ juzga «idéntico», con los datos del diseño.
     lo para). En vivo a 1280 y 390 con una muestra en «Piscina de bolas» (Kids, LOCAL). ⚠️ La sonda usa Chromium sin
     H.264: prueba con WebM; los navegadores de verdad reproducen el MP4 que pide el panel. Falta el MATERIAL: los 4
     vídeos verticales de 4–6 s del brief, que sube el owner.
+  - ▶ **·6 🟦 (26-09, `#771`)**: **las VOCES de la pieza 5**: el panel de la nota pinta las tres opiniones que el parque
+    etiqueta con la zona (`/reviews`), con `review-card` (el `ReviewCard` del mockup, 1:1: cara o iniciales, estrellas
+    amarillas, texto entero, fotos y «Ver en Google» abajo; firmadas «Nombre I.», fecha en relativo); estrecho, en fila
+    que se desliza. Visto a 1280 y 390 con tres muestras LOCALES (borradas). Falta el DATO: copiar e importar las de
+    la ficha (`google-reviews.md` §9) y etiquetarlas por página.
 - ▶▶ **LA VERIFICACIÓN FINAL de Kids y Jump (25-09, `#768`): 40 de 40 a 0 píxeles** contra el mockup del 25-09 —cada
   pieza en reposo a 390 y 1280, sin estados, ~5 min—. Cazó un defecto del port del zip: el margen del icono del parking
   iba al `svg` y `<x-lucide>` pinta una `<span>` que lo envuelve (instancia `d1114ad`). La isla, 60/60 en su banco; la

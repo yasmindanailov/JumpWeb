@@ -41,7 +41,7 @@ return [
             'attractions' => ['label' => 'Atracciones', 'description' => 'Lo que se enseña de cada zona en la web.'],
             'landing_services' => ['label' => 'Servicios (web)', 'description' => 'Las secciones de la página de servicios.'],
             'faqs' => ['label' => 'Preguntas frecuentes', 'description' => 'Las preguntas y respuestas que se publican.'],
-            'testimonials' => ['label' => 'Opiniones propias', 'description' => 'Lo que ve quien no acepta cookies de terceros.'],
+            'testimonials' => ['label' => 'Opiniones', 'description' => 'Las reseñas copiadas de tu ficha de Google y las escritas aquí; eliges en qué páginas sale cada una.'],
             'offers' => ['label' => 'Ofertas', 'description' => 'Promociones informativas del aviso flotante.'],
             'bar_images' => ['label' => 'El bar', 'description' => 'La carta del bar y la foto del local que se publican en la web.'],
             'park_rules' => ['label' => 'Normas', 'description' => 'Las normas del recinto que se publican en la web.'],
@@ -3787,9 +3787,9 @@ return [
     // que el parque las dejaría vacías**. Aquí se dice lo que son: lo que ve una parte de sus
     // visitantes cada día.
     'testimonials' => [
-        'nav_label' => 'Opiniones propias',
+        'nav_label' => 'Opiniones',
         'model_label_singular' => 'opinión',
-        'model_label_plural' => 'Opiniones propias',
+        'model_label_plural' => 'Opiniones',
 
         'col_author' => 'Quién',
         'col_text' => 'Opinión',
@@ -3797,8 +3797,28 @@ return [
         'col_active' => 'Activa',
         'active_yes' => 'Activa',
         'active_no' => 'Inactiva',
+        // `#771`: las copiadas de la ficha de Google y en qué páginas sale cada una.
+        'col_origin' => 'De dónde',
+        'col_tags' => 'Páginas',
+        'tags_none' => 'Ninguna',
+        'origins' => ['own' => 'Escrita aquí', 'google' => 'De Google'],
 
         'section_who' => 'Quién lo dice',
+        'field_author_meta' => 'Línea del autor (opcional)',
+        'field_author_meta_hint' => 'La que pone Google debajo del nombre («Local Guide · 12 reseñas»).',
+        'field_avatar' => 'Su foto (opcional)',
+        'field_avatar_hint' => 'Sin foto, se pinta su inicial en el círculo.',
+        'field_photos' => 'Fotos de la reseña (opcional)',
+        'field_photos_hint' => 'Hasta tres, en el orden en que salen.',
+        'section_origin' => 'De dónde es',
+        'field_origin' => 'Origen',
+        'field_source_url' => 'Enlace a la ficha en Google',
+        'field_source_url_hint' => 'Adónde lleva «Ver en Google». Lo pone solo el importador.',
+        'section_reply' => 'Respuesta del parque',
+        'field_reply' => 'Respuesta (opcional)',
+        'field_reply_hint' => 'La que contestaste en Google, tal cual. Se pinta debajo de la reseña.',
+        'field_tags' => 'Páginas en que sale',
+        'field_tags_hint' => 'Una por página: «kids», «jump», «cumpleanos», «colegios», «portada»… La página de Kids pinta las etiquetadas «kids», en el orden de abajo. Sin ninguna, no sale en las páginas nuevas.',
         'field_author' => 'Nombre',
         'field_author_hint' => 'Como quiera aparecer publicado. La inicial se pinta en el círculo.',
         'field_rating' => 'Nota (opcional)',
@@ -3814,7 +3834,7 @@ return [
 
         'lang' => ['es' => 'Español', 'en' => 'Inglés', 'fr' => 'Francés'],
         'field_text' => 'Opinión',
-        'field_text_hint' => 'Se publica ENTERA, sin recortar. Cortita se lee mejor: cabe en cuatro líneas.',
+        'field_text_hint' => 'Se publica ENTERA, sin recortar. Cortita se lee mejor: cabe en cuatro líneas. Una copiada de Google, tal cual.',
 
         'create_title' => 'Crear opinión',
         'edit_title' => 'Editar la opinión de :name',
