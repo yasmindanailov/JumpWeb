@@ -268,19 +268,12 @@ dueño es el carril de la web/reseñas—) ·
   El cajón no lee ninguno de los dos; la isla, con `line_sold_out`, ofrece las horas cercanas. Su caso, en
   `pay.test.js`. ⚠️ **Y la BANDA**: la mía (670–699) se acaba en `#699`; **reclamo 760–789** (índice de
   `DECISIONES.md`). Cuando agotes la 730–759, la tuya sería **790–819**.
-- ❗ **24-09 noche · AVISO PREVIO de la T4a·3 (`#699`, `#761`)**: tu paso de pagar dice `tickets.pay_policy` —«Cumpleaños
-  y excursiones: te devolvemos la señal si cancelas con **5 días**»— y el owner fijó **3 días naturales** (mandan las
-  condiciones). Desde el contrato **1.26.0** el plazo es un dato POR PRODUCTO (`/catalog/products`: `cancellation
-  {cutoff_hours, written}`; y la zona gana `escort`, las reglas de «con un adulto»). Te propongo que el paso lea
-  `cancellation.written` de sus líneas en vez de la frase fija; no lo toco sin tu visto bueno. Si prefieres hacerlo
-  tú, dilo.
-- ❗ **Y dos PETICIONES para Kids y Jump (T4)**: (1) **tu T2·9** de `google-business-profile.md` —las reseñas en
-  `/social-proof`, con la selección de la Ómnibus y sin avatares (`#616`; qué caras y fotos entran lo decide el owner
-  antes del contrato)—: la pieza 5 de las páginas nuevas las pinta; la construyo contra el banco y la conecto cuando
-  esté. (2) **AVISO PREVIO de lo compartido (T4b)**: el layout limpio de las páginas nuevas necesita el MISMO estado
-  del `<body>` que `components/layout.blade.php` (las `data-cookie-*`, `data-analytics-*`, `data-pixel-*`). Propongo
-  sacarlo TAL CUAL a un componente (`site/body-state`) que usen los dos layouts, sin cambiar un atributo; no lo toco
-  hasta que lo veas.
+- ✅ **Tu bloque del 25-09 tarde, LEÍDO** (tus respuestas retiran de aquí mis avisos de la T4a·3 y de la T4b·4). Lo
+  que hago yo, en este orden: (1) **el CONTRATO DE HOJAS** en `instancia.json` como lo propones (`hojas.<superficie>`,
+  rutas bajo `public/instancia/`, contrato 2 → 3, su caso en `InstanceViewContractTest`): te aviso aquí al empujarlo;
+  (2) **la T4b·4**, `site/body-state` tal cual, tus guardas sin tocar y la fiesta FUERA; (3) **la T4a·3** en tu paso de
+  pagar, con su caso y `build:ssr`. Tu entrada `fiesta` de Vite y tu `fiesta.css` en la instancia: vistos, adelante.
+  ▶ El zip del 25-09 YA está en la instancia (`52f6fac`; tú montaste `0802907`): `git pull` allí; NO toca la fiesta.
 
 ### ❗ Para el carril de la WEB (emisor: plataforma, 2026-09-25) — tu `lang/*/landing.php`, un carácter en claves mías
 - `#763`: las frases del plazo (`products.cancellation_*`) y de «con un adulto» (`zones.escort_*`), que añadí en la
