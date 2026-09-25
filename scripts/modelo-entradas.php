@@ -74,12 +74,16 @@ const DECIDIDAS = [
     'p4.atracciones' => 'las atracciones, sus líneas y su orden son del PANEL (el diseño trae las del brief)',
     'p6.hoy.live' => '«Quedan huecos esta tarde» es de la T4e: la disponibilidad del día la dará la isla',
     'media.foto' => 'la foto de la cabecera es la de la zona en el panel (el diseño trae una provisional)',
+    'p3.detalles.1.a' => '`#763`: los días de tarifa especial de las dudas de la calculadora, con la etiqueta del panel',
 ];
 
-/** Las claves que el diseño escribe y el modelo no (material, notas de trabajo, lo de la T4d) no se comparan. */
+/**
+ * Las claves que el diseño escribe y el modelo no (material, notas de trabajo, los corchetes apagados) no se comparan.
+ * Los textos de la calculadora SÍ, desde la T4d·3; no su ejemplo, ni la oferta y los JumpPoints (apagados, `#699`), ni
+ * el hueco de «los festivos del año» de sus dudas (`lista`, `#761`·3).
+ */
 const FUERA = ['hoy', 'oferta', 'precio.filas.*.oferta', 'media.hueco', 'media.nota', 'p4.pendiente', 'p4.pendienteFoto', 'p4.nota', 'p5.foto', 'p5.prueba.huecos',
-    'p3.inicio', 'p3.persona', 'p3.oferta', 'p3.ofertaLinea', 'p3.preguntas', 'p3.cuantos', 'p3.calcetines', 'p3.grupo', 'p3.compartirNota',
-    'p3.puntos', 'p3.nota', 'p3.boton', 'p3.compartir', 'p3.detalles', 'p3.ejemplo', 'p3.filas.*.oferta', 'p3.filas.*.id',
+    'p3.oferta', 'p3.ofertaLinea', 'p3.puntos', 'p3.detalles.*.lista', 'p3.ejemplo', 'p3.filas.*.oferta', 'p3.filas.*.id',
     'p8.plazo', 'p7.*.a.*.href', 'p5.cuidados.*.link.href', 'p7.*.a.*.door'];
 
 $aplanar = function (mixed $valor, string $ruta = '') use (&$aplanar): array {
@@ -137,7 +141,25 @@ $mover = [
         }
 
         return $h;
-    }, ['texto', 'p5.cuidados.0.text', 'p7.0.q', 'p7.1.hint']],
+    }, ['texto', 'p5.cuidados.0.text', 'p7.0.q', 'p7.1.hint', 'p3.cuantos.nota', 'p3.detalles.0.q']],
+    'la edad mínima de Kids (4 → 5), en la página de JUMP' => ['jump', function (array $h): array {
+        foreach ($h['products']['data'] as $i => $p) {
+            if (($p['zone']['slug'] ?? '') === 'kids') {
+                $h['products']['data'][$i]['guest_age_min'] = 5;
+            }
+        }
+
+        return $h;
+    }, ['p3.cuantos.nota', 'p3.detalles.0.a']],
+    'la edad mínima de Jump (8 → 9), en su página' => ['jump', function (array $h): array {
+        foreach ($h['products']['data'] as $i => $p) {
+            if (($p['zone']['slug'] ?? '') === 'jump') {
+                $h['products']['data'][$i]['guest_age_min'] = 9;
+            }
+        }
+
+        return $h;
+    }, ['p3.cuantos.sub', 'p3.cuantos.nota', 'p3.detalles.0.hint', 'p3.detalles.0.a']],
     'la edad mínima de Jump (8 → 9), en la página de KIDS' => ['kids', function (array $h): array {
         foreach ($h['products']['data'] as $i => $p) {
             if (($p['zone']['slug'] ?? '') === 'jump') {
@@ -155,7 +177,7 @@ $mover = [
         }
 
         return $h;
-    }, ['texto', 'p5.cuidados.2.text', 'p7.0.a']],
+    }, ['texto', 'p5.cuidados.2.text', 'p7.0.a', 'p3.detalles.0.hint', 'p3.detalles.0.a']],
     'la altura con adulto de Jump (1,30 → 1,40 m)' => ['jump', function (array $h): array {
         foreach ($h['zones']['data'] as $i => $zn) {
             if ($zn['slug'] === 'jump') {
@@ -164,7 +186,7 @@ $mover = [
         }
 
         return $h;
-    }, ['p5.cuidados.1.text', 'p7.1.a']],
+    }, ['p5.cuidados.1.text', 'p7.1.a', 'p3.cuantos.nota', 'p3.detalles.0.a']],
     'el plazo de cambio (24 h → 72 h)' => ['kids', function (array $h): array {
         foreach ($h['products']['data'] as $i => $p) {
             if (isset($p['cancellation'])) {
@@ -193,7 +215,7 @@ $mover = [
         }
 
         return $h;
-    }, ['p7.4.a']],
+    }, ['p7.4.a', 'p3.calcetines.sub', 'p3.calcetines.nota']],
     'el pack de cumpleaños de Kids (14,95 → 16 €)' => ['kids', function (array $h): array {
         foreach ($h['products']['data'] as $i => $p) {
             if ($p['type'] === 'pack' && ($p['guest_age_min'] ?? null) === 4) {
@@ -232,7 +254,17 @@ $mover = [
         }
 
         return $h;
-    }, ['precio.filas.0.dias', 'p3.filas.2.soloLJ', 'p3.pasos.0.title', 'p3.col_normal']],
+    }, ['precio.filas.0.dias', 'p3.filas.2.soloLJ', 'p3.filas.2.aviso', 'p3.pasos.0.title', 'p3.col_normal']],
+    'la tarifa especial del panel: sin el viernes (`#763`)' => ['kids', function (array $h): array {
+        foreach ($h['prices']['rates'] as $i => $r) {
+            if (! empty($r['special'])) {
+                $h['prices']['rates'][$i]['label'] = 'Fines de semana, vísperas y festivos';
+                $h['prices']['rates'][$i]['weekdays'] = [6, 0];
+            }
+        }
+
+        return $h;
+    }, ['precio.filas.1.dias', 'p3.detalles.1.hint', 'p3.detalles.1.a']],
     'la dirección del parque' => ['kids', function (array $h): array {
         $h['site']['address']['line1'] = 'Calle Mayor, 1';
 
@@ -247,5 +279,31 @@ foreach ($mover as $que => [$zona, $cambiar, $rutas]) {
     echo ($quietas === [] ? '✓' : '✗')." {$que}: ".($quietas === [] ? 'se mueven '.count($rutas).' textos' : 'NO se mueven '.implode(', ', $quietas))."\n";
 }
 
-echo "\n".($fallos === 0 ? '✓ el modelo escribe el brief y ninguna cifra está tecleada' : "✗ {$fallos} fallos")."\n";
+echo "\n── 3. La calculadora: la vista del PRODUCTO con lo que le da la página, contra la del diseño ──\n";
+// Lo que la página le da al producto (`calculadora` del modelo, con los hechos del brief), los textos del producto y la
+// ficha de su primera entrada; `scripts/calculadora-contra-diseno.mjs` compara las dos vistas estado a estado. La URL
+// de la página es la del diseño (la de esta instalación local no es un texto).
+foreach (['kids', 'jump'] as $zona) {
+    $hechos = $conBrief($reales);
+    $pagina = $modelo($hechos, $zona, $reloj)['calculadora'];
+    $pagina['url'] = 'https://playjumppark.es/'.$zona;
+    $ficha = collect($hechos['product_details'])->firstWhere('id', $pagina['filas'][0]['id']);
+    $entrada = storage_path("app/tmp/calculadora-{$zona}.json");
+    is_dir(dirname($entrada)) || mkdir(dirname($entrada), 0775, true);
+    file_put_contents($entrada, json_encode(['pagina' => $pagina, 'textos' => __('isla'), 'z' => $brief[$zona], 'ficha' => $ficha], JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
+    $estados = json_decode((string) shell_exec('node '.escapeshellarg(__DIR__.'/calculadora-contra-diseno.mjs').' '.escapeshellarg($entrada)), true, 512, JSON_THROW_ON_ERROR);
+    $decididas = [];
+    foreach ($estados as $estado => $r) {
+        $fallos += count($r['diferencias']);
+        $decididas = [...$decididas, ...$r['decididas']];
+        foreach ($r['diferencias'] as $d) {
+            echo "✗ {$zona} · {$estado} · {$d['ruta']}\n    diseño   «".json_encode($d['diseno'], JSON_UNESCAPED_UNICODE)."»\n    producto «".json_encode($d['producto'], JSON_UNESCAPED_UNICODE)."»\n";
+        }
+    }
+    $limpios = array_keys(array_filter($estados, fn (array $r): bool => $r['diferencias'] === []));
+    echo (count($limpios) === count($estados) ? '✓ ' : '✗ ').$zona.': '.count($limpios).' de '.count($estados).' estados iguales al diseño ('.implode(', ', $limpios).')'
+        .($decididas ? '; distinto por decisión: '.implode(' · ', array_unique($decididas)) : '')."\n";
+}
+
+echo "\n".($fallos === 0 ? '✓ el modelo escribe el brief, ninguna cifra está tecleada y la calculadora escribe la del diseño' : "✗ {$fallos} fallos")."\n";
 exit($fallos === 0 ? 0 : 1);

@@ -62,6 +62,33 @@ export function cambiarDiseno(z, s, campo, valor) {
     if (s.hora && ! horaValida(p, s)) s.hora = null;
 }
 
+/**
+ * Los mismos datos de prueba del diseño con la FORMA que da el motor (`scripts/calculadora-contra-diseno.mjs`): los
+ * días de cada fila con su precio (`availability/{id}/dates`), las horas con sus plazas (`times`), la línea que
+ * resolvería el servidor y lo que cargarían los calcetines. `ids[i]` es el producto de la fila `i` de la página.
+ */
+export function motorDiseno(z, s, ids, calcetin) {
+    const p = z.p3;
+    const i = Math.max(0, p.filas.findIndex((f) => f.id === s.filaId));
+    const fila = p.filas[i];
+    const cents = (euros) => Math.round(euros * 100);
+    const precios = Object.fromEntries(p.filas.map((f, k) => [ids[k], P3_DIAS.filter((d) => f.precios[p3Especial(d) ? 1 : 0] != null)
+        .map((d) => ({ date: d, price_cents: cents(f.precios[p3Especial(d) ? 1 : 0]), rate_key: p3Especial(d) ? 'special' : 'normal' }))]));
+    const horas = s.dia ? p3Sesiones(s.dia, fila.horas, s.gente).map((x) => ({ time: `${x.time}:00`, available: x.left, sellable: true })) : [];
+    const unidad = s.dia ? cents(fila.precios[p3Especial(s.dia) ? 1 : 0]) : null;
+    const h = horaValida(p, s) ? s.hora : null;
+    const cargo = s.calcetines * calcetin.price_cents;
+    const linea = h && unidad !== null ? {
+        unit_price_cents: unidad, subtotal_cents: s.gente * unidad, total_cents: s.gente * unidad + cargo,
+        addons: s.calcetines ? [{ product_id: calcetin.id, product_name: calcetin.name, quantity: s.calcetines, subtotal_cents: cargo }] : [],
+    } : null;
+
+    return {
+        borrador: { fila: ids[i], dia: s.dia, hora: s.hora ? `${s.hora}:00` : null, n: s.gente, cal: s.calcetines },
+        precios, horas, linea, cargoCalcetines: s.calcetines ? cargo : null, hoy: P3_HOY,
+    };
+}
+
 /** La vista que pinta el diseño, en la forma de `resources/js/isla/calculadora/CalculadoraEntradas.vue`. */
 export function vistaDiseno(z, s) {
     const p = z.p3;
@@ -105,7 +132,7 @@ export function vistaDiseno(z, s) {
             titulo: p.preguntas[4], sub: p.calcetines.sub, label: 'Pares de calcetines', sublabel: s.calcetines ? '' : 'Traéis los vuestros', n: s.calcetines, max: 40,
             precio: s.calcetines ? p3Eur(calc) : '', cadaUno: { texto: `Un par para cada ${p.persona[0]} · ${s.gente}`, elegido: s.calcetines === s.gente, n: s.gente }, nota: p.calcetines.nota,
         },
-        resumen: { seleccion, lineas, total: p3Eur(total), falta, faltaHref: ! s.dia ? '#p3-dia' : '#p3-hora', boton: p.boton, junto: p.junto, nota: p.nota },
+        resumen: { seleccion, lineas, total: p3Eur(total), falta, listo: ! falta, faltaHref: ! s.dia ? '#p3-dia' : '#p3-hora', boton: p.boton, junto: p.junto, nota: p.nota },
         compartir: { value: `https://playjumppark.es/${z.zona}#precio`, items: [{ kind: 'whatsapp', label: p.compartir, href: wa }] },
     };
 }

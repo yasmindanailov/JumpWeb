@@ -109,6 +109,22 @@ return [
             'tarifa_especial' => 'Tarifa especial',
         ],
     ],
+    // La calculadora de la página (T4d, `paginas/entradas/pieza-3.jsx`): lo GENÉRICO —qué falta, el eco de la hora, las
+    // líneas del recibo—. Lo que nombra lo del parque (sus preguntas, sus calcetines, su mensaje) lo trae la página.
+    'calculadora' => [
+        'falta_dia' => 'Elige el día para ver el total',
+        'falta_hora' => 'Elige la hora para ver el total',
+        'espera_hora' => 'Elige antes el día: cada día tiene sus horas libres.',
+        'por' => ':precio por :persona',
+        'desde' => 'desde :precio',
+        'eco_dia_antes' => ':tarifa: ',
+        'eco_dia_despues' => ' por :persona',
+        'eco_hora' => 'De :desde a :hasta',
+        'eco_hora_cierre' => 'De :desde al cierre, a las :cierre',
+        'a_las' => ':dia a las :hora',
+        'linea_entradas' => 'Entradas · :n × :precio',
+        'linea_complemento' => ':nombre · :n × :precio',
+    ],
     // Las pantallas de la COMPRA (T3c), con el literal de su diseño (`paginas/compra/datos.js`). Lo que depende de
     // los datos del parque —nombres de zona, precios, las preguntas de su widget, los plazos de sus condiciones—
     // no vive aquí: llega a la pantalla como dato.

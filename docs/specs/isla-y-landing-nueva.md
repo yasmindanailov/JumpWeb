@@ -1037,6 +1037,27 @@ juzga «idéntico», con los datos del diseño.
     24 a 0 a la primera**; el banco entero de la página, 170 de 170; el de piezas, 25 de 25 (el `Tag` y el `ShareRow`
     con su `hover`); control: 1 px más de separación en cada pregunta, los 24 caen. Sin juzgar: el «Enlace copiado»
     (dura 2,6 s y el juez asienta más).
+  - ▶ **·3 ✅ (25-09)**: la vista DE VERDAD —de los hechos, del motor y de los textos—, en dos mitades. **La página**:
+    los textos del widget pasan a `lang/<idioma>/paginas.php` de la instancia (preguntas, «niño», cuántos, calcetines,
+    la cuenta, el botón, compartir, las dudas; el grupo `comun.calculadora` para lo que el diseño deja escrito en su
+    pieza y NOMBRA a PlayJump: «Pares de calcetines», «Un par para cada niño», las cantidades en letra, el mensaje), con
+    cada cifra de su hecho; los días de tarifa especial de las dudas, del PANEL (`#763`: su etiqueta, y «V–D» de sus
+    días de la semana); y el modelo arma lo que la pieza le dará al producto (`calculadora`: filas con su «desde» en
+    céntimos, su pista y su línea, las dos columnas, los textos y el cierre de cada día). **El producto**:
+    `calculadora/vista.js` (pura; lo genérico en el grupo `calculadora` de `lang/<idioma>/isla.php`) —el dinero, SOLO
+    del servidor: el precio del día, la `line` y el `charged_cents` de los calcetines, que el endpoint de complementos da
+    aun sin día ni hora—; el botón se enciende con la línea del servidor (`listo`), no con tener día y hora. **Medido**:
+    `scripts/modelo-entradas.php` gana su parte 3 —la vista del producto con lo que da la página (el modelo REAL, los
+    hechos del brief) contra la del diseño, estado a estado (`scripts/calculadora-contra-diseno.mjs`)—: **11 de 11
+    (Kids) y 9 de 9 (Jump)** iguales; la parte 1, 162 y 153 campos iguales al brief (los textos del widget ya se
+    comparan); la parte 2, 16 hechos movidos (tres nuevos) que mueven sus textos. `node --test`: 8 casos de la vista
+    (el dinero que no se cuenta, la línea que aún no llega, la hora que no cabe, el cierre de cada día); mutante —el
+    total como «n × precio»— muerto. Controles: una edad tecleada en una nota, la cae la parte 2; el fin de la sesión
+    mal contado, 10 fallos en la parte 3. El banco, 24 de 24 tras el cambio del botón. En en/fr, sin marcadores
+    sueltos y con las etiquetas del panel traducidas. **Distinto por decisión** (principio de `#763`): el recibo nombra
+    el complemento como el panel, «Calcetines antideslizantes», como lo dirá «Pagar»; ▶ del owner, si lo quiere más
+    corto, el nombre del producto en el panel. ⚠️ Lo del MOTOR (el borrador sin día de fábrica, vaciar el día al elegir
+    una fila que no se vende ese día, pedir el cargo de los calcetines) va con el montaje, en la ·4.
 - **T4e · la isla en la página** (producto): montada al cargar en su propio trozo (el motor, 295 KiB, sigue
   llegando al pulsar), el contrato de §4.3 fijado, sus hechos reales, cede su botón con uno de la página a la vista,
   y se transforma en la compra. Techo de peso con su prueba; aviso al SPA (su T5c y el consentimiento).

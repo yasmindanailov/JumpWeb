@@ -105,6 +105,20 @@ return [
             'tarifa_especial' => 'Tarif spécial',
         ],
     ],
+    'calculadora' => [
+        'falta_dia' => 'Choisis le jour pour voir le total',
+        'falta_hora' => 'Choisis l’heure pour voir le total',
+        'espera_hora' => 'Choisis d’abord le jour : chaque jour a ses heures libres.',
+        'por' => ':precio par :persona',
+        'desde' => 'dès :precio',
+        'eco_dia_antes' => ':tarifa : ',
+        'eco_dia_despues' => ' par :persona',
+        'eco_hora' => 'De :desde à :hasta',
+        'eco_hora_cierre' => 'De :desde à la fermeture, à :cierre',
+        'a_las' => ':dia à :hora',
+        'linea_entradas' => 'Entrées · :n × :precio',
+        'linea_complemento' => ':nombre · :n × :precio',
+    ],
     'compra' => [
         'paso' => 'Étape :n sur :total',
         'cuando' => [

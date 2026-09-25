@@ -46,7 +46,8 @@
 pie a 0 px contra el diseño —`scripts/banco-entradas.php`, 146 pares; el visor, `scripts/sonda-visor.mjs`— y `/kids` y
 `/jump` ENTERAS con los hechos en es/en/fr —`scripts/modelo-entradas.php`—; la pieza 5, con foto PROVISIONAL del
 panel, `#764`) → **T4d la calculadora, EN CURSO** (afinada al medirla en §4.12; ·1 el calendario ✅; ·2 la vista del
-widget ✅, 24 de 24 a 0; sigue la ·3, la vista sobre el motor y sus textos) → T4e la isla viva (con ella, «Hoy, 1 hora cuesta…» y
+widget ✅, 24 de 24 a 0; ·3 la vista de los hechos y sus textos ✅, igual al diseño estado a estado; sigue la ·4, el
+montaje sobre el motor y «Reservar y pagar») → T4e la isla viva (con ella, «Hoy, 1 hora cuesta…» y
 «Reservar para hoy»: el owner ESPERA a la isla) → T4f la sonda; entre la d y la e, la forma de VÍDEO de las
 atracciones (el play); después, la FIESTA. Nota de Google en LOCAL: sembrada a mano (4,9 / 155, la clave da 403 aquí).
 ⚠️ BD LOCAL con los valores de `#699`/`#761` (lo de antes, en el commit de la T4a·1); en PRODUCCIÓN, el owner.

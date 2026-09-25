@@ -105,6 +105,20 @@ return [
             'tarifa_especial' => 'Special rate',
         ],
     ],
+    'calculadora' => [
+        'falta_dia' => 'Choose the day to see the total',
+        'falta_hora' => 'Choose the time to see the total',
+        'espera_hora' => 'Choose the day first: each day has its own free times.',
+        'por' => ':precio per :persona',
+        'desde' => 'from :precio',
+        'eco_dia_antes' => ':tarifa: ',
+        'eco_dia_despues' => ' per :persona',
+        'eco_hora' => 'From :desde to :hasta',
+        'eco_hora_cierre' => 'From :desde until closing, at :cierre',
+        'a_las' => ':dia at :hora',
+        'linea_entradas' => 'Tickets · :n × :precio',
+        'linea_complemento' => ':nombre · :n × :precio',
+    ],
     'compra' => [
         'paso' => 'Step :n of :total',
         'cuando' => [
