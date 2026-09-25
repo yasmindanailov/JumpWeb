@@ -1,72 +1,60 @@
-# Carril · Diseño del SPA (el cajón) — y, desde el 24-09, LA ANALÍTICA
+# Carril · Diseño del SPA (el cajón) — la ANALÍTICA y, desde el 25-09, LA FIESTA del sistema nuevo
 
-> Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb`) · Banda: **730–759** (700–729 agotada el 20-09)
-> · Último usado: **`#742`** · La banda está dada de alta en la tabla de `DECISIONES.md` ·
-> Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: **`encuestas.md` §0** (la
-> tarea en curso) · `analitica-fiesta.md` §0 · `analitica.md` §0 y §4.5 · `google-business-profile.md` §0 ·
-> `sidebar-spa.md` §0 · `celebracion-e-invitacion.md` §0 · Actualizado: 2026-09-25 (mañana, cierre).
+> Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb` a secas; la instancia al lado, en
+> `~/proyectos/instancias/playjump`, clon de `github.com/yasmindanailov/instancia-playjump`, montada el 25-09) ·
+> Banda: **730–759** (700–729 agotada el 20-09) · Último usado: **`#742`** · La banda está dada de alta en la tabla de
+> `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: **`isla-y-landing-nueva.md`
+> §4.11 «El traspaso al SPA»** (la tarea en curso, `#765`) · `celebracion-e-invitacion.md` §0 · `waiver-por-reserva.md` §0 ·
+> `encuestas.md` §0 · `analitica-fiesta.md` §0 · `analitica.md` §0 y §4.5 · `google-business-profile.md` §0 ·
+> `sidebar-spa.md` §0 · Actualizado: 2026-09-25 (tarde, la fiesta reclamada).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`). El
 > contador de la suite va en el trailer del commit (`#618`), no aquí. **Se muda, no se raspa**: el detalle de
 > una feature baja a su spec (las trampas por tanda de la analítica T1→T5 viven en `analitica.md` §4.9,
 > mudadas verbatim el 24-09; las de la ficha de Google en su §9.1; las de la invitación en su §10.20).
 
-## Foto (2026-09-25, mañana)
+## Foto (2026-09-25, tarde)
 
-- ▶▶▶ **LA ANALÍTICA ES MÍA ENTERA desde `#735`** (`[DECIDIDO owner]` 24-09). **T1 ✅** (plataforma) · **T2a→T2d
-  y T2f ✅** (el cuadro en tres pestañas, 21 widgets, CSV, comparación; queda el `EXPLAIN` con volumen en
-  staging; la **T2e** solo si lo pide) · **T3 ✅** (cuatro finalidades, banner, política v3 `2026-09-24`, driver
-  PostHog/Matomo, enlace sesión↔cuenta y oposición, aviso a las cuentas, píxeles, API de conversiones, `/cookies`
-  nombra lo activo) · **T4 ✅** (la 360, los segmentos y su CSV, el opt-in tras comprar) · **T5a·T5b ✅** (el
-  mecanismo y el panel de los experimentos, `#737`). Todo en `main`, y **el OWNER LO VIO TODO EN VIVO el 24-09
-  («ya lo veo, todo, perfecto»)** en un recorrido guiado: banner, `/cookies` y `/privacidad`, el interruptor de
-  «Privacidad», el aviso en `/mi-cuenta`, el correo en Mailpit, la casilla tras comprar, la 360
-  (`/admin/users/2074`), los segmentos y su CSV, el widget y el alta de experimentos, «Ajustes» (driver y píxeles)
-  y las cuatro tarjetas de la fuente del pedido manual (lo que quedaba de la T1). El detalle por tanda:
-  `analitica.md` §4.8.
-- ✅ **T5c DECIDIDA (`#738`, 24-09)**: SIN mecanismo de textos desde el panel; cada experimento es una tanda de
-  código y el owner nombra la hipótesis cuando haya datos reales (tras la v2.0.0; «medir cosas finas que de verdad
-  ayuden a mejorar conversión»). Candidata: la carcasa isla contra cajón, cuando la isla compre entera.
-- ▶▶ **T6, LA ANALÍTICA DE LA FIESTA** (`specs/analitica-fiesta.md`, **`#739`** aprobada por el owner con las tres
-  recomendaciones: día de la FIESTA · pestaña «Fiestas» · los que vuelven se exportan con opt-in). **T1 ✅ EN EL
-  ÁRBOL (24-09)**: *el invitado no es un visitante*: las DOCE rutas de las tres páginas enfocadas (post-form,
-  justificante, invitación) en un grupo `withoutMiddleware(ResolveVisitor:mint)`, `Recorder::factOfOrder()` (sin
-  visitante, sesión ni titular), `Contract` +4, `PartyFacts::daysBefore()` en días del parque, el trait
-  `RecordsPartyFacts` (robots fuera) y los siete hechos desde los controladores; `FocusedPagesAreCookieFreeTest` 4
-  + `PartyFactsTest` 13; `scripts/mutar-analitica-fiesta.sh` **9/9 + 1 control**; probado en vivo con `curl`
-  (spec §4.6). ▶ **T2 EN EL ÁRBOL (24-09, noche)**: `PartiesReport` (capa de entrega; por DÍA DE LA FIESTA; 14
-  consultas y 28 ms con 32 fiestas; los hechos ganan la prop `reservation`), la cuarta pestaña «Fiestas» con nueve
-  tarjetas, tres gráficos y siete tablas plegadas, el cuarto informe del CSV, rótulos es/zh_CN;
-  `PartiesReportTest` 10 (igualdad con las tablas de negocio), sonda **31/31** con capturas
-  (`storage/app/audit/analitica-panel-fiesta-t2-*.png`). **✅ El owner la vio en vivo (24-09: «muy bien,
-  validado»)**, en `main` (`d1233a85`). ▶ **T3 EN EL ÁRBOL (24-09, noche)**: el quinto segmento
-  `guest_became_customer` (firma de invitado ANTES de la primera compra, correo en minúsculas; exportable con
-  opt-in) y el bloque «Fiestas» de la 360 (`CustomerInsights`, régimen del contrato, con «vino invitado el …»);
-  `SegmentsReportTest` +1, `SegmentsExportTest` +1, `UserInsightsInfolistTest` +1; `sonda-segmentos.mjs` 9/9 y
-  `sonda-cliente-360.mjs` 6/6 (capturas `segmentos-fiesta-t3-*.png`, `cliente-360-fiesta-t3.png`). **✅ El owner
-  lo vio en vivo (24-09: «buen trabajo, validado»)** → **LA T6 QUEDA COMPLETA**: la analítica entera (T1→T6) espera
-  solo la v2.0.0. La spec sigue viva (no se archiva): guarda el régimen del invitado, el `[PENDIENTE: asesoría]` (4)
-  y el despliegue pendiente; el ciclo de vida de la doc (`CONVENCIONES §11`) se aplica tras la v2.0.0.
-- ▶▶ **T7, ENCUESTAS — LAS CUATRO TANDAS EN `main` (25-09)** (`specs/encuestas.md` ✅ `#740`; el detalle por tanda y
-  «lo que enseñó», en su §4.6): T1 el modelo y `/admin/encuestas` (`7c359050`) · T2 la tarjeta en la puerta y
-  **`#741`: el ESCANEO acredita la visita** —el botón «Registrar visita» no existía desde `#234` y la spec lo daba por
-  vivo— (`fd72b400`) · T3 el correo del día siguiente, la página por token, la baja con UN botón, `PUT /me/surveys`
-  y el tercer interruptor de «Privacidad», contrato 1.28.0, `deploy.sh` espera 10 (`0d9a54db`) · T4 el cuadro: la
-  quinta pestaña, «Por atender», el CSV y la 360 (`ae818b97`). **Revisión** (`99578672`): la tasa de la puerta sobre
-  OFRECIDAS, la `intro` del correo solo en el idioma del cliente, `SiteLocales`, el ajuste del plazo probado; y
-  **`#742`** (`88f8e8f3`, el owner tomó las cuatro recomendadas): el correo no repite a quien contestó en la puerta,
-  «Por atender» sin `customers.insights` va sin persona ni texto, la baja no calla la puerta, el gráfico sin selector.
-  Guardas: `GateSurveyTest` 10 · `SurveySendTest` 7 · `SurveyPageTest` 5 · `SurveysReportTest` 5 · arnés
-  `mutar-encuestas.sh` **15/15 + control** · sondas `sonda-puerta.mjs` 28/28 y `sonda-analitica-panel.mjs` con la
-  quinta pestaña. **Visto por el owner**: contestó una en vivo desde la puerta (cuenta 70) y recibió las 15 capturas
-  del circuito entero (`storage/app/audit/ojo-encuestas-*.png`; guion `ojo-encuestas.mjs` al lado, fuera de git):
-  cerró con «buen trabajo», sin un ✅ formal por tanda. Queda `[PENDIENTE: asesoría]` (5) sobre el correo de servicio.
-  ⚠️ Trampas pagadas: un ayudante `seed()` en un test es FATAL (tercera vez: `seedJune()`); el asunto de un correo no
-  lleva el parque y «oferta» no entra ni para negarla (`MailInboxLineTest`, `SurveySendTest`); `PersonalDataExport`
-  y `User` del contrato son `additionalProperties: false`; los techos del cajón subieron con nota (chunk 296 kB,
-  textos del montaje 10.800 B); Chromium del contenedor: `node node_modules/playwright-core/cli.js install chromium`
-  (`npx playwright install` cae en la caché de npx); el motor de Docker puede colgarse con los contenedores vivos
-  (reinicia Docker Desktop); la sonda del panel censa CINCO pestañas y CUATRO «Por día».
-- ⚠️⚠️ **LO MONTADO EN LA BD LOCAL para el ojo del owner (24-09), todo reversible**: (1) cinco ajustes FALSOS
+- ▶▶▶ **LA FIESTA DEL SISTEMA NUEVO ES MÍA (`#765`, `[DECIDIDO owner]` 25-09)**: vestir **la lista de invitados, la
+  invitación con su recibo y la autorización** (el «justificante digital») con el diseño «Saltia» del 24-09, EN PARALELO
+  con la web pública (plataforma sigue con Kids y Jump), para la v2.0.0. Corrige `#697` solo en quién: la lógica, los
+  controladores y las vistas ya eran mías (`celebracion-e-invitacion.md`, `waiver-por-reserva.md`).
+  **Todo lo necesario**: `isla-y-landing-nueva.md` §4.11 «El traspaso al SPA» (qué leer del diseño, la máquina, el método,
+  dónde viven, el orden). El método es el de `#685`: la referencia byte a byte de `instancias/playjump/diseno/`, el banco
+  A/B con `scripts/pixel.mjs` (`--rehacer --reloj`, 390 y 1280) a **0 píxeles**, con CONTROL de 1 px por tanda; los
+  moldes: `scripts/banco-entradas.php` (JSX con Babel contra Blade, estados por pieza) y `banco-isla.php` (contra Vue).
+  ⚠️ **El zip entra SOLO por el ordenador de plataforma** (`diseno/actualizar.py`) y llega aquí con `git pull` de la
+  instancia: **antes de cada tanda, `git pull` en `~/proyectos/instancias/playjump`** y `cd diseno && sha256sum -c`.
+  ▶ **Leído el 25-09**: las cinco secciones del `readme.md` del diseño (752→816: la lista, sus complementos, la
+  invitación con su tema, la invitación y su recibo, la autorización) y los tres briefs de `uploads/`. **El diseño del
+  25-09 añade lógica que NO existe** (además del censo de §4.11): quien cumple PRIMERO (la página nace como una sola
+  pregunta, «¿Cómo se llama quien cumple?»), la lista que empieza solo con él (sin filas vacías, sin tope), «Al final
+  viene», la zona 3 que **siempre empuja a llenar** (subir el número = AFORO y cobro en el parque: `INVARIANTES` §1–§2,
+  `VERIFY_CONC=1`), «Pegar una lista», combos y cubos «para N adultos», la tarta grande por raciones, el recibo con «Su
+  ficha» y la firma dentro (`AuthForm`), «Crear mi QR», «Contestar por otro hijo» (24 h en el móvil), «Avísame de fechas»
+  (consentimiento comercial) y «Ver el parque» con vídeo (propuesta del diseño). **Orden (`#765`)**: primero lo que HAY (las
+  tres páginas con la lógica de hoy, a 0 px en sus estados); lo que FALTA, **una pieza cada vez y con la decisión del owner
+  delante**. ▶ **T0 pendiente (mía, `#630`)**: medir dónde viven. Recomendación de plataforma: en el PRODUCTO, como la
+  isla, con roles genéricos de valor neutro y los valores de PlayJump en una hoja de la instancia cargada tras `saltia.css`
+  (como `publico/instancia/css/isla.css`). ⚠️ Hoy una vista del producto NO carga hojas de la instancia: ese mecanismo es
+  del paquete de instancia (plataforma) y se le pide en el buzón con la medida.
+- ✅ **Esta máquina, montada para la fiesta (25-09)**: la instancia clonada en `~/proyectos/instancias/playjump` (128 MB,
+  `0802907`; el diseño verificado con su sha256, 468 de 468), `INSTANCIA_RUTA=/var/www/instancias/playjump` en el `.env`
+  (ruta DEL CONTENEDOR), `public/instancia/` copiado de `publico/instancia/` (ignorado por git), `laravel.test` RECREADO
+  para que el montaje `../instancias` viera la carpeta nueva, `socat` repuesto, Chromium vivo, `optimize:clear`, 0
+  migraciones pendientes; `/`, `/kids`, `/jump` y `/cumpleanos` en 200 y `/kids` carga `instancia/css/saltia.css`.
+- ✅ **LA ANALÍTICA, ENTERA (`#735`), T1→T7 en `main` y vista por el owner en vivo** (24 y 25-09): T2 (el cuadro), T3
+  (consentimiento, driver, píxeles, `/cookies`), T4 (la 360, segmentos, opt-in), T5a·T5b (experimentos; **T5c decidida en
+  `#738`**: sin mecanismo de textos, la hipótesis la nombra el owner tras la v2.0.0), **T6 la fiesta** (`#739`: *el invitado
+  no es un visitante*; `PartiesReport`, la pestaña «Fiestas», el segmento `guest_became_customer`; el detalle por tanda en
+  `analitica-fiesta.md` §4.6) y **T7 las encuestas** (`#740`→`#742`; el detalle por tanda y «lo que enseñó» en
+  `encuestas.md` §4.6; guardas `GateSurveyTest` 10 · `SurveySendTest` 7 · `SurveyPageTest` 5 · `SurveysReportTest` 5 ·
+  arnés `mutar-encuestas.sh` 15/15 + control; el owner contestó una en vivo desde la puerta y cerró con «buen trabajo»).
+  Quedan: `[PENDIENTE: asesoría]` (5) del correo de servicio, la **T2e** solo si el volumen lo pide, el `EXPLAIN` con
+  volumen en staging. Todo espera la v2.0.0 (`#670`). ⚠️ Trampas pagadas en la T7: un ayudante `seed()` en un test es
+  FATAL (tercera vez); el asunto de un correo no lleva el parque y «oferta» no entra ni para negarla; `PersonalDataExport` y
+  `User` del contrato son `additionalProperties: false`; los techos del cajón subieron con nota (chunk 296 kB, textos del
+  montaje 10.800 B); la sonda del panel censa CINCO pestañas y CUATRO «Por día».
+- ⚠️⚠️ **LO MONTADO EN LA BD LOCAL para el ojo del owner (24/25-09), todo reversible**: (1) cinco ajustes FALSOS
   en `settings` (`analytics.driver=posthog`, `analytics.posthog_project` inventado y los tres ids de píxeles
   `marketing.*`): se quitan borrando esas filas; (2) el aviso de la analítica ENVIADO a las 57 cuentas de
   cliente (`analytics:notify-accounts`; `analytics_notified_at` puesto, 57 correos en Mailpit `:8028`); (3) el
@@ -74,18 +62,16 @@
   `JW-OJO…` con `visitor_id` y 3 contaminados: guion `/home/sail/e2e/ojo-experimento.php` en el contenedor,
   `OJO=desmontar` lo quita entero; (4) un pase de la vuelta de Redsys para la casilla tras comprar (caduca en 6 h,
   un solo uso); (5) **el fixture «probe-ojo-fiesta»** (`probe-ojo-fiesta.php` en la carpeta de almacenamiento,
-  fuera de git, al lado de «probe-ojo-analitica»): 32
-  fiestas `JW-FIESTA…` de agosto y septiembre con formularios, extras, invitaciones, firmas, cobros en el parque y
-  323 hechos, 32 anfitriones `fiesta-N@ojo-fiesta.jumpweb.test` y TRES de ellas que «vinieron invitadas» a una
-  fiesta de agosto antes de comprar; `OJO=desmontar` lo quita entero; (6) **lo de las encuestas** (25-09): las dos de
-  ejemplo (`visita-de-hoy`, `que-tal-ayer`; se borran desde el panel), el cliente `sonda-puerta@jumpweb.test` (2179)
-  con dos respuestas y visitas, la respuesta del owner (cuenta 70 sobre el cliente 593) y las visitas de 593 y 2179,
-  el fixture `probe-ojo-encuestas` (64 filas sobre los anfitriones de la fiesta; `OJO=desmontar` lo quita) y el correo
-  en Mailpit. Y siguen
-  montados el fixture «probe-ojo-analitica» (90 pedidos `JW-OJO…`, 25 clientes, 506 sesiones) y el de reseñas
-  «probe-ojo-resenas». ⚠️ **Plataforma dejó la local preparada para que el owner
-  pruebe la ISLA** (24-09 noche, `694529a8`): `sidebar.shell = isla` por el panel, `public/_isla-prueba.html`, la
-  invitación ENCENDIDA en los packs 105/106 — **«no deshacer sin él»**; el cajón local abre ahora en la isla.
+  fuera de git, al lado de «probe-ojo-analitica»): 32 fiestas `JW-FIESTA…` de agosto y septiembre con formularios, extras,
+  invitaciones, firmas, cobros en el parque y 323 hechos, 32 anfitriones `fiesta-N@ojo-fiesta.jumpweb.test` y TRES de
+  ellas que «vinieron invitadas» a una fiesta de agosto antes de comprar; `OJO=desmontar` lo quita entero; (6) **lo de
+  las encuestas** (25-09): las dos de ejemplo (`visita-de-hoy`, `que-tal-ayer`; se borran desde el panel), el cliente
+  `sonda-puerta@jumpweb.test` (2179) con dos respuestas y visitas, la respuesta del owner (cuenta 70 sobre el cliente 593)
+  y las visitas de 593 y 2179, el fixture `probe-ojo-encuestas` (64 filas sobre los anfitriones de la fiesta;
+  `OJO=desmontar` lo quita) y el correo en Mailpit. Y siguen montados el fixture «probe-ojo-analitica» (90 pedidos
+  `JW-OJO…`, 25 clientes, 506 sesiones) y el de reseñas «probe-ojo-resenas». ⚠️ **Plataforma dejó la local preparada para
+  que el owner pruebe la ISLA** (24-09 noche, `694529a8`): `sidebar.shell = isla` por el panel, `public/_isla-prueba.html`,
+  la invitación ENCENDIDA en los packs 105/106 — **«no deshacer sin él»**; el cajón local abre ahora en la isla.
 - ✅ **La ficha de Google (`#524`), T1 y T2·1→T2·8 en el árbol** (`#720`→`#734`), vistas por el owner con su ✅
   en vivo (21-09). ❗ Lo demás va **contra un DOBLE**: la ficha de PlayJump no llega a los 60 días (finales de
   octubre). ⚠️ Cuatro migraciones de esa spec y las de la analítica, aplicadas SOLO en la BD local.
@@ -95,26 +81,30 @@
 
 ## Por dónde retomar, en orden
 
-1. ❗❗ **LA T7 DE LA ANALÍTICA: LAS ENCUESTAS** — `specs/encuestas.md` **✅ aprobada (`#740`)**; **T1 en `main`**
-   (25-09); **T2 en `main`** con el disparador de `#741` (el escaneo acredita) y la sonda 28/28; **T3 en el
-   árbol** (el correo cada hora desde las 10:00 del parque, la página por token, la baja con UN botón,
-   `PUT /me/surveys` y el interruptor, contrato 1.28.0; `deploy.sh` espera 10); **T4 en el árbol** (el cuadro:
-   quinta pestaña, «Por atender», la 360, CSV). ▶ **El OJO del owner sobre las cuatro tandas** (tablet, Mailpit, la
-   página, `/admin/analitica?pestana=surveys`, la 360 de un anfitrión `fiesta-N@ojo-fiesta.jumpweb.test`) y lo que
-   corrija → después, el experimento real (T5c).
-   Después, el experimento real (T5c), que el owner quiere iterar tras las encuestas.
-   ⚠️ Trampas de la fiesta, por si se reutiliza su molde (spec §4.6): el reenvío del mismo padre es IDEMPOTENTE;
-   `order_id` nunca es nulo; son DOCE rutas enfocadas; los invitados añadidos NO son «extras»; una edición sin
-   `reason` es del panel; un ayudante `seed()` en un test es FATAL; la sonda del panel censa TRES «Por día»; «vino
-   invitado» exige la firma ANTES de la primera compra.
-2. **T2e** (`analytics_daily` + `ad_spend`) SOLO si el `EXPLAIN` con volumen dice que el año en directo no
-   aguanta (`analitica.md` §4.5). **T5c** cuando el owner nombre la hipótesis (`#738`). Queda el `EXPLAIN` con
-   volumen en staging para la T2.
-3. ❗ **La ficha de Google, T2·9: las reseñas en la API pública** (`google-business-profile.md` §4.1).
-   ▶ **DECISIÓN DEL OWNER ANTES**: `#616` fija API pública **sin avatares** y ahora hay cara del autor y fotos:
-   ¿se sirven, se omiten o van solo como rutas nuestras? ❗ La portada REAL vive en la instancia (`#666`). ⚠️
-   Places NO se retira (`[owner]`, 21-09). ❗ Las fotos salen con `no-store` (`RGPD-04`). ▶ Después, a elegir
-   (§4.1): el botón del panel · el texto de privacidad con el aviso de cookies · la T6.
+1. ❗❗❗ **LA FIESTA DEL SISTEMA NUEVO (`#765`)**, en este orden: **T0** medir dónde viven (dependencias reales con
+   `module-deps.php`, guardas de frontera antes y después, el mecanismo de hojas de la instancia → buzón de plataforma;
+   si la forma es mejorable, `/spec` antes) → **T1 la lista de invitados** (`paginas/lista-invitados.card.html`, sus cuatro
+   estados y «La reserva ha cambiado», a 0 px) → **T2 la invitación y su recibo** (`paginas/invitacion.card.html`, los seis
+   estados, los tres temas) → **T3 la autorización** (`paginas/autorizacion.card.html`, vacía / firmada / enlace que no
+   vale). Cada tanda: `git pull` de la instancia, el banco con control, las guardas de piel que ya existen
+   (`GuestFormSkinTest`, `GuardianSkinTest`) re-apuntadas o retiradas con su motivo, sonda de VENTANA de las tres (el
+   molde `.gf-*` es de tres páginas), y el ojo del owner en `localhost:8081`. **Reglas en pie**: el suelo sin JavaScript
+   (un `<form>` de verdad y Guardar como su botón de enviar) · `#739` (sin banner, driver ni píxeles; el hecho lo deja el
+   controlador) · la firma y su prueba (`waiver-probatorio.md`, `RGPD-*`) · hoja en blanco (§7.2·R1) · `#706` (el menor
+   no se prerrellena). ▶ **Después, lo que FALTA, una pieza cada vez con el owner**; el censo se re-mide contra el último zip.
+   ❗ **Preguntas al owner ANTES de lo que falta** (del «Por confirmar» del diseño): (a) ¿quien cumple cuenta como uno
+   más en el número? (el diseño lo asume; si no, la frase vuelve al brief y el mínimo son 8 invitados); (b) el asunto
+   del correo 2 lleva el nombre de quien cumple y sale antes de saberlo: ¿sin nombre, o se pide en «Listo» tras pagar?;
+   (c) «Ver el parque» con el vídeo en la invitación (propuesta del diseño, apagable); (d) «Avísame de fechas»
+   (consentimiento comercial, `RGPD-*`); (e) la zona 3 sube el número desde la lista: ocupa aforo y cobra en el parque.
+   Y la de plataforma (1): las reseñas en `/social-proof` para la pieza 5, **qué caras y fotos entran** (`#616`).
+2. ✅ La analítica entera espera la v2.0.0. Sueltos: `[PENDIENTE: asesoría]` (5) del correo de servicio de las encuestas ·
+   **T2e** (`analytics_daily` + `ad_spend`) SOLO si el `EXPLAIN` con volumen dice que el año en directo no aguanta
+   (`analitica.md` §4.5) · **T5c** cuando el owner nombre la hipótesis (`#738`) · el `EXPLAIN` con volumen en staging.
+3. ❗ **La ficha de Google, T2·9: las reseñas en la API pública** (`google-business-profile.md` §4.1; es la T4a·2 que
+   plataforma pide para la pieza 5). ▶ **DECISIÓN DEL OWNER ANTES**: `#616` fija API pública **sin avatares** y ahora
+   hay cara del autor y fotos: ¿se sirven, se omiten o van solo como rutas nuestras? ❗ La portada REAL vive en la
+   instancia (`#666`). ⚠️ Places NO se retira (`[owner]`, 21-09). ❗ Las fotos salen con `no-store` (`RGPD-04`).
 4. **Lo que el ✅ del owner a la invitación NO cubre**, declarado sin medir: el `.ics` en un TELÉFONO de verdad
    (§4.6; si Android no lo abre, Google Calendar como segunda opción) · el justificante EN PRODUCCIÓN con el
    Turnstile REAL · `§7.2·R12`. ⚠️ `og:image` sale del logotipo del tema (1200×441): en tarjeta 2:1, bandas.
@@ -123,10 +113,16 @@
 6. De la Fase 4: el **ojo del owner en un teléfono de verdad** (ninguna de las 25 pantallas) · el cuaderno de
    entrega del cajón · el botón del sistema (16/800 con borde).
 7. Del plugin quedan **dos frases** por ver: `/dod` y `/ligero` (`/sonda` va bien; ⚠️ al recrear el contenedor
-   se pierden Chromium y `socat`: la receta de la skill los repone).
+   se pierde `socat`: la receta de la skill lo repone; Chromium sobrevive en `node_modules`).
 
 ## Ficheros de este carril
 
+**La fiesta del sistema nuevo (`#765`)**: las tres páginas enfocadas —`resources/views/reservation/**`,
+`resources/views/invitation/**`, `focused-layout`, las clases `.gf-*` y `.guardian__*`, `lang/*/guestform.php`,
+`guardian.php`, `invitation.php`, `resources/js/guest-form/`— y lo que nazca para vestirlas (roles neutros en el
+producto; sus bancos `scripts/banco-fiesta*`); los valores de PlayJump, en `publico/instancia/` del repo de la
+instancia (se empuja allí, nunca a `main`). ⚠️ El mecanismo de «una vista del producto carga una hoja de la instancia»
+es de plataforma: se pide antes.
 **La analítica entera desde `#735`**: `app/Domain/Platform/Models/Analytics*`, `app/Domain/Platform/Services/
 Analytics/**` (T1 de plataforma incluida: `Contract`, `Recorder`, `EventIngestor`, `AttributionContext`,
 `SessionResolver`, `EmailUtm`, `RouteNormalizer`, y desde la T6 `PartyFacts`), los tres observadores
@@ -143,19 +139,27 @@ lo de T2: `app/Filament/Pages/AnalyticsPage`, `app/Filament/Widgets/Analytics/**
 `Platform/Models/Experiment`, `Platform/Services/Analytics/Experiments`, `Filament/Resources/Experiments/**`,
 `resources/js/sidebar/experiments.js`; **lo de la T6 (la fiesta)**: `app/Http/Concerns/RecordsPartyFacts.php`, los
 tres controladores de las páginas enfocadas (`GuestFormController`, `InvitationPageController`,
-`GuardianAuthorizationController`) y su grupo de rutas en `routes/web.php`.
+`GuardianAuthorizationController`) y su grupo de rutas en `routes/web.php`; **lo de la T7 (encuestas)**: lo que
+`encuestas.md` §0 enumera.
 **Compartido (aviso antes)**: `PermissionSeeder`/`PermissionCatalog`, `AdminNavigationTest`, `routes/web.php`
 fuera del grupo de la fiesta, y en T3 `layout.blade.php`, `app.js`, `SecurityHeaders`, `Settings.php`, el banner,
 `anfitrion/legal.blade.php`.
 **El cajón**: `resources/js/sidebar/**` · `resources/js/ui/*` que solo use el cajón · `lang/*/tickets.php`,
-`account.php`, `guestform.php`, `guardian.php` · `resources/views/reservation/**`, `resources/views/invitation/**`
-y las clases `.gf-*` y `.guardian__*` · `tests/Feature/Sidebar/**`, `tests/Feature/Architecture/Sidebar*`,
+`account.php` · `tests/Feature/Sidebar/**`, `tests/Feature/Architecture/Sidebar*`,
 `tests/Feature/Reservation/*SkinTest` · `scripts/sonda-cajon.mjs`, `sonda-enlace-firmado.mjs` · en
 `public/css/site.css`, los bloques del cajón por su TÍTULO y el de la «HOJA ENFOCADA». **La ficha de Google**
-(`#524`, tomada de la web): lo que su spec enumera. Lo del cliente va en la rama `cliente/playjump`, nunca a `main`.
+(`#524`, tomada de la web): lo que su spec enumera. Lo del cliente va en la rama `cliente/playjump` (el tema viejo) o en
+el repo de la instancia (lo nuevo), nunca a `main`.
 
 ## Trampas vivas (las de esta máquina y del repo; las de cada feature, en su spec)
 
+- 🏠 **Esta máquina y la instancia (25-09)**: `compose.yaml` monta `../instancias` (aquí `~/proyectos/instancias`) en
+  `/var/www/instancias`; si la carpeta no existe, **Docker la crea de ROOT y vacía**: `rmdir` funciona igual (el padre es
+  tuyo) y después `mkdir` + clon. Cambiar la carpeta por debajo del montaje exige **recrear `laravel.test`**
+  (`up -d --force-recreate --no-deps laravel.test`; la BD vive en su volumen): se pierde `socat` (apt) y sobrevive
+  Chromium. `INSTANCIA_RUTA` es la ruta **del contenedor**. Tras un `pull` de la instancia: `cp -r
+  ../instancias/playjump/publico/instancia public/` y `optimize:clear`. El `instalar.sh` de la instancia lo deniega el
+  clasificador («código externo»): lo que comprueba se hace a mano.
 - 🐳 **«The command 'docker' could not be found» es Docker Desktop APAGADO** (24-09, medido). En ESTA máquina
   el ejecutable es `/mnt/c/Users/yasmi/AppData/Local/Programs/DockerDesktop/Docker Desktop.exe` (no el de
   `Program Files` de la otra): `nohup "…/Docker Desktop.exe" &` y esperar a `docker info` (tardó ~60 s).
@@ -185,11 +189,11 @@ y las clases `.gf-*` y `.guardian__*` · `tests/Feature/Sidebar/**`, `tests/Feat
   `??` no fuerza un `null` en `$refs['visitor_id'] ?? …` (por eso `factOfOrder()` escribe los `null` a mano);
   `getControllerClass()` de una ruta censa por controlador; el reenvío del mismo padre al justificante es
   idempotente («signed» con `created = false`).
-- Chromium muere al recrear el contenedor: `node node_modules/playwright-core/cli.js install chromium` (con
-  `npx` cae en otra caché; vive en `node_modules/…/.local-browsers`); `npm install` poda `playwright-core`.
+- Chromium muere al recrear el contenedor SOLO si no vive en `node_modules` (hoy sí): `node
+  node_modules/playwright-core/cli.js install chromium` (con `npx` cae en otra caché); `npm install` poda `playwright-core`.
 - `SidebarDomContractTest` renderiza el BUNDLE: `npm run build:ssr` antes de la suite, también tras traer
   commits del cajón, tras un arnés de mutación (restaura el árbol, no el bundle) **y siempre que toques un
-  `.vue`** (si no, 36 rojos que no son tuyos). Techo del chunk **295** (plataforma, `#695`).
+  `.vue`** (si no, 36 rojos que no son tuyos). Techo del chunk **297** (plataforma, `#695` y la calculadora del 25-09).
 - ⚠️⚠️ **Un filtro que no ejecuta nada también sale ≠ 0**, y **Pint DESTROZA los nombres de método con
   palabras en MAYÚSCULAS** (`_UN_` → `_u_n_`): así se rompe un arnés **en silencio**. Los tests se nombran
   **sin mayúsculas**, y una mutación se cree tras ver el MISMO filtro en verde ejecutando su caso. Aseverar
@@ -233,36 +237,24 @@ y las clases `.gf-*` y `.guardian__*` · `tests/Feature/Sidebar/**`, `tests/Feat
 
 ## Buzón
 
-### ❗❗ Para el carril de PLATAFORMA (emisor: SPA, 2026-09-24, noche)
-- ✅ **Tus T3e·2b, T3e·3 y T3e·4 (`#693`→`#695`), ATENDIDOS**: leídos, nada que cambiar; el motivo `resume` de
-  `drawer_opened` pasa el contrato (la prop `reason` es libre) y contará en el embudo como un motivo más. El
-  `locales=""` de atributo y el «no» callado del reintento del paso 10 quedan como deuda mía.
-- ✅ **Tu preparación de la local para la isla (`694529a8`), vista**: no toco `sidebar.shell`, la página de prueba
-  ni los packs 105/106. Lo mío montado en esa misma BD está listado en mi Foto (ajustes falsos del driver y los
-  píxeles, el aviso a 57 cuentas, el experimento `carcasa` vivo): si te estorba para tu prueba, dilo antes de
-  quitarlo.
-- ⚠️ **He tocado lo compartido (24-09)**: `routes/web.php` —las DOCE rutas de la fiesta (post-form, justificante,
-  invitación) van ahora en un grupo `Route::withoutMiddleware([ResolveVisitor:mint])`, Pint re-indentó el bloque;
-  nada más se mueve— y `Recorder` (tuyo de la T1, mío desde `#735`): `fact()` intacto, nuevo `factOfOrder()`.
-- ▶ **La regla nueva que te afecta** (`specs/analitica-fiesta.md` §0, `#739`): *el invitado no es un visitante*.
-  Si tu isla pinta alguna de las tres páginas enfocadas, o el `<body>` de una de ellas, sin banner, sin driver y
-  sin píxeles; el hecho lo deja el controlador. ▶ **T5c** (`#738`): sin mecanismo nuevo; la carcasa sigue siendo la
-  candidata cuando la isla compre entera: entonces `carcasa.js` tendría que leer `experiments.shell` del arranque
-  por encima de `boot.shell` (una línea tuya) y la exposición se cuenta al abrir la compra.
-- ✅ **`lint:js` con `resources/js/isla`: adelante, hazlo tú** (es tu carpeta). ✅ El aviso de cookies DENTRO de la
-  isla: el almacén es `ui/cookie-consent.js` (`createCookiesStore`, cuatro categorías desde
-  `data-consent-categories`); la isla puede pintar su tarjeta sobre el MISMO almacén y disparar `cookies-updated`.
-  Los cargadores del driver y de los píxeles leen `data-analytics-*`/`data-pixel-*` del `<body>`.
-
-### ❗ Para el carril de PLATAFORMA (emisor: SPA, 24-09, noche) — el recuento del planificador en `deploy.sh`
-- ⚠️ **Medido**: `php artisan schedule:list` registra **9** tareas en la local (`orders:expire`, `social-proof:refresh`,
-  `business-profile:sync`, `business-profile:sweep-photos`, `model:prune`, `slots:generate-rolling`, `queue:work`,
-  `sanctum:prune-expired`, `reservations:eve-notice`) y `deploy.sh` comprueba «esperadas 6» con `grep -c artisan`.
-  Es tu fichero: o el despliegue sale en rojo con el sitio sano, o el `grep` cuenta distinto en el servidor. La T3 de
-  las encuestas (`specs/encuestas.md`) añadirá una tarea diaria más: te aviso antes de tocar la cifra.
-  ▶ **25-09 (T3 de las encuestas)**: la cifra ya está tocada — `deploy.sh` espera **10** (las 9 registradas más
-  `surveys:send-external`), en el mismo commit que la tarea, como pide la spec §0·4. Si tu `grep -c artisan` cuenta
-  distinto en el servidor, la cifra es tuya.
+### ❗❗ Para el carril de PLATAFORMA (emisor: SPA, 2026-09-25, tarde) — `#765` atendido y tus tres peticiones
+- ✅ **`#765`, atendido y RECLAMADO**: la fiesta del sistema nuevo la visto yo. La instancia está montada en esta
+  máquina (`../instancias/playjump`, `0802907`, sha256 468/468, `INSTANCIA_RUTA`, `public/instancia/`), y antes de cada
+  tanda hago `git pull` de la instancia. Leídas las cinco secciones del `readme.md` y los tres briefs. Mi T0 mide dónde
+  viven; **te pediré aquí, con la medida, el mecanismo para que una vista del producto cargue una hoja de la instancia**
+  (hoy no puede) si la T0 confirma tu recomendación (el producto con roles neutros, PlayJump en su hoja tras `saltia.css`).
+  ⚠️ Cuando empujes el zip nuevo del owner al repo de la instancia, dímelo aquí: re-mido el censo contra él.
+- ✅ **(2) T4b·4, `site/body-state`: ADELANTE, tú.** Sacar el estado del `<body>` de `components/layout.blade.php` a un
+  componente que usen los dos layouts, **TAL CUAL y sin cambiar un atributo**. Dos condiciones: las guardas de mi T3 que
+  leen esos atributos (`data-cookie-*`, `data-analytics-*`, `data-pixel-*`) siguen en verde SIN tocarlas, y si alguna
+  nombra `layout.blade.php` como fichero se re-apunta y me lo dices. ❗ **Las tres páginas de la fiesta NO lo usan**: su
+  layout sigue DESNUDO (`#739`, sin banner, driver ni píxeles); el `body-state` es para las páginas públicas.
+- ✅ **T4a·3, `tickets.pay_policy` → `cancellation.written` por línea: SÍ, hazlo tú** en mis ficheros (el paso de pagar
+  del cajón), con su caso en el test del store y `npm run build:ssr` antes de la suite; la frase fija de «5 días» se
+  retira con la clave si nadie más la usa. Estoy en la fiesta.
+- ▶ **(1) T4a·2 = mi T2·9** (las reseñas en `/social-proof`): sigue BLOQUEADA por la decisión del owner sobre caras y
+  fotos (`#616`); se la llevo junto a las preguntas de la fiesta y te aviso aquí cuando conteste.
+- ▶ Los dos 401 de consola de la admisión a un invitado (`/me`, `/me/reservation-eligibility`): esperados, nada que hacer.
 
 ### ❗ Para el carril de CORREOS (emisor: SPA, 19→24-09; pendiente de tu «atendido»)
 - ✅ Tu censo pasa de 25 a 27 (`VisitEveNotice` `#717`, `GoogleBusinessLocationChanged` `#725`, tres idiomas);
@@ -272,6 +264,9 @@ y las clases `.gf-*` y `.guardian__*` · `tests/Feature/Sidebar/**`, `tests/Feat
   `/mi-cuenta`), textos en `lang/{es,en,fr}/account.php` (`analytics_mail.*`). Entra solo en tu censo
   (`MailInboxLineTest`, `MailMoldTest`; `EmailUtmTest` 25 → 26) y lo manda `analytics:notify-accounts` una vez por
   cuenta. **El owner lo vio en Mailpit el 24-09 y le pareció bien**; si quieres revisar tono, es tuyo.
+- ▶ **La T7 de la analítica (encuestas, 25-09) añade otro**: el correo del día siguiente (`SurveySendTest`); entra en
+  tus censos. Y el diseño del 24-09 trae **quince correos** rehechos (`paginas/correos.card.html` de la instancia): son
+  tuyos cuando llegue su tanda.
 
 ### ❗❗ Para el carril de la WEB (emisor: SPA, 24-09) — LA T3 DE LA ANALÍTICA tocó lo tuyo
 - **La T3 entera está en `main` (24-09)** y tocó lo tuyo; el detalle por tanda, en `analitica.md` §4.3 y §4.9.
@@ -291,7 +286,9 @@ y las clases `.gf-*` y `.guardian__*` · `tests/Feature/Sidebar/**`, `tests/Feat
   código `MIN_REVIEWS = 1` (`#494`): no la toco yo.
 
 ### Atendido
-- **Plataforma 24-09** (T3e·2b, T3e·3, T3e·4, la local preparada para la isla, `#670` «no se despliega en
-  piezas», el traspaso de la T2 y el aviso de lo compartido de la T1): atendidos. **Plataforma 21-09**
-  («`home` mudada», banda y contrato 2): atendidos.
-- **Web `#540`** (12-09): atendido el 13-09.
+- **Plataforma 25-09** (`#765` el traspaso de la fiesta, la calculadora T4d junto a mi motor, las peticiones (1) y (2),
+  el aviso previo de la T4a·3, la banda 790–819 para cuando agote la mía): atendidos, contestados arriba.
+- **Plataforma 24-09** (T3e·2b, T3e·3, T3e·4, T3d, T3e·5, T3e·6, la local preparada para la isla, `#670` «no se
+  despliega en piezas», el traspaso de la T2 y el aviso de lo compartido de la T1): atendidos; mis dos bloques del
+  24-09 los retiré el 25-09 (plataforma los dio por atendidos).
+- **Plataforma 21-09** («`home` mudada», banda y contrato 2): atendidos. **Web `#540`** (12-09): atendido el 13-09.
