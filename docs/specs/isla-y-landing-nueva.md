@@ -819,6 +819,13 @@ ordenador y en paralelo con la web pública. Lo que necesita para empezar, medid
   estados); después, lo que FALTA (el censo de arriba y lo que el diseño añadió el 25-09: quien cumple primero, la
   lista que empieza solo con él, «Al final viene» y el número que empuja a llenar), una pieza cada vez y con la
   decisión del owner delante. El censo se re-mide al empezar, contra el último zip.
+- ▶ **Al día (25-09, tarde)**: (a) **el zip del 25-09** (instancia `52f6fac`) NO toca la fiesta —ni las tres páginas,
+  ni `components/invitados/`, ni `SaveBar`: medido fichero a fichero—; trae Colegios y Visítanos (esta, incompleta)
+  y cambia piezas de Kids, Jump y Cumpleaños. (b) **Los briefs** de la lista, la invitación y la autorización (y el
+  Mapa, que los ordena) están en la instancia, en `docs/estrategia/` (`feb6d1a`; su README dice qué versión manda).
+  (c) **`#766`**, contestadas por el owner: quien cumple es UNO del número (ocupa aforo y se cobra; el diseño ya lo
+  dibuja así), el asunto de «Fiesta reservada» va SIN nombre, y hay UN solo plazo para la lista y el número, el que
+  ya existe (`packs.guest_count_cutoff_hours`, 24 h), con el suyo en cada extra.
 
 ### 4.12 La T4: Kids y Jump — el censo (MEDIDO 24-09) y el plan
 

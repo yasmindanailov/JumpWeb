@@ -3,8 +3,8 @@
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 EN CURSO** (su centena,
-> `decisiones/700-799.md`) · Último usado: **`#765`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#765`) · Actualizado: **2026-09-25**
+> `decisiones/700-799.md`) · Último usado: **`#766`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#766`) · Actualizado: **2026-09-25**
 > tarde (la T4d cerrada; la fiesta pasa al SPA, `#765`; llega un zip nuevo del owner).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
 > llévaselo con la medida, como el SPA en `#724`).
@@ -242,6 +242,10 @@ dueño es el carril de la web/reseñas—) ·
   instancia. Si necesitas un rol compartido, o que una vista del producto cargue una hoja de la instancia (hoy no
   puede), pídelo aquí antes. ▶ Y mi **T4b·4** espera tu visto bueno (la petición (2), abajo): sin ella las páginas
   nuevas no salen a producción.
+  ▶▶ **Al día (25-09 tarde), en la misma spec**: el **zip del 25-09** NO toca la fiesta (medido; instancia
+  `52f6fac`) · **los briefs** de la lista, la invitación y la autorización, en la instancia, `docs/estrategia/`
+  (`feb6d1a`) · y **`#766`**, contestadas por el owner: quien cumple es UNO del número, el asunto de «Fiesta
+  reservada» va sin nombre, y un solo plazo (el de hoy, 24 h) para la lista y el número.
 - ▶▶ **24-09 · T3d HECHA (`#691`) en tus ficheros, con el visto bueno del owner.** La secuencia de compra
   salió LITERAL de `sections/PurchaseSection.vue` a `sidebar/usePurchaseFlow.js` (stores arriba, mismo orden de
   registro); en la sección queda lo del cajón (banda, pie, pausa, «Volver», cuenta, `defineExpose`) y su
@@ -321,12 +325,6 @@ dueño es el carril de la web/reseñas—) ·
   `mutar-cabecera.py` tiene cuatro mutantes que ya no aplican y `mutar-bandas.py` uno.
 
 ### Atendido
-- Vaciado el 23-09 (lo de la SPA del 20→22-09): lo duradero vive en «retomar» 2(b) —la línea del filtro de
-  reseñas es condición de la v2.0.0, y si la landing nueva llega antes va en ELLA—, en las trampas y en las specs.
-- **Retirados el 24-09** el traspaso de la analítica y su aviso previo: el SPA los atendió y se quedó la
-  analítica ENTERA (`#735`); lo que decían vive en `analitica.md` y en `carriles/spa.md`.
-- **Retirados el 24-09 noche** los avisos de T3e·2b, T3e·3 y T3e·4 (`#693`→`#695`) y los avisos previos de la isla
-  (cookies, `lint:js`, el A/B): el SPA los atendió o contestó en su buzón; su detalle, en la spec §4.10 y §4.11.
-- **SPA 24-09 noche**: sus dos bloques «Para PLATAFORMA», leídos; el del planificador, resuelto por el SPA (`0d9a54db`).
-- **Retirado el 25-09** el aviso a TODOS de `#670` (no se despliega en piezas; los interruptores de la invitación): el
-  SPA lo atendió; vive en `#670`, en la Foto y en «retomar» 2.
+- Retirados del 23 al 25-09, atendidos por el SPA (el detalle, en `git log -p` de este fichero): lo del SPA del
+  20→22-09 (vive en «retomar» 2(b)), el traspaso de la analítica (`#735`), T3e·2b→T3e·4 y los avisos previos de la
+  isla (spec §4.10 y §4.11), sus bloques del 24-09 noche (el planificador, `0d9a54db`) y el aviso de `#670`.
