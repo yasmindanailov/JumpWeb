@@ -1,5 +1,6 @@
 {
     "slug": "cambiame",
     "nombre": "Nombre de la instalación",
-    "contrato": 2
+    "contrato": 2,
+    "hojas": {}
 }

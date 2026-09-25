@@ -39,6 +39,9 @@ class InstanceViews
     /** El fichero donde el paquete declara con qué producto está hecho para funcionar. */
     public const MANIFIESTO = 'instancia.json';
 
+    /** La carpeta de `public/` con el material de la instancia (hojas, fuentes, medios), copiada de su `publico/`. */
+    public const PUBLICO = 'instancia';
+
     /**
      * **La versión del CONTRATO DE INSTANCIA que sirve este producto.**
      *
@@ -342,15 +345,9 @@ class InstanceViews
      */
     private function avisarSiElContratoNoCuadra(string $raiz): void
     {
-        $fichero = $raiz.DIRECTORY_SEPARATOR.self::MANIFIESTO;
+        $manifiesto = self::manifiesto($raiz);
 
-        if (! is_file($fichero)) {
-            return;
-        }
-
-        $manifiesto = json_decode((string) file_get_contents($fichero), true);
-
-        if (! is_array($manifiesto) || ! isset($manifiesto['contrato'])) {
+        if ($manifiesto === null || ! isset($manifiesto['contrato'])) {
             return;
         }
 
@@ -360,6 +357,76 @@ class InstanceViews
                 'producto' => self::CONTRATO,
             ]);
         }
+    }
+
+    /**
+     * **EL CONTRATO DE HOJAS** (`#769`; lo pidió el SPA para la fiesta del sistema nuevo, `fiesta-sistema-nuevo.md` §3.3·b):
+     * las hojas de la INSTANCIA que carga una SUPERFICIE del producto —una vista suya con roles neutros, como la isla o
+     * las páginas de la fiesta—, en su orden, listas para la prop `hojas` de `<x-pagina>` (rutas bajo `public/`).
+     *
+     *     "hojas": { "fiesta": ["css/fuentes.css", "css/saltia.css", "css/fiesta.css"] }      (`instancia.json`)
+     *     InstanceViews::hojas('fiesta')  →  ['instancia/css/fuentes.css', 'instancia/css/saltia.css', …]
+     *
+     * ▶ La instancia NOMBRA sus ficheros y el producto no: por eso es contrato y no la convención «si existe
+     * `fiesta.css`», que obligaría al producto a conocer un nombre de la instancia y no admitiría una segunda hoja.
+     *
+     * ⚠️ **Solo hojas `.css` que EXISTAN dentro de `public/instancia/`** (lo que `instalar.sh` copia de su `publico/`),
+     * resueltas con `realpath`: nada absoluto, nada con `..`, nada que salga por un enlace. Una entrada que no cuadra
+     * se queda fuera con aviso en el log y las demás siguen, como en `InstancePages`: un manifiesto mal escrito deja
+     * la página sin una hoja, nunca en blanco. Sin paquete, sin la clave o sin la superficie: una lista vacía, y la
+     * vista sale con sus valores neutros.
+     *
+     * ⚠️ **Y `CONTRATO` NO sube** (el SPA proponía 2 → 3): es aditivo, como las páginas de la T4b —un paquete sin
+     * `hojas` sigue exactamente igual— y el aviso compara por igualdad.
+     *
+     * @return list<string>
+     */
+    public static function hojas(string $superficie): array
+    {
+        $raiz = self::rutaDelPaquete();
+
+        if ($raiz === null || preg_match('/^[a-z][a-z0-9-]*$/', $superficie) !== 1) {
+            return [];
+        }
+
+        $declaradas = self::manifiesto($raiz)['hojas'][$superficie] ?? [];
+        $base = realpath(public_path(self::PUBLICO));
+
+        if (! is_array($declaradas) || $base === false) {
+            return [];
+        }
+
+        $hojas = [];
+        foreach ($declaradas as $ruta) {
+            $valida = is_string($ruta)
+                && preg_match('#^[A-Za-z0-9_-]+(?:/[A-Za-z0-9_.-]+)*\.css$#', $ruta) === 1
+                && ! str_contains($ruta, '..');
+            $real = $valida ? realpath($base.DIRECTORY_SEPARATOR.$ruta) : false;
+
+            if ($real === false || ! is_file($real) || ! str_starts_with($real, $base.DIRECTORY_SEPARATOR)) {
+                Log::warning('instancia: una hoja declarada no vale y se queda fuera', ['superficie' => $superficie, 'hoja' => $ruta]);
+
+                continue;
+            }
+
+            $hojas[] = self::PUBLICO.'/'.$ruta;
+        }
+
+        return array_values(array_unique($hojas));
+    }
+
+    /** El manifiesto del paquete (`instancia.json`), o `null` si no hay o no se lee: no es un error (spec §4.3). */
+    private static function manifiesto(string $raiz): ?array
+    {
+        $fichero = $raiz.DIRECTORY_SEPARATOR.self::MANIFIESTO;
+
+        if (! is_file($fichero)) {
+            return null;
+        }
+
+        $manifiesto = json_decode((string) file_get_contents($fichero), true);
+
+        return is_array($manifiesto) ? $manifiesto : null;
     }
 
     /**

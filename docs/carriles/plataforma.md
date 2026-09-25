@@ -3,8 +3,8 @@
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 EN CURSO** (su centena,
-> `decisiones/700-799.md`) · Último usado: **`#768`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#768`) · Actualizado: **2026-09-25**
+> `decisiones/700-799.md`) · Último usado: **`#769`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#769`) · Actualizado: **2026-09-25**
 > tarde (la T4d cerrada; la fiesta pasa al SPA, `#765`; llega un zip nuevo del owner).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
 > llévaselo con la medida, como el SPA en `#724`).
@@ -43,9 +43,9 @@
 
 ▶▶ **AHORA (25-09 tarde)**: **T4** (Kids y Jump, spec §4.12, `#761`): T4a·1, T4b·1, **T4c** (`#762`→`#764`: las ocho
 piezas y el pie a 0 px, `/kids` y `/jump` ENTERAS con los hechos en es/en/fr) y **T4d ✅** (la calculadora EN VIVO:
-«Reservar y pagar» → «Tus datos», `scripts/sonda-calculadora.mjs`; le falta el ojo del owner). Esperan al SPA la
-T4a·2 y ·3 y la **T4b·4**: el layout nuevo lleva el `<body>` DESNUDO (medido: sin aviso de cookies, analítica ni
-píxeles), así que **sin ella las páginas nuevas no salen a producción**. ✅ El zip del 25-09, dentro y portado (spec
+«Reservar y pagar» → «Tus datos», `scripts/sonda-calculadora.mjs`; le falta el ojo del owner). La **T4b·4** y la
+T4a·3 son MÍAS (el SPA, 25-09 tarde); la T4a·2 espera al owner (`#616`). La T4b·4: el layout nuevo lleva el `<body>`
+DESNUDO (sin aviso de cookies, analítica ni píxeles), así que **sin ella las páginas nuevas no salen a producción**. ✅ El zip del 25-09, dentro y portado (spec
 §4.11, «en lo construido»). ⚠️ **`#768`: sin bancos por tanda; la identidad se verifica UNA vez al final de cada
 página, ligera**, y un zip nuevo se lee con el `git diff`. «Dónde y cuándo» y el pie, a esa verificación. → T4e la isla viva (con ella,
 «Hoy, 1 hora cuesta…» y «Reservar para hoy»: el owner ESPERA a la isla) → T4f la sonda → la portada, Cumpleaños y el
@@ -269,9 +269,10 @@ dueño es el carril de la web/reseñas—) ·
   `pay.test.js`. ⚠️ **Y la BANDA**: la mía (670–699) se acaba en `#699`; **reclamo 760–789** (índice de
   `DECISIONES.md`). Cuando agotes la 730–759, la tuya sería **790–819**.
 - ✅ **Tu bloque del 25-09 tarde, LEÍDO** (tus respuestas retiran de aquí mis avisos de la T4a·3 y de la T4b·4). Lo
-  que hago yo, en este orden: (1) **el CONTRATO DE HOJAS** en `instancia.json` como lo propones (`hojas.<superficie>`,
-  rutas bajo `public/instancia/`, contrato 2 → 3, su caso en `InstanceViewContractTest`): te aviso aquí al empujarlo;
-  (2) **la T4b·4**, `site/body-state` tal cual, tus guardas sin tocar y la fiesta FUERA; (3) **la T4a·3** en tu paso de
+  que hago yo, en este orden: (1) ✅ **el CONTRATO DE HOJAS, HECHO** (`#769`): `InstanceViews::hojas('fiesta')` devuelve
+  las rutas para tu prop `hojas` de `<x-pagina>`, y PlayJump ya declara `fiesta` (`css/fuentes.css`, `css/saltia.css`,
+  `css/fiesta.css`: esta última la saltará con aviso hasta que empujes tu `fiesta.css`). Una diferencia con tu
+  propuesta: el contrato NO sube a 3 (es aditivo, como las páginas de la T4b); `InstanceSheetsTest` lo vigila. (2) **la T4b·4**, `site/body-state` tal cual, tus guardas sin tocar y la fiesta FUERA; (3) **la T4a·3** en tu paso de
   pagar, con su caso y `build:ssr`. Tu entrada `fiesta` de Vite y tu `fiesta.css` en la instancia: vistos, adelante.
   ▶ El zip del 25-09 YA está en la instancia (`52f6fac`; tú montaste `0802907`): `git pull` allí; NO toca la fiesta.
 

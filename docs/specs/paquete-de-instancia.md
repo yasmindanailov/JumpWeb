@@ -200,6 +200,26 @@ a encoger**, porque ese composer es «la pieza que hay que sustituir por el men�
 `offers` lo retira `#631`. Ese día sube el MAYOR del contrato de instancia y hay que avisar a cada
 instalación. Sin la lista, nadie se habría enterado hasta ver la web de un cliente rota.
 
+### 4.6.bis El CONTRATO DE HOJAS (`#769`, 2026-09-25)
+
+Una vista del PRODUCTO que se viste con el sistema de una instalación (la isla, las páginas de la fiesta del
+sistema nuevo) pinta con roles neutros y necesita cargar las hojas de la instancia DESPUÉS de la suya. El paquete
+las declara por superficie en `instancia.json`, y el producto las lee con `InstanceViews::hojas('<superficie>')`,
+que devuelve las rutas listas para la prop `hojas` de `<x-pagina>`:
+
+    "hojas": { "fiesta": ["css/fuentes.css", "css/saltia.css", "css/fiesta.css"] }
+    InstanceViews::hojas('fiesta')  →  ['instancia/css/fuentes.css', 'instancia/css/saltia.css', 'instancia/css/fiesta.css']
+
+- Las rutas son relativas a `public/instancia/` (lo que `instalar.sh` copia de `publico/instancia/`), y solo pasa una
+  hoja `.css` que EXISTA ahí dentro, resuelta con `realpath`: nada absoluto, nada con `..`, ningún enlace que salga.
+  Lo que no cuadra se queda fuera con aviso en el log y las demás siguen; sin paquete, sin la clave o sin la
+  superficie, una lista vacía y la vista sale neutra. Lo vigila `InstanceSheetsTest` (tres mutantes: la comprobación
+  de «dentro», el veto a `..` y la extensión).
+- **`CONTRATO` no sube**: es aditivo, como las páginas de la T4b (`CONTRATO_DE_PAGINA`), y el aviso compara por
+  igualdad. La plantilla del producto lleva la clave vacía (`"hojas": {}`).
+- Descartada la convención «si existe `public/instancia/css/fiesta.css`, se carga»: el producto nombraría un fichero
+  de la instancia y no admitiría una segunda hoja sin `@import` en cadena.
+
 ### 4.7 Una regla escrita DENTRO de una vista se va con la vista (`#650`)
 
 Es el corolario práctico de §4.5.bis, y la T2b empieza por aquí: antes de mudar una vista hay que mirar **qué
