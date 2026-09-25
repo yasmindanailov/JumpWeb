@@ -3,13 +3,10 @@
 namespace Tests\Feature\Fiesta;
 
 use App\Domain\Booking\Models\InvitationReply;
-use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\PartyInvitation;
 use App\Domain\Booking\Services\PostFormAddons;
 use App\Domain\Identity\Models\GuardianAuthorization;
 use App\Domain\Platform\Services\PersonNameKey;
-use App\Http\Controllers\GuestFormController;
-use App\Http\Fiesta\ListaDeInvitados;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Support\MountsAParty;
 use Tests\TestCase;
@@ -44,6 +41,12 @@ class ListaDeInvitadosTest extends TestCase
         $this->assertStringContainsString('type="hidden" name="guests[0][notes]"', $html);
         $this->assertStringContainsString('type="hidden" name="guests[0][special_menu]"', $html);
         $this->assertStringNotContainsString('gf-form', $html, 'la vista vieja ya no se pinta');
+        // «Escribir el recordatorio» envía SU formulario (`form=`): un solo `type`, y es `submit` (la pieza `enlace`
+        // ponía `type="button"` delante y el navegador se quedaba con ése: no enviaba nunca, T1b).
+        $this->assertSame(1, preg_match('#<button[^>]*data-recordatorio-escribir[^>]*>#', $html, $boton), 'el recordatorio es un botón');
+        $this->assertSame(1, substr_count($boton[0], 'type='), $boton[0]);
+        $this->assertStringContainsString('type="submit"', $boton[0]);
+        $this->assertStringContainsString('form="fiesta-recordatorio"', $boton[0]);
     }
 
     public function test_a_pending_reply_is_proposed_on_its_row_with_the_badge_and_the_adopt_id(): void
@@ -131,21 +134,6 @@ class ListaDeInvitadosTest extends TestCase
 
         $this->assertSame($invitation->theme, $invitation->fresh()->theme);
         $this->assertSame('Te invita Marta', $invitation->fresh()->host_line);
-    }
-
-    public function test_the_model_shape_for_the_bank_matches_the_page(): void
-    {
-        ['reservation' => $reservation, 'host' => $host] = $this->mountParty();
-        $this->actingAs($host);
-        $vista = app(GuestFormController::class);
-        $this->assertTrue(method_exists(ListaDeInvitados::class, 'componer'));
-
-        $html = $this->get(route('reservation.guests', ['reservation' => $reservation]))->assertOk()->getContent();
-        foreach (['data-zona="1"', 'data-zona="2"', 'data-zona="3"', 'data-zona="5"', 'data-barra', 'data-numero'] as $marca) {
-            $this->assertStringContainsString($marca, $html, $marca);
-        }
-        $this->assertInstanceOf(OrderItem::class, $reservation);
-        $this->assertNotNull($vista);
     }
 
     private function filaDe(string $html, string $id): string

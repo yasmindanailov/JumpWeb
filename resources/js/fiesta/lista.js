@@ -147,6 +147,15 @@ function lista(form) {
         fila.classList.toggle('fi-fila--open', si);
         q('[data-fila-abrir]', fila)?.setAttribute('aria-expanded', si ? 'true' : 'false');
     };
+    // La última fila VISIBLE de cada lista es la que va sin borde (el diseño calcula `last` sobre las que pinta): con
+    // las fichas vacías escondidas por `js` y con el filtro, la marca del servidor (la última posición) se mueve.
+    const marcaUltimas = () => {
+        [...new Set(filas().map((f) => f.parentElement))].forEach((ul) => {
+            const hijas = qa(':scope > [data-fila]', ul);
+            const visibles = hijas.filter((f) => !f.hidden && !f.classList.contains('fi-fila--vacia'));
+            hijas.forEach((f) => f.classList.toggle('fi-fila--last', f === visibles[visibles.length - 1]));
+        });
+    };
     form.addEventListener('click', (e) => {
         const cab = e.target.closest('[data-fila-abrir]');
         if (cab) { const fila = cab.closest('[data-fila]'); abre(fila, !fila.classList.contains('fi-fila--open')); return; }
@@ -220,7 +229,7 @@ function lista(form) {
         fila.classList.remove('fi-fila--vacia');
         fila.dataset.origen = 'mano';
         pintaFila(fila);
-        q('[data-vacia]', form)?.setAttribute('hidden', '');
+        q('[data-lista-vacia]', form)?.setAttribute('hidden', '');
 
         return fila;
     };
@@ -302,6 +311,7 @@ function lista(form) {
             const et = q('[data-filtro-etiqueta]', chip);
             if (et && filtro) et.innerHTML = `${t(`la_lista.filtro.${filtro}`, filtro)}<span class="pz-etiqueta__cuenta">${q(`[data-cuenta="${filtro}"]`, form)?.textContent ?? ''}</span>`;
         }
+        marcaUltimas();
         if (filtro !== null) q('[data-la-lista]', form)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
     qa('[data-filtro]', form).forEach((b) => b.addEventListener('click', () => filtra(b.dataset.filtro)));
@@ -368,6 +378,7 @@ function lista(form) {
     };
     let recuperado = false;
     const actualiza = () => {
+        marcaUltimas();
         avisaNumero();
         const n = cambios();
         if (n > 0 || repasar > 0) {
@@ -437,7 +448,9 @@ function lista(form) {
     filas().forEach((f) => { pintaFila(f); abre(f, false); });
     const primeraPendiente = filas().find((f) => f.dataset.completa === '0' && !f.classList.contains('fi-fila--vacia') && f.dataset.respuesta !== 'no' && camposDe(f).name);
     if (primeraPendiente) abre(primeraPendiente, true);
-    if (q('[data-vacia]', form) && nombres().length > 0) q('[data-vacia]', form).setAttribute('hidden', '');
+    // ⚠️ El mensaje de la lista vacía es `[data-lista-vacia]`: `[data-vacia]` es la marca de CADA fila (`pintaFila`) y
+    //    con ese selector se escondía la primera fila con nombre (T1b).
+    if (q('[data-lista-vacia]', form) && nombres().length > 0) q('[data-lista-vacia]', form).setAttribute('hidden', '');
     actualiza();
 }
 

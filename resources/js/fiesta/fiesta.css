@@ -479,8 +479,10 @@ a.inv-prueba svg{color:var(--fiesta-sol-600)}a.inv-prueba:hover{text-decoration:
 
 /* ══ LA PÁGINA: la lista de invitados (`paginas/lista-invitados.card.html`, su `<style>` tal cual) ════════════ */
 body.fiesta-lista { margin: 0; background: var(--bg-subtle); font-family: var(--font-ui); color: var(--text-body); }
-.fiesta-lista a { color: var(--text-link); }
-.fiesta-lista a:hover { color: var(--text-link-hover); }
+/* Con la especificidad del `a{}` del diseño (0,0,1): un `<a>` con cara de botón (`.pz-boton--quiet`, «Reenviar la
+   invitación») conserva su color; con `.fiesta-lista a` (0,1,1) se lo pisaba el color de enlace (T1b, 1.121 px). */
+:where(.fiesta-lista) a { color: var(--text-link); }
+:where(.fiesta-lista) a:hover { color: var(--text-link-hover); }
 .pli{max-width:760px;margin:0 auto;padding:clamp(16px,4vw,28px) var(--gutter) 48px;box-sizing:border-box;display:grid;gap:16px}
 .pli-cab{display:grid;gap:10px;padding:4px 2px 4px}
 .pli-logo{height:40px;width:auto;margin-bottom:8px}

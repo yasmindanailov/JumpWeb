@@ -6,7 +6,7 @@
 > `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: **`isla-y-landing-nueva.md`
 > §4.11 «El traspaso al SPA»** (la tarea en curso, `#765`) · `celebracion-e-invitacion.md` §0 · `waiver-por-reserva.md` §0 ·
 > `encuestas.md` §0 · `analitica-fiesta.md` §0 · `analitica.md` §0 y §4.5 · `google-business-profile.md` §0 ·
-> `sidebar-spa.md` §0 · Actualizado: 2026-09-25 (noche, T1a, T2 y T3 de la fiesta en `main`).
+> `sidebar-spa.md` §0 · Actualizado: 2026-09-25 (noche, T1a→T3 y T1b de la fiesta en `main`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`). El
 > contador de la suite va en el trailer del commit (`#618`), no aquí. **Se muda, no se raspa**: el detalle de
 > una feature baja a su spec (las trampas por tanda de la analítica T1→T5 viven en `analitica.md` §4.9,
@@ -41,21 +41,16 @@
 - ✅ **Esta máquina, montada para la fiesta (25-09)**: la instancia clonada en `~/proyectos/instancias/playjump` (el
   diseño con su sha256 verificado), `INSTANCIA_RUTA=/var/www/instancias/playjump` en el `.env` (ruta DEL CONTENEDOR),
   `public/instancia/` copiado de `publico/instancia/` (ignorado por git); la receta entera, en Trampas vivas 🏠.
-- ✅ **LA FIESTA DEL SISTEMA NUEVO: T1a y T2 EN `main` (25-09 noche)**. **T1a**, la lista con lo que HAY, portada 1:1
-  (`ListaDeInvitados`, `x-pagina-enfocada`, 12 piezas del núcleo + 7 de la fiesta, las zonas, la hoja con roles,
-  `lista.js`/`logica.js`, `lang/*/fiesta.php`): 46 pares a **0 px** con control, `PaletaNeutraTest` (cazó cuatro valores
-  de PlayJump en los respaldos «neutros»), seis guardas re-apuntadas; la hoja de PlayJump en el repo de la instancia
-  (`a3da88c`). **T2**, la invitación y su recibo con lo que HAY (**`#744`**: recibo directo tras contestar, nombre de
-  pila de la cuenta, descripción del pack): `InvitacionPagina`, `x-fiesta.rsvp-bar`, `views/fiesta/invitacion/*`,
-  `invitacion.js`, el bloque `.inv-*`; 24 h y caducado sin 403; idioma por `lang.switch`; «Su ficha» que se guarda sola;
-  sin «¿vas tú con él?». **Pasada ligera** (`#768`): viva y cerrada a 390 y 1280, **0 px** en los pares de diagnóstico y
-  4.566–5.082 px en los reales, todos en la línea de privacidad que el mockup no dibuja. **T3**, la autorización
-  (**`#745`**: la fecha y la relación se quedan, el adulto en UNA casilla, teléfono obligatorio): `Autorizacion`,
-  `x-fiesta.firma`, `x-pieza.selector`, `views/fiesta/autorizacion`, el descargo en el flujo, el Listo del brief;
-  pasada ligera **0 px en `firmada`** y en los diagnósticos. ❗ Cazado en T3: `view()->shared('site')` es `null` en un
-  controlador (el composer corre al pintar) y las tres páginas decían «JumpWeb» sin «Cómo llegar»; `Sitio::datos()` lo
-  arregla. Las páginas vivas se visten con PlayJump (`#769`). Lo que enseñó: spec §4.7. ▶ Sigue **T1b** (la pasada
-  ligera de la lista) y **el ojo del owner sobre las tres**.
+- ✅ **LA FIESTA DEL SISTEMA NUEVO: T1a, T2, T3 y T1b EN `main` (25-09 noche)** — las tres páginas con lo que HAY, a
+  0 px en su pasada ligera (`#768`); el detalle de cada tanda, en la spec §4.6 y lo que enseñó en §4.7. **T1a** la lista
+  (46 pares de piezas con control; la hoja de PlayJump en la instancia, `a3da88c`) · **T2** la invitación y su recibo
+  (**`#744`**) · **T3** la autorización (**`#745`**; cazó que `view()->shared('site')` es `null` en un controlador:
+  `Sitio::datos()`; las vivas se visten con PlayJump, `#769`) · **T1b** la pasada de la PÁGINA de la lista: `lista-recien` y
+  `lista-guardado-diagnostico` a página entera, **4 de 4 a 0 px** con control de 1 px (`mutar-fiesta.sh`, dos etapas),
+  `scripts/banco-fiesta/modelos.php` + `FiestaModeloTest` (el banco y los tres controladores, la misma forma). ❗ La T1b
+  cazó CUATRO defectos de la T1a que el banco de piezas no veía (la primera fila con nombre ESCONDIDA por `[data-vacia]`,
+  el recordatorio que no enviaba, el borde de la última fila, el color de «Reenviar»): un banco de piezas no ve la
+  página. ▶ Sigue **T4** (la piel vieja fuera) y **el ojo del owner sobre las tres**.
 - ✅ **LA ANALÍTICA, ENTERA (`#735`), T1→T7 en `main` y vista por el owner en vivo** (24 y 25-09): T2 (el cuadro), T3
   (consentimiento, driver, píxeles, `/cookies`), T4 (la 360, segmentos, opt-in), T5a·T5b (experimentos; **T5c decidida en
   `#738`**: sin mecanismo de textos, la hipótesis la nombra el owner tras la v2.0.0), **T6 la fiesta** (`#739`: *el invitado
@@ -94,12 +89,12 @@
 
 1. ❗❗❗ **LA FIESTA DEL SISTEMA NUEVO (`#765`) — `specs/fiesta-sistema-nuevo.md` ✅ APROBADA (`#743`, 25-09: las
    ocho respuestas en su §7; ❗ «Ver el parque» va ENCENDIDO con el vídeo de portada, no la recomendada)**. Orden:
-   T1a ✅ · T2 ✅ · T3 ✅ (25-09: las tres páginas con lo que HAY; la invitación y la autorización a 0 px en su pasada
-   ligera) → **T1b la pasada LIGERA de la lista** (A `PliPagina`, B la Blade con el modelo desde el MISMO `datos.js`,
-   como `invitacion-viva` y `autorizacion-recibo` en `banco-fiesta.php`) y **el ojo del owner en `localhost:8081`** (la
-   lista de la 1076, `/invitacion/XezlOftP36QI`, su recibo y `/autorizacion/1076` por su enlace firmado) → **T4
-   retirar la piel vieja** (`.gf-*`, `.guardian__*`, `focused-layout` si
-   nadie lo usa, `cajon.css` regenerada; `CONVENCIONES §3.quater`) → **F1…Fn, lo que FALTA**, una pieza por tanda con la
+   T1a ✅ · T2 ✅ · T3 ✅ · T1b ✅ (25-09: las tres páginas con lo que HAY, a 0 px en su pasada ligera) → **el ojo del
+   owner en `localhost:8081`** (la lista de la 1076, `/invitacion/XezlOftP36QI`, su recibo y `/autorizacion/1076` por su
+   enlace firmado; las URL firmadas, en el resumen de la sesión o se regeneran con `signedRoute`) → **T4 retirar la piel
+   vieja** (`.gf-*`, `.guardian__*`, `focused-layout` si nadie lo usa —las encuestas aún—, `public/js/guest-form/logic.js`,
+   `resources/views/invitation/*` y `reservation/authorization.blade.php`, las claves sin uso de `guardian.php` e
+   `invitation.php`, `cajon.css` regenerada; `CONVENCIONES §3.quater`) → **F1…Fn, lo que FALTA**, una pieza por tanda con la
    decisión del owner. Cada tanda: `git pull` de la instancia + `sha256sum -c`, el banco con control, las guardas de
    piel re-apuntadas o retiradas con su motivo, sonda de VENTANA de las tres y el ojo del owner en `localhost:8081`
    (la página viva sale NEUTRA hasta que plataforma haga el contrato de hojas: mientras, el banco carga las hojas a
@@ -130,9 +125,9 @@
 `resources/views/invitation/**`, `focused-layout`, las clases `.gf-*` y `.guardian__*`, `lang/*/guestform.php`,
 `guardian.php`, `invitation.php`, `resources/js/guest-form/`— y lo nuevo (T1a→T3): `app/Http/Fiesta/` (los modelos de
 página, `Temas`, `Marca`, `Sitio`), `resources/views/fiesta/**`, `components/{fiesta,pieza}/`, `components/pagina-enfocada.blade.php`,
-`resources/js/fiesta/`, `lang/*/fiesta.php`, `tests/Feature/Fiesta/`, `scripts/banco-fiesta.php`, `mutar-fiesta.sh`;
-los valores de PlayJump, en `publico/instancia/` del repo de la instancia (se empuja allí, nunca a `main`). ⚠️ El
-mecanismo de «una vista del producto carga una hoja de la instancia» es de plataforma: se pide antes.
+`resources/js/fiesta/`, `lang/*/fiesta.php`, `tests/Feature/Fiesta/`, `scripts/banco-fiesta.php`, `banco-fiesta/modelos.php`,
+`mutar-fiesta.sh`; los valores de PlayJump, en `publico/instancia/` del repo de la instancia (se empuja allí, nunca a
+`main`). El contrato de hojas (`InstanceViews::hojas`) es de plataforma (`#769`).
 **La analítica entera desde `#735`**: `app/Domain/Platform/Models/Analytics*`, `app/Domain/Platform/Services/
 Analytics/**` (T1 de plataforma incluida: `Contract`, `Recorder`, `EventIngestor`, `AttributionContext`,
 `SessionResolver`, `EmailUtm`, `RouteNormalizer`, y desde la T6 `PartyFacts`), los tres observadores
@@ -163,6 +158,8 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 
 ## Trampas vivas (las de esta máquina y del repo; las de cada feature, en su spec)
 
+- **El trailer lleva el TOTAL de la suite** (la línea `Tests: N` del gate, con los omitidos dentro), no los «passed» de
+  `--compact`: 6077 passed + 1 skipped se declara 6078, o el gate dice que el commit MIENTE (26-09).
 - 🏠 **Esta máquina y la instancia (25-09)**: `compose.yaml` monta `../instancias` (aquí `~/proyectos/instancias`) en
   `/var/www/instancias`; si la carpeta no existe, **Docker la crea de ROOT y vacía**: `rmdir` funciona igual (el padre es
   tuyo) y después `mkdir` + clon. Cambiar la carpeta por debajo del montaje exige **recrear `laravel.test`**

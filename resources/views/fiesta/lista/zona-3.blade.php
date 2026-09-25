@@ -33,7 +33,8 @@
             @else
                 <div class="pli-fila-num" style="margin-top: 16px;"><p class="pli-frase ok" data-numero-frase><x-lucide name="circle-check" :size="20" />{{ __('fiesta.lista.numero.listo', ['n' => $num['valor']]) }}</p><x-pieza.boton variant="ghost" size="sm" data-numero-cambiar><x-slot:izquierda><x-lucide name="pencil" :size="16" /></x-slot:izquierda>{{ __('fiesta.lista.numero.cambiar') }}</x-pieza.boton></div>
                 @if ($m['invitacion'] !== null && $m['invitacion']['respuestas_abiertas'])
-                    <div style="margin-top: 16px;"><x-pieza.enlace size="sm" :href="$m['invitacion']['whatsapp']" external><x-slot:icono><x-lucide name="message-circle" :size="15" /></x-slot:icono>{{ __('fiesta.lista.numero.alguien_mas') }}</x-pieza.enlace></div>
+                    {{-- Como el diseño: `target="_blank"` a secas, sin la cola de `external` (la flecha es de «Cómo llegar»). --}}
+                    <div style="margin-top: 16px;"><x-pieza.enlace size="sm" :href="$m['invitacion']['whatsapp']" target="_blank" rel="noopener noreferrer"><x-slot:icono><x-lucide name="message-circle" :size="15" /></x-slot:icono>{{ __('fiesta.lista.numero.alguien_mas') }}</x-pieza.enlace></div>
                 @endif
             @endif
         </div>

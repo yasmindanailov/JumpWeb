@@ -232,7 +232,8 @@ Medido en `GuestFormController::show()` (sus 30 claves), `InvitationPageControll
 - Por página y **estado**, dos HTML en el mismo marco: **A** monta la página del diseño SIN su barra de prueba
   (`PliPagina` con el `id` del estado; en la invitación y la autorización, sus vistas con su estado), con
   `styles.css`, React, Babel, `_ds_bundle.js` y `datos.js`; **B** es nuestra Blade con el modelo mapeado desde
-  el MISMO `datos.js` y las tres hojas de la instancia. `lote.json` a 390 y 1280, `--completa`.
+  el MISMO `datos.js` (`scripts/banco-fiesta/modelos.php`: los tres modelos en un fichero, que `FiestaModeloTest`
+  iguala en FORMA a lo que dan los tres controladores) y las tres hojas de la instancia. `lote.json` a 390 y 1280.
 - Estados: la lista, sus cuatro (`recien`, `respuestas`, `guardado`, `fuera`) más «llega una respuesta» y «la
   reserva ha cambiado» (`clics`); la invitación, seis; la autorización, tres; y las fichas de las nueve piezas.
   ⚠️ **`#768` (25-09, owner)**: esos estados NO se juzgan por tanda («tardamos más en verificar que en trabajar»):
@@ -261,7 +262,7 @@ Medido en `GuestFormController::show()` (sus 30 claves), `InvitationPageControll
 |---|---|---|
 | **T0** ✅ | Esta spec: medir, decidir dónde viven, pedir el contrato de hojas, las preguntas al owner. | Guardas de frontera 47/47 · el censo de tokens · docs-check. |
 | **T1a** ✅ | La lista con lo que HAY (25-09): el modelo de página, `x-pagina-enfocada`, 12 piezas del núcleo (`pieza/`) y 7 de la fiesta (`fiesta/`), las zonas, la hoja con roles, el JS portado, `lang/*/fiesta.php`, la hoja de la instancia; `store()` acepta la personalización con el único Guardar. | Banco de PIEZAS: **46 pares × (390, 1280) a 0 px** + control (1 px tumba 5 pares; restaura byte a byte) · `ListaDeInvitadosTest` 7 · `PaletaNeutraTest` 4 con su mutación · `node --test` 8 · seis guardas de piel re-apuntadas · sonda de ventana 390/1280 (`storage/app/audit/fiesta-lista-viva-*.png`) · suite. |
-| **T1b** | La pasada LIGERA de la lista (`#768`): la página entera en reposo con los datos del diseño, a 390 y 1280, una vez; A monta `PliPagina`, B la Blade con el modelo mapeado desde el MISMO `datos.js` (`FiestaModeloTest`: el banco y el controlador producen la misma forma). Los estados, solo si esa pasada señala algo. | Un par por ventana a 0 · **el ojo del owner en `localhost:8081`** (la página viva ya carga las hojas de PlayJump, `#769`). |
+| **T1b** ✅ | La pasada LIGERA de la lista (25-09 noche, `#768`): A monta `PliPagina` (la ficha del diseño tal cual, sin su barra de pruebas; el `guardado` AJUSTADO a lo que HAY, §4.7), B la Blade entera con `scripts/banco-fiesta/modelos.php` (los tres modelos del diseño; `FiestaModeloTest` iguala su forma a la de los tres controladores, clave a clave y tipo a tipo). Cazó CUATRO defectos de la T1a que el banco de piezas no podía ver: `[data-vacia]` escondía la PRIMERA fila con nombre; «Escribir el recordatorio» no enviaba (`type="button"` delante del `submit`); la última fila visible llevaba borde; «Reenviar» perdía su color por `.fiesta-lista a`. Y el `años` con espacio duro, como el diseño. | `lista-recien` (la primera pantalla) y `lista-guardado-diagnostico` (nueve niños, sin lo que FALTA a los dos lados), página ENTERA a 390 y 1280 → **4 de 4 a 0 px** · el par real de `guardado` no mide lo mismo (A 4.040, B 2.932 a 1280: la tarta y los padres) y no entra en el lote · control de 1 px sobre la página (`mutar-fiesta.sh`, segunda etapa, con `npm run build` en medio) · `FiestaModeloTest` 3 · `ListaDeInvitadosTest` 6 · suite · **queda el ojo del owner en `localhost:8081`**. |
 | **T2** ✅ | La invitación y su recibo con lo que HAY (25-09; `#744`): `InvitacionPagina`, `x-fiesta.rsvp-bar`, `views/fiesta/invitacion/{cabecera,invitacion,recibo}`, `invitacion.js`, el bloque `.inv-*` de la hoja, `lang/*/fiesta.php` (`invitacion_pagina`, `recibo`); el recibo directo tras contestar, 24 h y caducado sin 403, el idioma, «Su ficha» que se guarda sola, la autorización como oferta sin pregunta (la firma, enlace hasta T3), el aviso de privacidad con sus tres cosas. | Pasada ligera (`#768`): la invitación viva y cerrada, A el propio `invitacion.card.html` y B la página entera, 390 y 1280 → **0 px** en los pares de diagnóstico y 4.566–5.082 px en los reales, todos en la línea de privacidad que el mockup no dibuja (`banco-fiesta.php invitacion-viva invitacion-cerrada`) · `InvitacionPaginaTest` 7 · `InvitationPageTest`, `InvitationReceiptTest`, `InvitationSigningFlowTest` re-apuntadas (la hoja en blanco, `og:*`, `no-referrer` intactas) · suite · el recibo, sin A hasta T3 · el owner se manda el enlace al teléfono. |
 | **T3** ✅ | La autorización con lo que HAY (25-09; `#745`): `Autorizacion` (modelo de página), `x-fiesta.firma` (`AuthForm` 1:1, con ranuras para lo del producto), `x-pieza.selector`, `views/fiesta/autorizacion`, `autorizacion.js` + `comun.js`, el bloque `.aut-*`, `lang/*/fiesta.php` (`firma`, `autorizacion`); la tarjeta arriba con el titular y quien responde; el descargo en el flujo; el Listo del brief; los bloqueos con la forma del «enlace que no vale». Censo: el adulto en UNA casilla, teléfono obligatorio, nacimiento y relación se quedan. | Pasada ligera: `recibo` y `firmada` a 390 y 1280 → **0 px en `firmada`** y en los diagnósticos; el `recibo` real difiere solo en nacimiento, relación y el descargo (5.958–21.622 px) · `AutorizacionPaginaTest` 5 · `GuardianSkinTest` reescrita a la piel nueva · los cinco desenlaces, la hoja en blanco y las defensas intactas (`GuardianAuthorizationScreenTest`, `GuestMinorAuthorizationTest`) · el flujo real con `curl` (`sonda-aut.sh`) · suite. |
 | **T4** | Retirar la piel vieja: el bloque `.gf-*` y `.guardian__*` de `site.css`, `focused-layout` si ya no lo usa nadie, `public/js/guest-form/logic.js` si el port lo absorbe; regenerar `cajon.css`. `CONVENCIONES §3.quater`. | Auditoría de los tests que afirmaban la piel vieja · `hoja-del-cajon.py --aplicar` · suite. |
@@ -324,6 +325,28 @@ Medido en `GuestFormController::show()` (sus 30 claves), `InvitationPageControll
 - **El censo antes de vestir (`#745`)**: la fecha de nacimiento entra en la prueba firmada (`WaiverSigner`, `CRITICAL_RE`)
   y da la edad a la puerta; la relación entra en la prueba; el apellido del adulto solo compone un nombre completo. El
   descargo se PRESENTA en el flujo (`waiver-probatorio.md` §4.4): «Leer el descargo» es un ancla, no el modal del mockup.
+
+**La T1b (25-09, noche)**:
+- ❗ **Un banco de PIEZAS no ve lo que hace la PÁGINA**: 46 pares a 0 px y la lista viva escondía su PRIMERA fila con
+  nombre. `pintaFila` pone `data-vacia="0|1"` en cada fila y el selector `[data-vacia]` (el mensaje de la lista vacía)
+  atrapaba la primera: ahora el mensaje es `data-lista-vacia`. Del mismo saco: `<button type="button" … type="submit">`
+  (el navegador se queda con el PRIMER atributo: «Escribir el recordatorio» no enviaba nunca; la pieza `enlace` pone el
+  `type` por `merge`); `fi-fila--last` iba en la última POSICIÓN, no en la última fila visible (con las vacías escondidas
+  por `js`, la última con nombre llevaba borde: `marcaUltimas()` lo mueve, también al filtrar); y `.fiesta-lista a`
+  (0,1,1) pisaba el color de un `<a>` con cara de botón quieto («Reenviar»): el diseño tiene `a{}` sin ámbito, así que
+  `:where(.fiesta-lista) a`.
+- **El juez a página completa exige la MISMA altura** y «no miden lo mismo» no es un número: los dos formularios
+  auxiliares (`pz-sr`, absolutos de 1 px) DESPUÉS del principal estiraban el documento un píxel; van delante. El par real
+  de `guardado` (la tarta y los padres a un lado) no se puede juzgar y no entra en el lote: lo que FALTA se ve abriendo
+  `a/lista-guardado.html` y `b/`. Una sonda de alturas por bloque (`getBoundingClientRect` a los dos lados, en la
+  carpeta del banco) encontró el píxel en un minuto; a ojo no se ve.
+- **Montar el estado del diseño**: `window.PLI.ESTADOS.guardado` se AJUSTA en el montaje (sin los «no», edades a 7,
+  sin palabras ni pistas, sin fecha de guardado) y se borran sus claves de `localStorage` antes de montar (el diseño
+  persiste `pj-lista-v3-servidor-<id>` por origen y un banco anterior contaminaría el siguiente). En el diseño, «mano»
+  con «sí» lleva chapa «por la invitación»: para el presentador eso es `origen: invitacion`, y el modelo lo mapea así.
+- **`FiestaModeloTest` en su primera vuelta**: `columnas.labels` y `ninos[].extra` van por clave de DATO (las columnas del
+  pack) y se comparan como mapas; `diagnostico` es la única clave que el banco añade. Un `*/` dentro de un docblock
+  (`paginas/*/datos.js`) lo cierra; el espacio duro no entra por Edit (`"\u{a0}"` en PHP).
 
 ## 5. Impacto en invariantes
 

@@ -38,7 +38,7 @@ return [
         'age_unit' => 'ans',
         'no_name' => 'Sans nom',
         'unsaved' => 'Non enregistré',
-        'years' => ':n ans',
+        'years' => ':n'."\u{a0}".'ans',
         'sheet' => 'Fiche de :name',
         'birthday' => 'C’est son anniversaire',
         'rejoin' => 'Vient finalement',

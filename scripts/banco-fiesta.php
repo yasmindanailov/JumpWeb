@@ -1,15 +1,19 @@
 <?php
 
 /**
- * BANCO DE LA FIESTA — las PIEZAS del sistema nuevo contra las del diseño, con los mismos datos
- * (`specs/fiesta-sistema-nuevo.md` §4.4, T1a; `DECISIONES #743`, `#765`).
+ * BANCO DE LA FIESTA — las PIEZAS del sistema nuevo contra las del diseño, con los mismos datos, y las PÁGINAS en
+ * reposo (`specs/fiesta-sistema-nuevo.md` §4.4, T1a las piezas · T1b, T2 y T3 las páginas; `DECISIONES #743`, `#765`,
+ * `#768`).
  *
  * Por cada pieza y estado escribe DOS páginas con el mismo marco (el de `components/invitados/invitados.card.html`):
  *   · `a/<pieza>.html`: la pieza React del diseño (`_ds_bundle.js`, con Babel), montada con esos datos;
  *   · `b/<pieza>.html`: nuestra pieza Blade (`components/pieza/*`, `components/fiesta/*`) con los MISMOS datos, la
  *     hoja del PRODUCTO (`resources/js/fiesta/fiesta.css`, los roles neutros) y DESPUÉS las de la instancia
  *     (`fuentes.css`, `saltia.css`, `fiesta.css`), como las cargará la página viva por el contrato de hojas.
- * Y deja `lote.json` para `scripts/pixel.mjs`: cada par a 390 y a 1000, a página completa.
+ * Por cada página y estado (la pasada LIGERA, `#768`): A es la ficha del diseño tal cual (`paginas/*.card.html`, con
+ * sus rutas reescritas al diseño enlazado) montando la página sin su barra de pruebas; B es nuestra página ENTERA
+ * (`view()->render()`) con el modelo de `banco-fiesta/modelos.php`, que `FiestaModeloTest` iguala en forma al del
+ * controlador. Y deja `lote.json` para `scripts/pixel.mjs`: cada par a 390 y a 1000/1280.
  *
  * ⚠️ El lado B lleva `<html class="js">`: el A es React (siempre con JavaScript), y las piezas con estado (la ficha
  *    del niño cerrada, los botones − y + del selector) solo se ven así con la clase que pone el JS de la página.
@@ -24,16 +28,16 @@
  *       --lote storage/app/pixel/banco-fiesta/lote.json --reloj 2026-09-23T16:05:00+02:00 --rehacer --reintentos 2 \
  *       --salida storage/app/pixel/banco-fiesta/juicio
  *
- * Con nombres de pieza al final, solo esas (`… http://127.0.0.1:8132 invitacion-confeti filas`).
+ * Con nombres de pieza o de página al final, solo esas (`… http://127.0.0.1:8132 invitacion-confeti lista-guardado`).
  */
 
-use App\Http\Fiesta\Temas;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Support\Facades\Blade;
 
 require __DIR__.'/../vendor/autoload.php';
 $app = require __DIR__.'/../bootstrap/app.php';
 $app->make(Kernel::class)->bootstrap();
+$modelos = require __DIR__.'/banco-fiesta/modelos.php';
 
 [$diseno, $salida, $base] = [$argv[1] ?? '', $argv[2] ?? '', $argv[3] ?? ''];
 $solo = array_slice($argv, 4);
@@ -237,34 +241,8 @@ HTML);
 // ⚠️ Se juzga la VENTANA (`completa: false`), no la página entera: el aviso de privacidad bajo la barra (spec hermana
 //    §7.2·R7) es del producto y el diseño no lo dibuja en la invitación. El recibo se juzga sin A hasta T3 (`AuthForm`).
 $card = (string) file_get_contents($diseno.'/paginas/invitacion.card.html');
-$paginas = ['invitacion-viva' => 'viva', 'invitacion-cerrada' => 'cerrada'];
-$textoFiesta = 'Dos horas saltando en su zona, con monitores, merienda y tarta. Los padres podéis quedaros en la cafetería o venir a recogerlos.';
-$modeloInvitacion = static fn (bool $abierta): array => [
-    'titulo_pagina' => 'Vera cumple 7 años y te invita a saltar · Play Jump Park',
-    'marca' => ['src' => '../assets/logo/logo-playjump.png', 'alt' => 'Play Jump Park'],
-    'idiomas' => ['actual' => 'es', 'actual_corto' => 'ES', 'lista' => [
-        ['clave' => 'es', 'corto' => 'ES', 'nombre' => 'Español', 'enlace' => '#es'],
-        ['clave' => 'en', 'corto' => 'EN', 'nombre' => 'English', 'enlace' => '#en'],
-        ['clave' => 'fr', 'corto' => 'FR', 'nombre' => 'Français', 'enlace' => '#fr'],
-    ]],
-    'tema' => ['clave' => 'confeti', 'tinte' => Temas::de('confeti')['tint'], 'acento' => Temas::de('confeti')['accent']],
-    'cumple' => ['nombre' => 'Vera', 'edad' => '7'],
-    'fecha' => 'Sábado 26 de septiembre',
-    'hora' => 'De 17:00 a 19:00',
-    'lugar' => 'Play Jump Park, Lorca',
-    'anfitrion' => ['linea' => 'Lucía, la madre de Vera', 'nombre' => 'Lucía', 'telefono' => '', 'tel' => ''],
-    'enlaces' => ['mapa' => 'https://www.google.com/maps/search/?api=1&query=Play+Jump+Park+Lorca', 'calendario' => '#calendario', 'ics' => 'cumple-vera.ics'],
-    'texto' => [$textoFiesta],
-    'merienda' => [],
-    'merienda_alergias' => '¿Alergias o menú especial? Lo apuntas al contestar, y lo ven Lucía y los monitores.',
-    'respuestas' => ['abiertas' => $abierta, 'plazo' => 'Confirma antes del viernes 25 a las 17:00.', 'accion' => '#contestar', 'cerrado' => 'El plazo pasó: habla con Lucía.', 'error' => ''],
-    'aviso' => null,
-    'turnstile' => ['activo' => false, 'clave' => '', 'rotulo' => ''],
-    'og' => ['sitio' => 'Play Jump Park', 'title' => '', 'description' => '', 'image' => null, 'width' => null, 'height' => null],
-    'privacidad' => ['texto' => 'Lucía verá el nombre de tu hijo, su edad y sus alergias para organizar la fiesta; el parque, para atenderle. Lo borramos a los 14 días de la fiesta.', 'politica' => 'Política de privacidad', 'enlace' => '#privacidad'],
-    'recibo' => null,
-];
-foreach ($paginas as $nombre => $estado) {
+$hojas = ['instancia/css/fuentes.css', 'instancia/css/saltia.css', 'instancia/css/fiesta.css'];
+foreach (['invitacion-viva' => 'viva', 'invitacion-cerrada' => 'cerrada'] as $nombre => $estado) {
     if ($solo !== [] && ! in_array($nombre, $solo, true)) {
         continue;
     }
@@ -284,10 +262,7 @@ foreach ($paginas as $nombre => $estado) {
     file_put_contents($salida."/a/{$nombre}.html", $a);
 
     // B: la página del producto, entera, con el modelo del diseño y las hojas de la instancia por el contrato.
-    $b = view('fiesta.invitacion', [
-        'm' => $modeloInvitacion($estado === 'viva'),
-        'hojas' => ['instancia/css/fuentes.css', 'instancia/css/saltia.css', 'instancia/css/fiesta.css'],
-    ])->render();
+    $b = view('fiesta.invitacion', ['m' => $modelos['invitacion']($estado === 'viva'), 'hojas' => $hojas])->render();
     // ⚠️ Los assets van por el MISMO origen que la página del banco (`../build`, `../instancia`, enlazados): servidos
     //    desde `APP_URL` el navegador bloquea las fuentes y el módulo de Vite (CORS) y B sale sin `js` y con la
     //    fuente del sistema. Medido: 35 % de píxeles distintos que no eran de la piel.
@@ -315,38 +290,6 @@ foreach ($paginas as $nombre => $estado) {
 // B lleva lo que el producto pide y el brief no (`#745`: nacimiento y relación) y el descargo en el flujo; el par de
 // DIAGNÓSTICO (`$m['diagnostico']`) los omite y tiene que dar 0: así el par real solo puede diferir en eso.
 $cardAut = (string) file_get_contents($diseno.'/paginas/autorizacion.card.html');
-$modeloAutorizacion = static fn (string $estado, bool $diagnostico): array => [
-    'diagnostico' => $diagnostico,
-    'titulo_pagina' => 'Autorización para la fiesta de Vera · Play Jump Park',
-    'marca' => ['src' => '../assets/logo/logo-playjump.png', 'alt' => 'Play Jump Park'],
-    'idiomas' => ['actual' => 'es', 'actual_corto' => 'ES', 'lista' => [
-        ['clave' => 'es', 'corto' => 'ES', 'nombre' => 'Español', 'enlace' => '#es'],
-        ['clave' => 'en', 'corto' => 'EN', 'nombre' => 'English', 'enlace' => '#en'],
-        ['clave' => 'fr', 'corto' => 'FR', 'nombre' => 'Français', 'enlace' => '#fr'],
-    ]],
-    'tema' => ['clave' => 'confeti', 'tinte' => Temas::de('confeti')['tint'], 'acento' => Temas::de('confeti')['accent']],
-    'tarjeta' => [
-        'edad' => '7',
-        'titulo' => 'Autorización para la fiesta de Vera',
-        'linea' => 'Sábado 26 de septiembre · 17:00 · Play Jump Park, Lorca.',
-        'que' => 'Si dejas a tu hijo en la fiesta y no te quedas, queda a cargo de Lucía, como en cualquier cumpleaños. Esta autorización lo dice por escrito, e incluye el descargo de responsabilidad: la hoja que firma todo el que entra a saltar, con las normas y los riesgos.',
-    ],
-    'anfitrion' => ['etiqueta' => 'Va con', 'linea' => '', 'nombre' => 'Lucía', 'telefono' => '', 'tel' => ''],
-    'bloqueado' => null,
-    'listo' => $estado !== 'firmada' ? null : ['texto' => 'Firmada. El día de la fiesta lo acompañas hasta la puerta y listo, sin esperas.', 'quien' => 'Hugo Martín Sáez', 'firmante' => 'Ana Sáez Ruiz · 611 204 118'],
-    'aviso' => null,
-    'formulario' => $estado === 'firmada' ? null : [
-        'accion' => '#firmar', 'documento_id' => 0, 'respuesta_id' => null, 'desde_invitacion' => '', 'menores' => [],
-        'valores' => ['ninoNombre' => '', 'ninoApellidos' => '', 'nombre' => '', 'telefono' => '', 'correo' => '', 'casilla' => ''],
-        'fallos' => ['ninoNombre' => '', 'ninoApellidos' => '', 'nombre' => '', 'telefono' => '', 'correo' => '', 'casilla' => ''],
-        'nacimiento' => ['label' => 'Fecha de nacimiento', 'hint' => 'La usamos para saber su edad el día de la visita.', 'value' => '', 'error' => ''],
-        'relacion' => ['label' => 'Relación con el menor', 'opciones' => [['value' => '', 'label' => 'Elige una opción'], ['value' => 'mother', 'label' => 'Madre']], 'value' => '', 'error' => ''],
-        'descargo' => ['titulo' => 'El descargo', 'version' => '', 'cuerpo' => [['h' => '', 'p' => 'Aquí va el texto del descargo, el que da el parque.']]],
-        'casilla' => 'Como su padre, madre o tutor, autorizo a que se quede a cargo de Lucía durante la fiesta y acepto el descargo de responsabilidad en su nombre.',
-    ],
-    'privacidad' => ['texto' => 'Lucía verá el nombre de tu hijo y que su autorización está firmada; el parque, tus datos para atenderle.', 'datos' => 'Los datos que escribes aquí los declaras tú y no los comprobamos con ningún documento. Se conservan como prueba de esta autorización.', 'politica' => 'Política de privacidad', 'enlace' => '#privacidad'],
-    'turnstile' => ['activo' => false, 'clave' => '', 'rotulo' => ''],
-];
 foreach (['autorizacion-recibo' => 'recibo', 'autorizacion-firmada' => 'firmada'] as $nombre => $estado) {
     if ($solo !== [] && ! in_array($nombre, $solo, true)) {
         continue;
@@ -366,10 +309,7 @@ foreach (['autorizacion-recibo' => 'recibo', 'autorizacion-firmada' => 'firmada'
     file_put_contents($salida."/a/{$nombre}.html", $a);
 
     foreach (['' => false, '-diagnostico' => true] as $variante => $diagnostico) {
-        $b = view('fiesta.autorizacion', [
-            'm' => $modeloAutorizacion($estado, $diagnostico),
-            'hojas' => ['instancia/css/fuentes.css', 'instancia/css/saltia.css', 'instancia/css/fiesta.css'],
-        ])->render();
+        $b = view('fiesta.autorizacion', ['m' => $modelos['autorizacion']($estado, $diagnostico), 'hojas' => $hojas])->render();
         $b = str_replace(rtrim((string) config('app.url'), '/').'/', '../', $b);
         file_put_contents($salida."/b/{$nombre}{$variante}.html", $b);
         foreach (['390x844', '1280x900'] as $ventana) {
@@ -379,6 +319,62 @@ foreach (['autorizacion-recibo' => 'recibo', 'autorizacion-firmada' => 'firmada'
                 'b' => "{$base}/b/{$nombre}{$variante}.html",
                 'viewport' => $ventana,
                 'completa' => false,
+                'clics' => [],
+            ];
+        }
+    }
+}
+
+// ── LA LISTA (T1b): la primera pantalla (`recien`) y la lista completa y guardada (`guardado`), a página ENTERA ────────
+// A es `paginas/lista-invitados.card.html` tal cual, montando `PliPagina` con el `id` del estado (sin la barra de
+// pruebas y con el `localStorage` del estado limpio antes de montar); B es `fiesta.lista` con `modelos.php → lista`.
+// El `guardado` del diseño se monta AJUSTADO a lo que HAY (spec §1.4, y lo mismo en el modelo B): sin los «no» (k7, k8:
+// «Al final viene» FALTA), con las edades a 7 (la nota de las edades FALTA), sin palabras ni pistas, sin fecha de
+// guardado. El par de DIAGNÓSTICO esconde en los dos lados lo que el producto no tiene: la fila de quien cumple (A), la
+// zona 4 entera (la tarta y los padres, A y B) y la línea de privacidad bajo la barra (B). Tiene que dar 0. Las páginas
+// REALES de `guardado` se escriben (para el ojo: `a/lista-guardado.html`, `b/lista-guardado.html`) pero no entran en el
+// lote: no miden lo mismo (A 1280×4040, B 1280×2932: la tarta y los padres) y el juez no puede dar un número.
+$cardLista = (string) file_get_contents($diseno.'/paginas/lista-invitados.card.html');
+$ajusteGuardado = 'const E = window.PLI.ESTADOS.guardado; E.guardadoEn = null; E.form.invitacion.palabras = ""; E.form.invitacion.pistas = ""; '
+    .'E.form.ninos = E.form.ninos.filter((x) => x.respuesta !== "no").map((x) => Object.assign({}, x, { edad: x.edad === "8" ? "7" : x.edad })); ';
+$esconderA = '<style>section[data-zona="2"] > ul.pli-ul:first-of-type, [data-zona="4"] { display: none; }</style>';
+$esconderB = '<style>[data-zona="4"], [data-zona="5"] > .pli-sub { display: none; }</style>';
+foreach (['lista-recien' => 'recien', 'lista-guardado' => 'guardado'] as $nombre => $estado) {
+    if ($solo !== [] && ! in_array($nombre, $solo, true)) {
+        continue;
+    }
+    $a = str_replace(
+        ['"../styles.css"', '"lista-invitados/datos.js"', '"lista-invitados/estado.jsx"', '"lista-invitados/zonas-1-2.jsx"', '"lista-invitados/zonas-3-5.jsx"', '"../_ds_bundle.js"'],
+        ['"../diseno/styles.css"', '"../diseno/paginas/lista-invitados/datos.js"', '"../diseno/paginas/lista-invitados/estado.jsx"', '"../diseno/paginas/lista-invitados/zonas-1-2.jsx"', '"../diseno/paginas/lista-invitados/zonas-3-5.jsx"', '"../diseno/_ds_bundle.js"'],
+        $cardLista,
+    );
+    $montaje = '["pj-lista-v3-servidor-'.$estado.'", "pj-lista-v3-borrador-'.$estado.'"].forEach((k) => localStorage.removeItem(k)); '
+        .($estado === 'guardado' ? $ajusteGuardado : '')
+        .'ReactDOM.createRoot(document.getElementById("root")).render(<PliPagina id="'.$estado.'" conflictoRef={{ current: false }} onConflictoUsado={() => {}} pruebaRef={{ current: null }} onPrueba={() => {}} />);';
+    $a = str_replace('ReactDOM.createRoot(document.getElementById("root")).render(<PliBanco />);', $montaje, $a, $n);
+    if ($n !== 1) {
+        fwrite(STDERR, "la ficha de la lista cambió: no encuentro su montaje\n");
+        exit(1);
+    }
+    file_put_contents($salida."/a/{$nombre}.html", $a);
+
+    $b = view('fiesta.lista', ['m' => $modelos['lista']($estado), 'hojas' => $hojas])->render();
+    $b = str_replace(rtrim((string) config('app.url'), '/').'/', '../', $b);
+    file_put_contents($salida."/b/{$nombre}.html", $b);
+    $variantes = [''];
+    if ($estado === 'guardado') {
+        file_put_contents($salida."/a/{$nombre}-diagnostico.html", str_replace('</head>', $esconderA.'</head>', $a));
+        file_put_contents($salida."/b/{$nombre}-diagnostico.html", str_replace('</head>', $esconderB.'</head>', $b));
+        $variantes = ['-diagnostico'];
+    }
+    foreach (['390x844', '1280x900'] as $ventana) {
+        foreach ($variantes as $variante) {
+            $lote[] = [
+                'nombre' => "{$nombre}-".strtok($ventana, 'x').$variante,
+                'a' => "{$base}/a/{$nombre}{$variante}.html",
+                'b' => "{$base}/b/{$nombre}{$variante}.html",
+                'viewport' => $ventana,
+                'completa' => true,
                 'clics' => [],
             ];
         }

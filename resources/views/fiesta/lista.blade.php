@@ -15,6 +15,9 @@
 @if ($m['primero'])
     @include('fiesta.lista.primero')
 @else
+    {{-- Los formularios auxiliares van DELANTE del principal: son `pz-sr` (absolutos, 1 px) y detrás de él estiraban el
+         documento un píxel que el diseño no tiene (T1b, el juez a página completa). --}}
+    @include('fiesta.lista.auxiliares')
     <form class="pli" method="post" action="{{ $m['accion'] }}" id="fiesta-form" novalidate data-lista data-reserva="{{ $m['reserva']['codigo'] }}" data-textos="{{ json_encode(array_merge(__('fiesta.lista'), ['fila' => __('fiesta.fila'), 'anadir' => __('fiesta.anadir')]), JSON_UNESCAPED_UNICODE) }}">
         @csrf
         {{-- El TESTIGO de la reserva: si el parque la movió con la página abierta, el servidor rechaza el envío entero. --}}
@@ -34,6 +37,5 @@
         @endif
         @include('fiesta.lista.zona-5')
     </form>
-    @include('fiesta.lista.auxiliares')
 @endif
 </x-pagina-enfocada>

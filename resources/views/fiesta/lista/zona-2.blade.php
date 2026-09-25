@@ -50,7 +50,9 @@
     </ul>
     <p class="pli-sub" hidden data-nadie>{{ __('fiesta.lista.la_lista.nada_aqui') }}</p>
     @if (! $conDatos && $sumar)
-        <p class="pli-vacia" data-vacia><x-lucide name="users-round" :size="20" />{{ __('fiesta.lista.la_lista.vacia') }}</p>
+        {{-- ⚠️ La marca es `data-lista-vacia`, no `data-vacia`: cada fila lleva `data-vacia="0|1"` (lo pone el JS) y un
+             `[data-vacia]` atrapaba la PRIMERA fila y la escondía (T1b). --}}
+        <p class="pli-vacia" data-lista-vacia><x-lucide name="users-round" :size="20" />{{ __('fiesta.lista.la_lista.vacia') }}</p>
     @endif
     <p class="pli-deshacer" role="status" hidden data-deshacer><span data-deshacer-texto></span><x-pieza.enlace size="sm" underline="always" data-deshacer-boton>{{ __('fiesta.lista.la_lista.deshacer') }}</x-pieza.enlace></p>
     @if ($sumar)

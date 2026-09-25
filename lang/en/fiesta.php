@@ -38,7 +38,7 @@ return [
         'age_unit' => 'years',
         'no_name' => 'No name',
         'unsaved' => 'Unsaved',
-        'years' => ':n years',
+        'years' => ':n'."\u{a0}".'years',
         'sheet' => 'Details for :name',
         'birthday' => 'Birthday child',
         'rejoin' => 'Coming after all',

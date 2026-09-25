@@ -43,7 +43,7 @@ return [
         'age_unit' => 'años',
         'no_name' => 'Sin nombre',
         'unsaved' => 'Sin guardar',
-        'years' => ':n años',
+        'years' => ':n'."\u{a0}".'años', // el espacio duro del diseño (`GuestRow.jsx`): la edad no se parte de su unidad
         'sheet' => 'Ficha de :name',
         'birthday' => 'Es su cumple',
         'rejoin' => 'Al final viene',
