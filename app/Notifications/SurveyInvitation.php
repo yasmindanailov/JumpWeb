@@ -48,11 +48,14 @@ class SurveyInvitation extends Notification implements ShouldQueue
         $park = (string) Setting::businessName();
         $token = (string) $this->response->token;
         $optOut = route('survey.optout', ['token' => $token]);
+        // La `intro` del panel SOLO si existe en el idioma del cliente: `displayIntro()` cae al español, y una línea
+        // en español dentro de un correo en inglés es peor que la frase de la casa en inglés.
+        $intro = trim((string) ($this->survey->intro[app()->getLocale()] ?? ''));
 
         $mail = (new BrandedMailMessage($this))
             ->subject(__('surveys.mail.subject', ['park' => $park]))
             ->hero('surveys.mail', 'info')
-            ->line($this->survey->displayIntro(app()->getLocale()) ?? __('surveys.mail.line1', ['park' => $park]))
+            ->line($intro !== '' ? $intro : __('surveys.mail.line1', ['park' => $park]))
             ->line(__('surveys.mail.line2'))
             ->action(__('surveys.mail.action'), route('survey.show', ['token' => $token]))
             ->outro(new HtmlString('<a href="'.e($optOut).'">'.e(__('surveys.mail.optout')).'</a>'));

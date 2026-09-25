@@ -290,10 +290,10 @@ return [
         // 问卷（`specs/encuestas.md` §4.4，T4）：按回答当天统计；除「待处理」外只有汇总。
         'surveys' => [
             'heading' => '问卷：回答了多少，说了什么',
-            'note' => '回答日期落在该时间范围内的问卷。入口回答率 = 入口回答数 / 已登记到访数；邮件回答率 = 邮件回答数 / 已发送数。「待处理」不受时间范围影响：最近 30 天。',
+            'note' => '回答日期落在该时间范围内的问卷。入口回答率 = 入口回答数 / 已提供次数（问卷进行中且尚未问过该客户的已登记到访）；邮件回答率 = 邮件回答数 / 已发送数。「待处理」不受时间范围影响：最近 30 天。',
             'answered' => '已回答',
             'internal_rate' => '入口回答率',
-            'internal_rate_hint' => ':visits 次到访中回答了 :answered 次',
+            'internal_rate_hint' => '已提供 :offered 次中回答了 :answered 次（到访 :visits 次）',
             'external_rate' => '邮件回答率',
             'external_rate_hint' => ':sent 封邮件中回答了 :answered 封',
             'sent' => '已发送邮件',

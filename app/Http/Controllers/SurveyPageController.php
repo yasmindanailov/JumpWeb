@@ -6,6 +6,7 @@ use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\AccountPrivacy;
 use App\Domain\Platform\Models\Survey;
 use App\Domain\Platform\Models\SurveyResponse;
+use App\Domain\Platform\Services\SiteLocales;
 use App\Domain\Platform\Services\Surveys\QuestionSchema;
 use App\Domain\Platform\Services\Surveys\SurveyResponses;
 use Illuminate\Http\RedirectResponse;
@@ -136,11 +137,11 @@ class SurveyPageController extends Controller
         return SurveyResponse::query()->where('token', $token)->first();
     }
 
-    /** El idioma que se fijó al mandar el correo; si no es uno de los del sitio, el de la instalación. */
+    /** El idioma que se fijó al mandar el correo; si no es uno de los del sitio (`SiteLocales`), el de la instalación. */
     private function useLocaleOf(SurveyResponse $response): void
     {
         $locale = (string) $response->locale;
-        if (in_array($locale, (array) config('app.locales', ['es', 'en', 'fr']), true)) {
+        if (in_array($locale, SiteLocales::SUPPORTED, true)) {
             app()->setLocale($locale);
         }
     }

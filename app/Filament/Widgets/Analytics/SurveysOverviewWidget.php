@@ -47,7 +47,7 @@ class SurveysOverviewWidget extends StatsOverviewWidget
         return [
             $this->countStat(__('admin.analytics.surveys.answered'), $t['answered'], $p['answered']),
             Stat::make(__('admin.analytics.surveys.internal_rate'), self::percent($t['internal_rate_bp']))
-                ->description(__('admin.analytics.surveys.internal_rate_hint', ['answered' => $t['answered_internal'], 'visits' => $t['visits']]))
+                ->description(__('admin.analytics.surveys.internal_rate_hint', ['answered' => $t['answered_internal'], 'offered' => $t['offered'], 'visits' => $t['visits']]))
                 ->color('gray'),
             Stat::make(__('admin.analytics.surveys.external_rate'), self::percent($t['external_rate_bp']))
                 ->description(__('admin.analytics.surveys.external_rate_hint', ['answered' => $t['answered_external'], 'sent' => $t['sent']]))

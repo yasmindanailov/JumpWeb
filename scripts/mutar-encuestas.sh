@@ -19,8 +19,9 @@ RES=app/Domain/Platform/Services/Surveys/SurveyResponses.php
 SCH=app/Domain/Platform/Services/Surveys/QuestionSchema.php
 EXP=app/Domain/Identity/Services/AccountPrivacy.php
 CMD=app/Console/Commands/SendExternalSurveys.php
+BRK=app/Filament/Widgets/Analytics/SurveysBreakdownWidget.php
 TMP="$(mktemp -d)"
-FICHEROS=("$LW" "$RES" "$SCH" "$EXP" "$CMD")
+FICHEROS=("$LW" "$RES" "$SCH" "$EXP" "$CMD" "$BRK")
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$TMP/$(basename "$f")" "$f"; touch "$f"; done; }
 trap 'restaurar; rm -rf "$TMP"' EXIT
 for f in "${FICHEROS[@]}"; do cp "$f" "$TMP/$(basename "$f")"; done
@@ -28,7 +29,7 @@ SHA_ANTES="$(sha1sum "${FICHEROS[@]}" | sha1sum)"
 
 # Las guardas de la T2, más las del esquema y de la privacidad de la T1.
 verde() { docker compose exec -u sail -T laravel.test php artisan test \
-    --filter='GateSurveyTest|SurveyPrivacyTest|QuestionSchemaTest|SurveySendTest|SurveyPageTest' >/dev/null 2>&1; }
+    --filter='GateSurveyTest|SurveyPrivacyTest|QuestionSchemaTest|SurveySendTest|SurveyPageTest|SurveysReportTest' >/dev/null 2>&1; }
 
 if ! verde; then
     echo '✗ la base NO está verde antes de mutar: el veredicto de abajo no valdría nada.' >&2
@@ -151,6 +152,12 @@ mutar "un token ya contestado vuelve a abrir la página" "$RES" \
   "            ->where('token', \$token)
             ->whereNull('answered_at')" \
   "            ->where('token', \$token)"
+
+echo '── T4 · el cuadro: el CSV no lleva un texto libre ───────────────────────────────────────────────'
+
+mutar "el CSV lleva los textos libres (un texto puede llevar un nombre)" "$BRK" \
+  "        if (\$this->forcedWindow === null) {" \
+  "        if (true) {"
 
 echo '── CONTROL ──────────────────────────────────────────────────────────────────────────────────────'
 

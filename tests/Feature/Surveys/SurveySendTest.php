@@ -180,4 +180,19 @@ class SurveySendTest extends TestCase
             $this->assertStringNotContainsStringIgnoringCase($forbidden, $html, 'un correo de SERVICIO no lleva una línea comercial (§7·4)');
         }
     }
+
+    /** La `intro` del panel solo si existe en el idioma del cliente: si no, la frase de la casa en SU idioma. */
+    public function test_an_intro_written_only_in_spanish_does_not_leak_into_an_english_mail(): void
+    {
+        $survey = $this->survey(['intro' => ['es' => 'Dos preguntas rápidas.']]);
+        $ana = $this->visitor('ana@example.com', ['locale' => 'en']);
+        $response = app(SurveyResponses::class)->send($survey, $ana->id, self::YESTERDAY, 'en');
+        $this->assertNotNull($response);
+
+        app()->setLocale('en');
+        $html = (string) (new SurveyInvitation($survey, $response))->toMail($ana)->render();
+
+        $this->assertStringNotContainsString('Dos preguntas rápidas.', $html);
+        $this->assertStringContainsString('You visited', $html);
+    }
 }

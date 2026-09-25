@@ -61,11 +61,12 @@ final class SurveysReport
     public function compute(Window $window, ?Window $baseline = null): array
     {
         $baseline ??= $window->previous();
-        $surveys = $this->surveys();
+        $surveys = $this->surveys($window->timezone);
         $rows = $this->rows($window);
         $totals = $this->totals($rows, $window);
         $totals['visits'] = $this->visits($window);
-        $totals['internal_rate_bp'] = $totals['visits'] > 0 ? (int) round(min($totals['answered_internal'], $totals['visits']) / $totals['visits'] * 10000) : 0;
+        $totals['offered'] = $this->offered($surveys, $window);
+        $totals['internal_rate_bp'] = $totals['offered'] > 0 ? (int) round(min($totals['answered_internal'], $totals['offered']) / $totals['offered'] * 10000) : 0;
         $totals['external_rate_bp'] = $totals['sent'] > 0 ? (int) round(min($totals['answered_external'], $totals['sent']) / $totals['sent'] * 10000) : 0;
 
         $perSurvey = $this->perSurvey($surveys, $rows, $window);
@@ -82,18 +83,19 @@ final class SurveysReport
             'surveys' => $perSurvey,
             'attention' => $this->attention($surveys),
             'series' => $this->series($window, $rows),
-            'previous' => $this->totalsOnly($baseline),
+            'previous' => $this->totalsOnly($baseline, $surveys),
         ];
     }
 
     // ─── Las encuestas y las respuestas del periodo ──────────────────────────────────────────────
 
     /**
-     * Todas las encuestas, con sus preguntas normalizadas y rotuladas en el idioma del panel.
+     * Todas las encuestas, con sus preguntas normalizadas y rotuladas en el idioma del panel, y su ventana en días
+     * del parque (para contar las ofertas de la interna).
      *
-     * @return array<int, array{id: int, key: string, name: string, kind: string, live: bool, questions: list<array{key: string, type: string, label: string, options: array<string, string>}>}>
+     * @return array<int, array{id: int, key: string, name: string, kind: string, live: bool, active: bool, starts_on: ?string, ends_on: ?string, questions: list<array{key: string, type: string, label: string, options: array<string, string>}>}>
      */
-    private function surveys(): array
+    private function surveys(string $timezone): array
     {
         $locale = app()->getLocale();
         $out = [];
@@ -112,11 +114,50 @@ final class SurveysReport
                 'name' => $survey->displayName($locale),
                 'kind' => (string) $survey->kind,
                 'live' => $survey->isRunning(),
+                'active' => (bool) $survey->active,
+                'starts_on' => $survey->starts_at?->copy()->setTimezone($timezone)->toDateString(),
+                'ends_on' => $survey->ends_at?->copy()->setTimezone($timezone)->toDateString(),
                 'questions' => $questions,
             ];
         }
 
         return $out;
+    }
+
+    /**
+     * **Las OFERTAS de la interna en el periodo**, el denominador de su tasa (spec §4.4): las visitas acreditadas en
+     * días en que una encuesta interna estaba viva —por su ventana; `active` no guarda historia, así que una
+     * apagada hoy no cuenta ofertas— y de clientes SIN fila previa para ella: a quien ya contestó o declinó no se le
+     * vuelve a ofrecer, así que su visita no es una oferta. Una fila del MISMO día sí lo es (es la respuesta a esa
+     * oferta): el MOMENTO de la fila —mandada, contestada o declinada, lo primero que haya— se compara con la
+     * medianoche del día de la visita. ⚠️ No `created_at`: en un fixture lo escribe el reloj del test, no el hecho.
+     *
+     * @param  array<int, array<string, mixed>>  $surveys
+     */
+    private function offered(array $surveys, Window $window): int
+    {
+        $offered = 0;
+        foreach ($surveys as $survey) {
+            if ($survey['kind'] !== Survey::KIND_INTERNAL || ! $survey['active']) {
+                continue;
+            }
+            $from = max($window->dateFrom(), $survey['starts_on'] ?? $window->dateFrom());
+            $to = min($window->dateTo(), $survey['ends_on'] ?? $window->dateTo());
+            if ($from > $to) {
+                continue;
+            }
+            $offered += (int) DB::table('customer_visits as v')
+                ->whereBetween('v.visited_on', [$from, $to])
+                ->whereNotExists(static function ($query) use ($survey): void {
+                    $query->selectRaw('1')->from('survey_responses as r')
+                        ->whereColumn('r.user_id', 'v.user_id')
+                        ->where('r.survey_id', $survey['id'])
+                        ->whereRaw('COALESCE(r.sent_at, r.answered_at, r.declined_at) < v.visited_on');
+                })
+                ->count();
+        }
+
+        return $offered;
     }
 
     /**
@@ -406,11 +447,17 @@ final class SurveysReport
         return $series;
     }
 
-    /** Las cifras de las tarjetas para el periodo de comparación. @return array<string, int> */
-    private function totalsOnly(Window $window): array
+    /**
+     * Las cifras de las tarjetas para el periodo de comparación.
+     *
+     * @param  array<int, array<string, mixed>>  $surveys
+     * @return array<string, int>
+     */
+    private function totalsOnly(Window $window, array $surveys): array
     {
         $totals = $this->totals($this->rows($window), $window);
         $totals['visits'] = $this->visits($window);
+        $totals['offered'] = $this->offered($surveys, $window);
 
         return $totals;
     }

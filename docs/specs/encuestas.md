@@ -100,7 +100,7 @@ WhatsApp; recompensas (JumpPoints) por contestar.
 
 ### 4.1 El modelo (`Platform`, como `Experiment`)
 
-- `surveys` `(futuro)`: `id`, `key` (`^[a-z][a-z0-9_-]{0,47}$`, única), `name` json es/en/fr, `kind`
+- `surveys`: `id`, `key` (`^[a-z][a-z0-9_-]{0,47}$`, única), `name` json es/en/fr, `kind`
   (`internal`|`external`), `active` bool, `starts_at`, `ends_at` (nulos = sin plazo), `intro` json es/en/fr (la
   frase de cabecera del correo o de la tablet), `questions` json, `created_by`, timestamps. **Vivo** = activa y
   dentro de su ventana (la regla de `Experiment::isRunning()`). `[PENDIENTE: owner]` §7·5: **una viva por clase**
@@ -108,18 +108,18 @@ WhatsApp; recompensas (JumpPoints) por contestar.
 - `questions`: lista ordenada de `{key, type, required, label{es,en,fr}, options?}` con `type` ∈ `choice` (UNA
   opción de `options: [{key, label{es,en,fr}}]`), `multi` (varias de la lista), `scale` (1 a 5), `yesno` y `text`
   (libre, ≤ 300 caracteres) — `[DECIDIDO owner]` §7·3: todos los formatos. Normalizada por `Platform\Services\Surveys\
-  QuestionSchema` `(futuro)` con la misma disciplina que `normalizeFieldSchema()` (sin clave → fuera; tipo inválido →
+  QuestionSchema` con la misma disciplina que `normalizeFieldSchema()` (sin clave → fuera; tipo inválido →
   `choice`; claves únicas). **Con respuestas guardadas, las claves y los tipos se BLOQUEAN** (los textos siguen
   editables): cambiar una pregunta a mitad mezcla lo medido, como los pesos de un experimento.
-- `survey_responses` `(futuro)`: `id`, `survey_id`, `user_id` (nullable, `SET NULL` al anonimizar), `visited_on`
+- `survey_responses`: `id`, `survey_id`, `user_id` (nullable, `SET NULL` al anonimizar), `visited_on`
   (el día de la visita que la originó), `channel` (`internal`|`external`), `answered_by` (el empleado, solo interna),
   `token` (40 caracteres, solo externa: abre la página), `sent_at`, `answered_at`, `declined_at`, `answers` json
   `{clave: valor}`, `locale`. Índices: `(survey_id, user_id)` ÚNICO —**una respuesta por cliente y encuesta**,
   `[DECIDIDO owner]` §7·2— y `(survey_id, answered_at)`. **Atadas al cliente y a su visita** (`[DECIDIDO owner]`
   §7·1, con la recomendación de §7): el cuadro solo enseña agregados; la persona aparece en dos sitios y con permiso
   propio (`customers.insights`): en su ficha 360 y en la lista de «puntuaciones bajas por atender» (§4.4).
-- `users.surveys_opt_out` `(futuro)` bool: «no quiero recibir más encuestas», con su interruptor en «Privacidad» del
-  cajón (`PUT /me/surveys` `(futuro)`, el molde de `PUT /me/marketing`) y el enlace firmado del correo.
+- `users.surveys_opt_out` bool: «no quiero recibir más encuestas», con su interruptor en «Privacidad» del
+  cajón (`PUT /me/surveys`, el molde de `PUT /me/marketing`) y el enlace firmado del correo.
 - El libro: `Contract` gana `survey_sent`, `survey_answered` y `survey_declined` (servidor; props `survey`, `channel`;
   ref `user_id`, régimen del contrato como `visit_checked_in`). Ninguna respuesta entra en el libro.
 
@@ -133,7 +133,7 @@ WhatsApp; recompensas (JumpPoints) por contestar.
   permiso de la ficha, ANTES de componer la ficha) y la tarjeta sale en el mismo gesto; la búsqueda tecleada no
   acredita (`registerVisit()` sigue para ella). Descartados: reponer el botón (un gesto más; olvidarlo = ni
   encuesta ni correo) y ofrecer al escanear sin acreditar sacando la externa de las reservas de ayer.
-- **Dónde**: una tarjeta `gate-survey` `(futuro)` en la columna principal de la ficha, DEBAJO de «Hoy», con el
+- **Dónde**: una tarjeta `gate-survey` en la columna principal de la ficha, DEBAJO de «Hoy», con el
   nombre de la encuesta, «N preguntas» y dos botones: «Preguntar» y «No preguntar» (esta última escribe
   `declined_at`). Nunca un modal sobre el lector ni encima de «Registrar visita» (§0·1).
 - **Cómo**: al abrir, las preguntas una a una o en lista corta (según el tipo): `choice` = un botón por opción;
@@ -153,11 +153,11 @@ WhatsApp; recompensas (JumpPoints) por contestar.
 
 ### 4.3 La externa: el correo del día siguiente
 
-- **El comando** `surveys:send-external` `(futuro)`, programado a las **10:00 del parque** (`DisplayTime`), en
+- **El comando** `surveys:send-external`, programado a las **10:00 del parque** (`DisplayTime`), en
   `routes/console.php` (+1 tarea: `deploy.sh` «esperadas» sube EN EL MISMO commit, §0·4). Por cada encuesta externa
   viva: los clientes con `customer_visits.visited_on` = AYER (día del parque), con correo verificado, no
   anonimizados, sin `surveys_opt_out`, sin fila para esa encuesta y **sin ningún correo de encuesta en los últimos
-  30 días** (`surveys.cooldown_days` `(futuro)`, ajuste de «Ajustes → Puerta», 30 por defecto). Por cada uno: fila
+  30 días** (`surveys.cooldown_days`, ajuste de «Ajustes → Puerta», 30 por defecto). Por cada uno: fila
   `survey_responses` (`sent_at`, `token`) y la notificación en cola. `--dry-run` cuenta sin mandar. Idempotente:
   reejecutar no manda dos veces (la fila ya existe).
   **Como se construyó (T3)**: `SendExternalSurveys` corre **cada hora y la hora la decide él** (desde las 10:00 del
@@ -165,18 +165,19 @@ WhatsApp; recompensas (JumpPoints) por contestar.
   la ejecución y una hora de cron caído no se lleva la encuesta. La elegibilidad va entera en la consulta
   (`whereExists`/`whereNotExists`); la fila nace ANTES de encolar (`SurveyResponses::send()`); el plazo es
   `SurveySettings::cooldownDays()`. `deploy.sh` espera **10** tareas (9 registradas + ésta; decía 6 desde antes).
-- **La notificación** `SurveyInvitation` `(futuro)` sobre `BrandedMailMessage`: `hero('surveys.mail', 'info')`, la
+- **La notificación** `SurveyInvitation` sobre `BrandedMailMessage`: `hero('surveys.mail', 'info')`, la
   `intro` de la encuesta en el idioma del cliente, el botón «Contestar» a la página firmada, y al pie el enlace
   «No quiero recibir más encuestas» (firmado, un toque). Piezas de bandeja en tres idiomas en `lang/{es,en,fr}/
-  surveys.php` `(futuro)`. `[DECIDIDO owner]` §7·4: **correo de servicio a todo el que visitó**, con la baja de un
+  surveys.php`. `[DECIDIDO owner]` §7·4: **correo de servicio a todo el que visitó**, con la baja de un
   toque y SIN una sola línea comercial dentro (ni oferta, ni producto, ni enlace a comprar: eso lo convertiría en
   comunicación comercial y exigiría el opt-in). `[PENDIENTE: asesoría]` (5): confirmar esa lectura.
   **Como se construyó (T3)**: `SurveyInvitation` (`ShouldQueue`, `hero('surveys.mail')`, piezas en
-  `lang/{es,en,fr}/surveys.php`); la primera línea es la `intro` de la encuesta si el panel la escribió; el botón
+  `lang/{es,en,fr}/surveys.php`); la primera línea es la `intro` de la encuesta si el panel la escribió EN EL IDIOMA
+  del cliente (sin caer al español dentro de un correo en inglés: entonces, la frase de la casa); el botón
   abre la página por su **TOKEN** de 40 caracteres, la credencial entera como en la invitación (no hay firma que
   caducar); la baja al pie y en la cabecera `List-Unsubscribe`; el asunto SIN el nombre del parque (regla de la
   bandeja) y **sin la palabra «oferta» ni para negarla** (`SurveySendTest` la busca).
-- **La página** `GET /encuesta/{token}` `(futuro)` en `focused-layout` (sin banner, sin tracker, sin `visitor_id`,
+- **La página** `GET /encuesta/{token}` en `focused-layout` (sin banner, sin tracker, sin `visitor_id`,
   como las de la fiesta: el grupo `withoutMiddleware(ResolveVisitor:mint)`), `no-store` (`RGPD-04`), en el idioma
   del cliente; `POST` guarda una sola vez (`answered_at` cierra el token) y el hecho `survey_answered` (`channel =
   external`); después, «Gracias». Un token inexistente, contestado o de una encuesta apagada: el mismo 404 (el
@@ -192,22 +193,24 @@ WhatsApp; recompensas (JumpPoints) por contestar.
 
 ### 4.4 El cuadro y la 360
 
-- `app/Filament/Analytics/SurveysReport.php` `(futuro)`, capa de entrega, caché 5 min, por **día de la respuesta**
+- `app/Filament/Analytics/SurveysReport.php`, capa de entrega, caché 5 min, por **día de la respuesta**
   (`answered_at` → día del parque) dentro de la ventana: por encuesta viva o con respuestas en el periodo: enviadas
   (externa), contestadas por canal, declinadas, **tasa de respuesta** interna (contestadas / visitas acreditadas con
   la encuesta viva y sin fila previa) y externa (contestadas / enviadas), y por pregunta: `choice` → reparto por
   opción; `scale` → media, n y reparto 1–5; `text` → las últimas 12 respuestas (solo en la pestaña, NUNCA en el CSV:
   un texto libre puede llevar un nombre).
 - Widgets en una quinta pestaña `surveys` («Encuestas», icono `ChatBubbleLeftRight`): `SurveysOverviewWidget`
-  `(futuro)` (tarjetas: contestadas, tasa interna, tasa externa, enviadas, declinadas, media de la primera escala),
-  `SurveyQuestionsChart` `(futuro)` (una barra por opción de la encuesta elegida), `SurveysBreakdownWidget` `(futuro)`
-  (por encuesta y pregunta, plegada). `CsvExport::REPORT_SURVEYS` `(futuro)`: agregados sin texto libre.
+  (tarjetas: contestadas, tasa interna, tasa externa, enviadas, declinadas, media de la primera escala),
+  `SurveysAnswersChart` (la primera pregunta con opciones de la primera encuesta; sin selector: las tablas llevan
+  todas), `SurveysAttentionWidget` («Por atender», vista propia) y `SurveysBreakdownWidget` (por encuesta y pregunta,
+  plegada). `CsvExport::REPORT_SURVEYS`: agregados sin texto libre. **La tasa interna se mide sobre OFRECIDAS**
+  (`SurveysReport::offered()`): visitas acreditadas en días con una interna viva y de clientes sin fila previa.
 - La 360 gana el bloque «Encuestas»: contestadas, la última (fecha, canal, su puntuación de escala si la hay y su
   texto libre), bajo `customers.insights`. Y la pestaña lleva **«Por atender»**: las respuestas con una escala ≤ 2 de
   los últimos 30 días, con el día, el canal, la puntuación, el texto y el enlace a la ficha del cliente (solo con
   `customers.insights`; sin él, la fila sale sin persona). Es el valor de atar la respuesta a la persona (§7): una
   mala visita se puede llamar y arreglar; un agregado no.
-- `SurveyResource` `(futuro)` en «Ajustes → Sistema» (`settings.manage`): lista con clase, estado, respuestas;
+- `SurveyResource` en «Ajustes → Sistema» (`settings.manage`): lista con clase, estado, respuestas;
   formulario con clave, nombre e intro en tres idiomas, clase, encendido, ventana, y el Repeater de preguntas (tipo,
   rótulos, opciones); con respuestas, claves y tipos bloqueados; una viva por clase (§7·5). Rastro `surveys.saved` /
   `surveys.deleted` (`AuditLog::ACTIONS`). Borrar una encuesta con respuestas: no; se apaga.
@@ -238,7 +241,7 @@ notificación en cola) · `SUITE-01`. Dinero, aforo: ninguno.
 
 ## 6. Plan de verificación empírica
 
-- Tests por tanda (§4.6) y un arnés `scripts/mutar-encuestas.sh` `(futuro)`: la interna se ofrece antes de
+- Tests por tanda (§4.6) y un arnés `scripts/mutar-encuestas.sh`: la interna se ofrece antes de
   acreditar (muere), una segunda respuesta del mismo cliente entra (muere), el comando manda dos veces (muere), el
   token contestado vuelve a abrir (muere), el CSV lleva un texto libre (muere), y un CONTROL.
 - `curl -D` a `/encuesta/{token}`: 200, `no-store`, sin `visitor_id`, cero `<script>` de terceros.

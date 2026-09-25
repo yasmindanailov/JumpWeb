@@ -80,6 +80,8 @@ class SurveysReportTest extends TestCase
         foreach (['ana' => '2026-06-05', 'bea' => '2026-06-05', 'cai' => '2026-06-12', 'dan' => '2026-06-20', 'eva' => '2026-06-28', 'fon' => '2026-05-30'] as $name => $day) {
             app(GateVisits::class)->register($this->users[$name], null, Carbon::parse($day));
         }
+        // Ana vuelve el 25: ya contestó el 5, así que esa visita NO es una oferta (una por cliente y encuesta).
+        app(GateVisits::class)->register($this->users['ana'], null, Carbon::parse('2026-06-25'));
 
         // En la puerta, en junio: dos contestan el 5 (una nota baja con texto), una declina el 12, otra contesta el 20.
         $this->answered($this->internal, 'ana', '2026-06-05 10:00:00', ['ambiente' => 5, 'como' => 'google', 'zonas' => ['jump'], 'volveria' => true, 'comentario' => 'Genial']);
@@ -117,11 +119,13 @@ class SurveysReportTest extends TestCase
 
         $r = (new SurveysReport)->compute($this->june());
 
-        $this->assertSame(['sent' => 2, 'answered' => 5, 'answered_internal' => 4, 'answered_external' => 1, 'declined' => 1, 'visits' => 5, 'internal_rate_bp' => 8000, 'external_rate_bp' => 5000], $r['totals']);
+        // Seis visitas, cinco OFERTAS (la segunda de Ana no lo es: ya había contestado) y cuatro contestadas en la
+        // puerta → 80 %. Sobre las visitas a secas saldría 66,7 %: la tasa se mide sobre a quién se le preguntó.
+        $this->assertSame(['sent' => 2, 'answered' => 5, 'answered_internal' => 4, 'answered_external' => 1, 'declined' => 1, 'visits' => 6, 'offered' => 5, 'internal_rate_bp' => 8000, 'external_rate_bp' => 5000], $r['totals']);
         $this->assertSame(['survey' => 'Tu visita', 'question' => 'Ambiente', 'mean' => 3.7, 'n' => 3], $r['scale'], 'la primera escala de la interna viva');
 
-        // Mayo: lo de Fon (mandada y contestada) y su visita.
-        $this->assertSame(['sent' => 1, 'answered' => 1, 'answered_internal' => 0, 'answered_external' => 1, 'declined' => 0, 'visits' => 1], $r['previous']);
+        // Mayo: lo de Fon (mandada y contestada) y su visita, que fue una oferta sin respuesta.
+        $this->assertSame(['sent' => 1, 'answered' => 1, 'answered_internal' => 0, 'answered_external' => 1, 'declined' => 0, 'visits' => 1, 'offered' => 1], $r['previous']);
 
         $sum = static fn (string $field) => array_sum(array_column($r['series'], $field));
         $this->assertSame(5, $sum('answered'));

@@ -330,10 +330,10 @@ return [
         // Las encuestas (`specs/encuestas.md` §4.4, T4): por DÍA DE LA RESPUESTA; solo agregados salvo «Por atender».
         'surveys' => [
             'heading' => 'Las encuestas: cuántas se contestan y qué dicen',
-            'note' => 'Respuestas cuyo día cae en el periodo. La tasa en la puerta es contestadas entre visitas acreditadas; la de correo, contestadas entre mandadas. «Por atender» no depende del periodo: son los últimos 30 días.',
+            'note' => 'Respuestas cuyo día cae en el periodo. La tasa en la puerta es contestadas entre OFRECIDAS (visitas acreditadas con la encuesta viva y de clientes a los que aún no se había preguntado); la de correo, contestadas entre mandadas. «Por atender» no depende del periodo: son los últimos 30 días.',
             'answered' => 'Contestadas',
             'internal_rate' => 'Tasa en la puerta',
-            'internal_rate_hint' => ':answered contestadas de :visits visitas acreditadas',
+            'internal_rate_hint' => ':answered contestadas de :offered ofrecidas (:visits visitas)',
             'external_rate' => 'Tasa por correo',
             'external_rate_hint' => ':answered contestadas de :sent mandadas',
             'sent' => 'Correos mandados',
