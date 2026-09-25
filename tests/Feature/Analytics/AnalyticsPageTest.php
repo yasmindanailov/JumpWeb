@@ -38,6 +38,10 @@ use App\Filament\Widgets\Analytics\RegistrationsWidget;
 use App\Filament\Widgets\Analytics\SegmentsWidget;
 use App\Filament\Widgets\Analytics\SourcesChart;
 use App\Filament\Widgets\Analytics\SourcesWidget;
+use App\Filament\Widgets\Analytics\SurveysAnswersChart;
+use App\Filament\Widgets\Analytics\SurveysAttentionWidget;
+use App\Filament\Widgets\Analytics\SurveysBreakdownWidget;
+use App\Filament\Widgets\Analytics\SurveysOverviewWidget;
 use App\Filament\Widgets\Analytics\TrafficHoursChart;
 use App\Filament\Widgets\Analytics\TrafficSeriesChart;
 use App\Filament\Widgets\Analytics\TrafficWidget;
@@ -117,6 +121,7 @@ class AnalyticsPageTest extends TestCase
             ->assertSeeText(__('admin.analytics.tabs.customers'))
             ->assertSeeText(__('admin.analytics.tabs.traffic'))
             ->assertSeeText(__('admin.analytics.tabs.parties'))
+            ->assertSeeText(__('admin.analytics.tabs.surveys'))
             ->assertSee('role="tablist"', escape: false);
     }
 
@@ -181,6 +186,11 @@ class AnalyticsPageTest extends TestCase
         PartiesMoneyChart::class,
         PartiesTimingChart::class,
         PartiesBreakdownWidget::class,
+        // T4 de las encuestas (`specs/encuestas.md` §4.4): la quinta pestaña.
+        SurveysOverviewWidget::class,
+        SurveysAnswersChart::class,
+        SurveysAttentionWidget::class,
+        SurveysBreakdownWidget::class,
     ];
 
     public function test_each_widget_asks_the_permission_again(): void
@@ -205,12 +215,13 @@ class AnalyticsPageTest extends TestCase
 
         // T2f: cuatro pestañas (la de la fiesta desde la T2 de `analitica-fiesta.md`), cada widget en una sola, y las
         // tablas plegadas al final de cada una.
-        $this->assertSame(['money', 'customers', 'traffic', 'parties'], array_keys(AnalyticsPage::TABS));
+        $this->assertSame(['money', 'customers', 'traffic', 'parties', 'surveys'], array_keys(AnalyticsPage::TABS));
         $this->assertSame($analytics, array_unique($analytics), 'ningún widget en dos pestañas');
         $this->assertSame(MoneyBreakdownWidget::class, array_last(AnalyticsPage::TABS['money']));
         $this->assertSame(CustomersBreakdownWidget::class, array_last(AnalyticsPage::TABS['customers']));
         $this->assertSame(PagesWidget::class, array_last(AnalyticsPage::TABS['traffic']));
         $this->assertSame(PartiesBreakdownWidget::class, array_last(AnalyticsPage::TABS['parties']));
+        $this->assertSame(SurveysBreakdownWidget::class, array_last(AnalyticsPage::TABS['surveys']));
     }
 
     /**

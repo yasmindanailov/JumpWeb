@@ -11,6 +11,7 @@ use App\Filament\Widgets\Analytics\MoneyBreakdownWidget;
 use App\Filament\Widgets\Analytics\PagesWidget;
 use App\Filament\Widgets\Analytics\PartiesBreakdownWidget;
 use App\Filament\Widgets\Analytics\SourcesWidget;
+use App\Filament\Widgets\Analytics\SurveysBreakdownWidget;
 
 /**
  * **El CSV de «Analítica»** (`docs/specs/analitica.md` §4.5, T2d): un informe (el dinero, los registros y la
@@ -37,7 +38,10 @@ final class CsvExport
     public const REPORT_PARTIES = 'parties';
 
     /** @var list<string> */
-    public const REPORTS = [self::REPORT_MONEY, self::REPORT_CUSTOMERS, self::REPORT_FUNNEL, self::REPORT_PARTIES];
+    /** T4 de las encuestas (`specs/encuestas.md` §4.4): agregados sin un solo texto libre. */
+    public const REPORT_SURVEYS = 'surveys';
+
+    public const REPORTS = [self::REPORT_MONEY, self::REPORT_CUSTOMERS, self::REPORT_FUNNEL, self::REPORT_PARTIES, self::REPORT_SURVEYS];
 
     public const SEPARATOR = ';';
 
@@ -128,8 +132,32 @@ final class CsvExport
                 $this->partiesSummary($window, $comparison),
                 ...(new PartiesBreakdownWidget)->tablesFor($window, $comparison),
             ],
+            // Sin textos libres: `tablesFor()` fuerza la ventana y el widget los deja fuera por eso.
+            self::REPORT_SURVEYS => [
+                $this->surveysSummary($window, $comparison),
+                ...(new SurveysBreakdownWidget)->tablesFor($window, $comparison),
+            ],
             default => throw new \InvalidArgumentException("«{$report}» no es un informe del cuadro"),
         };
+    }
+
+    /** @return array{heading: string, columns: list<string>, rows: list<list<string>>} */
+    private function surveysSummary(Window $window, Comparison $comparison): array
+    {
+        $r = SurveysReport::for($window, $comparison);
+        /** @var array<string, int> $t */
+        $t = $r['totals'];
+        /** @var array{survey: string, question: string, mean: float, n: int}|null $scale */
+        $scale = $r['scale'];
+
+        return $this->summary([
+            [__('admin.analytics.surveys.answered'), (string) $t['answered']],
+            [__('admin.analytics.surveys.internal_rate'), number_format($t['internal_rate_bp'] / 100, 1, ',', '.').' %'],
+            [__('admin.analytics.surveys.external_rate'), number_format($t['external_rate_bp'] / 100, 1, ',', '.').' %'],
+            [__('admin.analytics.surveys.sent'), (string) $t['sent']],
+            [__('admin.analytics.surveys.declined'), (string) $t['declined']],
+            [__('admin.analytics.surveys.scale_mean'), $scale === null ? __('admin.analytics.parties.none') : number_format($scale['mean'], 1, ',', '.').' / 5'],
+        ]);
     }
 
     /** @return array{heading: string, columns: list<string>, rows: list<list<string>>} */

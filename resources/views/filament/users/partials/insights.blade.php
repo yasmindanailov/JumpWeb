@@ -92,6 +92,36 @@
         </dl>
     </div>
 
+    {{-- Las ENCUESTAS de este cliente (T4 de `specs/encuestas.md` §4.4): cuántas contestó y la última, con su nota y
+         su texto. Atadas a la persona con este permiso (`[DECIDIDO owner]` §7·1): es lo que permite llamar tras una
+         mala visita. --}}
+    @php($s = $i['surveys'])
+    <div class="mt-4 border-t border-gray-200 pt-3 dark:border-gray-700">
+        <p class="mb-2 text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ __('admin.users.insights.surveys') }}</p>
+        <dl class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm md:grid-cols-3" data-insights="surveys" data-insights-surveys="{{ $s['answered'] }}">
+            <div>
+                <dt class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ __('admin.users.insights.surveys_answered') }}</dt>
+                <dd class="font-medium text-gray-800 dark:text-gray-200">{{ $s['answered'] }}</dd>
+            </div>
+            @if ($s['last_on'] !== null)
+                <div>
+                    <dt class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ __('admin.users.insights.surveys_last') }}</dt>
+                    <dd class="font-medium text-gray-800 dark:text-gray-200">{{ $s['last_on'] }} · {{ __('admin.analytics.surveys.channel.'.$s['last_channel']) }} · {{ $s['last_survey'] }}</dd>
+                </div>
+                <div>
+                    <dt class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ __('admin.users.insights.surveys_last_score') }}</dt>
+                    <dd class="font-medium text-gray-800 dark:text-gray-200" data-insights-last-score="{{ $s['last_score'] ?? '' }}">{{ $s['last_score'] === null ? __('admin.analytics.parties.none') : $s['last_score'].' / 5' }}</dd>
+                </div>
+                @if ($s['last_text'] !== null)
+                    <div class="col-span-2 md:col-span-3">
+                        <dt class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ __('admin.users.insights.surveys_last_text') }}</dt>
+                        <dd class="font-medium text-gray-800 dark:text-gray-200">{{ $s['last_text'] }}</dd>
+                    </div>
+                @endif
+            @endif
+        </dl>
+    </div>
+
     {{-- Lo de la NAVEGACIÓN: solo en el régimen identificado (`analytics` consentida y sin oposición). Si la
          cuenta no tiene sesiones atadas, se dice y no se inventa (§4.6). --}}
     <div class="mt-4 border-t border-gray-200 pt-3 dark:border-gray-700">

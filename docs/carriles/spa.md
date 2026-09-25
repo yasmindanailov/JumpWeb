@@ -68,7 +68,12 @@
   con UN botón y su confirmación), `PUT /me/surveys` y el tercer interruptor de «Privacidad» (contrato 1.28.0),
   `surveys.cooldown_days` en «Ajustes → Puerta»; 13 tests nuevos, arnés +4; `deploy.sh` espera 10. **Demo local**:
   el cliente 2179 tiene la visita de AYER y la externa `que-tal-ayer` vive → `surveys:send-external --force` deja
-  el correo en Mailpit `:8028` y su página abre por el token de la fila.
+  el correo en Mailpit `:8028` y su página abre por el token de la fila. ▶ **T4 EN EL ÁRBOL (25-09)**: `SurveysReport`
+  (por día de la respuesta, las dos tasas, por encuesta y pregunta, «Por atender», seis consultas), la quinta pestaña
+  «Encuestas» (cuatro widgets; la persona de «Por atender» solo con `customers.insights`), el CSV `surveys` sin
+  textos, el bloque «Encuestas» de la 360; `SurveysReportTest` 5; la sonda del panel con la quinta pestaña.
+  **Fixture local `probe-ojo-encuestas`** (64 respuestas sobre los 32 anfitriones de la fiesta, `OJO=desmontar` lo
+  quita). ⚠️ Un ayudante `seed()` en un test es FATAL (tercera vez en este carril: `seedJune()`).
 - ⚠️⚠️ **LO MONTADO EN LA BD LOCAL para el ojo del owner (24-09), todo reversible**: (1) cinco ajustes FALSOS
   en `settings` (`analytics.driver=posthog`, `analytics.posthog_project` inventado y los tres ids de píxeles
   `marketing.*`): se quitan borrando esas filas; (2) el aviso de la analítica ENVIADO a las 57 cuentas de
@@ -97,8 +102,10 @@
 1. ❗❗ **LA T7 DE LA ANALÍTICA: LAS ENCUESTAS** — `specs/encuestas.md` **✅ aprobada (`#740`)**; **T1 en `main`**
    (25-09); **T2 en `main`** con el disparador de `#741` (el escaneo acredita) y la sonda 28/28; **T3 en el
    árbol** (el correo cada hora desde las 10:00 del parque, la página por token, la baja con UN botón,
-   `PUT /me/surveys` y el interruptor, contrato 1.28.0; `deploy.sh` espera 10). ▶ El ojo del owner en Mailpit y en
-   la página → commit y push → **T4 el cuadro** (quinta pestaña, «Por atender», la 360).
+   `PUT /me/surveys` y el interruptor, contrato 1.28.0; `deploy.sh` espera 10); **T4 en el árbol** (el cuadro:
+   quinta pestaña, «Por atender», la 360, CSV). ▶ **El OJO del owner sobre las cuatro tandas** (tablet, Mailpit, la
+   página, `/admin/analitica?pestana=surveys`, la 360 de un anfitrión `fiesta-N@ojo-fiesta.jumpweb.test`) y lo que
+   corrija → después, el experimento real (T5c).
    Después, el experimento real (T5c), que el owner quiere iterar tras las encuestas.
    ⚠️ Trampas de la fiesta, por si se reutiliza su molde (spec §4.6): el reenvío del mismo padre es IDEMPOTENTE;
    `order_id` nunca es nulo; son DOCE rutas enfocadas; los invitados añadidos NO son «extras»; una edición sin

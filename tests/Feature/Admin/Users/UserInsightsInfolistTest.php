@@ -14,6 +14,8 @@ use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Platform\Models\AnalyticsEvent;
 use App\Domain\Platform\Models\AnalyticsSession;
+use App\Domain\Platform\Models\Survey;
+use App\Domain\Platform\Models\SurveyResponse;
 use App\Domain\Platform\Services\Analytics\Visitor;
 use App\Domain\Platform\Services\Money;
 use App\Filament\Resources\Users\Pages\ViewUser;
@@ -223,6 +225,41 @@ class UserInsightsInfolistTest extends TestCase
         $plain = CustomerInsights::forCustomer($this->userWithRole('customer'))['parties'];
         $this->assertSame(0, $plain['count']);
         $this->assertNull($plain['came_as_guest']);
+    }
+
+    /** T4 de `specs/encuestas.md` §4.4: cuántas encuestas contestó y la ÚLTIMA, con su nota y su texto. */
+    public function test_the_surveys_block_shows_how_many_she_answered_and_the_last_one(): void
+    {
+        $customer = $this->userWithRole('customer');
+        $gate = Survey::create(['key' => 'visita', 'name' => ['es' => 'Tu visita'], 'kind' => Survey::KIND_INTERNAL, 'active' => true, 'questions' => [
+            ['key' => 'ambiente', 'type' => 'scale', 'label' => ['es' => 'Ambiente']],
+            ['key' => 'comentario', 'type' => 'text', 'label' => ['es' => 'Algo más']],
+        ]]);
+        $mail = Survey::create(['key' => 'que-tal', 'name' => ['es' => 'Qué tal ayer'], 'kind' => Survey::KIND_EXTERNAL, 'active' => true, 'questions' => [
+            ['key' => 'nota', 'type' => 'scale', 'label' => ['es' => 'Nota']],
+            ['key' => 'texto', 'type' => 'text', 'label' => ['es' => 'Cuéntanos']],
+        ]]);
+        SurveyResponse::create(['survey_id' => $gate->id, 'user_id' => $customer->id, 'channel' => 'internal', 'visited_on' => '2026-09-20', 'answered_at' => '2026-09-20 10:00:00', 'answers' => ['ambiente' => 2, 'comentario' => 'Mucha cola en la entrada'], 'locale' => 'es']);
+        SurveyResponse::create(['survey_id' => $mail->id, 'user_id' => $customer->id, 'channel' => 'external', 'token' => Str::random(40), 'sent_at' => '2026-09-22 08:00:00', 'answered_at' => '2026-09-22 09:30:00', 'answers' => ['nota' => 4, 'texto' => 'Mejor que la otra vez'], 'locale' => 'es']);
+
+        $s = CustomerInsights::forCustomer($customer)['surveys'];
+
+        $this->assertSame(2, $s['answered']);
+        $this->assertSame('22/09/2026', $s['last_on'], 'la última por fecha de respuesta');
+        $this->assertSame('external', $s['last_channel']);
+        $this->assertSame('Qué tal ayer', $s['last_survey']);
+        $this->assertSame(4, $s['last_score']);
+        $this->assertSame('Mejor que la otra vez', $s['last_text']);
+
+        $html = $this->sheet($this->userWithRole('admin'), $customer)->html();
+        $this->assertSame('2', $this->attribute($html, 'data-insights-surveys'));
+        $this->assertSame('4', $this->attribute($html, 'data-insights-last-score'));
+        $this->assertStringContainsString('Mejor que la otra vez', $html);
+        $this->assertStringNotContainsString('Mucha cola en la entrada', $html, 'solo la última: el histórico entero no cabe en la ficha');
+
+        $plain = CustomerInsights::forCustomer($this->userWithRole('customer'))['surveys'];
+        $this->assertSame(0, $plain['answered']);
+        $this->assertNull($plain['last_on']);
     }
 
     public function test_an_anonymized_account_shows_nothing(): void

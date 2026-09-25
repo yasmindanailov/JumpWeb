@@ -11,6 +11,7 @@ use App\Filament\Analytics\Delta;
 use App\Filament\Analytics\FunnelReport;
 use App\Filament\Analytics\MoneyReport;
 use App\Filament\Analytics\PartiesReport;
+use App\Filament\Analytics\SurveysReport;
 use App\Filament\Pages\AnalyticsPage;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
@@ -94,6 +95,12 @@ trait AnalyticsWidget
     protected function parties(): array
     {
         return PartiesReport::for($this->window(), $this->comparison());
+    }
+
+    /** El informe de las encuestas (`specs/encuestas.md` §4.4, T4). @return array<string, mixed> */
+    protected function surveys(): array
+    {
+        return SurveysReport::for($this->window(), $this->comparison());
     }
 
     /** Puntos básicos → «12,3 %». */

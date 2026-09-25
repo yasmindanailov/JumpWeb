@@ -163,7 +163,7 @@ const respuesta = await page.goto(`${BASE}/admin/analitica`, { waitUntil: 'netwo
 informe.status = respuesta?.status() ?? null;
 informe.titulo = await page.title();
 ok('status 200', informe.status === 200, String(informe.status));
-ok('cuatro pestañas', await page.getByRole('tab').count() === 4, String(await page.getByRole('tab').count()));
+ok('cinco pestañas', await page.getByRole('tab').count() === 5, String(await page.getByRole('tab').count()));
 // ⚠️ Medido: las pestañas inactivas NO son `display: none` (Filament las deja `invisible absolute h-0`), así que
 // el observador de intersección de Livewire da por visibles sus widgets y los pide también. Se apunta cuántas
 // peticiones costó abrir la página, para que el dato esté y no se afirme lo contrario.
@@ -218,23 +218,35 @@ await captura('escritorio-fiestas');
 await bajaHasta('Cuándo se completa el formulario');
 await captura('escritorio-fiestas-graficos');
 
+// 5 ter. Encuestas (T4 de `specs/encuestas.md`): 6 tarjetas, 1 gráfico (lo que contestan), «Por atender» y su
+// desglose plegado.
+await abrirPestana('Encuestas', 'Las encuestas, al detalle');
+await llega('Las encuestas: cuántas se contestan y qué dicen');
+await llega('Por atender');
+informe.pestanas.encuestas = { stats: await leerStats(), canvas: await canvasVisibles() };
+ok('encuestas: seis tarjetas', informe.pestanas.encuestas.stats.length === 6, String(informe.pestanas.encuestas.stats.length));
+ok('encuestas: un gráfico (con respuestas) o ninguno (sin ellas)', informe.pestanas.encuestas.canvas <= 1, String(informe.pestanas.encuestas.canvas));
+await captura('escritorio-encuestas');
+
 // Las tablas siguen en el DOM, plegadas: son la vista de tabla de los gráficos y lo que lleva el CSV.
 informe.tablas = await page.$$eval('h3', (els) => els.map((el) => el.textContent?.trim() ?? '').filter(Boolean));
 informe.canvas = await page.locator('canvas').count();
 ok('las tablas del dinero', ['Por día', 'Por canal', 'Por método de cobro', 'Por producto', 'La señal', 'Perdido'].every((t) => informe.tablas.includes(t)), informe.tablas.join(' · '));
-// Tres «Por día»: el dinero, los registros y, desde la T2 de la fiesta, las fiestas por día.
-ok('las tablas de registros y puerta', informe.tablas.includes('Cómo se registran') && informe.tablas.filter((t) => t === 'Por día').length === 3, informe.tablas.join(' · '));
+// Cuatro «Por día»: el dinero, los registros, las fiestas (T2 de la fiesta) y, desde la T4 de las encuestas, las
+// respuestas por día.
+ok('las tablas de registros y puerta', informe.tablas.includes('Cómo se registran') && informe.tablas.filter((t) => t === 'Por día').length === 4, informe.tablas.join(' · '));
 ok('las tablas de la conversión', ['Paso a paso', 'Dónde se quedan', 'Por primer toque', 'Páginas de entrada', 'Contacto'].every((t) => informe.tablas.includes(t)), informe.tablas.join(' · '));
 ok('las tablas de la fiesta', ['El dinero de después de reservar', 'Por complemento', 'La invitación y el justificante', 'Tiempos', 'Los invitados: dispositivo e idioma'].every((t) => informe.tablas.includes(t)), informe.tablas.join(' | '));
-ok('catorce gráficos en total', informe.canvas === 14, String(informe.canvas));
-const todasLasStats = [...informe.pestanas.dinero.stats, ...informe.pestanas.clientes.stats, ...informe.pestanas.conversion.stats, ...informe.pestanas.fiestas.stats];
+ok('las tablas de las encuestas', ['Por encuesta'].every((t) => informe.tablas.includes(t)), informe.tablas.join(' · '));
+ok('catorce o quince gráficos en total (el de las encuestas solo con respuestas)', informe.canvas === 14 + informe.pestanas.encuestas.canvas, String(informe.canvas));
+const todasLasStats = [...informe.pestanas.dinero.stats, ...informe.pestanas.clientes.stats, ...informe.pestanas.conversion.stats, ...informe.pestanas.fiestas.stats, ...informe.pestanas.encuestas.stats];
 ok('ninguna tarjeta vacía', todasLasStats.every((s) => s.label !== '' && s.value !== ''));
-ok('la pestaña viaja en la URL', page.url().includes('pestana=parties'), page.url());
+ok('la pestaña viaja en la URL', page.url().includes('pestana=surveys'), page.url());
 
 // T2d: el botón del CSV (el admin tiene `reports.export` por `Gate::before`) y la descarga de verdad, con la
 // sesión del navegador: estado, tipo, el BOM que abre bien la hoja de cálculo y la línea de comparación (T2f).
 ok('el botón «Descargar CSV»', await page.getByText('Descargar CSV').count() > 0);
-for (const informeCsv of ['money', 'customers', 'funnel', 'parties']) {
+for (const informeCsv of ['money', 'customers', 'funnel', 'parties', 'surveys']) {
     const csv = await page.request.get(`${BASE}/admin/analitica/csv?report=${informeCsv}&period=this_month&compare=year_ago`);
     const cuerpo = await csv.text();
     ok(`CSV «${informeCsv}»`, csv.status() === 200 && (csv.headers()['content-type'] ?? '').startsWith('text/csv') && cuerpo.startsWith('﻿') && cuerpo.includes('Resumen') && cuerpo.includes('Comparado con'), `${csv.status()} ${csv.headers()['content-type'] ?? ''} ${cuerpo.length} B`);

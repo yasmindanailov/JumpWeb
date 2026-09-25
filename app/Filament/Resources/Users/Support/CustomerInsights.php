@@ -11,7 +11,9 @@ use App\Domain\Platform\Models\AnalyticsEvent;
 use App\Domain\Platform\Models\AnalyticsSession;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Domain\Platform\Services\Money;
+use App\Domain\Platform\Services\Surveys\QuestionSchema;
 use App\Filament\Analytics\PartiesReport;
+use App\Filament\Analytics\SurveysReport;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -117,7 +119,60 @@ final class CustomerInsights
             'visits_before' => $visitsBefore,
             'contacts' => $contacts,
             'parties' => self::parties($customer, $orderIds->all(), $first),
+            'surveys' => self::surveys($userId),
         ];
+    }
+
+    /**
+     * **Las ENCUESTAS de este cliente** (T4 de `specs/encuestas.md` §4.4; `[DECIDIDO owner]` §7·1: atadas a la persona
+     * con permiso propio): cuántas contestó y la ÚLTIMA —el día, el canal, la encuesta, su nota de escala si la hay
+     * y su texto libre—. Es lo que permite llamar tras una mala visita.
+     *
+     * @return array{answered: int, last_on: ?string, last_channel: ?string, last_survey: ?string, last_score: ?int, last_text: ?string}
+     */
+    private static function surveys(int $userId): array
+    {
+        $rows = DB::table('survey_responses as r')
+            ->join('surveys as s', 's.id', '=', 'r.survey_id')
+            ->where('r.user_id', $userId)
+            ->whereNotNull('r.answered_at')
+            ->orderByDesc('r.answered_at')
+            ->orderByDesc('r.id')
+            ->select(['r.answered_at', 'r.channel', 'r.answers', 's.name', 's.key', 's.questions'])
+            ->get();
+
+        if ($rows->isEmpty()) {
+            return self::noSurveys();
+        }
+
+        $last = $rows->first();
+        $answers = is_string($last->answers) ? (array) json_decode($last->answers, true) : [];
+        $score = null;
+        $text = null;
+        foreach (QuestionSchema::normalize(is_string($last->questions) ? json_decode($last->questions, true) : null) as $q) {
+            $value = $answers[$q['key']] ?? null;
+            if ($q['type'] === QuestionSchema::TYPE_SCALE && $score === null && is_int($value)) {
+                $score = $value;
+            }
+            if ($q['type'] === QuestionSchema::TYPE_TEXT && $text === null && is_string($value) && trim($value) !== '') {
+                $text = $value;
+            }
+        }
+
+        return [
+            'answered' => $rows->count(),
+            'last_on' => DisplayTime::format((string) $last->answered_at, 'd/m/Y'),
+            'last_channel' => (string) $last->channel,
+            'last_survey' => SurveysReport::nameOf($last->name, (string) $last->key),
+            'last_score' => $score,
+            'last_text' => $text,
+        ];
+    }
+
+    /** @return array{answered: int, last_on: null, last_channel: null, last_survey: null, last_score: null, last_text: null} */
+    private static function noSurveys(): array
+    {
+        return ['answered' => 0, 'last_on' => null, 'last_channel' => null, 'last_survey' => null, 'last_score' => null, 'last_text' => null];
     }
 
     /**
@@ -251,6 +306,7 @@ final class CustomerInsights
             'first_purchase' => null, 'last_purchase' => null, 'frequency' => null, 'products' => [],
             'marketing' => false, 'identified' => false, 'first_source' => null, 'visits_before' => null, 'contacts' => null,
             'parties' => self::noParties(),
+            'surveys' => self::noSurveys(),
         ];
     }
 }
