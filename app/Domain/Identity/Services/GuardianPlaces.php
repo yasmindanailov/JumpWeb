@@ -135,4 +135,28 @@ final class GuardianPlaces implements ReservationPlacesTaken, SignedInvitationRe
     {
         return GuardianAuthorization::query()->where('order_item_id', $reservationId)->count();
     }
+
+    /**
+     * **Las claves de los menores con justificante en esa reserva** (`specs/fiesta-sistema-nuevo.md` §4.1): lo que
+     * la lista de invitados del sistema nuevo necesita para decir «Firmada · Falta» en cada fila, y la respuesta
+     * de la invitación a la que está atada cada firma (o `null` si es una firma suelta).
+     *
+     * ⚠️ Se publica la RESPUESTA y no la consulta, como el resto de esta clase: Booking no mira a Identity, y la
+     * página cruza cada ficha con estas claves por `PersonNameKey::cardMatches()`, la misma regla que la puerta
+     * (`GateProfile`). Aquí no se compara nada: se dice qué hay.
+     *
+     * @return list<array{key: string, reply_id: int|null}>
+     */
+    public function signedMinorsIn(int $reservationId): array
+    {
+        return GuardianAuthorization::query()
+            ->where('order_item_id', $reservationId)
+            ->orderBy('id')
+            ->get(['minor_key', 'invitation_reply_id'])
+            ->map(static fn (GuardianAuthorization $a): array => [
+                'key' => (string) $a->minor_key,
+                'reply_id' => $a->invitation_reply_id === null ? null : (int) $a->invitation_reply_id,
+            ])
+            ->all();
+    }
 }

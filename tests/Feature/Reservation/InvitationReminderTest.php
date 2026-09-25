@@ -217,7 +217,8 @@ class InvitationReminderTest extends TestCase
             ->get(route('reservation.guests', ['reservation' => $item]))
             ->assertOk()->getContent();
 
-        $this->assertStringContainsString(__('guestform.invite.remind_ready'), $html);
+        // ▶ Desde `#743` (la lista del sistema nuevo) el texto vuelve escrito en su panel, listo para copiar.
+        $this->assertStringContainsString('data-recordatorio-texto', $html, 'el texto tiene que estar en la pantalla');
         $this->assertStringContainsString('Ana Soler', $html);
     }
 
@@ -311,12 +312,13 @@ class InvitationReminderTest extends TestCase
             ->get(route('reservation.guests', ['reservation' => $item]))
             ->assertOk()->getContent();
 
-        $this->assertStringNotContainsString(__('guestform.invite.remind'), $html);
+        // ▶ Desde `#743` (la lista del sistema nuevo): el gesto es «Escribir el recordatorio» (`data-recordatorio-escribir`).
+        $this->assertStringNotContainsString('data-recordatorio-escribir', $html);
         // El control de este caso: con la fiesta a diez días, el botón SÍ está.
         Carbon::setTestNow();
         $open = $this->reservation(2, [['name' => 'Ana Soler'], ['name' => 'Iris Vela']]);
         $this->assertStringContainsString(
-            __('guestform.invite.remind'),
+            'data-recordatorio-escribir',
             $this->actingAs($open->order->user)->get(route('reservation.guests', ['reservation' => $open]))->getContent(),
         );
     }

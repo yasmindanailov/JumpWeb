@@ -102,7 +102,9 @@ class InvitationProposalsTest extends TestCase
         // `guests[i]` es un mapa ABIERTO de columnas del panel: meter ahí el id chocaría con una
         // columna que se llamara igual (§7.2·R3).
         $this->assertStringNotContainsString('guests[0][reply_id]', $html);
-        $this->assertStringContainsString(__('guestform.invite.badge'), $html, 'falta la chapa de origen');
+        // La chapa de origen, en la piel nueva (`fiesta-sistema-nuevo.md` §4.2): la fila lo dice como dato y como texto.
+        $this->assertStringContainsString('data-origen="invitacion"', $html, 'la fila no dice que viene por la invitación');
+        $this->assertStringContainsString(__('fiesta.fila.invite'), $html, 'falta la chapa de origen');
     }
 
     public function test_a_no_is_not_painted_over_any_card(): void

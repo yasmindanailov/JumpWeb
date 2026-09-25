@@ -616,11 +616,11 @@ class GuestFormTest extends TestCase
             ->assertOk()
             ->getContent();
 
-        $this->assertStringContainsString('gf-fiche__regime', $html);
-        // ⚠️ El del mayor va MARCADO: es el que mueve el precio de la fiesta. Sin esta aserción,
-        // pintar los dos iguales pasaría igual de verde.
-        $this->assertStringContainsString('gf-fiche__regime is-other', $html);
-        $this->assertStringContainsString('Cumpleaños Jump', $html);
+        // ▶ Desde `#743` la página es la lista del sistema nuevo: el régimen que DIFIERE del pack va en la
+        // fila del niño (`data-regimen`, y su chapa), y el propio no se repite. ⚠️ Solo el mayor lo lleva: es
+        // el que mueve el precio de la fiesta. Sin esta aserción, pintar los dos iguales pasaría igual de verde.
+        $this->assertSame(1, substr_count($html, 'data-regimen="Cumpleaños Jump"'), 'solo la ficha del mayor dice Jump');
+        $this->assertStringNotContainsString('data-regimen="Cumpleaños Kids"', $html, 'el pack reservado no se repite en su ficha');
     }
 
     // ─── Una edad SIN PRODUCTO (`#284` D6, §22.5) ────────────────────────────────
@@ -645,7 +645,7 @@ class GuestFormTest extends TestCase
             ->assertSee(__('guestform.regime_no_product'))
             ->getContent();
 
-        $this->assertStringContainsString('data-no-product="1"', $html, 'la ficha va marcada para que el JS no la dé por lista');
+        $this->assertStringContainsString('data-sin-producto="1"', $html, 'la ficha va marcada para que el JS no la dé por lista');
     }
 
     public function test_the_park_can_write_its_own_text_for_each_case(): void
@@ -694,7 +694,7 @@ class GuestFormTest extends TestCase
         $this->actingAs($user)
             ->get(route('reservation.guests', $reservation))
             ->assertOk()
-            ->assertDontSee('gf-fiche__regime');
+            ->assertDontSee('data-regimen=');
     }
 
     /**
@@ -723,14 +723,14 @@ class GuestFormTest extends TestCase
 
             // (1) SIN logotipo: el suelo es el nombre del sitio en la fuente de rótulo.
             $sinLogo = (string) $this->get($url)->assertOk()->getContent();
-            $this->assertStringContainsString('gf-mark__brand', $sinLogo, 'sin logotipo tiene que quedar el nombre');
-            $this->assertStringNotContainsString('gf-mark__logo', $sinLogo);
+            $this->assertStringContainsString('<span class="pli-logo"', $sinLogo, 'sin logotipo tiene que quedar el nombre');
+            $this->assertStringNotContainsString('<img class="pli-logo"', $sinLogo);
 
             // (2) CON logotipo: manda la imagen y el texto se retira — son alternativas.
             file_put_contents($dir.'/img/client-logo.svg', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"></svg>');
             $conLogo = (string) $this->get($url)->assertOk()->getContent();
-            $this->assertStringContainsString('gf-mark__logo', $conLogo, 'el logotipo de la instalación no llega al parte');
-            $this->assertStringNotContainsString('gf-mark__brand', $conLogo, 'se pintan el logotipo Y el texto: son alternativas');
+            $this->assertStringContainsString('<img class="pli-logo"', $conLogo, 'el logotipo de la instalación no llega al parte');
+            $this->assertStringNotContainsString('<span class="pli-logo"', $conLogo, 'se pintan el logotipo Y el texto: son alternativas');
         } finally {
             @unlink($dir.'/img/client-logo.svg');
             @unlink($dir.'/build');
@@ -889,11 +889,12 @@ class GuestFormTest extends TestCase
             ->assertSee('Para toda la mesa')
             ->getContent();
 
-        // El desplegable existe y es nativo: sin JS también se abre.
-        $this->assertMatchesRegularExpression('/<details class="gf-extra__more">/', $html);
-        $this->assertStringContainsString(__('tickets.addon_more_info'), $html);
+        // ▶ Desde `#743` (la tarjeta del sistema nuevo) lo que lleva va ESCRITO en la tarjeta, en su línea, sin
+        // ningún desplegable: sin JS se lee igual, que es lo que este caso vigila.
+        $this->assertStringContainsString('12 refrescos a elegir · Para toda la mesa', $html, 'lo que lleva, en una línea a la vista');
+        $this->assertStringNotContainsString('<details', $html, 'nada que abrir para leer qué se compra');
 
-        // CONTROL: un extra SIN features no pinta el bloque, o saldría un desplegable vacío.
+        // CONTROL: un extra SIN features pinta su tarjeta sin línea, no una línea vacía.
         $mudo = $this->attachPostFormAddon($reservation->ticketType, 'Cubo mudo', 900);
         $mudo->forceFill(['features' => null])->save();
 
@@ -903,11 +904,8 @@ class GuestFormTest extends TestCase
             ->assertSee('Cubo mudo')
             ->getContent();
 
-        $this->assertSame(
-            1,
-            substr_count($html, '<details class="gf-extra__more">'),
-            'con dos extras y uno sin «Más info», solo puede haber UN desplegable',
-        );
+        $this->assertSame(2, substr_count($html, 'class="fi-complemento'), 'dos tarjetas, una por extra');
+        $this->assertSame(1, substr_count($html, '12 refrescos a elegir · Para toda la mesa'), 'la línea solo la tiene el que lleva algo');
     }
 
     private function withPostFormAddon(string $name = 'Cubo de refrescos', int $cents = 1200, int $cutoff = 48): array

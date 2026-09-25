@@ -952,6 +952,28 @@ final class PartyInvitations
     }
 
     /**
+     * **Las claves de las fichas cuyo «sí» ya está ADOPTADO** (`specs/fiesta-sistema-nuevo.md` §4.1): lo que la
+     * lista de invitados del sistema nuevo necesita para pintar «por la invitación» en una ficha que el anfitrión
+     * ya guardó con su respuesta dentro. Vivas (no descartadas) y solo las que dijeron que sí; un «no» nunca se
+     * adopta sobre una ficha.
+     *
+     * @return list<string>
+     */
+    public function adoptedYesKeysIn(OrderItem $reservation): array
+    {
+        return InvitationReply::query()
+            ->where('order_item_id', $reservation->getKey())
+            ->where('attending', true)
+            ->whereNotNull('adopted_at')
+            ->whereNull('dismissed_at')
+            ->pluck('adopted_name_key')
+            ->map(static fn ($key): string => (string) $key)
+            ->filter(static fn (string $key): bool => $key !== '')
+            ->values()
+            ->all();
+    }
+
+    /**
      * Las fichas de la reserva por POSICIÓN, con su clave y si ya las tiene alguien.
      *
      * @return list<array{key: string|null, taken: bool}>

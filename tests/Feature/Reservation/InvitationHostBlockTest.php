@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Reservation;
 
+use App\Domain\Booking\Models\InvitationReply;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\PartyInvitation;
@@ -13,6 +14,7 @@ use App\Domain\Booking\Services\GuestCountPolicy;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Platform\Services\DisplayTime;
+use App\Domain\Platform\Services\PersonNameKey;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
@@ -95,23 +97,27 @@ class InvitationHostBlockTest extends TestCase
 
         $invitation = PartyInvitation::query()->where('order_item_id', $item->id)->firstOrFail();
 
-        // El enlace, ESCRITO: sin JavaScript no hay ni Web Share ni portapapeles.
-        $this->assertStringContainsString(route('invitation.show', ['token' => $invitation->token]), $html, 'el anfitrión tiene que poder leer el enlace');
-        $this->assertStringContainsString('data-invite-share', $html, 'falta el atajo de compartir');
-        $this->assertStringContainsString('data-invite-copy', $html, 'falta el atajo de copiar');
+        // ▶ Desde `#743` (la lista del sistema nuevo): el enlace viaja en «Copiar el enlace» y en el mensaje de
+        // WhatsApp, que es un `<a>` de verdad: sin JavaScript se comparte igual.
+        $this->assertStringContainsString(route('invitation.show', ['token' => $invitation->token]), $html, 'el anfitrión tiene que poder repartir el enlace');
+        $this->assertStringContainsString('data-kind="copy"', $html, 'falta el atajo de copiar');
+        $this->assertStringContainsString('href="https://wa.me/?text=', $html, 'falta compartir por WhatsApp');
 
         // El PLAZO escrito como fecha (canvas, turno 3a), y no un número de horas que haya que sumar.
         $deadline = app(GuestCountPolicy::class)->deadlineFor($item);
         $this->assertNotNull($deadline);
-        $this->assertStringContainsString(
-            __('guestform.invite.deadline', ['when' => DisplayTime::dayLabel($deadline)]),
-            $html,
-            'el plazo se escribe como FECHA'
-        );
+        $this->assertStringContainsString(DisplayTime::dayLabel($deadline), $html, 'el plazo se escribe como FECHA');
 
-        // El resumen de §4.7, con sus tres cifras y sin ninguna respuesta todavía.
-        $this->assertStringContainsString(trans_choice('guestform.invite.tally_yes', 0, ['count' => 0]), $html);
-        $this->assertStringContainsString(trans_choice('guestform.invite.tally_pending', 0, ['count' => 0]), $html);
+        // El resumen de §4.7 (las tres cifras) solo cuando la invitación ya se ha compartido: recién pagada, manda
+        // «Compartir por WhatsApp» (diseño, Z1). Con una respuesta, las cifras aparecen y cuentan.
+        $this->assertStringNotContainsString('data-cuenta=', $html, 'sin respuestas no hay cifras que enseñar');
+        InvitationReply::query()->create([
+            'party_invitation_id' => $invitation->getKey(), 'order_item_id' => $item->getKey(),
+            'attending' => true, 'child_name' => 'Hugo Ruiz', 'child_key' => PersonNameKey::for('Hugo Ruiz'),
+        ]);
+        $html = $this->get($item->guestFormSignedUrl())->assertOk()->getContent();
+        $this->assertStringContainsString('data-cuenta="confirmados">1<', $html, 'un «sí» pendiente cuenta como confirmado');
+        $this->assertStringContainsString('data-cuenta="no">0<', $html);
     }
 
     public function test_a_product_without_the_invitation_paints_nothing_and_creates_no_row(): void
@@ -135,9 +141,11 @@ class InvitationHostBlockTest extends TestCase
         $invitation = PartyInvitation::query()->where('order_item_id', $item->id)->firstOrFail();
 
         $this->assertStringNotContainsString((string) $invitation->token, $html, 'el token no puede repartirse antes de que la invitación diga de quién es la fiesta');
-        $this->assertStringContainsString(__('guestform.invite.needs_name'), $html, 'la pantalla tiene que decir qué falta');
-        // El remedio está DENTRO del desplegable, así que nace abierto.
-        $this->assertMatchesRegularExpression('#<details class="gf-invite__custom"\s+open\s*>#', $html, 'con el nombre por escribir, «Personalizar» se abre solo');
+        // ▶ Desde `#743`: sin el nombre, la página ES la pregunta («¿Cómo se llama quien cumple?»), con su campo y
+        // «Crear la invitación»; la lista no se enseña hasta contestarla (diseño del 25-09, spec §1.4 Z1).
+        $this->assertStringContainsString('data-primero', $html, 'la pantalla tiene que ser la pregunta por el nombre');
+        $this->assertStringContainsString('name="honoree_name"', $html, 'el remedio es el campo, a la vista');
+        $this->assertStringNotContainsString('data-lista', $html, 'sin nombre no hay lista que repartir');
     }
 
     // ─── El testigo, con su control ──────────────────────────────────────────────────

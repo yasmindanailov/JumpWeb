@@ -80,10 +80,14 @@ class GuestFormSkinTest extends TestCase
 
         $html = $this->actingAs($user)->get(route('reservation.guests', ['reservation' => $item]))->assertOk()->getContent();
 
-        $this->assertStringNotContainsString('eventfields__req', $html, 'volvió el asterisco de lo obligatorio');
-        $this->assertSame(2, substr_count($html, '<span class="gf-opt">'), 'la columna opcional se marca en cada una de las dos fichas');
-        $this->assertMatchesRegularExpression('#<a class="gf-legal" href="[^"]*privacidad[^"]*">#', $html, 'la política tiene que ser un control propio (F-08)');
-        $this->assertMatchesRegularExpression('#<div class="gf-stub" data-surface="ink">#', $html, 'el resguardo declara su superficie en el marcado');
+        // ▶ Desde `#743` (la lista del sistema nuevo): la ficha no marca lo obligatorio con asterisco, marca lo
+        // OPCIONAL con palabra (`pz-campo__opt`), la política es un enlace propio y la superficie de tinta (la barra
+        // de Guardar) la declara el marcado.
+        $this->assertStringNotContainsString('pz-campo__req', $html, 'volvió el asterisco de lo obligatorio');
+        // Dos fichas más la de «Añadir a mano», cada una con su columna opcional marcada con palabra.
+        $this->assertSame(3, substr_count($html, '<span class="pz-campo__opt">'), 'la columna opcional se marca en cada ficha y en la de añadir a mano');
+        $this->assertMatchesRegularExpression('#<a href="[^"]*privacidad[^"]*">#', $html, 'la política tiene que ser un control propio (F-08)');
+        $this->assertStringContainsString('data-surface="ink"', $html, 'la barra declara su superficie en el marcado');
     }
 
     /** El bloque de la hoja en `site.css`, sin comentarios. */

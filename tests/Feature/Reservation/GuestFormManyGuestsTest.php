@@ -30,15 +30,17 @@ class GuestFormManyGuestsTest extends TestCase
 
         $html = $this->actingAs($user)->get(route('reservation.guests', ['reservation' => $item]))->assertOk()->getContent();
 
-        $pending = strpos($html, 'data-i="1"');
-        $group = strpos($html, '<details class="gf-done" id="gf-done">');
-        $first = strpos($html, 'data-i="0"');
-        $third = strpos($html, 'data-i="2"');
+        // ▶ Desde `#743` (la lista del sistema nuevo) el orden de la PÁGINA sigue sin ser el de las POSICIONES:
+        // las fichas con datos van en su orden y las VACÍAS al final (escondidas con JavaScript, que las rellena
+        // «Añadir a mano»). Por eso `sanitizeGuestData()` sigue ordenando por clave al guardar.
+        $first = strpos($html, 'data-fila="g0"');
+        $third = strpos($html, 'data-fila="g2"');
+        $empty = strpos($html, 'data-fila="g1"');
 
-        $this->assertNotFalse($group, 'las fichas listas tienen que ir plegadas en su grupo');
-        $this->assertTrue($pending < $group && $group < $first && $first < $third, 'orden de la página: la pendiente arriba, después el grupo con las listas en su orden');
-        $this->assertStringContainsString(__('guestform.group_pending', ['count' => 1]), $html);
-        $this->assertStringContainsString(trans_choice('guestform.group_done', 2, ['count' => 2]), $html);
+        $this->assertNotFalse($first);
+        $this->assertTrue($first < $third && $third < $empty, 'orden de la página: las escritas en su orden y la vacía al final');
+        $this->assertMatchesRegularExpression('#class="fi-fila[^"]*fi-fila--vacia[^"]*" data-fila="g1"#', $html, 'la vacía va marcada');
+        $this->assertDoesNotMatchRegularExpression('#class="fi-fila[^"]*fi-fila--vacia[^"]*" data-fila="g0"#', $html);
     }
 
     public function test_a_card_with_some_data_says_what_it_is_missing_and_a_blank_one_does_not(): void
@@ -47,8 +49,11 @@ class GuestFormManyGuestsTest extends TestCase
 
         $html = $this->actingAs($user)->get(route('reservation.guests', ['reservation' => $item]))->assertOk()->getContent();
 
-        $this->assertStringContainsString(__('guestform.status_missing', ['field' => 'Edad']), $html);
-        $this->assertSame(1, substr_count($html, 'gf-fiche__role is-missing'), 'solo la ficha a medias dice qué le falta; la de en blanco no');
+        // ▶ Desde `#743`: la fila del niño dice «Falta la edad» en su resumen y va sin `data-completa`; la de en
+        // blanco es una ficha VACÍA (no una a medias) y se esconde con JavaScript.
+        $this->assertMatchesRegularExpression('#data-fila="g0"[^>]*data-completa="0"#', $html, 'Iker sin edad no está completo');
+        $this->assertStringContainsString(__('fiesta.fila.no_age'), $html, 'y su ficha dice qué le falta');
+        $this->assertMatchesRegularExpression('#class="fi-fila[^"]*fi-fila--vacia[^"]*" data-fila="g1"#', $html, 'la de en blanco es vacía, no «a medias»');
     }
 
     public function test_saving_with_the_cards_out_of_order_keeps_every_guest_in_place(): void
@@ -99,20 +104,21 @@ class GuestFormManyGuestsTest extends TestCase
     {
         [$user, $item] = $this->reservation([[], []]);
 
+        // ▶ Desde `#743` (la lista del sistema nuevo): la barra de Guardar, el panel de «Pegar una lista» y la
+        // entrada de Vite de la página; en solo lectura, ni barra ni panel.
         $editable = $this->actingAs($user)->get(route('reservation.guests', ['reservation' => $item]))->assertOk()->getContent();
-        $this->assertStringContainsString('<div class="gf-savebar">', $editable);
-        $this->assertStringContainsString('<dialog class="gf-dialog" id="gf-paste"', $editable);
-        $this->assertMatchesRegularExpression('#<script type="module">\s*import \{[^}]+\} from \'[^\']*js/guest-form/logic\.js\?v=\d+\'#', $editable, 'la página importa la lógica pura con su fecha de fichero');
+        $this->assertStringContainsString('data-barra', $editable, 'la barra de Guardar');
+        $this->assertStringContainsString('data-panel="pegar"', $editable, 'el panel de pegar');
+        $this->assertMatchesRegularExpression('#<script type="module" src="[^"]*/build/assets/lista-[^"]+\.js"#', $editable, 'la página carga su entrada de Vite');
 
         $item->forceFill(['slot_id' => $this->pastSlot($item)->id])->save();
         $readonly = $this->actingAs($user)->get(route('reservation.guests', ['reservation' => $item]))->assertOk()->getContent();
 
-        // ⚠️ Se buscan los ELEMENTOS y no los nombres de clase sueltos: el script del módulo nombra `gf-savebar-done`,
-        // `gf-paste` y `gf-done` para buscarlos, y una subcadena sobre la página entera daba la solo lectura por rota
-        // con la página sana (la trampa de `#553`, esta vez con el JS en el papel de la prosa).
-        $this->assertStringNotContainsString('<div class="gf-savebar">', $readonly, 'en solo lectura no hay nada que guardar');
-        $this->assertStringNotContainsString('<dialog class="gf-dialog"', $readonly, 'en solo lectura no se pega nada');
-        $this->assertStringNotContainsString('<details class="gf-done"', $readonly, 'en solo lectura la lista se lee en su orden, sin agrupar');
+        // ⚠️ Se buscan los ELEMENTOS (sus marcas `data-*`) y no nombres de clase sueltos: una subcadena sobre la
+        // página entera daba la solo lectura por rota con la página sana (la trampa de `#553`).
+        $this->assertStringNotContainsString('data-barra', $readonly, 'en solo lectura no hay nada que guardar');
+        $this->assertStringNotContainsString('data-panel="pegar"', $readonly, 'en solo lectura no se pega nada');
+        $this->assertStringContainsString(__('guestform.readonly_notice'), $readonly);
     }
 
     public function test_the_page_serves_the_logic_module_it_imports(): void

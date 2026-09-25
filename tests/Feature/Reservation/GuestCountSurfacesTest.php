@@ -82,17 +82,25 @@ class GuestCountSurfacesTest extends TestCase
     {
         $item = $this->reservation(10);
 
-        $this->get($item->guestFormSignedUrl())
+        $html = $this->get($item->guestFormSignedUrl())
             ->assertOk()
             ->assertSee('name="guest_count"', false)
-            // ⚠️⚠️ El campo vive en el RESGUARDO, FUERA del formulario: sin `form=` el navegador no lo envía y
-            // cambiar el número no hacía nada en un navegador real (`#571`). Los casos de abajo mandan el POST a
-            // mano, así que ninguno podía verlo.
-            ->assertSee('form="gf-form"', false)
-            ->assertSee('id="gf-form"', false)
+            ->assertSee('id="fiesta-form"', false)
             // El SUELO es el mínimo del pack y el TECHO su máximo, resueltos por el dominio.
             ->assertSee('min="8"', false)
-            ->assertSee('max="20"', false);
+            ->assertSee('max="20"', false)
+            ->getContent();
+
+        // ⚠️⚠️ En la piel vieja el campo vivía en el RESGUARDO, FUERA del formulario, y sin `form=` el navegador no
+        // lo enviaba: cambiar el número no hacía nada en un navegador real (`#571`). Los casos de abajo mandan el
+        // POST a mano, así que ninguno podía verlo. En la piel nueva (`fiesta-sistema-nuevo.md` §4.2) la zona 3 va
+        // DENTRO del único formulario: lo que se afirma es que el campo sigue entre `<form>` y `</form>`.
+        $form = strpos($html, 'id="fiesta-form"');
+        $campo = strpos($html, 'name="guest_count"');
+        $this->assertNotFalse($form);
+        $this->assertNotFalse($campo);
+        $this->assertGreaterThan($form, $campo, 'el campo del número está antes del formulario');
+        $this->assertLessThan(strpos($html, '</form>', $form), $campo, 'el campo del número está FUERA del formulario: el navegador no lo enviaría (`#571`)');
     }
 
     public function test_the_signed_page_saves_the_new_count_together_with_the_cards(): void
@@ -164,19 +172,20 @@ class GuestCountSurfacesTest extends TestCase
         // `SlotOfferTest` de `#324`). El aviso lo pinta el JS, y en el navegador no hay `trans_choice`: con la
         // sintaxis de plural de Laravel, la barra vertical y las dos formas llegaban enteras a la pantalla, así
         // que la cadena tenía UNA sola forma —y la pantalla decía «de 1 fichas»—.
-        // ▶ Desde la T2 el JS SÍ pluraliza: `choice()` de `public/js/guest-form/logic.js`, con sus casos de
+        // ▶ Desde la T2 el JS SÍ pluraliza: `choice()`, hoy en `resources/js/fiesta/logica.js`, con sus casos de
         // `node --test`. Lo que se vigila ahora es la PAREJA: si la cadena trae dos formas, el script tiene que
         // resolverlas con `choice()` y no con un `replace` a secas, que es exactamente cómo volvería el defecto.
+        // ⚠️ En la piel nueva la plantilla viaja en `data-tpl` del aviso y el script va EMPAQUETADO por Vite: el
+        // emparejamiento se afirma sobre el fuente del script, no sobre el HTML.
         $item = $this->reservation(10);
 
-        $html = $this->get($item->guestFormSignedUrl())
+        $this->get($item->guestFormSignedUrl())
             ->assertOk()
-            ->assertSee('id="gf-count-warn"', false)
-            ->assertSee(':discarded', false)
-            ->getContent();
+            ->assertSee('id="pli-aviso-numero"', false)
+            ->assertSee(':discarded', false);
 
         $this->assertStringContainsString(
-            'choice(countWarnTpl', (string) $html,
+            'choice(aviso.dataset.tpl', (string) file_get_contents(base_path('resources/js/fiesta/lista.js')),
             'el aviso de fichas perdidas no pasa por `choice()`: una cadena con dos formas llegaría entera a la pantalla',
         );
 

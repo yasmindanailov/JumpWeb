@@ -20,6 +20,8 @@ use App\Domain\Platform\Services\Money;
 use App\Domain\Platform\Services\PublicFreeText;
 use App\Http\Concerns\AuthorizesGuestForm;
 use App\Http\Concerns\RecordsPartyFacts;
+use App\Http\Fiesta\ListaDeInvitados;
+use App\Http\Instancia\InstanceViews;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -69,7 +71,11 @@ class GuestFormController extends Controller
         // Lo que PROPONEN las respuestas pendientes, ya colocado sobre sus fichas (T6·2).
         $proposed = $this->withProposals($reservation, $reservation->guestData(), $proposals);
 
-        return view('reservation.guests', [
+        // ▶ Desde `#743` la página es LA LISTA DEL SISTEMA NUEVO (`specs/fiesta-sistema-nuevo.md` §4.1): las mismas
+        // claves de siempre entran en el MODELO DE PÁGINA (`ListaDeInvitados`) y la vista `fiesta.lista` lee solo
+        // ese arreglo. ⚠️ Las hojas de la instancia llegan por el contrato de hojas de `instancia.json` (de
+        // plataforma, pedido): hasta entonces la página viva sale NEUTRA con la hoja del producto.
+        $datos = [
             'order' => $reservation->order,
             'reservation' => $reservation,
             'type' => $type,
@@ -147,6 +153,18 @@ class GuestFormController extends Controller
             'formAction' => $request->hasValidSignatureWhileIgnoring(EmailUtm::IGNORED_QUERY)
                 ? $reservation->guestFormSignedStoreUrl()
                 : route('reservation.guests.store', ['reservation' => $reservation]),
+        ];
+
+        return view('fiesta.lista', [
+            'm' => ListaDeInvitados::componer(
+                $datos,
+                (array) (view()->shared('site') ?? []),
+                is_string(session('status')) ? session('status') : null,
+                is_string(session('reminder_text')) ? session('reminder_text') : null,
+            ),
+            // Las hojas de la instancia para la superficie `fiesta` (`#769`): con ellas la página se viste con la marca;
+            // sin paquete o sin la clave, vacío y la página sale NEUTRA, entera.
+            'hojas' => InstanceViews::hojas('fiesta'),
         ]);
     }
 
@@ -228,6 +246,13 @@ class GuestFormController extends Controller
             app(PartyInvitations::class)->reconcileAdopted($reservation->fresh(['ticketType']) ?? $reservation);
         }
 
+        // ── PERSONALIZAR la invitación con el MISMO Guardar (`#743`, `specs/fiesta-sistema-nuevo.md` §4.2) ─────────
+        // El diseño tiene UN solo botón que escribe, y personalizar viaja en él. Escribe SOLO `party_invitations`
+        // (lo mismo que `updateInvitation`, que sigue viva para la API y para la primera pantalla), y va DESPUÉS de las
+        // fichas: el testigo ya lo movió el guardado, así que aquí no deja obsoleta ninguna página. Solo si vino
+        // alguna de sus claves —el formulario viejo no las manda— y solo si el producto ofrece invitación.
+        $rejectedText = $this->personalizeFromRequest($request, $reservation);
+
         // Los extras van DESPUÉS y en su propia transacción (§4.5.3): un id que dejó de ofrecerse no
         // puede tumbar el guardado de los nombres y las alergias, que es la razón de ser de esta
         // página. La no-atomicidad es deliberada, y por eso el desenlace la DICE.
@@ -236,7 +261,7 @@ class GuestFormController extends Controller
         // 10, y dos se pierden sin que nadie avise).
         $status = ($countChange !== null && ! $countChange->applied && $countChange->reason !== GuestCountChange::REASON_NOOP)
             ? 'guest-count-'.$countChange->reason
-            : 'guest-form-saved';
+            : ($rejectedText ? 'invitation-text-rejected' : 'guest-form-saved');
         $desired = $this->submittedGuestFormArray($request, 'addons');
         $extrasCents = 0;
         if ($desired !== null) {
@@ -413,6 +438,43 @@ class GuestFormController extends Controller
             ->to($this->invitationBackUrl($request, $reservation))
             ->with('status', 'invitation-reminded')
             ->with('reminder_text', $text);
+    }
+
+    /**
+     * Las claves de personalizar que vinieron en el guardado de la lista, validadas como en `updateInvitation()`, y
+     * escritas en `party_invitations`. Devuelve si algún texto libre se rechazó (§7.2·R9), para decirlo.
+     *
+     * ⚠️ `sometimes` en todas: el formulario viejo y la API no las mandan, y entonces no se toca nada. Sin
+     * invitación (el producto no la ofrece) tampoco: una clave forjada no crea ninguna fila.
+     */
+    private function personalizeFromRequest(Request $request, OrderItem $reservation): bool
+    {
+        $claves = ['theme', 'honoree_name', 'honoree_age', 'host_line', 'show_host_phone'];
+        if (! $request->hasAny($claves)) {
+            return false;
+        }
+        $type = $reservation->ticketType;
+        if ($type === null || ! $type->offersGuestInvitation()) {
+            return false;
+        }
+        $invitations = app(PartyInvitations::class);
+        $invitation = $invitations->existingFor($reservation);
+        if ($invitation === null) {
+            return false;
+        }
+
+        $data = $request->validate([
+            'theme' => ['sometimes', 'string', 'max:16'],
+            'honoree_name' => ['sometimes', 'nullable', 'string', 'max:'.PartyInvitation::HONOREE_NAME_MAX],
+            'honoree_age' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:255'],
+            'host_line' => ['sometimes', 'nullable', 'string', 'max:'.PartyInvitation::HOST_LINE_MAX],
+            'show_host_phone' => ['sometimes', 'boolean'],
+        ]);
+
+        $rejected = $this->rejectedFreeText($data);
+        $invitations->personalize($invitation, $data);
+
+        return $rejected;
     }
 
     /**

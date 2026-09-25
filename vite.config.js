@@ -20,6 +20,10 @@ export default defineConfig({
                 // T4d — la CALCULADORA de una página declarada (`specs/isla-y-landing-nueva.md` §4.12). Entrada propia:
                 // la pide la página que la lleva (`scripts` de `<x-pagina>`) y se monta al acercarse su pieza.
                 'resources/js/isla/calculadora/montar.js',
+                // La FIESTA del sistema nuevo (`specs/fiesta-sistema-nuevo.md` §4.5, carril del SPA): la lista de
+                // invitados, con su hoja `fiesta.css` (roles neutros + piezas). La carga `<x-pagina-enfocada>`; no
+                // entra en el chunk del cajón ni en `app.js`.
+                'resources/js/fiesta/lista.js',
             ],
             refresh: true,
         }),

@@ -101,8 +101,11 @@ class InvitationDeclinedTest extends TestCase
 
         $html = $this->get($item->guestFormSignedUrl())->assertOk()->getContent();
 
-        $this->assertSame(1, substr_count($html, __('guestform.invite.declined_badge')), 'la chapa va en la ficha que empareja, y solo en ella');
-        // Y no se quita a nadie solo: la lista es suya.
+        // ▶ Desde `#743` (la lista del sistema nuevo) la ficha que empareja se pinta como «No puede venir»
+        // (`data-respuesta="no"`), y solo ella.
+        $this->assertSame(1, substr_count($html, 'data-respuesta="no"'), 'el «no» va en la ficha que empareja, y solo en ella');
+        $this->assertMatchesRegularExpression('#data-fila="g1"[^>]*data-respuesta="no"#', $html);
+        // Y no se quita a nadie solo: la lista es suya, y su ficha sigue viajando en el formulario.
         $this->assertStringContainsString('name="guests[1][name]" value="Pablo"', $html);
     }
 
