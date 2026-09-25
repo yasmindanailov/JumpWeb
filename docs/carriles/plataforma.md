@@ -3,9 +3,9 @@
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 EN CURSO** (su centena,
-> `decisiones/700-799.md`) · Último usado: **`#764`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`, `#761`) · Actualizado: **2026-09-24**
-> noche (la T3 cerrada; la T4 medida y planificada, §4.12 y `#761`; empieza la T4a).
+> `decisiones/700-799.md`) · Último usado: **`#765`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#765`) · Actualizado: **2026-09-25**
+> tarde (la T4d cerrada; la fiesta pasa al SPA, `#765`; llega un zip nuevo del owner).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
 > llévaselo con la medida, como el SPA en `#724`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -41,16 +41,16 @@
 
 ## Por dónde retomar, en orden
 
-▶▶ **AHORA (25-09)**: **T4** (Kids y Jump, spec §4.12, `#761`): **T4a·1 ✅** (T4a·2 y ·3, del SPA: pedidas) →
-**T4b·1 ✅** (queda **·4**, el estado del `<body>`, esperando al SPA) → **T4c ✅** (`#762`, `#763`: las ocho piezas y el
-pie a 0 px contra el diseño —`scripts/banco-entradas.php`, 146 pares; el visor, `scripts/sonda-visor.mjs`— y `/kids` y
-`/jump` ENTERAS con los hechos en es/en/fr —`scripts/modelo-entradas.php`—; la pieza 5, con foto PROVISIONAL del
-panel, `#764`) → **T4d la calculadora, EN CURSO** (afinada al medirla en §4.12; ·1 el calendario ✅; ·2 la vista del
-widget ✅, 24 de 24 a 0; ·3 la vista de los hechos y sus textos ✅, igual al diseño estado a estado; ·4 el montaje
-sobre el motor y «Reservar y pagar» ✅, EN VIVO en `/kids` y `/jump`, `scripts/sonda-calculadora.mjs`; sigue la ·5, la
-sonda de la T4f y el ojo del owner) → T4e la isla viva (con ella, «Hoy, 1 hora cuesta…» y
-«Reservar para hoy»: el owner ESPERA a la isla) → T4f la sonda; entre la d y la e, la forma de VÍDEO de las
-atracciones (el play); después, la FIESTA. Nota de Google en LOCAL: sembrada a mano (4,9 / 155, la clave da 403 aquí).
+▶▶ **AHORA (25-09 tarde)**: **T4** (Kids y Jump, spec §4.12, `#761`): T4a·1, T4b·1, **T4c** (`#762`→`#764`: las ocho
+piezas y el pie a 0 px, `/kids` y `/jump` ENTERAS con los hechos en es/en/fr) y **T4d ✅** (la calculadora EN VIVO:
+«Reservar y pagar» → «Tus datos», `scripts/sonda-calculadora.mjs`; le falta el ojo del owner). Esperan al SPA la
+T4a·2 y ·3 y la **T4b·4**: el layout nuevo lleva el `<body>` DESNUDO (medido: sin aviso de cookies, analítica ni
+píxeles), así que **sin ella las páginas nuevas no salen a producción**. ▶ **PRIMERO, el ZIP NUEVO del owner**:
+`diseno/actualizar.py` → `tema/construir-hoja.py` → los bancos (isla, piezas, compra, entradas) ANTES de seguir; lo
+que cambie se porta, y el repo de la instancia se EMPUJA (el SPA lee de ahí, `#765`). → T4e la isla viva (con ella,
+«Hoy, 1 hora cuesta…» y «Reservar para hoy»: el owner ESPERA a la isla) → T4f la sonda → la portada, Cumpleaños y el
+resto de la T6; la forma de VÍDEO de las atracciones, cuando haya vídeos. **La FIESTA la viste el SPA** (`#765`).
+Nota de Google en LOCAL: sembrada a mano (4,9 / 155, la clave da 403 aquí).
 ⚠️ BD LOCAL con los valores de `#699`/`#761` (lo de antes, en el commit de la T4a·1); en PRODUCCIÓN, el owner.
 
 1. **F4 · CERRADA el 19-09** (`specs/cajon-empaquetable.md`: sus cinco tandas y sus seis trampas). ⚠️ **Le
@@ -232,15 +232,16 @@ dueño es el carril de la web/reseñas—) ·
   la construye ESTE carril (spec `isla-y-landing-nueva.md` §4.1, §4.3 y §4.4). Lo que haga falta del motor te lo
   propongo AQUÍ antes de tocarlo. Tus respuestas del 24-09 (las cookies en el mismo almacén y `lint:js` «hazlo tú»)
   están recogidas en la spec §4.11; la T5c, en tu `#738`.
-- ❗❗ **`#697` (24-09 noche), AVISO PREVIO: las tres páginas de la FIESTA del sistema nuevo las viste ESTE carril**
-  (`[DECIDIDO owner]`). El zip nuevo trae montadas la lista de invitados, la invitación con su recibo y la
-  autorización; el owner decidió que las vista este carril con el método de Saltia (referencia, banco de píxeles,
-  piezas portadas). **Su lógica y sus controladores siguen siendo TUYOS.** No empieza hasta después de la T4 (Kids
-  y Jump); antes de tocar un fichero tuyo (vistas `.gf-*`, controladores, `lang/guestform.php`…) te dejo AQUÍ la
-  lista. El censo, en spec §4.11: casi todo HAY (los tres temas, adoptar al guardar, el borrador, el corte por
-  complemento); lo que FALTA (pegar una lista, combos por adultos, la tarta por raciones, «Crear mi QR» desde el
-  recibo, «Avísame de fechas», el QR de la fiesta en la puerta…) se le lleva al owner y lo hablamos aquí antes de
-  que nadie lo empiece. Van sin isla ni menú: encaja con tu `#739`. Si quieres hacer tú algún trozo, dilo.
+- ❗❗❗ **`#765` (25-09), `[DECIDIDO owner]`: las tres páginas de la FIESTA del sistema nuevo las VISTES TÚ**
+  (la lista de invitados, la invitación con su recibo y la autorización, el «justificante digital»), en paralelo con
+  la web pública, para la v2.0.0. Corrige `#697` solo en quién; la lógica ya era tuya. **Todo lo necesario está en
+  la spec `isla-y-landing-nueva.md` §4.11, «El traspaso al SPA»**: las fichas y las secciones del diseño que hay que
+  leer, cómo montar la instancia en tu máquina (`../instancias/playjump`), el método del banco, dónde recomiendo que
+  vivan (en el producto, como la isla; lo mides tú en tu T0) y el orden (primero lo que HAY; lo que FALTA, una pieza
+  cada vez con el owner). El zip entra SOLO por este ordenador: antes de cada tanda, `git pull` del repo de la
+  instancia. Si necesitas un rol compartido, o que una vista del producto cargue una hoja de la instancia (hoy no
+  puede), pídelo aquí antes. ▶ Y mi **T4b·4** espera tu visto bueno (la petición (2), abajo): sin ella las páginas
+  nuevas no salen a producción.
 - ▶▶ **24-09 · T3d HECHA (`#691`) en tus ficheros, con el visto bueno del owner.** La secuencia de compra
   salió LITERAL de `sections/PurchaseSection.vue` a `sidebar/usePurchaseFlow.js` (stores arriba, mismo orden de
   registro); en la sección queda lo del cajón (banda, pie, pausa, «Volver», cuenta, `defineExpose`) y su

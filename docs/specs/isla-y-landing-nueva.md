@@ -27,7 +27,7 @@
   la isla en Vue, idéntica al diseño) y **T3 ✅** (§4.10, `#689`→`#698`): la isla compra con tarjeta hasta el banco,
   con «Entra» y Google, cumpleaños con señal y la hora que se llena; su sonda, `scripts/sonda-isla.mjs`; la
   secuencia, en `sidebar/usePurchaseFlow.js`. El sistema nuevo del 24-09 tarde, dentro (§4.11, `#697`). **T4 🟦**
-  (§4.12, `#763`): T4a·1, T4b·1 y T4c ✅.
+  (§4.12, `#763`): T4a·1, T4b·1, T4c y T4d ✅. La fiesta, del SPA (`#765`).
 - **Invariantes**: `PAY-*` si entra Bizum (`VERIFY_CONC=1`), `SEC-12` (la ruta de las vistas), `SEC-01`,
   `RGPD-*` (consentimiento dentro de la isla, Apple como proveedor), `PERF-02` (la carcasa por instalación va en
   el arranque cacheado; la variante del A/B, en la sesión).
@@ -316,7 +316,7 @@ deja de decir «nada de otra librería» en la T1.
 | T3 ✅ | La compra en la isla sobre el motor, con tarjeta; sonda de compra (§4.10; la sonda en staging, con el ensayo de la v2.0.0) | Producto |
 | T4 | **Kids y Jump** (`#683`), un molde y dos páginas, con su calculadora y la isla viva en la página (§4.12: T4a→T4f); los 301, con la T6 | Instancia + producto |
 | T5 | Mi cuenta en la isla | Producto |
-| T6 | El resto de páginas, las tres de la fiesta (las viste este carril: `#697`, §4.11) y la lógica nueva que apruebe el owner | Los dos |
+| T6 | El resto de páginas, las tres de la fiesta (las viste el SPA: `#765`, §4.11) y la lógica nueva que apruebe el owner | Los dos |
 
 Después, la v2.0.0 (`#670`): con la isla encendida para PlayJump, y el A/B cuando la T5 de la analítica exista.
 
@@ -782,6 +782,43 @@ del propio diseño). Cada una se le lleva al owner y se habla con el SPA antes d
 invitado no es un visitante*, sin banner, driver ni píxeles en ellas).
 ▶ Contestado por el SPA el 24-09: el aviso de cookies dentro de la isla pinta su tarjeta sobre el MISMO almacén
 (`ui/cookie-consent.js`, `createCookiesStore`) y dispara `cookies-updated`; y `lint:js` con `isla/`, «hazlo tú».
+
+▶▶ **El traspaso al SPA (`#765`, 25-09)**: las tres páginas de la fiesta las viste el carril del SPA, en el otro
+ordenador y en paralelo con la web pública. Lo que necesita para empezar, medido aquí:
+- **Qué, en el diseño** (`instancias/playjump/diseno/playjump-design-system/`): `paginas/lista-invitados.card.html`
+  (código en `paginas/lista-invitados/`: `datos.js`, `estado.jsx`, `zonas-1-2.jsx`, `zonas-3-5.jsx`),
+  `paginas/invitacion.card.html` (`invitacion/datos.js`, `vistas.jsx`, `invitacion.css`, que comparte con la
+  autorización) y `paginas/autorizacion.card.html` (`autorizacion/datos.js`); los componentes de
+  `components/invitados/` y `forms/SaveBar`. Se leen ANTES, en `readme.md` del diseño, las secciones «La lista de
+  invitados», «Complementos en la lista de invitados», «La invitación, con su tema», «La invitación y su recibo» y
+  «La autorización», con sus «Por confirmar» y «Por aprobar», y la lista general «Por confirmar con el cliente».
+- **La máquina**: el repo de la instancia (`github.com/yasmindanailov/instancia-playjump`) clonado AL LADO del
+  producto, en `../instancias/playjump` (es lo que monta `compose.yaml`: `../instancias:/var/www/instancias`), con
+  `INSTANCIA_RUTA` en `.env` y `cp -r ../instancias/playjump/publico/instancia public/`. La copia del diseño se
+  comprueba con `cd diseno && sha256sum -c --quiet playjump-design-system.sha256`. ⚠️ El zip entra SOLO por el
+  ordenador de plataforma (`diseno/actualizar.py`) y llega con un `git pull` del repo de la instancia: nunca se
+  pone a mano en el otro.
+- **El método** (el de la T1→T4, `#685`): el banco A/B con `scripts/pixel.mjs` (`--rehacer --reloj`, a 390 y
+  1280) → 0 píxeles. A = la ficha del diseño con sus datos de prueba; B = nuestra página con los MISMOS datos. Los
+  modelos que ya existen: `scripts/banco-entradas.php` (JSX con Babel contra Blade, con estados pulsados por pieza:
+  `clics` y `pasar`) y `scripts/banco-isla.php` (contra Vue). Cada tanda con su CONTROL: una mutación de 1 px tiene
+  que tumbar sus pares. Las trampas del juez, en `TESTING.md` §2.octies.
+- **Dónde viven, recomendación técnica a medir en su T0** (`#630`): en el PRODUCTO, como la isla (`#682`), porque
+  son funciones de toda instalación con fiestas y «la mecánica viene decidida del sistema». La estructura va en el
+  producto con roles genéricos de valor neutro, y los valores de PlayJump van en una hoja de la instancia cargada tras
+  `saltia.css`, igual que `publico/instancia/css/isla.css` con los `--isla-*`. ⚠️ Hoy una vista del producto NO
+  carga hojas de la instancia (por eso la isla sale neutra en las páginas viejas). Ese mecanismo es del paquete de
+  instancia, de este carril, y se propone en el buzón antes de tocarlo. En principio queda descartado hacerlas vistas
+  de la instancia sobre el contrato de datos (`#681`): la lógica de la lista (el borrador, pegar, las plazas) acabaría
+  en la instancia.
+- **Reglas que siguen en pie**: el suelo sin JavaScript del brief (un `<form>` de verdad y Guardar como su botón de
+  enviar; lo demás es mejora) · `#739` (sin banner, driver ni píxeles; el hecho lo deja el controlador) · la firma y
+  su prueba (`waiver-probatorio.md`, `RGPD-*`) · ⚠️ la zona 3 de la lista, «siempre empuja a llenar» (25-09), sube
+  el número: eso ocupa AFORO y cobra en el parque, así que es `INVARIANTES` §1–§2 y `VERIFY_CONC=1` si se toca.
+- **El orden recomendado**: primero se viste lo que HAY (las tres páginas con la lógica de hoy, a 0 píxeles en sus
+  estados); después, lo que FALTA (el censo de arriba y lo que el diseño añadió el 25-09: quien cumple primero, la
+  lista que empieza solo con él, «Al final viene» y el número que empuja a llenar), una pieza cada vez y con la
+  decisión del owner delante. El censo se re-mide al empezar, contra el último zip.
 
 ### 4.12 La T4: Kids y Jump — el censo (MEDIDO 24-09) y el plan
 
