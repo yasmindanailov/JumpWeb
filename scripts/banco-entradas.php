@@ -133,6 +133,24 @@ $piezas = [
             'puerta' => $pasar('a:has-text("Ver el cumpleaños")', ['button:has-text("¿Hacéis cumpleaños")']),
         ],
     ],
+    // La pieza 5 COMO IRÁ HOY: sin las tres reseñas (esperan la T2·9 del SPA) y sin la foto que cuida (material que
+    // falta), las dos sin hueco (`#761`·3). El A es el diseño con esos datos vaciados antes de montar.
+    'tranquilidad' => [
+        'jsx' => ['entradas/pieza-5.jsx'],
+        'antes' => 'for (const k of ["kids", "jump"]) window.PJ_ENTRADAS[k].p5.prueba.huecos = []; const DS5 = window.SaltiaDesignSystem_33397c; const PF5 = DS5.ProofList; DS5.ProofList = (p) => React.createElement(PF5, Object.assign({}, p, { media: null }));',
+        'react' => '<section className="sec"><div className="wrap"><TranquilidadEntradas z={z} /></div></section>',
+        'vista' => 'instancia::entradas.pieza-5',
+        'datos' => fn (string $zona): array => ['google' => 'https://www.google.com/maps', 'foto' => null],
+        'estados' => ['normas' => $pasar('text=Ver normas y seguridad'), 'resenas' => $pasar('text=Leer las reseñas en Google')],
+    ],
+    // Y su forma CON foto, para el día que llegue el material: la misma imagen a los dos lados.
+    'tranquilidad-foto' => [
+        'jsx' => ['entradas/pieza-5.jsx'],
+        'antes' => 'for (const k of ["kids", "jump"]) window.PJ_ENTRADAS[k].p5.prueba.huecos = []; const DS5 = window.SaltiaDesignSystem_33397c; const PF5 = DS5.ProofList; DS5.ProofList = (p) => React.createElement(PF5, Object.assign({}, p, { media: { src: "../assets/media/foto-120.png", alt: "Un monitor con los niños" } }));',
+        'react' => '<section className="sec"><div className="wrap"><TranquilidadEntradas z={z} /></div></section>',
+        'vista' => 'instancia::entradas.pieza-5',
+        'datos' => fn (string $zona): array => ['google' => 'https://www.google.com/maps', 'foto' => ['src' => '../assets/media/foto-120.png', 'alt' => 'Un monitor con los niños']],
+    ],
     'donde' => [
         'jsx' => ['entradas/pieza-6.jsx'],
         // ⚠️ El mapa es material que NO EXISTE (el diseño pinta su hueco de «pendiente», y la web nunca: `#761`·3). Para

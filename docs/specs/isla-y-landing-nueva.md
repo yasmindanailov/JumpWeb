@@ -921,6 +921,12 @@ juzga «idéntico», con los datos del diseño.
     misma imagen que el nuestro, envuelto en su espacio antes de montar (`antes` en el banco). **Medido: 12 de 12 a 0**
     a la primera; control: sin el `grid` de la forma estrecha, caen justo los 6 pares de 390. ▶ Del owner: la
     captura estática del mapa (con el pin y la salida de la carretera de Granada, como pide el diseño).
+  - ▶ **·5, hecha (25-09)**: `proof-list` (los cuidados y su premio; con foto, al lado y estirada o, bajo 760 px,
+    encima) y `review-panel` (se apila bajo 820 px), los dos con `@container`, y `pieza-5.blade.php` (instancia
+    `b359232`). Tal como irá HOY: **sin las tres reseñas** (la T2·9 del SPA) **ni la foto que cuida** (material que falta),
+    sin hueco; y la forma CON foto, construida y juzgada ya con una imagen que hace de foto. El A, el diseño con esos
+    datos vaciados antes de montar. **Medido: 16 de 16 a 0** a la primera; control: sin la forma estrecha del panel,
+    caen justo los 8 pares de 390.
 - **T4a · los datos** (producto): las dos columnas de `#699` con su campo en el panel, sus hechos en
   `/catalog/products` y `/catalog/zones` (contrato 1.26.0), sus pruebas y su mutante; y la LISTA de reseñas en
   `/social-proof`, con la misma regla de permiso y la misma línea legal que la portada de hoy. El texto del paso de
