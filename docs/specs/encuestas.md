@@ -127,7 +127,8 @@ WhatsApp; recompensas (JumpPoints) por contestar.
 
 - **Cuándo**: solo tras `registerVisit()` con éxito (o si la visita de hoy ya estaba acreditada), si hay una encuesta
   interna viva y este cliente no tiene fila para ella (ni contestada ni declinada). Una encuesta contestada no
-  vuelve a ofrecerse; una declinada tampoco.
+  vuelve a ofrecerse; una declinada tampoco. La baja de los correos (`surveys_opt_out`) NO calla la puerta: el
+  interruptor habla del correo, y aquí el cliente dice «no» en persona (`[DECIDIDO owner]` `#742`).
   ▶ `[DECIDIDO #741]` (25-09) **cómo se acredita la visita, porque no hay botón desde `#234`** (§1): **al
   ESCANEAR el carné se acredita sola** (`searchByCard()` → `GateVisits::register()`, idempotente por día, con el
   permiso de la ficha, ANTES de componer la ficha) y la tarjeta sale en el mismo gesto; la búsqueda tecleada no
@@ -156,7 +157,8 @@ WhatsApp; recompensas (JumpPoints) por contestar.
 - **El comando** `surveys:send-external`, programado a las **10:00 del parque** (`DisplayTime`), en
   `routes/console.php` (+1 tarea: `deploy.sh` «esperadas» sube EN EL MISMO commit, §0·4). Por cada encuesta externa
   viva: los clientes con `customer_visits.visited_on` = AYER (día del parque), con correo verificado, no
-  anonimizados, sin `surveys_opt_out`, sin fila para esa encuesta y **sin ningún correo de encuesta en los últimos
+  anonimizados, sin `surveys_opt_out`, sin fila para esa encuesta, **sin haber contestado la interna en esa visita**
+  (`[DECIDIDO owner]` `#742`: a quien dijo «no preguntar» sí se le manda) y **sin ningún correo de encuesta en los últimos
   30 días** (`surveys.cooldown_days`, ajuste de «Ajustes → Puerta», 30 por defecto). Por cada uno: fila
   `survey_responses` (`sent_at`, `token`) y la notificación en cola. `--dry-run` cuenta sin mandar. Idempotente:
   reejecutar no manda dos veces (la fila ya existe).
@@ -208,7 +210,7 @@ WhatsApp; recompensas (JumpPoints) por contestar.
 - La 360 gana el bloque «Encuestas»: contestadas, la última (fecha, canal, su puntuación de escala si la hay y su
   texto libre), bajo `customers.insights`. Y la pestaña lleva **«Por atender»**: las respuestas con una escala ≤ 2 de
   los últimos 30 días, con el día, el canal, la puntuación, el texto y el enlace a la ficha del cliente (solo con
-  `customers.insights`; sin él, la fila sale sin persona). Es el valor de atar la respuesta a la persona (§7): una
+  `customers.insights`; sin él, la fila sale sin persona NI texto, `[DECIDIDO owner]` `#742`). Es el valor de atar la respuesta a la persona (§7): una
   mala visita se puede llamar y arreglar; un agregado no.
 - `SurveyResource` en «Ajustes → Sistema» (`settings.manage`): lista con clase, estado, respuestas;
   formulario con clave, nombre e intro en tres idiomas, clase, encendido, ventana, y el Repeater de preguntas (tipo,

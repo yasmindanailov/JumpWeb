@@ -345,7 +345,7 @@ return [
             'answers_chart_of' => ':survey · :question',
             'attention_heading' => 'Por atender',
             'attention_note' => 'Respuestas de los últimos 30 días con una nota de 2 o menos, las peores primero. Pulsa el nombre para abrir la ficha.',
-            'attention_note_no_person' => 'Respuestas de los últimos 30 días con una nota de 2 o menos. Sin el permiso de la ficha del cliente, la fila sale sin persona.',
+            'attention_note_no_person' => 'Respuestas de los últimos 30 días con una nota de 2 o menos. Sin el permiso de la ficha del cliente, la fila sale sin persona ni texto.',
             'attention_empty' => 'Nada por atender: ninguna nota de 2 o menos en los últimos 30 días.',
             'breakdown_heading' => 'Las encuestas, al detalle',
             'breakdown_note' => 'Por día o semana de respuesta, por encuesta y por pregunta. Los textos libres solo aquí: el CSV no los lleva.',

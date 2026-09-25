@@ -305,7 +305,7 @@ return [
             'answers_chart_of' => ':survey · :question',
             'attention_heading' => '待处理',
             'attention_note' => '最近 30 天评分 2 分及以下的回答，最差的排在前面。点击姓名打开客户档案。',
-            'attention_note_no_person' => '最近 30 天评分 2 分及以下的回答。没有客户档案权限时不显示客户。',
+            'attention_note_no_person' => '最近 30 天评分 2 分及以下的回答。没有客户档案权限时不显示客户，也不显示留言。',
             'attention_empty' => '无需处理：最近 30 天没有 2 分及以下的评分。',
             'breakdown_heading' => '问卷明细',
             'breakdown_note' => '按回答的日或周、按问卷、按问题。自由文本仅在此显示：CSV 不包含。',

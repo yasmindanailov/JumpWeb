@@ -106,14 +106,21 @@ class SurveySendTest extends TestCase
         SurveyResponse::create(['survey_id' => $other->id, 'user_id' => $reciente->id, 'channel' => 'external', 'sent_at' => now()->subDays(10), 'token' => Str::random(40)]);
         $enLaPuerta = $this->visitor('puerta@example.com');
         SurveyResponse::create(['survey_id' => $survey->id, 'user_id' => $enLaPuerta->id, 'channel' => 'internal', 'declined_at' => now()->subDay()]);
+        // `#742`: quien CONTESTÓ la interna en esa visita ya dio su opinión; quien dijo «no preguntar» recibe el correo.
+        $internal = $this->survey(['key' => 'visita', 'kind' => Survey::KIND_INTERNAL]);
+        $contesto = $this->visitor('contesto@example.com');
+        SurveyResponse::create(['survey_id' => $internal->id, 'user_id' => $contesto->id, 'channel' => 'internal', 'visited_on' => self::YESTERDAY, 'answered_at' => self::YESTERDAY.' 11:00:00', 'answers' => ['ambiente' => 4]]);
+        $declino = $this->visitor('declino@example.com');
+        SurveyResponse::create(['survey_id' => $internal->id, 'user_id' => $declino->id, 'channel' => 'internal', 'visited_on' => self::YESTERDAY, 'declined_at' => self::YESTERDAY.' 11:00:00']);
 
         Artisan::call('surveys:send-external');
 
         Notification::assertSentTo($ana, SurveyInvitation::class);
-        foreach ([$baja, $anteayer, $sinVerificar, $anonima, $reciente, $enLaPuerta] as $user) {
+        Notification::assertSentTo($declino, SurveyInvitation::class);
+        foreach ([$baja, $anteayer, $sinVerificar, $anonima, $reciente, $enLaPuerta, $contesto] as $user) {
             Notification::assertNotSentTo($user, SurveyInvitation::class);
         }
-        $this->assertSame(1, SurveyResponse::query()->where('survey_id', $survey->id)->where('channel', 'external')->count());
+        $this->assertSame(2, SurveyResponse::query()->where('survey_id', $survey->id)->where('channel', 'external')->count());
 
         // Con el plazo a cero, quien recibió otra encuesta hace diez días sí entra: el plazo es un ajuste.
         Setting::updateOrCreate(['key' => 'surveys.cooldown_days'], ['value' => '0', 'group' => 'puerta']);

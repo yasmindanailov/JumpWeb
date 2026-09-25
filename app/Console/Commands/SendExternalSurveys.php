@@ -27,6 +27,7 @@ use Throwable;
  *  · sin correo verificado, o anonimizado (art. 17): no hay a quién escribir;
  *  · con `surveys_opt_out` («no quiero recibir más encuestas»);
  *  · con fila para ESTA encuesta (ya la contestó en la puerta, la declinó o ya se le mandó);
+ *  · que CONTESTÓ la interna en esa misma visita (`#742`): ya dio su opinión; a quien dijo «no preguntar», sí;
  *  · con un correo de encuesta en los últimos `surveys.cooldown_days` días (30 por defecto): una persona que
  *    viene cada semana no recibe una encuesta cada semana.
  *
@@ -132,6 +133,13 @@ class SendExternalSurveys extends Command
             ->whereNotExists(static fn (Query $q) => $q->selectRaw('1')->from('survey_responses')
                 ->whereColumn('survey_responses.user_id', 'users.id')
                 ->where('survey_responses.survey_id', $survey->getKey()))
+            // `#742`: a quien CONTESTÓ la interna en esa visita no se le repite por correo (ya dio su opinión); a
+            // quien dijo «no preguntar» sí: el correo es el canal tranquilo.
+            ->whereNotExists(static fn (Query $q) => $q->selectRaw('1')->from('survey_responses')
+                ->whereColumn('survey_responses.user_id', 'users.id')
+                ->where('survey_responses.channel', 'internal')
+                ->where('survey_responses.visited_on', $yesterday)
+                ->whereNotNull('survey_responses.answered_at'))
             ->whereNotExists(static fn (Query $q) => $q->selectRaw('1')->from('survey_responses')
                 ->whereColumn('survey_responses.user_id', 'users.id')
                 ->where('survey_responses.channel', 'external')

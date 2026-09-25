@@ -1,7 +1,7 @@
 # Carril · Diseño del SPA (el cajón) — y, desde el 24-09, LA ANALÍTICA
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb`) · Banda: **730–759** (700–729 agotada el 20-09)
-> · Último usado: **`#741`** · La banda está dada de alta en la tabla de `DECISIONES.md` ·
+> · Último usado: **`#742`** · La banda está dada de alta en la tabla de `DECISIONES.md` ·
 > Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: **`encuestas.md` §0** (la
 > tarea en curso) · `analitica-fiesta.md` §0 · `analitica.md` §0 y §4.5 · `google-business-profile.md` §0 ·
 > `sidebar-spa.md` §0 · `celebracion-e-invitacion.md` §0 · Actualizado: 2026-09-25 (madrugada).
@@ -73,7 +73,11 @@
   «Encuestas» (cuatro widgets; la persona de «Por atender» solo con `customers.insights`), el CSV `surveys` sin
   textos, el bloque «Encuestas» de la 360; `SurveysReportTest` 5; la sonda del panel con la quinta pestaña.
   **Fixture local `probe-ojo-encuestas`** (64 respuestas sobre los 32 anfitriones de la fiesta, `OJO=desmontar` lo
-  quita). ⚠️ Un ayudante `seed()` en un test es FATAL (tercera vez en este carril: `seedJune()`).
+  quita). ⚠️ Un ayudante `seed()` en un test es FATAL (tercera vez en este carril: `seedJune()`). ▶ **Revisión del
+  25-09**: la tasa de la puerta se mide sobre OFRECIDAS, la `intro` del correo solo en el idioma del cliente,
+  `SiteLocales` en la página, el ajuste del plazo probado; y **`#742`** (el owner tomó las cuatro recomendadas): el
+  correo no repite a quien contestó en la puerta, «Por atender» sin permiso va sin texto, la baja no calla la puerta,
+  el gráfico sin selector. Queda `[PENDIENTE: asesoría]` (5) sobre el correo de servicio y el ojo del owner.
 - ⚠️⚠️ **LO MONTADO EN LA BD LOCAL para el ojo del owner (24-09), todo reversible**: (1) cinco ajustes FALSOS
   en `settings` (`analytics.driver=posthog`, `analytics.posthog_project` inventado y los tres ids de píxeles
   `marketing.*`): se quitan borrando esas filas; (2) el aviso de la analítica ENVIADO a las 57 cuentas de

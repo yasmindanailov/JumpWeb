@@ -144,6 +144,13 @@ mutar "el comando manda a quien se dio de baja" "$CMD" \
 " \
   ""
 
+mutar "el correo se manda a quien ya contestó la interna en esa visita (#742)" "$CMD" \
+  "                ->where('survey_responses.visited_on', \$yesterday)
+                ->whereNotNull('survey_responses.answered_at'))" \
+  "                ->where('survey_responses.visited_on', \$yesterday)
+                ->whereNotNull('survey_responses.answered_at')
+                ->whereRaw('1 = 0'))"
+
 mutar "el plazo entre dos encuestas se ignora" "$CMD" \
   "        \$cooldownSince = Carbon::now()->subDays(SurveySettings::cooldownDays());" \
   "        \$cooldownSince = Carbon::now();"

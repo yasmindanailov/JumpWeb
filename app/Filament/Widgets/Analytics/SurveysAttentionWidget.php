@@ -13,8 +13,9 @@ use Filament\Widgets\Widget;
  * una escala ≤ 2 —el día, el canal, la encuesta, la nota, el texto y el enlace a la ficha del cliente—. Es el
  * valor de atar la respuesta a la persona: una mala visita se puede llamar y arreglar; un agregado no.
  *
- * ⚠️ **La persona sale SOLO con `customers.insights`** (el permiso de la 360): sin él, la fila va sin nadie. No
- * depende del periodo del filtro: es lo que hay que atender HOY.
+ * ⚠️ **La persona Y su texto salen SOLO con `customers.insights`** (el permiso de la 360; `#742`): sin él, la fila va
+ * sin nadie y sin lo que escribió, porque un texto libre es la persona hablando y puede llevar un nombre. No depende
+ * del periodo del filtro: es lo que hay que atender HOY.
  */
 class SurveysAttentionWidget extends Widget
 {
@@ -43,7 +44,7 @@ class SurveysAttentionWidget extends Widget
                 'channel' => __('admin.analytics.surveys.channel.'.$row['channel']),
                 'survey' => $row['survey'],
                 'score' => $row['score'].' / 5',
-                'text' => $row['text'] ?? '',
+                'text' => $showPerson ? (string) ($row['text'] ?? '') : '',
                 'person' => $showPerson && $row['user_id'] !== null ? (string) ($row['user_name'] ?? '#'.$row['user_id']) : null,
                 'url' => $showPerson && $row['user_id'] !== null ? UserResource::getUrl('view', ['record' => $row['user_id']]) : null,
             ];
