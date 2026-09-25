@@ -3,6 +3,7 @@
 namespace App\Http\Resources\Api\V1;
 
 use App\Domain\Content\Services\ContactTopics;
+use App\Domain\Content\Services\MapsEmbed;
 use App\Domain\Platform\Services\PublicFacts;
 use App\Domain\Platform\Services\VenueAddress;
 use Illuminate\Http\Request;
@@ -91,13 +92,17 @@ class SiteFactsResource extends JsonResource
             // versión de este recurso lo sirvió como `address.postal`: una landing que pintara su bloque de
             // contacto habría mandado a sus clientas a la gestoría. El fiscal viaja en `legal`, que es donde
             // se usa (aviso legal y facturación), y con su nombre.
-            'address' => (object) ($hechos->compact([
-                'line1' => 'address.line1',
-                'line2' => 'address.line2',
-                'city' => 'business.city',
-                'maps_url' => 'address.maps_url',
-                'maps_embed_url' => 'address.maps_embed_url',
-            ]) + $this->direccionEscrita($hechos)),
+            // ⚠️ `maps_embed_url` sale SANEADA (`MapsEmbed::clean`, la misma regla que la landing de siempre): acaba en el
+            // `src` de un iframe, y el panel admite pegar el `<iframe>` entero. Lo que no es un mapa de Google, fuera.
+            'address' => (object) (array_filter([
+                ...$hechos->compact([
+                    'line1' => 'address.line1',
+                    'line2' => 'address.line2',
+                    'city' => 'business.city',
+                    'maps_url' => 'address.maps_url',
+                ]),
+                'maps_embed_url' => MapsEmbed::clean($hechos->compact(['v' => 'address.maps_embed_url'])['v'] ?? null),
+            ], fn ($v): bool => $v !== null) + $this->direccionEscrita($hechos)),
             'contact' => (object) ($hechos->compact([
                 'email' => 'contact.email',
                 'phone' => 'contact.phone',

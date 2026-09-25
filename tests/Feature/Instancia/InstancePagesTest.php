@@ -3,6 +3,7 @@
 namespace Tests\Feature\Instancia;
 
 use App\Domain\Booking\Models\RateType;
+use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Models\User;
@@ -11,6 +12,7 @@ use App\Domain\Platform\Services\Analytics\Pixels;
 use App\Http\Instancia\InstancePages;
 use App\Http\Instancia\InstanceViews;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
@@ -265,6 +267,35 @@ BLADE);
         $this->assertStringNotContainsString('jw-calculadora-motor', $sin);
         $this->assertDoesNotMatchRegularExpression('#/build/assets/(montar|paquete)-#', $sin);
         $this->assertStringNotContainsString('css/cajon.css', $sin, 'Sin el cajón, ni su hoja.');
+    }
+
+    /**
+     * **Las horas de HOY de cada entrada** (`availability_today`, T4e): de ellas salen «Quedan huecos», «Reservar para hoy»
+     * y «Hoy, 1 hora cuesta…». Es el único hecho que no pasa por su controlador (medido: 160–180 ms por el catálogo sin
+     * memorizar), así que se prueba que da el MISMO JSON que `POST /availability/{id}/times` con la fecha de hoy DEL
+     * PARQUE, y solo para las entradas: un pack no pregunta «¿quedan huecos hoy?».
+     */
+    public function test_a_page_gets_todays_times_of_each_entry_with_the_same_json_as_the_api(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-10-06 10:00', 'Europe/Madrid'));
+        $tarifa = RateType::create(['key' => RateType::KEY_NORMAL, 'label' => ['es' => 'Normal'], 'weekdays' => null, 'priority' => 0]);
+        $zona = Zone::create(['slug' => 'kids', 'name' => ['es' => 'Kids'], 'position' => 1, 'is_active' => true, 'max_guests_per_slot' => 60, 'max_per_slot' => 0, 'prep_blocks_cupo' => false]);
+        foreach (['17:00:00', '18:00:00'] as $inicio) {
+            Slot::create(['zone_id' => $zona->id, 'date' => '2026-10-06', 'start_time' => $inicio, 'end_time' => Carbon::parse($inicio)->addHour()->format('H:i:s'), 'capacity' => 10, 'online_capacity' => 10]);
+        }
+        $entrada = TicketType::create(['name' => ['es' => 'Kids · 1 hora'], 'type' => TicketType::TYPE_ENTRY, 'zone_id' => $zona->id, 'duration_min' => 60, 'seats_per_unit' => 1, 'is_sellable' => true, 'is_active' => true, 'position' => 1]);
+        $entrada->prices()->create(['rate_type_id' => $tarifa->id, 'amount_cents' => 800]);
+        $pack = TicketType::create(['name' => ['es' => 'Pack'], 'type' => TicketType::TYPE_PACK, 'zone_id' => $zona->id, 'duration_min' => 120, 'seats_per_unit' => 1, 'is_sellable' => true, 'is_active' => true, 'position' => 2]);
+        $pack->prices()->create(['rate_type_id' => $tarifa->id, 'amount_cents' => 1500]);
+        $this->declarar(['kids' => ['vista' => 'kids', 'hechos' => ['availability_today']]]);
+
+        $hoy = $this->hechosDe('/kids')['availability_today'];
+
+        $this->assertSame([$entrada->id], array_column($hoy, 'product_id'), 'Solo las entradas.');
+        $api = $this->postJson("/api/v1/availability/{$entrada->id}/times", ['date' => '2026-10-06'])->assertOk()->json('data');
+        $this->assertCount(2, $api, 'El caso necesita horas de verdad: una lista vacía coincidiría por casualidad.');
+        $this->assertSame($api, $hoy[0]['data']);
+        Carbon::setTestNow();
     }
 
     /**

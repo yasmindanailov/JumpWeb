@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { medirVista, propsDeLaIsla, quedanHuecos } from './pagina.js';
+import { medirVista, propsDeLaIsla } from './pagina.js';
 
 /**
  * T4e — la isla viva en una página declarada (`pagina.js`), contra lo que hace `paginas/entradas/pagina.jsx` del diseño.
@@ -17,17 +17,8 @@ const acciones = {
     abrirCuenta: (zona) => llamadas.push(['cuenta', zona]),
     aceptarCookies: () => {}, rechazarCookies: () => {}, configurarCookies: () => {}, politicaCookies: () => {}, navegar: () => {},
 };
-const estado = (extra = {}) => ({ vista: { cta: false, hoy: false }, calculo: null, huecos: false, cookies: false, ...extra });
-const props = (extra) => propsDeLaIsla({ config, estado: estado(extra), acciones, textos });
-
-describe('los huecos de hoy', () => {
-    test('alguna hora VENDIBLE y con plazas; una llena o que ya no se vende no cuenta', () => {
-        assert.equal(quedanHuecos({ data: [{ time: '19:00', sellable: true, available: 3 }] }), true);
-        assert.equal(quedanHuecos({ data: [{ time: '19:00', sellable: true, available: 0 }, { time: '17:00', sellable: false, available: 9 }] }), false);
-        assert.equal(quedanHuecos({ data: [] }), false);
-        assert.equal(quedanHuecos(null), false, 'Sin respuesta, no se promete nada.');
-    });
-});
+const estado = (extra = {}) => ({ vista: { cta: false, hoy: false }, calculo: null, cookies: false, ...extra });
+const props = (extra, huecos = false) => propsDeLaIsla({ config: { ...config, today: { ...config.today, slots: huecos } }, estado: estado(extra), acciones, textos });
 
 describe('qué se ve de la página', () => {
     const alto = 800;
@@ -49,8 +40,8 @@ describe('qué se ve de la página', () => {
 });
 
 describe('las props de la isla', () => {
-    test('en reposo: [Hoy] con sus huecos y la acción de la página, que al pulsarla pide hoy solo si quedan', () => {
-        const con = props({ huecos: true });
+    test('en reposo: [Hoy] con los huecos que da la página y su acción, que al pulsarla pide hoy solo si quedan', () => {
+        const con = props({}, true);
         assert.deepEqual(con.today, { state: 'antes', opensAt: '16:30', closesAt: '21:30', slots: true });
         assert.equal(con.page.action.label, 'Reservar Kids');
         assert.equal(con.page.action.href, '#precio');
@@ -58,8 +49,9 @@ describe('las props de la isla', () => {
         con.page.action.onClick();
         assert.deepEqual(llamadas, [['reservar', true]]);
         llamadas.length = 0;
-        props({ huecos: false }).page.action.onClick();
+        props({}, false).page.action.onClick();
         assert.deepEqual(llamadas, [['reservar', false]], 'Sin huecos, «Reservar» no elige hoy.');
+        assert.equal(props({}, false).today.slots, false, 'Sin huecos, la isla no los promete.');
     });
 
     test('calla [Hoy] cuando la pieza 6 lo dice o mientras se calcula', () => {

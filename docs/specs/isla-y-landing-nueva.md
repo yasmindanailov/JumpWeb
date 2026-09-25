@@ -1200,6 +1200,17 @@ juzga «idéntico», con los datos del diseño.
     · 8 €» sin botón (el de la calculadora se ve); «Reservar y pagar» → una sola isla, la de la compra, en «Paso 1 de 2 ·
     Tus datos»; consola limpia. ⚠️ **El lateral de la cuenta se ve con el tema NEUTRO del producto** (los botones negros
     del producto, no Saltia): lo arregla la T5 (Mi cuenta en la isla), que el owner decide si entra en la v2.0.0.
+  - ▶ **·3 ✅ (25-09, pedidos del owner)**: (a) **«Hoy, 1 hora cuesta…»** —la cabecera, «dónde y cuándo», el cierre y
+    la isla lo decían con `huecos` fijo a `false`—: el hecho `availability_today` (las horas de hoy de cada ENTRADA, el
+    mismo JSON que `POST /availability/{id}/times`) lo resuelve en el servidor llamando al servicio —15–22 ms; por el
+    controlador eran 160–180 por `ProductCatalog::product()` sin memorizar— y el modelo decide los huecos de la zona; la
+    isla los recibe en `today.slots` y se retira su petición tras cargar. Con huecos sale como el mockup; sin ellos (de
+    noche), el «desde». Su caso, en `InstancePagesTest` (el mismo JSON, solo entradas, con horas de verdad). (b) **El
+    mapa de GOOGLE** en «dónde y cuándo» en vez de la captura: `park-location` gana `embed` (el hecho
+    `address.maps_embed_url`, ahora SANEADO por `MapsEmbed::clean`, su caso en `SiteFactsTest`), en el mismo marco y
+    con el panel encima; es de la categoría `maps` —consentido, el iframe desde el servidor; si no, un hueco con «Cargar
+    el mapa» que se lo pide a la isla (`jw:cookies:conceder`) y carga al confirmarlo el servidor (`cookies-updated`)—.
+    En vivo a 1280 y 390: hueco → consentimiento 200 → el mapa, sin recargar; consola limpia.
 - ▶▶ **LA VERIFICACIÓN FINAL de Kids y Jump (25-09, `#768`): 40 de 40 a 0 píxeles** contra el mockup del 25-09 —cada
   pieza en reposo a 390 y 1280, sin estados, ~5 min—. Cazó un defecto del port del zip: el margen del icono del parking
   iba al `svg` y `<x-lucide>` pinta una `<span>` que lo envuelve (instancia `d1114ad`). La isla, 60/60 en su banco; la

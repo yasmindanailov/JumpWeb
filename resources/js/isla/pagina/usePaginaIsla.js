@@ -4,10 +4,8 @@
  *
  *   · **Qué se ve**: la geometría del diseño en cada desplazamiento (un fotograma por ráfaga), sobre los primarios de la
  *     página (`data-isla-cta`, contrato página↔isla §4.3) y la línea [Hoy] de la pieza 6 (`data-hoy-linea`).
- *   · **Los huecos de hoy**: UNA petición (`POST /availability/{id}/times`, la primera fila de la zona) tras `load` y en
- *     un rato ocioso: la página no la espera, y hasta que llega la isla dice «Hoy abrimos…» sin prometer huecos. Se
- *     descartó resolverlo en el servidor: `ProductCatalog::product()` sin memorizar hacía 176 consultas y 160–180 ms por
- *     visita (medido el 25-09), más que todos los hechos de la página juntos.
+ *   · **Los huecos de hoy** llegan con la página (`today.slots`, del hecho `availability_today`): los mismos que dicen su
+ *     cabecera, «dónde y cuándo» y su cierre, sin petición desde aquí ni salto al llegar la respuesta.
  *   · **El aviso de cookies**: el MISMO almacén que la web de siempre (`ui/cookie-consent.js`): lo lee del `<body>`
  *     (`site/body-state`, T4b·4), lo guarda con su POST atómico (`RGPD-05`) y dispara `cookies-updated`, que es lo que
  *     esperan los cargadores del driver y de los píxeles. Con la compra abierta, espera.
@@ -17,12 +15,11 @@
  *     la de la compra ocupa su sitio.
  */
 import { computed, onBeforeUnmount, onMounted, reactive, watch } from 'vue';
-import { api } from '../../sidebar/api.js';
 import { createCookiesStore } from '../../ui/cookie-consent.js';
-import { medirVista, propsDeLaIsla, quedanHuecos } from './pagina.js';
+import { medirVista, propsDeLaIsla } from './pagina.js';
 
 export function usePaginaIsla({ config, textos, doc = document, win = window }) {
-    const e = reactive({ vista: { cta: false, hoy: false }, calculo: null, huecos: false, compraAbierta: false });
+    const e = reactive({ vista: { cta: false, hoy: false }, calculo: null, compraAbierta: false });
     const cookies = reactive(createCookiesStore({ doc, win, purchase: () => ({ isOpen: e.compraAbierta }) }));
 
     let ctas = [];
@@ -38,14 +35,10 @@ export function usePaginaIsla({ config, textos, doc = document, win = window }) 
     };
     const mover = () => { if (! fotograma) fotograma = win.requestAnimationFrame(medir); };
 
-    async function pedirHuecos() {
-        if (! config.today || ! config.productoHoy) return;
-        const respuesta = await api.post(`/availability/${config.productoHoy}/times`, { date: config.today.date }).catch(() => null);
-
-        e.huecos = Boolean(respuesta?.ok) && quedanHuecos(respuesta.data);
-    }
-
     const alCalcular = (ev) => { e.calculo = ev.detail ?? null; };
+    // Un contenido de la página que necesita una categoría («Cargar el mapa») se la pide a la isla, dueña del almacén;
+    // al confirmarla el servidor, el almacén dispara `cookies-updated` y el contenido se carga.
+    const alPedirCategoria = (ev) => { if (ev.detail?.categoria) cookies.grant(ev.detail.categoria); };
     const alAbrir = () => { e.compraAbierta = true; };
     const alCerrar = () => { e.compraAbierta = false; };
     const irA = (selector) => {
@@ -76,7 +69,7 @@ export function usePaginaIsla({ config, textos, doc = document, win = window }) 
 
     const props = computed(() => propsDeLaIsla({
         config, textos, acciones,
-        estado: { vista: e.vista, calculo: e.calculo, huecos: e.huecos, cookies: cookies.showing },
+        estado: { vista: e.vista, calculo: e.calculo, cookies: cookies.showing },
     }));
 
     // El hecho `consent_shown`, una vez por página y cuando el aviso se enseña de verdad (como el banner de siempre).
@@ -86,17 +79,16 @@ export function usePaginaIsla({ config, textos, doc = document, win = window }) 
         win.addEventListener('scroll', mover, { passive: true });
         win.addEventListener('resize', mover);
         doc.addEventListener('jw:calculadora', alCalcular);
+        doc.addEventListener('jw:cookies:conceder', alPedirCategoria);
         doc.addEventListener('jw:cajon:open', alAbrir);
         doc.addEventListener('jw:cajon:close', alCerrar);
         win.setTimeout(medir, 300);
-        const ocioso = win.requestIdleCallback ?? ((fn) => win.setTimeout(fn, 1200));
-        if (doc.readyState === 'complete') ocioso(pedirHuecos);
-        else win.addEventListener('load', () => ocioso(pedirHuecos), { once: true });
     });
     onBeforeUnmount(() => {
         win.removeEventListener('scroll', mover);
         win.removeEventListener('resize', mover);
         doc.removeEventListener('jw:calculadora', alCalcular);
+        doc.removeEventListener('jw:cookies:conceder', alPedirCategoria);
         doc.removeEventListener('jw:cajon:open', alAbrir);
         doc.removeEventListener('jw:cajon:close', alCerrar);
         if (fotograma) win.cancelAnimationFrame(fotograma);

@@ -2,9 +2,13 @@
 
 namespace App\Http\Instancia;
 
+use App\Domain\Booking\Contracts\AvailabilityOffer;
 use App\Domain\Booking\Contracts\CatalogProduct;
 use App\Domain\Booking\Contracts\ProductCatalog;
+use App\Domain\Platform\Services\DisplayTime;
+use App\Http\Api\ApiCollection;
 use App\Http\Controllers\Api\V1\AttractionsFactsController;
+use App\Http\Controllers\Api\V1\AvailabilityController;
 use App\Http\Controllers\Api\V1\CatalogProductsController;
 use App\Http\Controllers\Api\V1\CatalogZonesController;
 use App\Http\Controllers\Api\V1\FaqsFactsController;
@@ -13,6 +17,7 @@ use App\Http\Controllers\Api\V1\RulesFactsController;
 use App\Http\Controllers\Api\V1\ScheduleFactsController;
 use App\Http\Controllers\Api\V1\SiteFactsController;
 use App\Http\Controllers\Api\V1\SocialProofFactsController;
+use App\Http\Resources\Api\V1\OfferedTimeResource;
 use Illuminate\Http\Request;
 use LogicException;
 
@@ -51,6 +56,9 @@ final class PageFacts
         // Las FICHAS del catálogo (T4c·8, `#763`): una por producto, en el orden de `products`. El precio de un
         // complemento («2 € el par» de calcetines) solo vive aquí (`addons[].price_cents`).
         'product_details' => [CatalogProductsController::class, 'show', false],
+        // Las HORAS DE HOY de cada ENTRADA (T4e): de aquí salen «Quedan huecos esta tarde», «Reservar para hoy» y «Hoy,
+        // 1 hora cuesta…» de la cabecera, «dónde y cuándo», el cierre y la isla. Se resuelve en {@see horasDeHoy()}.
+        'availability_today' => [AvailabilityController::class, 'times', false],
     ];
 
     /**
@@ -75,6 +83,12 @@ final class PageFacts
                 throw new LogicException("«{$nombre}» no es un hecho que una página pueda pedir");
             }
 
+            if ($nombre === 'availability_today') {
+                $hechos[$nombre] = $this->horasDeHoy();
+
+                continue;
+            }
+
             [$controlador, $metodo, $conIdioma] = self::HECHOS[$nombre];
             $peticion = Request::create('/', 'GET', $conIdioma ? ['lang' => $idioma] : []);
             $pedir = fn (array $argumentos = []): array => app()
@@ -89,5 +103,31 @@ final class PageFacts
         app()->setLocale($idioma);
 
         return $hechos;
+    }
+
+    /**
+     * **Las horas de hoy de cada entrada**, con el MISMO JSON que `POST /availability/{id}/times` (la colección de la
+     * API con su recurso) sin la cesta —es la oferta para quien llega— y con la fecha de hoy DEL PARQUE
+     * (`DisplayTime::today()`: entre las dos medianoches la del contenedor no es la misma). Una fila por entrada, en el
+     * orden del catálogo: `{product_id, data}`.
+     *
+     * ⚠️ Es el ÚNICO hecho que no pasa por su controlador, y es medido: el controlador busca el producto con
+     * `ProductCatalog::product()`, que no memoriza, y así eran 176 consultas y 160–180 ms por visita para las nueve
+     * fichas; el servicio directo sobre las cinco entradas, 15–22 ms (25-09). Lo que se salta —validar la fecha y el
+     * 404 de un producto que no existe— no aplica: la fecha es la de hoy y los productos, los del catálogo.
+     *
+     * @return list<array{product_id: int, data: list<array<string, mixed>>}>
+     */
+    private function horasDeHoy(): array
+    {
+        $hoy = DisplayTime::today()->toDateString();
+        $oferta = app(AvailabilityOffer::class);
+        $peticion = Request::create('/', 'GET');
+        $entradas = array_filter(app(ProductCatalog::class)->products(null), fn (CatalogProduct $p): bool => $p->type === 'entry');
+
+        return array_values(array_map(fn (CatalogProduct $p): array => [
+            'product_id' => $p->id,
+            'data' => (new ApiCollection($oferta->times($p->id, $hoy), OfferedTimeResource::class))->toResponse($peticion)->getData(true)['data'] ?? [],
+        ], $entradas));
     }
 }

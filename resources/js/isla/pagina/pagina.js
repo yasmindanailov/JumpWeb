@@ -9,13 +9,6 @@
  * Los textos son del grupo `isla` de `lang/` (los de la acción) y de la página (su acción y su «desde»).
  */
 
-/** ¿Quedan huecos hoy? Alguna hora VENDIBLE y con plazas en la respuesta de `POST /availability/{id}/times`. */
-export function quedanHuecos(respuesta) {
-    const horas = Array.isArray(respuesta?.data) ? respuesta.data : [];
-
-    return horas.some((h) => Boolean(h?.sellable) && Number(h?.available) > 0);
-}
-
 /**
  * Qué se ve de la página, con la geometría del diseño: un primario cuenta en cuanto asoma FUERA de la franja de la
  * isla (si la isla está abajo, por encima de ella; si arriba, por debajo), y la línea [Hoy] de la pieza 6, igual.
@@ -35,21 +28,22 @@ export function medirVista({ ctas = [], hoyLinea = null, isla = null, alto }) {
 }
 
 /**
- * Las props que la página le da a la isla. `config` es lo que da la página (su `page`, su `today` sin los huecos, su
- * menú…); `estado`, lo que cambia (`vista`, `calculo` de la calculadora, `huecos`, `cookies`); `acciones`, lo que hace
- * cada botón. `textos` es el grupo `isla` de `lang/`.
+ * Las props que la página le da a la isla. `config` es lo que da la página (su `page`, su `today` con sus huecos
+ * —`slots`, del hecho de la página: los mismos que dicen su cabecera y su cierre—, su menú…); `estado`, lo que cambia
+ * (`vista`, `calculo` de la calculadora, `cookies`); `acciones`, lo que hace cada botón. `textos`, el grupo `isla`.
  */
 export function propsDeLaIsla({ config, estado, acciones, textos }) {
     const calculo = estado.calculo ?? null;
     const falta = calculo?.falta || null;
     const conHoy = Boolean(config.today) && ! estado.vista.hoy && ! falta;
+    const huecos = Boolean(config.today?.slots);
     const accion = falta
         ? { label: textos?.accion?.[falta === 'dia' ? 'elige_dia' : 'elige_hora'] ?? '', href: falta === 'dia' ? '#p3-dia' : '#p3-hora' }
-        : { ...config.page.action, onClick: () => acciones.reservar(conHoy && Boolean(estado.huecos)) };
+        : { ...config.page.action, onClick: () => acciones.reservar(conHoy && huecos) };
 
     return {
         page: { ...config.page, action: accion },
-        today: conHoy ? { ...config.today, slots: Boolean(estado.huecos) } : null,
+        today: conHoy ? { ...config.today, slots: huecos } : null,
         chosen: calculo?.elegido ? { text: calculo.elegido, label: calculo.boton, widgetVisible: estado.vista.cta, onClick: acciones.irAlResumen } : null,
         ctaVisible: estado.vista.cta,
         compact: false,

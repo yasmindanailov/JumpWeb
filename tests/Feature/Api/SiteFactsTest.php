@@ -26,6 +26,21 @@ class SiteFactsTest extends TestCase
         Setting::flushMemo();
     }
 
+    /**
+     * **El mapa embebido viaja SANEADO** (T4e·3 de `isla-y-landing-nueva.md`): acaba en el `src` de un iframe de las
+     * páginas nuevas, y el panel admite pegar el `<iframe>` entero. La regla es la de la landing de siempre
+     * (`MapsEmbed::clean`): de un `<iframe>` pegado, su `src`; lo que no es un mapa de Google, no viaja.
+     */
+    public function test_the_embedded_map_travels_cleaned_and_only_if_it_is_a_google_map(): void
+    {
+        $url = 'https://www.google.com/maps/embed?pb=!1m18!1m12';
+        $this->ajuste('address.maps_embed_url', '<iframe src="'.$url.'" width="600" height="450"></iframe>', 'contact');
+        $this->assertSame($url, $this->getJson('/api/v1/site')->assertOk()->json('address.maps_embed_url'));
+
+        $this->ajuste('address.maps_embed_url', 'https://evil.example/maps/embed?pb=1', 'contact');
+        $this->assertNull($this->getJson('/api/v1/site')->assertOk()->json('address.maps_embed_url'), 'Lo que no es de Google no viaja.');
+    }
+
     public function test_it_serves_the_identity_and_contact_of_the_installation(): void
     {
         $this->ajuste('business.name', 'Parque de Prueba');
