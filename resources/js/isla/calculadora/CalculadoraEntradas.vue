@@ -11,7 +11,8 @@ import CalculadoraResumen from './CalculadoraResumen.vue';
 
 defineProps({
     v: { type: Object, required: true },
-    lado: { type: String, required: true },
+    // Un selector o el propio elemento (la entrada, `montar.js`, pasa el de SU sección).
+    lado: { type: [String, Object], required: true },
 });
 defineEmits(['cambiar', 'reservar']);
 </script>

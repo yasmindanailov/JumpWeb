@@ -166,11 +166,15 @@ export function createCajonController({ scrollLock }) {
             this.intentAdapter = fn;
             this.flushIntent();
         },
-        /** Abre el cajón pidiendo algo: `{ type: 'packs' }` · `{ type: 'zone', slug }` · `{ type: 'product', id }`. */
+        /**
+         * Abre el cajón pidiendo algo: `{ type: 'packs' }` · `{ type: 'zone', slug }` · `{ type: 'product', id }` · y
+         * `{ type: 'linea', id, date, time, quantity, addons, continuar }`, la selección ENTERA de la calculadora de
+         * una página (T4d de `specs/isla-y-landing-nueva.md` §4.12), que la compra de la isla lleva sola a «Tus datos».
+         */
         openWith(intent) {
             // El producto viaja en el anuncio de apertura (`drawer_opened`, analítica §4.2): es el único dato
             // de la intención que una medida de embudo quiere, y solo lo lleva quien abre EN un producto.
-            this.open(intent?.type === 'product' ? { product: intent.id } : {});
+            this.open(intent?.type === 'product' || intent?.type === 'linea' ? { product: intent.id } : {});
             this.intent = intent;
             this.flushIntent();
         },

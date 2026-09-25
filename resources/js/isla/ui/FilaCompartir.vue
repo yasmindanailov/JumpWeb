@@ -6,8 +6,7 @@
  */
 import { onBeforeUnmount, ref, watch } from 'vue';
 import IconoLucide from './IconoLucide.vue';
-import { estiloCompartir } from './estilos.js';
-import { ICONOS_COMPARTIR, atributosCompartir } from './piezas.js';
+import { ICONOS_COMPARTIR, atributosCompartir, estiloCompartir } from './compartir.js';
 import { useTextos } from '../piezas/textos.js';
 
 const props = defineProps({

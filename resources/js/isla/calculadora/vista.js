@@ -38,7 +38,7 @@ function enLetra(n, numeros) {
  *   especial], textos }) · `borrador` ({ fila, dia, hora, n, cal }) · `precios` ({ [id]: días ofrecidos }) · `horas`
  *   (las ofrecidas de la fila y el día) · `linea` (la del servidor, o `null`) · `cargoCalcetines` (céntimos, o `null`)
  *   · `calcetin` (el complemento por cantidad, o `null`) · `minimo` · `maximo` · `cierre` (`HH:MM` del día elegido) ·
- *   `textos` (el grupo `isla`) · `locale` · `hoy`.
+ *   `pendiente` (una petición en camino) · `textos` (el grupo `isla`) · `locale` · `hoy`.
  */
 export function vistaCalculadora(e) {
     const { pagina: pg, borrador: b, textos, locale } = e;
@@ -94,7 +94,8 @@ export function vistaCalculadora(e) {
             precio: b.cal && e.cargoCalcetines != null ? euros(e.cargoCalcetines, locale) : '', nota: p.calcetines.nota,
             cadaUno: { texto: pp('cada_uno', { persona: p.persona[0], n: b.n }), elegido: b.cal === b.n, n: b.n },
         } : null,
-        resumen: { seleccion, lineas, total, falta, listo: Boolean(linea), faltaHref: ! b.dia ? '#p3-dia' : '#p3-hora', boton: p.boton, junto: p.junto, nota: p.nota },
+        // `pendiente`: hay una petición en camino (más gente, otro par): el botón espera a la última respuesta.
+        resumen: { seleccion, lineas, total, falta, listo: Boolean(linea) && ! e.pendiente, faltaHref: ! b.dia ? '#p3-dia' : '#p3-hora', boton: p.boton, junto: p.junto, nota: p.nota },
         compartir: { value: `${pg.url}#precio`, items: [{ kind: 'whatsapp', label: p.compartir, href: `https://wa.me/?text=${encodeURIComponent(mensaje)}` }] },
     };
 }

@@ -148,7 +148,13 @@ export function useSeccionCompra(props) {
         cartStore.setError('');
         if (isOutcome(store.step)) flow.addAnother();
         Object.assign(compra, { paso: 'cuando', aviso: '', pedido: null, pagado: null });
-        enCola(() => situar(borradorDeIntencion(intencion, catalogStore.products)));
+        const situada = enCola(() => situar(borradorDeIntencion(intencion, catalogStore.products)));
+
+        // «Reservar y pagar» de la calculadora de la página (T4d): con su selección entera, la compra sigue SOLA a «Tus
+        // datos» por su camino de siempre (`continuar`: la línea se valida y entra en la cesta). Si al situarla ya no cabe
+        // —la hora se llenó—, se queda en la pantalla 0 con lo que quepa. ⚠️ FUERA de la cola: `continuar` la espera, y
+        // desde dentro se esperaría a sí misma.
+        if (intencion?.type === 'linea' && intencion.continuar) situada.then(() => (vista.value?.listo ? continuar() : undefined));
     }
 
     watch(() => catalogStore.products, () => applyIntent());

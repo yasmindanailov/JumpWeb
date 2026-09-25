@@ -357,6 +357,18 @@ son de cualquiera que mida, no de un carril.
   implementación que el mutante estaba probando—. `checkout` solo vale sobre un fichero limpio.
 - **`SHELL` es una variable del propio bash** (mudada del carril de plataforma el 25-09): llamar así a una ruta en
   un guion se la cambia a todo lo que se lance después. En `mutar-cajon-apertura.sh` se llama `CARCASA`.
+- **Una sonda repetida agota el SUELO de la API** (25-09, T4d·4): 60 peticiones por minuto y por IP sin sesión
+  (`config/api.php`), y todo el navegador de la sonda sale de la misma IP. Dos recorridos seguidos de la calculadora
+  hasta «Tus datos» (23 peticiones cada uno) daban 429 en los días y la ficha, y un calendario ENTERO cerrado que
+  parecía un fallo de la página. `scripts/sonda-calculadora.mjs` espera un minuto antes de cada recorrido
+  (`SONDA_PAUSA`); una sonda nueva que haga más de un recorrido, igual.
+- **`npm install` PODA `playwright-core`** (va con `--no-save`; mudada del carril de plataforma el 25-09): reponerlo
+  (`/sonda` §1). Y el navegador se pierde al recrear el contenedor (~2 min montarlo;
+  `PLAYWRIGHT_BROWSERS_PATH=/home/sail/pw-browsers`).
+- **ESLint o cualquier herramienta se MIDE fuera del árbol si el gate está corriendo** (mudada del carril el 25-09):
+  instalación desechable en el `/tmp` del contenedor y `--config` apuntándola, con el cwd en el repo.
+- **«The command 'docker' could not be found» es Docker Desktop APAGADO** (mudada del carril el 25-09): se arranca
+  desde WSL con `"/mnt/c/Program Files/Docker/Docker/Docker Desktop.exe"` en segundo plano y `until docker info`.
 
 ### 3. Guardas de arquitectura — `tests/Feature/Architecture/`
 Tests que no prueban una feature sino una REGLA estructural; sin ellos el refactor de Fase 2 se

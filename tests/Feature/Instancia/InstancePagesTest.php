@@ -5,6 +5,7 @@ namespace Tests\Feature\Instancia;
 use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Identity\Models\User;
 use App\Http\Instancia\InstancePages;
 use App\Http\Instancia\InstanceViews;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -220,6 +221,44 @@ BLADE);
         $this->assertStringContainsString('<i class="z">hija</i>', $html);
         $this->assertStringNotContainsString('el icono del intruso', $html);
         $this->assertStringContainsString('<svg', $html, '<x-lucide> es el del producto');
+    }
+
+    /**
+     * **Una página pide las entradas del producto por su NOMBRE** (`scripts` de `<x-pagina>`, T4d·4 de §4.12): el
+     * cargador del cajón y la calculadora, y nada más —un nombre que el producto no conoce no carga nada: la instancia
+     * no nombra ficheros del producto—. Con la calculadora, el layout da lo que solo sabe el producto: sus textos y el
+     * TITULAR de la cesta, que tiene que ser el MISMO que el arranque del motor (`SidebarMountTest`): leer la cesta
+     * guardada con otro titular la PURGA (`cart.js::decideOwnership`), así que un titular distinto borraría la cesta de
+     * quien solo mira la página.
+     */
+    public function test_a_page_asks_for_the_product_entries_by_name_and_gets_the_same_cart_owner_as_the_engine(): void
+    {
+        File::put($this->paquete.'/web/con-calculadora.blade.php', <<<'BLADE'
+<x-pagina titulo="Kids" :scripts="['cajon', 'calculadora', 'resources/js/app.js', 'otra']"><p>hola</p></x-pagina>
+BLADE);
+        File::put($this->paquete.'/web/sin-calculadora.blade.php', '<x-pagina titulo="Kids"><p>hola</p></x-pagina>');
+        $this->declarar(['kids' => ['vista' => 'con-calculadora', 'hechos' => []], 'jump' => ['vista' => 'sin-calculadora', 'hechos' => []]]);
+
+        $html = (string) $this->get('/kids')->assertOk()->getContent();
+        $this->assertMatchesRegularExpression('#<script type="module" src="[^"]*/build/assets/paquete-[\w-]+\.js"#', $html);
+        $this->assertMatchesRegularExpression('#<script type="module" src="[^"]*/build/assets/montar-[\w-]+\.js"#', $html);
+        $this->assertDoesNotMatchRegularExpression('#/build/assets/app-[\w-]+\.js#', $html, 'un nombre que no es de la lista no carga nada, tampoco una ruta');
+
+        $motor = fn (string $html): array => preg_match('#<script type="application/json" id="jw-calculadora-motor">(.*?)</script>#s', $html, $m) === 1
+            ? json_decode($m[1], true, 512, JSON_THROW_ON_ERROR) : [];
+        $invitado = $motor($html);
+        $this->assertArrayHasKey('owner', $invitado);
+        $this->assertNull($invitado['owner']);
+        $this->assertSame(__('isla.calculadora'), $invitado['textos']['calculadora']);
+        $this->assertSame(__('isla.pieza'), $invitado['textos']['pieza']);
+
+        $user = User::factory()->create();
+        $this->assertSame($user->id, $motor((string) $this->actingAs($user)->get('/kids')->getContent())['owner'] ?? null);
+
+        // Sin pedirla, ni su entrada ni lo del motor.
+        $sin = (string) $this->get('/jump')->assertOk()->getContent();
+        $this->assertStringNotContainsString('jw-calculadora-motor', $sin);
+        $this->assertDoesNotMatchRegularExpression('#/build/assets/(montar|paquete)-#', $sin);
     }
 
     /** Sin paquete, o con un paquete que no declara páginas, no hay ninguna: el estado normal, no un error. */

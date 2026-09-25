@@ -46,8 +46,9 @@
 pie a 0 px contra el diseño —`scripts/banco-entradas.php`, 146 pares; el visor, `scripts/sonda-visor.mjs`— y `/kids` y
 `/jump` ENTERAS con los hechos en es/en/fr —`scripts/modelo-entradas.php`—; la pieza 5, con foto PROVISIONAL del
 panel, `#764`) → **T4d la calculadora, EN CURSO** (afinada al medirla en §4.12; ·1 el calendario ✅; ·2 la vista del
-widget ✅, 24 de 24 a 0; ·3 la vista de los hechos y sus textos ✅, igual al diseño estado a estado; sigue la ·4, el
-montaje sobre el motor y «Reservar y pagar») → T4e la isla viva (con ella, «Hoy, 1 hora cuesta…» y
+widget ✅, 24 de 24 a 0; ·3 la vista de los hechos y sus textos ✅, igual al diseño estado a estado; ·4 el montaje
+sobre el motor y «Reservar y pagar» ✅, EN VIVO en `/kids` y `/jump`, `scripts/sonda-calculadora.mjs`; sigue la ·5, la
+sonda de la T4f y el ojo del owner) → T4e la isla viva (con ella, «Hoy, 1 hora cuesta…» y
 «Reservar para hoy»: el owner ESPERA a la isla) → T4f la sonda; entre la d y la e, la forma de VÍDEO de las
 atracciones (el play); después, la FIESTA. Nota de Google en LOCAL: sembrada a mano (4,9 / 155, la clave da 403 aquí).
 ⚠️ BD LOCAL con los valores de `#699`/`#761` (lo de antes, en el commit de la T4a·1); en PRODUCCIÓN, el owner.
@@ -181,7 +182,6 @@ dueño es el carril de la web/reseñas—) ·
   `withCredentials()`) se MUDARON con ella: viven en `carriles/spa.md`, `analitica.md` y `#680`.
 - 🪤 **`DesignSync` corta a 256 KiB y el README del diseño se contradice** (`isla-y-landing-nueva.md` §0): el
   vídeo y el logotipo, del original; y mandan los ficheros, no el índice del README.
-- El harness en modo «auto» ordena preferir Bash a Read/Edit/Write; manda la regla 8 de `CLAUDE.md`.
 - **El clasificador «auto» y producción**: deniega escribir hooks, manifiestos y reglas del plugin salvo con las
   reglas `allow` de `#626`; con la orden del owner EN EL TURNO deja pasar escrituras por `ssh` y el `--go`; deniega
   el ensayo en seco con la salida redirigida a fichero («Blind Apply»). No se rodea: se le pide al owner.
@@ -199,17 +199,14 @@ dueño es el carril de la web/reseñas—) ·
 - ▶ **Las trampas de MEDIDA y de ARNESES viven en `TESTING.md` §2.octies** (mudadas el 24-09): la captura
   asentada, el gate saturado, el arnés que restaura por copia, la línea base antes del controlador, los
   manifiestos de Vite, el «NO SE APLICÓ», la salida truncada, la base que cruza un umbral del horario y la guarda
-  transversal que se juzga con la SUITE ENTERA (`TestCase::be()`) y la variable `SHELL` de bash.
+  transversal que se juzga con la SUITE ENTERA (`TestCase::be()`), la variable `SHELL` de bash, el SUELO de la API
+  que agota una sonda repetida, `playwright-core` podado, ESLint con el gate corriendo y Docker Desktop apagado.
 - **Mover código que unas guardas leen como TEXTO**: se mueve TAL CUAL, se re-apunta cada guarda al fichero
   nuevo y se MUTA allí (el método entero, en `paquete-de-instancia.md` §4.7).
 - **El tipo que Sanctum declara para `currentAccessToken()` miente con cookie** (dice `PersonalAccessToken`,
   llega `TransientToken`): el tipo real es `HasAbilities`, con `@var`; no es una entrada más de la línea base.
 - ▶ **Las trampas del CAJÓN viven en su spec** (`cajon-empaquetable.md` §4.8): el proxy de Alpine, el bundle
   SSR rancio tras un arnés, las guardas de presupuesto que cambian el diseño, el juez de la hoja y el banco.
-- **`npm install` PODA `playwright-core`** (va con `--no-save`): reponerlo (`/sonda` §1). Y el ojo del navegador
-  se pierde al recrear el contenedor (~2 min montarlo; `PLAYWRIGHT_BROWSERS_PATH=/home/sail/pw-browsers`).
-- **ESLint o cualquier herramienta se MIDE fuera del árbol** si el gate está corriendo: instalación desechable
-  en el `/tmp` del contenedor y `--config` apuntándola, con el cwd en el repo.
 - **Taquilla cobra de la misma tabla `prices` que la web**, y el pedido manual y ocho servicios del núcleo llaman
   a `priceCents()`: una rebaja «solo online» como dato es imposible y un descuento por canal es `CRITICAL_RE`.
 - `rm -rf` está en el deny del repo y un comando compuesto que lo lleve se deniega entero: `git rm -r` para lo
@@ -217,14 +214,20 @@ dueño es el carril de la web/reseñas—) ·
 - 💥💥 **Sacar ficheros del repo** (`#663`): `git rm --cached` REGISTRA un borrado que el `pull --rebase` aplica
   al disco (se copian FUERA antes), y lo que dependía de ellos en disco sale verde aquí y rojo en el otro
   ordenador (la suite, con y sin ellos). Las dos, enteras, en `paquete-de-instancia.md` (la trampa que costó la tanda).
-- **«The command 'docker' could not be found» es Docker Desktop APAGADO**: se arranca desde WSL con
-  `"/mnt/c/Program Files/Docker/Docker/Docker Desktop.exe"` en segundo plano y `until docker info`.
 - Una etiqueta no pasa por el gate (`pre-push` solo mira `refs/heads/main`): `/release` exige que el commit ya
   esté en `origin/main`; y un test sobre una «casi versión» tiene que EMPUJARLA antes de medir.
 
 ## Buzón
 
-### ❗❗ Para el SPA — el OTRO ordenador (emisor: plataforma, 2026-09-24) — LA ISLA sobre TU motor, y LA FIESTA
+### ❗ Para el SPA (emisor: plataforma, 2026-09-25) — la CALCULADORA de Kids y Jump (T4d), junto a tu motor
+- Una ENTRADA nueva de Vite (`isla/calculadora/montar.js`) con su Vue y su Pinia, que usa TUS stores de la oferta
+  (`catalog`, `time`, `selection`, `cart`) y `api.js` **sin tocarlos**. Rollup saca lo común a un trozo compartido: el
+  motor no gana código (295,28 construyendo sin la entrada) y sube 0,84 KiB de costura → **`SIDEBAR_CHUNK_MAX_KB`
+  297**, con su medida en el test. La cesta la LEE con `restore()` y el titular del layout (`auth()->id()`, el de tu
+  arranque): nunca la guarda. «Reservar y pagar» usa una intención nueva, `{ type: 'linea', … }`, por tu
+  `queueIntent` (no filtra el tipo): no toqué `sidebar/`. Visto de paso: tu admisión da dos 401 de consola a un
+  invitado (`/me` y `/me/reservation-eligibility`), esperados; nada que hacer si te parece bien.
+
 - ▶ `#682`: la **isla** va en el producto como **segunda carcasa** sobre el motor del cajón, apagada por defecto, y
   la construye ESTE carril (spec `isla-y-landing-nueva.md` §4.1, §4.3 y §4.4). Lo que haga falta del motor te lo
   propongo AQUÍ antes de tocarlo. Tus respuestas del 24-09 (las cookies en el mismo almacén y `lint:js` «hazlo tú»)

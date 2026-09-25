@@ -62,6 +62,16 @@ export function borradorDeIntencion(intencion, productos) {
     const lista = Array.isArray(productos) ? productos : [];
     const entradas = lista.filter((p) => p?.type === 'entry');
     const packs = lista.filter((p) => p?.type === 'pack');
+    // «Reservar y pagar» de la calculadora de la página (T4d): la selección ENTERA —la entrada, su día y su hora, cuántos
+    // y sus calcetines—. La hora llega en la forma del motor (`HH:MM:SS`); lo que ya no quepa lo vacía la pantalla 0.
+    const linea = intencion?.type === 'linea' ? entradas.find((p) => p.id === intencion.id) : null;
+
+    if (linea) {
+        return {
+            ...borradorVacio(), zona: linea.zone.slug, fila: linea.id, dia: intencion.date ?? null, hora: intencion.time ?? null,
+            n: Math.max(1, Number(intencion.quantity) || 1), cal: Number(intencion.addons?.[0]?.quantity) || 0,
+        };
+    }
     const zonaPedida = intencion?.type === 'zone' ? intencion.slug : null;
     const pack = (intencion?.type === 'product' && packs.find((p) => p.id === intencion.id))
         || (intencion?.type === 'packs' && packs[0])

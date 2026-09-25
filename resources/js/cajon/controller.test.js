@@ -140,6 +140,10 @@ describe('el cajón sin framework', () => {
 
         cajon.openWith({ type: 'zone', slug: 'kids' });
         assert.deepEqual(eventos.at(-1).detalle, { reason: 'user', product: undefined, surface: 'cajon' });
+
+        // La selección entera de la calculadora de una página (T4d) también abre EN su producto.
+        cajon.openWith({ type: 'linea', id: 101, date: '2026-09-26', time: '17:00:00', quantity: 2, addons: [], continuar: true });
+        assert.deepEqual(eventos.at(-1).detalle, { reason: 'user', product: 101, surface: 'cajon' });
     });
 
     /**

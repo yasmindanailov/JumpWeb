@@ -1,10 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createTextVNode, h } from 'vue';
-import {
-    acotar, barrasEsqueleto, celdasDelMes, columnasOpciones, enNavegadorDeApp, estadoDia, estadoHora, idDeCampo, idDeCasilla, mesDesplazado,
-    textoDeRanura, vistaCalendario,
-} from './piezas.js';
+import { acotar, barrasEsqueleto, columnasOpciones, enNavegadorDeApp, estadoHora, idDeCampo, idDeCasilla, textoDeRanura } from './piezas.js';
+import { celdasDelMes, estadoDia, mesDesplazado, vistaCalendario } from './calendario.js';
+import { atributosCompartir } from './compartir.js';
 
 const tp = (clave, p = {}) => `${clave}${p.n != null ? `:${p.n}` : ''}`;
 
@@ -106,4 +105,10 @@ test('la vista del mes: su nombre y sus iniciales en el idioma, los topes y el n
     assert.deepEqual([dia(23).aria, dia(26).aria, dia(27).aria], ['23 de septiembre, hoy, cerrado', '26 de septiembre, libre, tarifa especial', '27 de septiembre, completo']);
     assert.deepEqual([dia(26).sobre, dia(24).sobre], [true, false]);
     assert.equal(vistaCalendario({ mes: '2026-09', locale: 'en' }, { t, tp }).iniciales.join(''), 'MTWTFSS');
+});
+
+test('compartir: un enlace de fuera se abre aparte y sin `opener`; uno de la casa, en su sitio; sin enlace, un botón', () => {
+    assert.deepEqual(atributosCompartir({ href: 'https://wa.me/?text=x' }), { href: 'https://wa.me/?text=x', target: '_blank', rel: 'noopener noreferrer' });
+    assert.deepEqual(atributosCompartir({ href: '#precio' }), { href: '#precio', target: undefined, rel: undefined });
+    assert.deepEqual(atributosCompartir({ kind: 'copy' }), { type: 'button' });
 });

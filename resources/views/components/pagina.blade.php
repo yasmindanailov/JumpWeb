@@ -9,10 +9,23 @@
     `components/layout.blade.php` por un componente. Hasta entonces estas páginas no cargan analítica ni píxeles, y no
     salen de local: nada se despliega antes de la v2.0.0 (`#670`).
 --}}
-@props(['titulo', 'descripcion' => null, 'imagen' => null, 'hojas' => [], 'noindex' => false])
+@props(['titulo', 'descripcion' => null, 'imagen' => null, 'hojas' => [], 'scripts' => [], 'noindex' => false])
 @php
     $canonical = url()->current();
     $imagenOg = $imagen ? asset($imagen) : ($site['og_image'] ?? null ?: asset('og-image.jpg'));
+    // Las entradas del PRODUCTO que una página puede pedir, por su NOMBRE (T4d, contrato de página): la instancia no
+    // nombra ficheros del producto, y un nombre que no está aquí no carga nada. `cajon`: el cargador del paquete (la
+    // compra se abre en la isla o en el lateral, según `sidebar.shell`); `calculadora`: la de la pieza de precio.
+    $entradas = array_values(array_intersect_key([
+        'cajon' => 'resources/js/cajon/paquete.js',
+        'calculadora' => 'resources/js/isla/calculadora/montar.js',
+    ], array_flip($scripts)));
+    // Lo que la calculadora necesita y solo sabe el producto: sus textos, el TITULAR de la cesta —el mismo que da el
+    // arranque del motor (`SidebarBoot`: leer la cesta con otro la purgaría)— y el idioma. ⚠️ En una variable: `@json`
+    // parte su argumento por las comas, y un arreglo escrito dentro no se compila.
+    $motorCalculadora = in_array('calculadora', $scripts, true)
+        ? ['textos' => ['pieza' => __('isla.pieza'), 'calculadora' => __('isla.calculadora')], 'owner' => auth()->id(), 'locale' => app()->getLocale()]
+        : null;
 @endphp
 <!doctype html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -46,8 +59,14 @@
     @foreach ($hojas as $hoja)
         <link rel="stylesheet" href="{{ asset($hoja) }}?v={{ @filemtime(public_path($hoja)) }}">
     @endforeach
+    @if ($entradas !== [])
+        @vite($entradas)
+    @endif
 </head>
 <body>
     {{ $slot }}
+    @if ($motorCalculadora !== null)
+        <script type="application/json" id="jw-calculadora-motor">@json($motorCalculadora)</script>
+    @endif
 </body>
 </html>

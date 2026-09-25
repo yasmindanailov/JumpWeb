@@ -868,7 +868,12 @@ class SidebarBundleBudgetTest extends TestCase
     // acción `setSurveys` del store y su etiqueta en la zona—. Medido sobre `fd72b400`: 294,70 → 295,28 (+0,58), y
     // el techo sube a 296 a propósito: es un presupuesto, no un objetivo, y el interruptor es la salida
     // proporcionada de un correo de servicio (la baja también vive en el propio correo).
-    private const SIDEBAR_CHUNK_MAX_KB = 296;
+    // T4d·4 de `specs/isla-y-landing-nueva.md` (la calculadora de una página, plataforma): una ENTRADA nueva
+    // (`isla/calculadora/montar.js`) que COMPARTE con el motor Vue, Pinia, sus stores de la oferta y la API —quien
+    // calcula y después compra no los baja dos veces—, y Rollup los saca a un trozo común. El motor no gana ni un byte
+    // de código (medido construyendo SIN la entrada: 295,28, lo de antes); lo que sube es la costura entre trozos, los
+    // nombres que el motor importa del común: 295,28 → 296,12 (+0,84). El techo, a 297, con esa medida.
+    private const SIDEBAR_CHUNK_MAX_KB = 297;
 
     // T3e·2: la compra de la isla, chunk diferido del motor que solo trae una instalación con la isla. Medido 93,36 KiB
     // (la sección, la pantalla 0, la isla y sus piezas); su hoja va aparte (7,2 KiB).
@@ -886,7 +891,19 @@ class SidebarBundleBudgetTest extends TestCase
     // 129,66); el resto, el `opcional` del campo y un icono. Medido 129,66.
     // T3e·6 (`#698`): la hora que se llena al pagar —recargar las horas del día, las cercanas (`vista.js::horasCercanas`)
     // y «Elegir esta hora», que rehace la línea—. Medido 130,90.
-    private const ISLA_COMPRA_CHUNK_MAX_KB = 131;
+    // T4d·4 (la calculadora de una página): «Reservar y pagar» le pasa su selección entera a esta compra (la intención
+    // `linea` de `oferta.js` y seguir sola a «Tus datos» en `useSeccionCompra.js`): +0,28 medido SIN la entrada de la
+    // calculadora (131,18). Y la entrada comparte con la compra sus piezas y su vista, que Rollup saca a un trozo común:
+    // +0,71 de costura. Medido 131,89. ⚠️ Lo que SOLO usa la calculadora (el calendario, el chip, compartir, el cargo
+    // de los calcetines) vive en módulos aparte (`ui/calendario.js`, `ui/compartir.js`, `calculadora/cargo.js`): en
+    // `piezas.js`, `estilos.js` y `oferta.js` viajaba con la compra, y medía 136,48. El techo, a 133.
+    private const ISLA_COMPRA_CHUNK_MAX_KB = 133;
+
+    // T4d·4 (`specs/isla-y-landing-nueva.md` §4.12): la CALCULADORA de una página, entrada propia que la página pide
+    // (`scripts` de `<x-pagina>`) y se monta al acercarse su pieza. Su DESCARGA entera, como la mide el navegador que
+    // llega: medido 169,37 KiB (57,54 comprimidos) —100,2 compartidos con el motor (Vue, Pinia, los stores de la
+    // oferta y la API), que quien compra después ya no baja, y 69,17 suyos (sus pantallas, el calendario, sus piezas)—.
+    private const CALCULADORA_MAX_KB = 172;
 
     // T3e·3 (`#694`): las pantallas de después de la pantalla 0, en su trozo (`isla/compra/pasos-diferidos.js`), que la
     // compra pide al montarse. Medido 36,92 KiB. T3e·4 (`#695`): «Entra» con sus eventos y la «G» de Google, 37,66.
@@ -1241,6 +1258,30 @@ class SidebarBundleBudgetTest extends TestCase
         $kb = $this->descargaDe($clave, $this->alcanceEstatico('resources/js/sidebar/index.js'));
         $this->assertLessThanOrEqual(self::ISLA_COMPRA_CHUNK_MAX_KB, $kb, sprintf(
             'La compra de la isla pesa %.2f kB (techo: %s kB).', $kb, self::ISLA_COMPRA_CHUNK_MAX_KB
+        ));
+    }
+
+    /**
+     * **La calculadora de una página es su PROPIA entrada** (T4d·4): la pide solo la página que la lleva, nunca viaja
+     * con la landing ni con el cargador del cajón, y NO trae el motor entero —el alta, la admisión y el cobro son de la
+     * compra, que llega al pulsar «Reservar y pagar»—: solo comparte con él lo común (Vue, Pinia, los stores de la
+     * oferta), y su descarga tiene techo.
+     */
+    public function test_the_page_calculator_is_its_own_entry_without_the_engine_under_its_budget(): void
+    {
+        $manifest = $this->manifest();
+        $clave = 'resources/js/isla/calculadora/montar.js';
+
+        $this->assertArrayHasKey($clave, $manifest, 'La calculadora ya no es una entrada propia.');
+        $this->assertTrue((bool) ($manifest[$clave]['isEntry'] ?? false), 'La calculadora ya no es una ENTRADA: alguien la importa.');
+        $this->assertNotContains($clave, $this->alcanceEstatico('resources/js/app.js'), 'La calculadora viaja con la landing.');
+        $this->assertNotContains($clave, $this->alcanceEstatico('resources/js/cajon/paquete.js'), 'La calculadora viaja con el cargador del cajón.');
+        $this->assertNotContains('resources/js/sidebar/index.js', $this->alcanceEstatico($clave), 'La calculadora trae el motor entero.');
+        $this->assertNotContains('resources/js/isla/SeccionCompra.vue', $this->alcanceEstatico($clave), 'La calculadora trae la compra de la isla.');
+
+        $kb = $this->descargaDe($clave, []);
+        $this->assertLessThanOrEqual(self::CALCULADORA_MAX_KB, $kb, sprintf(
+            'La calculadora de la página pesa %.2f kB (techo: %s kB).', $kb, self::CALCULADORA_MAX_KB
         ));
     }
 

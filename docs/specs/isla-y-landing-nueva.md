@@ -1058,6 +1058,45 @@ juzga «idéntico», con los datos del diseño.
     el complemento como el panel, «Calcetines antideslizantes», como lo dirá «Pagar»; ▶ del owner, si lo quiere más
     corto, el nombre del producto en el panel. ⚠️ Lo del MOTOR (el borrador sin día de fábrica, vaciar el día al elegir
     una fila que no se vende ese día, pedir el cargo de los calcetines) va con el montaje, en la ·4.
+  - ▶ **·4, diseñada al medirla (25-09)**. **Medido**: el layout limpio (`components/pagina.blade.php`) no carga JS del
+    producto; la cesta se PERSISTE (`localStorage`, `stores/cart.js`), así que dos apps de Vue con su Pinia leen la
+    misma; `cajon.openWith(intent)` → `machine.queueIntent` (no filtra el tipo) → la compra de la isla la toma
+    (`useSeccionCompra::applyIntent` → `borradorDeIntencion`): **una intención nueva no toca ningún fichero del SPA**;
+    la carcasa, del ajuste `sidebar.shell` (en local, `isla`: dato). **Decidido** (técnico): (1) la calculadora es su
+    PROPIA app —Vue, Pinia y los stores de la OFERTA del motor (`catalog`, `time`, `selection`, `cart`) con las
+    peticiones de `compra/oferta.js`—, sin `usePurchaseFlow` (el alta y el cobro no son suyos): la oferta con la misma
+    fuente que la compra y un trozo pequeño; (2) su entrada (`isla/calculadora/montar.js`) la pide la página por su
+    NOMBRE con el cargador del cajón (`scripts` de `<x-pagina>`: `cajon`, `calculadora`; otro nombre no carga nada), y
+    **se PINTA al cargar y PIDE al acercarse** (corregido al medir: la pieza 3 empieza a 1,03 pantallas en 1280 y a
+    1,22 en 390, así que «montar una pantalla antes» era montar al llegar): la vista sale entera con lo que da la página
+    —sus filas con su «desde», sus textos y sus calcetines, del hecho—, sin hueco ni salto, y los días, la ficha y las
+    horas esperan a que la pieza esté a 300 px, al primer toque o a nada si se llega a `#precio`; (3) «Reservar y
+    pagar» = `JumpWeb.cajon.openWith({ type: 'linea', id, date, time, quantity, addons, continuar: true })`: la compra
+    de la isla sitúa su pantalla 0 con esa selección y sigue sola a «Tus datos» (la línea se valida y entra en la cesta
+    por su camino de siempre); (4) el borrador nace SIN día (`inicio="vacio"`), y elegir una fila que no se vende ese
+    día vacía día y hora. (5) **La cesta se lee con su TITULAR**: el layout da el `auth()->id()` del arranque del motor
+    (leerla con otro la PURGA, `cart.js::decideOwnership`), y la calculadora nunca la guarda.
+  - ▶ **·4 ✅ (25-09)**: `calculadora/useCalculadora.js` (la oferta en cola, el cargo de los calcetines sin hora
+    —`calculadora/cargo.js`—, `pendiente` que apaga el botón mientras hay respuesta en camino) y `montar.js`; en la
+    compra de la isla, la intención `linea` (`oferta.js::borradorDeIntencion`) y seguir sola a «Tus datos»
+    (`useSeccionCompra::empezar`, FUERA de la cola: dentro se esperaría a sí misma); `cajon.openWith` cuenta su
+    producto; `<x-pagina>` gana `scripts` y `#jw-calculadora-motor` (`InstancePagesTest`: los nombres y el MISMO titular que el
+    arranque; mutante —el titular siempre `null`— muerto); la instancia pide las dos entradas y le da la pieza. **El peso, medido** (`SidebarBundleBudgetTest`): la calculadora descarga
+    **169,37 KiB (57,54 comprimidos)** —100,2 compartidos con el motor, que quien compra después ya no baja— y su
+    guarda nueva exige que no traiga el motor ni la compra (control: importar el motor la tumba). ⚠️ Lo que SOLO usa
+    la calculadora viajaba con la compra desde `piezas.js`, `estilos.js` y `oferta.js` (la compra, 136,48 KiB): se
+    mudó a `ui/calendario.js`, `ui/compartir.js` y `calculadora/cargo.js` (131,89). Construyendo SIN la entrada: el
+    motor, 295,28 (igual que antes: ni un byte de código) y la compra, 131,18 (+0,28, la intención); con ella, la
+    costura de los trozos compartidos: el motor 296,12 y la compra 131,89 —techos a 297 y 133, con su medida en el
+    test—. **En vivo** (`scripts/sonda-calculadora.mjs`, Kids y Jump, 1280 y 390): **8 de 8 en cada recorrido** —al
+    llegar ya está PINTADA sin haber pedido nada; al bajar pide los días de sus filas; día y hora: el total que se pinta
+    es el `total_cents` del servidor; con calcetines, su línea y el total del servidor; «Reservar y pagar» abre la
+    compra en «Tus datos» con ESA línea en la cesta; consola limpia; ninguna otra respuesta de error—. Todo el
+    recorrido cuesta **23 peticiones** (Kids; 21 Jump) contra un suelo de 60 por minuto y por IP: dos recorridos
+    seguidos lo agotan (429: la trampa, en `TESTING.md` §2.octies). ⚠️ Los dos 401 de la consola son de la ADMISIÓN
+    del motor (`admission.js::runCheckout`: `/me` y `/me/reservation-eligibility` sin sesión), esperados. ⚠️ **Para la
+    T4e**: la compra vuelve a pedir 6 cosas que la calculadora ya tenía (los días, la ficha, las horas, la línea: otra
+    app, otra Pinia); y sin respuesta de la API el calendario sale entero CERRADO —un aviso o un reintento—.
 - **T4e · la isla en la página** (producto): montada al cargar en su propio trozo (el motor, 295 KiB, sigue
   llegando al pulsar), el contrato de §4.3 fijado, sus hechos reales, cede su botón con uno de la página a la vista,
   y se transforma en la compra. Techo de peso con su prueba; aviso al SPA (su T5c y el consentimiento).

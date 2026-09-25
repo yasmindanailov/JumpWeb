@@ -5,7 +5,7 @@
  * ranura; `count`, la cifra pequeña al final.
  */
 import { computed, ref, useAttrs } from 'vue';
-import { estiloEtiqueta } from './estilos.js';
+import { estiloEtiqueta } from './compartir.js';
 
 defineOptions({ inheritAttrs: false });
 

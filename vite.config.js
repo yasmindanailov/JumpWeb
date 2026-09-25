@@ -17,6 +17,9 @@ export default defineConfig({
                 // producto no tenga que descargar la landing entera (`app.js`) para abrir el cajón.
                 // Se sirve en ruta estable desde `/cajon/paquete.js`; lo vigila `PaqueteDelCajonTest`.
                 'resources/js/cajon/paquete.js',
+                // T4d — la CALCULADORA de una página declarada (`specs/isla-y-landing-nueva.md` §4.12). Entrada propia:
+                // la pide la página que la lleva (`scripts` de `<x-pagina>`) y se monta al acercarse su pieza.
+                'resources/js/isla/calculadora/montar.js',
             ],
             refresh: true,
         }),

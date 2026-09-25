@@ -5,14 +5,13 @@
  * se tachan (esconderlos deja sin saber si hay algo). Es el de la calculadora de la página (T4d de
  * `specs/isla-y-landing-nueva.md` §4.12); la compra de la isla usa la tira (`TiraDias`).
  * `days` = `[{ date, special?, state? }]` —sin fila, el día está cerrado—; el día elegido, con `v-model`; el mes a la
- * vista, con `month` o, sin él, el del primer día. Lo que decide, en `vistaCalendario()` (`piezas.js`, `CE-6`); sus
- * estilos, en `estilos.js`.
+ * vista, con `month` o, sin él, el del primer día. Lo que decide y sus estilos, en `calendario.js` (`CE-6`; aparte de
+ * `piezas.js` para que no viaje con la compra de la isla).
  * ⚠️ Sin «Avísame si se libera» (`onNotify`): ninguna pantalla lo usa todavía; sin él, un día completo no se pulsa.
  */
 import { computed, ref, watch } from 'vue';
 import IconoLucide from './IconoLucide.vue';
-import { estiloDiaCalendario, estiloFlechaMes, estiloHoyCalendario, estiloPuntoCalendario } from './estilos.js';
-import { mesDesplazado, vistaCalendario } from './piezas.js';
+import { estiloDiaCalendario, estiloFlechaMes, estiloHoyCalendario, estiloPuntoCalendario, mesDesplazado, vistaCalendario } from './calendario.js';
 import { useTextos } from '../piezas/textos.js';
 
 const props = defineProps({

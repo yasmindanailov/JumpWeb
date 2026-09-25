@@ -45,6 +45,9 @@ test('el dinero es el del SERVIDOR: el precio del día, la línea y el cargo de 
     assert.equal(v.cuantos.precio, `10${NBSP}€ por niño`);
     assert.deepEqual(v.resumen.lineas.map((l) => [l.label, l.value]), [[`Entradas · 2 × 10${NBSP}€`, `19,90${NBSP}€`], [`Calcetines · 2 × 2${NBSP}€`, `5${NBSP}€`]]);
     assert.deepEqual([v.resumen.total, v.resumen.listo, v.calcetines.precio], [`24,90${NBSP}€`, true, `4,50${NBSP}€`]);
+    // Con otra petición en camino, el total que se ve sigue ahí pero el botón espera a la última respuesta.
+    const enCamino = vista({ borrador: { dia: '2026-09-26', hora: '17:00:00', cal: 2 }, horas: [{ time: '17:00:00', available: 20 }], linea, pendiente: true });
+    assert.deepEqual([enCamino.resumen.total, enCamino.resumen.listo], [`24,90${NBSP}€`, false]);
 });
 
 test('con hora pero sin la línea del servidor todavía: sin total y con el botón apagado', () => {
