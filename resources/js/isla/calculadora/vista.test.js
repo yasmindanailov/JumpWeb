@@ -50,6 +50,15 @@ test('el dinero es el del SERVIDOR: el precio del día, la línea y el cargo de 
     assert.deepEqual([enCamino.resumen.total, enCamino.resumen.listo], [`24,90${NBSP}€`, false]);
 });
 
+test('lo que se le cuenta a la ISLA (T4e): nada sin tocar; lo que falta; y lo elegido en corto con el total del servidor', () => {
+    assert.equal(vista().isla, null, 'Los valores de partida no son un cálculo: la isla no anuncia nada.');
+    assert.deepEqual(vista({ tocada: true }).isla, { falta: 'dia', elegido: null, boton: 'Reservar' });
+    assert.equal(vista({ tocada: true, borrador: { dia: '2026-09-26' } }).isla.falta, 'hora');
+    const linea = { unit_price_cents: 1000, subtotal_cents: 1990, total_cents: 2490, addons: [] };
+    const listo = vista({ tocada: true, borrador: { dia: '2026-09-26', hora: '17:00:00' }, horas: [{ time: '17:00:00', available: 20 }], linea });
+    assert.deepEqual(listo.isla, { falta: '', elegido: `Sáb 26 · 17:00 · 2 niños · 24,90${NBSP}€`, boton: 'Reservar' }, 'El día con mayúscula, como `p3Corto` del diseño; el total, el del servidor.');
+});
+
 test('con hora pero sin la línea del servidor todavía: sin total y con el botón apagado', () => {
     const v = vista({ borrador: { dia: '2026-09-26', hora: '17:00:00' }, horas: [{ time: '17:00:00', available: 20 }] });
     assert.deepEqual([v.resumen.falta, v.resumen.lineas, v.resumen.total, v.resumen.listo], ['', [], '', false]);

@@ -12,7 +12,9 @@
  * (qué falta, el eco de la hora, las líneas del recibo) es del grupo `calculadora` de `lang/<idioma>/isla.php`.
  */
 import { tp as textoCon } from '../../sidebar/i18n.js';
-import { diaDelPlazo, euros, horaCorta, horasDelSelector, precioDelDia } from '../compra/vista.js';
+import { diaCorto, diaDelPlazo, euros, horaCorta, horasDelSelector, precioDelDia } from '../compra/vista.js';
+
+const mayuscula = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
 const minutos = (hhmm) => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5));
 const reloj = (m) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
@@ -96,6 +98,10 @@ export function vistaCalculadora(e) {
         } : null,
         // `pendiente`: hay una petición en camino (más gente, otro par): el botón espera a la última respuesta.
         resumen: { seleccion, lineas, total, falta, listo: Boolean(linea) && ! e.pendiente, faltaHref: ! b.dia ? '#p3-dia' : '#p3-hora', boton: p.boton, junto: p.junto, nota: p.nota },
+        // Lo que la calculadora le cuenta a la ISLA de la página (T4e, el `onCalculo` de `pagina.jsx` del diseño): qué
+        // pregunta falta y, con todo elegido, lo elegido en corto con el total DEL SERVIDOR («Sáb 26 · 17:00 · 3 niños ·
+        // 24 €»). Solo cuenta si alguien la ha tocado (`tocada`): los valores de partida no son un cálculo.
+        isla: e.tocada ? { falta: ! b.dia ? 'dia' : ! h ? 'hora' : '', elegido: linea ? `${mayuscula(diaCorto(b.dia, locale))} · ${h} · ${quien(b.n)} · ${total}` : null, boton: p.boton } : null,
         compartir: { value: `${pg.url}#precio`, items: [{ kind: 'whatsapp', label: p.compartir, href: `https://wa.me/?text=${encodeURIComponent(mensaje)}` }] },
     };
 }

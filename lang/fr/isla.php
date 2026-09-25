@@ -12,6 +12,8 @@ return [
         'pagar_bizum' => 'Payer avec Bizum',
         'reintentar_tarjeta' => 'Réessayer avec la carte',
         'manual' => 'Ou nous réservons pour vous et vous payez par Bizum',
+        'elige_dia' => 'Choisissez le jour',
+        'elige_hora' => 'Choisissez l’heure',
     ],
     'hoy' => [
         'antes' => 'Nous ouvrons aujourd’hui à :hora.',

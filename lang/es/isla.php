@@ -13,6 +13,9 @@ return [
         'pagar_bizum' => 'Pagar con Bizum',
         'reintentar_tarjeta' => 'Volver a intentar con tarjeta',
         'manual' => 'O lo reservamos nosotros y pagas por Bizum',
+        // T4e: con la calculadora de la página a medias, la acción es el paso que falta (`pagina.jsx`).
+        'elige_dia' => 'Elige el día',
+        'elige_hora' => 'Elige la hora',
     ],
     'hoy' => [
         'antes' => 'Hoy abrimos a las :hora.',

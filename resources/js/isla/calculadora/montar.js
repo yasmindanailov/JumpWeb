@@ -12,7 +12,7 @@
  * ⚠️ Lo que el producto sabe y la página no (sus textos de `lang/<idioma>/isla.php`, el titular de la cesta —el mismo
  * `auth()->id()` que el arranque del motor— y el idioma) llega del layout en `#jw-calculadora-motor`.
  */
-import { createApp, h } from 'vue';
+import { createApp, h, watch } from 'vue';
 import { createPinia } from 'pinia';
 import '../isla.css';
 import CalculadoraEntradas from './CalculadoraEntradas.vue';
@@ -34,6 +34,10 @@ export function montarCalculadora(sitio, { textos = {}, owner = null, locale = '
     const app = createApp({
         setup() {
             calculadora = useCalculadora({ pagina, textos, locale, owner });
+            // Con la ISLA de la página (T4e), por eventos del documento —son dos apps—: lo que falta y lo elegido van a
+            // la isla (`jw:calculadora`), y su «Reservar para hoy» elige hoy aquí (`jw:calculadora:hoy`).
+            watch(() => calculadora.vista.value.isla, (detail) => document.dispatchEvent(new CustomEvent('jw:calculadora', { detail })), { deep: true });
+            document.addEventListener('jw:calculadora:hoy', () => calculadora.elegirHoy());
 
             return () => h(CalculadoraEntradas, { v: calculadora.vista.value, lado, onCambiar: calculadora.cambiar, onReservar: calculadora.reservar });
         },

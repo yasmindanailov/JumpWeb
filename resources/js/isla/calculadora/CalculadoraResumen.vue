@@ -20,7 +20,7 @@ defineEmits(['reservar']);
     <ResumenPrecio :selection="v.resumen.seleccion" :lines="v.resumen.lineas" :total="v.resumen.total" :incomplete="v.resumen.falta" :incomplete-href="v.resumen.faltaHref" :cta-note="v.resumen.junto">
         <p :style="LINEA"><span :style="LINEA_ICONO"><IconoLucide name="qr-code" :size="16" /></span><span>{{ v.resumen.nota }}</span></p>
         <template #cta>
-            <BotonSistema variant="primary" size="xl" full :disabled="! v.resumen.listo" @click="$emit('reservar')">{{ v.resumen.boton }}</BotonSistema>
+            <BotonSistema variant="primary" size="xl" full data-isla-cta :disabled="! v.resumen.listo" @click="$emit('reservar')">{{ v.resumen.boton }}</BotonSistema>
         </template>
     </ResumenPrecio>
     <FilaCompartir :value="v.compartir.value" :items="v.compartir.items" />

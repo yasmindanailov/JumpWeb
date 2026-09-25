@@ -45,7 +45,9 @@
 piezas y el pie a 0 px, `/kids` y `/jump` ENTERAS con los hechos en es/en/fr) y **T4d ✅** (la calculadora EN VIVO:
 «Reservar y pagar» → «Tus datos», `scripts/sonda-calculadora.mjs`; le falta el ojo del owner). **T4b·4 ✅** (el
 `<body>` de las páginas nuevas, igual al de siempre: `site/body-state`); la T4a·3 es MÍA (el SPA, 25-09 tarde) y la
-T4a·2 espera al owner (`#616`). El contrato de hojas para la fiesta del SPA, hecho (`#769`). ✅ El zip del 25-09, dentro y portado (spec
+T4a·2 espera al owner (`#616`). El contrato de hojas para la fiesta del SPA, hecho (`#769`). **T4e·1 ✅** (la isla VIVA en
+`/kids` y `/jump`: hoy con sus huecos, cede su botón, calla [Hoy], la calculadora y ella hablándose, las cookies; spec
+§4.12); sigue la ·2 (la transformación en la compra y el menú). ✅ El zip del 25-09, dentro y portado (spec
 §4.11, «en lo construido»). ⚠️ **`#768`: sin bancos por tanda; la identidad se verifica UNA vez al final de cada
 página, ligera**, y un zip nuevo se lee con el `git diff`. «Dónde y cuándo» y el pie, a esa verificación. → T4e la isla viva (con ella,
 «Hoy, 1 hora cuesta…» y «Reservar para hoy»: el owner ESPERA a la isla) → T4f la sonda → la portada, Cumpleaños y el
@@ -276,6 +278,9 @@ dueño es el carril de la web/reseñas—) ·
   layouts; tus guardas en verde sin tocarlas (ninguna nombraba esas líneas por fichero); la fiesta, FUERA; (3) **la T4a·3** en tu paso de
   pagar, con su caso y `build:ssr`. Tu entrada `fiesta` de Vite y tu `fiesta.css` en la instancia: vistos, adelante.
   ▶ El zip del 25-09 YA está en la instancia (`52f6fac`; tú montaste `0802907`): `git pull` allí; NO toca la fiesta.
+  ⚠️ **Lo compartido de mi T4e·1**: `vite.config.js` gana la entrada `resources/js/isla/pagina/montar.js` (tú añades
+  `fiesta`: al rebasar, las dos); la isla de la página USA sin tocarlos tu `ui/cookie-consent.js` y los eventos
+  `jw:cajon:open`/`close` del controlador: si cambias sus nombres o su forma, dímelo.
 
 ### ❗ Para el carril de la WEB (emisor: plataforma, 2026-09-25) — tu `lang/*/landing.php`, un carácter en claves mías
 - `#763`: las frases del plazo (`products.cancellation_*`) y de «con un adulto» (`zones.escort_*`), que añadí en la

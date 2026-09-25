@@ -264,6 +264,41 @@ BLADE);
     }
 
     /**
+     * **La ISLA de una página, por su nombre** (T4e de §4.12): con `isla` en `scripts`, la página carga la entrada de la
+     * isla y el layout le da, en `#jw-isla-pagina`, lo de la página (su `isla`) más lo que solo sabe el producto —si hay
+     * sesión, dónde está la política de cookies y los textos de la isla SIN los de la compra ni la calculadora, que
+     * viajan con ellas—. Sin pedirla, nada.
+     */
+    public function test_a_page_asks_for_the_isla_by_name_and_gets_its_config_texts_and_session(): void
+    {
+        File::put($this->paquete.'/web/con-isla.blade.php', <<<'BLADE'
+<x-pagina titulo="Kids" :scripts="['isla']" :isla="['page' => ['kind' => 'producto', 'product' => 'kids', 'action' => ['label' => 'Reservar Kids', 'href' => '#precio'], 'from' => 'Desde 8 €']]"><div data-jw-isla></div></x-pagina>
+BLADE);
+        File::put($this->paquete.'/web/sin-isla.blade.php', '<x-pagina titulo="Kids"><p>hola</p></x-pagina>');
+        $this->declarar(['kids' => ['vista' => 'con-isla', 'hechos' => []], 'jump' => ['vista' => 'sin-isla', 'hechos' => []]]);
+
+        $isla = function (string $html): ?array {
+            return preg_match('#<script type="application/json" id="jw-isla-pagina">(.*?)</script>#s', $html, $m) === 1
+                ? json_decode($m[1], true, 512, JSON_THROW_ON_ERROR) : null;
+        };
+
+        $html = (string) $this->get('/kids')->assertOk()->getContent();
+        $this->assertMatchesRegularExpression('#<script type="module" src="[^"]*/build/assets/montar-[\w-]+\.js"#', $html);
+        $invitado = $isla($html);
+        $this->assertSame('Reservar Kids', $invitado['config']['page']['action']['label']);
+        $this->assertNull($invitado['config']['owner']);
+        $this->assertSame(route('legal.cookies'), $invitado['config']['cookiesUrl']);
+        $this->assertSame(__('isla.hoy'), $invitado['textos']['hoy']);
+        $this->assertArrayNotHasKey('compra', $invitado['textos'], 'Los textos de la compra viajan con la compra, no aquí.');
+        $this->assertArrayNotHasKey('calculadora', $invitado['textos']);
+
+        $user = User::factory()->create();
+        $this->assertSame($user->id, $isla((string) $this->actingAs($user)->get('/kids')->getContent())['config']['owner'] ?? null);
+
+        $this->assertNull($isla((string) $this->get('/jump')->assertOk()->getContent()), 'Sin pedirla, ni su JSON.');
+    }
+
+    /**
      * **El `<body>` de una página nueva lleva EXACTAMENTE el estado de la web de siempre** (T4b·4 de §4.12): el
      * consentimiento, la analítica y los píxeles que leen el aviso de cookies y sus cargadores. Sin él, las páginas
      * nuevas saldrían sin aviso y ciegas para la analítica. Se compara atributo a atributo con la portada (el layout de

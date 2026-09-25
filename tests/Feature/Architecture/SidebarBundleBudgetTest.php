@@ -905,6 +905,13 @@ class SidebarBundleBudgetTest extends TestCase
     // oferta y la API), que quien compra después ya no baja, y 69,17 suyos (sus pantallas, el calendario, sus piezas)—.
     private const CALCULADORA_MAX_KB = 172;
 
+    // T4e (`specs/isla-y-landing-nueva.md` §4.12): la ISLA EN REPOSO de una página, entrada propia que la página pide
+    // (`isla` en `scripts` de `<x-pagina>`) y que se monta al cargar. Su descarga ENTERA, como la del navegador que llega
+    // sin nada: la isla (`IslaFlotante` y sus piezas), Vue, el almacén de cookies y la API; el motor y la compra, NO.
+    // Medido el 25-09: 153,69 KiB (51,1 comprimidos). En Kids, con la calculadora y el cajón que ya cargaba, el JS de la
+    // página pasa de 62,6 a 78,3 KiB comprimidos (comparten Vue, la API y las piezas).
+    private const ISLA_PAGINA_MAX_KB = 156;
+
     // T3e·3 (`#694`): las pantallas de después de la pantalla 0, en su trozo (`isla/compra/pasos-diferidos.js`), que la
     // compra pide al montarse. Medido 36,92 KiB. T3e·4 (`#695`): «Entra» con sus eventos y la «G» de Google, 37,66.
     // T3e·6 (`#698`): «Esa hora ya no está libre» (`PantallaPerdida`, con su selector de horas), 38,56.
@@ -1282,6 +1289,28 @@ class SidebarBundleBudgetTest extends TestCase
         $kb = $this->descargaDe($clave, []);
         $this->assertLessThanOrEqual(self::CALCULADORA_MAX_KB, $kb, sprintf(
             'La calculadora de la página pesa %.2f kB (techo: %s kB).', $kb, self::CALCULADORA_MAX_KB
+        ));
+    }
+
+    /**
+     * **La isla de una página es su PROPIA entrada** (T4e): la pide solo la página que la lleva, nunca viaja con la landing
+     * ni con el cargador del cajón, y NO trae el motor ni la compra —llegan al pulsar—; su descarga tiene techo.
+     */
+    public function test_the_page_isla_is_its_own_entry_without_the_engine_under_its_budget(): void
+    {
+        $manifest = $this->manifest();
+        $clave = 'resources/js/isla/pagina/montar.js';
+
+        $this->assertArrayHasKey($clave, $manifest, 'La isla de la página ya no es una entrada propia.');
+        $this->assertTrue((bool) ($manifest[$clave]['isEntry'] ?? false), 'La isla de la página ya no es una ENTRADA: alguien la importa.');
+        $this->assertNotContains($clave, $this->alcanceEstatico('resources/js/app.js'), 'La isla de la página viaja con la landing.');
+        $this->assertNotContains($clave, $this->alcanceEstatico('resources/js/cajon/paquete.js'), 'La isla de la página viaja con el cargador del cajón.');
+        $this->assertNotContains('resources/js/sidebar/index.js', $this->alcanceEstatico($clave), 'La isla de la página trae el motor entero.');
+        $this->assertNotContains('resources/js/isla/SeccionCompra.vue', $this->alcanceEstatico($clave), 'La isla de la página trae la compra.');
+
+        $kb = $this->descargaDe($clave, []);
+        $this->assertLessThanOrEqual(self::ISLA_PAGINA_MAX_KB, $kb, sprintf(
+            'La isla de la página pesa %.2f kB (techo: %s kB).', $kb, self::ISLA_PAGINA_MAX_KB
         ));
     }
 

@@ -33,7 +33,7 @@ export function useCalculadora({ pagina, textos, locale, owner = null }) {
     const hoy = todayIso();
     const e = reactive({
         borrador: { fila: pagina.filas[0]?.id ?? null, dia: null, hora: null, n: Number(pagina.textos.inicio?.personas) || 1, cal: 0 },
-        precios: {}, cargoCalcetines: null, pendientes: 0,
+        precios: {}, cargoCalcetines: null, pendientes: 0, tocada: false,
     });
 
     let cola = Promise.resolve();
@@ -114,6 +114,7 @@ export function useCalculadora({ pagina, textos, locale, owner = null }) {
         const b = e.borrador;
 
         arrancar();
+        e.tocada = true;
 
         if (campo === 'dia') { b.dia = valor; return enCola(cargarHoras); }
         if (campo === 'hora') { b.hora = horaDelMotor(timeStore.offered, valor); return enCola(resolver); }
@@ -149,7 +150,11 @@ export function useCalculadora({ pagina, textos, locale, owner = null }) {
         pagina, textos, locale, hoy, borrador: e.borrador, precios: e.precios, horas: timeStore.offered, linea: selectionStore.line,
         cargoCalcetines: e.cargoCalcetines, calcetin: calcetinActual(), minimo: catalogStore.minQuantity,
         maximo: e.borrador.hora ? timeStore.maxQuantity : null, cierre: cierreDelDia(pagina.cierres, e.borrador.dia), pendiente: e.pendientes > 0,
+        tocada: e.tocada,
     }));
 
-    return { vista, arrancar, cambiar, reservar };
+    /** «Reservar para hoy» desde la isla o la página (el `pedirHoy` del diseño): hoy elegido; queda la hora. */
+    const elegirHoy = () => cambiar('dia', hoy);
+
+    return { vista, arrancar, cambiar, reservar, elegirHoy };
 }

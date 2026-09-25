@@ -12,6 +12,8 @@ return [
         'pagar_bizum' => 'Pay with Bizum',
         'reintentar_tarjeta' => 'Try the card again',
         'manual' => 'Or we book it for you and you pay by Bizum',
+        'elige_dia' => 'Choose the day',
+        'elige_hora' => 'Choose the time',
     ],
     'hoy' => [
         'antes' => 'We open today at :hora.',

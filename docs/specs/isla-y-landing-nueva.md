@@ -1169,6 +1169,26 @@ juzga «idéntico», con los datos del diseño.
 - **T4e · la isla en la página** (producto): montada al cargar en su propio trozo (el motor, 295 KiB, sigue
   llegando al pulsar), el contrato de §4.3 fijado, sus hechos reales, cede su botón con uno de la página a la vista,
   y se transforma en la compra. Techo de peso con su prueba; aviso al SPA (su T5c y el consentimiento).
+  - ▶ **·1 ✅ (25-09)**: la transcripción de `paginas/entradas/pagina.jsx` (el mockup, `#767`). **Producto**: la entrada
+    `isla/pagina/montar.js` (nombre `isla` en `scripts` de `<x-pagina>`, que emite `#jw-isla-pagina`: lo de la página
+    más la sesión, la política de cookies y los textos de la isla sin la compra ni la calculadora); lo que decide, puro,
+    en `pagina.js` (los huecos, la geometría, las props; 8 casos) y lo que cambia, en `usePaginaIsla.js`. **El contrato
+    §4.3, fijado**: el SITIO `[data-jw-isla]`, primer hijo de la columna de la página y montado con `display: contents`
+    (la isla va `sticky`, arriba en escritorio y con `order` abajo en móvil; montada al final del `<body>` quedaba al pie,
+    medido), `data-isla-cta` en los primarios (cede su botón con uno a la vista, fuera de su franja) y `data-hoy-linea`
+    de la pieza 6 (calla [Hoy] si ya lo dice). **Hoy**: el estado (antes, abierto o cerrado con la hora de mañana) lo
+    da el modelo de la página; «Quedan huecos» sale de UNA petición tras cargar (`POST /availability/{id}/times`, la
+    primera fila). ⚠️ Se midió y DESCARTÓ resolverlo en el servidor: `ProductCatalog::product()` no memoriza, y el hecho
+    hacía 176 consultas y 160–180 ms por visita (más que todos los hechos de la página): **deuda**, que también paga
+    `product_details`. **La calculadora ↔ la isla**, por eventos del documento: `jw:calculadora` (lo que falta y lo
+    elegido, solo tras tocarla: `vista.isla`, su caso) y `jw:calculadora:hoy` («Reservar para hoy» elige hoy). **Las
+    cookies**: el MISMO almacén (`ui/cookie-consent.js`) sobre el `<body>` de la T4b·4, con `consent_shown`; ⚠️ el
+    mockup NO dibuja la segunda capa (categorías una a una): «Configurar» lleva a `/cookies` hasta que la dibuje (del
+    owner). **Peso**: la entrada, 153,69 KiB (51,1 comprimidos), techo 156; con la calculadora y el cajón, el JS de Kids
+    pasa de 62,6 a 78,3 KiB comprimidos (idea para después: pedir la calculadora al acercarse). **En vivo** (390 y
+    1280): arriba «Abierto hasta las 21:30. Quedan huecos.» y cede ante la cabecera; con la pieza 6 a la vista, calla
+    [Hoy]; «Reservar para hoy» baja al precio, la calculadora elige hoy y la isla pasa a «Elige la hora»; consola limpia.
+    Sigue ·2: la transformación en la compra y el menú (Mi QR, Mi cuenta, Entrar), comprobados en vivo.
 - **T4f · la sonda de las dos páginas** (`scripts/sonda-isla.mjs` crece): llegar, la isla en reposo, calcular,
   «Reservar y pagar», la pasarela; en 390 y 1280.
 
