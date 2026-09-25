@@ -245,6 +245,9 @@ BLADE);
         $this->assertMatchesRegularExpression('#<script type="module" src="[^"]*/build/assets/paquete-[\w-]+\.js"#', $html);
         $this->assertMatchesRegularExpression('#<script type="module" src="[^"]*/build/assets/montar-[\w-]+\.js"#', $html);
         $this->assertDoesNotMatchRegularExpression('#/build/assets/app-[\w-]+\.js#', $html, 'un nombre que no es de la lista no carga nada, tampoco una ruta');
+        // El paquete del cajón son DOS líneas (`#636`): con el cargador, su hoja; si no, el lateral de la cuenta sale sin
+        // estilo (T4e·2, medido).
+        $this->assertMatchesRegularExpression('#<link rel="stylesheet" href="[^"]*/css/cajon\.css\?v=#', $html);
 
         $motor = fn (string $html): array => preg_match('#<script type="application/json" id="jw-calculadora-motor">(.*?)</script>#s', $html, $m) === 1
             ? json_decode($m[1], true, 512, JSON_THROW_ON_ERROR) : [];
@@ -261,6 +264,7 @@ BLADE);
         $sin = (string) $this->get('/jump')->assertOk()->getContent();
         $this->assertStringNotContainsString('jw-calculadora-motor', $sin);
         $this->assertDoesNotMatchRegularExpression('#/build/assets/(montar|paquete)-#', $sin);
+        $this->assertStringNotContainsString('css/cajon.css', $sin, 'Sin el cajón, ni su hoja.');
     }
 
     /**

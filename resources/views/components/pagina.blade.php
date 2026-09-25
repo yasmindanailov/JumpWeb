@@ -67,6 +67,12 @@
 
     <x-site.json-ld :site="$site" />
 
+    {{-- Con el cajón, SU hoja (`#636`: el paquete son dos líneas, la hoja y el cargador): la cuenta se abre en el lateral
+         hasta la T5, y sin ella el lateral salía sin estilo al pie de la página (medido, T4e·2). La hoja no toca la página
+         que la aloja (F4, idéntica a 0 píxeles), y va antes que las de la página. --}}
+    @if (in_array('cajon', $scripts, true))
+        <link rel="stylesheet" href="{{ asset('css/cajon.css') }}?v={{ @filemtime(public_path('css/cajon.css')) }}">
+    @endif
     @foreach ($hojas as $hoja)
         <link rel="stylesheet" href="{{ asset($hoja) }}?v={{ @filemtime(public_path($hoja)) }}">
     @endforeach

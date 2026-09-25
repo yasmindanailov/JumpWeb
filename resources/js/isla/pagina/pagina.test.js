@@ -14,6 +14,7 @@ const config = {
 const llamadas = [];
 const acciones = {
     reservar: (paraHoy) => llamadas.push(['reservar', paraHoy]), irAlResumen: () => llamadas.push(['resumen']),
+    abrirCuenta: (zona) => llamadas.push(['cuenta', zona]),
     aceptarCookies: () => {}, rechazarCookies: () => {}, configurarCookies: () => {}, politicaCookies: () => {}, navegar: () => {},
 };
 const estado = (extra = {}) => ({ vista: { cta: false, hoy: false }, calculo: null, huecos: false, cookies: false, ...extra });
@@ -79,10 +80,17 @@ describe('las props de la isla', () => {
         assert.equal(p.ctaVisible, true);
     });
 
-    test('el aviso de cookies solo mientras hay que decidir; la cuenta, de invitado o con sesión', () => {
+    test('el aviso de cookies solo mientras hay que decidir; la cuenta, de invitado o con sesión, en su zona', () => {
         assert.equal(props({ cookies: false }).cookies, null);
         assert.equal(typeof props({ cookies: true }).cookies.onAccept, 'function');
-        assert.deepEqual(props({}).account, { state: 'guest' });
-        assert.deepEqual(propsDeLaIsla({ config: { ...config, owner: 7 }, estado: estado(), acciones, textos }).account, { state: 'session' });
+        llamadas.length = 0;
+        const invitado = props({}).account;
+        assert.equal(invitado.state, 'guest');
+        invitado.onClick();
+        const sesion = propsDeLaIsla({ config: { ...config, owner: 7 }, estado: estado(), acciones, textos }).account;
+        assert.equal(sesion.state, 'session');
+        sesion.onQr();
+        sesion.onClick();
+        assert.deepEqual(llamadas, [['cuenta', 'login'], ['cuenta', 'card'], ['cuenta', 'home']], 'Entrar, Mi QR y Mi cuenta, cada uno a su zona.');
     });
 });

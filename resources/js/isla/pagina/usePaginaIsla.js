@@ -65,6 +65,13 @@ export function usePaginaIsla({ config, textos, doc = document, win = window }) 
         configurarCookies: () => { win.location.href = config.cookiesUrl; },
         politicaCookies: () => { win.location.href = config.cookiesUrl; },
         navegar: (it) => { if (it?.href) win.location.href = it.href; },
+        // La cuenta, en su zona del lateral (`cajon.openAccount`, el mismo camino que el menú de siempre); sin el
+        // cargador del cajón, la puerta de entrar.
+        abrirCuenta: (zona) => {
+            const cajon = win.JumpWeb?.cajon;
+            if (cajon?.openAccount) cajon.openAccount({ preventDefault() {} }, zona);
+            else win.location.href = '/login';
+        },
     };
 
     const props = computed(() => propsDeLaIsla({

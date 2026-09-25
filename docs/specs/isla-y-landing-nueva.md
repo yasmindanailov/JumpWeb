@@ -1189,6 +1189,17 @@ juzga «idéntico», con los datos del diseño.
     1280): arriba «Abierto hasta las 21:30. Quedan huecos.» y cede ante la cabecera; con la pieza 6 a la vista, calla
     [Hoy]; «Reservar para hoy» baja al precio, la calculadora elige hoy y la isla pasa a «Elige la hora»; consola limpia.
     Sigue ·2: la transformación en la compra y el menú (Mi QR, Mi cuenta, Entrar), comprobados en vivo.
+  - ▶ **·2 ✅ (25-09)**: **la transformación**: con la compra abierta (`jw:cajon:open`) la isla en reposo se aparta y la
+    de la compra ocupa su sitio; al cerrarla (`close`) vuelve. **El menú**: «Entrar o crear cuenta», Mi QR y Mi cuenta
+    abren su zona (`login`, `card`, `home`) en el LATERAL con `cajon.openAccount` —el mismo camino que el menú de
+    siempre— hasta la T5; su caso en `pagina.test.js`. ⚠️ **Medido y arreglado**: el lateral salía SIN estilo al pie de
+    la página, porque `<x-pagina>` ponía el cargador del paquete sin su hoja (`#636`: son dos líneas): ahora, con
+    `cajon`, `css/cajon.css`, y la huella de estilo de `/kids` con y sin ella da **0 elementos distintos** de 1.029 (390)
+    y 1.026 (1280), la isla incluida; su guarda, en `InstancePagesTest`. **En vivo** (1280): aceptar las cookies; el menú
+    → «Entrar» abre el lateral y la isla se aparta; al cerrar, vuelve; día y hora → la isla dice «Sáb 26 · 11:00 · 1 niño
+    · 8 €» sin botón (el de la calculadora se ve); «Reservar y pagar» → una sola isla, la de la compra, en «Paso 1 de 2 ·
+    Tus datos»; consola limpia. ⚠️ **El lateral de la cuenta se ve con el tema NEUTRO del producto** (los botones negros
+    del producto, no Saltia): lo arregla la T5 (Mi cuenta en la isla), que el owner decide si entra en la v2.0.0.
 - **T4f · la sonda de las dos páginas** (`scripts/sonda-isla.mjs` crece): llegar, la isla en reposo, calcular,
   «Reservar y pagar», la pasarela; en 390 y 1280.
 
