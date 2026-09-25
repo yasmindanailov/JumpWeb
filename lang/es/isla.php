@@ -92,6 +92,7 @@ return [
         'entrar_apple' => 'Entrar con Apple',
         'qr' => 'QR',
         'qr_de' => 'QR :codigo',
+        'copiado' => 'Enlace copiado',
         // El calendario de mes (`AvailabilityCalendar.jsx`; T4d): los nombres del mes y de los días, del idioma.
         'calendario' => [
             'mes_anterior' => 'Mes anterior',

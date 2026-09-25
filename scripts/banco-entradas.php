@@ -148,6 +148,29 @@ $piezas = [
     ],
     // La pieza 3 en su forma SIN la calculadora (`widget={false}`, un estado que el diseño trae): la calculadora es
     // la T4d, del producto.
+    /*
+     * La pieza 3 CON la calculadora (T4d·2): como la monta la página del diseño (`inicio="vacio"`, sin JumpPoints,
+     * [Jump Club] ni [Bono]) y sin el hueco de «los festivos del año» en las dudas (`#761`·3). El B, la forma con
+     * calculadora de la pieza Blade y la VISTA del producto montada en su sitio, con la lógica del diseño transcrita
+     * (`scripts/banco-calculadora/`: se compila antes). Los estados se pulsan igual a los dos lados.
+     */
+    'calculadora' => [
+        'jsx' => ['entradas/pieza-3.jsx'],
+        'antes' => 'for (const k of ["kids", "jump"]) window.PJ_ENTRADAS[k].p3.detalles.forEach((d) => { d.lista = false; });',
+        'react' => '<section className="sec"><div className="wrap"><PrecioEntradas z={z} inicio="vacio" ofertas={false} puntos={false} club={false} bono={false} /></div></section>',
+        'vista' => 'instancia::entradas.pieza-3',
+        'datos' => fn (string $zona): array => ['hoy' => $filaHoy, 'calculadora' => ['zona' => $zona]],
+        'b' => fn (string $zona): string => '<link rel="stylesheet" href="../calc/calculadora.css"><script>window.BANCO = '
+            .json_encode(['z' => $contenido[$zona], 'textos' => __('isla')], JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR).'</script><script src="../calc/calculadora.js"></script>',
+        'estados' => [
+            'dia' => ['clics' => ['button[aria-label="26 de septiembre, libre, tarifa especial"]']],
+            'hora' => ['clics' => ['button[aria-label="26 de septiembre, libre, tarifa especial"]', 'button:has-text("17:00")']],
+            'todo' => ['clics' => ['button[aria-label="26 de septiembre, libre, tarifa especial"]', 'button:has-text("17:00")', 'button[aria-label="Añadir uno"]', 'button[aria-label="Añadir uno"]', 'button:has-text("Un par para cada")']],
+            'dos-horas' => ['clics' => ['button[aria-label="24 de septiembre, libre"]', 'label:has-text("2 horas")', 'button:has-text("19:00")']],
+            'ilimitada' => ['clics' => ['button[aria-label="26 de septiembre, libre, tarifa especial"]', 'label:has-text("Ilimitada")'], 'zona' => 'kids'],
+            'ilimitada-hora' => ['clics' => ['label:has-text("Ilimitada")', 'button[aria-label="28 de septiembre, libre"]', 'button:has-text("18:30")'], 'zona' => 'kids'],
+        ],
+    ],
     'precio' => [
         'jsx' => ['entradas/pieza-3.jsx'],
         'react' => '<section className="sec"><div className="wrap"><PrecioEntradas z={z} ofertas={false} widget={false} /></div></section>',
@@ -254,6 +277,7 @@ HTML);
 
         $z = isset($pieza['z']) ? $pieza['z']($contenido[$zona]) : $contenido[$zona];
         $cuerpo = view($pieza['vista'], ['z' => $z, ...$pieza['datos']($zona)])->render();
+        $extraB = isset($pieza['b']) ? $pieza['b']($zona) : '';
         file_put_contents($salida."/b/{$zona}-{$nombre}.html", <<<HTML
 <!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="../instancia/css/fuentes.css"><link rel="stylesheet" href="../instancia/css/saltia.css"><link rel="stylesheet" href="../instancia/css/isla.css"><link rel="stylesheet" href="../instancia/css/entradas.css">
@@ -261,13 +285,14 @@ HTML);
 {$cuerpo}
 </main>
 <script src="../instancia/js/entradas.js"></script>
+{$extraB}
 </body></html>
 HTML);
 
         // En reposo y en cada estado (lo que se pulsa, dónde se deja el puntero y si se reduce el movimiento).
         foreach (['390x844', '1280x900'] as $ventana) {
             foreach (['' => [], ...($pieza['estados'] ?? [])] as $estado => $pasos) {
-                if (isset($pasos['solo']) && $pasos['solo'] !== $ventana) {
+                if ((isset($pasos['solo']) && $pasos['solo'] !== $ventana) || (isset($pasos['zona']) && $pasos['zona'] !== $zona)) {
                     continue;
                 }
                 $lote[] = [

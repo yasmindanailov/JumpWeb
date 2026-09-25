@@ -30,6 +30,8 @@ import TarjetaTarea from '../../resources/js/isla/ui/TarjetaTarea.vue';
 import EsqueletoCarga from '../../resources/js/isla/ui/EsqueletoCarga.vue';
 import CargaRebote from '../../resources/js/isla/ui/CargaRebote.vue';
 import CalendarioMes from '../../resources/js/isla/ui/CalendarioMes.vue';
+import EtiquetaSistema from '../../resources/js/isla/ui/EtiquetaSistema.vue';
+import FilaCompartir from '../../resources/js/isla/ui/FilaCompartir.vue';
 
 /** Pieza del diseño → pieza del producto, y qué props suyas son ranuras (prop de React → nombre de la ranura). */
 const PIEZAS = {
@@ -51,6 +53,8 @@ const PIEZAS = {
     Skeleton: { c: EsqueletoCarga },
     BounceLoader: { c: CargaRebote },
     AvailabilityCalendar: { c: CalendarioMes, modelo: 'value' },
+    Tag: { c: EtiquetaSistema, ranuras: { icon: 'icono' } },
+    ShareRow: { c: FilaCompartir },
 };
 
 const esElemento = (x) => x !== null && typeof x === 'object' && ! Array.isArray(x) && typeof x.$ === 'string';

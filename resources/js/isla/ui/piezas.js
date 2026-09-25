@@ -163,6 +163,20 @@ export function vistaCalendario({ mes, days = [], value = null, today = null, mi
 }
 
 /**
+ * El icono de cada forma de compartir (`ShareRow.jsx`). ⚠️ Solo `message-circle` está en `iconos.js`: los demás entran
+ * con su primer consumidor (un icono que falta pinta su hueco vacío, como el diseño).
+ */
+export const ICONOS_COMPARTIR = { whatsapp: 'message-circle', email: 'mail', copy: 'link', link: 'arrow-up-right' };
+
+/** Los atributos de una píldora de compartir: un enlace (el de fuera, en otra pestaña y sin `opener`) o un botón. */
+export function atributosCompartir(item) {
+    if (! item?.href) return { type: 'button' };
+    const fuera = item.href.indexOf('http') === 0;
+
+    return { href: item.href, target: fuera ? '_blank' : undefined, rel: fuera ? 'noopener noreferrer' : undefined };
+}
+
+/**
  * El texto de un botón cuando su contenido es SOLO texto (`Button.jsx`: `typeof children === "string"`): es lo
  * que lee la bola de carga mientras el botón espera. Con un icono o varios nodos dentro, cadena vacía.
  */

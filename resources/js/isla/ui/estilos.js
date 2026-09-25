@@ -138,6 +138,29 @@ export function estiloHoyCalendario(e) {
     };
 }
 
+/** El chip (`Tag.jsx`): elegido en el color del control; al pasar, solo si se pulsa. */
+export function estiloEtiqueta({ selected, disabled, pulsable, sobre }) {
+    return {
+        display: 'inline-flex', alignItems: 'center', gap: '8px', height: '40px', padding: '0 16px', borderRadius: 'var(--r-pill)', border: 'none',
+        background: selected ? 'var(--control-selected-bg)' : sobre && pulsable ? 'var(--control-bg-hover)' : 'var(--bg-subtle)',
+        color: selected ? 'var(--control-selected-fg)' : 'var(--text-strong)',
+        boxShadow: selected ? 'none' : 'inset 0 0 0 1px var(--border-subtle)',
+        fontFamily: 'var(--font-ui)', fontSize: 'var(--fs-body-sm)', fontWeight: 'var(--fw-semibold)',
+        cursor: pulsable ? (disabled ? 'not-allowed' : 'pointer') : 'default', opacity: disabled ? 0.45 : 1, transition: 'var(--t-hover)',
+    };
+}
+
+/** Una píldora de compartir (`ShareRow.jsx`): tranquila, nunca naranja; sobre tinta, su borde y su texto claros. */
+export function estiloCompartir({ tinta, sobre }) {
+    return {
+        display: 'inline-flex', alignItems: 'center', gap: '9px', minHeight: '44px', padding: '0 18px', border: 'none', borderRadius: 'var(--r-pill)',
+        background: sobre ? (tinta ? 'rgba(255,255,255,0.14)' : 'var(--ink-100)') : 'transparent',
+        boxShadow: `inset 0 0 0 1px ${tinta ? 'var(--border-inverse)' : 'var(--border-subtle)'}`,
+        color: tinta ? 'var(--snow)' : 'var(--ink-900)', fontFamily: 'var(--font-ui)', fontWeight: 'var(--fw-semibold)', fontSize: 'var(--fs-body-sm)',
+        textDecoration: 'none', cursor: 'pointer', transition: 'var(--t-hover)',
+    };
+}
+
 /** El punto de la tarifa especial (lima sobre el día elegido, sol en los demás); sin ella, un punto transparente. */
 export function estiloPuntoCalendario(e) {
     const color = e.activo ? 'var(--volt-500)' : 'var(--sun-500)';

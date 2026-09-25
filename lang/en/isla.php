@@ -89,6 +89,7 @@ return [
         'entrar_apple' => 'Sign in with Apple',
         'qr' => 'QR',
         'qr_de' => 'QR :codigo',
+        'copiado' => 'Link copied',
         'calendario' => [
             'mes_anterior' => 'Previous month',
             'mes_siguiente' => 'Next month',

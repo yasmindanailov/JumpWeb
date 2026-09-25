@@ -991,13 +991,16 @@ juzga «idéntico», con los datos del diseño.
   `PriceSummary`, `ShareRow`), sus 12 textos (de la instancia) y el montaje. **Medido**: la página no carga hoy nada
   del producto; el motor llega por `import()` al abrir (219 KB, 60 KB comprimido; Vue y Pinia, 31; la compra de la
   isla, 36), y una página que no es del producto lo arranca con `cajon/paquete.js` (F4·T5) y `/sidebar/boot`.
-  ⚠️ **Corrección**: el total NO es de `/orders/quote` (la CESTA, en «Pagar»): es la `line` que resuelve el servidor
-  (`/catalog/products/{id}/addons`), la misma de la pantalla 0 —entradas, calcetines y `total_cents`; sin sumas en el
-  cliente, `PAY-12`—. Los días, de `/availability/{id}/dates` (`price_cents`, `rate_key`): libre y especial; el resto,
+  ⚠️ **Precisión**: el total no se pide a `/orders/quote` (la CESTA, en «Pagar»): es la `line` que resuelve el servidor
+  (`/catalog/products/{id}/addons`), la misma de la pantalla 0 y «del mismo cálculo que `orders/quote`» (su contrato)
+  —`unit_price_cents` y `subtotal_cents` de las entradas, el `subtotal_cents` de cada complemento y `total_cents`; sin
+  sumas en el cliente, `PAY-12`—. Los días, de `/availability/{id}/dates` (`price_cents`, `rate_key`): libre y especial; el resto,
   cerrado; la ilimitada ya no se vende en día especial (dato), sin regla en el cliente. Decidido (técnico, `#630`):
   (a) **producto** (`resources/js/isla/calculadora/`) sobre `usePantallaCero`: una sola fuente de aforo y dinero; la
-  página da el sitio, la zona y sus textos. (b) **Antes de montar, y sin JS, la forma SIN calculadora** (la ·7,
-  juzgada): el motor se pide al acercarse la pieza 3 y en el acto si se llega a `#precio`; se mide el cambio en vivo.
+  página da el sitio, la zona y sus textos. (b) **Antes de montar, el hueco de carga del diseño** (`Skeleton`) en el
+  sitio de las preguntas y del total: el motor se pide al acercarse la pieza 3 y en el acto si se llega a `#precio`; se
+  mide el cambio en vivo. ⚠️ Corregido en la ·2 (se había escrito «la forma SIN calculadora»): sin JS la compra entera
+  no funciona —el cajón es JS—, así que esa forma dejaría un botón muerto y, al montar, movería la tabla de sitio.
   (c) Lo quieto sigue en Blade (la tabla, el aviso de grupo y las dudas); Vue pinta preguntas y resumen, dentro de la
   misma retícula. (d) «Reservar y pagar»: la línea a la cesta como «Continuar» de la pantalla 0 y la compra de la isla
   en «Tus datos». (e) «Reservar para hoy» y «Hoy, 1 hora cuesta…», con la T4e (el owner, 25-09).
@@ -1017,6 +1020,23 @@ juzga «idéntico», con los datos del diseño.
     banco de piezas (5 casos de la instancia —el vacío de la página, el ejemplo con completos, hoy especial elegido, dos
     meses, sin leyenda— y dos variantes, el puntero encima y «Mes siguiente»): **3 de 3 a 0 a la primera**, y el banco
     entero 21 de 21; control: 1 px más de alto por día, los 3 caen.
+  - ▶ **·2 ✅ (25-09)**: la VISTA del widget, en `resources/js/isla/calculadora/` —`CalculadoraEntradas` (las preguntas
+    donde se monta y el total, con `Teleport`, en el lado que la página declara), `CalculadoraPreguntas` (las cinco, con
+    sus ecos y pistas), `CalculadoraResumen` (el recibo, «Reservar y pagar» apagado hasta tener día y hora, la línea
+    de la cuenta y compartir) y `PreguntaCalculadora`; sus estilos, en `calculadora/estilos.js`—. PINTAN: todo llega
+    en `v` y suben `cambiar(campo, valor)` y `reservar`. Dos piezas nuevas de la isla: `EtiquetaSistema` (`Tag`) y
+    `FilaCompartir` (`ShareRow`; solo el icono de WhatsApp está en `iconos.js`: la compra va a 129,66 de 130 KiB, y los
+    de correo y copiar entran con su consumidor). En la instancia, la forma CON calculadora de la pieza 3 (la tabla
+    encima; los sitios `data-jw-calculadora` y `data-jw-calculadora-lado`; el aviso de grupo, `info-callout` nuevo,
+    y las dudas, sin el hueco de los festivos) y `.pj-ic` en `entradas.css`. ⚠️ La cifra en columna del diseño
+    (`.pj-num` de `tokens/base.css`) es `tabular-nums`, no la mono: la calculadora la lleva en línea. **El banco**:
+    pieza `calculadora` de `banco-entradas.php` —A, `PrecioEntradas` como lo monta la página del diseño; B, la pieza
+    Blade con la vista montada y la lógica del diseño TRANSCRITA (`scripts/banco-calculadora/diseno.js`, sus sesiones
+    inventadas incluidas)—, con siete estados pulsados igual a los dos lados (reposo, día, hora, todo elegido, dos
+    horas, la ilimitada que vacía el día especial, la ilimitada con hora; los dos últimos, solo Kids). **Medido: 24 de
+    24 a 0 a la primera**; el banco entero de la página, 170 de 170; el de piezas, 25 de 25 (el `Tag` y el `ShareRow`
+    con su `hover`); control: 1 px más de separación en cada pregunta, los 24 caen. Sin juzgar: el «Enlace copiado»
+    (dura 2,6 s y el juez asienta más).
 - **T4e · la isla en la página** (producto): montada al cargar en su propio trozo (el motor, 295 KiB, sigue
   llegando al pulsar), el contrato de §4.3 fijado, sus hechos reales, cede su botón con uno de la página a la vista,
   y se transforma en la compra. Techo de peso con su prueba; aviso al SPA (su T5c y el consentimiento).
