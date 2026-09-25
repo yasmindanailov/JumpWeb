@@ -821,8 +821,10 @@ ordenador y en paralelo con la web pública. Lo que necesita para empezar, medid
   decisión del owner delante. El censo se re-mide al empezar, contra el último zip.
 - ▶ **Al día (25-09, tarde)**: (a) **el zip del 25-09** (instancia `52f6fac`) NO toca la fiesta —ni las tres páginas,
   ni `components/invitados/`, ni `SaveBar`: medido fichero a fichero—; trae Colegios y Visítanos (esta, incompleta)
-  y cambia piezas de Kids, Jump y Cumpleaños. (b) **Los briefs** de la lista, la invitación y la autorización (y el
-  Mapa, que los ordena) están en la instancia, en `docs/estrategia/` (`feb6d1a`; su README dice qué versión manda).
+  y cambia piezas de Kids, Jump y Cumpleaños. (b) ⚠️⚠️ **`#767` (owner): el diseño se toma SOLO del mockup** (el zip,
+  sus fichas, su código y su `readme.md`). Los briefs de la lista, la invitación y la autorización, y el Mapa, están
+  en la instancia (`docs/estrategia/`, `feb6d1a`) como REFERENCIA para algunos casos: nunca deciden cómo se ve algo
+  ni corrigen al mockup.
   (c) **`#766`**, contestadas por el owner: quien cumple es UNO del número (ocupa aforo y se cobra; el diseño ya lo
   dibuja así), el asunto de «Fiesta reservada» va SIN nombre, y hay UN solo plazo para la lista y el número, el que
   ya existe (`packs.guest_count_cutoff_hours`, 24 h), con el suyo en cada extra.

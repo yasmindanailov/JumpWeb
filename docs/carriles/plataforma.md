@@ -3,8 +3,8 @@
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 EN CURSO** (su centena,
-> `decisiones/700-799.md`) · Último usado: **`#766`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#766`) · Actualizado: **2026-09-25**
+> `decisiones/700-799.md`) · Último usado: **`#767`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#767`) · Actualizado: **2026-09-25**
 > tarde (la T4d cerrada; la fiesta pasa al SPA, `#765`; llega un zip nuevo del owner).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
 > llévaselo con la medida, como el SPA en `#724`).
@@ -243,8 +243,8 @@ dueño es el carril de la web/reseñas—) ·
   puede), pídelo aquí antes. ▶ Y mi **T4b·4** espera tu visto bueno (la petición (2), abajo): sin ella las páginas
   nuevas no salen a producción.
   ▶▶ **Al día (25-09 tarde), en la misma spec**: el **zip del 25-09** NO toca la fiesta (medido; instancia
-  `52f6fac`) · **los briefs** de la lista, la invitación y la autorización, en la instancia, `docs/estrategia/`
-  (`feb6d1a`) · y **`#766`**, contestadas por el owner: quien cumple es UNO del número, el asunto de «Fiesta
+  `52f6fac`) · ⚠️ **`#767`: el diseño SOLO del mockup**; los briefs (instancia, `docs/estrategia/`, `feb6d1a`)
+  son referencia para algunos casos, nunca fuente · y **`#766`**, contestadas por el owner: quien cumple es UNO del número, el asunto de «Fiesta
   reservada» va sin nombre, y un solo plazo (el de hoy, 24 h) para la lista y el número.
 - ▶▶ **24-09 · T3d HECHA (`#691`) en tus ficheros, con el visto bueno del owner.** La secuencia de compra
   salió LITERAL de `sections/PurchaseSection.vue` a `sidebar/usePurchaseFlow.js` (stores arriba, mismo orden de
