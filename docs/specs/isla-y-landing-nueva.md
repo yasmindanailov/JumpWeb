@@ -927,6 +927,24 @@ juzga «idéntico», con los datos del diseño.
     sin hueco; y la forma CON foto, construida y juzgada ya con una imagen que hace de foto. El A, el diseño con esos
     datos vaciados antes de montar. **Medido: 16 de 16 a 0** a la primera; control: sin la forma estrecha del panel,
     caen justo los 8 pares de 390.
+  - ▶ **·6, hecha (25-09)**: `clip-tile` y `clip-list` en su forma de FOTO (sin vídeos, que son material que falta,
+    y sin el triángulo de «play», que el propio diseño quita sin vídeo), `clip-viewer` —un ESQUELETO servido y oculto,
+    con los clips en su JSON, que abre y rellena `entradas.js`: el foco a «Cerrar» a los 30 ms y de vuelta al cerrar, el
+    `body` bloqueado, las flechas y las marcas, el teclado, el dedo, el fondo y la acción— y `pieza-4.blade.php`
+    (instancia `8671b11`, con la ·7). En el banco, cada atracción recibe la misma foto a los dos lados (el diseño solo trae
+    una por zona). **Medido: 26 de 26 a 0** (reposo, el `hover` de tarjeta y fila, el visor abierto desde una tarjeta y
+    desde la lista, el segundo plano por su marca y, a 1280, por la flecha); la CONDUCTA, con `scripts/sonda-visor.mjs`:
+    7 de 7 pasos iguales. Dos diferencias deliberadas, informadas y no juzgadas: tras usar una marca el diseño devuelve
+    el foco a «Cerrar» (efecto de las dependencias de su `useEffect`; copiarlo haría que un segundo Intro sobre
+    «siguiente» cerrase el visor) y la acción lleva al ancla ella misma (en el diseño lo hace la página). Controles:
+    las marcas mal encendidas tumban los 10 estados del visor; sin Esc, la sonda cae en su paso.
+  - ▶ **·7, hecha (25-09)**: la pieza 3 en su forma **SIN la calculadora** (`widget={false}`, un estado que el propio
+    diseño trae: la tabla en su columna y, al lado, «Cómo funciona» con los pasos y el botón), mejor que un hueco;
+    la calculadora es la T4d y entra en esta misma retícula. `rate-table`, `step-list` (su camino) y **`dinero`, la
+    única mano que escribe importes** (`#677`): `Number::currency()` de Laravel con la regla del diseño —sin decimales
+    si es entero—, medido con los mismos bytes que el diseño en español («8 €», «14,40 €», con U+00A0). **Medido: 8 de
+    8 a 0**; control: con dos decimales siempre («8,00 €»), caen los 8. ⚠️ Su botón va a `#reservar`, como en el
+    diseño: abrir la compra desde ahí es de la T4e.
 - **T4a · los datos** (producto): las dos columnas de `#699` con su campo en el panel, sus hechos en
   `/catalog/products` y `/catalog/zones` (contrato 1.26.0), sus pruebas y su mutante; y la LISTA de reseñas en
   `/social-proof`, con la misma regla de permiso y la misma línea legal que la portada de hoy. El texto del paso de

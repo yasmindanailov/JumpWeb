@@ -97,6 +97,19 @@ $pie = static function (string $zona): array {
 };
 
 /**
+ * Las fotos que hacen de material en la pieza 4: el diseño solo trae UNA por zona (las demás atracciones son su hueco
+ * rayado, y la web nunca: `#761`·3), así que a los dos lados cada atracción recibe una de éstas, en ciclo.
+ */
+$fotos = ['../assets/media/foto-113.png', '../assets/media/foto-120.png', '../assets/media/foto-127.png', '../assets/media/foto-132.png'];
+$conFotos = static function (array $z) use ($fotos): array {
+    foreach ($z['p4']['atracciones'] as $i => $a) {
+        $z['p4']['atracciones'][$i]['foto'] = $fotos[$i % count($fotos)];
+    }
+
+    return $z;
+};
+
+/**
  * Un estado con el puntero encima de un botón o enlace, para juzgar su `hover`. Con `movimiento`, SIN reducirlo: solo
  * en los BOTONES, porque su levantamiento es un token que el movimiento reducido anula (`--lift-hover: 0px`). Un enlace
  * se juzga con él reducido: sus duraciones pasan a 1 ms y el `hover` (color, subrayado, la flecha) sale entero y quieto
@@ -131,6 +144,34 @@ $piezas = [
             // dentro del enlace), y el puntero esperaba 30 s a un `<a>` que no llegaba.
             'aqui' => $pasar('a:has-text("aquí")', ['button:has-text("¿Puedo comprar la entrada para hoy?")']),
             'puerta' => $pasar('a:has-text("Ver el cumpleaños")', ['button:has-text("¿Hacéis cumpleaños")']),
+        ],
+    ],
+    // La pieza 3 en su forma SIN la calculadora (`widget={false}`, un estado que el diseño trae): la calculadora es
+    // la T4d, del producto.
+    'precio' => [
+        'jsx' => ['entradas/pieza-3.jsx'],
+        'react' => '<section className="sec"><div className="wrap"><PrecioEntradas z={z} ofertas={false} widget={false} /></div></section>',
+        'vista' => 'instancia::entradas.pieza-3',
+        'datos' => fn (string $zona): array => ['hoy' => $filaHoy],
+        'estados' => ['boton' => $pasarBoton('a:has-text("Reservar")')],
+    ],
+    // La pieza 4 con una foto por atracción (`$fotos`: la misma a los dos lados; el A, por datos antes de montar).
+    'zona' => [
+        'jsx' => ['entradas/pieza-4.jsx'],
+        'antes' => 'const F4 = '.json_encode($fotos).'; for (const k of ["kids", "jump"]) window.PJ_ENTRADAS[k].p4.atracciones.forEach((a, i) => { a.foto = F4[i % F4.length]; });',
+        'z' => $conFotos,
+        'react' => '<section className="sec"><div className="wrap"><ZonaEntradas z={z} /></div></section>',
+        'vista' => 'instancia::entradas.pieza-4',
+        'datos' => fn (string $zona): array => [],
+        'estados' => [
+            'tarjeta' => $pasarBoton('figure button[aria-label^="Ver la foto"] >> nth=0'),
+            'fila' => $pasar('li button[aria-label^="Ver la foto"] >> nth=0'),
+            'visor' => ['clics' => ['figure button[aria-label^="Ver la foto"] >> nth=0']],
+            'visor-lista' => ['clics' => ['li button[aria-label^="Ver la foto"] >> nth=1']],
+            // El segundo plano por su MARCA de progreso y no por la flecha: por debajo de 640 px el visor no tiene flechas
+            // (el diseño no las pinta; el nuestro, `display: none`) y «el último botón» sería otro en cada lado.
+            'visor-segundo' => ['clics' => ['figure button[aria-label^="Ver la foto"] >> nth=0', '[role=dialog] button[aria-label$=" 2"]']],
+            'visor-flecha' => ['clics' => ['figure button[aria-label^="Ver la foto"] >> nth=0', '[role=dialog] > button >> nth=-1'], 'solo' => '1280x900'],
         ],
     ],
     // La pieza 5 COMO IRÁ HOY: sin las tres reseñas (esperan la T2·9 del SPA) y sin la foto que cuida (material que
@@ -211,7 +252,8 @@ foreach ($piezas as $nombre => $pieza) {
 </body></html>
 HTML);
 
-        $cuerpo = view($pieza['vista'], ['z' => $contenido[$zona], ...$pieza['datos']($zona)])->render();
+        $z = isset($pieza['z']) ? $pieza['z']($contenido[$zona]) : $contenido[$zona];
+        $cuerpo = view($pieza['vista'], ['z' => $z, ...$pieza['datos']($zona)])->render();
         file_put_contents($salida."/b/{$zona}-{$nombre}.html", <<<HTML
 <!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="../instancia/css/fuentes.css"><link rel="stylesheet" href="../instancia/css/saltia.css"><link rel="stylesheet" href="../instancia/css/isla.css"><link rel="stylesheet" href="../instancia/css/entradas.css">
@@ -225,6 +267,9 @@ HTML);
         // En reposo y en cada estado (lo que se pulsa, dónde se deja el puntero y si se reduce el movimiento).
         foreach (['390x844', '1280x900'] as $ventana) {
             foreach (['' => [], ...($pieza['estados'] ?? [])] as $estado => $pasos) {
+                if (isset($pasos['solo']) && $pasos['solo'] !== $ventana) {
+                    continue;
+                }
                 $lote[] = [
                     'nombre' => "{$zona}-{$nombre}-".strtok($ventana, 'x').($estado !== '' ? "-{$estado}" : ''),
                     'a' => "{$base}/a/{$zona}-{$nombre}.html",

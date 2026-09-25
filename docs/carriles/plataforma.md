@@ -44,8 +44,8 @@
 ▶▶ **AHORA (24-09 noche)**: sistema de diseño nuevo dentro (`#697`); **T3 cerrada** (`#698`); **T4** (Kids y Jump,
 spec §4.12, `#761`): **T4a·1 ✅** (reglas de «con un adulto» y plazo, contrato 1.26.0; T4a·2 y ·3, del SPA: pedidas)
 → **T4b·1 ✅** (las páginas que declara el paquete: `/kids` y `/jump` en local, hoy un ESQUELETO —solo el titular—;
-queda **·4**, el estado del `<body>`, esperando al SPA) → **T4c las piezas** (`#762`, spec §4.12: ·0→·5 ✅, piezas 1-2, 5-8 y pie
-a 0 px con `scripts/banco-entradas.php`; sigue ·6) → T4d la calculadora → T4e la isla viva → T4f la sonda; después, la FIESTA.
+queda **·4**, el estado del `<body>`, esperando al SPA) → **T4c las piezas** (`#762`, spec §4.12: ·0→·7 ✅, las ocho piezas y el
+pie a 0 px con `scripts/banco-entradas.php`; sigue ·8, el modelo) → T4d la calculadora → T4e la isla viva → T4f la sonda; después, la FIESTA.
 ⚠️ BD LOCAL con los valores de `#699`/`#761` (lo de antes, en el commit de la T4a·1); en PRODUCCIÓN, el owner.
 
 1. **F4 · CERRADA el 19-09** (`specs/cajon-empaquetable.md`: sus cinco tandas y sus seis trampas). ⚠️ **Le
@@ -64,8 +64,8 @@ a 0 px con `scripts/banco-entradas.php`; sigue ·6) → T4d la calculadora → T
    supera el `max_qty` de su pack —desde `#677` la tabla de `/servicios` deja de anunciarlos, y aquí no se
    puede medir—; (b) la portada que vaya a producción pinta la línea del FILTRO de reseñas
    (`socialSelection`, la Ómnibus) y la tarjeta de la T2·8 — buzón del SPA del 21/22-09, abajo en Atendido.
-   ❗ **(c) El PLANIFICADOR en `deploy.sh`** (aviso del SPA, 24-09): espera **6** tareas (`grep -c artisan`) y la
-   local registra **9**; medir cómo cuenta en el servidor y arreglarlo ANTES de la v2.0.0 (las encuestas, +1).
+   ✅ **(c) El PLANIFICADOR en `deploy.sh`**: el SPA subió la cifra a **10** con la tarea de las encuestas
+   (`0d9a54db`, avisado); medido en local el 25-09, `schedule:list` = 10. Es propiedad del repo, no del servidor.
 3. **F5 · EL MENÚ DE HECHOS, COMPLETO ✅** (`specs/instancia-y-landing-fuera.md`; la historia de cada tanda
    vive allí, que es donde no caduca). T1→T4 (`#640`→`#669`) · los cuatro platos de la vía A
    (`#671`→`#674`) · el censo y sus lotes (`#675`, `#676`) · y **los TRAMOS DE GRUPO** (`#677`, contrato
