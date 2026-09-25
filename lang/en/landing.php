@@ -78,13 +78,13 @@ return [
         'height_up_to' => 'up to :h m',
         'height_from' => 'from :h m',
         'height_between' => 'from :a to :b m',
-        'escort_under_age_from' => 'below the age, with an adult from :h m',
-        'escort_below' => 'under :h m, with an adult',
+        'escort_under_age_from' => "below the age, with an adult from :h\u{00A0}m",
+        'escort_below' => "under :h\u{00A0}m, with an adult",
         'intro' => 'We built two different worlds — one for the kids who fly without brakes, one for those just learning to jump. Pick yours.',
     ],
     'products' => [
-        'cancellation_hours' => 'up to :n h before',
-        'cancellation_days' => 'up to :n days before',
+        'cancellation_hours' => "up to :n\u{00A0}h before",
+        'cancellation_days' => "up to :n\u{00A0}days before",
         'cancellation_at_start' => 'up to the booked time',
     ],
     'rides' => [

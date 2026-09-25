@@ -134,8 +134,9 @@ return [
          * edad: la zona no la guarda en números (es del producto, `#676`); quien quiera «los menores de 4» la
          * tiene en el catálogo.
          */
-        'escort_under_age_from' => 'por debajo de la edad, con un adulto desde :h m',
-        'escort_below' => 'con menos de :h m, con un adulto',
+        // Cifra y unidad con espacio DURO (`#763`): partido en dos renglones, «1,30 / m» no se lee como una altura.
+        'escort_under_age_from' => "por debajo de la edad, con un adulto desde :h\u{00A0}m",
+        'escort_below' => "con menos de :h\u{00A0}m, con un adulto",
         'intro' => 'Diseñamos dos universos diferentes: uno para los que vuelan sin frenos y otro para los que están descubriendo el salto. Elige el tuyo.',
     ],
     /*
@@ -143,8 +144,9 @@ return [
      * por debajo de dos días («hasta 24 h antes») y en días a partir de ahí («hasta 3 días antes»).
      */
     'products' => [
-        'cancellation_hours' => 'hasta :n h antes',
-        'cancellation_days' => 'hasta :n días antes',
+        // Cifra y unidad con espacio DURO (`#763`): partido, «24 / h antes» no se lee como un plazo.
+        'cancellation_hours' => "hasta :n\u{00A0}h antes",
+        'cancellation_days' => "hasta :n\u{00A0}días antes",
         'cancellation_at_start' => 'hasta la hora reservada',
     ],
     /*

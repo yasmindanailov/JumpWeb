@@ -27,7 +27,7 @@
   la isla en Vue, idéntica al diseño) y **T3 ✅** (§4.10, `#689`→`#698`): la isla compra con tarjeta hasta el banco,
   con «Entra» y Google, cumpleaños con señal y la hora que se llena; su sonda, `scripts/sonda-isla.mjs`; la
   secuencia, en `sidebar/usePurchaseFlow.js`. El sistema nuevo del 24-09 tarde, dentro (§4.11, `#697`). **T4 🟦**
-  (§4.12, `#762`): T4a·1, T4b·1, T4c·0 y ·1 ✅.
+  (§4.12, `#763`): T4a·1, T4b·1 y T4c ✅.
 - **Invariantes**: `PAY-*` si entra Bizum (`VERIFY_CONC=1`), `SEC-12` (la ruta de las vistas), `SEC-01`,
   `RGPD-*` (consentimiento dentro de la isla, Apple como proveedor), `PERF-02` (la carcasa por instalación va en
   el arranque cacheado; la variante del A/B, en la sesión).
@@ -950,7 +950,21 @@ juzga «idéntico», con los datos del diseño.
     PlayJump (el sistema no aplica esos umbrales); los días de cada tarifa, con la etiqueta del panel. **·8a ✅**:
     `PageFacts` gana `product_details` —las fichas del catálogo, una por producto y en su orden, con el mismo JSON que
     `GET /catalog/products/{id}`— sin API nueva ni contrato (`InstancePagesTest`, su mutante —la lista en vez de las
-    fichas— muere). Sigue **·8b**: el modelo de la instancia (`$z` desde los hechos y `lang`) y las páginas enteras.
+    fichas— muere). **·8b ✅** (25-09): `web/entradas/modelo.php` de la instancia —lo `require` el molde por el buscador
+    de vistas del espacio `instancia`, la misma raíz validada— saca `$z` de los hechos y de `lang/<idioma>/paginas.php`,
+    donde cada cifra es un MARCADOR: las de la zona sin prefijo y las de las dos con `kids_`/`jump_` (cada página nombra
+    a la otra). Una mano por cosa: `dinero`, y en el modelo las alturas («90 cm», «1,30 m»), las duraciones, las horas y
+    los días. Reglas medidas, sin nombres ni ids: los calcetines son el único complemento de TODAS las entradas de la
+    zona; su pack de cumpleaños, el de la zona de cumpleaños con su misma edad mínima; las atracciones, en el orden del
+    panel. `/kids` y `/jump` enteras en local, en es/en/fr (seis en 200, cero marcadores sueltos, registro limpio).
+    **Medido** con `scripts/modelo-entradas.php`: con los hechos reales y las cifras del brief, 140 (Kids) y 129 (Jump)
+    campos IGUALES al brief y solo las diferencias decididas (días de la tarifa especial, «Toca una y mírala» sin vídeos,
+    atracciones del panel, «quedan huecos» de la T4e); y 13 hechos movidos mueven cada uno sus textos —control: una edad
+    tecleada en un texto la caza la prueba 2 y no la 1—. De paso, un defecto del PRODUCTO: el plazo y «con un adulto»
+    se escribían con espacio normal entre cifra y unidad («24 h»); ahora duro, como pide el diseño, con su guarda en
+    `CatalogTest`. Dos trampas del traductor: un `false` suelto en un fichero de textos devuelve la CLAVE (verdadera), y
+    un `null` dentro de un arreglo pasa por `strtr()` (obsoleto). ▶ Del owner: escribir «De lunes a jueves» en la etiqueta
+    de la tarifa normal (hoy «Lunes a jueves»), ordenar las atracciones como el brief en el panel, y revisar en/fr.
 - **T4a · los datos** (producto): las dos columnas de `#699` con su campo en el panel, sus hechos en
   `/catalog/products` y `/catalog/zones` (contrato 1.26.0), sus pruebas y su mutante; y la LISTA de reseñas en
   `/social-proof`, con la misma regla de permiso y la misma línea legal que la portada de hoy. El texto del paso de

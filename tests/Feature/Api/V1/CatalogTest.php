@@ -258,6 +258,7 @@ class CatalogTest extends ApiTestCase
         $this->assertArrayNotHasKey('under_age_from_cm', $jump['escort']);
         $this->assertArrayNotHasKey('height', $jump, '«con menos de 1,30 m, con un adulto» no es una altura MÍNIMA');
         $this->assertSame(__('landing.zones.escort_below', ['h' => '1,30']), $jump['escort']['written']);
+        $this->assertSame("con menos de 1,30\u{00A0}m, con un adulto", $jump['escort']['written'], 'cifra y unidad, con espacio duro (`#763`)');
     }
 
     /** Sin ninguna regla de «con un adulto», el bloque falta ENTERO; y la frase va en el decimal del idioma. */
@@ -296,7 +297,10 @@ class CatalogTest extends ApiTestCase
             $this->assertSame(['cutoff_hours' => $horas, 'written' => $frase], $publicado, "con {$horas} h");
         }
 
-        $this->assertSame('hasta 3 días antes', __('landing.products.cancellation_days', ['n' => 3]));
+        // Cifra y unidad con espacio DURO (`#763`, la regla de `contenido.js` del diseño): partido en dos renglones,
+        // «24 / h antes» no se lee como un plazo. Medido al comparar las páginas nuevas con el brief.
+        $this->assertSame("hasta 3\u{00A0}días antes", __('landing.products.cancellation_days', ['n' => 3]));
+        $this->assertSame("hasta 24\u{00A0}h antes", __('landing.products.cancellation_hours', ['n' => 24]));
         $this->getJson(self::ROOT.'/catalog/products/'.$producto->id)->assertOk()->assertValidResponse(200)
             ->assertJsonPath('cancellation.cutoff_hours', 0);
     }

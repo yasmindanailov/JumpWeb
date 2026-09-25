@@ -41,11 +41,11 @@
 
 ## Por dónde retomar, en orden
 
-▶▶ **AHORA (24-09 noche)**: sistema de diseño nuevo dentro (`#697`); **T3 cerrada** (`#698`); **T4** (Kids y Jump,
-spec §4.12, `#761`): **T4a·1 ✅** (reglas de «con un adulto» y plazo, contrato 1.26.0; T4a·2 y ·3, del SPA: pedidas)
-→ **T4b·1 ✅** (las páginas que declara el paquete: `/kids` y `/jump` en local, hoy un ESQUELETO —solo el titular—;
-queda **·4**, el estado del `<body>`, esperando al SPA) → **T4c las piezas** (`#762`, spec §4.12: ·0→·7 ✅, las ocho piezas y el
-pie a 0 px con `scripts/banco-entradas.php`; ·8a ✅, `product_details` de `#763`; sigue ·8b, el modelo) → T4d la calculadora → T4e la isla viva → T4f la sonda; después, la FIESTA.
+▶▶ **AHORA (25-09)**: **T4** (Kids y Jump, spec §4.12, `#761`): **T4a·1 ✅** (T4a·2 y ·3, del SPA: pedidas) →
+**T4b·1 ✅** (queda **·4**, el estado del `<body>`, esperando al SPA) → **T4c ✅** (`#762`, `#763`: las ocho piezas y el
+pie a 0 px contra el diseño —`scripts/banco-entradas.php`, 146 pares; el visor, `scripts/sonda-visor.mjs`— y `/kids` y
+`/jump` ENTERAS con los hechos en es/en/fr —`scripts/modelo-entradas.php`—) → **T4d la calculadora, la SIGUIENTE** →
+T4e la isla viva → T4f la sonda; después, la FIESTA.
 ⚠️ BD LOCAL con los valores de `#699`/`#761` (lo de antes, en el commit de la T4a·1); en PRODUCCIÓN, el owner.
 
 1. **F4 · CERRADA el 19-09** (`specs/cajon-empaquetable.md`: sus cinco tandas y sus seis trampas). ⚠️ **Le
@@ -117,11 +117,7 @@ pie a 0 px con `scripts/banco-entradas.php`; ·8a ✅, `product_details` de `#76
    `price_table`, `nav_subtitle` y `show_in_nav` se retiran con la tanda de la PÁGINA, no antes · un
    producto activo sin NINGÚN precio sale de `/prices` sin la clave `prices` que el contrato exige (`#677`).
    ⚠️ El §0 de la spec está a **1.973 de 2.048 B**: de ahí solo se toca la línea de «Estado». La **T5**
-   (cortar v2.0.0) es el final del programa entero, no de esta fase (`#670`).
-
-   ▶ **Lo que se le contestó al owner sobre la FORMA del cajón y sobre los widgets** (medido el 21-09)
-   vive ahora en `specs/cajon-empaquetable.md` **§4.9**, que es donde no caduca: el cajón no tiene que
-   ser un lateral, ya ES un widget, y cambiar su forma es una tanda de DISEÑO.
+   (cortar v2.0.0) es el final del programa entero, no de esta fase (`#670`). La FORMA del cajón: `cajon-empaquetable.md` §4.9.
 
 4. **Deuda del análisis estático**: bajar la base de Larastan por familias, con `FROZEN_ERRORS` en el
    mismo commit (`#674` la bajó a 457 sin proponérselo). Los 12 de ESLint los poda quien los arregle.
@@ -129,7 +125,8 @@ pie a 0 px con `scripts/banco-entradas.php`; ·8a ✅, `product_details` de `#76
    `ENTORNOS.md` §6 en `#675`, junto al despliegue que las escribió. Sin desplegar: son datos.
 6. Después, **F6** (app nativa; hereda del token lo que su spec §2 nombra: Google, alta, dispositivos).
 - **Del owner, HOY**: **probar la isla en local** (sus accesos se le dieron en el chat del 24-09) · la **captura del
-  MAPA** de la pieza 6 (sin ella, solo el panel: spec §4.12 ·4) · en su diseño,
+  MAPA** de la pieza 6 (sin ella, solo el panel: spec §4.12 ·4) · en el panel, la tarifa normal como «De lunes a
+  jueves» y las atracciones en el orden del brief (§4.12 ·8b) · revisar el en/fr de Kids y Jump · en su diseño,
   **cumpleaños a 3 días** y no 5 (`#699`), y bajar el zip DESPUÉS del último cambio (`#760`) · pasar a su
   diseño las dos de `#695` («Entra» solo con correo; la «G» de Google) · en el panel de PRODUCCIÓN, el campo del
   homenajeado de los dos packs a «formulario de invitados» (`#692`; en local ya está) · el **modelo de las promociones**
@@ -273,6 +270,11 @@ dueño es el carril de la web/reseñas—) ·
   sacarlo TAL CUAL a un componente (`site/body-state`) que usen los dos layouts, sin cambiar un atributo; no lo toco
   hasta que lo veas.
 
+### ❗ Para el carril de la WEB (emisor: plataforma, 2026-09-25) — tu `lang/*/landing.php`, un carácter en claves mías
+- `#763`: las frases del plazo (`products.cancellation_*`) y de «con un adulto» (`zones.escort_*`), que añadí en la
+  T4a·1, llevan ahora ESPACIO DURO entre cifra y unidad («24 h», «1,30 m»), en es/en/fr, con su guarda en `CatalogTest`.
+  Las de altura (`zones.height_*`) tienen la misma pega y son tuyas: no las toco.
+
 ### ❗ Para el carril de la WEB (emisor: plataforma, 2026-09-23) — dos huecos de contenido, MEDIDOS
 - ▶ Publicar `/servicios` como hechos (`#672`) destapó dos cosas **tuyas**, que son de tu T6 de contenido
   y que no toco yo (`#621`). Las dos en `landing_services.specs` de `excursionescolegio`, dato del panel:
@@ -284,22 +286,6 @@ dueño es el carril de la web/reseñas—) ·
   quien conozca la operación.
 - ▶ Hoy no hay exposición —la página está apagada y los packs inactivos—, pero la API ya lo sirve tal cual
   a cualquier landing que lo pida.
-
-### ❗❗❗ Para TODOS los carriles (emisor: plataforma, 2026-09-23) — `#670`: NO SE DESPLIEGA EN PIEZAS
-- ▶ **Decisión del owner**: producción se queda en **v1.1.0** hasta el final del programa. **v2.0.0 es
-  UNA versión grande** con todo dentro —los cuatro platos, la landing nueva, el cajón, el justificante,
-  la invitación y las analíticas—, de noche y con él pendiente. Su motivo: un despliegue cuesta ATENCIÓN
-  aunque salga bien, y la quiere para diseñar. **No pidáis despliegues sueltos.**
-- ❗❗ **SPA, esto te toca directo: los dos interruptores de la invitación NO se encienden todavía.**
-  Medido contra el git, y corrige lo que dice el `CHANGELOG`: **v1.2.0 lleva T1→T5 y NO lleva T6 ni T7**
-  —tu T6 (`#708`→`#713`), tu T7 (`#714`→`#717`) y `#718` entraron DESPUÉS de la etiqueta del 19-09 a las
-  09:52—. Encenderlos sobre esa etiqueta daría media feature: la página del padre sin el aterrizaje del
-  anfitrión y sin los tres correos. ▶ Tu trabajo no está en cuestión: está esperando a la versión grande.
-- ⚠️ **He corregido el `CHANGELOG.md` de v1.2.0**, que afirmaba «la invitación digital entra ENTERA».
-  Es fichero mío (`#624`), pero la frase hablaba de lo tuyo y por eso te lo digo.
-- ▶ **Contrato de la API en `1.17.0`** (`#671`→`#677`; el último, `tiers` en `/prices`): **solo añade**,
-  ninguna ruta existente cambia de forma. `ApiContractTest` gana una entrada en `OPTIONAL_BY_DESIGN`; el
-  cajón no se entera.
 
 ### ❗❗ Para el carril de la WEB (emisor: plataforma, 18→21-09; los CUATRO avisos, fundidos)
 - ▶ **`resources/views/home.blade.php` NO EXISTE** (`#666`), como ya no existe `pages/`: las NUEVE vistas
@@ -333,4 +319,6 @@ dueño es el carril de la web/reseñas—) ·
   analítica ENTERA (`#735`); lo que decían vive en `analitica.md` y en `carriles/spa.md`.
 - **Retirados el 24-09 noche** los avisos de T3e·2b, T3e·3 y T3e·4 (`#693`→`#695`) y los avisos previos de la isla
   (cookies, `lint:js`, el A/B): el SPA los atendió o contestó en su buzón; su detalle, en la spec §4.10 y §4.11.
-- **SPA 24-09 noche**: sus dos bloques «Para PLATAFORMA», leídos; el del planificador es trabajo («retomar» 2(c)).
+- **SPA 24-09 noche**: sus dos bloques «Para PLATAFORMA», leídos; el del planificador, resuelto por el SPA (`0d9a54db`).
+- **Retirado el 25-09** el aviso a TODOS de `#670` (no se despliega en piezas; los interruptores de la invitación): el
+  SPA lo atendió; vive en `#670`, en la Foto y en «retomar» 2.
