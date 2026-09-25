@@ -985,6 +985,38 @@ juzga «idéntico», con los datos del diseño.
 - **T4d · la calculadora** (producto): la pieza 3 en Vue sobre el motor y la lógica de la pantalla 0, el calendario
   de mes, «Reservar y pagar» a «Tus datos» de la isla con la línea ya en la cesta, y «Reservar para hoy» con hoy
   elegido. El total, siempre de `/orders/quote`. Banco de sus estados → 0 px.
+  ▶ **Afinada al medirla (25-09)**. HAY la lógica (`usePantallaCero` sobre el motor: el borrador, los días de TODAS
+  las filas, las horas con la cesta —`AFORO-02`—, la hora que ya no cabe se vacía) y cuatro piezas; FALTAN el
+  calendario de mes (`AvailabilityCalendar`, 9 KB de JSX), la VISTA del widget (`PrecioEntradas`: cinco preguntas,
+  `PriceSummary`, `ShareRow`), sus 12 textos (de la instancia) y el montaje. **Medido**: la página no carga hoy nada
+  del producto; el motor llega por `import()` al abrir (219 KB, 60 KB comprimido; Vue y Pinia, 31; la compra de la
+  isla, 36), y una página que no es del producto lo arranca con `cajon/paquete.js` (F4·T5) y `/sidebar/boot`.
+  ⚠️ **Corrección**: el total NO es de `/orders/quote` (la CESTA, en «Pagar»): es la `line` que resuelve el servidor
+  (`/catalog/products/{id}/addons`), la misma de la pantalla 0 —entradas, calcetines y `total_cents`; sin sumas en el
+  cliente, `PAY-12`—. Los días, de `/availability/{id}/dates` (`price_cents`, `rate_key`): libre y especial; el resto,
+  cerrado; la ilimitada ya no se vende en día especial (dato), sin regla en el cliente. Decidido (técnico, `#630`):
+  (a) **producto** (`resources/js/isla/calculadora/`) sobre `usePantallaCero`: una sola fuente de aforo y dinero; la
+  página da el sitio, la zona y sus textos. (b) **Antes de montar, y sin JS, la forma SIN calculadora** (la ·7,
+  juzgada): el motor se pide al acercarse la pieza 3 y en el acto si se llega a `#precio`; se mide el cambio en vivo.
+  (c) Lo quieto sigue en Blade (la tabla, el aviso de grupo y las dudas); Vue pinta preguntas y resumen, dentro de la
+  misma retícula. (d) «Reservar y pagar»: la línea a la cesta como «Continuar» de la pantalla 0 y la compra de la isla
+  en «Tus datos». (e) «Reservar para hoy» y «Hoy, 1 hora cuesta…», con la T4e (el owner, 25-09).
+  **Sub-tandas**: ·1 el calendario (su vista pura y sus estados a 0 px) · ·2 la vista del widget contra
+  `PrecioEntradas` con los datos del diseño (vacío, el ejemplo, día sin hora, la ilimitada, hora apagada; 390 y
+  1280) · ·3 sobre el motor (`node --test`: el dinero del servidor, la hora que no cabe) · ·4 el montaje y «Reservar
+  y pagar» (guardas; aviso al SPA si se toca `sidebar/`) · ·5 la sonda en vivo.
+  - ▶ **·1 ✅ (25-09)**: `ui/CalendarioMes.vue`, el `AvailabilityCalendar` del diseño en Vue con su estilo en línea
+    (como las demás piezas de la isla): el mes con la semana en lunes, «hoy» con la palabra, el punto de la tarifa
+    especial, los completos tachados, la leyenda, el `hover` de un día libre y los meses con sus topes. Lo que decide,
+    en `ui/piezas.js` (`celdasDelMes`, `estadoDia`, `mesDesplazado`, `vistaCalendario`; 4 casos de `node --test`: el
+    año que cambia, el mes que empieza en lunes, el completo que no se pulsa, los nombres accesibles) y sus estilos en
+    `ui/estilos.js`: el guardián `CE-6` lo tumbó con 62 líneas de código en el componente (techo 40) y se sacó, sin
+    excepción. Los nombres del mes y de los días, de `Intl` (en español,
+    los del diseño, medido); los rótulos, `pieza.calendario` de `lang/*/isla.php` (en/fr a revisar; «aujourd’hui» es
+    largo para su casilla: a mirar con la T4d·2). Sin «Avísame si se libera»: nadie lo usa aún. **Medido**, en el
+    banco de piezas (5 casos de la instancia —el vacío de la página, el ejemplo con completos, hoy especial elegido, dos
+    meses, sin leyenda— y dos variantes, el puntero encima y «Mes siguiente»): **3 de 3 a 0 a la primera**, y el banco
+    entero 21 de 21; control: 1 px más de alto por día, los 3 caen.
 - **T4e · la isla en la página** (producto): montada al cargar en su propio trozo (el motor, 295 KiB, sigue
   llegando al pulsar), el contrato de §4.3 fijado, sus hechos reales, cede su botón con uno de la página a la vista,
   y se transforma en la compra. Techo de peso con su prueba; aviso al SPA (su T5c y el consentimiento).

@@ -92,6 +92,21 @@ return [
         'entrar_apple' => 'Entrar con Apple',
         'qr' => 'QR',
         'qr_de' => 'QR :codigo',
+        // El calendario de mes (`AvailabilityCalendar.jsx`; T4d): los nombres del mes y de los días, del idioma.
+        'calendario' => [
+            'mes_anterior' => 'Mes anterior',
+            'mes_siguiente' => 'Mes siguiente',
+            'dia' => ':n de :mes',
+            'aria_hoy' => ', hoy',
+            'aria_libre' => ', libre',
+            'aria_especial' => ', libre, :tarifa',
+            'aria_completo' => ', completo',
+            'aria_cerrado' => ', cerrado',
+            'hoy' => 'hoy',
+            'libre' => 'libre',
+            'completo' => 'completo',
+            'tarifa_especial' => 'Tarifa especial',
+        ],
     ],
     // Las pantallas de la COMPRA (T3c), con el literal de su diseño (`paginas/compra/datos.js`). Lo que depende de
     // los datos del parque —nombres de zona, precios, las preguntas de su widget, los plazos de sus condiciones—

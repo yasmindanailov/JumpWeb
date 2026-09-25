@@ -29,6 +29,7 @@ import PaseQr from '../../resources/js/isla/ui/PaseQr.vue';
 import TarjetaTarea from '../../resources/js/isla/ui/TarjetaTarea.vue';
 import EsqueletoCarga from '../../resources/js/isla/ui/EsqueletoCarga.vue';
 import CargaRebote from '../../resources/js/isla/ui/CargaRebote.vue';
+import CalendarioMes from '../../resources/js/isla/ui/CalendarioMes.vue';
 
 /** Pieza del diseño → pieza del producto, y qué props suyas son ranuras (prop de React → nombre de la ranura). */
 const PIEZAS = {
@@ -49,6 +50,7 @@ const PIEZAS = {
     TaskCard: { c: TarjetaTarea, ranuras: { actions: 'acciones' } },
     Skeleton: { c: EsqueletoCarga },
     BounceLoader: { c: CargaRebote },
+    AvailabilityCalendar: { c: CalendarioMes, modelo: 'value' },
 };
 
 const esElemento = (x) => x !== null && typeof x === 'object' && ! Array.isArray(x) && typeof x.$ === 'string';

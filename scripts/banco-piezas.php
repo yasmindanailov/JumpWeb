@@ -109,7 +109,9 @@ HTML
             'b' => "{$base}/b-{$pieza['nombre']}.html",
             'viewport' => '1024x800',
             'completa' => true,
-            'clics' => $variante['clics'],
+            'clics' => $variante['clics'] ?? [],
+            // El puntero encima justo antes de la foto (el `hover` de un día del calendario, T4d).
+            'pasar' => $variante['pasar'] ?? null,
         ];
     }
 }

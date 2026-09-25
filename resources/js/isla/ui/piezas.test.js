@@ -1,7 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createTextVNode, h } from 'vue';
-import { acotar, barrasEsqueleto, columnasOpciones, enNavegadorDeApp, estadoHora, idDeCampo, idDeCasilla, textoDeRanura } from './piezas.js';
+import {
+    acotar, barrasEsqueleto, celdasDelMes, columnasOpciones, enNavegadorDeApp, estadoDia, estadoHora, idDeCampo, idDeCasilla, mesDesplazado,
+    textoDeRanura, vistaCalendario,
+} from './piezas.js';
 
 const tp = (clave, p = {}) => `${clave}${p.n != null ? `:${p.n}` : ''}`;
 
@@ -64,4 +67,43 @@ test('el texto de un botón para su bola de carga: solo si dentro hay SOLO texto
     assert.equal(textoDeRanura([h('span', 'Pagar')]), '');
     assert.equal(textoDeRanura([createTextVNode('a'), createTextVNode('b')]), '');
     assert.equal(textoDeRanura(undefined), '');
+});
+
+test('el mes del calendario se mueve cruzando el año, hacia delante y hacia atrás', () => {
+    assert.equal(mesDesplazado('2026-09', 1), '2026-10');
+    assert.equal(mesDesplazado('2026-12', 1), '2027-01');
+    assert.equal(mesDesplazado('2026-01', -1), '2025-12');
+    assert.equal(mesDesplazado('2026-09', -21), '2024-12');
+});
+
+test('las casillas del mes empiezan en lunes y cuentan sus días', () => {
+    const septiembre = celdasDelMes('2026-09'); // el 1 es martes
+    assert.equal(septiembre[0], null);
+    assert.deepEqual(septiembre[1], { n: 1, date: '2026-09-01' });
+    assert.equal(septiembre.length, 1 + 30);
+    assert.equal(celdasDelMes('2026-06')[0].date, '2026-06-01'); // el 1 es lunes: sin hueco
+    assert.equal(celdasDelMes('2028-02').filter(Boolean).length, 29);
+});
+
+test('un día: sin fila, cerrado; completo, tachado y solo pulsable con aviso; la marca especial, nunca si está lleno', () => {
+    const d = '2026-09-26';
+    assert.deepEqual(estadoDia(undefined, { date: d }), { libre: false, lleno: false, activo: false, hoy: false, especial: false, pulsable: false });
+    assert.equal(estadoDia({ date: d }, { date: d }).libre, true);
+    assert.equal(estadoDia({ date: d, special: true }, { date: d }).especial, true);
+    assert.deepEqual([estadoDia({ date: d, state: 'full', special: true }, { date: d }).especial, estadoDia({ date: d, state: 'full' }, { date: d }).pulsable], [false, false]);
+    assert.equal(estadoDia({ date: d, state: 'full' }, { date: d, avisa: true }).pulsable, true);
+    assert.deepEqual([estadoDia({ date: d }, { date: d, value: d, today: d }).activo, estadoDia({ date: d }, { date: d, today: d }).hoy], [true, true]);
+});
+
+test('la vista del mes: su nombre y sus iniciales en el idioma, los topes y el nombre accesible de cada día', () => {
+    const textos = { 'pieza.calendario.dia': ':n de :mes', 'pieza.calendario.aria_hoy': ', hoy', 'pieza.calendario.aria_especial': ', libre, :tarifa', 'pieza.calendario.aria_cerrado': ', cerrado', 'pieza.calendario.aria_completo': ', completo' };
+    const t = (k) => textos[k];
+    const tp = (k, p) => Object.entries(p).reduce((s, [n, x]) => s.replace(`:${n}`, x), textos[k]);
+    const v = vistaCalendario({ mes: '2026-09', days: [{ date: '2026-09-26', special: true }, { date: '2026-09-27', state: 'full' }], today: '2026-09-23', minMonth: '2026-09', especial: 'Tarifa especial', sobre: '2026-09-26' }, { t, tp });
+
+    assert.deepEqual([v.nombre, v.anio, v.iniciales.join(''), v.puedeAtras, v.puedeAlante], ['septiembre', 2026, 'LMXJVSD', false, true]);
+    const dia = (n) => v.celdas.find((c) => c?.n === n);
+    assert.deepEqual([dia(23).aria, dia(26).aria, dia(27).aria], ['23 de septiembre, hoy, cerrado', '26 de septiembre, libre, tarifa especial', '27 de septiembre, completo']);
+    assert.deepEqual([dia(26).sobre, dia(24).sobre], [true, false]);
+    assert.equal(vistaCalendario({ mes: '2026-09', locale: 'en' }, { t, tp }).iniciales.join(''), 'MTWTFSS');
 });
