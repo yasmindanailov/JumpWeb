@@ -179,6 +179,22 @@ return [
                 'via_card' => 'Abierta por QR',
                 'via_lookup' => 'Abierta por búsqueda',
                 'waiver_disabled' => 'Esta instalación no comprueba el descargo en la puerta.',
+                // LA ENCUESTA INTERNA (T2 de `specs/encuestas.md` §4.2): la tarjeta debajo de «Hoy», solo con
+                // la visita acreditada. El operador pregunta y marca con el dedo; «No preguntar» también es una
+                // respuesta (no se vuelve a ofrecer). Los errores se componen por clave (`survey_error_`.$tipo).
+                'survey_questions' => '{1}:count pregunta|[2,*]:count preguntas',
+                'survey_ask' => 'Preguntar',
+                'survey_skip' => 'No preguntar',
+                'survey_save' => 'Guardar respuestas',
+                'survey_cancel' => 'Ahora no',
+                'survey_answered' => 'Encuesta contestada',
+                'survey_declined' => 'No se ha preguntado',
+                'survey_required' => 'obligatoria',
+                'survey_yes' => 'Sí',
+                'survey_no' => 'No',
+                'survey_text_placeholder' => 'Lo que diga el cliente',
+                'survey_error_required' => 'Falta contestar esta pregunta.',
+                'survey_error_invalid' => 'Respuesta no válida para esta pregunta.',
             ],
         ],
     ],

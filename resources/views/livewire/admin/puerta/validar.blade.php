@@ -202,6 +202,103 @@
                                 @endif
                             </x-filament::section>
 
+                            {{-- LA ENCUESTA INTERNA (`specs/encuestas.md` §4.2, T2): DEBAJO de «Hoy» y nunca sobre el
+                                 lector ni como modal. Solo aparece con la visita de hoy acreditada, una encuesta
+                                 interna viva y sin respuesta de este cliente; «No preguntar» también es una
+                                 respuesta. Cada opción es un radio/checkbox oculto con su etiqueta vestida de botón
+                                 táctil (≥ 44 px), con `wire:model` DIFERIDO: cero idas y vueltas hasta «Guardar»;
+                                 el servidor tipa y valida (`SEC-04`). Los `data-gate-survey*` los miran los tests
+                                 y la sonda. --}}
+                            @if ($survey !== null)
+                                <x-filament::section
+                                    :heading="$survey['name']"
+                                    :description="$survey['intro']"
+                                    :icon="Heroicon::OutlinedChatBubbleLeftRight"
+                                    icon-color="primary"
+                                    compact
+                                    class="gate-survey"
+                                    data-gate-survey="{{ $survey['state'] }}"
+                                    data-gate-survey-key="{{ $survey['key'] }}"
+                                >
+                                    @if ($survey['state'] === 'offer')
+                                        <p class="gate-hint" data-gate-survey-count>{{ trans_choice('admin.puerta.validar.profile.survey_questions', (int) $survey['count'], ['count' => (int) $survey['count']]) }}</p>
+                                        <div class="gate-survey__actions">
+                                            <x-filament::button wire:click="openSurvey" size="lg" data-gate-survey-open>
+                                                {{ __('admin.puerta.validar.profile.survey_ask') }}
+                                            </x-filament::button>
+                                            <x-filament::button wire:click="declineSurvey" size="lg" color="gray" outlined data-gate-survey-decline>
+                                                {{ __('admin.puerta.validar.profile.survey_skip') }}
+                                            </x-filament::button>
+                                        </div>
+                                    @elseif ($survey['state'] === 'open')
+                                        <form wire:submit="answerSurvey" class="gate-survey__form" data-gate-survey-form>
+                                            @foreach ($survey['questions'] as $q)
+                                                <fieldset class="gate-q" data-gate-question="{{ $q['key'] }}" data-gate-question-type="{{ $q['type'] }}">
+                                                    <legend class="gate-q__label">
+                                                        {{ $q['label'] }}
+                                                        @if ($q['required'])
+                                                            <span class="gate-q__required">· {{ __('admin.puerta.validar.profile.survey_required') }}</span>
+                                                        @endif
+                                                    </legend>
+
+                                                    @if ($q['type'] === 'choice')
+                                                        <div class="gate-q__options">
+                                                            @foreach ($q['options'] as $o)
+                                                                <input type="radio" id="q-{{ $q['key'] }}-{{ $o['key'] }}" class="gate-q__input" wire:model="surveyAnswers.{{ $q['key'] }}" value="{{ $o['key'] }}">
+                                                                <label for="q-{{ $q['key'] }}-{{ $o['key'] }}" class="gate-q__btn">{{ $o['label'] }}</label>
+                                                            @endforeach
+                                                        </div>
+                                                    @elseif ($q['type'] === 'multi')
+                                                        <div class="gate-q__options">
+                                                            @foreach ($q['options'] as $o)
+                                                                <input type="checkbox" id="q-{{ $q['key'] }}-{{ $o['key'] }}" class="gate-q__input" wire:model="surveyAnswers.{{ $q['key'] }}" value="{{ $o['key'] }}">
+                                                                <label for="q-{{ $q['key'] }}-{{ $o['key'] }}" class="gate-q__btn">{{ $o['label'] }}</label>
+                                                            @endforeach
+                                                        </div>
+                                                    @elseif ($q['type'] === 'scale')
+                                                        <div class="gate-q__options">
+                                                            @foreach (range(\App\Domain\Platform\Services\Surveys\QuestionSchema::SCALE_MIN, \App\Domain\Platform\Services\Surveys\QuestionSchema::SCALE_MAX) as $n)
+                                                                <input type="radio" id="q-{{ $q['key'] }}-{{ $n }}" class="gate-q__input" wire:model="surveyAnswers.{{ $q['key'] }}" value="{{ $n }}">
+                                                                <label for="q-{{ $q['key'] }}-{{ $n }}" class="gate-q__btn gate-q__btn--scale">{{ $n }}</label>
+                                                            @endforeach
+                                                        </div>
+                                                    @elseif ($q['type'] === 'yesno')
+                                                        <div class="gate-q__options">
+                                                            <input type="radio" id="q-{{ $q['key'] }}-yes" class="gate-q__input" wire:model="surveyAnswers.{{ $q['key'] }}" value="1">
+                                                            <label for="q-{{ $q['key'] }}-yes" class="gate-q__btn">{{ __('admin.puerta.validar.profile.survey_yes') }}</label>
+                                                            <input type="radio" id="q-{{ $q['key'] }}-no" class="gate-q__input" wire:model="surveyAnswers.{{ $q['key'] }}" value="0">
+                                                            <label for="q-{{ $q['key'] }}-no" class="gate-q__btn">{{ __('admin.puerta.validar.profile.survey_no') }}</label>
+                                                        </div>
+                                                    @else
+                                                        <input type="text" id="q-{{ $q['key'] }}" class="gate-q__text" wire:model="surveyAnswers.{{ $q['key'] }}" maxlength="{{ \App\Domain\Platform\Services\Surveys\QuestionSchema::TEXT_MAX }}" autocomplete="off" placeholder="{{ __('admin.puerta.validar.profile.survey_text_placeholder') }}">
+                                                    @endif
+
+                                                    @error('surveyAnswers.'.$q['key'])
+                                                        <p class="gate-q__error" data-gate-survey-error="{{ $q['key'] }}">{{ $message }}</p>
+                                                    @enderror
+                                                </fieldset>
+                                            @endforeach
+
+                                            <div class="gate-survey__actions">
+                                                <x-filament::button type="submit" size="lg" data-gate-survey-save>
+                                                    <span wire:loading.remove wire:target="answerSurvey">{{ __('admin.puerta.validar.profile.survey_save') }}</span>
+                                                    <span wire:loading wire:target="answerSurvey">…</span>
+                                                </x-filament::button>
+                                                <x-filament::button type="button" wire:click="cancelSurvey" size="lg" color="gray" outlined data-gate-survey-cancel>
+                                                    {{ __('admin.puerta.validar.profile.survey_cancel') }}
+                                                </x-filament::button>
+                                            </div>
+                                        </form>
+                                    @elseif ($survey['state'] === 'answered')
+                                        <p class="gate-fact">
+                                            <x-filament::badge color="success" size="lg" :icon="Heroicon::OutlinedCheckCircle">{{ __('admin.puerta.validar.profile.survey_answered') }}</x-filament::badge>
+                                        </p>
+                                    @else
+                                        <p class="gate-empty">{{ __('admin.puerta.validar.profile.survey_declined') }}</p>
+                                    @endif
+                                </x-filament::section>
+                            @endif
+
                             {{-- 5 · La ventana ±N, en segundo plano: «tiene reserva, pero otro día» NO es
                                  «no tiene nada» (§4.6, estado 2). --}}
                             @if ($profile['window'] !== [])
@@ -385,15 +482,12 @@
                                 </x-filament::section>
                             @endif
 
-                            {{-- ⚠️ AQUÍ IBA LA TARJETA DE «VISITA» (#234, `[DECIDIDO owner]`): se retira
-                                 HASTA QUE EXISTA JUMPPOINTS, que es lo único que da sentido a acreditar
-                                 una visita, y entonces se decide bien dónde y cómo va.
-                                 ❗ **Consecuencia, y es de datos, no de pantalla**: era el ÚNICO sitio
-                                 desde el que se registraba una visita, así que a partir de ahora
-                                 `customer_visits` deja de crecer. La maquinaria sigue entera y probada
-                                 —`registerVisit()`, el hecho idempotente por día y `GateVisitsTest`—:
-                                 lo que falta es su botón. Ficha en `DEUDA.md` y en
-                                 `specs/lealtad-jumppoints.md` §9. --}}
+                            {{-- ⚠️ AQUÍ IBA LA TARJETA DE «VISITA» (#234, `[DECIDIDO owner]`): se retiró
+                                 HASTA QUE EXISTA JUMPPOINTS, y con ella `customer_visits` dejó de crecer.
+                                 ▶ Desde `#741` la visita la acredita EL ESCANEO del carné (la insignia de la
+                                 cabecera lo enseña), sin botón ni gesto: es lo que abre la encuesta interna
+                                 (`specs/encuestas.md` §4.2). `registerVisit()` sigue entero para la ficha
+                                 abierta por búsqueda tecleada, que no acredita sola. --}}
                         </div>
 
                         </div>

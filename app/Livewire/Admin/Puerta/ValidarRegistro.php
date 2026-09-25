@@ -11,13 +11,18 @@ use App\Domain\Identity\Services\GateVisits;
 use App\Domain\Identity\Services\PuertaSettings;
 use App\Domain\Identity\Services\WaiverCounterDeclaration;
 use App\Domain\Identity\Services\WaiverStatus;
+use App\Domain\Platform\Models\Survey;
+use App\Domain\Platform\Models\SurveyResponse;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Domain\Platform\Services\PhoneNormalizer;
+use App\Domain\Platform\Services\Surveys\QuestionSchema;
+use App\Domain\Platform\Services\Surveys\SurveyResponses;
 use Filament\Facades\Filament;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -124,6 +129,32 @@ class ValidarRegistro extends Component
     public ?int $profileExpiresAt = null;
 
     /**
+     * **LA ENCUESTA INTERNA** (`specs/encuestas.md` §4.2, T2): la oferta y su estado dentro de ESTA ficha.
+     * Forma: `['key', 'name', 'intro', 'count', 'state', 'questions']` con `state` ∈ `offer` (la tarjeta con
+     * «Preguntar» y «No preguntar») · `open` (el formulario) · `answered` · `declined`. Las preguntas viajan
+     * con sus rótulos en el idioma del PANEL: las lee el operador, que es quien pregunta y marca.
+     *
+     * ⚠️ Viaja en el snapshot como `$profile`: lleva la encuesta (dato del panel) y nunca respuestas de nadie.
+     * Vive y muere con la ficha: `search()`, `clear()` y la caducidad la vacían.
+     *
+     * @var array<string,mixed>|null
+     */
+    public ?array $survey = null;
+
+    /**
+     * Lo que el operador marca con el dedo, `wire:model` DIFERIDO (cero idas y vueltas hasta «Guardar»). Llega
+     * como cadenas y listas; el servidor lo tipa y lo valida contra las preguntas al guardar (`SEC-04`: el
+     * navegador no decide qué vale).
+     *
+     * @var array<string,mixed>
+     */
+    public array $surveyAnswers = [];
+
+    /** La encuesta ofrecida, bloqueada como el sujeto: el navegador no elige a qué encuesta responde. */
+    #[Locked]
+    public ?int $surveyId = null;
+
+    /**
      * Esta página vive FUERA del shell de Filament (decisión #119) y por eso no pasa por el middleware
      * `SetUpPanel` del panel. Consecuencia MEDIDA en navegador (§9.7 C·5): sin panel «actual» y
      * booteado, `@filamentStyles` no emite `--gray-*`, `--primary-*`, `--success-*`… y el bundle del
@@ -168,6 +199,7 @@ class ValidarRegistro extends Component
         $this->profile = null;
         $this->profileUserId = null;
         $this->profileExpiresAt = null;
+        $this->forgetSurvey();
 
         $raw = trim($this->input);
         $type = self::detectInputType($raw);
@@ -263,6 +295,17 @@ class ValidarRegistro extends Component
         }
 
         $this->result = $this->stateFor($card->user, __('admin.puerta.validar.card_query'));
+
+        // `#741` · **EL ESCANEO ACREDITA LA VISITA.** La persona está delante con su carné: no hay gesto más
+        // claro de «ha venido», y entre dos clientes no puede haber ninguno (`#234`). Idempotente por (cliente,
+        // día) —`GateVisits`—, ANTES de componer la ficha para que nazca con la visita puesta y la encuesta
+        // interna se ofrezca en el mismo gesto (`specs/encuestas.md` §4.2). Con el mismo permiso que la ficha:
+        // sin `puerta.profile` el escaneo sigue siendo solo el semáforo. La búsqueda TECLEADA no acredita
+        // («me he dejado el móvil» puede ser una consulta): ahí sigue `registerVisit()`.
+        if ($this->canViewProfile()) {
+            app(GateVisits::class)->register($card->user, Auth::user(), DisplayTime::today());
+        }
+
         $this->openProfile($card->user, 'card');
     }
 
@@ -302,6 +345,7 @@ class ValidarRegistro extends Component
         $this->profileUserId = (int) $user->getKey();
         $this->profileExpiresAt = now()->addMinutes(PuertaSettings::profileTtlMinutes())->timestamp;
         $this->profile = $this->composeProfile($user, $via);
+        $this->refreshSurveyOffer($user);
 
         AuditLogger::log('puerta.profile_viewed', $user, ['via' => $via]);
     }
@@ -346,15 +390,19 @@ class ValidarRegistro extends Component
             $this->profile = null;
             $this->profileUserId = null;
             $this->profileExpiresAt = null;
-            $this->profileUserId = null;
-            $this->profileExpiresAt = null;
             $this->result = null;
+            // La encuesta abierta muere con la ficha (§4.2): sin guardar, y se vuelve a ofrecer en la siguiente.
+            $this->forgetSurvey();
         }
     }
 
     /**
-     * Acreditar la VISITA (§8.3): un acto EXPLÍCITO e idempotente por (cliente, día), nunca un efecto
-     * de abrir la ficha. Requiere la ficha viva y el permiso; la interacción reinicia el reloj.
+     * Acreditar la VISITA (§8.3): idempotente por (cliente, día). Requiere la ficha viva y el permiso; la
+     * interacción reinicia el reloj.
+     *
+     * ▶ Desde `#741` el ESCANEO del carné acredita solo ({@see searchByCard}); este método queda para la ficha
+     * abierta por BÚSQUEDA TECLEADA (sin botón en la vista desde `#234`: hoy solo lo llaman los tests y, el día
+     * que vuelva un botón o llegue JumpPoints, ese botón).
      */
     public function registerVisit(): void
     {
@@ -377,6 +425,206 @@ class ValidarRegistro extends Component
         $this->profile['visit_registered_today'] = true;
         $this->profileExpiresAt = now()->addMinutes(PuertaSettings::profileTtlMinutes())->timestamp;
         $this->profile['expires_at'] = $this->profileExpiresAt;
+        // La visita acreditada es lo que abre la oferta de la encuesta interna (§4.2).
+        $this->refreshSurveyOffer($customer);
+    }
+
+    // ─── La encuesta interna (`specs/encuestas.md` §4.2, T2) ───────────────────────────────────────
+
+    /**
+     * La OFERTA: solo con la visita de HOY acreditada, una encuesta interna viva y sin fila de este cliente para
+     * ella (ni contestada ni declinada). Lo demás —a quién, cuándo, una por cliente— lo decide `SurveyResponses`.
+     */
+    private function refreshSurveyOffer(User $customer): void
+    {
+        $this->forgetSurvey();
+
+        if (! (bool) ($this->profile['visit_registered_today'] ?? false)) {
+            return;
+        }
+
+        $survey = app(SurveyResponses::class)->offerFor(Survey::KIND_INTERNAL, (int) $customer->getKey());
+        if ($survey === null) {
+            return;
+        }
+
+        $this->surveyId = (int) $survey->getKey();
+        $this->survey = $this->surveyState($survey, 'offer');
+    }
+
+    private function forgetSurvey(): void
+    {
+        $this->survey = null;
+        $this->surveyId = null;
+        $this->surveyAnswers = [];
+    }
+
+    /**
+     * Lo que la vista pinta de la encuesta, con los rótulos ya resueltos al idioma del panel (`QuestionSchema`
+     * cae al español si falta): la vista no decide idiomas.
+     *
+     * @return array<string, mixed>
+     */
+    private function surveyState(Survey $survey, string $state): array
+    {
+        $locale = app()->getLocale();
+        $questions = array_map(static fn (array $q): array => [
+            'key' => $q['key'],
+            'type' => $q['type'],
+            'required' => $q['required'],
+            'label' => QuestionSchema::label($q['label'], $locale),
+            'options' => array_map(
+                static fn (array $o): array => ['key' => $o['key'], 'label' => QuestionSchema::label($o['label'], $locale)],
+                $q['options'],
+            ),
+        ], $survey->questionList());
+
+        return [
+            'key' => $survey->key,
+            'name' => $survey->displayName($locale),
+            'intro' => $survey->displayIntro($locale),
+            'count' => count($questions),
+            'state' => $state,
+            'questions' => $questions,
+        ];
+    }
+
+    /** «Preguntar»: abre el formulario. Sin escribir nada todavía. */
+    public function openSurvey(): void
+    {
+        if ($this->surveySubject() === null) {
+            return;
+        }
+
+        $this->surveyAnswers = [];
+        $this->resetErrorBag();
+        $this->survey['state'] = 'open';
+        $this->touchProfileWindow();
+    }
+
+    /** «Ahora no»: vuelve a la oferta sin guardar (la tarjeta sigue ahí mientras viva la ficha). */
+    public function cancelSurvey(): void
+    {
+        if ($this->surveySubject() === null) {
+            return;
+        }
+
+        $this->surveyAnswers = [];
+        $this->resetErrorBag();
+        $this->survey['state'] = 'offer';
+        $this->touchProfileWindow();
+        $this->releaseReader();
+    }
+
+    /**
+     * **El lector sigue libre.** Tocar un botón de la encuesta se lleva el foco, y al cerrarse el formulario ese
+     * botón ya no existe: el foco caería al `body` y el siguiente escaneo no escribiría en ningún sitio. Es el
+     * mismo aviso que emite `search()` (`#234`, `GateKioskTest`): la vista lo escucha y devuelve el cursor al campo.
+     */
+    private function releaseReader(): void
+    {
+        $this->dispatch('gate-input-cleared');
+    }
+
+    /**
+     * «Guardar respuestas»: lo marcado se TIPA y se VALIDA contra las preguntas en el servidor; una obligatoria
+     * sin contestar o un valor que la pregunta no acepta vuelven como error de campo y no se escribe nada. Con
+     * todo en orden: la fila (`channel = internal`, el operador, la visita de hoy), el hecho y el rastro.
+     */
+    public function answerSurvey(): void
+    {
+        $subject = $this->surveySubject();
+        if ($subject === null) {
+            return;
+        }
+        [$customer, $survey] = $subject;
+
+        // Cada intento se juzga de nuevo: los errores del anterior no sobreviven a una corrección.
+        $this->resetErrorBag();
+        $questions = $survey->questionList();
+        $typed = QuestionSchema::fromForm($questions, $this->surveyAnswers);
+        $errors = QuestionSchema::validate($questions, $typed);
+        if ($errors !== []) {
+            $messages = [];
+            foreach ($errors as $key => $reason) {
+                $messages['surveyAnswers.'.$key] = (string) __('admin.puerta.validar.profile.survey_error_'.$reason);
+            }
+
+            throw ValidationException::withMessages($messages);
+        }
+
+        $response = app(SurveyResponses::class)->answer(
+            $survey,
+            (int) $customer->getKey(),
+            SurveyResponse::CHANNEL_INTERNAL,
+            $typed,
+            app()->getLocale(),
+            DisplayTime::today()->toDateString(),
+            Auth::id() === null ? null : (int) Auth::id(),
+        );
+        if ($response !== null) {
+            AuditLogger::log('puerta.survey_answered', $customer, ['survey' => $survey->key, 'response_id' => (int) $response->getKey()]);
+        }
+
+        $this->survey = $this->surveyState($survey, 'answered');
+        $this->surveyAnswers = [];
+        $this->touchProfileWindow();
+        $this->releaseReader();
+    }
+
+    /** «No preguntar»: también es una respuesta — deja fila, hecho y rastro, y no se vuelve a ofrecer. */
+    public function declineSurvey(): void
+    {
+        $subject = $this->surveySubject();
+        if ($subject === null) {
+            return;
+        }
+        [$customer, $survey] = $subject;
+
+        $response = app(SurveyResponses::class)->decline(
+            $survey,
+            (int) $customer->getKey(),
+            SurveyResponse::CHANNEL_INTERNAL,
+            DisplayTime::today()->toDateString(),
+            Auth::id() === null ? null : (int) Auth::id(),
+            app()->getLocale(),
+        );
+        if ($response !== null) {
+            AuditLogger::log('puerta.survey_declined', $customer, ['survey' => $survey->key, 'response_id' => (int) $response->getKey()]);
+        }
+
+        $this->survey = $this->surveyState($survey, 'declined');
+        $this->surveyAnswers = [];
+        $this->touchProfileWindow();
+        $this->releaseReader();
+    }
+
+    /**
+     * El sujeto de la encuesta, re-autorizado (`SEC-04`): la ficha VIVA, el cliente y la encuesta BLOQUEADOS, y
+     * la encuesta todavía en marcha. Si algo falta —la ficha caducó, la encuesta se apagó entre la oferta y el
+     * guardado— no hay sujeto y no se escribe nada.
+     *
+     * @return array{0: User, 1: Survey}|null
+     */
+    private function surveySubject(): ?array
+    {
+        $this->authorizeAccess();
+        abort_unless($this->canViewProfile(), 403);
+        $this->ensureFresh();
+
+        if ($this->profile === null || $this->survey === null || $this->surveyId === null) {
+            return null;
+        }
+
+        $customer = User::find((int) ($this->profileUserId ?? 0));
+        $survey = Survey::find($this->surveyId);
+        if ($customer === null || $survey === null || ! $survey->isRunning()) {
+            $this->forgetSurvey();
+
+            return null;
+        }
+
+        return [$customer, $survey];
     }
 
     /**
@@ -463,6 +711,10 @@ class ValidarRegistro extends Component
         $this->profile = null;
         $this->profileUserId = null;
         $this->profileExpiresAt = null;
+        $this->forgetSurvey();
+        // «Nueva búsqueda» se pulsa con el dedo y el foco se quedaba en el botón (medido con la sonda, T2 de
+        // las encuestas): el siguiente escaneo no escribía en el campo. El mismo aviso que tras buscar.
+        $this->releaseReader();
     }
 
     public function render(): View

@@ -391,6 +391,10 @@ hecho observable que justificaba la dependencia `A → D` sigue construido, pero
 con el operador y auditoría), `CustomerVisit`, `GateProfileData::visitRegisteredToday` y
 `GateVisitsTest`—: lo único que falta es su botón.
 
+▶ **Desde `#741` (2026-09-25) el ESCANEO del carné acredita la visita** (`specs/encuestas.md` §4.2): sin botón
+ni gesto, `customer_visits` vuelve a crecer desde esa fecha y JumpPoints hereda «visita = escaneo». La búsqueda
+tecleada sigue sin acreditar; el histórico entre el 28-08 y el 25-09 no existe.
+
 ▶ **Tres preguntas que el diseño de este subsistema tiene que contestar**, y que la retirada deja
 planteadas en vez de resueltas:
 1. ¿Acreditar la visita es un acto del empleado (un botón) o se deriva de algo que ya ocurre

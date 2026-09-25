@@ -1,7 +1,7 @@
 # [SPEC] Las encuestas — internas en la puerta y externas por correo, creadas en el panel, medidas en el cuadro
 
 > Estado: ✅ **aprobada por el owner el 24-09** (`#740`: sus cinco respuestas en §7) → **en implementación: T1 en
-> `main`, T2 en curso** (carril del SPA) · Última actualización: 2026-09-25 · Decisión asociada: `#740`. Es la **T7** de `analitica.md`
+> `main`, T2 en el árbol** (carril del SPA) · Última actualización: 2026-09-25 · Decisión asociada: `#740`. Es la **T7** de `analitica.md`
 > (§4.8 y §4.10, las palabras del owner).
 
 ## §0 · Antes de tocar
@@ -12,23 +12,29 @@
   (régimen del contrato de servicio), y en el libro de eventos entra solo el HECHO (`survey_sent`, `survey_answered`,
   `survey_declined` con la clave de la encuesta y el canal): ninguna respuesta pisa el libro (`RGPD-07`).
 - **Empieza por** §1 (lo medido) → §4.1 (el modelo) → §4.2 (la puerta) → §4.3 (el correo) → §4.4 (el cuadro) → §4.6.
-- **Trampas medidas (24-09)**: (1) **la puerta es un KIOSCO de tablet** (`panel-navegacion.md` §8): nada tapa
+- **Trampas (24-09)**: (1) **la puerta es un KIOSCO de tablet** (`panel-navegacion.md` §8): nada tapa
   «Registrar visita» ni el lector, la ficha CADUCA en servidor, y la encuesta se ofrece DESPUÉS de acreditar la
   visita. (2) **La visita acreditada es idempotente por (cliente, día)** (`GateVisits::register()`,
   `customer_visits`): la externa se dispara desde esa fila. (3) **Todo correo nace por partida doble** sobre
-  `BrandedMailMessage`, con sus piezas de bandeja en tres idiomas (`MailInboxLineTest`); `EmailUtm::keys()` lo censa
-  por estar en `app/Notifications/`. (4) **Una tarea nueva del planificador sube el recuento de `deploy.sh`** (espera 6,
+  `BrandedMailMessage` (piezas de bandeja en tres idiomas, `MailInboxLineTest`; `EmailUtm::keys()` lo censa). (4) **Una tarea nueva del planificador sube el recuento de `deploy.sh`** (espera 6,
   hay 9: avisado a plataforma). (5) Un Resource nuevo va a
-  `AdminSettingsHub::areas()` o `AdminNavigationTest` se pone rojo. (6) `RGPD-01`: purga y export cubren las
-  tablas nuevas; `RGPD-04`: la página del correo va `no-store`.
+  `AdminSettingsHub::areas()` (`AdminNavigationTest`). (6) `RGPD-01`: purga y export cubren las tablas nuevas;
+  `RGPD-04`: `no-store` en la página del correo.
 - **Estado**: ✅ `#740` (atadas al cliente y a la visita · una por cliente y encuesta · todos los tipos de pregunta
-  · correo de servicio con baja de un toque · una viva por clase). **T1 en `main`** (25-09; queda el ✅ del owner,
-  §4.6). **T2 en curso**; luego T3 y T4.
+  · correo de servicio con baja de un toque · una viva por clase). **T1 en `main`, T2 en el árbol** (25-09): quedan
+  su ✅ en la tablet; el ESCANEO acredita la visita (`#741`, §1). Luego T3, T4.
 - **Invariantes**: `RGPD-01`, `RGPD-04`, `RGPD-07`, `SEC-04`, `SEC-05`, `PAY-14`, `SUITE-01`. Dinero y aforo:
   ninguno. Ningún fichero del `CRITICAL_RE`.
 
 ## 1. Contexto y problema — MEDIDO (2026-09-24)
 
+- ⚠️⚠️ **CORRECCIÓN (25-09, al empezar la T2), y va delante del texto que corrige**: el botón «Registrar visita»
+  **NO existe en la vista de la puerta desde `#234`** (28-08: la tarjeta «Visita» se retiró hasta JumpPoints;
+  `GateKioskTest` lo asevera y `DEUDA.md` lo anota: `customer_visits` dejó de crecer). Lo que el punto siguiente
+  midió fue el MÉTODO `registerVisit()` y su maquinaria, que siguen enteros. Consecuencia: con la pantalla tal
+  como está, ni la interna se ofrecería nunca ni la externa tendría a quién escribir. ▶ Resuelto en **`#741`**
+  (§4.2): el ESCANEO acredita la visita; la T2 se construyó contra «visita de hoy acreditada», que es lo que el
+  escaneo deja puesto.
 - **La puerta**: `Livewire\Admin\Puerta\ValidarRegistro` (556 líneas) escanea el carné o busca, compone la ficha
   con `GateProfile` (presupuesto constante, caduca en servidor) y **«Registrar visita»** (`registerVisit()`) llama a
   `GateVisits::register()`, que inserta en `customer_visits` (`user_id`, `visited_on`, `registered_by`; UNA fila por
@@ -122,6 +128,11 @@ WhatsApp; recompensas (JumpPoints) por contestar.
 - **Cuándo**: solo tras `registerVisit()` con éxito (o si la visita de hoy ya estaba acreditada), si hay una encuesta
   interna viva y este cliente no tiene fila para ella (ni contestada ni declinada). Una encuesta contestada no
   vuelve a ofrecerse; una declinada tampoco.
+  ▶ `[DECIDIDO #741]` (25-09) **cómo se acredita la visita, porque no hay botón desde `#234`** (§1): **al
+  ESCANEAR el carné se acredita sola** (`searchByCard()` → `GateVisits::register()`, idempotente por día, con el
+  permiso de la ficha, ANTES de componer la ficha) y la tarjeta sale en el mismo gesto; la búsqueda tecleada no
+  acredita (`registerVisit()` sigue para ella). Descartados: reponer el botón (un gesto más; olvidarlo = ni
+  encuesta ni correo) y ofrecer al escanear sin acreditar sacando la externa de las reservas de ayer.
 - **Dónde**: una tarjeta `gate-survey` `(futuro)` en la columna principal de la ficha, DEBAJO de «Hoy», con el
   nombre de la encuesta, «N preguntas» y dos botones: «Preguntar» y «No preguntar» (esta última escribe
   `declined_at`). Nunca un modal sobre el lector ni encima de «Registrar visita» (§0·1).
@@ -129,6 +140,11 @@ WhatsApp; recompensas (JumpPoints) por contestar.
   `scale` = cinco botones grandes; `text` = un campo corto (el empleado teclea si el cliente quiere). Todo con
   los objetivos táctiles de la puerta (≥ 44 px, §8 de la navegación). «Guardar» escribe la fila (`channel =
   internal`, `answered_by` el operador, `visited_on` hoy) y el hecho `survey_answered`; la tarjeta pasa a «Contestada».
+  **Como se construyó (T2)**: cada opción es un radio/checkbox oculto con su etiqueta vestida de botón y
+  `wire:model` DIFERIDO (cero idas y vueltas hasta «Guardar»); el servidor tipa (`QuestionSchema::fromForm()`) y
+  valida (`validate()`) y devuelve el error por pregunta; los rótulos van en el idioma del PANEL —el operador
+  pregunta y marca; `QuestionSchema::label()` cae al español— y `locale` guarda ese idioma; la encuesta ofrecida
+  viaja bloqueada (`$surveyId`, como el sujeto) y una encuesta apagada entre la oferta y el guardado no se escribe.
 - **Permisos**: el de validar (`registrations.validate`): quien acredita la visita pregunta. `SEC-04`: se re-autoriza
   al guardar. `SEC-05`: sin limitador propio (una respuesta por cliente y encuesta ya acota). Auditoría:
   `puerta.survey_answered` y `puerta.survey_declined` (target el cliente).
@@ -191,8 +207,8 @@ WhatsApp; recompensas (JumpPoints) por contestar.
 
 | | Tanda | Entrega | Verificación (§6) |
 |---|---|---|---|
-| T1 | **🟦 (25-09, en `main`; queda el ✅ del owner en `/admin/encuestas`, con dos ejemplos sembrados en local) el modelo y el panel**: la migración `create_surveys_tables` (`surveys`, `survey_responses`, `users.surveys_opt_out`), `Platform\Models\Survey` (`isRunning()`, `runningOfKind()`, `anotherRunning()`, `questionList()`) y `SurveyResponse` (`MassPrunable` a 24 meses, `forgetPerson()`), `Platform\Services\Surveys\QuestionSchema` (cinco tipos, `normalize()`, `accepts()`), `SurveyResource` en «Ajustes → Sistema» (`/admin/encuestas`, `settings.manage`; formulario con pestañas es/en/fr, el Repeater de preguntas con sus opciones; con respuestas la clave, la clase y la estructura van bloqueadas PERO dehidratadas para que los rótulos editados casen con su pregunta —`GuardsSurveyForm`—; una viva por clase al encender; sin respuestas se borra con rastro, con respuestas no), `AuditLog::ACTIONS` +2, alias de morfo, `Contract` +3 (`survey_sent`, `survey_answered`, `survey_declined`), `anonymize()` y `model:prune`. **El export del cliente (contrato `PersonalDataExport`) entra en la T2**, con las primeras respuestas. **Lo que enseñó**: un campo `disabled()` no viaja al guardar y sin la clave el Repeater no puede casar los rótulos: `disabled()->dehydrated()` y la guarda del servidor decide; el censo de tarjetas de «Ajustes» (`AdminNavigationTest`) se teclea a mano (23 → 24) | `#740` | `SurveyResourceTest` (7), `QuestionSchemaTest` (3), `SurveyPrivacyTest` (4); `MorphMapTest`, `AdminNavigationTest`, `AuditActionCatalogTest`, `AnalyticsContractTest` en verde · el OJO del owner en `/admin/encuestas` |
-| T2 | **la puerta**: la tarjeta y el formulario táctil en `ValidarRegistro`, la oferta tras la visita, «No preguntar», hechos y auditoría | | `GateSurveyTest` `(futuro)`; la sonda de la puerta (kiosco, ≥ 44 px, el lector sigue libre); el OJO en la tablet |
+| T1 | **🟦 (25-09, en `main`; queda el ✅ del owner en `/admin/encuestas`, con dos ejemplos sembrados en local) el modelo y el panel**: la migración `create_surveys_tables` (`surveys`, `survey_responses`, `users.surveys_opt_out`), `Platform\Models\Survey` (`isRunning()`, `runningOfKind()`, `anotherRunning()`, `questionList()`) y `SurveyResponse` (`MassPrunable` a 24 meses, `forgetPerson()`), `Platform\Services\Surveys\QuestionSchema` (cinco tipos, `normalize()`, `accepts()`), `SurveyResource` en «Ajustes → Sistema» (`/admin/encuestas`, `settings.manage`; formulario con pestañas es/en/fr, el Repeater de preguntas con sus opciones; con respuestas la clave, la clase y la estructura van bloqueadas PERO dehidratadas para que los rótulos editados casen con su pregunta —`GuardsSurveyForm`—; una viva por clase al encender; sin respuestas se borra con rastro, con respuestas no), `AuditLog::ACTIONS` +2, alias de morfo, `Contract` +3 (`survey_sent`, `survey_answered`, `survey_declined`), `anonymize()` y `model:prune`. **El export del cliente (`AccountPrivacy::exportFor()`, contrato `PersonalDataExport` 1.27.0) entró en la T2.** **Lo que enseñó**: un campo `disabled()` no viaja al guardar y sin la clave el Repeater no puede casar los rótulos: `disabled()->dehydrated()` y la guarda del servidor decide; el censo de tarjetas de «Ajustes» (`AdminNavigationTest`) se teclea a mano (23 → 24) | `#740` | `SurveyResourceTest` (7), `QuestionSchemaTest` (3), `SurveyPrivacyTest` (4); `MorphMapTest`, `AdminNavigationTest`, `AuditActionCatalogTest`, `AnalyticsContractTest` en verde · el OJO del owner en `/admin/encuestas` |
+| T2 | **🟦 (25-09, en `main`; disparador `#741`: el ESCANEO acredita la visita; el owner la contestó EN VIVO desde la puerta con la encuesta de ejemplo; queda su ✅ en la tablet del mostrador) la puerta**: `Platform\Services\Surveys\SurveyResponses` (la oferta —viva y sin fila del cliente—, `answer()`/`decline()` con el índice único como árbitro y el hecho; Platform no mira a Identity: el cliente es un `int`), `QuestionSchema::fromForm()`/`validate()` (tipa y valida en el servidor), la tarjeta `gate-survey` DEBAJO de «Hoy» en `ValidarRegistro` (`$survey` con estados `offer`/`open`/`answered`/`declined`, `$surveyId` bloqueado, radios ocultos con etiqueta-botón ≥ 44 px y `wire:model` diferido; muere con la ficha), `puerta.survey_answered`/`puerta.survey_declined` (target el cliente), el export (`surveys`, contrato 1.27.0), rótulos es/zh_CN. **Lo que enseñó**: el botón de la visita no existe (§1); los errores de validación de Livewire sobreviven al siguiente intento si no se resetean (`resetErrorBag()` antes de juzgar); `PersonalDataExport` es `additionalProperties: false`, así que un campo nuevo en el export es contrato | `#740` | `GateSurveyTest` (9), `SurveyPrivacyTest` +1 (el export), `scripts/mutar-encuestas.sh` **9/9 + 1 control**; `MePrivacyTest`, `ApiContractTest`, `GateKioskTest`, `ModuleBoundariesTest` en verde · `scripts/sonda-puerta.mjs` **28/28** (tablet 1080×810 y móvil 390: la tarjeta DEBAJO de «Hoy» y lejos del buscador, el lector con el cursor antes, con la ficha, tras cerrar la encuesta y tras «Nueva búsqueda» —ese último lo arregló la sonda: `clear()` no devolvía el foco—, 11 objetivos ≥ 44 px, sin desborde; dos controles). **Lo que enseñó la sonda**: el cliente de sonda de siempre ya tenía respuesta (la del owner) y la tarjeta no salía: una por cliente funciona; la sonda usa un cliente propio (`sonda-puerta@jumpweb.test`) |
 | T3 | **el correo y la página**: `surveys:send-external` (+1 tarea, `deploy.sh`), `SurveyInvitation`, `/encuesta/{token}` y la baja, `surveys_opt_out` con su interruptor y `PUT /me/surveys` (contrato de la API +1) | contrato de la API | `SurveySendTest`, `SurveyPageTest` `(futuro)`; los censos de correos; `curl -D` sin `visitor_id`; el OJO en Mailpit |
 | T4 | **el cuadro**: `SurveysReport`, la pestaña, el CSV, la 360; fixture del ojo | | `SurveysReportTest` `(futuro)` (igualdad con las tablas), presupuesto, sonda del panel, el OJO |
 

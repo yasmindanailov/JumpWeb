@@ -12,6 +12,7 @@ use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Models\UserIdentity;
 use App\Domain\Platform\Models\AnalyticsEvent;
 use App\Domain\Platform\Models\AnalyticsSession;
+use App\Domain\Platform\Models\SurveyResponse;
 use App\Domain\Platform\Services\Analytics\AttributionContext;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -237,6 +238,7 @@ class AccountPrivacy
                 ])->values()->all(),
             'orders' => $this->withAssignedDependents($this->orders->exportFor((int) $user->id)),
             'analytics' => $this->analyticsFor($user),
+            'surveys' => $this->surveysFor($user),
         ];
     }
 
@@ -255,6 +257,26 @@ class AccountPrivacy
      *
      * @return array{visits: array{count: int, first_seen_at: ?string, last_seen_at: ?string}, events_count: int, first_source: ?array{source: string, medium: string, campaign: ?string}, opted_out: bool, first_attribution: ?array{source: string, medium: string, campaign: ?string}}
      */
+    /**
+     * Las encuestas del titular (`specs/encuestas.md` §4.5, T2; `RGPD-01`): lo que contestó —o declinó—, cuándo
+     * y por qué canal, con la clave de la encuesta. Es dato SUYO y el export lo lleva entero, texto libre incluido.
+     *
+     * @return list<array{survey: ?string, channel: string, visited_on: ?string, sent_at: ?string, answered_at: ?string, declined_at: ?string, answers: ?array<string, mixed>}>
+     */
+    private function surveysFor(User $user): array
+    {
+        return SurveyResponse::query()->where('user_id', $user->getKey())->with('survey')->orderBy('id')->get()
+            ->map(static fn (SurveyResponse $response): array => [
+                'survey' => $response->survey?->key,
+                'channel' => (string) $response->channel,
+                'visited_on' => $response->visited_on?->toDateString(),
+                'sent_at' => $response->sent_at?->toIso8601String(),
+                'answered_at' => $response->answered_at?->toIso8601String(),
+                'declined_at' => $response->declined_at?->toIso8601String(),
+                'answers' => $response->answers,
+            ])->values()->all();
+    }
+
     private function analyticsFor(User $user): array
     {
         $visits = AnalyticsSession::query()->where('user_id', $user->getKey())->orderBy('started_at')->get();

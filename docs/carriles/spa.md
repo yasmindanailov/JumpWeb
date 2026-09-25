@@ -1,7 +1,7 @@
 # Carril · Diseño del SPA (el cajón) — y, desde el 24-09, LA ANALÍTICA
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb`) · Banda: **730–759** (700–729 agotada el 20-09)
-> · Último usado: **`#740`** · La banda está dada de alta en la tabla de `DECISIONES.md` ·
+> · Último usado: **`#741`** · La banda está dada de alta en la tabla de `DECISIONES.md` ·
 > Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: **`encuestas.md` §0** (la
 > tarea en curso) · `analitica-fiesta.md` §0 · `analitica.md` §0 y §4.5 · `google-business-profile.md` §0 ·
 > `sidebar-spa.md` §0 · `celebracion-e-invitacion.md` §0 · Actualizado: 2026-09-25 (madrugada).
@@ -52,7 +52,17 @@
   en «Ajustes → Sistema» (`/admin/encuestas`) con bloqueo con respuestas y «una viva por clase», `AuditLog`, el hub,
   el morfo, `Contract` +3, `anonymize()`; 14 tests. **Dos encuestas de EJEMPLO en la BD local** (`visita-de-hoy`
   interna y `que-tal-ayer` externa, sembradas por tinker; se borran desde el panel). El owner las tuvo delante y
-  preguntó por la puerta y el correo (T2 y T3): su ✅ explícito a la T1 no llegó. Sigue la **T2**.
+  preguntó por la puerta y el correo (T2 y T3): su ✅ explícito a la T1 no llegó. ▶ **T2 EN EL ÁRBOL (25-09,
+  madrugada)**: `SurveyResponses`, `QuestionSchema::fromForm()/validate()`, la tarjeta `gate-survey` en la puerta,
+  rastro, export (contrato 1.27.0); `GateSurveyTest` 10, arnés `mutar-encuestas.sh` 9/9 + control. ❗ **HALLAZGO
+  → `#741`**: el botón «Registrar visita» NO existía desde `#234` (la spec lo daba por vivo); desde `#741` **el
+  ESCANEO acredita la visita** (la búsqueda tecleada no) y la tarjeta sale en el mismo gesto; el owner aceptó la
+  recomendada («Perfecto, continúa»). **El owner la contestó EN VIVO** (25-09, desde su cuenta 70, con la encuesta
+  de ejemplo sobre el cliente 593). Sonda `scripts/sonda-puerta.mjs` **28/28** (tablet y móvil; arregló el foco tras
+  «Nueva búsqueda»). ⚠️ Montado en local para la sonda: el cliente `sonda-puerta@jumpweb.test` (id 2179) y las
+  visitas de HOY de 593 y 2179 en `customer_visits`; la respuesta del owner en `survey_responses` (se borran al
+  desmontar). Chromium en el contenedor va con `node node_modules/playwright-core/cli.js install chromium`
+  (`npx playwright install` cae en la caché de npx y no se encuentra: medido).
 - ⚠️⚠️ **LO MONTADO EN LA BD LOCAL para el ojo del owner (24-09), todo reversible**: (1) cinco ajustes FALSOS
   en `settings` (`analytics.driver=posthog`, `analytics.posthog_project` inventado y los tres ids de píxeles
   `marketing.*`): se quitan borrando esas filas; (2) el aviso de la analítica ENVIADO a las 57 cuentas de
@@ -79,8 +89,8 @@
 ## Por dónde retomar, en orden
 
 1. ❗❗ **LA T7 DE LA ANALÍTICA: LAS ENCUESTAS** — `specs/encuestas.md` **✅ aprobada (`#740`)**; **T1 en `main`**
-   (25-09). ▶ **Sigue la T2, la puerta** (spec §4.2): la tarjeta táctil debajo de «Hoy» tras `registerVisit()`,
-   nunca sobre el lector; «No preguntar»; los hechos `survey_*`; el export del cliente (contrato). → T3 el correo
+   (25-09); **T2 en `main`** con el disparador de `#741` (el escaneo acredita) y la sonda 28/28. ▶ **Sigue la T3**,
+   el correo
    del día siguiente (comando a las 10:00, +1 tarea del planificador: aviso a plataforma por `deploy.sh`; página
    firmada SIN cookie de medición; baja de un toque) → T4 el cuadro (quinta pestaña, «Por atender», la 360).
    Después, el experimento real (T5c), que el owner quiere iterar tras las encuestas.

@@ -166,7 +166,7 @@ class ValidarRegistroProfileTest extends TestCase
             ->assertSet('profile.holder_name', 'Ana Titular')
             ->assertSet('profile.via', 'card')
             ->assertSet('profile.card', 'active')
-            ->assertSet('profile.visit_registered_today', false)
+            ->assertSet('profile.visit_registered_today', true) // `#741`: el ESCANEO acredita la visita
             ->assertSee('Ana Titular')
             ->assertSee('Entrada 1h')
             // §9.7 C·5: los menores se aseveran por `data-*`, NO por la cadena compuesta
@@ -322,7 +322,7 @@ class ValidarRegistroProfileTest extends TestCase
             ->assertSet('profile', null)
             ->assertSet('result', null)
             ->assertDontSee('Ana Titular');
-        $this->assertSame(0, CustomerVisit::count(), 'sobre una ficha caducada no se registra ninguna visita');
+        $this->assertSame(1, CustomerVisit::count(), 'la del escaneo (`#741`); sobre una ficha caducada no se registra ninguna más');
     }
 
     public function test_an_interaction_renews_the_server_clock(): void
@@ -340,7 +340,7 @@ class ValidarRegistroProfileTest extends TestCase
         $page->call('registerVisit')->assertSet('profile.holder_name', 'Ana Titular', 'a los 2:30 desde la apertura sigue viva porque se tocó al minuto');
     }
 
-    // ─── La visita: explícita, idempotente, con permiso (§8.3) ────────────────
+    // ─── La visita: la acredita el ESCANEO (`#741`), idempotente, con permiso (§8.3) ──────────
 
     /**
      * ⚠️⚠️ **EL NAVEGADOR NO DECIDE A QUIÉN SE LE ACREDITA LA VISITA NI CUÁNDO CADUCA LA FICHA**
@@ -391,7 +391,14 @@ class ValidarRegistroProfileTest extends TestCase
         $staff = $this->staff();
 
         $page = Livewire::actingAs($staff)->test(ValidarRegistro::class)->set('input', $token)->call('search');
-        $this->assertSame(0, CustomerVisit::count(), 'ABRIR la ficha no acredita nada');
+        $this->assertSame(1, CustomerVisit::count(), '`#741`: ESCANEAR el carné acredita la visita, sin ningún gesto más');
+
+        // Y una búsqueda TECLEADA no: puede ser una consulta («me he dejado el móvil», un correo mal dado).
+        $otra = User::factory()->create(['email' => 'otra@example.com']);
+        Livewire::actingAs($staff)->test(ValidarRegistro::class)->set('input', 'otra@example.com')->call('search')
+            ->assertSet('profile.holder_name', $otra->name)
+            ->assertSet('profile.visit_registered_today', false);
+        $this->assertSame(0, CustomerVisit::where('user_id', $otra->id)->count(), 'abrir la ficha por búsqueda no acredita nada');
 
         // #234: la TARJETA de visita se retiró de la pantalla hasta que exista JumpPoints, así que
         // ya no hay `data-gate-visit` que aseverar. La MAQUINARIA sigue entera y es lo que este caso
@@ -417,8 +424,11 @@ class ValidarRegistroProfileTest extends TestCase
         Livewire::actingAs($staff)->test(ValidarRegistro::class)->set('input', $token)->call('search')
             ->assertSet('profile.visit_registered_today', true);
 
-        // Sin el permiso de la ficha no hay visita que registrar.
+        // Sin el permiso de la ficha no hay visita que registrar: ni con el método ni con el escaneo, que ahí
+        // vuelve a ser solo el semáforo.
         Livewire::actingAs($this->staffWithoutProfile())->test(ValidarRegistro::class)->call('registerVisit')->assertForbidden();
+        Livewire::actingAs($this->staffWithoutProfile())->test(ValidarRegistro::class)->set('input', $token)->call('search')->assertSet('profile', null);
+        $this->assertSame(1, CustomerVisit::count(), 'el escaneo sin `puerta.profile` no acredita');
     }
 
     // ─── El rediseño (§9.7 C·5): un solo semáforo y NUNCA el nombre de un menor ──

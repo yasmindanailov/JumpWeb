@@ -94,6 +94,68 @@ final class QuestionSchema
         };
     }
 
+    /**
+     * **Lo que llega de un formulario → valores TIPADOS por pregunta** (T2). Un formulario manda cadenas («3»,
+     * «1», la clave de una opción) y listas de cadenas; aquí cada una se convierte al tipo de su pregunta y lo
+     * que no viene —o viene vacío— se queda FUERA (una pregunta sin contestar no es una respuesta inválida:
+     * {@see validate()} decide si era obligatoria). Es fuente única para la puerta y para la página del correo.
+     *
+     * @param  list<array{key: string, type: string, required: bool, label: array<string, string>, options: list<array{key: string, label: array<string, string>}>}>  $questions
+     * @param  array<string, mixed>  $raw
+     * @return array<string, mixed>
+     */
+    public static function fromForm(array $questions, array $raw): array
+    {
+        $out = [];
+        foreach ($questions as $question) {
+            $value = $raw[$question['key']] ?? null;
+            $typed = match ($question['type']) {
+                self::TYPE_CHOICE => is_string($value) && $value !== '' ? $value : null,
+                self::TYPE_MULTI => is_array($value) ? array_values(array_filter($value, 'is_string')) : null,
+                self::TYPE_SCALE => is_int($value) || (is_string($value) && preg_match('/^\d+$/', $value) === 1) ? (int) $value : null,
+                self::TYPE_YESNO => match (true) {
+                    $value === true, $value === 1, $value === '1', $value === 'true' => true,
+                    $value === false, $value === 0, $value === '0', $value === 'false' => false,
+                    default => null,
+                },
+                self::TYPE_TEXT => is_string($value) && trim($value) !== '' ? trim($value) : null,
+                default => null,
+            };
+            if ($typed !== null && $typed !== []) {
+                $out[$question['key']] = $typed;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * Las respuestas tipadas contra sus preguntas: `required` para una obligatoria que falta, `invalid` para un
+     * valor que la pregunta no acepta. Vacío si todo vale.
+     *
+     * @param  list<array{key: string, type: string, required: bool, label: array<string, string>, options: list<array{key: string, label: array<string, string>}>}>  $questions
+     * @param  array<string, mixed>  $typed
+     * @return array<string, string>
+     */
+    public static function validate(array $questions, array $typed): array
+    {
+        $errors = [];
+        foreach ($questions as $question) {
+            if (! array_key_exists($question['key'], $typed)) {
+                if ($question['required']) {
+                    $errors[$question['key']] = 'required';
+                }
+
+                continue;
+            }
+            if (! self::accepts($question, $typed[$question['key']])) {
+                $errors[$question['key']] = 'invalid';
+            }
+        }
+
+        return $errors;
+    }
+
     /** @return list<array{key: string, label: array<string, string>}> */
     private static function options(mixed $raw): array
     {

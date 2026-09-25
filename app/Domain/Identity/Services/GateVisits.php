@@ -12,11 +12,15 @@ use Carbon\CarbonInterface;
  * Fase 6 · subsistema A — ACREDITAR la visita de un cliente en la puerta (`docs/specs/identidad-qr-puerta.md`
  * §8.3, §9.2 A·4).
  *
- * Es un acto EXPLÍCITO e IDEMPOTENTE por (cliente, día): la ficha se abre varias veces por cliente
- * —comprobar el waiver, mirar un vale, teclear un correo— y si el punto cayera al abrirla el saldo
- * dependería de cuántas veces mira el empleado. El único `(user_id, visited_on)` hace la idempotencia
- * por construcción; se audita SOLO cuando se escribe (`puerta.visit_registered`, target el cliente,
- * `by` el operador de la petición).
+ * Es un acto IDEMPOTENTE por (cliente, día): la ficha se abre varias veces por cliente —comprobar el
+ * waiver, mirar un vale, teclear un correo— y si el punto cayera al abrirla el saldo dependería de cuántas
+ * veces mira el empleado. El único `(user_id, visited_on)` hace la idempotencia por construcción; se audita
+ * SOLO cuando se escribe (`puerta.visit_registered`, target el cliente, `by` el operador de la petición).
+ *
+ * ▶ **Quién lo llama, desde `#741`** (`specs/encuestas.md` §4.2): el ESCANEO del carné en la puerta —la
+ * persona está delante con su carné— y, si algún día vuelve el botón, «Registrar visita». Una búsqueda
+ * TECLEADA no acredita: puede ser una consulta. Hasta `#741` era «un acto explícito, nunca un efecto de
+ * abrir la ficha»; el botón que lo hacía explícito se retiró en `#234` y `customer_visits` dejó de crecer.
  */
 final class GateVisits
 {
