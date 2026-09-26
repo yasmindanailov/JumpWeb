@@ -7,6 +7,7 @@ use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\PartyInvitation;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Services\GuestAgeMixReader;
+use App\Domain\Booking\Services\ItemEditPricing;
 use App\Domain\Booking\Services\PartyInvitations;
 use App\Domain\Identity\Services\DependentRegistry;
 use App\Domain\Identity\Services\GuardianPlaces;
@@ -15,6 +16,7 @@ use App\Domain\Platform\Services\DisplayTime;
 use App\Domain\Platform\Services\Money;
 use App\Domain\Platform\Services\PersonNameKey;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
@@ -87,6 +89,9 @@ final class ListaDeInvitados
             'primero' => $inv !== null && ! $readonly && $cumple['nombre'] === '',
             'invitacion' => $inv === null ? null : self::invitacion($invitacion, $inv, $reservation, $cumple, $reserva, $status, $reminderText),
             'ninos' => $ninos,
+            // F4 (§4.9, `#747`): la ficha que `lista.js` copia para añadir niños MÁS ALLÁ del número (con el número en
+            // plazo). `__I__` es su posición, que pone el JS. Sin plazo, la lista no pasa del número y no hay plantilla.
+            'plantilla' => ((bool) $v['guestCount']['editable'] && ! $readonly) ? self::plantilla($columnas) : null,
             'columnas' => $columnas,
             'cuentas' => $cuentas,
             'numero' => self::numero($reservation, $v['guestCount'], $cuentas, $readonly),
@@ -218,6 +223,27 @@ final class ListaDeInvitados
     }
 
     /**
+     * La ficha VACÍA que copia `lista.js` para añadir un niño más allá del número (F4): la misma forma que las de
+     * `ninos()`, con `__I__` donde va su posición.
+     *
+     * @param  array{name: ?string, age: ?string, allergies: ?string, extra: list<array<string, mixed>>, labels: array<string, string>}  $columnas
+     * @return array<string, mixed>
+     */
+    private static function plantilla(array $columnas): array
+    {
+        $i = '__I__';
+        $campo = static fn (?string $clave): ?string => $clave === null ? null : 'guests['.$i.']['.$clave.']';
+
+        return [
+            'id' => 'g'.$i, 'indice' => $i, 'nombre' => '', 'edad' => '', 'alergias' => '', 'vacia' => true,
+            'origen' => 'mano', 'respuesta' => null, 'pendiente' => false, 'reply_id' => null, 'no_reply_id' => null,
+            'repetida' => false, 'firmada' => false, 'completa' => false, 'falta' => null, 'sin_producto' => false, 'regimen' => null,
+            'campos' => ['name' => $campo($columnas['name']), 'age' => $campo($columnas['age']), 'allergies' => $campo($columnas['allergies'])],
+            'extra' => [], 'editable' => true,
+        ];
+    }
+
+    /**
      * LA FIRMA DE QUIEN CUMPLE (F3b de `fiesta-sistema-nuevo.md` §4.8, `#747`): no es un justificante de invitado, es la
      * exención de su ficha de MENOR A CARGO del anfitrión (`menores-a-cargo.md`). Sin esto su fila decía «Falta» aunque el
      * anfitrión hubiera firmado por él. Se empareja por nombre con la MISMA regla que las demás filas y que la puerta
@@ -255,6 +281,8 @@ final class ListaDeInvitados
         $sin = 0;
         $enLista = 0;
         foreach ($ninos as $n) {
+            // ⚠️ Un «no» que empareja con una ficha del anfitrión SÍ cuenta (F4, §4.9): sigue siendo su ficha, porque el
+            // emparejado por nombre no es seguro (T6·3, «nadie se quita solo»). Los «no» sueltos no son fichas: no cuentan.
             if ($n['vacia']) {
                 continue;
             }
@@ -380,18 +408,45 @@ final class ListaDeInvitados
     {
         $valor = (int) $reservation->quantity;
         $enLista = $cuentas['en_lista'];
+        $editable = (bool) $control['editable'] && ! $readonly;
 
         return [
             'valor' => $valor,
             'suelo' => (int) $control['min'],
             'techo' => $control['max'],
-            'editable' => (bool) $control['editable'] && ! $readonly,
+            'editable' => $editable,
             'motivo' => $control['locked_reason'],
             'pista' => (string) $control['hint'],
             'en_lista' => $enLista,
             'libres' => max(0, $valor - $enLista),
             'lleno' => $enLista >= $valor,
+            // F4 (§4.9, `#747`): la lista que supera la reserva. `precio_nino` es lo que costaría UN niño más, con la MISMA
+            // tarificación que aplica el ajuste al subir (`ItemEditPricing`, la del día de la fiesta): se paga en el parque.
+            'de_mas' => max(0, $enLista - $valor),
+            'precio_nino' => $editable ? self::precioNino($reservation) : '',
         ];
+    }
+
+    /**
+     * El precio de un niño más, ya escrito («16,95 €»), o vacío si no se puede tarificar (sin franja o sin tarifa).
+     *
+     * ⚠️ Vacío y NO una excepción: sin la tarifa «normal» `RateResolver` lanza un «modelo no encontrado», que Laravel pinta
+     * como 404 —medido: la lista ENTERA caía en 404 por una frase de la zona 3—. Sin precio, la frase dice «que se paga en
+     * el parque» sin cifra; lo que se cobra lo decide el ajuste bajo el lock, no esta frase.
+     */
+    private static function precioNino(OrderItem $reservation): string
+    {
+        $date = $reservation->slot?->date?->toDateString();
+        if ($date === null) {
+            return '';
+        }
+        try {
+            $precio = app(ItemEditPricing::class)->computeEditPricing($reservation, (int) $reservation->ticket_type_id, (int) $reservation->quantity + 1, $date);
+        } catch (ModelNotFoundException) {
+            return '';
+        }
+
+        return $precio['new'] === null ? '' : Money::format((int) $precio['unit'], $reservation->order->currency ?? 'EUR');
     }
 
     /**

@@ -432,6 +432,16 @@ foreach (['lista-recien' => 'recien', 'lista-guardado' => 'guardado'] as $nombre
             ];
         }
     }
+    // F4 (§4.9): el estado del diseño con MÁS niños que plazas («Con respuestas por repasar»: 11 para 10), SOLO para el
+    // ojo (`a/lista-respuestas.html`), fuera del lote: en el producto 11 fichas para 10 plazas solo existen tecleadas en
+    // el navegador, así que no hay B de servidor que comparar; se mira contra la sonda `sonda-f4.mjs`.
+    if ($estado === 'recien') {
+        file_put_contents($salida.'/a/lista-respuestas.html', str_replace(
+            ['"pj-lista-v3-servidor-recien", "pj-lista-v3-borrador-recien"', 'id="recien"'],
+            ['"pj-lista-v3-servidor-respuestas", "pj-lista-v3-borrador-respuestas"', 'id="respuestas"'],
+            $a,
+        ));
+    }
 }
 
 file_put_contents($salida.'/lote.json', json_encode($lote, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));

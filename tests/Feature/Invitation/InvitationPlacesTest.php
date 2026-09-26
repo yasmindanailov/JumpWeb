@@ -283,20 +283,24 @@ class InvitationPlacesTest extends TestCase
         $reservation->forceFill(['guest_data' => $rows])->save();
 
         // El navegador manda las OCHO fichas tal y como las pintó, y baja la cantidad a 3.
+        // ▶ Desde F4 (`fiesta-sistema-nuevo.md` §4.9, `[DECIDIDO owner]` `#747`) la web NO baja por debajo de la lista: se
+        // PARA y pregunta, y no se pierde NADIE —la promesa de este caso, ahora entera—. La compactación que conserva a
+        // los confirmados sigue en el dominio para la API y el panel (`GuestCountTest`, `GuestCardOrder`).
         $this->actingAs($reservation->order->user)
             ->post(route('reservation.guests.store', ['reservation' => $reservation]), [
                 'guest_count' => 3,
                 'guests' => $rows,
-            ])->assertRedirect();
+            ])->assertRedirect()->assertSessionHas('status', 'guest-count-unconfirmed');
 
         $names = array_values(array_filter(array_map(
             static fn (array $row): string => trim((string) ($row['name'] ?? '')),
             $reservation->fresh()->guestData(),
         )));
 
-        $this->assertSame(3, (int) $reservation->fresh()->quantity);
+        $this->assertSame(8, (int) $reservation->fresh()->quantity, 'la web bajó por debajo de la lista sin preguntar');
         $this->assertContains('Hugo Ruiz', $names, 'por HTTP tampoco puede perderse quien confirmó');
         $this->assertContains('Ana Gil', $names);
+        $this->assertCount(8, $names, 'por HTTP se perdió alguien de la lista');
         $this->assertSame(2, app(GuardianPlaces::class)->takenIn((int) $reservation->getKey()));
     }
 

@@ -202,6 +202,17 @@ class GuestFormController extends Controller
         //     que recibe, y la de esta capa sigue teniendo la cantidad vieja en memoria.
         $countChange = null;
         $desiredCount = $this->submittedGuestCount($request);
+
+        // ❗ F4 (§4.9, `[DECIDIDO owner]` `#747`): **con más niños en la lista que el número, se PARA y se pregunta.** La
+        // lista admite niños de más (la zona 3 los pinta en ámbar), pero guardarlos sin el «Sí» que sube el número haría
+        // una de dos cosas malas: cobrar sin confirmar, o que el saneo (que recorta a `quantity`) tirara nombres en
+        // silencio. Con JavaScript la página ya no deja enviar; esto es el cinturón, y no escribe NADA. Cuenta las fichas
+        // con algo escrito y los «Al final viene», que necesitan su ficha.
+        $llenas = $this->filledSubmittedRows($request, $reservation);
+        if ($llenas !== null && $llenas > ($desiredCount ?? (int) $reservation->quantity)) {
+            return redirect()->to($this->backUrl($request, $reservation))->with('status', 'guest-count-unconfirmed');
+        }
+
         if ($desiredCount !== null) {
             $countChange = app(GuestCountAdjuster::class)->adjust(
                 $reservation,
@@ -210,6 +221,12 @@ class GuestFormController extends Controller
                 is_string($request->input('expected_version')) ? $request->input('expected_version') : null,
             );
             $reservation = $reservation->fresh(['ticketType', 'slot', 'order', 'children']) ?? $reservation;
+
+            // Y si el aforo, el techo o el plazo rechazan la subida, las fichas de más NO se guardan a medias: el saneo
+            // tiraría las últimas en silencio. Se dice el motivo y no se escribe nada más.
+            if (! $countChange->applied && $llenas !== null && $llenas > (int) $reservation->quantity) {
+                return redirect()->to($this->backUrl($request, $reservation))->with('status', 'guest-count-unsaved');
+            }
         }
 
         // Qué se persiste de un formulario con datos de MENORES lo decide el dominio, no esta capa
@@ -638,6 +655,28 @@ class GuestFormController extends Controller
                 static fn (array $p): bool => $p['attending'] && $p['slot_index'] === null,
             )),
         ];
+    }
+
+    /**
+     * Cuántos niños MANDA la lista (F4, §4.9): las fichas con algo escrito más los «Al final viene» que necesitan una
+     * ficha NUEVA (uno que ya tiene la suya no ocupa otra: `rejoinCardsNeeded`). `null` si el envío no trae `guests`
+     * (entonces las fichas no se tocan y no hay nada que contar).
+     */
+    private function filledSubmittedRows(Request $request, OrderItem $reservation): ?int
+    {
+        $guests = $this->submittedGuestFormArray($request, 'guests');
+        if ($guests === null) {
+            return null;
+        }
+        $llenas = 0;
+        foreach ($guests as $row) {
+            if (is_array($row) && array_filter($row, static fn (mixed $v): bool => is_scalar($v) && trim((string) $v) !== '') !== []) {
+                $llenas++;
+            }
+        }
+        $rejoin = array_map(intval(...), array_filter($this->submittedGuestFormArray($request, 'rejoin') ?? [], 'is_scalar'));
+
+        return $llenas + app(PartyInvitations::class)->rejoinCardsNeeded($reservation, $rejoin, $guests);
     }
 
     /**

@@ -24,7 +24,6 @@ return [
     'mixed_savings_pending' => 'That makes your party :amount cheaper: the discount will apply once every age is filled in.',
     'mixed_no_difference' => 'There is no price difference between the two: nothing extra to pay for this.',
     'readonly_notice' => 'This booking has already taken place. The form is read-only: you can review the details but no longer edit them.',
-    'count_warn_title' => 'Before you save',
     'count_error_title' => 'The guest count hasn’t changed',
     'saved' => 'Form saved. Thank you! You can edit it again anytime.',
     'extras_closed_cutoff' => 'No longer changeable',
@@ -35,7 +34,6 @@ return [
     'count_hint' => 'You can change it until :when (maximum :max).',
     'count_closed_cutoff' => 'The number of guests can no longer be changed: the deadline has passed.',
     'count_closed' => 'The number of guests can no longer be changed.',
-    'count_warn_discard' => 'Going down to :count guests will discard the details already filled in on :discarded card.|Going down to :count guests will discard the details already filled in on :discarded cards.',
     'count_error_above_max' => 'Your details were saved, but the number of guests was not: it is more than this party allows. Call us and we will sort it out.',
     'count_error_below_min' => 'Your details were saved, but the number of guests was not: it is below this party\'s minimum. Call us and we will sort it out.',
     'count_error_below_assigned' => 'Your details were saved, but the number of guests was not: you have already assigned more places than you want to keep. Remove someone from the list and try again.',
@@ -43,6 +41,8 @@ return [
     'count_error_cutoff' => 'Your details were saved, but the number of guests was not: the deadline to change it has passed.',
     'count_error_closed' => 'Your details were saved, but the number of guests could not be changed. Call us and we will sort it out.',
     'count_error_stale' => 'Your details were saved, but the number of guests was not: the booking changed while you had this page open. Please reload it.',
+    'count_error_unconfirmed' => 'Nothing was saved: there are more children on the list than in your booking. Confirm the number under «The final number» and save again.',
+    'count_error_unsaved' => 'Nothing was saved: the list has more children than your booking and the number couldn’t go up. Call us and we’ll sort it out with you.',
 
     // The invitation, as seen from the host's list (T6, `specs/celebracion-e-invitacion.md` §4.7).
     'invite' => [

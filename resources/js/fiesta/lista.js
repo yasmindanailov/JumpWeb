@@ -276,8 +276,24 @@ function lista(form) {
     // Una ficha VACÍA es donde entra un niño nuevo: la primera escondida, por su posición.
     const siguienteVacia = () => filas().filter((f) => f.classList.contains('fi-fila--vacia') && f.dataset.origen !== 'cumple' && camposDe(f).name).sort((a, b) => Number(a.dataset.indice) - Number(b.dataset.indice))[0] || null;
     const nombres = () => filas().filter((f) => !f.classList.contains('fi-fila--vacia')).map((f) => camposDe(f).name?.value.trim()).filter(Boolean);
+    // F4 (§4.9, `#747`): sin fichas libres, y con el número en plazo, una ficha NUEVA más allá del número —la plantilla del
+    // servidor con su posición—, antes de los «no» sueltos. La zona 3 la cuenta en ámbar hasta el «Sí».
+    const plantilla = q('template[data-fila-plantilla]', form);
+    const creaFila = () => {
+        if (!plantilla) return null;
+        const indices = filas().map((f) => Number(f.dataset.indice)).filter((n) => Number.isFinite(n));
+        const i = (indices.length ? Math.max(...indices) : -1) + 1;
+        const caja = document.createElement('template');
+        caja.innerHTML = plantilla.innerHTML.replaceAll('__I__', String(i)).trim();
+        const fila = caja.content.firstElementChild;
+        const lista = q('[data-filas]', form);
+        if (!fila || !lista) return null;
+        lista.insertBefore(fila, q(':scope > [data-suelto]', lista));
+        qa('input, textarea, select', fila).forEach((el) => inicial.set(el, ''));
+        return fila;
+    };
     const mete = (nombre, edad, alergias) => {
-        const fila = siguienteVacia();
+        const fila = siguienteVacia() || creaFila();
         if (!fila) return null;
         const c = camposDe(fila);
         c.name.value = nombre; if (c.age) c.age.value = edad || ''; if (c.allergies) c.allergies.value = alergias || '';
@@ -373,25 +389,87 @@ function lista(form) {
     qa('[data-filtro]', form).forEach((b) => b.addEventListener('click', () => filtra(b.dataset.filtro)));
     q('[data-filtro-quitar]', form)?.addEventListener('click', () => filtra(filtro));
 
-    // ── El número: «Cambiar» abre el editor; al bajar, se dice cuántas fichas se pierden ──
+    // ── El número: «Cambiar» abre el editor; la zona 3 se pinta con (número elegido, niños en la lista) — F4 ──
     const editor = q('[data-numero-editor]', form);
     const vista = q('[data-numero-vista]', form);
+    const campoNumero = q('[data-guest-count] [data-cantidad-campo]', form);
     if (editor && vista) {
         editor.hidden = true;
-        q('[data-numero-cambiar]', form)?.addEventListener('click', () => { editor.hidden = false; vista.hidden = true; q('[data-cantidad-campo]', editor)?.focus(); });
-        q('[data-numero-hecho]', form)?.addEventListener('click', () => { editor.hidden = true; vista.hidden = false; });
+        qa('[data-numero-cambiar]', form).forEach((b) => b.addEventListener('click', () => { editor.hidden = false; vista.hidden = true; campoNumero?.focus(); }));
+        q('[data-numero-hecho]', form)?.addEventListener('click', () => { editor.hidden = true; vista.hidden = false; actualiza(); });
     }
-    const aviso = q('#pli-aviso-numero');
-    const avisaNumero = () => {
-        const campo = q('[data-guest-count] [data-cantidad-campo]', form);
-        if (!campo || !aviso) return;
-        const quiere = parseInt(campo.value, 10);
-        const actual = parseInt(q('[data-guest-count]', form).dataset.actual, 10) || 0;
-        if (!quiere || quiere >= actual) { aviso.hidden = true; return; }
-        const pierde = filas().filter((f) => Number(f.dataset.indice) >= quiere && f.dataset.vacia !== '1' && camposDe(f).name).length;
-        aviso.hidden = pierde === 0;
-        q('[data-aviso-numero-texto]', aviso).textContent = choice(aviso.dataset.tpl, pierde, { count: quiere, discarded: pierde });
+    // Los niños que la lista MANDA: las fichas con algo (quien cumple cuenta) y los «Al final viene» sueltos, que al guardar
+    // entran en una ficha. ⚠️ Un «no» que empareja con una ficha del anfitrión cuenta: sigue siendo su ficha, porque el
+    // emparejado por nombre no es seguro (T6·3, «nadie se quita solo»). Los «no» sueltos no son fichas: no cuentan.
+    const enLaLista = () => filas().filter((f) => !f.classList.contains('fi-fila--vacia')
+        && (f.dataset.suelto === undefined || f.dataset.vuelve === '1'));
+    // El medidor de plazas, como la pieza (`x-fiesta.plazas`, `PlacesMeter.jsx`): casillas hasta 40, barra con más.
+    const pintaMedidor = (el, total, confirmadas, pendientes, reservadas, rotulo) => {
+        const n = Math.max(0, Math.round(total));
+        const c = Math.min(Math.max(0, confirmadas), n);
+        const p = Math.min(Math.max(0, pendientes), n - c);
+        const corte = reservadas > 0 && reservadas < n ? reservadas : 0;
+        el.setAttribute('aria-label', rotulo);
+        el.innerHTML = '';
+        if (n > 40) {
+            el.style.cssText = 'display: flex; height: 12px; border-radius: var(--r-pill); overflow: hidden; background: var(--fiesta-tinta-200);';
+            [[c, 'var(--success-500)'], [p, 'var(--warn-500)']].forEach(([x, color]) => {
+                const s = document.createElement('span');
+                s.style.cssText = `width: ${n > 0 ? (x / n) * 100 : 0}%; background: ${color}; transition: width var(--dur-base) var(--ease-out);`;
+                el.append(s);
+            });
+            return;
+        }
+        el.style.cssText = `display: flex; gap: ${n > 20 ? '3px' : '4px'}; height: 12px;`;
+        for (let i = 0; i < n; i++) {
+            const s = document.createElement('span');
+            const color = i < c ? 'var(--success-500)' : i < c + p ? 'var(--warn-500)' : 'var(--fiesta-tinta-200)';
+            const radio = n === 1 ? 'var(--r-pill)' : i === 0 ? '999px 4px 4px 999px' : i === n - 1 ? '4px 999px 999px 4px' : '4px';
+            s.style.cssText = `flex: 1 1 0; min-width: 0; background: ${color}; transition: background var(--dur-base) var(--ease-out); margin-left: ${corte && i === corte ? (n > 20 ? '5px' : '8px') : '0px'}; border-radius: ${radio};`;
+            el.append(s);
+        }
     };
+    let estadoNumero = null;
+    const pintaNumero = () => {
+        if (!vista || !campoNumero) return;
+        const elegido = parseInt(campoNumero.value, 10) || 0;
+        const ninos = enLaLista();
+        const n = ninos.length;
+        estadoNumero = n < elegido ? 'libres' : n === elegido ? 'listo' : 'mas';
+        qa('[data-numero-estado]', vista).forEach((b) => { b.hidden = b.dataset.numeroEstado !== estadoNumero; });
+        const medidor = q('[data-plazas]', vista);
+        const mas = estadoNumero === 'mas';
+        if (medidor) {
+            pintaMedidor(medidor, mas ? n : elegido, mas ? elegido : n, mas ? n - elegido : 0, mas ? elegido : 0,
+                mas ? choice(t('numero.meter_mas', ''), 1, { n, extra: n - elegido, plazas: elegido }) : choice(t('numero.meter', ''), 1, { n, plazas: elegido }));
+        }
+        const pon = (sel, texto) => { const el = q(sel, vista); if (el) el.textContent = texto; };
+        pon('[data-numero-libres]', choice(t('numero.libres', ''), Math.max(1, elegido - n), { count: Math.max(1, elegido - n) }));
+        pon('[data-numero-tienes]', choice(t('numero.tienes', ''), 1, { plazas: elegido, lista: n }));
+        pon('[data-numero-listo]', choice(t('numero.listo', ''), 1, { n: elegido }));
+        // «Seréis 12: Vera, los 9 confirmados y 2 que añadiste.»
+        const confirmados = ninos.filter((f) => f.dataset.origen !== 'cumple' && f.dataset.respuesta === 'si').length;
+        const anadidos = ninos.filter((f) => f.dataset.origen !== 'cumple' && f.dataset.respuesta !== 'si').length;
+        const nombreCumple = filaCumple ? (camposDe(filaCumple).name?.value.trim() ?? '') : '';
+        const partes = [nombreCumple,
+            confirmados ? choice(t('numero.confirmados', ''), confirmados, { count: confirmados }) : '',
+            anadidos ? choice(t('numero.anadidos', ''), anadidos, { count: anadidos }) : ''].filter(Boolean);
+        const listaTexto = partes.length > 1 ? partes.slice(0, -1).join(', ') + t('numero.y', ' y ') + partes[partes.length - 1] : (partes[0] || '');
+        pon('[data-numero-frase]', choice(t('numero.frase', ''), 1, { n, lista: listaTexto }));
+        const precio = vista.dataset.precio || '';
+        pon('[data-numero-mas]', choice(t(precio ? 'numero.mas' : 'numero.mas_sin_precio', ''), Math.max(1, n - elegido), { count: Math.max(1, n - elegido), plazas: elegido, precio }));
+        if (!mas) { const aviso = q('[data-numero-confirma]', vista); if (aviso) aviso.hidden = true; }
+    };
+    // «Sí»: el número pasa a ser el de la lista (lo guarda el Guardar de siempre, que ajusta el número ANTES que las fichas).
+    q('[data-numero-si]', form)?.addEventListener('click', () => {
+        if (!campoNumero) return;
+        const max = parseInt(campoNumero.getAttribute('max') || '', 10);
+        const n = enLaLista().length;
+        campoNumero.value = String(Number.isFinite(max) ? Math.min(n, max) : n);
+        campoNumero.dispatchEvent(new Event('input', { bubbles: true }));
+        campoNumero.dispatchEvent(new Event('change', { bubbles: true }));
+        actualiza();
+    });
 
     // ── Personalizar la invitación: el panel, la nota de «se ven al guardar», el titular y LA VISTA PREVIA EN VIVO (F2) ──
     const pers = q('[data-pers]', form);
@@ -490,7 +568,7 @@ function lista(form) {
     let recuperado = false;
     const actualiza = () => {
         marcaUltimas();
-        avisaNumero();
+        pintaNumero();
         const n = cambios();
         if (n > 0 || repasar > 0) {
             const status = n > 0 ? choice(t('guardar.cambios', ':count cambios sin guardar'), n) : choice(t('guardar.respuestas', ':count respuestas por repasar'), repasar);
@@ -518,6 +596,10 @@ function lista(form) {
         try {
             const datos = JSON.parse(localStorage.getItem(claveBorrador) || 'null');
             if (!datos) return;
+            // Las fichas de MÁS que se teclearon y no se guardaron (F4): se crean antes de devolverles lo escrito.
+            const hasta = Math.max(-1, ...Object.keys(datos).map((k) => Number(/^guests\[(\d+)\]\[/.exec(k)?.[1] ?? -1)));
+            const ultima = () => Math.max(-1, ...filas().map((f) => Number(f.dataset.indice)).filter((n) => Number.isFinite(n)));
+            while (ultima() < hasta && creaFila()) { /* una más */ }
             campos().forEach((el) => {
                 const k = el.name + (el.type === 'radio' ? '=' + el.value : '');
                 if (!(k in datos)) return;
@@ -529,7 +611,20 @@ function lista(form) {
             if (recuperado) filas().forEach((f) => { pintaFila(f); if (f.dataset.vacia === '0') f.classList.remove('fi-fila--vacia'); });
         } catch { /* sin almacenamiento */ }
     };
-    form.addEventListener('submit', () => {
+    form.addEventListener('submit', (e) => {
+        // ❗ F4 (`[DECIDIDO owner]` `#747`): con más niños en la lista que el número, NO se envía: sube a la zona 3, lo dice
+        // y deja el foco en el «Sí». Ni se cobra sin confirmar ni el saneo tira nombres.
+        pintaNumero();
+        if (estadoNumero === 'mas') {
+            e.preventDefault();
+            if (editor) editor.hidden = true;
+            if (vista) vista.hidden = false;
+            const aviso = q('[data-numero-confirma]', form);
+            if (aviso) aviso.hidden = false;
+            q('[data-zona="3"]', form)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setTimeout(() => q('[data-numero-si]', form)?.focus({ preventScroll: true }), 350);
+            return;
+        }
         try { localStorage.removeItem(claveBorrador); } catch { /* nada */ }
         pintaBarra('saving', t('guardar.guardando', 'Guardando la lista'), '');
     });

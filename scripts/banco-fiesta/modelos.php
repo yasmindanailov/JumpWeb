@@ -170,12 +170,14 @@ return [
                 'host_max' => PartyInvitation::HOST_LINE_MAX,
             ],
             'ninos' => $ninos,
+            'plantilla' => null,
             'columnas' => ['name' => 'name', 'age' => 'age', 'allergies' => 'allergies', 'extra' => [], 'labels' => ['name' => 'Nombre', 'age' => 'Edad', 'allergies' => 'Alergias o menú especial']],
             'cuentas' => ['confirmados' => $confirmados, 'no_pueden' => 0, 'sin_contestar' => 0, 'en_lista' => $confirmados + 1],
             'numero' => [
                 'valor' => $RESERVA['reservados'], 'suelo' => 8, 'techo' => null, 'editable' => true, 'motivo' => null,
                 'pista' => 'Hasta el viernes 25',
                 'en_lista' => $guardado ? 10 : 1, 'libres' => $guardado ? 0 : 9, 'lleno' => $guardado,
+                'de_mas' => 0, 'precio_nino' => '16,95'.$NB.'€',
             ],
             'extras' => [
                 'lista' => $extras, 'total' => $guardado ? '83'.$NB.'€' : '', 'elegidos' => $guardado ? 2 : 0, 'alguno_abierto' => true,

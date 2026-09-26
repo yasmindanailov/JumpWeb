@@ -30,6 +30,8 @@
   fichas contra la cantidad VIEJA.
 - **El SUELO son dos motivos que no se funden** (el mínimo del pack se resuelve llamando; «ya has asignado más
   plazas», quitando a alguien de la lista); bajar del `min_qty` es excepción del OPERADOR, no del cliente.
+- ▶ **F4 (`#747`, `fiesta-sistema-nuevo.md` §4.9)**: la WEB no guarda con más fichas llenas que el número (se para y
+  pregunta). El ajuste no cambia: API y panel.
   Techo: el `max_qty` del pack. Plazo: `packs.guest_count_cutoff_hours` (vacío = 24 h). Basta con el libro.
 - **`guest_count` ausente = NO LO TOQUES**, nunca un `?? $quantity` (`#413` midió que un cuerpo parcial borraba
   las fichas de ocho menores).

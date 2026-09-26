@@ -166,39 +166,85 @@ class GuestCountSurfacesTest extends TestCase
             ->assertSee(__('guestform.count_closed_cutoff'));
     }
 
-    public function test_the_discard_warning_travels_in_a_form_the_browser_can_render(): void
+    // ─── F4: la lista que supera la reserva (`fiesta-sistema-nuevo.md` §4.9, `[DECIDIDO owner]` `#747`) ─────────────
+    //
+    // ▶ Aquí vivía la guarda del aviso «al bajar se perderán N fichas» (`#444`, `#571`). F4 lo RETIRÓ con su motivo
+    // (§3.quater): bajar el número por debajo de la lista ya no destruye fichas —la zona 3 pregunta y guardar se para—,
+    // así que el aviso decía algo que ya no pasa. Su sujeto nuevo son estas guardas: nada se cobra sin «Sí» y ningún
+    // nombre se pierde. (El descarte al bajar sigue en el DOMINIO, para la API y el panel: `GuestCountTest`.)
+
+    /** ❗ Con más niños que el número y sin el «Sí» que lo sube, NO se guarda nada (ni se cobra ni se tira un nombre). */
+    public function test_more_children_than_the_number_without_saying_yes_saves_nothing(): void
     {
-        // ⚠️⚠️ **Guarda nacida de un defecto propio, y CAMBIÓ DE PREMISA en `#571`** (el precedente del
-        // `SlotOfferTest` de `#324`). El aviso lo pinta el JS, y en el navegador no hay `trans_choice`: con la
-        // sintaxis de plural de Laravel, la barra vertical y las dos formas llegaban enteras a la pantalla, así
-        // que la cadena tenía UNA sola forma —y la pantalla decía «de 1 fichas»—.
-        // ▶ Desde la T2 el JS SÍ pluraliza: `choice()`, hoy en `resources/js/fiesta/logica.js`, con sus casos de
-        // `node --test`. Lo que se vigila ahora es la PAREJA: si la cadena trae dos formas, el script tiene que
-        // resolverlas con `choice()` y no con un `replace` a secas, que es exactamente cómo volvería el defecto.
-        // ⚠️ En la piel nueva la plantilla viaja en `data-tpl` del aviso y el script va EMPAQUETADO por Vite: el
-        // emparejamiento se afirma sobre el fuente del script, no sobre el HTML.
         $item = $this->reservation(10);
-
-        $this->get($item->guestFormSignedUrl())
-            ->assertOk()
-            ->assertSee('id="pli-aviso-numero"', false)
-            ->assertSee(':discarded', false);
-
-        $this->assertStringContainsString(
-            'choice(aviso.dataset.tpl', (string) file_get_contents(base_path('resources/js/fiesta/lista.js')),
-            'el aviso de fichas perdidas no pasa por `choice()`: una cadena con dos formas llegaría entera a la pantalla',
-        );
-
-        foreach (['es', 'en', 'fr'] as $locale) {
-            $text = (string) __('guestform.count_warn_discard', [], $locale);
-            $forms = explode('|', $text);
-
-            $this->assertLessThanOrEqual(2, count($forms), "«count_warn_discard» ({$locale}) trae más formas de las que resuelve `choice()` sin intervalos.");
-            foreach ($forms as $form) {
-                $this->assertStringContainsString(':count', $form, "«count_warn_discard» ({$locale}): a una forma le falta :count");
-                $this->assertStringContainsString(':discarded', $form, "«count_warn_discard» ({$locale}): a una forma le falta :discarded");
-            }
+        $guests = [];
+        for ($i = 0; $i < 12; $i++) {
+            $guests[$i] = ['name' => 'Nino '.($i + 1)];
         }
+
+        $this->post($item->guestFormSignedStoreUrl(), ['guests' => $guests])
+            ->assertRedirect()->assertSessionHas('status', 'guest-count-unconfirmed');
+
+        $fresh = $item->fresh();
+        $this->assertSame(10, (int) $fresh->quantity, 'se subió el número sin «Sí»');
+        $this->assertSame([], $fresh->guestData(), 'se guardaron fichas: el saneo habría tirado dos nombres');
+    }
+
+    /** Bajar el número por debajo de la lista es el mismo caso: se para, no se pierden fichas. */
+    public function test_lowering_the_number_below_the_list_saves_nothing(): void
+    {
+        $item = $this->reservation(10);
+        $guests = array_map(static fn (int $i): array => ['name' => 'Nino '.$i], range(1, 10));
+        $item->submitGuestForm($guests, null, 'signed_link');
+
+        $this->post($item->guestFormSignedStoreUrl(), ['guest_count' => 8, 'guests' => $guests])
+            ->assertRedirect()->assertSessionHas('status', 'guest-count-unconfirmed');
+
+        $this->assertSame(10, (int) $item->fresh()->quantity);
+        $this->assertCount(10, array_filter($item->fresh()->guestData()), 'se perdieron fichas al bajar');
+    }
+
+    /** ❗ Si el aforo o el techo rechazan la subida, las fichas de más no se guardan a medias. */
+    public function test_a_refused_raise_does_not_save_the_extra_cards_by_halves(): void
+    {
+        $item = $this->reservation(10);
+        $guests = array_map(static fn (int $i): array => ['name' => 'Nino '.$i], range(1, 22));
+
+        $this->post($item->guestFormSignedStoreUrl(), ['guest_count' => 22, 'guests' => $guests])   // por encima del máximo (20)
+            ->assertRedirect()->assertSessionHas('status', 'guest-count-unsaved');
+
+        $this->assertSame(10, (int) $item->fresh()->quantity);
+        $this->assertSame([], $item->fresh()->guestData(), 'se guardaron diez y se tiraron doce');
+    }
+
+    /** «Sí»: el número sube a la lista y los niños de más quedan en el libro, a pagar en el parque. */
+    public function test_saying_yes_raises_the_number_and_the_extra_is_due_at_the_park(): void
+    {
+        $item = $this->reservation(10);
+        $guests = array_map(static fn (int $i): array => ['name' => 'Nino '.$i], range(1, 12));
+
+        $this->post($item->guestFormSignedStoreUrl(), ['guest_count' => 12, 'guests' => $guests])
+            ->assertRedirect()->assertSessionHas('status', 'guest-form-saved');
+
+        $this->assertSame(12, (int) $item->fresh()->quantity);
+        $this->assertCount(12, $item->fresh()->guestData());
+        $this->assertGreaterThan(0, (int) $item->order->adjustments()->where('type', 'edit')->sum('amount_cents'), 'los dos de más no quedan a pagar');
+    }
+
+    /** La zona 3 lleva sus TRES estados (el del servidor a la vista), el precio de un niño más y la ficha plantilla. */
+    public function test_the_list_carries_the_three_states_the_price_and_the_template(): void
+    {
+        $item = $this->reservation(10);
+        $item->submitGuestForm([['name' => 'Ana'], ['name' => 'Bea'], ['name' => 'Cris']], null, 'signed_link');
+
+        $html = (string) $this->get($item->guestFormSignedUrl())->assertOk()->getContent();
+
+        $this->assertMatchesRegularExpression('#data-numero-estado="libres">#', $html, 'con 3 de 10, las plazas libres a la vista');
+        $this->assertMatchesRegularExpression('#data-numero-estado="listo" hidden#', $html);
+        $this->assertMatchesRegularExpression('#data-numero-estado="mas" hidden#', $html);
+        $this->assertMatchesRegularExpression('#data-precio="14,95#', $html, 'falta el precio de un niño más');
+        $this->assertStringContainsString('data-fila-plantilla', $html, 'sin plantilla no se pueden añadir niños de más');
+        $this->assertStringContainsString('name="guests[__I__][name]"', $html);
     }
 
     // ─── La API ──────────────────────────────────────────────────────────────────────

@@ -85,8 +85,8 @@ Medido en `GuestFormController::show()` (sus 30 claves), `InvitationPageControll
   venían de la T1a (medido en F3a). **FALTA**: la lista **sin tope** (hoy `sanitizeGuestData()` es posicional y acotada
   a `quantity`: §7·3, F4), **tres campos y ni uno más** (los packs de PlayJump tienen cinco columnas: §7·6, DATO).
 - Z3 · **HAY**: el número con su plazo, subir y bajar dentro del suelo (`guestCount`, `#444`), «Solo pagas los niños
-  que vengan». **FALTA**: el `PlacesMeter` con más niños que plazas (ámbar), «Seréis N… ¿Es correcto?» que SUBE el
-  número desde la lista, «Invitar a más» (§7·3, aforo).
+  que vengan», «Invitar a más». ✅ **En F4 (26-09, §4.9)**: el `PlacesMeter` con más niños que plazas (ámbar), «Seréis N…
+  ¿Es correcto?» con su «Sí» que SUBE el número desde la lista, y guardar se para sin él (`#747`).
 - Z4 · **HAY**: los complementos con su plazo por enganche (`PostFormAddonView`), «fuera de plazo» con motivo, la
   tarta como grupo excluyente. **FALTA**: la tarta por raciones y «la grande», combos y cubos «para N adultos»
   con «¿Cuántos adultos se quedan?» (DATO nuevo del enganche + regla), el aviso de la tarta bajo la cabecera.
@@ -274,6 +274,7 @@ Medido en `GuestFormController::show()` (sus 30 claves), `InvitationPageControll
 | **F2** ✅ | Personalizar la invitación EN TIEMPO REAL (26-09): la vista previa de la zona 1 se reescribe al teclear el tema, quién cumple, su edad (también en las tres miniaturas del tema), quien invita, las palabras, las pistas y «enseñar mi teléfono», como `PliZona1` del diseño. La tarjeta tiene un modo `vivo` (una rama APARTE de `x-fiesta.invitacion`: la tarjeta pública no cambia ni un byte) que pinta además, oculto, lo que puede aparecer al teclear, con sus marcas `data-inv-*`; una `<template>` por tema con la tarjeta entera (otro tema es otra tarjeta: el adorno nuevo entra con su animación, la chapa y la burbuja no la repiten, como React); `vistaInvitacion()` en `logica.js` decide qué se ve con las mismas reglas que el servidor; `lista.js` lo escribe. Sin nombre tecleado, el titular vuelve al guardado; la edad, solo cifras y dos. | `node --test` 12 (+4: la vista previa completa, sin edad ni palabras, sin quien invita, la edad tecleada) · `ListaDeInvitadosTest` +1 (la tarjeta viva, las tres plantillas y lo oculto) · `InvitacionPaginaTest` (la pública sin nada de esto) · **el juez: 18 de 18 a 0 px** (la lista en reposo, las piezas `invitacion-*` y `tema`, la invitación viva) · **la sonda en la lista viva de `JW-OJO-F1`: 16 de 16 pasos, sin errores de página** (`sonda-f2.mjs`, fuera de git) · ESLint. |
 | **F6a** ✅ | La firma DENTRO del recibo (26-09; `[DECIDIDO]` `#746`): tras «Vamos» y sin firma, el recibo pinta `x-fiesta.firma` con lo que la prueba exige (`#745`/`#706`: nombre y apellidos del niño con la nota de lo que escribió, nacimiento, relación, el descargo en el flujo y su privacidad) y la frase del diseño junto al botón; firmada, «Firmada» con quién firmó (nombre · teléfono). Una sola fuente para las dos pantallas: `ComposesGuardianForm` (el bloqueo, las relaciones, lo que llega de la invitación, el prellenado, los menores a cargo, la URL firmada del envío y lo que vuelve por la sesión) y `Autorizacion::formularioDe/avisoDe`. El envío lleva `desde=recibo` DENTRO de la firma: el error vuelve al recibo, a `#inv-h-aut`, con el foco en su campo; el éxito, al recibo con «Firmada». Arreglado de paso, medido: (1) una fiesta LLENA pintaba «no quedan plazas» a un «sí» atado aunque el firmador le deja (`#576`); (2) el enlace «Firmar» llevaba a un 404 fuera del modo interno: ahora sin nada que firmar no hay sección; (3) la firma compartía cupo con toda ruta con límite numérico (429 al segundo intento): cupo propio `guardian-sign` (SEC-06); (4) un REENVÍO desde un segundo recibo del mismo niño devolvía el formulario vacío: dice «Firmada»; (5) la cabecera con «Ver el parque» desbordaba en móvil (el diseño también): la píldora baja a su fila; (6) `.inv a` pesaba más que un botón con `href`: `:where(.inv) a`. La apertura de la autorización se cuenta en el recibo (`via=invitation`). | `InvitationSigningFlowTest` 9 (+4: la fiesta llena con su control, el reenvío con su control, el cupo con su control, el Listo) · `InvitationReceiptTest` +3 (la firma dentro, el error junto a su campo con el bolso real, sin modo interno con su control) · `PartyFactsTest` +1 · `FiestaModeloTest` +1 (el recibo) · **siete mutaciones, las siete caen** · **el banco: el recibo `si` y `firmada` contra `InvPagina`, 4 de 4 diagnósticos a 0 px** (esconden lo que la prueba exige, «Crear mi QR» de F6b y la cabecera en móvil); **el banco entero 66 de 70**: los cuatro reales que difieren son la cabecera en móvil y los campos del producto en la autorización, con sus diagnósticos a 0 · el flujo real con `curl` (un campo en rojo, lo escrito conservado) · **la sonda `sonda-f6a.mjs` a 390, 360 y 1280: sin errores de página, sin desbordar, el foco en el campo con error, «Firmada» con quién firmó** · suite. |
 | **F3a** ✅ | Quien cumple, la PRIMERA fila de la lista (26-09; `[DECIDIDO owner]` `#747`): el ajuste del pack `honoree_counts` (en el panel), el sello `honoree_row` en `OrderCreator`, la ficha 0 con su espejo en la invitación en los dos sentidos, la ficha clavada (`GuestCardOrder`, las propuestas, los «no», el recordatorio), su plaza en el suelo y en las firmas (`PartyGuests::honoreeSeatsIn`, contrato), `honoree_row` en la API (1.35.0), su fila en la lista con «Es su cumple» y «Personalizar» como espejo. El detalle y las tres partes, §4.8. | Ver §4.8. |
+| **F4** ✅ | La lista que supera la reserva y su «Sí» (26-09; `[DECIDIDO owner]` `#747`: con más niños que el número, guardar se para y se pregunta): fichas de más desde una plantilla, la zona 3 en sus tres estados y viva, el precio de un niño más, las dos guardas. El detalle, §4.9. | Ver §4.9. |
 | **F1…Fn** | Lo que FALTA (§1.4), una pieza por tanda, en el orden que fije el owner (§7). Cada una con su spec de sección aquí, su decisión y, si toca aforo, `VERIFY_CONC=1`. | Por pieza. |
 
 ### 4.7 Lo que enseñó la T1a (2026-09-25)
@@ -452,6 +453,18 @@ Medido en `GuestFormController::show()` (sus 30 claves), `InvitationPageControll
 - ❗ **El texto de un enlace del sistema vive en `.pz-enlace__texto`**, no en un nodo del botón: el primer intento no
   cambiaba «Al final viene» por «No viene». Lo vio la sonda.
 
+**La F4 (26-09)**:
+- ❗❗ **Una decisión vieja tiene un PORQUÉ que hay que leer antes de revertirla**: quise que el «no» emparejado dejara de ser
+  ficha al guardar (el diseño no lo cuenta) y las pruebas de T6·3 lo pararon: el emparejado es por nombre y no es seguro,
+  así que borrar la ficha podía llevarse a otro niño que sí viene. Se quedó como estaba: cuenta, y decide el anfitrión.
+- ❗ **Una frase de la página no puede tumbar la página**: la tarificación sin tarifa «normal» lanza un «no encontrado» y
+  Laravel lo pinta como 404; la lista entera caía por el precio de un niño más. Ahora, sin precio, frase sin cifra.
+- **Lo que retira una tanda es parte de la tanda**: el aviso de «se perderán N fichas» de `#444` decía algo que ya no pasa
+  (ahora se para); se fue con su JS, sus claves y su prueba re-apuntada por su sujeto, no se dejó apagado.
+- **Un solo `querySelector` para un botón que ahora son tres** («Cambiar» por estado) solo engancha el primero.
+- ⚠️ **Otra vez el `??` con un `null` esperado** en una prueba: `$x['k'] ?? 'falta'` convierte el `null` en el texto. Se
+  asevera que existe y después que es `null`.
+
 ### 4.8 F3 · Quien cumple y la lista del diseño (`[DECIDIDO owner]` `#747`, 26-09)
 
 **Lo que dice el diseño** (`lista-invitados/estado.jsx`): UNA lista `ninos[]`; quien cumple es la fila `origen: cumple`,
@@ -487,6 +500,40 @@ El suelo del número (`GuestCountPolicy`) y las plazas de firma (`GuardianPlaces
 | **F3c** ✅ | «Al final viene»: cada «no» (el suelto y el que empareja con una ficha del anfitrión) lleva el botón; la fila pasa a «viene» y sigue en su sitio hasta guardar, «No viene» lo deshace; al guardar, **la respuesta pasa a «sí»** —como el `volver()` del diseño; corrige el «no se reescribe» de este plan— con `host_rejoined_at` (el rastro de que el «sí» lo puso el anfitrión) y queda adoptada en su ficha o en la primera libre (nunca la de quien cumple). Sin ficha libre no entra y se dice. `PartyInvitations::rejoin()`, `rejoin[]` en el guardado de la web y de la API (1.36.0); sin JavaScript el botón ENVÍA el formulario con su id. | `AlFinalVieneTest` 9 · **arnés 29/29** (y el arnés dejó de copiar por nombre base: dos `GuestFormController.php` se pisaban) · la sonda `sonda-f3c.mjs` (volver, deshacer, guardar) y sin JavaScript. |
 
 Los packs a tres campos (`#743`·6) son DATO del panel: en local se ponen para el ojo del owner y se apuntan en el carril.
+
+### 4.9 F4 ✅ · La lista que supera la reserva y su «Sí» (`#743`·3, `[DECIDIDO owner]` `#747`, 26-09)
+
+**Lo que dice el diseño** (`PliZona3`): la lista admite más niños que plazas; la barra crece, un hueco marca dónde acababa
+la reserva y los de más van en ámbar; «Seréis 12: Vera, los 9 confirmados y 2 que añadiste. ¿Es correcto?» con «Tu reserva
+es de 10: son 2 niños más, a 16,95 € cada uno, que se pagan en el parque.»; «Sí» sube el número. «Solo pagas los niños
+que vengan». Los «no» no cuentan (`propuesto = cumple + confirmados + sin contestar`).
+
+**Medido (26-09)**: el ajuste del número YA existe (`#444`, `GuestCountAdjuster`, `CRITICAL_RE`): aforo bajo lock, el techo
+del pack, los dos suelos, y la subida escribe un `edit` en el libro que se paga en el parque (`Order::recordEdit`). El
+guardado ya ajusta el número ANTES de sanear las fichas. Lo que falta es de la LISTA: crear fichas más allá del número,
+la zona 3 viva y el «Sí».
+
+**Decidido**: el owner (`#747`, con opciones): **si se guarda con más niños que el número sin haber dicho «Sí», se PARA y
+se pregunta** (no se guarda, sube a la zona 3; ni cobro sin confirmar ni nombres perdidos). Mío, por el diseño: los estados
+salen de (número elegido, niños en la lista): menos = plazas libres; igual = «Seréis N»; más = la pregunta. Los «no» sueltos
+no cuentan (no son fichas, como en el diseño); ⚠️ pero un «no» que EMPAREJA con una ficha del anfitrión sigue siendo su
+ficha y cuenta —el emparejado es por nombre y no es seguro: su «Pablo» puede no ser el «Pablo Ortiz» que dijo que no—, así
+que lo decide él (T6·3, «nadie se quita solo»). Lo medí al revés primero y el suelo de T6·3 lo cazó. Bajar el número por
+debajo de la lista es el mismo caso: se para (el aviso de «se perderán N fichas» de `#444` se retiró). Si el aforo o el
+techo rechazan la subida, las fichas de más no se guardan a medias.
+
+**Hecho (26-09)**: la ficha PLANTILLA (`plantilla` del modelo, dentro de un `<template>`) que `lista.js` copia cuando ya no
+quedan fichas libres, con el número en plazo; la zona 3 con sus tres estados en el HTML (`data-numero-estado`) y
+repintada al teclear (el medidor, las frases, el precio de un niño más con la tarificación del ajuste, `precio_nino`); el
+«Sí» pone el número de la lista en `guest_count`; la guarda del navegador (no envía; sube, lo dice y deja el foco en «Sí») y
+la del servidor (`guest-count-unconfirmed` / `guest-count-unsaved`: no escribe nada), que no cuenta dos veces un «Al final
+viene» sobre su propia ficha (`PartyInvitations::rejoinCardsNeeded`); el borrador del móvil rehace las fichas de más. El
+ajuste del número (`CRITICAL_RE`) no se toca. **Verificación**: `GuestCountSurfacesTest` +5 (la del aviso retirado,
+re-apuntada por su sujeto) · `AlFinalVieneTest` +1 · tres pruebas re-apuntadas (`InvitationPlacesTest`, la fila de más en
+`ListaDeInvitadosTest`, la vuelta sin sitio) · arnés **36/36** · la sonda `sonda-f4.mjs` (11 para 10: ámbar, se para, «Sí»,
+guarda 11 y el libro apunta 16,95 € a pagar en el parque) y el borrador al recargar · la zona 3 «más» contra el estado
+«Con respuestas por repasar» del diseño, a ojo (no hay B de servidor: 11 fichas para 10 solo existen tecleadas) · la
+lista a 0 px en `recien` y `guardado`.
 
 ## 5. Impacto en invariantes
 

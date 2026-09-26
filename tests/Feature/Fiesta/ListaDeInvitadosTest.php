@@ -31,7 +31,8 @@ class ListaDeInvitadosTest extends TestCase
         $html = $this->actingAs($host)->get(route('reservation.guests', ['reservation' => $reservation]))->assertOk()->getContent();
 
         $this->assertStringContainsString('data-lista', $html, 'la página es la del sistema nuevo');
-        $this->assertSame(6, substr_count($html, 'data-fila="g'), 'una fila por plaza de la reserva (6)');
+        // ⚠️ `g\d`: desde F4 la página lleva además la ficha PLANTILLA (`data-fila="g__I__"`, dentro de un `<template>`).
+        $this->assertSame(6, preg_match_all('#data-fila="g\d#', $html), 'una fila por plaza de la reserva (6)');
         $this->assertStringContainsString('name="guests[0][name]"', $html, 'el formulario sigue siendo posicional');
         $this->assertStringContainsString('name="guests[5][allergy]"', $html);
         $this->assertStringContainsString('name="guest_count"', $html, 'el número viaja por su campo de siempre');

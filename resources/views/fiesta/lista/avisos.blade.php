@@ -15,9 +15,5 @@
 @if ($m['invitacion'] !== null && $m['invitacion']['descartada'])
     <x-pieza.aviso tone="success" size="sm" role="status"><x-slot:icono><x-lucide name="circle-check" :size="17" /></x-slot:icono>{{ '' }}{{ __('guestform.invite.dismissed') }}</x-pieza.aviso>
 @endif
-{{-- BAJAR INVITADOS DESTRUYE FICHAS y se dice ANTES de guardar (`#444`): lo rellena el JS con las fichas que se perderían. --}}
-@if ($m['numero']['editable'])
-    <div hidden id="pli-aviso-numero" data-tpl="{{ __('guestform.count_warn_discard', ['count' => ':count', 'discarded' => ':discarded']) }}">
-        <x-pieza.aviso tone="warn" size="sm" role="alert" :title="__('guestform.count_warn_title')"><x-slot:icono><x-lucide name="triangle-alert" :size="17" /></x-slot:icono>{{ '' }}<span data-aviso-numero-texto></span></x-pieza.aviso>
-    </div>
-@endif
+{{-- ▶ Desde F4 (§4.9, `#747`) bajar el número por debajo de la lista ya NO destruye fichas: la zona 3 pregunta «¿Es
+     correcto?» y guardar se para hasta confirmarlo (el aviso de «se perderán N fichas» de `#444` se retiró con esto). --}}

@@ -24,7 +24,6 @@ return [
     'mixed_savings_pending' => 'Votre fête revient donc :amount moins cher : la remise s’appliquera une fois tous les âges renseignés.',
     'mixed_no_difference' => 'Il n’y a aucune différence de prix entre les deux : rien de plus à régler pour cette raison.',
     'readonly_notice' => 'Cette réservation a déjà eu lieu. Le formulaire est en lecture seule : vous pouvez consulter les informations mais plus les modifier.',
-    'count_warn_title' => 'Avant d’enregistrer',
     'count_error_title' => 'Le nombre d’invités n’a pas changé',
     'saved' => 'Formulaire enregistré. Merci ! Vous pouvez le modifier à tout moment.',
     'extras_closed_cutoff' => 'Ce n’est plus modifiable',
@@ -35,7 +34,6 @@ return [
     'count_hint' => 'Vous pouvez le modifier jusqu\'au :when (maximum :max).',
     'count_closed_cutoff' => 'Le nombre d\'invités ne peut plus être modifié : le délai est dépassé.',
     'count_closed' => 'Le nombre d\'invités ne peut plus être modifié.',
-    'count_warn_discard' => 'En passant à :count invités, les données déjà saisies sur :discarded fiche seront perdues.|En passant à :count invités, les données déjà saisies sur :discarded fiches seront perdues.',
     'count_error_above_max' => 'Vos données ont été enregistrées, mais pas le nombre d\'invités : c\'est plus que ce que cet anniversaire permet. Appelez-nous.',
     'count_error_below_min' => 'Vos données ont été enregistrées, mais pas le nombre d\'invités : c\'est moins que le minimum de cet anniversaire. Appelez-nous.',
     'count_error_below_assigned' => 'Vos données ont été enregistrées, mais pas le nombre d\'invités : vous avez déjà attribué plus de places que vous ne souhaitez garder. Retirez quelqu\'un de la liste et réessayez.',
@@ -43,6 +41,8 @@ return [
     'count_error_cutoff' => 'Vos données ont été enregistrées, mais pas le nombre d\'invités : le délai pour le modifier est dépassé.',
     'count_error_closed' => 'Vos données ont été enregistrées, mais le nombre d\'invités n\'a pas pu être modifié. Appelez-nous.',
     'count_error_stale' => 'Vos données ont été enregistrées, mais pas le nombre d\'invités : la réservation a changé pendant que cette page était ouverte. Rechargez-la.',
+    'count_error_unconfirmed' => 'Rien n’a été enregistré : il y a plus d’enfants sur la liste que dans votre réservation. Confirmez le nombre dans « Le nombre final » et enregistrez à nouveau.',
+    'count_error_unsaved' => 'Rien n’a été enregistré : la liste a plus d’enfants que votre réservation et le nombre n’a pas pu augmenter. Appelez-nous et nous verrons avec vous.',
 
     // L'invitation, vue depuis la liste de l'hôte (T6, `specs/celebracion-e-invitacion.md` §4.7).
     'invite' => [

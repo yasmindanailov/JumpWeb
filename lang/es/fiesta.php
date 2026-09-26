@@ -159,6 +159,15 @@ return [
             'y_lo_vemos' => ' y lo vemos.',
             'uno_menos' => 'Uno menos',
             'uno_mas' => 'Uno más',
+            // F4 (§4.9, `#747`): la lista que supera la reserva.
+            'frase' => 'Seréis :n: :lista.',
+            'confirmados' => '{1} 1 confirmado|[2,*] los :count confirmados',
+            'anadidos' => ':count que añadiste',
+            'y' => ' y ',
+            'mas' => '{1} Tu reserva es de :plazas: es 1 niño más, a :precio, que se paga en el parque.|[2,*] Tu reserva es de :plazas: son :count niños más, a :precio cada uno, que se pagan en el parque.',
+            'mas_sin_precio' => '{1} Tu reserva es de :plazas: es 1 niño más, que se paga en el parque.|[2,*] Tu reserva es de :plazas: son :count niños más, que se pagan en el parque.',
+            'meter_mas' => ':n en la lista: :extra más que las :plazas plazas de tu reserva, sin confirmar.',
+            'confirma' => 'Antes de guardar, confirma el número: hay más niños en la lista que en tu reserva.',
         ],
         'extras' => [
             'titular' => 'Y si queréis, para redondear la fiesta',

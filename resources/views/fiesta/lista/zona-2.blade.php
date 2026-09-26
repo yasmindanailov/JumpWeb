@@ -63,6 +63,10 @@
         <p class="pli-vacia" data-lista-vacia><x-lucide name="users-round" :size="20" />{{ __('fiesta.lista.la_lista.vacia') }}</p>
     @endif
     <p class="pli-deshacer" role="status" hidden data-deshacer><span data-deshacer-texto></span><x-pieza.enlace size="sm" underline="always" data-deshacer-boton>{{ __('fiesta.lista.la_lista.deshacer') }}</x-pieza.enlace></p>
+    @if ($sumar && $m['plantilla'] !== null)
+        {{-- F4 (§4.9, `#747`): la ficha que `lista.js` copia cuando ya no quedan fichas libres, más allá del número. --}}
+        <template data-fila-plantilla>@include('fiesta.lista.fila', ['n' => $m['plantilla'], 'ultima' => false])</template>
+    @endif
     @if ($sumar)
         <div hidden data-panel="anadir"><x-fiesta.anadir-invitado id="nuevo" :defaultAge="$m['cumple']['edad']" :autoFocus="false" /></div>
         <div hidden data-panel="pegar" class="pli-pegar">

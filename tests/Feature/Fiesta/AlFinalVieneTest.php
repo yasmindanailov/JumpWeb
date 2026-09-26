@@ -139,11 +139,13 @@ class AlFinalVieneTest extends TestCase
         $this->assertTrue($no->fresh()?->attending);
         $this->assertSame('Irene Castillo', $reservation->fresh()?->guestData()[1]['name'] ?? null);
 
-        // Sin sitio: lo demás se guarda y se dice.
+        // Sin sitio (2 de 2 y uno más que vuelve): desde F4 se PARA antes de escribir nada y se pregunta por el número.
         $otro = $this->reply($reservation->fresh() ?? $reservation, $invitation, 'Pablo Gil', false);
         $this->actingAs($host)->post(route('reservation.guests.store', ['reservation' => $reservation]), [
             'guests' => [['name' => 'Mateo'], ['name' => 'Irene Castillo']], 'rejoin' => [$otro->getKey()],
-        ])->assertRedirect()->assertSessionHas('status', 'invitation-rejoin-full');
+        ])->assertRedirect()->assertSessionHas('status', 'guest-count-unconfirmed');
+        $this->assertFalse($otro->fresh()?->attending);
+        // Si aun así una vuelta no cabe (dos pestañas a la vez), se dice.
         $this->assertStringContainsString('ya no cabe nadie más', (string) $this->actingAs($host)->withSession(['status' => 'invitation-rejoin-full'])->get($lista)->getContent());
     }
 
@@ -157,6 +159,28 @@ class AlFinalVieneTest extends TestCase
         $html = (string) $this->actingAs($host)->get(route('reservation.guests', ['reservation' => $reservation]))->assertOk()->getContent();
 
         $this->assertMatchesRegularExpression('#data-indice="1".*?<button[^>]*name="rejoin\[\]"[^>]*value="'.$no->getKey().'"#s', $html, 'la ficha del «no» no ofrece «Al final viene»');
+    }
+
+    /**
+     * ⚠️ F4 (§4.9): un «no» que empareja con una ficha del anfitrión SIGUE siendo su ficha —viaja y cuenta en el número—,
+     * porque el emparejado por nombre no es seguro: su «Irene» puede no ser la «Irene Castillo» que dijo que no. Lo decide
+     * el anfitrión (T6·3, «nadie se quita solo»). Y volverla a contar no pide otra plaza: ya tiene su ficha.
+     */
+    public function test_a_no_on_a_card_keeps_its_card_and_coming_back_needs_no_new_place(): void
+    {
+        [$reservation, $invitation, $host] = $this->party(quantity: 2);
+        $reservation->submitGuestForm([['name' => 'Mateo'], ['name' => 'Irene']], null, 'account');
+        $no = $this->reply($reservation->fresh() ?? $reservation, $invitation, 'Irene Castillo', false);
+
+        $pagina = $this->actingAs($host)->get(route('reservation.guests', ['reservation' => $reservation]))->assertOk();
+        $this->assertSame(2, $pagina->viewData('m')['numero']['en_lista'], 'la ficha del «no» dejó de contar');
+        $this->assertStringContainsString('name="guests[1][name]" value="Irene"', (string) $pagina->getContent(), 'la ficha del «no» dejó de viajar');
+
+        // Con la reserva llena (2 de 2), volverla a contar cabe: no pide ficha nueva, la guarda no la cuenta dos veces.
+        $this->actingAs($host)->post(route('reservation.guests.store', ['reservation' => $reservation]), [
+            'guests' => [['name' => 'Mateo'], ['name' => 'Irene']], 'rejoin' => [$no->getKey()],
+        ])->assertRedirect()->assertSessionHas('status', 'guest-form-saved');
+        $this->assertTrue($no->fresh()?->attending, 'la vuelta sobre su propia ficha no entró');
     }
 
     /** API-first: la app lo hace con el mismo guardado (`PUT` del formulario, `rejoin`, contrato 1.36.0). */

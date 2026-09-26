@@ -13,7 +13,7 @@
 set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
-FILTER='QuienCumpleFilaTest|ModuleContractsTest|AlFinalVieneTest'
+FILTER='QuienCumpleFilaTest|ModuleContractsTest|AlFinalVieneTest|GuestCountSurfacesTest'
 RUN="docker compose exec -u sail -T laravel.test php artisan test --filter=${FILTER}"
 
 TMP="$(mktemp -d)"
@@ -32,6 +32,7 @@ FICHEROS=(
     app/Http/Controllers/GuestFormController.php
     app/Http/Controllers/Api/V1/GuestFormController.php
     resources/views/components/fiesta/fila-invitado.blade.php
+    resources/views/fiesta/lista/zona-3.blade.php
 )
 # ⚠️ La copia va por la RUTA entera, no por el nombre base: hay dos `GuestFormController.php` (la web y la API), y por el
 # nombre base el segundo pisaba al primero y la restauración escribía un controlador encima del otro.
@@ -188,6 +189,30 @@ mutar "«Al final viene» deja de ser un botón de envío (sin JavaScript no hac
 mutar "la ficha del «no» pierde el id de su respuesta" "$LDI" \
   "'no_reply_id' => \$declinada ? (int) (\$declinadas->get(\$i)['id'] ?? 0) : null," \
   "'no_reply_id' => null,"
+
+# ── 7 · La lista que supera la reserva (F4) ─────────────────────────────────────────────────────
+Z3=resources/views/fiesta/lista/zona-3.blade.php
+mutar "se guarda con más niños que el número sin «Sí» (cobro sin confirmar o nombres tirados)" "$GFW" \
+  "if (\$llenas !== null && \$llenas > (\$desiredCount ?? (int) \$reservation->quantity)) {" \
+  "if (false) {"
+mutar "con la subida rechazada, las fichas de más se guardan a medias" "$GFW" \
+  "if (! \$countChange->applied && \$llenas !== null && \$llenas > (int) \$reservation->quantity) {" \
+  "if (false) {"
+mutar "una vuelta sobre su propia ficha cuenta como plaza nueva" "$PI" \
+  "            ->filter(fn (\$childKey): bool => ! \$this->matches(\$keys, (string) \$childKey))" \
+  "            ->filter(fn (\$childKey): bool => true)"
+mutar "las vueltas sueltas no cuentan en la guarda" "$GFW" \
+  "return \$llenas + app(PartyInvitations::class)->rejoinCardsNeeded(\$reservation, \$rejoin, \$guests);" \
+  "return \$llenas;"
+mutar "la zona 3 pierde el precio de un niño más" "$LDI" \
+  "'precio_nino' => \$editable ? self::precioNino(\$reservation) : ''," \
+  "'precio_nino' => '',"
+mutar "sin plantilla no se pueden añadir niños de más" "$LDI" \
+  "'plantilla' => ((bool) \$v['guestCount']['editable'] && ! \$readonly) ? self::plantilla(\$columnas) : null," \
+  "'plantilla' => null,"
+mutar "la zona 3 enseña el estado equivocado" "$Z3" \
+  "\$estado = \$num['en_lista'] < \$num['valor'] ? 'libres'" \
+  "\$estado = \$num['en_lista'] < \$num['valor'] ? 'listo'"
 
 echo "$muerden/$total muerden"
 [[ $muerden -eq $total ]]

@@ -1070,6 +1070,39 @@ final class PartyInvitations
     }
 
     /**
+     * Cuántas de esas vueltas necesitarán una ficha NUEVA (F4, §4.9): las de un «no» pendiente de esta reserva cuyo niño
+     * no está ya en las fichas que llegan. Es lo que la guarda del guardado suma a las fichas llenas: una vuelta sobre una
+     * ficha que ya viaja no ocupa una plaza más. La misma regla de emparejado que `rejoin()`.
+     *
+     * @param  list<int>|array<int, int>  $replyIds
+     * @param  array<int, mixed>  $rows  las fichas tal y como llegan del formulario
+     */
+    public function rejoinCardsNeeded(OrderItem $reservation, array $replyIds, array $rows): int
+    {
+        $ids = array_values(array_unique(array_filter(array_map(intval(...), $replyIds), fn (int $id): bool => $id > 0)));
+        $nameKey = $reservation->ticketType?->guestNameFieldKey();
+        if ($ids === [] || $nameKey === null) {
+            return 0;
+        }
+        $keys = [];
+        foreach (TicketType::orderGuestRows($rows) as $i => $row) {
+            $name = is_array($row) ? trim((string) ($row[$nameKey] ?? '')) : '';
+            if ($name !== '' && ! ($i === OrderItem::HONOREE_ROW_INDEX && $reservation->hasHonoreeRow())) {
+                $keys[] = PersonNameKey::for($name);
+            }
+        }
+
+        return InvitationReply::query()
+            ->where('order_item_id', $reservation->getKey())
+            ->whereIn('id', $ids)
+            ->pending()
+            ->where('attending', false)
+            ->pluck('child_key')
+            ->filter(fn ($childKey): bool => ! $this->matches($keys, (string) $childKey))
+            ->count();
+    }
+
+    /**
      * «No lo apuntes» (§7.2·R11): el anfitrión quita una respuesta de su lista.
      *
      * ❗❗ **Sin esto, V4 deja al anfitrión ATRAPADO.** Desde `#576` un «sí» pendiente es una plaza con

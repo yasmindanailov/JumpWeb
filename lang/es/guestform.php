@@ -37,7 +37,6 @@ return [
     'mixed_no_difference' => 'No hay diferencia de precio entre los dos: no tienes nada que abonar por este motivo.',
     'readonly_notice' => 'Esta reserva ya se ha celebrado. El formulario es de solo lectura: puedes consultar los datos pero ya no editarlos.',
     // La receta del aviso pide TÍTULO. El de error sirve para los cinco rechazos: cuentan lo mismo y solo cambian de remedio.
-    'count_warn_title' => 'Antes de guardar',
     'count_error_title' => 'Los invitados no se han cambiado',
     'saved' => 'Formulario guardado. ¡Gracias! Puedes volver a editarlo cuando quieras.',
     // Los EXTRAS de venta posterior (`specs/complementos-post-reserva.md`, `#413`): lo que se
@@ -55,7 +54,6 @@ return [
     'count_closed' => 'El número de invitados ya no se puede cambiar.',
     // ⚠️ La pinta el JS de la lista (`resources/js/fiesta/lista.js`, con `choice()` de `logica.js`): `trans_choice` no
     // existe en el navegador, y la forma «uno|varios» la resuelve él por las fichas que se pierden.
-    'count_warn_discard' => 'Al bajar a :count invitados se perderán los datos ya rellenados de :discarded ficha.|Al bajar a :count invitados se perderán los datos ya rellenados de :discarded fichas.',
     'count_error_above_max' => 'Tus datos se han guardado, pero el número de invitados no: es más de lo que admite este cumpleaños. Llámanos y lo vemos contigo.',
     'count_error_below_min' => 'Tus datos se han guardado, pero el número de invitados no: es menos del mínimo de este cumpleaños. Llámanos y lo vemos contigo.',
     'count_error_below_assigned' => 'Tus datos se han guardado, pero el número de invitados no: ya has asignado más plazas de las que quieres dejar. Quita a alguien de la lista y vuelve a intentarlo.',
@@ -63,6 +61,9 @@ return [
     'count_error_cutoff' => 'Tus datos se han guardado, pero el número de invitados no: ha pasado el plazo para cambiarlo.',
     'count_error_closed' => 'Tus datos se han guardado, pero el número de invitados no se ha podido cambiar. Llámanos y lo vemos contigo.',
     'count_error_stale' => 'Tus datos se han guardado, pero el número de invitados no: la reserva ha cambiado mientras tenías esta página abierta. Vuelve a cargarla.',
+    // F4 (`fiesta-sistema-nuevo.md` §4.9, `#747`): con más niños en la lista que el número, NO se guarda nada.
+    'count_error_unconfirmed' => 'No hemos guardado nada: en la lista hay más niños que en tu reserva. Confirma el número en «El número final» y vuelve a guardar.',
+    'count_error_unsaved' => 'No hemos guardado nada: la lista tiene más niños que tu reserva y el número no ha podido subir. Llámanos y lo vemos contigo.',
 
     // ── LA INVITACIÓN, vista desde la lista del anfitrión (T6, `specs/celebracion-e-invitacion.md` §4.7) ──
     // ⚠️ Lo que lee un DESCONOCIDO en la página pública vive en `fiesta.php` (`invitacion_pagina`); aquí solo
