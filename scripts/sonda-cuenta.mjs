@@ -25,7 +25,14 @@
  *      dos hijos con la fecha tecleada, sus relaciones y la casilla (y el descargo leído); «Guardado»; sus chips con
  *      «firmado» y «Todo listo»; la ficha de uno, con su firma y su PDF, y quitarlo tras preguntar; y la puerta
  *      `/mi-cuenta/hijos`;
- *   10. la consola queda limpia y ninguna respuesta de la API falla.
+ *   10. LOS AJUSTES (T5e, `DECISIONES #778`): los cuatro plegables cerrados y «Cerrar sesión»; «Tus datos» con los de la
+ *      cuenta, «Guardar los cambios» solo al cambiar algo (se guarda y se deja como estaba); el correo nuevo que se pide
+ *      con la contraseña y se cancela; la contraseña (una que no es, bajo su campo; la buena, de vuelta a Mi cuenta con
+ *      «Acceso» abierto); cerrar las otras sesiones; un interruptor ida y vuelta, sin contraseña; el PDF del descargo;
+ *      «Descargar mis datos» que DESCARGA; borrar la cuenta con una reserva por celebrar (lo dice, sin botón) y sin ella
+ *      (la contraseña, la casilla y el botón, que no se pulsa); los recibos del libro; `#mi-cuenta/privacidad`; y, al
+ *      final, «Cerrar sesión», que sale a la portada sin sesión;
+ *   11. la consola queda limpia y ninguna respuesta de la API falla (salvo el «no» buscado de la contraseña).
  * Sale con 1 si algo falla. Dentro del contenedor, contra su puerto 80, con la cuenta de pruebas de `sonda-isla.mjs`:
  *
  *   docker compose exec -u sail -T -e PLAYWRIGHT_BROWSERS_PATH=/home/sail/pw-browsers laravel.test \
@@ -67,13 +74,16 @@ async function recorrer(navegador, ventana, informe) {
     // ⚠️ Dos «no» del servidor son de esperar, y el navegador los apunta en la consola sin su URL (se descuentan por
     // cuenta): los 401 de `/me` sin sesión (el motor pregunta quién es al abrir) y el 404 de `/auth/google/pending` en su
     // puerta, que ES el desenlace «no hay ningún alta esperando» (`account/google.js`, el mismo del cajón).
-    const esperados = { 401: 0, 404: 0 };
+    // Y uno más, buscado (T5e): el 422 de «Cambiar la contraseña» con una actual que no es.
+    const esperados = { 401: 0, 404: 0, 422: 0 };
+    let buscar422 = 0;
     pagina.on('pageerror', (e) => errores.push(e.message));
     pagina.on('console', (m) => { if (m.type() === 'error') errores.push(m.text()); });
     pagina.on('response', (r) => {
         const ruta = new URL(r.url()).pathname;
         if (r.status() === 401 && /\/api\/v1\/me(\/[a-z-]+)?$/.test(ruta)) esperados[401] += 1;
         else if (r.status() === 404 && ruta === '/api/v1/auth/google/pending') esperados[404] += 1;
+        else if (r.status() === 422 && ruta === '/api/v1/me/password' && buscar422 > 0) { buscar422 -= 1; esperados[422] += 1; }
         else if (r.status() >= 400 && ruta.startsWith('/api/')) malas.push(`${r.status()} ${r.request().method()} ${ruta}`);
     });
 
@@ -176,7 +186,8 @@ async function recorrer(navegador, ventana, informe) {
     check('desde Mi cuenta, la flecha de Tu QR vuelve a Mi cuenta', (await banda()) === 'Mi cuenta');
 
     // ── 4 · La X y Mi QR del menú ────────────────────────────────────────────────────────────────────
-    await capa().getByRole('button', { name: 'Cerrar' }).click();
+    // `exact`: desde la T5e, Ajustes trae «Cerrar sesión» y «Cerrar sesión en otros dispositivos» (su «Cerrar»).
+    await capa().getByRole('button', { name: 'Cerrar', exact: true }).click();
     await pagina.waitForTimeout(500);
     check('la X cierra la capa y la dirección pierde `#mi-cuenta`', ! (await capa().isVisible().catch(() => false)) && ! pagina.url().includes('#'), pagina.url());
     await abrirMenu();
@@ -458,10 +469,162 @@ async function recorrer(navegador, ventana, informe) {
     await pagina.waitForTimeout(600);
     check('la puerta `/mi-cuenta/hijos` abre «Añade a tus hijos» en la isla, no el lateral', (await banda()) === 'Añade a tus hijos' && ! (await lateralAbierto()), await banda());
 
-    // ── 10 · Limpio ──────────────────────────────────────────────────────────────────────────────────
+    // ── 10 · Ajustes (T5e) ───────────────────────────────────────────────────────────────────────────
+    // Con el Jump y el cumpleaños como reservas (el Jump, la próxima: impide borrar la cuenta). Lo que se cambia, se deja
+    // como estaba; el correo nuevo se pide y se cancela; la contraseña se «cambia» a la misma.
+    datos('montar');
+    limitadoresACero();
+    const deLaSonda = (campo) => tinker(`echo App\\Domain\\Identity\\Models\\User::where('email', '${CLIENTE.email}')->value('${campo}');`);
+    await cargar('/kids#mi-cuenta');
+    const ajustes = capa().locator('#ajustes');
+    await ajustes.waitFor({ timeout: 15000 }).catch(() => {});
+    await ajustes.scrollIntoViewIfNeeded().catch(() => {});
+    const plegable = (nombre) => ajustes.getByRole('button', { name: nombre, exact: true });
+    const abiertos = async () => Promise.all(['Tus datos', 'Acceso', 'Privacidad', 'Recibos'].map((n) => plegable(n).getAttribute('aria-expanded').catch(() => null)));
+    check('«Ajustes» al final: Tus datos, Acceso, Privacidad y Recibos, plegados, y «Cerrar sesión»',
+        (await abiertos()).join() === 'false,false,false,false' && await ajustes.getByRole('button', { name: 'Cerrar sesión', exact: true }).isVisible(), (await abiertos()).join());
+    await captura('18-ajustes');
+
+    await plegable('Tus datos').click();
+    const nombreAj = capa().locator('#mc-aj-nombre');
+    const telefonoAj = capa().locator('#mc-aj-telefono');
+    await nombreAj.waitFor({ timeout: 8000 }).catch(() => {});
+    const telefonoDeAntes = await telefonoAj.inputValue().catch(() => '');
+    const idiomas = await capa().locator('#mc-aj-idioma option').evaluateAll((os) => os.map((o) => o.value)).catch(() => []);
+    check('«Tus datos», con los de la cuenta y los idiomas de la instalación (no los dos del mockup)',
+        (await nombreAj.inputValue()).startsWith(CLIENTE.nombre) && telefonoDeAntes === deLaSonda('phone') && idiomas.join() === 'es,en,fr', `${await nombreAj.inputValue()} · ${telefonoDeAntes} · ${idiomas}`);
+    const guardarCambios = capa().getByRole('button', { name: 'Guardar los cambios' });
+    check('sin cambios, no hay «Guardar los cambios»', ! (await guardarCambios.isVisible().catch(() => false)));
+    const telefonoNuevo = `${telefonoDeAntes.slice(0, -1)}${telefonoDeAntes.endsWith('9') ? '8' : '9'}`;
+    await telefonoAj.fill(telefonoNuevo);
+    check('al cambiar algo, sale', await guardarCambios.isVisible());
+    await guardarCambios.click();
+    await pagina.waitForTimeout(1000);
+    check('«Guardar los cambios» lo guarda en el servidor y lo confirma arriba', deLaSonda('phone') === telefonoNuevo && await capa().getByText('Guardado', { exact: true }).first().isVisible(), deLaSonda('phone'));
+    await telefonoAj.fill(telefonoDeAntes);
+    await guardarCambios.click();
+    await pagina.waitForTimeout(1000);
+    check('y se deja como estaba', deLaSonda('phone') === telefonoDeAntes);
+
+    await ajustes.getByRole('button', { name: 'Cambiar el correo', exact: true }).click();
+    await pagina.waitForTimeout(500);
+    check('«Cambiar» del correo abre su paso, con la contraseña (la pide el servidor)', (await banda()) === 'Correo' && await capa().locator('#mc-correo-clave').isVisible(), await banda());
+    await capa().locator('#mc-correo-nuevo').fill(CLIENTE.email);
+    await capa().locator('#mc-correo-clave').fill(CLIENTE.password);
+    await capa().getByRole('button', { name: 'Enviar el enlace' }).click();
+    await pagina.waitForTimeout(300);
+    check('el mismo correo se dice antes de preguntar', await capa().getByText('Es el correo que ya tienes.').isVisible());
+    await capa().locator('#mc-correo-nuevo').fill('probe-card-nuevo@jumpweb.test');
+    await capa().getByRole('button', { name: 'Enviar el enlace' }).click();
+    await capa().getByText(/Te hemos enviado un enlace a probe-card-nuevo/).first().waitFor({ timeout: 8000 }).catch(() => {});
+    t = await texto(capa());
+    check('con la contraseña, lo pide: a dónde, con cuál se sigue entrando y cuánto le queda',
+        /Te hemos enviado un enlace a probe-card-nuevo@jumpweb\.test\. Hasta que lo abras, sigues entrando con probe-card@jumpweb\.test\. El enlace caduca en (59|60) min\./.test(t) && deLaSonda('pending_email') === 'probe-card-nuevo@jumpweb.test', t.slice(0, 260));
+    await captura('19-correo');
+    await capa().getByRole('button', { name: 'Cancelar el cambio' }).click();
+    await pagina.waitForTimeout(900);
+    check('«Cancelar el cambio» lo cancela y lo dice', await capa().getByText('Cambio de correo cancelado').isVisible() && deLaSonda('pending_email') === '');
+    await volver();
+    check('su flecha vuelve a Mi cuenta con «Tus datos» abierto', (await banda()) === 'Mi cuenta' && (await plegable('Tus datos').getAttribute('aria-expanded')) === 'true');
+
+    await plegable('Acceso').click();
+    await pagina.waitForTimeout(300);
+    check('«Acceso»: la contraseña, «Vincular Google» (aquí se ofrece) y cerrar las otras sesiones; sin Apple',
+        await ajustes.getByText('Vincular Google').isVisible() && await ajustes.getByText('Cerrar sesión en otros dispositivos').isVisible() && ! (await ajustes.getByText(/Apple/).count()));
+    await ajustes.getByRole('button', { name: 'Cambiar la contraseña' }).click();
+    await pagina.waitForTimeout(500);
+    check('«Cambiar la contraseña» abre su paso, con la salida de quien entró con Google', (await banda()) === 'Cambiar la contraseña' && await capa().getByText(/entraste con Google y no tienes/).isVisible());
+    await capa().locator('#mc-clave-actual').fill('No-es-esta-2026');
+    await capa().locator('#mc-clave-nueva').fill(CLIENTE.password);
+    buscar422 = 1;
+    await capa().getByRole('button', { name: 'Guardar la contraseña' }).click();
+    await pagina.waitForTimeout(1000);
+    check('una actual que no es: el «no» del servidor, bajo su campo', (await capa().locator('#mc-clave-actual').getAttribute('aria-invalid')) === 'true' && (await banda()) === 'Cambiar la contraseña', (await texto(capa())).slice(0, 200));
+    await captura('20-clave');
+    await capa().locator('#mc-clave-actual').fill(CLIENTE.password);
+    await capa().getByRole('button', { name: 'Guardar la contraseña' }).click();
+    await pagina.waitForTimeout(1200);
+    check('con la buena, la guarda, vuelve a Mi cuenta —con «Acceso» abierto— y lo dice arriba',
+        (await banda()) === 'Mi cuenta' && await capa().getByText('Contraseña guardada').isVisible() && (await plegable('Acceso').getAttribute('aria-expanded')) === 'true', await banda());
+
+    await ajustes.getByRole('button', { name: 'Cerrar sesión en otros dispositivos', exact: true }).click();
+    await pagina.waitForTimeout(500);
+    check('«Cerrar» abre «Cerrar sesión en otros dispositivos», que pide la contraseña', (await banda()) === 'Cerrar sesión en otros dispositivos' && await capa().locator('#mc-otras-clave').isVisible(), await banda());
+    await capa().locator('#mc-otras-clave').fill(CLIENTE.password);
+    await capa().getByRole('button', { name: 'Cerrar las otras sesiones' }).click();
+    await pagina.waitForTimeout(1200);
+    check('las cierra y lo dice arriba; esta sesión sigue', (await banda()) === 'Mi cuenta' && await capa().getByText('Hemos cerrado la sesión en tus otros dispositivos').isVisible());
+
+    await plegable('Privacidad').click();
+    const encuesta = capa().locator('#mc-aj-encuestas');
+    await encuesta.waitFor({ state: 'attached', timeout: 8000 }).catch(() => {});
+    await pagina.waitForTimeout(300);
+    const enServidor = { novedades: deLaSonda('marketing_opt_in') === '1', analitica: deLaSonda('analytics_opt_out') !== '1', encuestas: deLaSonda('surveys_opt_out') !== '1' };
+    check('«Privacidad»: novedades, la navegación y la encuesta, como las tiene el servidor',
+        (await capa().locator('#mc-aj-novedades').isChecked()) === enServidor.novedades && (await capa().locator('#mc-aj-analitica').isChecked()) === enServidor.analitica && (await encuesta.isChecked()) === enServidor.encuestas, JSON.stringify(enServidor));
+    await capa().locator('label[for="mc-aj-encuestas"]').click();
+    await pagina.waitForTimeout(1000);
+    check('un interruptor se aplica al momento, sin contraseña, y lo confirma', (deLaSonda('surveys_opt_out') === '1') === enServidor.encuestas && await capa().getByText('Guardado', { exact: true }).first().isVisible());
+    await capa().locator('label[for="mc-aj-encuestas"]').click();
+    await pagina.waitForTimeout(1000);
+    check('y se deja como estaba', (deLaSonda('surveys_opt_out') !== '1') === enServidor.encuestas);
+    t = await texto(ajustes);
+    const pdf = await ajustes.getByRole('link', { name: 'Descargar tu descargo firmado' }).getAttribute('href').catch(() => '');
+    check('«Tu descargo firmado»: cuándo, qué versión y su PDF', /Tu descargo firmado Firmado el \d{2}\/\d{2}\/\d{4} · versión \d+/.test(t) && /\/api\/v1\/me\/waiver\/\d+\/pdf$/.test(pdf ?? ''), `${pdf} · ${t.slice(0, 160)}`);
+    const [bajada] = await Promise.all([
+        pagina.waitForEvent('download', { timeout: 10000 }).catch(() => null),
+        ajustes.getByRole('button', { name: 'Descargar mis datos', exact: true }).click(),
+    ]);
+    await pagina.waitForTimeout(500);
+    check('«Descargar mis datos» DESCARGA el documento y lo dice', /^mis-datos-\d{4}-\d{2}-\d{2}\.json$/.test(bajada?.suggestedFilename() ?? '') && await capa().getByText('Tus datos: descargado').isVisible(), bajada?.suggestedFilename() ?? 'sin descarga');
+    await captura('21-privacidad');
+
+    await ajustes.getByRole('button', { name: 'Borrar mi cuenta' }).click();
+    await pagina.waitForTimeout(600);
+    t = await texto(capa());
+    check('«Borrar mi cuenta» con una reserva por celebrar: lo dice, y sin un botón que solo puede fallar',
+        (await banda()) === 'Borrar tu cuenta' && /Tienes una reserva el \S+ \d+ a las 11:30\. Mientras tengas una por celebrar, la cuenta no se puede borrar/.test(t) && ! (await capa().getByRole('button', { name: 'Borrar mi cuenta' }).isVisible().catch(() => false)), t.slice(0, 320));
+    await captura('22-borrar-con-reserva');
+    await capa().getByRole('button', { name: 'Dejarlo como está' }).click();
+    await pagina.waitForTimeout(500);
+    check('«Dejarlo como está» vuelve a Mi cuenta', (await banda()) === 'Mi cuenta');
+
+    await plegable('Recibos').click();
+    await pagina.waitForTimeout(1200);
+    t = await texto(ajustes);
+    check('«Recibos»: el de cada pedido con cuándo, qué y su número, sus líneas del libro y su total (con señal, lo del parque)',
+        /[a-zé]{3} \d{1,2} [a-z]{3} · Jump [^€]* · Nº R-SNDCJUMP Pagado online 28\s?€ Total 28\s?€/.test(t)
+            && /· Nº R-SNDCCUMPLE Pagado online 50\s?€ A pagar en el parque el día de la visita 119,50\s?€ Total 169,50\s?€/.test(t), t.slice(0, 520));
+    await captura('23-recibos');
+
+    // Sin reservas por celebrar, borrar ofrece su formulario; y `#mi-cuenta/privacidad` abre Mi cuenta con ese plegable.
+    datos('borrar');
+    await cargar('/kids#mi-cuenta/privacidad');
+    await ajustes.waitFor({ timeout: 15000 }).catch(() => {});
+    await pagina.waitForTimeout(900);
+    check('`#mi-cuenta/privacidad` abre Mi cuenta con «Privacidad» abierto', (await plegable('Privacidad').getAttribute('aria-expanded')) === 'true' && (await plegable('Acceso').getAttribute('aria-expanded')) === 'false');
+    await ajustes.getByRole('button', { name: 'Borrar mi cuenta' }).click();
+    await pagina.waitForTimeout(600);
+    const borrarBoton = capa().getByRole('button', { name: 'Borrar mi cuenta' });
+    check('sin reservas: la contraseña, «Entiendo…» y el botón en el contenido, apagado hasta marcarla (no naranja: sin acción en la isla)',
+        await capa().locator('#mc-borrar-clave').isVisible() && await borrarBoton.isDisabled() && (await banda()) === 'Borrar tu cuenta');
+    await capa().getByText('Entiendo que no se puede deshacer.').click();
+    check('marcada, se enciende (aquí no se pulsa)', await borrarBoton.isEnabled());
+    await captura('24-borrar');
+    await volver();
+
+    await ajustes.getByRole('button', { name: 'Cerrar sesión', exact: true }).click();
+    await pagina.waitForURL((u) => new URL(u).pathname === '/', { timeout: 15000 }).catch(() => {});
+    await pagina.waitForLoadState('load');
+    await pagina.goto(`${base}/kids`, { waitUntil: 'load' });
+    await pagina.waitForTimeout(600);
+    await abrirMenu();
+    check('«Cerrar sesión» sale a la portada, y la página ya no tiene sesión', await pagina.getByText('Entrar o crear cuenta').first().isVisible(), pagina.url());
+
+    // ── 11 · Limpio ──────────────────────────────────────────────────────────────────────────────────
     const deCodigo = (codigo) => errores.filter((e) => e.includes(`status of ${codigo}`));
-    const inesperados = errores.filter((e) => ! /status of (401|404)/.test(e))
-        .concat(deCodigo(401).slice(esperados[401]), deCodigo(404).slice(esperados[404]));
+    const inesperados = errores.filter((e) => ! /status of (401|404|422)/.test(e))
+        .concat(deCodigo(401).slice(esperados[401]), deCodigo(404).slice(esperados[404]), deCodigo(422).slice(esperados[422]));
     check('consola limpia', inesperados.length === 0, inesperados.join(' | '));
     check('ninguna respuesta de la API falla', malas.length === 0, malas.join(', '));
 }

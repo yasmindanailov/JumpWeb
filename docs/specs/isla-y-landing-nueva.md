@@ -1310,7 +1310,7 @@ piezas del sistema**, enseñado en vivo antes de cerrar.
 - **T5c · Antes de venir**: el censo de las tareas y sus plazos, lo que haya que publicar, el chip y el punto de la isla.
 - **T5d · Quién viene contigo y Añadir a tus hijos**, con (a) y (b): `DependentRegistry` es del `CRITICAL_RE`
   (`VERIFY_CONC=1`) y el formulario del cajón es del SPA (aviso).
-- **T5e · Ajustes y Cerrar sesión**, con (d).
+- **T5e · Ajustes y Cerrar sesión**, con (d): en dos, **T5e·1** los Ajustes y **T5e·2** los avisos de la cuenta.
 - **T5f · lo que queda**: Reservar otra vez, la bienvenida de la cuenta nueva, sin conexión, los bloques protegidos,
   la verificación final y la sonda (`scripts/sonda-cuenta.mjs` crece).
 - ▶ **T5a ✅ (26-09, `#774`)**. **La capa**: con la isla, TODO se abre en ella (`carcasa.js::superficieDe`), y el
@@ -1403,6 +1403,31 @@ piezas del sistema**, enseñado en vivo antes de cerrar.
   141** a 1280 y 390. **El peso**: Mi cuenta 79,96 → 95,43 KiB (techo 97); el motor 296,99 → 297,09 (techo 298: sus
   exportaciones a Mi cuenta). ⚠️ **Pendiente (T5e)**: los avisos de la cuenta que pinta el índice del cajón —confirmar el
   correo, el aviso de la analítica (`#678` T3a·4), la firma del titular— aún no salen en Mi cuenta de la isla.
+- ▶ **T5e·1 ✅ (26-09, `#778`) · Ajustes y Cerrar sesión**. **El bloque** (`cuenta/BloqueAjustes.vue`; lo que decide,
+  `cuenta/ajustes.js`, puro; lo que pide y hace, `useAjustesCuenta.js`): los cuatro plegables del mockup —el acordeón y el
+  desplegable del sistema, portados (`ui/AcordeonSistema.vue`, CONTROLADO: sus abiertos se conservan al ir a un paso y
+  volver; `inert` en lo plegado; `ui/SelectorSistema.vue`)— y «Cerrar sesión» (`account/sign-out.js` del motor). **Tus
+  datos**: nombre, teléfono e idioma (los TRES de la instalación, «en el que te escribimos»: el idioma de la cuenta es el de
+  los correos, no el de la web), «Guardar los cambios» solo con algo cambiado, y la fila del correo con su cambio
+  pendiente. **Acceso**: «Cambiar la contraseña», Google (vinculado, con «Desvincular»; o «Vincular», que va al servidor y
+  vuelve a `#mi-cuenta/acceso`) y cerrar las otras sesiones. **Privacidad**: «Novedades», la navegación y la encuesta
+  (interruptores al momento, sin contraseña), «Tu descargo firmado» (su fecha, su versión y su PDF; sin firma o de otra
+  versión, «Firmar»), «Descargar mis datos» y «Borrar mi cuenta». **Recibos**: el libro de cada pedido con dinero movido
+  (las líneas de DINERO con los rótulos del servidor, el saldo del parque y el TOTAL, que el mockup dejaba vacío), de diez
+  en diez. **Los pasos** (`CuentaAjuste.vue`, su trozo): la contraseña, el correo (con su desenlace: reenviar, cancelar),
+  las otras sesiones, desvincular Google, TU descargo (casilla y «Leer el descargo», el gesto de la ficha de un hijo) y
+  borrar. **Lo que decide la verdad** (el detalle, en `#778`): la contraseña actual donde la exige el servidor, con la salida
+  para quien entró con Google bajo cada campo (`CampoClaveActual.vue`); con una reserva por celebrar, borrar lo dice y no
+  ofrece botón; lo destructivo, en el contenido y nunca en la acción naranja. **Las zonas del cajón** que eran pantallas de
+  Ajustes (`profile`, `password`, `sessions`, `privacy`) y `#mi-cuenta/<plegable>` abren Mi cuenta con ese plegable
+  (`vistaDeApertura`). **Accesibilidad**: los enlaces cortos de las filas («Cambiar», «Cerrar», «Descargar») llevan su
+  nombre entero (en la capa hay otra X «Cerrar» y dos «Descargar»; WCAG 2.5.3). **Medido**: `node --test` 1.400 → 1.430
+  (`ajustes.test.js` 24, `vista.test.js` +6); **en vivo**, la sonda con su paso de Ajustes: **199 de 199** a 1280 y 390
+  (cazó un manejador que no llegaba a ejecutarse en los pasos); `SidebarBundleBudgetTest` +1 guarda (Ajustes, trozo propio;
+  un mutante muerto). **El peso**: Mi cuenta 95,43 → 101,34 KiB (techo 103): Ajustes va ENTERO en su trozo, con su lógica
+  en un `effectScope` (26,92 al pintar el inicio, techo 28; sus pasos, 6,18) —dentro medía 126,22—; el motor, 297,09 →
+  297,28 (sus exportaciones). ▶ **Sigue la T5e·2**: los avisos de la cuenta (arriba), y los `status` del servidor que las
+  páginas nuevas no pintan (la vuelta de Google, entre ellas la de «Vincular»).
 
 ## 5. Impacto en invariantes
 

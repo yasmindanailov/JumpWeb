@@ -3,9 +3,9 @@
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 EN CURSO** (su centena,
-> `decisiones/700-799.md`) · Último usado: **`#777`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#777`) · Actualizado: **2026-09-26**
-> (la T5, Mi cuenta en la isla: plan `#773`; T5a→T5d hechas, `#774`→`#777`).
+> `decisiones/700-799.md`) · Último usado: **`#778`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#778`) · Actualizado: **2026-09-26**
+> (la T5, Mi cuenta en la isla: plan `#773`; T5a→T5e·1 hechas, `#774`→`#778`).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
 > llévaselo con la medida, como el SPA en `#724`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -42,12 +42,13 @@
 ## Por dónde retomar, en orden
 
 ▶▶ **EN MARCHA (26-09): T5 · Mi cuenta en la isla** (spec §4.13, `#773`: el censo, las cuatro respuestas del owner y
-el plan T5a→T5f; dentro de la v2). **T5a ✅** (`#774`: la capa, las puertas, Tu QR, Entra), **T5b ✅** (`#775`: las
-reservas), **T5c ✅** (`#776`: Antes de venir, el punto de la isla) y **T5d ✅** (`#777`: los hijos; contrato 1.38.0;
-`scripts/sonda-cuenta.mjs` 141/141 con `sonda-cuenta-datos.php`). Sigue la **T5e**, Ajustes y Cerrar sesión, ❗ con
-los AVISOS de la cuenta que la isla aún no pinta (confirmar el correo, el aviso de la analítica, la firma del titular).
+el plan T5a→T5f; dentro de la v2). **T5a→T5d ✅** (`#774`→`#777`: la capa, las reservas, Antes de venir, los hijos;
+contrato 1.38.0) y **T5e·1 ✅** (`#778`: Ajustes y Cerrar sesión; `scripts/sonda-cuenta.mjs` 199/199 con
+`sonda-cuenta-datos.php`). Sigue la **T5e·2**: los AVISOS de la cuenta que la isla aún no pinta (confirmar el correo, el
+de la analítica, la firma del titular) y los `status` del servidor que las páginas nuevas pierden (la vuelta de Google).
 ⚠️ En PRODUCCIÓN, el owner pone en el panel el aviso de los calcetines y «se devuelve la señal» de los packs (en LOCAL,
-puestos). ⚠️ La sonda RENUEVA el carné de `probe-card@` y le declara y quita hijos (con firma: desvinculados).
+puestos). ⚠️ La sonda RENUEVA el carné de `probe-card@`, le declara y quita hijos, y cambia y DESHACE datos de su
+cuenta (teléfono, encuesta, un correo pendiente; la contraseña, a la misma).
 ▶ **HECHO (25/26-09)**: la **T4** (spec §4.12; banco de la isla 60/60; `#768`: sin bancos por tanda) y el encargo del
 owner del 25-09 —promociones 🟦 T1 (`promociones.md` §8; en LOCAL, dos ofertas de muestra), el play de los vídeos 🟦
 (falta el MATERIAL; en LOCAL, una muestra WebM) y las reseñas 🟦 (`#771`, `#772`: 18 publicadas, Places retirado;
@@ -91,14 +92,9 @@ FIESTA, del SPA (`#765`). ⚠️ BD LOCAL con los valores de `#699`/`#761`; en P
    las páginas en **Blade dentro de la instancia** · `#682` la **isla**, segunda carcasa del producto, apagada
    por defecto · `#683` Kids y Jump primero, Lucide, pasos compartidos; Bizum, Apple y el aviso en la v2.0.0 ·
    `#684` promociones (modelo a iterar) · `#688` la compra guarda la hora **al pagar** y dice «Esta cuenta ya
-   existe» **al enviar**. ✅ T0 (§1.6) · ✅ T1 (§4.8: 82/82 páginas y 84 iconos a 0 px) · ✅ T2 (§4.9: la isla,
-   52/52 a 0 px, `CE-6` sin excepción; en/fr de `lang/*/isla.php` a revisar por el owner). ▶ **`#697`** (24-09
-   noche): el zip nuevo (la fiesta, Mi cuenta, correos) entra por `diseno/actualizar.py`; la isla vuelve a 0 px con
-   el selector de plan rehecho (54/54, piezas 18/18); el censo de la fiesta, en §4.11. El zip es la ÚNICA fuente,
-   sin contraste con el vivo (`#760`: la cuenta de Claude Design es otra); `actualizar.py` rechaza uno más viejo.
-   ▶▶ **T3, la compra ✅** (§4.10; la historia de cada tanda vive allí): T3a→T3d (`#689`→`#691`) → T3e (`#692`): `#693`
-   la carcasa elegible · `#694` la isla compra hasta el banco · `#695` «Entra» y Google · `#696` los cumpleaños con
-   señal · `#698` la hora que se llena al pagar y la sonda. Queda: la sonda en STAGING, con el ensayo de la v2.0.0.
+   existe» **al enviar**. ✅ T0→T2 (§1.6, §4.8, §4.9; el en/fr de `lang/*/isla.php`, a revisar por el owner). ▶ `#697`:
+   el zip entra por `diseno/actualizar.py` (rechaza uno más viejo) y es la ÚNICA fuente (`#760`); su censo, §4.11.
+   ▶▶ **T3, la compra ✅** (§4.10, `#689`→`#698`: cada tanda, allí). Queda: la sonda en STAGING, con el ensayo de la v2.0.0.
    Probar la isla: `sidebar.shell = isla` en local, **`scripts/sonda-isla.mjs [390|1280]`** (monta y borra su página;
    19/19), `public/_isla-prueba.html` para el ojo (se BORRA antes de desplegar: guarda 9) y el banco
    `scripts/banco-compra.php` (52/54: «entrar» difiere por `#695`; se juzga CON `--rehacer`); tras una prueba
@@ -225,6 +221,9 @@ dueño es el carril de la web/reseñas—) ·
 - `#773`: Mi cuenta en la isla (spec `isla-y-landing-nueva.md` §4.13: cada tanda dice lo tocado). De lo tuyo:
   `Sidebar.vue` (+3 líneas: con la isla monta `isla/SeccionCuenta.vue`) y `carcasa.js::superficieDe`; tus stores y
   `account/*.js`, leídos sin tocar. Contratos míos: 1.33.0 (T5a) y 1.34.0 (T5b).
+- ▶ **T5e·1 (`#778`)**, HECHA: Mi cuenta usa SIN tocarlos tus stores `profile`, `credentials`, `privacy`, `waiver` y
+  `auth` (el olvido), y `account/{sign-out,form-outcome,profile,waiver}.js`: si cambian de forma, avísame. El motor los
+  exporta a mi trozo: 297,09 → 297,28 (techo 298, intacto). Sin contrato nuevo.
 - ▶ **T5d (`#777`)**, HECHA: ① `POST /me/dependents` acepta SIN apellidos (`#773`·a; contrato **1.38.0**, mío: el
   siguiente, tuyo); tu `DependentsZone` decide si los sigue pidiendo. ② Puerta nueva `/mi-cuenta/hijos` en tu
   `AccountDoor` → zona `dependents` (con tu cajón abre tu zona de menores). ③ Uso SIN tocarlos tu store de menores,

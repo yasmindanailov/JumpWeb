@@ -4,8 +4,8 @@
  * tres segundos —«Hola, Ana», la próxima en una línea (baja a su bloque) y, con tareas, «Siguiente: …» (baja a Antes de
  * venir, T5c)—; después los bloques en su orden. **Tu QR**: compacto, con «Enseñar mi QR» (`PmcQrMini`), o grande de
  * entrada si la reserva es HOY, que es lo que va a hacer (T5b). **Tu próxima reserva**, **Antes de venir** (T5c) y
- * **Otras reservas** con su historial (T5b) y **Quién viene contigo** (T5d). Reservar otra vez y los Ajustes se suman
- * aquí en las tandas que los traen.
+ * **Otras reservas** con su historial (T5b), **Quién viene contigo** (T5d) y los **Ajustes** plegados con «Cerrar
+ * sesión» (T5e). Reservar otra vez se suma aquí en la T5f.
  *
  * Pinta y avisa: qué se enseña lo decide `useSeccionCuenta.js` (y `reservas.js`).
  */
@@ -16,6 +16,7 @@ import BloqueQr from './BloqueQr.vue';
 import BloqueReserva from './BloqueReserva.vue';
 import BloqueAntes from './BloqueAntes.vue';
 import BloqueOtras from './BloqueOtras.vue';
+import { defineAsyncComponent } from 'vue';
 import BloqueQuien from './BloqueQuien.vue';
 import IconoLucide from '../ui/IconoLucide.vue';
 import BotonSistema from '../ui/BotonSistema.vue';
@@ -27,6 +28,7 @@ defineProps({
     linea: { type: String, default: '' },
     qr: { type: Object, required: true },
     aviso: { type: String, default: '' },
+    avisoTono: { type: String, default: 'success' },
     hoy: { type: Boolean, default: false },
     renovar: { type: Boolean, default: false },
     renovando: { type: Boolean, default: false },
@@ -37,9 +39,18 @@ defineProps({
     chip: { type: String, default: '' },
     otras: { type: Object, required: true },
     quien: { type: Object, required: true },
+    ajustes: { type: Object, default: null },
+    saliendo: { type: Boolean, default: false },
 });
-const emit = defineEmits(['qr', 'bloque', 'cambiar', 'abrir', 'mas', 'guardar', 'preguntar', 'renovar', 'tarea', 'hijos', 'hijo']);
+const emit = defineEmits([
+    'qr', 'bloque', 'cambiar', 'abrir', 'mas', 'guardar', 'preguntar', 'renovar', 'tarea', 'hijos', 'hijo',
+    'alternar', 'dato', 'guardar-datos', 'paso', 'vincular', 'interruptor', 'descargar', 'mas-recibos', 'salir',
+]);
 const { t, tp } = useTextos();
+
+// Ajustes (T5e), en su trozo: va plegado al final («nada esencial vive aquí») y Mi cuenta pinta sin esperarlo. Dentro
+// medía +30,8 KiB (el bloque, el acordeón, el selector y el interruptor), un tercio de Mi cuenta.
+const BloqueAjustes = defineAsyncComponent(() => import('./BloqueAjustes.vue'));
 </script>
 
 <template>
@@ -47,6 +58,7 @@ const { t, tp } = useTextos();
         <AvisoCuenta
             v-if="aviso"
             :texto="aviso"
+            :tono="avisoTono"
         />
         <header :style="{ display: 'grid', gap: '10px' }">
             <h1
@@ -148,6 +160,20 @@ const { t, tp } = useTextos();
             v-bind="quien"
             @anadir="emit('hijos')"
             @abrir="(id) => emit('hijo', id)"
+        />
+        <BloqueAjustes
+            v-if="ajustes"
+            :ajustes="ajustes"
+            :saliendo="saliendo"
+            @alternar="(id) => emit('alternar', id)"
+            @dato="(campo, valor) => emit('dato', campo, valor)"
+            @guardar="emit('guardar-datos')"
+            @paso="(v) => emit('paso', v)"
+            @vincular="emit('vincular')"
+            @interruptor="(nombre, valor) => emit('interruptor', nombre, valor)"
+            @descargar="emit('descargar')"
+            @mas="emit('mas-recibos')"
+            @salir="emit('salir')"
         />
     </div>
 </template>

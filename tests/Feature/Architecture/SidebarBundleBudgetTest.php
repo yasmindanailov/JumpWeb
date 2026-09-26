@@ -954,7 +954,18 @@ class SidebarBundleBudgetTest extends TestCase
     // `useHijosCuenta.js` y dos iconos) y el trozo común +2,85. ⚠️ Las dos PANTALLAS (Añade a tus hijos y la ficha de un
     // hijo) van en su propio trozo, pedido al abrirlas (2,9 KiB cada una): dentro medía 99,46. El store de menores ya lo
     // descarga el motor (`card-*.js`), no se duplica. El techo, a 97.
-    private const ISLA_CUENTA_CHUNK_MAX_KB = 97;
+    // T5e (`#778`, Ajustes y Cerrar sesión): 95,43 → 101,34 (base: `HEAD` construido aparte). ⚠️ AJUSTES ENTERO VA EN SU
+    // TROZO, con su lógica —bloque, acordeón, selector, interruptor, `useAjustesCuenta.js`, `ajustes.js` y sus tres
+    // iconos—: va plegado al final («nada esencial vive aquí») y dentro medía 126,22 (+30,8, un tercio de Mi cuenta). Lo
+    // que queda aquí (+5,91) es lo que ENRUTA: las seis vistas de sus pasos en `vista.js`, la carga diferida en su
+    // `effectScope` y los avisos con tono. El techo, a 103; Ajustes tiene el suyo, abajo.
+    private const ISLA_CUENTA_CHUNK_MAX_KB = 103;
+
+    // T5e (`#778`): los AJUSTES de Mi cuenta, su trozo —el bloque y su lógica, pedidos al pintar el inicio—, sobre lo que ya
+    // tiene quien abre Mi cuenta. Medido: 26,92 (el bloque 12,70, la lógica 6,56, `ajustes.js` 3,44, el interruptor que
+    // comparte con las cookies 2,76 y los iconos 1,46). Sus PASOS (contraseña, correo, sesiones, Google, descargo, borrar),
+    // otro trozo al abrir uno: 6,18. El techo, a 28.
+    private const ISLA_AJUSTES_MAX_KB = 28;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un
@@ -1422,6 +1433,38 @@ class SidebarBundleBudgetTest extends TestCase
         ]);
         $this->assertLessThanOrEqual(self::ISLA_CUENTA_CHUNK_MAX_KB, $kb, sprintf(
             'Mi cuenta de la isla pesa %.2f kB (techo: %s kB).', $kb, self::ISLA_CUENTA_CHUNK_MAX_KB
+        ));
+    }
+
+    /**
+     * **Los Ajustes de Mi cuenta son OTRO trozo, con su lógica** (T5e, `#778`): van plegados al final y Mi cuenta pinta
+     * sin ellos. El bloque llega con `import()` desde el inicio y su lógica desde la sección (que la trae al pintarlo);
+     * ninguno de los dos viaja con Mi cuenta. Lo que se descarga por ellos, sobre lo que ya tiene quien abre Mi cuenta,
+     * bajo su techo.
+     */
+    public function test_the_isla_account_settings_are_their_own_deferred_chunk_under_their_budget(): void
+    {
+        $manifest = $this->manifest();
+        $cuenta = 'resources/js/isla/SeccionCuenta.vue';
+        $bloque = 'resources/js/isla/cuenta/BloqueAjustes.vue';
+        $logica = 'resources/js/isla/cuenta/useAjustesCuenta.js';
+
+        foreach ([$bloque, $logica] as $clave) {
+            $this->assertArrayHasKey($clave, $manifest, "«{$clave}» ya no es un trozo propio.");
+            $this->assertTrue($this->llegaPorImportDinamico($cuenta, $clave), "Mi cuenta ya no trae «{$clave}» con `import()`.");
+            $this->assertNotContains($clave, $this->alcanceEstatico($cuenta), "«{$clave}» viaja con la primera pintura de Mi cuenta.");
+        }
+
+        $yaDescargado = [
+            ...$this->alcanceEstatico('resources/js/sidebar/index.js'),
+            ...$this->alcanceEstatico('resources/js/isla/SeccionCompra.vue'),
+            ...$this->alcanceEstatico($cuenta),
+        ];
+        $propio = array_diff(array_unique([...$this->alcanceEstatico($bloque), ...$this->alcanceEstatico($logica)]), $yaDescargado);
+        $kb = array_sum(array_map(fn (string $k): float => $this->sizeKb((string) $manifest[$k]['file']), $propio));
+
+        $this->assertLessThanOrEqual(self::ISLA_AJUSTES_MAX_KB, $kb, sprintf(
+            'Los Ajustes de Mi cuenta pesan %.2f kB (techo: %s kB).', $kb, self::ISLA_AJUSTES_MAX_KB
         ));
     }
 

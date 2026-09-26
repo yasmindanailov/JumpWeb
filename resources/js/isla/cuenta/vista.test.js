@@ -18,14 +18,14 @@ const ck = (e) => ckDeCuenta({ textos, acciones, ...e });
 
 describe('con qué vista se abre Mi cuenta', () => {
     test('con sesión: el inicio; el carné, Tu QR; «Mis reservas» de los correos, el inicio en la próxima', () => {
-        assert.deepEqual(vistaDeApertura('home', { sesion: true }), { vista: VISTA.INICIO, bloque: '' });
-        assert.deepEqual(vistaDeApertura('card', { sesion: true }), { vista: VISTA.QR, bloque: '' });
-        assert.deepEqual(vistaDeApertura('orders', { sesion: true }), { vista: VISTA.INICIO, bloque: 'proxima' });
+        assert.deepEqual(vistaDeApertura('home', { sesion: true }), { vista: VISTA.INICIO, bloque: '', plegable: '' });
+        assert.deepEqual(vistaDeApertura('card', { sesion: true }), { vista: VISTA.QR, bloque: '', plegable: '' });
+        assert.deepEqual(vistaDeApertura('orders', { sesion: true }), { vista: VISTA.INICIO, bloque: 'proxima', plegable: '' });
     });
 
     test('el bloque de un enlace (`#mi-cuenta/antes`) manda sobre el de la zona', () => {
-        assert.deepEqual(vistaDeApertura('home', { sesion: true, bloque: 'antes' }), { vista: VISTA.INICIO, bloque: 'antes' });
-        assert.deepEqual(vistaDeApertura('orders', { sesion: true, bloque: 'ajustes' }), { vista: VISTA.INICIO, bloque: 'ajustes' });
+        assert.deepEqual(vistaDeApertura('home', { sesion: true, bloque: 'antes' }), { vista: VISTA.INICIO, bloque: 'antes', plegable: '' });
+        assert.deepEqual(vistaDeApertura('orders', { sesion: true, bloque: 'ajustes' }), { vista: VISTA.INICIO, bloque: 'ajustes', plegable: '' });
     });
 
     test('sin sesión, Mi cuenta abre Entrar; el alta, Crea tu cuenta; el olvido, Entrar (sale de ahí con el correo)', () => {
@@ -104,7 +104,7 @@ describe('los hijos (T5d)', () => {
     const ckd = (e) => ckDeCuenta({ textos: t5d, acciones: acc, ...e });
 
     test('la zona de menores del motor (la puerta `/mi-cuenta/hijos`) abre «Añade a tus hijos»; sin sesión, Entrar', () => {
-        assert.deepEqual(vistaDeApertura('dependents', { sesion: true }), { vista: VISTA.HIJOS, bloque: '' });
+        assert.deepEqual(vistaDeApertura('dependents', { sesion: true }), { vista: VISTA.HIJOS, bloque: '', plegable: '' });
         assert.equal(vistaDeApertura('dependents', { sesion: false }).vista, VISTA.ENTRAR);
     });
 
@@ -204,5 +204,80 @@ describe('la banda de cada vista', () => {
     test('cada vista trae la dirección con la que entra (la animación de la isla)', () => {
         assert.equal(ck({ vista: VISTA.QR, dir: 'fwd' }).dir, 'fwd');
         assert.equal(ck({ vista: VISTA.INICIO, dir: 'back' }).dir, 'back');
+    });
+});
+
+describe('los Ajustes (T5e)', () => {
+    const t5e = {
+        ...textos,
+        mi_cuenta: {
+            ...textos.mi_cuenta,
+            ajustes: { guardando: 'Guardando' },
+            clave: { titulo: 'Cambiar la contraseña', guardar: 'Guardar la contraseña' },
+            correo: { titulo: 'Correo', enviar: 'Enviar el enlace', enviando: 'Enviando el enlace' },
+            otras_sesiones: { titulo: 'Cerrar sesión en otros dispositivos', boton: 'Cerrar las otras sesiones', cerrando: 'Cerrando' },
+            desvincular: { titulo: 'Desvincular Google', boton: 'Desvincular', cargando: 'Desvinculando' },
+            descargo: { titulo: 'Tu descargo', firmar: 'Firmar' },
+            hijo: { firmando: 'Firmando' },
+            borrar: { titulo: 'Borrar tu cuenta' },
+        },
+    };
+    const acc = { ...acciones, guardarClave: () => 'clave!', enviarCorreo: () => 'correo!', cerrarOtras: () => 'otras!', desvincular: () => 'desvincular!', firmar: () => 'firmar!' };
+    const cke = (e) => ckDeCuenta({ textos: t5e, acciones: acc, ...e });
+
+    test('las zonas del cajón que son un plegable abren Mi cuenta en Ajustes, con ese plegable abierto', () => {
+        assert.deepEqual(vistaDeApertura('profile', { sesion: true }), { vista: VISTA.INICIO, bloque: 'ajustes', plegable: 'datos' });
+        assert.deepEqual(vistaDeApertura('password', { sesion: true }), { vista: VISTA.INICIO, bloque: 'ajustes', plegable: 'acceso' });
+        assert.deepEqual(vistaDeApertura('sessions', { sesion: true }), { vista: VISTA.INICIO, bloque: 'ajustes', plegable: 'acceso' });
+        assert.deepEqual(vistaDeApertura('privacy', { sesion: true }), { vista: VISTA.INICIO, bloque: 'ajustes', plegable: 'privacidad' });
+        assert.equal(vistaDeApertura('privacy', { sesion: false }).vista, VISTA.ENTRAR);
+    });
+
+    test('`#mi-cuenta/<plegable>` también (la vuelta de vincular Google es `#mi-cuenta/acceso`); un bloque que no lo es, no', () => {
+        assert.deepEqual(vistaDeApertura('home', { sesion: true, bloque: 'acceso' }), { vista: VISTA.INICIO, bloque: 'ajustes', plegable: 'acceso' });
+        assert.deepEqual(vistaDeApertura('home', { sesion: true, bloque: 'recibos' }), { vista: VISTA.INICIO, bloque: 'ajustes', plegable: 'recibos' });
+        assert.equal(vistaDeApertura('home', { sesion: true, bloque: 'quien' }).plegable, '');
+    });
+
+    test('cada paso: su banda, la flecha a Mi cuenta y su acción, con lo que dice mientras espera', () => {
+        const casos = [
+            [VISTA.CLAVE, 'Cambiar la contraseña', 'Guardar la contraseña', 'clave!', 'Guardando'],
+            [VISTA.CORREO, 'Correo', 'Enviar el enlace', 'correo!', 'Enviando el enlace'],
+            [VISTA.OTRAS, 'Cerrar sesión en otros dispositivos', 'Cerrar las otras sesiones', 'otras!', 'Cerrando'],
+            [VISTA.DESVINCULAR, 'Desvincular Google', 'Desvincular', 'desvincular!', 'Desvinculando'],
+            [VISTA.FIRMA, 'Tu descargo', 'Firmar', 'firmar!', 'Firmando'],
+        ];
+
+        for (const [vista, step, label, hace, cargando] of casos) {
+            const r = cke({ vista, ajuste: { enviado: false, firmar: true } });
+
+            assert.equal(r.step, step, vista);
+            assert.equal(r.onBack(), 'inicio', vista);
+            assert.equal(r.action.label, label, vista);
+            assert.equal(r.action.onClick(), hace, vista);
+            assert.equal(r.action.loading, false, vista);
+            assert.equal(cke({ vista, ajuste: { enviado: false, firmar: true }, ocupado: vista }).action.loading, cargando, vista);
+        }
+    });
+
+    test('borrar la cuenta NO lleva acción en la isla: lo destructivo no va en el naranja', () => {
+        const r = cke({ vista: VISTA.BORRAR });
+
+        assert.equal(r.step, 'Borrar tu cuenta');
+        assert.equal(r.action, null);
+        assert.equal(r.onBack(), 'inicio');
+    });
+
+    test('el correo ya enviado deja el desenlace sin acción; el descargo sin nada que firmar, también', () => {
+        assert.equal(cke({ vista: VISTA.CORREO, ajuste: { enviado: true } }).action, null);
+        assert.equal(cke({ vista: VISTA.FIRMA, ajuste: { firmar: false } }).action, null);
+    });
+
+    test('leer el descargo desde «Tu descargo» es un paso: su flecha vuelve a la firma', () => {
+        const t2 = { ...t5e, compra: { ...t5e.compra, datos: { ...t5e.compra.datos, descargo: 'El descargo' } } };
+        const r = ckDeCuenta({ textos: t2, acciones: acc, vista: VISTA.FIRMA, subpaso: 'descargo', ajuste: { firmar: true } });
+
+        assert.equal(r.step, 'El descargo');
+        assert.equal(r.onBack(), 'formulario');
     });
 });

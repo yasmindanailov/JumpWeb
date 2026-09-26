@@ -12,7 +12,7 @@
  *     mandarlos a todo visitante eran ~5 KB en cada página, `PERF-02`), y es el mismo camino que el área del cajón
  *     (`account/after-auth.js`): la contraseña no sobrevive en memoria y la página entera sabe ya quién es.
  */
-import { computed, inject, nextTick, reactive, watch } from 'vue';
+import { computed, effectScope, inject, nextTick, onScopeDispose, reactive, shallowRef, watch } from 'vue';
 import { TEXTOS_ISLA } from '../../sidebar/carcasa.js';
 import { cajonHost } from '../../sidebar/host-bridge.js';
 import { api } from '../../sidebar/api.js';
@@ -36,6 +36,9 @@ import { VISTA, ckDeCuenta, lineaProxima, vistaDeApertura } from './vista.js';
 import { tituloDe } from './reservas.js';
 import { useReservasCuenta } from './useReservasCuenta.js';
 import { useHijosCuenta } from './useHijosCuenta.js';
+
+/** Los pasos de Ajustes (T5e): al entrar en uno, su formulario empieza vacío. */
+const PASOS_DE_AJUSTES = [VISTA.CLAVE, VISTA.CORREO, VISTA.OTRAS, VISTA.DESVINCULAR, VISTA.FIRMA, VISTA.BORRAR];
 
 /** La «G» del botón de Google: el MISMO fichero que la compra de la isla y el botón oficial del cajón (`#695`). */
 const MARCA_GOOGLE = '/images/providers/google.svg';
@@ -71,6 +74,26 @@ export function useSeccionCuenta(props) {
     const hoy = computed(() => proxima.value?.reservation?.today === true);
     // Los hijos (T5d): Quién viene contigo, Añade a tus hijos y la ficha de cada uno.
     const hijos = useHijosCuenta({ textos, props, emailVerified: () => contexto.context?.email_verified });
+    // Los Ajustes (T5e): sus cuatro plegables, sus pasos y «Cerrar sesión». Viajan en su trozo CON su lógica: van plegados
+    // al final («nada esencial vive aquí») y Mi cuenta pinta sin ellos (medido: dentro eran +9,3 KiB de lógica y +15,4 del
+    // bloque). Se traen al pintar el inicio, dentro de un `effectScope`: sus `watch` viven y mueren con esta sección. Lo
+    // que dicen, arriba (`decir`, más abajo). Sin red, `null`, y el siguiente intento vuelve a pedirlo.
+    const alcance = effectScope();
+    onScopeDispose(() => alcance.stop());
+    const ajustes = shallowRef(null);
+    let trayendoAjustes = null;
+
+    function conAjustes() {
+        trayendoAjustes ??= import('./useAjustesCuenta.js')
+            .then(({ useAjustesCuenta }) => {
+                ajustes.value ??= alcance.run(() => useAjustesCuenta({ textos, props, locale, proxima, contexto, decir: (texto, tono) => decir(texto, tono) }));
+
+                return ajustes.value;
+            })
+            .catch(() => { trayendoAjustes = null; return null; });
+
+        return trayendoAjustes;
+    }
 
     const caja = () => document.querySelector('[data-isla-scroll]');
     const enfocarError = () => nextTick(() => caja()?.querySelector('[aria-invalid="true"]')?.focus());
@@ -86,9 +109,12 @@ export function useSeccionCuenta(props) {
             });
         }
         if (vista === VISTA.CAMBIAR) reservas.cargarSitio();
-        if (vista === VISTA.INICIO) hijos.cargar();
+        if (vista === VISTA.INICIO) { hijos.cargar(); conAjustes(); }
         if (vista === VISTA.HIJOS) hijos.empezar();
         if (vista === VISTA.CREAR || vista === VISTA.ALTA_GOOGLE) waiverStore.ensureLegal();
+        // Tu descargo (T5e): el texto que se firma y el estado, también si se llega sin haber abierto «Privacidad».
+        if (vista === VISTA.FIRMA) { waiverStore.ensureStatus({ api }); waiverStore.ensureLegal({ api }); }
+        if (PASOS_DE_AJUSTES.includes(vista)) conAjustes().then((aj) => aj?.empezarPaso());
         if (vista === VISTA.ALTA_GOOGLE) {
             loadGoogleScreen({ api }).then((pantalla) => {
                 e.google = pantalla;
@@ -126,7 +152,10 @@ export function useSeccionCuenta(props) {
     /** Al abrirse, la vista de su zona: la que pidió la apertura (aún sin consumir) o la ya aplicada al motor. */
     function situar(zona) {
         const host = cajonHost();
-        const { vista, bloque } = vistaDeApertura(zona, { sesion: contexto.identified, bloque: enlaceDeCuenta(window.location.hash)?.bloque ?? '' });
+        const { vista, bloque, plegable } = vistaDeApertura(zona, { sesion: contexto.identified, bloque: enlaceDeCuenta(window.location.hash)?.bloque ?? '' });
+
+        // Un plegable de Ajustes (la zona del cajón que lo era, `#mi-cuenta/acceso`): abierto, y la capa baja a él.
+        if (plegable) conAjustes().then((aj) => aj?.abrir(plegable));
 
         Object.assign(e, {
             vista, subpaso: '', dir: null, ocupado: null, aviso: null, renovar: false, errores: {}, avisoAlta: '',
@@ -144,7 +173,8 @@ export function useSeccionCuenta(props) {
     // La sesión murió con la capa abierta (el carné responde 401): lo que se ve pasa a ser Entrar.
     watch(() => carne.expired, (caducada) => { if (caducada && abierta.value) { contexto.refresh({ api }); Object.assign(e, { vista: VISTA.ENTRAR, subpaso: '', dir: null }); } });
 
-    const decir = (texto) => { e.aviso = { texto, en: e.vista }; };
+    /** La confirmación de arriba; con `tono = 'danger'`, lo que no salió (T5e). Se queda hasta salir de su vista. */
+    const decir = (texto, tono = 'success') => { e.aviso = { texto, en: e.vista, tono }; };
 
     // ── Moverse dentro de la capa ────────────────────────────────────────────────────────────────────
 
@@ -244,6 +274,59 @@ export function useSeccionCuenta(props) {
         recargarAntes();
         aInicio();
         decir(dicho);
+    }
+
+    // ── Con sesión: los Ajustes (T5e) ────────────────────────────────────────────────────────────────
+
+    /** Lo que hizo un paso o un botón de Ajustes: la sesión que murió lleva a Entrar; un «no», a su campo. */
+    function tras(r) {
+        if (r === 'caducada') Object.assign(e, { vista: VISTA.ENTRAR, subpaso: '', dir: null });
+        else if (r === 'error') enfocarError();
+    }
+
+    /**
+     * La acción de un paso de Ajustes (la de la isla): espera al servidor y, si sale, vuelve a Mi cuenta —al mismo punto,
+     * con el plegable abierto— y lo dice arriba (`dicho`). El correo no vuelve: queda su desenlace.
+     *
+     * @param {string} hace  el método de `useAjustesCuenta` que la hace
+     */
+    async function hacerPaso(hace, dicho = '') {
+        if (e.ocupado || ! ajustes.value) return;
+        e.ocupado = e.vista;
+        const r = await ajustes.value[hace]();
+
+        e.ocupado = null;
+        if (r === 'ok' && dicho) {
+            aInicio();
+            decir(t(textos, dicho));
+        } else {
+            tras(r);
+        }
+    }
+
+    async function guardarDatos() {
+        if (e.ocupado || ! ajustes.value) return;
+        e.ocupado = 'datos';
+        const r = await ajustes.value.guardarDatos();
+
+        e.ocupado = null;
+        tras(r);
+    }
+
+    /** «Borrar mi cuenta», el botón del contenido: al salir bien, la página se va (el composable navega). */
+    async function borrarCuenta() {
+        if (e.ocupado || ! ajustes.value) return;
+        e.ocupado = 'borrar';
+        const r = await ajustes.value.borrar();
+
+        if (r !== 'ok') { e.ocupado = null; tras(r); }
+    }
+
+    /** «Cerrar sesión»: el cierre del motor, que navega a la portada si el servidor lo confirma. */
+    async function salir() {
+        if (e.ocupado || ! ajustes.value) return;
+        e.ocupado = 'salir';
+        if (! await ajustes.value.salir()) e.ocupado = null;
     }
 
     // ── Sin sesión: Entra, el olvido, Crea tu cuenta y el alta de Google ────────────────────────────
@@ -364,12 +447,23 @@ export function useSeccionCuenta(props) {
         entrada: e.ent, textos, altaGoogle: { pendiente: e.google.pending !== null },
         cambiar: { desdeReserva: e.cambiarDesdeReserva, whatsapp: Boolean(cambiarVista.value?.whatsapp) },
         hijo: { nombre: hijos.hijo.value?.nombre ?? '', firmar: Boolean(hijos.hijo.value?.firmar) },
+        // Los pasos de Ajustes (T5e): el correo ya pedido deja su desenlace sin acción; tu descargo, «Firmar» solo si
+        // hace falta y hay texto que firmar.
+        ajuste: {
+            enviado: Boolean(ajustes.value?.paso.value.correo?.pendiente),
+            firmar: Boolean(ajustes.value?.bloque.value.descargo?.firmar && waiverStore.document),
+        },
         rotulos: {
             altaGoogle: t(props.account, 'google.title'), altaGoogleBoton: t(props.account, 'google.submit'),
             altaGoogleEnviando: t(props.account, 'google.submitting'),
         },
         acciones: {
             cerrar, alMenu, aInicio, entrar, crear, completarGoogle, escribir, guardarHijos, firmarHijo,
+            guardarClave: () => hacerPaso('guardarClave', 'mi_cuenta.clave.guardada'),
+            enviarCorreo: () => hacerPaso('enviarCorreo'),
+            cerrarOtras: () => hacerPaso('cerrarOtras', 'mi_cuenta.otras_sesiones.hecho'),
+            desvincular: () => hacerPaso('desvincular', 'mi_cuenta.desvincular.hecho'),
+            firmar: () => hacerPaso('firmar', 'mi_cuenta.descargo.firmado'),
             aReserva: () => Object.assign(e, { vista: VISTA.RESERVA, subpaso: '', dir: 'back' }),
             aEntrar: () => Object.assign(e, { vista: VISTA.ENTRAR, subpaso: '', dir: 'back', errores: {}, avisoAlta: '' }),
             volverDelDescargo: () => Object.assign(e, { subpaso: '', dir: 'back' }),
@@ -396,6 +490,7 @@ export function useSeccionCuenta(props) {
         linea: linea.value,
         qr: qr.value,
         aviso: e.aviso?.en === VISTA.INICIO ? e.aviso.texto : '',
+        avisoTono: e.aviso?.en === VISTA.INICIO ? (e.aviso.tono ?? 'success') : 'success',
         hoy: hoy.value, renovar: e.renovar, renovando: e.ocupado === 'renovar', sinQr: delMotor('account.card.unavailable'),
         proxima: reservas.bloque(proxima.value),
         // El contexto ya dice que hay próxima y aún no han llegado las reservas: su hueco espera, sin saltos.
@@ -405,6 +500,9 @@ export function useSeccionCuenta(props) {
         chip: reservas.chip(proxima.value),
         otras: reservas.otras.value,
         quien: hijos.quien.value,
+        // Ajustes y «Cerrar sesión» (T5e), cuando llega su trozo.
+        ajustes: ajustes.value?.bloque.value ?? null,
+        saliendo: e.ocupado === 'salir',
     }));
 
     const vistaQr = computed(() => ({
@@ -451,6 +549,28 @@ export function useSeccionCuenta(props) {
         casillaHijo: (v) => { hijos.s.firmaCasilla = v; hijos.s.firmaError = ''; },
         preguntarQuitar: (si) => { hijos.s.preguntar = si; },
         quitarHijo,
+        // Los Ajustes (T5e): el bloque (sus plegables, «Tus datos», los interruptores, las descargas, los recibos y
+        // «Cerrar sesión») y sus pasos, con su formulario.
+        alternarAjuste: (id) => ajustes.value?.alternar(id),
+        datoAjuste: (campo, valor) => ajustes.value?.cambiarDato(campo, valor),
+        guardarDatos,
+        pasoAjuste: (vista) => a(vista),
+        vincular: () => ajustes.value?.vincular(),
+        interruptor: (nombre, valor) => ajustes.value?.interruptor(nombre, valor),
+        descargarDatos: () => ajustes.value?.descargarDatos(),
+        masRecibos: () => ajustes.value?.masRecibos(),
+        salir,
+        // El paso de Ajustes que se ve, cuando su lógica ya está (hasta entonces, `null`: no se pinta).
+        pasoDeAjuste: computed(() => (ajustes.value ? {
+            ...ajustes.value.paso.value,
+            ocupado: ajustes.value.paso.value.ocupado || e.ocupado === 'borrar',
+            aviso: e.aviso?.en === e.vista ? e.aviso : null,
+        } : null)),
+        cambiarPaso: (campo, valor) => ajustes.value?.cambiarPaso(campo, valor),
+        enlaceClave: () => ajustes.value?.enlaceClave(),
+        reenviarCorreo: () => ajustes.value?.reenviarCorreo(),
+        cancelarCorreo: () => ajustes.value?.cancelarCorreo(),
+        borrarCuenta,
         cambiarVista,
         guardarQr: () => decir(t(textos, 'mi_cuenta.qr.guardado')),
         pedirRenovar: (si) => { e.renovar = si; },
