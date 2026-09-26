@@ -51,10 +51,14 @@
         ]
         : null;
     // Lo que la calculadora necesita y solo sabe el producto: sus textos, el TITULAR de la cesta —el mismo que da el
-    // arranque del motor (`SidebarBoot`: leer la cesta con otro la purgaría)— y el idioma. ⚠️ En una variable: `@json`
-    // parte su argumento por las comas, y un arreglo escrito dentro no se compila.
+    // arranque del motor (`SidebarBoot`: leer la cesta con otro la purgaría)—, el idioma y las formas de pago que acepta la
+    // instalación con su logotipo, para bajo «Reservar y pagar» (`#784`, `MarcasDePago`: sin ninguna, lista vacía). ⚠️ En
+    // una variable: `@json` parte su argumento por las comas, y un arreglo escrito dentro no se compila.
     $motorCalculadora = in_array('calculadora', $scripts, true)
-        ? ['textos' => ['pieza' => __('isla.pieza'), 'calculadora' => __('isla.calculadora')], 'owner' => auth()->id(), 'locale' => app()->getLocale()]
+        ? [
+            'textos' => ['pieza' => __('isla.pieza'), 'calculadora' => __('isla.calculadora')], 'owner' => auth()->id(), 'locale' => app()->getLocale(),
+            'marcas' => \App\Domain\Payments\Services\MarcasDePago::activas(),
+        ]
         : null;
     // Entre páginas, la isla SE QUEDA (Z3, `#782`): para que el navegador la case con la de la página que se va, tiene que
     // estar pintada cuando captura la que llega, y la pinta un módulo. Medido: sin esperar, la nueva se revelaba sin isla

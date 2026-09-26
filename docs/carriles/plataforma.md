@@ -3,9 +3,9 @@
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 EN CURSO** (su centena,
-> `decisiones/700-799.md`) · Último usado: **`#783`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#783`) · Actualizado: **2026-09-26**
-> (el zip del 26-09 tarde, §4.14: Z1→Z3 hechas, `#780`→`#783`; la T5 de Mi cuenta, T5a→T5e hechas, `#774`→`#779`).
+> `decisiones/700-799.md`) · Último usado: **`#784`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#784`) · Actualizado: **2026-09-26**
+> (el zip del 26-09 tarde, §4.14: Z1→Z3 hechas, `#780`→`#784`; la T5 de Mi cuenta, T5a→T5e hechas, `#774`→`#779`).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
 > llévaselo con la medida, como el SPA en `#724`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -44,8 +44,10 @@
 ▶▶▶ **EN MARCHA (26-09 tarde): el ZIP TERCERO** (spec §4.14, `#780`, en `instancias/playjump/diseno/`). **Z1 ✅** («Entra» a
 lo ancho, las garantías `ReassuranceBand`, la marca oficial de Google) y **Z2 ✅** (`#781`: el movimiento de las páginas,
 `movimiento.js`; `scripts/sonda-movimiento.mjs` 16/16) y **Z3 ✅** (`#782`: la isla y su RELEVO entre montajes;
-`sonda-isla-movimiento` 24/24, contra el diseño `sonda-banco-movimiento` 9/9) y su rendimiento (`#783`). EN MARCHA: las
-MARCAS de pago (Bizum oficial, de su portal; Visa y Mastercard las baja el owner; el botón de Bizum, con la v2.0.0).
+`sonda-isla-movimiento` 24/24, contra el diseño `sonda-banco-movimiento` 9/9) y su rendimiento (`#783`). Las MARCAS de
+pago 🟦 (`#784`, spec §4.14: en «Pagar» y bajo «Reservar y pagar»): Bizum y Visa ✅; **falta Mastercard** (el owner
+bajó Maestro; se le pidió el suyo) → la receta, en la spec. En LOCAL, `payment.marks` = `bizum,visa`; en PRODUCCIÓN lo
+marca el owner en el panel. El botón de Bizum, con la v2.0.0.
 Sigue: **Z4** la conversión (aviso al SPA ANTES) → Normas y Visítanos. La isla por temporada, **ahora no**. ⚠️ Tras tocar
 `instancias/playjump/publico/`, copiarlo a `public/instancia` (el producto sirve la copia).
 ▶▶ **EN MARCHA (26-09): T5 · Mi cuenta en la isla** (spec §4.13, `#773`: el censo, las cuatro respuestas del owner y
@@ -111,9 +113,7 @@ FIESTA, del SPA (`#765`). ⚠️ BD LOCAL con los valores de `#699`/`#761`; en P
    ❗ **LOCAL, preparado para que el OWNER pruebe la isla (24-09 noche) — no deshacer sin él**: `sidebar.shell =
    isla` (puesto por el panel), `public/_isla-prueba.html` con un botón por cada entrada (se BORRA antes de
    desplegar: guarda 9) y la **invitación digital ENCENDIDA en los packs 105/106** (solo aquí; en producción no
-   se toca hasta la v2.0.0). Medido de verdad por la isla: la pasarela pública de pruebas (pide ya el TITULAR;
-   3DS simulado; vuelta firmada → «¡Reservado!», `storage/app/sonda-isla-pasarela.mjs`) y Google, que acepta la
-   vuelta de `localhost:8081` y no la del 80 del contenedor. ⚠️ La vuelta del banco cae en la portada de hoy: ahí
+   se toca hasta la v2.0.0). La pasarela y Google medidos por la isla: `TESTING.md` §2.octies. ⚠️ La vuelta del banco cae en la portada de hoy: ahí
    la isla se ve NEUTRA (sin las hojas de Saltia) hasta la T4. La contraseña del admin local la tiene el owner.
    Los datos que faltaban (T0), decididos en `#699`: sin precio de antes ni oferta; el plazo de cambio y
    cancelación, POR PRODUCTO (cumpleaños 3 días naturales); los 90 cm con adulto, en la ZONA; el destacado, el
@@ -219,8 +219,8 @@ dueño es el carril de la web/reseñas—) ·
   de Saltia, regenerada: `pj-outcome-rise` se funde con `pj-rise`). Re-mide tu censo contra él.
 - ⚠️ **Z4 (después del movimiento) toca TU motor**: la hora que se guarda al entrar en «Tus datos» (hoy al pagar, `#688`),
   el teclado del móvil (`visualViewport`), Intro al campo siguiente y `Medir`. Te lo propongo aquí ANTES de tocarlo.
-- ▶ `#781`: `<x-pagina>` gana `transiciones` (aditivo). Para que tus páginas de la fiesta se fundan entre sí, pídela: la
-  regla solo en `saltia.css` NO basta (medido: Chromium no la ve a tiempo en una página grande).
+- ▶ `#781`: `<x-pagina>` gana `transiciones` (aditivo): pídela para fundir tus páginas (con la regla solo en `saltia.css`,
+  medido, no ocurre). ✅ Tu `…save_bar_says_when_the_host_saved`, que fallaba de 22:00 a 24:00: visto arreglado en `#751`.
 
 ### ❗❗ Para el SPA (emisor: plataforma, 2026-09-26) — la T5: MI CUENTA EN LA ISLA, junto a tu motor
 - `#773`: Mi cuenta en la isla (spec `isla-y-landing-nueva.md` §4.13: cada tanda dice lo tocado). De lo tuyo:

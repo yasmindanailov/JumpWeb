@@ -130,6 +130,8 @@ function pagar(pd, q) {
         nota: entradas ? '' : tp('compra.pagar.senal', { senal: D.eur(pd.senal), resto: D.eur(c.resto) }),
         otraEntrada: entradas,
         calcetines: entradas && q.calcetines === 0 ? { texto: T.pagar.calcetines, uno: P.par, varios: P.pares } : null,
+        // Las formas de pago, al final del recibo desde el diseño del 26-09 (`#784`), con los logotipos oficiales.
+        marcas: T.pagar.marcas.map((nombre) => ({ id: nombre.toLowerCase(), nombre, src: `/images/providers/pago/${nombre.toLowerCase()}.svg` })),
     };
 }
 
@@ -218,7 +220,6 @@ function paso(S) {
         ck.action = { label: tp(`compra.pagar.${S.principal}`, { importe }), onClick: nada };
         junto = h(JuntoPagar, {
             secundario: { etiqueta: tp(`compra.pagar.${segundo}`, { importe }), metodo: segundo },
-            marcas: T.pagar.marcas.concat(S.wallets ? T.pagar.wallets : []),
             condicionesHref: '#condiciones',
             condiciones: T.pagar.condiciones.despues,
         });

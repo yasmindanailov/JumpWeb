@@ -378,6 +378,9 @@ son de cualquiera que mida, no de un carril.
   prefijo y se quedan, y uno de mañana pasa a ser «Tu próxima reserva» —`sonda-cuenta.mjs`, 22 fallos que no eran del
   código—. Tras una corrida de la compra, sus pedidos se pasan a `sonda-compra@jumpweb.test` (tinker, solo en local, con
   el recuento esperado por fila) antes de la de la cuenta.
+- **La isla, medida de verdad contra fuera** (mudada del carril de plataforma el 26-09): la pasarela PÚBLICA de pruebas
+  pide ya el TITULAR, simula el 3DS y su vuelta firmada acaba en «¡Reservado!» (`storage/app/sonda-isla-pasarela.mjs`);
+  Google acepta la vuelta a `localhost:8081` y NO la del 80 del contenedor.
 - **Sin GPU, a 1280 el navegador de la sonda pinta un fotograma cada 35–50ms** (26-09, Z3: los desenfoques grandes de la
   isla): una sonda de MOVIMIENTO espera a la condición (`waitForFunction` con tope) o muestrea por fotograma; nunca mira
   a un reloj fijo, que a 390 pasa y a 1280 falla sin que el código cambie.

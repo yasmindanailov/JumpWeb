@@ -3,16 +3,19 @@
  * **El total de la calculadora de la página** (el lado de `PrecioEntradas`, `paginas/entradas/pieza-3.jsx`): un
  * RECIBO —lo elegido, sus líneas y el total del servidor—, «Reservar y pagar» apagado hasta tener la línea del
  * servidor (`listo`: con día y hora; el enlace lleva a lo que falta), la línea de la cuenta y el descargo antes del botón, y compartirlo por WhatsApp. PINTA:
- * todo llega hecho en `v.resumen` y `v.compartir`; avisa `reservar`.
+ * todo llega hecho en `v.resumen` y `v.compartir`; avisa `reservar`. Bajo la nota del botón («Pago con tarjeta o
+ * Bizum…»), las formas de pago con sus logotipos (`marcas`, del servidor; `#784`): la frase lo dice y la marca lo
+ * enseña, justo donde se decide empezar a pagar.
  * Sin JumpPoints, [Jump Club] ni [Bono] (`#699`: corchetes apagados, sin hueco).
  */
 import BotonSistema from '../ui/BotonSistema.vue';
 import FilaCompartir from '../ui/FilaCompartir.vue';
 import IconoLucide from '../ui/IconoLucide.vue';
+import MarcasDePago from '../ui/MarcasDePago.vue';
 import ResumenPrecio from '../ui/ResumenPrecio.vue';
 import { LINEA, LINEA_ICONO } from './estilos.js';
 
-defineProps({ v: { type: Object, required: true } });
+defineProps({ v: { type: Object, required: true }, marcas: { type: Array, default: () => [] } });
 defineEmits(['reservar']);
 </script>
 
@@ -22,6 +25,7 @@ defineEmits(['reservar']);
         <template #cta>
             <BotonSistema variant="primary" size="xl" full data-isla-cta :disabled="! v.resumen.listo" :loading="v.resumen.abriendo" @click="$emit('reservar')">{{ v.resumen.boton }}</BotonSistema>
         </template>
+        <template #pie><MarcasDePago :marcas="marcas" centro /></template>
     </ResumenPrecio>
     <FilaCompartir :value="v.compartir.value" :items="v.compartir.items" />
 </template>

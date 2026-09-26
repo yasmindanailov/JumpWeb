@@ -10,7 +10,8 @@
  * espera a que la pieza esté a 300 px de la vista, al primer toque dentro de ella, o a nada si se llega a `#precio`:
  * quien no baja no le cuesta al servidor ni una petición.
  * ⚠️ Lo que el producto sabe y la página no (sus textos de `lang/<idioma>/isla.php`, el titular de la cesta —el mismo
- * `auth()->id()` que el arranque del motor— y el idioma) llega del layout en `#jw-calculadora-motor`.
+ * `auth()->id()` que el arranque del motor—, el idioma y las formas de pago con su logotipo, `#784`) llega del layout
+ * en `#jw-calculadora-motor`.
  */
 import { createApp, h, watch } from 'vue';
 import { createPinia } from 'pinia';
@@ -23,7 +24,7 @@ import { CLAVE_TEXTOS } from '../piezas/textos.js';
  * Monta la calculadora en su sitio (pintada, sin pedir nada). Devuelve `{ app, arrancar }` —`arrancar()` hace las
  * peticiones, una vez—, o `null` sin sitio, sin su lado o sin datos.
  */
-export function montarCalculadora(sitio, { textos = {}, owner = null, locale = 'es' } = {}) {
+export function montarCalculadora(sitio, { textos = {}, owner = null, locale = 'es', marcas = [] } = {}) {
     let pagina = null;
 
     try { pagina = JSON.parse(sitio?.dataset?.jwCalculadora ?? 'null'); } catch { pagina = null; }
@@ -39,7 +40,7 @@ export function montarCalculadora(sitio, { textos = {}, owner = null, locale = '
             watch(() => calculadora.vista.value.isla, (detail) => document.dispatchEvent(new CustomEvent('jw:calculadora', { detail })), { deep: true });
             document.addEventListener('jw:calculadora:hoy', () => calculadora.elegirHoy());
 
-            return () => h(CalculadoraEntradas, { v: calculadora.vista.value, lado, onCambiar: calculadora.cambiar, onReservar: calculadora.reservar });
+            return () => h(CalculadoraEntradas, { v: calculadora.vista.value, lado, marcas, onCambiar: calculadora.cambiar, onReservar: calculadora.reservar });
         },
     });
 

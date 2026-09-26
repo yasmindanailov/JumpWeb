@@ -8,6 +8,7 @@ use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Content\Services\ShellSettings;
 use App\Domain\Identity\Models\User;
+use App\Domain\Payments\Services\MarcasDePago;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\Analytics\Pixels;
 use App\Http\Instancia\InstancePages;
@@ -259,6 +260,14 @@ BLADE);
         $this->assertNull($invitado['owner']);
         $this->assertSame(__('isla.calculadora'), $invitado['textos']['calculadora']);
         $this->assertSame(__('isla.pieza'), $invitado['textos']['pieza']);
+
+        // Las formas de pago bajo «Reservar y pagar» (`#784`): sin elegir, ninguna; elegidas, las MISMAS que el arranque de
+        // la compra, en su orden y solo con su fichero oficial.
+        $this->assertSame([], $invitado['marcas']);
+        Setting::query()->updateOrCreate(['key' => MarcasDePago::KEY], ['value' => 'visa,bizum', 'group' => 'payment']);
+        $marcas = $motor((string) $this->get('/kids')->getContent())['marcas'] ?? null;
+        $this->assertSame(['bizum', 'visa'], array_column($marcas ?? [], 'id'));
+        $this->assertSame(MarcasDePago::activas(), $marcas);
 
         $user = User::factory()->create();
         $this->assertSame($user->id, $motor((string) $this->actingAs($user)->get('/kids')->getContent())['owner'] ?? null);

@@ -87,6 +87,23 @@ async function recorrer(navegador, ventana) {
     const primera = ultima();
     check(`día (${diaNombre}) y hora (${horaTexto}): el total que se pinta es el del servidor`, primera && (await lado()).includes(euros(primera.line.total_cents)), primera ? `servidor ${euros(primera.line.total_cents)}` : 'sin línea');
 
+    // Las formas de pago (`#784`): las del motor (`#jw-calculadora-motor`), BAJO «Reservar y pagar», en su orden y cargadas.
+    const marcas = await pagina.evaluate(async () => {
+        const motor = JSON.parse(document.getElementById('jw-calculadora-motor')?.textContent ?? '{}').marcas ?? [];
+        const boton = [...document.querySelectorAll('[data-jw-calculadora-lado] button')].find((x) => x.textContent.includes('Reservar y pagar'));
+        const imgs = [...document.querySelectorAll('[data-jw-calculadora-lado] ul[aria-label="Formas de pago"] img')];
+
+        await Promise.all(imgs.map((i) => i.decode().catch(() => null)));
+
+        return {
+            motor: motor.map((m) => m.nombre),
+            vistas: imgs.map((i) => (i.naturalWidth > 0 ? i.alt : `ROTA ${i.alt}`)),
+            debajo: imgs.every((i) => i.getBoundingClientRect().top >= boton.getBoundingClientRect().bottom),
+        };
+    });
+    check('las formas de pago del motor, bajo «Reservar y pagar», en su orden y cargadas', JSON.stringify(marcas.motor) === JSON.stringify(marcas.vistas) && marcas.debajo, JSON.stringify(marcas));
+    await pagina.locator('[data-jw-calculadora-lado]').screenshot({ path: `storage/app/audit/calculadora-${zona}-${ancho}-marcas.png` });
+
     // Un par para cada uno: el cargo de los calcetines y el total, del servidor.
     const cadaUno = pagina.locator('[data-jw-calculadora] button:has-text("Un par para cada")');
     if (await cadaUno.count()) {

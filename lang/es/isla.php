@@ -106,6 +106,8 @@ return [
         'total' => 'Total',
         'desde' => 'Desde',
         'cargando' => 'Cargando',
+        // Las formas de pago con sus logotipos (`#784`): el nombre de la lista, para quien no la ve.
+        'formas_pago' => 'Formas de pago',
         'continuar_google' => 'Continuar con Google',
         'continuar_apple' => 'Continuar con Apple',
         'entrar_google' => 'Entrar con Google',

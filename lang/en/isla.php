@@ -98,6 +98,7 @@ return [
         'total' => 'Total',
         'desde' => 'From',
         'cargando' => 'Loading',
+        'formas_pago' => 'Payment methods',
         'continuar_google' => 'Continue with Google',
         'continuar_apple' => 'Continue with Apple',
         'entrar_google' => 'Sign in with Google',

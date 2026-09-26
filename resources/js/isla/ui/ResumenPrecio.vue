@@ -7,6 +7,7 @@
  * ⚠️ El control de una línea es la ranura `control` (recibe `{ linea }`), y la línea lo declara con
  * `control: true`: de eso dependen su negrita, su separación y su filete, como en el diseño.
  * ▶ El total RUEDA hasta su valor (Z3, `#782`): se ve que ha reaccionado a lo elegido.
+ * ▶ La ranura `pie` va bajo la nota del botón: las formas de pago de la calculadora (`#784`).
  */
 import { computed } from 'vue';
 import { useTextos } from '../piezas/textos.js';
@@ -135,6 +136,7 @@ const fuerte = (l) => Boolean(l.strong || l.control);
                 v-if="ctaNote"
                 :style="{ margin: 0, textAlign: 'center', fontFamily: 'var(--font-ui)', fontSize: 'var(--fs-caption)', lineHeight: 1.5, color: 'var(--text-muted)' }"
             >{{ ctaNote }}</p>
+            <slot name="pie" />
         </div>
     </div>
 </template>

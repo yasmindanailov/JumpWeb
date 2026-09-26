@@ -3191,6 +3191,8 @@ return [
         'purchase_horizon_months_hint' => 'Hasta cuántos meses por delante se puede reservar.',
         'incidents_alert_email' => 'Email para avisos de incidencias de cobro',
         'incidents_alert_email_hint' => 'A dónde avisar de un cobro duplicado, huérfano o tras caducar. Si lo dejas vacío, se usa el email de contacto.',
+        'payment_marks' => 'Formas de pago que aceptas',
+        'payment_marks_hint' => 'Sus logotipos oficiales salen al final del recibo, antes de pagar. Marca solo las que acepta tu terminal. Una que salga en gris aún no tiene su logotipo oficial en la web.',
         'puerta_rate_limit' => 'Límite de validaciones de puerta (por minuto)',
         'puerta_rate_limit_hint' => 'Búsquedas de validación permitidas por minuto y empleado (freno anti-abuso).',
         // Fase 6 · subsistema A (`specs/identidad-qr-puerta.md` §4.6, §4.8): la ficha de puerta.

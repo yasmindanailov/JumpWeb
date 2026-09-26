@@ -120,6 +120,21 @@ export function reciboDe({ quote, pedido, textos = {}, locale = 'es' }) {
     };
 }
 
+/**
+ * Las formas de pago del final del recibo (`#784`): de las `urls.mark_<id>` del arranque, que el servidor manda en su
+ * orden y solo si la instalación las acepta y tiene su logotipo oficial (`MarcasDePago`). El nombre, para el texto
+ * alternativo, es la marca: no se traduce.
+ */
+export function marcasDe(urls) {
+    return Object.entries(urls ?? {})
+        .filter(([clave, src]) => clave.startsWith('mark_') && typeof src === 'string' && src !== '')
+        .map(([clave, src]) => {
+            const id = clave.slice(5);
+
+            return { id, nombre: id.charAt(0).toUpperCase() + id.slice(1), src };
+        });
+}
+
 /** Qué cambia una fila del recibo: la gente (`{ n }`) o los pares (`{ cal }`). */
 export function cambioDe(id, n) {
     return String(id).startsWith('l') ? { n } : { cal: n };

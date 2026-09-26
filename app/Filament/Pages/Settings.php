@@ -12,6 +12,7 @@ use App\Domain\Identity\Services\BirthdayReminders;
 use App\Domain\Identity\Services\DependentSettings;
 use App\Domain\Identity\Services\PuertaSettings;
 use App\Domain\Identity\Services\WaiverSettings;
+use App\Domain\Payments\Services\MarcasDePago;
 use App\Domain\Payments\Services\PaymentSettings;
 use App\Domain\Payments\Services\Redsys;
 use App\Domain\Platform\Models\Setting;
@@ -20,6 +21,7 @@ use App\Domain\Platform\Services\Analytics\Pixels;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Domain\Platform\Services\Surveys\SurveySettings;
 use BackedEnum;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -225,6 +227,8 @@ class Settings extends Page
         // Avisos de incidencia de cobro (recomendación C, 2026-06-15): email del operador al que
         // avisar de un cobro duplicado/huérfano o tras caducar. Vacío → se usa `contact.email`.
         'incidents.alert_email' => 'payment',
+        // Las formas de pago que acepta el parque (`#784`): una LISTA en el formulario, texto con comas en la tabla.
+        MarcasDePago::KEY => 'payment',
         // Tema (white-label, #7.10 iter.2): color de marca global. Los colores POR ZONA viven
         // en `zones.color` (#210) y se editan en cada zona, no aquí.
         'theme.brand' => 'theme',
@@ -304,6 +308,11 @@ class Settings extends Page
             if ($key === ShellSettings::KEY) {
                 $raw = ShellSettings::shell();
             }
+            // Las marcas, como la lista de casillas: `data_set` pone el array entero en su sitio. ⚠️ Solo las que tienen
+            // fichero: la casilla sin él está en gris, y Filament rechaza guardar una opción apagada marcada.
+            if ($key === MarcasDePago::KEY) {
+                $raw = array_values(array_filter(MarcasDePago::elegidas(), MarcasDePago::tieneFichero(...)));
+            }
             $value = in_array($key, self::BOOL_KEYS, true)
                 ? ((string) $raw === '1')
                 : ($raw ?? '');
@@ -342,6 +351,9 @@ class Settings extends Page
 
         /** @var array<string,mixed> $flat */
         $flat = Arr::dot($state);
+        // ⚠️ `Arr::dot` parte la LISTA de las marcas en `payment.marks.0`, `.1`… (y deja `[]` si no hay ninguna): se
+        // guarda como el texto con comas que lee `MarcasDePago`, en su orden y solo con las que conoce.
+        $flat[MarcasDePago::KEY] = implode(',', array_intersect(MarcasDePago::CONOCIDAS, (array) data_get($state, MarcasDePago::KEY, [])));
 
         // Guarda cruzada (T3a·2): un driver de análisis sin sus datos no se guarda. `Drivers::config()` lo
         // trataría como «ninguno» igualmente, pero el operador tiene que verlo aquí, no descubrirlo porque
@@ -1084,6 +1096,14 @@ class Settings extends Page
                     ->helperText(__('admin.settings.incidents_alert_email_hint'))
                     ->email()
                     ->maxLength(160)
+                    ->columnSpanFull(),
+                // Las marcas de pago (`#784`): las que no tienen aún su fichero oficial salen en gris, no se esconden.
+                CheckboxList::make(MarcasDePago::KEY)
+                    ->label(__('admin.settings.payment_marks'))
+                    ->helperText(__('admin.settings.payment_marks_hint'))
+                    ->options(MarcasDePago::NOMBRES)
+                    ->disableOptionWhen(fn (string $value): bool => ! MarcasDePago::tieneFichero($value))
+                    ->columns(3)
                     ->columnSpanFull(),
             ]);
     }

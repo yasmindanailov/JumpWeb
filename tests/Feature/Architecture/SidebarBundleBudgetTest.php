@@ -930,7 +930,9 @@ class SidebarBundleBudgetTest extends TestCase
     // oferta y la API), que quien compra después ya no baja, y 69,17 suyos (sus pantallas, el calendario, sus piezas)—.
     // Z3 (`#782`): la píldora de sus horas, su total que rueda y su «Reservar y pagar» que llega con bote (`useLlegada`).
     // Medido 171,18 → 178,58 (base: `HEAD` construido aparte). El techo, a 180.
-    private const CALCULADORA_MAX_KB = 180;
+    // `#784`: las formas de pago con su logotipo bajo «Reservar y pagar» (`ui/MarcasDePago.vue`, su chapa en `ui/marcas.js`,
+    // en un trozo que comparte con los pasos de la compra). Medido 178,90 → 180,14 (base: el `HEAD` de `#783`). El techo, a 181.
+    private const CALCULADORA_MAX_KB = 181;
 
     // T4e (`specs/isla-y-landing-nueva.md` §4.12): la ISLA EN REPOSO de una página, entrada propia que la página pide
     // (`isla` en `scripts` de `<x-pagina>`) y que se monta al cargar. Su descarga ENTERA, como la del navegador que llega
@@ -953,7 +955,10 @@ class SidebarBundleBudgetTest extends TestCase
     // T5a (`#773`): Mi cuenta sin sesión pinta «Entra», «Crea tu cuenta» y el descargo con ESTAS pantallas, así que el
     // empaquetador las saca a un trozo común con ella (`_CajaAntiBot`): mismos bytes, una costura más. Medido 38,83 →
     // 39,34 (base: `HEAD`). El techo, a 40.
-    private const ISLA_PASOS_CHUNK_MAX_KB = 40;
+    // `#784`: las formas de pago al final del recibo de «Pagar» (`ui/MarcasDePago.vue`), que dejan el hueco de texto de
+    // `JuntoPagar`. Medido 39,68 → 40,44 (base: el `HEAD` de `#783`). La chapa, en su módulo: en `ui/estilos.js` subía
+    // también la isla de CADA página (+0,37). El techo, a 41.
+    private const ISLA_PASOS_CHUNK_MAX_KB = 41;
 
     // T5b (`#775`): MI CUENTA de la isla, trozo diferido del motor que se pide a la primera apertura de la cuenta. Su
     // descarga, sobre lo que ya tiene quien la abre (el motor y la compra, que la isla monta con el motor). Medido el

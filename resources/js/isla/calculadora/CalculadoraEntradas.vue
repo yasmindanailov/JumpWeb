@@ -13,11 +13,13 @@ defineProps({
     v: { type: Object, required: true },
     // Un selector o el propio elemento (la entrada, `montar.js`, pasa el de SU sección).
     lado: { type: [String, Object], required: true },
+    // Las formas de pago que acepta la instalación, con su logotipo (`#784`): van bajo «Reservar y pagar».
+    marcas: { type: Array, default: () => [] },
 });
 defineEmits(['cambiar', 'reservar']);
 </script>
 
 <template>
     <CalculadoraPreguntas :v="v" @cambiar="(campo, valor) => $emit('cambiar', campo, valor)" />
-    <Teleport :to="lado"><CalculadoraResumen :v="v" @reservar="$emit('reservar')" /></Teleport>
+    <Teleport :to="lado"><CalculadoraResumen :v="v" :marcas="marcas" @reservar="$emit('reservar')" /></Teleport>
 </template>

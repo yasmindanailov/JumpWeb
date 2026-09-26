@@ -7,7 +7,9 @@
  *
  * ⚠️ Ningún importe se calcula aquí (`PAY-12`): las líneas y el total llegan hechos, del cálculo del servidor.
  * `lineas` son las del resumen (`{ id, label, sub, value, tone, control: { n, min, max, uno, varios } }`) y
- * `calcetines`, si se ofrecen, `{ texto, uno, varios }`.
+ * `calcetines`, si se ofrecen, `{ texto, uno, varios }`. Al final, las formas de pago que acepta la instalación con sus
+ * logotipos oficiales (`marcas`, `[{ id, nombre, src }]`, `#784`): en el diseño van aquí y no junto al botón, para que
+ * el pie fijo se quede en lo que decide y el recibo respire en pantallas bajas.
  */
 import { useTextos } from '../piezas/textos.js';
 import PasoCompra from './PasoCompra.vue';
@@ -16,6 +18,7 @@ import IconoLucide from '../ui/IconoLucide.vue';
 import EnlaceSistema from '../ui/EnlaceSistema.vue';
 import ResumenPrecio from '../ui/ResumenPrecio.vue';
 import AvisoDestacado from '../ui/AvisoDestacado.vue';
+import MarcasDePago from '../ui/MarcasDePago.vue';
 
 defineProps({
     lineas: { type: Array, required: true },
@@ -25,6 +28,7 @@ defineProps({
     calcetines: { type: Object, default: null },
     // El «no» del servidor al pagar o al cambiar una cantidad (T3e·3): la hora se llenó, la cantidad no cabe…
     aviso: { type: String, default: '' },
+    marcas: { type: Array, default: () => [] },
 });
 const emit = defineEmits(['cantidad', 'otra', 'calcetines']);
 const { t } = useTextos();
@@ -93,5 +97,6 @@ const { t } = useTextos();
                 />
             </div>
         </AvisoDestacado>
+        <MarcasDePago :marcas="marcas" />
     </PasoCompra>
 </template>

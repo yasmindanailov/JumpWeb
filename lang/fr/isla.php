@@ -98,6 +98,7 @@ return [
         'total' => 'Total',
         'desde' => 'Dès',
         'cargando' => 'Chargement',
+        'formas_pago' => 'Moyens de paiement',
         'continuar_google' => 'Continuer avec Google',
         'continuar_apple' => 'Continuer avec Apple',
         'entrar_google' => 'Se connecter avec Google',

@@ -166,6 +166,16 @@ try {
     await accion(/^Continuar$/).click();
     await hastaPagar();
     ok('«Tus datos» con la cuenta → «Paso 2 de 2 · Pagar»', (await paso()).includes('Pagar'), await paso());
+    // Las formas de pago (`#784`): las del arranque (`urls.mark_*`), al final del recibo, en su orden y CARGADAS.
+    const marcas = await page.evaluate(async () => {
+        const urls = (await (await fetch('/api/v1/sidebar/boot?lang=es')).json()).urls;
+        const imgs = [...document.querySelectorAll('[data-isla-scroll] ul[aria-label="Formas de pago"] img')];
+
+        await Promise.all(imgs.map((i) => i.decode().catch(() => null)));
+
+        return { boot: Object.entries(urls).filter(([k]) => k.startsWith('mark_')).map(([, v]) => v), vistas: imgs.map((i) => (i.naturalWidth > 0 ? i.src : `ROTA ${i.src}`)) };
+    });
+    ok('las formas de pago del arranque, al final del recibo, en su orden y cargadas', JSON.stringify(marcas.boot) === JSON.stringify(marcas.vistas), JSON.stringify(marcas));
     await foto('1-pagar');
 
     llena = await franjaDeLaCesta();

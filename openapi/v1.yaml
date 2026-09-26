@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.39.0
+  version: 1.40.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -4596,7 +4596,11 @@ components:
           type: object
           additionalProperties:
             type: string
-          description: Las rutas que pinta el cajón (contacto, condiciones, privacidad…). Las compone el servidor.
+          description: |
+            Las rutas que pinta el cajón (contacto, condiciones, privacidad…). Las compone el servidor. Desde
+            1.40.0, `mark_<id>` (`mark_bizum`, `mark_visa`, `mark_mastercard`) es el logotipo oficial de cada forma
+            de pago que la instalación acepta (ajuste `payment.marks`), en el orden en que se enseña; sin ninguna
+            elegida o sin venta online, no viaja ninguna.
         shell:
           type: string
           enum: [cajon, isla]

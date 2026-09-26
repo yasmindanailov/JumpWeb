@@ -27,7 +27,7 @@ import { usePantallaCero } from './usePantallaCero.js';
 import { borradorDeIntencion } from './oferta.js';
 import { euros, horasCercanas, horasDelSelector } from './vista.js';
 import { meterLinea, pedidoDe } from './linea.js';
-import { lineaListo, reciboDe, resumenDeLaCesta, resumenDelPedido } from './recibo.js';
+import { lineaListo, marcasDe, reciboDe, resumenDeLaCesta, resumenDelPedido } from './recibo.js';
 import { ckDelPaso, direccion, empiezaOtra, pantallaListo, pasoDelMotor, rango } from './pasos.js';
 import {
     almacenDeLaPestana, conVuelta, esVuelta, marcarSalida, sinVuelta, tomarMarca, vueltaDe, vuelveAqui,
@@ -352,6 +352,8 @@ export function useSeccionCompra(props) {
 
     // Google, solo si la instalación lo tiene (`urls.google`); Apple sigue de corchete apagado (`#683`).
     const social = computed(() => ({ social: Boolean(props.urls?.google), apple: false, marcaGoogle: MARCA_GOOGLE }));
+    // Las formas de pago del final del recibo (`#784`): también del arranque, que no cambia.
+    const marcas = marcasDe(props.urls);
 
     const pantallaDatos = computed(() => ({
         cuenta: datos.cuenta.value,
@@ -393,7 +395,9 @@ export function useSeccionCompra(props) {
         fiesta: computed(() => Boolean(compra.borrador.fiesta)),
         cuando: computed(() => ({ ...vista.value.props, aviso: compra.aviso })), cambiar,
         datos, pantallaDatos, pantallaEntrar, aGoogle, pago, listo,
-        recibo: computed(() => ({ ...reciboDe({ quote: cartStore.quote, pedido: compra.pedido, textos, locale: flow.locale }), aviso: compra.aviso })),
+        recibo: computed(() => ({
+            ...reciboDe({ quote: cartStore.quote, pedido: compra.pedido, textos, locale: flow.locale }), aviso: compra.aviso, marcas,
+        })),
         fallido: computed(() => ({ hora: outcomeStore.holdUntil, motivo: outcomeStore.declinedReason, aviso: compra.aviso })),
         perdida: computed(() => ({ cercanas: compra.cercanas, horaNueva: compra.horaNueva })),
         elegirNueva: (hora) => { compra.horaNueva = hora; },

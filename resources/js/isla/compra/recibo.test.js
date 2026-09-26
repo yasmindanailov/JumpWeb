@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { cambioDe, hoyPagas, lineaListo, reciboDe, resumenDe, resumenDeLaCesta, resumenDelPedido } from './recibo.js';
+import { cambioDe, hoyPagas, lineaListo, marcasDe, reciboDe, resumenDe, resumenDeLaCesta, resumenDelPedido } from './recibo.js';
 
 /**
  * El recibo y las líneas de la compra de la isla (T3e·3 de `specs/isla-y-landing-nueva.md` §4.10). El presupuesto y
@@ -138,5 +138,17 @@ describe('el recibo de una FIESTA (T3e·5)', () => {
         assert.equal(hoyPagas(1600, 1600, { textos }), null, 'sin señal no hay «hoy pagas»');
         assert.equal(lineaListo({ code: 'R-1', lines: [{ product_name: 'Pack Kids', quantity: 10, is_pack: true, date: '2026-09-26', time: '17:00:00' }] }, { textos }),
             'Sábado 26 de septiembre · 17:00 · Pack Kids · 10 niños · Nº de pedido R-1');
+    });
+});
+
+describe('las formas de pago del final del recibo (#784)', () => {
+    test('salen de urls.mark_<id> en el orden del servidor, con la marca por nombre; lo demás no', () => {
+        const urls = { contact: '/contacto', mark_bizum: '/p/bizum.svg', terms: '/c', mark_visa: '/p/visa.svg', mark_mastercard: '' };
+
+        assert.deepEqual(marcasDe(urls), [
+            { id: 'bizum', nombre: 'Bizum', src: '/p/bizum.svg' },
+            { id: 'visa', nombre: 'Visa', src: '/p/visa.svg' },
+        ], 'una sin ruta no se pinta rota: no se pinta');
+        assert.deepEqual(marcasDe(undefined), [], 'sin arranque, ninguna');
     });
 });

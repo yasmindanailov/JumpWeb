@@ -4,6 +4,7 @@ namespace App\Http\Sidebar;
 
 use App\Domain\Content\Services\ShellSettings;
 use App\Domain\Identity\Services\GoogleAuth;
+use App\Domain\Payments\Services\MarcasDePago;
 use App\Domain\Platform\Services\Analytics\Experiments;
 use App\Domain\Platform\Services\SiteLocales;
 use Illuminate\Support\Arr;
@@ -281,6 +282,10 @@ final class SidebarBoot
                 // área, y esa sección **no pide config**: solo lo hace el embudo. Un segundo sitio del
                 // que leerlo sería el `if` que un día discrepa.
                 ...(GoogleAuth::enabled() ? ['google' => route('auth.google.redirect')] : []),
+                // · `mark_<id>` — los logotipos OFICIALES de las formas de pago que esta instalación acepta
+                //   (`MarcasDePago`, `DECISIONES #784`), en su orden, para el final del recibo de «Pagar». Mismo
+                //   interruptor que Google: la que no se eligió en el panel, o no tiene fichero, no viaja.
+                ...MarcasDePago::urls(),
             ],
             // · `shell` — la CARCASA de la compra de esta instalación (`ShellSettings`, `DECISIONES #682`): el
             //   cajón lateral o la isla. Es igual para todos, así que va en esta mitad y se cachea con ella. La
