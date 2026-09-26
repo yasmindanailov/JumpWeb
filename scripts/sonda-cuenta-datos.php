@@ -10,17 +10,22 @@
  * SOLO EN LOCAL. Se ejecuta desde la sonda con tinker, fijando antes `$modo`:
  *   · `montar`: un Jump dentro de cinco días (la próxima, en plazo) y un cumpleaños con señal dentro de diez (la otra);
  *   · `hoy`: lo mismo y, además, unas Kids HOY con calcetines (la próxima: el QR grande, fuera de plazo, «Cómo llegar»);
+ *   · `fiesta` (T5c): SOLO el cumpleaños, dentro de tres días —la próxima, con «Antes de venir»—: su invitación creada
+ *     (quien cumple, «Vera», 7 años), dos fichas de diez rellenas y dos «sí»;
  *   · `borrar`: nada.
  *   php artisan tinker --execute='$modo = "montar"; require base_path("scripts/sonda-cuenta-datos.php");'
  *
  * Imprime una línea JSON: `{"hoy": bool}` (a partir de las 20:00 del parque no hay «hoy» que montar).
  */
 
+use App\Domain\Booking\Models\InvitationReply;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderAdjustment;
 use App\Domain\Booking\Models\OrderItem;
+use App\Domain\Booking\Models\PartyInvitation;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Services\PartyInvitations;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Platform\Services\DisplayTime;
@@ -38,6 +43,9 @@ $llaveFranjas = 'sonda-cuenta:franjas';
 $borrar = function () use ($prefijo, $llaveFranjas): void {
     foreach (Order::where('code', 'like', $prefijo.'%')->get() as $pedido) {
         DB::transaction(function () use ($pedido): void {
+            $lineas = OrderItem::where('order_id', $pedido->id)->pluck('id');
+            InvitationReply::whereIn('order_item_id', $lineas)->delete();
+            PartyInvitation::whereIn('order_item_id', $lineas)->delete();
             OrderAdjustment::where('order_id', $pedido->id)->delete();
             Payment::where('payable_type', $pedido->getMorphClass())->where('payable_id', $pedido->id)->delete();
             OrderItem::where('order_id', $pedido->id)->whereNotNull('parent_item_id')->delete();
@@ -51,7 +59,7 @@ $borrar = function () use ($prefijo, $llaveFranjas): void {
 
 $borrar();
 
-if (! in_array($modo ?? '', ['montar', 'hoy'], true)) {
+if (! in_array($modo ?? '', ['montar', 'hoy', 'fiesta'], true)) {
     echo json_encode(['borrado' => true]), "\n";
 
     return;
@@ -92,6 +100,22 @@ $reserva = function (string $sufijo, int $producto, string $fecha, string $hora,
         'amount' => $total - $enElParque, 'currency' => 'EUR', 'status' => Payment::STATUS_PAID, 'paid_at' => now(),
     ]);
 };
+
+if ($modo === 'fiesta') {
+    // El cumpleaños como PRÓXIMA (tres días: los extras, a 48 h, siguen en plazo), con lo que deja un anfitrión a medias.
+    $reserva('CUMPLE', 105, $ahora->copy()->addDays(3)->toDateString(), '17:00:00', 10, 1695, [], 11950);
+    $linea = OrderItem::whereHas('order', fn ($q) => $q->where('code', $prefijo.'CUMPLE'))->whereNull('parent_item_id')->firstOrFail();
+    $linea->forceFill(['guest_data' => [['name' => 'Hugo', 'age' => '7'], ['name' => 'Ana', 'age' => '6']]])->save();
+    $invitaciones = app(PartyInvitations::class);
+    $inv = $invitaciones->forReservation($linea->fresh(['ticketType', 'slot', 'order']));
+    $inv->forceFill(['honoree_name' => 'Vera', 'honoree_age' => 7])->save();
+    foreach (['Hugo Ruiz', 'Ana Gil'] as $nino) {
+        $invitaciones->reply($inv, $nino, true);
+    }
+    echo json_encode(['fiesta' => $linea->id]), "\n";
+
+    return;
+}
 
 // HOY, si da tiempo (su hora, dentro de dos horas en punto): Kids 1 hora, 2 niños, y 2 pares de calcetines.
 $hoy = $modo === 'hoy' && $ahora->hour < 20;

@@ -1360,6 +1360,29 @@ piezas del sistema**, enseñado en vivo antes de cerrar.
   borra): **89 de 89** a 1280 y 390, con el paso de HOY. **El peso**: Mi cuenta, 66,70 KiB al abrirla (41,98 suyos y
   trozos comunes con los pasos de la compra), con su techo nuevo a 68 en `SidebarBundleBudgetTest`. Los datos de la
   instalación (el aviso de los calcetines, la señal de los dos packs) se ponen en el panel de cada entorno.
+- ▶ **T5c ✅ (26-09, `#776`)**. **Las tareas las compone el servidor**, ya escritas y con su plazo real
+  (`Http\Cuenta\AntesDeVenir`: en la capa HTTP por la frontera —las firmas son de Identity—; ninguna regla propia, cada
+  hecho de su servicio): **Formulario de invitados** (tarea; hecho = el post-form completo; «hasta el jueves 24» con el
+  ÚNICO plazo de la fiesta, `#766`, y solo mientras sea verdad), **Invitación** (tarea mientras las respuestas sigan
+  abiertas; hecha cuando los «sí» llegan a los INVITADOS —sin quien cumple si la reserva lleva su ficha, `#747`—, el
+  owner, `#776`; «Compartir por WhatsApp» con el MISMO mensaje que la lista —`MeReservationBeforeVisitTest` compara con
+  su página— o, sin el nombre de quien cumple, «Crear la invitación»), **Extras** (opcional: los de venta posterior en
+  plazo; hasta tres se nombran con su día de cierre, como el mockup; con más, cuántos y cuándo cierra el primero —los ocho
+  del catálogo de prueba ocupaban cuatro líneas—) y **Autorizaciones** (estado: las firmadas y, con respuestas, sobre los
+  «sí»; nunca un denominador inventado, `waiver-por-reserva.md` §4.10). Salen por **`GET /me/reservations/{id}/before-visit`**
+  (contrato **1.37.0**; ruta propia porque cuesta consultas y lleva el enlace de la invitación, la credencial con la que
+  se contesta) y, para la **isla de cada página**, en su `config.cuenta` (`paraLaIsla`, sin ese enlace: la invitación va
+  a su sitio en la lista, como el correo): el **punto** del menú, «Siguiente: …» en «Mi cuenta», la situación **tarea**
+  (portada y página de lo reservado) y **«Hoy a las 17:00»** con «Ver mi QR» (situación 14), de la próxima
+  (`CustomerReservationsReader::nextItemFor`, la regla de `next_reservation`). **Mi cuenta** (`cuenta/antes.js`, puro;
+  `BloqueAntes.vue`): «N de M hecho», la siguiente entera con «SIGUIENTE» (la tarjeta gana `overline`), el resto en filas
+  (`ui/FilaTarea.vue`, la `variant="row"` del diseño en su componente: dentro de la tarjeta la pagaban los pasos de la
+  compra), el chip «Siguiente: …» arriba, que baja al bloque, y el bloque también en «Tu reserva». ⚠️ **De paso**, la
+  isla de la página llevaba en su HTML los textos de Mi cuenta (4.161 B en cada página y para cada visitante): fuera.
+  «Añade a tus hijos», con su pantalla (T5d). **Medido**: `MeReservationBeforeVisitTest` 17 (diez mutantes muertos),
+  `InstancePagesTest` +4 aserciones, `node --test` +11 (`cuenta/antes.test.js` 10, `pagina.test.js` +1); **en vivo**,
+  la sonda con el modo `fiesta`: **111 de 111** a 1280 y 390. **El peso**: Mi cuenta 66,70 → 79,96 KiB (techo 82), los
+  pasos de la compra 39,34 → 39,65.
 
 ## 5. Impacto en invariantes
 

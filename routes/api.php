@@ -29,6 +29,7 @@ use App\Http\Controllers\Api\V1\MeDependentsController;
 use App\Http\Controllers\Api\V1\MeOrdersController;
 use App\Http\Controllers\Api\V1\MePrivacyController;
 use App\Http\Controllers\Api\V1\MeProfileController;
+use App\Http\Controllers\Api\V1\MeReservationBeforeVisitController;
 use App\Http\Controllers\Api\V1\MeReservationEligibilityController;
 use App\Http\Controllers\Api\V1\MeReservationsController;
 use App\Http\Controllers\Api\V1\MeWaiverController;
@@ -568,6 +569,11 @@ Route::name('api.v1.')->group(function (): void {
         // se comería cualquier segmento futuro que colgara de aquí.
         Route::get('/me/reservations/{scope}', [MeReservationsController::class, 'page'])
             ->name('me.reservations.page');
+        // «Antes de venir» de UNA reserva (T5c, `#776`): sus tareas con su plazo, para Mi cuenta. Ruta propia y no campo
+        // de `OrderItem`: cuesta sus consultas y lleva el enlace de la invitación (el porqué, en el controlador).
+        Route::get('/me/reservations/{reservation}/before-visit', MeReservationBeforeVisitController::class)
+            ->whereNumber('reservation')
+            ->name('me.reservations.before-visit');
         Route::get('/me/orders', [MeOrdersController::class, 'index'])->name('me.orders.index');
 
         // **El contexto de cuenta en UN viaje**: saludo, próxima reserva, contador y formularios

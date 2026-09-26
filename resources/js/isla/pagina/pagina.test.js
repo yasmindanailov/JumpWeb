@@ -97,6 +97,31 @@ describe('las props de la isla', () => {
         sesion.onQr({ from: 'isla' });
         assert.deepEqual(llamadas, [['cuenta', 'home', 'menu'], ['cuenta', 'card', 'isla']]);
     });
+
+    test('T5c: lo que el servidor sabe de la próxima —su primera tarea y si es hoy— llega a la isla, solo con sesión', () => {
+        const cuenta = {
+            pending: true, pendingText: 'Siguiente: Formulario de invitados',
+            task: { text: 'Rellena el formulario de invitados, hasta el jueves 24.', action: { label: 'Rellenar el formulario', href: '/reserva/7/datos-invitados' } },
+            bookingToday: { text: 'Hoy a las 17:00' },
+        };
+        const p = propsDeLaIsla({ config: { ...config, owner: 7, cuenta }, estado: estado(), acciones, textos });
+
+        assert.equal(p.account.pending, true, 'el punto del menú');
+        assert.equal(p.account.pendingText, 'Siguiente: Formulario de invitados');
+        assert.deepEqual(p.bookingToday, { text: 'Hoy a las 17:00' });
+        assert.deepEqual(p.task, { text: 'Rellena el formulario de invitados, hasta el jueves 24.', product: null, action: { label: 'Rellenar el formulario', href: '/reserva/7/datos-invitados' } });
+
+        const sinNada = propsDeLaIsla({ config: { ...config, owner: 7, cuenta: { pending: false, pendingText: null, task: null, bookingToday: null } }, estado: estado(), acciones, textos });
+        assert.equal(sinNada.account.pending, false);
+        assert.equal(sinNada.bookingToday, null);
+        assert.equal(sinNada.task, null);
+
+        // Sin sesión, aunque la página trajera algo (una caché, un error), la isla no lo dice.
+        const invitado = propsDeLaIsla({ config: { ...config, owner: null, cuenta }, estado: estado(), acciones, textos });
+        assert.equal(invitado.bookingToday, null);
+        assert.equal(invitado.task, null);
+        assert.equal(invitado.account.pending, undefined);
+    });
 });
 
 describe('la segunda capa de las cookies', () => {

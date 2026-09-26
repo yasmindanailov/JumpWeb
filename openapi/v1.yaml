@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.36.0
+  version: 1.37.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -3483,6 +3483,53 @@ paths:
         '503':
           $ref: '#/components/responses/Maintenance'
 
+  /me/reservations/{reservation}/before-visit:
+    get:
+      tags: [Cuenta]
+      operationId: getMyReservationBeforeVisit
+      summary: «Antes de venir» de una reserva
+      description: |
+        Lo que le queda por hacer a UNA reserva del cliente antes de la visita, con su plazo real y **ya escrito en el
+        idioma de la petición** (1.37.0, `DECISIONES #776`): el formulario de invitados, la invitación, los extras en
+        plazo y las autorizaciones. Mi cuenta lo pinta tal cual; nada se calcula en el cliente.
+
+        ⚠️ **Ruta propia y no campo de `OrderItem`**: cuesta sus consultas (respuestas, extras, firmas) y
+        «Compartir por WhatsApp» lleva el ENLACE de la invitación, que es la credencial con la que se contesta. No se
+        siembra en ninguna página.
+
+        Una reserva de un pedido sin pagar, cancelada o ya celebrada responde con `tasks` VACÍO. Una ajena, 404.
+      security:
+        - sessionCookie: []
+        - bearerAuth: []
+      parameters:
+        - name: reservation
+          in: path
+          required: true
+          description: El id de la reserva (la línea principal del pedido, `ReservationCard.reservation.id`).
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Las tareas de la reserva, en el orden en que se hacen.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/BeforeVisit'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
   /me/orders:
     get:
       tags: [Cuenta]
@@ -5728,6 +5775,73 @@ components:
             $ref: '#/components/schemas/ReservationCard'
         meta:
           $ref: '#/components/schemas/ListMeta'
+
+    BeforeVisit:
+      type: object
+      description: «Antes de venir» de una reserva (1.37.0, `DECISIONES #776`).
+      additionalProperties: false
+      required: [reservation_id, tasks]
+      properties:
+        reservation_id:
+          type: integer
+          format: int64
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/BeforeVisitTask'
+
+    BeforeVisitTask:
+      type: object
+      description: |
+        Una tarea, ya escrita. `type`: `task` (se hace y cuenta en «N de M hecho»), `optional` (los extras: se ofrece,
+        no se pide) o `status` (las autorizaciones: se informa). Ninguna regla la decide el cliente: si está hecha
+        (`done`), qué dice y a dónde lleva lo compone el servidor con los servicios de cada hecho.
+      additionalProperties: false
+      required: [kind, type, done, title, note, text, due, action]
+      properties:
+        kind:
+          type: string
+          enum: [guest_form, invitation, extras, authorizations]
+        type:
+          type: string
+          enum: [task, optional, status]
+        done:
+          type: boolean
+          description: |
+            `guest_form`: el formulario completo (el mismo «8 de 8» de su pantalla). `invitation`: los «sí» llegan al
+            número de invitados (`#776`). Siempre `false` en `optional` y `status`.
+        title:
+          type: string
+          nullable: true
+          description: El nombre de la tarea en su fila («Formulario de invitados»).
+        note:
+          type: string
+          nullable: true
+          description: Su plazo o su estado, en corto («Hasta el jueves 24», «6 de 10 confirmados»).
+        text:
+          type: string
+          description: La frase entera, con lo que hay que hacer.
+        due:
+          type: string
+          nullable: true
+          description: «Para el jueves 24», cuando la frase no lleva ya el plazo. El ÚNICO de la fiesta (`#766`).
+        action:
+          type: object
+          nullable: true
+          additionalProperties: false
+          required: [label, url, via]
+          properties:
+            label:
+              type: string
+            url:
+              type: string
+              format: uri
+              description: |
+                Una página de la web (la lista de invitados, con la sesión: sin firmar) o, con `via: whatsapp`, el enlace
+                de WhatsApp con el mensaje de la invitación, el mismo que compone su lista.
+            via:
+              type: string
+              enum: [link, whatsapp]
 
     ReservationCard:
       type: object

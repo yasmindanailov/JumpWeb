@@ -21,6 +21,7 @@ import CuentaEntrar from './cuenta/CuentaEntrar.vue';
 import CuentaAltaGoogle from './cuenta/CuentaAltaGoogle.vue';
 import CuentaCambiar from './cuenta/CuentaCambiar.vue';
 import BloqueReserva from './cuenta/BloqueReserva.vue';
+import BloqueAntes from './cuenta/BloqueAntes.vue';
 import PantallaDatos from './compra/PantallaDatos.vue';
 import PantallaDescargo from './compra/PantallaDescargo.vue';
 import CajaAntiBot from './compra/CajaAntiBot.vue';
@@ -32,7 +33,7 @@ const {
     abierta, textos, e, ck, inicio, vistaQr, social, firma, authStore, waiverStore, rotulosGoogle, tx, sinQr,
     pantallaEntrar, google, abrirQr, aInicio, renovarQr, olvido, aGoogle, guardarQr, pedirRenovar, cambiarEntrada,
     cambiarAlta, aCrear, leerDescargo, cambiarGoogle, irAlBloque, abrirReserva, aCambiar, masHistorial, reservaAbierta,
-    cambiarVista,
+    cambiarVista, antesAbierta, hacerTarea,
 } = useSeccionCuenta(props);
 const proveedor = (via) => via === 'google' && aGoogle();
 </script>
@@ -60,10 +61,11 @@ const proveedor = (via) => via === 'google' && aGoogle();
                 @guardar="guardarQr"
                 @preguntar="pedirRenovar"
                 @renovar="renovarQr"
+                @tarea="hacerTarea"
             />
             <div
                 v-else-if="e.vista === VISTA.RESERVA && reservaAbierta"
-                :style="{ display: 'grid', gap: '16px', maxWidth: '520px', margin: '0 auto' }"
+                :style="{ display: 'grid', gap: '28px', maxWidth: '520px', margin: '0 auto' }"
             >
                 <BloqueReserva
                     id-bloque="reserva"
@@ -71,6 +73,12 @@ const proveedor = (via) => via === 'google' && aGoogle();
                     oculto
                     v-bind="reservaAbierta"
                     @cambiar="aCambiar(true)"
+                />
+                <BloqueAntes
+                    v-if="antesAbierta"
+                    id-bloque="reserva-antes"
+                    :antes="antesAbierta"
+                    @tarea="hacerTarea"
                 />
             </div>
             <CuentaCambiar

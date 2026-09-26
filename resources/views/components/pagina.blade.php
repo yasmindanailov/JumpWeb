@@ -24,12 +24,17 @@
     ], array_flip($scripts)));
     // La isla de la página (T4e): lo que da la página —su tipo, su acción, su «desde», hoy, el menú, el contacto— más lo
     // que solo sabe el producto: sus textos (los de la isla, sin los de la compra ni la calculadora, que viajan con
-    // ellas), si hay sesión y dónde está la política de cookies.
+    // ellas, ni los de Mi cuenta, que viven en el motor y viajan con la sesión: eran 4 KB en cada página, `PERF-02`),
+    // si hay sesión y dónde está la política de cookies.
     $islaDePagina = in_array('isla', $scripts, true) && is_array($isla)
         ? [
             // `cookiesPanel`: los textos LEGALES de cada finalidad (los de la web de siempre) para la segunda capa.
-            'config' => $isla + ['owner' => auth()->id(), 'cookiesUrl' => route('legal.cookies'), 'cookiesPanel' => __('cookies.panel')],
-            'textos' => \Illuminate\Support\Arr::except((array) __('isla'), ['compra', 'calculadora']),
+            // `cuenta` (T5c, `#776`): con sesión, si la próxima es hoy y su primera tarea pendiente, ya escritas.
+            'config' => $isla + [
+                'owner' => auth()->id(), 'cookiesUrl' => route('legal.cookies'), 'cookiesPanel' => __('cookies.panel'),
+                'cuenta' => app(\App\Http\Cuenta\AntesDeVenir::class)->paraLaIsla(auth()->user()),
+            ],
+            'textos' => \Illuminate\Support\Arr::except((array) __('isla'), ['compra', 'calculadora', 'mi_cuenta', 'mi_cuenta_alta']),
         ]
         : null;
     // Lo que la calculadora necesita y solo sabe el producto: sus textos, el TITULAR de la cesta —el mismo que da el

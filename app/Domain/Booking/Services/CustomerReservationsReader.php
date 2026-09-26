@@ -48,6 +48,17 @@ class CustomerReservationsReader implements CustomerReservations
     }
 
     /**
+     * **La PRÓXIMA reserva del cliente, como línea** (T5c de `specs/isla-y-landing-nueva.md` §4.13, `#776`): la misma
+     * que {@see upcomingFor} pone primera —pagada, con franja, sin terminar— y que el contexto de cuenta publica como
+     * `next_reservation`. Existe para quien necesita la LÍNEA y no su resumen: la isla de las páginas, que dice «Hoy a
+     * las 17:00» y la primera tarea de «Antes de venir». Una regla, no dos: sale de {@see upcomingItems}.
+     */
+    public function nextItemFor(int $userId): ?OrderItem
+    {
+        return $this->upcomingItems($userId)->first();
+    }
+
+    /**
      * ¿Tiene el cliente alguna reserva POR CELEBRAR? — la puerta de la supresión (T5 · D8,
      * `cumple-mixto.md` §25.4). El porqué del criterio —y de que NO sea el complemento de
      * `terminated()`— está en el contrato ({@see CustomerReservations::hasUpcomingFor}).

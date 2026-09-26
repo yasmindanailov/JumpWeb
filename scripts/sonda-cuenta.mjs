@@ -13,9 +13,14 @@
  *      señal): «Tu próxima reserva» con su plazo, «Ver el pago» del libro, «Cambiar o cancelar» (lo que se puede, el
  *      mensaje escrito, «Llamar» y WhatsApp con el teléfono del parque), «Otras reservas» → «Tu reserva» con la señal
  *      pagada, lo del día y la promesa de devolverla; y el historial con «Ver más»;
- *   7. HOY (si da tiempo, antes de las 20:00 del parque): el QR grande de entrada, los calcetines con el aviso escrito en
- *      el panel, el plazo ya pasado (y su aviso en «Cambiar o cancelar») y «Cómo llegar» en Tu QR;
- *   8. la consola queda limpia y ninguna respuesta de la API falla.
+ *   7. HOY (si da tiempo, antes de las 20:00 del parque): en la página, la isla con «Hoy a las …» y «Ver mi QR»; en Mi
+ *      cuenta, el QR grande de entrada, los calcetines con el aviso escrito en el panel, el plazo ya pasado (y su aviso en
+ *      «Cambiar o cancelar») y «Cómo llegar» en Tu QR;
+ *   8. ANTES DE VENIR (T5c, `DECISIONES #776`), con el cumpleaños como próxima: en la página, el punto de alerta y
+ *      «Siguiente: …» en el menú; en Mi cuenta, el chip que baja al bloque, la siguiente tarea entera, la invitación en
+ *      fila (que se comparte por WhatsApp con el mensaje de la lista), las autorizaciones y los extras con sus enlaces, y
+ *      la siguiente, que lleva a la lista de invitados de esa fiesta;
+ *   9. la consola queda limpia y ninguna respuesta de la API falla.
  * Sale con 1 si algo falla. Dentro del contenedor, contra su puerto 80, con la cuenta de pruebas de `sonda-isla.mjs`:
  *
  *   docker compose exec -u sail -T -e PLAYWRIGHT_BROWSERS_PATH=/home/sail/pw-browsers laravel.test \
@@ -25,7 +30,7 @@
  * ⚠️ Los textos que espera son los de la instalación local: el aviso de los calcetines (`reservation_note` del
  *    complemento 110) y la promesa de la señal de los packs (`deposit_refundable_in_time`), puestos en su panel.
  */
-/* global URL, console, document, window -- Node y, dentro de `evaluate`, el navegador */
+/* global URL, console, document, window, getComputedStyle -- Node y, dentro de `evaluate`, el navegador */
 import process from 'node:process';
 import { execFileSync } from 'node:child_process';
 import { chromium } from 'playwright-core';
@@ -40,7 +45,7 @@ if (tinker('echo App\\Domain\\Content\\Services\\ShellSettings::shell();') !== '
 // Los limitadores (entrar, 5 por minuto; la API, 60 por minuto y por IP o titular) no pueden decidir el resultado de una
 // sonda que entra dos veces y, repetida, agota el suelo de la API (la trampa de `TESTING.md` §2.octies). Las claves, las
 // de `sonda-isla.mjs`.
-/** Las reservas de la sonda (`sonda-cuenta-datos.php`): `montar`, `hoy` o `borrar`. Devuelve su línea JSON. */
+/** Las reservas de la sonda (`sonda-cuenta-datos.php`): `montar`, `hoy`, `fiesta` o `borrar`. Devuelve su línea JSON. */
 const datos = (modo) => JSON.parse(tinker(`$modo = '${modo}'; require base_path('scripts/sonda-cuenta-datos.php');`).split('\n').pop());
 const limitadoresACero = () => tinker(`$id = App\\Domain\\Identity\\Models\\User::where('email', '${CLIENTE.email}')->value('id'); foreach ([md5('api'.'user:'.$id), md5('api'.'ip:127.0.0.1'), 'login-ip|127.0.0.1', Illuminate\\Support\\Str::transliterate('${CLIENTE.email}|127.0.0.1')] as $k) { Illuminate\\Support\\Facades\\RateLimiter::clear($k); }`);
 
@@ -270,6 +275,14 @@ async function recorrer(navegador, ventana, informe) {
         console.log(`· ${ventana} · pasadas las 20:00 del parque no hay «hoy» que montar: el paso 7 no se ha comprobado`);
     } else {
         limitadoresACero();
+        // La isla de la PÁGINA (T5c): «Hoy a las…» manda, con «Ver mi QR» y el punto «vivo» en el menú.
+        await cargar('/kids');
+        await pagina.waitForTimeout(700);
+        const islaHoy = pagina.locator('[data-situation="reserva-hoy"]');
+        check('en la página, la isla dice «Hoy a las …» con «Ver mi QR» y el punto vivo en su menú',
+            /Hoy a las \d{2}:\d{2}/.test(await texto(islaHoy)) && await islaHoy.getByRole('button', { name: 'Ver mi QR' }).isVisible() && await islaHoy.locator('[style*="--isla-vivo"]').count() > 0,
+            await texto(islaHoy));
+        await captura('10a-isla-hoy');
         await cargar('/kids#mi-cuenta');
         await proxima.waitFor({ timeout: 15000 }).catch(() => {});
         await pagina.waitForTimeout(600);
@@ -298,7 +311,67 @@ async function recorrer(navegador, ventana, informe) {
         await captura('11-como-llegar');
     }
 
-    // ── 8 · Limpio ───────────────────────────────────────────────────────────────────────────────────
+    // ── 8 · Antes de venir (T5c) ─────────────────────────────────────────────────────────────────────
+    const { fiesta } = datos('fiesta');
+    const lista = `${base}/reserva/${fiesta}/datos-invitados`;
+    limitadoresACero();
+
+    // En la página: el punto de alerta en el menú y, dentro, la nota de «Mi cuenta».
+    await cargar('/kids');
+    await pagina.waitForTimeout(700);
+    check('en la página, con una tarea pendiente, el punto de alerta en el menú de la isla', await pagina.locator('[data-situation] [style*="--isla-alerta"]').count() > 0);
+    await abrirMenu();
+    check('y en su menú, «Mi cuenta» dice «Siguiente: Formulario de invitados»', await pagina.getByText('Siguiente: Formulario de invitados').first().isVisible());
+    await captura('12-isla-tarea');
+
+    await cargar('/kids#mi-cuenta');
+    const bloqueAntes = capa().locator('#antes');
+    await bloqueAntes.waitFor({ timeout: 15000 }).catch(() => {});
+    await pagina.waitForTimeout(500);
+    const chip = capa().getByRole('button', { name: 'Siguiente: Formulario de invitados' });
+    check('arriba, el chip «Siguiente: Formulario de invitados»', await chip.isVisible().catch(() => false));
+    t = await texto(bloqueAntes);
+    check('«Antes de venir»: «0 de 2 hecho» y, entera, la siguiente con su plazo y «Rellenar»',
+        t.startsWith('Antes de venir 0 de 2 hecho') && /SIGUIENTE Formulario de invitados, hasta el \S+ \d+: quién viene, edades y alergias\. Rellenar/.test(t), t.slice(0, 200));
+    check('en fila, la invitación con sus confirmados (del servidor)', t.includes('Invitación 2 de 10 confirmados'), t);
+    const faltan = bloqueAntes.getByRole('link', { name: 'Ver quién falta' });
+    const extras = bloqueAntes.getByRole('link', { name: 'Añadir extras' });
+    check('las autorizaciones, dichas sin denominador inventado, con «Ver quién falta» a la lista',
+        t.includes('Autorizaciones: aún no hay ninguna firmada.') && (await faltan.getAttribute('href').catch(() => '')) === lista);
+    check('los extras, ofrecidos por su número y su plazo (ocho nombres saturaban), con «Añadir extras» a la lista',
+        /Y si quieres: 8 extras para la fiesta, que se añaden hasta el \S+ \d+\. Se pagan el día de la fiesta\./.test(t) && (await extras.getAttribute('href').catch(() => '')) === lista);
+    await captura('13-antes-de-venir');
+
+    // Dónde queda el bloque respecto de la caja que se desplaza: arriba (a 12 px), o tan arriba como deje el final.
+    const posicion = () => bloqueAntes.evaluate((el) => {
+        let c = el.parentElement;
+        while (c && ! (c.scrollHeight > c.clientHeight && /(auto|scroll)/.test(getComputedStyle(c).overflowY))) c = c.parentElement;
+        if (! c) return { caja: null };
+        const arriba = Math.round(el.getBoundingClientRect().top - c.getBoundingClientRect().top);
+
+        return { caja: c.hasAttribute('data-isla-scroll') ? 'data-isla-scroll' : c.tagName, arriba, scroll: Math.round(c.scrollTop), max: c.scrollHeight - c.clientHeight };
+    }).catch(() => ({ caja: null }));
+    await chip.click();
+    await pagina.waitForTimeout(700);
+    const p = await posicion();
+    check('el chip baja la capa hasta «Antes de venir»', p.caja !== null && ((p.arriba >= 0 && p.arriba <= 20) || p.scroll >= p.max - 2), JSON.stringify(p));
+    await captura('13b-antes-bloque');
+
+    await interceptarVentanas();
+    await bloqueAntes.getByRole('button', { name: /Invitación/ }).click();
+    await pagina.waitForTimeout(300);
+    const [invitacionWa = ''] = await ventanas();
+    check('tocar la invitación la comparte por WhatsApp con el mensaje de la lista (quién cumple, cuándo, el enlace)',
+        invitacionWa.startsWith('https://wa.me/?text=') && /^Vera cumple 7 años.+Contesta aquí: https?:\/\/\S+\/invitacion\/\w{12}$/.test(decodeURIComponent(invitacionWa.split('?text=')[1] ?? '')),
+        decodeURIComponent(invitacionWa.split('?text=')[1] ?? '').slice(0, 160));
+
+    await Promise.all([
+        pagina.waitForURL(lista, { timeout: 15000 }).catch(() => {}),
+        bloqueAntes.getByRole('button', { name: /Formulario de invitados/ }).click(),
+    ]);
+    check('tocar la siguiente lleva a la lista de invitados de ESA fiesta', pagina.url() === lista, pagina.url());
+
+    // ── 9 · Limpio ───────────────────────────────────────────────────────────────────────────────────
     const deCodigo = (codigo) => errores.filter((e) => e.includes(`status of ${codigo}`));
     const inesperados = errores.filter((e) => ! /status of (401|404)/.test(e))
         .concat(deCodigo(401).slice(esperados[401]), deCodigo(404).slice(esperados[404]));

@@ -326,9 +326,15 @@ BLADE);
         $this->assertSame(__('isla.hoy'), $invitado['textos']['hoy']);
         $this->assertArrayNotHasKey('compra', $invitado['textos'], 'Los textos de la compra viajan con la compra, no aquí.');
         $this->assertArrayNotHasKey('calculadora', $invitado['textos']);
+        // T5c: los de Mi cuenta viven en el motor y viajan con la sesión; aquí eran 4 KB en cada página (`PERF-02`).
+        $this->assertArrayNotHasKey('mi_cuenta', $invitado['textos']);
+        $this->assertArrayNotHasKey('mi_cuenta_alta', $invitado['textos']);
+        $this->assertNull($invitado['config']['cuenta'], 'sin sesión, nada de la cuenta');
 
         $user = User::factory()->create();
-        $this->assertSame($user->id, $isla((string) $this->actingAs($user)->get('/kids')->getContent())['config']['owner'] ?? null);
+        $conSesion = $isla((string) $this->actingAs($user)->get('/kids')->getContent())['config'] ?? [];
+        $this->assertSame($user->id, $conSesion['owner'] ?? null);
+        $this->assertSame(['pending' => false, 'pendingText' => null, 'task' => null, 'bookingToday' => null], $conSesion['cuenta'] ?? null, 'con sesión y sin reservas: la cuenta, sin nada que decir');
 
         $this->assertNull($isla((string) $this->get('/jump')->assertOk()->getContent()), 'Sin pedirla, ni su JSON.');
     }

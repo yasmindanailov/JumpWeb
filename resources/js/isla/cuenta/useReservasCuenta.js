@@ -8,16 +8,19 @@
  *     (la zona del cajón, con anterior y siguiente); aquí la lista crece. Mismos endpoints, mismo contrato.
  *   · **El contacto del parque** (`/site`: el teléfono de «Cambiar o cancelar», la ruta de «Cómo llegar»), solo cuando
  *     hace falta y una vez.
+ *   · **«Antes de venir»** (T5c, `#776`) de cada reserva que se enseña —la próxima y la que se abre—, una vez por reserva
+ *     (`/me/reservations/{id}/before-visit`: sus tareas ya escritas por el servidor).
  *   · Se pide al entrar en Mi cuenta y no se repite al reabrirla (una recarga lo trae de nuevo).
  */
 import { computed, reactive } from 'vue';
 import { api } from '../../sidebar/api.js';
 import { cambiarDe, filaHistorial, lineasDe, pagoDe, reservasDeCuenta, tarjetaDe } from './reservas.js';
+import { antesDe, chipDe } from './antes.js';
 
 const POR_PAGINA_HISTORIAL = 10;
 
 export function useReservasCuenta({ textos, locale }) {
-    const s = reactive({ proximas: null, pasadas: [], pagina: 0, ultima: 1, cargando: false, cargandoMas: false, sitio: null });
+    const s = reactive({ proximas: null, pasadas: [], pagina: 0, ultima: 1, cargando: false, cargandoMas: false, sitio: null, antes: {} });
     const deps = { locale, textos };
 
     async function cargar() {
@@ -57,11 +60,23 @@ export function useReservasCuenta({ textos, locale }) {
         s.sitio = r.ok ? (r.data ?? {}) : {};
     }
 
+    /** Las tareas de una reserva, una vez. Sin respuesta, ninguna: el bloque no sale (no inventa tareas). */
+    async function cargarAntes(id) {
+        if (! id || s.antes[id] !== undefined) return;
+        s.antes[id] = null;
+        const r = await api.get(`/me/reservations/${id}/before-visit`);
+
+        s.antes[id] = r.ok ? (r.data?.data?.tasks ?? []) : [];
+    }
+
     const listas = computed(() => reservasDeCuenta({ proximas: s.proximas, pasadas: s.pasadas }));
     const bloque = (card) => (card ? { tarjeta: tarjetaDe(card, deps), lineas: lineasDe(card, deps), pago: pagoDe(card, deps) } : null);
+    const tareasDe = (card) => s.antes[card?.reservation?.id] ?? [];
 
     return {
-        s, cargar, mas, cargarSitio, listas, bloque,
+        s, cargar, mas, cargarSitio, cargarAntes, listas, bloque,
+        antes: (card) => (card ? antesDe(tareasDe(card), { ...deps, fecha: card.reservation?.date ?? '' }) : null),
+        chip: (card) => chipDe(tareasDe(card), deps),
         buscar: (id) => [listas.value.proxima, ...listas.value.otras].find((c) => c?.reservation?.id === id) ?? null,
         otras: computed(() => ({
             otras: listas.value.otras.map((c) => ({ id: c.reservation.id, tarjeta: tarjetaDe(c, deps) })),

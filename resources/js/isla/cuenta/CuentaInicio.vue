@@ -1,10 +1,11 @@
 <script setup>
 /**
  * **Mi cuenta, el inicio** (`paginas/mi-cuenta/cuenta.jsx`, la vista `inicio`; §4.13): arriba, las tres respuestas en
- * tres segundos —«Hola, Ana», la próxima en una línea (baja a su bloque) y, con tareas, «Siguiente: …» (T5c)—; después
- * los bloques en su orden. **Tu QR**: compacto, con «Enseñar mi QR» (`PmcQrMini`), o grande de entrada si la reserva es
- * HOY, que es lo que va a hacer (T5b). **Tu próxima reserva** y **Otras reservas** con su historial (T5b). Antes de
- * venir, Reservar otra vez, Quién viene contigo y los Ajustes se suman aquí en las tandas que los traen.
+ * tres segundos —«Hola, Ana», la próxima en una línea (baja a su bloque) y, con tareas, «Siguiente: …» (baja a Antes de
+ * venir, T5c)—; después los bloques en su orden. **Tu QR**: compacto, con «Enseñar mi QR» (`PmcQrMini`), o grande de
+ * entrada si la reserva es HOY, que es lo que va a hacer (T5b). **Tu próxima reserva**, **Antes de venir** (T5c) y
+ * **Otras reservas** con su historial (T5b). Reservar otra vez, Quién viene contigo y los Ajustes se suman aquí en las
+ * tandas que los traen.
  *
  * Pinta y avisa: qué se enseña lo decide `useSeccionCuenta.js` (y `reservas.js`).
  */
@@ -13,6 +14,7 @@ import { CUENTA } from './estilos.js';
 import AvisoCuenta from './AvisoCuenta.vue';
 import BloqueQr from './BloqueQr.vue';
 import BloqueReserva from './BloqueReserva.vue';
+import BloqueAntes from './BloqueAntes.vue';
 import BloqueOtras from './BloqueOtras.vue';
 import IconoLucide from '../ui/IconoLucide.vue';
 import BotonSistema from '../ui/BotonSistema.vue';
@@ -30,9 +32,11 @@ defineProps({
     sinQr: { type: String, default: '' },
     proxima: { type: Object, default: null },
     esperandoProxima: { type: Boolean, default: false },
+    antes: { type: Object, default: null },
+    chip: { type: String, default: '' },
     otras: { type: Object, required: true },
 });
-const emit = defineEmits(['qr', 'bloque', 'cambiar', 'abrir', 'mas', 'guardar', 'preguntar', 'renovar']);
+const emit = defineEmits(['qr', 'bloque', 'cambiar', 'abrir', 'mas', 'guardar', 'preguntar', 'renovar', 'tarea']);
 const { t, tp } = useTextos();
 </script>
 
@@ -59,6 +63,17 @@ const { t, tp } = useTextos();
                     color="var(--icon-accent)"
                 />
                 <span :style="{ minWidth: 0 }">{{ linea }}</span>
+            </button>
+            <button
+                v-if="chip"
+                type="button"
+                :style="{ display: 'inline-flex', alignItems: 'center', gap: '8px', justifySelf: 'start', minHeight: '36px', padding: '0 14px', borderRadius: 'var(--r-pill)', border: '1px solid var(--notice-warn-border)', background: 'var(--notice-warn-bg)', cursor: 'pointer', fontFamily: 'var(--font-ui)', fontSize: 'var(--fs-caption)', fontWeight: 'var(--fw-bold)', color: 'var(--text-strong)' }"
+                @click="emit('bloque', 'antes')"
+            >
+                <span
+                    aria-hidden="true"
+                    :style="{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--notice-warn-fg)' }"
+                />{{ chip }}
             </button>
         </header>
         <BloqueQr
@@ -116,6 +131,11 @@ const { t, tp } = useTextos();
             v-else-if="esperandoProxima"
             kind="card"
             height="168px"
+        />
+        <BloqueAntes
+            v-if="antes"
+            :antes="antes"
+            @tarea="(a) => emit('tarea', a)"
         />
         <BloqueOtras
             v-bind="otras"

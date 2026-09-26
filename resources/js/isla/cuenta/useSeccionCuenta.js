@@ -74,8 +74,14 @@ export function useSeccionCuenta(props) {
 
     function cargar(vista) {
         if (vista === VISTA.INICIO || vista === VISTA.QR) carne.ensure({ api });
-        // Las reservas, al entrar; con la de HOY, la ruta al parque para «Cómo llegar» de Tu QR (situación 14).
-        if (vista === VISTA.INICIO || vista === VISTA.QR) reservas.cargar().then(() => { if (hoy.value) reservas.cargarSitio(); });
+        // Las reservas, al entrar; con la de HOY, la ruta al parque para «Cómo llegar» de Tu QR (situación 14); y «Antes de
+        // venir» de la próxima (T5c).
+        if (vista === VISTA.INICIO || vista === VISTA.QR) {
+            reservas.cargar().then(() => {
+                if (hoy.value) reservas.cargarSitio();
+                reservas.cargarAntes(proxima.value?.reservation?.id);
+            });
+        }
         if (vista === VISTA.CAMBIAR) reservas.cargarSitio();
         if (vista === VISTA.CREAR || vista === VISTA.ALTA_GOOGLE) waiverStore.ensureLegal();
         if (vista === VISTA.ALTA_GOOGLE) {
@@ -87,14 +93,25 @@ export function useSeccionCuenta(props) {
         }
     }
 
-    /** Lleva el scroll de la capa a un bloque (`#mi-cuenta/antes`), cuando ya está pintado. */
-    function irAlBloque(bloque) {
+    /**
+     * Lleva el scroll de la capa a un bloque (`#mi-cuenta/antes`), cuando ya está pintado. Un bloque que depende de una
+     * respuesta (Antes de venir, la próxima) aún no existe al abrir: se espera a que aparezca, con un tope de dos segundos.
+     */
+    function irAlBloque(bloque, intentos = 20) {
         nextTick(() => setTimeout(() => {
             const c = caja();
             const el = bloque ? document.getElementById(bloque) : null;
 
             if (c && el) c.scrollTop = el.getBoundingClientRect().top - c.getBoundingClientRect().top + c.scrollTop - 12;
-        }, 60));
+            else if (bloque && intentos > 0) irAlBloque(bloque, intentos - 1);
+        }, intentos === 20 ? 60 : 100));
+    }
+
+    /** La acción de una tarea: WhatsApp se abre aparte (la aplicación, en un móvil); una página de la web, en esta pestaña. */
+    function hacerTarea(accion) {
+        if (! accion?.url) return;
+        if (accion.via === 'whatsapp') window.open(accion.url, '_blank', 'noopener');
+        else window.location.assign(accion.url);
     }
 
     /** Al abrirse, la vista de su zona: la que pidió la apertura (aún sin consumir) o la ya aplicada al motor. */
@@ -326,6 +343,9 @@ export function useSeccionCuenta(props) {
         proxima: reservas.bloque(proxima.value),
         // El contexto ya dice que hay próxima y aún no han llegado las reservas: su hueco espera, sin saltos.
         esperandoProxima: reservas.s.proximas === null && Boolean(contexto.context?.next_reservation),
+        // «Antes de venir» de la próxima y, arriba, «Siguiente: …» (T5c).
+        antes: reservas.antes(proxima.value),
+        chip: reservas.chip(proxima.value),
         otras: reservas.otras.value,
     }));
 
@@ -354,10 +374,13 @@ export function useSeccionCuenta(props) {
         aInicio, decir, renovarQr, olvido, aGoogle, irAlBloque,
         // Las reservas (T5b): abrir una de «Otras reservas», pedir un cambio (desde la próxima o desde la abierta) y el
         // historial que crece.
-        abrirReserva: (id) => a(VISTA.RESERVA, { rSel: id }),
+        abrirReserva: (id) => { a(VISTA.RESERVA, { rSel: id }); reservas.cargarAntes(id); },
         aCambiar: (desdeReserva) => a(VISTA.CAMBIAR, { cambiarDesdeReserva: desdeReserva === true }),
         masHistorial: () => reservas.mas(),
         reservaAbierta: computed(() => reservas.bloque(reservas.buscar(e.rSel))),
+        // Su «Antes de venir» (T5c): cada reserva tiene sus tareas, también la que se abre desde «Otras reservas».
+        antesAbierta: computed(() => reservas.antes(reservas.buscar(e.rSel))),
+        hacerTarea,
         cambiarVista,
         guardarQr: () => decir(t(textos, 'mi_cuenta.qr.guardado')),
         pedirRenovar: (si) => { e.renovar = si; },

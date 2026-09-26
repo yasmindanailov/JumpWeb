@@ -35,6 +35,7 @@ export function medirVista({ ctas = [], hoyLinea = null, isla = null, alto }) {
 export function propsDeLaIsla({ config, estado, acciones, textos }) {
     const calculo = estado.calculo ?? null;
     const falta = calculo?.falta || null;
+    const cuenta = config.owner ? (config.cuenta ?? null) : null;
     const conHoy = Boolean(config.today) && ! estado.vista.hoy && ! falta;
     const huecos = Boolean(config.today?.slots);
     const accion = falta
@@ -55,9 +56,16 @@ export function propsDeLaIsla({ config, estado, acciones, textos }) {
         lang: config.lang ?? '',
         // La cuenta, en su capa de la isla (T5, `#773`): Mi QR (el carné), Mi cuenta (su inicio) o, sin sesión, entrar. De
         // dónde viene (`from`: el menú o la acción de la isla) viaja con ella: desde el menú, su flecha vuelve a él.
+        // Con sesión, lo que el SERVIDOR sabe de la próxima (`config.cuenta`, `Http\Cuenta\AntesDeVenir::paraLaIsla`, T5c):
+        // su primera tarea pendiente —el punto del menú y «Siguiente: …» en Mi cuenta— y si es HOY.
         account: config.owner
-            ? { state: 'session', onQr: (x) => acciones.abrirCuenta('card', x?.from), onClick: (x) => acciones.abrirCuenta('home', x?.from) }
+            ? { state: 'session', pending: Boolean(cuenta?.pending), pendingText: cuenta?.pendingText ?? null,
+                onQr: (x) => acciones.abrirCuenta('card', x?.from), onClick: (x) => acciones.abrirCuenta('home', x?.from) }
             : { state: 'guest', onClick: (x) => acciones.abrirCuenta('login', x?.from) },
+        // «Hoy a las 17:00» (situación 14): manda sobre casi todo y su acción es «Ver mi QR», que abre Tu QR en su capa.
+        bookingToday: cuenta?.bookingToday ? { text: cuenta.bookingToday.text } : null,
+        // La tarea (situación 13): en la portada y en la página de lo reservado, con su acción (un enlace a su sitio).
+        task: cuenta?.task ? { text: cuenta.task.text, product: cuenta.task.product ?? null, action: { ...cuenta.task.action } } : null,
         cookies: estado.cookies ? { onAccept: acciones.aceptarCookies, onReject: acciones.rechazarCookies, onConfigure: acciones.configurarCookies, onPolicy: acciones.politicaCookies } : null,
         cookiePrefs: estado.preferencias ?? null,
         notice: estado.aviso ?? null,

@@ -2,9 +2,10 @@
 /**
  * Una tarea antes de venir, del sistema de diseño (`TaskCard.jsx`): añadir a los hijos, el formulario de
  * invitados, los calcetines. La misma en Listo de la compra y en «Antes de venir» de Mi cuenta. Todas
- * opcionales: se dicen como una ayuda, nunca como un deber. Con `due` lleva su plazo real arriba; con `@click` y
- * sin la ranura `acciones`, se toca entera (y su acción se lee en color de enlace, `cta`). Sirve sobre claro y
- * sobre tinta.
+ * opcionales: se dicen como una ayuda, nunca como un deber. Con `due` lleva su plazo real arriba (y con `overline`,
+ * «SIGUIENTE» delante, T5c); con `@click` y sin la ranura `acciones`, se toca entera (y su acción se lee en color de
+ * enlace, `cta`). Sirve sobre claro y sobre tinta. La fila de la lista de tareas (`variant="row"` del diseño) es
+ * `FilaTarea.vue`: solo la pinta Mi cuenta, y aquí viajaría con «Listo» de la compra.
  */
 import { computed, ref, useSlots } from 'vue';
 import IconoLucide from './IconoLucide.vue';
@@ -12,6 +13,7 @@ import IconoLucide from './IconoLucide.vue';
 const props = defineProps({
     icon: { type: String, default: 'circle-check' },
     title: { type: String, default: '' },
+    overline: { type: String, default: '' },
     due: { type: String, default: '' },
     steps: { type: Array, default: null },
     note: { type: String, default: '' },
@@ -44,9 +46,18 @@ const entera = computed(() => Boolean(props.onClick) && ! slots.acciones);
         /></span>
         <span :style="{ display: 'grid', gap: '8px', minWidth: 0 }">
             <span
-                v-if="due"
-                :style="{ fontFamily: 'var(--font-ui)', fontSize: 'var(--fs-caption)', fontWeight: 'var(--fw-bold)', color: 'var(--text-low)' }"
-            >{{ due }}</span>
+                v-if="overline || due"
+                :style="{ display: 'flex', flexWrap: 'wrap', gap: '4px 10px', fontFamily: 'var(--font-ui)', fontSize: 'var(--fs-caption)', fontWeight: 'var(--fw-bold)' }"
+            >
+                <span
+                    v-if="overline"
+                    :style="{ color: 'var(--text-strong)', textTransform: 'uppercase', letterSpacing: '0.06em' }"
+                >{{ overline }}</span>
+                <span
+                    v-if="due"
+                    :style="{ color: 'var(--text-low)' }"
+                >{{ due }}</span>
+            </span>
             <strong
                 v-if="title"
                 :style="{ fontFamily: 'var(--font-ui)', fontSize: 'var(--fs-body-sm)', fontWeight: 'var(--fw-bold)', lineHeight: 1.4, color: 'var(--text-strong)' }"

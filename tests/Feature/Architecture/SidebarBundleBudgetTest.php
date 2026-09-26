@@ -943,7 +943,11 @@ class SidebarBundleBudgetTest extends TestCase
     // 26-09 con las reservas: 66,70 KiB —41,98 suyos y el resto, trozos COMUNES con los pasos de la compra (las pantallas
     // de entrar y del alta, `_CajaAntiBot`, 17,77), que quien ya pasó por «Tus datos» no vuelve a bajar—. El techo, a
     // 68; las tandas que traen más bloques (T5c–T5f) lo suben con su medida.
-    private const ISLA_CUENTA_CHUNK_MAX_KB = 68;
+    // T5c (`#776`, «Antes de venir»): 66,70 → 79,96. Lo suyo +10,09 (el bloque, la fila de tarea, `antes.js`, el chip y
+    // cuatro iconos) y el trozo común con los pasos +3,17: la tarjeta de tarea, que ahora comparten «Listo» y el bloque.
+    // ⚠️ La FILA (`variant="row"` del diseño) es su propio componente (`ui/FilaTarea.vue`): dentro de la tarjeta la
+    // pagaban los pasos de la compra, que no la pintan (medido: 39,34 → 41,36; aparte, 39,65). El techo, a 82.
+    private const ISLA_CUENTA_CHUNK_MAX_KB = 82;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

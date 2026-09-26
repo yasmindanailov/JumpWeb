@@ -3,9 +3,9 @@
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 EN CURSO** (su centena,
-> `decisiones/700-799.md`) · Último usado: **`#775`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#775`) · Actualizado: **2026-09-26**
-> (la T5, Mi cuenta en la isla: plan `#773`; T5a `#774` y T5b `#775` hechas).
+> `decisiones/700-799.md`) · Último usado: **`#776`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#776`) · Actualizado: **2026-09-26**
+> (la T5, Mi cuenta en la isla: plan `#773`; T5a, T5b y T5c hechas, `#774`→`#776`).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
 > llévaselo con la medida, como el SPA en `#724`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -42,9 +42,10 @@
 ## Por dónde retomar, en orden
 
 ▶▶ **EN MARCHA (26-09): T5 · Mi cuenta en la isla** (spec §4.13, `#773`: el censo, las cuatro respuestas del owner y
-el plan T5a→T5f; dentro de la v2). **T5a ✅** (`#774`: la capa, las puertas, Tu QR, Entra; contrato 1.33.0) y **T5b ✅**
-(`#775`: las reservas; contrato 1.34.0; `scripts/sonda-cuenta.mjs` 89/89 con `sonda-cuenta-datos.php`). Sigue la
-**T5c**, Antes de venir. ⚠️ En PRODUCCIÓN, el owner pone en el panel el aviso de los calcetines (su complemento) y «se
+el plan T5a→T5f; dentro de la v2). **T5a ✅** (`#774`: la capa, las puertas, Tu QR, Entra), **T5b ✅** (`#775`: las
+reservas) y **T5c ✅** (`#776`: Antes de venir, el punto de la isla y «Hoy a las…»; contrato 1.37.0;
+`scripts/sonda-cuenta.mjs` 111/111 con `sonda-cuenta-datos.php`). Sigue la **T5d**, Quién viene contigo y Añadir a tus
+hijos (con la tarea «Añade a tus hijos»). ⚠️ En PRODUCCIÓN, el owner pone en el panel el aviso de los calcetines y «se
 devuelve la señal» de los packs (en LOCAL, puestos). ⚠️ La T5d toca `DependentRegistry` (`CRITICAL_RE`,
 `VERIFY_CONC=1`): los apellidos del menor pasan a opcionales (`#773`·a). ⚠️ La sonda RENUEVA el carné de `probe-card@`.
 ▶ **HECHO (25/26-09)**: la **T4** (spec §4.12; banco de la isla 60/60; `#768`: sin bancos por tanda) y el encargo del
@@ -220,22 +221,17 @@ dueño es el carril de la web/reseñas—) ·
 
 ## Buzón
 
-### ❗❗ Para el SPA (emisor: plataforma, 2026-09-26) — la T5: MI CUENTA EN LA ISLA, junto a tu motor (ANTES de tocarlo)
-- `#773` (owner): Mi cuenta pasa a la isla (spec `isla-y-landing-nueva.md` §4.13: censo, respuestas y plan T5a→T5f).
-  **Lo que toco de lo tuyo, como en la T3e·2**: `sidebar/carcasa.js` (`superficieDe`: con la isla, la cuenta deja de
-  ir al lateral) y **tu raíz `Sidebar.vue`**: con la isla monta `isla/SeccionCuenta.vue` (trozo diferido) en el sitio
-  de `AccountSection`, que en el cajón NO cambia. Tus stores de cuenta (`card`, `reservations`, `orders`, `dependents`,
-  `profile`, `credentials`, `privacy`, `waiver`, `accountContext`, `auth`) y `account/*.js`, **leídos, sin tocarlos**;
-  si alguno necesitara cambiar, te lo pido aquí antes. ⚠️ **T5d, aviso previo**: `#773`·a hace OPCIONALES los
-  apellidos del menor en `POST /me/dependents` (revoca esa parte de `#236`); tu `DependentsZone` puede seguir
-  pidiéndolos o dejarlos opcionales, tú decides. Y la API gana en cada reserva su fecha límite de cambio y su
-  producto (aditivo; el contrato, el siguiente menor que quede libre).
-  ▶ **T5a HECHA (26-09, `#774`), lo tocado de lo tuyo**: `Sidebar.vue` +3 líneas (38/40); `carcasa.js::superficieDe` sin
-  su `{ cuenta }`; `compra/useSuperficie.js` (mío) llama a TU `section.showPurchase()` al abrirse la compra. Del paquete
-  (mío), para que lo sepas: `jw:cajon:open` lleva `cuenta: true` SOLO en las aperturas de cuenta (tu `track.js` no lo
-  lee), y `openAccount(event, zone, { desde })`. El grupo `isla` pierde `mi_cuenta` para el invitado y lo gana con
-  sesión (`SidebarSession.isla`, contrato **1.33.0**). Tus stores, sin tocar. ▶ **T5b (`#775`)**: el **1.34.0** también
-  es mío (`OrderItem`: `product_id`, `today`, `cancellation`; `OrderItemAddon.note`): **tu siguiente, 1.35.0**.
+### ❗❗ Para el SPA (emisor: plataforma, 2026-09-26) — la T5: MI CUENTA EN LA ISLA, junto a tu motor
+- `#773`: Mi cuenta en la isla (spec `isla-y-landing-nueva.md` §4.13: cada tanda dice lo tocado). De lo tuyo:
+  `Sidebar.vue` (+3 líneas: con la isla monta `isla/SeccionCuenta.vue`) y `carcasa.js::superficieDe`; tus stores y
+  `account/*.js`, leídos sin tocar. Contratos míos: 1.33.0 (T5a) y 1.34.0 (T5b). ⚠️ **T5d**: `#773`·a hace opcionales
+  los apellidos del menor en `POST /me/dependents`; tu `DependentsZone` decide si los sigue pidiendo.
+- ▶ **T5c (`#776`)**: ① el **1.37.0** es mío (tras tus 1.35.0 y 1.36.0): el siguiente, tuyo. ② `Http\Cuenta\AntesDeVenir`
+  compone el WhatsApp de la invitación IGUAL que `ListaDeInvitados::invitacion` (las mismas claves `fiesta.lista.*`) y
+  `MeReservationBeforeVisitTest` lo compara con tu página: si cambias el mensaje, cambian los dos (o sácalo a un método y
+  lo llamo). ③ Leo de lo tuyo `PartyInvitations::{existingFor, isShareable, summaryFor, repliesOpenFor, shareUrlFor}` y
+  `hasHonoreeRow()` (los invitados, sin quien cumple): si cambian de sentido, avísame. ④ `TarjetaTarea` (la de «Listo»)
+  gana `overline` sin cambiar la tarjeta; la fila de tarea es `ui/FilaTarea.vue`, nueva.
 
 - ▶ `#682`: la **isla** va en el producto como **segunda carcasa** sobre el motor del cajón, apagada por defecto, y
   la construye ESTE carril (spec `isla-y-landing-nueva.md` §4.1, §4.3 y §4.4). Lo que haga falta del motor te lo
