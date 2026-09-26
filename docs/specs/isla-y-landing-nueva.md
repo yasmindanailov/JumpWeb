@@ -1449,6 +1449,43 @@ piezas del sistema**, enseñado en vivo antes de cerrar.
   su módulo y por lectura, no en vivo. **El peso**: Mi cuenta 101,34 → 104,93 (techo 106: los avisos van con la primera
   pintura, donde se miran), la isla de la página 155,62 → 156,30 (techo 157). ▶ **Sigue la T5f**.
 
+### 4.14 El zip del 26-09 tarde (el tercero): movimiento, garantías y la marca de Google (`#780`)
+
+**Lo que trae** (`diseno/actualizar.py`, 603 ficheros; su README lo cuenta por secciones): **el movimiento en el sistema**
+—tokens `--dur-bote`, `--dur-close`, `--dur-count` y `--nudge-*` (a 1ms con «reducir movimiento»), los keyframes `pj-bote`,
+`pj-trazo`, `pj-destello`, `pj-baja`, `pj-tachar` y las View Transitions entre páginas en `tokens/base.css`; y por pieza:
+`Button` primario que llega con bote y un brillo (`arrive`), `ParkIsland` (la frase en calma, la acción que llega con bote,
+abrir fila a fila, cerrar en 300ms), `RollingNumber`, `TimeSlotPicker` (la hora se desliza; las plazas destellan y se tachan),
+`RatingSummary` (4,0 → 4,9 al verse), `Accordion`, `Skeleton` (`delay` 300ms), `Reveal`, `VideoHero` (profundidad al bajar),
+`StepList path` (el raíl se llena) y `ScrollNudge` («hay más abajo»: un bote a los 4,5 s)—; **las garantías**, una sola
+pieza para toda la web (`ReassuranceBand`, barra de ~80px con tres pegatinas de los colores del logotipo); **la isla por
+temporada**; **cinco mejoras de conversión** de la compra (la hora al entrar en «Tus datos», el teclado, Intro, «¿Querías
+decir…?», `Medir`); y **Normas y Visítanos** enteras.
+
+**El owner, 26-09** (`#780`): lo que pidió —el movimiento, las garantías y la marca OFICIAL de Google donde se hable de
+reseñas o puntuaciones— primero; **la isla por temporada, ahora no**; **la conversión, después del movimiento** (toca el
+motor: aviso al SPA); **Normas y Visítanos, después**. Y «Entra» a lo ancho, como «Crea tu cuenta».
+
+**El plan**: **Z1** (Entra, garantías, Google) → **Z2** el movimiento de las PÁGINAS (lo que Kids y Jump usan: el botón
+que llega, la nota que cuenta, el acordeón, la profundidad de la cabecera, el raíl de los pasos, `ScrollNudge` y las View
+Transitions con la isla fija) → **Z3** el movimiento de la ISLA (la píldora, abrir y cerrar, la acción que llega, el total
+que rueda, las horas, `BotonSistema`, `EsqueletoCarga`, `AcordeonSistema`) → **Z4** la conversión → Normas y Visítanos.
+La identidad con el diseño, una vez y al final (`#768`).
+
+- ▶ **Z1 ✅ (26-09, `#780`)**. **Entra, a lo ancho**: en Mi cuenta la pantalla iba en una rejilla, y una casilla con
+  `margin: 0 auto` se encoge a su contenido (~260px); el paso común (`compra/estilos.js`, `PASO.paso`) gana `width: 100%`
+  con su tope de 520 y queda como «Crea tu cuenta» (medido: 520 a 1280, 340 a 390). **Las garantías**
+  (`instancias/playjump/web/components/reassurance-band.blade.php`, `.pj-rb`): la barra o la lista la deciden los textos
+  —`entradas.js` mide la copia oculta de los tres titulares, como el diseño; antes y sin JavaScript, una suposición por la
+  ventana—; `title` es el principio de la frase (en es/en/fr); la tira vieja se retira (sin uso). **La marca de Google**,
+  según el contexto y siempre el FICHERO de Google (no se recolorea): la «G» junto a la nota de la cabecera y del cierre
+  (sobre tinta, en su círculo blanco), el LOGOTIPO entero como insignia del panel de reseñas
+  (`public/images/providers/google-logo.svg`, del CDN de marca de Google, byte a byte y con su sha256) y la «G» en la
+  esquina de cada tarjeta **solo si la reseña es de la ficha** (`origin: google`; una propia nunca, `#494`). El texto
+  («sobre 5 en Google», «Ver en Google») sigue siendo texto: la marca no va dentro de una frase. ⚠️ **De paso, un defecto
+  previo**: la nota decía «en Google» también si venía del panel (`source: cms`); ahora la fuente sale del hecho y, sin
+  Google, ni marca ni «en Google» (`piezas.nota.sobre_sin`). La hoja de Saltia, regenerada (`tema/construir-hoja.py`).
+
 ## 5. Impacto en invariantes
 
 - `PAY-*`: solo si entra Bizum; entonces `VERIFY_CONC=1` y la lista del `CRITICAL_RE`.

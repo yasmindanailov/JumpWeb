@@ -233,6 +233,17 @@ No hay chat entre agentes: **lo que no está en `origin/main`, el otro no lo sab
    cae en la frontera de los dos carriles, los ficheros de carril dicen quién lo lleva; no se arregla dos veces.
 8. **Al cerrar un carril** su fichero dice «cerrado» y apunta a la spec: la foto es una FOTO, no un
    histórico (el histórico es `docs/decisiones/` y `git log -p`).
+9. **Las trampas al empujar** (mudadas del carril de plataforma el 26-09, porque valen para todos):
+   - **Dos carriles empujando a la vez**: el gate tarda ~3 min y el remoto se mueve; un push puede salir RECHAZADO
+     con el gate en verde (18-09, dos veces). `pull --rebase`, **re-medir la suite sobre el árbol fusionado**,
+     corregir el trailer con `--amend` y volver a empujar. La etiqueta se lleva `main` ENTERO.
+   - **El código de salida de una tarea en segundo plano con `; tail` al final es el del `tail`**: los de `pull` y
+     `push` se imprimen con `echo "… exit=$?"` y se LEEN.
+   - **Una etiqueta no pasa por el gate** (`pre-push` solo mira `refs/heads/main`): `/release` exige que el commit ya
+     esté en `origin/main`; y un test sobre una «casi versión» tiene que EMPUJARLA antes de medir.
+   - 💥 **Sacar ficheros del repo** (`#663`): `git rm --cached` REGISTRA un borrado que el `pull --rebase` aplica al
+     disco (se copian FUERA antes), y lo que dependía de ellos en disco sale verde aquí y rojo en el otro ordenador
+     (la suite, con y sin ellos). Las dos, enteras, en `paquete-de-instancia.md`.
 
 ## §11 Ciclo de vida de la documentación — escribir, mover, borrar
 `[DECIDIDO owner, 2026-09-16]` (`DECISIONES #622`). F1 enseñó a escribir con techo; esto dice cómo se
@@ -256,3 +267,7 @@ Reglas transversales:
 5. **Lo medible lo mide el gate** (check 11): una spec con estado 📜 no puede seguir en `docs/specs/`;
    `CLAUDE.md` no cita `docs/archivo/`; ningún doc de `sistemas/` pasa de 48 KB. El resto lo ejecutan
    las skills de cierre (`/handoff` y `/dod` desde F2), no la memoria de nadie.
+6. **Un doc pegado a su techo se MUDA, no se raspa** (mudada del carril de plataforma el 26-09). El enrutador (12 KB), el
+   tracker (16), un carril (32) y el §0 de una spec (2) viven pegados al suyo: rascar tres veces seguidas es la señal de
+   que algo tiene que irse a su spec o a su doc de referencia —no de que el techo esté mal—. Así se fueron las trampas del
+   cajón a `cajon-empaquetable.md` §4.8 y el historial del menú a `instancia-y-landing-fuera.md` §4.1.

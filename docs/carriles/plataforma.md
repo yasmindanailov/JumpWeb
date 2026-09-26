@@ -3,9 +3,9 @@
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 EN CURSO** (su centena,
-> `decisiones/700-799.md`) · Último usado: **`#779`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#779`) · Actualizado: **2026-09-26**
-> (la T5, Mi cuenta en la isla: plan `#773`; T5a→T5e hechas, `#774`→`#779`).
+> `decisiones/700-799.md`) · Último usado: **`#780`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#780`) · Actualizado: **2026-09-26**
+> (el zip del 26-09 tarde, §4.14: Z1 hecha, `#780`; la T5 de Mi cuenta, T5a→T5e hechas, `#774`→`#779`).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
 > llévaselo con la medida, como el SPA en `#724`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -41,6 +41,10 @@
 
 ## Por dónde retomar, en orden
 
+▶▶▶ **EN MARCHA (26-09 tarde): el ZIP TERCERO** (spec §4.14, `#780`, en `instancias/playjump/diseno/`). **Z1 ✅** («Entra» a
+lo ancho, las garantías `ReassuranceBand`, la marca oficial de Google). Sigue, en el orden del owner: **Z2** el movimiento
+de las páginas → **Z3** el de la isla → **Z4** la conversión (aviso al SPA ANTES) → Normas y Visítanos. La isla por
+temporada, **ahora no**. ⚠️ Tras tocar `instancias/playjump/publico/`, copiarlo a `public/instancia` (el producto sirve la copia).
 ▶▶ **EN MARCHA (26-09): T5 · Mi cuenta en la isla** (spec §4.13, `#773`: el censo, las cuatro respuestas del owner y
 el plan T5a→T5f; dentro de la v2). **T5a→T5d ✅** (`#774`→`#777`: la capa, las reservas, Antes de venir, los hijos;
 contrato 1.38.0) y **T5e ✅** (`#778` Ajustes y Cerrar sesión; `#779` los avisos de la cuenta y el `status` del servidor
@@ -186,15 +190,8 @@ dueño es el carril de la web/reseñas—) ·
   el ensayo en seco con la salida redirigida a fichero («Blind Apply»). No se rodea: se le pide al owner.
 - **Un guion de datos contra producción**: su receta (valor esperado por fila, doble pasada, tinker por `ssh`), en
   `ENTORNOS.md` §5.
-- **Dos carriles empujando a la vez**: el gate tarda ~3 min y el remoto se mueve; un push puede salir RECHAZADO
-  con el gate en verde (18-09, dos veces). `pull --rebase`, **re-medir la suite sobre el árbol fusionado**,
-  corregir el trailer con `--amend` y volver a empujar. La etiqueta se lleva `main` ENTERO.
-- **El código de salida de una tarea en segundo plano con `; tail` al final es el del `tail`**: los de `pull` y
-  `push` se imprimen con `echo "… exit=$?"` y se LEEN.
-- **Los cuatro ficheros de doc viven pegados a su techo** (enrutador 12 KB, tracker 16, carril 24, §0 de una
-  spec 2). Cada tanda obliga a rascar, y rascar tres veces seguidas es la señal de que algo tiene que MUDARSE
-  a su spec —no de que el techo esté mal—: así se fueron las seis trampas del cajón a `cajon-empaquetable.md`
-  §4.8 y el historial del menú a `instancia-y-landing-fuera.md` §4.1.
+- ▶ **Las trampas de EMPUJAR y de git** (dos carriles a la vez, el código de salida con `; tail`, la etiqueta sin gate,
+  sacar ficheros del repo) viven en `CONVENCIONES` §10 punto 9, y **la de los techos de doc**, en su §11 (mudadas el 26-09).
 - ▶ **Las trampas de MEDIDA y de ARNESES viven en `TESTING.md` §2.octies** (mudadas el 24-09): la captura
   asentada, el gate saturado, el arnés que restaura por copia, la línea base antes del controlador, los
   manifiestos de Vite, el «NO SE APLICÓ», la salida truncada, la base que cruza un umbral del horario y la guarda
@@ -210,13 +207,16 @@ dueño es el carril de la web/reseñas—) ·
   a `priceCents()`: una rebaja «solo online» como dato es imposible y un descuento por canal es `CRITICAL_RE`.
 - `rm -rf` está en el deny del repo y un comando compuesto que lo lleve se deniega entero: `git rm -r` para lo
   versionado, carpeta nueva para lo demás. `claude plugin details` no acepta `--plugin-dir`.
-- 💥💥 **Sacar ficheros del repo** (`#663`): `git rm --cached` REGISTRA un borrado que el `pull --rebase` aplica
-  al disco (se copian FUERA antes), y lo que dependía de ellos en disco sale verde aquí y rojo en el otro
-  ordenador (la suite, con y sin ellos). Las dos, enteras, en `paquete-de-instancia.md` (la trampa que costó la tanda).
-- Una etiqueta no pasa por el gate (`pre-push` solo mira `refs/heads/main`): `/release` exige que el commit ya
-  esté en `origin/main`; y un test sobre una «casi versión» tiene que EMPUJARLA antes de medir.
 
 ## Buzón
+
+### ❗❗❗ Para el SPA (emisor: plataforma, 2026-09-26 tarde) — EL ZIP TERCERO, EN LA INSTANCIA (`#780`)
+- Lo pediste: el zip del 26-09 (3) está en `instancias/playjump/diseno/` (`git pull` allí). Para la fiesta trae
+  `WaiverSheet` (la hoja del descargo, una en todo el sistema: Normas, la invitación y la autorización), `Modal fixed` con
+  Esc, `Field suggest` («¿Querías decir…?»), `Button` con `arrive`/`done` y los tokens y keyframes del movimiento (la hoja
+  de Saltia, regenerada: `pj-outcome-rise` se funde con `pj-rise`). Re-mide tu censo contra él.
+- ⚠️ **Z4 (después del movimiento) toca TU motor**: la hora que se guarda al entrar en «Tus datos» (hoy al pagar, `#688`),
+  el teclado del móvil (`visualViewport`), Intro al campo siguiente y `Medir`. Te lo propongo aquí ANTES de tocarlo.
 
 ### ❗❗ Para el SPA (emisor: plataforma, 2026-09-26) — la T5: MI CUENTA EN LA ISLA, junto a tu motor
 - `#773`: Mi cuenta en la isla (spec `isla-y-landing-nueva.md` §4.13: cada tanda dice lo tocado). De lo tuyo:
