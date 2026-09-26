@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Fiesta;
 
+use App\Domain\Booking\Models\InvitationReply;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Services\GuestCountPolicy;
 use App\Domain\Booking\Services\PartyInvitations;
@@ -165,6 +166,27 @@ class InvitacionPaginaTest extends TestCase
         $this->assertStringContainsString('turns 8 and invites you to jump', $html, 'la invitación, en inglés');
         $this->assertStringContainsString('<html lang="en"', $html);
         $this->assertIdiomaAbajo($html, 'en', 'data-invitation-privacy');
+    }
+
+    /**
+     * «Tus respuestas» (F6b, §4.12): el servidor solo pinta el HUECO, escondido, con el id de la invitación —nunca su token,
+     * que es la credencial—; el recibo añade lo que el móvil tiene que guardar (id y nombre de pila). Lo demás es del
+     * `localStorage` de ese teléfono (`invitacion.js`, con su lógica en `logica.test.js` y su recorrido en `sonda-f6b.mjs`).
+     */
+    public function test_your_replies_strip_is_a_hidden_hole_the_phone_fills(): void
+    {
+        ['invitation' => $invitation] = $this->mountParty();
+
+        $html = (string) $this->get(route(PartyInvitations::PUBLIC_ROUTE, ['token' => $invitation->token]))->assertOk()->getContent();
+        $this->assertStringContainsString('<div class="inv-mias" data-mias hidden data-fiesta="'.$invitation->getKey().'"><span>Tus respuestas:</span></div>', $html);
+        $this->assertLessThan(strpos($html, 'data-invitation-form'), strpos($html, 'data-mias'), 'entre la tarjeta y la barra');
+
+        $vuelta = $this->post(route('invitation.reply', ['token' => $invitation->token]), ['child_name' => 'Hugo Ruiz', 'attending' => '1']);
+        $reply = InvitationReply::query()->where('child_name', 'Hugo Ruiz')->firstOrFail();
+        $recibo = (string) $this->get((string) $vuelta->headers->get('Location'))->assertOk()->getContent();
+        $this->assertSame(1, preg_match('#<div class="inv-mias"[^>]*>#', $recibo, $hueco));
+        $this->assertStringContainsString('data-mia="{&quot;id&quot;:'.$reply->getKey().',&quot;nombre&quot;:&quot;Hugo&quot;}"', $hueco[0], 'el recibo dice qué guardar: su id y el nombre de pila');
+        $this->assertStringNotContainsString($invitation->token, $hueco[0], 'el token de la invitación no sale en el hueco');
     }
 
     public function test_on_the_first_visit_the_invitation_speaks_the_language_of_the_browser(): void

@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Filament\Resources\Attractions\AttractionResource;
 use App\Filament\Resources\AuditLogs\AuditLogResource;
 use App\Filament\Resources\BarImages\BarImageResource;
+use App\Filament\Resources\BirthdayReminders\BirthdayReminderResource;
 use App\Filament\Resources\Catalog\CatalogResource;
 use App\Filament\Resources\Experiments\ExperimentResource;
 use App\Filament\Resources\Faqs\FaqResource;
@@ -102,6 +103,9 @@ class AdminSettingsHub extends Page
                 ['key' => 'catalog', 'class' => CatalogResource::class],
                 // Las ofertas y los regalos (`#770`), junto a lo que anuncian.
                 ['key' => 'promotions', 'class' => PromotionResource::class],
+                // «Avísame de fechas» (`specs/avisame-de-fechas.md`, `#750`): quién quiere un correo antes del cumple de su
+                // hijo. Aquí, junto a lo que vende las fiestas, con el permiso de los clientes (`users.manage`).
+                ['key' => 'birthday_reminders', 'class' => BirthdayReminderResource::class],
                 ['key' => 'rate_types', 'class' => RateTypeResource::class],
                 ['key' => 'zones', 'class' => ZoneResource::class],
             ],

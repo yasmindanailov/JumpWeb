@@ -301,11 +301,12 @@ foreach (['invitacion-viva' => 'viva', 'invitacion-cerrada' => 'cerrada'] as $no
 // Hugo); B es `fiesta.invitacion` con `modelos.php → invitacion(true, estado)`. Las páginas REALES se escriben para el
 // ojo pero no entran en el lote: no miden lo mismo. B lleva lo que la prueba firmada exige y el diseño no dibuja en el
 // recibo (el nombre y los apellidos del niño con la nota de lo que escribió, el nacimiento, la relación, el descargo en
-// el flujo y su privacidad, `#745`/`#706`) y a A le sobra lo que aún no está (F6b: «Crear mi QR» y «Avísame de fechas»).
+// el flujo y su privacidad, `#745`/`#706`). «Avísame de fechas» (F6b, `#750`) el diseño lo dibuja DENTRO de la sección
+// de «Crear mi QR», que no va (`#747`): B lo lleva en su propia sección, y se enseña en vivo; aquí sale a los dos lados.
 // El par de DIAGNÓSTICO esconde eso a cada lado, y el idioma (`#748`), y tiene que dar 0.
 $esconderReciboA = '<style>.inv-qr,.inv-lang{display:none!important}</style>';
 $esconderReciboB = '<style>[data-from-invitation],form[data-receipt-firma]>div:has([name="minor_name"]),form[data-receipt-firma]>:has(#inv-aut-relacion),'
-    .'[data-guardian-waiver],[data-guardian-privacy],[data-idiomas]{display:none!important}</style>';
+    .'[data-guardian-waiver],[data-guardian-privacy],[data-idiomas],[data-receipt-dates]{display:none!important}</style>';
 foreach (['recibo-si' => 'si', 'recibo-firmada' => 'firmada'] as $nombre => $estado) {
     if ($solo !== [] && ! in_array($nombre, $solo, true)) {
         continue;

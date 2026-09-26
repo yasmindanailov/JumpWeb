@@ -6,9 +6,40 @@
  * deja el foco en el nombre. ⚠️ Nada de esto ESCRIBE por su cuenta: escriben los formularios. Sin JavaScript la página
  * contesta y guarda igual; la clase `js` se pone AL FINAL: si algo falla, el documento se queda en `no-js`.
  */
-/* global document, window, location, fetch, FormData, setTimeout, clearTimeout */
+/* global document, window, location, fetch, FormData, setTimeout, clearTimeout, localStorage */
 import './fiesta.css';
 import { arranca, enterNoEnvia, firma, menores, q, qa } from './comun.js';
+import { caducaEn, deLaFiesta, misRespuestas } from './logica.js';
+
+/* ── «TUS RESPUESTAS» (F6b, `InvMias`, spec §4.12): los niños contestados DESDE ESTE MÓVIL, como chips que llevan a cada
+   recibo. Solo en el `localStorage` de este teléfono, y cada entrada caduca con la firma de su enlace (24 h). El recibo
+   se guarda al abrirse (`data-mia`); la invitación enseña las de su fiesta; el recibo, solo si hay más de una. */
+function mias() {
+    const caja = q('[data-mias]');
+    if (!caja) return;
+    const clave = 'fiesta-mis-respuestas';
+    const fiesta = caja.dataset.fiesta || '';
+    let guardadas;
+    let mia = null;
+    try { guardadas = JSON.parse(localStorage.getItem(clave) || '[]'); } catch { guardadas = []; }
+    try { mia = caja.dataset.mia ? JSON.parse(caja.dataset.mia) : null; } catch { mia = null; }
+    const url = location.origin + location.pathname + location.search;
+    const hasta = mia ? caducaEn(url) : null;
+    const lista = misRespuestas(guardadas, Date.now(), mia && hasta ? { fiesta, id: mia.id, nombre: mia.nombre, url, hasta } : null);
+    try { if (lista.length > 0) localStorage.setItem(clave, JSON.stringify(lista)); else localStorage.removeItem(clave); } catch { /* sin almacenamiento */ }
+    const vigentes = deLaFiesta(lista, fiesta);
+    if (vigentes.length < (mia ? 2 : 1)) return;
+    vigentes.forEach((r) => {
+        const actual = mia !== null && String(r.id) === String(mia.id);
+        const chip = document.createElement('a');
+        chip.className = `pz-etiqueta${actual ? ' pz-etiqueta--on' : ''}`;
+        chip.href = r.url;
+        chip.textContent = r.nombre;
+        if (actual) chip.setAttribute('aria-current', 'page');
+        caja.append(chip);
+    });
+    caja.hidden = false;
+}
 
 /* ── «Ver el parque» (F1c, `content/ClipViewer.jsx`): la píldora abre el visor; el vídeo suena (si el navegador lo veta,
    sin sonido), un toque lo pausa y enseña el triángulo, se cierra con la X, con Escape, tocando fuera o deslizando hacia
@@ -153,6 +184,51 @@ function ficha() {
     });
 }
 
+/* ── «Avísame de fechas» (F6b, `avisame-de-fechas.md` §4.2): se guarda sola al marcar o desmarcar (el mismo POST del
+   formulario, por fetch) y lo dice, como «Su ficha». Si el guardado por detrás falla, vuelve su botón. ─────────── */
+function avisame() {
+    const form = q('[data-avisame]');
+    if (!form) return;
+    const casilla = q('[data-avisame-casilla] input, input[data-avisame-casilla]', form) || q('input[type="checkbox"][name="dates"]', form);
+    const ok = q('[data-avisame-ok]', form);
+    const guardar = q('[data-avisame-guardar]', form);
+    if (!casilla) return;
+    if (guardar) guardar.hidden = true;
+    let temporizador = null;
+    const dilo = (texto) => {
+        if (!ok) return;
+        ok.textContent = '';
+        if (!texto) return;
+        const icono = q('template[data-icono-ok]');
+        if (icono) ok.appendChild(icono.content.cloneNode(true));
+        ok.appendChild(document.createTextNode(texto));
+        if (temporizador) clearTimeout(temporizador);
+        temporizador = setTimeout(() => { ok.textContent = ''; }, 2400);
+    };
+    const envia = async () => {
+        try {
+            const r = await fetch(form.action, {
+                method: 'POST',
+                body: new FormData(form),
+                headers: { 'X-Requested-With': 'XMLHttpRequest', Accept: 'application/json' },
+                credentials: 'same-origin',
+            });
+            if (!r.ok) throw new Error(String(r.status));
+            const cuerpo = await r.json();
+            if (cuerpo && cuerpo.saved) dilo(ok ? ok.dataset.guardado || '' : '');
+            else if (guardar) guardar.hidden = false;
+        } catch {
+            if (guardar) guardar.hidden = false;
+        }
+    };
+    casilla.addEventListener('change', envia);
+    form.addEventListener('submit', (e) => {
+        if (guardar && guardar.hidden === false) return;
+        e.preventDefault();
+        envia();
+    });
+}
+
 /* ── Llegar con `#rsvp-nino` («Contestar por otro hijo», o «Vamos» del vídeo): el foco, en el nombre. ─────────── */
 function foco() {
     if (location.hash !== '#rsvp-nino') return;
@@ -161,4 +237,4 @@ function foco() {
 }
 
 // La firma dentro del recibo (F6a): el mismo comportamiento que la página de la autorización (`comun.js`).
-arranca(visor, barra, ficha, menores, firma, foco);
+arranca(visor, barra, ficha, menores, firma, foco, mias, avisame);

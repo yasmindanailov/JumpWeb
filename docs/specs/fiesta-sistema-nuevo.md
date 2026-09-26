@@ -276,6 +276,7 @@ Medido en `GuestFormController::show()` (sus 30 claves), `InvitationPageControll
 | **F3a** ✅ | Quien cumple, la PRIMERA fila de la lista (26-09; `[DECIDIDO owner]` `#747`): el ajuste del pack `honoree_counts` (en el panel), el sello `honoree_row` en `OrderCreator`, la ficha 0 con su espejo en la invitación en los dos sentidos, la ficha clavada (`GuestCardOrder`, las propuestas, los «no», el recordatorio), su plaza en el suelo y en las firmas (`PartyGuests::honoreeSeatsIn`, contrato), `honoree_row` en la API (1.35.0), su fila en la lista con «Es su cumple» y «Personalizar» como espejo. El detalle y las tres partes, §4.8. | Ver §4.8. |
 | **F4** ✅ | La lista que supera la reserva y su «Sí» (26-09; `[DECIDIDO owner]` `#747`: con más niños que el número, guardar se para y se pregunta): fichas de más desde una plantilla, la zona 3 en sus tres estados y viva, el precio de un niño más, las dos guardas. El detalle, §4.9. | Ver §4.9. |
 | **F5** ✅ | La tarta (sin tarta grande: «Añadir otra tarta», `#749`), lo de los padres con «¿Cuántos adultos se quedan?» y sus sugerencias, el aviso de la tarta y «Guardado hoy a las…»: tres tandas, §4.11. Visto por el owner (26-09). | Ver §4.11. |
+| **F6b** ✅ | «Tus respuestas» (el móvil recuerda sus respuestas 24 h, como el enlace) y «Avísame de fechas» (un correo antes del cumple, `#750`, con spec propia: la casilla, la marca, la baja, el correo, `birthday-reminders:send` y la lista del panel). De paso, `hidden` vuelve a ocultar SIN JavaScript en las cuatro páginas (el visor tapaba la invitación entera). §4.12. | `AvisameDeFechasTest` 8 · `AvisameDeFechasEnvioTest` 10 · `InvitacionPaginaTest` +1 · `OcultoSinJavaScriptTest` 1 · `logica.test.js` +2 · censos al día (hub 26, `EmailUtm` 28, asuntos) · **arnés `mutar-avisame-fiesta.sh` 42/42** (el primero dio 39/40: el permiso del panel no mordía porque un empleado SIN rol lo echa el panel entero; ahora es un `staff`) · el banco ENTERO tras la regla de `[hidden]`: 62 de 70, los 8 que difieren son los 8 reales de `#748` (el idioma) y todo diagnóstico a 0 px · sondas `sonda-f6b.mjs` (chips a 390/1280, otro móvil y sin JS nada), `sonda-avisame.mjs` (el camino entero con y sin JS, el correo en Mailpit con su `List-Unsubscribe`, la baja que no escribe al abrirse) y `sonda-hidden.mjs` (8 → 0) · suite. |
 | **Idioma** ✅ | El idioma, abajo y en texto (26-09; `[DECIDIDO owner]` `#748`): fuera la píldora del diseño; la invitación, su recibo y la autorización lo eligen solas, como la web (`SetLocale`), y al pie llevan «Español · English · Français». El detalle, §4.10. | Ver §4.10. |
 | **F1…Fn** | Lo que FALTA (§1.4), una pieza por tanda, en el orden que fije el owner (§7). Cada una con su spec de sección aquí, su decisión y, si toca aforo, `VERIFY_CONC=1`. | Por pieza. |
 
@@ -627,6 +628,32 @@ el mismo hueco, «no llega para 14», «Añadir otra tarta» → 24 raciones, 8 
 «Ponerlo», guardar ×2, «Sin tarta», «Guardado hoy a las…»; sin JavaScript, radios y campos numéricos) sin errores ni
 desborde · el banco: `lista-recien` y `lista-guardado-diagnostico` **4 de 4 a 0 px con la zona 4 dentro** (en A solo se
 esconden los marcos de foto del diseño) y las piezas `complementos` 4 de 4.
+
+### 4.12 F6b · «Tus respuestas» y «Avísame de fechas» (`#747`, `[DECIDIDO owner]` `#750`, 26-09)
+
+**«Tus respuestas»** (`InvMias`): los niños contestados DESDE ESTE MÓVIL, como chips que llevan a cada recibo; en la
+invitación entre la tarjeta y la barra, y en el recibo solo si hay más de uno, con el actual marcado. Solo las propias,
+nunca las de otros: vive en el `localStorage` del teléfono (clave `fiesta-mis-respuestas`), sin servidor. Cada entrada
+es `{fiesta, id, nombre, url, hasta}`: `fiesta` el id de la invitación (no el token, que es la credencial), el nombre de
+pila, la URL firmada del recibo y **`hasta` el `expires` de esa misma firma** (24 h): caduca con el enlace, ni antes ni
+después, y se poda al leer. La página solo pinta el hueco vacío y el recibo lo que hay que guardar (`data-mia`: id y
+nombre); lo demás es `invitacion.js` con la lógica pura en `logica.js`. Sin JavaScript, no hay chips (el hueco se queda
+escondido). ⚠️ Privacidad: el nombre de pila y la URL del recibo quedan 24 h en el dispositivo de quien contestó —lo
+mismo que su historial—; es entrada del propio usuario ligada a su respuesta, la excepción de «user-input» del GT29
+(Dictamen 4/2012), y el layout de la fiesta sigue DESNUDO (`#739`).
+
+**«Avísame de fechas»**: sola en el recibo, tras firmar con correo (`#747`); su tratamiento (un adulto sin cuenta, el
+cumple de un menor, un correo comercial) tiene spec propia: `specs/avisame-de-fechas.md`.
+
+**Lo que enseñó F6b (26-09)**: (1) ❗ **`hidden` no ocultaba SIN JavaScript**: las piezas llevan su `display` EN LÍNEA
+(el port del React), que le gana al `[hidden]` del navegador, y la hoja solo lo reforzaba bajo `.js`. Medido con
+`sonda-hidden.mjs` en las cuatro páginas: OCHO nodos visibles sin JavaScript (cero con él) y el peor, el visor de «Ver el
+parque» (F1c), fijo y a pantalla entera, tapaba la invitación y el recibo; en la lista, «Deshacer», un chip de filtro, un
+panel de 318×279… Ahora `[hidden] { display: none !important; }` sin `.js` (sustituye al parche de F2): 8 → 0, y
+`OcultoSinJavaScriptTest` con su mutación. Lo destapó la sonda de «Avísame» al pulsar la casilla sin JavaScript: ninguna
+prueba de PHP calcula CSS. (2) «Tus respuestas»: renovar una entrada al final reordenaba los chips cada vez que se abría
+uno (visto en la sonda): se renueva EN SU SITIO. (3) Una sonda que firma dos veces el mismo niño en la misma fiesta cae
+en «un niño, un papel»: la prueba es de la PRIMERA respuesta y el segundo recibo dice «Firmada» sin casilla (correcto).
 
 ## 5. Impacto en invariantes
 

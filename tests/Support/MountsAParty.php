@@ -58,11 +58,12 @@ trait MountsAParty
                     'stage' => TicketType::EVENT_STAGE_BOOKING, 'label' => ['es' => 'Homenajeado']],
             ],
         ]);
-        $slot = Slot::create([
-            'zone_id' => $zone->id,
-            'date' => DisplayTime::today()->addDays(self::DAYS_BEFORE)->toDateString(),
-            'start_time' => '17:00:00', 'end_time' => '19:00:00', 'capacity' => 200, 'online_capacity' => 200,
-        ]);
+        // `firstOrCreate`: dos fiestas en la misma prueba (el mismo niño firmado en dos, `AvisameDeFechasEnvioTest`)
+        // comparten la franja; crearla dos veces choca con su índice único (zona, día, hora).
+        $slot = Slot::query()->firstOrCreate(
+            ['zone_id' => $zone->id, 'date' => DisplayTime::today()->addDays(self::DAYS_BEFORE)->toDateString(), 'start_time' => '17:00:00'],
+            ['end_time' => '19:00:00', 'capacity' => 200, 'online_capacity' => 200],
+        );
 
         $host = User::factory()->create(['name' => 'Marta Anfitriona', 'phone' => '600111222', 'email_verified_at' => now()]);
         $order = Order::create([

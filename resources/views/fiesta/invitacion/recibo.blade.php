@@ -16,6 +16,7 @@
         @if ($r['si'])<p class="inv-texto fuerte">{{ $r['texto'] }}</p>@if ($m['enlaces']['calendario'] !== '' || $m['enlaces']['mapa'] !== '')<div class="inv-enlaces">@if ($m['enlaces']['calendario'] !== '')<x-pieza.boton variant="quiet" size="sm" :href="$m['enlaces']['calendario']" :download="$m['enlaces']['ics']" data-invitation-calendar><x-slot:izquierda><x-lucide name="calendar-plus" :size="17" /></x-slot:izquierda>{{ __('fiesta.invitacion_pagina.calendario') }}</x-pieza.boton>@endif{{ '' }}@if ($m['enlaces']['mapa'] !== '')<x-pieza.enlace :href="$m['enlaces']['mapa']" target="_blank" rel="noopener noreferrer"><x-slot:icono><x-lucide name="map-pin" :size="16" /></x-slot:icono>{{ __('fiesta.invitacion_pagina.como_llegar') }}</x-pieza.enlace>@endif</div>@endif{{ '' }}@else<p class="inv-texto fuerte">{{ $r['texto'] }}</p>@endif
     </x-fiesta.invitacion>
 </div>
+@include('fiesta.invitacion.mias')
 @if ($r['si'])
     @if ($f['abierta'] && $f['campos'] !== [])
         <section class="inv-sec" aria-labelledby="inv-h-ficha" data-receipt-fields>
@@ -69,5 +70,8 @@
     </section>
     @endif
     <p class="inv-legal" data-invitation-privacy>{{ $m['privacidad']['texto'] }} <x-pieza.enlace size="sm" underline="always" :href="$m['privacidad']['enlace']">{{ $m['privacidad']['politica'] }}</x-pieza.enlace></p>
+    @if ($r['avisame'] !== null)
+        @include('fiesta.invitacion.avisame')
+    @endif
 @endif
 <p class="inv-despues" data-receipt-after><x-lucide name="info" :size="16" /><span>{{ $r['despues'] }}</span></p>

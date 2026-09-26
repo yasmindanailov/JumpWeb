@@ -8,6 +8,7 @@ use App\Domain\Booking\Services\GuestCountPolicy;
 use App\Domain\Content\Services\MapsEmbed;
 use App\Domain\Content\Services\ShellSettings;
 use App\Domain\Content\Services\SocialEmbed;
+use App\Domain\Identity\Services\BirthdayReminders;
 use App\Domain\Identity\Services\DependentSettings;
 use App\Domain\Identity\Services\PuertaSettings;
 use App\Domain\Identity\Services\WaiverSettings;
@@ -148,6 +149,8 @@ class Settings extends Page
         // de portada y su foto. Vacío → la invitación no ofrece el vídeo.
         'party.park_video' => 'party',
         'party.park_video_poster' => 'party',
+        // «Avísame de fechas» (`specs/avisame-de-fechas.md`, `#750`): cuántas semanas antes del cumple sale el correo.
+        'party.birthday_reminder_weeks' => 'party',
         // Textos de la landing editables POR IDIOMA (#215): título web (SEO), eslogan del pie y la
         // coletilla del copyright. Vacío → cae al texto traducido por defecto (lang/landing).
         'seo.title.es' => 'seo',
@@ -998,6 +1001,14 @@ class Settings extends Page
                     ->label(__('admin.settings.party_park_video_poster'))
                     ->helperText(__('admin.settings.party_park_video_poster_hint'))
                     ->maxLength(255),
+                // «Avísame de fechas» (`avisame-de-fechas.md`, `#750`): 0 lo apaga (la casilla del recibo no se pinta).
+                TextInput::make(BirthdayReminders::WEEKS_KEY)
+                    ->label(__('admin.settings.party_birthday_reminder_weeks'))
+                    ->helperText(__('admin.settings.party_birthday_reminder_weeks_hint'))
+                    ->integer()
+                    ->minValue(BirthdayReminders::WEEKS_MIN)
+                    ->maxValue(BirthdayReminders::WEEKS_MAX)
+                    ->placeholder((string) BirthdayReminders::WEEKS_DEFAULT),
                 TextInput::make('catalog.search_min_items')
                     ->label(__('admin.settings.catalog_search_min_items'))
                     ->helperText(__('admin.settings.catalog_search_min_items_hint'))

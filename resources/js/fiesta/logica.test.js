@@ -1,7 +1,30 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { capitalizar, choice, clave, cuentas, cubrir, estadoFicha, euros, limpiar, soloEdad, vistaInvitacion } from './logica.js';
+import { caducaEn, capitalizar, choice, clave, cuentas, cubrir, deLaFiesta, estadoFicha, euros, limpiar, misRespuestas, soloEdad, vistaInvitacion } from './logica.js';
+
+// F6b (§4.12): «Tus respuestas», las de este móvil.
+const AHORA = 1_790_000_000_000;
+const R = (o) => Object.assign({ fiesta: '7', id: 1, nombre: 'Hugo', url: 'https://x/invitacion/recibo/1?expires=1790086400&signature=a', hasta: AHORA + 3_600_000 }, o);
+
+test('tus respuestas: lo caducado y lo que no tiene forma se tira; la nueva se guarda una sola vez', () => {
+    const lista = [R(), R({ id: 2, nombre: 'Lía', hasta: AHORA - 1 }), { basura: true }, null, R({ id: 3, nombre: 'Leo', fiesta: '' })];
+    assert.deepEqual(misRespuestas(lista, AHORA).map((r) => r.nombre), ['Hugo'], 'caducada, sin forma y sin fiesta, fuera');
+    assert.deepEqual(misRespuestas('no es una lista', AHORA), []);
+    // Volver al mismo recibo la RENUEVA en su sitio: ni la duplica ni la mueve (los chips no cambian de orden bajo el dedo).
+    const otra = misRespuestas([R(), R({ id: 4, nombre: 'Lola' })], AHORA, R({ nombre: 'Hugo', hasta: AHORA + 7_200_000 }));
+    assert.deepEqual(otra.map((r) => r.nombre), ['Hugo', 'Lola']);
+    assert.equal(otra[0].hasta, AHORA + 7_200_000);
+    // Y una nueva va al final.
+    assert.deepEqual(misRespuestas([R()], AHORA, R({ id: 5, nombre: 'Leo' })).map((r) => r.nombre), ['Hugo', 'Leo']);
+});
+
+test('tus respuestas: solo las de esta fiesta, y caducan con la firma del enlace', () => {
+    assert.deepEqual(deLaFiesta([R(), R({ fiesta: '8', id: 9 })], '7').map((r) => r.id), [1], 'otra fiesta en el mismo móvil no sale');
+    assert.equal(caducaEn('https://x/invitacion/recibo/1?expires=1790086400&signature=a'), 1_790_086_400_000);
+    assert.equal(caducaEn('https://x/invitacion/recibo/1?signature=a'), null, 'sin `expires` no se guarda');
+    assert.equal(caducaEn('no es una url'), null);
+});
 
 // F5 (`#749`): los combos y los cubos del diseño (`datos.js → EXTRAS.padres`), en céntimos.
 const COMBOS = [{ para: 6, precio: 3900, max: 5 }, { para: 10, precio: 5900, max: 5 }];

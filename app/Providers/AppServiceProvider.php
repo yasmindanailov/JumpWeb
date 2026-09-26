@@ -43,6 +43,7 @@ use App\Domain\Content\Services\ScheduleDisplay;
 use App\Domain\Content\Services\SocialEmbed;
 use App\Domain\Identity\Listeners\RecordLoginFact;
 use App\Domain\Identity\Listeners\SignPendingWaiverOnVerification;
+use App\Domain\Identity\Models\BirthdayReminder;
 use App\Domain\Identity\Models\Consent;
 use App\Domain\Identity\Models\CookieConsentLog;
 use App\Domain\Identity\Models\CustomerCard;
@@ -283,6 +284,8 @@ class AppServiceProvider extends ServiceProvider
             // alias de morfo — lo exige `MorphMapTest` y es lo que hace que el AUDIT guarde `bar_image`
             // y no el nombre de clase, que se rompe al mover el fichero de sitio.
             'bar_image' => BarImage::class,
+            // «Avísame de fechas» (`#750`): sin relaciones polimórficas hoy, pero todo modelo lleva alias.
+            'birthday_reminder' => BirthdayReminder::class,
             'consent' => Consent::class,
             'cookie_consent_log' => CookieConsentLog::class,
             'customer_card' => CustomerCard::class,

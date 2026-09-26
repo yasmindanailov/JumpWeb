@@ -126,6 +126,14 @@ final class InvitacionPagina
                 'enlace' => route('legal.privacidad'),
             ],
             'recibo' => $recibo,
+            // «Tus respuestas» (F6b, §4.12): de qué fiesta es el hueco (el id, no el token) y, en el recibo, qué guardar.
+            'mias' => [
+                'fiesta' => (string) $inv->getKey(),
+                'mia' => $recibo === null ? null : [
+                    'id' => (int) $v['receipt']['reply']->getKey(),
+                    'nombre' => trim(Str::before($recibo['nino'], ' ')),
+                ],
+            ],
         ];
     }
 
@@ -386,6 +394,14 @@ final class InvitacionPagina
                 // Recién firmada desde aquí: nombre · teléfono de quien firmó, bajo «Firmada» (el Listo del diseño).
                 'firmante' => trim((string) ($r['signer'] ?? '')),
                 'firma' => $firmada ? null : $firma,
+            ] : null,
+            // «AVÍSAME DE FECHAS» (`avisame-de-fechas.md` §4.2, `#750`): sola, tras firmar con correo (`#747`). Se guarda
+            // contra la MISMA URL firmada del recibo, como «Su ficha».
+            'avisame' => is_array($r['dates'] ?? null) ? [
+                'marcada' => (bool) ($r['dates']['marcada'] ?? false),
+                'mandado' => is_string($r['dates']['mandado'] ?? null) ? $r['dates']['mandado'] : null,
+                'accion' => (string) ($r['action'] ?? ''),
+                'estado' => is_string($r['dates_status'] ?? null) ? $r['dates_status'] : null,
             ] : null,
             'despues' => __('fiesta.recibo.despues', ['h' => $h]).($si && ! $firmada && $firma !== null ? ' '.__('fiesta.recibo.sin_firma') : ''),
         ];

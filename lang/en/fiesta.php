@@ -239,6 +239,7 @@ return [
     ],
     'invitacion_pagina' => [
         'titulo_pagina' => 'An invitation',
+        'tus' => 'Your replies:',
         'como_llegar' => 'How to get there',
         'calendario' => 'Add to calendar',
         'merienda' => 'The snack',
@@ -264,6 +265,10 @@ return [
         'politica' => 'Privacy policy',
     ],
     'recibo' => [
+        'avisame' => 'Let me know about dates for my child’s birthday.',
+        'avisame_texto' => 'We’ll write to you a few weeks before their birthday.',
+        'avisame_legal' => 'Only for that email, with the date of birth you gave; you can unsubscribe from the email itself.',
+        'avisame_mandado' => 'We wrote to you on :dia for this birthday.',
         'titulo_si' => 'We’re counting on :n',
         'si' => 'We’re counting on you!',
         'si_texto' => 'See you on :dia at :hora.',
@@ -314,5 +319,24 @@ return [
         'caducado_texto' => 'Ask whoever invited you to the party for the new link.',
         'err_nino_nombre' => 'Write their first name.',
         'err_nino_apellidos' => 'Write their last name.',
+    ],
+    'cumple_mail' => [
+        'subject' => ':nombre turns :edad in :mes: shall we celebrate here?',
+        'badge' => 'Their birthday',
+        'headline' => ':nombre’s birthday, sorted',
+        'preheader' => 'Two hours of jumping, snacks and presents. You just bring the guests.',
+        'linea' => 'Two hours at their own pace, with instructors; snacks for every child, a reserved table and presents. Parents can relax.',
+        'desde' => 'From :precio per child, and you only pay for the ones who come.',
+        'pronto' => 'The nearest weekends fill up fast: check the free days.',
+        'boton' => 'See free days',
+        'porque' => 'We’re writing because you ticked «Let me know about dates» when signing :nombre’s authorisation.',
+        'baja' => 'Unsubscribe',
+    ],
+    'avisame_baja' => [
+        'titulo' => 'The birthday reminder',
+        'texto' => 'You asked us to write to you before :nino’s birthday. If you no longer want it, unsubscribe here.',
+        'boton' => 'Unsubscribe',
+        'hecho_titulo' => 'Done',
+        'hecho' => 'We won’t write to you about their birthday.',
     ],
 ];

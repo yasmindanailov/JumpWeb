@@ -75,6 +75,9 @@ $RECIBO = static function (string $estado): array {
                 'turnstile' => ['activo' => false, 'clave' => '', 'rotulo' => ''],
             ],
         ],
+        // «Avísame de fechas» (F6b, `#750`): firmada con correo (la de Ana), la casilla; el diagnóstico la esconde, como el
+        // bloque del QR del diseño donde vive en A.
+        'avisame' => $firmada ? ['marcada' => false, 'mandado' => null, 'accion' => '#avisame', 'estado' => null] : null,
         'despues' => 'El recibo caduca a las 24 horas y la respuesta no se edita: díselo a Lucía, que puede corregirlo todo.'
             .($firmada ? '' : ' Y sin firma, la autorización se hace en la puerta con un QR: treinta segundos.'),
     ];
@@ -264,6 +267,8 @@ return [
         'og' => ['sitio' => 'Play Jump Park', 'title' => '', 'description' => '', 'image' => null, 'width' => null, 'height' => null],
         'privacidad' => ['texto' => 'Lucía verá el nombre de tu hijo, su edad y sus alergias para organizar la fiesta; el parque, para atenderle. Lo borramos a los 14 días de la fiesta.', 'politica' => 'Política de privacidad', 'enlace' => '#privacidad'],
         'recibo' => $recibo === null ? null : $RECIBO($recibo),
+        // «Tus respuestas» (F6b): el hueco, vacío en el banco (el móvil no tiene nada guardado, como A sin `localStorage`).
+        'mias' => ['fiesta' => '1', 'mia' => $recibo === null ? null : ['id' => 1, 'nombre' => 'Hugo']],
     ],
 
     // ── LA AUTORIZACIÓN (`autorizacion/datos.js`): el formulario en reposo (`recibo`) o el Listo (`firmada`) ───────────

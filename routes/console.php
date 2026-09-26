@@ -230,3 +230,16 @@ Schedule::command('reservations:eve-notice')
 Schedule::command('surveys:send-external')
     ->hourly()
     ->withoutOverlapping();
+
+/*
+ * «EL CUMPLE SE ACERCA» (`specs/avisame-de-fechas.md` §4.3, `[DECIDIDO owner]` `#750`) — a quien marcó «Avísame de fechas»
+ * al firmar la autorización de un invitado, UN correo unas semanas antes del cumpleaños del niño.
+ *
+ * ⚠️ CADA HORA y la hora la decide el COMANDO (desde las 10:00 del PARQUE), por las razones de `reservations:eve-notice`;
+ * `birthday_reminders.sent_for` es la marca, así que la siguiente pasada recupera y nunca duplica.
+ * ⚠️ `withoutOverlapping` porque manda correos. ❗ En staging el scheduler no corre (`#115`): allí, `--force`.
+ * ❗ Una tarea MÁS del planificador: las «esperadas» de `deploy.sh` suben a 10 en este mismo commit.
+ */
+Schedule::command('birthday-reminders:send')
+    ->hourly()
+    ->withoutOverlapping();

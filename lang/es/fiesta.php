@@ -252,6 +252,8 @@ return [
     // el anfitrión (quién invita) va tal cual. `:h` es quien organiza, por su nombre de pila (`#744`).
     'invitacion_pagina' => [
         'titulo_pagina' => 'Una invitación',
+        // F6b (`InvMias`): los niños contestados desde este móvil.
+        'tus' => 'Tus respuestas:',
         'como_llegar' => 'Cómo llegar',
         'calendario' => 'Añadir al calendario',
         'merienda' => 'La merienda',
@@ -281,6 +283,11 @@ return [
     ],
     // EL RECIBO (T2): tras «Vamos» o «No podemos». Todo aquí es opcional.
     'recibo' => [
+        // «Avísame de fechas» (`avisame-de-fechas.md`, `#750`): la casilla, sola, tras firmar con correo.
+        'avisame' => 'Avísame de fechas para el cumple de mi hijo.',
+        'avisame_texto' => 'Te escribimos unas semanas antes de su cumpleaños.',
+        'avisame_legal' => 'Solo para ese correo, con la fecha de nacimiento que has puesto; te das de baja desde el propio correo.',
+        'avisame_mandado' => 'Te escribimos el :dia para este cumpleaños.',
         'titulo_si' => 'Contamos con :n',
         'si' => '¡Contamos con vosotros!',
         'si_texto' => 'Nos vemos el :dia a las :hora.',
@@ -334,5 +341,26 @@ return [
         'caducado_texto' => 'Pídele el enlace nuevo a quien te invitó a la fiesta.',
         'err_nino_nombre' => 'Escribe su nombre.',
         'err_nino_apellidos' => 'Escribe sus apellidos.',
+    ],
+    // «EL CUMPLE SE ACERCA» (`avisame-de-fechas.md` §4.3, `#750`; el correo nº 12 del mockup): comercial, solo con la casilla.
+    'cumple_mail' => [
+        'subject' => ':nombre cumple :edad en :mes: ¿lo celebramos aquí?',
+        'badge' => 'Su cumple',
+        'headline' => 'El cumple de :nombre, resuelto',
+        'preheader' => 'Dos horas saltando, merienda y regalos. Tú solo traes a los invitados.',
+        'linea' => 'Dos horas a su ritmo, con monitores; merienda para cada niño, mesa reservada y regalos. Los padres, tranquilos.',
+        'desde' => 'Desde :precio por niño, y solo pagas los que vengan.',
+        'pronto' => 'Los fines de semana cercanos se llenan pronto: mira los días libres.',
+        'boton' => 'Ver días libres',
+        'porque' => 'Te escribimos porque marcaste «Avísame de fechas» al firmar la autorización de :nombre.',
+        'baja' => 'Darme de baja',
+    ],
+    // LA BAJA de «Avísame de fechas» (`avisame-de-fechas.md` §4.4): una página con UN botón (no escribe al abrirse).
+    'avisame_baja' => [
+        'titulo' => 'El aviso del cumple',
+        'texto' => 'Pediste que te escribiéramos antes del cumple de :nino. Si ya no lo quieres, date de baja aquí.',
+        'boton' => 'Darme de baja',
+        'hecho_titulo' => 'Hecho',
+        'hecho' => 'No te escribiremos para su cumple.',
     ],
 ];

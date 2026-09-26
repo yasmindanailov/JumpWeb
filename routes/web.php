@@ -17,6 +17,7 @@ use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\BarController;
+use App\Http\Controllers\BirthdayReminderController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\CookieConsentController;
 use App\Http\Controllers\EventsController;
@@ -415,6 +416,19 @@ Route::withoutMiddleware([ResolveVisitor::class.':'.ResolveVisitor::MINT])->grou
         ->middleware(['signed', 'throttle:20,1', 'no-store'])
         ->missing(fn () => abort(403))
         ->name('invitation.receipt.save');
+
+    // LA BAJA de «Avísame de fechas» (`specs/avisame-de-fechas.md` §4.4, `#750`): FIRMADAS y sin caducidad (la baja
+    // funciona siempre, LSSI art. 22.1); el GET enseña UN botón y solo el POST escribe (los escáneres abren los GET).
+    Route::get('/avisos-cumple/{reminder}/baja', [BirthdayReminderController::class, 'show'])
+        ->whereNumber('reminder')
+        ->middleware(['signed', 'throttle:60,1', 'no-store'])
+        ->missing(fn () => abort(404))
+        ->name('birthday-reminder.unsubscribe');
+    Route::post('/avisos-cumple/{reminder}/baja', [BirthdayReminderController::class, 'confirm'])
+        ->whereNumber('reminder')
+        ->middleware(['signed', 'throttle:20,1', 'no-store'])
+        ->missing(fn () => abort(404))
+        ->name('birthday-reminder.unsubscribe.confirm');
 
 });
 // ═══ fin de las páginas enfocadas de la fiesta ════════════════════════════════════════════════════

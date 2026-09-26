@@ -8,6 +8,7 @@ use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\PartyInvitation;
 use App\Domain\Booking\Services\GuestCountPolicy;
 use App\Domain\Booking\Services\PartyInvitations;
+use App\Domain\Identity\Services\BirthdayReminders;
 use App\Domain\Identity\Services\LegalDocuments;
 use App\Domain\Identity\Services\WaiverSettings;
 use App\Domain\Platform\Models\Setting;
@@ -224,6 +225,9 @@ class InvitationPageController extends Controller
                 // «Su ficha» se guarda contra la MISMA URL firmada: `back()` perdería la firma.
                 'action' => $request->fullUrl(),
                 'status' => $request->session()->get('receipt_status'),
+                // «Avísame de fechas» (`avisame-de-fechas.md` §4.2, `#750`): solo tras un «sí» firmado desde aquí con correo.
+                'dates' => $this->datesOffer($reply),
+                'dates_status' => $request->session()->get('receipt_dates_status'),
             ],
         ], Sitio::datos());
 
@@ -232,10 +236,51 @@ class InvitationPageController extends Controller
             ->header('Referrer-Policy', 'no-referrer');
     }
 
+    /**
+     * La casilla «Avísame de fechas» del recibo: `null` si no se ofrece (sin «sí», sin autorización firmada desde esta
+     * respuesta con correo y fecha, o con el ajuste apagado); si se ofrece, si está marcada y si ya salió el correo de
+     * este cumpleaños.
+     *
+     * @return array{marcada: bool, mandado: ?string}|null
+     */
+    private function datesOffer(InvitationReply $reply): ?array
+    {
+        if (! $reply->attending) {
+            return null;
+        }
+        $reminders = app(BirthdayReminders::class);
+        $authorization = $reminders->offerableFor((int) $reply->getKey());
+        if ($authorization === null) {
+            return null;
+        }
+        $row = $reminders->of($authorization);
+
+        return [
+            'marcada' => $row !== null && $row->isLive(),
+            'mandado' => $row?->sent_at === null ? null : DisplayTime::format($row->sent_at, 'd/m/Y'),
+        ];
+    }
+
     /** Guarda las dos ofertas. La firma de la URL es lo que autoriza; el plazo lo re-mira el dominio. */
     public function saveReceipt(Request $request, InvitationReply $reply): RedirectResponse|JsonResponse
     {
         abort_if($reply->reservation === null, 404);
+
+        // «AVÍSAME DE FECHAS» (`specs/avisame-de-fechas.md` §4.2, `#750`): su propia rama, contra la misma URL firmada.
+        // ⚠️ Va ANTES y sale sola: un envío de la casilla no trae `guest_data`, y la rama de la ficha lo leería como
+        // «vacíala». Solo se escribe si la casilla se OFRECE (la autorización firmada desde esta respuesta, con correo).
+        if ($request->has('dates')) {
+            $wants = $request->boolean('dates');
+            $reminders = app(BirthdayReminders::class);
+            $authorization = $reply->attending ? $reminders->offerableFor((int) $reply->getKey()) : null;
+            $saved = $authorization !== null && $reminders->set($authorization, $wants, app()->getLocale()) !== null;
+
+            if ($request->expectsJson()) {
+                return response()->json(['saved' => $saved]);
+            }
+
+            return redirect()->to($request->fullUrl().'#inv-avisame')->with('receipt_dates_status', $saved ? 'saved' : 'closed');
+        }
 
         // ⚠️ `companion` ya no se pregunta en el recibo (`#743`·5: «¿Vas tú con él?» desaparece; la autorización es
         // una oferta sin pregunta). El dominio sigue admitiéndolo hasta que se retire con su columna (T4/F).

@@ -74,7 +74,7 @@ contador de la suite va en el trailer del commit** (`#618`). Si no salta: `git c
 | El libro del pedido · desglose +/− · saldo en el parque · cortesía · reembolso | `docs/specs/desglose-libro.md` §0 |
 | Área de cliente en el cajón · «Mis reservas» por reserva · historial | `docs/specs/area-cliente.md` §0 · `docs/specs/mis-reservas-por-reserva.md` §0 |
 | Bloque de cuenta del cajón (`.acct`) · el `no-store` de la web | `docs/specs/account-context-vue.md` §0 |
-| Sidebar SPA · Vue · las pantallas del cajón · rótulos · el chunk | `docs/specs/sidebar-spa.md` §0 · `docs/CARRIL-SPA.md` |
+| Sidebar SPA · Vue · las pantallas del cajón | `docs/specs/sidebar-spa.md` §0 · `docs/CARRIL-SPA.md` |
 | Justificante de un menor invitado (waiver offshore) · activación · plazas | `docs/specs/waiver-por-reserva.md` §0 |
 | Waiver (firma, prueba, PDF, versiones del texto) · la firma en la puerta | `docs/specs/waiver-probatorio.md` §0 |
 | Menores a cargo · asignar una entrada a un menor · apellidos y relación | `docs/specs/menores-a-cargo.md` §0 |
@@ -93,7 +93,7 @@ contador de la suite va en el trailer del commit** (`#618`). Si no salta: `git c
 | Cumpleaños mixto · edad de los invitados · el suplemento · el sello · solapes de tramos | `docs/specs/cumple-mixto.md` §0 |
 | Los correos · tema · firma y remitente · línea de adelanto · el libro en un correo | `docs/specs/correos-desde-canvas.md` §0 |
 | Post-form de invitados | `docs/sistemas/POSTFORM-INVITADOS.md` |
-| Vestir la fiesta con el sistema nuevo · post-form · justificante · invitación | `docs/specs/fiesta-sistema-nuevo.md` §0 |
+| La fiesta del sistema nuevo · invitación · «Avísame de fechas» | `docs/specs/fiesta-sistema-nuevo.md` §0 · `docs/specs/avisame-de-fechas.md` §0 |
 | Tests / suite / fakes / datos de prueba | `docs/TESTING.md` · `docs/CONVENCIONES.md` §3.bis/§3.ter |
 | Desmontar `ViewOrder` · edición, reembolso y calendario de un pedido | `docs/specs/desmontar-view-order.md` §0 |
 | Retirar código viejo / auditar sus tests | `docs/CONVENCIONES.md` §3.quater |

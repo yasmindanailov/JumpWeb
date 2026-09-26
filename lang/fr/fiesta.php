@@ -239,6 +239,7 @@ return [
     ],
     'invitacion_pagina' => [
         'titulo_pagina' => 'Une invitation',
+        'tus' => 'Vos réponses :',
         'como_llegar' => 'Comment venir',
         'calendario' => 'Ajouter au calendrier',
         'merienda' => 'Le goûter',
@@ -264,6 +265,10 @@ return [
         'politica' => 'Politique de confidentialité',
     ],
     'recibo' => [
+        'avisame' => 'Prévenez-moi des dates pour l’anniversaire de mon enfant.',
+        'avisame_texto' => 'Nous vous écrirons quelques semaines avant son anniversaire.',
+        'avisame_legal' => 'Uniquement pour ce courriel, avec la date de naissance indiquée ; désinscription depuis le courriel lui-même.',
+        'avisame_mandado' => 'Nous vous avons écrit le :dia pour cet anniversaire.',
         'titulo_si' => 'On compte sur :n',
         'si' => 'On compte sur vous !',
         'si_texto' => 'Rendez-vous le :dia à :hora.',
@@ -314,5 +319,24 @@ return [
         'caducado_texto' => 'Demandez le nouveau lien à la personne qui vous a invité à la fête.',
         'err_nino_nombre' => 'Écrivez son prénom.',
         'err_nino_apellidos' => 'Écrivez son nom.',
+    ],
+    'cumple_mail' => [
+        'subject' => ':nombre a :edad ans en :mes : on le fête ici ?',
+        'badge' => 'Son anniversaire',
+        'headline' => 'L’anniversaire de :nombre, c’est réglé',
+        'preheader' => 'Deux heures de sauts, goûter et cadeaux. Vous n’amenez que les invités.',
+        'linea' => 'Deux heures à son rythme, avec des moniteurs ; goûter pour chaque enfant, table réservée et cadeaux. Les parents, tranquilles.',
+        'desde' => 'À partir de :precio par enfant, et vous ne payez que ceux qui viennent.',
+        'pronto' => 'Les week-ends proches se remplissent vite : regardez les jours libres.',
+        'boton' => 'Voir les jours libres',
+        'porque' => 'Nous vous écrivons parce que vous avez coché « Prévenez-moi des dates » en signant l’autorisation de :nombre.',
+        'baja' => 'Me désinscrire',
+    ],
+    'avisame_baja' => [
+        'titulo' => 'Le rappel d’anniversaire',
+        'texto' => 'Vous avez demandé qu’on vous écrive avant l’anniversaire de :nino. Si vous ne le souhaitez plus, désinscrivez-vous ici.',
+        'boton' => 'Me désinscrire',
+        'hecho_titulo' => 'C’est fait',
+        'hecho' => 'Nous ne vous écrirons pas pour son anniversaire.',
     ],
 ];

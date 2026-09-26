@@ -31,6 +31,7 @@ return [
         'items' => [
             'catalog' => ['label' => 'Catálogo', 'description' => 'Entradas, packs y complementos que se venden.'],
             'promotions' => ['label' => 'Promociones', 'description' => 'Ofertas con fecha y regalos, y dónde salen en la web.'],
+            'birthday_reminders' => ['label' => 'Avisos de cumple', 'description' => 'Quién pidió al firmar que le escribamos antes del cumple de su hijo.'],
             'rate_types' => ['label' => 'Tarifas', 'description' => 'Tipos de precio y a qué días se aplica cada uno.'],
             'zones' => ['label' => 'Zonas', 'description' => 'Áreas del recinto, su aforo y su color.'],
             'weekly_schedule' => ['label' => 'Horario semanal', 'description' => 'A qué hora se abre y se cierra cada día de la semana.'],
@@ -3104,6 +3105,8 @@ return [
         'party_park_video_hint' => 'El vídeo de portada, como lo sirve la web (por ejemplo `videos/header_hero.mp4`) o una URL entera. Se descarga solo al tocar. Vacío = la invitación no ofrece el vídeo.',
         'party_park_video_poster' => 'Invitación de cumpleaños · foto del vídeo',
         'party_park_video_poster_hint' => 'La foto que se ve antes de darle al play y en la píldula «Ver el parque» (por ejemplo `videos/header_poster.jpg`).',
+        'party_birthday_reminder_weeks' => '«Avísame de fechas»: semanas antes del cumple',
+        'party_birthday_reminder_weeks_hint' => 'Quien firma la autorización de un invitado con su correo puede pedir en el recibo que le escribamos antes del cumpleaños de su hijo. Cuántas semanas antes sale ese correo (6 por defecto). 0 lo apaga: la casilla no se ofrece.',
 
         'section_landing_texts' => 'Textos de la landing',
         'section_landing_texts_hint' => 'Título de la pestaña/Google, eslogan del pie y coletilla del copyright. Editables por idioma; si dejas un idioma vacío, se usa el texto por defecto.',
@@ -4051,6 +4054,30 @@ return [
      * PROMOCIONES (`specs/promociones.md`, `#770`): ofertas con fecha y regalos, en una sola página. Una promoción es
      * TEXTO: no cambia ningún precio, y así lo dicen las ayudas.
      */
+    // «Avísame de fechas» (`specs/avisame-de-fechas.md` §4.4, `#750`).
+    'birthday_reminders' => [
+        'nav_label' => 'Avisos de cumple',
+        'model_label_singular' => 'aviso de cumple',
+        'model_label_plural' => 'avisos de cumple',
+        'subheading' => 'Quien firma la autorización de un invitado con su correo puede pedir que le escribamos unas semanas antes del cumple de su hijo. Aquí, quién lo pidió y en qué punto está. Borrar lo quita para siempre (la autorización firmada se queda).',
+        'col_guardian' => 'Quién lo pidió',
+        'col_child' => 'Para el cumple de',
+        'col_birthday' => 'Cumple',
+        'col_since' => 'Desde',
+        'col_state' => 'Estado',
+        'state' => [
+            'waiting' => 'Esperando',
+            'sent' => 'Mandado el :dia',
+            'revoked' => 'De baja',
+        ],
+        'filter' => [
+            'waiting' => 'Esperando',
+            'sent' => 'Mandados',
+            'revoked' => 'De baja',
+        ],
+        'delete' => 'Borrar',
+        'delete_confirm' => 'Se borra la petición y no se le escribirá. La autorización firmada, que es la prueba del descargo, se queda.',
+    ],
     'promotions' => [
         'nav_label' => 'Promociones',
         'model_label_singular' => 'promoción',

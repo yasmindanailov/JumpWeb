@@ -2,11 +2,11 @@
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb` a secas; la instancia al lado, en
 > `~/proyectos/instancias/playjump`, clon de `github.com/yasmindanailov/instancia-playjump`, montada el 25-09) ·
-> Banda: **730–759** (700–729 agotada el 20-09) · Último usado: **`#749`** · La banda está dada de alta en la tabla de
+> Banda: **730–759** (700–729 agotada el 20-09) · Último usado: **`#750`** · La banda está dada de alta en la tabla de
 > `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: **`isla-y-landing-nueva.md`
 > §4.11 «El traspaso al SPA»** (la tarea en curso, `#765`) · `celebracion-e-invitacion.md` §0 · `waiver-por-reserva.md` §0 ·
 > `encuestas.md` §0 · `analitica-fiesta.md` §0 · `analitica.md` §0 y §4.5 · `google-business-profile.md` §0 ·
-> `sidebar-spa.md` §0 · Actualizado: 2026-09-26 (mediodía: F3a de la fiesta en `main`).
+> `sidebar-spa.md` §0 · Actualizado: 2026-09-26 (tarde: F6b de la fiesta en `main`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`). El
 > contador de la suite va en el trailer del commit (`#618`), no aquí. **Se muda, no se raspa**: el detalle de
 > una feature baja a su spec (las trampas por tanda de la analítica T1→T5 viven en `analitica.md` §4.9,
@@ -41,7 +41,7 @@
 - ✅ **Esta máquina, montada para la fiesta (25-09)**: la instancia clonada en `~/proyectos/instancias/playjump` (el
   diseño con su sha256 verificado), `INSTANCIA_RUTA=/var/www/instancias/playjump` en el `.env` (ruta DEL CONTENEDOR),
   `public/instancia/` copiado de `publico/instancia/` (ignorado por git); la receta entera, en Trampas vivas 🏠.
-- ✅ **LA FIESTA DEL SISTEMA NUEVO: T1a→T4, F1, F2, F6a y F3 EN `main` (25/26-09)**, F1/F2/F6a **aprobadas por el owner**
+- ✅ **LA FIESTA DEL SISTEMA NUEVO: T1a→T4, F1→F5, F6a y F6b EN `main` (25/26-09)**, F1/F2/F6a **aprobadas por el owner**
   (`#747`, menos «Crear mi QR», que no va) — **F3 (`#747`)**: quien cumple es la PRIMERA fila (ajuste del pack
   `honoree_counts`, sello `honoree_row` al reservar, ficha 0 con espejo en la invitación, clavada, con su plaza en el
   suelo y su firma de menor a cargo; la lista guardada a 0 px) y «Al final viene» (web, API 1.36.0 y sin JS) — las
@@ -82,7 +82,9 @@
   (109) «para 12» en el bloque de la tarta, los combos 111–113 (6/10/15) y los cubos 114–116 (6 cada uno, DE PRUEBA) en
   sus familias y en el bloque de los padres, y «Nº aproximado de adultos» del pack 105 como tipo `adults`; y la fiesta
   `JW-OJO-F5` (dentro de 3 días, 14 niños: la tarta cierra mañana y no llega). Todo con `ojo-f5.php` (fuera de git; lo
-  de antes, en `ojo-f5-antes.json`; `OJO=desmontar` lo deja como estaba). Y siguen montados el fixture «probe-ojo-analitica» (90 pedidos
+  de antes, en `ojo-f5-antes.json`; `OJO=desmontar` lo deja como estaba); (11) **de F6b**: en `JW-OJO-F1`, las
+  respuestas «… Sonda…» 311→326, seis autorizaciones `avisame-sonda…@jumpweb.test` con sus `birthday_reminders` y sus
+  correos en Mailpit. Y siguen montados el fixture «probe-ojo-analitica» (90 pedidos
   `JW-OJO…`, 25 clientes, 506 sesiones) y el de reseñas «probe-ojo-resenas». ⚠️ **Plataforma dejó la local preparada para
   que el owner pruebe la ISLA** (24-09 noche, `694529a8`): `sidebar.shell = isla` por el panel, `public/_isla-prueba.html`,
   la invitación ENCENDIDA en los packs 105/106 — **«no deshacer sin él»**; el cajón local abre ahora en la isla.
@@ -101,15 +103,12 @@
    (26-09: la lista supera la reserva, «Sí» sube el número, guardar se para sin él; arnés `mutar-quien-cumple.sh` 36/36) · el
    idioma abajo ✅ (`#748`: fuera de la cabecera, sola como la web; §4.10) · **F5 ✅** (`#749`: sin tarta grande, «para
    cuántas personas» en los complementos; la zona 4 como el mockup, el aviso de la tarta y «Guardado hoy a las…»; §4.11;
-   arnés `mutar-extras-fiesta.sh` 42/42; visto por el owner en `JW-OJO-F5`) → **F6b** «Tus respuestas» y «Avísame de
-   fechas» SOLA tras firmar con correo (`#747`; consentimiento: spec antes). F3 y F4, spec §4.8 y §4.9. Para el ojo:
-   `JW-OJO-F3` (sellada, `ojo-f3.php`) y `JW-OJO-F1` (1077; `/invitacion/WxYYnZkkNx7U`). Cada tanda: `git pull` de la instancia + `sha256sum -c`, el banco con control, las guardas de
-   piel re-apuntadas o retiradas con su motivo, sonda de VENTANA de las tres y el ojo del owner en `localhost:8081`
-   (la página viva sale NEUTRA hasta que plataforma haga el contrato de hojas: mientras, el banco carga las hojas a
-   mano). **Reglas en pie**: el suelo sin JavaScript · `#739` · la firma y su prueba (`waiver-probatorio.md`, `RGPD-*`) ·
-   hoja en blanco (§7.2·R1) · `#706`. ▶ Las ocho preguntas al owner están en la spec §7 (quien cumple cuenta; el asunto
-   del correo 2; la zona 3 que sube el número = aforo; el recibo 24 h o 2 h; «¿vas tú con él?» desaparece; tres campos
-   por niño contra cinco columnas; «Ver el parque»; «Avísame de fechas») y la de plataforma sobre caras y fotos (`#616`).
+   arnés `mutar-extras-fiesta.sh` 42/42; visto por el owner en `JW-OJO-F5`) · **F6b ✅** (`#750`: «Tus respuestas» y
+   «Avísame de fechas» con spec propia, `avisame-de-fechas.md`; y `hidden` que vuelve a ocultar SIN JavaScript, §4.12;
+   arnés `mutar-avisame-fiesta.sh` 42/42) → **la fiesta, COMPLETA en código**: queda el contrato de hojas de plataforma
+   (`#769`: la página viva sale NEUTRA; el banco carga las hojas a mano) y la v2.0.0. Para el ojo: `JW-OJO-F3`
+   (`ojo-f3.php`), `JW-OJO-F1` (1077; `/invitacion/WxYYnZkkNx7U`) y `JW-OJO-F5`. **Reglas en pie**: el suelo sin
+   JavaScript · `#739` · la firma y su prueba (`waiver-probatorio.md`, `RGPD-*`) · hoja en blanco (§7.2·R1) · `#706`.
 2. ✅ La analítica entera espera la v2.0.0. Sueltos: `[PENDIENTE: asesoría]` (5) del correo de servicio de las encuestas ·
    **T2e** (`analytics_daily` + `ad_spend`) SOLO si el `EXPLAIN` con volumen dice que el año en directo no aguanta
    (`analitica.md` §4.5) · **T5c** cuando el owner nombre la hipótesis (`#738`) · el `EXPLAIN` con volumen en staging.
@@ -246,6 +245,12 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 
 ## Buzón
 
+- ❗ **Para la web (26-09, `#750`)**: «Avísame de fechas» es un tratamiento NUEVO (correo comercial a quien firma la
+  autorización de un invitado y marca la casilla; consentimiento; baja en cada correo): **`/privacidad` tiene que
+  nombrarlo**, `[PENDIENTE: asesoría]`. El texto es tuyo (`LegalContent`); yo no lo toco.
+- **Para plataforma (26-09, F6b, `#750`)**: `scripts/deploy.sh` espera ya **10** tareas (entra `birthday-reminders:send`,
+  horaria); una tarjeta en tu hub («Precios y productos → Avisos de cumple») y un ajuste en `Settings.php`
+  (`party.birthday_reminder_weeks`). El contrato NO cambia. En `fiesta.css`, `[hidden]` oculta ya sin `.js`.
 - ❗ **Para plataforma (26-09, F5, `#749`)**: el CONTRATO **1.39.0** es mío (tras tu 1.38.0): en `PostFormAddon`
   `serves`, `family`, `block` e `image_url`; en `GuestForm` `cake_declined` y `saved_at`; `PUT` acepta `cake_declined`;
   `adults` en el `enum` de tipos de campo del catálogo. Tu siguiente, **1.40.0**. ⚠️ `PostFormAddons::viewFor()` (lo
@@ -276,17 +281,13 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 - ▶ **(1) T4a·2 = mi T2·9** (las reseñas en `/social-proof`): sigue BLOQUEADA por la decisión del owner sobre caras y
   fotos (`#616`); se la llevo junto a las preguntas de la fiesta y te aviso aquí cuando conteste.
 
-### ❗ Para el carril de CORREOS (emisor: SPA, 19→24-09; pendiente de tu «atendido»)
-- ✅ Tu censo pasa de 25 a 27 (`VisitEveNotice` `#717`, `GoogleBusinessLocationChanged` `#725`, tres idiomas);
-  tocado `GuestFormRequest` (solo con invitación). Te queda tu OJO en Gmail/Outlook de los tres nuevos.
-- ▶ **La T3a·4 trae un correo nuevo sobre tu molde (24-09)**: `app/Notifications/AnalyticsLinkNotice.php` sobre
-  `BrandedMailMessage` **sin tocarlo** (`hero('account.analytics_mail', 'info')`, tres líneas, botón a
-  `/mi-cuenta`), textos en `lang/{es,en,fr}/account.php` (`analytics_mail.*`). Entra solo en tu censo
-  (`MailInboxLineTest`, `MailMoldTest`; `EmailUtmTest` 25 → 26) y lo manda `analytics:notify-accounts` una vez por
-  cuenta. **El owner lo vio en Mailpit el 24-09 y le pareció bien**; si quieres revisar tono, es tuyo.
-- ▶ **La T7 de la analítica (encuestas, 25-09) añade otro**: el correo del día siguiente (`SurveySendTest`); entra en
-  tus censos. Y el diseño del 24-09 trae **quince correos** rehechos (`paginas/correos.card.html` de la instancia): son
-  tuyos cuando llegue su tanda.
+### ❗ Para el carril de CORREOS (emisor: SPA, 19→26-09; pendiente de tu «atendido»)
+- ▶ **Correos nuevos sobre tu molde, SIN tocarlo, todos en tus censos**: `VisitEveNotice` (`#717`),
+  `GoogleBusinessLocationChanged` (`#725`), `AnalyticsLinkNotice` (T3a·4; el owner lo vio en Mailpit el 24-09), el del
+  día siguiente de las encuestas (T7) y, **el 26-09, `BirthdayComingNotice`** («El cumple se acerca», `#750`: comercial,
+  con la baja al pie y en `List-Unsubscribe`; `EmailUtmTest` 27 → 28; el asunto pasa sus datos en línea, como pide
+  `MailInboxLineTest`). Te queda tu OJO en Gmail/Outlook. Tocado `GuestFormRequest` (solo con invitación). El diseño del
+  24-09 trae **quince correos** rehechos (`paginas/correos.card.html` de la instancia): tuyos cuando llegue su tanda.
 
 ### ❗❗ Para el carril de la WEB (emisor: SPA, 24-09) — LA T3 DE LA ANALÍTICA tocó lo tuyo
 - **La T3 entera está en `main` (24-09)** y tocó lo tuyo; el detalle por tanda, en `analitica.md` §4.3 y §4.9.

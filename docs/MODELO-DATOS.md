@@ -461,6 +461,14 @@ se quedó huérfana, y **hay que registrarla en la lista EXPLÍCITA de `model:pr
 ⚠️ `PurgeCustomerData` la borra ANTES que los pedidos, **incluidas las de cuentas que conserva**: la
 limpieza de go-live se lleva TODOS los pedidos y una prueba sin su pedido no prueba nada.
 
+### `birthday_reminders` (BirthdayReminder) — «Avísame de fechas» (`specs/avisame-de-fechas.md`, `#750`)
+La casilla del recibo: quien firmó la autorización de un invitado CON correo pide un correo antes del cumple del niño.
+`guardian_authorization_id` (FK **CASCADE**, **único**: la prueba es la autorización y de ella salen el correo, el
+nombre y la fecha; aquí no se copia nada) · `locale`(8, el del correo) · `accepted_at` · `revoked_at` (la baja; marcar
+de nuevo la revive con otra `accepted_at`) · `sent_for` (el cumpleaños para el que salió: una vez por cumpleaños) ·
+`sent_at` · timestamps. Ajuste `party.birthday_reminder_weeks` (6; 0 lo apaga). ⚠️ La cascada es el ciclo de vida: la
+poda o `PurgeCustomerData` se llevan la autorización y la marca con ella; la baja alcanza a todas las filas de ese correo.
+
 ### `dependents` (Dependent, **Prunable**) — Fase 6 · menores a cargo
 Las PERSONAS A CARGO que un titular declara (`specs/menores-a-cargo.md` §4.1–§4.5, `DECISIONES #191`):
 `user_id` FK **RESTRICT** (la fila sobrevive a la cuenta mientras haya una firma detrás; la limpieza de

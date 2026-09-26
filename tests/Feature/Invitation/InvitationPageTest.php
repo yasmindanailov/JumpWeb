@@ -369,9 +369,10 @@ class InvitationPageTest extends TestCase
         // por dos credenciales distintas, que es justo lo que TIENEN que ser.
         // ⚠️ Se compara lo que el padre VE (`<main>`), no el documento entero: Livewire inyecta sus estilos en la cabecera
         // de UNA de las dos respuestas según qué corrió antes en la suite, y eso no es un desenlace.
+        // ▶ F6b (§4.12): `data-mia` es lo que SU móvil guarda de SU respuesta (id y nombre de pila): suyo, como la URL.
         $recibo = static fn (string $html): string => (string) preg_replace(
-            ['/Ana Gil|Hugo Ruiz|Ana(?:%20|\+)Gil|Hugo(?:%20|\+)Ruiz/', '#/invitacion/recibo/\d+\?[^"]*#', '/invitation_reply_id=\d+/', '/(signature|expires)=[^&"]+/', '/name="_token" value="[^"]+"/'],
-            ['NOMBRE', '/invitacion/recibo/RECIBO', 'invitation_reply_id=N', '$1=X', 'name="_token" value="T"'],
+            ['/Ana Gil|Hugo Ruiz|Ana(?:%20|\+)Gil|Hugo(?:%20|\+)Ruiz/', '#/invitacion/recibo/\d+\?[^"]*#', '/invitation_reply_id=\d+/', '/(signature|expires)=[^&"]+/', '/name="_token" value="[^"]+"/', '/data-mia="[^"]*"/'],
+            ['NOMBRE', '/invitacion/recibo/RECIBO', 'invitation_reply_id=N', '$1=X', 'name="_token" value="T"', 'data-mia="MIA"'],
             preg_match('#<main class="inv">.*?</main>#s', $html, $m) ? $m[0] : 'SIN PÁGINA'
         );
 

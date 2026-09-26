@@ -384,10 +384,11 @@ button.fi-fila__cabecera:hover, .fi-fila--open > button.fi-fila__cabecera { back
 /* Una ficha VACÍA (posicional, sin datos): sin JavaScript se ve con sus campos, que es el suelo; con él la esconde la
    página y la rellena «Añadir a mano», una detrás de otra. */
 .js .fi-fila--vacia { display: none; }
-.js [hidden] { display: none !important; }
-/* La tarjeta EN VIVO de «Personalizar» (F2): lo que hoy no se ve lleva `hidden` y sus estilos en línea (`display: flex`,
-   `grid`…) le ganarían al del navegador; esto lo hace valer también sin JavaScript. */
-[data-inv-vivo] [hidden] { display: none !important; }
+/* ❗ `hidden` ES OCULTO, con JavaScript Y SIN ÉL. Las piezas llevan sus estilos EN LÍNEA (`display: flex`, `grid`…), que le
+   ganan al `[hidden]` del navegador: con la regla solo bajo `.js` (hasta el 26-09), sin JavaScript se veían OCHO nodos que
+   nadie debía ver —medido con una sonda—, y el peor era el visor de «Ver el parque» (F1c): fijo, a pantalla entera y
+   con su velo, tapaba la invitación y el recibo enteros. En F2 se había parcheado solo la tarjeta en vivo. */
+[hidden] { display: none !important; }
 .fi-fila__campos { display: grid; grid-template-columns: minmax(92px, 116px) minmax(0, 1fr); gap: 12px; align-items: end; }
 .fi-fila__acciones { display: flex; flex-wrap: wrap; gap: 8px; }
 
@@ -450,6 +451,9 @@ button.fi-fila__cabecera:hover, .fi-fila--open > button.fi-fila__cabecera { back
 a.inv-prueba{display:inline-flex;align-items:center;gap:7px;justify-self:start;min-height:32px;font:700 var(--fs-body-sm)/1.4 var(--font-ui);color:var(--fiesta-tinta-900);text-decoration:none}
 a.inv-prueba svg{color:var(--fiesta-sol-600)}a.inv-prueba:hover{text-decoration:underline;text-underline-offset:3px}
 .inv-mias{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;padding:0 2px;font:600 var(--fs-caption)/1.3 var(--font-ui);color:var(--fiesta-tinta-900)}
+/* F6b: el hueco vacío se queda escondido sin JavaScript (`[hidden]`, arriba); cada chip es un ENLACE a su recibo, con el
+   aspecto del `Tag` con `onClick` del diseño (`button.pz-etiqueta`). */
+a.pz-etiqueta{cursor:pointer;text-decoration:none}a.pz-etiqueta:not(.pz-etiqueta--on):hover{background:var(--control-bg-hover)}
 .inv-barra{margin-top:2px}
 .inv-caducado{margin:0;font:400 var(--fs-caption)/1.45 var(--font-ui);color:var(--text-body)}
 .inv-llamar{display:inline-flex;align-items:center;gap:5px;min-height:44px;margin-left:6px;font-weight:700;color:var(--text-link)}
@@ -477,6 +481,8 @@ a.inv-prueba svg{color:var(--fiesta-sol-600)}a.inv-prueba:hover{text-decoration:
 .inv-idiomas>a{color:var(--text-body);text-decoration:underline;text-underline-offset:3px}.inv-idiomas>a:hover{color:var(--fiesta-tinta-900)}
 .inv-idiomas>[aria-current]{font-weight:700;color:var(--fiesta-tinta-900)}
 .inv-ficha-form{display:grid;gap:12px}
+/* «Avísame de fechas» (F6b, `#750`): la casilla, su texto legal y, al pie, «Guardado» o su botón (sin JavaScript). */
+.inv-avisame{display:grid;gap:10px}.inv-avisame-pie{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .inv-tercero{display:grid;gap:6px;padding:2px 4px 0}
 .inv-tercero-rotulo{font:700 var(--fs-caption)/1.3 var(--font-ui);color:var(--text-muted)}
 /* `forms/Select.jsx` → `pz-selector`: el foco, que el diseño lleva en estado. */

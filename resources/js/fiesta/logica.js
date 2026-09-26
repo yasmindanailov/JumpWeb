@@ -5,6 +5,7 @@
  * estado de una ficha, la vista previa de la invitación (F2)— y de `choice()`, el plural de Laravel resuelto en el
  * navegador.
  */
+/* global URL */
 
 /** La clave de un nombre: sin tildes, en minúsculas y con los espacios colapsados (el `norm()` del diseño). */
 export function clave(s) {
@@ -174,6 +175,43 @@ export function cubrir(variantes, adultos) {
     if (adultos > 0 && variantes.length > 0 && variantes.every((v) => v.para > 0)) rec(0, adultos, 0, 0);
 
     return best;
+}
+
+/**
+ * «TUS RESPUESTAS» (F6b de `fiesta-sistema-nuevo.md` §4.12, `InvMias`): la lista de este móvil sin lo caducado y, con
+ * `nueva`, con esa respuesta guardada o renovada (una por fiesta e id). Cada entrada: `{fiesta, id, nombre, url, hasta}`,
+ * con `hasta` en milisegundos. Lo que no tenga esa forma se tira: el almacenamiento es del navegador, no nuestro.
+ * ⚠️ Renovar la deja EN SU SITIO (el orden es el de contestar, como el diseño): al final, los chips cambiaban de orden
+ * cada vez que se abría uno (medido en la sonda).
+ *
+ * @param {unknown} lista  lo que había guardado
+ * @param {number} ahora  `Date.now()`
+ * @param {{fiesta: string, id: number|string, nombre: string, url: string, hasta: number}|null} nueva
+ */
+export function misRespuestas(lista, ahora, nueva = null) {
+    const vivas = (Array.isArray(lista) ? lista : []).filter((r) => r !== null && typeof r === 'object'
+        && typeof r.fiesta === 'string' && r.fiesta !== '' && r.id !== undefined && typeof r.url === 'string'
+        && typeof r.nombre === 'string' && Number(r.hasta) > ahora);
+    if (!nueva) return vivas;
+    const misma = (r) => r.fiesta === nueva.fiesta && String(r.id) === String(nueva.id);
+
+    return vivas.some(misma) ? vivas.map((r) => (misma(r) ? nueva : r)) : [...vivas, nueva];
+}
+
+/** Las de UNA fiesta, en el orden en que se contestaron (solo las propias: la lista ya es de este móvil). */
+export function deLaFiesta(lista, fiesta) {
+    return lista.filter((r) => r.fiesta === fiesta);
+}
+
+/** El `expires` de una URL firmada, en milisegundos: la entrada caduca con su enlace. `null` si no lo lleva. */
+export function caducaEn(url) {
+    try {
+        const e = new URL(url).searchParams.get('expires');
+
+        return e !== null && /^\d+$/.test(e) ? Number(e) * 1000 : null;
+    } catch {
+        return null;
+    }
 }
 
 /** El espacio duro entre una cifra y su unidad («16 €», «7 años»), como lo escribe el servidor. */
