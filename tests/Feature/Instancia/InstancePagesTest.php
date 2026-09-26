@@ -330,6 +330,11 @@ BLADE);
         $this->assertArrayNotHasKey('mi_cuenta', $invitado['textos']);
         $this->assertArrayNotHasKey('mi_cuenta_alta', $invitado['textos']);
         $this->assertNull($invitado['config']['cuenta'], 'sin sesión, nada de la cuenta');
+        // T5e·2 (`#779`): el `status` que deja el servidor al volver (Google, el correo…) viaja AQUÍ, con su tono: el
+        // motor pide su arranque después, con el `status` ya gastado. Sin él, nada.
+        $this->assertNull($invitado['config']['aviso']);
+        $conAviso = $isla((string) $this->withSession(['status' => 'google-provider-taken'])->get('/kids')->getContent());
+        $this->assertSame(['texto' => __('account.status.google-provider-taken'), 'tono' => 'danger'], $conAviso['config']['aviso'] ?? null);
 
         $user = User::factory()->create();
         $conSesion = $isla((string) $this->actingAs($user)->get('/kids')->getContent())['config'] ?? [];

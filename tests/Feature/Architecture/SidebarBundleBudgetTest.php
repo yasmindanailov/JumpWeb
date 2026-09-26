@@ -931,7 +931,9 @@ class SidebarBundleBudgetTest extends TestCase
     // sin nada: la isla (`IslaFlotante` y sus piezas), Vue, el almacén de cookies y la API; el motor y la compra, NO.
     // Medido el 25-09: 153,69 KiB (51,1 comprimidos). En Kids, con la calculadora y el cajón que ya cargaba, el JS de la
     // página pasa de 62,6 a 78,3 KiB comprimidos (comparten Vue, la API y las piezas).
-    private const ISLA_PAGINA_MAX_KB = 156;
+    // T5e·2 (`#779`): el aviso que deja el servidor al volver (`pagina/aviso-servidor.js`, que también toman Mi cuenta y
+    // la compra): 155,62 → 156,30 (base: `HEAD` construido aparte). El techo, a 157.
+    private const ISLA_PAGINA_MAX_KB = 157;
 
     // T3e·3 (`#694`): las pantallas de después de la pantalla 0, en su trozo (`isla/compra/pasos-diferidos.js`), que la
     // compra pide al montarse. Medido 36,92 KiB. T3e·4 (`#695`): «Entra» con sus eventos y la «G» de Google, 37,66.
@@ -959,7 +961,10 @@ class SidebarBundleBudgetTest extends TestCase
     // iconos—: va plegado al final («nada esencial vive aquí») y dentro medía 126,22 (+30,8, un tercio de Mi cuenta). Lo
     // que queda aquí (+5,91) es lo que ENRUTA: las seis vistas de sus pasos en `vista.js`, la carga diferida en su
     // `effectScope` y los avisos con tono. El techo, a 103; Ajustes tiene el suyo, abajo.
-    private const ISLA_CUENTA_CHUNK_MAX_KB = 103;
+    // T5e·2 (`#779`, los avisos de la cuenta): 101,34 → 104,93. Van ARRIBA y con la primera pintura —confirmar el correo
+    // con su reenvío, firmar tu descargo o el de tus hijos, la analítica (`avisos.js`, dos avisos del sistema)— y el aviso
+    // del servidor en Entra y en Tu QR; diferirlos sería pintarlos tarde justo donde se miran. El techo, a 106.
+    private const ISLA_CUENTA_CHUNK_MAX_KB = 106;
 
     // T5e (`#778`): los AJUSTES de Mi cuenta, su trozo —el bloque y su lógica, pedidos al pintar el inicio—, sobre lo que ya
     // tiene quien abre Mi cuenta. Medido: 26,92 (el bloque 12,70, la lógica 6,56, `ajustes.js` 3,44, el interruptor que

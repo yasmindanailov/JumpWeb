@@ -16,6 +16,7 @@ defineProps({
     renovando: { type: Boolean, default: false },
     irCuenta: { type: Boolean, default: false },
     aviso: { type: String, default: '' },
+    avisoTono: { type: String, default: 'success' },
     sinQr: { type: String, default: '' },
     comoLlegar: { type: String, default: '' },
 });
@@ -28,6 +29,7 @@ const { t } = useTextos();
         <AvisoCuenta
             v-if="aviso"
             :texto="aviso"
+            :tono="avisoTono"
         />
         <BloqueQr
             vista

@@ -32,6 +32,7 @@ import { ckDelPaso, direccion, empiezaOtra, pantallaListo, pasoDelMotor, rango }
 import {
     almacenDeLaPestana, conVuelta, esVuelta, marcarSalida, sinVuelta, tomarMarca, vueltaDe, vuelveAqui,
 } from '../../sidebar/reanudar.js';
+import { tomarAvisoDelServidor } from '../pagina/aviso-servidor.js';
 
 /** Lo que `SeccionCompra.vue` da a los pasos de después de la pantalla 0, que viajan en otro trozo (`PasosCompra.vue`). */
 export const COMPRA = Symbol('la compra de la isla');
@@ -116,6 +117,11 @@ export function useSeccionCompra(props) {
         if (! guardada?.borrador?.zona) return empezar(null);
         Object.assign(compra, { borrador: { ...guardada.borrador }, pedido: guardada.pedido ?? null, paso: 'datos', ocupado: 'datos', aviso: '' });
         datos.preparar();
+        // La vuelta que NO salió (T5e·2, `#779`: canceló en Google, esa cuenta ya es de otra…) lo dice en «Tus datos», con
+        // su aviso de siempre; antes se volvía al mismo sitio sin decir nada. La que salió no necesita aviso: sigue a pagar.
+        const delServidor = tomarAvisoDelServidor(document, { si: (a) => a.tono !== 'success' });
+
+        if (delServidor) datos.estado.aviso = delServidor.texto;
 
         try {
             await flow.ready;

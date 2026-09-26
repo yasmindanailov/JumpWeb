@@ -31,7 +31,10 @@
  *      «Acceso» abierto); cerrar las otras sesiones; un interruptor ida y vuelta, sin contraseña; el PDF del descargo;
  *      «Descargar mis datos» que DESCARGA; borrar la cuenta con una reserva por celebrar (lo dice, sin botón) y sin ella
  *      (la contraseña, la casilla y el botón, que no se pulsa); los recibos del libro; `#mi-cuenta/privacidad`; y, al
- *      final, «Cerrar sesión», que sale a la portada sin sesión;
+ *      final, «Cerrar sesión», que sale a la portada sin sesión. Antes, LOS AVISOS (T5e·2, `#779`): «Vincular Google»
+ *      hasta la puerta de Google (se corta ahí) y la vuelta cancelada, cuyo aviso del servidor sale en Mi cuenta; y, con
+ *      el correo sin confirmar y la analítica pendiente, sus dos avisos, el reenvío con su espera y «Entendido» (la
+ *      cuenta se deja como estaba);
  *   11. la consola queda limpia y ninguna respuesta de la API falla (salvo el «no» buscado de la contraseña).
  * Sale con 1 si algo falla. Dentro del contenedor, contra su puerto 80, con la cuenta de pruebas de `sonda-isla.mjs`:
  *
@@ -612,6 +615,65 @@ async function recorrer(navegador, ventana, informe) {
     check('marcada, se enciende (aquí no se pulsa)', await borrarBoton.isEnabled());
     await captura('24-borrar');
     await volver();
+
+    // ── 10b · Los avisos (T5e·2) ─────────────────────────────────────────────────────────────────────
+    // La vuelta de Google que NO salió: «Vincular Google» de verdad hasta la puerta de Google (se corta ahí: sin salir a
+    // internet) y la vuelta con `error`, como cuando se cancela allí. El servidor deja su `status` en la página nueva y Mi
+    // cuenta lo dice arriba (hasta la T5e·2 se perdía en silencio).
+    // ⚠️ Playwright no intercepta la petición a la que lleva una redirección: se intercepta la IDA del servidor y se lee su
+    // redirección sin seguirla (el reto queda en la sesión, que no cambia de identificador).
+    let alGoogle = '';
+    await pagina.route('**/auth/google/vincular**', async (ruta) => {
+        const r = await ruta.fetch({ maxRedirects: 0 });
+
+        alGoogle = r.headers().location ?? '';
+        await ruta.abort();
+    });
+    limitadoresACero();
+    await cargar('/kids#mi-cuenta/acceso');
+    await ajustes.waitFor({ timeout: 15000 }).catch(() => {});
+    await pagina.waitForTimeout(900);
+    check('`#mi-cuenta/acceso` abre Mi cuenta con «Acceso» abierto', (await plegable('Acceso').getAttribute('aria-expanded')) === 'true');
+    await ajustes.getByRole('button', { name: 'Vincular Google', exact: true }).click();
+    await pagina.waitForTimeout(1800);
+    await pagina.unroute('**/auth/google/vincular**');
+    const reto = new URL(alGoogle || 'http://sin-google/').searchParams.get('state') ?? '';
+    check('«Vincular Google» va a Google por el servidor, con su reto', reto !== '', alGoogle.slice(0, 90));
+    await pagina.goto(`${base}/auth/google/callback?state=${encodeURIComponent(reto)}&error=access_denied`, { waitUntil: 'load' });
+    await capa().waitFor({ timeout: 15000 }).catch(() => {});
+    await pagina.waitForTimeout(1200);
+    check('cancelada en Google, vuelve a la página en Mi cuenta —«Acceso» abierto— y el aviso del servidor sale arriba',
+        new URL(pagina.url()).pathname === '/kids' && await capa().getByText('No has terminado de entrar con Google').first().isVisible() && (await plegable('Acceso').getAttribute('aria-expanded')) === 'true', pagina.url());
+    await captura('25-aviso-del-servidor');
+
+    // Sin el correo confirmado y con el aviso de la analítica pendiente: los dos arriba, cada uno con lo suyo.
+    const verificadaAntes = deLaSonda('email_verified_at');
+    const avisadaAntes = deLaSonda('analytics_notified_at');
+    const vistaAntes = deLaSonda('analytics_notice_seen_at');
+    const aSql = (v) => (v === '' ? 'null' : `'${v}'`);
+    tinker(`App\\Domain\\Identity\\Models\\User::where('email', '${CLIENTE.email}')->update(['email_verified_at' => null, 'analytics_notified_at' => now(), 'analytics_notice_seen_at' => null]);`);
+    limitadoresACero();
+    await cargar('/kids#mi-cuenta');
+    await capa().waitFor({ timeout: 15000 }).catch(() => {});
+    await pagina.waitForTimeout(1000);
+    t = await texto(capa());
+    check('sin el correo confirmado, arriba: confirmarlo, con los reenvíos que quedan y «Reenviar el correo»',
+        t.includes('Confirma tu correo con el enlace que te enviamos. Reenvíos que quedan: 4. Reenviar el correo'), t.slice(0, 320));
+    check('y, aparte, el de la analítica, con su botón como lo nombra su frase y «Entendido»',
+        t.includes('Puedes oponerte en «Privacidad y datos». Privacidad y datos Entendido'), t.slice(0, 480));
+    await captura('26-avisos');
+    await capa().getByRole('button', { name: 'Reenviar el correo' }).click();
+    await pagina.waitForTimeout(1300);
+    check('«Reenviar el correo» lo reenvía, lo confirma y espera su minuto',
+        await capa().getByText('Te hemos reenviado el correo').isVisible() && await capa().getByRole('button', { name: /^Reenviar en \d+ s$/ }).isDisabled());
+    await capa().getByRole('button', { name: 'Entendido', exact: true }).click();
+    await pagina.waitForTimeout(1000);
+    check('«Entendido» lo despide en el servidor, y se va', deLaSonda('analytics_notice_seen_at') !== '' && ! (await capa().getByText('Puedes oponerte en').isVisible().catch(() => false)));
+    tinker(`App\\Domain\\Identity\\Models\\User::where('email', '${CLIENTE.email}')->update(['email_verified_at' => ${aSql(verificadaAntes)}, 'analytics_notified_at' => ${aSql(avisadaAntes)}, 'analytics_notice_seen_at' => ${aSql(vistaAntes)}]);`);
+    await cargar('/kids#mi-cuenta');
+    await capa().waitFor({ timeout: 15000 }).catch(() => {});
+    await pagina.waitForTimeout(900);
+    check('con todo al día, ningún aviso (la cuenta, como estaba)', ! (await capa().getByText('Confirma tu correo').isVisible().catch(() => false)) && deLaSonda('email_verified_at') === verificadaAntes);
 
     await ajustes.getByRole('button', { name: 'Cerrar sesión', exact: true }).click();
     await pagina.waitForURL((u) => new URL(u).pathname === '/', { timeout: 15000 }).catch(() => {});

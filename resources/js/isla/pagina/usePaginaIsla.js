@@ -17,6 +17,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, watch } from 'vue';
 import { createCookiesStore } from '../../ui/cookie-consent.js';
 import { medirVista, preferenciasDeCookies, propsDeLaIsla } from './pagina.js';
+import { loTomaUnaCapa, tomarAvisoDelServidor } from './aviso-servidor.js';
 
 export function usePaginaIsla({ config, textos, doc = document, win = window }) {
     const e = reactive({ vista: { cta: false, hoy: false }, calculo: null, compraAbierta: false, aviso: null });
@@ -107,6 +108,14 @@ export function usePaginaIsla({ config, textos, doc = document, win = window }) 
         doc.addEventListener('jw:cajon:open', alAbrir);
         doc.addEventListener('jw:cajon:close', alCerrar);
         win.setTimeout(medir, 300);
+        // El aviso que dejó el servidor al volver aquí (T5e·2, `#779`), si no lo toma una capa que se abre al cargar. El
+        // «Aviso» de la isla crece un momento y se va solo: sirve para CONFIRMAR («Tu cuenta ha sido eliminada»), no para
+        // un «no se pudo» largo, que se leería a medias (WCAG 2.2.1): ése se queda para Mi cuenta, al abrirla.
+        if (! loTomaUnaCapa(win.location, doc)) {
+            const aviso = tomarAvisoDelServidor(doc, { si: (a) => a.tono === 'success' });
+
+            if (aviso) avisar(aviso.texto);
+        }
     });
     onBeforeUnmount(() => {
         win.removeEventListener('scroll', mover);

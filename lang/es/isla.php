@@ -596,6 +596,22 @@ return [
                 'casilla' => 'Marca la casilla para firmar.',
             ],
         ],
+        // Los avisos de la cuenta arriba de Mi cuenta (T5e·2, `#779`), los del índice del cajón con las piezas del sistema
+        // (`#773`·d): confirmar el correo (con el reenvío y su cupo), firmar tu descargo y el de tus hijos.
+        'avisos' => [
+            'verificar' => 'Confirma tu correo con el enlace que te enviamos.',
+            'verificar_descargo' => 'Tu descargo quedará firmado al confirmarlo.',
+            'reenviar' => 'Reenviar el correo',
+            'reenviar_en' => 'Reenviar en :s s',
+            'quedan' => 'Reenvíos que quedan: :n.',
+            'limite' => 'Has llegado al límite de reenvíos: mira en el correo no deseado o inténtalo más tarde.',
+            'reenviado' => 'Te hemos reenviado el correo',
+            'firmar' => 'Te falta firmar el descargo de responsabilidad.',
+            'firmar_nuevo' => 'El descargo ha cambiado desde que lo firmaste: vuelve a firmarlo.',
+            'firmar_boton' => 'Firmar',
+            'hijos' => 'Falta la firma del descargo de alguno de tus hijos.',
+            'hijos_boton' => 'Ver a tus hijos',
+        ],
         'borrar' => [
             'titulo' => 'Borrar tu cuenta',
             // Lo que hace `User::anonymize()` (`RGPD-01`), no lo que decía el mockup («se borran tus reservas y tus recibos»:

@@ -5,7 +5,7 @@
  * venir, T5c)—; después los bloques en su orden. **Tu QR**: compacto, con «Enseñar mi QR» (`PmcQrMini`), o grande de
  * entrada si la reserva es HOY, que es lo que va a hacer (T5b). **Tu próxima reserva**, **Antes de venir** (T5c) y
  * **Otras reservas** con su historial (T5b), **Quién viene contigo** (T5d) y los **Ajustes** plegados con «Cerrar
- * sesión» (T5e). Reservar otra vez se suma aquí en la T5f.
+ * sesión» (T5e). Bajo la cabecera, los **avisos de la cuenta** (T5e·2). Reservar otra vez se suma aquí en la T5f.
  *
  * Pinta y avisa: qué se enseña lo decide `useSeccionCuenta.js` (y `reservas.js`).
  */
@@ -18,6 +18,7 @@ import BloqueAntes from './BloqueAntes.vue';
 import BloqueOtras from './BloqueOtras.vue';
 import { defineAsyncComponent } from 'vue';
 import BloqueQuien from './BloqueQuien.vue';
+import AvisosCuenta from './AvisosCuenta.vue';
 import IconoLucide from '../ui/IconoLucide.vue';
 import BotonSistema from '../ui/BotonSistema.vue';
 import PaseQr from '../ui/PaseQr.vue';
@@ -41,11 +42,10 @@ defineProps({
     quien: { type: Object, required: true },
     ajustes: { type: Object, default: null },
     saliendo: { type: Boolean, default: false },
+    avisos: { type: Object, default: () => ({}) },
 });
-const emit = defineEmits([
-    'qr', 'bloque', 'cambiar', 'abrir', 'mas', 'guardar', 'preguntar', 'renovar', 'tarea', 'hijos', 'hijo',
-    'alternar', 'dato', 'guardar-datos', 'paso', 'vincular', 'interruptor', 'descargar', 'mas-recibos', 'salir',
-]);
+const emit = defineEmits(['qr', 'bloque', 'cambiar', 'abrir', 'mas', 'guardar', 'preguntar', 'renovar', 'tarea', 'hijos', 'hijo',
+    'alternar', 'dato', 'guardar-datos', 'paso', 'vincular', 'interruptor', 'descargar', 'mas-recibos', 'salir', 'aviso', 'analitica']);
 const { t, tp } = useTextos();
 
 // Ajustes (T5e), en su trozo: va plegado al final («nada esencial vive aquí») y Mi cuenta pinta sin esperarlo. Dentro
@@ -90,6 +90,12 @@ const BloqueAjustes = defineAsyncComponent(() => import('./BloqueAjustes.vue'));
                 />{{ chip }}
             </button>
         </header>
+        <!-- Los avisos de la cuenta (T5e·2), arriba, con «qué le falta». -->
+        <AvisosCuenta
+            v-bind="avisos"
+            @aviso="(hace) => emit('aviso', hace)"
+            @analitica="(que) => emit('analitica', que)"
+        />
         <BloqueQr
             v-if="hoy"
             :qr="qr"

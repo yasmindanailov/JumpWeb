@@ -3,9 +3,9 @@
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 EN CURSO** (su centena,
-> `decisiones/700-799.md`) · Último usado: **`#778`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#778`) · Actualizado: **2026-09-26**
-> (la T5, Mi cuenta en la isla: plan `#773`; T5a→T5e·1 hechas, `#774`→`#778`).
+> `decisiones/700-799.md`) · Último usado: **`#779`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#779`) · Actualizado: **2026-09-26**
+> (la T5, Mi cuenta en la isla: plan `#773`; T5a→T5e hechas, `#774`→`#779`).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
 > llévaselo con la medida, como el SPA en `#724`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -43,9 +43,10 @@
 
 ▶▶ **EN MARCHA (26-09): T5 · Mi cuenta en la isla** (spec §4.13, `#773`: el censo, las cuatro respuestas del owner y
 el plan T5a→T5f; dentro de la v2). **T5a→T5d ✅** (`#774`→`#777`: la capa, las reservas, Antes de venir, los hijos;
-contrato 1.38.0) y **T5e·1 ✅** (`#778`: Ajustes y Cerrar sesión; `scripts/sonda-cuenta.mjs` 199/199 con
-`sonda-cuenta-datos.php`). Sigue la **T5e·2**: los AVISOS de la cuenta que la isla aún no pinta (confirmar el correo, el
-de la analítica, la firma del titular) y los `status` del servidor que las páginas nuevas pierden (la vuelta de Google).
+contrato 1.38.0) y **T5e ✅** (`#778` Ajustes y Cerrar sesión; `#779` los avisos de la cuenta y el `status` del servidor
+que las páginas nuevas perdían; `scripts/sonda-cuenta.mjs` 215/215 con `sonda-cuenta-datos.php`). Sigue la **T5f** (Reservar
+otra vez, la bienvenida, sin conexión, los bloques protegidos, la verificación final). ❗ Lo que el mockup no dibuja
+(`#773`·d) se ENSEÑA al owner en vivo antes de cerrar la T5. ⚠️ La vuelta de Google de la COMPRA, sin probar en vivo.
 ⚠️ En PRODUCCIÓN, el owner pone en el panel el aviso de los calcetines y «se devuelve la señal» de los packs (en LOCAL,
 puestos). ⚠️ La sonda RENUEVA el carné de `probe-card@`, le declara y quita hijos, y cambia y DESHACE datos de su
 cuenta (teléfono, encuesta, un correo pendiente; la contraseña, a la misma).
@@ -221,9 +222,10 @@ dueño es el carril de la web/reseñas—) ·
 - `#773`: Mi cuenta en la isla (spec `isla-y-landing-nueva.md` §4.13: cada tanda dice lo tocado). De lo tuyo:
   `Sidebar.vue` (+3 líneas: con la isla monta `isla/SeccionCuenta.vue`) y `carcasa.js::superficieDe`; tus stores y
   `account/*.js`, leídos sin tocar. Contratos míos: 1.33.0 (T5a) y 1.34.0 (T5b).
-- ▶ **T5e·1 (`#778`)**, HECHA: Mi cuenta usa SIN tocarlos tus stores `profile`, `credentials`, `privacy`, `waiver` y
-  `auth` (el olvido), y `account/{sign-out,form-outcome,profile,waiver}.js`: si cambian de forma, avísame. El motor los
-  exporta a mi trozo: 297,09 → 297,28 (techo 298, intacto). Sin contrato nuevo.
+- ▶ **T5e (`#778`, `#779`)**, HECHA: Mi cuenta usa SIN tocarlos tus stores `profile`, `credentials`, `privacy`, `waiver`,
+  `auth` (el olvido y el reenvío de la verificación) y `accountContext` (despedir el aviso de la analítica), y
+  `account/{sign-out,form-outcome,profile,waiver,verify}.js` (`accountNoticeFrom`, `resendGate`): si cambian de forma,
+  avísame. El motor los exporta a mi trozo: 297,09 → 297,31 (techo 298, intacto). Sin contrato nuevo.
 - ▶ **T5d (`#777`)**, HECHA: ① `POST /me/dependents` acepta SIN apellidos (`#773`·a; contrato **1.38.0**, mío: el
   siguiente, tuyo); tu `DependentsZone` decide si los sigue pidiendo. ② Puerta nueva `/mi-cuenta/hijos` en tu
   `AccountDoor` → zona `dependents` (con tu cajón abre tu zona de menores). ③ Uso SIN tocarlos tu store de menores,

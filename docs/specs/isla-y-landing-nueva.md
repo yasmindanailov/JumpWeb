@@ -1424,10 +1424,30 @@ piezas del sistema**, enseñado en vivo antes de cerrar.
   nombre entero (en la capa hay otra X «Cerrar» y dos «Descargar»; WCAG 2.5.3). **Medido**: `node --test` 1.400 → 1.430
   (`ajustes.test.js` 24, `vista.test.js` +6); **en vivo**, la sonda con su paso de Ajustes: **199 de 199** a 1280 y 390
   (cazó un manejador que no llegaba a ejecutarse en los pasos); `SidebarBundleBudgetTest` +1 guarda (Ajustes, trozo propio;
-  un mutante muerto). **El peso**: Mi cuenta 95,43 → 101,34 KiB (techo 103): Ajustes va ENTERO en su trozo, con su lógica
-  en un `effectScope` (26,92 al pintar el inicio, techo 28; sus pasos, 6,18) —dentro medía 126,22—; el motor, 297,09 →
-  297,28 (sus exportaciones). ▶ **Sigue la T5e·2**: los avisos de la cuenta (arriba), y los `status` del servidor que las
-  páginas nuevas no pintan (la vuelta de Google, entre ellas la de «Vincular»).
+  un mutante muerto; son 14 casos, y no 15 como decía el trailer de `28990689`). **El peso**: Mi cuenta 95,43 → 101,34 KiB
+  (techo 103): Ajustes va ENTERO en su trozo, con su lógica en un `effectScope` (26,92 al pintar el inicio, techo 28; sus
+  pasos, 6,18) —dentro medía 126,22—; el motor, 297,09 → 297,28 (sus exportaciones).
+- ▶ **T5e·2 ✅ (26-09, `#779`) · los avisos**. **Los de la cuenta** (`cuenta/avisos.js`, puro; `AvisosCuenta.vue`), arriba
+  y con «qué le falta»: el del índice del cajón con su MISMA decisión (`accountNoticeFrom`, `#331`: uno y en su orden) —
+  confirmar el correo con «Reenviar el correo», su cuenta atrás y su cupo (`account/verify.js`, la puerta del alta), y si
+  dejó el descargo aceptado, que se firmará al confirmarlo; con él, firmar SU descargo (el paso de Ajustes) o el de sus
+  hijos (baja a «Quién viene contigo»)— y, aparte, el de la analítica (`#678` T3a·4), con su «Entendido» y su otro botón
+  llamado como lo nombra la frase del servidor («Privacidad y datos», que abre ese plegable y lo despide). **El `status`
+  del servidor en las páginas nuevas** (MEDIDO: se perdía): el layout de la instancia no lo pinta y el motor pide su
+  arranque a la API después, con el `status` ya gastado; así que una vuelta de Google que no salió —al entrar, al vincular
+  desde Ajustes o en la compra— volvía sin decir nada. Viaja en la configuración de la isla de la página (`config.aviso`,
+  `Http\Cuenta\AvisoDeSesion`: el texto de `account.status.*` y su tono por lista, con `AvisoDeSesionTest`, que obliga a
+  clasificar cada `status` en los tres idiomas) y lo toma UNA vez (`pagina/aviso-servidor.js`, marcándolo en el propio
+  `<script>`) quien se abre primero: Mi cuenta (arriba, o en Entra y Tu QR), la compra que vuelve de Google (en «Tus
+  datos», si no salió) o, sin capa, el «Aviso» de la isla solo si CONFIRMA (se va solo a los 4,2 s: un error largo se leería
+  a medias, WCAG 2.2.1; ése se queda para Mi cuenta). **De paso**: el aviso pegado arriba de Mi cuenta se transparentaba
+  sobre lo que pasaba por debajo (el token es cristal, al 94 %; el mockup tenía lo mismo): lleva el fondo de la isla dos
+  veces. **Medido**: `AvisoDeSesionTest` 3 e `InstancePagesTest` +2 aserciones; `node --test` 1.446 (`avisos.test.js` 10,
+  `aviso-servidor.test.js` 6); **en vivo**, la sonda: **215 de 215** a 1280 y 390 —«Vincular Google» hasta la puerta de
+  Google y la vuelta cancelada, cuyo aviso sale en Mi cuenta con «Acceso» abierto; el correo sin confirmar y la analítica
+  pendiente con sus dos avisos, el reenvío con su espera y «Entendido»—. ⚠️ La vuelta de Google de la COMPRA queda medida por
+  su módulo y por lectura, no en vivo. **El peso**: Mi cuenta 101,34 → 104,93 (techo 106: los avisos van con la primera
+  pintura, donde se miran), la isla de la página 155,62 → 156,30 (techo 157). ▶ **Sigue la T5f**.
 
 ## 5. Impacto en invariantes
 

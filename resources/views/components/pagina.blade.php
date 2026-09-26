@@ -30,9 +30,12 @@
         ? [
             // `cookiesPanel`: los textos LEGALES de cada finalidad (los de la web de siempre) para la segunda capa.
             // `cuenta` (T5c, `#776`): con sesión, si la próxima es hoy y su primera tarea pendiente, ya escritas.
+            // `aviso` (T5e·2, `#779`): el `status` que dejó el servidor al volver aquí (Google, el correo…), con su tono.
+            // Solo esta petición lo ve: el motor pide su arranque después, con el `status` ya gastado.
             'config' => $isla + [
                 'owner' => auth()->id(), 'cookiesUrl' => route('legal.cookies'), 'cookiesPanel' => __('cookies.panel'),
                 'cuenta' => app(\App\Http\Cuenta\AntesDeVenir::class)->paraLaIsla(auth()->user()),
+                'aviso' => app(\App\Http\Cuenta\AvisoDeSesion::class)->paraLaIsla(session('status')),
             ],
             'textos' => \Illuminate\Support\Arr::except((array) __('isla'), ['compra', 'calculadora', 'mi_cuenta', 'mi_cuenta_alta']),
         ]

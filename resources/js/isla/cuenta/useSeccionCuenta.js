@@ -27,12 +27,14 @@ import { emptyGoogleScreen, loadGoogleScreen, submitGoogleScreen } from '../../s
 import { landOnAccount } from '../../sidebar/account/after-auth.js';
 import { conVuelta } from '../../sidebar/reanudar.js';
 import { enlaceDeCuenta } from '../../cajon/enlace-cuenta.js';
+import { tomarAvisoDelServidor } from '../pagina/aviso-servidor.js';
 import { useSuperficie } from '../compra/useSuperficie.js';
 import {
     cuentaQueYaExiste, datosVacios, entradaVacia, errorDeEntrar, erroresDelServidor, firmaPendiente, formularioDeAlta,
     revisarDatos,
 } from '../compra/datos.js';
 import { VISTA, ckDeCuenta, lineaProxima, vistaDeApertura } from './vista.js';
+import { avisoDeAnalitica, avisoDeCuenta } from './avisos.js';
 import { tituloDe } from './reservas.js';
 import { useReservasCuenta } from './useReservasCuenta.js';
 import { useHijosCuenta } from './useHijosCuenta.js';
@@ -157,8 +159,13 @@ export function useSeccionCuenta(props) {
         // Un plegable de Ajustes (la zona del cajón que lo era, `#mi-cuenta/acceso`): abierto, y la capa baja a él.
         if (plegable) conAjustes().then((aj) => aj?.abrir(plegable));
 
+        // El aviso que dejó el servidor al volver a esta página (T5e·2, `#779`: la vuelta de Google al entrar o al vincular,
+        // un correo…), la primera vez que se abre Mi cuenta: arriba, con su tono, y hasta salir de la vista.
+        const delServidor = tomarAvisoDelServidor(document);
+
         Object.assign(e, {
-            vista, subpaso: '', dir: null, ocupado: null, aviso: null, renovar: false, errores: {}, avisoAlta: '',
+            vista, subpaso: '', dir: null, ocupado: null, renovar: false, errores: {}, avisoAlta: '',
+            aviso: delServidor ? { ...delServidor, en: vista } : null,
             desde: host?.cuentaDesde ?? null, qrDesde: vista === VISTA.QR ? (host?.cuentaDesde ?? 'fuera') : null,
             ent: entradaVacia(), f: datosVacios(), rSel: null, cambiarDesdeReserva: false,
         });
@@ -175,6 +182,39 @@ export function useSeccionCuenta(props) {
 
     /** La confirmación de arriba; con `tono = 'danger'`, lo que no salió (T5e). Se queda hasta salir de su vista. */
     const decir = (texto, tono = 'success') => { e.aviso = { texto, en: e.vista, tono }; };
+
+    // ── Los avisos de la cuenta (T5e·2) ──────────────────────────────────────────────────────────────
+
+    /** El de la cuenta (`avisos.js`): confirmar el correo, firmar su descargo o el de sus hijos. Uno, y en su orden. */
+    const avisoCuenta = computed(() => avisoDeCuenta(contexto.context, { textos, reenvio: { segundos: authStore.resendSeconds, quedan: authStore.resendsLeft } }));
+    // El cupo del reenvío se arma UNA vez, cuando hay que confirmar el correo (la misma puerta que el índice del cajón).
+    watch(() => avisoCuenta.value?.tipo, (tipo) => { if (tipo === 'verificar') authStore.allowVerificationResend(); }, { immediate: true });
+
+    /** «Reenviar el correo»: el reenvío del motor, que ya sabe si toca (espera y cupo) y a qué correo. */
+    async function reenviarVerificacion() {
+        const r = await authStore.resendVerification({ api });
+
+        if (r?.ok) decir(t(textos, 'mi_cuenta.avisos.reenviado'));
+        else if (! r?.skipped) decir(t(props.messages, 'errors.try_later'), 'danger');
+    }
+
+    /** El enlace del aviso de la cuenta: reenviar, firmar SU descargo (su paso) o ir a sus hijos. */
+    function hacerAviso(hace) {
+        if (hace === 'reenviar') reenviarVerificacion();
+        else if (hace === 'firmar') a(VISTA.FIRMA);
+        else if (hace === 'hijos') irAlBloque('quien');
+    }
+
+    /**
+     * El aviso de la analítica: «Entendido» lo despide (el servidor lo confirma antes de quitarlo) y «Privacidad» también
+     * —quien va a donde se retira ya lo ha leído, como en el cajón— y abre ese plegable de Ajustes.
+     */
+    function hacerAnalitica(que) {
+        contexto.dismissAnalyticsNotice({ api });
+        if (que !== 'privacidad') return;
+        conAjustes().then((aj) => aj?.abrir('privacidad'));
+        irAlBloque('ajustes');
+    }
 
     // ── Moverse dentro de la capa ────────────────────────────────────────────────────────────────────
 
@@ -502,12 +542,15 @@ export function useSeccionCuenta(props) {
         quien: hijos.quien.value,
         // Ajustes y «Cerrar sesión» (T5e), cuando llega su trozo.
         ajustes: ajustes.value?.bloque.value ?? null,
+        // Los avisos de la cuenta (T5e·2), arriba.
+        avisos: { cuenta: avisoCuenta.value, analitica: avisoDeAnalitica(contexto.context, { textos, motor: props.account }) },
         saliendo: e.ocupado === 'salir',
     }));
 
     const vistaQr = computed(() => ({
         qr: qr.value, renovar: e.renovar, renovando: e.ocupado === 'renovar', irCuenta: e.qrDesde !== 'cuenta',
         aviso: e.aviso?.en === VISTA.QR ? e.aviso.texto : '',
+        avisoTono: e.aviso?.en === VISTA.QR ? (e.aviso.tono ?? 'success') : 'success',
         comoLlegar: hoy.value ? reservas.rutaAlParque.value : '',
     }));
 
@@ -526,6 +569,8 @@ export function useSeccionCuenta(props) {
         tx: (clave) => t(textos, clave),
         sinQr: computed(() => delMotor('account.card.unavailable')),
         pantallaEntrar: computed(() => ({ paso: e.subpaso === 'olvido' ? 'olvido' : 'id', valor: e.ent.valor, clave: e.ent.clave, error: e.ent.error, ...social.value })),
+        // Lo que se dice arriba de «Entra» (T5e·2): la vuelta de Google que no salió («No has terminado de entrar…»).
+        avisoEntrar: computed(() => (e.aviso?.en === VISTA.ENTRAR ? e.aviso : null)),
         abrirQr: () => a(VISTA.QR, { qrDesde: 'cuenta' }),
         aInicio, decir, renovarQr, olvido, aGoogle, irAlBloque,
         // Las reservas (T5b): abrir una de «Otras reservas», pedir un cambio (desde la próxima o desde la abierta) y el
@@ -571,6 +616,9 @@ export function useSeccionCuenta(props) {
         reenviarCorreo: () => ajustes.value?.reenviarCorreo(),
         cancelarCorreo: () => ajustes.value?.cancelarCorreo(),
         borrarCuenta,
+        // Los avisos de la cuenta (T5e·2).
+        hacerAviso,
+        hacerAnalitica,
         cambiarVista,
         guardarQr: () => decir(t(textos, 'mi_cuenta.qr.guardado')),
         pedirRenovar: (si) => { e.renovar = si; },

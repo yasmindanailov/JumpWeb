@@ -40,12 +40,12 @@ defineOptions({ inheritAttrs: false });
 const props = defineProps(PROPS_MOTOR);
 const {
     abierta, textos, e, ck, inicio, vistaQr, social, firma, authStore, waiverStore, rotulosGoogle, tx, sinQr,
-    pantallaEntrar, google, abrirQr, aInicio, renovarQr, olvido, aGoogle, guardarQr, pedirRenovar, cambiarEntrada,
+    pantallaEntrar, avisoEntrar, google, abrirQr, aInicio, renovarQr, olvido, aGoogle, guardarQr, pedirRenovar, cambiarEntrada,
     cambiarAlta, aCrear, leerDescargo, cambiarGoogle, irAlBloque, abrirReserva, aCambiar, masHistorial, reservaAbierta,
     cambiarVista, antesAbierta, hacerTarea, pantallaHijos, fichaHijo, abrirHijos, abrirHijo, cambiarHijo, otroHijo,
     quitarFicha, casillaHijos, casillaHijo, preguntarQuitar, quitarHijo, alternarAjuste, datoAjuste, guardarDatos, pasoAjuste,
     vincular, interruptor, descargarDatos, masRecibos, salir, pasoDeAjuste, cambiarPaso, enlaceClave, reenviarCorreo,
-    cancelarCorreo, borrarCuenta,
+    cancelarCorreo, borrarCuenta, hacerAviso, hacerAnalitica,
 } = useSeccionCuenta(props);
 const proveedor = (via) => via === 'google' && aGoogle();
 </script>
@@ -85,6 +85,8 @@ const proveedor = (via) => via === 'google' && aGoogle();
                 @descargar="descargarDatos"
                 @mas-recibos="masRecibos"
                 @salir="salir"
+                @aviso="hacerAviso"
+                @analitica="hacerAnalitica"
             />
             <CuentaAjuste
                 v-else-if="PASOS_DE_AJUSTES.includes(e.vista) && pasoDeAjuste"
@@ -156,6 +158,7 @@ const proveedor = (via) => via === 'google' && aGoogle();
             <CuentaEntrar
                 v-else-if="e.vista === VISTA.ENTRAR"
                 :pantalla="pantallaEntrar"
+                :aviso="avisoEntrar"
                 @cambiar="cambiarEntrada"
                 @olvido="olvido"
                 @proveedor="proveedor"
