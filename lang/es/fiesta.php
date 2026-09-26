@@ -202,6 +202,13 @@ return [
         'merienda_alergias' => '¿Alergias o menú especial? Lo apuntas al contestar, y lo ven :h y los monitores.',
         // Los tres grupos de la merienda del diseño (F1b), con su icono fijo; lo que va en cada uno es dato del producto.
         'merienda_grupos' => ['drink' => 'Para beber', 'food' => 'Para comer', 'sweet' => 'Y para terminar'],
+        // «Ver el parque» (F1c): la píldora, la línea del vídeo (ciudad + atracciones, dato), la nota de Google y el visor.
+        'ver_parque' => 'Ver el parque',
+        'video_linea' => '{1} 1 atracción, cada edad en su zona|[2,*] :n atracciones, cada edad en su zona',
+        'prueba' => '{1} :nota en Google · 1 reseña|[2,*] :nota en Google · :n reseñas',
+        'nota_aria' => ':nota sobre 5 en Google',
+        'video_rotulo' => 'Vídeo: :nombre',
+        'cerrar' => 'Cerrar',
         'plazo' => 'Confirma antes del :dia a las :hora.',
         'campo' => 'Nombre y apellidos del niño o la niña',
         'si' => 'Vamos',

@@ -144,6 +144,10 @@ class Settings extends Page
         'mixed_party.no_product.gap.fr' => 'mixed_party',
         // SEO
         'seo.og_image' => 'seo',
+        // LA FIESTA (`specs/fiesta-sistema-nuevo.md` F1c, `#743` §7·7): «Ver el parque» en la invitación, con el vídeo
+        // de portada y su foto. Vacío → la invitación no ofrece el vídeo.
+        'party.park_video' => 'party',
+        'party.park_video_poster' => 'party',
         // Textos de la landing editables POR IDIOMA (#215): título web (SEO), eslogan del pie y la
         // coletilla del copyright. Vacío → cae al texto traducido por defecto (lang/landing).
         'seo.title.es' => 'seo',
@@ -983,6 +987,16 @@ class Settings extends Page
                     ->label(__('admin.settings.seo_og_image'))
                     ->helperText(__('admin.settings.seo_og_image_hint'))
                     ->url()
+                    ->maxLength(255),
+                // «Ver el parque» en la invitación de una fiesta (`fiesta-sistema-nuevo.md` F1c, `#743`): el vídeo de
+                // portada de la instalación y su foto. Una ruta bajo `public/` (como la sirve la landing) o una URL.
+                TextInput::make('party.park_video')
+                    ->label(__('admin.settings.party_park_video'))
+                    ->helperText(__('admin.settings.party_park_video_hint'))
+                    ->maxLength(255),
+                TextInput::make('party.park_video_poster')
+                    ->label(__('admin.settings.party_park_video_poster'))
+                    ->helperText(__('admin.settings.party_park_video_poster_hint'))
                     ->maxLength(255),
                 TextInput::make('catalog.search_min_items')
                     ->label(__('admin.settings.catalog_search_min_items'))

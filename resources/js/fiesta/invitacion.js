@@ -6,9 +6,84 @@
  * deja el foco en el nombre. ⚠️ Nada de esto ESCRIBE por su cuenta: escriben los formularios. Sin JavaScript la página
  * contesta y guarda igual; la clase `js` se pone AL FINAL: si algo falla, el documento se queda en `no-js`.
  */
-/* global document, location, fetch, FormData, setTimeout, clearTimeout */
+/* global document, window, location, fetch, FormData, setTimeout, clearTimeout */
 import './fiesta.css';
 import { arranca, enterNoEnvia, idioma, q, qa } from './comun.js';
+
+/* ── «Ver el parque» (F1c, `content/ClipViewer.jsx`): la píldora abre el visor; el vídeo suena (si el navegador lo veta,
+   sin sonido), un toque lo pausa y enseña el triángulo, se cierra con la X, con Escape, tocando fuera o deslizando hacia
+   abajo, y «Vamos» lo cierra y lleva al nombre de la respuesta. El foco vuelve a donde estaba. ────────────────────── */
+function visor() {
+    const dialogo = q('[data-visor]');
+    const abrir = q('[data-visor-abrir]');
+    if (!dialogo || !abrir) return;
+    const video = q('[data-visor-video]', dialogo);
+    const pausa = q('[data-visor-pausa]', dialogo);
+    const cerrarBoton = q('[data-visor-cerrar]', dialogo);
+    const escena = q('[data-visor-escena]', dialogo);
+    const estrecho = window.matchMedia('(max-width: 640px)');
+    const ajusta = () => dialogo.classList.toggle('inv-visor--estrecho', estrecho.matches);
+    ajusta();
+    estrecho.addEventListener('change', ajusta);
+    let ultimoFoco = null;
+    let desbordamiento = '';
+    let toque = null;
+    const cerrar = () => {
+        if (dialogo.hidden) return;
+        if (video) video.pause();
+        dialogo.hidden = true;
+        abrir.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = desbordamiento;
+        window.removeEventListener('keydown', teclas);
+        if (ultimoFoco && ultimoFoco.focus) ultimoFoco.focus();
+    };
+    const teclas = (e) => { if (e.key === 'Escape') { e.preventDefault(); cerrar(); } };
+    const abre = () => {
+        ultimoFoco = document.activeElement;
+        desbordamiento = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        dialogo.hidden = false;
+        abrir.setAttribute('aria-expanded', 'true');
+        if (pausa) pausa.hidden = true;
+        if (video) {
+            video.muted = false;
+            const p = video.play();
+            if (p && p.catch) p.catch(() => { video.muted = true; video.play().catch(() => {}); });
+        }
+        setTimeout(() => { if (cerrarBoton) cerrarBoton.focus(); }, 30);
+        window.addEventListener('keydown', teclas);
+    };
+    abrir.addEventListener('click', abre);
+    if (cerrarBoton) cerrarBoton.addEventListener('click', cerrar);
+    dialogo.addEventListener('pointerdown', (e) => { if (e.target === dialogo) cerrar(); });
+    if (video) {
+        video.addEventListener('click', () => {
+            if (video.paused) { video.play().catch(() => {}); if (pausa) pausa.hidden = true; } else { video.pause(); if (pausa) pausa.hidden = false; }
+        });
+    }
+    if (escena) {
+        escena.addEventListener('touchstart', (e) => { const t = e.touches[0]; toque = { x: t.clientX, y: t.clientY }; }, { passive: true });
+        escena.addEventListener('touchend', (e) => {
+            if (!toque) return;
+            const t = e.changedTouches[0];
+            const dx = t.clientX - toque.x;
+            const dy = t.clientY - toque.y;
+            toque = null;
+            if (dy > 90 && Math.abs(dy) > Math.abs(dx)) cerrar();
+        }, { passive: true });
+    }
+    const accion = q('[data-visor-accion]', dialogo);
+    if (accion) {
+        accion.addEventListener('click', (e) => {
+            e.preventDefault();
+            cerrar();
+            const campo = q('#rsvp-nino');
+            if (!campo) { location.hash = '#rsvp-nino'; return; }
+            campo.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setTimeout(() => campo.focus({ preventScroll: true }), 350);
+        });
+    }
+}
 
 /* ── La barra: Intro cierra el teclado y no contesta; al pulsar, «Enviando» y el otro botón se bloquea. ──────── */
 function barra() {
@@ -85,4 +160,4 @@ function foco() {
     if (campo) setTimeout(() => campo.focus({ preventScroll: false }), 60);
 }
 
-arranca(idioma, barra, ficha, foco);
+arranca(idioma, visor, barra, ficha, foco);

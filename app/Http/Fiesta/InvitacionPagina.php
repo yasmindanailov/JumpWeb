@@ -6,6 +6,8 @@ use App\Domain\Booking\Models\InvitationReply;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\PartyInvitation;
 use App\Domain\Booking\Services\PartyInvitations;
+use App\Domain\Content\Models\Attraction;
+use App\Domain\Content\Services\CmsSocialProof;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Domain\Platform\Services\SiteLocales;
 use App\Domain\Platform\Services\Turnstile;
@@ -98,6 +100,7 @@ final class InvitacionPagina
                 'ics' => self::icsNombre($cumple['nombre']),
             ],
             'texto' => self::parrafos($reservation),
+            'parque' => self::parque($site, $nombreSitio, $recibo === null && (bool) ($v['repliesOpen'] ?? false)),
             'merienda' => self::merienda((array) ($v['menu'] ?? [])),
             'merienda_alergias' => __('fiesta.invitacion_pagina.merienda_alergias', ['h' => $h]),
             'respuestas' => [
@@ -156,6 +159,43 @@ final class InvitacionPagina
             array_map('trim', preg_split('/\R{2,}/', $texto) ?: []),
             static fn (string $p): bool => $p !== '',
         ));
+    }
+
+    /**
+     * «VER EL PARQUE» (F1c; `#743` §7·7, encendido con el vídeo de portada): la píldora de la cabecera con la foto, el
+     * play y la nota de Google, y el visor a pantalla completa (`content/ClipViewer.jsx`) con UN clip —el vídeo de
+     * portada de la instalación—, su nombre, su línea y, con las respuestas abiertas, «Vamos», que lleva a contestar.
+     * Sin vídeo en los ajustes (`party.park_video`), sin píldora ni visor. La nota es la de Google COPIADA de la ficha
+     * (`#771`, `CmsSocialProof::rating()`): sin ella, la píldora va sin cifra y el botón sin su coletilla.
+     *
+     * @param  array<string, mixed>  $site
+     * @return array{video: string, poster: string, nombre: string, linea: string, ver: string, cerrar: string, rotulo: string, nota: ?array{valor: string, texto: string, aria: string}, accion: ?array{label: string, href: string}}
+     */
+    private static function parque(array $site, string $nombreSitio, bool $contestar): array
+    {
+        $video = (string) ($site['park_video'] ?? '');
+        $ciudad = trim((string) ($site['city'] ?? ''));
+        $atracciones = $video === '' ? 0 : Attraction::query()->where('is_active', true)->count();
+        $rating = $video === '' ? null : app(CmsSocialProof::class)->rating();
+        $valor = $rating === null ? '' : number_format($rating->value, 1, ',', '');
+
+        return [
+            'video' => $video,
+            'poster' => (string) ($site['park_video_poster'] ?? ''),
+            'nombre' => $nombreSitio,
+            'linea' => $atracciones > 0
+                ? trim(($ciudad !== '' ? $ciudad.' · ' : '').trans_choice('fiesta.invitacion_pagina.video_linea', $atracciones, ['n' => $atracciones]))
+                : $ciudad,
+            'ver' => __('fiesta.invitacion_pagina.ver_parque'),
+            'cerrar' => __('fiesta.invitacion_pagina.cerrar'),
+            'rotulo' => __('fiesta.invitacion_pagina.video_rotulo', ['nombre' => $nombreSitio]),
+            'nota' => $rating === null ? null : [
+                'valor' => $valor,
+                'texto' => trans_choice('fiesta.invitacion_pagina.prueba', $rating->count, ['nota' => $valor, 'n' => $rating->count]),
+                'aria' => __('fiesta.invitacion_pagina.nota_aria', ['nota' => $valor]),
+            ],
+            'accion' => $contestar ? ['label' => __('fiesta.invitacion_pagina.si'), 'href' => '#rsvp-nino'] : null,
+        ];
     }
 
     /**

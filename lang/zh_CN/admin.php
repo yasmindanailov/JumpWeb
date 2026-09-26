@@ -2530,6 +2530,10 @@ return [
         'section_web_appearance_hint' => '品牌色、社交分享图片、目录搜索框和 Cookie 横幅。',
         'seo_og_image' => '分享图片（网址）',
         'seo_og_image_hint' => '在社交平台分享网站时显示的图片（Open Graph）。留空 = 无图片。',
+        'party_park_video' => '生日邀请函 · “看看乐园”视频',
+        'party_park_video_hint' => '首页视频，按网站提供的路径（例如 `videos/header_hero.mp4`）或完整网址。点击时才下载。留空 = 邀请函不提供视频。',
+        'party_park_video_poster' => '生日邀请函 · 视频封面图',
+        'party_park_video_poster_hint' => '播放前及“看看乐园”按钮中显示的图片（例如 `videos/header_poster.jpg`）。',
 
         'section_landing_texts' => '落地页文案',
         'section_landing_texts_hint' => '浏览器标签/谷歌标题、页脚标语和版权附言。可按语言编辑；某语言留空则使用默认文案。',

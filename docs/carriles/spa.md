@@ -41,27 +41,23 @@
 - ✅ **Esta máquina, montada para la fiesta (25-09)**: la instancia clonada en `~/proyectos/instancias/playjump` (el
   diseño con su sha256 verificado), `INSTANCIA_RUTA=/var/www/instancias/playjump` en el `.env` (ruta DEL CONTENEDOR),
   `public/instancia/` copiado de `publico/instancia/` (ignorado por git); la receta entera, en Trampas vivas 🏠.
-- ✅ **LA FIESTA DEL SISTEMA NUEVO: T1a, T2, T3, T1b y T4 EN `main` (25/26-09)** — las tres páginas con lo que HAY, a
-  0 px en su pasada ligera (`#768`), y la piel vieja FUERA; el detalle de cada tanda, en la spec §4.6 y lo que enseñó
-  en §4.7. **T4** (26-09): las cuatro vistas viejas, el JS estático, 576 líneas de `site.css`, el rol `--shadow-nav-dock`
-  y 164 claves muertas; se QUEDAN el molde `gf-*` y `focused-layout` (los usan las ENCUESTAS) y el ancla
-  `#gf-invite` (contrato de correos y API); `ClavesDeIdiomaTest` vigila paridad y texto muerto; ocho tests
-  re-apuntados por su sujeto (§4.7). **T1a** la lista
-  (46 pares de piezas con control; la hoja de PlayJump en la instancia, `a3da88c`) · **T2** la invitación y su recibo
-  (**`#744`**) · **T3** la autorización (**`#745`**; cazó que `view()->shared('site')` es `null` en un controlador:
-  `Sitio::datos()`; las vivas se visten con PlayJump, `#769`) · **T1b** la pasada de la PÁGINA de la lista: `lista-recien` y
-  `lista-guardado-diagnostico` a página entera, **4 de 4 a 0 px** con control de 1 px (`mutar-fiesta.sh`, dos etapas),
-  `scripts/banco-fiesta/modelos.php` + `FiestaModeloTest` (el banco y los tres controladores, la misma forma). ❗ La T1b
-  cazó CUATRO defectos de la T1a que el banco de piezas no veía (la primera fila con nombre ESCONDIDA por `[data-vacia]`,
-  el recordatorio que no enviaba, el borde de la última fila, el color de «Reenviar»): un banco de piezas no ve la
-  página. ▶ Sigue **el ojo del owner sobre las tres** y después **F1…Fn** (lo que FALTA, una pieza por tanda).
+- ✅ **LA FIESTA DEL SISTEMA NUEVO: T1a→T4 y F1 EN `main` (25/26-09)** — las tres páginas con lo que HAY, a 0 px
+  (`#768`), la piel vieja FUERA y **la invitación ENTERA como el mockup (F1, 26-09)**: F1a palabras y pistas (dato +
+  API 1.32.0), F1b la merienda por grupos con icono (tres listas i18n del complemento, en el panel), F1c «Ver el
+  parque» (dos ajustes: vídeo de portada y foto; la nota de Google copiada; el visor como esqueleto oculto): con `opc`
+  y `foto` del diseño encendidos, **8 de 8 pares a 0 px**. El detalle, spec §4.6; lo que enseñó, §4.7. **T4** (26-09):
+  las cuatro vistas viejas, el JS estático, 576 líneas de `site.css`, `--shadow-nav-dock` y 164 claves muertas; se
+  QUEDAN el molde `gf-*` y `focused-layout` (las ENCUESTAS) y el ancla `#gf-invite` (contrato); `ClavesDeIdiomaTest`
+  vigila paridad y texto muerto. **T1a** la lista (46 pares de piezas con control) · **T2** la invitación (`#744`) ·
+  **T3** la autorización (`#745`; `Sitio::datos()` porque `view()->shared('site')` es `null` en un controlador) ·
+  **T1b** la PÁGINA de la lista (4 de 4 a 0 px con control; `modelos.php` + `FiestaModeloTest`; ❗ cazó cuatro defectos
+  que el banco de piezas no veía: un banco de piezas no ve la página).
 - ✅ **LA ANALÍTICA, ENTERA (`#735`), T1→T7 en `main` y vista por el owner en vivo** (24 y 25-09): T2 (el cuadro), T3
   (consentimiento, driver, píxeles, `/cookies`), T4 (la 360, segmentos, opt-in), T5a·T5b (experimentos; **T5c decidida en
   `#738`**: sin mecanismo de textos, la hipótesis la nombra el owner tras la v2.0.0), **T6 la fiesta** (`#739`: *el invitado
   no es un visitante*; `PartiesReport`, la pestaña «Fiestas», el segmento `guest_became_customer`; el detalle por tanda en
-  `analitica-fiesta.md` §4.6) y **T7 las encuestas** (`#740`→`#742`; el detalle por tanda y «lo que enseñó» en
-  `encuestas.md` §4.6; guardas `GateSurveyTest` 10 · `SurveySendTest` 7 · `SurveyPageTest` 5 · `SurveysReportTest` 5 ·
-  arnés `mutar-encuestas.sh` 15/15 + control; el owner contestó una en vivo desde la puerta y cerró con «buen trabajo»).
+  `analitica-fiesta.md` §4.6) y **T7 las encuestas** (`#740`→`#742`; el detalle por tanda, las guardas y «lo que
+  enseñó» en `encuestas.md` §4.6; el owner contestó una en vivo desde la puerta y cerró con «buen trabajo»).
   Quedan: `[PENDIENTE: asesoría]` (5) del correo de servicio, la **T2e** solo si el volumen lo pide, el `EXPLAIN` con
   volumen en staging. Todo espera la v2.0.0 (`#670`). Las trampas pagadas en la T7 viven en `encuestas.md` §4.6.
 - ⚠️⚠️ **LO MONTADO EN LA BD LOCAL para el ojo del owner (24/25-09), todo reversible**: (1) cinco ajustes FALSOS
@@ -78,7 +74,9 @@
   las encuestas** (25-09): las dos de ejemplo (`visita-de-hoy`, `que-tal-ayer`; se borran desde el panel), el cliente
   `sonda-puerta@jumpweb.test` (2179) con dos respuestas y visitas, la respuesta del owner (cuenta 70 sobre el cliente 593)
   y las visitas de 593 y 2179, el fixture `probe-ojo-encuestas` (64 filas sobre los anfitriones de la fiesta;
-  `OJO=desmontar` lo quita) y el correo en Mailpit. Y siguen montados el fixture «probe-ojo-analitica» (90 pedidos
+  `OJO=desmontar` lo quita) y el correo en Mailpit; (7) **lo de F1 (26-09)**: los ajustes `party.park_video(_poster)`
+  (`public/videos/`, copiado de la instancia), la nota de Google de prueba (4,9 · 155), el Menú 1 (107) repartido y
+  marcado en el pack 105, la fiesta `JW-OJO-F1` (`ojo-f1.php`, `OJO=desmontar`). Y siguen montados el fixture «probe-ojo-analitica» (90 pedidos
   `JW-OJO…`, 25 clientes, 506 sesiones) y el de reseñas «probe-ojo-resenas». ⚠️ **Plataforma dejó la local preparada para
   que el owner pruebe la ISLA** (24-09 noche, `694529a8`): `sidebar.shell = isla` por el panel, `public/_isla-prueba.html`,
   la invitación ENCENDIDA en los packs 105/106 — **«no deshacer sin él»**; el cajón local abre ahora en la isla.
@@ -93,12 +91,12 @@
 
 1. ❗❗❗ **LA FIESTA DEL SISTEMA NUEVO (`#765`) — `specs/fiesta-sistema-nuevo.md` ✅ APROBADA (`#743`, 25-09: las
    ocho respuestas en su §7; ❗ «Ver el parque» va ENCENDIDO con el vídeo de portada, no la recomendada)**. Orden:
-   T1a ✅ · T2 ✅ · T3 ✅ · T1b ✅ · T4 ✅ (25/26-09: las tres páginas con lo que HAY, a 0 px en su pasada ligera, y la
-   piel vieja fuera) → **el ojo del owner en `localhost:8081`** (la lista de la 1076, `/invitacion/XezlOftP36QI`, su
-   recibo y `/autorizacion/1076` por su enlace firmado; las URL firmadas se regeneran con `signedRoute`) → **F1…Fn, lo
-   que FALTA** (spec §1.4 y §7: la firma dentro del recibo, «Ver el parque», «Crear mi QR», «Avísame de fechas»,
-   palabras y pistas, la merienda, quien cumple como fila, «Al final viene», la zona 3 que sube el número —AFORO,
-   `VERIFY_CONC=1`—, la tarta y los combos, tres campos por niño como dato del panel), una pieza por tanda con la
+   T1a→T4 ✅ · F1 ✅ (la invitación entera, 26-09) → **el ojo del owner en `localhost:8081`** sobre la fiesta de prueba
+   `JW-OJO-F1` (reserva 1077; `ojo-f1.php`, fuera de git, imprime sus tres URL; `/invitacion/WxYYnZkkNx7U` lleva
+   merienda, palabras, pistas y «Ver el parque») → **F2…Fn, lo que FALTA en la lista y el recibo** (spec §1.4 y §7: F2
+   personalizar en tiempo real; F3 quien cumple como fila, sin fichas vacías, «Al final viene», Quitar con deshacer,
+   añadir de uno en uno; F4 la zona 3 que sube el número —AFORO, `VERIFY_CONC=1`—; F5 la tarta y los combos, el
+   borrador en el móvil; F6 la firma dentro del recibo, «Tus respuestas», «Crear mi QR», «Avísame de fechas»), una pieza por tanda con la
    decisión del owner. Cada tanda: `git pull` de la instancia + `sha256sum -c`, el banco con control, las guardas de
    piel re-apuntadas o retiradas con su motivo, sonda de VENTANA de las tres y el ojo del owner en `localhost:8081`
    (la página viva sale NEUTRA hasta que plataforma haga el contrato de hojas: mientras, el banco carga las hojas a
@@ -241,6 +239,9 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 - Commit por NOMBRE de fichero, nunca `git add -A`. La decisión, al final de `decisiones/700-799.md`.
 
 ## Buzón
+
+- **Para plataforma (26-09, F1c)**: `party.park_video` y `party.park_video_poster` son hechos públicos: si
+  `instancia-y-landing-fuera.md` §2 cuenta los ajustes públicos, sumadlos.
 
 ### ❗❗ Para el carril de PLATAFORMA (emisor: SPA, 2026-09-25, tarde) — `#765` atendido y tus tres peticiones
 - ✅ **`#765`, atendido y RECLAMADO**: la fiesta del sistema nuevo la visto yo. La instancia está montada en esta

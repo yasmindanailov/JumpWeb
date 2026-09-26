@@ -153,10 +153,22 @@ return [
         'fecha' => 'Sábado 26 de septiembre',
         'hora' => 'De 17:00 a 19:00',
         'lugar' => 'Play Jump Park, Lorca',
-        'anfitrion' => ['linea' => 'Lucía, la madre de Vera', 'nombre' => 'Lucía', 'telefono' => '', 'tel' => '', 'palabras' => '', 'pistas' => ''],
+        // Con `opc` encendido en el diseño (desde F1: palabras, pistas, teléfono y merienda son dato).
+        'anfitrion' => ['linea' => 'Lucía, la madre de Vera', 'nombre' => 'Lucía', 'telefono' => '655 120 387', 'tel' => 'tel:+34655120387', 'palabras' => 'Traed ganas de saltar', 'pistas' => 'Le encantan los libros de animales'],
         'enlaces' => ['mapa' => 'https://www.google.com/maps/search/?api=1&query=Play+Jump+Park+Lorca', 'calendario' => '#calendario', 'ics' => 'cumple-vera.ics'],
         'texto' => ['Dos horas saltando en su zona, con monitores, merienda y tarta. Los padres podéis quedaros en la cafetería o venir a recogerlos.'],
-        'merienda' => [],
+        // «Ver el parque» (F1c) con `foto` encendida en el diseño: la foto del diseño, su vídeo, la nota y «Vamos» si se contesta.
+        'parque' => [
+            'video' => '../assets/media/hero-playjump.mp4', 'poster' => '../assets/media/foto-127-1200.jpg', 'nombre' => 'Play Jump Park',
+            'linea' => 'Lorca · 23 atracciones, cada edad en su zona', 'ver' => 'Ver el parque', 'cerrar' => 'Cerrar', 'rotulo' => 'Vídeo: Play Jump Park',
+            'nota' => ['valor' => '4,9', 'texto' => '4,9 en Google · 155 reseñas', 'aria' => '4,9 sobre 5 en Google'],
+            'accion' => $abierta ? ['label' => 'Vamos', 'href' => '#rsvp-nino'] : null,
+        ],
+        'merienda' => [
+            ['icono' => 'cup-soda', 'rotulo' => 'Para beber', 'cosas' => ['Refresco o zumo', 'Agua']],
+            ['icono' => 'sandwich', 'rotulo' => 'Para comer', 'cosas' => ['Snacks', 'Sándwich mixto', 'Sándwich dulce']],
+            ['icono' => 'candy', 'rotulo' => 'Y para terminar', 'cosas' => ['Cono de chuches']],
+        ],
         'merienda_alergias' => '¿Alergias o menú especial? Lo apuntas al contestar, y lo ven Lucía y los monitores.',
         'respuestas' => ['abiertas' => $abierta, 'plazo' => 'Confirma antes del viernes 25 a las 17:00.', 'accion' => '#contestar', 'cerrado' => 'El plazo pasó: habla con Lucía.', 'error' => ''],
         'aviso' => null,

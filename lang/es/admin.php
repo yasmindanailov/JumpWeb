@@ -3079,6 +3079,10 @@ return [
         'section_web_appearance_hint' => 'Color de marca, imagen para compartir en redes, buscador del catálogo y banner de cookies.',
         'seo_og_image' => 'Imagen para compartir (URL)',
         'seo_og_image_hint' => 'Imagen que se muestra al compartir el sitio en redes (Open Graph). Vacío = sin imagen.',
+        'party_park_video' => 'Invitación de cumpleaños · vídeo de «Ver el parque»',
+        'party_park_video_hint' => 'El vídeo de portada, como lo sirve la web (por ejemplo `videos/header_hero.mp4`) o una URL entera. Se descarga solo al tocar. Vacío = la invitación no ofrece el vídeo.',
+        'party_park_video_poster' => 'Invitación de cumpleaños · foto del vídeo',
+        'party_park_video_poster_hint' => 'La foto que se ve antes de darle al play y en la píldula «Ver el parque» (por ejemplo `videos/header_poster.jpg`).',
 
         'section_landing_texts' => 'Textos de la landing',
         'section_landing_texts_hint' => 'Título de la pestaña/Google, eslogan del pie y coletilla del copyright. Editables por idioma; si dejas un idioma vacío, se usa el texto por defecto.',

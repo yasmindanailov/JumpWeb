@@ -39,5 +39,8 @@
                 @include('fiesta.invitacion.invitacion')
             @endif
         </main>
+        @if ($m['parque']['video'] !== '')
+            @include('fiesta.invitacion.visor')
+        @endif
     </div>
 </x-pagina-enfocada>

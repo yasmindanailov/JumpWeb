@@ -236,8 +236,10 @@ HTML);
 // ── LAS PÁGINAS: la pasada LIGERA (`#768`) — la invitación en reposo, con los datos del diseño a los dos lados ────────
 // A es el propio `paginas/invitacion.card.html` (la misma fuente, nunca una copia) con sus rutas apuntando al diseño
 // enlazado, en español y montando `InvPagina` sin la barra de pruebas; B es `fiesta.invitacion` con el modelo mapeado a
-// mano desde `invitacion/datos.js` (`FIESTA`, `T.es`, `P.es`), con el logotipo del diseño. Sin los bloques opcionales
-// (`opc=false`: sin merienda, palabras, pistas ni teléfono), que son dato que el producto aún no tiene (spec §1.4).
+// mano desde `invitacion/datos.js` (`FIESTA`, `T.es`, `P.es`), con el logotipo del diseño. Desde F1 (26-09) con TODO
+// encendido: `opc` (la merienda por grupos, las palabras, las pistas y el teléfono son dato) y `foto` («Ver el parque»,
+// la píldora con la foto del diseño y la nota). El visor abierto no se juzga: reproduce un vídeo, y un fotograma no es
+// una referencia.
 // ⚠️ Se juzga la VENTANA (`completa: false`), no la página entera: el aviso de privacidad bajo la barra (spec hermana
 //    §7.2·R7) es del producto y el diseño no lo dibuja en la invitación. El recibo se juzga sin A hasta T3 (`AuthForm`).
 $card = (string) file_get_contents($diseno.'/paginas/invitacion.card.html');
@@ -253,7 +255,7 @@ foreach (['invitacion-viva' => 'viva', 'invitacion-cerrada' => 'cerrada'] as $no
         $card,
     );
     $montaje = 'localStorage.setItem("pj-invitacion-idioma", JSON.stringify("es")); localStorage.removeItem("pj-invitacion-respuestas"); '
-        .'window.invCargar(FUENTES).then(() => ReactDOM.createRoot(document.getElementById("root")).render(<InvPagina estado="'.$estado.'" tema="confeti" opc={false} foto={false} />));';
+        .'window.invCargar(FUENTES).then(() => ReactDOM.createRoot(document.getElementById("root")).render(<InvPagina estado="'.$estado.'" tema="confeti" opc={true} foto={true} />));';
     $a = (string) preg_replace('/window\.invCargar\(FUENTES\)\.then\(\(\) => ReactDOM\.createRoot\(document\.getElementById\("root"\)\)\.render\(<InvBanco \/>\)\);/', $montaje, $a, 1, $n);
     if ($n !== 1) {
         fwrite(STDERR, "la ficha de la invitación cambió: no encuentro su montaje\n");

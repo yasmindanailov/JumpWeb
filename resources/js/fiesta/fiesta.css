@@ -40,6 +40,9 @@
     --fiesta-sol-600: #c49a00;
     --fiesta-sol-500: #e8b400;
     --fiesta-sol-100: #fff3cc;
+    /* La sombra grande del visor de clips (`content/ClipViewer.jsx`): el sistema la llama `--shadow-lg` y `isla.css` no la
+       respalda; neutra, con la tinta del producto. */
+    --shadow-lg: 0 24px 64px rgba(16, 20, 24, 0.35);
     --fiesta-lima-700: #2f7d3a;
     --fiesta-lima-600: #3a9646;
     --fiesta-lima-500: #3fa34d;
@@ -410,6 +413,15 @@ button.fi-fila__cabecera:hover, .fi-fila--open > button.fi-fila__cabecera { back
 .inv-historia-aro{position:relative;flex:0 0 auto;width:38px;height:38px;border-radius:50%;padding:2px;background:var(--fiesta-agua-500);box-sizing:border-box}
 .inv-historia-aro img{display:block;width:100%;height:100%;border-radius:50%;object-fit:cover;object-position:50% 62%;box-shadow:0 0 0 2px var(--fiesta-nieve)}
 .inv-historia-play{position:absolute;right:-2px;bottom:-2px;display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:var(--fiesta-tinta-900);color:var(--fiesta-nieve);box-shadow:0 0 0 2px var(--fiesta-nieve)}
+/* EL VISOR de «Ver el parque» (`content/ClipViewer.jsx`, F1c): lo que en el JSX depende de `narrow` (el `matchMedia`
+   de 640 px) va aquí por clase —`.inv-visor--estrecho` la pone el JS—; el resto de sus estilos van en línea en la vista.
+   Por debajo de 640 px de VENTANA ocupa la pantalla entera, sin radio ni sombra. */
+.inv-visor-escena{aspect-ratio:9 / 16;height:min(90vh,860px);border-radius:var(--r-xl);box-shadow:var(--shadow-lg)}
+.inv-visor-arriba{padding:14px 14px 28px}
+.inv-visor-abajo{padding:64px 18px 18px}
+.inv-visor--estrecho .inv-visor-escena{aspect-ratio:auto;height:100dvh;width:100vw;border-radius:0;box-shadow:none}
+.inv-visor--estrecho .inv-visor-arriba{padding:max(12px,env(safe-area-inset-top)) 12px 28px}
+.inv-visor--estrecho .inv-visor-abajo{padding:56px 16px max(16px,env(safe-area-inset-bottom))}
 .inv-lang{position:relative;flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;min-height:44px;padding:0 10px 0 12px;border-radius:var(--r-pill);background:var(--fiesta-nieve);box-shadow:inset 0 0 0 1px var(--border-subtle);color:var(--fiesta-tinta-900);cursor:pointer;transition:var(--t-hover)}
 .inv-lang:hover{box-shadow:inset 0 0 0 1px var(--fiesta-tinta-300),var(--shadow-sm)}
 .inv-lang-cod{font:700 var(--fs-body-sm)/1 var(--font-ui)}

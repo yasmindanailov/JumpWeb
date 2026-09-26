@@ -5,6 +5,7 @@ namespace Tests\Feature\Fiesta;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Services\GuestCountPolicy;
 use App\Domain\Booking\Services\PartyInvitations;
+use App\Domain\Content\Services\CopiedRating;
 use App\Domain\Platform\Models\Setting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Support\MountsAParty;
@@ -163,6 +164,47 @@ class InvitacionPaginaTest extends TestCase
         $html = (string) $this->get($url)->assertOk()->getContent();
         $this->assertStringContainsString('turns 8 and invites you to jump', $html, 'la invitación, en inglés');
         $this->assertStringContainsString('<html lang="en"', $html);
+    }
+
+    public function test_without_a_park_video_there_is_no_pill_and_no_viewer(): void
+    {
+        ['invitation' => $invitation] = $this->mountParty();
+
+        $html = (string) $this->get(route(PartyInvitations::PUBLIC_ROUTE, ['token' => $invitation->token]))->assertOk()->getContent();
+
+        $this->assertStringNotContainsString('data-invitation-park', $html, 'sin vídeo en los ajustes no hay «Ver el parque»');
+        $this->assertStringNotContainsString('<video', $html);
+    }
+
+    public function test_the_park_video_opens_from_the_pill_with_the_google_rating_and_lets_you_answer(): void
+    {
+        ['reservation' => $reservation, 'invitation' => $invitation] = $this->mountParty();
+        Setting::query()->updateOrCreate(['key' => 'party.park_video'], ['value' => 'https://cdn.example.com/portada.mp4', 'group' => 'party']);
+        Setting::query()->updateOrCreate(['key' => 'party.park_video_poster'], ['value' => 'videos/header_poster.jpg', 'group' => 'party']);
+        Setting::flushMemo();
+        app(CopiedRating::class)->put(4.9, 155, 'https://maps.example/parque', now());
+        Setting::flushMemo();
+        $url = route(PartyInvitations::PUBLIC_ROUTE, ['token' => $invitation->token]);
+
+        $html = (string) $this->get($url)->assertOk()->getContent();
+
+        // La píldora de la cabecera: la foto en el aro, el play, «Ver el parque» y la nota de Google en la misma píldora.
+        $this->assertMatchesRegularExpression('#<button type="button" class="inv-historia"[^>]*data-visor-abrir[^>]*data-invitation-park>#', $html);
+        $this->assertStringContainsString('<span class="inv-historia-aro"><img src="'.asset('videos/header_poster.jpg').'" alt="">', $html, 'la foto, servida por la instalación');
+        $this->assertStringContainsString('4,9</span></button>', $html, 'la nota copiada de la ficha de Google (`#771`), con coma');
+        // El visor: oculto hasta tocar, el vídeo sin descargar hasta entonces, y «Vamos» que lleva a contestar.
+        $this->assertMatchesRegularExpression('#<div class="inv-visor" role="dialog" aria-modal="true" aria-label="[^"]+" hidden data-visor#', $html);
+        $this->assertStringContainsString('<video data-visor-video src="https://cdn.example.com/portada.mp4" poster="'.asset('videos/header_poster.jpg').'" playsinline loop preload="none"', $html);
+        $this->assertStringContainsString('href="#rsvp-nino"', $html);
+        $this->assertStringContainsString('data-visor-accion', $html, '«Vamos», con las respuestas abiertas');
+        $this->assertStringContainsString('★ 4,9 en Google · 155 reseñas', $html, 'la prueba, bajo el botón');
+
+        // En el RECIBO la píldora sigue (es la cabecera del parque) pero no hay nada que contestar: sin «Vamos».
+        $vuelta = $this->post(route('invitation.reply', ['token' => $invitation->token]), ['child_name' => 'Hugo Ruiz', 'attending' => '1']);
+        $recibo = (string) $this->get((string) $vuelta->headers->get('Location'))->assertOk()->getContent();
+        $this->assertStringContainsString('data-invitation-park>', $recibo);
+        $this->assertStringNotContainsString('data-visor-accion', $recibo);
+        $this->assertNotNull($reservation->fresh());
     }
 
     public function test_the_words_of_the_family_and_the_gift_hints_are_painted_when_the_host_wrote_them(): void

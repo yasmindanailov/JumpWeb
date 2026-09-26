@@ -104,9 +104,10 @@ Medido en `GuestFormController::show()` (sus 30 claves), `InvitationPageControll
   recibo (G2), la firma desde el recibo (G3 «Lo dejo y me voy»), el aviso de privacidad, es/en/fr.
 - **FALTA** (tras T2): la firma DENTRO del recibo (`AuthForm`, T3; hoy «Firmar» es un enlace a la autorización), «Tus
   respuestas» en el móvil (JS; «Contestar por otro hijo» ya es un enlace), «Crear mi QR» (Mi cuenta), «Avísame de
-  fechas» (§7·8), «Ver el parque» (§7·7), la nota de Google en la cabecera. ✅ **En F1a (26-09)**: las palabras de la
-  familia y las pistas. ✅ **En F1b (26-09)**: los grupos de la merienda con su icono (dato del complemento: tres listas
-  i18n `menu_drink/food/sweet`; sin reparto, el plato sigue por su nombre). ✅ **En T2**: el recibo dura 24 h (§7·4); «¿Vas tú con él?» fuera del
+  fechas» (§7·8). ✅ **En F1a (26-09)**: las palabras de la familia y las pistas. ✅ **En F1b (26-09)**: los grupos de
+  la merienda con su icono (dato del complemento: tres listas i18n `menu_drink/food/sweet`; sin reparto, el plato
+  sigue por su nombre). ✅ **En F1c (26-09)**: «Ver el parque» (§7·7) con la nota de Google en la cabecera (dos ajustes
+  del panel: el vídeo de portada y su foto; la nota, la copiada de la ficha `#771`). ✅ **En T2**: el recibo dura 24 h (§7·4); «¿Vas tú con él?» fuera del
   recibo (§7·5; `companion` se retira con la puerta); el recibo directo, el nombre de pila y la descripción del pack
   (`#744`).
 
@@ -269,6 +270,7 @@ Medido en `GuestFormController::show()` (sus 30 claves), `InvitationPageControll
 | **T4** ✅ | La piel vieja FUERA (26-09): las cuatro vistas (`reservation/guests`, `reservation/authorization`, `invitation/show`, `invitation/receipt`), `public/js/guest-form/logic.js` con su test, 576 líneas de `site.css` (`.gf-fiche`, `.gf-invite`, `.gf-extra`, `.gf-savebar`, `.gf-meter`, `.gf-group`, `.gf-done`, `.gf-paste`, `.gf-dialog`, `.gf-toast`, `.gf-foot`, `.guardian__*`, `.invitation__*`, `.invitation-card`, y un `.gf-extra__field` colado en la regla de `.eventfields`), el rol `--shadow-nav-dock` sin usuario, y **164 claves muertas** de `guardian.php` (60→30), `invitation.php` (63→14) y `guestform.php` (136→51) en los tres idiomas. Se QUEDAN, medidos: el molde `gf-page/gf-mark/gf-sheet/gf-stub/gf-notice/gf-form` y `focused-layout`, porque los usan las tres vistas de las encuestas (el bloque se retitula «HOJA ENFOCADA — el molde de las ENCUESTAS»), y el ancla `#gf-invite` en la zona 1 (contrato de correos ya enviados y de `invitation_url` en `/me/orders`). | Censo por familia de clase fuera de `site.css` antes de cortar · `ClavesDeIdiomaTest` 7 (paridad es/en/fr de los cuatro ficheros + ninguna clave muerta en los tres viejos, sin contar los tests como uso) · ocho tests re-apuntados por su SUJETO (§3.quater): `GuestFormSkinTest` (el molde), `ShapeScaleTest` (una excepción de foco y un rol de sombra menos), `GuestFormTest` ×3, `MeOrdersTest`, `InvitationDeclinedTest`, `GuestFormManyGuestsTest` · `hoja-del-cajon.py --aplicar` · **las tres páginas re-juzgadas tras el corte: los mismos números que en T1b, T2 y T3** (0 px en todos los diagnósticos, en `firmada` y en `lista-recien`; los reales solo en lo que FALTA) · suite. |
 | **F1a** ✅ | Palabras de la familia y pistas para el regalo (26-09): `family_words` y `gift_hints` en `party_invitations` (tope 90, la misma puerta de `PublicFreeText` que «quién cumple» y «te invita»: un enlace se rechaza y se dice), en Personalizar (dos campos opcionales), en la vista previa de la lista y en la tarjeta de la invitación (la burbuja con la inicial y la línea del regalo), y en la API (`GET`/`PUT /reservations/{id}/invitation`, `InvitationCard`: contrato **1.32.0**). La edad en la chapa ya era dato: la pide el pack al reservar y la hereda la invitación; la reserva de prueba 1076 no la traía y se le puso a mano en local. | `ListaDeInvitadosTest` 8 (guardar y pintar; el enlace rechazado y el resto guardado) · `InvitacionPaginaTest` 8 (sin dato, sin bloque; con dato, la burbuja y la línea) · `InvitationApiTest` (el rechazo por la API) · `ApiContractTest` · `FiestaModeloTest`, `ClavesDeIdiomaTest` · las piezas `invitacion-fiesta` (palabras) e `invitacion-sereno` (pistas) ya estaban a 0 px en el banco de T1a; la pasada de página con `opc` encendido, al cerrar F1. |
 | **F1b** ✅ | La merienda por grupos con su icono (26-09): tres listas i18n en el complemento (`ticket_types.menu_drink/menu_food/menu_sweet`, una cosa por línea, como `features`; en el panel, solo en complementos, «En la invitación · Para beber / Para comer / Y para terminar»), `TicketType::invitationMenuGroups()`, `menuFor()` las lleva y `InvitacionPagina::merienda()` las reparte en los TRES grupos del diseño con su icono fijo (`cup-soda`, `sandwich`, `candy`) y su rótulo (`fiesta.invitacion_pagina.merienda_grupos`, es/en/fr), sin repetir cosas de dos platos; un complemento sin reparto sigue siendo su propio grupo detrás. La regla de `#521` no cambia: solo lo COMPRADO más la marca del pack. ⚠️ PlayJump no tiene hoy ningún complemento marcado ni repartido, y la reserva de prueba 1076 no compró menú: es DATO del panel. | `InvitationPageTest` (+1: los tres grupos en su orden, el plato deja de ser grupo) · `CatalogEditTest` (+1: se guardan como listas i18n, vuelven al formulario, ocultas fuera de un complemento) · `ClavesDeIdiomaTest` (paridad de los rótulos) · Larastan · Pint · la pasada de página con `opc` encendido, al cerrar F1. |
+| **F1c** ✅ | «Ver el parque» (26-09; `#743` §7·7, ENCENDIDO con el vídeo de portada): dos ajustes del panel (`party.park_video`, `party.park_video_poster`: una ruta bajo `public/` como la sirve la web de la instalación —`videos/header_hero.mp4`— o una URL; con esquema, por `safeExternalUrl`), `Sitio::datos()` los resuelve y `InvitacionPagina::parque()` compone la píldora (la foto en el aro, el play, «Ver el parque» y la nota de Google COPIADA de la ficha `#771` en la misma píldora) y el visor `fiesta/invitacion/visor` (`content/ClipViewer.jsx` con UN clip: esqueleto oculto, `preload="none"` —se descarga solo al tocar—, el nombre del parque, «ciudad · N atracciones, cada edad en su zona» con N de `Attraction`, «Vamos» que cierra y lleva al nombre cuando se puede contestar, la prueba debajo); `invitacion.js` lo abre con sonido (sin él si el navegador lo veta), un toque pausa, cierra con la X, Escape, fuera o deslizando hacia abajo, y devuelve el foco. En el recibo la píldora sigue y no hay «Vamos»; la autorización no la lleva (el diseño tampoco). | `InvitacionPaginaTest` +2 · `AjustesFiestaTest` 2 (el panel escribe, `Sitio` resuelve, `javascript:` no pasa) · ESLint · **la pasada de la invitación con TODO el estado del diseño encendido (`opc` y `foto`): 8 de 8 pares a 0 px** (viva y cerrada, 390 y 1280; con `opc` la línea de privacidad queda bajo el pliegue y los pares reales también dan 0) · el visor abierto no se juzga: reproduce un vídeo · datos para el ojo en local (spa.md). |
 | **F1…Fn** | Lo que FALTA (§1.4), una pieza por tanda, en el orden que fije el owner (§7). Cada una con su spec de sección aquí, su decisión y, si toca aforo, `VERIFY_CONC=1`. | Por pieza. |
 
 ### 4.7 Lo que enseñó la T1a (2026-09-25)
@@ -374,6 +376,24 @@ Medido en `GuestFormController::show()` (sus 30 claves), `InvitationPageControll
   los rechazos, la fiesta mixta, el número, los extras, el recordatorio). Las docs que nombraban las vistas borradas
   (`celebracion-e-invitacion.md`, `waiver-por-reserva.md`, `POSTFORM-INVITADOS.md`, `cumple-mixto.md`,
   `complementos-post-reserva.md`, `invitados-en-post-form.md`) apuntan ahora a las nuevas.
+
+**La F1 (26-09)**:
+- ❗ **Tres de las cinco cosas que «faltaban» a ojo en la invitación eran DATO**: la chapa de la edad (el pack la pide
+  al reservar y la invitación la hereda; la reserva de prueba nació sin ella), la merienda (ningún complemento de
+  PlayJump estaba marcado ni repartido, y la 1076 no compró menú: `#521` manda, solo lo COMPRADO) y el vídeo (la portada
+  lo tenía en `publico/videos/`, pero nada del producto lo nombraba). Medir contra los datos antes de codificar ahorró
+  tres piezas y dijo cuáles pedían un ajuste del panel.
+- **El molde de un ajuste que nombra un fichero de la instalación**: ruta bajo `public/` → `asset()`; cualquier
+  ESQUEMA → `safeExternalUrl` (`javascript:alert(1)` se convertía en un asset «válido» bajo el dominio: lo cazó la guarda
+  antes que nadie).
+- **El visor es un ESQUELETO servido y oculto**, como el de la instancia para las atracciones: lo que en el JSX es
+  estado de React (`narrow` por `matchMedia`) va por clase en la hoja y lo demás en línea; `--shadow-lg` no lo respalda
+  `isla.css` y entra como rol neutro. El vídeo va con `preload="none"`: 14,8 MB que solo bajan al tocar (`#743`).
+- **Una clave nueva del modelo en un parcial COMPARTIDO** (la cabecera la pintan la invitación y la autorización) o es
+  opcional en el parcial o entra en los dos modelos: `parque` tumbó la autorización en la suite antes de decidirlo (el
+  diseño no pone la píldora en la autorización: opcional).
+- **Con `opc` encendido la línea de privacidad cae bajo el pliegue** y los pares reales dan 0 igual que los de
+  diagnóstico: la variante `-sin-legal` es la que sigue protegiendo esa diferencia, no el par real.
 
 ## 5. Impacto en invariantes
 
