@@ -44,10 +44,7 @@ class InvitacionPaginaTest extends TestCase
         $this->assertStringContainsString('name="attending" value="1"', $html);
         $this->assertStringContainsString('name="attending" value="0"', $html);
         $this->assertStringContainsString('Confirma antes del', $html, 'el plazo, escrito en la barra');
-        // El idioma: el desplegable nativo con los tres del sitio, y los enlaces para quien no tiene JavaScript.
-        $this->assertStringContainsString('data-idioma-select', $html);
-        $this->assertSame(3, substr_count($html, '<option value='), 'los tres idiomas del sitio');
-        $this->assertStringContainsString('/lang/en', $html);
+        $this->assertIdiomaAbajo($html, 'es', 'data-invitation-privacy');
         // Quien organiza, por su nombre de pila (`#744`); y la hoja en blanco: ni un invitado.
         $this->assertStringContainsString('Marta verá el nombre de tu hijo', $html);
         $this->assertStringNotContainsString('Hugo', $html, 'un «sí» de otro padre se coló en la invitación');
@@ -102,6 +99,7 @@ class InvitacionPaginaTest extends TestCase
         $this->assertStringContainsString('sin firma, la autorización se hace en la puerta', $html);
         // Su nombre, solo en el título del documento: la tarjeta es la del diseño.
         $this->assertStringContainsString('<title>Contamos con Hugo Ruiz', $html);
+        $this->assertIdiomaAbajo($html, 'es', 'data-receipt-after');
     }
 
     public function test_saying_no_lands_on_the_receipt_without_the_sheet(): void
@@ -166,6 +164,53 @@ class InvitacionPaginaTest extends TestCase
         $html = (string) $this->get($url)->assertOk()->getContent();
         $this->assertStringContainsString('turns 8 and invites you to jump', $html, 'la invitación, en inglés');
         $this->assertStringContainsString('<html lang="en"', $html);
+        $this->assertIdiomaAbajo($html, 'en', 'data-invitation-privacy');
+    }
+
+    public function test_on_the_first_visit_the_invitation_speaks_the_language_of_the_browser(): void
+    {
+        ['invitation' => $invitation] = $this->mountParty();
+
+        // `#748`: la invitación elige el idioma SOLA, como la web (`SetLocale`): el padre que abre el enlace con el
+        // teléfono en francés la lee en francés sin tocar nada.
+        $html = (string) $this->withHeaders(['Accept-Language' => 'fr-FR,fr;q=0.9,en;q=0.5'])
+            ->get(route(PartyInvitations::PUBLIC_ROUTE, ['token' => $invitation->token]))->assertOk()->getContent();
+
+        $this->assertStringContainsString('<html lang="fr"', $html);
+        $this->assertStringContainsString('fête ses 8 ans', $html, 'la invitación, en francés');
+        $this->assertIdiomaAbajo($html, 'fr', 'data-invitation-privacy');
+    }
+
+    /**
+     * El idioma de la fiesta (`#748`, el owner): NADA en la cabecera y, abajo del todo —después de `$ultimo`—, una línea
+     * de texto con los tres del sitio: el que se lee sin enlace y con `aria-current`, los otros enlaces a `lang.switch`.
+     */
+    private function assertIdiomaAbajo(string $html, string $actual, string $ultimo): void
+    {
+        // La cabecera es `inv-cab` > `inv-top`, sin otro `div` dentro: el primer `</div>` la cierra.
+        $cabecera = strpos($html, 'class="inv-cab"');
+        $this->assertNotFalse($cabecera);
+        $fin = (int) strpos($html, '</div>', $cabecera);
+        $this->assertStringContainsString('class="inv-top"', substr($html, $cabecera, $fin - $cabecera));
+        $this->assertStringNotContainsString('/lang/', substr($html, $cabecera, $fin - $cabecera), 'el idioma volvió a la cabecera');
+        $this->assertStringNotContainsString('<select', substr($html, $cabecera, $fin - $cabecera));
+
+        $pie = strpos($html, 'data-idiomas');
+        $this->assertNotFalse($pie, 'sin la línea del idioma');
+        $antes = strpos($html, $ultimo);
+        $this->assertNotFalse($antes);
+        $this->assertGreaterThan($antes, $pie, 'la línea del idioma va ABAJO, después de '.$ultimo);
+        $linea = substr($html, $pie, (int) strpos($html, '</nav>', $pie) - $pie);
+
+        $nombres = ['es' => 'Español', 'en' => 'English', 'fr' => 'Français'];
+        foreach ($nombres as $clave => $nombre) {
+            if ($clave === $actual) {
+                $this->assertStringContainsString('<span lang="'.$clave.'" aria-current="true">'.$nombre.'</span>', $linea, 'el que se lee, sin enlace');
+                $this->assertStringNotContainsString('/lang/'.$clave.'"', $linea);
+            } else {
+                $this->assertStringContainsString('/lang/'.$clave.'" hreflang="'.$clave.'" lang="'.$clave.'">'.$nombre.'</a>', $linea, 'cada otro idioma, un enlace con su nombre');
+            }
+        }
     }
 
     public function test_without_a_park_video_there_is_no_pill_and_no_viewer(): void

@@ -1,8 +1,9 @@
 {{--
     LA INVITACIÓN DIGITAL de una fiesta, del sistema nuevo (`specs/fiesta-sistema-nuevo.md` §4.2, T2; `#743`, `#744`):
     la página que recibe el padre invitado por WhatsApp, con el diseño `paginas/invitacion.card.html`. Sin isla ni menú:
-    el logotipo, el idioma, la tarjeta con su tema y la barra de la respuesta; tras contestar, el RECIBO (`$m['recibo']`,
-    la misma página con su firma en la URL). Lee SOLO el modelo `$m` (`App\Http\Fiesta\InvitacionPagina`).
+    el logotipo, la tarjeta con su tema y la barra de la respuesta, y abajo el idioma en texto (`#748`); tras contestar,
+    el RECIBO (`$m['recibo']`, la misma página con su firma en la URL). Lee SOLO el modelo `$m`
+    (`App\Http\Fiesta\InvitacionPagina`).
 
     ❗❗ HOJA EN BLANCO: no pinta ni una respuesta, ni cuántas hay, ni si un nombre concreto contestó. El enlace se reparte
     a un grupo de clase entero. Y sin `og:url`: el token no se repite en una meta.
@@ -38,6 +39,7 @@
             @else
                 @include('fiesta.invitacion.invitacion')
             @endif
+            @include('fiesta.invitacion.idiomas')
         </main>
         @if ($m['parque']['video'] !== '')
             @include('fiesta.invitacion.visor')

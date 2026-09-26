@@ -244,7 +244,12 @@ HTML);
 //    §7.2·R7) es del producto y el diseño no lo dibuja en la invitación. El recibo tiene su sección, abajo (F6a).
 $card = (string) file_get_contents($diseno.'/paginas/invitacion.card.html');
 $hojas = ['instancia/css/fuentes.css', 'instancia/css/saltia.css', 'instancia/css/fiesta.css'];
-$sinCabeceraMovil = '<style>@media (max-width:459px){.inv-cab{display:none}}</style>';
+// ⚠️ EL IDIOMA (`#748`, el owner, 26-09): el producto lo quita de la cabecera (lo elige solo, como la web) y lo pone
+//    abajo en texto. Es un desvío DECIDIDO del mockup: los pares reales lo enseñan; los de diagnóstico lo esconden a
+//    cada lado (la píldora del diseño en A, la línea de abajo en B). Sin la píldora el diseño ya no desborda a 390, y
+//    la cabecera en móvil vuelve a juzgarse (antes se escondía a los dos lados).
+$sinIdiomaA = '<style>.inv-lang{display:none!important}</style>';
+$sinIdiomaB = '<style>[data-idiomas]{display:none!important}</style>';
 foreach (['invitacion-viva' => 'viva', 'invitacion-cerrada' => 'cerrada'] as $nombre => $estado) {
     if ($solo !== [] && ! in_array($nombre, $solo, true)) {
         continue;
@@ -272,11 +277,10 @@ foreach (['invitacion-viva' => 'viva', 'invitacion-cerrada' => 'cerrada'] as $no
     $b = str_replace(rtrim((string) config('app.url'), '/').'/', '../', $b);
     file_put_contents($salida."/b/{$nombre}.html", $b);
     // El par de DIAGNÓSTICO: la misma B sin el aviso de privacidad (que el diseño no dibuja en la invitación y el
-    // producto exige) y, en los dos lados, sin la cabecera en móvil: con «Ver el parque» el diseño DESBORDA a lo ancho
-    // (414 px de página a 390, medido el 26-09) y el producto pasa la píldora a su fila (`fiesta.css`). Tiene que dar 0:
-    // así el par real solo puede diferir en esas dos cosas, y se ve cuánto.
-    file_put_contents($salida."/a/{$nombre}-sin-legal.html", str_replace('</head>', $sinCabeceraMovil.'</head>', $a));
-    file_put_contents($salida."/b/{$nombre}-sin-legal.html", str_replace('</head>', $sinCabeceraMovil.'</head>', (string) preg_replace('#<p class="inv-legal"[^>]*>.*?</p>#s', '', $b)));
+    // producto exige) y sin el idioma a cada lado (`#748`). Tiene que dar 0: así el par real solo puede diferir en esas
+    // dos cosas, y se ve cuánto.
+    file_put_contents($salida."/a/{$nombre}-sin-legal.html", str_replace('</head>', $sinIdiomaA.'</head>', $a));
+    file_put_contents($salida."/b/{$nombre}-sin-legal.html", str_replace('</head>', $sinIdiomaB.'</head>', (string) preg_replace('#<p class="inv-legal"[^>]*>.*?</p>#s', '', $b)));
 
     foreach (['390x844', '1280x900'] as $ventana) {
         foreach (['', '-sin-legal'] as $variante) {
@@ -298,10 +302,10 @@ foreach (['invitacion-viva' => 'viva', 'invitacion-cerrada' => 'cerrada'] as $no
 // ojo pero no entran en el lote: no miden lo mismo. B lleva lo que la prueba firmada exige y el diseño no dibuja en el
 // recibo (el nombre y los apellidos del niño con la nota de lo que escribió, el nacimiento, la relación, el descargo en
 // el flujo y su privacidad, `#745`/`#706`) y a A le sobra lo que aún no está (F6b: «Crear mi QR» y «Avísame de fechas»).
-// El par de DIAGNÓSTICO esconde eso a cada lado, y la cabecera en móvil (el diseño desborda), y tiene que dar 0.
-$esconderReciboA = '<style>.inv-qr{display:none}@media (max-width:459px){.inv-cab{display:none}}</style>';
+// El par de DIAGNÓSTICO esconde eso a cada lado, y el idioma (`#748`), y tiene que dar 0.
+$esconderReciboA = '<style>.inv-qr,.inv-lang{display:none!important}</style>';
 $esconderReciboB = '<style>[data-from-invitation],form[data-receipt-firma]>div:has([name="minor_name"]),form[data-receipt-firma]>:has(#inv-aut-relacion),'
-    .'[data-guardian-waiver],[data-guardian-privacy]{display:none!important}@media (max-width:459px){.inv-cab{display:none}}</style>';
+    .'[data-guardian-waiver],[data-guardian-privacy],[data-idiomas]{display:none!important}</style>';
 foreach (['recibo-si' => 'si', 'recibo-firmada' => 'firmada'] as $nombre => $estado) {
     if ($solo !== [] && ! in_array($nombre, $solo, true)) {
         continue;
@@ -339,7 +343,8 @@ foreach (['recibo-si' => 'si', 'recibo-firmada' => 'firmada'] as $nombre => $est
 
 // ── LA AUTORIZACIÓN (T3): el formulario en reposo (`recibo`) y el Listo (`firmada`), con los datos del diseño ──────────
 // B lleva lo que el producto pide y el brief no (`#745`: nacimiento y relación) y el descargo en el flujo; el par de
-// DIAGNÓSTICO (`$m['diagnostico']`) los omite y tiene que dar 0: así el par real solo puede diferir en eso.
+// DIAGNÓSTICO (`$m['diagnostico']`) los omite, esconde el idioma a cada lado (`#748`) y tiene que dar 0: así el par real
+// solo puede diferir en eso.
 $cardAut = (string) file_get_contents($diseno.'/paginas/autorizacion.card.html');
 foreach (['autorizacion-recibo' => 'recibo', 'autorizacion-firmada' => 'firmada'] as $nombre => $estado) {
     if ($solo !== [] && ! in_array($nombre, $solo, true)) {
@@ -358,15 +363,16 @@ foreach (['autorizacion-recibo' => 'recibo', 'autorizacion-firmada' => 'firmada'
         exit(1);
     }
     file_put_contents($salida."/a/{$nombre}.html", $a);
+    file_put_contents($salida."/a/{$nombre}-diagnostico.html", str_replace('</head>', $sinIdiomaA.'</head>', $a));
 
     foreach (['' => false, '-diagnostico' => true] as $variante => $diagnostico) {
         $b = view('fiesta.autorizacion', ['m' => $modelos['autorizacion']($estado, $diagnostico), 'hojas' => $hojas])->render();
         $b = str_replace(rtrim((string) config('app.url'), '/').'/', '../', $b);
-        file_put_contents($salida."/b/{$nombre}{$variante}.html", $b);
+        file_put_contents($salida."/b/{$nombre}{$variante}.html", $diagnostico ? str_replace('</head>', $sinIdiomaB.'</head>', $b) : $b);
         foreach (['390x844', '1280x900'] as $ventana) {
             $lote[] = [
                 'nombre' => "{$nombre}-".strtok($ventana, 'x').$variante,
-                'a' => "{$base}/a/{$nombre}.html",
+                'a' => "{$base}/a/{$nombre}{$variante}.html",
                 'b' => "{$base}/b/{$nombre}{$variante}.html",
                 'viewport' => $ventana,
                 'completa' => false,

@@ -411,7 +411,9 @@ button.fi-fila__cabecera:hover, .fi-fila--open > button.fi-fila__cabecera { back
 .inv-fondo{min-height:100vh;transition:background-color var(--dur-base) var(--ease-out)}
 .inv{max-width:560px;margin:0 auto;padding:12px 16px 20px;box-sizing:border-box;display:grid;gap:14px}
 .inv-cab{display:grid;gap:0}
-.inv-top{display:flex;align-items:center;gap:10px;padding:2px;min-height:48px}
+/* ⚠️ Sin el idioma del diseño (`#748`): la fila de arriba es el logotipo y «Ver el parque». Si un logotipo ancho no la
+   deja caber, la píldora baja a su fila, a la derecha (`flex-wrap`), antes que desbordar la página a lo ancho. */
+.inv-top{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;padding:2px;min-height:48px}
 .inv-logo{height:32px;width:auto;flex:0 0 auto}
 .inv-historia{display:inline-flex;align-items:center;gap:8px;min-height:44px;margin-left:auto;padding:0 12px 0 3px;border:none;border-radius:var(--r-pill);background:var(--fiesta-nieve);box-shadow:inset 0 0 0 1px var(--border-subtle);font:700 var(--fs-body-sm)/1 var(--font-ui);color:var(--fiesta-tinta-900);cursor:pointer;transition:var(--t-hover);white-space:nowrap}
 .inv-historia-nota{display:inline-flex;align-items:center;gap:3px;padding-left:9px;margin-left:1px;border-left:1px solid var(--border-subtle);font:700 var(--fs-body-sm)/1 var(--font-ui);color:var(--fiesta-tinta-900);font-variant-numeric:tabular-nums}
@@ -428,19 +430,6 @@ button.fi-fila__cabecera:hover, .fi-fila--open > button.fi-fila__cabecera { back
 .inv-visor--estrecho .inv-visor-escena{aspect-ratio:auto;height:100dvh;width:100vw;border-radius:0;box-shadow:none}
 .inv-visor--estrecho .inv-visor-arriba{padding:max(12px,env(safe-area-inset-top)) 12px 28px}
 .inv-visor--estrecho .inv-visor-abajo{padding:56px 16px max(16px,env(safe-area-inset-bottom))}
-.inv-lang{position:relative;flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;min-height:44px;padding:0 10px 0 12px;border-radius:var(--r-pill);background:var(--fiesta-nieve);box-shadow:inset 0 0 0 1px var(--border-subtle);color:var(--fiesta-tinta-900);cursor:pointer;transition:var(--t-hover)}
-.inv-lang:hover{box-shadow:inset 0 0 0 1px var(--fiesta-tinta-300),var(--shadow-sm)}
-.inv-lang-cod{font:700 var(--fs-body-sm)/1 var(--font-ui)}
-.inv-lang>svg:last-of-type{color:var(--text-muted)}
-.inv-top .inv-historia+.inv-lang{margin-left:0}.inv-top>.inv-lang:nth-child(2){margin-left:auto}
-.inv-lang select{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer;font-size:16px;appearance:none;-webkit-appearance:none;border:none;background:transparent}
-.inv-lang select:focus-visible{outline:none}.inv-lang:focus-within{box-shadow:inset 0 0 0 1px var(--fiesta-tinta-300),var(--ring)}
-/* ⚠️ Lo que el diseño NO resuelve (medido el 26-09): con «Ver el parque» la fila de arriba —logotipo, píldora e idioma—
-   no cabe en un móvil (el propio diseño desborda: 414 px de página a 390) y el idioma queda cortado con la página
-   desplazándose a lo ancho. Cuando no cabe, la píldora pasa a su fila, debajo, sin perder la nota ni el idioma. El
-   umbral cubre un logotipo de hasta ~120 px a 32 px de alto. */
-.inv-cab{container-type:inline-size}
-@container (max-width:439px){.inv-top{flex-wrap:wrap;row-gap:8px}.inv-top .inv-historia{order:3;margin-left:0}.inv-top .inv-historia+.inv-lang{margin-left:auto}}
 .inv-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 @media (max-width:599px){.inv-card{margin:0 -16px;--invite-radius:0}}
 .inv-enlaces{display:flex;flex-wrap:wrap;gap:4px 18px}
@@ -478,12 +467,15 @@ a.inv-prueba svg{color:var(--fiesta-sol-600)}a.inv-prueba:hover{text-decoration:
 .inv-despues svg{flex:0 0 auto;margin-top:1px;color:var(--icon-accent)}
 .inv-hueco{padding:18px;border:1.5px dashed var(--fiesta-tinta-300);border-radius:var(--r-md);font:400 var(--fs-body-sm)/1.5 var(--font-ui);color:var(--text-muted)}
 .inv-vista{display:grid;gap:14px;animation:fiesta-fade-in var(--dur-base) var(--ease-out)}
-/* Lo que el diseño no dibuja (sin A): el nombre del parque sin logotipo, los enlaces del idioma sin JavaScript, el Guardar
-   de la ficha sin JavaScript y la caja del anti-robot en la barra y en la firma del recibo (F6a). */
+/* Lo que el diseño no dibuja (sin A): el nombre del parque sin logotipo, el Guardar de la ficha sin JavaScript, la caja
+   del anti-robot en la barra y en la firma del recibo (F6a) y el idioma abajo, en texto (`#748`): discreto, pero cada
+   nombre con su zona de toque de 44 px. */
 .inv-marca{font:800 var(--fs-body)/1 var(--font-display);color:var(--fiesta-tinta-900)}
-.inv-lang-enlaces{display:inline-flex;align-items:center;gap:10px;margin-left:auto;font:700 var(--fs-body-sm)/1 var(--font-ui)}
-.inv-lang-enlaces a[aria-current="true"]{text-decoration:underline;text-underline-offset:3px}
-.js .inv-lang-enlaces{display:none}.no-js .inv-lang{display:none}
+.inv-idiomas{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:0 16px;padding:0 4px 4px;font:400 var(--fs-caption)/1.5 var(--font-ui);color:var(--text-body)}
+.inv-idiomas>svg{flex:0 0 auto;margin-right:-8px;color:var(--text-muted)}
+.inv-idiomas>a,.inv-idiomas>span{display:inline-flex;align-items:center;min-height:44px}
+.inv-idiomas>a{color:var(--text-body);text-decoration:underline;text-underline-offset:3px}.inv-idiomas>a:hover{color:var(--fiesta-tinta-900)}
+.inv-idiomas>[aria-current]{font-weight:700;color:var(--fiesta-tinta-900)}
 .inv-ficha-form{display:grid;gap:12px}
 .inv-tercero{display:grid;gap:6px;padding:2px 4px 0}
 .inv-tercero-rotulo{font:700 var(--fs-caption)/1.3 var(--font-ui);color:var(--text-muted)}

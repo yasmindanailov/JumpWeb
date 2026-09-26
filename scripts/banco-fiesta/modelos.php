@@ -22,10 +22,10 @@ use App\Http\Fiesta\Temas;
 
 $NB = "\u{a0}";
 $LOGO = ['src' => '../assets/logo/logo-playjump.png', 'alt' => 'Play Jump Park'];
-$IDIOMAS = ['actual' => 'es', 'actual_corto' => 'ES', 'lista' => [
-    ['clave' => 'es', 'corto' => 'ES', 'nombre' => 'Español', 'enlace' => '#es'],
-    ['clave' => 'en', 'corto' => 'EN', 'nombre' => 'English', 'enlace' => '#en'],
-    ['clave' => 'fr', 'corto' => 'FR', 'nombre' => 'Français', 'enlace' => '#fr'],
+$IDIOMAS = ['actual' => 'es', 'lista' => [
+    ['clave' => 'es', 'nombre' => 'Español', 'enlace' => '#es'],
+    ['clave' => 'en', 'nombre' => 'English', 'enlace' => '#en'],
+    ['clave' => 'fr', 'nombre' => 'Français', 'enlace' => '#fr'],
 ]];
 $tema = static fn (string $clave): array => ['clave' => $clave, 'tinte' => Temas::de($clave)['tint'], 'acento' => Temas::de($clave)['accent']];
 // `datos.js → RESERVA` de la lista, con las claves del presentador (`ListaDeInvitados::reserva()`).

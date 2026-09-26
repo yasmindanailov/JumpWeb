@@ -67,6 +67,7 @@
                     </section>
                 @endif
             @endif
+            @include('fiesta.invitacion.idiomas')
         </main>
     </div>
 </x-pagina-enfocada>

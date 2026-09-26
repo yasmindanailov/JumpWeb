@@ -49,7 +49,16 @@ class AutorizacionPaginaTest extends TestCase
         $this->assertMatchesRegularExpression('#id="descargo"[^>]*>.*?Exención de responsabilidad.*?Saltar en camas elásticas#s', $html);
         $this->assertStringContainsString('href="#descargo"', $html);
         $this->assertStringContainsString('Marta verá el nombre de tu hijo y que su autorización está firmada', $html);
-        $this->assertStringContainsString('data-idioma-select', $html);
+        // El idioma, como en la invitación (`#748`): nada en la cabecera (el primer `</div>` la cierra) y, debajo de la
+        // firma, la línea de texto con el que se lee sin enlace y los otros dos a `lang.switch`.
+        $cabecera = (int) strpos($html, 'class="inv-cab"');
+        $this->assertStringNotContainsString('/lang/', substr($html, $cabecera, (int) strpos($html, '</div>', $cabecera) - $cabecera));
+        $pie = strpos($html, 'data-idiomas');
+        $this->assertNotFalse($pie);
+        $this->assertGreaterThan((int) strpos($html, 'data-firma'), $pie, 'la línea del idioma va debajo de la firma');
+        $this->assertStringContainsString('<span lang="es" aria-current="true">Español</span>', $html);
+        $this->assertStringContainsString('/lang/en" hreflang="en" lang="en">English</a>', $html);
+        $this->assertStringContainsString('/lang/fr" hreflang="fr" lang="fr">Français</a>', $html);
     }
 
     public function test_a_parent_signs_with_one_name_field_and_a_phone_and_sees_the_done_block(): void

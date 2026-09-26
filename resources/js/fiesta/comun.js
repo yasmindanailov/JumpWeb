@@ -1,7 +1,7 @@
 /*
- * Lo que comparten las páginas de la fiesta (`specs/fiesta-sistema-nuevo.md` §4.5): el idioma (el desplegable nativo de
- * la cabecera lleva en cada opción el enlace que lo cambia), Intro que no envía, y el arranque que pone la clase `js`
- * AL FINAL: si algo falla, el documento se queda en `no-js`, que es un formulario completo.
+ * Lo que comparten las páginas de la fiesta (`specs/fiesta-sistema-nuevo.md` §4.5): Intro que no envía, la firma, y el
+ * arranque que pone la clase `js` AL FINAL: si algo falla, el documento se queda en `no-js`, que es un formulario
+ * completo. (El idioma ya no necesita JavaScript: son tres enlaces de texto al pie, `#748`.)
  */
 /* global document, location, window, setTimeout */
 
@@ -9,16 +9,6 @@ const de = document.documentElement;
 
 export const q = (sel, raiz = document) => raiz.querySelector(sel);
 export const qa = (sel, raiz = document) => [...raiz.querySelectorAll(sel)];
-
-/** El idioma: elegir en el desplegable cambia de idioma (`lang.switch`, que vuelve aquí desde la sesión). */
-export function idioma() {
-    const select = q('[data-idioma-select]');
-    if (!select) return;
-    select.addEventListener('change', () => {
-        const destino = select.value;
-        if (destino) location.href = destino;
-    });
-}
 
 /** Intro cierra el teclado y no envía: la acción es siempre un toque en su botón. */
 export function enterNoEnvia(campo) {

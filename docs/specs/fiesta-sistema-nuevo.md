@@ -275,6 +275,7 @@ Medido en `GuestFormController::show()` (sus 30 claves), `InvitationPageControll
 | **F6a** ✅ | La firma DENTRO del recibo (26-09; `[DECIDIDO]` `#746`): tras «Vamos» y sin firma, el recibo pinta `x-fiesta.firma` con lo que la prueba exige (`#745`/`#706`: nombre y apellidos del niño con la nota de lo que escribió, nacimiento, relación, el descargo en el flujo y su privacidad) y la frase del diseño junto al botón; firmada, «Firmada» con quién firmó (nombre · teléfono). Una sola fuente para las dos pantallas: `ComposesGuardianForm` (el bloqueo, las relaciones, lo que llega de la invitación, el prellenado, los menores a cargo, la URL firmada del envío y lo que vuelve por la sesión) y `Autorizacion::formularioDe/avisoDe`. El envío lleva `desde=recibo` DENTRO de la firma: el error vuelve al recibo, a `#inv-h-aut`, con el foco en su campo; el éxito, al recibo con «Firmada». Arreglado de paso, medido: (1) una fiesta LLENA pintaba «no quedan plazas» a un «sí» atado aunque el firmador le deja (`#576`); (2) el enlace «Firmar» llevaba a un 404 fuera del modo interno: ahora sin nada que firmar no hay sección; (3) la firma compartía cupo con toda ruta con límite numérico (429 al segundo intento): cupo propio `guardian-sign` (SEC-06); (4) un REENVÍO desde un segundo recibo del mismo niño devolvía el formulario vacío: dice «Firmada»; (5) la cabecera con «Ver el parque» desbordaba en móvil (el diseño también): la píldora baja a su fila; (6) `.inv a` pesaba más que un botón con `href`: `:where(.inv) a`. La apertura de la autorización se cuenta en el recibo (`via=invitation`). | `InvitationSigningFlowTest` 9 (+4: la fiesta llena con su control, el reenvío con su control, el cupo con su control, el Listo) · `InvitationReceiptTest` +3 (la firma dentro, el error junto a su campo con el bolso real, sin modo interno con su control) · `PartyFactsTest` +1 · `FiestaModeloTest` +1 (el recibo) · **siete mutaciones, las siete caen** · **el banco: el recibo `si` y `firmada` contra `InvPagina`, 4 de 4 diagnósticos a 0 px** (esconden lo que la prueba exige, «Crear mi QR» de F6b y la cabecera en móvil); **el banco entero 66 de 70**: los cuatro reales que difieren son la cabecera en móvil y los campos del producto en la autorización, con sus diagnósticos a 0 · el flujo real con `curl` (un campo en rojo, lo escrito conservado) · **la sonda `sonda-f6a.mjs` a 390, 360 y 1280: sin errores de página, sin desbordar, el foco en el campo con error, «Firmada» con quién firmó** · suite. |
 | **F3a** ✅ | Quien cumple, la PRIMERA fila de la lista (26-09; `[DECIDIDO owner]` `#747`): el ajuste del pack `honoree_counts` (en el panel), el sello `honoree_row` en `OrderCreator`, la ficha 0 con su espejo en la invitación en los dos sentidos, la ficha clavada (`GuestCardOrder`, las propuestas, los «no», el recordatorio), su plaza en el suelo y en las firmas (`PartyGuests::honoreeSeatsIn`, contrato), `honoree_row` en la API (1.35.0), su fila en la lista con «Es su cumple» y «Personalizar» como espejo. El detalle y las tres partes, §4.8. | Ver §4.8. |
 | **F4** ✅ | La lista que supera la reserva y su «Sí» (26-09; `[DECIDIDO owner]` `#747`: con más niños que el número, guardar se para y se pregunta): fichas de más desde una plantilla, la zona 3 en sus tres estados y viva, el precio de un niño más, las dos guardas. El detalle, §4.9. | Ver §4.9. |
+| **Idioma** ✅ | El idioma, abajo y en texto (26-09; `[DECIDIDO owner]` `#748`): fuera la píldora del diseño; la invitación, su recibo y la autorización lo eligen solas, como la web (`SetLocale`), y al pie llevan «Español · English · Français». El detalle, §4.10. | Ver §4.10. |
 | **F1…Fn** | Lo que FALTA (§1.4), una pieza por tanda, en el orden que fije el owner (§7). Cada una con su spec de sección aquí, su decisión y, si toca aforo, `VERIFY_CONC=1`. | Por pieza. |
 
 ### 4.7 Lo que enseñó la T1a (2026-09-25)
@@ -535,6 +536,28 @@ guarda 11 y el libro apunta 16,95 € a pagar en el parque) y el borrador al rec
 «Con respuestas por repasar» del diseño, a ojo (no hay B de servidor: 11 fichas para 10 solo existen tecleadas) · la
 lista a 0 px en `recien` y `guardado`.
 
+### 4.10 El idioma, abajo y en texto ✅ (`[DECIDIDO owner]` `#748`, 26-09)
+
+**El owner**: «lo del idioma lo vamos a quitar de la invitación: el sistema de la web, que es automático, o más discreto
+abajo como texto de selección, profesional, pero no con tanta importancia». **Medido**: las tres páginas ya pasaban por
+`SetLocale` (grupo `web`): la elección de antes, el idioma de la cuenta o el `Accept-Language` del navegador; la píldora
+solo era la vía manual. **Decidido (mío, contra ese objetivo)**: las dos cosas, que no se excluyen: sola como la web, y al
+pie una línea de texto para quien quiera otra (un teléfono en español de un padre que lee francés). Cada idioma con su
+nombre EN SU idioma y su `lang` (quien no lee el de la página reconoce el suyo); el que se lee, sin enlace y con
+`aria-current`; los otros, a `lang.switch` (vuelve por la sesión: la página no manda `Referer`). Sin JavaScript
+(`idioma()` de `comun.js` fuera). Nombres y no códigos, al revés que el pie de la web: aquí es texto suelto, sin la
+fila de contacto que da contexto al «ES · EN · FR».
+
+**Hecho**: `fiesta/invitacion/idiomas.blade.php` al final de `main` en `fiesta.invitacion` (invitación y recibo) y
+`fiesta.autorizacion`; la cabecera, solo logotipo y «Ver el parque»; `.inv-lang*` y el salto por `@container` fuera
+(sin la píldora, la fila cabe a 360: `flex-wrap` queda de red para un logotipo ancho); `InvitacionPagina::idiomas()` sin
+los códigos cortos. **Verificación**: `InvitacionPaginaTest` +1 (primera visita con el navegador en francés) y la
+aserción del pie en la invitación, el recibo, el cambio a inglés y la autorización · arnés `mutar-idioma-fiesta.sh`
+**8/8** · la sonda `sonda-idioma.mjs` a 390, 360 y 1280 en las tres páginas: cabecera en UNA fila, sin desbordar, la
+línea lo último de la página, contraste 5,91 (enlaces) y 11,4 (el actual), 44 px de toque, sin errores; francés a la
+primera y «English» vuelve a la misma invitación · el banco: **12 de 12 diagnósticos a 0 px** (esconden la píldora en A
+y la línea en B; la cabecera en móvil vuelve a juzgarse), los 8 reales difieren solo en eso.
+
 ## 5. Impacto en invariantes
 
 | ID | Cómo |
@@ -608,6 +631,8 @@ la casilla en `00-REFACTOR.md`. Lo que la revisión corrija se escribe aquí DEL
   la invitación**; quien cumple es la PRIMERA fila, **como un invitado más** (nombre, edad y alergias; hoja de monitores,
   puerta y línea de edades); **solo en las reservas nuevas**; **«Avísame de fechas» se queda sola** en el recibo tras
   firmar con correo. El modelo, §4.8.
+- **26-09, `[DECIDIDO owner]` `#748`**: el idioma **fuera de la cabecera** de la invitación (y de la autorización, que la
+  comparte): lo elige la página sola, como la web, y al pie queda una línea de texto discreta. §4.10.
 - **25-09 (T3), `[DECIDIDO owner]` `#745`, el censo de campos con opciones**: (1) **la fecha de nacimiento se
   mantiene** (el owner preguntó si la edad del recibo servía: no, es opcional, vive en la respuesta y no entra en la
   prueba); (2) **la relación con el menor se mantiene** (el desplegable); (3) **el adulto escribe nombre y apellidos

@@ -2,7 +2,7 @@
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb` a secas; la instancia al lado, en
 > `~/proyectos/instancias/playjump`, clon de `github.com/yasmindanailov/instancia-playjump`, montada el 25-09) ·
-> Banda: **730–759** (700–729 agotada el 20-09) · Último usado: **`#747`** · La banda está dada de alta en la tabla de
+> Banda: **730–759** (700–729 agotada el 20-09) · Último usado: **`#748`** · La banda está dada de alta en la tabla de
 > `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: **`isla-y-landing-nueva.md`
 > §4.11 «El traspaso al SPA»** (la tarea en curso, `#765`) · `celebracion-e-invitacion.md` §0 · `waiver-por-reserva.md` §0 ·
 > `encuestas.md` §0 · `analitica-fiesta.md` §0 · `analitica.md` §0 y §4.5 · `google-business-profile.md` §0 ·
@@ -94,7 +94,8 @@
 1. ❗❗❗ **LA FIESTA DEL SISTEMA NUEVO (`#765`) — `specs/fiesta-sistema-nuevo.md` ✅ APROBADA (`#743`, 25-09: las
    ocho respuestas en su §7; ❗ «Ver el parque» va ENCENDIDO con el vídeo de portada, no la recomendada)**. Orden:
    T1a→T4 ✅ · F1 ✅ · F2 ✅ · F6a ✅ (aprobadas, `#747`) · F3 ✅ (quien cumple, su firma, «Al final viene») · F4 ✅
-   (26-09: la lista supera la reserva, «Sí» sube el número, guardar se para sin él; arnés `mutar-quien-cumple.sh` 36/36) → F5 la tarta y los combos, el borrador → **F6b** «Tus respuestas» y «Avísame de
+   (26-09: la lista supera la reserva, «Sí» sube el número, guardar se para sin él; arnés `mutar-quien-cumple.sh` 36/36) · el
+   idioma abajo ✅ (`#748`: fuera de la cabecera, sola como la web; §4.10) → F5 la tarta y los combos, el borrador → **F6b** «Tus respuestas» y «Avísame de
    fechas» SOLA tras firmar con correo (`#747`; consentimiento: spec antes). F3 y F4, spec §4.8 y §4.9. Para el ojo:
    `JW-OJO-F3` (sellada, `ojo-f3.php`) y `JW-OJO-F1` (1077; `/invitacion/WxYYnZkkNx7U`). Cada tanda: `git pull` de la instancia + `sha256sum -c`, el banco con control, las guardas de
    piel re-apuntadas o retiradas con su motivo, sonda de VENTANA de las tres y el ojo del owner en `localhost:8081`

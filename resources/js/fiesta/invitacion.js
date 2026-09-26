@@ -1,14 +1,14 @@
 /*
  * LA INVITACIÓN DIGITAL del sistema nuevo — el comportamiento de la página y de su recibo (`specs/fiesta-sistema-nuevo.md`
- * §4.5, T2). Lo poco que `InvPagina` hace con React y aquí se hace a mano: el idioma (elegir en el desplegable cambia
- * de idioma), Intro no contesta (la respuesta es siempre un toque), el botón pulsado dice «Enviando» mientras el
+ * §4.5, T2). Lo poco que `InvPagina` hace con React y aquí se hace a mano (el idioma no: desde `#748` son enlaces al
+ * pie): Intro no contesta (la respuesta es siempre un toque), el botón pulsado dice «Enviando» mientras el
  * formulario viaja, «Su ficha» se guarda sola al salir de cada campo y dice «Guardado», y «Contestar por otro hijo»
  * deja el foco en el nombre. ⚠️ Nada de esto ESCRIBE por su cuenta: escriben los formularios. Sin JavaScript la página
  * contesta y guarda igual; la clase `js` se pone AL FINAL: si algo falla, el documento se queda en `no-js`.
  */
 /* global document, window, location, fetch, FormData, setTimeout, clearTimeout */
 import './fiesta.css';
-import { arranca, enterNoEnvia, firma, idioma, menores, q, qa } from './comun.js';
+import { arranca, enterNoEnvia, firma, menores, q, qa } from './comun.js';
 
 /* ── «Ver el parque» (F1c, `content/ClipViewer.jsx`): la píldora abre el visor; el vídeo suena (si el navegador lo veta,
    sin sonido), un toque lo pausa y enseña el triángulo, se cierra con la X, con Escape, tocando fuera o deslizando hacia
@@ -161,4 +161,4 @@ function foco() {
 }
 
 // La firma dentro del recibo (F6a): el mismo comportamiento que la página de la autorización (`comun.js`).
-arranca(idioma, visor, barra, ficha, menores, firma, foco);
+arranca(visor, barra, ficha, menores, firma, foco);

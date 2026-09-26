@@ -292,10 +292,11 @@ final class InvitacionPagina
     }
 
     /**
-     * El selector de idioma: los del sitio (`SiteLocales`), con su código corto y su nombre entero, y el enlace que lo
-     * cambia (`lang.switch`, que vuelve a la página desde la sesión: esta página no manda `Referer`).
+     * El idioma, abajo y en texto (`#748`): los del sitio (`SiteLocales`), con su nombre en su propio idioma, y el enlace
+     * que lo cambia (`lang.switch`, que vuelve a la página desde la sesión: esta página no manda `Referer`). Cuál se lee
+     * lo decide `SetLocale`, como en la web: la elección de antes, la cuenta o el navegador.
      *
-     * @return array{actual: string, actual_corto: string, lista: list<array{clave: string, corto: string, nombre: string, enlace: string}>}
+     * @return array{actual: string, lista: list<array{clave: string, nombre: string, enlace: string}>}
      */
     public static function idiomas(): array
     {
@@ -306,13 +307,12 @@ final class InvitacionPagina
         foreach (SiteLocales::SUPPORTED as $clave) {
             $lista[] = [
                 'clave' => $clave,
-                'corto' => strtoupper($clave),
                 'nombre' => $nombres[$clave],
                 'enlace' => route('lang.switch', ['locale' => $clave]),
             ];
         }
 
-        return ['actual' => $actual, 'actual_corto' => strtoupper($actual), 'lista' => $lista];
+        return ['actual' => $actual, 'lista' => $lista];
     }
 
     /** `cumple-vera.ics`: un nombre de fichero que se reconozca en la carpeta de descargas, sin acentos ni token. */
