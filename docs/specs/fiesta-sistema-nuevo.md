@@ -27,7 +27,7 @@
   que JSX no deja · el juez: `--reloj`, `--rehacer`, `--reintentos 2` y sus ocho trampas en `scripts/pixel.mjs`.
 - **Invariantes y `CRITICAL_RE`**: vestir no toca dinero ni aforo. ⚠️ La zona 3 del diseño **sube el número desde
   la lista** y admite más niños que plazas: `GuestCountAdjuster` (`CRITICAL_RE`), aforo y cobro en el parque →
-  `INVARIANTES` §1–§2, `VERIFY_CONC=1`, solo con el sí del owner (la pregunta 3, abajo). `RGPD-*` en la firma y el recibo.
+  `INVARIANTES` §1–§2, `VERIFY_CONC=1`. `RGPD-*` en la firma y el recibo; la exención de quien cumple, §4.13 (`#752`).
 
 ## 1. Contexto y problema — MEDIDO (2026-09-25)
 
@@ -516,10 +516,7 @@ plazas** (13 → 12); (4) el emparejado por nombre falla con «María José» �
 hacer (ni la fila, ni la víspera, que lo cuenta resuelto, ni el correo del justificante); (6) si quien reserva no es el
 padre, solo queda el justificante, con (2) y (3); (7) el justificante dice «a cargo de :h», absurdo si :h es la madre;
 (8) aparte, «Firmada · Falta» sale aunque el producto no pida justificante o el waiver no sea interno (leído, no medido).
-**Para el owner**: quién firma (recomendado: quien reserva como su menor a cargo si es su hijo; si no, su padre con el
-justificante) y dónde se pide (recomendado: en la fila de quien cumple, «Falta · Firmar su exención», y la víspera lo
-recuerda). **Míos, sin decisión**: atarlo por id y no por nombre, la puerta leyendo lo mismo que la lista, su plaza sin
-contar dos veces, su justificante sin rechazo por llena, el mensaje y el aviso de la víspera.
+→ **Decidido por el owner (`#752`): el diseño y sus tres partes, en §4.13.**
 
 ### 4.9 F4 ✅ · La lista que supera la reserva y su «Sí» (`#743`·3, `[DECIDIDO owner]` `#747`, 26-09)
 
@@ -684,6 +681,66 @@ panel de 318×279… Ahora `[hidden] { display: none !important; }` sin `.js` (s
 prueba de PHP calcula CSS. (2) «Tus respuestas»: renovar una entrada al final reordenaba los chips cada vez que se abría
 uno (visto en la sonda): se renueva EN SU SITIO. (3) Una sonda que firma dos veces el mismo niño en la misma fiesta cae
 en «un niño, un papel»: la prueba es de la PRIMERA respuesta y el segundo recibo dice «Firmada» sin casilla (correcto).
+
+### 4.13 F7 · La exención de quien cumple (`[DECIDIDO owner]` `#752`, 26-09) ⬜
+
+**El hueco** está medido en §4.8 (la puerta contradice a la lista, su justificante se rechaza con la fiesta llena y
+gasta dos plazas con sitio, el nombre falla con compuestos, nadie avisa). **El qué (owner)**: firma **quien reserva,
+como su menor a cargo, si es su hijo; si no, su padre o madre con el justificante**; se pide **en la fila de quien
+cumple** («Falta · Firmar su exención») y **la víspera lo recuerda**; sin sesión, **las dos vías**: «Entrar y firmarla
+en tu cuenta» y «Firmarla aquí».
+
+**El modelo (mío): quien cumple queda CUBIERTO por UNA de dos pruebas, atadas por id y nunca por nombre.**
+1. **Un menor a cargo del titular** → una fila de `dependent_assignments` sobre la línea del pack. Hoy la tabla es solo
+   de entradas (`DependentAssigner`, «los packs ya piden a sus invitados»); se abre **solo para quien cumple**: como mucho
+   una fila por línea y solo si la línea sella `honoree_row`. Escritor: `DependentAssigner::assignHonoree()` (futuro),
+   con las reglas de siempre (suyo y activo, menor en la fecha de la visita, exención vigente en `interno`).
+2. **Un justificante atado a quien cumple** → `guardian_authorizations.honoree` (futuro: `true` o NULL, con
+   `unique(order_item_id, honoree)` —NULL no choca en ningún motor: como mucho uno por reserva—). **Fuera del hash**:
+   el hash es de la fila de la firma (`HASHED_FIELDS_BY_VERSION`), no de ésta, como `invitation_reply_id` (`RGPD-01`).
+   `GuardianAuthorizationSigner::sign(…, forHonoree)`: atado **no gasta plaza** (es la suya) y **no se rechaza por
+   llena**; se niega si la línea no sella o quien cumple ya está cubierto.
+- **Cubierto UNA vez es invariante, no costumbre**: las dos escrituras bloquean la MISMA fila, la del titular
+  (`sign()` bloquea a `$reservation->order->user`; `add()` y `assignHonoree()`, al titular) y comprueban bajo el lock.
+- **La cobertura es UNA pregunta** —`GuardianPlaces::honoreeCoverage()` (futuro): `none | dependent | authorization`, el
+  nombre de pila y la exención `current | outdated | missing`— y la hacen la lista, la puerta, la víspera y la API.
+- **Su plaza cuenta UNA vez**: `takenIn` = asignados + justificantes + «sí» sin firma + (sella y NO cubierto ? 1 : 0).
+- **Sin nombre**: `cumpleFirmado()` se retira (falsos positivos, compuestos). El nombre solo PRESELECCIONA al hijo.
+- **No se tocan `WaiverSigner` ni `DependentRegistry`** (`CRITICAL_RE`): se usan tal cual. El firmador de justificantes sí
+  cambia: `waiver:verify-chain` sobre MySQL antes de empujar.
+
+**La fila (web)**. «Firmada · Falta» solo donde aplica (el `entry` de la puerta: `interno` y el producto pide
+justificante; hoy salía siempre). Quien cumple sin cubrir, con la lista abierta: «Firmar su exención» abre, bajo la
+fila (`<details>`: funciona sin JavaScript), «¿Firmas tú por Mateo?»:
+- **«Sí, soy su padre, madre o tutor»** → con sesión del titular: sus hijos a cargo (el que empareja por nombre,
+  preseleccionado) u «Otro: añadirlo» (nombre, apellidos, nacimiento, relación y la casilla de la exención con «Leer el
+  descargo»); «Firmar» envía a la MISMA URL firmada de la lista y escribe `add()` si es nuevo + `assignHonoree()`. Un hijo
+  con la exención de un texto viejo se vuelve a firmar en el mismo paso. Sin sesión: **«Entrar y firmarla en tu
+  cuenta»** (`/login?next=…`; Google vuelve solo, la contraseña de la isla: a medir) y **«Firmarla aquí»** (el
+  justificante de quien cumple). ⚠️ El camino de la cuenta EXIGE sesión (`RGPD-03`: el enlace de la lista no la da, se
+  reenvía, y una firma a nombre del titular no puede hacerla quien tenga el enlace).
+- **«No, que la firme su familia»** → «Pásale este enlace a su padre o madre», con Copiar y WhatsApp.
+
+**El justificante de quien cumple**: la página de siempre con `para=cumple` DENTRO de la firma de la URL (medido:
+añadirlo a mano la invalida; un padre invitado no puede atar su firma a quien cumple). «La exención de Mateo»; lo que
+viene de la reserva se ENSEÑA y el nombre y los apellidos los escribe quien firma (`#706`); la casilla dice «Como su
+padre, madre o tutor, acepto el descargo de responsabilidad en su nombre» (sin «a cargo de :h»: es su fiesta). Ya
+cubierto: «La exención de Mateo ya está firmada».
+
+**La puerta** lee la cobertura: la ficha de quien cumple llega marcada por contrato (`GateReservation.partyGuests`) y sale
+«(cumple)», firmada si está cubierta (de un hijo, con el estado de su exención) y contada en «N de M». No firma nada
+nuevo: se resuelve desde la lista, en el móvil del padre. **La víspera**: «Falta la exención de Mateo: fírmala desde la
+lista» (`PendingWork`, por contrato). **La API** (API-first): la ficha de invitados dice la cobertura y el enlace; el
+camino de la cuenta, con Bearer del titular (1.40.0, si plataforma no la tomó).
+
+**De paso**: el «toda su capacidad» del rechazo por llena (con 0 justificantes). **Fuera**: igualar la edad de quien
+cumple a la de su hijo (movería el suplemento de edades: dinero); firmar hijos en la tablet de la puerta.
+
+| Parte | Qué | Verificación |
+|---|---|---|
+| **F7a** ⬜ | El dominio: la columna, `assignHonoree()`, `sign(forHonoree)`, `honoreeCoverage()`, las plazas, los contratos (la ficha marcada, `PendingWork`), el mensaje. | Pruebas con control · arnés · `waiver:verify-chain` sobre MySQL · suite. |
+| **F7b** ⬜ | La lista y el justificante de quien cumple: la fila y su panel, las dos vías, «Firmada · Falta» donde aplica. | Pruebas · arnés · sonda con y sin JavaScript a 390 y 1280 · el ojo del owner. |
+| **F7c** ⬜ | La puerta, la víspera y la API. | Pruebas · arnés · la ficha de la puerta y el correo en Mailpit. |
 
 ## 5. Impacto en invariantes
 
