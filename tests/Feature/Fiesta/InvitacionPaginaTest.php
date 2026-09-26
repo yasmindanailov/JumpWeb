@@ -212,10 +212,13 @@ class InvitacionPaginaTest extends TestCase
         ['invitation' => $invitation] = $this->mountParty();
         $url = route(PartyInvitations::PUBLIC_ROUTE, ['token' => $invitation->token]);
 
-        // Sin dato, sin bloque (la tarjeta no pinta ni la burbuja ni la línea del regalo).
+        // Sin dato, sin bloque (la tarjeta no pinta ni la burbuja ni la línea del regalo). Y la tarjeta pública NUNCA lleva
+        // la maquinaria de la vista previa en vivo de la lista (F2): ni marcas ni nada oculto.
         $sin = (string) $this->get($url)->assertOk()->getContent();
         $this->assertStringNotContainsString('<blockquote', $sin);
         $this->assertStringNotContainsString(__('fiesta.invitacion.gifts').':', $sin);
+        $this->assertStringNotContainsString('data-inv-vivo', $sin);
+        $this->assertStringNotContainsString('data-inv-plantilla', $sin);
 
         $invitation->forceFill(['family_words' => 'Traed ganas de saltar', 'gift_hints' => 'Le encantan los libros de animales'])->save();
 

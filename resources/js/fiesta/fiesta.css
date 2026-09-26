@@ -385,6 +385,9 @@ button.fi-fila__cabecera:hover, .fi-fila--open > button.fi-fila__cabecera { back
    página y la rellena «Añadir a mano», una detrás de otra. */
 .js .fi-fila--vacia { display: none; }
 .js [hidden] { display: none !important; }
+/* La tarjeta EN VIVO de «Personalizar» (F2): lo que hoy no se ve lleva `hidden` y sus estilos en línea (`display: flex`,
+   `grid`…) le ganarían al del navegador; esto lo hace valer también sin JavaScript. */
+[data-inv-vivo] [hidden] { display: none !important; }
 .fi-fila__campos { display: grid; grid-template-columns: minmax(92px, 116px) minmax(0, 1fr); gap: 12px; align-items: end; }
 .fi-fila__acciones { display: flex; flex-wrap: wrap; gap: 8px; }
 

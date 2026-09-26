@@ -135,6 +135,35 @@ class ListaDeInvitadosTest extends TestCase
         $this->assertStringContainsString(__('fiesta.invitacion.gifts').': Le encantan los libros de animales', $html, 'la línea del regalo');
     }
 
+    /**
+     * **La vista previa de «Personalizar» es EN VIVO** (F2): la tarjeta lleva sus marcas para que `lista.js` la reescriba
+     * al teclear, y una plantilla por tema con la tarjeta entera. Lo que hoy no se ve —la burbuja sin palabras, la
+     * línea del regalo sin pistas, «Llamar» sin marcar— va ya en la página, OCULTO, para aparecer al teclear.
+     */
+    public function test_the_preview_is_live_with_a_template_per_theme_and_what_may_appear_hidden(): void
+    {
+        ['reservation' => $reservation, 'host' => $host] = $this->mountParty();
+
+        $html = $this->actingAs($host)->get(route('reservation.guests', ['reservation' => $reservation]))->assertOk()->getContent();
+
+        $this->assertSame(1, preg_match('#<div class="pli-inv-vista">(.*?)</div>\s*<div class="pli-inv-acc">#s', $html, $vista), 'el bloque de la vista previa');
+        $this->assertMatchesRegularExpression('#^\s*<article data-inv-vivo data-inv-tema="confeti" data-resto-con="[^"]*:age[^"]*" data-resto-sin="[^"]+"#', $vista[1], 'la tarjeta visible es la viva, con los dos titulares');
+        foreach (PartyInvitation::THEMES as $tema) {
+            $this->assertSame(1, preg_match('#<template data-inv-plantilla="'.$tema.'"><article data-inv-vivo data-inv-tema="'.$tema.'"#', $vista[1]), "la plantilla del tema {$tema}");
+        }
+        // Sin palabras ni pistas (la invitación recién montada): la burbuja y la línea del regalo, ocultas y listas.
+        $this->assertStringContainsString('<span data-inv-con-palabras hidden ', $vista[1]);
+        $this->assertStringContainsString('<p data-inv-pistas-linea hidden ', $vista[1]);
+        // Quien invita sin palabras: el pie en su forma corta, visible; la larga, oculta.
+        $this->assertStringContainsString('<figcaption data-inv-pie="sin">', $vista[1]);
+        $this->assertStringContainsString('<figcaption data-inv-pie="con" hidden ', $vista[1]);
+        // «Llamar», oculto hasta marcar la casilla, con el teléfono de la cuenta.
+        $this->assertStringContainsString('<span data-inv-llamar hidden ', $vista[1]);
+        // Y las miniaturas del tema llevan la chapa de la edad con su marca.
+        $this->assertMatchesRegularExpression('#<div data-inv-vivo style="[^"]*padding-bottom: 22px;#', $html, 'las miniaturas del selector, vivas');
+        $this->assertStringContainsString('data-inv-edad', $html);
+    }
+
     public function test_words_or_hints_with_a_link_are_rejected_and_the_rest_is_saved(): void
     {
         ['reservation' => $reservation, 'invitation' => $invitation, 'host' => $host] = $this->mountParty();

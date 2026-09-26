@@ -2,8 +2,8 @@
  * LA LÓGICA PURA de la lista de invitados del sistema nuevo (`specs/fiesta-sistema-nuevo.md` §4.5): sin DOM, para
  * probarla con `node --test` (`logica.test.js`). Es el port de lo que `paginas/lista-invitados/estado.jsx` y
  * `zonas-1-2.jsx` del diseño hacen en el navegador —limpiar una lista pegada, normalizar un nombre, las cuentas, el
- * estado de una ficha— y de `choice()`, el plural de Laravel resuelto en el navegador (`public/js/guest-form/logic.js`,
- * que se retira en la T4).
+ * estado de una ficha, la vista previa de la invitación (F2)— y de `choice()`, el plural de Laravel resuelto en el
+ * navegador.
  */
 
 /** La clave de un nombre: sin tildes, en minúsculas y con los espacios colapsados (el `norm()` del diseño). */
@@ -106,6 +106,47 @@ export function choice(template, count, replacements = {}) {
     return Object.keys(values)
         .sort((a, b) => b.length - a.length)
         .reduce((text, key) => text.split(`:${key}`).join(String(values[key])), chosen.trim());
+}
+
+/** Solo las cifras de una edad tecleada, dos como mucho (el `setCu("age")` de `zonas-1-2.jsx`). */
+export function soloEdad(s) {
+    return String(s ?? '').replace(/\D/g, '').slice(0, 2);
+}
+
+/**
+ * LA VISTA PREVIA de la invitación en «Personalizar» (F2 de `fiesta-sistema-nuevo.md`): qué enseña la tarjeta para lo
+ * que se ha tecleado, con las MISMAS reglas que `components/fiesta/invitacion.blade.php` pinta en el servidor —la chapa
+ * solo con edad; el titular «cumple N años…» o «te invita…»; la figura si hay palabras o quien invita; la burbuja con la
+ * inicial de quien invita (o de quien cumple) si hay palabras; el pie con quien invita en su forma con o sin palabras;
+ * «Llamar» si se marcó; la línea del regalo si hay pistas—.
+ *
+ * @param {{nombre?: string, edad?: string, invita?: string, palabras?: string, pistas?: string, telefono?: boolean}} campos
+ * @param {{restoCon?: string, restoSin?: string}} textos  «cumple :age años y te invita a saltar» y «te invita a saltar»
+ */
+export function vistaInvitacion(campos = {}, textos = {}) {
+    const nombre = String(campos.nombre ?? '').trim();
+    const edad = soloEdad(campos.edad);
+    const invita = String(campos.invita ?? '').trim();
+    const palabras = String(campos.palabras ?? '').trim();
+    const pistas = String(campos.pistas ?? '').trim();
+    const base = invita || nombre;
+
+    return {
+        nombre,
+        edad,
+        conEdad: edad !== '',
+        resto: edad !== '' ? String(textos.restoCon ?? '').split(':age').join(edad) : String(textos.restoSin ?? ''),
+        figura: palabras !== '' || invita !== '',
+        conPalabras: palabras !== '',
+        palabras,
+        inicial: base === '' ? '' : [...base][0].toUpperCase(),
+        pieCon: invita !== '' && palabras !== '',
+        pieSin: invita !== '' && palabras === '',
+        invita,
+        telefono: Boolean(campos.telefono),
+        conPistas: pistas !== '',
+        pistas,
+    };
 }
 
 /** El espacio duro entre una cifra y su unidad («16 €», «7 años»), como lo escribe el servidor. */

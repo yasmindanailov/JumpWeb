@@ -41,11 +41,11 @@
 - ✅ **Esta máquina, montada para la fiesta (25-09)**: la instancia clonada en `~/proyectos/instancias/playjump` (el
   diseño con su sha256 verificado), `INSTANCIA_RUTA=/var/www/instancias/playjump` en el `.env` (ruta DEL CONTENEDOR),
   `public/instancia/` copiado de `publico/instancia/` (ignorado por git); la receta entera, en Trampas vivas 🏠.
-- ✅ **LA FIESTA DEL SISTEMA NUEVO: T1a→T4 y F1 EN `main` (25/26-09)** — las tres páginas con lo que HAY, a 0 px
-  (`#768`), la piel vieja FUERA y **la invitación ENTERA como el mockup (F1, 26-09)**: F1a palabras y pistas (dato +
-  API 1.32.0), F1b la merienda por grupos con icono (tres listas i18n del complemento, en el panel), F1c «Ver el
-  parque» (dos ajustes: vídeo de portada y foto; la nota de Google copiada; el visor como esqueleto oculto): con `opc`
-  y `foto` del diseño encendidos, **8 de 8 pares a 0 px**. El detalle, spec §4.6; lo que enseñó, §4.7. **T4** (26-09):
+- ✅ **LA FIESTA DEL SISTEMA NUEVO: T1a→T4, F1 y F2 EN `main` (25/26-09)** — las tres páginas con lo que HAY, a 0 px
+  (`#768`), la piel vieja FUERA, **la invitación ENTERA como el mockup (F1)**: palabras y pistas (API 1.32.0), la
+  merienda por grupos con icono (dato del complemento), «Ver el parque» (dos ajustes; la nota de Google copiada), 8 de 8
+  a 0 px; y **F2, personalizar en tiempo real** (la tarjeta `vivo` en rama aparte, una plantilla por tema, 18 de 18 a
+  0 px y la sonda 16 de 16). El detalle, spec §4.6; lo que enseñó, §4.7. **T4** (26-09):
   las cuatro vistas viejas, el JS estático, 576 líneas de `site.css`, `--shadow-nav-dock` y 164 claves muertas; se
   QUEDAN el molde `gf-*` y `focused-layout` (las ENCUESTAS) y el ancla `#gf-invite` (contrato); `ClavesDeIdiomaTest`
   vigila paridad y texto muerto. **T1a** la lista (46 pares de piezas con control) · **T2** la invitación (`#744`) ·
@@ -91,10 +91,10 @@
 
 1. ❗❗❗ **LA FIESTA DEL SISTEMA NUEVO (`#765`) — `specs/fiesta-sistema-nuevo.md` ✅ APROBADA (`#743`, 25-09: las
    ocho respuestas en su §7; ❗ «Ver el parque» va ENCENDIDO con el vídeo de portada, no la recomendada)**. Orden:
-   T1a→T4 ✅ · F1 ✅ (la invitación entera, 26-09) → **el ojo del owner en `localhost:8081`** sobre la fiesta de prueba
+   T1a→T4 ✅ · F1 ✅ · F2 ✅ (26-09) → **el ojo del owner en `localhost:8081`** sobre la fiesta de prueba
    `JW-OJO-F1` (reserva 1077; `ojo-f1.php`, fuera de git, imprime sus tres URL; `/invitacion/WxYYnZkkNx7U` lleva
-   merienda, palabras, pistas y «Ver el parque») → **F2…Fn, lo que FALTA en la lista y el recibo** (spec §1.4 y §7: F2
-   personalizar en tiempo real; F3 quien cumple como fila, sin fichas vacías, «Al final viene», Quitar con deshacer,
+   merienda, palabras, pistas y «Ver el parque»; su lista, «Personalizar» en vivo) → **F3…Fn, lo que FALTA en la lista
+   y el recibo** (spec §1.4 y §7: F3 quien cumple como fila, sin fichas vacías, «Al final viene», Quitar con deshacer,
    añadir de uno en uno; F4 la zona 3 que sube el número —AFORO, `VERIFY_CONC=1`—; F5 la tarta y los combos, el
    borrador en el móvil; F6 la firma dentro del recibo, «Tus respuestas», «Crear mi QR», «Avísame de fechas»), una pieza por tanda con la
    decisión del owner. Cada tanda: `git pull` de la instancia + `sha256sum -c`, el banco con control, las guardas de

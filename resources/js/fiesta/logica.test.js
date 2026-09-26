@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { capitalizar, choice, clave, cuentas, estadoFicha, euros, limpiar } from './logica.js';
+import { capitalizar, choice, clave, cuentas, estadoFicha, euros, limpiar, soloEdad, vistaInvitacion } from './logica.js';
 
 test('la clave de un nombre ignora tildes, mayúsculas y espacios de más', () => {
     assert.equal(clave('  Álex   Romero '), 'alex romero');
@@ -55,4 +55,47 @@ test('euros escribe como el servidor', () => {
     const NBSP = String.fromCharCode(160);
     assert.equal(euros(1600), `16${NBSP}€`);
     assert.equal(euros(1695), `16,95${NBSP}€`);
+});
+
+// ── La vista previa de «Personalizar» (F2): las mismas reglas que la tarjeta del servidor ──
+const TEXTOS = { restoCon: ' cumple :age años y te invita a saltar', restoSin: ' te invita a saltar' };
+
+test('la edad tecleada: solo cifras, dos como mucho', () => {
+    assert.equal(soloEdad('7 años'), '7');
+    assert.equal(soloEdad('123'), '12');
+    assert.equal(soloEdad(''), '');
+    assert.equal(soloEdad(undefined), '');
+});
+
+test('la vista previa completa: chapa, titular, burbuja con la inicial de quien invita, pie con palabras y regalo', () => {
+    const v = vistaInvitacion({ nombre: ' Vera ', edad: '7', invita: 'lucía, la madre de Vera', palabras: 'Traed ganas de saltar', pistas: 'Libros', telefono: true }, TEXTOS);
+    assert.equal(v.nombre, 'Vera');
+    assert.equal(v.conEdad, true);
+    assert.equal(v.resto, ' cumple 7 años y te invita a saltar');
+    assert.equal(v.figura, true);
+    assert.equal(v.conPalabras, true);
+    assert.equal(v.inicial, 'L', 'la inicial es la de quien invita, en mayúscula');
+    assert.deepEqual([v.pieCon, v.pieSin], [true, false], 'con palabras, el pie va bajo la burbuja');
+    assert.equal(v.telefono, true);
+    assert.deepEqual([v.conPistas, v.pistas], [true, 'Libros']);
+});
+
+test('la vista previa sin edad, sin palabras ni pistas: sin chapa, titular corto, pie en su forma sin burbuja', () => {
+    const v = vistaInvitacion({ nombre: 'Vera', edad: 'x', invita: 'Lucía', palabras: '   ', pistas: '' }, TEXTOS);
+    assert.equal(v.conEdad, false);
+    assert.equal(v.resto, ' te invita a saltar');
+    assert.equal(v.figura, true, 'quien invita sigue teniendo su pie');
+    assert.equal(v.conPalabras, false, 'solo espacios no es una palabra');
+    assert.deepEqual([v.pieCon, v.pieSin], [false, true]);
+    assert.equal(v.conPistas, false);
+    assert.equal(v.telefono, false);
+});
+
+test('sin quien invita ni palabras no hay figura, y la inicial cae en quien cumple', () => {
+    const vacia = vistaInvitacion({ nombre: 'Álvaro', invita: '', palabras: '' }, TEXTOS);
+    assert.equal(vacia.figura, false);
+    assert.deepEqual([vacia.pieCon, vacia.pieSin], [false, false]);
+    const soloPalabras = vistaInvitacion({ nombre: 'álvaro', invita: '', palabras: 'Hola' }, TEXTOS);
+    assert.equal(soloPalabras.inicial, 'Á', 'la inicial de quien cumple, con su tilde');
+    assert.deepEqual([soloPalabras.pieCon, soloPalabras.pieSin], [false, false], 'sin quien invita no hay pie');
 });

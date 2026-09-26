@@ -13,7 +13,7 @@
  */
 /* global document, localStorage, setTimeout, location, navigator, Event */
 import './fiesta.css';
-import { NBSP, capitalizar, choice, clave, euros, limpiar } from './logica.js';
+import { NBSP, capitalizar, choice, clave, euros, limpiar, soloEdad, vistaInvitacion } from './logica.js';
 
 const de = document.documentElement;
 const q = (sel, raiz = document) => raiz.querySelector(sel);
@@ -337,8 +337,9 @@ function lista(form) {
         q('[data-aviso-numero-texto]', aviso).textContent = choice(aviso.dataset.tpl, pierde, { count: quiere, discarded: pierde });
     };
 
-    // ── Personalizar la invitación: el panel, la nota de «se ven al guardar» y el titular ──
+    // ── Personalizar la invitación: el panel, la nota de «se ven al guardar», el titular y LA VISTA PREVIA EN VIVO (F2) ──
     const pers = q('[data-pers]', form);
+    let actualizaVista = () => {};
     if (pers) {
         pers.hidden = true;
         const abrir = q('[data-pers-abrir]', form);
@@ -346,11 +347,65 @@ function lista(form) {
         q('[data-pers-cerrar]', form)?.addEventListener('click', () => { pers.hidden = true; abrir?.setAttribute('aria-expanded', 'false'); abrir?.classList.remove('pz-boton--secondary'); abrir?.classList.add('pz-boton--ghost'); });
         const nota = q('[data-inv-nota]', form);
         const h1 = q('#pli-h1');
+        // Sin nombre tecleado, el titular vuelve al de lo guardado (el `nombreDe()` del diseño).
+        const titularGuardado = h1 ? h1.textContent : '';
         const invSucia = () => qa('input', pers).some((el) => inicial.has(el) && inicial.get(el) !== valorDe(el));
-        pers.addEventListener('input', () => {
+        const campoInv = (k) => q(`[data-inv-campo="${k}"]`, pers);
+        const telefono = q('#pli-tel', pers);
+        let temaActual = q('[data-inv-vista]', form)?.dataset.invTema ?? '';
+        const lee = () => ({
+            nombre: campoInv('name')?.value ?? '',
+            edad: campoInv('age')?.value ?? '',
+            invita: campoInv('host')?.value ?? '',
+            palabras: campoInv('words')?.value ?? '',
+            pistas: campoInv('gifts')?.value ?? '',
+            telefono: Boolean(telefono?.checked),
+            tema: q('input[name="theme"]:checked', pers)?.value ?? temaActual,
+        });
+        // Lo que la tarjeta enseña (`vistaInvitacion`, las reglas del servidor), escrito en sus marcas `data-inv-*`. Vale
+        // para la tarjeta y para las miniaturas del tema, que solo llevan la chapa.
+        const pon = (raiz, sel, fn) => qa(sel, raiz).forEach(fn);
+        const pinta = (raiz, v) => {
+            pon(raiz, '[data-inv-chip]', (el) => { el.hidden = !v.conEdad; });
+            pon(raiz, '[data-inv-edad]', (el) => { el.textContent = v.edad; });
+            pon(raiz, '[data-inv-nombre]', (el) => { el.textContent = v.nombre; });
+            pon(raiz, '[data-inv-resto]', (el) => { el.textContent = v.resto; });
+            pon(raiz, '[data-inv-figura]', (el) => { el.hidden = !v.figura; });
+            pon(raiz, '[data-inv-con-palabras]', (el) => { el.hidden = !v.conPalabras; });
+            pon(raiz, '[data-inv-palabras]', (el) => { el.textContent = v.palabras; });
+            pon(raiz, '[data-inv-inicial]', (el) => { el.textContent = v.inicial; });
+            pon(raiz, '[data-inv-pie="con"]', (el) => { el.hidden = !v.pieCon; });
+            pon(raiz, '[data-inv-pie="sin"]', (el) => { el.hidden = !v.pieSin; });
+            pon(raiz, '[data-inv-invita]', (el) => { el.textContent = v.invita; });
+            pon(raiz, '[data-inv-llamar]', (el) => { el.hidden = !v.telefono; });
+            pon(raiz, '[data-inv-pistas-linea]', (el) => { el.hidden = !v.conPistas; });
+            pon(raiz, '[data-inv-pistas]', (el) => { el.textContent = `${el.dataset.rotulo}: ${v.pistas}`; });
+        };
+        // Otro tema es otra tarjeta: la de su plantilla. Como el diseño al cambiar de tema, el adorno nuevo entra con su
+        // animación; la chapa y la burbuja, que ya estaban, no la repiten.
+        const cambiaTema = (tema) => {
+            if (!tema || tema === temaActual) return;
+            const actual = q('[data-inv-vista]', form);
+            const nueva = q(`template[data-inv-plantilla="${tema}"]`, form)?.content.firstElementChild?.cloneNode(true);
+            if (!actual || !nueva) return;
+            qa('[data-inv-chip], [data-inv-palabras]', nueva).forEach((el) => { el.style.animation = 'none'; });
+            actual.replaceWith(nueva);
+            temaActual = tema;
+        };
+        actualizaVista = () => {
+            const c = lee();
+            cambiaTema(c.tema);
+            const tarjeta = q('[data-inv-vista]', form);
+            if (tarjeta) pinta(tarjeta, vistaInvitacion(c, { restoCon: tarjeta.dataset.restoCon, restoSin: tarjeta.dataset.restoSin }));
+            pinta(pers, vistaInvitacion(c));
             if (nota) nota.hidden = !invSucia();
-            const nombre = q('[data-inv-campo="name"]', pers)?.value.trim();
-            if (h1 && nombre) h1.textContent = choice(t('titular', 'Los invitados de :n'), 1, { n: nombre });
+            if (h1) h1.textContent = c.nombre.trim() ? choice(t('titular', 'Los invitados de :n'), 1, { n: c.nombre.trim() }) : titularGuardado;
+        };
+        pers.addEventListener('input', (e) => {
+            // La edad, solo cifras y dos como mucho, como el diseño.
+            const edad = campoInv('age');
+            if (e.target === edad && soloEdad(edad.value) !== edad.value) edad.value = soloEdad(edad.value);
+            actualizaVista();
         });
     }
 
@@ -451,6 +506,8 @@ function lista(form) {
     // ⚠️ El mensaje de la lista vacía es `[data-lista-vacia]`: `[data-vacia]` es la marca de CADA fila (`pintaFila`) y
     //    con ese selector se escondía la primera fila con nombre (T1b).
     if (q('[data-lista-vacia]', form) && nombres().length > 0) q('[data-lista-vacia]', form).setAttribute('hidden', '');
+    // La vista previa, con lo que haya en los campos: el borrador recuperado o lo que el navegador restauró al volver.
+    actualizaVista();
     actualiza();
 }
 

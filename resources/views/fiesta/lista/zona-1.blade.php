@@ -26,8 +26,13 @@
         <x-pieza.aviso tone="neutral" size="sm"><x-slot:icono><x-lucide name="lock" :size="17" /></x-slot:icono>{{ '' }}{{ __('fiesta.lista.invitacion.cerrada', ['plazo' => $inv['plazo']]) }}</x-pieza.aviso>
     @else
         <div class="pli-inv">
+            {{-- LA VISTA PREVIA, EN VIVO (F2): lo que se teclea en «Personalizar» se ve en la tarjeta al momento (`lista.js`).
+                 Una plantilla por tema con la tarjeta entera: cambiar de tema cambia la tarjeta y le vuelve a poner lo
+                 tecleado. Sin JavaScript, la tarjeta es la de lo guardado, como siempre. --}}
+            @php($deA = __('fiesta.lista.de_a', ['hora' => $m['reserva']['hora'], 'fin' => $m['reserva']['fin']]))
             <div class="pli-inv-vista">
-                <x-fiesta.invitacion :theme="$inv['tema']" :name="$m['cumple']['nombre']" :age="$m['cumple']['edad']" :date="$m['reserva']['dia']" :time="__('fiesta.lista.de_a', ['hora' => $m['reserva']['hora'], 'fin' => $m['reserva']['fin']])" :place="$m['reserva']['lugar']" :host="$inv['invita']" :words="$inv['palabras']" :gifts="$inv['pistas']" :phone="$inv['telefono'] ? $m['reserva']['anfitriona'] : ''" animate data-inv-vista />
+                <x-fiesta.invitacion vivo :telefonoVisible="$inv['telefono']" :theme="$inv['tema']" :name="$m['cumple']['nombre']" :age="$m['cumple']['edad']" :date="$m['reserva']['dia']" :time="$deA" :place="$m['reserva']['lugar']" :host="$inv['invita']" :words="$inv['palabras']" :gifts="$inv['pistas']" :phone="$m['reserva']['anfitriona']" animate data-inv-vista />
+                @foreach ($inv['temas'] as $tema)<template data-inv-plantilla="{{ $tema['value'] }}"><x-fiesta.invitacion vivo :telefonoVisible="$inv['telefono']" :theme="$tema['value']" :name="$m['cumple']['nombre']" :age="$m['cumple']['edad']" :date="$m['reserva']['dia']" :time="$deA" :place="$m['reserva']['lugar']" :host="$inv['invita']" :words="$inv['palabras']" :gifts="$inv['pistas']" :phone="$m['reserva']['anfitriona']" animate data-inv-vista /></template>@endforeach
             </div>
             <div class="pli-inv-acc">
                 @if (! $inv['compartida'])
@@ -41,7 +46,7 @@
                 {{-- PERSONALIZAR: escribe SOLO `party_invitations`, con el Guardar de la página (`store()` lo reparte). Sin
                      JavaScript sale abierto; con él lo abre el botón. --}}
                 <div id="pli-pers" class="pli-pers" data-pers>
-                    <x-fiesta.tema :label="__('fiesta.lista.pers.tema')" name="theme" :items="$inv['temas']" :value="$inv['tema']" :age="$m['cumple']['edad']" />
+                    <x-fiesta.tema vivo :label="__('fiesta.lista.pers.tema')" name="theme" :items="$inv['temas']" :value="$inv['tema']" :age="$m['cumple']['edad']" />
                     <div class="pli-pers-2">
                         <x-pieza.campo id="pli-quien" name="honoree_name" :label="__('fiesta.lista.pers.quien')" :value="$m['cumple']['nombre']" :maxlength="$inv['honoree_max']" autocomplete="off" data-inv-campo="name" />
                         <x-pieza.campo id="pli-su-edad" name="honoree_age" :label="__('fiesta.lista.pers.edad')" :value="$m['cumple']['edad']" inputmode="numeric" maxlength="2" data-inv-campo="age"><x-slot:sufijo>{{ __('fiesta.invitacion.unit') }}</x-slot:sufijo></x-pieza.campo>
