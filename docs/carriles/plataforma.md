@@ -41,19 +41,18 @@
 
 ## Por dónde retomar, en orden
 
-▶▶ **AHORA (25-09 noche)**: **T4** (Kids y Jump, spec §4.12): T4a·1, T4b·1/·4, T4c, T4d y **T4e ·1→·4 ✅** (la isla
-VIVA, sus horas de HOY como hecho, el mapa embebido con su consentimiento y la SEGUNDA CAPA de cookies «Tus cookies»,
-dibujada con el sistema); verificación final 40/40 y banco de la isla 60/60 a 0. ⚠️ **`#768`: sin bancos por tanda**;
-un zip nuevo se lee con el `git diff`. **El encargo del owner del 25-09, en este orden**: (1) **PROMOCIONES 🟦 T1 en el
+▶▶ **HECHO (25/26-09)**: **T4** (Kids y Jump, spec §4.12): T4a→T4d y **T4e ·1→·6 ✅** (la isla viva, el mapa, «Tus
+cookies»); banco de la isla 60/60. ⚠️ **`#768`: sin bancos por tanda**. **El encargo del owner del 25-09**: (1) **PROMOCIONES 🟦 T1 en el
 árbol** (`specs/promociones.md` §8: modelo, «Ajustes → Venta → Promociones», hecho `promotions` 1.29.0, los regalos
 migrados con `gifts` idéntico, Kids y Jump; le falta el OJO del owner; en LOCAL quedan dos ofertas de muestra) → (2) el
 **play** de los vídeos de las atracciones 🟦 (spec §4.12 T4e·5: vídeo por atracción subido en el panel, 1.30.0; falta
 el MATERIAL del owner; en LOCAL, una muestra WebM en «Piscina de bolas») → (3) **RESEÑAS 🟦** (`#771`, `google-reviews.md` §9:
 copiadas de SU ficha a «Opiniones», `/reviews` 1.31.0, las tres de cada zona en la pieza 5): **191 copiadas** por el
 owner con la consola (sin sesión, Maps da 5), 141 importadas, **18 publicadas** por página y **PLACES RETIRADO**
-(`#772`). ⚠️ Al desplegar: importar `playjump-curado.json` (`ENTORNOS.md`) → (4) **T5 Mi cuenta**, dentro de la v2 → T4f la sonda → portada, Cumpleaños,
-Colegios; Visítanos y Normas cuando el owner las cierre. **La FIESTA la viste el SPA** (`#765`). Nota de Google en
-LOCAL: sembrada a mano (4,9 / 155).
+(`#772`); a una altura con «Ver más» y fotos en visor. ⚠️ Al desplegar: `playjump-curado.json` (`ENTORNOS.md`).
+❓ Pendiente del owner: la línea Ómnibus bajo las reseñas («elegidas por el parque; todas, en Google»).
+▶▶ **SIGUIENTE (cierre del 26-09): (4) T5 Mi cuenta** en la isla, dentro de la v2 (mockup `paginas/mi-cuenta/`) → T4f la
+sonda → portada, Cumpleaños, Colegios; Visítanos y Normas cuando el owner las cierre. **La FIESTA, del SPA** (`#765`).
 ⚠️ BD LOCAL con los valores de `#699`/`#761` (lo de antes, en el commit de la T4a·1); en PRODUCCIÓN, el owner.
 
 1. **F4 · CERRADA el 19-09** (`specs/cajon-empaquetable.md`: sus cinco tandas y sus seis trampas). ⚠️ **Le
