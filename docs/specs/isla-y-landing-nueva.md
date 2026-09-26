@@ -27,7 +27,7 @@
   la isla en Vue, idéntica al diseño) y **T3 ✅** (§4.10, `#689`→`#698`): la isla compra con tarjeta hasta el banco,
   con «Entra» y Google, cumpleaños con señal y la hora que se llena; su sonda, `scripts/sonda-isla.mjs`; la
   secuencia, en `sidebar/usePurchaseFlow.js`. El sistema nuevo del 24-09 tarde, dentro (§4.11, `#697`). **T4 🟦**
-  (§4.12, `#763`): T4a·1, T4b·1, T4c y T4d ✅. La fiesta, del SPA (`#765`).
+  (§4.12) · **T5 🟦** (§4.13, `#773`): Mi cuenta. La fiesta, del SPA (`#765`).
 - **Invariantes**: `PAY-*` si entra Bizum (`VERIFY_CONC=1`), `SEC-12` (la ruta de las vistas), `SEC-01`,
   `RGPD-*` (consentimiento dentro de la isla, Apple como proveedor), `PERF-02` (la carcasa por instalación va en
   el arranque cacheado; la variante del A/B, en la sesión).
@@ -315,7 +315,7 @@ deja de decir «nada de otra librería» en la T1.
 | T2 ✅ | La isla en Vue, idéntica al diseño en 26 situaciones (§4.9); los datos reales, con la T4 | Producto |
 | T3 ✅ | La compra en la isla sobre el motor, con tarjeta; sonda de compra (§4.10; la sonda en staging, con el ensayo de la v2.0.0) | Producto |
 | T4 | **Kids y Jump** (`#683`), un molde y dos páginas, con su calculadora y la isla viva en la página (§4.12: T4a→T4f); los 301, con la T6 | Instancia + producto |
-| T5 | Mi cuenta en la isla | Producto |
+| T5 | Mi cuenta en la isla (§4.13: T5a→T5f, `#773`) | Producto |
 | T6 | El resto de páginas, las tres de la fiesta (las viste el SPA: `#765`, §4.11) y la lógica nueva que apruebe el owner | Los dos |
 
 Después, la v2.0.0 (`#670`): con la isla encendida para PlayJump, y el A/B cuando la T5 de la analítica exista.
@@ -1245,6 +1245,74 @@ juzga «idéntico», con los datos del diseño.
   compra, 52/54 («entrar», `#695`).
 - **T4f · la sonda de las dos páginas** (`scripts/sonda-isla.mjs` crece): llegar, la isla en reposo, calcular,
   «Reservar y pagar», la pasarela; en 390 y 1280.
+
+### 4.13 La T5: Mi cuenta en la isla — el censo (MEDIDO 26-09) y el plan (`#773`)
+
+**Lo que pide el diseño** (`paginas/mi-cuenta.card.html`, `mi-cuenta-reglas.card.html` y `paginas/mi-cuenta/`: el
+hook `usePmcCuenta` en `cuenta.jsx`, los bloques en `bloques.jsx` y `bloques-2.jsx`, las dos pantallas en
+`pantallas.jsx` y los textos, TODOS aprobados el 24-09, en `datos.js`; en `readme.md`, sus siete secciones «Mi
+cuenta · …»). Mi cuenta vive en la **capa grande** de la isla, la de la compra: el mismo contenedor, la misma flecha,
+la misma X y la acción abajo. **Siete bloques, en orden**: arriba «Hola, Ana», la próxima en una línea y el chip
+«Siguiente: …» · Tu QR (compacto; grande si la reserva es hoy) · Tu próxima reserva (`BookingCard`, «Ver el pago»,
+«Cambiar o cancelar») · Antes de venir (una tarea cada vez) · Otras reservas, con el historial plegado · Reservar otra
+vez · Quién viene contigo · Ajustes plegados (`Accordion`) y «Cerrar sesión». **Sus vistas**: Tu QR, Tu reserva,
+Cambiar o cancelar, Añadir a tus hijos y su «Guardado», Contraseña, Correo, Borrar tu cuenta y, sin sesión, Entrar, el
+olvido y Crea tu cuenta; los huecos de otros briefs (el formulario, los extras, las autorizaciones) son las páginas de
+la fiesta (`#765`). **Sus reglas**: una tarea cada vez · la flecha solo si hay algo detrás, y vuelve al mismo punto ·
+una acción principal por vista y lo destructivo nunca en naranja · los avisos se quedan hasta salir de la vista · cada
+bloque protegido · sin conexión se avisa y se reintenta · todo sobre tinta. Se abre desde el menú, Mi QR, `/mi-cuenta`
+y el enlace de un correo (`#mi-cuenta/<bloque>`).
+
+**Lo que hay, medido** (la API `/me/*` en local, con `Sanctum::actingAs` sobre dos cuentas con pedidos; el motor):
+
+| Pieza | Hoy en el producto | Veredicto |
+|---|---|---|
+| La capa y abrirla en su bloque | Con la isla, la cuenta abre el LATERAL (`carcasa.js::superficieDe`, «hasta la T5»). Las puertas de `AccountDoor`: `/mi-cuenta` y `/mi-cuenta/pedidos` (ahí aterrizan 8 notificaciones y 11 redirecciones del servidor) y las de invitado (`login`, `register`, `forgot`, `google-signup`) | **HAY** el camino (`cajon.openAccount` → `showAccount(zona)`); **FALTA** la sección de cuenta de la isla, como la de compra en la T3e·2 |
+| El motor de la cuenta | 13 zonas del cajón sobre stores con su `node --test` (`card`, `reservations`, `orders`, `dependents`, `profile`, `credentials`, `privacy`, `waiver`, `accountContext`, `auth`) | **HAY**: la isla los usa SIN tocarlos, como la compra los suyos |
+| «Hola, Ana» y la próxima en una línea | `/me/account-context` (`first_name`, `next_reservation`) y `/me/reservations/upcoming` | **HAY** |
+| Tu QR: verlo, dictarlo, guardarlo, renovarlo | `/me/card` (20 caracteres; en grupos de cuatro para dictar), `/me/card/png` y `POST /me/card/rotate` | **HAY**. El QR es la PNG del SERVIDOR dentro del marco del pase (`identidad-qr-puerta.md` §0), nunca uno dibujado en el navegador |
+| Tu próxima reserva y la abierta | `/me/reservations/{upcoming,past}`: día, franja, cantidad, complementos (los calcetines), estado, el libro (`ledger`: total, señal, resto en el parque, devoluciones) y `order.code` | **HAY** |
+| «Puedes cambiar o cancelar hasta…», dentro o fuera | El plazo es POR PRODUCTO (`cancellation_cutoff_hours`, T4a·1) y la reserva no lo trae | **PARCIAL**: la fecha límite en la reserva (API aditiva) |
+| Cambiar o cancelar | Lo hace el personal (`CancellationCutoffRule`: se informa, no se aplica); el teléfono, en `/site` | **HAY**: el mensaje escrito a WhatsApp y «Llamar» |
+| Antes de venir | Por reserva: `needs_guest_form`, `guest_form_status`/`_url`, `guest_count_deadline`, `invitation_url`, `can_add_extras`; las autorizaciones, en `/orders/{code}/guest-minors`; los menores sin firma, en `account-context.waiver` | **PARCIAL**: «6 de 10 confirmados» no se publica y no hay lista de tareas con su plazo (§4.5, «A MEDIR con la T5»): se mide en su tanda |
+| Otras reservas, el historial, la visita de hoy ya terminada | Los dos ámbitos de `mis-reservas-por-reserva.md`, con el corte de `isFinishedInPractice()` | **HAY** |
+| Reservar otra vez | La reserva trae el nombre, no el producto; la compra de la isla acepta la intención `linea` (T4d) | **PARCIAL**: el producto en la reserva (API aditiva) |
+| Quién viene contigo y Añadir a tus hijos | `/me/dependents` con la firma en el mismo gesto (`#441`). El alta exigía **apellidos** (`#236`) y la relación sale de un catálogo de **cinco**; el diseño pide nombre, fecha y cuatro tarjetas | **HAY**, con dos choques: (a) y (b) de abajo |
+| Tus datos, el correo, el idioma | `PATCH /me` y el correo nuevo con su enlace (`pending_email`) | **HAY** |
+| Contraseña (cambiar o crear), vincular Google, otros dispositivos | `PUT /me/password`, `/auth/google/vincular` (`#347`), `/me/identities`, `POST /me/sessions/revoke-others` | **HAY**; Apple, **FALTA** (`#683`: v2.0.0, en su tanda) |
+| Novedades, el descargo, mis datos, borrar | `PUT /me/marketing`; `/me/waiver` (versión, fecha, PDF); `GET /me/export`, una DESCARGA; `DELETE /me`, que exige la CONTRASEÑA actual. Y dos que el diseño no dibuja: analítica y encuestas (`PUT /me/analytics`, `/me/surveys`) | **HAY** |
+| Recibos | `/me/orders` con su libro | **HAY** el desglose |
+| Entrar, el olvido, Crea tu cuenta | La compra de la isla los pinta (`PantallaEntrar`, `#695`) sobre `auth` y `register`, con la casilla del descargo | **HAY** |
+| Completar el alta que vuelve de Google | `/registro/google`, zona `google-signup` del lateral | **HAY** en el lateral; el diseño no la dibuja |
+| [Apple Wallet] · [Google Wallet] · [Descargar el recibo] · [Tu vale de 1 hora] | Nada detrás (el vale es de JumpPoints, SIN empezar) | **APAGADOS** (`#773`·c): corchetes sin hueco |
+
+**Lo que decide la verdad y no el diseño** (`#630`): el QR es el del servidor · «Descargar mis datos» descarga, así
+que su aviso es el de descargado (`descargado`) y no «Te enviamos tus datos al correo» · borrar la cuenta pide la
+contraseña actual además de la casilla (lo exige el servidor) · y los interruptores de analítica y encuestas se quedan
+en «Privacidad» junto a «Novedades»: retirar un consentimiento tiene que ser tan fácil como darlo (la regla de «Tus
+cookies», T4e·4).
+
+**Contestadas por el owner el 26-09** (`#773`, `[DECIDIDO owner]`): (a) los apellidos del menor dejan de ser
+obligatorios —el formulario de la isla no los pide; la firma guarda el nombre que se declaró—; (b) la relación, las
+**cinco** del producto en las tarjetas del sistema; (c) Wallet y el recibo descargable, **apagados** en la v2.0.0; (d)
+lo que el mockup no dibuja (completar el alta de Google, la contraseña al borrar, los dos interruptores), **con las
+piezas del sistema**, enseñado en vivo antes de cerrar.
+
+**El plan, en seis sub-tandas** (cada una con su prueba y su medida; la identidad con el mockup, una vez y al final,
+`#768`):
+- **T5a · la capa y sus puertas**: con la isla, la cuenta deja de ir al lateral (`superficieDe`) y la raíz del motor
+  monta `isla/SeccionCuenta.vue` (su trozo, diferido) en el sitio de `AccountSection`; lo que decide —la vista, el
+  origen, la flecha, el mapa de las zonas de `AccountDoor` y el ancla del correo— en un módulo puro con su `node
+  --test`. Dentro: «Hola», la próxima en una línea, Tu QR (compacto y su vista) y, sin sesión, Entrar, el olvido y
+  Crea tu cuenta. Aviso al SPA (su raíz; sus stores, sin tocarlos).
+- **T5b · las reservas**: la próxima y la abierta, «Ver el pago», Otras y el historial, Cambiar o cancelar; en la API,
+  la fecha límite de cambio y el producto de cada reserva (aditivo: el siguiente menor del contrato).
+- **T5c · Antes de venir**: el censo de las tareas y sus plazos, lo que haya que publicar, el chip y el punto de la isla.
+- **T5d · Quién viene contigo y Añadir a tus hijos**, con (a) y (b): `DependentRegistry` es del `CRITICAL_RE`
+  (`VERIFY_CONC=1`) y el formulario del cajón es del SPA (aviso).
+- **T5e · Ajustes y Cerrar sesión**, con (d).
+- **T5f · lo que queda**: Reservar otra vez, la bienvenida de la cuenta nueva, sin conexión, los bloques protegidos,
+  Mi QR del menú, el alta de Google (d), la verificación final y la sonda (`scripts/sonda-isla.mjs` crece).
 
 ## 5. Impacto en invariantes
 

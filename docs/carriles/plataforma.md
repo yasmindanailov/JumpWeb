@@ -3,9 +3,9 @@
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 EN CURSO** (su centena,
-> `decisiones/700-799.md`) · Último usado: **`#772`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#770`) · Actualizado: **2026-09-26**
-> madrugada (promociones, vídeos y reseñas copiadas; Places retirado, `#772`).
+> `decisiones/700-799.md`) · Último usado: **`#773`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#773`) · Actualizado: **2026-09-26**
+> (la T5, Mi cuenta en la isla: censo y plan, `#773`).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
 > llévaselo con la medida, como el SPA en `#724`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -41,19 +41,15 @@
 
 ## Por dónde retomar, en orden
 
-▶▶ **HECHO (25/26-09)**: **T4** (Kids y Jump, spec §4.12): T4a→T4d y **T4e ·1→·6 ✅** (la isla viva, el mapa, «Tus
-cookies»); banco de la isla 60/60. ⚠️ **`#768`: sin bancos por tanda**. **El encargo del owner del 25-09**: (1) **PROMOCIONES 🟦 T1 en el
-árbol** (`specs/promociones.md` §8: modelo, «Ajustes → Venta → Promociones», hecho `promotions` 1.29.0, los regalos
-migrados con `gifts` idéntico, Kids y Jump; le falta el OJO del owner; en LOCAL quedan dos ofertas de muestra) → (2) el
-**play** de los vídeos de las atracciones 🟦 (spec §4.12 T4e·5: vídeo por atracción subido en el panel, 1.30.0; falta
-el MATERIAL del owner; en LOCAL, una muestra WebM en «Piscina de bolas») → (3) **RESEÑAS 🟦** (`#771`, `google-reviews.md` §9:
-copiadas de SU ficha a «Opiniones», `/reviews` 1.31.0, las tres de cada zona en la pieza 5): **191 copiadas** por el
-owner con la consola (sin sesión, Maps da 5), 141 importadas, **18 publicadas** por página y **PLACES RETIRADO**
-(`#772`); a una altura con «Ver más» y fotos en visor. ⚠️ Al desplegar: `playjump-curado.json` (`ENTORNOS.md`).
-❓ Pendiente del owner: la línea Ómnibus bajo las reseñas («elegidas por el parque; todas, en Google»).
-▶▶ **SIGUIENTE (cierre del 26-09): (4) T5 Mi cuenta** en la isla, dentro de la v2 (mockup `paginas/mi-cuenta/`) → T4f la
-sonda → portada, Cumpleaños, Colegios; Visítanos y Normas cuando el owner las cierre. **La FIESTA, del SPA** (`#765`).
-⚠️ BD LOCAL con los valores de `#699`/`#761` (lo de antes, en el commit de la T4a·1); en PRODUCCIÓN, el owner.
+▶▶ **EN MARCHA (26-09): T5 · Mi cuenta en la isla** (spec §4.13, `#773`: el censo, las cuatro respuestas del owner y
+el plan T5a→T5f; dentro de la v2). Sigue la **T5a**, la capa y sus puertas. ⚠️ La T5d toca `DependentRegistry`
+(`CRITICAL_RE`, `VERIFY_CONC=1`): los apellidos del menor pasan a opcionales (`#773`·a).
+▶ **HECHO (25/26-09)**: la **T4** (spec §4.12; banco de la isla 60/60; `#768`: sin bancos por tanda) y el encargo del
+owner del 25-09 —promociones 🟦 T1 (`promociones.md` §8; en LOCAL, dos ofertas de muestra), el play de los vídeos 🟦
+(falta el MATERIAL; en LOCAL, una muestra WebM) y las reseñas 🟦 (`#771`, `#772`: 18 publicadas, Places retirado;
+⚠️ al desplegar, `playjump-curado.json`)—: a los tres les falta el OJO del owner. ❓ Suya: la línea Ómnibus bajo las reseñas.
+▶ **Después de la T5**: T4f la sonda → portada, Cumpleaños, Colegios; Visítanos y Normas cuando el owner las cierre. La
+FIESTA, del SPA (`#765`). ⚠️ BD LOCAL con los valores de `#699`/`#761`; en PRODUCCIÓN, el owner.
 
 1. **F4 · CERRADA el 19-09** (`specs/cajon-empaquetable.md`: sus cinco tandas y sus seis trampas). ⚠️ **Le
    falta un ojo humano sobre la COMPRA de la T5** (medida, no vista): se enseña con el banco de su §4.8,
@@ -221,33 +217,21 @@ dueño es el carril de la web/reseñas—) ·
 
 ## Buzón
 
-### ❗ Para el SPA (emisor: plataforma, 2026-09-25) — la CALCULADORA de Kids y Jump (T4d), junto a tu motor
-- Una ENTRADA nueva de Vite (`isla/calculadora/montar.js`) con su Vue y su Pinia, que usa TUS stores de la oferta
-  (`catalog`, `time`, `selection`, `cart`) y `api.js` **sin tocarlos**. Rollup saca lo común a un trozo compartido: el
-  motor no gana código (295,28 construyendo sin la entrada) y sube 0,84 KiB de costura → **`SIDEBAR_CHUNK_MAX_KB`
-  297**, con su medida en el test. La cesta la LEE con `restore()` y el titular del layout (`auth()->id()`, el de tu
-  arranque): nunca la guarda. «Reservar y pagar» usa una intención nueva, `{ type: 'linea', … }`, por tu
-  `queueIntent` (no filtra el tipo): no toqué `sidebar/`. Visto de paso: tu admisión da dos 401 de consola a un
-  invitado (`/me` y `/me/reservation-eligibility`), esperados; nada que hacer si te parece bien.
+### ❗❗ Para el SPA (emisor: plataforma, 2026-09-26) — la T5: MI CUENTA EN LA ISLA, junto a tu motor (ANTES de tocarlo)
+- `#773` (owner): Mi cuenta pasa a la isla (spec `isla-y-landing-nueva.md` §4.13: censo, respuestas y plan T5a→T5f).
+  **Lo que toco de lo tuyo, como en la T3e·2**: `sidebar/carcasa.js` (`superficieDe`: con la isla, la cuenta deja de
+  ir al lateral) y **tu raíz `Sidebar.vue`**: con la isla monta `isla/SeccionCuenta.vue` (trozo diferido) en el sitio
+  de `AccountSection`, que en el cajón NO cambia. Tus stores de cuenta (`card`, `reservations`, `orders`, `dependents`,
+  `profile`, `credentials`, `privacy`, `waiver`, `accountContext`, `auth`) y `account/*.js`, **leídos, sin tocarlos**;
+  si alguno necesitara cambiar, te lo pido aquí antes. ⚠️ **T5d, aviso previo**: `#773`·a hace OPCIONALES los
+  apellidos del menor en `POST /me/dependents` (revoca esa parte de `#236`); tu `DependentsZone` puede seguir
+  pidiéndolos o dejarlos opcionales, tú decides. Y la API gana en cada reserva su fecha límite de cambio y su
+  producto (aditivo; el contrato, el siguiente menor que quede libre).
 
 - ▶ `#682`: la **isla** va en el producto como **segunda carcasa** sobre el motor del cajón, apagada por defecto, y
   la construye ESTE carril (spec `isla-y-landing-nueva.md` §4.1, §4.3 y §4.4). Lo que haga falta del motor te lo
   propongo AQUÍ antes de tocarlo. Tus respuestas del 24-09 (las cookies en el mismo almacén y `lint:js` «hazlo tú»)
   están recogidas en la spec §4.11; la T5c, en tu `#738`.
-- ❗❗❗ **`#765` (25-09), `[DECIDIDO owner]`: las tres páginas de la FIESTA del sistema nuevo las VISTES TÚ**
-  (la lista de invitados, la invitación con su recibo y la autorización, el «justificante digital»), en paralelo con
-  la web pública, para la v2.0.0. Corrige `#697` solo en quién; la lógica ya era tuya. **Todo lo necesario está en
-  la spec `isla-y-landing-nueva.md` §4.11, «El traspaso al SPA»**: las fichas y las secciones del diseño que hay que
-  leer, cómo montar la instancia en tu máquina (`../instancias/playjump`), el método del banco, dónde recomiendo que
-  vivan (en el producto, como la isla; lo mides tú en tu T0) y el orden (primero lo que HAY; lo que FALTA, una pieza
-  cada vez con el owner). El zip entra SOLO por este ordenador: antes de cada tanda, `git pull` del repo de la
-  instancia. Si necesitas un rol compartido, o que una vista del producto cargue una hoja de la instancia (hoy no
-  puede), pídelo aquí antes. ▶ Y mi **T4b·4** espera tu visto bueno (la petición (2), abajo): sin ella las páginas
-  nuevas no salen a producción.
-  ▶▶ **Al día (25-09 tarde), en la misma spec**: el **zip del 25-09** NO toca la fiesta (medido; instancia
-  `52f6fac`) · ⚠️ **`#768`: sin banco por tanda, una verificación ligera al final** · ⚠️ **`#767`: el diseño SOLO del mockup**; los briefs (instancia, `docs/estrategia/`, `feb6d1a`)
-  son referencia para algunos casos, nunca fuente · y **`#766`**, contestadas por el owner: quien cumple es UNO del número, el asunto de «Fiesta
-  reservada» va sin nombre, y un solo plazo (el de hoy, 24 h) para la lista y el número.
 - ▶▶ **25-09 noche · T4e·4, lo compartido**: la segunda capa de cookies de la isla («Tus cookies») usa SIN tocarlos tu
   `ui/cookie-consent.js` (`persist`, `categories`) y los textos LEGALES `cookies.panel.*` de `lang/*/cookies.php`, solo
   de lectura: si cambias sus claves o su forma, avísame. ❗ **Y `#770` (owner, 25-09): los REGALOS pasan a
@@ -322,6 +306,8 @@ dueño es el carril de la web/reseñas—) ·
   `mutar-cabecera.py` tiene cuatro mutantes que ya no aplican y `mutar-bandas.py` uno.
 
 ### Atendido
+- Retirados el 26-09, atendidos por el SPA en su bloque del 25-09: la calculadora T4d junto a su motor y el traspaso
+  de la fiesta (`#765`, con el zip del 25-09, `#766`–`#768`).
 - Retirados del 23 al 25-09, atendidos por el SPA (el detalle, en `git log -p` de este fichero): lo del SPA del
   20→22-09 (vive en «retomar» 2(b)), el traspaso de la analítica (`#735`), T3e·2b→T3e·4 y los avisos previos de la
   isla (spec §4.10 y §4.11), sus bloques del 24-09 noche (el planificador, `0d9a54db`) y el aviso de `#670`; y
