@@ -371,6 +371,9 @@ son de cualquiera que mida, no de un carril.
   `scripts/sonda-cuenta-datos.php` crea reservas pagadas CON su cobro (`Payment`) y, si hay señal, su reparto como hecho
   del libro (`deposit_split`, como `OrderCreator`): sin el cobro, el libro dice «pagado 0» y la pantalla miente. Códigos
   con prefijo propio, borrado al empezar y en el `finally`, y las franjas que tuvo que crear, apuntadas y borradas.
+- **`sonda-cuenta.mjs` toca la cuenta de pruebas y la deja como estaba** (mudada del carril de plataforma el 26-09): le
+  RENUEVA el carné (es lo que prueba), le declara y quita hijos, y cambia y DESHACE datos de su cuenta (teléfono,
+  encuesta, un correo pendiente; la contraseña, a la misma). No la uses para nada que dependa de su QR.
 - ⚠️ **Pero `sonda-isla.mjs` PAGA de verdad con la MISMA cuenta de pruebas** (26-09, Z3): sus pedidos no llevan el
   prefijo y se quedan, y uno de mañana pasa a ser «Tu próxima reserva» —`sonda-cuenta.mjs`, 22 fallos que no eran del
   código—. Tras una corrida de la compra, sus pedidos se pasan a `sonda-compra@jumpweb.test` (tinker, solo en local, con

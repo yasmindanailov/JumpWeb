@@ -942,7 +942,10 @@ class SidebarBundleBudgetTest extends TestCase
     // Z3 (`#782`): el movimiento de la isla —qué rebota y qué va en calma, el hundimiento, las filas del panel, la salida
     // corta, el relevo con la compra y Mi cuenta, la espera a que la releven— y las piezas que ahora mueve. Medido 156,30 →
     // 165,23 (base: `HEAD` construido aparte). El techo, a 166.
-    private const ISLA_PAGINA_MAX_KB = 166;
+    // `#783` (el rendimiento): adelantar la compra en segundo plano (`pagina/precarga.js`), la guarda que solo repinta la
+    // isla si cambia lo que se ve, su hueco fijo y el brillo tras el bote de su acción. Medido 165,23 → 166,26 (base: el
+    // `HEAD` de la Z3). A cambio, la primera compra en 4G aparece a los 348ms en vez de a los 2.019. El techo, a 167.
+    private const ISLA_PAGINA_MAX_KB = 167;
 
     // T3e·3 (`#694`): las pantallas de después de la pantalla 0, en su trozo (`isla/compra/pasos-diferidos.js`), que la
     // compra pide al montarse. Medido 36,92 KiB. T3e·4 (`#695`): «Entra» con sus eventos y la «G» de Google, 37,66.

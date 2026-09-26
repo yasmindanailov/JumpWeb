@@ -88,6 +88,15 @@ test('en la compra la raíz deja de ir pegada: fija sobre la página, con aire a
     assert.equal(abajo.pointerEvents, 'none');
 });
 
+test('el hueco de la isla en la página es fijo y ella lo desborda por el lado libre; en la compra no hay hueco', () => {
+    assert.equal(estiloRaiz({ gutter: '16px', top: false }).height, undefined, 'antes de medir, el alto de siempre');
+    const abajo = estiloRaiz({ gutter: '16px', top: false, reservado: 64 });
+    assert.deepEqual([abajo.height, abajo.alignItems], ['calc(64px + max(14px, env(safe-area-inset-bottom)))', 'flex-end']);
+    const arriba = estiloRaiz({ gutter: '16px', top: true, reservado: 60 });
+    assert.deepEqual([arriba.height, arriba.alignItems], ['calc(60px + max(14px, env(safe-area-inset-top)))', 'flex-start']);
+    assert.equal(estiloRaiz({ gutter: '16px', top: false, reservado: 64, inCheckout: true }).height, undefined);
+});
+
 test('en la compra el medidor mide 600px como mucho arriba y el ancho entero abajo, aunque sea fila', () => {
     assert.equal(estiloMedida({ row: true, top: true, isOpen: true, cap: 1200, maxWidth: 760, inCheckout: true }).width, 'min(600px, calc(100vw - 32px))');
     assert.equal(estiloMedida({ row: false, top: false, isOpen: true, cap: 390, maxWidth: 760, inCheckout: true }).width, '100%');

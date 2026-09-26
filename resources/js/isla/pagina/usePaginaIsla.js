@@ -20,6 +20,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, reactive, watch } from 
 import { createCookiesStore } from '../../ui/cookie-consent.js';
 import { medirVista, preferenciasDeCookies, propsDeLaIsla } from './pagina.js';
 import { loTomaUnaCapa, tomarAvisoDelServidor } from './aviso-servidor.js';
+import { precargarCompra } from './precarga.js';
 
 /** Lo más que la píldora espera a que la releve la isla de la compra (la primera apertura descarga el motor). */
 export const ESPERA_RELEVO = 2500;
@@ -63,10 +64,13 @@ export function usePaginaIsla({ config, textos, doc = document, win = window }) 
         if (! ctas.length || ctas.some((el) => ! el.isConnected)) ctas = Array.from(doc.querySelectorAll('[data-isla-cta]'));
         const isla = doc.querySelector('[data-situation]');
         observar(isla);
-        e.vista = medirVista({
+        const vista = medirVista({
             ctas: ctas.map(rect), hoyLinea: rect(doc.querySelector('[data-hoy-linea] > p')),
             isla: rect(isla), alto: win.innerHeight,
         });
+        // Solo si CAMBIA (`#783`): un objeto nuevo en cada fotograma de scroll repintaba la isla entera en cada uno
+        // (medido con la CPU ×4: 788 cambios de su estilo en 265 fotogramas de desplazarse, sin que cambiara nada).
+        if (vista.cta !== e.vista.cta || vista.hoy !== e.vista.hoy) e.vista = vista;
     };
     const mover = () => { if (! fotograma) fotograma = win.requestAnimationFrame(medir); };
 
@@ -139,6 +143,8 @@ export function usePaginaIsla({ config, textos, doc = document, win = window }) 
         doc.addEventListener('jw:cajon:close', alCerrar);
         win.addEventListener('isla:relevada', alRelevar);
         win.setTimeout(medir, 300);
+        // La compra, adelantada en segundo plano con la página quieta (`#783`): la primera apertura no la espera.
+        precargarCompra(config.precargar, { doc, win });
         // El aviso que dejó el servidor al volver aquí (T5e·2, `#779`), si no lo toma una capa que se abre al cargar. El
         // «Aviso» de la isla crece un momento y se va solo: sirve para CONFIRMAR («Tu cuenta ha sido eliminada»), no para
         // un «no se pudo» largo, que se leería a medias (WCAG 2.2.1): ése se queda para Mi cuenta, al abrirla.

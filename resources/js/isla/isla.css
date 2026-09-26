@@ -235,6 +235,16 @@
     }
 }
 
+/* Quien pide al sistema MENOS TRANSPARENCIA (`#783`) tiene la isla y su velo sin desenfoque: el tinte se queda. Es
+   también lo más caro de pintar (medido: el velo desenfocado a pantalla completa es casi todo el coste de abrir un panel
+   cuando no hay GPU). `:root` y no `:where()`, a propósito: aquí manda la preferencia de quien mira, no la instalación. */
+@media (prefers-reduced-transparency: reduce) {
+    :root {
+        --blur-island: none;
+        --blur-veil: none;
+    }
+}
+
 /* Los movimientos, con la definición del diseño (`tokens/base.css`: `pj-pulse`, `pj-island-swap`, `pj-fade-in`…).
    Los de la bola y el confeti cambian de color con los cuatro roles de fiesta, que el diseño escribía con su paleta. */
 @keyframes isla-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.45; transform: scale(0.78); } }

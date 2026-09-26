@@ -3,10 +3,15 @@
  * La acción de la isla (`ActionButton` del diseño): una sola, naranja, en la fila. En móvil puede llevar la
  * línea de situación dentro (`sublabel`). `loading` la bloquea y pone la bola pequeña delante del texto; si es
  * un texto, es lo que se espera («Comprobando tus datos y guardando tu hora»), para el lector de pantalla.
- * `llega`: la isla recupera la acción (el botón de la página salió de pantalla) y entra con el bote del sistema (Z3).
+ * `llega`: la isla recupera la acción (el botón de la página salió de pantalla) y entra con el bote del sistema (Z3) y,
+ * tras el salto, UN brillo que la cruza —el del primario que llega—: lo pidió el owner el 26-09 (`#783`); el mockup solo
+ * botaba. Mismo reloj que el primario (el brillo, 520ms después de empezar el bote), aquí con los 120ms del bote de la isla.
  */
 import { computed, ref } from 'vue';
 import CargaRebote from '../ui/CargaRebote.vue';
+import { BRILLO_BOTON } from '../ui/estilos.js';
+
+const BRILLO = { ...BRILLO_BOTON, animation: 'isla-sheen 900ms var(--ease-in-out) 640ms 1 both' };
 
 const props = defineProps({
     top: { type: Boolean, default: false },
@@ -27,7 +32,7 @@ const ring = ref(false);
 const bloqueado = computed(() => props.disabled || Boolean(props.loading));
 
 const estilo = computed(() => ({
-    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1px',
+    position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1px',
     flex: props.top ? '0 0 auto' : '1 1 auto', minWidth: 0, minHeight: props.big ? '54px' : '46px', padding: props.top ? '0 24px' : '5px 14px',
     border: 'none', borderRadius: 'var(--r-pill)',
     background: hover.value && !bloqueado.value ? 'var(--action-bg-hover)' : 'var(--action-bg)', color: 'var(--action-fg)',
@@ -74,5 +79,10 @@ function click(e) {
             v-if="sublabel"
             :style="{ maxWidth: '100%', fontSize: '11px', lineHeight: 1.2, fontWeight: 'var(--fw-semibold)', textAlign: 'center', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }"
         >{{ sublabel }}</small>
+        <span
+            v-if="llega"
+            aria-hidden="true"
+            :style="BRILLO"
+        />
     </component>
 </template>

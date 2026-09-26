@@ -36,11 +36,16 @@
             // Solo esta petición lo ve: el motor pide su arranque después, con el `status` ya gastado.
             // `carcasa` (Z3, `#782`): dónde se abre la compra. Con la isla, esta píldora espera a que la capa grande crezca
             // desde ella; el aviso de apertura no lo sabe la primera vez (el motor aún no ha arrancado y dice «cajón»).
+            // `precargar` (`#783`): los trozos de la compra que la isla pide en segundo plano con la página quieta, para
+            // que la primera apertura no los espere (medido en 4G: 2s). Solo si la compra se abre en la isla y se carga
+            // el cajón.
             'config' => $isla + [
                 'owner' => auth()->id(), 'cookiesUrl' => route('legal.cookies'), 'cookiesPanel' => __('cookies.panel'),
                 'cuenta' => app(\App\Http\Cuenta\AntesDeVenir::class)->paraLaIsla(auth()->user()),
                 'aviso' => app(\App\Http\Cuenta\AvisoDeSesion::class)->paraLaIsla(session('status')),
-                'carcasa' => \App\Domain\Content\Services\ShellSettings::shell(),
+                'carcasa' => $carcasa = \App\Domain\Content\Services\ShellSettings::shell(),
+                'precargar' => $carcasa === \App\Domain\Content\Services\ShellSettings::ISLA && in_array('cajon', $scripts, true)
+                    ? \App\Http\Instancia\PrecargaDeCompra::urls($entradas) : [],
             ],
             'textos' => \Illuminate\Support\Arr::except((array) __('isla'), ['compra', 'calculadora', 'mi_cuenta', 'mi_cuenta_alta']),
         ]

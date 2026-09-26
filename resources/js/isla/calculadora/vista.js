@@ -97,7 +97,7 @@ export function vistaCalculadora(e) {
             cadaUno: { texto: pp('cada_uno', { persona: p.persona[0], n: b.n }), elegido: b.cal === b.n, n: b.n },
         } : null,
         // `pendiente`: hay una petición en camino (más gente, otro par): el botón espera a la última respuesta.
-        resumen: { seleccion, lineas, total, falta, listo: Boolean(linea) && ! e.pendiente, faltaHref: ! b.dia ? '#p3-dia' : '#p3-hora', boton: p.boton, junto: p.junto, nota: p.nota },
+        resumen: { seleccion, lineas, total, falta, listo: Boolean(linea) && ! e.pendiente, faltaHref: ! b.dia ? '#p3-dia' : '#p3-hora', boton: p.boton, junto: p.junto, nota: p.nota, abriendo: Boolean(e.abriendo) },
         // Lo que la calculadora le cuenta a la ISLA de la página (T4e, el `onCalculo` de `pagina.jsx` del diseño): qué
         // pregunta falta y, con todo elegido, lo elegido en corto con el total DEL SERVIDOR («Sáb 26 · 17:00 · 3 niños ·
         // 24 €»). Solo cuenta si alguien la ha tocado (`tocada`): los valores de partida no son un cálculo.

@@ -418,6 +418,31 @@ BLADE);
         $this->assertSame([], $bloqueantes((string) $this->withHeaders(['Sec-Fetch-Site' => 'same-origin'])->get('/jump')->getContent()), 'sin transiciones, nada bloquea');
     }
 
+    /**
+     * **La compra, adelantada** (`#783`): con la isla como carcasa y el cargador del cajón, la isla de la página recibe los
+     * trozos que la compra necesita al abrirse —el motor entre ellos— para pedirlos en segundo plano; nunca los que la
+     * página ya carga. Con el cajón lateral, ninguno (esa carcasa no es esta compra).
+     */
+    public function test_with_the_isla_shell_the_page_isla_gets_the_purchase_chunks_to_preload(): void
+    {
+        File::put($this->paquete.'/web/con.blade.php', '<x-pagina titulo="Kids" :scripts="[\'cajon\', \'isla\']" :isla="[\'page\' => [\'kind\' => \'producto\', \'action\' => [\'label\' => \'Reservar\', \'href\' => \'#\']]]"><div data-jw-isla></div></x-pagina>');
+        $this->declarar(['kids' => ['vista' => 'con', 'hechos' => []]]);
+        $precargar = function (): array {
+            preg_match('#<script type="application/json" id="jw-isla-pagina">(.*?)</script>#s', (string) $this->get('/kids')->assertOk()->getContent(), $m);
+
+            return json_decode($m[1], true, 512, JSON_THROW_ON_ERROR)['config']['precargar'];
+        };
+
+        $this->assertSame([], $precargar(), 'con el cajón lateral, nada que adelantar');
+
+        Setting::updateOrCreate(['key' => ShellSettings::KEY], ['value' => ShellSettings::ISLA, 'group' => 'sidebar']);
+        $urls = $precargar();
+        $this->assertNotEmpty(array_filter($urls, fn (string $u): bool => (bool) preg_match('#/build/assets/sidebar-[\w-]+\.js$#', $u)), 'el motor, adelantado');
+        $this->assertNotEmpty(array_filter($urls, fn (string $u): bool => (bool) preg_match('#/build/assets/SeccionCompra-[\w-]+\.js$#', $u)), 'la compra de la isla, adelantada');
+        $this->assertSame([], array_filter($urls, fn (string $u): bool => (bool) preg_match('#/build/assets/(paquete|montar)-#', $u)), 'lo que la página ya carga, no');
+        $this->assertSame(array_values(array_unique($urls)), $urls, 'sin repetir');
+    }
+
     /** Sin paquete, o con un paquete que no declara páginas, no hay ninguna: el estado normal, no un error. */
     public function test_without_a_declaration_there_are_no_pages(): void
     {

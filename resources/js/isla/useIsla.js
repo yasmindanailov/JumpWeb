@@ -44,7 +44,8 @@ export function useIsla(props, { wrapRef, islandRef, sizerRef, panelRef }) {
     const actionView = computed(() => view.value !== null && (view.value === 'plans' || Boolean(s.value.action && s.value.action.panel === view.value)));
     const titleInRow = computed(() => actionView.value && view.value !== null);
 
-    const { box, animate, calmNow, remedirCuando } = useMorfeo({ wrapRef, sizerRef, isOpen });
+    // `usaAncho`: el ancho medido solo manda en fila (`r`, más abajo; se lee al medir, ya montada).
+    const { box, animate, calmNow, reservado, remedirCuando } = useMorfeo({ wrapRef, sizerRef, isOpen, usaAncho: () => r.value.row });
     const scrolledDown = useCompacta(props, wrapRef);
     const shownNotice = useAviso(props, isOpen);
     const { alTeclear } = useCapa({ islandRef, panelRef, isOpen, inCheckout, checkout: () => props.checkout, pila });
@@ -135,7 +136,7 @@ export function useIsla(props, { wrapRef, islandRef, sizerRef, panelRef }) {
         cerrar: pila.cerrar, atras: pila.atras, apilarPanel: pila.apilarPanel, elegirPlan, abrirCapa, navegar,
         cambio, hundir, soltar, veloSaliente,
         tamano: computed(() => tamano({ inCheckout: inCheckout.value, isOpen: isOpen.value, notice: shownNotice.value, isCompact: r.value.isCompact })),
-        estiloRaiz: computed(() => estiloRaiz({ gutter: props.gutter, top: top.value, inCheckout: inCheckout.value })),
+        estiloRaiz: computed(() => estiloRaiz({ gutter: props.gutter, top: top.value, inCheckout: inCheckout.value, reservado: reservado.value })),
         // Entre páginas, la isla de la página se queda (`view-transition-name`); la compra y Mi cuenta no cruzan de página.
         estiloIsla: computed(() => estiloIsla({
             row: r.value.row, box: box.value, alert: s.value.tone === 'alert', grown: grown.value, animate: animate.value, calm: calmNow.value,

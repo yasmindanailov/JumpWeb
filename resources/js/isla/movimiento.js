@@ -77,9 +77,12 @@ export function crecerDesde(el, caja, { abrir, arriba }) {
     if (! el?.animate || ! caja || quieto()) return null;
     const r = el.getBoundingClientRect();
     const cs = getComputedStyle(el);
+    const { dx, dy } = desplazamientoDesde(caja, { x: r.left, y: r.top, w: r.width, h: r.height }, arriba);
+    // ⚠️ Probado y DESCARTADO (`#783`): revelar la capa grande con un recorte (`clip-path`) en vez de animar su tamaño.
+    // Sin recolocar nada debía costar menos, y medido con la CPU ×4 no mejoraba en móvil (15 fotogramas lentos de 203) y
+    // empeoraba en escritorio (48 de 125, seis de más de 50ms): recortar un elemento con cristal cuesta más que recolocarlo.
     const bordes = (parseFloat(cs.borderLeftWidth) || 0) + (parseFloat(cs.borderRightWidth) || 0);
     const bordesV = (parseFloat(cs.borderTopWidth) || 0) + (parseFloat(cs.borderBottomWidth) || 0);
-    const { dx, dy } = desplazamientoDesde(caja, { x: r.left, y: r.top, w: r.width, h: r.height }, arriba);
 
     // `offset: 0`: un fotograma suelto es el de LLEGADA para la API (medido: la compra encogía hasta la píldora).
     return el.animate(

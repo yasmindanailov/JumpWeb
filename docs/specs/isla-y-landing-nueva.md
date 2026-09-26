@@ -1512,6 +1512,14 @@ La identidad con el diseño, una vez y al final (`#768`).
   sitio (`Sec-Fetch-Site`)—. Contra el diseño: `scripts/sonda-banco-movimiento.mjs` (en el banco de la isla, que gana
   `BANCO_SET`), 9/9 a 390 y a 1280; en vivo: `scripts/sonda-isla-movimiento.mjs`, 24/24 en las dos; sin regresión:
   `sonda-isla` 19/19 y `sonda-cuenta` sin fallos. Los techos de peso de la isla suben con la medida (+7 a +11 KiB).
+- ▶ **Z3·2 ✅ (26-09, `#783`)**. **El rendimiento, medido** (`scripts/sonda-isla-rendimiento.mjs [390|1280] [cpu]`: por
+  escena, fotogramas lentos, script, estilos, maquetación y repintados de la isla; `EXP=` prueba cambios con CSS inyectado
+  sin tocar el código). Arreglado: la página solo avisa a la isla si CAMBIA lo que se ve (`usePaginaIsla`); el hueco de la
+  isla en la página es fijo (`useMorfeo::reservado`: crece por encima, no empuja); el ancho medido solo cuenta en fila
+  (`usaAncho`); la compra se ADELANTA (`Http\Instancia\PrecargaDeCompra` → `config.precargar` → `pagina/precarga.js`,
+  `modulepreload` con la página ociosa, nunca con ahorro de datos ni en 2G) y «Reservar y pagar» carga desde el toque. El
+  velo desenfocado se queda (UX); con `prefers-reduced-transparency`, sin desenfoque. La acción de la isla, con el brillo
+  tras el bote (el owner). ⚠️ `sonda-isla` PAGA con la cuenta de pruebas: `TESTING.md` §2.octies.
 
 ## 5. Impacto en invariantes
 

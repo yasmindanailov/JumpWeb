@@ -10,14 +10,19 @@
  * de la página: fija sobre el velo, con aire arriba y abajo en escritorio y a pantalla completa en móvil, donde
  * tocar fuera no la cierra.
  */
-export function estiloRaiz({ gutter, top, inCheckout = false }) {
+export function estiloRaiz({ gutter, top, inCheckout = false, reservado = 0 }) {
+    const borde = top ? 'max(14px, env(safe-area-inset-top))' : 'max(14px, env(safe-area-inset-bottom))';
+
     return {
         // La isla es su propia banda: ocupa el ancho del contenedor de scroll y se pega al borde. Si la metes en un
         // div de su alto, sticky no tiene recorrido y se va con el scroll: por eso el hueco lateral es suyo.
         position: 'sticky', zIndex: 80, display: 'flex', justifyContent: 'center',
         width: '100%', boxSizing: 'border-box', paddingLeft: gutter, paddingRight: gutter,
         pointerEvents: 'none',
-        ...(top ? { top: 0, paddingTop: 'max(14px, env(safe-area-inset-top))' } : { bottom: 0, paddingBottom: 'max(14px, env(safe-area-inset-bottom))' }),
+        ...(top ? { top: 0, paddingTop: borde } : { bottom: 0, paddingBottom: borde }),
+        // Su hueco en la página, fijo (`#783`): la isla lo desborda por el lado libre —abajo si va arriba, arriba si va
+        // abajo— y la página no se mueve mientras crece o encoge (`useMorfeo`, `reservado`).
+        ...(reservado && ! inCheckout ? { height: `calc(${reservado}px + ${borde})`, alignItems: top ? 'flex-start' : 'flex-end' } : {}),
         ...(inCheckout && top ? { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 90, alignItems: 'flex-start', paddingTop: 'max(16px, 4vh)', paddingBottom: 'max(16px, 4vh)', pointerEvents: 'auto' } : {}),
         ...(inCheckout && ! top ? { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 90, alignItems: 'flex-end', paddingTop: 'max(8px, env(safe-area-inset-top))', paddingBottom: 'max(8px, env(safe-area-inset-bottom))', paddingLeft: '8px', paddingRight: '8px' } : {}),
     };

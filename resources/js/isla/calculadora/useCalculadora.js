@@ -33,7 +33,7 @@ export function useCalculadora({ pagina, textos, locale, owner = null }) {
     const hoy = todayIso();
     const e = reactive({
         borrador: { fila: pagina.filas[0]?.id ?? null, dia: null, hora: null, n: Number(pagina.textos.inicio?.personas) || 1, cal: 0 },
-        precios: {}, cargoCalcetines: null, pendientes: 0, tocada: false,
+        precios: {}, cargoCalcetines: null, pendientes: 0, tocada: false, abriendo: false,
     });
 
     let cola = Promise.resolve();
@@ -135,11 +135,24 @@ export function useCalculadora({ pagina, textos, locale, owner = null }) {
         return null;
     }
 
-    /** «Reservar y pagar»: la selección ENTERA a la compra de la isla, que sigue sola a «Tus datos». */
+    /**
+     * «Reservar y pagar»: la selección ENTERA a la compra de la isla, que sigue sola a «Tus datos». Desde el toque y hasta
+     * que la compra aparece (`isla:relevada`), el botón CARGA (`#783`): la primera vez llega el motor, y en un móvil eran
+     * segundos sin que nada respondiera. Se suelta también al cerrarse, y a los 8s pase lo que pase.
+     */
     function reservar() {
         const b = e.borrador;
         const calcetin = calcetinActual();
+        const soltar = () => {
+            e.abriendo = false;
+            window.removeEventListener('isla:relevada', soltar);
+            document.removeEventListener('jw:cajon:close', soltar);
+        };
 
+        e.abriendo = true;
+        window.addEventListener('isla:relevada', soltar);
+        document.addEventListener('jw:cajon:close', soltar);
+        window.setTimeout(soltar, 8000);
         window.JumpWeb?.cajon?.openWith?.({
             type: 'linea', id: b.fila, date: b.dia, time: b.hora, quantity: b.n,
             addons: calcetin && b.cal > 0 ? [{ product_id: calcetin.id, quantity: b.cal }] : [], continuar: true,
@@ -150,7 +163,7 @@ export function useCalculadora({ pagina, textos, locale, owner = null }) {
         pagina, textos, locale, hoy, borrador: e.borrador, precios: e.precios, horas: timeStore.offered, linea: selectionStore.line,
         cargoCalcetines: e.cargoCalcetines, calcetin: calcetinActual(), minimo: catalogStore.minQuantity,
         maximo: e.borrador.hora ? timeStore.maxQuantity : null, cierre: cierreDelDia(pagina.cierres, e.borrador.dia), pendiente: e.pendientes > 0,
-        tocada: e.tocada,
+        tocada: e.tocada, abriendo: e.abriendo,
     }));
 
     /** «Reservar para hoy» desde la isla o la página (el `pedirHoy` del diseño): hoy elegido; queda la hora. */

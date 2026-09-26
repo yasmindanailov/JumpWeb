@@ -51,6 +51,7 @@ const estado = (p) => p.evaluate(() => {
     return {
         id: w.dataset.situation, size: w.dataset.size, transicion: i.style.transition, transform: i.style.transform,
         accion: a ? a.textContent.trim() : null, bote: a ? getComputedStyle(a).animationName : null, boteRetraso: a ? getComputedStyle(a).animationDelay : null,
+        brillo: a ? [...a.children].map((c) => getComputedStyle(c)).filter((c) => c.animationName === 'isla-sheen').map((c) => c.animationDelay)[0] ?? null : null,
         linea: l ? l.textContent.trim() : null, lineaRetraso: l ? getComputedStyle(l).animationDelay : null,
     };
 });
@@ -80,6 +81,7 @@ const sinBotones = (p) => p.evaluate(() => {
     await hasta(p, () => Boolean(document.querySelector('[data-jw-isla-pagina] [data-isla-accion]')));
     const llega = await estado(p);
     cumple('al recuperar la acción, llega con bote (120ms después)', llega?.accion && llega.bote === 'isla-bote' && llega.boteRetraso === '0.12s', llega);
+    cumple('…y tras el salto, un brillo que la cruza (lo pidió el owner, `#783`)', llega?.brillo === '0.64s', llega?.brillo);
     cumple('…y la caja cambia con rebote (`--t-island`)', /^var\(--t-island\)/.test(llega?.transicion ?? ''), llega?.transicion);
     await baja(p, 0);
     await hasta(p, () => ! document.querySelector('[data-jw-isla-pagina] [data-isla-accion]'));
