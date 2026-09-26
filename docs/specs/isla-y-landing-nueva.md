@@ -1496,6 +1496,22 @@ La identidad con el diseño, una vez y al final (`#768`).
   (el par con la portada nueva) y ⚠️ la regla `@view-transition` va EN LÍNEA por `<x-pagina transiciones>`: solo desde
   `saltia.css`, Chromium no la ve a tiempo en una página de este tamaño (medido, `#781`). Sonda:
   `scripts/sonda-movimiento.mjs [1280|390]`, 16/16 en las dos (el camino, inyectado: hoy no lo pinta ninguna página).
+- ▶ **Z3 ✅ (26-09, `#782`)**. **El movimiento de la isla**, el delta de `ParkIsland.jsx` del 26-09: qué ha cambiado
+  (`forma.js::tipoDeCambio`) decide la caja —la frase, en calma (`--dur-base`) y la nueva 120ms después; la acción que
+  llega, con rebote y su BOTE; la que se va, en calma—; tocarla la hunde; el panel entra fila a fila (+140ms, 30ms) y al
+  cerrar se funde en 100ms (se cierra al TERMINAR, no a reloj: sin GPU el primer fotograma llegaba tarde) y la caja vuelve
+  en `--dur-close`, con su velo fundido; la barra de pasos se llena y el total RUEDA (`NumeroRodante`: las cifras, en
+  contenido generado —como texto se leía «0 1 2 3…»—). Las piezas: el botón (cargando no cambia de ancho; el primario de
+  fuera de la isla llega con bote y brillo), las horas (una píldora que se desliza; si bajan en directo, destello y tachado,
+  y nunca entre días distintos), el esqueleto (no se ve antes de 300ms) y el acordeón. **El relevo** (`relevo.js`,
+  `useRelevo.js`): la píldora de la página, la compra y Mi cuenta son tres montajes; la que entra crece desde la que se va,
+  casando el centro y el borde anclado, sin un fotograma sin isla. Con él, tres arreglos medidos: el cerrojo del cajón
+  (`html.no-scroll`) mandaba la píldora `sticky` al pie del documento —mientras dura, se queda fija (`isla.css`)—; la
+  primera apertura dice «cajón» porque el motor no ha arrancado —la página lee la carcasa del servidor
+  (`config.carcasa`)—; y entre páginas la isla nueva llegaba tarde —su script lleva `blocking="render"` si se llega desde el
+  sitio (`Sec-Fetch-Site`)—. Contra el diseño: `scripts/sonda-banco-movimiento.mjs` (en el banco de la isla, que gana
+  `BANCO_SET`), 9/9 a 390 y a 1280; en vivo: `scripts/sonda-isla-movimiento.mjs`, 24/24 en las dos; sin regresión:
+  `sonda-isla` 19/19 y `sonda-cuenta` sin fallos. Los techos de peso de la isla suben con la medida (+7 a +11 KiB).
 
 ## 5. Impacto en invariantes
 

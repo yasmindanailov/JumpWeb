@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { estiloIsla, estiloMedida, estiloRaiz, tamano } from './forma.js';
+import { estiloIsla, estiloMedida, estiloRaiz, tamano, tipoDeCambio, transicionIsla } from './forma.js';
 
 const caja = (w, h, cap = 0) => ({ w, h, cap });
 
@@ -21,6 +21,37 @@ test('abrir o cerrar un panel va sin rebote, y una isla en columna ocupa el anch
     assert.equal(abierta.width, '100%');
     assert.equal(abierta.borderRadius, 'var(--r-lg)');
     assert.doesNotMatch(abierta.transition, /--t-island/);
+});
+
+test('qué ha cambiado en la píldora (02c): la frase, la acción que llega, la que se va, otra oferta; o nada', () => {
+    const hoy = { id: 'hoy', line: 'Abierto hasta las 21:30.', acc: 'Reservar' };
+    assert.equal(tipoDeCambio(hoy, { ...hoy }), null);
+    assert.equal(tipoDeCambio(hoy, { ...hoy, line: 'Abierto hasta las 21:30. Quedan huecos.' }), 'frase');
+    assert.equal(tipoDeCambio(hoy, { ...hoy, id: 'oferta' }), 'frase', 'otra situación con la misma acción: solo cambia lo que dice');
+    assert.equal(tipoDeCambio({ ...hoy, acc: '' }, hoy), 'llega');
+    assert.equal(tipoDeCambio(hoy, { ...hoy, acc: '' }), 'sale');
+    assert.equal(tipoDeCambio(hoy, { ...hoy, acc: 'Reservar para hoy' }), 'oferta');
+});
+
+test('la caja se mueve según lo que cambia: la frase y la acción que se va, en calma; lo que se ofrece, con rebote', () => {
+    assert.match(transicionIsla({ calm: false, cambio: 'frase' }), /^width var\(--dur-base\) var\(--ease-out\), height var\(--dur-base\)/);
+    assert.match(transicionIsla({ calm: false, cambio: 'sale' }), /^width var\(--dur-slow\) var\(--ease-out\)/);
+    assert.match(transicionIsla({ calm: false, cambio: 'llega' }), /^var\(--t-island\)/);
+    assert.match(transicionIsla({ calm: false, cambio: 'oferta' }), /^var\(--t-island\)/);
+    // Abrir en calma; cerrar, más corto: la página vuelve enseguida.
+    assert.match(transicionIsla({ calm: true, isOpen: true }), /^width var\(--dur-slow\) var\(--ease-out\)/);
+    assert.match(transicionIsla({ calm: true, isOpen: false }), /^width var\(--dur-close\) var\(--ease-out\)/);
+    // Hundida en un instante; al soltar, con el muelle (y el último `transform` de la lista es el que vale).
+    assert.match(transicionIsla({ calm: false, cambio: 'llega', hundida: true }), /transform var\(--dur-instant\) var\(--ease-out\)$/);
+    assert.match(transicionIsla({ calm: false, cambio: 'llega', hundida: false }), /transform 260ms var\(--ease-spring\)$/);
+});
+
+test('hundida, la isla escala a `--scale-press`; y el nombre de la transición entre páginas solo si lo lleva', () => {
+    const base = { row: true, box: caja(300, 64), alert: false, grown: false, animate: true, calm: false };
+    assert.equal(estiloIsla({ ...base, hundida: true }).transform, 'scale(var(--scale-press))');
+    assert.equal(estiloIsla(base).transform, 'none');
+    assert.equal(estiloIsla({ ...base, nombre: 'isla' }).viewTransitionName, 'isla');
+    assert.equal(estiloIsla(base).viewTransitionName, undefined);
 });
 
 test('el pago fallido cambia el borde a su rol de alerta', () => {

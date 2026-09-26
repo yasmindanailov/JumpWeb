@@ -371,6 +371,13 @@ son de cualquiera que mida, no de un carril.
   `scripts/sonda-cuenta-datos.php` crea reservas pagadas CON su cobro (`Payment`) y, si hay señal, su reparto como hecho
   del libro (`deposit_split`, como `OrderCreator`): sin el cobro, el libro dice «pagado 0» y la pantalla miente. Códigos
   con prefijo propio, borrado al empezar y en el `finally`, y las franjas que tuvo que crear, apuntadas y borradas.
+- ⚠️ **Pero `sonda-isla.mjs` PAGA de verdad con la MISMA cuenta de pruebas** (26-09, Z3): sus pedidos no llevan el
+  prefijo y se quedan, y uno de mañana pasa a ser «Tu próxima reserva» —`sonda-cuenta.mjs`, 22 fallos que no eran del
+  código—. Tras una corrida de la compra, sus pedidos se pasan a `sonda-compra@jumpweb.test` (tinker, solo en local, con
+  el recuento esperado por fila) antes de la de la cuenta.
+- **Sin GPU, a 1280 el navegador de la sonda pinta un fotograma cada 35–50ms** (26-09, Z3: los desenfoques grandes de la
+  isla): una sonda de MOVIMIENTO espera a la condición (`waitForFunction` con tope) o muestrea por fotograma; nunca mira
+  a un reloj fijo, que a 390 pasa y a 1280 falla sin que el código cambie.
 - **Navegar de `/kids#a` a `/kids#b` NO carga la página** (26-09): el navegador solo cambia el ancla, y la capa se queda
   donde estaba. Una sonda que quiere la puerta de un enlace pasa antes por `about:blank`.
 - **`npm install` PODA `playwright-core`** (va con `--no-save`; mudada del carril de plataforma el 25-09): reponerlo

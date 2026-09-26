@@ -8,15 +8,18 @@
  * luego la primera medida, luego el scroll, luego `isla:abrir`) y los `watch` también: es el orden del port de una
  * pieza, y el banco de la isla lo midió así (52/52 a 0 px).
  */
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { resolverSituacion, reparto } from './situacion.js';
 import { t as texto } from '../sidebar/i18n.js';
-import { estiloIsla, estiloMedida, estiloRaiz, tamano } from './forma.js';
+import { estiloIsla, estiloMedida, estiloRaiz, tamano, tipoDeCambio } from './forma.js';
 import { useAncho, useCompacta } from './useColocacion.js';
 import { useMorfeo } from './useMorfeo.js';
 import { useAviso } from './useAviso.js';
 import { useCapa, usePila } from './usePaneles.js';
 import { useCompraCapa } from './useCompraCapa.js';
+import { useRelevo } from './useRelevo.js';
+import { dejarVuelo } from './relevo.js';
+import { salidaDePanel, vueloDesde } from './movimiento.js';
 
 export function useIsla(props, { wrapRef, islandRef, sizerRef, panelRef }) {
     const t = (clave) => texto(props.textos, clave);
@@ -48,6 +51,30 @@ export function useIsla(props, { wrapRef, islandRef, sizerRef, panelRef }) {
     const { anuncio } = useCompraCapa({
         islandRef, inCheckout, clave: computed(() => (inCheckout.value && props.checkout ? props.checkout.key : null)), bloquea: () => props.bloqueaPagina,
     });
+    const { veloSaliente } = useRelevo({ islandRef, isOpen, inCheckout, top });
+    // Al cerrar un panel, su velo se va fundido (el de la compra lo funde la píldora que la releva).
+    watch(isOpen, (abierta, antes) => { if (antes && ! abierta && props.scrim) veloSaliente.value = true; });
+    // Cerrar: el contenido se va en 100ms antes de que la isla vuelva (si entretanto se abre otra cosa, se deshace).
+    pila.alSalir((hecho, abortado) => {
+        const pn = panelRef.value?.elemento?.();
+        salidaDePanel(pn, () => { if (abortado() && pn) pn.getAnimations().forEach((a) => a.cancel()); hecho(); });
+    });
+
+    // Qué ha cambiado en la píldora (02c, `tipoDeCambio`): decide si la caja rebota o cambia en calma, si la frase entra
+    // con retraso y si la acción llega con bote. Síncrono: tiene que saberse ANTES de pintar el cambio.
+    const accionKey = computed(() => (s.value.action && !actionView.value ? String(s.value.action.label || '') : ''));
+    const cambio = ref('otro');
+    let previo = null;
+    watch(() => ({ id: s.value.id, line: s.value.line, acc: accionKey.value }), (ahora) => {
+        const c = previo ? tipoDeCambio(previo, ahora) : null;
+        if (c) cambio.value = c;
+        if (c || ! previo) previo = ahora;
+    }, { flush: 'sync', immediate: true });
+
+    // Tocar la píldora la hunde (0,97) antes de crecer: el bote empieza en el dedo (02b). Solo cerrada.
+    const hundida = ref(false);
+    const hundir = (e) => { if (!isOpen.value && !inCheckout.value && e.target.closest && e.target.closest('button, a')) hundida.value = true; };
+    const soltar = () => { hundida.value = false; };
 
     // ── Reparto de la línea de situación ──
     const r = computed(() => reparto({
@@ -90,9 +117,10 @@ export function useIsla(props, { wrapRef, islandRef, sizerRef, panelRef }) {
         if (a.onClick) a.onClick(e);
     }
 
-    const elegirPlan = (o) => { stack.value = []; if (o.onClick) o.onClick({ fromToday: plansFromToday.value }); };
-    const abrirCapa = (fn) => { stack.value = []; fn({ from: 'menu' }); };
-    const navegar = (it, e) => { stack.value = []; if (props.onNavigate) props.onNavigate(it, e); };
+    // Del selector a la compra, el nombre del plan viajará a la cabecera del paso (02b): lo toma la isla de la compra.
+    const elegirPlan = (o, e) => { dejarVuelo(vueloDesde(e?.currentTarget, o.title)); pila.poner([]); if (o.onClick) o.onClick({ fromToday: plansFromToday.value }); };
+    const abrirCapa = (fn) => { pila.poner([]); fn({ from: 'menu' }); };
+    const navegar = (it, e) => { pila.poner([]); if (props.onNavigate) props.onNavigate(it, e); };
 
     const panelProps = computed(() => ({
         vista: view.value, titulo: panelTitle.value, tituloEnFila: titleInRow.value, top: top.value,
@@ -105,10 +133,13 @@ export function useIsla(props, { wrapRef, islandRef, sizerRef, panelRef }) {
         t, s, stack, view, top, r, isOpen, inCheckout, openRow, stretch, pendiente, titleInRow, panelTitle, shownNotice,
         hayLinea, lineaAbre, accion, accionHref, accionAbierta, pulsarAccion, alTeclear, alternarPanel, panelProps, anuncio,
         cerrar: pila.cerrar, atras: pila.atras, apilarPanel: pila.apilarPanel, elegirPlan, abrirCapa, navegar,
+        cambio, hundir, soltar, veloSaliente,
         tamano: computed(() => tamano({ inCheckout: inCheckout.value, isOpen: isOpen.value, notice: shownNotice.value, isCompact: r.value.isCompact })),
         estiloRaiz: computed(() => estiloRaiz({ gutter: props.gutter, top: top.value, inCheckout: inCheckout.value })),
+        // Entre páginas, la isla de la página se queda (`view-transition-name`); la compra y Mi cuenta no cruzan de página.
         estiloIsla: computed(() => estiloIsla({
             row: r.value.row, box: box.value, alert: s.value.tone === 'alert', grown: grown.value, animate: animate.value, calm: calmNow.value,
+            isOpen: isOpen.value, cambio: cambio.value, hundida: hundida.value, nombre: inCheckout.value ? null : 'isla',
         })),
         estiloMedida: computed(() => estiloMedida({ row: r.value.row, top: top.value, isOpen: isOpen.value, cap: box.value.cap, maxWidth: props.maxWidth, inCheckout: inCheckout.value })),
     };

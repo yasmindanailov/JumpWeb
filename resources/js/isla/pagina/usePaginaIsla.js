@@ -12,12 +12,17 @@
  *   · **La calculadora** (otra app): cuenta lo que falta y lo elegido (`jw:calculadora`); «Reservar para hoy» le pide
  *     hoy (`jw:calculadora:hoy`).
  *   · **La compra**: mientras el cajón la tiene abierta (`jw:cajon:open` / `jw:cajon:close`), esta isla se aparta y
- *     la de la compra ocupa su sitio.
+ *     la de la compra ocupa su sitio. Si se abre EN LA ISLA (Z3, `#782`), no se aparta hasta que la otra la releva
+ *     (`isla:relevada`: ya creció desde esta píldora), con un tope (`ESPERA_RELEVO`) por si el motor no llega; así no
+ *     queda un hueco sin isla la primera vez, mientras se descarga (medido: ~290ms). Con el cajón lateral, al momento.
  */
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, watch } from 'vue';
 import { createCookiesStore } from '../../ui/cookie-consent.js';
 import { medirVista, preferenciasDeCookies, propsDeLaIsla } from './pagina.js';
 import { loTomaUnaCapa, tomarAvisoDelServidor } from './aviso-servidor.js';
+
+/** Lo más que la píldora espera a que la releve la isla de la compra (la primera apertura descarga el motor). */
+export const ESPERA_RELEVO = 2500;
 
 export function usePaginaIsla({ config, textos, doc = document, win = window }) {
     const e = reactive({ vista: { cta: false, hoy: false }, calculo: null, compraAbierta: false, aviso: null });
@@ -40,13 +45,27 @@ export function usePaginaIsla({ config, textos, doc = document, win = window }) 
 
     let ctas = [];
     let fotograma = 0;
+    // La franja de la isla cambia de alto sin que la página se mueva —el aviso de cookies que se va, un aviso que crece—
+    // y lo que se ve cambia con ella: se vuelve a medir (Z3, `#782`). Medido: rechazadas las cookies arriba del todo, la
+    // isla seguía sin ceder su acción al botón de la cabecera hasta que alguien se desplazaba.
+    let ro = null;
+    let observada = null;
+    const observar = (el) => {
+        if (el === observada || typeof win.ResizeObserver === 'undefined') return;
+        if (ro) ro.disconnect();
+        observada = el;
+        ro = el ? new win.ResizeObserver(() => mover()) : null;
+        if (ro) ro.observe(el);
+    };
     const rect = (el) => (el ? el.getBoundingClientRect() : null);
     const medir = () => {
         fotograma = 0;
         if (! ctas.length || ctas.some((el) => ! el.isConnected)) ctas = Array.from(doc.querySelectorAll('[data-isla-cta]'));
+        const isla = doc.querySelector('[data-situation]');
+        observar(isla);
         e.vista = medirVista({
             ctas: ctas.map(rect), hoyLinea: rect(doc.querySelector('[data-hoy-linea] > p')),
-            isla: rect(doc.querySelector('[data-situation]')), alto: win.innerHeight,
+            isla: rect(isla), alto: win.innerHeight,
         });
     };
     const mover = () => { if (! fotograma) fotograma = win.requestAnimationFrame(medir); };
@@ -55,8 +74,19 @@ export function usePaginaIsla({ config, textos, doc = document, win = window }) 
     // Un contenido de la página que necesita una categoría («Cargar el mapa») se la pide a la isla, dueña del almacén;
     // al confirmarla el servidor, el almacén dispara `cookies-updated` y el contenido se carga.
     const alPedirCategoria = (ev) => { if (ev.detail?.categoria) cookies.grant(ev.detail.categoria); };
-    const alAbrir = () => { e.compraAbierta = true; };
-    const alCerrar = () => { e.compraAbierta = false; };
+    let espera = 0;
+    const apartarse = () => { win.clearTimeout(espera); e.compraAbierta = true; };
+    // Con la isla como carcasa (lo dice el servidor, `config.carcasa`: la primera vez, el aviso dice «cajón» porque el
+    // motor aún no ha arrancado), la píldora espera a que la releven; con el cajón lateral, se aparta ya.
+    const alAbrir = (ev) => {
+        if (config.carcasa !== 'isla' && ev?.detail?.surface !== 'isla') { apartarse(); return; }
+        win.clearTimeout(espera);
+        espera = win.setTimeout(apartarse, ESPERA_RELEVO);
+    };
+    // Cualquier capa grande que se monta la releva: también la que nace abierta (la vuelta del banco), cuyo aviso de
+    // apertura sonó antes de que esta isla escuchara.
+    const alRelevar = () => apartarse();
+    const alCerrar = () => { win.clearTimeout(espera); espera = 0; e.compraAbierta = false; };
     const irA = (selector) => {
         const el = doc.querySelector(selector);
         if (! el) return;
@@ -107,6 +137,7 @@ export function usePaginaIsla({ config, textos, doc = document, win = window }) 
         doc.addEventListener('jw:cookies:conceder', alPedirCategoria);
         doc.addEventListener('jw:cajon:open', alAbrir);
         doc.addEventListener('jw:cajon:close', alCerrar);
+        win.addEventListener('isla:relevada', alRelevar);
         win.setTimeout(medir, 300);
         // El aviso que dejó el servidor al volver aquí (T5e·2, `#779`), si no lo toma una capa que se abre al cargar. El
         // «Aviso» de la isla crece un momento y se va solo: sirve para CONFIRMAR («Tu cuenta ha sido eliminada»), no para
@@ -124,6 +155,9 @@ export function usePaginaIsla({ config, textos, doc = document, win = window }) 
         doc.removeEventListener('jw:cookies:conceder', alPedirCategoria);
         doc.removeEventListener('jw:cajon:open', alAbrir);
         doc.removeEventListener('jw:cajon:close', alCerrar);
+        win.removeEventListener('isla:relevada', alRelevar);
+        win.clearTimeout(espera);
+        if (ro) ro.disconnect();
         if (fotograma) win.cancelAnimationFrame(fotograma);
     });
 

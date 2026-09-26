@@ -34,10 +34,13 @@
             // `cuenta` (T5c, `#776`): con sesión, si la próxima es hoy y su primera tarea pendiente, ya escritas.
             // `aviso` (T5e·2, `#779`): el `status` que dejó el servidor al volver aquí (Google, el correo…), con su tono.
             // Solo esta petición lo ve: el motor pide su arranque después, con el `status` ya gastado.
+            // `carcasa` (Z3, `#782`): dónde se abre la compra. Con la isla, esta píldora espera a que la capa grande crezca
+            // desde ella; el aviso de apertura no lo sabe la primera vez (el motor aún no ha arrancado y dice «cajón»).
             'config' => $isla + [
                 'owner' => auth()->id(), 'cookiesUrl' => route('legal.cookies'), 'cookiesPanel' => __('cookies.panel'),
                 'cuenta' => app(\App\Http\Cuenta\AntesDeVenir::class)->paraLaIsla(auth()->user()),
                 'aviso' => app(\App\Http\Cuenta\AvisoDeSesion::class)->paraLaIsla(session('status')),
+                'carcasa' => \App\Domain\Content\Services\ShellSettings::shell(),
             ],
             'textos' => \Illuminate\Support\Arr::except((array) __('isla'), ['compra', 'calculadora', 'mi_cuenta', 'mi_cuenta_alta']),
         ]
@@ -48,6 +51,16 @@
     $motorCalculadora = in_array('calculadora', $scripts, true)
         ? ['textos' => ['pieza' => __('isla.pieza'), 'calculadora' => __('isla.calculadora')], 'owner' => auth()->id(), 'locale' => app()->getLocale()]
         : null;
+    // Entre páginas, la isla SE QUEDA (Z3, `#782`): para que el navegador la case con la de la página que se va, tiene que
+    // estar pintada cuando captura la que llega, y la pinta un módulo. Medido: sin esperar, la nueva se revelaba sin isla
+    // y la vieja se fundía; con su script `blocking="render"`, las dos viajan como una (`::view-transition-group(isla)`).
+    // Solo si se llega DESDE ESTE SITIO (`Sec-Fetch-Site: same-origin`): quien llega de fuera no espera a la isla para
+    // ver la página (su primer pintado no se toca), y dentro del sitio el script ya está en la caché.
+    $etiquetasVite = $entradas === [] ? '' : (string) app(\Illuminate\Foundation\Vite::class)($entradas);
+    if ($transiciones && in_array('isla', $scripts, true) && request()->header('Sec-Fetch-Site') === 'same-origin') {
+        $entradaIsla = app(\Illuminate\Foundation\Vite::class)->asset('resources/js/isla/pagina/montar.js');
+        $etiquetasVite = str_replace('<script type="module" src="'.$entradaIsla.'"', '<script type="module" blocking="render" src="'.$entradaIsla.'"', $etiquetasVite);
+    }
 @endphp
 <!doctype html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -93,9 +106,7 @@
     @foreach ($hojas as $hoja)
         <link rel="stylesheet" href="{{ asset($hoja) }}?v={{ @filemtime(public_path($hoja)) }}">
     @endforeach
-    @if ($entradas !== [])
-        @vite($entradas)
-    @endif
+    {!! $etiquetasVite !!}
 </head>
 {{-- T4b·4: el MISMO estado del `<body>` que las páginas de siempre —consentimiento, analítica y píxeles— para que los
      lean el aviso de cookies y los cargadores (`components/site/body-state.blade.php`). --}}

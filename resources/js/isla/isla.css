@@ -82,11 +82,16 @@
     --control-md: 48px;
     --control-lg: 56px;
     --control-xl: 64px;
+    --dur-instant: 90ms;
     --dur-fast: 150ms;
     --dur-base: 240ms;
     --dur-slow: 380ms;
     --dur-island: 520ms;
     --dur-reveal: 700ms;
+    /* El movimiento del 26-09 (Z3, `#782`): el bote de lo que empuja, cerrar más corto que abrir y las cifras. */
+    --dur-bote: 620ms;
+    --dur-close: 300ms;
+    --dur-count: 900ms;
     --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
     --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
     --ease-island: cubic-bezier(0.32, 1.35, 0.3, 1);
@@ -211,11 +216,15 @@
 
 @media (prefers-reduced-motion: reduce) {
     :where(:root) {
+        --dur-instant: 1ms;
         --dur-fast: 1ms;
         --dur-base: 1ms;
         --dur-slow: 1ms;
         --dur-island: 1ms;
         --dur-reveal: 1ms;
+        --dur-bote: 1ms;
+        --dur-close: 1ms;
+        --dur-count: 1ms;
         --lift-hover: 0px;
         --scale-press: 1;
     }
@@ -248,3 +257,22 @@
 @keyframes isla-bounce-hue { 0%, 12.4% { background: var(--isla-fiesta-1); } 12.5%, 37.4% { background: var(--isla-fiesta-2); } 37.5%, 62.4% { background: var(--isla-fiesta-3); } 62.5%, 87.4% { background: var(--isla-fiesta-4); } 87.5%, 100% { background: var(--isla-fiesta-1); } }
 @keyframes isla-step-fwd { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: none; } }
 @keyframes isla-step-back { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: none; } }
+/* El movimiento del 26-09 (Z3, `#782`), con la definición del diseño (`pj-bote`, `pj-destello`, `pj-baja`,
+   `pj-tachar`; el brillo del botón que llega es `isla-sheen`, el mismo del esqueleto, que cruza una vez). El bote: sube,
+   se pasa 4px y aterriza con un 3 % de aplastamiento (timing linear: las curvas van por tramo). */
+@keyframes isla-bote { 0% { opacity: 0; transform: translateY(18px); animation-timing-function: cubic-bezier(0.2, 0.8, 0.3, 1); } 45% { opacity: 1; transform: translateY(-4px); animation-timing-function: cubic-bezier(0.5, 0, 0.8, 0.5); } 68% { transform: translateY(0) scale(1.015, 0.97); animation-timing-function: cubic-bezier(0.2, 0.8, 0.3, 1); } 100% { opacity: 1; transform: none; } }
+@keyframes isla-destello { from { background-color: color-mix(in srgb, var(--text-low) 24%, var(--control-bg)); } }
+@keyframes isla-baja { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+@keyframes isla-tachar { from { background-size: 0 2px; } to { background-size: 100% 2px; } }
+@keyframes isla-fade-out { to { opacity: 0; } }
+/* Lo que se VE del número que rueda (`NumeroRodante`): las diez cifras de cada columna y sus símbolos, en contenido
+   generado —se ve igual y no es texto: ni el lector de pantalla, ni quien copia, leen «0 1 2 3…»—. */
+:where([data-isla-rueda])::before { content: attr(data-isla-rueda); white-space: pre; }
+/* El velo que se va, fundido: el de un panel que se cierra, o el de la capa grande que la píldora releva. Solo mueve. */
+:where(.isla-velo-sale) { animation: isla-fade-out var(--dur-close) var(--ease-out) both; }
+/* ⚠️ La otra regla de maquetación de la isla, y por qué (Z3, `#782`): con el cerrojo del cajón puesto (`html.no-scroll`,
+   la compra o Mi cuenta abriéndose) el `overflow: hidden` del `<body>` le cambia a `sticky` su contenedor de scroll, y
+   la píldora de la página se iba al pie del documento (medido en Kids a 390: de y = 747 a y = 11.604) justo cuando la
+   capa grande tiene que crecer desde ella. Mientras dura el cerrojo, se queda FIJA donde se ve. `!important` gana a su
+   estilo en línea (`position: sticky`), y solo con el cerrojo; `top`/`bottom` siguen siendo los suyos. */
+:where(html.no-scroll) :where([data-jw-isla-pagina] > [data-isla]) { position: fixed !important; left: 0; right: 0; }

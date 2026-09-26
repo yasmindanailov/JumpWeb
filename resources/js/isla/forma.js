@@ -23,12 +23,45 @@ export function estiloRaiz({ gutter, top, inCheckout = false }) {
     };
 }
 
-// Los cambios grandes (abrir o cerrar un panel) van sin rebote; los pequeños, con el muelle de la isla.
-const TRANSICION_CALMA = 'width var(--dur-slow) var(--ease-out), height var(--dur-slow) var(--ease-out), border-radius var(--dur-slow) var(--ease-out), border-color var(--dur-base) var(--ease-out)';
-const TRANSICION_VIVA = 'var(--t-island), border-color var(--dur-base) var(--ease-out)';
+const tamanoEn = (dur) => ['width', 'height', 'border-radius'].map((q) => `${q} ${dur} var(--ease-out)`).join(', ');
 
-/** La isla: anima hasta lo que mide su contenido (`box`); sin transición hasta la primera medida. */
-export function estiloIsla({ row, box, alert, grown, animate, calm }) {
+/**
+ * **Qué ha cambiado en la píldora** (02c del laboratorio de movimiento, 26-09; `cambioRef` de `ParkIsland.jsx`): si solo
+ * cambia la frase (lo normal al leer), `frase`; si llega la acción (la isla la recupera), `llega`; si se va, `sale`; si
+ * cambia a otra, `oferta`. Recibe lo de antes y lo de ahora (`{ id, line, acc }`, `acc` = el rótulo de la acción o '').
+ * Devuelve `null` si no ha cambiado nada: quien la llama conserva el último cambio (el del diseño, en su `ref`).
+ */
+export function tipoDeCambio(antes, ahora) {
+    if (antes.id === ahora.id && antes.line === ahora.line && antes.acc === ahora.acc) return null;
+    if (antes.acc === ahora.acc) return 'frase';
+
+    return ! antes.acc ? 'llega' : ! ahora.acc ? 'sale' : 'oferta';
+}
+
+/**
+ * La transición de la caja, la del diseño (26-09). Abrir, en calma (`--dur-slow`); cerrar, más corto (`--dur-close`): la
+ * página vuelve enseguida. En la píldora: la frase, en calma (`--dur-base`); la acción que se va, en calma (`--dur-slow`);
+ * lo que cambia la oferta, con el rebote (`--t-island`). Hundida al tocarla, en `--dur-instant`; al soltar, con el muelle.
+ */
+export function transicionIsla({ calm, isOpen, cambio, hundida }) {
+    const tamano = calm ? tamanoEn(isOpen ? 'var(--dur-slow)' : 'var(--dur-close)')
+        : cambio === 'frase' ? tamanoEn('var(--dur-base)')
+            : cambio === 'sale' ? tamanoEn('var(--dur-slow)')
+                : 'var(--t-island)';
+
+    return [
+        tamano,
+        'border-color var(--dur-base) var(--ease-out)',
+        hundida ? 'transform var(--dur-instant) var(--ease-out)' : 'transform 260ms var(--ease-spring)',
+    ].join(', ');
+}
+
+/**
+ * La isla: anima hasta lo que mide su contenido (`box`); sin transición hasta la primera medida. `nombre` es su
+ * `view-transition-name`: entre páginas, la isla se queda y el resto se funde (solo la de la página, que es la que
+ * está en las dos; la compra y Mi cuenta no cruzan de página).
+ */
+export function estiloIsla({ row, box, alert, grown, animate, calm, isOpen = false, cambio = null, hundida = false, nombre = null }) {
     return {
         pointerEvents: 'auto',
         position: 'relative',
@@ -42,7 +75,10 @@ export function estiloIsla({ row, box, alert, grown, animate, calm }) {
         border: `1px solid ${alert ? 'var(--isla-borde-alerta)' : 'var(--surface-glass-ink-border)'}`,
         borderRadius: grown ? 'var(--r-lg)' : 'var(--r-pill)',
         boxShadow: 'var(--isla-sombra)',
-        transition: animate ? (calm ? TRANSICION_CALMA : TRANSICION_VIVA) : 'none',
+        transition: animate ? transicionIsla({ calm, isOpen, cambio, hundida }) : 'none',
+        // Tocar la píldora la hunde (0,97) antes de crecer: el bote empieza en el dedo (02b).
+        transform: hundida ? 'scale(var(--scale-press))' : 'none',
+        viewTransitionName: nombre || undefined,
         willChange: 'width, height',
     };
 }

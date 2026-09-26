@@ -2,9 +2,11 @@
 /**
  * El panel abierto de la isla: el menú, el selector de plan, el resumen, la cuenta o la ayuda. Es un diálogo
  * con su título (salvo que el título suba a la fila) y su propio scroll. La isla le pone la `key` de la vista:
- * cambiar de panel lo vuelve a montar, y así entra con su movimiento.
+ * cambiar de panel lo vuelve a montar, y así entra con su movimiento: desde el 26-09 (Z3), sin fundido de bloque, el
+ * contenido sube desde la acción fila a fila (`entradaPorFilas`); y al cerrar se va en 100ms (`elemento()`, la isla).
  */
-import { defineAsyncComponent, ref } from 'vue';
+import { defineAsyncComponent, onMounted, ref } from 'vue';
+import { entradaPorFilas } from '../movimiento.js';
 import CabeceraPanel from './CabeceraPanel.vue';
 import MenuIsla from './MenuIsla.vue';
 import SelectorPlan from './SelectorPlan.vue';
@@ -14,7 +16,7 @@ import HojasIsla from './HojasIsla.vue';
 // +5,9 KiB estáticas).
 const PreferenciasCookies = defineAsyncComponent(() => import('./PreferenciasCookies.vue'));
 
-defineProps({
+const props = defineProps({
     vista: { type: String, required: true },
     titulo: { type: String, default: null },
     tituloEnFila: { type: Boolean, default: false },
@@ -35,7 +37,8 @@ defineProps({
 const emit = defineEmits(['abrir', 'capa', 'navegar', 'elegir']);
 
 const raiz = ref(null);
-defineExpose({ enfocar: () => raiz.value && raiz.value.focus({ preventScroll: true }) });
+defineExpose({ enfocar: () => raiz.value && raiz.value.focus({ preventScroll: true }), elemento: () => raiz.value });
+onMounted(() => entradaPorFilas(raiz.value, props.top));
 </script>
 
 <template>
@@ -48,7 +51,6 @@ defineExpose({ enfocar: () => raiz.value && raiz.value.focus({ preventScroll: tr
             outline: 'none', boxShadow: 'none', padding: top ? '10px 2px 2px' : '2px 2px 10px',
             maxHeight: 'min(62vh, 520px)', overflowY: 'auto', overscrollBehavior: 'contain',
             scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.28) transparent',
-            animation: 'isla-swap var(--dur-slow) var(--ease-island) both',
         }"
     >
         <CabeceraPanel
@@ -74,7 +76,7 @@ defineExpose({ enfocar: () => raiz.value && raiz.value.focus({ preventScroll: tr
             v-else-if="vista === 'plans' && plans"
             :plans="plans"
             :from-today="plansFromToday"
-            @elegir="(o) => emit('elegir', o)"
+            @elegir="(o, e) => emit('elegir', o, e)"
         />
         <PreferenciasCookies
             v-else-if="vista === 'cookies' && preferencias"

@@ -125,6 +125,7 @@ const { t } = useTextos();
                     size="sm"
                     :slots="horas"
                     :model-value="hora"
+                    :dia="dia"
                     counts="low"
                     :low-threshold="umbral"
                     @update:model-value="emit('cambiar', 'hora', $event)"

@@ -6,11 +6,13 @@
  * (`tone="ink"` o dentro de `data-surface="ink"`) cambian solos.
  * ⚠️ El control de una línea es la ranura `control` (recibe `{ linea }`), y la línea lo declara con
  * `control: true`: de eso dependen su negrita, su separación y su filete, como en el diseño.
+ * ▶ El total RUEDA hasta su valor (Z3, `#782`): se ve que ha reaccionado a lo elegido.
  */
 import { computed } from 'vue';
 import { useTextos } from '../piezas/textos.js';
 import IconoLucide from './IconoLucide.vue';
 import EnlaceSistema from './EnlaceSistema.vue';
+import NumeroRodante from './NumeroRodante.vue';
 
 const props = defineProps({
     selection: { type: String, default: '' },
@@ -91,7 +93,7 @@ const fuerte = (l) => Boolean(l.strong || l.control);
             <span
                 v-if="!incomplete"
                 :style="[cifras, { fontFamily: 'var(--font-display)', fontWeight: 'var(--fw-black)', fontSize: size === 'md' ? '1.75rem' : 'var(--fs-h1)', lineHeight: 1, letterSpacing: 'var(--tracking-display)', color: 'var(--text-strong)' }]"
-            >{{ total }}</span>
+            ><NumeroRodante :value="total" /></span>
         </div>
 
         <div

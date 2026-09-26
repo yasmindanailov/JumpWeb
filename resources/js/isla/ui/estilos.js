@@ -44,8 +44,20 @@ const VARIANTES_BOTON = {
     },
 };
 
-/** El estilo del botón, en el orden del diseño: base, talla, variante y, encima, su `hover`. */
-export function estiloBoton({ variant, size, full, bloqueado, loading, hover, press }) {
+/** El hueco entre el icono y el texto de cada talla: el contenido lo lleva en su propia caja (Z3). */
+export const huecoBoton = (size) => (TALLAS_BOTON[size] || TALLAS_BOTON.md).gap;
+
+/** La capa del botón que va ENCIMA de su contenido (la bola de carga), del mismo tamaño: así el botón no cambia de ancho. */
+export const CAPA_BOTON = { position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' };
+
+/** El brillo del primario que llega: uno solo, que cruza una vez (`pj-sheen` del diseño, `isla-sheen` aquí). */
+export const BRILLO_BOTON = { position: 'absolute', inset: 0, pointerEvents: 'none', background: 'linear-gradient(100deg, transparent 30%, rgba(255,255,255,0.55) 50%, transparent 70%) no-repeat', backgroundSize: '60% 100%', animation: 'isla-sheen 900ms var(--ease-in-out) 520ms 1 both' };
+
+/**
+ * El estilo del botón, en el orden del diseño: base, talla, variante y, encima, su `hover`. Desde el 26-09 (Z3) es la
+ * caja de sus capas (`position`, `overflow`: el brillo no se sale) y, si `llega`, bota (`isla-bote`).
+ */
+export function estiloBoton({ variant, size, full, bloqueado, loading, hover, press, llega = false }) {
     const v = VARIANTES_BOTON[variant] || VARIANTES_BOTON.primary;
     return {
         display: full ? 'flex' : 'inline-flex',
@@ -65,6 +77,9 @@ export function estiloBoton({ variant, size, full, bloqueado, loading, hover, pr
         transition: 'var(--t-hover)',
         transform: press ? 'scale(var(--scale-press))' : hover && !bloqueado ? 'translateY(var(--lift-hover))' : 'none',
         opacity: bloqueado && !loading ? 0.42 : 1,
+        position: 'relative',
+        overflow: 'hidden',
+        animation: llega ? 'isla-bote var(--dur-bote) linear both' : undefined,
         ...(TALLAS_BOTON[size] || TALLAS_BOTON.md),
         ...v.base,
         ...(hover && !bloqueado ? v.hover : {}),

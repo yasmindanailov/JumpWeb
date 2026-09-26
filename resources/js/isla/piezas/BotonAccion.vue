@@ -3,6 +3,7 @@
  * La acción de la isla (`ActionButton` del diseño): una sola, naranja, en la fila. En móvil puede llevar la
  * línea de situación dentro (`sublabel`). `loading` la bloquea y pone la bola pequeña delante del texto; si es
  * un texto, es lo que se espera («Comprobando tus datos y guardando tu hora»), para el lector de pantalla.
+ * `llega`: la isla recupera la acción (el botón de la página salió de pantalla) y entra con el bote del sistema (Z3).
  */
 import { computed, ref } from 'vue';
 import CargaRebote from '../ui/CargaRebote.vue';
@@ -17,6 +18,7 @@ const props = defineProps({
     big: { type: Boolean, default: false },
     disabled: { type: Boolean, default: false },
     loading: { type: [Boolean, String], default: false },
+    llega: { type: Boolean, default: false },
 });
 
 const hover = ref(false);
@@ -34,6 +36,7 @@ const estilo = computed(() => ({
     transform: press.value ? 'scale(var(--scale-press))' : 'none',
     boxShadow: ring.value ? 'inset 0 0 0 2px var(--isla-tinta)' : hover.value ? 'var(--shadow-cta)' : 'none',
     transition: 'var(--t-hover)',
+    animation: props.llega ? 'isla-bote var(--dur-bote) linear 120ms both' : undefined,
 }));
 
 function click(e) {
@@ -49,6 +52,7 @@ function click(e) {
         :aria-expanded="expanded"
         :aria-disabled="bloqueado || undefined"
         :aria-busy="loading ? true : undefined"
+        data-isla-accion=""
         :style="estilo"
         @click="click"
         @mouseenter="hover = true"

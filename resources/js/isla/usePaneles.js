@@ -10,15 +10,31 @@ export function usePila() {
     const plansFromToday = ref(false);
     const view = computed(() => (stack.value.length ? stack.value[stack.value.length - 1] : null));
     let trigger = null;
+    // Cerrar es más corto que abrir (02b, `#782`): el contenido se va en 100ms (`salida`, la pone la isla) y después la
+    // isla vuelve a su tamaño. `gen` descarta un cierre pendiente si entretanto se abre otra cosa.
+    // Un cierre en curso no se repite: el velo y «tocar fuera» lo piden con el mismo toque.
+    let salida = null;
+    let gen = 0;
+    let cerrando = 0;
+    const alSalir = (fn) => { salida = fn; };
+    const poner = (pila) => { gen += 1; stack.value = pila; };
 
     function cerrar() {
-        stack.value = [];
-        const tr = trigger;
-        if (tr && tr.focus) requestAnimationFrame(() => tr.focus());
+        if (cerrando && cerrando === gen) return;
+        const g = ++gen;
+        cerrando = g;
+        const acabar = () => {
+            if (g !== gen) return;
+            cerrando = 0;
+            stack.value = [];
+            const tr = trigger;
+            if (tr && tr.focus) requestAnimationFrame(() => tr.focus());
+        };
+        if (salida && stack.value.length) salida(acabar, () => g !== gen); else acabar();
     }
-    const abrirPanel = (id, e) => { if (e && e.currentTarget) trigger = e.currentTarget; stack.value = [id]; };
-    const apilarPanel = (id) => { stack.value = stack.value.concat([id]); };
-    const atras = () => { stack.value = stack.value.slice(0, -1); };
+    const abrirPanel = (id, e) => { if (e && e.currentTarget) trigger = e.currentTarget; poner([id]); };
+    const apilarPanel = (id) => { poner(stack.value.concat([id])); };
+    const atras = () => { poner(stack.value.slice(0, -1)); };
     function alternarPanel(id, e) {
         if (view.value === id && stack.value.length === 1) { cerrar(); return; }
         abrirPanel(id, e);
@@ -34,10 +50,10 @@ export function usePila() {
         if (!d.panel) return;
         if (d.trigger) trigger = d.trigger;
         if (d.panel === 'plans') plansFromToday.value = Boolean(d.fromToday);
-        stack.value = [d.panel];
+        poner([d.panel]);
     }
 
-    return { stack, view, plansFromToday, cerrar, apilarPanel, atras, alternarPanel, alAbrirDesdeLaPagina };
+    return { stack, view, plansFromToday, cerrar, apilarPanel, atras, alternarPanel, alAbrirDesdeLaPagina, alSalir, poner };
 }
 
 /**
@@ -45,8 +61,9 @@ export function usePila() {
  * X, que cierra sin perder nada (`checkout.onClose`).
  */
 export function useCapa({ islandRef, panelRef, isOpen, inCheckout, checkout, pila }) {
+    // Tocar fuera cierra como la X: con la salida corta del contenido (el diseño, desde el 26-09).
     function alTocarFuera(e) {
-        if (islandRef.value && !islandRef.value.contains(e.target)) pila.stack.value = [];
+        if (islandRef.value && !islandRef.value.contains(e.target)) pila.cerrar();
     }
 
     watch([isOpen, inCheckout], ([abierta, compra]) => {

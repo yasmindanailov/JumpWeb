@@ -71,7 +71,13 @@ foreach ($datos['situaciones'] as $sit) {
 <script type="text/babel">
 const { ParkIsland } = window.SaltiaDesignSystem_33397c;
 const conFunciones = (v) => (v === '@fn' ? () => {} : Array.isArray(v) ? v.map(conFunciones) : v && typeof v === 'object' ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, conFunciones(x)])) : v);
-ReactDOM.createRoot(document.getElementById('isla')).render(<ParkIsland {...conFunciones({$json})} />);
+// `window.BANCO_SET(props)`: las mismas props cambiadas en vivo en los dos lados, para comparar el movimiento (Z3).
+function Banco() {
+  const [p, setP] = React.useState(() => conFunciones({$json}));
+  window.BANCO_SET = (cambio) => setP((antes) => Object.assign({}, antes, conFunciones(cambio)));
+  return <ParkIsland {...p} />;
+}
+ReactDOM.createRoot(document.getElementById('isla')).render(<Banco />);
 </script>
 HTML
     ));

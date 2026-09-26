@@ -52,7 +52,7 @@ const uid = useId();
                         name="chevron-down"
                         :size="20"
                         color="var(--text-muted)"
-                        :style="{ transform: abiertos.includes(it.id) ? 'rotate(180deg)' : 'none', transition: 'transform var(--dur-base) var(--ease-spring)' }"
+                        :style="{ transform: abiertos.includes(it.id) ? 'rotate(180deg)' : 'none', transition: 'transform var(--dur-slow) var(--ease-spring)' }"
                     />
                 </button>
             </component>
@@ -60,7 +60,7 @@ const uid = useId();
                 :id="`${uid}-${it.id}`"
                 role="region"
                 :aria-labelledby="`${uid}-${it.id}-b`"
-                :style="{ display: 'grid', gridTemplateRows: abiertos.includes(it.id) ? '1fr' : '0fr', transition: 'grid-template-rows var(--dur-base) var(--ease-out)' }"
+                :style="{ display: 'grid', gridTemplateRows: abiertos.includes(it.id) ? '1fr' : '0fr', transition: 'grid-template-rows var(--dur-slow) var(--ease-out)' }"
             >
                 <!-- Plegado, fuera del recorrido del teclado: lo oculto no se enfoca (`inert`; el diseño lo dejaba alcanzable
                      con el tabulador). ⚠️ `|| undefined` y no `false`: un atributo que no se quita vale por estar. -->
@@ -68,7 +68,8 @@ const uid = useId();
                     :inert="! abiertos.includes(it.id) || undefined"
                     :style="{ minHeight: 0, overflow: 'hidden' }"
                 >
-                    <div :style="{ padding: '0 var(--space-5) var(--space-5)', paddingLeft: $slots[`icono-${it.id}`] ? 'calc(var(--space-5) + 34px)' : 'var(--space-5)', font: 'var(--type-body)', color: 'var(--text-body)', maxWidth: '72ch' }">
+                    <!-- El texto entra 60ms después de abrir, cuando ya hay sitio (26-09; Z3, `#782`). -->
+                    <div :style="{ padding: '0 var(--space-5) var(--space-5)', paddingLeft: $slots[`icono-${it.id}`] ? 'calc(var(--space-5) + 34px)' : 'var(--space-5)', font: 'var(--type-body)', color: 'var(--text-body)', maxWidth: '72ch', opacity: abiertos.includes(it.id) ? 1 : 0, transform: abiertos.includes(it.id) ? 'none' : 'translateY(-4px)', transition: `opacity var(--dur-base) var(--ease-out) ${abiertos.includes(it.id) ? '60ms' : '0ms'}, transform var(--dur-base) var(--ease-out) ${abiertos.includes(it.id) ? '60ms' : '0ms'}` }">
                         <slot :name="it.id" />
                     </div>
                 </div>

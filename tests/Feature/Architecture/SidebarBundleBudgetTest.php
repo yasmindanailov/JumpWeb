@@ -918,13 +918,19 @@ class SidebarBundleBudgetTest extends TestCase
     // Medido 133,57 → 134,82 (base: `HEAD` construido aparte). Lo que solo pinta Mi cuenta no viaja aquí: sus dos
     // iconos se registran desde su trozo (`cuenta/iconos.js`: con ellos en el registro común medía 135,50). El techo,
     // a 136: a 135 quedaban 0,18 de margen, un cable trampa.
-    private const ISLA_COMPRA_CHUNK_MAX_KB = 136;
+    // Z3 (`#782`, el movimiento de la isla del 26-09): el relevo entre islas (`relevo.js`, `useRelevo.js`), los
+    // movimientos por la API (`movimiento.js`), la píldora de las horas (`usePildoraHoras.js`), el número que rueda y la
+    // llegada del botón. Medido 135,73 → 146,81 (base: `HEAD` construido aparte). ⚠️ Probado y DESCARTADO: la
+    // `<Transition>` de Vue para el velo pesaba 10–14 KiB más en cada trozo; el velo que se va es otro nodo. El techo, a 148.
+    private const ISLA_COMPRA_CHUNK_MAX_KB = 148;
 
     // T4d·4 (`specs/isla-y-landing-nueva.md` §4.12): la CALCULADORA de una página, entrada propia que la página pide
     // (`scripts` de `<x-pagina>`) y se monta al acercarse su pieza. Su DESCARGA entera, como la mide el navegador que
     // llega: medido 169,37 KiB (57,54 comprimidos) —100,2 compartidos con el motor (Vue, Pinia, los stores de la
     // oferta y la API), que quien compra después ya no baja, y 69,17 suyos (sus pantallas, el calendario, sus piezas)—.
-    private const CALCULADORA_MAX_KB = 172;
+    // Z3 (`#782`): la píldora de sus horas, su total que rueda y su «Reservar y pagar» que llega con bote (`useLlegada`).
+    // Medido 171,18 → 178,58 (base: `HEAD` construido aparte). El techo, a 180.
+    private const CALCULADORA_MAX_KB = 180;
 
     // T4e (`specs/isla-y-landing-nueva.md` §4.12): la ISLA EN REPOSO de una página, entrada propia que la página pide
     // (`isla` en `scripts` de `<x-pagina>`) y que se monta al cargar. Su descarga ENTERA, como la del navegador que llega
@@ -933,7 +939,10 @@ class SidebarBundleBudgetTest extends TestCase
     // página pasa de 62,6 a 78,3 KiB comprimidos (comparten Vue, la API y las piezas).
     // T5e·2 (`#779`): el aviso que deja el servidor al volver (`pagina/aviso-servidor.js`, que también toman Mi cuenta y
     // la compra): 155,62 → 156,30 (base: `HEAD` construido aparte). El techo, a 157.
-    private const ISLA_PAGINA_MAX_KB = 157;
+    // Z3 (`#782`): el movimiento de la isla —qué rebota y qué va en calma, el hundimiento, las filas del panel, la salida
+    // corta, el relevo con la compra y Mi cuenta, la espera a que la releven— y las piezas que ahora mueve. Medido 156,30 →
+    // 165,23 (base: `HEAD` construido aparte). El techo, a 166.
+    private const ISLA_PAGINA_MAX_KB = 166;
 
     // T3e·3 (`#694`): las pantallas de después de la pantalla 0, en su trozo (`isla/compra/pasos-diferidos.js`), que la
     // compra pide al montarse. Medido 36,92 KiB. T3e·4 (`#695`): «Entra» con sus eventos y la «G» de Google, 37,66.

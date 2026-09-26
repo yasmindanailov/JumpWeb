@@ -40,8 +40,12 @@ const panelRef = ref(null);
 const {
     t, s, stack, view, top, r, isOpen, inCheckout, openRow, stretch, pendiente, titleInRow, panelTitle, shownNotice,
     hayLinea, lineaAbre, accion, accionHref, accionAbierta, pulsarAccion, alTeclear, alternarPanel, panelProps, anuncio,
-    cerrar, atras, apilarPanel, elegirPlan, abrirCapa, navegar, tamano, estiloRaiz, estiloIsla, estiloMedida,
+    cerrar, atras, apilarPanel, elegirPlan, abrirCapa, navegar, cambio, hundir, soltar, veloSaliente,
+    tamano, estiloRaiz, estiloIsla, estiloMedida,
 } = useIsla(props, { wrapRef, islandRef, sizerRef, panelRef });
+// El velo: entra fundido y se va fundido (`isla-velo-sale`, en `isla.css`; Z3, `#782`). Sin `<Transition>` de Vue, a
+// propósito: su maquinaria pesaba 10–14 KiB en cada trozo de la isla (medido); el que se va es otro nodo, que se quita solo.
+const velo = { position: 'fixed', inset: 0, zIndex: -1, background: 'var(--isla-velo)', WebkitBackdropFilter: 'var(--blur-veil)', backdropFilter: 'var(--blur-veil)' };
 </script>
 
 <template>
@@ -54,18 +58,30 @@ const {
     >
         <div
             v-if="scrim && isOpen"
-            :style="{ position: 'fixed', inset: 0, zIndex: -1, pointerEvents: 'auto', background: 'var(--isla-velo)', WebkitBackdropFilter: 'var(--blur-veil)', backdropFilter: 'var(--blur-veil)', animation: 'isla-fade-in var(--dur-base) var(--ease-out) both' }"
-            @pointerdown="inCheckout ? null : (stack = [])"
+            :style="{ ...velo, pointerEvents: 'auto', animation: 'isla-fade-in var(--dur-base) var(--ease-out) both' }"
+            @pointerdown="inCheckout ? null : cerrar()"
+        />
+        <!-- El velo que se va, fundido: el de un panel que se cierra, o el de la capa grande que la píldora releva. -->
+        <div
+            v-if="veloSaliente"
+            class="isla-velo-sale"
+            :style="{ ...velo, pointerEvents: 'none' }"
+            @animationend="veloSaliente = false"
         />
 
         <div
             ref="islandRef"
             data-surface="ink"
+            :data-isla-velo="scrim && isOpen ? '1' : undefined"
             :style="estiloIsla"
             :role="inCheckout ? 'dialog' : undefined"
             :aria-modal="inCheckout ? 'true' : undefined"
             :aria-labelledby="inCheckout ? 'isla-compra-paso' : undefined"
             @keydown="alTeclear"
+            @pointerdown.capture="hundir"
+            @pointerup.capture="soltar"
+            @pointercancel.capture="soltar"
+            @pointerleave="soltar"
         >
             <span
                 role="status"
@@ -114,11 +130,12 @@ const {
                     >
                         <div :style="{ flex: '1 1 auto', minWidth: 0 }">
                             <LineaContexto
-                                :key="s.id"
+                                :key="`${s.id}|${s.line || ''}`"
                                 :situation="s"
                                 :top="top"
                                 :abrir="lineaAbre"
                                 :expanded="Boolean(s.opens) && view === s.opens"
+                                :retraso="cambio === 'frase' ? 120 : 0"
                             />
                         </div>
                     </div>
@@ -152,11 +169,12 @@ const {
                             :style="{ flex: '1 1 auto', minWidth: 0, maxWidth: top ? 'min(420px, 46vw)' : 'calc(100vw - 110px)', display: 'flex', justifyContent: top ? 'flex-end' : 'flex-start', paddingRight: top ? 0 : '8px' }"
                         >
                             <LineaContexto
-                                :key="s.id"
+                                :key="`${s.id}|${s.line || ''}`"
                                 :situation="s"
                                 :top="top"
                                 :abrir="lineaAbre"
                                 :expanded="Boolean(s.opens) && view === s.opens"
+                                :retraso="cambio === 'frase' ? 120 : 0"
                             />
                         </div>
                         <span
@@ -171,6 +189,7 @@ const {
                             :href="accionHref"
                             :expanded="accionAbierta"
                             :pulsar="pulsarAccion"
+                            :llega="cambio === 'llega'"
                         />
                         <ControlIcono
                             v-if="openRow"

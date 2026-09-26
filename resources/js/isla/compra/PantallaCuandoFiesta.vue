@@ -99,6 +99,7 @@ const emit = defineEmits(['cambiar']);
                 size="sm"
                 :slots="horas"
                 :model-value="hora"
+                :dia="dia"
                 counts="low"
                 :low-threshold="1"
                 @update:model-value="emit('cambiar', 'hora', $event)"

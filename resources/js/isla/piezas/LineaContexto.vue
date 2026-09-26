@@ -1,5 +1,8 @@
 <script setup>
-/** La línea de situación (`ContextLine` del diseño): un punto de color si la situación está viva, y el texto. */
+/**
+ * La línea de situación (`ContextLine` del diseño): un punto de color si la situación está viva, y el texto. Si solo
+ * cambia la frase (`retraso`, Z3), la nueva entra cuando la isla ya tiene su ancho: nunca se ve cortada.
+ */
 import { computed, ref } from 'vue';
 import IconoLucide from '../ui/IconoLucide.vue';
 
@@ -10,6 +13,7 @@ const props = defineProps({
     top: { type: Boolean, default: false },
     abrir: { type: Function, default: null },
     expanded: { type: Boolean, default: false },
+    retraso: { type: Number, default: 0 },
 });
 
 const hover = ref(false);
@@ -22,7 +26,7 @@ const estilo = computed(() => ({
     textAlign: props.top ? 'right' : 'left', cursor: props.abrir ? 'pointer' : 'default',
     fontFamily: 'var(--font-ui)', fontSize: '14px', fontWeight: 'var(--fw-semibold)',
     color: 'var(--isla-sobre)', lineHeight: 1.35, transition: 'var(--t-hover)',
-    animation: 'isla-swap var(--dur-base) var(--ease-island) both',
+    animation: props.retraso ? `isla-swap var(--dur-base) var(--ease-out) ${props.retraso}ms both` : 'isla-swap var(--dur-base) var(--ease-island) both',
 }));
 </script>
 

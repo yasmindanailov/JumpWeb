@@ -34,7 +34,7 @@ const cambiar = (campo, valor) => emit('cambiar', campo, valor);
         <span v-if="v.dia.eco" :style="ECO"><IconoLucide name="check" :size="16" /><span>{{ v.dia.eco.antes }}<span :style="CIFRA">{{ v.dia.eco.cifra }}</span>{{ v.dia.eco.despues }}</span></span>
     </PreguntaCalculadora>
     <PreguntaCalculadora id="p3-hora" :titulo="v.hora.titulo" :ultima="! v.calcetines">
-        <SelectorHoras v-if="v.hora.horas" :model-value="v.hora.valor" :slots="v.hora.horas" counts="low" columns="repeat(auto-fill, minmax(96px, 1fr))" @update:model-value="cambiar('hora', $event)" />
+        <SelectorHoras v-if="v.hora.horas" :model-value="v.hora.valor" :slots="v.hora.horas" :dia="v.dia.valor" counts="low" columns="repeat(auto-fill, minmax(96px, 1fr))" @update:model-value="cambiar('hora', $event)" />
         <p v-else :style="PISTA">{{ v.hora.espera }}</p>
         <span v-if="v.hora.eco" :style="ECO"><IconoLucide name="clock" :size="16" /><span :style="CIFRA">{{ v.hora.eco }}</span></span>
         <p :style="PISTA">{{ v.hora.regla }}</p>

@@ -1,11 +1,22 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createTextVNode, h } from 'vue';
-import { acotar, barrasEsqueleto, columnasOpciones, enNavegadorDeApp, estadoHora, idDeCampo, idDeCasilla, textoDeRanura } from './piezas.js';
+import { acotar, barrasEsqueleto, columnasOpciones, columnasRodantes, enNavegadorDeApp, estadoHora, idDeCampo, idDeCasilla, textoDeRanura } from './piezas.js';
 import { celdasDelMes, estadoDia, mesDesplazado, vistaCalendario } from './calendario.js';
 import { atributosCompartir } from './compartir.js';
 
 const tp = (clave, p = {}) => `${clave}${p.n != null ? `:${p.n}` : ''}`;
+
+test('la cifra que rueda: columnas contadas desde la derecha, 30ms entre cifras, y los símbolos quietos', () => {
+    const cols = columnasRodantes('96,00 €');
+    assert.deepEqual(cols.map((c) => c.clave), ['d4', 'd3', 's5', 'd2', 'd1', 's2', 's1']);
+    assert.deepEqual(cols.filter((c) => c.simbolo === null).map((c) => [c.cifra, c.retraso]), [[9, 0], [6, 30], [0, 60], [0, 90]]);
+    assert.equal(cols[5].simbolo, ' ', 'el espacio antes del «€», duro');
+    // De 96 a 108: las unidades («d1») siguen siendo la misma columna, y la centena nueva («d5») aparece a la izquierda.
+    const antes = new Set(columnasRodantes('96,00 €').map((c) => c.clave));
+    const despues = columnasRodantes('108,00 €').map((c) => c.clave);
+    assert.deepEqual(despues.filter((k) => ! antes.has(k)), ['d5']);
+});
 
 test('una hora: la nota manda, luego completa, luego pocas; con counts «low» la cifra grande calla', () => {
     assert.equal(estadoHora({ time: '17:00', left: 0 }, {}, tp).texto, 'pieza.completo');

@@ -89,6 +89,26 @@ export function barrasEsqueleto({ kind = 'text', lines = 3, width = '100%', heig
 }
 
 /**
+ * Las columnas de una cifra que rueda (`RollingNumber.jsx`, Z3): cada dígito, su columna, con la CLAVE contada desde la
+ * derecha —así, de 96 a 108, las unidades siguen siendo la misma columna y giran, y la cifra nueva aparece a la
+ * izquierda— y su retraso, 30ms detrás del anterior. Los símbolos no ruedan (el espacio, duro: no se parte).
+ */
+export function columnasRodantes(texto) {
+    const letras = Array.from(texto);
+    const digitos = letras.filter((c) => /\d/.test(c)).length;
+    let k = 0;
+
+    return letras.map((c, i) => {
+        if (! /\d/.test(c)) return { clave: `s${letras.length - i}`, simbolo: c === ' ' ? ' ' : c, cifra: null, retraso: 0 };
+        const desdeLaDerecha = digitos - k;
+
+        k += 1;
+
+        return { clave: `d${desdeLaDerecha}`, simbolo: null, cifra: Number(c), retraso: (k - 1) * 30 };
+    });
+}
+
+/**
  * El texto de un botón cuando su contenido es SOLO texto (`Button.jsx`: `typeof children === "string"`): es lo
  * que lee la bola de carga mientras el botón espera. Con un icono o varios nodos dentro, cadena vacía.
  */

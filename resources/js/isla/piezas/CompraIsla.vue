@@ -10,12 +10,15 @@
  * `ck` es la descripción del paso que da quien lleva la compra: `key` (cambia con el paso), `dir` (`fwd` · `back`),
  * `stepStrong` y `step` («Paso 1 de 2» en negrita y « · Tus datos»), `progress` ([hecho, total]), `onBack`,
  * `onClose`, `summary`, `total`, `today`, `note` y `action` ({ label, onClick, disabled, loading }).
+ * ▶ El movimiento (Z3, `#782`): al avanzar, el tramo de la barra se LLENA de izquierda a derecha (se ve el avance) y el
+ * total RUEDA hasta su valor (`NumeroRodante`).
  */
 import { useTextos } from './textos.js';
 import BloqueCookies from './BloqueCookies.vue';
 import ControlIcono from './ControlIcono.vue';
 import BotonAccion from './BotonAccion.vue';
 import IconoLucide from '../ui/IconoLucide.vue';
+import NumeroRodante from '../ui/NumeroRodante.vue';
 
 defineProps({
     ck: { type: Object, required: true },
@@ -60,8 +63,8 @@ const { t } = useTextos();
             <i
                 v-for="i in ck.progress[1]"
                 :key="i"
-                :style="{ height: '4px', borderRadius: '2px', background: i - 1 < ck.progress[0] ? 'var(--isla-vivo)' : 'rgba(255,255,255,0.2)', transition: 'background var(--dur-base) var(--ease-out)' }"
-            />
+                :style="{ position: 'relative', height: '4px', borderRadius: '2px', overflow: 'hidden', background: 'rgba(255,255,255,0.2)' }"
+            ><b :style="{ position: 'absolute', inset: 0, borderRadius: '2px', background: 'var(--isla-vivo)', transformOrigin: 'left center', transform: i - 1 < ck.progress[0] ? 'scaleX(1)' : 'scaleX(0)', transition: 'transform var(--dur-slow) var(--ease-out)' }" /></i>
         </div>
         <div
             :key="ck.key"
@@ -82,7 +85,7 @@ const { t } = useTextos();
                     v-if="ck.total"
                     :style="{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '3px', flex: '0 0 auto' }"
                 >
-                    <b :style="{ fontFamily: 'var(--font-display)', fontWeight: 'var(--fw-black)', fontSize: '22px', lineHeight: 1, letterSpacing: '-0.02em', color: 'var(--isla-sobre)', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }">{{ ck.total }}</b>
+                    <b :style="{ fontFamily: 'var(--font-display)', fontWeight: 'var(--fw-black)', fontSize: '22px', lineHeight: 1, letterSpacing: '-0.02em', color: 'var(--isla-sobre)', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }"><NumeroRodante :value="ck.total" /></b>
                     <small
                         v-if="ck.today"
                         :style="{ fontFamily: 'var(--font-ui)', fontSize: '14px', fontWeight: 'var(--fw-bold)', color: 'var(--isla-vivo)', whiteSpace: 'nowrap' }"

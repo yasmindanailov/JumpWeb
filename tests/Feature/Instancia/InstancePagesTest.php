@@ -6,6 +6,7 @@ use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Content\Services\ShellSettings;
 use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\Analytics\Pixels;
@@ -333,6 +334,10 @@ BLADE);
         // T5e·2 (`#779`): el `status` que deja el servidor al volver (Google, el correo…) viaja AQUÍ, con su tono: el
         // motor pide su arranque después, con el `status` ya gastado. Sin él, nada.
         $this->assertNull($invitado['config']['aviso']);
+        // Z3 (`#782`): dónde se abre la compra, que el aviso de apertura no sabe la primera vez. Sin ajuste, el cajón.
+        $this->assertSame('cajon', $invitado['config']['carcasa']);
+        Setting::updateOrCreate(['key' => ShellSettings::KEY], ['value' => ShellSettings::ISLA, 'group' => 'sidebar']);
+        $this->assertSame('isla', $isla((string) $this->get('/kids')->getContent())['config']['carcasa'] ?? null);
         $conAviso = $isla((string) $this->withSession(['status' => 'google-provider-taken'])->get('/kids')->getContent());
         $this->assertSame(['texto' => __('account.status.google-provider-taken'), 'tono' => 'danger'], $conAviso['config']['aviso'] ?? null);
 
@@ -389,6 +394,28 @@ BLADE);
         $this->assertLessThan(strpos($html, '</head>'), $regla);
 
         $this->assertStringNotContainsString('@view-transition', (string) $this->get('/jump')->assertOk()->getContent(), 'sin pedirla, ninguna');
+    }
+
+    /**
+     * **Entre páginas, la isla se queda** (Z3, `#782`): llegando DESDE EL SITIO, el script de la isla bloquea el primer
+     * pintado (`blocking="render"`) para que la página nueva ya la traiga cuando el navegador la captura; llegando de
+     * fuera, no (el primer pintado de quien llega de Google no espera a la isla). Solo el de la isla, y solo si la
+     * página pide las transiciones.
+     */
+    public function test_from_the_same_site_the_isla_script_blocks_the_first_paint_so_the_isla_stays(): void
+    {
+        File::put($this->paquete.'/web/con.blade.php', '<x-pagina titulo="Kids" transiciones :scripts="[\'cajon\', \'isla\']" :isla="[\'page\' => [\'kind\' => \'producto\', \'action\' => [\'label\' => \'Reservar\', \'href\' => \'#\']]]"><div data-jw-isla></div></x-pagina>');
+        File::put($this->paquete.'/web/sin.blade.php', '<x-pagina titulo="Jump" :scripts="[\'isla\']" :isla="[\'page\' => [\'kind\' => \'producto\', \'action\' => [\'label\' => \'Reservar\', \'href\' => \'#\']]]"><div data-jw-isla></div></x-pagina>');
+        $this->declarar(['kids' => ['vista' => 'con', 'hechos' => []], 'jump' => ['vista' => 'sin', 'hechos' => []]]);
+        $bloqueantes = fn (string $html): array => preg_match_all('#<script type="module" blocking="render" src="[^"]*/build/assets/([\w-]+)\.js"#', $html, $m) ? $m[1] : [];
+
+        $dentro = (string) $this->withHeaders(['Sec-Fetch-Site' => 'same-origin'])->get('/kids')->assertOk()->getContent();
+        $this->assertCount(1, $bloqueantes($dentro), 'desde el sitio, un script bloquea: el de la isla');
+        $this->assertStringStartsWith('montar-', $bloqueantes($dentro)[0]);
+        $this->assertMatchesRegularExpression('#<script type="module" src="[^"]*/build/assets/paquete-#', $dentro, 'el cargador del cajón, no');
+
+        $this->assertSame([], $bloqueantes((string) $this->withHeaders(['Sec-Fetch-Site' => 'cross-site'])->get('/kids')->getContent()), 'de fuera, nada bloquea');
+        $this->assertSame([], $bloqueantes((string) $this->withHeaders(['Sec-Fetch-Site' => 'same-origin'])->get('/jump')->getContent()), 'sin transiciones, nada bloquea');
     }
 
     /** Sin paquete, o con un paquete que no declara páginas, no hay ninguna: el estado normal, no un error. */
