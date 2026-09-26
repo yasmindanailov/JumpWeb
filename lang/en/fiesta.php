@@ -191,6 +191,7 @@ return [
         'calendario' => 'Add to calendar',
         'merienda' => 'The snack',
         'merienda_alergias' => 'Allergies or a special menu? Add it when you reply, and :h and the instructors will see it.',
+        'merienda_grupos' => ['drink' => 'To drink', 'food' => 'To eat', 'sweet' => 'And to finish'],
         'plazo' => 'Please reply before :dia at :hora.',
         'campo' => 'Child’s first and last name',
         'si' => 'We’re coming',

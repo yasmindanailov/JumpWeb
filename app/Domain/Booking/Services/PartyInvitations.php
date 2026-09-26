@@ -457,6 +457,8 @@ final class PartyInvitations
             ->map(static fn (OrderItem $line): array => [
                 'name' => trim((string) $line->ticketType?->tr('name')),
                 'features' => $line->ticketType?->featureLines() ?? [],
+                // Los tres grupos con icono del diseño (F1b): dato del producto; vacíos, el plato va por su nombre.
+                'groups' => $line->ticketType?->invitationMenuGroups() ?? ['drink' => [], 'food' => [], 'sweet' => []],
             ])
             ->filter(static fn (array $dish): bool => $dish['name'] !== '')
             ->unique('name')

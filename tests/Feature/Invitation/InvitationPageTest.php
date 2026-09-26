@@ -281,6 +281,36 @@ class InvitationPageTest extends TestCase
         $this->assertNotNull($reservation->fresh());
     }
 
+    /**
+     * **La merienda POR GRUPOS** (F1b de `fiesta-sistema-nuevo.md`): lo que el complemento reparte en «para beber», «para
+     * comer» y «y para terminar» (dato del panel, tres listas i18n) sale en esos tres grupos, con su rótulo fijo y en
+     * el orden del diseño, y el plato deja de ser su propio grupo. Sin reparto, el caso de arriba: su nombre y sus
+     * ventajas.
+     */
+    public function test_a_dish_split_into_groups_is_painted_as_the_three_groups_of_the_design(): void
+    {
+        [$reservation, $invitation] = $this->party(withMenu: true);
+        TicketType::query()->where('name->es', 'Menú Pizza')->update([
+            'menu_drink' => json_encode(['es' => ['Refresco o zumo', 'Agua']]),
+            'menu_food' => json_encode(['es' => ['Pizza', 'Patatas']]),
+            'menu_sweet' => json_encode(['es' => ['Cono de chuches']]),
+        ]);
+
+        $html = (string) $this->get(route(PartyInvitations::PUBLIC_ROUTE, ['token' => $invitation->token]))->assertOk()->getContent();
+
+        $this->assertStringContainsString('data-invitation-menu', $html);
+        $rotulos = __('fiesta.invitacion_pagina.merienda_grupos');
+        foreach ([[$rotulos['drink'], 'Refresco o zumo'], [$rotulos['food'], 'Pizza'], [$rotulos['sweet'], 'Cono de chuches']] as [$rotulo, $cosa]) {
+            $this->assertStringContainsString('<span class="rot">'.$rotulo.'</span>', $html, $rotulo);
+            // Una cosa que no es la última lleva el separador DENTRO de su `span`: se afirma el texto, no el cierre.
+            $this->assertStringContainsString('>'.$cosa.'<', $html, $cosa);
+        }
+        $this->assertStringContainsString('<span>Refresco o zumo<span aria-hidden="true" class="sep">·</span></span><span>Agua</span>', $html, 'las cosas del grupo, con su separador');
+        $this->assertMatchesRegularExpression('#'.preg_quote($rotulos['drink'], '#').'.*'.preg_quote($rotulos['food'], '#').'.*'.preg_quote($rotulos['sweet'], '#').'#s', $html, 'los tres grupos, en el orden del diseño');
+        $this->assertStringNotContainsString('<span class="rot">Menú Pizza</span>', $html, 'repartido, el plato ya no es su propio grupo');
+        $this->assertNotNull($reservation->fresh());
+    }
+
     // ── 6 · Contestar (T5·2) ──────────────────────────────────────────────────
 
     public function test_a_parent_answers_from_the_page_and_is_told_so(): void

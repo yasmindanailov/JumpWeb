@@ -159,20 +159,45 @@ final class InvitacionPagina
     }
 
     /**
-     * La merienda, por grupos (`inv-merienda` del diseño): hoy cada complemento MARCADO y comprado es un grupo, con su
-     * nombre de rótulo y sus detalles como cosas; el icono por grupo es dato del enganche que FALTA (§1.4) y sale
-     * neutro.
+     * La merienda, por grupos (`inv-merienda` del diseño, F1b): los TRES grupos del diseño con su icono —«para
+     * beber», «para comer», «y para terminar»— se llenan con lo que cada complemento marcado y comprado reparte en
+     * ellos (`TicketType::invitationMenuGroups()`, dato del panel), sin repetir una cosa que traigan dos platos; un
+     * complemento sin reparto sigue siendo su propio grupo, con su nombre y sus ventajas y el icono neutro, detrás.
      *
-     * @param  list<array{name: string, features: list<string>}>  $menu
+     * @param  list<array{name: string, features: list<string>, groups?: array{drink: list<string>, food: list<string>, sweet: list<string>}}>  $menu
      * @return list<array{icono: string, rotulo: string, cosas: list<string>}>
      */
     private static function merienda(array $menu): array
     {
-        return array_map(static fn (array $plato): array => [
-            'icono' => 'utensils',
-            'rotulo' => (string) $plato['name'],
-            'cosas' => array_values(array_filter(array_map('trim', $plato['features']), static fn (string $x): bool => $x !== '')),
-        ], $menu);
+        $iconos = ['drink' => 'cup-soda', 'food' => 'sandwich', 'sweet' => 'candy'];
+        $grupos = ['drink' => [], 'food' => [], 'sweet' => []];
+        $sueltos = [];
+        foreach ($menu as $plato) {
+            $repartido = false;
+            foreach ($grupos as $clave => $cosas) {
+                $suyas = $plato['groups'][$clave] ?? [];
+                if ($suyas !== []) {
+                    $grupos[$clave] = array_merge($cosas, $suyas);
+                    $repartido = true;
+                }
+            }
+            if (! $repartido) {
+                $sueltos[] = [
+                    'icono' => 'utensils',
+                    'rotulo' => (string) $plato['name'],
+                    'cosas' => array_values(array_filter(array_map('trim', $plato['features']), static fn (string $x): bool => $x !== '')),
+                ];
+            }
+        }
+
+        $out = [];
+        foreach ($grupos as $clave => $cosas) {
+            if ($cosas !== []) {
+                $out[] = ['icono' => $iconos[$clave], 'rotulo' => __('fiesta.invitacion_pagina.merienda_grupos.'.$clave), 'cosas' => array_values(array_unique($cosas))];
+            }
+        }
+
+        return array_merge($out, $sueltos);
     }
 
     /**

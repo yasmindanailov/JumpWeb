@@ -35,7 +35,7 @@ trait InteractsWithCatalogForm
      * lista para guardar (aquí) y para rellenar (`EditCatalog`): con dos, un campo nuevo se guardaría
      * y no volvería a salir en el formulario, o al revés, sin que nada fallara.
      */
-    protected const I18N_LIST_FIELDS = ['features'];
+    protected const I18N_LIST_FIELDS = ['features', 'menu_drink', 'menu_food', 'menu_sweet'];
 
     /** @var array<int,?string> Importes (€) por rate_type_id capturados del form para el upsert. */
     protected array $priceInputs = [];

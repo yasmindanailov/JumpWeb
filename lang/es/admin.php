@@ -2485,6 +2485,11 @@ return [
         'badge_hint' => 'Texto corto tipo "Top" sobre la tarjeta. Vacío = sin etiqueta.',
         'field_features' => 'Ventajas',
         'features_hint' => 'Una ventaja por línea.',
+        // La merienda de la invitación por grupos (F1b de `fiesta-sistema-nuevo.md`), solo en complementos.
+        'field_menu_drink' => 'En la invitación · Para beber',
+        'field_menu_food' => 'En la invitación · Para comer',
+        'field_menu_sweet' => 'En la invitación · Y para terminar',
+        'menu_groups_hint' => 'Una cosa por línea. La invitación lo enseña por grupos, con su icono, si el pack marca este complemento «en la invitación»; sin nada aquí, sale con su nombre y sus ventajas.',
         'field_gifts' => 'Regalos',
         // `#770`: los regalos se gestionan en Promociones; la ficha solo los enseña.
         'gifts_hint' => 'Lo que se da sin cobrar con este producto. Se crea y se cambia en Ajustes → Promociones (clase «Regalo»), no aquí.',

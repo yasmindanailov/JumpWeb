@@ -235,6 +235,41 @@ class CatalogEditTest extends TestCase
     }
 
     /**
+     * **La merienda de la invitación por grupos** (F1b de `fiesta-sistema-nuevo.md`): las tres listas de un
+     * complemento se editan como texto, una cosa por línea, y se guardan como listas i18n igual que las ventajas; la
+     * que se deja vacía no se persiste. Existen SOLO en un complemento: en una entrada o un pack no se pintan.
+     */
+    public function test_the_invitation_menu_groups_of_an_addon_are_stored_as_i18n_lists(): void
+    {
+        $addon = TicketType::create([
+            'name' => ['es' => 'Menú 1'], 'type' => TicketType::TYPE_ADDON,
+            'is_sellable' => true, 'is_active' => true, 'position' => 20,
+        ]);
+
+        Livewire::actingAs($this->admin())
+            ->test(EditCatalog::class, ['record' => $addon->id])
+            ->assertFormFieldExists('menu_drink_es')
+            ->fillForm(['menu_drink_es' => "Refresco o zumo\n  Agua  \n", 'menu_food_es' => 'Sándwich mixto', 'menu_sweet_es' => ''])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $fresh = $addon->fresh();
+        $this->assertSame(['Refresco o zumo', 'Agua'], $fresh->menu_drink['es']);
+        $this->assertSame(['Sándwich mixto'], $fresh->menu_food['es']);
+        $this->assertEmpty($fresh->menu_sweet, 'la lista vacía no se persiste');
+        $this->assertSame(['drink' => ['Refresco o zumo', 'Agua'], 'food' => ['Sándwich mixto'], 'sweet' => []], $fresh->invitationMenuGroups());
+
+        // Y vuelven al formulario como texto, una por línea.
+        Livewire::actingAs($this->admin())
+            ->test(EditCatalog::class, ['record' => $addon->id])
+            ->assertFormSet(['menu_drink_es' => "Refresco o zumo\nAgua"]);
+
+        Livewire::actingAs($this->admin())
+            ->test(EditCatalog::class, ['record' => $this->makeEntry()->id])
+            ->assertFormFieldHidden('menu_drink_es');
+    }
+
+    /**
      * **La FOTO de la ficha se pone desde el PANEL** (`#645`, F5 · T6), y esta guarda existe porque
      * el modo de fallo es silencioso: si alguien retira el `FileUpload` del formulario, la API
      * sigue publicando `image_url` —sus tests siguen verdes, porque escriben la columna a mano— y

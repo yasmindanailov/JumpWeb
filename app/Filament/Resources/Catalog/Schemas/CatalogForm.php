@@ -226,6 +226,23 @@ class CatalogForm
                 ->rows(4)
                 ->helperText(__('admin.catalog.features_hint')),
 
+            // LA MERIENDA DE LA INVITACIÓN por grupos (F1b de `fiesta-sistema-nuevo.md`): tres listas i18n que la
+            // invitación pinta con su icono («Para beber», «Para comer», «Y para terminar»). Solo tienen sentido en un
+            // complemento que un pack enseña en la invitación; vacías, el complemento sale por su nombre y sus ventajas.
+            Textarea::make("menu_drink_{$locale}")
+                ->label(__('admin.catalog.field_menu_drink'))
+                ->rows(2)
+                ->visible(fn (Get $get): bool => $get('type') === TicketType::TYPE_ADDON)
+                ->helperText(__('admin.catalog.menu_groups_hint')),
+            Textarea::make("menu_food_{$locale}")
+                ->label(__('admin.catalog.field_menu_food'))
+                ->rows(2)
+                ->visible(fn (Get $get): bool => $get('type') === TicketType::TYPE_ADDON),
+            Textarea::make("menu_sweet_{$locale}")
+                ->label(__('admin.catalog.field_menu_sweet'))
+                ->rows(2)
+                ->visible(fn (Get $get): bool => $get('type') === TicketType::TYPE_ADDON),
+
             // LOS REGALOS (`#589`) viven en PROMOCIONES desde `#770`: aquí solo se ENSEÑAN, para que quien edita
             // la ficha sepa qué se anuncia con ella y dónde cambiarlo. Una sola vez, en la pestaña del español.
             Placeholder::make('gifts_managed_in_promotions')

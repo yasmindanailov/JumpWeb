@@ -208,6 +208,10 @@ class TicketType extends Model
         'description' => 'array',
         'period_label' => 'array',
         'features' => 'array',
+        // La merienda de la invitación por grupos (F1b de `fiesta-sistema-nuevo.md`): tres listas i18n, como `features`.
+        'menu_drink' => 'array',
+        'menu_food' => 'array',
+        'menu_sweet' => 'array',
         // ⚠️ Aquí estaba `gifts` (`#589`): los regalos viven en PROMOCIONES desde `#770` ({@see giftLines()}).
         'conditions' => 'array',
         'badge' => 'array',
@@ -351,12 +355,34 @@ class TicketType extends Model
      */
     public function featureLines(): array
     {
-        $features = $this->tr('features');
-        $features = is_array($features) ? $features : [$features];
+        return $this->lineasDe('features');
+    }
+
+    /**
+     * Los tres grupos de la merienda que la invitación pinta con su icono (F1b de `fiesta-sistema-nuevo.md`):
+     * «para beber», «para comer» y «y para terminar», en el idioma activo y sin vacíos. Los tres vacíos = el
+     * complemento no está repartido en grupos, y la invitación lo enseña por su nombre y sus ventajas.
+     *
+     * @return array{drink: list<string>, food: list<string>, sweet: list<string>}
+     */
+    public function invitationMenuGroups(): array
+    {
+        return ['drink' => $this->lineasDe('menu_drink'), 'food' => $this->lineasDe('menu_food'), 'sweet' => $this->lineasDe('menu_sweet')];
+    }
+
+    /**
+     * Una lista i18n (`{es: […], …}`) leída en el idioma activo: cada línea recortada y sin las vacías.
+     *
+     * @return list<string>
+     */
+    private function lineasDe(string $campo): array
+    {
+        $lineas = $this->tr($campo);
+        $lineas = is_array($lineas) ? $lineas : [$lineas];
 
         return array_values(array_filter(
-            array_map(fn (mixed $feature): string => is_scalar($feature) ? trim((string) $feature) : '', $features),
-            fn (string $feature): bool => $feature !== '',
+            array_map(fn (mixed $linea): string => is_scalar($linea) ? trim((string) $linea) : '', $lineas),
+            fn (string $linea): bool => $linea !== '',
         ));
     }
 

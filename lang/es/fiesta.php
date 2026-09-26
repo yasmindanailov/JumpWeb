@@ -200,6 +200,8 @@ return [
         'calendario' => 'Añadir al calendario',
         'merienda' => 'La merienda',
         'merienda_alergias' => '¿Alergias o menú especial? Lo apuntas al contestar, y lo ven :h y los monitores.',
+        // Los tres grupos de la merienda del diseño (F1b), con su icono fijo; lo que va en cada uno es dato del producto.
+        'merienda_grupos' => ['drink' => 'Para beber', 'food' => 'Para comer', 'sweet' => 'Y para terminar'],
         'plazo' => 'Confirma antes del :dia a las :hora.',
         'campo' => 'Nombre y apellidos del niño o la niña',
         'si' => 'Vamos',

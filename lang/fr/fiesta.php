@@ -191,6 +191,7 @@ return [
         'calendario' => 'Ajouter au calendrier',
         'merienda' => 'Le goûter',
         'merienda_alergias' => 'Allergies ou menu spécial ? Indiquez-le en répondant : :h et les moniteurs le verront.',
+        'merienda_grupos' => ['drink' => 'À boire', 'food' => 'À manger', 'sweet' => 'Et pour finir'],
         'plazo' => 'Répondez avant le :dia à :hora.',
         'campo' => 'Prénom et nom de l’enfant',
         'si' => 'On vient',
