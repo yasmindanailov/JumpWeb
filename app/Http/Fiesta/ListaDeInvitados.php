@@ -28,8 +28,9 @@ use Illuminate\Support\Str;
  * ⚠️ **La lógica no cambia** (spec §0): el formulario sigue siendo POSICIONAL (`guests[i][columna]`, `adopt[]`,
  * `guest_count`, `expected_version`, `addons[i][…]`, `general[…]`) y lo que aquí se calcula es lo que ya calculaba la
  * vista de 1.279 líneas en Blade (`ficheStates`, el orden de la página, `declinedBySlot`…), bajado a PHP con su
- * test. Lo que el diseño añade y el producto no tiene (quien cumple como fila, la lista sin filas vacías, el número
- * que sube desde la lista…) NO está aquí: es lo que FALTA (spec §1.4, con la decisión del owner, `#743`).
+ * test. Lo que el diseño añade y el producto no tiene (el número que sube desde la lista, «Al final viene»…) NO está
+ * aquí: es lo que FALTA (spec §1.4, con la decisión del owner, `#743`). ✅ Desde F3a (`#747`): quien cumple como fila,
+ * la ficha 0 de las reservas que la sellan.
  *
  * ⚠️ Las tres columnas de la ficha —nombre, edad, alergias— se resuelven por TIPO y por orden, como
  * `guestNameFieldKey()`: el nombre es la primera `text`; la edad, la primera `age`; las alergias, la siguiente `text`.
@@ -61,13 +62,16 @@ final class ListaDeInvitados
         $adoptadas = $inv !== null ? app(PartyInvitations::class)->adoptedYesKeysIn($reservation) : [];
         $declinadas = collect($invitacion['declined'] ?? [])->filter(fn (array $r): bool => $r['slot_index'] !== null)->keyBy('slot_index');
 
-        $ninos = self::ninos($reservation, $type, $rows, $proposals, $columnas, $firmas, $adoptadas, $declinadas, $v);
-        $cuentas = self::cuentas($ninos, $invitacion['summary'] ?? null);
-        $reserva = self::reserva($reservation, $type, $site, $invitacion);
+        // Quien cumple: su nombre y su edad son los de la invitación. Con la fila de quien cumple (F3a, `#747`) son además
+        // los de la ficha 0, y «Personalizar» los enseña como espejo de esa fila (la vista y `lista.js`).
         $cumple = [
             'nombre' => $inv !== null ? trim((string) $inv->honoree_name) : '',
             'edad' => $inv !== null && $inv->honoree_age !== null ? (string) $inv->honoree_age : '',
+            'fila' => $reservation->hasHonoreeRow(),
         ];
+        $ninos = self::ninos($reservation, $type, $rows, $proposals, $columnas, $firmas, $adoptadas, $declinadas, $v, $cumple);
+        $cuentas = self::cuentas($ninos, $invitacion['summary'] ?? null);
+        $reserva = self::reserva($reservation, $type, $site, $invitacion);
 
         return [
             'accion' => $v['formAction'],
@@ -138,9 +142,10 @@ final class ListaDeInvitados
      * @param  list<string>  $adoptadas
      * @param  Collection<int, array{id: int, child_name: string, slot_index: int|null}>  $declinadas
      * @param  array<string, mixed>  $v
+     * @param  array{nombre: string, edad: string, fila: bool}  $cumple
      * @return list<array<string, mixed>>
      */
-    private static function ninos(OrderItem $reservation, TicketType $type, array $rows, array $proposals, array $columnas, array $firmas, array $adoptadas, $declinadas, array $v): array
+    private static function ninos(OrderItem $reservation, TicketType $type, array $rows, array $proposals, array $columnas, array $firmas, array $adoptadas, $declinadas, array $v, array $cumple): array
     {
         $out = [];
         $quantity = max(0, (int) $reservation->quantity);
@@ -151,14 +156,22 @@ final class ListaDeInvitados
 
         for ($i = 0; $i < $quantity; $i++) {
             $row = $rows[$i] ?? [];
-            $mark = $proposals[$i] ?? null;
+            // ❗ LA FILA DE QUIEN CUMPLE (F3a, `#747`): la ficha 0 de una reserva que la sella. Abre la lista, no es una
+            // respuesta (no entra en las cifras de la zona 1, sí en el número), no se quita ni se descarta, y hasta
+            // el primer guardado trae el nombre y la edad de la invitación: así el guardado los escribe en su ficha.
+            $esCumple = $cumple['fila'] && $i === OrderItem::HONOREE_ROW_INDEX;
+            $mark = $esCumple ? null : ($proposals[$i] ?? null);
             $nombre = $columnas['name'] === null ? '' : trim((string) ($row[$columnas['name']] ?? ''));
             $edad = $columnas['age'] === null ? '' : trim((string) ($row[$columnas['age']] ?? ''));
+            if ($esCumple && $nombre === '') {
+                $nombre = $cumple['nombre'];
+                $edad = $edad !== '' ? $edad : $cumple['edad'];
+            }
             $alergias = $columnas['allergies'] === null ? '' : trim((string) ($row[$columnas['allergies']] ?? ''));
             $key = $nombre === '' ? '' : PersonNameKey::for($nombre);
             $firmada = $key !== '' && collect($firmas)->contains(fn (array $f): bool => PersonNameKey::cardMatches($key, $f['key']));
-            $adoptada = $key !== '' && in_array($key, $adoptadas, true);
-            $declinada = $declinadas->has($i);
+            $adoptada = ! $esCumple && $key !== '' && in_array($key, $adoptadas, true);
+            $declinada = ! $esCumple && $declinadas->has($i);
             $sinProducto = in_array($i, $noProduct, true);
             $primeraVacia = collect($guestFields)->first(fn (array $f): bool => (bool) $f['required'] && ! filled($row[$f['key']] ?? null));
             $conDatos = collect($guestFields)->contains(fn (array $f): bool => filled($row[$f['key']] ?? null));
@@ -175,9 +188,9 @@ final class ListaDeInvitados
                 'nombre' => $nombre,
                 'edad' => $edad,
                 'alergias' => $alergias,
-                'vacia' => ! $conDatos && $mark === null,
-                'origen' => ($mark !== null || $adoptada) ? 'invitacion' : 'mano',
-                'respuesta' => ($mark !== null || $adoptada) ? 'si' : ($declinada ? 'no' : null),
+                'vacia' => ! $esCumple && ! $conDatos && $mark === null,
+                'origen' => $esCumple ? 'cumple' : (($mark !== null || $adoptada) ? 'invitacion' : 'mano'),
+                'respuesta' => ($esCumple || $mark !== null || $adoptada) ? 'si' : ($declinada ? 'no' : null),
                 'pendiente' => $mark !== null,
                 'reply_id' => $mark['id'] ?? null,
                 'repetida' => (bool) ($mark['repeated'] ?? false),
@@ -202,6 +215,7 @@ final class ListaDeInvitados
     /**
      * Las cifras de la zona 1 y de la 3: «confirmados» son los «sí» (pendientes o adoptados) SIN contar dos veces
      * a un niño; «sin contestar», las fichas con nombre que no llegaron por la invitación; «no pueden», los «no».
+     * Quien cumple solo suma en «en la lista», que es lo que el número compara.
      *
      * @param  list<array<string, mixed>>  $ninos
      * @param  array{yes: int, no: int, pending: int}|null  $summary
@@ -217,6 +231,10 @@ final class ListaDeInvitados
                 continue;
             }
             $enLista++;
+            // Quien cumple (F3a, `#747`) cuenta en el número pero no es una respuesta: fuera de las cifras de la zona 1.
+            if ($n['origen'] === 'cumple') {
+                continue;
+            }
             if ($n['respuesta'] === 'si') {
                 $confirmados++;
             } elseif ($n['respuesta'] === null) {

@@ -220,6 +220,8 @@ class TicketType extends Model
         // D15: si este producto ofrece INVITACIÓN DIGITAL (`specs/celebracion-e-invitacion.md` §4.4,
         // `#573`). Hermano de `guardian_authorization`: los dos contestan a «¿qué papeles pide?».
         'guest_invitation' => 'boolean',
+        // F3a de `fiesta-sistema-nuevo.md` (`#747`): quien cumple cuenta como uno de los niños ({@see countsHonoree()}).
+        'honoree_counts' => 'boolean',
         'tax_rate' => 'decimal:2',
         'duration_min' => 'integer',
         'seats_per_unit' => 'integer',
@@ -875,6 +877,22 @@ class TicketType extends Model
     public function offersGuestInvitation(): bool
     {
         return (bool) $this->guest_invitation
+            && $this->isPack()
+            && $this->guestNameFieldKey() !== null;
+    }
+
+    /**
+     * ¿**Quien cumple cuenta como uno de los niños** de este pack? (F3a de `specs/fiesta-sistema-nuevo.md` §4.8,
+     * `[DECIDIDO owner]` `#747`). Con él, una reserva de 10 es quien cumple + 9 invitados: la reserva lo SELLA al
+     * crearse (`order_items.honoree_row`, en `OrderCreator`) y su ficha 0 es la de quien cumple.
+     *
+     * ⚠️ Es un AJUSTE del pack (data-driven), no una regla del producto: hay parques que cuentan al homenajeado y parques
+     * que no. Y exige lo mismo que la invitación, además del interruptor: un pack con columna de nombre, porque la ficha
+     * de quien cumple es una ficha como las demás.
+     */
+    public function countsHonoree(): bool
+    {
+        return (bool) $this->honoree_counts
             && $this->isPack()
             && $this->guestNameFieldKey() !== null;
     }

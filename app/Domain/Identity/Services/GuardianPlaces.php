@@ -69,7 +69,10 @@ final class GuardianPlaces implements ReservationPlacesTaken, SignedInvitationRe
     {
         return $this->assignedDependents($reservationId)
             + $this->authorizations($reservationId)
-            + $this->committedGuests($reservationId);
+            + $this->committedGuests($reservationId)
+            // ▶ Desde F3a (`#747`): la plaza de QUIEN CUMPLE, si la reserva la sella. Ocupa una plaza con dueño como
+            // un «sí», así que el suelo no deja bajar por debajo de él + los confirmados ni se firma por encima.
+            + $this->guests->honoreeSeatsIn($reservationId);
     }
 
     /**

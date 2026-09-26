@@ -2600,6 +2600,8 @@ return [
 
         'field_guest_invitation' => 'Invitación digital',
         'guest_invitation_hint' => 'El cliente comparte un enlace y cada padre contesta si su hijo viene, con su nombre. Solo en packs con datos por invitado que tengan una columna de nombre, y no se puede combinar con el justificante obligatorio. Con la invitación encendida el cliente ya no ve la casilla del justificante: lo dice cada padre al contestar.',
+        'field_honoree_counts' => 'Quien cumple cuenta como uno de los niños',
+        'honoree_counts_hint' => 'Una reserva de 10 es quien cumple y 9 invitados: su ficha abre la lista, con su nombre, su edad y sus alergias, y sale en la hoja de los monitores y en la puerta. Solo en packs con datos por invitado que tengan una columna de nombre. Vale para las reservas que se hagan desde que lo enciendas: las de antes no cambian.',
 
         'field_min_qty' => 'Mín. invitados',
         'min_qty_hint' => 'Número mínimo de invitados para reservar.',

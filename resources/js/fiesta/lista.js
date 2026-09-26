@@ -117,7 +117,8 @@ function lista(form) {
         const nombre = c.name.value.trim();
         const edad = (c.age?.value || '').trim();
         const alergias = (c.allergies?.value || '').trim();
-        const vacia = nombre === '' && edad === '' && alergias === '' && fila.dataset.origen !== 'invitacion';
+        // Quien cumple (F3a) nunca es una ficha vacía: abre la lista aunque aún no tenga nombre.
+        const vacia = nombre === '' && edad === '' && alergias === '' && fila.dataset.origen !== 'invitacion' && fila.dataset.origen !== 'cumple';
         fila.dataset.vacia = vacia ? '1' : '0';
         const n = q('[data-fila-nombre]', fila);
         if (n) { n.textContent = nombre || t('la_lista.sin_nombre', 'Sin nombre'); n.style.color = nombre ? 'var(--text-strong)' : 'var(--text-muted)'; }
@@ -149,12 +150,33 @@ function lista(form) {
     };
     // La última fila VISIBLE de cada lista es la que va sin borde (el diseño calcula `last` sobre las que pinta): con
     // las fichas vacías escondidas por `js` y con el filtro, la marca del servidor (la última posición) se mueve.
+    const filaCumple = q('[data-fila][data-origen="cumple"]', form);
     const marcaUltimas = () => {
         [...new Set(filas().map((f) => f.parentElement))].forEach((ul) => {
             const hijas = qa(':scope > [data-fila]', ul);
             const visibles = hijas.filter((f) => !f.hidden && !f.classList.contains('fi-fila--vacia'));
             hijas.forEach((f) => f.classList.toggle('fi-fila--last', f === visibles[visibles.length - 1]));
         });
+        // Quien cumple va en su propia lista, pero la de debajo la continúa: sin borde solo si detrás viene «Por repasar»
+        // o no viene nadie (el `last` del diseño sobre `[cumple]` o `[cumple, null]`).
+        if (filaCumple) {
+            const repasarVisible = qa('[data-repasar] [data-fila]', form).some((f) => !f.hidden);
+            const restoVisible = qa('[data-filas] > [data-fila]', form).some((f) => !f.hidden && !f.classList.contains('fi-fila--vacia'));
+            filaCumple.classList.toggle('fi-fila--last', repasarVisible || !restoVisible);
+        }
+    };
+    // ── Quien cumple (F3a, `#747`): «Personalizar» enseña su nombre y su edad como ESPEJO de su fila, que es la que se
+    //    guarda («se escriben una vez», el diseño). Los espejos no tienen `name`: no viajan ni cuentan como cambio. ──
+    const espejos = qa('[data-cumple-espejo]', form);
+    const copiaEspejo = (desdeFila) => {
+        if (!filaCumple) return;
+        const c = camposDe(filaCumple);
+        espejos.forEach((el) => {
+            const campo = c[el.dataset.cumpleEspejo];
+            if (!campo) return;
+            if (desdeFila) el.value = campo.value; else campo.value = el.value;
+        });
+        if (!desdeFila) pintaFila(filaCumple);
     };
     form.addEventListener('click', (e) => {
         const cab = e.target.closest('[data-fila-abrir]');
@@ -176,6 +198,8 @@ function lista(form) {
         if (i >= 0 && i < f.length - 1) f[i + 1].focus(); else abre(ficha.closest('[data-fila]'), false);
     });
     form.addEventListener('input', (e) => {
+        if (e.target.dataset?.cumpleEspejo) copiaEspejo(false);
+        else if (filaCumple && filaCumple.contains(e.target)) { copiaEspejo(true); actualizaVista(); }
         const fila = e.target.closest('[data-fila]');
         if (fila) pintaFila(fila);
         actualiza();
@@ -219,7 +243,7 @@ function lista(form) {
     qa('[data-panel-cerrar], [data-anadir] [data-act="cerrar"]', form).forEach((b) => b.addEventListener('click', () => abrePanel(null)));
 
     // Una ficha VACÍA es donde entra un niño nuevo: la primera escondida, por su posición.
-    const siguienteVacia = () => filas().filter((f) => f.classList.contains('fi-fila--vacia') && camposDe(f).name).sort((a, b) => Number(a.dataset.indice) - Number(b.dataset.indice))[0] || null;
+    const siguienteVacia = () => filas().filter((f) => f.classList.contains('fi-fila--vacia') && f.dataset.origen !== 'cumple' && camposDe(f).name).sort((a, b) => Number(a.dataset.indice) - Number(b.dataset.indice))[0] || null;
     const nombres = () => filas().filter((f) => !f.classList.contains('fi-fila--vacia')).map((f) => camposDe(f).name?.value.trim()).filter(Boolean);
     const mete = (nombre, edad, alergias) => {
         const fila = siguienteVacia();
@@ -303,7 +327,8 @@ function lista(form) {
         filtro = filtro === k ? null : k;
         qa('[data-filtro]', form).forEach((b) => { b.classList.toggle('on', b.dataset.filtro === filtro); b.setAttribute('aria-pressed', b.dataset.filtro === filtro ? 'true' : 'false'); });
         let vistos = 0;
-        filas().forEach((f) => { const oculta = filtro !== null && (categoria(f) !== filtro || f.classList.contains('fi-fila--vacia')); f.hidden = oculta; if (!oculta && !f.classList.contains('fi-fila--vacia')) vistos++; });
+        // Con un filtro, quien cumple se esconde: no es una respuesta (el `conCumple` del diseño).
+        filas().forEach((f) => { const oculta = filtro !== null && (f.dataset.origen === 'cumple' || categoria(f) !== filtro || f.classList.contains('fi-fila--vacia')); f.hidden = oculta; if (!oculta && !f.classList.contains('fi-fila--vacia')) vistos++; });
         const nadie = q('[data-nadie]', form);
         if (nadie) nadie.hidden = !(filtro !== null && vistos === 0);
         if (chip) {
@@ -506,6 +531,8 @@ function lista(form) {
     // ⚠️ El mensaje de la lista vacía es `[data-lista-vacia]`: `[data-vacia]` es la marca de CADA fila (`pintaFila`) y
     //    con ese selector se escondía la primera fila con nombre (T1b).
     if (q('[data-lista-vacia]', form) && nombres().length > 0) q('[data-lista-vacia]', form).setAttribute('hidden', '');
+    // Los espejos de quien cumple, con lo que traiga su fila (el borrador recuperado, o lo que el navegador restauró).
+    copiaEspejo(true);
     // La vista previa, con lo que haya en los campos: el borrador recuperado o lo que el navegador restauró al volver.
     actualizaVista();
     actualiza();

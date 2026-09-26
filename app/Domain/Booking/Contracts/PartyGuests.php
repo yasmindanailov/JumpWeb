@@ -60,4 +60,14 @@ interface PartyGuests
      * @return array<int, list<array{reply_id: int, name: string, key: string, companion: string|null, pending: bool}>>
      */
     public function partyGuestsIn(array $reservationIds): array;
+
+    /**
+     * **La plaza de QUIEN CUMPLE**: 1 si la reserva la tiene sellada, 0 si no (F3a de `specs/fiesta-sistema-nuevo.md`
+     * §4.8, `[DECIDIDO owner]` `#747`).
+     *
+     * ⚠️ Quien cumple ocupa una plaza que ya tiene dueño, como un «sí»: sin ella en la cuenta, una reserva de 10 con 9
+     * «sí» dejaría firmar a un décimo invitado y el suelo dejaría bajar a 9, y el recorte se llevaría a un confirmado.
+     * Si el anfitrión además asignó a su hijo como menor a cargo, cuenta dos veces: el suelo sale alto, el lado seguro.
+     */
+    public function honoreeSeatsIn(int $reservationId): int;
 }

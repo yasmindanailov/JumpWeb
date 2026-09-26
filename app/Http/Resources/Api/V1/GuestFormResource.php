@@ -67,6 +67,10 @@ class GuestFormResource extends JsonResource
             // la respuesta violaba `openapi/v1.yaml` y ningún caso lo veía porque el fixture de
             // siempre tenía un campo general. Una ficha sin respuestas es el mismo caso.
             'guests' => array_map(static fn (array $row): object => (object) $row, $item->guestData()),
+            // ¿La ficha 0 es la de QUIEN CUMPLE? (F3a de `fiesta-sistema-nuevo.md` §4.8, `#747`, contrato 1.35.0). Con él,
+            // `guest_count` incluye a quien cumple y su nombre y su edad son los de la invitación: la app los pinta en la
+            // primera fila y los devuelve en ella al guardar.
+            'honoree_row' => $item->hasHonoreeRow(),
             'general' => (object) $this->generalAnswers($item, $type),
             'save_url' => $item->guestFormApiUrls()['save'],
             // Los EXTRAS de venta posterior (`specs/complementos-post-reserva.md`, T3 de `#413`):

@@ -381,14 +381,16 @@ foreach (['autorizacion-recibo' => 'recibo', 'autorizacion-firmada' => 'firmada'
 // pruebas y con el `localStorage` del estado limpio antes de montar); B es `fiesta.lista` con `modelos.php → lista`.
 // El `guardado` del diseño se monta AJUSTADO a lo que HAY (spec §1.4, y lo mismo en el modelo B): sin los «no» (k7, k8:
 // «Al final viene» FALTA), con las edades a 7 (la nota de las edades FALTA), sin palabras ni pistas, sin fecha de
-// guardado. El par de DIAGNÓSTICO esconde en los dos lados lo que el producto no tiene: la fila de quien cumple (A), la
-// zona 4 entera (la tarta y los padres, A y B) y la línea de privacidad bajo la barra (B). Tiene que dar 0. Las páginas
+// guardado. El par de DIAGNÓSTICO esconde en los dos lados lo que el producto no tiene: la zona 4 entera (la tarta y los
+// padres, A y B) y la línea de privacidad bajo la barra (B). Tiene que dar 0. ✅ Desde F3a (`#747`) la fila de quien cumple
+// ya no se esconde: es del producto y entra en el par. Las páginas
 // REALES de `guardado` se escriben (para el ojo: `a/lista-guardado.html`, `b/lista-guardado.html`) pero no entran en el
 // lote: no miden lo mismo (A 1280×4040, B 1280×2932: la tarta y los padres) y el juez no puede dar un número.
 $cardLista = (string) file_get_contents($diseno.'/paginas/lista-invitados.card.html');
 $ajusteGuardado = 'const E = window.PLI.ESTADOS.guardado; E.guardadoEn = null; E.form.invitacion.palabras = ""; E.form.invitacion.pistas = ""; '
     .'E.form.ninos = E.form.ninos.filter((x) => x.respuesta !== "no").map((x) => Object.assign({}, x, { edad: x.edad === "8" ? "7" : x.edad })); ';
-$esconderA = '<style>section[data-zona="2"] > ul.pli-ul:first-of-type, [data-zona="4"] { display: none; }</style>';
+// Desde F3a (`#747`) la fila de quien cumple ES del producto: A ya no la esconde (antes, `ul.pli-ul:first-of-type`).
+$esconderA = '<style>[data-zona="4"] { display: none; }</style>';
 $esconderB = '<style>[data-zona="4"], [data-zona="5"] > .pli-sub { display: none; }</style>';
 foreach (['lista-recien' => 'recien', 'lista-guardado' => 'guardado'] as $nombre => $estado) {
     if ($solo !== [] && ! in_array($nombre, $solo, true)) {

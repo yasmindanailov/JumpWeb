@@ -185,7 +185,9 @@ suelo = max( min_qty del pack , menores a cargo asignados + justificantes firmad
   permiso propio y rastro (`orders.edit_item_below_minimum`, D7 de `cumple-mixto.md` §23): **el
   cliente no la tiene y no se le da**.
 - **Lo que ya tiene dueño**: `GuardianPlaces::takenIn()` — menores a cargo asignados + justificantes
-  firmados. ⚠️ Sin esto, bajar dejaría la hoja de sala imprimiendo **plazas negativas** (ficha viva en
+  firmados (+ los «sí» de la invitación, `#576`; ▶ y desde `[DECIDIDO owner]` `#747`, 26-09, **la plaza de quien
+  cumple** en las reservas que la sellan, `fiesta-sistema-nuevo.md` §4.8: su ficha 0 está clavada y no se pierde al
+  bajar). ⚠️ Sin esto, bajar dejaría la hoja de sala imprimiendo **plazas negativas** (ficha viva en
   `DEUDA.md`, reproducida: cantidad 1 con 3 menores asignados → la hoja calcula **−2**). Esta feature
   **cierra ese agujero por su lado**; el del panel sigue abierto.
 - ⚠️ **El motivo que se devuelve distingue los dos**, porque el remedio no es el mismo: al primero se

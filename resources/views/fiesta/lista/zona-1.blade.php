@@ -47,9 +47,13 @@
                      JavaScript sale abierto; con él lo abre el botón. --}}
                 <div id="pli-pers" class="pli-pers" data-pers>
                     <x-fiesta.tema vivo :label="__('fiesta.lista.pers.tema')" name="theme" :items="$inv['temas']" :value="$inv['tema']" :age="$m['cumple']['edad']" />
+                    {{-- ⚠️ Con la fila de quien cumple (F3a, `#747`) estos dos son un ESPEJO de su fila en la lista («se escriben
+                         una vez»): sin `name`, no viajan; `lista.js` los ata a los campos de la ficha 0, que son los que se
+                         guardan. Sin ella (las reservas de antes), escriben la invitación como siempre. --}}
+                    @php($espejo = $m['cumple']['fila'] ? collect($m['ninos'])->first(fn (array $n): bool => $n['origen'] === 'cumple') : null)
                     <div class="pli-pers-2">
-                        <x-pieza.campo id="pli-quien" name="honoree_name" :label="__('fiesta.lista.pers.quien')" :value="$m['cumple']['nombre']" :maxlength="$inv['honoree_max']" autocomplete="off" data-inv-campo="name" />
-                        <x-pieza.campo id="pli-su-edad" name="honoree_age" :label="__('fiesta.lista.pers.edad')" :value="$m['cumple']['edad']" inputmode="numeric" maxlength="2" data-inv-campo="age"><x-slot:sufijo>{{ __('fiesta.invitacion.unit') }}</x-slot:sufijo></x-pieza.campo>
+                        <x-pieza.campo id="pli-quien" :name="$espejo === null ? 'honoree_name' : null" :label="__('fiesta.lista.pers.quien')" :value="$espejo['nombre'] ?? $m['cumple']['nombre']" :maxlength="$inv['honoree_max']" autocomplete="off" data-inv-campo="name" :data-cumple-espejo="$espejo === null ? null : 'name'" />
+                        <x-pieza.campo id="pli-su-edad" :name="$espejo === null ? 'honoree_age' : null" :label="__('fiesta.lista.pers.edad')" :value="$espejo['edad'] ?? $m['cumple']['edad']" inputmode="numeric" maxlength="2" data-inv-campo="age" :data-cumple-espejo="$espejo === null ? null : 'age'"><x-slot:sufijo>{{ __('fiesta.invitacion.unit') }}</x-slot:sufijo></x-pieza.campo>
                     </div>
                     <x-pieza.campo id="pli-invita" name="host_line" :label="__('fiesta.lista.pers.invita')" :value="$inv['invita']" :maxlength="$inv['host_max']" autocomplete="off" data-inv-campo="host" />
                     {{-- Las palabras y las pistas (F1a): opcionales, con el tope del diseño; texto libre publicado, como «te invita». --}}

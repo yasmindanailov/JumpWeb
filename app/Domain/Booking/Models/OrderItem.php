@@ -6,6 +6,7 @@ use App\Domain\Booking\Services\AgeFamilySeal;
 use App\Domain\Booking\Services\GuestAgeMixReader;
 use App\Domain\Booking\Services\GuestCardOrder;
 use App\Domain\Booking\Services\MixedPartySurcharge;
+use App\Domain\Booking\Services\PartyInvitations;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\PaymentRefund;
 use App\Domain\Platform\Services\AuditLogger;
@@ -46,6 +47,9 @@ class OrderItem extends Model
 
     public const GUEST_FORM_STATUS_PENDING = 'pending';
 
+    /** La posición de la ficha de quien cumple en las reservas que la tienen ({@see hasHonoreeRow()}, `#747`). */
+    public const HONOREE_ROW_INDEX = 0;
+
     protected $guarded = [];
 
     /**
@@ -74,6 +78,9 @@ class OrderItem extends Model
         // acordó AL COMPRAR. Es un hecho de la línea y no una consulta al catálogo — cambiar el
         // interruptor del producto mañana no reescribe lo que este cliente marcó ayer.
         'guardian_authorization' => 'boolean',
+        // El SELLO de quien cumple (F3a de `fiesta-sistema-nuevo.md`, `#747`): copiado del pack al crear la reserva. Con
+        // él la ficha 0 es la de quien cumple ({@see hasHonoreeRow()}); las reservas de antes quedan en `false`.
+        'honoree_row' => 'boolean',
         'age_family_seal' => 'array',
         'cancelled_at' => 'datetime',
         // Cuándo salió el AVISO DE LA VÍSPERA de esta reserva (T7·2b). ⚠️ Se escribe por el
@@ -527,6 +534,36 @@ class OrderItem extends Model
     }
 
     /**
+     * ¿La ficha 0 es la de **quien cumple**? (F3a de `specs/fiesta-sistema-nuevo.md` §4.8, `[DECIDIDO owner]` `#747`).
+     *
+     * Lo dice el SELLO de la reserva, no el pack de hoy: se copia al crearla (`OrderCreator`) y no cambia, así que las
+     * reservas de antes siguen con sus N fichas de invitados y ninguna pierde plaza ni paga más.
+     */
+    public function hasHonoreeRow(): bool
+    {
+        return (bool) $this->honoree_row && (int) $this->quantity > 0;
+    }
+
+    /**
+     * Las fichas de los INVITADOS, por su posición (0…quantity−1), **sin la de quien cumple**: lo que empareja con las
+     * respuestas de la invitación (propuestas, «no», recordatorio, adopción).
+     *
+     * ⚠️ Conserva las claves: quien la recorre necesita la POSICIÓN real de cada ficha. Quien cumple no contesta a su
+     * propia invitación, así que su ficha no es candidata de ninguna respuesta ni está «sin contestar».
+     *
+     * @return array<int, array<string, string>>
+     */
+    public function invitedGuestRows(): array
+    {
+        $rows = array_slice($this->guestData(), 0, max(0, (int) $this->quantity), true);
+        if ($this->hasHonoreeRow()) {
+            unset($rows[self::HONOREE_ROW_INDEX]);
+        }
+
+        return $rows;
+    }
+
+    /**
      * ¿El post-form por-niño está COMPLETO para la cantidad ACTUAL de invitados? Se DERIVA en
      * vivo de `guest_data` contra `quantity` (no de un flag congelado): si el empleado sube el nº
      * de niños, vuelve a estar incompleto solo (hay filas nuevas vacías). Para entradas o packs
@@ -941,6 +978,12 @@ class OrderItem extends Model
             'order_item_id' => $this->id,
             'via' => $via,
         ]);
+
+        // La ficha de QUIEN CUMPLE (F3a de `fiesta-sistema-nuevo.md` §4.8, `#747`): su nombre y su edad son los de la
+        // invitación. Aquí, el único punto por el que entran las fichas, se copian a la tarjeta pública.
+        if ($guests !== null && $this->hasHonoreeRow()) {
+            app(PartyInvitations::class)->syncHonoreeFromRow($this);
+        }
 
         // El suplemento de fiesta MIXTA sigue a las edades (`specs/cumple-mixto.md` §12,
         // `[DECIDIDO owner]`). Va aquí, después del guardado, por el mismo motivo que el resto de

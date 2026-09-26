@@ -10,8 +10,8 @@
  *    producto pide y el diseño no (nacimiento, relación, el descargo en el flujo, la privacidad…) va con texto neutro.
  * ⚠️ El estado `guardado` de la lista se mapea AJUSTADO a lo que HAY (spec §1.4): sin los «no» del diseño (k7, k8:
  *    «Al final viene» FALTA), con las edades a 7 (la nota de las edades FALTA), sin palabras ni pistas (FALTA), sin
- *    fecha de guardado (la barra dice «Nada que guardar todavía»). Quien cumple NO es una fila (FALTA): nueve con datos
- *    y la décima plaza vacía, como las produce el presentador; el número dice «10 de 10» porque en el diseño quien cumple
+ *    fecha de guardado (la barra dice «Nada que guardar todavía»). Desde F3a (`#747`) quien cumple ES la primera fila
+ *    (la ficha 0) y los nueve invitados llenan el resto; antes era «nueve y la décima vacía». El número dice «10 de 10»: quien cumple
  *    cuenta como uno más. k9, k10 y k12 son «mano» con «sí» en el diseño, que para el presentador es `origen: invitacion`.
  *
  * @return array{lista: callable(string): array<string, mixed>, invitacion: callable(bool, ?string=): array<string, mixed>, autorizacion: callable(string, bool): array<string, mixed>}
@@ -84,7 +84,8 @@ return [
     // ── LA LISTA (`lista-invitados/datos.js`): `recien` es la primera pantalla; `guardado`, la lista completa ──────────
     'lista' => static function (string $estado) use ($NB, $LOGO, $RESERVA, $TEMAS): array {
         $guardado = $estado === 'guardado';
-        $cumple = ['nombre' => $guardado ? 'Vera' : '', 'edad' => '7'];
+        // Quien cumple, la PRIMERA fila (F3a, `#747`): la reserva del diseño la sella (`honoree_row`).
+        $cumple = ['nombre' => $guardado ? 'Vera' : '', 'edad' => '7', 'fila' => true];
         $titular = $cumple['nombre'].__('fiesta.invitacion.rest', ['age' => $cumple['edad']]);
         $cuando = __('fiesta.lista.cuando', ['dia' => $RESERVA['dia'], 'hora' => $RESERVA['hora'], 'fin' => $RESERVA['fin'], 'lugar' => $RESERVA['lugar']]);
         $mensaje = __('fiesta.lista.invitacion.mensaje', ['titular' => $titular, 'cuando' => $cuando, 'enlace' => $RESERVA['enlace']]);
@@ -104,9 +105,12 @@ return [
             ['Nora Jiménez Vidal', '7', 'Frutos secos', true], ['Daniel Ortiz Mora', '7', '', true], ['Irene Castillo Rey', '7', '', true],
             ['Pablo Ruiz Navarro', '7', '', true], ['Sofía Navarro Pons', '7', 'Celiaca', false], ['Lola Pérez Soto', '6', 'Huevo', false],
         ] : [];
-        $ninos = [];
-        for ($i = 0; $i < $RESERVA['reservados']; $i++) {
-            $ninos[] = isset($conDatos[$i]) ? $nino($i, ...$conDatos[$i]) : $nino($i);
+        // La ficha 0 es la de quien cumple (`cu(true)` del diseño en `guardado`): abre la lista y no es una respuesta.
+        $ninos = [array_merge($nino(0, $cumple['nombre'], $cumple['edad'], '', $guardado), [
+            'vacia' => false, 'origen' => 'cumple', 'respuesta' => 'si', 'completa' => $guardado,
+        ])];
+        for ($i = 1; $i < $RESERVA['reservados']; $i++) {
+            $ninos[] = isset($conDatos[$i - 1]) ? $nino($i, ...$conDatos[$i - 1]) : $nino($i);
         }
         $confirmados = count($conDatos);
 
@@ -167,7 +171,7 @@ return [
             ],
             'ninos' => $ninos,
             'columnas' => ['name' => 'name', 'age' => 'age', 'allergies' => 'allergies', 'extra' => [], 'labels' => ['name' => 'Nombre', 'age' => 'Edad', 'allergies' => 'Alergias o menú especial']],
-            'cuentas' => ['confirmados' => $confirmados, 'no_pueden' => 0, 'sin_contestar' => 0, 'en_lista' => $confirmados],
+            'cuentas' => ['confirmados' => $confirmados, 'no_pueden' => 0, 'sin_contestar' => 0, 'en_lista' => $confirmados + 1],
             'numero' => [
                 'valor' => $RESERVA['reservados'], 'suelo' => 8, 'techo' => null, 'editable' => true, 'motivo' => null,
                 'pista' => 'Hasta el viernes 25',
@@ -179,7 +183,7 @@ return [
             ],
             'generales' => [],
             'avisos' => [],
-            'progreso' => ['done' => $confirmados, 'total' => $RESERVA['reservados']],
+            'progreso' => ['done' => $guardado ? $confirmados + 1 : 0, 'total' => $RESERVA['reservados']],
             'guardar' => ['estado' => 'clean'],
             'plazos' => ['respuestas' => true, 'numero' => true, 'extras' => true],
             'privacidad' => '#privacidad',

@@ -79,9 +79,8 @@ Medido en `GuestFormController::show()` (sus 30 claves), `InvitationPageControll
   Las cifras como filtro: JS de la página, sin lógica de servidor.
 - Z2 · **HAY**: las fichas de `guest_data` con su estado, las respuestas por repasar (`proposals`, con «repetida»),
   la chapa «por la invitación», «No lo apuntes» (`dismissReply`), firmada/falta por niño (`guestRegimes`), el
-  pegado de nombres (`logic.js`), la línea de las edades (`ageMix`, `ageSurcharge`). **FALTA**: quien cumple como
-  FILA de la lista («Es su cumple»; hoy vive en `event_data` y no cuenta como ficha), la lista **sin filas vacías y
-  sin tope** (hoy `sanitizeGuestData()` es posicional y acotada a `quantity`: §7·3), «Al final viene» (una respuesta
+  pegado de nombres (`logic.js`), la línea de las edades (`ageMix`, `ageSurcharge`). ✅ **En F3a (26-09, `#747`)**: quien cumple como
+  FILA de la lista («Es su cumple»; la ficha 0 de las reservas que lo sellan, §4.8). **FALTA**: la lista **sin tope** (hoy `sanitizeGuestData()` es posicional y acotada a `quantity`: §7·3), «Al final viene» (una respuesta
   «no» que el anfitrión vuelve a contar), «Quitar» con deshacer, el `GuestComposer` (añadir de uno en uno con
   Intro), **tres campos y ni uno más** (los packs de PlayJump tienen cinco columnas: §7·6, DATO).
 - Z3 · **HAY**: el número con su plazo, subir y bajar dentro del suelo (`guestCount`, `#444`), «Solo pagas los niños
@@ -102,8 +101,8 @@ Medido en `GuestFormController::show()` (sus 30 claves), `InvitationPageControll
   disponible), la barra con el nombre y dos botones, el tema que pinta la página, cuándo y dónde, «Cómo llegar»,
   el `.ics`, el menú por `show_in_invitation`, quién invita y «Llamar», la vista previa (`og:*`), «Su ficha» en el
   recibo (G2), la firma desde el recibo (G3 «Lo dejo y me voy»), el aviso de privacidad, es/en/fr.
-- **FALTA** (tras T2): «Tus respuestas» en el móvil (JS; «Contestar por otro hijo» ya es un enlace), «Crear mi QR»
-  (Mi cuenta), «Avísame de fechas» (§7·8). ✅ **En F6a (26-09, `#746`)**: la firma DENTRO del recibo (`AuthForm`, con lo
+- **FALTA** (tras T2): «Tus respuestas» en el móvil (JS; «Contestar por otro hijo» ya es un enlace), «Avísame de
+  fechas» (§7·8; sola en el recibo, `#747`). ~~«Crear mi QR»~~: fuera de la invitación (`[DECIDIDO owner]` `#747`). ✅ **En F6a (26-09, `#746`)**: la firma DENTRO del recibo (`AuthForm`, con lo
   que la prueba exige). ✅ **En F1a (26-09)**: las palabras de la familia y las pistas. ✅ **En F1b (26-09)**: los grupos de
   la merienda con su icono (dato del complemento: tres listas i18n `menu_drink/food/sweet`; sin reparto, el plato
   sigue por su nombre). ✅ **En F1c (26-09)**: «Ver el parque» (§7·7) con la nota de Google en la cabecera (dos ajustes
@@ -273,6 +272,7 @@ Medido en `GuestFormController::show()` (sus 30 claves), `InvitationPageControll
 | **F1c** ✅ | «Ver el parque» (26-09; `#743` §7·7, ENCENDIDO con el vídeo de portada): dos ajustes del panel (`party.park_video`, `party.park_video_poster`: una ruta bajo `public/` como la sirve la web de la instalación —`videos/header_hero.mp4`— o una URL; con esquema, por `safeExternalUrl`), `Sitio::datos()` los resuelve y `InvitacionPagina::parque()` compone la píldora (la foto en el aro, el play, «Ver el parque» y la nota de Google COPIADA de la ficha `#771` en la misma píldora) y el visor `fiesta/invitacion/visor` (`content/ClipViewer.jsx` con UN clip: esqueleto oculto, `preload="none"` —se descarga solo al tocar—, el nombre del parque, «ciudad · N atracciones, cada edad en su zona» con N de `Attraction`, «Vamos» que cierra y lleva al nombre cuando se puede contestar, la prueba debajo); `invitacion.js` lo abre con sonido (sin él si el navegador lo veta), un toque pausa, cierra con la X, Escape, fuera o deslizando hacia abajo, y devuelve el foco. En el recibo la píldora sigue y no hay «Vamos»; la autorización no la lleva (el diseño tampoco). | `InvitacionPaginaTest` +2 · `AjustesFiestaTest` 2 (el panel escribe, `Sitio` resuelve, `javascript:` no pasa) · ESLint · **la pasada de la invitación con TODO el estado del diseño encendido (`opc` y `foto`): 8 de 8 pares a 0 px** (viva y cerrada, 390 y 1280; con `opc` la línea de privacidad queda bajo el pliegue y los pares reales también dan 0) · el visor abierto no se juzga: reproduce un vídeo · datos para el ojo en local (spa.md). |
 | **F2** ✅ | Personalizar la invitación EN TIEMPO REAL (26-09): la vista previa de la zona 1 se reescribe al teclear el tema, quién cumple, su edad (también en las tres miniaturas del tema), quien invita, las palabras, las pistas y «enseñar mi teléfono», como `PliZona1` del diseño. La tarjeta tiene un modo `vivo` (una rama APARTE de `x-fiesta.invitacion`: la tarjeta pública no cambia ni un byte) que pinta además, oculto, lo que puede aparecer al teclear, con sus marcas `data-inv-*`; una `<template>` por tema con la tarjeta entera (otro tema es otra tarjeta: el adorno nuevo entra con su animación, la chapa y la burbuja no la repiten, como React); `vistaInvitacion()` en `logica.js` decide qué se ve con las mismas reglas que el servidor; `lista.js` lo escribe. Sin nombre tecleado, el titular vuelve al guardado; la edad, solo cifras y dos. | `node --test` 12 (+4: la vista previa completa, sin edad ni palabras, sin quien invita, la edad tecleada) · `ListaDeInvitadosTest` +1 (la tarjeta viva, las tres plantillas y lo oculto) · `InvitacionPaginaTest` (la pública sin nada de esto) · **el juez: 18 de 18 a 0 px** (la lista en reposo, las piezas `invitacion-*` y `tema`, la invitación viva) · **la sonda en la lista viva de `JW-OJO-F1`: 16 de 16 pasos, sin errores de página** (`sonda-f2.mjs`, fuera de git) · ESLint. |
 | **F6a** ✅ | La firma DENTRO del recibo (26-09; `[DECIDIDO]` `#746`): tras «Vamos» y sin firma, el recibo pinta `x-fiesta.firma` con lo que la prueba exige (`#745`/`#706`: nombre y apellidos del niño con la nota de lo que escribió, nacimiento, relación, el descargo en el flujo y su privacidad) y la frase del diseño junto al botón; firmada, «Firmada» con quién firmó (nombre · teléfono). Una sola fuente para las dos pantallas: `ComposesGuardianForm` (el bloqueo, las relaciones, lo que llega de la invitación, el prellenado, los menores a cargo, la URL firmada del envío y lo que vuelve por la sesión) y `Autorizacion::formularioDe/avisoDe`. El envío lleva `desde=recibo` DENTRO de la firma: el error vuelve al recibo, a `#inv-h-aut`, con el foco en su campo; el éxito, al recibo con «Firmada». Arreglado de paso, medido: (1) una fiesta LLENA pintaba «no quedan plazas» a un «sí» atado aunque el firmador le deja (`#576`); (2) el enlace «Firmar» llevaba a un 404 fuera del modo interno: ahora sin nada que firmar no hay sección; (3) la firma compartía cupo con toda ruta con límite numérico (429 al segundo intento): cupo propio `guardian-sign` (SEC-06); (4) un REENVÍO desde un segundo recibo del mismo niño devolvía el formulario vacío: dice «Firmada»; (5) la cabecera con «Ver el parque» desbordaba en móvil (el diseño también): la píldora baja a su fila; (6) `.inv a` pesaba más que un botón con `href`: `:where(.inv) a`. La apertura de la autorización se cuenta en el recibo (`via=invitation`). | `InvitationSigningFlowTest` 9 (+4: la fiesta llena con su control, el reenvío con su control, el cupo con su control, el Listo) · `InvitationReceiptTest` +3 (la firma dentro, el error junto a su campo con el bolso real, sin modo interno con su control) · `PartyFactsTest` +1 · `FiestaModeloTest` +1 (el recibo) · **siete mutaciones, las siete caen** · **el banco: el recibo `si` y `firmada` contra `InvPagina`, 4 de 4 diagnósticos a 0 px** (esconden lo que la prueba exige, «Crear mi QR» de F6b y la cabecera en móvil); **el banco entero 66 de 70**: los cuatro reales que difieren son la cabecera en móvil y los campos del producto en la autorización, con sus diagnósticos a 0 · el flujo real con `curl` (un campo en rojo, lo escrito conservado) · **la sonda `sonda-f6a.mjs` a 390, 360 y 1280: sin errores de página, sin desbordar, el foco en el campo con error, «Firmada» con quién firmó** · suite. |
+| **F3a** ✅ | Quien cumple, la PRIMERA fila de la lista (26-09; `[DECIDIDO owner]` `#747`): el ajuste del pack `honoree_counts` (en el panel), el sello `honoree_row` en `OrderCreator`, la ficha 0 con su espejo en la invitación en los dos sentidos, la ficha clavada (`GuestCardOrder`, las propuestas, los «no», el recordatorio), su plaza en el suelo y en las firmas (`PartyGuests::honoreeSeatsIn`, contrato), `honoree_row` en la API (1.35.0), su fila en la lista con «Es su cumple» y «Personalizar» como espejo. El detalle y las tres partes, §4.8. | Ver §4.8. |
 | **F1…Fn** | Lo que FALTA (§1.4), una pieza por tanda, en el orden que fije el owner (§7). Cada una con su spec de sección aquí, su decisión y, si toca aforo, `VERIFY_CONC=1`. | Por pieza. |
 
 ### 4.7 Lo que enseñó la T1a (2026-09-25)
@@ -427,6 +427,54 @@ Medido en `GuestFormController::show()` (sus 30 claves), `InvitationPageControll
 - **El diseño también se equivoca**: «Ver el parque» (su propuesta) desborda a 390 en el propio mockup. «Idéntico al
   mockup» no puede incluir un scroll horizontal: se desvía, se declara (`#746`) y el diagnóstico lo descuenta.
 
+**La F3a (26-09)**:
+- **Medir antes de diseñar ahorró una tanda**: F3b parecía la mitad del trabajo y la T1a ya lo tenía (fichas vacías
+  escondidas, añadir de uno en uno, «Quitar» con «Deshacer», el tope). Lo que faltaba de verdad era el DATO de quien cumple.
+- **El espejo pasa por el guardado de siempre**: la edad de la ficha 0 mueve la línea de edades y el suplemento
+  (`CRITICAL_RE`); escribirla a mano desde la invitación se habría saltado el saneo, el rastro y el dinero.
+- ❗ **Una aserción que pasa por CASUALIDAD es un arnés que miente**: el «no se le recuerda que conteste» salía verde
+  porque en el mismo caso había un «no» con su nombre y ya contaba como contestada. Lo vio el arnés (16/17), no la lectura.
+- **Materializar la invitación en un GET no puede escribir la reserva**: su `updated_at` es el testigo de los extras y
+  `show()` lo lee ANTES; la ficha 0 se escribe al primer guardado (la lista la trae rellena con lo de la invitación).
+- **Una clave nueva del presentador es una clave nueva del banco**: `FiestaModeloTest` lo exige, y el modelo del diseño
+  gana la fila de quien cumple (el par de la lista guardada vuelve a 0 sin esconderla).
+
+### 4.8 F3 · Quien cumple y la lista del diseño (`[DECIDIDO owner]` `#747`, 26-09)
+
+**Lo que dice el diseño** (`lista-invitados/estado.jsx`): UNA lista `ninos[]`; quien cumple es la fila `origen: cumple`,
+abre la lista y cuenta en el número (`suelo = máx(mínimo, cumple + confirmados)`); no hay filas vacías (cada invitado se
+añade a mano o llega por la invitación); «Quitar» solo para los añadidos a mano sin respuesta, con «Deshacer» antes de
+guardar; «Al final viene» vuelve a contar a un «no»; su nombre y su edad son los de la invitación (se escriben una vez).
+
+**Medido en el producto (26-09)**: quien cumple vive SOLO en `party_invitations` (`honoree_name`, `honoree_age`, que se
+rellenan del `celebrant` y del campo `celebrant_age` de la reserva); las fichas son POSICIONALES y se recortan a
+`quantity` (`sanitizeGuestData`), y de sus posiciones cuelgan el progreso X/N, el recordatorio, las edades que mueven
+dinero (`GuestAgeMixReader` → `MixedPartySurcharge`, `CRITICAL_RE`), la hoja de sala (`ReservationSlip`), la puerta
+(`GateReservationsReader`), el panel, la API (`GuestFormResource`), las propuestas (`slotsOf`) y el recorte al bajar el
+número (`GuestCardOrder`). Con `#743`·1 (quien cumple cuenta) una reserva de 10 pedía hoy 10 invitados: una ficha de más.
+El suelo del número (`GuestCountPolicy`) y las plazas de firma (`GuardianPlaces`) no cuentan a quien cumple.
+
+**El modelo elegido** (mío, por los principios; el owner eligió el QUÉ):
+- **Un ajuste del pack**, `ticket_types.honoree_counts` («Quien cumple cuenta como uno de los niños»; PlayJump, sí): data-driven.
+- **La reserva lo SELLA al crearse**, `order_items.honoree_row`, en `OrderCreator` junto a `age_family_seal`: las de
+  antes quedan en `false` y siguen como están (`#747`·3). No se re-sella al cambiar de pack.
+- **Su fila es la ficha 0 de `guest_data`**, con sus columnas como cualquier invitado: así la hoja de sala, la puerta, el
+  panel, la API y las edades la ven sin tocarlos. Su nombre y su edad son ESPEJO de la invitación y se sincronizan en los
+  dos únicos sitios que los escriben: `submitGuestForm()` (web, API y panel) → la invitación; `personalize()` y la
+  materialización → la ficha 0 (por `submitGuestForm()`, para que la edad pase por el suplemento como cualquier otra).
+- **La ficha 0 está clavada**: `GuestCardOrder` no la mueve ni la pierde; las propuestas no caen en ella; un «no» con su
+  nombre no la marca. **El suelo y las plazas de firma cuentan uno más** (quien cumple ocupa su plaza).
+- **La API** dice `honoree_row` en la ficha de invitados (contrato menor); la ficha 0 viaja como las demás.
+
+**Las tres partes**:
+| Parte | Qué | Verificación |
+|---|---|---|
+| **F3a** ✅ | El ajuste del pack (y en el panel), el sello, la ficha 0 y su espejo, la ficha clavada, el suelo y las plazas, la API (1.35.0; plataforma usó la 1.34.0 en `#775`); la fila de quien cumple en la lista («Es su cumple») y «Personalizar» como su espejo. | `QuienCumpleFilaTest` 11 · `ModuleContractsTest` (la plaza llega por el contrato) · **`scripts/mutar-quien-cumple.sh` 17/17** (el 17.º cazó una aserción que pasaba por casualidad) · la lista `guardado` con su fila **a 0 px contra el diseño** (ya no se esconde) · la sonda `sonda-f3.mjs` a 390 y 1280 · `VERIFY_CONC=1` · suite. |
+| **F3b** | ⚠️ Medido en F3a: **la T1a ya lo trajo casi todo** (las fichas vacías escondidas con JS, «Añadir a mano» de uno en uno con Intro y sin repetidos, «Pegar una lista», «Quitar» con «Deshacer», el tope del número con «No caben más»). Queda: la firma de la fila de quien cumple (hoy dice «Falta» aunque el anfitrión firmara por él como menor a cargo: su estado sale de su ficha de menor, no de los justificantes de invitados) y el repaso sin JavaScript. | Pruebas · la sonda. |
+| **F3c** | «Al final viene»: los «no» abajo, con el botón mientras el número está en plazo; pasan a ser una ficha que cuenta; «No viene» lo deshace antes de guardar. La respuesta del padre no se reescribe. | Pruebas del dominio · la sonda. |
+
+Los packs a tres campos (`#743`·6) son DATO del panel: en local se ponen para el ojo del owner y se apuntan en el carril.
+
 ## 5. Impacto en invariantes
 
 | ID | Cómo |
@@ -496,6 +544,10 @@ la casilla en `00-REFACTOR.md`. Lo que la revisión corrija se escribe aquí DEL
   marcado, icono neutro), «Los calcetines van incluidos» fuera (texto del parque), el recibo caducado devuelve a la
   invitación con su aviso, y el aviso de privacidad de la invitación conserva «cuándo se borra» (§7.2·R7 de la hermana)
   aunque el mockup no lo diga.
+- **26-09, `[DECIDIDO owner]` `#747`, tres preguntas con opciones** (y aprueba F1, F2 y F6a): **«Crear mi QR» no va en
+  la invitación**; quien cumple es la PRIMERA fila, **como un invitado más** (nombre, edad y alergias; hoja de monitores,
+  puerta y línea de edades); **solo en las reservas nuevas**; **«Avísame de fechas» se queda sola** en el recibo tras
+  firmar con correo. El modelo, §4.8.
 - **25-09 (T3), `[DECIDIDO owner]` `#745`, el censo de campos con opciones**: (1) **la fecha de nacimiento se
   mantiene** (el owner preguntó si la edad del recibo servía: no, es opcional, vive en la respuesta y no entra en la
   prueba); (2) **la relación con el menor se mantiene** (el desplegable); (3) **el adulto escribe nombre y apellidos

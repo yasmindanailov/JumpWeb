@@ -318,7 +318,8 @@ final class PartyInvitations
         }
 
         $cards = [];
-        foreach (array_slice($reservation->guestData(), 0, max(0, (int) $reservation->quantity)) as $row) {
+        // Las fichas de los INVITADOS: sin la de quien cumple (F3a, `#747`), que no contesta a su propia invitación.
+        foreach ($reservation->invitedGuestRows() as $row) {
             // Sin `is_array($row)`: `guestData()` declara `array<int, array<string,string>>` y
             // `sanitizeGuestData()` lo impone al escribir. Comprobarlo afirmaba una duda que el
             // contrato ya cierra — y Larastan lo dice.
@@ -587,9 +588,89 @@ final class PartyInvitations
 
         if ($changes !== []) {
             $invitation->fill($changes)->save();
+            $this->mirrorHonoreeToRow($invitation);
         }
 
         return $invitation;
+    }
+
+    /**
+     * EL ESPEJO invitación → ficha 0 (F3a de `specs/fiesta-sistema-nuevo.md` §4.8, `[DECIDIDO owner]` `#747`): en una
+     * reserva con la fila de quien cumple, su nombre y su edad son los de la invitación, «se escriben una vez».
+     *
+     * ⚠️⚠️ Escribe por `submitGuestForm()` y no a mano: la edad de la ficha 0 mueve la línea de edades y el suplemento
+     * de fiesta mixta (`MixedPartySurcharge`, `CRITICAL_RE`), y ese camino es el ÚNICO por el que entran los datos por
+     * niño. Una escritura directa se saltaría el saneo, el sello, el rastro y el dinero.
+     * ⚠️ Mueve `order_items.updated_at` (el testigo de los extras) solo cuando el nombre o la edad CAMBIAN de verdad:
+     * cambiar el tema no toca la reserva. El espejo de vuelta ({@see syncHonoreeFromRow()}) no escribe si ya coincide.
+     */
+    private function mirrorHonoreeToRow(PartyInvitation $invitation): void
+    {
+        $reservation = $invitation->reservation;
+        $type = $reservation?->ticketType;
+        $nameKey = $type?->guestNameFieldKey();
+        if ($reservation === null || $type === null || $nameKey === null || ! $reservation->hasHonoreeRow()) {
+            return;
+        }
+
+        $rows = $type->sanitizeGuestData($reservation->guestData(), (int) $reservation->quantity);
+        $row = $rows[OrderItem::HONOREE_ROW_INDEX] ?? [];
+        $antes = $row;
+        $name = trim((string) $invitation->honoree_name);
+        if ($name !== '') {
+            $row[$nameKey] = $name;
+        }
+        $ageKey = $type->guestAgeFieldKey();
+        if ($ageKey !== null && $invitation->honoree_age !== null) {
+            $row[$ageKey] = (string) $invitation->honoree_age;
+        }
+        if ($row === $antes) {
+            return;
+        }
+
+        $rows[OrderItem::HONOREE_ROW_INDEX] = $row;
+        $reservation->submitGuestForm($rows, null, 'invitation');
+    }
+
+    /**
+     * EL ESPEJO ficha 0 → invitación (F3a, `#747`): lo llama `OrderItem::submitGuestForm()` —web, API y panel— tras
+     * guardar, para que la tarjeta pública diga el nombre y la edad que el anfitrión acaba de escribir en su fila.
+     *
+     * ⚠️ Solo copia lo que la ficha TRAE: una ficha 0 sin edad no borra la de la invitación (una app que no mande la
+     * edad de quien cumple no puede dejar la tarjeta sin ella). Y el nombre pasa por `PublicFreeText`, la puerta de
+     * todo lo que se publica: con un enlace no se copia (la invitación no publica «paga el regalo aquí»).
+     * ⚠️ Escribe SOLO `party_invitations`: no toca la reserva ni su testigo.
+     */
+    public function syncHonoreeFromRow(OrderItem $reservation): void
+    {
+        $type = $reservation->ticketType;
+        $nameKey = $type?->guestNameFieldKey();
+        if ($type === null || $nameKey === null || ! $reservation->hasHonoreeRow()) {
+            return;
+        }
+        $invitation = $this->existingFor($reservation);
+        if ($invitation === null) {
+            return;
+        }
+
+        $row = $reservation->guestData()[OrderItem::HONOREE_ROW_INDEX] ?? [];
+        $changes = [];
+        $name = PublicFreeText::clean(trim((string) ($row[$nameKey] ?? '')), PartyInvitation::HONOREE_NAME_MAX);
+        if ($name !== null && $name !== '' && $name !== (string) $invitation->honoree_name) {
+            $changes['honoree_name'] = $name;
+        }
+        $ageKey = $type->guestAgeFieldKey();
+        $age = $ageKey === null ? null : ($row[$ageKey] ?? null);
+        if (is_numeric($age)) {
+            $age = max(0, min(255, (int) $age));
+            if ($age !== $invitation->honoree_age) {
+                $changes['honoree_age'] = $age;
+            }
+        }
+
+        if ($changes !== []) {
+            $invitation->forceFill($changes)->save();
+        }
     }
 
     // ══ EL RECORDATORIO (T6·6, §4.7; `DECISIONES #713`) ════════════════════════════════════════
@@ -800,8 +881,8 @@ final class PartyInvitations
     public function declinedPendingIn(OrderItem $reservation): array
     {
         $nameKey = $reservation->ticketType?->guestNameFieldKey();
-        $quantity = max(0, (int) $reservation->quantity);
-        $rows = $nameKey === null ? [] : array_slice($reservation->guestData(), 0, $quantity);
+        // Por su POSICIÓN y sin la ficha de quien cumple (F3a, `#747`): un «no» con su nombre no la marca.
+        $rows = $nameKey === null ? [] : $reservation->invitedGuestRows();
 
         $declined = InvitationReply::query()
             ->where('order_item_id', $reservation->getKey())
@@ -993,7 +1074,9 @@ final class PartyInvitations
         $slots = [];
         for ($i = 0; $i < $quantity; $i++) {
             $name = $nameKey === null ? '' : trim((string) ($rows[$i][$nameKey] ?? ''));
-            $slots[] = ['key' => $name === '' ? null : PersonNameKey::for($name), 'taken' => false];
+            // La ficha de quien cumple (F3a, `#747`) está OCUPADA desde el principio: ninguna respuesta cae en ella.
+            $honoree = $i === OrderItem::HONOREE_ROW_INDEX && $reservation->hasHonoreeRow();
+            $slots[] = ['key' => $name === '' || $honoree ? null : PersonNameKey::for($name), 'taken' => $honoree];
         }
 
         // Regla 4: una ficha que ya adoptó otra respuesta NO es candidata de nadie más.

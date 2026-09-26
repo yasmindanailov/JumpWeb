@@ -4,6 +4,7 @@ namespace App\Domain\Booking\Services;
 
 use App\Domain\Booking\Contracts\PartyGuests;
 use App\Domain\Booking\Models\InvitationReply;
+use App\Domain\Booking\Models\OrderItem;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
@@ -35,6 +36,14 @@ final class PartyGuestsReader implements PartyGuests
     public function isCommittedReply(int $replyId, int $reservationId): bool
     {
         return $this->liveYesQuery($reservationId)->whereKey($replyId)->exists();
+    }
+
+    /** La plaza de quien cumple (F3a, `#747`): la del SELLO de la reserva, no la del pack de hoy. */
+    public function honoreeSeatsIn(int $reservationId): int
+    {
+        $item = OrderItem::query()->whereKey($reservationId)->first(['id', 'quantity', 'honoree_row']);
+
+        return $item?->hasHonoreeRow() === true ? 1 : 0;
     }
 
     /**

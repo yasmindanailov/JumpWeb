@@ -4,7 +4,10 @@
      «Añadir a mano» las rellena una detrás de otra. --}}
 @php
     $inv = $m['invitacion'];
-    $ninos = $m['ninos'];
+    // Quien cumple (F3a, `#747`) abre la lista, en su propia `ul`, como el diseño (`conCumple`): no entra en «Por repasar»
+    // ni en el resto, y con un filtro puesto se esconde (`lista.js`).
+    $cumpleFila = collect($m['ninos'])->first(fn (array $n): bool => $n['origen'] === 'cumple');
+    $ninos = array_values(array_filter($m['ninos'], fn (array $n): bool => $n['origen'] !== 'cumple'));
     $repasar = array_values(array_filter($ninos, fn (array $n): bool => $n['pendiente']));
     $resto = array_values(array_filter($ninos, fn (array $n): bool => ! $n['pendiente'] && ! $n['vacia']));
     $vacias = array_values(array_filter($ninos, fn (array $n): bool => ! $n['pendiente'] && $n['vacia']));
@@ -26,6 +29,10 @@
     @endif
     @php($ley = __('fiesta.lista.la_lista.leyenda'))
     <p class="pli-leyenda">{{ $ley[0] }} <span class="ok"><x-lucide name="circle-check" :size="15" />{{ $ley[1] }}</span> {{ $ley[2] }} <span><x-lucide name="circle-dashed" :size="15" />{{ $ley[3] }}</span></p>
+    @if ($cumpleFila !== null)
+        {{-- Sin borde si detrás viene «Por repasar» o nada; con él si le sigue la lista, que continúa debajo (el diseño). --}}
+        <ul class="pli-ul" data-filas-cumple>@include('fiesta.lista.fila', ['n' => $cumpleFila, 'ultima' => $repasar !== [] || $resto === []])</ul>
+    @endif
     @if ($repasar !== [])
         <div class="pli-repasar" data-repasar>
             <p class="pli-repasar-cab"><strong>{{ __('fiesta.lista.la_lista.por_repasar') }} · <span data-repasar-n>{{ count($repasar) }}</span></strong><span>{{ __('fiesta.lista.la_lista.por_repasar_nota') }}</span></p>

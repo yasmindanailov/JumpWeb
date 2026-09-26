@@ -66,6 +66,14 @@ final class GuestCardOrder
             return [];
         }
 
+        // ❗ **La ficha de quien cumple está CLAVADA** (F3a de `fiesta-sistema-nuevo.md` §4.8, `#747`): es la primera y
+        // no entra en el reparto. Si entrara, un invitado confirmado podría adelantarla y el recorte se la llevaría a
+        // ella, que es la única plaza que nunca puede faltar. El suelo cuenta su plaza, así que siempre cabe.
+        $cabeza = [];
+        if ($reservation->hasHonoreeRow()) {
+            $cabeza = [array_shift($rows)];
+        }
+
         $nameKey = $reservation->ticketType?->guestNameFieldKey();
 
         // `key` es `adopted_name_key ?? child_key`: la clave de la FICHA si el anfitrión ya adoptó la
@@ -83,7 +91,7 @@ final class GuestCardOrder
             $cubos[$this->grupoDe($row, $nameKey, $confirmed)][] = $row;
         }
 
-        return array_merge($cubos[self::CONFIRMADA], $cubos[self::ESCRITA], $cubos[self::VACIA]);
+        return array_merge($cabeza, $cubos[self::CONFIRMADA], $cubos[self::ESCRITA], $cubos[self::VACIA]);
     }
 
     /**

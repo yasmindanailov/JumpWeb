@@ -477,6 +477,14 @@ class CatalogForm
                     ->label(__('admin.catalog.field_guest_invitation'))
                     ->helperText(__('admin.catalog.guest_invitation_hint'))
                     ->default(false),
+
+                // QUIEN CUMPLE CUENTA como uno de los niños (F3a de `fiesta-sistema-nuevo.md` §4.8, `#747`): un ajuste
+                // del pack, porque hay parques que cuentan al homenajeado y parques que no. Solo manda en las reservas
+                // que se hagan DESPUÉS de encenderlo (el sello, `order_items.honoree_row`): las de antes no cambian.
+                Toggle::make('honoree_counts')
+                    ->label(__('admin.catalog.field_honoree_counts'))
+                    ->helperText(__('admin.catalog.honoree_counts_hint'))
+                    ->default(false),
             ]);
     }
 

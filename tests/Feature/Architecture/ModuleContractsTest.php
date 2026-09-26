@@ -433,10 +433,17 @@ class ModuleContractsTest extends TestCase
             {
                 throw new \LogicException('este doble sirve el suelo de plazas, no la lista de la puerta');
             }
+
+            /** La plaza de quien cumple (F3a, `#747`): la reserva 4242 no existe, así que solo el doble puede darla. */
+            public function honoreeSeatsIn(int $reservationId): int
+            {
+                return 1;
+            }
         });
 
-        // Por el CONTRATO, no por el implementador: es como pregunta Booking desde `GuestCountPolicy`.
-        $this->assertSame(3, app(ReservationPlacesTaken::class)->takenIn(4242));
+        // Por el CONTRATO, no por el implementador: es como pregunta Booking desde `GuestCountPolicy`. Tres «sí» y la
+        // plaza de quien cumple, que Identity tampoco puede mirar por su cuenta.
+        $this->assertSame(4, app(ReservationPlacesTaken::class)->takenIn(4242));
     }
 
     /**

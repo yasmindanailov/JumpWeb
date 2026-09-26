@@ -290,6 +290,11 @@ class OrderCreator
                     // arriba— y viaja en el `create()`: una fila y su sello nacen en la misma
                     // sentencia. `null` para una entrada: solo un pack tiene veredicto.
                     'age_family_seal' => $this->sealer->build($type, $slot->date)?->toArray(),
+                    // El SELLO de quien cumple (F3a de `fiesta-sistema-nuevo.md` §4.8, `[DECIDIDO owner]` `#747`): si el
+                    // pack cuenta a quien cumple como uno de los niños, esta reserva nace con su ficha 0 reservada para
+                    // él. Se copia AQUÍ, en la misma sentencia que la fila, por la misma razón que el sello de arriba:
+                    // cambiar el ajuste del pack mañana no reescribe lo que significa el número de esta reserva.
+                    'honoree_row' => $type->countsHonoree(),
                     // El JUSTIFICANTE de un menor invitado (`specs/waiver-por-reserva.md` §12.2, T6).
                     //
                     // ⚠️⚠️ **Las TRES ramas las decide el SERVIDOR y ninguna se cree la cesta sin más**
