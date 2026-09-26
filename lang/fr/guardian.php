@@ -52,7 +52,9 @@ return [
         'heading' => 'Impossible de signer ici',
         'not_paid' => 'Cette réservation n’est pas encore confirmée. Parlez-en à la personne qui l’a faite.',
         'closed' => 'La visite de cette réservation a déjà eu lieu : ce formulaire est fermé.',
-        'full' => "Cette réservation n'accepte plus d'autorisations : il y en a déjà autant de signées que de places achetées. S'il en manque une, parlez-en à la personne qui a réservé.",
+        'full' => "Cette réservation n'accepte plus d'autorisations : chaque place a déjà un enfant inscrit. S'il en manque une, parlez-en à la personne qui a réservé.",
+        'not_honoree' => "Cette réservation n'a personne qui fête son anniversaire : ce lien ne s'applique pas. Parlez-en à la personne qui a réservé.",
+        'honoree_covered' => "La décharge de l'enfant qui fête son anniversaire est déjà signée pour cette réservation. Rien d'autre à faire.",
     ],
 
     'errors' => [

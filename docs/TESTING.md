@@ -507,7 +507,11 @@ docker compose exec -u sail laravel.test php artisan mixed-party:verify-concurre
   `WaiverSigner` serializa: **UNA fila** (idempotencia por versión bajo el lock) y las cadenas —una por
   sujeto desde `#197`— verifican. ⚠️ Hasta `#198` medía la linealidad de una cadena de N menores; con
   cadenas por sujeto eso no cazaría nada. **Visto fallar** sin el lock (2 filas del titular, 1 `prev_hash`
-  repetido, cadena ROTA). Correr tras tocar `WaiverSigner`.
+  repetido, cadena ROTA). Correr tras tocar `WaiverSigner`. ▶ **`--scenario=honoree`** (`#752`,
+  `fiesta-sistema-nuevo.md` §4.13): justificantes de quien cumple (padres distintos) y la asignación de su menor a cargo
+  A LA VEZ → **UNA prueba** al terminar. Mide EXCLUSIÓN entre dos tablas que ninguna restricción cruza: **visto fallar**
+  3/3 sin el lock de `GuardianAuthorizationSigner` y `DependentAssigner::assignHonoree()` (justificante Y asignación, y
+  seis desenlaces de error). Correr tras tocar cualquiera de los dos.
 
 - **`mixed-party:verify-concurrency`** (`specs/cumple-mixto.md` §12 y §24): N guardados simultáneos
   del MISMO post-form, desde cero líneas → verifica que el `lockForUpdate` de `MixedPartySurcharge`

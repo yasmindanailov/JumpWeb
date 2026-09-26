@@ -8,7 +8,7 @@ use RuntimeException;
  * Fase 6 · justificante de un menor invitado — el pedido **no admite** (o ya no admite) una
  * autorización más (`docs/specs/waiver-por-reserva.md` §4.6, §4.7).
  *
- * Un solo tipo con tres motivos, porque los tres significan lo mismo de cara a la pantalla —«por aquí
+ * Un solo tipo con sus motivos (tres, y desde `#752` dos más de quien cumple), porque significan lo mismo de cara a la pantalla —«por aquí
  * no se puede firmar»— y solo cambia la FRASE. Separarlos en tres clases obligaría a la capa de
  * entrega a conocer tres, y a la vista a repetir el mismo `match`.
  *
@@ -28,6 +28,12 @@ class GuardianAuthorizationRefusedException extends RuntimeException
     /** No se puede autorizar a más gente de la que se compró. */
     public const REASON_FULL = 'full';
 
+    /** El justificante de QUIEN CUMPLE en una reserva que no lo sella (§4.13 de `fiesta-sistema-nuevo.md`, `#752`). */
+    public const REASON_NOT_HONOREE = 'not_honoree';
+
+    /** A quien cumple ya lo cubre otra prueba: su ficha de menor a cargo, o el justificante de su otro progenitor. */
+    public const REASON_HONOREE_COVERED = 'honoree_covered';
+
     private function __construct(public readonly string $reason, string $message)
     {
         parent::__construct($message);
@@ -43,8 +49,22 @@ class GuardianAuthorizationRefusedException extends RuntimeException
         return new self(self::REASON_CLOSED, "La visita del pedido #{$orderId} ya pasó: el justificante se cerró.");
     }
 
+    /**
+     * ⚠️ Decía «ya tiene {$capacity} justificantes, que es toda su capacidad» y era falso (medido en `#752`: con CERO
+     * justificantes): las plazas las ocupan también los «sí» sin firma, los menores a cargo y quien cumple.
+     */
     public static function full(int $orderId, int $capacity): self
     {
-        return new self(self::REASON_FULL, "El pedido #{$orderId} ya tiene {$capacity} justificantes, que es toda su capacidad.");
+        return new self(self::REASON_FULL, "La reserva #{$orderId} no tiene plazas libres para otro justificante: sus {$capacity} plazas ya tienen dueño.");
+    }
+
+    public static function notHonoree(int $orderId): self
+    {
+        return new self(self::REASON_NOT_HONOREE, "La reserva #{$orderId} no sella a quien cumple: no hay a quién atar el justificante.");
+    }
+
+    public static function honoreeCovered(int $orderId): self
+    {
+        return new self(self::REASON_HONOREE_COVERED, "A quien cumple en la reserva #{$orderId} ya lo cubre otra prueba.");
     }
 }

@@ -4,11 +4,13 @@ namespace App\Domain\Identity\Services;
 
 use App\Domain\Booking\Contracts\CheckoutLine;
 use App\Domain\Booking\Contracts\CheckoutLines;
+use App\Domain\Booking\Contracts\PartyGuests;
 use App\Domain\Booking\Contracts\ProductCatalog;
 use App\Domain\Identity\Contracts\AssignmentOutcome;
 use App\Domain\Identity\Contracts\SyncOutcome;
 use App\Domain\Identity\Models\Dependent;
 use App\Domain\Identity\Models\DependentAssignment;
+use App\Domain\Identity\Models\GuardianAuthorization;
 use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Domain\Platform\Services\DisplayTime;
@@ -64,9 +66,16 @@ final class DependentAssigner
 
     public const REASON_ENTRIES_ONLY = 'entries_only';
 
+    /** La línea no sella a quien cumple (no es un pack con `honoree_row`): no hay a quién atar (§4.13, `#752`). */
+    public const REASON_NOT_HONOREE = 'not_honoree';
+
+    /** A quien cumple ya lo cubre el justificante que firmó su padre o su madre (§4.13, `#752`). */
+    public const REASON_HONOREE_COVERED = 'honoree_covered';
+
     public function __construct(
         private readonly CheckoutLines $lines,
         private readonly ProductCatalog $catalog,
+        private readonly PartyGuests $guests,
     ) {}
 
     /**
@@ -338,6 +347,88 @@ final class DependentAssigner
             });
         } catch (Throwable $e) {
             Log::warning('dependents.sync_failed', ['order_id' => $orderId, 'order_item_id' => $orderItemId, 'exception' => $e]);
+
+            return SyncOutcome::aborted('failed');
+        }
+    }
+
+    // ─── QUIEN CUMPLE (F7 de `fiesta-sistema-nuevo.md` §4.13, `#752`) ─────────
+    //
+    // Un pack no admite menores a cargo («ya pide a sus invitados»), SALVO UNO: quien cumple, si es hijo del titular.
+    // Su asignación es la prueba de que su exención es la de su ficha de menor a cargo —atada por id, no por su nombre—,
+    // y cubre su plaza (`GuardianPlaces::takenIn()` la cuenta una sola vez).
+
+    /**
+     * Ata a quien cumple con un menor a cargo del titular, bajo el MISMO lock que las demás escrituras de menores y que los
+     * justificantes (`GuardianAuthorizationSigner` bloquea también al titular): «cubierto una sola vez» es invariante.
+     *
+     *  - La línea tiene que ser un PACK que SELLA a quien cumple (`honoree_row`); si no, `not_honoree`.
+     *  - Si ya lo cubre un justificante —su padre firmó por él—, `honoree_covered`: no se tapa una prueba con otra.
+     *  - Las reglas de siempre sobre el menor ({@see rejections()}): suyo y activo, menor en la fecha de la visita, exención
+     *    vigente en `interno`.
+     *  - Otro hijo ya atado se SUSTITUYE (el titular eligió mal); el mismo, idempotente. Auditado por fila, nunca lanza.
+     */
+    public function assignHonoree(User $holder, int $orderId, int $orderItemId, int $dependentId): SyncOutcome
+    {
+        try {
+            return DB::transaction(function () use ($holder, $orderId, $orderItemId, $dependentId): SyncOutcome {
+                // ⚠️ PRIMERA sentencia: el lock de la fila del titular (`DependentRegistry`, `WaiverSigner`, `assign()`).
+                $locked = User::query()->whereKey($holder->getKey())->lockForUpdate()->firstOrFail();
+
+                $line = null;
+                foreach ($this->lines->forOrder($orderId, (int) $locked->getKey()) as $candidate) {
+                    if ($candidate->orderItemId === $orderItemId) {
+                        $line = $candidate;
+                        break;
+                    }
+                }
+                if ($line === null) {
+                    return SyncOutcome::aborted('no_line');
+                }
+                if ($line->isEntry || $this->guests->honoreeSeatsIn($orderItemId) < 1) {
+                    return SyncOutcome::rejected(['' => self::REASON_NOT_HONOREE]);
+                }
+                if (GuardianAuthorization::query()->where('order_item_id', $orderItemId)->where('honoree', true)->exists()) {
+                    return SyncOutcome::rejected(['' => self::REASON_HONOREE_COVERED]);
+                }
+
+                $active = $this->dependentsOf($locked, [$dependentId]);
+                $statuses = [];
+                $rejections = $this->rejections([$dependentId], 1, $line->date ?? DisplayTime::today()->toDateString(), $active, $statuses);
+                if ($rejections !== []) {
+                    return SyncOutcome::rejected($rejections);
+                }
+
+                $current = DependentAssignment::query()->where('order_item_id', $orderItemId)->get();
+                if ($current->contains(fn (DependentAssignment $a): bool => (int) $a->dependent_id === $dependentId)) {
+                    return new SyncOutcome(0, 0, 1);
+                }
+
+                foreach ($current as $old) {
+                    $old->delete();
+                    AuditLogger::log('dependents.unassigned', $locked, [
+                        'dependent_id' => (int) $old->dependent_id,
+                        'order_item_id' => $orderItemId,
+                        'order_id' => $orderId,
+                        'honoree' => true,
+                    ]);
+                }
+                DependentAssignment::query()->insert([
+                    'dependent_id' => $dependentId,
+                    'order_item_id' => $orderItemId,
+                    'created_at' => now(),
+                ]);
+                AuditLogger::log('dependents.assigned', $locked, [
+                    'dependent_id' => $dependentId,
+                    'order_item_id' => $orderItemId,
+                    'order_id' => $orderId,
+                    'honoree' => true,
+                ]);
+
+                return new SyncOutcome(1, $current->count(), 0);
+            });
+        } catch (Throwable $e) {
+            Log::warning('dependents.assign_honoree_failed', ['order_id' => $orderId, 'order_item_id' => $orderItemId, 'exception' => $e]);
 
             return SyncOutcome::aborted('failed');
         }

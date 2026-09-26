@@ -52,7 +52,9 @@ return [
         'heading' => 'This form is not open',
         'not_paid' => 'This booking is not confirmed yet. Please talk to the person who made it.',
         'closed' => 'The visit for this booking has already taken place, so this form is closed.',
-        'full' => 'This booking cannot take more authorisations: there are already as many signed as there are places bought. If one is missing, please talk to the person who made the booking.',
+        'full' => 'This booking cannot take more authorisations: every place already has a child listed. If one is missing, please talk to the person who made the booking.',
+        'not_honoree' => 'This booking has nobody celebrating a birthday, so this link does not apply. Please talk to the person who made the booking.',
+        'honoree_covered' => 'The waiver of the birthday child is already signed for this booking. Nothing else is needed.',
     ],
 
     'errors' => [

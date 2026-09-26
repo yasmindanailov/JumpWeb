@@ -64,6 +64,10 @@ final class GuardianAuthorizationSigner
      *                                   contra el contrato de Booking, y si no es un «sí» vivo de ESTA
      *                                   reserva se ignora en silencio — un enlace de otra fiesta no
      *                                   puede servir para saltarse el tope de ésta
+     * @param  bool  $forHonoree  el justificante de QUIEN CUMPLE (`fiesta-sistema-nuevo.md` §4.13, `#752`): llega por
+     *                            su enlace, con `para=cumple` DENTRO de la firma de la URL. Atado a él, **no gasta
+     *                            plaza** (la suya ya cuenta) y **no se rechaza por llena**; se niega si la reserva no
+     *                            lo sella o ya lo cubre otra prueba — ambas cosas, bajo este lock
      * @return array{authorization: GuardianAuthorization, signature: WaiverSignature, created: bool}
      */
     public function sign(
@@ -73,10 +77,11 @@ final class GuardianAuthorizationSigner
         array $data,
         WaiverSignatureRequest $request,
         ?int $invitationReplyId = null,
+        bool $forHonoree = false,
     ): array {
         $key = GuardianAuthorization::keyFor($data['minor_name'], $data['minor_surname']);
 
-        return DB::transaction(function () use ($responsible, $reservationId, $version, $data, $request, $key, $invitationReplyId): array {
+        return DB::transaction(function () use ($responsible, $reservationId, $version, $data, $request, $key, $invitationReplyId, $forHonoree): array {
             // El MISMO punto de serialización que usa el firmador (§4.4). Va primero, antes de leer
             // nada: si se buscara la autorización fuera del lock, dos envíos simultáneos del mismo
             // menor podrían decidir los dos que no existe.
@@ -106,6 +111,14 @@ final class GuardianAuthorizationSigner
                 // harían que la puerta y la hoja de sala lo enseñaran dos veces.
                 if (! $this->sameGuardian($existing, $data)) {
                     throw GuardianAuthorizationExistsException::for($existing);
+                }
+
+                // ▶ Quien cumple (§4.13, `#752`): su padre ya había firmado un justificante SUELTO con el mismo nombre y
+                // ahora llega por el enlace de quien cumple. Se ata esa misma autorización —la única edición que admite la
+                // fila, un puntero fuera del hash— en vez de dejarle «firmado» y sin cubrir.
+                if ($forHonoree && $existing->honoree !== true) {
+                    $this->assertHonoreeOpen($reservationId);
+                    $existing->forceFill(['honoree' => true])->save();
                 }
 
                 $signature = $this->signer->sign(
@@ -146,15 +159,23 @@ final class GuardianAuthorizationSigner
             // ⚠️ **No se comparan nombres** —ni el del «sí» con el del menor que firma—: eso es
             // exactamente lo que `#328` descartó. Lo que se comprueba es que esa plaza no la esté
             // usando ya otro justificante.
-            $tied = $invitationReplyId !== null
-                && $this->guests->isCommittedReply($invitationReplyId, $reservationId)
-                && ! GuardianAuthorization::query()
-                    ->where('order_item_id', $reservationId)
-                    ->where('invitation_reply_id', $invitationReplyId)
-                    ->exists();
+            // ▶ QUIEN CUMPLE (§4.13, `#752`): su plaza ya tiene dueño —él—, así que su justificante la OCUPA en vez de
+            // pedir otra. Antes, con la fiesta llena se rechazaba («no quedan plazas», justo en la puerta) y con sitio
+            // gastaba dos (medido: 13 → 12 libres). Una respuesta de la invitación no tiene nada que ver aquí.
+            if ($forHonoree) {
+                $this->assertHonoreeOpen($reservationId);
+                $tied = false;
+            } else {
+                $tied = $invitationReplyId !== null
+                    && $this->guests->isCommittedReply($invitationReplyId, $reservationId)
+                    && ! GuardianAuthorization::query()
+                        ->where('order_item_id', $reservationId)
+                        ->where('invitation_reply_id', $invitationReplyId)
+                        ->exists();
 
-            if (! $tied && $this->places->freeIn($reservation) < 1) {
-                throw GuardianAuthorizationRefusedException::full($reservationId, $reservation->quantity);
+                if (! $tied && $this->places->freeIn($reservation) < 1) {
+                    throw GuardianAuthorizationRefusedException::full($reservationId, $reservation->quantity);
+                }
             }
 
             $authorization = GuardianAuthorization::create([
@@ -162,6 +183,8 @@ final class GuardianAuthorizationSigner
                 // ⚠️ Solo si el contrato lo confirmó. Es lo que permite a `GuardianPlaces` dejar de
                 // contar ese «sí» aparte: a partir de aquí, la plaza la cuenta el justificante.
                 'invitation_reply_id' => $tied ? $invitationReplyId : null,
+                // `true` o NULL, nunca `false`: el `UNIQUE (order_item_id, honoree)` es el respaldo de «uno por reserva».
+                'honoree' => $forHonoree ? true : null,
                 'minor_name' => mb_substr(trim($data['minor_name']), 0, GuardianAuthorization::NAME_MAX),
                 'minor_surname' => mb_substr(trim($data['minor_surname']), 0, GuardianAuthorization::SURNAME_MAX),
                 'minor_key' => $key,
@@ -181,6 +204,21 @@ final class GuardianAuthorizationSigner
 
             return ['authorization' => $authorization, 'signature' => $signature, 'created' => true];
         });
+    }
+
+    /**
+     * ¿Se puede atar un justificante a quien cumple? La reserva tiene que sellarlo y nadie tiene que cubrirlo todavía —ni
+     * su ficha de menor a cargo ni el justificante del otro progenitor—. ⚠️ Solo dentro de la transacción de `sign()`,
+     * después del lock del titular: `DependentAssigner::assignHonoree()` escribe bajo el mismo.
+     */
+    private function assertHonoreeOpen(int $reservationId): void
+    {
+        if ($this->guests->honoreeSeatsIn($reservationId) < 1) {
+            throw GuardianAuthorizationRefusedException::notHonoree($reservationId);
+        }
+        if ($this->places->honoreeCovered($reservationId)) {
+            throw GuardianAuthorizationRefusedException::honoreeCovered($reservationId);
+        }
     }
 
     /**

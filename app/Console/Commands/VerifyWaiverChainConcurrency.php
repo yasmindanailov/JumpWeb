@@ -2,21 +2,26 @@
 
 namespace App\Console\Commands;
 
+use App\Domain\Booking\Models\TicketType;
 use App\Domain\Identity\Exceptions\DependentsLimitReachedException;
+use App\Domain\Identity\Exceptions\GuardianAuthorizationRefusedException;
 use App\Domain\Identity\Models\Dependent;
 use App\Domain\Identity\Models\GuardianAuthorization;
 use App\Domain\Identity\Models\LegalDocumentVersion;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Models\WaiverSignature;
+use App\Domain\Identity\Services\DependentAssigner;
 use App\Domain\Identity\Services\DependentRegistry;
 use App\Domain\Identity\Services\DependentSettings;
 use App\Domain\Identity\Services\GuardianAuthorizationSigner;
+use App\Domain\Identity\Services\GuardianPlaces;
 use App\Domain\Identity\Services\LegalDocumentPublisher;
 use App\Domain\Identity\Services\LegalDocuments;
 use App\Domain\Identity\Services\WaiverChain;
 use App\Domain\Identity\Services\WaiverSettings;
 use App\Domain\Identity\Services\WaiverSignatureRequest;
 use App\Domain\Identity\Services\WaiverSigner;
+use App\Domain\Identity\Services\WaiverStatus;
 use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -50,6 +55,11 @@ use Illuminate\Support\Str;
  *    `#191`: la suite es ciega por construcción, `SQLiteGrammar::compileLock()` devuelve cadena
  *    vacía), y porque la T1 de `#441` va a meter la FIRMA dentro de esa misma transacción: el
  *    instrumento tiene que existir ANTES del cambio o mediría el reposo, no el efecto.
+ *  - **`honoree`** (`#752`, `fiesta-sistema-nuevo.md` §4.13): la MISMA fiesta y quien cumple, con la mitad de los procesos
+ *    firmando SU justificante (padres distintos) y la otra mitad asignándole el menor a cargo del titular. ⚠️⚠️ Su
+ *    propiedad es la EXCLUSIÓN entre DOS TABLAS: al terminar lo cubre UNA prueba —un justificante con `honoree` o una
+ *    asignación, nunca las dos—. Entre dos justificantes hay además un `UNIQUE` de respaldo; entre un justificante y una
+ *    asignación NO hay restricción que valga: solo el lock del titular, que toman los dos escritores.
  *
  * ⚠️⚠️ **El escenario obvio para el sujeto nuevo NO MUERDE, y es la trampa que este fichero ya
  * documentaba en `#197` para el caso anterior**: N padres DISTINTOS del mismo pedido son N cadenas de
@@ -62,11 +72,11 @@ use Illuminate\Support\Str;
  */
 class VerifyWaiverChainConcurrency extends Command
 {
-    private const SCENARIOS = ['holder', 'guest', 'dependent'];
+    private const SCENARIOS = ['holder', 'guest', 'dependent', 'honoree'];
 
     protected $signature = 'waiver:verify-chain
         {--workers=8 : Nº de firmas concurrentes (procesos) del MISMO sujeto}
-        {--scenario=holder : holder | guest | dependent — qué hacen los procesos a la vez}
+        {--scenario=holder : holder | guest | dependent | honoree — qué hacen los procesos a la vez}
         {--keep : No borrar los datos de prueba al terminar}';
 
     protected $description = 'Verifica empíricamente (fork real + MySQL InnoDB) que N firmas simultáneas del mismo sujeto producen UNA sola fila (idempotencia bajo el lock) y cadenas lineales por sujeto. Dos escenarios: `holder` y `guest` (justificante de menor invitado). Solo dev/local.';
@@ -142,6 +152,20 @@ class VerifyWaiverChainConcurrency extends Command
             return self::FAILURE;
         }
 
+        // `honoree` (`#752`): el gesto de la carrera no se puede hacer en serie sin cubrir a quien cumple y dejar la carrera
+        // sin nada que disputar. Lo que se comprueba es que la carrera ES POSIBLE: la reserva lo sella, nadie lo cubre y el
+        // menor a cargo tiene su descargo vigente (la firma de arriba). Si no, los procesos medirían otro rechazo.
+        if ($scenario === 'honoree') {
+            $coverage = app(GuardianPlaces::class)->honoreeCoverage((int) $seed['order_item_id']);
+            $waiver = WaiverStatus::forDependent(Dependent::findOrFail($seed['dependent']->getKey()));
+            if ($coverage === null || $coverage->covered() || ! $waiver->signed || $waiver->isOutdated()) {
+                $this->error('El escenario `honoree` no deja carrera: la reserva no sella a quien cumple, ya está cubierto o el menor no tiene su descargo vigente.');
+                $this->cleanup($seed, $resultsDir);
+
+                return self::FAILURE;
+            }
+        }
+
         $gesto = $scenario === 'dependent' ? 'altas de menor' : 'firmas';
         $sujeto = $scenario === 'dependent' ? 'del mismo TITULAR contra el último hueco del tope' : 'del mismo sujeto';
         $this->line("Disparando <fg=yellow>{$workers}</> {$gesto} <options=bold>CONCURRENTES</> {$sujeto} sobre {$driver}…");
@@ -209,15 +233,18 @@ class VerifyWaiverChainConcurrency extends Command
             }
 
             $reservationId = null;
-            if ($scenario === 'guest') {
+            if ($scenario === 'guest' || $scenario === 'honoree') {
                 // ⚠️ La RESERVA tiene que ser LEGAL para el subsistema, no solo existir: su pedido
                 // `paid` y ella principal y viva, porque el tope sale de ahí
                 // (`AuthorizableReservationsReader`). Una línea de cantidad 0 daría cero plazas y este
                 // verificador mediría el rechazo del cupo en vez de la carrera — verde por el motivo
                 // equivocado.
-                $ticketTypeId = DB::table('ticket_types')->where('is_active', true)->value('id');
+                // `honoree` (`#752`): un PACK, porque solo un pack sella a quien cumple y solo en uno se le asigna su menor a cargo.
+                $ticketTypeId = DB::table('ticket_types')->where('is_active', true)
+                    ->when($scenario === 'honoree', fn ($q) => $q->where('type', TicketType::TYPE_PACK))
+                    ->value('id');
                 if ($ticketTypeId === null) {
-                    throw new \RuntimeException('No hay ningún producto activo en el catálogo: el escenario `guest` no puede montar un pedido legal.');
+                    throw new \RuntimeException("No hay ningún producto activo (un pack, en `honoree`) en el catálogo: el escenario `{$scenario}` no puede montar un pedido legal.");
                 }
 
                 $orderId = (int) DB::table('orders')->insertGetId([
@@ -236,6 +263,8 @@ class VerifyWaiverChainConcurrency extends Command
                     'quantity' => max(2, $workers),
                     'unit_price' => 0,
                     'seats' => max(2, $workers),
+                    // Sella a quien cumple (`#747`), como una reserva nueva de un pack que lo cuenta.
+                    'honoree_row' => $scenario === 'honoree',
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
@@ -258,7 +287,7 @@ class VerifyWaiverChainConcurrency extends Command
     }
 
     /**
-     * @param  array{user:User, version:LegalDocumentVersion, order_item_id:?int}  $seed
+     * @param  array{user:User, dependent:Dependent, version:LegalDocumentVersion, order_item_id:?int}  $seed
      */
     private function forkWorkers(array $seed, string $scenario, int $workers, float $startAt, string $resultsDir): void
     {
@@ -319,6 +348,36 @@ class VerifyWaiverChainConcurrency extends Command
                             $request,
                         );
                         $outcome = 'signed:'.$result['signature']->getKey();
+                    } elseif ($scenario === 'honoree') {
+                        // Pares: el justificante de quien cumple, cada uno con OTRO padre y otro nombre escrito (así ni la
+                        // idempotencia ni «un niño, un papel» los separan: solo la cobertura). Impares: su menor a cargo.
+                        if ($i % 2 === 0) {
+                            $result = app(GuardianAuthorizationSigner::class)->sign(
+                                $holder,
+                                (int) $seed['order_item_id'],
+                                $version,
+                                [
+                                    'minor_name' => 'Quien Cumple',
+                                    'minor_surname' => 'Carrera '.$i,
+                                    'minor_born_on' => now()->subYears(8)->toDateString(),
+                                    'guardian_name' => 'Padre '.$i,
+                                    'guardian_surname' => '',
+                                    'guardian_relationship' => 'father',
+                                    'guardian_email' => null,
+                                    'guardian_phone' => null,
+                                ],
+                                $request,
+                                null,
+                                true,
+                            );
+                            $outcome = 'authorization:'.$result['authorization']->getKey();
+                        } else {
+                            $orderId = (int) DB::table('order_items')->where('id', $seed['order_item_id'])->value('order_id');
+                            $out = app(DependentAssigner::class)->assignHonoree($holder, $orderId, (int) $seed['order_item_id'], (int) $seed['dependent']->getKey());
+                            $outcome = $out->ok()
+                                ? 'assigned'
+                                : (($out->rejections[''] ?? null) === DependentAssigner::REASON_HONOREE_COVERED ? 'covered' : 'REJECTED: '.json_encode($out->rejections).' '.($out->abortedBecause ?? ''));
+                        }
                     } else {
                         // Todos como el TITULAR, misma versión: la propiedad es que solo UNO escriba.
                         $signature = app(WaiverSigner::class)->sign($holder, $version, $request);
@@ -328,6 +387,9 @@ class VerifyWaiverChainConcurrency extends Command
                     // El desenlace CORRECTO para los que pierden la carrera del tope: no es un error
                     // del instrumento, es la propiedad que se está midiendo.
                     $outcome = 'limit';
+                } catch (GuardianAuthorizationRefusedException $e) {
+                    // `honoree`: perder la carrera ES el rechazo «ya lo cubre otra prueba». Cualquier otro motivo, no.
+                    $outcome = $e->reason === GuardianAuthorizationRefusedException::REASON_HONOREE_COVERED ? 'covered' : 'REFUSED: '.$e->reason;
                 } catch (\Throwable $e) {
                     $outcome = 'EXCEPTION: '.$e->getMessage();
                 }
@@ -352,6 +414,9 @@ class VerifyWaiverChainConcurrency extends Command
 
         if ($scenario === 'dependent') {
             return $this->evaluateDependentRace($seed, $workers, $outcomes);
+        }
+        if ($scenario === 'honoree') {
+            return $this->evaluateHonoreeRace($seed, $workers, $outcomes);
         }
         $signed = $outcomes->filter(fn (string $o): bool => str_starts_with($o, 'signed:'));
         $errors = $outcomes->reject(fn (string $o): bool => str_starts_with($o, 'signed:'));
@@ -465,6 +530,54 @@ class VerifyWaiverChainConcurrency extends Command
             $this->info("✅ PASA (dependent): con {$workers} altas simultáneas por el ÚLTIMO hueco entra UNA sola, la cuenta queda exactamente en el tope ({$max}) y hay {$firmas} firmas de menor —una por alta que entró, escritas DENTRO de su transacción—. Verificado sobre InnoDB real.");
         } else {
             $this->error("❌ FALLA: la cuenta quedó en {$final} con un tope de {$max}, o los desenlaces no cuadran. Revisar que el lockForUpdate() de la fila del titular sea la PRIMERA sentencia de la transacción de DependentRegistry::add().");
+        }
+
+        return $ok;
+    }
+
+    /**
+     * **Quien cumple, cubierto UNA vez** (`#752`): justificantes de padres distintos y la asignación de su menor a cargo, a
+     * la vez. ⚠️⚠️ **Sin el lock del titular esto no revienta: CUBRE DOS VECES** —un justificante con `honoree` Y una
+     * asignación—, porque son dos tablas y ninguna restricción las cruza; su plaza quedaría contada por dos pruebas y la
+     * puerta leería una de las dos. Entre dos justificantes, el `UNIQUE` saldría como error (un 500), no como rechazo.
+     *
+     * El veredicto mira el ESTADO FINAL: UNA prueba en total, y cada desenlace que no ganó es el rechazo «ya cubierto» (o,
+     * si ganó la asignación, la misma asignación devuelta: es el mismo hijo, idempotente).
+     *
+     * @param  array{user:User, dependent:Dependent, order_item_id:?int}  $seed
+     * @param  Collection<int, string>  $outcomes
+     */
+    private function evaluateHonoreeRace(array $seed, int $workers, $outcomes): bool
+    {
+        $itemId = (int) $seed['order_item_id'];
+        $authorizations = GuardianAuthorization::query()->where('order_item_id', $itemId)->where('honoree', true)->count();
+        $assignments = DB::table('dependent_assignments')->where('order_item_id', $itemId)->count();
+        $errors = $outcomes->reject(fn (string $o): bool => str_starts_with($o, 'authorization:') || $o === 'assigned' || $o === 'covered');
+        $chain = WaiverChain::verify(User::findOrFail($seed['user']->getKey()));
+        $coverage = app(GuardianPlaces::class)->honoreeCoverage($itemId);
+
+        $this->newLine();
+        $this->line('<options=bold>Resultados de la carrera por cubrir a quien cumple:</>');
+        $this->line('  '.$outcomes->filter(fn (string $o): bool => str_starts_with($o, 'authorization:'))->count().'× su justificante · '
+            .$outcomes->filter(fn (string $o): bool => $o === 'assigned')->count().'× su menor a cargo · '
+            .$outcomes->filter(fn (string $o): bool => $o === 'covered')->count().'× «ya cubierto»');
+        if ($errors->isNotEmpty()) {
+            $this->line('  <fg=red>'.$errors->count().'× desenlace inesperado</>');
+            $errors->each(fn (string $e) => $this->line('     '.$e));
+        }
+        $this->line("  al terminar: justificantes de quien cumple {$authorizations} · asignaciones de su menor a cargo {$assignments} → "
+            .($authorizations + $assignments).' pruebas (esperada 1) · cobertura: '.($coverage === null ? 'null' : $coverage->via).' · cadena del titular: '.($chain['ok'] ? 'OK' : 'ROTA'));
+
+        $ok = $errors->isEmpty()
+            && $authorizations + $assignments === 1
+            && $coverage !== null && $coverage->covered()
+            && $chain['ok'];
+
+        $this->newLine();
+        if ($ok) {
+            $this->info("✅ PASA (honoree): con {$workers} procesos a la vez —justificantes de padres distintos y su menor a cargo—, a quien cumple lo cubre UNA sola prueba ({$coverage->via}) y los demás reciben «ya cubierto». Verificado sobre InnoDB real.");
+        } else {
+            $this->error('❌ FALLA: quien cumple quedó cubierto por más de una prueba (o por ninguna), o hubo desenlaces inesperados. Revisar que GuardianAuthorizationSigner y DependentAssigner::assignHonoree() tomen el lockForUpdate() del titular como PRIMERA sentencia y comprueben la cobertura DESPUÉS.');
         }
 
         return $ok;

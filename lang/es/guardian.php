@@ -66,7 +66,12 @@ return [
         'heading' => 'Por aquí no se puede firmar',
         'not_paid' => 'Esta reserva todavía no está confirmada. Habla con la persona que la hizo.',
         'closed' => 'La visita de esta reserva ya ha pasado, así que este formulario está cerrado.',
-        'full' => 'Esta reserva no admite más autorizaciones: ya hay tantas firmadas como plazas compradas. Si falta la de tu hijo o hija, habla con la persona que hizo la reserva.',
+        // ⚠️ Decía «ya hay tantas firmadas como plazas compradas», y era falso: las plazas las ocupan también los niños que
+        // dijeron que sí, los hijos de quien reservó y quien cumple (medido en `#752`, con cero firmadas).
+        'full' => 'Esta reserva no admite más autorizaciones: todas sus plazas ya tienen un niño apuntado. Si falta la de tu hijo o hija, habla con la persona que hizo la reserva.',
+        // La exención de quien cumple (`fiesta-sistema-nuevo.md` §4.13, `#752`).
+        'not_honoree' => 'Esta reserva no tiene a nadie que cumpla años, así que este enlace no sirve. Habla con la persona que hizo la reserva.',
+        'honoree_covered' => 'El descargo de quien cumple ya está firmado para esta reserva. No hace falta hacer nada más.',
     ],
 
     'errors' => [

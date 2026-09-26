@@ -6,6 +6,7 @@ use App\Domain\Booking\Contracts\AuthorizableReservation;
 use App\Domain\Booking\Contracts\PartyGuests;
 use App\Domain\Booking\Contracts\ReservationPlacesTaken;
 use App\Domain\Booking\Contracts\SignedInvitationReplies;
+use App\Domain\Identity\Contracts\HonoreeCoverage;
 use App\Domain\Identity\Models\DependentAssignment;
 use App\Domain\Identity\Models\GuardianAuthorization;
 
@@ -72,7 +73,75 @@ final class GuardianPlaces implements ReservationPlacesTaken, SignedInvitationRe
             + $this->committedGuests($reservationId)
             // ▶ Desde F3a (`#747`): la plaza de QUIEN CUMPLE, si la reserva la sella. Ocupa una plaza con dueño como
             // un «sí», así que el suelo no deja bajar por debajo de él + los confirmados ni se firma por encima.
-            + $this->guests->honoreeSeatsIn($reservationId);
+            // ❗ Y desde F7 (`#752`) UNA sola vez: si ya la cubre su menor a cargo (una asignación) o su justificante, esa
+            // prueba ya sumó arriba y aquí no se suma otra. Antes, firmar por él gastaba DOS plazas (medido: 13 → 12).
+            + ($this->guests->honoreeSeatsIn($reservationId) > 0 && ! $this->honoreeCovered($reservationId) ? 1 : 0);
+    }
+
+    /**
+     * **¿Quién cubre a quien cumple?** (`specs/fiesta-sistema-nuevo.md` §4.13, `#752`) — la ÚNICA respuesta, la que leen
+     * la lista, la puerta, la víspera y la API. `null` si la reserva no sella a quien cumple.
+     *
+     * Por la ATADURA y NUNCA por el nombre (la regla de {@see isReplySigned()}): un justificante con `honoree`, o la
+     * asignación de un menor a cargo sobre la línea del pack —un pack no admite otras (`DependentAssigner`)—. Emparejar
+     * por nombre, lo de F3b, fallaba con «María José» y acertaba con cualquier «Lucía» (medido, §4.8).
+     */
+    public function honoreeCoverage(int $reservationId): ?HonoreeCoverage
+    {
+        if ($this->guests->honoreeSeatsIn($reservationId) < 1) {
+            return null;
+        }
+
+        $internal = WaiverSettings::isInternal();
+        $authorization = GuardianAuthorization::query()
+            ->where('order_item_id', $reservationId)
+            ->where('honoree', true)
+            ->first();
+        if ($authorization !== null) {
+            $status = $internal ? (WaiverStatus::forGuestMinors([$authorization])[(int) $authorization->getKey()] ?? null) : null;
+
+            return new HonoreeCoverage(
+                HonoreeCoverage::AUTHORIZATION,
+                (string) $authorization->minor_name,
+                $status?->minorState(),
+                authorizationId: (int) $authorization->getKey(),
+            );
+        }
+
+        $dependent = $this->honoreeAssignment($reservationId)?->dependent;
+        if ($dependent !== null) {
+            return new HonoreeCoverage(
+                HonoreeCoverage::DEPENDENT,
+                (string) $dependent->name,
+                $internal ? WaiverStatus::forDependent($dependent)->minorState() : null,
+                dependentId: (int) $dependent->getKey(),
+            );
+        }
+
+        return HonoreeCoverage::none();
+    }
+
+    /**
+     * ¿Lo cubre ya una prueba atada? Sin mirar si su exención está vigente: la plaza es suya igual (una firma que quedó
+     * «anterior» no la devuelve al montón). Es la pregunta de las plazas y la de los dos escritores, bajo su lock.
+     */
+    public function honoreeCovered(int $reservationId): bool
+    {
+        return GuardianAuthorization::query()->where('order_item_id', $reservationId)->where('honoree', true)->exists()
+            || $this->honoreeAssignment($reservationId) !== null;
+    }
+
+    /**
+     * La asignación de quien cumple: la única que admite una línea de pack (`DependentAssigner::assignHonoree()`).
+     * ⚠️ Solo tiene sentido en una reserva que sella a quien cumple; en una entrada, sus asignaciones son otra cosa.
+     */
+    private function honoreeAssignment(int $reservationId): ?DependentAssignment
+    {
+        if ($this->guests->honoreeSeatsIn($reservationId) < 1) {
+            return null;
+        }
+
+        return DependentAssignment::query()->where('order_item_id', $reservationId)->with('dependent')->orderBy('id')->first();
     }
 
     /**

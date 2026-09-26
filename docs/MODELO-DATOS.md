@@ -441,7 +441,10 @@ la de una asignación) · `minor_name`(120) · `minor_surname`(120) · **`minor_
 `minor_born_on` · `guardian_name`(120) · `guardian_surname`(120) · `guardian_relationship`(16, la lista
 CERRADA `Dependent::RELATIONSHIPS`) · `guardian_email` · `guardian_phone` · `created_at` (**sin
 `updated_at`: la fila no se edita**) · `invitation_reply_id` (FK nullable **`nullOnDelete`** a
-`invitation_replies`, 2026-09-17 `DECISIONES #573`). **`unique (order_id, minor_key)`** = «un niño, un papel».
+`invitation_replies`, 2026-09-17 `DECISIONES #573`) · **`honoree`** (`true` o NULL, `#752`: el justificante de QUIEN
+CUMPLE; `unique (order_item_id, honoree)` = como mucho uno por reserva, porque dos NULL no chocan en ningún motor; fuera
+del hash, y el ÚNICO campo que se ata después de nacer, una vez, bajo el lock del titular). **`unique (order_id,
+minor_key)`** = «un niño, un papel».
 ⚠️⚠️ **`invitation_reply_id` es `SET NULL` por diseño y NO entra en el hash de la firma**: las respuestas
 se podan a los 14 días de la visita y esta prueba se conserva años — con `RESTRICT` la poda fallaría y
 con `CASCADE` se llevaría la prueba por delante. Y meter una columna `SET NULL` dentro de un hash
@@ -504,7 +507,8 @@ compartido por `hasReferences()` y `prunable()`.
 
 ### `dependent_assignments` (DependentAssignment) — Fase 6 · menores a cargo, tanda 4
 Qué ENTRADAS de un pedido son para qué menores (`specs/menores-a-cargo.md` §4.6–§4.10, §9.9.3 D4;
-`DECISIONES #202`). La posee IDENTITY y referencia el ítem por su id ENTERO: `dependent_id` FK
+`DECISIONES #202`). ▶ **La única fila sobre un PACK es la de QUIEN CUMPLE** (`#752`, `fiesta-sistema-nuevo.md` §4.13):
+su hijo a cargo, como mucho una por línea y solo si sella `honoree_row` (`DependentAssigner::assignHonoree()`). La posee IDENTITY y referencia el ítem por su id ENTERO: `dependent_id` FK
 **RESTRICT** a `dependents` (un menor con entradas asignadas se DESVINCULA, no se borra) ·
 `order_item_id` `unsignedBigInteger` FK **CASCADE** desde `order_items` (una asignación sin su línea no
 significa nada; así la purga de go-live y los verificadores no la conocen) · `created_at` (sin

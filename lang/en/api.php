@@ -60,6 +60,8 @@ return [
         'waiver_unsigned' => 'Their waiver is not signed yet: sign it under “Dependents” before assigning them a ticket.',
         'too_many' => 'You have picked more dependents than tickets.',
         'entries_only' => 'Dependents can only be assigned to tickets: a party pack already asks for its guests.',
+        'not_honoree' => 'This booking has nobody celebrating a birthday.',
+        'honoree_covered' => 'The birthday child\'s waiver was already signed by their mother or father with the authorisation.',
         'repeated' => 'You have picked the same dependent twice for these tickets.',
     ],
 

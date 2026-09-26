@@ -687,8 +687,8 @@ en «un niño, un papel»: la prueba es de la PRIMERA respuesta y el segundo rec
 **El hueco** está medido en §4.8 (la puerta contradice a la lista, su justificante se rechaza con la fiesta llena y
 gasta dos plazas con sitio, el nombre falla con compuestos, nadie avisa). **El qué (owner)**: firma **quien reserva,
 como su menor a cargo, si es su hijo; si no, su padre o madre con el justificante**; se pide **en la fila de quien
-cumple** («Falta · Firmar su exención») y **la víspera lo recuerda**; sin sesión, **las dos vías**: «Entrar y firmarla
-en tu cuenta» y «Firmarla aquí».
+cumple** («Falta · Firmar su descargo»; en pantalla, «descargo» y nunca «exención»: `#339`) y **la víspera lo
+recuerda**; sin sesión, **las dos vías**: «Entrar y firmarlo en tu cuenta» y «Firmarlo aquí».
 
 **El modelo (mío): quien cumple queda CUBIERTO por UNA de dos pruebas, atadas por id y nunca por nombre.**
 1. **Un menor a cargo del titular** → una fila de `dependent_assignments` sobre la línea del pack. Hoy la tabla es solo
@@ -710,26 +710,26 @@ en tu cuenta» y «Firmarla aquí».
   cambia: `waiver:verify-chain` sobre MySQL antes de empujar.
 
 **La fila (web)**. «Firmada · Falta» solo donde aplica (el `entry` de la puerta: `interno` y el producto pide
-justificante; hoy salía siempre). Quien cumple sin cubrir, con la lista abierta: «Firmar su exención» abre, bajo la
+justificante; hoy salía siempre). Quien cumple sin cubrir, con la lista abierta: «Firmar su descargo» abre, bajo la
 fila (`<details>`: funciona sin JavaScript), «¿Firmas tú por Mateo?»:
 - **«Sí, soy su padre, madre o tutor»** → con sesión del titular: sus hijos a cargo (el que empareja por nombre,
-  preseleccionado) u «Otro: añadirlo» (nombre, apellidos, nacimiento, relación y la casilla de la exención con «Leer el
+  preseleccionado) u «Otro: añadirlo» (nombre, apellidos, nacimiento, relación y la casilla del descargo con «Leer el
   descargo»); «Firmar» envía a la MISMA URL firmada de la lista y escribe `add()` si es nuevo + `assignHonoree()`. Un hijo
-  con la exención de un texto viejo se vuelve a firmar en el mismo paso. Sin sesión: **«Entrar y firmarla en tu
-  cuenta»** (`/login?next=…`; Google vuelve solo, la contraseña de la isla: a medir) y **«Firmarla aquí»** (el
+  con el descargo de un texto viejo lo vuelve a firmar en el mismo paso. Sin sesión: **«Entrar y firmarlo en tu
+  cuenta»** (`/login?next=…`; Google vuelve solo, la contraseña de la isla: a medir) y **«Firmarlo aquí»** (el
   justificante de quien cumple). ⚠️ El camino de la cuenta EXIGE sesión (`RGPD-03`: el enlace de la lista no la da, se
   reenvía, y una firma a nombre del titular no puede hacerla quien tenga el enlace).
-- **«No, que la firme su familia»** → «Pásale este enlace a su padre o madre», con Copiar y WhatsApp.
+- **«No, que lo firme su familia»** → «Pásale este enlace a su padre o madre», con Copiar y WhatsApp.
 
 **El justificante de quien cumple**: la página de siempre con `para=cumple` DENTRO de la firma de la URL (medido:
-añadirlo a mano la invalida; un padre invitado no puede atar su firma a quien cumple). «La exención de Mateo»; lo que
+añadirlo a mano la invalida; un padre invitado no puede atar su firma a quien cumple). «El descargo de Mateo»; lo que
 viene de la reserva se ENSEÑA y el nombre y los apellidos los escribe quien firma (`#706`); la casilla dice «Como su
 padre, madre o tutor, acepto el descargo de responsabilidad en su nombre» (sin «a cargo de :h»: es su fiesta). Ya
-cubierto: «La exención de Mateo ya está firmada».
+cubierto: «El descargo de Mateo ya está firmado».
 
 **La puerta** lee la cobertura: la ficha de quien cumple llega marcada por contrato (`GateReservation.partyGuests`) y sale
-«(cumple)», firmada si está cubierta (de un hijo, con el estado de su exención) y contada en «N de M». No firma nada
-nuevo: se resuelve desde la lista, en el móvil del padre. **La víspera**: «Falta la exención de Mateo: fírmala desde la
+«(cumple)», firmada si está cubierta (de un hijo, con el estado de su descargo) y contada en «N de M». No firma nada
+nuevo: se resuelve desde la lista, en el móvil del padre. **La víspera**: «Falta el descargo de Mateo: fírmalo desde la
 lista» (`PendingWork`, por contrato). **La API** (API-first): la ficha de invitados dice la cobertura y el enlace; el
 camino de la cuenta, con Bearer del titular (1.40.0, si plataforma no la tomó).
 
@@ -738,9 +738,9 @@ cumple a la de su hijo (movería el suplemento de edades: dinero); firmar hijos 
 
 | Parte | Qué | Verificación |
 |---|---|---|
-| **F7a** ⬜ | El dominio: la columna, `assignHonoree()`, `sign(forHonoree)`, `honoreeCoverage()`, las plazas, los contratos (la ficha marcada, `PendingWork`), el mensaje. | Pruebas con control · arnés · `waiver:verify-chain` sobre MySQL · suite. |
-| **F7b** ⬜ | La lista y el justificante de quien cumple: la fila y su panel, las dos vías, «Firmada · Falta» donde aplica. | Pruebas · arnés · sonda con y sin JavaScript a 390 y 1280 · el ojo del owner. |
-| **F7c** ⬜ | La puerta, la víspera y la API. | Pruebas · arnés · la ficha de la puerta y el correo en Mailpit. |
+| **F7a** ✅ | El dominio (26-09): `guardian_authorizations.honoree` con su `UNIQUE`, `DependentAssigner::assignHonoree()` (bajo el lock del titular, con las reglas de un menor a cargo; otro hijo SUSTITUYE), `sign(…, forHonoree)` (no gasta plaza ni se rechaza por llena; un justificante suelto del mismo niño se ATA una vez), `GuardianPlaces::honoreeCoverage()`/`honoreeCovered()` (`HonoreeCoverage`) y su plaza UNA vez; el mensaje de «llena» (el interno y el de la página: los dos mentían). ⚠️ Visto al escribirlo: el vocabulario manda «descargo» y no «exención» en pantalla (`#339`, `WaiverWordingIsOneTermTest`). | `ExencionDeQuienCumpleTest` 8 (cada caso con su control; el `UNIQUE` pedido por su excepción EXACTA: con una columna olvidada, el primer insert fallaba por otra cosa) · **arnés `scripts/mutar-exencion-cumple.sh` 16/16** · **`waiver:verify-chain --scenario=honoree` (nuevo) PASA sobre InnoDB, y visto FALLAR 3/3 sin el lock** (justificante Y asignación) · los otros tres escenarios PASAN · 1211 vecinos. |
+| **F7b** ⬜ | La lista y el justificante de quien cumple: la fila y su panel, las dos vías, «Firmada · Falta» donde aplica; la lista deja `cumpleFirmado()` y lee la cobertura. | Pruebas · arnés · sonda con y sin JavaScript a 390 y 1280 · el ojo del owner. |
+| **F7c** ⬜ | La puerta (la ficha de quien cumple marcada por contrato), la víspera (`PendingWork`, por contrato) y la API. | Pruebas · arnés · la ficha de la puerta y el correo en Mailpit. |
 
 ## 5. Impacto en invariantes
 

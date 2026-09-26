@@ -22,7 +22,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  *
  * Tres reglas que son la entidad entera:
  *  - **No se edita.** Sin `updated_at` y sin escritor que actualice: una corrección es una
- *    autorización nueva. Lo que la fila dice es lo que se firmó.
+ *    autorización nueva. Lo que la fila dice es lo que se firmó. ▶ **La ÚNICA excepción es `honoree`**
+ *    (`fiesta-sistema-nuevo.md` §4.13, `#752`): el puntero que dice que esta autorización cubre a QUIEN
+ *    CUMPLE puede atarse UNA vez (NULL → `true`) bajo el lock del titular, cuando su padre ya había
+ *    firmado un justificante suelto con el mismo nombre. No es lo firmado sino a quién cubre, y está
+ *    fuera del hash, como `invitation_reply_id`.
  *  - **No se borra mientras su prueba exista** (`deleting` + FK RESTRICT desde `waiver_signatures`),
  *    igual que un menor a cargo con waiver. La única salida es la poda por plazo, que se la lleva
  *    cuando ya no le queda ninguna firma.
@@ -43,6 +47,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     // El vínculo con la respuesta de la invitación (`#576`). Lo escribe el firmador y solo cuando el
     // contrato confirma que esa respuesta es un «sí» vivo de ESTA reserva.
     'invitation_reply_id',
+    // Cubre a QUIEN CUMPLE (§4.13, `#752`): `true` o NULL, como mucho una por reserva (`UNIQUE`).
+    'honoree',
     'minor_name', 'minor_surname', 'minor_key', 'minor_born_on',
     'guardian_name', 'guardian_surname', 'guardian_relationship', 'guardian_email', 'guardian_phone',
 ])]
@@ -72,6 +78,7 @@ class GuardianAuthorization extends Model
 
     protected $casts = [
         'order_item_id' => 'integer',
+        'honoree' => 'boolean',
         'minor_born_on' => 'immutable_date',
     ];
 
