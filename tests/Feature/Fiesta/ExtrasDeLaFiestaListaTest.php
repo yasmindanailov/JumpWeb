@@ -45,10 +45,18 @@ class ExtrasDeLaFiestaListaTest extends TestCase
         $this->assertStringContainsString('/uploads/productos/tarta.webp', $z4, 'la foto de la tarta, grande');
         $this->assertStringContainsString('name="cake_quantity" value="1"', $z4);
         $this->assertStringNotContainsString('][product_id]" value="'.$tarta->id.'"', $z4, 'la tarta viaja como la pregunta, no como una tarjeta más');
+        // «¿Cuántas tartas?» (el owner, 26-09: «no se ven cantidades»): la cantidad A LA VISTA con la pieza de los adultos,
+        // un campo numérico de verdad (sin JavaScript también se cambia). Sin tarta elegida, `--sin` (el JS la esconde) y
+        // el tope, el mayor de las tartas (aquí el de «Traemos», 10).
+        $this->assertMatchesRegularExpression('#<div class="pli-adultos pli-tarta-n pli-tarta-n--sin" data-tarta-cantidad>.*?¿Cuántas tartas\?.*?<input type="number" id="pli-tarta-n" name="cake_quantity" value="1" min="1"\s+max="10"#s', $z4);
 
         // Con más niños que raciones, la opción lo dice (sin tarta grande: «Añadir otra tarta» la pone `lista.js`).
         $r->forceFill(['quantity' => 14])->save();
         $this->assertStringContainsString('De 12 raciones: no llega para 14', $this->zona4($this->pagina($r, $host)));
+
+        // Elegida «La nuestra», el tope es el SUYO (3), no el mayor de las dos (10).
+        $this->guardar($r, $host, ['cake' => (string) $tarta->id, 'cake_quantity' => '1']);
+        $this->assertMatchesRegularExpression('#name="cake_quantity" value="1" min="1"\s+max="3"#', $this->zona4($this->pagina($r, $host)));
     }
 
     public function test_the_saved_answer_comes_back_checked_with_its_quantity(): void
@@ -61,9 +69,20 @@ class ExtrasDeLaFiestaListaTest extends TestCase
         $this->assertMatchesRegularExpression('#name="cake" value="'.$tarta->id.'"\s+checked#', $z4);
         $this->assertStringContainsString('name="cake_quantity" value="2"', $z4);
         $this->assertStringContainsString('Lo cambias hasta', $z4, 'elegida, la pista dice hasta cuándo se cambia');
+        // Elegida, «¿Cuántas tartas?» se ve con su cuenta (lo cobrado, como el precio de la opción) y el tope de ESA tarta.
+        $this->assertStringContainsString('<div class="pli-adultos pli-tarta-n" data-tarta-cantidad>', $z4);
+        $this->assertStringContainsString('<span data-tarta-cuenta>24 raciones · 50,00 €</span>', $z4);
+        $this->assertMatchesRegularExpression('#name="cake_quantity" value="2" min="1"\s+max="3"#', $z4);
 
         $this->guardar($r, $host, ['cake' => 'none']);
         $this->assertMatchesRegularExpression('#name="cake" value="none"\s+checked#', $this->zona4($this->pagina($r, $host)));
+
+        // Cerrado el plazo, la cantidad también se VE (solo leída), y ya no se cambia.
+        $this->guardar($r, $host, ['cake' => (string) $tarta->id, 'cake_quantity' => '2']);
+        DB::table('product_addons')->where('addon_id', $tarta->id)->update(['postform_cutoff_hours' => 24 * 30]);
+        $cerrada = $this->zona4($this->pagina($r, $host));
+        $this->assertStringContainsString('<p class="pli-tarta-fija" data-tarta-fija>2 tartas · 24 raciones · 50,00 €</p>', $cerrada);
+        $this->assertStringNotContainsString('name="cake_quantity"', $cerrada);
     }
 
     public function test_the_parents_block_groups_by_family_and_asks_how_many_adults_stay(): void
@@ -139,6 +158,9 @@ class ExtrasDeLaFiestaListaTest extends TestCase
 
     public function test_the_save_bar_says_when_the_host_saved(): void
     {
+        // ⚠️ A mediodía del PARQUE: con el reloj de verdad, de 22:00 a medianoche las dos horas de abajo caían en «ayer»
+        //    (visto el 26-09 a las 22:03).
+        $this->travelTo(DisplayTime::today()->setTime(12, 0)->shiftTimezone(DisplayTime::timezone()));
         ['reservation' => $r, 'host' => $host] = $this->mountParty();
         $this->extra($this->tipo($r), 'Cubo', 1600);
 

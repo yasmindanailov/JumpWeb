@@ -224,3 +224,17 @@ export function euros(cents) {
 
     return `${s}${NBSP}€`;
 }
+
+/**
+ * Un importe COBRADO como lo escribe `Money::format()` («25,00 €», «1.234,50 €»): siempre dos decimales, el punto de los
+ * millares y un espacio normal. Es el registro de los complementos de la lista —su precio y su «… en total» salen así del
+ * servidor—; con `euros()` (el de escaparate) el total saltaba de «78,00 €» a «78 €» al tocar + (medido, 26-09).
+ */
+export function importe(cents) {
+    const n = Math.round(Number(cents) || 0);
+    const signo = n < 0 ? '-' : '';
+    const abs = Math.abs(n);
+    const enteros = String(Math.floor(abs / 100)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
+    return `${signo}${enteros},${String(abs % 100).padStart(2, '0')} €`;
+}

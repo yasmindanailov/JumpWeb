@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { caducaEn, capitalizar, choice, clave, cuentas, cubrir, deLaFiesta, estadoFicha, euros, limpiar, misRespuestas, soloEdad, vistaInvitacion } from './logica.js';
+import { caducaEn, capitalizar, choice, clave, cuentas, cubrir, deLaFiesta, estadoFicha, euros, importe, limpiar, misRespuestas, soloEdad, vistaInvitacion } from './logica.js';
 
 // F6b (§4.12): «Tus respuestas», las de este móvil.
 const AHORA = 1_790_000_000_000;
@@ -97,6 +97,17 @@ test('euros escribe como el servidor', () => {
     const NBSP = String.fromCharCode(160);
     assert.equal(euros(1600), `16${NBSP}€`);
     assert.equal(euros(1695), `16,95${NBSP}€`);
+});
+
+test('importe escribe como Money::format (lo cobrado: la tarta y los complementos)', () => {
+    // Los valores, leídos de `Money::format()` el 26-09 (byte a byte: el espacio es NORMAL, no el duro de `euros`).
+    assert.equal(importe(2500), '25,00 €');
+    assert.equal(importe(1695), '16,95 €');
+    assert.equal(importe(123450), '1.234,50 €');
+    assert.equal(importe(100000000), '1.000.000,00 €');
+    assert.equal(importe(5), '0,05 €');
+    assert.equal(importe(-1250), '-12,50 €');
+    assert.equal(importe(2500).charCodeAt(5), 32, 'espacio normal');
 });
 
 // ── La vista previa de «Personalizar» (F2): las mismas reglas que la tarjeta del servidor ──

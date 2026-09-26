@@ -13,7 +13,7 @@
  */
 /* global document, localStorage, setTimeout, location, navigator, Event */
 import './fiesta.css';
-import { NBSP, capitalizar, choice, clave, cubrir, euros, limpiar, soloEdad, vistaInvitacion } from './logica.js';
+import { NBSP, capitalizar, choice, clave, cubrir, euros, importe, limpiar, soloEdad, vistaInvitacion } from './logica.js';
 
 const de = document.documentElement;
 const q = (sel, raiz = document) => raiz.querySelector(sel);
@@ -29,24 +29,27 @@ function cantidades(raiz, alCambiar) {
         const mas = q('[data-cantidad-mas]', caja);
         const valor = q('[data-cantidad-valor]', caja);
         if (!campo || !menos || !mas || !valor) return;
-        const min = Number(caja.dataset.min ?? 0);
-        const max = caja.dataset.max === undefined ? Infinity : Number(caja.dataset.max);
+        // Los topes se leen en CADA paso: el de «¿Cuántas tartas?» cambia con la tarta elegida (`data-max`).
+        const min = () => Number(caja.dataset.min ?? 0);
+        const max = () => (caja.dataset.max === undefined ? Infinity : Number(caja.dataset.max));
         const formato = caja.dataset.formato;
         const pinta = () => {
             const n = parseInt(campo.value, 10) || 0;
             valor.textContent = formato ? formato.replace(':n', String(n)) : String(n);
-            menos.disabled = n <= min;
-            mas.disabled = n >= max;
+            menos.disabled = n <= min();
+            mas.disabled = n >= max();
             caja.classList.toggle('pz-cantidad--con', n > 0);
         };
         const pon = (n) => {
-            campo.value = String(Math.min(max, Math.max(min, n)));
+            campo.value = String(Math.min(max(), Math.max(min(), n)));
             pinta();
             campo.dispatchEvent(new Event('input', { bubbles: true }));
         };
         menos.addEventListener('click', () => pon((parseInt(campo.value, 10) || 0) - 1));
         mas.addEventListener('click', () => pon((parseInt(campo.value, 10) || 0) + 1));
         campo.addEventListener('input', pinta);
+        // La página cambió un tope o el valor por su cuenta (la tarta): se repinta SIN avisar de un cambio.
+        caja.addEventListener('cantidad:repinta', pinta);
         pinta();
         if (alCambiar) campo.addEventListener('input', () => alCambiar(caja, parseInt(campo.value, 10) || 0));
     });
@@ -476,11 +479,14 @@ function lista(form) {
     });
 
     // ── F5 (§4.11, `#749`): LA TARTA (`PliZona4`, `PliAvisoTarta`) ──
-    // «¿La tarta?» es un radio `cake` (el id de una tarta, o `none`) y «Añadir otra tarta» sube `cake_quantity`: el servidor
-    // lo traduce a las cantidades de siempre. Sin tarta grande (`#749`): si los niños no caben, se propone otra.
+    // «¿La tarta?» es un radio `cake` (el id de una tarta, o `none`) y «¿Cuántas tartas?» su `cake_quantity`, A LA VISTA con
+    // su cuenta (el owner, 26-09); el servidor lo traduce a las cantidades de siempre. Sin tarta grande (`#749`): si los
+    // niños no caben, «Añadir otra tarta» es el + de esa cantidad.
     const tarta = q('[data-tarta]', form);
     const radiosTarta = tarta ? qa('input[name="cake"]', tarta) : [];
     const cantidadTarta = tarta ? q('input[name="cake_quantity"]', tarta) : null;
+    const filaCantidad = tarta ? q('[data-tarta-cantidad]', tarta) : null;
+    const cajaCantidad = filaCantidad ? q('[data-cantidad]', filaCantidad) : null;
     const datosTartas = (() => { try { return JSON.parse(tarta?.dataset.tartas || '{}'); } catch { return {}; } })();
     const tartaElegida = () => radiosTarta.find((r) => r.checked)?.value ?? '';
     const tartaInicial = { v: tartaElegida(), n: cantidadTarta?.value ?? '' };
@@ -506,21 +512,29 @@ function lista(form) {
         });
         const pista = q('.pz-opciones__pista', tarta);
         if (pista) pista.textContent = v ? (tarta.dataset.pistaCambia || '') : (tarta.dataset.pistaPlazo || '');
+        // «¿Cuántas tartas?»: con una tarta elegida, su tope y su cuenta («24 raciones · 50,00 €»); sin ella, fuera.
+        if (filaCantidad) {
+            filaCantidad.classList.toggle('pli-tarta-n--sin', !d);
+            if (d && cajaCantidad) {
+                const tope = Math.max(1, d.max || 1);
+                cajaCantidad.dataset.max = String(tope);
+                cantidadTarta.max = String(tope);
+                if ((parseInt(cantidadTarta.value, 10) || 1) > tope) cantidadTarta.value = String(tope);
+                // ⚠️ `cantidad:repinta` y no `input`: la tarta escucha `input` para repintarse y sería un bucle.
+                cajaCantidad.dispatchEvent(new Event('cantidad:repinta'));
+            }
+            const cuenta = q('[data-tarta-cuenta]', filaCantidad);
+            if (cuenta) cuenta.textContent = d ? [d.serves ? choice(t('tarta.raciones_total', ''), 1, { n: d.serves * n }) : '', importe((d.precio || 0) * n)].filter(Boolean).join(' · ') : '';
+        }
         const sug = q('[data-tarta-sug]', tarta);
         if (sug) {
             const total = d && d.serves ? d.serves * n : 0;
             const otra = q('[data-tarta-otra]', sug);
-            const quitar = q('[data-tarta-quitar]', sug);
             const texto = q('[data-tarta-sug-texto]', sug);
+            // Solo mientras NO llegue; «Añadir otra tarta» es el + de la cantidad y se va en el tope.
             if (total && s > total) {
                 texto.textContent = n === 1 ? choice(t('tarta.poca', ''), 1, { n: s, r: d.serves }) : choice(t('tarta.poca_varias', ''), 1, { n: s, q: n, r: total });
                 otra.hidden = n >= (d.max || 1);
-                quitar.hidden = n <= 1;
-                sug.hidden = false;
-            } else if (total && n > 1) {
-                texto.textContent = choice(t('tarta.varias', ''), 1, { q: n, r: total });
-                otra.hidden = true;
-                quitar.hidden = false;
                 sug.hidden = false;
             } else {
                 sug.hidden = true;
@@ -538,23 +552,19 @@ function lista(form) {
             qa('[data-aviso-icono]', aviso).forEach((ic) => { ic.hidden = (ic.dataset.avisoIcono === 'elegida') !== Boolean(v); });
         }
     };
+    // La última TARTA elegida (nunca «Sin tarta»): pasar por «Sin tarta» y volver a la misma no pierde la cantidad.
     let tartaAntes = tartaElegida();
     radiosTarta.forEach((r) => r.addEventListener('change', () => {
         // Otra tarta es otra cantidad: se vuelve a una.
-        if (cantidadTarta && r.value !== tartaAntes) cantidadTarta.value = '1';
-        tartaAntes = r.value;
+        if (cantidadTarta && r.value !== 'none' && tartaAntes !== '' && tartaAntes !== 'none' && r.value !== tartaAntes) cantidadTarta.value = '1';
+        if (r.value !== 'none') tartaAntes = r.value;
         actualiza();
         guardaBorrador();
     }));
-    const cambiaTartas = (paso) => {
-        const d = datosTartas[tartaElegida()];
-        if (!d || !cantidadTarta) return;
-        cantidadTarta.value = String(Math.min(d.max || 1, Math.max(1, (parseInt(cantidadTarta.value, 10) || 1) + paso)));
-        actualiza();
-        guardaBorrador();
-    };
-    q('[data-tarta-otra]', form)?.addEventListener('click', () => cambiaTartas(1));
-    q('[data-tarta-quitar]', form)?.addEventListener('click', () => cambiaTartas(-1));
+    // «¿Cuántas tartas?»: cada paso del − y el + (o lo tecleado sin JavaScript) repinta la cuenta, la sugerencia y la barra.
+    cantidadTarta?.addEventListener('input', () => { actualiza(); guardaBorrador(); });
+    // «Añadir otra tarta» ES el + de esa cantidad: la cifra de arriba sube a la vista.
+    q('[data-tarta-otra]', form)?.addEventListener('click', () => { if (cajaCantidad) q('[data-cantidad-mas]', cajaCantidad)?.click(); });
 
     // ── F5: LO DE LOS PADRES (`PliFamilia`): con los adultos puestos, la cuenta más barata de cada familia ──
     const padres = q('[data-padres]', form);
@@ -764,13 +774,15 @@ function lista(form) {
     });
 
     // ── Las cantidades de los extras: el importe de cada tarjeta, anticipado (el que vale lo dice el servidor) ──
+    // ⚠️ `importe()`, como lo escribe el servidor en la misma tarjeta (`Money::format`): con `euros()` saltaba de «78,00 €»
+    //    a «78 €» al tocar + (medido, 26-09).
     cantidades(form, (caja, n) => {
         const tarjeta = caja.closest('.fi-complemento');
         if (!tarjeta) return;
         tarjeta.classList.toggle('fi-complemento--con', n > 0);
         const precio = Number(tarjeta.dataset.precio || 0);
         const total = q('[data-total]', tarjeta);
-        if (total) { total.hidden = n === 0; total.textContent = choice(t('extras.total', ':x en total'), 1, { x: euros(n * precio) }); }
+        if (total) { total.hidden = n === 0; total.textContent = choice(t('extras.total', ':x en total'), 1, { x: importe(n * precio) }); }
     });
 
     // ── Compartir el enlace y el recordatorio ──

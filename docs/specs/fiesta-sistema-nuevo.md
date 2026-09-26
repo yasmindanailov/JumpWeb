@@ -504,6 +504,23 @@ El suelo del número (`GuestCountPolicy`) y las plazas de firma (`GuardianPlaces
 
 Los packs a tres campos (`#743`·6) son DATO del panel: en local se ponen para el ojo del owner y se apuntan en el carril.
 
+**❗ Hueco de F3b: LA EXENCIÓN DE QUIEN CUMPLE (revisado el 26-09 a petición del owner, SIN código; espera su decisión).**
+Nada ata a quien cumple con una firma: al reservar es un nombre y una edad (un pack no se asigna a menores a cargo,
+`DependentAssigner` «solo en entradas»; y el mockup quita «Añade a tus hijos» del cumpleaños, 24-09). Medido en
+`JW-OJO-F5` con transacciones deshechas: (1) **la puerta contradice a la lista**: firmado como menor a cargo, la lista
+dice «Firmada» y la puerta «sin resolver» y «0 de 14» (`GateProfile` solo mira justificantes), con el bloque de menores
+diciendo «vigente»; (2) **con la fiesta llena su justificante se RECHAZA** (su plaza ya cuenta y no hay «sí» al que
+atarla), con un mensaje falso («ya tiene 1 justificantes, que es toda su capacidad» con 0); (3) con sitio, **gasta dos
+plazas** (13 → 12); (4) el emparejado por nombre falla con «María José» ↔ «María José López», «Mateo Ruiz García» ↔
+«Mateo Ruiz» y apodos, y acierta con cualquier «Lucía» contra la hija «Lucía Pérez»; (5) nadie le dice al anfitrión qué
+hacer (ni la fila, ni la víspera, que lo cuenta resuelto, ni el correo del justificante); (6) si quien reserva no es el
+padre, solo queda el justificante, con (2) y (3); (7) el justificante dice «a cargo de :h», absurdo si :h es la madre;
+(8) aparte, «Firmada · Falta» sale aunque el producto no pida justificante o el waiver no sea interno (leído, no medido).
+**Para el owner**: quién firma (recomendado: quien reserva como su menor a cargo si es su hijo; si no, su padre con el
+justificante) y dónde se pide (recomendado: en la fila de quien cumple, «Falta · Firmar su exención», y la víspera lo
+recuerda). **Míos, sin decisión**: atarlo por id y no por nombre, la puerta leyendo lo mismo que la lista, su plaza sin
+contar dos veces, su justificante sin rechazo por llena, el mensaje y el aviso de la víspera.
+
 ### 4.9 F4 ✅ · La lista que supera la reserva y su «Sí» (`#743`·3, `[DECIDIDO owner]` `#747`, 26-09)
 
 **Lo que dice el diseño** (`PliZona3`): la lista admite más niños que plazas; la barra crece, un hueco marca dónde acababa
@@ -628,6 +645,19 @@ el mismo hueco, «no llega para 14», «Añadir otra tarta» → 24 raciones, 8 
 «Ponerlo», guardar ×2, «Sin tarta», «Guardado hoy a las…»; sin JavaScript, radios y campos numéricos) sin errores ni
 desborde · el banco: `lista-recien` y `lista-guardado-diagnostico` **4 de 4 a 0 px con la zona 4 dentro** (en A solo se
 esconden los marcos de foto del diseño) y las piezas `complementos` 4 de 4.
+
+**«¿Cuántas tartas?» (26-09, `#751`)**: el owner, en vivo, «la tarta no se puede subir de cantidad; le doy a añadir otra
+y no se ven cantidades». Medido (`sonda-tarta.mjs`): la cantidad solo vivía en una frase («2 tartas: 24 raciones.») y
+«Añadir otra tarta» se iba en cuanto llegaban las raciones. Ahora, con una tarta elegida, la fila «¿Cuántas tartas?» con
+la pieza de los adultos (`x-pieza.cantidad` desnuda, `cake_quantity` de verdad) y su cuenta («24 raciones · 50,00 €»,
+`importe()` = `Money::format`); «Añadir otra tarta» solo mientras no llega, y es su +; fuera «Quitar una» y la frase;
+pasar por «Sin tarta» y volver no pierde la cantidad; cerrada, «2 tartas · 24 raciones · 50,00 €»; sin JavaScript, un
+campo numérico. El tope de la fila es el de la tarta elegida (`cantidades()` lee los topes en cada paso). De paso, el
+«… en total» de cada complemento saltaba de «78,00 €» a «78 €» al tocar +: `importe()`. **Verificación**:
+`ExtrasDeLaFiestaListaTest` 8 (+8 aserciones: la fila, su tope, su cuenta, cerrada) · `node --test` +1 (`importe`, con
+los valores leídos de `Money::format` byte a byte) · arnés `mutar-extras-fiesta.sh` **48/48** (+6, una de ellas en JS) · la sonda a 390 y
+1280 (−, «Añadir otra tarta», +, «Sin tarta» y vuelta, la barra con UN cambio, sin JavaScript el campo) sin errores ni
+desborde · el banco de la lista 4 de 4 a 0 px (la fila, desvío decidido, se esconde en el diagnóstico de `guardado`).
 
 ### 4.12 F6b · «Tus respuestas» y «Avísame de fechas» (`#747`, `[DECIDIDO owner]` `#750`, 26-09)
 

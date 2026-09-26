@@ -140,7 +140,11 @@ return [
                 ],
                 'elegida' => $guardado ? '101' : null,
                 'cantidad' => 1,
-                'datos' => ['101' => ['serves' => 12, 'max' => 5, 'desc' => null], '102' => ['serves' => null, 'max' => 1, 'desc' => 'Se cobra el cubierto']],
+                // «¿Cuántas tartas?» (el owner, 26-09): el diseño no la dibuja; el diagnóstico de `guardado` la esconde.
+                'tope' => 5,
+                'con' => $guardado,
+                'cuenta' => $guardado ? '12 raciones · 25,00 €' : '',
+                'datos' => ['101' => ['serves' => 12, 'max' => 5, 'precio' => 2500, 'desc' => null], '102' => ['serves' => null, 'max' => 1, 'precio' => 1000, 'desc' => 'Se cobra el cubierto']],
                 // «Aquí, hoy es jueves 24» (`datos.js`): la tarta cierra hoy a las 17:00.
                 'pista_plazo' => 'Hasta hoy a las 17:00',
                 'pista_cambia' => 'Lo cambias hasta hoy a las 17:00',

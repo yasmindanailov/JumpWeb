@@ -1,8 +1,8 @@
 {{-- ZONA 4 · Los complementos de venta posterior (`PliZona4`; F5 de la spec §4.11, `[DECIDIDO owner]` `#749`), en los
      bloques que dice cada enganche:
-       · LA TARTA: su foto, «¿La tarta?» con una opción por complemento y «Sin tarta» (un radio `cake`), y si los niños no
-         caben en sus raciones, «Añadir otra tarta» (`cake_quantity`) — sin tarta grande (`#749`). Fuera de plazo, solo la
-         elegida y «El plazo de la tarta pasó. Llámanos y lo vemos.».
+       · LA TARTA: su foto, «¿La tarta?» con una opción por complemento y «Sin tarta» (un radio `cake`), «¿Cuántas tartas?»
+         (`cake_quantity`, con su cuenta) y, si los niños no caben en sus raciones, «Añadir otra tarta» — sin tarta grande
+         (`#749`). Fuera de plazo, solo la elegida y «El plazo de la tarta pasó. Llámanos y lo vemos.».
        · PARA LOS PADRES: «¿Cuántos adultos se quedan?» (el campo general de tipo `adults`) y una familia por `family`, con
          su sugerencia debajo («Para 8 adultos: 1 Combo picoteo, 59 €» y «Ponerlo»), que nunca se pone sola.
        · Los que no dicen bloque, en la rejilla de siempre.
@@ -27,11 +27,19 @@
                 <p class="pli-tarta-l">{{ __('fiesta.lista.tarta.pregunta') }}</p>
             @endif
             @if ($ta['abierta'])
-                <input type="hidden" name="cake_quantity" value="{{ $ta['cantidad'] }}">
-                {{-- «Sois 14 y la tarta es de 12 raciones.» con «Añadir otra tarta»; con dos o más, lo dice y deja quitar
-                     una. Lo pinta `lista.js` con lo que se teclea (sin JavaScript, la cantidad no cambia). --}}
-                <p class="pli-sug" data-tarta-sug hidden><span data-tarta-sug-texto></span><x-pieza.boton variant="quiet" size="sm" data-tarta-otra><x-slot:izquierda><x-lucide name="plus" :size="16" /></x-slot:izquierda>{{ __('fiesta.lista.tarta.otra') }}</x-pieza.boton><x-pieza.boton variant="quiet" size="sm" data-tarta-quitar hidden><x-slot:izquierda><x-lucide name="minus" :size="16" /></x-slot:izquierda>{{ __('fiesta.lista.tarta.quitar') }}</x-pieza.boton></p>
+                {{-- «¿Cuántas tartas?» (el owner, 26-09: «no se ven cantidades»): la cantidad A LA VISTA y con su cuenta, con la
+                     pieza de «¿Cuántos adultos se quedan?» (el `QuantityStepper` desnudo del diseño). Sin tarta elegida, con
+                     JavaScript se esconde (`--sin`); sin él se ve siempre: se elige la tarta y su cantidad a la vez. --}}
+                <div @class(['pli-adultos', 'pli-tarta-n', 'pli-tarta-n--sin' => ! $ta['con']]) data-tarta-cantidad>
+                    <span class="pli-adultos-t"><strong>{{ __('fiesta.lista.tarta.cuantas') }}</strong><span data-tarta-cuenta>{{ $ta['cuenta'] }}</span></span>
+                    <x-pieza.cantidad variant="bare" :label="__('fiesta.lista.tarta.cuantas')" :value="$ta['cantidad']" :min="1" :max="$ta['tope']" :labels="[__('fiesta.lista.tarta.una_menos'), __('fiesta.lista.tarta.una_mas')]" name="cake_quantity" id="pli-tarta-n" />
+                </div>
+                {{-- «Sois 14 y la tarta es de 12 raciones.» con «Añadir otra tarta» (el + de arriba), solo mientras no llegue.
+                     Lo pinta `lista.js` con lo que se teclea. --}}
+                <p class="pli-sug" data-tarta-sug hidden><span data-tarta-sug-texto></span><x-pieza.boton variant="quiet" size="sm" data-tarta-otra><x-slot:izquierda><x-lucide name="plus" :size="16" /></x-slot:izquierda>{{ __('fiesta.lista.tarta.otra') }}</x-pieza.boton></p>
             @else
+                {{-- Cerrada, la cantidad también se ve (solo leída): «2 tartas · 24 raciones · 50,00 €». --}}
+                @if ($ta['con'])<p class="pli-tarta-fija" data-tarta-fija>{{ trans_choice('fiesta.lista.tarta.fija', $ta['cantidad'], ['count' => $ta['cantidad'], 'cuenta' => $ta['cuenta']]) }}</p>@endif
                 <x-pieza.aviso tone="warn" size="sm"><x-slot:icono><x-lucide name="clock-alert" :size="17" /></x-slot:icono>{{ '' }}{{ __('fiesta.lista.tarta.pasada') }}{!! $llamanos !!}</x-pieza.aviso>
             @endif
         </div>

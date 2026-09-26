@@ -402,7 +402,9 @@ $ajusteGuardado = 'const E = window.PLI.ESTADOS.guardado; E.form.invitacion.pala
 // MARCOS de foto (`imageNote` del diseño: «Foto real: …»), que el producto sin foto no pinta («sin dato, sin bloque»).
 // ⚠️ `!important`: la `figure` del diseño lleva `display` EN LÍNEA, que le gana a la hoja (medido: 179 px de más en A).
 $esconderA = '<style>[data-zona="4"] article > div:first-child:has(> figure), .pli-tarta > figure { display: none !important; }</style>';
-$esconderB = '<style>[data-zona="5"] > .pli-sub { display: none; }</style>';
+// «¿Cuántas tartas?» (el owner, 26-09: la cantidad a la vista) es un desvío DECIDIDO del diseño, que no la tiene: en B se
+// esconde en el diagnóstico de `guardado` (en `recien` no hay tarta elegida y la esconde el JS: se compara).
+$esconderB = '<style>[data-zona="5"] > .pli-sub { display: none; } [data-tarta-cantidad] { display: none !important; }</style>';
 foreach (['lista-recien' => 'recien', 'lista-guardado' => 'guardado'] as $nombre => $estado) {
     if ($solo !== [] && ! in_array($nombre, $solo, true)) {
         continue;

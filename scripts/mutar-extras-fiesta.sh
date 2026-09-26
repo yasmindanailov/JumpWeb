@@ -15,6 +15,7 @@ cd "$(git rev-parse --show-toplevel)"
 
 FILTER='ExtrasDeLaFiestaDatoTest|ExtrasDeLaFiestaListaTest|AddonStageTest'
 RUN="docker compose exec -u sail -T laravel.test php artisan test --filter=${FILTER}"
+RUNJS="docker compose exec -u sail -T laravel.test node --test resources/js/fiesta/logica.test.js"
 
 TMP="$(mktemp -d)"
 FICHEROS=(
@@ -30,6 +31,8 @@ FICHEROS=(
     resources/views/fiesta/lista.blade.php
     resources/views/fiesta/lista/zona-3.blade.php
     resources/views/components/fiesta/complemento.blade.php
+    resources/views/fiesta/lista/zona-4.blade.php
+    resources/js/fiesta/logica.js
 )
 copia() { echo "$TMP/$(echo "$1" | tr '/' '_')"; }
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$(copia "$f")" "$f"; touch "$f"; done; }
@@ -37,8 +40,9 @@ trap 'restaurar; rm -rf "$TMP"' EXIT
 for f in "${FICHEROS[@]}"; do cp "$f" "$(copia "$f")"; done
 
 verde() { $RUN >/dev/null 2>&1; }
+verdejs() { $RUNJS >/dev/null 2>&1; }
 
-if ! verde; then
+if ! verde || ! verdejs; then
     echo '✗ la base NO está verde antes de mutar: el veredicto de abajo no valdría nada.' >&2
     exit 1
 fi
@@ -46,8 +50,9 @@ echo '✓ base verde'
 
 muerden=0; total=0
 
+# mutar <nombre> <fichero> <buscar> <poner> [js]
 mutar() {
-    local nombre="$1" fichero="$2" buscar="$3" poner="$4"
+    local nombre="$1" fichero="$2" buscar="$3" poner="$4" juez="${5:-php}"
     total=$((total + 1))
     local veces
     veces=$(python3 -c 'import sys; print(open(sys.argv[1],encoding="utf-8").read().count(sys.argv[2]))' "$fichero" "$buscar")
@@ -62,7 +67,9 @@ mutar() {
         return
     fi
     touch "$fichero"
-    if verde; then
+    local sigue=1
+    if [[ "$juez" == js ]]; then verdejs || sigue=0; else verde || sigue=0; fi
+    if [[ $sigue -eq 1 ]]; then
         echo "  ✗ NO muerde: $nombre"
     else
         echo "  ✓ muerde:    $nombre"
@@ -180,6 +187,27 @@ mutar "la tarta guardada vuelve sin marcar" "$LDI" \
 mutar "la tarta guardada vuelve con una sola" "$LDI" \
   "\$cantidad = \$elegidaVista !== null ? \$elegidaVista->quantity : 1;" \
   "\$cantidad = 1;"
+# «¿Cuántas tartas?» (el owner, 26-09: «no se ven cantidades»)
+Z4=resources/views/fiesta/lista/zona-4.blade.php
+LJ=resources/js/fiesta/logica.js
+mutar "«¿Cuántas tartas?» se ve sin tarta elegida" "$LDI" \
+  "'con' => \$elegidaVista !== null," \
+  "'con' => true,"
+mutar "el tope es el mayor, no el de la elegida" "$LDI" \
+  "\$tope = \$elegidaVista !== null ? \$elegidaVista->maxQuantity : max(" \
+  "\$tope = max("
+mutar "la cuenta sin sus raciones" "$LDI" \
+  "\$tarta->serves === null ? '' : __('fiesta.lista.tarta.raciones_total'" \
+  "true ? '' : __('fiesta.lista.tarta.raciones_total'"
+mutar "la cuenta a precio de una tarta" "$LDI" \
+  "Money::format(\$tarta->unitPriceCents * \$cantidad, \$moneda)," \
+  "Money::format(\$tarta->unitPriceCents, \$moneda),"
+mutar "cerrada, la cantidad no se ve" "$Z4" \
+  "@if (\$ta['con'])<p class=\"pli-tarta-fija\"" \
+  "@if (false)<p class=\"pli-tarta-fija\""
+mutar "el importe cobrado sin sus dos decimales" "$LJ" \
+  "String(abs % 100).padStart(2, '0')" \
+  "String(abs % 100)" js
 mutar "los adultos se preguntan dos veces (siguen en los generales)" "$LDI" \
   "fn (array \$g): bool => \$g['key'] !== \$adultos))," \
   "fn (array \$g): bool => true)),"

@@ -538,6 +538,9 @@ final class ListaDeInvitados
                 ];
             }
             $opciones[] = ['value' => 'none', 'title' => __('fiesta.lista.tarta.sin'), 'description' => '', 'price' => '', 'disabled' => ! $abierta];
+            // «¿Cuántas tartas?» (el owner, 26-09): la cantidad se VE y se sube, con su cuenta al lado. El tope, el de la
+            // elegida (sin elegida, el mayor: sin JavaScript se elige la tarta y su cantidad a la vez).
+            $tope = $elegidaVista !== null ? $elegidaVista->maxQuantity : max(array_map(fn (PostFormAddonView $a): int => $a->maxQuantity, $tartas));
             $tarta = [
                 'abierta' => $abierta,
                 'foto' => (string) (collect($tartas)->map(fn (PostFormAddonView $a): ?string => $a->imageUrl)->filter()->first() ?? ''),
@@ -545,9 +548,12 @@ final class ListaDeInvitados
                 'opciones' => $abierta ? $opciones : array_values(array_filter($opciones, fn (array $o): bool => $o['value'] === $elegida)),
                 'elegida' => $elegida,
                 'cantidad' => $cantidad,
-                // Para `lista.js`: las raciones, el tope y la descripción de cada una, con las que repinta al teclear.
+                'tope' => max(1, $tope),
+                'con' => $elegidaVista !== null,
+                'cuenta' => $elegidaVista === null ? '' : self::cuentaTarta($elegidaVista, $cantidad, $moneda),
+                // Para `lista.js`: las raciones, el tope, el precio y la descripción de cada una, con las que repinta al teclear.
                 'datos' => collect($tartas)->mapWithKeys(fn (PostFormAddonView $a): array => [(string) $a->productId => [
-                    'serves' => $a->serves, 'max' => $a->maxQuantity, 'desc' => $a->serves === null ? ($a->features[0] ?? '') : null,
+                    'serves' => $a->serves, 'max' => $a->maxQuantity, 'precio' => $a->unitPriceCents, 'desc' => $a->serves === null ? ($a->features[0] ?? '') : null,
                 ]])->all(),
                 'pista_plazo' => $cuando === '' ? '' : __('fiesta.lista.extras.hasta', ['cuando' => $cuando]),
                 'pista_cambia' => $cuando === '' ? '' : __('fiesta.lista.extras.cambia', ['cuando' => $cuando]),
@@ -641,6 +647,18 @@ final class ListaDeInvitados
         }
 
         return __('fiesta.lista.extras.el_dia', ['dia' => DisplayTime::dayInSentence($fue), 'hora' => $hora]);
+    }
+
+    /**
+     * La cuenta de «¿Cuántas tartas?»: «24 raciones · 50,00 €» (sin «para cuántas», solo el importe). Lo cobrado se escribe
+     * como lo cobrado (`Money::format`), igual que el precio de la opción; `lista.js` la reescribe al tocar (`importe()`).
+     */
+    private static function cuentaTarta(PostFormAddonView $tarta, int $cantidad, string $moneda): string
+    {
+        return implode(' · ', array_filter([
+            $tarta->serves === null ? '' : __('fiesta.lista.tarta.raciones_total', ['n' => $tarta->serves * $cantidad]),
+            Money::format($tarta->unitPriceCents * $cantidad, $moneda),
+        ]));
     }
 
     /** «hoy a las 17:00», «mañana a las 17:00» o «el jueves 24 a las 17:00», como lo lee quien lo lee. */
