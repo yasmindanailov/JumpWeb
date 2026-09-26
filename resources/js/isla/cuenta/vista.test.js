@@ -98,6 +98,41 @@ describe('las vistas de las reservas (T5b)', () => {
     });
 });
 
+describe('los hijos (T5d)', () => {
+    const t5d = { ...textos, mi_cuenta: { ...textos.mi_cuenta, hijos: { titulo: 'Añade a tus hijos', boton: 'Guardar', guardando: 'Guardando' }, hijo: { firmar: 'Firmar en su nombre', firmando: 'Firmando' } } };
+    const acc = { ...acciones, guardarHijos: () => 'guardar!', firmarHijo: () => 'firmar!' };
+    const ckd = (e) => ckDeCuenta({ textos: t5d, acciones: acc, ...e });
+
+    test('la zona de menores del motor (la puerta `/mi-cuenta/hijos`) abre «Añade a tus hijos»; sin sesión, Entrar', () => {
+        assert.deepEqual(vistaDeApertura('dependents', { sesion: true }), { vista: VISTA.HIJOS, bloque: '' });
+        assert.equal(vistaDeApertura('dependents', { sesion: false }).vista, VISTA.ENTRAR);
+    });
+
+    test('Añade a tus hijos: vuelve a Mi cuenta y su acción es «Guardar», con «Guardando» mientras', () => {
+        const r = ckd({ vista: VISTA.HIJOS });
+
+        assert.equal(r.step, 'Añade a tus hijos');
+        assert.equal(r.onBack(), 'inicio');
+        assert.equal(r.action.onClick(), 'guardar!');
+        assert.equal(r.action.loading, false);
+        assert.equal(ckd({ vista: VISTA.HIJOS, ocupado: 'hijos' }).action.loading, 'Guardando');
+    });
+
+    test('su «Guardado», sin acción', () => {
+        assert.equal(ckd({ vista: VISTA.HIJOS_LISTO }).action, null);
+        assert.equal(ckd({ vista: VISTA.HIJOS_LISTO }).onBack(), 'inicio');
+    });
+
+    test('la ficha de un hijo: su nombre en la banda; «Firmar en su nombre» solo si hace falta y se puede', () => {
+        const r = ckd({ vista: VISTA.HIJO, hijo: { nombre: 'Vera', firmar: true } });
+
+        assert.equal(r.step, 'Vera');
+        assert.equal(r.action.onClick(), 'firmar!');
+        assert.equal(ckd({ vista: VISTA.HIJO, hijo: { nombre: 'Vera', firmar: true }, ocupado: 'firmar' }).action.loading, 'Firmando');
+        assert.equal(ckd({ vista: VISTA.HIJO, hijo: { nombre: 'Pol', firmar: false } }).action, null);
+    });
+});
+
 describe('la banda de cada vista', () => {
     test('el inicio: «Mi cuenta», sin acción; la flecha solo si se abrió desde el menú, y vuelve a él', () => {
         const desdeFuera = ck({ vista: VISTA.INICIO });

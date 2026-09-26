@@ -116,6 +116,14 @@ describe('las props de la isla', () => {
         assert.equal(sinNada.bookingToday, null);
         assert.equal(sinNada.task, null);
 
+        // T5d: una tarea que resuelve una pantalla de la cuenta la abre en su zona, sin navegar.
+        const hijos = propsDeLaIsla({ config: { ...config, owner: 7, cuenta: { ...cuenta, task: { text: 'Añade a tus hijos…', product: 'kids', action: { label: 'Añadir a mis hijos', href: '/mi-cuenta/hijos', zone: 'dependents' } } } }, estado: estado(), acciones, textos });
+        assert.equal(hijos.task.product, 'kids');
+        assert.equal(hijos.task.action.href, undefined, 'sin href: cambiar el ancla en la misma página no la recarga');
+        llamadas.length = 0;
+        hijos.task.action.onClick();
+        assert.deepEqual(llamadas, [['cuenta', 'dependents', 'isla']]);
+
         // Sin sesión, aunque la página trajera algo (una caché, un error), la isla no lo dice.
         const invitado = propsDeLaIsla({ config: { ...config, owner: null, cuenta }, estado: estado(), acciones, textos });
         assert.equal(invitado.bookingToday, null);

@@ -201,7 +201,10 @@ class ApiContractTest extends TestCase
         // solo dice qué texto se sirvió — un `document_id` suelto no prueba que nadie aceptara nada.
         // Quien lo decide es el servidor: 422 sobre `accept_waiver` cuando falta, 409 si el texto se
         // republicó. Lo que sigue mordiendo aquí es `additionalProperties: false`.
-        'DependentCreateRequest' => ['accept_waiver', 'waiver_document_id'],
+        // ▶ Y los APELLIDOS, opcionales desde `#773`·a (`[DECIDIDO owner]`, revoca esa parte de `#236`; contrato 1.38.0):
+        // Mi cuenta de la isla no los pide y la ficha los guarda como `null`. La relación SIGUE exigida: es lo que sostiene
+        // que ese adulto firme por el menor.
+        'DependentCreateRequest' => ['surname', 'accept_waiver', 'waiver_document_id'],
         // Mismo caso: cuerpo de PETICIÓN. `context` tiene valor por defecto, y los dos anti-bot solo
         // los envía quien los tiene: el señuelo `website` lo rellenan los bots y `turnstile_token`
         // solo existe si la instalación configuró claves. Obligarlos convertiría en 422 a un cliente

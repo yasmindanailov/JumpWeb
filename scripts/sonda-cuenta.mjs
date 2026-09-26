@@ -20,7 +20,12 @@
  *      «Siguiente: …» en el menú; en Mi cuenta, el chip que baja al bloque, la siguiente tarea entera, la invitación en
  *      fila (que se comparte por WhatsApp con el mensaje de la lista), las autorizaciones y los extras con sus enlaces, y
  *      la siguiente, que lleva a la lista de invitados de esa fiesta;
- *   9. la consola queda limpia y ninguna respuesta de la API falla.
+ *   9. LOS HIJOS (T5d, `DECISIONES #777`), con una entrada como próxima y la cuenta sin hijos: «Siguiente: Añade a tus
+ *      hijos» en la isla de la página; su tarea en «Antes de venir», que abre la pantalla de alta; lo que falta al guardar;
+ *      dos hijos con la fecha tecleada, sus relaciones y la casilla (y el descargo leído); «Guardado»; sus chips con
+ *      «firmado» y «Todo listo»; la ficha de uno, con su firma y su PDF, y quitarlo tras preguntar; y la puerta
+ *      `/mi-cuenta/hijos`;
+ *   10. la consola queda limpia y ninguna respuesta de la API falla.
  * Sale con 1 si algo falla. Dentro del contenedor, contra su puerto 80, con la cuenta de pruebas de `sonda-isla.mjs`:
  *
  *   docker compose exec -u sail -T -e PLAYWRIGHT_BROWSERS_PATH=/home/sail/pw-browsers laravel.test \
@@ -371,7 +376,89 @@ async function recorrer(navegador, ventana, informe) {
     ]);
     check('tocar la siguiente lleva a la lista de invitados de ESA fiesta', pagina.url() === lista, pagina.url());
 
-    // ── 9 · Limpio ───────────────────────────────────────────────────────────────────────────────────
+    // ── 9 · Los hijos (T5d) ──────────────────────────────────────────────────────────────────────────
+    // El Jump como próxima (una ENTRADA) y la cuenta sin hijos: «Añade a tus hijos» es su tarea.
+    datos('montar');
+    limitadoresACero();
+    await cargar('/kids');
+    await pagina.waitForTimeout(700);
+    await abrirMenu();
+    check('en la página, con una entrada y sin hijos, «Mi cuenta» dice «Siguiente: Añade a tus hijos»', await pagina.getByText('Siguiente: Añade a tus hijos').first().isVisible());
+
+    await cargar('/kids#mi-cuenta');
+    const antesH = capa().locator('#antes');
+    const quien = capa().locator('#quien');
+    await antesH.waitFor({ timeout: 15000 }).catch(() => {});
+    await pagina.waitForTimeout(500);
+    t = await texto(antesH);
+    check('«Antes de venir» de una entrada: «Añade a tus hijos», para el día de la reserva, con «Añadir»',
+        /SIGUIENTE Para el \S+ \d+ Añade a tus hijos: nombre y fecha de nacimiento, y firmas por ellos\. .+ Añadir/.test(t), t);
+    t = await texto(quien);
+    check('«Quién viene contigo»: «Tus hijos», «Añadir» y que los adultos se registran ellos', t === 'Quién viene contigo Tus hijos Añadir Los adultos se registran ellos, desde casa o en el mostrador.', t);
+
+    await antesH.getByRole('button', { name: /Añade a tus hijos/ }).click();
+    await pagina.waitForTimeout(600);
+    check('tocar la tarea abre «Añade a tus hijos» en la capa', (await banda()) === 'Añade a tus hijos', await banda());
+    await capa().getByRole('button', { name: 'Guardar' }).click();
+    await pagina.waitForTimeout(400);
+    t = await texto(capa());
+    check('«Guardar» sin nada: lo que falta, en su sitio (nombre, fecha, relación y la casilla)',
+        t.includes('Escribe su nombre.') && t.includes('Revisa la fecha: día, mes y año.') && t.includes('Elige qué eres suyo.') && t.includes('Marca la casilla para guardar.'), t.slice(0, 260));
+    await captura('14-hijos-errores');
+
+    // ⚠️ `input[...]`: el campo pone el mismo prefijo en los `id` de su error y su pista, y `nth(1)` era el error del primero.
+    const nombre = (i) => capa().locator('input[id^="pmc-n-"]').nth(i);
+    const fecha = (i) => capa().locator('input[id^="pmc-f-"]').nth(i);
+    const relacion = (i, valor) => capa().locator(`label:has(input[type=radio][value="${valor}"])`).nth(i);
+    await nombre(0).fill('Vera');
+    await fecha(0).pressSequentially('07032019');
+    await relacion(0, 'mother').click();
+    const conPista = await texto(capa());
+    check('la fecha se escribe con las barras solas y dice su edad', (await fecha(0).inputValue()) === '07/03/2019' && conPista.includes('7 años'), await fecha(0).inputValue());
+    await capa().getByRole('button', { name: 'Añadir otro hijo' }).click();
+    await nombre(1).fill('Pol');
+    await fecha(1).pressSequentially('01052021');
+    await relacion(1, 'father').click();
+    await capa().getByText('Acepto el descargo de responsabilidad en su nombre.').click();
+    await capa().getByRole('button', { name: 'Leer el descargo' }).click();
+    await pagina.waitForTimeout(400);
+    check('«Leer el descargo» lo abre en la capa', (await banda()) === 'Descargo de responsabilidad');
+    await volver();
+    check('y su flecha vuelve al formulario, con lo escrito', (await banda()) === 'Añade a tus hijos' && (await nombre(1).inputValue()) === 'Pol');
+    await captura('15-hijos-formulario');
+    await capa().getByRole('button', { name: 'Guardar' }).click();
+    // `first()`: la cabecera del desenlace repite su título para el lector de pantalla.
+    const guardado = capa().getByText('Guardado. En la puerta salen con tu QR.').first();
+    await guardado.waitFor({ timeout: 8000 }).catch(() => {});
+    check('«Guardar» declara a los dos, firmando por ellos, y dice «Guardado»', await guardado.isVisible());
+
+    await volver();
+    await pagina.waitForTimeout(800);
+    t = await texto(quien);
+    check('de vuelta, «Quién viene contigo» los enseña con su edad y «firmado»', /Vera, 7 años firmado/.test(t) && /Pol, 5 años firmado/.test(t), t);
+    t = await texto(capa().locator('#antes'));
+    check('y «Antes de venir» ya dice «Todo listo para el …»', /Todo listo para el \S+ \d+/.test(t), t);
+    await captura('16-quien');
+
+    await quien.getByRole('button', { name: /^Vera, 7 años, firmado$/ }).click();
+    await pagina.waitForTimeout(600);
+    t = await texto(capa());
+    check('su ficha: la banda con su nombre, su firma y el PDF del descargo',
+        (await banda()) === 'Vera' && /Descargo firmado el \d{2}\/\d{2}\/\d{4} · versión \d+/.test(t) && await capa().getByRole('link', { name: 'Descargar el descargo firmado' }).isVisible(), t.slice(0, 220));
+    await capa().getByRole('button', { name: 'Quitar de tu cuenta' }).click();
+    check('«Quitar de tu cuenta» pregunta en el sitio', await capa().getByText('¿Quitar a Vera de tu cuenta?').isVisible());
+    await captura('17-quitar');
+    await capa().getByRole('button', { name: 'Sí, quitar' }).click();
+    await pagina.waitForTimeout(900);
+    check('y al confirmar la quita, vuelve a Mi cuenta y lo dice arriba',
+        (await banda()) === 'Mi cuenta' && await capa().getByText('Vera ya no está en tu cuenta').isVisible() && ! (await texto(quien)).includes('Vera'));
+
+    await cargar('/mi-cuenta/hijos');
+    await capa().waitFor({ timeout: 15000 }).catch(() => {});
+    await pagina.waitForTimeout(600);
+    check('la puerta `/mi-cuenta/hijos` abre «Añade a tus hijos» en la isla, no el lateral', (await banda()) === 'Añade a tus hijos' && ! (await lateralAbierto()), await banda());
+
+    // ── 10 · Limpio ──────────────────────────────────────────────────────────────────────────────────
     const deCodigo = (codigo) => errores.filter((e) => e.includes(`status of ${codigo}`));
     const inesperados = errores.filter((e) => ! /status of (401|404)/.test(e))
         .concat(deCodigo(401).slice(esperados[401]), deCodigo(404).slice(esperados[404]));

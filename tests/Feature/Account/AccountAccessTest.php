@@ -61,7 +61,8 @@ class AccountAccessTest extends TestCase
     {
         $user = User::factory()->create();
 
-        foreach (['/mi-cuenta' => 'home', '/mi-cuenta/pedidos' => 'orders'] as $path => $zone) {
+        // T5d (`#777`): `/mi-cuenta/hijos`, la URL de la tarea «Añade a tus hijos» de «Antes de venir».
+        foreach (['/mi-cuenta' => 'home', '/mi-cuenta/pedidos' => 'orders', '/mi-cuenta/hijos' => 'dependents'] as $path => $zone) {
             $html = (string) $this->actingAs($user)->get($path)->assertOk()->getContent();
 
             $this->assertStringContainsString('data-purchase-open="1"', $html, "«{$path}» no abre el cajón");

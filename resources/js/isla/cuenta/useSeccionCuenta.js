@@ -16,7 +16,7 @@ import { computed, inject, nextTick, reactive, watch } from 'vue';
 import { TEXTOS_ISLA } from '../../sidebar/carcasa.js';
 import { cajonHost } from '../../sidebar/host-bridge.js';
 import { api } from '../../sidebar/api.js';
-import { t } from '../../sidebar/i18n.js';
+import { t, tp } from '../../sidebar/i18n.js';
 import { useAccountStore } from '../../sidebar/stores/account.js';
 import { useAccountContextStore } from '../../sidebar/stores/accountContext.js';
 import { useCardStore } from '../../sidebar/stores/card.js';
@@ -35,6 +35,7 @@ import {
 import { VISTA, ckDeCuenta, lineaProxima, vistaDeApertura } from './vista.js';
 import { tituloDe } from './reservas.js';
 import { useReservasCuenta } from './useReservasCuenta.js';
+import { useHijosCuenta } from './useHijosCuenta.js';
 
 /** La «G» del botón de Google: el MISMO fichero que la compra de la isla y el botón oficial del cajón (`#695`). */
 const MARCA_GOOGLE = '/images/providers/google.svg';
@@ -68,6 +69,8 @@ export function useSeccionCuenta(props) {
     const reservas = useReservasCuenta({ textos, locale });
     const proxima = computed(() => reservas.listas.value.proxima);
     const hoy = computed(() => proxima.value?.reservation?.today === true);
+    // Los hijos (T5d): Quién viene contigo, Añade a tus hijos y la ficha de cada uno.
+    const hijos = useHijosCuenta({ textos, props, emailVerified: () => contexto.context?.email_verified });
 
     const caja = () => document.querySelector('[data-isla-scroll]');
     const enfocarError = () => nextTick(() => caja()?.querySelector('[aria-invalid="true"]')?.focus());
@@ -83,6 +86,8 @@ export function useSeccionCuenta(props) {
             });
         }
         if (vista === VISTA.CAMBIAR) reservas.cargarSitio();
+        if (vista === VISTA.INICIO) hijos.cargar();
+        if (vista === VISTA.HIJOS) hijos.empezar();
         if (vista === VISTA.CREAR || vista === VISTA.ALTA_GOOGLE) waiverStore.ensureLegal();
         if (vista === VISTA.ALTA_GOOGLE) {
             loadGoogleScreen({ api }).then((pantalla) => {
@@ -107,10 +112,14 @@ export function useSeccionCuenta(props) {
         }, intentos === 20 ? 60 : 100));
     }
 
-    /** La acción de una tarea: WhatsApp se abre aparte (la aplicación, en un móvil); una página de la web, en esta pestaña. */
+    /**
+     * La acción de una tarea: la que resuelve una pantalla de la cuenta («Añade a tus hijos», `via: account`) se abre aquí
+     * mismo; WhatsApp, aparte (la aplicación, en un móvil); una página de la web, en esta pestaña.
+     */
     function hacerTarea(accion) {
         if (! accion?.url) return;
-        if (accion.via === 'whatsapp') window.open(accion.url, '_blank', 'noopener');
+        if (accion.via === 'account') a(VISTA.HIJOS);
+        else if (accion.via === 'whatsapp') window.open(accion.url, '_blank', 'noopener');
         else window.location.assign(accion.url);
     }
 
@@ -188,6 +197,53 @@ export function useSeccionCuenta(props) {
         } finally {
             Object.assign(e, { ocupado: null, renovar: false });
         }
+    }
+
+    // ── Con sesión: los hijos (T5d) ──────────────────────────────────────────────────────────────────
+
+    /** «Antes de venir» de la próxima, otra vez: «Añade a tus hijos» pasa a hecha en cuanto hay uno. */
+    const recargarAntes = () => reservas.recargarAntes(proxima.value?.reservation?.id);
+
+    /** «Guardar» de Añade a tus hijos: uno a uno; con todos dentro, su «Guardado». */
+    async function guardarHijos() {
+        if (e.ocupado) return;
+        e.ocupado = 'hijos';
+        const r = await hijos.guardar();
+
+        e.ocupado = null;
+        if (r === 'listo') {
+            recargarAntes();
+            Object.assign(e, { vista: VISTA.HIJOS_LISTO, subpaso: '', dir: 'fwd' });
+        } else if (r === 'caducada') {
+            Object.assign(e, { vista: VISTA.ENTRAR, subpaso: '', dir: null });
+        } else {
+            enfocarError();
+        }
+    }
+
+    /** «Firmar en su nombre», desde su ficha: lo confirma arriba. */
+    async function firmarHijo() {
+        if (e.ocupado) return;
+        e.ocupado = 'firmar';
+        const ok = await hijos.firmar();
+
+        e.ocupado = null;
+        if (ok) {
+            recargarAntes();
+            decir(tp(textos, 'mi_cuenta.hijo.firmado_ok', { nombre: hijos.hijo.value?.nombre ?? '' }));
+        } else {
+            enfocarError();
+        }
+    }
+
+    /** Quitarlo, tras la pregunta: de vuelta en Mi cuenta, y lo dice arriba. */
+    async function quitarHijo() {
+        const dicho = await hijos.quitar();
+
+        if (! dicho) return;
+        recargarAntes();
+        aInicio();
+        decir(dicho);
     }
 
     // ── Sin sesión: Entra, el olvido, Crea tu cuenta y el alta de Google ────────────────────────────
@@ -307,12 +363,13 @@ export function useSeccionCuenta(props) {
         vista: e.vista, subpaso: e.subpaso, desde: e.desde, qrDesde: e.qrDesde, dir: e.dir, ocupado: e.ocupado,
         entrada: e.ent, textos, altaGoogle: { pendiente: e.google.pending !== null },
         cambiar: { desdeReserva: e.cambiarDesdeReserva, whatsapp: Boolean(cambiarVista.value?.whatsapp) },
+        hijo: { nombre: hijos.hijo.value?.nombre ?? '', firmar: Boolean(hijos.hijo.value?.firmar) },
         rotulos: {
             altaGoogle: t(props.account, 'google.title'), altaGoogleBoton: t(props.account, 'google.submit'),
             altaGoogleEnviando: t(props.account, 'google.submitting'),
         },
         acciones: {
-            cerrar, alMenu, aInicio, entrar, crear, completarGoogle, escribir,
+            cerrar, alMenu, aInicio, entrar, crear, completarGoogle, escribir, guardarHijos, firmarHijo,
             aReserva: () => Object.assign(e, { vista: VISTA.RESERVA, subpaso: '', dir: 'back' }),
             aEntrar: () => Object.assign(e, { vista: VISTA.ENTRAR, subpaso: '', dir: 'back', errores: {}, avisoAlta: '' }),
             volverDelDescargo: () => Object.assign(e, { subpaso: '', dir: 'back' }),
@@ -347,6 +404,7 @@ export function useSeccionCuenta(props) {
         antes: reservas.antes(proxima.value),
         chip: reservas.chip(proxima.value),
         otras: reservas.otras.value,
+        quien: hijos.quien.value,
     }));
 
     const vistaQr = computed(() => ({
@@ -381,6 +439,18 @@ export function useSeccionCuenta(props) {
         // Su «Antes de venir» (T5c): cada reserva tiene sus tareas, también la que se abre desde «Otras reservas».
         antesAbierta: computed(() => reservas.antes(reservas.buscar(e.rSel))),
         hacerTarea,
+        // Los hijos (T5d): el alta (sus fichas, «Añadir otro hijo», la casilla) y la ficha de uno (firmar, quitar).
+        pantallaHijos: hijos.pantalla,
+        fichaHijo: computed(() => ({ ...hijos.ficha.value, aviso: e.aviso?.en === VISTA.HIJO ? e.aviso.texto : '' })),
+        abrirHijos: () => a(VISTA.HIJOS),
+        abrirHijo: (id) => { a(VISTA.HIJO); hijos.abrir(id); },
+        cambiarHijo: (i, campo, valor) => hijos.cambiar(i, campo, valor),
+        otroHijo: () => hijos.otro(),
+        quitarFicha: (i) => hijos.quitarFicha(i),
+        casillaHijos: (v) => { hijos.s.h.descargo = v; hijos.s.errores = { ...hijos.s.errores, descargo: '' }; },
+        casillaHijo: (v) => { hijos.s.firmaCasilla = v; hijos.s.firmaError = ''; },
+        preguntarQuitar: (si) => { hijos.s.preguntar = si; },
+        quitarHijo,
         cambiarVista,
         guardarQr: () => decir(t(textos, 'mi_cuenta.qr.guardado')),
         pedirRenovar: (si) => { e.renovar = si; },

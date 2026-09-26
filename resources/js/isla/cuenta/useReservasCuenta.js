@@ -75,6 +75,8 @@ export function useReservasCuenta({ textos, locale }) {
 
     return {
         s, cargar, mas, cargarSitio, cargarAntes, listas, bloque,
+        /** Su «Antes de venir», otra vez (algo que se hace dentro de Mi cuenta la cambia: añadir a los hijos). */
+        recargarAntes: (id) => { if (id) { delete s.antes[id]; cargarAntes(id); } },
         antes: (card) => (card ? antesDe(tareasDe(card), { ...deps, fecha: card.reservation?.date ?? '' }) : null),
         chip: (card) => chipDe(tareasDe(card), deps),
         buscar: (id) => [listas.value.proxima, ...listas.value.otras].find((c) => c?.reservation?.id === id) ?? null,

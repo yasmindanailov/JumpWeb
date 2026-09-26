@@ -64,10 +64,12 @@ class MeDependentsController extends Controller
 
         // «Hoy» es el del parque (`DisplayTime`, doctrina `AFORO-09`): a las 00:30 de Madrid en
         // verano el UTC todavía va por ayer, y una fecha de nacimiento «de hoy» sería futura.
-        // ⚠️ `surname` y `relationship` son OBLIGATORIOS en el alta nueva (`#236`) aunque en la
-        // tabla sean nulables: las fichas anteriores a esa tanda no los tienen y no se inventan,
-        // pero a partir de ahora no se declara a nadie sin ellos. La relación se cierra contra el
+        // ⚠️ `relationship` es OBLIGATORIA en el alta nueva (`#236`) aunque en la tabla sea nulable:
+        // las fichas anteriores a esa tanda no la tienen y no se inventa. Se cierra contra el
         // catálogo —es lo que sostiene que este adulto pueda firmar por el menor—.
+        // ▶ `surname`, OPCIONAL desde `#773`·a (`[DECIDIDO owner]`, revoca esa parte de `#236`): Mi
+        // cuenta de la isla no la pide, y la firma guarda entonces el nombre que se declaró. Vacío o
+        // ausente, la ficha lo guarda como `null` (`DependentRegistry::add`), nunca como un texto vacío.
         // ❗❗ `#441` · **la exención se acepta AQUÍ, en el mismo gesto.** Los dos campos son
         // obligatorios SOLO si esta instalación tiene algo que firmar: en modo `externo`, o sin
         // versión publicada, exigirlos dejaría a esa instalación sin poder declarar un menor
@@ -82,7 +84,7 @@ class MeDependentsController extends Controller
 
         $data = $request->validate([
             'name' => ['required', 'string', 'max:'.Dependent::NAME_MAX],
-            'surname' => ['required', 'string', 'max:'.Dependent::SURNAME_MAX],
+            'surname' => ['nullable', 'string', 'max:'.Dependent::SURNAME_MAX],
             'relationship' => ['required', 'string', Rule::in(Dependent::RELATIONSHIPS)],
             'born_on' => ['required', 'date_format:Y-m-d', 'before_or_equal:'.DisplayTime::today()->toDateString()],
             // ⚠️ La rama de «no exigible» NO puede llevar `accepted`: es una regla IMPLÍCITA de
@@ -110,7 +112,7 @@ class MeDependentsController extends Controller
                 $user,
                 (string) $data['name'],
                 (string) $data['born_on'],
-                (string) $data['surname'],
+                (string) ($data['surname'] ?? ''),
                 (string) $data['relationship'],
                 $waiver,
                 $this->signatureRequest($request),

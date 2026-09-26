@@ -27,6 +27,7 @@ use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Services\PartyInvitations;
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Services\DependentRegistry;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Platform\Services\DisplayTime;
 use Illuminate\Support\Carbon;
@@ -55,6 +56,13 @@ $borrar = function () use ($prefijo, $llaveFranjas): void {
     }
     $creadas = Cache::pull($llaveFranjas, []);
     Slot::whereIn('id', $creadas)->whereNotIn('id', OrderItem::whereIn('slot_id', $creadas)->select('slot_id'))->delete();
+
+    // Los hijos que la sonda declara (T5d): se QUITAN como lo haría su titular —con firma detrás se desvinculan y la
+    // prueba se conserva; sin ella, se borran (`DependentRegistry::remove`)—, así «Añade a tus hijos» vuelve a salir.
+    $sonda = User::where('email', 'probe-card@jumpweb.test')->first();
+    foreach ($sonda === null ? [] : app(DependentRegistry::class)->activeFor($sonda) as $hijo) {
+        app(DependentRegistry::class)->remove($sonda, (int) $hijo->getKey());
+    }
 };
 
 $borrar();

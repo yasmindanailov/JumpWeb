@@ -3,9 +3,9 @@
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 EN CURSO** (su centena,
-> `decisiones/700-799.md`) · Último usado: **`#776`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#776`) · Actualizado: **2026-09-26**
-> (la T5, Mi cuenta en la isla: plan `#773`; T5a, T5b y T5c hechas, `#774`→`#776`).
+> `decisiones/700-799.md`) · Último usado: **`#777`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#777`) · Actualizado: **2026-09-26**
+> (la T5, Mi cuenta en la isla: plan `#773`; T5a→T5d hechas, `#774`→`#777`).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
 > llévaselo con la medida, como el SPA en `#724`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -43,11 +43,11 @@
 
 ▶▶ **EN MARCHA (26-09): T5 · Mi cuenta en la isla** (spec §4.13, `#773`: el censo, las cuatro respuestas del owner y
 el plan T5a→T5f; dentro de la v2). **T5a ✅** (`#774`: la capa, las puertas, Tu QR, Entra), **T5b ✅** (`#775`: las
-reservas) y **T5c ✅** (`#776`: Antes de venir, el punto de la isla y «Hoy a las…»; contrato 1.37.0;
-`scripts/sonda-cuenta.mjs` 111/111 con `sonda-cuenta-datos.php`). Sigue la **T5d**, Quién viene contigo y Añadir a tus
-hijos (con la tarea «Añade a tus hijos»). ⚠️ En PRODUCCIÓN, el owner pone en el panel el aviso de los calcetines y «se
-devuelve la señal» de los packs (en LOCAL, puestos). ⚠️ La T5d toca `DependentRegistry` (`CRITICAL_RE`,
-`VERIFY_CONC=1`): los apellidos del menor pasan a opcionales (`#773`·a). ⚠️ La sonda RENUEVA el carné de `probe-card@`.
+reservas), **T5c ✅** (`#776`: Antes de venir, el punto de la isla) y **T5d ✅** (`#777`: los hijos; contrato 1.38.0;
+`scripts/sonda-cuenta.mjs` 141/141 con `sonda-cuenta-datos.php`). Sigue la **T5e**, Ajustes y Cerrar sesión, ❗ con
+los AVISOS de la cuenta que la isla aún no pinta (confirmar el correo, el aviso de la analítica, la firma del titular).
+⚠️ En PRODUCCIÓN, el owner pone en el panel el aviso de los calcetines y «se devuelve la señal» de los packs (en LOCAL,
+puestos). ⚠️ La sonda RENUEVA el carné de `probe-card@` y le declara y quita hijos (con firma: desvinculados).
 ▶ **HECHO (25/26-09)**: la **T4** (spec §4.12; banco de la isla 60/60; `#768`: sin bancos por tanda) y el encargo del
 owner del 25-09 —promociones 🟦 T1 (`promociones.md` §8; en LOCAL, dos ofertas de muestra), el play de los vídeos 🟦
 (falta el MATERIAL; en LOCAL, una muestra WebM) y las reseñas 🟦 (`#771`, `#772`: 18 publicadas, Places retirado;
@@ -224,8 +224,12 @@ dueño es el carril de la web/reseñas—) ·
 ### ❗❗ Para el SPA (emisor: plataforma, 2026-09-26) — la T5: MI CUENTA EN LA ISLA, junto a tu motor
 - `#773`: Mi cuenta en la isla (spec `isla-y-landing-nueva.md` §4.13: cada tanda dice lo tocado). De lo tuyo:
   `Sidebar.vue` (+3 líneas: con la isla monta `isla/SeccionCuenta.vue`) y `carcasa.js::superficieDe`; tus stores y
-  `account/*.js`, leídos sin tocar. Contratos míos: 1.33.0 (T5a) y 1.34.0 (T5b). ⚠️ **T5d**: `#773`·a hace opcionales
-  los apellidos del menor en `POST /me/dependents`; tu `DependentsZone` decide si los sigue pidiendo.
+  `account/*.js`, leídos sin tocar. Contratos míos: 1.33.0 (T5a) y 1.34.0 (T5b).
+- ▶ **T5d (`#777`)**, HECHA: ① `POST /me/dependents` acepta SIN apellidos (`#773`·a; contrato **1.38.0**, mío: el
+  siguiente, tuyo); tu `DependentsZone` decide si los sigue pidiendo. ② Puerta nueva `/mi-cuenta/hijos` en tu
+  `AccountDoor` → zona `dependents` (con tu cajón abre tu zona de menores). ③ Uso SIN tocarlos tu store de menores,
+  `account/dependents.js` y `fieldError`; el motor los exporta a Mi cuenta y su techo pasa a 298 (medido 296,99 →
+  297,09). ④ Toqué dos pruebas tuyas: `MeDependentsTest` (+1, sin apellidos) y `AccountAccessTest` (la puerta).
 - ▶ **T5c (`#776`)**: ① el **1.37.0** es mío (tras tus 1.35.0 y 1.36.0): el siguiente, tuyo. ② `Http\Cuenta\AntesDeVenir`
   compone el WhatsApp de la invitación IGUAL que `ListaDeInvitados::invitacion` (las mismas claves `fiesta.lista.*`) y
   `MeReservationBeforeVisitTest` lo compara con tu página: si cambias el mensaje, cambian los dos (o sácalo a un método y

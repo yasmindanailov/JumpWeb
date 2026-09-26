@@ -121,6 +121,8 @@ Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])
 Route::middleware('auth')->group(function () {
     Route::get('/mi-cuenta', HomeController::class)->name('account');
     Route::get('/mi-cuenta/pedidos', HomeController::class)->name('account.orders');
+    // T5d (`#777`): la puerta de «Añade a tus hijos» —la URL de su tarea en «Antes de venir»—, como las de arriba.
+    Route::get('/mi-cuenta/hijos', HomeController::class)->name('account.dependents');
     // `no-store` (auditoría Fase 1, Sistema 5): el JSON de portabilidad RGPD lleva el perfil
     // completo, consentimientos con IP y `event_data` (nombre + ALERGIAS de menores, art. 9). Es
     // un controlador (no Livewire), así que NO recibe el `no-store` que Livewire estampa solo en

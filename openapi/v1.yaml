@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.37.0
+  version: 1.38.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -5801,7 +5801,10 @@ components:
       properties:
         kind:
           type: string
-          enum: [guest_form, invitation, extras, authorizations]
+          enum: [guest_form, invitation, extras, authorizations, dependents]
+          description: |
+            `dependents` (1.38.0, T5d, `DECISIONES #777`): «Añade a tus hijos», la tarea de una ENTRADA cuando la
+            instalación firma el descargo dentro; hecha con algún menor declarado.
         type:
           type: string
           enum: [task, optional, status]
@@ -5837,11 +5840,12 @@ components:
               type: string
               format: uri
               description: |
-                Una página de la web (la lista de invitados, con la sesión: sin firmar) o, con `via: whatsapp`, el enlace
-                de WhatsApp con el mensaje de la invitación, el mismo que compone su lista.
+                Una página de la web (la lista de invitados, con la sesión: sin firmar); con `via: whatsapp`, el enlace
+                de WhatsApp con el mensaje de la invitación, el mismo que compone su lista; con `via: account`, la
+                puerta de la pantalla de la cuenta que la resuelve (`/mi-cuenta/hijos`), que Mi cuenta abre en el sitio.
             via:
               type: string
-              enum: [link, whatsapp]
+              enum: [link, whatsapp, account]
 
     ReservationCard:
       type: object
@@ -9174,8 +9178,9 @@ components:
         añadió los otros dos: los apellidos para identificar sin ambigüedad a quien no conoce a la
         familia, y la **relación**, que es lo que sostiene que ese adulto pueda firmar por él.
 
-        ⚠️ Los tres son **obligatorios al declarar**, aunque en la tabla los dos nuevos sean
-        nulables: las fichas de antes de `#236` no los tienen y no se inventan.
+        ⚠️ La relación es **obligatoria al declarar**, aunque en la tabla sea nulable: las fichas de
+        antes de `#236` no la tienen y no se inventa. Los **apellidos son OPCIONALES** desde `#773`·a
+        (`[DECIDIDO owner]`, 1.38.0): vacíos o ausentes, la ficha los guarda como `null`.
 
         ❗❗ **La EXENCIÓN se acepta aquí** (`#441`): declarar un menor y aceptar su descargo son un
         solo gesto. Los dos campos son **condicionalmente obligatorios** —solo cuando el modo del
@@ -9187,7 +9192,7 @@ components:
         ⚠️ Van **DOS y no uno**, como las dos altas de cuenta: la casilla es el acto afirmativo del
         art. 7.1 RGPD y el identificador solo dice **qué texto** se sirvió. Un `document_id` suelto
         no prueba que nadie aceptara nada.
-      required: [name, surname, relationship, born_on]
+      required: [name, relationship, born_on]
       additionalProperties: false
       properties:
         name:
@@ -9196,7 +9201,7 @@ components:
           maxLength: 120
         surname:
           type: string
-          minLength: 1
+          nullable: true
           maxLength: 120
         relationship:
           type: string

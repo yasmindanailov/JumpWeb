@@ -9,6 +9,7 @@
  * Viaja en su propio trozo y se trae a la primera entrada: quien solo compra no lo descarga.
  * ⚠️ `bloquea-pagina` apagado: la página la deja quieta el controlador, dueño único del cerrojo de scroll.
  */
+import { defineAsyncComponent } from 'vue';
 import './isla.css';
 import './cuenta/iconos.js';
 import IslaFlotante from './IslaFlotante.vue';
@@ -22,9 +23,14 @@ import CuentaAltaGoogle from './cuenta/CuentaAltaGoogle.vue';
 import CuentaCambiar from './cuenta/CuentaCambiar.vue';
 import BloqueReserva from './cuenta/BloqueReserva.vue';
 import BloqueAntes from './cuenta/BloqueAntes.vue';
+import CabeceraDesenlace from './ui/CabeceraDesenlace.vue';
 import PantallaDatos from './compra/PantallaDatos.vue';
 import PantallaDescargo from './compra/PantallaDescargo.vue';
 import CajaAntiBot from './compra/CajaAntiBot.vue';
+
+// Añade a tus hijos y la ficha de un hijo (T5d), en su trozo: se abren a demanda, y Mi cuenta pinta sin esperarlas.
+const CuentaHijos = defineAsyncComponent(() => import('./cuenta/CuentaHijos.vue'));
+const CuentaHijo = defineAsyncComponent(() => import('./cuenta/CuentaHijo.vue'));
 
 // Las MISMAS props que la raíz le pasa con `v-bind="props"`: ninguna acaba de atributo en el DOM.
 defineOptions({ inheritAttrs: false });
@@ -33,7 +39,8 @@ const {
     abierta, textos, e, ck, inicio, vistaQr, social, firma, authStore, waiverStore, rotulosGoogle, tx, sinQr,
     pantallaEntrar, google, abrirQr, aInicio, renovarQr, olvido, aGoogle, guardarQr, pedirRenovar, cambiarEntrada,
     cambiarAlta, aCrear, leerDescargo, cambiarGoogle, irAlBloque, abrirReserva, aCambiar, masHistorial, reservaAbierta,
-    cambiarVista, antesAbierta, hacerTarea,
+    cambiarVista, antesAbierta, hacerTarea, pantallaHijos, fichaHijo, abrirHijos, abrirHijo, cambiarHijo, otroHijo,
+    quitarFicha, casillaHijos, casillaHijo, preguntarQuitar, quitarHijo,
 } = useSeccionCuenta(props);
 const proveedor = (via) => via === 'google' && aGoogle();
 </script>
@@ -62,6 +69,32 @@ const proveedor = (via) => via === 'google' && aGoogle();
                 @preguntar="pedirRenovar"
                 @renovar="renovarQr"
                 @tarea="hacerTarea"
+                @hijos="abrirHijos"
+                @hijo="abrirHijo"
+            />
+            <CuentaHijos
+                v-else-if="e.vista === VISTA.HIJOS"
+                :pantalla="pantallaHijos"
+                @cambiar="cambiarHijo"
+                @otro="otroHijo"
+                @quitar="quitarFicha"
+                @casilla="casillaHijos"
+                @descargo="leerDescargo"
+            />
+            <CabeceraDesenlace
+                v-else-if="e.vista === VISTA.HIJOS_LISTO"
+                kind="success"
+                :celebrate="false"
+                :title="tx('mi_cuenta.hijos.listo')"
+                :style="{ padding: '24px 0' }"
+            />
+            <CuentaHijo
+                v-else-if="e.vista === VISTA.HIJO && fichaHijo.nombre"
+                :ficha="fichaHijo"
+                @casilla="casillaHijo"
+                @descargo="leerDescargo"
+                @preguntar="preguntarQuitar"
+                @quitar="quitarHijo"
             />
             <div
                 v-else-if="e.vista === VISTA.RESERVA && reservaAbierta"

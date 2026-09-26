@@ -28,6 +28,14 @@ export function medirVista({ ctas = [], hoyLinea = null, isla = null, alto }) {
 }
 
 /**
+ * La acción de la tarea en la isla: su enlace, o —con `zone`— abrir la cuenta en esa zona, como el menú (el `href` de su
+ * puerta no serviría en la misma página: cambiar solo el ancla no la recarga).
+ */
+function accionDeTarea({ label, href, zone }, acciones) {
+    return zone ? { label, onClick: () => acciones.abrirCuenta(zone, 'isla') } : { label, href };
+}
+
+/**
  * Las props que la página le da a la isla. `config` es lo que da la página (su `page`, su `today` con sus huecos
  * —`slots`, del hecho de la página: los mismos que dicen su cabecera y su cierre—, su menú…); `estado`, lo que cambia
  * (`vista`, `calculo` de la calculadora, `cookies`); `acciones`, lo que hace cada botón. `textos`, el grupo `isla`.
@@ -64,8 +72,9 @@ export function propsDeLaIsla({ config, estado, acciones, textos }) {
             : { state: 'guest', onClick: (x) => acciones.abrirCuenta('login', x?.from) },
         // «Hoy a las 17:00» (situación 14): manda sobre casi todo y su acción es «Ver mi QR», que abre Tu QR en su capa.
         bookingToday: cuenta?.bookingToday ? { text: cuenta.bookingToday.text } : null,
-        // La tarea (situación 13): en la portada y en la página de lo reservado, con su acción (un enlace a su sitio).
-        task: cuenta?.task ? { text: cuenta.task.text, product: cuenta.task.product ?? null, action: { ...cuenta.task.action } } : null,
+        // La tarea (situación 13): en la portada y en la página de lo reservado, con su acción: un enlace a su sitio o, si
+        // la resuelve una pantalla de la cuenta (`zone`, «Añade a tus hijos», T5d), la cuenta abierta en esa zona.
+        task: cuenta?.task ? { text: cuenta.task.text, product: cuenta.task.product ?? null, action: accionDeTarea(cuenta.task.action, acciones) } : null,
         cookies: estado.cookies ? { onAccept: acciones.aceptarCookies, onReject: acciones.rechazarCookies, onConfigure: acciones.configurarCookies, onPolicy: acciones.politicaCookies } : null,
         cookiePrefs: estado.preferencias ?? null,
         notice: estado.aviso ?? null,

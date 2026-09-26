@@ -3,22 +3,28 @@
 namespace Tests\Feature\Api\V1;
 
 use App\Domain\Booking\Models\InvitationReply;
+use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\Price;
 use App\Domain\Booking\Models\ProductAddon;
 use App\Domain\Booking\Models\RateType;
+use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Models\Zone;
 use App\Domain\Booking\Services\GuestCountPolicy;
+use App\Domain\Identity\Models\Dependent;
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Services\LegalDocumentPublisher;
+use App\Domain\Identity\Services\WaiverSettings;
+use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Domain\Platform\Services\PersonNameKey;
 use App\Http\Cuenta\AntesDeVenir;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Testing\TestResponse;
 use Symfony\Component\Yaml\Yaml;
+use Tests\Feature\Api\ApiTestCase;
 use Tests\Support\MountsAParty;
-use Tests\TestCase;
 
 /**
  * **«Antes de venir» de una reserva** (T5c de `docs/specs/isla-y-landing-nueva.md` §4.13, `DECISIONES #776`):
@@ -33,12 +39,11 @@ use Tests\TestCase;
  *  · las autorizaciones sin denominador inventado (`waiver-por-reserva.md` §4.10);
  *  · y una reserva ajena es un 404; una sin pagar, cancelada o celebrada, una lista vacía.
  */
-class MeReservationBeforeVisitTest extends TestCase
+class MeReservationBeforeVisitTest extends ApiTestCase
 {
     use MountsAParty;
-    use RefreshDatabase;
 
-    private const ROOT = '/api/v1/me/reservations/';
+    private const RESERVAS = self::ROOT.'/me/reservations/';
 
     public function test_a_party_lists_the_form_and_the_invitation_with_the_single_deadline_of_766(): void
     {
@@ -60,7 +65,7 @@ class MeReservationBeforeVisitTest extends TestCase
         $this->assertSame('whatsapp', $tareas[1]['action']['via']);
         $this->assertStringStartsWith('https://wa.me/?text=', $tareas[1]['action']['url']);
 
-        // La forma es la del CONTRATO, clave a clave y en su orden (`BeforeVisitTask`, 1.37.0).
+        // La forma es la del CONTRATO, clave a clave y en su orden (`BeforeVisitTask`, 1.38.0).
         $esquema = Yaml::parseFile(base_path('openapi/v1.yaml'))['components']['schemas']['BeforeVisitTask'];
         foreach ($tareas as $tarea) {
             $this->assertSame($esquema['required'], array_keys($tarea));
@@ -211,10 +216,10 @@ class MeReservationBeforeVisitTest extends TestCase
     {
         ['reservation' => $r] = $this->mountParty();
 
-        $this->actingAs(User::factory()->create())->getJson(self::ROOT.$r->getKey().'/before-visit')->assertNotFound();
-        $this->actingAs(User::factory()->create())->getJson(self::ROOT.'999999/before-visit')->assertNotFound();
+        $this->actingAs(User::factory()->create())->getJson(self::RESERVAS.$r->getKey().'/before-visit')->assertNotFound();
+        $this->actingAs(User::factory()->create())->getJson(self::RESERVAS.'999999/before-visit')->assertNotFound();
         $this->app['auth']->forgetGuards();
-        $this->getJson(self::ROOT.$r->getKey().'/before-visit')->assertUnauthorized();
+        $this->getJson(self::RESERVAS.$r->getKey().'/before-visit')->assertUnauthorized();
     }
 
     public function test_a_cancelled_or_celebrated_party_has_nothing_pending(): void
@@ -234,10 +239,80 @@ class MeReservationBeforeVisitTest extends TestCase
     {
         ['reservation' => $r, 'host' => $host] = $this->mountParty();
 
-        $en = $this->actingAs($host)->withHeader('Accept-Language', 'en')->getJson(self::ROOT.$r->getKey().'/before-visit')->json('data.tasks');
+        $en = $this->actingAs($host)->withHeader('Accept-Language', 'en')->getJson(self::RESERVAS.$r->getKey().'/before-visit')->json('data.tasks');
 
         $this->assertSame(['Guest form', 'Invitation'], array_column($en, 'title'));
         $this->assertSame('0 of 6 confirmed', $en[1]['note']);
+    }
+
+    // ─── Una entrada: «Añade a tus hijos» (T5d) ──────────────────────────────────────
+
+    public function test_an_entry_asks_to_add_the_children_when_the_park_signs_inside(): void
+    {
+        [$r, $titular] = $this->entrada();
+
+        $this->assertSame([
+            'kind' => 'dependents', 'type' => 'task', 'done' => false,
+            'title' => 'Añade a tus hijos', 'note' => 'Un minuto',
+            'text' => 'Añade a tus hijos: nombre y fecha de nacimiento, y firmas por ellos. Un minuto, y en la puerta solo enseñas el QR.',
+            'due' => 'Para el '.DisplayTime::dayInSentence($r->slot?->date),
+            'action' => ['label' => 'Añadir', 'url' => route('account.dependents'), 'via' => 'account'],
+        ], $this->tareas($titular, $r)[0]);
+    }
+
+    public function test_the_children_task_is_done_with_a_minor_declared_and_an_adult_does_not_count(): void
+    {
+        [$r, $titular] = $this->entrada();
+
+        // Una persona a cargo que ya cumplió los 18 no es un hijo por el que firmar.
+        Dependent::create(['user_id' => $titular->id, 'name' => 'Iris', 'relationship' => 'mother', 'born_on' => DisplayTime::today()->subYears(19)->toDateString()]);
+        $this->assertFalse($this->tareas($titular, $r)[0]['done']);
+
+        Dependent::create(['user_id' => $titular->id, 'name' => 'Vera', 'relationship' => 'mother', 'born_on' => DisplayTime::today()->subYears(7)->toDateString()]);
+        $this->assertTrue($this->tareas($titular, $r)[0]['done']);
+    }
+
+    public function test_without_the_waiver_signed_inside_an_entry_has_nothing_before_coming(): void
+    {
+        [$r, $titular] = $this->entrada();
+        Setting::query()->updateOrCreate(['key' => WaiverSettings::KEY_MODE], ['value' => WaiverSettings::MODE_EXTERNAL]);
+        Setting::flushMemo();
+
+        $this->assertSame([], $this->tareas($titular, $r));
+    }
+
+    public function test_in_internal_mode_without_a_published_text_there_is_nothing_to_sign_nor_to_ask(): void
+    {
+        // La condición del alta de un menor (`#441`): sin texto publicado, el alta no pide firmar y la tarea no sale.
+        [$r, $titular] = $this->entrada(conTexto: false);
+
+        $this->assertSame([], $this->tareas($titular, $r));
+    }
+
+    public function test_an_unpaid_entry_or_a_pack_without_guest_form_has_nothing_before_coming(): void
+    {
+        [$r, $titular] = $this->entrada();
+        $r->order?->forceFill(['status' => Order::STATUS_PENDING, 'paid_at' => null])->save();
+        $this->assertSame([], $this->tareas($titular, $r), 'sin pagar, no hay visita que preparar');
+
+        // Un pack sin fichas no es una entrada: «Añade a tus hijos» es de las entradas.
+        ['reservation' => $fiesta, 'host' => $host] = $this->mountParty();
+        TicketType::query()->whereKey($fiesta->ticket_type_id)->update(['guest_fields' => json_encode([])]);
+        $this->assertSame([], $this->tareas($host, $fiesta->fresh()));
+    }
+
+    public function test_the_page_isla_opens_the_children_screen_by_its_zone_on_the_page_of_what_was_booked(): void
+    {
+        [$r, $titular] = $this->entrada();
+
+        $isla = app(AntesDeVenir::class)->paraLaIsla($titular);
+
+        $this->assertSame('Siguiente: Añade a tus hijos', $isla['pendingText']);
+        $this->assertSame([
+            'text' => 'Añade a tus hijos y firma por ellos: en la puerta solo enseñas el QR.',
+            'product' => 'kids',
+            'action' => ['label' => 'Añadir a mis hijos', 'href' => route('account.dependents'), 'zone' => 'dependents'],
+        ], $isla['task']);
     }
 
     // ─── La isla de las páginas ──────────────────────────────────────────────────────
@@ -251,7 +326,7 @@ class MeReservationBeforeVisitTest extends TestCase
         $this->assertSame([
             'pending' => true,
             'pendingText' => 'Siguiente: Formulario de invitados',
-            'task' => ['text' => "Rellena el formulario de invitados, hasta el {$dia}.", 'action' => ['label' => 'Rellenar el formulario', 'href' => $lista]],
+            'task' => ['text' => "Rellena el formulario de invitados, hasta el {$dia}.", 'product' => null, 'action' => ['label' => 'Rellenar el formulario', 'href' => $lista]],
             'bookingToday' => null,
         ], app(AntesDeVenir::class)->paraLaIsla($host));
 
@@ -260,7 +335,7 @@ class MeReservationBeforeVisitTest extends TestCase
         $r->forceFill(['guest_data' => array_fill(0, 6, $this->fichaCompleta($r))])->save();
         $isla = app(AntesDeVenir::class)->paraLaIsla($host);
         $this->assertSame('Siguiente: Invitación', $isla['pendingText']);
-        $this->assertSame(['text' => 'Comparte la invitación: 0 de 6 confirmados.', 'action' => ['label' => 'Compartir la invitación', 'href' => $lista.'#gf-invite']], $isla['task']);
+        $this->assertSame(['text' => 'Comparte la invitación: 0 de 6 confirmados.', 'product' => null, 'action' => ['label' => 'Compartir la invitación', 'href' => $lista.'#gf-invite']], $isla['task']);
     }
 
     public function test_with_every_task_done_what_is_optional_does_not_light_the_dot(): void
@@ -301,12 +376,13 @@ class MeReservationBeforeVisitTest extends TestCase
     /** @return list<array<string, mixed>> */
     private function tareas(User $host, OrderItem $r): array
     {
-        return $this->pedir($host, $r)->assertOk()->assertJsonPath('data.reservation_id', (int) $r->getKey())->json('data.tasks');
+        // Cada respuesta, contra el CONTRATO (`BeforeVisit`): una clave de más, una que falte o un `via` desconocido caen aquí.
+        return $this->pedir($host, $r)->assertOk()->assertValidResponse(200)->assertJsonPath('data.reservation_id', (int) $r->getKey())->json('data.tasks');
     }
 
     private function pedir(User $host, OrderItem $r): TestResponse
     {
-        return $this->actingAs($host)->getJson(self::ROOT.$r->getKey().'/before-visit');
+        return $this->actingAs($host)->getJson(self::RESERVAS.$r->getKey().'/before-visit');
     }
 
     private function autorizaciones(User $host, OrderItem $r): string
@@ -315,6 +391,33 @@ class MeReservationBeforeVisitTest extends TestCase
         $this->assertSame('status', $t['type']);
 
         return $t['text'];
+    }
+
+    /**
+     * Una ENTRADA pagada de Kids dentro de cinco días, en una instalación que firma el descargo dentro (modo interno y
+     * texto publicado, como `mountParty()`).
+     *
+     * @return array{0: OrderItem, 1: User}
+     */
+    private function entrada(bool $conTexto = true): array
+    {
+        Setting::query()->updateOrCreate(['key' => WaiverSettings::KEY_MODE], ['value' => WaiverSettings::MODE_INTERNAL]);
+        Setting::flushMemo();
+        if ($conTexto) {
+            app(LegalDocumentPublisher::class)->publish(WaiverSettings::SLUG, ['es' => ['title' => 'Exención', 'body' => [['h' => 'Riesgo', 'p' => 'Saltar implica riesgos.']]]]);
+        }
+
+        $zona = Zone::firstOrCreate(['slug' => 'kids'], ['name' => ['es' => 'Kids'], 'position' => 1, 'is_active' => true]);
+        $tipo = TicketType::create(['zone_id' => $zona->id, 'type' => TicketType::TYPE_ENTRY, 'name' => ['es' => 'Kids · 1 hora'],
+            'duration_min' => 60, 'seats_per_unit' => 1, 'is_sellable' => true, 'is_active' => true, 'position' => 1]);
+        $franja = Slot::create(['zone_id' => $zona->id, 'date' => DisplayTime::today()->addDays(5)->toDateString(),
+            'start_time' => '11:00:00', 'end_time' => '12:00:00', 'capacity' => 50, 'online_capacity' => 50]);
+        $titular = User::factory()->create(['email_verified_at' => now()]);
+        $pedido = Order::create(['user_id' => $titular->id, 'code' => 'R-ENT'.$titular->id, 'status' => Order::STATUS_PAID,
+            'subtotal' => 1600, 'tax' => 0, 'total' => 1600, 'currency' => 'EUR', 'paid_at' => now()]);
+        $linea = $pedido->items()->create(['ticket_type_id' => $tipo->id, 'slot_id' => $franja->id, 'quantity' => 2, 'unit_price' => 800, 'seats' => 2]);
+
+        return [$linea->fresh(['ticketType.zone', 'slot', 'order.user']), $titular];
     }
 
     /** Una ficha con todas las columnas obligatorias del pack rellenas. */

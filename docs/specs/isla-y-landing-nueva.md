@@ -1383,6 +1383,26 @@ piezas del sistema**, enseñado en vivo antes de cerrar.
   `InstancePagesTest` +4 aserciones, `node --test` +11 (`cuenta/antes.test.js` 10, `pagina.test.js` +1); **en vivo**,
   la sonda con el modo `fiesta`: **111 de 111** a 1280 y 390. **El peso**: Mi cuenta 66,70 → 79,96 KiB (techo 82), los
   pasos de la compra 39,34 → 39,65.
+- ▶ **T5d ✅ (26-09, `#777`)**. **(a)** El apellido del menor deja de ser obligatorio en `POST /me/dependents` (contrato
+  **1.38.0**): la regla vivía en la validación del controlador y `DependentRegistry::add` ya guardaba `null`, así que el
+  servicio del `CRITICAL_RE` no se toca (sin `VERIFY_CONC`). **(b)** «Soy su» con las CINCO relaciones del catálogo, en
+  tarjetas y **sin ninguna marcada** —el mockup marcaba la primera, y una relación por defecto sería un dato que nadie
+  ha mirado dentro de lo que sostiene la firma (`#236`)—. **Mi cuenta** usa el store y las reglas de menores del motor
+  SIN tocarlos (`stores/dependents.js`, `account/dependents.js`): **Quién viene contigo** (chips con su inicial, su edad
+  del servidor y «firmado», o «falta su firma»; «Añadir»; «los adultos se registran ellos»), **Añade a tus hijos** (por
+  hijo, nombre, fecha con las barras solas y su edad como pista, y la relación; «Añadir otro hijo»; una casilla del
+  descargo para todos con «Leer el descargo»; una petición por hijo y el que entra sale del formulario; el 409 del texto
+  que cambió se detecta releyéndolo y desmarca la casilla) con su **«Guardado»**, y **la ficha de un hijo** —que el
+  mockup no dibuja—: su firma con su PDF, firmar en su nombre (o, sin el correo confirmado, decir que falta) y quitarlo
+  tras preguntar en el sitio. Las dos pantallas van en su propio trozo. **«Añade a tus hijos»** es tarea de «Antes de
+  venir» en las ENTRADAS con la condición del alta (`#441`), hecha con un menor declarado; su URL es la puerta nueva
+  **`/mi-cuenta/hijos`** (zona `dependents`: con la isla abre el alta; con el cajón, su zona), y en la isla de una
+  página se abre por su zona, sin navegar. **Medido**: `MeReservationBeforeVisitTest` 23 (ahora contra el contrato,
+  `ApiTestCase`; siete mutantes muertos), `MeDependentsTest` +1, `AccountAccessTest` +1 puerta, `node --test` 1.400
+  (`hijos.test.js` 14, `vista.test.js` +4, `pagina.test.js` +1); **en vivo**, la sonda con su paso de los hijos: **141 de
+  141** a 1280 y 390. **El peso**: Mi cuenta 79,96 → 95,43 KiB (techo 97); el motor 296,99 → 297,09 (techo 298: sus
+  exportaciones a Mi cuenta). ⚠️ **Pendiente (T5e)**: los avisos de la cuenta que pinta el índice del cajón —confirmar el
+  correo, el aviso de la analítica (`#678` T3a·4), la firma del titular— aún no salen en Mi cuenta de la isla.
 
 ## 5. Impacto en invariantes
 

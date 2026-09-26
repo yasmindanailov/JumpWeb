@@ -882,7 +882,10 @@ class SidebarBundleBudgetTest extends TestCase
     // calcula y después compra no los baja dos veces—, y Rollup los saca a un trozo común. El motor no gana ni un byte
     // de código (medido construyendo SIN la entrada: 295,28, lo de antes); lo que sube es la costura entre trozos, los
     // nombres que el motor importa del común: 295,28 → 296,12 (+0,84). El techo, a 297, con esa medida.
-    private const SIDEBAR_CHUNK_MAX_KB = 297;
+    // T5d de la isla (`#777`, plataforma): Mi cuenta usa del motor, sin tocarlos, el store de menores, sus reglas
+    // (`account/dependents.js`) y `fieldError`, y el motor los EXPORTA a su trozo: 296,99 → 297,09 (+0,10, medido
+    // construyendo el JS de `HEAD` y el de la T5d), sin una línea de código más. El techo, a 298, con esa medida.
+    private const SIDEBAR_CHUNK_MAX_KB = 298;
 
     // T3e·2: la compra de la isla, chunk diferido del motor que solo trae una instalación con la isla. Medido 93,36 KiB
     // (la sección, la pantalla 0, la isla y sus piezas); su hoja va aparte (7,2 KiB).
@@ -947,7 +950,11 @@ class SidebarBundleBudgetTest extends TestCase
     // cuatro iconos) y el trozo común con los pasos +3,17: la tarjeta de tarea, que ahora comparten «Listo» y el bloque.
     // ⚠️ La FILA (`variant="row"` del diseño) es su propio componente (`ui/FilaTarea.vue`): dentro de la tarjeta la
     // pagaban los pasos de la compra, que no la pintan (medido: 39,34 → 41,36; aparte, 39,65). El techo, a 82.
-    private const ISLA_CUENTA_CHUNK_MAX_KB = 82;
+    // T5d (`#777`, Quién viene contigo y Añade a tus hijos): 79,96 → 95,43. Lo suyo +12,6 (el bloque, `hijos.js`,
+    // `useHijosCuenta.js` y dos iconos) y el trozo común +2,85. ⚠️ Las dos PANTALLAS (Añade a tus hijos y la ficha de un
+    // hijo) van en su propio trozo, pedido al abrirlas (2,9 KiB cada una): dentro medía 99,46. El store de menores ya lo
+    // descarga el motor (`card-*.js`), no se duplica. El techo, a 97.
+    private const ISLA_CUENTA_CHUNK_MAX_KB = 97;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

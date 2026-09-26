@@ -4,8 +4,8 @@
  * tres segundos —«Hola, Ana», la próxima en una línea (baja a su bloque) y, con tareas, «Siguiente: …» (baja a Antes de
  * venir, T5c)—; después los bloques en su orden. **Tu QR**: compacto, con «Enseñar mi QR» (`PmcQrMini`), o grande de
  * entrada si la reserva es HOY, que es lo que va a hacer (T5b). **Tu próxima reserva**, **Antes de venir** (T5c) y
- * **Otras reservas** con su historial (T5b). Reservar otra vez, Quién viene contigo y los Ajustes se suman aquí en las
- * tandas que los traen.
+ * **Otras reservas** con su historial (T5b) y **Quién viene contigo** (T5d). Reservar otra vez y los Ajustes se suman
+ * aquí en las tandas que los traen.
  *
  * Pinta y avisa: qué se enseña lo decide `useSeccionCuenta.js` (y `reservas.js`).
  */
@@ -16,6 +16,7 @@ import BloqueQr from './BloqueQr.vue';
 import BloqueReserva from './BloqueReserva.vue';
 import BloqueAntes from './BloqueAntes.vue';
 import BloqueOtras from './BloqueOtras.vue';
+import BloqueQuien from './BloqueQuien.vue';
 import IconoLucide from '../ui/IconoLucide.vue';
 import BotonSistema from '../ui/BotonSistema.vue';
 import PaseQr from '../ui/PaseQr.vue';
@@ -35,8 +36,9 @@ defineProps({
     antes: { type: Object, default: null },
     chip: { type: String, default: '' },
     otras: { type: Object, required: true },
+    quien: { type: Object, required: true },
 });
-const emit = defineEmits(['qr', 'bloque', 'cambiar', 'abrir', 'mas', 'guardar', 'preguntar', 'renovar', 'tarea']);
+const emit = defineEmits(['qr', 'bloque', 'cambiar', 'abrir', 'mas', 'guardar', 'preguntar', 'renovar', 'tarea', 'hijos', 'hijo']);
 const { t, tp } = useTextos();
 </script>
 
@@ -141,6 +143,11 @@ const { t, tp } = useTextos();
             v-bind="otras"
             @abrir="(id) => emit('abrir', id)"
             @mas="emit('mas')"
+        />
+        <BloqueQuien
+            v-bind="quien"
+            @anadir="emit('hijos')"
+            @abrir="(id) => emit('hijo', id)"
         />
     </div>
 </template>

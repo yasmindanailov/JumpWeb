@@ -38,6 +38,10 @@ final readonly class AccountDoor
     public const ZONE_BY_ROUTE = [
         'account' => 'home',
         'account.orders' => 'orders',
+        // «Añade a tus hijos» (T5d de `isla-y-landing-nueva.md` §4.13, `#777`): la URL de la tarea de «Antes de venir»
+        // (`Http\Cuenta\AntesDeVenir`), que sirve a cualquier cliente. Con la isla abre su pantalla de alta; con el
+        // cajón, su zona de menores.
+        'account.dependents' => 'dependents',
 
         // ── Las puertas de AUTH (`specs/auth-en-cajon.md` §4.4) ──────────────────────────────
         //

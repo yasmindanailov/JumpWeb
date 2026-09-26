@@ -2,6 +2,7 @@
 
 namespace App\Http\Cuenta;
 
+use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\PartyInvitation;
 use App\Domain\Booking\Models\ProductAddon;
@@ -10,8 +11,12 @@ use App\Domain\Booking\Services\CustomerReservationsReader;
 use App\Domain\Booking\Services\GuestCountPolicy;
 use App\Domain\Booking\Services\PartyInvitations;
 use App\Domain\Booking\Services\PostFormAddons;
+use App\Domain\Identity\Models\Dependent;
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Services\DependentRegistry;
 use App\Domain\Identity\Services\GuardianRoster;
+use App\Domain\Identity\Services\LegalDocuments;
+use App\Domain\Identity\Services\WaiverSettings;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\DisplayTime;
 use Carbon\CarbonImmutable;
@@ -37,8 +42,10 @@ use Illuminate\Support\Str;
  *   · **Autorizaciones** (estado, si el producto las pide): las firmadas; con invitación, sobre los que han dicho que sí.
  *     Nunca un denominador inventado (`waiver-por-reserva.md` §4.10): sin respuestas, solo las firmadas.
  *
+ *   · **Añade a tus hijos** (tarea de una ENTRADA, T5d, `#777`): si la instalación firma el descargo dentro; hecha con
+ *     algún menor declarado.
+ *
  * ⚠️ Una reserva sin pagar, cancelada o ya celebrada no tiene nada pendiente (la guarda de `PendingBeforeVisit`).
- * ⚠️ Las entradas aún no tienen tareas: «Añade a tus hijos» llega con su pantalla (T5d).
  */
 final class AntesDeVenir
 {
@@ -56,6 +63,8 @@ final class AntesDeVenir
 
     public const AUTORIZACIONES = 'authorizations';
 
+    public const HIJOS = 'dependents';
+
     private const T = 'isla.mi_cuenta.antes.';
 
     /**
@@ -70,6 +79,7 @@ final class AntesDeVenir
         private PostFormAddons $extras,
         private GuardianRoster $firmas,
         private CustomerReservationsReader $reservas,
+        private DependentRegistry $menores,
     ) {}
 
     /**
@@ -91,7 +101,7 @@ final class AntesDeVenir
      * 17:00», con «Ver mi QR») y su primera tarea pendiente (el punto del menú, «Siguiente: …» y la situación «tarea»).
      * `null` sin sesión.
      *
-     * @return array{pending: bool, pendingText: ?string, task: ?array{text: string, action: array{label: string, href: string}}, bookingToday: ?array{text: string}}|null
+     * @return array{pending: bool, pendingText: ?string, task: ?array{text: string, product: ?string, action: array{label: string, href: string, zone?: string}}, bookingToday: ?array{text: string}}|null
      */
     public function paraLaIsla(?User $titular): ?array
     {
@@ -122,10 +132,54 @@ final class AntesDeVenir
     private function componer(OrderItem $reserva): array
     {
         $tipo = $reserva->ticketType;
-        if ($tipo === null || ! $reserva->acceptsGuestForm() || $reserva->isFinishedInPractice()) {
+        $viva = $tipo !== null && $reserva->parent_item_id === null && ! $reserva->isCancelled()
+            && $reserva->order?->status === Order::STATUS_PAID && ! $reserva->isFinishedInPractice();
+        if (! $viva) {
             return [];
         }
+        if ($reserva->acceptsGuestForm()) {
+            return $this->deLaFiesta($reserva, $tipo);
+        }
 
+        // Una ENTRADA: «Añade a tus hijos» (T5d). Un pack sin formulario no tiene nada que pedir.
+        $hijos = $tipo->isPack() ? null : $this->hijos($reserva, $tipo);
+
+        return $hijos === null ? [] : [$hijos];
+    }
+
+    /**
+     * **«Añade a tus hijos»** (T5d, `#777`): en una entrada, si la instalación firma el descargo DENTRO y tiene texto
+     * publicado —la condición del alta de un menor (`#441`) y la de «Listo» de la compra, que la ofrece igual—. Hecha
+     * cuando la cuenta tiene algún menor declarado (el mockup: «la de los hijos se da por hecha en cuanto hay hijos»).
+     * Su acción abre la pantalla de alta: en Mi cuenta, en el sitio (`via: account`); fuera, su puerta.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function hijos(OrderItem $reserva, TicketType $tipo): ?array
+    {
+        $titular = $reserva->order?->user;
+        if ($titular === null || ! WaiverSettings::isInternal() || LegalDocuments::latestVersionNumber(WaiverSettings::SLUG) === null) {
+            return null;
+        }
+
+        $hoy = DisplayTime::today();
+        $t = self::T.'hijos.';
+        $puerta = route('account.dependents');
+
+        return [
+            'kind' => self::HIJOS, 'type' => self::TAREA,
+            'done' => $this->menores->activeFor($titular)->contains(fn (Dependent $d): bool => $d->isMinorOn($hoy)),
+            'title' => __($t.'titulo'), 'note' => __($t.'nota'), 'text' => __($t.'texto'),
+            'due' => __(self::T.'para_el', ['dia' => DisplayTime::dayInSentence($reserva->slot->date)]),
+            'action' => ['label' => __($t.'boton'), 'url' => $puerta, 'via' => 'account'],
+            // En la isla de una página: se abre la cuenta en su ZONA (el enlace del motor), en la página de lo reservado.
+            'isla' => ['text' => __($t.'linea'), 'product' => $tipo->zone?->slug, 'action' => ['label' => __($t.'boton_isla'), 'href' => $puerta, 'zone' => 'dependents']],
+        ];
+    }
+
+    /** @return list<array<string, mixed>> */
+    private function deLaFiesta(OrderItem $reserva, TicketType $tipo): array
+    {
         $plazo = $this->plazos->deadlineFor($reserva);
         // «Hasta el jueves 24» solo mientras sea verdad: pasado el plazo, la tarea sigue pero sin prometer una fecha.
         $dia = $plazo !== null && $this->plazos->isWithinWindow($reserva) ? DisplayTime::dayInSentence($plazo) : null;
@@ -163,6 +217,7 @@ final class AntesDeVenir
             'action' => ['label' => __($t.($hecha ? 'boton_hecho' : 'boton')), 'url' => $lista, 'via' => 'link'],
             'isla' => [
                 'text' => $dia === null ? __($t.'linea_sin_plazo') : __($t.'linea', ['dia' => $dia]),
+                'product' => null,
                 'action' => ['label' => __($t.'boton_isla'), 'href' => $lista],
             ],
         ];
@@ -193,7 +248,7 @@ final class AntesDeVenir
             'due' => $dia === null ? null : __(self::T.'para_el', ['dia' => $dia]),
             'action' => $accion,
             // En la isla de una página, sin el enlace de la invitación en el HTML: a su sitio en la lista, como el correo.
-            'isla' => ['text' => __($t.'linea', $cifras), 'action' => ['label' => __($t.'boton_isla'), 'href' => $enLaLista]],
+            'isla' => ['text' => __($t.'linea', $cifras), 'product' => null, 'action' => ['label' => __($t.'boton_isla'), 'href' => $enLaLista]],
         ];
     }
 

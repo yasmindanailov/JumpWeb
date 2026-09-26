@@ -20,7 +20,10 @@ function diaConMayuscula(iso, locale) {
     return `${dia.charAt(0).toUpperCase()}${dia.slice(1)}`;
 }
 
-/** Las vistas de la capa: las de la T5a y, desde la T5b, Tu reserva y Cambiar o cancelar. Las siguientes, aquí. */
+/**
+ * Las vistas de la capa: las de la T5a; desde la T5b, Tu reserva y Cambiar o cancelar; desde la T5d, Añade a tus hijos,
+ * su «Guardado» y la ficha de un hijo (firmar por él, quitarlo). Las siguientes, aquí.
+ */
 export const VISTA = {
     INICIO: 'inicio',
     QR: 'qr',
@@ -29,6 +32,9 @@ export const VISTA = {
     ALTA_GOOGLE: 'alta-google',
     RESERVA: 'reserva',
     CAMBIAR: 'cambiar',
+    HIJOS: 'hijos',
+    HIJOS_LISTO: 'hijos-listo',
+    HIJO: 'hijo',
 };
 
 /**
@@ -47,6 +53,8 @@ export function vistaDeApertura(zona, { sesion, bloque = '' }) {
     if (zona === 'google-signup') return { vista: VISTA.ALTA_GOOGLE, bloque: '' };
     if (! sesion) return { vista: zona === 'register' ? VISTA.CREAR : VISTA.ENTRAR, bloque: '' };
     if (zona === 'card') return { vista: VISTA.QR, bloque: '' };
+    // «Añade a tus hijos» (T5d): la zona de menores del motor —su puerta `/mi-cuenta/hijos`, la tarea de «Antes de venir»—.
+    if (zona === 'dependents') return { vista: VISTA.HIJOS, bloque: '' };
 
     // «Mis reservas» (`/mi-cuenta/pedidos`, a donde llevan los correos ya enviados): el inicio, en la próxima.
     return { vista: VISTA.INICIO, bloque: bloque || (zona === 'orders' ? 'proxima' : '') };
@@ -79,6 +87,7 @@ export function lineaProxima(reserva, { locale = 'es', titulo = '' } = {}) {
  *   acciones: {cerrar: Function, alMenu: Function, aInicio: Function, aEntrar: Function, entrar: Function,
  *              crear: Function, completarGoogle: Function, volverDelDescargo: Function, aReserva: Function, escribir: Function},
  *   cambiar?: {desdeReserva: boolean, whatsapp: boolean},
+ *   hijo?: {nombre: string, firmar: boolean},
  *   rotulos?: {altaGoogle?: string, altaGoogleBoton?: string, altaGoogleEnviando?: string},
  *   altaGoogle?: {pendiente: boolean},
  * }} e
@@ -122,6 +131,23 @@ export function ckDeCuenta(e) {
         return {
             ...base, step: t('mi_cuenta.cambiar.banda'), onBack: e.cambiar?.desdeReserva ? acciones.aReserva : acciones.aInicio,
             action: e.cambiar?.whatsapp ? { label: t('mi_cuenta.cambiar.boton'), onClick: acciones.escribir } : null,
+        };
+    }
+
+    // Añade a tus hijos (T5d): su flecha vuelve a Mi cuenta; su acción, «Guardar», espera al servidor (uno a uno).
+    if (e.vista === VISTA.HIJOS) {
+        return {
+            ...base, step: t('mi_cuenta.hijos.titulo'), onBack: acciones.aInicio,
+            action: { label: t('mi_cuenta.hijos.boton'), onClick: acciones.guardarHijos, loading: e.ocupado === 'hijos' ? t('mi_cuenta.hijos.guardando') : false },
+        };
+    }
+    if (e.vista === VISTA.HIJOS_LISTO) return { ...base, step: t('mi_cuenta.hijos.titulo'), onBack: acciones.aInicio };
+
+    // La ficha de un hijo: firmar por él es su acción, cuando hace falta y se puede (con el correo sin verificar, no).
+    if (e.vista === VISTA.HIJO) {
+        return {
+            ...base, step: e.hijo?.nombre ?? '', onBack: acciones.aInicio,
+            action: e.hijo?.firmar ? { label: t('mi_cuenta.hijo.firmar'), onClick: acciones.firmarHijo, loading: e.ocupado === 'firmar' ? t('mi_cuenta.hijo.firmando') : false } : null,
         };
     }
 

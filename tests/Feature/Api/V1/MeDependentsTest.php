@@ -122,6 +122,30 @@ class MeDependentsTest extends ApiTestCase
         $this->assertNull($stored->removed_at);
     }
 
+    /**
+     * `#773`·a (`[DECIDIDO owner]`, revoca esa parte de `#236`): los apellidos son OPCIONALES. Ausentes o vacíos, la ficha
+     * los guarda como `null` —nunca un texto vacío— y el nombre completo es el que se declaró.
+     */
+    public function test_the_surname_is_optional_and_is_stored_as_null_when_absent_or_blank(): void
+    {
+        $user = User::factory()->create();
+
+        $sin = $this->actingAs($user)->postJson(self::PATH, ['name' => 'Vera', 'relationship' => 'mother', 'born_on' => '2019-03-07'])
+            ->assertCreated()->assertValidRequest()->assertValidResponse(201);
+        $this->assertNull($sin->json('surname'));
+        $this->assertSame('Vera', $sin->json('full_name'));
+
+        $vacio = $this->actingAs($user)->postJson(self::PATH, ['name' => 'Pol', 'surname' => '  ', 'relationship' => 'father', 'born_on' => '2021-05-01'])
+            ->assertCreated()->assertValidResponse(201);
+        $this->assertNull($vacio->json('surname'));
+
+        $this->assertSame([null, null], Dependent::where('user_id', $user->id)->orderBy('id')->pluck('surname')->all());
+
+        // La relación SIGUE siendo obligatoria: es lo que sostiene que este adulto firme por el menor.
+        $this->actingAs($user)->postJson(self::PATH, ['name' => 'Leo', 'born_on' => '2020-01-01'])
+            ->assertStatus(422)->assertJsonPath('error.code', 'validation_failed')->assertJsonStructure(['error' => ['fields' => ['relationship']]]);
+    }
+
     public function test_it_validates_the_body_and_a_future_date_is_a_field_error(): void
     {
         $user = User::factory()->create();
