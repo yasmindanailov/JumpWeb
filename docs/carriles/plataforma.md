@@ -3,9 +3,9 @@
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 EN CURSO** (su centena,
-> `decisiones/700-799.md`) · Último usado: **`#774`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#774`) · Actualizado: **2026-09-26**
-> (la T5, Mi cuenta en la isla: censo y plan, `#773`; la T5a hecha, `#774`).
+> `decisiones/700-799.md`) · Último usado: **`#775`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#775`) · Actualizado: **2026-09-26**
+> (la T5, Mi cuenta en la isla: plan `#773`; T5a `#774` y T5b `#775` hechas).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
 > llévaselo con la medida, como el SPA en `#724`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -42,9 +42,10 @@
 ## Por dónde retomar, en orden
 
 ▶▶ **EN MARCHA (26-09): T5 · Mi cuenta en la isla** (spec §4.13, `#773`: el censo, las cuatro respuestas del owner y
-el plan T5a→T5f; dentro de la v2). **T5a ✅** (`#774`: la capa, las puertas, «Hola», Tu QR y, sin sesión, Entra y Crea
-tu cuenta; sonda `scripts/sonda-cuenta.mjs` 42/42 a 1280 y 390; contrato 1.33.0). Sigue la **T5b**, las reservas (la
-fecha límite de cambio y el producto de cada reserva, en la API). ⚠️ La T5d toca `DependentRegistry` (`CRITICAL_RE`,
+el plan T5a→T5f; dentro de la v2). **T5a ✅** (`#774`: la capa, las puertas, Tu QR, Entra; contrato 1.33.0) y **T5b ✅**
+(`#775`: las reservas; contrato 1.34.0; `scripts/sonda-cuenta.mjs` 89/89 con `sonda-cuenta-datos.php`). Sigue la
+**T5c**, Antes de venir. ⚠️ En PRODUCCIÓN, el owner pone en el panel el aviso de los calcetines (su complemento) y «se
+devuelve la señal» de los packs (en LOCAL, puestos). ⚠️ La T5d toca `DependentRegistry` (`CRITICAL_RE`,
 `VERIFY_CONC=1`): los apellidos del menor pasan a opcionales (`#773`·a). ⚠️ La sonda RENUEVA el carné de `probe-card@`.
 ▶ **HECHO (25/26-09)**: la **T4** (spec §4.12; banco de la isla 60/60; `#768`: sin bancos por tanda) y el encargo del
 owner del 25-09 —promociones 🟦 T1 (`promociones.md` §8; en LOCAL, dos ofertas de muestra), el play de los vídeos 🟦
@@ -233,7 +234,8 @@ dueño es el carril de la web/reseñas—) ·
   su `{ cuenta }`; `compra/useSuperficie.js` (mío) llama a TU `section.showPurchase()` al abrirse la compra. Del paquete
   (mío), para que lo sepas: `jw:cajon:open` lleva `cuenta: true` SOLO en las aperturas de cuenta (tu `track.js` no lo
   lee), y `openAccount(event, zone, { desde })`. El grupo `isla` pierde `mi_cuenta` para el invitado y lo gana con
-  sesión (`SidebarSession.isla`, contrato **1.33.0**; tu siguiente, 1.34.0). Tus stores, sin tocar.
+  sesión (`SidebarSession.isla`, contrato **1.33.0**). Tus stores, sin tocar. ▶ **T5b (`#775`)**: el **1.34.0** también
+  es mío (`OrderItem`: `product_id`, `today`, `cancellation`; `OrderItemAddon.note`): **tu siguiente, 1.35.0**.
 
 - ▶ `#682`: la **isla** va en el producto como **segunda carcasa** sobre el motor del cajón, apagada por defecto, y
   la construye ESTE carril (spec `isla-y-landing-nueva.md` §4.1, §4.3 y §4.4). Lo que haga falta del motor te lo
@@ -273,7 +275,8 @@ dueño es el carril de la web/reseñas—) ·
 ### ❗ Para el carril de la WEB (emisor: plataforma, 2026-09-25) — tu `lang/*/landing.php`, un carácter en claves mías
 - `#763`: las frases del plazo (`products.cancellation_*`) y de «con un adulto» (`zones.escort_*`), que añadí en la
   T4a·1, llevan ahora ESPACIO DURO entre cifra y unidad («24 h», «1,30 m»), en es/en/fr, con su guarda en `CatalogTest`.
-  Las de altura (`zones.height_*`) tienen la misma pega y son tuyas: no las toco.
+  Las de altura (`zones.height_*`) tienen la misma pega y son tuyas: no las toco. ▶ 26-09 (`#775`): dos más, mías y
+  aditivas, `products.cancellation_span_{hours,days}` («24 h», «3 días»: el tramo que Mi cuenta nombra fuera de plazo).
 
 ### ❗ Para el carril de la WEB (emisor: plataforma, 2026-09-23) — dos huecos de contenido, MEDIDOS
 - ▶ Publicar `/servicios` como hechos (`#672`) destapó dos cosas **tuyas**, que son de tu T6 de contenido

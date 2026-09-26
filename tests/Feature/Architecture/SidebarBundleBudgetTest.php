@@ -938,6 +938,13 @@ class SidebarBundleBudgetTest extends TestCase
     // 39,34 (base: `HEAD`). El techo, a 40.
     private const ISLA_PASOS_CHUNK_MAX_KB = 40;
 
+    // T5b (`#775`): MI CUENTA de la isla, trozo diferido del motor que se pide a la primera apertura de la cuenta. Su
+    // descarga, sobre lo que ya tiene quien la abre (el motor y la compra, que la isla monta con el motor). Medido el
+    // 26-09 con las reservas: 66,70 KiB —41,98 suyos y el resto, trozos COMUNES con los pasos de la compra (las pantallas
+    // de entrar y del alta, `_CajaAntiBot`, 17,77), que quien ya pasó por «Tus datos» no vuelve a bajar—. El techo, a
+    // 68; las tandas que traen más bloques (T5c–T5f) lo suben con su medida.
+    private const ISLA_CUENTA_CHUNK_MAX_KB = 68;
+
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un
      * techo en kB se puede satisfacer por casualidad, pero encontrar el runtime de Vue dentro del
@@ -1376,6 +1383,34 @@ class SidebarBundleBudgetTest extends TestCase
         ]);
         $this->assertLessThanOrEqual(self::ISLA_PASOS_CHUNK_MAX_KB, $kb, sprintf(
             'Los pasos de la compra de la isla pesan %.2f kB (techo: %s kB).', $kb, self::ISLA_PASOS_CHUNK_MAX_KB
+        ));
+    }
+
+    /**
+     * **Mi cuenta de la isla es OTRO trozo, pedido al abrir la cuenta** (T5a, `#773`; techo desde T5b, `#775`): quien
+     * solo compra no la descarga. Ni el motor, ni la landing, ni la isla de la página la traen de forma estática.
+     */
+    public function test_the_isla_account_is_a_deferred_chunk_of_the_engine_under_its_budget(): void
+    {
+        $manifest = $this->manifest();
+        $clave = 'resources/js/isla/SeccionCuenta.vue';
+
+        $this->assertArrayHasKey($clave, $manifest, 'Mi cuenta de la isla ya no es un trozo propio.');
+        $this->assertTrue(
+            $this->llegaPorImportDinamico('resources/js/sidebar/index.js', $clave),
+            'El motor ya no trae Mi cuenta de la isla con `import()`.'
+        );
+        $this->assertNotContains($clave, $this->descargaDelMotor(), 'Mi cuenta de la isla viaja con el motor: la paga cada cajón.');
+        $this->assertNotContains($clave, $this->alcanceEstatico('resources/js/isla/SeccionCompra.vue'), 'Mi cuenta viaja con la compra de la isla.');
+        $this->assertNotContains($clave, $this->alcanceEstatico('resources/js/isla/pagina/montar.js'), 'Mi cuenta viaja con la isla de la página.');
+        $this->assertNotContains($clave, $this->alcanceEstatico('resources/js/app.js'), 'Mi cuenta de la isla viaja con la landing.');
+
+        $kb = $this->descargaDe($clave, [
+            ...$this->alcanceEstatico('resources/js/sidebar/index.js'),
+            ...$this->alcanceEstatico('resources/js/isla/SeccionCompra.vue'),
+        ]);
+        $this->assertLessThanOrEqual(self::ISLA_CUENTA_CHUNK_MAX_KB, $kb, sprintf(
+            'Mi cuenta de la isla pesa %.2f kB (techo: %s kB).', $kb, self::ISLA_CUENTA_CHUNK_MAX_KB
         ));
     }
 

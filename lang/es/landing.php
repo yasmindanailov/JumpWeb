@@ -148,6 +148,9 @@ return [
         'cancellation_hours' => "hasta :n\u{00A0}h antes",
         'cancellation_days' => "hasta :n\u{00A0}días antes",
         'cancellation_at_start' => 'hasta la hora reservada',
+        // Su tramo, sin el «hasta … antes» (T5b, `#775`): Mi cuenta dice «Quedan menos de 24 h» cuando ya pasó.
+        'cancellation_span_hours' => ":n\u{00A0}h",
+        'cancellation_span_days' => ":n\u{00A0}días",
     ],
     /*
      * La sección 03 «Qué hay dentro» (`#482`). ⚠️ El RÓTULO no lleva número —decisión del canvas,

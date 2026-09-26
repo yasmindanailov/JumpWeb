@@ -1337,6 +1337,29 @@ piezas del sistema**, enseñado en vivo antes de cerrar.
   paquete 7,95 → 8,57, la compra 133,57 → 134,82 (costuras de los trozos comunes con Mi cuenta; sus dos iconos se
   registran desde su trozo, `ui/iconos.js::registrarIconos`: en el común medía 135,50) y sus pasos 38,83 → 39,34; techos
   a 27, 9, 136 y 40, con su medida en `SidebarBundleBudgetTest`. Mi cuenta, 20 kB propios.
+- ▶ **T5b ✅ (26-09, `#775`)**. **La API** (contrato **1.34.0**, aditivo, a la COLA de `OrderItem`): `product_id`,
+  `today` (el día del parque, con su reloj y su zona) y `cancellation` —`cutoff_hours`, `written` («hasta 3 días
+  antes»), `span` («24 h», «3 días»; nulo con plazo 0), `until` (el inicio de la franja en la zona del parque menos el
+  plazo, `CancellationCutoffRule::deadlineFor`), `open` y `deposit_refundable`—; cada complemento, su `note`. **El
+  panel** (`#775`, owner): el **aviso del complemento** (`reservation_note`, i18n, `:n` = la cantidad; solo
+  complementos: «Tenéis :n pares de calcetines…») y **«Se devuelve la señal si se cancela en plazo»**
+  (`deposit_refundable_in_time`, solo packs con señal); sin aviso, «Calcetines · 2 unidades», que no promete nada. **La
+  isla** (`cuenta/reservas.js`, puro; `useReservasCuenta.js`, lo que pide): la PRÓXIMA es la primera de un pedido
+  PAGADO (la regla de `next_reservation`); con ella HOY, Tu QR sale grande de entrada y su vista ofrece «Cómo llegar»
+  (`/site`). Bajo la tarjeta: la señal pagada y lo del día (si el servidor dice `shows_deposit_note`), los complementos y
+  el plazo, dentro o fuera. «Ver el pago» sale del LIBRO (`ledger`): sin cuadrar sus líneas con el total, los
+  movimientos; con el libro en revisión, solo el total y su nota. «Cambiar o cancelar» solo facilita PEDIRLO: qué y
+  hasta cuándo, el mensaje escrito y ENSEÑADO, WhatsApp (la acción de la capa) y «Llamar», con el teléfono internacional
+  de `/site`. «Otras reservas» abre «Tu reserva» (y su «Cambiar o cancelar» vuelve a ella); el historial, de diez en
+  diez. **Desvíos del mockup**: el historial sale aunque no haya otras vivas (su propia cuenta «Sin reservas» tiene
+  historial y no se veía); el nombre accesible de cada fila lleva el día, QUÉ y su estado (el del diseño era solo la
+  fecha, y en la fila-botón sustituye al contenido: WCAG 2.5.3), y en las filas que no se tocan va en un texto oculto
+  (ARIA prohíbe `aria-label` en un `div`). **Medido**: `node --test` 1.371 (`cuenta/reservas.test.js` 22, `vista.test.js`
+  16 → 20); `MeReservationChangeFactsTest` 8 (cinco mutantes muertos) y `CatalogEditTest` +3; **en vivo**
+  (`scripts/sonda-cuenta.mjs` con `sonda-cuenta-datos.php`, que monta reservas pagadas con su cobro y su señal y las
+  borra): **89 de 89** a 1280 y 390, con el paso de HOY. **El peso**: Mi cuenta, 66,70 KiB al abrirla (41,98 suyos y
+  trozos comunes con los pasos de la compra), con su techo nuevo a 68 en `SidebarBundleBudgetTest`. Los datos de la
+  instalación (el aviso de los calcetines, la señal de los dos packs) se ponen en el panel de cada entorno.
 
 ## 5. Impacto en invariantes
 

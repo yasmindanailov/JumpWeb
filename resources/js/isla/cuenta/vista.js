@@ -20,13 +20,15 @@ function diaConMayuscula(iso, locale) {
     return `${dia.charAt(0).toUpperCase()}${dia.slice(1)}`;
 }
 
-/** Las vistas de la capa en la T5a. Las de las tandas siguientes (Tu reserva, los ajustes…) se suman aquí. */
+/** Las vistas de la capa: las de la T5a y, desde la T5b, Tu reserva y Cambiar o cancelar. Las siguientes, aquí. */
 export const VISTA = {
     INICIO: 'inicio',
     QR: 'qr',
     ENTRAR: 'entrar',
     CREAR: 'crear',
     ALTA_GOOGLE: 'alta-google',
+    RESERVA: 'reserva',
+    CAMBIAR: 'cambiar',
 };
 
 /**
@@ -51,19 +53,20 @@ export function vistaDeApertura(zona, { sesion, bloque = '' }) {
 }
 
 /**
- * «Sáb 26 · 17:00 · Kids 1 hora»: la próxima reserva en una línea, arriba (el bloque «Arriba» del diseño,
- * `proximaCorta`). De `next_reservation`, el contexto de cuenta que ya viene sembrado: sin petición.
+ * «Sáb 26 · 17:00 · Kids 1 hora · 2 niños»: la próxima reserva en una línea, arriba (el bloque «Arriba» del diseño,
+ * `proximaCorta`). Antes de llegar las reservas, de `next_reservation` —el contexto ya sembrado, sin la cantidad—; con
+ * ellas, con su `titulo` (qué y cuántos).
  *
  * @param {{date?: string, time_window?: string, product_name?: string}|null} reserva
- * @param {{locale?: string}} [opciones]
+ * @param {{locale?: string, titulo?: string}} [opciones]
  * @returns {string}  `''` sin reserva
  */
-export function lineaProxima(reserva, { locale = 'es' } = {}) {
+export function lineaProxima(reserva, { locale = 'es', titulo = '' } = {}) {
     if (! reserva?.date) return '';
 
     const hora = horaCorta(String(reserva.time_window ?? '').split(/[–-]/)[0].trim());
 
-    return [diaConMayuscula(reserva.date, locale), hora, reserva.product_name].filter(Boolean).join(' · ');
+    return [diaConMayuscula(reserva.date, locale), hora, titulo || reserva.product_name].filter(Boolean).join(' · ');
 }
 
 /**
@@ -74,7 +77,8 @@ export function lineaProxima(reserva, { locale = 'es' } = {}) {
  *   vista: string, subpaso?: string, desde?: string|null, qrDesde?: string|null, dir?: string|null,
  *   ocupado?: string|null, entrada?: {valor: string, clave: string}, textos: object,
  *   acciones: {cerrar: Function, alMenu: Function, aInicio: Function, aEntrar: Function, entrar: Function,
- *              crear: Function, completarGoogle: Function, volverDelDescargo: Function},
+ *              crear: Function, completarGoogle: Function, volverDelDescargo: Function, aReserva: Function, escribir: Function},
+ *   cambiar?: {desdeReserva: boolean, whatsapp: boolean},
  *   rotulos?: {altaGoogle?: string, altaGoogleBoton?: string, altaGoogleEnviando?: string},
  *   altaGoogle?: {pendiente: boolean},
  * }} e
@@ -106,6 +110,18 @@ export function ckDeCuenta(e) {
         return {
             ...base, step: t('mi_cuenta_alta.crear_titulo'), onBack: acciones.aEntrar,
             action: { label: t('mi_cuenta_alta.crear_boton'), onClick: acciones.crear, loading: e.ocupado === 'crear' ? t('mi_cuenta_alta.creando') : false },
+        };
+    }
+
+    // Tu reserva (una de «Otras reservas»): su flecha vuelve a Mi cuenta, al mismo punto.
+    if (e.vista === VISTA.RESERVA) return { ...base, step: t('mi_cuenta.reserva.titulo'), onBack: acciones.aInicio };
+
+    // Cambiar o cancelar: desde la reserva abierta, la flecha vuelve a ella; desde la próxima, a la lista. Su acción
+    // es escribir por WhatsApp con el mensaje ya escrito; sin teléfono del parque, ninguna (queda el texto).
+    if (e.vista === VISTA.CAMBIAR) {
+        return {
+            ...base, step: t('mi_cuenta.cambiar.banda'), onBack: e.cambiar?.desdeReserva ? acciones.aReserva : acciones.aInicio,
+            action: e.cambiar?.whatsapp ? { label: t('mi_cuenta.cambiar.boton'), onClick: acciones.escribir } : null,
         };
     }
 

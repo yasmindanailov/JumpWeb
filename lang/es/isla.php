@@ -324,6 +324,53 @@ return [
             'renovar_si' => 'Sí, renovar',
             'renovar_no' => 'Dejarlo como está',
             'renovado' => 'Tu QR se ha renovado',
+            'como_llegar' => 'Cómo llegar',
+        ],
+        // Las reservas (T5b, `#775`): «Tu próxima reserva», «Otras reservas», «Tu reserva» y «Cambiar o cancelar».
+        'proxima' => [
+            'titulo' => 'Tu próxima reserva',
+            'numero' => 'Nº :code',
+            'aria' => ':dia a las :hora',
+            'ver_pago' => 'Ver el pago',
+            'cambiar' => 'Cambiar o cancelar',
+            'senal' => 'Señal pagada: :importe',
+            'resto' => 'El día de la fiesta: :importe',
+            'senal_rotulo' => 'Señal pagada',
+            'resto_rotulo' => 'El día de la fiesta',
+            // Un complemento sin aviso escrito en el panel (`#775`): su nombre y su cantidad, sin prometer nada.
+            'complemento' => ':nombre · :cantidad',
+            'plazo' => 'Puedes cambiar o cancelar hasta el :dia a las :hora.',
+            'fuera' => 'Quedan menos de :tramo: ya no se puede cambiar ni cancelar. Si ha pasado algo, escríbenos y lo vemos.',
+            'fuera_sin_tramo' => 'Ya no se puede cambiar ni cancelar. Si ha pasado algo, escríbenos y lo vemos.',
+            'total' => 'Total',
+            'incluido' => 'Incluido',
+        ],
+        'otras' => [
+            'titulo' => 'Otras reservas',
+            'historial' => 'Ver el historial',
+            'ocultar' => 'Ocultar el historial',
+            'mas' => 'Ver más',
+            'estado' => [
+                'pasada' => 'Pasada',
+                'cancelada' => 'Cancelada',
+                'devuelta' => 'Devuelta',
+                'sin_pagar' => 'Sin pagar',
+            ],
+        ],
+        'reserva' => [
+            'titulo' => 'Tu reserva',
+        ],
+        'cambiar' => [
+            'banda' => 'Cambiar o cancelar',
+            'titulo' => 'Cambiar o cancelar tu reserva',
+            'texto' => 'Para tu reserva del :dia a las :hora, :que, número :code. Puedes cambiar la fecha o la hora, o cancelar, :plazo: escríbenos y lo hacemos contigo.',
+            // Solo si el producto promete devolver la señal en plazo (`#775`, el interruptor del panel).
+            'devolvemos' => ', y te devolvemos la señal',
+            'texto_sin_plazo' => 'Para tu reserva del :dia a las :hora, :que, número :code. Escríbenos y lo vemos contigo.',
+            'boton' => 'Escribirnos por WhatsApp',
+            'mensaje' => 'Hola, quiero cambiar o cancelar mi reserva :code del :dia a las :hora.',
+            'mensaje_titulo' => 'Te lo dejamos escrito:',
+            'llamar' => 'Llamar al :telefono',
         ],
     ],
 ];

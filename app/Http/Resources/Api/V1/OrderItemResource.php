@@ -5,6 +5,7 @@ namespace App\Http\Resources\Api\V1;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Services\Balance;
+use App\Domain\Booking\Services\CancellationCutoffRule;
 use App\Domain\Booking\Services\GuestCountPolicy;
 use App\Domain\Booking\Services\OrderBook;
 use App\Domain\Booking\Services\PostFormAddons;
@@ -12,6 +13,7 @@ use App\Domain\Booking\Services\ProductIcon;
 use App\Domain\Platform\Services\DisplayTime;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Carbon;
 
 /**
  * Fase 3 · paso 1 — una línea de pedido vista por su dueño.
@@ -165,6 +167,47 @@ class OrderItemResource extends JsonResource
             'invitation_url' => $item->acceptsGuestForm() && ($item->ticketType?->offersGuestInvitation() ?? false)
                 ? route('reservation.guests', ['reservation' => $item]).'#gf-invite'
                 : null,
+            // ── Mi cuenta en la isla (T5b de `specs/isla-y-landing-nueva.md` §4.13, `#775`, contrato 1.34.0). A la COLA,
+            //    por el orden que `ApiContractTest` compara.
+            //
+            // El producto, para «Reservar otra vez» (la compra se abre situada en él).
+            'product_id' => (int) $item->ticket_type_id,
+            // ¿Es HOY en el parque? Lo decide el servidor con SU reloj y SU zona (`DisplayTime`, `AFORO-09`): el del
+            // navegador puede estar en otra zona. Con ella, Mi cuenta enseña el QR grande de entrada.
+            'today' => $item->slot?->date?->toDateString() === DisplayTime::today()->toDateString(),
+            'cancellation' => $this->cancellation($item, $book->hasDeposit),
+        ];
+    }
+
+    /**
+     * **El plazo de cambio y cancelación de ESTA reserva**, o `null` si su producto no publica plazo (`#699`). Lo que
+     * Mi cuenta dice: «Puedes cambiar o cancelar hasta el viernes 25 a las 17:00» (`until`, en la zona del parque),
+     * y, pasado, «Quedan menos de 24 h: ya no se puede…» (`open` a `false`, `span`). Todo sale de
+     * `CancellationCutoffRule`, la misma regla que la ficha del producto. Lo INFORMA: cambia y cancela el personal.
+     *
+     * `deposit_refundable` es si al cancelar en plazo se devuelve la SEÑAL (`#775`): un dato del producto que la
+     * instalación enciende solo si sus condiciones lo prometen, y SOLO en una reserva que nació con señal.
+     *
+     * @return array{cutoff_hours: int, written: string, span: ?string, until: ?string, open: bool, deposit_refundable: bool}|null
+     */
+    private function cancellation(OrderItem $item, bool $hasDeposit): ?array
+    {
+        $hours = $item->ticketType?->cancellation_cutoff_hours;
+
+        if ($hours === null) {
+            return null;
+        }
+
+        $rule = app(CancellationCutoffRule::class);
+        $until = $rule->deadlineFor($item);
+
+        return [
+            'cutoff_hours' => (int) $hours,
+            'written' => (string) $rule->written((int) $hours),
+            'span' => $rule->span((int) $hours),
+            'until' => $until?->toIso8601String(),
+            'open' => $until !== null && Carbon::now()->lessThan($until),
+            'deposit_refundable' => $item->ticketType->deposit_refundable_in_time && $hasDeposit,
         ];
     }
 }

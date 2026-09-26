@@ -243,6 +243,15 @@ class CatalogForm
                 ->rows(2)
                 ->visible(fn (Get $get): bool => $get('type') === TicketType::TYPE_ADDON),
 
+            // EL AVISO DEL COMPLEMENTO EN MI CUENTA (`#775`): lo que la reserva del cliente dice de él, con `:n` por la
+            // cantidad («Tenéis :n pares de calcetines comprados; os los damos en la puerta.»). Dónde se recoge un
+            // complemento es de cada instalación, no del producto; vacío, la reserva lo nombra con su cantidad.
+            TextInput::make("reservation_note.{$locale}")
+                ->label(__('admin.catalog.field_reservation_note'))
+                ->maxLength(200)
+                ->visible(fn (Get $get): bool => $get('type') === TicketType::TYPE_ADDON)
+                ->helperText(__('admin.catalog.reservation_note_hint')),
+
             // LOS REGALOS (`#589`) viven en PROMOCIONES desde `#770`: aquí solo se ENSEÑAN, para que quien edita
             // la ficha sepa qué se anuncia con ella y dónde cambiarlo. Una sola vez, en la pestaña del español.
             Placeholder::make('gifts_managed_in_promotions')
@@ -546,6 +555,13 @@ class CatalogForm
                             TicketType::DEPOSIT_FIXED => __('admin.catalog.deposit_value_fixed'),
                             default => __('admin.catalog.deposit_value_none'),
                         }),
+
+                    // SI SE DEVUELVE LA SEÑAL al cancelar en plazo (`#775`): Mi cuenta lo DICE al pedir un cambio («…y te
+                    // devolvemos la señal») solo con esto encendido. No devuelve nada: lo hace el personal. Solo con señal.
+                    Toggle::make('deposit_refundable_in_time')
+                        ->label(__('admin.catalog.field_deposit_refundable_in_time'))
+                        ->visible(fn (Get $get): bool => ($get('deposit_type') ?? TicketType::DEPOSIT_NONE) !== TicketType::DEPOSIT_NONE)
+                        ->helperText(__('admin.catalog.deposit_refundable_in_time_hint')),
 
                     TextInput::make('prep_before_min')
                         ->label(__('admin.catalog.field_prep_before_min'))

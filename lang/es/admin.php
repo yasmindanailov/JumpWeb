@@ -2663,6 +2663,11 @@ return [
         // El plazo de cambio y cancelación (`#699`): lo que la web DICE; los cambios los sigue haciendo el personal.
         'field_cancellation_cutoff_hours' => 'Cambio o cancelación, hasta',
         'cancellation_cutoff_hint' => 'Horas antes de la hora reservada: 24 en las entradas; 72 son los «3 días» de un cumpleaños. La web lo dice así («hasta 24 h antes», «hasta 3 días antes»). Vacío: no se publica. No bloquea nada: los cambios los hace el personal.',
+        // Lo que Mi cuenta DICE de lo reservado (`#775`): datos de la instalación, no política del producto.
+        'field_reservation_note' => 'Aviso en la reserva del cliente',
+        'reservation_note_hint' => 'Lo que dice Mi cuenta de este complemento en la reserva; :n es la cantidad («Tenéis :n pares de calcetines comprados; os los damos en la puerta.»). Vacío: sale con su nombre y su cantidad.',
+        'field_deposit_refundable_in_time' => 'Si se cancela en plazo, se devuelve la señal',
+        'deposit_refundable_in_time_hint' => 'Mi cuenta lo dice al pedir un cambio («…y te devolvemos la señal»). Enciéndelo solo si tus condiciones lo prometen. No devuelve nada: lo hace el personal.',
         'guest_age_range_required' => 'Si el pack declara una familia por edad, tiene que declarar también su tramo (al menos la edad mínima o la máxima).',
         'guest_age_range_inverted' => 'La edad máxima no puede ser menor que la mínima.',
         'guest_age_range_overlap' => 'El tramo de edad pisa al de «:name», que está en la misma familia. Dos packs no pueden cubrir la misma edad: no habría forma de saber a cuál corresponde un invitado.',

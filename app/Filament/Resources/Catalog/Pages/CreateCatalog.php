@@ -166,6 +166,8 @@ class CreateCatalog extends CreateRecord
         // Familia y tramo de edad (`specs/cumple-mixto.md` §9): normaliza, anula fuera del pack y
         // bloquea el guardado si el tramo pisa al de un hermano. Misma llamada en `EditCatalog`.
         $data = $this->normalizeCancellationCutoff($data, $type);
+        // Lo que Mi cuenta dice de lo reservado (`#775`), solo donde tiene sentido. Misma llamada en `EditCatalog`.
+        $data = $this->normalizeReservationWording($data, $type);
 
         return $this->normalizeGuestAgeFields($data, $type);
     }

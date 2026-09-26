@@ -86,6 +86,8 @@ return [
         'cancellation_hours' => "jusqu'à :n\u{00A0}h avant",
         'cancellation_days' => "jusqu'à :n\u{00A0}jours avant",
         'cancellation_at_start' => "jusqu'à l'heure réservée",
+        'cancellation_span_hours' => ":n\u{00A0}h",
+        'cancellation_span_days' => ":n\u{00A0}jours",
     ],
     'rides' => [
         'eyebrow' => 'Ce qu’il y a dedans',

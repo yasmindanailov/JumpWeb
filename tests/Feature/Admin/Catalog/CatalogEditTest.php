@@ -363,6 +363,66 @@ class CatalogEditTest extends TestCase
         $this->assertFalse($log->payload['changed']['is_active']['to']);
     }
 
+    // ─── Lo que Mi cuenta DICE de lo reservado (`#775`) ──────────────────────
+
+    /**
+     * **Un COMPLEMENTO escribe su aviso para la reserva del cliente**, por idioma y con `:n` (T5b, `#775`): dónde se
+     * recoge es de la instalación. Los idiomas vacíos se descartan, como en el nombre.
+     */
+    public function test_an_addon_writes_its_note_for_the_customers_reservation(): void
+    {
+        $addon = $this->makeEntry(['name' => ['es' => 'Calcetines'], 'type' => TicketType::TYPE_ADDON, 'zone_id' => null, 'duration_min' => null]);
+
+        Livewire::actingAs($this->admin())
+            ->test(EditCatalog::class, ['record' => $addon->id])
+            ->fillForm(['reservation_note' => ['es' => '  Tenéis :n pares de calcetines comprados; os los damos en la puerta.  ', 'en' => '', 'fr' => '']])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertSame(['es' => 'Tenéis :n pares de calcetines comprados; os los damos en la puerta.'], $addon->fresh()->reservation_note);
+        $this->assertSame('Tenéis 2 pares de calcetines comprados; os los damos en la puerta.', $addon->fresh()->reservationNote(2));
+    }
+
+    /** Fuera de un complemento el aviso no existe: guardar una entrada no deja uno colgado que nadie ve en el panel. */
+    public function test_an_entry_never_keeps_a_reservation_note(): void
+    {
+        $entry = $this->makeEntry(['reservation_note' => ['es' => 'Os lo damos en la puerta.']]);
+
+        Livewire::actingAs($this->admin())
+            ->test(EditCatalog::class, ['record' => $entry->id])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertNull($entry->fresh()->reservation_note);
+    }
+
+    /**
+     * **La promesa de devolver la señal vive solo en un PACK que COBRA señal**, y cambiarla queda AUDITADO: es una
+     * promesa de dinero, como el resto de la configuración económica.
+     */
+    public function test_the_deposit_refund_promise_lives_only_on_a_pack_with_a_deposit_and_is_audited(): void
+    {
+        $pack = $this->makePack();
+
+        Livewire::actingAs($this->admin())
+            ->test(EditCatalog::class, ['record' => $pack->id])
+            ->fillForm(['deposit_refundable_in_time' => true])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertTrue($pack->fresh()->deposit_refundable_in_time);
+        $log = AuditLog::where('action', 'catalog.updated')->latest()->first();
+        $this->assertTrue($log->payload['changed']['deposit_refundable_in_time']['to'] ?? null, 'el cambio de la promesa queda en la auditoría');
+
+        Livewire::actingAs($this->admin())
+            ->test(EditCatalog::class, ['record' => $pack->id])
+            ->fillForm(['deposit_type' => TicketType::DEPOSIT_NONE, 'deposit_value' => '0'])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertFalse($pack->fresh()->deposit_refundable_in_time, 'sin señal no hay nada que prometer devolver');
+    }
+
     // ─── Validación ──────────────────────────────────────────────────────────
 
     public function test_name_es_is_required(): void

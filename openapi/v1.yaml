@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.33.0
+  version: 1.34.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -6100,6 +6100,9 @@ components:
         - can_add_extras
         - guest_count_deadline
         - invitation_url
+        - product_id
+        - today
+        - cancellation
       additionalProperties: false
       properties:
         id:
@@ -6258,13 +6261,58 @@ components:
             formulario tenga columna de nombre; y que la reserva admita formulario). La invitación vive
             DENTRO del formulario de invitados, en su bloque: es `guest_form_url` con su ancla, compuesta
             por el servidor, que es quien conoce la vista. Desde 1.25.0.
+        product_id:
+          type: integer
+          format: int64
+          description: |
+            El producto de esta reserva (1.34.0, `DECISIONES #775`): con él, «Reservar otra vez» de Mi cuenta abre la
+            compra situada en ese producto. Nunca nulo (la línea se borra con su producto), pero puede ser uno que ya no
+            se vende: quien lo use lo comprueba contra el catálogo.
+        today:
+          type: boolean
+          description: |
+            Si la reserva es HOY en el parque (1.34.0). Lo decide el servidor con su reloj y la zona del parque
+            (`DisplayTime`): la del navegador puede ser otra. Mi cuenta enseña entonces el QR grande de entrada.
+        cancellation:
+          type: object
+          nullable: true
+          additionalProperties: false
+          required: [cutoff_hours, written, span, until, open, deposit_refundable]
+          description: |
+            **El plazo de cambio y cancelación de ESTA reserva** (1.34.0, `DECISIONES #775`), o `null` si su producto no
+            publica plazo (`ticket_types.cancellation_cutoff_hours`, `#699`). Lo INFORMA: cambia y cancela el personal.
+            Todo sale de la misma regla que la ficha del producto (`CancellationCutoffRule`).
+          properties:
+            cutoff_hours:
+              type: integer
+              description: Las horas antes de la hora reservada (24; 72 son los «3 días» de un cumpleaños).
+            written:
+              type: string
+              description: La frase, en el idioma de la petición («hasta 24 h antes», «hasta 3 días antes»).
+            span:
+              type: string
+              nullable: true
+              description: El tramo sin el «hasta … antes» («24 h», «3 días»), o `null` con un plazo de cero horas.
+            until:
+              type: string
+              format: date-time
+              nullable: true
+              description: La fecha límite, en la zona del parque; `null` si la reserva no tiene franja con hora.
+            open:
+              type: boolean
+              description: Si aún se está dentro del plazo, con el reloj del servidor al responder.
+            deposit_refundable:
+              type: boolean
+              description: |
+                Si al cancelar en plazo se DEVUELVE la señal: el interruptor del producto que la instalación enciende
+                solo si sus condiciones lo prometen, y solo en una reserva que nació con señal.
     OrderItemAddon:
       type: object
       description: |
         Complemento contratado dentro de una línea. Deliberadamente con menos campos: no tiene
         franja ni post-form propios —los hereda del padre— y repetirlos invitaría a leerlos del
         sitio equivocado.
-      required: [id, product_name, quantity, charged_subtotal_cents, free_quantity, quantity_label]
+      required: [id, product_name, quantity, charged_subtotal_cents, free_quantity, quantity_label, note]
       additionalProperties: false
       properties:
         id:
@@ -6289,6 +6337,13 @@ components:
             principal (`OrderItem.quantity_label`): el complemento sufría el MISMO defecto `L2`
             —`· 2×` pegado al importe de la línea—, y arreglar solo el principal habría dejado la
             ambigüedad viva una fila más abajo.
+        note:
+          type: string
+          nullable: true
+          description: |
+            El aviso de este complemento en la reserva, ya escrito con su cantidad (1.34.0, `DECISIONES #775`): «Tenéis
+            2 pares de calcetines comprados; os los damos en la puerta.». Lo escribe el panel de cada instalación
+            (dónde se recoge un complemento es suyo); `null` si no lo escribió.
 
     OrderGuestMinors:
       type: object

@@ -364,6 +364,15 @@ son de cualquiera que mida, no de un carril.
   (`SONDA_PAUSA`); una sonda nueva que haga más de un recorrido, igual, o pone a CERO sus limitadores antes de cada uno
   con tinker (`sonda-isla.mjs`, `sonda-cuenta.mjs`: las claves `api` de su IP y de su titular y las de entrar). Medido el
   26-09 con `sonda-cuenta.mjs`: sin ponerlos a cero, la segunda pasada seguida pasó 15 de 40; con ellos, 40 y 40.
+  ⚠️ **Y DENTRO de un recorrido largo**: cada carga de Mi cuenta pide ocho cosas a la API; con las reservas (T5b), un
+  solo recorrido recargaba más de 60 veces por minuto y el `/site` de «Cómo llegar» salió 429 (medido). Se ponen a cero
+  también antes de cada tramo que recarga.
+- **Los datos de una sonda los monta y BORRA la propia sonda, con la forma del dato real** (26-09, T5b):
+  `scripts/sonda-cuenta-datos.php` crea reservas pagadas CON su cobro (`Payment`) y, si hay señal, su reparto como hecho
+  del libro (`deposit_split`, como `OrderCreator`): sin el cobro, el libro dice «pagado 0» y la pantalla miente. Códigos
+  con prefijo propio, borrado al empezar y en el `finally`, y las franjas que tuvo que crear, apuntadas y borradas.
+- **Navegar de `/kids#a` a `/kids#b` NO carga la página** (26-09): el navegador solo cambia el ancla, y la capa se queda
+  donde estaba. Una sonda que quiere la puerta de un enlace pasa antes por `about:blank`.
 - **`npm install` PODA `playwright-core`** (va con `--no-save`; mudada del carril de plataforma el 25-09): reponerlo
   (`/sonda` §1). Y el navegador se pierde al recrear el contenedor (~2 min montarlo;
   `PLAYWRIGHT_BROWSERS_PATH=/home/sail/pw-browsers`).

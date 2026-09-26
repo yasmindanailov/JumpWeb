@@ -33,6 +33,8 @@ import {
     revisarDatos,
 } from '../compra/datos.js';
 import { VISTA, ckDeCuenta, lineaProxima, vistaDeApertura } from './vista.js';
+import { tituloDe } from './reservas.js';
+import { useReservasCuenta } from './useReservasCuenta.js';
 
 /** La «G» del botón de Google: el MISMO fichero que la compra de la isla y el botón oficial del cajón (`#695`). */
 const MARCA_GOOGLE = '/images/providers/google.svg';
@@ -47,6 +49,8 @@ export function useSeccionCuenta(props) {
     const waiverStore = useWaiverStore();
     const locale = document.documentElement.lang || 'es';
     const opciones = () => ({ api, messages: props.messages, auth: props.auth });
+    /** Un texto del motor (el grupo `account`): los de las pantallas que el mockup no dibuja (`#773`·d). */
+    const delMotor = (clave) => t(props.account, clave);
 
     /**
      * `vista` y `subpaso` (el olvido de Entrar, el descargo de Crear); `dir`, la entrada de la vista; `desde` y
@@ -57,15 +61,22 @@ export function useSeccionCuenta(props) {
     const e = reactive({
         vista: VISTA.INICIO, subpaso: '', dir: null, desde: null, qrDesde: null, ocupado: null, aviso: null,
         renovar: false, ent: entradaVacia(), f: datosVacios(), errores: {}, avisoAlta: '', token: '',
-        google: emptyGoogleScreen(),
+        google: emptyGoogleScreen(), rSel: null, cambiarDesdeReserva: false,
     });
     let scroll = 0;
+    // Las reservas (T5b): la próxima, las otras y el historial, y el contacto del parque para «Cambiar o cancelar».
+    const reservas = useReservasCuenta({ textos, locale });
+    const proxima = computed(() => reservas.listas.value.proxima);
+    const hoy = computed(() => proxima.value?.reservation?.today === true);
 
     const caja = () => document.querySelector('[data-isla-scroll]');
     const enfocarError = () => nextTick(() => caja()?.querySelector('[aria-invalid="true"]')?.focus());
 
     function cargar(vista) {
         if (vista === VISTA.INICIO || vista === VISTA.QR) carne.ensure({ api });
+        // Las reservas, al entrar; con la de HOY, la ruta al parque para «Cómo llegar» de Tu QR (situación 14).
+        if (vista === VISTA.INICIO || vista === VISTA.QR) reservas.cargar().then(() => { if (hoy.value) reservas.cargarSitio(); });
+        if (vista === VISTA.CAMBIAR) reservas.cargarSitio();
         if (vista === VISTA.CREAR || vista === VISTA.ALTA_GOOGLE) waiverStore.ensureLegal();
         if (vista === VISTA.ALTA_GOOGLE) {
             loadGoogleScreen({ api }).then((pantalla) => {
@@ -94,7 +105,7 @@ export function useSeccionCuenta(props) {
         Object.assign(e, {
             vista, subpaso: '', dir: null, ocupado: null, aviso: null, renovar: false, errores: {}, avisoAlta: '',
             desde: host?.cuentaDesde ?? null, qrDesde: vista === VISTA.QR ? (host?.cuentaDesde ?? 'fuera') : null,
-            ent: entradaVacia(), f: datosVacios(),
+            ent: entradaVacia(), f: datosVacios(), rSel: null, cambiarDesdeReserva: false,
         });
         cargar(vista);
         if (bloque) irAlBloque(bloque);
@@ -111,16 +122,28 @@ export function useSeccionCuenta(props) {
 
     // ── Moverse dentro de la capa ────────────────────────────────────────────────────────────────────
 
-    /** A una vista, recordando el punto de la lista para volver a él (la flecha vuelve «al mismo punto del scroll»). */
+    /**
+     * A una vista, recordando el punto de la LISTA para volver a él (la flecha vuelve «al mismo punto del scroll»). Solo
+     * al salir del inicio: de «Tu reserva» a «Cambiar o cancelar» no se pisa el punto al que volverá la lista.
+     */
     function a(vista, extra = {}) {
-        scroll = caja()?.scrollTop ?? 0;
+        if (e.vista === VISTA.INICIO) scroll = caja()?.scrollTop ?? 0;
         Object.assign(e, { vista, subpaso: '', dir: 'fwd', renovar: false, ...extra });
         cargar(vista);
     }
 
     function aInicio() {
-        Object.assign(e, { vista: VISTA.INICIO, subpaso: '', dir: 'back', renovar: false });
+        Object.assign(e, { vista: VISTA.INICIO, subpaso: '', dir: 'back', renovar: false, rSel: null });
         nextTick(() => setTimeout(() => { const c = caja(); if (c) c.scrollTop = scroll; }, 60));
+    }
+
+    /** La tarjeta de «Cambiar o cancelar»: la de la reserva abierta o, desde el inicio, la próxima. */
+    const tarjetaCambiar = computed(() => (e.cambiarDesdeReserva ? reservas.buscar(e.rSel) : proxima.value));
+    const cambiarVista = computed(() => (tarjetaCambiar.value ? reservas.cambiar(tarjetaCambiar.value) : null));
+
+    /** «Escribirnos por WhatsApp»: el mensaje ya escrito, en otra pestaña (o en la aplicación, en un móvil). */
+    function escribir() {
+        if (cambiarVista.value?.whatsapp) window.open(cambiarVista.value.whatsapp, '_blank', 'noopener');
     }
 
     /** La X: cierra la capa sin perder nada. El enlace que la abrió se va con ella: recargar no la reabre. */
@@ -266,12 +289,14 @@ export function useSeccionCuenta(props) {
     const ck = computed(() => ckDeCuenta({
         vista: e.vista, subpaso: e.subpaso, desde: e.desde, qrDesde: e.qrDesde, dir: e.dir, ocupado: e.ocupado,
         entrada: e.ent, textos, altaGoogle: { pendiente: e.google.pending !== null },
+        cambiar: { desdeReserva: e.cambiarDesdeReserva, whatsapp: Boolean(cambiarVista.value?.whatsapp) },
         rotulos: {
             altaGoogle: t(props.account, 'google.title'), altaGoogleBoton: t(props.account, 'google.submit'),
             altaGoogleEnviando: t(props.account, 'google.submitting'),
         },
         acciones: {
-            cerrar, alMenu, aInicio, entrar, crear, completarGoogle,
+            cerrar, alMenu, aInicio, entrar, crear, completarGoogle, escribir,
+            aReserva: () => Object.assign(e, { vista: VISTA.RESERVA, subpaso: '', dir: 'back' }),
             aEntrar: () => Object.assign(e, { vista: VISTA.ENTRAR, subpaso: '', dir: 'back', errores: {}, avisoAlta: '' }),
             volverDelDescargo: () => Object.assign(e, { subpaso: '', dir: 'back' }),
         },
@@ -285,22 +310,34 @@ export function useSeccionCuenta(props) {
         fallo: carne.notice || '',
     }));
 
+    // La línea de arriba: con las reservas ya llegadas, la próxima con qué Y cuántos; antes, la del contexto sembrado.
+    const linea = computed(() => {
+        const r = proxima.value?.reservation;
+
+        return r ? lineaProxima(r, { locale, titulo: tituloDe(r) }) : lineaProxima(contexto.context?.next_reservation ?? null, { locale });
+    });
+
     const inicio = computed(() => ({
         nombre: contexto.context?.first_name ?? '',
-        linea: lineaProxima(contexto.context?.next_reservation ?? null, { locale }),
+        linea: linea.value,
         qr: qr.value,
         aviso: e.aviso?.en === VISTA.INICIO ? e.aviso.texto : '',
+        hoy: hoy.value, renovar: e.renovar, renovando: e.ocupado === 'renovar', sinQr: delMotor('account.card.unavailable'),
+        proxima: reservas.bloque(proxima.value),
+        // El contexto ya dice que hay próxima y aún no han llegado las reservas: su hueco espera, sin saltos.
+        esperandoProxima: reservas.s.proximas === null && Boolean(contexto.context?.next_reservation),
+        otras: reservas.otras.value,
     }));
 
     const vistaQr = computed(() => ({
         qr: qr.value, renovar: e.renovar, renovando: e.ocupado === 'renovar', irCuenta: e.qrDesde !== 'cuenta',
         aviso: e.aviso?.en === VISTA.QR ? e.aviso.texto : '',
+        comoLlegar: hoy.value ? reservas.rutaAlParque.value : '',
     }));
 
     const social = computed(() => ({ social: Boolean(props.urls?.google), apple: false, marcaGoogle: MARCA_GOOGLE }));
 
     /** Los textos de siempre de completar el alta de Google (`account.google.*`, solo en su puerta) y del alta. */
-    const delMotor = (clave) => t(props.account, clave);
     const rotulosGoogle = computed(() => ({
         titulo: delMotor('google.title'), intro: delMotor('google.intro'), correo: delMotor('google.email_label'),
         correoPista: delMotor('google.email_hint'), caducada: delMotor('google.expired'), empezar: delMotor('google.restart'),
@@ -315,6 +352,13 @@ export function useSeccionCuenta(props) {
         pantallaEntrar: computed(() => ({ paso: e.subpaso === 'olvido' ? 'olvido' : 'id', valor: e.ent.valor, clave: e.ent.clave, error: e.ent.error, ...social.value })),
         abrirQr: () => a(VISTA.QR, { qrDesde: 'cuenta' }),
         aInicio, decir, renovarQr, olvido, aGoogle, irAlBloque,
+        // Las reservas (T5b): abrir una de «Otras reservas», pedir un cambio (desde la próxima o desde la abierta) y el
+        // historial que crece.
+        abrirReserva: (id) => a(VISTA.RESERVA, { rSel: id }),
+        aCambiar: (desdeReserva) => a(VISTA.CAMBIAR, { cambiarDesdeReserva: desdeReserva === true }),
+        masHistorial: () => reservas.mas(),
+        reservaAbierta: computed(() => reservas.bloque(reservas.buscar(e.rSel))),
+        cambiarVista,
         guardarQr: () => decir(t(textos, 'mi_cuenta.qr.guardado')),
         pedirRenovar: (si) => { e.renovar = si; },
         cambiarEntrada: (campo, valor) => { e.ent = { ...e.ent, [campo]: valor, error: '' }; },

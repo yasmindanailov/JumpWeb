@@ -62,7 +62,7 @@ trait InteractsWithCatalogForm
         }
 
         // 2) Limpieza de textos i18n simples: descartar idiomas vacíos; null si quedan todos vacíos.
-        foreach (['name', 'description', 'period_label', 'badge'] as $field) {
+        foreach (['name', 'description', 'period_label', 'badge', 'reservation_note'] as $field) {
             if (array_key_exists($field, $data)) {
                 $data[$field] = $this->compactI18n($data[$field]);
             }
@@ -413,6 +413,29 @@ trait InteractsWithCatalogForm
         $data['cancellation_cutoff_hours'] = ($type === TicketType::TYPE_ADDON || $raw === null || $raw === '')
             ? null
             : max(0, min(8760, (int) $raw));
+
+        return $data;
+    }
+
+    /**
+     * **Lo que Mi cuenta DICE de lo reservado** (`#775`), cada cosa solo donde tiene sentido: el aviso, en un
+     * COMPLEMENTO (es lo que se recoge en la puerta); la devolución de la señal, en un PACK que cobra señal. Fuera de
+     * ahí se borran, para que un cambio de tipo o de señal no deje una promesa colgada que nadie ve en el panel.
+     *
+     * ⚠️ «Que cobra señal» no se vuelve a mirar aquí, y es medido: sin señal el interruptor está OCULTO (su `visible`
+     *    en `CatalogForm`) y Filament no envía un campo oculto, así que llega AUSENTE y vale `false`. Una segunda
+     *    condición sobre `deposit_type` sobrevivía a su mutante —las dos se tapaban (`DECISIONES #112`)—.
+     *
+     * @param  array<string,mixed>  $data
+     * @return array<string,mixed>
+     */
+    protected function normalizeReservationWording(array $data, string $type): array
+    {
+        if ($type !== TicketType::TYPE_ADDON) {
+            $data['reservation_note'] = null;
+        }
+
+        $data['deposit_refundable_in_time'] = $type === TicketType::TYPE_PACK && (bool) ($data['deposit_refundable_in_time'] ?? false);
 
         return $data;
     }

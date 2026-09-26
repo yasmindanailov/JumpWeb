@@ -19,6 +19,8 @@ import CuentaInicio from './cuenta/CuentaInicio.vue';
 import CuentaQr from './cuenta/CuentaQr.vue';
 import CuentaEntrar from './cuenta/CuentaEntrar.vue';
 import CuentaAltaGoogle from './cuenta/CuentaAltaGoogle.vue';
+import CuentaCambiar from './cuenta/CuentaCambiar.vue';
+import BloqueReserva from './cuenta/BloqueReserva.vue';
 import PantallaDatos from './compra/PantallaDatos.vue';
 import PantallaDescargo from './compra/PantallaDescargo.vue';
 import CajaAntiBot from './compra/CajaAntiBot.vue';
@@ -29,7 +31,8 @@ const props = defineProps(PROPS_MOTOR);
 const {
     abierta, textos, e, ck, inicio, vistaQr, social, firma, authStore, waiverStore, rotulosGoogle, tx, sinQr,
     pantallaEntrar, google, abrirQr, aInicio, renovarQr, olvido, aGoogle, guardarQr, pedirRenovar, cambiarEntrada,
-    cambiarAlta, aCrear, leerDescargo, cambiarGoogle, irAlBloque,
+    cambiarAlta, aCrear, leerDescargo, cambiarGoogle, irAlBloque, abrirReserva, aCambiar, masHistorial, reservaAbierta,
+    cambiarVista,
 } = useSeccionCuenta(props);
 const proveedor = (via) => via === 'google' && aGoogle();
 </script>
@@ -51,6 +54,28 @@ const proveedor = (via) => via === 'google' && aGoogle();
                 v-bind="inicio"
                 @qr="abrirQr"
                 @bloque="irAlBloque"
+                @cambiar="aCambiar(false)"
+                @abrir="abrirReserva"
+                @mas="masHistorial"
+                @guardar="guardarQr"
+                @preguntar="pedirRenovar"
+                @renovar="renovarQr"
+            />
+            <div
+                v-else-if="e.vista === VISTA.RESERVA && reservaAbierta"
+                :style="{ display: 'grid', gap: '16px', maxWidth: '520px', margin: '0 auto' }"
+            >
+                <BloqueReserva
+                    id-bloque="reserva"
+                    :titulo="tx('mi_cuenta.reserva.titulo')"
+                    oculto
+                    v-bind="reservaAbierta"
+                    @cambiar="aCambiar(true)"
+                />
+            </div>
+            <CuentaCambiar
+                v-else-if="e.vista === VISTA.CAMBIAR && cambiarVista"
+                :cambiar="cambiarVista"
             />
             <CuentaQr
                 v-else-if="e.vista === VISTA.QR"

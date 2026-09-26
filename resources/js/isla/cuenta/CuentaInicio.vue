@@ -1,27 +1,38 @@
 <script setup>
 /**
- * **Mi cuenta, el inicio** (`paginas/mi-cuenta/cuenta.jsx`, la vista `inicio`; T5a de §4.13): arriba, las tres
- * respuestas en tres segundos —«Hola, Ana», la próxima en una línea (baja a su bloque) y, con tareas, «Siguiente: …»
- * (T5c)—; después los bloques en su orden. En la T5a, el primero: **Tu QR**, compacto, con «Enseñar mi QR», que lo
- * abre en grande (`PmcQrMini`). Los demás (la próxima, Antes de venir, Otras reservas, Reservar otra vez, Quién viene
- * contigo y los Ajustes) se suman aquí en las tandas que los traen.
+ * **Mi cuenta, el inicio** (`paginas/mi-cuenta/cuenta.jsx`, la vista `inicio`; §4.13): arriba, las tres respuestas en
+ * tres segundos —«Hola, Ana», la próxima en una línea (baja a su bloque) y, con tareas, «Siguiente: …» (T5c)—; después
+ * los bloques en su orden. **Tu QR**: compacto, con «Enseñar mi QR» (`PmcQrMini`), o grande de entrada si la reserva es
+ * HOY, que es lo que va a hacer (T5b). **Tu próxima reserva** y **Otras reservas** con su historial (T5b). Antes de
+ * venir, Reservar otra vez, Quién viene contigo y los Ajustes se suman aquí en las tandas que los traen.
  *
- * Pinta y avisa (`qr`, `bloque`): qué se enseña lo decide `useSeccionCuenta.js`.
+ * Pinta y avisa: qué se enseña lo decide `useSeccionCuenta.js` (y `reservas.js`).
  */
 import { useTextos } from '../piezas/textos.js';
 import { CUENTA } from './estilos.js';
 import AvisoCuenta from './AvisoCuenta.vue';
+import BloqueQr from './BloqueQr.vue';
+import BloqueReserva from './BloqueReserva.vue';
+import BloqueOtras from './BloqueOtras.vue';
 import IconoLucide from '../ui/IconoLucide.vue';
 import BotonSistema from '../ui/BotonSistema.vue';
 import PaseQr from '../ui/PaseQr.vue';
+import EsqueletoCarga from '../ui/EsqueletoCarga.vue';
 
 defineProps({
     nombre: { type: String, default: '' },
     linea: { type: String, default: '' },
     qr: { type: Object, required: true },
     aviso: { type: String, default: '' },
+    hoy: { type: Boolean, default: false },
+    renovar: { type: Boolean, default: false },
+    renovando: { type: Boolean, default: false },
+    sinQr: { type: String, default: '' },
+    proxima: { type: Object, default: null },
+    esperandoProxima: { type: Boolean, default: false },
+    otras: { type: Object, required: true },
 });
-const emit = defineEmits(['qr', 'bloque']);
+const emit = defineEmits(['qr', 'bloque', 'cambiar', 'abrir', 'mas', 'guardar', 'preguntar', 'renovar']);
 const { t, tp } = useTextos();
 </script>
 
@@ -50,7 +61,18 @@ const { t, tp } = useTextos();
                 <span :style="{ minWidth: 0 }">{{ linea }}</span>
             </button>
         </header>
+        <BloqueQr
+            v-if="hoy"
+            :qr="qr"
+            :renovar="renovar"
+            :renovando="renovando"
+            :sin-qr="sinQr"
+            @guardar="emit('guardar')"
+            @preguntar="(si) => emit('preguntar', si)"
+            @renovar="emit('renovar')"
+        />
         <section
+            v-else
             id="mi-qr"
             aria-labelledby="mi-qr-t"
             :style="{ display: 'grid', gridTemplateColumns: 'auto minmax(0,1fr)', alignItems: 'center', gap: '14px', padding: '12px', borderRadius: 'var(--r-xl)', border: '1px solid var(--border-subtle)', background: 'var(--surface-card)', scrollMarginTop: '16px' }"
@@ -84,5 +106,21 @@ const { t, tp } = useTextos();
                 </BotonSistema>
             </div>
         </section>
+        <BloqueReserva
+            v-if="proxima"
+            :titulo="t('mi_cuenta.proxima.titulo')"
+            v-bind="proxima"
+            @cambiar="emit('cambiar')"
+        />
+        <EsqueletoCarga
+            v-else-if="esperandoProxima"
+            kind="card"
+            height="168px"
+        />
+        <BloqueOtras
+            v-bind="otras"
+            @abrir="(id) => emit('abrir', id)"
+            @mas="emit('mas')"
+        />
     </div>
 </template>

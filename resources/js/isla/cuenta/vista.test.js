@@ -12,6 +12,7 @@ const textos = {
 const acciones = {
     cerrar: () => 'cerrar', alMenu: () => 'menu', aInicio: () => 'inicio', aEntrar: () => 'entrar',
     entrar: () => 'entrar!', crear: () => 'crear!', completarGoogle: () => 'google!', volverDelDescargo: () => 'formulario',
+    aReserva: () => 'reserva', escribir: () => 'whatsapp!',
 };
 const ck = (e) => ckDeCuenta({ textos, acciones, ...e });
 
@@ -60,6 +61,40 @@ describe('la próxima reserva en una línea', () => {
     test('sin reserva, nada', () => {
         assert.equal(lineaProxima(null), '');
         assert.equal(lineaProxima({}), '');
+    });
+
+    test('con las reservas ya cargadas, qué Y cuántos (T5b)', () => {
+        assert.equal(
+            lineaProxima({ date: '2026-09-26', time_window: '17:00–18:00', product_name: 'Kids 1 hora' }, { locale: 'es', titulo: 'Kids 1 hora · 2 niños' }),
+            'Sáb 26 · 17:00 · Kids 1 hora · 2 niños',
+        );
+    });
+});
+
+describe('las vistas de las reservas (T5b)', () => {
+    const t5b = { ...textos, mi_cuenta: { ...textos.mi_cuenta, reserva: { titulo: 'Tu reserva' }, cambiar: { banda: 'Cambiar o cancelar', boton: 'Escribirnos por WhatsApp' } } };
+    const ck5 = (e) => ckDeCuenta({ textos: t5b, acciones, ...e });
+
+    test('Tu reserva: su banda, sin acción, y la flecha vuelve a Mi cuenta', () => {
+        const r = ck5({ vista: VISTA.RESERVA, desde: 'menu' });
+
+        assert.equal(r.step, 'Tu reserva');
+        assert.equal(r.onBack(), 'inicio');
+        assert.equal(r.action, null);
+    });
+
+    test('Cambiar o cancelar: desde la reserva abierta vuelve a ella; desde la próxima, a Mi cuenta', () => {
+        assert.equal(ck5({ vista: VISTA.CAMBIAR, cambiar: { desdeReserva: true, whatsapp: true } }).onBack(), 'reserva');
+        assert.equal(ck5({ vista: VISTA.CAMBIAR, cambiar: { desdeReserva: false, whatsapp: true } }).onBack(), 'inicio');
+    });
+
+    test('su acción es escribir por WhatsApp; sin teléfono del parque, ninguna', () => {
+        const con = ck5({ vista: VISTA.CAMBIAR, cambiar: { desdeReserva: false, whatsapp: true } });
+
+        assert.equal(con.step, 'Cambiar o cancelar');
+        assert.equal(con.action.label, 'Escribirnos por WhatsApp');
+        assert.equal(con.action.onClick(), 'whatsapp!');
+        assert.equal(ck5({ vista: VISTA.CAMBIAR, cambiar: { desdeReserva: false, whatsapp: false } }).action, null);
     });
 });
 

@@ -34,6 +34,10 @@ class OrderItemAddonResource extends JsonResource
             // el complemento sufría el MISMO defecto `L2` —`· 2×` pegado al importe— y arreglar solo
             // el principal habría dejado la ambigüedad viva una fila más abajo.
             'quantity_label' => $this->resource->displayQuantityLabel(),
+            // El aviso de este complemento en la reserva, ya escrito con su cantidad (`#775`, contrato 1.34.0): «Tenéis 2
+            // pares de calcetines comprados; os los damos en la puerta.». `null` si la instalación no lo escribió: Mi
+            // cuenta lo nombra entonces con su cantidad (`product_name` · `quantity_label`), sin prometer nada.
+            'note' => $this->resource->ticketType?->reservationNote((int) $this->resource->quantity),
         ];
     }
 }

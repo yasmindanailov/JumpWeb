@@ -236,6 +236,10 @@ class TicketType extends Model
         // Hasta cuántas horas antes se cambia o se cancela (`#699`): lo INFORMA, no lo aplica (cancela el
         // personal). La frase la escribe `CancellationCutoffRule`.
         'cancellation_cutoff_hours' => 'integer',
+        // Lo que Mi cuenta DICE de lo reservado (`#775`): el aviso de un complemento ({@see reservationNote()}) y si la
+        // señal se devuelve al cancelar en plazo. Datos de la instalación, no política del producto.
+        'reservation_note' => 'array',
+        'deposit_refundable_in_time' => 'boolean',
         'featured' => 'boolean',
         'is_sellable' => 'boolean',
         'is_active' => 'boolean',
@@ -302,6 +306,20 @@ class TicketType extends Model
     public function isPack(): bool
     {
         return $this->type === self::TYPE_PACK;
+    }
+
+    /**
+     * **El aviso de este complemento en la reserva del cliente** (`#775`, T5b de `specs/isla-y-landing-nueva.md`
+     * §4.13), en el idioma activo y con la cantidad en `:n` —«Tenéis 2 pares de calcetines comprados; os los damos en
+     * la puerta.»—. `null` si no hay texto: entonces Mi cuenta lo nombra con su cantidad, sin prometer nada.
+     *
+     * ⚠️ Lo escribe el panel de cada instalación: dónde se recoge un complemento es suyo, no del producto.
+     */
+    public function reservationNote(int $quantity): ?string
+    {
+        $nota = trim((string) $this->tr('reservation_note'));
+
+        return $nota === '' ? null : str_replace(':n', (string) $quantity, $nota);
     }
 
     /**

@@ -86,6 +86,8 @@ return [
         'cancellation_hours' => "up to :n\u{00A0}h before",
         'cancellation_days' => "up to :n\u{00A0}days before",
         'cancellation_at_start' => 'up to the booked time',
+        'cancellation_span_hours' => ":n\u{00A0}h",
+        'cancellation_span_days' => ":n\u{00A0}days",
     ],
     'rides' => [
         'eyebrow' => 'What’s inside',

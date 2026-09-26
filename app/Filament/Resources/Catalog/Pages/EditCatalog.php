@@ -48,18 +48,19 @@ class EditCatalog extends EditRecord
         // §9): moverlos cambia el veredicto de fiestas ya vendidas, así que se auditan como el
         // resto de la configuración con consecuencias económicas.
         'guest_age_family', 'guest_age_min', 'guest_age_max',
-        // Lo que la web DICE del plazo de cambio y cancelación (`#699`).
-        'cancellation_cutoff_hours',
+        // Lo que la web DICE del plazo de cambio y cancelación (`#699`), y si promete devolver la señal en plazo
+        // (`#775`): una promesa de dinero, así que se audita como el resto de la configuración económica.
+        'cancellation_cutoff_hours', 'deposit_refundable_in_time',
         'featured', 'is_active', 'is_sellable',
     ];
 
-    private const BOOL_FIELDS = ['featured', 'is_active', 'is_sellable'];
+    private const BOOL_FIELDS = ['featured', 'is_active', 'is_sellable', 'deposit_refundable_in_time'];
 
     private const STRING_FIELDS = ['deposit_type', 'guest_age_family'];
 
     /** Campos i18n/JSON cuyo cambio se audita solo por nombre (no se vuelca el contenido). */
     private const TEXT_FIELDS = [
-        'name', 'description', 'period_label', 'badge', 'features', 'event_fields', 'guest_fields',
+        'name', 'description', 'period_label', 'badge', 'features', 'event_fields', 'guest_fields', 'reservation_note',
     ];
 
     /** @var array<string,mixed> Diff capturado en `mutateFormDataBeforeSave` para auditar en `afterSave`. */
@@ -171,6 +172,7 @@ class EditCatalog extends EditRecord
         // —normalizar, anular fuera del pack y bloquear tramos solapados—, no una copia.
         $data = $this->normalizeGuestAgeFields($data, (string) $record->type);
         $data = $this->normalizeCancellationCutoff($data, (string) $record->type);
+        $data = $this->normalizeReservationWording($data, (string) $record->type);
 
         // 3) Capturar el diff para auditar tras guardar.
         $this->auditPayload = $this->buildAuditDiff($record, $data);
