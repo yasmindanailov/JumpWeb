@@ -52,6 +52,14 @@ class ProductAddon extends Pivot
     /** @var list<string> Lista CERRADA: con sufijos libres ninguna guarda de paridad puede existir. */
     public const STAGES = [self::STAGE_BOOKING, self::STAGE_POSTFORM];
 
+    /** Los BLOQUES de la lista de invitados (F5, `#749`): la pregunta de la tarta y lo de los padres. */
+    public const BLOCK_CAKE = 'cake';
+
+    public const BLOCK_ADULTS = 'adults';
+
+    /** @var list<string> Lista CERRADA, como {@see STAGES}. */
+    public const POSTFORM_BLOCKS = [self::BLOCK_CAKE, self::BLOCK_ADULTS];
+
     protected $casts = [
         'position' => 'integer',
         'is_included' => 'boolean',
@@ -135,6 +143,22 @@ class ProductAddon extends Pivot
     public function isPostFormStage(): bool
     {
         return $this->saleStage() === self::STAGE_POSTFORM;
+    }
+
+    /**
+     * En qué BLOQUE de la lista de invitados va este enganche (F5 de `fiesta-sistema-nuevo.md` §4.11, `#749`): la
+     * pregunta de la tarta, lo de los padres o —`null`— la rejilla de siempre. Es PRESENTACIÓN, no una regla de venta:
+     * un valor desconocido, o puesto en un enganche que no se vende después, se lee `null` en vez de fallar. Por
+     * `getAttributes()`, como {@see saleStage()}.
+     */
+    public function postformBlock(): ?string
+    {
+        if (! $this->isPostFormStage()) {
+            return null;
+        }
+        $block = $this->getAttributes()['postform_block'] ?? null;
+
+        return is_string($block) && in_array($block, self::POSTFORM_BLOCKS, true) ? $block : null;
     }
 
     /** El plazo de corte en horas antes del inicio de la franja; `null` = no declarado. */

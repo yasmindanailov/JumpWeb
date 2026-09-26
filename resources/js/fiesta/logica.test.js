@@ -1,7 +1,26 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { capitalizar, choice, clave, cuentas, estadoFicha, euros, limpiar, soloEdad, vistaInvitacion } from './logica.js';
+import { capitalizar, choice, clave, cuentas, cubrir, estadoFicha, euros, limpiar, soloEdad, vistaInvitacion } from './logica.js';
+
+// F5 (`#749`): los combos y los cubos del diseño (`datos.js → EXTRAS.padres`), en céntimos.
+const COMBOS = [{ para: 6, precio: 3900, max: 5 }, { para: 10, precio: 5900, max: 5 }];
+
+test('lo de los padres: la cuenta más barata que cubre a los adultos, como el diseño', () => {
+    assert.deepEqual(cubrir(COMBOS, 8), { q: [0, 1], coste: 5900, uds: 1 }, 'para 8, un combo de 10 (59 €) y no dos de 6 (78 €)');
+    assert.deepEqual(cubrir(COMBOS, 6), { q: [1, 0], coste: 3900, uds: 1 });
+    assert.deepEqual(cubrir(COMBOS, 12), { q: [2, 0], coste: 7800, uds: 2 }, '78 € frente a 98 € (6+10) o 118 € (10+10)');
+    // A igual precio, la de menos unidades.
+    assert.deepEqual(cubrir([{ para: 5, precio: 1000 }, { para: 10, precio: 2000 }], 10), { q: [0, 1], coste: 2000, uds: 1 });
+});
+
+test('lo de los padres: el tope de cada complemento manda, y sin adultos no se propone nada', () => {
+    assert.deepEqual(cubrir([{ para: 6, precio: 3900, max: 1 }, { para: 10, precio: 5900, max: 1 }], 14), { q: [1, 1], coste: 9800, uds: 2 });
+    assert.equal(cubrir([{ para: 6, precio: 3900, max: 1 }], 14), null, 'ni con el tope se llega: no se inventa una cuenta');
+    assert.equal(cubrir(COMBOS, 0), null);
+    assert.equal(cubrir([], 8), null);
+    assert.equal(cubrir([{ para: 0, precio: 100 }], 8), null, 'una variante sin «para cuántas» no entra en la cuenta');
+});
 
 test('la clave de un nombre ignora tildes, mayúsculas y espacios de más', () => {
     assert.equal(clave('  Álex   Romero '), 'alex romero');

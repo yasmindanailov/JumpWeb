@@ -2636,6 +2636,8 @@ return [
             'age' => 'Edad',
             // `#588`: una por fiesta; con la edad fuera del tramo del pack, la web no deja reservarlo.
             'celebrant_age' => 'Edad del cumpleañero (se comprueba con el tramo del pack)',
+            // F5 de la fiesta (`#749`): en el post-form, la lista sugiere con él cuánto pedir de lo de los padres.
+            'adults' => 'Adultos que se quedan (la lista sugiere cuánto pedir para ellos)',
         ],
         'event_field_required' => 'Obligatorio',
         'event_field_label' => 'Etiqueta',
@@ -2669,6 +2671,11 @@ return [
         // Lo que Mi cuenta DICE de lo reservado (`#775`): datos de la instalación, no política del producto.
         'field_reservation_note' => 'Aviso en la reserva del cliente',
         'reservation_note_hint' => 'Lo que dice Mi cuenta de este complemento en la reserva; :n es la cantidad («Tenéis :n pares de calcetines comprados; os los damos en la puerta.»). Vacío: sale con su nombre y su cantidad.',
+        // F5 de la fiesta (`#749`): para cuántas personas es un complemento, y su familia en la lista de invitados.
+        'field_serves' => 'Para cuántas personas',
+        'serves_hint' => 'Opcional. La lista de invitados lo enseña («Para 6 adultos», «De 12 raciones») y con él sugiere cuántos pedir: si sois más, propone añadir otro.',
+        'field_family' => 'Familia en la lista de invitados',
+        'family_hint' => 'Opcional. Los complementos con la misma familia van juntos bajo este título («Combos», «Cubos de bebidas»), y la lista sugiere lo más barato de cada familia para los adultos que se quedan.',
         'field_deposit_refundable_in_time' => 'Si se cancela en plazo, se devuelve la señal',
         'deposit_refundable_in_time_hint' => 'Mi cuenta lo dice al pedir un cambio («…y te devolvemos la señal»). Enciéndelo solo si tus condiciones lo prometen. No devuelve nada: lo hace el personal.',
         'guest_age_range_required' => 'Si el pack declara una familia por edad, tiene que declarar también su tramo (al menos la edad mínima o la máxima).',
@@ -2718,6 +2725,12 @@ return [
             'postform_without_form_body' => 'El complemento queda guardado, pero el cliente no podrá elegirlo: solo un operador podrá añadirlo desde «Gestionar». Los formularios post-reserva los tienen hoy los packs con fichas de invitados.',
             'show_in_invitation' => 'Se enseña en la invitación',
             'show_in_invitation_hint' => 'Marca aquí el menú (o lo que quieras que vean los padres en la invitación digital de este producto). El mismo complemento puede enseñarse en un pack y no en otro.',
+            // F5 de la fiesta (`#749`): el bloque de la lista de invitados.
+            'postform_block' => 'En la lista de invitados',
+            'postform_block_hint' => 'Dónde lo ve el cliente en su lista. «La tarta»: la pregunta con foto, con «Sin tarta» y «Añadir otra» si no llega para los niños. «Para los padres»: con «¿Cuántos adultos se quedan?» y lo que cubre cada uno. Para agrupar y sugerir, rellena en el complemento «Para cuántas personas» y «Familia».',
+            'postform_block_none' => 'Con los demás complementos',
+            'postform_block_cake' => 'La tarta',
+            'postform_block_adults' => 'Para los padres',
             'is_included' => 'Incluido (gratis)',
             'is_included_hint' => 'Las primeras unidades vienen gratis con el producto. Las que excedan se cobran a su precio.',
             'included_quantity' => 'Unidades incluidas',

@@ -149,6 +149,33 @@ export function vistaInvitacion(campos = {}, textos = {}) {
     };
 }
 
+/**
+ * LO DE LOS PADRES (F5 de `fiesta-sistema-nuevo.md` §4.11, `cubrir()` de `zonas-3-5.jsx`): la cuenta MÁS BARATA que cubre
+ * a `adultos` con las variantes de una familia (cada una «para N», a su precio y con su tope); a igual precio, la de menos
+ * unidades. `null` si ni con los topes se llega. Nunca se aplica sola: la página la PROPONE y el anfitrión la pone.
+ *
+ * @param {{para: number, precio: number, max?: number}[]} variantes
+ * @param {number} adultos
+ * @returns {{q: number[], coste: number, uds: number}|null}
+ */
+export function cubrir(variantes, adultos) {
+    let best = null;
+    const q = variantes.map(() => 0);
+    const rec = (i, resto, coste, uds) => {
+        if (i === variantes.length) {
+            if (resto <= 0 && (!best || coste < best.coste || (coste === best.coste && uds < best.uds))) best = { q: q.slice(), coste, uds };
+            return;
+        }
+        const v = variantes[i];
+        const hasta = Math.min(v.max > 0 ? v.max : Infinity, Math.ceil(Math.max(0, resto) / v.para));
+        for (let n = 0; n <= hasta; n++) { q[i] = n; rec(i + 1, resto - n * v.para, coste + n * v.precio, uds + n); }
+        q[i] = 0;
+    };
+    if (adultos > 0 && variantes.length > 0 && variantes.every((v) => v.para > 0)) rec(0, adultos, 0, 0);
+
+    return best;
+}
+
 /** El espacio duro entre una cifra y su unidad («16 €», «7 años»), como lo escribe el servidor. */
 export const NBSP = String.fromCharCode(160);
 

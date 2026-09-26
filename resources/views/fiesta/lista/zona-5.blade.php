@@ -4,7 +4,9 @@
 @php($inv = $m['invitacion'])
 <section class="pli-z5" data-zona="5" aria-label="{{ __('fiesta.barra.label') }}">
     @unless ($m['solo_lectura'])
-        <x-fiesta.barra-guardar :state="$m['guardar']['estado']" :status="$m['guardar']['estado'] === 'saved' ? __('fiesta.lista.guardar.guardado') : __('fiesta.lista.guardar.nada')" :sticky="false" buttonType="submit" :loadingLabel="__('fiesta.lista.guardar.guardando')" />
+        {{-- «Guardado hoy a las 16:05» (F5c, `#749`): cuándo guardó el titular por última vez; `lista.js` lo vuelve a poner
+             cuando se deshacen los cambios. --}}
+        <x-fiesta.barra-guardar :state="$m['guardar']['estado']" :status="$m['guardar']['estado'] === 'saved' ? $m['guardar']['guardado'] : __('fiesta.lista.guardar.nada')" :sticky="false" buttonType="submit" :loadingLabel="__('fiesta.lista.guardar.guardando')" :data-guardado="$m['guardar']['guardado']" />
     @endunless
     {{-- ⚠️ No se ata a «compartida»: aquí eso se INFIERE (hay respuestas o ya se recordó), y el recordatorio sirve
          justo cuando todavía no ha contestado nadie. Solo cuando se puede compartir y las respuestas siguen abiertas. --}}

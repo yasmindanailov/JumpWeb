@@ -289,7 +289,8 @@ class ApiContractTest extends TestCase
         // chocaría el día que alguien llamara a una columna igual (§1.3·13, §7.2·R3).
         // ▶ `rejoin` («Al final viene», F3c de `fiesta-sistema-nuevo.md`, `#747`) es la hermana de `adopt` y con su misma
         // regla: un `PUT` que no vuelve a contar a nadie no tiene por qué mandar `[]`, y ausente = no se toca ningún «no».
-        'GuestFormRequest' => ['guests', 'general', 'addons', 'expected_version', 'guest_count', 'adopt', 'rejoin'],
+        // ▶ `cake_declined` («Sin tarta», F5, `#749`, 1.39.0), igual: ausente = la pregunta de la tarta no se toca.
+        'GuestFormRequest' => ['guests', 'general', 'addons', 'expected_version', 'guest_count', 'adopt', 'rejoin', 'cake_declined'],
     ];
 
     /** @var array<string, mixed>|null */

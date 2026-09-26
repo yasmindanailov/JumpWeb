@@ -67,6 +67,8 @@ class TicketType extends Model
         'postform_cutoff_hours',
         // D12 (`#574`): si este enganche es «el menú» que la invitación digital enseña.
         'show_in_invitation',
+        // F5 de `fiesta-sistema-nuevo.md` (`#749`): el bloque de la lista de invitados (la tarta, lo de los padres).
+        'postform_block',
     ];
 
     /** Tipos de SEÑAL configurable para packs (#83). */
@@ -122,6 +124,16 @@ class TicketType extends Model
      */
     public const FIELD_TYPE_CELEBRANT_AGE = 'celebrant_age';
 
+    /**
+     * **LOS ADULTOS QUE SE QUEDAN** (F5 de `fiesta-sistema-nuevo.md` §4.11, `#749`). Uno por fiesta, en el post-form: es
+     * el «¿Cuántos adultos se quedan?» de la lista, con el que se sugiere cuánto pedir de lo de los padres. Como las
+     * edades, lo declara el ESQUEMA —no una convención sobre la clave— y su saneo tiene cota ({@see ADULTS_MAX}).
+     */
+    public const FIELD_TYPE_ADULTS = 'adults';
+
+    /** El tope de «¿Cuántos adultos se quedan?»: fuera de él, «no respondido» (como las edades). */
+    public const ADULTS_MAX = 99;
+
     /** Todos los tipos que el producto conoce. **No es la lista que acepta cada esquema**: ver abajo. */
     /** @var list<string> */
     public const FIELD_TYPES = [
@@ -130,6 +142,7 @@ class TicketType extends Model
         self::FIELD_TYPE_TEXTAREA,
         self::FIELD_TYPE_AGE,
         self::FIELD_TYPE_CELEBRANT_AGE,
+        self::FIELD_TYPE_ADULTS,
     ];
 
     /**
@@ -151,6 +164,7 @@ class TicketType extends Model
         self::FIELD_TYPE_NUMBER,
         self::FIELD_TYPE_TEXTAREA,
         self::FIELD_TYPE_CELEBRANT_AGE,
+        self::FIELD_TYPE_ADULTS,
     ];
 
     /** Los que acepta el esquema POR INVITADO (`guest_fields`), el único donde la EDAD significa algo. */
@@ -208,6 +222,9 @@ class TicketType extends Model
         'description' => 'array',
         'period_label' => 'array',
         'features' => 'array',
+        // F5 de `fiesta-sistema-nuevo.md` (`#749`): para cuántas personas es un complemento, y su familia en la lista.
+        'serves' => 'integer',
+        'family' => 'array',
         // La merienda de la invitación por grupos (F1b de `fiesta-sistema-nuevo.md`): tres listas i18n, como `features`.
         'menu_drink' => 'array',
         'menu_food' => 'array',
@@ -936,7 +953,48 @@ class TicketType extends Model
      */
     public static function isNumericFieldType(?string $type): bool
     {
-        return in_array($type, [self::FIELD_TYPE_NUMBER, self::FIELD_TYPE_AGE, self::FIELD_TYPE_CELEBRANT_AGE], true);
+        return in_array($type, [self::FIELD_TYPE_NUMBER, self::FIELD_TYPE_AGE, self::FIELD_TYPE_CELEBRANT_AGE, self::FIELD_TYPE_ADULTS], true);
+    }
+
+    /**
+     * La CLAVE del campo «¿Cuántos adultos se quedan?» del post-form (F5, `#749`), o `null` si el esquema no lo declara.
+     * Por TIPO, nunca por nombre de clave, como {@see guestAgeFieldKey()}; con más de uno, el primero.
+     */
+    public function adultsFieldKey(): ?string
+    {
+        foreach ($this->eventFields(self::EVENT_STAGE_POSTFORM) as $field) {
+            if ($field['type'] === self::FIELD_TYPE_ADULTS) {
+                return (string) $field['key'];
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * El enganche (`product_addons`) por el que este complemento llegó, TIPADO: `null` si no llegó por la relación
+     * `addons()`/`configurableAddons()`. Existe por el trinquete de Larastan: un `$addon->pivot` es un acceso dinámico
+     * que suma una entrada a la línea base, y esa línea solo encoge (F5, `#749`).
+     */
+    public function addonPivot(): ?ProductAddon
+    {
+        $pivot = $this->relationLoaded('pivot') ? $this->getRelation('pivot') : null;
+
+        return $pivot instanceof ProductAddon ? $pivot : null;
+    }
+
+    /**
+     * «Para cuántas personas» es este complemento (F5, `#749`); `null` si no lo dice (el campo es opcional).
+     *
+     * ⚠️ No se llama `serves()`: un método con el nombre de una columna es la trampa de `ProductAddon::saleStage()` —con
+     * la fila leída sin esa columna, `$this->serves` entraría por la puerta de las relaciones—. Por eso lee además de
+     * `getAttributes()`.
+     */
+    public function peopleServed(): ?int
+    {
+        $serves = $this->getAttributes()['serves'] ?? null;
+
+        return is_numeric($serves) && (int) $serves >= 1 ? (int) $serves : null;
     }
 
     /**
@@ -1440,6 +1498,16 @@ class TicketType extends Model
                 return null;
             }
             $value = (string) $age; // normaliza «007» → «7»: la comparación con el tramo es numérica.
+        }
+
+        // Los ADULTOS que se quedan (F5), igual: acotados, y fuera de rango «no respondido». Cero SÍ vale («no se queda
+        // ninguno»): es una respuesta, no un hueco.
+        if ($type === self::FIELD_TYPE_ADULTS && $value !== '') {
+            $adults = (int) $value;
+            if ($adults > self::ADULTS_MAX) {
+                return null;
+            }
+            $value = (string) $adults;
         }
 
         // Cap defensivo (#217): impide inflar la columna JSON con valores enormes (post-form o compra).

@@ -10,7 +10,9 @@
     $pedido = $value > 0 && ! $closed;
 @endphp
 <article {{ $attributes->class(['fi-complemento', 'fi-complemento--con' => $pedido]) }}>
-<div style="opacity: {{ $closed ? '0.6' : '1' }};"><x-pieza.marco kind="image" :src="$image" :alt="$name" :note="$imageNote" aspect="16 / 7" rounded="0" flat /></div>
+{{-- Sin foto (y sin la nota del hueco, que solo lleva el banco del diseño), sin marco: «Hueco de foto» es un marcador del
+     diseño, no algo que deba ver un cliente (F5, «sin dato, sin bloque»). --}}
+@if ($image || $imageNote !== '')<div style="opacity: {{ $closed ? '0.6' : '1' }};"><x-pieza.marco kind="image" :src="$image" :alt="$name" :note="$imageNote" aspect="16 / 7" rounded="0" flat /></div>@endif
 <div style="display: grid; gap: 6px; padding: 14px 16px 16px;">
 <div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 12px;"><h4 style="margin: 0; font-family: var(--font-ui); font-size: var(--fs-body); font-weight: var(--fw-bold); letter-spacing: 0; color: var(--text-strong);">{{ $name }}</h4><span class="pj-num" style="font-family: var(--font-mono); font-size: var(--fs-body-sm); font-weight: 500; color: var(--text-strong); white-space: nowrap;">{{ $price }}</span></div>
 @if ($line !== '')<p style="margin: 0; font-family: var(--font-ui); font-size: var(--fs-body-sm); line-height: 1.45; color: var(--text-body);">{{ $line }}</p>@endif

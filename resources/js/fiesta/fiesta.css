@@ -570,6 +570,8 @@ body.fiesta-lista { margin: 0; background: var(--bg-subtle); font-family: var(--
 .pli-sug{margin:0;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 12px;padding:10px 12px 10px 14px;border-radius:var(--r-md);background:var(--fiesta-nieve);box-shadow:inset 0 0 0 1.5px var(--fiesta-agua-400);font:600 var(--fs-body-sm)/1.4 var(--font-ui);color:var(--fiesta-tinta-900)}
 .pli-sug>span{flex:1 1 200px;min-width:0}
 .pli-sug.ok{box-shadow:inset 0 0 0 1px var(--border-subtle);background:var(--bg-subtle)}
+/* F5 (`#749`): las sugerencias las pinta `lista.js`; sin él se quedan escondidas (el `display` de arriba le ganaría a `hidden`). */
+.pli-sug[hidden]{display:none}
 .pli-aviso-tarta,.pli-padres{margin:0;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:12px 14px;border-radius:var(--r-lg);font:600 var(--fs-body-sm)/1.4 var(--font-ui);color:var(--fiesta-tinta-900)}
 .pli-aviso-tarta{background:var(--surface-card);box-shadow:inset 0 0 0 2px var(--fiesta-sol-500)}
 .pli-padres{background:var(--bg-subtle);box-shadow:inset 0 0 0 1px var(--border-subtle)}

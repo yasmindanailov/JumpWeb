@@ -13,7 +13,7 @@
  */
 /* global document, localStorage, setTimeout, location, navigator, Event */
 import './fiesta.css';
-import { NBSP, capitalizar, choice, clave, euros, limpiar, soloEdad, vistaInvitacion } from './logica.js';
+import { NBSP, capitalizar, choice, clave, cubrir, euros, limpiar, soloEdad, vistaInvitacion } from './logica.js';
 
 const de = document.documentElement;
 const q = (sel, raiz = document) => raiz.querySelector(sel);
@@ -104,13 +104,15 @@ function lista(form) {
 
     // Lo que había al abrir: para saber qué cambió (el punto en la inicial, la cuenta de la barra) y para deshacer.
     const inicial = new Map();
-    const campos = () => qa('input:not([type=hidden]):not([type=submit]), textarea, select, input[type=hidden][name^="guests["]', form)
+    const campos = () => qa('input:not([type=hidden]):not([type=submit]), textarea, select, input[type=hidden][name^="guests["], input[type=hidden][name="cake_quantity"]', form)
         .filter((el) => el.name && !['_token', 'expected_version', 'reply', 'with_names'].includes(el.name) && el.form === form);
     const valorDe = (el) => (el.type === 'checkbox' || el.type === 'radio' ? (el.checked ? el.value : '') : el.value);
     campos().forEach((el) => inicial.set(el, valorDe(el)));
-    // Cada «Al final viene» pendiente de guardar (su `rejoin[]`) es un cambio más.
-    const cambios = () => campos().filter((el) => inicial.has(el) && inicial.get(el) !== valorDe(el)).length
-        + qa('input[type="hidden"][name="rejoin[]"]', form).length;
+    // Cada «Al final viene» pendiente de guardar (su `rejoin[]`) es un cambio más. La TARTA (F5) cuenta UNO, como en el
+    // diseño (`a.tarta !== b.tarta`), aunque cambiar de opción mueva dos radios y su cantidad.
+    const cambios = () => campos().filter((el) => el.name !== 'cake' && el.name !== 'cake_quantity' && inicial.has(el) && inicial.get(el) !== valorDe(el)).length
+        + qa('input[type="hidden"][name="rejoin[]"]', form).length
+        + tartaCambio();
 
     // ── Cada fila: abrir y cerrar, el resumen que se reescribe al teclear, Listo, Quitar con deshacer ──
     const pintaFila = (fila) => {
@@ -430,6 +432,8 @@ function lista(form) {
         }
     };
     let estadoNumero = null;
+    // La tarta y lo de los padres (F5) se repintan con cada cambio; se definen más abajo, con sus piezas.
+    let pintaExtras = () => {};
     const pintaNumero = () => {
         if (!vista || !campoNumero) return;
         const elegido = parseInt(campoNumero.value, 10) || 0;
@@ -470,6 +474,131 @@ function lista(form) {
         campoNumero.dispatchEvent(new Event('change', { bubbles: true }));
         actualiza();
     });
+
+    // ── F5 (§4.11, `#749`): LA TARTA (`PliZona4`, `PliAvisoTarta`) ──
+    // «¿La tarta?» es un radio `cake` (el id de una tarta, o `none`) y «Añadir otra tarta» sube `cake_quantity`: el servidor
+    // lo traduce a las cantidades de siempre. Sin tarta grande (`#749`): si los niños no caben, se propone otra.
+    const tarta = q('[data-tarta]', form);
+    const radiosTarta = tarta ? qa('input[name="cake"]', tarta) : [];
+    const cantidadTarta = tarta ? q('input[name="cake_quantity"]', tarta) : null;
+    const datosTartas = (() => { try { return JSON.parse(tarta?.dataset.tartas || '{}'); } catch { return {}; } })();
+    const tartaElegida = () => radiosTarta.find((r) => r.checked)?.value ?? '';
+    const tartaInicial = { v: tartaElegida(), n: cantidadTarta?.value ?? '' };
+    function tartaCambio() {
+        return tarta && (tartaElegida() !== tartaInicial.v || (cantidadTarta?.value ?? '') !== tartaInicial.n) ? 1 : 0;
+    }
+    // Cuántos sois (el `sois` del diseño): el número elegido, o la lista si lo supera.
+    const sois = () => Math.max(campoNumero ? (parseInt(campoNumero.value, 10) || 0) : Number(tarta?.dataset.sois || 0), enLaLista().length);
+    const pintaTarta = () => {
+        if (!tarta) return;
+        const v = tartaElegida();
+        const d = datosTartas[v] || null;
+        const n = Math.max(1, parseInt(cantidadTarta?.value ?? '1', 10) || 1);
+        const s = sois();
+        // «De 12 raciones», o «De 12 raciones: no llega para 14» (en la elegida, con las que pidió).
+        radiosTarta.forEach((r) => {
+            const dr = datosTartas[r.value];
+            const desc = q('.pz-opciones__desc', r.closest('label'));
+            if (!dr || !dr.serves || !desc) return;
+            desc.textContent = s > dr.serves * (r.value === v ? n : 1)
+                ? choice(t('tarta.no_llega', ''), 1, { r: dr.serves, n: s })
+                : choice(t('tarta.raciones', ''), 1, { n: dr.serves });
+        });
+        const pista = q('.pz-opciones__pista', tarta);
+        if (pista) pista.textContent = v ? (tarta.dataset.pistaCambia || '') : (tarta.dataset.pistaPlazo || '');
+        const sug = q('[data-tarta-sug]', tarta);
+        if (sug) {
+            const total = d && d.serves ? d.serves * n : 0;
+            const otra = q('[data-tarta-otra]', sug);
+            const quitar = q('[data-tarta-quitar]', sug);
+            const texto = q('[data-tarta-sug-texto]', sug);
+            if (total && s > total) {
+                texto.textContent = n === 1 ? choice(t('tarta.poca', ''), 1, { n: s, r: d.serves }) : choice(t('tarta.poca_varias', ''), 1, { n: s, q: n, r: total });
+                otra.hidden = n >= (d.max || 1);
+                quitar.hidden = n <= 1;
+                sug.hidden = false;
+            } else if (total && n > 1) {
+                texto.textContent = choice(t('tarta.varias', ''), 1, { q: n, r: total });
+                otra.hidden = true;
+                quitar.hidden = false;
+                sug.hidden = false;
+            } else {
+                sug.hidden = true;
+            }
+        }
+        // El aviso de arriba: elegida y sin guardar, cambia el texto EN EL MISMO HUECO (no se va: la página subiría).
+        const aviso = q('[data-aviso-tarta]', form);
+        if (aviso) {
+            const tx = q('[data-aviso-texto]', aviso);
+            const ir = q('[data-aviso-ir]', aviso);
+            const irTx = ir ? (q('.pz-enlace__texto', ir) || ir) : null;
+            if (aviso.dataset.original === undefined) { aviso.dataset.original = tx?.textContent ?? ''; aviso.dataset.irOriginal = irTx?.textContent ?? ''; }
+            if (tx) tx.textContent = v === 'none' ? aviso.dataset.sin : (v ? aviso.dataset.elegida : aviso.dataset.original);
+            if (irTx) irTx.textContent = v ? aviso.dataset.ver : aviso.dataset.irOriginal;
+            qa('[data-aviso-icono]', aviso).forEach((ic) => { ic.hidden = (ic.dataset.avisoIcono === 'elegida') !== Boolean(v); });
+        }
+    };
+    let tartaAntes = tartaElegida();
+    radiosTarta.forEach((r) => r.addEventListener('change', () => {
+        // Otra tarta es otra cantidad: se vuelve a una.
+        if (cantidadTarta && r.value !== tartaAntes) cantidadTarta.value = '1';
+        tartaAntes = r.value;
+        actualiza();
+        guardaBorrador();
+    }));
+    const cambiaTartas = (paso) => {
+        const d = datosTartas[tartaElegida()];
+        if (!d || !cantidadTarta) return;
+        cantidadTarta.value = String(Math.min(d.max || 1, Math.max(1, (parseInt(cantidadTarta.value, 10) || 1) + paso)));
+        actualiza();
+        guardaBorrador();
+    };
+    q('[data-tarta-otra]', form)?.addEventListener('click', () => cambiaTartas(1));
+    q('[data-tarta-quitar]', form)?.addEventListener('click', () => cambiaTartas(-1));
+
+    // ── F5: LO DE LOS PADRES (`PliFamilia`): con los adultos puestos, la cuenta más barata de cada familia ──
+    const padres = q('[data-padres]', form);
+    const campoAdultos = padres ? q('[data-adultos] [data-cantidad-campo]', padres) : null;
+    const pintaPadres = () => {
+        if (!padres) return;
+        const adultos = parseInt(campoAdultos?.value ?? '0', 10) || 0;
+        qa('[data-familia]', padres).forEach((fam) => {
+            const sug = q('[data-familia-sug]', fam);
+            const ok = q('[data-familia-ok]', fam);
+            if (!sug || !ok) return;
+            sug.hidden = true;
+            ok.hidden = true;
+            const tarjetas = qa('[data-variante]', fam).filter((c) => Number(c.dataset.serves || 0) > 0);
+            // Lo que ya cubre: lo tecleado en las abiertas y lo pedido en las cerradas.
+            const pedido = (c) => { const campo = q('[data-cantidad-campo]', c); return campo ? (parseInt(campo.value, 10) || 0) : Number(c.dataset.pedido || 0); };
+            const hay = tarjetas.reduce((suma, c) => suma + pedido(c) * Number(c.dataset.serves), 0);
+            const abiertas = tarjetas.filter((c) => q('[data-cantidad-campo]', c));
+            if (adultos <= 0 || abiertas.length === 0) return;
+            if (hay >= adultos) {
+                q('[data-familia-ok-texto]', ok).textContent = choice(t('padres.cubierto', ''), adultos, { count: adultos });
+                ok.hidden = false;
+                return;
+            }
+            const vars = abiertas.map((c) => ({ c, para: Number(c.dataset.serves), precio: Number(c.dataset.precio || 0), max: Number(c.dataset.max || 0) }));
+            const cuenta = cubrir(vars, adultos);
+            if (!cuenta) return;
+            const partes = vars.map((v, i) => (cuenta.q[i] ? `${cuenta.q[i]} ${v.c.dataset.nombre || ''}` : '')).filter(Boolean);
+            const lista = partes.length > 1 ? partes.slice(0, -1).join(', ') + t('numero.y', ' y ') + partes[partes.length - 1] : partes[0];
+            q('[data-familia-sug-texto]', sug).textContent = choice(t('padres.sugerencia', ''), adultos, { count: adultos, partes: lista, precio: euros(cuenta.coste) });
+            const poner = q('[data-familia-poner-texto]', sug);
+            if (poner) poner.textContent = choice(t('padres.poner', ''), cuenta.uds);
+            sug.cuenta = vars.map((v, i) => [q('[data-cantidad-campo]', v.c), cuenta.q[i]]);
+            sug.hidden = false;
+        });
+    };
+    // «Ponerlo(s)»: la cuenta propuesta pasa a las cantidades (nunca sola). Cada campo avisa como si se hubiera tocado.
+    padres?.addEventListener('click', (e) => {
+        const boton = e.target.closest('[data-familia-poner]');
+        const sug = boton?.closest('[data-familia-sug]');
+        if (!sug || !sug.cuenta) return;
+        sug.cuenta.forEach(([campo, n]) => { if (!campo) return; campo.value = String(n); campo.dispatchEvent(new Event('input', { bubbles: true })); });
+    });
+    pintaExtras = () => { pintaTarta(); pintaPadres(); };
 
     // ── Personalizar la invitación: el panel, la nota de «se ven al guardar», el titular y LA VISTA PREVIA EN VIVO (F2) ──
     const pers = q('[data-pers]', form);
@@ -569,15 +698,20 @@ function lista(form) {
     const actualiza = () => {
         marcaUltimas();
         pintaNumero();
+        pintaExtras();
         const n = cambios();
         if (n > 0 || repasar > 0) {
             const status = n > 0 ? choice(t('guardar.cambios', ':count cambios sin guardar'), n) : choice(t('guardar.respuestas', ':count respuestas por repasar'), repasar);
-            const detalle = n > 0
+            let detalle = n > 0
                 ? [repasar ? choice(t('guardar.respuestas', ''), repasar) : '', recuperado ? t('guardar.recuperado', 'Borrador recuperado de este móvil') : t('guardar.movil', 'Borrador en este móvil')].filter(Boolean).join(' · ')
                 : t('guardar.entran', 'Entran en la lista al guardar');
+            // F5: con la tarta ELEGIDA y sin guardar, y su plazo cerrando hoy o mañana, la barra lo dice (`guardarTarta`).
+            const v = tarta ? tartaElegida() : '';
+            if (tarta?.dataset.pronto === '1' && v && v !== 'none' && v !== tartaInicial.v && tarta.dataset.guardarTexto) detalle = tarta.dataset.guardarTexto;
             pintaBarra('dirty', status, detalle);
         } else if (barra?.dataset.estado === 'saved' || barra?.dataset.estadoInicial === 'saved') {
-            pintaBarra('saved', t('guardar.guardado', 'Guardado'), '');
+            // «Guardado hoy a las 16:05» (F5c): el del servidor, no un «Guardado» a secas.
+            pintaBarra('saved', barra?.dataset.guardado || t('guardar.guardado', 'Guardado'), '');
         } else {
             pintaBarra('clean', t('guardar.nada', 'Nada que guardar todavía'), '');
         }
@@ -651,6 +785,7 @@ function lista(form) {
 
     // ── Arranque: el borrador, las filas, la primera pendiente abierta, la barra ──
     recuperaBorrador();
+    tartaAntes = tartaElegida();
     filas().forEach((f) => { pintaFila(f); abre(f, false); });
     const primeraPendiente = filas().find((f) => f.dataset.completa === '0' && !f.classList.contains('fi-fila--vacia') && f.dataset.respuesta !== 'no' && camposDe(f).name);
     if (primeraPendiente) abre(primeraPendiente, true);

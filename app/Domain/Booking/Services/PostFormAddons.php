@@ -259,6 +259,12 @@ final class PostFormAddons
                     default => null,
                 },
                 closesAt: self::deadlineFor($principal, $addon->pivot)?->toIso8601String(),
+                // F5 (`#749`): lo que la lista de invitados necesita para PINTARLO (la tarta, lo de los padres, «Para 6
+                // adultos», la foto). Presentación: nada de esto entra en `reconcile()` ni en el precio.
+                serves: $addon->peopleServed(),
+                family: trim((string) ($addon->tr('family') ?? '')),
+                block: $addon->addonPivot()?->postformBlock(),
+                imageUrl: $addon->imageUrl(),
             );
         }
 

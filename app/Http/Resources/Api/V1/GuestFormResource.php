@@ -77,7 +77,10 @@ class GuestFormResource extends JsonResource
             // lista VACÍA si la instalación no ha configurado ninguno, que es el caso por defecto.
             // ⚠️ Viajan también los CERRADOS con su motivo: ocultarlos haría creer al cliente que lo
             // que pidió se ha perdido.
-            'addons' => PostFormAddonResource::collection(app(PostFormAddons::class)->viewFor($item))->resolve($request),
+            'addons' => PostFormAddonResource::collection($addons = app(PostFormAddons::class)->viewFor($item))->resolve($request),
+            // F5 (1.39.0, `#749`): «Sin tarta» contestado, y la última vez que el titular guardó.
+            'cake_declined' => $item->cakeDeclined($addons),
+            'saved_at' => $item->guest_form_saved_at?->toIso8601String(),
             // El TESTIGO de la reserva: hay que devolverlo al guardar. Sin él, un envío hecho con la
             // pantalla vieja pisaría en silencio lo que el operador acabara de cambiar por teléfono.
             'version' => PostFormAddons::versionOf($item),

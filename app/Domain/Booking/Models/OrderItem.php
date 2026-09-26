@@ -2,6 +2,7 @@
 
 namespace App\Domain\Booking\Models;
 
+use App\Domain\Booking\Contracts\PostFormAddonView;
 use App\Domain\Booking\Services\AgeFamilySeal;
 use App\Domain\Booking\Services\GuestAgeMixReader;
 use App\Domain\Booking\Services\GuestCardOrder;
@@ -69,6 +70,9 @@ class OrderItem extends Model
         'event_data' => 'array',
         'guest_data' => 'array',
         'guest_form_completed_at' => 'datetime',
+        // F5 de `fiesta-sistema-nuevo.md` (`#749`): la última vez que el TITULAR guardó su lista, y «Sin tarta» decidido.
+        'guest_form_saved_at' => 'datetime',
+        'cake_declined_at' => 'datetime',
         // La VERSIÓN del enlace firmado del post-form (`#413` D14): subirla invalida los enlaces ya
         // emitidos. Casteada porque viaja DENTRO de la firma y se compara con `===` contra el `v` de
         // la URL: un `'0'` de SQLite frente a un `0` de MySQL sería una diferencia de motor
@@ -971,6 +975,12 @@ class OrderItem extends Model
             $this->markGuestFormCompleted();
         }
 
+        // «Guardado hoy a las 16:05» (F5 de `fiesta-sistema-nuevo.md` §4.11, `#749`): solo el TITULAR, web o API (el
+        // panel guarda por él, y no es su guardado).
+        if ($by === null) {
+            $this->markGuestFormSaved();
+        }
+
         // `RGPD-02`: el rastro NO lleva PII. Ni un nombre de niño ni una alergia — solo qué reserva
         // se tocó y por dónde entró quien la tocó.
         AuditLogger::log('orders.guest_form_submitted', $this->order, [
@@ -1012,6 +1022,85 @@ class OrderItem extends Model
     public function markGuestFormCompleted(): void
     {
         $this->forceFill(['guest_form_completed_at' => now()])->save();
+    }
+
+    /**
+     * La última vez que el TITULAR guardó su lista (F5, `#749`: «Guardado hoy a las 16:05»). Cada guardado, también uno
+     * idéntico: es lo que el titular hizo, no lo que cambió.
+     *
+     * ⚠️⚠️ **SIN mover `updated_at`**: es el testigo de la página (`PostFormAddons::versionOf`) y el token optimista de
+     * cinco puertas del operador, y por eso `guest_form_completed_at` dejó de re-estamparse en los guardados idénticos
+     * (arriba). Por la consulta base (`toBase()`), que no añade `updated_at`, y la instancia se sincroniza sin marcarse
+     * sucia.
+     */
+    public function markGuestFormSaved(): void
+    {
+        $now = now();
+        static::query()->whereKey($this->getKey())->toBase()->update(['guest_form_saved_at' => $now]);
+        $this->setAttribute('guest_form_saved_at', $now);
+        $this->syncOriginalAttribute('guest_form_saved_at');
+    }
+
+    /**
+     * «Sin tarta» (F5, `#749`): el titular DECIDE que no quiere tarta (el aviso de la tarta sin decidir se va). Elegir una
+     * lo borra. No toca ninguna línea: las cantidades de la tarta las gobierna `PostFormAddons`, como siempre.
+     */
+    public function declineCake(bool $declined): void
+    {
+        if ($declined === ($this->cake_declined_at !== null)) {
+            return;
+        }
+        $this->forceFill(['cake_declined_at' => $declined ? now() : null])->save();
+    }
+
+    /**
+     * La respuesta a la pregunta de la tarta tras un guardado (F5, `#749`), web y API: `$declined` es lo que mandó el
+     * titular (`null` = no la tocó). Va DESPUÉS de `PostFormAddons::reconcile()`: si al final HAY una tarta, la marca de
+     * «Sin tarta» se borra —si no, reaparecería sola el día que esa tarta se quitara—.
+     */
+    public function settleCakeAnswer(?bool $declined): void
+    {
+        if ($declined !== null) {
+            $this->declineCake($declined);
+        }
+        if ($this->cake_declined_at === null) {
+            return;
+        }
+        $cakeIds = [];
+        foreach ($this->ticketType === null ? [] : $this->ticketType->addons as $addon) {
+            if ($addon->addonPivot()?->postformBlock() === ProductAddon::BLOCK_CAKE) {
+                $cakeIds[] = (int) $addon->getKey();
+            }
+        }
+        $hasCake = $cakeIds !== [] && $this->children()
+            ->whereIn('ticket_type_id', $cakeIds)
+            ->where('quantity', '>', 0)
+            ->whereNull('cancelled_at')
+            ->exists();
+        if ($hasCake) {
+            $this->declineCake(false);
+        }
+    }
+
+    /**
+     * ¿Está «Sin tarta» CONTESTADO? Decidido Y sin ninguna unidad de los complementos de la tarta: si un guardado dejó
+     * la marca pero la línea no se retiró (el reconciliador la bloqueó), manda la línea — nunca se enseña «Sin tarta» con
+     * una tarta pedida.
+     *
+     * @param  list<PostFormAddonView>  $addons  lo que `PostFormAddons::viewFor()` devolvió para esta reserva
+     */
+    public function cakeDeclined(array $addons): bool
+    {
+        if ($this->cake_declined_at === null) {
+            return false;
+        }
+        foreach ($addons as $addon) {
+            if ($addon->block === ProductAddon::BLOCK_CAKE && $addon->quantity > 0) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**

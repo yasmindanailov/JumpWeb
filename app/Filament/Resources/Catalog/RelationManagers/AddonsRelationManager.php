@@ -164,6 +164,8 @@ class AddonsRelationManager extends RelationManager
                         // ⚠️ Por método y no por propiedad: un acceso dinámico al pivote suma una
                         // entrada al trinquete de Larastan, y esa línea base solo encoge.
                         'show_in_invitation' => $record->pivot?->showsInInvitation() ?? false,
+                        // F5 (`#749`): el bloque de la lista. La misma trampa: sin esta línea, tocar la posición lo borraría.
+                        'postform_block' => $record->addonPivot()?->postformBlock(),
                         'is_included' => (bool) $record->pivot?->is_included,
                         'included_quantity' => (int) ($record->pivot?->included_quantity ?? 1),
                         'is_mandatory' => (bool) $record->pivot?->is_mandatory,
@@ -288,6 +290,18 @@ class AddonsRelationManager extends RelationManager
                 ->minValue(0)
                 ->default(0)
                 ->required($postForm)
+                ->visible($postForm),
+
+            // F5 de `fiesta-sistema-nuevo.md` (`#749`): en qué bloque de la LISTA DE INVITADOS va (la pregunta de la
+            // tarta, lo de los padres o la rejilla de siempre). Solo en venta posterior: es donde se elige.
+            Select::make('postform_block')
+                ->label(__('admin.catalog.addons.postform_block'))
+                ->helperText(__('admin.catalog.addons.postform_block_hint'))
+                ->options([
+                    ProductAddon::BLOCK_CAKE => __('admin.catalog.addons.postform_block_cake'),
+                    ProductAddon::BLOCK_ADULTS => __('admin.catalog.addons.postform_block_adults'),
+                ])
+                ->placeholder(__('admin.catalog.addons.postform_block_none'))
                 ->visible($postForm),
 
             // D12 · «el menú» de la invitación digital. Es una CASILLA del enganche y no una deducción
@@ -483,6 +497,10 @@ class AddonsRelationManager extends RelationManager
             // D12 (`#574`): «el menú» que la invitación digital enseña. Segunda lista blanca — sin
             // esta línea la casilla del formulario no se escribiría NUNCA, en silencio.
             'show_in_invitation' => (bool) ($data['show_in_invitation'] ?? false),
+            // F5 (`#749`): el bloque de la lista, solo en venta posterior y de la lista cerrada; si no, se limpia.
+            'postform_block' => ($postForm && in_array($data['postform_block'] ?? null, ProductAddon::POSTFORM_BLOCKS, true))
+                ? $data['postform_block']
+                : null,
             'is_included' => (bool) ($data['is_included'] ?? false),
             'included_quantity' => max(1, (int) ($data['included_quantity'] ?? 1)),
             'is_mandatory' => (bool) ($data['is_mandatory'] ?? false),

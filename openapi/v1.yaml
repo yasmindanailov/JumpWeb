@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.38.0
+  version: 1.39.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -6731,6 +6731,8 @@ components:
         - general
         - save_url
         - addons
+        - cake_declined
+        - saved_at
         - version
         - guest_count_editable
         - guest_count_min
@@ -6830,6 +6832,18 @@ components:
             nada online (`DECISIONES #244`).
           items:
             $ref: '#/components/schemas/PostFormAddon'
+        cake_declined:
+          type: boolean
+          description: |
+            **1.39.0** (`DECISIONES #749`). `true` cuando el titular decidió «Sin tarta» y no tiene ninguna de los
+            complementos del bloque `cake`: la pregunta de la tarta está contestada. Se manda al guardar.
+        saved_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: |
+            **1.39.0**. La última vez que el TITULAR guardó el formulario («Guardado hoy a las 16:05»), por la web o la
+            API; lo que guarda el parque no cuenta. `null` = nunca.
         version:
           type: string
           description: |
@@ -7045,6 +7059,12 @@ components:
             type: integer
             format: int64
             minimum: 1
+        cake_declined:
+          type: boolean
+          description: |
+            **1.39.0** (`DECISIONES #749`). «Sin tarta»: `true` decide que no quiere ninguna de los complementos del
+            bloque `cake` (manda además sus cantidades a 0 en `addons`); `false` lo deshace. Ausente = no se toca. Elegir
+            una tarta (una cantidad > 0) la deja contestada igual: `cake_declined` vuelve `false`.
 
     # ─── La INVITACIÓN DIGITAL (`specs/celebracion-e-invitacion.md` §4.10, `DECISIONES #574`) ───
     # Los nombres y las formas se fijan AQUÍ antes de escribir una sola línea de código de API, que
@@ -8227,10 +8247,12 @@ components:
           type: string
         type:
           type: string
-          enum: [text, number, textarea, celebrant_age]
+          enum: [text, number, textarea, celebrant_age, adults]
           description: |
             `celebrant_age` es la edad del CUMPLEAÑERO (una por fiesta): se contesta como número y el
-            servidor la compara con el tramo del pack (`min`/`max`).
+            servidor la compara con el tramo del pack (`min`/`max`). `adults` (**1.39.0**, `DECISIONES #749`) son
+            los adultos que se quedan: un número de 0 a 99, que la lista de invitados usa para sugerir cuánto
+            pedir para ellos.
         required:
           type: boolean
         min:
@@ -8301,6 +8323,10 @@ components:
         - closed
         - closed_reason
         - closes_at
+        - serves
+        - family
+        - block
+        - image_url
       additionalProperties: false
       properties:
         product_id:
@@ -8365,6 +8391,32 @@ components:
           format: date-time
           nullable: true
           description: Cuándo vence su plazo, para poder decírselo al cliente antes de que pase.
+        serves:
+          type: integer
+          nullable: true
+          minimum: 1
+          description: |
+            **1.39.0** (`DECISIONES #749`). Para cuántas personas es («Para 6 adultos», «De 12 raciones»), si el
+            parque lo declara. Con él la lista sugiere cuántos pedir: si sois más, otro. `null` = no lo dice.
+        family:
+          type: string
+          nullable: true
+          description: |
+            **1.39.0**. Su familia en la lista, traducida («Combos», «Cubos de bebidas»): los de la misma familia van
+            juntos bajo ella y la sugerencia para los adultos se hace por familia. `null` = sin familia.
+        block:
+          type: string
+          nullable: true
+          enum: [cake, adults, null]
+          description: |
+            **1.39.0**. En qué bloque de la lista va: `cake` = la pregunta de la tarta (una opción por complemento, más
+            «Sin tarta», que se manda como `cake_declined`); `adults` = para los padres, con «¿Cuántos adultos se
+            quedan?» (el campo general de tipo `adults`); `null` = con los demás.
+        image_url:
+          type: string
+          format: uri
+          nullable: true
+          description: '**1.39.0**. Su foto, URL absoluta; `null` si no tiene.'
 
     AddonQuantity:
       type: object

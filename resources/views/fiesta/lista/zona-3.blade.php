@@ -54,6 +54,11 @@
                     {{-- Como el diseño: `target="_blank"` a secas, sin la cola de `external` (la flecha es de «Cómo llegar»). --}}
                     <div style="margin-top: 16px;"><x-pieza.enlace size="sm" :href="$m['invitacion']['whatsapp']" target="_blank" rel="noopener noreferrer"><x-slot:icono><x-lucide name="message-circle" :size="15" /></x-slot:icono>{{ __('fiesta.lista.numero.alguien_mas') }}</x-pieza.enlace></div>
                 @endif
+                {{-- F5 (`PliZona3`): los padres también esperan. Depende de lo GUARDADO: si se fuera con el primer «+», toda la
+                     zona 4 subiría bajo el dedo. --}}
+                @if ($m['extras']['padres'] !== null && $m['extras']['padres']['abierto'] && $m['extras']['padres']['nada_guardado'])
+                    <p class="pli-padres" style="margin: 16px 0 0;" data-padres-linea><span class="pli-padres-ic" aria-hidden="true"><x-lucide name="coffee" :size="18" /></span><span>{{ __('fiesta.lista.padres.linea') }}</span><x-pieza.enlace size="sm" underline="always" href="#pli-extras-padres">{{ $m['extras']['padres']['ver'] }}</x-pieza.enlace></p>
+                @endif
             </div>
             {{-- MÁS (F4): la pregunta, lo que cuesta cada niño de más (se paga en el parque) y su «Sí». --}}
             <div data-numero-estado="mas"{!! $oculto('mas') !!}>

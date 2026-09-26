@@ -52,6 +52,15 @@ final readonly class PostFormAddonView
         public ?string $closedReason,
         /** Cuándo vence su plazo, en ISO 8601, para poder avisar antes de que pase. */
         public ?string $closesAt,
+        /**
+         * F5 de `fiesta-sistema-nuevo.md` §4.11 (`#749`): PRESENTACIÓN de la lista de invitados, sin peso en el dinero.
+         * Para cuántas personas es (`null` = no lo dice), su familia traducida (`''` = sin familia), el bloque del
+         * enganche (`cake` | `adults` | `null`) y su foto (URL absoluta o `null`).
+         */
+        public ?int $serves = null,
+        public string $family = '',
+        public ?string $block = null,
+        public ?string $imageUrl = null,
     ) {}
 
     public const REASON_CUTOFF = 'cutoff';

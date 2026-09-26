@@ -34,6 +34,11 @@ class PostFormAddonResource extends JsonResource
             'closed' => $view->closed,
             'closed_reason' => $view->closedReason,
             'closes_at' => $view->closesAt,
+            // F5 de la fiesta (1.39.0, `#749`): cómo lo pinta la lista de invitados. Siempre presentes, con su nulo.
+            'serves' => $view->serves,
+            'family' => $view->family !== '' ? $view->family : null,
+            'block' => $view->block,
+            'image_url' => $view->imageUrl,
         ];
     }
 }

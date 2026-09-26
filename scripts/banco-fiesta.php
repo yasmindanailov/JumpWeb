@@ -393,11 +393,15 @@ foreach (['autorizacion-recibo' => 'recibo', 'autorizacion-firmada' => 'firmada'
 // REALES de `guardado` se escriben (para el ojo: `a/lista-guardado.html`, `b/lista-guardado.html`) pero no entran en el
 // lote: no miden lo mismo (A 1280×4040, B 1280×2932: la tarta y los padres) y el juez no puede dar un número.
 $cardLista = (string) file_get_contents($diseno.'/paginas/lista-invitados.card.html');
-$ajusteGuardado = 'const E = window.PLI.ESTADOS.guardado; E.guardadoEn = null; E.form.invitacion.palabras = ""; E.form.invitacion.pistas = ""; '
+// Desde F5c (`#749`) «Guardado hoy a las 12:40» es del producto: el `guardadoEn` del diseño ya no se quita.
+$ajusteGuardado = 'const E = window.PLI.ESTADOS.guardado; E.form.invitacion.palabras = ""; E.form.invitacion.pistas = ""; '
     .'E.form.ninos = E.form.ninos.filter((x) => x.respuesta !== "no").map((x) => Object.assign({}, x, { edad: x.edad === "8" ? "7" : x.edad })); ';
 // Desde F3a (`#747`) la fila de quien cumple ES del producto: A ya no la esconde (antes, `ul.pli-ul:first-of-type`).
-$esconderA = '<style>[data-zona="4"] { display: none; }</style>';
-$esconderB = '<style>[data-zona="4"], [data-zona="5"] > .pli-sub { display: none; }</style>';
+// ✅ Desde F5 (`#749`) la ZONA 4 también (la tarta, lo de los padres, el pie): se compara. Solo se esconden en A los
+// MARCOS de foto (`imageNote` del diseño: «Foto real: …»), que el producto sin foto no pinta («sin dato, sin bloque»).
+// ⚠️ `!important`: la `figure` del diseño lleva `display` EN LÍNEA, que le gana a la hoja (medido: 179 px de más en A).
+$esconderA = '<style>[data-zona="4"] article > div:first-child:has(> figure), .pli-tarta > figure { display: none !important; }</style>';
+$esconderB = '<style>[data-zona="5"] > .pli-sub { display: none; }</style>';
 foreach (['lista-recien' => 'recien', 'lista-guardado' => 'guardado'] as $nombre => $estado) {
     if ($solo !== [] && ! in_array($nombre, $solo, true)) {
         continue;

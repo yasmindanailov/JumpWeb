@@ -275,6 +275,7 @@ Medido en `GuestFormController::show()` (sus 30 claves), `InvitationPageControll
 | **F6a** ✅ | La firma DENTRO del recibo (26-09; `[DECIDIDO]` `#746`): tras «Vamos» y sin firma, el recibo pinta `x-fiesta.firma` con lo que la prueba exige (`#745`/`#706`: nombre y apellidos del niño con la nota de lo que escribió, nacimiento, relación, el descargo en el flujo y su privacidad) y la frase del diseño junto al botón; firmada, «Firmada» con quién firmó (nombre · teléfono). Una sola fuente para las dos pantallas: `ComposesGuardianForm` (el bloqueo, las relaciones, lo que llega de la invitación, el prellenado, los menores a cargo, la URL firmada del envío y lo que vuelve por la sesión) y `Autorizacion::formularioDe/avisoDe`. El envío lleva `desde=recibo` DENTRO de la firma: el error vuelve al recibo, a `#inv-h-aut`, con el foco en su campo; el éxito, al recibo con «Firmada». Arreglado de paso, medido: (1) una fiesta LLENA pintaba «no quedan plazas» a un «sí» atado aunque el firmador le deja (`#576`); (2) el enlace «Firmar» llevaba a un 404 fuera del modo interno: ahora sin nada que firmar no hay sección; (3) la firma compartía cupo con toda ruta con límite numérico (429 al segundo intento): cupo propio `guardian-sign` (SEC-06); (4) un REENVÍO desde un segundo recibo del mismo niño devolvía el formulario vacío: dice «Firmada»; (5) la cabecera con «Ver el parque» desbordaba en móvil (el diseño también): la píldora baja a su fila; (6) `.inv a` pesaba más que un botón con `href`: `:where(.inv) a`. La apertura de la autorización se cuenta en el recibo (`via=invitation`). | `InvitationSigningFlowTest` 9 (+4: la fiesta llena con su control, el reenvío con su control, el cupo con su control, el Listo) · `InvitationReceiptTest` +3 (la firma dentro, el error junto a su campo con el bolso real, sin modo interno con su control) · `PartyFactsTest` +1 · `FiestaModeloTest` +1 (el recibo) · **siete mutaciones, las siete caen** · **el banco: el recibo `si` y `firmada` contra `InvPagina`, 4 de 4 diagnósticos a 0 px** (esconden lo que la prueba exige, «Crear mi QR» de F6b y la cabecera en móvil); **el banco entero 66 de 70**: los cuatro reales que difieren son la cabecera en móvil y los campos del producto en la autorización, con sus diagnósticos a 0 · el flujo real con `curl` (un campo en rojo, lo escrito conservado) · **la sonda `sonda-f6a.mjs` a 390, 360 y 1280: sin errores de página, sin desbordar, el foco en el campo con error, «Firmada» con quién firmó** · suite. |
 | **F3a** ✅ | Quien cumple, la PRIMERA fila de la lista (26-09; `[DECIDIDO owner]` `#747`): el ajuste del pack `honoree_counts` (en el panel), el sello `honoree_row` en `OrderCreator`, la ficha 0 con su espejo en la invitación en los dos sentidos, la ficha clavada (`GuestCardOrder`, las propuestas, los «no», el recordatorio), su plaza en el suelo y en las firmas (`PartyGuests::honoreeSeatsIn`, contrato), `honoree_row` en la API (1.35.0), su fila en la lista con «Es su cumple» y «Personalizar» como espejo. El detalle y las tres partes, §4.8. | Ver §4.8. |
 | **F4** ✅ | La lista que supera la reserva y su «Sí» (26-09; `[DECIDIDO owner]` `#747`: con más niños que el número, guardar se para y se pregunta): fichas de más desde una plantilla, la zona 3 en sus tres estados y viva, el precio de un niño más, las dos guardas. El detalle, §4.9. | Ver §4.9. |
+| **F5** ✅ | La tarta (sin tarta grande: «Añadir otra tarta», `#749`), lo de los padres con «¿Cuántos adultos se quedan?» y sus sugerencias, el aviso de la tarta y «Guardado hoy a las…»: tres tandas, §4.11. Visto por el owner (26-09). | Ver §4.11. |
 | **Idioma** ✅ | El idioma, abajo y en texto (26-09; `[DECIDIDO owner]` `#748`): fuera la píldora del diseño; la invitación, su recibo y la autorización lo eligen solas, como la web (`SetLocale`), y al pie llevan «Español · English · Français». El detalle, §4.10. | Ver §4.10. |
 | **F1…Fn** | Lo que FALTA (§1.4), una pieza por tanda, en el orden que fije el owner (§7). Cada una con su spec de sección aquí, su decisión y, si toca aforo, `VERIFY_CONC=1`. | Por pieza. |
 
@@ -558,6 +559,75 @@ línea lo último de la página, contraste 5,91 (enlaces) y 11,4 (el actual), 44
 primera y «English» vuelve a la misma invitación · el banco: **12 de 12 diagnósticos a 0 px** (esconden la píldora en A
 y la línea en B; la cabecera en móvil vuelve a juzgarse), los 8 reales difieren solo en eso.
 
+### 4.11 F5 · La tarta, lo de los padres y «Guardado hoy a las…» (`[DECIDIDO owner]` `#749`, 26-09)
+
+**El owner** (`#749`): «el mockup se equivoca» en la tarta: **no hay tarta grande**. Algunos complementos (los de comer)
+llevan un campo OPCIONAL «para cuántas personas», y con él la lógica «sois N; es para M: añade uno más»; en la tarta,
+«Añadir otra tarta» donde el mockup dice «Cambiar a la grande». **El resto, fiel al mockup** (`PliZona4`,
+`PliAvisoTarta`, la línea de los padres de `PliZona3`, el «Guardado» de `PliZona5`).
+
+**Medido (26-09)**: la zona 4 del producto es una rejilla de tarjetas (`PostFormAddonView`); el mockup pide lo que el
+catálogo no sabe decir: qué complemento es LA TARTA (una pregunta con foto y «Sin tarta»), cuáles son PARA LOS PADRES y
+en qué FAMILIA van («Combos», «Cubos de bebidas»), para cuántos es cada uno y cuántos adultos se quedan. PlayJump tiene
+hoy una «Tarta» (cantidad, tope 5), tres combos y tres cubos con el «para N» en el NOMBRE, y el campo general «Nº
+aproximado de adultos». `choice_group` no sirve: el panel lo esconde en venta posterior a propósito (`#413` §4.3·4).
+`guest_form_completed_at` tampoco: solo se sella con la lista COMPLETA. Las piezas y la hoja del diseño ya están
+portadas (`x-pieza.opciones`, `x-pieza.marco`, `x-pieza.cantidad`, `x-fiesta.complemento` con `serves`, `.pli-tarta`,
+`.pli-fam`, `.pli-sug`, `.pli-aviso-tarta`, `.pli-padres`).
+
+**Diseño (mío, contra «fiel al mockup» y los principios)**. Todo DATO del panel, nada de PlayJump en el producto:
+
+| Dato | Dónde | Para qué |
+|---|---|---|
+| `ticket_types.serves` (entero, opcional) | el complemento | «Para cuántas personas» (`#749`): la chapa «Para 6 adultos», «De 12 raciones» y las sugerencias. |
+| `ticket_types.family` (i18n, opcional) | el complemento | La familia en la lista («Combos»): agrupa y titula; sin familia, un grupo sin título. |
+| `product_addons.postform_block` (`cake` \| `adults` \| nulo) | el enganche, solo `postform` | La tarta (la pregunta con foto) · para los padres · la rejilla de siempre. Entra en la lista blanca de `sanitizePivotData` (§8 de `complementos-post-reserva.md`: olvidarla lo revierte al guardar). |
+| tipo de campo `adults` | `event_fields` (contrato del catálogo) | «¿Cuántos adultos se quedan?» es ESE campo (`general[clave]`) y sale del bloque de campos generales; lo declara el esquema, no la clave. |
+| `order_items.cake_declined_at` | la reserva | «Sin tarta» decidido y guardado (el aviso se va); se borra al elegir una. |
+| `order_items.guest_form_saved_at` | la reserva | «Guardado hoy a las 16:05»: lo sella `submitGuestForm()` del TITULAR (web y API) SIN mover `updated_at`, que es el testigo de la página y el token de cinco puertas del operador. |
+
+- **La tarta** (enganches `cake`): el marco con la foto del primero que la tenga (sin foto, sin marco); `x-pieza.opciones`
+  «¿La tarta?» con una opción por complemento («De N raciones» si trae `serves`, si no su primera línea; su precio) y
+  «Sin tarta»; la pista del plazo («Hasta hoy a las 17:00» / «Lo cambias hasta…»). Con más niños que raciones
+  (`max(número, en la lista) > serves × cantidad`): «De 12 raciones: no llega para 14» en la opción y «Sois 14 y la tarta
+  es de 12 raciones.» con **«Añadir otra tarta»** (`#749`), hasta el tope del enganche; con dos o más, la línea lo dice y
+  deja quitar una. Fuera de plazo, solo la elegida y «El plazo de la tarta pasó. Llámanos y lo vemos.». La web manda
+  `cake` (id \| `none`) y `cake_quantity`, y el controlador los traduce a las cantidades de siempre ANTES de
+  `PostFormAddons::reconcile()` (el ajuste del dinero no cambia: R1, R2 y las escrituras asimétricas intactas); la API
+  manda las cantidades y `cake_declined`.
+- **Para los padres** (enganches `adults`): el titular y su línea; el `x-pieza.cantidad` de los adultos si el pack tiene el
+  campo; una familia por `family` con sus tarjetas («Para 6 adultos»); debajo de cada una, con adultos puestos, la
+  sugerencia más barata que los cubre (`cubrir()` del diseño, acotada al tope de cada enganche) con «Ponerlo(s)» —nunca
+  se pone sola— o «Cubre a los 8 adultos.».
+- **Arriba, bajo la cabecera**, el aviso de la tarta sin decidir que cierra hoy o mañana (sobre lo GUARDADO; elegida y sin
+  guardar cambia el texto en el mismo hueco); en la zona 3, con el número listo y nada de los padres guardado, «¿Algo para
+  los padres mientras saltan? · Ver combos y cubos»; el pie con los plazos por bloque; los enganches sin bloque, la rejilla
+  de siempre (sin A).
+- **API** (minor): en cada complemento del post-form `serves`, `family`, `block` e `image`; en el formulario
+  `cake_declined` y `saved_at`; `PUT` acepta `cake_declined`; `adults` en el `enum` de tipos de campo.
+
+**Tandas**: **F5a** el dato (migración, panel, dominio, API; sin pantalla) · **F5b** la zona 4, el aviso y la línea de la
+zona 3 (vista, JS, textos; el banco compara la zona 4 del `guardado` con las tres tartas del mockup como tres productos)
+· **F5c** «Guardado hoy a las…». `PostFormAddons` está en el `CRITICAL_RE`: su lectura crece → `VERIFY_CONC=1`.
+**Queda para el parque (DATO)**: raciones de la tarta, «para N» y familia de combos y cubos, el bloque de cada enganche
+y el tipo del campo de adultos; en local, de prueba (carril).
+
+**Hecho (26-09) ✅, visto por el owner en vivo** («todo correcto»). F5a: migración `2026_09_26_210000_add_party_extras_data`, los campos del
+panel (tres listas blancas del enganche), `TicketType::{peopleServed, adultsFieldKey, addonPivot}` (este último por el
+trinquete de Larastan: un `$addon->pivot` nuevo sumaba a la línea base), `ProductAddon::postformBlock()`,
+`OrderItem::{markGuestFormSaved, declineCake, settleCakeAnswer, cakeDeclined}`, la tarjeta del post-form con cuatro datos
+más y la API 1.39.0. F5b: `ListaDeInvitados::extras()` en tres bloques, `fiesta/lista/{zona-4, tarjeta-extra,
+aviso-tarta}`, la línea de los padres en la zona 3, `cubrir()` en `logica.js`, la tarta y los padres en `lista.js`; y,
+de paso, **sin foto, la tarjeta ya no pinta «Hueco de foto»** (un marcador del diseño que veía el cliente; el banco de
+piezas le sigue pasando su nota). F5c: la barra con «Guardado hoy a las…». ❗ Medido y quitado: el tope de la tarta en
+el controlador no decidía nada (`AddonResolver::effectiveQuantity` ya acota; su mutación sobrevivía). **Verificación**:
+`ExtrasDeLaFiestaDatoTest` 8 · `ExtrasDeLaFiestaListaTest` 8 · `node --test` +2 (`cubrir`) · `ApiContractTest` · arnés
+`scripts/mutar-extras-fiesta.sh` **42/42** · la sonda `sonda-f5.mjs` en `JW-OJO-F5` a 390 y 1280 (el aviso y su cambio en
+el mismo hueco, «no llega para 14», «Añadir otra tarta» → 24 raciones, 8 y 16 adultos con la cuenta más barata y
+«Ponerlo», guardar ×2, «Sin tarta», «Guardado hoy a las…»; sin JavaScript, radios y campos numéricos) sin errores ni
+desborde · el banco: `lista-recien` y `lista-guardado-diagnostico` **4 de 4 a 0 px con la zona 4 dentro** (en A solo se
+esconden los marcos de foto del diseño) y las piezas `complementos` 4 de 4.
+
 ## 5. Impacto en invariantes
 
 | ID | Cómo |
@@ -633,6 +703,9 @@ la casilla en `00-REFACTOR.md`. Lo que la revisión corrija se escribe aquí DEL
   firmar con correo. El modelo, §4.8.
 - **26-09, `[DECIDIDO owner]` `#748`**: el idioma **fuera de la cabecera** de la invitación (y de la autorización, que la
   comparte): lo elige la página sola, como la web, y al pie queda una línea de texto discreta. §4.10.
+- **26-09, `[DECIDIDO owner]` `#749`**: en la tarta **el mockup se equivoca: no hay tarta grande**. Un campo OPCIONAL «para
+  cuántas personas» en los complementos (los de comer) y, con él, «sois N, es para M: añade uno más»; en la tarta,
+  «Añadir otra tarta». El resto de F5, fiel al mockup; acepta el resto de mis recomendaciones. §4.11.
 - **25-09 (T3), `[DECIDIDO owner]` `#745`, el censo de campos con opciones**: (1) **la fecha de nacimiento se
   mantiene** (el owner preguntó si la edad del recibo servía: no, es opcional, vive en la respuesta y no entra en la
   prueba); (2) **la relación con el menor se mantiene** (el desplegable); (3) **el adulto escribe nombre y apellidos

@@ -2,7 +2,7 @@
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb` a secas; la instancia al lado, en
 > `~/proyectos/instancias/playjump`, clon de `github.com/yasmindanailov/instancia-playjump`, montada el 25-09) ·
-> Banda: **730–759** (700–729 agotada el 20-09) · Último usado: **`#748`** · La banda está dada de alta en la tabla de
+> Banda: **730–759** (700–729 agotada el 20-09) · Último usado: **`#749`** · La banda está dada de alta en la tabla de
 > `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: **`isla-y-landing-nueva.md`
 > §4.11 «El traspaso al SPA»** (la tarea en curso, `#765`) · `celebracion-e-invitacion.md` §0 · `waiver-por-reserva.md` §0 ·
 > `encuestas.md` §0 · `analitica-fiesta.md` §0 · `analitica.md` §0 y §4.5 · `google-business-profile.md` §0 ·
@@ -78,7 +78,11 @@
   marcado en el pack 105, la fiesta `JW-OJO-F1` (`ojo-f1.php`, `OJO=desmontar`); (8) **de las sondas de F6a**, en esa
   fiesta: las respuestas 260→267 («Sonda …», todas «sí») y sus autorizaciones de prueba (desde la 117); (9) **de F3a**:
   el pack 105 con `honoree_counts` ENCENDIDO y la fiesta sellada `JW-OJO-F3` (reserva 1126; `ojo-f3.php`, fuera de git,
-  imprime sus URL; `OJO=desmontar` la quita y apaga el ajuste). Y siguen montados el fixture «probe-ojo-analitica» (90 pedidos
+  imprime sus URL; `OJO=desmontar` la quita y apaga el ajuste); (10) **de F5 (26-09)**: en el catálogo local, la Tarta
+  (109) «para 12» en el bloque de la tarta, los combos 111–113 (6/10/15) y los cubos 114–116 (6 cada uno, DE PRUEBA) en
+  sus familias y en el bloque de los padres, y «Nº aproximado de adultos» del pack 105 como tipo `adults`; y la fiesta
+  `JW-OJO-F5` (dentro de 3 días, 14 niños: la tarta cierra mañana y no llega). Todo con `ojo-f5.php` (fuera de git; lo
+  de antes, en `ojo-f5-antes.json`; `OJO=desmontar` lo deja como estaba). Y siguen montados el fixture «probe-ojo-analitica» (90 pedidos
   `JW-OJO…`, 25 clientes, 506 sesiones) y el de reseñas «probe-ojo-resenas». ⚠️ **Plataforma dejó la local preparada para
   que el owner pruebe la ISLA** (24-09 noche, `694529a8`): `sidebar.shell = isla` por el panel, `public/_isla-prueba.html`,
   la invitación ENCENDIDA en los packs 105/106 — **«no deshacer sin él»**; el cajón local abre ahora en la isla.
@@ -95,7 +99,9 @@
    ocho respuestas en su §7; ❗ «Ver el parque» va ENCENDIDO con el vídeo de portada, no la recomendada)**. Orden:
    T1a→T4 ✅ · F1 ✅ · F2 ✅ · F6a ✅ (aprobadas, `#747`) · F3 ✅ (quien cumple, su firma, «Al final viene») · F4 ✅
    (26-09: la lista supera la reserva, «Sí» sube el número, guardar se para sin él; arnés `mutar-quien-cumple.sh` 36/36) · el
-   idioma abajo ✅ (`#748`: fuera de la cabecera, sola como la web; §4.10) → F5 la tarta y los combos, el borrador → **F6b** «Tus respuestas» y «Avísame de
+   idioma abajo ✅ (`#748`: fuera de la cabecera, sola como la web; §4.10) · **F5 ✅** (`#749`: sin tarta grande, «para
+   cuántas personas» en los complementos; la zona 4 como el mockup, el aviso de la tarta y «Guardado hoy a las…»; §4.11;
+   arnés `mutar-extras-fiesta.sh` 42/42; visto por el owner en `JW-OJO-F5`) → **F6b** «Tus respuestas» y «Avísame de
    fechas» SOLA tras firmar con correo (`#747`; consentimiento: spec antes). F3 y F4, spec §4.8 y §4.9. Para el ojo:
    `JW-OJO-F3` (sellada, `ojo-f3.php`) y `JW-OJO-F1` (1077; `/invitacion/WxYYnZkkNx7U`). Cada tanda: `git pull` de la instancia + `sha256sum -c`, el banco con control, las guardas de
    piel re-apuntadas o retiradas con su motivo, sonda de VENTANA de las tres y el ojo del owner en `localhost:8081`
@@ -240,22 +246,16 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 
 ## Buzón
 
-- ❗ **Para plataforma (26-09, F3)**: el CONTRATO va por **1.36.0**: tu `#775` usó la 1.34.0, yo la **1.35.0** (`honoree_row`
-  en la ficha de invitados) y la **1.36.0** (`rejoin` en su `PUT`). Tu siguiente, **1.37.0**.
+- ❗ **Para plataforma (26-09, F5, `#749`)**: el CONTRATO **1.39.0** es mío (tras tu 1.38.0): en `PostFormAddon`
+  `serves`, `family`, `block` e `image_url`; en `GuestForm` `cake_declined` y `saved_at`; `PUT` acepta `cake_declined`;
+  `adults` en el `enum` de tipos de campo del catálogo. Tu siguiente, **1.40.0**. ⚠️ `PostFormAddons::viewFor()` (lo
+  que lees en «Antes de venir», si lo lees) lleva cuatro datos más, sin cambiar los de antes. Leído tu buzón de la T5e·1
+  (`#778`): nada tuyo toca la fiesta.
 - **Para plataforma (26-09, F1c)**: `party.park_video` y `party.park_video_poster` son hechos públicos: si
   `instancia-y-landing-fuera.md` §2 cuenta los ajustes públicos, sumadlos.
 
 ### ❗❗ Para el carril de PLATAFORMA (emisor: SPA, 2026-09-25, tarde) — `#765` atendido y tus tres peticiones
-- ✅ **`#765`, atendido**: la fiesta la visto yo, en el PRODUCTO; `git pull` de la instancia antes de cada tanda.
-  ⚠️ Cuando empujes un zip nuevo del owner a la instancia, dímelo aquí: re-mido el censo contra él.
-- ✅ **El contrato de hojas, ATENDIDO por ti (`#769`), gracias**: `InstanceViews::hojas('fiesta')` va en
-  `GuestFormController::show()` desde la T1a y la lista viva ya se viste con PlayJump; sin subir `CONTRATO`, de
-  acuerdo. Leídos `#766` (coincide con mis respuestas 1, 2 y 4 de `#743`), `#767` y `#768` (sin banco por tanda: la
-  T1a ya traía el suyo, 46 pares; desde aquí, una pasada ligera al cerrar cada página). El zip del 25-09 sí tocó una
-  pieza que la fiesta usa: `forms/QuantityStepper.jsx` (el lado del precio envuelve; `editable`): portado en la T1a.
-- ⚠️ **Lo compartido que tocó la T1a (25-09 noche, hecho)**: `vite.config.js` tiene la entrada `resources/js/fiesta/lista.js`
-  (importa `fiesta.css`); no toqué `x-pagina` ni su mapa de `scripts`. En el repo de la INSTANCIA está
-  `publico/instancia/css/fiesta.css` (los valores de PlayJump para los roles `--fiesta-*`), como tu `isla.css`.
+- ⚠️ Cuando empujes un zip nuevo del owner a la instancia, dímelo aquí: re-mido el censo de la fiesta contra él.
 - ❗ **PETICIÓN (tuya: `package.json`, `eslint.config.js`, `StaticAnalysisGateTest`)**: el ESLint del gate no cubre
   `resources/js/fiesta` (`lint:js` = sidebar + cajon; `files` = sidebar, cajon, isla). Añade `fiesta` a los dos sitios
   (y `fiesta/**/*.test.js` al bloque de tests) cuando pases por ahí; hoy está limpio (`npx eslint resources/js/fiesta`, 0).
@@ -275,7 +275,6 @@ el repo de la instancia (lo nuevo), nunca a `main`.
   retira con la clave si nadie más la usa. Estoy en la fiesta.
 - ▶ **(1) T4a·2 = mi T2·9** (las reseñas en `/social-proof`): sigue BLOQUEADA por la decisión del owner sobre caras y
   fotos (`#616`); se la llevo junto a las preguntas de la fiesta y te aviso aquí cuando conteste.
-- ▶ Los dos 401 de consola de la admisión a un invitado (`/me`, `/me/reservation-eligibility`): esperados, nada que hacer.
 
 ### ❗ Para el carril de CORREOS (emisor: SPA, 19→24-09; pendiente de tu «atendido»)
 - ✅ Tu censo pasa de 25 a 27 (`VisitEveNotice` `#717`, `GoogleBusinessLocationChanged` `#725`, tres idiomas);

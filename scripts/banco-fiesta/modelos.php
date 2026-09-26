@@ -114,19 +114,59 @@ return [
         }
         $confirmados = count($conDatos);
 
-        // `EXTRAS.padres` del diseño (combos y cubos), con las claves de `ListaDeInvitados::extras()`.
-        $addon = static fn (int $i, string $nombre, string $linea, int $precio, int $cantidad): array => [
+        // `EXTRAS` del diseño con las claves de `ListaDeInvitados::extras()` (F5, `#749`): lo de los padres en sus dos
+        // familias, «para N adultos»; y la tarta con las opciones que el diseño ENSEÑA en este estado (la grande solo sale
+        // cuando no llega, y aquí sois 10 para 12 raciones): «La nuestra», «Traemos la nuestra» y «Sin tarta».
+        $addon = static fn (int $i, string $nombre, string $linea, int $precio, int $cantidad, int $para): array => [
             'indice' => $i, 'id' => $i + 1, 'nombre' => $nombre, 'linea' => $linea, 'que_lleva' => [$linea], 'regalos' => [],
             'precio' => $precio.$NB.'€', 'precio_unidad' => $precio * 100,
+            'serves' => $para, 'para' => 'Para '.$para.' adultos', 'foto' => null,
             'plazo' => 'Hasta el sábado 26', 'cambia' => 'Lo cambias hasta el sábado 26',
             'cantidad' => $cantidad, 'tope' => 60, 'cerrado' => false, 'motivo' => '',
             'total' => $cantidad > 0 ? ($precio * $cantidad).$NB.'€ en total' : '',
         ];
         $extras = [
-            $addon(0, 'Combo café', 'Café o infusión y bollería', 39, 0),
-            $addon(1, 'Combo picoteo', 'Refrescos, café y algo de picar', 59, $guardado ? 1 : 0),
-            $addon(2, 'Cubo de 6', 'Refrescos o aguas, con hielo', 16, 0),
-            $addon(3, 'Cubo de 10', 'Refrescos o aguas, con hielo', 24, $guardado ? 1 : 0),
+            'hay' => true,
+            'tarta' => [
+                'abierta' => true,
+                'foto' => '',
+                'opciones' => [
+                    ['value' => '101', 'title' => 'La nuestra', 'description' => 'De 12 raciones', 'price' => '25'.$NB.'€', 'disabled' => false],
+                    ['value' => '102', 'title' => 'Traemos la nuestra', 'description' => 'Se cobra el cubierto', 'price' => '10'.$NB.'€', 'disabled' => false],
+                    ['value' => 'none', 'title' => 'Sin tarta', 'description' => '', 'price' => '', 'disabled' => false],
+                ],
+                'elegida' => $guardado ? '101' : null,
+                'cantidad' => 1,
+                'datos' => ['101' => ['serves' => 12, 'max' => 5, 'desc' => null], '102' => ['serves' => null, 'max' => 1, 'desc' => 'Se cobra el cubierto']],
+                // «Aquí, hoy es jueves 24» (`datos.js`): la tarta cierra hoy a las 17:00.
+                'pista_plazo' => 'Hasta hoy a las 17:00',
+                'pista_cambia' => 'Lo cambias hasta hoy a las 17:00',
+                'cuando' => 'hoy a las 17:00',
+                'pronto' => true,
+                'urgente' => ! $guardado,
+                'sois' => $RESERVA['reservados'],
+            ],
+            'padres' => [
+                'abierto' => true,
+                'adultos' => ['clave' => 'adultos', 'name' => 'general[adultos]', 'valor' => $guardado ? 8 : 0],
+                'familias' => [
+                    ['titulo' => 'Combos', 'tarjetas' => [
+                        $addon(0, 'Combo café', 'Café o infusión y bollería', 39, 0, 6),
+                        $addon(1, 'Combo picoteo', 'Refrescos, café y algo de picar', 59, $guardado ? 1 : 0, 10),
+                    ]],
+                    ['titulo' => 'Cubos de bebidas', 'tarjetas' => [
+                        $addon(2, 'Cubo de 6', 'Refrescos o aguas, con hielo', 16, 0, 6),
+                        $addon(3, 'Cubo de 10', 'Refrescos o aguas, con hielo', 24, $guardado ? 1 : 0, 10),
+                    ]],
+                ],
+                'nada_guardado' => ! $guardado,
+                'ver' => 'Ver combos y cubos',
+            ],
+            'lista' => [],
+            // El pie del diseño, tal cual (el producto compone el suyo con los plazos: «lo de los padres, hasta…»).
+            'pie' => 'Se pagan el día de la fiesta, en el parque. La tarta, hasta el jueves 24; las bebidas y los combos, hasta el mismo día.',
+            'total' => $guardado ? '83'.$NB.'€' : '', 'elegidos' => $guardado ? 3 : 0, 'alguno_abierto' => true,
+            'telefono' => $RESERVA['telefono'], 'tel' => $RESERVA['tel'],
         ];
 
         return [
@@ -179,14 +219,12 @@ return [
                 'en_lista' => $guardado ? 10 : 1, 'libres' => $guardado ? 0 : 9, 'lleno' => $guardado,
                 'de_mas' => 0, 'precio_nino' => '16,95'.$NB.'€',
             ],
-            'extras' => [
-                'lista' => $extras, 'total' => $guardado ? '83'.$NB.'€' : '', 'elegidos' => $guardado ? 2 : 0, 'alguno_abierto' => true,
-                'telefono' => $RESERVA['telefono'], 'tel' => $RESERVA['tel'],
-            ],
+            'extras' => $extras,
             'generales' => [],
             'avisos' => [],
             'progreso' => ['done' => $guardado ? $confirmados + 1 : 0, 'total' => $RESERVA['reservados']],
-            'guardar' => ['estado' => 'clean'],
+            // `guardadoEn: "hoy a las 12:40"` del diseño en `guardado` (F5c).
+            'guardar' => $guardado ? ['estado' => 'saved', 'guardado' => 'Guardado hoy a las 12:40'] : ['estado' => 'clean', 'guardado' => 'Guardado'],
             'plazos' => ['respuestas' => true, 'numero' => true, 'extras' => true],
             'privacidad' => '#privacidad',
         ];

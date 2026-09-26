@@ -6,6 +6,7 @@ use App\Domain\Booking\Contracts\GuestCountChange;
 use App\Domain\Booking\Contracts\PostFormAddonView;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\PartyInvitation;
+use App\Domain\Booking\Models\ProductAddon;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Services\GuestAgeMixReader;
 use App\Domain\Booking\Services\GuestCountAdjuster;
@@ -287,6 +288,12 @@ class GuestFormController extends Controller
             ? 'guest-count-'.$countChange->reason
             : ($rejectedText ? 'invitation-text-rejected' : ($rejoinFull ? 'invitation-rejoin-full' : 'guest-form-saved'));
         $desired = $this->submittedGuestFormArray($request, 'addons');
+        // LA TARTA (F5 de `fiesta-sistema-nuevo.md` §4.11, `#749`): la pregunta se traduce a las cantidades de siempre ANTES
+        // del reconciliador, que sigue siendo el único que toca el dinero (R1, R2, escrituras asimétricas intactas).
+        $cake = $this->cakeAnswer($request, $reservation);
+        if ($cake['rows'] !== []) {
+            $desired = array_merge($desired ?? [], $cake['rows']);
+        }
         $extrasCents = 0;
         if ($desired !== null) {
             $fresh = $reservation->fresh(['ticketType.addons', 'order', 'slot', 'children']);
@@ -312,6 +319,8 @@ class GuestFormController extends Controller
                     : 'guest-form-extras-blocked';
             }
         }
+        // «Sin tarta» decidido o deshecho, DESPUÉS de los extras: con una tarta puesta, la marca se borra.
+        ($reservation->fresh(['ticketType.addons']) ?? $reservation)->settleCakeAnswer($cake['declined']);
 
         // El hecho de la RESERVA (`specs/analitica-fiesta.md` §4.2), con lo que esta petición movió: invitados
         // (solo si el ajuste se aplicó), céntimos de extras (con signo) y respuestas adoptadas. Sin nombres.
@@ -677,6 +686,40 @@ class GuestFormController extends Controller
         $rejoin = array_map(intval(...), array_filter($this->submittedGuestFormArray($request, 'rejoin') ?? [], 'is_scalar'));
 
         return $llenas + app(PartyInvitations::class)->rejoinCardsNeeded($reservation, $rejoin, $guests);
+    }
+
+    /**
+     * LA TARTA (F5 de `fiesta-sistema-nuevo.md` §4.11, `#749`): lo que mandó la pregunta —`cake` (el id de uno de sus
+     * complementos, o `none`) y `cake_quantity` («Añadir otra tarta»)— traducido a filas `{product_id, quantity}` de las
+     * tartas EN PLAZO, y si decidió «Sin tarta». Sin `cake` (sin contestar, o cerrada: un radio `disabled` no se envía) no
+     * hay filas y no se toca nada; un id que no es una tarta ofrecida, tampoco. La cantidad NO se acota aquí: el
+     * reconciliador la acota al tope del enganche (`AddonResolver::effectiveQuantity`), y un segundo tope en esta capa no
+     * decidiría nada (medido: su mutación sobrevive).
+     *
+     * @return array{rows: list<array{product_id: int, quantity: int}>, declined: ?bool}
+     */
+    private function cakeAnswer(Request $request, OrderItem $reservation): array
+    {
+        $answer = $request->input('cake');
+        if (! is_scalar($answer) || (string) $answer === '') {
+            return ['rows' => [], 'declined' => null];
+        }
+        $cakes = array_values(array_filter(
+            app(PostFormAddons::class)->viewFor($reservation),
+            static fn (PostFormAddonView $a): bool => $a->block === ProductAddon::BLOCK_CAKE && ! $a->closed,
+        ));
+        $none = (string) $answer === 'none';
+        $chosen = $none ? null : (int) $answer;
+        if ($cakes === [] || (! $none && ! in_array($chosen, array_map(static fn (PostFormAddonView $a): int => $a->productId, $cakes), true))) {
+            return ['rows' => [], 'declined' => null];
+        }
+        $quantity = max(1, (int) (is_scalar($request->input('cake_quantity')) ? $request->input('cake_quantity') : 1));
+        $rows = [];
+        foreach ($cakes as $cake) {
+            $rows[] = ['product_id' => $cake->productId, 'quantity' => $cake->productId === $chosen ? $quantity : 0];
+        }
+
+        return ['rows' => $rows, 'declined' => $none];
     }
 
     /**

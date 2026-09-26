@@ -102,6 +102,8 @@ class GuestFormController extends Controller
             // vuelve a contar. Fuera de `guests` por la misma razón que `adopt`.
             'rejoin' => ['sometimes', 'array', 'max:'.self::MAX_GUESTS],
             'rejoin.*' => ['integer', 'min:1'],
+            // «Sin tarta» (F5 de `fiesta-sistema-nuevo.md` §4.11, `#749`, contrato 1.39.0). Ausente = no se toca.
+            'cake_declined' => ['sometimes', 'boolean'],
         ]);
 
         // El estado ANTES de nuestra propia escritura ({@see addonsExpectedVersion}): `submitGuestForm()`
@@ -179,6 +181,11 @@ class GuestFormController extends Controller
                 return ApiErrorResponse::make(ApiErrorCode::GuestFormStale, 409);
             }
         }
+
+        // La respuesta a la tarta (F5, `#749`), DESPUÉS de los extras: con una tarta puesta, «Sin tarta» se borra.
+        ($item->fresh(['ticketType.addons']) ?? $item)->settleCakeAnswer(
+            array_key_exists('cake_declined', $validated) ? (bool) $validated['cake_declined'] : null,
+        );
 
         return new GuestFormResource($item->fresh(['ticketType.addons', 'order', 'slot', 'children']));
     }

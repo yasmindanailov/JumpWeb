@@ -146,6 +146,17 @@ class CatalogForm
                         ->native(false)
                         ->placeholder(__('admin.catalog.icon_placeholder'))
                         ->helperText(__('admin.catalog.icon_hint')),
+
+                    // «PARA CUÁNTAS PERSONAS» (F5 de `fiesta-sistema-nuevo.md`, `[DECIDIDO owner]` `#749`): opcional, en los
+                    // complementos que se comen o se beben. La lista de invitados lo enseña («Para 6 adultos», «De 12
+                    // raciones») y con él sugiere cuántos pedir («sois 14, es para 12: añade otra»).
+                    TextInput::make('serves')
+                        ->label(__('admin.catalog.field_serves'))
+                        ->numeric()
+                        ->minValue(1)
+                        ->maxValue(999)
+                        ->visible(fn (Get $get): bool => $get('type') === TicketType::TYPE_ADDON)
+                        ->helperText(__('admin.catalog.serves_hint')),
                 ]),
 
                 // **LA FOTO de la ficha** (`DECISIONES #632` P1, T6 del menú de hechos). La sirve
@@ -225,6 +236,14 @@ class CatalogForm
                 ->label(__('admin.catalog.field_features'))
                 ->rows(4)
                 ->helperText(__('admin.catalog.features_hint')),
+
+            // LA FAMILIA en la lista de invitados (F5, `#749`): los complementos con la misma familia van juntos bajo ella
+            // («Combos», «Cubos de bebidas») y la lista sugiere, por familia, lo más barato que cubre a los adultos.
+            TextInput::make("family.{$locale}")
+                ->label(__('admin.catalog.field_family'))
+                ->maxLength(60)
+                ->visible(fn (Get $get): bool => $get('type') === TicketType::TYPE_ADDON)
+                ->helperText(__('admin.catalog.family_hint')),
 
             // LA MERIENDA DE LA INVITACIÓN por grupos (F1b de `fiesta-sistema-nuevo.md`): tres listas i18n que la
             // invitación pinta con su icono («Para beber», «Para comer», «Y para terminar»). Solo tienen sentido en un
