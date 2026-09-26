@@ -42,6 +42,7 @@ return [
         'sheet' => 'Details for :name',
         'birthday' => 'Birthday child',
         'rejoin' => 'Coming after all',
+        'no_viene' => 'Not coming',
         'done' => 'Done',
     ],
     'anadir' => [
@@ -116,6 +117,8 @@ return [
             'cerrada' => ['The number is closed: to add someone, ', 'call us', '.'],
             'repetida' => 'This family replied more than once: the latest reply is shown.',
             'no_viene' => 'Said they can’t come',
+            'vuelve' => 'Coming after all: joins the list when you save.',
+            'vuelve_no_cabe' => 'We saved the list, but there’s no room for anyone else: to count someone who said no, raise the number.',
             'no_vienen' => '{1} Can’t come|[2,*] Can’t come (:count)',
             'no_vienen_baja' => 'If they’re not coming, you can lower the number of guests until :plazo.',
             'sin_producto' => 'No product for this age',

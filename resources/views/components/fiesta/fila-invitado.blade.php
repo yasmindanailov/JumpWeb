@@ -1,10 +1,11 @@
-@props(['id' => 'g', 'name' => '', 'age' => '', 'allergies' => '', 'state' => 'confirmado', 'viaInvite' => false, 'signed' => false, 'skipped' => false, 'dirty' => false, 'open' => false, 'autoFocus' => false, 'last' => false, 'editable' => true, 'birthday' => false, 'labels' => [], 'fallos' => [], 'campos' => null, 'quitar' => false, 'omitir' => false, 'deshacer' => false, 'volver' => false, 'omitirForm' => null, 'omitirValue' => null, 'chapa' => null, 'vacia' => false, 'oculto' => null])
+@props(['id' => 'g', 'name' => '', 'age' => '', 'allergies' => '', 'state' => 'confirmado', 'viaInvite' => false, 'signed' => false, 'skipped' => false, 'dirty' => false, 'open' => false, 'autoFocus' => false, 'last' => false, 'editable' => true, 'birthday' => false, 'labels' => [], 'fallos' => [], 'campos' => null, 'quitar' => false, 'omitir' => false, 'deshacer' => false, 'volver' => false, 'volverValue' => null, 'omitirForm' => null, 'omitirValue' => null, 'chapa' => null, 'vacia' => false, 'oculto' => null])
 @php
     /*
      * UN NIÑO de la lista de invitados (`invitados/GuestRow.jsx`): nombre, edad, alergias y su autorización, con la
      * chapa «por la invitación» si contestaron sus padres. Se toca entera y abre su ficha, de tres campos y ni uno
      * más. Quien cumple va primero, con su chapa, y no se quita. Un «No puede venir» se recupera con «Al final
-     * viene» (`volver`). Lo que abre y cierra es JS de la página (`data-fila`); sin JavaScript la ficha sale abierta,
+     * viene» (`volver`); con `volverValue` (el id de la respuesta, F3c) es un botón de ENVÍO `rejoin[]`: sin
+     * JavaScript guarda la lista y lo vuelve a contar, y con él la página lo intercepta. Lo que abre y cierra es JS de la página (`data-fila`); sin JavaScript la ficha sale abierta,
      * con sus campos, que es lo que viaja en el formulario (`campos`: los `name` de cada uno; por defecto, los del
      * diseño). Los estilos fijos van EN LÍNEA como el JSX; la fila, el chevron y la ficha, por `.fi-fila` en
      * `fiesta.css`, porque tienen estado.
@@ -38,7 +39,7 @@
 @php
     $resumen = trim(ob_get_clean());
 @endphp
-@if ($canOpen)<button type="button" aria-expanded="{{ $open ? 'true' : 'false' }}" aria-controls="{{ $regionId }}" class="fi-fila__cabecera" data-fila-abrir>{!! $resumen !!}</button>@else<div class="fi-fila__cabecera">{!! $resumen !!}@if ($skipped && $deshacer)<x-pieza.enlace size="sm" underline="always" data-act="deshacer">{{ $L['undo'] }}</x-pieza.enlace>@endif{{ '' }}@if ($no && $volver)<x-pieza.enlace size="sm" underline="always" style="flex: 0 0 auto;" data-act="volver"><x-slot:icono><x-lucide name="user-round-check" :size="15" /></x-slot:icono>{{ $L['rejoin'] }}</x-pieza.enlace>@endif</div>@endif
+@if ($canOpen)<button type="button" aria-expanded="{{ $open ? 'true' : 'false' }}" aria-controls="{{ $regionId }}" class="fi-fila__cabecera" data-fila-abrir>{!! $resumen !!}</button>@else<div class="fi-fila__cabecera">{!! $resumen !!}@if ($skipped && $deshacer)<x-pieza.enlace size="sm" underline="always" data-act="deshacer">{{ $L['undo'] }}</x-pieza.enlace>@endif{{ '' }}@if ($no && $volver)<x-pieza.enlace size="sm" underline="always" style="flex: 0 0 auto;" data-act="volver" :type="$volverValue !== null ? 'submit' : null" :name="$volverValue !== null ? 'rejoin[]' : null" :value="$volverValue" :data-rejoin="$volverValue"><x-slot:icono><x-lucide name="user-round-check" :size="15" /></x-slot:icono>{{ $L['rejoin'] }}</x-pieza.enlace>@endif</div>@endif
 @if ($canOpen)
 <div id="{{ $regionId }}" role="group" aria-label="{{ __('fiesta.fila.sheet', ['name' => $name !== '' ? $name : $L['noName']]) }}" class="fi-fila__ficha" data-fila-ficha>
 <x-pieza.campo :id="$id.'-nombre'" :name="$campos['name']" :label="$L['name']" :value="$name" :error="$fallos['name'] ?? ''" autocomplete="off" autocapitalize="words" enterkeyhint="next" :autofocus="$autoFocus === true || $autoFocus === 'name'" data-campo="name" />

@@ -108,7 +108,9 @@ function lista(form) {
         .filter((el) => el.name && !['_token', 'expected_version', 'reply', 'with_names'].includes(el.name) && el.form === form);
     const valorDe = (el) => (el.type === 'checkbox' || el.type === 'radio' ? (el.checked ? el.value : '') : el.value);
     campos().forEach((el) => inicial.set(el, valorDe(el)));
-    const cambios = () => campos().filter((el) => inicial.has(el) && inicial.get(el) !== valorDe(el)).length;
+    // Cada «Al final viene» pendiente de guardar (su `rejoin[]`) es un cambio más.
+    const cambios = () => campos().filter((el) => inicial.has(el) && inicial.get(el) !== valorDe(el)).length
+        + qa('input[type="hidden"][name="rejoin[]"]', form).length;
 
     // ── Cada fila: abrir y cerrar, el resumen que se reescribe al teclear, Listo, Quitar con deshacer ──
     const pintaFila = (fila) => {
@@ -186,6 +188,7 @@ function lista(form) {
         const fila = act.closest('[data-fila]');
         if (act.dataset.act === 'listo' && fila) { e.preventDefault(); abre(fila, false); }
         if (act.dataset.act === 'quitar' && fila) { e.preventDefault(); quitar(fila); }
+        if ((act.dataset.act === 'volver' || act.dataset.act === 'no-viene') && fila) { e.preventDefault(); vuelve(fila, act, act.dataset.act === 'volver'); }
     });
     // Intro en un campo de una ficha pasa al siguiente y, en el último, cierra: nunca guarda.
     form.addEventListener('keydown', (e) => {
@@ -205,6 +208,34 @@ function lista(form) {
         actualiza();
         guardaBorrador();
     });
+
+    // «AL FINAL VIENE» (F3c, `#747`): la familia dijo que no y cambia de opinión. Como el `volver()` del diseño, la fila
+    // pasa a «viene» y sigue en su sitio hasta guardar; «No viene» lo deshace. Lo que viaja es `rejoin[]` (el servidor lo
+    // adopta en su ficha, o en la primera libre). Sin JavaScript el mismo botón ENVÍA el formulario con su `rejoin[]`.
+    const vuelve = (fila, boton, si) => {
+        const id = boton.dataset.rejoin;
+        if (!id) return;
+        let oculto = qa('input[type="hidden"][name="rejoin[]"]', form).find((el) => el.value === id);
+        if (si && !oculto) { oculto = document.createElement('input'); oculto.type = 'hidden'; oculto.name = 'rejoin[]'; oculto.value = id; form.append(oculto); }
+        if (!si && oculto) oculto.remove();
+        fila.dataset.respuesta = si ? 'si' : 'no';
+        fila.dataset.vuelve = si ? '1' : '0';
+        const meta = q('[data-fila-meta]', fila);
+        if (meta) {
+            if (fila.dataset.metaNo === undefined) fila.dataset.metaNo = meta.textContent;
+            meta.textContent = si ? t('la_lista.vuelve', 'Al final viene: entra en la lista al guardar.') : fila.dataset.metaNo;
+        }
+        const nombre = q('[data-fila-nombre]', fila);
+        if (nombre) nombre.style.color = si ? 'var(--text-strong)' : 'var(--text-muted)';
+        // El texto del enlace del sistema vive en su `.pz-enlace__texto` (no es un nodo directo del botón).
+        const texto = q('.pz-enlace__texto', boton);
+        if (texto) {
+            if (boton.dataset.textoVolver === undefined) boton.dataset.textoVolver = texto.textContent;
+            texto.textContent = si ? t('fila.no_viene', 'No viene') : boton.dataset.textoVolver;
+        }
+        boton.dataset.act = si ? 'no-viene' : 'volver';
+        actualiza();
+    };
 
     // «Quitar» (solo los que añadió el anfitrión): la ficha se vacía y se esconde; «Deshacer» la devuelve.
     const deshacer = q('[data-deshacer]', form);

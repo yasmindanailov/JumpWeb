@@ -105,7 +105,7 @@ programa «producto e instancias» separa el producto de sus instancias.
 - [x] T4 · la invitación digital, **cerrada** en seis unidades verdes (spec §10.4, `#573`→`#578`; concurrencia verificada sobre InnoDB, RGPD al día, la API). ⚠️ En producción desde v1.1.0 **con los dos interruptores APAGADOS**: encenderlos es DATO del owner.
 - [x] **T5, T6, T7 y el borde `§7.1·5`: la invitación digital, CERRADA ENTERA** (`#701`→`#718`, spec §10.5–§10.18, ✅ del owner en vivo el 20-09): la página pública, el aterrizaje, los tres correos y el orden de las fichas al recortar; el detalle, en su § de la spec. ⚠️ **SIN DESPLEGAR**, con **una migración** (`order_items.eve_notice_at`).
 - [ ] La invitación: solo falta **desplegar** (T5–T7 + migración) y **encender** (dato del owner); los tres huecos del ✅, en el §0 de la spec.
-- [ ] ▶ **LA FIESTA DEL SISTEMA NUEVO** (`specs/fiesta-sistema-nuevo.md` ✅ `#743`): T0→T4 ✅ · F1 ✅ · F2 ✅ · F6a ✅ · F3a ✅ (`#747`) → F3b/F3c → F4… (la lista y el recibo).
+- [ ] ▶ **LA FIESTA DEL SISTEMA NUEVO** (`specs/fiesta-sistema-nuevo.md` ✅ `#743`): T0→T4 ✅ · F1 ✅ · F2 ✅ · F6a ✅ · F3 ✅ (`#747`) → F4 → F5 → F6b (la lista y el recibo).
 - [ ] El OJO del owner en un teléfono de verdad · el cuaderno de entrega del cajón · el botón del sistema.
 
 ### El PANEL: la exención del menor y el ROL DE PUERTA ✅ código — `#320`

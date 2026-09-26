@@ -80,9 +80,10 @@ Medido en `GuestFormController::show()` (sus 30 claves), `InvitationPageControll
 - Z2 · **HAY**: las fichas de `guest_data` con su estado, las respuestas por repasar (`proposals`, con «repetida»),
   la chapa «por la invitación», «No lo apuntes» (`dismissReply`), firmada/falta por niño (`guestRegimes`), el
   pegado de nombres (`logic.js`), la línea de las edades (`ageMix`, `ageSurcharge`). ✅ **En F3a (26-09, `#747`)**: quien cumple como
-  FILA de la lista («Es su cumple»; la ficha 0 de las reservas que lo sellan, §4.8). **FALTA**: la lista **sin tope** (hoy `sanitizeGuestData()` es posicional y acotada a `quantity`: §7·3), «Al final viene» (una respuesta
-  «no» que el anfitrión vuelve a contar), «Quitar» con deshacer, el `GuestComposer` (añadir de uno en uno con
-  Intro), **tres campos y ni uno más** (los packs de PlayJump tienen cinco columnas: §7·6, DATO).
+  FILA de la lista («Es su cumple»; la ficha 0 de las reservas que lo sellan, §4.8); **en F3c**, «Al final viene» (un
+  «no» que el anfitrión vuelve a contar). «Quitar» con deshacer y el `GuestComposer` (añadir de uno en uno con Intro)
+  venían de la T1a (medido en F3a). **FALTA**: la lista **sin tope** (hoy `sanitizeGuestData()` es posicional y acotada
+  a `quantity`: §7·3, F4), **tres campos y ni uno más** (los packs de PlayJump tienen cinco columnas: §7·6, DATO).
 - Z3 · **HAY**: el número con su plazo, subir y bajar dentro del suelo (`guestCount`, `#444`), «Solo pagas los niños
   que vengan». **FALTA**: el `PlacesMeter` con más niños que plazas (ámbar), «Seréis N… ¿Es correcto?» que SUBE el
   número desde la lista, «Invitar a más» (§7·3, aforo).
@@ -439,6 +440,18 @@ Medido en `GuestFormController::show()` (sus 30 claves), `InvitationPageControll
 - **Una clave nueva del presentador es una clave nueva del banco**: `FiestaModeloTest` lo exige, y el modelo del diseño
   gana la fila de quien cumple (el par de la lista guardada vuelve a 0 sin esconderla).
 
+**La F3b y la F3c (26-09)**:
+- ❗ **Un arnés que copia por NOMBRE BASE se pisa a sí mismo** en cuanto dos ficheros se llaman igual (la web y la API tienen
+  su `GuestFormController.php`): la restauración habría escrito un controlador encima del otro. Copia por ruta entera.
+- **La firma de quien cumple no es un justificante**: es la de su ficha de menor a cargo. Mirar solo lo de invitados le
+  ponía «Falta» a un niño firmado.
+- **«Al final viene» reescribe la respuesta, como el diseño**, y deja el rastro (`host_rejoined_at`): el «no» fue del padre
+  y el «sí», del anfitrión. De paso el recibo del padre, si lo reabre en sus 24 h, le ofrece la ficha y la firma.
+- **Declarado**: dos guardados A LA VEZ que vuelven a contar a dos niños con UNA sola ficha libre pueden escribir la misma
+  ficha (las fichas no se guardan bajo un lock, como siempre en el post-form); el suelo sale alto, el lado seguro.
+- ❗ **El texto de un enlace del sistema vive en `.pz-enlace__texto`**, no en un nodo del botón: el primer intento no
+  cambiaba «Al final viene» por «No viene». Lo vio la sonda.
+
 ### 4.8 F3 · Quien cumple y la lista del diseño (`[DECIDIDO owner]` `#747`, 26-09)
 
 **Lo que dice el diseño** (`lista-invitados/estado.jsx`): UNA lista `ninos[]`; quien cumple es la fila `origen: cumple`,
@@ -470,8 +483,8 @@ El suelo del número (`GuestCountPolicy`) y las plazas de firma (`GuardianPlaces
 | Parte | Qué | Verificación |
 |---|---|---|
 | **F3a** ✅ | El ajuste del pack (y en el panel), el sello, la ficha 0 y su espejo, la ficha clavada, el suelo y las plazas, la API (1.35.0; plataforma usó la 1.34.0 en `#775`); la fila de quien cumple en la lista («Es su cumple») y «Personalizar» como su espejo. | `QuienCumpleFilaTest` 11 · `ModuleContractsTest` (la plaza llega por el contrato) · **`scripts/mutar-quien-cumple.sh` 17/17** (el 17.º cazó una aserción que pasaba por casualidad) · la lista `guardado` con su fila **a 0 px contra el diseño** (ya no se esconde) · la sonda `sonda-f3.mjs` a 390 y 1280 · `VERIFY_CONC=1` · suite. |
-| **F3b** | ⚠️ Medido en F3a: **la T1a ya lo trajo casi todo** (las fichas vacías escondidas con JS, «Añadir a mano» de uno en uno con Intro y sin repetidos, «Pegar una lista», «Quitar» con «Deshacer», el tope del número con «No caben más»). Queda: la firma de la fila de quien cumple (hoy dice «Falta» aunque el anfitrión firmara por él como menor a cargo: su estado sale de su ficha de menor, no de los justificantes de invitados) y el repaso sin JavaScript. | Pruebas · la sonda. |
-| **F3c** | «Al final viene»: los «no» abajo, con el botón mientras el número está en plazo; pasan a ser una ficha que cuenta; «No viene» lo deshace antes de guardar. La respuesta del padre no se reescribe. | Pruebas del dominio · la sonda. |
+| **F3b** ✅ | ⚠️ Medido en F3a: **la T1a ya lo trajo casi todo** (las fichas vacías escondidas con JS, «Añadir a mano» de uno en uno con Intro y sin repetidos, «Pegar una lista», «Quitar» con «Deshacer», el tope del número con «No caben más»). Lo que faltaba: **la firma de la fila de quien cumple** sale de su ficha de MENOR A CARGO del anfitrión (exención vigente en modo interno, emparejada por nombre con la regla de la puerta); antes decía «Falta» aunque estuviera firmada. | `QuienCumpleFilaTest` +1 con su control · arnés +2 (21/21 entonces). |
+| **F3c** ✅ | «Al final viene»: cada «no» (el suelto y el que empareja con una ficha del anfitrión) lleva el botón; la fila pasa a «viene» y sigue en su sitio hasta guardar, «No viene» lo deshace; al guardar, **la respuesta pasa a «sí»** —como el `volver()` del diseño; corrige el «no se reescribe» de este plan— con `host_rejoined_at` (el rastro de que el «sí» lo puso el anfitrión) y queda adoptada en su ficha o en la primera libre (nunca la de quien cumple). Sin ficha libre no entra y se dice. `PartyInvitations::rejoin()`, `rejoin[]` en el guardado de la web y de la API (1.36.0); sin JavaScript el botón ENVÍA el formulario con su id. | `AlFinalVieneTest` 9 · **arnés 29/29** (y el arnés dejó de copiar por nombre base: dos `GuestFormController.php` se pisaban) · la sonda `sonda-f3c.mjs` (volver, deshacer, guardar) y sin JavaScript. |
 
 Los packs a tres campos (`#743`·6) son DATO del panel: en local se ponen para el ojo del owner y se apuntan en el carril.
 

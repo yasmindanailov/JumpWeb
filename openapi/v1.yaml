@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.35.0
+  version: 1.36.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -6910,6 +6910,19 @@ components:
             ⚠️ Ausente = no se adopta ninguna, con la misma regla que las otras claves. Un id que ya
             no esté pendiente, o que sea de otra reserva, **se ignora en silencio**: es el estado
             normal cuando dos pestañas guardan, no un error que deba tumbar el envío.
+          items:
+            type: integer
+            format: int64
+            minimum: 1
+        rejoin:
+          type: array
+          maxItems: 200
+          description: |
+            (1.36.0) **«Al final viene»** (`fiesta-sistema-nuevo.md` §4.8, F3c): ids de respuestas «no» que el anfitrión
+            vuelve a contar con este guardado. La respuesta pasa a «sí» (con el rastro de que la cambió el anfitrión) y
+            queda adoptada en su ficha: la de su nombre si ya estaba apuntado, o la primera libre, donde se escribe.
+            Se aplica DESPUÉS de `adopt` y de la reconciliación. Sin ficha libre no entra (la lista no pasa del número):
+            la respuesta sigue siendo «no» y se ve al releer. Un id que no sea un «no» pendiente de esta reserva se ignora.
           items:
             type: integer
             format: int64

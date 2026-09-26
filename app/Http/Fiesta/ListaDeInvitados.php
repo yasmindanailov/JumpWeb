@@ -8,7 +8,9 @@ use App\Domain\Booking\Models\PartyInvitation;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Services\GuestAgeMixReader;
 use App\Domain\Booking\Services\PartyInvitations;
+use App\Domain\Identity\Services\DependentRegistry;
 use App\Domain\Identity\Services\GuardianPlaces;
+use App\Domain\Identity\Services\WaiverStatus;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Domain\Platform\Services\Money;
 use App\Domain\Platform\Services\PersonNameKey;
@@ -169,7 +171,8 @@ final class ListaDeInvitados
             }
             $alergias = $columnas['allergies'] === null ? '' : trim((string) ($row[$columnas['allergies']] ?? ''));
             $key = $nombre === '' ? '' : PersonNameKey::for($nombre);
-            $firmada = $key !== '' && collect($firmas)->contains(fn (array $f): bool => PersonNameKey::cardMatches($key, $f['key']));
+            $firmada = $key !== '' && (collect($firmas)->contains(fn (array $f): bool => PersonNameKey::cardMatches($key, $f['key']))
+                || ($esCumple && self::cumpleFirmado($reservation, $key)));
             $adoptada = ! $esCumple && $key !== '' && in_array($key, $adoptadas, true);
             $declinada = ! $esCumple && $declinadas->has($i);
             $sinProducto = in_array($i, $noProduct, true);
@@ -193,6 +196,8 @@ final class ListaDeInvitados
                 'respuesta' => ($esCumple || $mark !== null || $adoptada) ? 'si' : ($declinada ? 'no' : null),
                 'pendiente' => $mark !== null,
                 'reply_id' => $mark['id'] ?? null,
+                // El «no» que empareja con esta ficha, para «Al final viene» (F3c, `#747`).
+                'no_reply_id' => $declinada ? (int) ($declinadas->get($i)['id'] ?? 0) : null,
                 'repetida' => (bool) ($mark['repeated'] ?? false),
                 'firmada' => $firmada,
                 'completa' => ! $sinProducto && $primeraVacia === null,
@@ -210,6 +215,29 @@ final class ListaDeInvitados
         }
 
         return $out;
+    }
+
+    /**
+     * LA FIRMA DE QUIEN CUMPLE (F3b de `fiesta-sistema-nuevo.md` §4.8, `#747`): no es un justificante de invitado, es la
+     * exención de su ficha de MENOR A CARGO del anfitrión (`menores-a-cargo.md`). Sin esto su fila decía «Falta» aunque el
+     * anfitrión hubiera firmado por él. Se empareja por nombre con la MISMA regla que las demás filas y que la puerta
+     * (`PersonNameKey::cardMatches`), y cuenta solo la firma VIGENTE en modo interno (`WaiverStatus::minorState()`: en los
+     * otros modos el parque no sabe de menores a cargo).
+     */
+    private static function cumpleFirmado(OrderItem $reservation, string $key): bool
+    {
+        $host = $reservation->order?->user;
+        if ($host === null) {
+            return false;
+        }
+        foreach (app(DependentRegistry::class)->activeFor($host) as $dependent) {
+            if (PersonNameKey::cardMatches($key, PersonNameKey::for($dependent->fullName()))
+                && WaiverStatus::forDependent($dependent)->minorState() === WaiverStatus::MINOR_CURRENT) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -472,6 +500,10 @@ final class ListaDeInvitados
         }
         if (is_string($status) && str_starts_with($status, 'guest-count-')) {
             $aviso('danger', __('guestform.count_error_title'), [__('guestform.count_error_'.substr($status, strlen('guest-count-')))], 'alert');
+        }
+        if ($status === 'invitation-rejoin-full') {
+            // «Al final viene» sin ficha libre (F3c, `#747`): lo demás se guardó; volver a contarle pide subir el número.
+            $aviso('warn', '', [__('fiesta.lista.la_lista.vuelve_no_cabe')], 'alert');
         }
         if (in_array($status, ['guest-form-extras-blocked', 'guest-form-stale'], true)) {
             $aviso('danger', '', [$status === 'guest-form-stale' ? __('guestform.extras_stale') : __('guestform.extras_blocked')], 'alert');

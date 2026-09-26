@@ -52,7 +52,8 @@
         @endforeach
         {{-- Los «no» que NO emparejan con ninguna ficha: no son filas del formulario, pero el anfitrión tiene que verlos. --}}
         @foreach ($noVienenSueltos as $k => $r)
-            <x-fiesta.fila-invitado :id="'no'.$r['id']" :name="$r['nombre']" state="no" viaInvite :editable="false" :last="$k === count($noVienenSueltos) - 1" omitir :omitirForm="$sumar ? 'fiesta-descartar' : null" :omitirValue="$r['id']" />
+            {{-- «Al final viene» (F3c, `#747`): vuelve a contarle; al guardar entra en la primera ficha libre. --}}
+            <x-fiesta.fila-invitado :id="'no'.$r['id']" :name="$r['nombre']" state="no" viaInvite :editable="false" :last="$k === count($noVienenSueltos) - 1" omitir :omitirForm="$sumar ? 'fiesta-descartar' : null" :omitirValue="$r['id']" :volver="$sumar" :volverValue="$sumar ? $r['id'] : null" data-suelto />
         @endforeach
     </ul>
     <p class="pli-sub" hidden data-nadie>{{ __('fiesta.lista.la_lista.nada_aqui') }}</p>

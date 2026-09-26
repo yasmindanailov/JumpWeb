@@ -68,6 +68,9 @@ class InvitationReply extends Model
         'data' => 'array',
         'adopted_at' => 'datetime',
         'dismissed_at' => 'datetime',
+        // «Al final viene» (F3c de `fiesta-sistema-nuevo.md`, `#747`): el anfitrión volvió a contar a un «no». Se escribe
+        // con `forceFill` desde `PartyInvitations::rejoin()`, como la adopción: no es un dato que mande el padre.
+        'host_rejoined_at' => 'datetime',
     ];
 
     /** Todavía sin resolver por el anfitrión: ni adoptada ni descartada. */

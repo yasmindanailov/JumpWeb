@@ -42,6 +42,7 @@ return [
         'sheet' => 'Fiche de :name',
         'birthday' => 'C’est son anniversaire',
         'rejoin' => 'Vient finalement',
+        'no_viene' => 'Ne vient pas',
         'done' => 'OK',
     ],
     'anadir' => [
@@ -116,6 +117,8 @@ return [
             'cerrada' => ['Le nombre est clos : pour ajouter quelqu’un, ', 'appelle-nous', '.'],
             'repetida' => 'Cette famille a répondu plusieurs fois : la réponse la plus récente est affichée.',
             'no_viene' => 'A dit qu’il ne vient pas',
+            'vuelve' => 'Vient finalement : entre dans la liste à l’enregistrement.',
+            'vuelve_no_cabe' => 'Nous avons enregistré la liste, mais il n’y a plus de place : pour compter quelqu’un qui a dit non, augmentez le nombre.',
             'no_vienen' => '{1} Ne vient pas|[2,*] Ne viennent pas (:count)',
             'no_vienen_baja' => 'S’ils ne viennent pas, tu peux baisser le nombre d’invités jusqu’au :plazo.',
             'sin_producto' => 'Pas de produit pour cet âge',

@@ -270,7 +270,7 @@ que su escritor rechaza URLs y direcciones de correo (`SEC-07`).
 leen por LOTES de reservas del día, y la supresión borra por los ids de las reservas del titular) ·
 `attending` · `child_name`(120) · `child_key`(255, `PersonNameKey`) · `data` JSON nullable (las columnas
 del pack, saneadas con `sanitizeGuestData`) · `companion` (`with_adult`\|`alone`\|`unknown`) ·
-`adopted_at` + `adopted_name_key` · `dismissed_at` · timestamps · índice `(order_item_id, child_key)`.
+`adopted_at` + `adopted_name_key` · `host_rejoined_at` (nullable, 2026-09-26 `#747`, F3c: «Al final viene» — el «no» que el anfitrión volvió a contar; la respuesta pasa a «sí» y esto dice que el «sí» lo puso él) · `dismissed_at` · timestamps · índice `(order_item_id, child_key)`.
 ⚠️⚠️ **Una respuesta NO escribe `guest_data`, y ésa es la decisión que ordena la feature**: se le PROPONE
 al anfitrión sobre una ficha y solo pasa a `guest_data` cuando él la ADOPTA al guardar. Si escribiera
 directamente, el siguiente guardado del anfitrión la borraría (`submitGuestForm()` sustituye la lista

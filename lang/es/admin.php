@@ -1614,6 +1614,7 @@ return [
                     'guest_form_link_rotate_blocked' => 'Rotación del enlace bloqueada',
                     'guest_form_submitted' => 'Formulario de invitados enviado',
                     'invitation_reply_received' => 'Respuesta recibida en la invitación',
+                    'invitation_replies_rejoined' => '«Al final viene»: el anfitrión volvió a contar un «no»',
                     'invitation_link_rotated' => 'Enlace de la invitación anulado',
                     'invitation_link_rotate_blocked' => 'Anulación del enlace bloqueada',
                     // `#440` · el teléfono del cliente en el mostrador. El primero es el rastro de que

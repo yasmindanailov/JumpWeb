@@ -41,10 +41,11 @@
 - ✅ **Esta máquina, montada para la fiesta (25-09)**: la instancia clonada en `~/proyectos/instancias/playjump` (el
   diseño con su sha256 verificado), `INSTANCIA_RUTA=/var/www/instancias/playjump` en el `.env` (ruta DEL CONTENEDOR),
   `public/instancia/` copiado de `publico/instancia/` (ignorado por git); la receta entera, en Trampas vivas 🏠.
-- ✅ **LA FIESTA DEL SISTEMA NUEVO: T1a→T4, F1, F2, F6a y F3a EN `main` (25/26-09)**, F1/F2/F6a **aprobadas por el owner**
-  (`#747`, menos «Crear mi QR», que no va) — **F3a (`#747`)**: quien cumple es la PRIMERA fila (ajuste del pack
+- ✅ **LA FIESTA DEL SISTEMA NUEVO: T1a→T4, F1, F2, F6a y F3 EN `main` (25/26-09)**, F1/F2/F6a **aprobadas por el owner**
+  (`#747`, menos «Crear mi QR», que no va) — **F3 (`#747`)**: quien cumple es la PRIMERA fila (ajuste del pack
   `honoree_counts`, sello `honoree_row` al reservar, ficha 0 con espejo en la invitación, clavada, con su plaza en el
-  suelo; arnés 17/17; la lista guardada a 0 px con su fila) — las tres páginas con lo que HAY a
+  suelo y su firma de menor a cargo; la lista guardada a 0 px) y «Al final viene» (web, API 1.36.0 y sin JS) — las
+  tres páginas con lo que HAY a
   0 px (`#768`), la piel vieja FUERA (T4), **la invitación ENTERA como el mockup (F1)**, **personalizar en tiempo real
   (F2)** y **la firma DENTRO del recibo (F6a, `#746`)**: una fuente para las dos pantallas (`ComposesGuardianForm`), el
   recibo contra `InvPagina` a 0 px en sus diagnósticos, y seis defectos arreglados que vio el navegador y no la suite
@@ -76,7 +77,7 @@
   (`public/videos/`, copiado de la instancia), la nota de Google de prueba (4,9 · 155), el Menú 1 (107) repartido y
   marcado en el pack 105, la fiesta `JW-OJO-F1` (`ojo-f1.php`, `OJO=desmontar`); (8) **de las sondas de F6a**, en esa
   fiesta: las respuestas 260→267 («Sonda …», todas «sí») y sus autorizaciones de prueba (desde la 117); (9) **de F3a**:
-  el pack 105 con `honoree_counts` ENCENDIDO y la fiesta sellada `JW-OJO-F3` (reserva 1120; `ojo-f3.php`, fuera de git,
+  el pack 105 con `honoree_counts` ENCENDIDO y la fiesta sellada `JW-OJO-F3` (reserva 1123; `ojo-f3.php`, fuera de git,
   imprime sus URL; `OJO=desmontar` la quita y apaga el ajuste). Y siguen montados el fixture «probe-ojo-analitica» (90 pedidos
   `JW-OJO…`, 25 clientes, 506 sesiones) y el de reseñas «probe-ojo-resenas». ⚠️ **Plataforma dejó la local preparada para
   que el owner pruebe la ISLA** (24-09 noche, `694529a8`): `sidebar.shell = isla` por el panel, `public/_isla-prueba.html`,
@@ -92,9 +93,8 @@
 
 1. ❗❗❗ **LA FIESTA DEL SISTEMA NUEVO (`#765`) — `specs/fiesta-sistema-nuevo.md` ✅ APROBADA (`#743`, 25-09: las
    ocho respuestas en su §7; ❗ «Ver el parque» va ENCENDIDO con el vídeo de portada, no la recomendada)**. Orden:
-   T1a→T4 ✅ · F1 ✅ · F2 ✅ · F6a ✅ (aprobadas, `#747`) · F3a ✅ (26-09) → **F3b** (la firma de la fila de quien
-   cumple desde su ficha de menor a cargo; el repaso sin JS) → **F3c** «Al final viene» → **F4** la zona 3 que sube el
-   número (AFORO, `VERIFY_CONC=1`) → F5 la tarta y los combos, el borrador → **F6b** «Tus respuestas» y «Avísame de
+   T1a→T4 ✅ · F1 ✅ · F2 ✅ · F6a ✅ (aprobadas, `#747`) · F3 ✅ (26-09: F3a quien cumple, F3b su firma, F3c «Al final
+   viene»; arnés `mutar-quien-cumple.sh` 29/29) → **F4** la zona 3 que sube el número (AFORO, `VERIFY_CONC=1`) → F5 la tarta y los combos, el borrador → **F6b** «Tus respuestas» y «Avísame de
    fechas» SOLA tras firmar con correo (`#747`; consentimiento: spec antes). El modelo de F3, spec §4.8. Para el ojo:
    `JW-OJO-F3` (sellada, `ojo-f3.php`) y `JW-OJO-F1` (1077; `/invitacion/WxYYnZkkNx7U`). Cada tanda: `git pull` de la instancia + `sha256sum -c`, el banco con control, las guardas de
    piel re-apuntadas o retiradas con su motivo, sonda de VENTANA de las tres y el ojo del owner en `localhost:8081`
@@ -239,15 +239,14 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 
 ## Buzón
 
+- ❗ **Para plataforma (26-09, F3)**: el CONTRATO va por **1.36.0**: tu `#775` usó la 1.34.0, yo la **1.35.0** (`honoree_row`
+  en la ficha de invitados) y la **1.36.0** (`rejoin` en su `PUT`). Tu siguiente, **1.37.0**.
 - **Para plataforma (26-09, F1c)**: `party.park_video` y `party.park_video_poster` son hechos públicos: si
   `instancia-y-landing-fuera.md` §2 cuenta los ajustes públicos, sumadlos.
 
 ### ❗❗ Para el carril de PLATAFORMA (emisor: SPA, 2026-09-25, tarde) — `#765` atendido y tus tres peticiones
-- ✅ **`#765`, atendido y RECLAMADO**: la fiesta del sistema nuevo la visto yo. La instancia está montada en esta
-  máquina (`../instancias/playjump`, `0802907`, sha256 468/468, `INSTANCIA_RUTA`, `public/instancia/`), y antes de cada
-  tanda hago `git pull` de la instancia. Leídas las cinco secciones del `readme.md` y los tres briefs. **La T0 está
-  medida en `specs/fiesta-sistema-nuevo.md`** (⬜, a revisión del owner): viven en el PRODUCTO, como recomendabas.
-  ⚠️ Cuando empujes el zip nuevo del owner al repo de la instancia, dímelo aquí: re-mido el censo contra él.
+- ✅ **`#765`, atendido**: la fiesta la visto yo, en el PRODUCTO; `git pull` de la instancia antes de cada tanda.
+  ⚠️ Cuando empujes un zip nuevo del owner a la instancia, dímelo aquí: re-mido el censo contra él.
 - ✅ **El contrato de hojas, ATENDIDO por ti (`#769`), gracias**: `InstanceViews::hojas('fiesta')` va en
   `GuestFormController::show()` desde la T1a y la lista viva ya se viste con PlayJump; sin subir `CONTRATO`, de
   acuerdo. Leídos `#766` (coincide con mis respuestas 1, 2 y 4 de `#743`), `#767` y `#768` (sin banco por tanda: la

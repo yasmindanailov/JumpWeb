@@ -18,11 +18,17 @@ use App\Domain\Booking\Services\OrderCreator;
 use App\Domain\Booking\Services\PackAvailability;
 use App\Domain\Booking\Services\PartyInvitations;
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Models\WaiverSignature;
+use App\Domain\Identity\Services\LegalDocumentPublisher;
+use App\Domain\Identity\Services\WaiverSettings;
+use App\Domain\Identity\Services\WaiverSignatureRequest;
+use App\Domain\Identity\Services\WaiverSigner;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\PersonNameKey;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
+use Tests\Support\DeclaresDependents;
 use Tests\TestCase;
 
 /**
@@ -40,6 +46,7 @@ use Tests\TestCase;
  */
 class QuienCumpleFilaTest extends TestCase
 {
+    use DeclaresDependents;
     use RefreshDatabase;
 
     // ── 1 · El sello ─────────────────────────────────────────────────────────
@@ -237,6 +244,32 @@ class QuienCumpleFilaTest extends TestCase
         ])->assertRedirect();
         $this->assertSame('Lucía María', $reservation->fresh()?->guestData()[0]['name'] ?? null);
         $this->assertSame('Lucía María', PartyInvitation::query()->where('order_item_id', $reservation->getKey())->value('honoree_name'));
+    }
+
+    /**
+     * F3b: la firma de quien cumple es la de su ficha de MENOR A CARGO del anfitrión, no un justificante de invitado. Sin
+     * esto su fila decía «Falta» aunque el anfitrión hubiera firmado por él. ⚠️ Con su CONTROL: antes de firmar, «Falta».
+     */
+    public function test_the_honoree_row_is_signed_by_his_dependent_waiver(): void
+    {
+        [$reservation, , $host] = $this->party();
+        $lucia = $this->declareLegacyDependent($host, 'Lucía', '2019-05-04', 'Pérez');
+        Setting::query()->updateOrCreate(['key' => WaiverSettings::KEY_MODE], ['value' => WaiverSettings::MODE_INTERNAL]);
+        Setting::flushMemo();
+        $version = app(LegalDocumentPublisher::class)->publish(WaiverSettings::SLUG, [
+            'es' => ['title' => 'Exención', 'body' => [['h' => 'Riesgo', 'p' => 'Saltar implica riesgos.']]],
+        ])->first();
+        $ficha0 = fn (): array => $this->actingAs($host)->get(route('reservation.guests', ['reservation' => $reservation]))->assertOk()->viewData('m')['ninos'][0];
+
+        $this->assertSame('cumple', $ficha0()['origen']);
+        $this->assertFalse($ficha0()['firmada'], 'CONTROL: sin firmar, su fila tiene que decir «Falta»');
+
+        app(WaiverSigner::class)->sign($host, $version, new WaiverSignatureRequest(
+            channel: WaiverSignature::CHANNEL_WEB, ip: '10.0.0.7', userAgent: 'test',
+            subjectType: WaiverSignature::SUBJECT_DEPENDENT, subjectId: (int) $lucia->getKey(),
+        ));
+
+        $this->assertTrue($ficha0()['firmada'], 'su fila no ve la firma de su ficha de menor a cargo');
     }
 
     /** CONTROL: una reserva de antes pinta la lista de siempre, con «Personalizar» escribiendo la invitación. */

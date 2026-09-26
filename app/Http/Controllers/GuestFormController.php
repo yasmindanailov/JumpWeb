@@ -246,6 +246,12 @@ class GuestFormController extends Controller
         if ($this->submittedGuestFormArray($request, 'guests') !== null) {
             app(PartyInvitations::class)->reconcileAdopted($reservation->fresh(['ticketType']) ?? $reservation);
         }
+        // «AL FINAL VIENE» (F3c de `fiesta-sistema-nuevo.md` §4.8, `#747`): los «no» que el anfitrión vuelve a contar. Va
+        // DESPUÉS de la reconciliación: la vuelta adopta la respuesta en su ficha, y la reconciliación, con las fichas de
+        // antes de escribirla, la habría descartado. Sin ficha libre no entra y se dice (hasta F4 no se pasa del número).
+        $rejoin = array_filter($this->submittedGuestFormArray($request, 'rejoin') ?? [], 'is_scalar');
+        $rejoinFull = $rejoin !== []
+            && app(PartyInvitations::class)->rejoin($reservation->fresh(['ticketType', 'order']) ?? $reservation, array_map(intval(...), $rejoin))['full'] > 0;
 
         // ── PERSONALIZAR la invitación con el MISMO Guardar (`#743`, `specs/fiesta-sistema-nuevo.md` §4.2) ─────────
         // El diseño tiene UN solo botón que escribe, y personalizar viaja en él. Escribe SOLO `party_invitations`
@@ -262,7 +268,7 @@ class GuestFormController extends Controller
         // 10, y dos se pierden sin que nadie avise).
         $status = ($countChange !== null && ! $countChange->applied && $countChange->reason !== GuestCountChange::REASON_NOOP)
             ? 'guest-count-'.$countChange->reason
-            : ($rejectedText ? 'invitation-text-rejected' : 'guest-form-saved');
+            : ($rejectedText ? 'invitation-text-rejected' : ($rejoinFull ? 'invitation-rejoin-full' : 'guest-form-saved'));
         $desired = $this->submittedGuestFormArray($request, 'addons');
         $extrasCents = 0;
         if ($desired !== null) {

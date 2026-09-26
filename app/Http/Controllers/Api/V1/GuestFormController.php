@@ -98,6 +98,10 @@ class GuestFormController extends Controller
             // día que alguien llamara a una columna igual (§1.3·13, §7.2·R3).
             'adopt' => ['sometimes', 'array', 'max:'.self::MAX_GUESTS],
             'adopt.*' => ['integer', 'min:1'],
+            // «AL FINAL VIENE» (F3c de `fiesta-sistema-nuevo.md` §4.8, `#747`, contrato 1.36.0): los «no» que el anfitrión
+            // vuelve a contar. Fuera de `guests` por la misma razón que `adopt`.
+            'rejoin' => ['sometimes', 'array', 'max:'.self::MAX_GUESTS],
+            'rejoin.*' => ['integer', 'min:1'],
         ]);
 
         // El estado ANTES de nuestra propia escritura ({@see addonsExpectedVersion}): `submitGuestForm()`
@@ -148,6 +152,11 @@ class GuestFormController extends Controller
         }
         if ($this->submittedGuestFormArray($request, 'guests', $validated) !== null) {
             app(PartyInvitations::class)->reconcileAdopted($item->fresh(['ticketType']) ?? $item);
+        }
+        // La vuelta de los «no» (F3c), DESPUÉS de reconciliar, como en la web: adopta en su ficha, y la reconciliación con
+        // las fichas de antes la habría descartado. Sin ficha libre no entra; la app lo ve en la respuesta (sigue «no»).
+        if (isset($validated['rejoin']) && is_array($validated['rejoin'])) {
+            app(PartyInvitations::class)->rejoin($item->fresh(['ticketType', 'order']) ?? $item, array_map(intval(...), $validated['rejoin']));
         }
 
         // Los extras van DESPUÉS y en su propia transacción (§4.5.3): un hueco de tarifas o un id que

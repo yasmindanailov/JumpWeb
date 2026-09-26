@@ -47,6 +47,7 @@ return [
         'sheet' => 'Ficha de :name',
         'birthday' => 'Es su cumple',
         'rejoin' => 'Al final viene',
+        'no_viene' => 'No viene',
         'done' => 'Listo',
     ],
     'anadir' => [
@@ -123,6 +124,8 @@ return [
             'cerrada' => ['El número ya está cerrado: para sumar a alguien, ', 'llámanos', '.'],
             'repetida' => 'Esta familia contestó más de una vez: se enseña la respuesta más reciente.',
             'no_viene' => 'Ha dicho que no viene',
+            'vuelve' => 'Al final viene: entra en la lista al guardar.',
+            'vuelve_no_cabe' => 'Hemos guardado la lista, pero ya no cabe nadie más: para volver a contar a quien dijo que no, sube el número.',
             'no_vienen' => '{1} No viene|[2,*] No vienen (:count)',
             'no_vienen_baja' => 'Si no vienen, puedes bajar el número de invitados hasta el :plazo.',
             'sin_producto' => 'Sin producto para esta edad',

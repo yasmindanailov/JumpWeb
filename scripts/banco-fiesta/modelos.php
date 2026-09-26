@@ -95,7 +95,7 @@ return [
             'vacia' => $nombre === '',
             'origen' => $nombre === '' ? 'mano' : 'invitacion',
             'respuesta' => $nombre === '' ? null : 'si',
-            'pendiente' => false, 'reply_id' => null, 'repetida' => false, 'firmada' => $firmada,
+            'pendiente' => false, 'reply_id' => null, 'no_reply_id' => null, 'repetida' => false, 'firmada' => $firmada,
             'completa' => $nombre !== '', 'falta' => null, 'sin_producto' => false, 'regimen' => null,
             'campos' => ['name' => 'guests['.$i.'][name]', 'age' => 'guests['.$i.'][age]', 'allergies' => 'guests['.$i.'][allergies]'],
             'extra' => [], 'editable' => true,

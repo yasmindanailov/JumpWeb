@@ -982,6 +982,94 @@ final class PartyInvitations
     }
 
     /**
+     * **«AL FINAL VIENE»** (F3c de `specs/fiesta-sistema-nuevo.md` §4.8, `[DECIDIDO owner]` `#747`): la familia dijo que no,
+     * cambió de opinión y se lo dijo al anfitrión, que la vuelve a contar. Como el `volver()` del diseño, la respuesta pasa
+     * a «sí» —con `host_rejoined_at`, el rastro de que el «sí» lo puso el anfitrión— y queda ADOPTADA en su ficha: la de su
+     * nombre si el anfitrión ya lo había apuntado, o la primera ficha libre de invitado, donde se escribe su nombre.
+     *
+     * ⚠️ Solo un «no» PENDIENTE de ESTA reserva (ni adoptado ni descartado): el id llega de un formulario público y no se
+     * cree. ⚠️ Sin ficha libre no entra y se DICE (`full`): hasta F4 la lista no pasa del número (`#743`·3), y un «sí» sin
+     * ficha sería una plaza que nadie ve. ⚠️ La ficha nueva se escribe por `submitGuestForm()`, el único punto por el que
+     * entran las fichas (saneo, sello, rastro y la línea de edades); la de quien cumple no es candidata (`#747`).
+     *
+     * @param  list<int>|array<int, int>  $replyIds
+     * @return array{rejoined: int, full: int}
+     */
+    public function rejoin(OrderItem $reservation, array $replyIds): array
+    {
+        $ids = array_values(array_unique(array_filter(array_map(intval(...), $replyIds), fn (int $id): bool => $id > 0)));
+        $type = $reservation->ticketType;
+        $nameKey = $type?->guestNameFieldKey();
+        if ($ids === [] || $type === null || $nameKey === null) {
+            return ['rejoined' => 0, 'full' => 0];
+        }
+
+        $replies = InvitationReply::query()
+            ->where('order_item_id', $reservation->getKey())
+            ->whereIn('id', $ids)
+            ->pending()
+            ->where('attending', false)
+            ->orderBy('id')
+            ->get();
+
+        $rows = $type->sanitizeGuestData($reservation->guestData(), (int) $reservation->quantity);
+        $candidata = static fn (int $i): bool => ! ($i === OrderItem::HONOREE_ROW_INDEX && $reservation->hasHonoreeRow());
+        $nuevas = false;
+        $rejoined = 0;
+        $full = 0;
+
+        foreach ($replies as $reply) {
+            $childKey = (string) $reply->child_key;
+            $index = null;
+            // Su ficha, si el anfitrión ya lo había apuntado (la misma regla que empareja un «sí»).
+            foreach ($rows as $i => $row) {
+                $name = trim((string) ($row[$nameKey] ?? ''));
+                if ($candidata($i) && $name !== '' && $this->matches([PersonNameKey::for($name)], $childKey)) {
+                    $index = $i;
+                    break;
+                }
+            }
+            // Si no, la primera ficha LIBRE de invitado, con su nombre tal y como lo escribió la familia.
+            if ($index === null) {
+                foreach ($rows as $i => $row) {
+                    if ($candidata($i) && $row === []) {
+                        $rows[$i] = [$nameKey => trim((string) $reply->child_name)];
+                        $index = $i;
+                        $nuevas = true;
+                        break;
+                    }
+                }
+            }
+            if ($index === null) {
+                $full++;
+
+                continue;
+            }
+
+            $reply->forceFill([
+                'attending' => true,
+                'host_rejoined_at' => now(),
+                'adopted_at' => now(),
+                'adopted_name_key' => PersonNameKey::for(trim((string) $rows[$index][$nameKey])),
+            ])->save();
+            $rejoined++;
+        }
+
+        if ($nuevas) {
+            $reservation->submitGuestForm($rows, null, 'invitation');
+        }
+        if ($rejoined > 0) {
+            // `RGPD-02`: sin nombres; qué reserva y cuántos.
+            AuditLogger::log('orders.invitation_replies_rejoined', $reservation->order, [
+                'order_item_id' => (int) $reservation->getKey(),
+                'count' => $rejoined,
+            ]);
+        }
+
+        return ['rejoined' => $rejoined, 'full' => $full];
+    }
+
+    /**
      * «No lo apuntes» (§7.2·R11): el anfitrión quita una respuesta de su lista.
      *
      * ❗❗ **Sin esto, V4 deja al anfitrión ATRAPADO.** Desde `#576` un «sí» pendiente es una plaza con

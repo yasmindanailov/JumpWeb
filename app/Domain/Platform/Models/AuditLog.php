@@ -155,6 +155,8 @@ class AuditLog extends Model
         // `#574`: un padre contestó a la invitación digital. SIN PII — ni el nombre del niño ni sus
         // datos: solo qué reserva, si viene y si ocupó plaza nueva (`RGPD-02`).
         'orders.invitation_reply_received',
+        // `#747` (F3c): «Al final viene» — el anfitrión volvió a contar a uno o más «no». Sin nombres: cuántos (`RGPD-02`).
+        'orders.invitation_replies_rejoined',
         // `#576`: el operador ANULÓ el enlace de la invitación. Sin el token, que es la credencial:
         // escribirlo en el rastro sería guardarla en claro (`RGPD-02`, la lección de `#413`).
         'orders.invitation_link_rotated',

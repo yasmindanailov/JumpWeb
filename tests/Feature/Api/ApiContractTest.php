@@ -284,7 +284,9 @@ class ApiContractTest extends TestCase
         // además una propiedad que conviene no perder de vista: va **fuera de `guests`** porque cada
         // fila es un mapa ABIERTO cuyas claves inventa cada instalación, y una marca metida dentro
         // chocaría el día que alguien llamara a una columna igual (§1.3·13, §7.2·R3).
-        'GuestFormRequest' => ['guests', 'general', 'addons', 'expected_version', 'guest_count', 'adopt'],
+        // ▶ `rejoin` («Al final viene», F3c de `fiesta-sistema-nuevo.md`, `#747`) es la hermana de `adopt` y con su misma
+        // regla: un `PUT` que no vuelve a contar a nadie no tiene por qué mandar `[]`, y ausente = no se toca ningún «no».
+        'GuestFormRequest' => ['guests', 'general', 'addons', 'expected_version', 'guest_count', 'adopt', 'rejoin'],
     ];
 
     /** @var array<string, mixed>|null */
