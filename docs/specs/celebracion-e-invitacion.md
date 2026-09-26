@@ -54,13 +54,14 @@
 
 ### 1.1 Lo que hay hoy (y funciona)
 
-- **El post-form** (`resources/views/reservation/guests.blade.php`, hoja `.gf-*` de
-  `public/css/site.css`, bloque «Formulario post-reserva — HOJA ENFOCADA»): enlace firmado por reserva,
-  acordeón de fichas, número de invitados (`#444`), extras con plazo (`#413`), fiesta mixta y solo
-  lectura. Funcionalmente completo; **sin vestir**.
-- **El justificante** (`resources/views/reservation/authorization.blade.php`, reglas `.guardian__*`):
-  hoja en blanco por reserva (`#401`), tope por plazas libres bajo lock, anti-bot, PDF. Solo con
-  `WaiverSettings::isInternal()` (producción está en `interno`). **Sin vestir.**
+- **El post-form** (hoy `resources/views/fiesta/lista.blade.php` + `fiesta/lista/*` sobre `x-pagina-enfocada`,
+  vestido con el sistema nuevo desde `fiesta-sistema-nuevo.md` T1a; la vista vieja `reservation/guests.blade.php`
+  y su hoja `.gf-*` se retiraron en su T4, 26-09): enlace firmado por reserva, fichas, número de invitados
+  (`#444`), extras con plazo (`#413`), fiesta mixta y solo lectura. Funcionalmente completo.
+- **El justificante** (hoy `resources/views/fiesta/autorizacion.blade.php` con `x-fiesta.firma`; la vieja
+  `reservation/authorization.blade.php` y sus `.guardian__*` se retiraron en la misma T4): hoja en blanco por
+  reserva (`#401`), tope por plazas libres bajo lock, anti-bot, PDF. Solo con `WaiverSettings::isInternal()`
+  (producción está en `interno`).
 - **La invitación** no existe. La tarjeta pública de `/cumpleanos` que el canvas dice «no se toca»
   **ya no existe**: la retiró `#528`.
 
@@ -727,7 +728,8 @@ comentarios, y el marcado).
   dato. Rojo de TEXTO con un token nuevo, `--err-ink` (defecto `--err`; el paquete, Rojo 800).
 - **La barra de guardar PEGADA** (`sticky`, 85 px medidos) con «Fichas completas» y «Guardar». Su sombra
   es un peso nuevo de la familia de mobiliario, `--shadow-nav-dock` (hacia ARRIBA), declarado en
-  `ShapeScaleTest`; el aviso de guardado sube por encima y pasa a `--shadow-nav` (con el paquete,
+  `ShapeScaleTest` (📜 retirado con la barra en `fiesta-sistema-nuevo.md` T4, 26-09: sin usuario, la propia
+  guarda lo cazó); el aviso de guardado sube por encima y pasa a `--shadow-nav` (con el paquete,
   `--shadow-float` es una sombra dura, `#265`). `scroll-padding-bottom` para que el foco no quede debajo.
 - **Extras en FILAS de una tarjeta**, los cerrados al final y con su motivo dentro de la fila, la cuenta
   «N elegidos», y el nombre y el precio como `summary` de «Más info» (el stepper fuera: un control dentro
@@ -736,9 +738,10 @@ comentarios, y el marcado).
   línea con comas; reparte **solo sobre las fichas vacías** en el orden de sus posiciones; dice cuántos
   nombres ha leído, a cuántas fichas van, cuántas no se tocan y cuántos no caben; y **pegar no guarda**, y se
   dice. Al aplicar, abre la primera ficha y lleva el foco a la edad.
-- **El JS de la página es un MÓDULO** que importa `public/js/guest-form/logic.js`: estático, sin Vite (la
-  página no carga el manifiesto, como `site.css`), con sus casos de `node --test` en
-  `resources/js/guest-form/logic.test.js`. El número de invitados gana su stepper.
+- **El JS de la página es un MÓDULO**: desde `fiesta-sistema-nuevo.md` T1a es la entrada de Vite
+  `resources/js/fiesta/lista.js`, y la lógica pura (`clave`, `limpiar`, `choice`…) vive en `logica.js` con sus
+  casos de `node --test` en `logica.test.js` (el `public/js/guest-form/logic.js` estático y su test se retiraron en
+  la T4, 26-09). El número de invitados gana su stepper.
 - 17 cadenas nuevas en es/en/fr, y `count_warn_discard` con singular y plural («de 1 fichas»).
 
 **Decisiones de ejecución**:

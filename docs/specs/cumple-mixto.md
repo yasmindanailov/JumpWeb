@@ -415,7 +415,7 @@ edad—, y **un cargo ya aplicado no se retira solo**: se enseña la divergencia
 | **El veredicto** | `Booking\Services\GuestAgeMixReader` → `Booking\Services\GuestAgeMix` | A qué producto de la familia le toca cada invitado y cuánto es la diferencia. **Derivado, nunca persistido** |
 | **La puerta** | `InteractsWithCatalogForm::normalizeGuestAgeFields` | Normaliza la familia, la anula fuera del pack y **bloquea tramos solapados** dentro de una familia |
 | **El panel** | `filament/orders/items-list.blade.php` | Etiqueta **MIXTA** junto al nombre + la propuesta con su importe y a quién corresponde |
-| **El cliente** | `reservation/guests.blade.php` | El aviso **donde declara las edades**, con el importe y dónde se paga |
+| **El cliente** | `fiesta/lista/avisos.blade.php` (los avisos de `ListaDeInvitados::avisos()`; antes `reservation/guests.blade.php`, retirada en `fiesta-sistema-nuevo.md` T4) | El aviso **donde declara las edades**, con el importe y dónde se paga |
 
 ### 11.2 · Lo que garantizan las guardas (y su mutación)
 

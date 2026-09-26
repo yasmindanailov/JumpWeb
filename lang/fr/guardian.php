@@ -1,31 +1,18 @@
 <?php
 
 /*
- * Phase 6 · l'AUTORISATION pour un mineur invité à une réservation
- * (`docs/specs/waiver-por-reserva.md`, lot T2). Lue par un INCONNU : un parent sans compte, depuis un
- * lien transmis par la personne qui a réservé. Trois langues, jamais dans `admin.*`.
+ * Phase 6 · l'AUTORISATION pour un mineur invité à une réservation (`docs/specs/waiver-por-reserva.md`, lot T2).
+ * Lue par un INCONNU : un parent sans compte, depuis un lien transmis par la personne qui a réservé. Trois
+ * langues, jamais dans `admin.*`. Depuis le T4 de `specs/fiesta-sistema-nuevo.md`, la page est habillée par le
+ * nouveau système (`fiesta.php`) : il ne reste ici que ce que le contrôleur et le domaine lisent encore.
  */
 return [
-    'title' => 'Autorisation pour les mineurs',
-    'stub' => [
-        'badge' => "Autorisation d'entrée",
-        'heading' => 'Autorisez votre enfant',
-        'lede' => "Quelqu'un a réservé une visite au parc et votre enfant vient avec le groupe. Pour qu'il puisse entrer, nous avons besoin de votre autorisation écrite. Cela prend deux minutes et aucun compte n'est nécessaire.",
-    ],
-
     'booking' => [
-        'heading' => 'La réservation',
-        'reference' => 'Référence',
-        'date' => 'Jour de la visite',
         'no_date' => 'Aucune date attribuée pour l’instant',
         'responsible' => 'Accompagné par',
     ],
 
     'minor' => [
-        'heading' => 'Données du mineur',
-        'name' => 'Prénom',
-        'surname' => 'Nom',
-        'born_on' => 'Date de naissance',
         'born_on_help' => 'Elle nous sert à connaître son âge le jour de la visite.',
         'from_invitation' => 'Sur l’invitation tu as écrit « :name ». Répartis-le ici : le prénom dans une case et le nom dans l’autre.',
         'pick' => 'Choisissez votre enfant',
@@ -34,16 +21,7 @@ return [
     ],
 
     'guardian' => [
-        'heading' => 'Vos données',
-        'help' => 'En tant que parent ou tuteur légal du mineur.',
-        'name' => 'Prénom',
-        'surname' => 'Nom',
-        'relationship' => 'Lien avec le mineur',
         'relationship_placeholder' => 'Choisissez une option',
-        'email' => 'Adresse e-mail',
-        'email_help' => 'Si vous la laissez, nous vous envoyons une copie de ce que vous signez.',
-        'phone' => 'Téléphone',
-        'phone_help' => 'Pour pouvoir vous joindre le jour de la visite.',
     ],
 
     'relationships' => [
@@ -55,26 +33,15 @@ return [
     ],
 
     'waiver' => [
-        'heading' => 'Décharge de responsabilité',
-        'accept' => 'J’ai lu la décharge de responsabilité et je l’accepte au nom du mineur.',
         'version' => 'Version :version, publiée le :date',
-    ],
-
-    'submit' => 'Signer l’autorisation',
-    'submit_short' => 'Signer',
-    'bar' => [
-        'minor' => 'Mineur',
     ],
 
     'antibot_label' => 'Contrôle de sécurité · Cloudflare',
 
     'done' => [
-        'signed_title' => 'Autorisation enregistrée',
         'already_title' => 'Rien d’autre à faire',
         'stale_title' => 'Il faut le relire',
         'refused_title' => 'Rien n’a été enregistré',
-        'signed' => 'C’est fait : l’autorisation de :name a bien été enregistrée.',
-        'signed_generic' => 'C’est fait : l’autorisation a bien été enregistrée.',
         'already' => ':name a déjà une autorisation signée pour cette réservation. Rien d’autre à faire.',
         'already_generic' => 'Ce mineur a déjà une autorisation signée pour cette réservation.',
         'stale' => 'Le texte de la décharge a été mis à jour pendant que vous remplissiez le formulaire. Relisez-le et acceptez-le à nouveau.',
@@ -89,12 +56,10 @@ return [
     ],
 
     'errors' => [
-        'accept_waiver' => 'Vous devez accepter la décharge de responsabilité pour pouvoir signer.',
         'born_on_future' => 'La date de naissance doit être antérieure à aujourd’hui.',
         'born_on_adult' => 'Cette date indique que la personne est déjà majeure, et une personne majeure signe pour elle-même : cette autorisation est réservée aux mineurs.',
     ],
 
     'notice' => 'Vous déclarez vous-même ces données et nous ne les vérifions avec aucun document. Elles sont conservées comme preuve de cette autorisation.',
-    'privacy' => 'Nous traitons ces données pour permettre l’entrée du mineur et comme preuve de votre autorisation. Vous pouvez exercer vos droits comme expliqué dans notre politique de confidentialité.',
     'privacy_link' => 'Lire la politique de confidentialité',
 ];

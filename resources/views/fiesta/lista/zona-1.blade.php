@@ -4,7 +4,9 @@
      Fuera de plazo, un aviso en lugar de compartir. --}}
 @php($inv = $m['invitacion'])
 @php($c = $m['cuentas'])
-<section class="pli-zona pli-z1" data-zona="1" aria-labelledby="pli-h1">
+{{-- `id="gf-invite"` es el ANCLA con la que el correo de «Compartir la invitación» (`GuestFormRequest`) y la API
+     (`invitation_url` de `/me/orders`) aterrizan aquí: es contrato en correos ya enviados y se conserva con su nombre. --}}
+<section class="pli-zona pli-z1" id="gf-invite" data-zona="1" aria-labelledby="pli-h1">
     @if ($inv['compartida'])
         <div class="pli-estado">
             <div role="group" aria-label="{{ __('fiesta.lista.respuestas') }}" class="pli-tally">

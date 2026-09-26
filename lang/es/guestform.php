@@ -1,20 +1,23 @@
 <?php
 
+/*
+ * El formulario de invitados de un cumpleaños: lo que el DOMINIO y el controlador siguen diciendo con estas claves
+ * (los avisos de la fiesta mixta, los rechazos del número y de los extras, el guardado, la solo lectura, las
+ * chapas de la invitación, el recordatorio). La página se viste con el sistema nuevo desde la T1a de
+ * `specs/fiesta-sistema-nuevo.md` y sus textos de pantalla viven en `fiesta.php` (`lista`); lo que pintaba la piel
+ * vieja se retiró con ella en la T4 (26-09). `ClavesDeIdiomaTest` vigila que no vuelva a quedar texto muerto.
+ */
 return [
-    'eyebrow' => 'Formulario de reserva',
+    // El título del formulario lo nombra la landing de cumpleaños («después de pagar te llega el :form»).
     'title' => 'Formulario de reserva',
-    'subtitle' => 'Completa los datos de cada invitado de esta reserva. Puedes editarlos cuando quieras hasta el día del evento.',
-    'fact_when' => 'Fecha y hora',
-    'fact_guests' => 'Invitados',
-    'fact_ref' => 'Reserva',
     'progress' => ':done de :total fichas completas',
     'progress_complete' => 'Todas las fichas completas (:total)',
 
     // Fiesta MIXTA (`docs/specs/cumple-mixto.md` §9·7). ⚠️ El texto NO promete un cobro: el
     // suplemento lo aplica el operador, así que dice dónde se paga y no da nada por hecho.
     // Una edad SIN PRODUCTO (`#284` D6, §22.4): tres casos, y el parque puede escribir los suyos en
-    // Ajustes (`mixed_party.no_product.*`). `:phone` = teléfono de contacto de la instalación.
-    'regime_no_product' => 'Sin producto para esta edad',
+    // Ajustes (`mixed_party.no_product.*`). `:phone` = teléfono de contacto de la instalación. La chapa de la ficha
+    // («Sin producto para esta edad») es `fiesta.lista.la_lista.sin_producto`.
     'no_product_title' => 'Una edad sin producto',
     'no_product_below' => 'Alguno de los invitados tiene una edad por debajo del tramo más bajo de este cumpleaños, y para esa edad no hay producto en las condiciones de tu reserva. Llámanos al :phone y lo vemos contigo; hasta entonces esa ficha no se da por completa.',
     'no_product_above' => 'Alguno de los invitados tiene una edad por encima del tramo más alto de este cumpleaños, y para esa edad no hay producto en las condiciones de tu reserva. Llámanos al :phone y lo vemos contigo; hasta entonces esa ficha no se da por completa.',
@@ -32,29 +35,13 @@ return [
     'mixed_net_zero' => 'Entre el suplemento y el descuento, tu importe en el parque no cambia por este motivo.',
     'mixed_savings_pending' => 'Por eso tu fiesta sale :amount más barata: el descuento se aplicará al completar todas las edades.',
     'mixed_no_difference' => 'No hay diferencia de precio entre los dos: no tienes nada que abonar por este motivo.',
-    'privacy' => 'Solo usamos estos datos para preparar tu evento. Los datos de los menores se tratan de forma confidencial y se eliminan según nuestra política de privacidad.',
     'readonly_notice' => 'Esta reserva ya se ha celebrado. El formulario es de solo lectura: puedes consultar los datos pero ya no editarlos.',
-    'general_heading' => 'Datos generales',
-    // `#570` (T1 de `specs/celebracion-e-invitacion.md`): la página ya se titula «Datos de los
-    // invitados» y la palabra que usa el resto de la pantalla es «ficha».
-    'children_heading' => 'Una ficha por invitado',
-    // La receta del aviso sobre papel pide TÍTULO, y estos dos avisos eran solo su frase. El de error
-    // sirve para los cinco rechazos: cuentan lo mismo y solo cambian de remedio.
+    // La receta del aviso pide TÍTULO. El de error sirve para los cinco rechazos: cuentan lo mismo y solo cambian de remedio.
     'count_warn_title' => 'Antes de guardar',
     'count_error_title' => 'Los invitados no se han cambiado',
-    // Se marca lo OPCIONAL en vez de lo obligatorio: de cinco columnas, dos son obligatorias.
-    'optional' => '(opcional)',
-    // La política sale de su frase y es un control propio de 48 (F-08 del canvas).
-    'privacy_link' => 'Leer la política de privacidad',
     'saved' => 'Formulario guardado. ¡Gracias! Puedes volver a editarlo cuando quieras.',
-    'child' => 'Invitado/a :n',
     // Los EXTRAS de venta posterior (`specs/complementos-post-reserva.md`, `#413`): lo que se
     // puede añadir DESPUÉS de reservar y se paga en el parque.
-    'extras_heading' => 'Extras',
-    'extras_lead' => 'Puedes añadirlos hasta poco antes de la fiesta. Se pagan en el parque, junto con el resto.',
-    'extras_qty_label' => 'Cuántos quieres de :name',
-    'extras_total' => 'Extras',
-    'extras_where' => 'Estos extras se pagan en el parque el día de la fiesta.',
     'extras_closed_cutoff' => 'Ya no se puede cambiar',
     'extras_closed_sold' => 'Lo elegiste al reservar — llámanos para cambiarlo',
     'extras_blocked' => 'Tus datos se han guardado, pero alguno de los extras no se ha podido cambiar: puede que ya haya pasado su plazo. Llámanos si lo necesitas.',
@@ -63,16 +50,12 @@ return [
     // El cliente cambia sus invitados desde aquí (`specs/invitados-en-post-form.md`, `#444`).
     // ⚠️ Los textos de RECHAZO son cinco y distinguen el remedio: el techo se resuelve llamando, el
     // suelo del pack también, pero «alguien ya tiene esa plaza» se resuelve quitándolo de la lista.
-    'count_label' => 'Número de invitados',
     'count_hint' => 'Puedes cambiarlo hasta el :when (máximo :max).',
     'count_closed_cutoff' => 'Ya no se puede cambiar el número de invitados: ha pasado el plazo.',
     'count_closed' => 'El número de invitados ya no se puede cambiar.',
-    // ⚠️ La pinta el JS. Hasta la T2 era UNA sola forma porque `trans_choice` no existe en el navegador y una
-    // cadena con `|` habría llegado entera a la pantalla («de 1 fichas»); desde `#571` la resuelve `choice()`
-    // de `public/js/guest-form/logic.js`, que elige por las fichas que se pierden.
+    // ⚠️ La pinta el JS de la lista (`resources/js/fiesta/lista.js`, con `choice()` de `logica.js`): `trans_choice` no
+    // existe en el navegador, y la forma «uno|varios» la resuelve él por las fichas que se pierden.
     'count_warn_discard' => 'Al bajar a :count invitados se perderán los datos ya rellenados de :discarded ficha.|Al bajar a :count invitados se perderán los datos ya rellenados de :discarded fichas.',
-    'count_saved_up' => 'Tus datos se han guardado y tu reserva pasa a :count invitados. La diferencia se abona en el parque.',
-    'count_saved_down' => 'Tus datos se han guardado y tu reserva pasa a :count invitados.',
     'count_error_above_max' => 'Tus datos se han guardado, pero el número de invitados no: es más de lo que admite este cumpleaños. Llámanos y lo vemos contigo.',
     'count_error_below_min' => 'Tus datos se han guardado, pero el número de invitados no: es menos del mínimo de este cumpleaños. Llámanos y lo vemos contigo.',
     'count_error_below_assigned' => 'Tus datos se han guardado, pero el número de invitados no: ya has asignado más plazas de las que quieres dejar. Quita a alguien de la lista y vuelve a intentarlo.',
@@ -81,69 +64,23 @@ return [
     'count_error_closed' => 'Tus datos se han guardado, pero el número de invitados no se ha podido cambiar. Llámanos y lo vemos contigo.',
     'count_error_stale' => 'Tus datos se han guardado, pero el número de invitados no: la reserva ha cambiado mientras tenías esta página abierta. Vuelve a cargarla.',
 
-    // ── EL BLOQUE DE LA INVITACIÓN (T6·1, `specs/celebracion-e-invitacion.md` §4.7) ───────────────
-    // Va ARRIBA y antes de que el anfitrión empiece a teclear —después ya no sirve de nada— y no
-    // promete rellenarlo todo: promete **repartir el trabajo**, dejando debajo la puerta de teclear
-    // sin esconderla (canvas, turno 3a). ⚠️ Lo que el anfitrión escribe aquí lo lee un DESCONOCIDO
-    // en la página pública, y por eso lo de allí vive en `invitation.php`: aquí solo está lo que lee
-    // ÉL. Las dos mitades no comparten voz.
+    // ── LA INVITACIÓN, vista desde la lista del anfitrión (T6, `specs/celebracion-e-invitacion.md` §4.7) ──
+    // ⚠️ Lo que lee un DESCONOCIDO en la página pública vive en `fiesta.php` (`invitacion_pagina`); aquí solo
+    // está lo que lee ÉL. Las dos mitades no comparten voz.
     'invite' => [
-        'title' => 'La invitación',
-        'lead' => 'Reparte el enlace y que cada familia te diga si viene. Lo que contesten aparecerá aquí y tú decides qué apuntas.',
-        'share' => 'Compartir la invitación',
-        // Lo que se manda con el enlace por Web Share. ⚠️ Sin el enlace dentro: lo pone el navegador
-        // en su propio campo, y repetirlo lo pega dos veces en el chat.
-        'share_text' => 'Estás invitado al cumple de :name.',
-        'share_text_generic' => 'Estás invitado a nuestra fiesta.',
-        'copy' => 'Copiar enlace',
-        'copied' => 'Enlace copiado',
-        // El enlace se ENSEÑA siempre, no solo detrás de un botón: sin JavaScript no hay ni Web Share
-        // ni portapapeles, y sin verlo escrito no habría forma de repartirlo.
-        'link_label' => 'Enlace de la invitación',
-        // ⚠️ Sin punto final: `DisplayTime::dayLabel()` ya termina en uno («Mar. 22 sep.») y la frase
-        // salía con dos. Lo vio la sonda, no una relectura. ▶ Y la fecha va ABREVIADA, como la pista
-        // del número de invitados dos líneas más arriba: es el MISMO plazo, y darle dos formas en la
-        // misma pantalla se lee como dos fechas distintas.
-        'deadline' => 'Pueden contestar hasta el :when',
-        'deadline_closed' => 'El plazo para contestar ya ha pasado. El enlace sigue abriendo: lo que dice la invitación hace falta el mismo día de la fiesta.',
-        'needs_name_title' => 'Antes de repartirla',
-        'needs_name' => 'Dinos de quién es la fiesta y ya puedes compartir el enlace: lo escribes aquí debajo, en «Personalizar».',
-        // El resumen de §4.7. ⚠️ «Por repasar» son las respuestas de las DOS clases, también los «no»:
-        // un «no» lleva a bajar el número de invitados, así que también hay que verlo.
-        'tally_yes' => '{0} Nadie ha dicho que viene|{1} :count viene|[2,*] :count vienen',
-        'tally_no' => '{0} Nadie ha dicho que no|{1} :count no puede|[2,*] :count no pueden',
-        'tally_pending' => '{0} Nada por repasar|{1} :count por repasar|[2,*] :count por repasar',
-        // La ficha que llega de fuera (T6·2): la chapa dice de DÓNDE sale, no quién la escribió — el
-        // anfitrión sabe quién es su invitado, y nombrar al padre no añade nada.
-        'badge' => 'Por la invitación',
         // ⚠️ No dice cuántas veces ni desde cuándo: solo que hay más de una y cuál se enseña (V6).
         'repeated' => 'Esta familia ha contestado más de una vez. Te enseñamos lo último que nos dijo.',
-
-        // ── LOS QUE NO VIENEN Y LOS QUE NO CABEN (T6·3, §4.7) ─────────────────────────────────────
-        // ⚠️ Un «no» no se apunta en ninguna parte: lo que hace es llevar a BAJAR el número de
-        // invitados (D3), y por eso su frase dice hasta cuándo se puede.
-        'declined_title' => '{1} No puede venir|[2,*] No pueden venir',
-        'declined_badge' => 'Ha dicho que no viene',
-        'declined_lead' => 'Si no vienen, puedes bajar el número de invitados hasta el :when',
-        // El mismo botón sirve para un «no» y para un «sí» que no quiere apuntar: en los dos casos es
-        // «quítalo de mi lista», y por eso no dice «borrar» — la respuesta se conserva.
-        'dismiss' => 'No lo apuntes',
+        // Un «no» no se apunta en ninguna parte: lleva a BAJAR el número de invitados (D3); la fila y la frase del
+        // plazo son de `fiesta.php` (`fila.no`, `lista.la_lista.no_vienen_baja`).
+        // El mismo gesto sirve para un «no» y para un «sí» que no quiere apuntar: «quítalo de mi lista»; la respuesta se conserva.
         'dismissed' => 'Hecho: eso ya no está en tu lista.',
         // ⚠️⚠️ La CARRERA, dicha (§7.1·3): entre pintar y guardar entraron más «sí». No es una lista de
         // espera y no se rechaza a nadie; la decisión es suya, que es quien sabe quién va.
         'overflow_title' => 'Hay respuestas que ya no caben',
         'overflow' => '{1} Una familia ha dicho que viene y ya no queda ficha para su hijo: sube el número de invitados o avísale.|[2,*] Hay :count respuestas que ya no caben: sube el número de invitados o avisa a esas familias.',
-        'customize' => 'Personalizar',
-        'theme' => 'Tema',
         'theme_confeti' => 'Confeti',
         'theme_fiesta' => 'Fiesta',
         'theme_sereno' => 'Sereno',
-        'honoree_name' => 'Quién cumple',
-        'honoree_age' => 'Años que cumple',
-        'host_line' => 'Te invita',
-        'show_phone' => 'Enseñar mi teléfono en la invitación',
-        'save' => 'Guardar la invitación',
-        'saved' => 'Invitación guardada.',
         // ⚠️ Se DICE cuando un texto no se admite: el campo se queda como estaba, y callarlo dejaría
         // al anfitrión creyendo que lo suyo se publicó (§7.2·R9).
         'rejected_title' => 'Eso no lo hemos guardado',
@@ -152,61 +89,15 @@ return [
         // ── EL RECORDATORIO (T6·6, §4.7) ──────────────────────────────────────────────────────────
         // ❗❗ No se envía NADA: del padre no tenemos correo. Esto escribe el mensaje y el anfitrión lo
         // pega donde ya repartió el enlace, que es el único sitio por donde se puede llegar a ellos.
-        'remind_title' => 'Si falta gente por contestar',
-        'remind' => 'Escribir el recordatorio',
         // ⚠️ La casilla nace SIN marcar: una lista de «éstos no han contestado» en el chat de la clase
         // señala a unas familias delante de las demás, y si eso se puede hacer lo sabe él, no nosotros.
         'remind_names' => '{1} Nombrar a la familia que falta|[2,*] Nombrar a las :count familias que faltan',
-        'remind_ready' => 'Ya lo tienes escrito: cópialo y pégalo donde repartiste el enlace.',
-        'remind_copy' => 'Copiar el recordatorio',
-        'remind_copied' => 'Recordatorio copiado',
-        'remind_text_label' => 'El recordatorio',
         // La marca de que ya avisó. ⚠️ Sin punto: `DisplayTime::dayLabel()` ya termina en uno.
         'remind_last' => '{1} Lo escribiste una vez, la última el :when|[2,*] Lo escribiste :count veces, la última el :when',
-        // ── Y el texto que se copia. Va DENTRO el enlace, al revés que `share_text`: esto se pega de
-        // una pieza en un chat, y sin la URL dentro no serviría de nada.
+        // ── Y el texto que se copia. Va DENTRO el enlace: esto se pega de una pieza en un chat.
         'reminder_text' => 'Nos faltan respuestas para el cumple de :name. Si todavía no nos habéis dicho si venís, se contesta aquí en un momento:',
         'reminder_text_generic' => 'Nos faltan respuestas para nuestra fiesta. Si todavía no nos habéis dicho si venís, se contesta aquí en un momento:',
         'reminder_names' => 'Nos faltan: :names.',
         'reminder_deadline' => 'Se puede contestar hasta el :when',
     ],
-
-    'submit' => 'Guardar',
-    'hint' => 'Si aún no los sabes todos, guarda lo que tengas y vuelve más adelante.',
-    'back' => 'Volver a mis reservas',
-
-    // Rediseño de la página (#264): hoja enfocada con acordeón de fichas.
-    'heading' => 'Datos de los invitados',
-    'meter_label' => 'Fichas completas',
-    'bulk_prompt' => '¿Aún no los sabes todos?',
-    'bulk_action' => 'Abrir la primera pendiente',
-    'status_pending' => 'Pendiente',
-    'status_done' => 'Lista',
-
-    // T2 de `specs/celebracion-e-invitacion.md` (`#571`): muchos invitados. ⚠️ Las que pinta el JS del
-    // pegado usan el formato «uno|varios»: lo resuelve `choice()` de `public/js/guest-form/logic.js`,
-    // porque `trans_choice` no existe en el navegador.
-    'group_pending' => 'Falta algo · :count',
-    'group_done' => '{1} :count ficha ya lista|[2,*] :count fichas ya listas',
-    'status_missing' => 'Falta :field',
-    'extras_chosen' => '{0} Ninguno elegido|{1} :count elegido|[2,*] :count elegidos',
-    'paste_prompt' => '¿Tienes la lista escrita? Pégala y solo te quedan las edades.',
-    'paste_open' => 'Pegar la lista de nombres',
-    'paste_title' => 'Pega la lista de nombres',
-    'paste_help' => 'Uno por línea. Los ponemos en orden y tú repasas las edades.',
-    'paste_label' => 'Lista de nombres',
-    'paste_count' => 'Hemos leído :count nombre|Hemos leído :count nombres',
-    'paste_scope' => 'Irá a la ficha que está sin rellenar.|Irán a las :count fichas que están sin rellenar.',
-    'paste_kept' => 'La que ya tiene datos no se toca.|Las :count que ya tienen datos no se tocan.',
-    'paste_overflow' => 'No cabe :count nombre: no quedan fichas sin rellenar.|No caben :count nombres: no quedan fichas sin rellenar.',
-    'paste_apply' => 'Poner el nombre|Poner los :count',
-    'paste_cancel' => 'Cancelar',
-    // ⚠️ Pegar NO guarda: los nombres viven en la página hasta que se pulsa «Guardar», y se dice.
-    'paste_done' => ':count nombre puesto. Guarda para que no se pierda.|:count nombres puestos. Guarda para que no se pierdan.',
-    'name_empty' => 'Sin completar',
-    'nav_prev' => 'Anterior',
-    'nav_next' => 'Siguiente',
-    'nav_last' => 'Última ficha',
-    'toast_saved' => 'Guardado',
-    'footer_privacy' => 'Privacidad',
 ];

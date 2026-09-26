@@ -74,7 +74,8 @@ class LandingCssHasNoOrphansTest extends TestCase
         // ⚠️ Éstas comparten REGLA con una clase viva, así que retirarlas es reescribir una regla que
         // sigue en uso: se van cuando se toque esa regla, no antes.
         'word' => 'comparte regla con una clase viva; se retira al tocar esa regla',
-        'guestform__progress' => 'comparte regla con una viva del post-form',
+        // ⚠️ `guestform__progress` vivía aquí («comparte regla con una viva del post-form») y SE RESOLVIÓ: la regla
+        // entera se fue con el post-form viejo (`fiesta-sistema-nuevo.md` T4, 26-09). La deuda encogió sola.
         'orders__line--addon' => 'comparte regla con `.orders__line`, que el cajón sí pinta',
         'orders__line--cancelled' => 'ídem `.orders__line`',
         'orders__line--finished' => 'ídem `.orders__line`',

@@ -722,7 +722,7 @@ correo de copia. El **tope de §4.7·3** todavía no tiene código: nace con el 
 | Las TRES puertas, **dentro de la transacción y bajo el lock** | `Identity\Services\GuardianAuthorizationSigner` + `GuardianAuthorizationRefusedException` |
 | La escalada **403 → 410 → 404** y su orden | `Http\Concerns\AuthorizesGuardianAuthorization` |
 | Rutas, validación, anti-abuso y desenlaces | `Http\Controllers\GuardianAuthorizationController` · `routes/web.php` |
-| La hoja: `<x-focused-layout>`, el texto legal en el flujo, la casilla separada | `resources/views/reservation/authorization.blade.php` |
+| La hoja: `<x-pagina-enfocada>`, la firma `x-fiesta.firma`, el texto legal en el flujo, la casilla separada | `resources/views/fiesta/autorizacion.blade.php` (desde `fiesta-sistema-nuevo.md` T3; la vieja `reservation/authorization.blade.php` se retiró en su T4) |
 | Rótulos en es/en/fr | `lang/{es,en,fr}/guardian.php` |
 | La fuente ÚNICA del enlace | `Order::guardianAuthorizationSignedUrl()` |
 
@@ -1127,7 +1127,7 @@ literalmente el criterio con el que se eligió `minor_key` en §4.8.
 | **T5** · el interruptor (3 estados) + el hecho de la línea | migración `2026_09_02_010000_add_guardian_authorization_to_products_and_items` · `TicketType::GUARDIAN_*` + `guardianMode()` · `OrderItem` cast · `Order::needsGuardianAuthorization()` · `CatalogForm` |
 | **T6** · el embudo | `OrderCreator` (**las tres ramas**) · `Cart::sanitize()` · `CartPayload` · `openapi/v1.yaml` (`CartLine` + `CatalogProductDetail`) · `CatalogReader` · `TimeStep.vue` + `PurchaseSection.vue` + `stores/selection.js` + `cart.js` |
 | **T7** · la entrega | `OrderInfolist` (**el huevo-y-gallina**) · `partials/guest-minors` (estado vacío + aviso) · `ViewOrder::sendGuardianLinkAction()` · `Order::RESEND_TYPE_GUARDIAN` · `GuardianAuthorizationRequest` en `RedsysReturnHandler` y `ManualOrderFulfiller` · `items-list` (icono por línea) · hoja de sala |
-| **T8** · la pantalla | `reservation/authorization.blade.php` (resguardo `.gf-stub` + pasos numerados + selector de menores) · `GuardianAuthorizationController` (`responsible`, `dependents`) · `guardian.php` en es/en/fr |
+| **T8** · la pantalla | `reservation/authorization.blade.php` (resguardo `.gf-stub` + pasos numerados + selector de menores; **retirada en `fiesta-sistema-nuevo.md` T4, 26-09: hoy `fiesta/autorizacion.blade.php`**) · `GuardianAuthorizationController` (`responsible`, `dependents`) · `guardian.php` en es/en/fr |
 
 ▶ **Lo que la ejecución enseñó y el diseño no había previsto:**
 

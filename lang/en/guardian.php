@@ -1,31 +1,18 @@
 <?php
 
 /*
- * Phase 6 · the AUTHORISATION for a minor invited to a booking
- * (`docs/specs/waiver-por-reserva.md`, batch T2). Read by a STRANGER: a parent without an account,
- * from a link the person who booked passed on. Three languages, never in `admin.*`.
+ * Phase 6 · the AUTHORISATION for a minor invited to a booking (`docs/specs/waiver-por-reserva.md`, batch T2).
+ * Read by a STRANGER: a parent without an account, from a link the person who booked passed on. Three
+ * languages, never in `admin.*`. Since T4 of `specs/fiesta-sistema-nuevo.md` the page is dressed by the new
+ * system (`fiesta.php`): only what the controller and the domain still read lives here.
  */
 return [
-    'title' => 'Authorisation for minors',
-    'stub' => [
-        'badge' => 'Entry authorization',
-        'heading' => 'Authorize your child',
-        'lede' => 'Someone has booked a visit to the park and your child is coming with the group. For them to come in we need your written authorization. It takes two minutes and no account is needed.',
-    ],
-
     'booking' => [
-        'heading' => 'The booking',
-        'reference' => 'Reference',
-        'date' => 'Day of the visit',
         'no_date' => 'No date assigned yet',
         'responsible' => 'Going with',
     ],
 
     'minor' => [
-        'heading' => "The minor's details",
-        'name' => 'First name',
-        'surname' => 'Surname',
-        'born_on' => 'Date of birth',
         'born_on_help' => 'We use it to know their age on the day of the visit.',
         'from_invitation' => 'On the invitation you wrote “:name”. Split it here: first name in one box, surname in the other.',
         'pick' => 'Choose your child',
@@ -34,16 +21,7 @@ return [
     ],
 
     'guardian' => [
-        'heading' => 'Your details',
-        'help' => 'As the parent or legal guardian of the minor.',
-        'name' => 'First name',
-        'surname' => 'Surname',
-        'relationship' => 'Relationship to the minor',
         'relationship_placeholder' => 'Choose one',
-        'email' => 'Email address',
-        'email_help' => 'If you leave it, we send you a copy of what you sign.',
-        'phone' => 'Phone',
-        'phone_help' => 'So we can reach you on the day of the visit.',
     ],
 
     'relationships' => [
@@ -55,26 +33,15 @@ return [
     ],
 
     'waiver' => [
-        'heading' => 'Liability waiver',
-        'accept' => 'I have read the liability waiver and accept it on behalf of the minor.',
         'version' => 'Version :version, published on :date',
-    ],
-
-    'submit' => 'Sign the authorisation',
-    'submit_short' => 'Sign',
-    'bar' => [
-        'minor' => 'Minor',
     ],
 
     'antibot_label' => 'Security check · Cloudflare',
 
     'done' => [
-        'signed_title' => 'Authorisation registered',
         'already_title' => 'Nothing else to do',
         'stale_title' => 'Please read it again',
         'refused_title' => 'Nothing was registered',
-        'signed' => "Done: :name's authorisation has been registered.",
-        'signed_generic' => 'Done: the authorisation has been registered.',
         'already' => ':name already has an authorisation signed for this booking. Nothing else to do.',
         'already_generic' => 'That minor already has an authorisation signed for this booking.',
         'stale' => 'The waiver text was updated while you were filling this in. Please read it again and accept it.',
@@ -89,12 +56,10 @@ return [
     ],
 
     'errors' => [
-        'accept_waiver' => 'You need to accept the liability waiver before signing.',
         'born_on_future' => 'The date of birth has to be before today.',
         'born_on_adult' => 'That date says this person is already an adult, and adults sign for themselves: this authorisation is only for minors.',
     ],
 
     'notice' => 'You are declaring these details yourself and we do not check them against any document. They are kept as proof of this authorisation.',
-    'privacy' => 'We process these details so the minor can be admitted and as proof of your authorisation. You can exercise your rights as explained in our privacy policy.',
     'privacy_link' => 'Read the privacy policy',
 ];

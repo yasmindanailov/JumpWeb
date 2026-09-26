@@ -157,10 +157,9 @@
        mockup lo pone en **56** (`min-height:56px` en su barra de acciones). Es el único sitio del
        armazón donde el alto no puede salir del racimo: son dos piezas con dos restricciones. */
     --book-bar-h: 56px;
-    /* La sombra de un mueble ANCLADO ABAJO (`#571`: la barra de guardar del formulario post-reserva). Es la
-       de la familia `--shadow-nav` pero hacia ARRIBA: una sombra hacia abajo en una barra pegada al borde
-       inferior cae fuera de la pantalla y no separa nada. */
-    --shadow-nav-dock: 0 -8px 24px color-mix(in srgb, var(--paper-fg) 12%, transparent);
+    /* 📜 Aquí vivía `--shadow-nav-dock` (`#571`: la sombra hacia ARRIBA de la barra de guardar del post-form) y se
+       retiró con esa barra (`fiesta-sistema-nuevo.md` T4, 26-09): un rol de sombra sin un solo usuario es un token
+       muerto, y `ShapeScaleTest` lo dijo. */
     --nav-cluster-h: max(var(--nav-logo-h), var(--nav-btn-h));
 
     --col-max: 1176px;
@@ -2433,7 +2432,6 @@ details > summary.legal-more ~ p { margin-top: var(--sp-10); }
    última fila de lo que lleva. */
 .addons__features .addons__features-gifts { padding: var(--sp-4) 0 0; }
 .addons__features .addons__features-gifts::before { content: none; }
-.gf-extra__gifts { margin-top: var(--sp-6); }
 .catalog__price { font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-body); color: var(--fg); white-space: nowrap; flex: none; }
 /* La UNIDAD de un pack («por niño»), en su propia línea bajo la cifra (`#552`). Hasta esta tanda no
    tenía regla: vivía dentro de `.catalog__price` y heredaba su `nowrap`, que es lo que hacía
@@ -2655,15 +2653,9 @@ details > summary.legal-more ~ p { margin-top: var(--sp-10); }
 /* `select` entra con el justificante de un menor invitado (#328): la relación con el menor es una
    lista CERRADA, no texto libre. Es puramente ADITIVO —medido: no había ni un `<select>` en las
    vistas públicas— y usa los MISMOS tokens, para que un desplegable no invente una segunda forma. */
-/* ⚠️ El `input` de cantidad de los EXTRAS (`#413` T3) entra en ESTA regla y no en una propia: vive
-   fuera de `.eventfields`, así que sin esto salía con el chrome del navegador — medido, `2px inset`
-   y `0` de radio junto a campos de `1px solid` y 14 — y desentonaba en la única zona que cobra.
-   Se AÑADE al grupo en vez de copiarle los valores para que siga al campo si el campo cambia; lo
-   suyo (ancho, centrado, peso) lo sobrescribe su propia regla, que va después en este fichero. */
 .eventfields input,
 .eventfields select,
-.eventfields textarea,
-.gf-extra__field input {
+.eventfields textarea {
     font-family: var(--font-body); font-size: var(--fs-15); color: var(--fg);
     background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--r-btn);
     padding: var(--sp-11) var(--sp-13); width: 100%; resize: vertical;
@@ -2687,9 +2679,8 @@ details > summary.legal-more ~ p { margin-top: var(--sp-10); }
 .eventfields__field.is-invalid input,
 .eventfields__field.is-invalid select,
 .eventfields__field.is-invalid textarea { border-color: var(--err); box-shadow: 0 0 0 3px color-mix(in srgb, var(--err) 13%, transparent); }
-/* Mensaje de error bajo el campo y ayuda: mismos tokens que el resto de la hoja. */
-.eventfields__help { font-family: var(--font-body); font-size: var(--fs-12); color: var(--fg-mute); }
-.eventfields__error { font-family: var(--font-body); font-size: var(--fs-12); font-weight: var(--fw-semibold); color: var(--err); }
+/* 📜 Aquí vivían `.eventfields__help` y `.eventfields__error` (la ayuda y el error bajo un campo): solo los pintaba
+   el post-form viejo, y se fueron con él (`fiesta-sistema-nuevo.md` T4, 26-09; `LandingCssHasNoOrphansTest` los vio). */
 
 /* Datos del evento mostrados bajo una línea de carrito/pago/confirmación */
 .cart__event { list-style: none; margin: var(--sp-8) 0 0; padding: var(--sp-8) 0 0; border-top: 1px dashed var(--line); display: flex; flex-direction: column; gap: var(--sp-3); }
@@ -5157,25 +5148,10 @@ body[data-has-hero] .nav--over .nav__cta {
    `errors/page-maintenance.blade.php` para su fila de botones. Se renombró a `.page__actions`, que
    es el bloque al que esa pantalla pertenece, y vive también en `landing.css`. */
 
-/* Post-formulario de datos por invitado de un cumpleaños (#217). Reutiliza el bloque
-   `.eventfields` (etiqueta + input) para cada campo; aquí van el contenedor y las tarjetas. */
-.guestform { display: flex; flex-direction: column; gap: var(--sp-28); margin-top: var(--sp-8); }
-
-/* Aviso de SOLO LECTURA (#217): la reserva ya se celebró → el formulario se muestra pero no se edita. */
-.guestform__readonly {
-    background: var(--bg-soft); border: 1px solid var(--line);
-    color: var(--fg); border-radius: var(--r-md); padding: var(--sp-14) var(--sp-18); font-size: var(--fs-14); margin-top: var(--sp-8);
-}
-/* Post-form individualizado POR RESERVA (#217): resumen de la reserva (cuándo · invitados ·
-   referencia) + indicador de progreso + nota de privacidad de datos de menores. */
-
-
-.guestform__progress.is-complete { color: var(--ok); background: color-mix(in srgb, var(--ok) 12%, var(--sheet)); }
-.guestform__privacy { color: var(--fg-mute); font-size: var(--fs-13); line-height: 1.5; margin: 0; }
-
-/* ▶ El JUSTIFICANTE de un menor invitado (`.guardian__*` y `.gf-group__num`) se mudó al bloque de la
-   HOJA ENFOCADA en la T3 de `celebracion-e-invitacion.md`: comparte su molde, y allí lo vigilan las
-   escalas de `GuestFormSkinTest` y `GuardianSkinTest`. */
+/* 📜 Aquí vivía el post-formulario de invitados de `#217` (`.guestform`, `.guestform__readonly`,
+   `.guestform__progress`, `.guestform__privacy`) y, después, el justificante (`.guardian__*`, `.gf-group__num`):
+   las tres páginas de la fiesta se visten con el sistema nuevo (`specs/fiesta-sistema-nuevo.md`,
+   `resources/js/fiesta/fiesta.css`) y toda su piel vieja se retiró en la T4 (26-09). */
 
 
 .purchase__note--guestform {
@@ -5451,18 +5427,21 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
 }
 
 /* ====================================================================
-   Formulario post-reserva — HOJA ENFOCADA (#264) · VESTIDA desde el canvas (`#570`, T1)
-   Página `reservation.guests` sin nav/footer. ⚠️ El MOLDE (`gf-page`, `gf-sheet`, `gf-stub`,
-   `gf-form`, `gf-group`, `gf-savebar`, `gf-mark`) lo comparte el JUSTIFICANTE del menor invitado
-   (`reservation/authorization.blade.php`): lo que se viste aquí lo viste a él.
-   ▶ Lo decidido vive en `docs/specs/celebracion-e-invitacion.md` §4.2 y en `doc/formulario.md` del
-   canvas (grietas F-01…F-08): papel liso y UNA columna de 640 · UNA sola superficie de tinta, el
-   resguardo · lo hecho con el rol `--done` · seis tallas de letra · radios `--r-md`, `--r` y
-   `--r-pill` · una sola sombra difusa, la del aviso flotante. La guarda es `GuestFormSkinTest`.
-   Mejora progresiva: sin JS las fichas salen abiertas (form usable); html.js
-   las convierte en acordeón.
+   HOJA ENFOCADA — el molde de las ENCUESTAS (`focused-layout`; `specs/encuestas.md` §4.3)
+   Lo que queda del «Formulario post-reserva — HOJA ENFOCADA» (#264, vestido desde el canvas en
+   `#570`): el marco (`gf-page`, `gf-sheet`), el parte con el logotipo (`gf-mark`), el resguardo
+   (`gf-stub`), el aviso (`gf-notice`) y el cuerpo (`gf-form`): lo que las tres vistas de `survey/`
+   usan, y nada más.
+   ▶ Las tres páginas de la fiesta —la lista de invitados, la invitación con su recibo y la
+   autorización— se visten con el sistema nuevo (`specs/fiesta-sistema-nuevo.md`: la hoja
+   `resources/js/fiesta/fiesta.css` y `x-pagina-enfocada`), y su piel vieja (`.gf-fiche`, `.gf-invite`,
+   `.gf-extra`, `.gf-savebar`, `.gf-meter`, `.gf-group`, `.gf-done`, `.gf-paste`, `.gf-dialog`,
+   `.gf-toast`, `.gf-foot`, `.guardian__*`, `.invitation__*`, `.invitation-card`) se retiró ENTERA en
+   la T4 (26-09): por bloque y con sus tests auditados (`CONVENCIONES §3.quater`).
+   Lo decidido para el molde sigue en pie (`doc/formulario.md` del canvas, F-01…F-08): papel liso y UNA
+   columna de 640 · una sola superficie de tinta, el resguardo · radios `--r-md`, `--r` y `--r-pill` ·
+   las tallas de la escala · ninguna sombra. La guarda es `GuestFormSkinTest`.
    ==================================================================== */
-.gf-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 
 /* ⚠️ La hoja FLOTANTE se retira (F-04 · F-05 · F-06): era una tarjeta de 700 con sombra de modal y
    radio 28 sobre una trama de puntos que no es de la marca, y en un teléfono ni se veía —ocupaba el
@@ -5484,10 +5463,10 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
 .gf-sheet { width: 100%; max-width: 640px; display: flex; flex-direction: column; gap: var(--sp-20); }
 
 /* El RESGUARDO: lo que ya está comprado, y la ÚNICA superficie de tinta de la página.
-   ⚠️ La superficie la declara el MARCADO (`data-surface="ink"`), no una inversión a mano: los grises
-   de dentro se apagaban con CINCO porcentajes (`color-mix` al 88, 70, 60, 50 y 16 %, F-03) donde la
-   superficie ya trae los suyos. Por eso aquí se leen `--fg`, `--fg-body`, `--fg-mute` y `--line`
-   tal cual: dentro de la tinta valen lo que tienen que valer. */
+   ⚠️ La superficie la declara el MARCADO (`data-surface="ink"`), no una inversión a mano (F-03): por
+   eso aquí se leen `--fg` y `--fg-mute` tal cual: dentro de la tinta valen lo que tienen que valer.
+   De sus celdas, su medidor y su contador (la lista vieja) no queda nada: la encuesta solo usa la
+   chapa y el titular. */
 .gf-stub { border-radius: var(--r); padding: var(--sp-20); display: flex; flex-direction: column; gap: var(--sp-16); }
 .gf-stub__top { display: flex; }
 /* Badge = nombre del producto (data-driven), recto y en el TINTE de identidad. Con el color de zona de
@@ -5502,29 +5481,6 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
     border: 1px solid color-mix(in srgb, var(--identity-fill) 30%, var(--bg));
 }
 .gf-stub__title { font-family: var(--font-display); font-size: var(--fs-title); line-height: 1.05; margin: 0; }
-.gf-stub__lede { font-size: var(--fs-lede); line-height: 1.5; margin: 0; color: var(--fg-body); max-width: 54ch; }
-/* Las tres celdas se APILAN en el teléfono: en fila de tres a 390 quedaban 100 px por celda y por eso
-   el valor iba a 14 y el rótulo a 10. Apiladas caben a 16 y 12; en escritorio vuelven a tres. */
-.gf-stub__meta { display: grid; grid-template-columns: 1fr; border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden; }
-.gf-stub__cell { padding: var(--sp-14) var(--sp-16); display: flex; flex-direction: column; gap: var(--sp-4); }
-.gf-stub__cell + .gf-stub__cell { border-top: 1px solid var(--line); }
-.gf-stub__cell .k { font-family: var(--font-mono); font-size: var(--fs-label); font-weight: 500; text-transform: uppercase; letter-spacing: 0.14em; color: var(--fg-mute); }
-.gf-stub__cell .v { font-family: var(--font-body); font-size: var(--fs-body); font-weight: var(--fw-semibold); line-height: 1.3; }
-.gf-stub__cell .v.mono { font-family: var(--font-mono); font-weight: 500; letter-spacing: 0.02em; }
-/* El número de invitados que el cliente cambia desde aquí (`#444`). ⚠️ Hasta la T1 estas dos clases
-   no tenían REGLA: el control era un `input` de navegador de 21 px de alto dentro de la tinta. */
-.gf-stub__count input { width: 88px; min-height: var(--tap-min); border-radius: var(--r-md); border: 1px solid var(--line-strong); background: var(--bg); color: var(--fg); font-size: var(--fs-body); font-weight: var(--fw-semibold); text-align: center; }
-.gf-stub__count input:focus-visible { outline: var(--focus-outline); outline-offset: 2px; }
-.gf-stub__hint { font-size: var(--fs-body-s); line-height: 1.5; color: var(--fg-mute); }
-
-/* El medidor: la cifra de lo hecho y su barra en el ROL `--done`, no en el color de zona (F-01). */
-.gf-meter { display: flex; flex-direction: column; gap: var(--sp-8); }
-.gf-meter__head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-12); }
-.gf-meter__label { font-family: var(--font-mono); font-size: var(--fs-label); font-weight: 500; text-transform: uppercase; letter-spacing: 0.14em; color: var(--fg-mute); }
-.gf-meter__count { font-family: var(--font-display); font-size: var(--fs-20); }
-.gf-meter__count em { font-style: normal; color: var(--done); }
-.gf-meter__track { height: 8px; border-radius: var(--r-pill); background: var(--line); overflow: hidden; }
-.gf-meter__bar { height: 100%; width: 0%; background: var(--done); border-radius: var(--r-pill); transition: width var(--dur-cae) var(--ease-sale); }
 
 /* ─── LOS AVISOS · un solo componente, sobre tinta y sobre papel (`#570`) ───────────────────────
    La receta del aviso de v1.10: tinte del TONO al 14 %, borde al 30 %, un punto del tono delante del
@@ -5542,10 +5498,8 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
     border: 1px solid color-mix(in srgb, var(--gf-tone) 30%, var(--bg));
 }
 .gf-notice[hidden] { display: none; }
-.gf-notice--attn { --gf-tone: var(--attn); }
-.gf-notice--err { --gf-tone: var(--err); }
-/* El cuarto tono entra con el justificante (T3): ÉXITO es «ha quedado registrada», y es `--ok` —el verde de
-   lo confirmado—, no el rol `--done` de lo rellenado. */
+/* Un solo tono además del de identidad: ÉXITO («ha quedado registrada»), `--ok`. Los tonos `--attn` y `--err` se
+   fueron con la lista y el justificante viejos (T4, 26-09): las encuestas no los pintan. */
 .gf-notice--ok { --gf-tone: var(--ok); }
 .gf-notice__title { display: flex; align-items: center; gap: var(--sp-8); font-size: var(--fs-body); font-weight: 700; line-height: 1.3; color: var(--fg); margin: 0; }
 .gf-notice__title::before { content: ""; width: 8px; height: 8px; flex: none; border-radius: var(--r-pill); background: var(--gf-tone); }
@@ -5556,496 +5510,13 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
 
 /* cuerpo del formulario */
 .gf-form { display: flex; flex-direction: column; gap: var(--sp-28); }
-/* La privacidad y el solo lectura son componentes `guestform__*` que comparte el justificante: se
-   visten SOLO dentro de esta hoja. Lo INERTE es superficie Nube, nunca opacidad. */
-.gf-page .guestform__privacy { font-size: var(--fs-body-s); line-height: 1.55; color: var(--fg-mute); margin: 0; }
-.gf-page .guestform__readonly { margin: 0; padding: var(--sp-14) var(--sp-16); border-radius: var(--r-md); background: var(--bg-soft); border: 1px solid var(--line); font-size: var(--fs-body); line-height: 1.5; color: var(--fg); }
-/* La política FUERA de su frase, como control propio de 48 (F-08): dentro del párrafo corría en cajas de
-   línea de 20 px. */
-.gf-intro { display: flex; flex-direction: column; gap: var(--sp-4); }
-.gf-legal { align-self: flex-start; display: inline-flex; align-items: center; min-height: var(--tap-min); font-size: var(--fs-body); font-weight: var(--fw-semibold); color: var(--interactive); text-decoration: underline; }
-.gf-legal:focus-visible { outline: var(--focus-outline); outline-offset: 2px; }
 
-/* ⚠️ Sin bordes DISCONTINUOS entre grupos: el sistema declara tres bordes y los tres son continuos
-   (J-06), y el aire entre grupos ya los separa. */
-.gf-group { display: flex; flex-direction: column; gap: var(--sp-16); }
-/* ⚠️ **`flex-wrap` lo pidió una CAPTURA, no un test** (T8 del justificante): con un titular largo
-   —«Descargo de responsabilidad»— y la versión del documento a su derecha, en un teléfono el título
-   se estrangulaba a tres líneas rotas («Descargo / de / responsabilidad») mientras el rótulo de la
-   versión ocupaba su columna. Ninguna guarda mira anchos; esto solo se ve mirando. */
-.gf-group__head { display: flex; align-items: baseline; gap: var(--sp-12); flex-wrap: wrap; }
-/* ▶ En fila (T3): en el justificante el titular lleva delante el cubo de su ordinal, y un titular largo
-   parte en líneas AL LADO del cubo, no debajo. Con un titular de solo texto no cambia nada. */
-.gf-group__title { display: flex; align-items: center; gap: var(--sp-12); font-family: var(--font-display); font-size: var(--fs-20); line-height: 1.1; margin: 0; }
-.gf-group__opt { font-family: var(--font-mono); font-size: var(--fs-label); font-weight: 500; letter-spacing: 0.14em; color: var(--fg-mute); margin-left: auto; align-self: center; }
-
-/* ─── EL BLOQUE DE LA INVITACIÓN (T6·1, `specs/celebracion-e-invitacion.md` §4.7) ──────────────────
-   Arriba del todo y **antes** de que el anfitrión empiece a teclear, con la puerta de rellenar a mano
-   justo debajo (canvas, turno 3a). Se distingue del papel con SUPERFICIE y BORDE —nunca con una
-   sombra (F-04) ni con el color de zona (F-01)—, que es lo mismo que hace el aviso de solo lectura.
-   ⚠️ Cero controles nuevos: el enlace es texto, los dos atajos son botones del sistema y el
-   desplegable es un `details` NATIVO, como el «Más info» de los extras. */
-.gf-invite {
-    display: flex; flex-direction: column; gap: var(--sp-16);
-    padding: var(--sp-20); border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-soft);
-}
-.gf-invite__lead { margin: 0; font-size: var(--fs-body); line-height: 1.5; color: var(--fg-body); }
-.gf-invite__share { display: flex; flex-direction: column; gap: var(--sp-12); }
-/* El enlace, ESCRITO: sin JavaScript no hay ni Web Share ni portapapeles, y sin verlo no habría forma
-   de repartir la fiesta. En papel (`--bg`) dentro de la superficie suave, para que se lea como un dato
-   y no como un control. */
-.gf-invite__linkbox {
-    display: flex; flex-direction: column; gap: var(--sp-4); margin: 0;
-    padding: var(--sp-12) var(--sp-14); border: 1px solid var(--line); border-radius: var(--r-md); background: var(--bg);
-}
-.gf-invite__linklabel { font-family: var(--font-mono); font-size: var(--fs-label); font-weight: 500; text-transform: uppercase; letter-spacing: 0.14em; color: var(--fg-mute); }
-/* ⚠️ `overflow-wrap: anywhere` no es cosmético: un token de 12 caracteres sobre el dominio del cliente
-   se sale de la columna de 390 y empuja la página entera a un scroll horizontal. */
-.gf-invite__url { font-family: var(--font-mono); font-size: var(--fs-body-s); line-height: 1.5; color: var(--fg); overflow-wrap: anywhere; }
-/* Los atajos miden lo que dicen y no el ancho de la columna —estirados, un solo «Copiar enlace» ocupaba
-   los 640 del escritorio—, que es lo que hace un `.btn` por su cuenta: `inline-flex` y sin crecer.
-   ⚠️ **Un `.btn` es `inline-flex`, y eso PISA el atributo `hidden`**: sin esta línea los dos atajos se
-   verían siempre, también donde el navegador no puede compartir ni copiar.
-   ⚠️ Se apunta al `button` y NO a `.btn`: `scripts/hoja-del-cajon.py` se lleva al paquete del cajón toda
-   regla que nombre una clase suya, y `.gf-invite` no puede existir dentro de un `.sidecart`. */
-.gf-invite__actions { display: flex; flex-wrap: wrap; gap: var(--sp-10); }
-.gf-invite__actions button[hidden] { display: none; }
-.gf-invite__deadline { margin: 0; font-size: var(--fs-body-s); line-height: 1.5; color: var(--fg-mute); }
-/* El resumen: «N vienen · M no pueden · K por repasar», cada cifra en su propia cápsula.
-   ⚠️⚠️ **El punto separador entre hermanos se retiró, y lo decidió una CAPTURA**: a 390 las tres
-   frases no caben en una línea, así que envolvían — y el «·» quedaba **abriendo renglón**, con lo que
-   el resumen se leía como una lista de viñetas mal puesta. Tres cápsulas envuelven solas y cada una
-   sigue siendo su propio elemento para quien lee con lector de pantalla. */
-.gf-invite__tally { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--sp-8); }
-.gf-invite__tallyitem {
-    padding: var(--sp-6) var(--sp-12); border: 1px solid var(--line); border-radius: var(--r-pill); background: var(--bg);
-    font-size: var(--fs-body-s); font-weight: var(--fw-semibold); color: var(--fg);
-}
-/* El grupo «NO VIENEN» (T6·3): una lista de nombres con su botón de retirar. Superficie de papel
-   dentro del bloque, como la caja del enlace: es un dato, no un aviso — nadie ha roto nada, y por eso
-   no lleva el componente de aviso ni ningún tono de error. */
-.gf-invite__declined { display: flex; flex-direction: column; gap: var(--sp-8); padding: var(--sp-12) var(--sp-14); border: 1px solid var(--line); border-radius: var(--r-md); background: var(--bg); }
-.gf-invite__declinedhead { margin: 0; font-family: var(--font-mono); font-size: var(--fs-label); font-weight: 500; text-transform: uppercase; letter-spacing: 0.14em; color: var(--fg-mute); }
-.gf-invite__names { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
-.gf-invite__name { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); font-size: var(--fs-body); }
-.gf-invite__name + .gf-invite__name { border-top: 1px solid var(--line); }
-/* ⚠️ Es un control, así que lleva el suelo táctil de 48 aunque parezca un enlace: se pulsa en un
-   teléfono, con el pulgar y entre dos nombres. */
-.gf-invite__dismiss {
-    flex: none; display: inline-flex; align-items: center; min-height: var(--tap-min); padding: 0 var(--sp-4);
-    border: 0; background: none; cursor: pointer;
-    font-family: var(--font-body); font-size: var(--fs-body-s); font-weight: var(--fw-semibold);
-    color: var(--interactive); text-decoration: underline;
-}
-.gf-invite__dismiss:focus-visible { outline: var(--focus-outline); outline-offset: 2px; }
-/* En una ficha propuesta el botón va debajo de su nota. ⚠️ `.gf-fiche__pad` es un bloque normal, no
-   un flex: aquí manda `display: flex` sobre el propio botón, no un `align-self` que no haría nada. */
-.gf-fiche__pad > .gf-invite__dismiss { display: flex; width: fit-content; margin-bottom: var(--sp-8); }
-/* La chapa del «no» sobre una ficha: INERTE, no informativa — ese niño sigue en la lista del
-   anfitrión y es él quien decide quitarlo. Superficie Nube, nunca un tono de error (§4.7: ninguno en
-   rojo). */
-.gf-fiche__from.is-declined { background: var(--bg-soft); border-color: var(--line); color: var(--fg-mute); }
-
-/* EL RECORDATORIO (T6·6): el bloque que escribe el mensaje para que el anfitrión lo pegue en su chat.
-   Mismo papel que el grupo «No vienen» —es un gesto sobre su lista, no un aviso—, así que ni tono ni
-   componente de aviso.
-   ⚠️ Se apunta al `button` y NO a `.btn`, por lo mismo que los atajos del enlace: `hoja-del-cajon.py`
-   se lleva al paquete del cajón toda regla que nombre una de sus clases, y `.gf-invite` no puede
-   existir dentro de un `.sidecart`. */
-.gf-invite__remind { display: flex; flex-direction: column; gap: var(--sp-12); padding-top: var(--sp-4); }
-.gf-invite__remindform { display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-12); }
-.gf-invite__remindout { display: flex; flex-direction: column; gap: var(--sp-10); padding: var(--sp-12) var(--sp-14); border: 1px solid var(--line); border-radius: var(--r-md); background: var(--bg); }
-.gf-invite__remindlead { margin: 0; font-size: var(--fs-body-s); line-height: 1.5; color: var(--fg-mute); }
-/* ⚠️ `resize: vertical` y no `none`: el texto crece con los nombres y un campo que no se puede
-   estirar obligaría a leerlo por una rendija en el móvil. `width: 100%` con `box-sizing` heredado del
-   reset: sin él el `cols` por defecto de un `textarea` se sale de la columna de 390. */
-.gf-invite__remindtext {
-    width: 100%; resize: vertical; padding: var(--sp-10) var(--sp-12);
-    border: 1px solid var(--line); border-radius: var(--r-md); background: var(--bg-soft);
-    font-family: var(--font-body); font-size: var(--fs-body-s); line-height: 1.5; color: var(--fg);
-}
-.gf-invite__remindtext:focus-visible { outline: var(--focus-outline); outline-offset: 2px; }
-
-/* Personalizar: `details` nativo con el suelo táctil en su `summary` y el chevrón girado al abrirse,
-   la misma receta que el grupo de fichas listas y el «Más info» de un extra. */
-.gf-invite__custom { border-top: 1px solid var(--line); }
-.gf-invite__summary {
-    display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12);
-    min-height: var(--tap-min); cursor: pointer; list-style: none;
-    font-size: var(--fs-body); font-weight: var(--fw-semibold); color: var(--interactive);
-}
-.gf-invite__summary::-webkit-details-marker { display: none; }
-.gf-invite__summary:focus-visible { outline: var(--focus-outline); outline-offset: 2px; }
-.gf-invite__summary svg { transition: transform var(--dur-sale) var(--ease-sale); }
-.gf-invite__custom[open] > .gf-invite__summary svg { transform: rotate(180deg); }
-.gf-invite__form { display: flex; flex-direction: column; gap: var(--sp-16); padding-bottom: var(--sp-4); }
-.gf-invite__form button[type="submit"] { align-self: flex-start; }
-.gf-invite__check { display: flex; align-items: center; gap: var(--sp-12); min-height: var(--tap-min); font-size: var(--fs-body); line-height: 1.5; color: var(--fg); cursor: pointer; }
-
-/* El PEGADO de la lista (2b, `#571`): una frase y un botón fantasma encima de las fichas. Solo con JS: sin él
-   no hay diálogo, y el formulario sigue siendo completo. */
-.gf-paste { display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-10); }
-.gf-paste__prompt { margin: 0; font-size: var(--fs-body-s); line-height: 1.5; color: var(--fg-mute); }
-.gf-paste .gf-notice { align-self: stretch; }
-html:not(.js) .gf-paste { display: none; }
-
-/* Los CAMPOS de la hoja: rótulo a 16 y lo OPCIONAL marcado, en vez del asterisco de lo obligatorio —de
-   cinco columnas, dos son obligatorias, y el asterisco se pintaba con el color de la zona y sin leyenda—.
-   ⚠️ `.eventfields` lo comparte el cajón: se viste SOLO dentro de esta hoja. */
-.gf-page .eventfields { margin-top: 0; }
-.gf-page .eventfields__label { font-size: var(--fs-body); }
-.gf-opt { font-weight: 400; color: var(--fg-mute); }
-.gf-page .eventfields input,
-.gf-page .eventfields select,
-.gf-page .eventfields textarea { font-size: var(--fs-body); border-radius: var(--r-md); }
-
-/* fichas (acordeón) · ⚠️ sin sombra al abrirse (F-04) y sin el color de zona al completarse (F-01): el
-   estado de la ficha lo dicen el CUBO y una PALABRA. */
-.gf-fiches { display: flex; flex-direction: column; gap: var(--sp-10); }
-.gf-fiches__label { margin: var(--sp-6) 0 0; font-family: var(--font-mono); font-size: var(--fs-label); font-weight: 500; text-transform: uppercase; letter-spacing: 0.12em; color: var(--fg-mute); }
-/* Las fichas LISTAS, plegadas en un grupo (2b). `details` nativo: se abre sin JS y lo que hay dentro sigue en
-   el POST aunque esté cerrado. Superficie Nube: es lo que ya está hecho, no lo que falta. */
-.gf-done { border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-soft); }
-.gf-done__summary { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); min-height: var(--tap-min); padding: var(--sp-12) var(--sp-14); cursor: pointer; list-style: none; font-size: var(--fs-body); font-weight: var(--fw-semibold); color: var(--fg); }
-.gf-done__summary::-webkit-details-marker { display: none; }
-.gf-done__summary:focus-visible { outline: var(--focus-outline); outline-offset: -3px; }
-.gf-done[open] > .gf-done__summary .gf-fiche__chev { transform: rotate(180deg); color: var(--fg); }
-.gf-done__list { display: flex; flex-direction: column; gap: var(--sp-10); padding: 0 var(--sp-10) var(--sp-10); }
-.gf-fiche { border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-card); overflow: hidden; transition: border-color var(--dur-estado) var(--ease-sale); }
-.gf-fiche.is-open { border-color: var(--line-strong); }
-.gf-fiche__head { display: flex; align-items: center; gap: var(--sp-14); width: 100%; padding: var(--sp-12) var(--sp-14); text-align: left; background: none; border: none; cursor: pointer; font: inherit; color: inherit; transition: background var(--dur-sale) var(--ease-sale); }
-.gf-fiche__head:hover { background: var(--bg); }
-.gf-fiche__head:focus-visible { outline: var(--focus-outline); outline-offset: -3px; }   /* el anillo del token, no el color de zona (`#436`) */
-html:not(.js) .gf-fiche__head { cursor: default; }
-html:not(.js) .gf-fiche__chev { display: none; }
-/* El CUBO es el estado: Nube con borde cuando falta, el rol `--done` cuando está lista. */
-.gf-fiche__cube { width: 48px; height: 48px; flex-shrink: 0; border-radius: var(--r-md); background: var(--bg-soft); border: 1px solid var(--line); display: grid; place-items: center; font-family: var(--font-display); font-size: var(--fs-18); color: var(--fg); transition: background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale), border-color var(--dur-sale) var(--ease-sale); }
-.gf-fiche.is-complete .gf-fiche__cube { background: var(--done); border-color: transparent; color: var(--on-done); }
-.gf-fiche__who { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-2); }
-.gf-fiche__role { font-family: var(--font-mono); font-size: var(--fs-label); font-weight: 500; text-transform: uppercase; letter-spacing: 0.12em; color: var(--fg-mute); }
-/* «Falta edad» (2b): el dato que falta en una ficha a medias, en rojo de TEXTO sobre papel y en una línea. */
-.gf-fiche__role.is-missing { color: var(--err-ink); font-weight: 700; }
-/* ⚠️ «· Lista» vive DENTRO del rótulo y no en una chapa aparte: la chapa se OCULTABA en el teléfono por
-   falta de sitio, y entonces el estado dependía solo del color. */
-.gf-fiche__done { color: var(--done-ink); font-weight: 700; }
-.gf-fiche:not(.is-complete) .gf-fiche__done { display: none; }
-.gf-fiche__name { max-width: 100%; font-family: var(--font-body); font-size: var(--fs-body); font-weight: var(--fw-semibold); line-height: 1.2; color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.gf-fiche__name.is-empty { color: var(--fg-mute); }
-.gf-fiche__chev { width: 26px; height: 26px; flex-shrink: 0; display: grid; place-items: center; color: var(--fg-mute); transition: transform var(--dur-entra) var(--ease-sale), color var(--dur-sale) var(--ease-sale); }
-/* El régimen del niño (`docs/specs/cumple-mixto.md` §15), SOLO cuando difiere del pack reservado o no
-   hay producto para esa edad: repetir el pack que ya dice el resguardo no informa y se come el nombre.
-   Chapa de TINTE, nunca relleno de zona. */
-.gf-fiche__regime { display: inline-flex; align-items: center; margin-top: var(--sp-4); font-family: var(--font-mono); font-size: var(--fs-label); font-weight: 500; letter-spacing: 0.06em; padding: var(--sp-4) var(--sp-8); border-radius: var(--r-pill); color: var(--fg); background: var(--tint-info); border: 1px solid var(--tint-info-border); }
-.gf-fiche__regime.is-unknown { background: var(--err-bg); border-color: var(--err-border); }
-/* La chapa de ORIGEN (T6·2): esta ficha la PROPONE una respuesta de la invitación y todavía no está
-   adoptada. **Misma receta que la del régimen** —mono, cápsula, tinte de información— porque es el
-   mismo oficio: un dato de contexto sobre el invitado, no un estado ni un error. Ninguno en rojo:
-   aquí nadie ha roto nada. */
-.gf-fiche__from { display: inline-flex; align-items: center; margin-top: var(--sp-4); font-family: var(--font-mono); font-size: var(--fs-label); font-weight: 500; letter-spacing: 0.06em; padding: var(--sp-4) var(--sp-8); border-radius: var(--r-pill); color: var(--fg); background: var(--tint-info); border: 1px solid var(--tint-info-border); }
-/* La nota de «ha contestado más de una vez», dentro de la ficha y en cuerpo: explica un dato que el
-   anfitrión no puede deducir, así que no puede ir en letra pequeña (F-02). */
-.gf-fiche__note { margin: 0 0 var(--sp-12); font-size: var(--fs-body-s); line-height: 1.5; color: var(--fg-mute); }
-.gf-fiche.is-open .gf-fiche__chev { transform: rotate(180deg); color: var(--fg); }
-.gf-fiche__body { display: grid; grid-template-rows: 1fr; }
-html.js .gf-fiche__body { grid-template-rows: 0fr; transition: grid-template-rows var(--dur-entra) var(--ease-sale); }
-html.js .gf-fiche.is-open .gf-fiche__body { grid-template-rows: 1fr; }
-/* Durante la activación JS (#264-audit): el colapso inicial (todas abiertas → acordeón) sin animación. */
-html.gf-initing .gf-fiche__body, html.gf-initing .gf-fiche__chev { transition: none !important; }
-.gf-fiche__body > div { overflow: hidden; }
-.gf-fiche__pad { padding: var(--sp-16) var(--sp-14) var(--sp-18); border-top: 1px solid var(--line); }
-.gf-fiche__pad .eventfields { margin-top: 0; }
-.gf-fiche__foot { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); margin-top: var(--sp-18); }
-html:not(.js) .gf-fiche__foot { display: none; }
-/* Prev/Siguiente usan el componente .btn del sitio (.btn--ghost / .btn--ink). El .btn desliza su icono a
-   la DERECHA al hover; en «Anterior» (flecha izquierda) lo corregimos a la izquierda. */
-.gf-nav-prev:hover svg { transform: translateX(-3px); }
 /* Los botones de la hoja a 16, el nivel Botón del sistema (el mismo que estrenó el cajón en `#550`).
    ⚠️ La FAMILIA `.btn` —su radio y su relleno— no se toca aquí: es de la web entera. */
 .gf-page .btn { font-size: var(--fs-button); }
 
-/* ─── GUARDAR, PEGADO abajo (2b, `#571`) ───────────────────────────────────────────────────────────
-   Con veinte fichas el único botón de la página quedaba al final de toda la página. ⚠️ `sticky` y no
-   `fixed`: viaja mientras se rellena y al llegar al final se queda en su sitio, sin tapar el pie. Es el
-   mueble anclado que el sistema excepcionó (`#217`): superficie opaca, sombra difusa HACIA ARRIBA
-   (`--shadow-nav-dock`), la cuenta a la izquierda y «Guardar» a 56. */
-.gf-savebar__help { font-size: var(--fs-body-s); line-height: 1.55; color: var(--fg-mute); text-align: center; margin: 0; }
-.gf-savebar {
-    position: sticky; bottom: 0; z-index: 20;
-    display: flex; align-items: center; gap: var(--sp-16);
-    margin-inline: calc(var(--sp-20) * -1);
-    padding: var(--sp-14) var(--sp-20) calc(var(--sp-14) + env(safe-area-inset-bottom, 0px));
-    background: var(--bg-card); border-top: 1px solid var(--line); box-shadow: var(--shadow-nav-dock);
-}
-.gf-savebar__count { display: flex; flex-direction: column; gap: var(--sp-2); }
-.gf-savebar__label { font-family: var(--font-mono); font-size: var(--fs-label); font-weight: 500; text-transform: uppercase; letter-spacing: 0.14em; color: var(--fg-mute); }
-.gf-savebar__num { font-family: var(--font-display); font-size: var(--fs-20); color: var(--fg); white-space: nowrap; }
-.gf-savebar__num em { font-style: normal; color: var(--done-ink); }
-.gf-savebar .btn { flex: 1; justify-content: center; }
-/* El campo que se está escribiendo no puede quedar DEBAJO de la barra al recibir el foco. */
-html:has(.gf-savebar) { scroll-padding-bottom: calc(var(--book-bar-h) + var(--sp-28) + var(--sp-20)); }
-
-/* ─── EXTRAS de venta posterior (`specs/complementos-post-reserva.md`, `#413` T3) ───────────────
-   La tercera zona del post-form y la única que mueve dinero. ⚠️ El control base es un
-   `input[type=number]`: esta página es de mejora progresiva declarada, así que un stepper a botones
-   dejaría sin comprar a quien no tiene JavaScript. El JS lo decora; el importe lo recalcula el
-   servidor. Todo con tokens: `RawColourIsNotATokenTest` y `ShapeScaleTest` barren este fichero. */
-.gf-extras__lead { font-size: var(--fs-body-s); line-height: 1.55; color: var(--fg-mute); margin: 0; }
-/* Los extras en FILAS de una sola tarjeta (2b, `#571`): de 152 a 69 px cada uno. */
-.gf-extras__list { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-card); overflow: hidden; }
-/* ⚠️⚠️ Dos correcciones MEDIDAS en navegador, las dos del mismo tipo: una declaración que suponía
-   algo no declarado, sin que fallara nada.
-   ▶ El radio decía `var(--r-card)`, y **ese token no existe** en la escala (`--r-xs · --r-sm ·
-     --r-md · --r-btn · --r · --r-lg · --r-pill`): un `var()` sin fallback a un token no declarado
-     hace que el navegador DESCARTE la declaración entera → esquina viva. Medido: `0px` aquí contra
-     `16px` en `.gf-fiche`, que es la tarjeta hermana de esta misma página. Va con `--r`, el mismo
-     que ella, que es lo que la escala documenta como radio de tarjeta. ⚠️ `ShapeScaleTest` no podía
-     verlo: prohíbe escribir un canto LITERAL, y `var(--r-card)` no lo es.
-   ▶ Y `flex-wrap: wrap`, porque `.gf-extra__why` declara `flex: 1 1 100%` para bajar a su propia
-     línea — pero sin `wrap` ese `100%` no salta: se queda en la fila y aplasta a los hermanos.
-     Medido en una fila cerrada: el motivo se llevaba 424 px de 612 y el nombre caía a 119 px
-     necesitando 164, o sea partido en dos líneas con sitio de sobra al lado. */
-.gf-extra { display: flex; align-items: center; gap: var(--sp-12); min-height: 69px; padding: var(--sp-12) var(--sp-16); }
-.gf-extra + .gf-extra { border-top: 1px solid var(--line); }
-.gf-extra__id { display: flex; flex-direction: column; gap: var(--sp-2); flex: 1 1 auto; min-width: 0; }
-.gf-extra__name { display: inline-flex; align-items: center; gap: var(--sp-6); font-weight: var(--fw-semibold); font-size: var(--fs-body); }
-.gf-extra__price { font-size: var(--fs-body-s); color: var(--fg-mute); }
-/* El «Más info» de cada extra (`#416`): `<details>` nativo, así que funciona sin una línea de JS —
-   la condición de esta página. Se le quita el marcador propio del navegador y se pone el nuestro,
-   que gira al abrir, para que no salga la flecha del sistema junto a los iconos del set. */
-.gf-extra__more { margin: 0; }
-/* ▶ T2 (`#571`): el `summary` es el NOMBRE y el PRECIO de la fila, que así hace de «Más info» entera (2b). */
-.gf-extra__more > summary { display: flex; flex-direction: column; justify-content: center; gap: var(--sp-2); cursor: pointer; list-style: none; min-height: var(--tap-min); }
-.gf-extra__more > summary::-webkit-details-marker { display: none; }
-/* ⚠️ Apunta al `svg`, NO a `.icon`: el componente del set **no emite esa clase** (medido —
-   `getAttribute('class')` → `null`), así que la primera versión de estas dos reglas no giraba nada
-   y `transform` computaba `none` con el desplegable abierto y cerrado. No fallaba: no hacía nada. */
-.gf-extra__more > summary svg { transition: transform var(--dur-sale) var(--ease-sale); }
-.gf-extra__more[open] > summary svg { transform: rotate(180deg); }
-.gf-extra__more > summary:focus-visible { outline: var(--focus-outline); outline-offset: 2px; }
-/* `:not(.gifts)`: los regalos (`#589`) son otra lista dentro del mismo desplegable y traen su propia regla. */
-.gf-extra__more > ul:not(.gifts) { list-style: none; margin: var(--sp-6) 0 0; padding: var(--sp-8) 0 0; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: var(--sp-4); font-size: var(--fs-body-s); color: var(--fg-mute); }
-
-.gf-extra__field { flex: 0 0 auto; }
-.gf-extra__field input { width: 88px; min-height: var(--tap-min); text-align: center; font-size: var(--fs-body); font-weight: var(--fw-semibold); border-radius: var(--r-md); }
-.gf-extra__qty { flex: 0 0 auto; font-family: var(--font-display); font-size: var(--fs-body); color: var(--fg); }
-.gf-extra__why { font-size: var(--fs-body-s); line-height: 1.4; color: var(--fg-mute); }
-/* Lo INERTE es superficie Nube: ni un borde discontinuo —no está en el sistema— ni opacidad. */
-.gf-extra.is-closed { background: var(--bg-soft); }
-/* El dinero de los extras va en RÓTULO y en TINTA: es lo que se debe, y el color de lo cobrado no pinta
-   aquí, porque aquí no se ha cobrado nada. */
-.gf-extras__total { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-14); margin: 0; padding-top: var(--sp-12); border-top: 1px solid var(--line); font-size: var(--fs-body); font-weight: var(--fw-semibold); }
-.gf-extras__total strong { font-family: var(--font-display); font-size: var(--fs-20); font-weight: 400; color: var(--fg); }
-.gf-extras__where { font-size: var(--fs-body-s); color: var(--fg-mute); margin: 0; }
-
-/* El stepper que el JS monta encima del `input[type=number]`. Sin JS no existe y no hace falta. */
-.gf-extra__step { display: inline-flex; align-items: center; gap: var(--sp-6); }
-.gf-extra__step button { min-width: var(--tap-min); min-height: var(--tap-min); border: 1px solid var(--line-strong); border-radius: var(--r-md); background: var(--bg-card); color: var(--fg); font-size: var(--fs-body); font-weight: 700; cursor: pointer; line-height: 1; }
-/* Lo inerte es Nube, nunca opacidad. */
-.gf-extra__step button:disabled { background: var(--bg-soft); color: var(--fg-mute); cursor: default; }
-/* Dentro del stepper el número es la CIFRA (2b): sin caja ni flechas del navegador, en rótulo. El control
-   accesible sigue siendo el `input`, así que conserva su anillo de foco. */
-.gf-extra__step input { width: 40px; padding-inline: 0; border-color: transparent; background: transparent; font-family: var(--font-display); font-size: var(--fs-body); font-weight: 400; appearance: textfield; -moz-appearance: textfield; }
-.gf-extra__step input::-webkit-inner-spin-button,
-.gf-extra__step input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-.gf-extra__step input:focus-visible { outline: var(--focus-outline); outline-offset: 2px; }
-
-/* toast del flash de guardado: mobiliario flotante (`#217`). ⚠️ Su sombra es de la familia `--shadow-nav` y
-   no `--shadow-float`, que con el paquete del cliente vale una sombra DURA (`#265`, la misma corrección de
-   rol que tuvo la barra de móvil). */
-.gf-toast { position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%) translateY(20px); background: var(--fg); color: var(--bg); padding: 13px 22px; border-radius: var(--r-md); font-size: var(--fs-body); font-weight: var(--fw-semibold); display: inline-flex; align-items: center; gap: var(--sp-10); box-shadow: var(--shadow-nav); opacity: 0; pointer-events: none; transition: opacity var(--dur-entra) var(--ease-sale), transform var(--dur-entra) var(--ease-sale); z-index: 200; }
-.gf-toast .tcheck { width: 20px; height: 20px; border-radius: var(--r-pill); background: var(--done); color: var(--on-done); display: grid; place-items: center; flex-shrink: 0; }
-.gf-toast.is-on { opacity: 1; transform: translateX(-50%) translateY(0); }
-/* Con la barra de guardar pegada abajo, el aviso sube por encima de ella. */
-body:has(.gf-savebar) .gf-toast { bottom: calc(var(--book-bar-h) + var(--sp-28) + var(--sp-20)); }
-
-/* ─── El diálogo del PEGADO (2b, `#571`) ─────────────────────────────────────────────────────────────
-   Un modal del sistema: radio 16, sombra de modal y dos botones de 48. `dialog` nativo en la capa superior
-   del navegador, así que no entra en la escala de `z-index`. */
-.gf-dialog { width: min(calc(100% - var(--sp-20) * 2), 480px); padding: 0; border: 0; border-radius: var(--r); background: var(--bg-card); color: var(--fg); box-shadow: var(--shadow-modal); }
-.gf-dialog::backdrop { background: color-mix(in srgb, var(--paper-fg) 45%, transparent); }
-.gf-dialog__body { display: flex; flex-direction: column; gap: var(--sp-14); padding: var(--sp-20); }
-.gf-dialog__title { margin: 0; font-family: var(--font-display); font-size: var(--fs-20); line-height: 1.1; }
-.gf-dialog__help { margin: 0; font-size: var(--fs-body); line-height: 1.5; }
-.gf-dialog__text { width: 100%; min-height: 120px; resize: vertical; padding: var(--sp-14); border: 1px solid var(--line-strong); border-radius: var(--r-md); background: var(--bg-card); color: var(--fg); font-family: var(--font-body); font-size: var(--fs-body); line-height: 1.5; }
-.gf-dialog__text:focus-visible { outline: var(--focus-outline); outline-offset: 2px; }
-.gf-dialog__actions { display: flex; gap: var(--sp-10); }
-.gf-dialog__actions .btn { flex: 1; justify-content: center; }
-
-/* El pie: el copyright en rótulo y los enlaces como CONTROLES de 48 (F-08). Antes era mono de 10 px en
-   versalitas sin alto mínimo, y el de la política era el único control legal que quedaba en solo
-   lectura. */
+/* El aire bajo la hoja: la encuesta no tiene pie propio (F-08 vivía en el pie de la lista vieja). */
 .gf-page .gf-sheet { padding-bottom: var(--sp-28); }
-.gf-foot { width: 100%; max-width: 640px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--sp-4) var(--sp-20); padding-block: var(--sp-12) var(--sp-28); margin-top: auto; border-top: 1px solid var(--line); }
-.gf-foot__copy { font-family: var(--font-mono); font-size: var(--fs-label); text-transform: uppercase; letter-spacing: 0.1em; color: var(--fg-mute); }
-.gf-foot__links { display: flex; gap: var(--sp-16); flex-wrap: wrap; }
-.gf-foot a { display: inline-flex; align-items: center; min-height: var(--tap-min); font-size: var(--fs-body); font-weight: var(--fw-semibold); color: var(--interactive); text-decoration: underline; }
-.gf-foot a.gf-foot__tel { font-family: var(--font-mono); font-size: var(--fs-body-s); font-weight: 400; color: var(--fg); text-decoration: none; }
-.gf-foot a:focus-visible { outline: var(--focus-outline); outline-offset: 2px; }
-
-/* ─── EL JUSTIFICANTE del menor invitado (`reservation/authorization.blade.php`) · T3 ─────────────────
-   Hermana de molde del post-form: hereda arriba el marco, el resguardo, los avisos, los campos y la barra
-   pegada. Aquí va solo lo SUYO —un texto legal, la casilla que lo acepta, el anti-robot y a quién se
-   firma—, con las ocho grietas propias del canvas cerradas (`doc/formulario.md`, J-01…J-08;
-   `docs/specs/celebracion-e-invitacion.md` §4.3). La guarda es `GuardianSkinTest`.
-   ⚠️ Estas reglas vivían FUERA de este bloque, donde ninguna escala las miraba: por eso el ordinal era
-   un círculo (`50%`) con mono 12 y el descargo iba a 13 y 14 sin que fallara nada. */
-
-/* El ordinal del paso: el CUBO del sistema a 40 (J-04), el mismo objeto que numera las fichas de la
-   hermana, una talla menor porque acompaña a un titular de 20 y no es un control. Es un `<span>` DENTRO
-   del `<h2>` y no un `::before` con `content`: un contador de CSS no llega al árbol de accesibilidad, y
-   aquí el número es parte de lo que se lee («1 · datos del menor»), no decoración. */
-.gf-group__num { flex: none; width: 40px; height: 40px; display: grid; place-items: center; border-radius: var(--r-md); background: var(--bg-soft); border: 1px solid var(--line); font-family: var(--font-display); font-size: var(--fs-body); color: var(--fg); }
-/* Los dos rótulos mono de esta hoja: la versión del documento y el que declara la caja de un tercero. */
-.guardian__version,
-.guardian__third-label { font-family: var(--font-mono); font-size: var(--fs-label); font-weight: 500; text-transform: uppercase; letter-spacing: 0.14em; color: var(--fg-mute); }
-/* Una frase de CUERPO en tinta: el motivo de la pantalla sin formulario y la entradilla del paso 2. */
-.guardian__text { margin: 0; font-size: var(--fs-body); line-height: 1.5; color: var(--fg); }
-
-/* A QUÉ visita autoriza el padre (`#401`). Va DENTRO del resguardo, así que lee los tokens de la
-   SUPERFICIE —el resguardo la declara en el marcado (`#570`)— y no una inversión a mano: con ella el
-   nombre del producto se pintó tinta sobre tinta, y lo vio la captura. */
-.guardian__what { margin: 0; padding: var(--sp-11) var(--sp-14); border: 1px solid var(--line); border-radius: var(--r-md); font-family: var(--font-body); font-size: var(--fs-body); line-height: 1.45; color: var(--fg-body); }
-.guardian__what strong { color: var(--fg); }
-
-/* El selector de menores a cargo (§12.5): un ATAJO, no un campo —no se envía—, y por eso va en caja
-   propia sobre Nube. ⚠️ Borde CONTINUO (J-06): el sistema declara tres bordes y ninguno es discontinuo;
-   que es inerte ya lo dice la superficie. */
-.guardian__pick { padding: var(--sp-14) var(--sp-16); border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-soft); }
-
-/* ⚠️⚠️ El descargo se lee ENTERO (J-01). Vivía en una ventana de 320 px con su propio scroll para que un
-   texto largo no empujara la casilla y el botón fuera de la pantalla; ese trabajo lo hace ahora la barra
-   pegada, y mejor. Un scroll dentro de otro es una trampa en un teléfono, y lo que esta pantalla tiene
-   que poder probar es que el documento se PRESENTÓ: enseñar una parte y guardar una firma es la prueba
-   que nadie quiere tener. En tinta y a 16, que es cuerpo: iba a 13. */
-.guardian__waiver { border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-card); padding: var(--sp-18) var(--sp-20); }
-.guardian__waiver-title { font-family: var(--font-display); font-size: var(--fs-20); line-height: 1.1; margin: 0 0 var(--sp-12); color: var(--fg); }
-.guardian__waiver-h { font-family: var(--font-body); font-size: var(--fs-body); font-weight: 700; margin: var(--sp-14) 0 var(--sp-4); color: var(--fg); }
-.guardian__waiver-p { font-size: var(--fs-body); line-height: 1.6; color: var(--fg); margin: 0; }
-
-/* La casilla que FIRMA es la del sistema (J-03): 24, borde de 2 y, marcada, relleno de tinta con el ✓ en
-   papel. Era un `input` de navegador de 13 px, y es el gesto legal de toda la pantalla.
-   ⚠️ El control es el propio `<input>` con `appearance: none` (la receta del interruptor, `#346`): el
-   anillo de foco cae sobre la caja real, y el teclado, el `required` y el lector de pantalla no se
-   enteran. El ✓ son dos bordes girados, sin imagen: un SVG incrustado traería un color crudo.
-   ▶ El área útil sigue siendo la ETIQUETA, que envuelve la casilla y lleva el suelo táctil.
-   ▶ **La receta la comparten las DOS páginas del molde** (T6·1): la casilla de «enseñar mi teléfono»
-   del bloque de la invitación es la misma pieza, y copiarla habría sido un segundo sitio donde
-   arreglarla el día que el sistema la mueva. */
-.guardian__accept { display: flex; align-items: flex-start; gap: var(--sp-12); min-height: var(--tap-min); font-size: var(--fs-body); line-height: 1.5; color: var(--fg); cursor: pointer; }
-.guardian__check,
-.gf-invite__check input[type="checkbox"] {
-    appearance: none; -webkit-appearance: none;
-    position: relative; flex: none; width: 24px; height: 24px; margin: 0; cursor: pointer;
-    border: 2px solid var(--fg); border-radius: var(--r-md); background: var(--bg-card);
-    transition: background var(--dur-sale) var(--ease-sale);
-}
-.guardian__check::before,
-.gf-invite__check input[type="checkbox"]::before {
-    content: ""; position: absolute; left: 6.5px; top: 2px; width: 7px; height: 12px;
-    border: solid var(--bg); border-width: 0 3px 3px 0;
-    transform: rotate(45deg) scale(0); transition: transform var(--dur-sale) var(--ease-sale);
-}
-.guardian__check:checked,
-.gf-invite__check input[type="checkbox"]:checked { background: var(--fg); }
-.guardian__check:checked::before,
-.gf-invite__check input[type="checkbox"]:checked::before { transform: rotate(45deg) scale(1); }
-.gf-invite__check input[type="checkbox"]:focus-visible { outline: var(--focus-outline); outline-offset: 2px; }
-.guardian__accept.is-invalid { color: var(--err-ink); }
-.guardian__accept.is-invalid .guardian__check { border-color: var(--err); }
-
-/* La ayuda y el ERROR de un campo, a 15 (J-07: el suelo de una nota) y el error en rojo de TEXTO. Iban a 12,
-   y la frase de la mayoría de edad —la que más se va a ver— era la letra más pequeña de su campo. */
-.gf-page .eventfields__help { font-size: var(--fs-body-s); line-height: 1.5; }
-.gf-page .eventfields__error { font-size: var(--fs-body-s); line-height: 1.5; color: var(--err-ink); }
-
-/* El cierre: lo legal EN EL FLUJO. ⚠️⚠️ Estos párrafos vivían dentro de `.gf-savebar`, y cuando la T2
-   (`#571`) hizo esa barra pegada y en fila para la hermana, aquí pasó a ocupar 401 px de 844 con el botón
-   65 px fuera de la pantalla (medido a 390), sin que fallara nada. */
-.guardian__close { display: flex; flex-direction: column; gap: var(--sp-16); }
-/* El anti-robot es la caja de un TERCERO (J-08): su letra y su radio de 4 no son nuestros y no se
-   recolorean —disfrazarlo escondería quién comprueba qué—. Segunda excepción declarada del sistema, tras
-   el botón de Google. Lo nuestro es la superficie que lo enmarca y el rótulo que dice qué es. */
-.guardian__third { display: flex; flex-direction: column; gap: var(--sp-8); padding: var(--sp-14) var(--sp-16); border: 1px solid var(--line); border-radius: var(--r-md); background: var(--bg-soft); }
-
-/* A QUIÉN se autoriza, a la izquierda de la barra de firmar: lo único que hay que releer antes de firmar.
-   Un nombre largo se corta con puntos y no empuja al botón. Sin nombre todavía, el bloque no está y el
-   botón ocupa la barra entera. ⚠️ `[hidden]` hay que decirlo: `.gf-savebar__count` declara `display`. */
-/* ───── La INVITACIÓN de una fiesta (`celebracion-e-invitacion.md` §4.6, T5·1) ─────
-   Vive DENTRO de la hoja enfocada porque comparte su molde entero (`.gf-page`, `.gf-stub`,
-   `.gf-group`), y por eso sus tallas y sus radios entran en las mismas escalas que vigila
-   `GuestFormSkinTest`. Lo único propio es lo que sus hermanas no tienen.
-
-   ⚠️ **Nada de esto toca una clase `.gf-*`**, a propósito: ese molde es de DOS páginas más, y la T2
-   ya enseñó lo que cuesta moverlo sin mirarlas (la barra de firmar de 401 px, §10.3). */
-
-/* ── La TARJETA: banda, confeti y chapa de edad (§4.6, §3.4) ──
-   ⚠️⚠️ **Cero naranja**, y está escrito en la spec: `--action-brand` es el color de COMPRAR en todo el
-   producto, y esta página no vende nada. Usar aquí el mismo naranja convertiría «te invito a mi
-   cumple» en un CTA de tienda.
-
-   ⚠️ Los tres temas NO son ilustraciones: son formas del sistema (gradientes) teñidas con los tokens
-   de la INSTALACIÓN (`--brand`, `--brand-2`). Un cliente con paleta lima ve su lima. Los seis del
-   canvas se descartaron justo por lo contrario: clavaban el mural de un parque dentro del producto. */
-.invitation-card { position: relative; overflow: hidden; }
-
-/* La BANDA: el tema en el borde superior de la tarjeta, del ancho completo. Es lo único que se ve
-   antes de leer nada, y lo que distingue un tema de otro de un vistazo. */
-.invitation-card::before {
-    content: ''; position: absolute; inset-block-start: 0; inset-inline: 0; height: var(--sp-8);
-    background: linear-gradient(90deg, var(--brand) 0%, var(--brand-2) 100%);
-}
-/* El CONFETI es **`.grain`, la pieza del sistema** (A1 de la fachada): «la única textura que el
-   sistema admite sobre tinta», con su perilla de densidad `--trama`.
-   ⚠️⚠️ **No se inventa un gradiente propio, y esto no es purismo.** La primera versión de esta página
-   llevaba dos radiales míos y la guarda F-06 la puso en rojo: la trama del post-form se retiró
-   justamente por «no ser de la marca». Lo que el sistema ya tiene se usa; lo que no, se propone.
-   Lo único que cambia por tema es la DENSIDAD, que es para lo que existe la perilla. */
-.invitation-card[data-theme="fiesta"] { --trama: 0.34; }
-/* `sereno`: sin confeti y con la banda en un solo tono. Para la fiesta de un niño mayor, donde el
-   confeti sobra, y para una instalación cuya marca ya es muy gráfica. */
-.invitation-card[data-theme="sereno"] .grain { display: none; }
-.invitation-card[data-theme="sereno"]::before { background: var(--brand); }
-/* `fiesta` invierte la banda: el mismo gesto, el otro tono de la marca al frente. */
-.invitation-card[data-theme="fiesta"]::before { background: linear-gradient(90deg, var(--brand-2) 0%, var(--brand) 100%); }
-
-/* Lo de dentro por encima del confeti. Sin esto, los puntos se pintan sobre el texto. */
-.invitation-card > * { position: relative; z-index: 1; }
-
-/* La CHAPA de la edad: el número, grande y redondo, al lado del nombre. Es el segundo dato que se
-   mira, y en el canvas es una pieza y no una frase.
-   ⚠️ Tamaño fijo y `flex-shrink: 0`: con dos cifras («Cumple 12») no puede deformarse en un óvalo. */
-.invitation__age {
-    display: inline-flex; align-items: center; justify-content: center;
-    inline-size: 56px; block-size: 56px; flex: 0 0 auto; border-radius: var(--r-pill);
-    font-family: var(--font-display); font-size: var(--fs-20); line-height: 1;
-    background: var(--brand); color: var(--on-brand);
-}
-.invitation-card[data-theme="fiesta"] .invitation__age { background: var(--brand-2); color: var(--on-brand); }
-/* En `sereno` la chapa es de trazo, no de relleno: el tema entero va un tono más bajo. */
-.invitation-card[data-theme="sereno"] .invitation__age { background: transparent; border: 2px solid var(--brand); color: var(--ink-fg); }
-
-
-/* El nombre y la chapa, en la misma fila y alineados por su centro. */
-.invitation__who { display: flex; align-items: center; gap: var(--sp-16); }
-
-/* El nombre de quien cumple es EL dato de la página: va solo, en la fuente de rótulo y a la talla del
-   titular. Un nombre largo parte por palabras en vez de desbordar la tarjeta. */
-.invitation__honoree { font-family: var(--font-display); font-size: var(--fs-title); line-height: 1.05; margin: 0; overflow-wrap: break-word; min-width: 0; }
-/* El bloque de «Dónde»: el MISMO molde con superficie que enmarca el anti-robot del justificante
-   (borde, radio medio y papel suave del sistema). Antes eran dos párrafos sueltos sobre el fondo, sin
-   caja — que es lo que el owner vio como «texto plano».
-   ⚠️ El menú NO necesita esto: usa `.gf-extras__list`, la pieza con la que el post-form lista los
-   complementos, porque el menú **es** una lista de complementos. Una pieza por cada cosa, no una caja
-   genérica para las dos. */
-.invitation__panel { display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-12); padding: var(--sp-16); border: 1px solid var(--line); border-radius: var(--r-md); background: var(--bg-soft); }
-/* El nombre del negocio manda dentro de su bloque: es el sitio al que hay que ir. */
-.invitation__place { font-family: var(--font-display); font-size: var(--fs-20); line-height: 1.2; margin: 0; }
-/* El texto de un bloque. A la talla del cuerpo, no a la de una nota: aquí no es letra pequeña, es la
-   información por la que se abre la invitación. */
-.invitation__note { font-size: var(--fs-body); line-height: 1.5; margin: 0; color: var(--fg-body); }
-/* «Cómo llegar» es una ACCIÓN y ahora lo parece: botón del sistema en su variante discreta. Como
-   párrafo con un enlace subrayado se leía igual que la dirección de encima. */
-.invitation__go { align-self: flex-start; }
 
 /* ── LA ENCUESTA por correo (`specs/encuestas.md` §4.3, T3) ──
    Misma hoja enfocada que la invitación. Cada opción es un radio/checkbox OCULTO con su etiqueta vestida de
@@ -6067,61 +5538,14 @@ body:has(.gf-savebar) .gf-toast { bottom: calc(var(--book-bar-h) + var(--sp-28) 
 .survey__error { margin: var(--sp-8) 0 0; font-size: var(--fs-body-s); color: #b42318; }
 .survey__actions { display: flex; flex-wrap: wrap; gap: var(--sp-12); }
 
-/* ── CONTESTAR (T5·2) ──
-   ⚠️⚠️ **Barra PROPIA y no `.gf-savebar`, aunque hablen el mismo idioma.** Esa clase es de TRES
-   páginas y resuelve otro problema —un «guardar» en fila—; aquí hay un campo y DOS botones del mismo
-   peso, que a 390 no caben en una línea. Tocarla para que cupieran movería el post-form y el
-   justificante, que es **exactamente** cómo la T2 rompió la barra de firmar (401 px de 844, §10.3).
-   ▶ Lo que sí se comparte es el lenguaje: mueble pegado abajo, papel de tarjeta, borde superior y la
-   sombra de dock — la misma familia que la guarda de la hoja admite. */
-.invitation__bar {
-    position: sticky; bottom: 0; z-index: 20;
-    display: flex; flex-direction: column; gap: var(--sp-12);
-    margin-inline: calc(var(--sp-20) * -1);
-    padding: var(--sp-14) var(--sp-20) calc(var(--sp-14) + env(safe-area-inset-bottom, 0px));
-    background: var(--bg-card); border-top: 1px solid var(--line); box-shadow: var(--shadow-nav-dock);
-}
-.invitation__field { display: flex; flex-direction: column; gap: var(--sp-6); }
-.invitation__label { font-size: var(--fs-label); font-weight: var(--fw-semibold); }
-.invitation__field input { min-height: var(--tap-min); font-size: var(--fs-body); border-radius: var(--r-md); }
-.invitation__error { font-size: var(--fs-body-s); line-height: 1.5; color: var(--err-ink); margin: 0; }
-
-/* ❗❗ **Los dos botones con el MISMO peso** (§4.6): no hay respuesta correcta. Jerarquizar el «sí»
-   —tinta grande contra un enlace pequeño— empujaría a decir que sí a quien no puede ir, y el anfitrión
-   acabaría con una lista que no es la real. Ocupan mitad y mitad, y en pantallas estrechas se apilan
-   antes de encogerse por debajo del área táctil. */
-.invitation__answers { display: flex; flex-wrap: wrap; gap: var(--sp-12); }
-.invitation__answers > .btn { flex: 1 1 12ch; }
-
-/* El aviso de privacidad, al pie y fuera de la barra: se lee una vez, no acompaña a cada gesto. */
-.invitation__privacy { font-size: var(--fs-body-s); line-height: 1.55; color: var(--fg-mute); margin: 0; max-width: 60ch; }
-
-/* ❗❗ **«Voy con él» NO pide firma** (D4), y hasta `#703` el botón de firmar se enseñaba igual — o sea
-   que la pantalla contradecía el texto que el propio padre acababa de leer dos líneas antes.
-   ⚠️ Con `:has()` y no con JS: esta página funciona entera sin una línea de script, y el estado lo
-   lleva el propio radio. Sin elegir nada el botón SÍ se ve, y es correcto: todavía no ha dicho que se
-   queda. `:has()` ya es idioma de la casa (19 usos entre las dos hojas). */
-.gf-group:has(input[name="companion"][value="with_adult"]:checked) .invitation__go { display: none; }
-/* El teléfono del anfitrión es un enlace `tel:` y tiene que parecerlo en un dedo: área táctil propia
-   dentro de la celda, sin cambiar la tipografía mono de la cifra. */
-.invitation__call { display: inline-block; padding-block: var(--sp-4); text-decoration: underline; }
-
-.guardian__who { flex: 1 1 auto; min-width: 0; }
-.guardian__who[hidden] { display: none; }
-.guardian__who-name { font-size: var(--fs-body); font-weight: 700; line-height: 1.3; color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.guardian__who:not([hidden]) + .btn { flex: 0 0 auto; }
-
-/* Escritorio: las celdas del resguardo vuelven a FILA —tantas como haya: la del día no sale sin franja— y
-   el resguardo gana aire. El título ya sube solo a 36 con `--fs-title`. */
+/* Escritorio: el resguardo gana aire. El título ya sube solo a 36 con `--fs-title`. */
 @media (min-width: 1024px) {
     .gf-page { padding-block-start: var(--sp-28); }
     .gf-stub { padding: var(--sp-28); }
-    .gf-stub__meta { grid-auto-flow: column; grid-auto-columns: 1fr; }
-    .gf-stub__cell + .gf-stub__cell { border-top: 0; border-left: 1px solid var(--line); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .gf-page *, .gf-page *::before, .gf-page *::after, .gf-toast { transition: none !important; animation: none !important; }
+    .gf-page *, .gf-page *::before, .gf-page *::after { transition: none !important; animation: none !important; }
 }
 
 /* 📜 **AQUÍ VIVÍA EL WIDGET «CAJA DE REGALO» DE OFERTAS** (`#270`) —el lanzador flotante, su

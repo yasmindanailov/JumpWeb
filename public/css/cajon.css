@@ -1,7 +1,7 @@
 /* GENERADO por scripts/hoja-del-cajon.py desde public/css/{site,landing,spinner}.css. NO se edita a mano:
  * se toca la regla en su fuente y se vuelve a generar. `HojaDelCajonTest` vigila que no se separen.
  * Qué entra y por qué: la cabecera de ese guion y `specs/cajon-empaquetable.md` §4.3.
- * FUENTES landing.css:075c01f32ca8 spinner.css:8270bcfe03ab site.css:1f6b93bda99e */
+ * FUENTES landing.css:075c01f32ca8 spinner.css:8270bcfe03ab site.css:b83e1ff59ae2 */
 /* La BASE del paquete: lo que el cajón heredaba del `<body>` del producto y ahora se da
  * a sí mismo, para no tocar el documento del anfitrión. Ver la cabecera del generador. */
 :where(.sidecart), :where(.sidecart) * {
@@ -840,10 +840,9 @@
     mockup lo pone en **56** (`min-height:56px` en su barra de acciones). Es el único sitio del
     armazón donde el alto no puede salir del racimo: son dos piezas con dos restricciones. */
     --book-bar-h: 56px;
-    /* La sombra de un mueble ANCLADO ABAJO (`#571`: la barra de guardar del formulario post-reserva). Es la
-    de la familia `--shadow-nav` pero hacia ARRIBA: una sombra hacia abajo en una barra pegada al borde
-    inferior cae fuera de la pantalla y no separa nada. */
-    --shadow-nav-dock: 0 -8px 24px color-mix(in srgb, var(--paper-fg) 12%, transparent);
+    /* 📜 Aquí vivía `--shadow-nav-dock` (`#571`: la sombra hacia ARRIBA de la barra de guardar del post-form) y se
+    retiró con esa barra (`fiesta-sistema-nuevo.md` T4, 26-09): un rol de sombra sin un solo usuario es un token
+    muerto, y `ShapeScaleTest` lo dijo. */
     --nav-cluster-h: max(var(--nav-logo-h), var(--nav-btn-h));
     --col-max: 1176px;
     /* El sangrado lateral de un contenedor YA ACOTADO (`max-width` propio). Es una LONGITUD FIJA
@@ -2369,7 +2368,7 @@ details > summary.legal-more ~ p {
 .eventfields__req {
     color: var(--zone-1);
 }
-.eventfields input, .eventfields select, .eventfields textarea, .gf-extra__field input {
+.eventfields input, .eventfields select, .eventfields textarea {
     font-family: var(--font-body); font-size: var(--fs-15); color: var(--fg);
     background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--r-btn);
     padding: var(--sp-11) var(--sp-13); width: 100%; resize: vertical;
@@ -2393,12 +2392,6 @@ details > summary.legal-more ~ p {
 }
 .eventfields__field.is-invalid input, .eventfields__field.is-invalid select, .eventfields__field.is-invalid textarea {
     border-color: var(--err); box-shadow: 0 0 0 3px color-mix(in srgb, var(--err) 13%, transparent);
-}
-.eventfields__help {
-    font-family: var(--font-body); font-size: var(--fs-12); color: var(--fg-mute);
-}
-.eventfields__error {
-    font-family: var(--font-body); font-size: var(--fs-12); font-weight: var(--fw-semibold); color: var(--err);
 }
 .cart__event {
     list-style: none; margin: var(--sp-8) 0 0; padding: var(--sp-8) 0 0; border-top: 1px dashed var(--line); display: flex; flex-direction: column; gap: var(--sp-3);
@@ -3113,41 +3106,8 @@ details > summary.legal-more ~ p {
 .purchase__maint-ctas .btn {
     width: 100%; justify-content: center; text-align: center;
 }
-.gf-page .eventfields {
-    margin-top: 0;
-}
-.gf-page .eventfields__label {
-    font-size: var(--fs-body);
-}
-.gf-page .eventfields input, .gf-page .eventfields select, .gf-page .eventfields textarea {
-    font-size: var(--fs-body); border-radius: var(--r-md);
-}
-.gf-fiche__pad .eventfields {
-    margin-top: 0;
-}
 .gf-page .btn {
     font-size: var(--fs-button);
-}
-.gf-savebar .btn {
-    flex: 1; justify-content: center;
-}
-.gf-extra__more > ul:not(.gifts) {
-    list-style: none; margin: var(--sp-6) 0 0; padding: var(--sp-8) 0 0; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: var(--sp-4); font-size: var(--fs-body-s); color: var(--fg-mute);
-}
-.gf-dialog__actions .btn {
-    flex: 1; justify-content: center;
-}
-.gf-page .eventfields__help {
-    font-size: var(--fs-body-s); line-height: 1.5;
-}
-.gf-page .eventfields__error {
-    font-size: var(--fs-body-s); line-height: 1.5; color: var(--err-ink);
-}
-.invitation__answers > .btn {
-    flex: 1 1 12ch;
-}
-.guardian__who:not([hidden]) + .btn {
-    flex: 0 0 auto;
 }
 .acc-tiles {
     display: grid;

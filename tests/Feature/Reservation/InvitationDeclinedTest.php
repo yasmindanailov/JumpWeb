@@ -83,12 +83,14 @@ class InvitationDeclinedTest extends TestCase
         $html = $this->get($item->guestFormSignedUrl())->assertOk()->getContent();
 
         $this->assertStringContainsString('Pablo Ortiz', $html, 'un «no» tiene que VERSE: es lo que lleva a bajar invitados');
-        $this->assertStringContainsString(trans_choice('guestform.invite.declined_title', 1, ['count' => 1]), $html);
+        // La fila del «no» y la frase de D3 son las de la lista del sistema nuevo (`fiesta.php`): la T4 retiró las
+        // claves viejas, que este test mantenía vivas porque su texto coincidía letra a letra con el nuevo.
+        $this->assertStringContainsString(__('fiesta.fila.no'), $html);
         // La frase de D3 lleva la fecha, no un plazo en horas.
         $deadline = app(GuestCountPolicy::class)->deadlineFor($item);
         $this->assertNotNull($deadline);
         $this->assertStringContainsString(
-            __('guestform.invite.declined_lead', ['when' => DisplayTime::dayLabel($deadline)]),
+            __('fiesta.lista.la_lista.no_vienen_baja', ['plazo' => DisplayTime::dayLabel($deadline)]),
             $html,
         );
     }

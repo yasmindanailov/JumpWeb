@@ -11,11 +11,14 @@ use Illuminate\Support\Str;
 use Tests\TestCase;
 
 /**
- * La PIEL del formulario post-reserva y de su molde (`docs/specs/celebracion-e-invitacion.md` §4.2, `#570`).
+ * La PIEL de la hoja enfocada (`focused-layout`): el molde que nació con el formulario post-reserva
+ * (`docs/specs/celebracion-e-invitacion.md` §4.2, `#570`) y que desde la T4 de `fiesta-sistema-nuevo.md` (26-09)
+ * queda para las ENCUESTAS (`gf-page`, `gf-mark`, `gf-sheet`, `gf-stub`, `gf-notice`, `gf-form`): las tres páginas
+ * de la fiesta se visten con el sistema nuevo y su piel vieja se retiró entera.
  *
- * ▶ Vigila las ocho grietas que el canvas midió (`doc/formulario.md`, F-01…F-08) donde se pueden volver
- * a abrir SIN QUE NADA FALLE: el color de zona haciendo de estado, las sombras de modal, los radios y
- * las tallas fuera de la escala, el asterisco rojo y la política metida en su frase.
+ * ▶ Vigila las grietas que el canvas midió (`doc/formulario.md`, F-01…F-08) donde se pueden volver a abrir SIN
+ * QUE NADA FALLE: el color de zona haciendo de estado, las sombras, los radios y las tallas fuera de la escala; y
+ * en la lista nueva, el asterisco rojo y la política metida en su frase.
  *
  * ⚠️ Mira el BLOQUE de la hoja en `site.css` y **sin comentarios**: la prosa de este fichero nombra a
  * propósito lo que se retiró (`--zone-1`, `--shadow-modal`…), y una aserción por subcadena sobre el
@@ -43,11 +46,9 @@ class GuestFormSkinTest extends TestCase
         $css = $this->sheetCss();
         preg_match_all('/box-shadow:\s*([^;}]+)/', $css, $m);
 
-        // Tres muebles con su ROL y nada más (T2, `#571`): el aviso de guardado y la barra pegada son
-        // mobiliario —la familia `--shadow-nav`, porque `--shadow-float` vale una sombra DURA con el paquete
-        // (`#265`)— y el diálogo del pegado es un modal. Una ficha abierta NO se eleva (F-04).
-        $allowed = ['var(--shadow-nav)', 'var(--shadow-nav-dock)', 'var(--shadow-modal)'];
-        $this->assertSame([], array_values(array_diff(array_map('trim', $m[1]), $allowed)), 'una sombra fuera de los tres muebles de la hoja (F-04)');
+        // Desde la T4 (26-09) el molde no tiene ningún mueble que se eleve: el aviso de guardado, la barra pegada y
+        // el diálogo del pegado se fueron con la lista vieja. Nada en el bloque puede tener sombra (F-04).
+        $this->assertSame([], array_values(array_map('trim', $m[1])), 'una sombra en el molde de la hoja (F-04)');
         $this->assertStringNotContainsString('radial-gradient', $css, 'la trama de puntos no es de la marca (F-06)');
     }
 
@@ -94,7 +95,7 @@ class GuestFormSkinTest extends TestCase
     private function sheetCss(): string
     {
         $css = (string) file_get_contents(public_path('css/site.css'));
-        $title = strpos($css, 'Formulario post-reserva — HOJA ENFOCADA');
+        $title = strpos($css, 'HOJA ENFOCADA — el molde de las ENCUESTAS');
         $this->assertNotFalse($title, 'no se encuentra el bloque de la hoja en site.css');
         // Desde la APERTURA de su comentario de cabecera, o el recorte empezaría a mitad de un
         // comentario y su prosa no se podría quitar.

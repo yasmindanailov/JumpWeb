@@ -18,7 +18,7 @@ use Tests\TestCase;
  * nuevo de la PÁGINA no reordene a los invitados al guardar.
  *
  * ⚠️ La lógica pura del pegado y del estado de una ficha se prueba con `node --test`
- * (`resources/js/guest-form/logic.test.js`); aquí se prueba lo que pinta el servidor y lo que guarda.
+ * (`resources/js/fiesta/logica.test.js`); aquí se prueba lo que pinta el servidor y lo que guarda.
  */
 class GuestFormManyGuestsTest extends TestCase
 {
@@ -121,10 +121,15 @@ class GuestFormManyGuestsTest extends TestCase
         $this->assertStringContainsString(__('guestform.readonly_notice'), $readonly);
     }
 
-    public function test_the_page_serves_the_logic_module_it_imports(): void
+    public function test_the_page_serves_the_module_it_imports(): void
     {
-        // Un módulo que no se sirve deja la página en `no-js`: completa, pero sin pegado ni agrupado vivo.
-        $this->assertFileExists(public_path('js/guest-form/logic.js'));
+        // Un módulo que no se sirve deja la página en `no-js`: completa, pero sin pegado ni agrupado vivo. Desde la
+        // T4 (26-09) el módulo es la entrada de Vite de la lista (`resources/js/fiesta/lista.js`), que el manifiesto
+        // de la construcción tiene que nombrar y cuyo fichero tiene que existir en `public/build`.
+        $manifiesto = json_decode((string) file_get_contents(public_path('build/manifest.json')), true);
+        $this->assertIsArray($manifiesto);
+        $this->assertArrayHasKey('resources/js/fiesta/lista.js', $manifiesto, 'la lista no está en el manifiesto de Vite');
+        $this->assertFileExists(public_path('build/'.$manifiesto['resources/js/fiesta/lista.js']['file']));
     }
 
     /**

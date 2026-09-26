@@ -228,7 +228,7 @@ class GuestFormTest extends TestCase
         $this->actingAs($user)->get(route('reservation.guests', ['reservation' => $reservation]))
             ->assertOk()
             ->assertSee(__('guestform.readonly_notice'))
-            ->assertDontSee(__('guestform.hint'));  // el bloque de guardar (hint incluido) no se renderiza
+            ->assertDontSee('data-barra', false);  // la barra de Guardar (la única acción que escribe) no se pinta
     }
 
     public function test_store_on_finished_reservation_does_not_save(): void
@@ -642,7 +642,7 @@ class GuestFormTest extends TestCase
             ->assertOk()
             ->assertSee(__('guestform.no_product_title'))
             ->assertSee(__('guestform.no_product_below', ['phone' => '968 22 22 22']))
-            ->assertSee(__('guestform.regime_no_product'))
+            ->assertSee(__('fiesta.lista.la_lista.sin_producto'))
             ->getContent();
 
         $this->assertStringContainsString('data-sin-producto="1"', $html, 'la ficha va marcada para que el JS no la dé por lista');
@@ -1053,10 +1053,12 @@ class GuestFormTest extends TestCase
         $user = User::factory()->create();
         $reservation = $this->reservation($this->paidOrder($user, $this->pack()));
 
+        // La zona 4 de la lista del sistema nuevo (`data-zona="4"`, `data-extras`) solo se pinta con extras que vender.
         $this->actingAs($user)
             ->get(route('reservation.guests', ['reservation' => $reservation]))
             ->assertOk()
-            ->assertDontSee('id="gf-extras"', false);
+            ->assertDontSee('data-zona="4"', false)
+            ->assertDontSee('data-extras', false);
     }
 
     /**

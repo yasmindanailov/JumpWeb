@@ -136,11 +136,13 @@ class ShapeScaleTest extends TestCase
         // ⚠️ Y aquí la chapa del widget de ofertas, que leía su propio color de marca (`#668`).
     ];
 
-    /** Las tres reglas de foco que NO pueden usar `--focus-color`, y por qué. */
+    /** Las dos reglas de foco que NO pueden usar `--focus-color`, y por qué. */
     private const FOCUS_EXCEPTIONS = [
         '.skip-link:focus-visible' => 'pinta sobre su propio fondo oscuro, que aún no declara superficie',
         '.hero__chip:focus-visible' => 'pinta sobre el vídeo del hero, que aún no declara superficie',
-        '.gf-fiche__head:focus-visible' => 'anillo INTERIOR (offset −2px) en el acento de zona, no en la tinta',
+        // ⚠️ `.gf-fiche__head:focus-visible` vivía aquí (el anillo interior de la ficha del post-form) y SE
+        // RETIRÓ con la piel vieja de la lista de invitados (`fiesta-sistema-nuevo.md` T4, 26-09): **de tres
+        // excepciones de foco quedan dos** — la lista encogió sola, como las de elevación.
     ];
 
     /** @var ?list<string> */
@@ -467,9 +469,10 @@ class ShapeScaleTest extends TestCase
             // El mobiliario flotante (`#217`): tres pesos y dos alturas, todos del mismo rol.
             'var(--shadow-nav)', 'var(--shadow-nav-ghost)', 'var(--shadow-nav-ghost-lift)',
             'var(--shadow-nav-fill)', 'var(--shadow-nav-fill-lift)',
-            // El mueble ANCLADO ABAJO (`#571`, la barra de guardar del formulario post-reserva): el mismo rol
-            // con la sombra hacia ARRIBA, porque hacia abajo caería fuera de la pantalla.
-            'var(--shadow-nav-dock)',
+            // ⚠️ `var(--shadow-nav-dock)` vivía aquí —el mueble ANCLADO ABAJO de `#571`, la barra de guardar del
+            // post-form, con la sombra hacia ARRIBA— y SE RETIRÓ con esa barra (`fiesta-sistema-nuevo.md` T4,
+            // 26-09): sin un solo usuario, esta misma guarda lo dijo («ni un uso del rol»), y un rol sin usuario
+            // es un token muerto. La barra de Guardar nueva lleva su propia sombra por rol de la fiesta.
             // Los dos ESTADOS de `--shadow-float` (`#478`): una pegatina que se aprieta acorta su
             // sombra y luego la pierde. ⚠️ No son una escala nueva: son el mismo rol respondiendo,
             // y por eso llevan su nombre. Se declaran **los dos**, como el par de `RhythmScaleTest`.

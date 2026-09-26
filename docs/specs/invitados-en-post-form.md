@@ -53,8 +53,9 @@ sanitizeGuestData → 8 filas guardadas (se descartan 4)
 nombres conservados: X1 … X8
 ```
 
-Y la vista no ofrece la puerta: `reservation/guests.blade.php` pinta **exactamente `quantity`
-fichas** (`@for ($i = 0; $i < $reservation->quantity; $i++)`), sin botón de añadir.
+Y la vista no ofrece la puerta: la lista pinta **exactamente `quantity` fichas** (hoy `ListaDeInvitados::ninos()`,
+una fila por posición, en `fiesta/lista/zona-2.blade.php`; entonces `reservation/guests.blade.php`, retirada en
+`fiesta-sistema-nuevo.md` T4), sin botón de añadir por encima de la reserva.
 
 ⚠️ **Y no hay ni una frase que le diga qué hacer.** El post-form tiene «llámanos» para **cinco**
 situaciones —las tres edades sin producto, el extra fuera de plazo y el que no se pudo cambiar— y

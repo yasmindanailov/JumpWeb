@@ -240,9 +240,9 @@ class MeOrdersTest extends ApiTestCase
             ->assertJsonPath('data.0.items.0.guest_count_deadline', $plazo)
             ->assertJsonPath('data.0.items.0.invitation_url', $formulario.'#gf-invite');
 
-        // ⚠️ El ancla es de la VISTA del formulario: si su bloque cambiara de id, el botón «Compartir la invitación»
-        // dejaría al cliente arriba del formulario sin que nada fallara.
-        $this->assertStringContainsString('id="gf-invite"', (string) file_get_contents(resource_path('views/reservation/guests.blade.php')));
+        // ⚠️ El ancla es de la VISTA de la lista (la zona 1 del sistema nuevo): si su bloque cambiara de id, el botón
+        // «Compartir la invitación» dejaría al cliente arriba del formulario sin que nada fallara.
+        $this->assertStringContainsString('id="gf-invite"', (string) file_get_contents(resource_path('views/fiesta/lista/zona-1.blade.php')));
 
         // La invitación es del producto: con su interruptor apagado, la misma fiesta no la ofrece.
         $pack->update(['guest_invitation' => false]);

@@ -157,9 +157,9 @@ seed siempre incluye `guest_fields`).
 - **Muchos invitados** (2026-09-13, `#571`, §10.2 de la misma spec): fichas pendientes arriba y listas plegadas en un
   `details`, «Falta :field», barra de guardar pegada, extras en filas y el **pegado de la lista de nombres**. ⚠️⚠️ **El
   orden de la PÁGINA ya no es el de las POSICIONES**: `TicketType::sanitizeGuestData()` ordena por clave antes de
-  reindexar, y el JS navega por la página y cuenta pérdidas por `data-i`. ⚠️ El JS es un módulo que importa
-  `public/js/guest-form/logic.js` (estático, sin Vite). ⚠️ El número de invitados lleva `form="gf-form"`: vive fuera
-  del formulario y sin el atributo no se enviaba. Guardas: `GuestFormManyGuestsTest` + `scripts/mutar-postform-t2.py`.
+  reindexar, y el JS navega por la página y cuenta pérdidas por `data-indice`. ⚠️ El JS es la entrada de Vite
+  `resources/js/fiesta/lista.js` con la lógica pura en `logica.js` (desde `fiesta-sistema-nuevo.md` T1a; el
+  `public/js/guest-form/logic.js` estático se retiró en su T4, 26-09). Guardas: `GuestFormManyGuestsTest`.
 - **El BLOQUE DE LA INVITACIÓN** (2026-09-19, `#708`, `specs/celebracion-e-invitacion.md` §4.7 y §10.8):
   arriba del todo y **antes** de que el anfitrión empiece a teclear, con la puerta de rellenar a mano
   justo debajo. Lleva el enlace **escrito** (los atajos de Web Share y portapapeles se encienden solo si
@@ -204,15 +204,15 @@ seed siempre incluye `guest_fields`).
   Al guardar: canaliza TODO por `sanitizeGuestData` + `maxLength` por campo
   (`ANSWER_MAX_LENGTH`), merge de `event_data` (preserva booking, reescribe postform),
   `markGuestFormCompleted()`, audit.
-- **Página** (`reservation/guests.blade.php`): hoja enfocada sin distracciones — layout propio
-  **`<x-focused-layout>`** (`resources/views/components/focused-layout.blade.php`): mínimo,
-  sin Livewire, carga `landing.css` + `<style id="jj-theme">` (tokens de marca) + `site.css`;
-  `<html class="no-js">` (mejora progresiva); título/marca desde `$site['name']`
-  (white-label), no `config('app.name')`. Contenido: cabecera (producto · fecha/hora · nº
-  invitados · referencia), **barra de progreso**, nota de privacidad (datos de menores),
-  **acordeón de fichas** (estado Pendiente/Lista en vivo, prev/siguiente), barra de guardar +
-  toast. Estructura CSS `.gf-*` en `site.css` con tokens existentes (`--bg/--fg/--zone-1`).
-  Names sin anidar por item: `guests[i][k]`, `general[k]`.
+- **Página** (`fiesta/lista.blade.php` + `fiesta/lista/*`, desde `specs/fiesta-sistema-nuevo.md` T1a; la
+  vieja `reservation/guests.blade.php` sobre `<x-focused-layout>` y su hoja `.gf-*` se retiraron en su T4,
+  26-09): hoja enfocada sin distracciones — layout propio **`<x-pagina-enfocada>`**, sin Livewire, que carga
+  SOLO la entrada de Vite de la fiesta (`resources/js/fiesta/lista.js` → `fiesta.css`, roles neutros) y
+  después las hojas de la instancia por el contrato de hojas (`#769`); `<html class="no-js">` (mejora
+  progresiva); marca desde `Sitio::datos()` (white-label), no `config('app.name')`. Contenido, por zonas del
+  diseño: cabecera (titular · resguardo), zona 1 (estado y compartir), zona 2 (la lista, una fila por
+  posición), zona 3 (el número), zona 4 (los extras), datos generales, zona 5 (un solo Guardar). Names sin
+  anidar por item: `guests[i][k]`, `general[k]`.
 - **Guardado con BOTÓN** (no autosave). **JS plano inline** — GOTCHA: `app.js` toma Alpine de
   Livewire, así que una página sin Livewire usa JS plano. Sin JS las fichas salen abiertas y
   el form es usable; la clase `js` se marca al FINAL del IIFE dentro de `try/catch` (si el JS
