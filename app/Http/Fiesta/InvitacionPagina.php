@@ -22,10 +22,10 @@ use Illuminate\Support\Str;
  * ❗❗ Sigue siendo una HOJA EN BLANCO (spec hermana §7.2·R1): aquí no entra ni una respuesta, ni cuántas hay, ni si un
  * nombre contestó. El recibo enseña solo lo que escribió quien lo abre.
  *
- * ⚠️ Lo que el diseño pinta y hoy NO es dato (§1.4, `#743`): las palabras de la familia y las pistas (la tarjeta las
- *    omite: «sin dato, sin bloque»), los grupos de la merienda con su icono (hoy, cada complemento marcado es un grupo,
- *    con su nombre y sus detalles, y un icono neutro), «Ver el parque», «Crear mi QR», «Avísame de fechas» y la firma
- *    dentro del recibo (sigue como enlace hasta T3). Entran una a una, con el owner.
+ * ⚠️ Lo que el diseño pinta y hoy NO es dato (§1.4, `#743`): los grupos de la merienda con su icono (hoy, cada
+ *    complemento marcado es un grupo, con su nombre y sus detalles, y un icono neutro), «Ver el parque», «Crear mi QR»,
+ *    «Avísame de fechas» y la firma dentro del recibo. Entran una a una, con el owner. Las palabras de la familia y
+ *    las pistas para el regalo SON dato desde F1a (26-09): `family_words` y `gift_hints`.
  * ⚠️ `#744`: tras contestar, el padre ve el RECIBO (no la invitación con un aviso); los textos nombran a quien organiza
  *    por el nombre de pila de la cuenta (sin él, «quien organiza la fiesta»); el «qué es la fiesta» es la descripción
  *    pública del pack.
@@ -88,6 +88,9 @@ final class InvitacionPagina
                 'nombre' => $h,
                 'telefono' => $telefono,
                 'tel' => $telefono === '' ? '' : 'tel:'.preg_replace('/\s+/', '', $telefono),
+                // «Unas palabras de la familia» y «pistas para el regalo» (F1a): la tarjeta las pinta si las hay.
+                'palabras' => trim((string) $inv->family_words),
+                'pistas' => trim((string) $inv->gift_hints),
             ],
             'enlaces' => [
                 'mapa' => $mapa === '#' ? '' : $mapa,

@@ -38,6 +38,8 @@ class InvitationCardResource extends JsonResource
             'honoree_name' => (string) $this->resource->honoree_name,
             'honoree_age' => $this->resource->honoree_age === null ? null : (int) $this->resource->honoree_age,
             'host_line' => (string) $this->resource->host_line,
+            'family_words' => (string) $this->resource->family_words,
+            'gift_hints' => (string) $this->resource->gift_hints,
             // ⚠️ Sale de la CUENTA y nunca se teclea aquí (§4.5·12): el anfitrión solo decide si se
             // enseña. Un teléfono escrito a mano en una invitación pública sería un campo de texto
             // libre con el que mandar a la gente a llamar a donde quisiera.

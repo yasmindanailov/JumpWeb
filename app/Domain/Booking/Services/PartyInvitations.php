@@ -559,6 +559,9 @@ final class PartyInvitations
         foreach ([
             'honoree_name' => PartyInvitation::HONOREE_NAME_MAX,
             'host_line' => PartyInvitation::HOST_LINE_MAX,
+            // Las palabras y las pistas (F1a) son texto libre publicado, como las dos de arriba: la misma puerta.
+            'family_words' => PartyInvitation::FAMILY_WORDS_MAX,
+            'gift_hints' => PartyInvitation::GIFT_HINTS_MAX,
         ] as $field => $max) {
             if (! array_key_exists($field, $data)) {
                 continue;

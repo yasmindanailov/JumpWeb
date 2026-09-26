@@ -327,12 +327,17 @@ class InvitationApiTest extends ApiTestCase
                 'honoree_name' => 'Mira www.regalos.example',
                 'honoree_age' => 8,
                 'host_line' => 'Te invita Mara',
+                // Las palabras y las pistas (1.32.0) pasan por la misma puerta: el enlace se rechaza, lo limpio entra.
+                'family_words' => 'Paga el regalo en https://regalos.example/x',
+                'gift_hints' => 'Le gustan los dinosaurios',
                 'show_host_phone' => true,
             ])
             ->assertOk()->assertValidResponse(200)
             ->assertJsonPath('honoree_name', 'Mara')          // el anterior, intacto
             ->assertJsonPath('honoree_age', 8)                // y el resto SÍ se guardó
             ->assertJsonPath('host_line', 'Te invita Mara')
+            ->assertJsonPath('family_words', '')              // el enlace no se publica
+            ->assertJsonPath('gift_hints', 'Le gustan los dinosaurios')
             ->assertJsonPath('show_host_phone', true);
     }
 

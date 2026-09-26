@@ -164,4 +164,21 @@ class InvitacionPaginaTest extends TestCase
         $this->assertStringContainsString('turns 8 and invites you to jump', $html, 'la invitación, en inglés');
         $this->assertStringContainsString('<html lang="en"', $html);
     }
+
+    public function test_the_words_of_the_family_and_the_gift_hints_are_painted_when_the_host_wrote_them(): void
+    {
+        ['invitation' => $invitation] = $this->mountParty();
+        $url = route(PartyInvitations::PUBLIC_ROUTE, ['token' => $invitation->token]);
+
+        // Sin dato, sin bloque (la tarjeta no pinta ni la burbuja ni la línea del regalo).
+        $sin = (string) $this->get($url)->assertOk()->getContent();
+        $this->assertStringNotContainsString('<blockquote', $sin);
+        $this->assertStringNotContainsString(__('fiesta.invitacion.gifts').':', $sin);
+
+        $invitation->forceFill(['family_words' => 'Traed ganas de saltar', 'gift_hints' => 'Le encantan los libros de animales'])->save();
+
+        $con = (string) $this->get($url)->assertOk()->getContent();
+        $this->assertStringContainsString('Traed ganas de saltar</blockquote>', $con, 'la burbuja con las palabras (F1a)');
+        $this->assertStringContainsString(__('fiesta.invitacion.gifts').': Le encantan los libros de animales', $con, 'la línea del regalo');
+    }
 }

@@ -46,6 +46,8 @@ class InvitationResource extends JsonResource
             'honoree_name' => (string) $this->resource->honoree_name,
             'honoree_age' => $this->resource->honoree_age === null ? null : (int) $this->resource->honoree_age,
             'host_line' => (string) $this->resource->host_line,
+            'family_words' => (string) $this->resource->family_words,
+            'gift_hints' => (string) $this->resource->gift_hints,
             'show_host_phone' => (bool) $this->resource->show_host_phone,
             'shareable' => $invitations->isShareable($this->reservation, $this->resource),
             'replies_yes' => $summary['yes'],

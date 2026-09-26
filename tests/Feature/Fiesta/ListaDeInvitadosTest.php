@@ -113,14 +113,45 @@ class ListaDeInvitadosTest extends TestCase
             'theme' => PartyInvitation::THEME_SERENO,
             'honoree_name' => 'Lucía',
             'host_line' => 'Te invita Marta y Pedro',
+            'family_words' => 'Traed ganas de saltar',
+            'gift_hints' => 'Le encantan los libros de animales',
             'show_host_phone' => '1',
         ])->assertRedirect();
 
         $fresh = $invitation->fresh();
         $this->assertSame(PartyInvitation::THEME_SERENO, $fresh->theme, 'el tema entra por el Guardar de la lista');
         $this->assertSame('Te invita Marta y Pedro', $fresh->host_line);
+        $this->assertSame('Traed ganas de saltar', $fresh->family_words, 'las palabras de la familia (F1a)');
+        $this->assertSame('Le encantan los libros de animales', $fresh->gift_hints, 'y las pistas para el regalo');
         $this->assertTrue((bool) $fresh->show_host_phone);
         $this->assertSame('Ana', $reservation->fresh()->guest_data[0]['name'] ?? null, 'y la lista se guardó igual');
+
+        // Y la página las pinta: en Personalizar (con su tope) y en la vista previa de la tarjeta.
+        $html = $this->actingAs($host)->get(route('reservation.guests', ['reservation' => $reservation]))->assertOk()->getContent();
+        $this->assertStringContainsString('name="family_words"', $html);
+        $this->assertStringContainsString('name="gift_hints"', $html);
+        $this->assertStringContainsString('maxlength="'.PartyInvitation::FAMILY_WORDS_MAX.'"', $html);
+        $this->assertStringContainsString('Traed ganas de saltar</blockquote>', $html, 'la burbuja de la tarjeta');
+        $this->assertStringContainsString(__('fiesta.invitacion.gifts').': Le encantan los libros de animales', $html, 'la línea del regalo');
+    }
+
+    public function test_words_or_hints_with_a_link_are_rejected_and_the_rest_is_saved(): void
+    {
+        ['reservation' => $reservation, 'invitation' => $invitation, 'host' => $host] = $this->mountParty();
+        $invitation->forceFill(['family_words' => 'Traed ganas de saltar'])->save();
+
+        // Texto libre publicado (§7.2·R9): un enlace en las palabras se RECHAZA (se queda lo de antes) y se dice; las
+        // pistas, limpias, entran igual.
+        $this->actingAs($host)->post(route('reservation.guests.store', ['reservation' => $reservation]), [
+            'expected_version' => PostFormAddons::versionOf($reservation),
+            'guests' => [['name' => 'Ana', 'age' => '8']],
+            'family_words' => 'Paga el regalo en https://regalos.example/x',
+            'gift_hints' => 'Le gustan los dinosaurios',
+        ])->assertRedirect()->assertSessionHas('status', 'invitation-text-rejected');
+
+        $fresh = $invitation->fresh();
+        $this->assertSame('Traed ganas de saltar', $fresh->family_words, 'el enlace no se publica: se queda lo de antes');
+        $this->assertSame('Le gustan los dinosaurios', $fresh->gift_hints);
     }
 
     public function test_the_old_post_without_invitation_keys_touches_nothing_of_the_invitation(): void

@@ -36,9 +36,10 @@ class InvitationHostController extends Controller
     public function __construct(private readonly PartyInvitations $invitations) {}
 
     /**
-     * Personalizar: tema, quién cumple, la línea «Te invita» y si se enseña el teléfono.
+     * Personalizar: tema, quién cumple, la línea «Te invita», las palabras de la familia, las pistas para el regalo
+     * y si se enseña el teléfono.
      *
-     * ⚠️ Un `honoree_name` o un `host_line` con un enlace o un correo **se rechaza sin 422**: ese
+     * ⚠️ Un texto libre (`honoree_name`, `host_line`, `family_words`, `gift_hints`) con un enlace o un correo **se rechaza sin 422**: ese
      * campo se queda como estaba y el resto se guarda. Lo decide el dominio (`PublicFreeText`), no
      * esta capa. Un 422 convertiría un descuido de redacción en un formulario que no guarda nada, y
      * limpiarlo a medias publicaría un texto que el anfitrión no escribió.
@@ -65,6 +66,9 @@ class InvitationHostController extends Controller
             'honoree_name' => ['sometimes', 'nullable', 'string', 'max:'.PartyInvitation::HONOREE_NAME_MAX],
             'honoree_age' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:255'],
             'host_line' => ['sometimes', 'nullable', 'string', 'max:'.PartyInvitation::HOST_LINE_MAX],
+            // Las palabras y las pistas (F1a de `fiesta-sistema-nuevo.md`): la misma puerta que los dos textos de arriba.
+            'family_words' => ['sometimes', 'nullable', 'string', 'max:'.PartyInvitation::FAMILY_WORDS_MAX],
+            'gift_hints' => ['sometimes', 'nullable', 'string', 'max:'.PartyInvitation::GIFT_HINTS_MAX],
             'show_host_phone' => ['sometimes', 'boolean'],
         ]);
 

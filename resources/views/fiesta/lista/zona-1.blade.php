@@ -27,7 +27,7 @@
     @else
         <div class="pli-inv">
             <div class="pli-inv-vista">
-                <x-fiesta.invitacion :theme="$inv['tema']" :name="$m['cumple']['nombre']" :age="$m['cumple']['edad']" :date="$m['reserva']['dia']" :time="__('fiesta.lista.de_a', ['hora' => $m['reserva']['hora'], 'fin' => $m['reserva']['fin']])" :place="$m['reserva']['lugar']" :host="$inv['invita']" :phone="$inv['telefono'] ? $m['reserva']['anfitriona'] : ''" animate data-inv-vista />
+                <x-fiesta.invitacion :theme="$inv['tema']" :name="$m['cumple']['nombre']" :age="$m['cumple']['edad']" :date="$m['reserva']['dia']" :time="__('fiesta.lista.de_a', ['hora' => $m['reserva']['hora'], 'fin' => $m['reserva']['fin']])" :place="$m['reserva']['lugar']" :host="$inv['invita']" :words="$inv['palabras']" :gifts="$inv['pistas']" :phone="$inv['telefono'] ? $m['reserva']['anfitriona'] : ''" animate data-inv-vista />
             </div>
             <div class="pli-inv-acc">
                 @if (! $inv['compartida'])
@@ -47,6 +47,9 @@
                         <x-pieza.campo id="pli-su-edad" name="honoree_age" :label="__('fiesta.lista.pers.edad')" :value="$m['cumple']['edad']" inputmode="numeric" maxlength="2" data-inv-campo="age"><x-slot:sufijo>{{ __('fiesta.invitacion.unit') }}</x-slot:sufijo></x-pieza.campo>
                     </div>
                     <x-pieza.campo id="pli-invita" name="host_line" :label="__('fiesta.lista.pers.invita')" :value="$inv['invita']" :maxlength="$inv['host_max']" autocomplete="off" data-inv-campo="host" />
+                    {{-- Las palabras y las pistas (F1a): opcionales, con el tope del diseño; texto libre publicado, como «te invita». --}}
+                    <x-pieza.campo id="pli-palabras" name="family_words" :label="__('fiesta.lista.pers.palabras')" optional :value="$inv['palabras']" :maxlength="$inv['palabras_max']" autocomplete="off" data-inv-campo="words" />
+                    <x-pieza.campo id="pli-pistas" name="gift_hints" :label="__('fiesta.lista.pers.pistas')" optional :value="$inv['pistas']" :maxlength="$inv['pistas_max']" autocomplete="off" data-inv-campo="gifts" />
                     {{-- ⚠️ El `hidden` de delante NO es decorativo: una casilla sin marcar no se envía, y para el dominio una clave
                          ausente es «no lo toques». Sin él, desmarcar «enseñar mi teléfono» no lo apagaría nunca. --}}
                     <input type="hidden" name="show_host_phone" value="0">

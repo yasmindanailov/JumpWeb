@@ -346,6 +346,8 @@ class GuestFormController extends Controller
             'honoree_name' => ['sometimes', 'nullable', 'string', 'max:'.PartyInvitation::HONOREE_NAME_MAX],
             'honoree_age' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:255'],
             'host_line' => ['sometimes', 'nullable', 'string', 'max:'.PartyInvitation::HOST_LINE_MAX],
+            'family_words' => ['sometimes', 'nullable', 'string', 'max:'.PartyInvitation::FAMILY_WORDS_MAX],
+            'gift_hints' => ['sometimes', 'nullable', 'string', 'max:'.PartyInvitation::GIFT_HINTS_MAX],
             'show_host_phone' => ['sometimes', 'boolean'],
         ]);
 
@@ -450,7 +452,7 @@ class GuestFormController extends Controller
      */
     private function personalizeFromRequest(Request $request, OrderItem $reservation): bool
     {
-        $claves = ['theme', 'honoree_name', 'honoree_age', 'host_line', 'show_host_phone'];
+        $claves = ['theme', 'honoree_name', 'honoree_age', 'host_line', 'family_words', 'gift_hints', 'show_host_phone'];
         if (! $request->hasAny($claves)) {
             return false;
         }
@@ -469,6 +471,8 @@ class GuestFormController extends Controller
             'honoree_name' => ['sometimes', 'nullable', 'string', 'max:'.PartyInvitation::HONOREE_NAME_MAX],
             'honoree_age' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:255'],
             'host_line' => ['sometimes', 'nullable', 'string', 'max:'.PartyInvitation::HOST_LINE_MAX],
+            'family_words' => ['sometimes', 'nullable', 'string', 'max:'.PartyInvitation::FAMILY_WORDS_MAX],
+            'gift_hints' => ['sometimes', 'nullable', 'string', 'max:'.PartyInvitation::GIFT_HINTS_MAX],
             'show_host_phone' => ['sometimes', 'boolean'],
         ]);
 
@@ -488,7 +492,7 @@ class GuestFormController extends Controller
      */
     private function rejectedFreeText(array $data): bool
     {
-        foreach (['honoree_name', 'host_line'] as $field) {
+        foreach (['honoree_name', 'host_line', 'family_words', 'gift_hints'] as $field) {
             $value = $data[$field] ?? null;
             if (is_string($value) && PublicFreeText::rejects($value)) {
                 return true;

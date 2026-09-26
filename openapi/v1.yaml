@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.31.0
+  version: 1.32.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -6696,7 +6696,7 @@ components:
             Es el mismo hallazgo de `DECISIONES #27`, que `AccountContext.next_reservation` y
             `extras_invite` ya pagaron, y se resuelve igual. Que las dos definiciones no diverjan lo
             vigila `ApiContractTest`.
-          required: [url, token, theme, honoree_name, honoree_age, host_line, show_host_phone, shareable, replies_yes, replies_no, replies_pending, pending_replies]
+          required: [url, token, theme, honoree_name, honoree_age, host_line, family_words, gift_hints, show_host_phone, shareable, replies_yes, replies_no, replies_pending, pending_replies]
           additionalProperties: false
           properties:
             url:
@@ -6720,6 +6720,12 @@ components:
             host_line:
               type: string
               maxLength: 80
+            family_words:
+              type: string
+              maxLength: 90
+            gift_hints:
+              type: string
+              maxLength: 90
             show_host_phone:
               type: boolean
             shareable:
@@ -6851,7 +6857,7 @@ components:
         ⚠️ No la confundas con `InvitationCard`, que es lo que ve un desconocido: **aquélla no lleva
         ni una respuesta**, y ésta sí. Son dos objetos distintos a propósito y no dos vistas del
         mismo, porque el día que alguien añada un campo aquí no puede filtrarse allí por descuido.
-      required: [url, token, theme, honoree_name, honoree_age, host_line, show_host_phone, shareable, replies_yes, replies_no, replies_pending, pending_replies]
+      required: [url, token, theme, honoree_name, honoree_age, host_line, family_words, gift_hints, show_host_phone, shareable, replies_yes, replies_no, replies_pending, pending_replies]
       additionalProperties: false
       properties:
         url:
@@ -6883,6 +6889,17 @@ components:
         host_line:
           type: string
           maxLength: 80
+        family_words:
+          type: string
+          maxLength: 90
+          description: |
+            «Unas palabras de la familia» (1.32.0, `specs/fiesta-sistema-nuevo.md` F1a): la burbuja de la tarjeta.
+            Texto libre publicado, como `host_line`: un valor con enlace o correo se rechaza y el anterior se queda.
+        gift_hints:
+          type: string
+          maxLength: 90
+          description: |
+            «Pistas para el regalo» (1.32.0), la línea del regalo en la tarjeta. Misma puerta que `family_words`.
         show_host_phone:
           type: boolean
           description: El teléfono sale del de la CUENTA; esto solo dice si se enseña.
@@ -6954,13 +6971,13 @@ components:
         Cómo el anfitrión personaliza su invitación. **Se envía entera**, como el resto del
         formulario: es un `PUT`, no un parcheo campo a campo.
 
-        ⚠️ `honoree_name` y `host_line` se publican bajo el dominio del parque, así que **se rechaza**
-        —no se limpia— un valor con enlaces o direcciones de correo: una invitación no puede decir
-        «paga el regalo en este enlace». El valor anterior se queda como estaba.
+        ⚠️ `honoree_name`, `host_line`, `family_words` y `gift_hints` se publican bajo el dominio del parque, así
+        que **se rechaza** —no se limpia— un valor con enlaces o direcciones de correo: una invitación no puede
+        decir «paga el regalo en este enlace». El valor anterior se queda como estaba.
 
-        ⚠️ Y un valor **vacío** (`""`) en cualquiera de los dos tampoco es un 422 (`#652`): ese campo se
+        ⚠️ Y un valor **vacío** (`""`) en cualquiera de los cuatro tampoco es un 422 (`#652`): ese campo se
         queda como estaba y el resto se guarda, igual que en la web.
-      required: [theme, honoree_name, honoree_age, host_line, show_host_phone]
+      required: [theme, honoree_name, honoree_age, host_line, family_words, gift_hints, show_host_phone]
       additionalProperties: false
       properties:
         theme:
@@ -6979,6 +6996,14 @@ components:
         host_line:
           type: string
           maxLength: 80
+        family_words:
+          type: string
+          maxLength: 90
+          description: «Unas palabras de la familia» (1.32.0). Vacío = déjalo como estaba.
+        gift_hints:
+          type: string
+          maxLength: 90
+          description: «Pistas para el regalo» (1.32.0). Vacío = déjalo como estaba.
         show_host_phone:
           type: boolean
           description: El teléfono sale del de la CUENTA; esto solo dice si se enseña.
@@ -6988,7 +7013,7 @@ components:
         La invitación **vista por un desconocido** que abre el enlace, y por eso es una HOJA EN
         BLANCO: ni una respuesta, ni cuántos han contestado, **ni si un nombre concreto ya contestó**.
         Ése es el motivo por el que su enlace se puede repartir a un grupo de clase entero.
-      required: [theme, honoree_name, honoree_age, host_line, host_phone, date, time_window, product_name, replies_open]
+      required: [theme, honoree_name, honoree_age, host_line, family_words, gift_hints, host_phone, date, time_window, product_name, replies_open]
       additionalProperties: false
       properties:
         theme:
@@ -7000,6 +7025,12 @@ components:
           nullable: true
         host_line:
           type: string
+        family_words:
+          type: string
+          description: «Unas palabras de la familia», tal cual las escribió el anfitrión (1.32.0). Vacío si no las hay.
+        gift_hints:
+          type: string
+          description: «Pistas para el regalo», tal cual (1.32.0). Vacío si no las hay.
         host_phone:
           type: string
           nullable: true

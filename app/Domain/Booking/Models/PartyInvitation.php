@@ -35,6 +35,8 @@ use Illuminate\Support\Str;
     'honoree_name',
     'honoree_age',
     'host_line',
+    'family_words',
+    'gift_hints',
     'show_host_phone',
 ])]
 class PartyInvitation extends Model
@@ -52,6 +54,14 @@ class PartyInvitation extends Model
     public const HONOREE_NAME_MAX = 60;
 
     public const HOST_LINE_MAX = 80;
+
+    /**
+     * «Unas palabras de la familia» y «pistas para el regalo» (F1a de `fiesta-sistema-nuevo.md`): los dos textos
+     * opcionales de la tarjeta, con el tope del diseño (`maxLength={90}`). Texto libre publicado: `PublicFreeText`.
+     */
+    public const FAMILY_WORDS_MAX = 90;
+
+    public const GIFT_HINTS_MAX = 90;
 
     /**
      * El tema visual, del que salen la banda, el confeti y el color de la chapa de edad — **hechos
