@@ -3,9 +3,9 @@
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 EN CURSO** (su centena,
-> `decisiones/700-799.md`) · Último usado: **`#770`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#770`) · Actualizado: **2026-09-25**
-> tarde (la T4d cerrada; la fiesta pasa al SPA, `#765`; llega un zip nuevo del owner).
+> `decisiones/700-799.md`) · Último usado: **`#772`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#770`) · Actualizado: **2026-09-26**
+> madrugada (promociones, vídeos y reseñas copiadas; Places retirado, `#772`).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
 > llévaselo con la medida, como el SPA en `#724`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -49,9 +49,9 @@ un zip nuevo se lee con el `git diff`. **El encargo del owner del 25-09, en este
 migrados con `gifts` idéntico, Kids y Jump; le falta el OJO del owner; en LOCAL quedan dos ofertas de muestra) → (2) el
 **play** de los vídeos de las atracciones 🟦 (spec §4.12 T4e·5: vídeo por atracción subido en el panel, 1.30.0; falta
 el MATERIAL del owner; en LOCAL, una muestra WebM en «Piscina de bolas») → (3) **RESEÑAS 🟦** (`#771`, `google-reviews.md` §9:
-copiadas de SU ficha a «Opiniones», `/reviews` 1.31.0, las tres de cada zona en la pieza 5). ⚠️ **El clasificador
-DENEGÓ lanzar el copiador contra Google Maps**: lo lanza el owner (o da permiso); después, `reviews:import` y las
-ETIQUETO y ordeno yo por página → (4) **T5 Mi cuenta**, dentro de la v2 → T4f la sonda → portada, Cumpleaños,
+copiadas de SU ficha a «Opiniones», `/reviews` 1.31.0, las tres de cada zona en la pieza 5): **191 copiadas** por el
+owner con la consola (sin sesión, Maps da 5), 141 importadas, **18 publicadas** por página y **PLACES RETIRADO**
+(`#772`). ⚠️ Al desplegar: importar `playjump-curado.json` (`ENTORNOS.md`) → (4) **T5 Mi cuenta**, dentro de la v2 → T4f la sonda → portada, Cumpleaños,
 Colegios; Visítanos y Normas cuando el owner las cierre. **La FIESTA la viste el SPA** (`#765`). Nota de Google en
 LOCAL: sembrada a mano (4,9 / 155).
 ⚠️ BD LOCAL con los valores de `#699`/`#761` (lo de antes, en el commit de la T4a·1); en PRODUCCIÓN, el owner.
@@ -258,11 +258,16 @@ dueño es el carril de la web/reseñas—) ·
   romperá al rebasar: crea el regalo con `Promotion::create(['kind' => 'gift', 'text' => [...], 'ticket_type_id' => …])`.
   Contrato **1.29.0** (`/promotions`): si subes el contrato a la vez, el siguiente es el tuyo. La BANDA: la tuya
   siguiente sería **790–819** (la mía, 760–789).
-- ▶▶ **26-09 · `#771` (owner), lo que toca a tus RESEÑAS**: las de la ficha se COPIAN a `testimonials` (`origin =
-  google`, imágenes en `uploads/resenas/`) y salen por un hecho NUEVO, `GET /reviews` (1.31.0, con caras y fotos:
-  son nuestras; corrige `#616`). **Tu cascada no cambia**: `CmsSocialProof` lee ahora solo las `origin = own`, así que
-  la portada de siempre pinta lo mismo. De paso, `content.testimonial_*` no estaban en `AuditLog::ACTIONS` (crear una
-  opinión reventaba fuera de producción): añadidas. Si tu T2·9 publica reseñas en `/social-proof`, dime cómo casarlo.
+- ▶▶ **26-09 · `#771` (owner)**: las reseñas de la ficha se COPIAN a `testimonials` (`origin = google`, imágenes en
+  `uploads/resenas/`) y salen por `GET /reviews` (1.31.0, con caras y fotos: son nuestras; corrige `#616`).
+  `content.testimonial_*` faltaban en `AuditLog::ACTIONS`: añadidas. Si tu T2·9 publica reseñas, dime cómo casarlo.
+- ❗❗ **26-09 · `#772` (owner): PLACES RETIRADO** en tu terreno, con el plan de tu spec §4.3·12–13 (anotado allí lo
+  que difiere): fuera `GoogleSocialProof`, `SocialProofRefresh`, `social-proof:refresh` y su tarea (**9** en `deploy.sh`),
+  `services.google_places` y `lh3` de `img-src` (guarda en `SecurityHeadersTest`). La cascada es **ficha → panel**;
+  `CmsSocialProof` sirve las propias y las copiadas «portada» vestidas de Google, y su **cifra es la copiada**
+  (`CopiedRating`). `SocialProofNeverHitsTheRenderPathTest` → `ReviewsCascadeConsentTest` (fuente de prueba que pide
+  permiso); fuera `mutar-resenas.sh` y los mutantes de Places de `mutar-atribucion-google.sh` y `mutar-gbp-t2-6.py`.
+  ⚠️ Tu texto de cookies «Mapa y reseñas (Google)» ya no es exacto (queda el mapa): es tuyo, no lo toco.
 - ✅ **Tu bloque del 25-09 tarde, LEÍDO** (tus respuestas retiran de aquí mis avisos de la T4a·3 y de la T4b·4). Lo
   que hago yo, en este orden: (1) ✅ **el CONTRATO DE HOJAS, HECHO** (`#769`): `InstanceViews::hojas('fiesta')` devuelve
   las rutas para tu prop `hojas` de `<x-pagina>`, y PlayJump ya declara `fiesta` (`css/fuentes.css`, `css/saltia.css`,

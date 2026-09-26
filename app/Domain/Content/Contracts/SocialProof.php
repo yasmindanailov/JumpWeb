@@ -14,11 +14,11 @@ use Illuminate\Support\Collection;
  * repartido por la plantilla, y **la rama sin cubrir de un respaldo es, por definición, la que solo
  * se ejecuta cuando algo va mal**.
  *
- * Implementaciones previstas (§4.1):
+ * Implementaciones (§4.1; Places, que iba en medio, se retiró en `#771`):
  *
- *     CmsSocialProof            ← las opiniones propias, de `testimonials`   (existe)
- *     GoogleSocialProof         ← Places API con caché corta                 (T2i·b)
- *     FallingBackSocialProof    ← el de arriba con el de abajo detrás        (T2i·b)
+ *     BusinessProfileSocialProof ← la ficha de Google (Perfil de Empresa)
+ *     CmsSocialProof             ← las opiniones del panel y la nota copiada de la ficha (`#771`)
+ *     FallingBackSocialProof     ← la cascada: la primera que tenga algo que enseñar
  *
  * ⚠️ **El respaldo será un DECORADOR, no un `if`**: la cascada de §4.0 vive en UN solo sitio.
  */

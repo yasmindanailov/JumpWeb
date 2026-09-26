@@ -35,10 +35,29 @@ if (/consent\./.test(p.url())) {
 }
 await p.waitForTimeout(3000);
 
+// El aviso de «Inicia sesión para disfrutar de lo mejor de Google Maps» tapa la ficha: se cierra SU botón (un «Cerrar»
+// a secas es también la X de la ficha, que la cerraría).
+const cerrarAviso = () => p.locator('[role="dialog"], [aria-modal="true"]').filter({ hasText: /Inicia sesión|Sign in/i })
+    .getByRole('button', { name: /^Cerrar$|^Close$/ }).first().click({ timeout: 3000 }).catch(() => {});
+
 // La pestaña «Reseñas».
+await cerrarAviso();
+await captura(p, 'ficha');
 const pestana = p.locator('button[role="tab"]').filter({ hasText: /Reseñas|Reviews/i }).first();
 await pestana.click({ timeout: 20000 });
 await p.waitForTimeout(2500);
+
+// Sin sesión, Google enseña una «vista limitada» (5 reseñas y «Ver más reseñas (N)», que pide entrar): se cierra el
+// aviso de «Inicia sesión» y se intenta el botón. Si Google exige la sesión, solo salen esas 5: entonces, la versión de
+// consola, en el navegador del owner con su sesión (`scripts/resenas-google-consola.js`).
+await cerrarAviso();
+const verMas = p.getByRole('button', { name: /Ver más reseñas|More reviews/i }).first();
+if (await verMas.count()) {
+    await verMas.click().catch(() => {});
+    await p.waitForTimeout(2500);
+    await captura(p, 'ver-mas');
+    await cerrarAviso();
+}
 
 // «Ordenar» → «Más recientes».
 const ordenar = p.locator('button[aria-label*="Ordenar"], button[data-value="Ordenar"]').first();
@@ -110,7 +129,15 @@ const resenas = await p.evaluate(() => {
     return [...unicas.values()];
 });
 
-writeFileSync(salida, JSON.stringify({ source: url, place_url: p.url(), total, copied_at: new Date().toISOString(), reviews: resenas }, null, 2));
+// La NOTA media de la ficha («4,9»): la del bloque de reseñas o la de la cabecera.
+const media = await p.evaluate(() => {
+    const t = document.querySelector('div.fontDisplayLarge')?.textContent || document.querySelector('.F7nice span[aria-hidden="true"]')?.textContent || '';
+    const n = Number(t.trim().replace(',', '.'));
+    return n >= 1 && n <= 5 ? n : null;
+});
+
+writeFileSync(salida, JSON.stringify({ source: url, place_url: p.url().split('/data=')[0], total, rating: { value: media, count: total }, copied_at: new Date().toISOString(), reviews: resenas }, null, 2));
+console.log(`nota de la ficha: ${media ?? '¿?'} · ${total ?? '¿?'} reseñas`);
 console.log(`${resenas.length} reseñas → ${salida}`);
 console.log(`con texto ${resenas.filter((r) => r.text).length} · con foto de autor ${resenas.filter((r) => r.avatar_url).length} · con fotos ${resenas.filter((r) => r.photos.length).length} · con respuesta ${resenas.filter((r) => r.reply).length}`);
 await navegador.close();

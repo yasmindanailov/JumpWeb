@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Admin\Testimonials;
 
+use App\Domain\Content\Contracts\SocialProof;
 use App\Domain\Content\Models\Testimonial;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
@@ -51,6 +52,19 @@ class TestimonialResourceTest extends TestCase
         $o = Testimonial::firstOrFail();
         $this->assertSame(['kids', 'jump'], $o->tags, 'en minúscula, sin espacios, sin repetir y sin vacías');
         $this->assertNull($o->source_url, 'una escrita en el panel no lleva enlace a Google');
+    }
+
+    /** La nota de la ficha, corregida a mano: la sirve la cascada, fechada hoy, y queda auditada. */
+    public function test_the_google_rating_can_be_corrected_by_hand(): void
+    {
+        Livewire::actingAs($this->admin())
+            ->test(ListTestimonials::class)
+            ->callAction('googleRating', ['value' => 4.9, 'count' => 191, 'url' => 'https://www.google.com/maps/place/Play+Jump+Park'])
+            ->assertHasNoActionErrors();
+
+        $nota = app(SocialProof::class)->rating();
+        $this->assertSame([4.9, 191, now()->toDateString()], [$nota?->value, $nota?->count, $nota?->asOf?->format('Y-m-d')]);
+        $this->assertDatabaseHas('audit_logs', ['action' => 'content.testimonial_rating_updated']);
     }
 
     public function test_a_google_copy_keeps_its_link_and_the_list_says_where_it_comes_from(): void

@@ -113,8 +113,10 @@ class ReviewsSectionTest extends TestCase
     {
         $this->sembrar();
 
+        // ⚠️ Desde `#771` la cifra de estas opiniones puede existir, pero es la COPIADA de la ficha (`CopiedRating`),
+        // nunca una media de estas filas: sin nota copiada, `null` aunque haya tres con cinco estrellas.
         $this->assertNull(
-            (new CmsSocialProof)->rating(),
+            app(CmsSocialProof::class)->rating(),
             'El respaldo del CMS compone una media agregada: publicarla junto a las estrellas del '.
             'sistema la haría pasar por la nota de Google, que es un número que Google no ha dado.',
         );

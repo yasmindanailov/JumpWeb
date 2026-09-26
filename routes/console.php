@@ -41,21 +41,10 @@ Artisan::command('inspire', function () {
 Schedule::command('orders:expire')->everyFiveMinutes()->withoutOverlapping();
 
 /*
- * `#491` — Las reseñas de Google a la caché corta. **La landing nunca llama a Google**: éste es el
- * único sitio que lo hace (`specs/google-reviews.md` §4.2, y `PERF-02` es la razón).
- *
- * ❗❗❗ **Cada MEDIA HORA, con una caché de 35 minutos** (`[DECIDIDO owner, 2026-09-13]`, `#591`): así
- * las reseñas están siempre puestas. Hasta `#591` iba cada tres horas con una caché de media hora y
- * la sección enseñaba Google media hora de cada tres — sin que fallara nada. **La caché tiene que
- * durar más que el hueco entre dos refrescos**, y `SocialProofNeverHitsTheRenderPathTest` lee esta
- * línea para comprobarlo.
- * ⚠️ **Es UNA llamada por pasada** (el idioma de la instalación; las otras versiones leen la misma
- * caché): **48 al día**. El tope diario de la consola de Google tiene que quedar por ENCIMA (100).
- * ⚠️ `withoutOverlapping` porque la llamada puede tardar (timeout de 8 s) y dos a la vez serían dos
- * peticiones facturadas para el mismo dato.
- * ❗ **En staging el scheduler no corre** (`#115`): allí se dispara a mano.
+ * 📜 Aquí estaba `social-proof:refresh` (`#491`, `#591`): las reseñas de PLACES a la caché corta, cada media hora.
+ * Se retiró con Places (`#771`, el owner 26-09): mientras Google no aprueba el Perfil de Empresa, las reseñas son
+ * las copiadas de la ficha al panel (`reviews:import`) y la nota, la copiada con ellas. Nada de esto llama a Google.
  */
-Schedule::command('social-proof:refresh')->everyThirtyMinutes()->withoutOverlapping();
 
 /*
  * T2·3 de `specs/google-business-profile.md` (§4.3·1, `DECISIONES #729`) — LA PASADA DE LAS RESEÑAS
@@ -66,8 +55,8 @@ Schedule::command('social-proof:refresh')->everyThirtyMinutes()->withoutOverlapp
  * menudo no haría la portada más rápida ni más fresca a ojos de nadie — solo gastaría cuota de un
  * proyecto que es COMÚN a todos los parques.
  *
- * ⚠️ **A una hora propia**, lejos de las 00:00 donde se amontonan las podas y de la media hora de
- * `social-proof:refresh`. 04:40 UTC son las 06:40 en Madrid: el parque lleva horas cerrado y, si la
+ * ⚠️ **A una hora propia**, lejos de las 00:00 donde se amontonan las podas. 04:40 UTC son las 06:40 en Madrid:
+ * el parque lleva horas cerrado y, si la
  * pasada tarda sus 120 segundos de presupuesto, no compite con nada.
  *
  * ⚠️ `withoutOverlapping` es el cinturón; **los tirantes están dentro** (`GoogleBusinessSync` coge su

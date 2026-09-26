@@ -2597,6 +2597,8 @@ espacio libre se respete. La suite ve el marcado; el navegador ve el dibujo.
 ⚠️ **`social-proof:refresh` ANTES, siempre.** La caché vive en la BD y **`RefreshDatabase` la vacía**:
 tras correr la suite, la sección cae al respaldo propio y la sonda mediría la ausencia de todo lo que
 viene a comprobar, llamándola «correcta».
+📜 **Desde `#771` ese comando no existe** (Places se retiró): las reseñas y la nota salen de «Opiniones» del panel
+(`reviews:import`). Para esta sonda basta con tener reseñas copiadas publicadas con la etiqueta «portada».
 
 ⚠️ La sonda vive en `storage/app/` (gitignorado), como las demás de auditoría. Está escrita para
 volver a generarse: lo que hay que conservar son las trampas de abajo.

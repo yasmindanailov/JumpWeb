@@ -115,6 +115,8 @@ class AuditLog extends Model
         // fuera de producción, y ninguna prueba abría ese panel (lo destapó `#771`).
         'content.testimonial_created',
         'content.testimonial_deleted',
+        // `#771`: la nota de la ficha de Google, corregida a mano en «Opiniones».
+        'content.testimonial_rating_updated',
         'content.testimonial_updated',
         'content.zone_created',
         'content.zone_delete_blocked',

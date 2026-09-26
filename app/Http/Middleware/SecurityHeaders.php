@@ -58,15 +58,11 @@ class SecurityHeaders
         $script = ["'self'", "'unsafe-inline'", "'unsafe-eval'", 'https://challenges.cloudflare.com'];
         $style = ["'self'", "'unsafe-inline'", 'https://fonts.bunny.net'];
         $connect = ["'self'", 'https://challenges.cloudflare.com'];
-        // ⚠️⚠️ **`lh3.googleusercontent.com` entra por las FOTOS DE AUTOR de las reseñas**
-        // (`#491`, `specs/google-reviews.md` §3.3), y esto **relaja la CSP del sitio entero**,
-        // no solo de esa sección: es una decisión, no un ajuste (`SEC-01`).
-        // ▶ De las tres salidas posibles es la ÚNICA que cumple las dos normas a la vez:
-        // proxear la foto sería «store» de contenido de Places —prohibido por R2— y servir la
-        // reseña sin foto incumple la atribución obligatoria de R3.
-        // ⚠️ Es un host concreto y solo para IMÁGENES; y la foto únicamente se pide cuando el
-        // visitante ha aceptado cookies de terceros, que es lo que exige `RGPD-05`.
-        $img = ["'self'", 'data:', 'https://lh3.googleusercontent.com'];
+        // 📜 Aquí entraba `lh3.googleusercontent.com` por las fotos de autor de las reseñas de PLACES (`#491`), que
+        // relajaba la CSP del sitio entero. Salió con Places (`#771`, §4.3·12 de `google-business-profile.md`): las
+        // imágenes de reseñas —del Perfil de Empresa y las copiadas de la ficha— se sirven desde este servidor.
+        // `SecurityHeadersTest::test_img_src_does_not_name_google` impide que vuelva sin decidirlo.
+        $img = ["'self'", 'data:'];
 
         // **La herramienta de análisis** (`specs/analitica.md` §4.3, T3a·2): sus orígenes viven en CÓDIGO
         // (`Drivers::csp()`, por driver y directiva) y entran SOLO con el driver activo y completo. El gate

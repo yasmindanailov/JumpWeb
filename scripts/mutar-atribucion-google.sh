@@ -24,7 +24,8 @@
 set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
-FILTER='GoogleAttributionTest|ReviewsSectionTest|SocialProofNeverHitsTheRenderPathTest'
+# `#771`: `SocialProofNeverHitsTheRenderPathTest` se re-apuntó a `ReviewsCascadeConsentTest` al retirar Places.
+FILTER='GoogleAttributionTest|ReviewsSectionTest|ReviewsCascadeConsentTest'
 RUN="docker compose exec -u sail -T laravel.test php artisan test --filter=${FILTER}"
 
 TMP="storage/app/mutaciones/atribucion-google"
@@ -34,7 +35,6 @@ FICHEROS=(
     public/css/landing.css
     public/images/providers/google-maps-gray.svg
     public/images/providers/google-maps-white.svg
-    app/Domain/Content/Services/GoogleSocialProof.php
     app/Domain/Content/Contracts/Testimonial.php
     app/Domain/Content/Contracts/OriginalText.php
     lang/es/landing.php
@@ -107,7 +107,6 @@ CMP=resources/views/components/site/google-attribution.blade.php
 CSS=public/css/landing.css
 SVGG=public/images/providers/google-maps-gray.svg
 SVGW=public/images/providers/google-maps-white.svg
-GS=app/Domain/Content/Services/GoogleSocialProof.php
 DT=app/Domain/Content/Contracts/Testimonial.php
 OT=app/Domain/Content/Contracts/OriginalText.php
 ES=lang/es/landing.php
@@ -196,16 +195,8 @@ mutar "la superficie de tinta recibe la variante de papel" "$CMP" \
   "\$surface === 'ink' ? 'images/providers/google-maps-white.svg' : 'images/providers/google-maps-gray.svg'" \
   "'images/providers/google-maps-gray.svg'"
 
-echo
-echo '── La atribución del AUTOR ──'
-
-mutar "la reseña deja de enlazar el perfil de su autor" "$GS" \
-  "'author_url' => \$this->safeUrl(\$r['authorAttribution']['uri'] ?? null)," \
-  "'author_url' => null,"
-
-mutar "la URL del perfil llega al DOM sin sanear" "$GS" \
-  "'author_url' => \$this->safeUrl(\$r['authorAttribution']['uri'] ?? null)," \
-  "'author_url' => \$r['authorAttribution']['uri'] ?? null,"
+# 📜 Aquí iban dos mutantes de la atribución del autor en el servicio de PLACES (leer y sanear su perfil): se
+# retiraron con Places (`#771`). El Perfil de Empresa sanea donde nace (`IncomingGoogleReview`).
 
 echo
 echo '── La traducción ──'
@@ -221,12 +212,6 @@ mutar "una reseña traducida deja de decirlo" "$HB" \
                                             <span class="rev__xlat-note">' \
   '                                        <p class="rev__xlat">
                                             <span class="rev__xlat-NO">'
-
-# La señal tiene que ser el IDIOMA: Google devuelve originalText SIEMPRE, traducida o no, así que
-# «hay original» no significa «está traducida».
-mutar "la traducción deja de mirar el idioma y se fía de que haya original" "$GS" \
-  '            && $idiomaServido !== $idiomaOriginal;' \
-  '            && true;'
 
 mutar "el original viaja sin declarar su idioma" "$HB" \
   'lang="{{ $op->originalText->language }}"' \
@@ -277,13 +262,6 @@ mutar "sin flechas, los puntos pierden su nombre accesible" "$HB" \
 mutar "«Ver en Google» pierde su alineación a la derecha" "$CSS" \
   '.rev__acts > .rev__more { margin-left: auto; }' \
   '.rev__acts > .rev__more { margin-left: 0; }'
-
-echo
-echo '── El umbral ──'
-
-mutar "el umbral vuelve a subir y apaga el widget de Google" "$GS" \
-  '    public const MIN_REVIEWS = 1;' \
-  '    public const MIN_REVIEWS = 10;'
 
 echo
 echo "── Veredicto: ${muerden}/${total} mutaciones mordidas ──"

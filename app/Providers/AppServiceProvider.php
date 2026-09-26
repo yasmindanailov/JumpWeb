@@ -37,7 +37,6 @@ use App\Domain\Content\Models\VenueRule;
 use App\Domain\Content\Services\BusinessProfileSocialProof;
 use App\Domain\Content\Services\CmsSocialProof;
 use App\Domain\Content\Services\FallingBackSocialProof;
-use App\Domain\Content\Services\GoogleSocialProof;
 use App\Domain\Content\Services\HeroStatus;
 use App\Domain\Content\Services\MapsEmbed;
 use App\Domain\Content\Services\ScheduleDisplay;
@@ -184,15 +183,13 @@ class AppServiceProvider extends ServiceProvider
         //
         //   1. **La ficha de Google** (Business Profile). Se sirve entera desde nuestro servidor
         //      —imagen incluida—, así que **no necesita consentimiento** y no le pide nada a Google.
-        //   2. **Places**, lo que hay hoy en producción. Sigue enlazado **a propósito** (`[owner]`,
-        //      21-09): retirarlo se valorará más adelante, y mientras tanto esto es lo que evita una
-        //      REGRESIÓN — sin conexión con la ficha, la 1 responde vacío y la portada seguiría
-        //      enseñando lo mismo que hoy en vez de caer a las opiniones propias.
-        //   3. **Las opiniones propias**, que es lo que ve quien no acepta cookies de terceros.
+        //   2. **Las opiniones del panel**: las escritas en él y las COPIADAS de la ficha, con la nota
+        //      copiada (`#771`). Es el respaldo mientras Google no aprueba la 1.
         //
-        // ⚠️⚠️ **Mientras la 2 siga en la lista, `img-src` NO puede dejar de nombrar a Google**
-        // (§4.3·12): sus fotos de autor las carga el visitante desde `lh3.googleusercontent.com`. El
-        // cambio de CSP va con la retirada de Places, no con esta tanda.
+        // 📜 Entre las dos estaba **Places** (`#491`), y se retiró en `#771` (el owner, 26-09) con su
+        // refresco, su clave y su hueco en `img-src` (§4.3·12–13): ya ninguna fuente pide nada a Google
+        // desde el navegador del visitante. El cierre del permiso se queda: es el mecanismo para la
+        // fuente que algún día lo necesite (`ReviewsCascadeConsentTest`).
         //
         // ⚠️⚠️ **`scoped` y no `bind`** (§4.3·9): la portada le pregunta a esto por las opiniones,
         // por la selección y por el permiso. Con `bind` serían tres objetos y tres recorridos de la
@@ -203,7 +200,6 @@ class AppServiceProvider extends ServiceProvider
             return new FallingBackSocialProof(
                 [
                     $this->app->make(BusinessProfileSocialProof::class),
-                    $this->app->make(GoogleSocialProof::class),
                     $this->app->make(CmsSocialProof::class),
                 ],
                 // ⚠️⚠️ **El consentimiento se lee AQUÍ y no dentro del decorador**: `CookieConsent`

@@ -56,7 +56,7 @@ class CopiedReviewImportTest extends TestCase
     {
         $cuenta = app(CopiedReviewImport::class)->import($this->copia([$this->resena(), $this->resena(['id' => 'SoloEstrellas', 'text' => ''])]));
 
-        $this->assertSame(['nuevas' => 1, 'actualizadas' => 0, 'sin_texto' => 1, 'imagenes' => 2], $cuenta);
+        $this->assertSame(['nuevas' => 1, 'actualizadas' => 0, 'sin_texto' => 1, 'imagenes' => 2, 'nota' => false], $cuenta);
         $o = Testimonial::firstOrFail();
         $this->assertSame([Testimonial::ORIGIN_GOOGLE, 'ChdDSUhN', false, null], [$o->origin, $o->source_ref, $o->is_active, $o->tags], 'nueva: de Google, apagada y en ninguna página');
         $this->assertSame(['es' => 'Mis hijos de 5 y 7 años disfrutaron muchísimo en Kids.'], $o->text);
@@ -102,12 +102,39 @@ class CopiedReviewImportTest extends TestCase
         }
     }
 
-    public function test_the_old_cascade_does_not_paint_a_copy_as_its_own(): void
+    /**
+     * La portada de siempre (la cascada): las escritas en el panel y, de las copiadas, solo las elegidas para la
+     * portada —con su marca de Google, su enlace y su foto de casa—; una copiada nunca se pinta como propia.
+     */
+    public function test_the_cascade_shows_own_ones_and_the_copies_chosen_for_the_home_page_as_googles(): void
     {
-        Testimonial::create(['author' => 'Escrita', 'text' => ['es' => 'Propia'], 'is_active' => true]);
-        Testimonial::create(['origin' => Testimonial::ORIGIN_GOOGLE, 'author' => 'Copiada', 'text' => ['es' => 'De Google'], 'is_active' => true]);
+        Testimonial::create(['author' => 'Escrita', 'text' => ['es' => 'Propia'], 'is_active' => true, 'position' => 1]);
+        Testimonial::create(['origin' => Testimonial::ORIGIN_GOOGLE, 'author' => 'Sin portada', 'text' => ['es' => 'A'], 'is_active' => true, 'tags' => ['kids'], 'position' => 2]);
+        Testimonial::create([
+            'origin' => Testimonial::ORIGIN_GOOGLE, 'source_url' => 'https://www.google.com/maps/place/Play+Jump+Park', 'author' => 'En portada',
+            'avatar' => 'resenas/a.png', 'text' => ['es' => 'B'], 'is_active' => true, 'tags' => ['portada'], 'position' => 3,
+        ]);
 
-        $this->assertSame(['Escrita'], app(CmsSocialProof::class)->testimonials()->pluck('author')->all());
+        $opiniones = app(CmsSocialProof::class)->testimonials();
+
+        $this->assertSame(['Escrita', 'En portada'], $opiniones->pluck('author')->all());
+        $copia = $opiniones->last();
+        $this->assertSame(['google', 'https://www.google.com/maps/place/Play+Jump+Park', asset('uploads/resenas/a.png')], [$copia->source, $copia->url, $copia->avatarUrl]);
+        $this->assertSame('cms', $opiniones->first()->source, 'una escrita en el panel no lleva la ropa de Google');
+    }
+
+    public function test_the_import_keeps_the_rating_of_the_listing_and_the_choice_in_the_file(): void
+    {
+        $copia = $this->copia([$this->resena(['tags' => ['Kids', ' jump '], 'position' => 2, 'active' => true])]);
+        $copia['rating'] = ['value' => 4.9, 'count' => 191];
+
+        $cuenta = app(CopiedReviewImport::class)->import($copia);
+
+        $this->assertTrue($cuenta['nota']);
+        $nota = app(CmsSocialProof::class)->rating();
+        $this->assertSame([4.9, 191, 'google', '2026-09-26'], [$nota?->value, $nota?->count, $nota?->source, $nota?->asOf?->format('Y-m-d')]);
+        $o = Testimonial::firstOrFail();
+        $this->assertSame([true, ['kids', 'jump'], 2], [$o->is_active, $o->tags, $o->position], 'la elección del fichero, aplicada al nacer');
     }
 
     public function test_an_image_shared_by_two_reviews_survives_while_one_still_uses_it(): void

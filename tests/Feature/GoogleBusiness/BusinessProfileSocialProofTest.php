@@ -14,7 +14,6 @@ use App\Domain\Content\Services\CmsSocialProof;
 use App\Domain\Content\Services\FallingBackSocialProof;
 use App\Domain\Content\Services\GoogleReviewFilter;
 use App\Domain\Content\Services\GoogleReviewImages;
-use App\Domain\Content\Services\GoogleSocialProof;
 use App\Domain\Platform\Models\Setting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Collection;
@@ -248,16 +247,16 @@ class BusinessProfileSocialProofTest extends TestCase
         // servidor, así que el navegador no le pide nada a Google y no hay nada que consentir.
         $this->assertFalse($this->fuente()->reviewsNeedConsent());
         $this->assertFalse($this->fuente()->reviewsAwaitConsent());
-        // Y el control: las de Places sí, porque su foto la carga el visitante desde Google.
-        $this->assertTrue(app(GoogleSocialProof::class)->reviewsNeedConsent());
+        // 📜 El control era Places, que sí pedía permiso; se retiró en `#771`. El mecanismo, con una fuente de prueba
+        // que lo pide, vive en `ReviewsCascadeConsentTest`.
     }
 
-    // ─────────── La cascada de tres (§4.3·9) ───────────
+    // ─────────── La cascada (§4.3·9): la ficha delante de las opiniones del panel ───────────
 
     private function cascada(bool $permitido = true): FallingBackSocialProof
     {
         return new FallingBackSocialProof(
-            [$this->fuente(), app(GoogleSocialProof::class), app(CmsSocialProof::class)],
+            [$this->fuente(), app(CmsSocialProof::class)],
             static fn (): bool => $permitido,
         );
     }

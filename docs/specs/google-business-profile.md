@@ -652,6 +652,11 @@ la caché de las fotos que la T2·4 dejó anotada.
     (`GoogleAttributionTest`, `ReviewsSectionTest`, `SocialProofNeverHitsTheRenderPathTest` —re-apuntado a la
     fuente nueva—), clasificados por sujeto (`CONVENCIONES §3.quater`). `deploy.sh` pasa a comprobar las tareas
     programadas **por NOMBRE**. En la consola de Google, la clave de Places se retira.
+    ▶ **12 y 13 HECHOS el 26-09 por el carril de plataforma** (`#772`, el owner, ANTES de la T2 con la ficha real: el
+    respaldo son las reseñas copiadas de la ficha, `google-reviews.md` §9). Diferencias con lo escrito: **la fila
+    `social.google_place_id` se QUEDA** —la publica `/site` como hecho (`SiteFacts.social`)—; `deploy.sh` sigue contando
+    (9, medido) y no por nombre; la caché `social-proof.google.*` caduca sola (35 min). Pruebas: murieron las de Places;
+    la cascada con permiso se re-apuntó a una fuente de prueba (`ReviewsCascadeConsentTest`).
 
 ### 4.4 T6 · El horario, publicado con un botón
 

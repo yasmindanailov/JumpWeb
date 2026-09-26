@@ -53,8 +53,14 @@
             reply: respuesta?.textContent.trim() ?? null,
         });
     }
-    const copia = { source: location.href, place_url: location.href.split('/data=')[0], total, copied_at: new Date().toISOString(), reviews: [...unicas.values()] };
+    // La NOTA media de la ficha («4,9»): la del bloque de reseñas o la de la cabecera.
+    const media = (() => {
+        const t = document.querySelector('div.fontDisplayLarge')?.textContent || document.querySelector('.F7nice span[aria-hidden="true"]')?.textContent || '';
+        const n = Number(t.trim().replace(',', '.'));
+        return n >= 1 && n <= 5 ? n : null;
+    })();
+    const copia = { source: location.href, place_url: location.href.split('/data=')[0], total, rating: { value: media, count: total }, copied_at: new Date().toISOString(), reviews: [...unicas.values()] };
     const enlace = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([JSON.stringify(copia, null, 2)], { type: 'application/json' })), download: 'resenas.json' });
     enlace.click();
-    console.log(`✓ ${copia.reviews.length} reseñas en resenas.json (con texto: ${copia.reviews.filter((r) => r.text).length})`);
+    console.log(`✓ ${copia.reviews.length} reseñas en resenas.json (con texto: ${copia.reviews.filter((r) => r.text).length}) · nota ${media ?? '¿?'} de ${total ?? '¿?'}`);
 })();

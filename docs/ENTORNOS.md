@@ -484,6 +484,12 @@ instalación de un cliente. Si se configura a mano deja de ser una prueba del pr
 >
 > ❗❗ **Después de un `artisan cache:clear`, `artisan social-proof:refresh`**: la caché de las reseñas vive en
 > Redis con las demás, y sin refresco la sección se queda vacía hasta el siguiente medio punto.
+> 📜 **Desde `#771` (26-09) Places NO EXISTE**: ni refresco ni caché de reseñas. **Al desplegar la v2.0.0**: quitar
+> `GOOGLE_PLACES_API_KEY` del `.env`, revocar la clave en la consola de Google, y subir e importar las reseñas
+> copiadas y ya elegidas (`php artisan reviews:import <json>`, con sus páginas: `google-reviews.md` §9); el importador
+> guarda también la nota de la ficha. Sin ese paso, la sección y la nota se quedan vacías hasta el Perfil de Empresa.
+> El fichero es `storage/app/resenas/playjump-curado.json` del ordenador del owner (gitignorado: datos personales); y
+> se borran en «Opiniones» las 3 opiniones propias antiguas (Ángela M., Jose Luis R., Marta S.), como pidió el owner.
 > ❗❗❗ **El tercero se paró en la GUARDA 1 y dejó el sitio 3 minutos en 503** (`#594`): el owner había
 > pasado Redsys a `live` a las 17:29. Se levantó con `artisan up` y se completaron a mano las franjas,
 > `artisan optimize` y la salud. Desde `#594`, en producción la guarda admite `test` o `live`.

@@ -81,19 +81,7 @@ return [
         'access_token' => env('TIKTOK_EVENTS_ACCESS_TOKEN'),
     ],
 
-    /*
-     * **La clave de Places API (New)** para las reseñas de la landing (`DECISIONES #491`,
-     * `specs/google-reviews.md` §4.4).
-     *
-     * ⚠️⚠️ **Va en `.env` y NUNCA en el panel** (`SEC-11`), y se lee por `config()` y no con `env()`
-     * directo, por el mismo motivo que la clave de Redsys: con `php artisan config:cache` —paso del
-     * runbook de despliegue— `env()` devuelve `null` en runtime y la integración se apagaría en
-     * silencio. `config()` sí se hornea.
-     * ⚠️ El `place_id` NO va aquí: cambia por instalación y es la única cosa que la política de
-     * Google exime de sus límites de caché, así que vive en `settings` (`social.google_place_id`).
-     */
-    'google_places' => [
-        'key' => env('GOOGLE_PLACES_API_KEY'),
-    ],
+    // 📜 Aquí estaba `google_places` (la clave de Places API para las reseñas, `#491`): se retiró con Places (`#771`).
+    // La clave se revoca en la consola de Google y sale del `.env` de cada instalación.
 
 ];

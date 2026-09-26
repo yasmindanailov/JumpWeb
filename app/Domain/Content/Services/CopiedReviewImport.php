@@ -21,11 +21,16 @@ use InvalidArgumentException;
  */
 final class CopiedReviewImport
 {
-    public function __construct(private readonly CopiedReviewImages $imagenes) {}
+    public function __construct(private readonly CopiedReviewImages $imagenes, private readonly CopiedRating $nota) {}
 
     /**
+     * ▶ **La NOTA de la ficha** (`rating: {value, count}` de la copia) se guarda también ({@see CopiedRating}): es la que
+     * enseñan las páginas mientras no haya Perfil de Empresa.
+     * ▶ **La ELECCIÓN puede venir en el fichero**: una reseña con `tags`, `position` o `active` nace publicada así. Es
+     * como se lleva a otro servidor la misma selección que se hizo en local; en una que ya estaba no se toca.
+     *
      * @param  array<string, mixed>  $copia  el JSON de la herramienta de copia
-     * @return array{nuevas: int, actualizadas: int, sin_texto: int, imagenes: int}
+     * @return array{nuevas: int, actualizadas: int, sin_texto: int, imagenes: int, nota: bool}
      */
     public function import(array $copia): array
     {
@@ -36,7 +41,14 @@ final class CopiedReviewImport
 
         $momento = isset($copia['copied_at']) ? Carbon::parse((string) $copia['copied_at']) : now();
         $ficha = self::url($copia['place_url'] ?? $copia['source'] ?? null);
-        $cuenta = ['nuevas' => 0, 'actualizadas' => 0, 'sin_texto' => 0, 'imagenes' => 0];
+        $cuenta = ['nuevas' => 0, 'actualizadas' => 0, 'sin_texto' => 0, 'imagenes' => 0, 'nota' => false];
+
+        $media = (float) str_replace(',', '.', (string) ($copia['rating']['value'] ?? 0));
+        $total = (int) ($copia['rating']['count'] ?? $copia['total'] ?? 0);
+        if ($media >= 1 && $media <= 5 && $total >= 1) {
+            $this->nota->put($media, $total, $ficha, $momento);
+            $cuenta['nota'] = true;
+        }
 
         foreach ($resenas as $r) {
             $id = trim((string) ($r['id'] ?? ''));
@@ -72,12 +84,16 @@ final class CopiedReviewImport
                     return;
                 }
 
+                $etiquetas = array_values(array_unique(array_filter(array_map(
+                    fn (mixed $t): string => is_scalar($t) ? mb_strtolower(trim((string) $t)) : '',
+                    (array) ($r['tags'] ?? []),
+                ), fn (string $t): bool => $t !== '')));
                 Testimonial::create($datos + [
                     'source_ref' => $id,
                     'published_at' => self::fecha($r['when'] ?? null, $momento)?->toDateString(),
-                    'is_active' => false,
-                    'tags' => null,
-                    'position' => 0,
+                    'is_active' => (bool) ($r['active'] ?? false),
+                    'tags' => $etiquetas === [] ? null : $etiquetas,
+                    'position' => (int) ($r['position'] ?? 0),
                 ]);
                 $cuenta['nuevas']++;
             });

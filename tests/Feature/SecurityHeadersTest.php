@@ -82,6 +82,21 @@ class SecurityHeadersTest extends TestCase
     }
 
     /**
+     * ❗ **`img-src` NO nombra a Google** (`specs/google-business-profile.md` §4.3·12; hecho con la retirada de Places,
+     * `#771`). Las imágenes de reseñas —las del Perfil de Empresa y las copiadas de la ficha— se sirven desde este
+     * servidor; volver a abrir `lh3.googleusercontent.com` relajaría la CSP del sitio entero para nada, y sin que falle
+     * nada visible.
+     */
+    public function test_img_src_does_not_name_google(): void
+    {
+        $csp = (string) $this->get('/')->headers->get('Content-Security-Policy');
+
+        $this->assertMatchesRegularExpression('/img-src [^;]+/', $csp, 'el caso miraría una CSP sin `img-src`');
+        preg_match('/img-src [^;]+/', $csp, $m);
+        $this->assertStringNotContainsString('googleusercontent', $m[0], 'las fotos de reseñas se piden otra vez a Google');
+    }
+
+    /**
      * En local SÍ se permite el dev-server, y con el puerto que dice la configuración.
      *
      * Estuvo quemado a 5173 mientras `.env` fijaba 5374 y `.env.example` 5274 — tres valores a la

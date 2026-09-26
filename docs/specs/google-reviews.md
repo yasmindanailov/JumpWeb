@@ -74,8 +74,8 @@
   terceros; desde `#592` la sección no desaparece sin cookies (nota + «Elegir cookies»). `rating()` es `null`
   en el CMS a propósito; `SEC-07` se sanea DONDE NACE el dato; una reseña sin autor no se publica.
 - **Cinco restricciones DURAS** en §1.3. Anexo al final con la fila del enrutador.
-- ▶ **`#771` (owner, 26-09): las reseñas de SU ficha se COPIAN a «Opiniones»** (`origin = google`, imágenes en
-  casa) y cada página nueva enseña las etiquetadas con ella (`/reviews`). Cómo, en §9.
+- ▶ **`#771`/`#772` (owner, 26-09): PLACES SE RETIRÓ**. Las reseñas de SU ficha se COPIAN a «Opiniones» (imágenes en
+  casa), la nota también, y cada página enseña las etiquetadas con ella (`/reviews`). Lo de arriba es historia; §9.
 
 ## 1. Contexto y problema — MEDIDO, no supuesto
 
@@ -531,6 +531,14 @@ Sin esto no puede llegar a ✅ (`/dod` §3.bis).
 - **Publicar**: «Ajustes → Web → Opiniones»: activarla y darle páginas («kids», «jump»…) y orden. `GET /api/v1/reviews`
   (1.31.0, hecho de página `reviews`) sirve las publicadas con sus páginas; Kids y Jump pintan las tres primeras de su
   zona en el panel de la nota (`review-card`, el `ReviewCard` del mockup), firmadas «Nombre I.».
-- **Lo que NO cambia**: la cascada `SocialProof` (Perfil de Empresa → Places → propias) lee solo las `own`.
 - **Riesgos, dichos al owner**: las condiciones de uso de Google (copiar su contenido) y el nombre y la cara de
   terceros (`RGPD`): se firman con nombre e inicial y se retira la que su autor pida.
+- ▶ **Hecho el 26-09 (`#772`)**: **Places se retiró** (fuente, refresco, tarea, clave, `img-src`). La cascada es Perfil
+  de Empresa → opiniones del panel; `CmsSocialProof` sirve las escritas aquí y las copiadas con la etiqueta «portada»
+  (vestidas de Google), y su **nota es la copiada** (`CopiedRating`: `reviews.rating_*` en `settings`, fechada; la
+  guarda el importador y se corrige en «Opiniones» → «Nota de Google»).
+- ▶ **La copia real** (26-09): sin sesión de Google, Maps da 5 reseñas («vista limitada»); con la del owner, la versión
+  de consola dio las 191 (141 con texto) y 4,9. Importadas; 18 publicadas por página (Kids, Jump, Cumpleaños,
+  portada), sin las del dueño, su familia ni empleados (Ómnibus). ⚠️ **Producción**: al desplegar la v2.0.0 se importa
+  `storage/app/resenas/playjump-curado.json` (la copia con la elección; gitignorado: datos personales) y se borran las
+  3 opiniones propias antiguas (`ENTORNOS.md`).

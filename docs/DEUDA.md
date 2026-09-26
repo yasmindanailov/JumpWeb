@@ -802,7 +802,10 @@ numeración a medias engaña más que ninguna.
 
 ---
 
-## ▶ ❗ ALTA · Las reseñas de Google casi nunca se ven: la caché está VACÍA el 83 % del tiempo (2026-09-10, `DECISIONES #499`)
+## ▶ ~~❗ ALTA · Las reseñas de Google casi nunca se ven: la caché está VACÍA el 83 % del tiempo~~ **RETIRADA: su sujeto se fue** (2026-09-10, `DECISIONES #499`; retirada 26-09 con Places, `#771`)
+
+> 📜 Arreglada en `#591` (cada media hora, caché de 35 min) y **retirada en `#771`**: Places ya no existe. Las reseñas
+> son las copiadas de la ficha al panel y no hay caché ni refresco que desincronizar. Se conserva como historia.
 
 **El owner preguntó por qué no se muestran las reseñas de Google en la página.** Medido, y la causa
 principal no es el consentimiento: es una **incoherencia entre el TTL y la cadencia del refresco**.

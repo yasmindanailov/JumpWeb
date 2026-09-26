@@ -7,11 +7,9 @@ use App\Domain\Content\Contracts\Rating;
 use App\Domain\Content\Contracts\ReviewSelection;
 use App\Domain\Content\Contracts\SocialProof;
 use App\Domain\Content\Contracts\Testimonial as TestimonialData;
-use App\Domain\Content\Services\GoogleSocialProof;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 /**
@@ -424,37 +422,12 @@ class GoogleAttributionTest extends TestCase
     }
 
     /**
-     * ❗❗❗ **EL SERVICIO REAL LEE EL PERFIL DE LA RESPUESTA DE PLACES, y este caso nació de una
-     * mutación que NO mordía.**
-     *
-     * Los casos de arriba doblan el CONTRATO —que es lo correcto para probar la vista—, pero por eso
-     * **no pasan por `GoogleSocialProof`**: borrar allí la lectura de `authorAttribution.uri` los
-     * dejaba a todos en verde. *Doblar el contrato prueba la vista y deja el traductor sin cubrir.*
-     */
-    public function test_the_service_reads_the_author_profile_from_places(): void
-    {
-        $opinion = $this->desdeGoogle(['uri' => 'https://www.google.com/maps/contrib/106042760']);
-
-        $this->assertSame('https://www.google.com/maps/contrib/106042760', $opinion->authorUrl,
-            "`GoogleSocialProof` no lee el enlace al perfil del autor.\n".
-            '▶ «author attribution (author\'s avatar image, name, and profile link)».');
-    }
-
-    /**
-     * El dato del perfil viaja **saneado desde donde NACE**, nunca desde la plantilla (`SEC-07`).
-     *
-     * ⚠️ Es URL de un tercero y acaba en un `href`: sanearla en el servicio es lo que garantiza que
-     * **todas** las superficies que la consuman —la portada hoy, la API o un correo mañana— reciban
-     * lo mismo. Hacerlo en la vista deja la siguiente superficie sin defensa y nadie se entera.
+     * El dato del perfil nunca acaba en un `href` con un esquema raro (`SEC-07`): la vista tampoco lo pinta si le
+     * llega. ⚠️ La mitad que probaba el SANEO en el servicio de Places se retiró con Places (`#771`, `§3.quater`: su
+     * sujeto se fue); la del Perfil de Empresa lo sanea donde nace (`IncomingGoogleReview`).
      */
     public function test_a_profile_url_with_a_strange_scheme_never_reaches_the_dom(): void
     {
-        $opinion = $this->desdeGoogle(['uri' => 'javascript:alert(1)']);
-
-        $this->assertNull($opinion->authorUrl,
-            'Una URL de perfil con esquema raro sobrevive al servicio y acabaría en un `href`.');
-
-        // Y la vista tampoco la pinta si le llega.
         $this->conGoogle(rating: true, opiniones: 'google', perfilRaro: true);
         $this->assertStringNotContainsString('javascript:', $this->seccion());
     }
@@ -539,42 +512,6 @@ class GoogleAttributionTest extends TestCase
     }
 
     /**
-     * ❗❗❗ **EL SERVICIO NO DECLARA TRADUCIDA UNA RESEÑA QUE NO LO ESTÁ, y este caso nació de una
-     * mutación que NO mordía.**
-     *
-     * **Google devuelve `originalText` SIEMPRE**, traducida o no: en español los dos campos vienen
-     * con `languageCode: es` y el mismo contenido (medido contra la API real el 2026-09-10). Así que
-     * *«hay original»* **no** significa *«está traducida»* — quien lo escriba así verá el aviso
-     * «Traducida del español» sobre una reseña escrita en español, y en la página en español, que es
-     * justo donde más se nota.
-     *
-     * ⚠️ Los casos de la vista doblan el CONTRATO y por eso no ven esto: el defecto vive en el
-     * traductor, no en la plantilla.
-     */
-    public function test_the_service_does_not_call_a_same_language_review_translated(): void
-    {
-        $servicio = new GoogleSocialProof;
-        $normalizar = (new \ReflectionClass($servicio))->getMethod('normalize');
-        $normalizar->setAccessible(true);
-
-        $datos = $normalizar->invoke($servicio, [
-            'rating' => 4.8,
-            'userRatingCount' => 42,
-            'reviews' => [[
-                'rating' => 5,
-                // La forma REAL de una reseña sin traducir: los dos campos, mismo idioma.
-                'text' => ['text' => 'Buen sitio.', 'languageCode' => 'es'],
-                'originalText' => ['text' => 'Buen sitio.', 'languageCode' => 'es'],
-                'authorAttribution' => ['displayName' => 'anna'],
-            ]],
-        ]);
-
-        $this->assertNull($datos['reviews'][0]['original'],
-            "Una reseña escrita en el idioma de la página sale marcada como TRADUCIDA.\n".
-            '▶ Google devuelve `originalText` siempre: la señal es que los idiomas DIFIERAN.');
-    }
-
-    /**
      * ⚠️⚠️ **`ext-intl` NO es un requisito declarado de este producto**, así que nombrar el idioma
      * tiene que poder fallar hacia lo seguro: se avisa igual, sin el nombre.
      */
@@ -639,25 +576,6 @@ class GoogleAttributionTest extends TestCase
 
         $this->assertStringContainsString(__('landing.reviews.google_policy'), $this->seccion(),
             'Con chapa de Google sobre opiniones propias, la nota de política desaparece.');
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────────────
-    //  7 · El umbral
-    // ─────────────────────────────────────────────────────────────────────────────────
-
-    /**
-     * ❗❗❗ **EL UMBRAL SE QUEDA EN 1** (`[DECIDIDO owner, 2026-09-10]`: *«deja el umbral a 1 siempre;
-     * mínimo 1 reseña para mostrar el widget de Google»*).
-     *
-     * ⚠️ Estuvo en 10 y bajó a 1 en `#493` con la sección renderizada delante; se re-confirmó en
-     * `#494` **con la inconsistencia de la API ya medida y a la vista**. Subirlo «para que la media
-     * sea más estable» apaga el widget entero: no se toca sin reabrir la decisión.
-     */
-    public function test_one_review_is_enough_to_show_googles_widget(): void
-    {
-        $this->assertSame(1, GoogleSocialProof::MIN_REVIEWS,
-            "El umbral de reseñas ha cambiado.\n".
-            '▶ `[DECIDIDO owner, 2026-09-10]`: se queda en 1, y subirlo apaga la sección de Google entera.');
     }
 
     // ─────────────────────────────────────────────────────────────────────────────────
@@ -731,53 +649,6 @@ class GoogleAttributionTest extends TestCase
                 return null;
             }
         });
-    }
-
-    /**
-     * Una opinión tal y como la produce **el servicio REAL** a partir de una respuesta de Places.
-     *
-     * ⚠️ Siembra la caché y lee: `GoogleSocialProof` **nunca llama a Google** (`#491`), así que no
-     * hace falta falsear HTTP para ejercitar su traducción del JSON.
-     *
-     * @param  array<string,string>  $atribucion  lo que se quiera cambiar de `authorAttribution`
-     */
-    private function desdeGoogle(array $atribucion = []): TestimonialData
-    {
-        app()->setLocale('es');
-
-        $servicio = new GoogleSocialProof;
-
-        // Se pasa por `normalize()` de verdad: mutar la lectura del perfil tiene que notarse aquí.
-        $normalizar = (new \ReflectionClass($servicio))->getMethod('normalize');
-        $normalizar->setAccessible(true);
-
-        $datos = $normalizar->invoke($servicio, [
-            'rating' => 4.8,
-            'userRatingCount' => 42,
-            'googleMapsUri' => 'https://maps.google.com/?cid=1',
-            'reviews' => [[
-                'rating' => 5,
-                'text' => ['text' => 'Great place.', 'languageCode' => 'en'],
-                'originalText' => ['text' => 'Buen sitio.', 'languageCode' => 'es'],
-                'relativePublishTimeDescription' => 'hace una semana',
-                'googleMapsUri' => 'https://www.google.com/maps/reviews/1',
-                'authorAttribution' => array_merge([
-                    'displayName' => 'anna',
-                    'uri' => 'https://www.google.com/maps/contrib/106042760',
-                    'photoUri' => 'https://lh3.googleusercontent.com/a/ACg8ocK',
-                ], $atribucion),
-            ]],
-        ]);
-
-        $this->assertNotNull($datos, 'la respuesta de ejemplo no pasa el umbral: el caso miraría el vacío');
-
-        Cache::put(GoogleSocialProof::cacheKey(), $datos, 60);
-
-        $opiniones = $servicio->testimonials();
-
-        $this->assertCount(1, $opiniones, 'el servicio no ha producido la opinión: el caso miraría el vacío');
-
-        return $opiniones->first();
     }
 
     /** El HTML de la sección 06, acotado — nunca la página entera (`#295`). */

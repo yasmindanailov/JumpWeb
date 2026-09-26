@@ -3802,6 +3802,16 @@ return [
         'col_tags' => 'Páginas',
         'tags_none' => 'Ninguna',
         'origins' => ['own' => 'Escrita aquí', 'google' => 'De Google'],
+        // La nota de la ficha de Google (`#771`), a mano.
+        'rating' => [
+            'action' => 'Nota de Google',
+            'heading' => 'La nota de tu ficha de Google',
+            'description' => 'La que enseñan las páginas («4,9 · 191 reseñas») mientras Google no apruebe el Perfil de Empresa. Se actualiza sola al importar las reseñas copiadas; aquí puedes corregirla. Queda fechada hoy.',
+            'value' => 'Nota media (1 a 5)',
+            'count' => 'Número de reseñas',
+            'url' => 'Enlace a tu ficha en Google',
+            'saved' => 'Nota guardada.',
+        ],
 
         'section_who' => 'Quién lo dice',
         'field_author_meta' => 'Línea del autor (opcional)',

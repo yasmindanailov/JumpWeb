@@ -26,7 +26,6 @@ EXEC = ['docker', 'compose', 'exec', '-T', '-u', 'sail', 'laravel.test']
 
 SRC = 'app/Domain/Content/Services/BusinessProfileSocialProof.php'
 CASCADA = 'app/Domain/Content/Services/FallingBackSocialProof.php'
-PLACES = 'app/Domain/Content/Services/GoogleSocialProof.php'
 CTRL = 'app/Http/Controllers/HomeController.php'
 VIEW = 'resources/views/anfitrion/portada.blade.php'
 CONTRATO = 'app/Http/Instancia/InstanceViews.php'
@@ -204,14 +203,8 @@ MUTATIONS = [
         '    public function reviewsNeedConsent(): bool\n    {\n        return true;\n    }',
         php(B + 'test_la_ficha_responde_aunque_el_visitante_no_acepte_terceros'),
     ),
-    (
-        # Su foto de autor la carga el visitante desde Google: eso es lo que `RGPD-05` gestiona.
-        'las de Places SÍ necesitan consentimiento',
-        PLACES,
-        '    public function reviewsNeedConsent(): bool\n    {\n        return true;\n    }',
-        '    public function reviewsNeedConsent(): bool\n    {\n        return false;\n    }',
-        php(B + 'test_estas_resenas_no_necesitan_consentimiento'),
-    ),
+    # 📜 Aquí iba «las de Places SÍ necesitan consentimiento»: su sujeto se retiró en `#771`. El mecanismo del permiso
+    # se prueba con una fuente de prueba en `ReviewsCascadeConsentTest`.
     (
         'la cifra se recorre aunque las opiniones las den las propias',
         CASCADA,
