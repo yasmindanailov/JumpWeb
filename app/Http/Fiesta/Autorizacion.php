@@ -85,8 +85,8 @@ final class Autorizacion
                 'quien' => trim((string) ($v['minorName'] ?? '')),
                 'firmante' => trim((string) ($v['signer'] ?? '')),
             ],
-            'aviso' => self::aviso($status, trim((string) ($v['minorName'] ?? ''))),
-            'formulario' => $bloqueado !== null || $status === 'signed' ? null : self::formulario($v, $document, $h),
+            'aviso' => self::avisoDe($status, trim((string) ($v['minorName'] ?? ''))),
+            'formulario' => $bloqueado !== null || $status === 'signed' ? null : self::formularioDe($v, $document, $h),
             'privacidad' => [
                 'texto' => __('fiesta.autorizacion.privacidad', ['h' => $h]),
                 'datos' => __('guardian.notice'),
@@ -131,10 +131,11 @@ final class Autorizacion
     /**
      * Los desenlaces que no son «firmada» (esa es el Listo): «ya firmada» (un niño, un papel), el texto que cambió, el
      * anti-robot y el rechazo del dominio bajo el lock. Un tono por desenlace y su título delante (spec hermana J-02).
+     * Los pinta también el recibo cuando la firma va dentro (F6a).
      *
      * @return array{tono: string, titulo: string, texto: string, rol: string}|null
      */
-    private static function aviso(?string $status, string $minor): ?array
+    public static function avisoDe(?string $status, string $minor): ?array
     {
         return match ($status) {
             'already' => ['tono' => 'neutral', 'titulo' => __('guardian.done.already_title'), 'rol' => 'status',
@@ -149,12 +150,13 @@ final class Autorizacion
     /**
      * El formulario: lo que la pieza `x-fiesta.firma` pinta, los valores que vuelven tras un error, los fallos por
      * campo con palabras, los campos del producto (nacimiento, relación), el texto del descargo y, con sesión, los
-     * menores a cargo para elegir (§12.5 de la spec hermana: rellena, no envía; no enlaza la cuenta con la firma).
+     * menores a cargo para elegir (§12.5 de la spec hermana: rellena, no envía; no enlaza la cuenta con la firma). La
+     * misma forma sirve al recibo cuando la firma va dentro (F6a): una sola fuente para las dos pantallas.
      *
      * @param  array<string, mixed>  $v
      * @return array<string, mixed>
      */
-    private static function formulario(array $v, LegalDocumentVersion $document, string $h): array
+    public static function formularioDe(array $v, LegalDocumentVersion $document, string $h): array
     {
         $errores = $v['errors'] ?? null;
         $e = static fn (string $campo): string => $errores instanceof ViewErrorBag ? (string) $errores->first($campo) : '';

@@ -2,11 +2,11 @@
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb` a secas; la instancia al lado, en
 > `~/proyectos/instancias/playjump`, clon de `github.com/yasmindanailov/instancia-playjump`, montada el 25-09) ·
-> Banda: **730–759** (700–729 agotada el 20-09) · Último usado: **`#745`** · La banda está dada de alta en la tabla de
+> Banda: **730–759** (700–729 agotada el 20-09) · Último usado: **`#746`** · La banda está dada de alta en la tabla de
 > `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: **`isla-y-landing-nueva.md`
 > §4.11 «El traspaso al SPA»** (la tarea en curso, `#765`) · `celebracion-e-invitacion.md` §0 · `waiver-por-reserva.md` §0 ·
 > `encuestas.md` §0 · `analitica-fiesta.md` §0 · `analitica.md` §0 y §4.5 · `google-business-profile.md` §0 ·
-> `sidebar-spa.md` §0 · Actualizado: 2026-09-26 (madrugada: T1a→T4 de la fiesta en `main`).
+> `sidebar-spa.md` §0 · Actualizado: 2026-09-26 (mañana: F6a de la fiesta en `main`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`). El
 > contador de la suite va en el trailer del commit (`#618`), no aquí. **Se muda, no se raspa**: el detalle de
 > una feature baja a su spec (las trampas por tanda de la analítica T1→T5 viven en `analitica.md` §4.9,
@@ -41,17 +41,12 @@
 - ✅ **Esta máquina, montada para la fiesta (25-09)**: la instancia clonada en `~/proyectos/instancias/playjump` (el
   diseño con su sha256 verificado), `INSTANCIA_RUTA=/var/www/instancias/playjump` en el `.env` (ruta DEL CONTENEDOR),
   `public/instancia/` copiado de `publico/instancia/` (ignorado por git); la receta entera, en Trampas vivas 🏠.
-- ✅ **LA FIESTA DEL SISTEMA NUEVO: T1a→T4, F1 y F2 EN `main` (25/26-09)** — las tres páginas con lo que HAY, a 0 px
-  (`#768`), la piel vieja FUERA, **la invitación ENTERA como el mockup (F1)**: palabras y pistas (API 1.32.0), la
-  merienda por grupos con icono (dato del complemento), «Ver el parque» (dos ajustes; la nota de Google copiada), 8 de 8
-  a 0 px; y **F2, personalizar en tiempo real** (la tarjeta `vivo` en rama aparte, una plantilla por tema, 18 de 18 a
-  0 px y la sonda 16 de 16). El detalle, spec §4.6; lo que enseñó, §4.7. **T4** (26-09):
-  las cuatro vistas viejas, el JS estático, 576 líneas de `site.css`, `--shadow-nav-dock` y 164 claves muertas; se
-  QUEDAN el molde `gf-*` y `focused-layout` (las ENCUESTAS) y el ancla `#gf-invite` (contrato); `ClavesDeIdiomaTest`
-  vigila paridad y texto muerto. **T1a** la lista (46 pares de piezas con control) · **T2** la invitación (`#744`) ·
-  **T3** la autorización (`#745`; `Sitio::datos()` porque `view()->shared('site')` es `null` en un controlador) ·
-  **T1b** la PÁGINA de la lista (4 de 4 a 0 px con control; `modelos.php` + `FiestaModeloTest`; ❗ cazó cuatro defectos
-  que el banco de piezas no veía: un banco de piezas no ve la página).
+- ✅ **LA FIESTA DEL SISTEMA NUEVO: T1a→T4, F1, F2 y F6a EN `main` (25/26-09)** — las tres páginas con lo que HAY a
+  0 px (`#768`), la piel vieja FUERA (T4), **la invitación ENTERA como el mockup (F1)**, **personalizar en tiempo real
+  (F2)** y **la firma DENTRO del recibo (F6a, `#746`)**: una fuente para las dos pantallas (`ComposesGuardianForm`), el
+  recibo contra `InvPagina` a 0 px en sus diagnósticos, y seis defectos arreglados que vio el navegador y no la suite
+  (el 429 del cupo compartido, el reenvío mudo, el foco tras un ancla, la cabecera que desborda en móvil —el diseño
+  también—, el color del botón, la fiesta llena con un «sí» atado). El detalle, spec §4.6; lo que enseñó, §4.7.
 - ✅ **LA ANALÍTICA, ENTERA (`#735`), T1→T7 en `main` y vista por el owner en vivo** (24 y 25-09): T2 (el cuadro), T3
   (consentimiento, driver, píxeles, `/cookies`), T4 (la 360, segmentos, opt-in), T5a·T5b (experimentos; **T5c decidida en
   `#738`**: sin mecanismo de textos, la hipótesis la nombra el owner tras la v2.0.0), **T6 la fiesta** (`#739`: *el invitado
@@ -76,7 +71,8 @@
   y las visitas de 593 y 2179, el fixture `probe-ojo-encuestas` (64 filas sobre los anfitriones de la fiesta;
   `OJO=desmontar` lo quita) y el correo en Mailpit; (7) **lo de F1 (26-09)**: los ajustes `party.park_video(_poster)`
   (`public/videos/`, copiado de la instancia), la nota de Google de prueba (4,9 · 155), el Menú 1 (107) repartido y
-  marcado en el pack 105, la fiesta `JW-OJO-F1` (`ojo-f1.php`, `OJO=desmontar`). Y siguen montados el fixture «probe-ojo-analitica» (90 pedidos
+  marcado en el pack 105, la fiesta `JW-OJO-F1` (`ojo-f1.php`, `OJO=desmontar`); (8) **de las sondas de F6a**, en esa
+  fiesta: las respuestas 260→267 («Sonda …», todas «sí») y sus autorizaciones de prueba (desde la 117). Y siguen montados el fixture «probe-ojo-analitica» (90 pedidos
   `JW-OJO…`, 25 clientes, 506 sesiones) y el de reseñas «probe-ojo-resenas». ⚠️ **Plataforma dejó la local preparada para
   que el owner pruebe la ISLA** (24-09 noche, `694529a8`): `sidebar.shell = isla` por el panel, `public/_isla-prueba.html`,
   la invitación ENCENDIDA en los packs 105/106 — **«no deshacer sin él»**; el cajón local abre ahora en la isla.
@@ -91,12 +87,13 @@
 
 1. ❗❗❗ **LA FIESTA DEL SISTEMA NUEVO (`#765`) — `specs/fiesta-sistema-nuevo.md` ✅ APROBADA (`#743`, 25-09: las
    ocho respuestas en su §7; ❗ «Ver el parque» va ENCENDIDO con el vídeo de portada, no la recomendada)**. Orden:
-   T1a→T4 ✅ · F1 ✅ · F2 ✅ (26-09) → **el ojo del owner en `localhost:8081`** sobre la fiesta de prueba
+   T1a→T4 ✅ · F1 ✅ · F2 ✅ · F6a ✅ (26-09) → **el ojo del owner en `localhost:8081`** sobre la fiesta de prueba
    `JW-OJO-F1` (reserva 1077; `ojo-f1.php`, fuera de git, imprime sus tres URL; `/invitacion/WxYYnZkkNx7U` lleva
-   merienda, palabras, pistas y «Ver el parque»; su lista, «Personalizar» en vivo) → **F3…Fn, lo que FALTA en la lista
-   y el recibo** (spec §1.4 y §7: F3 quien cumple como fila, sin fichas vacías, «Al final viene», Quitar con deshacer,
-   añadir de uno en uno; F4 la zona 3 que sube el número —AFORO, `VERIFY_CONC=1`—; F5 la tarta y los combos, el
-   borrador en el móvil; F6 la firma dentro del recibo, «Tus respuestas», «Crear mi QR», «Avísame de fechas»), una pieza por tanda con la
+   merienda, palabras, pistas y «Ver el parque»; contestar «Vamos» da el recibo con la firma dentro; su lista,
+   «Personalizar» en vivo) → **F3…Fn, lo que FALTA** (spec §1.4 y §7: F3 quien cumple como fila, sin fichas vacías,
+   «Al final viene», Quitar con deshacer, añadir de uno en uno —la mecánica, a la spec y al owner ANTES—; F4 la zona 3
+   que sube el número —AFORO, `VERIFY_CONC=1`—; F5 la tarta y los combos, el borrador en el móvil; F6b «Tus
+   respuestas», «Crear mi QR», «Avísame de fechas» —consentimiento: spec antes—), una pieza por tanda con la
    decisión del owner. Cada tanda: `git pull` de la instancia + `sha256sum -c`, el banco con control, las guardas de
    piel re-apuntadas o retiradas con su motivo, sonda de VENTANA de las tres y el ojo del owner en `localhost:8081`
    (la página viva sale NEUTRA hasta que plataforma haga el contrato de hojas: mientras, el banco carga las hojas a

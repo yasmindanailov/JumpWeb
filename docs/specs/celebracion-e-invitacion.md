@@ -341,6 +341,9 @@ Reglas estructurales:
    `invitation_reply_id` en la firma.
    - ⚠️ **El firmador no descuenta plaza por una firma atada a un «sí»**: esa plaza ya tiene dueño.
      Sin esa excepción el padre que dijo «sí» con la lista completa **no podría firmar**.
+   - ▶ `[DECIDIDO]` **`#746` (26-09): la firma va DENTRO del recibo** (`fiesta-sistema-nuevo.md` §4.6 F6a): el mismo
+     formulario, `desde=recibo` en la firma del envío, y el error o el Listo vuelven al recibo. La pantalla ya no pinta
+     «no quedan plazas» a un «sí» atado con la fiesta llena, y fuera del modo interno el recibo no ofrece nada.
 8. **Plazas con dueño** (V4). `GuardianPlaces::takenIn()` = menores asignados + justificantes + «sí»
    no descartados, distintos por `child_key`, **sin firma atada**. Así el suelo de `#444` protege a un
    niño que confirmó.

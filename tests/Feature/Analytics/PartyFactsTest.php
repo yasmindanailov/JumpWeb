@@ -171,6 +171,34 @@ class PartyFactsTest extends TestCase
         $this->assertSame(1, AnalyticsEvent::query()->where('name', 'authorization_signed')->count(), 'el reenvío dejó un segundo hecho de firma');
     }
 
+    /**
+     * F6a (`fiesta-sistema-nuevo.md`): la firma vive DENTRO del recibo, así que la autorización se «abre» donde se
+     * ofrece —el recibo, `via=invitation`— y la firma que sale de ahí trae sus horas desde esa apertura. ⚠️ Con su
+     * CONTROL: tras firmar, el recibo ya no ofrece nada y no deja otra apertura.
+     */
+    public function test_the_receipt_counts_the_opening_where_the_form_is_offered(): void
+    {
+        $party = $this->mountParty();
+        $reply = $this->replyOf($party['invitation'], $party['reservation']);
+        $recibo = app(PartyInvitations::class)->receiptUrl($reply);
+
+        $html = (string) $this->get($recibo)->assertOk()->getContent();
+        $opened = $this->fact('authorization_opened');
+        $this->assertIsOfTheReservationAndOfNobody($opened, $party['order']->id);
+        $this->assertSame('invitation', $opened->props['via']);
+
+        $this->assertTrue((bool) preg_match('#<form method="post" action="([^"]+)"[^>]*data-receipt-firma#', $html, $m));
+        $this->post(html_entity_decode($m[1]), $this->authorizationPayload($party['document'], ['invitation_reply_id' => (string) $reply->getKey()]))
+            ->assertRedirectContains('/invitacion/recibo/'.$reply->getKey());
+
+        $signed = $this->fact('authorization_signed');
+        $this->assertSame('invitation', $signed->props['via']);
+        $this->assertIsNumeric($signed->props['hours_since_open'] ?? null, 'la firma desde el recibo no trae sus horas desde la apertura');
+
+        $this->get($recibo)->assertOk();
+        $this->assertSame(1, AnalyticsEvent::query()->where('name', 'authorization_opened')->count(), 'un recibo ya firmado contó otra apertura');
+    }
+
     /** Sin apertura en esta sesión (el padre firma desde otra pestaña o tras cerrar), sin dato: la prop no viaja. */
     public function test_without_an_opening_in_the_session_there_are_no_hours(): void
     {

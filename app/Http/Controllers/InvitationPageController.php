@@ -2,15 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\Booking\Contracts\AuthorizableReservations;
 use App\Domain\Booking\Models\InvitationReply;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\PartyInvitation;
 use App\Domain\Booking\Services\GuestCountPolicy;
 use App\Domain\Booking\Services\PartyInvitations;
+use App\Domain\Identity\Services\LegalDocuments;
+use App\Domain\Identity\Services\WaiverSettings;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\CalendarFile;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Domain\Platform\Services\Turnstile;
+use App\Http\Concerns\ComposesGuardianForm;
 use App\Http\Concerns\RecordsPartyFacts;
 use App\Http\Fiesta\InvitacionPagina;
 use App\Http\Fiesta\Sitio;
@@ -53,6 +57,7 @@ use Illuminate\Validation\Rule;
  */
 class InvitationPageController extends Controller
 {
+    use ComposesGuardianForm;
     use RecordsPartyFacts;
 
     public function __construct(private readonly PartyInvitations $invitations) {}
@@ -165,6 +170,36 @@ class InvitationPageController extends Controller
             $labels[(string) $field['key']] = (string) ($type?->guestFieldLabel($field) ?? $field['key']);
         }
 
+        // LA FIRMA DENTRO DEL RECIBO (F6a de `fiesta-sistema-nuevo.md`, `AuthForm` en el recibo del diseño): tras «Vamos»
+        // y sin firma todavía, el formulario de la autorización se pinta AQUÍ, atado a esta respuesta y con `desde=recibo`
+        // dentro de la firma del envío, para que el error o el desenlace vuelvan a este recibo. Lo compone la misma
+        // fuente que la página de la autorización (`ComposesGuardianForm`), con sus mismas condiciones de existencia
+        // (`AuthorizesGuardianAuthorization`): modo interno, texto del descargo publicado, autorización en el pack y un
+        // titular sin anonimizar. Si falta una, no hay nada que firmar aquí y la sección no se pinta.
+        // Recién firmada DESDE este recibo (el flash del envío, atado a esta respuesta): cuenta como firmada también en un
+        // reenvío, cuando la autorización que ya existía está atada a otra respuesta del mismo niño.
+        $recienFirmada = $request->session()->get('guardian_status') === 'signed'
+            && (int) $request->session()->get('guardian_reply') === (int) $reply->getKey();
+        $signed = $recienFirmada || $this->invitations->waiverSignedFor($reply);
+        $firma = null;
+        if ($reply->attending && ! $signed && WaiverSettings::isInternal() && ! ($reservation->order?->user?->isAnonymized() ?? false)) {
+            $context = app(AuthorizableReservations::class)->find((int) $reservation->getKey());
+            $document = LegalDocuments::current(WaiverSettings::SLUG, app()->getLocale());
+            if ($context !== null && $document !== null) {
+                $firma = ['document' => $document] + $this->guardianFormInputs($request, $reservation, $context, [
+                    'invitation_reply_id' => (int) $reply->getKey(),
+                    'minor' => (string) $reply->child_name,
+                    'desde' => 'recibo',
+                ]);
+                // La analítica de la fiesta (`analitica-fiesta.md` §4.2): la autorización se «abre» donde se ofrece, que
+                // ahora es aquí; el mismo hecho y el mismo `via` que cuando se llegaba a su página desde el recibo.
+                if ($firma['blocked'] === null) {
+                    $this->partyFact($request, $reservation, 'authorization_opened', ['via' => 'invitation']);
+                    $request->session()->put(GuardianAuthorizationController::OPENED_AT_SESSION_KEY.$reservation->getKey(), now()->getTimestamp());
+                }
+            }
+        }
+
         // El modelo de página (T2): la misma vista que la invitación, con el recibo dentro.
         $m = InvitacionPagina::componer([
             'invitation' => $invitation,
@@ -181,14 +216,10 @@ class InvitationPageController extends Controller
                 'data' => (array) ($reply->data ?? []),
                 // ❗ **Si ya firmó, no se le vuelve a ofrecer** (`#704`, §10.6·C). La pregunta cruza la frontera con
                 // Identity y va por contrato; el implementador responde por la ATADURA de `#576`, no por el nombre.
-                'signed' => $this->invitations->waiverSignedFor($reply),
-                // «Firmar» lleva a la autorización de ESTA reserva con la respuesta atada, y el nombre del menor
-                // entero — sin partirlo en nombre y apellidos (`#236`). ⚠️⚠️ Los dos extras viajan **DENTRO** de la
-                // firma: medido, pegar un `&x=y` a una URL ya firmada la invalida.
-                'waiverUrl' => $reservation->guardianAuthorizationSignedUrl([
-                    'invitation_reply_id' => (int) $reply->getKey(),
-                    'minor' => (string) $reply->child_name,
-                ]),
+                'signed' => $signed,
+                // Recién firmado desde aquí: con quién (nombre · teléfono), para el Listo del diseño.
+                'signer' => $recienFirmada ? $request->session()->get('guardian_signer') : null,
+                'firma' => $firma,
                 'open' => $this->invitations->repliesOpenFor($reservation),
                 // «Su ficha» se guarda contra la MISMA URL firmada: `back()` perdería la firma.
                 'action' => $request->fullUrl(),

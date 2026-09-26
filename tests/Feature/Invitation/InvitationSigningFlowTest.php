@@ -30,7 +30,7 @@ use Tests\TestCase;
  *
  * Lo levantó el owner viendo funcionar la T5·3: las piezas estaban bien **por separado** y el camino
  * completo no cerraba. Por eso este fichero no monta escenarios a mano — **camina la pantalla**:
- * recibo → enlace del justificante → envío → vuelta. Un caso que fabricara la autorización con el
+ * recibo → el formulario del justificante (desde F6a, DENTRO del recibo) → envío → vuelta. Un caso que fabricara la autorización con el
  * firmador probaría el dominio, que ya está probado, y **se perdería justo lo que falla, que es la
  * costura**.
  *
@@ -65,19 +65,22 @@ class InvitationSigningFlowTest extends TestCase
     {
         [, , $reply] = $this->partyWithReply();
 
-        // Antes de firmar: el recibo ofrece el salto.
+        // Antes de firmar: el recibo ofrece la firma, DENTRO desde F6a (`fiesta-sistema-nuevo.md`).
         $this->get(app(PartyInvitations::class)->receiptUrl($reply))
             ->assertOk()
-            ->assertSee('autorizacion', escape: false);
+            ->assertSee('data-receipt-firma', escape: false);
 
         $this->signFromTheReceipt($reply);
 
-        // Después: ni el salto ni el botón, y se dice por qué.
+        // Después: ni el formulario ni el enlace, y se dice por qué.
         $html = (string) $this->get(app(PartyInvitations::class)->receiptUrl($reply))
             ->assertOk()->getContent();
 
-        // ⚠️ La marca del botón es `data-receipt-firmar`, no `data-receipt-sign`: esa es SUBCADENA de `data-receipt-signed`.
-        $this->assertStringNotContainsString('data-receipt-firmar', $html, 'el recibo sigue ofreciendo firmar a quien ya firmó');
+        // ⚠️ Las marcas de la oferta son `data-receipt-firma` (dentro) y `data-receipt-firmar` (el enlace), no
+        // `data-receipt-sign`: esa es SUBCADENA de `data-receipt-signed`. Y `data-receipt-firma` lo es de `…-firmar`, así
+        // que se busca con su comilla o su espacio detrás.
+        $this->assertDoesNotMatchRegularExpression('#data-receipt-firma[\s>]#', $html, 'el recibo sigue ofreciendo firmar a quien ya firmó');
+        $this->assertStringNotContainsString('data-receipt-firmar', $html, 'el recibo sigue ofreciendo el enlace a quien ya firmó');
         $this->assertStringContainsString('data-receipt-signed', $html, 'el recibo no dice que ya está firmado');
     }
 
@@ -93,13 +96,20 @@ class InvitationSigningFlowTest extends TestCase
     {
         [, , $reply] = $this->partyWithReply();
 
-        $this->signFromTheReceipt($reply)
-            ->assertRedirectContains('/invitacion/recibo/'.$reply->getKey());
+        $vuelta = $this->signFromTheReceipt($reply);
+        $vuelta->assertRedirectContains('/invitacion/recibo/'.$reply->getKey());
+        // A la sección de la autorización, no al principio de la tarjeta (F6a): es donde estaba mirando.
+        $this->assertStringEndsWith('#inv-h-aut', (string) $vuelta->headers->get('Location'));
 
         $this->assertDatabaseHas('guardian_authorizations', [
             'invitation_reply_id' => $reply->getKey(),
             'minor_name' => 'Hugo',
         ]);
+
+        // El Listo del diseño: «Firmada», y debajo con quién (nombre · teléfono), que llega por flash.
+        $html = (string) $this->get((string) $vuelta->headers->get('Location'))->assertOk()->getContent();
+        $this->assertStringContainsString('data-receipt-signed', $html);
+        $this->assertStringContainsString('Marta Ruiz Díaz · 600111222', $html, 'el Listo no dice quién firmó');
     }
 
     /**
@@ -107,12 +117,16 @@ class InvitationSigningFlowTest extends TestCase
      * nacimiento vuelve al formulario: si la vuelta se compone sin los extras firmados, su segundo
      * intento ya no va atado a la respuesta —**cobra plaza**— y con la reserva llena acaba en «no
      * quedan plazas», que es el fallo que `#576` existe para impedir.
+     *
+     * Desde F6a firma DENTRO de su recibo, y el error vuelve ahí (`desde=recibo`, dentro de la firma): el recibo se
+     * compone a partir de SU respuesta, así que la atadura vuelve sola —también si recarga más tarde, sin sesión—.
      */
     public function test_a_rejected_form_comes_back_with_the_invitation_still_tied(): void
     {
         [, , $reply] = $this->partyWithReply();
 
         $accion = $this->waiverFormAction($reply);
+        $this->assertStringContainsString('desde=recibo', $accion, 'la firma del envío no dice que se firma desde el recibo');
 
         // Una fecha de nacimiento futura: la rechaza el validador, no el dominio.
         $respuesta = $this->post($accion, $this->payload([
@@ -122,10 +136,9 @@ class InvitationSigningFlowTest extends TestCase
 
         $vuelta = (string) ($respuesta->headers->get('Location') ?? '');
 
-        // Los dos extras vuelven DENTRO de la firma del enlace de vuelta: es lo que hace que el
-        // segundo intento siga atado —y que un recargado más tarde, sin sesión, siga prerrellenado—.
-        $this->assertStringContainsString('invitation_reply_id='.$reply->getKey(), $vuelta, 'la vuelta perdió la atadura con la invitación');
-        $this->assertStringContainsString('minor=Hugo', $vuelta, 'la vuelta perdió el nombre que traía la invitación');
+        // Vuelve a SU recibo, a la sección de la firma: sacarle a otra página le dejaría sin saber qué corregir.
+        $this->assertStringContainsString('/invitacion/recibo/'.$reply->getKey(), $vuelta, 'el error no volvió al recibo');
+        $this->assertStringEndsWith('#inv-h-aut', $vuelta);
 
         $html = (string) $this->get($vuelta)->assertOk()->getContent();
 
@@ -134,13 +147,113 @@ class InvitationSigningFlowTest extends TestCase
             $html,
             'el formulario de la segunda oportunidad ya no lleva la atadura'
         );
+        $this->assertMatchesRegularExpression('#action="[^"]*invitation_reply_id='.$reply->getKey().'#', $html, 'la segunda oportunidad perdió la atadura DENTRO de la firma');
         // ⚠️ Y lo que se pinta es lo que ESCRIBIÓ, no el prerrelleno: `old()` manda. Un formulario que
         // le devolviera «Hugo Ruiz» encima de su «Hugo» le estaría corrigiendo el nombre de su hijo.
         $this->assertStringContainsString('value="Hugo"', $html, 'la segunda oportunidad perdió lo que el padre había escrito');
+        // ⚠️ El error junto a su campo NO se asevera aquí: en el arnés el bolso del POST llega VACÍO a la petición
+        // siguiente (la trampa de `AutorizacionPaginaTest`). Lo prueba `InvitationReceiptTest` con la forma real.
 
         // Y el segundo intento, ya correcto, entra ATADO: sin esto el arreglo sería cosmético.
         $this->post($accion, $this->payload())->assertRedirectContains('/invitacion/recibo/');
         $this->assertDatabaseHas('guardian_authorizations', ['invitation_reply_id' => $reply->getKey()]);
+    }
+
+    /**
+     * ❗❗ **Una fiesta LLENA no le cierra la firma a quien contestó «sí»** (F6a). Su «sí» ya tiene plaza
+     * (`GuardianPlaces::takenIn` lo cuenta) y el firmador salta el tope para una firma atada a él (`#576`); hasta F6a la
+     * pantalla pintaba «no quedan plazas» y no le dejaba intentarlo — el caso normal de una fiesta completa.
+     *
+     * ⚠️ Con su CONTROL: sin la atadura (el enlace repartido), la misma fiesta llena sí se pinta bloqueada.
+     */
+    public function test_a_full_party_still_lets_a_yes_reply_sign_from_its_receipt(): void
+    {
+        [$reservation, , $reply] = $this->partyWithReply();
+        // Seis plazas: el «sí» de Hugo y cinco justificantes más la llenan.
+        foreach (range(1, 5) as $i) {
+            InvitationReply::query()->create([
+                'party_invitation_id' => $reply->party_invitation_id,
+                'order_item_id' => $reservation->getKey(),
+                'attending' => true,
+                'child_name' => 'Invitado '.$i,
+                'child_key' => PersonNameKey::for('Invitado '.$i),
+            ]);
+        }
+
+        $html = (string) $this->get(app(PartyInvitations::class)->receiptUrl($reply))->assertOk()->getContent();
+        $this->assertStringNotContainsString('data-receipt-blocked', $html, 'el recibo cierra la firma a un «sí» con la fiesta llena');
+        $this->assertStringContainsString('data-receipt-firma', $html);
+
+        // Y firma de verdad: el dominio, bajo el lock, le deja. (El cuerpo lleva SU respuesta: `payload()` pone la última.)
+        $this->post($this->waiverFormAction($reply), $this->payload(['invitation_reply_id' => (string) $reply->getKey()]))
+            ->assertRedirectContains('/invitacion/recibo/'.$reply->getKey());
+        $this->assertDatabaseHas('guardian_authorizations', ['invitation_reply_id' => $reply->getKey()]);
+
+        // CONTROL: el enlace repartido (sin atadura) con la fiesta llena sí se pinta bloqueado.
+        $this->get($reservation->fresh()?->guardianAuthorizationSignedUrl() ?? '')
+            ->assertOk()
+            ->assertSee('data-guardian-blocked="full"', escape: false);
+    }
+
+    /**
+     * ❗ **El REENVÍO desde otro recibo del mismo niño dice «Firmada»** (F6a, medido en navegador). Un padre que contestó
+     * dos veces por Hugo firma en el primer recibo y luego en el segundo: el dominio no duplica la firma (es idempotente
+     * y devuelve la que ya existía, atada a la PRIMERA respuesta), y el segundo recibo —que pregunta por la atadura—
+     * volvía a pintar el formulario vacío sin decir nada. ⚠️ Con su CONTROL: recargado más tarde, sin el desenlace en la
+     * sesión, vuelve a ofrecer firmar (lo mismo que la página de la autorización: comparar nombres lo descartó `#328`).
+     */
+    public function test_a_resent_signature_from_a_second_receipt_of_the_same_child_says_signed(): void
+    {
+        [$reservation, $invitation, $primera] = $this->partyWithReply();
+        $segunda = InvitationReply::query()->create([
+            'party_invitation_id' => $invitation->getKey(),
+            'order_item_id' => $reservation->getKey(),
+            'attending' => true,
+            'child_name' => 'Hugo Ruiz',
+            'child_key' => PersonNameKey::for('Hugo Ruiz'),
+        ]);
+
+        $this->post($this->waiverFormAction($primera), $this->payload(['invitation_reply_id' => (string) $primera->getKey()]))
+            ->assertRedirectContains('/invitacion/recibo/'.$primera->getKey());
+
+        $vuelta = $this->post($this->waiverFormAction($segunda), $this->payload(['invitation_reply_id' => (string) $segunda->getKey()]));
+        $vuelta->assertRedirectContains('/invitacion/recibo/'.$segunda->getKey());
+        $this->assertSame(1, GuardianAuthorization::query()->where('order_item_id', $reservation->getKey())->count(), 'el reenvío duplicó la firma');
+
+        $html = (string) $this->get((string) $vuelta->headers->get('Location'))->assertOk()->getContent();
+        $this->assertStringContainsString('data-receipt-signed', $html, 'el segundo recibo no dice que ya está firmada');
+        $this->assertStringContainsString('Marta Ruiz Díaz · 600111222', $html);
+        $this->assertStringNotContainsString('data-receipt-firma', $html);
+
+        // CONTROL: recargado sin el desenlace en la sesión, vuelve la oferta (y el Listo no se inventa).
+        $html = (string) $this->get(app(PartyInvitations::class)->receiptUrl($segunda))->assertOk()->getContent();
+        $this->assertStringContainsString('data-receipt-firma', $html);
+        $this->assertStringNotContainsString('data-receipt-signed', $html);
+    }
+
+    /**
+     * ❗ **La firma tiene su propio cupo** (SEC-06, F6a). Sin prefijo, Laravel cuenta en UNA clave por IP todas las rutas
+     * con límite numérico: abrir la invitación y el recibo y guardar la ficha gastaban el cupo de la firma, y un padre
+     * rápido se llevaba un 429 al segundo intento (medido en navegador). ⚠️ Con su CONTROL: la barrera de volumen sigue
+     * —el undécimo envío en un minuto desde la misma IP es 429—.
+     */
+    public function test_the_signature_has_its_own_throttle_bucket(): void
+    {
+        [, , $reply] = $this->partyWithReply();
+        $recibo = app(PartyInvitations::class)->receiptUrl($reply);
+
+        // Doce vistas del recibo (su límite es 60): antes, con la clave compartida, ya no quedaba cupo para firmar.
+        foreach (range(1, 12) as $i) {
+            $this->get($recibo)->assertOk();
+        }
+        $accion = $this->waiverFormAction($reply);
+        $this->post($accion, $this->payload())->assertRedirectContains('/invitacion/recibo/');
+
+        // CONTROL: nueve envíos más (rechazados por el validador) llenan los diez; el undécimo, 429.
+        foreach (range(1, 9) as $i) {
+            $this->post($accion, $this->payload(['minor_born_on' => now()->addDay()->toDateString()]))->assertRedirect();
+        }
+        $this->post($accion, $this->payload())->assertStatus(429);
     }
 
     /**
@@ -199,28 +312,18 @@ class InvitationSigningFlowTest extends TestCase
 
     // ── El camino que anda un padre ───────────────────────────────────────────
 
-    /** El enlace al justificante **tal y como lo pinta el recibo**, con sus extras dentro de la firma. */
-    private function waiverLink(InvitationReply $reply): string
+    /**
+     * El `action` del formulario **tal y como lo sirve el recibo** (desde F6a la firma vive DENTRO): es donde viven los
+     * extras firmados.
+     */
+    private function waiverFormAction(InvitationReply $reply): string
     {
         $html = (string) $this->get(app(PartyInvitations::class)->receiptUrl($reply))
             ->assertOk()->getContent();
 
         $this->assertTrue(
-            (bool) preg_match('#href="([^"]*autorizacion[^"]*)"#', $html, $m),
-            'el recibo no ofrece el salto al justificante'
-        );
-
-        return html_entity_decode($m[1]);
-    }
-
-    /** El `action` del formulario **tal y como lo sirve la pantalla**: es donde viven los extras firmados. */
-    private function waiverFormAction(InvitationReply $reply): string
-    {
-        $html = (string) $this->get($this->waiverLink($reply))->assertOk()->getContent();
-
-        $this->assertTrue(
-            (bool) preg_match('#<form method="post" action="([^"]+)"[^>]*data-firma#', $html, $m),
-            'el formulario del justificante no se pintó'
+            (bool) preg_match('#<form method="post" action="([^"]+)"[^>]*data-receipt-firma[^>]*data-firma#', $html, $m),
+            'el recibo no pinta el formulario del justificante'
         );
 
         return html_entity_decode($m[1]);

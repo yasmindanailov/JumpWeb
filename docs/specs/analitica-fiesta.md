@@ -119,7 +119,7 @@ enlace); la landing y la app; cualquier dato personal en el libro (`RGPD-02`); l
 | `invitation_viewed` `(futuro)` | `InvitationPageController::show` | `days_before`, `device`, `locale` |
 | `invitation_replied` (ya declarado) | `InvitationPageController::reply`, tras el éxito | `attending` (`yes`\|`no`), `companion` (bool), `days_before` |
 | `invitation_calendar_downloaded` `(futuro)` | `InvitationPageController::calendar` | `days_before` |
-| `authorization_opened` `(futuro)` | `GuardianAuthorizationController::show` | `via` (`invitation`\|`link`), `days_before`, `device` |
+| `authorization_opened` `(futuro)` | `GuardianAuthorizationController::show` y, desde F6a (`#746`, 26-09), `InvitationPageController::receipt` cuando PINTA la firma dentro (`via=invitation`): la apertura se cuenta donde se ofrece, así que el paso del embudo mide «ofrecida en el recibo», ya no «pulsó Firmar» | `via` (`invitation`\|`link`), `days_before`, `device` |
 | `authorization_signed` `(futuro)` | `GuardianAuthorizationController::store`, tras el éxito | `via`, `days_before`, `hours_since_open` (si hubo apertura en la misma sesión técnica) |
 
 `Contract` gana las cuatro filas nuevas; `Recorder::fact()` ya difiere con `DB::afterCommit` y traga con `Log`. Los

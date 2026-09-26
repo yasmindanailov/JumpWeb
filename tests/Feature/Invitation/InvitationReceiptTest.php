@@ -111,32 +111,38 @@ class InvitationReceiptTest extends TestCase
      * primer espacio recorta «María del Carmen» a «María» dentro de un documento que se firma. El
      * único que sabe dónde acaba su nombre es quien lo escribió.
      */
-    public function test_lo_dejo_y_me_voy_lands_on_a_waiver_that_opens_with_the_reply_tied(): void
+    public function test_lo_dejo_y_me_voy_signs_inside_the_receipt_with_the_reply_tied(): void
     {
         [$reservation, , $reply] = $this->partyWithReply();
 
+        // Desde F6a (`fiesta-sistema-nuevo.md`) la firma vive DENTRO del recibo: el mismo formulario que su página.
         $html = (string) $this->get(app(PartyInvitations::class)->receiptUrl($reply))
             ->assertOk()->getContent();
 
         $this->assertTrue(
-            (bool) preg_match('#href="([^"]*autorizacion[^"]*)"#', $html, $m),
-            'el recibo no ofrece el salto al justificante'
+            (bool) preg_match('#<form method="post" action="([^"]+)"[^>]*data-receipt-firma#', $html, $m),
+            'el recibo no pinta la firma dentro'
         );
+        $accion = html_entity_decode($m[1]);
 
-        $waiver = html_entity_decode($m[1]);
+        // La atadura, DENTRO de la firma del envío (y en el cuerpo, que el dominio contrasta con el contrato).
+        $this->assertStringContainsString('invitation_reply_id='.$reply->getKey(), $accion);
+        $this->assertStringContainsString('desde=recibo', $accion);
+        $this->assertStringContainsString('signature=', $accion);
+        $this->assertStringContainsString('name="invitation_reply_id" value="'.$reply->getKey().'"', $html);
 
-        // La firma del enlace TIENE que valer: es lo que este caso existe para probar.
-        $html = (string) $this->get($waiver)
-            ->assertOk()
-            ->assertSee('value="'.$reply->getKey().'"', escape: false)
-            // Lo que escribió, ENSEÑADO…
-            ->assertSee('Hugo Ruiz')
-            ->getContent();
-
+        // Lo que escribió, ENSEÑADO…
+        $this->assertStringContainsString('data-from-invitation', $html, 'no se le dice de dónde viene ni qué escribió');
+        $this->assertStringContainsString('Hugo Ruiz', $html);
         // …y las dos casillas VACÍAS: que el reparto lo haga él.
         $this->assertStringContainsString('name="minor_name" value=""', $html);
         $this->assertStringNotContainsString('value="Hugo Ruiz"', $html, 'el nombre se volcó en una casilla en vez de enseñarse');
-        $this->assertStringContainsString('data-from-invitation', $html, 'no se le dice de dónde viene ni qué escribió');
+        // El texto del descargo se PRESENTA en el flujo (`waiver-probatorio.md` §4.4), con su ancla, y el aviso de lo
+        // que se recoge al firmar va donde se recoge.
+        $this->assertStringContainsString('data-guardian-waiver', $html, 'el descargo no se presenta en el recibo');
+        $this->assertStringContainsString('Saltar implica riesgos.', $html);
+        $this->assertStringContainsString('href="#descargo"', $html);
+        $this->assertStringContainsString('data-guardian-privacy', $html);
 
         $this->assertNotNull($reservation->fresh());
     }
@@ -152,8 +158,62 @@ class InvitationReceiptTest extends TestCase
         $html = (string) $this->get(app(PartyInvitations::class)->receiptUrl($reply))->assertOk()->getContent();
 
         $this->assertStringNotContainsString('name="companion"', $html, 'la pregunta volvió al recibo');
-        $this->assertStringContainsString('data-receipt-firmar', $html, 'sin la pregunta, la oferta de firmar tiene que seguir');
+        $this->assertStringContainsString('data-receipt-firma', $html, 'sin la pregunta, la oferta de firmar tiene que seguir');
         $this->assertStringContainsString('Firmarla no te compromete', $html, 'la frase que quita la duda va junto al botón');
+    }
+
+    /**
+     * F6a: un envío rechazado vuelve a SU recibo con el error junto a su campo, lo que escribió y el desenlace. ⚠️ El
+     * bolso de errores se mete con la FORMA con la que viaja (`session.serialization = json`): en el arnés el de un POST
+     * previo llega vacío (la trampa de `AutorizacionPaginaTest`). El flujo real se midió con curl y cookies.
+     */
+    public function test_a_rejected_signature_paints_the_error_inside_the_receipt(): void
+    {
+        [, , $reply] = $this->partyWithReply();
+
+        $html = (string) $this->withSession([
+            'errors' => ['default' => ['format' => ':message', 'messages' => ['minor_born_on' => ['La fecha no puede ser futura.']]]],
+            '_old_input' => ['minor_name' => 'Hugo', 'minor_born_on' => '2031-01-01'],
+        ])->get(app(PartyInvitations::class)->receiptUrl($reply))->assertOk()->getContent();
+
+        $this->assertMatchesRegularExpression(
+            '#<div class="pz-campo pz-campo--error">.*?id="inv-aut-nacimiento"[^>]*aria-invalid="true".*?<span id="[^"]+" class="pz-campo__error">La fecha no puede ser futura\.</span>#s',
+            $html,
+            'el error no se pinta junto a su campo en el recibo'
+        );
+        $this->assertStringContainsString('value="Hugo"', $html, 'se perdió lo que escribió');
+        $this->assertStringContainsString('value="2031-01-01"', $html);
+    }
+
+    /**
+     * ❗ **Sin nada que firmar aquí, el recibo no lo ofrece** (F6a). Fuera del modo interno la página de la
+     * autorización no existe (404), y hasta F6a el recibo ofrecía «Firmar» hacia ella: un callejón sin salida justo
+     * después de decir que sí. Ni la sección ni la línea de «sin firma, en la puerta».
+     *
+     * ⚠️ Con su CONTROL: el mismo recibo en modo interno sí la ofrece, y el enlace de antes da 404 en externo.
+     */
+    public function test_outside_the_internal_mode_the_receipt_offers_nothing_to_sign(): void
+    {
+        [$reservation, , $reply] = $this->partyWithReply();
+        $url = app(PartyInvitations::class)->receiptUrl($reply);
+
+        // CONTROL: en modo interno, la sección y la línea.
+        $this->get($url)->assertOk()
+            ->assertSee('data-receipt-authorization', escape: false)
+            ->assertSee('sin firma, la autorización se hace en la puerta');
+
+        Setting::query()->updateOrCreate(['key' => 'waiver.mode'], ['value' => WaiverSettings::MODE_EXTERNAL]);
+
+        $html = (string) $this->get($url)->assertOk()->getContent();
+        $this->assertStringNotContainsString('data-receipt-authorization', $html, 'el recibo ofrece firmar donde no hay nada que firmar');
+        $this->assertStringNotContainsString('autorizacion', $html, 'queda un enlace a la autorización');
+        $this->assertStringNotContainsString('sin firma, la autorización se hace en la puerta', $html);
+
+        // Y por qué: el enlace que había antes, en externo, no lleva a ninguna parte.
+        $this->get($reservation->guardianAuthorizationSignedUrl([
+            'invitation_reply_id' => (int) $reply->getKey(),
+            'minor' => (string) $reply->child_name,
+        ]))->assertNotFound();
     }
 
     /** Una respuesta que el anfitrión DESCARTÓ no se resucita por el recibo. */

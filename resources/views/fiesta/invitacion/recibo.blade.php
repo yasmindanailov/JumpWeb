@@ -1,8 +1,10 @@
 {{-- EL RECIBO (`InvRecibo`): la misma tarjeta con su titular; tras «Vamos», el confeti vuelve a caer, «Añadir al calendario»
      pasa a botón, y debajo «Su ficha» (opcional; con JavaScript se guarda sola al salir de cada campo y dice «Guardado»;
-     sin él, su Guardar), la autorización como oferta (firmada, su Listo; si no, «Firmar» lleva a la autorización con la
-     respuesta atada, hasta que `AuthForm` entre en T3), el aviso de privacidad y la línea de después. Tras «No podemos»,
-     la tarjeta y la línea, sin confeti. ⚠️ Todo aquí es OPCIONAL: quien cierra la pestaña ha terminado bien.
+     sin él, su Guardar), la autorización como oferta —desde F6a, la FIRMA DENTRO (`AuthForm`): el mismo formulario que su
+     página, atado a esta respuesta, que vuelve aquí con su error o su desenlace; firmada, su Listo con quién firmó—, el
+     aviso de privacidad y la línea de después. Sin nada que firmar aquí (fuera del modo interno o sin texto publicado),
+     la sección no existe: el enlace de antes llevaba a un 404. Tras «No podemos», la tarjeta y la línea, sin confeti.
+     ⚠️ Todo aquí es OPCIONAL: quien cierra la pestaña ha terminado bien.
      ⚠️ «¿Vas tú con él?» ya no se pregunta (`#743`·5): la autorización es una oferta sin pregunta. --}}
 @php
     $r = $m['recibo'];
@@ -29,17 +31,43 @@
     @elseif ($f['estado'] === 'closed')
         <x-pieza.aviso tone="warn" size="sm" role="alert" data-receipt-closed>{{ __('fiesta.recibo.cerrado') }}</x-pieza.aviso>
     @endif
+    @php($a = $r['autorizacion'])
+    @if ($a !== null)
     <section class="inv-sec" aria-labelledby="inv-h-aut" data-receipt-authorization>
         <h2 id="inv-h-aut" class="inv-h2">{{ __('fiesta.recibo.aut_titulo') }}</h2>
         <p class="inv-texto">{{ __('fiesta.recibo.aut_texto') }}</p>
-        @if ($r['autorizacion']['firmada'])
-            <x-pieza.aviso tone="success" size="sm" data-receipt-signed><x-slot:icono><x-lucide name="circle-check" :size="18" /></x-slot:icono>{{ __('fiesta.recibo.firmada') }}</x-pieza.aviso>
-        @elseif ($r['autorizacion']['enlace'] !== '')
-            {{-- La firma DENTRO del recibo (`AuthForm`) llega en T3: hasta entonces, la frase que quita la duda junto al
-                 botón y «Firmar» lleva a la autorización con la respuesta atada (`#576`). --}}
-            <div class="inv-firma-oferta"><p class="inv-nota">{{ __('fiesta.recibo.aut_compromiso') }}</p><x-pieza.boton variant="primary" size="md" full :href="$r['autorizacion']['enlace']" data-receipt-firmar>{{ __('fiesta.recibo.firmar') }}</x-pieza.boton></div>
+        @if ($a['firmada'])
+            <x-pieza.aviso tone="success" size="sm" data-receipt-signed><x-slot:icono><x-lucide name="circle-check" :size="18" /></x-slot:icono>{{ '' }}{{ __('fiesta.recibo.firmada') }}@if ($a['firmante'] !== '')<span class="inv-firma">{{ $a['firmante'] }}</span>@endif</x-pieza.aviso>
+        @else
+            @php($fr = $a['firma'])
+            @if ($fr['aviso'] !== null)
+                <x-pieza.aviso :tone="$fr['aviso']['tono']" :title="$fr['aviso']['titulo']" :role="$fr['aviso']['rol']" size="sm" data-receipt-outcome>{{ $fr['aviso']['texto'] }}</x-pieza.aviso>
+            @endif
+            @if ($fr['bloqueado'] !== null)
+                <x-pieza.aviso tone="neutral" size="sm" role="status" data-receipt-blocked="{{ $fr['bloqueado']['motivo'] }}"><x-slot:icono><x-lucide name="lock" :size="17" /></x-slot:icono>{{ '' }}{{ $fr['bloqueado']['texto'] }}</x-pieza.aviso>
+            @else
+                @php($fa = $fr['formulario'])
+                @if ($fa['menores'] !== [])
+                    {{-- Con sesión, el menor se ELIGE (§12.5): rellena los campos y no envía; «a mano» los vacía. --}}
+                    <x-pieza.selector id="dependent_pick" :label="__('guardian.minor.pick')" :hint="__('guardian.minor.pick_help')" :options="[['value' => '', 'label' => __('guardian.minor.pick_manual')], ...$fa['menores']]" data-guardian-pick-select />
+                @endif
+                @if ($fa['desde_invitacion'] !== '')
+                    {{-- Lo que escribió al contestar se ENSEÑA, no se reparte (`#706`, `#236`): el nombre y los apellidos, los pone él. --}}
+                    <p class="inv-nota" data-from-invitation>{{ __('guardian.minor.from_invitation', ['name' => $fa['desde_invitacion']]) }}</p>
+                @endif
+                <x-fiesta.firma child idPrefix="inv-aut" :action="$fa['accion']" :valores="$fa['valores']" :fallos="$fa['fallos']" :labels="['box' => $fa['casilla'], 'commit' => __('fiesta.recibo.aut_compromiso')]" data-receipt-firma>
+                    <x-slot:oculto>@if ($fa['respuesta_id'] !== null)<input type="hidden" name="invitation_reply_id" value="{{ $fa['respuesta_id'] }}">@endif<input type="hidden" name="document_id" value="{{ $fa['documento_id'] }}"><div class="pz-sr" aria-hidden="true"><label for="contact_ref">Ref</label><input type="text" id="contact_ref" name="contact_ref" tabindex="-1" autocomplete="off"></div></x-slot:oculto>
+                    <x-slot:nino><x-pieza.campo id="inv-aut-nacimiento" name="minor_born_on" type="date" :label="$fa['nacimiento']['label']" :hint="$fa['nacimiento']['hint']" :value="$fa['nacimiento']['value']" :error="$fa['nacimiento']['error']" /></x-slot:nino>
+                    <x-slot:adulto><x-pieza.selector id="inv-aut-relacion" name="guardian_relationship" :label="$fa['relacion']['label']" :options="$fa['relacion']['opciones']" :value="$fa['relacion']['value']" :error="$fa['relacion']['error']" /></x-slot:adulto>
+                    {{-- El texto del descargo se PRESENTA en el flujo (`waiver-probatorio.md` §4.4): «Leer el descargo» es un ancla. --}}
+                    <x-slot:descargo><div class="aut-descargo" id="descargo" data-guardian-waiver><h2 class="inv-h2">{{ $fa['descargo']['titulo'] }}</h2><span class="inv-nota">{{ $fa['descargo']['version'] }}</span>@foreach ($fa['descargo']['cuerpo'] as $s)@if ($s['h'] !== '')<h3 class="aut-descargo-h">{{ $s['h'] }}</h3>@endif{{ '' }}@if ($s['p'] !== '')<p class="inv-texto">{{ $s['p'] }}</p>@endif{{ '' }}@endforeach</div></x-slot:descargo>
+                    <x-slot:legal><p class="inv-legal" data-guardian-privacy>{{ $fr['privacidad']['texto'] }} <span>{{ $fr['privacidad']['datos'] }}</span></p></x-slot:legal>
+                    @if ($fr['turnstile']['activo'])<x-slot:tercero><div class="inv-tercero"><span class="inv-tercero-rotulo">{{ $fr['turnstile']['rotulo'] }}</span><div class="cf-turnstile" data-sitekey="{{ $fr['turnstile']['clave'] }}"></div></div><script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script></x-slot:tercero>{{ '' }}@endif
+                </x-fiesta.firma>
+            @endif
         @endif
     </section>
+    @endif
     <p class="inv-legal" data-invitation-privacy>{{ $m['privacidad']['texto'] }} <x-pieza.enlace size="sm" underline="always" :href="$m['privacidad']['enlace']">{{ $m['privacidad']['politica'] }}</x-pieza.enlace></p>
 @endif
 <p class="inv-despues" data-receipt-after><x-lucide name="info" :size="16" /><span>{{ $r['despues'] }}</span></p>

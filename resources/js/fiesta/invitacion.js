@@ -8,7 +8,7 @@
  */
 /* global document, window, location, fetch, FormData, setTimeout, clearTimeout */
 import './fiesta.css';
-import { arranca, enterNoEnvia, idioma, q, qa } from './comun.js';
+import { arranca, enterNoEnvia, firma, idioma, menores, q, qa } from './comun.js';
 
 /* ── «Ver el parque» (F1c, `content/ClipViewer.jsx`): la píldora abre el visor; el vídeo suena (si el navegador lo veta,
    sin sonido), un toque lo pausa y enseña el triángulo, se cierra con la X, con Escape, tocando fuera o deslizando hacia
@@ -160,4 +160,5 @@ function foco() {
     if (campo) setTimeout(() => campo.focus({ preventScroll: false }), 60);
 }
 
-arranca(idioma, visor, barra, ficha, foco);
+// La firma dentro del recibo (F6a): el mismo comportamiento que la página de la autorización (`comun.js`).
+arranca(idioma, visor, barra, ficha, menores, firma, foco);

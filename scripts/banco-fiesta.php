@@ -241,9 +241,10 @@ HTML);
 // la píldora con la foto del diseño y la nota). El visor abierto no se juzga: reproduce un vídeo, y un fotograma no es
 // una referencia.
 // ⚠️ Se juzga la VENTANA (`completa: false`), no la página entera: el aviso de privacidad bajo la barra (spec hermana
-//    §7.2·R7) es del producto y el diseño no lo dibuja en la invitación. El recibo se juzga sin A hasta T3 (`AuthForm`).
+//    §7.2·R7) es del producto y el diseño no lo dibuja en la invitación. El recibo tiene su sección, abajo (F6a).
 $card = (string) file_get_contents($diseno.'/paginas/invitacion.card.html');
 $hojas = ['instancia/css/fuentes.css', 'instancia/css/saltia.css', 'instancia/css/fiesta.css'];
+$sinCabeceraMovil = '<style>@media (max-width:459px){.inv-cab{display:none}}</style>';
 foreach (['invitacion-viva' => 'viva', 'invitacion-cerrada' => 'cerrada'] as $nombre => $estado) {
     if ($solo !== [] && ! in_array($nombre, $solo, true)) {
         continue;
@@ -271,20 +272,68 @@ foreach (['invitacion-viva' => 'viva', 'invitacion-cerrada' => 'cerrada'] as $no
     $b = str_replace(rtrim((string) config('app.url'), '/').'/', '../', $b);
     file_put_contents($salida."/b/{$nombre}.html", $b);
     // El par de DIAGNÓSTICO: la misma B sin el aviso de privacidad (que el diseño no dibuja en la invitación y el
-    // producto exige). Tiene que dar 0: así el par real solo puede diferir en esa línea, y se ve cuánto.
-    file_put_contents($salida."/b/{$nombre}-sin-legal.html", (string) preg_replace('#<p class="inv-legal"[^>]*>.*?</p>#s', '', $b));
+    // producto exige) y, en los dos lados, sin la cabecera en móvil: con «Ver el parque» el diseño DESBORDA a lo ancho
+    // (414 px de página a 390, medido el 26-09) y el producto pasa la píldora a su fila (`fiesta.css`). Tiene que dar 0:
+    // así el par real solo puede diferir en esas dos cosas, y se ve cuánto.
+    file_put_contents($salida."/a/{$nombre}-sin-legal.html", str_replace('</head>', $sinCabeceraMovil.'</head>', $a));
+    file_put_contents($salida."/b/{$nombre}-sin-legal.html", str_replace('</head>', $sinCabeceraMovil.'</head>', (string) preg_replace('#<p class="inv-legal"[^>]*>.*?</p>#s', '', $b)));
 
     foreach (['390x844', '1280x900'] as $ventana) {
         foreach (['', '-sin-legal'] as $variante) {
             $lote[] = [
                 'nombre' => "{$nombre}-".strtok($ventana, 'x').$variante,
-                'a' => "{$base}/a/{$nombre}.html",
+                'a' => "{$base}/a/{$nombre}{$variante}.html",
                 'b' => "{$base}/b/{$nombre}{$variante}.html",
                 'viewport' => $ventana,
                 'completa' => false,
                 'clics' => [],
             ];
         }
+    }
+}
+
+// ── EL RECIBO (F6a): tras «Vamos» (`si`, con la firma DENTRO) y firmado (`firmada`), a página ENTERA ─────────────────
+// A es la misma ficha de la invitación montando `InvPagina` con el estado del recibo (su `semilla`: la respuesta de
+// Hugo); B es `fiesta.invitacion` con `modelos.php → invitacion(true, estado)`. Las páginas REALES se escriben para el
+// ojo pero no entran en el lote: no miden lo mismo. B lleva lo que la prueba firmada exige y el diseño no dibuja en el
+// recibo (el nombre y los apellidos del niño con la nota de lo que escribió, el nacimiento, la relación, el descargo en
+// el flujo y su privacidad, `#745`/`#706`) y a A le sobra lo que aún no está (F6b: «Crear mi QR» y «Avísame de fechas»).
+// El par de DIAGNÓSTICO esconde eso a cada lado, y la cabecera en móvil (el diseño desborda), y tiene que dar 0.
+$esconderReciboA = '<style>.inv-qr{display:none}@media (max-width:459px){.inv-cab{display:none}}</style>';
+$esconderReciboB = '<style>[data-from-invitation],form[data-receipt-firma]>div:has([name="minor_name"]),form[data-receipt-firma]>:has(#inv-aut-relacion),'
+    .'[data-guardian-waiver],[data-guardian-privacy]{display:none!important}@media (max-width:459px){.inv-cab{display:none}}</style>';
+foreach (['recibo-si' => 'si', 'recibo-firmada' => 'firmada'] as $nombre => $estado) {
+    if ($solo !== [] && ! in_array($nombre, $solo, true)) {
+        continue;
+    }
+    $a = str_replace(
+        ['"../styles.css"', '"invitacion/datos.js"', '"invitacion/invitacion.css"', '"invitacion/vistas.jsx"', '"../components/', '"../_ds_bundle.js"'],
+        ['"../diseno/styles.css"', '"../diseno/paginas/invitacion/datos.js"', '"../diseno/paginas/invitacion/invitacion.css"', '"../diseno/paginas/invitacion/vistas.jsx"', '"../diseno/components/', '"../diseno/_ds_bundle.js"'],
+        $card,
+    );
+    $montaje = 'localStorage.setItem("pj-invitacion-idioma", JSON.stringify("es")); localStorage.removeItem("pj-invitacion-respuestas"); '
+        .'window.invCargar(FUENTES).then(() => ReactDOM.createRoot(document.getElementById("root")).render(<InvPagina estado="'.$estado.'" tema="confeti" opc={true} foto={true} />));';
+    $a = (string) preg_replace('/window\.invCargar\(FUENTES\)\.then\(\(\) => ReactDOM\.createRoot\(document\.getElementById\("root"\)\)\.render\(<InvBanco \/>\)\);/', $montaje, $a, 1, $n);
+    if ($n !== 1) {
+        fwrite(STDERR, "la ficha de la invitación cambió: no encuentro su montaje\n");
+        exit(1);
+    }
+    $b = view('fiesta.invitacion', ['m' => $modelos['invitacion'](true, $estado), 'hojas' => $hojas])->render();
+    $b = str_replace(rtrim((string) config('app.url'), '/').'/', '../', $b);
+    file_put_contents($salida."/a/{$nombre}.html", $a);
+    file_put_contents($salida."/b/{$nombre}.html", $b);
+    file_put_contents($salida."/a/{$nombre}-diagnostico.html", str_replace('</head>', $esconderReciboA.'</head>', $a));
+    // La privacidad del producto dice además cuánto se guarda (RGPD); el diseño no: la frase fuera, la línea se compara.
+    file_put_contents($salida."/b/{$nombre}-diagnostico.html", str_replace(['</head>', ' Lo borramos a los 14 días de la fiesta.'], [$esconderReciboB.'</head>', ''], $b));
+    foreach (['390x844', '1280x900'] as $ventana) {
+        $lote[] = [
+            'nombre' => "{$nombre}-".strtok($ventana, 'x').'-diagnostico',
+            'a' => "{$base}/a/{$nombre}-diagnostico.html",
+            'b' => "{$base}/b/{$nombre}-diagnostico.html",
+            'viewport' => $ventana,
+            'completa' => true,
+            'clics' => [],
+        ];
     }
 }
 

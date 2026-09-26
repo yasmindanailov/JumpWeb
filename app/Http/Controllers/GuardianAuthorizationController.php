@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Domain\Booking\Contracts\AuthorizableReservation;
 use App\Domain\Booking\Contracts\AuthorizableReservations;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Services\PartyInvitations;
@@ -10,9 +9,7 @@ use App\Domain\Identity\Exceptions\GuardianAuthorizationExistsException;
 use App\Domain\Identity\Exceptions\GuardianAuthorizationRefusedException;
 use App\Domain\Identity\Models\Dependent;
 use App\Domain\Identity\Models\GuardianAuthorization;
-use App\Domain\Identity\Services\DependentRegistry;
 use App\Domain\Identity\Services\GuardianAuthorizationSigner;
-use App\Domain\Identity\Services\GuardianPlaces;
 use App\Domain\Identity\Services\LegalDocuments;
 use App\Domain\Identity\Services\WaiverAcceptance;
 use App\Domain\Identity\Services\WaiverSettings;
@@ -20,6 +17,7 @@ use App\Domain\Identity\Services\WaiverSignatureRequest;
 use App\Domain\Platform\Services\Analytics\EmailUtm;
 use App\Domain\Platform\Services\Turnstile;
 use App\Http\Concerns\AuthorizesGuardianAuthorization;
+use App\Http\Concerns\ComposesGuardianForm;
 use App\Http\Concerns\RecordsPartyFacts;
 use App\Http\Fiesta\Autorizacion;
 use App\Http\Fiesta\Sitio;
@@ -28,7 +26,6 @@ use App\Notifications\GuardianAuthorizationSigned;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\View\View;
 
@@ -54,13 +51,15 @@ use Illuminate\View\View;
 class GuardianAuthorizationController extends Controller
 {
     use AuthorizesGuardianAuthorization;
+    use ComposesGuardianForm;
     use RecordsPartyFacts;
 
     /**
      * Cuándo abrió ESTA persona el justificante de ESTA reserva, en su sesión técnica: de ahí sale
-     * `hours_since_open` al firmar (`specs/analitica-fiesta.md` §4.2). Es un sello de tiempo, no un dato suyo.
+     * `hours_since_open` al firmar (`specs/analitica-fiesta.md` §4.2). Es un sello de tiempo, no un dato suyo. Lo
+     * pone también el RECIBO cuando pinta la firma dentro (F6a), que es donde ahora se «abre».
      */
-    private const OPENED_AT_SESSION_KEY = 'analytics.authorization_opened_at.';
+    public const OPENED_AT_SESSION_KEY = 'analytics.authorization_opened_at.';
 
     public function show(Request $request, OrderItem $reservation): View
     {
@@ -74,7 +73,6 @@ class GuardianAuthorizationController extends Controller
         $document = LegalDocuments::current(WaiverSettings::SLUG, app()->getLocale());
         abort_if($document === null, 404);
 
-        $user = $request->user();
         $desdeLaInvitacion = $this->invitationExtras($request);
 
         // La analítica de la fiesta (`specs/analitica-fiesta.md` §4.2): una apertura, como hecho de la RESERVA y
@@ -85,22 +83,15 @@ class GuardianAuthorizationController extends Controller
         $request->session()->put(self::OPENED_AT_SESSION_KEY.$reservation->getKey(), now()->getTimestamp());
 
         // El modelo de página (`App\Http\Fiesta\Autorizacion`, T3 de `fiesta-sistema-nuevo.md`): la vista lee SOLO `$m`,
-        // y el banco pinta lo mismo con los datos del diseño. Lo que aquí se calcula es lo de siempre.
+        // y el banco pinta lo mismo con los datos del diseño. Lo que necesita el formulario —el bloqueo, las
+        // relaciones, lo que llega desde la invitación, el prellenado y los menores a cargo, la URL firmada del envío y
+        // lo que vuelve por la sesión— lo compone `ComposesGuardianForm`, la misma fuente que el recibo (F6a).
         $m = Autorizacion::componer([
             'reservation' => $reservation,
             'context' => $context,
             'document' => $document,
             // La invitación de la fiesta, si la hay: su tema pinta la página y quien cumple da el titular.
             'invitation' => app(PartyInvitations::class)->existingFor($reservation),
-            'status' => $request->session()->get('guardian_status'),
-            'minorName' => $request->session()->get('guardian_minor'),
-            'signer' => $request->session()->get('guardian_signer'),
-            'errors' => $request->session()->get('errors'),
-            'old' => $request->old(),
-            // Por qué NO se puede firmar, si es el caso. Se decide aquí solo para PINTAR: la puerta
-            // que manda está en el dominio, bajo el lock.
-            'blocked' => $this->blockedReason($context),
-            'relationships' => Dependent::RELATIONSHIPS,
             // §12.4 (`[DECIDIDO owner, 2026-09-01]`) — **QUIÉN RESPONDE del menor durante la visita**.
             // Un padre que firma esto está confiando a su hijo a un adulto que no es él, y hasta ahora
             // la pantalla no decía ni quién era.
@@ -118,75 +109,12 @@ class GuardianAuthorizationController extends Controller
                 'name' => (string) ($reservation->order?->user?->name ?? ''),
                 'phone' => (string) ($reservation->order?->user?->phone ?? ''),
             ],
-            // ── Lo que llega DESDE la invitación digital (§4.5·7, `DECISIONES #703`) ──
-            //
-            // Quien elige «lo dejo y me voy» en su recibo aterriza aquí con dos cosas atadas **dentro
-            // de la firma**: la respuesta a la que pertenece —para que el firmador no le cobre una
-            // plaza que ya tiene dueño (`#576`)— y el nombre del niño, que ya escribió una vez.
-            //
-            // ⚠️⚠️ **El nombre entra ENTERO en el primer campo y NO se parte** (`#236`): partirlo por
-            // el primer espacio fabricaría un apellido en una pantalla que acompaña a una prueba
-            // legal, que es justo el defecto asumido que la nota de abajo describe para el adulto.
-            // Aquí no hay que asumirlo: viene de un campo que pedía «nombre y apellidos».
-            //
-            // ⚠️ Llegan por la QUERY FIRMADA, así que no se pueden forjar sin romper el HMAC. Aun así
-            // el id **no se cree**: quien decide si esa respuesta es de esta reserva es el contrato,
-            // dentro del firmador.
-            'fromInvitation' => [
-                'reply_id' => $desdeLaInvitacion['invitation_reply_id'] ?? null,
-                'minor' => $desdeLaInvitacion['minor'] ?? '',
-            ],
-            // §4.6: con sesión, los datos del adulto vienen rellenos. ⚠️ Iniciar sesión no cambia nada
-            // más: no verifica, no enlaza la cuenta y el justificante sigue siendo puntual.
-            //
-            // ⚠️ **`guardian_name` recibe el nombre COMPLETO de la cuenta y el apellido queda vacío, y
-            // eso es un DEFECTO ASUMIDO, no un descuido**: el formulario parte nombre y apellidos en
-            // dos campos y la cuenta no los tiene partidos. Rellenar los dos partiendo por el primer
-            // espacio acertaría con «Ana López» y fallaría con «María del Carmen Ruiz Gil» — y quien
-            // firma no suele revisar lo que ya viene puesto. Se prellena lo que se sabe y se deja el
-            // resto a la persona.
-            'prefill' => [
-                'guardian_name' => $user?->name,
-                'guardian_email' => $user?->email,
-                'guardian_phone' => $user?->phone,
-            ],
-            // §12.5 — **con sesión, el menor se ELIGE en vez de teclearse.** `Dependent` tiene
-            // exactamente los cuatro campos que este formulario pide (nombre, apellidos, fecha de
-            // nacimiento y la relación con quien firma), así que un padre registrado rellena el bloque
-            // entero de un clic.
-            //
-            // ⚠️ **Esto NO enlaza la cuenta con la firma** (§4.3 lo prohíbe: una columna `ON DELETE
-            // SET NULL` no puede estar dentro de un hash que se verifica). Lo que se hace es COPIAR el
-            // dato, exactamente como el prellenado del adulto de aquí arriba. El justificante sigue
-            // siendo puntual y la prueba, la misma.
-            //
-            // ⚠️ Solo los que HOY son menores: un mayor de edad firma por sí mismo, y ofrecerlo aquí
-            // llevaría a un rechazo del validador con el nombre ya puesto.
-            'dependents' => $user === null ? [] : app(DependentRegistry::class)
-                ->activeFor($user)
-                ->filter(fn (Dependent $d): bool => $d->isMinor())
-                ->map(fn (Dependent $d): array => [
-                    'id' => (int) $d->getKey(),
-                    'name' => (string) $d->name,
-                    'surname' => (string) $d->surname,
-                    'born_on' => $d->born_on?->toDateString(),
-                    'relationship' => (string) $d->relationship,
-                    'label' => $d->fullName(),
-                ])
-                ->values()
-                ->all(),
-            // ❗❗ **Los extras de la invitación viajan también en la firma del POST** (`#704`, §10.6):
-            // hasta aquí solo iban en el `GET`, y el `invitation_reply_id` llegaba al envío por un campo
-            // oculto del CUERPO. Para ATAR la firma eso basta —el dominio lo contrasta con el contrato y
-            // no se fía—, pero para decidir **a dónde se vuelve** no: una URL de recibo es una credencial
-            // de dos horas sobre los datos de un menor y no se emite a partir de un número que cualquiera
-            // puede escribir. Dentro del HMAC, no se puede.
-            'formAction' => URL::temporarySignedRoute(
-                'reservation.authorization.store',
-                $context->linkExpiresAt,
-                ['reservation' => $reservation] + $desdeLaInvitacion,
-            ),
-        ], Sitio::datos());
+            // ── Lo que llega DESDE la invitación digital (§4.5·7, `DECISIONES #703`) viaja DENTRO de la firma: la
+            // respuesta a la que pertenece (para que el firmador no le cobre una plaza que ya tiene dueño, `#576`) y el
+            // nombre del niño ENTERO, sin partirlo (`#236`). ⚠️ `guardian_name` se prellena con el nombre COMPLETO de la
+            // cuenta y el apellido queda vacío: DEFECTO ASUMIDO (partir por el primer espacio fabricaría un apellido en una
+            // prueba legal). Con sesión, el menor se ELIGE copiando el dato, sin enlazar la cuenta con la firma (§4.3).
+        ] + $this->guardianFormInputs($request, $reservation, $context, $desdeLaInvitacion), Sitio::datos());
 
         return view('fiesta.autorizacion', ['m' => $m, 'hojas' => InstanceViews::hojas('fiesta')]);
     }
@@ -301,9 +229,17 @@ class GuardianAuthorizationController extends Controller
         //
         // ⚠️ Solo en el ÉXITO. Un formulario rechazado vuelve al formulario con lo que escribió: sacarle
         // de la pantalla del error le dejaría sin saber qué corregir.
+        // Con quién firmó, por flash, para el Listo del recibo (el diseño: «Firmada» con nombre · teléfono debajo). Y
+        // «firmada» con la respuesta de ESE recibo (F6a): en un REENVÍO el dominio devuelve la autorización que ya existía
+        // —atada, si lo estaba, a otra respuesta del mismo niño— y el recibo, que pregunta por la atadura, volvía a pintar
+        // el formulario vacío sin decir nada. La página de la autorización ya enseña el Listo en ese caso; el recibo, igual.
         $recibo = $this->receiptUrl($request, $reservation);
         if ($recibo !== null) {
-            return redirect()->to($recibo);
+            return redirect()->to($recibo.'#inv-h-aut')
+                ->with('guardian_status', 'signed')
+                ->with('guardian_reply', (int) $request->query('invitation_reply_id'))
+                ->with('guardian_minor', $result['authorization']->minorFullName())
+                ->with('guardian_signer', trim($result['authorization']->guardianFullName().' · '.(string) $result['authorization']->guardian_phone, ' ·'));
         }
 
         // El Listo del brief nombra al niño y a quien firma (nombre · teléfono): lo que acaba de escribir, por flash.
@@ -374,25 +310,6 @@ class GuardianAuthorizationController extends Controller
         ];
     }
 
-    /** Por qué no se puede firmar, para PINTARLO. La puerta que manda vive en el dominio. */
-    private function blockedReason(AuthorizableReservation $context): ?string
-    {
-        if (! $context->isPaid) {
-            return GuardianAuthorizationRefusedException::REASON_NOT_PAID;
-        }
-        if ($context->visitFinished) {
-            return GuardianAuthorizationRefusedException::REASON_CLOSED;
-        }
-        // Las plazas LIBRES, no la cantidad: descuenta los menores a cargo ya asignados y los
-        // justificantes ya firmados (`GuardianPlaces`). El owner compró UNA entrada, se la asignó a
-        // su hija y la pantalla seguía ofreciendo firmar.
-        if (app(GuardianPlaces::class)->freeIn($context) < 1) {
-            return GuardianAuthorizationRefusedException::REASON_FULL;
-        }
-
-        return null;
-    }
-
     private function back(Request $request, OrderItem $reservation, string $status, ?string $minorName = null, ?string $signer = null): RedirectResponse
     {
         return redirect()->to($this->backUrl($request, $reservation))
@@ -413,6 +330,13 @@ class GuardianAuthorizationController extends Controller
      */
     private function backUrl(Request $request, OrderItem $reservation): string
     {
+        // F6a: quien firma DENTRO de su recibo vuelve a su recibo —con el error junto a su campo o con el desenlace—, a
+        // la sección de la autorización. Solo si lo dice la FIRMA del enlace (`desde=recibo` va dentro del HMAC) y el
+        // recibo se puede emitir por ella ({@see receiptUrl()}); si no, a la página de la autorización, como siempre.
+        if ($request->query('desde') === 'recibo' && ($recibo = $this->receiptUrl($request, $reservation)) !== null) {
+            return $recibo.'#inv-h-aut';
+        }
+
         $extras = $this->invitationExtras($request);
 
         if ($this->ownsOrder($request, $reservation)) {

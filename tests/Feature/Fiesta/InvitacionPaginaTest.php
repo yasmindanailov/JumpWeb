@@ -89,9 +89,11 @@ class InvitacionPaginaTest extends TestCase
         $this->assertStringContainsString('data-receipt-fields', $html);
         $this->assertStringContainsString('name="guest_data[', $html);
         $this->assertStringNotContainsString('name="guest_data[name]"', $html, 'el nombre ya se contestó: no se pide dos veces');
-        // La autorización como oferta sin pregunta: «Firmar» con la respuesta atada, y la frase que quita la duda.
+        // La autorización como oferta sin pregunta: desde F6a la firma DENTRO, con la respuesta atada, y la frase que
+        // quita la duda.
         $this->assertStringContainsString('data-receipt-authorization', $html);
-        $this->assertStringContainsString('data-receipt-firmar', $html);
+        $this->assertStringContainsString('data-receipt-firma', $html);
+        $this->assertStringContainsString('Firmarla no te compromete', $html);
         $this->assertStringContainsString('invitation_reply_id=', $html, 'la firma va ATADA a la respuesta (`#576`)');
         $this->assertStringNotContainsString('name="companion"', $html);
         // «Contestar por otro hijo» vuelve a la invitación con el foco en el nombre; y la línea de después, con las 24 h.

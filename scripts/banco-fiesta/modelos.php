@@ -14,7 +14,7 @@
  *    y la décima plaza vacía, como las produce el presentador; el número dice «10 de 10» porque en el diseño quien cumple
  *    cuenta como uno más. k9, k10 y k12 son «mano» con «sí» en el diseño, que para el presentador es `origen: invitacion`.
  *
- * @return array{lista: callable(string): array<string, mixed>, invitacion: callable(bool): array<string, mixed>, autorizacion: callable(string, bool): array<string, mixed>}
+ * @return array{lista: callable(string): array<string, mixed>, invitacion: callable(bool, ?string=): array<string, mixed>, autorizacion: callable(string, bool): array<string, mixed>}
  */
 
 use App\Domain\Booking\Models\PartyInvitation;
@@ -36,6 +36,49 @@ $RESERVA = [
     'enlace' => 'https://playjump.es/i/7K2P4V', 'enlace_corto' => 'playjump.es/i/7K2P4V', 'anfitriona' => '655 120 387',
 ];
 $TEMAS = [['value' => 'confeti', 'label' => 'Confeti', 'note' => 'Por defecto'], ['value' => 'fiesta', 'label' => 'Fiesta', 'note' => null], ['value' => 'sereno', 'label' => 'Sereno', 'note' => null]];
+// `invitacion/datos.js → semilla`: EL RECIBO de la respuesta de Hugo Martín Sáez, tras «Vamos» (`si`) y con la ficha y
+// la autorización firmada (`firmada`). La firma va DENTRO (F6a) con lo que el producto pide y el diseño no —el nombre y
+// los apellidos del niño con la nota de lo que escribió, el nacimiento, la relación, el descargo en el flujo y su
+// privacidad— en texto neutro; el par de diagnóstico del banco lo esconde. Las columnas de la ficha, las del diseño.
+$RECIBO = static function (string $estado): array {
+    $firmada = $estado === 'firmada';
+
+    return [
+        'si' => true,
+        'nino' => 'Hugo Martín Sáez',
+        'titulo' => '¡Contamos con vosotros!',
+        'texto' => 'Nos vemos el sábado 26 a las 17:00. Los calcetines van incluidos.',
+        'ficha' => [
+            'abierta' => true, 'accion' => '#ficha', 'ayuda' => 'Ayuda a Lucía y a los monitores.', 'estado' => null,
+            'campos' => [
+                ['clave' => 'age', 'name' => 'guest_data[age]', 'id' => 'inv-age', 'label' => 'Edad', 'valor' => $firmada ? '7' : '', 'tipo' => 'text', 'sufijo' => 'años', 'inputmode' => 'numeric', 'maxlength' => 2],
+                ['clave' => 'allergy', 'name' => 'guest_data[allergy]', 'id' => 'inv-allergy', 'label' => 'Alergias o menú especial', 'valor' => $firmada ? 'Frutos secos' : '', 'tipo' => 'text', 'sufijo' => null, 'inputmode' => null, 'maxlength' => 2000],
+            ],
+        ],
+        'otro' => '#rsvp-nino',
+        'autorizacion' => [
+            'firmada' => $firmada,
+            'firmante' => $firmada ? 'Ana Sáez Ruiz · 611 204 118' : '',
+            'firma' => $firmada ? null : [
+                'aviso' => null,
+                'bloqueado' => null,
+                'formulario' => [
+                    'accion' => '#firmar', 'documento_id' => 0, 'respuesta_id' => 1, 'desde_invitacion' => 'Hugo Martín Sáez', 'menores' => [],
+                    'valores' => ['ninoNombre' => '', 'ninoApellidos' => '', 'nombre' => '', 'telefono' => '', 'correo' => '', 'casilla' => ''],
+                    'fallos' => ['ninoNombre' => '', 'ninoApellidos' => '', 'nombre' => '', 'telefono' => '', 'correo' => '', 'casilla' => ''],
+                    'nacimiento' => ['label' => 'Fecha de nacimiento', 'hint' => 'La usamos para saber su edad el día de la visita.', 'value' => '', 'error' => ''],
+                    'relacion' => ['label' => 'Relación con el menor', 'opciones' => [['value' => '', 'label' => 'Elige una opción'], ['value' => 'mother', 'label' => 'Madre']], 'value' => '', 'error' => ''],
+                    'descargo' => ['titulo' => 'El descargo', 'version' => '', 'cuerpo' => [['h' => '', 'p' => 'Aquí va el texto del descargo, el que da el parque.']]],
+                    'casilla' => 'Como su padre, madre o tutor, autorizo a que se quede a cargo de Lucía durante la fiesta y acepto el descargo de responsabilidad en su nombre.',
+                ],
+                'privacidad' => ['texto' => 'Lucía verá el nombre de tu hijo y que su autorización está firmada; el parque, tus datos para atenderle.', 'datos' => 'Los datos que escribes aquí los declaras tú y no los comprobamos con ningún documento.'],
+                'turnstile' => ['activo' => false, 'clave' => '', 'rotulo' => ''],
+            ],
+        ],
+        'despues' => 'El recibo caduca a las 24 horas y la respuesta no se edita: díselo a Lucía, que puede corregirlo todo.'
+            .($firmada ? '' : ' Y sin firma, la autorización se hace en la puerta con un QR: treinta segundos.'),
+    ];
+};
 
 return [
     // ── LA LISTA (`lista-invitados/datos.js`): `recien` es la primera pantalla; `guardado`, la lista completa ──────────
@@ -143,8 +186,9 @@ return [
         ];
     },
 
-    // ── LA INVITACIÓN (`invitacion/datos.js`: `FIESTA`, `T.es`, `P.es`), en reposo: viva (abierta) o cerrada ──────────
-    'invitacion' => static fn (bool $abierta): array => [
+    // ── LA INVITACIÓN (`invitacion/datos.js`: `FIESTA`, `T.es`, `P.es`), en reposo: viva (abierta) o cerrada; con
+    //    `$recibo` (`si`, `firmada`), la misma página con el recibo dentro (F6a) ───────────────────────────────────────
+    'invitacion' => static fn (bool $abierta, ?string $recibo = null): array => [
         'titulo_pagina' => 'Vera cumple 7 años y te invita a saltar · Play Jump Park',
         'marca' => $LOGO,
         'idiomas' => $IDIOMAS,
@@ -175,7 +219,7 @@ return [
         'turnstile' => ['activo' => false, 'clave' => '', 'rotulo' => ''],
         'og' => ['sitio' => 'Play Jump Park', 'title' => '', 'description' => '', 'image' => null, 'width' => null, 'height' => null],
         'privacidad' => ['texto' => 'Lucía verá el nombre de tu hijo, su edad y sus alergias para organizar la fiesta; el parque, para atenderle. Lo borramos a los 14 días de la fiesta.', 'politica' => 'Política de privacidad', 'enlace' => '#privacidad'],
-        'recibo' => null,
+        'recibo' => $recibo === null ? null : $RECIBO($recibo),
     ],
 
     // ── LA AUTORIZACIÓN (`autorizacion/datos.js`): el formulario en reposo (`recibo`) o el Listo (`firmada`) ───────────

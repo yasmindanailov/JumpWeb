@@ -240,7 +240,6 @@ return [
         'aut_titulo' => 'Por si no te quedas.',
         'aut_texto' => 'Los padres podéis quedaros durante la fiesta o no, como en cualquier cumpleaños. Si no te vas a quedar, deja firmada la autorización: el día de la fiesta lo acompañas hasta la puerta y listo, sin esperas.',
         'aut_compromiso' => 'Firmarla no te compromete: si al final te quedas, no hace falta nada.',
-        'firmar' => 'Firmar',
         'firmada' => 'Firmada. El día de la fiesta lo acompañas hasta la puerta y listo, sin esperas.',
         'despues' => 'El recibo caduca a las 24 horas y la respuesta no se edita: díselo a :h, que puede corregirlo todo.',
         'sin_firma' => 'Y sin firma, la autorización se hace en la puerta con un QR: treinta segundos.',

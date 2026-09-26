@@ -227,7 +227,6 @@ return [
         'aut_titulo' => 'In case you don’t stay.',
         'aut_texto' => 'Parents can stay during the party or not, like at any birthday. If you’re not staying, leave the authorisation signed: on the day, you walk them to the door and that’s it, no waiting.',
         'aut_compromiso' => 'Signing it doesn’t commit you: if you end up staying, nothing else is needed.',
-        'firmar' => 'Sign',
         'firmada' => 'Signed. On the day, you walk them to the door and that’s it, no waiting.',
         'despues' => 'This receipt expires after 24 hours and the reply can’t be edited: tell :h, who can correct everything.',
         'sin_firma' => 'And without a signature, the authorisation is done at the door with a QR: thirty seconds.',

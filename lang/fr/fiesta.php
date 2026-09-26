@@ -227,7 +227,6 @@ return [
         'aut_titulo' => 'Au cas où vous ne restez pas.',
         'aut_texto' => 'Les parents peuvent rester pendant la fête ou non, comme à n’importe quel anniversaire. Si vous ne restez pas, laissez l’autorisation signée : le jour de la fête, vous l’accompagnez jusqu’à la porte et c’est tout, sans attente.',
         'aut_compromiso' => 'La signer ne vous engage à rien : si finalement vous restez, il n’y a rien à faire.',
-        'firmar' => 'Signer',
         'firmada' => 'Signée. Le jour de la fête, vous l’accompagnez jusqu’à la porte et c’est tout, sans attente.',
         'despues' => 'Ce reçu expire au bout de 24 heures et la réponse ne peut pas être modifiée : dites-le à :h, qui peut tout corriger.',
         'sin_firma' => 'Et sans signature, l’autorisation se fait à la porte avec un QR : trente secondes.',

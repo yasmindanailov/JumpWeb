@@ -309,12 +309,17 @@ Route::withoutMiddleware([ResolveVisitor::class.':'.ResolveVisitor::MINT])->grou
     //
     // ⚠️ Y el mismo `->missing()` que el post-form, por el mismo motivo: `AuthorizesGuardianAuthorization`
     // repite la escalada 403 → 410 → 404 y el binding implícito la cortocircuitaba igual.
+    //
+    // ⚠️⚠️ El limitador lleva CUBO PROPIO (`guardian-sign`, como `waiver-sign` en la API): sin prefijo, Laravel cuenta en
+    // UNA clave por IP todas las rutas con límite numérico, así que ver la invitación, el recibo, guardar la ficha y
+    // firmar gastaban el mismo cupo y la firma se cortaba a los 10. Medido en navegador con la firma dentro del recibo
+    // (F6a de `fiesta-sistema-nuevo.md`): un 429 en el segundo intento de un padre. La barrera sigue: 10 envíos/min/IP.
     Route::get('/autorizacion/{reservation}', [GuardianAuthorizationController::class, 'show'])
         ->middleware('no-store')
         ->missing(fn () => abort(403))
         ->name('reservation.authorization');
     Route::post('/autorizacion/{reservation}', [GuardianAuthorizationController::class, 'store'])
-        ->middleware(['throttle:10,1', 'no-store'])
+        ->middleware(['throttle:10,1,guardian-sign', 'no-store'])
         ->missing(fn () => abort(403))
         ->name('reservation.authorization.store');
 

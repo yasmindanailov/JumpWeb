@@ -54,6 +54,28 @@ class FiestaModeloTest extends TestCase
         $this->assertMismaForma($pagina, $modelos['invitacion'](false), 'invitacion(cerrada)');
     }
 
+    /** El RECIBO (F6a): tras «Vamos», con la firma dentro; y firmada desde él, con quién firmó. */
+    public function test_the_receipt_model_of_the_bank_has_the_shape_the_controller_produces(): void
+    {
+        ['reservation' => $reservation, 'invitation' => $invitation, 'document' => $document] = $this->mountParty();
+        $reply = $this->replyOf($invitation, $reservation, 'Hugo Ruiz');
+        $modelos = $this->modelos();
+        $recibo = app(PartyInvitations::class)->receiptUrl($reply);
+
+        $html = (string) $this->get($recibo)->assertOk()->getContent();
+        $enReposo = $this->get($recibo)->assertOk()->viewData('m');
+        $this->assertIsArray($enReposo);
+        $this->assertIsArray($enReposo['recibo']['autorizacion']['firma'] ?? null, 'en reposo, el recibo lleva la firma dentro');
+        $this->assertMismaForma($enReposo, $modelos['invitacion'](true, 'si'), 'invitacion(recibo si)');
+
+        $this->assertTrue((bool) preg_match('#<form method="post" action="([^"]+)"[^>]*data-receipt-firma#', $html, $m));
+        $vuelta = $this->post(html_entity_decode($m[1]), $this->authorizationPayload($document, ['invitation_reply_id' => (string) $reply->getKey()]));
+        $firmada = $this->get((string) $vuelta->headers->get('Location'))->assertOk()->viewData('m');
+        $this->assertIsArray($firmada);
+        $this->assertTrue($firmada['recibo']['autorizacion']['firmada'] ?? false, 'firmada, el recibo lleva el Listo');
+        $this->assertMismaForma($firmada, $modelos['invitacion'](true, 'firmada'), 'invitacion(recibo firmada)');
+    }
+
     public function test_the_authorization_model_of_the_bank_has_the_shape_the_controller_produces(): void
     {
         ['reservation' => $reservation, 'document' => $document] = $this->mountParty();
@@ -75,7 +97,7 @@ class FiestaModeloTest extends TestCase
         $this->assertMismaForma($firmada, $sinDiagnostico($modelos['autorizacion']('firmada', false)), 'autorizacion(firmada)');
     }
 
-    /** @return array{lista: callable(string): array<string, mixed>, invitacion: callable(bool): array<string, mixed>, autorizacion: callable(string, bool): array<string, mixed>} */
+    /** @return array{lista: callable(string): array<string, mixed>, invitacion: callable(bool, ?string=): array<string, mixed>, autorizacion: callable(string, bool): array<string, mixed>} */
     private function modelos(): array
     {
         return require base_path('scripts/banco-fiesta/modelos.php');

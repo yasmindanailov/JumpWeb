@@ -8,6 +8,7 @@ use App\Domain\Booking\Models\PartyInvitation;
 use App\Domain\Booking\Services\PartyInvitations;
 use App\Domain\Content\Models\Attraction;
 use App\Domain\Content\Services\CmsSocialProof;
+use App\Domain\Identity\Models\LegalDocumentVersion;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Domain\Platform\Services\SiteLocales;
 use App\Domain\Platform\Services\Turnstile;
@@ -25,9 +26,9 @@ use Illuminate\Support\Str;
  * nombre contestó. El recibo enseña solo lo que escribió quien lo abre.
  *
  * ⚠️ Lo que el diseño pinta y hoy NO es dato (§1.4, `#743`): los grupos de la merienda con su icono (hoy, cada
- *    complemento marcado es un grupo, con su nombre y sus detalles, y un icono neutro), «Ver el parque», «Crear mi QR»,
- *    «Avísame de fechas» y la firma dentro del recibo. Entran una a una, con el owner. Las palabras de la familia y
- *    las pistas para el regalo SON dato desde F1a (26-09): `family_words` y `gift_hints`.
+ *    complemento marcado es un grupo, con su nombre y sus detalles, y un icono neutro), «Crear mi QR» y «Avísame de
+ *    fechas». Entran una a una, con el owner. Desde F1 y F6a (26-09) SON dato o pieza: las palabras y las pistas
+ *    (`family_words`, `gift_hints`), la merienda por grupos, «Ver el parque» y la firma dentro del recibo.
  * ⚠️ `#744`: tras contestar, el padre ve el RECIBO (no la invitación con un aviso); los textos nombran a quien organiza
  *    por el nombre de pila de la cuenta (sin él, «quien organiza la fiesta»); el «qué es la fiesta» es la descripción
  *    pública del pack.
@@ -162,6 +163,38 @@ final class InvitacionPagina
     }
 
     /**
+     * LA FIRMA DENTRO DEL RECIBO (F6a; `AuthForm` en el recibo del diseño): el mismo formulario que la página de la
+     * autorización (`Autorizacion::formularioDe`, una sola fuente), su desenlace si vuelve con uno, el bloqueo si la
+     * reserva ya no admite firmas, y su aviso de privacidad (lo que se recoge al firmar se dice donde se recoge).
+     * ⚠️ Pide lo mismo que la página (`#745` y `#236`): el nombre y los apellidos del niño —lo que escribió en la
+     *    invitación se ENSEÑA en una nota (`#706`), no se reparte—, su fecha de nacimiento y la relación. El diseño no
+     *    los dibuja en el recibo porque el niño ya se conoce; la prueba firmada los necesita por separado.
+     *
+     * @param  array<string, mixed>|null  $f  `document` y lo que compone `ComposesGuardianForm`
+     * @return array<string, mixed>|null
+     */
+    private static function firma(?array $f, string $h): ?array
+    {
+        if ($f === null || ! ($f['document'] ?? null) instanceof LegalDocumentVersion) {
+            return null;
+        }
+        $bloqueado = is_string($f['blocked'] ?? null) ? $f['blocked'] : null;
+        $status = is_string($f['status'] ?? null) ? $f['status'] : null;
+
+        return [
+            'aviso' => Autorizacion::avisoDe($status, trim((string) ($f['minorName'] ?? ''))),
+            'bloqueado' => $bloqueado === null ? null : ['motivo' => $bloqueado, 'texto' => __('guardian.blocked.'.$bloqueado)],
+            'formulario' => $bloqueado !== null ? null : Autorizacion::formularioDe($f, $f['document'], $h),
+            'privacidad' => ['texto' => __('fiesta.autorizacion.privacidad', ['h' => $h]), 'datos' => __('guardian.notice')],
+            'turnstile' => [
+                'activo' => Turnstile::enabled(),
+                'clave' => Turnstile::enabled() ? Turnstile::siteKey() : '',
+                'rotulo' => __('guardian.antibot_label'),
+            ],
+        ];
+    }
+
+    /**
      * «VER EL PARQUE» (F1c; `#743` §7·7, encendido con el vídeo de portada): la píldora de la cabecera con la foto, el
      * play y la nota de Google, y el visor a pantalla completa (`content/ClipViewer.jsx`) con UN clip —el vídeo de
      * portada de la instalación—, su nombre, su línea y, con las respuestas abiertas, «Vamos», que lleva a contestar.
@@ -293,7 +326,7 @@ final class InvitacionPagina
     /**
      * El RECIBO (§4.5·6 de la spec hermana, con el diseño del 24-09): tras «Vamos», la tarjeta con su titular, «Su
      * ficha» (las columnas del pack menos el nombre, todas opcionales), la autorización como oferta (firmada, su
-     * Listo; si no, «Firmar» como enlace a la autorización con la respuesta atada), la línea de después; tras «No
+     * Listo con quién firmó; si no, desde F6a, la firma DENTRO, atada a la respuesta), la línea de después; tras «No
      * podemos», solo la tarjeta y la línea.
      *
      * @param  array<string, mixed>  $r
@@ -305,6 +338,7 @@ final class InvitacionPagina
         $reply = $r['reply'];
         $si = (bool) $reply->attending;
         $firmada = (bool) ($r['signed'] ?? false);
+        $firma = self::firma(is_array($r['firma'] ?? null) ? $r['firma'] : null, $h);
         $datos = (array) ($r['data'] ?? []);
 
         $campos = [];
@@ -344,11 +378,16 @@ final class InvitacionPagina
                 'estado' => is_string($r['status'] ?? null) ? $r['status'] : null,
             ],
             'otro' => route(PartyInvitations::PUBLIC_ROUTE, ['token' => (string) $inv->token]).'#rsvp-nino',
-            'autorizacion' => [
+            // ❗ Sin nada que firmar aquí (fuera del modo interno, sin texto del descargo publicado o sin autorización en
+            // el pack) la sección NO se pinta, ni la línea de «sin firma»: hasta F6a el recibo ofrecía «Firmar» y ese
+            // enlace llevaba a un 404 en los tres casos (la página de la autorización no existe fuera de ellos).
+            'autorizacion' => $firmada || $firma !== null ? [
                 'firmada' => $firmada,
-                'enlace' => (string) ($r['waiverUrl'] ?? ''),
-            ],
-            'despues' => __('fiesta.recibo.despues', ['h' => $h]).($si && ! $firmada ? ' '.__('fiesta.recibo.sin_firma') : ''),
+                // Recién firmada desde aquí: nombre · teléfono de quien firmó, bajo «Firmada» (el Listo del diseño).
+                'firmante' => trim((string) ($r['signer'] ?? '')),
+                'firma' => $firmada ? null : $firma,
+            ] : null,
+            'despues' => __('fiesta.recibo.despues', ['h' => $h]).($si && ! $firmada && $firma !== null ? ' '.__('fiesta.recibo.sin_firma') : ''),
         ];
     }
 }
