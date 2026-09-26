@@ -3,9 +3,9 @@
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 EN CURSO** (su centena,
-> `decisiones/700-799.md`) · Último usado: **`#780`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#780`) · Actualizado: **2026-09-26**
-> (el zip del 26-09 tarde, §4.14: Z1 hecha, `#780`; la T5 de Mi cuenta, T5a→T5e hechas, `#774`→`#779`).
+> `decisiones/700-799.md`) · Último usado: **`#781`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#781`) · Actualizado: **2026-09-26**
+> (el zip del 26-09 tarde, §4.14: Z1 y Z2 hechas, `#780`, `#781`; la T5 de Mi cuenta, T5a→T5e hechas, `#774`→`#779`).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
 > llévaselo con la medida, como el SPA en `#724`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -42,9 +42,10 @@
 ## Por dónde retomar, en orden
 
 ▶▶▶ **EN MARCHA (26-09 tarde): el ZIP TERCERO** (spec §4.14, `#780`, en `instancias/playjump/diseno/`). **Z1 ✅** («Entra» a
-lo ancho, las garantías `ReassuranceBand`, la marca oficial de Google). Sigue, en el orden del owner: **Z2** el movimiento
-de las páginas → **Z3** el de la isla → **Z4** la conversión (aviso al SPA ANTES) → Normas y Visítanos. La isla por
-temporada, **ahora no**. ⚠️ Tras tocar `instancias/playjump/publico/`, copiarlo a `public/instancia` (el producto sirve la copia).
+lo ancho, las garantías `ReassuranceBand`, la marca oficial de Google) y **Z2 ✅** (`#781`: el movimiento de las páginas,
+`movimiento.js`; `scripts/sonda-movimiento.mjs` 16/16). Sigue, en el orden del owner: **Z3** el de la isla → **Z4** la
+conversión (aviso al SPA ANTES) → Normas y Visítanos. La isla por temporada, **ahora no**. ⚠️ Tras tocar
+`instancias/playjump/publico/`, copiarlo a `public/instancia` (el producto sirve la copia).
 ▶▶ **EN MARCHA (26-09): T5 · Mi cuenta en la isla** (spec §4.13, `#773`: el censo, las cuatro respuestas del owner y
 el plan T5a→T5f; dentro de la v2). **T5a→T5d ✅** (`#774`→`#777`: la capa, las reservas, Antes de venir, los hijos;
 contrato 1.38.0) y **T5e ✅** (`#778` Ajustes y Cerrar sesión; `#779` los avisos de la cuenta y el `status` del servidor
@@ -153,7 +154,7 @@ FIESTA, del SPA (`#765`). ⚠️ BD LOCAL con los valores de `#699`/`#761`; en P
 guardas 8 y 9) · `scripts/mutar-guarda8.sh` · `CHANGELOG.md` · `phpstan.neon` · `phpstan-baseline.neon` ·
 `eslint.config.js` · `eslint-suppressions.json` (la poda quien arregla) · `scripts/mutar-analisis-estatico.sh` ·
 **LA ISLA Y LA LANDING NUEVA** (`#681`, `#682`): la spec, la isla `resources/js/isla/**`, sus bancos y sondas
-(`scripts/banco-{isla,piezas,compra}*`, `scripts/pixel.mjs`, `scripts/sonda-{embudo,isla,cuenta}.mjs`), `sidebar/reanudar.js`,
+(`scripts/banco-{isla,piezas,compra}*`, `scripts/pixel.mjs`, `scripts/sonda-{embudo,isla,cuenta,movimiento}.mjs`), `sidebar/reanudar.js`,
 `sidebar/marca-compra.js`, `app/Http/Sidebar/PurchaseResume.php` y
 las vistas nuevas de `instancias/playjump/web/`; ⚠️ **el motor del cajón es del SPA**: se le avisa ANTES de tocarlo ·
 `StaticAnalysisGateTest` · `Tests\TestCase::be()` · **el token y el cajón empaquetado**, cuyos ficheros
@@ -217,6 +218,8 @@ dueño es el carril de la web/reseñas—) ·
   de Saltia, regenerada: `pj-outcome-rise` se funde con `pj-rise`). Re-mide tu censo contra él.
 - ⚠️ **Z4 (después del movimiento) toca TU motor**: la hora que se guarda al entrar en «Tus datos» (hoy al pagar, `#688`),
   el teclado del móvil (`visualViewport`), Intro al campo siguiente y `Medir`. Te lo propongo aquí ANTES de tocarlo.
+- ▶ `#781`: `<x-pagina>` gana `transiciones` (aditivo). Para que tus páginas de la fiesta se fundan entre sí, pídela: la
+  regla solo en `saltia.css` NO basta (medido: Chromium no la ve a tiempo en una página grande).
 
 ### ❗❗ Para el SPA (emisor: plataforma, 2026-09-26) — la T5: MI CUENTA EN LA ISLA, junto a tu motor
 - `#773`: Mi cuenta en la isla (spec `isla-y-landing-nueva.md` §4.13: cada tanda dice lo tocado). De lo tuyo:
@@ -317,9 +320,6 @@ dueño es el carril de la web/reseñas—) ·
   `mutar-cabecera.py` tiene cuatro mutantes que ya no aplican y `mutar-bandas.py` uno.
 
 ### Atendido
-- Retirados el 26-09, atendidos por el SPA en su bloque del 25-09: la calculadora T4d junto a su motor y el traspaso
-  de la fiesta (`#765`, con el zip del 25-09, `#766`–`#768`).
-- Retirados del 23 al 25-09, atendidos por el SPA (el detalle, en `git log -p` de este fichero): lo del SPA del
-  20→22-09 (vive en «retomar» 2(b)), el traspaso de la analítica (`#735`), T3e·2b→T3e·4 y los avisos previos de la
-  isla (spec §4.10 y §4.11), sus bloques del 24-09 noche (el planificador, `0d9a54db`) y el aviso de `#670`; y
-  mis avisos del 24-09 en tus ficheros (T3d `#691`, T3e·5 `#696`, T3e·6 `#698`), leídos por tu bloque del 25-09.
+- Retirados del 23 al 26-09, atendidos por el SPA (el detalle, en `git log -p` de este fichero): la calculadora T4d y
+  el traspaso de la fiesta (`#765`–`#768`), lo del 20→22-09 («retomar» 2(b)), la analítica (`#735`), la isla de la T3
+  (spec §4.10 y §4.11), el planificador (`0d9a54db`), `#670` y mis avisos T3d/T3e (`#691`, `#696`, `#698`).

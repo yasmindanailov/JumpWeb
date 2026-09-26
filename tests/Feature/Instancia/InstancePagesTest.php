@@ -369,6 +369,28 @@ BLADE);
         $this->assertArrayHasKey('data-consent-categories', $nueva);
     }
 
+    /**
+     * **Las transiciones entre páginas, a petición de la página** (Z2 de §4.14, `#781`): con `transiciones`, la regla
+     * `@view-transition` va EN LÍNEA y antes de la primera hoja —desde una hoja externa, Chromium no la ve a tiempo en
+     * una página grande y la transición no ocurre nunca (medido)—. Sin pedirla, ninguna: es del diseño del paquete.
+     */
+    public function test_a_page_asks_for_page_transitions_and_gets_the_rule_inline_before_any_sheet(): void
+    {
+        File::put($this->paquete.'/web/con.blade.php', '<x-pagina titulo="Kids" transiciones :hojas="[\'instancia/css/saltia.css\']"><p>hola</p></x-pagina>');
+        File::put($this->paquete.'/web/sin.blade.php', '<x-pagina titulo="Kids" :hojas="[\'instancia/css/saltia.css\']"><p>hola</p></x-pagina>');
+        $this->declarar(['kids' => ['vista' => 'con', 'hechos' => []], 'jump' => ['vista' => 'sin', 'hechos' => []]]);
+
+        $html = (string) $this->get('/kids')->assertOk()->getContent();
+        $regla = strpos($html, '<style>@view-transition { navigation: auto; }</style>');
+        $hoja = strpos($html, '<link rel="stylesheet"');
+        $this->assertNotFalse($regla, 'con `transiciones`, la regla en línea');
+        $this->assertNotFalse($hoja, 'el caso necesita una hoja: sin ella, «antes» se cumpliría por casualidad');
+        $this->assertLessThan($hoja, $regla, 'antes de toda hoja');
+        $this->assertLessThan(strpos($html, '</head>'), $regla);
+
+        $this->assertStringNotContainsString('@view-transition', (string) $this->get('/jump')->assertOk()->getContent(), 'sin pedirla, ninguna');
+    }
+
     /** Sin paquete, o con un paquete que no declara páginas, no hay ninguna: el estado normal, no un error. */
     public function test_without_a_declaration_there_are_no_pages(): void
     {

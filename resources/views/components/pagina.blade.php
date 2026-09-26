@@ -8,8 +8,10 @@
     ▶ El estado del `<body>` —consentimiento, analítica y píxeles— es el MISMO que el de `components/layout.blade.php`
     (T4b·4, con el visto bueno del SPA): los dos incluyen `components/site/body-state.blade.php`. Lo que LO LEE —el
     aviso de cookies dentro de la isla y los cargadores del driver y los píxeles— llega con la T4e.
+    ▶ `transiciones` (Z2 de §4.14, `#781`): la página se apunta a las transiciones entre documentos. La decide la página
+    (es del diseño de su paquete); el producto solo pone la regla, EN LÍNEA y la primera: ver abajo.
 --}}
-@props(['titulo', 'descripcion' => null, 'imagen' => null, 'hojas' => [], 'scripts' => [], 'isla' => null, 'noindex' => false])
+@props(['titulo', 'descripcion' => null, 'imagen' => null, 'hojas' => [], 'scripts' => [], 'isla' => null, 'noindex' => false, 'transiciones' => false])
 @php
     $canonical = url()->current();
     $imagenOg = $imagen ? asset($imagen) : ($site['og_image'] ?? null ?: asset('og-image.jpg'));
@@ -53,6 +55,12 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    {{-- ⚠️ EN LÍNEA y antes de toda hoja, aunque la hoja del sistema ya la traiga: medido en Chromium 131 (`#781`), con
+         la regla solo en una hoja externa, una página del tamaño de Kids no se apunta a tiempo y la transición no ocurre
+         NUNCA (3 de 3); en línea, siempre (6 de 6, ida y vuelta). --}}
+    @if ($transiciones)
+        <style>@view-transition { navigation: auto; }</style>
+    @endif
 
     <title>{{ $titulo }}</title>
     @if ($descripcion)

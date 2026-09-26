@@ -1485,6 +1485,17 @@ La identidad con el diseño, una vez y al final (`#768`).
   («sobre 5 en Google», «Ver en Google») sigue siendo texto: la marca no va dentro de una frase. ⚠️ **De paso, un defecto
   previo**: la nota decía «en Google» también si venía del panel (`source: cms`); ahora la fuente sale del hecho y, sin
   Google, ni marca ni «en Google» (`piezas.nota.sobre_sin`). La hoja de Saltia, regenerada (`tema/construir-hoja.py`).
+- ▶ **Z2 ✅ (26-09, `#781`)**. **El movimiento de las páginas**, en `instancias/playjump/publico/instancia/js/movimiento.js`
+  (sin framework, sobre el HTML del servidor; con «reducir movimiento» no arranca): el primario LLEGA con `pj-bote` y un
+  brillo al verse un 25 % —a 1280×900 el de la cabecera asoma un 22 % al cargar, así que llega al bajar: es la regla—,
+  una vez y nunca dentro de la isla; la NOTA cuenta desde el entero en `--dur-count`; el CAMINO (`step-list`, con su
+  `.pj-sl__relleno`) se llena al leer y enciende cada paso a la línea del 55 %; la CABECERA baja la foto a un cuarto y la
+  acerca un 6 %, y funde el texto solo sobre la foto (≥ 720px); «HAY MÁS ABAJO» bota `--nudge-distance` a los 4,5 s sin
+  tocar nada, una vez por visita y página. En CSS: el acordeón a `--dur-slow` con la pista apagada y el texto a +60ms, y
+  el icono de la derecha del botón +3px (`.pj-btn__derecha`). **Entre páginas**: la foto se llama `pj-kids`/`pj-jump`
+  (el par con la portada nueva) y ⚠️ la regla `@view-transition` va EN LÍNEA por `<x-pagina transiciones>`: solo desde
+  `saltia.css`, Chromium no la ve a tiempo en una página de este tamaño (medido, `#781`). Sonda:
+  `scripts/sonda-movimiento.mjs [1280|390]`, 16/16 en las dos (el camino, inyectado: hoy no lo pinta ninguna página).
 
 ## 5. Impacto en invariantes
 
