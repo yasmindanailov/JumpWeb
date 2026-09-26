@@ -361,7 +361,9 @@ son de cualquiera que mida, no de un carril.
   (`config/api.php`), y todo el navegador de la sonda sale de la misma IP. Dos recorridos seguidos de la calculadora
   hasta «Tus datos» (23 peticiones cada uno) daban 429 en los días y la ficha, y un calendario ENTERO cerrado que
   parecía un fallo de la página. `scripts/sonda-calculadora.mjs` espera un minuto antes de cada recorrido
-  (`SONDA_PAUSA`); una sonda nueva que haga más de un recorrido, igual.
+  (`SONDA_PAUSA`); una sonda nueva que haga más de un recorrido, igual, o pone a CERO sus limitadores antes de cada uno
+  con tinker (`sonda-isla.mjs`, `sonda-cuenta.mjs`: las claves `api` de su IP y de su titular y las de entrar). Medido el
+  26-09 con `sonda-cuenta.mjs`: sin ponerlos a cero, la segunda pasada seguida pasó 15 de 40; con ellos, 40 y 40.
 - **`npm install` PODA `playwright-core`** (va con `--no-save`; mudada del carril de plataforma el 25-09): reponerlo
   (`/sonda` §1). Y el navegador se pierde al recrear el contenedor (~2 min montarlo;
   `PLAYWRIGHT_BROWSERS_PATH=/home/sail/pw-browsers`).

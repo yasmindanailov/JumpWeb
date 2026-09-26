@@ -54,11 +54,20 @@ class SidebarBundleBudgetTest extends TestCase
      *
      * ⚠️ Y ojo con la unidad al leer la salida de Vite: **Vite cuenta en kB decimales y esto en
      * KiB**. «22,46 kB» son 21,93 KiB, y esa diferencia ya despistó una vez en esta misma tanda.
+     *
+     * ⚠️ **De 26 a 27 en la T5a de la isla** (`DECISIONES #773`, Mi cuenta en la isla): medido **25,98 → 26,60 KiB**
+     * (base: `HEAD` construido aparte). Los +0,62 son del controlador del cajón (su trozo `_cajon`, que también carga
+     * el cargador del paquete, abajo): la apertura de CUENTA con su origen (`cuenta`, `cuentaDesde`, los anuncios y el
+     * cierre), que es lo que deja a la isla enseñar Mi cuenta o la compra, y el disparo del enlace `#mi-cuenta`. Su
+     * lógica viaja DIFERIDA (`cajon/enlace-cuenta.js`, solo si la dirección la lleva): en la entrada eran +0,72.
      */
-    private const LANDING_ENTRY_MAX_KB = 26;
+    private const LANDING_ENTRY_MAX_KB = 27;
 
-    /** Techo del CARGADOR DEL PAQUETE con sus chunks estáticos. Medido al nacer (T5): **6,10 KiB**. */
-    private const PACKAGE_LOADER_MAX_KB = 8;
+    /**
+     * Techo del CARGADOR DEL PAQUETE con sus chunks estáticos. Medido al nacer (T5): **6,10 KiB**. De 8 a 9 en la T5a de
+     * la isla (`#773`): medido 7,95 → 8,57, el mismo trozo `_cajon` y por lo mismo que la entrada de la landing.
+     */
+    private const PACKAGE_LOADER_MAX_KB = 9;
 
     /**
      * Techo del trozo del minijuego (`#231`). Medido al construirlo: **12,08 kB**.
@@ -900,7 +909,13 @@ class SidebarBundleBudgetTest extends TestCase
     // T4e·4 (la segunda capa de cookies, «Tus cookies»): el panel viaja DIFERIDO (`PanelIsla.vue`, su trozo de 4,74
     // KiB llega al abrirlo); estático, la compra medía 137,78. Queda lo que el menú y el panel comparten para abrirlo
     // desde cualquier sitio (el título, `preferencias` y el cargador): medido 133,57. El techo, a 134.
-    private const ISLA_COMPRA_CHUNK_MAX_KB = 134;
+    // T5a (`#773`, Mi cuenta en la isla): Mi cuenta usa piezas de la compra (sus estilos de paso, `datos.js`, la
+    // superficie, las pantallas de entrar y del alta) y el empaquetador las saca a trozos COMUNES: los bytes son los
+    // mismos, pero la compra paga las costuras (~0,8), la variante `inverse` del botón y la capa en `useSuperficie`.
+    // Medido 133,57 → 134,82 (base: `HEAD` construido aparte). Lo que solo pinta Mi cuenta no viaja aquí: sus dos
+    // iconos se registran desde su trozo (`cuenta/iconos.js`: con ellos en el registro común medía 135,50). El techo,
+    // a 136: a 135 quedaban 0,18 de margen, un cable trampa.
+    private const ISLA_COMPRA_CHUNK_MAX_KB = 136;
 
     // T4d·4 (`specs/isla-y-landing-nueva.md` §4.12): la CALCULADORA de una página, entrada propia que la página pide
     // (`scripts` de `<x-pagina>`) y se monta al acercarse su pieza. Su DESCARGA entera, como la mide el navegador que
@@ -918,7 +933,10 @@ class SidebarBundleBudgetTest extends TestCase
     // T3e·3 (`#694`): las pantallas de después de la pantalla 0, en su trozo (`isla/compra/pasos-diferidos.js`), que la
     // compra pide al montarse. Medido 36,92 KiB. T3e·4 (`#695`): «Entra» con sus eventos y la «G» de Google, 37,66.
     // T3e·6 (`#698`): «Esa hora ya no está libre» (`PantallaPerdida`, con su selector de horas), 38,56.
-    private const ISLA_PASOS_CHUNK_MAX_KB = 39;
+    // T5a (`#773`): Mi cuenta sin sesión pinta «Entra», «Crea tu cuenta» y el descargo con ESTAS pantallas, así que el
+    // empaquetador las saca a un trozo común con ella (`_CajaAntiBot`): mismos bytes, una costura más. Medido 38,83 →
+    // 39,34 (base: `HEAD`). El techo, a 40.
+    private const ISLA_PASOS_CHUNK_MAX_KB = 40;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

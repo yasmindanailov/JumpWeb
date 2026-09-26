@@ -77,6 +77,16 @@ return [
         'ir' => 'Ir a mi cuenta',
         'entrar' => 'Entrar',
     ],
+    // Mi cuenta SIN sesión (T5a, `isla-y-landing-nueva.md` §4.13): crear la cuenta desde Entrar. Viaja con la isla a
+    // todo visitante, porque es justo quien no ha entrado quien la ve (`paginas/mi-cuenta/datos.js`, su `propuesta`).
+    'mi_cuenta_alta' => [
+        'primera_vez' => '¿Es tu primera vez?',
+        'crear_enlace' => 'Crea tu cuenta',
+        'crear_titulo' => 'Crea tu cuenta',
+        'crear_boton' => 'Crear mi cuenta',
+        'creando' => 'Creando tu cuenta',
+        'ya_existe' => 'Ya hay una cuenta con este correo: entra con él.',
+    ],
     'ayuda' => [
         'en_horario' => 'Te contestamos en un rato.',
         'fuera' => 'Te contestamos mañana a partir de las :hora.',
@@ -292,6 +302,28 @@ return [
             'titular' => 'Esa hora ya no está libre.',
             'texto' => 'No se ha cobrado nada. Estas sí:',
             'boton' => 'Elegir esta hora',
+        ],
+    ],
+    // MI CUENTA en la isla (T5, `isla-y-landing-nueva.md` §4.13, `DECISIONES #773`): los textos del diseño
+    // (`paginas/mi-cuenta/datos.js`, aprobados el 24-09). ⚠️ Viajan SOLO CON SESIÓN (`SidebarBoot::personal()`): sin
+    // ella nadie los pinta, y mandarlos a todo visitante sería pagar sus bytes en cada página (`PERF-02`).
+    'mi_cuenta' => [
+        'titulo' => 'Mi cuenta',
+        'hola' => 'Hola, :nombre',
+        'qr' => [
+            'titulo' => 'Tu QR',
+            'mini' => 'Tu QR, para la puerta',
+            'ensenar' => 'Enseñar mi QR',
+            'de' => 'Tu QR. Código :codigo',
+            'texto' => 'Enséñalo en la puerta: ahí está todo.',
+            'guardar' => 'Guardar en el móvil',
+            'guardado' => 'QR guardado en el móvil',
+            'dicta' => 'Si la cámara falla, dicta este código:',
+            'renovar' => 'Renovar mi QR',
+            'renovar_aviso' => 'El anterior dejará de valer al instante, también el impreso.',
+            'renovar_si' => 'Sí, renovar',
+            'renovar_no' => 'Dejarlo como está',
+            'renovado' => 'Tu QR se ha renovado',
         ],
     ],
 ];

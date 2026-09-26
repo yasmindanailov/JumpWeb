@@ -1,14 +1,15 @@
 /**
- * **¿Está abierta la compra de la ISLA?** (T3e·2 de `docs/specs/isla-y-landing-nueva.md` §4.10, `DECISIONES #682`).
+ * **¿Está abierta esta capa de la ISLA?** (T3e·2 de `docs/specs/isla-y-landing-nueva.md` §4.10, `DECISIONES #682`; y
+ * desde la T5, `#773`, §4.13, con DOS capas: la compra y Mi cuenta).
  *
- * La apertura es del controlador del paquete (`cajon/controller.js`), que decide la SUPERFICIE de cada una: con la
- * isla como carcasa, la compra se abre en la isla y la cuenta en el lateral. Aquí solo se OYE lo que anuncia
- * (`jw:cajon:open` con su `surface`, `jw:cajon:close`) y se le pide cerrar; el estado no se duplica.
+ * La apertura es del controlador del paquete (`cajon/controller.js`), que decide la SUPERFICIE de cada una y, desde
+ * la T5, si es de la CUENTA. Aquí solo se OYE lo que anuncia (`jw:cajon:open` con su `surface` y su `cuenta`,
+ * `jw:cajon:close`) y se le pide cerrar; el estado no se duplica: cada capa se da por abierta cuando la isla lo está
+ * y la apertura es la suya.
  *
- * ⚠️⚠️ **Y la cuenta puede pedir la compra DESDE DENTRO del lateral** —«volver» sin historia, reintentar un pago
- * desde «Mis pedidos», abrir un producto—, conmutando de sección sin pasar por el controlador. En el cajón eso
- * enseñaba su sección de compra; con la isla, el lateral no tiene ninguna, así que se le pide al controlador que
- * abra la compra en SU superficie: el lateral se cierra y aparece la isla.
+ * ⚠️⚠️ **La sección del motor sigue a la capa, y lo hace UN solo dueño: la compra** (siempre montada con la isla).
+ * Una apertura de compra deja la sección en la compra; y si algo del motor pide la compra estando en Mi cuenta —un
+ * reintento de pago, un «volver» sin historia—, se le pide al controlador que abra la compra: la capa cambia sola.
  */
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { cajonHost } from '../../sidebar/host-bridge.js';
@@ -16,10 +17,18 @@ import { ISLA } from '../../sidebar/carcasa.js';
 import { useSectionStore } from '../../sidebar/stores/section.js';
 import { SECTIONS } from '../../sidebar/section.js';
 
-export function useSuperficie() {
-    const enLaIsla = () => Boolean(cajonHost()?.isOpen && cajonHost()?.surface === ISLA);
+/**
+ * @param {{cuenta?: boolean}} [capa]  `cuenta: true` para Mi cuenta; por defecto, la compra
+ */
+export function useSuperficie({ cuenta = false } = {}) {
+    const esLaMia = (surface, deCuenta) => surface === ISLA && Boolean(deCuenta) === cuenta;
+    const enLaIsla = () => Boolean(cajonHost()?.isOpen && esLaMia(cajonHost()?.surface, cajonHost()?.cuenta));
     const abierta = ref(enLaIsla());
-    const alAbrir = (evento) => { abierta.value = evento.detail?.surface === ISLA; };
+    const seccion = useSectionStore();
+    const alAbrir = (evento) => {
+        abierta.value = esLaMia(evento.detail?.surface, evento.detail?.cuenta);
+        if (! cuenta && abierta.value) seccion.showPurchase();
+    };
     const alCerrar = () => { abierta.value = false; };
 
     onMounted(() => {
@@ -33,12 +42,13 @@ export function useSuperficie() {
         document.removeEventListener('jw:cajon:close', alCerrar);
     });
 
-    const seccion = useSectionStore();
-    watch(() => seccion.active, (activa) => {
-        const host = cajonHost();
+    if (! cuenta) {
+        watch(() => seccion.active, (activa) => {
+            const host = cajonHost();
 
-        if (activa === SECTIONS.PURCHASE && host?.isOpen && host.surface !== ISLA) host.open();
-    });
+            if (activa === SECTIONS.PURCHASE && host?.isOpen && (host.surface !== ISLA || host.cuenta)) host.open();
+        });
+    }
 
     return { abierta, cerrar: () => cajonHost()?.close() };
 }

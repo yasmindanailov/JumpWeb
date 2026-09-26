@@ -37,6 +37,13 @@ use Illuminate\Support\Arr;
 final class SidebarBoot
 {
     /**
+     * El subgrupo de `lang/{idioma}/isla.php` que viaja SOLO con sesión: Mi cuenta en la isla (T5, `DECISIONES #773`). Son
+     * ~1 KB hoy y crecen con cada tanda de la T5; sin sesión nadie los pinta —Mi cuenta abre Entrar, y sus textos
+     * (`mi_cuenta_alta`) sí viajan para todos—.
+     */
+    public const ISLA_CON_SESION = 'mi_cuenta';
+
+    /**
      * El payload entero, tal y como lo pinta el layout en `data-boot`.
      *
      * @return array<string, mixed>
@@ -73,9 +80,10 @@ final class SidebarBoot
             // porque una respuesta con forma fija es un campo menos que comprobar — la misma regla que `locales`).
             ...($personal['experiments'] !== [] ? ['experiments' => $personal['experiments']] : []),
             // La carcasa, la ÚLTIMA: las claves de antes conservan su orden y su byte (`#631`, T1). Y los rótulos
-            // de la isla, solo cuando la carcasa es ella.
+            // de la isla, solo cuando la carcasa es ella; con sesión, con los de Mi cuenta dentro (T5, `#773`): el
+            // mismo grupo, así que la isla lee un solo camino (`isla.mi_cuenta.…`).
             'shell' => $shared['shell'],
-            ...(array_key_exists('isla', $shared) ? ['isla' => $shared['isla']] : []),
+            ...(array_key_exists('isla', $shared) ? ['isla' => $shared['isla'] + $personal['isla']] : []),
         ];
     }
 
@@ -283,7 +291,9 @@ final class SidebarBoot
             //   piezas, el menú) y una instalación con el cajón no los pinta nunca. Mandarlos siempre sería pagar
             //   sus bytes en cada página para nada, que es lo que el presupuesto del montaje anónimo existe
             //   para cazar (`SidebarMountTest`).
-            ...(ShellSettings::shell() === ShellSettings::ISLA ? ['isla' => __('isla')] : []),
+            // ⚠️ **Sin `mi_cuenta`** (T5, `DECISIONES #773`): los textos de Mi cuenta solo los pinta quien ha
+            //   entrado, así que viajan en {@see personal()}, con sesión — la misma regla que los del área del cajón.
+            ...(ShellSettings::shell() === ShellSettings::ISLA ? ['isla' => Arr::except(__('isla'), [self::ISLA_CON_SESION])] : []),
         ];
     }
 
@@ -291,7 +301,7 @@ final class SidebarBoot
      * La mitad que SÍ depende de quién mira. **Nunca se cachea**, y leerla tiene un efecto: el
      * desenlace del pago se CONSUME.
      *
-     * @return array{outcome: ?string, orderCode: ?string, account: array<string, mixed>, locales?: array<int|string, mixed>, userId: int|string|null, accountContext: mixed, urls: array<string, string>, experiments: array<string, string>}
+     * @return array{outcome: ?string, orderCode: ?string, account: array<string, mixed>, locales?: array<int|string, mixed>, userId: int|string|null, accountContext: mixed, urls: array<string, string>, experiments: array<string, string>, isla: array<string, mixed>}
      */
     public static function personal(): array
     {
@@ -437,6 +447,11 @@ final class SidebarBoot
             //   componer esto, así que la primera vista ya trae la suya) o, sin él, con el titular. Vacío sin
             //   experimentos vivos; `forCurrentRequest()` no lo pinta entonces y la API lo manda como `{}`.
             'experiments' => Experiments::forRequest(),
+            // · `isla` — los textos de MI CUENTA en la isla (T5, `DECISIONES #773`), con sesión y con la isla como
+            //   carcasa: la otra mitad del grupo `isla` que {@see shared()} deja fuera. Vacío si no toca.
+            'isla' => ShellSettings::shell() === ShellSettings::ISLA && auth()->check()
+                ? [self::ISLA_CON_SESION => __('isla.'.self::ISLA_CON_SESION)]
+                : [],
         ];
     }
 }

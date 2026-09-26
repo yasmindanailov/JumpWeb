@@ -38,6 +38,10 @@
     --isla-fiesta-2: #3fa34d;
     --isla-fiesta-3: #e8b400;
     --isla-fiesta-4: #c2327a;
+    /* El botón INVERSO del sistema (`Button` `inverse`: claro sobre la tinta de la isla), por roles (T5a, Mi cuenta). */
+    --isla-inverso-fondo: #ffffff;
+    --isla-inverso-fondo-hover: #e9edf1;
+    --isla-inverso-texto: #101418;
     --isla-qr-fondo: #ffffff;
     --isla-qr-tinta: #101418;
     --isla-qr-sombra: 0 1px 2px rgba(16, 20, 24, 0.12);

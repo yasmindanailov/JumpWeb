@@ -51,6 +51,8 @@ class SidebarBootController extends Controller
         // Y las variantes de los experimentos (spec §4.4, T5a): un diccionario clave → variante, vacío sin
         // experimentos vivos. En el layout la clave solo viaja cuando hay alguno.
         $personal['experiments'] = (object) $personal['experiments'];
+        // Y los textos de Mi cuenta en la isla (T5, `#773`): un diccionario, vacío sin sesión o sin la isla.
+        $personal['isla'] = (object) $personal['isla'];
         // Y `locales` va SIEMPRE, vacío sin sesión: en el layout la clave no viaja para el anónimo
         // (son bytes en cada página pública), pero una respuesta de API con forma fija es un campo
         // menos que el cliente tiene que comprobar antes de leer — y el contrato lo exige.

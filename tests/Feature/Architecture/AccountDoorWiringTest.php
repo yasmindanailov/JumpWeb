@@ -181,20 +181,23 @@ class AccountDoorWiringTest extends TestCase
     {
         $alpine = $this->source(self::ALPINE);
 
-        $this->assertStringContainsString('openAccount(event, zone)', $alpine, 'no existe el puente de la cabecera');
+        // ⚠️ Desde la T5 (`DECISIONES #773`) la firma lleva un tercer argumento, de dónde viene la apertura (la
+        // flecha de Mi cuenta): se busca su comienzo, `openAccount(event, zone`.
+        $this->assertStringContainsString('openAccount(event, zone', $alpine, 'no existe el puente de la cabecera');
 
         // ⚠️ El corte termina en la DEFINICIÓN del consumidor (`applyAccountZone(handle) {`), no en su
         // nombre a secas: el puente lo LLAMA, así que cortar por el nombre dejaba fuera justo la línea
         // que este caso quiere leer. La primera versión de esto falló por eso.
-        $bridge = mb_substr($alpine, (int) mb_strpos($alpine, 'openAccount(event, zone)'));
+        $bridge = mb_substr($alpine, (int) mb_strpos($alpine, 'openAccount(event, zone'));
         $bridge = mb_substr($bridge, 0, (int) mb_strpos($bridge, 'applyAccountZone(handle) {'));
 
-        // ⚠️ Y lo abre COMO CUENTA (T3e·2, `DECISIONES #682`): con la isla como carcasa, la compra se abre en ella y
-        // la cuenta sigue en el lateral hasta la T5; sin la marca, la cuenta se abriría en una isla sin cuenta.
+        // ⚠️ Y lo abre COMO CUENTA (T3e·2, `DECISIONES #682`; T5, `#773`): con la isla como carcasa, la compra y
+        // Mi cuenta son dos capas de la misma isla, y es la marca la que dice cuál se enseña; sin ella, el clic
+        // en «Mi cuenta» abriría la compra.
         $this->assertStringContainsString(
-            'this.open({ cuenta: true })', $bridge,
+            'this.open({ cuenta: true, desde })', $bridge,
             'El puente de la cabecera ya no ABRE el cajón como CUENTA: conmutaría la sección de un panel que '.
-            'sigue cerrado, o la abriría en la isla, y el clic no enseñaría nada.'
+            'sigue cerrado, o la isla enseñaría la compra, y el clic no enseñaría Mi cuenta.'
         );
 
         $this->assertStringContainsString(

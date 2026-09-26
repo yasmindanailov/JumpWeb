@@ -14,7 +14,7 @@ const config = {
 const llamadas = [];
 const acciones = {
     reservar: (paraHoy) => llamadas.push(['reservar', paraHoy]), irAlResumen: () => llamadas.push(['resumen']),
-    abrirCuenta: (zona) => llamadas.push(['cuenta', zona]),
+    abrirCuenta: (zona, desde) => llamadas.push(desde === undefined ? ['cuenta', zona] : ['cuenta', zona, desde]),
     aceptarCookies: () => {}, rechazarCookies: () => {}, configurarCookies: () => {}, politicaCookies: () => {}, navegar: () => {},
 };
 const estado = (extra = {}) => ({ vista: { cta: false, hoy: false }, calculo: null, cookies: false, ...extra });
@@ -90,6 +90,12 @@ describe('las props de la isla', () => {
         sesion.onQr();
         sesion.onClick();
         assert.deepEqual(llamadas, [['cuenta', 'login'], ['cuenta', 'card'], ['cuenta', 'home']], 'Entrar, Mi QR y Mi cuenta, cada uno a su zona.');
+
+        // T5: de dónde viene viaja con ella (la flecha de Mi cuenta vuelve al menú si se abrió desde él).
+        llamadas.length = 0;
+        sesion.onClick({ from: 'menu' });
+        sesion.onQr({ from: 'isla' });
+        assert.deepEqual(llamadas, [['cuenta', 'home', 'menu'], ['cuenta', 'card', 'isla']]);
     });
 });
 

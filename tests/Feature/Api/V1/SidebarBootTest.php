@@ -58,9 +58,9 @@ class SidebarBootTest extends ApiTestCase
             // ninguno vivo); en el layout la clave solo viaja cuando hay alguna, como `locales`.
             ...($session['experiments'] !== [] ? ['experiments' => $session['experiments']] : []),
             // La carcasa de la compra (`DECISIONES #682`): de la mitad compartida, y la última en el layout; con la
-            // isla, sus rótulos detrás.
+            // isla, sus rótulos detrás, y con sesión los de Mi cuenta dentro (T5, `#773`: su otra mitad, la privada).
             'shell' => $boot['shell'],
-            ...(array_key_exists('isla', $boot) ? ['isla' => $boot['isla']] : []),
+            ...(array_key_exists('isla', $boot) ? ['isla' => $boot['isla'] + $session['isla']] : []),
         ];
     }
 
@@ -255,6 +255,38 @@ class SidebarBootTest extends ApiTestCase
 
         Setting::updateOrCreate(['key' => ShellSettings::KEY], ['value' => 'lateral']);
         $this->assertSame(ShellSettings::CAJON, $this->getJson(self::ROOT.'/sidebar/boot?lang=es')->json('shell'), 'un valor desconocido es el cajón');
+    }
+
+    /**
+     * **Los textos de MI CUENTA en la isla viajan SOLO con sesión** (T5a de `specs/isla-y-landing-nueva.md` §4.13,
+     * `DECISIONES #773`): sin ella nadie los pinta —Mi cuenta abre Entrar, cuyos textos sí viajan para todos—, y
+     * mandarlos a cada visitante sería pagar sus bytes en cada página (`PERF-02`). Con sesión llegan dentro del MISMO
+     * grupo `isla` por los dos transportes —el layout los funde; la API los da en su mitad privada—, y el cliente los
+     * reconstruye igual. Sin la isla, no viajan: el cajón no los pinta.
+     */
+    public function test_the_island_account_labels_travel_only_with_a_session(): void
+    {
+        Setting::updateOrCreate(['key' => ShellSettings::KEY], ['value' => ShellSettings::ISLA, 'group' => 'theme']);
+
+        $boot = $this->getJson(self::ROOT.'/sidebar/boot?lang=es')->assertValidResponse(200)->json();
+        $this->assertArrayNotHasKey('mi_cuenta', $boot['isla'], 'la mitad compartida no lleva Mi cuenta');
+        $this->assertSame(__('isla.mi_cuenta_alta.crear_boton'), $boot['isla']['mi_cuenta_alta']['crear_boton'] ?? null, 'crear la cuenta sí viaja para todos');
+        $this->assertSame([], $this->getJson(self::ROOT.'/sidebar/session?lang=es')->assertValidResponse(200)->json('isla'), 'sin sesión, la mitad privada no lleva nada');
+        $this->assertArrayNotHasKey('mi_cuenta', $this->layoutBoot($this->get('/')->assertOk())['isla'], 'ni el layout del invitado');
+
+        $holder = User::factory()->create(['email_verified_at' => now()]);
+        $session = $this->actingAs($holder, 'web')->getJson(self::ROOT.'/sidebar/session?lang=en')->assertValidResponse(200)->json();
+        $this->assertSame(__('isla.mi_cuenta.qr.titulo', [], 'en'), $session['isla']['mi_cuenta']['qr']['titulo'] ?? null, 'con sesión, en el idioma de la URL');
+
+        $painted = $this->layoutBoot($this->actingAs($holder, 'web')->get('/')->assertOk());
+        $this->assertSame(__('isla.mi_cuenta.titulo'), $painted['isla']['mi_cuenta']['titulo'] ?? null, 'el layout con sesión los funde en el grupo');
+        $this->assertSame($painted, $this->merged(
+            $this->actingAs($holder, 'web')->getJson(self::ROOT.'/sidebar/boot?lang=es')->json(),
+            $this->actingAs($holder, 'web')->getJson(self::ROOT.'/sidebar/session?lang=es')->json(),
+        ), 'con la isla y con sesión, la API ya no rehace lo que pinta el layout');
+
+        Setting::updateOrCreate(['key' => ShellSettings::KEY], ['value' => ShellSettings::CAJON]);
+        $this->assertSame([], $this->actingAs($holder, 'web')->getJson(self::ROOT.'/sidebar/session?lang=es')->json('isla'), 'con el cajón, tampoco con sesión');
     }
 
     /** El payload no vuelve a componerse DENTRO de la plantilla: sería la segunda fuente que un día discrepa. */

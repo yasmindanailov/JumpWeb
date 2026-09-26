@@ -3,7 +3,8 @@
  *
  * Viven aquí y no en sus componentes por la regla `CE-6` del SPA (`SidebarComponentBudgetTest`): un componente
  * PINTA, y las tablas y las cuentas van en módulos planos. Las tablas son las del diseño, sin las variantes que
- * nombraban la paleta de su marca (`volt`, `inverse`, `glass` del botón; `inverse` del enlace).
+ * nombraban la paleta de su marca (`volt` y `glass` del botón; `inverse` del enlace). La `inverse` del botón entra
+ * con Mi cuenta (T5a), escrita con roles de la isla.
  */
 
 const TALLAS_BOTON = {
@@ -29,6 +30,12 @@ const VARIANTES_BOTON = {
     ghost: {
         base: { background: 'transparent', color: 'var(--text-strong)' },
         hover: { background: 'var(--control-bg-hover)' },
+    },
+    // La inversa, clara sobre la tinta de la isla (Mi cuenta: «Enseñar mi QR», «Guardar en el móvil»). En el diseño
+    // nombraba la paleta (`--snow`, `--ink-900`, `--ink-100`); aquí, sus ROLES (T5a), que cada instalación pinta.
+    inverse: {
+        base: { background: 'var(--isla-inverso-fondo)', color: 'var(--isla-inverso-texto)' },
+        hover: { background: 'var(--isla-inverso-fondo-hover)', boxShadow: 'var(--shadow-md)' },
     },
     // La secundaria de la isla y de la compra: clara, con BORDE de verdad (una sombra taparía el anillo de foco).
     quiet: {

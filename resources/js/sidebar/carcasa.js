@@ -7,8 +7,8 @@
  *  · el CONTROLADOR del paquete (`cajon/controller.js`), que decide en qué SUPERFICIE se abre cada cosa;
  *  · la RAÍZ del motor (`Sidebar.vue`), que monta la compra del cajón o la de la isla.
  *
- * ⚠️ Con la isla, **la cuenta sigue en el lateral** hasta que «Mi cuenta» viva también en ella (T5): por eso la
- * superficie se decide por APERTURA y no una vez por página.
+ * ⚠️ Desde la T5 (`DECISIONES #773`, §4.13) **la cuenta también vive en la isla**: con ella como carcasa, TODO se abre
+ * en la isla, y qué capa enseña (la compra o Mi cuenta) lo dice la apertura (`cuenta` del controlador), no la superficie.
  */
 export const CAJON = 'cajon';
 
@@ -32,12 +32,12 @@ export function carcasaDe(boot) {
 }
 
 /**
- * Dónde se abre una apertura: la CUENTA, en el lateral (hasta la T5); todo lo demás, en la carcasa.
+ * Dónde se abre una apertura: en la carcasa de la instalación, la compra y la cuenta por igual (T5). Una carcasa que
+ * no existe abre el lateral, la conducta de siempre.
  *
  * @param {'cajon'|'isla'} carcasa
- * @param {{cuenta?: boolean}} [apertura]
  * @returns {'cajon'|'isla'}
  */
-export function superficieDe(carcasa, { cuenta = false } = {}) {
-    return cuenta ? CAJON : (carcasa === ISLA ? ISLA : CAJON);
+export function superficieDe(carcasa) {
+    return carcasa === ISLA ? ISLA : CAJON;
 }

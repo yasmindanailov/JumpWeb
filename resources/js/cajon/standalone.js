@@ -80,7 +80,8 @@ export function mergeBoot(shared = {}, personal = {}) {
         // dos líneas la fusión se los comía, y en una página ajena la isla no se encendía NUNCA: el controlador
         // leía la carcasa de este arranque y encontraba el cajón. Lo cazó el navegador, no una prueba.
         shell: shared.shell ?? 'cajon',
-        ...(shared.isla ? { isla: shared.isla } : {}),
+        // Con sesión, los de Mi cuenta dentro del mismo grupo (T5, `#773`), como `$shared['isla'] + $personal['isla']`.
+        ...(shared.isla ? { isla: { ...shared.isla, ...(personal.isla ?? {}) } } : {}),
     };
 }
 

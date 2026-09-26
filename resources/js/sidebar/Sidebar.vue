@@ -37,8 +37,17 @@ const props = defineProps(PROPS_MOTOR);
 const IslaSeccionCompra = defineAsyncComponent(() => import('../isla/SeccionCompra.vue'));
 const enIsla = inject(CARCASA, null) === ISLA;
 
+/**
+ * ⚠️ **Y Mi cuenta de la ISLA** (T5, `DECISIONES #773`): con la isla, ocupa el sitio de la sección de cuenta del cajón
+ * —que no cambia—, en su trozo y solo a la primera entrada, como aquélla. Pero se QUEDA montada desde entonces: pasar a
+ * la compra y volver («Reservar otra vez») la encuentra donde estaba, que es lo que pide el diseño.
+ */
+const IslaSeccionCuenta = defineAsyncComponent(() => import('../isla/SeccionCuenta.vue'));
+const cuentaVista = ref(false);
+
 const purchase = ref(null);
 const section = useSectionStore();
+watch(() => section.onAccount, (dentro) => { if (dentro) cuentaVista.value = true; }, { immediate: true });
 const purchaseStore = usePurchaseStore();
 const outcomeStore = useOutcomeStore();
 
@@ -133,7 +142,9 @@ defineExpose({
     -->
     <IslaSeccionCompra v-else ref="purchase" v-bind="props" />
 
-    <AccountSection v-if="section.onAccount" v-bind="props" />
+    <AccountSection v-if="section.onAccount && ! enIsla" v-bind="props" />
+    <!-- Con la ISLA (T5), Mi cuenta es una capa suya: se enseña cuando el controlador la abre, no con la sección. -->
+    <IslaSeccionCuenta v-if="enIsla && cuentaVista" v-bind="props" />
 
     <!--
       ⚠️⚠️ **El bloque de cuenta NO es una sección: es CROMO del panel**, y por eso se teletransporta

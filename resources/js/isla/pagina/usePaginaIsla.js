@@ -72,11 +72,11 @@ export function usePaginaIsla({ config, textos, doc = document, win = window }) 
         configurarCookies: () => { win.dispatchEvent(new win.CustomEvent('isla:abrir', { detail: { panel: 'cookies' } })); },
         politicaCookies: () => { win.location.href = config.cookiesUrl; },
         navegar: (it) => { if (it?.href) win.location.href = it.href; },
-        // La cuenta, en su zona del lateral (`cajon.openAccount`, el mismo camino que el menú de siempre); sin el
-        // cargador del cajón, la puerta de entrar.
-        abrirCuenta: (zona) => {
+        // La cuenta, en su zona (`cajon.openAccount`, el mismo camino que el menú de siempre): con la isla, en su capa de
+        // Mi cuenta (T5), que abierta desde el menú vuelve a él con su flecha. Sin el cargador del cajón, la puerta de entrar.
+        abrirCuenta: (zona, desde) => {
             const cajon = win.JumpWeb?.cajon;
-            if (cajon?.openAccount) cajon.openAccount({ preventDefault() {} }, zona);
+            if (cajon?.openAccount) cajon.openAccount({ preventDefault() {} }, zona, { desde: desde === 'menu' ? 'menu' : null });
             else win.location.href = '/login';
         },
     };

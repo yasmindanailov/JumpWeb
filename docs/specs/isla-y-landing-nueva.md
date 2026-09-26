@@ -1312,7 +1312,31 @@ piezas del sistema**, enseñado en vivo antes de cerrar.
   (`VERIFY_CONC=1`) y el formulario del cajón es del SPA (aviso).
 - **T5e · Ajustes y Cerrar sesión**, con (d).
 - **T5f · lo que queda**: Reservar otra vez, la bienvenida de la cuenta nueva, sin conexión, los bloques protegidos,
-  Mi QR del menú, el alta de Google (d), la verificación final y la sonda (`scripts/sonda-isla.mjs` crece).
+  la verificación final y la sonda (`scripts/sonda-cuenta.mjs` crece).
+- ▶ **T5a ✅ (26-09, `#774`)**. **La capa**: con la isla, TODO se abre en ella (`carcasa.js::superficieDe`), y el
+  controlador del paquete guarda y anuncia si la apertura es de CUENTA y desde dónde (`cuenta`, `cuentaDesde`, el
+  tercer argumento de `openAccount`; `cuenta: true` viaja en `jw:cajon:open` solo cuando lo es, así que los anuncios de
+  compra no cambian). Cada capa se da por abierta si la apertura es suya (`compra/useSuperficie.js`), y la compra lleva
+  la sección del motor detrás. La raíz del motor monta `isla/SeccionCuenta.vue` (su trozo, a la primera entrada, y se
+  queda). **Las puertas**: `/mi-cuenta` (inicio), `/mi-cuenta/pedidos` (inicio, en la próxima), las de invitado
+  (Entra; `register`, Crea tu cuenta), `google-signup` (completar el alta, dibujada con el sistema, `#773`·d) y el
+  enlace **`#mi-cuenta[/bloque]`** (`cajon/enlace-cuenta.js`, diferido: solo con la isla, porque el lateral no protege
+  sus zonas privadas sin sesión). **Dentro**: «Hola», la próxima en una línea (del contexto sembrado, sin petición;
+  sin la cantidad hasta la T5b), Tu QR compacto y su vista (la PNG del servidor, «Guardar en el móvil», el código para
+  dictar, «Renovar mi QR» con su pregunta; Wallet apagado) y, sin sesión, Entra, el olvido y Crea tu cuenta, que son
+  las pantallas de la compra (`PantallaEntrar`, `PantallaDatos` con su titular, el descargo, el anti-bot). ⚠️ **Entrar,
+  crear la cuenta o volver de Google recarga la página en `#mi-cuenta`**: los textos de Mi cuenta (`isla.mi_cuenta`)
+  viajan SOLO con sesión (`SidebarBoot::personal()`, contrato **1.33.0**), como los del área del cajón. Lo que el mockup
+  omite y la verdad pide: «Leer el descargo» en Crea tu cuenta (aceptar sin poder leer no prueba nada). **Medido**:
+  `node --test` 1.312 → 1.341 (`cuenta/vista.test.js` 16, `enlace-cuenta.test.js` 9, el controlador +4; la página, el
+  origen en un caso que ya había); `SidebarBootTest` +1 (un mutante muerto: sin la poda, rojo); **en vivo** (`scripts/sonda-cuenta.mjs`, `/kids`
+  a 1280 y 390, capturas en `storage/app/audit/`): **42 de 42**, dos pasadas seguidas. ⚠️ Las puertas del servidor
+  (`/mi-cuenta`, `/registro/google`) sirven la portada de HOY, que no carga las hojas de Saltia: allí la capa sale con el
+  tema NEUTRO del producto (como la vuelta del banco) hasta la portada nueva (T6). **El peso**, contra el `HEAD`
+  construido aparte: la entrada de la landing 25,98 → 26,60 KiB (el controlador; el enlace, diferido), el cargador del
+  paquete 7,95 → 8,57, la compra 133,57 → 134,82 (costuras de los trozos comunes con Mi cuenta; sus dos iconos se
+  registran desde su trozo, `ui/iconos.js::registrarIconos`: en el común medía 135,50) y sus pasos 38,83 → 39,34; techos
+  a 27, 9, 136 y 40, con su medida en `SidebarBundleBudgetTest`. Mi cuenta, 20 kB propios.
 
 ## 5. Impacto en invariantes
 

@@ -3,7 +3,7 @@
  * El botón del sistema de diseño (`Button.jsx`), portado a Vue con sus mismos estilos en línea.
  *
  * Solo las variantes que se escriben con ROLES (`primary`, `secondary`, `outline`, `ghost`, `quiet`): las
- * del diseño que nombraban la paleta de su marca (`volt`, `inverse`, `glass`) no entran en el producto. Las
+ * del diseño que nombraban la paleta de su marca (`volt`, `glass`) no entran en el producto; la `inverse`, con roles (T5a). Las
  * de control pasan solas a blanco dentro de la isla (`data-surface="ink"`). `loading` bloquea el botón —un
  * segundo toque no paga dos veces— y pone la bola pequeña en lugar del icono de la izquierda, leyendo
  * `loadingLabel` o el texto del botón. El estilo lo compone `estiloBoton()` (`estilos.js`): un componente pinta,

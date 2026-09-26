@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.32.0
+  version: 1.33.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -4555,19 +4555,20 @@ components:
           enum: [cajon, isla]
           description: |
             La carcasa de la compra de esta instalación (ajuste `sidebar.shell`, sin él `cajon`). Con `isla`,
-            la compra se abre en la isla y la cuenta sigue en el cajón lateral.
+            la compra y, desde 1.33.0, también la cuenta se abren en la isla.
         isla:
           type: object
           additionalProperties: true
           description: |
             Los rótulos de la isla (la compra, sus piezas, su menú). Viajan **solo con `shell: isla`**: una
-            instalación con el cajón no los pinta nunca.
+            instalación con el cajón no los pinta nunca. Sin los de Mi cuenta (`mi_cuenta`), que viajan con
+            sesión en `SidebarSession.isla` (1.33.0).
 
     SidebarSession:
       type: object
       description: La parte del arranque del cajón que es de quien mira. Nunca se cachea.
       additionalProperties: false
-      required: [outcome, experiments, orderCode, account, locales, userId, accountContext, urls]
+      required: [outcome, experiments, orderCode, account, locales, userId, accountContext, urls, isla]
       properties:
         outcome:
           type: string
@@ -4625,6 +4626,13 @@ components:
           additionalProperties:
             type: string
           description: Las rutas que solo existen con sesión (vincular con Google).
+        isla:
+          type: object
+          additionalProperties: true
+          description: |
+            Los rótulos de MI CUENTA en la isla (1.33.0, `DECISIONES #773`): la otra mitad del grupo `isla` de
+            `SidebarBoot`, que viaja solo con sesión y con `shell: isla` (sin sesión nadie los pinta). Vacío si no
+            toca. El cliente los funde con los de `SidebarBoot.isla`.
 
     PublicConfig:
       type: object

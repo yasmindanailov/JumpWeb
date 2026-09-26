@@ -12,6 +12,8 @@
  * Con el motor (T3e·3): `aviso` es un «no» del servidor que no es de ningún campo (el limitador, un corte), en el
  * mismo aviso de arriba; `entrar` y `social` apagan «¿Ya has venido? Entra» y Google/Apple mientras no entran de
  * verdad (T3e·4); la ranura `antibot` lleva el anti-bot del alta, si la instalación lo tiene. Sin ellos, el diseño.
+ * `titulo` lo cambia Mi cuenta, que pinta aquí su «Crea tu cuenta» (T5a, `paginas/mi-cuenta/cuenta.jsx`): el mismo
+ * formulario, sin «¿Ya has venido? Entra» (`entrar` apagado) porque se llega desde Entrar.
  */
 import { computed } from 'vue';
 import { useTextos } from '../piezas/textos.js';
@@ -43,6 +45,7 @@ const props = defineProps({
     // T3e·4 (`#695`): Apple, apagado hasta que exista (`#683`); y la «G» del botón de Google.
     apple: { type: Boolean, default: true },
     marcaGoogle: { type: String, default: '' },
+    titulo: { type: String, default: '' },
 });
 const emit = defineEmits(['cambiar', 'entrar', 'descargo', 'proveedor', 'hora']);
 const { t, tp } = useTextos();
@@ -53,7 +56,7 @@ const cambiar = (campo) => (valor) => emit('cambiar', campo, valor);
 </script>
 
 <template>
-    <PasoCompra :titulo="cuenta === 'dentro' ? tp('compra.datos.hola', { nombre: nombrePila }) : t('compra.datos.titular')">
+    <PasoCompra :titulo="titulo || (cuenta === 'dentro' ? tp('compra.datos.hola', { nombre: nombrePila }) : t('compra.datos.titular'))">
         <template
             v-if="cuenta !== 'dentro' && entrar"
             #antes

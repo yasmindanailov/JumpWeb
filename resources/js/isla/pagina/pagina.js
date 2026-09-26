@@ -53,11 +53,11 @@ export function propsDeLaIsla({ config, estado, acciones, textos }) {
         menuItems: config.menuItems ?? [],
         contact: config.contact ?? { phone: '', whatsapp: '' },
         lang: config.lang ?? '',
-        // La cuenta se abre en el LATERAL del cajón hasta la T5 (Mi cuenta en la isla): Mi QR (el carné), Mi cuenta (su
-        // índice) o, sin sesión, entrar.
+        // La cuenta, en su capa de la isla (T5, `#773`): Mi QR (el carné), Mi cuenta (su inicio) o, sin sesión, entrar. De
+        // dónde viene (`from`: el menú o la acción de la isla) viaja con ella: desde el menú, su flecha vuelve a él.
         account: config.owner
-            ? { state: 'session', onQr: () => acciones.abrirCuenta('card'), onClick: () => acciones.abrirCuenta('home') }
-            : { state: 'guest', onClick: () => acciones.abrirCuenta('login') },
+            ? { state: 'session', onQr: (x) => acciones.abrirCuenta('card', x?.from), onClick: (x) => acciones.abrirCuenta('home', x?.from) }
+            : { state: 'guest', onClick: (x) => acciones.abrirCuenta('login', x?.from) },
         cookies: estado.cookies ? { onAccept: acciones.aceptarCookies, onReject: acciones.rechazarCookies, onConfigure: acciones.configurarCookies, onPolicy: acciones.politicaCookies } : null,
         cookiePrefs: estado.preferencias ?? null,
         notice: estado.aviso ?? null,

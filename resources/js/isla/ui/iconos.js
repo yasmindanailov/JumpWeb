@@ -77,6 +77,17 @@ const SVG = {
     x,
 };
 
+/**
+ * **Los iconos de una capa que no viaja con la compra** (Mi cuenta, T5a): los registra SU trozo al cargarse, y así la
+ * compra —que se descarga con la isla en cada página— no paga dibujos que no pinta (`SidebarBundleBudgetTest`).
+ * Uno ya registrado no se pisa.
+ *
+ * @param {Record<string, string>} dibujos  nombre → SVG crudo de Lucide
+ */
+export function registrarIconos(dibujos) {
+    for (const [nombre, svg] of Object.entries(dibujos)) SVG[nombre] ??= svg;
+}
+
 /** El SVG listo para incrustar, o cadena vacía si el icono no está en el registro. */
 export function dibujo(nombre, relleno = false) {
     const svg = SVG[nombre];

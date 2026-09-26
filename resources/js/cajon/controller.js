@@ -19,7 +19,7 @@
  * `sidebar/host-bridge.js`; ya no nombra a Alpine.
  */
 import { reveal } from '../ui/account-host.js';
-import { carcasaDe, superficieDe } from '../sidebar/carcasa.js';
+import { ISLA, carcasaDe, superficieDe } from '../sidebar/carcasa.js';
 import { installShell } from './shell.js';
 
 /**
@@ -70,11 +70,22 @@ export function createCajonController({ scrollLock }) {
         reanudando: document.body.dataset.purchaseResume === '1',
         /**
          * **DÓNDE está abierto** (`DECISIONES #682`, T3e·2 de `specs/isla-y-landing-nueva.md` §4.10): `cajon` —el
-         * lateral— o `isla`. Con la isla como carcasa, la compra se abre en ella y la cuenta en el lateral hasta la
-         * T5, así que se decide en CADA apertura (`sidebar/carcasa.js`). La carcasa del lateral (`shell.js`) solo
-         * se pinta abierta para la suya, y la compra de la isla, para la suya. `null` hasta la primera apertura.
+         * lateral— o `isla`, la carcasa de la instalación (`sidebar/carcasa.js`). La carcasa del lateral (`shell.js`)
+         * solo se pinta abierta para la suya, y la isla, para la suya. `null` cerrado.
          */
         surface: null,
+        /**
+         * **¿La apertura en curso es de la CUENTA?** (T5, `DECISIONES #773`): desde que Mi cuenta vive también en la
+         * isla, las dos capas comparten superficie y esto dice cuál enseña —la compra o Mi cuenta—. Lo escriben
+         * `open()` y `start()`, y viaja en el anuncio SOLO cuando es verdad, así que los de compra no cambian de forma.
+         */
+        cuenta: false,
+        /**
+         * **Desde dónde se abrió la cuenta** (`'menu'` · `'enlace'` · `null`): la flecha de Mi cuenta solo sale si hay
+         * algo detrás, y abierta desde el menú de la isla vuelve a él (el diseño, «La isla · un solo QR y la flecha
+         * desde el menú»).
+         */
+        cuentaDesde: null,
         /** La carcasa de la instalación, leída del arranque la primera vez que hace falta. */
         carcasa: null,
         carcasaActual() {
@@ -232,15 +243,30 @@ export function createCajonController({ scrollLock }) {
          *
          * @param {MouseEvent} event
          * @param {string} zone
+         * @param {{desde?: 'menu'|'enlace'|null}} [opciones]  de dónde viene la apertura (la flecha de Mi cuenta, T5)
          */
-        openAccount(event, zone) {
+        openAccount(event, zone, { desde = null } = {}) {
             if (! zone) return;
 
             event.preventDefault();
             this.accountZone = zone;
-            // La cuenta, en el LATERAL también con la isla como carcasa (hasta la T5).
-            this.open({ cuenta: true });
+            // En la carcasa, como la compra: con la isla, Mi cuenta es una capa de la isla (T5).
+            this.open({ cuenta: true, desde });
             this.bootSpaEngine()?.then?.((handle) => this.applyAccountZone(handle));
+        },
+        /**
+         * **El enlace que abre Mi cuenta** (`#mi-cuenta[/bloque]`, T5a): el del correo, y por donde vuelve quien acaba
+         * de entrar dentro de la isla. Lo lee `start()`, y su lógica (`enlace-cuenta.js`) se trae SOLO si la dirección
+         * lo lleva: la entrada de la landing la paga cada visita (`SidebarBundleBudgetTest`).
+         */
+        openAccountLink() {
+            const hash = globalThis.window?.location?.hash ?? '';
+
+            if (this.isOpen || ! hash.startsWith('#mi-cuenta')) return null;
+
+            const carcasaSabida = this.carcasa !== null || inlineBoot(document.getElementById('sidecart-spa')) !== null;
+
+            return import('./enlace-cuenta.js').then((m) => m.abrirEnlaceDeCuenta(this, { hash, carcasaSabida, isla: ISLA }));
         },
         /**
          * **El ÚNICO sitio que consume `accountZone`.**
@@ -291,7 +317,7 @@ export function createCajonController({ scrollLock }) {
                     // ⚠️ La carcasa de una página ajena solo la sabe este arranque (T3e·2): con la isla, la compra
                     // que ya se abrió pasa a SU superficie antes de construir el lateral, que así no nace abierto.
                     this.carcasa = carcasaDe(boot);
-                    if (this.isOpen) this.surface = superficieDe(this.carcasa, { cuenta: Boolean(this.accountZone) });
+                    if (this.isOpen) this.surface = superficieDe(this.carcasa);
 
                     // Queda INSTALADA, así que la carcasa recién construida nace ya abierta si el cajón lo
                     // estaba — por su rama de «cómo NACE», que es la misma que usa la del layout.
@@ -355,11 +381,13 @@ export function createCajonController({ scrollLock }) {
          * Encontrado en su día con navegador (`VERIFICACION-E2E-CAJON.md`); ninguna paridad podía verlo.
          */
         start() {
-            if (! this.isOpen) return null;
+            // Cerrado al nacer, el único que puede abrirlo es el enlace a Mi cuenta (`#mi-cuenta`, T5a).
+            if (! this.isOpen) return this.openAccountLink() ?? null;
 
-            // Dónde nace abierto: una puerta de cuenta, en el lateral; `/entradas` y la vuelta de la pasarela son
-            // COMPRA, así que en la carcasa (T3e·2).
-            this.surface = superficieDe(this.carcasaActual(), { cuenta: Boolean(this.accountZone) });
+            // Dónde nace abierto: en la carcasa, sea compra (`/entradas`, la vuelta de la pasarela) o una puerta de
+            // cuenta (T5: con la isla, Mi cuenta es una de sus capas).
+            this.cuenta = Boolean(this.accountZone);
+            this.surface = superficieDe(this.carcasaActual());
             scrollLock.lock('sidecart');
             // Y se ANUNCIA por qué nació abierto (`drawer_opened`, analítica §4.2), que `open()` no va a contar:
             // la vuelta de la pasarela trae su desenlace en el `data-boot`, una puerta de cuenta trae su zona y
@@ -367,20 +395,22 @@ export function createCajonController({ scrollLock }) {
             const outcome = inlineBoot(document.getElementById('sidecart-spa'))?.outcome;
             const reason = outcome ? 'return' : (this.accountZone ? 'door' : (this.reanudando ? 'resume' : 'deeplink'));
 
-            announce('open', { reason, surface: this.surface });
+            announce('open', { reason, surface: this.surface, ...(this.cuenta ? { cuenta: true } : {}) });
 
             return this.bootSpaEngine();
         },
         /**
-         * @param {{product?: number, cuenta?: boolean}} [detail]  lo que se cuenta con la apertura (`drawer_opened`);
-         *   un clic de la landing no pasa nada, y `openWith()` pasa el producto cuando abre en uno. `cuenta` la
-         *   pasa `openAccount()`: la cuenta se abre en el lateral también con la isla como carcasa.
+         * @param {{product?: number, cuenta?: boolean, desde?: string|null}} [detail]  lo que se cuenta con la apertura
+         *   (`drawer_opened`); un clic de la landing no pasa nada, y `openWith()` pasa el producto cuando abre en uno.
+         *   `cuenta` y `desde` los pasa `openAccount()`: con la isla, la capa que se enseña es Mi cuenta (T5).
          */
         open(detail = {}) {
             this.isOpen = true;
-            this.surface = superficieDe(this.carcasaActual(), { cuenta: detail?.cuenta === true });
+            this.cuenta = detail?.cuenta === true;
+            this.cuentaDesde = this.cuenta ? (detail?.desde ?? null) : null;
+            this.surface = superficieDe(this.carcasaActual());
             scrollLock.lock('sidecart');
-            announce('open', { reason: 'user', product: detail?.product, surface: this.surface });
+            announce('open', { reason: 'user', product: detail?.product, surface: this.surface, ...(this.cuenta ? { cuenta: true } : {}) });
             // ⚠️ Al abrir se RELEE el estado de las reservas: el motor SPA se monta una sola vez por
             // carga de página, así que sin esto la pausa solo entraría al recargar. En la primera
             // apertura el propio montaje ya la pide, y `refreshStatus` es un no-op sobre un motor que
@@ -416,8 +446,10 @@ export function createCajonController({ scrollLock }) {
             // ⚠️ Se anuncia ANTES de la recarga de abajo: quien escucha (una landing que mide embudo, por
             // ejemplo) tiene que enterarse del cierre también cuando ese cierre se lleva la página.
             if (wasOpen) announce('close', { reloading: this.authChanged });
-            // Cerrado no está en ninguna superficie: el cierre vale para las dos (T3e·2).
+            // Cerrado no está en ninguna superficie ni en ninguna capa: el cierre vale para todas (T3e·2, T5).
             this.surface = null;
+            this.cuenta = false;
+            this.cuentaDesde = null;
             // Si hubo login dentro del sidebar, recargamos la PÁGINA ACTUAL (no navegamos a otro
             // sitio) para que el nav refleje la sesión. Al cierre, no a mitad del flujo; el carrito
             // vive en sesión, así que no se pierde nada. Mismo patrón que el modal (#51).

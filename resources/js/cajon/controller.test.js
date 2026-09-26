@@ -106,7 +106,7 @@ describe('el cajón sin framework', () => {
         assert.deepEqual(eventos.at(-1), { tipo: 'jw:cajon:open', detalle: { reason: 'deeplink', surface: 'cajon' } });
 
         montar({ dataset: { purchaseOpen: '1', accountZone: 'orders' } }).start();
-        assert.deepEqual(eventos.at(-1), { tipo: 'jw:cajon:open', detalle: { reason: 'door', surface: 'cajon' } });
+        assert.deepEqual(eventos.at(-1), { tipo: 'jw:cajon:open', detalle: { reason: 'door', surface: 'cajon', cuenta: true } });
 
         montar({ dataset: { purchaseOpen: '1' }, hueco: { dataset: { boot: JSON.stringify({ outcome: 'confirmed' }) } } }).start();
         assert.deepEqual(eventos.at(-1), { tipo: 'jw:cajon:open', detalle: { reason: 'return', surface: 'cajon' } });
@@ -147,38 +147,114 @@ describe('el cajón sin framework', () => {
     });
 
     /**
-     * **La SUPERFICIE de cada apertura** (T3e·2, `DECISIONES #682`): con la isla como carcasa, la compra se abre
-     * en la isla y la cuenta en el lateral (hasta la T5). El anuncio lo dice, y es lo que oyen la carcasa del
-     * lateral y la compra de la isla para saber cuál de las dos se enseña.
+     * **La SUPERFICIE y la CAPA de cada apertura** (T3e·2, `DECISIONES #682`; T5, `#773`): con la isla como carcasa
+     * la compra y la cuenta se abren en la isla, y la apertura de cuenta lo dice (`cuenta`) para que la isla enseñe
+     * Mi cuenta y no la compra. Los anuncios de compra no cambian de forma: `cuenta` viaja solo cuando es verdad.
      */
-    test('con la isla como carcasa, la compra se abre en la isla y la cuenta en el lateral', () => {
+    test('con la isla como carcasa, la compra y la cuenta se abren en la isla; la de cuenta lo dice', () => {
         const cajon = montar({ hueco: { dataset: { boot: JSON.stringify({ shell: 'isla' }) } } });
+        cajon.bootSpaEngine = async () => null;
 
         cajon.openWith({ type: 'zone', slug: 'kids' });
         assert.equal(cajon.surface, 'isla');
-        assert.equal(eventos.at(-1).detalle.surface, 'isla');
+        assert.equal(cajon.cuenta, false);
+        assert.deepEqual(eventos.at(-1).detalle, { reason: 'user', product: undefined, surface: 'isla' });
 
         cajon.openAccount({ preventDefault() {} }, 'orders');
-        assert.equal(cajon.surface, 'cajon');
-        assert.equal(eventos.at(-1).detalle.surface, 'cajon');
+        assert.equal(cajon.surface, 'isla');
+        assert.equal(cajon.cuenta, true);
+        assert.deepEqual(eventos.at(-1).detalle, { reason: 'user', product: undefined, surface: 'isla', cuenta: true });
+
+        // Y de la cuenta a la compra, dentro de la misma isla: la capa cambia con la apertura.
+        cajon.openWith({ type: 'product', id: 7 });
+        assert.equal(cajon.cuenta, false);
 
         cajon.close();
         assert.equal(cajon.surface, null, 'cerrado no está en ninguna');
+        assert.equal(cajon.cuenta, false);
     });
 
-    test('nacer abierto con la isla: una compra (la vuelta del banco, `/entradas`) en la isla; una puerta de cuenta, en el lateral', () => {
+    /** La flecha de Mi cuenta solo sale si hay algo detrás: abierta desde el menú de la isla, vuelve a él. */
+    test('la apertura de cuenta recuerda desde dónde se hizo, y cerrar lo olvida', () => {
+        const cajon = montar({ hueco: { dataset: { boot: JSON.stringify({ shell: 'isla' }) } } });
+        cajon.bootSpaEngine = async () => null;
+
+        cajon.openAccount({ preventDefault() {} }, 'home', { desde: 'menu' });
+        assert.equal(cajon.cuentaDesde, 'menu');
+
+        cajon.openAccount({ preventDefault() {} }, 'card');
+        assert.equal(cajon.cuentaDesde, null, 'sin decirlo, desde ningún sitio: solo la X');
+
+        cajon.openAccount({ preventDefault() {} }, 'home', { desde: 'menu' });
+        cajon.openWith({ type: 'zone', slug: 'kids' });
+        assert.equal(cajon.cuentaDesde, null, 'una apertura de compra no lleva origen de cuenta');
+
+        cajon.openAccount({ preventDefault() {} }, 'home', { desde: 'menu' });
+        cajon.close();
+        assert.equal(cajon.cuentaDesde, null);
+    });
+
+    test('nacer abierto con la isla: una compra (la vuelta del banco, `/entradas`) y una puerta de cuenta, las dos en la isla', () => {
         const isla = JSON.stringify({ shell: 'isla', outcome: 'failed' });
 
         const vuelta = montar({ dataset: { purchaseOpen: '1' }, hueco: { dataset: { boot: isla } } });
         vuelta.bootSpaEngine = async () => null;
         vuelta.start();
         assert.equal(vuelta.surface, 'isla');
+        assert.equal(vuelta.cuenta, false);
         assert.deepEqual(eventos.at(-1).detalle, { reason: 'return', surface: 'isla' });
 
-        const puerta = montar({ dataset: { purchaseOpen: '1', accountZone: 'orders' }, hueco: { dataset: { boot: isla } } });
+        const puerta = montar({ dataset: { purchaseOpen: '1', accountZone: 'orders' }, hueco: { dataset: { boot: JSON.stringify({ shell: 'isla' }) } } });
         puerta.bootSpaEngine = async () => null;
         puerta.start();
-        assert.equal(puerta.surface, 'cajon');
+        assert.equal(puerta.surface, 'isla');
+        assert.equal(puerta.cuenta, true);
+        assert.deepEqual(eventos.at(-1).detalle, { reason: 'door', surface: 'isla', cuenta: true });
+    });
+
+    /**
+     * **El enlace `#mi-cuenta`** (T5a): el del correo y la vuelta de quien entra dentro de la isla. Abre Mi cuenta
+     * SOLO con la isla —es su enlace, y el lateral no protege sus zonas privadas sin sesión—; en una página ajena,
+     * la carcasa la dice el arranque, así que se espera a él.
+     */
+    test('el enlace #mi-cuenta abre Mi cuenta en la isla, en su zona, y se anuncia como apertura de cuenta', async () => {
+        const cajon = montar({ hueco: { dataset: { boot: JSON.stringify({ shell: 'isla' }) } } });
+        globalThis.window.location.hash = '#mi-cuenta/qr';
+        cajon.bootSpaEngine = async () => null;
+
+        await cajon.start();
+
+        assert.equal(cajon.isOpen, true);
+        assert.equal(cajon.accountZone, 'card', 'sin motor, la zona espera a él');
+        assert.equal(cajon.cuentaDesde, 'enlace');
+        assert.deepEqual(eventos.at(-1).detalle, { reason: 'user', product: undefined, surface: 'isla', cuenta: true });
+    });
+
+    test('con el cajón lateral, o sin enlace, el enlace no abre nada', async () => {
+        const lateral = montar({ hueco: { dataset: { boot: JSON.stringify({ shell: 'cajon' }) } } });
+        globalThis.window.location.hash = '#mi-cuenta';
+        await lateral.start();
+        assert.equal(lateral.isOpen, false);
+        assert.deepEqual(eventos, []);
+
+        const sinEnlace = montar({ hueco: { dataset: { boot: JSON.stringify({ shell: 'isla' }) } } });
+        globalThis.window.location.hash = '#precio';
+        assert.equal(sinEnlace.start(), null, 'sin enlace ni siquiera se trae su módulo');
+        assert.equal(sinEnlace.isOpen, false);
+    });
+
+    test('en una página ajena, el enlace espera al arranque y decide con su carcasa', async () => {
+        const cajon = montar();
+        globalThis.window.location.hash = '#mi-cuenta/antes';
+        let traido = 0;
+        cajon.bootSpaEngine = async () => { traido += 1; cajon.carcasa = 'isla'; return null; };
+
+        await cajon.start();
+
+        assert.equal(traido >= 1, true, 'sin carcasa sabida, se trae el arranque');
+        assert.equal(cajon.isOpen, true);
+        assert.equal(cajon.accountZone, 'home');
+        assert.equal(cajon.cuenta, true);
     });
 
     /**

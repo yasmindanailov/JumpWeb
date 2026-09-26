@@ -22,14 +22,12 @@ describe('la carcasa que dice el arranque', () => {
 });
 
 describe('dónde se abre cada cosa', () => {
-    test('con la isla, la compra se abre en la isla y la cuenta en el lateral (hasta la T5)', () => {
+    test('con la isla, todo en la isla: la compra y, desde la T5, también la cuenta', () => {
         assert.equal(superficieDe(ISLA), ISLA);
-        assert.equal(superficieDe(ISLA, { cuenta: true }), CAJON);
     });
 
     test('con el cajón, todo en el lateral', () => {
         assert.equal(superficieDe(CAJON), CAJON);
-        assert.equal(superficieDe(CAJON, { cuenta: true }), CAJON);
     });
 
     test('una carcasa desconocida no abre una superficie que no existe', () => {
