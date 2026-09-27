@@ -177,7 +177,8 @@ const respuesta = await page.goto(`${BASE}/admin/analitica`, { waitUntil: 'netwo
 informe.status = respuesta?.status() ?? null;
 informe.titulo = await page.title();
 ok('status 200', informe.status === 200, String(informe.status));
-ok('cinco pestañas', await page.getByRole('tab').count() === 5, String(await page.getByRole('tab').count()));
+// Seis desde la T2 (`#758`): «Ocupación», tras «Dinero».
+ok('seis pestañas', await page.getByRole('tab').count() === 6, String(await page.getByRole('tab').count()));
 // ⚠️ Medido: las pestañas inactivas NO son `display: none` (Filament las deja `invisible absolute h-0`), así que
 // el observador de intersección de Livewire da por visibles sus widgets y los pide también. Se apunta cuántas
 // peticiones costó abrir la página, para que el dato esté y no se afirme lo contrario.
@@ -197,6 +198,21 @@ ok('dinero: el desglose nace plegado', await page.locator('section.fi-collapsed'
 await captura('escritorio-dinero');
 await bajaHasta('Vendido por producto');
 await captura('escritorio-dinero-graficos');
+
+// 3 bis. Ocupación (la T2 de `specs/analitica-para-decidir.md` §4.8.ter, `#758`): 6 tarjetas, el mapa de calor (una tabla
+// con el % escrito en cada celda, no un canvas), el gráfico de la anticipación (con reservas) y su desglose plegado.
+await abrirPestana('Ocupación', 'La ocupación, al detalle');
+await llega('La ocupación: cómo de lleno está el parque, y cuándo');
+await llega('Cuándo se llena: día de la semana y hora');
+informe.pestanas.ocupacion = { stats: await leerStats(), canvas: await canvasVisibles() };
+ok('ocupación: seis tarjetas', informe.pestanas.ocupacion.stats.length === 6, String(informe.pestanas.ocupacion.stats.length));
+ok('ocupación: un gráfico (con reservas) o ninguno', informe.pestanas.ocupacion.canvas <= 1, String(informe.pestanas.ocupacion.canvas));
+const celdas = await page.$$eval('[data-occupancy-heatmap] td', (tds) => tds.map((td) => td.textContent?.trim() ?? ''));
+ok('ocupación: el mapa de calor escribe el % en cada celda (o «—» sin franjas)', celdas.length > 0 && celdas.every((t) => /^\d{1,3} %$/.test(t) || t === '—'), `${celdas.length} celdas · ${celdas.slice(0, 6).join(' | ')}`);
+ok('ocupación: cada celda lleva su tooltip', await page.$$eval('[data-occupancy-heatmap] td', (tds) => tds.every((td) => (td.getAttribute('title') ?? '') !== '')));
+await captura('escritorio-ocupacion');
+await bajaHasta('Cuándo se llena: día de la semana y hora');
+await captura('escritorio-ocupacion-mapa');
 
 // 4. Clientes: 11 tarjetas (registros 3 · puerta 8), 3 gráficos (la serie, las horas, el anillo) y su desglose.
 await abrirPestana('Clientes', 'Registros y puerta, al detalle');
@@ -255,15 +271,16 @@ ok('las tablas de registros y puerta', informe.tablas.includes('Cómo se registr
 ok('las tablas de la conversión', ['Paso a paso', 'Dónde se quedan', 'Por primer toque', 'Páginas de entrada', 'Contacto'].every((t) => informe.tablas.includes(t)), informe.tablas.join(' · '));
 ok('las tablas de la fiesta', ['El dinero de después de reservar', 'Por complemento', 'La invitación y el justificante', 'Tiempos', 'Los invitados: dispositivo e idioma'].every((t) => informe.tablas.includes(t)), informe.tablas.join(' | '));
 ok('las tablas de las encuestas', ['Por encuesta', 'Notas bajas frente al resto'].every((t) => informe.tablas.includes(t)), informe.tablas.join(' · '));
-ok('catorce o quince gráficos en total (el de las encuestas solo con respuestas)', informe.canvas === 14 + informe.pestanas.encuestas.canvas, String(informe.canvas));
-const todasLasStats = [...informe.pestanas.dinero.stats, ...informe.pestanas.clientes.stats, ...informe.pestanas.conversion.stats, ...informe.pestanas.fiestas.stats, ...informe.pestanas.encuestas.stats];
+// Los 14 fijos, más el de las encuestas y el de la anticipación (la T2), cada uno solo con datos.
+ok('catorce a dieciséis gráficos en total (los de encuestas y anticipación solo con datos)', informe.canvas === 14 + informe.pestanas.encuestas.canvas + informe.pestanas.ocupacion.canvas, String(informe.canvas));
+const todasLasStats = [...informe.pestanas.dinero.stats, ...informe.pestanas.ocupacion.stats, ...informe.pestanas.clientes.stats, ...informe.pestanas.conversion.stats, ...informe.pestanas.fiestas.stats, ...informe.pestanas.encuestas.stats];
 ok('ninguna tarjeta vacía', todasLasStats.every((s) => s.label !== '' && s.value !== ''));
 ok('la pestaña viaja en la URL', page.url().includes('pestana=surveys'), page.url());
 
 // T2d: el botón del CSV (el admin tiene `reports.export` por `Gate::before`) y la descarga de verdad, con la
 // sesión del navegador: estado, tipo, el BOM que abre bien la hoja de cálculo y la línea de comparación (T2f).
 ok('el botón «Descargar CSV»', await page.getByText('Descargar CSV').count() > 0);
-for (const informeCsv of ['money', 'customers', 'funnel', 'parties', 'surveys']) {
+for (const informeCsv of ['money', 'occupancy', 'customers', 'funnel', 'parties', 'surveys']) {
     const csv = await page.request.get(`${BASE}/admin/analitica/csv?report=${informeCsv}&period=this_month&compare=year_ago`);
     const cuerpo = await csv.text();
     ok(`CSV «${informeCsv}»`, csv.status() === 200 && (csv.headers()['content-type'] ?? '').startsWith('text/csv') && cuerpo.startsWith('﻿') && cuerpo.includes('Resumen') && cuerpo.includes('Comparado con'), `${csv.status()} ${csv.headers()['content-type'] ?? ''} ${cuerpo.length} B`);
@@ -288,6 +305,18 @@ await page.evaluate(() => window.scrollTo(0, 0));
 await captura('movil-fiestas');
 await bajaHasta('El embudo: reservas');
 await captura('movil-fiestas-graficos');
+// La T2 (`#758`): el mapa de calor es una tabla ancha; en móvil se desplaza DENTRO de su caja, sin mover la página.
+await page.getByRole('tab', { name: 'Ocupación' }).first().click();
+await page.waitForTimeout(500);
+await page.evaluate(() => window.scrollTo(0, 0));
+await captura('movil-ocupacion');
+await bajaHasta('Cuándo se llena: día de la semana y hora');
+await captura('movil-ocupacion-mapa');
+const mapaDesborda = await page.evaluate(() => {
+    const caja = document.querySelector('[data-occupancy-heatmap]');
+    return caja ? { propio: caja.scrollWidth > caja.clientWidth, pagina: document.documentElement.scrollWidth } : null;
+});
+ok('ocupación en móvil: el mapa se desplaza en su caja y no en la página', mapaDesborda !== null && mapaDesborda.pagina <= 390, JSON.stringify(mapaDesborda));
 const anchoDoc = await page.evaluate(() => document.documentElement.scrollWidth);
 ok('sin scroll horizontal en móvil', anchoDoc <= 390, String(anchoDoc));
 

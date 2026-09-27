@@ -100,6 +100,22 @@ class AnalyticsEventsTest extends ApiTestCase
     }
 
     /**
+     * **La demanda sin hueco llega entera** (`analitica-para-decidir.md` §4.8.ter, la T2; `#758`): el cajón manda
+     * `availability_missing` con el producto como cadena y el mes `YYYY-MM`, y el libro lo guarda tal cual. El filtro de
+     * datos personales cuenta cifras (un teléfono son nueve o más): un mes tiene seis y no puede vaciar el evento, o la
+     * tarjeta «Demanda sin hueco» se quedaría a cero sin que nada fallara.
+     */
+    public function test_the_missing_demand_event_reaches_the_book_with_its_product_and_month(): void
+    {
+        $this->lote([$this->event('availability_missing', ['product' => '12', 'month' => '2026-09'], '/entradas')])
+            ->assertStatus(202)
+            ->assertValidRequest()
+            ->assertExactJson(['accepted' => 1, 'rejected' => []]);
+
+        $this->assertSame(['product' => '12', 'month' => '2026-09'], AnalyticsEvent::query()->where('name', 'availability_missing')->sole()->props);
+    }
+
+    /**
      * **Por evento, no por lote** (spec §7.1, producto-3): lo válido entra, lo inválido vuelve con su
      * índice y su motivo, y el `page_viewed` con la campaña sobrevive a un rótulo mal escrito a su lado.
      */

@@ -12,6 +12,7 @@ use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\Analytics\Visitor;
 use App\Filament\Pages\AnalyticsPage;
 use App\Filament\Pages\Dashboard;
+use App\Filament\Widgets\Analytics\AnticipationChart;
 use App\Filament\Widgets\Analytics\CategoryChart;
 use App\Filament\Widgets\Analytics\CustomersBreakdownWidget;
 use App\Filament\Widgets\Analytics\CustomersSeriesChart;
@@ -27,6 +28,9 @@ use App\Filament\Widgets\Analytics\MoneyCustomersWidget;
 use App\Filament\Widgets\Analytics\MoneyOverviewWidget;
 use App\Filament\Widgets\Analytics\MoneyProductsChart;
 use App\Filament\Widgets\Analytics\MoneySeriesChart;
+use App\Filament\Widgets\Analytics\OccupancyBreakdownWidget;
+use App\Filament\Widgets\Analytics\OccupancyHeatmapWidget;
+use App\Filament\Widgets\Analytics\OccupancyOverviewWidget;
 use App\Filament\Widgets\Analytics\PagesWidget;
 use App\Filament\Widgets\Analytics\PartiesBreakdownWidget;
 use App\Filament\Widgets\Analytics\PartiesFunnelChart;
@@ -162,6 +166,11 @@ class AnalyticsPageTest extends TestCase
         MoneyChannelsChart::class,
         MoneyCustomersWidget::class,
         MoneyBreakdownWidget::class,
+        // La T2 de la analítica para decidir (`#758`): «Ocupación», tras «Dinero» (el orden de §4.1).
+        OccupancyOverviewWidget::class,
+        OccupancyHeatmapWidget::class,
+        AnticipationChart::class,
+        OccupancyBreakdownWidget::class,
         RegistrationsWidget::class,
         GateWidget::class,
         // T0c (#756): los que vuelven al parque.
@@ -219,7 +228,8 @@ class AnalyticsPageTest extends TestCase
 
         // T2f: cuatro pestañas (la de la fiesta desde la T2 de `analitica-fiesta.md`), cada widget en una sola, y las
         // tablas plegadas al final de cada una.
-        $this->assertSame(['money', 'customers', 'traffic', 'parties', 'surveys'], array_keys(AnalyticsPage::TABS));
+        $this->assertSame(['money', 'occupancy', 'customers', 'traffic', 'parties', 'surveys'], array_keys(AnalyticsPage::TABS));
+        $this->assertSame(OccupancyBreakdownWidget::class, array_last(AnalyticsPage::TABS['occupancy']));
         $this->assertSame($analytics, array_unique($analytics), 'ningún widget en dos pestañas');
         $this->assertSame(MoneyBreakdownWidget::class, array_last(AnalyticsPage::TABS['money']));
         $this->assertSame(CustomersBreakdownWidget::class, array_last(AnalyticsPage::TABS['customers']));

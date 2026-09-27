@@ -201,6 +201,34 @@ export function initialMonth(offeredDates = [], now = new Date()) {
 }
 
 /**
+ * **Los meses SIN HUECO de un producto** (`docs/specs/analitica-para-decidir.md` §4.8.ter, la T2; `DECISIONES #758`): la
+ * demanda que el parque no pudo atender, para `availability_missing`. Son el mes EN CURSO y los siguientes hasta el
+ * anterior al primero con algún día a la venta; si no hay ninguno, el en curso. Un producto con días este mes no deja
+ * ninguno: el calendario solo pasea por meses con oferta, así que lo que el cliente no llega a ver es justo esto.
+ *
+ * ⚠️ Es una MEDIDA, no una regla de venta: qué días se ofrecen lo sigue diciendo el servidor (`AFORO-02`).
+ *
+ * @param {Array<{date: string}>} offeredDates  lo que devuelve la API
+ * @param {Date} now
+ * @returns {string[]}  meses `YYYY-MM`
+ */
+export function missingMonths(offeredDates = [], now = new Date()) {
+    const current = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const first = offeredMonths(offeredDates)[0] ?? null;
+
+    if (first === null) {
+        return [current];
+    }
+
+    const months = [];
+    for (let month = current; month < first; month = shiftMonth(month, 1)) {
+        months.push(month);
+    }
+
+    return months;
+}
+
+/**
  * La TIRA de días reservables, agrupados por mes (`DECISIONES #239`).
  *
  * ⚠️ **Por qué existe, medido el 2026-08-28.** El calendario mensual pintaba **42 celdas** y abría

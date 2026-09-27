@@ -1,6 +1,6 @@
 # [SPEC] La analítica para decidir — un cuadro que se entiende, dice si va bien o mal y cubre las decisiones del operador
 
-> Estado: ✅ **aprobada por el owner el 27-09** (§7; `#755`) → ✅ **T0 y T1** · 🟦 **T2 en curso** · Última actualización: 2026-09-27 ·
+> Estado: ✅ **aprobada por el owner el 27-09** (§7; `#755`) → ✅ **T0, T1 y T2** · ⬜ **T3** · Última actualización: 2026-09-27 ·
 > Decisiones: `#755` (esta), `#754` (encuestas anónimas, su T1) · Carril: **SPA** (banda 730–759). Amplía `analitica.md`
 > (el libro, los regímenes y la T2 siguen siendo suyos).
 
@@ -16,7 +16,7 @@
   inactivas de Filament CARGAN (12 peticiones al abrir, `#736`): con siete, carga por pestaña; (4) el texto para IA
   sale a un tercero: SOLO agregados, con guarda; (5) los enlaces FIRMADOS de los correos: la marca de envío va por el
   camino de `EmailUtm` (tras firmar, ignorada al validar); (6) aperturas solo con consentimiento (`[PENDIENTE: asesoría]`).
-- **Estado**: ✅ aprobada (27-09, `#755`); T0a·T0b·T0c ✅ · **T1** ✅ (la T5 de `encuestas.md`, `#754`, `#757`) → **T2** ocupación. **Nada de lo medido se
+- **Estado**: ✅ aprobada (27-09, `#755`); T0a·T0b·T0c ✅ · **T1** ✅ (la T5 de `encuestas.md`, `#754`, `#757`) · **T2** ✅ ocupación (§4.8.ter, `#758`) → **T3** Resumen. **Nada de lo medido se
   pierde** (§4.1.bis, con guarda): se resume arriba y lo demás queda plegado o en su pestaña.
 - **Invariantes**: `RGPD-01`, `RGPD-04`, `RGPD-07`, `SEC-04`, `SUITE-01`. Dinero y aforo: solo lectura.
 
@@ -258,6 +258,82 @@ informes dejan de devolver arrays sueltos para las tarjetas (las tablas y el CSV
   ALTURAS el año pasado (cobros hasta hoy − 1 año para visitas en la ventana − 1 año); sin año anterior, frente a la
   media de las 4 semanas previas al mismo horizonte. Por semana que viene, barras «vendido ya» frente a «a estas alturas».
 
+### 4.8.ter La T2 al detalle — medido el 27-09 noche, antes de codificar (`#758`)
+
+**Medido** (BD local): la venta en taquilla SÍ entra como pedido cuando se hace desde el panel (`attribution_channel =
+panel`, 9 cobrados, con efectivo y datáfono); la que se cobre fuera del sistema no existe para el cuadro, y la tarjeta lo
+dice. `slots.capacity` = `online_capacity` en las 3.666 franjas locales (en una instalación pueden diferir: la reserva de
+taquilla). `slots.seats_taken` está MUERTA (`MODELO-DATOS.md` §6): no se usa. La zona `jump` vende entradas Y dos packs
+(sus fiestas ocupan plazas de salto, como cuenta el aforo). El tope de fiestas es un ajuste (`packs.max_per_slot` = 5,
+`packs.max_guests_per_slot` = 60) con override por zona. **`availability_missing` está en el `Contract` y NADIE lo emite**
+(0 eventos): la demanda sin hueco no tenía de dónde salir. La rejilla SE SOLAPA (`AFORO-12`): sumar franjas contaría dos
+veces; la regla es la de PRESENCIA.
+
+**`[DECIDIDO owner]` 27-09 (`#758`)**: (1) **la demanda sin hueco se mide desde ya** (el cajón la emite en esta tanda; la
+isla, plataforma, por buzón); (2) **dos cifras**: la ocupación de las ENTRADAS (plazas) y las FIESTAS por franja (fiestas
+frente al tope), nunca mezcladas.
+
+**Las definiciones** (las cierra el agente contra el objetivo —«rigurosa y clave para decidir»—, cada una en su «¿Cómo se
+calcula?»):
+- **La fuente**: `Booking\Services\OccupancyReader` (futuro) calcula, por LOTES (tres o cuatro consultas por ventana), la
+  presencia de cada punto de la rejilla con la MISMA aritmética que `SlotAvailability::occupancyMap()` (entradas: toda
+  línea principal viva de pedido PAGADO que ocupa plazas en esa zona, en cada franja cuyo inicio cae en su tramo;
+  `duration_min + extra_minutes`; nula = hasta el cierre) y que `PackAvailability::occupancyMaps()` (fiestas: su ventana con
+  la preparación si la zona la cuenta). Sin pendientes ni cestas: es lo que PASÓ. **Paridad**: tests contra los dos
+  contadores sobre fixtures con la rejilla solapada, duración ilimitada, hora extra, preparación y líneas canceladas.
+  No se tocan los ficheros del `CRITICAL_RE`.
+- **Ocupación de las entradas** = Σ presencia / Σ capacidad en los puntos de las zonas que venden entradas (sin franjas
+  cerradas), por fecha de VISITA hasta hoy. Cada punto es un momento del parque: con la rejilla de 30 min, cada media
+  hora cuenta una vez.
+- **Fiestas por franja** = Σ fiestas presentes / Σ tope, en los puntos de las zonas con packs; con tope 0 («sin tope»)
+  se enseña el recuento y no el %.
+- **Franjas llenas** = puntos con la presencia ≥ `online_capacity` (la web ya no puede vender); su **antelación** = inicio
+  del punto − el último cobro de quienes lo llenan, mediana en días.
+- **Ingreso por plaza-hora ofrecida** = lo vendido de las líneas presentes (`chargedSubtotalCents()`, visitas del periodo)
+  / plazas-hora ofrecidas (capacidad × minutos hasta el siguiente inicio de la zona y día, o hasta su fin). En euros.
+- **Anticipación** = días entre el cobro y la visita, por línea principal: mediana y reparto (el mismo día · 1–2 · 3–7 ·
+  8–30 · más de 30), por TIPO (fiesta › grupo › entrada: la regla de `PaidVisits`) y por día de la semana de la visita.
+- **Demanda sin hueco** = eventos `availability_missing` del periodo, por producto y mes. **Cuándo lo emite el cajón**: al
+  cargar la oferta de un producto, una vez por producto y mes, por cada mes desde el EN CURSO hasta el anterior al
+  primero con días (y el en curso si no hay ninguno). Regla pura en `calendar.js` con su `node --test`.
+- **La pestaña «Ocupación»** (tras «Dinero», el orden de §4.1): seis tarjetas —Ocupación de las entradas (principal),
+  Fiestas por franja, Franjas llenas, Ingreso por plaza-hora, Anticipación (mediana), Demanda sin hueco—; el mapa de calor
+  día × hora con el % escrito en cada celda; la anticipación por tipo; plegado: por hora, por zona, por producto, las
+  fiestas por zona, la anticipación por día y la demanda por producto y mes. CSV `occupancy`. Presupuesto ≤ 20 consultas;
+  `EXPLAIN` sobre un año sintético.
+
+**Cómo se construyó (27-09 noche; ✅ vista y aprobada por el owner: «buen trabajo»)**:
+- `Booking\Services\OccupancyReader`: `points()` (cada punto con su aforo, `minutes`, zona de entradas o de fiestas, sus
+  topes —leídos de `PackAvailability`, no copiados—, las plazas, las fiestas, los niños y el último cobro) y `paidLines()`
+  (las líneas principales cobradas con su visita, lo cobrado —`chargedSubtotalCents()`— y el tipo); `partyWindow()` es la
+  copia DECLARADA de la ventana privada de `PackAvailability`. `Filament\Analytics\OccupancyReport` corta por el instante
+  de la visita, separa entradas y fiestas y calcula el resto. Widgets: `OccupancyOverviewWidget` (seis tarjetas con su
+  anatomía), `OccupancyHeatmapWidget` (una TABLA: el % escrito, tooltip, cinco pasos de UN tono —el azul validado de la
+  T2f— por `color-mix()`, blanco solo sobre el paso lleno), `AnticipationChart` y `OccupancyBreakdownWidget` (siete tablas;
+  la del día × hora es la vista de tabla del mapa). Pestaña «Ocupación» tras «Dinero»; CSV `occupancy`.
+- La demanda sin hueco: `calendar.js::missingMonths()` y `sidebar/missing.js::createMissingReporter()` (una vez por
+  producto y mes en la visita; `JumpWeb.track`), llamados por `usePurchaseFlow::selectProduct()` si la oferta llegó. La
+  isla NO pasa por ahí (tiene su camino): buzón a plataforma.
+- **Medido**: en la BD local, «este mes» 57 ms y 14 consultas; un año, 62 ms y 11. Con CARGA sintética (10.000 líneas
+  cobradas en 3.666 franjas, dentro de una transacción deshecha, `probe-t2-carga.php`): `points()` 653 ms,
+  `paidLines()` 134 ms, 5 consultas. `EXPLAIN` (MySQL): las franjas por fecha van por el índice único con *skip scan*
+  (pocas zonas); las líneas entran por el índice de estado del pedido y llegan a la franja por clave primaria.
+- **Tests**: `OccupancyReaderParityTest` (3: punto a punto contra los DOS contadores del aforo con rejilla solapada,
+  ilimitada, hora extra, preparación y cancelada —y la cifra tecleada—; lo pendiente, fuera a propósito; aforo, minutos y
+  topes por punto) · `OccupancyReportTest` (6: el fixture a mano) · `calendar.test.js` +3 y `missing.test.js` (4) ·
+  `AnalyticsEventsTest` +1 (el evento llega entero: un mes tiene seis cifras y el filtro de teléfonos pide nueve) ·
+  `AnalyticsCensusTest` (+6 tarjetas, cada una con su «¿Cómo se calcula?» en es y zh_CN) · `AnalyticsPageTest`. Arnés
+  `mutar-analitica-decidir.sh`: **+16 mutaciones de la T2 (todas muerden), 71/71 + control**; su `verde()` corre también
+  los dos `node --test` del cajón. Sonda del panel 41/41. ⚠️ **No verificado en el navegador**: la línea de
+  `usePurchaseFlow::selectProduct()` que llama al reportero —el cajón local abre en la ISLA (`sidebar.shell = isla`,
+  «no deshacer sin él»)—; la regla y el evento, sí, por sus tests.
+- **Lo que enseñó**: (1) el evento de la demanda sin hueco estaba en el contrato y nadie lo emitía; (2) el selector del
+  CSV pintaba «admin.analytics.export.report.surveys» en crudo desde la T4 de las encuestas (arreglado de paso); (3) el
+  mapa de la BD local enseña horas sin franjas: NO es el lector —`SlotGenerator` «jamás toca fechas pasadas»—, es que la
+  local no corre el cron diario; lo dice la consulta directa. (4) Una mutación vieja del arnés («¿Cómo se calcula?» en
+  chino) había dejado de aplicarse desde la T1 —su ancla era la definición de la nota media, ampliada con la frase del
+  anonimato— y la T1 no corrió este arnés: al tocar un texto que un arnés usa de ancla, se corre ese arnés.
+
 ### 4.8.bis Los que VUELVEN (T0c, `#756`) — ✅ vista y aprobada por el owner (27-09: «buen trabajo»)
 
 **El owner, 27-09**: «los clientes que vuelven no los veo, o sea que se registran y vienen otro día y se escanea de nuevo su
@@ -349,7 +425,7 @@ número móvil»; y de las compras: «clientes recurrentes sí, eso me sirve». 
 |---|---|---|---|
 | T0 | **El rigor del tiempo y la anatomía** — **T0a ✅** (el tiempo, `0dc5d317`; §4.3) · **T0b ✅** (la anatomía, `6243e8d9`; §4.2) · **T0c ✅** (los que vuelven, `#756`; §4.8.bis) — las tres vistas y aprobadas por el owner | §4.3 (tramo transcurrido, mismo día de la semana) · `Metric` (futuro) con polaridad, base mínima, puntos, Wilson · las 44 tarjetas de hoy pasadas por el componente, sin datos nuevos · el censo de §4.1.bis y su guarda | test del tramo (el 27 contra el 27), de la polaridad y de la base pequeña, con su mutación · sonda |
 | T1 | **Encuestas anónimas** — ✅ (27-09, `#757`; vista y aprobada por el owner: «está perfecto, visto bueno») | `encuestas.md` §4.7 (`#754`; lo construido, su «Cómo se construyó») | las de esa spec |
-| T2 | **Ocupación y anticipación** | la pestaña, §4.8 | tests de la regla con aforo y líneas vivas · `EXPLAIN` con un año sintético · sonda · ojo |
+| T2 | **Ocupación y anticipación** — ✅ (27-09, `#758`; aprobada por el owner: «buen trabajo») | la pestaña, §4.8 y §4.8.ter | tests de la regla con aforo y líneas vivas · `EXPLAIN` con un año sintético · sonda · ojo |
 | T3 | **Resumen y la reorganización** | §4.1, §4.4–§4.7, §4.11: las siete pestañas, los objetivos, las referencias (su historia; el sector con fuentes que se traen al owner), las frases, «lo que ha cambiado», el texto para IA y su guarda, la carga por pestaña, el glosario | guardas de IA y jerga · sonda (primera cifra en la primera pantalla, peticiones al abrir) · ojo |
 | T4 | **La cartera** | §4.8 | test «a estas alturas» con fechas fijas · ojo |
 | T5 | **Marketing con coste y correos por cliente** | §4.9 | tests de la marca en enlaces firmados, del píxel con y sin consentimiento, de la oposición · `Http` y Mailpit · ojo |

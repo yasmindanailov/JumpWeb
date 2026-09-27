@@ -37,6 +37,7 @@ import { needsAssignment } from './assignment.js';
 import { STEPS, isOutcome } from './machine.js';
 import { api } from './api.js';
 import { searchIsEnabled, sectionsFrom } from './catalog.js';
+import { createMissingReporter } from './missing.js';
 import { initialQuantity } from './offer.js';
 import { nextQuantity, unitPriceToShow } from './quantity.js';
 import { t as translate } from './i18n.js';
@@ -139,6 +140,12 @@ export function usePurchaseFlow(props) {
      * con un booleano la primera en volver apagaría el velo mientras la otra sigue.
      */
     const inFlight = ref(0);
+
+    /**
+     * **La demanda sin hueco** (`missing.js`, la T2 de la analítica; `#758`): una vez por producto y mes en esta visita,
+     * por `JumpWeb.track` como los experimentos; sin tracker (o en el render del servidor) no pasa nada.
+     */
+    const reportMissing = createMissingReporter((name, props) => (typeof window !== 'undefined' ? window.JumpWeb?.track?.(name, props) : undefined));
 
     /**
      * `GET /config` tal cual llegó al montar, o `null` (T3e·5): la compra de la isla lee de ahí lo que el cajón no usa
@@ -283,10 +290,13 @@ export function usePurchaseFlow(props) {
 
         // ⚠️ La ficha y los días se piden JUNTOS, no en cadena: los dos hacen falta antes de que el
         // cliente pueda elegir nada, y encadenarlos sumaría dos esperas donde cabe una.
-        await tracked(Promise.all([
+        const [offerLoaded] = await tracked(Promise.all([
             dateStore.loadOffer({ api, productId: id }),
             catalogStore.loadProduct({ api, id }),
         ]));
+
+        // La demanda sin hueco (`#758`): solo si la oferta LLEGÓ —una red caída no es un mes lleno—.
+        if (offerLoaded) reportMissing(id, dateStore.offered);
     }
 
     async function loadDependents() {

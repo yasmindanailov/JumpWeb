@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-    buildStrip, buildWeeks, canGoNext, canGoPrev, initialMonth, monthLabel, monthOf, offeredMonths,
+    buildStrip, buildWeeks, canGoNext, canGoPrev, initialMonth, missingMonths, monthLabel, monthOf, offeredMonths,
     shiftMonth, weekdayHeaders,
 } from './calendar.js';
 
@@ -350,6 +350,22 @@ test('el nombre del día se calcula en horario LOCAL, no parseando la cadena', (
     } finally {
         process.env.TZ = original;
     }
+});
+
+// ─── La demanda sin hueco (`#758`, T2 de la analítica para decidir) ────────────────────────────────
+
+test('sin ningún día a la venta, el mes en curso es un mes sin hueco', () => {
+    assert.deepEqual(missingMonths([], new Date(2026, 8, 27)), ['2026-09']);
+});
+
+test('con días este mes no hay demanda sin hueco: el cliente ve fechas', () => {
+    assert.deepEqual(missingMonths([{ date: '2026-09-29' }, { date: '2026-10-02' }], new Date(2026, 8, 27)), []);
+});
+
+test('los meses sin días desde el en curso hasta el primero con oferta, cruzando el año', () => {
+    const offered = [{ date: '2027-02-10' }, { date: '2027-03-01' }];
+
+    assert.deepEqual(missingMonths(offered, new Date(2026, 10, 30)), ['2026-11', '2026-12', '2027-01']);
 });
 
 test('los rótulos van capitalizados y sin el punto de la abreviatura', () => {

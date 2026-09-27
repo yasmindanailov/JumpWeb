@@ -8,6 +8,7 @@ use App\Domain\Platform\Services\Analytics\Reports\Window;
 use App\Filament\Analytics\CsvExport;
 use App\Filament\Analytics\SegmentsReport;
 use App\Filament\Analytics\WindowLabel;
+use App\Filament\Widgets\Analytics\AnticipationChart;
 use App\Filament\Widgets\Analytics\CustomersBreakdownWidget;
 use App\Filament\Widgets\Analytics\CustomersSeriesChart;
 use App\Filament\Widgets\Analytics\DevicesChart;
@@ -22,6 +23,9 @@ use App\Filament\Widgets\Analytics\MoneyCustomersWidget;
 use App\Filament\Widgets\Analytics\MoneyOverviewWidget;
 use App\Filament\Widgets\Analytics\MoneyProductsChart;
 use App\Filament\Widgets\Analytics\MoneySeriesChart;
+use App\Filament\Widgets\Analytics\OccupancyBreakdownWidget;
+use App\Filament\Widgets\Analytics\OccupancyHeatmapWidget;
+use App\Filament\Widgets\Analytics\OccupancyOverviewWidget;
 use App\Filament\Widgets\Analytics\PagesWidget;
 use App\Filament\Widgets\Analytics\PartiesBreakdownWidget;
 use App\Filament\Widgets\Analytics\PartiesFunnelChart;
@@ -106,6 +110,14 @@ class AnalyticsPage extends BaseDashboard
             MoneyCustomersWidget::class,
             MoneyBreakdownWidget::class,
         ],
+        // La T2 de la analítica para decidir (`specs/analitica-para-decidir.md` §4.8.ter, `#758`): cómo de lleno está el
+        // parque, y cuándo. Tras «Dinero», el orden de §4.1; las tablas plegadas, al final como en todas.
+        'occupancy' => [
+            OccupancyOverviewWidget::class,
+            OccupancyHeatmapWidget::class,
+            AnticipationChart::class,
+            OccupancyBreakdownWidget::class,
+        ],
         'customers' => [
             RegistrationsWidget::class,
             GateWidget::class,
@@ -154,6 +166,7 @@ class AnalyticsPage extends BaseDashboard
     /** @var array<string, Heroicon> */
     private const TAB_ICONS = [
         'money' => Heroicon::OutlinedBanknotes,
+        'occupancy' => Heroicon::OutlinedTableCells,
         'customers' => Heroicon::OutlinedUsers,
         'traffic' => Heroicon::OutlinedFunnel,
         'parties' => Heroicon::OutlinedCake,

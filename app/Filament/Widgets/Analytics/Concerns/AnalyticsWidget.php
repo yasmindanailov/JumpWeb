@@ -9,6 +9,7 @@ use App\Filament\Analytics\CustomersReport;
 use App\Filament\Analytics\FunnelReport;
 use App\Filament\Analytics\Metric;
 use App\Filament\Analytics\MoneyReport;
+use App\Filament\Analytics\OccupancyReport;
 use App\Filament\Analytics\PartiesReport;
 use App\Filament\Analytics\SurveysReport;
 use App\Filament\Pages\AnalyticsPage;
@@ -112,6 +113,12 @@ trait AnalyticsWidget
     protected function surveys(): array
     {
         return SurveysReport::for($this->window(), $this->comparison());
+    }
+
+    /** El informe de la ocupación (`specs/analitica-para-decidir.md` §4.8.ter, la T2). @return array<string, mixed> */
+    protected function occupancy(): array
+    {
+        return OccupancyReport::for($this->window(), $this->comparison());
     }
 
     /** Puntos básicos → «12,3 %». */

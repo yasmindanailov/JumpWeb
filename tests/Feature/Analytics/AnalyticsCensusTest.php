@@ -16,6 +16,7 @@ use App\Filament\Pages\AnalyticsPage;
 use App\Filament\Widgets\Analytics\GateWidget;
 use App\Filament\Widgets\Analytics\MoneyCustomersWidget;
 use App\Filament\Widgets\Analytics\MoneyOverviewWidget;
+use App\Filament\Widgets\Analytics\OccupancyOverviewWidget;
 use App\Filament\Widgets\Analytics\PartiesOverviewWidget;
 use App\Filament\Widgets\Analytics\RegistrationsWidget;
 use App\Filament\Widgets\Analytics\ReturnsWidget;
@@ -64,18 +65,30 @@ class AnalyticsCensusTest extends TestCase
         ],
     ];
 
+    /**
+     * Las cifras que llegan DESPUÉS del 27-09, por informe, con su tanda: también tecleadas a mano y también en su CSV.
+     * La T2 (`#758`): las seis de «Ocupación».
+     */
+    private const CENSUS_SINCE = [
+        CsvExport::REPORT_OCCUPANCY => [
+            'Ocupación de las entradas', 'Fiestas por franja', 'Franjas llenas', 'Ingreso por plaza-hora', 'Anticipación',
+            'Demanda sin hueco',
+        ],
+    ];
+
     /** Los widgets de tarjetas del cuadro (T0b: todos pasan por `Metric`). */
     private const TILE_WIDGETS = [
         MoneyOverviewWidget::class, MoneyCustomersWidget::class, RegistrationsWidget::class, GateWidget::class,
-        ReturnsWidget::class,
+        ReturnsWidget::class, OccupancyOverviewWidget::class,
         TrafficWidget::class, PartiesOverviewWidget::class, SurveysOverviewWidget::class,
     ];
 
     /**
      * Las 44 del 27-09 y las que se añaden después, cada una con su tanda (T0c, `#756`: cinco —ya habían venido, primera
-     * vez, dos o más días, cada cuánto vuelven y repiten por la web—; cómo se acreditó la visita va como detalle).
+     * vez, dos o más días, cada cuánto vuelven y repiten por la web—; cómo se acreditó la visita va como detalle · T2,
+     * `#758`: las seis de la ocupación).
      */
-    private const TILES = 44 + 5;
+    private const TILES = 44 + 5 + 6;
 
     protected function setUp(): void
     {
@@ -92,7 +105,7 @@ class AnalyticsCensusTest extends TestCase
     {
         $this->assertSame(44, array_sum(array_map('count', self::CENSUS)), 'el censo es el del 27-09: 44 tarjetas');
 
-        foreach (self::CENSUS as $report => $labels) {
+        foreach (self::CENSUS + self::CENSUS_SINCE as $report => $labels) {
             $firstCells = array_map(static fn (array $row): string => (string) ($row[0] ?? ''), (new CsvExport)->build($report, ReportPeriod::ThisMonth->window())['rows']);
 
             foreach ($labels as $label) {

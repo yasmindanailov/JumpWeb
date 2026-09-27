@@ -12,7 +12,7 @@
 set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
-FILTER='ReportPeriodTest|MoneyReportTest|WindowLabelTest|AnalyticsPageTest|MetricTest|AnalyticsCensusTest|FunnelReportTest|PartiesReportTest|CustomersReportTest|GateSurveyTest|ValidarRegistroProfileTest|GateVisitsTest'
+FILTER='ReportPeriodTest|MoneyReportTest|WindowLabelTest|AnalyticsPageTest|MetricTest|AnalyticsCensusTest|FunnelReportTest|PartiesReportTest|CustomersReportTest|GateSurveyTest|ValidarRegistroProfileTest|GateVisitsTest|OccupancyReaderParityTest|OccupancyReportTest'
 RUN="docker compose exec -u sail -T laravel.test php artisan test --filter=${FILTER}"
 
 TMP="$(mktemp -d)"
@@ -33,12 +33,18 @@ FICHEROS=(
     app/Livewire/Admin/Puerta/ValidarRegistro.php
     app/Domain/Identity/Services/GateVisits.php
     app/Filament/Widgets/Analytics/GateWidget.php
+    app/Domain/Booking/Services/OccupancyReader.php
+    app/Filament/Analytics/OccupancyReport.php
+    app/Filament/Widgets/Analytics/OccupancyHeatmapWidget.php
+    resources/js/sidebar/calendar.js
+    resources/js/sidebar/missing.js
 )
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$TMP/$(basename "$f")" "$f"; touch "$f"; done; }
 trap 'restaurar; rm -rf "$TMP"' EXIT
 for f in "${FICHEROS[@]}"; do cp "$f" "$TMP/$(basename "$f")"; done
 
-verde() { $RUN >/dev/null 2>&1; }
+# La T2 (`#758`) añade dos módulos de JS del cajón (la demanda sin hueco): su red es `node --test`, no la suite.
+verde() { $RUN >/dev/null 2>&1 && docker compose exec -u sail -T laravel.test node --test resources/js/sidebar/calendar.test.js resources/js/sidebar/missing.test.js >/dev/null 2>&1; }
 
 if ! verde; then
     echo '✗ la base NO está verde antes de mutar: el veredicto de abajo no valdría nada.' >&2
@@ -276,7 +282,7 @@ mutar "los widgets del cuadro vuelven a sondear cada 5 s" "$AW" \
     }"
 
 mutar "una cifra pierde su «¿Cómo se calcula?» en chino" "lang/zh_CN/admin.php" \
-  "                'scale_mean' => '本时段回答中第一个评分题（1 到 5）的平均分。'," \
+  "                'scale_mean' => '本时段回答中第一个评分题（1 到 5）的平均分。回答是匿名的：少于 5 条时不显示平均分。'," \
   ''
 
 # ── T0c · LOS QUE VUELVEN (§4.8.bis, #756) ────────────────────────────────────────────────────
@@ -334,6 +340,92 @@ mutar "las visitas de antes, sin origen, dejan de decirse" "app/Filament/Widgets
 mutar "los compradores se comparan consigo mismos y no con el periodo anterior" "app/Filament/Analytics/MoneyReport.php" \
   "'previous' => \$this->buyerCounts(\$baseline, \$this->buyerRows(\$baseline))," \
   "'previous' => \$this->buyerCounts(\$window, \$this->buyerRows(\$window)),"
+
+# ── La T2 (`#758`): la ocupación con la regla del aforo, dos cifras, lo que ya pasó, y la demanda sin hueco ──────
+OR=app/Domain/Booking/Services/OccupancyReader.php
+OP=app/Filament/Analytics/OccupancyReport.php
+
+mutar "el lector cuenta lo PENDIENTE como ocupación (no es lo que pasó)" "$OR" \
+  "            ->join('orders as o', 'o.id', '=', 'i.order_id')
+            ->where('o.status', Order::STATUS_PAID)
+            ->whereNull('i.cancelled_at')
+            ->whereBetween('s.date', [\$from, \$to])
+            ->select(['s.zone_id', 's.date', 's.start_time as entry_start'," \
+  "            ->join('orders as o', 'o.id', '=', 'i.order_id')
+            ->whereNull('i.cancelled_at')
+            ->whereBetween('s.date', [\$from, \$to])
+            ->select(['s.zone_id', 's.date', 's.start_time as entry_start',"
+
+mutar "una línea CANCELADA sigue ocupando" "$OR" \
+  "            ->where('o.status', Order::STATUS_PAID)
+            ->whereNull('i.cancelled_at')
+            ->whereBetween('s.date', [\$from, \$to])
+            ->select(['s.zone_id', 's.date', 's.start_time as entry_start'," \
+  "            ->where('o.status', Order::STATUS_PAID)
+            ->whereBetween('s.date', [\$from, \$to])
+            ->select(['s.zone_id', 's.date', 's.start_time as entry_start',"
+
+mutar "la HORA EXTRA no alarga la ocupación" "$OR" \
+  "->selectRaw('(t.duration_min + i.extra_minutes) as duration_min')" \
+  "->selectRaw('(t.duration_min + 0) as duration_min')"
+
+mutar "el tramo de una entrada incluye su FIN (una franja de más)" "$OR" \
+  'if ($start < $entry || ($end !== null && $start >= $end)) {' \
+  'if ($start < $entry || ($end !== null && $start > $end)) {'
+
+mutar "la PREPARACIÓN de una fiesta no cuenta aunque la zona la cuente" "$OR" \
+  "\$zone['prep_blocks'] ?? true);" \
+  "false);"
+
+mutar "cada punto representa su franja entera y no la media hora hasta el siguiente" "$OR" \
+  '? (string) $next->start_time' \
+  '? (string) $slot->end_time'
+
+mutar "un pack cuenta como grupo (la regla del tipo, invertida)" "$OR" \
+  "'kind' => \$row->type === TicketType::TYPE_PACK ? 'party' : ((bool) \$row->tiered ? 'group' : 'entry')," \
+  "'kind' => \$row->type === TicketType::TYPE_PACK ? 'group' : ((bool) \$row->tiered ? 'party' : 'entry'),"
+
+mutar "una franja CERRADA cuenta como ofrecida, y las zonas de fiestas se suman a las entradas" "$OP" \
+  "            if (! \$p['entry_zone'] || \$p['closed']) {
+                continue;
+            }
+            \$entryZones[\$p['zone_id']] = true;" \
+  "            if (false) {
+                continue;
+            }
+            \$entryZones[\$p['zone_id']] = true;"
+
+mutar "lo que aún no ha pasado (esta tarde) cuenta" "$OP" \
+  "return array_values(array_filter(\$rows, static fn (array \$row): bool => \$window->contains(CarbonImmutable::parse(\$row['date'].' '.\$row['start'], \$window->timezone))));" \
+  "return array_values(\$rows);"
+
+mutar "la antelación del llenado redondea hacia arriba" "$OP" \
+  'max(0, (int) floor(CarbonImmutable::parse($p' \
+  'max(0, (int) ceil(CarbonImmutable::parse($p'
+
+mutar "un cobro apuntado DESPUÉS de la visita da antelación negativa" "$OP" \
+  '$days = max(0, (int) $paidOn->diffInDays($visit, false));' \
+  '$days = (int) $paidOn->diffInDays($visit, false);'
+
+mutar "el tope de fiestas deja de ser el de la zona" "$OP" \
+  "\$out['cap'] += \$p['max_parties'];" \
+  "\$out['cap'] += 1;"
+
+mutar "«desde cuándo» se mide sale del último evento y no del primero" "$OP" \
+  "->where('name', 'availability_missing')->min('received_at');" \
+  "->where('name', 'availability_missing')->max('received_at');"
+
+mutar "el mapa de calor parte los pasos en 25 puntos (el lleno deja de verse)" "app/Filament/Widgets/Analytics/OccupancyHeatmapWidget.php" \
+  'intdiv(min($bp, 9999), 2000)' \
+  'intdiv(min($bp, 9999), 2500)'
+
+mutar "sin ningún día a la venta no hay demanda sin hueco (JS)" "resources/js/sidebar/calendar.js" \
+  '        return [current];' \
+  '        return [];'
+
+mutar "la demanda sin hueco se repite al reabrir el producto (JS)" "resources/js/sidebar/missing.js" \
+  '            if (seen.has(key)) continue;' \
+  '            if (false) continue;'
 
 # ── El CONTROL: tocar un comentario no puede poner nada en rojo ─────────────────────────────────
 control "un comentario de Window" "$W" \

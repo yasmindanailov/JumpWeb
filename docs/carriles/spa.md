@@ -2,7 +2,7 @@
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb` a secas; la instancia al lado, en
 > `~/proyectos/instancias/playjump`, clon de `github.com/yasmindanailov/instancia-playjump`, montada el 25-09) ·
-> Banda: **730–759** (700–729 agotada el 20-09) · Último usado: **`#757`** · La banda está dada de alta en la tabla de
+> Banda: **730–759** (700–729 agotada el 20-09) · Último usado: **`#758`** · La banda está dada de alta en la tabla de
 > `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: **`analitica-para-decidir.md`
 > §0** (la tarea en curso, `#755`) · `encuestas.md` §0 y §4.7 (`#754`) · `analitica.md` §0 y §4.5 · `isla-y-landing-nueva.md`
 > §4.11 · `celebracion-e-invitacion.md` §0 · `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 ·
@@ -19,7 +19,10 @@
   encuestas anónimas** (`#754`) **✅ con siete ajustes (`#757`), vista y aprobada por el owner el 27-09 noche** («está
   perfecto, visto bueno»): participación y respuesta sin clave común, el sello cifrado de 90 días y
   `surveys:resolve-returns`, el mínimo de 5, «Notas bajas y si volvieron», la 360 sin encuestas, el aviso, el export
-  1.46.0; el detalle, `encuestas.md` §4.7 «Cómo se construyó». **Sigue la T2: ocupación y anticipación** (§4.8).
+  1.46.0; el detalle, `encuestas.md` §4.7 «Cómo se construyó». **T2, ocupación y anticipación, ✅** (27-09 noche, `#758`,
+  aprobada por el owner: «buen trabajo»): entradas y fiestas en dos cifras, la demanda sin hueco medida desde ya, la
+  pestaña «Ocupación», el mapa de calor y el CSV `occupancy`; el detalle y lo medido, `analitica-para-decidir.md` §4.8.ter.
+  **Sigue la T3: Resumen y la reorganización** (§4.1, §4.4–§4.7, §4.11).
 - ▶ **LA FIESTA DEL SISTEMA NUEVO ES MÍA (`#765`, `[DECIDIDO owner]` 25-09)**: la lista de invitados, la invitación con
   su recibo y la autorización, vestidas con «Saltia» para la v2.0.0, en paralelo con la web pública. El traspaso,
   `isla-y-landing-nueva.md` §4.11; el censo HAY/FALTA, el método y las tandas, `specs/fiesta-sistema-nuevo.md` (§1.4,
@@ -70,10 +73,16 @@
    (`#754` + `#757`; `deploy.sh` espera 11; contrato 1.46.0; la BD local migrada y re-sembrada con
    `probe-ojo-anonimas.php`, `CARRIL-SPA.md` §8·14). Los CRUCES por franja, tipo de visita y primera visita (datos ya
    guardados) llegan con la T8; el cruce por EMPLEADO, `[PENDIENTE: owner]` (preguntado el 27-09, sin respuesta aún). →
-   ▶ **T2 ocupación y anticipación** (§4.8: ocupación = plazas vendidas / aforo ofrecido, mapa de calor, franjas llenas,
-   ingreso por plaza, demanda sin hueco, anticipación por tipo; ⚠️ a medir PRIMERO si la venta en taquilla entra como
-   pedido, y el `EXPLAIN` con un año sintético) → T3 Resumen → T4 cartera → T5 marketing y correos → T6 cohortes → T7
-   pérdidas → T8 satisfacción (§4.12).
+   ✅ **T2 ocupación y anticipación** (§4.8.ter, `#758`) → ▶ **T3 Resumen y la reorganización** (§4.1 las siete pestañas,
+   §4.4 referencias —su historia; el SECTOR solo con fuentes que se traen AL OWNER antes de sembrar nada—, §4.5 «lo que ha
+   cambiado», §4.6 frases, §4.7 el texto para IA con su guarda sin PII ni celdas < 5, §4.11 carga por pestaña, glosario y
+   selector nativo en móvil; spec primero si la forma cambia) → T4 cartera → T5 marketing y correos → T6 cohortes → T7
+   pérdidas → T8 satisfacción (§4.12). **Trampas de la T2**: `OccupancyReader` COPIA la aritmética del aforo (los dos
+   contadores viven en el `CRITICAL_RE`): si cambia `occupancyMap()` o la ventana de un pack, cambia aquí
+   —`OccupancyReaderParityTest` lo caza—; la local no corre el cron de franjas y su rejilla del pasado es escasa (no es el
+   lector); ⚠️ **no verificado en navegador** que el cajón emita `availability_missing` (la local abre la ISLA,
+   `sidebar.shell = isla`, «no deshacer sin él»): verlo cuando el owner apague la isla. Al tocar un texto que un arnés usa
+   de ancla, se corre ESE arnés (la T1 dejó una mutación sin aplicar).
    Cada tanda, al ojo del owner en vivo ANTES del commit. **Trampas de hoy**: una tarjeta nueva va por `metric()` con su
    `Polarity`, su «¿Cómo se calcula?» (es y zh_CN), `TILES` del censo y el recuento de la sonda; el arnés
    `mutar-analitica-decidir.sh` (55, ~16 min) en segundo plano, sin medir nada mientras; tras rebasar, los dos bundles y
@@ -218,6 +227,12 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 
 ## Buzón
 
+- ❗❗ **Para plataforma (27-09 noche, la T2 de la analítica, `#758` `[DECIDIDO owner]`)**: la «demanda sin hueco» se mide
+  desde ya: el CAJÓN emite `availability_missing {product, month}` al cargar la oferta de un producto (por cada mes sin días
+  desde el en curso; una vez por producto y mes en la visita). **La isla no pasa por `selectProduct()` y no lo emite**: te
+  pido que la isla lo haga con la misma regla, sin copiarla —`sidebar/missing.js::createMissingReporter(track)` y
+  `calendar.js::missingMonths()`, puros y con sus `node --test`—, donde la isla reciba los días de un producto. Sin contrato
+  nuevo (el evento ya estaba en `Contract`). Y el cuadro gana la pestaña «Ocupación» y el CSV `occupancy` (tu hub, sin tocar).
 - ❗❗ **Para plataforma (27-09 noche, `#754`/`#757`, YA EN CÓDIGO)**: (1) `scripts/deploy.sh` espera **11** tareas (entra
   `surveys:resolve-returns`, 04:20); toqué solo esa línea y su comentario. (2) El CONTRATO **1.46.0** es mío: te respeté la
   1.45.0 reservada; `PersonalDataExport.surveys` pasa a `ExportedSurveys` `{participations, sealed_responses}`. Tu

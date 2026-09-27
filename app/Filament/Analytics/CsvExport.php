@@ -8,6 +8,8 @@ use App\Domain\Platform\Services\Money;
 use App\Filament\Widgets\Analytics\CustomersBreakdownWidget;
 use App\Filament\Widgets\Analytics\FunnelWidget;
 use App\Filament\Widgets\Analytics\MoneyBreakdownWidget;
+use App\Filament\Widgets\Analytics\OccupancyBreakdownWidget;
+use App\Filament\Widgets\Analytics\OccupancyOverviewWidget;
 use App\Filament\Widgets\Analytics\PagesWidget;
 use App\Filament\Widgets\Analytics\PartiesBreakdownWidget;
 use App\Filament\Widgets\Analytics\SourcesWidget;
@@ -42,7 +44,10 @@ final class CsvExport
     /** T4 de las encuestas (`specs/encuestas.md` §4.4): agregados sin un solo texto libre. */
     public const REPORT_SURVEYS = 'surveys';
 
-    public const REPORTS = [self::REPORT_MONEY, self::REPORT_CUSTOMERS, self::REPORT_FUNNEL, self::REPORT_PARTIES, self::REPORT_SURVEYS];
+    /** La ocupación (`specs/analitica-para-decidir.md` §4.8.ter, la T2): por el instante de la VISITA. */
+    public const REPORT_OCCUPANCY = 'occupancy';
+
+    public const REPORTS = [self::REPORT_MONEY, self::REPORT_OCCUPANCY, self::REPORT_CUSTOMERS, self::REPORT_FUNNEL, self::REPORT_PARTIES, self::REPORT_SURVEYS];
 
     public const SEPARATOR = ';';
 
@@ -119,6 +124,10 @@ final class CsvExport
                 $this->moneySummary($window, $comparison),
                 ...(new MoneyBreakdownWidget)->tablesFor($window, $comparison),
             ],
+            self::REPORT_OCCUPANCY => [
+                $this->occupancySummary($window, $comparison),
+                ...(new OccupancyBreakdownWidget)->tablesFor($window, $comparison),
+            ],
             self::REPORT_CUSTOMERS => [
                 $this->customersSummary($window, $comparison),
                 ...(new CustomersBreakdownWidget)->tablesFor($window, $comparison),
@@ -142,6 +151,32 @@ final class CsvExport
             ],
             default => throw new \InvalidArgumentException("«{$report}» no es un informe del cuadro"),
         };
+    }
+
+    /**
+     * Las seis cifras de la ocupación (la T2), con las mismas definiciones que sus tarjetas: la de las ENTRADAS y las
+     * FIESTAS por franja van por separado (`#758`).
+     *
+     * @return array{heading: string, columns: list<string>, rows: list<list<string>>}
+     */
+    private function occupancySummary(Window $window, Comparison $comparison): array
+    {
+        $r = OccupancyReport::for($window, $comparison);
+        /** @var array<string, mixed> $e */
+        $e = $r['entries'];
+        /** @var array<string, mixed> $f */
+        $f = $r['parties'];
+        $percent = static fn (int $hits, int $of): string => $of > 0 ? number_format($hits / $of * 100, 1, ',', '.').' %' : __('admin.analytics.parties.none');
+        $seatHours = (int) $e['seat_minutes'];
+
+        return $this->summary([
+            [__('admin.analytics.occupancy.entries'), $percent((int) $e['seats'], (int) $e['capacity'])],
+            [__('admin.analytics.occupancy.parties'), $f['capped'] ? $percent((int) $f['present'], (int) $f['cap']) : (string) $f['present']],
+            [__('admin.analytics.occupancy.full'), (string) $e['full']],
+            [__('admin.analytics.occupancy.revenue_per_seat_hour'), Money::format($seatHours > 0 ? (int) round((int) $e['revenue_cents'] * 60 / $seatHours) : 0)],
+            [__('admin.analytics.occupancy.anticipation'), $r['anticipation']['median'] === null ? __('admin.analytics.parties.none') : OccupancyOverviewWidget::days((int) $r['anticipation']['median'])],
+            [__('admin.analytics.occupancy.missing'), (string) $r['missing']['count']],
+        ]);
     }
 
     /** @return array{heading: string, columns: list<string>, rows: list<list<string>>} */
