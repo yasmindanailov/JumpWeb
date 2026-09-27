@@ -3,7 +3,7 @@
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
-> **820–849** (dada de alta en `DECISIONES.md` el 27-09; centena `decisiones/800-899.md`) · Último usado: **`#831`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **820–849** (dada de alta en `DECISIONES.md` el 27-09; centena `decisiones/800-899.md`) · Último usado: **`#832`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#827`) · Actualizado: **2026-09-27 noche**
 > (la primera pantalla, la conversión del zip y **la T5 de Mi cuenta, ENTERA** —T5f `#824` y los hijos por producto `#825`—, ✅).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
@@ -48,8 +48,8 @@ edad del panel—; contrato **1.45.0**; `sonda-cuenta.mjs` 250/250, arneses `mut
 T6a·2a (`#827`, la portada DECLARADA) y T6a·2b (`#828`, `#829`: `instancias/playjump/web/inicio/`, instancia `5c2b9cf`;
 guarda `scripts/sonda-portada.mjs` 20/20) y el CALENDARIO ✅ (`#830`: la tira de la isla, 14 días + «Más fechas»; la
 calculadora, dos meses a fin de mes) y la FLECHA DE «ATRÁS» ✅ (`#831`: el censo, en la spec §4.17; faltaba la de la
-compra nacida del selector). **EN MARCHA: T6b, Cumpleaños** (el censo, en la spec §4.18: T6b·1 la página sin la
-calculadora, en la instancia; T6b·2 el hecho de los días con hueco; T6b·3 la calculadora de la fiesta en la página; T6b·4
+compra nacida del selector). **EN MARCHA: T6b, Cumpleaños** (el censo, en la spec §4.18; `#832`: una página del paquete puede
+OCUPAR `/cumpleanos`, como la portada `/`, con `'ocupa' => 'cumpleanos'`; T6b·1 la página sin la calculadora, en la instancia; T6b·2 el hecho de los días con hueco; T6b·3 la calculadora de la fiesta en la página; T6b·4
 sonda y ojo del owner). La ISLA la está repensando el owner con Claude Design: no atar nada nuevo a ella en la T6b. **Para iterar con el owner** (no
 ahora): la isla «muy sola» y el «Reservar» solo en la isla del móvil (A/B propuesto: las páginas de la instancia aún no
 reciben su variante). Orden de la T6: portada, Cumpleaños, Colegios, Visítanos (SIN formulario: `/contacto` con 301) y Normas, y los 301

@@ -32,10 +32,17 @@ use Throwable;
  * puertas (`/login`, `/mi-cuenta`…) y la vuelta del banco—, así que una página no puede tomarla por su slug. La que se
  * marca como portada no tiene ruta propia: la pinta `HomeController`, con la misma vista y los mismos hechos que
  * cualquier página ({@see InstancePageController::pintar()}). Una sola: la segunda se descarta con aviso.
+ * ▶▶ **Y cualquier RUTA DEL PRODUCTO que ceda su sitio** (`'ocupa' => 'cumpleanos'`, `#832`, T6b de §4.18): la misma
+ * mano para las páginas del producto que la landing nueva sustituye conservando su dirección (la de más valor en
+ * Google). Solo las de {@see self::OCUPABLES}, porque solo sus controladores preguntan (`queOcupa`); la portada es el
+ * caso `home`. Una por ruta: la segunda se descarta con aviso.
  */
 final class InstancePages
 {
     public const FICHERO = 'config'.DIRECTORY_SEPARATOR.'paginas.php';
+
+    /** Las rutas del producto que una página del paquete puede ocupar: las que su controlador sabe cederle. */
+    public const OCUPABLES = ['home', 'cumpleanos'];
 
     private const SLUG = '/^[a-z0-9]+(?:-[a-z0-9]+)*$/';
 
@@ -60,8 +67,14 @@ final class InstancePages
     /** La página que ocupa la portada, o `null` si el paquete no declara ninguna (y `/` pinta la vista de siempre). */
     public function portada(): ?InstancePage
     {
+        return $this->queOcupa('home');
+    }
+
+    /** La página que ocupa esa ruta del producto, o `null` si ninguna (y la ruta pinta lo de siempre). */
+    public function queOcupa(string $ruta): ?InstancePage
+    {
         foreach ($this->todas() as $pagina) {
-            if ($pagina->portada) {
+            if ($pagina->ocupa === $ruta) {
                 return $pagina;
             }
         }
@@ -83,8 +96,8 @@ final class InstancePages
         }
 
         foreach ($this->todas() as $pagina) {
-            // La portada no tiene ruta propia: la sirve `/` (`HomeController`).
-            if ($pagina->portada) {
+            // La que ocupa una ruta del producto no tiene ruta propia: la sirve esa ruta (la portada, `/`).
+            if ($pagina->ocupa !== null) {
                 continue;
             }
 
@@ -125,20 +138,22 @@ final class InstancePages
         }
 
         $paginas = [];
-        $conPortada = false;
+        $ocupadas = [];
         foreach ($declaradas as $slug => $declarada) {
             $pagina = $this->validar($slug, $declarada);
             if ($pagina === null) {
                 continue;
             }
-            // Una sola portada: la primera. La segunda se descarta ENTERA (no se degrada a página suelta, que sería
-            // publicar en su slug lo que el paquete quería en `/`).
-            if ($pagina->portada && $conPortada) {
-                Log::warning('instancia: la página no se registra: ya hay otra portada', ['slug' => $pagina->slug]);
+            // Una por ruta ocupada: la primera. La segunda se descarta ENTERA (no se degrada a página suelta, que sería
+            // publicar en su slug lo que el paquete quería en esa ruta).
+            if ($pagina->ocupa !== null && isset($ocupadas[$pagina->ocupa])) {
+                Log::warning('instancia: la página no se registra: ya hay otra en la ruta que ocupa', ['slug' => $pagina->slug, 'ocupa' => $pagina->ocupa]);
 
                 continue;
             }
-            $conPortada = $conPortada || $pagina->portada;
+            if ($pagina->ocupa !== null) {
+                $ocupadas[$pagina->ocupa] = true;
+            }
             $paginas[$pagina->slug] = $pagina;
         }
 
@@ -156,6 +171,8 @@ final class InstancePages
             ! in_array($declarada['frecuencia'] ?? 'weekly', self::FRECUENCIAS, true) => 'la frecuencia del sitemap no es válida',
             ! is_numeric($declarada['prioridad'] ?? '0.5') || (float) ($declarada['prioridad'] ?? 0.5) < 0 || (float) ($declarada['prioridad'] ?? 0.5) > 1 => 'la prioridad del sitemap no es válida',
             ! is_bool($declarada['portada'] ?? false) => 'la marca de portada no es verdadero o falso',
+            isset($declarada['ocupa']) && ! in_array($declarada['ocupa'], self::OCUPABLES, true) => 'la ruta que ocupa no es una que el producto ceda',
+            ($declarada['portada'] ?? false) === true && isset($declarada['ocupa']) && $declarada['ocupa'] !== 'home' => 'es la portada y ocupa otra ruta',
             default => null,
         };
 
@@ -166,14 +183,15 @@ final class InstancePages
         }
 
         /** @var string $slug */
-        /** @var array{vista: string, hechos?: list<string>, prioridad?: string|float, frecuencia?: string, portada?: bool} $declarada */
+        /** @var array{vista: string, hechos?: list<string>, prioridad?: string|float, frecuencia?: string, portada?: bool, ocupa?: string} $declarada */
         return new InstancePage(
             slug: $slug,
             vista: $declarada['vista'],
             hechos: array_values(array_unique($declarada['hechos'] ?? [])),
             prioridad: number_format((float) ($declarada['prioridad'] ?? 0.5), 1, '.', ''),
             frecuencia: $declarada['frecuencia'] ?? 'weekly',
-            portada: $declarada['portada'] ?? false,
+            // `'portada' => true` es el caso `home` de `ocupa` (`#827` antes que `#832`).
+            ocupa: ($declarada['portada'] ?? false) ? 'home' : ($declarada['ocupa'] ?? null),
         );
     }
 }

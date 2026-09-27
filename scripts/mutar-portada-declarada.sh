@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Arnés de mutación de LA PORTADA DECLARADA (T6a de `specs/isla-y-landing-nueva.md` §4.17): una página del paquete marcada
 # `'portada' => true` la pintan `/` y sus puertas (`HomeController`), nunca su slug; una sola; la vuelta del banco se
-# consume igual; y las puertas de entrar, sin indexar.
+# consume igual; y las puertas de entrar, sin indexar. Y desde `#832` (T6b, §4.18), cualquier RUTA DEL PRODUCTO que ceda
+# su sitio (`'ocupa' => 'cumpleanos'`, `EventsController`): solo las de la lista, una página por ruta.
 #
 # Reglas de la casa dentro (`/mutar`): verde antes de mutar · veredicto por código de salida · ancla ÚNICA · comprobar
 # que la mutación SE APLICÓ · restaurar por COPIA DE SEGURIDAD (por ruta entera) y `touch`, nunca `git checkout`.
@@ -15,6 +16,7 @@ PHP="docker compose exec -u sail -T laravel.test php artisan test --filter=Insta
 TMP="$(mktemp -d)"
 FICHEROS=(
     app/Http/Controllers/HomeController.php
+    app/Http/Controllers/EventsController.php
     app/Http/Controllers/InstancePageController.php
     app/Http/Instancia/InstancePages.php
 )
@@ -59,6 +61,7 @@ mutar() {
 }
 
 HC=app/Http/Controllers/HomeController.php
+EC=app/Http/Controllers/EventsController.php
 PC=app/Http/Controllers/InstancePageController.php
 IP=app/Http/Instancia/InstancePages.php
 
@@ -67,14 +70,20 @@ mutar "las puertas de entrar se indexan" "$HC" "route('home'), AccountDoor::isAu
 mutar "la portada se pinta ANTES de consumir la vuelta del banco" "$HC" "        \$this->maybeConsumeRedsysReturn(\$request);
 
         /*" "        /*"
-mutar "la portada tiene también ruta propia" "$IP" "            if (\$pagina->portada) {
+mutar "la página que ocupa una ruta tiene también ruta propia" "$IP" "            if (\$pagina->ocupa !== null) {
                 continue;
             }
 
             if (isset(\$ocupadas" "            if (isset(\$ocupadas"
-mutar "dos portadas" "$IP" "if (\$pagina->portada && \$conPortada) {" "if (false) {"
+mutar "dos páginas en la misma ruta" "$IP" "if (\$pagina->ocupa !== null && isset(\$ocupadas[\$pagina->ocupa])) {" "if (false) {"
 mutar "cualquier cosa vale como marca" "$IP" "! is_bool(\$declarada['portada'] ?? false) => 'la marca de portada no es verdadero o falso'," ""
 mutar "la vista no recibe su URL de portada" "$HC" "InstancePageController::pintar(\$portada, \$hechos, route('home')," "InstancePageController::pintar(\$portada, \$hechos, route(\$portada->ruta())"
+# `#832`: la ruta que ocupa.
+mutar "/cumpleanos no pinta la página que la ocupa" "$EC" "if ((\$pagina = \$this->paginas->queOcupa('cumpleanos')) !== null) {" "if (false) {"
+mutar "cualquier ruta vale" "$IP" "isset(\$declarada['ocupa']) && ! in_array(\$declarada['ocupa'], self::OCUPABLES, true) => 'la ruta que ocupa no es una que el producto ceda'," ""
+mutar "la portada puede ocupar otra ruta" "$IP" "(\$declarada['portada'] ?? false) === true && isset(\$declarada['ocupa']) && \$declarada['ocupa'] !== 'home' => 'es la portada y ocupa otra ruta'," ""
+mutar "la marca de portada ya no es el caso home" "$IP" "ocupa: (\$declarada['portada'] ?? false) ? 'home' : (\$declarada['ocupa'] ?? null)," "ocupa: \$declarada['ocupa'] ?? null,"
+mutar "queOcupa da cualquier página que ocupe algo" "$IP" "if (\$pagina->ocupa === \$ruta) {" "if (\$pagina->ocupa !== null) {"
 
 echo
 echo "$muerden de $total mutantes muertos"

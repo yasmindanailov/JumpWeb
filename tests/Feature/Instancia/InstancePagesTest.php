@@ -173,6 +173,61 @@ BLADE);
     }
 
     /**
+     * **Una página que OCUPA una ruta del producto** (`#832`, T6b de §4.18): `/cumpleanos` es del producto
+     * (`EventsController`); la página declarada con `'ocupa' => 'cumpleanos'` la pinta ahí —con sus hechos y la misma
+     * mano que cualquier página—, conserva la dirección y nunca se publica en su slug ni en el sitemap con él.
+     */
+    public function test_a_page_that_occupies_a_product_route_is_served_there_and_never_at_its_slug(): void
+    {
+        File::put($this->paquete.'/web/fiesta.blade.php', <<<'BLADE'
+<h1>El cumpleaños nuevo</h1>
+<p id="url">{{ $pagina['url'] }}</p>
+<script type="application/json" id="hechos">{!! json_encode($hechos) !!}</script>
+BLADE);
+        $this->declarar([
+            'kids' => ['vista' => 'kids', 'hechos' => []],
+            'fiesta' => ['vista' => 'fiesta', 'hechos' => ['site'], 'ocupa' => 'cumpleanos'],
+        ]);
+
+        $this->get('/cumpleanos')->assertOk()->assertSee('El cumpleaños nuevo')->assertSee('<p id="url">'.route('cumpleanos').'</p>', false);
+        $this->assertSame($this->getJson('/api/v1/site')->assertOk()->json(), $this->hechosDe('/cumpleanos')['site']);
+        $this->assertSame('fiesta', app(InstancePages::class)->queOcupa('cumpleanos')?->slug);
+        // No es la portada: `/` sigue con la de siempre.
+        $this->assertNull(app(InstancePages::class)->portada());
+        $this->get('/')->assertOk()->assertDontSee('El cumpleaños nuevo');
+
+        $this->assertFalse(Route::has('instancia.fiesta'));
+        $this->get('/fiesta')->assertNotFound();
+        $this->get('/sitemap.xml')->assertOk()->assertDontSee('/fiesta');
+        $this->get('/kids')->assertOk()->assertSee('Saltan hasta caer rendidos');
+    }
+
+    /**
+     * **Solo las rutas que el producto CEDE, y una página por ruta**: una ruta fuera de la lista (`contacto`, cuyo
+     * controlador no pregunta) deja la página fuera; la segunda que ocupa la misma, también; y la portada que dice
+     * ocupar otra ruta, igual. Las demás, en pie.
+     */
+    public function test_only_the_routes_the_product_yields_and_one_page_each(): void
+    {
+        $this->declarar([
+            'una' => ['vista' => 'kids', 'hechos' => [], 'ocupa' => 'cumpleanos'],
+            'otra' => ['vista' => 'kids', 'hechos' => [], 'ocupa' => 'cumpleanos'],
+            'ajena' => ['vista' => 'kids', 'hechos' => [], 'ocupa' => 'contacto'],
+            'rara' => ['vista' => 'kids', 'hechos' => [], 'portada' => true, 'ocupa' => 'cumpleanos'],
+            'kids' => ['vista' => 'kids', 'hechos' => []],
+        ]);
+
+        $this->assertSame(['una', 'kids'], array_keys(app(InstancePages::class)->todas()));
+        $this->assertSame('una', app(InstancePages::class)->queOcupa('cumpleanos')?->slug);
+        $this->assertNull(app(InstancePages::class)->queOcupa('contacto'));
+        $this->assertNull(app(InstancePages::class)->portada());
+
+        // La portada con `ocupa => home` es la misma que con la marca.
+        $this->declarar(['inicio' => ['vista' => 'kids', 'hechos' => [], 'portada' => true, 'ocupa' => 'home']]);
+        $this->assertSame('inicio', app(InstancePages::class)->portada()?->slug);
+    }
+
+    /**
      * **La vuelta del banco se consume también con la portada declarada**: el pase de un solo uso de `RedsysReturnController`
      * deja el desenlace en la sesión para que la compra lo enseñe, igual que con la portada de siempre.
      */

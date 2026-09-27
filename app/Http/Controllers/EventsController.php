@@ -5,11 +5,13 @@ namespace App\Http\Controllers;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Services\BirthdayComparison;
 use App\Domain\Content\Services\LandingAddonPresenter;
+use App\Http\Instancia\InstancePages;
 use App\Http\Instancia\InstanceViews;
+use App\Http\Instancia\PageFacts;
 
 class EventsController extends Controller
 {
-    public function __construct(private readonly InstanceViews $instancia) {}
+    public function __construct(private readonly InstanceViews $instancia, private readonly InstancePages $paginas) {}
 
     /**
      * `/cumpleanos` (`DECISIONES #528`, artboard `Cumpleanos Pagina PJP`): la comparativa de los
@@ -18,9 +20,16 @@ class EventsController extends Controller
      * ⚠️ Desde `#659` (F5 · T2b) la vista vive en la INSTANCIA (`web/cumpleanos.blade.php`) y el producto
      * sirve `anfitrion/cumpleanos` sin paquete. Lo que se pasa es el CONTRATO de la vista
      * (`InstanceViews::CONTRATO_DE_VISTAS`), y todo va COMPUESTO: la landing no calcula un precio.
+     * ▶ Desde `#832` (T6b de `isla-y-landing-nueva.md` §4.18): si el paquete declara una página que OCUPA esta ruta
+     * (`'ocupa' => 'cumpleanos'`), la pinta ella, con sus hechos y la misma mano que cualquier página; la dirección se
+     * conserva. Sin ella, lo de siempre.
      */
-    public function __invoke(BirthdayComparison $comparison)
+    public function __invoke(BirthdayComparison $comparison, PageFacts $hechos)
     {
+        if (($pagina = $this->paginas->queOcupa('cumpleanos')) !== null) {
+            return InstancePageController::pintar($pagina, $hechos, route('cumpleanos'));
+        }
+
         // Landing de packs: VISIBLE en la web (`is_active`) Y en venta online (`sellable()`).
         // Tras el desacople is_active⊥is_sellable (P3) se exigen AMBOS: no anuncia un pack oculto
         // de la web ni uno no vendible (coherencia CTA⟺catálogo, #210; deep-link `show-packs`).

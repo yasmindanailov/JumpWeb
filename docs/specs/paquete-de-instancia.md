@@ -233,6 +233,14 @@ layouts (`site/body-compra`, `#785`); y `pagina.noindex` es verdadero en las pue
 portada declarada, `/` pinta la vista de siempre con su contrato. `CONTRATO` no sube (aditivo). Lo vigilan
 `InstancePagesTest` (tres casos) y `scripts/mutar-portada-declarada.sh` (7/7).
 
+▶ **Y cualquier ruta del producto que ceda su sitio** (`[DECIDIDO]` 2026-09-27, `#832`; T6b de `isla-y-landing-nueva.md`
+§4.18): `'ocupa' => '<ruta>'` —la portada es el caso `home`, y `'portada' => true` sigue valiendo—. Solo las de
+`InstancePages::OCUPABLES` (hoy `home` y `cumpleanos`), porque solo sus controladores preguntan
+(`InstancePages::queOcupa`, en `HomeController` y `EventsController`); una ruta fuera de la lista, una segunda página en
+la misma o una portada que ocupa otra dejan esa página fuera con aviso. Conserva la dirección (la de más valor en Google),
+sin 301. Una ruta que se quiera ceder entra en la lista con su controlador en el mismo cambio. `InstancePagesTest` +2 y
+el arnés, 12/12.
+
 ### 4.7 Una regla escrita DENTRO de una vista se va con la vista (`#650`)
 
 Es el corolario práctico de §4.5.bis, y la T2b empieza por aquí: antes de mudar una vista hay que mirar **qué
