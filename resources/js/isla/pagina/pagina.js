@@ -48,7 +48,12 @@ export function medirVista({ ctas = [], hoyLinea = null, isla = null, alto }) {
 export function planesDe(plans, acciones) {
     if (! Array.isArray(plans?.options) || ! plans.options.length) return null;
 
-    return { ...plans, options: plans.options.map((o) => ({ ...o, onClick: () => acciones.comprar(o.intent ?? {}) })) };
+    // La compra sabe que nace del SELECTOR (y si se abrió desde «Reservar para hoy»): su flecha lo vuelve a abrir, sin
+    // cerrar la isla (`#831`, `compra.jsx` del diseño). La isla llama a la opción con `{ fromToday }`.
+    return {
+        ...plans,
+        options: plans.options.map((o) => ({ ...o, onClick: (x) => acciones.comprar({ ...(o.intent ?? {}), desde: 'selector', desdeHoy: Boolean(x?.fromToday) }) })),
+    };
 }
 
 /**

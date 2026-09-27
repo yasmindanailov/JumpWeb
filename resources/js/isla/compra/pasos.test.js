@@ -1,7 +1,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { STEPS } from '../../sidebar/machine.js';
-import { ckDelPaso, destinoDeTarea, direccion, empiezaOtra, pantallaListo, pasoDelMotor, rango, tareaDeFiesta } from './pasos.js';
+import { ckDelPaso, destinoDeTarea, direccion, empiezaOtra, pantallaListo, pasoDelMotor, rango, tareaDeFiesta, volverDeLaPantallaCero } from './pasos.js';
 
 /**
  * Los pasos de la compra de la isla tras la pantalla 0 (T3e·3 de `specs/isla-y-landing-nueva.md` §4.10): la banda, la
@@ -227,4 +227,14 @@ test('`#825` «Listo»: donde puede entrar un adulto (Jump, desde 8), no se da p
     assert.deepEqual(conLineas([]), []);
     // Jump y Kids en la misma reserva: con una entrada de menores, sí.
     assert.deepEqual(conLineas([{ is_pack: false, minors_only: false }, { is_pack: false, minors_only: true }]), ['menores']);
+});
+
+test('la flecha de la pantalla 0 (`#831`): al selector si nació de él, a Mi cuenta si nació allí; de una página, ninguna', () => {
+    const aLaCuenta = () => 'cuenta';
+    const alSelector = () => 'selector';
+
+    assert.equal(volverDeLaPantallaCero('selector', { aLaCuenta, alSelector }), alSelector);
+    assert.equal(volverDeLaPantallaCero('cuenta', { aLaCuenta, alSelector }), aLaCuenta);
+    assert.equal(volverDeLaPantallaCero(null, { aLaCuenta, alSelector }), null);
+    assert.equal(volverDeLaPantallaCero('pagina', { aLaCuenta, alSelector }), null, 'un origen que no es una capa de la isla no tiene flecha');
 });

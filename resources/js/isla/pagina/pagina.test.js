@@ -163,7 +163,11 @@ describe('el selector de planes (T6a)', () => {
         assert.equal(p.plans.footer, plans.footer);
         assert.deepEqual(p.plans.options.map((o) => [o.title, o.featured ?? false, o.today ?? false]), [['Un cumpleaños', true, false], ['Entrada Kids', false, false], ['Para hoy', false, true]]);
         p.plans.options.forEach((o) => o.onClick());
-        assert.deepEqual(compradas, [{ type: 'packs' }, { type: 'zone', slug: 'kids' }, {}]);
+        // `#831`: la compra sabe que nace del selector —su flecha lo reabre— y si se abrió desde «Reservar para hoy».
+        const desde = { desde: 'selector', desdeHoy: false };
+        assert.deepEqual(compradas, [{ type: 'packs', ...desde }, { type: 'zone', slug: 'kids', ...desde }, desde]);
+        p.plans.options[1].onClick({ fromToday: true });
+        assert.deepEqual(compradas.at(-1), { type: 'zone', slug: 'kids', desde: 'selector', desdeHoy: true });
     });
 
     test('sin selector en la página —o vacío—, ninguno: la acción de la isla sigue siendo la de la página', () => {

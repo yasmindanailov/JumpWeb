@@ -42,6 +42,21 @@ export function rango(paso, vista = null, pasoEntrada = null) {
     return 3;
 }
 
+/**
+ * LA FLECHA DE LA PANTALLA 0 (`#831`, la regla del diseño: «Volver = un paso atrás dentro de la misma capa; solo si hay
+ * un paso detrás»; `compra.jsx`): nacida del SELECTOR de planes, lo vuelve a abrir, sin cerrar la isla; nacida de otra
+ * capa (Mi cuenta, «Reservar otra vez», T5f), vuelve a ella; desde una página de producto no hay nada detrás dentro de la
+ * isla: solo la X. (Con «preparando», ninguna: no hay nada que tocar, `#785`; lo resuelve quien la llama.)
+ *
+ * @returns {Function|null}
+ */
+export function volverDeLaPantallaCero(desde, { aLaCuenta = null, alSelector = null } = {}) {
+    if (desde === 'cuenta') return aLaCuenta;
+    if (desde === 'selector') return alSelector;
+
+    return null;
+}
+
 /** La dirección de un cambio de paso: `fwd`, `back`, o `null` la primera vez. */
 export function direccion(antes, ahora) {
     if (antes === null || antes === undefined || antes === ahora) return null;

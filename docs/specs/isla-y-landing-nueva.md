@@ -1747,7 +1747,28 @@ que llegue Bizum. Los vídeos, pendientes del MATERIAL como en la T4 (en LOCAL, 
 - ▶ **El CALENDARIO ✅ (27-09, `#830`)**: la tira de la compra de la isla, 14 días y «Más fechas» (el calendario de meses,
   cargado al abrirlo; el día lejano entra al final de la tira con su mes), en entradas y en fiesta; la calculadora, dos
   meses a fin de mes. `node --test` +6 (y dos mutaciones en rojo); en vivo 16/16 (desde la portada, el calendario no se
-  descarga hasta abrirlo). **Sigue**: la FLECHA DE «ATRÁS» de la isla en los mismos casos que el mockup (censo riguroso).
+  descarga hasta abrirlo).
+- ▶ **La FLECHA de «atrás» ✅ (27-09, `#831`)**: el censo contra el diseño (`ParkIsland.jsx`, `compra.jsx`, `cuenta.jsx`),
+  con su regla: «Volver = un paso atrás dentro de la misma capa, solo si hay un paso detrás; la X sale de la capa».
+
+  | Caso | Diseño | Isla |
+  |---|---|---|
+  | menú → «¿Lo hablamos?», Mi QR o Mi cuenta como hoja | flecha al menú (`pushPanel`) | ✓ (`apilarPanel`; `openRow && stack > 1`) |
+  | menú → las cookies | (su «Configurar» es un marcador) | ✓ se apila: flecha al menú |
+  | menú → Mi QR / Mi cuenta como CAPA; su inicio; «Entra» | flecha al menú | ✓ (`cuenta/vista.js`, `delMenu`) |
+  | Mi cuenta: contraseña, correo, borrar, reserva, hijos, hueco, QR desde la cuenta | flecha al inicio | ✓ |
+  | «Cambiar» desde el detalle de una reserva · crear cuenta · el olvido de «Entra» | al detalle · a «Entra» · a «Entra» | ✓ |
+  | la compra desde el SELECTOR de planes (pantalla 0) | flecha: reabre el selector sin cerrar la isla | ❌ → ✅ `volverDeLaPantallaCero` |
+  | la compra desde Mi cuenta («Reservar otra vez», la bienvenida) | flecha a Mi cuenta | ✓ (T5f) |
+  | la compra desde una página (calculadora, «Reservar para hoy») | solo la X | ✓ |
+  | «Tus datos»: el descargo, «Entra», o llegada desde la pantalla 0 | a «Tus datos» · a su paso · a la pantalla 0 | ✓ |
+  | «Tus datos» / «Pagar» desde la calculadora (compra directa) | sin flecha / a «Tus datos» | desvío del owner (`#785`): «su flecha, a lo elegido» |
+  | «Añadir otra entrada» | flecha a «Pagar» | no se ofrece (`recibo.js`: `otraEntrada: false`) |
+  | banco, fallido, verificando, listo; la hora llena al pagar | sin flecha | ✓ (al continuar, `#822`: a la pantalla 0) |
+
+  **Guarda**: `pasos.test.js` y `pagina.test.js` (la intención lleva `desde: 'selector'`), y `sonda-portada.mjs` 23/23
+  (los tres planes: la flecha reabre el selector; su mutación en `useSeccionCompra`, en rojo 20/23); `sonda-cuenta` (T5f)
+  sin fallos.
 
 ## 5. Impacto en invariantes
 

@@ -129,6 +129,12 @@ try {
 
         ok(`«${plan}» abre la compra con su intención`, esperado(paso, cuerpo), `${paso} · ${cuerpo.slice(0, 120)}`);
         await h.foto(`3-${plan.split(' ').pop().toLowerCase()}`);
+        // `#831`: nacida del selector, su flecha lo reabre, sin cerrar la isla (`compra.jsx` del diseño).
+        const volver = a.page.locator('[data-isla] button[aria-label="Volver"]');
+        const conFlecha = await volver.count() === 1;
+        if (conFlecha) await volver.click();
+        const reabierto = conFlecha && await h.hastaSelector();
+        ok(`y su flecha cierra la compra y vuelve a abrir el selector`, reabierto && await a.page.locator('#isla-compra-paso').count() === 0, `flecha ${conFlecha} · selector ${reabierto}`);
     }
 
     await h.cargar('/');

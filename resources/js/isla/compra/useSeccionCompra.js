@@ -29,7 +29,7 @@ import { borradorDeIntencion } from './oferta.js';
 import { euros, horasCercanas, horasDelSelector } from './vista.js';
 import { meterLinea, pedidoDe } from './linea.js';
 import { lineaListo, marcasDe, reciboDe, resumenDeLaCesta, resumenDelPedido } from './recibo.js';
-import { ckDelPaso, direccion, empiezaOtra, pantallaListo, pasoDelMotor, rango } from './pasos.js';
+import { ckDelPaso, direccion, empiezaOtra, pantallaListo, pasoDelMotor, rango, volverDeLaPantallaCero } from './pasos.js';
 import {
     almacenDeLaPestana, conVuelta, esVuelta, marcarSalida, sinVuelta, tomarMarca, vueltaDe, vuelveAqui,
 } from '../../sidebar/reanudar.js';
@@ -56,12 +56,13 @@ export function useSeccionCompra(props) {
      * a presionar continuar o editar algo»). `sinDatos`: se llegó a «Pagar» sin pasar por «Tus datos» (nada que pedir).
      * `alEntrar` (`#822`, §4.16): la hora se llenó al CONTINUAR de la pantalla 0, no al pagar —la línea aún no está en la
      * cesta y nada se ha cobrado ni pedido—. `desde` (T5f): la compra la abrió Mi cuenta («Reservar otra vez», «Reserva tu
-     * primera visita»), y la flecha de la pantalla 0 vuelve a ella.
+     * primera visita»), y la flecha de la pantalla 0 vuelve a ella; o el SELECTOR de planes (`#831`), y la flecha lo
+     * reabre —`desdeHoy`: tal como se abrió, desde «Reservar para hoy» o no—.
      */
     const compra = reactive({
         borrador: borradorDeIntencion(null, []), precios: {}, fichas: {}, grupos: [], cargandoHoras: false, intencion: null,
         paso: 'cuando', aviso: '', ocupado: null, pedido: null, pagado: null, dir: null, cercanas: [], horaNueva: null,
-        preparando: false, sinDatos: false, alEntrar: false, desde: null,
+        preparando: false, sinDatos: false, alEntrar: false, desde: null, desdeHoy: false,
     });
 
     /**
@@ -204,7 +205,9 @@ export function useSeccionCompra(props) {
 
         Object.assign(compra, {
             paso: 'cuando', aviso: '', pedido: null, pagado: null, preparando: sola, sinDatos: false, alEntrar: false,
-            desde: intencion?.desde === 'cuenta' ? 'cuenta' : null,
+            // De dónde nace (su flecha, `volverDeLaPantallaCero`): de Mi cuenta (T5f) o del selector de planes (`#831`).
+            desde: ['cuenta', 'selector'].includes(intencion?.desde) ? intencion.desde : null,
+            desdeHoy: intencion?.desdeHoy === true,
         });
         const situada = enCola(() => situar(borradorDeIntencion(intencion, catalogStore.products)));
 
@@ -392,6 +395,18 @@ export function useSeccionCompra(props) {
      */
     const aLaCuenta = () => cajonHost()?.openAccount?.({ preventDefault() {} }, 'home', { desde: 'compra' });
 
+    /**
+     * La flecha de la pantalla 0 nacida del SELECTOR de planes (`#831`; `compra.jsx` del diseño: «Volver lo abre otra vez,
+     * sin cerrar la isla»): la compra se cierra y el selector se abre tal como estaba (`fromToday`). Tras el cierre, como
+     * la bienvenida de Mi cuenta: la isla deja antes la capa de la compra.
+     */
+    const alSelector = () => {
+        const fromToday = compra.desdeHoy;
+
+        cerrar();
+        setTimeout(() => window.dispatchEvent(new CustomEvent('isla:abrir', { detail: { panel: 'plans', fromToday } })), 40);
+    };
+
     // ── Lo que se pinta ──────────────────────────────────────────────────────────────────────────────
 
     const deLaCesta = (quote) => resumenDeLaCesta(quote, { textos, locale: flow.locale });
@@ -429,9 +444,10 @@ export function useSeccionCompra(props) {
                 return { ...c, ...cesta, dir: compra.dir, onBack: null, onClose: cerrar, action: { ...c.action, onClick: () => {}, loading: t(textos, 'pieza.cargando') } };
             }
 
-            // Nacida en Mi cuenta (T5f), la flecha vuelve a ella, al mismo punto; si no, no hay nada detrás: solo la X.
+            // Nacida en Mi cuenta (T5f), la flecha vuelve a ella, al mismo punto; nacida del selector (`#831`), lo reabre; si
+            // no, no hay nada detrás: solo la X.
             return {
-                ...c, dir: compra.dir, onBack: compra.desde === 'cuenta' ? aLaCuenta : null, onClose: cerrar,
+                ...c, dir: compra.dir, onBack: volverDeLaPantallaCero(compra.desde, { aLaCuenta, alSelector }), onClose: cerrar,
                 action: { ...c.action, onClick: continuar, loading: compra.ocupado === 'cuando' ? t(textos, 'pieza.cargando') : false },
             };
         }
