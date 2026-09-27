@@ -1770,6 +1770,28 @@ que llegue Bizum. Los vídeos, pendientes del MATERIAL como en la T4 (en LOCAL, 
   (los tres planes: la flecha reabre el selector; su mutación en `useSeccionCompra`, en rojo 20/23); `sonda-cuenta` (T5f)
   sin fallos.
 
+### 4.18 La T6b: CUMPLEAÑOS — el censo (MEDIDO 27-09 noche)
+
+**La página del diseño** (`paginas/cumpleanos.card.html` y `piezas-1-4.jsx`, `piezas-5-6.jsx`, `piezas-7-9.jsx`): nueve
+piezas y el pie; TODOS sus botones llevan a `#calcula` (la pieza 6), y la isla cambia con lo que se lee y lo calculado.
+
+| Pieza | Lo que pinta | Piezas del sistema | Datos (medidos) |
+|---|---|---|---|
+| 1 · cabecera | vídeo, «desde» con su oferta, nota, «Ver días libres», y la franja de garantías | `video-hero`, `price-tag`, `rating-summary`, `reassurance-band` ✓ | el «desde» (14,95 €), la señal (50 €), el plazo REAL (3 días, `#699`; el mockup dice 5) |
+| 3 · así es la fiesta | tres momentos: saltan (vídeo), meriendan, soplan las velas | `MomentCard` ✗ · `Reveal` ✗ | MATERIAL: la mesa y la tarta no existen (`#761`·3: sin hueco) |
+| 4 · tranquilidad | cuidados con sus cifras y la nota con tres voces | `proof-list`, `review-panel` ✓ | `reviews` etiquetadas `cumpleanos` (hay 4) |
+| 5 · lo resuelves | lo que incluye, «la lista se hace sola» (formulario e invitación), los tres pasos | `IncludedList` ✗ · `AfterBookingPanel` ✗ · `StepsPanel` ✗ (`step-list` ✓) | la ficha del pack (`features`, `gifts`, la señal); la INVITACIÓN solo si el producto la tiene encendida (la ficha no lo publica aún) |
+| 6 · calcula | la CALCULADORA DE LA FIESTA: edad → pack, niños, día (calendario), hora, menú; el resumen fijo con la señal y el resto, la hora extra, compartir; extras e «Niños de dos edades» | en el producto (como la de entradas, T4d): `fiesta.js`, `CalendarioMes`, `SelectorHoras`, `TarjetasOpcion` ✓; `PriceSummary`, `UpgradeRow`, `ShareRow`, `AddonList` ✗ | menús 107 (incluido) y 108 (+2 €), hora extra 317 (5 €; el mockup: 4), mín. 8 y máx. 20 (el mockup: 40); los EXTRAS del mockup (tarta, combos, cubos) NO están en el panel |
+| 7 · dónde y cuándo | mapa, horario y «Próximos fines de semana con hueco» | `park-location`, `opening-hours` ✓ · `NextDays` ✗ | los días con hueco de los packs: HECHO NUEVO (hoy solo `availability_today`) |
+| 8 · dudas | nueve dudas en dos columnas | `accordion` ✓ | textos de PlayJump con cifras de los hechos (plazos, mínimos, hora extra) |
+| 9 · cierre | la pregunta, la nota, el botón con su «desde» | `cta-band` ✓ | sin la línea de Bizum (`#826`, `#829`) |
+
+**Lo que manda la verdad y no el mockup**: cada cifra, del panel (el plazo, la hora extra, el máximo); lo que no está en
+el panel no se dice (los extras, la invitación, el precio de lanzamiento sin promoción). **Plan**: T6b·1 la página sin la
+calculadora (instancia: las piezas y sus cinco componentes nuevos); T6b·2 el hecho de los días con hueco (producto); T6b·3
+la calculadora de la fiesta en la página (producto, reutilizando la pantalla de la fiesta de la isla) y la isla de la
+página (calculado, elegido, la frase de cada pieza); T6b·4 la sonda y el ojo del owner.
+
 ## 5. Impacto en invariantes
 
 - `PAY-*`: solo si entra Bizum; entonces `VERIFY_CONC=1` y la lista del `CRITICAL_RE`.

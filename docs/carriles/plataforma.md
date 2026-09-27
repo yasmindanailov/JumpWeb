@@ -48,7 +48,9 @@ edad del panel—; contrato **1.45.0**; `sonda-cuenta.mjs` 250/250, arneses `mut
 T6a·2a (`#827`, la portada DECLARADA) y T6a·2b (`#828`, `#829`: `instancias/playjump/web/inicio/`, instancia `5c2b9cf`;
 guarda `scripts/sonda-portada.mjs` 20/20) y el CALENDARIO ✅ (`#830`: la tira de la isla, 14 días + «Más fechas»; la
 calculadora, dos meses a fin de mes) y la FLECHA DE «ATRÁS» ✅ (`#831`: el censo, en la spec §4.17; faltaba la de la
-compra nacida del selector). **Sigue**: T6b, Cumpleaños. **Para iterar con el owner** (no
+compra nacida del selector). **EN MARCHA: T6b, Cumpleaños** (el censo, en la spec §4.18: T6b·1 la página sin la
+calculadora, en la instancia; T6b·2 el hecho de los días con hueco; T6b·3 la calculadora de la fiesta en la página; T6b·4
+sonda y ojo del owner). La ISLA la está repensando el owner con Claude Design: no atar nada nuevo a ella en la T6b. **Para iterar con el owner** (no
 ahora): la isla «muy sola» y el «Reservar» solo en la isla del móvil (A/B propuesto: las páginas de la instancia aún no
 reciben su variante). Orden de la T6: portada, Cumpleaños, Colegios, Visítanos (SIN formulario: `/contacto` con 301) y Normas, y los 301
 → **(4)** Bizum, Apple (entra) y el día liberado → material y revisión del owner, al final (los datos: playjump.es). **Los
