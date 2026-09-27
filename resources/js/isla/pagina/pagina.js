@@ -39,6 +39,19 @@ export function medirVista({ ctas = [], hoyLinea = null, isla = null, alto }) {
 }
 
 /**
+ * **El SELECTOR DE PLANES** (T6a de §4.17; el diseño: «un solo selector de plan en toda la web, el de la isla»), o `null`
+ * si la página no lo trae. Lo compone la PÁGINA (`config.plans`: sus opciones ya escritas con los hechos —título, nota,
+ * «desde», oferta, foto, `featured`, `today`—) y cada opción lleva la INTENCIÓN de la compra (`intent`, la de
+ * `cajon.openWith`: `{type:'packs'}`, `{type:'zone', slug}`; sin tipo, «Para hoy» eligiendo zona). Aquí solo se le pone
+ * el clic: la isla lo abre con su acción, y la página con sus «Reservar» (`data-isla-planes`).
+ */
+export function planesDe(plans, acciones) {
+    if (! Array.isArray(plans?.options) || ! plans.options.length) return null;
+
+    return { ...plans, options: plans.options.map((o) => ({ ...o, onClick: () => acciones.comprar(o.intent ?? {}) })) };
+}
+
+/**
  * La acción de la tarea en la isla: su enlace, o —con `zone`— abrir la cuenta en esa zona, como el menú (el `href` de su
  * puerta no serviría en la misma página: cambiar solo el ancla no la recarga).
  */
@@ -86,6 +99,8 @@ export function propsDeLaIsla({ config, estado, acciones, textos }) {
         // La tarea (situación 13): en la portada y en la página de lo reservado, con su acción: un enlace a su sitio o, si
         // la resuelve una pantalla de la cuenta (`zone`, «Añade a tus hijos», T5d), la cuenta abierta en esa zona.
         task: cuenta?.task ? { text: cuenta.task.text, product: cuenta.task.product ?? null, action: accionDeTarea(cuenta.task.action, acciones) } : null,
+        // El selector de planes (T6a): con él, «Reservar» de la isla lo abre en vez de ir a la página.
+        plans: planesDe(config.plans, acciones),
         cookies: estado.cookies ? { onAccept: acciones.aceptarCookies, onReject: acciones.rechazarCookies, onConfigure: acciones.configurarCookies, onPolicy: acciones.politicaCookies } : null,
         cookiePrefs: estado.preferencias ?? null,
         notice: estado.aviso ?? null,

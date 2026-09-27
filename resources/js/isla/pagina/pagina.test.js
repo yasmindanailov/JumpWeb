@@ -1,6 +1,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { cajaSiVisible, medirVista, preferenciasDeCookies, propsDeLaIsla } from './pagina.js';
+import { paginaConSelector } from './con-selector.js';
 
 /**
  * T4e — la isla viva en una página declarada (`pagina.js`), contra lo que hace `paginas/entradas/pagina.jsx` del diseño.
@@ -140,6 +141,43 @@ describe('las props de la isla', () => {
         assert.equal(invitado.bookingToday, null);
         assert.equal(invitado.task, null);
         assert.equal(invitado.account.pending, undefined);
+    });
+});
+
+describe('el selector de planes (T6a)', () => {
+    const compradas = [];
+    const conComprar = { ...acciones, comprar: (intencion) => compradas.push(intencion) };
+    const plans = {
+        title: '¿Qué quieres reservar?', footer: 'Pago con tarjeta en la pasarela del banco; tu tarjeta no se guarda.',
+        options: [
+            { title: 'Un cumpleaños', featured: true, price: 'desde 14,95 €', intent: { type: 'packs' } },
+            { title: 'Entrada Kids', note: 'De 4 a 7 años', price: 'desde 6,40 €', intent: { type: 'zone', slug: 'kids' } },
+            { title: 'Para hoy', today: true, highlight: true, note: 'Quedan huecos esta tarde' },
+        ],
+    };
+
+    test('lo que da la página, tal cual, y cada opción compra con SU intención (sin intención, «Para hoy»: `{}`)', () => {
+        const p = propsDeLaIsla({ config: { ...config, plans }, estado: estado(), acciones: conComprar, textos });
+
+        assert.equal(p.plans.title, plans.title);
+        assert.equal(p.plans.footer, plans.footer);
+        assert.deepEqual(p.plans.options.map((o) => [o.title, o.featured ?? false, o.today ?? false]), [['Un cumpleaños', true, false], ['Entrada Kids', false, false], ['Para hoy', false, true]]);
+        p.plans.options.forEach((o) => o.onClick());
+        assert.deepEqual(compradas, [{ type: 'packs' }, { type: 'zone', slug: 'kids' }, {}]);
+    });
+
+    test('sin selector en la página —o vacío—, ninguno: la acción de la isla sigue siendo la de la página', () => {
+        assert.equal(props().plans, null);
+        assert.equal(propsDeLaIsla({ config: { ...config, plans: { title: 'x', options: [] } }, estado: estado(), acciones: conComprar, textos }).plans, null);
+    });
+
+    test('quien no es la isla sabe si la página lo trae, por la configuración que publica; rota o ausente, no', () => {
+        const doc = (texto) => ({ getElementById: (id) => (id === 'jw-isla-pagina' && texto !== null ? { textContent: texto } : null) });
+
+        assert.equal(paginaConSelector(doc(JSON.stringify({ config: { ...config, plans } }))), true);
+        assert.equal(paginaConSelector(doc(JSON.stringify({ config }))), false);
+        assert.equal(paginaConSelector(doc('{roto')), false);
+        assert.equal(paginaConSelector(doc(null)), false);
     });
 });
 

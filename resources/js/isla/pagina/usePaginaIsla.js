@@ -116,6 +116,21 @@ export function usePaginaIsla({ config, textos, doc = document, win = window }) 
             if (cajon?.openAccount) cajon.openAccount({ preventDefault() {} }, zona, { desde: desde === 'menu' ? 'menu' : null });
             else win.location.href = '/login';
         },
+        // Un plan del selector (T6a): la compra con su intención (`cajon.openWith`, el mismo camino que la calculadora).
+        comprar: (intencion) => { win.JumpWeb?.cajon?.openWith?.(intencion); },
+    };
+
+    /**
+     * Los «Reservar» de la PÁGINA que abren el selector (T6a; el contrato página↔isla, §4.3): los marca `data-isla-planes`
+     * —la cabecera y el cierre de la portada, el visor de vídeos— y su `href` es la salida sin JavaScript. Solo si la
+     * página trae selector; si no, el enlace sigue su camino.
+     */
+    const alPulsar = (ev) => {
+        const boton = ev.target?.closest?.('[data-isla-planes]');
+
+        if (! boton || ! props.value.plans) return;
+        ev.preventDefault();
+        win.dispatchEvent(new win.CustomEvent('isla:abrir', { detail: { panel: 'plans', trigger: boton } }));
     };
 
     const preferencias = computed(() => preferenciasDeCookies({
@@ -143,6 +158,7 @@ export function usePaginaIsla({ config, textos, doc = document, win = window }) 
         doc.addEventListener('jw:cookies:conceder', alPedirCategoria);
         doc.addEventListener('jw:cajon:open', alAbrir);
         doc.addEventListener('jw:cajon:close', alCerrar);
+        doc.addEventListener('click', alPulsar);
         win.addEventListener('isla:relevada', alRelevar);
         // La cabecera avisa al terminar de medirse (`pj-hero:medida`): con las fuentes o la versión compacta, su botón
         // puede entrar o salir de la pantalla sin scroll ni resize, y la isla vuelve a mirar si cede el suyo.
@@ -166,6 +182,7 @@ export function usePaginaIsla({ config, textos, doc = document, win = window }) 
         doc.removeEventListener('jw:cookies:conceder', alPedirCategoria);
         doc.removeEventListener('jw:cajon:open', alAbrir);
         doc.removeEventListener('jw:cajon:close', alCerrar);
+        doc.removeEventListener('click', alPulsar);
         win.removeEventListener('isla:relevada', alRelevar);
         win.removeEventListener('pj-hero:medida', medir);
         win.clearTimeout(espera);

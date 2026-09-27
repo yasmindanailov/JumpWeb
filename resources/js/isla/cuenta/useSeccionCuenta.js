@@ -28,6 +28,7 @@ import { landOnAccount } from '../../sidebar/account/after-auth.js';
 import { conVuelta } from '../../sidebar/reanudar.js';
 import { enlaceDeCuenta } from '../../cajon/enlace-cuenta.js';
 import { tomarAvisoDelServidor } from '../pagina/aviso-servidor.js';
+import { paginaConSelector } from '../pagina/con-selector.js';
 import { useSuperficie } from '../compra/useSuperficie.js';
 import {
     cuentaQueYaExiste, datosVacios, entradaVacia, errorDeEntrar, erroresDelServidor, firmaPendiente, formularioDeAlta,
@@ -653,9 +654,16 @@ export function useSeccionCuenta(props) {
         abrirReserva: (id) => { a(VISTA.RESERVA, { rSel: id }); reservas.cargarAntes(id); },
         aCambiar: (desdeReserva) => a(VISTA.CAMBIAR, { cambiarDesdeReserva: desdeReserva === true }),
         masHistorial: () => reservas.mas(),
-        // T5f: a la compra, situada en la última visita o eligiendo zona.
+        // T5f: a la compra, situada en la última visita. «Reserva tu primera visita»: el selector de planes si la página lo
+        // trae (T6a: el diseño cierra Mi cuenta y lo abre), y si no, la compra eligiendo zona.
         otraVez: () => { const o = reservas.otraVez.value; if (o) aLaCompra({ type: 'linea', id: o.id, quantity: o.n }); },
-        primeraVisita: () => aLaCompra(),
+        primeraVisita: () => {
+            if (! paginaConSelector(document)) return aLaCompra();
+            cerrar();
+            setTimeout(() => window.dispatchEvent(new CustomEvent('isla:abrir', { detail: { panel: 'plans' } })), 40);
+
+            return undefined;
+        },
         reservaAbierta: computed(() => reservas.bloque(reservas.buscar(e.rSel))),
         // Su «Antes de venir» (T5c): cada reserva tiene sus tareas, también la que se abre desde «Otras reservas».
         antesAbierta: computed(() => reservas.antes(reservas.buscar(e.rSel))),

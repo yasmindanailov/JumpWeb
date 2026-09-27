@@ -3,7 +3,7 @@
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
-> **820–849** (dada de alta en `DECISIONES.md` el 27-09; centena `decisiones/800-899.md`) · Último usado: **`#825`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **820–849** (dada de alta en `DECISIONES.md` el 27-09; centena `decisiones/800-899.md`) · Último usado: **`#826`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#825`) · Actualizado: **2026-09-27 noche**
 > (la primera pantalla, la conversión del zip y **la T5 de Mi cuenta, ENTERA** —T5f `#824` y los hijos por producto `#825`—, ✅).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
@@ -44,7 +44,11 @@ PANTALLA (spec §4.15, `#820`/`#821`), (1) la CONVERSIÓN del zip tercero (§4.1
 conexión, cada bloque protegido— y `#825` —«Añade a tus hijos» es tarea solo si el PRODUCTO es de menores, por su tramo de
 edad del panel—; contrato **1.45.0**; `sonda-cuenta.mjs` 250/250, arneses `mutar-t5f.sh` 14/14 y
 `mutar-hijos-de-producto.sh` 12/12). Lo medido de cada tanda, en la spec.
-▶ **SIGUE: (3) T6**: portada, Cumpleaños, Colegios, Visítanos (SIN formulario: `/contacto` con 301) y Normas, y los 301
+▶ **EN MARCHA: (3) T6** (spec §4.17: el plan en seis sub-tandas y el censo de la PORTADA). **T6a·1 🟦** (el selector de
+planes en la isla de la página, en el producto; sin verificar en vivo hasta la portada) y `#826` (sin la línea de Bizum).
+**Sigue la T6a·2**: la portada en la instancia —su modelo, sus 8 piezas, las 6 piezas nuevas del sistema (`PriceGroup`,
+`PlanDoor`, `ReassuranceStrip`, `ZoneExplorer`, `PromoSplit`, `PriceTag`) y `config.plans`—, como Kids y Jump en la T4.
+Orden de la T6: portada, Cumpleaños, Colegios, Visítanos (SIN formulario: `/contacto` con 301) y Normas, y los 301
 → **(4)** Bizum, Apple (entra) y el día liberado → material y revisión del owner, al final (los datos: playjump.es). **Los
 correos del sistema y la puerta, del SPA**, en paralelo. Faltan piezas para la T6: `AnswerRow`, `RuleGrid`/`RuleCard`,
 `PromoSplit` y `WaiverSheet` (buzón al SPA ANTES). La T6 HEREDA: toda página nueva usa `video-hero` SIN `height` y entra en

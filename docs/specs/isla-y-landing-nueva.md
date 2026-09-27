@@ -1694,6 +1694,45 @@ cabecera (acababa en 1000px de una pantalla de 560)—. **Después**: Kids y Jum
 - ⚠️ **Trampa pagada**: `sonda-isla` PAGA con la cuenta de pruebas y rompe `sonda-cuenta` si corre antes (la reserva de hoy
   saca el QR grande): sus pedidos se pasan a `sonda-compra@` entre las dos (`TESTING.md` §2.octies). Pasó en esta tanda.
 
+### 4.17 La T6: el resto de páginas — el plan y el censo de la PORTADA (MEDIDO 27-09 noche, `#789`)
+
+**El plan, en seis sub-tandas**, en el orden de `#789`; cada una con su censo, sus preguntas, su sonda y el ojo del owner
+en vivo antes de cerrar (la identidad con el mockup, una vez y al final: `#768`): **T6a · la portada** (y, con ella, el
+SELECTOR DE PLANES de la isla, que hoy no tiene ninguna página) · **T6b · Cumpleaños** · **T6c · Colegios** · **T6d ·
+Visítanos** (sin formulario: `/contacto` con 301, `#789`) · **T6e · Normas** · **T6f · los 301 y retirar las páginas
+viejas** de la instancia (`atracciones`, `bar`, `servicios`, `precios`, `contacto`, `entradas`, la portada y el
+cumpleaños de hoy; §1.6.4), con la sonda de todas (la T4f de Kids y Jump va aquí).
+
+**La portada del diseño** (`paginas/portada.card.html`, sin sección en el README: su guion es la tarjeta): ocho piezas y
+el pie, con la isla viva. **Lo que hay y lo que falta, medido** (las piezas de la T4 viven en `instancias/playjump/web/
+components/`; los hechos, en el menú de `PageFacts`):
+
+| Pieza | Lo que pinta | Piezas del sistema | Datos |
+|---|---|---|---|
+| 1 · cabecera | vídeo, «Hoy abrimos…» y huecos, título, precios de entradas y cumpleaños con la oferta, la nota de Google, «Reservar» → el SELECTOR | `video-hero` ✓ · `PriceGroup` ✗ | `schedule_now`, `availability_today`, `prices`, `promotions`, `social_proof` ✓ |
+| 2 · reparto | «¿Qué plan es el tuyo?»: tres puertas (Cumpleaños, Kids, Jump) con su «desde», su oferta y su foto; «Excursiones» | `PlanDoor` ✗ · `ReassuranceStrip` ✗ | `prices`, `promotions`, `zones` ✓; las fotos, del panel |
+| 3 · míralo | seis vídeos (3 y 3) con su visor; «¿Qué hay en cada zona?» con sus atracciones | `clip-tile`, `clip-viewer` ✓ · `ZoneExplorer` ✗ | `attractions`, `zones` ✓; ❗ el MATERIAL de los vídeos (el de la T4, pendiente) |
+| 4 · la fiesta | incluye, el regalo del cumpleañero, «desde», la oferta | `PromoSplit` ✗ · `PriceTag` ✗ · `media-frame` ✓ | `products` (el pack), `promotions` (el regalo, `#770`) ✓; «merienda, mesa…», a medir con la T6b |
+| 5 · para ti | Jump para adultos: vídeo, con quién, una reseña de un adulto | `PromoSplit` ✗ · `review-card` ✓ | `prices`, `reviews` (etiquetada) |
+| 6 · tranquilidad | tres garantías con sus cifras; el panel de la nota con tres reseñas, una por comprador | `proof-list`, `review-panel` ✓ | `zones`, `rules`, `reviews` (etiquetadas por página, `#771`) ✓; «mínimo 3 monitores», texto de PlayJump (como la T4) |
+| 7 · dónde y cuándo | dirección y mapa, horario con hoy, «antes de venir» (cafetería, calcetines con su precio) | `park-location`, `opening-hours` ✓ | `site`, `schedule`, `product_details` (calcetines) ✓ |
+| 8 · cierre | «¿Reservamos?» con tres elecciones y sus precios, garantías (pago, QR, cambios), contacto | `cta-band` ✓ | `prices`, `products` (plazos: los reales, `#699`), `site` ✓ |
+| la isla | el SELECTOR de planes (cuatro opciones, «Para hoy» solo con huecos) y la línea «desde» | producto: `SelectorPlan.vue` ✓ (T2), pero `propsDeLaIsla` no le pasa `plans` | la página compone las opciones; cada una, una intención de la compra |
+
+**Piezas nuevas**: `PriceGroup`, `PlanDoor`, `ReassuranceStrip`, `ZoneExplorer`, `PromoSplit` y `PriceTag` (en la instancia,
+del sistema 1:1, como las de la T4). **En el producto**: el selector de planes en la isla de la página (la configuración
+de la página lo trae; «Reserva tu primera visita» de Mi cuenta lo abrirá, `#824`). **Lo que manda la verdad y no el
+mockup**: los plazos del cierre salen de cada producto (el de los cumpleaños, 3 días: `#699`), las cifras de los hechos.
+**Contestada** (`#826`, `[DECIDIDO owner]` 2026-09-27): sin «lo reservamos nosotros y pagas por Bizum» en el cierre hasta
+que llegue Bizum. Los vídeos, pendientes del MATERIAL como en la T4 (en LOCAL, la muestra).
+- ▶ **T6a·1 🟦 (27-09) · el selector de planes, en el producto**: la isla de la página lo recibe de su configuración
+  (`config.plans`, que `<x-pagina>` ya deja pasar) y `pagina.js::planesDe` le pone a cada opción su clic —la compra con SU
+  intención (`acciones.comprar` → `cajon.openWith`)—; los «Reservar» de la página que lo abren llevan `data-isla-planes`
+  (contrato página↔isla, §4.3; su `href`, la salida sin JavaScript), y «Reserva tu primera visita» de Mi cuenta lo abre si
+  la página lo trae (`pagina/con-selector.js`: en su módulo, porque importado de `pagina.js` Mi cuenta pesaba +2,6 KiB).
+  **Medido**: `node --test` 1.510 → 1.513; el peso, Mi cuenta 115,94 → 116,24 y la isla de la página 171,96. ❗ **Sin
+  verificar en vivo**: ninguna página lo trae aún; lo prueba la portada (T6a·2).
+
 ## 5. Impacto en invariantes
 
 - `PAY-*`: solo si entra Bizum; entonces `VERIFY_CONC=1` y la lista del `CRITICAL_RE`.
