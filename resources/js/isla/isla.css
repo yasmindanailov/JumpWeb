@@ -78,6 +78,11 @@
     --space-2: 8px;
     --space-3: 12px;
     --space-4: 16px;
+    /* La primera pantalla (zip del 27-09, §4.15): el margen de la página, el aire de la isla arriba y su alto en reposo, que
+       la isla publica al medirse. El margen, el de antes de que la isla lo tomara de la página: sin él, nada cambia. */
+    --gutter: clamp(16px, 4vw, 48px);
+    --island-inset: 16px;
+    --island-h: 62px;
     --space-5: 20px;
     --space-6: 24px;
     --r-xs: 6px;

@@ -18,10 +18,11 @@ import { useAviso } from './useAviso.js';
 import { useCapa, usePila } from './usePaneles.js';
 import { useCompraCapa } from './useCompraCapa.js';
 import { useRelevo } from './useRelevo.js';
+import { useAltoIsla } from './useAltoIsla.js';
 import { dejarVuelo } from './relevo.js';
 import { salidaDePanel, vueloDesde } from './movimiento.js';
 
-export function useIsla(props, { wrapRef, islandRef, sizerRef, panelRef }) {
+export function useIsla(props, { wrapRef, islandRef, sizerRef, panelRef, rowRef, lineRowRef }) {
     const t = (clave) => texto(props.textos, clave);
     const wide = useAncho(props);
     const pila = usePila();
@@ -84,6 +85,11 @@ export function useIsla(props, { wrapRef, islandRef, sizerRef, panelRef }) {
         cookies: props.cookies, shownNotice: shownNotice.value,
     }));
     remedirCuando([top, () => r.value.row, inCheckout, isOpen, () => s.value.id, view, () => stack.value.length]);
+    // La primera pantalla (zip del 27-09): el alto en reposo, publicado para la cabecera (`--island-h`).
+    useAltoIsla({
+        rowRef, lineRowRef,
+        estado: () => ({ isOpen: isOpen.value, inCheckout: inCheckout.value, isCompact: r.value.isCompact, extra: s.value.extra, row: r.value.row, top: top.value }),
+    });
 
     const grown = computed(() => isOpen.value || Boolean(props.cookies) || Boolean(shownNotice.value) || (r.value.hasLine && !r.value.row) || box.value.h > 70);
     const openRow = computed(() => isOpen.value && !inCheckout.value);

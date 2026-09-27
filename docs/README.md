@@ -10,7 +10,7 @@
 | `carriles/<carril>.md` | **Un fichero por carril** (`#621`): banda y último usado · ficheros · foto · por dónde retomar · buzón. Cada agente escribe SOLO el suyo (≤ 32 KB, `#724`). Hoy: `plataforma` · `web` · `spa` · `correos` · `pasarela`. |
 | `00-REFACTOR.md` | Tracker VIVO (fases + casillas, sin narrativa, ≤ 16 KB). Sus marcadores de fase MANDAN sobre los carriles. |
 | `DECISIONES.md` | **Índice** del registro de decisiones (`#617`): dónde está cada número, cómo se escribe una (≤ 1,5 KB) y las bandas. Buscar por número. Revertida = «Sustituida por #N» en la antigua. |
-| `decisiones/NNN-NNN.md` | Las entradas, por centenas (`000-099` … `600-699`), en orden de número; una nueva se añade al final de su centena. Partido el 2026-09-16 sin tocar una entrada. |
+| `decisiones/NNN-NNN.md` | Las entradas, por centenas (`000-099` … `800-899`), en orden de número; una nueva se añade al final de su centena. Partido el 2026-09-16 sin tocar una entrada. |
 | `ENTORNOS.md` | Los dos entornos (local y **staging**, que es 0 LIVE / 0 PRODUCCIÓN), sus seis guardas y el procedimiento de despliegue. |
 | `CONVENCIONES.md` | Reglas y protocolo de los agentes (DoD §3.bis, arranque/handoff §7, git §8, escalado al owner §9, **dos agentes sobre `main` §10**). |
 | `GLOSARIO.md` | Lenguaje ubicuo: término de dominio ↔ artefacto real de código/BD, con estado de generalización. |

@@ -929,7 +929,11 @@ class SidebarBundleBudgetTest extends TestCase
     // (`trasAdmitir`, `faltaAlgo`) y la reanudación de Google con su alta dentro de la compra. Medido 147,51 → 150,32 (base:
     // el `HEAD` de `#784`, construido aparte). El alta de Google (`account/google.js`), con `import()`: en el trozo sumaba
     // 1,18 más para quien abre cualquier compra. El techo, a 151.
-    private const ISLA_COMPRA_CHUNK_MAX_KB = 151;
+    // `#820` (la primera pantalla del zip del 27-09): la isla publica su alto en reposo (`useAltoIsla.js`, con su
+    // `ResizeObserver`; `altoEnReposo`/`publicaAlto` en `forma.js`) y, abajo, el aviso de cookies compacto
+    // (`EnlaceEnFrase.vue`). Medido 150,57 → 153,07 con la cuenta de este test (base: el `HEAD` de `#789`, construido
+    // aparte). El techo, a 154.
+    private const ISLA_COMPRA_CHUNK_MAX_KB = 154;
 
     // T4d·4 (`specs/isla-y-landing-nueva.md` §4.12): la CALCULADORA de una página, entrada propia que la página pide
     // (`scripts` de `<x-pagina>`) y se monta al acercarse su pieza. Su DESCARGA entera, como la mide el navegador que
@@ -954,7 +958,10 @@ class SidebarBundleBudgetTest extends TestCase
     // `#783` (el rendimiento): adelantar la compra en segundo plano (`pagina/precarga.js`), la guarda que solo repinta la
     // isla si cambia lo que se ve, su hueco fijo y el brillo tras el bote de su acción. Medido 165,23 → 166,26 (base: el
     // `HEAD` de la Z3). A cambio, la primera compra en 4G aparece a los 348ms en vez de a los 2.019. El techo, a 167.
-    private const ISLA_PAGINA_MAX_KB = 167;
+    // `#820` (la primera pantalla): lo mismo que la compra —el alto que publica, las cookies compactas— y, de la página,
+    // lo que la llegada limpia esconde no cuenta como botón a la vista (`cajaSiVisible`) y se vuelve a mirar con
+    // `pj-hero:medida`. Medido 166,26 → 168,94 (base: el `HEAD` de `#789`, construido aparte). El techo, a 170.
+    private const ISLA_PAGINA_MAX_KB = 170;
 
     // T3e·3 (`#694`): las pantallas de después de la pantalla 0, en su trozo (`isla/compra/pasos-diferidos.js`), que la
     // compra pide al montarse. Medido 36,92 KiB. T3e·4 (`#695`): «Entra» con sus eventos y la «G» de Google, 37,66.

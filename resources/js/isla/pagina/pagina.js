@@ -10,9 +10,20 @@
  */
 
 /**
+ * La caja de un elemento que SE VE, o `null`: lo que la cabecera esconde hasta el primer scroll (la llegada limpia del
+ * zip del 27-09, `[data-llegada="oculto"]`, solo opacidad) sigue ahí pero no se ve, así que no cuenta como botón a la
+ * vista y la isla no le cede el suyo.
+ */
+export function cajaSiVisible(el) {
+    if (! el || (el.closest && el.closest('[data-llegada="oculto"]'))) return null;
+
+    return el.getBoundingClientRect();
+}
+
+/**
  * Qué se ve de la página, con la geometría del diseño: un primario cuenta en cuanto asoma FUERA de la franja de la
  * isla (si la isla está abajo, por encima de ella; si arriba, por debajo), y la línea [Hoy] de la pieza 6, igual.
- * Recibe rectángulos (`getBoundingClientRect()`) y el alto de la ventana.
+ * Recibe rectángulos (`getBoundingClientRect()`, o `null` si no se ve) y el alto de la ventana.
  */
 export function medirVista({ ctas = [], hoyLinea = null, isla = null, alto }) {
     let arriba = 0;

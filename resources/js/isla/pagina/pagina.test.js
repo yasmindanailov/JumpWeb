@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { medirVista, preferenciasDeCookies, propsDeLaIsla } from './pagina.js';
+import { cajaSiVisible, medirVista, preferenciasDeCookies, propsDeLaIsla } from './pagina.js';
 
 /**
  * T4e — la isla viva en una página declarada (`pagina.js`), contra lo que hace `paginas/entradas/pagina.jsx` del diseño.
@@ -36,6 +36,17 @@ describe('qué se ve de la página', () => {
     test('la línea [Hoy] de la pieza 6, con la misma regla', () => {
         assert.equal(medirVista({ hoyLinea: { top: 300, bottom: 330, height: 30 }, alto }).hoy, true);
         assert.equal(medirVista({ hoyLinea: null, alto }).hoy, false);
+    });
+
+    test('lo que la llegada limpia esconde no cuenta: sigue en su sitio, pero no se ve (zip del 27-09)', () => {
+        const caja = { top: 300, bottom: 350, height: 50 };
+        // Un elemento de mentira: solo lo que `cajaSiVisible` le pregunta.
+        const el = (dentroDeOculto) => ({ closest: (sel) => (sel === '[data-llegada="oculto"]' && dentroDeOculto ? {} : null), getBoundingClientRect: () => caja });
+        assert.deepEqual(cajaSiVisible(el(false)), caja);
+        assert.equal(cajaSiVisible(el(true)), null);
+        assert.equal(cajaSiVisible(null), null);
+        assert.equal(medirVista({ ctas: [cajaSiVisible(el(true))], alto }).cta, false, 'El botón de la cabecera oculto al llegar: la isla no cede el suyo.');
+        assert.equal(medirVista({ ctas: [cajaSiVisible(el(false))], alto }).cta, true);
     });
 });
 

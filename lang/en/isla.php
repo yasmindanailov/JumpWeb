@@ -57,10 +57,12 @@ return [
     ],
     'cookies' => [
         'texto' => 'We use our own and third-party cookies to measure visits and show you our ads on other websites. You can accept, reject or configure them.',
+        'texto_corto' => 'Our own and third-party cookies: measurement and ads.',
         'aceptar' => 'Accept',
         'rechazar' => 'Reject',
         'configurar' => 'Configure',
         'politica' => 'Cookie policy',
+        'politica_corta' => 'Policy',
         'guardado' => 'Saved',
         'si' => 'Yes',
         'no' => 'No',

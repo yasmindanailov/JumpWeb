@@ -31,18 +31,21 @@ import CompraIsla from './piezas/CompraIsla.vue';
 const props = defineProps(PROPS_ISLA);
 provide(CLAVE_TEXTOS, () => props.textos);
 
-// Las cuatro referencias al DOM son del componente; lo que hace con ellas, de `useIsla()`.
+// Las referencias al DOM son del componente; lo que hace con ellas, de `useIsla()`. La fila y la línea de encima
+// miden el alto en reposo que la isla publica (`--island-h`, la primera pantalla).
 const wrapRef = ref(null);
 const islandRef = ref(null);
 const sizerRef = ref(null);
 const panelRef = ref(null);
+const rowRef = ref(null);
+const lineRowRef = ref(null);
 
 const {
     t, s, stack, view, top, r, isOpen, inCheckout, openRow, stretch, pendiente, titleInRow, panelTitle, shownNotice,
     hayLinea, lineaAbre, accion, accionHref, accionAbierta, pulsarAccion, alTeclear, alternarPanel, panelProps, anuncio,
     cerrar, atras, apilarPanel, elegirPlan, abrirCapa, navegar, cambio, hundir, soltar, veloSaliente,
     tamano, estiloRaiz, estiloIsla, estiloMedida,
-} = useIsla(props, { wrapRef, islandRef, sizerRef, panelRef });
+} = useIsla(props, { wrapRef, islandRef, sizerRef, panelRef, rowRef, lineRowRef });
 // El velo: entra fundido y se va fundido (`isla-velo-sale`, en `isla.css`; Z3, `#782`). Sin `<Transition>` de Vue, a
 // propósito: su maquinaria pesaba 10–14 KiB en cada trozo de la isla (medido); el que se va es otro nodo, que se quita solo.
 const velo = { position: 'fixed', inset: 0, zIndex: -1, background: 'var(--isla-velo)', WebkitBackdropFilter: 'var(--blur-veil)', backdropFilter: 'var(--blur-veil)' };
@@ -126,6 +129,7 @@ const velo = { position: 'fixed', inset: 0, zIndex: -1, background: 'var(--isla-
                     />
                     <div
                         v-if="!r.row && hayLinea"
+                        ref="lineRowRef"
                         :style="{ padding: '2px 4px 7px', display: 'flex', alignItems: 'flex-start', gap: '6px' }"
                     >
                         <div :style="{ flex: '1 1 auto', minWidth: 0 }">
@@ -145,7 +149,10 @@ const velo = { position: 'fixed', inset: 0, zIndex: -1, background: 'var(--isla-
                         :top="top"
                     />
 
-                    <div :style="{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }">
+                    <div
+                        ref="rowRef"
+                        :style="{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }"
+                    >
                         <ControlIcono
                             v-if="openRow && stack.length > 1"
                             :label="t('control.volver')"

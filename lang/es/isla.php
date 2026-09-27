@@ -61,10 +61,13 @@ return [
     ],
     'cookies' => [
         'texto' => 'Usamos cookies propias y de terceros para medir las visitas y enseñarte nuestros anuncios en otras webs. Puedes aceptarlas, rechazarlas o configurarlas.',
+        // Abajo (móvil), el aviso compacto (zip del 27-09): una frase, con «Configurar» y «Política» dentro.
+        'texto_corto' => 'Cookies propias y de terceros: medición y anuncios.',
         'aceptar' => 'Aceptar',
         'rechazar' => 'Rechazar',
         'configurar' => 'Configurar',
         'politica' => 'Política de cookies',
+        'politica_corta' => 'Política',
         'guardado' => 'Guardado',
         'si' => 'Sí',
         'no' => 'No',

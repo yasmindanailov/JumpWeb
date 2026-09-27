@@ -1570,7 +1570,53 @@ y 7 escritorios; el README dice 13), en primera visita o vuelta, y a la llegada 
 absorbe la diferencia; cede `facts`, `link` y `proof` en pantallas bajas; la «llegada limpia»), `ParkIsland` (el gutter de
 la página, publica `--island-h` y `pj-island:size`, la banda fija arriba, las cookies compactas abajo), `ScrollNudge`
 (`data-pista`) y el `<meta viewport>` en todas las páginas. El owner (27-09): **va antes que todo lo demás** (`#789`).
-El censo contra lo nuestro y el plan, en esta sección al medirlo.
+
+**Cómo se juzga — la guía, PORTADA como sonda** (`scripts/sonda-primera-pantalla.mjs`): sus `medir()` y `reglas()` tal
+cual, sus 15 pantallas, las dos visitas (primera, con el aviso de cookies; vuelta, con la cookie de la política vigente) y
+los dos momentos. **Control**: la guía original en el navegador y el port dan las MISMAS cifras en el mockup de Kids
+(114/114 y 45/45 en la vuelta; 102/111 con los mismos nueve fallos en la primera visita: el aviso se abre encima, como
+pide el diseño, y la regla de los aires mide la isla con él). **La guarda** (`comparar`): la web no incumple NINGUNA regla
+que el mockup cumple en esa pantalla, visita y momento. Una regla que solo existe en un lado es otra rama del contrato
+(«cabe entera» o «último bloque a 16px»; píldora o a lo ancho) y la decide el CONTENIDO —la frase de la isla del mockup es
+de demostración («Hoy abrimos a las 16:30…», dos líneas) y sus precios también—: se cuenta, no falla.
+**Antes** (la web del 26-09, `/kids`): 62/114 en la vuelta y 62/105 en la primera visita —la isla 4px más ancha que la
+cabecera, 14px de aire abajo en vez del margen, la cabecera de alto fijo y, en escritorio, el aviso de cookies EMPUJANDO la
+cabecera (acababa en 1000px de una pantalla de 560)—. **Después**: Kids y Jump, **0 reglas peores que el mockup** en las
+15 pantallas, las dos visitas y los dos momentos (y 16 de otra rama, por el contenido).
+
+**Lo hecho** (T5·1 de la primera pantalla):
+- **La isla** (producto): el margen de la página (`gutter` = `var(--gutter)`, con respaldo en `isla.css` para una instalación
+  sin él); arriba, la banda FIJA en `--island-inset` + `--island-h` (lo que crece se abre encima) y, abajo, `--gutter` de
+  aire; publica su alto en reposo (`useAltoIsla.js`, `altoEnReposo`/`publicaAlto` en `forma.js`); las cookies, compactas
+  abajo (`texto_corto`, «Configurar» y «Política» en la frase: `EnlaceEnFrase.vue`); y la página no cuenta lo oculto como
+  botón a la vista (`cajaSiVisible`) y vuelve a mirar con `pj-hero:medida`.
+- **La cabecera** (instancia): `cabecera.js`, EN LÍNEA tras su marcado (corre antes del primer pintado); `video-hero` con
+  `height="screen"` por defecto, sus dos sondas, lo que cede pintado dos veces (en tinta y en claro, una con `hidden`) y la
+  compacta; `.pj-sec--top` con `--hero-top`; el sitio de la isla, reservado en escritorio antes de montarse; y el bote de
+  «hay más abajo» marca `data-pista`. La hoja de Saltia, regenerada.
+- **Cuatro desvíos del diseño, medidos** (`#820`): (1) sobre la foto, el alto de la tarjeta se FIJA en píxeles al medir —con
+  el diseño vivo, en una tableta (820×1106) la isla recupera su botón al bajar (62 → 90px) y la cabecera encogía 28px con la
+  página bajada, contra su propia regla—; (2) la isla mide su alto con un `ResizeObserver`, no tras cada pintado —medir en
+  cada uno forzaba la maquetación: 4–8 fotogramas de más de 20ms al desplazarse a 1280 con la CPU ×4, frente a 2; con el
+  observador, 1–2—; (3) no borra `--island-h` al desmontarse (tres montajes que se relevan); (4) el sitio de la isla,
+  reservado en escritorio (el mockup se pinta en el navegador y no lo necesita; aquí la isla llegaba y empujaba 78px).
+- **Un defecto propio, cazado por `comparar`**: con el enlace y la nota cedidos, su envoltorio vacío sumaba 14px de hueco
+  al bloque de la acción (78px y no 64). Y uno AJENO en `sonda-cuenta`: el enlace de la invitación lleva ya su canal
+  (`?c=wa`, F8 del SPA): la sonda lo exige.
+- **Sin regresión**: `sonda-movimiento` 16/16, `sonda-isla-movimiento` 25/25, `sonda-isla` 21/21 y `sonda-compra-directa`
+  16/16 en 390 y 1280, `sonda-cuenta` sin fallos, `test:js` 1480/1480.
+- **El logotipo, del owner en vivo** (`#821`, se aparta del mockup): sobre la foto, arriba a la izquierda con el aire del
+  texto y a 64px —en una pantalla baja CEDE (56, 48, 40) hasta que la tarjeta quepa: con 64 fijo, tres reglas peores que
+  el mockup—; apilada, sobre la foto a 48px. Medido: 64 en Full HD, QHD, MacBook Air, Windows 125 % y la tableta; 48 en
+  1280×689; 40 en 1366×657, la ventana baja y el móvil en horizontal. ✅ del owner: «en desktop, perfecto».
+- **El peso** (`SidebarBundleBudgetTest`, con su propia cuenta; base: el `HEAD` de `#789`, construido aparte): la compra
+  de la isla 150,57 → 153,07 kB (techo, a 154) y la isla de la página 166,26 → 168,94 (techo, a 170).
+- **La guarda muerde** (`scripts/mutar-primera-pantalla.sh`): la isla con su margen propio, la sección de arriba con su
+  aire viejo, sin la llegada limpia, sin la medida de la foto apilada y el logotipo que no cede: cada una pone
+  `comparar kids` en rojo: **5/5** (27-09). Las
+  dos de la instancia mutan la copia que sirve el producto (`public/instancia/`), tras comprobar que es su fuente.
+- ⚠️ **Para la T6**: toda página nueva usa `video-hero` SIN `height` (el contrato es la pantalla) y entra en la sonda
+  (`sonda-primera-pantalla.mjs comparar <página>`; su ficha y su ruta ya están en su mapa `PAGINA`, las siete).
 
 ## 5. Impacto en invariantes
 

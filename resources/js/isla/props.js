@@ -8,7 +8,8 @@ export const PROPS_ISLA = {
     textos: { type: Object, default: () => ({}) },
     placement: { type: String, default: 'auto' },
     compact: { type: [String, Boolean], default: 'auto' },
-    gutter: { type: String, default: 'clamp(16px, 4vw, 48px)' },
+    /** El margen de la PÁGINA (zip del 27-09): en móvil, los bordes de la isla son los de la cabecera y los de cada bloque. */
+    gutter: { type: String, default: 'var(--gutter)' },
     mobileContext: { type: String, default: 'auto' },
     maxWidth: { type: Number, default: 760 },
     scrim: { type: Boolean, default: true },

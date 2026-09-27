@@ -17,6 +17,7 @@
 | `decisiones/500-599.md` | `#500` → … (correos, SPA y web: bandas vivas) |
 | `decisiones/600-699.md` | `#610` → `#699` (plataforma: sus tres bandas) |
 | `decisiones/700-799.md` | `#700` → … (SPA, abierta el 18-09 al agotarse su banda; plataforma desde `#760`) |
+| `decisiones/800-899.md` | `#800` → … (abierta el 27-09 por plataforma con `#820`; el SPA, desde `#800` si llega) |
 
 Recuento vivo: `grep -cE '^## #[0-9]+ ·' docs/decisiones/*.md` (al partir, el 2026-09-16, eran 536). Los
 cuatro números repetidos son colisiones de la época sin bandas (`CONVENCIONES §10.6`); las dos entradas de

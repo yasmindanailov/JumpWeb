@@ -18,7 +18,7 @@
  */
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, watch } from 'vue';
 import { createCookiesStore } from '../../ui/cookie-consent.js';
-import { medirVista, preferenciasDeCookies, propsDeLaIsla } from './pagina.js';
+import { cajaSiVisible, medirVista, preferenciasDeCookies, propsDeLaIsla } from './pagina.js';
 import { loTomaUnaCapa, tomarAvisoDelServidor } from './aviso-servidor.js';
 import { precargarCompra } from './precarga.js';
 
@@ -64,8 +64,9 @@ export function usePaginaIsla({ config, textos, doc = document, win = window }) 
         if (! ctas.length || ctas.some((el) => ! el.isConnected)) ctas = Array.from(doc.querySelectorAll('[data-isla-cta]'));
         const isla = doc.querySelector('[data-situation]');
         observar(isla);
+        // Lo que la llegada limpia esconde (`[data-llegada="oculto"]`, la cabecera del zip del 27-09) no se ve: no cuenta.
         const vista = medirVista({
-            ctas: ctas.map(rect), hoyLinea: rect(doc.querySelector('[data-hoy-linea] > p')),
+            ctas: ctas.map(cajaSiVisible), hoyLinea: cajaSiVisible(doc.querySelector('[data-hoy-linea] > p')),
             isla: rect(isla), alto: win.innerHeight,
         });
         // Solo si CAMBIA (`#783`): un objeto nuevo en cada fotograma de scroll repintaba la isla entera en cada uno
@@ -94,7 +95,8 @@ export function usePaginaIsla({ config, textos, doc = document, win = window }) 
     const irA = (selector) => {
         const el = doc.querySelector(selector);
         if (! el) return;
-        win.scrollTo({ top: el.getBoundingClientRect().top + win.scrollY - (win.innerWidth >= 900 ? 92 : 16), behavior: 'smooth' });
+        // Arriba, lo que ocupa la banda fija de la isla (16 + 62) y su aire (16): el `irA` del diseño (zip del 27-09).
+        win.scrollTo({ top: el.getBoundingClientRect().top + win.scrollY - (win.innerWidth >= 900 ? 94 : 16), behavior: 'smooth' });
     };
 
     const acciones = {
@@ -142,6 +144,9 @@ export function usePaginaIsla({ config, textos, doc = document, win = window }) 
         doc.addEventListener('jw:cajon:open', alAbrir);
         doc.addEventListener('jw:cajon:close', alCerrar);
         win.addEventListener('isla:relevada', alRelevar);
+        // La cabecera avisa al terminar de medirse (`pj-hero:medida`): con las fuentes o la versión compacta, su botón
+        // puede entrar o salir de la pantalla sin scroll ni resize, y la isla vuelve a mirar si cede el suyo.
+        win.addEventListener('pj-hero:medida', medir);
         win.setTimeout(medir, 300);
         // La compra, adelantada en segundo plano con la página quieta (`#783`): la primera apertura no la espera.
         precargarCompra(config.precargar, { doc, win });
@@ -162,6 +167,7 @@ export function usePaginaIsla({ config, textos, doc = document, win = window }) 
         doc.removeEventListener('jw:cajon:open', alAbrir);
         doc.removeEventListener('jw:cajon:close', alCerrar);
         win.removeEventListener('isla:relevada', alRelevar);
+        win.removeEventListener('pj-hero:medida', medir);
         win.clearTimeout(espera);
         if (ro) ro.disconnect();
         if (fotograma) win.cancelAnimationFrame(fotograma);

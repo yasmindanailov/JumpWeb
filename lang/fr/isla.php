@@ -57,10 +57,12 @@ return [
     ],
     'cookies' => [
         'texto' => 'Nous utilisons des cookies propres et tiers pour mesurer les visites et vous montrer nos publicités sur d’autres sites. Vous pouvez les accepter, les refuser ou les configurer.',
+        'texto_corto' => 'Cookies propres et tiers : mesure et publicités.',
         'aceptar' => 'Accepter',
         'rechazar' => 'Refuser',
         'configurar' => 'Configurer',
         'politica' => 'Politique de cookies',
+        'politica_corta' => 'Politique',
         'guardado' => 'Enregistré',
         'si' => 'Oui',
         'no' => 'Non',

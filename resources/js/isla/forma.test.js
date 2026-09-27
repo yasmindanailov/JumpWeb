@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { estiloIsla, estiloMedida, estiloRaiz, tamano, tipoDeCambio, transicionIsla } from './forma.js';
+import { altoEnReposo, estiloIsla, estiloMedida, estiloRaiz, publicaAlto, tamano, tipoDeCambio, transicionIsla } from './forma.js';
 
 const caja = (w, h, cap = 0) => ({ w, h, cap });
 
@@ -70,7 +70,7 @@ test('abierta arriba, el mínimo va en PÍXELES (un % perseguía a la isla que s
 test('el techo del medidor: el contenedor o `maxWidth` arriba; abajo, la pantalla menos sus márgenes', () => {
     assert.equal(estiloMedida({ row: true, top: true, isOpen: false, cap: 1200, maxWidth: 760 }).maxWidth, '760px');
     assert.equal(estiloMedida({ row: true, top: true, isOpen: false, cap: 0, maxWidth: 760 }).maxWidth, '760px');
-    assert.equal(estiloMedida({ row: true, top: false, isOpen: false, cap: 390, maxWidth: 760 }).maxWidth, 'calc(100vw - 32px)');
+    assert.equal(estiloMedida({ row: true, top: false, isOpen: false, cap: 390, maxWidth: 760 }).maxWidth, 'calc(100vw - 2 * var(--gutter))');
     assert.equal(estiloMedida({ row: false, top: false, isOpen: false, cap: 390, maxWidth: 760 }).maxWidth, '100%');
 });
 
@@ -88,13 +88,49 @@ test('en la compra la raíz deja de ir pegada: fija sobre la página, con aire a
     assert.equal(abajo.pointerEvents, 'none');
 });
 
-test('el hueco de la isla en la página es fijo y ella lo desborda por el lado libre; en la compra no hay hueco', () => {
+test('abajo, el hueco de la isla es fijo y ella lo desborda hacia arriba; en la compra no hay hueco', () => {
     assert.equal(estiloRaiz({ gutter: '16px', top: false }).height, undefined, 'antes de medir, el alto de siempre');
     const abajo = estiloRaiz({ gutter: '16px', top: false, reservado: 64 });
-    assert.deepEqual([abajo.height, abajo.alignItems], ['calc(64px + max(14px, env(safe-area-inset-bottom)))', 'flex-end']);
-    const arriba = estiloRaiz({ gutter: '16px', top: true, reservado: 60 });
-    assert.deepEqual([arriba.height, arriba.alignItems], ['calc(60px + max(14px, env(safe-area-inset-top)))', 'flex-start']);
+    assert.deepEqual([abajo.height, abajo.alignItems], ['calc(64px + max(var(--gutter), env(safe-area-inset-bottom)))', 'flex-end']);
     assert.equal(estiloRaiz({ gutter: '16px', top: false, reservado: 64, inCheckout: true }).height, undefined);
+});
+
+test('la primera pantalla: arriba, la banda es FIJA —aire más el alto en reposo— y lo que crece se abre encima', () => {
+    // Con o sin lo medido, el mismo alto: las cookies o un panel no empujan la cabecera.
+    for (const reservado of [0, 60, 240]) {
+        const arriba = estiloRaiz({ gutter: 'var(--gutter)', top: true, reservado });
+        assert.deepEqual([arriba.paddingTop, arriba.height, arriba.alignItems], [
+            'max(var(--island-inset), env(safe-area-inset-top))',
+            'calc(max(var(--island-inset), env(safe-area-inset-top)) + var(--island-h))',
+            'flex-start',
+        ]);
+    }
+    // Abajo, el mismo aire que a los lados; y el margen lateral es el que se le da (el de la página, por defecto).
+    const abajo = estiloRaiz({ gutter: 'var(--gutter)', top: false });
+    assert.deepEqual([abajo.paddingBottom, abajo.paddingLeft, abajo.paddingRight], ['max(var(--gutter), env(safe-area-inset-bottom))', 'var(--gutter)', 'var(--gutter)']);
+    // En la compra, arriba, la banda deja de medir su alto fijo: ocupa la pantalla.
+    assert.equal(estiloRaiz({ gutter: 'var(--gutter)', top: true, inCheckout: true }).height, 'auto');
+});
+
+test('el alto en reposo que publica: la fila, desde la línea si va encima, más los 16px del medidor', () => {
+    // En fila (arriba en escritorio): 46 de fila + 16 = 62, el valor por defecto de la hoja.
+    assert.equal(altoEnReposo({ fila: { top: 24, bottom: 70 }, linea: null, row: true }), 62);
+    // Con la línea ENCIMA (abajo, en móvil): desde la línea hasta el final de la fila.
+    assert.equal(altoEnReposo({ fila: { top: 700, bottom: 746 }, linea: { top: 671 }, row: false }), 91);
+    // En fila, la línea no cuenta aunque exista (va DENTRO de la fila).
+    assert.equal(altoEnReposo({ fila: { top: 700, bottom: 746 }, linea: { top: 671 }, row: true }), 62);
+    // Sin fila, o una medida absurda (montándose, sin caja): nada que publicar.
+    assert.equal(altoEnReposo({ fila: null, row: true }), 0);
+    assert.equal(altoEnReposo({ fila: { top: 0, bottom: 0 }, row: true }), 0);
+});
+
+test('publica en reposo y cedida; abierta, en la compra, compacta o con el pago fallido, no', () => {
+    const reposo = { isOpen: false, inCheckout: false, isCompact: false, extra: null };
+    assert.equal(publicaAlto(reposo), true);
+    assert.equal(publicaAlto({ ...reposo, isOpen: true }), false);
+    assert.equal(publicaAlto({ ...reposo, inCheckout: true }), false);
+    assert.equal(publicaAlto({ ...reposo, isCompact: true }), false);
+    assert.equal(publicaAlto({ ...reposo, extra: { kind: 'fallo' } }), false);
 });
 
 test('en la compra el medidor mide 600px como mucho arriba y el ancho entero abajo, aunque sea fila', () => {

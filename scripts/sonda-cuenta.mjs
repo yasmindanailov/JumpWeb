@@ -381,8 +381,9 @@ async function recorrer(navegador, ventana, informe) {
     await pagina.waitForTimeout(300);
     const [invitacionWa = ''] = await ventanas();
     check('tocar la invitación la comparte por WhatsApp con el mensaje de la lista (quién cumple, cuándo, el enlace)',
-        invitacionWa.startsWith('https://wa.me/?text=') && /^Vera cumple 7 años.+Contesta aquí: https?:\/\/\S+\/invitacion\/\w{12}$/.test(decodeURIComponent(invitacionWa.split('?text=')[1] ?? '')),
-        decodeURIComponent(invitacionWa.split('?text=')[1] ?? '').slice(0, 160));
+        // El enlace lleva su canal (`?c=wa`, F8 del SPA, `#753`): la visita sabe que vino de WhatsApp, como el de la lista.
+        invitacionWa.startsWith('https://wa.me/?text=') && /^Vera cumple 7 años.+Contesta aquí: https?:\/\/\S+\/invitacion\/\w{12}\?c=wa$/.test(decodeURIComponent(invitacionWa.split('?text=')[1] ?? '')),
+        decodeURIComponent(invitacionWa.split('?text=')[1] ?? '').slice(-80));
 
     await Promise.all([
         pagina.waitForURL(lista, { timeout: 15000 }).catch(() => {}),
