@@ -14,8 +14,8 @@ import { diaDelPlazo } from '../compra/vista.js';
 
 const TAREA = 'task';
 
-/** El icono de cada tarea, del set de Lucide (los del mockup). */
-const ICONOS = { guest_form: 'clipboard-list', invitation: 'send', extras: 'cake', authorizations: 'file-signature' };
+/** El icono de cada tarea, del set de Lucide (los del mockup; el de los hijos, `user-round-plus`, faltaba hasta `#825`). */
+const ICONOS = { guest_form: 'clipboard-list', invitation: 'send', extras: 'cake', authorizations: 'file-signature', dependents: 'user-round-plus' };
 
 /** Plegadas a partir de la tercera fila: «Ver las N». */
 const FILAS_A_LA_VISTA = 2;
@@ -62,7 +62,9 @@ export function antesDe(tareas, { textos = {}, locale = 'es', fecha = '' } = {})
             : tp(textos, 'mi_cuenta.antes.ver_mas', { n: resto.length - FILAS_A_LA_VISTA }),
         verMenos: texto(textos, 'mi_cuenta.antes.ver_menos'),
         estado,
-        opcional,
+        // `enLaCuenta` (`#825`): «¿Vienen menores?» se resuelve en una pantalla de Mi cuenta, y se abre en el sitio. `suelta`:
+        // no hay nada encima (ni tareas ni estado), y su raya separadora no separaría nada.
+        opcional: opcional ? { ...opcional, enLaCuenta: opcional.action?.via === 'account', suelta: ! porHacer.length && ! estado } : null,
     };
 }
 

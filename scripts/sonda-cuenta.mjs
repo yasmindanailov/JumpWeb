@@ -20,8 +20,9 @@
  *      «Siguiente: …» en el menú; en Mi cuenta, el chip que baja al bloque, la siguiente tarea entera, la invitación en
  *      fila (que se comparte por WhatsApp con el mensaje de la lista), las autorizaciones y los extras con sus enlaces, y
  *      la siguiente, que lleva a la lista de invitados de esa fiesta;
- *   9. LOS HIJOS (T5d, `DECISIONES #777`), con una entrada como próxima y la cuenta sin hijos: «Siguiente: Añade a tus
- *      hijos» en la isla de la página; su tarea en «Antes de venir», que abre la pantalla de alta; lo que falta al guardar;
+ *   9. LOS HIJOS (T5d, `DECISIONES #777`): con un Jump como próxima (puede entrar un adulto, `#825`), ni «Siguiente» ni
+ *      chip, y una línea opcional que abre la pantalla; con unas Kids (solo menores) y la cuenta sin hijos: «Siguiente:
+ *      Añade a tus hijos» en la isla de la página; su tarea en «Antes de venir», que abre la pantalla de alta; lo que falta al guardar;
  *      dos hijos con la fecha tecleada, sus relaciones y la casilla (y el descargo leído); «Guardado»; sus chips con
  *      «firmado» y «Todo listo»; la ficha de uno, con su firma y su PDF, y quitarlo tras preguntar; y la puerta
  *      `/mi-cuenta/hijos`;
@@ -35,8 +36,13 @@
  *      hasta la puerta de Google (se corta ahí) y la vuelta cancelada, cuyo aviso del servidor sale en Mi cuenta; y, con
  *      el correo sin confirmar y la analítica pendiente, sus dos avisos, el reenvío con su espera y «Entendido» (la
  *      cuenta se deja como estaba);
+ *   10c. LO QUE QUEDA (T5f, `DECISIONES #824`): «Reservar otra vez» con el historial real de la cuenta (el oráculo, de la
+ *      API), la compra situada y su flecha de vuelta al MISMO punto; la bienvenida (la API servida vacía) y su compra
+ *      eligiendo zona; un bloque con una fecha rota, que deja su hueco y el resto sigue; y sin conexión (`setOffline`): el
+ *      aviso, lo que guarda sin intentarse y «Volver a intentarlo». Y, ya sin sesión, «Sin conexión» en «Entra»;
  *   11. la consola queda limpia y ninguna respuesta de la API falla (salvo el «no» buscado de la contraseña).
- * Sale con 1 si algo falla. Dentro del contenedor, contra su puerto 80, con la cuenta de pruebas de `sonda-isla.mjs`:
+ * Sale con 1 si algo falla. Con `SONDA_SOLO=t5f`, tras entrar, solo la 10c y el cierre. Dentro del contenedor, contra su
+ * puerto 80, con la cuenta de pruebas de `sonda-isla.mjs`:
  *
  *   docker compose exec -u sail -T -e PLAYWRIGHT_BROWSERS_PATH=/home/sail/pw-browsers laravel.test \
  *       node scripts/sonda-cuenta.mjs http://localhost
@@ -80,8 +86,15 @@ async function recorrer(navegador, ventana, informe) {
     // Y uno más, buscado (T5e): el 422 de «Cambiar la contraseña» con una actual que no es.
     const esperados = { 401: 0, 404: 0, 422: 0 };
     let buscar422 = 0;
+    // T5f: el bloque que se rompe A PROPÓSITO se apunta en la consola («Mi cuenta · bloque …»): mientras se busca, se
+    // guarda aparte (y se comprueba que se apuntó); fuera de ese paso, sería un error de verdad.
+    const huecos = { buscando: false, vistos: [] };
     pagina.on('pageerror', (e) => errores.push(e.message));
-    pagina.on('console', (m) => { if (m.type() === 'error') errores.push(m.text()); });
+    pagina.on('console', (m) => {
+        if (m.type() !== 'error') return;
+        if (huecos.buscando && m.text().startsWith('Mi cuenta · bloque')) huecos.vistos.push(m.text());
+        else errores.push(m.text());
+    });
     pagina.on('response', (r) => {
         const ruta = new URL(r.url()).pathname;
         if (r.status() === 401 && /\/api\/v1\/me(\/[a-z-]+)?$/.test(ruta)) esperados[401] += 1;
@@ -167,6 +180,14 @@ async function recorrer(navegador, ventana, informe) {
     check('Tu QR compacto enseña la PNG del SERVIDOR (cargada)', mini.ok && /\/me\/card\/png/.test(mini.src), mini.src);
     check('abierta desde un enlace, solo la X (sin flecha)', ! (await capa().getByRole('button', { name: 'Volver' }).isVisible().catch(() => false)));
     await captura('3-mi-cuenta');
+
+    // `SONDA_SOLO=t5f`: tras entrar, solo lo de la T5f y el cierre (para afinarlo sin el recorrido entero).
+    if (process.env.SONDA_SOLO === 't5f') {
+        await loQueQueda();
+        await cierre();
+
+        return;
+    }
 
     // ── 3 · Tu QR ─────────────────────────────────────────────────────────────────────────────────────
     await capa().getByRole('button', { name: 'Enseñar mi QR' }).last().click();
@@ -391,18 +412,38 @@ async function recorrer(navegador, ventana, informe) {
     ]);
     check('tocar la siguiente lleva a la lista de invitados de ESA fiesta', pagina.url() === lista, pagina.url());
 
-    // ── 9 · Los hijos (T5d) ──────────────────────────────────────────────────────────────────────────
-    // El Jump como próxima (una ENTRADA) y la cuenta sin hijos: «Añade a tus hijos» es su tarea.
+    // ── 9 · Los hijos (T5d; `#825`) ──────────────────────────────────────────────────────────────────
+    // Primero el Jump como próxima: puede entrar un adulto (desde 8 años, sin tope), así que «Añade a tus hijos» NO es
+    // tarea (`#825`): ni «Siguiente» en la página ni chip; en «Antes de venir», la línea opcional, que abre su pantalla.
     datos('montar');
     limitadoresACero();
     await cargar('/kids');
     await pagina.waitForTimeout(700);
     await abrirMenu();
-    check('en la página, con una entrada y sin hijos, «Mi cuenta» dice «Siguiente: Añade a tus hijos»', await pagina.getByText('Siguiente: Añade a tus hijos').first().isVisible());
-
+    check('`#825`: con un Jump (puede entrar un adulto), la página NO dice «Siguiente: Añade a tus hijos»', ! (await pagina.getByText('Siguiente: Añade a tus hijos').first().isVisible().catch(() => false)));
     await cargar('/kids#mi-cuenta');
     const antesH = capa().locator('#antes');
     const quien = capa().locator('#quien');
+    await antesH.waitFor({ timeout: 15000 }).catch(() => {});
+    await pagina.waitForTimeout(500);
+    t = await texto(antesH);
+    check('`#825`: en Mi cuenta, la línea opcional, sin «SIGUIENTE» ni chip',
+        t === 'Antes de venir ¿Vienen menores? Firma por ellos antes y en la puerta solo enseñas el QR. Añadir a mis hijos' && ! (await capa().getByText('Siguiente: Añade a tus hijos').isVisible().catch(() => false)), t);
+    await captura('13b-hijos-opcional');
+    await antesH.getByRole('button', { name: 'Añadir a mis hijos' }).click();
+    await pagina.waitForTimeout(600);
+    check('`#825`: y su enlace abre «Añade a tus hijos» en la capa', (await banda()) === 'Añade a tus hijos', await banda());
+    await volver();
+
+    // Con unas Kids como próxima (de 4 a 7 años: solo menores) y la cuenta sin hijos: «Añade a tus hijos» es su TAREA.
+    datos('kids');
+    limitadoresACero();
+    await cargar('/kids');
+    await pagina.waitForTimeout(700);
+    await abrirMenu();
+    check('en la página, con unas Kids y sin hijos, «Mi cuenta» dice «Siguiente: Añade a tus hijos»', await pagina.getByText('Siguiente: Añade a tus hijos').first().isVisible());
+
+    await cargar('/kids#mi-cuenta');
     await antesH.waitFor({ timeout: 15000 }).catch(() => {});
     await pagina.waitForTimeout(500);
     t = await texto(antesH);
@@ -676,20 +717,156 @@ async function recorrer(navegador, ventana, informe) {
     await pagina.waitForTimeout(900);
     check('con todo al día, ningún aviso (la cuenta, como estaba)', ! (await capa().getByText('Confirma tu correo').isVisible().catch(() => false)) && deLaSonda('email_verified_at') === verificadaAntes);
 
-    await ajustes.getByRole('button', { name: 'Cerrar sesión', exact: true }).click();
-    await pagina.waitForURL((u) => new URL(u).pathname === '/', { timeout: 15000 }).catch(() => {});
-    await pagina.waitForLoadState('load');
-    await pagina.goto(`${base}/kids`, { waitUntil: 'load' });
-    await pagina.waitForTimeout(600);
-    await abrirMenu();
-    check('«Cerrar sesión» sale a la portada, y la página ya no tiene sesión', await pagina.getByText('Entrar o crear cuenta').first().isVisible(), pagina.url());
+    await loQueQueda();
+    await cierre();
 
-    // ── 11 · Limpio ──────────────────────────────────────────────────────────────────────────────────
-    const deCodigo = (codigo) => errores.filter((e) => e.includes(`status of ${codigo}`));
-    const inesperados = errores.filter((e) => ! /status of (401|404|422)/.test(e))
-        .concat(deCodigo(401).slice(esperados[401]), deCodigo(404).slice(esperados[404]), deCodigo(422).slice(esperados[422]));
-    check('consola limpia', inesperados.length === 0, inesperados.join(' | '));
-    check('ninguna respuesta de la API falla', malas.length === 0, malas.join(', '));
+    // ── 10c · Lo que queda (T5f, `#824`) ─────────────────────────────────────────────────────────────
+    async function loQueQueda() {
+        const cuerpo = () => texto(capa().locator('[data-isla-scroll]'));
+        const arriba = () => pagina.evaluate(() => document.querySelector('[data-isla-scroll]')?.scrollTop ?? -1);
+        const esperarCapa = async (ms = 1200) => { await capa().waitFor({ timeout: 15000 }).catch(() => {}); await pagina.waitForTimeout(ms); };
+
+        // RESERVAR OTRA VEZ, con el historial de verdad de la cuenta de pruebas (sus compras de `sonda-isla`). El oráculo lo
+        // dice la API, escrito aquí sin la regla de la isla: la primera del historial pagada, sin cancelar y que no sea una
+        // fiesta, cuyo producto se sigue vendiendo como entrada.
+        datos('montar');
+        limitadoresACero();
+        await cargar('/kids#mi-cuenta');
+        await esperarCapa();
+        const bloque = capa().locator('#otra-vez');
+        await bloque.waitFor({ timeout: 8000 }).catch(() => {});
+        const esperado = await pagina.evaluate(async () => {
+            const pedir = (u) => fetch(u, { credentials: 'same-origin', headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } }).then((r) => r.json());
+            const [pasadas, catalogo] = await Promise.all([pedir('/api/v1/me/reservations/past?per_page=10&page=1'), pedir('/api/v1/catalog/products')]);
+            const entradas = new Set((catalogo.data ?? []).filter((p) => p.type === 'entry').map((p) => p.id));
+            const c = (pasadas.data ?? []).find((x) => x.order?.status === 'paid' && ! x.reservation?.cancelled && ! x.reservation?.is_pack && entradas.has(x.reservation?.product_id));
+
+            return c ? { texto: `${c.reservation.product_name} · ${c.reservation.quantity_label}`, n: c.reservation.quantity } : null;
+        });
+        let t = await texto(bloque);
+        check('«Reservar otra vez»: la última visita disfrutada (qué y cuántos) y «Elegir día»', esperado !== null && t === `Reservar otra vez ${esperado.texto} Elegir día`, `«${t}» · ${JSON.stringify(esperado)}`);
+        await bloque.scrollIntoViewIfNeeded();
+        await pagina.waitForTimeout(400);
+        const punto = await arriba();
+        await captura('27-otra-vez');
+        await bloque.getByRole('button', { name: 'Elegir día' }).click();
+        await pagina.waitForTimeout(1800);
+        t = await cuerpo();
+        check('«Elegir día» abre la COMPRA en la misma capa, situada (sin «¿Qué zona?»), con su flecha',
+            (await banda()) === 'Cuándo y cuántos' && ! t.includes('¿Qué zona?') && ! (await lateralAbierto()) && await capa().getByRole('button', { name: 'Volver' }).isVisible(), `banda «${await banda()}» · ${t.slice(0, 240)}`);
+        await captura('28-otra-vez-compra');
+        await volver();
+        await pagina.waitForTimeout(500);
+        const vuelta = await arriba();
+        check('su flecha vuelve a Mi cuenta, al MISMO punto', (await banda()) === 'Mi cuenta' && punto > 0 && Math.abs(vuelta - punto) <= 4, `${punto} → ${vuelta}`);
+        check('y Mi cuenta, abierta desde un enlace, sigue sin flecha', ! (await capa().getByRole('button', { name: 'Volver' }).isVisible().catch(() => false)));
+
+        // LA BIENVENIDA de una cuenta sin reservas. La de pruebas tiene historial: la API se sirve VACÍA, con la forma de su
+        // contrato (la regla la prueba `reservas.test.js`; aquí, lo que se ve y a dónde lleva).
+        const vacia = (ruta) => ruta.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ data: [], meta: { current_page: 1, last_page: 1, per_page: 10, total: 0 } }) });
+        await pagina.route('**/api/v1/me/reservations/upcoming**', vacia);
+        await pagina.route('**/api/v1/me/reservations/past**', vacia);
+        await cargar('/kids#mi-cuenta');
+        await esperarCapa();
+        const bienvenida = capa().locator('section[aria-labelledby="bienvenida-t"]');
+        t = await texto(bienvenida);
+        check('sin ninguna reserva, la bienvenida: «Tu cuenta está lista», su frase y UNA acción',
+            t === 'Tu cuenta está lista Tu QR ya vale: con él entras siempre, sin papeles. Solo falta elegir cuándo venir. Reserva tu primera visita', t);
+        check('y ni «Reservar otra vez» ni «Tu próxima reserva»', (await capa().locator('#otra-vez').count()) === 0 && ! (await capa().getByText('Tu próxima reserva').isVisible().catch(() => false)));
+        await captura('29-bienvenida');
+        await bienvenida.getByRole('button', { name: 'Reserva tu primera visita' }).click();
+        await pagina.waitForTimeout(1500);
+        t = await cuerpo();
+        check('«Reserva tu primera visita» abre la compra eligiendo zona, con su flecha',
+            (await banda()) === 'Cuándo y cuántos' && t.includes('¿Qué zona?') && await capa().getByRole('button', { name: 'Volver' }).isVisible(), t.slice(0, 200));
+        await captura('30-primera-visita');
+        await volver();
+        check('y su flecha vuelve a la bienvenida', (await banda()) === 'Mi cuenta' && await bienvenida.isVisible());
+        await pagina.unroute('**/api/v1/me/reservations/upcoming**');
+        await pagina.unroute('**/api/v1/me/reservations/past**');
+
+        // UN BLOQUE QUE FALLA: la próxima con una fecha que no se puede leer (`Intl` lanza al componerla). Deja su hueco, se
+        // apunta en la consola (lo descuenta `huecos`) y el resto de Mi cuenta sigue.
+        huecos.buscando = true;
+        await pagina.route('**/api/v1/me/reservations/upcoming**', async (ruta) => {
+            const r = await ruta.fetch();
+            const json = await r.json();
+            const pagada = (json.data ?? []).find((c) => c.order?.status === 'paid');
+
+            if (pagada) pagada.reservation.date = 'no-es-una-fecha';
+            await ruta.fulfill({ response: r, json });
+        });
+        await cargar('/kids#mi-cuenta');
+        await esperarCapa(1500);
+        t = await cuerpo();
+        check('un bloque que no se puede componer deja su HUECO y el resto sigue',
+            t.includes('«Tu próxima reserva» no se ha podido cargar. Recarga la página.') && t.includes('Otras reservas') && t.includes('Quién viene contigo') && (await titular()) === `Hola, ${CLIENTE.nombre}`, t.slice(0, 420));
+        check('y se apunta en la consola, con el nombre del bloque', huecos.vistos.some((m) => m.startsWith('Mi cuenta · bloque proxima')), huecos.vistos.join(' | '));
+        await captura('31-hueco');
+        await pagina.unroute('**/api/v1/me/reservations/upcoming**');
+        huecos.buscando = false;
+
+        // SIN CONEXIÓN: el aviso arriba mientras no hay red; lo que guarda (renovar el QR) no se intenta y deja reintentar.
+        limitadoresACero();
+        await cargar('/kids#mi-cuenta');
+        await esperarCapa(900);
+        await capa().getByRole('button', { name: 'Enseñar mi QR' }).last().click();
+        await pagina.waitForTimeout(600);
+        const qr = async () => (await capa().locator('#mi-qr b').first().textContent().catch(() => '')).trim();
+        const qrAntes = await qr();
+        await contexto.setOffline(true);
+        await pagina.waitForTimeout(400);
+        check('sin red, «Sin conexión» arriba, con su frase', await capa().getByText('Sin conexión', { exact: true }).isVisible() && await capa().getByText('Lo que ves sigue aquí. Cuando vuelva la conexión, podrás guardar.').isVisible());
+        await capa().getByRole('button', { name: 'Renovar mi QR' }).click();
+        await capa().getByRole('button', { name: 'Sí, renovar' }).click();
+        await pagina.waitForTimeout(600);
+        check('lo que guarda NO se intenta: su fallo con «Volver a intentarlo», y el QR sigue siendo el mismo',
+            await capa().getByText('No se ha podido guardar: no hay conexión. No has perdido nada.').isVisible() && await capa().getByRole('button', { name: 'Volver a intentarlo' }).isVisible() && (await qr()) === qrAntes, qrAntes);
+        await captura('32-sin-conexion');
+        await contexto.setOffline(false);
+        await pagina.waitForTimeout(500);
+        check('con la red de vuelta, «Sin conexión» se va y el fallo se queda hasta reintentar',
+            ! (await capa().getByText('Sin conexión', { exact: true }).isVisible().catch(() => false)) && await capa().getByRole('button', { name: 'Volver a intentarlo' }).isVisible());
+        await capa().getByRole('button', { name: 'Volver a intentarlo' }).click();
+        await pagina.waitForTimeout(1300);
+        const qrDespues = await qr();
+        check('«Volver a intentarlo» lo hace: renueva el QR, lo confirma y el fallo se va',
+            qrDespues !== '' && qrDespues !== qrAntes && await capa().getByText('Tu QR se ha renovado').isVisible() && ! (await capa().getByText('No se ha podido guardar').isVisible().catch(() => false)), `${qrAntes} → ${qrDespues}`);
+        await volver();
+    }
+
+    // ── Cerrar sesión, y limpio ──────────────────────────────────────────────────────────────────────
+    async function cierre() {
+        const bloqueAjustes = capa().locator('#ajustes');
+
+        limitadoresACero();
+        await cargar('/kids#mi-cuenta');
+        await bloqueAjustes.waitFor({ timeout: 15000 }).catch(() => {});
+        await pagina.waitForTimeout(700);
+        await bloqueAjustes.getByRole('button', { name: 'Cerrar sesión', exact: true }).click();
+        await pagina.waitForURL((u) => new URL(u).pathname === '/', { timeout: 15000 }).catch(() => {});
+        await pagina.waitForLoadState('load');
+        await pagina.goto(`${base}/kids`, { waitUntil: 'load' });
+        await pagina.waitForTimeout(600);
+        await abrirMenu();
+        check('«Cerrar sesión» sale a la portada, y la página ya no tiene sesión', await pagina.getByText('Entrar o crear cuenta').first().isVisible(), pagina.url());
+
+        // Sin sesión, «Sin conexión» también sale (T5f): sus textos viajan para todos (`mi_cuenta_alta`).
+        await pagina.getByText('Entrar o crear cuenta').first().click();
+        await capa().waitFor({ timeout: 8000 }).catch(() => {});
+        await contexto.setOffline(true);
+        await pagina.waitForTimeout(400);
+        check('sin sesión, en «Entra», «Sin conexión» arriba', (await titular()) === 'Entra' && await capa().getByText('Sin conexión', { exact: true }).isVisible());
+        await contexto.setOffline(false);
+        await pagina.waitForTimeout(300);
+
+        // ── 11 · Limpio ──────────────────────────────────────────────────────────────────────────────
+        const deCodigo = (codigo) => errores.filter((e) => e.includes(`status of ${codigo}`));
+        const inesperados = errores.filter((e) => ! /status of (401|404|422)/.test(e))
+            .concat(deCodigo(401).slice(esperados[401]), deCodigo(404).slice(esperados[404]), deCodigo(422).slice(esperados[422]));
+        check('consola limpia', inesperados.length === 0, inesperados.join(' | '));
+        check('ninguna respuesta de la API falla', malas.length === 0, malas.join(', '));
+    }
 }
 
 const navegador = await chromium.launch();

@@ -16,9 +16,11 @@ import mapPin from '../../../icons/lucide/icons/map-pin.svg?raw';
 import maximize2 from '../../../icons/lucide/icons/maximize-2.svg?raw';
 import packageIcon from '../../../icons/lucide/icons/package.svg?raw';
 import receipt from '../../../icons/lucide/icons/receipt.svg?raw';
+import rotateCcw from '../../../icons/lucide/icons/rotate-ccw.svg?raw';
 import send from '../../../icons/lucide/icons/send.svg?raw';
 import store from '../../../icons/lucide/icons/store.svg?raw';
 import triangleAlert from '../../../icons/lucide/icons/triangle-alert.svg?raw';
+import wifiOff from '../../../icons/lucide/icons/wifi-off.svg?raw';
 
 registrarIconos({
     cake,
@@ -32,7 +34,9 @@ registrarIconos({
     'maximize-2': maximize2,
     package: packageIcon,
     receipt,
+    'rotate-ccw': rotateCcw,
     send,
     store,
     'triangle-alert': triangleAlert,
+    'wifi-off': wifiOff,
 });

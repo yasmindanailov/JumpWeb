@@ -137,6 +137,9 @@ export function confirmationLine(item, answers = [], dependents = []) {
         guest_form_url: typeof item?.guest_form_url === 'string' ? item.guest_form_url : null,
         guest_count_deadline: typeof item?.guest_count_deadline === 'string' ? item.guest_count_deadline : null,
         invitation_url: typeof item?.invitation_url === 'string' ? item.invitation_url : null,
+        // `#825` (1.45.0): si todo el que entra es menor, del tramo de edad del producto; lo decide el SERVIDOR. Con él,
+        // «¡Reservado!» de la isla ofrece añadir a los hijos solo donde seguro que vienen.
+        minors_only: item?.minors_only === true,
     };
 }
 

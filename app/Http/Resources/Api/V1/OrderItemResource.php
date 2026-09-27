@@ -10,6 +10,7 @@ use App\Domain\Booking\Services\GuestCountPolicy;
 use App\Domain\Booking\Services\OrderBook;
 use App\Domain\Booking\Services\PostFormAddons;
 use App\Domain\Booking\Services\ProductIcon;
+use App\Domain\Identity\Models\Dependent;
 use App\Domain\Platform\Services\DisplayTime;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -176,6 +177,10 @@ class OrderItemResource extends JsonResource
             // navegador puede estar en otra zona. Con ella, Mi cuenta enseña el QR grande de entrada.
             'today' => $item->slot?->date?->toDateString() === DisplayTime::today()->toDateString(),
             'cancellation' => $this->cancellation($item, $book->hasDeposit),
+            // Si todo el que entra es MENOR (1.45.0, `DECISIONES #825`): el tramo de edad del producto, con tope por debajo de
+            // la mayoría de edad (la de Identity, `Dependent::ADULT_AGE`). Con él, «¡Reservado!» ofrece añadir a los hijos
+            // solo donde seguro que vienen. A la COLA, por el orden que `ApiContractTest` compara.
+            'minors_only' => $item->ticketType?->onlyGuestsUnder(Dependent::ADULT_AGE) ?? false,
         ];
     }
 

@@ -17,6 +17,7 @@
 import { computed, inject, onMounted, reactive, watch } from 'vue';
 import { usePurchaseFlow } from '../../sidebar/usePurchaseFlow.js';
 import { TEXTOS_ISLA } from '../../sidebar/carcasa.js';
+import { cajonHost } from '../../sidebar/host-bridge.js';
 import { STEPS, isOutcome } from '../../sidebar/machine.js';
 import { api } from '../../sidebar/api.js';
 import { t, tp } from '../../sidebar/i18n.js';
@@ -54,12 +55,13 @@ export function useSeccionCompra(props) {
      * Google— y la pantalla 0 no se enseña mientras: un esqueleto, sin nada que tocar (el owner: «al usuario le da tiempo
      * a presionar continuar o editar algo»). `sinDatos`: se llegó a «Pagar» sin pasar por «Tus datos» (nada que pedir).
      * `alEntrar` (`#822`, §4.16): la hora se llenó al CONTINUAR de la pantalla 0, no al pagar —la línea aún no está en la
-     * cesta y nada se ha cobrado ni pedido—.
+     * cesta y nada se ha cobrado ni pedido—. `desde` (T5f): la compra la abrió Mi cuenta («Reservar otra vez», «Reserva tu
+     * primera visita»), y la flecha de la pantalla 0 vuelve a ella.
      */
     const compra = reactive({
         borrador: borradorDeIntencion(null, []), precios: {}, fichas: {}, grupos: [], cargandoHoras: false, intencion: null,
         paso: 'cuando', aviso: '', ocupado: null, pedido: null, pagado: null, dir: null, cercanas: [], horaNueva: null,
-        preparando: false, sinDatos: false, alEntrar: false,
+        preparando: false, sinDatos: false, alEntrar: false, desde: null,
     });
 
     /**
@@ -200,7 +202,10 @@ export function useSeccionCompra(props) {
         // a sí misma.
         const sola = intencion?.type === 'linea' && intencion.continuar === true;
 
-        Object.assign(compra, { paso: 'cuando', aviso: '', pedido: null, pagado: null, preparando: sola, sinDatos: false, alEntrar: false });
+        Object.assign(compra, {
+            paso: 'cuando', aviso: '', pedido: null, pagado: null, preparando: sola, sinDatos: false, alEntrar: false,
+            desde: intencion?.desde === 'cuenta' ? 'cuenta' : null,
+        });
         const situada = enCola(() => situar(borradorDeIntencion(intencion, catalogStore.products)));
 
         if (sola) situada.then(() => (vista.value?.listo ? continuar() : undefined)).finally(() => { compra.preparando = false; });
@@ -380,6 +385,13 @@ export function useSeccionCompra(props) {
         if (store.step === STEPS.CONFIRMED) empezar(null);
     }
 
+    /**
+     * La flecha de la pantalla 0 cuando la abrió Mi cuenta (T5f; el diseño: «la compra vuelve aquí con su flecha»): la
+     * capa pasa a Mi cuenta —su inicio, `desde: 'compra'`— y Mi cuenta vuelve al punto del que salió. La compra se queda
+     * como estaba: nada se ha metido en la cesta en la pantalla 0.
+     */
+    const aLaCuenta = () => cajonHost()?.openAccount?.({ preventDefault() {} }, 'home', { desde: 'compra' });
+
     // ── Lo que se pinta ──────────────────────────────────────────────────────────────────────────────
 
     const deLaCesta = (quote) => resumenDeLaCesta(quote, { textos, locale: flow.locale });
@@ -417,8 +429,9 @@ export function useSeccionCompra(props) {
                 return { ...c, ...cesta, dir: compra.dir, onBack: null, onClose: cerrar, action: { ...c.action, onClick: () => {}, loading: t(textos, 'pieza.cargando') } };
             }
 
+            // Nacida en Mi cuenta (T5f), la flecha vuelve a ella, al mismo punto; si no, no hay nada detrás: solo la X.
             return {
-                ...c, dir: compra.dir, onBack: null, onClose: cerrar,
+                ...c, dir: compra.dir, onBack: compra.desde === 'cuenta' ? aLaCuenta : null, onClose: cerrar,
                 action: { ...c.action, onClick: continuar, loading: compra.ocupado === 'cuando' ? t(textos, 'pieza.cargando') : false },
             };
         }

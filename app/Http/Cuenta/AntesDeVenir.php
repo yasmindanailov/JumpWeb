@@ -42,8 +42,8 @@ use Illuminate\Support\Str;
  *   · **Autorizaciones** (estado, si el producto las pide): las firmadas; con invitación, sobre los que han dicho que sí.
  *     Nunca un denominador inventado (`waiver-por-reserva.md` §4.10): sin respuestas, solo las firmadas.
  *
- *   · **Añade a tus hijos** (tarea de una ENTRADA, T5d, `#777`): si la instalación firma el descargo dentro; hecha con
- *     algún menor declarado.
+ *   · **Añade a tus hijos** (de una ENTRADA, T5d, `#777`): si la instalación firma el descargo dentro. Tarea si el
+ *     producto es de menores, hecha con algún menor declarado; si puede entrar un adulto, opcional (`#825`).
  *
  * ⚠️ Una reserva sin pagar, cancelada o ya celebrada no tiene nada pendiente (la guarda de `PendingBeforeVisit`).
  */
@@ -153,6 +153,11 @@ final class AntesDeVenir
      * cuando la cuenta tiene algún menor declarado (el mockup: «la de los hijos se da por hecha en cuanto hay hijos»).
      * Su acción abre la pantalla de alta: en Mi cuenta, en el sitio (`via: account`); fuera, su puerta.
      *
+     * ⚠️ **Tarea solo si el PRODUCTO es de menores** (`#825`, el owner): su tramo de edad del panel tiene tope por debajo
+     * de la mayoría de edad (`TicketType::onlyGuestsUnder`). Si puede entrar un adulto (Jump, «desde 8 años»), la reserva
+     * no dice quién viene: dos adultos veían «Siguiente: Añade a tus hijos» y no podían cumplirla nunca. Ahí es una línea
+     * OPCIONAL —ni «Siguiente» ni el punto del menú— y, con algún menor ya en la cuenta, ninguna.
+     *
      * @return array<string, mixed>|null
      */
     private function hijos(OrderItem $reserva, TicketType $tipo): ?array
@@ -165,10 +170,20 @@ final class AntesDeVenir
         $hoy = DisplayTime::today();
         $t = self::T.'hijos.';
         $puerta = route('account.dependents');
+        $conMenores = $this->menores->activeFor($titular)->contains(fn (Dependent $d): bool => $d->isMinorOn($hoy));
+
+        if (! $tipo->onlyGuestsUnder(Dependent::ADULT_AGE)) {
+            return $conMenores ? null : [
+                'kind' => self::HIJOS, 'type' => self::OPCIONAL, 'done' => false,
+                'title' => null, 'note' => null, 'text' => __($t.'opcional'), 'due' => null,
+                'action' => ['label' => __($t.'boton_isla'), 'url' => $puerta, 'via' => 'account'],
+                'isla' => null,
+            ];
+        }
 
         return [
             'kind' => self::HIJOS, 'type' => self::TAREA,
-            'done' => $this->menores->activeFor($titular)->contains(fn (Dependent $d): bool => $d->isMinorOn($hoy)),
+            'done' => $conMenores,
             'title' => __($t.'titulo'), 'note' => __($t.'nota'), 'text' => __($t.'texto'),
             'due' => __(self::T.'para_el', ['dia' => DisplayTime::dayInSentence($reserva->slot->date)]),
             'action' => ['label' => __($t.'boton'), 'url' => $puerta, 'via' => 'account'],

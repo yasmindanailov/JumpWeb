@@ -8,6 +8,7 @@ use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Identity\Models\Dependent;
 use App\Domain\Identity\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
@@ -145,6 +146,27 @@ class MeReservationChangeFactsTest extends ApiTestCase
 
         $en = collect($this->actingAs($this->user)->withHeader('Accept-Language', 'en')->getJson(self::ROOT.'/me/reservations/upcoming')->json('data.0.reservation.addons'))->keyBy('product_name');
         $this->assertSame('You have 2 pairs of socks; we hand them over at the door.', $en['Calcetines']['note'], 'en el idioma de la petición');
+    }
+
+    /**
+     * `#825` (1.45.0): `minors_only`, si todo el que entra es MENOR —el tramo de edad del producto con tope por debajo de
+     * la mayoría de edad, extremos incluidos—. Sin tope, o sin tramo, puede entrar un adulto: `false`.
+     */
+    public function test_825_minors_only_says_whether_everyone_who_comes_is_under_age(): void
+    {
+        $tramos = ['kids' => [4, 7], 'hasta17' => [null, Dependent::ADULT_AGE - 1], 'hasta18' => [null, Dependent::ADULT_AGE], 'jump' => [8, null], 'sin' => [null, null]];
+        $ids = [];
+        foreach ($tramos as $clave => [$min, $max]) {
+            $item = $this->reservation(date: '2026-06-18', cutoff: null);
+            TicketType::query()->whereKey($item->ticket_type_id)->update(['guest_age_min' => $min, 'guest_age_max' => $max]);
+            $ids[$clave] = $item->id;
+        }
+
+        $cards = collect($this->upcoming()->assertValidResponse(200)->json('data'))->keyBy('reservation.id');
+        $this->assertSame(
+            ['kids' => true, 'hasta17' => true, 'hasta18' => false, 'jump' => false, 'sin' => false],
+            array_map(fn (int $id): bool => $cards[$id]['reservation']['minors_only'], $ids),
+        );
     }
 
     // ── Andamiaje ───────────────────────────────────────────────────────────────────────────────

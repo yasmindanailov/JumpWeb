@@ -18,6 +18,7 @@ import { useDependentsStore } from '../../sidebar/stores/dependents.js';
 import { useWaiverStore } from '../../sidebar/stores/waiver.js';
 import { signupNeedsWaiver, signupWaiverDocumentId } from '../../sidebar/account/dependents.js';
 import { erroresDeFicha, fechaTecleada, fichaVacia, fichasDe, formularioHijos, hijoDe, isoDeFecha, quienDe, relacionesDe, revisarHijos } from './hijos.js';
+import { protegido } from './seguro.js';
 
 /** «Hoy» del navegador en `Y-m-d`: solo para la forma y la pista de la edad (si es menor lo decide el servidor). */
 const hoyLocal = () => new Date().toLocaleDateString('sv-SE');
@@ -123,7 +124,8 @@ export function useHijosCuenta({ textos, props, emailVerified }) {
         otro: () => { s.h.lista.push(fichaVacia()); },
         quitarFicha: (i) => { if (s.h.lista.length > 1) s.h.lista.splice(i, 1); s.errores.lista.splice(i, 1); },
         abrir: (id) => { Object.assign(s, { hijo: id, preguntar: false, firmaCasilla: false, firmaError: '' }); menores.forget(); descargo.ensureLegal({ api }); },
-        quien: computed(() => ({ hijos: quienDe(menores.items, { textos, emailVerified: emailVerified() }), cargando: ! menores.loaded })),
+        // Protegido DENTRO (T5f, `seguro.js`): si no se puede componer, el bloque deja su hueco y Mi cuenta sigue.
+        quien: computed(() => protegido('quien', () => ({ hijos: quienDe(menores.items, { textos, emailVerified: emailVerified() }), cargando: ! menores.loaded }))),
         pantalla: computed(() => ({ fichas: fichasDe(s.h, { textos, hoy: hoyLocal() }), relaciones: relacionesDe(textos), errores: s.errores, aviso: s.aviso, descargo: s.h.descargo, firma: firma.value })),
         hijo,
         ficha: computed(() => ({ ...hijo.value, preguntar: s.preguntar, casilla: s.firmaCasilla, error: s.firmaError, quitando: menores.removingId === s.hijo })),

@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.44.0
+  version: 1.45.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -5966,8 +5966,9 @@ components:
           type: string
           enum: [guest_form, invitation, extras, authorizations, dependents]
           description: |
-            `dependents` (1.38.0, T5d, `DECISIONES #777`): «Añade a tus hijos», la tarea de una ENTRADA cuando la
-            instalación firma el descargo dentro; hecha con algún menor declarado.
+            `dependents` (1.38.0, T5d, `DECISIONES #777`): «Añade a tus hijos», de una ENTRADA cuando la instalación firma
+            el descargo dentro. Desde `#825`, `task` solo si su producto es de menores (`OrderItem.minors_only`), hecha con
+            algún menor declarado; si puede entrar un adulto, `optional` («¿Vienen menores?…») y solo sin menores en la cuenta.
         type:
           type: string
           enum: [task, optional, status]
@@ -6384,6 +6385,7 @@ components:
         - product_id
         - today
         - cancellation
+        - minors_only
       additionalProperties: false
       properties:
         id:
@@ -6587,6 +6589,13 @@ components:
               description: |
                 Si al cancelar en plazo se DEVUELVE la señal: el interruptor del producto que la instalación enciende
                 solo si sus condiciones lo prometen, y solo en una reserva que nació con señal.
+        minors_only:
+          type: boolean
+          description: |
+            **Si todo el que entra con esta reserva es MENOR** (1.45.0, `DECISIONES #825`): el tramo de edad de su producto
+            (el del panel, `guest_age_min`/`guest_age_max` del catálogo) tiene tope y queda por debajo de la mayoría de edad.
+            Sin tope («desde 8 años») es `false`: puede entrar un adulto. Con él, «¡Reservado!» ofrece añadir a los hijos
+            y firmar por ellos solo donde seguro que vienen.
     OrderItemAddon:
       type: object
       description: |

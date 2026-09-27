@@ -301,6 +301,46 @@ class MeReservationBeforeVisitTest extends ApiTestCase
         $this->assertSame([], $this->tareas($host, $fiesta->fresh()));
     }
 
+    public function test_825_where_an_adult_can_come_it_is_optional_and_lights_neither_the_chip_nor_the_dot(): void
+    {
+        // Jump, «desde 8 años»: sin tope, pueden ser dos adultos. Se ofrece, no se pide (el owner, `#825`).
+        [$r, $titular] = $this->entrada(edadMin: 8, edadMax: null);
+
+        $this->assertSame([[
+            'kind' => 'dependents', 'type' => 'optional', 'done' => false,
+            'title' => null, 'note' => null,
+            'text' => '¿Vienen menores? Firma por ellos antes y en la puerta solo enseñas el QR.',
+            'due' => null,
+            'action' => ['label' => 'Añadir a mis hijos', 'url' => route('account.dependents'), 'via' => 'account'],
+        ]], $this->tareas($titular, $r));
+        $this->assertSame(['pending' => false, 'pendingText' => null, 'task' => null, 'bookingToday' => null], app(AntesDeVenir::class)->paraLaIsla($titular));
+    }
+
+    public function test_825_a_product_without_an_age_range_does_not_assume_children_either(): void
+    {
+        [$r, $titular] = $this->entrada(edadMin: null, edadMax: null);
+
+        $this->assertSame(['optional'], array_column($this->tareas($titular, $r), 'type'));
+    }
+
+    public function test_825_it_is_a_task_only_if_the_top_of_the_range_is_under_the_age_of_majority(): void
+    {
+        // Los extremos van incluidos: «hasta 17» son todos menores; «hasta 18» ya admite a un adulto.
+        [$r, $titular] = $this->entrada(edadMax: Dependent::ADULT_AGE - 1);
+        $this->assertSame(['task'], array_column($this->tareas($titular, $r), 'type'));
+
+        TicketType::query()->whereKey($r->ticket_type_id)->update(['guest_age_max' => Dependent::ADULT_AGE]);
+        $this->assertSame(['optional'], array_column($this->tareas($titular, $r), 'type'));
+    }
+
+    public function test_825_with_a_minor_already_in_the_account_the_optional_line_goes(): void
+    {
+        [$r, $titular] = $this->entrada(edadMin: 8, edadMax: null);
+        Dependent::create(['user_id' => $titular->id, 'name' => 'Vera', 'relationship' => 'mother', 'born_on' => DisplayTime::today()->subYears(9)->toDateString()]);
+
+        $this->assertSame([], $this->tareas($titular, $r));
+    }
+
     public function test_the_page_isla_opens_the_children_screen_by_its_zone_on_the_page_of_what_was_booked(): void
     {
         [$r, $titular] = $this->entrada();
@@ -395,11 +435,11 @@ class MeReservationBeforeVisitTest extends ApiTestCase
 
     /**
      * Una ENTRADA pagada de Kids dentro de cinco días, en una instalación que firma el descargo dentro (modo interno y
-     * texto publicado, como `mountParty()`).
+     * texto publicado, como `mountParty()`). Su tramo de edad, el del panel: Kids, de 4 a 7 (`#825`); Jump, desde 8.
      *
      * @return array{0: OrderItem, 1: User}
      */
-    private function entrada(bool $conTexto = true): array
+    private function entrada(bool $conTexto = true, ?int $edadMin = 4, ?int $edadMax = 7): array
     {
         Setting::query()->updateOrCreate(['key' => WaiverSettings::KEY_MODE], ['value' => WaiverSettings::MODE_INTERNAL]);
         Setting::flushMemo();
@@ -409,7 +449,8 @@ class MeReservationBeforeVisitTest extends ApiTestCase
 
         $zona = Zone::firstOrCreate(['slug' => 'kids'], ['name' => ['es' => 'Kids'], 'position' => 1, 'is_active' => true]);
         $tipo = TicketType::create(['zone_id' => $zona->id, 'type' => TicketType::TYPE_ENTRY, 'name' => ['es' => 'Kids · 1 hora'],
-            'duration_min' => 60, 'seats_per_unit' => 1, 'is_sellable' => true, 'is_active' => true, 'position' => 1]);
+            'duration_min' => 60, 'seats_per_unit' => 1, 'is_sellable' => true, 'is_active' => true, 'position' => 1,
+            'guest_age_min' => $edadMin, 'guest_age_max' => $edadMax]);
         $franja = Slot::create(['zone_id' => $zona->id, 'date' => DisplayTime::today()->addDays(5)->toDateString(),
             'start_time' => '11:00:00', 'end_time' => '12:00:00', 'capacity' => 50, 'online_capacity' => 50]);
         $titular = User::factory()->create(['email_verified_at' => now()]);

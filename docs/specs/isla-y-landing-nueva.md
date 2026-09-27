@@ -27,7 +27,7 @@
   la isla en Vue, idéntica al diseño) y **T3 ✅** (§4.10, `#689`→`#698`): la isla compra con tarjeta hasta el banco,
   con «Entra» y Google, cumpleaños con señal y la hora que se llena; su sonda, `scripts/sonda-isla.mjs`; la
   secuencia, en `sidebar/usePurchaseFlow.js`. El sistema nuevo del 24-09 tarde, dentro (§4.11, `#697`). **T4 🟦**
-  (§4.12) · **T5 🟦** (§4.13, `#773`): Mi cuenta. La fiesta, del SPA (`#765`).
+  (§4.12) · **T5 ✅** (§4.13, `#773`): Mi cuenta. La fiesta, del SPA (`#765`).
 - **Invariantes**: `PAY-*` si entra Bizum (`VERIFY_CONC=1`), `SEC-12` (la ruta de las vistas), `SEC-01`,
   `RGPD-*` (consentimiento dentro de la isla, Apple como proveedor), `PERF-02` (la carcasa por instalación va en
   el arranque cacheado; la variante del A/B, en la sesión).
@@ -1448,6 +1448,48 @@ piezas del sistema**, enseñado en vivo antes de cerrar.
   pendiente con sus dos avisos, el reenvío con su espera y «Entendido»—. ⚠️ La vuelta de Google de la COMPRA queda medida por
   su módulo y por lectura, no en vivo. **El peso**: Mi cuenta 101,34 → 104,93 (techo 106: los avisos van con la primera
   pintura, donde se miran), la isla de la página 155,62 → 156,30 (techo 157). ▶ **Sigue la T5f**.
+- ▶ **T5f ✅ (27-09, `#824`, `[DECIDIDO]` 2026-09-27) · lo que queda**. **Reservar otra vez** (`BloqueOtraVez.vue`;
+  `reservas.js::otraVezDe`): la última visita DISFRUTADA —pasada y pagada— de una ENTRADA que el catálogo del motor sigue
+  vendiendo (el `is_pack` de la reserva sale de la misma columna que su `type`: mirarlo dos veces era código muerto, lo
+  delató el arnés), qué y cuántos. «Elegir día» abre la compra en la misma capa con `{ type: 'linea', id, quantity, desde:
+  'cuenta' }` —sin día (la pantalla 0 pone hoy o el primero con huecos, como el mockup), ni hora ni calcetines— y la flecha
+  de su pantalla 0 (`compra.desde`) vuelve a Mi cuenta (`openAccount(…, 'home', { desde: 'compra' })`), con su flecha y en
+  su punto. Sin el vale (`#773`·c) ni el punto final del texto del mockup. **La bienvenida** (`esCuentaNueva`): con las dos
+  listas LEÍDAS y vacías (un pedido a medio pagar ya es una reserva); «Reserva tu primera visita» abre la compra eligiendo
+  zona, con su flecha (desvío: el mockup abre el selector de planes, que la isla de las páginas no tiene hasta la T6).
+  **Sin conexión** (`conexion.js`, `useConexion.js`, `AvisosRed.vue`): «Sin conexión» arriba de cualquier vista mientras
+  `navigator.onLine === false`, y lo que guarda (entrar, crear, los pasos de Ajustes, renovar el QR, los interruptores,
+  cerrar sesión, reenviar…) no se intenta: deja su fallo con «Volver a intentarlo», que vuelve a mirar la red; el fallo
+  retira la confirmación y sube la capa a él (lo que falló puede estar al fondo). Con `onLine` a `true` sin red de verdad
+  lo dicen los formularios del motor («inténtalo más tarde»). Sus textos, en `mi_cuenta_alta.red`: viajan sin sesión
+  (+237–242 B, +92–102 B gzip por página con la isla). **Cada bloque, protegido** (`seguro.js::protegido`,
+  `BloqueSeguro.vue`): sus datos DENTRO de cada `computed` que pinta un bloque —⚠️ Vue 3.5 reevalúa los `computed` de los
+  que se depende en `isDirty` → `refreshComputed`, fuera del `try` de quien los lee (`seguro.test.js` lo fija, con su
+  control)— y su pintura con `onErrorCaptured`: el hueco del diseño, apuntado en la consola. De paso, el `ck` de la capa
+  calculaba SIEMPRE «Cambiar o cancelar» de la próxima y una fecha rota se llevaba la capa entera: ahora cada paso calcula
+  lo suyo. **Medido**: `node --test` 1.489 → 1.505 (`reservas.test.js` +8, `conexion.test.js` 3, `seguro.test.js` 5);
+  `scripts/mutar-t5f.sh` 14/14; **en vivo**, `sonda-cuenta.mjs` 215 → **244/244** a 1280 y 390 (su parte 10c —con
+  `SONDA_SOLO=t5f`, sola—: otra vez con el historial real, la bienvenida con la API vacía, el hueco con una fecha rota —antes
+  del arreglo del `ck` la capa no salía—, sin conexión con `setOffline`, y sin sesión en «Entra»); `sonda-compra-directa`
+  16/16 en los dos anchos; la comparación final con el mockup (`?cuenta=entradas`, a 390, lado a lado): los mismos bloques,
+  en su orden. **El peso**: Mi cuenta 108,40 → 115,70 KiB (techo 117; base: el `HEAD` de `#823` construido aparte).
+  `CuentaInicio` llegó a 44 líneas de código (techo 40, `SidebarComponentBudgetTest`): Tu QR y la confirmación pasan a un
+  objeto cada una (`tuQr`, `aviso`), como la vista de Tu QR, y `BloqueSeguro` decide su hueco con sus `datos` (39).
+  ✅ **El visto bueno del owner** (27-09, `#773`·d): con él, **la T5 entera, CERRADA** (T5a→T5f).
+  ▶ **Y `#825` (`[DECIDIDO owner]` 2026-09-27)**: «Añade a tus hijos» deja de ser tarea en toda entrada —dos adultos con
+  un Jump la veían y no podían cumplirla—; es tarea solo si el PRODUCTO es de menores —su edad máxima del panel
+  (`guest_age_max`) por debajo de `Dependent::ADULT_AGE`: Kids 4–7 sí, Jump 8+ no—, y si no, una línea opcional sin chip
+  ni punto. Los cumpleaños no cambian (la tarea solo existe en las entradas). **Hecho**: el hecho, en el producto
+  (`TicketType::onlyGuestsUnder`, la edad la pone quien pregunta: Booking no mira a Identity); Mi cuenta
+  (`AntesDeVenir::hijos`: la tarea o la línea opcional, que abre «Añade a tus hijos» en el sitio y, con un menor ya en
+  la cuenta, no sale; `antes.js` le da su icono del diseño, `user-round-plus`, y sin nada encima quita su raya); la API,
+  `OrderItem.minors_only` (contrato **1.45.0**; el siguiente, del SPA), y «¡Reservado!» de la compra, que pide los hijos
+  solo con una entrada de menores (`confirmationLine` lo transporta: toqué el motor del SPA, avisado). **Medido**:
+  `MeReservationBeforeVisitTest` 23 → 27 (Jump, sin edad, la frontera 17/18, con un menor) y `MeReservationChangeFactsTest`
+  +1 (cinco tramos contra el contrato); `node --test` 1.505 → 1.510; `scripts/mutar-hijos-de-producto.sh` 12/12 (dos
+  supervivientes antes, los dos código muerto: fuera); `sonda-cuenta.mjs` 250/250 (su parte 9: el Jump sin «Siguiente» y
+  su línea opcional que abre la pantalla —el caso de Kids, que sí lo encuentra, hace de control—; y las Kids, la tarea);
+  el peso de Mi cuenta, 115,94 KiB. ⚠️ «¡Reservado!»: probado por su módulo y el contrato, no en vivo (ninguna sonda lo mira).
 
 ### 4.14 El zip del 26-09 tarde (el tercero): movimiento, garantías y la marca de Google (`#780`)
 

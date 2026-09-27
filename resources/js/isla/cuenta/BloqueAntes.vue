@@ -5,7 +5,8 @@
  * tercera); las autorizaciones, dichas; los extras, ofrecidos. Con todo hecho, «Todo listo para el sábado 26».
  *
  * Pinta y avisa (`tarea`, con la acción de la tarea que se toca entera: WhatsApp se abre aparte): qué se enseña lo decide
- * `antes.js`, y lo que dice, el servidor. Las acciones de las dos líneas de abajo son enlaces de verdad (a la lista).
+ * `antes.js`, y lo que dice, el servidor. Las acciones de las dos líneas de abajo son enlaces de verdad (a la lista);
+ * la de «¿Vienen menores?» (`#825`), la que se resuelve en Mi cuenta, avisa como una tarea y abre su pantalla en el sitio.
  */
 import { ref } from 'vue';
 import { useTextos } from '../piezas/textos.js';
@@ -110,7 +111,7 @@ const todas = ref(false);
         </p>
         <p
             v-if="antes.opcional"
-            :style="[CUENTA.pista, { display: 'flex', gap: '8px', alignItems: 'flex-start', paddingTop: '10px', borderTop: '1px solid var(--border-subtle)' }]"
+            :style="[CUENTA.pista, { display: 'flex', gap: '8px', alignItems: 'flex-start' }, antes.opcional.suelta ? {} : { paddingTop: '10px', borderTop: '1px solid var(--border-subtle)' }]"
         >
             <span
                 aria-hidden="true"
@@ -123,7 +124,8 @@ const todas = ref(false);
                 v-if="antes.opcional.action"
                 size="sm"
                 underline="always"
-                :href="antes.opcional.action.url"
+                :href="antes.opcional.enLaCuenta ? undefined : antes.opcional.action.url"
+                @click="antes.opcional.enLaCuenta ? emit('tarea', antes.opcional.action) : undefined"
             >{{ antes.opcional.action.label }}</EnlaceSistema></span>
         </p>
     </section>

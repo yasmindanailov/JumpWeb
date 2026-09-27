@@ -209,11 +209,22 @@ describe('«¡Fiesta reservada!» (T3e·5)', () => {
     });
 });
 
-test('«Listo»: la tarea de los hijos solo si la instalación firma dentro; el QR es el del carné', () => {
-    const base = { linea: 'Sábado 26 · 17:00', confirmacion: { code: 'R-7K2P4' }, correo: 'ana@correo.es', qrSrc: '/api/v1/me/card/png?v=1', textos };
+test('«Listo»: la tarea de los hijos solo si la instalación firma dentro y la entrada es de menores; el QR es el del carné', () => {
+    const kids = { is_pack: false, minors_only: true };
+    const base = { linea: 'Sábado 26 · 17:00', confirmacion: { code: 'R-7K2P4', lines: [kids] }, correo: 'ana@correo.es', qrSrc: '/api/v1/me/card/png?v=1', textos };
 
     assert.deepEqual(pantallaListo(base).tareas, []);
     assert.deepEqual(pantallaListo({ ...base, firmaDentro: true }).tareas.map((x) => x.id), ['menores']);
     assert.equal(pantallaListo(base).codigo, 'R-7K2P4');
     assert.equal(pantallaListo(base).whatsapp, false, 'el producto no manda WhatsApp');
+});
+
+test('`#825` «Listo»: donde puede entrar un adulto (Jump, desde 8), no se da por hecho que vienen niños', () => {
+    const conLineas = (lines) => pantallaListo({ linea: 'x', confirmacion: { code: 'R-1', lines }, correo: 'a@b.es', firmaDentro: true, textos }).tareas.map((x) => x.id);
+
+    assert.deepEqual(conLineas([{ is_pack: false, minors_only: false }]), []);
+    assert.deepEqual(conLineas([{ is_pack: false }]), [], 'sin el dato, no se supone');
+    assert.deepEqual(conLineas([]), []);
+    // Jump y Kids en la misma reserva: con una entrada de menores, sí.
+    assert.deepEqual(conLineas([{ is_pack: false, minors_only: false }, { is_pack: false, minors_only: true }]), ['menores']);
 });

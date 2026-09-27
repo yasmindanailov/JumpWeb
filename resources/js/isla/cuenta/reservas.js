@@ -153,6 +153,43 @@ export function filaHistorial(card, deps = {}) {
     return { ...tarjeta, status, aria: `${tarjeta.aria}, ${status}` };
 }
 
+/**
+ * **«Reservar otra vez»** (T5f; el bloque 5 del diseño, `PmcOtraVez`: «la compra abre ya situada en ese producto y esa
+ * gente: solo falta el día y la hora»): la última visita DISFRUTADA —pasada y pagada, ni cancelada ni devuelta— de una
+ * ENTRADA que la tienda siga vendiendo, con su gente. `null` si no la hay: el bloque no sale.
+ *
+ *  · El historial llega del más reciente al más antiguo (`CustomerReservationsReader`, `desc`): la primera que cumple es
+ *    la última. Se mira la página que ya está (diez); una cuenta cuyas diez últimas no valen se queda sin el bloque.
+ *  · Solo ENTRADAS del catálogo: un producto que ya no está (retirado, sin venta en línea) no se ofrece —la compra no
+ *    inventa filas—, y una FIESTA tampoco: repetirla no es «solo el día y la hora» (pide la edad y el menú) y un
+ *    cumpleaños no se repite igual. (El `is_pack` de la reserva sale de la misma columna que el `type` del catálogo: con
+ *    el catálogo basta; mirarlo dos veces era código muerto, lo delató `mutar-t5f.sh`.)
+ *  · Sin los calcetines de aquella vez: se compran una vez y se traen.
+ *
+ * @param {object[]} pasadas  el historial tal cual (`{reservation, order}`)
+ * @param {object[]} productos  el catálogo de la compra (`GET /catalog/products`)
+ * @returns {{texto: string, id: number, n: number}|null}
+ */
+export function otraVezDe(pasadas, productos) {
+    const vendidas = new Set((productos ?? []).filter((p) => p?.type === 'entry').map((p) => p.id));
+    const card = (pasadas ?? []).find((c) => estadoDe(c) === 'pasada' && vendidas.has(c.reservation?.product_id));
+
+    if (! card) return null;
+
+    return { texto: tituloDe(card.reservation), id: card.reservation.product_id, n: Math.max(1, Number(card.reservation.quantity) || 1) };
+}
+
+/**
+ * **La bienvenida de la cuenta recién creada** (T5f; el diseño, `sinNada`: «sin reservas, ni pasadas ni vivas»): con las
+ * DOS listas LEÍDAS y vacías. Una respuesta que no llegó no es una cuenta vacía (no se da la bienvenida a quien tiene
+ * reservas que no se pudieron leer), y un pedido a medio pagar, aunque no sea «tu próxima», ya es una reserva.
+ *
+ * @param {{proximas: object[]|null, pasadas: object[], historialLeido: boolean}} listas
+ */
+export function esCuentaNueva({ proximas, pasadas = [], historialLeido = false }) {
+    return Array.isArray(proximas) && proximas.length === 0 && historialLeido === true && pasadas.length === 0;
+}
+
 /** Los dígitos de un teléfono internacional, para `wa.me` y `tel:` («+34 641 99 57 14» → «34641995714»). */
 const digitos = (telefono) => String(telefono ?? '').replace(/\D/g, '');
 

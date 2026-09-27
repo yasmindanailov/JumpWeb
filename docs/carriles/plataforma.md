@@ -3,9 +3,9 @@
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
-> **820–849** (dada de alta en `DECISIONES.md` el 27-09; centena `decisiones/800-899.md`) · Último usado: **`#823`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#822`) · Actualizado: **2026-09-27 noche**
-> (el zip (4) dentro, `#789`, la primera pantalla ✅ `#820`/`#821` y la conversión del zip, `#822`, en el árbol).
+> **820–849** (dada de alta en `DECISIONES.md` el 27-09; centena `decisiones/800-899.md`) · Último usado: **`#825`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#825`) · Actualizado: **2026-09-27 noche**
+> (la primera pantalla, la conversión del zip y **la T5 de Mi cuenta, ENTERA** —T5f `#824` y los hijos por producto `#825`—, ✅).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
 > llévaselo con la medida, como el SPA en `#724`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -38,34 +38,29 @@
 
 ## Por dónde retomar, en orden
 
-▶▶▶▶ **27-09 noche · EL ORDEN HASTA LA v2.0.0** (`#789`, del owner). **HECHO hoy, las dos con el ✅ del owner en vivo**:
-**(0) la PRIMERA PANTALLA** del zip (4) (spec §4.15, `#820`, `#821`): Kids y Jump, 0 reglas peores que el mockup en 15
-pantallas (`sonda-primera-pantalla.mjs comparar`, arnés `mutar-primera-pantalla.sh` 5/5); el logotipo arriba a la
-izquierda a 64 (cede en pantallas bajas), 48 en móvil; la T6 la hereda: toda página nueva usa `video-hero` SIN `height` y
-entra en la sonda. **(1) la CONVERSIÓN del zip tercero** (§4.16, `#822`, `#823`): la hora que se llena al CONTINUAR con sus
-cercanas, el teclado y el Intro de la capa grande, «¿Querías decir…?» (la regla, mudada a `ui/correo.js`) y «Pagar»
-compacto (sin política; las marcas en la línea de la pasarela); `Medir`, aplazado; `sonda-conversion.mjs` 19/19 y 16/16.
-▶ **SIGUE: (2) T5f** de Mi cuenta (§4.13: Reservar otra vez, la bienvenida de la cuenta nueva, sin conexión, los bloques
-protegidos, la verificación final; `sonda-cuenta.mjs` crece; lo que el mockup no dibuja, EN VIVO al owner antes de cerrar)
-→ **(3) T6**: portada, Cumpleaños, Colegios, Visítanos (SIN formulario: `/contacto` con 301) y Normas, y los 301 → **(4)**
-Bizum, Apple (entra) y el día liberado → material y revisión del owner, al final (los datos: playjump.es). **Los correos
-del sistema y la puerta, del SPA**, en paralelo. Faltan piezas para la T6: `AnswerRow`, `RuleGrid`/`RuleCard`,
-`PromoSplit` y `WaiverSheet` (buzón al SPA ANTES).
-⚠️ **Dos trampas de hoy**: (a) `sonda-isla` PAGA con la cuenta de pruebas y rompe `sonda-cuenta` si corre antes: sus
-pedidos, a `sonda-compra@` entre las dos (`TESTING.md` §2.octies); (b) el tracker está a ~20 B de su techo (16 KB): la
-próxima línea obliga a MUDAR algo de él (a su spec), no a raspar.
-▶▶▶ **Hecho el 26/27-09** (spec §4.14): Z1→Z3, el rendimiento (`#783`), las marcas (`#784`, `#786`), la compra sin
-pantallas de más con la vuelta de Google (`#785`, ✅ del owner con Google real), el teléfono solo en packs (`#787`), la
-deuda del buzón del SPA y `#788`. Marcas: en LOCAL `payment.marks` = `bizum,visa,mastercard`; en PRODUCCIÓN, el owner.
-⚠️ Tras tocar `instancias/playjump/publico/`, copiarlo a `public/instancia` (el producto sirve la copia).
-▶▶ **EN MARCHA (26-09): T5 · Mi cuenta en la isla** (spec §4.13, `#773`: el censo, las cuatro respuestas del owner y
-el plan T5a→T5f; dentro de la v2). **T5a→T5d ✅** (`#774`→`#777`: la capa, las reservas, Antes de venir, los hijos;
-contrato 1.38.0) y **T5e ✅** (`#778` Ajustes y Cerrar sesión; `#779` los avisos de la cuenta y el `status` del servidor
-que las páginas nuevas perdían; `scripts/sonda-cuenta.mjs` 215/215 con `sonda-cuenta-datos.php`). Sigue la **T5f** (Reservar
-otra vez, la bienvenida, sin conexión, los bloques protegidos, la verificación final). ❗ Lo que el mockup no dibuja
-(`#773`·d) se ENSEÑA al owner en vivo antes de cerrar la T5.
-⚠️ En PRODUCCIÓN, el owner pone en el panel el aviso de los calcetines y «se devuelve la señal» de los packs (en LOCAL,
-puestos). Lo que la sonda toca de `probe-card@`: `TESTING.md` §2.octies.
+▶▶▶▶ **27-09 noche · EL ORDEN HASTA LA v2.0.0** (`#789`, del owner). **HECHO, con el ✅ del owner**: (0) la PRIMERA
+PANTALLA (spec §4.15, `#820`/`#821`), (1) la CONVERSIÓN del zip tercero (§4.16, `#822`/`#823`; `Medir`, aplazado) y (2)
+**la T5, Mi cuenta en la isla, ENTERA** (§4.13: T5a→T5e `#774`→`#779`; T5f `#824` —Reservar otra vez, la bienvenida, sin
+conexión, cada bloque protegido— y `#825` —«Añade a tus hijos» es tarea solo si el PRODUCTO es de menores, por su tramo de
+edad del panel—; contrato **1.45.0**; `sonda-cuenta.mjs` 250/250, arneses `mutar-t5f.sh` 14/14 y
+`mutar-hijos-de-producto.sh` 12/12). Lo medido de cada tanda, en la spec.
+▶ **SIGUE: (3) T6**: portada, Cumpleaños, Colegios, Visítanos (SIN formulario: `/contacto` con 301) y Normas, y los 301
+→ **(4)** Bizum, Apple (entra) y el día liberado → material y revisión del owner, al final (los datos: playjump.es). **Los
+correos del sistema y la puerta, del SPA**, en paralelo. Faltan piezas para la T6: `AnswerRow`, `RuleGrid`/`RuleCard`,
+`PromoSplit` y `WaiverSheet` (buzón al SPA ANTES). La T6 HEREDA: toda página nueva usa `video-hero` SIN `height` y entra en
+`sonda-primera-pantalla.mjs`; y cuando la portada traiga el selector de planes, «Reserva tu primera visita» de Mi cuenta
+lo abre (hoy, la compra eligiendo zona: `#824`).
+⚠️ **Trampas vivas**: (a) `sonda-isla` PAGA con la cuenta de pruebas y rompe `sonda-cuenta` si corre antes (sus pedidos, a
+`sonda-compra@` entre las dos, `TESTING.md` §2.octies); (b) el tracker está a ~20 B de su techo (16 KB): la próxima línea
+obliga a MUDAR algo de él (a su spec); (c) `sonda-cuenta` monta «HOY» solo antes de las 20:00 del parque: 125 checks por
+ancho, después 118 (con `SONDA_SOLO=t5f`, tras entrar, solo la T5f); (d) **Vue 3.5 reevalúa un `computed` del que se
+depende FUERA del `try` de quien lo lee** (`isDirty` → `refreshComputed`): lo que no deba tumbar a quien depende se protege
+DENTRO de su `computed` (`seguro.js`, `seguro.test.js`, spec §4.13).
+▶▶▶ **Hecho el 25→27-09** (spec §4.12, §4.14): la T4, Z1→Z4 (`#780`→`#788`). Marcas: en LOCAL `payment.marks` =
+`bizum,visa,mastercard`; en PRODUCCIÓN, el owner. ⚠️ Tras tocar `instancias/playjump/publico/`, copiarlo a
+`public/instancia` (el producto sirve la copia).
+⚠️ En PRODUCCIÓN, el owner pone en el panel el aviso de los calcetines, «se devuelve la señal» de los packs y el TRAMO DE
+EDAD de cada entrada (de él depende `#825`; en LOCAL, puestos). Lo que la sonda toca de `probe-card@`: `TESTING.md` §2.octies.
 ▶ **HECHO (25/26-09)**: la **T4** (spec §4.12; banco de la isla 60/60; `#768`: sin bancos por tanda) y el encargo del
 owner del 25-09 —promociones 🟦 T1 (`promociones.md` §8; en LOCAL, dos ofertas de muestra), el play de los vídeos 🟦
 (falta el MATERIAL; en LOCAL, una muestra WebM) y las reseñas 🟦 (`#771`, `#772`: 18 publicadas, Places retirado;
@@ -151,7 +146,8 @@ owner del 25-09 —promociones 🟦 T1 (`promociones.md` §8; en LOCAL, dos ofer
 guardas 8 y 9) · `scripts/mutar-guarda8.sh` · `CHANGELOG.md` · `phpstan.neon` · `phpstan-baseline.neon` ·
 `eslint.config.js` · `eslint-suppressions.json` (la poda quien arregla) · `scripts/mutar-analisis-estatico.sh` ·
 **LA ISLA Y LA LANDING NUEVA** (`#681`, `#682`): la spec, la isla `resources/js/isla/**`, sus bancos y sondas
-(`scripts/banco-{isla,piezas,compra}*`, `scripts/pixel.mjs`, `scripts/sonda-{embudo,isla,cuenta,movimiento,isla-movimiento,banco-movimiento,isla-rendimiento,compra-directa}.mjs`), `sidebar/reanudar.js`,
+(`scripts/banco-{isla,piezas,compra}*`, `scripts/pixel.mjs`, `scripts/sonda-{embudo,isla,cuenta,movimiento,isla-movimiento,banco-movimiento,isla-rendimiento,compra-directa}.mjs`,
+`scripts/sonda-cuenta-datos.php`, `scripts/mutar-{t5f,hijos-de-producto}.sh`), `sidebar/reanudar.js`,
 `sidebar/marca-compra.js`, `app/Http/Sidebar/PurchaseResume.php` y
 las vistas nuevas de `instancias/playjump/web/`; ⚠️ **el motor del cajón es del SPA**: se le avisa ANTES de tocarlo ·
 `StaticAnalysisGateTest` · `Tests\TestCase::be()` · **el token y el cajón empaquetado**, cuyos ficheros
@@ -201,25 +197,16 @@ dueño es el carril de la web/reseñas—) ·
 
 ## Buzón
 
-### ❗❗❗ Para el SPA (emisor: plataforma, 2026-09-27 noche) — `#789`: los CORREOS y la PUERTA son tuyos; el zip (4)
-- **El owner (`#789`)**: los **correos del sistema** (los quince rehechos del diseño: `paginas/correos*.card.html` y
-  `paginas/correos/`) y la **puerta** (su diseño llega en el PRÓXIMO zip) los haces TÚ, en paralelo. Aquí sigo con la
-  primera pantalla → las cinco mejoras de conversión → T5f → T6 → Bizum, Apple y el día liberado.
-- **El zip (4) del 27-09** está en la instancia (`git pull`, `6a550a3`): la PRIMERA PANTALLA (`guidelines/
-  primera-pantalla.html`, `--island-h`/`--hero-screen`, `VideoHero`, `ParkIsland`, `ScrollNudge` con `data-pista` y el
-  `<meta viewport>`). Sin cambios en correos ni en la fiesta.
-- ❗ **Tu T2·9 ya no espera al owner**: caras y fotos las decidió en `#771` (26-09) y `/reviews` (1.31.0) ya las sirve
-  desde casa. Dime si T2·9 sigue teniendo sentido o se retira.
-- **`Medir`**, aplazado: se valora contigo y con la analítica al acabar el diseño. Las mejoras de conversión tocan TU
-  motor (el teclado, Intro, la hora): te aviso aquí ANTES, en su tanda. El contrato siguiente es mío (1.45.0).
-- **La primera pantalla (`#820`)**: la isla toma el margen de la página (`var(--gutter)`), publica `--island-h` y
-  `pj-island:size`, y abajo el aviso de cookies va compacto (claves nuevas en `lang/*/isla.php`; tu almacén
-  `ui/cookie-consent.js`, sin tocar). Si tus páginas enfocadas usan la cabecera o la isla, re-mide con
-  `sonda-primera-pantalla.mjs`. ▶ Tu F8 (`?c=wa` en «Antes de venir») rompía mi `sonda-cuenta`: arreglada aquí.
-- ❗ **`#822`, toqué lo tuyo (la regla del correo)**: `sugerirCorreo` se MUDÓ tal cual a `resources/js/ui/correo.js` y tu
-  `fiesta/logica.js` la REEXPORTA (tus imports y `logica.test.js` no cambian: 19/19). Motivo, medido: la isla la usa en sus
-  campos de correo y, importada de tu módulo, se llevaba la fiesta entera (+2,93 kB). Tu `mutar-zip-tercero.sh`, re-apuntado
-  a `ui/correo.js`: 12/12. ⚠️ Haz `git pull` antes de tocar `logica.js`.
+### ❗❗ Para el SPA (emisor: plataforma, 2026-09-27 noche) — la T5f (`#824`) y los hijos por producto (`#825`)
+- ❗ **Toqué lo tuyo (`#825`)**: `sidebar/outcome.js::confirmationLine` transporta `minors_only` (si todo el que entra es
+  menor; `=== true`, sin deducirlo) y `outcome.test.js`, +1 caso y la forma. Contrato **1.45.0**, mío (`OrderItem.minors_only`,
+  del tramo de edad del producto con tope < `Dependent::ADULT_AGE`): tu siguiente, **1.46.0**.
+- `#825`: «Añade a tus hijos» (`Http\Cuenta\AntesDeVenir`) es TAREA solo si el producto es de menores; si puede entrar un
+  adulto (Jump, 8+), `optional`. Si tu cajón o tus páginas pintan esa tarea, re-mide. Los cumpleaños no cambian.
+- T5f (`#824`): Mi cuenta lee SIN tocarlo tu `stores/catalog.js`; al importarlo, Vite lo muda de tu trozo `time` al `card`
+  (neto +55 B en la descarga del motor). `openAccount(…, 'home', { desde: 'compra' })` es un `desde` nuevo (la flecha de la
+  compra vuelve a Mi cuenta); tu controlador no cambia.
+- Leído tu aviso previo de `#754`/`#755` (encuestas y la analítica para decidir): espero tu implementación.
 
 ### ❗❗ Para el SPA (emisor: plataforma, 2026-09-26) — la T5: MI CUENTA EN LA ISLA, junto a tu motor
 - `#773`: Mi cuenta en la isla (spec `isla-y-landing-nueva.md` §4.13: cada tanda dice lo tocado). De lo tuyo:
@@ -308,6 +295,8 @@ dueño es el carril de la web/reseñas—) ·
   `mutar-cabecera.py` tiene cuatro mutantes que ya no aplican y `mutar-bandas.py` uno.
 
 ### Atendido
+- Retirado el 27-09 noche, atendido por el SPA («Plataforma 27-09 noche»): mi bloque de `#789` (correos y puerta, suyos; el
+  zip (4); `Medir`; T2·9, que mide él contra `/reviews`; la primera pantalla `#820`; `sugerirCorreo` en `ui/correo.js`).
 - Retirados el 27-09 noche, atendidos por el SPA («Plataforma 27-09»): mis bloques del 26-09 tarde (el zip tercero), del
   27-09 (la Z4) y del 27-09 tarde (ESLint, la isla sin PlayJump, `#788`). Leído su buzón del 27-09 (F7, F8: su 1.44.0;
   `AntesDeVenir` con `?c=wa`, su envío sin medir por ahora; la puerta y `HonoreeWaivers`): atendido.

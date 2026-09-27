@@ -89,6 +89,13 @@ return [
         'crear_boton' => 'Crear mi cuenta',
         'creando' => 'Creando tu cuenta',
         'ya_existe' => 'Ya hay una cuenta con este correo: entra con él.',
+        // Sin conexión (T5f), en toda la capa de Mi cuenta, con sesión o sin ella: arriba, y lo que guarda deja reintentar.
+        'red' => [
+            'sin' => 'Sin conexión',
+            'sin_texto' => 'Lo que ves sigue aquí. Cuando vuelva la conexión, podrás guardar.',
+            'fallo' => 'No se ha podido guardar: no hay conexión. No has perdido nada.',
+            'reintentar' => 'Volver a intentarlo',
+        ],
     ],
     'ayuda' => [
         'en_horario' => 'Te contestamos en un rato.',
@@ -388,6 +395,18 @@ return [
             'mensaje_titulo' => 'Te lo dejamos escrito:',
             'llamar' => 'Llamar al :telefono',
         ],
+        // T5f: «Reservar otra vez» (la compra, ya situada en la última visita), la bienvenida de la cuenta sin reservas y
+        // el hueco de un bloque que no se pudo pintar. Los de sin conexión, en `mi_cuenta_alta`: salen también sin sesión.
+        'otra_vez' => [
+            'titulo' => 'Reservar otra vez',
+            'boton' => 'Elegir día',
+        ],
+        'bienvenida' => [
+            'titulo' => 'Tu cuenta está lista',
+            'texto' => 'Tu QR ya vale: con él entras siempre, sin papeles. Solo falta elegir cuándo venir.',
+            'boton' => 'Reserva tu primera visita',
+        ],
+        'hueco' => '«:nombre» no se ha podido cargar. Recarga la página.',
         // «Antes de venir» (T5c, `#776`): las tareas de la reserva, con su plazo real. Los de cada tarea (título, nota,
         // texto, botón) los compone el SERVIDOR (`Http\Cuenta\AntesDeVenir`) con estos textos, y la isla de las páginas
         // dice los mismos; el bloque solo pinta.
@@ -443,6 +462,8 @@ return [
                 'boton' => 'Añadir',
                 'linea' => 'Añade a tus hijos y firma por ellos: en la puerta solo enseñas el QR.',
                 'boton_isla' => 'Añadir a mis hijos',
+                // `#825`: en un producto en el que puede entrar un adulto, opcional (ni «Siguiente» ni el punto del menú).
+                'opcional' => '¿Vienen menores? Firma por ellos antes y en la puerta solo enseñas el QR.',
             ],
             'autorizaciones' => [
                 'texto' => 'Autorizaciones: :firmadas de :total firmadas. Las que falten se firman en la puerta.',

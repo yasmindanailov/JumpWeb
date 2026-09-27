@@ -11,10 +11,14 @@
  *   · **«Antes de venir»** (T5c, `#776`) de cada reserva que se enseña —la próxima y la que se abre—, una vez por reserva
  *     (`/me/reservations/{id}/before-visit`: sus tareas ya escritas por el servidor).
  *   · Se pide al entrar en Mi cuenta y no se repite al reabrirla (una recarga lo trae de nuevo).
+ *   · **«Reservar otra vez»** (T5f) cruza el historial con el catálogo que el motor ya pidió al montar (su store, leído sin
+ *     tocarlo): solo se ofrece lo que se sigue vendiendo.
  */
 import { computed, reactive } from 'vue';
 import { api } from '../../sidebar/api.js';
-import { cambiarDe, filaHistorial, lineasDe, pagoDe, reservasDeCuenta, tarjetaDe } from './reservas.js';
+import { useCatalogStore } from '../../sidebar/stores/catalog.js';
+import { cambiarDe, esCuentaNueva, filaHistorial, lineasDe, otraVezDe, pagoDe, reservasDeCuenta, tarjetaDe } from './reservas.js';
+import { protegido } from './seguro.js';
 import { antesDe, chipDe } from './antes.js';
 
 const POR_PAGINA_HISTORIAL = 10;
@@ -22,6 +26,7 @@ const POR_PAGINA_HISTORIAL = 10;
 export function useReservasCuenta({ textos, locale }) {
     const s = reactive({ proximas: null, pasadas: [], pagina: 0, ultima: 1, cargando: false, cargandoMas: false, sitio: null, antes: {} });
     const deps = { locale, textos };
+    const catalogo = useCatalogStore();
 
     async function cargar() {
         if (s.proximas !== null || s.cargando) return;
@@ -69,7 +74,9 @@ export function useReservasCuenta({ textos, locale }) {
         s.antes[id] = r.ok ? (r.data?.data?.tasks ?? []) : [];
     }
 
-    const listas = computed(() => reservasDeCuenta({ proximas: s.proximas, pasadas: s.pasadas }));
+    // Los `computed` que pintan un bloque, protegidos DENTRO (T5f, `seguro.js`: Vue los reevalúa al mirar si repinta, fuera
+    // del `try` de quien los lee). Roto, su bloque deja su hueco; las listas rotas, vacías.
+    const listas = computed(() => protegido('reservas', () => reservasDeCuenta({ proximas: s.proximas, pasadas: s.pasadas }), { roto: { proxima: null, otras: [], historial: [] } }));
     const bloque = (card) => (card ? { tarjeta: tarjetaDe(card, deps), lineas: lineasDe(card, deps), pago: pagoDe(card, deps) } : null);
     const tareasDe = (card) => s.antes[card?.reservation?.id] ?? [];
 
@@ -80,12 +87,15 @@ export function useReservasCuenta({ textos, locale }) {
         antes: (card) => (card ? antesDe(tareasDe(card), { ...deps, fecha: card.reservation?.date ?? '' }) : null),
         chip: (card) => chipDe(tareasDe(card), deps),
         buscar: (id) => [listas.value.proxima, ...listas.value.otras].find((c) => c?.reservation?.id === id) ?? null,
-        otras: computed(() => ({
+        otras: computed(() => protegido('otras', () => ({
             otras: listas.value.otras.map((c) => ({ id: c.reservation.id, tarjeta: tarjetaDe(c, deps) })),
             historial: listas.value.historial.map((c) => filaHistorial(c, deps)),
             hayMas: s.pagina < s.ultima, cargandoMas: s.cargandoMas,
-        })),
+        }))),
         cambiar: (card) => cambiarDe(card, { ...deps, telefono: s.sitio?.contact?.phone ?? '' }),
         rutaAlParque: computed(() => s.sitio?.address?.maps_url ?? ''),
+        // T5f: la última visita que se puede repetir, y si la cuenta aún no tiene ninguna reserva (su bienvenida).
+        otraVez: computed(() => protegido('otra-vez', () => otraVezDe(s.pasadas, catalogo.products))),
+        cuentaNueva: computed(() => protegido('bienvenida', () => esCuentaNueva({ proximas: s.proximas, pasadas: s.pasadas, historialLeido: s.pagina > 0 }), { roto: false })),
     };
 }

@@ -12,6 +12,8 @@
  *   · `hoy`: lo mismo y, además, unas Kids HOY con calcetines (la próxima: el QR grande, fuera de plazo, «Cómo llegar»);
  *   · `fiesta` (T5c): SOLO el cumpleaños, dentro de tres días —la próxima, con «Antes de venir»—: su invitación creada
  *     (quien cumple, «Vera», 7 años), dos fichas de diez rellenas y dos «sí»;
+ *   · `kids` (`#825`): lo de `montar` y, como PRÓXIMA (dentro de tres días), unas Kids —su producto, de 4 a 7 años: solo
+ *     menores—, donde «Añade a tus hijos» es tarea (en el Jump, desde 8 años, es opcional);
  *   · `borrar`: nada.
  *   php artisan tinker --execute='$modo = "montar"; require base_path("scripts/sonda-cuenta-datos.php");'
  *
@@ -67,7 +69,7 @@ $borrar = function () use ($prefijo, $llaveFranjas): void {
 
 $borrar();
 
-if (! in_array($modo ?? '', ['montar', 'hoy', 'fiesta'], true)) {
+if (! in_array($modo ?? '', ['montar', 'hoy', 'fiesta', 'kids'], true)) {
     echo json_encode(['borrado' => true]), "\n";
 
     return;
@@ -129,6 +131,10 @@ if ($modo === 'fiesta') {
 $hoy = $modo === 'hoy' && $ahora->hour < 20;
 if ($hoy) {
     $reserva('HOY', 100, $ahora->toDateString(), $ahora->copy()->addHours(2)->startOfHour()->format('H:i:s'), 2, 800, [[110, 2, 200]]);
+}
+// `kids` (`#825`): Kids 1 hora, 2 niños, dentro de tres días —antes que el Jump: la próxima—.
+if ($modo === 'kids') {
+    $reserva('KIDS', 100, $ahora->copy()->addDays(3)->toDateString(), '17:00:00', 2, 800);
 }
 // Un cumpleaños dentro de diez días, con señal: 169,50 €, 50 € pagados y 119,50 € en el parque.
 $reserva('CUMPLE', 105, $ahora->copy()->addDays(10)->toDateString(), '17:00:00', 10, 1695, [], 11950);

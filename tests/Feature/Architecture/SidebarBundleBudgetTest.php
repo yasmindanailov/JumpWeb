@@ -1010,7 +1010,13 @@ class SidebarBundleBudgetTest extends TestCase
     // 104,93 → 105,99 con `#785` (dentro del techo) y 105,99 → 106,04 con `#787` (base: el `HEAD` de `#786`). El techo, a 107.
     // `#822`: la sugerencia de correo (Entra, Crea tu cuenta, el cambio de correo) y el Intro de la capa grande. Medido
     // 106,04 → 108,40 (base: el `HEAD` de `#821`). El techo, a 109.
-    private const ISLA_CUENTA_CHUNK_MAX_KB = 109;
+    // T5f (`#824`): Reservar otra vez, la bienvenida, sin conexión y cada bloque protegido. Medido 108,40 → 115,70 (base: el
+    // `HEAD` de `#823` construido aparte: el trozo de Mi cuenta, 76.490 → 83.964 B; sus dos iconos 0,95 KB y su lógica ~1 KB,
+    // el resto sus cuatro componentes). Todo va en la primera pintura, y el aviso de «Sin conexión» no se puede diferir: sin
+    // red no se descarga. ⚠️ De paso el catálogo del motor (`stores/catalog.js`, que ahora lee Mi cuenta) se muda de un
+    // trozo del motor a otro (`time` −1.753 B, `card` +1.808): neto +55 B, que paga el motor. Con `#825` («¿Vienen
+    // menores?» en su sitio y el icono de la tarea), 115,94. El techo, a 117.
+    private const ISLA_CUENTA_CHUNK_MAX_KB = 117;
 
     // T5e (`#778`): los AJUSTES de Mi cuenta, su trozo —el bloque y su lógica, pedidos al pintar el inicio—, sobre lo que ya
     // tiene quien abre Mi cuenta. Medido: 26,92 (el bloque 12,70, la lógica 6,56, `ajustes.js` 3,44, el interruptor que

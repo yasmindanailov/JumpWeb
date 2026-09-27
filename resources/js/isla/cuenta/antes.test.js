@@ -100,3 +100,32 @@ describe('el chip de arriba', () => {
         assert.equal(chipDe(null, { textos }), '');
     });
 });
+
+describe('«Añade a tus hijos» (`#825`)', () => {
+    const hijos = (extra = {}) => ({ kind: 'dependents', type: 'task', done: false, title: 'Añade a tus hijos', note: 'Un minuto',
+        text: 'Añade a tus hijos: nombre y fecha de nacimiento, y firmas por ellos.', due: 'Para el viernes 2',
+        action: { label: 'Añadir', url: '/mi-cuenta/hijos', via: 'account' }, ...extra });
+    const opcional = hijos({ type: 'optional', title: null, note: null, due: null,
+        text: '¿Vienen menores? Firma por ellos antes y en la puerta solo enseñas el QR.', action: { label: 'Añadir a mis hijos', url: '/mi-cuenta/hijos', via: 'account' } });
+
+    test('de menores, una tarea con su icono (el del diseño) y el chip', () => {
+        assert.equal(antesDe([hijos()], ctx).siguiente.icon, 'user-round-plus');
+        assert.equal(chipDe([hijos()], { textos }), 'Siguiente: Añade a tus hijos');
+    });
+
+    test('si puede entrar un adulto, la línea opcional: sin «Siguiente», sin chip y sin «Todo listo»', () => {
+        const a = antesDe([opcional], ctx);
+
+        assert.equal(a.siguiente, null);
+        assert.equal(a.todoListo, '');
+        assert.deepEqual([a.opcional.kind, a.opcional.icon, a.opcional.enLaCuenta], ['dependents', 'user-round-plus', true]);
+        assert.equal(chipDe([opcional], { textos }), '');
+        assert.equal(a.opcional.suelta, true, 'sola, sin raya separadora encima');
+        assert.equal(antesDe([formulario(), extras], ctx).opcional.suelta, false, 'bajo una tarea, con su raya');
+        assert.equal(antesDe([extras, autorizaciones], ctx).opcional.suelta, false, 'con el estado, también');
+    });
+
+    test('la línea de los extras sigue siendo un enlace a la lista, no una pantalla de la cuenta', () => {
+        assert.equal(antesDe([extras], ctx).opcional.enLaCuenta, false);
+    });
+});

@@ -1126,6 +1126,17 @@ class TicketType extends Model
     }
 
     /**
+     * **¿Todo el que entra con este producto tiene menos de `$age` años?** (`DECISIONES #825`): su tramo tiene TOPE y el
+     * tope queda por debajo (los extremos van incluidos, como en {@see coversGuestAge()}: «de 4 a 17» sí, «de 4 a 18» no).
+     * Sin tope —«desde 8 años»— puede entrar un adulto: no se sabe, y no se da por hecho. La edad la pone quien pregunta
+     * (la mayoría de edad es de Identity, y Booking no mira a Identity: `ModuleBoundariesTest`).
+     */
+    public function onlyGuestsUnder(int $age): bool
+    {
+        return $this->guest_age_max !== null && (int) $this->guest_age_max < $age;
+    }
+
+    /**
      * El hermano de la MISMA familia cuyo tramo PISA al dado, o `null` si el tramo está libre.
      *
      * **Es la verdad ÚNICA del criterio de solape** (T6, `cumple-mixto.md` §26): los extremos

@@ -21,6 +21,7 @@ import CuentaQr from './cuenta/CuentaQr.vue';
 import CuentaEntrar from './cuenta/CuentaEntrar.vue';
 import CuentaAltaGoogle from './cuenta/CuentaAltaGoogle.vue';
 import CuentaCambiar from './cuenta/CuentaCambiar.vue';
+import AvisosRed from './cuenta/AvisosRed.vue';
 import BloqueReserva from './cuenta/BloqueReserva.vue';
 import BloqueAntes from './cuenta/BloqueAntes.vue';
 import CabeceraDesenlace from './ui/CabeceraDesenlace.vue';
@@ -45,7 +46,7 @@ const {
     cambiarVista, antesAbierta, hacerTarea, pantallaHijos, fichaHijo, abrirHijos, abrirHijo, cambiarHijo, otroHijo,
     quitarFicha, casillaHijos, casillaHijo, preguntarQuitar, quitarHijo, alternarAjuste, datoAjuste, guardarDatos, pasoAjuste,
     vincular, interruptor, descargarDatos, masRecibos, salir, pasoDeAjuste, cambiarPaso, enlaceClave, reenviarCorreo,
-    cancelarCorreo, borrarCuenta, hacerAviso, hacerAnalitica,
+    cancelarCorreo, borrarCuenta, hacerAviso, hacerAnalitica, otraVez, primeraVisita, red, reintentar,
 } = useSeccionCuenta(props);
 const proveedor = (via) => via === 'google' && aGoogle();
 </script>
@@ -58,6 +59,11 @@ const proveedor = (via) => via === 'google' && aGoogle();
             :checkout="ck"
             :bloquea-pagina="false"
         >
+            <!-- Sin conexión (T5f), arriba de cualquier vista, con sesión o sin ella. -->
+            <AvisosRed
+                v-bind="red"
+                @reintentar="reintentar"
+            />
             <PantallaDescargo
                 v-if="e.subpaso === 'descargo'"
                 :secciones="waiverStore.document?.sections ?? []"
@@ -87,6 +93,8 @@ const proveedor = (via) => via === 'google' && aGoogle();
                 @salir="salir"
                 @aviso="hacerAviso"
                 @analitica="hacerAnalitica"
+                @otra-vez="otraVez"
+                @primera="primeraVisita"
             />
             <CuentaAjuste
                 v-else-if="PASOS_DE_AJUSTES.includes(e.vista) && pasoDeAjuste"

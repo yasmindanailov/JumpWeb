@@ -129,7 +129,15 @@ test('traduce la línea del pedido a la forma del presupuesto', () => {
         guest_form_url: null,
         guest_count_deadline: null,
         invitation_url: null,
+        minors_only: false,
     });
+});
+
+/** `#825`: si todo el que entra es menor lo dice el servidor; solo un `true` de verdad lo es. */
+test('transporta si la reserva es solo de menores, sin deducirlo', () => {
+    assert.equal(confirmationLine(item({ minors_only: true })).minors_only, true);
+    assert.equal(confirmationLine(item({ minors_only: 'true' })).minors_only, false);
+    assert.equal(confirmationLine(item({})).minors_only, false);
 });
 
 /** T3e·5: lo que la fiesta ofrece hacer después, tal cual lo compone el servidor (y `null` si no viene). */

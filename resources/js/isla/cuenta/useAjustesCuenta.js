@@ -25,6 +25,7 @@ import { useAuthStore } from '../../sidebar/stores/auth.js';
 import { fieldError } from '../../sidebar/account/form-outcome.js';
 import { signOut } from '../../sidebar/account/sign-out.js';
 import { conVuelta } from '../../sidebar/reanudar.js';
+import { protegido } from './seguro.js';
 import {
     correoDe, datosDe, descargoDe, googleDe, hayCambios, idiomasDe, interruptoresDe, recibosDe, reservaQueImpide,
     revisarCorreo, revisarDatosCuenta,
@@ -288,7 +289,8 @@ export function useAjustesCuenta({ textos, props, locale, proxima, contexto, dec
 
     // ── Lo que se pinta ────────────────────────────────────────────────────────────────────────────
 
-    const bloque = computed(() => {
+    // Protegido DENTRO (T5f, `seguro.js`): si no se puede componer, el bloque deja su hueco y Mi cuenta sigue.
+    const bloque = computed(() => protegido('ajustes', () => {
         const user = perfil.user;
 
         return {
@@ -306,7 +308,7 @@ export function useAjustesCuenta({ textos, props, locale, proxima, contexto, dec
             hayMasRecibos: s.pagina < s.ultima,
             cargandoRecibos: s.cargandoRecibos,
         };
-    });
+    }));
 
     const paso = computed(() => ({
         f: s.f, errores: s.errores, fallo: s.fallo, enviado: s.enviado,

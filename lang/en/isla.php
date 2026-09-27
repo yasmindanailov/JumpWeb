@@ -82,6 +82,12 @@ return [
         'crear_boton' => 'Create my account',
         'creando' => 'Creating your account',
         'ya_existe' => 'There is already an account with this email: sign in with it.',
+        'red' => [
+            'sin' => 'No connection',
+            'sin_texto' => 'What you see stays here. When the connection comes back, you will be able to save.',
+            'fallo' => 'It could not be saved: there is no connection. You have not lost anything.',
+            'reintentar' => 'Try again',
+        ],
     ],
     'ayuda' => [
         'en_horario' => 'We will reply shortly.',
@@ -354,6 +360,16 @@ return [
             'mensaje_titulo' => 'We have written it for you:',
             'llamar' => 'Call :telefono',
         ],
+        'otra_vez' => [
+            'titulo' => 'Book again',
+            'boton' => 'Choose a day',
+        ],
+        'bienvenida' => [
+            'titulo' => 'Your account is ready',
+            'texto' => 'Your QR already works: with it you always get in, no paperwork. All that is left is choosing when to come.',
+            'boton' => 'Book your first visit',
+        ],
+        'hueco' => '“:nombre” could not be loaded. Reload the page.',
         'antes' => [
             'titulo' => 'Before you come',
             'siguiente' => 'Next',
@@ -404,6 +420,7 @@ return [
                 'boton' => 'Add',
                 'linea' => 'Add your children and sign for them: at the door you just show the QR.',
                 'boton_isla' => 'Add my children',
+                'opcional' => 'Are minors coming? Sign for them beforehand and at the door you only show the QR.',
             ],
             'autorizaciones' => [
                 'texto' => 'Authorisations: :firmadas of :total signed. Any missing are signed at the door.',

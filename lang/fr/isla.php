@@ -82,6 +82,12 @@ return [
         'crear_boton' => 'Créer mon compte',
         'creando' => 'Création de votre compte',
         'ya_existe' => 'Un compte existe déjà avec cet e-mail : connectez-vous avec.',
+        'red' => [
+            'sin' => 'Pas de connexion',
+            'sin_texto' => 'Ce que vous voyez reste ici. Quand la connexion reviendra, vous pourrez enregistrer.',
+            'fallo' => 'Impossible d\'enregistrer : pas de connexion. Vous n\'avez rien perdu.',
+            'reintentar' => 'Réessayer',
+        ],
     ],
     'ayuda' => [
         'en_horario' => 'Nous vous répondons rapidement.',
@@ -354,6 +360,16 @@ return [
             'mensaje_titulo' => 'Nous vous l\'avons écrit :',
             'llamar' => 'Appeler le :telefono',
         ],
+        'otra_vez' => [
+            'titulo' => 'Réserver à nouveau',
+            'boton' => 'Choisir un jour',
+        ],
+        'bienvenida' => [
+            'titulo' => 'Votre compte est prêt',
+            'texto' => 'Votre QR est déjà valable : avec lui, vous entrez toujours, sans papiers. Il ne reste qu\'à choisir quand venir.',
+            'boton' => 'Réservez votre première visite',
+        ],
+        'hueco' => '« :nombre » n\'a pas pu se charger. Rechargez la page.',
         'antes' => [
             'titulo' => 'Avant de venir',
             'siguiente' => 'Ensuite',
@@ -404,6 +420,7 @@ return [
                 'boton' => 'Ajouter',
                 'linea' => 'Ajoutez vos enfants et signez pour eux : à l’entrée vous montrez seulement le QR.',
                 'boton_isla' => 'Ajouter mes enfants',
+                'opcional' => 'Des mineurs viennent ? Signez pour eux avant et, à l\'entrée, vous montrez seulement le QR.',
             ],
             'autorizaciones' => [
                 'texto' => 'Autorisations : :firmadas sur :total signées. Celles qui manquent se signent à l’entrée.',

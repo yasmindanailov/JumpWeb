@@ -38,6 +38,8 @@ import { avisoDeAnalitica, avisoDeCuenta } from './avisos.js';
 import { tituloDe } from './reservas.js';
 import { useReservasCuenta } from './useReservasCuenta.js';
 import { useHijosCuenta } from './useHijosCuenta.js';
+import { useConexion } from './useConexion.js';
+import { protegido } from './seguro.js';
 
 /** Los pasos de Ajustes (T5e): al entrar en uno, su formulario empieza vacío. */
 const PASOS_DE_AJUSTES = [VISTA.CLAVE, VISTA.CORREO, VISTA.OTRAS, VISTA.DESVINCULAR, VISTA.FIRMA, VISTA.BORRAR];
@@ -100,6 +102,12 @@ export function useSeccionCuenta(props) {
     const caja = () => document.querySelector('[data-isla-scroll]');
     const enfocarError = () => nextTick(() => caja()?.querySelector('[aria-invalid="true"]')?.focus());
 
+    // Sin conexión (T5f): lo que GUARDA se envuelve (`guarda`), y sin red no se intenta. Su fallo retira la confirmación
+    // que hubiera (el diseño: uno u otro) y sube la capa a él: lo que falló puede estar al fondo (un interruptor de
+    // Ajustes), y el aviso y su «Volver a intentarlo» viven arriba.
+    const red = useConexion({ alFallar: () => { e.aviso = null; caja()?.scrollTo?.({ top: 0, behavior: 'smooth' }); } });
+    const guarda = red.guarda;
+
     function cargar(vista) {
         if (vista === VISTA.INICIO || vista === VISTA.QR) carne.ensure({ api });
         // Las reservas, al entrar; con la de HOY, la ruta al parque para «Cómo llegar» de Tu QR (situación 14); y «Antes de
@@ -151,9 +159,17 @@ export function useSeccionCuenta(props) {
         else window.location.assign(accion.url);
     }
 
+    /**
+     * Lo que Mi cuenta deja al pasar a la compra (T5f), para volver a ello cuando la flecha de la compra la devuelve
+     * (`desde: 'compra'`): su propia flecha (de dónde se abrió) y el punto del scroll.
+     */
+    let antesDeLaCompra = null;
+
     /** Al abrirse, la vista de su zona: la que pidió la apertura (aún sin consumir) o la ya aplicada al motor. */
     function situar(zona) {
         const host = cajonHost();
+        // De vuelta de la compra que abrió aquí (T5f): el inicio, entrando por la izquierda, con su flecha y en su punto.
+        const deLaCompra = host?.cuentaDesde === 'compra' ? antesDeLaCompra : null;
         const { vista, bloque, plegable } = vistaDeApertura(zona, { sesion: contexto.identified, bloque: enlaceDeCuenta(window.location.hash)?.bloque ?? '' });
 
         // Un plegable de Ajustes (la zona del cajón que lo era, `#mi-cuenta/acceso`): abierto, y la capa baja a él.
@@ -164,29 +180,35 @@ export function useSeccionCuenta(props) {
         const delServidor = tomarAvisoDelServidor(document);
 
         Object.assign(e, {
-            vista, subpaso: '', dir: null, ocupado: null, renovar: false, errores: {}, avisoAlta: '',
+            vista, subpaso: '', dir: deLaCompra ? 'back' : null, ocupado: null, renovar: false, errores: {}, avisoAlta: '',
             aviso: delServidor ? { ...delServidor, en: vista } : null,
-            desde: host?.cuentaDesde ?? null, qrDesde: vista === VISTA.QR ? (host?.cuentaDesde ?? 'fuera') : null,
+            desde: deLaCompra ? deLaCompra.desde : (host?.cuentaDesde ?? null),
+            qrDesde: vista === VISTA.QR ? (host?.cuentaDesde ?? 'fuera') : null,
             ent: entradaVacia(), f: datosVacios(), rSel: null, cambiarDesdeReserva: false,
         });
         cargar(vista);
-        if (bloque) irAlBloque(bloque);
+        if (deLaCompra) volverAlPunto(deLaCompra.scroll);
+        else if (bloque) irAlBloque(bloque);
     }
 
     watch(abierta, (dentro) => { if (dentro) situar(cajonHost()?.accountZone || zonas.zone); }, { immediate: true });
     watch(() => zonas.zone, (zona) => { if (abierta.value) situar(zona); });
-    // Una confirmación se va al salir de la vista en la que se dijo.
+    // Una confirmación se va al salir de la vista en la que se dijo; el fallo de la red, al cambiar de vista o de paso.
     watch(() => e.vista, (vista) => { if (e.aviso && e.aviso.en !== vista) e.aviso = null; });
+    watch(() => [e.vista, e.subpaso], () => red.olvidar());
     // La sesión murió con la capa abierta (el carné responde 401): lo que se ve pasa a ser Entrar.
     watch(() => carne.expired, (caducada) => { if (caducada && abierta.value) { contexto.refresh({ api }); Object.assign(e, { vista: VISTA.ENTRAR, subpaso: '', dir: null }); } });
 
-    /** La confirmación de arriba; con `tono = 'danger'`, lo que no salió (T5e). Se queda hasta salir de su vista. */
-    const decir = (texto, tono = 'success') => { e.aviso = { texto, en: e.vista, tono }; };
+    /**
+     * La confirmación de arriba; con `tono = 'danger'`, lo que no salió (T5e). Se queda hasta salir de su vista. Lo que se
+     * dice ahora sustituye al fallo de la red que hubiera (T5f).
+     */
+    const decir = (texto, tono = 'success') => { e.aviso = { texto, en: e.vista, tono }; red.olvidar(); };
 
     // ── Los avisos de la cuenta (T5e·2) ──────────────────────────────────────────────────────────────
 
     /** El de la cuenta (`avisos.js`): confirmar el correo, firmar su descargo o el de sus hijos. Uno, y en su orden. */
-    const avisoCuenta = computed(() => avisoDeCuenta(contexto.context, { textos, reenvio: { segundos: authStore.resendSeconds, quedan: authStore.resendsLeft } }));
+    const avisoCuenta = computed(() => protegido('avisos', () => avisoDeCuenta(contexto.context, { textos, reenvio: { segundos: authStore.resendSeconds, quedan: authStore.resendsLeft } }), { roto: null }));
     // El cupo del reenvío se arma UNA vez, cuando hay que confirmar el correo (la misma puerta que el índice del cajón).
     watch(() => avisoCuenta.value?.tipo, (tipo) => { if (tipo === 'verificar') authStore.allowVerificationResend(); }, { immediate: true });
 
@@ -198,20 +220,28 @@ export function useSeccionCuenta(props) {
         else if (! r?.skipped) decir(t(props.messages, 'errors.try_later'), 'danger');
     }
 
-    /** El enlace del aviso de la cuenta: reenviar, firmar SU descargo (su paso) o ir a sus hijos. */
+    /** El enlace del aviso de la cuenta: reenviar (sin red, no se intenta: T5f), firmar SU descargo (su paso) o ir a sus hijos. */
     function hacerAviso(hace) {
-        if (hace === 'reenviar') reenviarVerificacion();
+        if (hace === 'reenviar') guarda(reenviarVerificacion)();
         else if (hace === 'firmar') a(VISTA.FIRMA);
         else if (hace === 'hijos') irAlBloque('quien');
     }
 
     /**
      * El aviso de la analítica: «Entendido» lo despide (el servidor lo confirma antes de quitarlo) y «Privacidad» también
-     * —quien va a donde se retira ya lo ha leído, como en el cajón— y abre ese plegable de Ajustes.
+     * —quien va a donde se retira ya lo ha leído, como en el cajón— y abre ese plegable de Ajustes. Sin red (T5f),
+     * «Entendido» no se intenta y deja su reintento; «Privacidad» es sobre todo ir allí, y va: el aviso sigue hasta que
+     * el servidor lo despida.
      */
     function hacerAnalitica(que) {
-        contexto.dismissAnalyticsNotice({ api });
-        if (que !== 'privacidad') return;
+        const despedir = () => contexto.dismissAnalyticsNotice({ api });
+
+        if (que !== 'privacidad') {
+            guarda(despedir)();
+
+            return;
+        }
+        despedir();
         conAjustes().then((aj) => aj?.abrir('privacidad'));
         irAlBloque('ajustes');
     }
@@ -228,9 +258,14 @@ export function useSeccionCuenta(props) {
         cargar(vista);
     }
 
+    /** La lista, de vuelta en el punto en que se dejó (cuando ya está pintada). */
+    function volverAlPunto(arriba) {
+        nextTick(() => setTimeout(() => { const c = caja(); if (c) c.scrollTop = arriba; }, 60));
+    }
+
     function aInicio() {
         Object.assign(e, { vista: VISTA.INICIO, subpaso: '', dir: 'back', renovar: false, rSel: null });
-        nextTick(() => setTimeout(() => { const c = caja(); if (c) c.scrollTop = scroll; }, 60));
+        volverAlPunto(scroll);
     }
 
     /** La tarjeta de «Cambiar o cancelar»: la de la reserva abierta o, desde el inicio, la próxima. */
@@ -242,12 +277,28 @@ export function useSeccionCuenta(props) {
         if (cambiarVista.value?.whatsapp) window.open(cambiarVista.value.whatsapp, '_blank', 'noopener');
     }
 
-    /** La X: cierra la capa sin perder nada. El enlace que la abrió se va con ella: recargar no la reabre. */
-    function cerrar() {
-        cerrarSuperficie();
+    /** El enlace que abrió Mi cuenta (`#mi-cuenta…`) se va con ella: recargar no la reabre. */
+    function soltarEnlace() {
         if (enlaceDeCuenta(window.location.hash)) {
             try { window.history.replaceState(window.history.state, '', `${window.location.pathname}${window.location.search}`); } catch { /* sin historial */ }
         }
+    }
+
+    /** La X: cierra la capa sin perder nada. */
+    function cerrar() {
+        cerrarSuperficie();
+        soltarEnlace();
+    }
+
+    /**
+     * «Elegir día» de Reservar otra vez y «Reserva tu primera visita» (T5f): la COMPRA de la isla en la misma capa, ya
+     * situada en su producto y su gente (la intención `linea` SIN día ni hora: «solo falta el día y la hora») o, sin
+     * intención de producto, eligiendo zona. `desde: 'cuenta'` le da la flecha que vuelve aquí; lo que se deja, arriba.
+     */
+    function aLaCompra(intencion = {}) {
+        antesDeLaCompra = { desde: e.desde, scroll: caja()?.scrollTop ?? 0 };
+        soltarEnlace();
+        cajonHost()?.openWith?.({ ...intencion, desde: 'cuenta' });
     }
 
     /** Abierta desde el menú de la isla, la flecha vuelve a él: se cierra la capa y la isla de la página lo abre. */
@@ -482,68 +533,87 @@ export function useSeccionCuenta(props) {
 
     // ── Lo que se pinta ──────────────────────────────────────────────────────────────────────────────
 
+    // ⚠️ Lo de cada paso se calcula SOLO en su paso (T5f): el `ck` pinta la capa entera —su banda, su flecha, su acción—, y
+    // calculando siempre «Cambiar o cancelar» de la próxima, una reserva con un dato que no se puede leer se llevaba la capa
+    // por delante, por encima de los bloques protegidos (lo cazó la sonda con una fecha rota). Y así depende de menos.
     const ck = computed(() => ckDeCuenta({
         vista: e.vista, subpaso: e.subpaso, desde: e.desde, qrDesde: e.qrDesde, dir: e.dir, ocupado: e.ocupado,
         entrada: e.ent, textos, altaGoogle: { pendiente: e.google.pending !== null },
-        cambiar: { desdeReserva: e.cambiarDesdeReserva, whatsapp: Boolean(cambiarVista.value?.whatsapp) },
-        hijo: { nombre: hijos.hijo.value?.nombre ?? '', firmar: Boolean(hijos.hijo.value?.firmar) },
+        cambiar: e.vista === VISTA.CAMBIAR ? { desdeReserva: e.cambiarDesdeReserva, whatsapp: Boolean(cambiarVista.value?.whatsapp) } : null,
+        hijo: e.vista === VISTA.HIJO ? { nombre: hijos.hijo.value?.nombre ?? '', firmar: Boolean(hijos.hijo.value?.firmar) } : null,
         // Los pasos de Ajustes (T5e): el correo ya pedido deja su desenlace sin acción; tu descargo, «Firmar» solo si
         // hace falta y hay texto que firmar.
         ajuste: {
-            enviado: Boolean(ajustes.value?.paso.value.correo?.pendiente),
-            firmar: Boolean(ajustes.value?.bloque.value.descargo?.firmar && waiverStore.document),
+            enviado: e.vista === VISTA.CORREO && Boolean(ajustes.value?.paso.value.correo?.pendiente),
+            firmar: e.vista === VISTA.FIRMA && Boolean(ajustes.value?.bloque.value.descargo?.firmar && waiverStore.document),
         },
         rotulos: {
             altaGoogle: t(props.account, 'google.title'), altaGoogleBoton: t(props.account, 'google.submit'),
             altaGoogleEnviando: t(props.account, 'google.submitting'),
         },
+        // Lo que guarda, por `guarda` (T5f): sin red no se intenta y queda su «Volver a intentarlo».
         acciones: {
-            cerrar, alMenu, aInicio, entrar, crear, completarGoogle, escribir, guardarHijos, firmarHijo,
-            guardarClave: () => hacerPaso('guardarClave', 'mi_cuenta.clave.guardada'),
-            enviarCorreo: () => hacerPaso('enviarCorreo'),
-            cerrarOtras: () => hacerPaso('cerrarOtras', 'mi_cuenta.otras_sesiones.hecho'),
-            desvincular: () => hacerPaso('desvincular', 'mi_cuenta.desvincular.hecho'),
-            firmar: () => hacerPaso('firmar', 'mi_cuenta.descargo.firmado'),
+            cerrar, alMenu, aInicio, escribir,
+            entrar: guarda(entrar), crear: guarda(crear), completarGoogle: guarda(completarGoogle),
+            guardarHijos: guarda(guardarHijos), firmarHijo: guarda(firmarHijo),
+            guardarClave: guarda(() => hacerPaso('guardarClave', 'mi_cuenta.clave.guardada')),
+            enviarCorreo: guarda(() => hacerPaso('enviarCorreo')),
+            cerrarOtras: guarda(() => hacerPaso('cerrarOtras', 'mi_cuenta.otras_sesiones.hecho')),
+            desvincular: guarda(() => hacerPaso('desvincular', 'mi_cuenta.desvincular.hecho')),
+            firmar: guarda(() => hacerPaso('firmar', 'mi_cuenta.descargo.firmado')),
             aReserva: () => Object.assign(e, { vista: VISTA.RESERVA, subpaso: '', dir: 'back' }),
             aEntrar: () => Object.assign(e, { vista: VISTA.ENTRAR, subpaso: '', dir: 'back', errores: {}, avisoAlta: '' }),
             volverDelDescargo: () => Object.assign(e, { subpaso: '', dir: 'back' }),
         },
     }));
 
-    const qr = computed(() => ({
+    // ⚠️⚠️ Cada bloque se compone PROTEGIDO (T5f, `seguro.js`): el que revienta sale roto —su hueco— y el resto sigue. Y un
+    // `computed` se protege DENTRO, no donde se lee: Vue 3.5 vuelve a evaluar los `computed` de los que se depende al mirar
+    // si hay que repintar (`isDirty` → `refreshComputed`), fuera de cualquier `try` de quien los lee, así que uno que lanza
+    // se llevaba el repintado entero de Mi cuenta (lo cazó la sonda: la capa se quedaba sin sus reservas y sin su hueco).
+    const qr = computed(() => protegido('qr', () => ({
         src: cardImageUrl(carne.card),
         codigo: tokenGroups(carne.card?.token),
         dibujable: cardIsDrawable(carne.card),
         cargando: carne.loading && ! carne.loaded,
         fallo: carne.notice || '',
-    }));
+    })));
 
-    // La línea de arriba: con las reservas ya llegadas, la próxima con qué Y cuántos; antes, la del contexto sembrado.
-    const linea = computed(() => {
+    // La línea de arriba: con las reservas ya llegadas, la próxima con qué Y cuántos; antes, la del contexto sembrado. No es
+    // un bloque: si no se puede componer, se queda vacía.
+    const linea = computed(() => protegido('linea', () => {
         const r = proxima.value?.reservation;
 
         return r ? lineaProxima(r, { locale, titulo: tituloDe(r) }) : lineaProxima(contexto.context?.next_reservation ?? null, { locale });
-    });
+    }, { roto: '' }));
 
+    // Lo que se llama aquí (no un `computed`) se protege aquí. La línea y el chip se quedan vacíos; los avisos, sin aviso.
     const inicio = computed(() => ({
         nombre: contexto.context?.first_name ?? '',
         linea: linea.value,
-        qr: qr.value,
-        aviso: e.aviso?.en === VISTA.INICIO ? e.aviso.texto : '',
-        avisoTono: e.aviso?.en === VISTA.INICIO ? (e.aviso.tono ?? 'success') : 'success',
-        hoy: hoy.value, renovar: e.renovar, renovando: e.ocupado === 'renovar', sinQr: delMotor('account.card.unavailable'),
-        proxima: reservas.bloque(proxima.value),
+        // Tu QR (las props de `BloqueQr`) y la confirmación de arriba (las de `AvisoCuenta`), cada una en su objeto.
+        tuQr: { qr: qr.value, renovar: e.renovar, renovando: e.ocupado === 'renovar', sinQr: delMotor('account.card.unavailable') },
+        aviso: e.aviso?.en === VISTA.INICIO ? { texto: e.aviso.texto, tono: e.aviso.tono ?? 'success' } : null,
+        hoy: hoy.value,
+        proxima: protegido('proxima', () => reservas.bloque(proxima.value)),
         // El contexto ya dice que hay próxima y aún no han llegado las reservas: su hueco espera, sin saltos.
         esperandoProxima: reservas.s.proximas === null && Boolean(contexto.context?.next_reservation),
         // «Antes de venir» de la próxima y, arriba, «Siguiente: …» (T5c).
-        antes: reservas.antes(proxima.value),
-        chip: reservas.chip(proxima.value),
+        antes: protegido('antes', () => reservas.antes(proxima.value)),
+        chip: protegido('chip', () => reservas.chip(proxima.value), { roto: '' }),
+        // Estos cuatro son `computed`, protegidos dentro de su módulo.
         otras: reservas.otras.value,
+        // T5f: Reservar otra vez (la última visita que se puede repetir) y la bienvenida de la cuenta sin reservas.
+        otraVez: reservas.otraVez.value,
+        bienvenida: reservas.cuentaNueva.value,
         quien: hijos.quien.value,
-        // Ajustes y «Cerrar sesión» (T5e), cuando llega su trozo.
+        // Ajustes y «Cerrar sesión» (T5e), cuando llega su trozo (su `bloque`, protegido en `useAjustesCuenta`).
         ajustes: ajustes.value?.bloque.value ?? null,
         // Los avisos de la cuenta (T5e·2), arriba.
-        avisos: { cuenta: avisoCuenta.value, analitica: avisoDeAnalitica(contexto.context, { textos, motor: props.account }) },
+        avisos: {
+            cuenta: avisoCuenta.value,
+            analitica: protegido('avisos', () => avisoDeAnalitica(contexto.context, { textos, motor: props.account }), { roto: null }),
+        },
         saliendo: e.ocupado === 'salir',
     }));
 
@@ -572,12 +642,20 @@ export function useSeccionCuenta(props) {
         // Lo que se dice arriba de «Entra» (T5e·2): la vuelta de Google que no salió («No has terminado de entrar…»).
         avisoEntrar: computed(() => (e.aviso?.en === VISTA.ENTRAR ? e.aviso : null)),
         abrirQr: () => a(VISTA.QR, { qrDesde: 'cuenta' }),
-        aInicio, decir, renovarQr, olvido, aGoogle, irAlBloque,
+        aInicio, decir, irAlBloque,
+        // Lo que habla con el servidor (o sale a él), por `guarda` (T5f): sin red no se intenta.
+        renovarQr: guarda(renovarQr), olvido: guarda(olvido), aGoogle: guarda(aGoogle),
+        // Sin conexión (T5f): el aviso de arriba y el reintento de lo último que no se intentó.
+        red: computed(() => ({ enLinea: red.enLinea.value, fallo: red.fallo.value !== null })),
+        reintentar: () => red.fallo.value?.(),
         // Las reservas (T5b): abrir una de «Otras reservas», pedir un cambio (desde la próxima o desde la abierta) y el
         // historial que crece.
         abrirReserva: (id) => { a(VISTA.RESERVA, { rSel: id }); reservas.cargarAntes(id); },
         aCambiar: (desdeReserva) => a(VISTA.CAMBIAR, { cambiarDesdeReserva: desdeReserva === true }),
         masHistorial: () => reservas.mas(),
+        // T5f: a la compra, situada en la última visita o eligiendo zona.
+        otraVez: () => { const o = reservas.otraVez.value; if (o) aLaCompra({ type: 'linea', id: o.id, quantity: o.n }); },
+        primeraVisita: () => aLaCompra(),
         reservaAbierta: computed(() => reservas.bloque(reservas.buscar(e.rSel))),
         // Su «Antes de venir» (T5c): cada reserva tiene sus tareas, también la que se abre desde «Otras reservas».
         antesAbierta: computed(() => reservas.antes(reservas.buscar(e.rSel))),
@@ -593,18 +671,18 @@ export function useSeccionCuenta(props) {
         casillaHijos: (v) => { hijos.s.h.descargo = v; hijos.s.errores = { ...hijos.s.errores, descargo: '' }; },
         casillaHijo: (v) => { hijos.s.firmaCasilla = v; hijos.s.firmaError = ''; },
         preguntarQuitar: (si) => { hijos.s.preguntar = si; },
-        quitarHijo,
+        quitarHijo: guarda(quitarHijo),
         // Los Ajustes (T5e): el bloque (sus plegables, «Tus datos», los interruptores, las descargas, los recibos y
-        // «Cerrar sesión») y sus pasos, con su formulario.
+        // «Cerrar sesión») y sus pasos, con su formulario. Lo que guarda, por `guarda` (T5f).
         alternarAjuste: (id) => ajustes.value?.alternar(id),
         datoAjuste: (campo, valor) => ajustes.value?.cambiarDato(campo, valor),
-        guardarDatos,
+        guardarDatos: guarda(guardarDatos),
         pasoAjuste: (vista) => a(vista),
-        vincular: () => ajustes.value?.vincular(),
-        interruptor: (nombre, valor) => ajustes.value?.interruptor(nombre, valor),
-        descargarDatos: () => ajustes.value?.descargarDatos(),
+        vincular: guarda(() => ajustes.value?.vincular()),
+        interruptor: guarda((nombre, valor) => ajustes.value?.interruptor(nombre, valor)),
+        descargarDatos: guarda(() => ajustes.value?.descargarDatos()),
         masRecibos: () => ajustes.value?.masRecibos(),
-        salir,
+        salir: guarda(salir),
         // El paso de Ajustes que se ve, cuando su lógica ya está (hasta entonces, `null`: no se pinta).
         pasoDeAjuste: computed(() => (ajustes.value ? {
             ...ajustes.value.paso.value,
@@ -613,9 +691,9 @@ export function useSeccionCuenta(props) {
         } : null)),
         cambiarPaso: (campo, valor) => ajustes.value?.cambiarPaso(campo, valor),
         enlaceClave: () => ajustes.value?.enlaceClave(),
-        reenviarCorreo: () => ajustes.value?.reenviarCorreo(),
-        cancelarCorreo: () => ajustes.value?.cancelarCorreo(),
-        borrarCuenta,
+        reenviarCorreo: guarda(() => ajustes.value?.reenviarCorreo()),
+        cancelarCorreo: guarda(() => ajustes.value?.cancelarCorreo()),
+        borrarCuenta: guarda(borrarCuenta),
         // Los avisos de la cuenta (T5e·2).
         hacerAviso,
         hacerAnalitica,

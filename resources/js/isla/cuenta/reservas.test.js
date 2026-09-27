@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { cambiarDe, estadoDe, filaHistorial, hojaDelDia, lineasDe, pagoDe, reservasDeCuenta, tarjetaDe, tituloDe } from './reservas.js';
+import { cambiarDe, esCuentaNueva, estadoDe, filaHistorial, hojaDelDia, lineasDe, otraVezDe, pagoDe, reservasDeCuenta, tarjetaDe, tituloDe } from './reservas.js';
 
 /** Las reservas de Mi cuenta (T5b, `DECISIONES #775`, spec §4.13), con tarjetas de la forma de la API. */
 
@@ -206,5 +206,64 @@ describe('«Cambiar o cancelar»', () => {
 
         assert.equal(c.whatsapp, '');
         assert.equal(c.llamar, null);
+    });
+});
+
+describe('«Reservar otra vez» (T5f)', () => {
+    const catalogo = [{ id: 101, type: 'entry' }, { id: 102, type: 'entry' }, { id: 201, type: 'pack' }];
+    const pasada = (extra = {}, pedido = {}) => {
+        const c = entrada({ status: 'finished', addons: [], ...extra });
+        Object.assign(c.order, pedido);
+
+        return c;
+    };
+
+    test('la ÚLTIMA visita disfrutada de una entrada: qué y cuántos, su producto y su gente, sin los calcetines', () => {
+        const ultima = pasada({ product_id: 102, product_name: 'Jump 1 hora', quantity: 3, quantity_label: '3 personas' });
+
+        assert.deepEqual(otraVezDe([ultima, pasada()], catalogo), { texto: 'Jump 1 hora · 3 personas', id: 102, n: 3 });
+    });
+
+    test('se salta la cancelada, la devuelta, la que no se pagó y la fiesta', () => {
+        const historial = [
+            pasada({ cancelled: true, product_id: 102 }),
+            pasada({ product_id: 102 }, { status: 'refunded' }),
+            pasada({ product_id: 102 }, { status: 'expired' }),
+            pasada({ product_id: 201, is_pack: true, product_name: 'Pack Kids', quantity: 10 }),
+            pasada(),
+        ];
+
+        assert.deepEqual(otraVezDe(historial, catalogo), { texto: 'Kids 1 hora · 2 niños', id: 101, n: 2 });
+    });
+
+    test('un producto que ya no se vende (o que ahora es un pack) no se ofrece', () => {
+        assert.equal(otraVezDe([pasada({ product_id: 999 })], catalogo), null);
+        assert.equal(otraVezDe([pasada({ product_id: 201 })], catalogo), null);
+    });
+
+    test('sin historial, o sin catálogo aún, no hay bloque', () => {
+        assert.equal(otraVezDe([], catalogo), null);
+        assert.equal(otraVezDe([pasada()], []), null);
+        assert.equal(otraVezDe(undefined, undefined), null);
+    });
+
+    test('una cantidad rara sale como una persona, nunca cero', () => {
+        assert.equal(otraVezDe([pasada({ quantity: 0 })], catalogo).n, 1);
+    });
+});
+
+describe('la bienvenida de la cuenta nueva (T5f)', () => {
+    test('con las DOS listas leídas y vacías', () => {
+        assert.equal(esCuentaNueva({ proximas: [], pasadas: [], historialLeido: true }), true);
+    });
+
+    test('no mientras llegan, ni si una no se pudo leer', () => {
+        assert.equal(esCuentaNueva({ proximas: null, pasadas: [], historialLeido: true }), false);
+        assert.equal(esCuentaNueva({ proximas: [], pasadas: [], historialLeido: false }), false);
+    });
+
+    test('un pedido a medio pagar, o una visita pasada, ya no es una cuenta nueva', () => {
+        assert.equal(esCuentaNueva({ proximas: [{ reservation: { id: 9 }, order: { status: 'pending' } }], pasadas: [], historialLeido: true }), false);
+        assert.equal(esCuentaNueva({ proximas: [], pasadas: [entrada()], historialLeido: true }), false);
     });
 });
