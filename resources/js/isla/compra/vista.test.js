@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { diaCorto, diaLargo, euros, horasCercanas, horasDelSelector, pantallaCuando, tiraDias, zonasConEntradas } from './vista.js';
+import { DIAS_TIRA, calendarioDeTira, diaCorto, diaLargo, euros, horasCercanas, horasDelSelector, pantallaCuando, tiraDias, zonasConEntradas } from './vista.js';
 
 /**
  * La vista pura de la compra de la isla (T3e de `specs/isla-y-landing-nueva.md` §4.10): del estado del motor a las
@@ -65,6 +65,57 @@ describe('la tira de días y el selector de horas', () => {
 
         assert.deepEqual(primero, { id: '2026-09-24', n: 24, label: 'hoy', special: false, aria: 'Jueves 24 de septiembre' });
         assert.deepEqual(segundo, { id: '2026-09-25', n: 25, label: 'vie', special: true, aria: 'Viernes 25 de septiembre, tarifa especial' });
+    });
+
+    // `#830`: la tira se quedaba en SIETE días y el motor vende cinco meses.
+    const ofrecidos = (n, desde = '2026-09-28') => Array.from({ length: n }, (_, i) => {
+        const d = new Date(`${desde}T12:00:00Z`);
+
+        d.setUTCDate(d.getUTCDate() + i);
+
+        return { date: d.toISOString().slice(0, 10), price_cents: 800, rate_key: i % 7 === 4 ? 'special' : 'normal' };
+    });
+
+    test('la tira enseña dos semanas; el día elegido más allá entra al final, y no se repite si ya está', () => {
+        const dias = ofrecidos(155);
+
+        assert.equal(DIAS_TIRA, 14);
+        assert.equal(tiraDias(dias, { hoy: '2026-09-28', locale: 'es', textos }).length, 14);
+        const conLejano = tiraDias(dias, { hoy: '2026-09-28', locale: 'es', textos, elegido: '2026-11-20' });
+
+        assert.equal(conLejano.length, 15);
+        assert.equal(conLejano.at(-1).id, '2026-11-20');
+        // Con su mes encima: tras «dom 11» de octubre, «vie 20» se leía como del mismo mes.
+        assert.equal(conLejano.at(-1).label, 'nov');
+        assert.equal(conLejano.at(-2).label, 'dom');
+        assert.equal(tiraDias(dias, { hoy: '2026-09-28', locale: 'es', textos, elegido: '2026-10-01' }).length, 14);
+        // Un día que el motor no vende no se inventa en la tira.
+        assert.equal(tiraDias(dias, { hoy: '2026-09-28', locale: 'es', textos, elegido: '2027-06-01' }).length, 14);
+    });
+
+    test('«Más fechas»: solo si hay más días que la tira; abre en el mes del primero que ella deja fuera, o del elegido', () => {
+        assert.equal(calendarioDeTira(ofrecidos(14), {}), null);
+        const cal = calendarioDeTira(ofrecidos(155), { hoy: '2026-09-28', locale: 'es' });
+
+        // La tira va del 28-09 al 11-10: el primero que deja fuera es el 12-10.
+        assert.equal(cal.month, '2026-10');
+        assert.equal(cal.minMonth, '2026-09');
+        assert.equal(cal.maxMonth, '2027-03');
+        assert.equal(cal.days.length, 155);
+        assert.deepEqual(cal.days[4], { date: '2026-10-02', special: true });
+        assert.equal(cal.today, '2026-09-28');
+        assert.equal(calendarioDeTira(ofrecidos(155), { dia: '2026-12-24' }).month, '2026-12');
+        // Un elegido DENTRO de la tira no lo mueve: abre donde la tira acaba.
+        assert.equal(calendarioDeTira(ofrecidos(155), { dia: '2026-09-30' }).month, '2026-10');
+    });
+
+    test('las dos pantallas de «Cuándo» llevan el calendario de «Más fechas» cuando hay más días', () => {
+        const largo = { ...precios, 100: ofrecidos(40, '2026-09-24') };
+        const { props } = pantallaCuando(estado({ precios: largo }));
+
+        assert.equal(props.dias.length, 14);
+        assert.equal(props.calendario.month, '2026-10');
+        assert.equal(pantallaCuando(estado()).props.calendario, null);
     });
 
     test('una hora sin sitio para todos sale apagada, y con «Quedan N» si le queda alguno', () => {

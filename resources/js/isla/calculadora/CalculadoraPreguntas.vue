@@ -29,7 +29,7 @@ const cambiar = (campo, valor) => emit('cambiar', campo, valor);
         <TarjetasOpcion :name="v.tiempo.name" :model-value="v.tiempo.fila" :columns="v.tiempo.columnas" :items="v.tiempo.items" @update:model-value="cambiar('fila', $event)" />
     </PreguntaCalculadora>
     <PreguntaCalculadora id="p3-dia" :titulo="v.dia.titulo">
-        <CalendarioMes :month="v.dia.mes" :min-month="v.dia.desde" :max-month="v.dia.hasta" :today="v.dia.hoy" :days="v.dia.dias" :model-value="v.dia.valor" :locale="v.locale" @update:model-value="cambiar('dia', $event)" />
+        <CalendarioMes :month="v.dia.mes" :months="v.dia.meses" :min-month="v.dia.desde" :max-month="v.dia.hasta" :today="v.dia.hoy" :days="v.dia.dias" :model-value="v.dia.valor" :locale="v.locale" @update:model-value="cambiar('dia', $event)" />
         <p v-if="v.dia.nota" :style="PISTA">{{ v.dia.nota }}</p>
         <span v-if="v.dia.eco" :style="ECO"><IconoLucide name="check" :size="16" /><span>{{ v.dia.eco.antes }}<span :style="CIFRA">{{ v.dia.eco.cifra }}</span>{{ v.dia.eco.despues }}</span></span>
     </PreguntaCalculadora>

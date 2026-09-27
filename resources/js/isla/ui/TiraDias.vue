@@ -3,10 +3,12 @@
  * La tira de días del sistema de diseño (`DayStrip.jsx`): el calendario de «Cuándo y cuántos», en una fila que se
  * desliza. Hoy va primero y elegido; el punto marca la tarifa especial (`--isla-especial`), igual que en el
  * calendario de la página. Sirve sobre claro y sobre tinta. El día elegido, con `v-model`.
+ * ▶ Al cambiar el elegido, la tira se DESLIZA hasta él si no se ve (`#830`: un día elegido en «Más fechas» entra al
+ * final de la tira, y sin esto quedaba elegido fuera de la vista). Solo en horizontal: la isla no se mueve.
  */
-import { ref } from 'vue';
+import { nextTick, ref, watch } from 'vue';
 
-defineProps({
+const props = defineProps({
     days: { type: Array, default: () => [] },
     modelValue: { type: String, default: null },
     label: { type: String, default: '' },
@@ -15,10 +17,22 @@ const emit = defineEmits(['update:modelValue']);
 
 const foco = ref(null);
 const alEnfocar = (e, id) => { foco.value = e.currentTarget.matches(':focus-visible') ? id : null; };
+const tira = ref(null);
+watch(() => props.modelValue, async () => {
+    await nextTick();
+    const el = tira.value?.querySelector('[aria-checked="true"]');
+    if (! el) return;
+    // Solo si asoma por un borde: un día que ya se ve no mueve la tira.
+    const r = el.getBoundingClientRect();
+    const c = tira.value.getBoundingClientRect();
+    const dx = r.right > c.right ? r.right - c.right + 6 : r.left < c.left ? r.left - c.left - 6 : 0;
+    if (dx) tira.value.scrollBy({ left: dx, behavior: 'smooth' });
+});
 </script>
 
 <template>
     <div
+        ref="tira"
         role="radiogroup"
         :aria-label="label || undefined"
         :style="{ display: 'flex', gap: '8px', overflowX: 'auto', padding: '3px 3px 6px', margin: '-3px', scrollSnapType: 'x proximity', scrollbarWidth: 'none' }"

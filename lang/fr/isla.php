@@ -152,6 +152,8 @@ return [
             'titulo_hoy' => 'Pour aujourd\'hui',
             'zona' => 'Quelle zone ?',
             'otra_zona' => 'Quelqu\'un va dans l\'autre zone ? Ajoutez-le à la même réservation',
+            'mas_fechas' => 'Plus de dates',
+            'menos_fechas' => 'Fermer le calendrier',
             'quitar' => 'Retirer',
             'otra_titulo' => 'Ajouter une autre entrée',
             'buscando_horas' => 'Recherche des horaires libres',

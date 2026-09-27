@@ -9,7 +9,7 @@ import PasoCompra from './PasoCompra.vue';
 import PreguntaCompra from './PreguntaCompra.vue';
 import DatoFijo from './DatoFijo.vue';
 import CantidadCompra from './CantidadCompra.vue';
-import TiraDias from '../ui/TiraDias.vue';
+import DiasCompra from './DiasCompra.vue';
 import SelectorHoras from '../ui/SelectorHoras.vue';
 import TarjetasOpcion from '../ui/TarjetasOpcion.vue';
 import AvisoDestacado from '../ui/AvisoDestacado.vue';
@@ -25,6 +25,8 @@ defineProps({
     pack: { type: String, default: '' },
     ninos: { type: Object, required: true },
     dias: { type: Array, required: true },
+    // «Más fechas» (`#830`): una fiesta se reserva con semanas.
+    calendario: { type: Object, default: null },
     dia: { type: String, default: null },
     horas: { type: Array, default: null },
     hora: { type: String, default: null },
@@ -83,9 +85,10 @@ const emit = defineEmits(['cambiar']);
             id="pjc-q-dia"
             :titulo="preguntas[2]"
         >
-            <TiraDias
+            <DiasCompra
                 :label="preguntas[2]"
                 :days="dias"
+                :calendario="calendario"
                 :model-value="dia"
                 @update:model-value="emit('cambiar', 'dia', $event)"
             />

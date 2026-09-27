@@ -1744,10 +1744,10 @@ que llegue Bizum. Los vídeos, pendientes del MATERIAL como en la T4 (en LOCAL, 
   `scripts/sonda-portada.mjs` (20/20 en 390 y 1280; con su mutación en rojo). **Medido**: la primera pantalla idéntica al
   mockup en la vuelta (114/114 · 45/45); Kids y Jump solo cambian en lo pedido. ❗ Sin verificar: el vídeo corriendo (el
   Chromium de la sonda no trae H.264) y «Para hoy» (sin huecos a esa hora).
-- ▶ **Lo que sale de la revisión, por hacer** (el owner, 27-09): el CALENDARIO —la tira de la isla enseña 7 días (el motor
-  da 155) y la calculadora abre en el mes en curso, que a fin de mes casi no tiene días; aceptado: 14 días + «Más fechas»
-  con el calendario de meses, y dos meses a la vez cuando al mes le quedan menos de 7— y la FLECHA DE «ATRÁS» de la isla en
-  los mismos casos que el mockup (censo riguroso).
+- ▶ **El CALENDARIO ✅ (27-09, `#830`)**: la tira de la compra de la isla, 14 días y «Más fechas» (el calendario de meses,
+  cargado al abrirlo; el día lejano entra al final de la tira con su mes), en entradas y en fiesta; la calculadora, dos
+  meses a fin de mes. `node --test` +6 (y dos mutaciones en rojo); en vivo 16/16 (desde la portada, el calendario no se
+  descarga hasta abrirlo). **Sigue**: la FLECHA DE «ATRÁS» de la isla en los mismos casos que el mockup (censo riguroso).
 
 ## 5. Impacto en invariantes
 

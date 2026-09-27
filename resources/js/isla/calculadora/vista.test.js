@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cierreDelDia, vistaCalculadora } from './vista.js';
+import { DIAS_PARA_UN_MES, cierreDelDia, mesesDelCalendario, vistaCalculadora } from './vista.js';
 
 const NBSP = String.fromCharCode(0xa0);
 const textos = {
@@ -86,6 +86,37 @@ test('el resumen y el mensaje de WhatsApp con las palabras de la página', () =>
     assert.equal(v.resumen.seleccion, '2 niños · 1 hora · sábado 26 · pares para dos');
     assert.equal(decodeURIComponent(v.compartir.items[0].href.split('text=')[1]), 'Parque, zona Kids: 2 niños · 1 hora · sábado 26 · pares para dos · https://parque.test/kids');
     assert.equal(v.calcetines.cadaUno.texto, 'Uno por niño · 2');
+});
+
+// `#830`: a fin de mes el calendario abría en un mes con tres días elegibles y el siguiente quedaba tras la flecha.
+const vendidos = (desde, n) => Array.from({ length: n }, (_, i) => {
+    const d = new Date(`${desde}T12:00:00Z`);
+
+    d.setUTCDate(d.getUTCDate() + i);
+
+    return { date: d.toISOString().slice(0, 10), price_cents: 800, rate_key: 'normal' };
+});
+
+test('el calendario abre con DOS meses cuando al de hoy le quedan menos de siete días a la venta', () => {
+    assert.equal(DIAS_PARA_UN_MES, 7);
+    // Hoy 27-09, se vende del 28: quedan 3 en septiembre.
+    assert.deepEqual(mesesDelCalendario(vendidos('2026-09-28', 155), { hoy: '2026-09-27' }), { mes: '2026-09', meses: 2 });
+    // Hoy 24-09, se vende desde hoy: quedan 7 → uno.
+    assert.deepEqual(mesesDelCalendario(vendidos('2026-09-24', 155), { hoy: '2026-09-24' }), { mes: '2026-09', meses: 1 });
+    // Hoy 25-09: quedan 6 → dos.
+    assert.equal(mesesDelCalendario(vendidos('2026-09-25', 155), { hoy: '2026-09-25' }).meses, 2);
+    // Sin nada a la venta el mes que viene, uno solo (no se pinta un mes vacío).
+    assert.deepEqual(mesesDelCalendario(vendidos('2026-09-28', 3), { hoy: '2026-09-27' }), { mes: '2026-09', meses: 1 });
+});
+
+test('con dos meses, un día elegido en el de abajo deja la pareja quieta; uno más lejos pide su mes', () => {
+    const dias = vendidos('2026-09-28', 155);
+
+    assert.deepEqual(mesesDelCalendario(dias, { hoy: '2026-09-27', dia: '2026-10-15' }), { mes: '2026-09', meses: 2 });
+    assert.deepEqual(mesesDelCalendario(dias, { hoy: '2026-09-27', dia: '2026-09-29' }), { mes: '2026-09', meses: 2 });
+    assert.deepEqual(mesesDelCalendario(dias, { hoy: '2026-09-27', dia: '2026-12-05' }), { mes: '2026-12', meses: 2 });
+    // En mitad de mes, el del día elegido y uno solo, como siempre.
+    assert.deepEqual(mesesDelCalendario(vendidos('2026-09-10', 155), { hoy: '2026-09-10', dia: '2026-11-02' }), { mes: '2026-11', meses: 1 });
 });
 
 test('la hora de cierre de un día: la de su día especial, si no la de su día de la semana; sin abrir, ninguna', () => {

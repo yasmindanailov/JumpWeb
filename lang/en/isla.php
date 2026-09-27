@@ -152,6 +152,8 @@ return [
             'titulo_hoy' => 'For today',
             'zona' => 'Which area?',
             'otra_zona' => 'Is anyone going to the other area? Add them to the same booking',
+            'mas_fechas' => 'More dates',
+            'menos_fechas' => 'Close the calendar',
             'quitar' => 'Remove',
             'otra_titulo' => 'Add another ticket',
             'buscando_horas' => 'Looking for free times',

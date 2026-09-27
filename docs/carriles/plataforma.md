@@ -3,7 +3,7 @@
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
-> **820–849** (dada de alta en `DECISIONES.md` el 27-09; centena `decisiones/800-899.md`) · Último usado: **`#829`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **820–849** (dada de alta en `DECISIONES.md` el 27-09; centena `decisiones/800-899.md`) · Último usado: **`#830`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#827`) · Actualizado: **2026-09-27 noche**
 > (la primera pantalla, la conversión del zip y **la T5 de Mi cuenta, ENTERA** —T5f `#824` y los hijos por producto `#825`—, ✅).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
@@ -46,10 +46,9 @@ edad del panel—; contrato **1.45.0**; `sonda-cuenta.mjs` 250/250, arneses `mut
 `mutar-hijos-de-producto.sh` 12/12). Lo medido de cada tanda, en la spec.
 ▶ **EN MARCHA: (3) T6** (spec §4.17). **La PORTADA ✅** con el ojo del owner: T6a·1 (el selector de planes en la isla),
 T6a·2a (`#827`, la portada DECLARADA) y T6a·2b (`#828`, `#829`: `instancias/playjump/web/inicio/`, instancia `5c2b9cf`;
-guarda `scripts/sonda-portada.mjs` 20/20). **Sigue, por este orden** (lo que salió de su revisión): (a) el CALENDARIO
-—aceptado: la tira de la isla, 14 días + «Más fechas» con el calendario de meses; la calculadora, dos meses cuando al mes
-le quedan menos de 7 (`isla/compra/vista.js::tiraDias`, `isla/calculadora/vista.js`)—; (b) la FLECHA DE «ATRÁS» de la isla
-en los mismos casos que el mockup (censo riguroso contra `ParkIsland`); después T6b. **Para iterar con el owner** (no
+guarda `scripts/sonda-portada.mjs` 20/20) y el CALENDARIO ✅ (`#830`: la tira de la isla, 14 días + «Más fechas»; la
+calculadora, dos meses a fin de mes). **Sigue**: la FLECHA DE «ATRÁS» de la isla en los mismos casos que el mockup (censo
+riguroso contra `ParkIsland` del diseño, caso a caso); después T6b. **Para iterar con el owner** (no
 ahora): la isla «muy sola» y el «Reservar» solo en la isla del móvil (A/B propuesto: las páginas de la instancia aún no
 reciben su variante). Orden de la T6: portada, Cumpleaños, Colegios, Visítanos (SIN formulario: `/contacto` con 301) y Normas, y los 301
 → **(4)** Bizum, Apple (entra) y el día liberado → material y revisión del owner, al final (los datos: playjump.es). **Los

@@ -18,7 +18,7 @@ import CantidadCompra from './CantidadCompra.vue';
 import { PASO } from './estilos.js';
 import IconoLucide from '../ui/IconoLucide.vue';
 import EnlaceSistema from '../ui/EnlaceSistema.vue';
-import TiraDias from '../ui/TiraDias.vue';
+import DiasCompra from './DiasCompra.vue';
 import SelectorHoras from '../ui/SelectorHoras.vue';
 import TarjetasOpcion from '../ui/TarjetasOpcion.vue';
 import EsqueletoCarga from '../ui/EsqueletoCarga.vue';
@@ -32,6 +32,8 @@ defineProps({
     zona: { type: String, default: null },
     preguntas: { type: Object, default: null },
     dias: { type: Array, default: () => [] },
+    // «Más fechas» (`#830`): el calendario de meses para lo que la tira no enseña, o `null`.
+    calendario: { type: Object, default: null },
     dia: { type: String, default: null },
     horas: { type: Array, default: () => [] },
     hora: { type: String, default: null },
@@ -93,9 +95,10 @@ const { t } = useTextos();
                 id="pjc-q-dia"
                 :titulo="preguntas.dia"
             >
-                <TiraDias
+                <DiasCompra
                     :label="preguntas.dia"
                     :days="dias"
+                    :calendario="calendario"
                     :model-value="dia"
                     @update:model-value="emit('cambiar', 'dia', $event)"
                 />

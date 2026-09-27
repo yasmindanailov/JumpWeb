@@ -170,6 +170,9 @@ return [
             'titulo_hoy' => 'Para hoy',
             'zona' => '¿Qué zona?',
             'otra_zona' => '¿Alguien va a la otra zona? Añádelo a la misma reserva',
+            // Bajo la tira de días, el calendario de meses para lo que ella no enseña (`#830`).
+            'mas_fechas' => 'Más fechas',
+            'menos_fechas' => 'Cerrar el calendario',
             'quitar' => 'Quitar',
             'otra_titulo' => 'Añadir otra entrada',
             'buscando_horas' => 'Buscando horas libres',

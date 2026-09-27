@@ -13,6 +13,7 @@
  */
 import { tp as textoCon } from '../../sidebar/i18n.js';
 import { diaCorto, diaDelPlazo, euros, horaCorta, horasDelSelector, precioDelDia } from '../compra/vista.js';
+import { mesDesplazado } from '../ui/calendario.js';
 
 const mayuscula = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -27,6 +28,31 @@ export function cierreDelDia(cierres, dia) {
     if (! dia) return null;
 
     return cierres?.dias?.[dia] ?? cierres?.semana?.[new Date(`${dia}T12:00:00`).getDay()] ?? null;
+}
+
+/**
+ * Con menos de estos días a la venta en lo que queda del mes en curso, el calendario abre con DOS meses (`#830`, el
+ * owner 27-09: a fin de mes abría en uno con tres días elegibles, y el siguiente quedaba tras una flecha pequeña).
+ */
+export const DIAS_PARA_UN_MES = 7;
+
+/**
+ * El mes a la vista y cuántos (`#830`): DOS —este y el siguiente— cuando al mes de hoy le quedan menos de
+ * `DIAS_PARA_UN_MES` días a la venta y el motor vende en el siguiente; si no, uno. El mes pedido es el del día elegido
+ * (o el de hoy), salvo con dos, en que un día de la pareja deja arriba el de hoy. ⚠️ El calendario solo se mueve si el
+ * mes pedido no está ya a la vista (`CalendarioMes`): elegir abajo, o tras navegar, no lo hace saltar bajo el dedo.
+ *
+ * @returns {{mes: string, meses: number}}
+ */
+export function mesesDelCalendario(dias, { hoy, dia = null }) {
+    const lista = Array.isArray(dias) ? dias : [];
+    const esteMes = hoy.slice(0, 7);
+    const siguiente = mesDesplazado(esteMes, 1);
+    const quedan = lista.filter((d) => d.date >= hoy && d.date.slice(0, 7) === esteMes).length;
+    const doble = quedan < DIAS_PARA_UN_MES && lista.some((d) => d.date.slice(0, 7) === siguiente);
+    const mesDia = (dia ?? hoy).slice(0, 7);
+
+    return { mes: doble && mesDia === siguiente ? esteMes : mesDia, meses: doble ? 2 : 1 };
 }
 
 /** Las cantidades del resumen como las escribe la página: en letra hasta donde llegue su lista («para dos»). */
@@ -74,6 +100,7 @@ export function vistaCalculadora(e) {
     };
     const mensaje = `${pp('mensaje', { nombre: pg.nombre, zona: pg.zonaNombre })}${seleccion}${total ? ` · ${total}` : ''} · ${pg.url}${p.compartirNota ? `\n${p.compartirNota}` : ''}`;
     const ultimo = dias.length ? dias[dias.length - 1].date.slice(0, 7) : null;
+    const vistaMes = mesesDelCalendario(dias, { hoy: e.hoy, dia: b.dia });
 
     return {
         locale,
@@ -83,7 +110,7 @@ export function vistaCalculadora(e) {
             items: pg.filas.map((f) => ({ value: String(f.id), title: f.label, price: precioDe(f), description: f.descripcion ?? null })),
         },
         dia: {
-            titulo: p.preguntas[2], mes: (b.dia ?? e.hoy).slice(0, 7), desde: e.hoy.slice(0, 7), hasta: ultimo && ultimo > e.hoy.slice(0, 7) ? ultimo : e.hoy.slice(0, 7),
+            titulo: p.preguntas[2], mes: vistaMes.mes, meses: vistaMes.meses, desde: e.hoy.slice(0, 7), hasta: ultimo && ultimo > e.hoy.slice(0, 7) ? ultimo : e.hoy.slice(0, 7),
             hoy: e.hoy, dias: dias.map((d) => ({ date: d.date, special: d.rate_key === 'special' })), valor: b.dia, nota: fila.aviso ?? '',
             eco: unidad !== null ? { antes: tp('eco_dia_antes', { tarifa: pg.columnas[delDia.rate_key === 'special' ? 1 : 0] }), cifra: euros(unidad, locale), despues: tp('eco_dia_despues', { persona: p.persona[0] }) } : null,
         },

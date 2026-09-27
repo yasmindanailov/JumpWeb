@@ -12,7 +12,7 @@
  * del `lang` con sus cifras, hasta que la página traiga los suyos (T4).
  */
 import { t as texto, tp as textoCon } from '../../sidebar/i18n.js';
-import { diaCorto, euros, horaCorta, horasDelSelector, tiraDias } from './vista.js';
+import { calendarioDeTira, diaCorto, euros, horaCorta, horasDelSelector, tiraDias } from './vista.js';
 
 /** El campo de la EDAD de quien cumple (`type: 'celebrant_age'`), o `null`: sin él, el pack no es de fiesta. */
 export const campoDeEdad = (ficha) => (Array.isArray(ficha?.event_fields) ? ficha.event_fields : []).find((c) => c?.type === 'celebrant_age') ?? null;
@@ -124,7 +124,9 @@ export function pantallaCuandoFiesta(e) {
         edad: b.edad == null ? null : String(b.edad),
         pack: rotuloDelPack(pack, textos),
         ninos: { n: b.n ?? minimo, min: minimo, max: maximo, ...ninos, pista },
-        dias: base ? tiraDias(e.precios?.[base.id], { hoy: e.hoy, locale, textos }) : [],
+        dias: base ? tiraDias(e.precios?.[base.id], { hoy: e.hoy, locale, textos, elegido: b.dia }) : [],
+        // Una fiesta se reserva con semanas: «Más fechas» es aquí donde más falta (`#830`).
+        calendario: base ? calendarioDeTira(e.precios?.[base.id], { dia: b.dia, hoy: e.hoy, locale }) : null,
         dia: b.dia,
         horas: b.dia && ! e.cargandoHoras ? horasDelSelector(e.horas, { gente: b.n ?? minimo, textos }) : null,
         hora: horaCorta(b.hora),

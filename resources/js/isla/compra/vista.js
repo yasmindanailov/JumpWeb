@@ -83,19 +83,58 @@ export function precioDelDia(precios, id, dia) {
     return d ? d.price_cents : null;
 }
 
-/** La tira de días: los siete primeros que se venden de la fila elegida, con «hoy» y la tarifa especial. */
-export function tiraDias(dias, { hoy, locale, textos, cuantos = 7 }) {
-    return (Array.isArray(dias) ? dias : []).slice(0, cuantos).map((d) => {
+/**
+ * Cuántos días enseña la tira: DOS SEMANAS (el owner, 27-09, `#830`: eran siete y el motor vende cinco meses). Lo que
+ * queda más allá se elige en el calendario de «Más fechas» (`calendarioDeTira`).
+ */
+export const DIAS_TIRA = 14;
+
+/**
+ * La tira de días: los catorce primeros que se venden de la fila elegida, con «hoy» y la tarifa especial. El día
+ * ELEGIDO en el calendario, si cae más allá, entra al final: elegido y a la vista, nunca escondido; y con su MES encima
+ * en vez del día de la semana («nov / 20»): tras «dom 11», un «vie 20» se leía como del mismo mes.
+ */
+export function tiraDias(dias, { hoy, locale, textos, cuantos = DIAS_TIRA, elegido = null }) {
+    const lista = Array.isArray(dias) ? dias : [];
+    const primeros = lista.slice(0, cuantos);
+    const fuera = elegido && ! primeros.some((d) => d.date === elegido) ? lista.find((d) => d.date === elegido) : null;
+    const mesCorto = (iso) => new Intl.DateTimeFormat(locale, { month: 'short', timeZone: 'UTC' }).format(new Date(`${iso}T12:00:00Z`)).replace('.', '');
+
+    return (fuera ? [...primeros, fuera] : primeros).map((d) => {
         const especial = d.rate_key === 'special';
 
         return {
             id: d.date,
             n: Number(d.date.slice(8, 10)),
-            label: d.date === hoy ? texto(textos, 'compra.cuando.hoy') : diaCorto(d.date, locale).split(' ')[0],
+            label: d === fuera ? mesCorto(d.date) : d.date === hoy ? texto(textos, 'compra.cuando.hoy') : diaCorto(d.date, locale).split(' ')[0],
             special: especial,
             aria: diaLargo(d.date, locale) + (especial ? `, ${texto(textos, 'compra.cuando.tarifa_especial')}` : ''),
         };
     });
+}
+
+/**
+ * «Más fechas» (`#830`): el calendario de meses de la página para lo que la tira no enseña, o `null` si la tira ya los
+ * tiene todos. Abre en el mes del día elegido si cae fuera de la tira y, si no, en el del primer día que la tira deja
+ * fuera: lo que se busca al tocarlo. Sus topes, el mes del primer día y el del último que se vende; y lo que el
+ * calendario necesita para decir «hoy» y los meses en su idioma.
+ *
+ * @returns {{days: Array<{date: string, special: boolean}>, month: string, minMonth: string, maxMonth: string, today: ?string, locale: string}|null}
+ */
+export function calendarioDeTira(dias, { dia = null, hoy = null, locale = 'es', cuantos = DIAS_TIRA } = {}) {
+    const lista = Array.isArray(dias) ? dias : [];
+
+    if (lista.length <= cuantos) return null;
+    const fuera = dia && lista.findIndex((d) => d.date === dia) >= cuantos;
+
+    return {
+        days: lista.map((d) => ({ date: d.date, special: d.rate_key === 'special' })),
+        month: (fuera ? dia : lista[cuantos].date).slice(0, 7),
+        minMonth: lista[0].date.slice(0, 7),
+        maxMonth: lista[lista.length - 1].date.slice(0, 7),
+        today: hoy,
+        locale,
+    };
 }
 
 /** `17:00:00` → `17:00`: la hora como se pinta y como se elige en la isla. */
@@ -168,7 +207,8 @@ export function pantallaCuando(e) {
             cuantos: t('compra.cuando.pregunta_cuantos'),
             calcetines: t('compra.cuando.pregunta_calcetines'),
         } : null,
-        dias: fila ? tiraDias(e.precios?.[fila.id], { hoy: e.hoy, locale, textos }) : [],
+        dias: fila ? tiraDias(e.precios?.[fila.id], { hoy: e.hoy, locale, textos, elegido: b.dia }) : [],
+        calendario: fila ? calendarioDeTira(e.precios?.[fila.id], { dia: b.dia, hoy: e.hoy, locale }) : null,
         dia: b.dia,
         horas: horasDelSelector(e.horas, { gente: b.n, textos }),
         hora: horaCorta(b.hora),

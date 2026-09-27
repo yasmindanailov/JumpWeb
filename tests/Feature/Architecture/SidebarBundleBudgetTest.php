@@ -938,7 +938,11 @@ class SidebarBundleBudgetTest extends TestCase
     // 156,73 (base: el `HEAD` de `#821`, construido aparte), con una política al final del recibo que el owner retiró
     // después (`#823`: con ella fuera, pesa algo menos). ⚠️ «¿Querías decir…?» va en su módulo (`ui/correo.js`): importada de `fiesta/logica.js`, la
     // isla se llevaba el módulo entero de la fiesta (+2,93 en los pasos y en Mi cuenta, medido). El techo, a 158.
-    private const ISLA_COMPRA_CHUNK_MAX_KB = 158;
+    // `#830` (el calendario, el owner 27-09): la tira de dos semanas y «Más fechas» (`compra/DiasCompra.vue`,
+    // `calendarioDeTira`; la tira que se desliza hasta el día elegido). Medido 156,72 → 159,27 (base: el `HEAD` de `#829`,
+    // construido aparte con el mismo cálculo). El calendario de meses entra con `import()` al abrirlo: dentro del trozo
+    // sumaba otros 5,6 (T4d·4). El techo, a 160.
+    private const ISLA_COMPRA_CHUNK_MAX_KB = 160;
 
     // T4d·4 (`specs/isla-y-landing-nueva.md` §4.12): la CALCULADORA de una página, entrada propia que la página pide
     // (`scripts` de `<x-pagina>`) y se monta al acercarse su pieza. Su DESCARGA entera, como la mide el navegador que
@@ -948,7 +952,9 @@ class SidebarBundleBudgetTest extends TestCase
     // Medido 171,18 → 178,58 (base: `HEAD` construido aparte). El techo, a 180.
     // `#784`: las formas de pago con su logotipo bajo «Reservar y pagar» (`ui/MarcasDePago.vue`, su chapa en `ui/marcas.js`,
     // en un trozo que comparte con los pasos de la compra). Medido 178,90 → 180,14 (base: el `HEAD` de `#783`). El techo, a 181.
-    private const CALCULADORA_MAX_KB = 181;
+    // `#830`: a fin de mes, dos meses a la vez (`CalendarioMes` con `months`, `mesesDelCalendario`); y el calendario pasa a
+    // su trozo propio, que la compra pide con `import()`. Medido 180,84 → 182,75 (base: el `HEAD` de `#829`). El techo, a 183.
+    private const CALCULADORA_MAX_KB = 183;
 
     // T4e (`specs/isla-y-landing-nueva.md` §4.12): la ISLA EN REPOSO de una página, entrada propia que la página pide
     // (`isla` en `scripts` de `<x-pagina>`) y que se monta al cargar. Su descarga ENTERA, como la del navegador que llega
