@@ -95,6 +95,9 @@ basta «cerrar las demás» (`me/sessions/revoke-others`); (d) **el desenlace de
 - `Identity\Services\ApiTokenIssuer`: emite con `createToken(device_name, ['api-v1'], expiresAt)`,
   aplica el tope de 10 dentro de una transacción y deja `Log::info('auth.token_issued', user_id, ip)`.
   Lo que RETIRA tokens vive en `User` (`revokeStalestTokens()`, `revokeCurrentAccessToken()`): el emisor no borra.
+- ⚠️ **El tipo que Sanctum declara para `currentAccessToken()` miente con cookie** (dice `PersonalAccessToken`, llega
+  `TransientToken`): el tipo real es `HasAbilities`, con `@var`; no es una entrada más de la línea base de Larastan
+  (mudada del carril de plataforma el 27-09).
 
 ### 4.3 Superficie
 - `Api\V1\AuthTokenController`: valida, llama a `verify()` y al emisor, responde. Sin lógica propia

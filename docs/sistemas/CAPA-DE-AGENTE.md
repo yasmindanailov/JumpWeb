@@ -134,3 +134,9 @@ Una skill se puede no invocar; un gate no.
 - **El clasificador «auto» también deniega las escrituras remotas de un despliegue** (`scp`, `deploy.sh --go`;
   «Remote Shell Writes») aunque deja pasar `ssh … bash -s` y los `ssh` de lectura; el owner cambia el modo de
   permisos para ese paso (`ENTORNOS.md` §6, octavo despliegue). Dato para su decisión pendiente sobre el modo.
+- **El clasificador «auto» y producción** (mudada del carril de plataforma el 27-09): deniega escribir hooks,
+  manifiestos y reglas del plugin salvo con las reglas `allow` de `#626`; con la orden del owner EN EL TURNO deja
+  pasar escrituras por `ssh` y el `--go`; deniega el ensayo en seco con la salida redirigida a fichero («Blind
+  Apply»). No se rodea: se le pide al owner.
+- `rm -rf` está en el deny del repo y un comando compuesto que lo lleve se deniega entero: `git rm -r` para lo
+  versionado, carpeta nueva para lo demás. `claude plugin details` no acepta `--plugin-dir` (mudada el 27-09).

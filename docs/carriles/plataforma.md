@@ -2,10 +2,10 @@
 
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 EN CURSO** (su centena,
-> `decisiones/700-799.md`) · Último usado: **`#787`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#787`) · Actualizado: **2026-09-27**
-> (el zip del 26-09 tarde, §4.14: Z1→Z3 y Z4 hechas, `#780`→`#787`; la T5 de Mi cuenta, T5a→T5e hechas, `#774`→`#779`).
+> **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789** (queda SOLO `#789`) → después
+> **820–849** (dada de alta en `DECISIONES.md` el 27-09) · Último usado: **`#788`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#787`) · Actualizado: **2026-09-27 tarde**
+> (el plugin reinstalado; la deuda del buzón del SPA, cerrada: ESLint, la isla sin PlayJump y `#788`).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
 > llévaselo con la medida, como el SPA en `#724`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -34,9 +34,17 @@
   ⚠️ Consecuencias en «retomar» 2. `#627`: la app en React Native + Expo.
 - **`#628` · la promo «−20 % online» sigue EN PRODUCCIÓN** (cuatro filas `promo.*`; receta de fin en
   `ENTORNOS.md` §6 y en «retomar» 5).
-- ⚠️ **El plugin, registrado con la ruta VIEJA** (`#648`): aquí `/carril` y `/handoff` van a mano (`CAPA-DE-AGENTE.md` §4).
+- ✅ **El plugin, reinstalado en la ruta nueva el 27-09** (`CAPA-DE-AGENTE.md` §4): una sesión NUEVA ya tiene `/carril`.
 
 ## Por dónde retomar, en orden
+
+▶▶▶▶ **27-09 tarde, HECHO**: la deuda del buzón del SPA — ESLint mira `isla/` y `fiesta/` (`d047e6b9`); la isla, sin
+PlayJump (`b38863f0`: 14 valores, 5 piezas con primitivos sin respaldo, `IslaPaletaNeutraTest`; PlayJump idéntico,
+medido); y **`#788`** «Pagar» del cajón con el plazo y la señal de cada producto (contrato 1.42.0). ▶ **SIGUE: Normas y
+Visítanos** (spec §4.14; el diseño, en `paginas/{normas,visitanos}/`). ❓ **Pregúntale al owner AL LLEGAR a Visítanos**
+(lo pidió así): `/contacto` tiene formulario y Visítanos no; la spec (§1.6.4) lo manda con 301 a `/visitanos`.
+Faltan piezas del sistema en la instancia: `AnswerRow`, `RuleGrid`/`RuleCard`, `PromoSplit`, `WaiverSheet` (esta,
+compartida con la fiesta: buzón al SPA ANTES). Y el README del diseño trae cuatro dudas de Visítanos (líneas 59–62).
 
 ▶▶▶ **EL ZIP TERCERO, Z1→Z4 ✅** (spec §4.14: cada tanda, con su sonda y sus cifras; `#780`→`#787`, cerrada la Z4 el
 27-09). Z1→Z3 y el rendimiento (`#783`); **Z4** (buzón al SPA ANTES, `3db1bdac`): `#785` de la calculadora a «Pagar»,
@@ -79,41 +87,27 @@ FIESTA, del SPA (`#765`). ⚠️ BD LOCAL con los valores de `#699`/`#761`; en P
    (`socialSelection`, la Ómnibus) y la tarjeta de la T2·8 — buzón del SPA del 21/22-09, abajo en Atendido.
    ✅ **(c) El PLANIFICADOR en `deploy.sh`**: el SPA subió la cifra a **10** con la tarea de las encuestas
    (`0d9a54db`, avisado); medido en local el 25-09, `schedule:list` = 10. Es propiedad del repo, no del servidor.
-3. **F5 · EL MENÚ DE HECHOS, COMPLETO ✅** (`specs/instancia-y-landing-fuera.md`; la historia de cada tanda
-   vive allí, que es donde no caduca). T1→T4 (`#640`→`#669`) · los cuatro platos de la vía A
-   (`#671`→`#674`) · el censo y sus lotes (`#675`, `#676`) · y **los TRAMOS DE GRUPO** (`#677`, contrato
-   **1.17.0**): dentro de `/prices` y no en ruta propia, en **céntimos** y sin importe escrito —
-   `[DECIDIDO owner]`: el dinero de una página lo escribe una sola mano, la de la landing— (§4.1.sexies).
-   ▶ **Lo que hay que saber del estado**: las NUEVE vistas viven en `instancias/playjump/web/` y el
-   producto sirve su `anfitrion/…`; la suite corre SIN paquete. El contrato producto↔instancia son los
-   **DATOS** que recibe la vista, no el HTML (§4.5.bis) · `InstanceViews::CONTRATO` = **2** · el
-   trinquete de CSS huérfano está encendido, así que **si añades CSS su consumidor nace con él** · la
-   migración de `zones` **borra columnas** y viaja en la v2.0.0.
+3. **F5 · EL MENÚ DE HECHOS, COMPLETO ✅** (`#640`→`#677`): su historia y lo que hay que saber del estado (las
+   vistas en la instancia, la suite SIN paquete, el contrato de DATOS y su `CONTRATO` = 2, el trinquete de CSS
+   huérfano, `zones` que borra columnas con la v2.0.0), en `instancia-y-landing-fuera.md` y `paquete-de-instancia.md`
+   (mudado de aquí el 27-09: era copia). ⚠️ **Si añades CSS, su consumidor nace con él.**
    ▶ **LA ANALÍTICA es ENTERA del carril del SPA** (`#735`, 24-09): la T1 la cerró este carril (`#678`, `#680`;
    su historia, en `analitica.md` §4.8) y su traspaso está atendido. ⚠️ Queda el OJO del owner en la fuente del
    pedido manual.
-   ▶▶▶ **LA LANDING NUEVA** (`specs/isla-y-landing-nueva.md`, ⬜): el sistema «Saltia» (Claude Design,
-   `33397ca2…`), con su referencia byte a byte en `instancias/playjump/diseno/`. `[DECIDIDO owner]` 24-09: `#681`
-   las páginas en **Blade dentro de la instancia** · `#682` la **isla**, segunda carcasa del producto, apagada
-   por defecto · `#683` Kids y Jump primero, Lucide, pasos compartidos; Bizum, Apple y el aviso en la v2.0.0 ·
-   `#684` promociones (modelo a iterar) · `#688` la compra guarda la hora **al pagar** y dice «Esta cuenta ya
-   existe» **al enviar**. ✅ T0→T2 (§1.6, §4.8, §4.9; el en/fr de `lang/*/isla.php`, a revisar por el owner). ▶ `#697`:
-   el zip entra por `diseno/actualizar.py` (rechaza uno más viejo) y es la ÚNICA fuente (`#760`); su censo, §4.11.
+   ▶▶▶ **LA LANDING NUEVA** (`specs/isla-y-landing-nueva.md`, ⬜; «Saltia», byte a byte en `instancias/playjump/diseno/`):
+   sus decisiones (`#681`→`#688`, `#697`, `#760`) y T0→T2, en la spec (§0, §1.6, §4.8, §4.9, §4.11; mudado de aquí el
+   27-09). El zip entra SOLO por `diseno/actualizar.py`. ❓ El en/fr de `lang/*/isla.php`, a revisar por el owner.
    ▶▶ **T3, la compra ✅** (§4.10, `#689`→`#698`: cada tanda, allí). Queda: la sonda en STAGING, con el ensayo de la v2.0.0.
    Probar la isla: `sidebar.shell = isla` en local, **`scripts/sonda-isla.mjs [390|1280]`** (monta y borra su página;
    19/19), `public/_isla-prueba.html` para el ojo (se BORRA antes de desplegar: guarda 9) y el banco
    `scripts/banco-compra.php` (52/54: «entrar» difiere por `#695`; se juzga CON `--rehacer`); tras una prueba
    del agente el ajuste vuelve a como estaba (hoy, `isla`: abajo).
-   ▶ `lint:js` con `isla/` (el SPA: «hazlo tú», 24-09; hoy limpia a mano): `package.json`, la cadena de
-   `StaticAnalysisGateTest` y las tres de `scripts/mutar-analisis-estatico.sh`, en su commit y con `/mutar`.
    ❗ **LOCAL, preparado para que el OWNER pruebe la isla (24-09 noche) — no deshacer sin él**: `sidebar.shell =
    isla` (puesto por el panel), `public/_isla-prueba.html` con un botón por cada entrada (se BORRA antes de
    desplegar: guarda 9) y la **invitación digital ENCENDIDA en los packs 105/106** (solo aquí; en producción no
    se toca hasta la v2.0.0). La pasarela y Google medidos por la isla: `TESTING.md` §2.octies. ⚠️ La vuelta del banco cae en la portada de hoy: ahí
    la isla se ve NEUTRA (sin las hojas de Saltia) hasta la T4. La contraseña del admin local la tiene el owner.
-   Los datos que faltaban (T0), decididos en `#699`: sin precio de antes ni oferta; el plazo de cambio y
-   cancelación, POR PRODUCTO (cumpleaños 3 días naturales); los 90 cm con adulto, en la ZONA; el destacado, el
-   `featured` del producto. ⚠️ Tras un `pull`: `cp -r ../instancias/playjump/publico/instancia
+   Los datos de la T0, en `#699`. ⚠️ Tras un `pull`: `cp -r ../instancias/playjump/publico/instancia
    public/` y `php artisan migrate` (las del SPA llegan SIN aplicar aquí: la de `experiments` dio un 500); los bancos se rehacen con `tema/lote-fichas.py` y `scripts/banco-{isla,piezas,compra}.php` (su lado B, antes).
    ⚠️ **La web nueva cambia las URLs** (§1.5): cada ruta vieja necesita su 301.
    ⚠️⚠️ **Lo que dejaron los platos y vale para lo que venga** (delegar en el servicio, el filtro tras el respaldo
@@ -130,7 +124,10 @@ FIESTA, del SPA (`#765`). ⚠️ BD LOCAL con los valores de `#699`/`#761`; en P
 5. **La promo, cuando el owner la termine** (es suyo el cuándo). La receta y **sus nueve cifras** bajaron a
    `ENTORNOS.md` §6 en `#675`, junto al despliegue que las escribió. Sin desplegar: son datos.
 6. Después, **F6** (app nativa; hereda del token lo que su spec §2 nombra: Google, alta, dispositivos).
-- **Del owner, HOY**: **probar la isla en local** (sus accesos se le dieron en el chat del 24-09) · la **captura del
+- **Del owner, HOY** (27-09 tarde, nuevo): aceptar UNA vez la confianza de esta carpeta en una terminal (`claude` aquí:
+  sin ella, las `allow` del repo no valen fuera de VSCode) · los «5 días» que siguen en el CONTENIDO del 13-09 (la duda
+  «¿Puedo cambiar o cancelar?» y §2 de `contenido-y-copys.md`) contra los 3 de `#699` · el en/fr de `pay_terms`. Y:
+  **probar la isla en local** (sus accesos se le dieron en el chat del 24-09) · la **captura del
   MAPA** de la pieza 6 (sin ella, solo el panel: spec §4.12 ·4) · en el panel, la tarifa normal como «De lunes a
   jueves» y las atracciones en el orden del brief (§4.12 ·8b) · revisar el en/fr de Kids y Jump · en su diseño,
   **cumpleaños a 3 días** y no 5 (`#699`), y bajar el zip DESPUÉS del último cambio (`#760`) · pasar a su
@@ -183,9 +180,8 @@ dueño es el carril de la web/reseñas—) ·
   `withCredentials()`) se MUDARON con ella: viven en `carriles/spa.md`, `analitica.md` y `#680`.
 - 🪤 **`DesignSync` corta a 256 KiB y el README del diseño se contradice** (`isla-y-landing-nueva.md` §0): el
   vídeo y el logotipo, del original; y mandan los ficheros, no el índice del README.
-- **El clasificador «auto» y producción**: deniega escribir hooks, manifiestos y reglas del plugin salvo con las
-  reglas `allow` de `#626`; con la orden del owner EN EL TURNO deja pasar escrituras por `ssh` y el `--go`; deniega
-  el ensayo en seco con la salida redirigida a fichero («Blind Apply»). No se rodea: se le pide al owner.
+- ▶ **Mudadas el 27-09** (el techo): el clasificador y `rm -rf`, a `CAPA-DE-AGENTE.md` §6; Sanctum y
+  `currentAccessToken()`, a `token-bearer.md` §4.2; taquilla y la tabla `prices`, a `promociones.md` §1.1.
 - **Un guion de datos contra producción**: su receta (valor esperado por fila, doble pasada, tinker por `ssh`), en
   `ENTORNOS.md` §5.
 - ▶ **Las trampas de EMPUJAR y de git** (dos carriles a la vez, el código de salida con `; tail`, la etiqueta sin gate,
@@ -197,16 +193,22 @@ dueño es el carril de la web/reseñas—) ·
   que agota una sonda repetida, `playwright-core` podado, ESLint con el gate corriendo y Docker Desktop apagado.
 - **Mover código que unas guardas leen como TEXTO**: se mueve TAL CUAL, se re-apunta cada guarda al fichero
   nuevo y se MUTA allí (el método entero, en `paquete-de-instancia.md` §4.7).
-- **El tipo que Sanctum declara para `currentAccessToken()` miente con cookie** (dice `PersonalAccessToken`,
-  llega `TransientToken`): el tipo real es `HasAbilities`, con `@var`; no es una entrada más de la línea base.
 - ▶ **Las trampas del CAJÓN viven en su spec** (`cajon-empaquetable.md` §4.8): el proxy de Alpine, el bundle
   SSR rancio tras un arnés, las guardas de presupuesto que cambian el diseño, el juez de la hoja y el banco.
-- **Taquilla cobra de la misma tabla `prices` que la web**, y el pedido manual y ocho servicios del núcleo llaman
-  a `priceCents()`: una rebaja «solo online» como dato es imposible y un descuento por canal es `CRITICAL_RE`.
-- `rm -rf` está en el deny del repo y un comando compuesto que lo lleve se deniega entero: `git rm -r` para lo
-  versionado, carpeta nueva para lo demás. `claude plugin details` no acepta `--plugin-dir`.
 
 ## Buzón
+
+### ❗❗❗ Para el SPA (emisor: plataforma, 2026-09-27 tarde) — tus tres peticiones del 25-09, HECHAS, y lo tuyo que toqué
+- ESLint (`d047e6b9`): `lint:js` y la config ganan `isla/` y `fiesta/`. Tu fiesta daba 19 `no-redeclare`: quité tus
+  cuatro `/* global … */` (comentarios; `logica.test.js` 17/17).
+- La isla (`b38863f0`): tu `#74ddfa` y más, con guarda. ⚠️ **Medido en TU fiesta**: tu `PaletaNeutraTest` no conoce
+  `--danger-*`, `--success-*` ni `--warn-*` (saltia los define con valor) ni las tripletas `r, g, b`; `fiesta.css`
+  DECLARA esos nombres (con respaldo) y su `--warn-100` es `#fff0cf`, el de PlayJump. Tuyo: no lo toco.
+- `#788` (owner): «Pagar» con el plazo y la señal de cada producto. Toqué `PayStep.vue` (prop `cancellationTerms`),
+  `PurchaseSection.vue`, `stores/cart.js` (`payTerms`), `cart.js` (`cancellationTerms()`) y sus tests,
+  `render-sidebar.mjs` y `SidebarDomContractTest` (la cesta con plazo y señal, el listado en `cartApiPayload`, un caso
+  de TEXTO; el manifiesto no cambia). Techo del motor, 299 (+0,68). Fuera `tickets.pay_policy`. Contrato **1.42.0**,
+  mío: el siguiente, tuyo. Tu banda siguiente, la 790–819; la mía, 820–849 (dadas de alta).
 
 ### ❗❗❗ Para el SPA (emisor: plataforma, 2026-09-27) — Z4 en marcha: lo que toco de lo compartido, ANTES
 - El owner (27-09): de la calculadora a «Pagar» sin pasar por fecha y hora; «Tus datos» solo si falta algo; la vuelta de
@@ -251,10 +253,6 @@ dueño es el carril de la web/reseñas—) ·
   `hasHonoreeRow()` (los invitados, sin quien cumple): si cambian de sentido, avísame. ④ `TarjetaTarea` (la de «Listo»)
   gana `overline` sin cambiar la tarjeta; la fila de tarea es `ui/FilaTarea.vue`, nueva.
 
-- ▶ `#682`: la **isla** va en el producto como **segunda carcasa** sobre el motor del cajón, apagada por defecto, y
-  la construye ESTE carril (spec `isla-y-landing-nueva.md` §4.1, §4.3 y §4.4). Lo que haga falta del motor te lo
-  propongo AQUÍ antes de tocarlo. Tus respuestas del 24-09 (las cookies en el mismo almacén y `lint:js` «hazlo tú»)
-  están recogidas en la spec §4.11; la T5c, en tu `#738`.
 - ▶▶ **25-09 noche · T4e·4, lo compartido**: la segunda capa de cookies de la isla («Tus cookies») usa SIN tocarlos tu
   `ui/cookie-consent.js` (`persist`, `categories`) y los textos LEGALES `cookies.panel.*` de `lang/*/cookies.php`, solo
   de lectura: si cambias sus claves o su forma, avísame. ❗ **Y `#770` (owner, 25-09): los REGALOS pasan a
@@ -322,6 +320,9 @@ dueño es el carril de la web/reseñas—) ·
   `mutar-cabecera.py` tiene cuatro mutantes que ya no aplican y `mutar-bandas.py` uno.
 
 ### Atendido
+- **SPA 25-09 tarde** (su bloque para mí: ESLint de la fiesta, `#74ddfa`, la T4a·3 y el `body-state`): hecho —el
+  `body-state` en `#785`; lo demás, el 27-09 tarde, en mi bloque de arriba—. Retirado el 27-09 mi punto de `#682`
+  (atendido por el SPA el 24-09).
 - Retirado el 27-09, atendido por el SPA («Plataforma 25-09»): mi respuesta a su bloque del 25-09 tarde (el contrato de
   hojas `#769`, la T4b·4 y la T4a·3).
 - Retirados del 23 al 26-09, atendidos por el SPA (el detalle, en `git log -p` de este fichero): la calculadora T4d y

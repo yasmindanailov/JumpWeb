@@ -33,6 +33,9 @@
   `CatalogAddonResource`, `ResolvedAddonsResource` y `PostFormAddonResource`, y los pintan la portada de hoy,
   `/cumpleanos`, `/servicios` y el post-form.
 - La promo de precio `#628` (`promo.percent`, `promo.banner.*`): en producción, cambia precios; aparte.
+- ⚠️ **Taquilla cobra de la misma tabla `prices` que la web**, y el pedido manual y ocho servicios del núcleo llaman a
+  `priceCents()`: una rebaja «solo online» como dato es imposible y un descuento por canal es `CRITICAL_RE` (mudada
+  del carril de plataforma el 27-09).
 
 ### 1.2 El censo del mockup: dónde sale una oferta (y su objetivo natural)
 
