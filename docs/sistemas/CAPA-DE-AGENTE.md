@@ -97,10 +97,14 @@ El mapa vive en un solo sitio, `reglas/momentos.json`; esta tabla es su copia le
   versión instalada es el sha del commit (`claude plugin list` lo enseña), así que cada push es una versión.
   La actualización en segundo plano no autentica en repos privados por HTTPS: se hace a mano. Tras escribir o
   cambiar hooks, abrir `/hooks` una vez (spec §4.10).
-- ⚠️ **Tras MUDAR el repo (`#648`) una sesión ya abierta PIERDE skills y hooks** (el registro del plugin se resuelve al
-  arrancar). Medido el 24-09 (mudado del carril de plataforma el 27-09): el plugin seguía registrado con la ruta VIEJA
-  (`projectPath` `~/proyectos/JumpWeb` en `~/.claude/plugins/installed_plugins.json`) y no cargaba: `/carril` y
-  `/handoff` van a mano desde su `SKILL.md` (`~/.claude/plugins/marketplaces/jumpweb-agente/…`) hasta reinstalarlo.
+- ⚠️ **Tras MUDAR el repo (`#648`) el plugin NO carga**: la instalación de proyecto va atada a su `projectPath`
+  (`~/.claude/plugins/installed_plugins.json`), y seguía en `~/proyectos/JumpWeb`. ✅ **Arreglado el 27-09**: desde la
+  raíz NUEVA, `claude plugin install jumpweb-agente@jumpweb-agente --scope project` (pasó el clasificador con la orden
+  del owner en el turno) y una sesión NUEVA; probado con `claude -p … --max-turns 1`: las once skills. ⚠️ El
+  instalador REORDENA `enabledPlugins` en `.claude/settings.json` sin cambiar nada: `git checkout` del fichero. La
+  entrada vieja queda en el registro, inofensiva (su carpeta no existe). ⚠️ La confianza de la carpeta
+  (`hasTrustDialogAccepted` en `~/.claude.json`) también era de la ruta vieja: una sesión de TERMINAL aquí ignora
+  las `allow` del repo hasta que el owner acepte el diálogo una vez; en VSCode el guard `guard-bash.sh` corre (sondado).
 - **Probar**: `bash pruebas/probar-hooks.sh` (43 casos: los tres eventos, los once momentos, el «una vez por
   sesión» de `carril`, el dedupe del Stop, fail-open; veredicto por código de salida) y una sesión real sin instalar nada, desde la raíz del repo:
   `claude -p "…" --plugin-dir ~/proyectos/jumpweb-agente/plugins/jumpweb-agente --max-turns 1`.
