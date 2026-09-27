@@ -570,6 +570,16 @@ return [
             'previous' => 'El periodo anterior',
             'year_ago' => 'El mismo periodo del año pasado',
         ],
+        // T0 de `analitica-para-decidir.md` (#755): las fechas exactas de las dos ventanas, bajo los dos filtros.
+        'window' => [
+            'range' => 'Del :from al :to',
+            'so_far' => ':range, hasta ahora',
+            'same_stretch' => ':range, hasta la misma hora',
+            // Formatos ISO de Carbon: la fecha entera, y la de «desde» cuando comparte el año o el mes con «hasta».
+            'date_full' => 'D MMM YYYY',
+            'date_same_year' => 'D MMM',
+            'date_same_month' => 'D',
+        ],
         'delta' => [
             'vs_previous' => ':delta frente al periodo anterior',
             'vs_year_ago' => ':delta frente al año pasado',

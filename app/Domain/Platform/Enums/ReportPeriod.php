@@ -48,17 +48,27 @@ enum ReportPeriod: string
     /**
      * La ventana del periodo, hoy, en la zona del parque. Respeta `Carbon::setTestNow`.
      *
+     * ⚠️ Un periodo EN CURSO (hoy, esta semana, este mes…, los últimos 30 días, o unas fechas a medida que llegan a hoy)
+     * sale cortado AHORA, y su comparación es el mismo tramo ({@see Window::upTo()}; T0 de
+     * `analitica-para-decidir.md` §4.3, `#755`): el cuadro no cuenta días que aún no han pasado.
+     *
      * Para `Custom`, las dos fechas (`YYYY-MM-DD`): si faltan, no se entienden o van al revés, se ordenan o se
      * cae al periodo por defecto; si pasan de un año, la ventana se acorta al año desde la primera. Nunca lanza:
      * es la entrada de un filtro.
      */
     public function window(?string $from = null, ?string $to = null): Window
     {
+        return $this->wholeWindow($from, $to)->upTo(CarbonImmutable::now());
+    }
+
+    /** El periodo ENTERO, sin cortar: del primer día al último, con la unidad por la que se compara. */
+    private function wholeWindow(?string $from, ?string $to): Window
+    {
         $timezone = DisplayTime::timezone();
         $today = CarbonImmutable::now($timezone)->startOfDay();
 
         if ($this === self::Custom) {
-            return self::custom($from, $to, $timezone) ?? self::DEFAULT->window();
+            return self::custom($from, $to, $timezone) ?? self::DEFAULT->wholeWindow(null, null);
         }
 
         [$first, $last] = match ($this) {
@@ -88,7 +98,20 @@ enum ReportPeriod: string
             self::Last90 => [$today->subDays(89), $today],
         };
 
-        return Window::ofDays($first, $last, $timezone);
+        return Window::ofDays($first, $last, $timezone, $this->unit());
+    }
+
+    /** Por qué unidad se desplaza el periodo para compararse ({@see Window::previous()}). */
+    private function unit(): string
+    {
+        return match ($this) {
+            self::Today, self::Yesterday => Window::UNIT_DAY,
+            self::ThisWeek, self::LastWeek => Window::UNIT_WEEK,
+            self::ThisMonth, self::LastMonth => Window::UNIT_MONTH,
+            self::ThisQuarter, self::LastQuarter => Window::UNIT_QUARTER,
+            self::ThisYear, self::LastYear => Window::UNIT_YEAR,
+            self::Last30, self::Last90, self::Custom => Window::UNIT_SPAN,
+        };
     }
 
     private static function custom(?string $from, ?string $to, string $timezone): ?Window

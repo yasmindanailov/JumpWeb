@@ -522,6 +522,15 @@ return [
             'previous' => '上一时段',
             'year_ago' => '去年同期',
         ],
+        // T0 de `analitica-para-decidir.md` (#755): las fechas exactas de las dos ventanas, bajo los dos filtros.
+        'window' => [
+            'range' => ':from 至 :to',
+            'so_far' => ':range（截至目前）',
+            'same_stretch' => ':range（截至同一时刻）',
+            'date_full' => 'YYYY年M月D日',
+            'date_same_year' => 'M月D日',
+            'date_same_month' => 'D日',
+        ],
         'delta' => [
             'vs_previous' => '较上一时段 :delta',
             'vs_year_ago' => '较去年同期 :delta',

@@ -100,9 +100,10 @@ class FunnelReportTest extends TestCase
         $this->events($bot, ['page_viewed' => '/', 'drawer_opened' => null]);
         $internal = $this->visit('2026-06-05 09:00:00', ['is_internal' => true, 'device' => 'desktop']);
         $this->events($internal, ['page_viewed' => '/', 'drawer_opened' => null, 'date_chosen' => null]);
-        $mayo = $this->visit('2026-05-20 10:00:00', ['utm_source' => 'google', 'utm_medium' => 'cpc', 'device' => 'mobile', 'locale' => 'es', 'entry_route' => '/']);
+        // Mayo, dentro del MISMO tramo que junio lleva (1–10 hasta las 11:00): el mes en curso se compara así (T0, #755).
+        $mayo = $this->visit('2026-05-05 10:00:00', ['utm_source' => 'google', 'utm_medium' => 'cpc', 'device' => 'mobile', 'locale' => 'es', 'entry_route' => '/']);
         $this->events($mayo, ['page_viewed' => '/']);
-        $this->webOrder(2000, '2026-05-20 10:30:00', ['google', 'cpc', null], ['google', 'cpc', null]);
+        $this->webOrder(2000, '2026-05-05 10:30:00', ['google', 'cpc', null], ['google', 'cpc', null]);
 
         // Un pedido del PANEL y otro anterior a la medición: dinero sí, embudo no.
         $panel = $this->order(1500, '2026-06-07 16:00:00', 'panel');

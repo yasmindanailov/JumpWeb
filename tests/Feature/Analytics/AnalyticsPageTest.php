@@ -361,11 +361,23 @@ class AnalyticsPageTest extends TestCase
         $chart->pageFilters = ['period' => ReportPeriod::ThisMonth->value];
         $data = (new \ReflectionMethod(MoneySeriesChart::class, 'getData'))->invoke($chart);
 
-        $this->assertCount(30, $data['labels']);
+        // El mes EN CURSO llega a HOY (T0, #755): ni un día del gráfico que aún no ha pasado.
+        $this->assertCount(10, $data['labels']);
         $this->assertSame('01/06', $data['labels'][0]);
+        $this->assertSame('10/06', $data['labels'][9]);
         $this->assertCount(3, $data['datasets']);
         $this->assertSame(__('admin.analytics.money.collected'), $data['datasets'][0]['label']);
-        $this->assertSame(array_fill(0, 30, 0.0), $data['datasets'][0]['data']);
+        $this->assertSame(array_fill(0, 10, 0.0), $data['datasets'][0]['data']);
         $this->assertStringContainsString(__('admin.analytics.money.granularity.day'), (string) $chart->getHeading());
+    }
+
+    /** Bajo el filtro, las fechas EXACTAS de las dos ventanas (T0, #755): rótulos a mano (`#734`). */
+    public function test_the_filter_reads_the_exact_dates_of_both_windows(): void
+    {
+        $this->actingAs($this->withRole('admin'))
+            ->get(AnalyticsPage::getUrl())
+            ->assertOk()
+            ->assertSee('Del 1 al 10 jun. 2026, hasta ahora')
+            ->assertSee('Del 1 al 10 may. 2026, hasta la misma hora');
     }
 }

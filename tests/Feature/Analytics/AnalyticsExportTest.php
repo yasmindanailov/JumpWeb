@@ -73,7 +73,7 @@ class AnalyticsExportTest extends TestCase
         $this->actingAs($admin)->get($this->url('inventado'))->assertNotFound();
         $this->actingAs($admin)->get($this->url('money', 'bogus'))
             ->assertOk()
-            ->assertHeader('Content-Disposition', 'attachment; filename="analitica-money-2026-06-01-2026-06-30.csv"');
+            ->assertHeader('Content-Disposition', 'attachment; filename="analitica-money-2026-06-01-2026-06-10.csv"');   // el mes EN CURSO, hasta hoy (T0, #755)
     }
 
     // ─── El fichero ─────────────────────────────────────────────────────────────────────────────
@@ -169,9 +169,9 @@ class AnalyticsExportTest extends TestCase
     public function test_a_custom_range_and_the_year_ago_comparison_reach_the_file(): void
     {
         $csv = $this->actingAs($this->withRole('admin'))
-            ->get(route('admin.analitica.csv', ['report' => 'money', 'period' => 'custom', 'from' => '2026-04-01', 'to' => '2026-06-15', 'compare' => 'year_ago']))
+            ->get(route('admin.analitica.csv', ['report' => 'money', 'period' => 'custom', 'from' => '2026-03-01', 'to' => '2026-05-15', 'compare' => 'year_ago']))
             ->assertOk()
-            ->assertHeader('Content-Disposition', 'attachment; filename="analitica-money-2026-04-01-2026-06-15.csv"')
+            ->assertHeader('Content-Disposition', 'attachment; filename="analitica-money-2026-03-01-2026-05-15.csv"')
             ->getContent();
 
         $this->assertStringContainsString(__('admin.analytics.export.compare_line', ['comparison' => __('admin.analytics.compare.year_ago')]), $csv);
@@ -199,7 +199,7 @@ class AnalyticsExportTest extends TestCase
     {
         $built = (new CsvExport)->build(CsvExport::REPORT_MONEY, ReportPeriod::fromValue(null)->window());
 
-        $this->assertSame('analitica-money-2026-06-01-2026-06-30.csv', $built['filename']);
+        $this->assertSame('analitica-money-2026-06-01-2026-06-10.csv', $built['filename'], 'el mes en curso, hasta hoy (T0, #755)');
         $this->assertSame([__('admin.analytics.export.title', ['report' => __('admin.analytics.export.report.money')])], $built['rows'][0]);
     }
 }

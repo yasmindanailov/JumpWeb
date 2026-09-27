@@ -14,8 +14,11 @@ use App\Domain\Payments\Models\PaymentRefund;
 use App\Domain\Platform\Enums\ReportPeriod;
 use App\Domain\Platform\Models\AuditLog;
 use App\Domain\Platform\Models\Setting;
+use App\Domain\Platform\Services\Analytics\Reports\Window;
 use App\Domain\Platform\Services\AuditLogger;
+use App\Domain\Platform\Services\DisplayTime;
 use App\Filament\Analytics\MoneyReport;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
@@ -66,6 +69,19 @@ class MoneyReportTest extends TestCase
     }
 
     // ─── El fixture de junio ────────────────────────────────────────────────────────────────────
+
+    /**
+     * Junio ENTERO en la zona del parque, comparable con mayo entero. El fixture siembra cobros hasta el 30 con el reloj
+     * en el día 10, así que la aritmética del informe se mide sobre la ventana explícita del mes; lo que hace el filtro
+     * con un mes EN CURSO (cortarlo ahora y compararlo con el mismo tramo) lo mide
+     * {@see test_this_month_counts_up_to_now_and_compares_with_the_same_stretch_of_may()} (T0, `#755`).
+     */
+    private function june(): Window
+    {
+        $tz = DisplayTime::timezone();
+
+        return Window::ofDays(CarbonImmutable::parse('2026-06-01', $tz), CarbonImmutable::parse('2026-06-30', $tz), $tz, Window::UNIT_MONTH);
+    }
 
     private function seedJune(): void
     {
@@ -120,7 +136,7 @@ class MoneyReportTest extends TestCase
     {
         $this->seedJune();
 
-        $r = (new MoneyReport)->compute(ReportPeriod::ThisMonth->window());
+        $r = (new MoneyReport)->compute($this->june());
 
         $this->assertSame(['from' => '2026-06-01', 'to' => '2026-06-30', 'days' => 30, 'granularity' => 'day'], $r['window']);
 
@@ -140,7 +156,7 @@ class MoneyReportTest extends TestCase
     {
         $this->seedJune();
 
-        $r = (new MoneyReport)->compute(ReportPeriod::ThisMonth->window());
+        $r = (new MoneyReport)->compute($this->june());
 
         $this->assertSame(['collected' => 2000, 'payments' => 1, 'refunded' => 0, 'net' => 2000, 'sold' => 2000, 'orders' => 1], $r['previous']);
     }
@@ -150,7 +166,7 @@ class MoneyReportTest extends TestCase
     {
         $this->seedJune();
 
-        $series = collect((new MoneyReport)->compute(ReportPeriod::ThisMonth->window())['series'])->keyBy('key');
+        $series = collect((new MoneyReport)->compute($this->june())['series'])->keyBy('key');
 
         $this->assertCount(30, $series);
         $this->assertSame(['key' => '2026-06-01', 'collected' => 4000, 'refunded' => 0, 'sold' => 4000, 'orders' => 1], $series['2026-06-01']);
@@ -164,7 +180,7 @@ class MoneyReportTest extends TestCase
         // El control: en UTC ese cobro es del 31 de mayo y junio pierde 4.000.
         Setting::updateOrCreate(['key' => 'display_timezone'], ['value' => 'UTC', 'group' => 'general']);
         Setting::flushMemo();
-        $utc = (new MoneyReport)->compute(ReportPeriod::ThisMonth->window());
+        $utc = (new MoneyReport)->compute($this->june());
         $this->assertSame(9800 + 700 - 4000, $utc['totals']['collected'], 'en UTC entra O8 (30 de junio a las 22:30) y sale O7 (31 de mayo a las 22:30)');
         $this->assertSame(2000 + 4000, $utc['previous']['collected'], 'y O7 pasa a mayo');
     }
@@ -305,7 +321,7 @@ class MoneyReportTest extends TestCase
     public function test_the_comparison_can_be_the_same_period_a_year_ago(): void
     {
         $this->seedJune();
-        $window = ReportPeriod::ThisMonth->window();
+        $window = $this->june();
 
         $previous = (new MoneyReport)->compute($window, $window->previous());
         $yearAgo = (new MoneyReport)->compute($window, $window->yearAgo());
@@ -314,6 +330,36 @@ class MoneyReportTest extends TestCase
         $this->assertSame(0, $yearAgo['previous']['sold'], 'junio de 2025, vacío');
         $this->assertSame($previous['totals'], $yearAgo['totals'], 'el periodo es el mismo; solo cambia con qué se compara');
         $this->assertNotSame(MoneyReport::cacheKey($window, $window->previous()), MoneyReport::cacheKey($window, $window->yearAgo()));
+    }
+
+    /**
+     * «Este mes» EN CURSO es del 1 al 10 hasta las 11:00 de Madrid, y se compara con el 1–10 de mayo hasta las 11:00
+     * (T0 de `analitica-para-decidir.md` §4.3, `#755`). Medido el 27-09: antes llegaba al 30 y se comparaba con mayo
+     * entero. El cobro de este mismo segundo entra (la BD no guarda fracción); el del segundo siguiente, no.
+     */
+    public function test_this_month_counts_up_to_now_and_compares_with_the_same_stretch_of_may(): void
+    {
+        foreach ([
+            ['2026-05-05 10:00:00', 1000],   // en el tramo de mayo
+            ['2026-05-10 08:30:00', 400],    // 10:30 en Madrid: dentro del tramo
+            ['2026-05-10 09:30:00', 2000],   // 11:30 en Madrid: fuera del tramo, aunque sea el día 10
+            ['2026-05-20 10:00:00', 8000],   // mayo, pero fuera del tramo
+            ['2026-06-03 10:00:00', 3000],
+            ['2026-06-10 08:59:59', 100],
+            ['2026-06-10 09:00:00', 200],    // AHORA mismo
+            ['2026-06-10 09:00:01', 5000],   // un segundo en el futuro
+        ] as [$at, $cents]) {
+            $this->payment($this->order($this->ana, $cents, $at, 'web'), $cents, $at);
+        }
+
+        $window = ReportPeriod::ThisMonth->window();
+        $r = (new MoneyReport)->compute($window);
+
+        $this->assertTrue($window->isInProgress());
+        $this->assertSame(['from' => '2026-06-01', 'to' => '2026-06-10', 'days' => 10, 'granularity' => 'day'], $r['window']);
+        $this->assertSame(3300, $r['totals']['collected'], '3.000 + 100 + 200: ni el del segundo siguiente ni nada de después');
+        $this->assertSame(1400, $r['previous']['collected'], 'mayo del 1 al 10 hasta las 11:00: 1.000 + 400');
+        $this->assertSame(['2026-05-01', '2026-05-10'], [$window->previous()->dateFrom(), $window->previous()->dateTo()]);
     }
 
     // ─── Los ayudantes del fixture ──────────────────────────────────────────────────────────────

@@ -1,8 +1,8 @@
 # [SPEC] La analítica para decidir — un cuadro que se entiende, dice si va bien o mal y cubre las decisiones del operador
 
-> Estado: ⬜ **borrador** (dirección `[DECIDIDO owner]` el 27-09, `#755`; el owner revisa §4.1, §4.2 y §4.11 antes del
-> primer commit de código) · Última actualización: 2026-09-27 · Decisiones: `#755` (esta), `#754` (encuestas anónimas,
-> su T1) · Carril: **SPA** (banda 730–759). Amplía `analitica.md` (el libro, los regímenes y la T2 siguen siendo suyos).
+> Estado: ✅ **aprobada por el owner el 27-09** (§7; `#755`) → 🟦 **T0 en curso** · Última actualización: 2026-09-27 ·
+> Decisiones: `#755` (esta), `#754` (encuestas anónimas, su T1) · Carril: **SPA** (banda 730–759). Amplía `analitica.md`
+> (el libro, los regímenes y la T2 siguen siendo suyos).
 
 ## §0 · Antes de tocar
 
@@ -16,7 +16,8 @@
   inactivas de Filament CARGAN (12 peticiones al abrir, `#736`): con siete, carga por pestaña; (4) el texto para IA
   sale a un tercero: SOLO agregados, con guarda; (5) los enlaces FIRMADOS de los correos: la marca de envío va por el
   camino de `EmailUtm` (tras firmar, ignorada al validar); (6) aperturas solo con consentimiento (`[PENDIENTE: asesoría]`).
-- **Estado**: ⬜ borrador (`#755`). La T1 es la T5 de `encuestas.md` (`#754`). Nada en código.
+- **Estado**: ✅ aprobada (27-09, `#755`); 🟦 T0. La T1 es la T5 de `encuestas.md` (`#754`). **Nada de lo medido se
+  pierde** (§4.1.bis, con guarda): se resume arriba y lo demás queda plegado o en su pestaña.
 - **Invariantes**: `RGPD-01`, `RGPD-04`, `RGPD-07`, `SEC-04`, `SUITE-01`. Dinero y aforo: solo lectura.
 
 ## 1. Contexto y problema — MEDIDO (2026-09-27)
@@ -102,6 +103,33 @@ acuerdo de cada cliente); una PREVISIÓN estadística (la cartera de §4.8 es lo
   depende de él se lee con esa cifra al lado). Es donde vive hoy la jerga, y ahí se queda.
 - **La ficha del cliente (360)** gana «Correos» (§4.9) y pierde «Encuestas» (`#754`).
 
+### 4.1.bis Nada de lo medido se pierde: dónde va cada cifra de hoy
+
+`[DECIDIDO owner]` 27-09 («no quitaremos contenido, ¿no?»): **se resume, no se quita**. Arriba queda lo que decide; el
+resto, plegado a un clic en su pestaña, y TODO sigue en el CSV. Las 44 tarjetas y las 33 tablas medidas el 27-09 (§1):
+
+| Hoy | Va a |
+|---|---|
+| Dinero: Ingresos netos, Vendido, Devuelto, Pedidos cobrados, Valor medio del pedido | **Dinero, arriba** (+ «Pendiente de cobrar en el parque», que hoy vive en la tabla «La señal») |
+| Dinero: Cobrado online, Gestiones posteriores | Dinero, plegado |
+| Dinero: Compradores, Nuevos, Recurrentes, Valor medio por cliente, Valor de vida medio | **Clientes** (arriba: Nuevos, Repiten, Valor de vida; plegado: los otros dos) |
+| Clientes: Cuentas nuevas | Clientes, arriba («Registros») |
+| Clientes: Con el correo verificado, Que han comprado alguna vez | Clientes, plegado («Cómo se registran») |
+| Clientes: las 8 de la puerta (búsquedas, tecleadas, escaneos, encontradas, distintos, fichas, visitas acreditadas, clientes con visita) | Clientes, plegado («La puerta») |
+| Conversión: Visitas, Conversión | **Marketing, arriba** (las compras y lo cobrado, en la línea de detalle de «Conversión») |
+| Conversión: Compras por la web o la app, Cobrado en esas compras | Marketing, plegado |
+| Conversión: Sesiones identificadas, Fuera del recuento | Marketing → «Calidad del dato» |
+| Fiestas: Fiestas, Vendido después de reservar, Cobrado en el parque, Formularios completados, Respuestas «sí», Justificantes firmados | Fiestas, arriba |
+| Fiestas: Reservas con extras, Extras por reserva, Dentro del plazo | Fiestas, plegado |
+| Encuestas: Nota media, y las dos tasas unidas en «Tasa de respuesta» | **Satisfacción, arriba** |
+| Encuestas: Contestadas, Correos mandados, No preguntadas, y cada tasa por separado | Satisfacción, plegado |
+| Las 33 tablas | En su pestaña, plegadas (las de Conversión, en Marketing; «Eventos rechazados», en «Calidad del dato») |
+
+**Lo único que SE VA**, y por decisión: «Por atender» con nombre y el bloque «Encuestas» de la 360 (`#754`: pasan a
+«Notas bajas y si volvieron», sin persona), y la frase técnica de la cabecera, que baja a «¿Cómo se calcula?».
+**Guarda** (T0, `AnalyticsCensusTest` (futuro)): el censo de hoy, tecleado a mano, y cada cifra tiene que seguir existiendo
+en una tarjeta, una tabla plegada o el CSV; quitar una rompe el test.
+
 ### 4.2 La anatomía de una cifra (un solo componente)
 
 Todas las tarjetas salen de un objeto `Metric` (futuro) de la capa de entrega y de UN componente de pantalla; los
@@ -128,6 +156,24 @@ informes dejan de devolver arrays sueltos para las tarjetas (las tablas y el CSV
   compara con el mismo día de la semana anterior; «Esta semana», con los mismos días de la anterior.
 - Se hace en `Window`/`ReportPeriod`/`Comparison` (un solo dueño) con su test: el 27 de un mes compara 27 días a cada
   lado, y el cruce de medianoche del parque sigue la regla de `SqlTime`.
+- 🟦 **T0a, construida (27-09; en el árbol, falta el ojo del owner)**: `Window` sabe su UNIDAD (`UNIT_DAY` · `WEEK` ·
+  `MONTH` · `QUARTER` · `YEAR` · `SPAN`) y su FIN de periodo; `ReportPeriod::window()` la corta con `upTo(ahora)`, y
+  `previous()`/`yearAgo()` desplazan principio, corte y fin con la MISMA regla, en hora de pared del parque (día y
+  semana −7/−364 días; mes, trimestre y año sin desbordar; tramo, su longitud). `Comparison` no cambia. Bajo el filtro,
+  `WindowLabel` escribe las dos ventanas («Del 1 al 27 sep. 2026, hasta ahora» · «Del 1 al 27 ago. 2026, hasta la misma
+  hora»), con los formatos como dato del idioma. Tests: `ReportPeriodTest` reescrito (24), `WindowLabelTest` (3),
+  `MoneyReportTest` +1 (el tramo, con el cobro de este segundo dentro y el del siguiente fuera), `AnalyticsPageTest` +1;
+  arnés `scripts/mutar-analitica-decidir.sh` **17/17 + control**; sonda 35/35. **Medido con los datos locales** (no
+  reales), la misma pestaña antes y después: «Cobrado online» −27 % → −14 %, «Ingresos netos» −27 % → −16 %,
+  «Conversión» −20 % → −9 %, «Visitas» +36 % → +53 %.
+- **Lo que enseñó la T0a**: (1) **lo escrito en el segundo en curso** quedaba fuera: la ventana es `[from, to)` y la BD
+  guarda los instantes sin fracción; el corte es el principio del segundo SIGUIENTE. (2) Un **freno** «el corte no pasa
+  del fin» sobrevivió al arnés: los desplazamientos son monótonos y era código muerto; se quitó, y lo que sostiene «el 31
+  de marzo contra febrero entero» es el `NoOverflow`, que sí muerde. (3) Los fixtures de junio sembraban cobros el 30 con
+  el reloj en el 10: la aritmética del mes entero se mide con una ventana explícita (`Window::ofDays(…, UNIT_MONTH)`),
+  y el corte, con su caso. (4) ⚠️ **«Fiestas» de «Este mes» cuenta ahora las celebradas HASTA HOY** (se corta por fecha de
+  la fiesta) frente al mismo tramo del mes anterior; las que aún vienen son de la cartera (T4). La señal pendiente no
+  cambia: se corta por el cobro y se reparte por la visita frente a hoy.
 
 ### 4.4 Referencias: normal, bajo o alto
 
@@ -238,7 +284,7 @@ informes dejan de devolver arrays sueltos para las tarjetas (las tablas y el CSV
 
 | | Tanda | Entrega | Verificación |
 |---|---|---|---|
-| T0 | **El rigor del tiempo y la anatomía** | §4.3 (tramo transcurrido, mismo día de la semana) · `Metric` (futuro) con polaridad, base mínima, puntos, Wilson · las 44 tarjetas de hoy pasadas por el componente, sin datos nuevos | test del tramo (el 27 contra el 27), de la polaridad y de la base pequeña, con su mutación · sonda |
+| T0 | **El rigor del tiempo y la anatomía** — **T0a 🟦** (el tiempo, en el árbol; §4.3) · T0b ⬜ (la anatomía) | §4.3 (tramo transcurrido, mismo día de la semana) · `Metric` (futuro) con polaridad, base mínima, puntos, Wilson · las 44 tarjetas de hoy pasadas por el componente, sin datos nuevos · el censo de §4.1.bis y su guarda | test del tramo (el 27 contra el 27), de la polaridad y de la base pequeña, con su mutación · sonda |
 | T1 | **Encuestas anónimas** | `encuestas.md` §4.7 (`#754`) | las de esa spec |
 | T2 | **Ocupación y anticipación** | la pestaña, §4.8 | tests de la regla con aforo y líneas vivas · `EXPLAIN` con un año sintético · sonda · ojo |
 | T3 | **Resumen y la reorganización** | §4.1, §4.4–§4.7, §4.11: las siete pestañas, los objetivos, las referencias (su historia; el sector con fuentes que se traen al owner), las frases, «lo que ha cambiado», el texto para IA y su guarda, la carga por pestaña, el glosario | guardas de IA y jerga · sonda (primera cifra en la primera pantalla, peticiones al abrir) · ojo |
@@ -277,5 +323,6 @@ lectura**; ningún fichero del `CRITICAL_RE` (a confirmar con `grep` en cada tan
 - Decidido por el agente contra esos objetivos (vetable): la T0 del rigor delante; los clics por cliente para todos con
   oposición y las aperturas solo con consentimiento; el texto para IA copiado (sin proveedor) antes que integrado; las
   referencias del sector solo con fuente.
-- **Pendiente**: la revisión del owner de §4.1, §4.2 y §4.11 antes del primer commit de código; `[PENDIENTE: asesoría]`
-  los correos por persona y el píxel.
+- **27-09, owner — APROBADA**: «la apruebo, pero no quitaremos contenido, ¿no?, ¿o lo resumiremos?; primero analítica,
+  sí» → se resume y no se quita (§4.1.bis, con guarda), y la analítica va antes que los correos y la puerta (`#789`).
+- **Pendiente**: `[PENDIENTE: asesoría]` los correos por persona y el píxel.

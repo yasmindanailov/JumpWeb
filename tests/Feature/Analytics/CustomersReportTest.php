@@ -52,7 +52,7 @@ class CustomersReportTest extends TestCase
         $bea = $this->customer('2026-06-05 18:00:00', verified: false);
         $carl = $this->customer('2026-06-09 22:30:00', verified: true);   // el 10 en el parque
         $dora = $this->customer('2026-06-07 12:00:00', verified: true);
-        $mayo = $this->customer('2026-05-20 10:00:00', verified: true);     // el periodo anterior
+        $mayo = $this->customer('2026-05-05 10:00:00', verified: true);     // el periodo anterior: el MISMO tramo, 1–10 de mayo (T0, #755)
         $staff = $this->customer('2026-06-04 10:00:00', verified: true, role: 'staff');   // no es cliente
 
         Order::create(['user_id' => $ana->id, 'code' => 'JW-CR001', 'status' => Order::STATUS_PAID, 'subtotal' => 1000, 'tax' => 0, 'total' => 1000, 'currency' => 'EUR', 'paid_at' => '2026-06-03 11:00:00']);
@@ -68,12 +68,12 @@ class CustomersReportTest extends TestCase
         $this->lookup(CustomersReport::ACTION_LOOKUP_SCANNED, $ana, '2026-06-05 15:40:00');     // la misma Ana, el mismo día
         $this->lookup(CustomersReport::ACTION_LOOKUP_TYPED, $bea, '2026-06-09 22:30:00');       // hora 0 del 10 en el parque
         $this->lookup(CustomersReport::ACTION_PROFILE_VIEWED, $ana, '2026-06-05 09:16:00');
-        $this->lookup(CustomersReport::ACTION_LOOKUP_TYPED, $mayo, '2026-05-15 10:00:00');      // el periodo anterior
+        $this->lookup(CustomersReport::ACTION_LOOKUP_TYPED, $mayo, '2026-05-06 10:00:00');      // el periodo anterior
 
         CustomerVisit::create(['user_id' => $ana->id, 'visited_on' => '2026-06-05', 'registered_by' => $staff->id]);
         CustomerVisit::create(['user_id' => $ana->id, 'visited_on' => '2026-06-08', 'registered_by' => $staff->id]);
         CustomerVisit::create(['user_id' => $bea->id, 'visited_on' => '2026-06-08', 'registered_by' => $staff->id]);
-        CustomerVisit::create(['user_id' => $mayo->id, 'visited_on' => '2026-05-15', 'registered_by' => $staff->id]);
+        CustomerVisit::create(['user_id' => $mayo->id, 'visited_on' => '2026-05-06', 'registered_by' => $staff->id]);
 
         return compact('ana', 'bea', 'carl', 'dora', 'mayo', 'staff');
     }

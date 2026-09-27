@@ -94,10 +94,10 @@
 
 ## Por dónde retomar, en orden
 
-1. ❗❗❗ **LA ANALÍTICA PARA DECIDIR (`#755`) — `specs/analitica-para-decidir.md` ⬜ BORRADOR.** ▶ **Primero, la revisión
-   del owner** de §4.1 (las siete pestañas), §4.2 (la anatomía de una cifra) y §4.11 (las reglas de pantalla); con su ✅,
-   la spec pasa a ✅ y empieza la **T0** (el tramo transcurrido en `Window`/`ReportPeriod`/`Comparison` y `Metric` (futuro)
-   con polaridad, base mínima, puntos y Wilson, sobre las 44 tarjetas de hoy) → **T1** = la T5 de `encuestas.md` (§4.7,
+1. ❗❗❗ **LA ANALÍTICA PARA DECIDIR (`#755`) — `specs/analitica-para-decidir.md` ✅ APROBADA (27-09; antes que correos y
+   puerta; nada de lo medido se pierde, §4.1.bis).** 🟦 **T0a EN EL ÁRBOL (27-09), falta el ojo del owner** (§4.3:
+   el tramo transcurrido y las fechas bajo el filtro; arnés `mutar-analitica-decidir.sh` 17/17; sonda `t0a` 35/35) →
+   **T0b** (`Metric` (futuro): polaridad, base mínima, puntos, Wilson; las 44 tarjetas) → **T1** = la T5 de `encuestas.md` (§4.7,
    `#754`) → T2 ocupación → T3 Resumen y la reorganización → T4 cartera → T5 marketing y correos → T6 cohortes → T7 pérdidas
    → T8 satisfacción (§4.12). Cada tanda, al ojo del owner en vivo ANTES del commit (tablet 1080, móvil 390, escritorio).
    Línea base de la sonda: `storage/app/audit/analitica-panel-revision-2709*`. `[PENDIENTE: asesoría]`: los 90 días del

@@ -4,8 +4,10 @@ namespace App\Filament\Pages;
 
 use App\Domain\Platform\Enums\Comparison;
 use App\Domain\Platform\Enums\ReportPeriod;
+use App\Domain\Platform\Services\Analytics\Reports\Window;
 use App\Filament\Analytics\CsvExport;
 use App\Filament\Analytics\SegmentsReport;
+use App\Filament\Analytics\WindowLabel;
 use App\Filament\Widgets\Analytics\CustomersBreakdownWidget;
 use App\Filament\Widgets\Analytics\CustomersSeriesChart;
 use App\Filament\Widgets\Analytics\DevicesChart;
@@ -266,12 +268,14 @@ class AnalyticsPage extends BaseDashboard
                     ->options(ReportPeriod::options())
                     ->default(ReportPeriod::DEFAULT->value)
                     ->selectablePlaceholder(false)
+                    ->helperText(fn (Get $get): string => WindowLabel::period(self::windowOf($get)))
                     ->live(),
                 Select::make('compare')
                     ->label(__('admin.analytics.compare.label'))
                     ->options(Comparison::options())
                     ->default(Comparison::DEFAULT->value)
                     ->selectablePlaceholder(false)
+                    ->helperText(fn (Get $get): string => WindowLabel::baseline(Comparison::fromValue($get('compare'))->baseline(self::windowOf($get))))
                     ->live(),
                 DatePicker::make('from')
                     ->label(__('admin.analytics.period.from'))
@@ -286,6 +290,21 @@ class AnalyticsPage extends BaseDashboard
                     ->visible(fn (Get $get): bool => $get('period') === ReportPeriod::Custom->value)
                     ->live(),
             ]);
+    }
+
+    /**
+     * La ventana que el filtro tiene puesta, para rotular sus fechas debajo (T0, `#755`): la MISMA que resuelven los
+     * widgets (`Concerns\AnalyticsWidget::window()`) y el CSV, con las dos fechas a medida recortadas a `YYYY-MM-DD`.
+     */
+    private static function windowOf(Get $get): Window
+    {
+        $from = $get('from');
+        $to = $get('to');
+
+        return ReportPeriod::fromValue($get('period'))->window(
+            is_string($from) ? substr($from, 0, 10) : null,
+            is_string($to) ? substr($to, 0, 10) : null,
+        );
     }
 
     /**
