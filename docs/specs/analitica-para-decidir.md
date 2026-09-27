@@ -1,7 +1,7 @@
 # [SPEC] La analítica para decidir — un cuadro que se entiende, dice si va bien o mal y cubre las decisiones del operador
 
-> Estado: ✅ **aprobada por el owner el 27-09** (§7; `#755`) → ✅ **T0, T1 y T2** · ⬜ **T3** · Última actualización: 2026-09-27 ·
-> Decisiones: `#755` (esta), `#754` (encuestas anónimas, su T1) · Carril: **SPA** (banda 730–759). Amplía `analitica.md`
+> Estado: ✅ **aprobada por el owner el 27-09** (§7; `#755`) → ✅ **T0, T1 y T2** · 🟦 **T3** (T3a→T3e, §4.13) · Última actualización: 2026-09-28 ·
+> Decisiones: `#755` (esta), `#754` (encuestas anónimas, su T1), `#758` (la T2), `#759` (la T3 en cinco tandas) · Carril: **SPA** (banda 730–759). Amplía `analitica.md`
 > (el libro, los regímenes y la T2 siguen siendo suyos).
 
 ## §0 · Antes de tocar
@@ -16,8 +16,9 @@
   inactivas de Filament CARGAN (12 peticiones al abrir, `#736`): con siete, carga por pestaña; (4) el texto para IA
   sale a un tercero: SOLO agregados, con guarda; (5) los enlaces FIRMADOS de los correos: la marca de envío va por el
   camino de `EmailUtm` (tras firmar, ignorada al validar); (6) aperturas solo con consentimiento (`[PENDIENTE: asesoría]`).
-- **Estado**: ✅ aprobada (27-09, `#755`); T0a·T0b·T0c ✅ · **T1** ✅ (la T5 de `encuestas.md`, `#754`, `#757`) · **T2** ✅ ocupación (§4.8.ter, `#758`) → **T3** Resumen. **Nada de lo medido se
-  pierde** (§4.1.bis, con guarda): se resume arriba y lo demás queda plegado o en su pestaña.
+- **Estado**: ✅ aprobada (27-09, `#755`); T0a·T0b·T0c ✅ · **T1** ✅ (la T5 de `encuestas.md`, `#754`, `#757`) · **T2** ✅ ocupación (§4.8.ter, `#758`) → **T3** Resumen, en cinco tandas (§4.13,
+  `#759`): ▶ T3a la forma. **Nada de lo medido se pierde** (§4.1.bis, con guarda): se resume arriba y lo demás queda
+  plegado o en su pestaña.
 - **Invariantes**: `RGPD-01`, `RGPD-04`, `RGPD-07`, `SEC-04`, `SUITE-01`. Dinero y aforo: solo lectura.
 
 ## 1. Contexto y problema — MEDIDO (2026-09-27)
@@ -426,12 +427,63 @@ número móvil»; y de las compras: «clientes recurrentes sí, eso me sirve». 
 | T0 | **El rigor del tiempo y la anatomía** — **T0a ✅** (el tiempo, `0dc5d317`; §4.3) · **T0b ✅** (la anatomía, `6243e8d9`; §4.2) · **T0c ✅** (los que vuelven, `#756`; §4.8.bis) — las tres vistas y aprobadas por el owner | §4.3 (tramo transcurrido, mismo día de la semana) · `Metric` (futuro) con polaridad, base mínima, puntos, Wilson · las 44 tarjetas de hoy pasadas por el componente, sin datos nuevos · el censo de §4.1.bis y su guarda | test del tramo (el 27 contra el 27), de la polaridad y de la base pequeña, con su mutación · sonda |
 | T1 | **Encuestas anónimas** — ✅ (27-09, `#757`; vista y aprobada por el owner: «está perfecto, visto bueno») | `encuestas.md` §4.7 (`#754`; lo construido, su «Cómo se construyó») | las de esa spec |
 | T2 | **Ocupación y anticipación** — ✅ (27-09, `#758`; aprobada por el owner: «buen trabajo») | la pestaña, §4.8 y §4.8.ter | tests de la regla con aforo y líneas vivas · `EXPLAIN` con un año sintético · sonda · ojo |
-| T3 | **Resumen y la reorganización** | §4.1, §4.4–§4.7, §4.11: las siete pestañas, los objetivos, las referencias (su historia; el sector con fuentes que se traen al owner), las frases, «lo que ha cambiado», el texto para IA y su guarda, la carga por pestaña, el glosario | guardas de IA y jerga · sonda (primera cifra en la primera pantalla, peticiones al abrir) · ojo |
+| T3 | **Resumen y la reorganización** — en cinco tandas, T3a→T3e (§4.13, `#759`) | §4.1, §4.4–§4.7, §4.11: las siete pestañas, los objetivos, las referencias (su historia; el sector con fuentes que se traen al owner), las frases, «lo que ha cambiado», el texto para IA y su guarda, la carga por pestaña, el glosario | guardas de IA y jerga · sonda (primera cifra en la primera pantalla, peticiones al abrir) · ojo |
 | T4 | **La cartera** | §4.8 | test «a estas alturas» con fechas fijas · ojo |
 | T5 | **Marketing con coste y correos por cliente** | §4.9 | tests de la marca en enlaces firmados, del píxel con y sin consentimiento, de la oposición · `Http` y Mailpit · ojo |
 | T6 | **Cohortes** | §4.10 | test de cohorte con fechas fijas · `EXPLAIN` · ojo |
 | T7 | **Pérdidas y complementos** | §4.10 (promociones con plataforma) | tests · ojo |
 | T8 | **Satisfacción** | §4.10 (la foto diaria de Google) | tests · ojo |
+
+### 4.13 La T3 al detalle — medido el 28-09, antes de codificar (`#759`)
+
+**Medido** (BD local, sonda de solo lectura `probe-t3-antes`): al abrir piden **10 widgets**, los de las seis pestañas
+(`#736`); a 390×844 se ven **3 de 6** pestañas y la primera cifra cae a **732 px** (el filtro creció con sus fechas escritas,
+T0a); a 1080×810, a 540. Jerga en pantalla: «Conversión», seis rótulos (sesiones, primer toque, fuera del recuento, bots,
+internas, embudo); «Fiestas», uno (embudo). De los cinco gráficos de «Conversión», el de dispositivos tiene su tabla y **el de
+las horas no** (su dato no está en ninguna tabla ni en el CSV). Filament trae `Tabs::livewireProperty()`: con él una pestaña
+inactiva se pinta vacía y sus widgets ni existen ni piden.
+
+**En cinco tandas** (decidido por el agente contra el objetivo, vetable; `#759`), cada una al ojo del owner antes del commit:
+
+| | Entrega |
+|---|---|
+| T3a | **La forma**: las siete pestañas con su pregunta, la carga por pestaña, el reparto de §4.1.bis, «Resumen» con sus cifras (sin veredicto aún), móvil, los botones al pie, el glosario y su guarda |
+| T3b | **El veredicto y la frase**: «normal para ti» (la historia, §4.4) y la frase de plantilla (§4.6) en cada tarjeta |
+| T3c | **«Resumen» que decide**: «lo que ha cambiado» (§4.5) y los objetivos del mes |
+| T3d | **«Explícamelo con IA»** (§4.7) y su guarda |
+| T3e | **El sector**: los rangos con fuente, investigados y traídos al owner ANTES de sembrar nada |
+
+**La T3a**:
+- **Un catálogo de cifras por informe** (`Filament\Analytics\Metrics\*`): la composición de cada `Metric` sale de los widgets a
+  un sitio —una clave, una cifra— que leen las pestañas, «Resumen» y, después, «lo que ha cambiado» y el texto para IA. Un
+  widget ELIGE claves; ninguna cifra se define dos veces.
+- **Las pestañas** (§4.1): Resumen · Dinero · Ocupación · Clientes · Marketing (era «Conversión») · Fiestas · Satisfacción (era
+  «Encuestas»); en la URL `summary`, `money`, `occupancy`, `customers`, `marketing`, `parties`, `satisfaction` (`traffic` y
+  `surveys` siguen abriendo la suya). La cabecera es la pregunta; la frase técnica baja al «¿Cómo se calcula?» de «Ingresos netos».
+- **Arriba (≤ 6) y plegado** (§4.1.bis), cada grupo plegado con su título:
+  - **Dinero**: Ingresos netos (la principal, a doble ancho) · Vendido · **Pendiente de cobrar en el parque** (nueva: la fila
+    de «La señal») · Devuelto · Pedidos cobrados · Valor medio del pedido. Plegado: Cobrado y Gestiones posteriores.
+  - **Clientes**: **Visitantes** (nueva: las plazas de las visitas PAGADAS del periodo, por el instante de la visita; la misma
+    fuente que la ocupación) · Nuevos · Repiten · Ya habían venido · Valor de vida · Registros. Plegado: «Más de los clientes»
+    (Compradores, Valor medio por cliente, Repiten por la web, Vienen por primera vez, Vinieron dos o más días, Cada cuánto
+    vuelven), «Cómo se registran» y «La puerta». «Vuelven a los 90 días» (§4.1) es de las cohortes (T6): hasta entonces, «Ya
+    habían venido» (T0c).
+  - **Marketing**: Visitas a la web · Conversión (las compras y lo cobrado, en su detalle); las de la T5 llegarán aquí. Plegado:
+    Compras por la web o la app, Cobrado en esas compras, los experimentos y las tablas; al final **«Calidad del dato»**: visitas
+    identificadas, fuera del recuento, eventos rechazados y qué son «Sin dato (antes de medir)» y «Automático». Gráficos: el paso
+    a paso, las fuentes y la serie; las horas y los dispositivos, a tabla plegada (la de las horas, nueva).
+  - **Fiestas**: las seis de §4.1.bis; plegadas, las otras tres. **Satisfacción**: Nota media · **Tasa de respuesta** (nueva: las
+    respuestas entre lo ofrecido en la puerta y los correos mandados); plegado, las cinco de antes. «Notas bajas y si volvieron» sigue.
+  - **Resumen**: Ingresos netos · Ocupación de las entradas · Visitantes · Conversión · Valor medio del pedido · Repiten · Nota
+    media: la MISMA cifra que en su pestaña (clave y definición), con su enlace. La cartera llega con la T4.
+- **Carga por pestaña**: `livewireProperty('tab')` y la pestaña en la URL (`?pestana=`). **Móvil** (< md): un `<select>` nativo en
+  lugar de la fila de pestañas, y el filtro tras una píldora con el periodo y la comparación.
+- **Botones**: «Descargar CSV» al pie de cada pestaña, de su informe y sin modal; «Exportar segmento», al pie de Clientes.
+- **Glosario** (§4.11) con su guarda `AnalyticsJargonTest` (futuro): pinta cada widget de cada pestaña y falla si la jerga sale
+  fuera de «Calidad del dato». **Censo**: las tres nuevas, al CSV y al censo; lo renombrado, con su correspondencia en el test.
+- **Verificación**: la carga por pestaña (con X abierta, ningún widget de otra), el catálogo (cada clave una vez; «Resumen»
+  reusa), la jerga y el censo, con su mutación; la sonda con siete pestañas, la primera cifra a 390 y 1080 y las peticiones al
+  abrir; el ojo del owner en tablet, móvil y escritorio.
 
 ## 5. Impacto en invariantes
 

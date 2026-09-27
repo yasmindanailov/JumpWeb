@@ -2,11 +2,11 @@
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb` a secas; la instancia al lado, en
 > `~/proyectos/instancias/playjump`, clon de `github.com/yasmindanailov/instancia-playjump`, montada el 25-09) ·
-> Banda: **730–759** (700–729 agotada el 20-09) · Último usado: **`#758`** · La banda está dada de alta en la tabla de
-> `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: **`analitica-para-decidir.md`
+> Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#759`** · La banda está dada de alta en la
+> tabla de `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: **`analitica-para-decidir.md`
 > §0** (la tarea en curso, `#755`) · `encuestas.md` §0 y §4.7 (`#754`) · `analitica.md` §0 y §4.5 · `isla-y-landing-nueva.md`
 > §4.11 · `celebracion-e-invitacion.md` §0 · `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 ·
-> `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-09-27 (noche: la T1, encuestas anónimas, en el árbol).
+> `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-09-28 (madrugada: la T3 medida y troceada, §4.13).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`). El
 > contador de la suite va en el trailer del commit (`#618`), no aquí. **Se muda, no se raspa**: el detalle de
 > una feature baja a su spec (las trampas por tanda de la analítica T1→T5 viven en `analitica.md` §4.9,
@@ -22,7 +22,7 @@
   1.46.0; el detalle, `encuestas.md` §4.7 «Cómo se construyó». **T2, ocupación y anticipación, ✅** (27-09 noche, `#758`,
   aprobada por el owner: «buen trabajo»): entradas y fiestas en dos cifras, la demanda sin hueco medida desde ya, la
   pestaña «Ocupación», el mapa de calor y el CSV `occupancy`; el detalle y lo medido, `analitica-para-decidir.md` §4.8.ter.
-  **Sigue la T3: Resumen y la reorganización** (§4.1, §4.4–§4.7, §4.11).
+  **Sigue la T3: Resumen y la reorganización**, en cinco tandas (§4.13, `#759`): ▶ la T3a, la forma.
 - ▶ **LA FIESTA DEL SISTEMA NUEVO ES MÍA (`#765`, `[DECIDIDO owner]` 25-09)**: la lista de invitados, la invitación con
   su recibo y la autorización, vestidas con «Saltia» para la v2.0.0, en paralelo con la web pública. El traspaso,
   `isla-y-landing-nueva.md` §4.11; el censo HAY/FALTA, el método y las tandas, `specs/fiesta-sistema-nuevo.md` (§1.4,
@@ -73,16 +73,15 @@
    (`#754` + `#757`; `deploy.sh` espera 11; contrato 1.46.0; la BD local migrada y re-sembrada con
    `probe-ojo-anonimas.php`, `CARRIL-SPA.md` §8·14). Los CRUCES por franja, tipo de visita y primera visita (datos ya
    guardados) llegan con la T8; el cruce por EMPLEADO, `[PENDIENTE: owner]` (preguntado el 27-09, sin respuesta aún). →
-   ✅ **T2 ocupación y anticipación** (§4.8.ter, `#758`) → ▶ **T3 Resumen y la reorganización** (§4.1 las siete pestañas,
-   §4.4 referencias —su historia; el SECTOR solo con fuentes que se traen AL OWNER antes de sembrar nada—, §4.5 «lo que ha
-   cambiado», §4.6 frases, §4.7 el texto para IA con su guarda sin PII ni celdas < 5, §4.11 carga por pestaña, glosario y
-   selector nativo en móvil; spec primero si la forma cambia) → T4 cartera → T5 marketing y correos → T6 cohortes → T7
-   pérdidas → T8 satisfacción (§4.12). **Trampas de la T2**: `OccupancyReader` COPIA la aritmética del aforo (los dos
-   contadores viven en el `CRITICAL_RE`): si cambia `occupancyMap()` o la ventana de un pack, cambia aquí
-   —`OccupancyReaderParityTest` lo caza—; la local no corre el cron de franjas y su rejilla del pasado es escasa (no es el
-   lector); ⚠️ **no verificado en navegador** que el cajón emita `availability_missing` (la local abre la ISLA,
-   `sidebar.shell = isla`, «no deshacer sin él»): verlo cuando el owner apague la isla. Al tocar un texto que un arnés usa
-   de ancla, se corre ESE arnés (la T1 dejó una mutación sin aplicar).
+   ✅ **T2 ocupación y anticipación** (§4.8.ter, `#758`) → ▶ **T3 Resumen y la reorganización, EN CINCO TANDAS** (§4.13,
+   `#759`, 28-09; medido antes): ▶ **T3a la forma** (las siete pestañas con su pregunta, la carga por pestaña con
+   `Tabs::livewireProperty()`, el reparto de §4.1.bis sobre un CATÁLOGO de cifras por informe, «Resumen» con sus cifras, el
+   selector nativo y la píldora del filtro en móvil, CSV al pie, el glosario y `AnalyticsJargonTest`) → T3b veredicto y frase
+   (§4.4 su historia, §4.6) → T3c «lo que ha cambiado» y objetivos → T3d el texto para IA (§4.7, sin PII ni celdas < 5) → T3e
+   el SECTOR (fuentes AL OWNER antes de sembrar nada) → T4 cartera → T5 marketing y correos → T6 cohortes → T7
+   pérdidas → T8 satisfacción (§4.12). **Trampas de la T2**, en la spec §4.8.ter: `OccupancyReader` COPIA la aritmética del
+   aforo (`OccupancyReaderParityTest` lo caza); ⚠️ **no verificado en navegador** que el cajón emita `availability_missing`
+   (la local abre la ISLA, «no deshacer sin él»). Al tocar un texto que un arnés usa de ancla, se corre ESE arnés.
    Cada tanda, al ojo del owner en vivo ANTES del commit. **Trampas de hoy**: una tarjeta nueva va por `metric()` con su
    `Polarity`, su «¿Cómo se calcula?» (es y zh_CN), `TILES` del censo y el recuento de la sonda; el arnés
    `mutar-analitica-decidir.sh` (55, ~16 min) en segundo plano, sin medir nada mientras; tras rebasar, los dos bundles y
