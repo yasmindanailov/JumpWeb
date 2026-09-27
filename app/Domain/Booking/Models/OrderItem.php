@@ -779,6 +779,12 @@ class OrderItem extends Model
         return $this->signedGuestFormRoute('reservation.invitation.remind');
     }
 
+    /** El enlace firmado de «la invitación salió» (F8, `#753`): la cuarta puerta del mismo formulario. */
+    public function invitationSignedShareUrl(): string
+    {
+        return $this->signedGuestFormRoute('reservation.invitation.share');
+    }
+
     /**
      * La VERSIÓN del enlace del post-form (`specs/complementos-post-reserva.md` §4.6.bis, `#413` D14).
      *

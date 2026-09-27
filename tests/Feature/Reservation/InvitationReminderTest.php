@@ -13,10 +13,12 @@ use App\Domain\Booking\Models\Zone;
 use App\Domain\Booking\Services\PartyInvitations;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\Payment;
+use App\Domain\Platform\Models\AnalyticsEvent;
 use App\Domain\Platform\Services\DisplayTime;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
+use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
 /**
@@ -162,17 +164,17 @@ class InvitationReminderTest extends TestCase
         $this->assertNull($invitation->reminded_at, 'nadie escribía estas columnas hasta esta unidad');
         $this->assertSame(0, (int) $invitation->reminded_count);
 
-        $this->actingAs($item->order->user)
-            ->post(route('reservation.invitation.remind', ['reservation' => $item]))
-            ->assertSessionHas('reminder_text');
-
-        $this->actingAs($item->order->user)
-            ->post(route('reservation.invitation.remind', ['reservation' => $item]))
-            ->assertSessionHas('reminder_text');
+        $this->assertToWhatsApp($this->actingAs($item->order->user)->post(route('reservation.invitation.remind', ['reservation' => $item])));
+        $this->assertToWhatsApp($this->actingAs($item->order->user)->post(route('reservation.invitation.remind', ['reservation' => $item])));
 
         $invitation->refresh();
         $this->assertNotNull($invitation->reminded_at);
         $this->assertSame(2, (int) $invitation->reminded_count, 'la suma la hace la BD: dos avisos son dos');
+        // F8 (`#753`): un recordatorio es un envío —la invitación ya salió— y deja su hecho (sin nombres: si los llevaba).
+        $this->assertNotNull($invitation->shared_at);
+        $hechos = AnalyticsEvent::query()->where('name', 'invitation_reminded')->where('order_id', $item->order_id)->get();
+        $this->assertCount(2, $hechos);
+        $this->assertEquals(['reservation' => $item->id, 'listed' => false], array_intersect_key($hechos->first()->props, ['reservation' => 0, 'listed' => 0]));
     }
 
     public function test_writing_the_reminder_does_not_move_the_witness_of_the_extras(): void
@@ -183,9 +185,7 @@ class InvitationReminderTest extends TestCase
 
         Carbon::setTestNow(now()->addMinutes(5));
 
-        $this->actingAs($item->order->user)
-            ->post(route('reservation.invitation.remind', ['reservation' => $item]))
-            ->assertSessionHas('reminder_text');
+        $this->assertToWhatsApp($this->actingAs($item->order->user)->post(route('reservation.invitation.remind', ['reservation' => $item])));
 
         $this->assertEquals(
             $before,
@@ -201,25 +201,22 @@ class InvitationReminderTest extends TestCase
         Carbon::setTestNow();
     }
 
-    public function test_the_text_comes_back_on_the_screen_and_never_in_the_url(): void
+    public function test_the_text_goes_to_whatsapp_and_never_in_our_url(): void
     {
         $item = $this->reservation(2, [['name' => 'Ana Soler'], ['name' => 'Iris Vela']]);
+        $invitation = app(PartyInvitations::class)->forReservation($item);
+        $this->assertInstanceOf(PartyInvitation::class, $invitation);
 
         $response = $this->actingAs($item->order->user)
             ->post(route('reservation.invitation.remind', ['reservation' => $item]), ['with_names' => '1']);
 
-        // Lleva nombres de menores: por la sesión, nunca por un `?texto=` que acabaría en el historial
-        // del navegador y en cualquier referer.
-        $response->assertRedirect(route('reservation.guests', ['reservation' => $item]));
-        $response->assertSessionHas('reminder_text');
-
-        $html = $this->actingAs($item->order->user)
-            ->get(route('reservation.guests', ['reservation' => $item]))
-            ->assertOk()->getContent();
-
-        // ▶ Desde `#743` (la lista del sistema nuevo) el texto vuelve escrito en su panel, listo para copiar.
-        $this->assertStringContainsString('data-recordatorio-texto', $html, 'el texto tiene que estar en la pantalla');
-        $this->assertStringContainsString('Ana Soler', $html);
+        // ▶ Desde F8 (`#753`): a WHATSAPP con el mensaje escrito, en un toque. Los nombres —si él los pidió— viajan en el
+        // enlace de WhatsApp, que es su destino; NUESTRA petición es un POST sin ellos, y a la lista no vuelve nada.
+        $texto = $this->assertToWhatsApp($response);
+        $this->assertStringContainsString('Ana Soler', $texto);
+        $this->assertStringContainsString(app(PartyInvitations::class)->shareUrlFor($invitation, 'rec') ?? '—', $texto, 'el enlace dice su canal');
+        $this->assertStringNotContainsString('Ana Soler', (string) $response->baseResponse->headers->get('Referer'));
+        $this->assertStringNotContainsString('data-recordatorio-texto', $this->actingAs($item->order->user)->get(route('reservation.guests', ['reservation' => $item]))->getContent());
     }
 
     public function test_the_seal_says_how_many_times_and_when(): void
@@ -283,9 +280,7 @@ class InvitationReminderTest extends TestCase
         PartyInvitation::query()->whereKey($invitation->getKey())
             ->update(['reminded_count' => PartyInvitations::REMINDED_COUNT_MAX]);
 
-        $this->actingAs($item->order->user)
-            ->post(route('reservation.invitation.remind', ['reservation' => $item]))
-            ->assertSessionHas('reminder_text');
+        $this->assertToWhatsApp($this->actingAs($item->order->user)->post(route('reservation.invitation.remind', ['reservation' => $item])));
 
         $this->assertSame(
             PartyInvitations::REMINDED_COUNT_MAX,
@@ -314,9 +309,11 @@ class InvitationReminderTest extends TestCase
 
         // ▶ Desde `#743` (la lista del sistema nuevo): el gesto es «Escribir el recordatorio» (`data-recordatorio-escribir`).
         $this->assertStringNotContainsString('data-recordatorio-escribir', $html);
-        // El control de este caso: con la fiesta a diez días, el botón SÍ está.
+        // El control de este caso: con la fiesta a diez días —y la invitación ENVIADA, que desde F8 es cuando se ofrece—,
+        // el botón SÍ está.
         Carbon::setTestNow();
         $open = $this->reservation(2, [['name' => 'Ana Soler'], ['name' => 'Iris Vela']]);
+        app(PartyInvitations::class)->forReservation($open)?->forceFill(['shared_at' => now()])->save();
         $this->assertStringContainsString(
             'data-recordatorio-escribir',
             $this->actingAs($open->order->user)->get(route('reservation.guests', ['reservation' => $open]))->getContent(),
@@ -329,15 +326,24 @@ class InvitationReminderTest extends TestCase
         $invitation = app(PartyInvitations::class)->forReservation($item);
         $this->assertInstanceOf(PartyInvitation::class, $invitation);
 
-        $this->actingAs($item->order->user)
-            ->post(route('reservation.invitation.remind', ['reservation' => $item]))
-            ->assertSessionMissing('reminder_text');
+        $vuelta = $this->actingAs($item->order->user)->post(route('reservation.invitation.remind', ['reservation' => $item]));
+        $this->assertStringStartsNotWith('https://wa.me/', (string) $vuelta->headers->get('Location'), 'lo que ya pasó no se recuerda');
 
         $this->assertNull($invitation->refresh()->reminded_at);
         $this->assertSame(0, (int) $invitation->reminded_count);
     }
 
     // ─── Fixture ─────────────────────────────────────────────────────────────────────
+
+    /** El recordatorio va a WhatsApp con el mensaje escrito (F8, `#753`): devuelve ese mensaje. */
+    private function assertToWhatsApp(TestResponse $response): string
+    {
+        $response->assertRedirect();
+        $destino = (string) $response->headers->get('Location');
+        $this->assertStringStartsWith('https://wa.me/?text=', $destino);
+
+        return rawurldecode(substr($destino, strlen('https://wa.me/?text=')));
+    }
 
     private function reply(OrderItem $item, string $childName, bool $attending = true): InvitationReply
     {

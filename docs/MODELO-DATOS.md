@@ -262,7 +262,9 @@ Una fila = **una reserva de cumpleaños que se puede compartir**
 el post-form y el justificante: un pedido puede llevar dos visitas en dos días, y a una fiesta se invita.
 `order_item_id` **unique**, FK **cascade** · `token` char(12) **unique** · `theme`(16) · `honoree_name`(60) ·
 `honoree_age` tinyint nullable · `host_line`(80) · `show_host_phone` · `reminded_at` + `reminded_count`
-(el aviso de la víspera, idempotente por reserva) · timestamps.
+(el aviso de la víspera, idempotente por reserva) · `shared_at` timestamp nullable (F8, `fiesta-sistema-nuevo.md`
+§4.14, `#753`: el PRIMER envío o recordatorio —la lista ya no lo deduce—; cuántos y por qué canal son hechos de la
+reserva, `invitation_shared`) · timestamps.
 ⚠️ **El enlace es un token OPACO de 12 base62 (~71 bits)**, no una firma temporal de Laravel (200
 caracteres, imposible de teclear y confundible con la credencial del anfitrión) ni una ruta legible como
 `/i/lucia-8`, que sería adivinable y publicaría el nombre y la edad de un menor en la URL. **Se rota**

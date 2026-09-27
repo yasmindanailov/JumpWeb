@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.43.0
+  version: 1.44.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -1800,6 +1800,63 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
+  /reservations/{reservation}/invitation/shares:
+    post:
+      tags: [Reservas]
+      operationId: recordInvitationShare
+      summary: La invitación salió (una MEDIDA del envío)
+      description: |
+        **1.44.0** (`fiesta-sistema-nuevo.md` §4.14, `DECISIONES #753`). La app comparte el enlace de la invitación con lo que
+        tenga el teléfono y lo dice aquí, como los botones de la web: queda el hecho de la reserva (el canal) y, la primera
+        vez, `Invitation.shared_at`. La misma puerta que el formulario de invitados (firma o titularidad).
+
+        ⚠️ **204 también si la fiesta ya pasó o la reserva no tiene invitación**: es una medida, y un error aquí no le
+        enseña nada útil a quien acaba de compartir. Con su propio cupo: compartir no gasta el de guardar.
+      parameters:
+        - name: reservation
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [via]
+              properties:
+                via:
+                  type: string
+                  enum: [whatsapp, copy, other]
+                  description: '`other`: la hoja de compartir del sistema o un canal que la app no distingue.'
+      responses:
+        '204':
+          description: Apuntado (o nada que apuntar).
+        '403':
+          description: Ni firma válida ni titularidad (`unauthorized`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '410':
+          description: El titular ejerció su derecho de supresión y el canal queda cerrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
         '429':
           $ref: '#/components/responses/TooManyRequests'
         '503':
@@ -7036,7 +7093,7 @@ components:
             Es el mismo hallazgo de `DECISIONES #27`, que `AccountContext.next_reservation` y
             `extras_invite` ya pagaron, y se resuelve igual. Que las dos definiciones no diverjan lo
             vigila `ApiContractTest`.
-          required: [url, token, theme, honoree_name, honoree_age, host_line, family_words, gift_hints, show_host_phone, shareable, replies_yes, replies_no, replies_pending, pending_replies]
+          required: [url, token, theme, honoree_name, honoree_age, host_line, family_words, gift_hints, show_host_phone, shareable, shared_at, replies_yes, replies_no, replies_pending, pending_replies]
           additionalProperties: false
           properties:
             url:
@@ -7070,6 +7127,10 @@ components:
               type: boolean
             shareable:
               type: boolean
+            shared_at:
+              type: string
+              format: date-time
+              nullable: true
             replies_yes:
               type: integer
             replies_no:
@@ -7251,7 +7312,7 @@ components:
         ⚠️ No la confundas con `InvitationCard`, que es lo que ve un desconocido: **aquélla no lleva
         ni una respuesta**, y ésta sí. Son dos objetos distintos a propósito y no dos vistas del
         mismo, porque el día que alguien añada un campo aquí no puede filtrarse allí por descuido.
-      required: [url, token, theme, honoree_name, honoree_age, host_line, family_words, gift_hints, show_host_phone, shareable, replies_yes, replies_no, replies_pending, pending_replies]
+      required: [url, token, theme, honoree_name, honoree_age, host_line, family_words, gift_hints, show_host_phone, shareable, shared_at, replies_yes, replies_no, replies_pending, pending_replies]
       additionalProperties: false
       properties:
         url:
@@ -7302,6 +7363,13 @@ components:
           description: |
             ⚠️ Sigue siendo `true` **pasado el plazo de respuestas**: la información de la fiesta hace
             falta justo el día de la fiesta. Lo que el plazo cierra son las respuestas, no el enlace.
+        shared_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: |
+            **1.44.0** (`fiesta-sistema-nuevo.md` §4.14, `DECISIONES #753`). Cuándo SALIÓ por primera vez: un envío
+            (`POST /reservations/{reservation}/invitation/shares` o un botón de la web) o un recordatorio. `null`, todavía no.
         replies_yes:
           type: integer
         replies_no:

@@ -286,9 +286,48 @@ class PartiesReportTest extends TestCase
         $this->seedJune();
         $r = PartiesReport::for($this->june());
 
-        $this->assertSame(['with' => 1, 'views' => 3, 'viewed' => 1, 'replies_yes' => 2, 'replies_no' => 1, 'with_reply' => 1, 'adopted' => 1, 'calendar' => 1], $r['invitations']);
+        // ▶ Desde F8 (`#753`), además, los envíos y los canales (su caso propio, abajo). Aquí: salió porque alguien la vio.
+        $sinCanal = ['wa' => 0, 'copia' => 0, 'rec' => 0];
+        $this->assertSame([
+            'with' => 1, 'shared' => 1, 'shares_whatsapp' => 0, 'shares_copy' => 0, 'shares_other' => 0, 'shares_number' => 0,
+            'reminders' => 0, 'views_by_channel' => $sinCanal, 'replies_by_channel' => $sinCanal,
+            'views' => 3, 'viewed' => 1, 'replies_yes' => 2, 'replies_no' => 1, 'with_reply' => 1, 'adopted' => 1, 'calendar' => 1,
+        ], $r['invitations']);
         $this->assertSame(['marked' => 1, 'openings' => 2, 'opened' => 1, 'signed' => 1, 'signatures' => 1, 'from_invitation' => 1], $r['authorizations']);
         $this->assertSame(['opened' => 2, 'completed' => 1, 'on_time' => 1, 'on_time_bp' => 10000, 'cutoff_hours' => app(GuestCountPolicy::class)->cutoffHours()], $r['forms']);
+    }
+
+    /**
+     * F8 (`fiesta-sistema-nuevo.md` §4.14, `#753`): cuántas SALIERON —por `shared_at` o porque alguien ya la vio—, por qué
+     * botón (y aparte «Invitar a más», a prueba), los recordatorios, y las vistas y respuestas por el canal del enlace.
+     */
+    public function test_the_shares_the_reminders_and_the_channels_come_from_their_facts(): void
+    {
+        $this->seedJune();
+        $lucia = $this->parties['2026-06-06'];
+        $mateo = $this->parties['2026-06-20'];
+        // Mateo: enviada y todavía sin visitas (solo la columna lo sabe).
+        DB::table('party_invitations')->where('id', $this->invitation($mateo))->update(['shared_at' => '2026-06-10 10:00:00']);
+        $this->fact($lucia, 'invitation_shared', ['via' => 'whatsapp', 'where' => 'invitation']);
+        $this->fact($lucia, 'invitation_shared', ['via' => 'copy', 'where' => 'invitation']);
+        $this->fact($lucia, 'invitation_shared', ['via' => 'whatsapp', 'where' => 'number']);
+        $this->fact($lucia, 'invitation_shared', ['via' => 'other', 'where' => 'app']);
+        $this->fact($lucia, 'invitation_reminded', ['listed' => false]);
+        $this->fact($lucia, 'invitation_viewed', ['days_before' => 3, 'channel' => 'wa']);
+        $this->fact($lucia, 'invitation_viewed', ['days_before' => 3, 'channel' => 'rec']);
+        $this->fact($lucia, 'invitation_replied', ['attending' => 'yes', 'channel' => 'wa']);
+        // Un canal fuera de la lista no se cuenta (el contrato ya no lo deja entrar; aquí se escribe a mano).
+        $this->fact($lucia, 'invitation_replied', ['attending' => 'yes', 'channel' => 'otro']);
+
+        $r = PartiesReport::for($this->june());
+        $i = $r['invitations'];
+
+        $this->assertSame(2, $i['shared'], 'Lucía porque la vieron, Mateo por su `shared_at`');
+        $this->assertSame([2, 1, 1, 1, 1], [$i['shares_whatsapp'], $i['shares_copy'], $i['shares_other'], $i['shares_number'], $i['reminders']]);
+        $this->assertSame(['wa' => 1, 'copia' => 0, 'rec' => 1], $i['views_by_channel']);
+        $this->assertSame(['wa' => 1, 'copia' => 0, 'rec' => 0], $i['replies_by_channel']);
+        $paso = collect($r['funnel'])->firstWhere('step', 'invitation_shared');
+        $this->assertSame(2, $paso['reached'] ?? null, 'el paso del embudo, entre «con invitación» y «vista»');
     }
 
     public function test_the_timing_is_in_park_days_with_its_medians_and_histogram(): void

@@ -235,7 +235,8 @@ final class AntesDeVenir
         $enLaLista = $lista.'#gf-invite';
 
         $inv = $this->invitaciones->existingFor($reserva);
-        $enlace = $inv !== null && $this->invitaciones->isShareable($reserva, $inv) ? $this->invitaciones->shareUrlFor($inv) : null;
+        // Con el canal `wa`, como el de la lista (F8, `#753`): el MISMO mensaje, y la visita sabe que vino de WhatsApp.
+        $enlace = $inv !== null && $this->invitaciones->isShareable($reserva, $inv) ? $this->invitaciones->shareUrlFor($inv, 'wa') : null;
         $accion = $inv !== null && $enlace !== null
             ? ['label' => __($t.'boton'), 'url' => 'https://wa.me/?text='.rawurlencode($this->mensaje($reserva, $inv, $enlace)), 'via' => 'whatsapp']
             : ['label' => __($t.'crear'), 'url' => $enLaLista, 'via' => 'link'];

@@ -137,21 +137,36 @@ class PartiesBreakdownWidget extends Widget
     }
 
     /**
-     * @param  array<string, int>  $i
+     * ▶ F8 (`fiesta-sistema-nuevo.md` §4.14, `#753`): cuántas salieron y por qué botón —«Invitar a más» aparte, que está a
+     * prueba—, los recordatorios, y las vistas y las respuestas por el canal del enlace que las trajo.
+     *
+     * @param  array<string, mixed>  $i
      * @param  array<string, int>  $a
      * @return array{heading: string, columns: list<string>, rows: list<list<string>>}
      */
     private function invitationAndAuthorization(array $i, array $a): array
     {
         $row = static fn (string $key, int $value): array => [__('admin.analytics.parties.row.'.$key), (string) $value];
+        $porCanal = static fn (string $key, array $cuentas): array => array_map(
+            static fn (string $canal): array => [__('admin.analytics.parties.row.'.$key, ['canal' => __('admin.analytics.parties.channel.'.$canal)]), (string) ($cuentas[$canal] ?? 0)],
+            PartiesReport::CHANNELS,
+        );
 
         return [
             'heading' => __('admin.analytics.parties.invitation_heading'),
             'columns' => [__('admin.analytics.parties.col.what'), __('admin.analytics.parties.col.count')],
             'rows' => [
                 $row('with_invitation', $i['with']),
+                $row('shared', $i['shared']),
+                $row('shares_whatsapp', $i['shares_whatsapp']),
+                $row('shares_copy', $i['shares_copy']),
+                $row('shares_other', $i['shares_other']),
+                $row('shares_number', $i['shares_number']),
+                $row('reminders', $i['reminders']),
                 $row('invitation_views', $i['views']),
+                ...$porCanal('views_channel', $i['views_by_channel']),
                 $row('invitation_viewed', $i['viewed']),
+                ...$porCanal('replies_channel', $i['replies_by_channel']),
                 $row('replies_yes', $i['replies_yes']),
                 $row('replies_no', $i['replies_no']),
                 $row('adopted', $i['adopted']),

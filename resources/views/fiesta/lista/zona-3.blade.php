@@ -18,6 +18,11 @@
         $c['sin_contestar'] > 0 ? __('fiesta.lista.numero.anadidos', ['count' => $c['sin_contestar']]) : '',
     ]));
     $lista = count($partes) > 1 ? implode(', ', array_slice($partes, 0, -1)).__('fiesta.lista.numero.y').end($partes) : ($partes[0] ?? '');
+    // «Invitar a más» (F8, `#753`): el mismo envío que la invitación, aquí porque es donde se decide el número. Con plazas
+    // libres, siempre que las respuestas sigan abiertas; con «Seréis N», solo si el número aún puede SUBIR (el tope del
+    // pack: invitar a quien no cabe es lo contrario de convertir; el aforo lo revalida el «Sí» de F4 bajo el lock).
+    $invitar = $m['invitacion'] !== null && $m['invitacion']['respuestas_abiertas'];
+    $puedeSubir = $num['techo'] === null || $num['valor'] < $num['techo'];
 @endphp
 <section class="pli-zona" data-zona="3" aria-labelledby="pli-h-numero" data-numero>
     <div class="pli-cab-z">
@@ -41,8 +46,8 @@
                     <p class="pli-sub" data-numero-tienes>{{ __('fiesta.lista.numero.tienes', ['plazas' => $num['valor'], 'lista' => $num['en_lista']]) }}</p>
                 </div>
                 <div class="pli-acciones" style="margin-top: 16px;">
-                    @if ($m['invitacion'] !== null && $m['invitacion']['respuestas_abiertas'])
-                        <x-pieza.boton variant="secondary" size="sm" :href="$m['invitacion']['whatsapp']" target="_blank" rel="noopener noreferrer"><x-slot:izquierda><x-lucide name="message-circle" :size="17" /></x-slot:izquierda>{{ __('fiesta.lista.numero.invitar') }}</x-pieza.boton>
+                    @if ($invitar)
+                        <x-pieza.boton variant="secondary" size="sm" :href="$m['invitacion']['whatsapp']" target="_blank" rel="noopener noreferrer" data-envio="whatsapp" data-envio-donde="number" data-invitar-mas><x-slot:izquierda><x-lucide name="message-circle" :size="17" /></x-slot:izquierda>{{ __('fiesta.lista.numero.invitar') }}</x-pieza.boton>
                     @endif
                     <x-pieza.boton variant="ghost" size="sm" data-numero-cambiar><x-slot:izquierda><x-lucide name="pencil" :size="16" /></x-slot:izquierda>{{ __('fiesta.lista.numero.cambiar') }}</x-pieza.boton>
                 </div>
@@ -50,9 +55,9 @@
             {{-- IGUAL: «Seréis N.» --}}
             <div data-numero-estado="listo"{!! $oculto('listo') !!}>
                 <div class="pli-fila-num" style="margin-top: 16px;"><p class="pli-frase ok"><x-lucide name="circle-check" :size="20" /><span data-numero-listo>{{ __('fiesta.lista.numero.listo', ['n' => $num['valor']]) }}</span></p><x-pieza.boton variant="ghost" size="sm" data-numero-cambiar><x-slot:izquierda><x-lucide name="pencil" :size="16" /></x-slot:izquierda>{{ __('fiesta.lista.numero.cambiar') }}</x-pieza.boton></div>
-                @if ($m['invitacion'] !== null && $m['invitacion']['respuestas_abiertas'])
+                @if ($invitar && $puedeSubir)
                     {{-- Como el diseño: `target="_blank"` a secas, sin la cola de `external` (la flecha es de «Cómo llegar»). --}}
-                    <div style="margin-top: 16px;"><x-pieza.enlace size="sm" :href="$m['invitacion']['whatsapp']" target="_blank" rel="noopener noreferrer"><x-slot:icono><x-lucide name="message-circle" :size="15" /></x-slot:icono>{{ __('fiesta.lista.numero.alguien_mas') }}</x-pieza.enlace></div>
+                    <div style="margin-top: 16px;"><x-pieza.enlace size="sm" :href="$m['invitacion']['whatsapp']" target="_blank" rel="noopener noreferrer" data-envio="whatsapp" data-envio-donde="number" data-invitar-mas><x-slot:icono><x-lucide name="message-circle" :size="15" /></x-slot:icono>{{ __('fiesta.lista.numero.invitar') }}</x-pieza.enlace></div>
                 @endif
                 {{-- F5 (`PliZona3`): los padres también esperan. Depende de lo GUARDADO: si se fuera con el primer «+», toda la
                      zona 4 subiría bajo el dedo. --}}

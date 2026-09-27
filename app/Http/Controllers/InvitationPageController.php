@@ -91,7 +91,9 @@ class InvitationPageController extends Controller
         // ⚠️ Se vuelve a la página POR SU NOMBRE y no con `back()`: aquél depende del `Referer`, que lo
         // manda el cliente y puede no venir —un enlace abierto desde una app de mensajería suele
         // quitarlo—. Con `back()` el padre acababa en la portada sin saber si se había apuntado.
-        $volver = redirect()->route(PartyInvitations::PUBLIC_ROUTE, ['token' => $token]);
+        // El canal del enlace (F8, `#753`) sigue en la vuelta: si hay que repetir, la respuesta aún lo sabe.
+        $canal = PartyInvitations::channelOf($request->query(PartyInvitations::CHANNEL_PARAM));
+        $volver = redirect()->route(PartyInvitations::PUBLIC_ROUTE, ['token' => $token] + ($canal === null ? [] : [PartyInvitations::CHANNEL_PARAM => $canal]));
 
         if (! Turnstile::verify((string) $request->input('cf-turnstile-response'), (string) $request->ip())) {
             return $volver->with('invitation_status', 'antibot');
@@ -109,6 +111,7 @@ class InvitationPageController extends Controller
             $this->partyFact($request, $invitation->reservation, 'invitation_replied', [
                 'attending' => $data['attending'] === '1' ? 'yes' : 'no',
                 'companion' => (bool) ($outcome->reply->companion ?? false),
+                'channel' => $canal,
             ]);
         }
 
@@ -320,7 +323,10 @@ class InvitationPageController extends Controller
 
         // La analítica de la fiesta (`specs/analitica-fiesta.md` §4.2): una apertura, como hecho de la RESERVA
         // y sin visitante. Las vistas previas de los chats (robots) no cuentan.
-        $this->partyFact($request, $reservation, 'invitation_viewed');
+        // ▶ F8 (`fiesta-sistema-nuevo.md` §4.14, `#753`): con el CANAL del enlace que la trajo (`?c=`, lista cerrada), que
+        // sigue en la URL del formulario de respuesta para que la respuesta lo diga también.
+        $canal = PartyInvitations::channelOf($request->query(PartyInvitations::CHANNEL_PARAM));
+        $this->partyFact($request, $reservation, 'invitation_viewed', ['channel' => $canal]);
 
         $date = $reservation->slot?->date;
         $errores = $request->session()->get('errors');
@@ -345,7 +351,7 @@ class InvitationPageController extends Controller
             // El plazo, escrito en la barra («Confirma antes del viernes 25 a las 17:00»): el ÚNICO plazo de la
             // fiesta (`#766`), el mismo que gobierna las respuestas.
             'deadline' => app(GuestCountPolicy::class)->deadlineFor($reservation),
-            'replyAction' => route('invitation.reply', ['token' => $invitation->token]),
+            'replyAction' => route('invitation.reply', ['token' => $invitation->token] + ($canal === null ? [] : [PartyInvitations::CHANNEL_PARAM => $canal])),
             'error' => $errores instanceof ViewErrorBag ? (string) $errores->first('child_name') : '',
             'status' => $request->session()->get('invitation_status'),
             // ── Lo que se ve al PEGAR el enlace en un chat (§4.6, T5·4) ──

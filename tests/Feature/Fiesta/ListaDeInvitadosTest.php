@@ -42,12 +42,77 @@ class ListaDeInvitadosTest extends TestCase
         $this->assertStringContainsString('type="hidden" name="guests[0][notes]"', $html);
         $this->assertStringContainsString('type="hidden" name="guests[0][special_menu]"', $html);
         $this->assertStringNotContainsString('gf-form', $html, 'la vista vieja ya no se pinta');
-        // «Escribir el recordatorio» envía SU formulario (`form=`): un solo `type`, y es `submit` (la pieza `enlace`
-        // ponía `type="button"` delante y el navegador se quedaba con ése: no enviaba nunca, T1b).
-        $this->assertSame(1, preg_match('#<button[^>]*data-recordatorio-escribir[^>]*>#', $html, $boton), 'el recordatorio es un botón');
+    }
+
+    /**
+     * F8 (`fiesta-sistema-nuevo.md` §4.14, `#753`): **una acción por tarea**. Enviar es UN botón, el mismo antes y después;
+     * las cifras son un resumen (no filtran); el recordatorio sale junto a ellas solo con la invitación ENVIADA y alguien
+     * de la lista sin contestar, y abre WhatsApp en una pestaña nueva; «Invitar a más», un solo rótulo.
+     */
+    public function test_one_action_per_task_and_the_figures_are_a_summary(): void
+    {
+        ['reservation' => $reservation, 'invitation' => $invitation, 'host' => $host] = $this->mountParty();
+        $reservation->forceFill(['guest_data' => [['name' => 'Ana Soler'], ['name' => 'Iris Vela']]])->save();
+        $html = fn (): string => $this->actingAs($host)->get(route('reservation.guests', ['reservation' => $reservation]))->assertOk()->getContent();
+
+        // Sin enviar todavía: ni cifras ni recordatorio (antes se ofrecía recordar una invitación que no había salido).
+        $antes = $html();
+        $this->assertSame(1, substr_count($antes, 'data-envio="whatsapp" data-envio-donde="invitation"'), 'enviar: un botón');
+        $this->assertStringContainsString(e(__('fiesta.lista.enviar')), $antes);
+        $this->assertStringNotContainsString('data-recordatorio-escribir', $antes);
+        $this->assertStringNotContainsString('pli-tally', $antes);
+
+        // Enviada: el MISMO botón, las cifras sin botón y el recordatorio con su formulario.
+        $invitation->forceFill(['shared_at' => now()])->save();
+        $despues = $html();
+        $this->assertSame(1, substr_count($despues, 'data-envio="whatsapp" data-envio-donde="invitation"'), 'el mismo, antes y después');
+        $this->assertStringNotContainsString('data-filtro', $despues, 'las cifras ya no filtran');
+        $this->assertSame(0, preg_match('#<button[^>]*class="pli-cuenta#', $despues), 'las cifras no son botones');
+        $this->assertStringContainsString(e(trans_choice('fiesta.lista.recordar', 2, ['count' => 2])), $despues, 'recordar a los 2 sin contestar');
+        // Un solo `type`, y es `submit` (T1b), con su formulario, que abre una pestaña NUEVA (va a WhatsApp).
+        $this->assertSame(1, preg_match('#<button[^>]*data-recordatorio-escribir[^>]*>#', $despues, $boton), 'el recordatorio es un botón');
         $this->assertSame(1, substr_count($boton[0], 'type='), $boton[0]);
         $this->assertStringContainsString('type="submit"', $boton[0]);
         $this->assertStringContainsString('form="fiesta-recordatorio"', $boton[0]);
+        $this->assertMatchesRegularExpression('#<form[^>]*id="fiesta-recordatorio"[^>]*target="_blank"#', $despues);
+        // El enlace de cada canal dice su canal.
+        $this->assertStringContainsString(rawurlencode('?c=wa'), $despues, 'el de WhatsApp');
+        $this->assertStringContainsString('data-valor="'.e(route('invitation.show', ['token' => $invitation->token, 'c' => 'copia'])).'"', $despues, 'el copiado');
+        $this->assertStringContainsString('data-envio-url=', $despues, 'a dónde avisan los botones');
+
+        // CONTROL del recordatorio: con todos contestados no hay a quién recordar.
+        $this->replyOf($invitation, $reservation, 'Ana Soler');
+        $this->replyOf($invitation, $reservation, 'Iris Vela');
+        $this->assertStringNotContainsString('data-recordatorio-escribir', $html());
+    }
+
+    public function test_invite_more_only_while_the_number_can_still_grow(): void
+    {
+        ['reservation' => $reservation, 'invitation' => $invitation, 'host' => $host] = $this->mountParty();
+        $invitation->forceFill(['shared_at' => now()])->save();
+        $tope = (int) $reservation->ticketType->max_qty;
+        // ⚠️ La zona 3 lleva sus TRES estados en el HTML (el JS enseña el que toca): se mira DENTRO del bloque de cada uno.
+        // Medido: contar en la página entera daba 4 (dos bloques, y la marca sale `data-invitar-mas="data-invitar-mas"`).
+        $bloque = function (string $estado) use ($host, $reservation): string {
+            $html = $this->actingAs($host)->get(route('reservation.guests', ['reservation' => $reservation]))->assertOk()->getContent();
+            $this->assertSame(1, preg_match('#data-numero-estado="'.$estado.'"(.*?)data-numero-estado=#s', $html, $m), "el bloque «{$estado}»");
+
+            return $m[1];
+        };
+
+        // «Seréis N» por debajo del tope: se puede invitar a más, con el MISMO rótulo que con plazas libres.
+        $reservation->forceFill(['quantity' => 2, 'seats' => 2, 'guest_data' => [['name' => 'Ana'], ['name' => 'Iris']]])->save();
+        $listo = $bloque('listo');
+        $this->assertStringContainsString('data-invitar-mas', $listo);
+        $this->assertStringContainsString(e(__('fiesta.lista.numero.invitar')), $listo, 'un solo rótulo');
+        $this->assertStringContainsString('data-invitar-mas', $bloque('libres'));
+
+        // En el tope: invitar a quien no cabe es lo contrario de convertir.
+        $llena = array_map(static fn (int $i): array => ['name' => 'Niño '.$i], range(1, $tope));
+        $reservation->forceFill(['quantity' => $tope, 'seats' => $tope, 'guest_data' => $llena])->save();
+        $this->assertStringNotContainsString('data-invitar-mas', $bloque('listo'), "con {$tope} de {$tope}, no");
+        // CONTROL: el bloque de las plazas libres lo sigue teniendo (quitar a alguien deja una plaza que llenar).
+        $this->assertStringContainsString('data-invitar-mas', $bloque('libres'));
     }
 
     public function test_a_pending_reply_is_proposed_on_its_row_with_the_badge_and_the_adopt_id(): void

@@ -750,6 +750,49 @@ cumple a la de su hijo (movería el suplemento de edades: dinero); firmar hijos 
 | **F7b** ✅ | La lista y el justificante de quien cumple (27-09, visto por el owner en vivo: «muy bien»): su fila lee la COBERTURA (se retira `cumpleFirmado()`, el nombre solo preselecciona) y el justificante de quien cumple ya no firma a un invitado de su nombre; «Firmada · Falta» solo en `interno`; bajo su fila, `fiesta/lista/firma-cumple` (un `<details>`): «Sí, soy su padre, madre o tutor» —con la sesión del titular, sus hijos o uno nuevo y la casilla, a `HonoreeWaiverController` (su propio POST, EXIGE la sesión aunque llegue firmado; sin correo verificado, lo dice antes de escribir); sin ella, «Entrar y firmarlo en mi cuenta» y «Firmarlo aquí»— y «No, que lo firme su familia» (copiar y WhatsApp); la página del justificante con `para=cumple` (titular, nota, casilla sin «a cargo de», sin «llena»). ⚠️ Medido al escribirlo: la regla de la puerta (`usesGuardianAuthorization()`) escondía firmas reales del recibo; la de la lista es el modo interno. `x-pieza.casilla` gana `form` (a la `input`). | `ExencionDeQuienCumpleWebTest` 9 (el POST firmado sin sesión: sin él, quitar esa comprobación no lo cazaba nada) · `QuienCumpleFilaTest` (el nombre ya no firma: su control) · la sonda `sonda-f7.mjs` (sin sesión a 390 y 1280 y sin JS; con sesión, Noa preseleccionada, firmada y «Firmada»; su justificante firmado con la fiesta llena) · arnés · banco. |
 | **F7c** ✅ | La puerta, la víspera y la API (27-09, visto por el owner en vivo), como dice el párrafo de arriba. ⚠️ Visto por la sonda y no por la suite: en la tablet, la fila de quien cumple (con «su cumple») encogía y cortaba las pastillas («firm…»): `.gate-minor` salta de línea. | `GateHonoreeTest` 10 (sin cubrir, por su hijo, por su justificante, los dos homónimos, la respuesta homónima, sin sello y sin consulta, el presupuesto, fuera de `interno`, la pantalla) · `VisitEveNoticeTest` +3 · `HonoreeWaiverApiTest` 6 (contra el contrato) · `ApiContractTest` (la copia vigilada) · **arnés 55: 54 en la pasada; el superviviente —una firma de OTRA ruta ya no valía aquí— llevó el caso de una firma VÁLIDA de esta ruta, visto morder a mano** · `sonda-f7c.mjs` (la puerta a 1024 y 390; el correo de Mailpit) · suite 6255. |
 
+### 4.14 F8 · Una acción por tarea para la invitación, sin filtro, y cada envío medido (`[DECIDIDO owner]` `#753`, 27-09) ✅
+
+**Lo medido (27-09, en el código)**: cinco rótulos para DOS tareas —«Compartir por WhatsApp»/«Reenviar la invitación»,
+«Copiar el enlace» e «Invitar a más»/«Invitar a alguien más» mandan el MISMO enlace con el mismo mensaje (el mockup lo
+dice: `waDe`); solo «Escribir el recordatorio» es otro mensaje, abajo, tras Guardar, en dos pasos (escribir y copiar)—;
+las tres cifras eran BOTONES que filtraban la lista (escondían a quien cumple y bajaban la página) sin parecerlo; la
+página no sabía si la invitación había salido (lo DEDUCE de respuestas o recordatorios: los enlaces de WhatsApp no dejan
+rastro) y ofrecía el recordatorio antes de enviarla; «Invitar a alguien más» salía con el número en el tope del pack; y
+nada de esto se medía (no hay hecho del envío). **El qué (owner)**: menos, cada una con su objetivo —claridad y conversión
+(que inviten a más: más «sí» → la lista supera la reserva → «Sí» sube el número → niños de más y extras)— y medidas.
+
+**F8a · La página.** (1) **Las cifras, resumen**: texto, sin botón ni filtro; se retiran el chip «Ver todos» y «Nadie en
+este grupo» (hasta 50 niños: «Por repasar» arriba y «No vienen» al final ya ordenan). (2) **Enviar**: en la invitación,
+«Enviar por WhatsApp» como único primario, el MISMO rótulo antes y después; «Copiar el enlace» discreto (otros canales, el
+ordenador); se retira «Reenviar» de arriba. (3) **Recordar**: junto a las cifras y solo si alguien de la lista no ha
+contestado (y las respuestas siguen abiertas): «Recordárselo a los N que faltan» abre WhatsApp con el recordatorio escrito
+(su POST de siempre, que ahora REDIRIGE a WhatsApp en una pestaña nueva: sin copiar y pegar, y sin JavaScript también);
+«Nombrar a…» sigue opcional y desmarcado (señalar familias en el chat de la clase lo decide quien organiza; si se
+marca, los nombres viajan en el enlace de WhatsApp, que es su destino, y nunca en una URL nuestra); «Lo escribiste…»
+se queda como nota corta. Se retiran el bloque de abajo, su panel y «Copiar el mensaje». (4) **Invitar a más**: un rótulo,
+solo en «El número», con plazas libres o con «Seréis N» si el número aún puede subir (por debajo del tope del pack; el
+aforo lo revalida el «Sí» de F4 bajo el lock, como siempre); con respuestas cerradas, no.
+
+**F8b · Medirlo.** (1) **El envío es un hecho**: `invitation_shared` {`via`: `whatsapp`|`copy`, `where`: `invitation`|`number`}
+por un POST firmado que el botón manda al pulsarse (`sendBeacon`: el enlace de WhatsApp sigue DIRECTO, sin un salto por
+nuestro servidor); el recordatorio, `invitation_reminded` {`with_names`} desde su POST. (2) **La invitación sabe que
+salió**: `party_invitations.shared_at` (el primer envío o recordatorio); «compartida» = `shared_at` o respuestas.
+(3) **El canal viaja con el enlace**: `?c=wa|copia|rec` en lo que se envía; la página de la invitación lo pone en
+`invitation_viewed` y en el formulario de respuesta, y `invitation_replied` lo lleva (lista cerrada; otro valor, nada).
+(4) **El informe de fiestas**: el paso «Enviaron la invitación» en el embudo (tras «Activaron la invitación») y los envíos,
+vistas y respuestas por canal. Los resultados a seguir ya están casi todos (respuestas, «sí», invitados añadidos y lo
+cobrado en el parque): con esto se leen por canal. **F8c · La API**: la app registra su envío (`POST
+…/invitation/shares` {`via`}), y `Invitation` dice `shared_at` (contrato: el siguiente libre al empujar).
+
+⚠️ Sin cookies ni visitante (`#739`): hechos de la RESERVA, como el resto de la fiesta. «Invitar a más» queda A PRUEBA: si
+tras unos meses casi nadie lo usa (sus envíos con `where: number`), se quita.
+
+| Parte | Qué | Verificación |
+|---|---|---|
+| **F8a** ✅ | La página (27-09, aprobada por el owner: «buen trabajo»): las cifras son `<span>` (sin cursor ni «hover»); «Enviar por WhatsApp» único y siempre el mismo; «Recordárselo a los N que faltan» (de CONTORNO: el único principal es enviar) con «Nombrar…» y «Lo escribiste…», solo enviada y con alguien sin contestar, a WhatsApp en una pestaña nueva (`redirect()->away`); «Invitar a más» un rótulo, con el tope; fuera el panel de abajo, el filtro y sus textos. ⚠️ La zona 3 lleva sus TRES estados en el HTML: una prueba que cuente en la página entera no mide nada (medido: 4). | `ListaDeInvitadosTest` +2 · `InvitationReminderTest` (a WhatsApp, su hecho, `shared_at`) · arnés `mutar-envio-invitacion.sh` **28/28** · `sonda-f8.mjs` (390, 1280 y sin JS; a WhatsApp sin y con nombres). |
+| **F8b** ✅ | Los hechos (`invitation_shared` {via, where}, `invitation_reminded` {listed}), `shared_at` (el primero), el canal `?c=` en la visita y la respuesta, su cupo propio (`throttle:…,invitation-share`) y el informe (el paso «Enviada» y las filas por canal). ⚠️ `with_names` era una prop con pinta de dato personal para la guarda (`name`): `listed`. | `EnvioDeLaInvitacionTest` 6 (el cupo: 35 envíos y el Guardar sigue) · `PartiesReportTest` +1 · `FocusedPagesAreCookieFreeTest` (18 rutas) · arnés · la sonda: ⚠️ **«HeadlessChrome» es un robot** y no deja hechos (la sonda va como iPhone), y **Playwright no ve el destino de una redirección** (se lee el `Location` del POST). |
+| **F8c** ✅ | La API 1.44.0 (la 1.43.0 la tomó plataforma, `#788`): `POST /reservations/{id}/invitation/shares` {via} (`where: app`) y `Invitation.shared_at` (en el componente y en su copia vigilada). | `InvitationApiTest` +1 contra el contrato · `ApiContractTest` · arnés. |
+
 ## 5. Impacto en invariantes
 
 | ID | Cómo |

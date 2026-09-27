@@ -300,6 +300,12 @@ Route::withoutMiddleware([ResolveVisitor::class.':'.ResolveVisitor::MINT])->grou
         ->middleware(['throttle:30,1', 'throttle:guest-form', 'no-store'])
         ->missing(fn () => abort(403))
         ->name('reservation.invitation.remind');
+    // «La invitación salió» (F8, `fiesta-sistema-nuevo.md` §4.14, `#753`): lo mandan al pulsarse «Enviar por WhatsApp»,
+    // «Copiar el enlace» e «Invitar a más». ⚠️ Con su PROPIO cupo (prefijo): el de guardar no puede gastarse copiando.
+    Route::post('/reserva/{reservation}/invitacion/envio', [GuestFormController::class, 'recordShare'])
+        ->middleware(['throttle:60,1,invitation-share', 'no-store'])
+        ->missing(fn () => abort(403))
+        ->name('reservation.invitation.share');
     // EL DESCARGO DE QUIEN CUMPLE por el camino de la cuenta (`fiesta-sistema-nuevo.md` §4.13, `#752`): el titular ata a su
     // hijo a cargo y firma. ⚠️ Su propio POST, como sus hermanas (no escribe `guest_data`); la misma puerta y los mismos
     // limitadores, y además EXIGE la sesión del titular dentro (`HonoreeWaiverController`): el enlace firmado no basta.

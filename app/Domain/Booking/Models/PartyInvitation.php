@@ -102,6 +102,8 @@ class PartyInvitation extends Model
         'show_host_phone' => 'boolean',
         'reminded_at' => 'datetime',
         'reminded_count' => 'integer',
+        // F8 (`#753`): el primer envío o recordatorio (`PartyInvitations::markShared()`).
+        'shared_at' => 'datetime',
     ];
 
     /**

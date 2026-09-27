@@ -2,11 +2,11 @@
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb` a secas; la instancia al lado, en
 > `~/proyectos/instancias/playjump`, clon de `github.com/yasmindanailov/instancia-playjump`, montada el 25-09) ·
-> Banda: **730–759** (700–729 agotada el 20-09) · Último usado: **`#752`** · La banda está dada de alta en la tabla de
+> Banda: **730–759** (700–729 agotada el 20-09) · Último usado: **`#753`** · La banda está dada de alta en la tabla de
 > `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: **`isla-y-landing-nueva.md`
 > §4.11 «El traspaso al SPA»** (la tarea en curso, `#765`) · `celebracion-e-invitacion.md` §0 · `waiver-por-reserva.md` §0 ·
 > `encuestas.md` §0 · `analitica-fiesta.md` §0 · `analitica.md` §0 y §4.5 · `google-business-profile.md` §0 ·
-> `sidebar-spa.md` §0 · Actualizado: 2026-09-27 (F7 entera, vista por el owner; sigue F8, `#753`).
+> `sidebar-spa.md` §0 · Actualizado: 2026-09-27 (F7 y F8 enteras, vistas por el owner).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`). El
 > contador de la suite va en el trailer del commit (`#618`), no aquí. **Se muda, no se raspa**: el detalle de
 > una feature baja a su spec (las trampas por tanda de la analítica T1→T5 viven en `analitica.md` §4.9,
@@ -20,8 +20,8 @@
   §4.6, §7). ⚠️ **El zip entra SOLO por plataforma** y llega con `git pull` de la instancia (`cd diseno && sha256sum -c`).
 - ✅ **F7, LA EXENCIÓN DE QUIEN CUMPLE (`#752`), ENTERA Y VISTA POR EL OWNER** (27-09, «muy bien»): la lista y su
   justificante; la puerta (primera de su fiesta, «su cumple»), la víspera y la API 1.42.0 (§4.13; arnés
-  `mutar-exencion-cumple.sh` 55). ▶ **Sigue F8 (`#753`, aprobada el 27-09)**: menos formas de enviar la invitación, sin el
-  filtro de las cifras y con cada envío medido (spec §4.14).
+  `mutar-exencion-cumple.sh` 55). ✅ **F8 (`#753`), aprobada por el owner (27-09)**: una acción por tarea
+  (enviar, recordar, invitar a más), las cifras sin filtro y cada envío medido (spec §4.14; arnés 28/28; `JW-OJO-F8`).
 - ✅ **Esta máquina, montada para la fiesta (25-09)**: la instancia clonada en `~/proyectos/instancias/playjump` (el
   diseño con su sha256 verificado), `INSTANCIA_RUTA=/var/www/instancias/playjump` en el `.env` (ruta DEL CONTENEDOR),
   `public/instancia/` copiado de `publico/instancia/` (ignorado por git); la receta entera, en Trampas vivas 🏠.
@@ -70,7 +70,8 @@
   respuestas «… Sonda…» 311→326, seis autorizaciones `avisame-sonda…@jumpweb.test` con sus `birthday_reminders` y sus
   correos en Mailpit; (12) **de F7 (27-09)**, `ojo-f7.php` (fuera de git; `OJO=desmontar` quita las tres): `JW-OJO-F7`
   (dentro de 5 días, Noa sin cubrir), y con `OJO=f7c` `JW-OJO-F7P` (HOY, Noa atada: la puerta) y `JW-OJO-F7V` (mañana, su
-  aviso de la víspera mandado solo a la cuenta de sondas); sondas `sonda-f7.mjs` y `sonda-f7c.mjs`. Y siguen montados el fixture «probe-ojo-analitica» (90 pedidos
+  aviso de la víspera mandado solo a la cuenta de sondas); sondas `sonda-f7.mjs` y `sonda-f7c.mjs`; (13) **de F8**:
+  `JW-OJO-F8` (`ojo-f8.php`, enviada, con respuestas; `OJO=desmontar`) y `sonda-f8.mjs`. Y siguen montados el fixture «probe-ojo-analitica» (90 pedidos
   `JW-OJO…`, 25 clientes, 506 sesiones) y el de reseñas «probe-ojo-resenas». ⚠️ **Plataforma dejó la local preparada para
   que el owner pruebe la ISLA** (24-09 noche, `694529a8`): `sidebar.shell = isla` por el panel, `public/_isla-prueba.html`,
   la invitación ENCENDIDA en los packs 105/106 — **«no deshacer sin él»**; el cajón local abre ahora en la isla.
@@ -91,7 +92,7 @@
    cuántas personas» en los complementos; la zona 4 como el mockup, el aviso de la tarta y «Guardado hoy a las…»; §4.11;
    arnés `mutar-extras-fiesta.sh` 42/42; visto por el owner en `JW-OJO-F5`) · **F6b ✅** (`#750`: «Tus respuestas» y
    «Avísame de fechas» con spec propia, `avisame-de-fechas.md`; y `hidden` que vuelve a ocultar SIN JavaScript, §4.12;
-   arnés `mutar-avisame-fiesta.sh` 42/42) · «¿Cuántas tartas?» ✅ (`#751`) · **F7 ✅** (`#752`, §4.13) · ❗ **F8** (`#753`, §4.14:
+   arnés `mutar-avisame-fiesta.sh` 42/42) · «¿Cuántas tartas?» ✅ (`#751`) · **F7 ✅** (`#752`, §4.13) · **F8 ✅** (`#753`, §4.14:
    una acción por tarea —enviar, recordar, invitar a más—, las cifras sin filtro y cada envío como hecho) → **la fiesta, en código**: queda el contrato de hojas de plataforma
    (`#769`: la página viva sale NEUTRA; el banco carga las hojas a mano) y la v2.0.0. Para el ojo: `JW-OJO-F3`
    (`ojo-f3.php`), `JW-OJO-F1` (1077; `/invitacion/WxYYnZkkNx7U`) y `JW-OJO-F5`. **Reglas en pie**: el suelo sin
@@ -232,8 +233,11 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 
 ## Buzón
 
-- ❗ **Para plataforma (27-09, F7, `#752`)**: leído tu aviso de la Z4 (atendido: nada tuyo toca la fiesta). El CONTRATO **1.42.0** es mío (tras tu 1.41.0 de la Z4):
-  `GuestForm.honoree_waiver` y `PUT /reservations/{id}/honoree-waiver`; tu siguiente, 1.43.0. Tocado lo tuyo, mínimo: en
+- ❗ **Para plataforma (27-09, F7 `#752` y F8 `#753`)**: leído tu aviso de la Z4 (atendido). Los CONTRATOS **1.42.0** (F7:
+  `GuestForm.honoree_waiver`, `PUT …/honoree-waiver`) y **1.44.0** (F8: `POST …/invitation/shares`, `Invitation.shared_at`; tras tu 1.43.0,
+  `#788`) son míos; tu siguiente, 1.45.0. F8 añade `party_invitations.shared_at` y un paso al informe de fiestas. ⚠️ Tu
+  `AntesDeVenir` (`#776`): una línea, su enlace con `?c=wa` (tu guarda de paridad lo pidió); su envío NO se mide: si
+  quieres, al pulsar, el `POST …/invitation/shares` {via: whatsapp}. Tocado lo tuyo, mínimo: en
   la puerta, `livewire/admin/puerta/validar.blade.php` (la pastilla «su cumple»), `.gate-minor` de
   `filament/admin/theme.css` (salta de línea: en tablet cortaba las pastillas) y dos claves en `lang/{es,zh_CN}/admin.php`;
   `x-pieza.casilla` gana `form`. Un contrato nuevo de Booking, `HonoreeWaivers` (binding en `AppServiceProvider`).

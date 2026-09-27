@@ -50,6 +50,8 @@ class InvitationResource extends JsonResource
             'gift_hints' => (string) $this->resource->gift_hints,
             'show_host_phone' => (bool) $this->resource->show_host_phone,
             'shareable' => $invitations->isShareable($this->reservation, $this->resource),
+            // F8 (`#753`, 1.44.0): cuándo SALIÓ por primera vez (un envío o un recordatorio); `null`, todavía no.
+            'shared_at' => $this->resource->shared_at?->toIso8601String(),
             'replies_yes' => $summary['yes'],
             'replies_no' => $summary['no'],
             'replies_pending' => $summary['pending'],

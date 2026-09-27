@@ -6,6 +6,7 @@ use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\PartyInvitation;
 use App\Domain\Booking\Services\PartyInvitations;
 use App\Http\Concerns\AuthorizesGuestForm;
+use App\Http\Concerns\RecordsPartyFacts;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\InvitationResource;
 use Illuminate\Http\JsonResponse;
@@ -32,6 +33,7 @@ use Illuminate\Http\Response;
 class InvitationHostController extends Controller
 {
     use AuthorizesGuestForm;
+    use RecordsPartyFacts;
 
     public function __construct(private readonly PartyInvitations $invitations) {}
 
@@ -97,6 +99,32 @@ class InvitationHostController extends Controller
         // toca aunque el id venga en esta URL.
         /** @var OrderItem $item */
         $this->invitations->dismiss($item, $reply);
+
+        return response()->noContent();
+    }
+
+    /**
+     * **La invitación SALIÓ desde la app** (F8c de `fiesta-sistema-nuevo.md` §4.14, `#753`): la app la comparte con lo que
+     * tenga el teléfono y lo dice aquí, como los botones de la web (`GuestFormController::recordShare()`). Deja el hecho de
+     * la reserva (`where: app`) y, la primera vez, `shared_at`.
+     *
+     * ⚠️ 204 también si la fiesta ya pasó o no hay invitación: es una MEDIDA, y un error aquí no le enseña nada útil a
+     * quien acaba de compartir.
+     */
+    public function share(Request $request, int $reservation): Response
+    {
+        $item = $this->resolveGuestFormReservation($reservation);
+
+        $this->authorizeGuestFormAccess($request, $item);
+
+        $data = $request->validate(['via' => ['required', 'string', 'in:whatsapp,copy,other']]);
+
+        /** @var OrderItem $item */
+        $invitation = $item->isFinishedInPractice() ? null : $this->invitations->existingFor($item);
+        if ($invitation !== null) {
+            $this->invitations->markShared($invitation);
+            $this->partyFact($request, $item, 'invitation_shared', ['via' => $data['via'], 'where' => 'app']);
+        }
 
         return response()->noContent();
     }

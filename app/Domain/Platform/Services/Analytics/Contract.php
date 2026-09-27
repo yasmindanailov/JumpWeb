@@ -77,8 +77,13 @@ final class Contract
         // `locale` salen de la petición (agregado). Ni nombres, ni correos, ni claves de un menor: `PII_KEYS` lo vigila.
         'guest_form_opened' => ['source' => self::SERVER, 'props' => ['reservation', 'days_before', 'device', 'locale']],
         'guest_form_submitted' => ['source' => self::SERVER, 'props' => ['reservation', 'days_before', 'guests_delta', 'extras_cents', 'replies_adopted']],
-        'invitation_viewed' => ['source' => self::SERVER, 'props' => ['reservation', 'days_before', 'device', 'locale']],
-        'invitation_replied' => ['source' => self::SERVER, 'props' => ['reservation', 'attending', 'companion', 'days_before']],
+        // ▶ F8 (`fiesta-sistema-nuevo.md` §4.14, `#753`): el `channel` es el del enlace que trajo a la familia
+        // (`PartyInvitations::CHANNELS`: `wa` · `copia` · `rec`), y el envío y el recordatorio del anfitrión son hechos.
+        'invitation_viewed' => ['source' => self::SERVER, 'props' => ['reservation', 'days_before', 'device', 'locale', 'channel']],
+        'invitation_replied' => ['source' => self::SERVER, 'props' => ['reservation', 'attending', 'companion', 'days_before', 'channel']],
+        'invitation_shared' => ['source' => self::SERVER, 'props' => ['reservation', 'via', 'where', 'days_before', 'device']],
+        // `listed`: si el recordatorio nombraba a los que faltan (un sí o un no; los nombres NO viajan).
+        'invitation_reminded' => ['source' => self::SERVER, 'props' => ['reservation', 'listed', 'days_before', 'device']],
         'invitation_calendar_downloaded' => ['source' => self::SERVER, 'props' => ['reservation', 'days_before']],
         'authorization_opened' => ['source' => self::SERVER, 'props' => ['reservation', 'via', 'days_before', 'device']],
         'authorization_signed' => ['source' => self::SERVER, 'props' => ['reservation', 'via', 'days_before', 'hours_since_open']],

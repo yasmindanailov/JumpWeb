@@ -53,6 +53,14 @@ final class PartyInvitations
      */
     public const PUBLIC_ROUTE = 'invitation.show';
 
+    /**
+     * Los CANALES por los que sale el enlace (F8, `#753`): WhatsApp, copiado y el recordatorio. Viajan como `?c=` y la
+     * página de la invitación los apunta en la visita y en la respuesta. Lista CERRADA: lo demás no se escribe.
+     */
+    public const CHANNELS = ['wa', 'copia', 'rec'];
+
+    public const CHANNEL_PARAM = 'c';
+
     /** La ruta del RECIBO, firmada y temporal (§4.5·6). */
     public const RECEIPT_ROUTE = 'invitation.receipt';
 
@@ -499,12 +507,44 @@ final class PartyInvitations
      * declarara su ruta en otro sitio, el anfitrión estaría repartiendo un enlace muerto y nadie se
      * enteraría. Preguntando por el NOMBRE de la ruta, el campo se rellena **solo** en cuanto exista,
      * sin que nadie tenga que acordarse de volver aquí.
+     *
+     * ▶ Desde F8 (`fiesta-sistema-nuevo.md` §4.14, `#753`) puede decir por qué CANAL salió (`?c=`, {@see CHANNELS}): la
+     * página de la invitación lo apunta en la visita y en la respuesta, y así se sabe qué envío trae familias. Un canal
+     * fuera de la lista no se escribe.
      */
-    public function shareUrlFor(PartyInvitation $invitation): ?string
+    public function shareUrlFor(PartyInvitation $invitation, ?string $channel = null): ?string
     {
-        return Route::has(self::PUBLIC_ROUTE)
-            ? route(self::PUBLIC_ROUTE, ['token' => (string) $invitation->token])
-            : null;
+        if (! Route::has(self::PUBLIC_ROUTE)) {
+            return null;
+        }
+        $params = ['token' => (string) $invitation->token];
+        if ($channel !== null && in_array($channel, self::CHANNELS, true)) {
+            $params[self::CHANNEL_PARAM] = $channel;
+        }
+
+        return route(self::PUBLIC_ROUTE, $params);
+    }
+
+    /**
+     * El canal que trae una petición a la página de la invitación (su `?c=`, o el campo del formulario de respuesta), o
+     * `null` si no trae ninguno de la lista. ⚠️ Lista CERRADA: es un dato que se escribe en los hechos.
+     */
+    public static function channelOf(mixed $value): ?string
+    {
+        return is_string($value) && in_array($value, self::CHANNELS, true) ? $value : null;
+    }
+
+    /**
+     * **La invitación SALIÓ** (F8, `#753`): el primer envío o recordatorio, en `shared_at`. Solo el primero —cuántos y
+     * por qué canal son hechos de la reserva— y, como `remind()`, escribe SOLO `party_invitations` (el testigo de los
+     * extras es `order_items.updated_at`). Sin carrera que importe: dos a la vez escriben la misma fecha o casi.
+     */
+    public function markShared(PartyInvitation $invitation): void
+    {
+        PartyInvitation::query()
+            ->whereKey($invitation->getKey())
+            ->whereNull('shared_at')
+            ->update(['shared_at' => now(), 'updated_at' => now()]);
     }
 
     /**
@@ -740,7 +780,8 @@ final class PartyInvitations
     public function reminderTextFor(OrderItem $reservation, bool $withNames): string
     {
         $invitation = $this->existingFor($reservation);
-        $url = $invitation === null ? null : $this->shareUrlFor($invitation);
+        // El enlace del recordatorio dice su canal (F8, `#753`): así se sabe cuántas respuestas trae.
+        $url = $invitation === null ? null : $this->shareUrlFor($invitation, 'rec');
 
         $honoree = trim((string) $invitation?->honoree_name);
         $lines = [$honoree !== ''
@@ -793,6 +834,8 @@ final class PartyInvitations
                     : DB::raw('reminded_count + 1'),
                 'updated_at' => now(),
             ]);
+        // Un recordatorio es un envío (F8, `#753`): la invitación ya salió.
+        $this->markShared($invitation);
 
         return $invitation->refresh();
     }

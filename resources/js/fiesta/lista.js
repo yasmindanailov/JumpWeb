@@ -4,10 +4,11 @@
  * El port a JavaScript plano de lo que `paginas/lista-invitados/estado.jsx` y las zonas hacen con React, sobre el
  * formulario POSICIONAL de siempre: el borrador en este móvil (sobrevive a cerrar la pestaña, se vacía al guardar),
  * las fichas que se abren y cierran, «Añadir a mano» y «Pegar una lista» (rellenan las fichas vacías, una detrás de
- * otra), «Quitar» con deshacer, las cifras que filtran, el número con «Cambiar», los − y + de las cantidades, la barra
- * de Guardar que dice en qué punto está, copiar el enlace y el recordatorio. La lógica pura vive en `logica.js`.
+ * otra), «Quitar» con deshacer, el número con «Cambiar», los − y + de las cantidades, la barra de Guardar que dice en
+ * qué punto está, copiar el enlace y avisar de que la invitación salió (F8). La lógica pura vive en `logica.js`.
  *
- * ⚠️ Nada de esto ESCRIBE: escribe el único Guardar, y lo que escribe es el formulario. Sin JavaScript el documento se
+ * ⚠️ Nada de esto ESCRIBE la lista: escribe el único Guardar, y lo que escribe es el formulario (el aviso de envío es
+ * una medida, por su propio POST). Sin JavaScript el documento se
  * queda en `no-js` (fichas abiertas, campos numéricos), que es un formulario completo (`#264`). La clase `js` se pone
  * AL FINAL: si algo de arriba falla, la página vuelve a `no-js` y nunca queda atascada.
  */
@@ -54,7 +55,7 @@ function cantidades(raiz, alCambiar) {
     });
 }
 
-/* ── Copiar (el enlace de la invitación, el recordatorio) ───────────────────────────────────────────────────────── */
+/* ── Copiar (el enlace de la invitación, el de su justificante) ─────────────────────────────────────────────────── */
 function copiar(texto) {
     try { if (navigator.clipboard && texto) return navigator.clipboard.writeText(texto).catch(() => {}); } catch { /* sin portapapeles */ }
 
@@ -155,7 +156,7 @@ function lista(form) {
         q('[data-fila-abrir]', fila)?.setAttribute('aria-expanded', si ? 'true' : 'false');
     };
     // La última fila VISIBLE de cada lista es la que va sin borde (el diseño calcula `last` sobre las que pinta): con
-    // las fichas vacías escondidas por `js` y con el filtro, la marca del servidor (la última posición) se mueve.
+    // las fichas vacías escondidas por `js`, la marca del servidor (la última posición) se mueve.
     const filaCumple = q('[data-fila][data-origen="cumple"]', form);
     const marcaUltimas = () => {
         [...new Set(filas().map((f) => f.parentElement))].forEach((ul) => {
@@ -370,28 +371,7 @@ function lista(form) {
         previa();
     }
 
-    // ── Las cifras filtran la lista ──
-    const chip = q('[data-filtro-chip]', form);
-    let filtro = null;
-    const categoria = (fila) => (fila.dataset.respuesta === 'si' ? 'confirmados' : fila.dataset.respuesta === 'no' ? 'no' : 'sin');
-    const filtra = (k) => {
-        filtro = filtro === k ? null : k;
-        qa('[data-filtro]', form).forEach((b) => { b.classList.toggle('on', b.dataset.filtro === filtro); b.setAttribute('aria-pressed', b.dataset.filtro === filtro ? 'true' : 'false'); });
-        let vistos = 0;
-        // Con un filtro, quien cumple se esconde: no es una respuesta (el `conCumple` del diseño).
-        filas().forEach((f) => { const oculta = filtro !== null && (f.dataset.origen === 'cumple' || categoria(f) !== filtro || f.classList.contains('fi-fila--vacia')); f.hidden = oculta; if (!oculta && !f.classList.contains('fi-fila--vacia')) vistos++; });
-        const nadie = q('[data-nadie]', form);
-        if (nadie) nadie.hidden = !(filtro !== null && vistos === 0);
-        if (chip) {
-            chip.hidden = filtro === null;
-            const et = q('[data-filtro-etiqueta]', chip);
-            if (et && filtro) et.innerHTML = `${t(`la_lista.filtro.${filtro}`, filtro)}<span class="pz-etiqueta__cuenta">${q(`[data-cuenta="${filtro}"]`, form)?.textContent ?? ''}</span>`;
-        }
-        marcaUltimas();
-        if (filtro !== null) q('[data-la-lista]', form)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    };
-    qa('[data-filtro]', form).forEach((b) => b.addEventListener('click', () => filtra(b.dataset.filtro)));
-    q('[data-filtro-quitar]', form)?.addEventListener('click', () => filtra(filtro));
+    // (Las cifras de la zona 1 ya no filtran la lista desde F8, `#753`: son un resumen.)
 
     // ── El número: «Cambiar» abre el editor; la zona 3 se pinta con (número elegido, niños en la lista) — F4 ──
     const editor = q('[data-numero-editor]', form);
@@ -784,15 +764,23 @@ function lista(form) {
         if (total) { total.hidden = n === 0; total.textContent = choice(t('extras.total', ':x en total'), 1, { x: importe(n * precio) }); }
     });
 
-    // ── Compartir el enlace y el recordatorio ──
+    // ── Copiar el enlace, y avisar de que la invitación salió (F8, `#753`) ──
     compartir(form);
-    const rec = q('[data-recordatorio]', form);
-    if (rec) {
-        const texto = q('[data-recordatorio-texto]', rec);
-        const copiado = q('[data-recordatorio-copiado]', rec);
-        q('[data-recordatorio-copiar]', rec)?.addEventListener('click', () => copiar(texto?.textContent || '').then(() => { if (copiado) copiado.hidden = false; }));
-        if (texto) setTimeout(() => rec.scrollIntoView({ behavior: 'smooth', block: 'center' }), 250);
-    }
+    // Cada botón de envío (`data-envio`: «Enviar por WhatsApp», «Copiar el enlace», «Invitar a más») lo dice al pulsarse,
+    // con `sendBeacon`: el enlace de WhatsApp sigue DIRECTO y el aviso sobrevive a que la pestaña se vaya. Sin JavaScript
+    // no se apunta (es medida, no función: el envío funciona igual).
+    const envioUrl = form.dataset.envioUrl;
+    const token = q('input[name="_token"]', form)?.value || '';
+    const avisaEnvio = (via, where) => {
+        if (!envioUrl || !navigator.sendBeacon) return;
+        const datos = new FormData();
+        datos.append('_token', token);
+        datos.append('via', via);
+        datos.append('where', where);
+        try { navigator.sendBeacon(envioUrl, datos); } catch { /* sin aviso: el envío sigue */ }
+    };
+    qa('a[data-envio="whatsapp"]', form).forEach((a) => a.addEventListener('click', () => avisaEnvio('whatsapp', a.dataset.envioDonde || 'invitation')));
+    qa('[data-envio="copy"] [data-kind="copy"]', form).forEach((b) => b.addEventListener('click', () => avisaEnvio('copy', b.closest('[data-envio]')?.dataset.envioDonde || 'invitation')));
 
     // ── Arranque: el borrador, las filas, la primera pendiente abierta, la barra ──
     recuperaBorrador();

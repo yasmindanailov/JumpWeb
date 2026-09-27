@@ -45,7 +45,10 @@ final class PartiesReport
     public const TOP_ROWS = 12;
 
     /** Los pasos del embudo por reserva, en orden. */
-    public const STEPS = ['parties', 'form_opened', 'form_completed', 'with_extras', 'with_invitation', 'invitation_viewed', 'with_reply', 'authorization_opened', 'signed'];
+    public const STEPS = ['parties', 'form_opened', 'form_completed', 'with_extras', 'with_invitation', 'invitation_shared', 'invitation_viewed', 'with_reply', 'authorization_opened', 'signed'];
+
+    /** Los canales del enlace de la invitación (F8, `#753`; `PartyInvitations::CHANNELS`), en el orden del informe. */
+    public const CHANNELS = ['wa', 'copia', 'rec'];
 
     /** Los motivos del libro que son EXTRAS vendidos desde el post-form (con signo). */
     public const EXTRA_REASONS = ['postform_addon', 'addon_per_guest_rescale', 'addon_per_guest_rescale_reduction'];
@@ -60,7 +63,7 @@ final class PartiesReport
     public const DAYS_BUCKETS = ['late', 'same_day', 'd1_3', 'd4_7', 'd8_14', 'd15_plus'];
 
     /** Los hechos de la reserva que este informe lee. */
-    private const FACTS = ['guest_form_opened', 'guest_form_submitted', 'invitation_viewed', 'invitation_replied', 'invitation_calendar_downloaded', 'authorization_opened', 'authorization_signed'];
+    private const FACTS = ['guest_form_opened', 'guest_form_submitted', 'invitation_viewed', 'invitation_replied', 'invitation_calendar_downloaded', 'authorization_opened', 'authorization_signed', 'invitation_shared', 'invitation_reminded'];
 
     /** @return array<string, mixed> */
     public static function for(Window $window, Comparison $comparison = Comparison::Previous): array
@@ -100,6 +103,9 @@ final class PartiesReport
             'form_completed' => $parties->whereNotNull('guest_form_completed_at')->count(),
             'with_extras' => $money['with_extras'],
             'with_invitation' => count($invitations),
+            // F8 (`#753`): SALIÓ = `shared_at` (su primer envío o recordatorio) o alguien ya la vio —las de antes de la
+            // columna no tienen fecha, pero si hay visitas es que salió—. Así el embudo no se da la vuelta en el pasado.
+            'invitation_shared' => count($this->sharedInvitations($ids) + ($facts['by_reservation']['invitation_viewed'] ?? [])),
             'invitation_viewed' => count($facts['by_reservation']['invitation_viewed'] ?? []),
             'with_reply' => count($replies['by_reservation']),
             'authorization_opened' => count($facts['by_reservation']['authorization_opened'] ?? []),
@@ -124,6 +130,15 @@ final class PartiesReport
             ],
             'invitations' => [
                 'with' => $reached['with_invitation'],
+                // F8: cuántas salieron, por qué botón, los recordatorios, y de dónde vienen las vistas y las respuestas.
+                'shared' => $reached['invitation_shared'],
+                'shares_whatsapp' => $facts['shares']['whatsapp'],
+                'shares_copy' => $facts['shares']['copy'],
+                'shares_other' => $facts['shares']['other'],
+                'shares_number' => $facts['shares']['number'],
+                'reminders' => $facts['loads']['invitation_reminded'] ?? 0,
+                'views_by_channel' => $facts['by_channel']['invitation_viewed'],
+                'replies_by_channel' => $facts['by_channel']['invitation_replied'],
                 'views' => $facts['loads']['invitation_viewed'] ?? 0,
                 'viewed' => $reached['invitation_viewed'],
                 'replies_yes' => $replies['yes'],
@@ -187,11 +202,16 @@ final class PartiesReport
      *
      * @param  list<int>  $orderIds
      * @param  list<int>  $reservationIds
-     * @return array{loads: array<string, int>, by_reservation: array<string, array<int, int>>, devices: array<string, int>, locales: array<string, int>, hours_since_open: list<float>}
+     *                                     ▶ F8 (`#753`): los envíos del anfitrión por canal y zona, y las vistas y respuestas por el canal del enlace.
+     * @return array{loads: array<string, int>, by_reservation: array<string, array<int, int>>, devices: array<string, int>, locales: array<string, int>, hours_since_open: list<float>, shares: array<string, int>, by_channel: array<string, array<string, int>>}
      */
     private function facts(array $orderIds, array $reservationIds): array
     {
-        $out = ['loads' => [], 'by_reservation' => [], 'devices' => [], 'locales' => [], 'hours_since_open' => []];
+        $out = [
+            'loads' => [], 'by_reservation' => [], 'devices' => [], 'locales' => [], 'hours_since_open' => [],
+            'shares' => ['whatsapp' => 0, 'copy' => 0, 'other' => 0, 'number' => 0],
+            'by_channel' => ['invitation_viewed' => array_fill_keys(self::CHANNELS, 0), 'invitation_replied' => array_fill_keys(self::CHANNELS, 0)],
+        ];
 
         if ($orderIds === []) {
             return $out;
@@ -226,6 +246,19 @@ final class PartiesReport
             if ($name === 'authorization_signed' && isset($props['hours_since_open']) && is_numeric($props['hours_since_open'])) {
                 $out['hours_since_open'][] = (float) $props['hours_since_open'];
             }
+            // F8: cada envío por su canal, y aparte los de «Invitar a más» (la zona del número), que está A PRUEBA.
+            if ($name === 'invitation_shared') {
+                $via = (string) ($props['via'] ?? '');
+                if (isset($out['shares'][$via])) {
+                    $out['shares'][$via]++;
+                }
+                if (($props['where'] ?? null) === 'number') {
+                    $out['shares']['number']++;
+                }
+            }
+            if (isset($out['by_channel'][$name], $props['channel']) && isset($out['by_channel'][$name][(string) $props['channel']])) {
+                $out['by_channel'][$name][(string) $props['channel']]++;
+            }
         }
 
         arsort($out['devices']);
@@ -235,6 +268,26 @@ final class PartiesReport
     }
 
     // ─── La invitación y el justificante, desde las tablas de negocio ───────────────────────────
+
+    /**
+     * Las reservas cuya invitación ya SALIÓ (`party_invitations.shared_at`, F8, `#753`).
+     *
+     * @param  list<int>  $reservationIds
+     * @return array<int, int> reserva → 1
+     */
+    private function sharedInvitations(array $reservationIds): array
+    {
+        if ($reservationIds === []) {
+            return [];
+        }
+
+        return DB::table('party_invitations')
+            ->whereIn('order_item_id', $reservationIds)
+            ->whereNotNull('shared_at')
+            ->pluck('order_item_id')
+            ->mapWithKeys(static fn ($id): array => [(int) $id => 1])
+            ->all();
+    }
 
     /**
      * @param  list<int>  $reservationIds

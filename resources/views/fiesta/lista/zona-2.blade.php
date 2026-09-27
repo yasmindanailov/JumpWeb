@@ -5,7 +5,7 @@
 @php
     $inv = $m['invitacion'];
     // Quien cumple (F3a, `#747`) abre la lista, en su propia `ul`, como el diseño (`conCumple`): no entra en «Por repasar»
-    // ni en el resto, y con un filtro puesto se esconde (`lista.js`).
+    // ni en el resto. (Sin filtro desde F8, `#753`: las cifras de arriba son un resumen.)
     $cumpleFila = collect($m['ninos'])->first(fn (array $n): bool => $n['origen'] === 'cumple');
     $ninos = array_values(array_filter($m['ninos'], fn (array $n): bool => $n['origen'] !== 'cumple'));
     $repasar = array_values(array_filter($ninos, fn (array $n): bool => $n['pendiente']));
@@ -21,7 +21,6 @@
 <section class="pli-zona" data-zona="2" aria-labelledby="pli-h-lista" data-la-lista>
     <div class="pli-cab-z">
         <h2 id="pli-h-lista" class="pli-h2">{{ __('fiesta.lista.la_lista.titulo') }}</h2>
-        <span class="pli-filtro" hidden data-filtro-chip><x-pieza.etiqueta selected data-filtro-etiqueta>{{ '' }}</x-pieza.etiqueta><x-pieza.enlace size="sm" underline="always" data-filtro-quitar>{{ __('fiesta.lista.la_lista.ver_todos') }}</x-pieza.enlace></span>
     </div>
     {{-- El progreso, para el lector de pantalla (el diseño no lo dibuja): la fuente de verdad del servidor. --}}
     @if ($m['progreso']['total'] > 0)
@@ -63,7 +62,6 @@
             <x-fiesta.fila-invitado :id="'no'.$r['id']" :name="$r['nombre']" state="no" viaInvite :editable="false" :last="$k === count($noVienenSueltos) - 1" omitir :omitirForm="$sumar ? 'fiesta-descartar' : null" :omitirValue="$r['id']" :volver="$sumar" :volverValue="$sumar ? $r['id'] : null" data-suelto />
         @endforeach
     </ul>
-    <p class="pli-sub" hidden data-nadie>{{ __('fiesta.lista.la_lista.nada_aqui') }}</p>
     @if (! $conDatos && $sumar)
         {{-- ⚠️ La marca es `data-lista-vacia`, no `data-vacia`: cada fila lleva `data-vacia="0|1"` (lo pone el JS) y un
              `[data-vacia]` atrapaba la PRIMERA fila y la escondía (T1b). --}}

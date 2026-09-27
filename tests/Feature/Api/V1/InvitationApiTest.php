@@ -13,6 +13,7 @@ use App\Domain\Booking\Models\Zone;
 use App\Domain\Booking\Services\GuestCountPolicy;
 use App\Domain\Booking\Services\PartyInvitations;
 use App\Domain\Identity\Models\User;
+use App\Domain\Platform\Models\AnalyticsEvent;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\PersonNameKey;
 use Illuminate\Support\Carbon;
@@ -264,6 +265,33 @@ class InvitationApiTest extends ApiTestCase
     }
 
     // ── 3 · El ANFITRIÓN ──────────────────────────────────────────────────────
+
+    /**
+     * F8c (`fiesta-sistema-nuevo.md` §4.14, `#753`, 1.44.0): **la app dice que la invitación salió**, como los botones de la
+     * web —un hecho de la reserva con `where: app`— y el recurso dice cuándo salió por primera vez.
+     */
+    public function test_the_app_says_the_invitation_went_out_and_the_resource_says_when(): void
+    {
+        [$reservation, $invitation] = $this->party();
+        $host = $this->hostOf($reservation);
+        $url = "/api/v1/reservations/{$reservation->id}/invitation/shares";
+
+        $this->actingAs($host)->getJson("/api/v1/reservations/{$reservation->id}/guest-form")
+            ->assertOk()->assertValidResponse(200)->assertJsonPath('invitation.shared_at', null);
+
+        $this->actingAs($host)->postJson($url, ['via' => 'other'])->assertNoContent()->assertValidRequest()->assertValidResponse(204);
+
+        $this->assertNotNull($invitation->refresh()->shared_at);
+        $hecho = AnalyticsEvent::query()->where('name', 'invitation_shared')->sole();
+        $this->assertSame(['via' => 'other', 'where' => 'app'], array_intersect_key($hecho->props, ['via' => 0, 'where' => 0]));
+        $this->actingAs($host)->getJson("/api/v1/reservations/{$reservation->id}/guest-form")
+            ->assertOk()->assertValidResponse(200)->assertJsonPath('invitation.shared_at', $invitation->shared_at?->toIso8601String());
+
+        // Un canal fuera de la lista, 422; y otra cuenta, 403 (la puerta del formulario).
+        $this->actingAs($host)->postJson($url, ['via' => 'sms'])->assertUnprocessable()->assertValidResponse(422);
+        $this->actingAs(User::factory()->create())->postJson($url, ['via' => 'whatsapp'])->assertForbidden();
+        $this->assertSame(1, AnalyticsEvent::query()->where('name', 'invitation_shared')->count());
+    }
 
     public function test_the_host_sees_the_invitation_inside_the_guest_form(): void
     {

@@ -53,7 +53,7 @@ final class ListaDeInvitados
      * @param  array<string, mixed>  $site  el `$site` compartido (nombre, teléfono, dirección)
      * @return array<string, mixed>
      */
-    public static function componer(array $v, array $site, ?string $status, ?string $reminderText): array
+    public static function componer(array $v, array $site, ?string $status): array
     {
         /** @var OrderItem $reservation */
         $reservation = $v['reservation'];
@@ -106,7 +106,7 @@ final class ListaDeInvitados
             'cumple' => $cumple,
             // La PRIMERA pantalla (spec §1.4, Z1): sin el nombre de quien cumple no hay invitación ni titular.
             'primero' => $inv !== null && ! $readonly && $cumple['nombre'] === '',
-            'invitacion' => $inv === null ? null : self::invitacion($invitacion, $inv, $reservation, $cumple, $reserva, $status, $reminderText),
+            'invitacion' => $inv === null ? null : self::invitacion($invitacion, $inv, $reservation, $cumple, $reserva, $status),
             'ninos' => $ninos,
             'firma_visible' => $firmaVisible,
             // El descargo de QUIEN CUMPLE (F7b, §4.13, `#752`): el panel bajo su fila, o `null` si no toca.
@@ -426,7 +426,7 @@ final class ListaDeInvitados
      * @param  array<string, string|int>  $reserva
      * @return array<string, mixed>
      */
-    private static function invitacion(array $vista, PartyInvitation $inv, OrderItem $reservation, array $cumple, array $reserva, ?string $status, ?string $reminderText): array
+    private static function invitacion(array $vista, PartyInvitation $inv, OrderItem $reservation, array $cumple, array $reserva, ?string $status): array
     {
         $temas = array_map(fn (string $t): array => [
             'value' => $t,
@@ -437,9 +437,14 @@ final class ListaDeInvitados
             ? __('fiesta.invitacion.rest', ['age' => $cumple['edad']])
             : __('fiesta.invitacion.rest_sin_edad'));
         $cuando = __('fiesta.lista.cuando', ['dia' => $reserva['dia'], 'hora' => $reserva['hora'], 'fin' => $reserva['fin'], 'lugar' => $reserva['lugar']]);
-        $mensaje = __('fiesta.lista.invitacion.mensaje', ['titular' => $titular, 'cuando' => $cuando, 'enlace' => $reserva['enlace']]);
+        // El enlace que viaja por WhatsApp dice su canal (F8, `#753`): así la visita y la respuesta saben de dónde vienen.
+        $mensaje = __('fiesta.lista.invitacion.mensaje', ['titular' => $titular, 'cuando' => $cuando, 'enlace' => (string) ($vista['url_wa'] ?? $reserva['enlace'])]);
         $resumen = $vista['summary'];
-        $compartida = ((int) ($resumen['yes'] ?? 0) + (int) ($resumen['no'] ?? 0) + (int) ($resumen['pending'] ?? 0)) > 0 || (int) $inv->reminded_count > 0;
+        // ¿Ya salió? Desde F8, `shared_at` lo SABE (el primer envío o recordatorio); las respuestas y los recordatorios de
+        // antes de la columna siguen contando, para las invitaciones ya enviadas.
+        $compartida = $inv->shared_at !== null
+            || ((int) ($resumen['yes'] ?? 0) + (int) ($resumen['no'] ?? 0) + (int) ($resumen['pending'] ?? 0)) > 0
+            || (int) $inv->reminded_count > 0;
 
         return [
             'tema' => $inv->safeTheme(),
@@ -451,6 +456,9 @@ final class ListaDeInvitados
             'pistas_max' => PartyInvitation::GIFT_HINTS_MAX,
             'telefono' => (bool) $inv->show_host_phone,
             'url' => (string) ($vista['url'] ?? ''),
+            'url_copia' => (string) ($vista['url_copy'] ?? $vista['url'] ?? ''),
+            // A dónde avisan los botones de que la invitación salió (`lista.js`, `sendBeacon`).
+            'envio' => (string) ($vista['share'] ?? ''),
             'compartible' => (bool) $vista['shareable'],
             'respuestas_abiertas' => (bool) $vista['replies_open'],
             'plazo' => (string) $vista['deadline'],
@@ -463,7 +471,6 @@ final class ListaDeInvitados
             'faltan' => (int) $vista['awaiting'],
             'recordado_el' => (string) $vista['reminded_on'],
             'recordado_veces' => (int) $inv->reminded_count,
-            'texto_recordatorio' => $reminderText,
             'no_caben' => (int) $vista['unplaced'],
             'no_vienen' => array_values(array_map(fn (array $r): array => ['id' => (int) $r['id'], 'nombre' => (string) $r['child_name'], 'indice' => $r['slot_index']], $vista['declined'])),
             'texto_rechazado' => $status === 'invitation-text-rejected',

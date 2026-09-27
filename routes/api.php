@@ -410,6 +410,12 @@ Route::name('api.v1.')->group(function (): void {
         ->whereNumber('reply')
         ->middleware(['throttle:30,1', 'throttle:guest-form', 'no-store'])
         ->name('reservations.invitation.replies.destroy');
+    // «La invitación salió» desde la app (F8c, `fiesta-sistema-nuevo.md` §4.14, `#753`): la misma medida que los botones de
+    // la web. ⚠️ Su PROPIO cupo (prefijo), como en la web: compartir no gasta el de guardar.
+    Route::post('/reservations/{reservation}/invitation/shares', [InvitationHostController::class, 'share'])
+        ->whereNumber('reservation')
+        ->middleware(['throttle:60,1,invitation-share', 'no-store'])
+        ->name('reservations.invitation.shares.store');
 
     // ── La INVITACIÓN vista desde FUERA (T4·6, §4.6 y §4.10) ──────────────────────────────────
     //

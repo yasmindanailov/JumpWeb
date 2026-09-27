@@ -26,6 +26,7 @@ use App\Http\Fiesta\Sitio;
 use App\Http\Instancia\InstanceViews;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
 
 /**
@@ -166,7 +167,6 @@ class GuestFormController extends Controller
                 $datos,
                 Sitio::datos(),
                 is_string(session('status')) ? session('status') : null,
-                is_string(session('reminder_text')) ? session('reminder_text') : null,
             ),
             // Las hojas de la instancia para la superficie `fiesta` (`#769`): con ellas la página se viste con la marca;
             // sin paquete o sin la clave, vacío y la página sale NEUTRA, entera.
@@ -472,11 +472,40 @@ class GuestFormController extends Controller
         $text = $invitations->reminderTextFor($reservation, $withNames);
 
         $invitations->remind($invitation);
+        $this->partyFact($request, $reservation, 'invitation_reminded', ['listed' => $withNames]);
 
-        return redirect()
-            ->to($this->invitationBackUrl($request, $reservation))
-            ->with('status', 'invitation-reminded')
-            ->with('reminder_text', $text);
+        // ▶ A WHATSAPP, con el mensaje escrito (F8, `fiesta-sistema-nuevo.md` §4.14, `#753`): el formulario abre una
+        // pestaña nueva y aquí se la manda, en vez de volver a la lista con el texto para copiarlo y pegarlo.
+        // ⚠️ Con nombres de menores si él lo pidió: viajan en el enlace de WHATSAPP, que es su destino, y nunca en una URL
+        // nuestra (la petición es un POST sin ellos); la regla de `#743` —ni en el historial ni en un referer nuestro—.
+        return redirect()->away('https://wa.me/?text='.rawurlencode($text));
+    }
+
+    /**
+     * **La invitación SALIÓ por un botón de la lista** (F8, §4.14, `#753`): «Enviar por WhatsApp», «Copiar el enlace» o
+     * «Invitar a más», que lo mandan al pulsarse (`sendBeacon`: el enlace de WhatsApp sigue directo). Deja el hecho de la
+     * reserva —canal y zona— y la primera vez, `shared_at`.
+     *
+     * ⚠️ Su propio POST y su propio cupo (`throttle` con prefijo): compartir el de guardar dejaría que unos cuantos toques
+     * a «Copiar» le negaran el Guardar al anfitrión (el cupo compartido de F6a). Responde 204: nadie espera la respuesta.
+     */
+    public function recordShare(Request $request, OrderItem $reservation): Response
+    {
+        $this->authorizeGuestFormAccess($request, $reservation);
+
+        $datos = $request->validate([
+            'via' => ['required', 'string', 'in:whatsapp,copy'],
+            'where' => ['required', 'string', 'in:invitation,number'],
+        ]);
+
+        $invitations = app(PartyInvitations::class);
+        $invitation = $reservation->isFinishedInPractice() ? null : $invitations->existingFor($reservation);
+        if ($invitation !== null) {
+            $invitations->markShared($invitation);
+            $this->partyFact($request, $reservation, 'invitation_shared', ['via' => $datos['via'], 'where' => $datos['where']]);
+        }
+
+        return response()->noContent();
     }
 
     /**
@@ -612,7 +641,7 @@ class GuestFormController extends Controller
      * cabe no tiene ficha donde pintarse. Los dos son avisos sobre la lista, no filas de la lista.
      *
      * @param  list<array{id: int, child_name: string, attending: bool, companion: string|null, guest_data: array<string, string>, slot_index: int|null, repeated: bool}>  $proposals
-     * @return array{invitation: PartyInvitation, url: string|null, shareable: bool, replies_open: bool, deadline: string, summary: array{yes: int, no: int, pending: int}, action: string, dismiss: string, remind: string, awaiting: int, reminded_on: string, themes: list<string>, declined: list<array{id: int, child_name: string, slot_index: int|null}>, unplaced: int}|null
+     * @return array{invitation: PartyInvitation, url: string|null, shareable: bool, replies_open: bool, deadline: string, summary: array{yes: int, no: int, pending: int}, action: string, dismiss: string, remind: string, share: string, url_wa: string|null, url_copy: string|null, awaiting: int, reminded_on: string, themes: list<string>, declined: list<array{id: int, child_name: string, slot_index: int|null}>, unplaced: int}|null
      */
     private function invitationView(Request $request, OrderItem $reservation, array $proposals, bool $readonly): ?array
     {
@@ -648,6 +677,12 @@ class GuestFormController extends Controller
             'remind' => $signed
                 ? $reservation->invitationSignedRemindUrl()
                 : route('reservation.invitation.remind', ['reservation' => $reservation]),
+            // F8 (`#753`): a dónde avisa cada botón de que la invitación salió, y el enlace de cada canal.
+            'share' => $signed
+                ? $reservation->invitationSignedShareUrl()
+                : route('reservation.invitation.share', ['reservation' => $reservation]),
+            'url_wa' => $invitations->shareUrlFor($invitation, 'wa'),
+            'url_copy' => $invitations->shareUrlFor($invitation, 'copia'),
             // Quiénes faltan (T6·6): la pantalla solo necesita CUÁNTOS son —para ofrecer la casilla y
             // decir a cuántos señala—. Los nombres los pone el texto, y el texto lo compone el
             // dominio: pintarlos aquí sería una segunda copia de la misma lista.
