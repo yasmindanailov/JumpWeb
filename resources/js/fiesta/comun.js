@@ -4,6 +4,8 @@
  * completo. (El idioma ya no necesita JavaScript: son tres enlaces de texto al pie, `#748`.)
  */
 
+import { sugerirCorreo } from './logica.js';
+
 const de = document.documentElement;
 
 export const q = (sel, raiz = document) => raiz.querySelector(sel);
@@ -62,6 +64,54 @@ export function firma() {
     } else {
         enfoca();
     }
+}
+
+/**
+ * «¿Querías decir …?» (F9, el zip tercero `#780`: `forms/Field.jsx`, `suggest`): al SALIR de un campo de correo se le
+ * propone el bien escrito (`sugerirCorreo`) y un toque lo escribe; al volver a entrar, se esconde. El botón y su texto
+ * los pinta la pieza (`x-pieza.campo`); aquí solo se rellena y se enseña.
+ */
+export function sugerencias(raiz = document) {
+    qa('[data-sugerencia]', raiz).forEach((boton) => {
+        const campo = document.getElementById(boton.dataset.sugerencia);
+        const valor = q('[data-sugerencia-valor]', boton);
+        if (!campo || !valor) return;
+        const esconde = () => { boton.hidden = true; };
+        campo.addEventListener('focus', esconde);
+        campo.addEventListener('input', esconde);
+        campo.addEventListener('blur', () => {
+            const sug = sugerirCorreo(campo.value);
+            valor.textContent = sug || '';
+            boton.hidden = !sug;
+        });
+        boton.addEventListener('click', () => {
+            if (!valor.textContent) return;
+            campo.value = valor.textContent;
+            campo.dispatchEvent(new Event('input', { bubbles: true }));
+            esconde();
+        });
+    });
+}
+
+/**
+ * EL PRIMARIO LLEGA (F9, `core/Button.jsx`, `arrive`): la primera vez que entra en pantalla, el bote del sistema y UN
+ * brillo —lo único que se mueve en ese momento—. Una vez por botón, nunca en bucle, nunca sobre tinta (la barra de
+ * Guardar, «Vamos»: `data-surface="ink"`) y nada con «reducir movimiento». Los keyframes son los que `isla.css` ya porta
+ * (`isla-bote`, `isla-sheen`); la clase, `fiesta.css`.
+ */
+export function llegadas(raiz = document) {
+    if (typeof IntersectionObserver === 'undefined') return;
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    qa('[data-llega]', raiz).forEach((boton) => {
+        if (boton.closest('[data-surface="ink"]')) return;
+        const io = new IntersectionObserver((vistos) => {
+            if (!vistos.some((v) => v.isIntersecting)) return;
+            io.disconnect();
+            boton.classList.add('pz-boton--llega');
+            setTimeout(() => boton.classList.remove('pz-boton--llega'), 1600);
+        }, { threshold: 0.25 });
+        io.observe(boton);
+    });
 }
 
 /** Arranca la página: todo lo de dentro, y la clase `js` solo si nada falló. */

@@ -9,6 +9,8 @@
 return [
     'pieza' => [
         'opcional' => 'opcional',
+        // F9 (`#780`, `Field suggest`): el correo mal escrito, un toque y queda bien. El correo va en negrita entre las dos.
+        'sugerencia' => ['¿Querías decir ', '?'],
         'uno_menos' => 'Quitar uno',
         'uno_mas' => 'Añadir uno',
         'hueco_foto' => 'Hueco de foto',

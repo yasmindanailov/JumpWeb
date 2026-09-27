@@ -4,6 +4,7 @@
 return [
     'pieza' => [
         'opcional' => 'optional',
+        'sugerencia' => ['Did you mean ', '?'],
         'uno_menos' => 'Remove one',
         'uno_mas' => 'Add one',
         'hueco_foto' => 'Photo placeholder',

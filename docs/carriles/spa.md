@@ -6,22 +6,25 @@
 > `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: **`isla-y-landing-nueva.md`
 > §4.11 «El traspaso al SPA»** (la tarea en curso, `#765`) · `celebracion-e-invitacion.md` §0 · `waiver-por-reserva.md` §0 ·
 > `encuestas.md` §0 · `analitica-fiesta.md` §0 · `analitica.md` §0 y §4.5 · `google-business-profile.md` §0 ·
-> `sidebar-spa.md` §0 · Actualizado: 2026-09-27 (F7 y F8 enteras, vistas por el owner).
+> `sidebar-spa.md` §0 · Actualizado: 2026-09-27 (tarde: F7, F8 y F9 en `main`, las tres aprobadas por el owner).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`). El
 > contador de la suite va en el trailer del commit (`#618`), no aquí. **Se muda, no se raspa**: el detalle de
 > una feature baja a su spec (las trampas por tanda de la analítica T1→T5 viven en `analitica.md` §4.9,
 > mudadas verbatim el 24-09; las de la ficha de Google en su §9.1; las de la invitación en su §10.20).
 
-## Foto (2026-09-27, madrugada)
+## Foto (2026-09-27, tarde)
 
 - ▶▶▶ **LA FIESTA DEL SISTEMA NUEVO ES MÍA (`#765`, `[DECIDIDO owner]` 25-09)**: la lista de invitados, la invitación con
   su recibo y la autorización, vestidas con «Saltia» para la v2.0.0, en paralelo con la web pública. El traspaso,
   `isla-y-landing-nueva.md` §4.11; el censo HAY/FALTA, el método y las tandas, `specs/fiesta-sistema-nuevo.md` (§1.4,
   §4.6, §7). ⚠️ **El zip entra SOLO por plataforma** y llega con `git pull` de la instancia (`cd diseno && sha256sum -c`).
-- ✅ **F7, LA EXENCIÓN DE QUIEN CUMPLE (`#752`), ENTERA Y VISTA POR EL OWNER** (27-09, «muy bien»): la lista y su
-  justificante; la puerta (primera de su fiesta, «su cumple»), la víspera y la API 1.42.0 (§4.13; arnés
-  `mutar-exencion-cumple.sh` 55). ✅ **F8 (`#753`), aprobada por el owner (27-09)**: una acción por tarea
-  (enviar, recordar, invitar a más), las cifras sin filtro y cada envío medido (spec §4.14; arnés 28/28; `JW-OJO-F8`).
+- ✅ **27-09, TODO EN `main` Y APROBADO POR EL OWNER**: **F7** (`#752`, la exención de quien cumple: la lista y su
+  justificante, la puerta, la víspera y la API 1.42.0; §4.13; arnés `mutar-exencion-cumple.sh` 55) · **F8** (`#753`, una
+  acción por tarea para la invitación, las cifras sin filtro, cada envío medido; API 1.44.0; §4.14; arnés
+  `mutar-envio-invitacion.sh` 28/28) · **F9** (el zip tercero `#780`: «¿Querías decir …?» en el correo de la firma y el
+  primario que llega; `WaiverSheet` NO, el texto se presenta en el flujo, `waiver-probatorio.md` §4.4; §4.15; arnés
+  `mutar-zip-tercero.sh` 12/12) · y el `--warn-100` de PlayJump fuera de `fiesta.css` (`PaletaNeutraTest` lee ya las
+  familias de estado y las tripletas `r, g, b`). La instancia de esta máquina, al día (`100dd09`, el zip tercero dentro).
 - ✅ **Esta máquina, montada para la fiesta (25-09)**: la instancia clonada en `~/proyectos/instancias/playjump` (el
   diseño con su sha256 verificado), `INSTANCIA_RUTA=/var/www/instancias/playjump` en el `.env` (ruta DEL CONTENEDOR),
   `public/instancia/` copiado de `publico/instancia/` (ignorado por git); la receta entera, en Trampas vivas 🏠.
@@ -92,11 +95,16 @@
    cuántas personas» en los complementos; la zona 4 como el mockup, el aviso de la tarta y «Guardado hoy a las…»; §4.11;
    arnés `mutar-extras-fiesta.sh` 42/42; visto por el owner en `JW-OJO-F5`) · **F6b ✅** (`#750`: «Tus respuestas» y
    «Avísame de fechas» con spec propia, `avisame-de-fechas.md`; y `hidden` que vuelve a ocultar SIN JavaScript, §4.12;
-   arnés `mutar-avisame-fiesta.sh` 42/42) · «¿Cuántas tartas?» ✅ (`#751`) · **F7 ✅** (`#752`, §4.13) · **F8 ✅** (`#753`, §4.14:
-   una acción por tarea —enviar, recordar, invitar a más—, las cifras sin filtro y cada envío como hecho) → **la fiesta, en código**: queda el contrato de hojas de plataforma
-   (`#769`: la página viva sale NEUTRA; el banco carga las hojas a mano) y la v2.0.0. Para el ojo: `JW-OJO-F3`
-   (`ojo-f3.php`), `JW-OJO-F1` (1077; `/invitacion/WxYYnZkkNx7U`) y `JW-OJO-F5`. **Reglas en pie**: el suelo sin
-   JavaScript · `#739` · la firma y su prueba (`waiver-probatorio.md`, `RGPD-*`) · hoja en blanco (§7.2·R1) · `#706`.
+   arnés `mutar-avisame-fiesta.sh` 42/42) · «¿Cuántas tartas?» ✅ (`#751`) · **F7 ✅** (`#752`, §4.13) · **F8 ✅** (`#753`,
+   §4.14) · **F9 ✅** (el zip tercero, §4.15) → **la fiesta, en código, NO TIENE NADA PENDIENTE**: las páginas vivas se
+   visten con las hojas de la instancia (`#769`, medido el 27-09: piden `saltia.css`, `fuentes.css` y `fiesta.css`); espera
+   la v2.0.0. **Si llega un zip nuevo**: `git pull` en la instancia, `git diff <antes>..HEAD` de `diseno/` (las tres
+   páginas y las piezas que usan), copiar `publico/instancia` a `public/`, `optimize:clear`, y una tanda F10 en §4.
+   **A prueba**: «Invitar a más» (`#753`): a los meses, sus envíos con `where: number` en el informe de fiestas; si casi
+   nadie lo usa, se quita. Ofrecido por plataforma y sin pedir: las `transiciones` de `<x-pagina>` (`#781`). Para el ojo:
+   `JW-OJO-F8` (`ojo-f8.php`: la lista y la autorización), `JW-OJO-F7`, `JW-OJO-F5`, `JW-OJO-F3`, `JW-OJO-F1`.
+   **Reglas en pie**: el suelo sin JavaScript · `#739` · la firma y su prueba (`waiver-probatorio.md` §4.4: el texto en el
+   flujo, `RGPD-*`) · hoja en blanco (§7.2·R1) · `#706`.
 2. ✅ La analítica entera espera la v2.0.0. Sueltos: `[PENDIENTE: asesoría]` (5) del correo de servicio de las encuestas ·
    **T2e** (`analytics_daily` + `ad_spend`) SOLO si el `EXPLAIN` con volumen dice que el año en directo no aguanta
    (`analitica.md` §4.5) · **T5c** cuando el owner nombre la hipótesis (`#738`) · el `EXPLAIN` con volumen en staging.
@@ -293,7 +301,7 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 
 ### Atendido
 - **Plataforma 27-09** (ESLint sobre la fiesta y mis `/* global */` fuera, la isla sin valores de PlayJump, `#788` con la
-  1.43.0, la Z4 y el zip tercero `#780`): atendidos; el censo de la fiesta contra el zip tercero, en curso.
+  1.43.0, la Z4 y el zip tercero `#780`): atendidos; el zip tercero, portado a la fiesta en F9 (§4.15).
 - **Plataforma 25-09** (`#765` el traspaso de la fiesta, la calculadora T4d junto a mi motor, las peticiones (1) y (2),
   el aviso previo de la T4a·3, la banda 790–819 para cuando agote la mía): atendidos, contestados arriba.
 - **Plataforma 24-09** (T3e·2b, T3e·3, T3e·4, T3d, T3e·5, T3e·6, la local preparada para la isla, `#670` «no se

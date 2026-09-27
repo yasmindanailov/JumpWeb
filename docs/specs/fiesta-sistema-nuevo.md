@@ -793,6 +793,23 @@ tras unos meses casi nadie lo usa (sus envíos con `where: number`), se quita.
 | **F8b** ✅ | Los hechos (`invitation_shared` {via, where}, `invitation_reminded` {listed}), `shared_at` (el primero), el canal `?c=` en la visita y la respuesta, su cupo propio (`throttle:…,invitation-share`) y el informe (el paso «Enviada» y las filas por canal). ⚠️ `with_names` era una prop con pinta de dato personal para la guarda (`name`): `listed`. | `EnvioDeLaInvitacionTest` 6 (el cupo: 35 envíos y el Guardar sigue) · `PartiesReportTest` +1 · `FocusedPagesAreCookieFreeTest` (18 rutas) · arnés · la sonda: ⚠️ **«HeadlessChrome» es un robot** y no deja hechos (la sonda va como iPhone), y **Playwright no ve el destino de una redirección** (se lee el `Location` del POST). |
 | **F8c** ✅ | La API 1.44.0 (la 1.43.0 la tomó plataforma, `#788`): `POST /reservations/{id}/invitation/shares` {via} (`where: app`) y `Invitation.shared_at` (en el componente y en su copia vigilada). | `InvitationApiTest` +1 contra el contrato · `ApiContractTest` · arnés. |
 
+### 4.15 F9 · El zip tercero (`#780`) en la fiesta ✅
+
+**Medido (27-09, `git diff 072a248..HEAD` de la instancia, el método de `#768`)**: de las tres páginas solo cambia la
+invitación —«Leer el descargo» pasa de un `Modal` con hueco a la hoja del sistema, `WaiverSheet`— y, de lo compartido,
+`Button` (`arrive`: el primario llega con el bote y UN brillo la primera vez que se ve; `loading` sin cambiar de ancho;
+`done`), `Field` (`suggest`: «¿Querías decir ana@gmail.com?» en los correos), `Modal` (`fixed`, Esc) y los tokens de
+movimiento. **Lo que entra**: `suggest` en el correo de la firma (`sugerirCorreo`, portada tal cual a `logica.js`, con sus
+casos) y `arrive` en los primarios fuera de la tinta (los keyframes `isla-bote`/`isla-sheen` que `isla.css` ya porta,
+con «reducir movimiento»). **Lo que no**: `WaiverSheet` —el producto PRESENTA el texto en el flujo de firma
+(`waiver-probatorio.md` §4.4) y «Leer el descargo» es un ancla a él; la hoja del diseño es un hueco sin texto—; la
+medida `campo_sugerencia` del diseño (la fiesta no lleva analítica en el cliente, `#739`); `done` y `loading` (la fiesta
+no los usa: el Listo es su propia vista).
+
+| Parte | Qué | Verificación |
+|---|---|---|
+| **F9** ✅ | `suggest` en `x-pieza.campo` (correo: el botón escondido, atado a su campo; `comun.js::sugerencias`) y `arrive` en `x-pieza.boton` (`data-llega` en el primario sin bloquear; `comun.js::llegadas` lo calla sobre tinta y con «reducir movimiento»), en las tres páginas. | `logica.test.js` 19 (con los que NO se tocan: «lve», «ona», «orange.fr») · `ZipTerceroTest` 3 · arnés `mutar-zip-tercero.sh` **12/12** (el superviviente de los dominios cortos llevó sus dos casos) · `sonda-f9.mjs` (390 y 1280: «ana@gmial.com» → un toque → «ana@gmail.com»; «Firmar» llega una vez; con «reducir movimiento», nunca). Aprobada por el owner (27-09). |
+
 ## 5. Impacto en invariantes
 
 | ID | Cómo |

@@ -7,7 +7,7 @@
  * contesta y guarda igual; la clase `js` se pone AL FINAL: si algo falla, el documento se queda en `no-js`.
  */
 import './fiesta.css';
-import { arranca, enterNoEnvia, firma, menores, q, qa } from './comun.js';
+import { arranca, enterNoEnvia, firma, llegadas, menores, q, qa, sugerencias } from './comun.js';
 import { caducaEn, deLaFiesta, misRespuestas } from './logica.js';
 
 /* ── «TUS RESPUESTAS» (F6b, `InvMias`, spec §4.12): los niños contestados DESDE ESTE MÓVIL, como chips que llevan a cada
@@ -236,4 +236,4 @@ function foco() {
 }
 
 // La firma dentro del recibo (F6a): el mismo comportamiento que la página de la autorización (`comun.js`).
-arranca(visor, barra, ficha, menores, firma, foco, mias, avisame);
+arranca(visor, barra, ficha, menores, firma, foco, mias, avisame, sugerencias, llegadas);

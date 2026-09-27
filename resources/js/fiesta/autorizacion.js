@@ -7,6 +7,6 @@
  * JavaScript firma igual.
  */
 import './fiesta.css';
-import { arranca, firma, menores } from './comun.js';
+import { arranca, firma, llegadas, menores, sugerencias } from './comun.js';
 
-arranca(menores, firma);
+arranca(menores, firma, sugerencias, llegadas);

@@ -1,7 +1,28 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { caducaEn, capitalizar, choice, clave, cuentas, cubrir, deLaFiesta, estadoFicha, euros, importe, limpiar, misRespuestas, soloEdad, vistaInvitacion } from './logica.js';
+import { caducaEn, capitalizar, choice, clave, cuentas, cubrir, deLaFiesta, estadoFicha, euros, importe, limpiar, misRespuestas, soloEdad, sugerirCorreo, vistaInvitacion } from './logica.js';
+
+// F9 (§4.15, el zip tercero `#780`): el correo mal escrito, como `forms/Field.jsx` del diseño.
+test('el correo mal escrito se corrige: una letra, dos cambiadas, la terminación que no existe, el punto que falta', () => {
+    assert.equal(sugerirCorreo('ana@gmial.com'), 'ana@gmail.com', 'dos letras cambiadas');
+    assert.equal(sugerirCorreo('ana@gmail.con'), 'ana@gmail.com', 'la terminación que no existe');
+    assert.equal(sugerirCorreo('ana@gmail.es'), 'ana@gmail.com', 'gmail solo tiene .com');
+    assert.equal(sugerirCorreo('ana@hotmial.es'), 'ana@hotmail.es', 'conserva la terminación que el proveedor tiene');
+    assert.equal(sugerirCorreo('ana@outlok.es'), 'ana@outlook.es');
+    assert.equal(sugerirCorreo('ana@gmailcom'), 'ana@gmail.com', 'el punto que falta');
+    assert.equal(sugerirCorreo('  Ana.Pérez@GMIAL.com '), 'Ana.Pérez@gmail.com', 'la parte local, tal cual');
+});
+
+test('lo que no se toca: bien escrito, reales parecidos a otros, otra terminación real y lo que no es un correo', () => {
+    // «lve» y «ona» están a una letra de «live» y «ono», pero los de cuatro letras o menos no se corrigen nunca (el arnés).
+    for (const bien of ['ana@gmail.com', 'ana@hotmail.es', 'ana@ya.com', 'ana@me.com', 'ana@mail.com', 'ana@yahoo.es', 'ana@orange.fr', 'ana@empresa.com', 'ana@gmx.es', 'ana@lve.com', 'ana@ona.com']) {
+        assert.equal(sugerirCorreo(bien), null, bien);
+    }
+    for (const nada of ['', 'ana', '@gmail.com', 'ana@', 'ana @gmial.com', null, undefined]) {
+        assert.equal(sugerirCorreo(nada), null, String(nada));
+    }
+});
 
 // F6b (§4.12): «Tus respuestas», las de este móvil.
 const AHORA = 1_790_000_000_000;

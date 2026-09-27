@@ -185,6 +185,11 @@ img, video { display: block; max-width: 100%; }
 .pz-boton--lg { height: var(--control-lg); padding: 0 32px; font-size: 1.0625rem; gap: 10px; }
 .pz-boton--xl { height: var(--control-xl); padding: 0 40px; font-size: 1.1875rem; gap: 12px; }
 .pz-boton--primary { background: var(--action-bg); color: var(--action-fg); box-shadow: var(--shadow-sm); }
+/* EL PRIMARIO LLEGA (F9, `arrive` del zip tercero `#780`): el bote del sistema y UN brillo que cruza, la primera vez que se
+   ve (`comun.js::llegadas` pone y quita la clase). Los keyframes, los que `isla.css` porta; `--dur-bote` es 1ms con
+   «reducir movimiento». */
+.pz-boton--llega { position: relative; overflow: hidden; animation: isla-bote var(--dur-bote) linear both; }
+.pz-boton--llega::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.55) 50%, transparent 70%) no-repeat; background-size: 60% 100%; animation: isla-sheen 900ms var(--ease-in-out) 520ms 1 both; }
 .pz-boton--secondary { background: var(--control-selected-bg); color: var(--control-selected-fg); }
 .pz-boton--outline { background: transparent; color: var(--text-strong); box-shadow: inset 0 0 0 2px var(--control-border-strong); }
 .pz-boton--ghost { background: transparent; color: var(--text-strong); }
@@ -254,6 +259,10 @@ button.pz-etiqueta:not(:disabled):hover { background: var(--control-bg-hover); }
 .pz-campo__input:focus-visible { box-shadow: none; }
 .pz-campo__error { font-family: var(--font-ui); font-size: var(--fs-caption); font-weight: var(--fw-semibold); color: var(--text-danger); }
 .pz-campo__pista { font-family: var(--font-ui); font-size: var(--fs-caption); line-height: 1.45; color: var(--text-muted); }
+/* «¿Querías decir …?» (F9, `Field suggest`): un botón entero, 44px para el dedo; un toque y queda escrito. */
+.pz-campo__sug-vivo { display: contents; }
+.pz-campo__sug { align-self: flex-start; display: inline-flex; align-items: center; min-height: 44px; margin: -6px 0 -8px; padding: 0; border: none; background: none; cursor: pointer; text-align: left; font-family: var(--font-ui); font-size: var(--fs-body-sm); line-height: 1.35; color: var(--text-body); }
+.pz-campo__sug b { color: var(--text-link); font-weight: var(--fw-bold); text-decoration: underline; text-underline-offset: 3px; word-break: break-all; }
 
 /* `forms/Checkbox.jsx` → `pz-casilla`. El estado marcado, por `:has(:checked)`. */
 .pz-casilla { display: flex; flex-direction: column; gap: 6px; }

@@ -13,6 +13,7 @@
  * AL FINAL: si algo de arriba falla, la página vuelve a `no-js` y nunca queda atascada.
  */
 import './fiesta.css';
+import { llegadas } from './comun.js';
 import { NBSP, capitalizar, choice, clave, cubrir, euros, importe, limpiar, soloEdad, vistaInvitacion } from './logica.js';
 
 const de = document.documentElement;
@@ -819,6 +820,8 @@ try {
     if (formPrimero) primero(formPrimero);
     if (formLista) lista(formLista);
     firmaCumple();
+    // F9 (`#780`): el primario («Crear la invitación», «Firmar su descargo») llega con el bote, una vez.
+    llegadas();
     de.classList.remove('no-js');
     de.classList.add('js');
 } catch {
