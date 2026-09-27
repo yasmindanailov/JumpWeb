@@ -1531,6 +1531,18 @@ La identidad con el diseño, una vez y al final (`#768`).
   su espacio de respeto DENTRO (Visa), se recorta solo el `viewBox`; y el borde se mide en Chromium —MuPDF no lee el
   `<style>` interno y pinta de negro sus rectángulos—. Sondas: `sonda-isla` (20/20 a 390) y `sonda-calculadora` (kids
   20/20) comprueban que las marcas se ven, en su orden y cargadas. Botón «Pagar con Bizum»: v2.0.0.
+- ▶ **Z4·1 ✅ (27-09, `#785`)**. **La compra sin pantallas de más** (el owner). La compra que sigue SOLA —«Reservar y
+  pagar» de la calculadora, la vuelta de Google— marca `preparando` desde que toma la intención (también antes del
+  catálogo) y pinta `PantallaPreparando`, un esqueleto sin titular ni nada que tocar; la acción, cargando. Tras la
+  admisión, `trasAdmitir()`: «Tus datos» solo si `datos.faltaAlgo()` (`datos.js::hayQuePedir`: sin sesión; el teléfono
+  o la firma que falten, con el texto del descargo ya llegado); si no, «Pagar» con `sinDatos`: «Pagar» a secas (sin
+  «Paso 2 de 2» ni barra), «Reservas como …» bajo el titular y la flecha a la pantalla 0. Entrar con «Entra» y sin
+  nada que pedir, también a «Pagar». **La vuelta de Google**: las páginas nuevas no llevaban `data-purchase-open/resume`
+  (ahora `components/site/body-compra.blade.php`, en los dos layouts) y la compra no se reabría; y la cuenta NUEVA
+  vuelve a la compra (`PurchaseResume::isResumeUrl` en `GoogleAuthController`) y completa su alta en «Tus datos»
+  (`cuenta: 'google'`: su correo a la vista, su nombre, la casilla; `account/google.js` con `import()`, y
+  `flow.enterWith`). Sonda: `scripts/sonda-compra-directa.mjs [390|1280]`, 14/14 en las dos (simula las dos vueltas
+  de Google: `TESTING.md` §2.octies); sin regresión, `sonda-isla` 20/20 y `sonda-calculadora` kids.
 
 ## 5. Impacto en invariantes
 

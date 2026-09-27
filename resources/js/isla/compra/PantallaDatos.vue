@@ -14,6 +14,8 @@
  * verdad (T3e·4); la ranura `antibot` lleva el anti-bot del alta, si la instalación lo tiene. Sin ellos, el diseño.
  * `titulo` lo cambia Mi cuenta, que pinta aquí su «Crea tu cuenta» (T5a, `paginas/mi-cuenta/cuenta.jsx`): el mismo
  * formulario, sin «¿Ya has venido? Entra» (`entrar` apagado) porque se llega desde Entrar.
+ * `cuenta: 'google'` (`#785`): la cuenta NUEVA que vuelve de Google completa aquí su alta, sin salir de la compra: su
+ * correo de Google a la vista (`correoGoogle`, no se teclea), su nombre —el que da Google, corregible— y la casilla.
  */
 import { computed } from 'vue';
 import { useTextos } from '../piezas/textos.js';
@@ -46,6 +48,7 @@ const props = defineProps({
     apple: { type: Boolean, default: true },
     marcaGoogle: { type: String, default: '' },
     titulo: { type: String, default: '' },
+    correoGoogle: { type: String, default: '' },
 });
 const emit = defineEmits(['cambiar', 'entrar', 'descargo', 'proveedor', 'hora']);
 const { t, tp } = useTextos();
@@ -58,7 +61,7 @@ const cambiar = (campo) => (valor) => emit('cambiar', campo, valor);
 <template>
     <PasoCompra :titulo="titulo || (cuenta === 'dentro' ? tp('compra.datos.hola', { nombre: nombrePila }) : t('compra.datos.titular'))">
         <template
-            v-if="cuenta !== 'dentro' && entrar"
+            v-if="cuenta !== 'dentro' && cuenta !== 'google' && entrar"
             #antes
         >
             <p :style="PASO.cuerpo">{{ `${t('compra.datos.ya')} ` }}<EnlaceSistema
@@ -79,8 +82,19 @@ const cambiar = (campo) => (valor) => emit('cambiar', campo, valor);
             /></template>
         </AvisoDestacado>
         <template v-if="cuenta !== 'dentro'">
+            <AvisoDestacado
+                v-if="cuenta === 'google'"
+                tone="neutral"
+                size="sm"
+                :title="tp('compra.datos.google_cuenta', { correo: correoGoogle })"
+            >
+                <template #icono><IconoLucide
+                    name="circle-user-round"
+                    :size="18"
+                /></template>
+            </AvisoDestacado>
             <AccesoSocial
-                v-if="social"
+                v-else-if="social"
                 :in-app="enApp"
                 :apple="apple"
                 :marca="marcaGoogle"
@@ -98,6 +112,7 @@ const cambiar = (campo) => (valor) => emit('cambiar', campo, valor);
                     @update:model-value="cambiar('nombre')($event)"
                 />
                 <CampoSistema
+                    v-if="cuenta !== 'google'"
                     id="pjc-correo"
                     :label="t('compra.datos.correo')"
                     type="email"
@@ -134,7 +149,7 @@ const cambiar = (campo) => (valor) => emit('cambiar', campo, valor);
                         >{{ t('compra.datos.olvido') }}</EnlaceSistema>
                     </div>
                 </AvisoDestacado>
-                <template v-else>
+                <template v-else-if="cuenta !== 'google'">
                     <CampoSistema
                         id="pjc-tel"
                         :label="t('compra.datos.telefono')"

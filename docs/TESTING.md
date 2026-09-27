@@ -378,6 +378,12 @@ son de cualquiera que mida, no de un carril.
   prefijo y se quedan, y uno de mañana pasa a ser «Tu próxima reserva» —`sonda-cuenta.mjs`, 22 fallos que no eran del
   código—. Tras una corrida de la compra, sus pedidos se pasan a `sonda-compra@jumpweb.test` (tinker, solo en local, con
   el recuento esperado por fila) antes de la de la cuenta.
+- **La vuelta de Google, SIN Google** (27-09, `#785`, `scripts/sonda-compra-directa.mjs`): la ida es `/auth/google`
+  (no `/auth/google/redirect`: ése es el NOMBRE de la ruta; con el patrón equivocado la sonda salió a Google de verdad) y
+  se intercepta devolviendo un 302 a su `next`. La cuenta EXISTENTE se simula entrando por la API ANTES de pulsar —desde
+  el documento que ya se va, `page.evaluate` se cuelga—; la NUEVA, dejando un perfil en la sesión del servidor de ESE
+  navegador (su cookie de sesión, descifrada con `CookieValuePrefix::remove(Crypt::decrypt(…, false))`, y
+  `GoogleAuthSession::rememberProfile`, por tinker y solo en local). La cuenta que nace se anonimiza al acabar.
 - **La isla, medida de verdad contra fuera** (mudada del carril de plataforma el 26-09): la pasarela PÚBLICA de pruebas
   pide ya el TITULAR, simula el 3DS y su vuelta firmada acaba en «¡Reservado!» (`storage/app/sonda-isla-pasarela.mjs`);
   Google acepta la vuelta a `localhost:8081` y NO la del 80 del contenedor.

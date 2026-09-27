@@ -103,15 +103,10 @@
      2026-09-11]`, `DECISIONES #523`, revierte `#326`): «Reservar» abierto y el registro —o la cuenta,
      con sesión— plegado e invitando a abrirse. --}}
 <body data-cta-mode="buy"
-      data-purchase-open="{{ (((request()->routeIs('entradas') || \App\Http\Sidebar\PurchaseResume::requested()) && $site['sales_online']) || \App\Http\Sidebar\AccountDoor::isDoor() || \App\Http\Sidebar\SidebarEntry::peek()->pending()) ? '1' : '' }}"
-      {{-- La compra que salió a Google y vuelve (`?compra=reanudar`, T3e·4): se abre como `/entradas` y se cuenta como
-           `resume` (`Http\Sidebar\PurchaseResume`). --}}
-      data-purchase-resume="{{ \App\Http\Sidebar\PurchaseResume::requested() && $site['sales_online'] ? '1' : '' }}"
-      {{-- La ZONA del área de cliente con la que abrir, cuando se ha entrado por una de las rutas
-           que sobreviven a la retirada de `/mi-cuenta/…` (`AccountDoor`). Vacío = no es una puerta.
-           ⚠️ Se CONSUME al abrir: si no, cerrar y reabrir el cajón devolvería al cliente a la zona
-           una y otra vez — la misma trampa que `SidebarEntry` pagó en 4.0a. --}}
-      data-account-zone="{{ \App\Http\Sidebar\AccountDoor::zone() }}"
+      {{-- La compra abierta al cargar, su reanudación tras Google y la zona de la cuenta: el MISMO estado que las páginas
+           nuevas (`#785`), en su parcial. ⚠️ La zona se CONSUME al abrir: si no, cerrar y reabrir el cajón devolvería
+           al cliente a la zona una y otra vez — la misma trampa que `SidebarEntry` pagó en 4.0a. --}}
+      @include('components.site.body-compra')
       {{-- El consentimiento, la analítica y los píxeles: el MISMO estado que las páginas nuevas (T4b·4), en su parcial. --}}
       @include('components.site.body-state')
       @if ($hasHero) data-has-hero="1" @endif>

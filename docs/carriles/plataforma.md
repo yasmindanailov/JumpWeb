@@ -3,9 +3,9 @@
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 EN CURSO** (su centena,
-> `decisiones/700-799.md`) · Último usado: **`#784`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#784`) · Actualizado: **2026-09-26**
-> (el zip del 26-09 tarde, §4.14: Z1→Z3 hechas, `#780`→`#784`; la T5 de Mi cuenta, T5a→T5e hechas, `#774`→`#779`).
+> `decisiones/700-799.md`) · Último usado: **`#785`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#785`) · Actualizado: **2026-09-27**
+> (el zip del 26-09 tarde, §4.14: Z1→Z3 y Z4·1 hechas, `#780`→`#785`; la T5 de Mi cuenta, T5a→T5e hechas, `#774`→`#779`).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
 > llévaselo con la medida, como el SPA en `#724`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -38,14 +38,13 @@
 
 ## Por dónde retomar, en orden
 
-▶▶▶ **EN MARCHA (26-09 tarde): el ZIP TERCERO** (spec §4.14, `#780`, en `instancias/playjump/diseno/`). **Z1 ✅** («Entra» a
-lo ancho, las garantías `ReassuranceBand`, la marca oficial de Google) y **Z2 ✅** (`#781`: el movimiento de las páginas,
-`movimiento.js`; `scripts/sonda-movimiento.mjs` 16/16) y **Z3 ✅** (`#782`: la isla y su RELEVO entre montajes;
-`sonda-isla-movimiento` 24/24, contra el diseño `sonda-banco-movimiento` 9/9) y su rendimiento (`#783`). Las MARCAS de
-pago 🟦 (`#784`, spec §4.14: en «Pagar» y bajo «Reservar y pagar»): Bizum y Visa ✅; **falta Mastercard** (el owner
-bajó Maestro; se le pidió el suyo) → la receta, en la spec. En LOCAL, `payment.marks` = `bizum,visa`; en PRODUCCIÓN lo
-marca el owner en el panel. El botón de Bizum, con la v2.0.0.
-Sigue: **Z4** la conversión (aviso al SPA ANTES) → Normas y Visítanos. La isla por temporada, **ahora no**. ⚠️ Tras tocar
+▶▶▶ **EN MARCHA: el ZIP TERCERO** (spec §4.14: cada tanda, con su sonda y sus cifras; `#780`→`#785`). **Z1→Z3 ✅** y el
+rendimiento (`#783`). Las MARCAS de pago 🟦 (`#784`): en LOCAL, `payment.marks` = `bizum,visa`; en PRODUCCIÓN las marca
+el owner en el panel. El botón de Bizum, con la v2.0.0.
+**Z4 (27-09, el owner; buzón al SPA ANTES, `3db1bdac`)**: Z4·1 ✅ (`#785`: de la calculadora a «Pagar», «Tus datos» solo si
+falta algo, la vuelta de Google dentro de la compra; `sonda-compra-directa` 14/14) → Z4·2 las marcas pequeñas y sin
+chapa (pie, calculadora, bajo «Pagar»; Mastercard, `mc_symbol` ya en Descargas) → Z4·3 el teléfono SOLO en packs de
+fiesta, también en el alta. Luego Normas y Visítanos. La isla por temporada, **ahora no**. ⚠️ Tras tocar
 `instancias/playjump/publico/`, copiarlo a `public/instancia` (el producto sirve la copia).
 ▶▶ **EN MARCHA (26-09): T5 · Mi cuenta en la isla** (spec §4.13, `#773`: el censo, las cuatro respuestas del owner y
 el plan T5a→T5f; dentro de la v2). **T5a→T5d ✅** (`#774`→`#777`: la capa, las reservas, Antes de venir, los hijos;
@@ -152,7 +151,7 @@ FIESTA, del SPA (`#765`). ⚠️ BD LOCAL con los valores de `#699`/`#761`; en P
 guardas 8 y 9) · `scripts/mutar-guarda8.sh` · `CHANGELOG.md` · `phpstan.neon` · `phpstan-baseline.neon` ·
 `eslint.config.js` · `eslint-suppressions.json` (la poda quien arregla) · `scripts/mutar-analisis-estatico.sh` ·
 **LA ISLA Y LA LANDING NUEVA** (`#681`, `#682`): la spec, la isla `resources/js/isla/**`, sus bancos y sondas
-(`scripts/banco-{isla,piezas,compra}*`, `scripts/pixel.mjs`, `scripts/sonda-{embudo,isla,cuenta,movimiento,isla-movimiento,banco-movimiento,isla-rendimiento}.mjs`), `sidebar/reanudar.js`,
+(`scripts/banco-{isla,piezas,compra}*`, `scripts/pixel.mjs`, `scripts/sonda-{embudo,isla,cuenta,movimiento,isla-movimiento,banco-movimiento,isla-rendimiento,compra-directa}.mjs`), `sidebar/reanudar.js`,
 `sidebar/marca-compra.js`, `app/Http/Sidebar/PurchaseResume.php` y
 las vistas nuevas de `instancias/playjump/web/`; ⚠️ **el motor del cajón es del SPA**: se le avisa ANTES de tocarlo ·
 `StaticAnalysisGateTest` · `Tests\TestCase::be()` · **el token y el cajón empaquetado**, cuyos ficheros

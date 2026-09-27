@@ -118,8 +118,10 @@
     {!! $etiquetasVite !!}
 </head>
 {{-- T4b·4: el MISMO estado del `<body>` que las páginas de siempre —consentimiento, analítica y píxeles— para que los
-     lean el aviso de cookies y los cargadores (`components/site/body-state.blade.php`). --}}
+     lean el aviso de cookies y los cargadores (`components/site/body-state.blade.php`). Y `#785`: las marcas de la
+     compra (`body-compra`), sin las que la compra que volvía de Google a esta página no se reabría. --}}
 <body
+      @include('components.site.body-compra')
       @include('components.site.body-state')>
     {{ $slot }}
     @if ($motorCalculadora !== null)

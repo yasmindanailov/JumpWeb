@@ -7,11 +7,12 @@
  * vive aquí: el formulario del diseño (un solo paso para quien no tiene cuenta, «ya existe» al ENVIAR, `#688`), qué
  * pedir con sesión y a dónde llevar cada «no». Las reglas sin estado, en `datos.js` con su `node --test`.
  *
- * ⚠️⚠️ **Con sesión se enseña igual, y es el diseño**: «Hola, Ana», y solo lo que falta —el teléfono si la cuenta no
- * lo tiene (`#692`·3), la casilla si nunca firmó—. Es también la última ocasión de ver CON QUÉ cuenta se compra en un
- * móvil compartido.
+ * ⚠️⚠️ **Con sesión, solo si falta algo** (`#785`, el owner: una pantalla que solo decía «Hola, Ana» era fricción):
+ * `faltaAlgo()` decide si se enseña —el teléfono que ese pedido exige, la casilla que esa cuenta nunca firmó— y, si no,
+ * la compra va a «Pagar», que dice con qué cuenta se compra. Y la cuenta NUEVA que vuelve de Google completa aquí su alta
+ * (`cuenta: 'google'`: su nombre y la casilla, como en Mi cuenta), sin salir a Mi cuenta a mitad de pagar.
  */
-import { computed, nextTick, reactive } from 'vue';
+import { computed, nextTick, reactive, watch } from 'vue';
 import { STEPS } from '../../sidebar/machine.js';
 import { api } from '../../sidebar/api.js';
 import { t } from '../../sidebar/i18n.js';
@@ -19,11 +20,17 @@ import { useWaiverStore } from '../../sidebar/stores/waiver.js';
 import { useAccountContextStore } from '../../sidebar/stores/accountContext.js';
 import {
     cuentaQueYaExiste, datosVacios, entradaVacia, errorDeEntrar, erroresDelAcceso, erroresDelServidor, firmaPendiente,
-    formularioDeAlta, revisarDatos,
+    formularioDeAlta, hayQuePedir, revisarDatos,
 } from './datos.js';
 
 /** La marca de «la cuenta nace en esta compra», que sobrevive al viaje al banco (misma pestaña) y no lleva datos. */
 const CUENTA_NUEVA = 'jw-isla-cuenta-nueva';
+
+/**
+ * El alta que vuelve de Google (`account/google.js`), pedida SOLO al reanudar (`#785`): es rara, y en el trozo de la compra
+ * la bajaría quien abre cualquier compra (medido: +1,18 KiB).
+ */
+const altaDeGoogle = () => import('../../sidebar/account/google.js');
 
 export function useDatosCompra({ flow, props, textos }) {
     const { store, authStore, cartStore, buyerDue } = flow;
@@ -31,20 +38,100 @@ export function useDatosCompra({ flow, props, textos }) {
     const contexto = useAccountContextStore();
     /**
      * `f`, el formulario; `vista`, lo que se abre dentro del paso (`descargo` · `entrar`); `ent`, «Entra» y su olvido
-     * (`datos.js::entradaVacia`); `token`, el del anti-bot.
+     * (`datos.js::entradaVacia`); `token`, el del anti-bot; `google`, el perfil que espera en la sesión tras volver de
+     * Google sin cuenta (`{ name, email }`, `#785`).
      */
-    const estado = reactive({ f: datosVacios(), errores: {}, aviso: '', vista: null, ent: entradaVacia(), token: '' });
+    const estado = reactive({ f: datosVacios(), errores: {}, aviso: '', vista: null, ent: entradaVacia(), token: '', google: null });
     const aviso = (clave) => t(props.messages, clave);
 
-    // Con sesión manda la sesión; sin ella, lo que diga el alta («nueva», o «existe» tras su «no»).
-    const cuenta = computed(() => (contexto.context ? 'dentro' : estado.f.cuenta));
+    // Con sesión manda la sesión; sin ella, el alta que vuelve de Google o lo que diga el alta («nueva», o «existe»).
+    const cuenta = computed(() => (contexto.context ? 'dentro' : (estado.google ? 'google' : estado.f.cuenta)));
     const firma = computed(() => firmaPendiente({ cuenta: cuenta.value, contexto: contexto.context, documento: waiverStore.document }));
     const pedirTelefono = computed(() => cuenta.value === 'dentro' && flow.buyerNeed.value.phone);
 
     /** Al llegar desde la pantalla 0: el formulario en blanco y el texto del descargo pedido ya. */
     function preparar() {
-        Object.assign(estado, { f: datosVacios(), errores: {}, aviso: '', vista: null, ent: entradaVacia() });
+        Object.assign(estado, { f: datosVacios(), errores: {}, aviso: '', vista: null, ent: entradaVacia(), google: null });
         waiverStore.ensureLegal();
+    }
+
+    /** El texto del descargo, ya llegado (o fallado): de él depende si hay casilla. */
+    function conTextoDelDescargo() {
+        waiverStore.ensureLegal();
+
+        return new Promise((listo) => {
+            if (! waiverStore.legalLoading) return listo();
+            const parar = watch(() => waiverStore.legalLoading, (cargando) => { if (! cargando) { parar(); listo(); } });
+
+            return null;
+        });
+    }
+
+    /**
+     * ¿«Tus datos» tiene algo que pedir? (`datos.js::hayQuePedir`). Con la admisión ya hecha: `PAY` es que hay sesión. Se
+     * espera al texto del descargo, sin el que no se sabe si hay casilla que marcar.
+     */
+    async function faltaAlgo() {
+        if (store.step !== STEPS.PAY) return true;
+        await conTextoDelDescargo();
+
+        return hayQuePedir({ identificado: true, pedirTelefono: pedirTelefono.value, firma: firma.value });
+    }
+
+    /**
+     * La cuenta NUEVA que volvió de Google (`#785`): su perfil espera en la sesión del servidor y aquí se pide para
+     * completar el alta en «Tus datos». Solo si la instalación ofrece Google. Devuelve si lo había.
+     */
+    async function altaGooglePendiente() {
+        if (! props.urls?.google) return false;
+        const pendiente = await altaDeGoogle().then(({ loadGooglePending }) => loadGooglePending({ api })).catch(() => null);
+
+        if (pendiente === null) return false;
+        estado.google = pendiente;
+        if (! estado.f.nombre) estado.f.nombre = pendiente.name;
+
+        return true;
+    }
+
+    /**
+     * Completa el alta de Google (`account/google.js`, la secuencia de Mi cuenta y del cajón) y entra como tras
+     * cualquier alta (`flow.enterWith`: el contexto de cuenta, la cesta, los menores y la admisión). Un perfil que ya
+     * caducó vuelve al formulario de siempre con su aviso; un descargo republicado, a releer y marcar otra vez.
+     */
+    async function altaGoogle() {
+        const { runGoogleSignup } = await altaDeGoogle();
+        const r = await runGoogleSignup({
+            form: { name: estado.f.nombre.trim(), accept_waiver: estado.f.descargo === true },
+            api, waiver: waiverStore.document, messages: props.messages, auth: props.auth,
+        });
+
+        if (r.ok) {
+            try { window.sessionStorage.setItem(CUENTA_NUEVA, '1'); } catch { /* sin almacenamiento: «Listo» no lo dirá */ }
+            // La RESPUESTA entera de `GET /me`, como la del alta (`register.js`: `me`): de ella lee la cesta su titular.
+            const yo = await api.get('/me');
+
+            if (! yo?.ok) return fallar({}, aviso('errors.try_later'));
+            await flow.enterWith(yo);
+
+            return trasIdentificarse();
+        }
+
+        if (r.expired) {
+            estado.google = null;
+
+            return fallar({}, t(textos, 'compra.datos.google_caducada'));
+        }
+
+        if (r.stale) {
+            estado.f.descargo = false;
+            await waiverStore.reloadLegal({ api });
+
+            return fallar({ descargo: t(textos, 'compra.datos.errores.descargo_nuevo') });
+        }
+
+        const { errores, resto } = erroresDelServidor(r.errors?.fields);
+
+        return fallar(errores, resto[0] ?? (Object.keys(errores).length ? '' : r.errors?.summary?.[0] ?? ''));
     }
 
     function cambiar(campo, valor) {
@@ -155,6 +242,7 @@ export function useDatosCompra({ flow, props, textos }) {
 
         Object.assign(estado, { errores: {}, aviso: '' });
         if (f.cuenta === 'dentro') return deDentro();
+        if (f.cuenta === 'google') return altaGoogle();
 
         return f.cuenta === 'existe' ? entrar() : alta();
     }
@@ -242,5 +330,6 @@ export function useDatosCompra({ flow, props, textos }) {
     return {
         estado, cuenta, firma, pedirTelefono, contexto, waiverStore,
         preparar, cambiar, continuar, olvido, abrirEntrar, cambiarEntrada, entrarConClave, volver, cuentaNueva,
+        faltaAlgo, altaGooglePendiente,
     };
 }

@@ -202,6 +202,8 @@ return [
             'continuar' => 'Continuer vers le paiement',
             'cargando' => 'Vérification de vos coordonnées et réservation de votre horaire',
             'descargo' => 'Décharge de responsabilité',
+            'google_cuenta' => 'Avec votre compte Google : :correo',
+            'google_caducada' => 'Votre connexion Google a expiré : continuez à nouveau avec Google ou remplissez vos coordonnées.',
             'errores' => [
                 'nombre' => 'Écrivez vos nom et prénom.',
                 'correo' => 'Vérifiez l\'e-mail : il manque quelque chose.',
@@ -209,6 +211,7 @@ return [
                 'contrasena' => 'Écrivez un mot de passe de 8 caractères ou plus.',
                 'clave' => 'Écrivez votre mot de passe.',
                 'descargo' => 'Cochez la case pour continuer.',
+                'descargo_nuevo' => 'La décharge vient de changer : lisez-la et cochez à nouveau la case.',
                 'entrar' => 'Vérifiez l\'e-mail ou le mot de passe.',
             ],
         ],
@@ -224,6 +227,7 @@ return [
         'pagar' => [
             'banda' => 'Payer',
             'titular' => 'Vérifiez et payez',
+            'como' => 'Vous réservez en tant que :nombre',
             'total' => 'Total',
             'otra' => 'Ajouter une autre entrée',
             'tarjeta' => 'Payer :importe par carte',

@@ -99,6 +99,16 @@ describe('la descripción de cada paso', () => {
         assert.equal(ck('pagar', { ocupado: 'pagar' }).action.loading, 'Cargando');
     });
 
+    test('«Pagar» sin «Tus datos» delante (`#785`): su nombre solo, sin «Paso 2 de 2» ni barra; y así hasta el desenlace', () => {
+        for (const paso of ['pagar', 'banco', 'fallido', 'verificando', 'perdida']) {
+            const c = ck(paso, { sinDatos: true });
+
+            assert.equal(`${c.stepStrong}${c.step}`, 'Pagar', paso);
+            assert.equal(c.progress, null, paso);
+        }
+        assert.deepEqual(ck('pagar').progress, [2, 2], 'con «Tus datos» delante, la barra de siempre');
+    });
+
     test('saliendo al banco, el botón por si no salta; el pago no completado, reintentar con tarjeta (sin Bizum, `#683`)', () => {
         assert.equal(ck('banco').action.onClick(), 'salir');
         assert.equal(ck('banco').onBack, null);

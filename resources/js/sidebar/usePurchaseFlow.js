@@ -1008,5 +1008,8 @@ export function usePurchaseFlow(props) {
         selectProduct, selectDate, selectTime, applyQuantity, chooseAddon, setAddonQuantity,
         goToTime, goToCart, addToCart, removeLine, updateCartField, addAnother, clearSelection,
         checkout, submitLogin, submitRegister, confirmReservation, retryPayment,
+        // Lo que se hace tras identificarse, para la sesión que abre OTRA puerta: el alta con Google que la isla completa
+        // dentro de la compra (`#785`, plataforma; avisado en su buzón). La misma secuencia que tras entrar o darse de alta.
+        enterWith,
     };
 }

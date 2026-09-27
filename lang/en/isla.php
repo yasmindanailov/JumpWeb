@@ -202,6 +202,8 @@ return [
             'continuar' => 'Continue to payment',
             'cargando' => 'Checking your details and holding your time',
             'descargo' => 'Liability waiver',
+            'google_cuenta' => 'With your Google account: :correo',
+            'google_caducada' => 'Your Google sign-in expired: continue with Google again or fill in your details.',
             'errores' => [
                 'nombre' => 'Write your full name.',
                 'correo' => 'Check the email: something is missing.',
@@ -209,6 +211,7 @@ return [
                 'contrasena' => 'Write a password of 8 characters or more.',
                 'clave' => 'Write your password.',
                 'descargo' => 'Tick the box to continue.',
+                'descargo_nuevo' => 'The waiver has just changed: read it and tick the box again.',
                 'entrar' => 'Check the email or the password.',
             ],
         ],
@@ -224,6 +227,7 @@ return [
         'pagar' => [
             'banda' => 'Pay',
             'titular' => 'Review and pay',
+            'como' => 'Booking as :nombre',
             'total' => 'Total',
             'otra' => 'Add another ticket',
             'tarjeta' => 'Pay :importe by card',

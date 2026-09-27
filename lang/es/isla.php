@@ -221,7 +221,11 @@ return [
             'continuar' => 'Continuar al pago',
             'cargando' => 'Comprobando tus datos y guardando tu hora',
             'descargo' => 'Descargo de responsabilidad',
+            // `#785`: la cuenta NUEVA que vuelve de Google completa su alta aquí, dentro de la compra (antes, en Mi cuenta).
+            'google_cuenta' => 'Con tu cuenta de Google: :correo',
+            'google_caducada' => 'La vuelta de Google ha caducado: vuelve a continuar con Google o rellena tus datos.',
             'errores' => [
+                'descargo_nuevo' => 'El descargo acaba de cambiar: léelo y vuelve a marcar la casilla.',
                 'nombre' => 'Escribe tu nombre y apellidos.',
                 'correo' => 'Revisa el correo: falta algo.',
                 'telefono' => 'Revisa el teléfono: son 9 cifras.',
@@ -244,6 +248,8 @@ return [
         'pagar' => [
             'banda' => 'Pagar',
             'titular' => 'Repasa y paga',
+            // `#785`: sin «Tus datos» delante (con sesión y sin nada que pedir), con qué cuenta se compra, en una línea.
+            'como' => 'Reservas como :nombre',
             'total' => 'Total',
             'otra' => 'Añadir otra entrada',
             'tarjeta' => 'Pagar :importe con tarjeta',

@@ -280,6 +280,26 @@ BLADE);
     }
 
     /**
+     * **La compra que vuelve de Google se REABRE en una página declarada** (`#785`): el `<body>` lleva las mismas marcas de
+     * compra que el layout de siempre (`components/site/body-compra.blade.php`). Sin ellas, la compra que salía a Google
+     * desde Kids o Jump volvía a `?compra=reanudar` y no se reabría —el owner, 26-09: «al volver de Google te lleva a Mi
+     * cuenta»—.
+     */
+    public function test_a_declared_page_reopens_the_purchase_that_returns_from_google(): void
+    {
+        File::put($this->paquete.'/web/con-pagina.blade.php', '<x-pagina titulo="Kids"><p>hola</p></x-pagina>');
+        $this->declarar(['kids' => ['vista' => 'con-pagina', 'hechos' => []]]);
+
+        $vuelta = (string) $this->get('/kids?compra=reanudar')->assertOk()->getContent();
+        $this->assertStringContainsString('data-purchase-open="1"', $vuelta);
+        $this->assertStringContainsString('data-purchase-resume="1"', $vuelta);
+
+        $normal = (string) $this->get('/kids')->assertOk()->getContent();
+        $this->assertStringContainsString('data-purchase-open=""', $normal, 'sin vuelta, la página no abre la compra');
+        $this->assertStringContainsString('data-purchase-resume=""', $normal);
+    }
+
+    /**
      * **Las horas de HOY de cada entrada** (`availability_today`, T4e): de ellas salen «Quedan huecos», «Reservar para hoy»
      * y «Hoy, 1 hora cuesta…». Es el único hecho que no pasa por su controlador (medido: 160–180 ms por el catálogo sin
      * memorizar), así que se prueba que da el MISMO JSON que `POST /availability/{id}/times` con la fecha de hoy DEL

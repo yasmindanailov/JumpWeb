@@ -10,6 +10,7 @@ use App\Domain\Identity\Services\GoogleOAuth;
 use App\Domain\Identity\Services\SocialLogin;
 use App\Http\Auth\GoogleAuthSession;
 use App\Http\Controllers\Controller;
+use App\Http\Sidebar\PurchaseResume;
 use App\Http\Sidebar\SidebarEntry;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -141,7 +142,7 @@ class GoogleAuthController extends Controller
         if ($result->isPendingRegistration()) {
             GoogleAuthSession::rememberProfile($profile);
 
-            return $this->pendingRegistration();
+            return $this->pendingRegistration($destination);
         }
 
         return redirect()->to($destination)->with('status', $this->refusalStatus($result->reason));
@@ -214,10 +215,17 @@ class GoogleAuthController extends Controller
      * ⚠️ **La pantalla vive en el CAJÓN** (`[DECIDIDO owner]` Q8), así que el destino es una PUERTA:
      * una ruta web que sirve la home y abre el cajón en su zona, el mismo mecanismo que `/registro` y
      * `/login` (`Http\Sidebar\AccountDoor`). Aquí no se decide nada más.
+     *
+     * ▶ **Salvo si salió de una COMPRA** (`#785`, el owner: «al volver de Google tendría que mantenerse en el flujo de
+     * pago»): vuelve a esa compra —su `next` ya validado, con `?compra=reanudar`— y la compra completa el alta en «Tus
+     * datos» con el MISMO perfil que espera en la sesión (`GET /auth/google/pending`). Por la puerta, la persona salía a
+     * «Mi cuenta» a mitad de pagar.
      */
-    private function pendingRegistration(): RedirectResponse
+    private function pendingRegistration(string $destination): RedirectResponse
     {
-        return redirect()->route('registro.google');
+        return PurchaseResume::isResumeUrl($destination)
+            ? redirect()->to($destination)
+            : redirect()->route('registro.google');
     }
 
     /** El desenlace visible de un rechazo del dominio. Uno por motivo: cada uno tiene otra salida. */

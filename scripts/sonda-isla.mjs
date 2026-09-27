@@ -111,22 +111,29 @@ const volverDelBanco = async (ruta) => {
     await page.waitForSelector('#isla-compra-paso', { state: 'attached', timeout: 20000 });
 };
 
-/** «Tus datos» → «Pagar», con la sesión que haya: «Hola», o «Entra» con la cuenta de pruebas. */
+/**
+ * Hasta «Pagar», con la sesión que haya. Sin sesión, «Tus datos» y su «Entra» con la cuenta de pruebas; con ella y nada
+ * que pedir, «Pagar» directamente (`#785`), y si falta algo (el teléfono, el descargo), se da en «Tus datos».
+ */
 async function hastaPagar() {
-    await hastaPaso('Tus datos');
+    const enDatos = () => (document.querySelector('#isla-compra-paso')?.textContent ?? '').includes('Tus datos');
+
+    await espera(() => /Tus datos|Pagar$/.test((document.querySelector('#isla-compra-paso')?.textContent ?? '').trim()), null, 20000);
     await quieta();
-    if (! /^Hola/.test(await page.locator('[data-isla-scroll] h1').innerText().catch(() => ''))) {
+    if (await page.evaluate(enDatos) && ! /^Hola/.test(await page.locator('[data-isla-scroll] h1').innerText().catch(() => ''))) {
         await page.locator('[data-isla-scroll] a, [data-isla-scroll] button', { hasText: /^Entra$/ }).first().click();
         await page.fill('#pjc-ent', CLIENTE.email);
         await page.fill('#pjc-ent-clave', CLIENTE.password);
         await accion(/^Continuar$/).click();
-        await espera(() => /^Hola/.test(document.querySelector('[data-isla-scroll] h1')?.textContent ?? ''), null, 20000);
+        await espera(() => /^Hola/.test(document.querySelector('[data-isla-scroll] h1')?.textContent ?? '') || (document.querySelector('#isla-compra-paso')?.textContent ?? '').trim().endsWith('Pagar'), null, 20000);
     }
     // Lo que la cuenta aún deba (el teléfono, el descargo) se da aquí mismo.
-    if (await page.locator('#pjc-tel').count()) await page.fill('#pjc-tel', '600000000');
-    if (await page.locator('#pjc-descargo').count()) await page.check('#pjc-descargo');
-    await accion(/^Continuar al pago$/).click();
-    await hastaPaso('Paso 2 de 2');
+    if (await page.evaluate(enDatos)) {
+        if (await page.locator('#pjc-tel').count()) await page.fill('#pjc-tel', '600000000');
+        if (await page.locator('#pjc-descargo').count()) await page.check('#pjc-descargo');
+        await accion(/^Continuar al pago$/).click();
+    }
+    await hastaPaso('Pagar');
     await quieta();
 }
 

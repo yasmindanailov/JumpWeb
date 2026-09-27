@@ -36,6 +36,9 @@ export function revisarDatos(f, { pedirTelefono = false, firmaPendiente = false,
 
     if (f.cuenta === 'dentro') {
         if (pedirTelefono && vacio(f.telefono)) errores.telefono = t('telefono');
+    } else if (f.cuenta === 'google') {
+        // El alta que vuelve de Google (`#785`): el correo es el suyo y no se teclea; queda el nombre (y la casilla).
+        if (vacio(f.nombre)) errores.nombre = t('nombre');
     } else if (f.cuenta === 'existe') {
         if (! String(f.correo ?? '').includes('@')) errores.correo = t('correo');
         if (vacio(f.contrasena)) errores.contrasena = t('clave');
@@ -51,6 +54,18 @@ export function revisarDatos(f, { pedirTelefono = false, firmaPendiente = false,
     if (firmaPendiente && f.descargo !== true) errores.descargo = t('descargo');
 
     return errores;
+}
+
+/**
+ * **¿«Tus datos» tiene algo que pedir?** (`#785`, el owner: «si no vamos a poner algo REALMENTE relevante que merezca
+ * una pantalla, directamente la quitamos»). Sin sesión, sí: entrar o crear la cuenta. Con ella, solo lo que de verdad
+ * falta —el teléfono que ese pedido exige, la firma que esa cuenta nunca hizo—; si no falta nada, la compra va a
+ * «Pagar». ⚠️ No es la autoridad: si al pagar el servidor pide algo, la compra vuelve aquí con su campo (`alPagarMal`).
+ *
+ * @param {{identificado: boolean, pedirTelefono: boolean, firma: boolean}} e
+ */
+export function hayQuePedir({ identificado, pedirTelefono = false, firma = false }) {
+    return ! identificado || pedirTelefono || firma;
 }
 
 /** El campo de la isla que corresponde a cada campo del alta. Lo que no está aquí va arriba, al resumen. */

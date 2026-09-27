@@ -422,6 +422,28 @@ class GoogleAuthTest extends TestCase
     }
 
     /**
+     * **La cuenta nueva que salió de una COMPRA vuelve a la compra** (`#785`, el owner: «tendría que mantenerse en el flujo
+     * de pago»): su `next` es la vuelta de la compra (`?compra=reanudar`), y ahí completa el alta en «Tus datos» con el
+     * MISMO perfil que espera en la sesión. Por la puerta de siempre salía a «Mi cuenta» a mitad de pagar. Sin compra, la
+     * puerta de siempre (el caso de arriba).
+     */
+    public function test_a_new_account_that_left_from_a_purchase_goes_back_to_it_to_complete_the_signup(): void
+    {
+        $this->configureGoogleKeys();
+
+        $ida = $this->get(route('auth.google.redirect', ['next' => '/entradas?compra=reanudar']))->assertRedirect();
+        parse_str((string) parse_url((string) $ida->headers->get('Location'), PHP_URL_QUERY), $query);
+        $flow = ['state' => (string) $query['state'], 'nonce' => (string) $query['nonce']];
+        $this->fakeGoogleExchange($flow);
+
+        $this->returnFromGoogle($flow)->assertRedirect(url('/entradas?compra=reanudar'));
+
+        $this->assertGuest();
+        $this->assertDatabaseCount('users', 0);
+        $this->assertSame(self::GOOGLE_EMAIL, session('auth.google.profile')['email'] ?? null, 'el perfil espera en la sesión, como por la puerta');
+    }
+
+    /**
      * **P1 · la guarda dura.** Con `email_verified: false` no se vincula ni se crea nada, **aunque el
      * correo coincida con una cuenta existente**. Nunca se degrada a «el correo coincide».
      */

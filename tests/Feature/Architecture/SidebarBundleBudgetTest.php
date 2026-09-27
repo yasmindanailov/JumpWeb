@@ -922,7 +922,11 @@ class SidebarBundleBudgetTest extends TestCase
     // movimientos por la API (`movimiento.js`), la píldora de las horas (`usePildoraHoras.js`), el número que rueda y la
     // llegada del botón. Medido 135,73 → 146,81 (base: `HEAD` construido aparte). ⚠️ Probado y DESCARTADO: la
     // `<Transition>` de Vue para el velo pesaba 10–14 KiB más en cada trozo; el velo que se va es otro nodo. El techo, a 148.
-    private const ISLA_COMPRA_CHUNK_MAX_KB = 148;
+    // `#785` (la compra sin pantallas de más): «preparando» (`PantallaPreparando`), el paso que toca tras la admisión
+    // (`trasAdmitir`, `faltaAlgo`) y la reanudación de Google con su alta dentro de la compra. Medido 147,51 → 150,32 (base:
+    // el `HEAD` de `#784`, construido aparte). El alta de Google (`account/google.js`), con `import()`: en el trozo sumaba
+    // 1,18 más para quien abre cualquier compra. El techo, a 151.
+    private const ISLA_COMPRA_CHUNK_MAX_KB = 151;
 
     // T4d·4 (`specs/isla-y-landing-nueva.md` §4.12): la CALCULADORA de una página, entrada propia que la página pide
     // (`scripts` de `<x-pagina>`) y se monta al acercarse su pieza. Su DESCARGA entera, como la mide el navegador que

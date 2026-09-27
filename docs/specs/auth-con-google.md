@@ -410,6 +410,10 @@ contraseña, y a partir de aquí también una cuenta de Google.
 > **lo vigente es §21.4.3**.
 > ▶ Y con ello la Q6 queda cerrada: la pantalla **se sigue pintando aunque no haya descargo**, por el
 > NOMBRE (`[DECIDIDO owner]`, §19.6).
+> ▶ **`[DECIDIDO owner, 2026-09-27]` (`#785`): si la ida salió de una COMPRA de la isla** (su `next` lleva
+> `?compra=reanudar`), la vuelta de una cuenta nueva va a ESA compra y no a `/registro/google`: la compra completa el
+> alta en su «Tus datos» con el mismo perfil de la sesión y las mismas dos cosas (`account/google.js`). Por la puerta
+> salía a «Mi cuenta» a mitad de pagar. Fuera de una compra, la puerta de siempre (Q8).
 
 | | | |
 |---|---|---|

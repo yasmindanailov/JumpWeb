@@ -2,7 +2,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import {
     cuentaQueYaExiste, datosVacios, entradaVacia, errorDeEntrar, erroresDelAcceso, erroresDelServidor, firmaPendiente,
-    formularioDeAlta, revisarDatos,
+    formularioDeAlta, hayQuePedir, revisarDatos,
 } from './datos.js';
 
 /**
@@ -119,6 +119,26 @@ describe('el descargo que firmar', () => {
         assert.equal(con({ required: true, pending: false }), true);
         assert.equal(con({ required: true, pending: true }), false, 'aceptada en el alta, espera al correo (`#181`)');
         assert.equal(con({ required: false, pending: false, outdated: true }), false, 'una versión anterior la deja pasar la puerta');
+    });
+});
+
+describe('«Tus datos», solo si falta algo (`#785`)', () => {
+    test('sin sesión, siempre: entrar o crear la cuenta', () => {
+        assert.equal(hayQuePedir({ identificado: false }), true);
+    });
+
+    test('con sesión, solo el teléfono que ese pedido exige o la firma que nunca hizo; sin nada, a «Pagar»', () => {
+        assert.equal(hayQuePedir({ identificado: true }), false, 'un «Hola, Ana» sin nada que pedir no es una pantalla');
+        assert.equal(hayQuePedir({ identificado: true, pedirTelefono: true }), true);
+        assert.equal(hayQuePedir({ identificado: true, firma: true }), true);
+    });
+
+    test('la cuenta nueva que vuelve de Google: su nombre y la casilla; el correo es el de Google y no se teclea', () => {
+        const google = { ...datosVacios(), cuenta: 'google' };
+
+        assert.deepEqual(Object.keys(revisarDatos(google, { firmaPendiente: true, textos })), ['nombre', 'descargo']);
+        assert.deepEqual(revisarDatos({ ...google, nombre: 'Ana García', descargo: true }, { firmaPendiente: true, textos }), {});
+        assert.deepEqual(revisarDatos({ ...google, nombre: 'Ana García' }, { textos }), {}, 'sin descargo que firmar, basta el nombre');
     });
 });
 

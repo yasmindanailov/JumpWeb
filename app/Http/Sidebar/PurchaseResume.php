@@ -27,4 +27,16 @@ final class PurchaseResume
     {
         return request()->query(self::PARAM) === self::VALUE;
     }
+
+    /**
+     * ¿Esta URL es la VUELTA de una compra? (`#785`) La usa `GoogleAuthController`: una cuenta NUEVA que salió de una
+     * compra completa su alta DENTRO de ella (la compra la encuentra en `GET /auth/google/pending`), no en
+     * `/registro/google`, que la sacaba del camino de pagar a «Mi cuenta».
+     */
+    public static function isResumeUrl(string $url): bool
+    {
+        parse_str((string) parse_url($url, PHP_URL_QUERY), $query);
+
+        return ($query[self::PARAM] ?? null) === self::VALUE;
+    }
 }

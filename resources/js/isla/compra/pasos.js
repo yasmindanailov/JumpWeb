@@ -55,13 +55,17 @@ export function direccion(antes, ahora) {
  * @param {object} e
  *   `paso` · `vista` (`descargo` · `entrar`, dentro de «Tus datos») · `entrada` (el estado de «Entra»: `paso`,
  *   `valor`, `clave`) · `textos` · `resumen` ({ summary, total }) · `importe` (lo que cobra la pasarela, ya escrito) ·
- *   `ocupado` (el paso que espera al servidor) · `horaNueva` (la elegida en «perdida») · `acciones` ({ volver,
- *   continuar, entrar, pagar, salir, reintentar, elegirHora, miQr, cerrar }).
+ *   `ocupado` (el paso que espera al servidor) · `horaNueva` (la elegida en «perdida») · `sinDatos` (se llegó a «Pagar»
+ *   sin «Tus datos») · `acciones` ({ volver, continuar, entrar, pagar, salir, reintentar, elegirHora, miQr, cerrar }).
  */
 export function ckDelPaso(e) {
     const t = (clave) => texto(e.textos, clave);
     const a = e.acciones ?? {};
-    const pasoN = (n, nombre) => ({ stepStrong: textoCon(e.textos, 'compra.paso', { n, total: 2 }), step: ` · ${nombre}`, progress: [n, 2] });
+    // Sin «Tus datos» delante (`sinDatos`, `#785`: con sesión y nada que pedir), «Pagar» es el ÚNICO paso: su nombre, sin
+    // «Paso 2 de 2» ni una barra con un primer tramo que nadie vio.
+    const pasoN = (n, nombre) => (e.sinDatos
+        ? { stepStrong: nombre, step: '', progress: null }
+        : { stepStrong: textoCon(e.textos, 'compra.paso', { n, total: 2 }), step: ` · ${nombre}`, progress: [n, 2] });
     const ck = {
         key: `${e.paso}${e.vista ?? ''}`,
         stepStrong: '',

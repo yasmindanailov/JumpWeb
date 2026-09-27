@@ -12,6 +12,7 @@
  * el pie fijo se quede en lo que decide y el recibo respire en pantallas bajas.
  */
 import { useTextos } from '../piezas/textos.js';
+import { PASO } from './estilos.js';
 import PasoCompra from './PasoCompra.vue';
 import CantidadCompra from './CantidadCompra.vue';
 import IconoLucide from '../ui/IconoLucide.vue';
@@ -29,6 +30,8 @@ defineProps({
     // El «no» del servidor al pagar o al cambiar una cantidad (T3e·3): la hora se llenó, la cantidad no cabe…
     aviso: { type: String, default: '' },
     marcas: { type: Array, default: () => [] },
+    // Sin «Tus datos» delante (`#785`): con qué cuenta se compra («Reservas como Ana»), pegado al titular.
+    como: { type: String, default: '' },
 });
 const emit = defineEmits(['cantidad', 'otra', 'calcetines']);
 const { t } = useTextos();
@@ -36,6 +39,10 @@ const { t } = useTextos();
 
 <template>
     <PasoCompra :titulo="t('compra.pagar.titular')">
+        <p
+            v-if="como"
+            :style="[PASO.pista, { marginTop: '-16px' }]"
+        >{{ como }}</p>
         <AvisoDestacado
             v-if="aviso"
             tone="danger"

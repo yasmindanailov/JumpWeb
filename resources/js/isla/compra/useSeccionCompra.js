@@ -19,7 +19,7 @@ import { usePurchaseFlow } from '../../sidebar/usePurchaseFlow.js';
 import { TEXTOS_ISLA } from '../../sidebar/carcasa.js';
 import { STEPS, isOutcome } from '../../sidebar/machine.js';
 import { api } from '../../sidebar/api.js';
-import { t } from '../../sidebar/i18n.js';
+import { t, tp } from '../../sidebar/i18n.js';
 import { useSuperficie } from './useSuperficie.js';
 import { useDatosCompra } from './useDatosCompra.js';
 import { usePagoCompra } from './usePagoCompra.js';
@@ -49,9 +49,15 @@ export function useSeccionCompra(props) {
     const flow = usePurchaseFlow(props);
     const { store, catalogStore, timeStore, selectionStore, cartStore, outcomeStore, authStore } = flow;
     const { abierta, cerrar: cerrarSuperficie } = useSuperficie();
+    /**
+     * `preparando` (`#785`): la compra va SOLA al paso que toque —«Reservar y pagar» de la calculadora, la vuelta de
+     * Google— y la pantalla 0 no se enseña mientras: un esqueleto, sin nada que tocar (el owner: «al usuario le da tiempo
+     * a presionar continuar o editar algo»). `sinDatos`: se llegó a «Pagar» sin pasar por «Tus datos» (nada que pedir).
+     */
     const compra = reactive({
         borrador: borradorDeIntencion(null, []), precios: {}, fichas: {}, grupos: [], cargandoHoras: false, intencion: null,
         paso: 'cuando', aviso: '', ocupado: null, pedido: null, pagado: null, dir: null, cercanas: [], horaNueva: null,
+        preparando: false, sinDatos: false,
     });
 
     /**
@@ -81,6 +87,13 @@ export function useSeccionCompra(props) {
         try { window.history.replaceState(window.history.state, '', `${pathname}${sinVuelta(search)}${hash}`); } catch { /* sin historial */ }
     }
 
+    // La vuelta prepara YA (`#785`, medido con `sonda-compra-directa`): la reanudación espera al catálogo, y mientras la
+    // pantalla 0 se pintaba vacía. Si el montaje acaba sin catálogo, se suelta: nunca un esqueleto eterno.
+    if (reanudacion) {
+        compra.preparando = true;
+        flow.ready.then(() => { if (catalogStore.products.length === 0) compra.preparando = false; });
+    }
+
     /** El paso que se ve: el que manda la máquina (el cobro y los desenlaces) o el de la isla. */
     const paso = computed(() => pasoDelMotor(store.step) ?? compra.paso);
 
@@ -95,6 +108,12 @@ export function useSeccionCompra(props) {
      */
     function applyIntent() {
         compra.intencion = store.machine?.takeIntent?.() ?? compra.intencion;
+        // La que sigue SOLA (`#785`) prepara ya, también mientras espera al catálogo: si no, la pantalla 0 se pintaba vacía
+        // hasta que llegaba. Si el montaje acaba sin catálogo, se suelta: nunca un esqueleto eterno.
+        if (compra.intencion?.type === 'linea' && compra.intencion.continuar === true) {
+            compra.preparando = true;
+            flow.ready.then(() => { if (catalogStore.products.length === 0) compra.preparando = false; });
+        }
         if (catalogStore.products.length === 0) return;
         const intencion = compra.intencion;
 
@@ -109,33 +128,50 @@ export function useSeccionCompra(props) {
     }
 
     /**
-     * Reanuda en «Tus datos» la compra que volvió de Google: el borrador y el pedido de la marca, la línea de la cesta
-     * guardada (que el montaje restauró) y la admisión del motor (`IDENTIFY` si canceló, `PAY` si entró). Mientras,
-     * la acción espera. Si la línea ya no está (caducó, otro titular la purgó), a la pantalla 0 con el borrador.
+     * Reanuda la compra que volvió de Google: el borrador y el pedido de la marca, la línea de la cesta guardada (que el
+     * montaje restauró) y la admisión del motor (`IDENTIFY` si canceló o la cuenta es nueva, `PAY` si entró). Mientras,
+     * «preparando». Con sesión y nada que pedir, a «Pagar»; con una cuenta NUEVA, a completar su alta en «Tus datos»
+     * (`#785`: su perfil espera en la sesión; antes salía a Mi cuenta). Si la línea ya no está (caducó, otro titular la
+     * purgó), a la pantalla 0 con el borrador.
      */
     async function reanudar({ compra: guardada }) {
         if (! guardada?.borrador?.zona) return empezar(null);
-        Object.assign(compra, { borrador: { ...guardada.borrador }, pedido: guardada.pedido ?? null, paso: 'datos', ocupado: 'datos', aviso: '' });
+        Object.assign(compra, { borrador: { ...guardada.borrador }, pedido: guardada.pedido ?? null, paso: 'cuando', preparando: true, aviso: '' });
         datos.preparar();
         // La vuelta que NO salió (T5e·2, `#779`: canceló en Google, esa cuenta ya es de otra…) lo dice en «Tus datos», con
         // su aviso de siempre; antes se volvía al mismo sitio sin decir nada. La que salió no necesita aviso: sigue a pagar.
         const delServidor = tomarAvisoDelServidor(document, { si: (a) => a.tono !== 'success' });
-
-        if (delServidor) datos.estado.aviso = delServidor.texto;
 
         try {
             await flow.ready;
             if (compra.pedido && cartStore.lines.length > 0) {
                 compra.pedido = { ...compra.pedido, n: cartStore.lines[0].quantity ?? compra.pedido.n };
                 if (store.step === STEPS.CART) await flow.checkout();
-                if (store.step === STEPS.IDENTIFY || store.step === STEPS.PAY) return;
+                if (store.step === STEPS.IDENTIFY || store.step === STEPS.PAY) {
+                    if (store.step === STEPS.IDENTIFY) await datos.altaGooglePendiente();
+                    await trasAdmitir();
+                    if (delServidor && compra.paso === 'datos') datos.estado.aviso = delServidor.texto;
+
+                    return;
+                }
             }
         } finally {
-            compra.ocupado = null;
+            compra.preparando = false;
         }
 
         Object.assign(compra, { paso: 'cuando', pedido: null, aviso: cartStore.error });
         enCola(() => situar(compra.borrador));
+    }
+
+    /**
+     * Tras la admisión (`IDENTIFY` o `PAY`), el paso que toca (`#785`): «Tus datos» solo si tiene algo que pedir
+     * (`datos.faltaAlgo()`); si no, «Pagar» directamente, y «Pagar» lo sabe (`sinDatos`: sin «Paso 2 de 2» y su flecha
+     * vuelve a la pantalla 0). El formulario se prepara siempre: el servidor puede devolver aquí al pagar.
+     */
+    async function trasAdmitir() {
+        const pedir = await datos.faltaAlgo();
+
+        Object.assign(compra, { paso: pedir ? 'datos' : 'pagar', sinDatos: ! pedir });
     }
 
     /**
@@ -153,14 +189,18 @@ export function useSeccionCompra(props) {
     function empezar(intencion) {
         cartStore.setError('');
         if (isOutcome(store.step)) flow.addAnother();
-        Object.assign(compra, { paso: 'cuando', aviso: '', pedido: null, pagado: null });
+        // «Reservar y pagar» de la calculadora de la página (T4d): con su selección entera, la compra sigue SOLA por su
+        // camino de siempre (`continuar`: la línea se valida, entra en la cesta y se admite) hasta «Pagar», o hasta «Tus
+        // datos» si falta algo (`#785`). Mientras, «preparando»: la pantalla 0 no se enseña, porque no hay nada que elegir
+        // y se podía tocar mientras cargaba. Si al situarla ya no cabe —la hora se llenó— o el servidor dice que no, a la
+        // pantalla 0 con lo que quepa y su aviso. ⚠️ FUERA de la cola: `continuar` la espera, y desde dentro se esperaría
+        // a sí misma.
+        const sola = intencion?.type === 'linea' && intencion.continuar === true;
+
+        Object.assign(compra, { paso: 'cuando', aviso: '', pedido: null, pagado: null, preparando: sola, sinDatos: false });
         const situada = enCola(() => situar(borradorDeIntencion(intencion, catalogStore.products)));
 
-        // «Reservar y pagar» de la calculadora de la página (T4d): con su selección entera, la compra sigue SOLA a «Tus
-        // datos» por su camino de siempre (`continuar`: la línea se valida y entra en la cesta). Si al situarla ya no cabe
-        // —la hora se llenó—, se queda en la pantalla 0 con lo que quepa. ⚠️ FUERA de la cola: `continuar` la espera, y
-        // desde dentro se esperaría a sí misma.
-        if (intencion?.type === 'linea' && intencion.continuar) situada.then(() => (vista.value?.listo ? continuar() : undefined));
+        if (sola) situada.then(() => (vista.value?.listo ? continuar() : undefined)).finally(() => { compra.preparando = false; });
     }
 
     watch(() => catalogStore.products, () => applyIntent());
@@ -199,7 +239,7 @@ export function useSeccionCompra(props) {
             }
 
             datos.preparar();
-            compra.paso = 'datos';
+            await trasAdmitir();
         } finally {
             compra.ocupado = null;
         }
@@ -217,13 +257,16 @@ export function useSeccionCompra(props) {
         }
     }
 
-    /** «Continuar» de «Entra»: al entrar, de vuelta a «Tus datos» con sesión. */
+    /**
+     * «Continuar» de «Entra»: al entrar, a «Pagar» si ya no falta nada (`#785`: no se vuelve a un «Hola» vacío); si
+     * falta algo —el teléfono, la casilla—, a «Tus datos» con sesión, a pedir solo eso.
+     */
     async function entrarDatos() {
         if (compra.ocupado) return;
         compra.ocupado = 'entrar';
 
         try {
-            await datos.entrarConClave();
+            if (await datos.entrarConClave() && ! await datos.faltaAlgo()) compra.paso = 'pagar';
         } finally {
             compra.ocupado = null;
         }
@@ -231,7 +274,7 @@ export function useSeccionCompra(props) {
 
     /** El «no» del pago sobre lo que el comprador debe (el teléfono): a «Tus datos», con el error en su campo. */
     function alPagarMal(errores) {
-        compra.paso = 'datos';
+        Object.assign(compra, { paso: 'datos', sinDatos: false });
         Object.assign(datos.estado, { vista: null, errores: { telefono: errores.phone ?? '' }, aviso: errores.accept_terms ?? '' });
     }
 
@@ -277,7 +320,7 @@ export function useSeccionCompra(props) {
 
     /** Volver de «Tus datos» a la pantalla 0: la línea sale de la cesta, y la pantalla 0 sigue como estaba. */
     async function aCuando() {
-        Object.assign(compra, { paso: 'cuando', pedido: null, aviso: '' });
+        Object.assign(compra, { paso: 'cuando', pedido: null, aviso: '', sinDatos: false });
         cartStore.setError('');
         await flow.removeLine(0);
         // Tras una vuelta de Google la pantalla 0 no se había pintado en esta página: se sitúa entera en su borrador.
@@ -294,7 +337,7 @@ export function useSeccionCompra(props) {
 
         if (ahora === STEPS.IDENTIFY && antes === STEPS.DECLINED) {
             datos.preparar();
-            compra.paso = 'datos';
+            Object.assign(compra, { paso: 'datos', sinDatos: false });
         }
     });
 
@@ -328,6 +371,13 @@ export function useSeccionCompra(props) {
         if (paso.value === 'cuando') {
             const c = vista.value.ck;
 
+            // «Preparando» (`#785`): lo de debajo, ya el de la cesta si lo hay; la acción, cargando y sin nada que pulsar.
+            if (compra.preparando) {
+                const cesta = cartStore.quote?.lines?.length ? deLaCesta(cartStore.quote) : {};
+
+                return { ...c, ...cesta, dir: compra.dir, onBack: null, onClose: cerrar, action: { ...c.action, onClick: () => {}, loading: t(textos, 'pieza.cargando') } };
+            }
+
             return {
                 ...c, dir: compra.dir, onBack: null, onClose: cerrar,
                 action: { ...c.action, onClick: continuar, loading: compra.ocupado === 'cuando' ? t(textos, 'pieza.cargando') : false },
@@ -338,10 +388,11 @@ export function useSeccionCompra(props) {
             ...ckDelPaso({
                 paso: paso.value, vista: datos.estado.vista, entrada: datos.estado.ent, textos, resumen: resumen.value,
                 ocupado: compra.ocupado, importe: euros(cartStore.quote?.online_amount_cents ?? 0, flow.locale),
-                horaNueva: compra.horaNueva,
+                horaNueva: compra.horaNueva, sinDatos: compra.sinDatos,
                 acciones: {
                     cerrar,
-                    volver: paso.value === 'pagar' ? () => { compra.paso = 'datos'; } : datos.estado.vista ? datos.volver : aCuando,
+                    // De «Pagar» a «Tus datos»; sin «Tus datos» delante (`#785`), a la pantalla 0, que es lo que se eligió.
+                    volver: paso.value === 'pagar' ? (compra.sinDatos ? aCuando : () => { compra.paso = 'datos'; }) : datos.estado.vista ? datos.volver : aCuando,
                     continuar: continuarDatos, entrar: entrarDatos,
                     pagar: pago.pagar, salir: pago.salir, reintentar: pago.reintentar, elegirHora, miQr: pago.miQr,
                 },
@@ -365,6 +416,8 @@ export function useSeccionCompra(props) {
         aviso: datos.estado.aviso,
         // Lo de después de pagar (los hijos, los adultos) solo tiene sentido si la instalación firma dentro y viene más gente.
         lineaMenores: (datos.contexto.context?.waiver?.mode ?? datos.waiverStore.legal?.mode) === 'interno' && (compra.pedido?.n ?? 0) > 1,
+        // El alta que vuelve de Google (`#785`): su correo, a la vista.
+        correoGoogle: datos.estado.google?.email ?? '',
         ...social.value,
     }));
 
@@ -392,11 +445,15 @@ export function useSeccionCompra(props) {
 
     return {
         abierta, textos, ck, paso, esperando, compra, flow, authStore, outcomeStore,
+        preparando: computed(() => compra.preparando),
         fiesta: computed(() => Boolean(compra.borrador.fiesta)),
         cuando: computed(() => ({ ...vista.value.props, aviso: compra.aviso })), cambiar,
         datos, pantallaDatos, pantallaEntrar, aGoogle, pago, listo,
         recibo: computed(() => ({
             ...reciboDe({ quote: cartStore.quote, pedido: compra.pedido, textos, locale: flow.locale }), aviso: compra.aviso, marcas,
+            // Sin «Tus datos» delante (`#785`), «Pagar» dice con qué cuenta se compra: en un móvil compartido, la última
+            // ocasión de verlo (lo que hacía el «Hola, Ana» de «Tus datos»).
+            como: compra.sinDatos && datos.contexto.context?.first_name ? tp(textos, 'compra.pagar.como', { nombre: datos.contexto.context.first_name }) : '',
         })),
         fallido: computed(() => ({ hora: outcomeStore.holdUntil, motivo: outcomeStore.declinedReason, aviso: compra.aviso })),
         perdida: computed(() => ({ cercanas: compra.cercanas, horaNueva: compra.horaNueva })),
