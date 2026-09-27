@@ -306,7 +306,7 @@ class CatalogTest extends ApiTestCase
     }
 
     /**
-     * **Si en plazo se devuelve la SEÑAL** (1.42.0, `#788`): «Pagar» del cajón lo dice junto al plazo de cada producto,
+     * **Si en plazo se devuelve la SEÑAL** (1.43.0, `#788`): «Pagar» del cajón lo dice junto al plazo de cada producto,
      * como Mi cuenta. Hace falta el interruptor del producto (`#775`) Y que el producto cobre señal —la regla de la
      * línea de un pedido—: el interruptor encendido en una entrada que se paga entera no promete nada.
      */

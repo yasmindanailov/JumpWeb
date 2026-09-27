@@ -70,7 +70,7 @@ class CatalogProductResource extends JsonResource
             $this->resource->cancellationCutoffHours === null ? [] : ['cancellation' => [
                 'cutoff_hours' => $this->resource->cancellationCutoffHours,
                 'written' => $this->resource->cancellationWritten,
-                // 1.42.0 (`#788`): «Pagar» del cajón dice el plazo de cada producto y, si lo promete, la señal.
+                // 1.43.0 (`#788`): «Pagar» del cajón dice el plazo de cada producto y, si lo promete, la señal.
                 'deposit_refundable' => $this->resource->cancellationDepositRefundable,
             ]]
         );

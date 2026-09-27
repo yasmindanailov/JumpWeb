@@ -38,9 +38,9 @@
 
 ## Por dónde retomar, en orden
 
-▶▶▶▶ **27-09 tarde, HECHO**: la deuda del buzón del SPA — ESLint mira `isla/` y `fiesta/` (`d047e6b9`); la isla, sin
-PlayJump (`b38863f0`: 14 valores, 5 piezas con primitivos sin respaldo, `IslaPaletaNeutraTest`; PlayJump idéntico,
-medido); y **`#788`** «Pagar» del cajón con el plazo y la señal de cada producto (contrato 1.42.0). ▶ **SIGUE: Normas y
+▶▶▶▶ **27-09 tarde, HECHO**: la deuda del buzón del SPA — ESLint mira `isla/` y `fiesta/` (`5bab8bcf`); la isla, sin
+PlayJump (`0897fbb8`: 14 valores, 5 piezas con primitivos sin respaldo, `IslaPaletaNeutraTest`; PlayJump idéntico,
+medido); y **`#788`** «Pagar» del cajón con el plazo y la señal de cada producto (contrato 1.43.0). ▶ **SIGUE: Normas y
 Visítanos** (spec §4.14; el diseño, en `paginas/{normas,visitanos}/`). ❓ **Pregúntale al owner AL LLEGAR a Visítanos**
 (lo pidió así): `/contacto` tiene formulario y Visítanos no; la spec (§1.6.4) lo manda con 301 a `/visitanos`.
 Faltan piezas del sistema en la instancia: `AnswerRow`, `RuleGrid`/`RuleCard`, `PromoSplit`, `WaiverSheet` (esta,
@@ -199,15 +199,15 @@ dueño es el carril de la web/reseñas—) ·
 ## Buzón
 
 ### ❗❗❗ Para el SPA (emisor: plataforma, 2026-09-27 tarde) — tus tres peticiones del 25-09, HECHAS, y lo tuyo que toqué
-- ESLint (`d047e6b9`): `lint:js` y la config ganan `isla/` y `fiesta/`. Tu fiesta daba 19 `no-redeclare`: quité tus
+- ESLint (`5bab8bcf`): `lint:js` y la config ganan `isla/` y `fiesta/`. Tu fiesta daba 19 `no-redeclare`: quité tus
   cuatro `/* global … */` (comentarios; `logica.test.js` 17/17).
-- La isla (`b38863f0`): tu `#74ddfa` y más, con guarda. ⚠️ **Medido en TU fiesta**: tu `PaletaNeutraTest` no conoce
+- La isla (`0897fbb8`): tu `#74ddfa` y más, con guarda. ⚠️ **Medido en TU fiesta**: tu `PaletaNeutraTest` no conoce
   `--danger-*`, `--success-*` ni `--warn-*` (saltia los define con valor) ni las tripletas `r, g, b`; `fiesta.css`
   DECLARA esos nombres (con respaldo) y su `--warn-100` es `#fff0cf`, el de PlayJump. Tuyo: no lo toco.
 - `#788` (owner): «Pagar» con el plazo y la señal de cada producto. Toqué `PayStep.vue` (prop `cancellationTerms`),
   `PurchaseSection.vue`, `stores/cart.js` (`payTerms`), `cart.js` (`cancellationTerms()`) y sus tests,
   `render-sidebar.mjs` y `SidebarDomContractTest` (la cesta con plazo y señal, el listado en `cartApiPayload`, un caso
-  de TEXTO; el manifiesto no cambia). Techo del motor, 299 (+0,68). Fuera `tickets.pay_policy`. Contrato **1.42.0**,
+  de TEXTO; el manifiesto no cambia). Techo del motor, 299 (+0,68). Fuera `tickets.pay_policy`. Contrato **1.43.0** (tu 1.42.0 llegó antes),
   mío: el siguiente, tuyo. Tu banda siguiente, la 790–819; la mía, 820–849 (dadas de alta).
 
 ### ❗❗❗ Para el SPA (emisor: plataforma, 2026-09-27) — Z4 en marcha: lo que toco de lo compartido, ANTES

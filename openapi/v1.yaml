@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.42.0
+  version: 1.43.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -8264,7 +8264,7 @@ components:
             deposit_refundable:
               type: boolean
               description: |
-                Si al cancelar en plazo se DEVUELVE la señal (1.42.0, `DECISIONES #788`): el interruptor del
+                Si al cancelar en plazo se DEVUELVE la señal (1.43.0, `DECISIONES #788`): el interruptor del
                 producto que la instalación enciende solo si sus condiciones lo prometen, y solo si el producto
                 cobra señal —la misma regla que `OrderItem.cancellation.deposit_refundable`—. Con él, «Pagar»
                 dice el plazo de cada producto y, si toca, «y te devolvemos la señal».
@@ -8357,7 +8357,7 @@ components:
           description: 'Igual que en `CatalogProduct`: minutos, y no es `period_label`.'
         cancellation:
           type: object
-          description: 'Igual que en `CatalogProduct` (1.26.0; la señal, 1.42.0): el plazo de cambio y cancelación, ausente si no se publica.'
+          description: 'Igual que en `CatalogProduct` (1.26.0; la señal, 1.43.0): el plazo de cambio y cancelación, ausente si no se publica.'
           required: [cutoff_hours, written, deposit_refundable]
           additionalProperties: false
           properties:
