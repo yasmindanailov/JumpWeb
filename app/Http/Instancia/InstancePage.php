@@ -13,6 +13,8 @@ final readonly class InstancePage
 {
     /**
      * @param  list<string>  $hechos  nombres de {@see PageFacts::HECHOS}
+     * @param  bool  $portada  si ocupa la PORTADA (T6a de `isla-y-landing-nueva.md` §4.17): la sirven `/` y sus puertas
+     *                         (`HomeController`), no una ruta propia
      */
     public function __construct(
         public string $slug,
@@ -20,6 +22,7 @@ final readonly class InstancePage
         public array $hechos,
         public string $prioridad,
         public string $frecuencia,
+        public bool $portada = false,
     ) {}
 
     /** El nombre de su ruta. */

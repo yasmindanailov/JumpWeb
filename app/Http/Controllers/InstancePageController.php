@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Instancia\InstancePage;
 use App\Http\Instancia\InstancePages;
 use App\Http\Instancia\InstanceViews;
 use App\Http\Instancia\PageFacts;
@@ -21,14 +22,26 @@ class InstancePageController extends Controller
     {
         $declarada = $paginas->una($pagina);
 
+        // (La portada declarada no llega aquí: no tiene ruta propia, `InstancePages::registrarRutas`.)
         abort_if($declarada === null, 404);
 
-        return view(InstanceViews::NAMESPACE.'::'.$declarada->vista, [
+        return self::pintar($declarada, $hechos, route($declarada->ruta()));
+    }
+
+    /**
+     * **La vista de una página declarada**, con su contrato (`InstanceViews::CONTRATO_DE_PAGINA`: `pagina` y `hechos`).
+     * Una sola mano: la usan su ruta y, para la PORTADA declarada, `HomeController` (T6a de §4.17), que es quien sabe si
+     * la petición es una puerta de entrar (`noindex`: `/login` y compañía no se indexan nunca, `SeoTest`).
+     */
+    public static function pintar(InstancePage $pagina, PageFacts $hechos, string $url, bool $noindex = false): View
+    {
+        return view(InstanceViews::NAMESPACE.'::'.$pagina->vista, [
             'pagina' => [
-                'slug' => $declarada->slug,
-                'url' => route($declarada->ruta()),
+                'slug' => $pagina->slug,
+                'url' => $url,
+                'noindex' => $noindex,
             ],
-            'hechos' => $hechos->resolver($declarada->hechos),
+            'hechos' => $hechos->resolver($pagina->hechos),
         ]);
     }
 }

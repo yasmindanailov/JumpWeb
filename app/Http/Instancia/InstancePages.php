@@ -27,6 +27,11 @@ use Throwable;
  *
  * ⚠️ **Las rutas se cachean al desplegar** (`artisan optimize`): una página nueva en el paquete necesita volver a
  * construir esa caché, o no existe.
+ *
+ * ▶ **La PORTADA declarada** (`'portada' => true`, T6a de §4.17): `/` es una ruta del producto —y la sirven también sus
+ * puertas (`/login`, `/mi-cuenta`…) y la vuelta del banco—, así que una página no puede tomarla por su slug. La que se
+ * marca como portada no tiene ruta propia: la pinta `HomeController`, con la misma vista y los mismos hechos que
+ * cualquier página ({@see InstancePageController::pintar()}). Una sola: la segunda se descarta con aviso.
  */
 final class InstancePages
 {
@@ -52,6 +57,18 @@ final class InstancePages
         return $this->todas()[$slug] ?? null;
     }
 
+    /** La página que ocupa la portada, o `null` si el paquete no declara ninguna (y `/` pinta la vista de siempre). */
+    public function portada(): ?InstancePage
+    {
+        foreach ($this->todas() as $pagina) {
+            if ($pagina->portada) {
+                return $pagina;
+            }
+        }
+
+        return null;
+    }
+
     /**
      * Registra una ruta GET por página, **después** de las del producto: una página cuyo slug ya sea una ruta se
      * descarta con aviso, para que un paquete no pueda tapar `/admin`, `/api` ni ninguna página del producto.
@@ -66,6 +83,11 @@ final class InstancePages
         }
 
         foreach ($this->todas() as $pagina) {
+            // La portada no tiene ruta propia: la sirve `/` (`HomeController`).
+            if ($pagina->portada) {
+                continue;
+            }
+
             if (isset($ocupadas[$pagina->slug])) {
                 Log::warning('instancia: la página pisa una ruta del producto y no se registra', ['slug' => $pagina->slug]);
 
@@ -103,11 +125,21 @@ final class InstancePages
         }
 
         $paginas = [];
+        $conPortada = false;
         foreach ($declaradas as $slug => $declarada) {
             $pagina = $this->validar($slug, $declarada);
-            if ($pagina !== null) {
-                $paginas[$pagina->slug] = $pagina;
+            if ($pagina === null) {
+                continue;
             }
+            // Una sola portada: la primera. La segunda se descarta ENTERA (no se degrada a página suelta, que sería
+            // publicar en su slug lo que el paquete quería en `/`).
+            if ($pagina->portada && $conPortada) {
+                Log::warning('instancia: la página no se registra: ya hay otra portada', ['slug' => $pagina->slug]);
+
+                continue;
+            }
+            $conPortada = $conPortada || $pagina->portada;
+            $paginas[$pagina->slug] = $pagina;
         }
 
         return $paginas;
@@ -123,6 +155,7 @@ final class InstancePages
             ! is_array($declarada['hechos'] ?? []) || array_diff($declarada['hechos'] ?? [], array_keys(PageFacts::HECHOS)) !== [] => 'pide un hecho que no está en la lista blanca',
             ! in_array($declarada['frecuencia'] ?? 'weekly', self::FRECUENCIAS, true) => 'la frecuencia del sitemap no es válida',
             ! is_numeric($declarada['prioridad'] ?? '0.5') || (float) ($declarada['prioridad'] ?? 0.5) < 0 || (float) ($declarada['prioridad'] ?? 0.5) > 1 => 'la prioridad del sitemap no es válida',
+            ! is_bool($declarada['portada'] ?? false) => 'la marca de portada no es verdadero o falso',
             default => null,
         };
 
@@ -133,13 +166,14 @@ final class InstancePages
         }
 
         /** @var string $slug */
-        /** @var array{vista: string, hechos?: list<string>, prioridad?: string|float, frecuencia?: string} $declarada */
+        /** @var array{vista: string, hechos?: list<string>, prioridad?: string|float, frecuencia?: string, portada?: bool} $declarada */
         return new InstancePage(
             slug: $slug,
             vista: $declarada['vista'],
             hechos: array_values(array_unique($declarada['hechos'] ?? [])),
             prioridad: number_format((float) ($declarada['prioridad'] ?? 0.5), 1, '.', ''),
             frecuencia: $declarada['frecuencia'] ?? 'weekly',
+            portada: $declarada['portada'] ?? false,
         );
     }
 }

@@ -278,9 +278,10 @@ class InstanceViews
 
     /**
      * **EL CONTRATO DE UNA PÁGINA DECLARADA** (T4b de `isla-y-landing-nueva.md` §4.2): lo que recibe la vista de
-     * CUALQUIER página de `config/paginas.php` del paquete. `pagina` (su slug y su URL) y `hechos` (los que pidió, con
-     * el MISMO JSON que la API, `PageFacts`) los pone el controlador genérico; lo demás, el composer, como en toda
-     * vista. Lo vigila `InstancePagesTest` con un paquete de prueba, porque sin paquete no hay página que pedir.
+     * CUALQUIER página de `config/paginas.php` del paquete. `pagina` (su slug, su URL y, desde la T6a, `noindex`: la
+     * PORTADA declarada lo pide en las puertas de entrar) y `hechos` (los que pidió, con el MISMO JSON que la API,
+     * `PageFacts`) los pone el controlador genérico (`InstancePageController::pintar`); lo demás, el composer, como en
+     * toda vista. Lo vigila `InstancePagesTest` con un paquete de prueba, porque sin paquete no hay página que pedir.
      *
      * ⚠️ **Y `CONTRATO` NO sube por esto**: las páginas son una capacidad NUEVA y aditiva —un paquete sin
      * `config/paginas.php` sigue exactamente igual—, y el aviso compara por igualdad, así que subirlo llenaría de

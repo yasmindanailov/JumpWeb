@@ -1732,6 +1732,11 @@ que llegue Bizum. Los vídeos, pendientes del MATERIAL como en la T4 (en LOCAL, 
   la página lo trae (`pagina/con-selector.js`: en su módulo, porque importado de `pagina.js` Mi cuenta pesaba +2,6 KiB).
   **Medido**: `node --test` 1.510 → 1.513; el peso, Mi cuenta 115,94 → 116,24 y la isla de la página 171,96. ❗ **Sin
   verificar en vivo**: ninguna página lo trae aún; lo prueba la portada (T6a·2).
+- ▶ **T6a·2a 🟦 (27-09, `#827`) · la PORTADA DECLARADA, en el producto**: `/` es del producto (y la sirven ocho puertas y
+  la vuelta del banco), así que la portada nueva es una página del paquete marcada `'portada' => true`, que pinta
+  `HomeController` (`paquete-de-instancia.md` §4.6.bis). `InstancePagesTest` +3 y `mutar-portada-declarada.sh` 7/7 (dos
+  supervivientes antes: una comprobación inalcanzable, fuera, y un caso que no se medía solo, partido). Sigue la T6a·2b:
+  la vista de la portada en la instancia.
 
 ## 5. Impacto en invariantes
 

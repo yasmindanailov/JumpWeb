@@ -9,10 +9,13 @@ use App\Domain\Booking\Models\Zone;
 use App\Domain\Content\Services\ShellSettings;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Services\MarcasDePago;
+use App\Domain\Payments\Services\RedsysReturnOutcome;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\Analytics\Pixels;
+use App\Http\Controllers\Payments\RedsysReturnController;
 use App\Http\Instancia\InstancePages;
 use App\Http\Instancia\InstanceViews;
+use App\Http\Sidebar\SidebarEntry;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\File;
@@ -111,6 +114,84 @@ BLADE);
         $this->assertSame($prometidas, $recibidas);
         $this->assertSame($this->getJson('/api/v1/site')->assertOk()->json(), $hechos['site']);
         $this->assertSame($this->getJson('/api/v1/catalog/zones')->assertOk()->json(), $hechos['zones']);
+    }
+
+    /**
+     * **La PORTADA declarada** (T6a de §4.17): `/` es del producto, así que la página marcada `'portada' => true` no
+     * tiene ruta propia y la pinta `HomeController` —en `/` y en sus puertas, con la misma vista y los mismos hechos que
+     * cualquier página—, y en las puertas de entrar con `noindex` (`SeoTest`: nunca se indexan).
+     */
+    public function test_a_declared_portada_is_served_at_home_and_at_its_doors_and_never_at_its_slug(): void
+    {
+        File::put($this->paquete.'/web/portada.blade.php', <<<'BLADE'
+<h1>La portada nueva</h1>
+<p id="url">{{ $pagina['url'] }}</p>
+<p id="noindex">{{ $pagina['noindex'] ? 'sí' : 'no' }}</p>
+<script type="application/json" id="hechos">{!! json_encode($hechos) !!}</script>
+BLADE);
+        $this->declarar([
+            'kids' => ['vista' => 'kids', 'hechos' => []],
+            'inicio' => ['vista' => 'portada', 'hechos' => ['site'], 'portada' => true, 'prioridad' => '1.0'],
+        ]);
+
+        $this->get('/')->assertOk()->assertSee('La portada nueva')->assertSee('<p id="url">'.route('home').'</p>', false)->assertSee('<p id="noindex">no</p>', false);
+        $this->assertSame($this->getJson('/api/v1/site')->assertOk()->json(), $this->hechosDe('/')['site']);
+
+        // Sus puertas: la misma portada; las de entrar, sin indexar.
+        $this->get('/login')->assertOk()->assertSee('La portada nueva')->assertSee('<p id="noindex">sí</p>', false);
+        $this->get('/registro')->assertOk()->assertSee('<p id="noindex">sí</p>', false);
+        $this->get('/entradas')->assertOk()->assertSee('La portada nueva')->assertSee('<p id="noindex">no</p>', false);
+
+        // Nunca en su slug, ni en el sitemap con él (la raíz ya la publica el producto).
+        $this->assertFalse(Route::has('instancia.inicio'));
+        $this->get('/inicio')->assertNotFound();
+        $this->get('/sitemap.xml')->assertOk()->assertDontSee('/inicio');
+        // Las demás páginas, como siempre.
+        $this->get('/kids')->assertOk()->assertSee('Saltan hasta caer rendidos');
+    }
+
+    /** **Una sola portada**, y una marca que no es verdadero o falso deja esa página fuera (las demás, en pie). */
+    public function test_only_one_portada_and_a_malformed_mark_leaves_the_page_out(): void
+    {
+        $this->declarar([
+            'una' => ['vista' => 'kids', 'hechos' => [], 'portada' => true],
+            'otra' => ['vista' => 'kids', 'hechos' => [], 'portada' => true],
+            'kids' => ['vista' => 'kids', 'hechos' => []],
+        ]);
+
+        $this->assertSame(['una', 'kids'], array_keys(app(InstancePages::class)->todas()));
+        $this->assertSame('una', app(InstancePages::class)->portada()?->slug);
+
+        // Sola, para que la segunda portada no la tape: «sí» no es una marca, y la página se queda fuera.
+        $this->declarar([
+            'rara' => ['vista' => 'kids', 'hechos' => [], 'portada' => 'sí'],
+            'kids' => ['vista' => 'kids', 'hechos' => []],
+        ]);
+
+        $this->assertSame(['kids'], array_keys(app(InstancePages::class)->todas()));
+        $this->assertNull(app(InstancePages::class)->portada());
+    }
+
+    /**
+     * **La vuelta del banco se consume también con la portada declarada**: el pase de un solo uso de `RedsysReturnController`
+     * deja el desenlace en la sesión para que la compra lo enseñe, igual que con la portada de siempre.
+     */
+    public function test_the_bank_return_is_consumed_with_the_declared_portada_too(): void
+    {
+        File::put($this->paquete.'/web/portada.blade.php', '<x-pagina titulo="Portada"><p>La portada nueva</p></x-pagina>');
+        $this->declarar(['inicio' => ['vista' => 'portada', 'hechos' => [], 'portada' => true]]);
+        $cliente = User::factory()->create();
+        $token = 'pase-de-prueba';
+        RedsysReturnController::handoff()->put(
+            RedsysReturnController::cacheKey($token),
+            ['user_id' => $cliente->id, 'order_code' => 'R-PORTADA', 'outcome' => RedsysReturnOutcome::Authorized->value],
+            300,
+        );
+
+        $this->actingAs($cliente)->get('/?redsys='.$token)->assertOk()->assertSee('La portada nueva')->assertSee('data-purchase-open="1"', false);
+
+        $this->assertNull(RedsysReturnController::handoff()->get(RedsysReturnController::cacheKey($token)), 'el pase es de un solo uso');
+        $this->assertSame([SidebarEntry::OUTCOME_CONFIRMED, 'R-PORTADA'], [SidebarEntry::peek()->outcome, SidebarEntry::peek()->orderCode]);
     }
 
     /**

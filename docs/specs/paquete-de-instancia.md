@@ -220,6 +220,19 @@ que devuelve las rutas listas para la prop `hojas` de `<x-pagina>`:
 - Descartada la convención «si existe `public/instancia/css/fiesta.css`, se carga»: el producto nombraría un fichero
   de la instancia y no admitiría una segunda hoja sin `@import` en cadena.
 
+### 4.6.bis La PORTADA declarada (`[DECIDIDO]` 2026-09-27, `#827`; T6a de `isla-y-landing-nueva.md` §4.17)
+
+Una página del `paginas.php` del paquete puede marcarse `'portada' => true`: no tiene ruta propia y la pintan `/` y sus puertas
+(`/login`, `/registro`, `/registro/google`, `/recuperar-contrasena`, `/mi-cuenta…`, `/entradas`: las nueve de
+`HomeController`) con la misma vista y los mismos hechos que cualquier página (`InstancePageController::pintar`). Porque
+`/` es una ruta del producto —la sirven también sus puertas y en ella se consume la vuelta del banco—, una página no
+puede tomarla por su slug (`registrarRutas` descarta lo que pisa el producto). **Qué se conserva**: la vuelta del banco se
+consume ANTES (`maybeConsumeRedsysReturn`); las marcas de las puertas y de la compra las pone el `<body>` de los dos
+layouts (`site/body-compra`, `#785`); y `pagina.noindex` es verdadero en las puertas de entrar (`AccountDoor::isAuthDoor`,
+`SeoTest`). **Una sola**: la segunda se descarta entera con aviso; una marca que no es booleana deja la página fuera. Sin
+portada declarada, `/` pinta la vista de siempre con su contrato. `CONTRATO` no sube (aditivo). Lo vigilan
+`InstancePagesTest` (tres casos) y `scripts/mutar-portada-declarada.sh` (7/7).
+
 ### 4.7 Una regla escrita DENTRO de una vista se va con la vista (`#650`)
 
 Es el corolario práctico de §4.5.bis, y la T2b empieza por aquí: antes de mudar una vista hay que mirar **qué

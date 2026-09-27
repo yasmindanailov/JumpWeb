@@ -16,7 +16,9 @@ use App\Domain\Content\Services\SiteDestinations;
 use App\Domain\Payments\Services\RedsysReturnOutcome;
 use App\Domain\Platform\Models\Setting;
 use App\Http\Controllers\Payments\RedsysReturnController;
+use App\Http\Instancia\InstancePages;
 use App\Http\Instancia\InstanceViews;
+use App\Http\Instancia\PageFacts;
 use App\Http\Sidebar\AccountDoor;
 use App\Http\Sidebar\SidebarEntry;
 use Illuminate\Http\Request;
@@ -31,11 +33,23 @@ use Illuminate\Http\Request;
  */
 class HomeController extends Controller
 {
-    public function __construct(private readonly InstanceViews $instancia) {}
+    public function __construct(private readonly InstanceViews $instancia, private readonly InstancePages $paginas) {}
 
-    public function __invoke(Request $request, ScheduleDisplay $schedule)
+    public function __invoke(Request $request, ScheduleDisplay $schedule, PageFacts $hechos)
     {
         $this->maybeConsumeRedsysReturn($request);
+
+        /*
+         * **LA PORTADA DECLARADA** (T6a de `isla-y-landing-nueva.md` §4.17). Si el paquete marca una de sus páginas como
+         * portada (`'portada' => true` en `config/paginas.php`), `/` y sus puertas la pintan como cualquier página
+         * declarada —su vista y los hechos que pidió, con el MISMO JSON que la API—, y la de siempre (su contrato de
+         * abajo) no se compone. Lo de antes de este punto vale para las dos: la vuelta del banco se consume igual. Y las
+         * marcas de las puertas (la zona de la cuenta, la compra que se abre) las pone el `<body>` de las dos
+         * (`site/body-compra`, `#785`).
+         */
+        if (($portada = $this->paginas->portada()) !== null) {
+            return InstancePageController::pintar($portada, $hechos, route('home'), AccountDoor::isAuthDoor());
+        }
 
         // Atracciones activas por zona, en el orden del panel. De aquí salen el mosaico de «Qué hay
         // dentro» y su recuento.
