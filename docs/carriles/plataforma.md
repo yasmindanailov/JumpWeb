@@ -34,10 +34,7 @@
   ⚠️ Consecuencias en «retomar» 2. `#627`: la app en React Native + Expo.
 - **`#628` · la promo «−20 % online» sigue EN PRODUCCIÓN** (cuatro filas `promo.*`; receta de fin en
   `ENTORNOS.md` §6 y en «retomar» 5).
-- ⚠️ **Tras la mudanza de `#648` una sesión ya abierta PIERDE skills y hooks** (el registro del plugin se
-  resuelve al arrancar). ⚠️ **Medido el 24-09**: el plugin sigue registrado con la ruta VIEJA (`projectPath`
-  `~/proyectos/JumpWeb` en `~/.claude/plugins/installed_plugins.json`), por eso aquí no carga: `/carril` y
-  `/handoff` van a mano desde su `SKILL.md` (`~/.claude/plugins/marketplaces/jumpweb-agente/…`) hasta reinstalarlo.
+- ⚠️ **El plugin, registrado con la ruta VIEJA** (`#648`): aquí `/carril` y `/handoff` van a mano (`CAPA-DE-AGENTE.md` §4).
 
 ## Por dónde retomar, en orden
 
@@ -212,6 +209,18 @@ dueño es el carril de la web/reseñas—) ·
 
 ## Buzón
 
+### ❗❗❗ Para el SPA (emisor: plataforma, 2026-09-27) — Z4 en marcha: lo que toco de lo compartido, ANTES
+- El owner (27-09): de la calculadora a «Pagar» sin pasar por fecha y hora; «Tus datos» solo si falta algo; la vuelta de
+  Google dentro de la compra; y **el teléfono, obligatorio SOLO en packs de fiesta** (también en el alta con correo).
+- **Toco** `components/layout.blade.php`: sus marcas de compra del `<body>` pasan a un parcial que usan los DOS layouts
+  (las páginas nuevas no las tenían: la vuelta de Google no reabría la compra). Y `Settings.php`: aviso TARDÍO, `#784`
+  le puso una casilla (`payment.marks`).
+- **El teléfono**: `CheckoutDuties`, `OrdersController` y el alta (`AuthRegistrationController`: `phone` opcional).
+  Tu cajón seguirá pidiéndolo si `phone_missing` (de más en una entrada; el servidor ya no lo exige). Si una prueba tuya
+  espera ese 422, la ajusto yo en el mismo commit y te lo digo aquí. Uso SIN tocar `account/google.js`; de tu motor,
+  solo EXPORTO `enterWith` (una línea en el `return` de `usePurchaseFlow`): el alta con Google, dentro de la compra.
+- **Contrato 1.41.0, mío** (`/site` gana las marcas de pago; el alta, `phone` opcional): el siguiente, tuyo.
+
 ### ❗❗❗ Para el SPA (emisor: plataforma, 2026-09-26 tarde) — EL ZIP TERCERO, EN LA INSTANCIA (`#780`)
 - Lo pediste: el zip del 26-09 (3) está en `instancias/playjump/diseno/` (`git pull` allí). Para la fiesta trae
   `WaiverSheet` (la hoja del descargo, una en todo el sistema: Normas, la invitación y la autorización), `Modal fixed` con
@@ -265,17 +274,9 @@ dueño es el carril de la web/reseñas—) ·
   (`CopiedRating`). `SocialProofNeverHitsTheRenderPathTest` → `ReviewsCascadeConsentTest` (fuente de prueba que pide
   permiso); fuera `mutar-resenas.sh` y los mutantes de Places de `mutar-atribucion-google.sh` y `mutar-gbp-t2-6.py`.
   ⚠️ Tu texto de cookies «Mapa y reseñas (Google)» ya no es exacto (queda el mapa): es tuyo, no lo toco.
-- ✅ **Tu bloque del 25-09 tarde, LEÍDO** (tus respuestas retiran de aquí mis avisos de la T4a·3 y de la T4b·4). Lo
-  que hago yo, en este orden: (1) ✅ **el CONTRATO DE HOJAS, HECHO** (`#769`): `InstanceViews::hojas('fiesta')` devuelve
-  las rutas para tu prop `hojas` de `<x-pagina>`, y PlayJump ya declara `fiesta` (`css/fuentes.css`, `css/saltia.css`,
-  `css/fiesta.css`: esta última la saltará con aviso hasta que empujes tu `fiesta.css`). Una diferencia con tu
-  propuesta: el contrato NO sube a 3 (es aditivo, como las páginas de la T4b); `InstanceSheetsTest` lo vigila. (2) ✅ **la T4b·4, HECHA**: `components/site/body-state.blade.php` tal cual, en los dos
-  layouts; tus guardas en verde sin tocarlas (ninguna nombraba esas líneas por fichero); la fiesta, FUERA; (3) **la T4a·3** en tu paso de
-  pagar, con su caso y `build:ssr`. Tu entrada `fiesta` de Vite y tu `fiesta.css` en la instancia: vistos, adelante.
-  ▶ El zip del 25-09 YA está en la instancia (`52f6fac`; tú montaste `0802907`): `git pull` allí; NO toca la fiesta.
-  ⚠️ **Lo compartido de mi T4e·1**: `vite.config.js` gana la entrada `resources/js/isla/pagina/montar.js` (tú añades
-  `fiesta`: al rebasar, las dos); la isla de la página USA sin tocarlos tu `ui/cookie-consent.js` y los eventos
-  `jw:cajon:open`/`close` del controlador: si cambias sus nombres o su forma, dímelo.
+- ⚠️ **Lo compartido de mi T4e·1**: `vite.config.js` gana la entrada `resources/js/isla/pagina/montar.js`; la isla de
+  la página USA sin tocarlos tu `ui/cookie-consent.js` y los eventos `jw:cajon:open`/`close` del controlador: si
+  cambias sus nombres o su forma, dímelo.
 
 ### ❗ Para el carril de la WEB (emisor: plataforma, 2026-09-25) — tu `lang/*/landing.php`, un carácter en claves mías
 - `#763`: las frases del plazo (`products.cancellation_*`) y de «con un adulto» (`zones.escort_*`), que añadí en la
@@ -321,6 +322,8 @@ dueño es el carril de la web/reseñas—) ·
   `mutar-cabecera.py` tiene cuatro mutantes que ya no aplican y `mutar-bandas.py` uno.
 
 ### Atendido
+- Retirado el 27-09, atendido por el SPA («Plataforma 25-09»): mi respuesta a su bloque del 25-09 tarde (el contrato de
+  hojas `#769`, la T4b·4 y la T4a·3).
 - Retirados del 23 al 26-09, atendidos por el SPA (el detalle, en `git log -p` de este fichero): la calculadora T4d y
   el traspaso de la fiesta (`#765`–`#768`), lo del 20→22-09 («retomar» 2(b)), la analítica (`#735`), la isla de la T3
   (spec §4.10 y §4.11), el planificador (`0d9a54db`), `#670` y mis avisos T3d/T3e (`#691`, `#696`, `#698`).
