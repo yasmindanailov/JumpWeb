@@ -121,17 +121,20 @@ export function reciboDe({ quote, pedido, textos = {}, locale = 'es' }) {
 }
 
 /**
- * Las formas de pago del final del recibo (`#784`): de las `urls.mark_<id>` del arranque, que el servidor manda en su
- * orden y solo si la instalación las acepta y tiene su logotipo oficial (`MarcasDePago`). El nombre, para el texto
- * alternativo, es la marca: no se traduce.
+ * Las formas de pago de «Pagar» (`#784`, `#786`): de las `urls.mark_<id>` del arranque, que el servidor manda en su orden
+ * y solo si la instalación las acepta y tiene su logotipo oficial (`MarcasDePago`), con su versión para fondo oscuro en
+ * `mark_<id>_ink` (la de dentro de la isla; si falta, la misma). El nombre, para el texto alternativo, es la marca: no se
+ * traduce.
  */
 export function marcasDe(urls) {
-    return Object.entries(urls ?? {})
-        .filter(([clave, src]) => clave.startsWith('mark_') && typeof src === 'string' && src !== '')
+    const u = urls ?? {};
+
+    return Object.entries(u)
+        .filter(([clave, src]) => /^mark_[a-z]+$/.test(clave) && typeof src === 'string' && src !== '')
         .map(([clave, src]) => {
             const id = clave.slice(5);
 
-            return { id, nombre: id.charAt(0).toUpperCase() + id.slice(1), src };
+            return { id, nombre: id.charAt(0).toUpperCase() + id.slice(1), src, srcTinta: u[`${clave}_ink`] || src };
         });
 }
 

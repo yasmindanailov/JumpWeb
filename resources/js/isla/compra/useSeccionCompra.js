@@ -403,7 +403,7 @@ export function useSeccionCompra(props) {
 
     // Google, solo si la instalación lo tiene (`urls.google`); Apple sigue de corchete apagado (`#683`).
     const social = computed(() => ({ social: Boolean(props.urls?.google), apple: false, marcaGoogle: MARCA_GOOGLE }));
-    // Las formas de pago del final del recibo (`#784`): también del arranque, que no cambia.
+    // Las formas de pago (`#784`, `#786`): también del arranque, que no cambia.
     const marcas = marcasDe(props.urls);
 
     const pantallaDatos = computed(() => ({
@@ -449,8 +449,10 @@ export function useSeccionCompra(props) {
         fiesta: computed(() => Boolean(compra.borrador.fiesta)),
         cuando: computed(() => ({ ...vista.value.props, aviso: compra.aviso })), cambiar,
         datos, pantallaDatos, pantallaEntrar, aGoogle, pago, listo,
+        // Las formas de pago, bajo el botón de «Pagar» (`JuntoPagar`, `#786`).
+        marcas,
         recibo: computed(() => ({
-            ...reciboDe({ quote: cartStore.quote, pedido: compra.pedido, textos, locale: flow.locale }), aviso: compra.aviso, marcas,
+            ...reciboDe({ quote: cartStore.quote, pedido: compra.pedido, textos, locale: flow.locale }), aviso: compra.aviso,
             // Sin «Tus datos» delante (`#785`), «Pagar» dice con qué cuenta se compra: en un móvil compartido, la última
             // ocasión de verlo (lo que hacía el «Hola, Ana» de «Tus datos»).
             como: compra.sinDatos && datos.contexto.context?.first_name ? tp(textos, 'compra.pagar.como', { nombre: datos.contexto.context.first_name }) : '',

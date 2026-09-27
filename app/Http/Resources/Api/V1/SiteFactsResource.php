@@ -4,6 +4,7 @@ namespace App\Http\Resources\Api\V1;
 
 use App\Domain\Content\Services\ContactTopics;
 use App\Domain\Content\Services\MapsEmbed;
+use App\Domain\Payments\Services\MarcasDePago;
 use App\Domain\Platform\Services\PublicFacts;
 use App\Domain\Platform\Services\VenueAddress;
 use Illuminate\Http\Request;
@@ -134,6 +135,10 @@ class SiteFactsResource extends JsonResource
             'seo' => (object) $hechos->compact([
                 'og_image' => 'seo.og_image',
             ]),
+            // Las formas de pago que acepta la instalación, con sus logotipos OFICIALES (`#786`: el pie de la landing las
+            // pinta en vez de la frase). El ajuste tiene servicio de dominio, así que el recurso DELEGA en él (la regla de
+            // F5), que decide cuáles, en qué orden y con qué fichero. Una LISTA, siempre: vacía si no hay ninguna.
+            'payment_marks' => MarcasDePago::hechos(),
         ];
     }
 

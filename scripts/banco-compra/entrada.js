@@ -130,10 +130,15 @@ function pagar(pd, q) {
         nota: entradas ? '' : tp('compra.pagar.senal', { senal: D.eur(pd.senal), resto: D.eur(c.resto) }),
         otraEntrada: entradas,
         calcetines: entradas && q.calcetines === 0 ? { texto: T.pagar.calcetines, uno: P.par, varios: P.pares } : null,
-        // Las formas de pago, al final del recibo desde el diseño del 26-09 (`#784`), con los logotipos oficiales.
-        marcas: T.pagar.marcas.map((nombre) => ({ id: nombre.toLowerCase(), nombre, src: `/images/providers/pago/${nombre.toLowerCase()}.svg` })),
     };
 }
+
+/** Las formas de pago bajo el botón de pagar (`#786`), con los logotipos oficiales: el de fondo oscuro, si lo hay. */
+const MARCAS = T.pagar.marcas.map((nombre) => {
+    const id = nombre.toLowerCase();
+
+    return { id, nombre, src: `/images/providers/pago/${id}.svg`, srcTinta: `/images/providers/pago/${id}${id === 'mastercard' ? '' : '-tinta'}.svg` };
+});
 
 /** Las tareas de «Listo» (`pjcTareas`): las del producto con su `lang`; los calcetines, del parque. */
 function tareas(pd, q) {
@@ -220,6 +225,7 @@ function paso(S) {
         ck.action = { label: tp(`compra.pagar.${S.principal}`, { importe }), onClick: nada };
         junto = h(JuntoPagar, {
             secundario: { etiqueta: tp(`compra.pagar.${segundo}`, { importe }), metodo: segundo },
+            marcas: MARCAS,
             condicionesHref: '#condiciones',
             condiciones: T.pagar.condiciones.despues,
         });

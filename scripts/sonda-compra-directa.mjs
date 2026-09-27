@@ -136,6 +136,27 @@ try {
     const a = await contexto();
     const h = helpers(a.page);
 
+    // El pie de la página (`#786`): las formas de pago del hecho del sitio, en su versión CLARA, en su orden, cargadas y en
+    // vez de la frase.
+    await a.page.goto(`${BASE}/kids`, { waitUntil: 'load' });
+    const pie = await a.page.evaluate(async () => {
+        const hechos = (await (await fetch('/api/v1/site')).json()).payment_marks ?? [];
+        const imgs = [...document.querySelectorAll('.pj-pie ul.pj-pie__marcas img')];
+
+        imgs.forEach((i) => { i.loading = 'eager'; });
+        await Promise.all(imgs.map((i) => i.decode().catch(() => null)));
+
+        return {
+            hechos: hechos.map((m) => m.src),
+            vistas: imgs.map((i) => (i.naturalWidth > 0 ? i.src : `ROTA ${i.src}`)),
+            frase: document.querySelectorAll('.pj-pie .pj-pie__pago').length,
+        };
+    });
+    ok('el pie: las formas de pago del sitio, en su orden, cargadas y en lugar de la frase', pie.hechos.length > 0 && JSON.stringify(pie.hechos) === JSON.stringify(pie.vistas) && pie.frase === 0, JSON.stringify(pie));
+    await a.page.locator('.pj-pie__marcas').scrollIntoViewIfNeeded();
+    await a.page.waitForTimeout(600);
+    await a.page.locator('.pj-pie__base').screenshot({ path: `${SALIDA}/directa-${ANCHO}-0-pie.png` }).catch(() => {});
+
     await reservarDesdeLaCalculadora(a.page);
     await h.hastaPaso('Tus datos');
     await h.quieta();

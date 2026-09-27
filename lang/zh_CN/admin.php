@@ -2591,7 +2591,7 @@ return [
         'incidents_alert_email' => '收款事件通知邮箱',
         'incidents_alert_email_hint' => '发生重复、孤立或过期后收款时通知到哪里。留空则使用联系邮箱。',
         'payment_marks' => '接受的付款方式',
-        'payment_marks_hint' => '其官方标志显示在付款前的账单末尾。只勾选您的终端接受的方式。灰色的选项在网站上还没有官方标志。',
+        'payment_marks_hint' => '其官方标志显示在付款按钮下方、计算器的「预订并付款」下方以及网站页脚。只勾选您的终端接受的方式。灰色的选项在网站上还没有官方标志。',
         'puerta_rate_limit' => '门口验证限制（每分钟）',
         'puerta_rate_limit_hint' => '每名员工每分钟允许的验证查询次数（防滥用）。',
         'puerta_lookup_rate_limit' => '打开档案的手动查询限制（每小时）',

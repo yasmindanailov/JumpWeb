@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.40.0
+  version: 1.41.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -3823,12 +3823,13 @@ components:
     SiteFacts:
       type: object
       description: |
-        Los hechos de la instalación, en seis bloques. **Cada bloque es un objeto con las claves que
+        Los hechos de la instalación, en seis bloques y la lista de sus formas de pago (`payment_marks`, 1.41.0).
+        **Cada bloque es un objeto con las claves que
         esa instalación ha rellenado**: las demás no aparecen (no viajan vacías). Un bloque entero
         puede llegar `{}`, y eso también es una respuesta — significa «esta instalación no ha puesto
         nada de eso».
       additionalProperties: false
-      required: [identity, address, contact, social, legal, seo]
+      required: [identity, address, contact, social, legal, seo, payment_marks]
       properties:
         identity:
           type: object
@@ -3903,6 +3904,22 @@ components:
           additionalProperties: false
           properties:
             og_image: { type: string, description: 'La imagen de `og:image` de la instalación.' }
+        payment_marks:
+          type: array
+          description: |
+            **1.41.0.** Las formas de pago que acepta la instalación (las marca en su panel), con sus logotipos
+            OFICIALES y en el orden en que se enseñan. Vacía si no marcó ninguna o no vende online. `src` es la versión
+            para fondo claro y `src_ink`, la de fondo oscuro (la misma si la marca usa una sola). Son marcas ajenas: se
+            pintan tal cual, sin recolorear ni recortar.
+          items:
+            type: object
+            additionalProperties: false
+            required: [id, name, src, src_ink]
+            properties:
+              id: { type: string, example: bizum }
+              name: { type: string, example: Bizum, description: 'El nombre de la marca, para el texto alternativo. No se traduce.' }
+              src: { type: string, format: uri }
+              src_ink: { type: string, format: uri }
 
     Schedule:
       type: object
@@ -4600,7 +4617,8 @@ components:
             Las rutas que pinta el cajón (contacto, condiciones, privacidad…). Las compone el servidor. Desde
             1.40.0, `mark_<id>` (`mark_bizum`, `mark_visa`, `mark_mastercard`) es el logotipo oficial de cada forma
             de pago que la instalación acepta (ajuste `payment.marks`), en el orden en que se enseña; sin ninguna
-            elegida o sin venta online, no viaja ninguna.
+            elegida o sin venta online, no viaja ninguna. Desde 1.41.0, `mark_<id>_ink` es su versión para fondo
+            oscuro (la de dentro de la isla).
         shell:
           type: string
           enum: [cajon, isla]

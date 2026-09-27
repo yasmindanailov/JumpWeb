@@ -1,15 +1,17 @@
 <script setup>
 /**
- * **Las formas de pago con sus logotipos OFICIALES** (`#784`): una fila de chapas iguales, para el final del recibo de
- * «Pagar» y bajo «Reservar y pagar» de la calculadora. `marcas` llega hecha del servidor (`[{ id, nombre, src }]`:
- * solo las que la instalación acepta y tienen su fichero, `MarcasDePago`); sin ninguna, no pinta nada. `centro`, bajo
- * un botón a lo ancho. El nombre de cada marca es su texto alternativo, y la lista dice qué es.
+ * **Las formas de pago con sus logotipos OFICIALES** (`#784`, `#786`): una fila discreta —sin chapas, pequeña, a la misma
+ * altura óptica— bajo el botón de «Pagar» de la isla y bajo «Reservar y pagar» de la calculadora. `marcas` llega hecha del
+ * servidor (`[{ id, nombre, src, srcTinta }]`: solo las que la instalación acepta y tienen su fichero, `MarcasDePago`);
+ * sin ninguna, no pinta nada. `tinta`: sobre un fondo oscuro (la isla), la versión oficial para él. `centro`, bajo un
+ * botón a lo ancho. El nombre de cada marca es su texto alternativo, y la lista dice qué es.
  */
 import { useTextos } from '../piezas/textos.js';
 import { MARCA } from './marcas.js';
 
 defineProps({
     marcas: { type: Array, default: () => [] },
+    tinta: { type: Boolean, default: false },
     centro: { type: Boolean, default: false },
 });
 const { t } = useTextos();
@@ -24,12 +26,11 @@ const { t } = useTextos();
         <li
             v-for="m in marcas"
             :key="m.id"
-            :style="MARCA.chapa"
         >
             <img
-                :src="m.src"
+                :src="tinta ? m.srcTinta || m.src : m.src"
                 :alt="m.nombre"
-                :style="MARCA.logo"
+                :style="MARCA.logo(m.id)"
                 decoding="async"
             >
         </li>

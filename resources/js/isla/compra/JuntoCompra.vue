@@ -10,12 +10,13 @@ import JuntoPagar from './JuntoPagar.vue';
 import JuntoFallido from './JuntoFallido.vue';
 import BotonSistema from '../ui/BotonSistema.vue';
 
-const { paso, esperando, pago, otraReserva, rotuloOtra, urls } = inject(COMPRA);
+const { paso, esperando, pago, otraReserva, rotuloOtra, urls, marcas } = inject(COMPRA);
 </script>
 
 <template>
     <JuntoPagar
         v-if="paso === 'pagar'"
+        :marcas="marcas"
         :condiciones-href="urls.terms"
         @condiciones="pago.condiciones"
     />

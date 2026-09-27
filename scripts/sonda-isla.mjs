@@ -173,16 +173,23 @@ try {
     await accion(/^Continuar$/).click();
     await hastaPagar();
     ok('«Tus datos» con la cuenta → «Paso 2 de 2 · Pagar»', (await paso()).includes('Pagar'), await paso());
-    // Las formas de pago (`#784`): las del arranque (`urls.mark_*`), al final del recibo, en su orden y CARGADAS.
+    // Las formas de pago (`#784`, `#786`): las del arranque, BAJO el botón de pagar (fuera del recibo), en su versión para
+    // fondo oscuro (`urls.mark_<id>_ink`: la isla es tinta), en su orden y CARGADAS.
     const marcas = await page.evaluate(async () => {
         const urls = (await (await fetch('/api/v1/sidebar/boot?lang=es')).json()).urls;
-        const imgs = [...document.querySelectorAll('[data-isla-scroll] ul[aria-label="Formas de pago"] img')];
+        const imgs = [...document.querySelectorAll('[data-isla] ul[aria-label="Formas de pago"] img')];
+        const boton = [...document.querySelectorAll('[data-isla] button')].find((b) => /^Pagar .* con tarjeta$/.test(b.textContent.trim()));
 
         await Promise.all(imgs.map((i) => i.decode().catch(() => null)));
 
-        return { boot: Object.entries(urls).filter(([k]) => k.startsWith('mark_')).map(([, v]) => v), vistas: imgs.map((i) => (i.naturalWidth > 0 ? i.src : `ROTA ${i.src}`)) };
+        return {
+            boot: Object.keys(urls).filter((k) => /^mark_[a-z]+$/.test(k)).map((k) => urls[`${k}_ink`] ?? urls[k]),
+            vistas: imgs.map((i) => (i.naturalWidth > 0 ? i.src : `ROTA ${i.src}`)),
+            debajo: imgs.length > 0 && imgs.every((i) => i.getBoundingClientRect().top >= boton.getBoundingClientRect().bottom),
+            enElRecibo: document.querySelectorAll('[data-isla-scroll] ul[aria-label="Formas de pago"]').length,
+        };
     });
-    ok('las formas de pago del arranque, al final del recibo, en su orden y cargadas', JSON.stringify(marcas.boot) === JSON.stringify(marcas.vistas), JSON.stringify(marcas));
+    ok('las formas de pago del arranque, BAJO el botón y en su versión oscura, en su orden y cargadas', JSON.stringify(marcas.boot) === JSON.stringify(marcas.vistas) && marcas.debajo && marcas.enElRecibo === 0, JSON.stringify(marcas));
     await foto('1-pagar');
 
     llena = await franjaDeLaCesta();

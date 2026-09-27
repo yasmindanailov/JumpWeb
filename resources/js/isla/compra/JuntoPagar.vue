@@ -1,18 +1,21 @@
 <script setup>
 /**
- * Lo que va junto a la acción de pagar, bajo ella en la isla (`PjcPagoJunto` del diseño): el pago secundario, la
- * pasarela y las condiciones. Sin segundo método (el botón de Bizum llega con la v2.0.0) no queda hueco. La segunda
- * mitad de las condiciones —sus plazos— es dato de la instalación. Las marcas ya no van aquí: el diseño del 26-09 las
- * pasó al final del recibo (`PantallaPagar`, `#784`).
+ * Lo que va junto a la acción de pagar, bajo ella en la isla (`PjcPagoJunto` del diseño): el pago secundario, las
+ * formas de pago, la pasarela y las condiciones. Sin segundo método (el botón de Bizum llega con la v2.0.0) no queda
+ * hueco. La segunda mitad de las condiciones —sus plazos— es dato de la instalación. Las formas de pago (`marcas`,
+ * `#786`, el owner: «debajo del botón, sutil»): sus logotipos oficiales para fondo oscuro, pequeños y sin chapa, justo
+ * bajo la acción que las usa (el diseño del 26-09 las ponía al final del recibo, `#784`).
  */
 import { useTextos } from '../piezas/textos.js';
 import { PASO } from './estilos.js';
 import IconoLucide from '../ui/IconoLucide.vue';
 import BotonSistema from '../ui/BotonSistema.vue';
 import EnlaceSistema from '../ui/EnlaceSistema.vue';
+import MarcasDePago from '../ui/MarcasDePago.vue';
 
 defineProps({
     secundario: { type: Object, default: null },
+    marcas: { type: Array, default: () => [] },
     condicionesHref: { type: String, default: undefined },
     condiciones: { type: String, default: '' },
 });
@@ -30,6 +33,11 @@ const { t } = useTextos();
         >
             {{ secundario.etiqueta }}
         </BotonSistema>
+        <MarcasDePago
+            :marcas="marcas"
+            tinta
+            centro
+        />
         <p :style="[PASO.pista, { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: 'var(--text-body)', fontWeight: 'var(--fw-semibold)', textAlign: 'center' }]"><IconoLucide
             name="lock"
             :size="15"

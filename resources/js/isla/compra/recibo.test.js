@@ -142,13 +142,16 @@ describe('el recibo de una FIESTA (T3e·5)', () => {
 });
 
 describe('las formas de pago del final del recibo (#784)', () => {
-    test('salen de urls.mark_<id> en el orden del servidor, con la marca por nombre; lo demás no', () => {
-        const urls = { contact: '/contacto', mark_bizum: '/p/bizum.svg', terms: '/c', mark_visa: '/p/visa.svg', mark_mastercard: '' };
+    test('salen de urls.mark_<id> en el orden del servidor, con la marca por nombre y su versión oscura; lo demás no', () => {
+        const urls = {
+            contact: '/contacto', mark_bizum: '/p/bizum.svg', mark_bizum_ink: '/p/bizum-tinta.svg', terms: '/c',
+            mark_mastercard: '/p/mastercard.svg', mark_visa: '', mark_visa_ink: '/p/visa-tinta.svg',
+        };
 
         assert.deepEqual(marcasDe(urls), [
-            { id: 'bizum', nombre: 'Bizum', src: '/p/bizum.svg' },
-            { id: 'visa', nombre: 'Visa', src: '/p/visa.svg' },
-        ], 'una sin ruta no se pinta rota: no se pinta');
+            { id: 'bizum', nombre: 'Bizum', src: '/p/bizum.svg', srcTinta: '/p/bizum-tinta.svg' },
+            { id: 'mastercard', nombre: 'Mastercard', src: '/p/mastercard.svg', srcTinta: '/p/mastercard.svg' },
+        ], 'una sin ruta no se pinta rota: no se pinta; sin versión oscura, la misma (`#786`)');
         assert.deepEqual(marcasDe(undefined), [], 'sin arranque, ninguna');
     });
 });

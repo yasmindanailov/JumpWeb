@@ -1520,17 +1520,19 @@ La identidad con el diseño, una vez y al final (`#768`).
   `modulepreload` con la página ociosa, nunca con ahorro de datos ni en 2G) y «Reservar y pagar» carga desde el toque. El
   velo desenfocado se queda (UX); con `prefers-reduced-transparency`, sin desenfoque. La acción de la isla, con el brillo
   tras el bote (el owner). ⚠️ `sonda-isla` PAGA con la cuenta de pruebas: `TESTING.md` §2.octies.
-- ▶ **Marcas de pago 🟦 (26-09, `#784`)**. Las formas de pago con sus logotipos OFICIALES (`ui/MarcasDePago.vue`, chapas
-  blancas iguales de `ui/marcas.js`) en DOS sitios, por conversión: al final del recibo de «Pagar», como en el diseño (ya
-  no junto al botón), y bajo «Reservar y pagar» de la calculadora, tras su nota (ranura `pie` de `ResumenPrecio`). El panel
-  las marca (Ajustes → Venta, `payment.marks`; ninguna por defecto); viajan en el arranque de la compra como
-  `urls.mark_<id>` (API 1.40.0) y en `#jw-calculadora-motor` como `marcas`, en su orden, solo con venta online y con el
-  fichero en `public/images/providers/pago/<id>.svg` (`MarcasDePago`); sin él, su casilla sale en gris. **Bizum ✅ y Visa
-  ✅**; **Mastercard, pendiente**: el owner bajó `ms_…` (MAESTRO, para fondos oscuros), no el suyo. ⚠️ Para meter una
-  marca: el SVG de su dueño, sin tocar el dibujo, con cabecera de procedencia y su huella en `MarcasDePagoTest`; si trae
-  su espacio de respeto DENTRO (Visa), se recorta solo el `viewBox`; y el borde se mide en Chromium —MuPDF no lee el
-  `<style>` interno y pinta de negro sus rectángulos—. Sondas: `sonda-isla` (20/20 a 390) y `sonda-calculadora` (kids
-  20/20) comprueban que las marcas se ven, en su orden y cargadas. Botón «Pagar con Bizum»: v2.0.0.
+- ▶ **Marcas de pago ✅ (26-09 `#784`; discretas, 27-09 `#786`, Z4·2)**. Las formas de pago con sus logotipos OFICIALES
+  (`ui/MarcasDePago.vue`, `ui/marcas.js`): una fila DISCRETA, sin chapas, a la misma altura óptica (Bizum 15px, Visa 12,
+  los círculos de Mastercard 20). En TRES sitios: bajo el botón de «Pagar» (`JuntoPagar`, en la versión para fondo oscuro:
+  la isla es `data-surface="ink"`), bajo «Reservar y pagar» de la calculadora (ranura `pie` de `ResumenPrecio`) y en el
+  PIE de la instancia, en vez de «Pago con tarjeta o Bizum» (la frase queda como nombre de la lista). El panel las marca
+  (Ajustes → Venta, `payment.marks`; ninguna por defecto); viajan en el arranque (`urls.mark_<id>` y `mark_<id>_ink`),
+  en `#jw-calculadora-motor` (`marcas`) y en el hecho del sitio (`/site` → `payment_marks`, 1.41.0), en su orden, solo con
+  venta online y con el fichero en `public/images/providers/pago/<id>.svg` (la versión oscura, `<id>-tinta.svg`, o la
+  misma). **Bizum, Visa y Mastercard ✅** (el símbolo oficial para web). ⚠️ Para meter una marca: el SVG de su dueño, sin
+  tocar el dibujo, con cabecera de procedencia y su huella en `MarcasDePagoTest`; si trae su espacio de respeto DENTRO
+  (Visa, Mastercard), se recorta solo el `viewBox`; y el borde se mide en Chromium —MuPDF no lee el `<style>` interno y
+  pinta de negro sus rectángulos—. Sondas: `sonda-isla` (bajo el botón, la versión oscura), `sonda-calculadora` y
+  `sonda-compra-directa` (el pie). Botón «Pagar con Bizum»: v2.0.0.
 - ▶ **Z4·1 ✅ (27-09, `#785`)**. **La compra sin pantallas de más** (el owner). La compra que sigue SOLA —«Reservar y
   pagar» de la calculadora, la vuelta de Google— marca `preparando` desde que toma la intención (también antes del
   catálogo) y pinta `PantallaPreparando`, un esqueleto sin titular ni nada que tocar; la acción, cargando. Tras la

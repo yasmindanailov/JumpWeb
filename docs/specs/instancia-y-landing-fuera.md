@@ -65,6 +65,9 @@ Todo lo de esta sección se midió sobre el árbol en `ce7671d2`, con la BD de d
 
 ▶ **El secreto y el correo de contacto están en la misma tabla**: por eso `#631` exigió lista blanca por
 recurso. Un `settings` completo en la API es una filtración, no un menú.
+▶ 27-09 (`#786`): **`payment.marks`** —qué formas de pago acepta el parque— es operación Y hecho: sale en `GET /site`
+como `payment_marks` (1.41.0, con sus logotipos oficiales, `src` y `src_ink`) por su servicio (`MarcasDePago`), no por
+la lista blanca: el pie de una landing las pinta en vez de «Pago con tarjeta o Bizum».
 
 ### 1.4 «Cero marca del cliente en el código»: 167 apariciones, **una** viva
 
