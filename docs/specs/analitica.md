@@ -75,7 +75,8 @@ anuncio trae compras ni quién vuelve — y cada día sin medir es un día que n
 **Fuera de alcance**: remarketing (misma categoría, cuando el owner lo pida); **Consent Mode «avanzado»**
 (pings a Google antes de consentir: contradice el objetivo 5; si un día se quiere, cambia `RGPD-07`, la CSP y
 la sonda); la subida de conversiones a Google Ads por API (OAuth; cuando haya acceso a la cuenta); la carga de
-gasto por API (primero tecleado); mapas de calor propios; píxel de apertura en correos; **landings en OTRO
+gasto por API (primero tecleado); mapas de calor propios; ~~píxel de apertura en correos~~ (`[DECIDIDO owner]`
+27-09, `#755`: entra, solo con el consentimiento de análisis, `analitica-para-decidir.md` §4.9); **landings en OTRO
 origen** (sin cookie: exigirían CORS y visitante en el cuerpo; la vía A vive en el mismo dominio, como
 `cajon-empaquetable.md` §0); la app móvil (el contrato le sirve; su SDK es de F6); JumpPoints.
 
@@ -490,6 +491,11 @@ compra, y `carcasa.js` es del carril de la plataforma (por buzón; `isla-y-landi
 compre entera.
 
 ### 4.5 El cuadro de mando en el panel (T2) — ampliado el 24-09 (`#735`, carril del SPA)
+
+▶ **27-09, `[DECIDIDO owner]` `#755`**: el cuadro se REORDENA en siete pestañas por pregunta, con una anatomía común de
+cifra (veredicto, referencia, «cómo se calcula»), el tiempo comparado por el tramo transcurrido y lo que falta para
+decidir (ocupación, cartera, gasto, correos por cliente, cohortes): `analitica-para-decidir.md`. Lo que sigue es la T2
+tal como se construyó; `ad_spend` sale de la T2e y va a la T5 de esa spec.
 
 ⚠️ **Revisión 23-09**: permiso propio, zona horaria del parque, saneado de lo que teclea el visitante,
 agregados diarios desde T2, «anterior a la medición». ▶ **24-09, owner**: el cuadro cuenta además **el

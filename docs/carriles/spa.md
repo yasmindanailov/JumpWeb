@@ -2,11 +2,11 @@
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb` a secas; la instancia al lado, en
 > `~/proyectos/instancias/playjump`, clon de `github.com/yasmindanailov/instancia-playjump`, montada el 25-09) ·
-> Banda: **730–759** (700–729 agotada el 20-09) · Último usado: **`#753`** · La banda está dada de alta en la tabla de
-> `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: **`isla-y-landing-nueva.md`
-> §4.11 «El traspaso al SPA»** (la tarea en curso, `#765`) · `celebracion-e-invitacion.md` §0 · `waiver-por-reserva.md` §0 ·
-> `encuestas.md` §0 · `analitica-fiesta.md` §0 · `analitica.md` §0 y §4.5 · `google-business-profile.md` §0 ·
-> `sidebar-spa.md` §0 · Actualizado: 2026-09-27 (tarde: F7, F8 y F9 en `main`, las tres aprobadas por el owner).
+> Banda: **730–759** (700–729 agotada el 20-09) · Último usado: **`#755`** · La banda está dada de alta en la tabla de
+> `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: **`analitica-para-decidir.md`
+> §0** (la tarea en curso, `#755`) · `encuestas.md` §0 y §4.7 (`#754`) · `analitica.md` §0 y §4.5 · `isla-y-landing-nueva.md`
+> §4.11 · `celebracion-e-invitacion.md` §0 · `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 ·
+> `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-09-27 (tarde: la analítica para decidir, en spec).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`). El
 > contador de la suite va en el trailer del commit (`#618`), no aquí. **Se muda, no se raspa**: el detalle de
 > una feature baja a su spec (las trampas por tanda de la analítica T1→T5 viven en `analitica.md` §4.9,
@@ -14,7 +14,14 @@
 
 ## Foto (2026-09-27, tarde)
 
-- ▶▶▶ **LA FIESTA DEL SISTEMA NUEVO ES MÍA (`#765`, `[DECIDIDO owner]` 25-09)**: la lista de invitados, la invitación con
+- ▶▶▶ **27-09: LA ANALÍTICA PARA DECIDIR es la tarea** (`[DECIDIDO owner]`): revisé el cuadro con la sonda
+  (`revision-2709`: 44 tarjetas, 15 gráficos, 33 tablas, ninguna con veredicto; «Este mes» compara 27 días con 30) y
+  el owner decidió **`#754`** (encuestas ANÓNIMAS: participación y respuesta sin clave común, día + empleado + franja,
+  sello cifrado de 90 días para «volvió quien puntuó mal», aviso fijo) y **`#755`** (siete pestañas por pregunta, la
+  anatomía de una cifra, referencias con fuente, texto para IA solo con agregados, ocupación, cartera, gasto tecleado,
+  correos por cliente, cohortes). Specs: `analitica-para-decidir.md` (⬜ borrador: el owner revisa §4.1, §4.2 y §4.11)
+  y `encuestas.md` §4.7. **Nada en código.**
+- ▶ **LA FIESTA DEL SISTEMA NUEVO ES MÍA (`#765`, `[DECIDIDO owner]` 25-09)**: la lista de invitados, la invitación con
   su recibo y la autorización, vestidas con «Saltia» para la v2.0.0, en paralelo con la web pública. El traspaso,
   `isla-y-landing-nueva.md` §4.11; el censo HAY/FALTA, el método y las tandas, `specs/fiesta-sistema-nuevo.md` (§1.4,
   §4.6, §7). ⚠️ **El zip entra SOLO por plataforma** y llega con `git pull` de la instancia (`cd diseno && sha256sum -c`).
@@ -87,31 +94,26 @@
 
 ## Por dónde retomar, en orden
 
-1. ❗❗❗ **LA FIESTA DEL SISTEMA NUEVO (`#765`) — `specs/fiesta-sistema-nuevo.md` ✅ APROBADA (`#743`, 25-09: las
-   ocho respuestas en su §7; ❗ «Ver el parque» va ENCENDIDO con el vídeo de portada, no la recomendada)**. Orden:
-   T1a→T4 ✅ · F1 ✅ · F2 ✅ · F6a ✅ (aprobadas, `#747`) · F3 ✅ (quien cumple, su firma, «Al final viene») · F4 ✅
-   (26-09: la lista supera la reserva, «Sí» sube el número, guardar se para sin él; arnés `mutar-quien-cumple.sh` 36/36) · el
-   idioma abajo ✅ (`#748`: fuera de la cabecera, sola como la web; §4.10) · **F5 ✅** (`#749`: sin tarta grande, «para
-   cuántas personas» en los complementos; la zona 4 como el mockup, el aviso de la tarta y «Guardado hoy a las…»; §4.11;
-   arnés `mutar-extras-fiesta.sh` 42/42; visto por el owner en `JW-OJO-F5`) · **F6b ✅** (`#750`: «Tus respuestas» y
-   «Avísame de fechas» con spec propia, `avisame-de-fechas.md`; y `hidden` que vuelve a ocultar SIN JavaScript, §4.12;
-   arnés `mutar-avisame-fiesta.sh` 42/42) · «¿Cuántas tartas?» ✅ (`#751`) · **F7 ✅** (`#752`, §4.13) · **F8 ✅** (`#753`,
-   §4.14) · **F9 ✅** (el zip tercero, §4.15) → **la fiesta, en código, NO TIENE NADA PENDIENTE**: las páginas vivas se
-   visten con las hojas de la instancia (`#769`, medido el 27-09: piden `saltia.css`, `fuentes.css` y `fiesta.css`); espera
-   la v2.0.0. **Si llega un zip nuevo**: `git pull` en la instancia, `git diff <antes>..HEAD` de `diseno/` (las tres
-   páginas y las piezas que usan), copiar `publico/instancia` a `public/`, `optimize:clear`, y una tanda F10 en §4.
-   **A prueba**: «Invitar a más» (`#753`): a los meses, sus envíos con `where: number` en el informe de fiestas; si casi
-   nadie lo usa, se quita. Ofrecido por plataforma y sin pedir: las `transiciones` de `<x-pagina>` (`#781`). Para el ojo:
-   `JW-OJO-F8` (`ojo-f8.php`: la lista y la autorización), `JW-OJO-F7`, `JW-OJO-F5`, `JW-OJO-F3`, `JW-OJO-F1`.
-   **Reglas en pie**: el suelo sin JavaScript · `#739` · la firma y su prueba (`waiver-probatorio.md` §4.4: el texto en el
-   flujo, `RGPD-*`) · hoja en blanco (§7.2·R1) · `#706`.
-2. ✅ La analítica entera espera la v2.0.0. Sueltos: `[PENDIENTE: asesoría]` (5) del correo de servicio de las encuestas ·
-   **T2e** (`analytics_daily` + `ad_spend`) SOLO si el `EXPLAIN` con volumen dice que el año en directo no aguanta
-   (`analitica.md` §4.5) · **T5c** cuando el owner nombre la hipótesis (`#738`) · el `EXPLAIN` con volumen en staging.
-3. ❗ **La ficha de Google, T2·9: las reseñas en la API pública** (`google-business-profile.md` §4.1; es la T4a·2 que
-   plataforma pide para la pieza 5). ▶ **DECISIÓN DEL OWNER ANTES**: `#616` fija API pública **sin avatares** y ahora
-   hay cara del autor y fotos: ¿se sirven, se omiten o van solo como rutas nuestras? ❗ La portada REAL vive en la
-   instancia (`#666`). ⚠️ Places NO se retira (`[owner]`, 21-09). ❗ Las fotos salen con `no-store` (`RGPD-04`).
+1. ❗❗❗ **LA ANALÍTICA PARA DECIDIR (`#755`) — `specs/analitica-para-decidir.md` ⬜ BORRADOR.** ▶ **Primero, la revisión
+   del owner** de §4.1 (las siete pestañas), §4.2 (la anatomía de una cifra) y §4.11 (las reglas de pantalla); con su ✅,
+   la spec pasa a ✅ y empieza la **T0** (el tramo transcurrido en `Window`/`ReportPeriod`/`Comparison` y `Metric` (futuro)
+   con polaridad, base mínima, puntos y Wilson, sobre las 44 tarjetas de hoy) → **T1** = la T5 de `encuestas.md` (§4.7,
+   `#754`) → T2 ocupación → T3 Resumen y la reorganización → T4 cartera → T5 marketing y correos → T6 cohortes → T7 pérdidas
+   → T8 satisfacción (§4.12). Cada tanda, al ojo del owner en vivo ANTES del commit (tablet 1080, móvil 390, escritorio).
+   Línea base de la sonda: `storage/app/audit/analitica-panel-revision-2709*`. `[PENDIENTE: asesoría]`: los 90 días del
+   sello, los clics por persona y el píxel (y el (5) del correo de servicio de las encuestas).
+2. ✅ **LA FIESTA DEL SISTEMA NUEVO (`#765`, `fiesta-sistema-nuevo.md` ✅ `#743`): T1a→T4 y F1→F9 en `main` y aprobadas
+   (`#747`→`#753`, §4.6–§4.15) — en código NO TIENE NADA PENDIENTE**; espera la v2.0.0 (las páginas vivas se visten con
+   las hojas de la instancia, `#769`). **Si llega un zip nuevo**: `git pull` en la instancia, `git diff <antes>..HEAD` de
+   `diseno/`, copiar `publico/instancia` a `public/`, `optimize:clear`, y una tanda F10 en §4. **A prueba**: «Invitar a
+   más» (`#753`: si a los meses casi nadie lo usa, se quita). Ofrecido y sin pedir: las `transiciones` de `<x-pagina>`
+   (`#781`). Para el ojo: `JW-OJO-F8`, `F7`, `F5`, `F3`, `F1`. **Reglas en pie**: el suelo sin JavaScript · `#739` · la
+   firma y su prueba (`waiver-probatorio.md` §4.4) · hoja en blanco (§7.2·R1) · `#706`. Sueltos de la analítica de
+   antes: **T5c** cuando el owner nombre la hipótesis (`#738`) · el `EXPLAIN` con volumen en staging.
+3. ❗❗ **LOS CORREOS Y LA PUERTA, MÍOS desde `#789`** (owner con plataforma, 27-09 noche; en paralelo): los quince
+   correos rehechos del diseño (`paginas/correos*.card.html` y `paginas/correos/` de la instancia) y la puerta (su diseño,
+   en el PRÓXIMO zip). El orden frente a la analítica lo dice el owner. **T2·9** (las reseñas en la API): caras y fotos,
+   decididas en `#771`, y `/reviews` (1.31.0) ya las sirve: al retomarla, ver si queda algo (la selección) o se retira.
 4. **Lo que el ✅ del owner a la invitación NO cubre**, declarado sin medir: el `.ics` en un TELÉFONO de verdad
    (§4.6; si Android no lo abre, Google Calendar como segunda opción) · el justificante EN PRODUCCIÓN con el
    Turnstile REAL · `§7.2·R12`. ⚠️ `og:image` sale del logotipo del tema (1200×441): en tarjeta 2:1, bandas.
@@ -241,6 +243,12 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 
 ## Buzón
 
+- ❗ **Para web, plataforma y correos (27-09, `#754`/`#755`; AVISO PREVIO, nada en código aún)**: **web**, `/privacidad`
+  tendrá que nombrar el sello de 90 días de las encuestas anónimas y los clics por persona en los correos (oposición en
+  «Análisis»), y `/cookies` el píxel de apertura (con consentimiento): `[PENDIENTE: asesoría]`, el texto es tuyo.
+  **Plataforma**: +1 tarea en `deploy.sh` (`surveys:resolve-returns`) y `PersonalDataExport.surveys` cambia de forma (el
+  número de contrato, tras el tuyo, al implementar); las promociones en el cuadro (T7), contigo. **Correos**: la marca por
+  envío (`jw_e`) viaja con los UTM, y el píxel irá en `BrandedMailMessage`: te aviso aquí antes de tocar el molde.
 - ❗ **Para plataforma (27-09, F7 `#752` y F8 `#753`)**: leído tu aviso de la Z4 (atendido). Los CONTRATOS **1.42.0** (F7:
   `GuestForm.honoree_waiver`, `PUT …/honoree-waiver`) y **1.44.0** (F8: `POST …/invitation/shares`, `Invitation.shared_at`; tras tu 1.43.0,
   `#788`) son míos; tu siguiente, 1.45.0. F8 añade `party_invitations.shared_at` y un paso al informe de fiestas. ⚠️ Tu
@@ -269,8 +277,7 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 - ⚠️ Cuando empujes un zip nuevo del owner a la instancia, dímelo aquí: re-mido el censo de la fiesta contra él.
 - ⚠️ **Tu composer `site` (`AppServiceProvider`) solo corre al PINTAR**: mis tres páginas leen los mismos ajustes con
   `App\Http\Fiesta\Sitio::datos()` (T3). Si sacas ese arreglo a un servicio, lo uso y retiro el mío.
-- ▶ **T4a·2 = mi T2·9** (las reseñas en `/social-proof`): sigue BLOQUEADA por la decisión del owner sobre caras y
-  fotos (`#616`); te aviso aquí cuando conteste.
+- ▶ **T4a·2 = mi T2·9**: leído `#771`; la mido contra tu `/reviews` (1.31.0) al retomarla y te digo aquí si se retira.
 - ✅ **Tu medida del `--warn-100` de `fiesta.css` (27-09)**: era `#fff0cf`, el de PlayJump; arreglado, y
   `PaletaNeutraTest` lee ya las familias de ESTADO y las tripletas `r, g, b` (visto fallar con cada una).
 
@@ -300,11 +307,10 @@ el repo de la instancia (lo nuevo), nunca a `main`.
   código `MIN_REVIEWS = 1` (`#494`): no la toco yo.
 
 ### Atendido
+- **Plataforma 27-09 noche** (`#789`: correos y puerta, míos; el zip (4) sin correos ni fiesta; `Medir` aplazado; T2·9):
+  atendidos, en «Por dónde retomar» 3.
 - **Plataforma 27-09** (ESLint sobre la fiesta y mis `/* global */` fuera, la isla sin valores de PlayJump, `#788` con la
   1.43.0, la Z4 y el zip tercero `#780`): atendidos; el zip tercero, portado a la fiesta en F9 (§4.15).
 - **Plataforma 25-09** (`#765` el traspaso de la fiesta, la calculadora T4d junto a mi motor, las peticiones (1) y (2),
   el aviso previo de la T4a·3, la banda 790–819 para cuando agote la mía): atendidos, contestados arriba.
-- **Plataforma 24-09** (T3e·2b, T3e·3, T3e·4, T3d, T3e·5, T3e·6, la local preparada para la isla, `#670` «no se
-  despliega en piezas», el traspaso de la T2 y el aviso de lo compartido de la T1): atendidos; mis dos bloques del
-  24-09 los retiré el 25-09 (plataforma los dio por atendidos).
-- **Plataforma 21-09** («`home` mudada», banda y contrato 2): atendidos. **Web `#540`** (12-09): atendido el 13-09.
+- **Web `#540`** (12-09): atendido el 13-09. (Los de plataforma del 21 y el 24-09, retirados por su emisor: en git.)

@@ -45,7 +45,7 @@ contador de la suite va en el trailer del commit** (`#618`). Si no salta: `git c
 | Landing FUERA (F5) · menú de hechos · API pública · paquete de instancia | `docs/specs/instancia-y-landing-fuera.md` §0 · `docs/specs/paquete-de-instancia.md` §0 |
 | **La isla** · la landing nueva (Saltia) | `docs/specs/isla-y-landing-nueva.md` §0 |
 | Promociones · ofertas y regalos · la etiqueta de oferta | `docs/specs/promociones.md` §0 |
-| Analítica · conversión · atribución · consentimiento · la fiesta · encuestas | `docs/specs/analitica.md` §0 · `docs/specs/analitica-fiesta.md` §0 · `docs/specs/encuestas.md` §0 |
+| Analítica · el cuadro · conversión · consentimiento · fiesta · encuestas | `docs/specs/analitica-para-decidir.md` §0 · `docs/specs/analitica.md` §0 · `docs/specs/analitica-fiesta.md` §0 · `docs/specs/encuestas.md` §0 |
 | F4 · cajón empaquetable · token Bearer | `docs/specs/cajon-empaquetable.md` §0 · `docs/specs/token-bearer.md` §0 |
 | La capa de agente · el plugin `jumpweb-agente` · skills · hooks · reglas del owner | `docs/sistemas/CAPA-DE-AGENTE.md` |
 | Dinero / pagos / Redsys / reembolsos | `docs/INVARIANTES.md` §1 + §6 · `docs/sistemas/REDSYS.md` · `docs/MODELO-DATOS.md` §2 |
@@ -74,14 +74,14 @@ contador de la suite va en el trailer del commit** (`#618`). Si no salta: `git c
 | El libro del pedido · desglose +/− · saldo en el parque · cortesía · reembolso | `docs/specs/desglose-libro.md` §0 |
 | Área de cliente en el cajón · «Mis reservas» por reserva · historial | `docs/specs/area-cliente.md` §0 · `docs/specs/mis-reservas-por-reserva.md` §0 |
 | Bloque de cuenta del cajón (`.acct`) · el `no-store` de la web | `docs/specs/account-context-vue.md` §0 |
-| Sidebar SPA · Vue · las pantallas del cajón | `docs/specs/sidebar-spa.md` §0 · `docs/CARRIL-SPA.md` |
+| Sidebar SPA · Vue · pantallas del cajón | `docs/specs/sidebar-spa.md` §0 · `docs/CARRIL-SPA.md` |
 | Justificante de un menor invitado (waiver offshore) · activación · plazas | `docs/specs/waiver-por-reserva.md` §0 |
 | Waiver (firma, prueba, PDF, versiones del texto) · la firma en la puerta | `docs/specs/waiver-probatorio.md` §0 |
 | Menores a cargo · asignar una entrada a un menor · apellidos y relación | `docs/specs/menores-a-cargo.md` §0 |
 | Carné QR · pantalla de puerta · «Mi carné» · rotar carné | `docs/specs/identidad-qr-puerta.md` §0 |
 | JumpPoints / vales / lealtad | `docs/specs/lealtad-jumppoints.md` §0 |
 | CMS público (servicios) | `docs/sistemas/SERVICIOS-CMS.md` |
-| Reseñas de Google · Business Profile · prueba social | `docs/specs/google-business-profile.md` §0 · `docs/specs/google-reviews.md` §0 |
+| Reseñas de Google · Business Profile | `docs/specs/google-business-profile.md` §0 · `docs/specs/google-reviews.md` §0 |
 | Contenido y copys · festivos · jerga de la web | `docs/specs/contenido-y-copys.md` §0 |
 | Diseño previo a implementación (spec) | `docs/specs/PLANTILLA.md` · `docs/CONVENCIONES.md` §5 |
 | Cookies / consentimiento | `docs/sistemas/COOKIES.md` · `docs/SEGURIDAD.md` |
@@ -93,7 +93,7 @@ contador de la suite va en el trailer del commit** (`#618`). Si no salta: `git c
 | Cumpleaños mixto · edad de los invitados · el suplemento · el sello · solapes de tramos | `docs/specs/cumple-mixto.md` §0 |
 | Los correos · tema · firma y remitente · línea de adelanto · el libro en un correo | `docs/specs/correos-desde-canvas.md` §0 |
 | Post-form de invitados | `docs/sistemas/POSTFORM-INVITADOS.md` |
-| La fiesta del sistema nuevo · invitación · «Avísame de fechas» | `docs/specs/fiesta-sistema-nuevo.md` §0 · `docs/specs/avisame-de-fechas.md` §0 |
+| La fiesta del sistema nuevo · «Avísame de fechas» | `docs/specs/fiesta-sistema-nuevo.md` §0 · `docs/specs/avisame-de-fechas.md` §0 |
 | Tests / suite / fakes / datos de prueba | `docs/TESTING.md` · `docs/CONVENCIONES.md` §3.bis/§3.ter |
 | Desmontar `ViewOrder` · edición, reembolso y calendario de un pedido | `docs/specs/desmontar-view-order.md` §0 |
 | Retirar código viejo / auditar sus tests | `docs/CONVENCIONES.md` §3.quater |
