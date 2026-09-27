@@ -38,21 +38,20 @@
 
 ## Por dónde retomar, en orden
 
-▶▶▶ **EN MARCHA: el ZIP TERCERO** (spec §4.14: cada tanda, con su sonda y sus cifras; `#780`→`#787`). **Z1→Z3 ✅** y el
-rendimiento (`#783`). Las MARCAS de pago ✅ (`#784`, `#786`): en LOCAL, `payment.marks` = `bizum,visa,mastercard`; en
-PRODUCCIÓN las marca el owner en el panel. El botón de Bizum, con la v2.0.0.
-**Z4 (27-09, el owner; buzón al SPA ANTES, `3db1bdac`)**: Z4·1 ✅ (`#785`: de la calculadora a «Pagar», «Tus datos» solo si
-falta algo, la vuelta de Google dentro de la compra) → Z4·2 ✅ (`#786`: las marcas discretas, en el pie, la calculadora y
-bajo «Pagar»; el pie, en la instancia) → Z4·3 ✅ (`#787`: el teléfono SOLO en packs, también en el alta). ⚠️ Sin probar
-con Google DE VERDAD (simulado en la sonda): la prueba final, con el owner. Luego Normas y Visítanos. La isla por
-temporada, **ahora no**. ⚠️ Tras tocar
+▶▶▶ **EL ZIP TERCERO, Z1→Z4 ✅** (spec §4.14: cada tanda, con su sonda y sus cifras; `#780`→`#787`, cerrada la Z4 el
+27-09). Z1→Z3 y el rendimiento (`#783`); **Z4** (buzón al SPA ANTES, `3db1bdac`): `#785` de la calculadora a «Pagar»,
+«Tus datos» solo si falta algo y la vuelta de Google dentro de la compra —✅ **probada por el owner con Google real el
+27-09** («funciona perfectamente»)—; `#786` las marcas discretas (bajo «Pagar», calculadora, el PIE de la instancia);
+`#787` el teléfono SOLO en packs, también en el alta. Marcas: en LOCAL, `payment.marks` = `bizum,visa,mastercard`; en
+PRODUCCIÓN las marca el owner en el panel. El botón «Pagar con Bizum», con la v2.0.0. **Sigue: Normas y Visítanos**
+(el owner las dejó para después de la Z4). La isla por temporada, **ahora no**. ⚠️ Tras tocar
 `instancias/playjump/publico/`, copiarlo a `public/instancia` (el producto sirve la copia).
 ▶▶ **EN MARCHA (26-09): T5 · Mi cuenta en la isla** (spec §4.13, `#773`: el censo, las cuatro respuestas del owner y
 el plan T5a→T5f; dentro de la v2). **T5a→T5d ✅** (`#774`→`#777`: la capa, las reservas, Antes de venir, los hijos;
 contrato 1.38.0) y **T5e ✅** (`#778` Ajustes y Cerrar sesión; `#779` los avisos de la cuenta y el `status` del servidor
 que las páginas nuevas perdían; `scripts/sonda-cuenta.mjs` 215/215 con `sonda-cuenta-datos.php`). Sigue la **T5f** (Reservar
 otra vez, la bienvenida, sin conexión, los bloques protegidos, la verificación final). ❗ Lo que el mockup no dibuja
-(`#773`·d) se ENSEÑA al owner en vivo antes de cerrar la T5. ⚠️ La vuelta de Google de la COMPRA, sin probar en vivo.
+(`#773`·d) se ENSEÑA al owner en vivo antes de cerrar la T5.
 ⚠️ En PRODUCCIÓN, el owner pone en el panel el aviso de los calcetines y «se devuelve la señal» de los packs (en LOCAL,
 puestos). Lo que la sonda toca de `probe-card@`: `TESTING.md` §2.octies.
 ▶ **HECHO (25/26-09)**: la **T4** (spec §4.12; banco de la isla 60/60; `#768`: sin bancos por tanda) y el encargo del

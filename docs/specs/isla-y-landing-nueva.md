@@ -1544,7 +1544,8 @@ La identidad con el diseño, una vez y al final (`#768`).
   vuelve a la compra (`PurchaseResume::isResumeUrl` en `GoogleAuthController`) y completa su alta en «Tus datos»
   (`cuenta: 'google'`: su correo a la vista, su nombre, la casilla; `account/google.js` con `import()`, y
   `flow.enterWith`). Sonda: `scripts/sonda-compra-directa.mjs [390|1280]`, 14/14 en las dos (simula las dos vueltas
-  de Google: `TESTING.md` §2.octies); sin regresión, `sonda-isla` 20/20 y `sonda-calculadora` kids.
+  de Google: `TESTING.md` §2.octies); sin regresión, `sonda-isla` 20/20 y `sonda-calculadora` kids. ✅ Con Google REAL,
+  probada por el owner el 27-09 («funciona perfectamente»).
 - ▶ **Z4·3 ✅ (27-09, `#787`)**. **El teléfono, SOLO en una fiesta** (el owner; vale cualquier pack). El servidor:
   `POST /orders` lo exige solo con un pack (`CheckoutDuties::pendingForOrder`, `TicketType::anyPack`) y el alta con
   correo lo acepta vacío (1.41.0). La isla (`useDatosCompra::pedirTelefono`, con `esFiesta` de la compra): en el alta
