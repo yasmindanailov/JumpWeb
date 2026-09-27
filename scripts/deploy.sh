@@ -708,7 +708,8 @@ tasks=$(remote_php "artisan schedule:list" 2>/dev/null | grep -c 'artisan' || tr
 # súbelo aquí en el mismo commit: la cifra es una PROPIEDAD del repo, no del servidor.
 # Son 9 desde `#771`: `social-proof:refresh` se fue con Places (medido con `schedule:list`, 26-09).
 # Son 10 desde `#750`: `birthday-reminders:send` («Avísame de fechas», el correo antes del cumple).
-check "scheduler: $tasks tareas REGISTRADAS en la app (esperadas 10)" "$([[ "$tasks" == "10" ]] && echo 0 || echo 1)"
+# Son 11 desde `#754`: `surveys:resolve-returns` (las encuestas anónimas: ¿volvió quien puntuó?, y su sello se borra).
+check "scheduler: $tasks tareas REGISTRADAS en la app (esperadas 11)" "$([[ "$tasks" == "11" ]] && echo 0 || echo 1)"
 
 migr=$(remote_php "artisan migrate:status" 2>/dev/null | grep -c 'Pending' || true)
 check "migraciones pendientes: $migr (esperadas 0)" "$([[ "$migr" == "0" ]] && echo 0 || echo 1)"

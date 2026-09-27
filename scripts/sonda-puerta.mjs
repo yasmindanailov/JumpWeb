@@ -148,6 +148,12 @@ const tarjeta = await rect('[data-gate-survey]');
 const buscador = await rect('.gate-search');
 if (tarjeta && hoy) fila('la tarjeta va DEBAJO de «Hoy»', tarjeta.top >= hoy.bottom - 1, `hoy.bottom=${hoy.bottom} tarjeta.top=${tarjeta.top}`);
 if (tarjeta && buscador) fila('la tarjeta no pisa el buscador', tarjeta.top >= buscador.bottom, `buscador.bottom=${buscador.bottom} tarjeta.top=${tarjeta.top}`);
+// `#754`: el AVISO del anonimato, dentro de la tarjeta y visible (para leerlo en voz alta), y tampoco sobre el lector.
+const aviso = await rect('[data-gate-survey-notice]');
+if (estadoEncuesta === 'offer') {
+    fila('el aviso del anonimato se ve en la tarjeta', aviso !== null && aviso.height > 0 && tarjeta !== null && aviso.top >= tarjeta.top && aviso.bottom <= tarjeta.bottom + 1, `aviso=${JSON.stringify(aviso)}`);
+    if (aviso && buscador) fila('el aviso no pisa el buscador', aviso.top >= buscador.bottom, `buscador.bottom=${buscador.bottom} aviso.top=${aviso.top}`);
+}
 await captura('tablet-oferta');
 
 // CONTROL: una línea pequeña mide MENOS de 44 px (la medida discrimina).
@@ -167,6 +173,11 @@ if (estadoEncuesta === 'offer') {
     await asentar();
     const preguntas = await page.evaluate(() => [...document.querySelectorAll('[data-gate-question]')].map((q) => `${q.getAttribute('data-gate-question')}:${q.getAttribute('data-gate-question-type')}`));
     fila('el formulario pinta las preguntas de la encuesta viva', preguntas.length > 0, preguntas.join(' · '));
+    // `#754`: con el formulario abierto el aviso sigue a la vista, y cada pregunta de texto lleva «que no diga su nombre».
+    fila('el aviso sigue con el formulario abierto', (await rect('[data-gate-survey-notice]')) !== null);
+    const textos = preguntas.filter((p) => p.endsWith(':text')).length;
+    const avisosTexto = await page.evaluate(() => document.querySelectorAll('[data-gate-survey-text-hint]').length);
+    fila('cada pregunta de texto lleva su advertencia', avisosTexto === textos, `${avisosTexto} de ${textos}`);
     const tactil = await objetivos();
     fila(`todos los objetivos del formulario dan ≥ ${MIN_TACTIL} px (tablet)`, tactil.total > 0 && tactil.cortos.length === 0, `${tactil.total} objetivos · mínimo ${tactil.minW}×${tactil.minH}${tactil.cortos.length ? ' · cortos: ' + JSON.stringify(tactil.cortos) : ''}`);
     await captura('tablet-formulario');

@@ -208,7 +208,8 @@
                                  respuesta. Cada opción es un radio/checkbox oculto con su etiqueta vestida de botón
                                  táctil (≥ 44 px), con `wire:model` DIFERIDO: cero idas y vueltas hasta «Guardar»;
                                  el servidor tipa y valida (`SEC-04`). Los `data-gate-survey*` los miran los tests
-                                 y la sonda. --}}
+                                 y la sonda. ▶ `#754`: ANÓNIMA — el aviso, para leerlo en voz alta antes de preguntar,
+                                 y «no le pidas el nombre» junto a cada pregunta de texto (texto del producto, fijo). --}}
                             @if ($survey !== null)
                                 <x-filament::section
                                     :heading="$survey['name']"
@@ -220,6 +221,9 @@
                                     data-gate-survey="{{ $survey['state'] }}"
                                     data-gate-survey-key="{{ $survey['key'] }}"
                                 >
+                                    @if (in_array($survey['state'], ['offer', 'open'], true))
+                                        <p class="gate-hint" data-gate-survey-notice>{{ __('admin.puerta.validar.profile.survey_notice') }}</p>
+                                    @endif
                                     @if ($survey['state'] === 'offer')
                                         <p class="gate-hint" data-gate-survey-count>{{ trans_choice('admin.puerta.validar.profile.survey_questions', (int) $survey['count'], ['count' => (int) $survey['count']]) }}</p>
                                         <div class="gate-survey__actions">
@@ -270,7 +274,8 @@
                                                             <label for="q-{{ $q['key'] }}-no" class="gate-q__btn">{{ __('admin.puerta.validar.profile.survey_no') }}</label>
                                                         </div>
                                                     @else
-                                                        <input type="text" id="q-{{ $q['key'] }}" class="gate-q__text" wire:model="surveyAnswers.{{ $q['key'] }}" maxlength="{{ \App\Domain\Platform\Services\Surveys\QuestionSchema::TEXT_MAX }}" autocomplete="off" placeholder="{{ __('admin.puerta.validar.profile.survey_text_placeholder') }}">
+                                                        <input type="text" id="q-{{ $q['key'] }}" class="gate-q__text" wire:model="surveyAnswers.{{ $q['key'] }}" maxlength="{{ \App\Domain\Platform\Services\Surveys\QuestionSchema::TEXT_MAX }}" autocomplete="off" placeholder="{{ __('admin.puerta.validar.profile.survey_text_placeholder') }}" aria-describedby="q-{{ $q['key'] }}-hint">
+                                                        <p class="gate-hint" id="q-{{ $q['key'] }}-hint" data-gate-survey-text-hint>{{ __('admin.puerta.validar.profile.survey_text_hint') }}</p>
                                                     @endif
 
                                                     @error('surveyAnswers.'.$q['key'])

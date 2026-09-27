@@ -6,6 +6,7 @@ use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\Survey;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Domain\Platform\Services\Surveys\SurveyResponses;
+use App\Domain\Platform\Services\Surveys\SurveySeals;
 use App\Domain\Platform\Services\Surveys\SurveySettings;
 use App\Notifications\SurveyInvitation;
 use Illuminate\Console\Command;
@@ -26,18 +27,21 @@ use Throwable;
  * ## A quién NO
  *  · sin correo verificado, o anonimizado (art. 17): no hay a quién escribir;
  *  · con `surveys_opt_out` («no quiero recibir más encuestas»);
- *  · con fila para ESTA encuesta (ya la contestó en la puerta, la declinó o ya se le mandó);
- *  · que CONTESTÓ la interna en esa misma visita (`#742`): ya dio su opinión; a quien dijo «no preguntar», sí;
+ *  · que ya participó en ESTA encuesta (se le preguntó en la puerta o ya se le mandó);
+ *  · que CONTESTÓ una interna en esa misma visita (`#742`): ya dio su opinión; a quien dijo «no preguntar», sí. Desde
+ *    `#754` la participación no guarda el desenlace: lo dice el SELLO de las respuestas de ayer
+ *    (`SurveySeals::answeredInPersonOn()`), que solo tienen las contestadas;
  *  · con un correo de encuesta en los últimos `surveys.cooldown_days` días (30 por defecto): una persona que
  *    viene cada semana no recibe una encuesta cada semana.
  *
  * ## Por qué corre CADA HORA y decide él, desde las 10:00 del parque
  * Las dos razones de `reservations:eve-notice`: la zona del parque es un AJUSTE que se resuelve en la EJECUCIÓN,
- * y una hora de cron caído no se lleva la encuesta por delante — la fila de `survey_responses` (una por cliente y
- * encuesta) es la marca, así que la siguiente pasada recupera y nunca duplica. Idempotente por construcción.
+ * y una hora de cron caído no se lleva la encuesta por delante — la PARTICIPACIÓN (una por cliente y encuesta) es
+ * la marca, así que la siguiente pasada recupera y nunca duplica. Idempotente por construcción.
  *
- * ⚠️ **La fila nace ANTES de encolar** (`SurveyResponses::send()`): si el envío revienta, el cliente se queda sin
- * correo pero no con seis; queda el rastro en el log. El molde es `analytics:notify-accounts`.
+ * ⚠️ **La participación nace ANTES de encolar** (`SurveyResponses::send()`): si el envío revienta, el cliente se queda
+ * sin correo pero no con seis; queda el rastro en el log. El token EN CLARO sale de ahí y solo viaja en el correo:
+ * la base guarda su hash. El molde es `analytics:notify-accounts`.
  */
 class SendExternalSurveys extends Command
 {
@@ -52,7 +56,7 @@ class SendExternalSurveys extends Command
 
     protected $description = 'Manda por correo la encuesta externa viva a quien acreditó su visita ayer.';
 
-    public function handle(SurveyResponses $responses): int
+    public function handle(SurveyResponses $responses, SurveySeals $seals): int
     {
         $now = DisplayTime::now();
 
@@ -72,7 +76,9 @@ class SendExternalSurveys extends Command
         $sent = 0;
         $failed = 0;
 
-        $this->eligible($survey, $yesterday)->chunkById(self::CHUNK, function (Collection $users) use ($responses, $survey, $yesterday, $dryRun, &$sent, &$failed): void {
+        $answeredInPerson = $seals->answeredInPersonOn($yesterday);
+
+        $this->eligible($survey, $yesterday, $answeredInPerson)->chunkById(self::CHUNK, function (Collection $users) use ($responses, $survey, $yesterday, $dryRun, &$sent, &$failed): void {
             /** @var User $user */
             foreach ($users as $user) {
                 if ($dryRun) {
@@ -81,13 +87,13 @@ class SendExternalSurveys extends Command
                     continue;
                 }
 
-                $response = $responses->send($survey, (int) $user->getKey(), $yesterday, $user->preferredLocale());
-                if ($response === null) {
+                $token = $responses->send($survey, (int) $user->getKey(), $yesterday, $user->preferredLocale());
+                if ($token === null) {
                     continue;
                 }
 
                 try {
-                    $user->notify(new SurveyInvitation($survey, $response));
+                    $user->notify(new SurveyInvitation($survey, $token));
                     $sent++;
                 } catch (Throwable $e) {
                     // La fila se queda a propósito: reintentar mandaría el correo dos veces si el fallo fue
@@ -117,9 +123,10 @@ class SendExternalSurveys extends Command
      * Quien visitó AYER y puede recibir la encuesta. Todo en la consulta: el volumen de un día son decenas, pero
      * la pasada es horaria y no debe leer la tabla de clientes entera.
      *
+     * @param  list<int>  $answeredInPerson  quien contestó una interna en esa visita (`#742`)
      * @return Builder<User>
      */
-    private function eligible(Survey $survey, string $yesterday): Builder
+    private function eligible(Survey $survey, string $yesterday, array $answeredInPerson): Builder
     {
         $cooldownSince = Carbon::now()->subDays(SurveySettings::cooldownDays());
 
@@ -130,20 +137,16 @@ class SendExternalSurveys extends Command
             ->whereExists(static fn (Query $q) => $q->selectRaw('1')->from('customer_visits')
                 ->whereColumn('customer_visits.user_id', 'users.id')
                 ->where('customer_visits.visited_on', $yesterday))
-            ->whereNotExists(static fn (Query $q) => $q->selectRaw('1')->from('survey_responses')
-                ->whereColumn('survey_responses.user_id', 'users.id')
-                ->where('survey_responses.survey_id', $survey->getKey()))
+            ->whereNotExists(static fn (Query $q) => $q->selectRaw('1')->from('survey_participations')
+                ->whereColumn('survey_participations.user_id', 'users.id')
+                ->where('survey_participations.survey_id', $survey->getKey()))
             // `#742`: a quien CONTESTÓ la interna en esa visita no se le repite por correo (ya dio su opinión); a
             // quien dijo «no preguntar» sí: el correo es el canal tranquilo.
-            ->whereNotExists(static fn (Query $q) => $q->selectRaw('1')->from('survey_responses')
-                ->whereColumn('survey_responses.user_id', 'users.id')
-                ->where('survey_responses.channel', 'internal')
-                ->where('survey_responses.visited_on', $yesterday)
-                ->whereNotNull('survey_responses.answered_at'))
-            ->whereNotExists(static fn (Query $q) => $q->selectRaw('1')->from('survey_responses')
-                ->whereColumn('survey_responses.user_id', 'users.id')
-                ->where('survey_responses.channel', 'external')
-                ->where('survey_responses.sent_at', '>=', $cooldownSince))
+            ->when($answeredInPerson !== [], static fn (Builder $q) => $q->whereNotIn('users.id', $answeredInPerson))
+            ->whereNotExists(static fn (Query $q) => $q->selectRaw('1')->from('survey_participations')
+                ->whereColumn('survey_participations.user_id', 'users.id')
+                ->where('survey_participations.channel', 'external')
+                ->where('survey_participations.sent_at', '>=', $cooldownSince))
             ->orderBy('id');
     }
 }

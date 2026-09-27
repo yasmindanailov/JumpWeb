@@ -83,8 +83,10 @@ class SurveyForm
                             self::translatableTab('fr', __('admin.catalog.lang.fr')),
                         ]),
                     ]),
+                // `#754`: el aviso del anonimato para el OPERADOR va delante de las preguntas, que es donde se decide qué
+                // preguntar. Texto del producto, fijo: no es un campo.
                 Section::make(__('admin.surveys.section_questions'))
-                    ->description(__('admin.surveys.questions_hint'))
+                    ->description(__('admin.surveys.anonymous_notice').' '.__('admin.surveys.questions_hint'))
                     ->schema([
                         Repeater::make('questions')
                             ->hiddenLabel()

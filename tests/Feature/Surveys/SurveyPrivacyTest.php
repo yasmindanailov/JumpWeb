@@ -5,21 +5,32 @@ namespace Tests\Feature\Surveys;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\AccountPrivacy;
 use App\Domain\Platform\Models\Survey;
+use App\Domain\Platform\Models\SurveyParticipation;
 use App\Domain\Platform\Models\SurveyResponse;
+use App\Domain\Platform\Services\Surveys\SurveyResponses;
+use App\Domain\Platform\Services\Surveys\SurveySeals;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 /**
- * **Las respuestas y la persona** (`docs/specs/encuestas.md` §4.5, T1; `RGPD-01`): al anonimizar, las respuestas
- * dejan de ser suyas y el texto libre se borra, los agregados sobreviven; a los 24 meses se podan; y la baja de
- * encuestas vuelve a neutro con la cuenta.
+ * **Las encuestas y la persona** (`docs/specs/encuestas.md` §4.5 y §4.7, T1 y T5; `RGPD-01`; `#754`): al anonimizar,
+ * la participación se suelta y el SELLO de esa persona se borra —y el de otra no—; a los 24 meses se poda; «una por
+ * cliente y encuesta» es una regla de la BD; y el export lleva lo que sigue siendo suyo: sus participaciones y sus
+ * respuestas AÚN selladas, nunca las de otro.
  */
 class SurveyPrivacyTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->travelTo(Carbon::parse('2026-09-25 11:00:00', 'Europe/Madrid'));
+    }
 
     private function survey(): Survey
     {
@@ -32,46 +43,57 @@ class SurveyPrivacyTest extends TestCase
         ]);
     }
 
-    public function test_anonymizing_unlinks_the_responses_and_erases_the_free_text_but_keeps_the_scores(): void
+    /** @param  array<string, mixed>  $answers */
+    private function answerInPerson(Survey $survey, User $customer, array $answers): void
+    {
+        $this->assertTrue(app(SurveyResponses::class)->answerInPerson($survey, $customer->id, $answers, null));
+    }
+
+    public function test_anonymizing_unlinks_the_participation_and_forgets_that_seal_and_no_other(): void
     {
         $survey = $this->survey();
         $customer = User::factory()->create(['surveys_opt_out' => true]);
         $other = User::factory()->create();
-        SurveyResponse::create(['survey_id' => $survey->id, 'user_id' => $customer->id, 'channel' => 'internal', 'answered_at' => now(), 'answers' => ['ambiente' => 2, 'comentario' => 'Me llamo Ana y el bar estaba cerrado']]);
-        SurveyResponse::create(['survey_id' => $survey->id, 'user_id' => $other->id, 'channel' => 'internal', 'answered_at' => now(), 'answers' => ['ambiente' => 5, 'comentario' => 'Genial']]);
+        $this->answerInPerson($survey, $customer, ['ambiente' => 2, 'comentario' => 'Mucha cola']);
+        $this->answerInPerson($survey, $other, ['ambiente' => 5, 'comentario' => 'Genial']);
+        $seals = app(SurveySeals::class);
+        $this->assertCount(1, $seals->sealedFor($customer->id));
 
         $customer->anonymize();
 
-        $mine = SurveyResponse::query()->whereNull('user_id')->sole();
-        $this->assertSame(['ambiente' => 2], $mine->answers, 'la escala sobrevive sin persona; el texto libre no');
-        $this->assertSame('Genial', SurveyResponse::query()->where('user_id', $other->id)->sole()->answers['comentario'], 'la de otro cliente no se toca');
+        $this->assertNull(SurveyParticipation::query()->where('user_id', $customer->id)->first(), 'su participación ya no es suya');
+        $this->assertSame(2, SurveyParticipation::query()->count(), 'la fila sigue contando como preguntada, sin nadie');
+        $this->assertSame([], $seals->sealedFor($customer->id), 'su sello se borra en la misma transacción');
+        $this->assertCount(1, $seals->sealedFor($other->id), 'CONTROL: el sello de otro cliente no se toca');
+        $this->assertSame(2, SurveyResponse::query()->count(), 'las respuestas anónimas siguen contando');
+        $this->assertSame(1, DB::table('survey_responses')->whereNull('seal')->count());
         $this->assertFalse($customer->fresh()->surveys_opt_out, 'la baja vuelve a neutro con la cuenta');
-        $this->assertSame(2, SurveyResponse::count(), 'los agregados siguen contando');
     }
 
-    public function test_responses_older_than_two_years_are_pruned_answered_or_not(): void
+    public function test_participations_and_responses_older_than_two_years_are_pruned(): void
     {
         $survey = $this->survey();
-        $old = SurveyResponse::create(['survey_id' => $survey->id, 'channel' => 'external', 'sent_at' => now()->subMonths(30), 'answered_at' => now()->subMonths(30), 'answers' => ['ambiente' => 4]]);
-        $oldUnanswered = SurveyResponse::create(['survey_id' => $survey->id, 'channel' => 'external', 'token' => 'abcdefghijabcdefghijabcdefghijabcdefghij', 'sent_at' => now()->subMonths(30)]);
-        $oldUnanswered->forceFill(['created_at' => now()->subMonths(30)])->saveQuietly();
-        $recent = SurveyResponse::create(['survey_id' => $survey->id, 'channel' => 'internal', 'answered_at' => now()->subMonths(6), 'answers' => ['ambiente' => 3]]);
+        $old = SurveyParticipation::create(['survey_id' => $survey->id, 'channel' => 'external', 'asked_on' => now()->subMonths(30)->toDateString(), 'sent_at' => now()->subMonths(30)]);
+        $recent = SurveyParticipation::create(['survey_id' => $survey->id, 'channel' => 'internal', 'asked_on' => now()->subMonths(6)->toDateString()]);
+        $oldAnswer = SurveyResponse::create(['survey_id' => $survey->id, 'channel' => 'internal', 'answered_on' => now()->subMonths(30)->toDateString(), 'band' => 'morning', 'answers' => ['ambiente' => 4]]);
+        $recentAnswer = SurveyResponse::create(['survey_id' => $survey->id, 'channel' => 'internal', 'answered_on' => now()->subMonths(6)->toDateString(), 'band' => 'morning', 'answers' => ['ambiente' => 3]]);
 
-        Artisan::call('model:prune', ['--model' => [SurveyResponse::class]]);
+        Artisan::call('model:prune', ['--model' => [SurveyResponse::class, SurveyParticipation::class]]);
 
-        $this->assertDatabaseMissing('survey_responses', ['id' => $old->id]);
-        $this->assertDatabaseMissing('survey_responses', ['id' => $oldUnanswered->id]);
-        $this->assertDatabaseHas('survey_responses', ['id' => $recent->id]);
+        $this->assertDatabaseMissing('survey_participations', ['id' => $old->id]);
+        $this->assertDatabaseHas('survey_participations', ['id' => $recent->id]);
+        $this->assertDatabaseMissing('survey_responses', ['id' => $oldAnswer->id]);
+        $this->assertDatabaseHas('survey_responses', ['id' => $recentAnswer->id]);
     }
 
-    public function test_one_response_per_customer_and_survey_is_a_database_rule(): void
+    public function test_one_participation_per_customer_and_survey_is_a_database_rule(): void
     {
         $survey = $this->survey();
         $customer = User::factory()->create();
-        SurveyResponse::create(['survey_id' => $survey->id, 'user_id' => $customer->id, 'channel' => 'internal', 'answered_at' => now(), 'answers' => ['ambiente' => 4]]);
+        SurveyParticipation::create(['survey_id' => $survey->id, 'user_id' => $customer->id, 'channel' => 'internal', 'asked_on' => '2026-09-25']);
 
         $this->expectException(UniqueConstraintViolationException::class);
-        SurveyResponse::create(['survey_id' => $survey->id, 'user_id' => $customer->id, 'channel' => 'external', 'sent_at' => now()]);
+        SurveyParticipation::create(['survey_id' => $survey->id, 'user_id' => $customer->id, 'channel' => 'external', 'asked_on' => '2026-09-26', 'sent_at' => now()]);
     }
 
     public function test_a_survey_is_running_only_while_active_and_inside_its_window_and_one_per_kind(): void
@@ -90,25 +112,29 @@ class SurveyPrivacyTest extends TestCase
     }
 
     /**
-     * T2 · el export del titular (`RGPD-01`, spec §4.5) lleva sus encuestas ENTERAS —lo contestado y lo
-     * declinado, texto libre incluido—: es dato suyo. Y solo las suyas.
+     * El export del titular (art. 15, `RGPD-01`; contrato 1.46.0): a qué encuestas se le preguntó y lo que contestó
+     * MIENTRAS sigue sellado —texto libre incluido: es suyo—. Nada de otro cliente, nada de quién preguntó, y nada ya
+     * desellado: pasado el sello, nadie puede saber cuál fue la suya.
      */
-    public function test_the_export_of_the_customer_carries_their_responses_and_only_theirs(): void
+    public function test_the_export_carries_the_participations_and_the_still_sealed_answers_and_only_theirs(): void
     {
         $survey = $this->survey();
         $customer = User::factory()->create();
         $other = User::factory()->create();
-        SurveyResponse::create(['survey_id' => $survey->id, 'user_id' => $customer->id, 'channel' => 'internal', 'visited_on' => '2026-09-25', 'answered_at' => Carbon::parse('2026-09-25 11:05:00'), 'answers' => ['ambiente' => 4, 'comentario' => 'Muy bien'], 'locale' => 'es']);
-        SurveyResponse::create(['survey_id' => $survey->id, 'user_id' => $other->id, 'channel' => 'internal', 'answered_at' => now(), 'answers' => ['ambiente' => 1, 'comentario' => 'Secreto de otro']]);
+        $staff = User::factory()->create();
+        $this->assertTrue(app(SurveyResponses::class)->answerInPerson($survey, $customer->id, ['ambiente' => 4, 'comentario' => 'Muy bien'], $staff->id));
+        $this->answerInPerson($survey, $other, ['ambiente' => 1, 'comentario' => 'Secreto de otro']);
 
-        $export = app(AccountPrivacy::class)->exportFor($customer);
+        $export = app(AccountPrivacy::class)->exportFor($customer)['surveys'];
 
-        $this->assertArrayHasKey('surveys', $export);
-        $this->assertCount(1, $export['surveys']);
-        $this->assertSame('visita', $export['surveys'][0]['survey']);
-        $this->assertSame('internal', $export['surveys'][0]['channel']);
-        $this->assertSame('2026-09-25', $export['surveys'][0]['visited_on']);
-        $this->assertSame(['ambiente' => 4, 'comentario' => 'Muy bien'], $export['surveys'][0]['answers']);
-        $this->assertStringNotContainsString('Secreto de otro', json_encode($export, JSON_UNESCAPED_UNICODE));
+        $this->assertSame([['survey' => 'visita', 'channel' => 'internal', 'asked_on' => '2026-09-25', 'sent_at' => null]], $export['participations']);
+        $this->assertSame([['survey' => 'visita', 'channel' => 'internal', 'answered_on' => '2026-09-25', 'answers' => ['ambiente' => 4, 'comentario' => 'Muy bien']]], $export['sealed_responses']);
+        $json = json_encode($export, JSON_UNESCAPED_UNICODE);
+        $this->assertStringNotContainsString('Secreto de otro', (string) $json);
+        $this->assertStringNotContainsString((string) $staff->id, (string) json_encode($export['participations']), 'quién preguntó es un dato del empleado');
+
+        // Desellada (volvió, o pasaron los 90 días), la respuesta deja de ser suya y deja de estar aquí.
+        DB::table('survey_responses')->update(['seal' => null]);
+        $this->assertSame([], app(AccountPrivacy::class)->exportFor($customer)['surveys']['sealed_responses']);
     }
 }

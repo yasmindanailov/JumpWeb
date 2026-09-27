@@ -2,27 +2,34 @@
 
 namespace App\Domain\Platform\Services\Surveys;
 
+use App\Domain\Platform\Contracts\VisitFacts;
 use App\Domain\Platform\Models\Survey;
+use App\Domain\Platform\Models\SurveyParticipation;
 use App\Domain\Platform\Models\SurveyResponse;
 use App\Domain\Platform\Services\Analytics\Recorder;
+use App\Domain\Platform\Services\DisplayTime;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
- * **Las respuestas de una encuesta: a quién se le ofrece y cómo se escribe una** (`docs/specs/encuestas.md`
- * §4.2, T2; la externa de la T3 reutiliza la escritura).
+ * **Preguntar y contestar una encuesta, ANÓNIMA** (`docs/specs/encuestas.md` §4.2, §4.3 y §4.7; `DECISIONES #740` y
+ * `#754`): a quién se le ofrece, y cómo se escriben por separado la PARTICIPACIÓN (a quién se preguntó) y la RESPUESTA
+ * (qué se contestó, sin persona).
  *
- * Tres reglas que viven aquí y en ningún otro sitio:
- *  - **Una respuesta por cliente y encuesta** (`[DECIDIDO owner]` §7·2): la BD lo garantiza con su índice único
- *    y aquí se RESPETA — una segunda escritura (una tablet dormida que reenvía, una página abierta dos veces)
- *    no pisa la primera ni deja un segundo hecho: devuelve `null` y no pasa nada.
- *  - **«No preguntar» también es una respuesta**: deja fila (`declined_at`) y no se vuelve a ofrecer.
- *  - **Al libro solo va el HECHO** (`survey_answered` · `survey_declined`, con la clave de la encuesta y el
- *    canal, régimen del contrato como `visit_checked_in`): ninguna respuesta lo pisa (`RGPD-07`).
+ * Las reglas que viven aquí y en ningún otro sitio:
+ *  - **Una por cliente y encuesta** (`#740` §7·2): el índice único de la PARTICIPACIÓN es el árbitro. Una segunda
+ *    escritura (una tablet dormida que reenvía, una página abierta dos veces) no pisa la primera ni deja una segunda
+ *    respuesta: devuelve `false` y no pasa nada.
+ *  - **«No preguntar» también es una fila**: participación y respuesta con `declined`, para la tasa.
+ *  - **La respuesta no lleva a nadie**: ni cliente, ni hora (la FRANJA), ni idioma; lleva primera visita y tipo de
+ *    visita ({@see VisitFacts}) y, si se contestó, el SELLO ({@see SurveySeals}). Participación y respuesta se escriben
+ *    en la misma transacción, pero nada en ellas las une.
+ *  - **Al libro solo va `survey_sent`** (mandar es de la participación). Contestar y declinar ya no dejan hecho: su
+ *    hora exacta y el cliente unirían el desenlace (§4.7); el cuadro cuenta de su tabla.
  *
- * ⚠️ Platform no mira a Identity (`ModuleBoundariesTest`): el cliente es un `int`, y quien audita con el
- * modelo del cliente delante es la pantalla que llama (la puerta: `puerta.survey_*`).
+ * ⚠️ Platform no mira a Identity (`ModuleBoundariesTest`): el cliente es un `int`, y quien audita con el modelo del
+ * cliente delante es la pantalla que llama (la puerta: `puerta.survey_closed`, sin el desenlace).
  */
 final class SurveyResponses
 {
@@ -31,80 +38,25 @@ final class SurveyResponses
 
     public const TOKEN_RE = '/^[A-Za-z0-9]{40}$/';
 
-    public function __construct(private readonly Recorder $recorder) {}
+    /** Las dos etiquetas del HMAC del token: con la misma, las dos tablas se unirían sin el token en claro. */
+    public const HASH_LOOKUP = 'lookup';
 
-    /**
-     * T3 · el correo del día siguiente: la fila nace MANDADA (`sent_at`, su token) y deja el hecho `survey_sent`.
-     * `null` si el cliente ya tenía fila para esta encuesta: es la idempotencia del comando, por construcción.
-     */
-    public function send(Survey $survey, int $userId, ?string $visitedOn, ?string $locale): ?SurveyResponse
+    public const HASH_SPENT = 'spent';
+
+    public function __construct(
+        private readonly Recorder $recorder,
+        private readonly SurveySeals $seals,
+        private readonly VisitFacts $visits,
+    ) {}
+
+    public static function tokenHash(string $token, string $purpose): string
     {
-        $response = $this->insert($survey, $userId, [
-            'channel' => SurveyResponse::CHANNEL_EXTERNAL,
-            'visited_on' => $visitedOn,
-            'token' => Str::random(self::TOKEN_LENGTH),
-            'sent_at' => now(),
-            'locale' => $locale,
-        ]);
-
-        if ($response !== null) {
-            $this->recorder->fact('survey_sent', ['survey' => $survey->key, 'channel' => SurveyResponse::CHANNEL_EXTERNAL], ['user_id' => $userId]);
-        }
-
-        return $response;
+        return hash_hmac('sha256', $purpose.':'.$token, (string) config('app.key'));
     }
 
-    /**
-     * La fila que ABRE un token: mandada, sin contestar ni declinar, con titular, de una encuesta viva. Todo lo
-     * demás —inventado, contestado, apagada, anonimizado— es el mismo `null`, y la página el mismo 404 (§4.3).
-     */
-    public function openByToken(string $token): ?SurveyResponse
-    {
-        if (preg_match(self::TOKEN_RE, $token) !== 1) {
-            return null;
-        }
+    // ─── La puerta ───────────────────────────────────────────────────────────────────────────────
 
-        $response = SurveyResponse::query()
-            ->where('token', $token)
-            ->whereNull('answered_at')
-            ->whereNull('declined_at')
-            ->whereNotNull('user_id')
-            ->with('survey')
-            ->first();
-
-        if ($response === null || $response->survey === null || ! $response->survey->isRunning()) {
-            return null;
-        }
-
-        return $response;
-    }
-
-    /**
-     * Contestar desde el correo: cierra la fila UNA sola vez —bajo candado: dos pestañas con la misma página no
-     * escriben dos veces— y deja el hecho. `false` si ya estaba cerrada.
-     *
-     * @param  array<string, mixed>  $answers  ya tipadas y válidas ({@see QuestionSchema::validate()})
-     */
-    public function answerSent(SurveyResponse $response, array $answers, string $locale): bool
-    {
-        $written = DB::transaction(static function () use ($response, $answers, $locale): bool {
-            $fresh = SurveyResponse::query()->whereKey($response->getKey())->lockForUpdate()->first();
-            if ($fresh === null || $fresh->answered_at !== null || $fresh->declined_at !== null) {
-                return false;
-            }
-            $fresh->forceFill(['answered_at' => now(), 'answers' => $answers, 'locale' => $locale])->save();
-
-            return true;
-        });
-
-        if ($written && $response->survey !== null && $response->user_id !== null) {
-            $this->recorder->fact('survey_answered', ['survey' => $response->survey->key, 'channel' => SurveyResponse::CHANNEL_EXTERNAL], ['user_id' => (int) $response->user_id]);
-        }
-
-        return $written;
-    }
-
-    /** La encuesta VIVA de esa clase que este cliente aún no tiene (ni contestada ni declinada), o `null`. */
+    /** La encuesta VIVA de esa clase a la que este cliente aún no ha participado, o `null`. */
     public function offerFor(string $kind, int $userId): ?Survey
     {
         $survey = Survey::runningOfKind($kind);
@@ -112,71 +64,191 @@ final class SurveyResponses
             return null;
         }
 
-        return $this->rowExists($survey, $userId) ? null : $survey;
+        $asked = SurveyParticipation::query()->where('survey_id', $survey->getKey())->where('user_id', $userId)->exists();
+
+        return $asked ? null : $survey;
     }
 
     /**
-     * Escribe la respuesta y su hecho. `$answers` llegan ya TIPADAS y válidas ({@see QuestionSchema::fromForm()}
-     * y {@see QuestionSchema::validate()} antes: aquí no se decide qué vale). `null` si el cliente ya tenía fila.
+     * Contestada en la puerta, con la persona delante. `$answers` llegan ya TIPADAS y válidas
+     * ({@see QuestionSchema::fromForm()} y {@see QuestionSchema::validate()} antes: aquí no se decide qué vale).
+     * `false` si este cliente ya había participado.
      *
      * @param  array<string, mixed>  $answers
      */
-    public function answer(Survey $survey, int $userId, string $channel, array $answers, string $locale, ?string $visitedOn = null, ?int $answeredBy = null): ?SurveyResponse
+    public function answerInPerson(Survey $survey, int $userId, array $answers, ?int $askedBy): bool
     {
-        $response = $this->insert($survey, $userId, [
-            'channel' => $channel,
-            'answered_by' => $answeredBy,
-            'visited_on' => $visitedOn,
-            'answered_at' => now(),
-            'answers' => $answers,
-            'locale' => $locale,
-        ]);
-
-        if ($response !== null) {
-            $this->recorder->fact('survey_answered', ['survey' => $survey->key, 'channel' => $channel], ['user_id' => $userId]);
-        }
-
-        return $response;
+        return $this->closeInPerson($survey, $userId, $answers, $askedBy);
     }
 
-    /** «No preguntar» / «no quiero contestar»: fila con `declined_at` y su hecho; no se vuelve a ofrecer. */
-    public function decline(Survey $survey, int $userId, string $channel, ?string $visitedOn = null, ?int $by = null, ?string $locale = null): ?SurveyResponse
+    /** «No preguntar»: participación y una respuesta `declined`, sin sello; no se vuelve a ofrecer. */
+    public function declineInPerson(Survey $survey, int $userId, ?int $askedBy): bool
     {
-        $response = $this->insert($survey, $userId, [
-            'channel' => $channel,
-            'answered_by' => $by,
-            'visited_on' => $visitedOn,
-            'declined_at' => now(),
-            'locale' => $locale,
-        ]);
-
-        if ($response !== null) {
-            $this->recorder->fact('survey_declined', ['survey' => $survey->key, 'channel' => $channel], ['user_id' => $userId]);
-        }
-
-        return $response;
+        return $this->closeInPerson($survey, $userId, null, $askedBy);
     }
 
-    private function rowExists(Survey $survey, int $userId): bool
+    /** @param  array<string, mixed>|null  $answers  `null` = «no preguntar» */
+    private function closeInPerson(Survey $survey, int $userId, ?array $answers, ?int $askedBy): bool
     {
-        return SurveyResponse::query()
-            ->where('survey_id', $survey->getKey())
-            ->where('user_id', $userId)
-            ->exists();
+        $now = DisplayTime::now();
+        $today = $now->toDateString();
+        $facts = $this->factsOf($userId, $today);
+
+        return DB::transaction(function () use ($survey, $userId, $answers, $askedBy, $now, $today, $facts): bool {
+            $participation = $this->participate([
+                'survey_id' => $survey->getKey(),
+                'user_id' => $userId,
+                'channel' => SurveyResponse::CHANNEL_INTERNAL,
+                'asked_by' => $askedBy,
+                'asked_on' => $today,
+            ]);
+            if ($participation === null) {
+                return false;
+            }
+
+            $this->respond($survey, SurveyResponse::CHANNEL_INTERNAL, $now->toDateString(), SurveyResponse::bandAt($now), $askedBy, $facts, $answers, $answers === null ? null : $userId);
+
+            return true;
+        });
+    }
+
+    // ─── El correo del día siguiente ─────────────────────────────────────────────────────────────
+
+    /**
+     * La participación nace MANDADA (el día de la visita, su hora de envío, el idioma y el HASH del token) y deja el
+     * hecho `survey_sent`. Devuelve el token EN CLARO —solo existe para viajar en el correo— o `null` si el cliente ya
+     * había participado (la idempotencia del comando, por construcción).
+     */
+    public function send(Survey $survey, int $userId, string $visitedOn, ?string $locale): ?string
+    {
+        $token = Str::random(self::TOKEN_LENGTH);
+        $participation = $this->participate([
+            'survey_id' => $survey->getKey(),
+            'user_id' => $userId,
+            'channel' => SurveyResponse::CHANNEL_EXTERNAL,
+            'asked_on' => $visitedOn,
+            'sent_at' => now(),
+            'token_hash' => self::tokenHash($token, self::HASH_LOOKUP),
+            'locale' => $locale,
+        ]);
+        if ($participation === null) {
+            return null;
+        }
+
+        $this->recorder->fact('survey_sent', ['survey' => $survey->key, 'channel' => SurveyResponse::CHANNEL_EXTERNAL], ['user_id' => $userId]);
+
+        return $token;
+    }
+
+    /** La participación de un token, esté como esté (la baja y «Gracias» la necesitan aunque ya se contestara). */
+    public function participationOf(string $token): ?SurveyParticipation
+    {
+        if (preg_match(self::TOKEN_RE, $token) !== 1) {
+            return null;
+        }
+
+        return SurveyParticipation::query()->where('token_hash', self::tokenHash($token, self::HASH_LOOKUP))->with('survey')->first();
+    }
+
+    public function isSpent(string $token): bool
+    {
+        return DB::table('survey_spent_tokens')->where('hash', self::tokenHash($token, self::HASH_SPENT))->exists();
     }
 
     /**
-     * La única escritura. El índice único `(survey_id, user_id)` es el árbitro: si la fila ya existe, la BD lo
-     * dice y aquí se traduce a `null` sin pisar nada.
+     * La participación que ABRE un token: con titular, sin contestar, de una encuesta viva. Todo lo demás —inventado,
+     * contestado, apagada, anonimizado— es el mismo `null`, y la página el mismo 404 (§4.3).
+     */
+    public function openByToken(string $token): ?SurveyParticipation
+    {
+        $participation = $this->participationOf($token);
+        if ($participation === null || $participation->user_id === null || $participation->survey === null || ! $participation->survey->isRunning()) {
+            return null;
+        }
+
+        return $this->isSpent($token) ? null : $participation;
+    }
+
+    /**
+     * Contestar desde el correo: GASTA el token una sola vez —su hash de «gastado» es clave primaria, así que dos
+     * pestañas con la misma página no escriben dos veces— y escribe la respuesta sin persona, en la misma transacción.
+     * `false` si ya estaba gastado.
+     *
+     * @param  array<string, mixed>  $answers  ya tipadas y válidas ({@see QuestionSchema::validate()})
+     */
+    public function answerSent(SurveyParticipation $participation, string $token, array $answers): bool
+    {
+        $survey = $participation->survey;
+        $userId = $participation->user_id;
+        if ($survey === null || $userId === null) {
+            return false;
+        }
+
+        $now = DisplayTime::now();
+        $facts = $this->factsOf((int) $userId, $participation->asked_on->toDateString());
+
+        return DB::transaction(function () use ($survey, $userId, $answers, $token, $now, $facts): bool {
+            try {
+                DB::table('survey_spent_tokens')->insert(['hash' => self::tokenHash($token, self::HASH_SPENT)]);
+            } catch (UniqueConstraintViolationException) {
+                return false;
+            }
+
+            $this->respond($survey, SurveyResponse::CHANNEL_EXTERNAL, $now->toDateString(), SurveyResponse::bandAt($now), null, $facts, $answers, (int) $userId);
+
+            return true;
+        });
+    }
+
+    // ─── Las dos escrituras ──────────────────────────────────────────────────────────────────────
+
+    /**
+     * La participación. El índice único `(survey_id, user_id)` es el árbitro: si ya existía, la BD lo dice y aquí se
+     * traduce a `null` sin pisar nada.
      *
      * @param  array<string, mixed>  $attributes
      */
-    private function insert(Survey $survey, int $userId, array $attributes): ?SurveyResponse
+    private function participate(array $attributes): ?SurveyParticipation
     {
         try {
-            return SurveyResponse::query()->create(['survey_id' => $survey->getKey(), 'user_id' => $userId] + $attributes);
+            return SurveyParticipation::query()->create($attributes);
         } catch (UniqueConstraintViolationException) {
             return null;
         }
+    }
+
+    /**
+     * La respuesta, sin persona. Se sella solo si se CONTESTÓ (`$sealFor`): «volvió quien puntuó mal» no pregunta por
+     * quien dijo «no preguntar».
+     *
+     * @param  array{first_visit: bool, visit_kind: string}  $facts
+     * @param  array<string, mixed>|null  $answers
+     */
+    private function respond(Survey $survey, string $channel, string $day, string $band, ?int $askedBy, array $facts, ?array $answers, ?int $sealFor): void
+    {
+        $response = new SurveyResponse([
+            'survey_id' => $survey->getKey(),
+            'channel' => $channel,
+            'answered_on' => $day,
+            'band' => $band,
+            'asked_by' => $askedBy,
+            'first_visit' => $facts['first_visit'],
+            'visit_kind' => $facts['visit_kind'],
+            'declined' => $answers === null,
+            'answers' => $answers,
+        ]);
+        if ($sealFor !== null) {
+            $this->seals->stamp($response, $sealFor);
+        }
+        $response->save();
+    }
+
+    /** @return array{first_visit: bool, visit_kind: string} */
+    private function factsOf(int $userId, string $visitDay): array
+    {
+        return [
+            'first_visit' => $this->visits->isFirstVisit($userId, $visitDay),
+            'visit_kind' => $this->visits->kindOn($userId, $visitDay),
+        ];
     }
 }

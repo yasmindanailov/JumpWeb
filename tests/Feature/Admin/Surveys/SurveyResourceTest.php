@@ -75,6 +75,16 @@ class SurveyResourceTest extends TestCase
         return Survey::create($this->validForm($overrides));
     }
 
+    /**
+     * Una respuesta ANÓNIMA (`#754`): la que bloquea la estructura es la respuesta, sin persona.
+     *
+     * @param  array<string, mixed>  $answers
+     */
+    private function answered(Survey $survey, array $answers): void
+    {
+        SurveyResponse::create(['survey_id' => $survey->id, 'channel' => 'internal', 'answered_on' => now()->toDateString(), 'band' => 'morning', 'answers' => $answers]);
+    }
+
     public function test_gating_and_the_card_in_settings(): void
     {
         $this->actingAs($this->admin());
@@ -167,10 +177,12 @@ class SurveyResourceTest extends TestCase
     public function test_with_responses_the_structure_is_locked_but_the_labels_and_the_switch_are_not(): void
     {
         $survey = $this->stored();
-        SurveyResponse::create(['survey_id' => $survey->id, 'user_id' => User::factory()->create()->id, 'channel' => 'internal', 'answered_at' => now(), 'answers' => ['ambiente' => 4]]);
+        $this->answered($survey, ['ambiente' => 4]);
 
         Livewire::actingAs($this->admin())
             ->test(EditSurvey::class, ['record' => $survey->id])
+            // `#754`: el aviso para el OPERADOR, delante de las preguntas. Texto del producto, tecleado a mano (`#734`).
+            ->assertSee('Las encuestas son anónimas: no preguntes el nombre, el teléfono ni el correo.')
             ->fillForm([
                 'key' => 'otra',
                 'kind' => Survey::KIND_EXTERNAL,
@@ -205,7 +217,7 @@ class SurveyResourceTest extends TestCase
     public function test_a_survey_with_responses_is_not_deleted_and_one_without_is_deleted_with_a_trace(): void
     {
         $withResponses = $this->stored();
-        SurveyResponse::create(['survey_id' => $withResponses->id, 'channel' => 'internal', 'answered_at' => now(), 'answers' => ['ambiente' => 4]]);
+        $this->answered($withResponses, ['ambiente' => 4]);
         $this->actingAs($this->admin());
         $this->assertFalse(SurveyResource::canDelete($withResponses));
         Livewire::actingAs($this->admin())
@@ -225,7 +237,7 @@ class SurveyResourceTest extends TestCase
     public function test_the_list_shows_the_real_state_and_the_responses_of_each_survey(): void
     {
         $running = $this->stored();
-        SurveyResponse::create(['survey_id' => $running->id, 'channel' => 'internal', 'answered_at' => now(), 'answers' => ['ambiente' => 5]]);
+        $this->answered($running, ['ambiente' => 5]);
         $scheduled = $this->stored(['key' => 'futura', 'kind' => Survey::KIND_EXTERNAL, 'starts_at' => now()->addDay()]);
         $finished = $this->stored(['key' => 'pasada', 'kind' => Survey::KIND_EXTERNAL, 'ends_at' => now()->subDay()]);
         $off = $this->stored(['key' => 'apagada', 'active' => false]);

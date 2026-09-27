@@ -195,6 +195,10 @@ return [
                 'survey_cancel' => 'Ahora no',
                 'survey_answered' => 'Encuesta contestada',
                 'survey_declined' => 'No se ha preguntado',
+                // `#754`: EL AVISO DEL ANONIMATO, para leerlo en voz alta antes de preguntar, y junto a cada pregunta de
+                // texto. Texto del PRODUCTO, fijo: el mismo que llevan el correo y la página (`surveys.notice`).
+                'survey_notice' => 'Es anónima: nadie en el parque verá tu nombre junto a tus respuestas, y a los 90 días se separan de ti del todo.',
+                'survey_text_hint' => 'Si quiere seguir en el anonimato, que no diga su nombre ni datos personales.',
                 'survey_required' => 'obligatoria',
                 'survey_yes' => 'Sí',
                 'survey_no' => 'No',
@@ -336,7 +340,9 @@ return [
         // Las encuestas (`specs/encuestas.md` §4.4, T4): por DÍA DE LA RESPUESTA; solo agregados salvo «Por atender».
         'surveys' => [
             'heading' => 'Las encuestas: cuántas se contestan y qué dicen',
-            'note' => 'Respuestas cuyo día cae en el periodo. La tasa en la puerta es contestadas entre OFRECIDAS (visitas acreditadas con la encuesta viva y de clientes a los que aún no se había preguntado); la de correo, contestadas entre mandadas. «Por atender» no depende del periodo: son los últimos 30 días.',
+            'note' => 'Respuestas cuyo día cae en el periodo. Son ANÓNIMAS: ninguna cifra sale de menos de 5 respuestas. La tasa en la puerta es contestadas entre OFRECIDAS (visitas acreditadas con la encuesta viva y de clientes a los que aún no se había preguntado); la de correo, contestadas entre mandadas.',
+            // `#754`: la celda de una cifra hecha de menos de MIN_CELL respuestas (con el registro de la puerta diría quién).
+            'fewer_than_min' => 'menos de :min',
             'answered' => 'Contestadas',
             'internal_rate' => 'Tasa en la puerta',
             'internal_rate_hint' => ':answered contestadas de :offered ofrecidas (:visits visitas)',
@@ -349,12 +355,23 @@ return [
             'scale_mean_none' => 'Sin notas en el periodo',
             'answers_chart' => 'Lo que contestan',
             'answers_chart_of' => ':survey · :question',
-            'attention_heading' => 'Por atender',
-            'attention_note' => 'Respuestas de los últimos 30 días con una nota de 2 o menos, las peores primero. Pulsa el nombre para abrir la ficha.',
-            'attention_note_no_person' => 'Respuestas de los últimos 30 días con una nota de 2 o menos. Sin el permiso de la ficha del cliente, la fila sale sin persona ni texto.',
-            'attention_empty' => 'Nada por atender: ninguna nota de 2 o menos en los últimos 30 días.',
+            // `#754`: «Por atender» (la persona que puntuó mal) se retiró; esto la sustituye, sin nadie.
+            'low' => [
+                'heading' => 'Notas bajas y si volvieron',
+                'note' => 'De las respuestas del periodo con una nota de 1 a 5: las de 2 o menos y el resto, y cuántas personas de cada grupo han vuelto al parque en los 90 días siguientes (con una visita en la puerta o una reserva cobrada). Las recientes aún pueden volver; las de cuentas borradas no cuentan en el porcentaje. Sin persona: las encuestas son anónimas, y ninguna cifra sale de menos de :min respuestas.',
+                'table' => 'Notas bajas frente al resto',
+                'low' => 'Nota baja (1 o 2)',
+                'rest' => 'El resto (3 a 5)',
+                'all' => 'Respuestas con nota',
+                'col' => [
+                    'group' => 'Grupo',
+                    'answers' => 'Respuestas',
+                    'returned' => 'Han vuelto',
+                    'pending' => 'Aún pueden volver',
+                ],
+            ],
             'breakdown_heading' => 'Las encuestas, al detalle',
-            'breakdown_note' => 'Por día o semana de respuesta, por encuesta y por pregunta. Los textos libres solo aquí: el CSV no los lleva.',
+            'breakdown_note' => 'Por día o semana de respuesta, por encuesta y por pregunta. Una pregunta con menos de 5 respuestas no se desglosa. Los textos libres solo aquí, sin día y en orden aleatorio, y solo con 5 o más: el CSV no los lleva.',
             'by_survey' => 'Por encuesta',
             'by_question' => 'Por pregunta · :survey',
             'texts_heading' => 'Lo que escriben · :survey',
@@ -365,7 +382,6 @@ return [
             'yes' => 'Sí',
             'no' => 'No',
             'kind' => ['internal' => 'Interna', 'external' => 'Externa'],
-            'channel' => ['internal' => 'En la puerta', 'external' => 'Por correo'],
             'col' => [
                 'answered' => 'Contestadas',
                 'declined' => 'No preguntadas',
@@ -379,10 +395,6 @@ return [
                 'option' => 'Respuesta',
                 'answers' => 'Respuestas',
                 'text' => 'Texto',
-                'day' => 'Día',
-                'channel' => 'Canal',
-                'score' => 'Nota',
-                'customer' => 'Cliente',
             ],
         ],
         // La fiesta (`specs/analitica-fiesta.md` §4.3, T2): por DÍA DE LA FIESTA; el dinero de después de reservar
@@ -654,7 +666,7 @@ return [
                 'external_rate' => 'Por correo: contestadas entre los correos de encuesta mandados en el periodo.',
                 'sent' => 'Los correos de encuesta mandados en el periodo, el día después de la visita.',
                 'declined' => 'Las veces que en la puerta se pulsó «No preguntar».',
-                'scale_mean' => 'La media de la primera pregunta de escala (del 1 al 5) en las respuestas del periodo.',
+                'scale_mean' => 'La media de la primera pregunta de escala (del 1 al 5) en las respuestas del periodo. Las respuestas son anónimas: con menos de 5, la media no se enseña.',
             ],
         ],
         // T2d: el CSV.
@@ -2323,12 +2335,6 @@ return [
             'came_as_guest' => 'Vino invitado antes de comprar',
             'came_as_guest_yes' => 'Sí: firmó un justificante de menor invitado el :date',
             'came_as_guest_no' => 'No',
-            // Las encuestas (T4 de `specs/encuestas.md` §4.4): cuántas contestó y la última.
-            'surveys' => 'Encuestas',
-            'surveys_answered' => 'Encuestas contestadas',
-            'surveys_last' => 'La última',
-            'surveys_last_score' => 'Nota',
-            'surveys_last_text' => 'Lo que escribió',
         ],
 
         'orders_summary' => [
@@ -3767,6 +3773,8 @@ return [
         'create_title' => 'Nueva encuesta',
         'edit_title' => 'Encuesta «:name»',
         'locked_hint' => 'Esta encuesta ya tiene respuestas: la clave, la clase y la estructura de las preguntas están bloqueadas. Los rótulos y el encendido se pueden cambiar; para otra estructura, crea una encuesta nueva.',
+        // `#754`: texto del PRODUCTO, fijo: las encuestas son anónimas y el operador no lo puede cambiar.
+        'anonymous_notice' => 'Las encuestas son anónimas: no preguntes el nombre, el teléfono ni el correo.',
         'section_survey' => 'La encuesta',
         'section_texts' => 'Nombre y cabecera',
         'section_questions' => 'Preguntas',

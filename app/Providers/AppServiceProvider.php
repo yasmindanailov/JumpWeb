@@ -61,11 +61,13 @@ use App\Domain\Identity\Models\WaiverSignature;
 use App\Domain\Identity\Services\CookieConsent;
 use App\Domain\Identity\Services\CookieConsentLedger;
 use App\Domain\Identity\Services\CustomerAccountContext;
+use App\Domain\Identity\Services\CustomerVisitFacts;
 use App\Domain\Identity\Services\GuardianPlaces;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Models\PaymentRefund;
 use App\Domain\Payments\Services\PaymentSettings;
 use App\Domain\Platform\Contracts\ConsentLedger;
+use App\Domain\Platform\Contracts\VisitFacts;
 use App\Domain\Platform\Listeners\ApplyBusinessSender;
 use App\Domain\Platform\Listeners\RecordEmailSent;
 use App\Domain\Platform\Models\AnalyticsEvent;
@@ -75,6 +77,7 @@ use App\Domain\Platform\Models\Experiment;
 use App\Domain\Platform\Models\GoogleBusinessConnection;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Models\Survey;
+use App\Domain\Platform\Models\SurveyParticipation;
 use App\Domain\Platform\Models\SurveyResponse;
 use App\Domain\Platform\Services\Analytics\AttributionContext;
 use App\Domain\Platform\Services\Money;
@@ -180,6 +183,10 @@ class AppServiceProvider extends ServiceProvider
         // (`cookie_consent_logs`) y quien pregunta es Platform, que no ve a nadie: el contrato es de Platform,
         // lo implementa Identity y la atadura vive aquí, en el composition root.
         $this->app->bind(ConsentLedger::class, CookieConsentLedger::class);
+
+        // **Lo grueso de una visita** para las encuestas ANÓNIMAS (`specs/encuestas.md` §4.7, `#754`): primera vez, a qué
+        // vino y si volvió. Pregunta Platform, que no ve a nadie; lo sabe Identity (la puerta) con Booking (lo cobrado).
+        $this->app->bind(VisitFacts::class, CustomerVisitFacts::class);
 
         // **La prueba social de la landing** (`#490`; reescrito en `#732`, T2·6 de
         // `specs/google-business-profile.md` §4.3·9).
@@ -301,6 +308,7 @@ class AppServiceProvider extends ServiceProvider
             'experiment' => Experiment::class,
             // Las encuestas (`#740` T1): el audit guarda `survey`, no un nombre de clase.
             'survey' => Survey::class,
+            'survey_participation' => SurveyParticipation::class,
             'survey_response' => SurveyResponse::class,
             'faq' => Faq::class,
             // La conexión con la ficha de Google (`#524`). Alias como todo modelo nuevo: lo exige

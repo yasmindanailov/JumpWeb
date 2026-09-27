@@ -234,11 +234,12 @@ await captura('escritorio-fiestas');
 await bajaHasta('Cuándo se completa el formulario');
 await captura('escritorio-fiestas-graficos');
 
-// 5 ter. Encuestas (T4 de `specs/encuestas.md`): 6 tarjetas, 1 gráfico (lo que contestan), «Por atender» y su
-// desglose plegado.
+// 5 ter. Encuestas (T4 de `specs/encuestas.md`): 6 tarjetas, 1 gráfico (lo que contestan), «Notas bajas y si volvieron»
+// (desde `#754`, en lugar de «Por atender», sin persona) y su desglose plegado.
 await abrirPestana('Encuestas', 'Las encuestas, al detalle');
 await llega('Las encuestas: cuántas se contestan y qué dicen');
-await llega('Por atender');
+await llega('Notas bajas y si volvieron');
+ok('encuestas: «Por atender» ya no está (anónimas, `#754`)', await page.getByText('Por atender', { exact: true }).count() === 0);
 informe.pestanas.encuestas = { stats: await leerStats(), canvas: await canvasVisibles() };
 ok('encuestas: seis tarjetas', informe.pestanas.encuestas.stats.length === 6, String(informe.pestanas.encuestas.stats.length));
 ok('encuestas: un gráfico (con respuestas) o ninguno (sin ellas)', informe.pestanas.encuestas.canvas <= 1, String(informe.pestanas.encuestas.canvas));
@@ -253,7 +254,7 @@ ok('las tablas del dinero', ['Por día', 'Por canal', 'Por método de cobro', 'P
 ok('las tablas de registros y puerta', informe.tablas.includes('Cómo se registran') && informe.tablas.filter((t) => t === 'Por día').length === 4, informe.tablas.join(' · '));
 ok('las tablas de la conversión', ['Paso a paso', 'Dónde se quedan', 'Por primer toque', 'Páginas de entrada', 'Contacto'].every((t) => informe.tablas.includes(t)), informe.tablas.join(' · '));
 ok('las tablas de la fiesta', ['El dinero de después de reservar', 'Por complemento', 'La invitación y el justificante', 'Tiempos', 'Los invitados: dispositivo e idioma'].every((t) => informe.tablas.includes(t)), informe.tablas.join(' | '));
-ok('las tablas de las encuestas', ['Por encuesta'].every((t) => informe.tablas.includes(t)), informe.tablas.join(' · '));
+ok('las tablas de las encuestas', ['Por encuesta', 'Notas bajas frente al resto'].every((t) => informe.tablas.includes(t)), informe.tablas.join(' · '));
 ok('catorce o quince gráficos en total (el de las encuestas solo con respuestas)', informe.canvas === 14 + informe.pestanas.encuestas.canvas, String(informe.canvas));
 const todasLasStats = [...informe.pestanas.dinero.stats, ...informe.pestanas.clientes.stats, ...informe.pestanas.conversion.stats, ...informe.pestanas.fiestas.stats, ...informe.pestanas.encuestas.stats];
 ok('ninguna tarjeta vacía', todasLasStats.every((s) => s.label !== '' && s.value !== ''));

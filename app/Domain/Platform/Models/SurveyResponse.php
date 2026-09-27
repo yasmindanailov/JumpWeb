@@ -2,34 +2,44 @@
 
 namespace App\Domain\Platform\Models;
 
-use App\Domain\Platform\Services\Surveys\QuestionSchema;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\MassPrunable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 
 /**
- * **Lo que contestó un cliente a una encuesta** (`docs/specs/encuestas.md` §4.1, T1): una fila por cliente y
- * encuesta. Nace al mandar el correo (externa: `sent_at` y `token`) o al contestar en la puerta (interna), y se
- * cierra con `answered_at` o con `declined_at`.
+ * **Lo que se contestó a una encuesta, SIN persona** (`docs/specs/encuestas.md` §4.7, T5; `[DECIDIDO owner]`
+ * `DECISIONES #754`). A quién se preguntó vive en {@see SurveyParticipation}, y las dos filas no comparten clave.
  *
- * ⚠️ **Privacidad**: `user_id` se pone a NULL al anonimizar y las respuestas de TEXTO LIBRE se borran con él
- * ({@see forgetPerson()}); los agregados de elección y escala sobreviven sin persona. Se poda a los 24 meses
- * (`RGPD-01`, `model:prune`). Ninguna respuesta entra en el libro de eventos (`RGPD-07`).
+ * Qué guarda y por qué así:
+ *  · la clave es un **UUID v4 aleatorio** ({@see booted()}): ni autoincremental ni v7, porque el ORDEN de inserción
+ *    uniría esta fila con su participación. Sin `timestamps()` por lo mismo;
+ *  · el **día del parque** y la **FRANJA** ({@see bandAt()}), no la hora: el registro de actividad apunta cada escaneo
+ *    con su hora y su empleado, y con la hora exacta cualquiera con ese registro unía la respuesta a su persona;
+ *  · quién preguntó (`asked_by`, la puerta), primera visita y tipo de visita: lo grueso que el owner quiso conservar;
+ *  · `declined`: «No preguntar» también es una fila, para la tasa;
+ *  · el **SELLO** (`seal`): el cliente CIFRADO, que solo existe para saber si volvió en 90 días. Lo lee y lo borra
+ *    UNA clase, `Platform\Services\Surveys\SurveySeals`; nunca un cast `encrypted`, que lo descifraría al cargar el
+ *    modelo en cualquier pantalla.
  *
- * @property int $id
+ * ⚠️ Sin el idioma: en la página del correo es el del cliente, y `users.locale` lo cruzaría. Se poda a los 24 meses
+ * (`RGPD-01`) y ninguna respuesta entra en el libro de eventos (`RGPD-07`).
+ *
+ * @property string $id
  * @property int $survey_id
- * @property ?int $user_id
- * @property ?Carbon $visited_on
  * @property string $channel
- * @property ?int $answered_by
- * @property ?string $token
- * @property ?Carbon $sent_at
- * @property ?Carbon $answered_at
- * @property ?Carbon $declined_at
+ * @property Carbon $answered_on
+ * @property string $band
+ * @property ?int $asked_by
+ * @property ?bool $first_visit
+ * @property ?string $visit_kind
+ * @property bool $declined
  * @property ?array<string, mixed> $answers
- * @property ?string $locale
+ * @property ?bool $returned
+ * @property ?int $returned_after_days
  * @property-read ?Survey $survey
  */
 class SurveyResponse extends Model
@@ -40,18 +50,61 @@ class SurveyResponse extends Model
 
     public const CHANNEL_EXTERNAL = 'external';
 
+    /** Las franjas del día, en hora del PARQUE: hasta las 13:00, hasta las 16:00, y después. */
+    public const BAND_MORNING = 'morning';
+
+    public const BAND_MIDDAY = 'midday';
+
+    public const BAND_AFTERNOON = 'afternoon';
+
+    /** @var list<string> */
+    public const BANDS = [self::BAND_MORNING, self::BAND_MIDDAY, self::BAND_AFTERNOON];
+
+    /** Tipo de la visita, del pedido de ese día (`Platform\Contracts\VisitFacts`). */
+    public const KIND_ENTRY = 'entry';
+
+    public const KIND_PARTY = 'party';
+
+    public const KIND_GROUP = 'group';
+
+    public const KIND_OTHER = 'other';
+
+    /** @var list<string> */
+    public const KINDS = [self::KIND_ENTRY, self::KIND_PARTY, self::KIND_GROUP, self::KIND_OTHER];
+
     /** Meses que se conserva una respuesta (`RGPD-01`). */
     public const RETENTION_MONTHS = 24;
 
-    protected $fillable = ['survey_id', 'user_id', 'visited_on', 'channel', 'answered_by', 'token', 'sent_at', 'answered_at', 'declined_at', 'answers', 'locale'];
+    public $timestamps = false;
+
+    public $incrementing = false;
+
+    protected $keyType = 'string';
+
+    /** ⚠️ `seal` NO es asignable en masa: solo `SurveySeals` lo escribe, con `forceFill()`. */
+    protected $fillable = ['survey_id', 'channel', 'answered_on', 'band', 'asked_by', 'first_visit', 'visit_kind', 'declined', 'answers'];
+
+    /** El sello nunca viaja: ni en `toArray()`, ni en un JSON, ni en un volcado del modelo. */
+    protected $hidden = ['seal'];
 
     protected $casts = [
-        'visited_on' => 'date:Y-m-d',
-        'sent_at' => 'datetime',
-        'answered_at' => 'datetime',
-        'declined_at' => 'datetime',
+        'answered_on' => 'date:Y-m-d',
+        'first_visit' => 'boolean',
+        'declined' => 'boolean',
         'answers' => 'array',
+        'returned' => 'boolean',
+        'returned_after_days' => 'integer',
     ];
+
+    /** La clave, aleatoria: `Str::uuid()` es v4 (el `HasUuids` de Laravel da v7, ORDENADO por tiempo). */
+    protected static function booted(): void
+    {
+        static::creating(static function (self $response): void {
+            if (! is_string($response->getKey()) || $response->getKey() === '') {
+                $response->setAttribute($response->getKeyName(), (string) Str::uuid());
+            }
+        });
+    }
 
     /** @return BelongsTo<Survey, $this> */
     public function survey(): BelongsTo
@@ -59,42 +112,17 @@ class SurveyResponse extends Model
         return $this->belongsTo(Survey::class);
     }
 
-    public function isAnswered(): bool
+    /** La franja de un instante, en la hora de PARED del parque que ya trae (quien llama lo pasa por `DisplayTime`). */
+    public static function bandAt(CarbonInterface $parkTime): string
     {
-        return $this->answered_at !== null;
+        $hour = (int) $parkTime->format('G');
+
+        return $hour < 13 ? self::BAND_MORNING : ($hour < 16 ? self::BAND_MIDDAY : self::BAND_AFTERNOON);
     }
 
-    /** Las respuestas de más de {@see RETENTION_MONTHS} meses, por su última fecha. */
+    /** Las respuestas de más de {@see RETENTION_MONTHS} meses, por su día. */
     public function prunable(): Builder
     {
-        $limit = now()->subMonths(self::RETENTION_MONTHS);
-
-        return static::query()
-            ->where(static function (Builder $query) use ($limit): void {
-                $query->where('answered_at', '<', $limit)
-                    ->orWhere(static function (Builder $sent) use ($limit): void {
-                        $sent->whereNull('answered_at')->where('created_at', '<', $limit);
-                    });
-            });
-    }
-
-    /**
-     * **Al anonimizar una cuenta** (`User::anonymize()`, `RGPD-01`): sus respuestas dejan de ser suyas y el texto
-     * libre —lo único que puede llevar un nombre o un dato— se borra; lo demás sigue contando en los agregados.
-     */
-    public static function forgetPerson(int $userId): void
-    {
-        static::query()->where('user_id', $userId)->with('survey')->get()->each(static function (self $response): void {
-            $answers = $response->answers ?? [];
-            $survey = $response->survey;
-            if ($survey !== null) {
-                foreach ($survey->questionList() as $question) {
-                    if ($question['type'] === QuestionSchema::TYPE_TEXT) {
-                        unset($answers[$question['key']]);
-                    }
-                }
-            }
-            $response->forceFill(['user_id' => null, 'answers' => $answers === [] ? null : $answers])->saveQuietly();
-        });
+        return static::query()->where('answered_on', '<', now()->subMonths(self::RETENTION_MONTHS)->toDateString());
     }
 }

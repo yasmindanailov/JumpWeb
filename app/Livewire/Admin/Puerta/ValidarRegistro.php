@@ -13,7 +13,6 @@ use App\Domain\Identity\Services\PuertaSettings;
 use App\Domain\Identity\Services\WaiverCounterDeclaration;
 use App\Domain\Identity\Services\WaiverStatus;
 use App\Domain\Platform\Models\Survey;
-use App\Domain\Platform\Models\SurveyResponse;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Domain\Platform\Services\PhoneNormalizer;
@@ -539,7 +538,8 @@ class ValidarRegistro extends Component
     /**
      * «Guardar respuestas»: lo marcado se TIPA y se VALIDA contra las preguntas en el servidor; una obligatoria
      * sin contestar o un valor que la pregunta no acepta vuelven como error de campo y no se escribe nada. Con
-     * todo en orden: la fila (`channel = internal`, el operador, la visita de hoy), el hecho y el rastro.
+     * todo en orden: la participación, la respuesta ANÓNIMA (`#754`: el día, la franja y el operador, sin el cliente)
+     * y el rastro sin desenlace.
      */
     public function answerSurvey(): void
     {
@@ -563,17 +563,9 @@ class ValidarRegistro extends Component
             throw ValidationException::withMessages($messages);
         }
 
-        $response = app(SurveyResponses::class)->answer(
-            $survey,
-            (int) $customer->getKey(),
-            SurveyResponse::CHANNEL_INTERNAL,
-            $typed,
-            app()->getLocale(),
-            DisplayTime::today()->toDateString(),
-            Auth::id() === null ? null : (int) Auth::id(),
-        );
-        if ($response !== null) {
-            AuditLogger::log('puerta.survey_answered', $customer, ['survey' => $survey->key, 'response_id' => (int) $response->getKey()]);
+        $written = app(SurveyResponses::class)->answerInPerson($survey, (int) $customer->getKey(), $typed, Auth::id() === null ? null : (int) Auth::id());
+        if ($written) {
+            $this->auditSurveyClosed($customer, $survey);
         }
 
         $this->survey = $this->surveyState($survey, 'answered');
@@ -582,7 +574,7 @@ class ValidarRegistro extends Component
         $this->releaseReader();
     }
 
-    /** «No preguntar»: también es una respuesta — deja fila, hecho y rastro, y no se vuelve a ofrecer. */
+    /** «No preguntar»: también es una fila — la participación y una respuesta anónima `declined` —, y no se vuelve a ofrecer. */
     public function declineSurvey(): void
     {
         $subject = $this->surveySubject();
@@ -591,22 +583,26 @@ class ValidarRegistro extends Component
         }
         [$customer, $survey] = $subject;
 
-        $response = app(SurveyResponses::class)->decline(
-            $survey,
-            (int) $customer->getKey(),
-            SurveyResponse::CHANNEL_INTERNAL,
-            DisplayTime::today()->toDateString(),
-            Auth::id() === null ? null : (int) Auth::id(),
-            app()->getLocale(),
-        );
-        if ($response !== null) {
-            AuditLogger::log('puerta.survey_declined', $customer, ['survey' => $survey->key, 'response_id' => (int) $response->getKey()]);
+        $written = app(SurveyResponses::class)->declineInPerson($survey, (int) $customer->getKey(), Auth::id() === null ? null : (int) Auth::id());
+        if ($written) {
+            $this->auditSurveyClosed($customer, $survey);
         }
 
         $this->survey = $this->surveyState($survey, 'declined');
         $this->surveyAnswers = [];
         $this->touchProfileWindow();
         $this->releaseReader();
+    }
+
+    /**
+     * **UN rastro para las dos salidas** (`#754`, `specs/encuestas.md` §4.7): quién preguntó a quién y qué encuesta —el
+     * cliente de `target`, el empleado de autor—, y NADA del desenlace ni de la fila. Con «contestada» o «no preguntar»
+     * aquí, y la hora exacta del rastro, cualquiera con el registro de actividad partiría las respuestas anónimas de esa
+     * franja en dos montones y acotaría la de esta persona.
+     */
+    private function auditSurveyClosed(User $customer, Survey $survey): void
+    {
+        AuditLogger::log('puerta.survey_closed', $customer, ['survey' => $survey->key]);
     }
 
     /**

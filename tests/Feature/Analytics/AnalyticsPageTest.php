@@ -40,8 +40,8 @@ use App\Filament\Widgets\Analytics\SegmentsWidget;
 use App\Filament\Widgets\Analytics\SourcesChart;
 use App\Filament\Widgets\Analytics\SourcesWidget;
 use App\Filament\Widgets\Analytics\SurveysAnswersChart;
-use App\Filament\Widgets\Analytics\SurveysAttentionWidget;
 use App\Filament\Widgets\Analytics\SurveysBreakdownWidget;
+use App\Filament\Widgets\Analytics\SurveysLowScoresWidget;
 use App\Filament\Widgets\Analytics\SurveysOverviewWidget;
 use App\Filament\Widgets\Analytics\TrafficHoursChart;
 use App\Filament\Widgets\Analytics\TrafficSeriesChart;
@@ -189,10 +189,11 @@ class AnalyticsPageTest extends TestCase
         PartiesMoneyChart::class,
         PartiesTimingChart::class,
         PartiesBreakdownWidget::class,
-        // T4 de las encuestas (`specs/encuestas.md` §4.4): la quinta pestaña.
+        // T4 de las encuestas (`specs/encuestas.md` §4.4): la quinta pestaña. Desde `#754` (anónimas) «Por atender» se
+        // fue y en su sitio va «Notas bajas y si volvieron», sin persona.
         SurveysOverviewWidget::class,
         SurveysAnswersChart::class,
-        SurveysAttentionWidget::class,
+        SurveysLowScoresWidget::class,
         SurveysBreakdownWidget::class,
     ];
 

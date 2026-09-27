@@ -2,7 +2,9 @@
 
 // Les enquêtes envoyées au client par e-mail (`docs/specs/encuestas.md` §4.3, T3) : l'e-mail du lendemain et la page
 // qu'ouvre son bouton. Lu par un client dans SA langue, sans se connecter. E-mail de service : rien de commercial.
+// `notice` et `page.text_hint` sont L'AVIS D'ANONYMAT (`#754`, §4.7) : texte du produit, fixe, non modifiable.
 return [
+    'notice' => 'Personne au parc ne verra ton nom à côté de tes réponses, et au bout de 90 jours elles sont entièrement détachées de toi.',
     'mail' => [
         'badge' => 'Ton avis',
         'headline' => "C'était comment hier au parc ?",
@@ -21,6 +23,8 @@ return [
         'yes' => 'Oui',
         'no' => 'Non',
         'text_placeholder' => 'Écris ici (facultatif)',
+        'notice_title' => 'Elle est anonyme',
+        'text_hint' => "Si tu veux rester anonyme, n'écris ni ton nom ni tes données personnelles.",
         'submit' => 'Envoyer mes réponses',
         'error_required' => 'Réponds à cette question, s\'il te plaît.',
         'error_invalid' => 'Cette réponse ne convient pas à cette question.',

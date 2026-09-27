@@ -74,7 +74,8 @@ class FocusedPagesAreCookieFreeTest extends TestCase
             'questions' => [['key' => 'ambiente', 'type' => 'scale', 'label' => ['es' => 'Ambiente']]],
         ]);
 
-        return (string) app(SurveyResponses::class)->send($survey, (int) $order->user_id, '2026-09-25', 'es')?->token;
+        // Desde `#754` `send()` devuelve el token EN CLARO (la base guarda su hash): es el del botón del correo.
+        return (string) app(SurveyResponses::class)->send($survey, (int) $order->user_id, '2026-09-25', 'es');
     }
 
     /** @return list<string> */

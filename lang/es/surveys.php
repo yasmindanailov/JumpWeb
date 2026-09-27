@@ -7,8 +7,12 @@
  *
  * ⚠️ El correo es de SERVICIO (`[DECIDIDO owner]` §7·4): ni una línea comercial aquí. La `preheader` va sin
  * dato variable y no repite el asunto (`MailInboxLineTest`).
+ * ⚠️⚠️ `notice` y `page.text_hint` son EL AVISO DEL ANONIMATO (`[DECIDIDO owner]` `#754`, `encuestas.md` §4.7):
+ * texto del PRODUCTO, fijo, que el operador no puede editar ni quitar. Promete exactamente lo que el diseño cumple
+ * —nadie ve el nombre junto a las respuestas; a los 90 días se separan del todo—: ni más, ni menos.
  */
 return [
+    'notice' => 'Nadie en el parque verá tu nombre junto a tus respuestas, y a los 90 días se separan de ti del todo.',
     'mail' => [
         'badge' => 'Tu opinión',
         'headline' => '¿Qué tal ayer en el parque?',
@@ -29,6 +33,8 @@ return [
         'yes' => 'Sí',
         'no' => 'No',
         'text_placeholder' => 'Escribe aquí (opcional)',
+        'notice_title' => 'Es anónima',
+        'text_hint' => 'Si quieres seguir en el anonimato, no escribas tu nombre ni datos personales.',
         'submit' => 'Enviar respuestas',
         'error_required' => 'Contesta esta pregunta, por favor.',
         'error_invalid' => 'Esa respuesta no vale para esta pregunta.',

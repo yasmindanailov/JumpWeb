@@ -4,14 +4,18 @@ namespace App\Filament\Widgets\Analytics;
 
 use App\Domain\Platform\Services\Surveys\QuestionSchema;
 use App\Filament\Analytics\BucketLabel;
+use App\Filament\Analytics\SurveysReport;
 use App\Filament\Widgets\Analytics\Concerns\AnalyticsWidget;
 use Filament\Widgets\Concerns\InteractsWithPageFilters;
 use Filament\Widgets\Widget;
 
 /**
  * **Las encuestas, al detalle** (`specs/encuestas.md` §4.4, T4): por día o semana de respuesta, por encuesta, y por
- * pregunta el reparto de cada una; y los últimos textos libres, que van SOLO en la pestaña: un texto libre puede
+ * pregunta el reparto de cada una; y una muestra de los textos libres, que va SOLO en la pestaña: un texto libre puede
  * llevar un nombre, así que el CSV (que llama a `tablesFor()`) no los lleva.
+ *
+ * ⚠️ ANÓNIMAS (`#754`, §4.7): una pregunta con menos de cinco respuestas sale como UNA fila «menos de 5», sin reparto
+ * (`SurveysReport::MIN_CELL`); los textos, solo con cinco o más, sin día y en orden aleatorio (los da así el informe).
  */
 class SurveysBreakdownWidget extends Widget
 {
@@ -123,6 +127,11 @@ class SurveysBreakdownWidget extends Widget
         /** @var list<array<string, mixed>> $questions */
         $questions = $survey['questions'];
         foreach ($questions as $q) {
+            if ($q['suppressed']) {
+                $rows[] = [(string) $q['label'], __('admin.analytics.surveys.fewer_than_min', ['min' => SurveysReport::MIN_CELL]), (string) $q['n']];
+
+                continue;
+            }
             if ($q['type'] === QuestionSchema::TYPE_TEXT) {
                 $rows[] = [(string) $q['label'], __('admin.analytics.surveys.texts_count', ['n' => $q['n']]), (string) $q['n']];
 

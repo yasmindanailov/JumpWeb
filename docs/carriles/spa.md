@@ -2,11 +2,11 @@
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb` a secas; la instancia al lado, en
 > `~/proyectos/instancias/playjump`, clon de `github.com/yasmindanailov/instancia-playjump`, montada el 25-09) ·
-> Banda: **730–759** (700–729 agotada el 20-09) · Último usado: **`#756`** · La banda está dada de alta en la tabla de
+> Banda: **730–759** (700–729 agotada el 20-09) · Último usado: **`#757`** · La banda está dada de alta en la tabla de
 > `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: **`analitica-para-decidir.md`
 > §0** (la tarea en curso, `#755`) · `encuestas.md` §0 y §4.7 (`#754`) · `analitica.md` §0 y §4.5 · `isla-y-landing-nueva.md`
 > §4.11 · `celebracion-e-invitacion.md` §0 · `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 ·
-> `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-09-27 (tarde: la analítica para decidir, en spec).
+> `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-09-27 (noche: la T1, encuestas anónimas, en el árbol).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`). El
 > contador de la suite va en el trailer del commit (`#618`), no aquí. **Se muda, no se raspa**: el detalle de
 > una feature baja a su spec (las trampas por tanda de la analítica T1→T5 viven en `analitica.md` §4.9,
@@ -15,8 +15,11 @@
 ## Foto (2026-09-27, noche)
 
 - ▶▶▶ **27-09: LA ANALÍTICA PARA DECIDIR es la tarea** (`#755`, spec ✅). **T0a, T0b y T0c en `main` y aprobadas por el
-  owner** (el tramo transcurrido; la anatomía de una cifra en las 44 tarjetas; los que vuelven al parque, `#756`). Sigue
-  la **T1 = encuestas anónimas** (`#754`), que el owner quiere empezar en la próxima sesión.
+  owner** (el tramo transcurrido; la anatomía de una cifra en las 44 tarjetas; los que vuelven al parque, `#756`). **T1 =
+  encuestas anónimas** (`#754`) **✅ con siete ajustes (`#757`), vista y aprobada por el owner el 27-09 noche** («está
+  perfecto, visto bueno»): participación y respuesta sin clave común, el sello cifrado de 90 días y
+  `surveys:resolve-returns`, el mínimo de 5, «Notas bajas y si volvieron», la 360 sin encuestas, el aviso, el export
+  1.46.0; el detalle, `encuestas.md` §4.7 «Cómo se construyó». **Sigue la T2: ocupación y anticipación** (§4.8).
 - ▶ **LA FIESTA DEL SISTEMA NUEVO ES MÍA (`#765`, `[DECIDIDO owner]` 25-09)**: la lista de invitados, la invitación con
   su recibo y la autorización, vestidas con «Saltia» para la v2.0.0, en paralelo con la web pública. El traspaso,
   `isla-y-landing-nueva.md` §4.11; el censo HAY/FALTA, el método y las tandas, `specs/fiesta-sistema-nuevo.md` (§1.4,
@@ -49,38 +52,9 @@
   enseñó» en `encuestas.md` §4.6; el owner contestó una en vivo desde la puerta y cerró con «buen trabajo»).
   Quedan: `[PENDIENTE: asesoría]` (5) del correo de servicio, la **T2e** solo si el volumen lo pide, el `EXPLAIN` con
   volumen en staging. Todo espera la v2.0.0 (`#670`). Las trampas pagadas en la T7 viven en `encuestas.md` §4.6.
-- ⚠️⚠️ **LO MONTADO EN LA BD LOCAL para el ojo del owner (24/25-09), todo reversible**: (1) cinco ajustes FALSOS
-  en `settings` (`analytics.driver=posthog`, `analytics.posthog_project` inventado y los tres ids de píxeles
-  `marketing.*`): se quitan borrando esas filas; (2) el aviso de la analítica ENVIADO a las 57 cuentas de
-  cliente (`analytics:notify-accounts`; `analytics_notified_at` puesto, 57 correos en Mailpit `:8028`); (3) el
-  experimento de demostración **`carcasa` VIVO** (cajon 50 / isla 50) con 143 sesiones `OJOEXP…`, 24 sellos
-  `JW-OJO…` con `visitor_id` y 3 contaminados: guion `/home/sail/e2e/ojo-experimento.php` en el contenedor,
-  `OJO=desmontar` lo quita entero; (4) un pase de la vuelta de Redsys para la casilla tras comprar (caduca en 6 h,
-  un solo uso); (5) **el fixture «probe-ojo-fiesta»** (`probe-ojo-fiesta.php` en la carpeta de almacenamiento,
-  fuera de git, al lado de «probe-ojo-analitica»): 32 fiestas `JW-FIESTA…` de agosto y septiembre con formularios, extras,
-  invitaciones, firmas, cobros en el parque y 323 hechos, 32 anfitriones `fiesta-N@ojo-fiesta.jumpweb.test` y TRES de
-  ellas que «vinieron invitadas» a una fiesta de agosto antes de comprar; `OJO=desmontar` lo quita entero; (6) **lo de
-  las encuestas** (25-09): las dos de ejemplo (`visita-de-hoy`, `que-tal-ayer`; se borran desde el panel), el cliente
-  `sonda-puerta@jumpweb.test` (2179) con dos respuestas y visitas, la respuesta del owner (cuenta 70 sobre el cliente 593)
-  y las visitas de 593 y 2179, el fixture `probe-ojo-encuestas` (64 filas sobre los anfitriones de la fiesta;
-  `OJO=desmontar` lo quita) y el correo en Mailpit; (7) **lo de F1 (26-09)**: los ajustes `party.park_video(_poster)`
-  (`public/videos/`, copiado de la instancia), la nota de Google de prueba (4,9 · 155), el Menú 1 (107) repartido y
-  marcado en el pack 105, la fiesta `JW-OJO-F1` (`ojo-f1.php`, `OJO=desmontar`); (8) **de las sondas de F6a**, en esa
-  fiesta: las respuestas 260→267 («Sonda …», todas «sí») y sus autorizaciones de prueba (desde la 117); (9) **de F3a**:
-  el pack 105 con `honoree_counts` ENCENDIDO y la fiesta sellada `JW-OJO-F3` (reserva 1126; `ojo-f3.php`, fuera de git,
-  imprime sus URL; `OJO=desmontar` la quita y apaga el ajuste); (10) **de F5 (26-09)**: en el catálogo local, la Tarta
-  (109) «para 12» en el bloque de la tarta, los combos 111–113 (6/10/15) y los cubos 114–116 (6 cada uno, DE PRUEBA) en
-  sus familias y en el bloque de los padres, y «Nº aproximado de adultos» del pack 105 como tipo `adults`; y la fiesta
-  `JW-OJO-F5` (dentro de 3 días, 14 niños: la tarta cierra mañana y no llega). Todo con `ojo-f5.php` (fuera de git; lo
-  de antes, en `ojo-f5-antes.json`; `OJO=desmontar` lo deja como estaba); (11) **de F6b**: en `JW-OJO-F1`, las
-  respuestas «… Sonda…» 311→326, seis autorizaciones `avisame-sonda…@jumpweb.test` con sus `birthday_reminders` y sus
-  correos en Mailpit; (12) **de F7 (27-09)**, `ojo-f7.php` (fuera de git; `OJO=desmontar` quita las tres): `JW-OJO-F7`
-  (dentro de 5 días, Noa sin cubrir), y con `OJO=f7c` `JW-OJO-F7P` (HOY, Noa atada: la puerta) y `JW-OJO-F7V` (mañana, su
-  aviso de la víspera mandado solo a la cuenta de sondas); sondas `sonda-f7.mjs` y `sonda-f7c.mjs`; (13) **de F8**:
-  `JW-OJO-F8` (`ojo-f8.php`, enviada, con respuestas; `OJO=desmontar`) y `sonda-f8.mjs`. Y siguen montados el fixture «probe-ojo-analitica» (90 pedidos
-  `JW-OJO…`, 25 clientes, 506 sesiones) y el de reseñas «probe-ojo-resenas». ⚠️ **Plataforma dejó la local preparada para
-  que el owner pruebe la ISLA** (24-09 noche, `694529a8`): `sidebar.shell = isla` por el panel, `public/_isla-prueba.html`,
-  la invitación ENCENDIDA en los packs 105/106 — **«no deshacer sin él»**; el cajón local abre ahora en la isla.
+- ⚠️⚠️ **LO MONTADO EN LA BD LOCAL para el ojo del owner** (ajustes falsos, el experimento `carcasa` vivo, los fixtures
+  `probe-ojo-*`, las fiestas `JW-OJO-F1…F8` con sus guiones `OJO=desmontar`, y la ISLA encendida por plataforma —«no
+  deshacer sin él»—): el inventario entero, mudado verbatim a `docs/CARRIL-SPA.md` §8 (27-09). Todo reversible.
 - ✅ **La ficha de Google (`#524`), T1 y T2·1→T2·8 en el árbol** (`#720`→`#734`), vistas por el owner con su ✅
   en vivo (21-09). ❗ Lo demás va **contra un DOBLE**: la ficha de PlayJump no llega a los 60 días (finales de
   octubre). ⚠️ Cuatro migraciones de esa spec y las de la analítica, aplicadas SOLO en la BD local.
@@ -92,10 +66,14 @@
 
 1. ❗❗❗ **LA ANALÍTICA PARA DECIDIR (`#755`) — `specs/analitica-para-decidir.md` ✅ APROBADA (27-09; antes que correos y
    puerta; nada de lo medido se pierde, §4.1.bis).** ✅ **T0a** (`0dc5d317`) · ✅ **T0b** (`6243e8d9`) · ✅ **T0c** (§4.8.bis,
-   `#756`; no se reconstruyen visitas desde el rastro, `[DECIDIDO owner]`) → ▶ **T1 = la T5 de `encuestas.md` §4.7**
-   (`#754`; el diseño entero, sus guardas y sus residuos, allí; `surveys:resolve-returns` sube `deploy.sh`: avisar a
-   plataforma; el export cambia de forma: el contrato, tras el último de plataforma —`main` va por 1.44.0—) → T2
-   ocupación → T3 Resumen → T4 cartera → T5 marketing y correos → T6 cohortes → T7 pérdidas → T8 satisfacción (§4.12).
+   `#756`; no se reconstruyen visitas desde el rastro, `[DECIDIDO owner]`) · ✅ **T1 = la T5 de `encuestas.md` §4.7**
+   (`#754` + `#757`; `deploy.sh` espera 11; contrato 1.46.0; la BD local migrada y re-sembrada con
+   `probe-ojo-anonimas.php`, `CARRIL-SPA.md` §8·14). Los CRUCES por franja, tipo de visita y primera visita (datos ya
+   guardados) llegan con la T8; el cruce por EMPLEADO, `[PENDIENTE: owner]` (preguntado el 27-09, sin respuesta aún). →
+   ▶ **T2 ocupación y anticipación** (§4.8: ocupación = plazas vendidas / aforo ofrecido, mapa de calor, franjas llenas,
+   ingreso por plaza, demanda sin hueco, anticipación por tipo; ⚠️ a medir PRIMERO si la venta en taquilla entra como
+   pedido, y el `EXPLAIN` con un año sintético) → T3 Resumen → T4 cartera → T5 marketing y correos → T6 cohortes → T7
+   pérdidas → T8 satisfacción (§4.12).
    Cada tanda, al ojo del owner en vivo ANTES del commit. **Trampas de hoy**: una tarjeta nueva va por `metric()` con su
    `Polarity`, su «¿Cómo se calcula?» (es y zh_CN), `TILES` del censo y el recuento de la sonda; el arnés
    `mutar-analitica-decidir.sh` (55, ~16 min) en segundo plano, sin medir nada mientras; tras rebasar, los dos bundles y
@@ -240,12 +218,18 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 
 ## Buzón
 
-- ❗ **Para web, plataforma y correos (27-09, `#754`/`#755`; AVISO PREVIO, nada en código aún)**: **web**, `/privacidad`
-  tendrá que nombrar el sello de 90 días de las encuestas anónimas y los clics por persona en los correos (oposición en
-  «Análisis»), y `/cookies` el píxel de apertura (con consentimiento): `[PENDIENTE: asesoría]`, el texto es tuyo.
-  **Plataforma**: +1 tarea en `deploy.sh` (`surveys:resolve-returns`) y `PersonalDataExport.surveys` cambia de forma (el
-  número de contrato, tras el tuyo, al implementar); las promociones en el cuadro (T7), contigo. **Correos**: la marca por
-  envío (`jw_e`) viaja con los UTM, y el píxel irá en `BrandedMailMessage`: te aviso aquí antes de tocar el molde.
+- ❗❗ **Para plataforma (27-09 noche, `#754`/`#757`, YA EN CÓDIGO)**: (1) `scripts/deploy.sh` espera **11** tareas (entra
+  `surveys:resolve-returns`, 04:20); toqué solo esa línea y su comentario. (2) El CONTRATO **1.46.0** es mío: te respeté la
+  1.45.0 reservada; `PersonalDataExport.surveys` pasa a `ExportedSurveys` `{participations, sealed_responses}`. Tu
+  siguiente, 1.47.0. (3) Un contrato nuevo de Booking, `PaidVisits` (`PaidVisitsReader`, binding en `BookingServiceProvider`),
+  y uno de Platform, `VisitFacts` (en `AppServiceProvider`). (4) La tabla `survey_responses` se REHACE (migración
+  `make_survey_responses_anonymous`): tras el `pull`, `php artisan migrate`.
+- ❗ **Para la web (27-09, `#754`; sigue en pie)**: `/privacidad` tiene que nombrar el sello de 90 días de las encuestas
+  anónimas («a los 90 días se separan de ti del todo», el aviso que ya leen el cliente en la puerta, el correo y la página)
+  y los clics por persona en los correos (oposición en «Análisis»); `/cookies`, el píxel de apertura (con consentimiento):
+  `[PENDIENTE: asesoría]`, el texto es tuyo.
+- **Para correos (27-09, `#754`)**: `SurveyInvitation` gana UNA línea (el aviso del anonimato, tras la intro) y recibe el
+  token en claro en vez de la fila; tu molde, sin tocar. La marca por envío (`jw_e`) y el píxel, en la T5: aviso antes.
 - ❗ **Para plataforma (27-09, F7 `#752` y F8 `#753`)**: leído tu aviso de la Z4 (atendido). Los CONTRATOS **1.42.0** (F7:
   `GuestForm.honoree_waiver`, `PUT …/honoree-waiver`) y **1.44.0** (F8: `POST …/invitation/shares`, `Invitation.shared_at`; tras tu 1.43.0,
   `#788`) son míos; tu siguiente, 1.45.0. F8 añade `party_invitations.shared_at` y un paso al informe de fiestas. ⚠️ Tu
@@ -304,6 +288,8 @@ el repo de la instancia (lo nuevo), nunca a `main`.
   código `MIN_REVIEWS = 1` (`#494`): no la toco yo.
 
 ### Atendido
+- **Plataforma 27-09 noche, 2.º** (T5f `#824` y los hijos por producto `#825`: `outcome.js::confirmationLine` con
+  `minors_only`, la 1.45.0 suya y la 1.46.0 mía, `catalog.js` al trozo `card`): atendido, nada mío choca.
 - **Plataforma 27-09 noche** (`#789`: correos y puerta, míos; el zip (4) sin correos ni fiesta; `Medir` aplazado; T2·9;
   `#822`: `sugerirCorreo` mudada a `ui/correo.js`, `logica.js` la reexporta, 19/19 y 12/12): atendidos.
 - **Plataforma 27-09** (ESLint sobre la fiesta y mis `/* global */` fuera, la isla sin valores de PlayJump, `#788` con la

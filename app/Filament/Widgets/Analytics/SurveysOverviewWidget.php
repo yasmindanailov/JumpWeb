@@ -4,6 +4,7 @@ namespace App\Filament\Widgets\Analytics;
 
 use App\Filament\Analytics\Metric;
 use App\Filament\Analytics\Polarity;
+use App\Filament\Analytics\SurveysReport;
 use App\Filament\Widgets\Analytics\Concerns\AnalyticsWidget;
 use Filament\Widgets\Concerns\InteractsWithPageFilters;
 use Filament\Widgets\StatsOverviewWidget;
@@ -43,8 +44,14 @@ class SurveysOverviewWidget extends StatsOverviewWidget
         $t = $report['totals'];
         /** @var array<string, int> $p */
         $p = $report['previous'];
-        /** @var array{survey: string, question: string, mean: float, n: int}|null $scale */
+        /** @var array{survey: string, question: string, mean: ?float, n: int, suppressed: bool}|null $scale */
         $scale = $report['scale'];
+        // `#754`: una media de menos de cinco respuestas no se enseña (con el registro de la puerta diría quién puntuó).
+        $scaleValue = match (true) {
+            $scale === null => __('admin.analytics.parties.none'),
+            $scale['suppressed'] || $scale['mean'] === null => __('admin.analytics.surveys.fewer_than_min', ['min' => SurveysReport::MIN_CELL]),
+            default => number_format($scale['mean'], 1, ',', '.').' / 5',
+        };
 
         // Las dos tasas, con sus dos números del periodo y del comparado: en puntos y con sus intervalos (T0b, `#755`).
         return [
@@ -62,7 +69,7 @@ class SurveysOverviewWidget extends StatsOverviewWidget
             $this->metric(Metric::text(
                 'surveys.scale_mean',
                 __('admin.analytics.surveys.scale_mean'),
-                $scale === null ? __('admin.analytics.parties.none') : number_format($scale['mean'], 1, ',', '.').' / 5',
+                $scaleValue,
                 self::how('surveys.scale_mean'),
                 detail: $scale === null ? __('admin.analytics.surveys.scale_mean_none') : __('admin.analytics.surveys.scale_mean_hint', ['question' => $scale['question'], 'n' => $scale['n']]),
             )),

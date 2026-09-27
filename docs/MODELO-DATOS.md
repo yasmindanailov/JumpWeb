@@ -596,6 +596,26 @@ enteros positivos, no porcentajes; el orden es el reparto: cambiarlo rebaraja, a
 se abre otro) · `active` bool · `started_at`/`ended_at` nullable (vivo = activo y dentro de la ventana) · timestamps.
 Guardar o borrar una fila olvida la caché de 60 s de los vivos.
 
+### `surveys` · `survey_participations` · `survey_responses` · `survey_spent_tokens` — las encuestas, ANÓNIMAS · `#740`, `#754`, `#757`
+
+`specs/encuestas.md` §4.1 y §4.7. **Participación y respuesta NO comparten clave**: nada en la base une lo contestado con
+quien lo contestó, salvo el SELLO cifrado de 90 días.
+- `surveys` (Survey): `key` string(48) **unique** · `name`/`intro` json es/en/fr · `kind` (`internal`|`external`) · `active`
+  · `starts_at`/`ends_at` nullable (viva = activa y dentro) · `questions` json (`{key, type, required, label, options?}`,
+  `QuestionSchema`) · `created_by` FK nullOnDelete · timestamps. Una viva por clase (la valida el formulario).
+- `survey_participations` (SurveyParticipation, **MassPrunable** a 24 meses por `asked_on`) — A QUIÉN se preguntó: `survey_id`
+  FK cascade · `user_id` FK nullOnDelete (se suelta al anonimizar) · `channel` · `asked_by` (el empleado, puerta) · `asked_on`
+  date (el día de la visita) · `sent_at` (correo) · `token_hash` char(64) **unique** (`HMAC('lookup:'.token)`; el token en
+  claro solo viaja en el correo) · `locale` (el del correo). **UNIQUE `(survey_id, user_id)`**: el árbitro de «una por
+  cliente». Sin `timestamps()` y sin el desenlace.
+- `survey_responses` (SurveyResponse, **MassPrunable** a 24 meses por `answered_on`) — QUÉ se contestó, sin nadie: `id` **uuid
+  v4** (aleatoria; `HasUuids` daría v7, ordenada) · `survey_id` FK cascade · `channel` · `answered_on` date · `band`
+  (`morning`<13 h · `midday`<16 h · `afternoon`, hora del parque) · `asked_by` · `first_visit` · `visit_kind`
+  (`entry`|`party`|`group`|`other`) · `declined` · `answers` json · `seal` text (el cliente CIFRADO, solo con respuestas;
+  lo lee y lo borra SOLO `SurveySeals`) · `returned` / `returned_after_days`. Sin `timestamps()`, sin `user_id`, sin idioma.
+- `survey_spent_tokens` — `hash` char(64) **PK** (`HMAC('spent:'.token)`): el token ya contestado. Sin fecha ni FK.
+- `users.surveys_opt_out` bool: «no quiero recibir más encuestas».
+
 ### `google_business_connections` (GoogleBusinessConnection) — la ficha de Google del parque · `#720`
 **Fila ÚNICA**: `singleton` bool con índice **UNIQUE** (invariante de BD, no convención: una
 instalación es un parque y un parque es una ficha). `status` (enum `GoogleBusinessStatus`, default

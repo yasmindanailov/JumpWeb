@@ -5536,6 +5536,8 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
 .survey__text { width: 100%; min-height: 44px; padding: var(--sp-8) var(--sp-12); border: 1px solid var(--line); border-radius: var(--r-md); background: #fff; font: inherit; font-size: var(--fs-body); color: var(--ink); }
 .survey__text:focus-visible { outline: var(--focus-outline); outline-offset: 2px; }
 .survey__error { margin: var(--sp-8) 0 0; font-size: var(--fs-body-s); color: #b42318; }
+/* `#754`: bajo cada pregunta de texto, «no escribas tu nombre» (el aviso del anonimato, texto del producto). */
+.survey__hint { margin: var(--sp-8) 0 0; font-size: var(--fs-body-s); color: var(--fg-mute); }
 .survey__actions { display: flex; flex-wrap: wrap; gap: var(--sp-12); }
 
 /* Escritorio: el resguardo gana aire. El título ya sube solo a 36 con `--fs-title`. */

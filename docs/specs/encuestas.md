@@ -1,9 +1,9 @@
 # [SPEC] Las encuestas — internas en la puerta y externas por correo, creadas en el panel, medidas en el cuadro
 
 > Estado: ✅ **aprobada por el owner el 24-09** (`#740`: sus cinco respuestas en §7) → **T1→T4 en `main`** (carril
-> del SPA) · ⬜ **T5, el anonimato** (`[DECIDIDO owner]` 27-09, `#754`, §4.7: sustituye al punto 1 de `#740`) · Última
-> actualización: 2026-09-27 · Decisiones: `#740`, `#754`. Es la **T7** de `analitica.md` (§4.8 y §4.10) y la T1 de
-> `analitica-para-decidir.md`.
+> del SPA) · ✅ **T5, el anonimato** (`[DECIDIDO owner]` 27-09, `#754`, §4.7: sustituye al punto 1 de `#740`; construida
+> con los siete ajustes de `#757` y aprobada por el owner) · Última actualización: 2026-09-27 · Decisiones: `#740`, `#754`,
+> `#757`. Es la **T7** de `analitica.md` (§4.8 y §4.10) y la T1 de `analitica-para-decidir.md`.
 
 ## §0 · Antes de tocar
 
@@ -23,7 +23,7 @@
   `AdminSettingsHub::areas()` (`AdminNavigationTest`). (6) `RGPD-01`: purga y export cubren las tablas nuevas;
   `RGPD-04`: `no-store` en la página del correo.
 - **Estado**: `#740` (una por cliente y encuesta · todos los tipos · correo de servicio con baja · una viva por
-  clase) y `#754` (anónimas). **T1→T4 en `main`**; el ESCANEO acredita la visita (`#741`). ⬜ **T5** (§4.7).
+  clase) y `#754` (anónimas). **T1→T4 en `main`**; el ESCANEO acredita la visita (`#741`). ✅ **T5** (§4.7, `#757`).
 - **Invariantes**: `RGPD-01`, `RGPD-04`, `RGPD-07`, `SEC-04`, `SEC-05`, `PAY-14`, `SUITE-01`. Dinero y aforo:
   ninguno. Ningún fichero del `CRITICAL_RE`.
 
@@ -240,13 +240,16 @@ WhatsApp; recompensas (JumpPoints) por contestar.
 
 | | Tanda | Entrega | Verificación (§6) |
 |---|---|---|---|
-| T1 | **🟦 (25-09, en `main`; queda el ✅ del owner en `/admin/encuestas`, con dos ejemplos sembrados en local) el modelo y el panel**: la migración `create_surveys_tables` (`surveys`, `survey_responses`, `users.surveys_opt_out`), `Platform\Models\Survey` (`isRunning()`, `runningOfKind()`, `anotherRunning()`, `questionList()`) y `SurveyResponse` (`MassPrunable` a 24 meses, `forgetPerson()`), `Platform\Services\Surveys\QuestionSchema` (cinco tipos, `normalize()`, `accepts()`), `SurveyResource` en «Ajustes → Sistema» (`/admin/encuestas`, `settings.manage`; formulario con pestañas es/en/fr, el Repeater de preguntas con sus opciones; con respuestas la clave, la clase y la estructura van bloqueadas PERO dehidratadas para que los rótulos editados casen con su pregunta —`GuardsSurveyForm`—; una viva por clase al encender; sin respuestas se borra con rastro, con respuestas no), `AuditLog::ACTIONS` +2, alias de morfo, `Contract` +3 (`survey_sent`, `survey_answered`, `survey_declined`), `anonymize()` y `model:prune`. **El export del cliente (`AccountPrivacy::exportFor()`, contrato `PersonalDataExport` 1.27.0) entró en la T2.** **Lo que enseñó**: un campo `disabled()` no viaja al guardar y sin la clave el Repeater no puede casar los rótulos: `disabled()->dehydrated()` y la guarda del servidor decide; el censo de tarjetas de «Ajustes» (`AdminNavigationTest`) se teclea a mano (23 → 24) | `#740` | `SurveyResourceTest` (7), `QuestionSchemaTest` (3), `SurveyPrivacyTest` (4); `MorphMapTest`, `AdminNavigationTest`, `AuditActionCatalogTest`, `AnalyticsContractTest` en verde · el OJO del owner en `/admin/encuestas` |
-| T2 | **🟦 (25-09, en `main`; disparador `#741`: el ESCANEO acredita la visita; el owner la contestó EN VIVO desde la puerta con la encuesta de ejemplo; queda su ✅ en la tablet del mostrador) la puerta**: `Platform\Services\Surveys\SurveyResponses` (la oferta —viva y sin fila del cliente—, `answer()`/`decline()` con el índice único como árbitro y el hecho; Platform no mira a Identity: el cliente es un `int`), `QuestionSchema::fromForm()`/`validate()` (tipa y valida en el servidor), la tarjeta `gate-survey` DEBAJO de «Hoy» en `ValidarRegistro` (`$survey` con estados `offer`/`open`/`answered`/`declined`, `$surveyId` bloqueado, radios ocultos con etiqueta-botón ≥ 44 px y `wire:model` diferido; muere con la ficha), `puerta.survey_answered`/`puerta.survey_declined` (target el cliente), el export (`surveys`, contrato 1.27.0), rótulos es/zh_CN. **Lo que enseñó**: el botón de la visita no existe (§1); los errores de validación de Livewire sobreviven al siguiente intento si no se resetean (`resetErrorBag()` antes de juzgar); `PersonalDataExport` es `additionalProperties: false`, así que un campo nuevo en el export es contrato | `#740` | `GateSurveyTest` (9), `SurveyPrivacyTest` +1 (el export), `scripts/mutar-encuestas.sh` **9/9 + 1 control**; `MePrivacyTest`, `ApiContractTest`, `GateKioskTest`, `ModuleBoundariesTest` en verde · `scripts/sonda-puerta.mjs` **28/28** (tablet 1080×810 y móvil 390: la tarjeta DEBAJO de «Hoy» y lejos del buscador, el lector con el cursor antes, con la ficha, tras cerrar la encuesta y tras «Nueva búsqueda» —ese último lo arregló la sonda: `clear()` no devolvía el foco—, 11 objetivos ≥ 44 px, sin desborde; dos controles). **Lo que enseñó la sonda**: el cliente de sonda de siempre ya tenía respuesta (la del owner) y la tarjeta no salía: una por cliente funciona; la sonda usa un cliente propio (`sonda-puerta@jumpweb.test`) |
-| T3 | **🟦 (25-09, en el árbol; queda el OJO del owner: el correo en Mailpit, la página y el interruptor) el correo y la página**: `surveys:send-external` (`SendExternalSurveys`, cada hora desde las 10:00 del parque; +1 tarea: `deploy.sh` espera 10), `SurveyInvitation` sobre el molde con `List-Unsubscribe`, `SurveyResponses::send()/openByToken()/answerSent()`, `SurveyPageController` (página, respuesta, gracias, baja con UN botón y su confirmación: 5 rutas en el grupo enfocado), `surveys.cooldown_days` en «Ajustes → Puerta» (`SurveySettings`), `PUT /me/surveys` + `surveys_opt_out` en `GET /me` (contrato 1.28.0) + el tercer interruptor de «Privacidad» (`privacy.js`, `PrivacyZone.vue`), textos es/en/fr (`surveys.php`) y es/zh_CN. **Lo que enseñó**: el asunto no lleva el nombre del parque (`MailInboxLineTest`); la palabra «oferta» no entra ni para negarla; el token es la credencial y no hace falta firmar la URL; la baja de «un toque» es un botón en una página, no un GET que escribe | contrato 1.28.0 | `SurveySendTest` (6), `SurveyPageTest` (5), `MeSurveysTest` (2), `FocusedPagesAreCookieFreeTest` (17 rutas), `EmailUtmTest` (27), `MailMoldTest`, `MailInboxLineTest`, `ApiContractTest` en verde; `mutar-encuestas.sh` +4 · queda el OJO en Mailpit y en la página |
-| T4 | **🟦 (25-09, en el árbol; queda el OJO del owner en la pestaña y en la 360) el cuadro**: `SurveysReport` (por DÍA DE LA RESPUESTA; las dos tasas: en la puerta = contestadas entre visitas acreditadas del periodo, por correo = contestadas entre mandadas; por encuesta —la interna viva, la externa viva y las que tengan filas— y por pregunta el reparto de cada tipo, la media de la escala, los últimos 12 textos; «Por atender» = escala ≤ 2 en los últimos 30 días, las peores primero, con `user_id`; seis consultas), la quinta pestaña «Encuestas» (`SurveysOverviewWidget` seis tarjetas, `SurveysAnswersChart` la primera pregunta con opciones de la primera encuesta, `SurveysAttentionWidget` con la persona SOLO con `customers.insights` y su vista propia, `SurveysBreakdownWidget` con los textos solo en la pestaña), `CsvExport::REPORT_SURVEYS` (sin un texto libre), el bloque «Encuestas» de la 360 (`CustomerInsights::surveys()`: cuántas y la última con su nota y su texto), rótulos es/zh_CN, fixture local `probe-ojo-encuestas` (64 filas sobre los 32 anfitriones de la fiesta). **Lo que enseñó**: un ayudante `seed()` en un test es FATAL (otra vez); la sonda del panel censa CUATRO «Por día» y cinco pestañas | `#740` | `SurveysReportTest` (5: cifras y tasas, por encuesta y pregunta, «Por atender», presupuesto ≤ 20, los textos solo en la pestaña), `AnalyticsPageTest` y `UserInsightsInfolistTest` +1 en verde; `sonda-analitica-panel.mjs` con la quinta pestaña y el CSV `surveys` · queda el OJO |
-| T5 | **⬜ el anonimato** (`#754`, §4.7): participación y respuesta sin clave común, franja en vez de hora, `first_visit` y `visit_kind`, el sello de 90 días y `surveys:resolve-returns`, `ForgetSurveySeals`, el mínimo de 5 por celda, «Notas bajas y si volvieron» en lugar de «Por atender», la 360 sin encuestas, `puerta.survey_closed`, el aviso fijo en la puerta, el correo y la página, el export y su contrato | `#754` | las guardas de §4.7 con su mutación · `curl` a la página (el aviso, `no-store`) · `sonda-puerta.mjs` (el aviso en la tarjeta, sin tapar el lector) · `sonda-analitica-panel.mjs` (ninguna celda < 5) · el OJO del owner en la tablet, el correo y la pestaña |
+| T1 | **✅ (25-09; visto bueno del owner el 27-09 noche, en la misma pasada que la T5) el modelo y el panel**: la migración `create_surveys_tables` (`surveys`, `survey_responses`, `users.surveys_opt_out`), `Platform\Models\Survey` (`isRunning()`, `runningOfKind()`, `anotherRunning()`, `questionList()`) y `SurveyResponse` (`MassPrunable` a 24 meses, `forgetPerson()`), `Platform\Services\Surveys\QuestionSchema` (cinco tipos, `normalize()`, `accepts()`), `SurveyResource` en «Ajustes → Sistema» (`/admin/encuestas`, `settings.manage`; formulario con pestañas es/en/fr, el Repeater de preguntas con sus opciones; con respuestas la clave, la clase y la estructura van bloqueadas PERO dehidratadas para que los rótulos editados casen con su pregunta —`GuardsSurveyForm`—; una viva por clase al encender; sin respuestas se borra con rastro, con respuestas no), `AuditLog::ACTIONS` +2, alias de morfo, `Contract` +3 (`survey_sent`, `survey_answered`, `survey_declined`), `anonymize()` y `model:prune`. **El export del cliente (`AccountPrivacy::exportFor()`, contrato `PersonalDataExport` 1.27.0) entró en la T2.** **Lo que enseñó**: un campo `disabled()` no viaja al guardar y sin la clave el Repeater no puede casar los rótulos: `disabled()->dehydrated()` y la guarda del servidor decide; el censo de tarjetas de «Ajustes» (`AdminNavigationTest`) se teclea a mano (23 → 24) | `#740` | `SurveyResourceTest` (7), `QuestionSchemaTest` (3), `SurveyPrivacyTest` (4); `MorphMapTest`, `AdminNavigationTest`, `AuditActionCatalogTest`, `AnalyticsContractTest` en verde · el OJO del owner en `/admin/encuestas` |
+| T2 | **✅ (25-09; disparador `#741`: el ESCANEO acredita la visita; el owner la contestó EN VIVO desde la puerta y dio su visto bueno el 27-09 noche con la T5) la puerta**: `Platform\Services\Surveys\SurveyResponses` (la oferta —viva y sin fila del cliente—, `answer()`/`decline()` con el índice único como árbitro y el hecho; Platform no mira a Identity: el cliente es un `int`), `QuestionSchema::fromForm()`/`validate()` (tipa y valida en el servidor), la tarjeta `gate-survey` DEBAJO de «Hoy» en `ValidarRegistro` (`$survey` con estados `offer`/`open`/`answered`/`declined`, `$surveyId` bloqueado, radios ocultos con etiqueta-botón ≥ 44 px y `wire:model` diferido; muere con la ficha), `puerta.survey_answered`/`puerta.survey_declined` (target el cliente), el export (`surveys`, contrato 1.27.0), rótulos es/zh_CN. **Lo que enseñó**: el botón de la visita no existe (§1); los errores de validación de Livewire sobreviven al siguiente intento si no se resetean (`resetErrorBag()` antes de juzgar); `PersonalDataExport` es `additionalProperties: false`, así que un campo nuevo en el export es contrato | `#740` | `GateSurveyTest` (9), `SurveyPrivacyTest` +1 (el export), `scripts/mutar-encuestas.sh` **9/9 + 1 control**; `MePrivacyTest`, `ApiContractTest`, `GateKioskTest`, `ModuleBoundariesTest` en verde · `scripts/sonda-puerta.mjs` **28/28** (tablet 1080×810 y móvil 390: la tarjeta DEBAJO de «Hoy» y lejos del buscador, el lector con el cursor antes, con la ficha, tras cerrar la encuesta y tras «Nueva búsqueda» —ese último lo arregló la sonda: `clear()` no devolvía el foco—, 11 objetivos ≥ 44 px, sin desborde; dos controles). **Lo que enseñó la sonda**: el cliente de sonda de siempre ya tenía respuesta (la del owner) y la tarjeta no salía: una por cliente funciona; la sonda usa un cliente propio (`sonda-puerta@jumpweb.test`) |
+| T3 | **🟦 (25-09; el correo en Mailpit y la página, vistos y aprobados por el owner el 27-09 noche con la T5; queda su ojo en el interruptor de «Privacidad» del cajón) el correo y la página**: `surveys:send-external` (`SendExternalSurveys`, cada hora desde las 10:00 del parque; +1 tarea: `deploy.sh` espera 10), `SurveyInvitation` sobre el molde con `List-Unsubscribe`, `SurveyResponses::send()/openByToken()/answerSent()`, `SurveyPageController` (página, respuesta, gracias, baja con UN botón y su confirmación: 5 rutas en el grupo enfocado), `surveys.cooldown_days` en «Ajustes → Puerta» (`SurveySettings`), `PUT /me/surveys` + `surveys_opt_out` en `GET /me` (contrato 1.28.0) + el tercer interruptor de «Privacidad» (`privacy.js`, `PrivacyZone.vue`), textos es/en/fr (`surveys.php`) y es/zh_CN. **Lo que enseñó**: el asunto no lleva el nombre del parque (`MailInboxLineTest`); la palabra «oferta» no entra ni para negarla; el token es la credencial y no hace falta firmar la URL; la baja de «un toque» es un botón en una página, no un GET que escribe | contrato 1.28.0 | `SurveySendTest` (6), `SurveyPageTest` (5), `MeSurveysTest` (2), `FocusedPagesAreCookieFreeTest` (17 rutas), `EmailUtmTest` (27), `MailMoldTest`, `MailInboxLineTest`, `ApiContractTest` en verde; `mutar-encuestas.sh` +4 · queda el OJO en Mailpit y en la página |
+| T4 | **✅ (25-09; la pestaña, vista y aprobada por el owner el 27-09 noche con la T5; la 360 perdió el bloque en la T5) el cuadro**: `SurveysReport` (por DÍA DE LA RESPUESTA; las dos tasas: en la puerta = contestadas entre visitas acreditadas del periodo, por correo = contestadas entre mandadas; por encuesta —la interna viva, la externa viva y las que tengan filas— y por pregunta el reparto de cada tipo, la media de la escala, los últimos 12 textos; «Por atender» = escala ≤ 2 en los últimos 30 días, las peores primero, con `user_id`; seis consultas), la quinta pestaña «Encuestas» (`SurveysOverviewWidget` seis tarjetas, `SurveysAnswersChart` la primera pregunta con opciones de la primera encuesta, `SurveysAttentionWidget` con la persona SOLO con `customers.insights` y su vista propia, `SurveysBreakdownWidget` con los textos solo en la pestaña), `CsvExport::REPORT_SURVEYS` (sin un texto libre), el bloque «Encuestas» de la 360 (`CustomerInsights::surveys()`: cuántas y la última con su nota y su texto), rótulos es/zh_CN, fixture local `probe-ojo-encuestas` (64 filas sobre los 32 anfitriones de la fiesta). **Lo que enseñó**: un ayudante `seed()` en un test es FATAL (otra vez); la sonda del panel censa CUATRO «Por día» y cinco pestañas | `#740` | `SurveysReportTest` (5: cifras y tasas, por encuesta y pregunta, «Por atender», presupuesto ≤ 20, los textos solo en la pestaña), `AnalyticsPageTest` y `UserInsightsInfolistTest` +1 en verde; `sonda-analitica-panel.mjs` con la quinta pestaña y el CSV `surveys` · queda el OJO |
+| T5 | **✅ (27-09, con los siete ajustes de `#757`; la puerta, el correo, la página y la pestaña, vistos y aprobados por el owner: «está perfecto, visto bueno») el anonimato** (`#754`, §4.7; lo construido, en su «Cómo se construyó»): participación y respuesta sin clave común, franja en vez de hora, `first_visit` y `visit_kind`, el sello de 90 días y `surveys:resolve-returns`, `ForgetSurveySeals`, el mínimo de 5 por celda, «Notas bajas y si volvieron» en lugar de «Por atender», la 360 sin encuestas, `puerta.survey_closed`, el aviso fijo en la puerta, el correo y la página, el export y su contrato | `#754` | las guardas de §4.7 con su mutación · `curl` a la página (el aviso, `no-store`) · `sonda-puerta.mjs` (el aviso en la tarjeta, sin tapar el lector) · `sonda-analitica-panel.mjs` (ninguna celda < 5) · el OJO del owner en la tablet, el correo y la pestaña |
 
-### 4.7 El anonimato (T5, `#754`, 27-09) — ⬜
+### 4.7 El anonimato (T5, `#754`, 27-09) — ✅ construida (`#757`) y aprobada por el owner (27-09 noche)
+
+> ▶ **Construida el 27-09 con siete ajustes (`#757`)**, que van al final de esta sección («Cómo se construyó»). Lo que
+> sigue es el diseño aprobado; donde el ajuste lo corrige, manda el ajuste.
 
 **Qué significa aquí «anónima»**, y es la vara de todo lo demás: **nadie, desde el panel o sus exportaciones, puede
 saber qué contestó una persona; y a los 90 días, tampoco con acceso a la base de datos**. El aviso promete eso, ni más
@@ -267,7 +270,7 @@ ni menos.
   y en las vistas: cero).
 
 **Las filas, sin clave común**:
-- `survey_participations` (futuro) — **a quién se preguntó**, sin respuestas: `survey_id`, `user_id` (se borra al
+- `survey_participations` — **a quién se preguntó**, sin respuestas: `survey_id`, `user_id` (se borra al
   anonimizar), `channel`, `asked_by` (el empleado, solo interna), `sent_at` (solo externa), `token_hash` (solo
   externa: `HMAC(token, 'lookup')`; el token en claro solo viaja en el correo). Índice único `(survey_id, user_id)`: sigue
   siendo el árbitro de «una por cliente» (`#740` §2) y la fuente del plazo entre correos y de la baja. **No guarda el
@@ -278,21 +281,21 @@ ni menos.
   interna; `[DECIDIDO owner]` 27-09), `first_visit` (¿tenía antes una visita acreditada o una reserva cobrada?),
   `visit_kind` (`entry` · `party` · `group` · `other`, del pedido de la visita), `declined` («No preguntar» también es una
   fila anónima, para la tasa), `answers` json, `locale` y lo de «volvió» (abajo). **Sin `timestamps()`**.
-- `survey_spent_tokens` (futuro) — `hash` = `HMAC(token, 'spent')`, sin fecha ni clave foránea: cierra el token externo
+- `survey_spent_tokens` — `hash` = `HMAC(token, 'spent')`, sin fecha ni clave foránea: cierra el token externo
   sin tocar la participación. Unir las dos exige el token en claro, que solo tiene el destinatario.
 
 **«Volvió quien puntuó mal»** (la opción «a» del owner):
 - La respuesta guarda `seal` = el id del cliente **cifrado** (`Crypt::encryptString`, IV aleatorio) y `seal_until` = día +
   90. Nunca un cast `encrypted` (descifraría al cargar el modelo en cualquier pantalla): se descifra en UN sitio.
-- `surveys:resolve-returns` (futuro), diario: si hay una visita acreditada o una reserva cobrada con fecha de visita en
+- `surveys:resolve-returns`, diario: si hay una visita acreditada o una reserva cobrada con fecha de visita en
   (día, día + 90] → `returned = true` y `returned_after_days`; si pasó el plazo → `returned = false`. En los dos casos
   **`seal` a null en la misma escritura**. +1 tarea del planificador (`deploy.sh`; aviso a plataforma en el buzón).
-- `anonymize()` encola `ForgetSurveySeals` (futuro): recorre los sellos vivos (≤ 90 días, pocos), descifra y borra el
-  suyo. El export de la persona (art. 15) lleva su participación y las respuestas **aún selladas** (las encuentra el
+- `anonymize()` encola `ForgetSurveySeals` (descartado en `#757`: lo hace `SurveySeals::forget()` DENTRO de la
+  transacción): recorre los sellos vivos (≤ 90 días, pocos), descifra y borra el suyo. El export de la persona (art. 15) lleva su participación y las respuestas **aún selladas** (las encuentra el
   mismo recorrido): mientras hay sello es un dato suyo. `[PENDIENTE: asesoría]` los 90 días y su texto en `/privacidad`.
 
 **Lo que enseña el panel**:
-- **Ningún cruce de menos de 5 respuestas** (`SurveysReport::MIN_CELL` (futuro) = 5): por pregunta, franja, empleado, tipo
+- **Ningún cruce de menos de 5 respuestas** (`SurveysReport::MIN_CELL` = 5): por pregunta, franja, empleado, tipo
   de visita, primera visita o «volvió»; la celda dice «menos de 5».
 - Los textos libres salen **sin día, franja ni empleado, en orden aleatorio** y solo con 5 o más en el periodo: «el
   último» junto a la participación de ayer lo destaparía.
@@ -327,6 +330,51 @@ del contrato; el número, tras el último de plataforma al implementar).
 una celda con 4 respuestas no se pinta · los textos no salen por fecha · el aviso en tres idiomas en la puerta, el correo
 y la página (rótulo tecleado a mano, `#734`) · `resolve-returns` borra el sello al resolver y al caducar · `anonymize()`
 borra el sello de esa persona y no el de otra (control).
+
+**Cómo se construyó (27-09, `#757`)** — y corrige lo de arriba donde lo dice:
+- **Migración** `make_survey_responses_anonymous`: crea `survey_participations` (`asked_on` = el día de la VISITA que la
+  originó; `locale` solo en el correo; sin `timestamps()`) y `survey_spent_tokens`, rehace `survey_responses` (clave
+  `uuid`, sin persona, sin hora, **sin idioma**) y parte las filas locales hacia delante, sin sello. `down()` recupera la
+  forma, no la unión. Modelos `SurveyParticipation` (poda por `asked_on`, `forgetPerson()` suelta `user_id` y el hash) y
+  `SurveyResponse` (clave `Str::uuid()` v4 al crear —el `HasUuids` de Laravel da v7, ORDENADO—; `seal` oculto y no
+  asignable; `bandAt()` sobre la hora del PARQUE).
+- **La costura**: `Platform\Contracts\VisitFacts` (primera vez, tipo de visita, primera vuelta) lo implementa
+  `Identity\Services\CustomerVisitFacts` con las visitas de la puerta y `Booking\Contracts\PaidVisits`
+  (`PaidVisitsReader`, sobre `paidScheduledPrincipal()`). Tipo: un pack › un producto con tramos por volumen › entrada ›
+  `other` (nada cobrado para ese día).
+- **`SurveySeals`**, la ÚNICA clase que nombra la columna: `stamp()` (cifra), `resolve()` (la pasada), `forget()` (art. 17,
+  DENTRO de `User::anonymize()`), `sealedFor()` (art. 15) y `answeredInPersonOn()`: el correo del día siguiente no se lo
+  repite a quien CONTESTÓ en la puerta (`#742`) leyendo los sellos de ayer, sin guardar el desenlace. «Volvió» cuenta hasta
+  AYER (días vividos) — y por eso ningún sello de ayer se resuelve antes de que salga el correo—; `seal_until` no existe
+  (es el día + 90). `surveys:resolve-returns` a las 04:20 (+1 tarea: `deploy.sh` espera **11**).
+- **`SurveyResponses`**: `answerInPerson()`/`declineInPerson()` escriben participación y respuesta en una transacción (la
+  participación es el árbitro); `send()` devuelve el token EN CLARO, que solo viaja en `SurveyInvitation`; `answerSent()`
+  gasta el token (clave primaria) y responde en la misma transacción. Contestar y declinar ya no dejan hecho (fuera del
+  `Contract`); la puerta audita `puerta.survey_closed` con `{survey}` y nada más.
+- **El cuadro**: `SurveysReport` lee las dos tablas sin unirlas; `enough()` aplica el mínimo al GRUPO detrás de cada cifra
+  (la media, el reparto de una pregunta, los textos, el «volvió» de un grupo); los textos, una muestra en el orden de la
+  clave aleatoria. `SurveysLowScoresWidget` («Notas bajas y si volvieron») sustituye a «Por atender»: «ya han vuelto» sobre
+  TODAS las del periodo, una cota que crece con los días e igual para los dos grupos. La 360 pierde el bloque. El CSV
+  lleva los mismos mínimos. El export pasa a `{participations, sealed_responses}` (contrato **1.46.0**).
+- **El aviso**: `surveys.notice` y `surveys.page.text_hint` (es/en/fr) en el correo y la página; en la puerta y en el
+  formulario del panel, sus claves de `admin.php` (es/zh_CN).
+- **Residuo (4), declarado**: el mínimo se aplica a cada cifra, pero **dos periodos que se solapan** («este mes» y «hasta
+  ayer») se pueden RESTAR y aislar un día; si ese día contestó una sola persona y el registro de actividad dice a quién
+  se preguntó, se deduce. Exige intención y acceso al registro: el mínimo frena la lectura casual, no un ataque.
+- **Tests**: `SurveyAnonymityTest` (censos de columnas tecleados, clave v4, un solo lector del sello, el libro) ·
+  `SurveyReturnsTest` · `SurveyVisitFactsTest` · `GateSurveyTest`, `SurveySendTest`, `SurveyPageTest`,
+  `SurveyPrivacyTest` y `SurveysReportTest` rehechos a propósito (el borde 4/5, el orden de los textos, las notas bajas)
+  · `MePrivacyTest` +1 (el export contra el contrato) · `UserInsightsInfolistTest` (la 360 SIN encuestas). Arnés
+  `scripts/mutar-encuestas.sh` rehecho: **31/31 + control**, y UN superviviente DECLARADO: «la interna se ofrece sin
+  acreditar la visita» es equivalente desde `#756` (toda ficha abierta ya lleva la visita de hoy; la guarda queda como
+  defensa). Sondas: `sonda-puerta.mjs` 32/32 (el aviso dentro de la tarjeta y lejos del lector) y
+  `sonda-analitica-panel.mjs` en verde («Por atender» ya no está; «Notas bajas frente al resto» sí).
+- **Lo que enseñó**: (1) el `HasUuids` de Laravel da UUID **v7**, ORDENADO por tiempo: habría unido las dos tablas por el
+  orden. (2) La guarda del lector del sello cazaba dos métodos AJENOS llamados `seal()`: se busca la PROPIEDAD, no el método.
+  (3) Una respuesta sin resolver y sin sello (anonimizada, o de antes de medir) contaba como «aún puede volver» PARA SIEMPRE:
+  pasado su plazo es «no se sabe», decidido por la fecha (el informe no lee el sello) y fuera de la tasa. (4) La idea
+  «sin desenlace en la participación» chocaba con `#742` (no repetir por correo a quien contestó): lo resuelve el sello
+  que ya existía, sin dato nuevo. (5) Tocar la «HOJA ENFOCADA» exige regenerar `public/css/cajon.css` (solo cambió su huella).
 
 ## 5. Impacto en invariantes
 

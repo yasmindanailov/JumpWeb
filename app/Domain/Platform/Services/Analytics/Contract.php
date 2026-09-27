@@ -87,13 +87,12 @@ final class Contract
         'invitation_calendar_downloaded' => ['source' => self::SERVER, 'props' => ['reservation', 'days_before']],
         'authorization_opened' => ['source' => self::SERVER, 'props' => ['reservation', 'via', 'days_before', 'device']],
         'authorization_signed' => ['source' => self::SERVER, 'props' => ['reservation', 'via', 'days_before', 'hours_since_open']],
-        // ── Las encuestas (`specs/encuestas.md` §4.1): solo el HECHO, nunca una respuesta ───────────
-        // `survey` es la clave de la encuesta y `channel` la clase por la que llegó (`internal`|`external`); el
-        // hecho viaja con `user_id` como `visit_checked_in` (régimen del contrato). Lo contestado vive en
-        // `survey_responses` y no pisa el libro (`RGPD-07`).
+        // ── Las encuestas (`specs/encuestas.md` §4.1 y §4.7): solo el ENVÍO ──────────────────────────────
+        // `survey` es la clave de la encuesta y `channel` la clase (`external`); viaja con `user_id` como
+        // `visit_checked_in` (régimen del contrato): mandar es de la participación, que sí tiene persona. Desde `#754`
+        // (anónimas) contestar y declinar NO dejan hecho —su hora exacta y el cliente unirían el desenlace— y fuera
+        // del contrato no se pueden escribir: el cuadro los cuenta de `survey_responses`, sin nadie.
         'survey_sent' => ['source' => self::SERVER, 'props' => ['survey', 'channel']],
-        'survey_answered' => ['source' => self::SERVER, 'props' => ['survey', 'channel']],
-        'survey_declined' => ['source' => self::SERVER, 'props' => ['survey', 'channel']],
         'email_sent' => ['source' => self::SERVER, 'props' => ['key']],
         'email_clicked' => ['source' => self::SERVER, 'props' => ['key']],
         'visit_checked_in' => ['source' => self::SERVER, 'props' => []],

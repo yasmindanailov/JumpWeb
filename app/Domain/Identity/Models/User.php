@@ -8,8 +8,9 @@ use App\Domain\Booking\Models\Ticket;
 use App\Domain\Platform\Jobs\ForgetPersonInDriver;
 use App\Domain\Platform\Models\AnalyticsEvent;
 use App\Domain\Platform\Models\AnalyticsSession;
-use App\Domain\Platform\Models\SurveyResponse;
+use App\Domain\Platform\Models\SurveyParticipation;
 use App\Domain\Platform\Services\AuditLogger;
+use App\Domain\Platform\Services\Surveys\SurveySeals;
 use App\Notifications\PasswordReset;
 use App\Notifications\VerifyEmailAddress;
 use Database\Factories\UserFactory;
@@ -444,9 +445,11 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference,
             // una transición, y esto no es ninguna de las dos cosas.
             AnalyticsSession::query()->where('user_id', $this->getKey())->update(['user_id' => null]);
             AnalyticsEvent::query()->where('user_id', $this->getKey())->update(['user_id' => null]);
-            // LAS ENCUESTAS (`specs/encuestas.md` §4.5, `#740`): sus respuestas dejan de ser suyas y el texto libre
-            // se borra; los agregados de elección y escala sobreviven sin persona.
-            SurveyResponse::forgetPerson((int) $this->getKey());
+            // LAS ENCUESTAS, ANÓNIMAS (`specs/encuestas.md` §4.7, `#754`): sus participaciones se sueltan (siguen contando
+            // como preguntadas, sin nadie) y su SELLO se borra AQUÍ, dentro de la transacción y no en una cola: el art. 17
+            // no puede depender de que un trabajo llegue a correr. Sin sello, sus respuestas ya no son de nadie.
+            SurveyParticipation::forgetPerson((int) $this->getKey());
+            app(SurveySeals::class)->forget((int) $this->getKey());
             $this->orders()->whereNotNull('attribution')->get(['id', 'attribution'])->each(function (Order $order): void {
                 $order->forceFill([
                     'attribution' => array_diff_key((array) $order->attribution, array_flip(['visitor_id', 'session_id', 'click_ids', 'browser_ids'])),

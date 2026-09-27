@@ -12,8 +12,9 @@ use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Models\UserIdentity;
 use App\Domain\Platform\Models\AnalyticsEvent;
 use App\Domain\Platform\Models\AnalyticsSession;
-use App\Domain\Platform\Models\SurveyResponse;
+use App\Domain\Platform\Models\SurveyParticipation;
 use App\Domain\Platform\Services\Analytics\AttributionContext;
+use App\Domain\Platform\Services\Surveys\SurveySeals;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -54,6 +55,7 @@ class AccountPrivacy
         private readonly CustomerOrderHistory $orders,
         private readonly CustomerReservations $reservations,
         private readonly DependentAssigner $assigner,
+        private readonly SurveySeals $seals,
     ) {}
 
     /**
@@ -276,23 +278,25 @@ class AccountPrivacy
     }
 
     /**
-     * Las encuestas del titular (`specs/encuestas.md` §4.5, T2; `RGPD-01`): lo que contestó —o declinó—, cuándo
-     * y por qué canal, con la clave de la encuesta. Es dato SUYO y el export lo lleva entero, texto libre incluido.
+     * Las encuestas del titular (`specs/encuestas.md` §4.7, T5; `#754`; `RGPD-01`), ANÓNIMAS desde 1.46.0: lo que es
+     * SUYO y nada más —a qué encuestas se le preguntó o mandó (la participación) y lo que contestó MIENTRAS su respuesta
+     * sigue sellada (≤ 90 días): con el sello, esa respuesta aún es un dato suyo—. Pasado el sello no se puede saber
+     * cuál fue, y por eso ya no está aquí. Nunca quién preguntó: es un dato del empleado.
      *
-     * @return list<array{survey: ?string, channel: string, visited_on: ?string, sent_at: ?string, answered_at: ?string, declined_at: ?string, answers: ?array<string, mixed>}>
+     * @return array{participations: list<array{survey: ?string, channel: string, asked_on: string, sent_at: ?string}>, sealed_responses: list<array{survey: ?string, channel: string, answered_on: string, answers: ?array<string, mixed>}>}
      */
     private function surveysFor(User $user): array
     {
-        return SurveyResponse::query()->where('user_id', $user->getKey())->with('survey')->orderBy('id')->get()
-            ->map(static fn (SurveyResponse $response): array => [
-                'survey' => $response->survey?->key,
-                'channel' => (string) $response->channel,
-                'visited_on' => $response->visited_on?->toDateString(),
-                'sent_at' => $response->sent_at?->toIso8601String(),
-                'answered_at' => $response->answered_at?->toIso8601String(),
-                'declined_at' => $response->declined_at?->toIso8601String(),
-                'answers' => $response->answers,
-            ])->values()->all();
+        return [
+            'participations' => SurveyParticipation::query()->where('user_id', $user->getKey())->with('survey')->orderBy('asked_on')->orderBy('id')->get()
+                ->map(static fn (SurveyParticipation $participation): array => [
+                    'survey' => $participation->survey?->key,
+                    'channel' => $participation->channel,
+                    'asked_on' => $participation->asked_on->toDateString(),
+                    'sent_at' => $participation->sent_at?->toIso8601String(),
+                ])->values()->all(),
+            'sealed_responses' => $this->seals->sealedFor((int) $user->getKey()),
+        ];
     }
 
     private function analyticsFor(User $user): array

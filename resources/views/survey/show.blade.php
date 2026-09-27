@@ -7,6 +7,8 @@
      * justificante. **Sin una línea de JS**: cada opción es un radio/checkbox oculto con su etiqueta vestida de
      * píldora táctil (`.survey__*` en `site.css`), y el formulario es un POST normal. Los errores vuelven por
      * pregunta (`answers.<clave>`) y lo marcado se conserva (`old()`).
+     * ▶ `#754`: EL AVISO DEL ANONIMATO bajo el resguardo (`gf-notice`), y junto a cada pregunta de texto la advertencia
+     * de no escribir el nombre. Texto del producto (`surveys.notice`, `surveys.page.text_hint`), fijo.
      */
     $textMax = \App\Domain\Platform\Services\Surveys\QuestionSchema::TEXT_MAX;
     $scaleMin = \App\Domain\Platform\Services\Surveys\QuestionSchema::SCALE_MIN;
@@ -32,6 +34,11 @@
                 </div>
                 <h1 class="gf-stub__title" data-survey-name>{{ $name }}</h1>
                 <p class="survey__lede">{{ $intro ?? __('surveys.page.intro_default') }}</p>
+            </div>
+
+            <div class="gf-notice" data-survey-notice>
+                <p class="gf-notice__title">{{ __('surveys.page.notice_title') }}</p>
+                <p class="gf-notice__text">{{ __('surveys.notice') }}</p>
             </div>
 
             <form method="post" action="{{ route('survey.answer', ['token' => $token]) }}" class="gf-form survey" data-survey-form>
@@ -75,7 +82,8 @@
                                 <label for="q-{{ $q['key'] }}-no" class="survey__pill">{{ __('surveys.page.no') }}</label>
                             </div>
                         @else
-                            <input type="text" id="q-{{ $q['key'] }}" class="survey__text" name="answers[{{ $q['key'] }}]" maxlength="{{ $textMax }}" autocomplete="off" value="{{ is_string($old) ? $old : '' }}" placeholder="{{ __('surveys.page.text_placeholder') }}">
+                            <input type="text" id="q-{{ $q['key'] }}" class="survey__text" name="answers[{{ $q['key'] }}]" maxlength="{{ $textMax }}" autocomplete="off" value="{{ is_string($old) ? $old : '' }}" placeholder="{{ __('surveys.page.text_placeholder') }}" aria-describedby="q-{{ $q['key'] }}-hint">
+                            <p class="survey__hint" id="q-{{ $q['key'] }}-hint" data-survey-text-hint>{{ __('surveys.page.text_hint') }}</p>
                         @endif
 
                         @error('answers.'.$q['key'])

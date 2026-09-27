@@ -9,6 +9,7 @@ use Illuminate\Contracts\Support\Htmlable;
  * **Lo que contestan, como barras** (`specs/encuestas.md` §4.4, T4): el reparto de la primera pregunta con opciones
  * —o escala, o sí/no— de la primera encuesta de la pestaña (la interna viva, si la hay), con el nombre de la
  * encuesta y la pregunta en el título. Sin respuestas no hay barras. Su vista de tabla es «Por pregunta».
+ * ⚠️ `#754`: una pregunta con menos de cinco respuestas no se pinta (`suppressed`): se salta a la siguiente.
  */
 class SurveysAnswersChart extends CategoryChart
 {
@@ -52,7 +53,7 @@ class SurveysAnswersChart extends CategoryChart
             /** @var list<array<string, mixed>> $questions */
             $questions = $survey['questions'];
             foreach ($questions as $q) {
-                if ($q['type'] !== QuestionSchema::TYPE_TEXT && (int) $q['n'] > 0) {
+                if ($q['type'] !== QuestionSchema::TYPE_TEXT && (int) $q['n'] > 0 && ! $q['suppressed']) {
                     return ['survey' => (string) $survey['name'], 'label' => (string) $q['label'], 'distribution' => $q['distribution']];
                 }
             }

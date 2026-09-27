@@ -4,8 +4,11 @@ namespace App\Filament\Analytics;
 
 use App\Domain\Platform\Enums\Comparison;
 use App\Domain\Platform\Models\Survey;
+use App\Domain\Platform\Models\SurveyResponse;
 use App\Domain\Platform\Services\Analytics\Reports\Window;
+use App\Domain\Platform\Services\DisplayTime;
 use App\Domain\Platform\Services\Surveys\QuestionSchema;
+use App\Domain\Platform\Services\Surveys\SurveySeals;
 use App\Domain\Platform\Services\Translated;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
@@ -14,32 +17,36 @@ use Illuminate\Support\Facades\DB;
 use stdClass;
 
 /**
- * **LAS ENCUESTAS: cuántas se contestan y qué dicen** (`docs/specs/encuestas.md` §4.4, T4; `DECISIONES #740`).
+ * **LAS ENCUESTAS: cuántas se contestan y qué dicen — ANÓNIMAS** (`docs/specs/encuestas.md` §4.4 y §4.7, T4 y T5;
+ * `DECISIONES #740` y `#754`).
  *
- * **La unidad de tiempo es el DÍA DE LA RESPUESTA** (`answered_at` → día del parque); lo mandado va por el día del
- * envío y lo declinado por el suyo. Por encuesta —la interna viva, la externa viva y las que tengan respuestas en
- * el periodo—: mandadas, contestadas por canal, declinadas, y por pregunta el reparto de las opciones, la media y el
- * reparto de la escala, los síes y los noes, y los ÚLTIMOS textos libres (solo en la pestaña, nunca en el CSV).
+ * Lee dos tablas que no se unen: las RESPUESTAS (sin persona, por su día del parque) y las PARTICIPACIONES (a quién se
+ * preguntó o mandó, solo para contar envíos y ofertas). Por encuesta —la interna viva, la externa viva y las que
+ * tengan respuestas en el periodo—: mandadas, contestadas por canal, «no preguntar», y por pregunta el reparto, la
+ * media de la escala, los síes y los noes, y unos textos libres (solo en la pestaña, nunca en el CSV). Dos tasas: la
+ * interna, contestadas en la puerta entre las OFERTAS; la externa, contestadas por correo entre mandadas.
  *
- * Dos tasas: la interna es contestadas en la puerta entre visitas acreditadas del periodo (la encuesta se ofrece al
- * acreditar, `#741`); la externa, contestadas por correo entre mandadas. **«Por atender»** son las respuestas de los
- * últimos 30 días con una escala ≤ 2: la persona sale solo con `customers.insights`, y eso lo decide el widget.
+ * ⚠️⚠️ **NINGUNA CIFRA SALE DE MENOS DE {@see MIN_CELL} RESPUESTAS** (`#754`): una media, un reparto o una tasa de
+ * «volvió» sobre cuatro personas, junto al registro de actividad (quién preguntó a quién ese día), dice lo que
+ * contestó cada una. Por debajo, la celda dice «menos de 5» y no lleva valor. Los textos libres salen solo con cinco
+ * o más, sin día ni franja ni empleado, y en el orden de su clave ALEATORIA: «el último» junto a la participación de
+ * ayer destaparía a quién es. **«Por atender» se retiró** (el owner: «para llamarle, no»): en su lugar, «notas bajas y
+ * si volvieron», sin persona.
  *
- * ⚠️ Solo agregados salvo «Por atender» y los textos. Seis consultas por periodo; la caché de cinco minutos las
- * reparte entre los widgets y el CSV.
+ * Unas diez consultas por periodo; la caché de cinco minutos las reparte entre los widgets y el CSV.
  */
 final class SurveysReport
 {
     public const CACHE_SECONDS = 300;
 
-    /** Cuántos textos libres se enseñan por pregunta (los últimos). */
+    /** Cuántos textos libres se enseñan por pregunta (una muestra, en orden aleatorio). */
     public const TEXTS_SHOWN = 12;
 
-    public const ATTENTION_DAYS = 30;
+    /** El mínimo de respuestas detrás de cualquier cifra (`#754`). */
+    public const MIN_CELL = 5;
 
-    public const ATTENTION_MAX_SCORE = 2;
-
-    public const ATTENTION_ROWS = 50;
+    /** Una respuesta es una «nota baja» si alguna de sus escalas vale esto o menos. */
+    public const LOW_MAX_SCORE = 2;
 
     /** @return array<string, mixed> */
     public static function for(Window $window, Comparison $comparison = Comparison::Previous): array
@@ -51,7 +58,13 @@ final class SurveysReport
 
     public static function cacheKey(Window $window, Window $baseline): string
     {
-        return 'analytics:surveys:v1:'.$window->timezone.':'.$window->dateFrom().':'.$window->dateTo().':'.$baseline->dateFrom().':'.$baseline->dateTo().':'.app()->getLocale();
+        return 'analytics:surveys:v2:'.$window->timezone.':'.$window->dateFrom().':'.$window->dateTo().':'.$baseline->dateFrom().':'.$baseline->dateTo().':'.app()->getLocale();
+    }
+
+    /** ¿Hay base para enseñar una cifra hecha de `$n` respuestas? */
+    public static function enough(int $n): bool
+    {
+        return $n >= self::MIN_CELL;
     }
 
     /**
@@ -62,14 +75,15 @@ final class SurveysReport
     {
         $baseline ??= $window->previous();
         $surveys = $this->surveys($window->timezone);
-        $rows = $this->rows($window);
-        $totals = $this->totals($rows, $window);
+        $responses = $this->responses($window);
+        $sent = $this->sent($window);
+        $totals = $this->totals($responses, $sent);
         $totals['visits'] = $this->visits($window);
         $totals['offered'] = $this->offered($surveys, $window);
         $totals['internal_rate_bp'] = $totals['offered'] > 0 ? (int) round(min($totals['answered_internal'], $totals['offered']) / $totals['offered'] * 10000) : 0;
         $totals['external_rate_bp'] = $totals['sent'] > 0 ? (int) round(min($totals['answered_external'], $totals['sent']) / $totals['sent'] * 10000) : 0;
 
-        $perSurvey = $this->perSurvey($surveys, $rows, $window);
+        $perSurvey = $this->perSurvey($surveys, $responses, $sent);
 
         return [
             'window' => [
@@ -81,13 +95,13 @@ final class SurveysReport
             'totals' => $totals,
             'scale' => $this->firstScale($perSurvey),
             'surveys' => $perSurvey,
-            'attention' => $this->attention($surveys),
-            'series' => $this->series($window, $rows),
+            'low_scores' => $this->lowScores($surveys, $responses),
+            'series' => $this->series($window, $responses, $sent),
             'previous' => $this->totalsOnly($baseline, $surveys),
         ];
     }
 
-    // ─── Las encuestas y las respuestas del periodo ──────────────────────────────────────────────
+    // ─── Las encuestas, las respuestas y los envíos del periodo ──────────────────────────────────
 
     /**
      * Todas las encuestas, con sus preguntas normalizadas y rotuladas en el idioma del panel, y su ventana en días
@@ -125,12 +139,69 @@ final class SurveysReport
     }
 
     /**
+     * Las respuestas del periodo, por su DÍA del parque. ⚠️ En el orden de su clave, que es ALEATORIA (UUID v4): nada de
+     * lo que sale de aquí va en orden de llegada.
+     *
+     * @return Collection<int, stdClass>
+     */
+    private function responses(Window $window): Collection
+    {
+        return DB::table('survey_responses')
+            ->whereBetween('answered_on', [$window->dateFrom(), $window->dateTo()])
+            ->select(['id', 'survey_id', 'channel', 'answered_on', 'declined', 'answers', 'returned'])
+            ->orderBy('id')
+            ->get();
+    }
+
+    /**
+     * Los correos MANDADOS del periodo (la participación externa, por su hora de envío).
+     *
+     * @return Collection<int, stdClass>
+     */
+    private function sent(Window $window): Collection
+    {
+        return DB::table('survey_participations')
+            ->whereNotNull('sent_at')
+            ->whereBetween('sent_at', [$window->utcFrom()->format('Y-m-d H:i:s'), $window->utcTo()->format('Y-m-d H:i:s')])
+            ->select(['survey_id', 'sent_at'])
+            ->get()
+            ->filter(static fn (stdClass $row): bool => $window->contains(CarbonImmutable::parse((string) $row->sent_at, 'UTC')))
+            ->values();
+    }
+
+    /**
+     * @param  Collection<int, stdClass>  $responses
+     * @param  Collection<int, stdClass>  $sent
+     * @return array{sent: int, answered: int, answered_internal: int, answered_external: int, declined: int}
+     */
+    private function totals(Collection $responses, Collection $sent): array
+    {
+        $out = ['sent' => $sent->count(), 'answered' => 0, 'answered_internal' => 0, 'answered_external' => 0, 'declined' => 0];
+        foreach ($responses as $row) {
+            if ((bool) $row->declined) {
+                $out['declined']++;
+
+                continue;
+            }
+            $out['answered']++;
+            $out[$row->channel === SurveyResponse::CHANNEL_EXTERNAL ? 'answered_external' : 'answered_internal']++;
+        }
+
+        return $out;
+    }
+
+    /** Las visitas acreditadas del periodo (día del parque). */
+    private function visits(Window $window): int
+    {
+        return (int) DB::table('customer_visits')->whereBetween('visited_on', [$window->dateFrom(), $window->dateTo()])->count();
+    }
+
+    /**
      * **Las OFERTAS de la interna en el periodo**, el denominador de su tasa (spec §4.4): las visitas acreditadas en
-     * días en que una encuesta interna estaba viva —por su ventana; `active` no guarda historia, así que una
-     * apagada hoy no cuenta ofertas— y de clientes SIN fila previa para ella: a quien ya contestó o declinó no se le
-     * vuelve a ofrecer, así que su visita no es una oferta. Una fila del MISMO día sí lo es (es la respuesta a esa
-     * oferta): el MOMENTO de la fila —mandada, contestada o declinada, lo primero que haya— se compara con la
-     * medianoche del día de la visita. ⚠️ No `created_at`: en un fixture lo escribe el reloj del test, no el hecho.
+     * días en que una encuesta interna estaba viva —por su ventana; `active` no guarda historia, así que una apagada
+     * hoy no cuenta ofertas— y de clientes SIN participación previa en ella: a quien ya se le preguntó no se le vuelve a
+     * ofrecer, así que su visita no es una oferta. Una participación del MISMO día sí lo es (es la respuesta a esa
+     * oferta): por eso se compara su día con el de la visita, estrictamente anterior.
      *
      * @param  array<int, array<string, mixed>>  $surveys
      */
@@ -149,10 +220,10 @@ final class SurveysReport
             $offered += (int) DB::table('customer_visits as v')
                 ->whereBetween('v.visited_on', [$from, $to])
                 ->whereNotExists(static function ($query) use ($survey): void {
-                    $query->selectRaw('1')->from('survey_responses as r')
-                        ->whereColumn('r.user_id', 'v.user_id')
-                        ->where('r.survey_id', $survey['id'])
-                        ->whereRaw('COALESCE(r.sent_at, r.answered_at, r.declined_at) < v.visited_on');
+                    $query->selectRaw('1')->from('survey_participations as p')
+                        ->whereColumn('p.user_id', 'v.user_id')
+                        ->where('p.survey_id', $survey['id'])
+                        ->whereColumn('p.asked_on', '<', 'v.visited_on');
                 })
                 ->count();
         }
@@ -160,77 +231,23 @@ final class SurveysReport
         return $offered;
     }
 
-    /**
-     * Las filas que TOCAN la ventana por alguno de sus tres momentos (mandada, contestada, declinada). Una fila
-     * externa mandada y contestada en el mismo periodo cuenta en los dos: son dos hechos distintos.
-     *
-     * @return Collection<int, stdClass>
-     */
-    private function rows(Window $window): Collection
-    {
-        $from = $window->utcFrom()->format('Y-m-d H:i:s');
-        $to = $window->utcTo()->format('Y-m-d H:i:s');
-
-        return DB::table('survey_responses')
-            ->where(static function ($query) use ($from, $to): void {
-                $query->whereBetween('answered_at', [$from, $to])
-                    ->orWhereBetween('declined_at', [$from, $to])
-                    ->orWhereBetween('sent_at', [$from, $to]);
-            })
-            ->select(['id', 'survey_id', 'user_id', 'channel', 'sent_at', 'answered_at', 'declined_at', 'answers'])
-            ->orderBy('id')
-            ->get();
-    }
-
-    /**
-     * @param  Collection<int, stdClass>  $rows
-     * @return array{sent: int, answered: int, answered_internal: int, answered_external: int, declined: int}
-     */
-    private function totals(Collection $rows, Window $window): array
-    {
-        $out = ['sent' => 0, 'answered' => 0, 'answered_internal' => 0, 'answered_external' => 0, 'declined' => 0];
-        foreach ($rows as $row) {
-            if ($this->inWindow($row->sent_at, $window)) {
-                $out['sent']++;
-            }
-            if ($this->inWindow($row->answered_at, $window)) {
-                $out['answered']++;
-                $out[$row->channel === 'external' ? 'answered_external' : 'answered_internal']++;
-            }
-            if ($this->inWindow($row->declined_at, $window)) {
-                $out['declined']++;
-            }
-        }
-
-        return $out;
-    }
-
-    private function inWindow(mixed $timestamp, Window $window): bool
-    {
-        return is_string($timestamp) && $timestamp !== '' && $window->contains(CarbonImmutable::parse($timestamp, 'UTC'));
-    }
-
-    /** Las visitas acreditadas del periodo (día del parque): el denominador de la tasa interna. */
-    private function visits(Window $window): int
-    {
-        return (int) DB::table('customer_visits')->whereBetween('visited_on', [$window->dateFrom(), $window->dateTo()])->count();
-    }
-
     // ─── Por encuesta y por pregunta ─────────────────────────────────────────────────────────────
 
     /**
-     * En este orden: la interna viva, la externa viva y después las que tengan filas en el periodo. Cada una con sus
-     * recuentos y, por pregunta, lo que dicen las respuestas CONTESTADAS en el periodo.
+     * En este orden: la interna viva, la externa viva y después las que tengan respuestas o envíos en el periodo. Cada
+     * una con sus recuentos y, por pregunta, lo que dicen sus respuestas CONTESTADAS.
      *
      * @param  array<int, array<string, mixed>>  $surveys
-     * @param  Collection<int, stdClass>  $rows
+     * @param  Collection<int, stdClass>  $responses
+     * @param  Collection<int, stdClass>  $sent
      * @return list<array<string, mixed>>
      */
-    private function perSurvey(array $surveys, Collection $rows, Window $window): array
+    private function perSurvey(array $surveys, Collection $responses, Collection $sent): array
     {
-        $byId = $rows->groupBy('survey_id');
+        $byId = $responses->groupBy('survey_id');
+        $sentById = $sent->groupBy('survey_id');
         $ordered = [];
-        foreach (['internal', 'external'] as $kind) {
+        foreach ([Survey::KIND_INTERNAL, Survey::KIND_EXTERNAL] as $kind) {
             foreach ($surveys as $survey) {
                 if ($survey['live'] && $survey['kind'] === $kind) {
                     $ordered[$survey['id']] = $survey;
@@ -238,7 +255,7 @@ final class SurveysReport
             }
         }
         foreach ($surveys as $survey) {
-            if (! isset($ordered[$survey['id']]) && $byId->has($survey['id'])) {
+            if (! isset($ordered[$survey['id']]) && ($byId->has($survey['id']) || $sentById->has($survey['id']))) {
                 $ordered[$survey['id']] = $survey;
             }
         }
@@ -247,8 +264,10 @@ final class SurveysReport
         foreach ($ordered as $survey) {
             /** @var Collection<int, stdClass> $own */
             $own = $byId->get($survey['id'], collect());
-            $counts = $this->totals($own, $window);
-            $answered = $own->filter(fn (stdClass $row): bool => $this->inWindow($row->answered_at, $window))->values();
+            /** @var Collection<int, stdClass> $ownSent */
+            $ownSent = $sentById->get($survey['id'], collect());
+            $counts = $this->totals($own, $ownSent);
+            $answered = $own->reject(static fn (stdClass $row): bool => (bool) $row->declined)->values();
 
             $out[] = [
                 'id' => $survey['id'],
@@ -269,9 +288,12 @@ final class SurveysReport
     }
 
     /**
+     * Por pregunta: cuántas la contestaron (`n`) y, SOLO con {@see MIN_CELL} o más, su reparto, su media o sus textos;
+     * por debajo, `suppressed` y nada más (la celda dirá «menos de 5»).
+     *
      * @param  list<array{key: string, type: string, label: string, options: array<string, string>}>  $questions
-     * @param  Collection<int, stdClass>  $answered
-     * @return list<array{key: string, type: string, label: string, n: int, mean: float|null, distribution: list<array{key: string, label: string, n: int}>, texts: list<string>}>
+     * @param  Collection<int, stdClass>  $answered  en el orden de su clave aleatoria
+     * @return list<array{key: string, type: string, label: string, n: int, suppressed: bool, mean: float|null, distribution: list<array{key: string, label: string, n: int}>, texts: list<string>}>
      */
     private function questions(array $questions, Collection $answered): array
     {
@@ -285,7 +307,7 @@ final class SurveysReport
                     $values[] = $answers[$q['key']];
                 }
             }
-            $item = ['key' => $q['key'], 'type' => $q['type'], 'label' => $q['label'], 'n' => count($values), 'mean' => null, 'distribution' => [], 'texts' => []];
+            $item = ['key' => $q['key'], 'type' => $q['type'], 'label' => $q['label'], 'n' => count($values), 'suppressed' => false, 'mean' => null, 'distribution' => [], 'texts' => []];
 
             switch ($q['type']) {
                 case QuestionSchema::TYPE_CHOICE:
@@ -331,8 +353,15 @@ final class SurveysReport
                 default:
                     $texts = array_values(array_filter($values, static fn (mixed $v): bool => is_string($v) && trim($v) !== ''));
                     $item['n'] = count($texts);
-                    // Los ÚLTIMOS: las filas llegan por id ascendente, así que el final es lo más reciente.
-                    $item['texts'] = array_map(static fn (string $t): string => mb_substr($t, 0, QuestionSchema::TEXT_MAX), array_reverse(array_slice($texts, -self::TEXTS_SHOWN)));
+                    // Una MUESTRA en el orden de la clave aleatoria de su fila: ni los últimos ni por fecha.
+                    $item['texts'] = array_map(static fn (string $t): string => mb_substr($t, 0, QuestionSchema::TEXT_MAX), array_slice($texts, 0, self::TEXTS_SHOWN));
+            }
+
+            if (! self::enough($item['n'])) {
+                $item['suppressed'] = true;
+                $item['mean'] = null;
+                $item['distribution'] = [];
+                $item['texts'] = [];
             }
 
             $out[] = $item;
@@ -342,17 +371,24 @@ final class SurveysReport
     }
 
     /**
-     * La primera escala con respuestas de la primera encuesta: la cifra de la tarjeta.
+     * La primera escala con respuestas de la primera encuesta: la cifra de la tarjeta. Con menos de {@see MIN_CELL}
+     * respuestas sale SIN media (`suppressed`).
      *
      * @param  list<array<string, mixed>>  $perSurvey
-     * @return array{survey: string, question: string, mean: float, n: int}|null
+     * @return array{survey: string, question: string, mean: ?float, n: int, suppressed: bool}|null
      */
     private function firstScale(array $perSurvey): ?array
     {
         foreach ($perSurvey as $survey) {
             foreach ($survey['questions'] as $q) {
-                if ($q['type'] === QuestionSchema::TYPE_SCALE && $q['mean'] !== null) {
-                    return ['survey' => $survey['name'], 'question' => $q['label'], 'mean' => (float) $q['mean'], 'n' => (int) $q['n']];
+                if ($q['type'] === QuestionSchema::TYPE_SCALE && $q['n'] > 0) {
+                    return [
+                        'survey' => $survey['name'],
+                        'question' => $q['label'],
+                        'mean' => $q['suppressed'] ? null : (float) $q['mean'],
+                        'n' => (int) $q['n'],
+                        'suppressed' => (bool) $q['suppressed'],
+                    ];
                 }
             }
         }
@@ -360,83 +396,78 @@ final class SurveysReport
         return null;
     }
 
-    // ─── «Por atender» ───────────────────────────────────────────────────────────────────────────
+    // ─── «Notas bajas y si volvieron» ────────────────────────────────────────────────────────────
 
     /**
-     * Las respuestas de los últimos {@see ATTENTION_DAYS} días con alguna escala ≤ {@see ATTENTION_MAX_SCORE}: el
-     * día, el canal, la encuesta, la peor nota, el primer texto libre y QUIÉN (id y nombre; el widget decide si lo
-     * enseña). Las peores primero, y dentro de la misma nota las más recientes.
+     * Las respuestas CONTESTADAS del periodo con alguna escala, partidas en «nota baja» (alguna escala ≤
+     * {@see LOW_MAX_SCORE}) y «el resto», y de cada grupo cuántas ya han VUELTO (el sello resuelto a «volvió»), cuántas
+     * aún pueden volver y de cuántas NO SE SABE. «Ya han vuelto» sobre las que se saben o aún pueden es una cota que crece
+     * con los días, igual para los dos grupos del mismo periodo: por eso se comparan entre sí. Sin persona: son recuentos
+     * de filas anónimas. La pantalla aplica el mínimo: el reparto, con el total ≥ 5; la tasa de cada grupo, con su grupo
+     * (sin las que no se saben) ≥ 5.
+     *
+     * ⚠️ **«No se sabe»** es una respuesta SIN resolver cuyo plazo ya pasó: su sello se borró sin anotar nada (su cuenta se
+     * anonimizó) o nunca lo tuvo (las filas de antes de `#754`). Se decide por la FECHA y no por el sello, que este
+     * informe no lee nunca: sin esto contaría como «aún puede volver» para siempre.
      *
      * @param  array<int, array<string, mixed>>  $surveys
-     * @return list<array{response_id: int, on: string, channel: string, survey: string, score: int, text: ?string, user_id: ?int, user_name: ?string}>
+     * @param  Collection<int, stdClass>  $responses
+     * @return array{low: array{n: int, returned: int, pending: int, unknown: int}, rest: array{n: int, returned: int, pending: int, unknown: int}}
      */
-    private function attention(array $surveys): array
+    private function lowScores(array $surveys, Collection $responses): array
     {
-        $since = CarbonImmutable::now('UTC')->subDays(self::ATTENTION_DAYS)->format('Y-m-d H:i:s');
-        $rows = DB::table('survey_responses as r')
-            ->leftJoin('users as u', 'u.id', '=', 'r.user_id')
-            ->where('r.answered_at', '>=', $since)
-            ->select(['r.id', 'r.survey_id', 'r.user_id', 'r.channel', 'r.answered_at', 'r.answers', 'u.name as user_name'])
-            ->orderByDesc('r.answered_at')
-            ->get();
-
-        $out = [];
-        foreach ($rows as $row) {
+        $out = ['low' => ['n' => 0, 'returned' => 0, 'pending' => 0, 'unknown' => 0], 'rest' => ['n' => 0, 'returned' => 0, 'pending' => 0, 'unknown' => 0]];
+        // El último día que aún puede resolverse: el plazo de un día de respuesta D acaba cuando se ha vivido D + 90.
+        $stillOpenFrom = DisplayTime::today()->subDays(SurveySeals::DAYS)->toDateString();
+        foreach ($responses as $row) {
             $survey = $surveys[(int) $row->survey_id] ?? null;
-            if ($survey === null) {
+            if ($survey === null || (bool) $row->declined) {
                 continue;
             }
             $answers = is_string($row->answers) ? (array) json_decode($row->answers, true) : [];
             $worst = null;
-            $text = null;
             foreach ($survey['questions'] as $q) {
                 $value = $answers[$q['key']] ?? null;
                 if ($q['type'] === QuestionSchema::TYPE_SCALE && is_int($value) && ($worst === null || $value < $worst)) {
                     $worst = $value;
                 }
-                if ($q['type'] === QuestionSchema::TYPE_TEXT && $text === null && is_string($value) && trim($value) !== '') {
-                    $text = $value;
-                }
             }
-            if ($worst === null || $worst > self::ATTENTION_MAX_SCORE) {
+            if ($worst === null) {
                 continue;
             }
-            $out[] = [
-                'response_id' => (int) $row->id,
-                'on' => (string) $row->answered_at,
-                'channel' => (string) $row->channel,
-                'survey' => $survey['name'],
-                'score' => $worst,
-                'text' => $text,
-                'user_id' => $row->user_id === null ? null : (int) $row->user_id,
-                'user_name' => $row->user_name === null ? null : (string) $row->user_name,
-            ];
+            $group = $worst <= self::LOW_MAX_SCORE ? 'low' : 'rest';
+            $out[$group]['n']++;
+            if ($row->returned === null) {
+                $out[$group][substr((string) $row->answered_on, 0, 10) >= $stillOpenFrom ? 'pending' : 'unknown']++;
+            } elseif ((bool) $row->returned) {
+                $out[$group]['returned']++;
+            }
         }
 
-        usort($out, static fn (array $a, array $b): int => [$a['score'], $b['on']] <=> [$b['score'], $a['on']]);
-
-        return array_slice($out, 0, self::ATTENTION_ROWS);
+        return $out;
     }
 
     // ─── La serie y el periodo anterior ──────────────────────────────────────────────────────────
 
     /**
-     * @param  Collection<int, stdClass>  $rows
+     * @param  Collection<int, stdClass>  $responses
+     * @param  Collection<int, stdClass>  $sent
      * @return list<array{key: string, answered: int, declined: int, sent: int}>
      */
-    private function series(Window $window, Collection $rows): array
+    private function series(Window $window, Collection $responses, Collection $sent): array
     {
         $byKey = [];
         $bump = static function (string $key, string $field) use (&$byKey): void {
             $byKey[$key] ??= ['answered' => 0, 'declined' => 0, 'sent' => 0];
             $byKey[$key][$field]++;
         };
-        foreach ($rows as $row) {
-            foreach (['answered_at' => 'answered', 'declined_at' => 'declined', 'sent_at' => 'sent'] as $column => $field) {
-                if ($this->inWindow($row->{$column}, $window)) {
-                    $bump($window->bucketKey(CarbonImmutable::parse((string) $row->{$column}, 'UTC')->setTimezone($window->timezone)), $field);
-                }
-            }
+        foreach ($responses as $row) {
+            // El día del parque a mediodía: un DÍA, no un instante, y así ningún cambio de hora lo mueve de cubo.
+            $day = CarbonImmutable::parse(substr((string) $row->answered_on, 0, 10).' 12:00:00', $window->timezone);
+            $bump($window->bucketKey($day), (bool) $row->declined ? 'declined' : 'answered');
+        }
+        foreach ($sent as $row) {
+            $bump($window->bucketKey(CarbonImmutable::parse((string) $row->sent_at, 'UTC')), 'sent');
         }
 
         $series = [];
@@ -455,7 +486,7 @@ final class SurveysReport
      */
     private function totalsOnly(Window $window, array $surveys): array
     {
-        $totals = $this->totals($this->rows($window), $window);
+        $totals = $this->totals($this->responses($window), $this->sent($window));
         $totals['visits'] = $this->visits($window);
         $totals['offered'] = $this->offered($surveys, $window);
 

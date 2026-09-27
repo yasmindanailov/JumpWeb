@@ -4,7 +4,6 @@ namespace App\Notifications;
 
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Models\Survey;
-use App\Domain\Platform\Models\SurveyResponse;
 use App\Notifications\Support\BrandedMailMessage;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -22,9 +21,11 @@ use Symfony\Component\Mime\Email;
  * `List-Unsubscribe`, para el gestor de correo que la enseña como botón.
  *
  * ⚠️ El botón abre la página por su TOKEN de 40 caracteres, que es la credencial entera (como la invitación):
- * sin sesión, sin cookie de medición, y un solo 404 para lo inventado, lo contestado y lo apagado.
- * ⚠️ La primera línea es la `intro` de la encuesta si el panel la escribió; si no, una frase de la casa.
- * ⚠️ Lo manda `surveys:send-external`, con la fila ya escrita: la fila es la marca de «mandado».
+ * sin sesión, sin cookie de medición, y un solo 404 para lo inventado, lo contestado y lo apagado. Desde `#754` el
+ * token EN CLARO solo existe aquí (la base guarda su hash): por eso viaja la cadena y no la fila.
+ * ⚠️ La primera línea es la `intro` de la encuesta si el panel la escribió; si no, una frase de la casa. Justo
+ * detrás, **el aviso del anonimato** (`#754`): texto del PRODUCTO, fijo, que el operador no puede quitar.
+ * ⚠️ Lo manda `surveys:send-external`, con la participación ya escrita: es la marca de «mandado».
  */
 class SurveyInvitation extends Notification implements ShouldQueue
 {
@@ -32,7 +33,7 @@ class SurveyInvitation extends Notification implements ShouldQueue
 
     public function __construct(
         public readonly Survey $survey,
-        public readonly SurveyResponse $response,
+        public readonly string $token,
     ) {}
 
     /**
@@ -46,7 +47,7 @@ class SurveyInvitation extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         $park = (string) Setting::businessName();
-        $token = (string) $this->response->token;
+        $token = $this->token;
         $optOut = route('survey.optout', ['token' => $token]);
         // La `intro` del panel SOLO si existe en el idioma del cliente: `displayIntro()` cae al español, y una línea
         // en español dentro de un correo en inglés es peor que la frase de la casa en inglés.
@@ -56,6 +57,7 @@ class SurveyInvitation extends Notification implements ShouldQueue
             ->subject(__('surveys.mail.subject', ['park' => $park]))
             ->hero('surveys.mail', 'info')
             ->line($intro !== '' ? $intro : __('surveys.mail.line1', ['park' => $park]))
+            ->line(__('surveys.notice'))
             ->line(__('surveys.mail.line2'))
             ->action(__('surveys.mail.action'), route('survey.show', ['token' => $token]))
             ->outro(new HtmlString('<a href="'.e($optOut).'">'.e(__('surveys.mail.optout')).'</a>'));

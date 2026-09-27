@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.45.0
+  version: 1.46.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -5171,22 +5171,63 @@ components:
         analytics:
           $ref: '#/components/schemas/ExportedAnalytics'
         surveys:
+          $ref: '#/components/schemas/ExportedSurveys'
+
+    ExportedSurveys:
+      type: object
+      description: |
+        **1.46.0** (`specs/encuestas.md` §4.7, `DECISIONES #754`): las encuestas son ANÓNIMAS, y el export
+        lleva lo que sigue siendo del titular y nada más. Hasta 1.45.0 era una lista de respuestas atadas a
+        la persona (1.27.0, `#740`); ahora son dos listas que el servidor guarda SIN clave común:
+        a qué encuestas se le preguntó o mandó (`participations`) y lo que contestó MIENTRAS la respuesta
+        sigue sellada (`sealed_responses`, ≤ 90 días): pasado el sello, nadie —tampoco el parque— puede
+        saber cuál fue la suya, y por eso ya no está aquí. Las dos listas vacías son lo esperable para
+        quien nunca ha participado.
+      required: [participations, sealed_responses]
+      additionalProperties: false
+      properties:
+        participations:
           type: array
-          description: |
-            Las encuestas del titular (1.27.0, `specs/encuestas.md` §4.5, `#740`): lo que contestó —o
-            declinó— en la puerta o por correo, texto libre incluido. Es dato suyo, así que va entero;
-            la lista vacía es lo esperable para quien nunca ha contestado ninguna.
+          items:
+            $ref: '#/components/schemas/ExportedSurveyParticipation'
+        sealed_responses:
+          type: array
           items:
             $ref: '#/components/schemas/ExportedSurveyResponse'
+
+    ExportedSurveyParticipation:
+      type: object
+      description: |
+        Una encuesta a la que se le preguntó en la puerta o que se le mandó por correo, una por encuesta.
+        No dice si contestó: eso no se guarda junto a la persona.
+      required: [survey, channel, asked_on, sent_at]
+      additionalProperties: false
+      properties:
+        survey:
+          type: string
+          nullable: true
+          description: La clave de la encuesta; `null` solo si la encuesta ya no existe.
+        channel:
+          type: string
+          enum: [internal, external]
+          description: '`internal` = en la puerta, con la persona delante; `external` = por correo.'
+        asked_on:
+          type: string
+          format: date
+          description: El día de la visita que la originó.
+        sent_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Cuándo se mandó el correo (solo `external`).
 
     ExportedSurveyResponse:
       type: object
       description: |
-        Una respuesta a una encuesta (`specs/encuestas.md` §4.1). Una por cliente y encuesta: o se
-        contestó (`answered_at` y `answers`) o se declinó (`declined_at`), nunca las dos. `answers` va
-        por clave de pregunta con el valor TIPADO de su pregunta: entero (escala 1–5), cadena (elección
-        única o texto libre), lista de cadenas (elección múltiple) o booleano (sí/no).
-      required: [survey, channel, visited_on, sent_at, answered_at, declined_at, answers]
+        Una respuesta CONTESTADA aún sellada (≤ 90 días). `answers` va por clave de pregunta con el valor
+        TIPADO de su pregunta: entero (escala 1–5), cadena (elección única o texto libre), lista de cadenas
+        (elección múltiple) o booleano (sí/no). Sin hora: el servidor guarda el día y la franja, nunca la hora.
+      required: [survey, channel, answered_on, answers]
       additionalProperties: false
       properties:
         survey:
@@ -5197,29 +5238,15 @@ components:
           type: string
           enum: [internal, external]
           description: '`internal` = en la puerta, con la persona delante; `external` = la página del correo.'
-        visited_on:
+        answered_on:
           type: string
           format: date
-          nullable: true
-          description: El día de la visita que la originó.
-        sent_at:
-          type: string
-          format: date-time
-          nullable: true
-          description: Cuándo se mandó el correo (solo `external`).
-        answered_at:
-          type: string
-          format: date-time
-          nullable: true
-        declined_at:
-          type: string
-          format: date-time
-          nullable: true
+          description: El día (del parque) en que contestó.
         answers:
           type: object
           nullable: true
           additionalProperties: true
-          description: Por clave de pregunta; `null` si se declinó o si la persona se anonimizó (el texto libre se borra con ella).
+          description: Por clave de pregunta.
 
     ExportedProfile:
       type: object

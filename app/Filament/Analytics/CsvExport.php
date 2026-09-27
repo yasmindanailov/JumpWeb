@@ -12,6 +12,7 @@ use App\Filament\Widgets\Analytics\PagesWidget;
 use App\Filament\Widgets\Analytics\PartiesBreakdownWidget;
 use App\Filament\Widgets\Analytics\SourcesWidget;
 use App\Filament\Widgets\Analytics\SurveysBreakdownWidget;
+use App\Filament\Widgets\Analytics\SurveysLowScoresWidget;
 
 /**
  * **El CSV de «Analítica»** (`docs/specs/analitica.md` §4.5, T2d): un informe (el dinero, los registros y la
@@ -132,9 +133,11 @@ final class CsvExport
                 $this->partiesSummary($window, $comparison),
                 ...(new PartiesBreakdownWidget)->tablesFor($window, $comparison),
             ],
-            // Sin textos libres: `tablesFor()` fuerza la ventana y el widget los deja fuera por eso.
+            // Sin textos libres: `tablesFor()` fuerza la ventana y el widget los deja fuera por eso. Y con los MISMOS
+            // mínimos que la pestaña (`#754`): ninguna cifra de menos de cinco respuestas.
             self::REPORT_SURVEYS => [
                 $this->surveysSummary($window, $comparison),
+                ...(new SurveysLowScoresWidget)->tablesFor($window, $comparison),
                 ...(new SurveysBreakdownWidget)->tablesFor($window, $comparison),
             ],
             default => throw new \InvalidArgumentException("«{$report}» no es un informe del cuadro"),
@@ -147,8 +150,13 @@ final class CsvExport
         $r = SurveysReport::for($window, $comparison);
         /** @var array<string, int> $t */
         $t = $r['totals'];
-        /** @var array{survey: string, question: string, mean: float, n: int}|null $scale */
+        /** @var array{survey: string, question: string, mean: ?float, n: int, suppressed: bool}|null $scale */
         $scale = $r['scale'];
+        $mean = match (true) {
+            $scale === null => __('admin.analytics.parties.none'),
+            $scale['suppressed'] || $scale['mean'] === null => __('admin.analytics.surveys.fewer_than_min', ['min' => SurveysReport::MIN_CELL]),
+            default => number_format($scale['mean'], 1, ',', '.').' / 5',
+        };
 
         return $this->summary([
             [__('admin.analytics.surveys.answered'), (string) $t['answered']],
@@ -156,7 +164,7 @@ final class CsvExport
             [__('admin.analytics.surveys.external_rate'), number_format($t['external_rate_bp'] / 100, 1, ',', '.').' %'],
             [__('admin.analytics.surveys.sent'), (string) $t['sent']],
             [__('admin.analytics.surveys.declined'), (string) $t['declined']],
-            [__('admin.analytics.surveys.scale_mean'), $scale === null ? __('admin.analytics.parties.none') : number_format($scale['mean'], 1, ',', '.').' / 5'],
+            [__('admin.analytics.surveys.scale_mean'), $mean],
         ]);
     }
 

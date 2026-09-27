@@ -35,8 +35,8 @@ use App\Filament\Widgets\Analytics\SegmentsWidget;
 use App\Filament\Widgets\Analytics\SourcesChart;
 use App\Filament\Widgets\Analytics\SourcesWidget;
 use App\Filament\Widgets\Analytics\SurveysAnswersChart;
-use App\Filament\Widgets\Analytics\SurveysAttentionWidget;
 use App\Filament\Widgets\Analytics\SurveysBreakdownWidget;
+use App\Filament\Widgets\Analytics\SurveysLowScoresWidget;
 use App\Filament\Widgets\Analytics\SurveysOverviewWidget;
 use App\Filament\Widgets\Analytics\TrafficHoursChart;
 use App\Filament\Widgets\Analytics\TrafficSeriesChart;
@@ -141,12 +141,12 @@ class AnalyticsPage extends BaseDashboard
             PartiesTimingChart::class,
             PartiesBreakdownWidget::class,
         ],
-        // T4 de las encuestas (`specs/encuestas.md` §4.4, `#740`): por DÍA DE LA RESPUESTA; «Por atender» va entre el
-        // gráfico y las tablas plegadas, que cierran la pestaña (la regla de la T2f).
+        // T4 de las encuestas (`specs/encuestas.md` §4.4, `#740`): por DÍA DE LA RESPUESTA. Desde `#754` (ANÓNIMAS)
+        // «Por atender» se fue: entre el gráfico y las tablas plegadas va «Notas bajas y si volvieron», sin persona.
         'surveys' => [
             SurveysOverviewWidget::class,
             SurveysAnswersChart::class,
-            SurveysAttentionWidget::class,
+            SurveysLowScoresWidget::class,
             SurveysBreakdownWidget::class,
         ],
     ];

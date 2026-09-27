@@ -50,9 +50,16 @@ class Survey extends Model
         'questions' => 'array',
     ];
 
+    /** Lo que se contestó, sin persona (`#754`). */
     public function responses(): HasMany
     {
         return $this->hasMany(SurveyResponse::class);
+    }
+
+    /** A quién se preguntó, sin lo que contestó (`#754`). */
+    public function participations(): HasMany
+    {
+        return $this->hasMany(SurveyParticipation::class);
     }
 
     /** Activa y dentro de su ventana: es lo único que decide si se ofrece. */

@@ -1,6 +1,6 @@
 # [SPEC] La analítica para decidir — un cuadro que se entiende, dice si va bien o mal y cubre las decisiones del operador
 
-> Estado: ✅ **aprobada por el owner el 27-09** (§7; `#755`) → 🟦 **T0 en curso** · Última actualización: 2026-09-27 ·
+> Estado: ✅ **aprobada por el owner el 27-09** (§7; `#755`) → ✅ **T0 y T1** · 🟦 **T2 en curso** · Última actualización: 2026-09-27 ·
 > Decisiones: `#755` (esta), `#754` (encuestas anónimas, su T1) · Carril: **SPA** (banda 730–759). Amplía `analitica.md`
 > (el libro, los regímenes y la T2 siguen siendo suyos).
 
@@ -16,7 +16,7 @@
   inactivas de Filament CARGAN (12 peticiones al abrir, `#736`): con siete, carga por pestaña; (4) el texto para IA
   sale a un tercero: SOLO agregados, con guarda; (5) los enlaces FIRMADOS de los correos: la marca de envío va por el
   camino de `EmailUtm` (tras firmar, ignorada al validar); (6) aperturas solo con consentimiento (`[PENDIENTE: asesoría]`).
-- **Estado**: ✅ aprobada (27-09, `#755`); T0a·T0b·T0c ✅ → **T1** = la T5 de `encuestas.md` (`#754`). **Nada de lo medido se
+- **Estado**: ✅ aprobada (27-09, `#755`); T0a·T0b·T0c ✅ · **T1** ✅ (la T5 de `encuestas.md`, `#754`, `#757`) → **T2** ocupación. **Nada de lo medido se
   pierde** (§4.1.bis, con guarda): se resume arriba y lo demás queda plegado o en su pestaña.
 - **Invariantes**: `RGPD-01`, `RGPD-04`, `RGPD-07`, `SEC-04`, `SUITE-01`. Dinero y aforo: solo lectura.
 
@@ -348,7 +348,7 @@ número móvil»; y de las compras: «clientes recurrentes sí, eso me sirve». 
 | | Tanda | Entrega | Verificación |
 |---|---|---|---|
 | T0 | **El rigor del tiempo y la anatomía** — **T0a ✅** (el tiempo, `0dc5d317`; §4.3) · **T0b ✅** (la anatomía, `6243e8d9`; §4.2) · **T0c ✅** (los que vuelven, `#756`; §4.8.bis) — las tres vistas y aprobadas por el owner | §4.3 (tramo transcurrido, mismo día de la semana) · `Metric` (futuro) con polaridad, base mínima, puntos, Wilson · las 44 tarjetas de hoy pasadas por el componente, sin datos nuevos · el censo de §4.1.bis y su guarda | test del tramo (el 27 contra el 27), de la polaridad y de la base pequeña, con su mutación · sonda |
-| T1 | **Encuestas anónimas** | `encuestas.md` §4.7 (`#754`) | las de esa spec |
+| T1 | **Encuestas anónimas** — ✅ (27-09, `#757`; vista y aprobada por el owner: «está perfecto, visto bueno») | `encuestas.md` §4.7 (`#754`; lo construido, su «Cómo se construyó») | las de esa spec |
 | T2 | **Ocupación y anticipación** | la pestaña, §4.8 | tests de la regla con aforo y líneas vivas · `EXPLAIN` con un año sintético · sonda · ojo |
 | T3 | **Resumen y la reorganización** | §4.1, §4.4–§4.7, §4.11: las siete pestañas, los objetivos, las referencias (su historia; el sector con fuentes que se traen al owner), las frases, «lo que ha cambiado», el texto para IA y su guarda, la carga por pestaña, el glosario | guardas de IA y jerga · sonda (primera cifra en la primera pantalla, peticiones al abrir) · ojo |
 | T4 | **La cartera** | §4.8 | test «a estas alturas» con fechas fijas · ojo |

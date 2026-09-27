@@ -8,6 +8,7 @@ use App\Domain\Identity\Models\GuardianAuthorization;
 use App\Domain\Identity\Models\WaiverSignature;
 use App\Domain\Platform\Models\AnalyticsEvent;
 use App\Domain\Platform\Models\AnalyticsSession;
+use App\Domain\Platform\Models\SurveyParticipation;
 use App\Domain\Platform\Models\SurveyResponse;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -123,7 +124,7 @@ Schedule::command('business-profile:sweep-photos')->dailyAt('05:00')->withoutOve
  * ⚠️ Los EVENTOS van antes que las SESIONES: sin claves foráneas, el orden es lo único que evita eventos
  * huérfanos entre las dos pasadas. Y es la misma tarea de siempre: el recuento de `deploy.sh` no cambia.
  */
-Schedule::command('model:prune', ['--model' => [CookieConsentLog::class, WaiverSignature::class, GuardianAuthorization::class, Dependent::class, InvitationReply::class, GoogleBusinessReview::class, AnalyticsEvent::class, AnalyticsSession::class, SurveyResponse::class]])
+Schedule::command('model:prune', ['--model' => [CookieConsentLog::class, WaiverSignature::class, GuardianAuthorization::class, Dependent::class, InvitationReply::class, GoogleBusinessReview::class, AnalyticsEvent::class, AnalyticsSession::class, SurveyResponse::class, SurveyParticipation::class]])
     ->daily()
     ->withoutOverlapping();
 
@@ -229,6 +230,17 @@ Schedule::command('reservations:eve-notice')
  */
 Schedule::command('surveys:send-external')
     ->hourly()
+    ->withoutOverlapping();
+
+/*
+ * T5 de `specs/encuestas.md` (§4.7, `[DECIDIDO owner]` `#754`) — ¿VOLVIÓ QUIEN PUNTUÓ? Cada noche, cada respuesta anónima
+ * aún SELLADA se mira contra las visitas de su cliente en los 90 días siguientes; al saberlo (volvió, o pasó el plazo) el
+ * sello se borra. Una vez al día basta: el plazo se cuenta desde el día de la respuesta, así que una noche perdida la
+ * recupera la siguiente, y cuenta solo días ya vividos (hasta ayer, en el día del PARQUE, que el comando resuelve al
+ * correr). ❗ Una tarea MÁS del planificador: las «esperadas» de `deploy.sh` suben a 11 en este mismo commit.
+ */
+Schedule::command('surveys:resolve-returns')
+    ->dailyAt('04:20')
     ->withoutOverlapping();
 
 /*

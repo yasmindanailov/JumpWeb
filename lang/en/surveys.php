@@ -2,7 +2,9 @@
 
 // Surveys sent to the customer by e-mail (`docs/specs/encuestas.md` §4.3, T3): the next-day mail and the page its
 // button opens. Read by a customer in THEIR language, without signing in. Service mail: nothing commercial here.
+// `notice` and `page.text_hint` are THE ANONYMITY NOTICE (`#754`, §4.7): product text, fixed, not editable.
 return [
+    'notice' => 'No one at the park will see your name next to your answers, and after 90 days they are separated from you entirely.',
     'mail' => [
         'badge' => 'Your opinion',
         'headline' => 'How was the park yesterday?',
@@ -21,6 +23,8 @@ return [
         'yes' => 'Yes',
         'no' => 'No',
         'text_placeholder' => 'Write here (optional)',
+        'notice_title' => 'It is anonymous',
+        'text_hint' => 'If you want to stay anonymous, do not write your name or any personal details.',
         'submit' => 'Send answers',
         'error_required' => 'Please answer this question.',
         'error_invalid' => 'That answer is not valid for this question.',

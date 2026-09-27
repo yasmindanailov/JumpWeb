@@ -257,6 +257,55 @@ del cajón viven fuera de esos bloques (`.auth__*`, `.acct__*`, `.whoblock__*`, 
 `.acc-tile__name`…), más dos familias enteras (`.qr-pass__*`, `.dep-pick__*`). ▶ *Lo que define al cajón
 es qué clase EMITE, no dónde está escrita su regla* — el censo bueno está en `SidebarBodySizeTest`.
 
+## 8 · Lo montado en la BD LOCAL de esta máquina para el ojo del owner (mudado de `carriles/spa.md` el 2026-09-27)
+
+> Se mudó VERBATIM cuando el carril pasó de su techo de 32 KB: es inventario de esta máquina, no estado del carril.
+> Todo reversible; lo nuevo se añade al final con su número.
+
+⚠️⚠️ **LO MONTADO EN LA BD LOCAL para el ojo del owner (24/25-09), todo reversible**: (1) cinco ajustes FALSOS
+en `settings` (`analytics.driver=posthog`, `analytics.posthog_project` inventado y los tres ids de píxeles
+`marketing.*`): se quitan borrando esas filas; (2) el aviso de la analítica ENVIADO a las 57 cuentas de
+cliente (`analytics:notify-accounts`; `analytics_notified_at` puesto, 57 correos en Mailpit `:8028`); (3) el
+experimento de demostración **`carcasa` VIVO** (cajon 50 / isla 50) con 143 sesiones `OJOEXP…`, 24 sellos
+`JW-OJO…` con `visitor_id` y 3 contaminados: guion `/home/sail/e2e/ojo-experimento.php` en el contenedor,
+`OJO=desmontar` lo quita entero; (4) un pase de la vuelta de Redsys para la casilla tras comprar (caduca en 6 h,
+un solo uso); (5) **el fixture «probe-ojo-fiesta»** (`probe-ojo-fiesta.php` en la carpeta de almacenamiento,
+fuera de git, al lado de «probe-ojo-analitica»): 32 fiestas `JW-FIESTA…` de agosto y septiembre con formularios, extras,
+invitaciones, firmas, cobros en el parque y 323 hechos, 32 anfitriones `fiesta-N@ojo-fiesta.jumpweb.test` y TRES de
+ellas que «vinieron invitadas» a una fiesta de agosto antes de comprar; `OJO=desmontar` lo quita entero; (6) **lo de
+las encuestas** (25-09): las dos de ejemplo (`visita-de-hoy`, `que-tal-ayer`; se borran desde el panel), el cliente
+`sonda-puerta@jumpweb.test` (2179) con dos respuestas y visitas, la respuesta del owner (cuenta 70 sobre el cliente 593)
+y las visitas de 593 y 2179, el fixture `probe-ojo-encuestas` (64 filas sobre los anfitriones de la fiesta;
+`OJO=desmontar` lo quita) y el correo en Mailpit; (7) **lo de F1 (26-09)**: los ajustes `party.park_video(_poster)`
+(`public/videos/`, copiado de la instancia), la nota de Google de prueba (4,9 · 155), el Menú 1 (107) repartido y
+marcado en el pack 105, la fiesta `JW-OJO-F1` (`ojo-f1.php`, `OJO=desmontar`); (8) **de las sondas de F6a**, en esa
+fiesta: las respuestas 260→267 («Sonda …», todas «sí») y sus autorizaciones de prueba (desde la 117); (9) **de F3a**:
+el pack 105 con `honoree_counts` ENCENDIDO y la fiesta sellada `JW-OJO-F3` (reserva 1126; `ojo-f3.php`, fuera de git,
+imprime sus URL; `OJO=desmontar` la quita y apaga el ajuste); (10) **de F5 (26-09)**: en el catálogo local, la Tarta
+(109) «para 12» en el bloque de la tarta, los combos 111–113 (6/10/15) y los cubos 114–116 (6 cada uno, DE PRUEBA) en
+sus familias y en el bloque de los padres, y «Nº aproximado de adultos» del pack 105 como tipo `adults`; y la fiesta
+`JW-OJO-F5` (dentro de 3 días, 14 niños: la tarta cierra mañana y no llega). Todo con `ojo-f5.php` (fuera de git; lo
+de antes, en `ojo-f5-antes.json`; `OJO=desmontar` lo deja como estaba); (11) **de F6b**: en `JW-OJO-F1`, las
+respuestas «… Sonda…» 311→326, seis autorizaciones `avisame-sonda…@jumpweb.test` con sus `birthday_reminders` y sus
+correos en Mailpit; (12) **de F7 (27-09)**, `ojo-f7.php` (fuera de git; `OJO=desmontar` quita las tres): `JW-OJO-F7`
+(dentro de 5 días, Noa sin cubrir), y con `OJO=f7c` `JW-OJO-F7P` (HOY, Noa atada: la puerta) y `JW-OJO-F7V` (mañana, su
+aviso de la víspera mandado solo a la cuenta de sondas); sondas `sonda-f7.mjs` y `sonda-f7c.mjs`; (13) **de F8**:
+`JW-OJO-F8` (`ojo-f8.php`, enviada, con respuestas; `OJO=desmontar`) y `sonda-f8.mjs`. Y siguen montados el fixture «probe-ojo-analitica» (90 pedidos
+`JW-OJO…`, 25 clientes, 506 sesiones) y el de reseñas «probe-ojo-resenas». ⚠️ **Plataforma dejó la local preparada para
+que el owner pruebe la ISLA** (24-09 noche, `694529a8`): `sidebar.shell = isla` por el panel, `public/_isla-prueba.html`,
+la invitación ENCENDIDA en los packs 105/106 — **«no deshacer sin él»**; el cajón local abre ahora en la isla.
+
+(14) **De la T1 de la analítica para decidir, las encuestas ANÓNIMAS (27-09, `#754`/`#757`)**: la migración
+`make_survey_responses_anonymous` partió las 67 filas locales (67 participaciones, 52 respuestas sin sello, 18 tokens
+gastados; copia de antes en el scratchpad de la sesión, `antes-t1-encuestas.sql`). El fixture viejo `probe-ojo-encuestas.php`
+ya NO sirve (escribe la forma de antes): lo sustituye `probe-ojo-anonimas.php` (misma carpeta, fuera de git; 64
+participaciones, 46 respuestas SELLADAS sobre los 32 anfitriones, vueltas al parque y `surveys:resolve-returns`;
+`OJO=desmontar` borra sus participaciones, TODAS las respuestas de las dos encuestas de ejemplo y las visitas de esos
+anfitriones). La cuenta de sonda `sonda-puerta@jumpweb.test` (2179) quedó SIN participaciones, para que la puerta le vuelva a
+ofrecer la interna. ⚠️ El `OJO=desmontar` previo a la siembra se llevó TAMBIÉN la respuesta de prueba que el owner contestó
+en vivo el 25-09 (ya anónima, no había forma de separarla de las del fixture); su participación (cliente 593) sigue, así
+que la puerta no le vuelve a ofrecer la interna a esa cuenta.
+
 ## Anexo · La fila del enrutador, mudada el 2026-09-16
 
 > Lo que decía la fila **«El carril del SPA en el OTRO ordenador · rediseñar el cajón (Fase 4) · el material de PlayJump en otra máquina · la rama `cliente/playjump` · qué ficheros son de cada carril»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila

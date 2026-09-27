@@ -14,7 +14,9 @@ use App\Domain\Identity\Services\AccountCredentials;
 use App\Domain\Identity\Services\AccountPrivacy;
 use App\Domain\Platform\Models\AnalyticsEvent;
 use App\Domain\Platform\Models\AnalyticsSession;
+use App\Domain\Platform\Models\Survey;
 use App\Domain\Platform\Services\Analytics\Visitor;
+use App\Domain\Platform\Services\Surveys\SurveyResponses;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
@@ -660,6 +662,26 @@ class MePrivacyTest extends ApiTestCase
             'Lucía', $list->getContent(),
             'la LISTA de pedidos ha empezado a llevar datos del art. 9 en cada página'
         );
+    }
+
+    /**
+     * Las encuestas ANÓNIMAS en el export (contrato 1.46.0, `#754`): la participación y la respuesta aún SELLADA del
+     * titular, con la forma del contrato —`surveys` es un objeto con dos listas— y validada contra él con datos dentro.
+     */
+    public function test_the_export_carries_the_surveys_in_the_shape_of_the_contract(): void
+    {
+        $user = $this->holder();
+        $survey = Survey::create([
+            'key' => 'visita', 'name' => ['es' => 'Tu visita'], 'kind' => Survey::KIND_INTERNAL, 'active' => true,
+            'questions' => [['key' => 'nota', 'type' => 'scale', 'label' => ['es' => 'Nota']], ['key' => 'texto', 'type' => 'text', 'label' => ['es' => 'Algo más']]],
+        ]);
+        $this->assertTrue(app(SurveyResponses::class)->answerInPerson($survey, $user->id, ['nota' => 4, 'texto' => 'Muy bien'], null));
+
+        $export = $this->actingAs($user)->getJson(self::ROOT.'/me/export')->assertOk()->assertValidResponse(200);
+
+        $this->assertSame('visita', $export->json('surveys.participations.0.survey'));
+        $this->assertSame('internal', $export->json('surveys.participations.0.channel'));
+        $this->assertSame(['nota' => 4, 'texto' => 'Muy bien'], $export->json('surveys.sealed_responses.0.answers'));
     }
 
     /** `RGPD-04`: es el cuerpo con más PII del producto y no puede quedar en ninguna caché. */
