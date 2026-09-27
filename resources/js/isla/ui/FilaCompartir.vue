@@ -48,7 +48,7 @@ function pulsar(e, item) {
         <span
             v-if="copiado"
             role="status"
-            :style="{ display: 'inline-flex', alignItems: 'center', gap: '7px', fontFamily: 'var(--font-ui)', fontSize: 'var(--fs-body-sm)', fontWeight: 'var(--fw-semibold)', color: tone === 'ink' ? 'var(--volt-400)' : 'var(--success-600)', animation: 'pj-pop var(--dur-base) var(--ease-spring)' }"
+            :style="{ display: 'inline-flex', alignItems: 'center', gap: '7px', fontFamily: 'var(--font-ui)', fontSize: 'var(--fs-body-sm)', fontWeight: 'var(--fw-semibold)', color: 'var(--text-positive)', animation: 'isla-pop var(--dur-base) var(--ease-spring)' }"
         ><IconoLucide name="check" :size="16" />{{ confirm || t('pieza.copiado') }}</span>
     </div>
 </template>

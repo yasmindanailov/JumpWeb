@@ -18,13 +18,16 @@ export function atributosCompartir(item) {
     return { href: item.href, target: fuera ? '_blank' : undefined, rel: fuera ? 'noopener noreferrer' : undefined };
 }
 
-/** Una píldora de compartir: tranquila, nunca naranja; sobre tinta, su borde y su texto claros. */
+/**
+ * Una píldora de compartir: tranquila, nunca naranja; sobre tinta, su borde y su texto claros. El diseño nombraba la
+ * paleta (`--ink-100`, `--snow`, `--ink-900`); aquí, los roles que en PlayJump valen lo mismo.
+ */
 export function estiloCompartir({ tinta, sobre }) {
     return {
         display: 'inline-flex', alignItems: 'center', gap: '9px', minHeight: '44px', padding: '0 18px', border: 'none', borderRadius: 'var(--r-pill)',
-        background: sobre ? (tinta ? 'rgba(255,255,255,0.14)' : 'var(--ink-100)') : 'transparent',
+        background: sobre ? (tinta ? 'rgba(255,255,255,0.14)' : 'var(--action-quiet-bg)') : 'transparent',
         boxShadow: `inset 0 0 0 1px ${tinta ? 'var(--border-inverse)' : 'var(--border-subtle)'}`,
-        color: tinta ? 'var(--snow)' : 'var(--ink-900)', fontFamily: 'var(--font-ui)', fontWeight: 'var(--fw-semibold)', fontSize: 'var(--fs-body-sm)',
+        color: tinta ? 'var(--text-inverse)' : 'var(--text-strong)', fontFamily: 'var(--font-ui)', fontWeight: 'var(--fw-semibold)', fontSize: 'var(--fs-body-sm)',
         textDecoration: 'none', cursor: 'pointer', transition: 'var(--t-hover)',
     };
 }

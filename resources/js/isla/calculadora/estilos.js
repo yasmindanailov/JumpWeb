@@ -26,5 +26,5 @@ export const LINEA = {
  */
 export const CIFRA = { fontVariantNumeric: 'tabular-nums', fontFeatureSettings: '"tnum" 1' };
 
-/** Su icono (`.p3-linea > span:first-child`). */
-export const LINEA_ICONO = { display: 'inline-flex', flexShrink: 0, paddingTop: '2px', color: 'var(--aqua-600)' };
+/** Su icono (`.p3-linea > span:first-child`): el diseño decía `--aqua-600`, que en PlayJump es `--icon-accent`. */
+export const LINEA_ICONO = { display: 'inline-flex', flexShrink: 0, paddingTop: '2px', color: 'var(--icon-accent)' };

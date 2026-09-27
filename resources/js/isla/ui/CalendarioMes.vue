@@ -78,8 +78,8 @@ function ir(delta) {
         </div>
 
         <div v-if="legend" :style="{ display: 'flex', flexWrap: 'wrap', gap: '16px', marginTop: '12px', font: 'var(--type-mono)', color: 'var(--text-muted)' }">
-            <span :style="{ display: 'inline-flex', alignItems: 'center', gap: '7px' }"><span :style="{ width: '14px', height: '14px', borderRadius: '4px', border: '1px solid var(--border-subtle)', background: 'var(--snow)' }" />{{ t('pieza.calendario.libre') }}</span>
-            <span :style="{ display: 'inline-flex', alignItems: 'center', gap: '7px' }"><span :style="{ width: '6px', height: '6px', borderRadius: 'var(--r-pill)', background: 'var(--sun-500)' }" />{{ especial.toLowerCase() }}</span>
+            <span :style="{ display: 'inline-flex', alignItems: 'center', gap: '7px' }"><span :style="{ width: '14px', height: '14px', borderRadius: '4px', border: '1px solid var(--border-subtle)', background: 'var(--control-bg)' }" />{{ t('pieza.calendario.libre') }}</span>
+            <span :style="{ display: 'inline-flex', alignItems: 'center', gap: '7px' }"><span :style="{ width: '6px', height: '6px', borderRadius: 'var(--r-pill)', background: 'var(--isla-especial)' }" />{{ especial.toLowerCase() }}</span>
             <span :style="{ display: 'inline-flex', alignItems: 'center', gap: '7px', textDecoration: 'line-through' }">{{ t('pieza.calendario.completo') }}</span>
         </div>
     </div>
