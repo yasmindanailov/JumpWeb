@@ -149,9 +149,9 @@ class StaticAnalysisGateTest extends TestCase
             $config,
             'Sin un juego de reglas de Vue, ESLint no entiende una plantilla: `flat/essential` es el suelo (`#625`).',
         );
-        // `isla/` entra el 2026-09-24 (`#687`): la carcasa nueva del motor. El comando del gate la sumará a
-        // `lint:js` cuando el carril del SPA vea el aviso de `package.json` (compartido); hasta entonces se pasa a mano.
-        $this->assertStringContainsString("'resources/js/{sidebar,cajon,isla}/**/*.{js,vue}'", $config, 'La config ya no declara el cajón entero: el motor (`sidebar/`), lo que lo abre sin framework (`cajon/`, F4 · T2) y la isla (`isla/`, `#687`), `.js` y `.vue`.');
+        // `isla/` entra el 2026-09-24 (`#687`): la carcasa nueva del motor. El 2026-09-27 entran las dos en el
+        // comando del gate, con `fiesta/` (las páginas de la fiesta, pedido del SPA del 25-09).
+        $this->assertStringContainsString("'resources/js/{sidebar,cajon,isla,fiesta}/**/*.{js,vue}'", $config, 'La config ya no declara el cajón entero: el motor (`sidebar/`), lo que lo abre sin framework (`cajon/`, F4 · T2), la isla (`isla/`, `#687`) y la fiesta (`fiesta/`), `.js` y `.vue`.');
         $this->assertMatchesRegularExpression(
             "/'no-use-before-define':\s*\[\s*'error'/",
             $config,
@@ -168,7 +168,7 @@ class StaticAnalysisGateTest extends TestCase
         $scripts = json_decode((string) file_get_contents(base_path('package.json')), true)['scripts'] ?? [];
 
         $this->assertSame(
-            'eslint resources/js/sidebar resources/js/cajon',
+            'eslint resources/js/sidebar resources/js/cajon resources/js/isla resources/js/fiesta',
             $scripts['lint:js'] ?? null,
             'El comando del gate es exactamente este: una subcarpeta estrecha el alcance, y `--quiet`, `|| true` o '.
             '`--pass-on-unpruned-suppressions` ablandan el veredicto.',

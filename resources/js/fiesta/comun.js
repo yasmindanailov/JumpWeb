@@ -3,7 +3,6 @@
  * arranque que pone la clase `js` AL FINAL: si algo falla, el documento se queda en `no-js`, que es un formulario
  * completo. (El idioma ya no necesita JavaScript: son tres enlaces de texto al pie, `#748`.)
  */
-/* global document, location, window, setTimeout */
 
 const de = document.documentElement;
 

@@ -5,7 +5,6 @@
  * estado de una ficha, la vista previa de la invitación (F2)— y de `choice()`, el plural de Laravel resuelto en el
  * navegador.
  */
-/* global URL */
 
 /** La clave de un nombre: sin tildes, en minúsculas y con los espacios colapsados (el `norm()` del diseño). */
 export function clave(s) {

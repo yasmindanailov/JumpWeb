@@ -25,13 +25,14 @@ export default [
     ...vue.configs['flat/essential'],
     {
         // ⚠️ Desde F4 · T2 el cajón son DOS carpetas: el motor (`sidebar/`) y lo que lo abre y lo aloja sin
-        // framework (`cajon/`), que además viaja en la entrada de TODAS las páginas públicas.
-        files: ['resources/js/{sidebar,cajon,isla}/**/*.{js,vue}'],
+        // framework (`cajon/`), que además viaja en la entrada de TODAS las páginas públicas. La isla (`isla/`,
+        // `#687`) y las páginas de la fiesta (`fiesta/`, pedido del SPA el 25-09) entran también en `lint:js`.
+        files: ['resources/js/{sidebar,cajon,isla,fiesta}/**/*.{js,vue}'],
         languageOptions: { ecmaVersion: 'latest', sourceType: 'module', globals: { ...globals.browser } },
         rules: { 'no-use-before-define': ['error', { functions: false, classes: true, variables: false }] },
     },
     {
-        files: ['resources/js/{sidebar,cajon,isla}/**/*.test.js'],
+        files: ['resources/js/{sidebar,cajon,isla,fiesta}/**/*.test.js'],
         languageOptions: { globals: { ...globals.node } },
     },
 ];

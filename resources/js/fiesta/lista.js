@@ -11,7 +11,6 @@
  * queda en `no-js` (fichas abiertas, campos numéricos), que es un formulario completo (`#264`). La clase `js` se pone
  * AL FINAL: si algo de arriba falla, la página vuelve a `no-js` y nunca queda atascada.
  */
-/* global document, localStorage, setTimeout, location, navigator, Event */
 import './fiesta.css';
 import { NBSP, capitalizar, choice, clave, cubrir, euros, importe, limpiar, soloEdad, vistaInvitacion } from './logica.js';
 

@@ -35,6 +35,8 @@ FICHEROS=(
     resources/js/sidebar/steps/LoginForm.vue
     resources/js/sidebar/account/zones/DependentsZone.vue
     resources/js/cajon/controller.js
+    resources/js/isla/forma.js
+    resources/js/fiesta/comun.js
 )
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$TMP/$(basename "$f")" "$f"; touch "$f"; done; }
 trap 'restaurar; rm -rf "$TMP"' EXIT
@@ -167,22 +169,46 @@ mutar verde_tests "las reglas de Vue desaparecen (ESLint a secas no entiende una
 " \
   ""
 
+LINT='"lint:js": "eslint resources/js/sidebar resources/js/cajon resources/js/isla resources/js/fiesta"'
+
 mutar verde_tests "el comando del script se ablanda (|| true)" package.json \
-  "\"lint:js\": \"eslint resources/js/sidebar resources/js/cajon\"" \
-  "\"lint:js\": \"eslint resources/js/sidebar resources/js/cajon || true\""
+  "$LINT" \
+  '"lint:js": "eslint resources/js/sidebar resources/js/cajon resources/js/isla resources/js/fiesta || true"'
 
 mutar verde_tests "el alcance se estrecha a una subcarpeta" package.json \
-  "\"lint:js\": \"eslint resources/js/sidebar resources/js/cajon\"" \
-  "\"lint:js\": \"eslint resources/js/sidebar/steps\""
+  "$LINT" \
+  '"lint:js": "eslint resources/js/sidebar/steps"'
 
 mutar verde_tests "el controlador sin framework (\`cajon/\`, F4 · T2) se cae del alcance" package.json \
-  "\"lint:js\": \"eslint resources/js/sidebar resources/js/cajon\"" \
-  "\"lint:js\": \"eslint resources/js/sidebar\""
+  "$LINT" \
+  '"lint:js": "eslint resources/js/sidebar resources/js/isla resources/js/fiesta"'
+
+mutar verde_tests "la isla (\`isla/\`, \`#687\`) se cae del comando" package.json \
+  "$LINT" \
+  '"lint:js": "eslint resources/js/sidebar resources/js/cajon resources/js/fiesta"'
+
+mutar verde_tests "la fiesta (\`fiesta/\`) se cae del comando" package.json \
+  "$LINT" \
+  '"lint:js": "eslint resources/js/sidebar resources/js/cajon resources/js/isla"'
+
+mutar verde_tests "la fiesta sale de la config (sin los globales del navegador)" eslint.config.js \
+  "files: ['resources/js/{sidebar,cajon,isla,fiesta}/**/*.{js,vue}']," \
+  "files: ['resources/js/{sidebar,cajon,isla}/**/*.{js,vue}'],"
 
 mutar verde_eslint "una variable sin definir en el controlador del cajón" resources/js/cajon/controller.js \
-  "        open() {" \
-  "        open() {
+  "        open(detail = {}) {" \
+  "        open(detail = {}) {
             variableQueNoExisteEnElControlador();"
+
+mutar verde_eslint "una variable sin definir en la isla" resources/js/isla/forma.js \
+  "export function tipoDeCambio(antes, ahora) {" \
+  "export function tipoDeCambio(antes, ahora) {
+    variableQueNoExisteEnLaIsla();"
+
+mutar verde_eslint "una variable sin definir en la fiesta" resources/js/fiesta/comun.js \
+  "const de = document.documentElement;" \
+  "variableQueNoExisteEnLaFiesta();
+const de = document.documentElement;"
 
 mutar verde_tests "un error nuevo se CONGELA en la línea base del cajón" eslint-suppressions.json \
   "\"count\": 2" \

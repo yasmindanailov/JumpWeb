@@ -6,7 +6,6 @@
  * deja el foco en el nombre. ⚠️ Nada de esto ESCRIBE por su cuenta: escriben los formularios. Sin JavaScript la página
  * contesta y guarda igual; la clase `js` se pone AL FINAL: si algo falla, el documento se queda en `no-js`.
  */
-/* global document, window, location, fetch, FormData, setTimeout, clearTimeout, localStorage */
 import './fiesta.css';
 import { arranca, enterNoEnvia, firma, menores, q, qa } from './comun.js';
 import { caducaEn, deLaFiesta, misRespuestas } from './logica.js';
