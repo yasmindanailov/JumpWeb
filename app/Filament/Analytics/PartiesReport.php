@@ -75,7 +75,7 @@ final class PartiesReport
 
     public static function cacheKey(Window $window, Window $baseline): string
     {
-        return 'analytics:parties:v1:'.$window->timezone.':'.$window->dateFrom().':'.$window->dateTo().':'.$baseline->dateFrom().':'.$baseline->dateTo().':'.app()->getLocale();
+        return 'analytics:parties:v2:'.$window->timezone.':'.$window->dateFrom().':'.$window->dateTo().':'.$baseline->dateFrom().':'.$baseline->dateTo().':'.app()->getLocale();
     }
 
     /**
@@ -383,9 +383,12 @@ final class PartiesReport
      */
     private function money(array $reservationIds, array $orderIds): array
     {
+        // Los `*_sq` son la suma de los CUADRADOS de cada importe (T0b, `#755`): la varianza con la que `Metric` sabe si
+        // un cambio de dinero es claro o puede ser azar.
         $out = [
             'extras' => 0, 'guests' => 0, 'guests_added' => 0, 'guests_removed' => 0, 'sold_after_booking' => 0,
             'panel_edits' => 0, 'collected_in_park' => 0, 'with_extras' => 0, 'avg_extras' => 0,
+            'sold_after_sq' => 0, 'extras_sq' => 0, 'collected_in_park_sq' => 0,
             'by_addon' => [], 'by_reservation' => [],
         ];
 
@@ -410,6 +413,10 @@ final class PartiesReport
             $reservation = (int) $row->reservation;
             $cents = (int) $row->amount_cents;
             $reason = (string) ($row->reason ?? '');
+
+            if (in_array($reason, self::EXTRA_REASONS, true) || in_array($reason, self::GUEST_REASONS, true)) {
+                $out['sold_after_sq'] += $cents * $cents;
+            }
 
             if (in_array($reason, self::EXTRA_REASONS, true)) {
                 $out['extras'] += $cents;
@@ -436,6 +443,7 @@ final class PartiesReport
         $withExtras = array_filter($out['by_reservation'], static fn (int $cents): bool => $cents > 0);
         $out['with_extras'] = count($withExtras);
         $out['avg_extras'] = $out['with_extras'] > 0 ? (int) round(array_sum($withExtras) / $out['with_extras']) : 0;
+        $out['extras_sq'] = array_sum(array_map(static fn (int $cents): int => $cents * $cents, $withExtras));
 
         $names = $byAddon === [] ? [] : DB::table('ticket_types')->whereIn('id', array_keys($byAddon))->pluck('name', 'id')->all();
         $list = [];
@@ -451,12 +459,15 @@ final class PartiesReport
         usort($list, static fn (array $a, array $b): int => $b['cents'] <=> $a['cents']);
         $out['by_addon'] = array_slice($list, 0, self::TOP_ROWS);
 
-        $out['collected_in_park'] = (int) DB::table('payments')
+        $park = DB::table('payments')
             ->where('payable_type', (new Order)->getMorphClass())
             ->whereIn('payable_id', $orderIds)
             ->where('status', Payment::STATUS_PAID)
             ->whereIn('provider', self::PARK_PROVIDERS)
-            ->sum('amount');
+            ->selectRaw('COALESCE(SUM(amount), 0) AS amount, COALESCE(SUM(amount * amount), 0) AS sq')
+            ->first();
+        $out['collected_in_park'] = (int) ($park->amount ?? 0);
+        $out['collected_in_park_sq'] = (int) ($park->sq ?? 0);
 
         return $out;
     }
@@ -631,6 +642,9 @@ final class PartiesReport
             'avg_extras' => $money['avg_extras'],
             'replies_yes' => $replies['yes'],
             'signatures' => $signatures['total'],
+            'sold_after_sq' => $money['sold_after_sq'],
+            'extras_sq' => $money['extras_sq'],
+            'collected_in_park_sq' => $money['collected_in_park_sq'],
         ];
     }
 }

@@ -12,7 +12,7 @@
 set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
-FILTER='ReportPeriodTest|MoneyReportTest|WindowLabelTest|AnalyticsPageTest'
+FILTER='ReportPeriodTest|MoneyReportTest|WindowLabelTest|AnalyticsPageTest|MetricTest|AnalyticsCensusTest|FunnelReportTest|PartiesReportTest'
 RUN="docker compose exec -u sail -T laravel.test php artisan test --filter=${FILTER}"
 
 TMP="$(mktemp -d)"
@@ -21,6 +21,14 @@ FICHEROS=(
     app/Domain/Platform/Enums/ReportPeriod.php
     app/Filament/Analytics/WindowLabel.php
     app/Filament/Pages/AnalyticsPage.php
+    app/Filament/Analytics/Metric.php
+    app/Filament/Widgets/Analytics/Concerns/AnalyticsWidget.php
+    app/Filament/Analytics/CsvExport.php
+    app/Filament/Analytics/MoneyReport.php
+    app/Filament/Widgets/Analytics/MoneyCustomersWidget.php
+    lang/zh_CN/admin.php
+    app/Filament/Analytics/FunnelReport.php
+    app/Filament/Analytics/PartiesReport.php
 )
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$TMP/$(basename "$f")" "$f"; touch "$f"; done; }
 trap 'restaurar; rm -rf "$TMP"' EXIT
@@ -155,6 +163,117 @@ mutar "la línea de «Comparar con» rotula el periodo y no la comparación" "$A
 mutar "«desde» pierde la compactación y repite mes y año" "$L" \
   "\$from->isSameMonth(\$to) => 'date_same_month'," \
   "\$from->isSameMonth(\$to) => 'date_full',"
+
+# ── T0b · LA ANATOMÍA DE UNA CIFRA (§4.2): base, puntos, cambio claro, polaridad, censo ─────────
+M=app/Filament/Analytics/Metric.php
+AW=app/Filament/Widgets/Analytics/Concerns/AnalyticsWidget.php
+
+mutar "sin base, el porcentaje vuelve («+900 %»)" "$M" \
+  'if ($this->previousBase === null || $this->previousBase < self::MIN_BASE) {' \
+  'if ($this->previousBase === null) {'
+
+mutar "todo cambio de un recuento es claro (el rojo y el verde sobre ruido)" "$M" \
+  'return abs($z) >= self::Z;' \
+  'return true;'
+
+mutar "la prueba del recuento ignora la duración de cada ventana" "$M" \
+  '$z = ($current - $n * $share) / sqrt($n * $share * (1 - $share));' \
+  '$z = ($current - $n * 0.5) / sqrt($n * 0.25);'
+
+mutar "el widget no pasa la duración de las ventanas (siempre mitad y mitad)" "$AW" \
+  'return $now + $before > 0 ? $now / ($now + $before) : 0.5;' \
+  'return 0.5;'
+
+mutar "dos tasas siempre se distinguen (sin mirar sus intervalos)" "$M" \
+  "return \$now['low_bp'] > \$before['high_bp'] || \$now['high_bp'] < \$before['low_bp'];" \
+  'return true;'
+
+mutar "una tasa vuelve a compararse en % relativo y no en puntos" "$M" \
+  'if ($this->unit === self::UNIT_RATE) {' \
+  'if (false) {'
+
+mutar "la polaridad se ignora (subir es siempre verde)" "$M" \
+  "\$up === (\$this->polarity === Polarity::UpIsGood) => 'success'," \
+  "\$up => 'success',"
+
+mutar "una cifra neutra se colorea" "$M" \
+  "! \$clear, \$this->polarity === Polarity::Neutral => 'gray'," \
+  "! \$clear => 'gray',"
+
+mutar "un cero antes se lee como crecimiento («+15 frente al año pasado»)" "$M" \
+  'if ($this->previous === 0) {' \
+  'if (false) {'
+
+mutar "el dinero de la tarjeta vuelve a los céntimos desde 100 €" "$M" \
+  'if (abs($cents) < self::WHOLE_EUROS_FROM) {' \
+  'if (true) {'
+
+mutar "una tasa pierde su intervalo" "$M" \
+  'if ($this->unit === self::UNIT_RATE && $this->base !== null && $this->base > 0 && $this->hits !== null) {' \
+  'if (false) {'
+
+mutar "una tasa de más del 100 % revienta el panel" "$M" \
+  'if ($hits < 0 || $of < 0) {' \
+  'if ($hits < 0 || $of < 0 || $hits > $of) {'
+
+mutar "la base de «Devuelto» (las devoluciones) deja de contarse" "app/Filament/Analytics/MoneyReport.php" \
+  "'refunds' => self::sumOf(\$refunded, 'count')," \
+  "'refunds' => 0,"
+
+mutar "una cifra sale del CSV (el censo: nada de lo medido se quita)" "app/Filament/Analytics/CsvExport.php" \
+  "            [__('admin.analytics.money.adjustments'), Money::format(\$t['adjustments'])]," \
+  ''
+
+mutar "una tarjeta vuelve a ser un Stat suelto, sin anatomía" "app/Filament/Widgets/Analytics/MoneyCustomersWidget.php" \
+  "\$this->metric(Metric::money('money.adjustments', __('admin.analytics.money.adjustments'), \$t['adjustments'], null, 0, null, Polarity::Neutral, self::how('money.adjustments')))," \
+  "\\Filament\\Widgets\\StatsOverviewWidget\\Stat::make(__('admin.analytics.money.adjustments'), '0'),"
+
+# El dinero, con la suma de los CUADRADOS de sus importes (27-09: «Valor medio −1 %» salía en rojo sin prueba).
+mutar "el dinero se colorea sin prueba (con base, siempre claro)" "$M" \
+  'self::UNIT_MONEY => $this->moneyDiffers($share),' \
+  'self::UNIT_MONEY => true,'
+
+mutar "una media de importes se prueba como una suma" "$M" \
+  '? self::meansDiffer($this->value, $this->previous, (int) $this->base, (int) $this->previousBase, $this->squares, $this->previousSquares)' \
+  '? self::sumsDiffer($this->value, $this->previous, $this->squares, $this->previousSquares, $share)'
+
+mutar "la suma de dinero ignora la duración de las ventanas" "$M" \
+  '$k = $share / (1 - $share);' \
+  '$k = 1.0;'
+
+mutar "la varianza de la suma olvida el periodo comparado" "$M" \
+  '$variance = $squares + $k * $k * $previousSquares;' \
+  '$variance = $squares;'
+
+mutar "la varianza de la media no resta la media" "$M" \
+  '$variance = max(0.0, $squares / $n - $mean * $mean);' \
+  '$variance = $squares / $n;'
+
+mutar "el informe del dinero pierde la suma de cuadrados de los cobros" "app/Filament/Analytics/MoneyReport.php" \
+  "\$totals['collected_sq'] = self::sumOf(\$collected, 'squares');" \
+  "\$totals['collected_sq'] = 0;"
+
+mutar "la conversión pierde la suma de cuadrados de lo cobrado" "app/Filament/Analytics/FunnelReport.php" \
+  "->selectRaw('COALESCE(SUM(p.amount), 0) AS amount, COUNT(*) AS n, COALESCE(SUM(p.amount * p.amount), 0) AS sq')" \
+  "->selectRaw('COALESCE(SUM(p.amount), 0) AS amount, COUNT(*) AS n, 0 AS sq')"
+
+mutar "las fiestas pierden la suma de cuadrados de lo vendido después" "app/Filament/Analytics/PartiesReport.php" \
+  "\$out['sold_after_sq'] += \$cents * \$cents;" \
+  "\$out['sold_after_sq'] += 0;"
+
+mutar "los widgets del cuadro vuelven a sondear cada 5 s" "$AW" \
+  "    protected function getPollingInterval(): ?string
+    {
+        return null;
+    }" \
+  "    protected function getPollingInterval(): ?string
+    {
+        return '5s';
+    }"
+
+mutar "una cifra pierde su «¿Cómo se calcula?» en chino" "lang/zh_CN/admin.php" \
+  "                'scale_mean' => '本时段回答中第一个评分题（1 到 5）的平均分。'," \
+  ''
 
 # ── El CONTROL: tocar un comentario no puede poner nada en rojo ─────────────────────────────────
 control "un comentario de Window" "$W" \

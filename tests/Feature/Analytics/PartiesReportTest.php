@@ -362,7 +362,8 @@ class PartiesReportTest extends TestCase
         $this->assertSame(['key' => '2026-06-20', 'parties' => 1, 'completed' => 0, 'invitations' => 0, 'replies_yes' => 0, 'signatures' => 0, 'extras' => 0], $series['2026-06-20']);
         $this->assertSame(0, $series['2026-06-25']['parties'], 'el pedido sin pagar no es una fiesta');
 
-        $this->assertSame(['parties' => 1, 'completed' => 1, 'sold_after_booking' => 1000, 'collected_in_park' => 0, 'with_extras' => 1, 'avg_extras' => 1000, 'replies_yes' => 0, 'signatures' => 1], $r['previous']);
+        // Las sumas de cuadrados (T0b): un solo asiento de 1.000 céntimos → 1.000².
+        $this->assertSame(['parties' => 1, 'completed' => 1, 'sold_after_booking' => 1000, 'collected_in_park' => 0, 'with_extras' => 1, 'avg_extras' => 1000, 'replies_yes' => 0, 'signatures' => 1, 'sold_after_sq' => 1000000, 'extras_sq' => 1000000, 'collected_in_park_sq' => 0], $r['previous']);
     }
 
     public function test_an_empty_period_is_all_zeros_and_no_medians(): void

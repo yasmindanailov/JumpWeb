@@ -5,10 +5,9 @@ namespace App\Filament\Widgets\Analytics\Concerns;
 use App\Domain\Platform\Enums\Comparison;
 use App\Domain\Platform\Enums\ReportPeriod;
 use App\Domain\Platform\Services\Analytics\Reports\Window;
-use App\Domain\Platform\Services\Money;
 use App\Filament\Analytics\CustomersReport;
-use App\Filament\Analytics\Delta;
 use App\Filament\Analytics\FunnelReport;
+use App\Filament\Analytics\Metric;
 use App\Filament\Analytics\MoneyReport;
 use App\Filament\Analytics\PartiesReport;
 use App\Filament\Analytics\SurveysReport;
@@ -28,6 +27,18 @@ trait AnalyticsWidget
     public static function canView(): bool
     {
         return auth()->user()?->hasPermission(AnalyticsPage::PERMISSION) ?? false;
+    }
+
+    /**
+     * ⚠️ SIN sondeo (T0b, `#755`, medido el 27-09). Filament hace que cada widget de tarjetas y de gráfico vuelva a
+     * pedirse cada 5 s (`CanPoll`): el cuadro abierto y quieto hacía una petición cada 5 s (6 en 30 s) que obligaba a
+     * pintar otra vez sus widgets, para unos informes que se cachean 5 minutos; y la que estaba en vuelo cuando el
+     * operador tocaba el filtro se abortaba con un rechazo sin atender en la consola (siete de golpe). El cuadro
+     * contesta «cómo fue»: se recalcula al cambiar el filtro o al recargar, no solo.
+     */
+    protected function getPollingInterval(): ?string
+    {
+        return null;
     }
 
     /** La ventana y la comparación FORZADAS desde fuera (el CSV), por encima del filtro de la página. */
@@ -109,25 +120,41 @@ trait AnalyticsWidget
         return number_format($basisPoints / 100, 1, ',', '.')."\u{00A0}%";
     }
 
-    /** Una tarjeta de DINERO con su variación frente al periodo anterior. */
-    protected function moneyStat(string $label, int $current, int $previous, bool $upIsGood = true): Stat
+    /**
+     * UNA tarjeta del cuadro con su anatomía (T0b, `#755`): la cifra la compone el widget ({@see Metric}) y la pinta UNA
+     * vista. «¿Cómo se calcula?» sale de `admin.analytics.how.<clave>`.
+     */
+    protected function metric(Metric $metric): Stat
     {
-        return $this->withDelta(Stat::make($label, Money::format($current)), $current, $previous, $upIsGood);
+        return Stat::make($metric->label, $metric->displayValue())
+            ->view('filament.widgets.analytics.metric', [
+                'metric' => $metric,
+                'reading' => $metric->reading($this->comparison(), $this->windowShare()),
+            ]);
     }
 
-    /** Una tarjeta de RECUENTO con su variación frente al periodo anterior. */
-    protected function countStat(string $label, int $current, int $previous, bool $upIsGood = true): Stat
+    /**
+     * «¿Cómo se calcula?» de una cifra, por su clave.
+     *
+     * @param  array<string, int|string>  $replace
+     */
+    protected static function how(string $key, array $replace = []): string
     {
-        return $this->withDelta(Stat::make($label, (string) $current), $current, $previous, $upIsGood);
+        return __('admin.analytics.how.'.$key, $replace);
     }
 
-    private function withDelta(Stat $stat, int $current, int $previous, bool $upIsGood = true): Stat
+    /**
+     * Qué parte del tiempo de las dos ventanas es la del periodo: 0,5 si duran lo mismo. Un mes de 31 días contra uno de
+     * 28 no lo son, y la prueba de un recuento compara RITMOS, no totales ({@see Metric::reading()}). ⚠️ No se llama
+     * `share()`: un widget ya tenía el suyo y lo pisaba (lo cazó el censo, 27-09).
+     */
+    private function windowShare(): float
     {
-        $delta = Delta::describe($current, $previous, $upIsGood, $this->comparison());
+        $window = $this->window();
+        $baseline = $this->comparison()->baseline($window);
+        $now = $window->to->getTimestamp() - $window->from->getTimestamp();
+        $before = $baseline->to->getTimestamp() - $baseline->from->getTimestamp();
 
-        return $stat
-            ->description($delta['description'])
-            ->descriptionIcon($delta['icon'])
-            ->color($delta['color']);
+        return $now + $before > 0 ? $now / ($now + $before) : 0.5;
     }
 }

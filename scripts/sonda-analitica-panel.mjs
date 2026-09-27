@@ -62,6 +62,17 @@ page.on('console', async (m) => {
 });
 // Un `throw` de algo que no es `Error` llega aquí con el mensaje «Object»: se apunta también la pila.
 page.on('pageerror', (e) => consola.push(`[${paso}] pageerror ${e.name}: ${e.message} · ${(e.stack ?? '').split('\n').slice(0, 4).map((l) => l.trim()).join(' | ').slice(0, 400)}`));
+// …y como «Object» no dice nada (27-09, T0b: siete de golpe), la página misma vuelca QUÉ se lanzó, con su tipo y sus
+// propiedades, a `console.error`, que el manejador de arriba sí sabe leer.
+await page.addInitScript(() => {
+    const vuelca = (etiqueta, valor) => {
+        let texto;
+        try { texto = JSON.stringify(valor, Object.getOwnPropertyNames(valor ?? {})).slice(0, 400); } catch { texto = String(valor); }
+        console.error(`${etiqueta} ${valor?.constructor?.name ?? typeof valor} ${texto}`);
+    };
+    window.addEventListener('unhandledrejection', (ev) => vuelca('rechazo sin atender:', ev.reason));
+    window.addEventListener('error', (ev) => { if (! (ev.error instanceof Error)) vuelca('lanzado:', ev.error); });
+});
 page.on('request', (req) => { if (req.method() === 'POST' && /livewire/.test(req.url())) peticionesLivewire++; });
 // ⚠️ Un widget que revienta al cargar no rompe la página: Livewire responde 5xx a `/livewire/update` y el
 // hueco se queda vacío. Sin esto, la sonda solo veía «no llega» y moría sin decir por qué.
@@ -78,7 +89,10 @@ const ok = (nombre, cond, detalle = '') => informe.comprobaciones.push({ nombre,
 /** Espera a un texto y, si no llega, lo apunta como comprobación en rojo en vez de matar la sonda. */
 async function llega(texto) {
     try {
-        await page.getByText(texto).first().waitFor({ timeout: ESPERA_WIDGETS_MS });
+        // ⚠️ Solo una coincidencia VISIBLE (T0b, 27-09): `getByText` busca por subcadena y sin mayúsculas, y desde que
+        // cada tarjeta lleva su «¿Cómo se calcula?» plegado, «El desglose» casaba primero con «…, en el desglose, …»
+        // dentro de un `<details>` cerrado, que nunca se hace visible.
+        await page.getByText(texto).and(page.locator(':visible')).first().waitFor({ timeout: ESPERA_WIDGETS_MS });
 
         return true;
     } catch {
@@ -173,7 +187,7 @@ ok('peticiones de Livewire al abrir (dato, no umbral)', true, String(peticionesL
 
 // 3. Dinero: 12 tarjetas, 3 gráficos (la serie, por producto, por canal) y el desglose plegado.
 await abrirPestana('Dinero', 'El desglose');
-await llega('Cobrado online');
+await llega('Cobrado');   // «Cobrado online» hasta la T0b (#755): sumaba también el mostrador
 await llega('Vendido por producto');
 informe.pestanas.dinero = { stats: await leerStats(), canvas: await canvasVisibles() };
 ok('dinero: doce tarjetas', informe.pestanas.dinero.stats.length === 12, String(informe.pestanas.dinero.stats.length));

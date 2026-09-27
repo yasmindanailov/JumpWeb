@@ -90,7 +90,8 @@ class AnalyticsExportTest extends TestCase
         $this->assertStringContainsString("\r\n", $csv);
         // ⚠️ `fputcsv` entrecomilla toda celda con un espacio: se aserta el rótulo, no el rótulo pegado al separador.
         $this->assertStringContainsString(__('admin.analytics.export.summary'), $csv);
-        $this->assertStringContainsString('"'.__('admin.analytics.money.collected').'";', $csv);
+        // «Cobrado» (sin espacio desde la T0b, `#755`) ya no va entre comillas: la fila se busca con o sin ellas.
+        $this->assertMatchesRegularExpression('/\r\n"?Cobrado"?;/', $csv);
         $this->assertStringContainsString(__('admin.analytics.money.by_channel'), $csv);
         $this->assertStringContainsString(__('admin.analytics.money.by_day'), $csv);
         $this->assertStringContainsString(__('admin.analytics.money.col.day').';', $csv);

@@ -2,6 +2,8 @@
 
 namespace App\Filament\Widgets\Analytics;
 
+use App\Filament\Analytics\Metric;
+use App\Filament\Analytics\Polarity;
 use App\Filament\Widgets\Analytics\Concerns\AnalyticsWidget;
 use Filament\Widgets\Concerns\InteractsWithPageFilters;
 use Filament\Widgets\StatsOverviewWidget;
@@ -44,22 +46,26 @@ class SurveysOverviewWidget extends StatsOverviewWidget
         /** @var array{survey: string, question: string, mean: float, n: int}|null $scale */
         $scale = $report['scale'];
 
+        // Las dos tasas, con sus dos números del periodo y del comparado: en puntos y con sus intervalos (T0b, `#755`).
         return [
-            $this->countStat(__('admin.analytics.surveys.answered'), $t['answered'], $p['answered']),
-            Stat::make(__('admin.analytics.surveys.internal_rate'), self::percent($t['internal_rate_bp']))
-                ->description(__('admin.analytics.surveys.internal_rate_hint', ['answered' => $t['answered_internal'], 'offered' => $t['offered'], 'visits' => $t['visits']]))
-                ->color('gray'),
-            Stat::make(__('admin.analytics.surveys.external_rate'), self::percent($t['external_rate_bp']))
-                ->description(__('admin.analytics.surveys.external_rate_hint', ['answered' => $t['answered_external'], 'sent' => $t['sent']]))
-                ->color('gray'),
-            $this->countStat(__('admin.analytics.surveys.sent'), $t['sent'], $p['sent']),
-            $this->countStat(__('admin.analytics.surveys.declined'), $t['declined'], $p['declined'], upIsGood: false),
-            Stat::make(
+            $this->metric(Metric::count('surveys.answered', __('admin.analytics.surveys.answered'), $t['answered'], $p['answered'], Polarity::UpIsGood, self::how('surveys.answered'))),
+            $this->metric(Metric::rate(
+                'surveys.internal_rate', __('admin.analytics.surveys.internal_rate'), $t['answered_internal'], $t['offered'], $p['answered_internal'], $p['offered'], Polarity::UpIsGood, self::how('surveys.internal_rate'),
+                detail: __('admin.analytics.surveys.internal_rate_hint', ['answered' => $t['answered_internal'], 'offered' => $t['offered'], 'visits' => $t['visits']]),
+            )),
+            $this->metric(Metric::rate(
+                'surveys.external_rate', __('admin.analytics.surveys.external_rate'), $t['answered_external'], $t['sent'], $p['answered_external'], $p['sent'], Polarity::UpIsGood, self::how('surveys.external_rate'),
+                detail: __('admin.analytics.surveys.external_rate_hint', ['answered' => $t['answered_external'], 'sent' => $t['sent']]),
+            )),
+            $this->metric(Metric::count('surveys.sent', __('admin.analytics.surveys.sent'), $t['sent'], $p['sent'], Polarity::Neutral, self::how('surveys.sent'))),
+            $this->metric(Metric::count('surveys.declined', __('admin.analytics.surveys.declined'), $t['declined'], $p['declined'], Polarity::DownIsGood, self::how('surveys.declined'))),
+            $this->metric(Metric::text(
+                'surveys.scale_mean',
                 __('admin.analytics.surveys.scale_mean'),
                 $scale === null ? __('admin.analytics.parties.none') : number_format($scale['mean'], 1, ',', '.').' / 5',
-            )
-                ->description($scale === null ? __('admin.analytics.surveys.scale_mean_none') : __('admin.analytics.surveys.scale_mean_hint', ['question' => $scale['question'], 'n' => $scale['n']]))
-                ->color('gray'),
+                self::how('surveys.scale_mean'),
+                detail: $scale === null ? __('admin.analytics.surveys.scale_mean_none') : __('admin.analytics.surveys.scale_mean_hint', ['question' => $scale['question'], 'n' => $scale['n']]),
+            )),
         ];
     }
 }

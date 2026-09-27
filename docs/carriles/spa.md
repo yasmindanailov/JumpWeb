@@ -95,9 +95,9 @@
 ## Por dónde retomar, en orden
 
 1. ❗❗❗ **LA ANALÍTICA PARA DECIDIR (`#755`) — `specs/analitica-para-decidir.md` ✅ APROBADA (27-09; antes que correos y
-   puerta; nada de lo medido se pierde, §4.1.bis).** 🟦 **T0a EN EL ÁRBOL (27-09), falta el ojo del owner** (§4.3:
-   el tramo transcurrido y las fechas bajo el filtro; arnés `mutar-analitica-decidir.sh` 17/17; sonda `t0a` 35/35) →
-   **T0b** (`Metric` (futuro): polaridad, base mínima, puntos, Wilson; las 44 tarjetas) → **T1** = la T5 de `encuestas.md` (§4.7,
+   puerta; nada de lo medido se pierde, §4.1.bis).** ✅ **T0a** (`0dc5d317`: el tramo transcurrido) · 🟦 **T0b EN EL
+   ÁRBOL, falta el ojo del owner** (§4.2: `Metric`, las 44 tarjetas, el color solo si el cambio es claro —el dinero con sus
+   sumas de cuadrados—, «Cobrado» sin «online», sin sondeo; arnés 42/42; sonda `t0b` 35/35) → **T1** = la T5 de `encuestas.md` (§4.7,
    `#754`) → T2 ocupación → T3 Resumen y la reorganización → T4 cartera → T5 marketing y correos → T6 cohortes → T7 pérdidas
    → T8 satisfacción (§4.12). Cada tanda, al ojo del owner en vivo ANTES del commit (tablet 1080, móvil 390, escritorio).
    Línea base de la sonda: `storage/app/audit/analitica-panel-revision-2709*`. `[PENDIENTE: asesoría]`: los 90 días del

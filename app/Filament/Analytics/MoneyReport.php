@@ -67,7 +67,7 @@ final class MoneyReport
     /** La clave lleva la zona, las dos ventanas y el idioma: los nombres de producto salen traducidos y el día del parque depende de la zona. */
     public static function cacheKey(Window $window, Window $baseline): string
     {
-        return 'analytics:money:v2:'.$window->timezone.':'.$window->dateFrom().':'.$window->dateTo().':'.$baseline->dateFrom().':'.$baseline->dateTo().':'.app()->getLocale();
+        return 'analytics:money:v3:'.$window->timezone.':'.$window->dateFrom().':'.$window->dateTo().':'.$baseline->dateFrom().':'.$baseline->dateTo().':'.app()->getLocale();
     }
 
     /** @param  Window|null  $baseline  con qué se compara; sin ella, el periodo anterior */
@@ -82,6 +82,7 @@ final class MoneyReport
             'collected' => self::sumOf($collected, 'amount'),
             'payments' => self::sumOf($collected, 'count'),
             'refunded' => self::sumOf($refunded, 'amount'),
+            'refunds' => self::sumOf($refunded, 'count'),
             'sold' => self::sumOf($sold, 'amount'),
             'orders' => self::sumOf($sold, 'count'),
             'adjustments' => $this->adjustments($window),
@@ -89,6 +90,11 @@ final class MoneyReport
         $totals['net'] = $totals['collected'] - $totals['refunded'];
         $totals['avg_order'] = $totals['orders'] > 0 ? intdiv($totals['sold'], $totals['orders']) : 0;
         $totals['avg_collected'] = $totals['payments'] > 0 ? intdiv($totals['collected'], $totals['payments']) : 0;
+        // T0b (`#755`): la suma de los CUADRADOS de cada importe, para saber si un cambio de dinero es claro o puede ser
+        // azar (la varianza de una suma de importes se estima con ella; `Metric`).
+        $totals['collected_sq'] = self::sumOf($collected, 'squares');
+        $totals['refunded_sq'] = self::sumOf($refunded, 'squares');
+        $totals['sold_sq'] = self::sumOf($sold, 'squares');
 
         return [
             'window' => [
@@ -115,7 +121,7 @@ final class MoneyReport
     private function paymentsByBucket(Window $window): Collection
     {
         return $this->bucketed(
-            $this->paidPayments($window)->selectRaw('SUM(amount) AS amount, COUNT(*) AS n'),
+            $this->paidPayments($window)->selectRaw('SUM(amount) AS amount, COUNT(*) AS n, SUM(amount * amount) AS sq'),
             'paid_at',
         );
     }
@@ -124,7 +130,7 @@ final class MoneyReport
     private function refundsByBucket(Window $window): Collection
     {
         return $this->bucketed(
-            $this->succeededRefunds($window)->selectRaw('SUM(amount_cents) AS amount, COUNT(*) AS n'),
+            $this->succeededRefunds($window)->selectRaw('SUM(amount_cents) AS amount, COUNT(*) AS n, SUM(amount_cents * amount_cents) AS sq'),
             'processed_at',
         );
     }
@@ -133,7 +139,7 @@ final class MoneyReport
     private function ordersByBucket(Window $window): Collection
     {
         return $this->bucketed(
-            $this->collectedOrders($window)->selectRaw('SUM(total) AS amount, COUNT(*) AS n'),
+            $this->collectedOrders($window)->selectRaw('SUM(total) AS amount, COUNT(*) AS n, SUM(total * total) AS sq'),
             'paid_at',
         );
     }
@@ -157,9 +163,10 @@ final class MoneyReport
         $out = [];
         foreach ($rows as $row) {
             $key = $window->bucketKey(SqlTime::bucketStart((string) $row->bucket));
-            $out[$key] ??= ['amount' => 0, 'count' => 0];
+            $out[$key] ??= ['amount' => 0, 'count' => 0, 'squares' => 0];
             $out[$key]['amount'] += (int) $row->amount;
             $out[$key]['count'] += (int) $row->n;
+            $out[$key]['squares'] += (int) ($row->sq ?? 0);
         }
 
         return $out;
@@ -198,9 +205,9 @@ final class MoneyReport
     /** @return array<string, int> */
     private function totalsOnly(Window $window): array
     {
-        $payments = $this->paidPayments($window)->selectRaw('COALESCE(SUM(amount), 0) AS amount, COUNT(*) AS n')->first();
-        $refunds = $this->succeededRefunds($window)->selectRaw('COALESCE(SUM(amount_cents), 0) AS amount')->first();
-        $orders = $this->collectedOrders($window)->selectRaw('COALESCE(SUM(total), 0) AS amount, COUNT(*) AS n')->first();
+        $payments = $this->paidPayments($window)->selectRaw('COALESCE(SUM(amount), 0) AS amount, COUNT(*) AS n, COALESCE(SUM(amount * amount), 0) AS sq')->first();
+        $refunds = $this->succeededRefunds($window)->selectRaw('COALESCE(SUM(amount_cents), 0) AS amount, COUNT(*) AS n, COALESCE(SUM(amount_cents * amount_cents), 0) AS sq')->first();
+        $orders = $this->collectedOrders($window)->selectRaw('COALESCE(SUM(total), 0) AS amount, COUNT(*) AS n, COALESCE(SUM(total * total), 0) AS sq')->first();
 
         $collected = (int) ($payments->amount ?? 0);
         $refunded = (int) ($refunds->amount ?? 0);
@@ -209,9 +216,14 @@ final class MoneyReport
             'collected' => $collected,
             'payments' => (int) ($payments->n ?? 0),
             'refunded' => $refunded,
+            // T0b (`#755`): cuántas devoluciones sostienen el importe, para la regla de la base de la tarjeta.
+            'refunds' => (int) ($refunds->n ?? 0),
             'net' => $collected - $refunded,
             'sold' => (int) ($orders->amount ?? 0),
             'orders' => (int) ($orders->n ?? 0),
+            'collected_sq' => (int) ($payments->sq ?? 0),
+            'refunded_sq' => (int) ($refunds->sq ?? 0),
+            'sold_sq' => (int) ($orders->sq ?? 0),
         ];
     }
 

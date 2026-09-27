@@ -2,6 +2,8 @@
 
 namespace App\Filament\Widgets\Analytics;
 
+use App\Filament\Analytics\Metric;
+use App\Filament\Analytics\Polarity;
 use App\Filament\Widgets\Analytics\Concerns\AnalyticsWidget;
 use Filament\Widgets\Concerns\InteractsWithPageFilters;
 use Filament\Widgets\StatsOverviewWidget;
@@ -43,25 +45,16 @@ class GateWidget extends StatsOverviewWidget
         /** @var array<string, int> $p */
         $p = $report['previous'];
 
+        // La mecánica de la puerta (buscar, teclear, escanear, abrir fichas) no es buena ni mala: NEUTRA. Las visitas sí.
         return [
-            $this->countStat(__('admin.analytics.customers.lookups'), $g['lookups'], $p['lookups']),
-            Stat::make(__('admin.analytics.customers.typed'), (string) $g['typed'])
-                ->description(__('admin.analytics.customers.typed_hint'))
-                ->color('gray'),
-            Stat::make(__('admin.analytics.customers.scanned'), (string) $g['scanned'])
-                ->description(__('admin.analytics.customers.scanned_hint'))
-                ->color('gray'),
-            Stat::make(__('admin.analytics.customers.found'), (string) $g['found'])
-                ->description(__('admin.analytics.customers.not_found_line', ['count' => $g['not_found']]))
-                ->color('gray'),
-            Stat::make(__('admin.analytics.customers.customers'), (string) $g['customers'])
-                ->description(__('admin.analytics.customers.customers_hint'))
-                ->color('primary'),
-            Stat::make(__('admin.analytics.customers.profile_views'), (string) $g['profile_views'])->color('gray'),
-            $this->countStat(__('admin.analytics.customers.visits'), $g['visits'], $p['visits']),
-            Stat::make(__('admin.analytics.customers.visitors'), (string) $g['visitors'])
-                ->description(__('admin.analytics.customers.visitors_hint'))
-                ->color('gray'),
+            $this->metric(Metric::count('customers.lookups', __('admin.analytics.customers.lookups'), $g['lookups'], $p['lookups'], Polarity::Neutral, self::how('customers.lookups'))),
+            $this->metric(Metric::count('customers.typed', __('admin.analytics.customers.typed'), $g['typed'], null, Polarity::Neutral, self::how('customers.typed'))),
+            $this->metric(Metric::count('customers.scanned', __('admin.analytics.customers.scanned'), $g['scanned'], null, Polarity::Neutral, self::how('customers.scanned'))),
+            $this->metric(Metric::count('customers.found', __('admin.analytics.customers.found'), $g['found'], null, Polarity::Neutral, self::how('customers.found'), detail: __('admin.analytics.customers.not_found_line', ['count' => $g['not_found']]))),
+            $this->metric(Metric::count('customers.customers', __('admin.analytics.customers.customers'), $g['customers'], null, Polarity::Neutral, self::how('customers.customers'))),
+            $this->metric(Metric::count('customers.profile_views', __('admin.analytics.customers.profile_views'), $g['profile_views'], null, Polarity::Neutral, self::how('customers.profile_views'))),
+            $this->metric(Metric::count('customers.visits', __('admin.analytics.customers.visits'), $g['visits'], $p['visits'], Polarity::UpIsGood, self::how('customers.visits'))),
+            $this->metric(Metric::count('customers.visitors', __('admin.analytics.customers.visitors'), $g['visitors'], null, Polarity::UpIsGood, self::how('customers.visitors'))),
         ];
     }
 }

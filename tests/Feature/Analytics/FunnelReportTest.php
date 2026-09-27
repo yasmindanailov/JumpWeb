@@ -160,8 +160,9 @@ class FunnelReportTest extends TestCase
 
         $r = (new FunnelReport)->compute(ReportPeriod::ThisMonth->window());
 
-        $this->assertSame(['orders' => 2, 'sold' => 7000, 'revenue' => 7000, 'conversion_bp' => 2500], $r['purchases']);
-        $this->assertSame(['visits' => 1, 'orders' => 1, 'revenue' => 2000, 'conversion_bp' => 10000], $r['previous']);
+        // Lo cobrado, con sus cobros y la suma de sus cuadrados (T0b): 4.000 y 3.000 → 4.000² + 3.000²; mayo, 2.000².
+        $this->assertSame(['orders' => 2, 'sold' => 7000, 'revenue' => 7000, 'revenue_payments' => 2, 'revenue_sq' => 25000000, 'conversion_bp' => 2500], $r['purchases']);
+        $this->assertSame(['visits' => 1, 'orders' => 1, 'revenue' => 2000, 'revenue_payments' => 1, 'revenue_sq' => 4000000, 'conversion_bp' => 10000], $r['previous']);
 
         $series = collect($r['series'])->keyBy('key');
         $this->assertSame(['key' => '2026-06-10', 'visits' => 1, 'purchases' => 1], $series['2026-06-10'], 'las 22:30 UTC del 9 son el 10 en el parque');

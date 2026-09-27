@@ -144,6 +144,12 @@ class MoneyReportTest extends TestCase
         $this->assertSame(9800, $r['totals']['collected'], 'O7 4000 + O1 3000 + O2 2000 (señal) + O3 800 (efectivo)');
         $this->assertSame(4, $r['totals']['payments']);
         $this->assertSame(500, $r['totals']['refunded']);
+        $this->assertSame(1, $r['totals']['refunds'], 'una devolución: la base de la tarjeta «Devuelto» (T0b)');
+        // Las sumas de cuadrados (T0b), a mano: cobros 4.000² + 3.000² + 2.000² + 800²; devolución 500²; pedidos 4.000² +
+        // 3.000² + 5.000² + 1.500².
+        $this->assertSame(29640000, $r['totals']['collected_sq']);
+        $this->assertSame(250000, $r['totals']['refunded_sq']);
+        $this->assertSame(52250000, $r['totals']['sold_sq']);
         $this->assertSame(9300, $r['totals']['net']);
         $this->assertSame(13500, $r['totals']['sold'], 'O7 4000 + O1 3000 + O2 5000 + O3 1500; O8 es julio y O0 es mayo');
         $this->assertSame(4, $r['totals']['orders']);
@@ -158,7 +164,8 @@ class MoneyReportTest extends TestCase
 
         $r = (new MoneyReport)->compute($this->june());
 
-        $this->assertSame(['collected' => 2000, 'payments' => 1, 'refunded' => 0, 'net' => 2000, 'sold' => 2000, 'orders' => 1], $r['previous']);
+        // Las sumas de cuadrados (T0b): un solo cobro y un solo pedido de 2.000 céntimos → 2.000² cada una.
+        $this->assertSame(['collected' => 2000, 'payments' => 1, 'refunded' => 0, 'refunds' => 0, 'net' => 2000, 'sold' => 2000, 'orders' => 1, 'collected_sq' => 4000000, 'refunded_sq' => 0, 'sold_sq' => 4000000], $r['previous']);
     }
 
     /** El cobro de las 22:30 UTC del 31 de mayo cae en el DÍA 1 de junio del parque, y el del 30 a las 22:30 UTC ya es julio. */

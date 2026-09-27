@@ -3,6 +3,8 @@
 namespace App\Filament\Widgets\Analytics;
 
 use App\Domain\Platform\Services\Money;
+use App\Filament\Analytics\Metric;
+use App\Filament\Analytics\Polarity;
 use App\Filament\Widgets\Analytics\Concerns\AnalyticsWidget;
 use Filament\Widgets\Concerns\InteractsWithPageFilters;
 use Filament\Widgets\StatsOverviewWidget;
@@ -30,7 +32,12 @@ class MoneyOverviewWidget extends StatsOverviewWidget
         return __('admin.analytics.money.heading');
     }
 
-    /** @return array<int, Stat> */
+    /**
+     * Cada cifra con su anatomía (T0b, `#755`): el dinero se sostiene en sus OPERACIONES —cobros para lo cobrado y lo
+     * neto, devoluciones para lo devuelto, pedidos para lo vendido— y ésas son su base para el porcentaje y el color.
+     *
+     * @return array<int, Stat>
+     */
     protected function getStats(): array
     {
         $report = $this->money();
@@ -38,16 +45,20 @@ class MoneyOverviewWidget extends StatsOverviewWidget
         $t = $report['totals'];
         /** @var array<string, int> $p */
         $p = $report['previous'];
+        $previousAvg = $p['orders'] > 0 ? intdiv($p['sold'], $p['orders']) : 0;
 
+        // Lo neto es cobrado menos devuelto: su varianza es la de las dos sumas juntas.
         return [
-            $this->moneyStat(__('admin.analytics.money.collected'), $t['collected'], $p['collected']),
-            $this->moneyStat(__('admin.analytics.money.refunded'), $t['refunded'], $p['refunded'], upIsGood: false),
-            $this->moneyStat(__('admin.analytics.money.net'), $t['net'], $p['net']),
-            $this->moneyStat(__('admin.analytics.money.sold'), $t['sold'], $p['sold']),
-            $this->countStat(__('admin.analytics.money.orders'), $t['orders'], $p['orders']),
-            Stat::make(__('admin.analytics.money.avg_order'), Money::format($t['avg_order']))
-                ->description(__('admin.analytics.money.avg_collected').': '.Money::format($t['avg_collected']))
-                ->color('gray'),
+            $this->metric(Metric::money('money.collected', __('admin.analytics.money.collected'), $t['collected'], $p['collected'], $t['payments'], $p['payments'], Polarity::UpIsGood, self::how('money.collected'), squares: $t['collected_sq'], previousSquares: $p['collected_sq'])),
+            $this->metric(Metric::money('money.refunded', __('admin.analytics.money.refunded'), $t['refunded'], $p['refunded'], $t['refunds'], $p['refunds'], Polarity::DownIsGood, self::how('money.refunded'), squares: $t['refunded_sq'], previousSquares: $p['refunded_sq'])),
+            $this->metric(Metric::money('money.net', __('admin.analytics.money.net'), $t['net'], $p['net'], $t['payments'], $p['payments'], Polarity::UpIsGood, self::how('money.net'), squares: $t['collected_sq'] + $t['refunded_sq'], previousSquares: $p['collected_sq'] + $p['refunded_sq'])),
+            $this->metric(Metric::money('money.sold', __('admin.analytics.money.sold'), $t['sold'], $p['sold'], $t['orders'], $p['orders'], Polarity::UpIsGood, self::how('money.sold'), squares: $t['sold_sq'], previousSquares: $p['sold_sq'])),
+            $this->metric(Metric::count('money.orders', __('admin.analytics.money.orders'), $t['orders'], $p['orders'], Polarity::UpIsGood, self::how('money.orders'))),
+            $this->metric(Metric::money(
+                'money.avg_order', __('admin.analytics.money.avg_order'), $t['avg_order'], $previousAvg, $t['orders'], $p['orders'], Polarity::UpIsGood, self::how('money.avg_order'),
+                detail: __('admin.analytics.money.avg_collected').': '.Money::format($t['avg_collected']),
+                squares: $t['sold_sq'], previousSquares: $p['sold_sq'], mean: true,
+            )),
         ];
     }
 }

@@ -2,6 +2,8 @@
 
 namespace App\Filament\Widgets\Analytics;
 
+use App\Filament\Analytics\Metric;
+use App\Filament\Analytics\Polarity;
 use App\Filament\Widgets\Analytics\Concerns\AnalyticsWidget;
 use Filament\Widgets\Concerns\InteractsWithPageFilters;
 use Filament\Widgets\StatsOverviewWidget;
@@ -38,15 +40,10 @@ class RegistrationsWidget extends StatsOverviewWidget
         $p = $report['previous'];
 
         return [
-            // La variación se queda con su tarjeta (texto, icono y color van juntos); cómo se registran
-            // está en la tabla «Cómo se registran» del desglose, con sus tres filas.
-            $this->countStat(__('admin.analytics.customers.registrations'), $r['total'], $p['registrations']),
-            Stat::make(__('admin.analytics.customers.verified'), (string) $r['verified'])
-                ->description(self::share($r['verified'], $r['total']))
-                ->color('gray'),
-            Stat::make(__('admin.analytics.customers.buyers'), (string) $r['buyers'])
-                ->description(self::share($r['buyers'], $r['total']))
-                ->color('gray'),
+            // Cómo se registran está en la tabla «Cómo se registran» del desglose, con sus tres filas.
+            $this->metric(Metric::count('customers.registrations', __('admin.analytics.customers.registrations'), $r['total'], $p['registrations'], Polarity::UpIsGood, self::how('customers.registrations'))),
+            $this->metric(Metric::count('customers.verified', __('admin.analytics.customers.verified'), $r['verified'], null, Polarity::UpIsGood, self::how('customers.verified'), detail: self::share($r['verified'], $r['total']))),
+            $this->metric(Metric::count('customers.buyers', __('admin.analytics.customers.buyers'), $r['buyers'], null, Polarity::UpIsGood, self::how('customers.buyers'), detail: self::share($r['buyers'], $r['total']))),
         ];
     }
 

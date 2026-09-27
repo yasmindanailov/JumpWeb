@@ -132,7 +132,16 @@ en una tarjeta, una tabla plegada o el CSV; quitar una rompe el test.
 
 ### 4.2 La anatomía de una cifra (un solo componente)
 
-Todas las tarjetas salen de un objeto `Metric` (futuro) de la capa de entrega y de UN componente de pantalla; los
+> 🟦 **T0b, construida (27-09; en el árbol, falta el ojo del owner)** — y corrige lo de abajo en DOS cosas: (1) **el color
+> es de un cambio CLARO al 95 %, no de tener base**: recuentos, prueba binomial condicionada con la duración de cada
+> ventana; tasas, intervalos de Wilson que no se solapan; dinero, la SUMA DE LOS CUADRADOS de sus importes (una suma:
+> Poisson compuesto; una media: dos medias con su error), que los informes traen de las mismas consultas (`*_sq`). Sin
+> ella, gris: el primer borrador coloreaba el dinero con base, y «Valor medio del pedido −1 %» salía en ROJO (sonda del
+> 27-09). (2) El **veredicto normal/bajo/alto** y la frase siguen en la T3: la T0b pinta el cambio y su nota («pocos datos
+> para comparar», «no es un cambio claro: puede ser azar», el intervalo de una tasa). Detalle y lo que enseñó, al final
+> de esta sección.
+
+Todas las tarjetas salen de un objeto `Metric` de la capa de entrega y de UN componente de pantalla; los
 informes dejan de devolver arrays sueltos para las tarjetas (las tablas y el CSV siguen como están, `tablesFor()`).
 
 - **Nombre llano** (del glosario, §4.11) · **valor** · **comparación**: «frente al 1–27 de agosto: +310 € (+8 %)», el
@@ -146,6 +155,25 @@ informes dejan de devolver arrays sueltos para las tarjetas (las tablas y el CSV
   juzgar»); las tasas llevan su intervalo de Wilson al 95 % como los experimentos (`ExperimentsReport`).
 - **Números**: euros sin céntimos en las tarjetas a partir de 100 € (con céntimos en las tablas y el CSV); un decimal
   como mucho en porcentajes.
+- **Cómo se construyó (T0b)**: `Metric` (`count` · `money` · `rate` · `text`; clave estable, polaridad `Polarity` SIN valor
+  por defecto, base, sumas de cuadrados, `detail`) y su `reading()`; la vista `filament.widgets.analytics.metric` (el marcado
+  de la tarjeta de Filament, las notas y «¿Cómo se calcula?» en un `<details>` con zona de toque de 44 px, sin JS); el
+  trait `AnalyticsWidget::metric()` con `windowShare()` (qué parte del tiempo es de cada ventana). Las 44 tarjetas migradas
+  con su polaridad declarada y su definición escrita DESDE EL CÓDIGO de su informe (`admin.analytics.how.*`, es y zh_CN).
+  `Delta` y los diez `*_hint` que pasaron a las definiciones, retirados. Informes: `refunds` y las `*_sq` (dinero,
+  conversión, fiestas), sin consultas nuevas. Tests: `MetricTest` (13), `AnalyticsCensusTest` (4: las 44 del 27-09 en el
+  CSV, cada tarjeta con su definición en los dos idiomas, la duración de las ventanas, ningún widget sondea); arnés
+  `mutar-analitica-decidir.sh` **42/42 + control**; sonda 35/35 y consola limpia.
+- **Lo que enseñó la T0b**: (1) **«Cobrado online» mentía**: suma TODOS los cobros con éxito, también el efectivo y el
+  datáfono del mostrador; ahora «Cobrado» (y «Cobro medio»), con la definición exacta. (2) **La pista de «Clientes con
+  visita acreditada» hablaba del botón de la puerta**, que no existe desde `#234`: la visita se acredita al escanear
+  (`#741`). (3) **Cada widget del cuadro sondeaba el servidor cada 5 s** (`CanPoll` de Filament): el cuadro quieto pedía
+  una petición cada 5 s (6 en 30 s) para informes cacheados 5 min, y la que estaba en vuelo al tocar el filtro se abortaba
+  en la consola (siete rechazos `{status: null…}`); sin sondeo, 0 en 30 s. (4) Un `share()` del trait lo PISABA el de
+  `RegistrationsWidget` (el «96 % de las 47»): «Clientes» habría reventado; lo cazó el censo, y se llama `windowShare()`.
+  (5) Un cero en el periodo comparado sigue diciendo «Sin datos…»: puede ser «aún no se medía», y «+1.531 € frente al año
+  pasado» sugeriría un crecimiento que nadie ha visto. (6) `getByText` de Playwright busca por subcadena: «El desglose»
+  casaba con un «¿Cómo se calcula?» plegado; la sonda espera ya una coincidencia VISIBLE.
 
 ### 4.3 El tiempo, bien comparado (T0)
 
@@ -156,7 +184,7 @@ informes dejan de devolver arrays sueltos para las tarjetas (las tablas y el CSV
   compara con el mismo día de la semana anterior; «Esta semana», con los mismos días de la anterior.
 - Se hace en `Window`/`ReportPeriod`/`Comparison` (un solo dueño) con su test: el 27 de un mes compara 27 días a cada
   lado, y el cruce de medianoche del parque sigue la regla de `SqlTime`.
-- 🟦 **T0a, construida (27-09; en el árbol, falta el ojo del owner)**: `Window` sabe su UNIDAD (`UNIT_DAY` · `WEEK` ·
+- ✅ **T0a, construida (27-09; `0dc5d317`, vista y aprobada por el owner en vivo)**: `Window` sabe su UNIDAD (`UNIT_DAY` · `WEEK` ·
   `MONTH` · `QUARTER` · `YEAR` · `SPAN`) y su FIN de periodo; `ReportPeriod::window()` la corta con `upTo(ahora)`, y
   `previous()`/`yearAgo()` desplazan principio, corte y fin con la MISMA regla, en hora de pared del parque (día y
   semana −7/−364 días; mes, trimestre y año sin desbordar; tramo, su longitud). `Comparison` no cambia. Bajo el filtro,
@@ -284,7 +312,7 @@ informes dejan de devolver arrays sueltos para las tarjetas (las tablas y el CSV
 
 | | Tanda | Entrega | Verificación |
 |---|---|---|---|
-| T0 | **El rigor del tiempo y la anatomía** — **T0a 🟦** (el tiempo, en el árbol; §4.3) · T0b ⬜ (la anatomía) | §4.3 (tramo transcurrido, mismo día de la semana) · `Metric` (futuro) con polaridad, base mínima, puntos, Wilson · las 44 tarjetas de hoy pasadas por el componente, sin datos nuevos · el censo de §4.1.bis y su guarda | test del tramo (el 27 contra el 27), de la polaridad y de la base pequeña, con su mutación · sonda |
+| T0 | **El rigor del tiempo y la anatomía** — **T0a ✅** (el tiempo, `0dc5d317`, visto por el owner; §4.3) · **T0b 🟦** (la anatomía, en el árbol; §4.2) | §4.3 (tramo transcurrido, mismo día de la semana) · `Metric` (futuro) con polaridad, base mínima, puntos, Wilson · las 44 tarjetas de hoy pasadas por el componente, sin datos nuevos · el censo de §4.1.bis y su guarda | test del tramo (el 27 contra el 27), de la polaridad y de la base pequeña, con su mutación · sonda |
 | T1 | **Encuestas anónimas** | `encuestas.md` §4.7 (`#754`) | las de esa spec |
 | T2 | **Ocupación y anticipación** | la pestaña, §4.8 | tests de la regla con aforo y líneas vivas · `EXPLAIN` con un año sintético · sonda · ojo |
 | T3 | **Resumen y la reorganización** | §4.1, §4.4–§4.7, §4.11: las siete pestañas, los objetivos, las referencias (su historia; el sector con fuentes que se traen al owner), las frases, «lo que ha cambiado», el texto para IA y su guarda, la carga por pestaña, el glosario | guardas de IA y jerga · sonda (primera cifra en la primera pantalla, peticiones al abrir) · ojo |

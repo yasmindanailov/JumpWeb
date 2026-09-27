@@ -331,10 +331,12 @@ class AnalyticsPageTest extends TestCase
         /** @var array<int, Stat> $stats */
         $stats = $method->invoke($widget);
 
+        // Desde la T0b (#755) la tarjeta la pinta la vista de `Metric`: el cambio vive en su lectura, no en la descripción.
         $this->assertCount(6, $stats);
-        $this->assertSame(__('admin.analytics.money.collected'), (string) $stats[0]->getLabel());
+        $this->assertSame('Cobrado', (string) $stats[0]->getLabel());
         $this->assertSame('0,00 €', (string) $stats[0]->getValue());
-        $this->assertSame(__('admin.analytics.delta.none_previous'), (string) $stats[0]->getDescription());
+        $this->assertSame('filament.widgets.analytics.metric', $stats[0]->getView());
+        $this->assertSame('Sin datos en el periodo anterior', $stats[0]->getViewData()['reading']['line']);
         $this->assertSame(ReportPeriod::ThisMonth, ReportPeriod::fromValue(null));
     }
 

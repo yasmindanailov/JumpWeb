@@ -77,7 +77,7 @@ final class FunnelReport
 
     public static function cacheKey(Window $window, Window $baseline): string
     {
-        return 'analytics:funnel:v2:'.$window->timezone.':'.$window->dateFrom().':'.$window->dateTo().':'.$baseline->dateFrom().':'.$baseline->dateTo().':'.app()->getLocale();
+        return 'analytics:funnel:v3:'.$window->timezone.':'.$window->dateFrom().':'.$window->dateTo().':'.$baseline->dateFrom().':'.$baseline->dateTo().':'.app()->getLocale();
     }
 
     /** @param  Window|null  $baseline  con qué se compara; sin ella, el periodo anterior */
@@ -102,7 +102,7 @@ final class FunnelReport
             $purchases['orders'] += (int) $row->n;
             $purchases['sold'] += (int) $row->sold;
         }
-        $purchases['revenue'] = $this->revenue($window);
+        $purchases += $this->revenue($window);
         $purchases['conversion_bp'] = $visits > 0 ? (int) round($purchases['orders'] / $visits * 10000) : 0;
 
         return [
@@ -271,15 +271,27 @@ final class FunnelReport
             ->get();
     }
 
-    /** Lo cobrado por esos pedidos (los `payments` con éxito), en céntimos. */
-    private function revenue(Window $window): int
+    /**
+     * Lo cobrado por esos pedidos (los `payments` con éxito), en céntimos, con cuántos cobros y la suma de sus
+     * CUADRADOS (T0b, `#755`: la varianza de la suma, para saber si su cambio es claro). Una sola consulta.
+     *
+     * @return array{revenue: int, revenue_payments: int, revenue_sq: int}
+     */
+    private function revenue(Window $window): array
     {
-        return (int) $this->between(DB::table('payments as p'), 'p.paid_at', $window)
+        $row = $this->between(DB::table('payments as p'), 'p.paid_at', $window)
             ->join('orders as o', 'o.id', '=', 'p.payable_id')
             ->where('p.payable_type', (new Order)->getMorphClass())
             ->where('p.status', Payment::STATUS_PAID)
             ->whereIn('o.attribution_channel', self::WEB_CHANNELS)
-            ->sum('p.amount');
+            ->selectRaw('COALESCE(SUM(p.amount), 0) AS amount, COUNT(*) AS n, COALESCE(SUM(p.amount * p.amount), 0) AS sq')
+            ->first();
+
+        return [
+            'revenue' => (int) ($row->amount ?? 0),
+            'revenue_payments' => (int) ($row->n ?? 0),
+            'revenue_sq' => (int) ($row->sq ?? 0),
+        ];
     }
 
     // ─── Las fuentes ─────────────────────────────────────────────────────────────────────────────
@@ -522,7 +534,7 @@ final class FunnelReport
         return [
             'visits' => $visits,
             'orders' => $orders,
-            'revenue' => $this->revenue($window),
+            ...$this->revenue($window),
             'conversion_bp' => $visits > 0 ? (int) round($orders / $visits * 10000) : 0,
         ];
     }

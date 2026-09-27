@@ -2,7 +2,8 @@
 
 namespace App\Filament\Widgets\Analytics;
 
-use App\Domain\Platform\Services\Money;
+use App\Filament\Analytics\Metric;
+use App\Filament\Analytics\Polarity;
 use App\Filament\Widgets\Analytics\Concerns\AnalyticsWidget;
 use Filament\Widgets\Concerns\InteractsWithPageFilters;
 use Filament\Widgets\StatsOverviewWidget;
@@ -38,19 +39,15 @@ class MoneyCustomersWidget extends StatsOverviewWidget
         /** @var array<string, int> $t */
         $t = $report['totals'];
 
+        // T0b (`#755`): el informe no trae estas cifras del periodo comparado, así que van sin cambio (como antes) y con su
+        // «¿Cómo se calcula?»; la polaridad se declara igual, para cuando lo traiga.
         return [
-            Stat::make(__('admin.analytics.money.buyers'), (string) $c['buyers'])->color('primary'),
-            Stat::make(__('admin.analytics.money.new'), (string) $c['new'])
-                ->description(__('admin.analytics.money.new_hint'))
-                ->color('success'),
-            Stat::make(__('admin.analytics.money.returning'), (string) $c['returning'])->color('gray'),
-            Stat::make(__('admin.analytics.money.avg_per_customer'), Money::format($c['avg_per_customer']))->color('gray'),
-            Stat::make(__('admin.analytics.money.lifetime_avg'), Money::format($c['lifetime_avg']))
-                ->description(__('admin.analytics.money.lifetime_avg_hint'))
-                ->color('gray'),
-            Stat::make(__('admin.analytics.money.adjustments'), Money::format($t['adjustments']))
-                ->description(__('admin.analytics.money.adjustments_hint'))
-                ->color('gray'),
+            $this->metric(Metric::count('money.buyers', __('admin.analytics.money.buyers'), $c['buyers'], null, Polarity::UpIsGood, self::how('money.buyers'))),
+            $this->metric(Metric::count('money.new', __('admin.analytics.money.new'), $c['new'], null, Polarity::UpIsGood, self::how('money.new'))),
+            $this->metric(Metric::count('money.returning', __('admin.analytics.money.returning'), $c['returning'], null, Polarity::UpIsGood, self::how('money.returning'))),
+            $this->metric(Metric::money('money.avg_per_customer', __('admin.analytics.money.avg_per_customer'), $c['avg_per_customer'], null, $c['buyers'], null, Polarity::UpIsGood, self::how('money.avg_per_customer'))),
+            $this->metric(Metric::money('money.lifetime_avg', __('admin.analytics.money.lifetime_avg'), $c['lifetime_avg'], null, $c['buyers'], null, Polarity::UpIsGood, self::how('money.lifetime_avg'))),
+            $this->metric(Metric::money('money.adjustments', __('admin.analytics.money.adjustments'), $t['adjustments'], null, 0, null, Polarity::Neutral, self::how('money.adjustments'))),
         ];
     }
 }
