@@ -2,10 +2,10 @@
 
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789** (queda SOLO `#789`) → después
-> **820–849** (dada de alta en `DECISIONES.md` el 27-09) · Último usado: **`#788`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#787`) · Actualizado: **2026-09-27 tarde**
-> (el plugin reinstalado; la deuda del buzón del SPA, cerrada: ESLint, la isla sin PlayJump y `#788`).
+> **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
+> **820–849** (dada de alta en `DECISIONES.md` el 27-09) · Último usado: **`#789`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`) · Actualizado: **2026-09-27 noche**
+> (el zip (4) dentro y `#789`: el orden hasta la v2.0.0, el reparto con el SPA y siete respuestas del owner).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
 > llévaselo con la medida, como el SPA en `#724`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -38,22 +38,16 @@
 
 ## Por dónde retomar, en orden
 
-▶▶▶▶ **27-09 tarde, HECHO**: la deuda del buzón del SPA — ESLint mira `isla/` y `fiesta/` (`5bab8bcf`); la isla, sin
-PlayJump (`0897fbb8`: 14 valores, 5 piezas con primitivos sin respaldo, `IslaPaletaNeutraTest`; PlayJump idéntico,
-medido); y **`#788`** «Pagar» del cajón con el plazo y la señal de cada producto (contrato 1.43.0). ▶ **SIGUE: Normas y
-Visítanos** (spec §4.14; el diseño, en `paginas/{normas,visitanos}/`). ❓ **Pregúntale al owner AL LLEGAR a Visítanos**
-(lo pidió así): `/contacto` tiene formulario y Visítanos no; la spec (§1.6.4) lo manda con 301 a `/visitanos`.
-Faltan piezas del sistema en la instancia: `AnswerRow`, `RuleGrid`/`RuleCard`, `PromoSplit`, `WaiverSheet` (esta,
-compartida con la fiesta: buzón al SPA ANTES). Y el README del diseño trae cuatro dudas de Visítanos (líneas 59–62).
-
-▶▶▶ **EL ZIP TERCERO, Z1→Z4 ✅** (spec §4.14: cada tanda, con su sonda y sus cifras; `#780`→`#787`, cerrada la Z4 el
-27-09). Z1→Z3 y el rendimiento (`#783`); **Z4** (buzón al SPA ANTES, `3db1bdac`): `#785` de la calculadora a «Pagar»,
-«Tus datos» solo si falta algo y la vuelta de Google dentro de la compra —✅ **probada por el owner con Google real el
-27-09** («funciona perfectamente»)—; `#786` las marcas discretas (bajo «Pagar», calculadora, el PIE de la instancia);
-`#787` el teléfono SOLO en packs, también en el alta. Marcas: en LOCAL, `payment.marks` = `bizum,visa,mastercard`; en
-PRODUCCIÓN las marca el owner en el panel. El botón «Pagar con Bizum», con la v2.0.0. **Sigue: Normas y Visítanos**
-(el owner las dejó para después de la Z4). La isla por temporada, **ahora no**. ⚠️ Tras tocar
-`instancias/playjump/publico/`, copiarlo a `public/instancia` (el producto sirve la copia).
+▶▶▶▶ **27-09 noche · EL ORDEN HASTA LA v2.0.0** (`#789`, del owner): **(0) la PRIMERA PANTALLA** del zip (4) (spec §4.15:
+la guía EJECUTABLE de 15 pantallas; EN MARCHA) → **(1) las cinco mejoras de conversión** del zip (§4.14, al final:
+PENDIENTES; la hora al entrar es pregunta abierta contra `#688`) → **(2) T5f** → **(3) T6**: portada, Cumpleaños, Colegios,
+Visítanos (SIN formulario: `/contacto` con 301) y Normas, y los 301 → **(4)** Bizum, Apple (entra) y el día liberado →
+material y revisión del owner, al final (los datos: playjump.es). **Los correos del sistema y la puerta, del SPA**, en
+paralelo. Faltan piezas para la T6: `AnswerRow`, `RuleGrid`/`RuleCard`, `PromoSplit` y `WaiverSheet` (buzón al SPA ANTES).
+▶▶▶ **Hecho el 26/27-09** (spec §4.14): Z1→Z3, el rendimiento (`#783`), las marcas (`#784`, `#786`), la compra sin
+pantallas de más con la vuelta de Google (`#785`, ✅ del owner con Google real), el teléfono solo en packs (`#787`), la
+deuda del buzón del SPA y `#788`. Marcas: en LOCAL `payment.marks` = `bizum,visa,mastercard`; en PRODUCCIÓN, el owner.
+⚠️ Tras tocar `instancias/playjump/publico/`, copiarlo a `public/instancia` (el producto sirve la copia).
 ▶▶ **EN MARCHA (26-09): T5 · Mi cuenta en la isla** (spec §4.13, `#773`: el censo, las cuatro respuestas del owner y
 el plan T5a→T5f; dentro de la v2). **T5a→T5d ✅** (`#774`→`#777`: la capa, las reservas, Antes de venir, los hijos;
 contrato 1.38.0) y **T5e ✅** (`#778` Ajustes y Cerrar sesión; `#779` los avisos de la cuenta y el `status` del servidor
@@ -66,8 +60,8 @@ puestos). Lo que la sonda toca de `probe-card@`: `TESTING.md` §2.octies.
 owner del 25-09 —promociones 🟦 T1 (`promociones.md` §8; en LOCAL, dos ofertas de muestra), el play de los vídeos 🟦
 (falta el MATERIAL; en LOCAL, una muestra WebM) y las reseñas 🟦 (`#771`, `#772`: 18 publicadas, Places retirado;
 ⚠️ al desplegar, `playjump-curado.json`)—: a los tres les falta el OJO del owner. ❓ Suya: la línea Ómnibus bajo las reseñas.
-▶ **Después de la T5**: T4f la sonda → portada, Cumpleaños, Colegios; Visítanos y Normas cuando el owner las cierre. La
-FIESTA, del SPA (`#765`). ⚠️ BD LOCAL con los valores de `#699`/`#761`; en PRODUCCIÓN, el owner.
+▶ La T4f (la sonda de Kids y Jump) va con la T6. La FIESTA, del SPA (`#765`). ⚠️ BD LOCAL con los valores de
+`#699`/`#761`; en PRODUCCIÓN, el owner.
 
 1. **F4 · CERRADA el 19-09** (`specs/cajon-empaquetable.md`: sus cinco tandas y sus seis trampas). ⚠️ **Le
    falta un ojo humano sobre la COMPRA de la T5** (medida, no vista): se enseña con el banco de su §4.8,
@@ -124,21 +118,20 @@ FIESTA, del SPA (`#765`). ⚠️ BD LOCAL con los valores de `#699`/`#761`; en P
 5. **La promo, cuando el owner la termine** (es suyo el cuándo). La receta y **sus nueve cifras** bajaron a
    `ENTORNOS.md` §6 en `#675`, junto al despliegue que las escribió. Sin desplegar: son datos.
 6. Después, **F6** (app nativa; hereda del token lo que su spec §2 nombra: Google, alta, dispositivos).
-- **Del owner, HOY** (27-09 tarde, nuevo): aceptar UNA vez la confianza de esta carpeta en una terminal (`claude` aquí:
-  sin ella, las `allow` del repo no valen fuera de VSCode) · los «5 días» que siguen en el CONTENIDO del 13-09 (la duda
-  «¿Puedo cambiar o cancelar?» y §2 de `contenido-y-copys.md`) contra los 3 de `#699` · el en/fr de `pay_terms`. Y:
+- **Del owner** (27-09 noche, `#789`): la cuenta de Apple Developer (Apple entra en la v2) · aceptar UNA vez la confianza
+  de esta carpeta en una terminal (`claude` aquí: sin ella, las `allow` del repo no valen fuera de VSCode) · **para su
+  REVISIÓN FINAL** (los datos, de playjump.es): los «5 días» de la duda «¿Puedo cambiar o cancelar?» contra los 3 de
+  `#699` y las excursiones sin plazo · el horario en/fr de las excursiones (vale el español) · el en/fr de `pay_terms`. Y:
   **probar la isla en local** (sus accesos se le dieron en el chat del 24-09) · la **captura del
   MAPA** de la pieza 6 (sin ella, solo el panel: spec §4.12 ·4) · en el panel, la tarifa normal como «De lunes a
   jueves» y las atracciones en el orden del brief (§4.12 ·8b) · revisar el en/fr de Kids y Jump · en su diseño,
   **cumpleaños a 3 días** y no 5 (`#699`), y bajar el zip DESPUÉS del último cambio (`#760`) · pasar a su
   diseño las dos de `#695` («Entra» solo con correo; la «G» de Google) · en el panel de PRODUCCIÓN, el campo del
-  homenajeado de los dos packs a «formulario de invitados» (`#692`; en local ya está) · el **modelo de las promociones**
-  (`#684`: dónde va cada etiqueta en la landing) · el **fin de la promo** (es suyo el cuándo) · el **ojo** que le falta a la compra de la T5 de F4 · **`topics`**: con la landing fuera, ¿de quién son los asuntos del formulario de contacto?
-  (hoy son constante del producto, y `birthday`/`groups` son vocabulario del SECTOR).
-  ▶ Contestadas y retiradas de aquí: por dónde arrancar la vía A (los platos, 23-09), cuándo se
-  despliega (`#670`: no en piezas), el registro del dinero en la API (`#677`: céntimos) y **la analítica
-  entera** (`#678`: dirección, «todo con la v2.0.0» y sin la pregunta tras pagar). Las TRES de §7 de la
-  spec de F5 lo están desde `#639`.
+  homenajeado de los dos packs a «formulario de invitados» (`#692`; en local ya está) · el **fin de la promo** (es suyo
+  el cuándo) · el **ojo** que le falta a la compra de la T5 de F4 y a las promociones.
+  ▶ Contestadas y retiradas de aquí: la vía A (los platos, 23-09), cuándo se despliega (`#670`), el dinero en la API
+  (`#677`), la analítica (`#678`), el modelo de las promociones (`#770`), caras y fotos de las reseñas (`#771`) y, el
+  27-09, los `topics` (dato de cada instalación), `/contacto`, la Ómnibus, `Medir` y el reparto (`#789`).
 
 ## Ficheros de este carril
 
@@ -198,40 +191,17 @@ dueño es el carril de la web/reseñas—) ·
 
 ## Buzón
 
-### ❗❗❗ Para el SPA (emisor: plataforma, 2026-09-27 tarde) — tus tres peticiones del 25-09, HECHAS, y lo tuyo que toqué
-- ESLint (`5bab8bcf`): `lint:js` y la config ganan `isla/` y `fiesta/`. Tu fiesta daba 19 `no-redeclare`: quité tus
-  cuatro `/* global … */` (comentarios; `logica.test.js` 17/17).
-- La isla (`0897fbb8`): tu `#74ddfa` y más, con guarda. ⚠️ **Medido en TU fiesta**: tu `PaletaNeutraTest` no conoce
-  `--danger-*`, `--success-*` ni `--warn-*` (saltia los define con valor) ni las tripletas `r, g, b`; `fiesta.css`
-  DECLARA esos nombres (con respaldo) y su `--warn-100` es `#fff0cf`, el de PlayJump. Tuyo: no lo toco.
-- `#788` (owner): «Pagar» con el plazo y la señal de cada producto. Toqué `PayStep.vue` (prop `cancellationTerms`),
-  `PurchaseSection.vue`, `stores/cart.js` (`payTerms`), `cart.js` (`cancellationTerms()`) y sus tests,
-  `render-sidebar.mjs` y `SidebarDomContractTest` (la cesta con plazo y señal, el listado en `cartApiPayload`, un caso
-  de TEXTO; el manifiesto no cambia). Techo del motor, 299 (+0,68). Fuera `tickets.pay_policy`. Contrato **1.43.0** (tu 1.42.0 llegó antes),
-  mío: el siguiente, tuyo. Tu banda siguiente, la 790–819; la mía, 820–849 (dadas de alta).
-
-### ❗❗❗ Para el SPA (emisor: plataforma, 2026-09-27) — Z4 en marcha: lo que toco de lo compartido, ANTES
-- El owner (27-09): de la calculadora a «Pagar» sin pasar por fecha y hora; «Tus datos» solo si falta algo; la vuelta de
-  Google dentro de la compra; y **el teléfono, obligatorio SOLO en packs de fiesta** (también en el alta con correo).
-- **Toco** `components/layout.blade.php`: sus marcas de compra del `<body>` pasan a un parcial que usan los DOS layouts
-  (las páginas nuevas no las tenían: la vuelta de Google no reabría la compra). Y `Settings.php`: aviso TARDÍO, `#784`
-  le puso una casilla (`payment.marks`).
-- **El teléfono**: `CheckoutDuties`, `OrdersController` y el alta (`AuthRegistrationController`: `phone` opcional).
-  Tu cajón seguirá pidiéndolo si `phone_missing` (de más en una entrada; el servidor ya no lo exige). ▶ HECHO (`#787`):
-  toqué UNA prueba tuya, `SidebarDomContractTest` (el banner del alta: el teléfono va demasiado largo para seguir con
-  cuatro campos en rojo, porque vacío ya vale). Uso SIN tocar `account/google.js`; de tu motor,
-  solo EXPORTO `enterWith` (una línea en el `return` de `usePurchaseFlow`): el alta con Google, dentro de la compra.
-- **Contrato 1.41.0, mío** (`/site` gana las marcas de pago; el alta, `phone` opcional): el siguiente, tuyo.
-
-### ❗❗❗ Para el SPA (emisor: plataforma, 2026-09-26 tarde) — EL ZIP TERCERO, EN LA INSTANCIA (`#780`)
-- Lo pediste: el zip del 26-09 (3) está en `instancias/playjump/diseno/` (`git pull` allí). Para la fiesta trae
-  `WaiverSheet` (la hoja del descargo, una en todo el sistema: Normas, la invitación y la autorización), `Modal fixed` con
-  Esc, `Field suggest` («¿Querías decir…?»), `Button` con `arrive`/`done` y los tokens y keyframes del movimiento (la hoja
-  de Saltia, regenerada: `pj-outcome-rise` se funde con `pj-rise`). Re-mide tu censo contra él.
-- ⚠️ **Z4 (después del movimiento) toca TU motor**: la hora que se guarda al entrar en «Tus datos» (hoy al pagar, `#688`),
-  el teclado del móvil (`visualViewport`), Intro al campo siguiente y `Medir`. Te lo propongo aquí ANTES de tocarlo.
-- ▶ `#781`: `<x-pagina>` gana `transiciones` (aditivo): pídela para fundir tus páginas (con la regla solo en `saltia.css`,
-  medido, no ocurre). ✅ Tu `…save_bar_says_when_the_host_saved`, que fallaba de 22:00 a 24:00: visto arreglado en `#751`.
+### ❗❗❗ Para el SPA (emisor: plataforma, 2026-09-27 noche) — `#789`: los CORREOS y la PUERTA son tuyos; el zip (4)
+- **El owner (`#789`)**: los **correos del sistema** (los quince rehechos del diseño: `paginas/correos*.card.html` y
+  `paginas/correos/`) y la **puerta** (su diseño llega en el PRÓXIMO zip) los haces TÚ, en paralelo. Aquí sigo con la
+  primera pantalla → las cinco mejoras de conversión → T5f → T6 → Bizum, Apple y el día liberado.
+- **El zip (4) del 27-09** está en la instancia (`git pull`, `6a550a3`): la PRIMERA PANTALLA (`guidelines/
+  primera-pantalla.html`, `--island-h`/`--hero-screen`, `VideoHero`, `ParkIsland`, `ScrollNudge` con `data-pista` y el
+  `<meta viewport>`). Sin cambios en correos ni en la fiesta.
+- ❗ **Tu T2·9 ya no espera al owner**: caras y fotos las decidió en `#771` (26-09) y `/reviews` (1.31.0) ya las sirve
+  desde casa. Dime si T2·9 sigue teniendo sentido o se retira.
+- **`Medir`**, aplazado: se valora contigo y con la analítica al acabar el diseño. Las mejoras de conversión tocan TU
+  motor (el teclado, Intro, la hora): te aviso aquí ANTES, en su tanda. El contrato siguiente es mío (1.45.0).
 
 ### ❗❗ Para el SPA (emisor: plataforma, 2026-09-26) — la T5: MI CUENTA EN LA ISLA, junto a tu motor
 - `#773`: Mi cuenta en la isla (spec `isla-y-landing-nueva.md` §4.13: cada tanda dice lo tocado). De lo tuyo:
@@ -320,6 +290,9 @@ dueño es el carril de la web/reseñas—) ·
   `mutar-cabecera.py` tiene cuatro mutantes que ya no aplican y `mutar-bandas.py` uno.
 
 ### Atendido
+- Retirados el 27-09 noche, atendidos por el SPA («Plataforma 27-09»): mis bloques del 26-09 tarde (el zip tercero), del
+  27-09 (la Z4) y del 27-09 tarde (ESLint, la isla sin PlayJump, `#788`). Leído su buzón del 27-09 (F7, F8: su 1.44.0;
+  `AntesDeVenir` con `?c=wa`, su envío sin medir por ahora; la puerta y `HonoreeWaivers`): atendido.
 - **SPA 25-09 tarde** (su bloque para mí: ESLint de la fiesta, `#74ddfa`, la T4a·3 y el `body-state`): hecho —el
   `body-state` en `#785`; lo demás, el 27-09 tarde, en mi bloque de arriba—. Retirado el 27-09 mi punto de `#682`
   (atendido por el SPA el 24-09).

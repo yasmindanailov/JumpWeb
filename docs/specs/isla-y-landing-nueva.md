@@ -1553,6 +1553,24 @@ La identidad con el diseño, una vez y al final (`#768`).
   pagar. «Crea tu cuenta» de Mi cuenta, sin él. Sondas: `sonda-compra-directa` (el alta de Google en una entrada, sin
   teléfono, 16/16) y `sonda-isla` (la fiesta con la cuenta SIN teléfono lo pide, y solo eso; 21/21, y la cuenta de
   pruebas recupera el suyo); `sonda-cuenta` sin regresión.
+- ❗ **`[DECIDIDO owner]` 27-09 (`#789`): la «Z4» hecha NO es la del zip.** Arriba, Z4·1 a Z4·3 son lo que el owner pidió
+  el 27-09. Las **cinco mejoras de conversión** del README del zip («La isla y la compra · conversión (26-09)») siguen
+  **PENDIENTES**, medido en `resources/js/isla/`: la hora al entrar en «Tus datos» (no; choca con `#688`, pregunta
+  abierta), el pie de «Pagar» compacto (parcial), el teclado con `visualViewport` e Intro al campo siguiente (no), «¿Querías
+  decir…?» en los correos (no; solo en la fiesta del SPA) y `Medir` (no; se valora con la analítica al acabar el diseño).
+  Van DESPUÉS de la primera pantalla (§4.15) y ANTES de la T5f, para que Mi cuenta y la T6 las hereden.
+
+### 4.15 El zip del 27-09 (el cuarto): la primera pantalla, una sola retícula para la cabecera y la isla
+
+**Lo que trae** (`diseno/actualizar.py`, 626 ficheros; 82 cambiados y 23 nuevos): la guía EJECUTABLE
+`guidelines/primera-pantalla.html` —15 pantallas (6 móviles con las barras a la vista, la tableta, el móvil en horizontal
+y 7 escritorios; el README dice 13), en primera visita o vuelta, y a la llegada o tras el primer scroll—, los tokens
+`--island-inset`, `--island-h`, `--fold-gap`, `--hero-top` y `--hero-screen` (`tokens/space.css`), `[data-llegada]`
+(`tokens/base.css`), `VideoHero` (se mide contra la pantalla: compacta bajo 780px en escritorio; apilada, el vídeo
+absorbe la diferencia; cede `facts`, `link` y `proof` en pantallas bajas; la «llegada limpia»), `ParkIsland` (el gutter de
+la página, publica `--island-h` y `pj-island:size`, la banda fija arriba, las cookies compactas abajo), `ScrollNudge`
+(`data-pista`) y el `<meta viewport>` en todas las páginas. El owner (27-09): **va antes que todo lo demás** (`#789`).
+El censo contra lo nuestro y el plan, en esta sección al medirlo.
 
 ## 5. Impacto en invariantes
 
