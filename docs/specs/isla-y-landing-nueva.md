@@ -1737,6 +1737,17 @@ que llegue Bizum. Los vídeos, pendientes del MATERIAL como en la T4 (en LOCAL, 
   `HomeController` (`paquete-de-instancia.md` §4.6.bis). `InstancePagesTest` +3 y `mutar-portada-declarada.sh` 7/7 (dos
   supervivientes antes: una comprobación inalcanzable, fuera, y un caso que no se medía solo, partido). Sigue la T6a·2b:
   la vista de la portada en la instancia.
+- ▶ **T6a·2b ✅ (27-09, `#828`, `#829`) · la PORTADA en la instancia** (`web/inicio/`, instancia `5c2b9cf`): las ocho piezas
+  y el pie, con el selector de planes vivo. Su modelo reutiliza el de entradas por zona; cada oferta, en su objetivo
+  (`#828`). Revisada por el owner en vivo (`#829`): el vídeo detrás de toda la tarjeta apilada, [Hoy] como la isla pasado
+  el cierre, la estrella de Google en las medias, la nota encima del botón y sin la línea de Bizum. **Guarda**:
+  `scripts/sonda-portada.mjs` (20/20 en 390 y 1280; con su mutación en rojo). **Medido**: la primera pantalla idéntica al
+  mockup en la vuelta (114/114 · 45/45); Kids y Jump solo cambian en lo pedido. ❗ Sin verificar: el vídeo corriendo (el
+  Chromium de la sonda no trae H.264) y «Para hoy» (sin huecos a esa hora).
+- ▶ **Lo que sale de la revisión, por hacer** (el owner, 27-09): el CALENDARIO —la tira de la isla enseña 7 días (el motor
+  da 155) y la calculadora abre en el mes en curso, que a fin de mes casi no tiene días; aceptado: 14 días + «Más fechas»
+  con el calendario de meses, y dos meses a la vez cuando al mes le quedan menos de 7— y la FLECHA DE «ATRÁS» de la isla en
+  los mismos casos que el mockup (censo riguroso).
 
 ## 5. Impacto en invariantes
 
