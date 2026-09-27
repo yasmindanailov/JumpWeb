@@ -985,7 +985,10 @@ class SidebarBundleBudgetTest extends TestCase
     // T5e·2 (`#779`, los avisos de la cuenta): 101,34 → 104,93. Van ARRIBA y con la primera pintura —confirmar el correo
     // con su reenvío, firmar tu descargo o el de tus hijos, la analítica (`avisos.js`, dos avisos del sistema)— y el aviso
     // del servidor en Entra y en Tu QR; diferirlos sería pintarlos tarde justo donde se miran. El techo, a 106.
-    private const ISLA_CUENTA_CHUNK_MAX_KB = 106;
+    // `#785` y `#787`: «Tus datos», que Mi cuenta comparte para su «Crea tu cuenta», gana el alta de Google dentro de la
+    // compra y el teléfono SOLO en una fiesta (`datos.js`: `hayQuePedir`, las ramas de Google y del teléfono). Medido
+    // 104,93 → 105,99 con `#785` (dentro del techo) y 105,99 → 106,04 con `#787` (base: el `HEAD` de `#786`). El techo, a 107.
+    private const ISLA_CUENTA_CHUNK_MAX_KB = 107;
 
     // T5e (`#778`): los AJUSTES de Mi cuenta, su trozo —el bloque y su lógica, pedidos al pintar el inicio—, sobre lo que ya
     // tiene quien abre Mi cuenta. Medido: 26,92 (el bloque 12,70, la lógica 6,56, `ajustes.js` 3,44, el interruptor que

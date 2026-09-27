@@ -67,7 +67,8 @@ export function useSeccionCompra(props) {
     let cola = Promise.resolve();
     const enCola = (tarea) => (cola = cola.then(tarea, tarea));
 
-    const datos = useDatosCompra({ flow, props, textos });
+    // Una FIESTA (un pack) es lo único que pide el teléfono (`#787`).
+    const datos = useDatosCompra({ flow, props, textos, esFiesta: () => Boolean(compra.borrador.fiesta) });
     const pago = usePagoCompra({ flow, props, textos, compra, enCola, alPagarMal, alLlenarse });
     const { vista, situar, cambiar, cargarHoras, extrasDelPedido } = usePantallaCero({ flow, compra, enCola, textos });
 

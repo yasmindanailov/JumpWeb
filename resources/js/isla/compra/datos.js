@@ -26,8 +26,9 @@ const vacio = (valor) => String(valor ?? '').trim() === '';
  * Lo que falta, antes de preguntar a nadie.
  *
  * @param {ReturnType<typeof datosVacios>} f
- * @param {{pedirTelefono: boolean, firmaPendiente: boolean, textos: object}} deps  `pedirTelefono` con sesión y sin
- *   teléfono (`phone_missing`, `#692`·3); `firmaPendiente`, si hay descargo que firmar y nunca se firmó.
+ * @param {{pedirTelefono: boolean, firmaPendiente: boolean, textos: object}} deps  `pedirTelefono`, si ESTE pedido lo
+ *   exige (`#787`: una fiesta —en el alta, o con sesión y sin él, `phone_missing`— o el servidor al pagar);
+ *   `firmaPendiente`, si hay descargo que firmar y nunca se firmó.
  * @returns {Record<string, string>}  vacío si no falta nada
  */
 export function revisarDatos(f, { pedirTelefono = false, firmaPendiente = false, textos = {} }) {
@@ -37,8 +38,10 @@ export function revisarDatos(f, { pedirTelefono = false, firmaPendiente = false,
     if (f.cuenta === 'dentro') {
         if (pedirTelefono && vacio(f.telefono)) errores.telefono = t('telefono');
     } else if (f.cuenta === 'google') {
-        // El alta que vuelve de Google (`#785`): el correo es el suyo y no se teclea; queda el nombre (y la casilla).
+        // El alta que vuelve de Google (`#785`): el correo es el suyo y no se teclea; queda el nombre (y la casilla), y el
+        // teléfono en una fiesta.
         if (vacio(f.nombre)) errores.nombre = t('nombre');
+        if (pedirTelefono && vacio(f.telefono)) errores.telefono = t('telefono');
     } else if (f.cuenta === 'existe') {
         if (! String(f.correo ?? '').includes('@')) errores.correo = t('correo');
         if (vacio(f.contrasena)) errores.contrasena = t('clave');
@@ -47,7 +50,8 @@ export function revisarDatos(f, { pedirTelefono = false, firmaPendiente = false,
     } else {
         if (vacio(f.nombre)) errores.nombre = t('nombre');
         if (! String(f.correo ?? '').includes('@')) errores.correo = t('correo');
-        if (vacio(f.telefono)) errores.telefono = t('telefono');
+        // El teléfono, solo en una fiesta (`#787`): en una entrada el alta va sin él.
+        if (pedirTelefono && vacio(f.telefono)) errores.telefono = t('telefono');
         if (vacio(f.contrasena)) errores.contrasena = t('contrasena');
     }
 

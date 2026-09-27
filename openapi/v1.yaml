@@ -7633,6 +7633,9 @@ components:
             El teléfono, **solo si la cuenta no lo tiene**. Se pide aquí porque es donde hace falta —
             gestionar la reserva— y porque al crear la cuenta no siempre está: ni el alta con Google
             ni la de mostrador lo preguntan. A quien ya lo dio no se le vuelve a preguntar.
+            ⚠️ **Desde 1.41.0 (`DECISIONES #787`) solo se exige si la cesta lleva un PACK** (una fiesta):
+            `account-context.phone_missing` dice que a la CUENTA le falta; si el pedido lo exige lo dice
+            su contenido. Un 422 con `phone` es la autoridad.
 
     CartLineCheckRequest:
       type: object
@@ -8932,7 +8935,7 @@ components:
             que retirarlo sea tan fácil como darlo.
 
         La única casilla que queda es la del descargo (`accept_waiver`).
-      required: [name, email, phone, password]
+      required: [name, email, password]
       additionalProperties: false
       properties:
         name:
@@ -8944,7 +8947,11 @@ components:
           maxLength: 255
         phone:
           type: string
+          nullable: true
           maxLength: 30
+          description: |
+            **Opcional desde 1.41.0** (`DECISIONES #787`): el teléfono es obligatorio solo para reservar un PACK (una
+            fiesta), y eso lo exige `POST /orders`. Sin él, la cuenta nace sin teléfono.
         password:
           type: string
           format: password

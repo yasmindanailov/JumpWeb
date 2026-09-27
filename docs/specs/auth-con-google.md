@@ -1301,6 +1301,11 @@ el panel. Hasta entonces no se pide nada, que es la conducta segura.
 
 #### 21.4.2 · T8·b — el checkout pide lo que falta (`DECISIONES #349`)
 
+> ▶ **`[DECIDIDO owner, 2026-09-27]` (`#787`): el TELÉFONO, solo en un pedido con PACK** (una fiesta; vale cualquier
+> pack). `POST /orders` lo exige por el contenido de la cesta (`CheckoutDuties::pendingForOrder`); `phone_missing` sigue
+> diciendo lo que le falta a la CUENTA. Y el alta con correo deja de pedirlo (`RegisterRequest.phone`, opcional). Lo de
+> abajo describe la T8·b como se ejecutó; en lo del teléfono, manda esto.
+
 Segunda mitad, y **va antes que la T8·c a propósito**: primero el checkout PIDE y solo después el alta
 deja de pedir. Al revés habría una ventana en la que nadie acepta nada.
 

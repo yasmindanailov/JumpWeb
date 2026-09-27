@@ -23,11 +23,13 @@ const textos = {
 const lleno = { ...datosVacios(), nombre: 'Ana García', correo: 'ana@correo.es', telefono: '612345214', contrasena: 'secreto-8', descargo: true };
 
 describe('revisarDatos: lo que falta, con las frases del diseño', () => {
-    test('sin cuenta, los cuatro campos y la casilla si hay descargo que firmar', () => {
-        const errores = revisarDatos(datosVacios(), { firmaPendiente: true, textos });
+    test('sin cuenta, sus campos y la casilla si hay descargo que firmar; el teléfono, SOLO en una fiesta (`#787`)', () => {
+        const entrada = revisarDatos(datosVacios(), { firmaPendiente: true, textos });
+        const fiesta = revisarDatos(datosVacios(), { pedirTelefono: true, firmaPendiente: true, textos });
 
-        assert.deepEqual(Object.keys(errores), ['nombre', 'correo', 'telefono', 'contrasena', 'descargo']);
-        assert.equal(errores.telefono, 'Revisa el teléfono: son 9 cifras.');
+        assert.deepEqual(Object.keys(entrada), ['nombre', 'correo', 'contrasena', 'descargo'], 'una entrada no pide teléfono');
+        assert.deepEqual(Object.keys(fiesta), ['nombre', 'correo', 'telefono', 'contrasena', 'descargo']);
+        assert.equal(fiesta.telefono, 'Revisa el teléfono: son 9 cifras.');
     });
 
     test('solo mira que ESTÉ: el formato, la política de la contraseña y el teléfono son del servidor', () => {
@@ -139,6 +141,7 @@ describe('«Tus datos», solo si falta algo (`#785`)', () => {
         assert.deepEqual(Object.keys(revisarDatos(google, { firmaPendiente: true, textos })), ['nombre', 'descargo']);
         assert.deepEqual(revisarDatos({ ...google, nombre: 'Ana García', descargo: true }, { firmaPendiente: true, textos }), {});
         assert.deepEqual(revisarDatos({ ...google, nombre: 'Ana García' }, { textos }), {}, 'sin descargo que firmar, basta el nombre');
+        assert.deepEqual(Object.keys(revisarDatos({ ...google, nombre: 'Ana García' }, { pedirTelefono: true, textos })), ['telefono'], 'en una fiesta, su teléfono (`#787`)');
     });
 });
 

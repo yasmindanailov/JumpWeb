@@ -153,6 +153,20 @@ async function franjaDeLaCesta() {
     return datos ? { ...datos, hora } : null;
 }
 
+/**
+ * El teléfono de la cuenta de pruebas (`#787`): la FIESTA se prueba con la cuenta SIN él —la fiesta lo pide en «Tus
+ * datos»; una entrada no (`sonda-compra-directa`)—, y al acabar vuelve el suyo, pase lo que pase.
+ */
+let telefonoDeLaSonda = null;
+const quitarTelefono = () => {
+    telefonoDeLaSonda = tinker(`echo App\\Domain\\Identity\\Models\\User::where('email', '${CLIENTE.email}')->value('phone');`);
+    tinker(`App\\Domain\\Identity\\Models\\User::where('email', '${CLIENTE.email}')->update(['phone' => null]);`);
+};
+const devolverTelefono = () => {
+    if (telefonoDeLaSonda !== null) tinker(`App\\Domain\\Identity\\Models\\User::where('email', '${CLIENTE.email}')->update(['phone' => ${telefonoDeLaSonda === '' ? 'null' : JSON.stringify(telefonoDeLaSonda)}]);`);
+    telefonoDeLaSonda = null;
+};
+
 let llena = null;
 const devolverFranja = () => {
     if (llena) tinker(`$s = App\\Domain\\Booking\\Models\\Slot::find(${llena.id}); $s->online_capacity = ${llena.cupo}; $s->saveQuietly();`);
@@ -245,8 +259,9 @@ try {
     ok('el sí → «¡Reservado!» con su Nº de pedido y el QR del carné', /Nº de pedido/.test(await cuerpo()) && await page.locator('[data-isla-scroll] img[src*="/me/card/png"]').count() === 1);
     await foto('5-reservado');
 
-    // ── 3. Un CUMPLEAÑOS con señal ───────────────────────────────────────────────────────────────────────
+    // ── 3. Un CUMPLEAÑOS con señal (y la cuenta SIN teléfono: la fiesta lo pide, `#787`) ─────────────────
     limitadoresACero();
+    quitarTelefono();
     await page.goto(`${BASE}/_sonda-isla.html`, { waitUntil: 'networkidle' });
     await page.click('#abrir-packs');
     await espera(() => (document.querySelector('[data-isla-scroll] h1')?.textContent ?? '') === 'Un cumpleaños', null, 20000);
@@ -262,6 +277,9 @@ try {
     await quieta();
     ok('la fiesta: la edad elige el pack, los niños en su mínimo y «Hoy pagas 50 €»', /KIDS, de 4 a 7 años/.test(await cuerpo()) && /8 niños/.test(await debajo()) && /Hoy pagas 50\s€/.test(await page.locator('[data-isla]').innerText()));
     await accion(/^Continuar$/).click();
+    await hastaPaso('Tus datos');
+    await quieta();
+    ok('una fiesta con la cuenta SIN teléfono: «Tus datos» se lo pide, y solo eso (`#787`)', await page.locator('#pjc-tel').count() === 1 && /^Hola/.test(await page.locator('[data-isla-scroll] h1').innerText()), (await cuerpo()).slice(0, 90));
     await hastaPagar();
     ok('«Pagar» cobra la señal: «Pagar 50 € con tarjeta»', /Pagar 50\s€ con tarjeta/.test(await accion(/con tarjeta$/).innerText()));
     await foto('6-fiesta-pagar');
@@ -279,6 +297,7 @@ try {
     await foto('corte').catch(() => {});
 } finally {
     devolverFranja();
+    devolverTelefono();
     tinker(`$o = ${ULTIMO}; if ($o && $o->status === 'pending') { $o->expires_at = now()->subMinute(); $o->save(); }`);
     execFileSync('php', ['artisan', 'orders:expire'], { encoding: 'utf8' });
     await navegador.close();

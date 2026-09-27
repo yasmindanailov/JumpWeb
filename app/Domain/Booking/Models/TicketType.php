@@ -321,6 +321,17 @@ class TicketType extends Model
         return empty($this->duration_min);
     }
 
+    /**
+     * ¿Alguno de estos productos es un PACK (una fiesta)? Lo pregunta el pedido para saber si exige el teléfono de quien
+     * compra (`#787`, el owner: «obligatorio solo para reservas de cumpleaños»; vale cualquier pack). Solo lee.
+     *
+     * @param  list<int>  $ids
+     */
+    public static function anyPack(array $ids): bool
+    {
+        return $ids !== [] && self::query()->whereIn('id', $ids)->where('type', self::TYPE_PACK)->exists();
+    }
+
     /** ¿Es un pack (cumpleaños)? Aforo por cupo, no por plazas (#82). */
     public function isPack(): bool
     {

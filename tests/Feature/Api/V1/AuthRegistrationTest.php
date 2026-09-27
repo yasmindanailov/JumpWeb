@@ -99,6 +99,23 @@ class AuthRegistrationTest extends ApiTestCase
     }
 
     /**
+     * **Sin teléfono, el alta pasa** (`#787`, `[DECIDIDO owner, 2026-09-27]`): es obligatorio solo para reservar un PACK,
+     * y eso lo exige `POST /orders`. La cuenta nace sin él —como la de Google y la de mostrador—; vacío o de espacios, igual.
+     */
+    public function test_a_signup_without_a_phone_creates_the_account_without_one(): void
+    {
+        $this->register(['phone' => null])->assertCreated()->assertValidRequest();
+        $this->assertNull(User::where('email', 'nuevo@jumpweb.test')->value('phone'));
+
+        $this->register(['email' => 'otro@jumpweb.test', 'phone' => '   '])->assertCreated();
+        $this->assertNull(User::where('email', 'otro@jumpweb.test')->value('phone'), 'uno de espacios no es un teléfono');
+
+        $sinCampo = $this->payload(['email' => 'tercero@jumpweb.test']);
+        unset($sinCampo['phone']);
+        $this->withHeader('Origin', (string) config('app.url'))->postJson(self::ROOT.'/auth/register', $sinCampo)->assertCreated();
+    }
+
+    /**
      * ❗❗❗ **EL caso de la T8·c, y el que hace que la tanda no sea cosmética.**
      *
      * Quitar la casilla de la pantalla no basta: mientras el alta siguiera escribiendo una fila

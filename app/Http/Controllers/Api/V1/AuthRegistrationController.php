@@ -62,7 +62,9 @@ class AuthRegistrationController extends Controller
             // Sin `unique` a propósito: la existencia la resuelve el dominio, que además decide
             // qué se le cuenta al usuario y a quién se avisa por correo.
             'email' => ['required', 'string', 'email:rfc', 'max:255'],
-            'phone' => ['required', 'string', 'max:30'],
+            // Opcional desde `#787` (`[DECIDIDO owner, 2026-09-27]`): obligatorio solo en una reserva de PACK, y eso lo
+            // exige `POST /orders` (`CheckoutDuties::pendingForOrder`), que es donde se sabe qué se compra.
+            'phone' => ['nullable', 'string', 'max:30'],
             'password' => PasswordPolicy::rules(),
             // ⚠️⚠️ **Aquí NO hay casillas legales, desde la T8·c** (`[DECIDIDO owner, 2026-09-02]`,
             // spec §21.4.3). La privacidad se INFORMA con un enlace visible —el art. 13 no pide que
@@ -178,7 +180,8 @@ class AuthRegistrationController extends Controller
             [
                 'name' => $data['name'],
                 'email' => $data['email'],
-                'phone' => $data['phone'],
+                // Opcional (`#787`): sin él, la cuenta nace sin teléfono y se le pide al reservar un pack.
+                'phone' => $data['phone'] ?? null,
                 'password' => $data['password'],
                 'waiver' => $waiver,
             ],

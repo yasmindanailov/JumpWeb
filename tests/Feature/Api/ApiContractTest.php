@@ -212,7 +212,8 @@ class ApiContractTest extends TestCase
         // por defecto): quien la marca debe decir qué texto leyó, y eso lo exige el servidor.
         // ⚠️ `marketing` estuvo aquí hasta la T8·c (`#350`) y ya no está en el esquema: el alta no lo
         // pide, lo pide el interruptor de «Mi cuenta → Privacidad» (`PUT /me/marketing`).
-        'RegisterRequest' => ['context', 'website', 'turnstile_token', 'accept_waiver', 'waiver_document_id'],
+        // Y desde `#787` (27-09) el TELÉFONO: obligatorio solo para reservar un pack, y eso lo exige `POST /orders`.
+        'RegisterRequest' => ['phone', 'context', 'website', 'turnstile_token', 'accept_waiver', 'waiver_document_id'],
         // Cuerpo de PETICIÓN del alta con Google (`specs/auth-con-google.md` §7). Las dos claves del
         // descargo son opcionales por la MISMA razón que arriba y una más: en una instalación en modo
         // externo —o sin versión publicada— **no hay texto que aceptar**, así que exigirlas convertiría

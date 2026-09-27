@@ -1,9 +1,9 @@
 <script setup>
 /**
  * Paso 1 de la compra, «Tus datos» (`PjcDatos` del diseño, `paginas/compra/pasos-1-2.jsx`). Sin sesión: «¿Ya has
- * venido? Entra», Google o Apple ANTES de los campos (después ya no ahorran nada), nombre, correo, teléfono y
- * contraseña, y la casilla del descargo. Con sesión, solo el saludo y lo que de verdad falta: el teléfono en un
- * cumpleaños si entró con Google o Apple, y la casilla si esa cuenta nunca la firmó. «Esta cuenta ya existe» pide
+ * venido? Entra», Google o Apple ANTES de los campos (después ya no ahorran nada), nombre, correo, contraseña —y el
+ * teléfono SOLO en un cumpleaños (`pedirTelefono`, `#787`)— y la casilla del descargo. Con sesión, solo el saludo y lo
+ * que de verdad falta: el teléfono en un cumpleaños si entró con Google o Apple, y la casilla si esa cuenta nunca la firmó. «Esta cuenta ya existe» pide
  * su contraseña; sale al ENVIAR, no al teclear (`#688`). Con errores, un resumen arriba que se lee primero.
  *
  * Pinta y avisa (`cambiar(campo, valor)`, `entrar(modo)`, `descargo`, `proveedor(via)`, `hora(valor)`): quién es,
@@ -149,8 +149,10 @@ const cambiar = (campo) => (valor) => emit('cambiar', campo, valor);
                         >{{ t('compra.datos.olvido') }}</EnlaceSistema>
                     </div>
                 </AvisoDestacado>
-                <template v-else-if="cuenta !== 'google'">
+                <template v-else>
+                    <!-- El teléfono, solo si ESTE pedido lo pide (`#787`: una fiesta), también en el alta de Google. -->
                     <CampoSistema
+                        v-if="pedirTelefono"
                         id="pjc-tel"
                         :label="t('compra.datos.telefono')"
                         type="tel"
@@ -162,6 +164,7 @@ const cambiar = (campo) => (valor) => emit('cambiar', campo, valor);
                         @update:model-value="cambiar('telefono')($event)"
                     />
                     <CampoSistema
+                        v-if="cuenta !== 'google'"
                         id="pjc-clave"
                         :label="t('compra.datos.contrasena')"
                         type="password"

@@ -24,7 +24,7 @@ class StaticAnalysisGateTest extends TestCase
      * el número aquí en el mismo commit. Si el test te pide SUBIRLO, has metido un error nuevo en la
      * línea base en vez de arreglarlo.
      */
-    private const FROZEN_ERRORS = 453;   // F6a de la fiesta: tres entradas del controlador de la autorización se fueron con su código a `ComposesGuardianForm`, que pasa limpio
+    private const FROZEN_ERRORS = 448;   // `#787`: las cinco de `SelfSignup` se fueron al declarar en su tipo la clave `waiver` que siempre leyó (y el teléfono, ya opcional)
 
     private function config(): string
     {

@@ -570,7 +570,7 @@ class SidebarDomContractTest extends TestCase
      * El caso anterior no puede verlo —un formulario recién abierto no tiene errores—, y el número de
      * `<li>` depende de cuántos campos fallen: se fuerza un envío vacío, que falla en los CUATRO que
      * quedan (nombre, correo, teléfono y contraseña). ⚠️ Eran seis hasta la T8·c (`#350`), cuando las
-     * dos casillas legales salieron del alta.
+     * dos casillas legales salieron del alta; y desde `#787` el teléfono va demasiado largo, porque vacío ya vale.
      */
     public function test_the_register_error_banner_emits_the_same_tree_in_both_engines(): void
     {
@@ -584,9 +584,11 @@ class SidebarDomContractTest extends TestCase
         // validación— y el reparto entre banner y campo son SUYOS, y el test los reimplementaba en PHP
         // («el mismo orden que fija `register.js`», decía su comentario): eso es un punto ciego, no una
         // comodidad.
+        // ⚠️ Desde `#787` (plataforma, 27-09; avisado en su buzón) el teléfono es OPCIONAL en el alta: vacío ya no falla.
+        // Para seguir con cuatro campos en rojo va DEMASIADO LARGO (`max:30`), que es la regla que le queda.
         $api = ['register' => [
             'status' => 422,
-            'body' => $this->postJson('/api/v1/auth/register', [])->assertStatus(422)->json(),
+            'body' => $this->postJson('/api/v1/auth/register', ['phone' => str_repeat('6', 31)])->assertStatus(422)->json(),
         ]];
 
         // La precondición sigue viva y ahora se lee del MISMO 422 que consume el cajón: con un solo

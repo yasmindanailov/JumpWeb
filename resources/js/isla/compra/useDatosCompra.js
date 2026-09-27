@@ -32,7 +32,7 @@ const CUENTA_NUEVA = 'jw-isla-cuenta-nueva';
  */
 const altaDeGoogle = () => import('../../sidebar/account/google.js');
 
-export function useDatosCompra({ flow, props, textos }) {
+export function useDatosCompra({ flow, props, textos, esFiesta = () => false }) {
     const { store, authStore, cartStore, buyerDue } = flow;
     const waiverStore = useWaiverStore();
     const contexto = useAccountContextStore();
@@ -47,7 +47,13 @@ export function useDatosCompra({ flow, props, textos }) {
     // Con sesión manda la sesión; sin ella, el alta que vuelve de Google o lo que diga el alta («nueva», o «existe»).
     const cuenta = computed(() => (contexto.context ? 'dentro' : (estado.google ? 'google' : estado.f.cuenta)));
     const firma = computed(() => firmaPendiente({ cuenta: cuenta.value, contexto: contexto.context, documento: waiverStore.document }));
-    const pedirTelefono = computed(() => cuenta.value === 'dentro' && flow.buyerNeed.value.phone);
+    /**
+     * El teléfono, SOLO en una fiesta (`#787`, el owner: «obligatorio solo para reservas de cumpleaños»): al darse de alta
+     * (con correo o con Google), o con sesión si la cuenta no lo tiene (`phone_missing`). Y siempre que el servidor lo pida
+     * al pagar (`buyerDue.errors.phone`), que es la autoridad.
+     */
+    const pedirTelefono = computed(() => 'phone' in (buyerDue.errors ?? {})
+        || (esFiesta() && (cuenta.value === 'dentro' ? flow.buyerNeed.value.phone : cuenta.value !== 'existe')));
 
     /** Al llegar desde la pantalla 0: el formulario en blanco y el texto del descargo pedido ya. */
     function preparar() {
@@ -107,6 +113,8 @@ export function useDatosCompra({ flow, props, textos }) {
 
         if (r.ok) {
             try { window.sessionStorage.setItem(CUENTA_NUEVA, '1'); } catch { /* sin almacenamiento: «Listo» no lo dirá */ }
+            // El teléfono de una fiesta (`#787`): Google no lo da y su alta no lo acepta; va con el pago, como con sesión.
+            if (pedirTelefono.value) buyerDue.phone = estado.f.telefono.trim();
             // La RESPUESTA entera de `GET /me`, como la del alta (`register.js`: `me`): de ella lee la cesta su titular.
             const yo = await api.get('/me');
 
@@ -164,7 +172,10 @@ export function useDatosCompra({ flow, props, textos }) {
 
         if (store.step !== STEPS.PAY) return fallar({}, cartStore.error || aviso('errors.try_later'));
 
-        return ! (pedirTelefono.value || firma.value);
+        // El teléfono que ya se tecleó en el alta de Google (`#787`: en una fiesta va en el mismo paso) no se vuelve a pedir.
+        const faltaTelefono = pedirTelefono.value && ! String(buyerDue.phone ?? '').trim();
+
+        return ! (faltaTelefono || firma.value);
     }
 
     async function alta() {

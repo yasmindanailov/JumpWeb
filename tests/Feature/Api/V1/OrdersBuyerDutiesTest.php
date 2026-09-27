@@ -9,6 +9,7 @@ use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Models\Consent;
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Services\CheckoutDuties;
 use App\Domain\Identity\Services\LegalDocumentPublisher;
 use Illuminate\Support\Carbon;
 use Tests\Feature\Api\ApiTestCase;
@@ -36,6 +37,9 @@ class OrdersBuyerDutiesTest extends ApiTestCase
 
     private TicketType $entry;
 
+    /** Un pack (una fiesta): el único pedido que exige el teléfono desde `#787`. */
+    private TicketType $pack;
+
     private string $date;
 
     protected function setUp(): void
@@ -61,6 +65,13 @@ class OrdersBuyerDutiesTest extends ApiTestCase
             'duration_min' => 60, 'seats_per_unit' => 1, 'is_sellable' => true, 'is_active' => true, 'position' => 1,
         ]);
         $this->entry->prices()->create(['rate_type_id' => $rateId, 'amount_cents' => 990]);
+
+        $this->pack = TicketType::create([
+            'name' => ['es' => 'Cumpleaños'], 'type' => TicketType::TYPE_PACK, 'zone_id' => $zone->id,
+            'duration_min' => 60, 'min_qty' => 2, 'max_qty' => 10, 'seats_per_unit' => 1,
+            'is_sellable' => true, 'is_active' => true, 'position' => 2,
+        ]);
+        $this->pack->prices()->create(['rate_type_id' => $rateId, 'amount_cents' => 1500]);
     }
 
     // ─────────────────────────────────────────────────────────────────────────────────
@@ -141,20 +152,35 @@ class OrdersBuyerDutiesTest extends ApiTestCase
     //  El teléfono
     // ─────────────────────────────────────────────────────────────────────────────────
 
-    /** Sin teléfono no hay pedido — y con él, se guarda en la cuenta para no volver a pedirlo. */
-    public function test_an_account_without_a_phone_is_asked_for_one_and_it_is_kept(): void
+    /** Sin teléfono no hay pedido de un PACK — y con él, se guarda en la cuenta para no volver a pedirlo. */
+    public function test_an_account_without_a_phone_is_asked_for_one_to_book_a_pack_and_it_is_kept(): void
     {
         $user = $this->buyer(phone: null);
 
-        $this->actingAs($user)->postJson(self::PATH, $this->cart())
+        $this->actingAs($user)->postJson(self::PATH, $this->cart([], $this->pack))
             ->assertStatus(422)
             ->assertJsonStructure(['error' => ['fields' => ['phone']]]);
 
         $this->assertSame(0, Order::query()->count());
 
-        $this->actingAs($user)->postJson(self::PATH, $this->cart(['phone' => ' 600 111 222 ']))->assertCreated();
+        $this->actingAs($user)->postJson(self::PATH, $this->cart(['phone' => ' 600 111 222 '], $this->pack))->assertCreated();
 
         $this->assertSame('600 111 222', $user->fresh()->phone, 'el teléfono se guarda recortado');
+    }
+
+    /**
+     * ⚠️⚠️ **`#787` (`[DECIDIDO owner, 2026-09-27]`): una ENTRADA no exige el teléfono.** «Obligatorio solo para reservas
+     * de cumpleaños»: a quien entró con Google —que no lo da— se le pedía en cualquier compra, y eso era fricción donde no
+     * hace falta. La cuenta sigue sin él, y el contexto lo sigue diciendo (`phone_missing` es de la CUENTA).
+     */
+    public function test_an_entry_is_sold_without_asking_for_the_phone(): void
+    {
+        $user = $this->buyer(phone: null);
+
+        $this->actingAs($user)->postJson(self::PATH, $this->cart())->assertCreated();
+
+        $this->assertNull($user->fresh()->phone);
+        $this->assertTrue(app(CheckoutDuties::class)->pendingFor($user->fresh())['phone'], 'a la cuenta le sigue faltando');
     }
 
     /**
@@ -166,7 +192,7 @@ class OrdersBuyerDutiesTest extends ApiTestCase
     {
         $user = $this->buyer(phone: '600 000 000');
 
-        $this->actingAs($user)->postJson(self::PATH, $this->cart(['phone' => '699 999 999']))->assertCreated();
+        $this->actingAs($user)->postJson(self::PATH, $this->cart(['phone' => '699 999 999'], $this->pack))->assertCreated();
 
         $this->assertSame('600 000 000', $user->fresh()->phone);
     }
@@ -177,18 +203,22 @@ class OrdersBuyerDutiesTest extends ApiTestCase
 
     /**
      * El caso real que motiva la tanda: alguien que se dio de alta con Google **no tiene ninguna de
-     * las dos**, y las dos se le piden en el mismo 422 — no una, luego la otra.
+     * las dos**, y en un PACK las dos se le piden en el mismo 422 — no una, luego la otra. En una
+     * entrada, solo las condiciones (`#787`).
      */
-    public function test_a_google_signup_is_asked_for_both_at_once(): void
+    public function test_a_google_signup_is_asked_for_both_at_once_in_a_pack_and_only_the_terms_in_an_entry(): void
     {
         $this->publishTerms();
         $user = $this->buyer(phone: null);
 
-        $this->actingAs($user)->postJson(self::PATH, $this->cart())
+        $this->actingAs($user)->postJson(self::PATH, $this->cart([], $this->pack))
             ->assertStatus(422)
             ->assertJsonStructure(['error' => ['fields' => ['accept_terms', 'phone']]]);
 
-        $this->actingAs($user)->postJson(self::PATH, $this->cart(['accept_terms' => true, 'phone' => '600111222']))
+        $entrada = $this->actingAs($user)->postJson(self::PATH, $this->cart())->assertStatus(422);
+        $this->assertSame(['accept_terms'], array_keys($entrada->json('error.fields')));
+
+        $this->actingAs($user)->postJson(self::PATH, $this->cart(['accept_terms' => true, 'phone' => '600111222'], $this->pack))
             ->assertCreated();
     }
 
@@ -223,11 +253,11 @@ class OrdersBuyerDutiesTest extends ApiTestCase
     }
 
     /** @return array<string, mixed> */
-    private function cart(array $extra = []): array
+    private function cart(array $extra = [], ?TicketType $product = null): array
     {
         return [
             'items' => [[
-                'product_id' => $this->entry->id,
+                'product_id' => ($product ?? $this->entry)->id,
                 'date' => $this->date,
                 'time' => '10:00:00',
                 'quantity' => 2,

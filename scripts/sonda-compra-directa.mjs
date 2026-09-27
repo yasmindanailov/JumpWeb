@@ -10,9 +10,10 @@
  *   3. CON SESIÓN: la calculadora → «Pagar» directo, y su flecha vuelve a la pantalla 0 (lo que se eligió).
  *   4. LA VUELTA DE GOOGLE SIN CUENTA (simulada): igual, pero lo que espera en la sesión del SERVIDOR es un perfil de
  *      Google (tinker, SOLO EN LOCAL: el mismo `GoogleAuthSession::rememberProfile` que el retorno de Google). La compra
- *      lo encuentra y completa el alta en «Tus datos» —«Con tu cuenta de Google: …», su nombre, la casilla—; al seguir,
- *      la cuenta nace y la compra sigue a «Pagar». La cuenta se ANONIMIZA al acabar (y al empezar, la de una corrida
- *      anterior).
+ *      lo encuentra y completa el alta en «Tus datos» —«Con tu cuenta de Google: …», su nombre, la casilla y, en una
+ *      entrada, SIN teléfono (`#787`)—; al seguir, la cuenta nace y la compra sigue a «Pagar». La cuenta se ANONIMIZA
+ *      al acabar (y al empezar, la de una corrida anterior).
+ * Y antes, EL PIE de la página (`#786`): las formas de pago del hecho del sitio, en vez de la frase.
  * Sin pagar: no deja pedidos. Sale con 1 si algo falla; las fotos, en `storage/app/audit/directa-<ancho>-*.png`.
  *
  *   docker compose exec -u sail -T -e PLAYWRIGHT_BROWSERS_PATH=/home/sail/pw-browsers laravel.test \
@@ -207,23 +208,14 @@ try {
     ok('sin cuenta: la compra se reabre en «Tus datos» con «Con tu cuenta de Google: …»', /Con tu cuenta de Google/.test(alta) && (await hb.paso()).includes('Tus datos'), alta.slice(0, 120));
     ok('con el nombre que da Google, y sin correo ni contraseña que teclear', await b.page.inputValue('#pjc-nombre') === NUEVA.nombre && await b.page.locator('#pjc-correo, #pjc-clave').count() === 0);
     ok('sin «¿Ya has venido? Entra» ni el botón de Google', ! /Ya has venido|Continuar con Google/.test(alta));
+    ok('y sin teléfono: es una entrada (`#787`: solo las fiestas lo piden)', await b.page.locator('#pjc-tel').count() === 0);
     await hb.foto('4-alta-google');
     if (await b.page.locator('#pjc-descargo').count()) await b.page.check('#pjc-descargo');
     await hb.accion(/^Continuar al pago$/).click();
-    await b.page.waitForFunction(() => {
-        const p = (document.querySelector('#isla-compra-paso')?.textContent ?? '').trim();
-
-        return p.endsWith('Pagar') || /^Hola/.test(document.querySelector('[data-isla-scroll] h1')?.textContent ?? '');
-    }, null, { timeout: 20000 });
-    ok('la cuenta NACE al seguir (con su vínculo de Google)', tinker(`echo App\\Domain\\Identity\\Models\\User::where('email', '${NUEVA.email}')->whereHas('identities')->exists() ? 1 : 0;`) === '1');
-    // Lo que la cuenta nueva aún deba para ESTE pedido (el teléfono, hasta `#787`) se da aquí mismo.
-    if (await b.page.locator('#pjc-tel').count()) {
-        await b.page.fill('#pjc-tel', '600000000');
-        await hb.accion(/^Continuar al pago$/).click();
-    }
     await hb.hastaPaso('Pagar');
     await hb.quieta();
-    ok('y la compra sigue a «Pagar», sin haber salido a Mi cuenta', (await hb.paso()).includes('Pagar') && ! /Mi cuenta/.test(await hb.cuerpo()), await hb.paso());
+    ok('la cuenta NACE al seguir (con su vínculo de Google y sin teléfono)', tinker(`echo App\\Domain\\Identity\\Models\\User::where('email', '${NUEVA.email}')->whereHas('identities')->whereNull('phone')->exists() ? 1 : 0;`) === '1');
+    ok('y la compra sigue a «Pagar» sin pedir nada más, sin haber salido a Mi cuenta', (await hb.paso()).includes('Pagar') && ! /Mi cuenta/.test(await hb.cuerpo()), await hb.paso());
     await hb.foto('5-alta-pagar');
     await b.ctx.close();
 

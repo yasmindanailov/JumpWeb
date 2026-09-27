@@ -3,9 +3,9 @@
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 EN CURSO** (su centena,
-> `decisiones/700-799.md`) · Último usado: **`#786`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#786`) · Actualizado: **2026-09-27**
-> (el zip del 26-09 tarde, §4.14: Z1→Z3 y Z4·1→Z4·2 hechas, `#780`→`#786`; la T5 de Mi cuenta, T5a→T5e hechas, `#774`→`#779`).
+> `decisiones/700-799.md`) · Último usado: **`#787`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#787`) · Actualizado: **2026-09-27**
+> (el zip del 26-09 tarde, §4.14: Z1→Z3 y Z4 hechas, `#780`→`#787`; la T5 de Mi cuenta, T5a→T5e hechas, `#774`→`#779`).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
 > llévaselo con la medida, como el SPA en `#724`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -38,12 +38,14 @@
 
 ## Por dónde retomar, en orden
 
-▶▶▶ **EN MARCHA: el ZIP TERCERO** (spec §4.14: cada tanda, con su sonda y sus cifras; `#780`→`#785`). **Z1→Z3 ✅** y el
+▶▶▶ **EN MARCHA: el ZIP TERCERO** (spec §4.14: cada tanda, con su sonda y sus cifras; `#780`→`#787`). **Z1→Z3 ✅** y el
 rendimiento (`#783`). Las MARCAS de pago ✅ (`#784`, `#786`): en LOCAL, `payment.marks` = `bizum,visa,mastercard`; en
 PRODUCCIÓN las marca el owner en el panel. El botón de Bizum, con la v2.0.0.
 **Z4 (27-09, el owner; buzón al SPA ANTES, `3db1bdac`)**: Z4·1 ✅ (`#785`: de la calculadora a «Pagar», «Tus datos» solo si
 falta algo, la vuelta de Google dentro de la compra) → Z4·2 ✅ (`#786`: las marcas discretas, en el pie, la calculadora y
-bajo «Pagar»; el pie, en la instancia) → Z4·3 el teléfono SOLO en packs de fiesta, también en el alta. Luego Normas y Visítanos. La isla por temporada, **ahora no**. ⚠️ Tras tocar
+bajo «Pagar»; el pie, en la instancia) → Z4·3 ✅ (`#787`: el teléfono SOLO en packs, también en el alta). ⚠️ Sin probar
+con Google DE VERDAD (simulado en la sonda): la prueba final, con el owner. Luego Normas y Visítanos. La isla por
+temporada, **ahora no**. ⚠️ Tras tocar
 `instancias/playjump/publico/`, copiarlo a `public/instancia` (el producto sirve la copia).
 ▶▶ **EN MARCHA (26-09): T5 · Mi cuenta en la isla** (spec §4.13, `#773`: el censo, las cuatro respuestas del owner y
 el plan T5a→T5f; dentro de la v2). **T5a→T5d ✅** (`#774`→`#777`: la capa, las reservas, Antes de venir, los hijos;
@@ -214,8 +216,9 @@ dueño es el carril de la web/reseñas—) ·
   (las páginas nuevas no las tenían: la vuelta de Google no reabría la compra). Y `Settings.php`: aviso TARDÍO, `#784`
   le puso una casilla (`payment.marks`).
 - **El teléfono**: `CheckoutDuties`, `OrdersController` y el alta (`AuthRegistrationController`: `phone` opcional).
-  Tu cajón seguirá pidiéndolo si `phone_missing` (de más en una entrada; el servidor ya no lo exige). Si una prueba tuya
-  espera ese 422, la ajusto yo en el mismo commit y te lo digo aquí. Uso SIN tocar `account/google.js`; de tu motor,
+  Tu cajón seguirá pidiéndolo si `phone_missing` (de más en una entrada; el servidor ya no lo exige). ▶ HECHO (`#787`):
+  toqué UNA prueba tuya, `SidebarDomContractTest` (el banner del alta: el teléfono va demasiado largo para seguir con
+  cuatro campos en rojo, porque vacío ya vale). Uso SIN tocar `account/google.js`; de tu motor,
   solo EXPORTO `enterWith` (una línea en el `return` de `usePurchaseFlow`): el alta con Google, dentro de la compra.
 - **Contrato 1.41.0, mío** (`/site` gana las marcas de pago; el alta, `phone` opcional): el siguiente, tuyo.
 

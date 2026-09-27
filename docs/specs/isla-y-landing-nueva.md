@@ -1545,6 +1545,13 @@ La identidad con el diseño, una vez y al final (`#768`).
   (`cuenta: 'google'`: su correo a la vista, su nombre, la casilla; `account/google.js` con `import()`, y
   `flow.enterWith`). Sonda: `scripts/sonda-compra-directa.mjs [390|1280]`, 14/14 en las dos (simula las dos vueltas
   de Google: `TESTING.md` §2.octies); sin regresión, `sonda-isla` 20/20 y `sonda-calculadora` kids.
+- ▶ **Z4·3 ✅ (27-09, `#787`)**. **El teléfono, SOLO en una fiesta** (el owner; vale cualquier pack). El servidor:
+  `POST /orders` lo exige solo con un pack (`CheckoutDuties::pendingForOrder`, `TicketType::anyPack`) y el alta con
+  correo lo acepta vacío (1.41.0). La isla (`useDatosCompra::pedirTelefono`, con `esFiesta` de la compra): en el alta
+  —con correo o con Google, en el mismo paso—, con sesión si a la cuenta le falta, y siempre que el servidor lo pida al
+  pagar. «Crea tu cuenta» de Mi cuenta, sin él. Sondas: `sonda-compra-directa` (el alta de Google en una entrada, sin
+  teléfono, 16/16) y `sonda-isla` (la fiesta con la cuenta SIN teléfono lo pide, y solo eso; 21/21, y la cuenta de
+  pruebas recupera el suyo); `sonda-cuenta` sin regresión.
 
 ## 5. Impacto en invariantes
 

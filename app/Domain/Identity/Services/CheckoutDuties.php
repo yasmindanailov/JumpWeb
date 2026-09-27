@@ -10,7 +10,8 @@ use App\Domain\Identity\Models\User;
  * Son dos cosas y no se parecen en nada salvo en cuándo se piden:
  *  · **las condiciones**, en su versión vigente — el momento del contrato es donde el TRLGDCU
  *    (art. 97) y la LCGC (art. 5) las sitúan, no la creación de la cuenta;
- *  · **el teléfono**, si la cuenta no lo tiene. `[owner]`: *«imprescindible para las reservas»*.
+ *  · **el teléfono**, si la cuenta no lo tiene. `[owner]`: *«imprescindible para las reservas»* — y desde `#787`
+ *    (27-09) solo para las de un PACK: `pendingForOrder()`.
  *
  * ⚠️⚠️ **Existe porque la pregunta se estaba respondiendo en DOS sitios.** La primera versión la
  * resolvía el contexto de cuenta por un lado y el controlador de pedidos por otro, cada uno con su
@@ -44,6 +45,23 @@ final class CheckoutDuties
             // frase en el producto desde que este servicio existe.
             'phone' => trim((string) $user->phone) === '',
         ];
+    }
+
+    /**
+     * **Lo que exige ESTE pedido** (`#787`, `[DECIDIDO owner, 2026-09-27]`): las condiciones, siempre que falten; el
+     * teléfono, solo si falta Y el pedido lleva un pack (una fiesta: «obligatorio solo para reservas de cumpleaños»).
+     *
+     * ⚠️ `pendingFor()` sigue diciendo lo que le falta a la CUENTA (el contexto lo publica como `phone_missing`, y el
+     * mostrador lo usa tal cual): no se toca, porque su sentido es otro. Lo que cambia es qué exige un pedido.
+     *
+     * @return array{terms: bool, updated: bool, phone: bool}
+     */
+    public function pendingForOrder(User $user, bool $withPack): array
+    {
+        $pending = $this->pendingFor($user);
+        $pending['phone'] = $pending['phone'] && $withPack;
+
+        return $pending;
     }
 
     /**

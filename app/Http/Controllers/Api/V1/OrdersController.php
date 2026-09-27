@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Domain\Booking\Contracts\AdmissionDecision;
 use App\Domain\Booking\Contracts\ReservationCheckout;
 use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\TicketType;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\CheckoutDuties;
 use App\Domain\Identity\Services\DependentAssigner;
@@ -69,13 +70,16 @@ class OrdersController extends Controller
         }
 
         // Lo que el COMPRADOR debe antes de contratar (`#349`), y va ANTES del dinero por lo mismo que
-        // la asignación de menores: si falta, no se crea nada ni se consume la ficha de admisión.
-        $this->requireBuyerDuties($request, $user, $duties);
+        // la asignación de menores: si falta, no se crea nada ni se consume la ficha de admisión. El teléfono,
+        // solo si la cesta lleva un PACK (`#787`): la capa de entrega compone Booking (qué se compra) e Identity
+        // (qué se le debe), que no se miran entre sí.
+        $cart = CartPayload::toCart($validated['items']);
+        $this->requireBuyerDuties($request, $user, $duties, TicketType::anyPack(array_column($cart, 'ticket_type_id')));
 
         try {
             $outcome = $checkout->start(
                 $user,
-                CartPayload::toCart($validated['items']),
+                $cart,
                 ReservationCheckout::SOURCE_CHECKOUT,
             );
         } catch (PaymentInitiationException) {
@@ -148,7 +152,8 @@ class OrdersController extends Controller
      *    versión vigente. `[DECIDIDO owner, 2026-09-02]`: se piden en el momento del CONTRATO —que es
      *    donde el TRLGDCU (art. 97) y la LCGC (art. 5) las sitúan— y no al crear la cuenta.
      * 2. **El teléfono**, si la cuenta no lo tiene. `[owner]`: *«imprescindible para las reservas»*.
-     *    Solo se pide cuando falta: a quien ya lo dio no se le vuelve a preguntar.
+     *    Solo se pide cuando falta: a quien ya lo dio no se le vuelve a preguntar. Y desde `#787` (27-09), solo
+     *    en un pedido con un PACK (`$withPack`): «obligatorio solo para reservas de cumpleaños».
      *
      * ⚠️⚠️ **La comprobación es del SERVIDOR, y eso es lo que la hace real.** El cajón sabe qué pintar
      * porque el contexto de cuenta le da una PISTA (`terms_pending`), pero si la decisión viviera en
@@ -159,9 +164,9 @@ class OrdersController extends Controller
      * previa a quedar vinculado. Si después el pedido se cae por aforo, la aceptación y el teléfono se
      * quedan escritos — porque los dio de verdad.
      */
-    private function requireBuyerDuties(Request $request, User $user, CheckoutDuties $duties): void
+    private function requireBuyerDuties(Request $request, User $user, CheckoutDuties $duties, bool $withPack): void
     {
-        $pending = $duties->pendingFor($user);
+        $pending = $duties->pendingForOrder($user, $withPack);
 
         if (! $pending['terms'] && ! $pending['phone']) {
             return;
