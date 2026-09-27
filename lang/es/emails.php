@@ -172,6 +172,9 @@ return [
         'guests' => 'Fichas de invitados: :done de :total completas.',
         'replies' => '{1} Una familia te ha contestado y está por repasar.|[2,*] :count familias te han contestado y están por repasar.',
         'minors' => '{1} Queda un niño sin justificante firmado.|[2,*] Quedan :count niños sin justificante firmado.',
+        // Quien cumple (F7, `#752`): su descargo, por su nombre y con dónde se firma.
+        'honoree' => 'Falta el descargo de :name: puedes firmarlo en su fila de la lista.',
+        'honoree_unnamed' => 'Falta el descargo de quien cumple: puedes firmarlo en su fila de la lista.',
         'balance_title' => 'Lo que se paga en el parque',
         'balance' => 'Mañana quedan :amount por abonar en recepción.',
         // ❗❗ La frase que quita el susto, y no es cortesía: la cifra sola se lee como un reproche a

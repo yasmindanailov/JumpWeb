@@ -2,6 +2,7 @@
 
 namespace App\Domain\Booking\Services;
 
+use App\Domain\Booking\Contracts\HonoreeWaivers;
 use App\Domain\Booking\Contracts\PendingWork;
 use App\Domain\Booking\Contracts\ReservationPlacesTaken;
 use App\Domain\Booking\Models\OrderItem;
@@ -35,6 +36,8 @@ final class PendingBeforeVisit
     public function __construct(
         private ReservationPlacesTaken $places,
         private PartyInvitations $invitations,
+        // F7 (`#752`): lo que cubre a quien cumple es de Identity; se pregunta por contrato, como las plazas.
+        private HonoreeWaivers $honoree,
     ) {}
 
     public function forReservation(OrderItem $reservation): PendingWork
@@ -58,6 +61,9 @@ final class PendingBeforeVisit
             repliesToReview: $this->repliesToReview($reservation, $type),
             minorsUnresolved: $this->minorsUnresolved($reservation, $type),
             balanceAtParkCents: $this->balanceAtPark($reservation),
+            // ⚠️ Solo se pregunta si la reserva lo SELLA: la víspera corre sobre las reservas de un día entero y las de
+            // entradas no pagan ni una consulta por él.
+            honoreeWaiverMissing: $reservation->hasHonoreeRow() && $this->honoree->honoreeWaiverMissing((int) $reservation->getKey()),
         );
     }
 

@@ -549,6 +549,36 @@ class OrderItem extends Model
     }
 
     /**
+     * **El nombre de QUIEN CUMPLE**, si la reserva lo sella; `null` si no (F7, `#752`): la ÚNICA fuente con la que lo
+     * nombran la página de su justificante, la puerta y el aviso de la víspera. ⚠️ Solo para NOMBRARLO: quién lo cubre se
+     * sabe por la atadura, nunca por este nombre (`GuardianPlaces::honoreeCoverage()`).
+     *
+     * Su ficha (la 0) y, si aún no tiene nombre, el campo del homenajeado de la reserva (`celebrantNameFieldKey()`, por
+     * TIPO y no por clave). No hace falta mirar la invitación: su nombre y la ficha 0 son espejo (`PartyInvitations`), y
+     * nace de ese mismo campo — y así la puerta no paga una consulta por fiesta.
+     *
+     * Con la reserva sellada nunca es `null`, aunque su pack haya perdido después la columna de nombre: sigue ocupando su
+     * plaza y hay que poder decirlo (`''`: sin nombre en ningún sitio).
+     */
+    public function honoreeName(): ?string
+    {
+        if (! $this->hasHonoreeRow()) {
+            return null;
+        }
+
+        $type = $this->ticketType;
+        $nameKey = $type?->guestNameFieldKey();
+        $name = $nameKey === null ? '' : trim((string) ($this->guestData()[self::HONOREE_ROW_INDEX][$nameKey] ?? ''));
+        $celebrantKey = $type?->celebrantNameFieldKey();
+        if ($name === '' && $celebrantKey !== null) {
+            $value = (is_array($this->event_data) ? $this->event_data : [])[$celebrantKey] ?? null;
+            $name = is_scalar($value) ? trim((string) $value) : '';
+        }
+
+        return $name;
+    }
+
+    /**
      * Las fichas de los INVITADOS, por su posición (0…quantity−1), **sin la de quien cumple**: lo que empareja con las
      * respuestas de la invitación (propuestas, «no», recordatorio, adopción).
      *

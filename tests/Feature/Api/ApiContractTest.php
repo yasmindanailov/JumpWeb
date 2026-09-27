@@ -619,6 +619,25 @@ class ApiContractTest extends TestCase
     }
 
     /**
+     * ⚠️ **Y el DESCARGO DE QUIEN CUMPLE, por lo mismo** (F7, 1.42.0, `DECISIONES #752`): `GuestForm.honoree_waiver` es
+     * anulable y tiene la forma del componente `HonoreeWaiver`, que devuelve `PUT …/honoree-waiver`. Aquí se comparan las
+     * propiedades ENTERAS (tipo, enum, anulable): ni una ni otra llevan prosa por campo, así que no hay nada que excusar.
+     */
+    public function test_the_inlined_honoree_waiver_says_the_same_as_the_component(): void
+    {
+        $schemas = $this->contract()['components']['schemas'] ?? [];
+        $component = $schemas['HonoreeWaiver'] ?? null;
+        $inline = $schemas['GuestForm']['properties']['honoree_waiver'] ?? null;
+
+        $this->assertIsArray($component, 'falta el componente `HonoreeWaiver`');
+        $this->assertIsArray($inline, '`GuestForm` ya no declara el descargo de quien cumple inline');
+        $this->assertTrue($inline['nullable'] ?? false, 'anulable: la mayoría de las reservas no sellan a quien cumple');
+        $this->assertFalse($inline['additionalProperties'] ?? true, 'la copia perdió `additionalProperties: false`');
+        $this->assertSame($component['properties'], $inline['properties'] ?? null, '`GuestForm.honoree_waiver` ha divergido de `HonoreeWaiver`');
+        $this->assertSame($component['required'], $inline['required'] ?? null, '`GuestForm.honoree_waiver` ha divergido en sus obligatorios');
+    }
+
+    /**
      * La zona anidada en un producto está escrita INLINE y no como `$ref`, y esta guarda es el
      * precio de esa decisión.
      *

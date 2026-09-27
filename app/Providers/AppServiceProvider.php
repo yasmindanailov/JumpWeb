@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Domain\Booking\Contracts\HonoreeWaivers;
 use App\Domain\Booking\Contracts\ReservationPlacesTaken;
 use App\Domain\Booking\Contracts\SignedInvitationReplies;
 use App\Domain\Booking\Models\InvitationReply;
@@ -169,6 +170,10 @@ class AppServiceProvider extends ServiceProvider
         // invitación necesita saber si esa respuesta ya tiene justificante para no ofrecerle firmar a
         // quien acaba de firmar. La atadura la guarda Identity (`#576`) y el recibo es de Booking.
         $this->app->bind(SignedInvitationReplies::class, GuardianPlaces::class);
+
+        // Y la tercera pregunta de la misma frontera (F7, `#752`): ¿a quien cumple le falta su descargo? La víspera es de
+        // Booking y lo que lo cubre —su menor a cargo o su justificante— lo sabe Identity.
+        $this->app->bind(HonoreeWaivers::class, GuardianPlaces::class);
 
         // **El consentimiento vivo de un visitante** (`specs/analitica.md` §4.3, T3b·2): la cola relee la
         // última decisión de cookies antes de comunicar una compra a un anunciante. La prueba es de Identity

@@ -10,9 +10,13 @@ use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Services\GuestAgeMixReader;
 use App\Domain\Booking\Services\ItemEditPricing;
 use App\Domain\Booking\Services\PartyInvitations;
+use App\Domain\Identity\Contracts\HonoreeCoverage;
+use App\Domain\Identity\Models\Dependent;
+use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\DependentRegistry;
 use App\Domain\Identity\Services\GuardianPlaces;
-use App\Domain\Identity\Services\WaiverStatus;
+use App\Domain\Identity\Services\LegalDocuments;
+use App\Domain\Identity\Services\WaiverSettings;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Domain\Platform\Services\Money;
 use App\Domain\Platform\Services\PersonNameKey;
@@ -63,7 +67,16 @@ final class ListaDeInvitados
         $inv = $invitacion['invitation'] ?? null;
 
         $columnas = self::columnas($type, $guestFields);
-        $firmas = $inv !== null ? app(GuardianPlaces::class)->signedMinorsIn((int) $reservation->getKey()) : [];
+        $places = app(GuardianPlaces::class);
+        // «Firmada · Falta» solo donde una firma PUEDE existir (F7b, `#752`): con el descargo gestionado dentro. Es la regla del
+        // recibo, que es por donde firman los padres (`InvitationPageController::receipt`, sin mirar el modo del producto).
+        // ⚠️ No el `usesGuardianAuthorization()` de la puerta: con la invitación, el recibo ofrece la firma aunque el pack
+        // diga `none`, y esa condición escondería firmas de verdad (medido: se probó y lo cazó `ListaDeInvitadosTest`).
+        // Antes salía siempre, y fuera del modo interno toda fila decía «Falta» para siempre.
+        $firmaVisible = WaiverSettings::isInternal();
+        $firmas = $inv !== null ? $places->signedMinorsIn((int) $reservation->getKey()) : [];
+        // Quien cumple, por la ATADURA y nunca por su nombre (§4.13): `null` si la reserva no lo sella.
+        $cobertura = $places->honoreeCoverage((int) $reservation->getKey());
         $adoptadas = $inv !== null ? app(PartyInvitations::class)->adoptedYesKeysIn($reservation) : [];
         $declinadas = collect($invitacion['declined'] ?? [])->filter(fn (array $r): bool => $r['slot_index'] !== null)->keyBy('slot_index');
 
@@ -74,7 +87,7 @@ final class ListaDeInvitados
             'edad' => $inv !== null && $inv->honoree_age !== null ? (string) $inv->honoree_age : '',
             'fila' => $reservation->hasHonoreeRow(),
         ];
-        $ninos = self::ninos($reservation, $type, $rows, $proposals, $columnas, $firmas, $adoptadas, $declinadas, $v, $cumple);
+        $ninos = self::ninos($reservation, $type, $rows, $proposals, $columnas, $firmas, $adoptadas, $declinadas, $v, $cumple, $cobertura, $firmaVisible);
         $cuentas = self::cuentas($ninos, $invitacion['summary'] ?? null);
         $reserva = self::reserva($reservation, $type, $site, $invitacion);
         // F5 (`#749`): cuántos sois para la tarta (el `sois` de `PliZona4`: el número, o la lista si lo supera).
@@ -95,15 +108,18 @@ final class ListaDeInvitados
             'primero' => $inv !== null && ! $readonly && $cumple['nombre'] === '',
             'invitacion' => $inv === null ? null : self::invitacion($invitacion, $inv, $reservation, $cumple, $reserva, $status, $reminderText),
             'ninos' => $ninos,
+            'firma_visible' => $firmaVisible,
+            // El descargo de QUIEN CUMPLE (F7b, §4.13, `#752`): el panel bajo su fila, o `null` si no toca.
+            'firma_cumple' => self::firmaCumple($v, $reservation, $cumple, $cobertura, $firmaVisible, $readonly),
             // F4 (§4.9, `#747`): la ficha que `lista.js` copia para añadir niños MÁS ALLÁ del número (con el número en
             // plazo). `__I__` es su posición, que pone el JS. Sin plazo, la lista no pasa del número y no hay plantilla.
-            'plantilla' => ((bool) $v['guestCount']['editable'] && ! $readonly) ? self::plantilla($columnas) : null,
+            'plantilla' => ((bool) $v['guestCount']['editable'] && ! $readonly) ? self::plantilla($columnas, $firmaVisible) : null,
             'columnas' => $columnas,
             'cuentas' => $cuentas,
             'numero' => self::numero($reservation, $v['guestCount'], $cuentas, $readonly),
             'extras' => $extras,
             'generales' => array_values(array_filter(self::generales($type, $v['generalFields'], $reservation, $readonly), fn (array $g): bool => $g['key'] !== $adultos)),
-            'avisos' => self::avisos($v, $status, $type),
+            'avisos' => self::avisos($v, $status, $type, $cumple['nombre']),
             'progreso' => $v['progress'],
             // La barra (`PliZona5`): «Guardado hoy a las 16:05» si el titular guardó alguna vez (F5c, `#749`).
             'guardar' => [
@@ -153,14 +169,14 @@ final class ListaDeInvitados
      * @param  list<array<string, string>>  $rows
      * @param  array<int, array{id: int, repeated: bool}>  $proposals
      * @param  array{name: ?string, age: ?string, allergies: ?string, extra: list<array<string, mixed>>, labels: array<string, string>}  $columnas
-     * @param  list<array{key: string, reply_id: int|null}>  $firmas
+     * @param  list<array{key: string, reply_id: int|null, honoree?: bool}>  $firmas
      * @param  list<string>  $adoptadas
      * @param  Collection<int, array{id: int, child_name: string, slot_index: int|null}>  $declinadas
      * @param  array<string, mixed>  $v
      * @param  array{nombre: string, edad: string, fila: bool}  $cumple
      * @return list<array<string, mixed>>
      */
-    private static function ninos(OrderItem $reservation, TicketType $type, array $rows, array $proposals, array $columnas, array $firmas, array $adoptadas, $declinadas, array $v, array $cumple): array
+    private static function ninos(OrderItem $reservation, TicketType $type, array $rows, array $proposals, array $columnas, array $firmas, array $adoptadas, $declinadas, array $v, array $cumple, ?HonoreeCoverage $cobertura = null, bool $firmaVisible = true): array
     {
         $out = [];
         $quantity = max(0, (int) $reservation->quantity);
@@ -184,8 +200,12 @@ final class ListaDeInvitados
             }
             $alergias = $columnas['allergies'] === null ? '' : trim((string) ($row[$columnas['allergies']] ?? ''));
             $key = $nombre === '' ? '' : PersonNameKey::for($nombre);
-            $firmada = $key !== '' && (collect($firmas)->contains(fn (array $f): bool => PersonNameKey::cardMatches($key, $f['key']))
-                || ($esCumple && self::cumpleFirmado($reservation, $key)));
+            // ❗ F7 (`#752`): quien cumple, por su COBERTURA (la atadura) y nunca por el nombre; un invitado, por el nombre con
+            // los justificantes de los INVITADOS —el de quien cumple no puede firmar a un «Mateo» invitado—.
+            $firmada = $esCumple
+                ? ($cobertura?->signed() ?? false)
+                : $key !== '' && collect($firmas)->contains(fn (array $f): bool => ! ($f['honoree'] ?? false) && PersonNameKey::cardMatches($key, $f['key']));
+            $firmada = $firmada && $firmaVisible;
             $adoptada = ! $esCumple && $key !== '' && in_array($key, $adoptadas, true);
             $declinada = ! $esCumple && $declinadas->has($i);
             $sinProducto = in_array($i, $noProduct, true);
@@ -213,6 +233,7 @@ final class ListaDeInvitados
                 'no_reply_id' => $declinada ? (int) ($declinadas->get($i)['id'] ?? 0) : null,
                 'repetida' => (bool) ($mark['repeated'] ?? false),
                 'firmada' => $firmada,
+                'firma' => $firmaVisible,
                 'completa' => ! $sinProducto && $primeraVacia === null,
                 'falta' => $conDatos && $primeraVacia !== null ? $type->guestFieldLabel($primeraVacia) : null,
                 'sin_producto' => $sinProducto,
@@ -237,7 +258,7 @@ final class ListaDeInvitados
      * @param  array{name: ?string, age: ?string, allergies: ?string, extra: list<array<string, mixed>>, labels: array<string, string>}  $columnas
      * @return array<string, mixed>
      */
-    private static function plantilla(array $columnas): array
+    private static function plantilla(array $columnas, bool $firmaVisible = true): array
     {
         $i = '__I__';
         $campo = static fn (?string $clave): ?string => $clave === null ? null : 'guests['.$i.']['.$clave.']';
@@ -245,33 +266,81 @@ final class ListaDeInvitados
         return [
             'id' => 'g'.$i, 'indice' => $i, 'nombre' => '', 'edad' => '', 'alergias' => '', 'vacia' => true,
             'origen' => 'mano', 'respuesta' => null, 'pendiente' => false, 'reply_id' => null, 'no_reply_id' => null,
-            'repetida' => false, 'firmada' => false, 'completa' => false, 'falta' => null, 'sin_producto' => false, 'regimen' => null,
+            'repetida' => false, 'firmada' => false, 'firma' => $firmaVisible, 'completa' => false, 'falta' => null, 'sin_producto' => false, 'regimen' => null,
             'campos' => ['name' => $campo($columnas['name']), 'age' => $campo($columnas['age']), 'allergies' => $campo($columnas['allergies'])],
             'extra' => [], 'editable' => true,
         ];
     }
 
     /**
-     * LA FIRMA DE QUIEN CUMPLE (F3b de `fiesta-sistema-nuevo.md` §4.8, `#747`): no es un justificante de invitado, es la
-     * exención de su ficha de MENOR A CARGO del anfitrión (`menores-a-cargo.md`). Sin esto su fila decía «Falta» aunque el
-     * anfitrión hubiera firmado por él. Se empareja por nombre con la MISMA regla que las demás filas y que la puerta
-     * (`PersonNameKey::cardMatches`), y cuenta solo la firma VIGENTE en modo interno (`WaiverStatus::minorState()`: en los
-     * otros modos el parque no sabe de menores a cargo).
+     * **EL DESCARGO DE QUIEN CUMPLE, bajo su fila** (F7b de `fiesta-sistema-nuevo.md` §4.13, `[DECIDIDO owner]` `#752`).
+     * Sustituye a la F3b, que lo daba por firmado emparejando su NOMBRE con un hijo del titular: fallaba con «María José»
+     * y acertaba con cualquier «Lucía» (medido, §4.8). Ahora lo dice `honoreeCoverage()`, y esto compone el panel que pide
+     * firmarlo, solo cuando falta (sin cubrir, o cubierto por un hijo con el descargo de un texto viejo):
+     *  - «Sí, soy su padre, madre o tutor»: con la sesión del TITULAR, sus hijos a cargo (el que empareja por nombre,
+     *    preseleccionado: el nombre sugiere, no prueba) u «otro, que no está en tu cuenta»; sin ella, «Entrar y firmarlo en
+     *    tu cuenta» (el camino de la cuenta exige sesión, `RGPD-03`) y «Firmarlo aquí» (su justificante).
+     *  - «No, que lo firme su familia»: su justificante, para pasárselo a su padre o madre.
+     *
+     * @param  array<string, mixed>  $v
+     * @param  array{nombre: string, edad: string, fila: bool}  $cumple
+     * @return array<string, mixed>|null
      */
-    private static function cumpleFirmado(OrderItem $reservation, string $key): bool
+    private static function firmaCumple(array $v, OrderItem $reservation, array $cumple, ?HonoreeCoverage $cobertura, bool $firmaVisible, bool $readonly): ?array
     {
-        $host = $reservation->order?->user;
-        if ($host === null) {
-            return false;
+        if (! $cumple['fila'] || ! $firmaVisible || $readonly || $cobertura === null || $cobertura->signed()) {
+            return null;
         }
-        foreach (app(DependentRegistry::class)->activeFor($host) as $dependent) {
-            if (PersonNameKey::cardMatches($key, PersonNameKey::for($dependent->fullName()))
-                && WaiverStatus::forDependent($dependent)->minorState() === WaiverStatus::MINOR_CURRENT) {
-                return true;
+
+        $nombre = $cumple['nombre'] !== '' ? $cumple['nombre'] : __('fiesta.lista.cumple_firma.quien');
+        $viewer = $v['viewer'] ?? null;
+        $sesion = $viewer instanceof User && (int) $viewer->getKey() === (int) ($reservation->order->user_id ?? 0);
+
+        $hijos = [];
+        if ($sesion) {
+            $dia = $reservation->slot?->date !== null ? CarbonImmutable::parse($reservation->slot->date) : DisplayTime::today();
+            $clave = PersonNameKey::for($cumple['nombre']);
+            foreach (app(DependentRegistry::class)->activeFor($viewer) as $d) {
+                if (! $d->isMinorOn($dia)) {
+                    continue;
+                }
+                $hijos[] = [
+                    'id' => (int) $d->getKey(),
+                    'nombre' => $d->fullName(),
+                    'pre' => $cobertura->dependentId === (int) $d->getKey() || ($clave !== '' && PersonNameKey::cardMatches($clave, PersonNameKey::for($d->fullName()))),
+                ];
             }
         }
 
-        return false;
+        $documento = LegalDocuments::current(WaiverSettings::SLUG, app()->getLocale());
+        $aqui = $reservation->guardianAuthorizationSignedUrl(['para' => 'cumple']);
+        $relaciones = [['value' => '', 'label' => __('guardian.guardian.relationship_placeholder')]];
+        foreach (Dependent::RELATIONSHIPS as $r) {
+            $relaciones[] = ['value' => $r, 'label' => __('guardian.relationships.'.$r)];
+        }
+        $sesionEstado = session('status');
+
+        return [
+            'nombre' => $nombre,
+            // Cubierto por un hijo cuyo descargo es de un texto anterior: se vuelve a firmar en el mismo paso.
+            'viejo' => $cobertura->covered(),
+            'sesion' => $sesion,
+            'hijos' => $hijos,
+            'accion' => route('reservation.honoree.store', ['reservation' => $reservation]),
+            'entrar' => route('login', ['next' => (string) ($v['volver'] ?? '')]),
+            'aqui' => $aqui,
+            'whatsapp' => 'https://wa.me/?text='.rawurlencode(__('fiesta.lista.cumple_firma.mensaje', ['n' => $nombre, 'url' => $aqui])),
+            'documento' => $documento === null ? null : ['id' => (int) $documento->getKey(), 'descargo' => Autorizacion::descargoDe($documento)],
+            'relaciones' => $relaciones,
+            // Lo que volvió del envío (`HonoreeWaiverController`): el aviso, dentro del panel, donde actuó.
+            'aviso' => match ($sesionEstado) {
+                'cumple-entrar' => ['tono' => 'warn', 'texto' => __('fiesta.lista.cumple_firma.entrar_antes')],
+                'cumple-stale' => ['tono' => 'warn', 'texto' => __('guardian.done.stale')],
+                'cumple-rechazo' => ['tono' => 'danger', 'texto' => (string) session('honoree_reason', '')],
+                default => null,
+            },
+            'abierto' => in_array($sesionEstado, ['cumple-entrar', 'cumple-stale', 'cumple-rechazo'], true),
+        ];
     }
 
     /**
@@ -709,7 +778,7 @@ final class ListaDeInvitados
      * @param  array<string, mixed>  $v
      * @return list<array{tono: string, titulo: string, lineas: list<string>, rol: string}>
      */
-    private static function avisos(array $v, ?string $status, TicketType $type): array
+    private static function avisos(array $v, ?string $status, TicketType $type, string $cumple = ''): array
     {
         $out = [];
         $aviso = static function (string $tono, string $titulo, array $lineas, string $rol = 'status') use (&$out): void {
@@ -718,6 +787,10 @@ final class ListaDeInvitados
 
         if ($status === 'guest-form-saved') {
             $aviso('success', '', [__('guestform.saved')]);
+        }
+        // El descargo de quien cumple, firmado desde su fila (F7b, `#752`): el panel se va, el aviso lo dice.
+        if ($status === 'cumple-firmado') {
+            $aviso('success', '', [__('fiesta.lista.cumple_firma.firmado', ['n' => $cumple !== '' ? $cumple : __('fiesta.lista.cumple_firma.quien')])]);
         }
         if (is_string($status) && str_starts_with($status, 'guest-count-')) {
             $aviso('danger', __('guestform.count_error_title'), [__('guestform.count_error_'.substr($status, strlen('guest-count-')))], 'alert');

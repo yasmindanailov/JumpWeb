@@ -3,12 +3,14 @@
 namespace App\Domain\Identity\Services;
 
 use App\Domain\Booking\Contracts\AuthorizableReservation;
+use App\Domain\Booking\Contracts\HonoreeWaivers;
 use App\Domain\Booking\Contracts\PartyGuests;
 use App\Domain\Booking\Contracts\ReservationPlacesTaken;
 use App\Domain\Booking\Contracts\SignedInvitationReplies;
 use App\Domain\Identity\Contracts\HonoreeCoverage;
 use App\Domain\Identity\Models\DependentAssignment;
 use App\Domain\Identity\Models\GuardianAuthorization;
+use DateTimeInterface;
 
 /**
  * **Cuántos menores INVITADOS caben todavía en una reserva**
@@ -47,7 +49,7 @@ use App\Domain\Identity\Models\GuardianAuthorization;
  * aquí y no en una clase nueva justamente por eso: dos dueños del mismo hecho acaban discrepando, y
  * este es el sitio donde las dos mitades ya coexistían.
  */
-final class GuardianPlaces implements ReservationPlacesTaken, SignedInvitationReplies
+final class GuardianPlaces implements HonoreeWaivers, ReservationPlacesTaken, SignedInvitationReplies
 {
     public function __construct(private readonly PartyGuests $guests) {}
 
@@ -92,33 +94,82 @@ final class GuardianPlaces implements ReservationPlacesTaken, SignedInvitationRe
             return null;
         }
 
+        return $this->honoreeCoveragesOf([$reservationId])[$reservationId];
+    }
+
+    /**
+     * La cobertura de VARIAS reservas que sellan a quien cumple, **en cuatro consultas como mucho, sean una o veinte**: la
+     * de la puerta, que tiene un presupuesto medido (§7.2·R16, `GateProfileTest`) y no admite una lectura por fiesta. La
+     * misma regla que {@see HonoreeCoverage()}, que la usa: una sola copia de la pregunta.
+     *
+     * ⚠️ `$sealed` son reservas que SELLAN a quien cumple, y lo dice quien llama (la puerta lo sabe por su contrato, sin
+     * consultar): una línea de ENTRADA con asignaciones no es de quien cumple, y aquí no se vuelve a comprobar.
+     *
+     * @param  list<int>  $sealed
+     * @return array<int, HonoreeCoverage> por id de reserva
+     */
+    public function honoreeCoveragesOf(array $sealed): array
+    {
+        $sealed = array_values(array_unique(array_map('intval', $sealed)));
+        if ($sealed === []) {
+            return [];
+        }
+
         $internal = WaiverSettings::isInternal();
-        $authorization = GuardianAuthorization::query()
-            ->where('order_item_id', $reservationId)
-            ->where('honoree', true)
-            ->first();
-        if ($authorization !== null) {
-            $status = $internal ? (WaiverStatus::forGuestMinors([$authorization])[(int) $authorization->getKey()] ?? null) : null;
+        $out = [];
 
-            return new HonoreeCoverage(
+        $authorizations = GuardianAuthorization::query()->whereIn('order_item_id', $sealed)->where('honoree', true)->get();
+        $statuses = $internal && $authorizations->isNotEmpty() ? WaiverStatus::forGuestMinors($authorizations) : [];
+        foreach ($authorizations as $a) {
+            $out[(int) $a->order_item_id] = new HonoreeCoverage(
                 HonoreeCoverage::AUTHORIZATION,
-                (string) $authorization->minor_name,
-                $status?->minorState(),
-                authorizationId: (int) $authorization->getKey(),
+                (string) $a->minor_name,
+                ($statuses[(int) $a->getKey()] ?? null)?->minorState(),
+                authorizationId: (int) $a->getKey(),
+                bornOn: $a->minor_born_on->toDateString(),
             );
         }
 
-        $dependent = $this->honoreeAssignment($reservationId)?->dependent;
-        if ($dependent !== null) {
-            return new HonoreeCoverage(
-                HonoreeCoverage::DEPENDENT,
-                (string) $dependent->name,
-                $internal ? WaiverStatus::forDependent($dependent)->minorState() : null,
-                dependentId: (int) $dependent->getKey(),
-            );
+        $rest = array_values(array_diff($sealed, array_keys($out)));
+        if ($rest !== []) {
+            $assignments = DependentAssignment::query()->whereIn('order_item_id', $rest)->with('dependent')->orderBy('id')->get()
+                ->filter(fn (DependentAssignment $a): bool => $a->dependent !== null)
+                ->unique(fn (DependentAssignment $a): int => (int) $a->order_item_id);
+            $dependents = $assignments->map(fn (DependentAssignment $a) => $a->dependent)->values();
+            $dependentStatuses = $internal && $dependents->isNotEmpty() ? WaiverStatus::forDependents($dependents) : [];
+            foreach ($assignments as $a) {
+                $d = $a->dependent;
+                $nacido = $d->getAttribute('born_on');
+                $out[(int) $a->order_item_id] = new HonoreeCoverage(
+                    HonoreeCoverage::DEPENDENT,
+                    (string) $d->name,
+                    ($dependentStatuses[(int) $d->getKey()] ?? null)?->minorState(),
+                    dependentId: (int) $d->getKey(),
+                    bornOn: $nacido instanceof DateTimeInterface ? $nacido->format('Y-m-d') : null,
+                );
+            }
         }
 
-        return HonoreeCoverage::none();
+        foreach ($sealed as $id) {
+            $out[$id] ??= HonoreeCoverage::none();
+        }
+
+        return $out;
+    }
+
+    /**
+     * {@see HonoreeWaivers}: la pregunta de la víspera, con la misma respuesta que pinta la lista («Falta · Firmar su
+     * descargo» = modo interno, la reserva lo sella y no está `signed()`).
+     */
+    public function honoreeWaiverMissing(int $reservationId): bool
+    {
+        if (! WaiverSettings::isInternal()) {
+            return false;
+        }
+
+        $coverage = $this->honoreeCoverage($reservationId);
+
+        return $coverage !== null && ! $coverage->signed();
     }
 
     /**
@@ -217,17 +268,22 @@ final class GuardianPlaces implements ReservationPlacesTaken, SignedInvitationRe
      * página cruza cada ficha con estas claves por `PersonNameKey::cardMatches()`, la misma regla que la puerta
      * (`GateProfile`). Aquí no se compara nada: se dice qué hay.
      *
-     * @return list<array{key: string, reply_id: int|null}>
+     * ▶ Desde F7 (`#752`) dice también si esa firma es la de QUIEN CUMPLE: la lista la deja fuera del emparejado por nombre
+     * de los invitados —un «Mateo» invitado no puede salir firmado por el justificante del Mateo que cumple—, y quien
+     * cumple no se empareja por nombre con nada: lo dice `honoreeCoverage()`.
+     *
+     * @return list<array{key: string, reply_id: int|null, honoree: bool}>
      */
     public function signedMinorsIn(int $reservationId): array
     {
         return GuardianAuthorization::query()
             ->where('order_item_id', $reservationId)
             ->orderBy('id')
-            ->get(['minor_key', 'invitation_reply_id'])
+            ->get(['minor_key', 'invitation_reply_id', 'honoree'])
             ->map(static fn (GuardianAuthorization $a): array => [
                 'key' => (string) $a->minor_key,
                 'reply_id' => $a->invitation_reply_id === null ? null : (int) $a->invitation_reply_id,
+                'honoree' => $a->honoree === true,
             ])
             ->all();
     }

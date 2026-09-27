@@ -52,7 +52,10 @@
                             {{-- Con sesión, el menor se ELIGE (§12.5): rellena los campos y no envía; «a mano» los vacía. --}}
                             <x-pieza.selector id="dependent_pick" :label="__('guardian.minor.pick')" :hint="__('guardian.minor.pick_help')" :options="[['value' => '', 'label' => __('guardian.minor.pick_manual')], ...$f['menores']]" data-guardian-pick-select />
                         @endif
-                        @if ($f['desde_invitacion'] !== '')
+                        @if ($f['nota_cumple'] !== '')
+                            {{-- El descargo de QUIEN CUMPLE (§4.13, `#752`): lo que viene de la reserva se ENSEÑA (`#706`). --}}
+                            <p class="inv-nota" data-para-cumple>{{ $f['nota_cumple'] }}</p>
+                        @elseif ($f['desde_invitacion'] !== '')
                             {{-- Lo que escribió en la invitación se ENSEÑA, no se prerrellena (`#706`): lo reparte él. --}}
                             <p class="inv-nota" data-from-invitation>{{ __('guardian.minor.from_invitation', ['name' => $f['desde_invitacion']]) }}</p>
                         @endif

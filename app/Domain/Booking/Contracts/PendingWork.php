@@ -11,7 +11,7 @@ namespace App\Domain\Booking\Contracts;
  * la ficha del panel y para la app. Si esto devolviera frases, el día que el panel quisiera enseñar
  * lo mismo habría que traducirlas de vuelta a cifras.
  *
- * ⚠️ **Las cuatro cifras se miden por separado y NINGUNA anula a otra**: una reserva puede tener las
+ * ⚠️ **Las cifras se miden por separado y NINGUNA anula a otra**: una reserva puede tener las
  * fichas completas y deber dinero, o estar pagada y sin una sola ficha. Un único «¿falta algo?» no
  * podría decir QUÉ falta, que es lo que hace útil el aviso.
  */
@@ -39,6 +39,12 @@ final readonly class PendingWork
          * pendiente **no es trabajo del cliente** y no tiene sitio en un aviso que le pide cosas.
          */
         public int $balanceAtParkCents,
+        /**
+         * **A quien cumple le falta su descargo** (F7, `specs/fiesta-sistema-nuevo.md` §4.13, `#752`): la reserva lo sella y
+         * nada lo cubre con el descargo vigente ({@see HonoreeWaivers}). Va aparte de `minorsUnresolved` porque su plaza
+         * YA tiene dueño —cuenta como ocupada— y esa cifra nunca lo nombraba.
+         */
+        public bool $honoreeWaiverMissing = false,
     ) {}
 
     /** Fichas que faltan por completar. */
@@ -58,6 +64,7 @@ final readonly class PendingWork
         return $this->guestsMissing() > 0
             || $this->repliesToReview > 0
             || $this->minorsUnresolved > 0
+            || $this->honoreeWaiverMissing
             || $this->balanceAtParkCents > 0;
     }
 }

@@ -6,38 +6,22 @@
 > `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: **`isla-y-landing-nueva.md`
 > §4.11 «El traspaso al SPA»** (la tarea en curso, `#765`) · `celebracion-e-invitacion.md` §0 · `waiver-por-reserva.md` §0 ·
 > `encuestas.md` §0 · `analitica-fiesta.md` §0 · `analitica.md` §0 y §4.5 · `google-business-profile.md` §0 ·
-> `sidebar-spa.md` §0 · Actualizado: 2026-09-26 (tarde: F6b de la fiesta en `main`).
+> `sidebar-spa.md` §0 · Actualizado: 2026-09-27 (F7 entera, vista por el owner; sigue F8, `#753`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`). El
 > contador de la suite va en el trailer del commit (`#618`), no aquí. **Se muda, no se raspa**: el detalle de
 > una feature baja a su spec (las trampas por tanda de la analítica T1→T5 viven en `analitica.md` §4.9,
 > mudadas verbatim el 24-09; las de la ficha de Google en su §9.1; las de la invitación en su §10.20).
 
-## Foto (2026-09-25, noche)
+## Foto (2026-09-27, madrugada)
 
-- ▶▶▶ **LA FIESTA DEL SISTEMA NUEVO ES MÍA (`#765`, `[DECIDIDO owner]` 25-09)**: vestir **la lista de invitados, la
-  invitación con su recibo y la autorización** (el «justificante digital») con el diseño «Saltia» del 24-09, EN PARALELO
-  con la web pública (plataforma sigue con Kids y Jump), para la v2.0.0. Corrige `#697` solo en quién: la lógica, los
-  controladores y las vistas ya eran mías (`celebracion-e-invitacion.md`, `waiver-por-reserva.md`).
-  **Todo lo necesario**: `isla-y-landing-nueva.md` §4.11 «El traspaso al SPA» (qué leer del diseño, la máquina, el método,
-  dónde viven, el orden). El método es el de `#685`: la referencia byte a byte de `instancias/playjump/diseno/`, el banco
-  A/B con `scripts/pixel.mjs` (`--rehacer --reloj`, 390 y 1280) a **0 píxeles**, con CONTROL de 1 px por tanda; los
-  moldes: `scripts/banco-entradas.php` (JSX con Babel contra Blade, estados por pieza) y `banco-isla.php` (contra Vue).
-  ⚠️ **El zip entra SOLO por el ordenador de plataforma** (`diseno/actualizar.py`) y llega aquí con `git pull` de la
-  instancia: **antes de cada tanda, `git pull` en `~/proyectos/instancias/playjump`** y `cd diseno && sha256sum -c`.
-  ▶ **Leído el 25-09**: las cinco secciones del `readme.md` del diseño (752→816: la lista, sus complementos, la
-  invitación con su tema, la invitación y su recibo, la autorización) y los tres briefs de `uploads/`. **El diseño del
-  25-09 añade lógica que NO existe** (además del censo de §4.11): quien cumple PRIMERO (la página nace como una sola
-  pregunta, «¿Cómo se llama quien cumple?»), la lista que empieza solo con él (sin filas vacías, sin tope), «Al final
-  viene», la zona 3 que **siempre empuja a llenar** (subir el número = AFORO y cobro en el parque: `INVARIANTES` §1–§2,
-  `VERIFY_CONC=1`), «Pegar una lista», combos y cubos «para N adultos», la tarta grande por raciones, el recibo con «Su
-  ficha» y la firma dentro (`AuthForm`), «Crear mi QR», «Contestar por otro hijo» (24 h en el móvil), «Avísame de fechas»
-  (consentimiento comercial) y «Ver el parque» con vídeo (propuesta del diseño). **Orden (`#765`)**: primero lo que HAY (las
-  tres páginas con la lógica de hoy, a 0 px en sus estados); lo que FALTA, **una pieza cada vez y con la decisión del owner
-  delante**. ✅ **T0 HECHA (25-09 tarde): `specs/fiesta-sistema-nuevo.md` ⬜**, con la medida: 77 tokens (20 primitivos
-  → roles `--fiesta-*`; 51 roles de Saltia, 45 ya respaldados por `isla.css`), la vista de 1.279 líneas con 350 de
-  script en línea, el censo HAY/FALTA contra el código (§1.4) y **ocho preguntas al owner (§7)**. Decidido: viven en
-  el PRODUCTO (modelo de página + piezas portadas + `x-pagina-enfocada`, §3 y §4); los valores de PlayJump en
-  `publico/instancia/css/fiesta.css` por el **contrato de hojas de `instancia.json`**, pedido a plataforma (buzón).
+- ▶▶▶ **LA FIESTA DEL SISTEMA NUEVO ES MÍA (`#765`, `[DECIDIDO owner]` 25-09)**: la lista de invitados, la invitación con
+  su recibo y la autorización, vestidas con «Saltia» para la v2.0.0, en paralelo con la web pública. El traspaso,
+  `isla-y-landing-nueva.md` §4.11; el censo HAY/FALTA, el método y las tandas, `specs/fiesta-sistema-nuevo.md` (§1.4,
+  §4.6, §7). ⚠️ **El zip entra SOLO por plataforma** y llega con `git pull` de la instancia (`cd diseno && sha256sum -c`).
+- ✅ **F7, LA EXENCIÓN DE QUIEN CUMPLE (`#752`), ENTERA Y VISTA POR EL OWNER** (27-09, «muy bien»): la lista y su
+  justificante; la puerta (primera de su fiesta, «su cumple»), la víspera y la API 1.42.0 (§4.13; arnés
+  `mutar-exencion-cumple.sh` 55). ▶ **Sigue F8 (`#753`, aprobada el 27-09)**: menos formas de enviar la invitación, sin el
+  filtro de las cifras y con cada envío medido (spec §4.14).
 - ✅ **Esta máquina, montada para la fiesta (25-09)**: la instancia clonada en `~/proyectos/instancias/playjump` (el
   diseño con su sha256 verificado), `INSTANCIA_RUTA=/var/www/instancias/playjump` en el `.env` (ruta DEL CONTENEDOR),
   `public/instancia/` copiado de `publico/instancia/` (ignorado por git); la receta entera, en Trampas vivas 🏠.
@@ -84,7 +68,9 @@
   `JW-OJO-F5` (dentro de 3 días, 14 niños: la tarta cierra mañana y no llega). Todo con `ojo-f5.php` (fuera de git; lo
   de antes, en `ojo-f5-antes.json`; `OJO=desmontar` lo deja como estaba); (11) **de F6b**: en `JW-OJO-F1`, las
   respuestas «… Sonda…» 311→326, seis autorizaciones `avisame-sonda…@jumpweb.test` con sus `birthday_reminders` y sus
-  correos en Mailpit. Y siguen montados el fixture «probe-ojo-analitica» (90 pedidos
+  correos en Mailpit; (12) **de F7 (27-09)**, `ojo-f7.php` (fuera de git; `OJO=desmontar` quita las tres): `JW-OJO-F7`
+  (dentro de 5 días, Noa sin cubrir), y con `OJO=f7c` `JW-OJO-F7P` (HOY, Noa atada: la puerta) y `JW-OJO-F7V` (mañana, su
+  aviso de la víspera mandado solo a la cuenta de sondas); sondas `sonda-f7.mjs` y `sonda-f7c.mjs`. Y siguen montados el fixture «probe-ojo-analitica» (90 pedidos
   `JW-OJO…`, 25 clientes, 506 sesiones) y el de reseñas «probe-ojo-resenas». ⚠️ **Plataforma dejó la local preparada para
   que el owner pruebe la ISLA** (24-09 noche, `694529a8`): `sidebar.shell = isla` por el panel, `public/_isla-prueba.html`,
   la invitación ENCENDIDA en los packs 105/106 — **«no deshacer sin él»**; el cajón local abre ahora en la isla.
@@ -105,7 +91,8 @@
    cuántas personas» en los complementos; la zona 4 como el mockup, el aviso de la tarta y «Guardado hoy a las…»; §4.11;
    arnés `mutar-extras-fiesta.sh` 42/42; visto por el owner en `JW-OJO-F5`) · **F6b ✅** (`#750`: «Tus respuestas» y
    «Avísame de fechas» con spec propia, `avisame-de-fechas.md`; y `hidden` que vuelve a ocultar SIN JavaScript, §4.12;
-   arnés `mutar-avisame-fiesta.sh` 42/42) · «¿Cuántas tartas?» ✅ (`#751`) · ❗ **F7, la exención de quien cumple** (`#752`, §4.13: F7a dominio → F7b lista → F7c puerta, víspera, API) → **la fiesta, en código**: queda el contrato de hojas de plataforma
+   arnés `mutar-avisame-fiesta.sh` 42/42) · «¿Cuántas tartas?» ✅ (`#751`) · **F7 ✅** (`#752`, §4.13) · ❗ **F8** (`#753`, §4.14:
+   una acción por tarea —enviar, recordar, invitar a más—, las cifras sin filtro y cada envío como hecho) → **la fiesta, en código**: queda el contrato de hojas de plataforma
    (`#769`: la página viva sale NEUTRA; el banco carga las hojas a mano) y la v2.0.0. Para el ojo: `JW-OJO-F3`
    (`ojo-f3.php`), `JW-OJO-F1` (1077; `/invitacion/WxYYnZkkNx7U`) y `JW-OJO-F5`. **Reglas en pie**: el suelo sin
    JavaScript · `#739` · la firma y su prueba (`waiver-probatorio.md`, `RGPD-*`) · hoja en blanco (§7.2·R1) · `#706`.
@@ -245,6 +232,13 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 
 ## Buzón
 
+- ❗ **Para plataforma (27-09, F7, `#752`)**: leído tu aviso de la Z4 (atendido: nada tuyo toca la fiesta). El CONTRATO **1.42.0** es mío (tras tu 1.41.0 de la Z4):
+  `GuestForm.honoree_waiver` y `PUT /reservations/{id}/honoree-waiver`; tu siguiente, 1.43.0. Tocado lo tuyo, mínimo: en
+  la puerta, `livewire/admin/puerta/validar.blade.php` (la pastilla «su cumple»), `.gate-minor` de
+  `filament/admin/theme.css` (salta de línea: en tablet cortaba las pastillas) y dos claves en `lang/{es,zh_CN}/admin.php`;
+  `x-pieza.casilla` gana `form`. Un contrato nuevo de Booking, `HonoreeWaivers` (binding en `AppServiceProvider`).
+- **Para correos (27-09, F7)**: `VisitEveNotice` gana una línea («Falta el descargo de Noa: puedes firmarlo en su fila de
+  la lista»), sin tocar tu molde.
 - ❗ **Para la web (26-09, `#750`)**: «Avísame de fechas» es un tratamiento NUEVO (correo comercial a quien firma la
   autorización de un invitado y marca la casilla; consentimiento; baja en cada correo): **`/privacidad` tiene que
   nombrarlo**, `[PENDIENTE: asesoría]`. El texto es tuyo (`LegalContent`); yo no lo toco.

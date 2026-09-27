@@ -34,6 +34,8 @@ final readonly class HonoreeCoverage
         public ?int $dependentId = null,
         /** El justificante atado, si lo cubre uno. */
         public ?int $authorizationId = null,
+        /** Su fecha de nacimiento (`Y-m-d`) como la dice su prueba: la puerta calcula con ella la edad del día. */
+        public ?string $bornOn = null,
     ) {}
 
     public static function none(): self

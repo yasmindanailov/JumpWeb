@@ -1256,10 +1256,13 @@
     color: var(--gray-700);
 }
 
+/* ⚠️ `flex-wrap`: en la columna de la tablet una fila larga (quien cumple lleva además «su cumple», F7) ENCOGÍA y las
+ * pastillas se cortaban («su cu…», «firm…»; medido a 1024 y 390). Mejor una segunda línea que un estado ilegible. */
 .gate-minor {
     display: inline-flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: calc(var(--spacing) * 2);
+    gap: calc(var(--spacing) * 1) calc(var(--spacing) * 2);
     border-radius: var(--radius-lg);
     background-color: var(--gray-100);
     padding: calc(var(--spacing) * 1.5) calc(var(--spacing) * 2.5);
@@ -1270,6 +1273,7 @@
     font-weight: 600;
     color: var(--gray-800);
     font-variant-numeric: tabular-nums;
+    white-space: nowrap;
 }
 
 .gate-minor:where(.dark, .dark *) {

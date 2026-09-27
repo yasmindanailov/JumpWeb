@@ -449,8 +449,12 @@
                                     @endif
                                     <ul class="gate-minors" data-gate-guest-minors>
                                         @foreach ($profile['guest_minors'] as $g)
-                                            <li class="gate-minor" data-gate-guest-minor data-gate-guest-minor-name="{{ $g['name'] ?? '' }}" data-gate-guest-minor-age="{{ $g['age'] === null ? '' : (int) $g['age'] }}" data-gate-guest-minor-waiver="{{ $g['waiver'] ?? 'unknown' }}" data-gate-guest-minor-entry="{{ $g['entry'] ?? '' }}">
-                                                <span class="gate-minor__name">{{ $g['name'] ?? '' }}</span>
+                                            <li class="gate-minor" data-gate-guest-minor data-gate-guest-minor-name="{{ $g['name'] ?? '' }}" data-gate-guest-minor-age="{{ $g['age'] === null ? '' : (int) $g['age'] }}" data-gate-guest-minor-waiver="{{ $g['waiver'] ?? 'unknown' }}" data-gate-guest-minor-entry="{{ $g['entry'] ?? '' }}" @if ($g['honoree'] ?? false) data-gate-guest-minor-honoree @endif>
+                                                {{-- F7 (§4.13): quien cumple, con su pastilla; sin nombre escrito todavía, se dice quién es. --}}
+                                                <span class="gate-minor__name">{{ ($g['name'] ?? '') !== '' ? $g['name'] : (($g['honoree'] ?? false) ? __('admin.puerta.validar.profile.guest_honoree_unnamed') : '') }}</span>
+                                                @if ($g['honoree'] ?? false)
+                                                    <x-filament::badge size="xs" color="primary">{{ __('admin.puerta.validar.profile.guest_honoree') }}</x-filament::badge>
+                                                @endif
                                                 {{-- Sin firma no hay fecha de nacimiento, así que puede no
                                                      haber edad: un «0 años» sería un dato inventado. --}}
                                                 @if ($g['age'] !== null)

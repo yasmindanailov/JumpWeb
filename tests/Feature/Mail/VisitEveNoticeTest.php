@@ -10,8 +10,14 @@ use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Booking\Services\PendingBeforeVisit;
+use App\Domain\Identity\Models\LegalDocumentVersion;
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Services\GuardianAuthorizationSigner;
+use App\Domain\Identity\Services\LegalDocumentPublisher;
+use App\Domain\Identity\Services\WaiverSettings;
+use App\Domain\Identity\Services\WaiverSignatureRequest;
 use App\Domain\Payments\Models\Payment;
+use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Notifications\VisitEveNotice;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -255,7 +261,96 @@ class VisitEveNoticeTest extends TestCase
         $this->assertStringNotContainsString(__('emails.visit_eve.balance_title'), $html);
     }
 
+    // ─── Quien cumple (F7, `specs/fiesta-sistema-nuevo.md` §4.13, `#752`) ─────────────
+
+    public function test_the_honoree_without_its_waiver_is_named_and_alone_is_enough_to_warn(): void
+    {
+        $this->atParkHour(19);
+        $this->internalWaiver();
+
+        // Todo lo demás, hecho: fichas completas, pagada, sin invitación y sin justificante de invitados. Su plaza cuenta como
+        // ocupada, así que «plazas sin resolver» nunca lo nombraba: sin esta línea, a esta reserva no le faltaba nada.
+        $item = $this->sealed($this->reservation(quantity: 2, guests: [
+            ['name' => 'Noa', 'age' => '7'],
+            ['name' => 'Pablo', 'age' => '8'],
+        ], day: $this->parkTomorrow(), paid: true));
+
+        $work = app(PendingBeforeVisit::class)->forReservation($item);
+        $this->assertTrue($work->honoreeWaiverMissing);
+        $this->assertSame(0, $work->minorsUnresolved, 'el instrumento: la otra cifra no lo ve');
+        $this->assertTrue($work->any(), 'basta para avisar');
+
+        $html = (new VisitEveNotice($item, $work))->toMail($item->order->user)->render();
+        $this->assertStringContainsString(e(__('emails.visit_eve.honoree', ['name' => 'Noa'])), $html);
+        $this->assertStringNotContainsString(__('emails.visit_eve.guests', ['done' => 2, 'total' => 2]), $html);
+
+        // CONTROL: con su justificante atado ya no falta nada, y no se escribe a nadie.
+        app(GuardianAuthorizationSigner::class)->sign($item->order->user, (int) $item->getKey(), $this->waiverDocument(), [
+            'minor_name' => 'Noa', 'minor_surname' => 'Ruiz', 'minor_born_on' => now()->subYears(7)->toDateString(),
+            'guardian_name' => 'Marta', 'guardian_surname' => 'Ruiz', 'guardian_relationship' => 'mother',
+            'guardian_email' => null, 'guardian_phone' => '600111222',
+        ], WaiverSignatureRequest::web('127.0.0.1', 'test'), null, true);
+        $this->assertFalse(app(PendingBeforeVisit::class)->forReservation($item->fresh(['ticketType', 'slot', 'order']) ?? $item)->any());
+    }
+
+    public function test_without_a_card_the_celebrant_names_it_and_without_either_it_says_who_it_is(): void
+    {
+        $this->atParkHour(19);
+        $this->internalWaiver();
+
+        // Sin ficha escrita, lo nombra el homenajeado de la reserva (lo que se pidió al comprar).
+        $item = $this->sealed($this->reservation(quantity: 2, guests: [], day: $this->parkTomorrow(), paid: true));
+        $html = (new VisitEveNotice($item, app(PendingBeforeVisit::class)->forReservation($item)))->toMail($item->order->user)->render();
+        $this->assertStringContainsString(e(__('emails.visit_eve.honoree', ['name' => 'Lucía'])), $html);
+
+        // Sin nombre en ningún sitio, se dice quién es.
+        $item->forceFill(['event_data' => []])->save();
+        $item = $item->fresh(['ticketType', 'slot', 'order']) ?? $item;
+        $html = (new VisitEveNotice($item, app(PendingBeforeVisit::class)->forReservation($item)))->toMail($item->order->user)->render();
+        $this->assertStringContainsString(e(__('emails.visit_eve.honoree_unnamed')), $html);
+    }
+
+    public function test_outside_the_internal_mode_or_without_the_seal_the_honoree_is_not_asked_for(): void
+    {
+        $this->atParkHour(19);
+        $guests = [['name' => 'Noa', 'age' => '7'], ['name' => 'Pablo', 'age' => '8']];
+
+        // Sin el sello (una reserva de antes de F3): su ficha 0 es la de un invitado.
+        $this->internalWaiver();
+        $unsealed = $this->reservation(quantity: 2, guests: $guests, day: $this->parkTomorrow(), paid: true);
+        $this->assertFalse(app(PendingBeforeVisit::class)->forReservation($unsealed)->honoreeWaiverMissing);
+
+        // Sin el descargo gestionado dentro no hay firma que pedir.
+        $sealed = $this->sealed($this->reservation(quantity: 2, guests: $guests, day: $this->parkTomorrow(), paid: true));
+        Setting::query()->updateOrCreate(['key' => WaiverSettings::KEY_MODE], ['value' => 'externo']);
+        Setting::flushMemo();
+        $this->assertFalse(app(PendingBeforeVisit::class)->forReservation($sealed)->honoreeWaiverMissing);
+    }
+
     // ─── Fixture ─────────────────────────────────────────────────────────────────────
+
+    private function internalWaiver(): void
+    {
+        Setting::query()->updateOrCreate(['key' => WaiverSettings::KEY_MODE], ['value' => WaiverSettings::MODE_INTERNAL]);
+        Setting::flushMemo();
+        $this->waiverDocument();
+    }
+
+    private function waiverDocument(): LegalDocumentVersion
+    {
+        return LegalDocumentVersion::query()->where('slug', WaiverSettings::SLUG)->orderByDesc('id')->first()
+            ?? app(LegalDocumentPublisher::class)->publish(WaiverSettings::SLUG, [
+                'es' => ['title' => 'Descargo', 'body' => [['h' => 'Riesgo', 'p' => 'Saltar implica riesgos.']]],
+            ])->first();
+    }
+
+    /** La reserva SELLA a quien cumple (F3a): su ficha 0 es la suya. */
+    private function sealed(OrderItem $item): OrderItem
+    {
+        $item->forceFill(['honoree_row' => true])->save();
+
+        return $item->fresh(['ticketType', 'slot', 'order']) ?? $item;
+    }
 
     /** Congela el reloj en esa hora **del parque** (el contenedor va en UTC). */
     private function atParkHour(int $hour): void

@@ -77,6 +77,15 @@ class VisitEveNotice extends Notification implements ShouldQueue
             ]));
         }
 
+        // QUIEN CUMPLE (F7, `#752`): por su nombre, que es como lo reconoce quien lo lee, y dicho dónde se firma — en su fila
+        // de la lista, a la que lleva el botón. ⚠️ El nombre solo lo NOMBRA: que falte lo dice la atadura.
+        if ($this->pending->honoreeWaiverMissing) {
+            $name = (string) $this->reservation->honoreeName();
+            $message->line($name !== ''
+                ? __('emails.visit_eve.honoree', ['name' => $name])
+                : __('emails.visit_eve.honoree_unnamed'));
+        }
+
         $message->hero('emails.visit_eve', 'warn', EmailSlip::forItem($this->reservation));
 
         // ⚠️ El saldo va en el AVISO y no como una línea más: es DINERO y dice dónde se paga, el

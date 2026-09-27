@@ -682,7 +682,7 @@ prueba de PHP calcula CSS. (2) «Tus respuestas»: renovar una entrada al final 
 uno (visto en la sonda): se renueva EN SU SITIO. (3) Una sonda que firma dos veces el mismo niño en la misma fiesta cae
 en «un niño, un papel»: la prueba es de la PRIMERA respuesta y el segundo recibo dice «Firmada» sin casilla (correcto).
 
-### 4.13 F7 · La exención de quien cumple (`[DECIDIDO owner]` `#752`, 26-09) ⬜
+### 4.13 F7 · La exención de quien cumple (`[DECIDIDO owner]` `#752`, 26-09) ✅
 
 **El hueco** está medido en §4.8 (la puerta contradice a la lista, su justificante se rechaza con la fiesta llena y
 gasta dos plazas con sitio, el nombre falla con compuestos, nadie avisa). **El qué (owner)**: firma **quien reserva,
@@ -709,8 +709,9 @@ recuerda**; sin sesión, **las dos vías**: «Entrar y firmarlo en tu cuenta» y
 - **No se tocan `WaiverSigner` ni `DependentRegistry`** (`CRITICAL_RE`): se usan tal cual. El firmador de justificantes sí
   cambia: `waiver:verify-chain` sobre MySQL antes de empujar.
 
-**La fila (web)**. «Firmada · Falta» solo donde aplica (el `entry` de la puerta: `interno` y el producto pide
-justificante; hoy salía siempre). Quien cumple sin cubrir, con la lista abierta: «Firmar su descargo» abre, bajo la
+**La fila (web)**. «Firmada · Falta» solo donde una firma PUEDE existir: con el descargo en `interno` (la regla del
+recibo, por donde firman los padres; ⚠️ no la de la puerta, que mira además el modo del producto: con la invitación, el
+recibo ofrece la firma aunque el pack diga `none`, y esa condición escondía firmas reales). Hoy salía siempre. Quien cumple sin cubrir, con la lista abierta: «Firmar su descargo» abre, bajo la
 fila (`<details>`: funciona sin JavaScript), «¿Firmas tú por Mateo?»:
 - **«Sí, soy su padre, madre o tutor»** → con sesión del titular: sus hijos a cargo (el que empareja por nombre,
   preseleccionado) u «Otro: añadirlo» (nombre, apellidos, nacimiento, relación y la casilla del descargo con «Leer el
@@ -727,11 +728,18 @@ viene de la reserva se ENSEÑA y el nombre y los apellidos los escribe quien fir
 padre, madre o tutor, acepto el descargo de responsabilidad en su nombre» (sin «a cargo de :h»: es su fiesta). Ya
 cubierto: «El descargo de Mateo ya está firmado».
 
-**La puerta** lee la cobertura: la ficha de quien cumple llega marcada por contrato (`GateReservation.partyGuests`) y sale
-«(cumple)», firmada si está cubierta (de un hijo, con el estado de su descargo) y contada en «N de M». No firma nada
-nuevo: se resuelve desde la lista, en el móvil del padre. **La víspera**: «Falta el descargo de Mateo: fírmalo desde la
-lista» (`PendingWork`, por contrato). **La API** (API-first): la ficha de invitados dice la cobertura y el enlace; el
-camino de la cuenta, con Bearer del titular (1.40.0, si plataforma no la tomó).
+**La puerta** lee la cobertura: la ficha de quien cumple viaja APARTE de los invitados (`GateReservation.honoreeName`;
+`partyGuests` es `invitedGuestRows()`), así que ni una respuesta ni el justificante de un invitado se le emparejan por
+nombre, y el suyo (`honoree`) no firma a un invitado que se llame como él. Sale la PRIMERA de su fiesta con «su cumple»,
+leída por `GuardianPlaces::honoreeCoveragesOf()` (por lotes: el presupuesto de la puerta; sin sello, ni una consulta),
+firmada si está cubierta (con el estado de su descargo y su edad) y contada en «N de M». No firma nada nuevo.
+**La víspera**: «Falta el descargo de Noa: puedes firmarlo en su fila de la lista» (`PendingWork::honoreeWaiverMissing`
+por el contrato `HonoreeWaivers`: su plaza cuenta como ocupada y «plazas sin resolver» nunca lo nombraba).
+**La API** (1.42.0: la 1.40.0 y la 1.41.0 las tomó plataforma, `#784` y su Z4): `GuestForm.honoree_waiver` (lo que pinta su fila, con
+`authorization_url`) y `PUT /reservations/{id}/honoree-waiver` `{dependent_id}` —SOLO ata, con la identidad del titular
+(`auth:sanctum`; una firma válida de la ruta no la sustituye); dar de alta y firmar al hijo ya tienen su endpoint—.
+**Una fuente del nombre**: `OrderItem::honoreeName()` (su ficha y, vacía, el campo del homenajeado por TIPO), para la
+página de su justificante, la puerta y el correo; la página leía la clave literal `celebrant`.
 
 **De paso**: el «toda su capacidad» del rechazo por llena (con 0 justificantes). **Fuera**: igualar la edad de quien
 cumple a la de su hijo (movería el suplemento de edades: dinero); firmar hijos en la tablet de la puerta.
@@ -739,8 +747,8 @@ cumple a la de su hijo (movería el suplemento de edades: dinero); firmar hijos 
 | Parte | Qué | Verificación |
 |---|---|---|
 | **F7a** ✅ | El dominio (26-09): `guardian_authorizations.honoree` con su `UNIQUE`, `DependentAssigner::assignHonoree()` (bajo el lock del titular, con las reglas de un menor a cargo; otro hijo SUSTITUYE), `sign(…, forHonoree)` (no gasta plaza ni se rechaza por llena; un justificante suelto del mismo niño se ATA una vez), `GuardianPlaces::honoreeCoverage()`/`honoreeCovered()` (`HonoreeCoverage`) y su plaza UNA vez; el mensaje de «llena» (el interno y el de la página: los dos mentían). ⚠️ Visto al escribirlo: el vocabulario manda «descargo» y no «exención» en pantalla (`#339`, `WaiverWordingIsOneTermTest`). | `ExencionDeQuienCumpleTest` 8 (cada caso con su control; el `UNIQUE` pedido por su excepción EXACTA: con una columna olvidada, el primer insert fallaba por otra cosa) · **arnés `scripts/mutar-exencion-cumple.sh` 16/16** · **`waiver:verify-chain --scenario=honoree` (nuevo) PASA sobre InnoDB, y visto FALLAR 3/3 sin el lock** (justificante Y asignación) · los otros tres escenarios PASAN · 1211 vecinos. |
-| **F7b** ⬜ | La lista y el justificante de quien cumple: la fila y su panel, las dos vías, «Firmada · Falta» donde aplica; la lista deja `cumpleFirmado()` y lee la cobertura. | Pruebas · arnés · sonda con y sin JavaScript a 390 y 1280 · el ojo del owner. |
-| **F7c** ⬜ | La puerta (la ficha de quien cumple marcada por contrato), la víspera (`PendingWork`, por contrato) y la API. | Pruebas · arnés · la ficha de la puerta y el correo en Mailpit. |
+| **F7b** ✅ | La lista y el justificante de quien cumple (27-09, visto por el owner en vivo: «muy bien»): su fila lee la COBERTURA (se retira `cumpleFirmado()`, el nombre solo preselecciona) y el justificante de quien cumple ya no firma a un invitado de su nombre; «Firmada · Falta» solo en `interno`; bajo su fila, `fiesta/lista/firma-cumple` (un `<details>`): «Sí, soy su padre, madre o tutor» —con la sesión del titular, sus hijos o uno nuevo y la casilla, a `HonoreeWaiverController` (su propio POST, EXIGE la sesión aunque llegue firmado; sin correo verificado, lo dice antes de escribir); sin ella, «Entrar y firmarlo en mi cuenta» y «Firmarlo aquí»— y «No, que lo firme su familia» (copiar y WhatsApp); la página del justificante con `para=cumple` (titular, nota, casilla sin «a cargo de», sin «llena»). ⚠️ Medido al escribirlo: la regla de la puerta (`usesGuardianAuthorization()`) escondía firmas reales del recibo; la de la lista es el modo interno. `x-pieza.casilla` gana `form` (a la `input`). | `ExencionDeQuienCumpleWebTest` 9 (el POST firmado sin sesión: sin él, quitar esa comprobación no lo cazaba nada) · `QuienCumpleFilaTest` (el nombre ya no firma: su control) · la sonda `sonda-f7.mjs` (sin sesión a 390 y 1280 y sin JS; con sesión, Noa preseleccionada, firmada y «Firmada»; su justificante firmado con la fiesta llena) · arnés · banco. |
+| **F7c** ✅ | La puerta, la víspera y la API (27-09, visto por el owner en vivo), como dice el párrafo de arriba. ⚠️ Visto por la sonda y no por la suite: en la tablet, la fila de quien cumple (con «su cumple») encogía y cortaba las pastillas («firm…»): `.gate-minor` salta de línea. | `GateHonoreeTest` 10 (sin cubrir, por su hijo, por su justificante, los dos homónimos, la respuesta homónima, sin sello y sin consulta, el presupuesto, fuera de `interno`, la pantalla) · `VisitEveNoticeTest` +3 · `HonoreeWaiverApiTest` 6 (contra el contrato) · `ApiContractTest` (la copia vigilada) · **arnés 55: 54 en la pasada; el superviviente —una firma de OTRA ruta ya no valía aquí— llevó el caso de una firma VÁLIDA de esta ruta, visto morder a mano** · `sonda-f7c.mjs` (la puerta a 1024 y 390; el correo de Mailpit) · suite 6255. |
 
 ## 5. Impacto en invariantes
 

@@ -7,6 +7,8 @@ use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Services\GuestCountPolicy;
 use App\Domain\Booking\Services\PartyInvitations;
 use App\Domain\Booking\Services\PostFormAddons;
+use App\Domain\Identity\Services\GuardianPlaces;
+use App\Domain\Identity\Services\WaiverSettings;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -71,6 +73,8 @@ class GuestFormResource extends JsonResource
             // `guest_count` incluye a quien cumple y su nombre y su edad son los de la invitación: la app los pinta en la
             // primera fila y los devuelve en ella al guardar.
             'honoree_row' => $item->hasHonoreeRow(),
+            // Su DESCARGO (F7, `fiesta-sistema-nuevo.md` §4.13, `#752`, contrato 1.42.0): lo mismo que pinta su fila de la lista.
+            'honoree_waiver' => self::honoreeWaiverOf($item),
             'general' => (object) $this->generalAnswers($item, $type),
             'save_url' => $item->guestFormApiUrls()['save'],
             // Los EXTRAS de venta posterior (`specs/complementos-post-reserva.md`, T3 de `#413`):
@@ -100,6 +104,42 @@ class GuestFormResource extends JsonResource
             // enlace **en el mismo gesto** del usuario y un `fetch` previo pierde la activación en
             // Safari. Un escáner de correos que abra el enlace solo crea una fila vacía.
             'invitation' => $this->invitationOf($item),
+        ];
+    }
+
+    /**
+     * **El descargo de QUIEN CUMPLE** (F7, §4.13, `#752`): quién lo cubre, leído por la ATADURA
+     * (`GuardianPlaces::honoreeCoverage()`, la respuesta que leen la lista, la puerta y la víspera).
+     * `null` si la reserva no lo sella o si el descargo no se gestiona dentro —la misma regla por la que
+     * la lista no pinta «Firmada · Falta»—.
+     *
+     * Las dos vías de la web, para la app: su menor a cargo (`PUT …/honoree-waiver` con `dependent_id`,
+     * solo el titular autenticado) o el justificante de su padre o madre (`authorization_url`, la página
+     * web firmada que se comparte). ⚠️ `authorization_url` solo mientras nada lo cubra y la fiesta no haya
+     * pasado: después esa página diría que ya está cubierto.
+     *
+     * @return array{covered: bool, signed: bool, via: string, name: string|null, dependent_id: int|null, authorization_url: string|null}|null
+     */
+    public static function honoreeWaiverOf(OrderItem $item): ?array
+    {
+        if (! WaiverSettings::isInternal()) {
+            return null;
+        }
+
+        $coverage = app(GuardianPlaces::class)->honoreeCoverage((int) $item->getKey());
+        if ($coverage === null) {
+            return null;
+        }
+
+        return [
+            'covered' => $coverage->covered(),
+            'signed' => $coverage->signed(),
+            'via' => $coverage->via,
+            'name' => $coverage->name,
+            'dependent_id' => $coverage->dependentId,
+            'authorization_url' => $coverage->covered() || $item->isFinishedInPractice()
+                ? null
+                : $item->guardianAuthorizationSignedUrl(['para' => 'cumple']),
         ];
     }
 

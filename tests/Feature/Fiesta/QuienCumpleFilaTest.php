@@ -19,6 +19,7 @@ use App\Domain\Booking\Services\PackAvailability;
 use App\Domain\Booking\Services\PartyInvitations;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Models\WaiverSignature;
+use App\Domain\Identity\Services\DependentAssigner;
 use App\Domain\Identity\Services\LegalDocumentPublisher;
 use App\Domain\Identity\Services\WaiverSettings;
 use App\Domain\Identity\Services\WaiverSignatureRequest;
@@ -269,7 +270,13 @@ class QuienCumpleFilaTest extends TestCase
             subjectType: WaiverSignature::SUBJECT_DEPENDENT, subjectId: (int) $lucia->getKey(),
         ));
 
-        $this->assertTrue($ficha0()['firmada'], 'su fila no ve la firma de su ficha de menor a cargo');
+        // ❗ Desde F7 (`#752`, §4.13) el NOMBRE no firma: un hijo del titular que se llama como quien cumple no lo cubre
+        // hasta que se ATA a él. F3b lo daba por firmado por el nombre, y fallaba con «María José» y acertaba con cualquier
+        // «Lucía» (medido, §4.8).
+        $this->assertFalse($ficha0()['firmada'], 'el nombre solo no puede firmar a quien cumple');
+
+        $this->assertTrue(app(DependentAssigner::class)->assignHonoree($host, (int) $reservation->order_id, (int) $reservation->getKey(), (int) $lucia->getKey())->ok());
+        $this->assertTrue($ficha0()['firmada'], 'atado su menor a cargo con el descargo vigente, su fila dice «Firmada»');
     }
 
     /** CONTROL: una reserva de antes pinta la lista de siempre, con «Personalizar» escribiendo la invitación. */

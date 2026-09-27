@@ -54,8 +54,13 @@ final class Autorizacion
         $cumple = trim((string) ($inv->honoree_name ?? ''));
         $status = is_string($v['status'] ?? null) ? $v['status'] : null;
         $bloqueado = is_string($v['blocked'] ?? null) ? $v['blocked'] : null;
+        // El justificante de QUIEN CUMPLE (§4.13, `#752`): llega con `para=cumple` dentro de la firma del enlace.
+        $paraCumple = is_string($v['honoree'] ?? null) && trim($v['honoree']) !== '';
+        $nombreCumple = $paraCumple ? trim((string) $v['honoree']) : '';
 
-        $titulo = $cumple !== '' ? __('fiesta.autorizacion.titular', ['n' => $cumple]) : __('fiesta.autorizacion.titular_visita');
+        $titulo = $paraCumple
+            ? __('fiesta.autorizacion.titular_cumple', ['n' => $nombreCumple])
+            : ($cumple !== '' ? __('fiesta.autorizacion.titular', ['n' => $cumple]) : __('fiesta.autorizacion.titular_visita'));
 
         return [
             'titulo_pagina' => $titulo.' · '.$nombreSitio,
@@ -66,7 +71,7 @@ final class Autorizacion
                 'edad' => $inv?->honoree_age === null ? '' : (string) ((int) $inv->honoree_age),
                 'titulo' => $titulo,
                 'linea' => self::linea($context, $nombreSitio, $site),
-                'que' => __('fiesta.autorizacion.que', ['h' => $h]),
+                'que' => $paraCumple ? __('fiesta.autorizacion.que_cumple', ['n' => $nombreCumple]) : __('fiesta.autorizacion.que', ['h' => $h]),
             ],
             'anfitrion' => [
                 'etiqueta' => __('guardian.booking.responsible'),
@@ -142,7 +147,9 @@ final class Autorizacion
                 'texto' => $minor !== '' ? __('guardian.done.already', ['name' => $minor]) : __('guardian.done.already_generic')],
             'stale' => ['tono' => 'warn', 'titulo' => __('guardian.done.stale_title'), 'rol' => 'alert', 'texto' => __('guardian.done.stale')],
             'antibot' => ['tono' => 'danger', 'titulo' => __('guardian.done.refused_title'), 'rol' => 'alert', 'texto' => __('guardian.done.antibot')],
-            'not_paid', 'closed', 'full' => ['tono' => 'danger', 'titulo' => __('guardian.done.refused_title'), 'rol' => 'alert', 'texto' => __('guardian.blocked.'.$status)],
+            'not_paid', 'closed', 'full', 'not_honoree' => ['tono' => 'danger', 'titulo' => __('guardian.done.refused_title'), 'rol' => 'alert', 'texto' => __('guardian.blocked.'.$status)],
+            // Quien cumple ya estaba cubierto (su ficha de menor a cargo o el otro progenitor): no es un error, está hecho.
+            'honoree_covered' => ['tono' => 'neutral', 'titulo' => __('guardian.done.already_title'), 'rol' => 'status', 'texto' => __('guardian.blocked.honoree_covered')],
             default => null,
         };
     }
@@ -164,6 +171,7 @@ final class Autorizacion
         $prefill = (array) ($v['prefill'] ?? []);
         $o = static fn (string $campo, ?string $defecto = null): string => (string) ($old[$campo] ?? $defecto ?? '');
         $desde = (array) ($v['fromInvitation'] ?? []);
+        $cumple = is_string($v['honoree'] ?? null) && trim($v['honoree']) !== '' ? trim($v['honoree']) : null;
 
         $menores = [];
         foreach ((array) ($v['dependents'] ?? []) as $d) {
@@ -201,12 +209,26 @@ final class Autorizacion
             ],
             'nacimiento' => ['label' => __('fiesta.firma.nacimiento'), 'hint' => __('guardian.minor.born_on_help'), 'value' => $o('minor_born_on'), 'error' => $e('minor_born_on')],
             'relacion' => ['label' => __('fiesta.firma.relacion'), 'opciones' => $relaciones, 'value' => $o('guardian_relationship'), 'error' => $e('guardian_relationship')],
-            'descargo' => [
-                'titulo' => (string) $document->title,
-                'version' => __('guardian.waiver.version', ['version' => (string) $document->version, 'date' => DisplayTime::format($document->published_at, 'd/m/Y')]),
-                'cuerpo' => array_values(array_map(static fn (array $s): array => ['h' => (string) ($s['h'] ?? ''), 'p' => (string) ($s['p'] ?? '')], (array) $document->body)),
-            ],
-            'casilla' => __('fiesta.firma.casilla', ['h' => $h]),
+            'descargo' => self::descargoDe($document),
+            // QUIEN CUMPLE (§4.13, `#752`): su casilla no dice «a cargo de :h» —es su fiesta— y lo que viene de la reserva se
+            // ENSEÑA en una nota (`#706`): el nombre y los apellidos los escribe quien firma.
+            'nota_cumple' => $cumple !== null ? __('fiesta.autorizacion.para_cumple', ['n' => $cumple]) : '',
+            'casilla' => $cumple !== null ? __('fiesta.firma.casilla_cumple') : __('fiesta.firma.casilla', ['h' => $h]),
+        ];
+    }
+
+    /**
+     * El texto que se firma, presentado en el flujo (`waiver-probatorio.md` §4.4): lo pintan la autorización, el recibo y,
+     * desde F7 (`#752`), el panel de quien cumple en la lista. Una sola fuente para las tres.
+     *
+     * @return array{titulo: string, version: string, cuerpo: list<array{h: string, p: string}>}
+     */
+    public static function descargoDe(LegalDocumentVersion $document): array
+    {
+        return [
+            'titulo' => (string) $document->title,
+            'version' => __('guardian.waiver.version', ['version' => (string) $document->version, 'date' => DisplayTime::format($document->published_at, 'd/m/Y')]),
+            'cuerpo' => array_values(array_map(static fn (array $s): array => ['h' => (string) ($s['h'] ?? ''), 'p' => (string) ($s['p'] ?? '')], (array) $document->body)),
         ];
     }
 }

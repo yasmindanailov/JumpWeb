@@ -3,6 +3,7 @@
 namespace App\Http\Concerns;
 
 use App\Domain\Booking\Contracts\AuthorizableReservation;
+use App\Domain\Booking\Contracts\PartyGuests;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Identity\Exceptions\GuardianAuthorizationRefusedException;
 use App\Domain\Identity\Models\Dependent;
@@ -25,7 +26,7 @@ use Illuminate\Support\Facades\URL;
 trait ComposesGuardianForm
 {
     /**
-     * @param  array{invitation_reply_id?: int, minor?: string, desde?: string}  $extras  lo que viaja DENTRO de la firma
+     * @param  array{invitation_reply_id?: int, minor?: string, desde?: string, para?: string}  $extras  lo que viaja DENTRO de la firma
      * @return array<string, mixed>
      */
     protected function guardianFormInputs(Request $request, OrderItem $reservation, AuthorizableReservation $context, array $extras): array
@@ -33,7 +34,7 @@ trait ComposesGuardianForm
         $user = $request->user();
 
         return [
-            'blocked' => self::guardianBlockedReason($context, isset($extras['invitation_reply_id'])),
+            'blocked' => self::guardianBlockedReason($context, isset($extras['invitation_reply_id']), ($extras['para'] ?? null) === 'cumple'),
             'relationships' => Dependent::RELATIONSHIPS,
             'fromInvitation' => [
                 'reply_id' => $extras['invitation_reply_id'] ?? null,
@@ -98,13 +99,24 @@ trait ComposesGuardianForm
      * de una fiesta completa— y el firmador le habría dejado firmar. Con la atadura, «llena» no se pinta: si la respuesta
      * no resultara un «sí» vivo, el dominio lo rechaza igual y lo dice.
      */
-    protected static function guardianBlockedReason(AuthorizableReservation $context, bool $tied): ?string
+    protected static function guardianBlockedReason(AuthorizableReservation $context, bool $tied, bool $honoree = false): ?string
     {
         if (! $context->isPaid) {
             return GuardianAuthorizationRefusedException::REASON_NOT_PAID;
         }
         if ($context->visitFinished) {
             return GuardianAuthorizationRefusedException::REASON_CLOSED;
+        }
+        // QUIEN CUMPLE (§4.13, `#752`): su plaza ya es suya, así que «llena» no le cierra la puerta; lo que sí la cierra es
+        // que la reserva no lo selle o que ya lo cubra otra prueba. La misma pregunta que el firmador hace bajo el lock.
+        if ($honoree) {
+            if (app(PartyGuests::class)->honoreeSeatsIn($context->reservationId) < 1) {
+                return GuardianAuthorizationRefusedException::REASON_NOT_HONOREE;
+            }
+
+            return app(GuardianPlaces::class)->honoreeCovered($context->reservationId)
+                ? GuardianAuthorizationRefusedException::REASON_HONOREE_COVERED
+                : null;
         }
         // Las plazas LIBRES, no la cantidad: descuenta los menores a cargo asignados, los justificantes firmados y los
         // «sí» que aún no tienen el suyo (`GuardianPlaces`).

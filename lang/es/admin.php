@@ -166,6 +166,10 @@ return [
                 'guest_entry_signed' => 'firmado',
                 'guest_entry_with_adult' => 'viene con un adulto',
                 'guest_entry_unresolved' => 'sin resolver',
+                // QUIEN CUMPLE (F7, `specs/fiesta-sistema-nuevo.md` §4.13): el primero de su fiesta, con su pastilla; su
+                // estado sale de lo que lo cubre (su menor a cargo o su justificante), no de su nombre.
+                'guest_honoree' => 'su cumple',
+                'guest_honoree_unnamed' => 'Quien cumple',
                 'visit_register' => 'Registrar visita',
                 'visit_registered' => 'Visita registrada hoy',
                 'visit_hint' => 'Es lo que acredita que ha venido (JumpPoints). Una vez por día; volver a pulsar no suma.',

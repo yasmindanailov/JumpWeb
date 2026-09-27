@@ -69,9 +69,19 @@ final readonly class GateReservation
          * la línea y su producto, así que componerlas cuesta cero consultas — y la puerta tiene un
          * presupuesto medido que no admite una lectura por fiesta (§7.2·R16).
          *
+         * ▶ **Sin la ficha de QUIEN CUMPLE** desde F7 (`specs/fiesta-sistema-nuevo.md` §4.13, `#752`): no es un invitado.
+         * Viaja aparte, en {@see $honoreeName}, para que ninguna respuesta ni ningún justificante de un invitado se le
+         * empareje por su nombre.
+         *
          * @var list<array{name: string, key: string}>
          */
         public array $partyGuests = [],
+        /**
+         * **El nombre de QUIEN CUMPLE** (`OrderItem::honoreeName()`), si la reserva lo SELLA (`order_items.honoree_row`); `''`
+         * si lo sella y no tiene nombre en ningún sitio; `null` si no lo sella. Quién lo cubre no lo sabe Booking: lo dice
+         * Identity por la atadura (`GuardianPlaces::honoreeCoveragesOf()`), nunca por este nombre.
+         */
+        public ?string $honoreeName = null,
         /**
          * ¿El producto de esta reserva ofrece la invitación digital?
          *

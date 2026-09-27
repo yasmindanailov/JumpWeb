@@ -39,6 +39,8 @@ final class GateProfile
         // Los niños que han dicho que vienen (T6·4). ⚠️ Por CONTRATO: las respuestas son de Booking,
         // que Identity no puede mirar (`ModuleBoundariesTest`).
         private readonly PartyGuests $guests,
+        // Quién cubre a quien cumple (F7, `#752`): la misma respuesta que lee la lista, por la atadura.
+        private readonly GuardianPlaces $places,
     ) {}
 
     public function for(User $holder, CarbonInterface $today, int $windowDays): GateProfileData
@@ -184,11 +186,14 @@ final class GateProfile
      * en un viaje—, sean uno o veinte niños. `GateProfileTest` fija el techo en 28 y ya cazó un N+1 en
      * `#294`; si esto creciera por fila, lo cazaría otra vez.
      *
+     * ▶ Y desde F7 (`#752`), **solo si hoy alguna reserva sella a quien cumple**, las de su cobertura
+     * (`GuardianPlaces::honoreeCoveragesOf()`: cuatro o cinco por lotes, sean una o veinte fiestas).
+     *
      * ⚠️ Se acota a HOY a propósito: la ventana de ±N días es contexto, y los justificantes son para
      * dejar entrar a alguien que está delante.
      *
      * @param  list<GateReservation>  $reservations
-     * @return array{rows: list<array{order_code: string, name: string, age: int|null, waiver: ?string, entry: ?string}>, signed: int, expected: int}
+     * @return array{rows: list<array{order_code: string, name: string, age: int|null, waiver: ?string, entry: ?string, honoree: bool}>, signed: int, expected: int}
      */
     private function guestMinors(array $reservations, CarbonImmutable $day): array
     {
@@ -223,8 +228,12 @@ final class GateProfile
      * ahí los apellidos viven en su columna y se retienen; aquí distinguir a dos «Martina» de una
      * clase es justo para lo que se piden (§4.5·5).
      *
+     * ▶ **Quien cumple va el primero de su fiesta, con `honoree`** (F7, §4.13, `#752`) y leído por la ATADURA, como en
+     * la lista: su ficha no es un invitado, así que ni una respuesta ni el justificante de un invitado se le emparejan
+     * por su nombre, y el suyo no firma a un invitado que se llame como él.
+     *
      * @param  list<GateReservation>  $today
-     * @return array{rows: list<array{order_code: string, name: string, age: int|null, waiver: ?string, entry: ?string}>, signed: int, expected: int}
+     * @return array{rows: list<array{order_code: string, name: string, age: int|null, waiver: ?string, entry: ?string, honoree: bool}>, signed: int, expected: int}
      */
     private function composeGuestMinors(array $today, CarbonImmutable $day): array
     {
@@ -261,7 +270,46 @@ final class GateProfile
         $signed = 0;
         $expected = 0;
 
-        foreach ($parties as $r) {
+        // QUIEN CUMPLE (`specs/fiesta-sistema-nuevo.md` §4.13, `#752`): donde están los invitados —una fiesta con invitación
+        // o con justificante— y leído como lo lee la lista, por la ATADURA (`GuardianPlaces::honoreeCoveragesOf()`): su
+        // menor a cargo asignado o su justificante con `honoree`. ⚠️ Solo se pregunta si hoy alguna reserva lo sella: un
+        // escaneo normal no paga ni una consulta.
+        $honorees = array_values(array_filter(
+            $today,
+            static fn (GateReservation $r): bool => $r->honoreeName !== null && ($r->invitationOffered || $r->waiverOffered),
+        ));
+        $coverage = $honorees === []
+            ? []
+            : $this->places->honoreeCoveragesOf(array_map(static fn (GateReservation $r): int => $r->orderItemId, $honorees));
+
+        foreach ($today as $r) {
+            // Quien cumple, el primero de SU fiesta (con dos fiestas el mismo día, cada uno delante de los suyos).
+            if (isset($coverage[$r->orderItemId])) {
+                $c = $coverage[$r->orderItemId];
+                if ($c->authorizationId !== null) {
+                    // Su justificante ya sale en su fila: ni se empareja con un invitado ni se repite abajo.
+                    $matched[] = $c->authorizationId;
+                }
+                // Cuenta en «8 de 12» como cualquier niño de la fiesta: su plaza está dentro de lo contratado.
+                if ($c->covered() && $r->invitationOffered) {
+                    $signed++;
+                }
+
+                $rows[] = [
+                    'order_code' => $r->orderCode,
+                    // Cubierto manda el nombre de su PRUEBA, como con un invitado; sin cubrir, el de su ficha.
+                    'name' => $c->covered() ? (string) $c->name : (string) $r->honoreeName,
+                    'age' => $c->bornOn === null ? null : Dependent::ageBetween($c->bornOn, $day),
+                    'waiver' => $c->waiver,
+                    'entry' => ! $internal || ! $r->waiverOffered ? null : ($c->covered() ? 'signed' : 'unresolved'),
+                    'honoree' => true,
+                ];
+            }
+
+            if (! $r->invitationOffered) {
+                continue;
+            }
+
             // La cuenta «8 de 12 con justificante» se hace sobre los invitados CONTRATADOS, no sobre
             // los que el anfitrión ha apuntado: al operador le importa cuántos niños se esperan y
             // cuántos llegan resueltos, y una lista a medias no puede esconder a los que faltan.
@@ -286,6 +334,7 @@ final class GateProfile
                     'entry' => ! $internal || ! $r->waiverOffered
                         ? null
                         : ($auth !== null ? 'signed' : ($child['companion'] === 'with_adult' ? 'with_adult' : 'unresolved')),
+                    'honoree' => false,
                 ];
             }
         }
@@ -310,6 +359,7 @@ final class GateProfile
                 'age' => Dependent::ageBetween($a->minor_born_on->toDateString(), $day),
                 'waiver' => ($statuses[(int) $a->getKey()] ?? null)?->minorState(),
                 'entry' => $internal ? 'signed' : null,
+                'honoree' => false,
             ];
         }
 
@@ -380,7 +430,8 @@ final class GateProfile
     private function authorizationFor($authorizations, int $reservationId, array $child): ?GuardianAuthorization
     {
         foreach ($authorizations as $a) {
-            if ((int) $a->order_item_id !== $reservationId) {
+            // ⚠️ El justificante de QUIEN CUMPLE es suyo (`#752`): un invitado que se llame como él no sale firmado con él.
+            if ((int) $a->order_item_id !== $reservationId || $a->honoree === true) {
                 continue;
             }
 

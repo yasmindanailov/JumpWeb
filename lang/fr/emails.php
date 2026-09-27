@@ -153,6 +153,8 @@ return [
         'guests' => 'Fiches des invités : :done sur :total complètes.',
         'replies' => '{1} Une famille a répondu et attend que tu la valides.|[2,*] :count familles ont répondu et attendent que tu les valides.',
         'minors' => '{1} Il reste un enfant sans autorisation signée.|[2,*] Il reste :count enfants sans autorisation signée.',
+        'honoree' => 'La décharge de :name n’est pas encore signée : tu peux la signer sur sa ligne de la liste.',
+        'honoree_unnamed' => 'La décharge de l’enfant qui fête son anniversaire n’est pas encore signée : tu peux la signer sur sa ligne de la liste.',
         'balance_title' => 'Ce qui se règle au parc',
         'balance' => 'Il restera :amount à régler à l’accueil demain.',
         'not_serious' => 'Rien de tout cela n’empêche la fête : ce qui manque, on le règle à l’accueil, et un enfant accompagné d’un adulte entre quand même. Si tu peux, boucle-le cet après-midi et demain vous n’aurez qu’à venir.',

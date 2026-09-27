@@ -27,11 +27,18 @@
     @if ($m['progreso']['total'] > 0)
         <p class="pz-sr" role="status">{{ $m['progreso']['done'] >= $m['progreso']['total'] ? __('guestform.progress_complete', ['total' => $m['progreso']['total']]) : __('guestform.progress', ['done' => $m['progreso']['done'], 'total' => $m['progreso']['total']]) }}</p>
     @endif
-    @php($ley = __('fiesta.lista.la_lista.leyenda'))
-    <p class="pli-leyenda">{{ $ley[0] }} <span class="ok"><x-lucide name="circle-check" :size="15" />{{ $ley[1] }}</span> {{ $ley[2] }} <span><x-lucide name="circle-dashed" :size="15" />{{ $ley[3] }}</span></p>
+    {{-- La leyenda de la firma, solo donde la firma APLICA (F7b, `#752`): el descargo dentro y un producto que la pide. --}}
+    @if ($m['firma_visible'] ?? true)
+        @php($ley = __('fiesta.lista.la_lista.leyenda'))
+        <p class="pli-leyenda">{{ $ley[0] }} <span class="ok"><x-lucide name="circle-check" :size="15" />{{ $ley[1] }}</span> {{ $ley[2] }} <span><x-lucide name="circle-dashed" :size="15" />{{ $ley[3] }}</span></p>
+    @endif
     @if ($cumpleFila !== null)
         {{-- Sin borde si detrás viene «Por repasar» o nada; con él si le sigue la lista, que continúa debajo (el diseño). --}}
         <ul class="pli-ul" data-filas-cumple>@include('fiesta.lista.fila', ['n' => $cumpleFila, 'ultima' => $repasar !== [] || $resto === []])</ul>
+        {{-- Su descargo (F7b, §4.13, `#752`): bajo su fila, solo cuando falta. --}}
+        @if (($m['firma_cumple'] ?? null) !== null)
+            @include('fiesta.lista.firma-cumple', ['fc' => $m['firma_cumple']])
+        @endif
     @endif
     @if ($repasar !== [])
         <div class="pli-repasar" data-repasar>

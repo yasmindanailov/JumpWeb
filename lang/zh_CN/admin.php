@@ -114,6 +114,9 @@ return [
                 'guest_entry_signed' => '已签署',
                 'guest_entry_with_adult' => '有成人陪同',
                 'guest_entry_unresolved' => '待处理',
+                // 过生日的孩子（F7）：排在其派对第一位。
+                'guest_honoree' => '寿星',
+                'guest_honoree_unnamed' => '寿星',
                 'visit_register' => '登记到访',
                 'visit_registered' => '今日已登记到访',
                 'visit_hint' => '这是到访的凭证（JumpPoints）。每天一次；重复点击不会累计。',

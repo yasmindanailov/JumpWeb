@@ -87,11 +87,13 @@ class SendVisitEveNotices extends Command
 
             if ($this->option('dry-run')) {
                 $this->line(sprintf(
-                    '%s · %s · fichas %d/%d · respuestas %d · menores %d · parque %d',
+                    '%s · %s · fichas %d/%d · respuestas %d · menores %d · cumple %s · parque %d',
                     (string) $reservation->order->code,
                     (string) $user->email,
                     $work->guestsDone, $work->guestsTotal,
-                    $work->repliesToReview, $work->minorsUnresolved, $work->balanceAtParkCents,
+                    $work->repliesToReview, $work->minorsUnresolved,
+                    $work->honoreeWaiverMissing ? 'sin descargo' : '—',
+                    $work->balanceAtParkCents,
                 ));
                 $sent++;
 

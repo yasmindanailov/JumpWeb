@@ -212,6 +212,34 @@ return [
             'aviso_ver' => 'Ver la tarta',
             'guardar' => 'La tarta se guarda hasta :cuando',
         ],
+        // EL DESCARGO DE QUIEN CUMPLE, bajo su fila (F7b de `fiesta-sistema-nuevo.md` §4.13, `#752`). «Descargo», nunca
+        // «exención» (`#339`).
+        'cumple_firma' => [
+            'quien' => 'quien cumple',
+            'boton' => 'Falta su descargo · Firmarlo',
+            'boton_viejo' => 'Su descargo es de un texto anterior · Firmarlo de nuevo',
+            'pregunta' => '¿Firmas tú el descargo de :n?',
+            'si' => 'Sí, soy su padre, madre o tutor',
+            'cual' => '¿Cuál de tus hijos es?',
+            'otro' => 'Otro, que no está en mi cuenta',
+            'firmar' => 'Firmar su descargo',
+            'sin_sesion' => 'Entra en tu cuenta y queda guardado con tus hijos para otras visitas; o fírmalo aquí, sin entrar.',
+            'entrar' => 'Entrar y firmarlo en mi cuenta',
+            'aqui' => 'Firmarlo aquí',
+            'no' => 'No, que lo firme su familia',
+            'no_texto' => 'Pásale este enlace a la madre, el padre o el tutor de :n: lo firma en un minuto, sin cuenta.',
+            'copiar' => 'Copiar el enlace',
+            'copiado' => 'Enlace copiado.',
+            'mensaje' => 'Para la fiesta, falta firmar el descargo de :n. Es un minuto: :url',
+            'firmado' => 'El descargo de :n está firmado.',
+            'entrar_antes' => 'Para firmarlo como su padre o su madre, entra antes en tu cuenta.',
+            'verifica' => 'Antes de firmar por tus hijos, confirma tu correo: te enviamos el enlace al darte de alta.',
+            'err_nacimiento' => 'Escribe su fecha de nacimiento.',
+            'err_relacion' => 'Elige qué eres suyo.',
+            'err_mayor' => 'Con esa fecha de nacimiento ya es mayor de edad: firma él mismo.',
+            'err_tope' => 'Tu cuenta ya tiene todos los hijos que admite. Llámanos y lo vemos.',
+            'err_otro' => 'No se ha podido firmar. Vuelve a intentarlo.',
+        ],
         // PARA LOS PADRES (F5, `PliFamilia` y la línea de `PliZona3`).
         'padres' => [
             'titulo' => 'Para los padres, mientras saltan',
@@ -318,6 +346,8 @@ return [
         'tu_nombre' => 'Tu nombre y apellidos',
         'tu_telefono' => 'Tu teléfono',
         'casilla' => 'Como su padre, madre o tutor, autorizo a que se quede a cargo de :h durante la fiesta y acepto el descargo de responsabilidad en su nombre.',
+        // Quien cumple no «se queda a cargo» de nadie: es su fiesta (§4.13, `#752`).
+        'casilla_cumple' => 'Como su padre, madre o tutor, acepto el descargo de responsabilidad en su nombre.',
         'leer_descargo' => 'Leer el descargo',
         'correo' => 'Correo',
         'correo_ayuda' => 'Te mandamos una copia.',
@@ -345,6 +375,10 @@ return [
         'caducado_texto' => 'Pídele el enlace nuevo a quien te invitó a la fiesta.',
         'err_nino_nombre' => 'Escribe su nombre.',
         'err_nino_apellidos' => 'Escribe sus apellidos.',
+        // El descargo de QUIEN CUMPLE (`fiesta-sistema-nuevo.md` §4.13, `#752`): llega por su propio enlace.
+        'titular_cumple' => 'El descargo de :n',
+        'que_cumple' => ':n es quien cumple. Para que salte, su padre, madre o tutor acepta el descargo de responsabilidad en su nombre: la hoja que firma todo el que entra a saltar, con las normas y los riesgos.',
+        'para_cumple' => 'Es para :n, que cumple. Escribe su nombre y sus apellidos como los pondrías en un documento.',
     ],
     // «EL CUMPLE SE ACERCA» (`avisame-de-fechas.md` §4.3, `#750`; el correo nº 12 del mockup): comercial, solo con la casilla.
     'cumple_mail' => [

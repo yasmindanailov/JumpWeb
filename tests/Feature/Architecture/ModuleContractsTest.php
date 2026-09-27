@@ -17,6 +17,7 @@ use App\Domain\Booking\Contracts\CustomerReservations;
 use App\Domain\Booking\Contracts\GateReservation;
 use App\Domain\Booking\Contracts\GateReservations;
 use App\Domain\Booking\Contracts\GuestFormNotices;
+use App\Domain\Booking\Contracts\HonoreeWaivers;
 use App\Domain\Booking\Contracts\OfferedDate;
 use App\Domain\Booking\Contracts\OfferedTime;
 use App\Domain\Booking\Contracts\OperatingCalendar;
@@ -62,6 +63,7 @@ use App\Domain\Identity\Services\CustomerAccountContext;
 use App\Domain\Identity\Services\DependentAssigner;
 use App\Domain\Identity\Services\DependentRegistry;
 use App\Domain\Identity\Services\GateProfile;
+use App\Domain\Identity\Services\GuardianPlaces;
 use App\Domain\Payments\Contracts\RefundGateway;
 use App\Domain\Payments\Contracts\RefundResult;
 use App\Domain\Payments\Models\Payment;
@@ -116,6 +118,8 @@ class ModuleContractsTest extends TestCase
         $this->assertInstanceOf(CartPricer::class, app(CartPricing::class));
         $this->assertInstanceOf(AvailabilityReader::class, app(AvailabilityOffer::class));
         $this->assertInstanceOf(PartyGuestsReader::class, app(PartyGuests::class));
+        // Las preguntas de Booking que responde Identity (su binding vive en el composition root): la de F7 (`#752`).
+        $this->assertInstanceOf(GuardianPlaces::class, app(HonoreeWaivers::class));
         // Los dos puertos del checkout (cierre de Fase 3). `PaymentInitiation` es el caso raro y
         // conviene que salte a la vista: el contrato es de Booking pero lo implementa Payments, así
         // que su bind vive en `PaymentsServiceProvider` y no en el de Booking.

@@ -811,11 +811,27 @@ function lista(form) {
     actualiza();
 }
 
+/* ── El descargo de QUIEN CUMPLE (F7b, §4.13, `#752`): «Otro, que no está en mi cuenta» enseña los campos de su hijo nuevo.
+   Sin JavaScript se ven siempre y el servidor solo los lee con «Otro». Sus campos van a `fiesta-cumple` (`form=`), así
+   que la barra de Guardar no los cuenta. ───────────────────────────────────────────────────────────────────────── */
+function firmaCumple() {
+    const hijo = q('select[data-cumple-hijo]');
+    const nuevo = q('[data-cumple-nuevo]');
+    if (!hijo || !nuevo) return;
+    const pinta = () => {
+        if (hijo.value === 'nuevo') nuevo.removeAttribute('data-oculto');
+        else nuevo.setAttribute('data-oculto', '');
+    };
+    hijo.addEventListener('change', pinta);
+    pinta();
+}
+
 try {
     const formPrimero = q('[data-primero]');
     const formLista = q('[data-lista]');
     if (formPrimero) primero(formPrimero);
     if (formLista) lista(formLista);
+    firmaCumple();
     de.classList.remove('no-js');
     de.classList.add('js');
 } catch {

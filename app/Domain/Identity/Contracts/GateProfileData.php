@@ -60,7 +60,10 @@ final readonly class GateProfileData
          * `null`; y el nombre de un niño invitado es **un solo campo libre**, así que puede traer
          * apellidos —es justo para lo que se piden (§4.5·5)—.
          *
-         * @var list<array{order_code: string, name: string, age: int|null, waiver: ?string, entry: ?string}>
+         * ▶ Desde F7 (`specs/fiesta-sistema-nuevo.md` §4.13) cada fila dice si es QUIEN CUMPLE (`honoree`): va la primera
+         * de su fiesta y su estado sale de lo que la cubre (su menor a cargo o su justificante), no de su nombre.
+         *
+         * @var list<array{order_code: string, name: string, age: int|null, waiver: ?string, entry: ?string, honoree: bool}>
          */
         public array $guestMinors,
         public bool $visitRegisteredToday,

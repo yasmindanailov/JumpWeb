@@ -74,6 +74,7 @@ class GuardianAuthorizationController extends Controller
         abort_if($document === null, 404);
 
         $desdeLaInvitacion = $this->invitationExtras($request);
+        $invitation = app(PartyInvitations::class)->existingFor($reservation);
 
         // La analítica de la fiesta (`specs/analitica-fiesta.md` §4.2): una apertura, como hecho de la RESERVA y
         // sin visitante; `via` dice si llegó desde su respuesta a la invitación o por el enlace repartido.
@@ -91,7 +92,10 @@ class GuardianAuthorizationController extends Controller
             'context' => $context,
             'document' => $document,
             // La invitación de la fiesta, si la hay: su tema pinta la página y quien cumple da el titular.
-            'invitation' => app(PartyInvitations::class)->existingFor($reservation),
+            'invitation' => $invitation,
+            // Con `para=cumple` (§4.13, `#752`), la página es la del descargo de QUIEN CUMPLE: su nombre, para enseñarlo.
+            // La MISMA fuente que la puerta y la víspera (`OrderItem::honoreeName()`): su ficha, espejo de la invitación.
+            'honoree' => ($desdeLaInvitacion['para'] ?? null) === 'cumple' ? (string) $reservation->honoreeName() : null,
             // §12.4 (`[DECIDIDO owner, 2026-09-01]`) — **QUIÉN RESPONDE del menor durante la visita**.
             // Un padre que firma esto está confiando a su hijo a un adulto que no es él, y hasta ahora
             // la pantalla no decía ni quién era.
@@ -191,6 +195,8 @@ class GuardianAuthorizationController extends Controller
                 // si no es un «sí» vivo de ESTA reserva, lo ignora y aplica el tope como siempre. Por
                 // eso puede venir del formulario sin ser una credencial.
                 isset($data['invitation_reply_id']) ? (int) $data['invitation_reply_id'] : null,
+                // QUIEN CUMPLE (§4.13, `#752`): `para=cumple` DENTRO de la firma del POST, o la sesión del titular.
+                ($this->invitationExtras($request)['para'] ?? null) === 'cumple',
             );
         } catch (GuardianAuthorizationExistsException $e) {
             // «Un niño, un papel» (§7·9): el otro progenitor ve el nombre del menor y nada más — ni
@@ -384,7 +390,7 @@ class GuardianAuthorizationController extends Controller
      * ruido. Lo que sí se comprueba aparte es la emisión del RECIBO ({@see receiptUrl()}), porque eso
      * **no** es volver a una pantalla: es entregar una credencial.
      *
-     * @return array{invitation_reply_id?: int, minor?: string}
+     * @return array{invitation_reply_id?: int, minor?: string, para?: string}
      */
     private function invitationExtras(Request $request): array
     {
@@ -395,6 +401,11 @@ class GuardianAuthorizationController extends Controller
         }
         if (($minor = trim((string) $request->query('minor', ''))) !== '') {
             $extras['minor'] = $minor;
+        }
+        // El justificante de QUIEN CUMPLE (`fiesta-sistema-nuevo.md` §4.13, `#752`). ⚠️ Solo vale DENTRO de la firma del
+        // enlace (medido: añadirlo a mano invalida la URL) o con la sesión del titular, que es quien organiza la fiesta.
+        if ($request->query('para') === 'cumple') {
+            $extras['para'] = 'cumple';
         }
 
         return $extras;

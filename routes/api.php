@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\V1\EventsController;
 use App\Http\Controllers\Api\V1\FaqsFactsController;
 use App\Http\Controllers\Api\V1\GoogleSignupController;
 use App\Http\Controllers\Api\V1\GuestFormController;
+use App\Http\Controllers\Api\V1\HonoreeWaiverController;
 use App\Http\Controllers\Api\V1\InvitationHostController;
 use App\Http\Controllers\Api\V1\InvitationsController;
 use App\Http\Controllers\Api\V1\LegalDocumentsController;
@@ -554,6 +555,13 @@ Route::name('api.v1.')->group(function (): void {
             ->middleware('throttle:10,1,waiver-sign')
             ->whereNumber('dependent')
             ->name('me.dependents.waiver.store');
+        // QUIEN CUMPLE (F7, `specs/fiesta-sistema-nuevo.md` §4.13, `#752`): atar a uno de esos menores a cargo a la fila de
+        // quien cumple de su fiesta. Dentro de `auth:sanctum` y NO junto al formulario firmado: escribe en la cuenta del
+        // titular, y el enlace del correo no es su identidad (`RGPD-03`). El mismo cubo que las demás escrituras de menores.
+        Route::put('/reservations/{reservation}/honoree-waiver', [HonoreeWaiverController::class, 'update'])
+            ->middleware(['throttle:30,1,dependents-write', 'no-store'])
+            ->whereNumber('reservation')
+            ->name('reservations.honoree-waiver.update');
 
         Route::get('/me/reservations', [MeReservationsController::class, 'index'])->name('me.reservations.index');
 

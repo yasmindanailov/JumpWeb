@@ -88,6 +88,7 @@ class GateReservationsReader implements GateReservations
                     // Las fichas con nombre de la fiesta (T6·4): salen de `guest_data`, que ya está en
                     // la línea cargada, así que no cuestan ni una consulta.
                     partyGuests: $this->partyGuests($item),
+                    honoreeName: $item->honoreeName(),
                     invitationOffered: $item->ticketType?->offersGuestInvitation() ?? false,
                     waiverOffered: ($item->ticketType?->guardianMode() ?? TicketType::GUARDIAN_NONE) !== TicketType::GUARDIAN_NONE,
                 );
@@ -104,6 +105,8 @@ class GateReservationsReader implements GateReservations
      * ⚠️ Solo si el producto OFRECE la invitación: sin ella, la puerta no tiene nada que cruzar y
      * publicar los nombres de los niños sería repartir datos de menores sin motivo.
      *
+     * ⚠️ Sin la ficha de quien cumple (`invitedGuestRows()`, `#752`): viaja aparte (`OrderItem::honoreeName()`).
+     *
      * @return list<array{name: string, key: string}>
      */
     private function partyGuests(OrderItem $item): array
@@ -117,7 +120,7 @@ class GateReservationsReader implements GateReservations
 
         $guests = [];
 
-        foreach (array_slice($item->guestData(), 0, max(0, (int) $item->quantity)) as $row) {
+        foreach ($item->invitedGuestRows() as $row) {
             $name = trim((string) ($row[$nameKey] ?? ''));
             if ($name !== '') {
                 $guests[] = ['name' => $name, 'key' => PersonNameKey::for($name)];

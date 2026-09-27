@@ -155,6 +155,10 @@ class GuestFormController extends Controller
             'formAction' => $request->hasValidSignatureWhileIgnoring(EmailUtm::IGNORED_QUERY)
                 ? $reservation->guestFormSignedStoreUrl()
                 : route('reservation.guests.store', ['reservation' => $reservation]),
+            // El descargo de QUIEN CUMPLE (F7b, §4.13, `#752`): quién mira —el camino de la cuenta exige ser el titular— y a
+            // dónde se vuelve tras entrar (esta misma URL, firmada si llegó firmada).
+            'viewer' => $request->user(),
+            'volver' => $request->fullUrl(),
         ];
 
         return view('fiesta.lista', [

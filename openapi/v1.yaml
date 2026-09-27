@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.41.0
+  version: 1.42.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -1596,6 +1596,90 @@ paths:
                 $ref: '#/components/schemas/Error'
         '422':
           $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
+  /reservations/{reservation}/honoree-waiver:
+    put:
+      tags: [Reservas]
+      operationId: assignHonoreeWaiver
+      summary: Atar a quien cumple uno de mis menores a cargo
+      description: |
+        **1.42.0** (`fiesta-sistema-nuevo.md` §4.13, `DECISIONES #752`). El titular dice cuál de sus menores a cargo es
+        QUIEN CUMPLE en una reserva que lo sella (`GuestForm.honoree_row`): su descargo lo cubre desde entonces, y la lista,
+        la puerta y el aviso de la víspera lo leen por esa atadura, nunca por su nombre.
+
+        **Solo ata.** Dar de alta al hijo y firmar su descargo tienen su endpoint (`POST /me/dependents`,
+        `POST /me/dependents/{dependent}/waiver`): la app los compone y después llama aquí. El menor tiene que ser del
+        titular, menor de edad el día de la fiesta y con el descargo VIGENTE. Repetirlo con el mismo menor no cambia nada;
+        con otro, lo sustituye.
+
+        ⚠️ **Con la identidad del titular** (sesión o Bearer), nunca con la firma del enlace del correo: escribe en su
+        cuenta. La otra vía —el justificante de su padre o madre— se firma en la página web de
+        `GuestForm.honoree_waiver.authorization_url`.
+
+        Responde **200 con el `honoree_waiver`** ya actualizado.
+      security:
+        - sessionCookie: []
+        - bearerAuth: []
+      parameters:
+        - name: reservation
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [dependent_id]
+              properties:
+                dependent_id:
+                  type: integer
+                  minimum: 1
+                  description: Un menor a cargo del titular (`GET /me/dependents`).
+      responses:
+        '200':
+          description: Atado; su estado ya lo refleja.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [honoree_waiver]
+                properties:
+                  honoree_waiver:
+                    $ref: '#/components/schemas/HonoreeWaiver'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          description: La reserva no es del titular, o no existe (`unauthorized`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: '`guest_form_closed` — la fiesta ya pasó · `waiver_not_internal` — el descargo no se gestiona aquí.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: |
+            `validation_failed` con el motivo en `fields.dependent_id`: no es suyo, ese día ya no es menor, su descargo no
+            está vigente, la reserva no sella a quien cumple, o ya lo cubre el justificante de su padre o madre.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '429':
           $ref: '#/components/responses/TooManyRequests'
         '503':
@@ -6750,6 +6834,7 @@ components:
         - general_fields
         - guests
         - honoree_row
+        - honoree_waiver
         - general
         - save_url
         - addons
@@ -6832,6 +6917,36 @@ components:
             lo sella al crearse si el pack cuenta a quien cumple como uno de los niños. Entonces `guest_count` lo
             incluye, su nombre y su edad son los de la invitación, y la primera ficha se devuelve en su sitio al guardar.
             Las reservas de antes, `false`: todas sus fichas son de invitados.
+        honoree_waiver:
+          type: object
+          nullable: true
+          description: |
+            **1.42.0** (`DECISIONES #752`). El descargo de quien cumple: lo que pinta su fila de la lista. `null` si la
+            reserva no lo sella (`honoree_row: false`) o si el descargo no se gestiona dentro.
+
+            ⚠️ **COPIA VIGILADA de `HonoreeWaiver`, no un `$ref`**: la forma canónica de un `$ref` que admite `null`
+            (`allOf` + `nullable`) no funciona con el validador (`DECISIONES #27`, lo de `invitation`). Que no diverjan
+            lo vigila `ApiContractTest`.
+          required: [covered, signed, via, name, dependent_id, authorization_url]
+          additionalProperties: false
+          properties:
+            covered:
+              type: boolean
+            signed:
+              type: boolean
+            via:
+              type: string
+              enum: [none, dependent, authorization]
+            name:
+              type: string
+              nullable: true
+            dependent_id:
+              type: integer
+              nullable: true
+            authorization_url:
+              type: string
+              format: uri
+              nullable: true
         general:
           type: object
           additionalProperties:
@@ -7087,6 +7202,41 @@ components:
             **1.39.0** (`DECISIONES #749`). «Sin tarta»: `true` decide que no quiere ninguna de los complementos del
             bloque `cake` (manda además sus cantidades a 0 en `addons`); `false` lo deshace. Ausente = no se toca. Elegir
             una tarta (una cantidad > 0) la deja contestada igual: `cake_declined` vuelve `false`.
+
+    HonoreeWaiver:
+      type: object
+      description: |
+        **1.42.0** (`fiesta-sistema-nuevo.md` §4.13, `DECISIONES #752`). **El descargo de QUIEN CUMPLE**, leído por la
+        ATADURA y nunca por su nombre: lo cubre su menor a cargo asignado (`via: dependent`, con `dependent_id`) o el
+        justificante que firmó su padre o madre (`via: authorization`); `none` si nada lo cubre todavía.
+
+        `covered` y `signed` no son lo mismo: un menor a cargo cuyo descargo es de un texto ANTERIOR sigue cubriendo su
+        plaza (`covered: true`) pero la lista dice «Falta» y la puerta lo ve «anterior» (`signed: false`) hasta que se
+        vuelve a firmar (`POST /me/dependents/{dependent}/waiver`). `name` es el nombre de pila que dice su prueba.
+
+        `authorization_url` es la página WEB firmada donde su padre o madre firma su justificante —la vía sin cuenta, la
+        que se comparte—; `null` si ya está cubierto o la fiesta pasó. La vía de la cuenta es `PUT
+        /reservations/{reservation}/honoree-waiver`.
+      required: [covered, signed, via, name, dependent_id, authorization_url]
+      additionalProperties: false
+      properties:
+        covered:
+          type: boolean
+        signed:
+          type: boolean
+        via:
+          type: string
+          enum: [none, dependent, authorization]
+        name:
+          type: string
+          nullable: true
+        dependent_id:
+          type: integer
+          nullable: true
+        authorization_url:
+          type: string
+          format: uri
+          nullable: true
 
     # ─── La INVITACIÓN DIGITAL (`specs/celebracion-e-invitacion.md` §4.10, `DECISIONES #574`) ───
     # Los nombres y las formas se fijan AQUÍ antes de escribir una sola línea de código de API, que

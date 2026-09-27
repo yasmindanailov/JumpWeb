@@ -4,3 +4,7 @@
     <form method="POST" action="{{ $m['invitacion']['descartar'] }}" id="fiesta-descartar" class="pz-sr">@csrf</form>
     <form method="POST" action="{{ $m['invitacion']['recordatorio'] }}" id="fiesta-recordatorio" class="pz-sr">@csrf</form>
 @endif
+{{-- El descargo de QUIEN CUMPLE por el camino de la cuenta (F7b, `#752`): sus campos, bajo su fila, van aquí por `form=`. --}}
+@if (($m['firma_cumple'] ?? null) !== null && $m['firma_cumple']['sesion'])
+    <form method="POST" action="{{ $m['firma_cumple']['accion'] }}" id="fiesta-cumple" class="pz-sr">@csrf</form>
+@endif

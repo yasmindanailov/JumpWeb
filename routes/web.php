@@ -24,6 +24,7 @@ use App\Http\Controllers\EventsController;
 use App\Http\Controllers\GuardianAuthorizationController;
 use App\Http\Controllers\GuestFormController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\HonoreeWaiverController;
 use App\Http\Controllers\InvitationPageController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PaqueteDelCajonController;
@@ -299,6 +300,13 @@ Route::withoutMiddleware([ResolveVisitor::class.':'.ResolveVisitor::MINT])->grou
         ->middleware(['throttle:30,1', 'throttle:guest-form', 'no-store'])
         ->missing(fn () => abort(403))
         ->name('reservation.invitation.remind');
+    // EL DESCARGO DE QUIEN CUMPLE por el camino de la cuenta (`fiesta-sistema-nuevo.md` §4.13, `#752`): el titular ata a su
+    // hijo a cargo y firma. ⚠️ Su propio POST, como sus hermanas (no escribe `guest_data`); la misma puerta y los mismos
+    // limitadores, y además EXIGE la sesión del titular dentro (`HonoreeWaiverController`): el enlace firmado no basta.
+    Route::post('/reserva/{reservation}/quien-cumple', [HonoreeWaiverController::class, 'store'])
+        ->middleware(['throttle:30,1', 'throttle:guest-form', 'no-store'])
+        ->missing(fn () => abort(403))
+        ->name('reservation.honoree.store');
 
     // El JUSTIFICANTE de un menor INVITADO a una reserva («waiver offshore», `#328`): un adulto SIN
     // cuenta autoriza a un menor que no es menor a cargo de quien reservó. Va por PEDIDO —es «el papelito

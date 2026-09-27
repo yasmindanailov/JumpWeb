@@ -152,6 +152,8 @@ return [
         'guests' => 'Guest details: :done of :total complete.',
         'replies' => '{1} One family has replied and is waiting for you to review it.|[2,*] :count families have replied and are waiting for you to review them.',
         'minors' => '{1} One child still has no signed authorisation.|[2,*] :count children still have no signed authorisation.',
+        'honoree' => ':name’s waiver is still missing: you can sign it in their row of the list.',
+        'honoree_unnamed' => 'The birthday child’s waiver is still missing: you can sign it in their row of the list.',
         'balance_title' => 'What is paid at the park',
         'balance' => ':amount will be due at reception tomorrow.',
         'not_serious' => 'None of this stops the party: whatever is missing we sort out at the desk, and a child who comes with an adult gets in anyway. If you can, get it done this afternoon and tomorrow you only have to turn up.',
