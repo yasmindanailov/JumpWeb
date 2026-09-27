@@ -12,24 +12,33 @@
  * `onClose`, `summary`, `total`, `today`, `note` y `action` ({ label, onClick, disabled, loading }).
  * ▶ El movimiento (Z3, `#782`): al avanzar, el tramo de la barra se LLENA de izquierda a derecha (se ve el avance) y el
  * total RUEDA hasta su valor (`NumeroRodante`).
+ * ▶ **El teclado del móvil** (zip del 26-09, §4.16; `useTeclado.js`): con él abierto, la capa mide lo que se ve —la
+ * acción, siempre encima del teclado— y el pie se queda en la acción (el resumen, la nota y lo de debajo vuelven al
+ * cerrarlo); Intro pasa al campo siguiente y, en el último, hace la acción del paso.
  */
+import { ref } from 'vue';
 import { useTextos } from './textos.js';
+import { useIntro } from '../useTeclado.js';
 import BloqueCookies from './BloqueCookies.vue';
 import ControlIcono from './ControlIcono.vue';
 import BotonAccion from './BotonAccion.vue';
 import IconoLucide from '../ui/IconoLucide.vue';
 import NumeroRodante from '../ui/NumeroRodante.vue';
 
-defineProps({
+const props = defineProps({
     ck: { type: Object, required: true },
     top: { type: Boolean, default: false },
     cookies: { type: Object, default: null },
+    // La ventana visible con el teclado abierto (`useTeclado`, en la isla: ciñe también la raíz), o `null`.
+    kb: { type: Object, default: null },
 });
 const { t } = useTextos();
+const cajaRef = ref(null);
+const { alIntro } = useIntro({ cajaRef, accion: () => props.ck.action, kb: () => props.kb });
 </script>
 
 <template>
-    <div :style="{ display: 'flex', flexDirection: 'column', minHeight: 0, height: top ? 'auto' : 'calc(100dvh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom))', maxHeight: top ? 'calc(100dvh - 2 * max(16px, 4vh) - 16px)' : undefined }">
+    <div :style="{ display: 'flex', flexDirection: 'column', minHeight: 0, height: top ? 'auto' : kb ? `${kb.h - 16}px` : 'calc(100dvh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom))', maxHeight: top ? 'calc(100dvh - 2 * max(16px, 4vh) - 16px)' : undefined }">
         <BloqueCookies
             v-if="cookies"
             :cookies="cookies"
@@ -68,15 +77,17 @@ const { t } = useTextos();
         </div>
         <div
             :key="ck.key"
+            ref="cajaRef"
             data-isla-scroll=""
             tabindex="-1"
             :style="{ outline: 'none', flex: '1 1 auto', minHeight: 0, overflowY: 'auto', overscrollBehavior: 'contain', padding: '18px 8px 18px', scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.28) transparent', animation: ck.dir === 'back' ? 'isla-step-back var(--dur-slow) var(--ease-out) both' : ck.dir === 'fwd' ? 'isla-step-fwd var(--dur-slow) var(--ease-out) both' : 'isla-swap var(--dur-slow) var(--ease-island) both' }"
+            @keydown="alIntro"
         >
             <slot />
         </div>
         <div :style="{ display: 'grid', gap: '10px', paddingTop: '12px', borderTop: '1px solid rgba(255,255,255,0.14)' }">
             <div
-                v-if="ck.summary"
+                v-if="ck.summary && !kb"
                 aria-live="polite"
                 :style="{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '14px', padding: '0 6px' }"
             >
@@ -93,7 +104,7 @@ const { t } = useTextos();
                 </span>
             </div>
             <div
-                v-if="ck.note"
+                v-if="ck.note && !kb"
                 :style="{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 6px', fontFamily: 'var(--font-ui)', fontSize: '14px', fontWeight: 'var(--fw-semibold)', color: 'var(--isla-foco)' }"
             ><IconoLucide
                 name="clock"
@@ -107,7 +118,10 @@ const { t } = useTextos();
                 :disabled="Boolean(ck.action.disabled)"
                 :loading="ck.action.loading || false"
             />
-            <slot name="junto" />
+            <slot
+                v-if="!kb"
+                name="junto"
+            />
         </div>
     </div>
 </template>

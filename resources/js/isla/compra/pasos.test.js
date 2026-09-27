@@ -134,6 +134,17 @@ describe('la descripción de cada paso', () => {
         assert.equal(direccion(rango('pagar'), rango('perdida')), 'fwd');
     });
 
+    test('la hora se llenó al CONTINUAR (`#822`): el paso 1 («Tus datos»), con su flecha a la pantalla 0', () => {
+        const c = ck('perdida', { alEntrar: true });
+
+        assert.equal(`${c.stepStrong}${c.step}`, 'Paso 1 de 2 · Tus datos');
+        assert.deepEqual(c.progress, [1, 2]);
+        assert.equal(c.onBack(), 'volver');
+        assert.equal(c.action.label, 'Elegir esta hora');
+        assert.equal(c.action.disabled, true, 'apagado hasta elegir una');
+        assert.equal(ck('perdida', { alEntrar: true, horaNueva: '18:00' }).action.onClick(), 'elegirHora');
+    });
+
     test('«Listo»: sin banda ni resumen, y «Ir a Mi QR»', () => {
         const c = ck('listo');
 

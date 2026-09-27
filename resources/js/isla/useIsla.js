@@ -19,6 +19,7 @@ import { useCapa, usePila } from './usePaneles.js';
 import { useCompraCapa } from './useCompraCapa.js';
 import { useRelevo } from './useRelevo.js';
 import { useAltoIsla } from './useAltoIsla.js';
+import { useTeclado } from './useTeclado.js';
 import { dejarVuelo } from './relevo.js';
 import { salidaDePanel, vueloDesde } from './movimiento.js';
 
@@ -85,6 +86,8 @@ export function useIsla(props, { wrapRef, islandRef, sizerRef, panelRef, rowRef,
         cookies: props.cookies, shownNotice: shownNotice.value,
     }));
     remedirCuando([top, () => r.value.row, inCheckout, isOpen, () => s.value.id, view, () => stack.value.length]);
+    // El teclado del móvil en la capa grande (§4.16): la raíz se ciñe a lo que se ve y la capa mide ese alto.
+    const { kb } = useTeclado(() => inCheckout.value && ! top.value);
     // La primera pantalla (zip del 27-09): el alto en reposo, publicado para la cabecera (`--island-h`).
     useAltoIsla({
         rowRef, lineRowRef,
@@ -140,9 +143,9 @@ export function useIsla(props, { wrapRef, islandRef, sizerRef, panelRef, rowRef,
         t, s, stack, view, top, r, isOpen, inCheckout, openRow, stretch, pendiente, titleInRow, panelTitle, shownNotice,
         hayLinea, lineaAbre, accion, accionHref, accionAbierta, pulsarAccion, alTeclear, alternarPanel, panelProps, anuncio,
         cerrar: pila.cerrar, atras: pila.atras, apilarPanel: pila.apilarPanel, elegirPlan, abrirCapa, navegar,
-        cambio, hundir, soltar, veloSaliente,
+        cambio, hundir, soltar, veloSaliente, kb,
         tamano: computed(() => tamano({ inCheckout: inCheckout.value, isOpen: isOpen.value, notice: shownNotice.value, isCompact: r.value.isCompact })),
-        estiloRaiz: computed(() => estiloRaiz({ gutter: props.gutter, top: top.value, inCheckout: inCheckout.value, reservado: reservado.value })),
+        estiloRaiz: computed(() => estiloRaiz({ gutter: props.gutter, top: top.value, inCheckout: inCheckout.value, reservado: reservado.value, kb: kb.value })),
         // Entre páginas, la isla de la página se queda (`view-transition-name`); la compra y Mi cuenta no cruzan de página.
         estiloIsla: computed(() => estiloIsla({
             row: r.value.row, box: box.value, alert: s.value.tone === 'alert', grown: grown.value, animate: animate.value, calm: calmNow.value,

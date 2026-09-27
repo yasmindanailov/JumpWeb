@@ -112,6 +112,16 @@ test('la primera pantalla: arriba, la banda es FIJA —aire más el alto en repo
     assert.equal(estiloRaiz({ gutter: 'var(--gutter)', top: true, inCheckout: true }).height, 'auto');
 });
 
+test('el teclado del móvil (§4.16): en la compra, la raíz se ciñe a la ventana visible; sin él o arriba, como siempre', () => {
+    const kb = { h: 400, top: 12 };
+    const con = estiloRaiz({ gutter: 'var(--gutter)', top: false, inCheckout: true, kb });
+    assert.deepEqual([con.position, con.top, con.bottom, con.height, con.paddingTop, con.paddingBottom], ['fixed', '12px', 'auto', '400px', '8px', '8px']);
+    const sin = estiloRaiz({ gutter: 'var(--gutter)', top: false, inCheckout: true, kb: null });
+    assert.deepEqual([sin.top, sin.bottom, sin.height], [0, 0, undefined], 'sin teclado: toda la pantalla');
+    assert.equal(estiloRaiz({ gutter: 'var(--gutter)', top: true, inCheckout: true, kb }).top, 0, 'arriba (escritorio), el teclado no cuenta');
+    assert.equal(estiloRaiz({ gutter: 'var(--gutter)', top: false, inCheckout: false, kb }).height, undefined, 'fuera de la compra, tampoco');
+});
+
 test('el alto en reposo que publica: la fila, desde la línea si va encima, más los 16px del medidor', () => {
     // En fila (arriba en escritorio): 46 de fila + 16 = 62, el valor por defecto de la hoja.
     assert.equal(altoEnReposo({ fila: { top: 24, bottom: 70 }, linea: null, row: true }), 62);

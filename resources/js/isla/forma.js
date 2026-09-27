@@ -13,7 +13,7 @@
  * banda FIJA en ese aire más `--island-h` (el alto en reposo que la isla publica): lo que crece —las cookies, un aviso,
  * un panel— se abre por debajo, ENCIMA de la cabecera, sin empujarla. Abajo, el mismo aire que a los lados (`--gutter`).
  */
-export function estiloRaiz({ gutter, top, inCheckout = false, reservado = 0 }) {
+export function estiloRaiz({ gutter, top, inCheckout = false, reservado = 0, kb = null }) {
     const borde = top ? 'max(var(--island-inset), env(safe-area-inset-top))' : 'max(var(--gutter), env(safe-area-inset-bottom))';
 
     return {
@@ -28,6 +28,9 @@ export function estiloRaiz({ gutter, top, inCheckout = false, reservado = 0 }) {
         ...(reservado && ! top && ! inCheckout ? { height: `calc(${reservado}px + ${borde})`, alignItems: 'flex-end' } : {}),
         ...(inCheckout && top ? { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, height: 'auto', zIndex: 90, alignItems: 'flex-start', paddingTop: 'max(16px, 4vh)', paddingBottom: 'max(16px, 4vh)', pointerEvents: 'auto' } : {}),
         ...(inCheckout && ! top ? { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 90, alignItems: 'flex-end', paddingTop: 'max(8px, env(safe-area-inset-top))', paddingBottom: 'max(8px, env(safe-area-inset-bottom))', paddingLeft: '8px', paddingRight: '8px' } : {}),
+        // Con el TECLADO abierto (§4.16, `useTeclado`), la raíz se ciñe a la ventana VISIBLE —en iOS, abrir el teclado no
+        // encoge la página, y lo fijado al fondo quedaba debajo de él—: la acción, siempre encima del teclado.
+        ...(inCheckout && ! top && kb ? { top: `${kb.top}px`, bottom: 'auto', height: `${kb.h}px`, boxSizing: 'border-box', paddingTop: '8px', paddingBottom: '8px' } : {}),
     };
 }
 

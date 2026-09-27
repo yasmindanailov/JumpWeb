@@ -3,9 +3,9 @@
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
-> **820–849** (dada de alta en `DECISIONES.md` el 27-09; centena `decisiones/800-899.md`) · Último usado: **`#821`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`, `#821`) · Actualizado: **2026-09-27 noche**
-> (el zip (4) dentro, `#789` —el orden, el reparto y siete respuestas— y la primera pantalla ✅, `#820` y `#821`).
+> **820–849** (dada de alta en `DECISIONES.md` el 27-09; centena `decisiones/800-899.md`) · Último usado: **`#823`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#822`) · Actualizado: **2026-09-27 noche**
+> (el zip (4) dentro, `#789`, la primera pantalla ✅ `#820`/`#821` y la conversión del zip, `#822`, en el árbol).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
 > llévaselo con la medida, como el SPA en `#724`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -38,15 +38,22 @@
 
 ## Por dónde retomar, en orden
 
-▶▶▶▶ **27-09 noche · EL ORDEN HASTA LA v2.0.0** (`#789`, del owner): **(0) la PRIMERA PANTALLA** del zip (4) (spec §4.15,
-`#820`, `#821`: ✅ en Kids y Jump —0 reglas peores que el mockup en 15 pantallas, `sonda-primera-pantalla.mjs comparar`;
-arnés `mutar-primera-pantalla.sh`; el logotipo arriba a la izquierda, a 64 y cediendo en pantallas bajas; ✅ del owner en
-vivo, «buen trabajo»—; la T6 la hereda: toda página nueva usa `video-hero` SIN `height` y entra en la sonda) → **SIGUE:
-(1) las cinco mejoras de conversión** del zip (§4.14, al final:
-PENDIENTES; la hora al entrar es pregunta abierta contra `#688`) → **(2) T5f** → **(3) T6**: portada, Cumpleaños, Colegios,
-Visítanos (SIN formulario: `/contacto` con 301) y Normas, y los 301 → **(4)** Bizum, Apple (entra) y el día liberado →
-material y revisión del owner, al final (los datos: playjump.es). **Los correos del sistema y la puerta, del SPA**, en
-paralelo. Faltan piezas para la T6: `AnswerRow`, `RuleGrid`/`RuleCard`, `PromoSplit` y `WaiverSheet` (buzón al SPA ANTES).
+▶▶▶▶ **27-09 noche · EL ORDEN HASTA LA v2.0.0** (`#789`, del owner). **HECHO hoy, las dos con el ✅ del owner en vivo**:
+**(0) la PRIMERA PANTALLA** del zip (4) (spec §4.15, `#820`, `#821`): Kids y Jump, 0 reglas peores que el mockup en 15
+pantallas (`sonda-primera-pantalla.mjs comparar`, arnés `mutar-primera-pantalla.sh` 5/5); el logotipo arriba a la
+izquierda a 64 (cede en pantallas bajas), 48 en móvil; la T6 la hereda: toda página nueva usa `video-hero` SIN `height` y
+entra en la sonda. **(1) la CONVERSIÓN del zip tercero** (§4.16, `#822`, `#823`): la hora que se llena al CONTINUAR con sus
+cercanas, el teclado y el Intro de la capa grande, «¿Querías decir…?» (la regla, mudada a `ui/correo.js`) y «Pagar»
+compacto (sin política; las marcas en la línea de la pasarela); `Medir`, aplazado; `sonda-conversion.mjs` 19/19 y 16/16.
+▶ **SIGUE: (2) T5f** de Mi cuenta (§4.13: Reservar otra vez, la bienvenida de la cuenta nueva, sin conexión, los bloques
+protegidos, la verificación final; `sonda-cuenta.mjs` crece; lo que el mockup no dibuja, EN VIVO al owner antes de cerrar)
+→ **(3) T6**: portada, Cumpleaños, Colegios, Visítanos (SIN formulario: `/contacto` con 301) y Normas, y los 301 → **(4)**
+Bizum, Apple (entra) y el día liberado → material y revisión del owner, al final (los datos: playjump.es). **Los correos
+del sistema y la puerta, del SPA**, en paralelo. Faltan piezas para la T6: `AnswerRow`, `RuleGrid`/`RuleCard`,
+`PromoSplit` y `WaiverSheet` (buzón al SPA ANTES).
+⚠️ **Dos trampas de hoy**: (a) `sonda-isla` PAGA con la cuenta de pruebas y rompe `sonda-cuenta` si corre antes: sus
+pedidos, a `sonda-compra@` entre las dos (`TESTING.md` §2.octies); (b) el tracker está a ~20 B de su techo (16 KB): la
+próxima línea obliga a MUDAR algo de él (a su spec), no a raspar.
 ▶▶▶ **Hecho el 26/27-09** (spec §4.14): Z1→Z3, el rendimiento (`#783`), las marcas (`#784`, `#786`), la compra sin
 pantallas de más con la vuelta de Google (`#785`, ✅ del owner con Google real), el teléfono solo en packs (`#787`), la
 deuda del buzón del SPA y `#788`. Marcas: en LOCAL `payment.marks` = `bizum,visa,mastercard`; en PRODUCCIÓN, el owner.
@@ -209,6 +216,10 @@ dueño es el carril de la web/reseñas—) ·
   `pj-island:size`, y abajo el aviso de cookies va compacto (claves nuevas en `lang/*/isla.php`; tu almacén
   `ui/cookie-consent.js`, sin tocar). Si tus páginas enfocadas usan la cabecera o la isla, re-mide con
   `sonda-primera-pantalla.mjs`. ▶ Tu F8 (`?c=wa` en «Antes de venir») rompía mi `sonda-cuenta`: arreglada aquí.
+- ❗ **`#822`, toqué lo tuyo (la regla del correo)**: `sugerirCorreo` se MUDÓ tal cual a `resources/js/ui/correo.js` y tu
+  `fiesta/logica.js` la REEXPORTA (tus imports y `logica.test.js` no cambian: 19/19). Motivo, medido: la isla la usa en sus
+  campos de correo y, importada de tu módulo, se llevaba la fiesta entera (+2,93 kB). Tu `mutar-zip-tercero.sh`, re-apuntado
+  a `ui/correo.js`: 12/12. ⚠️ Haz `git pull` antes de tocar `logica.js`.
 
 ### ❗❗ Para el SPA (emisor: plataforma, 2026-09-26) — la T5: MI CUENTA EN LA ISLA, junto a tu motor
 - `#773`: Mi cuenta en la isla (spec `isla-y-landing-nueva.md` §4.13: cada tanda dice lo tocado). De lo tuyo:

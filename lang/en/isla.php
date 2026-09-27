@@ -92,6 +92,8 @@ return [
         'mostrar_clave' => 'Show password',
         'ocultar_clave' => 'Hide password',
         'opcional' => 'optional',
+        'sugerencia_antes' => 'Did you mean ',
+        'sugerencia_despues' => '?',
         'completo' => 'Full',
         'quedan' => 'Only :n left',
         'libres' => ':n free',
@@ -286,6 +288,7 @@ return [
         'perdida' => [
             'titular' => 'That time is no longer free.',
             'texto' => 'Nothing has been charged. These are:',
+            'texto_al_entrar' => 'These are:',
             'boton' => 'Choose this time',
         ],
     ],

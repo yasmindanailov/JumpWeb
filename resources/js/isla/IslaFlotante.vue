@@ -43,7 +43,7 @@ const lineRowRef = ref(null);
 const {
     t, s, stack, view, top, r, isOpen, inCheckout, openRow, stretch, pendiente, titleInRow, panelTitle, shownNotice,
     hayLinea, lineaAbre, accion, accionHref, accionAbierta, pulsarAccion, alTeclear, alternarPanel, panelProps, anuncio,
-    cerrar, atras, apilarPanel, elegirPlan, abrirCapa, navegar, cambio, hundir, soltar, veloSaliente,
+    cerrar, atras, apilarPanel, elegirPlan, abrirCapa, navegar, cambio, hundir, soltar, veloSaliente, kb,
     tamano, estiloRaiz, estiloIsla, estiloMedida,
 } = useIsla(props, { wrapRef, islandRef, sizerRef, panelRef, rowRef, lineRowRef });
 // El velo: entra fundido y se va fundido (`isla-velo-sale`, en `isla.css`; Z3, `#782`). Sin `<Transition>` de Vue, a
@@ -100,6 +100,7 @@ const velo = { position: 'fixed', inset: 0, zIndex: -1, background: 'var(--isla-
                     :ck="checkout"
                     :top="top"
                     :cookies="cookies"
+                    :kb="kb"
                 >
                     <slot />
                     <template #junto>

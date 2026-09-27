@@ -57,14 +57,20 @@ export function lineaDe(p, resueltos) {
     };
 }
 
+/** Si el «no» del servidor a una línea es la HORA: completa o que ya no se ofrece (`CartLineProblem`). */
+export function esHoraLlena(problemas) {
+    return (Array.isArray(problemas) ? problemas : []).some((p) => p?.reason === 'sold_out' || p?.reason === 'time_unavailable');
+}
+
 /**
  * Mete la línea del pedido como la ÚNICA de la cesta, la guarda y pide su presupuesto.
  *
  * Si el servidor dice que no, la cesta vuelve a lo que era y se devuelve el aviso ya traducido (el mismo que da el
- * cajón: `line-problems.js`).
+ * cajón: `line-problems.js`). `horaLlena`: el «no» es la HORA —completa (`sold_out`) o que ya no se ofrece
+ * (`time_unavailable`)—, y la compra puede proponer las cercanas (`#822`, §4.16).
  *
  * @param {{api: object, pedido: object, resueltos: Array, cartStore: object, messages?: object}} deps
- * @returns {Promise<{ok: boolean, aviso: string}>}
+ * @returns {Promise<{ok: boolean, aviso: string, horaLlena?: boolean}>}
  */
 export async function meterLinea({ api, pedido, resueltos, cartStore, messages = {} }) {
     const linea = lineaDe(pedido, resueltos);
@@ -76,9 +82,10 @@ export async function meterLinea({ api, pedido, resueltos, cartStore, messages =
 
     if (! respuesta?.ok || respuesta.data?.valid !== true) {
         cartStore.setLines(previas);
-        const aviso = respuesta?.ok ? lineProblems(respuesta.data?.problems ?? [], [], messages).error : '';
+        const problemas = respuesta?.ok ? respuesta.data?.problems ?? [] : [];
+        const aviso = respuesta?.ok ? lineProblems(problemas, [], messages).error : '';
 
-        return { ok: false, aviso: aviso || t(messages, 'errors.choose_one') };
+        return { ok: false, aviso: aviso || t(messages, 'errors.choose_one'), horaLlena: esHoraLlena(problemas) };
     }
 
     cartStore.setLines(addLine([], linea, respuesta.data));

@@ -8,7 +8,8 @@
  * ⚠️ Ningún importe se calcula aquí (`PAY-12`): las líneas y el total llegan hechos, del cálculo del servidor.
  * `lineas` son las del resumen (`{ id, label, sub, value, tone, control: { n, min, max, uno, varios } }`) y
  * `calcetines`, si se ofrecen, `{ texto, uno, varios }`. Las formas de pago ya no van aquí: el owner las quiso bajo el
- * botón de pagar, pequeñas (`JuntoPagar`, `#786`).
+ * botón de pagar, pequeñas (`JuntoPagar`, `#786`). Tampoco la política de cambios (`#823`, el owner: el plazo ya lo
+ * dicen la página y sus dudas; aquí, más texto es fricción): la cubre «Al pagar aceptas las condiciones», con su enlace.
  */
 import { useTextos } from '../piezas/textos.js';
 import { PASO } from './estilos.js';

@@ -120,10 +120,12 @@ export function ckDelPaso(e) {
     if (e.paso === 'verificando') return { ...ck, ...pasoN(2, t('compra.pagar.banda')) };
 
     // La hora se llenó al pagar (T3e·6, `PjcPerdida`): no se cobró nada, y «Elegir esta hora» vuelve a «Pagar» con la
-    // línea rehecha. Sin flecha, como el diseño: la salida es elegir otra hora o cerrar.
+    // línea rehecha. Sin flecha, como el diseño: la salida es elegir otra hora o cerrar. Si se llenó al CONTINUAR de la
+    // pantalla 0 (`alEntrar`, `#822`): el paso 1, con su flecha a la pantalla 0, como «Tus datos» del diseño.
     if (e.paso === 'perdida') {
         return {
-            ...ck, ...pasoN(2, t('compra.pagar.banda')),
+            ...ck, ...(e.alEntrar ? pasoN(1, t('compra.datos.banda')) : pasoN(2, t('compra.pagar.banda'))),
+            onBack: e.alEntrar ? a.volver ?? null : null,
             action: { label: t('compra.perdida.boton'), onClick: a.elegirHora, disabled: ! e.horaNueva, loading: e.ocupado === 'perdida' ? t('pieza.cargando') : false },
         };
     }

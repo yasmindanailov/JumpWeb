@@ -1618,6 +1618,40 @@ cabecera (acababa en 1000px de una pantalla de 560)—. **Después**: Kids y Jum
 - ⚠️ **Para la T6**: toda página nueva usa `video-hero` SIN `height` (el contrato es la pantalla) y entra en la sonda
   (`sonda-primera-pantalla.mjs comparar <página>`; su ficha y su ruta ya están en su mapa `PAGINA`, las siete).
 
+### 4.16 La conversión del zip tercero: el censo (MEDIDO 27-09) y el plan (`#789`, `#822`)
+
+**Lo que pide** (README del zip, «La isla y la compra · conversión (26-09)») y **lo que hay**, medido en el código:
+
+| Mejora | Hoy | Plan |
+|---|---|---|
+| **La hora, al entrar** | La comprobación YA EXISTE: «Continuar» de la pantalla 0 pregunta a la oferta (`POST /cart/validate-line` → `SOLD_OUT`) antes de «Tus datos», así que aquí no se rellena nada para nada. Pero lo dice con un aviso de TEXTO en la pantalla 0, sin recargar las horas | `#822` (owner, opción A): con `SOLD_OUT` al continuar, las horas del día otra vez y las cercanas (el camino de `alLlenarse`), y el aviso del diseño —«Esa hora ya no está libre. Estas sí:», las horas y «Elegir esta hora»— en el paso de la hora perdida, SIN «No se ha cobrado nada»; al elegir, sigue a «Tus datos» o a «Pagar» (`#785`). Nuestro motor no está en «Tus datos» sin una línea válida en la cesta: por eso va en su paso y no encima del formulario. La retención, al pagar (`#688`) |
+| **El pie de «Pagar», compacto** | El pie ya es el del diseño (pago secundario, pasarela, «Al pagar aceptas las condiciones») más las marcas bajo el botón (`#786`). La POLÍTICA de cambios no sale en ningún sitio | ▶ `#823` (el owner, en vivo): SIN la política —la dicen la página y sus dudas; la cubre el enlace a las condiciones— y las marcas DENTRO de la frase de la pasarela, al 80 %: el pie, de tres bloques a dos |
+| **El teclado y el Intro** | No hay nada: la capa grande mide `100dvh` y el teclado tapa la acción | En la capa grande (compra y Mi cuenta, `CompraIsla.vue`), en móvil: `visualViewport` (con el teclado, el pie se queda en la acción y el campo no queda tapado), Intro al campo siguiente y en el último la acción, y `enterkeyhint` «next»/«go» |
+| **«¿Querías decir…?»** | Solo en la fiesta del SPA (`fiesta/logica.js::sugerirCorreo`) | En `CampoSistema.vue` para todo campo de correo de la isla, con la MISMA función del SPA, usada sin tocarla |
+| **`Medir`** | — | Aplazado: se valora con la analítica al acabar el diseño (`#789`) |
+
+**Lo hecho** (27-09):
+- **La hora al continuar** (`useSeccionCompra.js`): `meterLinea` distingue la hora (`horaLlena`: `sold_out` o
+  `time_unavailable`, `esHoraLlena`); con ella, el pedido intentado queda como el perdido (`alEntrar`) y `alLlenarse`
+  enseña el paso de la hora perdida en la banda «Paso 1 de 2 · Tus datos», con su flecha a la pantalla 0
+  (`volverDeLaPerdida`, sin tocar la cesta), «Estas sí:» (`compra.perdida.texto_al_entrar`) y, debajo, lo que se estaba
+  eligiendo; «Elegir esta hora» rehace la línea y hace la admisión que faltaba (`admitir`, sacada de `continuar`). Sin
+  ninguna cercana, a la pantalla 0 con el aviso de siempre y las horas recargadas.
+- **«Pagar»** (`#823`): la política al final del recibo se hizo (`politicaDe`) y el owner la RETIRÓ al verla («ahí, tanto
+  texto genera fricción y satura»), código incluido; y las marcas, dentro de la frase de la pasarela
+  (`MarcasDePago en-linea`, `marcas.js::EN_LINEA`).
+- **El teclado**, como el diseño en dos piezas (`teclado.js`, puro; `useTeclado.js`): `useTeclado` en la isla —la RAÍZ
+  se ciñe a la ventana visible (`estiloRaiz`, `kb`): sin eso la capa medía bien pero seguía pegada al fondo, bajo el
+  teclado (lo cazó la sonda: la acción en 829 de 844 con 400 visibles)— y `useIntro` en la capa.
+- **«¿Querías decir…?»** en `CampoSistema` (`pieza.sugerencia_*`). ⚠️ La regla se MUDÓ a `ui/correo.js` (la fiesta la
+  reexporta): importada de `fiesta/logica.js`, la isla se llevaba el módulo entero de la fiesta (+2,93 kB en los pasos y
+  en Mi cuenta, medido). El arnés del SPA que la muta (`mutar-zip-tercero.sh`), re-apuntado allí: 12/12.
+- **Verificado**: `scripts/sonda-conversion.mjs` 19/19 a 390 y 16/16 a 1280 (el teclado, solo en móvil), con CONTROL: sobre
+  el código anterior se para en el primer paso. El peso, con su medida (base: el `HEAD` de `#821`, antes de retirar la
+  política): compra 153,07 → 156,73, página 168,94 → 171,50, pasos 40,85 → 43,38 y Mi cuenta 106,04 → 108,40.
+- ⚠️ **Trampa pagada**: `sonda-isla` PAGA con la cuenta de pruebas y rompe `sonda-cuenta` si corre antes (la reserva de hoy
+  saca el QR grande): sus pedidos se pasan a `sonda-compra@` entre las dos (`TESTING.md` §2.octies). Pasó en esta tanda.
+
 ## 5. Impacto en invariantes
 
 - `PAY-*`: solo si entra Bizum; entonces `VERIFY_CONC=1` y la lista del `CRITICAL_RE`.

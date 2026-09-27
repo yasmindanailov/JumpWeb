@@ -92,6 +92,8 @@ return [
         'mostrar_clave' => 'Afficher le mot de passe',
         'ocultar_clave' => 'Masquer le mot de passe',
         'opcional' => 'facultatif',
+        'sugerencia_antes' => 'Vouliez-vous dire ',
+        'sugerencia_despues' => ' ?',
         'completo' => 'Complet',
         'quedan' => 'Plus que :n',
         'libres' => ':n libres',
@@ -286,6 +288,7 @@ return [
         'perdida' => [
             'titular' => 'Cet horaire n\'est plus libre.',
             'texto' => 'Rien n\'a été débité. Ceux-ci le sont :',
+            'texto_al_entrar' => 'Ceux-ci le sont :',
             'boton' => 'Choisir cet horaire',
         ],
     ],

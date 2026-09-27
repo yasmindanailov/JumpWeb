@@ -933,7 +933,12 @@ class SidebarBundleBudgetTest extends TestCase
     // `ResizeObserver`; `altoEnReposo`/`publicaAlto` en `forma.js`) y, abajo, el aviso de cookies compacto
     // (`EnlaceEnFrase.vue`). Medido 150,57 → 153,07 con la cuenta de este test (base: el `HEAD` de `#789`, construido
     // aparte). El techo, a 154.
-    private const ISLA_COMPRA_CHUNK_MAX_KB = 154;
+    // `#822` (la conversión del zip tercero, §4.16): la hora que se llena al CONTINUAR con sus cercanas (`alEntrar`,
+    // `admitir`, `volverDeLaPerdida`) y el teclado del móvil con su Intro (`teclado.js`, `useTeclado.js`). Medido 153,07 →
+    // 156,73 (base: el `HEAD` de `#821`, construido aparte), con una política al final del recibo que el owner retiró
+    // después (`#823`: con ella fuera, pesa algo menos). ⚠️ «¿Querías decir…?» va en su módulo (`ui/correo.js`): importada de `fiesta/logica.js`, la
+    // isla se llevaba el módulo entero de la fiesta (+2,93 en los pasos y en Mi cuenta, medido). El techo, a 158.
+    private const ISLA_COMPRA_CHUNK_MAX_KB = 158;
 
     // T4d·4 (`specs/isla-y-landing-nueva.md` §4.12): la CALCULADORA de una página, entrada propia que la página pide
     // (`scripts` de `<x-pagina>`) y se monta al acercarse su pieza. Su DESCARGA entera, como la mide el navegador que
@@ -961,7 +966,10 @@ class SidebarBundleBudgetTest extends TestCase
     // `#820` (la primera pantalla): lo mismo que la compra —el alto que publica, las cookies compactas— y, de la página,
     // lo que la llegada limpia esconde no cuenta como botón a la vista (`cajaSiVisible`) y se vuelve a mirar con
     // `pj-hero:medida`. Medido 166,26 → 168,94 (base: el `HEAD` de `#789`, construido aparte). El techo, a 170.
-    private const ISLA_PAGINA_MAX_KB = 170;
+    // `#822`: el teclado del móvil de la capa grande (`teclado.js`, `useTeclado.js`), que viaja con `IslaFlotante` y su
+    // `CompraIsla` aunque la isla en reposo no entre en la compra. Medido 168,94 → 171,50 (base: el `HEAD` de `#821`).
+    // El techo, a 173.
+    private const ISLA_PAGINA_MAX_KB = 173;
 
     // T3e·3 (`#694`): las pantallas de después de la pantalla 0, en su trozo (`isla/compra/pasos-diferidos.js`), que la
     // compra pide al montarse. Medido 36,92 KiB. T3e·4 (`#695`): «Entra» con sus eventos y la «G» de Google, 37,66.
@@ -972,7 +980,9 @@ class SidebarBundleBudgetTest extends TestCase
     // `#784`: las formas de pago al final del recibo de «Pagar» (`ui/MarcasDePago.vue`), que dejan el hueco de texto de
     // `JuntoPagar`. Medido 39,68 → 40,44 (base: el `HEAD` de `#783`). La chapa, en su módulo: en `ui/estilos.js` subía
     // también la isla de CADA página (+0,37). El techo, a 41.
-    private const ISLA_PASOS_CHUNK_MAX_KB = 41;
+    // `#822`: «¿Querías decir…?» en los campos de correo (`CampoSistema`, con `ui/correo.js` en su trozo de 1,48 KiB) y
+    // la hora perdida al continuar (`PantallaPerdida`). Medido 40,85 → 43,38 (base: el `HEAD` de `#821`). El techo, a 44.
+    private const ISLA_PASOS_CHUNK_MAX_KB = 44;
 
     // T5b (`#775`): MI CUENTA de la isla, trozo diferido del motor que se pide a la primera apertura de la cuenta. Su
     // descarga, sobre lo que ya tiene quien la abre (el motor y la compra, que la isla monta con el motor). Medido el
@@ -998,7 +1008,9 @@ class SidebarBundleBudgetTest extends TestCase
     // `#785` y `#787`: «Tus datos», que Mi cuenta comparte para su «Crea tu cuenta», gana el alta de Google dentro de la
     // compra y el teléfono SOLO en una fiesta (`datos.js`: `hayQuePedir`, las ramas de Google y del teléfono). Medido
     // 104,93 → 105,99 con `#785` (dentro del techo) y 105,99 → 106,04 con `#787` (base: el `HEAD` de `#786`). El techo, a 107.
-    private const ISLA_CUENTA_CHUNK_MAX_KB = 107;
+    // `#822`: la sugerencia de correo (Entra, Crea tu cuenta, el cambio de correo) y el Intro de la capa grande. Medido
+    // 106,04 → 108,40 (base: el `HEAD` de `#821`). El techo, a 109.
+    private const ISLA_CUENTA_CHUNK_MAX_KB = 109;
 
     // T5e (`#778`): los AJUSTES de Mi cuenta, su trozo —el bloque y su lógica, pedidos al pintar el inicio—, sobre lo que ya
     // tiene quien abre Mi cuenta. Medido: 26,92 (el bloque 12,70, la lógica 6,56, `ajustes.js` 3,44, el interruptor que

@@ -101,6 +101,9 @@ return [
         'mostrar_clave' => 'Mostrar la contraseña',
         'ocultar_clave' => 'Ocultar la contraseña',
         'opcional' => 'opcional',
+        // «¿Querías decir …?», bajo un campo de correo mal escrito (el correo propuesto va en medio, en negrita).
+        'sugerencia_antes' => '¿Querías decir ',
+        'sugerencia_despues' => '?',
         'completo' => 'Completo',
         'quedan' => 'Quedan :n',
         'libres' => ':n libres',
@@ -312,6 +315,8 @@ return [
         'perdida' => [
             'titular' => 'Esa hora ya no está libre.',
             'texto' => 'No se ha cobrado nada. Estas sí:',
+            // Al CONTINUAR de la pantalla 0 (`#822`): aún no se ha pedido ni cobrado nada (el «Estas sí:» de «Tus datos»).
+            'texto_al_entrar' => 'Estas sí:',
             'boton' => 'Elegir esta hora',
         ],
     ],

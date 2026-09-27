@@ -13,10 +13,12 @@ PHP="docker compose exec -u sail -T laravel.test php artisan test --filter=ZipTe
 JS="docker compose exec -u sail -T laravel.test node --test resources/js/fiesta/logica.test.js"
 
 TMP="$(mktemp -d)"
+# ⚠️ La regla del correo vive desde el 27-09 en `ui/correo.js` (la usa también la isla; `fiesta/logica.js` la reexporta:
+# `isla-y-landing-nueva.md` §4.16): sus mutaciones van allí, y `logica.test.js` la sigue probando por la reexportación.
 FICHEROS=(
     resources/views/components/pieza/campo.blade.php
     resources/views/components/pieza/boton.blade.php
-    resources/js/fiesta/logica.js
+    resources/js/ui/correo.js
 )
 copia() { echo "$TMP/$(echo "$1" | tr '/' '_')"; }
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$(copia "$f")" "$f"; touch "$f"; done; }
@@ -61,7 +63,7 @@ mutar() {
 
 CA=resources/views/components/pieza/campo.blade.php
 BO=resources/views/components/pieza/boton.blade.php
-LO=resources/js/fiesta/logica.js
+LO=resources/js/ui/correo.js
 
 # ── 1 · El marcado ───────────────────────────────────────────────────────────────────────────────
 mutar "la sugerencia en cualquier campo" "$CA" "@if (\$type === 'email')@php" "@if (true)@php"

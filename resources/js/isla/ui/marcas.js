@@ -6,9 +6,12 @@
  * ⚠️ En su módulo y no en `estilos.js`: ése lo comparte la isla de CADA página, que no pinta marcas (medido: +0,37 KiB).
  */
 const ALTO = { bizum: 15, visa: 12, mastercard: 20 };
+/** En línea con el texto de la pasarela (`#823`), un poco más pequeñas: las MISMAS proporciones entre ellas. */
+const EN_LINEA = 0.8;
 
 export const MARCA = {
     fila: { display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px 16px', margin: 0, padding: 0, listStyle: 'none' },
+    enLinea: { display: 'inline-flex', flexWrap: 'nowrap', alignItems: 'center', gap: '10px', margin: 0, padding: 0, listStyle: 'none', verticalAlign: 'middle' },
     // Una marca que el producto aún no conoce, a una altura media.
-    logo: (id) => ({ display: 'block', height: `${ALTO[id] ?? 14}px`, width: 'auto' }),
+    logo: (id, enLinea = false) => ({ display: 'block', height: `${Math.round((ALTO[id] ?? 14) * (enLinea ? EN_LINEA : 1))}px`, width: 'auto' }),
 };

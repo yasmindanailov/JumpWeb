@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { complementosDe, lineaDe, meterLinea, pedidoDe } from './linea.js';
+import { complementosDe, esHoraLlena, lineaDe, meterLinea, pedidoDe } from './linea.js';
 
 /**
  * La línea de la compra de la isla (T3e·3 de `specs/isla-y-landing-nueva.md` §4.10): la cesta de la isla es SU
@@ -84,7 +84,7 @@ describe('meterLinea', () => {
         const cesta = cestaDeMentira({ previas: [vieja], veredicto: { valid: false, problems: [{ reason: 'cart_full' }] } });
         const r = await meterLinea({ api: {}, pedido, resueltos: [], cartStore: cesta, messages: { errors: { cart_too_large: 'La cesta está llena.', choose_one: 'Elige una opción.' } } });
 
-        assert.deepEqual(r, { ok: false, aviso: 'La cesta está llena.' });
+        assert.deepEqual(r, { ok: false, aviso: 'La cesta está llena.', horaLlena: false });
         assert.deepEqual(cesta.lines, [vieja]);
         assert.equal(cesta.llamadas.some(([q]) => q === 'persist' || q === 'refreshQuote'), false, 'ni se guarda ni se presupuesta');
     });
@@ -93,6 +93,19 @@ describe('meterLinea', () => {
         const cesta = cestaDeMentira({ ok: false });
         const r = await meterLinea({ api: {}, pedido, resueltos: [], cartStore: cesta, messages: { errors: { choose_one: 'Elige una opción.' } } });
 
-        assert.deepEqual(r, { ok: false, aviso: 'Elige una opción.' });
+        assert.deepEqual(r, { ok: false, aviso: 'Elige una opción.', horaLlena: false });
+    });
+
+    test('la HORA llena al continuar (`#822`): la compra lo sabe, para proponer las cercanas', async () => {
+        for (const reason of ['sold_out', 'time_unavailable']) {
+            const cesta = cestaDeMentira({ veredicto: { valid: false, problems: [{ reason }] } });
+            const r = await meterLinea({ api: {}, pedido, resueltos: [], cartStore: cesta, messages: { errors: { choose_one: 'Elige una opción.' } } });
+
+            assert.equal(r.ok, false, reason);
+            assert.equal(r.horaLlena, true, reason);
+        }
+        assert.equal(esHoraLlena([{ reason: 'event_field_required' }, { reason: 'sold_out' }]), true, 'entre otros problemas, también');
+        assert.equal(esHoraLlena([{ reason: 'cart_full' }]), false);
+        assert.equal(esHoraLlena(undefined), false);
     });
 });
