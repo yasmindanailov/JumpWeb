@@ -12,7 +12,7 @@
 set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
-FILTER='ReportPeriodTest|MoneyReportTest|WindowLabelTest|AnalyticsPageTest|MetricTest|AnalyticsCensusTest|FunnelReportTest|PartiesReportTest|CustomersReportTest|GateSurveyTest|ValidarRegistroProfileTest|GateVisitsTest|OccupancyReaderParityTest|OccupancyReportTest'
+FILTER='ReportPeriodTest|MoneyReportTest|WindowLabelTest|AnalyticsPageTest|MetricTest|AnalyticsCensusTest|FunnelReportTest|PartiesReportTest|CustomersReportTest|GateSurveyTest|ValidarRegistroProfileTest|GateVisitsTest|OccupancyReaderParityTest|OccupancyReportTest|AnalyticsTabsTest|AnalyticsJargonTest|MetricsCatalogTest|AnalyticsExportTest|SegmentsExportTest'
 RUN="docker compose exec -u sail -T laravel.test php artisan test --filter=${FILTER}"
 
 TMP="$(mktemp -d)"
@@ -25,23 +25,33 @@ FICHEROS=(
     app/Filament/Widgets/Analytics/Concerns/AnalyticsWidget.php
     app/Filament/Analytics/CsvExport.php
     app/Filament/Analytics/MoneyReport.php
-    app/Filament/Widgets/Analytics/MoneyCustomersWidget.php
+    app/Filament/Widgets/Analytics/MetricsWidget.php
     lang/zh_CN/admin.php
+    lang/es/admin.php
     app/Filament/Analytics/FunnelReport.php
     app/Filament/Analytics/PartiesReport.php
     app/Filament/Analytics/CustomersReport.php
     app/Livewire/Admin/Puerta/ValidarRegistro.php
     app/Domain/Identity/Services/GateVisits.php
-    app/Filament/Widgets/Analytics/GateWidget.php
+    app/Filament/Analytics/Metrics/CustomersMetrics.php
+    app/Filament/Analytics/Metrics/MoneyMetrics.php
+    app/Filament/Analytics/Metrics/SurveysMetrics.php
+    app/Filament/Widgets/Analytics/SummaryWidget.php
+    app/Filament/Widgets/Analytics/MoneyOverviewWidget.php
+    app/Filament/Widgets/Analytics/OccupancyBreakdownWidget.php
+    app/Filament/Widgets/Analytics/PagesWidget.php
+    resources/views/filament/pages/analytics/tab-select.blade.php
     app/Domain/Booking/Services/OccupancyReader.php
     app/Filament/Analytics/OccupancyReport.php
     app/Filament/Widgets/Analytics/OccupancyHeatmapWidget.php
     resources/js/sidebar/calendar.js
     resources/js/sidebar/missing.js
 )
-restaurar() { for f in "${FICHEROS[@]}"; do cp "$TMP/$(basename "$f")" "$f"; touch "$f"; done; }
+# La copia de cada fichero, por su RUTA entera (T3a): por su nombre, `lang/es/admin.php` y `lang/zh_CN/admin.php` chocaban.
+copia() { echo "$TMP/$(echo "$1" | tr '/' '_')"; }
+restaurar() { for f in "${FICHEROS[@]}"; do cp "$(copia "$f")" "$f"; touch "$f"; done; }
 trap 'restaurar; rm -rf "$TMP"' EXIT
-for f in "${FICHEROS[@]}"; do cp "$f" "$TMP/$(basename "$f")"; done
+for f in "${FICHEROS[@]}"; do cp "$f" "$(copia "$f")"; done
 
 # La T2 (`#758`) añade dos módulos de JS del cajón (la demanda sin hueco): su red es `node --test`, no la suite.
 verde() { $RUN >/dev/null 2>&1 && docker compose exec -u sail -T laravel.test node --test resources/js/sidebar/calendar.test.js resources/js/sidebar/missing.test.js >/dev/null 2>&1; }
@@ -63,7 +73,7 @@ mutar() {
     local nombre="$1" fichero="$2" buscar="$3" poner="$4"
     total=$((total + 1))
     aplicar "$fichero" "$buscar" "$poner"; local unico=$?
-    if cmp -s "$fichero" "$TMP/$(basename "$fichero")"; then
+    if cmp -s "$fichero" "$(copia "$fichero")"; then
         echo "  ⚠ «$nombre» NO SE APLICÓ (el patrón no casa): el veredicto no vale"
         return
     fi
@@ -77,13 +87,13 @@ mutar() {
         echo "  ✓ muerde:    $nombre"
         muerden=$((muerden + 1))
     fi
-    cp "$TMP/$(basename "$fichero")" "$fichero"; touch "$fichero"
+    cp "$(copia "$fichero")" "$fichero"; touch "$fichero"
 }
 
 control() {
     local nombre="$1" fichero="$2" buscar="$3" poner="$4"
     aplicar "$fichero" "$buscar" "$poner"
-    if cmp -s "$fichero" "$TMP/$(basename "$fichero")"; then
+    if cmp -s "$fichero" "$(copia "$fichero")"; then
         echo "  ⚠ CONTROL «$nombre» NO SE APLICÓ"; control_ok=0; return
     fi
     touch "$fichero"
@@ -92,7 +102,7 @@ control() {
     else
         echo "  ✗ CONTROL ROJO: $nombre — la suite se pone roja por algo que no es la regla"; control_ok=0
     fi
-    cp "$TMP/$(basename "$fichero")" "$fichero"; touch "$fichero"
+    cp "$(copia "$fichero")" "$fichero"; touch "$fichero"
 }
 
 W=app/Domain/Platform/Services/Analytics/Reports/Window.php
@@ -234,9 +244,10 @@ mutar "una cifra sale del CSV (el censo: nada de lo medido se quita)" "app/Filam
   "            [__('admin.analytics.money.adjustments'), Money::format(\$t['adjustments'])]," \
   ''
 
-mutar "una tarjeta vuelve a ser un Stat suelto, sin anatomía" "app/Filament/Widgets/Analytics/MoneyCustomersWidget.php" \
-  "\$this->metric(Metric::money('money.adjustments', __('admin.analytics.money.adjustments'), \$t['adjustments'], null, 0, null, Polarity::Neutral, self::how('money.adjustments')))," \
-  "\\Filament\\Widgets\\StatsOverviewWidget\\Stat::make(__('admin.analytics.money.adjustments'), '0'),"
+# T3a (`#759`): la tarjeta la pinta `MetricsWidget::tile()` para TODAS las pestañas (antes, cada widget la suya).
+mutar "una tarjeta vuelve a ser un Stat suelto, sin anatomía" "app/Filament/Widgets/Analytics/MetricsWidget.php" \
+  '$stat = $this->metric($metric);' \
+  '$stat = Stat::make($metric->label, $metric->displayValue());'
 
 # El dinero, con la suma de los CUADRADOS de sus importes (27-09: «Valor medio −1 %» salía en rojo sin prueba).
 mutar "el dinero se colorea sin prueba (con base, siempre claro)" "$M" \
@@ -329,11 +340,12 @@ mutar "«la web» deja fuera la app" "app/Filament/Analytics/MoneyReport.php" \
   '[$from, $to, $from, $to, AttributionContext::CHANNEL_WEB, AttributionContext::CHANNEL_APP],' \
   '[$from, $to, $from, $to, AttributionContext::CHANNEL_WEB, AttributionContext::CHANNEL_WEB],'
 
-mutar "«Visitas acreditadas» cambia el carné por la búsqueda" "app/Filament/Widgets/Analytics/GateWidget.php" \
+# T3a (`#759`): la composición de las cifras vive en el catálogo; `GateWidget` solo elige claves.
+mutar "«Visitas acreditadas» cambia el carné por la búsqueda" "app/Filament/Analytics/Metrics/CustomersMetrics.php" \
   "['card' => \$card, 'lookup' => \$lookup]" \
   "['card' => \$lookup, 'lookup' => \$card]"
 
-mutar "las visitas de antes, sin origen, dejan de decirse" "app/Filament/Widgets/Analytics/GateWidget.php" \
+mutar "las visitas de antes, sin origen, dejan de decirse" "app/Filament/Analytics/Metrics/CustomersMetrics.php" \
   'return $other > 0 ?' \
   'return $other > 999 ?'
 
@@ -426,6 +438,96 @@ mutar "sin ningún día a la venta no hay demanda sin hueco (JS)" "resources/js/
 mutar "la demanda sin hueco se repite al reabrir el producto (JS)" "resources/js/sidebar/missing.js" \
   '            if (seen.has(key)) continue;' \
   '            if (false) continue;'
+
+# ── T3a · LA FORMA (§4.13, `#759`): siete pestañas, solo la abierta, ≤ 6 arriba, lo plegado, el glosario ──────────
+AP=app/Filament/Pages/AnalyticsPage.php
+CSV=app/Filament/Analytics/CsvExport.php
+mutar "las pestañas vuelven a pintarse todas (las de Alpine)" "$AP" \
+  "->livewireProperty('tab')" \
+  "->persistTabInQueryString(self::TAB_QUERY_KEY)"
+
+mutar "una clave vieja deja de abrir su pestaña" "$AP" \
+  "public const LEGACY_TABS = ['traffic' => 'marketing', 'surveys' => 'satisfaction'];" \
+  "public const LEGACY_TABS = ['surveys' => 'satisfaction'];"
+
+mutar "el navegador puede poner una pestaña que no existe" "$AP" \
+  'public function updatedTab(): void
+    {
+        $this->tab = self::normalizeTab($this->tab);' \
+  'public function updatedTab(): void
+    {'
+
+mutar "el botón del CSV de Marketing descarga otro informe" "$AP" \
+  "'marketing' => CsvExport::REPORT_FUNNEL," \
+  "'marketing' => CsvExport::REPORT_MONEY,"
+
+mutar "«Exportar segmento» sale en todas las pestañas" "$AP" \
+  "if (\$tab === 'customers') {" \
+  "if (true) {"
+
+mutar "«Resumen» cambia una cifra por otra" "app/Filament/Widgets/Analytics/SummaryWidget.php" \
+  "public const KEYS = ['money.net'," \
+  "public const KEYS = ['money.sold',"
+
+mutar "arriba de Dinero caben siete" "app/Filament/Widgets/Analytics/MoneyOverviewWidget.php" \
+  "'money.orders', 'money.avg_order'];" \
+  "'money.orders', 'money.avg_order', 'money.collected'];"
+
+mutar "la principal deja de ir a doble ancho" "app/Filament/Widgets/Analytics/MoneyOverviewWidget.php" \
+  "public const PRINCIPAL = 'money.net';" \
+  "public const PRINCIPAL = null;"
+
+mutar "lo plegado nace abierto" "app/Filament/Widgets/Analytics/MetricsWidget.php" \
+  '->collapsed(static::FOLDED)' \
+  '->collapsed(false)'
+
+mutar "vuelve la jerga («El embudo»)" "lang/es/admin.php" \
+  "'funnel_heading' => 'Del paso a paso a la compra'," \
+  "'funnel_heading' => 'El embudo',"
+
+mutar "el selector del móvil deja de cambiar la pestaña al momento" "resources/views/filament/pages/analytics/tab-select.blade.php" \
+  'wire:model.live="tab"' \
+  'wire:model="tab"'
+
+mutar "«Pendiente de cobrar» lee lo liquidado" "app/Filament/Analytics/Metrics/MoneyMetrics.php" \
+  "\$d['pending'], null, \$d['orders']" \
+  "\$d['settled'], null, \$d['orders']"
+
+mutar "«Visitantes» cuenta reservas y no plazas" "$OP" \
+  "\$out['seats'] += \$seats;" \
+  "\$out['seats'] += 1;"
+
+mutar "«Visitantes» del periodo comparado, a cero" "$OP" \
+  "'visitors' => \$visitors['seats'], 'visitor_lines'" \
+  "'visitors' => 0, 'visitor_lines'"
+
+mutar "las plazas en lotes se prueban como sucesos sueltos" "$M" \
+  'self::UNIT_COUNT => $this->squares !== null' \
+  'self::UNIT_COUNT => $this->squares === -1'
+
+mutar "la tasa de respuesta olvida el correo" "app/Filament/Analytics/Metrics/SurveysMetrics.php" \
+  "\$t['answered_internal'] + \$t['answered_external'], \$t['offered'] + \$t['sent']," \
+  "\$t['answered_internal'], \$t['offered'] + \$t['sent'],"
+
+mutar "el CSV pierde la tasa de respuesta" "$CSV" \
+  "[__('admin.analytics.surveys.response_rate'), " \
+  "[__('admin.analytics.surveys.response_rate_x'), "
+
+mutar "el CSV de Clientes pierde a los visitantes" "$CSV" \
+  "            [__('admin.analytics.occupancy.visitors'), (string) \$visitors['seats']]," \
+  ''
+
+mutar "los eventos rechazados salen del CSV" "$CSV" \
+  '                ...(new DataQualityWidget)->tablesFor($window, $comparison),' \
+  ''
+
+mutar "el desglose de la ocupación deja de escribir días" "app/Filament/Widgets/Analytics/OccupancyBreakdownWidget.php" \
+  "OccupancyMetrics::days(\$k['median'])" \
+  "(string) \$k['median']"
+
+mutar "la tabla de las horas pierde una" "app/Filament/Widgets/Analytics/PagesWidget.php" \
+  'range(0, 23)' \
+  'range(0, 22)'
 
 # ── El CONTROL: tocar un comentario no puede poner nada en rojo ─────────────────────────────────
 control "un comentario de Window" "$W" \

@@ -10,8 +10,10 @@ use App\Filament\Analytics\SegmentsReport;
 use App\Filament\Analytics\WindowLabel;
 use App\Filament\Widgets\Analytics\AnticipationChart;
 use App\Filament\Widgets\Analytics\CustomersBreakdownWidget;
+use App\Filament\Widgets\Analytics\CustomersMoreWidget;
+use App\Filament\Widgets\Analytics\CustomersOverviewWidget;
 use App\Filament\Widgets\Analytics\CustomersSeriesChart;
-use App\Filament\Widgets\Analytics\DevicesChart;
+use App\Filament\Widgets\Analytics\DataQualityWidget;
 use App\Filament\Widgets\Analytics\ExperimentsWidget;
 use App\Filament\Widgets\Analytics\FunnelChart;
 use App\Filament\Widgets\Analytics\FunnelWidget;
@@ -19,7 +21,7 @@ use App\Filament\Widgets\Analytics\GateHoursChart;
 use App\Filament\Widgets\Analytics\GateWidget;
 use App\Filament\Widgets\Analytics\MoneyBreakdownWidget;
 use App\Filament\Widgets\Analytics\MoneyChannelsChart;
-use App\Filament\Widgets\Analytics\MoneyCustomersWidget;
+use App\Filament\Widgets\Analytics\MoneyMoreWidget;
 use App\Filament\Widgets\Analytics\MoneyOverviewWidget;
 use App\Filament\Widgets\Analytics\MoneyProductsChart;
 use App\Filament\Widgets\Analytics\MoneySeriesChart;
@@ -30,19 +32,21 @@ use App\Filament\Widgets\Analytics\PagesWidget;
 use App\Filament\Widgets\Analytics\PartiesBreakdownWidget;
 use App\Filament\Widgets\Analytics\PartiesFunnelChart;
 use App\Filament\Widgets\Analytics\PartiesMoneyChart;
+use App\Filament\Widgets\Analytics\PartiesMoreWidget;
 use App\Filament\Widgets\Analytics\PartiesOverviewWidget;
 use App\Filament\Widgets\Analytics\PartiesTimingChart;
 use App\Filament\Widgets\Analytics\RegistrationMethodsChart;
 use App\Filament\Widgets\Analytics\RegistrationsWidget;
-use App\Filament\Widgets\Analytics\ReturnsWidget;
 use App\Filament\Widgets\Analytics\SegmentsWidget;
 use App\Filament\Widgets\Analytics\SourcesChart;
 use App\Filament\Widgets\Analytics\SourcesWidget;
+use App\Filament\Widgets\Analytics\SummaryWidget;
 use App\Filament\Widgets\Analytics\SurveysAnswersChart;
 use App\Filament\Widgets\Analytics\SurveysBreakdownWidget;
 use App\Filament\Widgets\Analytics\SurveysLowScoresWidget;
+use App\Filament\Widgets\Analytics\SurveysMoreWidget;
 use App\Filament\Widgets\Analytics\SurveysOverviewWidget;
-use App\Filament\Widgets\Analytics\TrafficHoursChart;
+use App\Filament\Widgets\Analytics\TrafficMoreWidget;
 use App\Filament\Widgets\Analytics\TrafficSeriesChart;
 use App\Filament\Widgets\Analytics\TrafficWidget;
 use BackedEnum;
@@ -51,33 +55,44 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Pages\Dashboard as BaseDashboard;
 use Filament\Pages\Dashboard\Concerns\HasFiltersForm;
+use Filament\Schemas\Components\Actions;
+use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\View;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\Alignment;
 use Filament\Support\Icons\Heroicon;
 use Filament\Widgets\Widget;
+use Livewire\Attributes\Url;
 
 /**
- * **«Analítica», el cuadro de mando** (`docs/specs/analitica.md` §4.5; `DECISIONES #735`, `#736`).
+ * **«Analítica», el cuadro de mando** (`docs/specs/analitica.md` §4.5; `DECISIONES #735`, `#736`; y desde la T3a de
+ * `analitica-para-decidir.md` §4.13, `#759`, su forma de hoy).
  *
- * Es el SEGUNDO cuadro del panel: «Hoy» contesta qué viene y este contesta cómo fue. Por eso es una
- * `Dashboard` de Filament y no una `Page` a mano —el filtro, el ciclo de vida de los widgets y su carga
- * diferida vienen resueltos—, con su propia ruta (`/admin/analitica`) y sus propios widgets: desde que hay dos
- * cuadros, «Hoy» declara los suyos, o `Filament::getWidgets()` le colgaría también estos.
+ * Es el SEGUNDO cuadro del panel: «Hoy» contesta qué viene y este contesta cómo fue. Por eso es una `Dashboard` de
+ * Filament y no una `Page` a mano —el filtro, el ciclo de vida de los widgets y su carga diferida vienen resueltos—, con
+ * su propia ruta (`/admin/analitica`) y sus propios widgets: desde que hay dos cuadros, «Hoy» declara los suyos, o
+ * `Filament::getWidgets()` le colgaría también estos.
  *
- * **Cuatro pestañas** (T2f, `#736`: lo pidió el owner el 24-09 al ver T2a–T2d en escritorio; la cuarta, «Fiestas»,
- * es la T2 de `specs/analitica-fiesta.md`, `#739`): Dinero, Clientes, Conversión y Fiestas (`self::TABS`), y dentro
- * de cada una el mismo orden de lectura: las tarjetas, los gráficos y, plegadas al pie, las tablas. El filtro es común a las tres: el periodo (del día al año, o dos fechas a medida) y contra
- * qué se compara (el periodo anterior o el mismo periodo del año pasado). La pestaña viaja en la URL.
+ * **Siete pestañas, una pregunta cada una** (§4.1): Resumen, Dinero, Ocupación, Clientes, Marketing, Fiestas y
+ * Satisfacción (`self::TABS`). La cabecera es la pregunta de la pestaña abierta; dentro, el mismo orden de lectura: como
+ * mucho seis tarjetas arriba, como mucho tres gráficos, y plegado al pie lo que no decide —tarjetas y tablas— y el botón
+ * del CSV de su informe. El filtro es común: el periodo y contra qué se compara.
  *
- * ⚠️ **Permiso `reports.view`**: sembrado en F7.11 («Ver informes y exportaciones») y sin consumidor hasta esta
- * tanda; se le da uno en vez de crear un sinónimo. Es del grupo `gestion`, así que el admin lo tiene por
- * `Gate::before` y el empleado no. Cada widget lo vuelve a preguntar: esconder no es autorizar.
+ * ⚠️ **Solo se pinta la pestaña abierta** (T3a): medido el 28-09, las pestañas de Filament con Alpine dejan las inactivas
+ * en el DOM (`invisible absolute h-0`) y el observador de Livewire pedía los widgets de TODAS al abrir (10). Con
+ * `Tabs::livewireProperty()` una pestaña inactiva se pinta vacía y sus widgets ni existen ni piden; la pestaña vive en la
+ * propiedad `$tab` y en la URL (`?pestana=…`). En el móvil, un `<select>` nativo en lugar de la fila de pestañas.
  *
- * ⚠️ Quinto sitio del menú plano (`#223`), después de «Clientes»: es día a día para quien dirige, no puesta
- * en marcha. `AdminNavigationTest` fija los cinco.
+ * ⚠️ **Permiso `reports.view`**: sembrado en F7.11 («Ver informes y exportaciones»). Es del grupo `gestion`, así que el
+ * admin lo tiene por `Gate::before` y el empleado no. Cada widget lo vuelve a preguntar: esconder no es autorizar.
+ *
+ * ⚠️ Quinto sitio del menú plano (`#223`), después de «Clientes»: es día a día para quien dirige, no puesta en marcha.
+ * `AdminNavigationTest` fija los cinco.
  */
 class AnalyticsPage extends BaseDashboard
 {
@@ -95,23 +110,30 @@ class AnalyticsPage extends BaseDashboard
      */
     public const PERMISSION_SEGMENTS_EXPORT = 'analytics.export';
 
+    /** La pestaña con la que se abre. */
+    public const DEFAULT_TAB = 'summary';
+
     /**
-     * Los widgets de cada pestaña, en su orden de lectura: tarjetas, gráficos (los de media rejilla van de dos en
-     * dos) y, plegadas al final, las tablas. La clave es también la del rótulo (`admin.analytics.tabs.*`).
+     * Los widgets de cada pestaña, en su orden de lectura: las tarjetas de arriba, los gráficos (los de media rejilla van
+     * de dos en dos) y, plegados al final, las tarjetas y las tablas que no deciden. La clave es la de la URL y la del
+     * rótulo (`admin.analytics.tabs.*`) y la pregunta (`admin.analytics.questions.*`).
      *
      * @var array<string, list<class-string<Widget>>>
      */
     public const TABS = [
+        // T3a (`#759`): las cifras clave, las mismas de su pestaña.
+        'summary' => [
+            SummaryWidget::class,
+        ],
         'money' => [
             MoneyOverviewWidget::class,
             MoneySeriesChart::class,
             MoneyProductsChart::class,
             MoneyChannelsChart::class,
-            MoneyCustomersWidget::class,
+            MoneyMoreWidget::class,
             MoneyBreakdownWidget::class,
         ],
-        // La T2 de la analítica para decidir (`specs/analitica-para-decidir.md` §4.8.ter, `#758`): cómo de lleno está el
-        // parque, y cuándo. Tras «Dinero», el orden de §4.1; las tablas plegadas, al final como en todas.
+        // La T2 de la analítica para decidir (`#758`): cómo de lleno está el parque, y cuándo.
         'occupancy' => [
             OccupancyOverviewWidget::class,
             OccupancyHeatmapWidget::class,
@@ -119,31 +141,29 @@ class AnalyticsPage extends BaseDashboard
             OccupancyBreakdownWidget::class,
         ],
         'customers' => [
-            RegistrationsWidget::class,
-            GateWidget::class,
-            // T0c (`#756`): los que VUELVEN al parque y cada cuánto.
-            ReturnsWidget::class,
+            CustomersOverviewWidget::class,
             CustomersSeriesChart::class,
             GateHoursChart::class,
             RegistrationMethodsChart::class,
-            // T4b: los segmentos, un estado de HOY (no dependen del periodo). Van ANTES de la tabla plegada del
-            // detalle: la regla de la T2f es que la tabla del gráfico cierra la pestaña.
+            // T4b: los segmentos, un estado de HOY (no dependen del periodo).
             SegmentsWidget::class,
+            CustomersMoreWidget::class,
+            RegistrationsWidget::class,
+            GateWidget::class,
             CustomersBreakdownWidget::class,
         ],
-        'traffic' => [
+        // Era «Conversión»: T2c, los experimentos de la T5b y, al final, «Calidad del dato» (T3a).
+        'marketing' => [
             TrafficWidget::class,
             FunnelChart::class,
             SourcesChart::class,
             TrafficSeriesChart::class,
-            TrafficHoursChart::class,
-            DevicesChart::class,
-            // T5b: los experimentos, por variante y con su intervalo. Antes de las tablas plegadas que cierran la
-            // pestaña (la regla de la T2f: la última es `PagesWidget`).
+            TrafficMoreWidget::class,
             ExperimentsWidget::class,
             FunnelWidget::class,
             SourcesWidget::class,
             PagesWidget::class,
+            DataQualityWidget::class,
         ],
         // T2 de la fiesta (`specs/analitica-fiesta.md` §4.3, `#739`): de reservar a celebrar, por DÍA DE LA FIESTA.
         'parties' => [
@@ -151,30 +171,49 @@ class AnalyticsPage extends BaseDashboard
             PartiesFunnelChart::class,
             PartiesMoneyChart::class,
             PartiesTimingChart::class,
+            PartiesMoreWidget::class,
             PartiesBreakdownWidget::class,
         ],
-        // T4 de las encuestas (`specs/encuestas.md` §4.4, `#740`): por DÍA DE LA RESPUESTA. Desde `#754` (ANÓNIMAS)
-        // «Por atender» se fue: entre el gráfico y las tablas plegadas va «Notas bajas y si volvieron», sin persona.
-        'surveys' => [
+        // Era «Encuestas» (`specs/encuestas.md` §4.4, `#740`; anónimas desde `#754`).
+        'satisfaction' => [
             SurveysOverviewWidget::class,
             SurveysAnswersChart::class,
             SurveysLowScoresWidget::class,
+            SurveysMoreWidget::class,
             SurveysBreakdownWidget::class,
         ],
     ];
 
+    /** El informe del CSV al pie de cada pestaña; «Resumen» no tiene: cada cifra está en el de su pestaña. */
+    public const REPORTS = [
+        'money' => CsvExport::REPORT_MONEY,
+        'occupancy' => CsvExport::REPORT_OCCUPANCY,
+        'customers' => CsvExport::REPORT_CUSTOMERS,
+        'marketing' => CsvExport::REPORT_FUNNEL,
+        'parties' => CsvExport::REPORT_PARTIES,
+        'satisfaction' => CsvExport::REPORT_SURVEYS,
+    ];
+
+    /** Las claves de antes de la T3a siguen abriendo su pestaña (un enlace guardado no se rompe). */
+    public const LEGACY_TABS = ['traffic' => 'marketing', 'surveys' => 'satisfaction'];
+
     /** @var array<string, Heroicon> */
     private const TAB_ICONS = [
+        'summary' => Heroicon::OutlinedSquares2x2,
         'money' => Heroicon::OutlinedBanknotes,
         'occupancy' => Heroicon::OutlinedTableCells,
         'customers' => Heroicon::OutlinedUsers,
-        'traffic' => Heroicon::OutlinedFunnel,
+        'marketing' => Heroicon::OutlinedMegaphone,
         'parties' => Heroicon::OutlinedCake,
-        'surveys' => Heroicon::OutlinedChatBubbleLeftRight,
+        'satisfaction' => Heroicon::OutlinedFaceSmile,
     ];
 
     /** La clave de la pestaña en la URL (`?pestana=…`): se puede enlazar y sobrevive a recargar. */
     public const TAB_QUERY_KEY = 'pestana';
+
+    /** La pestaña abierta: la única que se pinta y la única cuyos widgets piden. */
+    #[Url(as: 'pestana')]
+    public string $tab = self::DEFAULT_TAB;
 
     protected static string $routePath = 'analitica';
 
@@ -194,80 +233,40 @@ class AnalyticsPage extends BaseDashboard
         return __('admin.analytics.nav_label');
     }
 
+    /** Una clave vieja abre su pestaña de ahora; una desconocida, «Resumen». */
+    public static function normalizeTab(string $tab): string
+    {
+        $tab = self::LEGACY_TABS[$tab] ?? $tab;
+
+        return array_key_exists($tab, self::TABS) ? $tab : self::DEFAULT_TAB;
+    }
+
+    public function mount(): void
+    {
+        $this->tab = self::normalizeTab($this->tab);
+    }
+
+    /** La pestaña la cambia el navegador (la fila de pestañas o el selector del móvil): se vuelve a normalizar. */
+    public function updatedTab(): void
+    {
+        $this->tab = self::normalizeTab($this->tab);
+    }
+
     public function getTitle(): string
     {
         return __('admin.analytics.title');
     }
 
+    /** La pregunta de la pestaña abierta (§4.1): la frase técnica de antes baja a «¿Cómo se calcula?» de «Ingresos netos». */
     public function getSubheading(): ?string
     {
-        return __('admin.analytics.subheading');
+        return __('admin.analytics.questions.'.self::normalizeTab($this->tab));
     }
 
-    /**
-     * «Descargar CSV» (T2d): el botón se esconde sin `reports.export` y el controlador de la ruta vuelve a
-     * exigirlo (esconder no es autorizar). El periodo, las dos fechas y la comparación son los del filtro de la
-     * página; el informe se elige en el modal. Abre la URL en otra pestaña por el mismo camino que el resumen del día.
-     *
-     * @return array<int, Action>
-     */
+    /** Sin botones arriba (T3a): el CSV va al pie de cada pestaña, y el segmento, al pie de «Clientes». */
     protected function getHeaderActions(): array
     {
-        return [
-            Action::make('exportCsv')
-                ->label(__('admin.analytics.export.button'))
-                ->icon(Heroicon::OutlinedArrowDownTray)
-                ->color('gray')
-                ->visible(fn (): bool => auth()->user()?->hasPermission(self::PERMISSION_EXPORT) ?? false)
-                ->modalHeading(__('admin.analytics.export.modal_heading'))
-                ->modalDescription(__('admin.analytics.export.modal_description'))
-                ->modalSubmitActionLabel(__('admin.analytics.export.submit'))
-                ->modalWidth('md')
-                ->schema([
-                    Select::make('report')
-                        ->label(__('admin.analytics.export.report_label'))
-                        ->options(array_combine(CsvExport::REPORTS, array_map(static fn (string $r): string => __('admin.analytics.export.report.'.$r), CsvExport::REPORTS)))
-                        ->default(CsvExport::REPORT_MONEY)
-                        ->required()
-                        ->selectablePlaceholder(false)
-                        ->native(false),
-                ])
-                ->action(function (array $data): void {
-                    $filters = $this->filters ?? [];
-                    $this->dispatch('open-url-new-tab', url: route('admin.analitica.csv', array_filter([
-                        'report' => (string) ($data['report'] ?? CsvExport::REPORT_MONEY),
-                        'period' => ReportPeriod::fromValue($filters['period'] ?? null)->value,
-                        'compare' => Comparison::fromValue($filters['compare'] ?? null)->value,
-                        'from' => is_string($filters['from'] ?? null) ? substr($filters['from'], 0, 10) : null,
-                        'to' => is_string($filters['to'] ?? null) ? substr($filters['to'], 0, 10) : null,
-                    ], static fn ($v): bool => $v !== null)));
-                }),
-            // «Exportar segmento» (T4b): una lista de personas con opt-in. Se esconde sin `analytics.export`; el
-            // controlador de la ruta vuelve a comprobarlo y audita cada descarga.
-            Action::make('exportSegment')
-                ->label(__('admin.analytics.segments.export.button'))
-                ->icon(Heroicon::OutlinedUserGroup)
-                ->color('gray')
-                ->visible(fn (): bool => auth()->user()?->hasPermission(self::PERMISSION_SEGMENTS_EXPORT) ?? false)
-                ->modalHeading(__('admin.analytics.segments.export.modal_heading'))
-                ->modalDescription(__('admin.analytics.segments.export.modal_description'))
-                ->modalSubmitActionLabel(__('admin.analytics.segments.export.submit'))
-                ->modalWidth('md')
-                ->schema([
-                    Select::make('segment')
-                        ->label(__('admin.analytics.segments.export.segment_label'))
-                        ->options(array_combine(SegmentsReport::SEGMENTS, array_map(static fn (string $s): string => __('admin.analytics.segments.name.'.$s), SegmentsReport::SEGMENTS)))
-                        ->default(SegmentsReport::ONCE_NEVER_BACK)
-                        ->required()
-                        ->selectablePlaceholder(false)
-                        ->native(false),
-                ])
-                ->action(function (array $data): void {
-                    $this->dispatch('open-url-new-tab', url: route('admin.analitica.segmentos.csv', [
-                        'segment' => (string) ($data['segment'] ?? SegmentsReport::ONCE_NEVER_BACK),
-                    ]));
-                }),
-        ];
+        return [];
     }
 
     /**
@@ -324,38 +323,130 @@ class AnalyticsPage extends BaseDashboard
     }
 
     /**
-     * El filtro y, debajo, las tres pestañas; cada una es una rejilla de dos columnas en escritorio (una en
-     * móvil) con sus widgets (`self::TABS`).
-     *
-     * ⚠️ Medido el 24-09: las pestañas inactivas de Filament NO son `display: none` (`invisible absolute h-0`),
-     * así que el observador de intersección de Livewire da por visibles sus widgets y los pide también: abrir
-     * la página cuesta 10 peticiones de Livewire, las de las TRES pestañas, no las de una. Los informes se
-     * calculan una vez por ventana y comparación (caché de 5 min), así que el coste es el render, no el SQL.
+     * El filtro —en el móvil, tras una píldora con el periodo y la comparación, que lo abre—, el selector nativo de las
+     * pestañas en el móvil y las siete pestañas; cada una, una rejilla de dos columnas en escritorio (una en móvil) con
+     * sus widgets y, al pie, sus botones.
      */
     public function content(Schema $schema): Schema
     {
         return $schema->components([
-            $this->getFiltersFormContentComponent(),
+            Group::make([
+                View::make('filament.pages.analytics.filter-pill')->viewData(fn (): array => ['label' => $this->filterPillLabel()]),
+                Group::make([$this->getFiltersFormContentComponent()])
+                    ->id('analitica-filtros')
+                    ->extraAttributes(['x-bind:class' => "{ 'max-md:hidden': ! filtersOpen }"]),
+            ])->extraAttributes(['x-data' => '{ filtersOpen: false }']),
+            View::make('filament.pages.analytics.tab-select')->viewData(fn (): array => ['tabs' => $this->tabLabels()]),
             Tabs::make(__('admin.analytics.title'))
-                ->persistTabInQueryString(self::TAB_QUERY_KEY)
+                ->livewireProperty('tab')
                 ->contained(false)
-                ->tabs(array_map(
+                // En el móvil la fila de pestañas se cortaba (3 de 6 a la vista, 28-09): allí manda el selector.
+                ->extraAttributes(['class' => 'max-md:[&>.fi-tabs]:hidden'])
+                ->tabs(array_combine(array_keys(self::TABS), array_map(
                     fn (string $tab): Tab => Tab::make(__('admin.analytics.tabs.'.$tab))
-                        ->key($tab)   // la URL dice `?pestana=money`, no el slug del rótulo traducido
-                        ->id($tab)
                         ->icon(self::TAB_ICONS[$tab])
                         ->schema([
                             Grid::make(['default' => 1, 'lg' => 2])
                                 ->schema(fn (): array => $this->getWidgetsSchemaComponents(self::TABS[$tab])),
+                            ...$this->footOf($tab),
                         ]),
                     array_keys(self::TABS),
-                )),
+                ))),
         ]);
     }
 
     /**
-     * Todos los widgets de ESTE cuadro, pestaña a pestaña: el dinero (T2a), los registros y la puerta (T2b) y la
-     * conversión —el embudo, las fuentes y las páginas— (T2c), con los gráficos de categorías de la T2f.
+     * Los botones al pie de una pestaña (§4.11): «Descargar CSV» de SU informe —sin modal: el periodo y la comparación son
+     * los del filtro— y, en «Clientes», «Exportar segmento». El botón se esconde sin su permiso y la ruta lo vuelve a
+     * exigir (esconder no es autorizar).
+     *
+     * @return list<Component>
+     */
+    private function footOf(string $tab): array
+    {
+        $actions = [];
+
+        if (isset(self::REPORTS[$tab])) {
+            $actions[] = Action::make('csv_'.$tab)
+                ->label(__('admin.analytics.export.button'))
+                ->icon(Heroicon::OutlinedArrowDownTray)
+                ->color('gray')
+                ->visible(fn (): bool => auth()->user()?->hasPermission(self::PERMISSION_EXPORT) ?? false)
+                ->url(fn (): string => $this->csvUrl(self::REPORTS[$tab]), shouldOpenInNewTab: true);
+        }
+
+        if ($tab === 'customers') {
+            $actions[] = $this->exportSegmentAction();
+        }
+
+        return $actions === [] ? [] : [Actions::make($actions)->alignment(Alignment::End)];
+    }
+
+    /** El CSV de un informe con el filtro de la página (T2d). */
+    private function csvUrl(string $report): string
+    {
+        $filters = $this->filters ?? [];
+
+        return route('admin.analitica.csv', array_filter([
+            'report' => $report,
+            'period' => ReportPeriod::fromValue($filters['period'] ?? null)->value,
+            'compare' => Comparison::fromValue($filters['compare'] ?? null)->value,
+            'from' => is_string($filters['from'] ?? null) ? substr($filters['from'], 0, 10) : null,
+            'to' => is_string($filters['to'] ?? null) ? substr($filters['to'], 0, 10) : null,
+        ], static fn ($v): bool => $v !== null));
+    }
+
+    /**
+     * «Exportar segmento» (T4b): una lista de personas con opt-in. Se esconde sin `analytics.export`; el controlador de la
+     * ruta vuelve a comprobarlo y audita cada descarga. Pública: Filament la resuelve por su nombre (`exportSegment`), y
+     * se pinta al pie de «Clientes».
+     */
+    public function exportSegmentAction(): Action
+    {
+        return Action::make('exportSegment')
+            ->label(__('admin.analytics.segments.export.button'))
+            ->icon(Heroicon::OutlinedUserGroup)
+            ->color('gray')
+            ->visible(fn (): bool => auth()->user()?->hasPermission(self::PERMISSION_SEGMENTS_EXPORT) ?? false)
+            ->modalHeading(__('admin.analytics.segments.export.modal_heading'))
+            ->modalDescription(__('admin.analytics.segments.export.modal_description'))
+            ->modalSubmitActionLabel(__('admin.analytics.segments.export.submit'))
+            ->modalWidth('md')
+            ->schema([
+                Select::make('segment')
+                    ->label(__('admin.analytics.segments.export.segment_label'))
+                    ->options(array_combine(SegmentsReport::SEGMENTS, array_map(static fn (string $s): string => __('admin.analytics.segments.name.'.$s), SegmentsReport::SEGMENTS)))
+                    ->default(SegmentsReport::ONCE_NEVER_BACK)
+                    ->required()
+                    ->selectablePlaceholder(false)
+                    ->native(false),
+            ])
+            ->action(function (array $data): void {
+                $this->dispatch('open-url-new-tab', url: route('admin.analitica.segmentos.csv', [
+                    'segment' => (string) ($data['segment'] ?? SegmentsReport::ONCE_NEVER_BACK),
+                ]));
+            });
+    }
+
+    /** «Este mes · frente al periodo anterior»: lo que dice la píldora del filtro en el móvil. */
+    private function filterPillLabel(): string
+    {
+        $filters = $this->filters ?? [];
+
+        return __('admin.analytics.filter_pill', [
+            'period' => ReportPeriod::fromValue($filters['period'] ?? null)->label(),
+            'compare' => __('admin.analytics.compare.short.'.Comparison::fromValue($filters['compare'] ?? null)->value),
+        ]);
+    }
+
+    /** @return array<string, string> */
+    private function tabLabels(): array
+    {
+        return array_combine(array_keys(self::TABS), array_map(static fn (string $tab): string => __('admin.analytics.tabs.'.$tab), array_keys(self::TABS)));
+    }
+
+    /**
+     * Todos los widgets de ESTE cuadro, pestaña a pestaña (lo que «Hoy» no hereda).
      *
      * @return list<class-string<Widget>>
      */

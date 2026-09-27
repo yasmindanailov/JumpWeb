@@ -13,6 +13,7 @@ use App\Domain\Platform\Enums\ReportPeriod;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\Analytics\Reports\Window;
 use App\Filament\Analytics\OccupancyReport;
+use App\Filament\Widgets\Analytics\OccupancyBreakdownWidget;
 use App\Filament\Widgets\Analytics\OccupancyHeatmapWidget;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -123,6 +124,35 @@ class OccupancyReportTest extends TestCase
         $this->assertSame(['present' => 3, 'cap' => 8, 'points' => 4, 'capped' => true], $r['parties'], 'las fiestas, aparte: nunca sumadas a las plazas');
     }
 
+    /**
+     * Los VISITANTES (T3a, `#759`): las plazas de las visitas pagadas que ya pasaron —entradas Y fiestas, que aquí sí se
+     * suman: son personas, no aforo—, las reservas que las traen y la suma de sus cuadrados. Tecleado a mano: 10 + 3 plazas
+     * de entrada y una fiesta de 12; la de las 18:00 del 30 aún no ha pasado. Mayo, sin visitas.
+     */
+    public function test_the_visitors_are_the_seats_of_the_paid_visits_already_past(): void
+    {
+        $this->seedJune();
+
+        $r = (new OccupancyReport)->compute($this->june());
+
+        $this->assertSame(['seats' => 25, 'lines' => 3, 'seats_sq' => 10 * 10 + 3 * 3 + 12 * 12], $r['visitors']);
+        $this->assertSame([0, 0, 0], [$r['previous']['visitors'], $r['previous']['visitor_lines'], $r['previous']['visitors_sq']]);
+    }
+
+    /**
+     * …y el periodo COMPARADO lleva los suyos: del 11 al 29 de junio (sin visitas) se compara con los 19 días de antes, del
+     * 23 de mayo al 10 de junio, donde están las tres visitas del día 10.
+     */
+    public function test_the_compared_period_carries_its_own_visitors(): void
+    {
+        $this->seedJune();
+
+        $r = (new OccupancyReport)->compute(ReportPeriod::Custom->window('2026-06-11', '2026-06-29'));
+
+        $this->assertSame(['seats' => 0, 'lines' => 0, 'seats_sq' => 0], $r['visitors']);
+        $this->assertSame([25, 3, 253], [$r['previous']['visitors'], $r['previous']['visitor_lines'], $r['previous']['visitors_sq']]);
+    }
+
     public function test_the_anticipation_by_kind_and_by_weekday(): void
     {
         $this->seedJune();
@@ -136,6 +166,23 @@ class OccupancyReportTest extends TestCase
         $this->assertSame(40, $a['by_kind']['party']['median']);
         $this->assertSame(0, $a['by_kind']['group']['n']);
         $this->assertSame(['n' => 3, 'median' => 5], $a['by_weekday'][3], 'el 10-06-2026 es miércoles');
+    }
+
+    /**
+     * El desglose, PINTADO CON RESERVAS (T3a, `#759`): las medianas se escriben en días. Sin reservas la tabla pone «—» y no
+     * llama a quien escribe los días; la T3a movió ese ayudante al catálogo y solo esto lo habría visto.
+     */
+    public function test_the_breakdown_writes_the_medians_in_days_with_bookings(): void
+    {
+        $this->seedJune();
+
+        $tables = collect((new OccupancyBreakdownWidget)->tablesFor($this->june()));
+
+        $byKind = $tables->firstWhere('heading', 'Anticipación por tipo')['rows'];
+        $this->assertSame(['Entradas', '2', 'el mismo día'], array_slice($byKind[0], 0, 3));
+        $this->assertSame(['Fiestas', '1', '40 días'], array_slice($byKind[1], 0, 3));
+        $this->assertSame('—', $byKind[2][2], 'sin grupos');
+        $this->assertContains(['Miércoles', '3', '5 días'], $tables->firstWhere('heading', 'Anticipación por día de la visita')['rows']);
     }
 
     /**

@@ -13,14 +13,19 @@ use App\Domain\Platform\Services\Analytics\Reports\Window;
 use App\Filament\Analytics\CsvExport;
 use App\Filament\Analytics\Metric;
 use App\Filament\Pages\AnalyticsPage;
+use App\Filament\Widgets\Analytics\CustomersMoreWidget;
+use App\Filament\Widgets\Analytics\CustomersOverviewWidget;
+use App\Filament\Widgets\Analytics\DataQualityWidget;
 use App\Filament\Widgets\Analytics\GateWidget;
-use App\Filament\Widgets\Analytics\MoneyCustomersWidget;
+use App\Filament\Widgets\Analytics\MoneyMoreWidget;
 use App\Filament\Widgets\Analytics\MoneyOverviewWidget;
 use App\Filament\Widgets\Analytics\OccupancyOverviewWidget;
+use App\Filament\Widgets\Analytics\PartiesMoreWidget;
 use App\Filament\Widgets\Analytics\PartiesOverviewWidget;
 use App\Filament\Widgets\Analytics\RegistrationsWidget;
-use App\Filament\Widgets\Analytics\ReturnsWidget;
+use App\Filament\Widgets\Analytics\SurveysMoreWidget;
 use App\Filament\Widgets\Analytics\SurveysOverviewWidget;
+use App\Filament\Widgets\Analytics\TrafficMoreWidget;
 use App\Filament\Widgets\Analytics\TrafficWidget;
 use Carbon\CarbonImmutable;
 use Database\Seeders\PermissionSeeder;
@@ -41,11 +46,17 @@ class AnalyticsCensusTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** Las 44 cifras del 27-09, por informe del CSV. «Cobrado» y «Cobro medio» dejaron de decir «online» (T0b). */
+    /**
+     * Las 44 cifras del 27-09, por informe del CSV. Renombradas A PROPÓSITO, con su nombre de entonces:
+     *  - T0b: «Cobrado online» → «Cobrado» (sumaba también el mostrador).
+     *  - T3a (`#759`, glosario de §4.11): «Nuevos» → «Compradores nuevos» y «Recurrentes» → «Compradores recurrentes» (van a
+     *    «Clientes», sin el título «Clientes que compran» que les daba sentido); «Visitas» → «Visitas a la web» (junto a
+     *    «Visitantes» del parque); «Sesiones identificadas» → «Visitas identificadas» («sesión» es jerga).
+     */
     private const CENSUS = [
         CsvExport::REPORT_MONEY => [
             'Cobrado', 'Devuelto', 'Ingresos netos', 'Vendido', 'Pedidos cobrados', 'Valor medio del pedido',
-            'Compradores', 'Nuevos', 'Recurrentes', 'Valor medio por cliente', 'Valor de vida medio', 'Gestiones posteriores',
+            'Compradores', 'Compradores nuevos', 'Compradores recurrentes', 'Valor medio por cliente', 'Valor de vida medio', 'Gestiones posteriores',
         ],
         CsvExport::REPORT_CUSTOMERS => [
             'Cuentas nuevas', 'Con el correo verificado', 'Que han comprado alguna vez', 'Búsquedas en la puerta', 'Tecleadas',
@@ -53,7 +64,7 @@ class AnalyticsCensusTest extends TestCase
             'Clientes con visita acreditada',
         ],
         CsvExport::REPORT_FUNNEL => [
-            'Visitas', 'Compras por la web o la app', 'Conversión', 'Cobrado en esas compras', 'Sesiones identificadas',
+            'Visitas a la web', 'Compras por la web o la app', 'Conversión', 'Cobrado en esas compras', 'Visitas identificadas',
             'Fuera del recuento',
         ],
         CsvExport::REPORT_PARTIES => [
@@ -67,28 +78,41 @@ class AnalyticsCensusTest extends TestCase
 
     /**
      * Las cifras que llegan DESPUÉS del 27-09, por informe, con su tanda: también tecleadas a mano y también en su CSV.
-     * La T2 (`#758`): las seis de «Ocupación».
+     * La T2 (`#758`): las seis de «Ocupación». La T3a (`#759`): «Visitantes» (en la ocupación y en los clientes), «Pendiente
+     * de cobrar en el parque» (la fila de «La señal») y «Tasa de respuesta».
      */
     private const CENSUS_SINCE = [
         CsvExport::REPORT_OCCUPANCY => [
             'Ocupación de las entradas', 'Fiestas por franja', 'Franjas llenas', 'Ingreso por plaza-hora', 'Anticipación',
-            'Demanda sin hueco',
+            'Demanda sin hueco', 'Visitantes',
         ],
+        CsvExport::REPORT_CUSTOMERS => ['Visitantes', 'Compradores nuevos', 'Compradores recurrentes', 'Valor de vida medio'],
+        CsvExport::REPORT_MONEY => ['Pendiente de cobrar en el parque'],
+        CsvExport::REPORT_SURVEYS => ['Tasa de respuesta'],
+        // T3a: el gráfico de las horas es tabla (antes su dato no estaba en ningún CSV), y los rechazados salen de «Calidad
+        // del dato»: siguen en el CSV del marketing.
+        CsvExport::REPORT_FUNNEL => ['Visitas por hora del parque', '00 h', 'Total rechazados'],
     ];
 
-    /** Los widgets de tarjetas del cuadro (T0b: todos pasan por `Metric`). */
+    /**
+     * Los widgets de tarjetas del cuadro (T0b: todos pasan por `Metric`; T3a: todos eligen del catálogo). «Resumen» no está:
+     * reusa las de su pestaña ({@see AnalyticsTabsTest}).
+     */
     private const TILE_WIDGETS = [
-        MoneyOverviewWidget::class, MoneyCustomersWidget::class, RegistrationsWidget::class, GateWidget::class,
-        ReturnsWidget::class, OccupancyOverviewWidget::class,
-        TrafficWidget::class, PartiesOverviewWidget::class, SurveysOverviewWidget::class,
+        MoneyOverviewWidget::class, MoneyMoreWidget::class,
+        OccupancyOverviewWidget::class,
+        CustomersOverviewWidget::class, CustomersMoreWidget::class, RegistrationsWidget::class, GateWidget::class,
+        TrafficWidget::class, TrafficMoreWidget::class, DataQualityWidget::class,
+        PartiesOverviewWidget::class, PartiesMoreWidget::class,
+        SurveysOverviewWidget::class, SurveysMoreWidget::class,
     ];
 
     /**
      * Las 44 del 27-09 y las que se añaden después, cada una con su tanda (T0c, `#756`: cinco —ya habían venido, primera
      * vez, dos o más días, cada cuánto vuelven y repiten por la web—; cómo se acreditó la visita va como detalle · T2,
-     * `#758`: las seis de la ocupación).
+     * `#758`: las seis de la ocupación · T3a, `#759`: visitantes, pendiente de cobrar en el parque y tasa de respuesta).
      */
-    private const TILES = 44 + 5 + 6;
+    private const TILES = 44 + 5 + 6 + 3;
 
     protected function setUp(): void
     {
@@ -105,11 +129,13 @@ class AnalyticsCensusTest extends TestCase
     {
         $this->assertSame(44, array_sum(array_map('count', self::CENSUS)), 'el censo es el del 27-09: 44 tarjetas');
 
-        foreach (self::CENSUS + self::CENSUS_SINCE as $report => $labels) {
-            $firstCells = array_map(static fn (array $row): string => (string) ($row[0] ?? ''), (new CsvExport)->build($report, ReportPeriod::ThisMonth->window())['rows']);
+        foreach ([self::CENSUS, self::CENSUS_SINCE] as $census) {
+            foreach ($census as $report => $labels) {
+                $firstCells = array_map(static fn (array $row): string => (string) ($row[0] ?? ''), (new CsvExport)->build($report, ReportPeriod::ThisMonth->window())['rows']);
 
-            foreach ($labels as $label) {
-                $this->assertContains($label, $firstCells, "«{$label}» ya no está en el CSV de «{$report}»: nada de lo medido se quita (§4.1.bis)");
+                foreach ($labels as $label) {
+                    $this->assertContains($label, $firstCells, "«{$label}» ya no está en el CSV de «{$report}»: nada de lo medido se quita (§4.1.bis)");
+                }
             }
         }
     }

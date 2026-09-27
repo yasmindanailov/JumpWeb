@@ -12,17 +12,14 @@
 > una feature baja a su spec (las trampas por tanda de la analítica T1→T5 viven en `analitica.md` §4.9,
 > mudadas verbatim el 24-09; las de la ficha de Google en su §9.1; las de la invitación en su §10.20).
 
-## Foto (2026-09-27, noche)
+## Foto (2026-09-28, madrugada)
 
-- ▶▶▶ **27-09: LA ANALÍTICA PARA DECIDIR es la tarea** (`#755`, spec ✅). **T0a, T0b y T0c en `main` y aprobadas por el
-  owner** (el tramo transcurrido; la anatomía de una cifra en las 44 tarjetas; los que vuelven al parque, `#756`). **T1 =
-  encuestas anónimas** (`#754`) **✅ con siete ajustes (`#757`), vista y aprobada por el owner el 27-09 noche** («está
-  perfecto, visto bueno»): participación y respuesta sin clave común, el sello cifrado de 90 días y
-  `surveys:resolve-returns`, el mínimo de 5, «Notas bajas y si volvieron», la 360 sin encuestas, el aviso, el export
-  1.46.0; el detalle, `encuestas.md` §4.7 «Cómo se construyó». **T2, ocupación y anticipación, ✅** (27-09 noche, `#758`,
-  aprobada por el owner: «buen trabajo»): entradas y fiestas en dos cifras, la demanda sin hueco medida desde ya, la
-  pestaña «Ocupación», el mapa de calor y el CSV `occupancy`; el detalle y lo medido, `analitica-para-decidir.md` §4.8.ter.
-  **Sigue la T3: Resumen y la reorganización**, en cinco tandas (§4.13, `#759`): ▶ la T3a, la forma.
+- ▶▶▶ **LA ANALÍTICA PARA DECIDIR es la tarea** (`#755`, spec ✅). En `main` y aprobadas por el owner: **T0a·T0b·T0c** (el
+  tramo, la anatomía, los que vuelven, `#756`), **T1** encuestas anónimas (`#754`/`#757`; `encuestas.md` §4.7) y **T2**
+  ocupación (`#758`; §4.8.ter). **T3 en cinco tandas** (§4.13, `#759`): ✅ **la T3a, la forma, en `main` y aprobada por el owner
+  el 28-09** («buen trabajo, todo correcto»: siete pestañas, solo la abierta pide —10 → 1 al abrir—, el catálogo de 58 cifras,
+  ≤ 6 arriba y lo demás plegado, «Resumen», móvil con selector y píldora —primera cifra 732 → 416 px—, el glosario; sonda
+  107/107; el detalle, §4.13 «Cómo se construyó»). ▶ **Sigue la T3b, el veredicto y la frase.**
 - ▶ **LA FIESTA DEL SISTEMA NUEVO ES MÍA (`#765`, `[DECIDIDO owner]` 25-09)**: la lista de invitados, la invitación con
   su recibo y la autorización, vestidas con «Saltia» para la v2.0.0, en paralelo con la web pública. El traspaso,
   `isla-y-landing-nueva.md` §4.11; el censo HAY/FALTA, el método y las tandas, `specs/fiesta-sistema-nuevo.md` (§1.4,
@@ -74,9 +71,7 @@
    `probe-ojo-anonimas.php`, `CARRIL-SPA.md` §8·14). Los CRUCES por franja, tipo de visita y primera visita (datos ya
    guardados) llegan con la T8; el cruce por EMPLEADO, `[PENDIENTE: owner]` (preguntado el 27-09, sin respuesta aún). →
    ✅ **T2 ocupación y anticipación** (§4.8.ter, `#758`) → ▶ **T3 Resumen y la reorganización, EN CINCO TANDAS** (§4.13,
-   `#759`, 28-09; medido antes): ▶ **T3a la forma** (las siete pestañas con su pregunta, la carga por pestaña con
-   `Tabs::livewireProperty()`, el reparto de §4.1.bis sobre un CATÁLOGO de cifras por informe, «Resumen» con sus cifras, el
-   selector nativo y la píldora del filtro en móvil, CSV al pie, el glosario y `AnalyticsJargonTest`) → T3b veredicto y frase
+   `#759`, 28-09; medido antes): ✅ **T3a la forma** (aprobada; §4.13 «Cómo se construyó») → ▶ **T3b veredicto y frase**
    (§4.4 su historia, §4.6) → T3c «lo que ha cambiado» y objetivos → T3d el texto para IA (§4.7, sin PII ni celdas < 5) → T3e
    el SECTOR (fuentes AL OWNER antes de sembrar nada) → T4 cartera → T5 marketing y correos → T6 cohortes → T7
    pérdidas → T8 satisfacción (§4.12). **Trampas de la T2**, en la spec §4.8.ter: `OccupancyReader` COPIA la aritmética del

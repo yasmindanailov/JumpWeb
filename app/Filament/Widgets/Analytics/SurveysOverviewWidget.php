@@ -2,77 +2,23 @@
 
 namespace App\Filament\Widgets\Analytics;
 
-use App\Filament\Analytics\Metric;
-use App\Filament\Analytics\Polarity;
-use App\Filament\Analytics\SurveysReport;
-use App\Filament\Widgets\Analytics\Concerns\AnalyticsWidget;
-use Filament\Widgets\Concerns\InteractsWithPageFilters;
-use Filament\Widgets\StatsOverviewWidget;
-use Filament\Widgets\StatsOverviewWidget\Stat;
+use App\Filament\Analytics\Metrics\SurveysMetrics;
 
 /**
- * **Las encuestas, en seis cifras** (`specs/encuestas.md` §4.4, T4): contestadas, la tasa interna (en la puerta,
- * sobre las visitas acreditadas) y la externa (por correo, sobre las mandadas), mandadas, declinadas y la media de
- * la primera escala. Las cuatro de recuento con su variación frente al periodo de comparación.
+ * **La satisfacción, arriba** (T3a de `analitica-para-decidir.md` §4.1.bis, `#759`; las cifras, T4 de `encuestas.md` y
+ * `#754`): la nota media (la principal) y la tasa de respuesta, las dos tasas en una. Lo demás, plegado
+ * ({@see SurveysMoreWidget}). La nota de Google, las notas bajas y si volvieron, arriba, con la T8.
  */
-class SurveysOverviewWidget extends StatsOverviewWidget
+class SurveysOverviewWidget extends MetricsWidget
 {
-    use AnalyticsWidget;
-    use InteractsWithPageFilters;
+    public const KEYS = ['surveys.scale_mean', 'surveys.response_rate'];
+
+    public const PRINCIPAL = 'surveys.scale_mean';
 
     protected static ?int $sort = 10;
 
-    protected int|string|array $columnSpan = 'full';
-
-    protected int|array|null $columns = 3;
-
-    protected function getHeading(): ?string
+    protected function metrics(): array
     {
-        return __('admin.analytics.surveys.heading');
-    }
-
-    protected function getDescription(): ?string
-    {
-        return __('admin.analytics.surveys.note');
-    }
-
-    /** @return array<int, Stat> */
-    protected function getStats(): array
-    {
-        $report = $this->surveys();
-        /** @var array<string, int> $t */
-        $t = $report['totals'];
-        /** @var array<string, int> $p */
-        $p = $report['previous'];
-        /** @var array{survey: string, question: string, mean: ?float, n: int, suppressed: bool}|null $scale */
-        $scale = $report['scale'];
-        // `#754`: una media de menos de cinco respuestas no se enseña (con el registro de la puerta diría quién puntuó).
-        $scaleValue = match (true) {
-            $scale === null => __('admin.analytics.parties.none'),
-            $scale['suppressed'] || $scale['mean'] === null => __('admin.analytics.surveys.fewer_than_min', ['min' => SurveysReport::MIN_CELL]),
-            default => number_format($scale['mean'], 1, ',', '.').' / 5',
-        };
-
-        // Las dos tasas, con sus dos números del periodo y del comparado: en puntos y con sus intervalos (T0b, `#755`).
-        return [
-            $this->metric(Metric::count('surveys.answered', __('admin.analytics.surveys.answered'), $t['answered'], $p['answered'], Polarity::UpIsGood, self::how('surveys.answered'))),
-            $this->metric(Metric::rate(
-                'surveys.internal_rate', __('admin.analytics.surveys.internal_rate'), $t['answered_internal'], $t['offered'], $p['answered_internal'], $p['offered'], Polarity::UpIsGood, self::how('surveys.internal_rate'),
-                detail: __('admin.analytics.surveys.internal_rate_hint', ['answered' => $t['answered_internal'], 'offered' => $t['offered'], 'visits' => $t['visits']]),
-            )),
-            $this->metric(Metric::rate(
-                'surveys.external_rate', __('admin.analytics.surveys.external_rate'), $t['answered_external'], $t['sent'], $p['answered_external'], $p['sent'], Polarity::UpIsGood, self::how('surveys.external_rate'),
-                detail: __('admin.analytics.surveys.external_rate_hint', ['answered' => $t['answered_external'], 'sent' => $t['sent']]),
-            )),
-            $this->metric(Metric::count('surveys.sent', __('admin.analytics.surveys.sent'), $t['sent'], $p['sent'], Polarity::Neutral, self::how('surveys.sent'))),
-            $this->metric(Metric::count('surveys.declined', __('admin.analytics.surveys.declined'), $t['declined'], $p['declined'], Polarity::DownIsGood, self::how('surveys.declined'))),
-            $this->metric(Metric::text(
-                'surveys.scale_mean',
-                __('admin.analytics.surveys.scale_mean'),
-                $scaleValue,
-                self::how('surveys.scale_mean'),
-                detail: $scale === null ? __('admin.analytics.surveys.scale_mean_none') : __('admin.analytics.surveys.scale_mean_hint', ['question' => $scale['question'], 'n' => $scale['n']]),
-            )),
-        ];
+        return SurveysMetrics::for($this->window(), $this->comparison());
     }
 }

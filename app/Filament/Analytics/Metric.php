@@ -79,6 +79,22 @@ final readonly class Metric
     }
 
     /**
+     * Un recuento de UNIDADES QUE LLEGAN EN LOTES (T3a, `#759`): las plazas de las visitas, que vienen de reserva en reserva
+     * —una entrada, una fiesta de veinte—. No es un Poisson: veinte plazas de una fiesta no son veinte sucesos, y probarlas
+     * como tales daría por claro un cambio que es una fiesta más. Se prueba como una suma de lotes (la varianza es la suma
+     * de los CUADRADOS de cada lote, como el dinero) y su base son las reservas (`$operations`), no las plazas.
+     */
+    public static function units(
+        string $key, string $label, int $units, ?int $previousUnits, int $operations, ?int $previousOperations, int $squares, ?int $previousSquares,
+        Polarity $polarity, string $how, ?string $detail = null,
+    ): self {
+        return new self(
+            $key, $label, self::UNIT_COUNT, $polarity, $how, $units, $previousUnits, $operations, $previousOperations,
+            detail: $detail, squares: $squares, previousSquares: $previousSquares,
+        );
+    }
+
+    /**
      * Dinero en céntimos; `$operations` son los casos que lo sostienen (cobros, pedidos…), para la regla de la base, y
      * `$squares` la suma de los cuadrados de sus importes, para la prueba. Una MEDIA (`$mean`) se prueba como media.
      */
@@ -215,7 +231,10 @@ final readonly class Metric
     private function isClear(float $share): bool
     {
         return match ($this->unit) {
-            self::UNIT_COUNT => self::countsDiffer($this->value, (int) $this->previous, $share),
+            // Con sus cuadrados es un recuento EN LOTES ({@see units()}): una suma, como el dinero.
+            self::UNIT_COUNT => $this->squares !== null
+                ? $this->previousSquares !== null && self::sumsDiffer($this->value, (int) $this->previous, $this->squares, $this->previousSquares, $share)
+                : self::countsDiffer($this->value, (int) $this->previous, $share),
             self::UNIT_RATE => self::ratesDiffer((int) $this->hits, (int) $this->base, (int) $this->previousHits, (int) $this->previousBase),
             self::UNIT_MONEY => $this->moneyDiffers($share),
             default => false,

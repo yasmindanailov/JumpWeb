@@ -135,12 +135,17 @@ class SegmentsExportTest extends TestCase
         $this->assertStringContainsString('600333444', $lines[1]);
     }
 
-    /** El botón vive en la página de «Analítica» y solo lo ve quien tiene el permiso. */
+    /**
+     * El botón vive en la página de «Analítica», al pie de «Clientes» (T3a, `#759`: solo es de esa pestaña), y solo lo ve
+     * quien tiene el permiso.
+     */
     public function test_the_page_offers_the_export_only_with_the_permission(): void
     {
-        Livewire::actingAs($this->withRole('admin'))->test(AnalyticsPage::class)
+        Livewire::actingAs($this->withRole('admin'))->withQueryParams([AnalyticsPage::TAB_QUERY_KEY => 'customers'])->test(AnalyticsPage::class)
             ->assertActionVisible('exportSegment')
             ->assertSee(__('admin.analytics.segments.export.button'));
+        Livewire::actingAs($this->withRole('admin'))->withQueryParams([AnalyticsPage::TAB_QUERY_KEY => 'money'])->test(AnalyticsPage::class)
+            ->assertDontSee(__('admin.analytics.segments.export.button'));
 
         $staffRole = Role::where('name', 'staff')->firstOrFail();
         $staffRole->permissions()->attach(Permission::where('name', 'reports.view')->value('id'));

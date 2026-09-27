@@ -128,26 +128,19 @@ trait AnalyticsWidget
     }
 
     /**
-     * UNA tarjeta del cuadro con su anatomía (T0b, `#755`): la cifra la compone el widget ({@see Metric}) y la pinta UNA
-     * vista. «¿Cómo se calcula?» sale de `admin.analytics.how.<clave>`.
+     * UNA tarjeta del cuadro con su anatomía (T0b, `#755`): la cifra la compone el catálogo de su informe
+     * (`Filament\Analytics\Metrics\*`, T3a) y la pinta UNA vista. «¿Cómo se calcula?» sale de `admin.analytics.how.<clave>`.
+     *
+     * @param  array{url: string, label: string}|null  $link  en «Resumen», adónde lleva la cifra (su pestaña)
      */
-    protected function metric(Metric $metric): Stat
+    protected function metric(Metric $metric, ?array $link = null): Stat
     {
         return Stat::make($metric->label, $metric->displayValue())
             ->view('filament.widgets.analytics.metric', [
                 'metric' => $metric,
                 'reading' => $metric->reading($this->comparison(), $this->windowShare()),
+                'link' => $link,
             ]);
-    }
-
-    /**
-     * «¿Cómo se calcula?» de una cifra, por su clave.
-     *
-     * @param  array<string, int|string>  $replace
-     */
-    protected static function how(string $key, array $replace = []): string
-    {
-        return __('admin.analytics.how.'.$key, $replace);
     }
 
     /**

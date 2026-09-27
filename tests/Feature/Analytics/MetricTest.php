@@ -70,6 +70,28 @@ class MetricTest extends TestCase
         $this->assertSame('success', $metric->reading(Comparison::Previous, 0.5)['color']);
     }
 
+    /**
+     * Plazas que llegan en LOTES (T3a, `#759`): 300 plazas en 30 reservas de 10 contra 200 en 20. Como recuento parecería un
+     * cambio claro (z ≈ 4,5); como suma de lotes no lo es (z ≈ 1,4): son diez reservas más. Y la base son las reservas.
+     */
+    public function test_units_that_come_in_batches_are_tested_as_a_sum_of_their_batches(): void
+    {
+        $batches = Metric::units('t.units', 'Visitantes', 300, 200, 30, 20, 30 * 10 * 10, 20 * 10 * 10, Polarity::UpIsGood, $this->how())->reading(Comparison::Previous);
+        $this->assertSame("+100 (+50\u{00A0}%) frente al periodo anterior", $batches['line']);
+        $this->assertSame('gray', $batches['color']);
+        $this->assertSame(['No es un cambio claro: puede ser azar'], $batches['notes']);
+
+        $this->assertSame('success', Metric::count('t.units.count', 'Visitantes', 300, 200, Polarity::UpIsGood, $this->how())->reading(Comparison::Previous)['color'], 'contadas una a una, sí lo parecería');
+
+        // Con reservas de UNA plaza, la suma de lotes es el recuento de siempre: el mismo veredicto.
+        $this->assertSame('success', Metric::units('t.units.ones', 'Visitantes', 300, 200, 300, 200, 300, 200, Polarity::UpIsGood, $this->how())->reading(Comparison::Previous)['color']);
+
+        // Pocas reservas antes (19), aunque sean muchas plazas: sin porcentaje ni color.
+        $few = Metric::units('t.units.few', 'Visitantes', 400, 380, 20, 19, 20 * 400, 19 * 400, Polarity::UpIsGood, $this->how())->reading(Comparison::Previous);
+        $this->assertSame('+20 frente al periodo anterior', $few['line']);
+        $this->assertSame(['Pocos datos para comparar (menos de 20 casos antes)'], $few['notes']);
+    }
+
     public function test_zero_before_is_no_data_and_equal_is_equal(): void
     {
         $none = Metric::count('t.none', 'Fiestas', 15, 0, Polarity::UpIsGood, $this->how())->reading(Comparison::YearAgo);

@@ -51,9 +51,9 @@ return [
             'settings' => ['label' => 'Configuración', 'description' => 'Datos del negocio, fiscales, venta, puerta y pagos.'],
             // T5b de la analítica: las pruebas A/B. La descripción nombra «A/B», «prueba» y «variante» porque el
             // buscador global busca también en la descripción.
-            'experiments' => ['label' => 'Experimentos', 'description' => 'Pruebas A/B de la web: variantes, pesos y cuándo están vivas. Los resultados, en Analítica → Conversión.'],
+            'experiments' => ['label' => 'Experimentos', 'description' => 'Pruebas A/B de la web: variantes, pesos y cuándo están vivas. Los resultados, en Analítica → Marketing.'],
             // T1 de las encuestas: la descripción nombra «encuesta», «preguntas», «puerta» y «correo» para el buscador.
-            'surveys' => ['label' => 'Encuestas', 'description' => 'Las encuestas a los clientes: internas en la puerta al validar la entrada y externas por correo al día siguiente; sus preguntas, en tres idiomas. Los resultados, en Analítica → Encuestas.'],
+            'surveys' => ['label' => 'Encuestas', 'description' => 'Las encuestas a los clientes: internas en la puerta al validar la entrada y externas por correo al día siguiente; sus preguntas, en tres idiomas. Los resultados, en Analítica → Satisfacción.'],
             // `#320`: la puerta sale del menú lateral y su puerta de entrada pasa a ser ésta. La
             // descripción menciona «entrada», «validar» y «escanear» porque el buscador global busca
             // también dentro de la descripción, y nadie recuerda cómo se llama una pantalla.
@@ -328,19 +328,33 @@ return [
     'analytics' => [
         'nav_label' => 'Analítica',
         'title' => 'Analítica',
-        'subheading' => 'Las cifras salen de las mismas filas que el libro de cada pedido —cobros, devoluciones y reparto de señal— y se cortan por el día del parque.',
-        // T2f: las pestañas del cuadro; «Fiestas» es la T2 de `specs/analitica-fiesta.md` (`#739`).
+        // Las siete pestañas (T3a de `specs/analitica-para-decidir.md` §4.13, `#759`): «Conversión» pasa a «Marketing» y
+        // «Encuestas» a «Satisfacción»; la cabecera de cada una es su PREGUNTA (§4.1), no una nota técnica.
         'tabs' => [
+            'summary' => 'Resumen',
             'money' => 'Dinero',
             'occupancy' => 'Ocupación',
             'customers' => 'Clientes',
-            'traffic' => 'Conversión',
+            'marketing' => 'Marketing',
             'parties' => 'Fiestas',
-            'surveys' => 'Encuestas',
+            'satisfaction' => 'Satisfacción',
+        ],
+        'questions' => [
+            'summary' => '¿Cómo vamos?',
+            'money' => '¿Cuánto ganamos y de qué?',
+            'occupancy' => '¿Cómo de lleno está el parque, y cuándo?',
+            'customers' => '¿Quién viene y quién vuelve?',
+            'marketing' => '¿Qué trae visitas y ventas?',
+            'parties' => '¿Cómo van los cumpleaños?',
+            'satisfaction' => '¿Están contentos?',
+        ],
+        'tab_select' => 'Qué mirar',
+        'filter_pill' => ':period · :compare',
+        'summary' => [
+            'see' => 'Ver en :tab',
         ],
         // La ocupación (la T2 de `specs/analitica-para-decidir.md` §4.8.ter, `#758`): entradas y fiestas, nunca sumadas.
         'occupancy' => [
-            'heading' => 'La ocupación: cómo de lleno está el parque, y cuándo',
             'note' => 'Por el día y la hora de la visita, lo que ya pasó del periodo. Las entradas se miden en plazas y las fiestas en fiestas por franja: por separado.',
             'entries' => 'Ocupación de las entradas',
             'entries_hint' => ':seats plazas ocupadas de :capacity ofrecidas',
@@ -357,6 +371,9 @@ return [
             'anticipation_none' => 'Sin reservas en el periodo',
             'anticipation_chart' => 'Con cuánta antelación se compra, por tipo de visita',
             'missing' => 'Demanda sin hueco',
+            // T3a (`#759`): las plazas de las visitas pagadas; se enseñan en «Clientes» y en «Resumen».
+            'visitors' => 'Visitantes',
+            'visitors_hint' => '{0} Sin reservas en el periodo|{1} En :n reserva|[2,*] En :n reservas',
             'missing_since' => 'Se mide desde el :date',
             'missing_not_yet' => 'Aún sin datos: se mide desde esta versión',
             'same_day' => 'el mismo día',
@@ -402,7 +419,6 @@ return [
         ],
         // Las encuestas (`specs/encuestas.md` §4.4, T4): por DÍA DE LA RESPUESTA; solo agregados salvo «Por atender».
         'surveys' => [
-            'heading' => 'Las encuestas: cuántas se contestan y qué dicen',
             'note' => 'Respuestas cuyo día cae en el periodo. Son ANÓNIMAS: ninguna cifra sale de menos de 5 respuestas. La tasa en la puerta es contestadas entre OFRECIDAS (visitas acreditadas con la encuesta viva y de clientes a los que aún no se había preguntado); la de correo, contestadas entre mandadas.',
             // `#754`: la celda de una cifra hecha de menos de MIN_CELL respuestas (con el registro de la puerta diría quién).
             'fewer_than_min' => 'menos de :min',
@@ -414,6 +430,10 @@ return [
             'sent' => 'Correos mandados',
             'declined' => 'No preguntadas',
             'scale_mean' => 'Nota media',
+            // T3a (`#759`, §4.1.bis): las dos tasas en una, arriba; cada una por separado, plegada.
+            'response_rate' => 'Tasa de respuesta',
+            'response_rate_hint' => ':answered contestadas de :asked pedidas (en la puerta y por correo)',
+            'more_heading' => 'Más de las encuestas',
             'scale_mean_hint' => '«:question» · :n respuestas',
             'scale_mean_none' => 'Sin notas en el periodo',
             'answers_chart' => 'Lo que contestan',
@@ -444,7 +464,8 @@ return [
             'off' => 'Apagada',
             'yes' => 'Sí',
             'no' => 'No',
-            'kind' => ['internal' => 'Interna', 'external' => 'Externa'],
+            // «Interna/Externa» era jerga de la casa (T3a, glosario §4.11): son la de la puerta y la del correo.
+            'kind' => ['internal' => 'En la puerta', 'external' => 'Por correo'],
             'col' => [
                 'answered' => 'Contestadas',
                 'declined' => 'No preguntadas',
@@ -463,7 +484,6 @@ return [
         // La fiesta (`specs/analitica-fiesta.md` §4.3, T2): por DÍA DE LA FIESTA; el dinero de después de reservar
         // desde el libro; el invitado sin cookie, contado por reserva.
         'parties' => [
-            'heading' => 'La fiesta: de reservar a celebrar',
             'note' => 'Fiestas cuyo día cae en el periodo: reservas de pack con formulario, de pedidos pagados. El dinero de después de reservar sale del libro de cada pedido (extras del formulario e invitados añadidos o quitados); lo cobrado en el parque, de los cobros en efectivo o con datáfono de esos pedidos. El invitado no lleva cookie: lo que abre se cuenta por reserva, nunca por persona.',
             'parties' => 'Fiestas',
             'sold_after' => 'Vendido después de reservar',
@@ -474,11 +494,12 @@ return [
             'on_time' => 'Dentro del plazo',
             'replies_yes' => 'Respuestas «sí» a la invitación',
             'signatures' => 'Justificantes firmados',
-            'funnel_chart' => 'El embudo: reservas que llegan a cada paso y % de las fiestas',
+            'funnel_chart' => 'De reservar a celebrar: reservas que llegan a cada paso y % de las fiestas',
+            'more_heading' => 'Más de la fiesta',
             'money_chart' => 'Vendido después de reservar, por complemento (€)',
             'timing_chart' => 'Cuándo se completa el formulario (días antes de la fiesta)',
             'breakdown_heading' => 'La fiesta, al detalle',
-            'breakdown_note' => 'Por día o semana de fiesta, el embudo paso a paso, el dinero de después de reservar (las ediciones del panel aparte), por complemento, la invitación y el justificante, los tiempos y los invitados. Es lo que lleva el CSV.',
+            'breakdown_note' => 'Por día o semana de fiesta, el paso a paso, el dinero de después de reservar (las ediciones del panel aparte), por complemento, la invitación y el justificante, los tiempos y los invitados. Es lo que lleva el CSV.',
             'funnel' => 'Paso a paso',
             'money_heading' => 'El dinero de después de reservar',
             'by_addon' => 'Por complemento',
@@ -643,6 +664,11 @@ return [
             'label' => 'Comparar con',
             'previous' => 'El periodo anterior',
             'year_ago' => 'El mismo periodo del año pasado',
+            // La píldora del filtro en el móvil (T3a): «Este mes · frente al periodo anterior».
+            'short' => [
+                'previous' => 'frente al periodo anterior',
+                'year_ago' => 'frente al año pasado',
+            ],
         ],
         // T0 de `analitica-para-decidir.md` (#755): las fechas exactas de las dos ventanas, bajo los dos filtros.
         'window' => [
@@ -674,17 +700,19 @@ return [
         'how' => [
             // La T2 (`specs/analitica-para-decidir.md` §4.8.ter, `#758`): desde `OccupancyReader`, con la regla del aforo.
             'occupancy' => [
-                'entries' => 'Las plazas ocupadas entre las ofrecidas, en las zonas que venden entradas y en las franjas que ya pasaron del periodo. Cada media hora de la rejilla cuenta una vez: una entrada de 1 h ocupa su plaza en las franjas que empiezan mientras está dentro, como cuenta el aforo. Solo pedidos cobrados (web, app y los del panel, también la taquilla que se apunta en él); lo que se cobre fuera del sistema no aparece. Una franja cerrada no cuenta como ofrecida.',
+                'entries' => 'Las plazas ocupadas entre las ofrecidas, en las zonas que venden entradas y en las franjas que ya pasaron del periodo. Cada media hora de la rejilla cuenta una vez: una entrada de 1 h ocupa su plaza en las franjas que empiezan mientras está dentro, como cuenta el aforo. Solo pedidos cobrados (web, app y los del panel, también la taquilla que se apunta en él); lo que se cobre sin pasar por la web ni por el panel no aparece. Una franja cerrada no cuenta como ofrecida.',
                 'parties' => 'Las fiestas a la vez en cada franja entre el máximo de fiestas por franja de su zona (el ajuste de «Packs»), con el montaje y la limpieza si la zona los cuenta. Sin máximo configurado no hay porcentaje: se cuentan. No se suma a la ocupación de las entradas.',
                 'full' => 'Las franjas del periodo en las que la web ya no podía vender (las plazas ocupadas llegaron al aforo online). Debajo, con cuánta antelación se llenaron: la mediana de los días entre el último cobro que la llenó y su hora de inicio.',
                 'revenue_per_seat_hour' => 'Lo vendido en las líneas de las visitas del periodo (en las zonas de entradas) entre las plazas-hora ofrecidas: el aforo de cada franja por el tiempo que representa. Dice cuánto rinde cada plaza abierta una hora.',
                 'anticipation' => 'La mediana de los días entre el cobro de cada reserva y su visita, en las visitas del periodo. Un pedido apuntado después de la visita cuenta como el mismo día. Debajo, por tipo: fiesta (un pack), grupo (un producto con tramos por volumen) y entrada.',
                 'missing' => 'Las veces que alguien abrió un producto en el cajón y el mes en curso (o los siguientes hasta el primero con fechas) no tenía ningún día a la venta. Se cuenta una vez por producto y mes en cada visita a la web. Se mide desde la T2: antes no existía.',
+                'visitors' => 'Las plazas de las visitas cobradas del periodo —entradas, grupos y fiestas— por el día y la hora de la visita, lo que ya pasó. Una plaza cuenta una vez aunque dure dos horas. Solo pedidos cobrados (web, app y los del panel); quien entra sin un pedido hecho en la web o en el panel no aparece. Debajo, las reservas que las traen: las plazas llegan en grupos (una fiesta trae muchas de golpe), y por eso el cambio se juzga por reservas y no plaza a plaza.',
             ],
             'money' => [
                 'collected' => 'Todos los cobros con éxito del periodo, por su fecha: los de la web (la pasarela de pago) y los que se apuntan en el mostrador desde el panel (efectivo o datáfono). «Por método de cobro», en el desglose, los separa.',
                 'refunded' => 'Las devoluciones que salieron con éxito en el periodo, por la fecha en que se hicieron.',
-                'net' => 'Lo cobrado menos lo devuelto en el periodo: el dinero que de verdad entró.',
+                'net' => 'Lo cobrado menos lo devuelto en el periodo: el dinero que de verdad entró. Sale de las mismas filas que el libro de cada pedido —cobros, devoluciones y reparto de señal— y se corta por el día del parque.',
+                'pending_in_park' => 'De los pedidos cobrados en el periodo con pago de señal, lo que falta por cobrar en el parque de las visitas que aún no han pasado. Es dinero ya vendido: ni bueno ni malo. Debajo, cuántos pedidos con señal hay en el periodo.',
                 'sold' => 'El importe de los pedidos cobrados en el periodo, por la fecha del cobro, tal como se vendieron. Puede ser más que lo cobrado: con señal, el resto se paga en el parque.',
                 'orders' => 'Los pedidos cobrados en el periodo (también los que después se devolvieron), por la fecha del cobro.',
                 'avg_order' => 'Lo vendido entre los pedidos cobrados. Debajo, el cobro medio: lo cobrado entre el número de cobros.',
@@ -734,11 +762,12 @@ return [
             ],
             'surveys' => [
                 'answered' => 'Las encuestas contestadas en el periodo, por el día de la respuesta, en la puerta y por correo.',
-                'internal_rate' => 'En la puerta: contestadas entre ofrecidas (visitas acreditadas con una encuesta interna activa, de clientes a los que aún no se había preguntado).',
+                'internal_rate' => 'En la puerta: contestadas entre ofrecidas (visitas acreditadas con una encuesta de la puerta activa, de clientes a los que aún no se había preguntado).',
                 'external_rate' => 'Por correo: contestadas entre los correos de encuesta mandados en el periodo.',
                 'sent' => 'Los correos de encuesta mandados en el periodo, el día después de la visita.',
                 'declined' => 'Las veces que en la puerta se pulsó «No preguntar».',
                 'scale_mean' => 'La media de la primera pregunta de escala (del 1 al 5) en las respuestas del periodo. Las respuestas son anónimas: con menos de 5, la media no se enseña.',
+                'response_rate' => 'Las encuestas contestadas entre las pedidas en el periodo: en la puerta (las ofrecidas) y por correo (las mandadas), sumadas. El cambio se da en puntos. Cada una por separado, en «Más de las encuestas».',
             ],
         ],
         // T2d: el CSV.
@@ -749,13 +778,13 @@ return [
             'report_label' => 'Informe',
             'submit' => 'Descargar',
             'report' => [
+                // T3a (`#759`): cada pestaña descarga el suyo; los nombres, los de su pestaña.
                 'money' => 'El dinero',
                 'occupancy' => 'La ocupación',
-                'customers' => 'Registros y puerta',
-                'funnel' => 'La conversión',
+                'customers' => 'Los clientes',
+                'funnel' => 'El marketing',
                 'parties' => 'Las fiestas',
-                // Faltaba desde la T4 de las encuestas: el selector del CSV pintaba la clave en crudo (visto el 27-09).
-                'surveys' => 'Las encuestas',
+                'surveys' => 'La satisfacción',
             ],
             'title' => 'Analítica · :report',
             'period_line' => 'Periodo: del :from al :to',
@@ -763,7 +792,6 @@ return [
             'summary' => 'Resumen',
         ],
         'money' => [
-            'heading' => 'El dinero del periodo',
             // T0b (#755): suma TODOS los cobros con éxito —la pasarela y el mostrador del panel—; «online» mentía.
             'collected' => 'Cobrado',
             'refunded' => 'Devuelto',
@@ -773,6 +801,8 @@ return [
             'avg_order' => 'Valor medio del pedido',
             'avg_collected' => 'Cobro medio',
             'adjustments' => 'Gestiones posteriores',
+            'more_heading' => 'Más del dinero',
+            'pending_orders' => '{0} Ningún pedido con señal|{1} De :n pedido con señal|[2,*] De :n pedidos con señal',
             'series_heading' => 'Cobrado, devuelto y vendido por :granularity, en euros',
             'products_chart' => 'Vendido por producto, en euros (los :top primeros)',
             'channels_chart' => 'Vendido y cobrado por canal, en euros',
@@ -783,10 +813,10 @@ return [
             ],
             'week_of' => 'Sem. del :day',
             'by_month' => 'Por mes',
-            'customers_heading' => 'Clientes que compran',
+            // T3a (`#759`): van a «Clientes», sin el título «Clientes que compran» que les daba sentido: lo dicen ellas.
             'buyers' => 'Compradores',
-            'new' => 'Nuevos',
-            'returning' => 'Recurrentes',
+            'new' => 'Compradores nuevos',
+            'returning' => 'Compradores recurrentes',
             'returning_web' => 'Repiten por la web',
             'avg_per_customer' => 'Valor medio por cliente',
             'lifetime_avg' => 'Valor de vida medio',
@@ -803,8 +833,9 @@ return [
                 'web' => 'Web',
                 'app' => 'App',
                 'panel' => 'Panel (pedido manual)',
-                'system' => 'Sistema',
-                'before' => 'Anterior a la medición',
+                // Glosario de la T3a (§4.11): qué son, en «Calidad del dato».
+                'system' => 'Automático',
+                'before' => 'Sin dato (antes de medir)',
             ],
             'method' => [
                 'redsys' => 'Pasarela (Redsys)',
@@ -863,7 +894,7 @@ return [
             'visits' => 'Visitas acreditadas',
             'visitors' => 'Clientes con visita acreditada',
             // T0c de `analitica-para-decidir.md` (#756): los que vuelven al parque.
-            'returns_heading' => 'Vuelven al parque',
+            'more_heading' => 'Más de los clientes',
             'returning_visitors' => 'Ya habían venido',
             'returning_share' => ':percent % de los :total clientes que vinieron',
             'first_visit' => 'Vienen por primera vez',
@@ -893,7 +924,7 @@ return [
             'method' => [
                 'password' => 'Con contraseña',
                 'google' => 'Con Google',
-                'unknown' => 'Sin dato (anterior a la medición o alta desde el panel)',
+                'unknown' => 'Sin dato (antes de medir, o alta desde el panel)',
             ],
             'col' => [
                 'registrations' => 'Cuentas',
@@ -906,18 +937,22 @@ return [
                 'count' => 'Cuántas',
             ],
         ],
-        // T2c: la conversión — el embudo, las fuentes y las páginas.
+        // T2c: la conversión — el paso a paso, las fuentes y las páginas. Desde la T3a (`#759`), la pestaña «Marketing», con
+        // el glosario de §4.11: la jerga (robots, el equipo, lo rechazado) solo en «Calidad del dato».
         'traffic' => [
-            'heading' => 'La conversión en la web',
-            'visits' => 'Visitas',
+            'visits' => 'Visitas a la web',
             'purchases' => 'Compras por la web o la app',
             'conversion' => 'Conversión',
+            'conversion_detail' => '{0} Ninguna compra por la web o la app|{1} :n compra por la web o la app · :revenue cobrados|[2,*] :n compras por la web o la app · :revenue cobrados',
             'revenue' => 'Cobrado en esas compras',
-            'identified' => 'Sesiones identificadas',
+            'more_heading' => 'Más del marketing',
+            'identified' => 'Visitas identificadas',
             'excluded' => 'Fuera del recuento',
             'excluded_value' => ':bots bots · :internal internas',
-            'funnel_heading' => 'El embudo',
-            'funnel_note' => 'Sesiones limpias que empezaron en el periodo. La compra no es un paso por sesión —no todas la atan— y está en las tarjetas; lo que pasa tras iniciar el pago lo cuentan el banco y el dinero.',
+            'quality_heading' => 'Calidad del dato',
+            'quality_note' => 'Cuánto fiarse de las cifras de arriba: las visitas atadas a una cuenta, lo que no cuenta como visita (robots y el equipo del parque) y los eventos que la ingesta rechazó. En las tablas por canal, «Sin dato (antes de medir)» son pedidos de antes de que se guardara su canal, y «Automático», pedidos que no nacieron de una visita a la web, a la app ni al panel (los crea el propio sistema).',
+            'funnel_heading' => 'Del paso a paso a la compra',
+            'funnel_note' => 'Visitas a la web que empezaron en el periodo (sin robots ni el equipo). La compra no es un paso de cada visita —no todas se pueden atar a la suya— y está en las tarjetas; lo que pasa tras iniciar el pago lo cuentan el banco y el dinero.',
             'funnel' => 'Paso a paso',
             'abandonment' => 'Dónde se quedan',
             'step' => [
@@ -936,9 +971,9 @@ return [
                 'identified' => 'Ya identificadas, antes de pagar',
             ],
             'sources_heading' => 'Fuentes y campañas',
-            'sources_note' => 'Las visitas, por la fuente de cada sesión; los pedidos, por el sello que llevan (el primer toque en la tabla de arriba, el último en la de abajo). Solo web y app.',
-            'first_touch' => 'Por primer toque',
-            'last_touch' => 'Por último toque (la campaña que cerró la compra)',
+            'sources_note' => 'Las visitas, por la fuente de cada una; los pedidos, por el sello que llevan: cómo llegaron la primera vez (arriba) y qué les hizo comprar (abajo). Solo web y app.',
+            'first_touch' => 'Cómo llegaron la primera vez',
+            'last_touch' => 'Qué les hizo comprar (la campaña que cerró la compra)',
             'source' => [
                 'direct' => 'Directo',
                 'none' => '—',
@@ -950,9 +985,8 @@ return [
                 'purchases' => 'Compras',
             ],
             'hours_heading' => 'Visitas por hora del parque',
-            'funnel_chart' => 'El embudo: sesiones que llegan a cada paso y % de las visitas',
-            'sources_chart' => 'Visitas por fuente, primer toque (las :top primeras)',
-            'devices_chart' => 'Visitas por dispositivo',
+            'funnel_chart' => 'Del paso a paso a la compra: visitas que llegan a cada paso y % del total',
+            'sources_chart' => 'Visitas por fuente: cómo llegaron la primera vez (las :top primeras)',
             'step_short' => [
                 'visits' => 'Visitas',
                 'interest' => 'Interés',
@@ -961,8 +995,8 @@ return [
                 'identified' => 'Identificadas',
                 'pay_started' => 'Pago iniciado',
             ],
-            'pages_heading' => 'Páginas, dispositivos, productos y contacto',
-            'pages_note' => 'Sesiones limpias del periodo. Las rutas van enmascaradas (ningún token) y los eventos rechazados son los de la última semana, no del periodo.',
+            'pages_heading' => 'Páginas, horas, dispositivos, productos y contacto',
+            'pages_note' => 'Visitas a la web del periodo (sin robots ni el equipo). Las rutas van enmascaradas (ningún token); la hora es la del parque.',
             'entries' => 'Páginas de entrada',
             'exits' => 'Últimas páginas vistas',
             'devices' => 'Dispositivo',
@@ -995,7 +1029,7 @@ return [
             'no_data' => 'Sin dato',
             'col' => [
                 'step' => 'Paso',
-                'reached' => 'Sesiones',
+                'reached' => 'Visitas',
                 'of_previous' => '% del paso anterior',
                 'of_visits' => '% de las visitas',
                 'left_at' => 'Se quedaron',
@@ -3844,7 +3878,7 @@ return [
         'nav_label' => 'Encuestas',
         'model_label_singular' => 'encuesta',
         'model_label_plural' => 'Encuestas',
-        'subheading' => 'Internas: el empleado pregunta en la puerta al validar la entrada. Externas: un correo al día siguiente de la visita. Una viva de cada clase como máximo; los resultados, en Analítica → Encuestas.',
+        'subheading' => 'Internas: el empleado pregunta en la puerta al validar la entrada. Externas: un correo al día siguiente de la visita. Una viva de cada clase como máximo; los resultados, en Analítica → Satisfacción.',
         'create_title' => 'Nueva encuesta',
         'edit_title' => 'Encuesta «:name»',
         'locked_hint' => 'Esta encuesta ya tiene respuestas: la clave, la clase y la estructura de las preguntas están bloqueadas. Los rótulos y el encendido se pueden cambiar; para otra estructura, crea una encuesta nueva.',

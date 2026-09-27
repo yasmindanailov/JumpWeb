@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets\Analytics;
 
 use App\Domain\Platform\Services\Money;
+use App\Filament\Analytics\Metrics\OccupancyMetrics;
 use App\Filament\Analytics\OccupancyReport;
 use App\Filament\Widgets\Analytics\Concerns\AnalyticsWidget;
 use Filament\Widgets\Concerns\InteractsWithPageFilters;
@@ -33,7 +34,8 @@ class OccupancyBreakdownWidget extends Widget
 
         return [
             'heading' => __('admin.analytics.occupancy.breakdown_heading'),
-            'description' => __('admin.analytics.occupancy.breakdown_note'),
+            // La nota del informe iba bajo el título de la pestaña hasta la T3a (`#759`): la cabecera es ya su pregunta.
+            'description' => __('admin.analytics.occupancy.note').' '.__('admin.analytics.occupancy.breakdown_note'),
             'tables' => [
                 $this->heatmap($r['heatmap']),
                 $this->byHour($r['by_hour']),
@@ -142,7 +144,7 @@ class OccupancyBreakdownWidget extends Widget
             $rows[] = [
                 __('admin.analytics.occupancy.kind.'.$kind),
                 self::n($k['n']),
-                $k['median'] === null ? '—' : OccupancyOverviewWidget::days($k['median']),
+                $k['median'] === null ? '—' : OccupancyMetrics::days($k['median']),
                 ...array_map(static fn (int $n): string => self::n($n), array_values($k['buckets'])),
             ];
         }
@@ -169,7 +171,7 @@ class OccupancyBreakdownWidget extends Widget
         $byWeekday = $a['by_weekday'];
         foreach ($byWeekday as $weekday => $w) {
             $name = Carbon::now()->startOfWeek()->addDays($weekday - 1)->locale(app()->getLocale())->isoFormat('dddd');
-            $rows[] = [mb_convert_case($name, MB_CASE_TITLE), self::n($w['n']), $w['median'] === null ? '—' : OccupancyOverviewWidget::days($w['median'])];
+            $rows[] = [mb_convert_case($name, MB_CASE_TITLE), self::n($w['n']), $w['median'] === null ? '—' : OccupancyMetrics::days($w['median'])];
         }
 
         return [

@@ -1,6 +1,6 @@
 # [SPEC] La analítica para decidir — un cuadro que se entiende, dice si va bien o mal y cubre las decisiones del operador
 
-> Estado: ✅ **aprobada por el owner el 27-09** (§7; `#755`) → ✅ **T0, T1 y T2** · 🟦 **T3** (T3a→T3e, §4.13) · Última actualización: 2026-09-28 ·
+> Estado: ✅ **aprobada por el owner el 27-09** (§7; `#755`) → ✅ **T0, T1 y T2** · 🟦 **T3** (✅ T3a · ⬜ T3b→T3e, §4.13) · Última actualización: 2026-09-28 ·
 > Decisiones: `#755` (esta), `#754` (encuestas anónimas, su T1), `#758` (la T2), `#759` (la T3 en cinco tandas) · Carril: **SPA** (banda 730–759). Amplía `analitica.md`
 > (el libro, los regímenes y la T2 siguen siendo suyos).
 
@@ -17,7 +17,7 @@
   sale a un tercero: SOLO agregados, con guarda; (5) los enlaces FIRMADOS de los correos: la marca de envío va por el
   camino de `EmailUtm` (tras firmar, ignorada al validar); (6) aperturas solo con consentimiento (`[PENDIENTE: asesoría]`).
 - **Estado**: ✅ aprobada (27-09, `#755`); T0a·T0b·T0c ✅ · **T1** ✅ (la T5 de `encuestas.md`, `#754`, `#757`) · **T2** ✅ ocupación (§4.8.ter, `#758`) → **T3** Resumen, en cinco tandas (§4.13,
-  `#759`): ▶ T3a la forma. **Nada de lo medido se pierde** (§4.1.bis, con guarda): se resume arriba y lo demás queda
+  `#759`): ✅ T3a la forma → ▶ T3b veredicto y frase. **Nada de lo medido se pierde** (§4.1.bis, con guarda): se resume arriba y lo demás queda
   plegado o en su pestaña.
 - **Invariantes**: `RGPD-01`, `RGPD-04`, `RGPD-07`, `SEC-04`, `SUITE-01`. Dinero y aforo: solo lectura.
 
@@ -413,7 +413,7 @@ número móvil»; y de las compras: «clientes recurrentes sí, eso me sirve». 
 - **Botones**: «Descargar CSV» al pie de cada pestaña (sus tablas); «Exportar segmento» solo en Clientes.
 - **Carga**: solo los widgets de la pestaña activa (medido: hoy cargan las cinco); la pestaña sigue en la URL.
 - **Tamaños de referencia**: tablet 1080×810 (el aparato del panel), móvil 390×844 y escritorio 1440×900.
-- **Glosario** (guarda: `AnalyticsJargonTest` (futuro) sobre los rótulos): «Sesiones» → «Visitas a la web» · «Primer
+- **Glosario** (guarda: `AnalyticsJargonTest` sobre los rótulos, T3a): «Sesiones» → «Visitas a la web» · «Primer
   toque» → «Cómo llegaron la primera vez» · «Último toque» → «Qué les hizo comprar» · «Anterior a la medición» → «Sin dato
   (antes de medir)» · «Sistema» → «Automático» (y a «Calidad del dato») · «Fuera del recuento», «bots», «internas» → solo
   en «Calidad del dato» · «Embudo» → «Del paso a paso a la compra».
@@ -479,11 +479,57 @@ inactiva se pinta vacía y sus widgets ni existen ni piden.
 - **Carga por pestaña**: `livewireProperty('tab')` y la pestaña en la URL (`?pestana=`). **Móvil** (< md): un `<select>` nativo en
   lugar de la fila de pestañas, y el filtro tras una píldora con el periodo y la comparación.
 - **Botones**: «Descargar CSV» al pie de cada pestaña, de su informe y sin modal; «Exportar segmento», al pie de Clientes.
-- **Glosario** (§4.11) con su guarda `AnalyticsJargonTest` (futuro): pinta cada widget de cada pestaña y falla si la jerga sale
+- **Glosario** (§4.11) con su guarda `AnalyticsJargonTest`: pinta cada widget de cada pestaña y falla si la jerga sale
   fuera de «Calidad del dato». **Censo**: las tres nuevas, al CSV y al censo; lo renombrado, con su correspondencia en el test.
 - **Verificación**: la carga por pestaña (con X abierta, ningún widget de otra), el catálogo (cada clave una vez; «Resumen»
   reusa), la jerga y el censo, con su mutación; la sonda con siete pestañas, la primera cifra a 390 y 1080 y las peticiones al
   abrir; el ojo del owner en tablet, móvil y escritorio.
+
+**Cómo se construyó la T3a (28-09; ✅ vista en vivo y aprobada por el owner el 28-09: «buen trabajo, todo correcto»)**:
+- **El catálogo**: `Filament\Analytics\Metrics\{Money,Occupancy,Customers,Marketing,Parties,Surveys}Metrics` sobre `MetricSet`:
+  `for()` lee el informe cacheado y `from()` compone (un test le da la forma REAL de un informe con los números a mano). 58
+  cifras, una clave cada una. `MetricsWidget` declara `KEYS`, `PRINCIPAL` (doble ancho desde tableta), `FOLDED` y `MAX_TOP`:
+  los widgets de tarjetas ELIGEN; `SummaryWidget` reusa las de arriba de su pestaña con «Ver en …».
+- **Widgets**: nuevos `SummaryWidget`, `CustomersOverviewWidget` y los plegados `MoneyMore`, `CustomersMore`, `TrafficMore`,
+  `PartiesMore`, `SurveysMore` y `DataQualityWidget` (tarjetas + los rechazados); `RegistrationsWidget` y `GateWidget`, plegados;
+  fuera `MoneyCustomersWidget`, `ReturnsWidget` y los gráficos de horas y dispositivos (a tabla en `PagesWidget`). Las notas
+  técnicas de las cabeceras bajan a la descripción de su grupo plegado.
+- **Cifras nuevas**: «Pendiente de cobrar en el parque» (neutra, sin comparación: el informe no la trae), «Visitantes»
+  (`Metric::units()`: las plazas llegan en LOTES —una fiesta, veinte— y se prueban como una suma, con las reservas de base) y
+  «Tasa de respuesta».
+- **La página**: `Tabs::livewireProperty('tab')` con `#[Url(as: 'pestana')]`; `normalizeTab()` (las claves viejas y lo que
+  mande el navegador); `REPORTS`, el CSV de cada pestaña al pie; «Exportar segmento» al pie de Clientes; la píldora y el
+  selector (`filament.pages.analytics.*`). Las preguntas no prometen lo que aún no hay: «¿Cómo vamos?» (el «qué hago» llega
+  con la T3c) y «¿Qué trae visitas y ventas?» (el coste, con la T5).
+- **Glosario**: «Compradores nuevos/recurrentes» (en Clientes perdían el título que les daba sentido), «Visitas a la web»
+  (junto a «Visitantes»), «Visitas identificadas», «Automático», «Sin dato (antes de medir)», «Cómo llegaron la primera vez»,
+  «Qué les hizo comprar», «Del paso a paso a la compra», las encuestas «En la puerta» y «Por correo»; el CSV, con el nombre de
+  su pestaña.
+- **Medido** (BD local): al abrir, **10 → 1** petición (solo «Resumen»); a 390, de 3 de 6 pestañas a la vista → el selector, y
+  la primera cifra de **732 → 416 px**; a 1080, 540 → 492; jerga en pantalla, 7 → 0; al cambiar de pestaña, los widgets de la
+  anterior viajan como `$commit` vacío y el servidor devuelve 0 B de su HTML (no los pinta). Sonda del panel **107/107**
+  (escritorio, tableta y móvil), consola limpia.
+- **Tests**: `AnalyticsTabsTest` (6), `AnalyticsJargonTest` (3: las claves de idioma y lo pintado; «iniciar sesión» no es
+  jerga), `MetricsCatalogTest` (5), `MetricTest` +1, `OccupancyReportTest` +3, y cambiados A PROPÓSITO `AnalyticsCensusTest`
+  (58; lo renombrado, con su correspondencia), `AnalyticsPageTest`, `AnalyticsExportTest` y `SegmentsExportTest`. Arnés
+  `mutar-analitica-decidir.sh`: +21 mutaciones de la T3a, **91/92 + control** y la 92.ª («lo plegado nace abierto») vista
+  morder aparte tras arreglar su prueba; copia por RUTA (dos `admin.php` chocaban por su nombre). Suite 6373.
+- **Lo que enseñó**: (1) `CENSUS + CENSUS_SINCE` es una UNIÓN de arrays: con la clave `money` en los dos, la cifra nueva del
+  dinero no se habría comprobado nunca. (2) El desglose de la ocupación llamaba al ayudante de los días, mudado al catálogo,
+  SOLO con reservas: la suite estaba verde y Larastan lo vio; ahora una prueba lo pinta con datos. (3) En Filament el `id` de
+  un grupo va por `->id()`: por `extraAttributes` pierde contra el suyo vacío. (4) El instrumento contaba las peticiones de
+  «Hoy» (12 en vez de 10): se espera a que termine. (5) La pestaña por defecto no se escribe en la URL. (6) Un grupo que
+  RECUERDA su estado lleva `fi-collapsed` desde el servidor aunque nazca abierto: lo que decide es `isCollapsed:
+  $persist(true)` de Alpine; la prueba miraba la clase y el arnés la dejó en evidencia.
+
+**T3e, primera búsqueda de fuentes (28-09; NADA sembrado, para el owner)**: casi todo lo publicado son MEDIAS de un
+informe, no rangos, y pocas veces de parques de salto. Candidatas, con su pega: (a) ROLLER, *2025 Attractions Industry
+Benchmark Report* (datos de sus operadores; el blog no da la muestra): en parques de salto, el 31 % de las reservas es
+online y el 66 % en taquilla; 3,4 personas por reserva online, 2,1 en taquilla y 10,1 en fiestas y grupos; las fiestas se
+reservan con 2–4 semanas. (b) Revinate, *2026 Hospitality Benchmark Report* (HOTELES): la encuesta por correo se completa
+en menos del 5 % (3,64 % Norteamérica · 4,41 % Asia-Pacífico). (c) Contentsquare, *Digital Experience Benchmark 2026*
+(6.500 webs; «Viajes y hostelería», 539): la conversión por sector está en el informe descargable, no en abierto.
+Descartado: los «60–70 % de ocupación en punta» y los «2,5–3 % de conversión» de blogs sin método.
 
 ## 5. Impacto en invariantes
 

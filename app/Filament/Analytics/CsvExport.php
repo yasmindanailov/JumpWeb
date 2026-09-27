@@ -5,11 +5,12 @@ namespace App\Filament\Analytics;
 use App\Domain\Platform\Enums\Comparison;
 use App\Domain\Platform\Services\Analytics\Reports\Window;
 use App\Domain\Platform\Services\Money;
+use App\Filament\Analytics\Metrics\OccupancyMetrics;
 use App\Filament\Widgets\Analytics\CustomersBreakdownWidget;
+use App\Filament\Widgets\Analytics\DataQualityWidget;
 use App\Filament\Widgets\Analytics\FunnelWidget;
 use App\Filament\Widgets\Analytics\MoneyBreakdownWidget;
 use App\Filament\Widgets\Analytics\OccupancyBreakdownWidget;
-use App\Filament\Widgets\Analytics\OccupancyOverviewWidget;
 use App\Filament\Widgets\Analytics\PagesWidget;
 use App\Filament\Widgets\Analytics\PartiesBreakdownWidget;
 use App\Filament\Widgets\Analytics\SourcesWidget;
@@ -137,6 +138,8 @@ final class CsvExport
                 ...(new FunnelWidget)->tablesFor($window, $comparison),
                 ...(new SourcesWidget)->tablesFor($window, $comparison),
                 ...(new PagesWidget)->tablesFor($window, $comparison),
+                // T3a (`#759`): los eventos rechazados viven en «Calidad del dato».
+                ...(new DataQualityWidget)->tablesFor($window, $comparison),
             ],
             self::REPORT_PARTIES => [
                 $this->partiesSummary($window, $comparison),
@@ -174,8 +177,10 @@ final class CsvExport
             [__('admin.analytics.occupancy.parties'), $f['capped'] ? $percent((int) $f['present'], (int) $f['cap']) : (string) $f['present']],
             [__('admin.analytics.occupancy.full'), (string) $e['full']],
             [__('admin.analytics.occupancy.revenue_per_seat_hour'), Money::format($seatHours > 0 ? (int) round((int) $e['revenue_cents'] * 60 / $seatHours) : 0)],
-            [__('admin.analytics.occupancy.anticipation'), $r['anticipation']['median'] === null ? __('admin.analytics.parties.none') : OccupancyOverviewWidget::days((int) $r['anticipation']['median'])],
+            [__('admin.analytics.occupancy.anticipation'), $r['anticipation']['median'] === null ? __('admin.analytics.parties.none') : OccupancyMetrics::days((int) $r['anticipation']['median'])],
             [__('admin.analytics.occupancy.missing'), (string) $r['missing']['count']],
+            // T3a (`#759`): las plazas de las visitas pagadas del periodo.
+            [__('admin.analytics.occupancy.visitors'), (string) $r['visitors']['seats']],
         ]);
     }
 
@@ -193,8 +198,12 @@ final class CsvExport
             default => number_format($scale['mean'], 1, ',', '.').' / 5',
         };
 
+        $asked = $t['offered'] + $t['sent'];
+
         return $this->summary([
             [__('admin.analytics.surveys.answered'), (string) $t['answered']],
+            // T3a (`#759`): las dos tasas en una, con la MISMA cuenta que su tarjeta (`Metric::rate`, sin recortar).
+            [__('admin.analytics.surveys.response_rate'), number_format(($asked > 0 ? (int) round(($t['answered_internal'] + $t['answered_external']) / $asked * 10000) : 0) / 100, 1, ',', '.').' %'],
             [__('admin.analytics.surveys.internal_rate'), number_format($t['internal_rate_bp'] / 100, 1, ',', '.').' %'],
             [__('admin.analytics.surveys.external_rate'), number_format($t['external_rate_bp'] / 100, 1, ',', '.').' %'],
             [__('admin.analytics.surveys.sent'), (string) $t['sent']],
@@ -266,8 +275,21 @@ final class CsvExport
         $g = $r['gate'];
         /** @var array{returning: int, first_time: int, repeat: int, gap_median_days: ?int} $ret */
         $ret = $r['returns'];
+        // T3a (`#759`): la pestaña «Clientes» enseña también los visitantes (de la ocupación) y los compradores (del dinero):
+        // su CSV los lleva, y el del dinero los sigue llevando (el censo).
+        /** @var array{seats: int} $visitors */
+        $visitors = OccupancyReport::for($window, $comparison)['visitors'];
+        /** @var array<string, int> $c */
+        $c = MoneyReport::for($window, $comparison)['customers'];
 
         return $this->summary([
+            [__('admin.analytics.occupancy.visitors'), (string) $visitors['seats']],
+            [__('admin.analytics.money.new'), (string) $c['new']],
+            [__('admin.analytics.money.returning'), (string) $c['returning']],
+            [__('admin.analytics.money.lifetime_avg'), Money::format($c['lifetime_avg'])],
+            [__('admin.analytics.money.buyers'), (string) $c['buyers']],
+            [__('admin.analytics.money.avg_per_customer'), Money::format($c['avg_per_customer'])],
+            [__('admin.analytics.money.returning_web'), (string) $c['returning_web']],
             [__('admin.analytics.customers.registrations'), (string) $reg['total']],
             [__('admin.analytics.customers.verified'), (string) $reg['verified']],
             [__('admin.analytics.customers.buyers'), (string) $reg['buyers']],

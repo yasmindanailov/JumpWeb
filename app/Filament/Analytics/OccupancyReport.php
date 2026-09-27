@@ -43,7 +43,8 @@ final class OccupancyReport
 
     public static function cacheKey(Window $window, Window $baseline): string
     {
-        return 'analytics:occupancy:v1:'.$window->timezone.':'.$window->utcFrom()->format('YmdHis').':'.$window->utcTo()->format('YmdHis').':'
+        // v2 (T3a, `#759`): el informe lleva «visitors»; una entrada de la v1 en caché no lo tendría.
+        return 'analytics:occupancy:v2:'.$window->timezone.':'.$window->utcFrom()->format('YmdHis').':'.$window->utcTo()->format('YmdHis').':'
             .$baseline->utcFrom()->format('YmdHis').':'.$baseline->utcTo()->format('YmdHis').':'.app()->getLocale();
     }
 
@@ -63,6 +64,7 @@ final class OccupancyReport
             'window' => ['from' => $window->dateFrom(), 'to' => $window->dateTo(), 'days' => $window->days()],
             'entries' => $this->entries($points, $lines, $window->timezone),
             'parties' => $this->parties($points),
+            'visitors' => $this->visitors($lines),
             'anticipation' => $this->anticipation($lines, $window->timezone),
             'missing' => $this->missing($window),
             'heatmap' => $this->heatmap($points),
@@ -87,6 +89,28 @@ final class OccupancyReport
     private function within(array $rows, Window $window): array
     {
         return array_values(array_filter($rows, static fn (array $row): bool => $window->contains(CarbonImmutable::parse($row['date'].' '.$row['start'], $window->timezone))));
+    }
+
+    /**
+     * **Los VISITANTES** (T3a, `#759`): las plazas de las visitas PAGADAS del periodo —entradas, grupos y fiestas, por el
+     * instante de la visita—, las reservas que las traen y la suma de los cuadrados de cada una: las plazas llegan en lotes
+     * (una fiesta de veinte) y su prueba es la de una suma ({@see Metric::units()}). No es la ocupación: aquí no hay aforo,
+     * y una plaza de dos horas cuenta una vez.
+     *
+     * @param  list<array<string, mixed>>  $lines
+     * @return array{seats: int, lines: int, seats_sq: int}
+     */
+    private function visitors(array $lines): array
+    {
+        $out = ['seats' => 0, 'lines' => 0, 'seats_sq' => 0];
+        foreach ($lines as $line) {
+            $seats = (int) $line['seats'];
+            $out['seats'] += $seats;
+            $out['lines']++;
+            $out['seats_sq'] += $seats * $seats;
+        }
+
+        return $out;
     }
 
     /**
@@ -363,7 +387,7 @@ final class OccupancyReport
     /**
      * Las cifras de las tarjetas para el periodo de comparación.
      *
-     * @return array{seats: int, capacity: int, full: int, revenue_cents: int, seat_minutes: int, lines: int, present: int, cap: int, missing: int}
+     * @return array{seats: int, capacity: int, full: int, revenue_cents: int, seat_minutes: int, lines: int, present: int, cap: int, visitors: int, visitor_lines: int, visitors_sq: int, missing: int}
      */
     private function totalsOnly(Window $window, OccupancyReader $reader): array
     {
@@ -371,11 +395,13 @@ final class OccupancyReport
         $lines = $this->within($reader->paidLines($window->dateFrom(), $window->dateTo()), $window);
         $entries = $this->entries($points, $lines, $window->timezone);
         $parties = $this->parties($points);
+        $visitors = $this->visitors($lines);
 
         return [
             'seats' => $entries['seats'], 'capacity' => $entries['capacity'], 'full' => $entries['full'],
             'revenue_cents' => $entries['revenue_cents'], 'seat_minutes' => $entries['seat_minutes'], 'lines' => $entries['lines'],
             'present' => $parties['present'], 'cap' => $parties['cap'],
+            'visitors' => $visitors['seats'], 'visitor_lines' => $visitors['lines'], 'visitors_sq' => $visitors['seats_sq'],
             'missing' => (int) DB::table('analytics_events')->where('name', 'availability_missing')
                 ->where('received_at', '>=', $window->utcFrom()->format('Y-m-d H:i:s'))
                 ->where('received_at', '<', $window->utcTo()->format('Y-m-d H:i:s'))

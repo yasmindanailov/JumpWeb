@@ -15,8 +15,10 @@ use App\Filament\Pages\Dashboard;
 use App\Filament\Widgets\Analytics\AnticipationChart;
 use App\Filament\Widgets\Analytics\CategoryChart;
 use App\Filament\Widgets\Analytics\CustomersBreakdownWidget;
+use App\Filament\Widgets\Analytics\CustomersMoreWidget;
+use App\Filament\Widgets\Analytics\CustomersOverviewWidget;
 use App\Filament\Widgets\Analytics\CustomersSeriesChart;
-use App\Filament\Widgets\Analytics\DevicesChart;
+use App\Filament\Widgets\Analytics\DataQualityWidget;
 use App\Filament\Widgets\Analytics\ExperimentsWidget;
 use App\Filament\Widgets\Analytics\FunnelChart;
 use App\Filament\Widgets\Analytics\FunnelWidget;
@@ -24,7 +26,7 @@ use App\Filament\Widgets\Analytics\GateHoursChart;
 use App\Filament\Widgets\Analytics\GateWidget;
 use App\Filament\Widgets\Analytics\MoneyBreakdownWidget;
 use App\Filament\Widgets\Analytics\MoneyChannelsChart;
-use App\Filament\Widgets\Analytics\MoneyCustomersWidget;
+use App\Filament\Widgets\Analytics\MoneyMoreWidget;
 use App\Filament\Widgets\Analytics\MoneyOverviewWidget;
 use App\Filament\Widgets\Analytics\MoneyProductsChart;
 use App\Filament\Widgets\Analytics\MoneySeriesChart;
@@ -35,19 +37,21 @@ use App\Filament\Widgets\Analytics\PagesWidget;
 use App\Filament\Widgets\Analytics\PartiesBreakdownWidget;
 use App\Filament\Widgets\Analytics\PartiesFunnelChart;
 use App\Filament\Widgets\Analytics\PartiesMoneyChart;
+use App\Filament\Widgets\Analytics\PartiesMoreWidget;
 use App\Filament\Widgets\Analytics\PartiesOverviewWidget;
 use App\Filament\Widgets\Analytics\PartiesTimingChart;
 use App\Filament\Widgets\Analytics\RegistrationMethodsChart;
 use App\Filament\Widgets\Analytics\RegistrationsWidget;
-use App\Filament\Widgets\Analytics\ReturnsWidget;
 use App\Filament\Widgets\Analytics\SegmentsWidget;
 use App\Filament\Widgets\Analytics\SourcesChart;
 use App\Filament\Widgets\Analytics\SourcesWidget;
+use App\Filament\Widgets\Analytics\SummaryWidget;
 use App\Filament\Widgets\Analytics\SurveysAnswersChart;
 use App\Filament\Widgets\Analytics\SurveysBreakdownWidget;
 use App\Filament\Widgets\Analytics\SurveysLowScoresWidget;
+use App\Filament\Widgets\Analytics\SurveysMoreWidget;
 use App\Filament\Widgets\Analytics\SurveysOverviewWidget;
-use App\Filament\Widgets\Analytics\TrafficHoursChart;
+use App\Filament\Widgets\Analytics\TrafficMoreWidget;
 use App\Filament\Widgets\Analytics\TrafficSeriesChart;
 use App\Filament\Widgets\Analytics\TrafficWidget;
 use App\Filament\Widgets\DashboardStatsWidget;
@@ -110,23 +114,21 @@ class AnalyticsPageTest extends TestCase
         $this->actingAs($this->withRole('puerta'))->get(AnalyticsPage::getUrl())->assertRedirect(route('admin.puerta.validar'));
     }
 
-    public function test_admin_opens_the_page_with_its_filters_and_its_four_tabs(): void
+    /** Siete pestañas desde la T3a (`#759`), con los rótulos tecleados a mano (`#734`), y «Resumen» abierta con su pregunta. */
+    public function test_admin_opens_the_page_with_its_filters_and_its_seven_tabs(): void
     {
         $this->actingAs($this->withRole('admin'))
             ->get(AnalyticsPage::getUrl())
             ->assertOk()
             ->assertSee('/admin/analitica', escape: false)
             ->assertSeeText('Analítica')
+            ->assertSeeText('¿Cómo vamos?')
             ->assertSee(__('admin.analytics.period.this_month'))
             ->assertSee(__('admin.analytics.period.last_90'))
             ->assertSee(__('admin.analytics.period.this_year'))
             ->assertSee(__('admin.analytics.period.custom'))
             ->assertSee(__('admin.analytics.compare.year_ago'))
-            ->assertSeeText(__('admin.analytics.tabs.money'))
-            ->assertSeeText(__('admin.analytics.tabs.customers'))
-            ->assertSeeText(__('admin.analytics.tabs.traffic'))
-            ->assertSeeText(__('admin.analytics.tabs.parties'))
-            ->assertSeeText(__('admin.analytics.tabs.surveys'))
+            ->assertSeeInOrder(['Resumen', 'Dinero', 'Ocupación', 'Clientes', 'Marketing', 'Fiestas', 'Satisfacción'])
             ->assertSee('role="tablist"', escape: false);
     }
 
@@ -156,53 +158,56 @@ class AnalyticsPageTest extends TestCase
     // ─── Los widgets ────────────────────────────────────────────────────────────────────────────
 
     /**
-     * Los widgets del cuadro, pestaña a pestaña y en su orden de lectura (tarjetas → gráficos → tablas): el dinero
-     * (T2a), los registros y la puerta (T2b) y la conversión (T2c), con los gráficos de categorías de la T2f.
+     * Los widgets del cuadro, pestaña a pestaña y en su orden de lectura (tarjetas de arriba → gráficos → lo plegado): la
+     * forma de la T3a (`#759`, §4.13), tecleada a mano.
      */
     private const WIDGETS = [
+        // «Resumen»: las cifras clave, las mismas de su pestaña.
+        SummaryWidget::class,
         MoneyOverviewWidget::class,
         MoneySeriesChart::class,
         MoneyProductsChart::class,
         MoneyChannelsChart::class,
-        MoneyCustomersWidget::class,
+        MoneyMoreWidget::class,
         MoneyBreakdownWidget::class,
         // La T2 de la analítica para decidir (`#758`): «Ocupación», tras «Dinero» (el orden de §4.1).
         OccupancyOverviewWidget::class,
         OccupancyHeatmapWidget::class,
         AnticipationChart::class,
         OccupancyBreakdownWidget::class,
-        RegistrationsWidget::class,
-        GateWidget::class,
-        // T0c (#756): los que vuelven al parque.
-        ReturnsWidget::class,
+        CustomersOverviewWidget::class,
         CustomersSeriesChart::class,
         GateHoursChart::class,
         RegistrationMethodsChart::class,
-        // T4b: los segmentos, antes de la tabla plegada que cierra «Clientes».
+        // T4b: los segmentos, un estado de hoy; lo plegado, después.
         SegmentsWidget::class,
+        CustomersMoreWidget::class,
+        RegistrationsWidget::class,
+        GateWidget::class,
         CustomersBreakdownWidget::class,
+        // «Marketing» (era «Conversión»): las horas y los dispositivos son tabla desde la T3a; «Calidad del dato», al final.
         TrafficWidget::class,
         FunnelChart::class,
         SourcesChart::class,
         TrafficSeriesChart::class,
-        TrafficHoursChart::class,
-        DevicesChart::class,
-        // T5b: los experimentos, antes de las tablas plegadas que cierran «Conversión».
+        TrafficMoreWidget::class,
         ExperimentsWidget::class,
         FunnelWidget::class,
         SourcesWidget::class,
         PagesWidget::class,
-        // T2 de la fiesta (`specs/analitica-fiesta.md` §4.3): la cuarta pestaña, con su tabla plegada al final.
+        DataQualityWidget::class,
+        // T2 de la fiesta (`specs/analitica-fiesta.md` §4.3).
         PartiesOverviewWidget::class,
         PartiesFunnelChart::class,
         PartiesMoneyChart::class,
         PartiesTimingChart::class,
+        PartiesMoreWidget::class,
         PartiesBreakdownWidget::class,
-        // T4 de las encuestas (`specs/encuestas.md` §4.4): la quinta pestaña. Desde `#754` (anónimas) «Por atender» se
-        // fue y en su sitio va «Notas bajas y si volvieron», sin persona.
+        // «Satisfacción» (era «Encuestas»; `#754`: «Notas bajas y si volvieron», sin persona).
         SurveysOverviewWidget::class,
         SurveysAnswersChart::class,
         SurveysLowScoresWidget::class,
+        SurveysMoreWidget::class,
         SurveysBreakdownWidget::class,
     ];
 
@@ -226,16 +231,15 @@ class AnalyticsPageTest extends TestCase
         $this->assertSame(self::WIDGETS, $analytics);
         $this->assertEmpty(array_intersect($analytics, (new Dashboard)->getWidgets()));
 
-        // T2f: cuatro pestañas (la de la fiesta desde la T2 de `analitica-fiesta.md`), cada widget en una sola, y las
-        // tablas plegadas al final de cada una.
-        $this->assertSame(['money', 'occupancy', 'customers', 'traffic', 'parties', 'surveys'], array_keys(AnalyticsPage::TABS));
+        // T3a (`#759`): siete pestañas en el orden de §4.1, cada widget en una sola, y lo plegado al final de cada una.
+        $this->assertSame(['summary', 'money', 'occupancy', 'customers', 'marketing', 'parties', 'satisfaction'], array_keys(AnalyticsPage::TABS));
         $this->assertSame(OccupancyBreakdownWidget::class, array_last(AnalyticsPage::TABS['occupancy']));
         $this->assertSame($analytics, array_unique($analytics), 'ningún widget en dos pestañas');
         $this->assertSame(MoneyBreakdownWidget::class, array_last(AnalyticsPage::TABS['money']));
         $this->assertSame(CustomersBreakdownWidget::class, array_last(AnalyticsPage::TABS['customers']));
-        $this->assertSame(PagesWidget::class, array_last(AnalyticsPage::TABS['traffic']));
+        $this->assertSame(DataQualityWidget::class, array_last(AnalyticsPage::TABS['marketing']), '«Calidad del dato», al final de Marketing');
         $this->assertSame(PartiesBreakdownWidget::class, array_last(AnalyticsPage::TABS['parties']));
-        $this->assertSame(SurveysBreakdownWidget::class, array_last(AnalyticsPage::TABS['surveys']));
+        $this->assertSame(SurveysBreakdownWidget::class, array_last(AnalyticsPage::TABS['satisfaction']));
     }
 
     /**
@@ -253,7 +257,7 @@ class AnalyticsPageTest extends TestCase
             return (new \ReflectionMethod($chart, 'getData'))->invoke($chart);
         };
 
-        foreach ([new MoneyProductsChart, new MoneyChannelsChart, new RegistrationMethodsChart, new FunnelChart, new SourcesChart, new DevicesChart, new PartiesFunnelChart, new PartiesMoneyChart, new PartiesTimingChart] as $chart) {
+        foreach ([new MoneyProductsChart, new MoneyChannelsChart, new RegistrationMethodsChart, new FunnelChart, new SourcesChart, new PartiesFunnelChart, new PartiesMoneyChart, new PartiesTimingChart] as $chart) {
             $this->assertSame([], $data($chart), $chart::class.' sin datos');
         }
         $this->assertSame(__('admin.analytics.money.empty'), (string) (new FunnelChart)->getEmptyStateHeading());
@@ -273,12 +277,11 @@ class AnalyticsPageTest extends TestCase
         $sources = $data(new SourcesChart);
         $this->assertSame(['google'], $sources['labels']);
         $this->assertSame([1], $sources['datasets'][0]['data']);
-
-        $devices = new DevicesChart;
-        $this->assertSame([__('admin.analytics.traffic.device.mobile')], $data($devices)['labels']);
-        $this->assertSame([CategoryChart::PALETTE[0]], $data($devices)['datasets'][0]['backgroundColor']);
-        $this->assertSame('doughnut', (new \ReflectionMethod($devices, 'getType'))->invoke($devices));
         $this->assertSame('bar', (new \ReflectionMethod($funnel = new FunnelChart, 'getType'))->invoke($funnel));
+
+        // T3a (`#759`): los dispositivos son TABLA (tres gráficos por pestaña): la sesión móvil tiene su fila.
+        $devices = collect((new PagesWidget)->tablesFor(ReportPeriod::Last30->window()))->firstWhere('heading', 'Dispositivo');
+        $this->assertSame([['Móvil', '1']], $devices['rows']);
     }
 
     public function test_the_gate_hours_chart_has_the_24_park_hours_and_the_customers_breakdown_its_tables(): void
@@ -312,6 +315,12 @@ class AnalyticsPageTest extends TestCase
         Livewire::test(PagesWidget::class, ['pageFilters' => ['period' => ReportPeriod::Last30->value]])
             ->assertOk()
             ->assertSee(__('admin.analytics.traffic.entries'))
+            ->assertDontSee(__('admin.analytics.traffic.rejected_reason.pii'));
+        // T3a (`#759`): los eventos rechazados viven en «Calidad del dato», bajo sus dos tarjetas, y nace plegada.
+        Livewire::test(DataQualityWidget::class, ['pageFilters' => ['period' => ReportPeriod::Last30->value]])
+            ->assertOk()
+            ->assertSee('Calidad del dato')
+            ->assertSee('Visitas identificadas')
             ->assertSee(__('admin.analytics.traffic.rejected_reason.pii'));
 
         // Una campaña llamada `=1+1` y otra con una etiqueta: texto, nunca HTML ni fórmula viva.
@@ -331,9 +340,12 @@ class AnalyticsPageTest extends TestCase
             ->assertSee('&lt;img src=x onerror=alert(1)&gt;', escape: false)
             ->assertDontSee('<img src=x onerror=alert(1)>', escape: false);
 
-        $chart = new TrafficHoursChart;
-        $chart->pageFilters = ['period' => ReportPeriod::Last30->value];
-        $this->assertCount(24, (new \ReflectionMethod(TrafficHoursChart::class, 'getData'))->invoke($chart)['labels']);
+        // T3a (`#759`): el gráfico de las horas es TABLA, con las 24 horas del parque (su dato no estaba en ninguna tabla).
+        $hours = collect((new PagesWidget)->tablesFor(ReportPeriod::Last30->window()))->firstWhere('heading', 'Visitas por hora del parque');
+        $this->assertCount(24, $hours['rows']);
+        $this->assertSame(['00 h', '0'], $hours['rows'][0]);
+        $this->assertSame('23 h', $hours['rows'][23][0]);
+        $this->assertSame(2, array_sum(array_map(static fn (array $r): int => (int) $r[1], $hours['rows'])), 'las dos sesiones de ayer, en su hora');
     }
 
     public function test_the_overview_renders_six_money_tiles_with_the_default_period(): void
@@ -346,8 +358,10 @@ class AnalyticsPageTest extends TestCase
         $stats = $method->invoke($widget);
 
         // Desde la T0b (#755) la tarjeta la pinta la vista de `Metric`: el cambio vive en su lectura, no en la descripción.
+        // Desde la T3a (#759) la primera es la principal, «Ingresos netos», a doble ancho.
         $this->assertCount(6, $stats);
-        $this->assertSame('Cobrado', (string) $stats[0]->getLabel());
+        $this->assertSame('Ingresos netos', (string) $stats[0]->getLabel());
+        $this->assertSame(['default' => 1, 'lg' => 2], $stats[0]->getColumnSpan());
         $this->assertSame('0,00 €', (string) $stats[0]->getValue());
         $this->assertSame('filament.widgets.analytics.metric', $stats[0]->getView());
         $this->assertSame('Sin datos en el periodo anterior', $stats[0]->getViewData()['reading']['line']);

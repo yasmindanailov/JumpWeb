@@ -181,17 +181,29 @@ class AnalyticsExportTest extends TestCase
 
     // ─── El botón ───────────────────────────────────────────────────────────────────────────────
 
+    /**
+     * El botón va al pie de cada pestaña con informe (T3a, `#759`) y descarga EL SUYO con el filtro de la página; «Resumen»
+     * no tiene (cada cifra está en el CSV de su pestaña).
+     */
     public function test_the_button_shows_only_with_the_export_permission(): void
     {
         $this->actingAs($this->withRole('admin'))
+            ->get(AnalyticsPage::getUrl([AnalyticsPage::TAB_QUERY_KEY => 'money']))
+            ->assertOk()
+            ->assertSee(__('admin.analytics.export.button'))
+            ->assertSee('csv?report=money&amp;period=this_month&amp;compare=previous', escape: false);
+        $this->actingAs($this->withRole('admin'))
+            ->get(AnalyticsPage::getUrl([AnalyticsPage::TAB_QUERY_KEY => 'marketing']))
+            ->assertSee('csv?report=funnel&amp;period=this_month&amp;compare=previous', escape: false);
+        $this->actingAs($this->withRole('admin'))
             ->get(AnalyticsPage::getUrl())
             ->assertOk()
-            ->assertSee(__('admin.analytics.export.button'));
+            ->assertDontSee(__('admin.analytics.export.button'));
 
         $viewer = $this->withRole('staff');
         $viewer->roles->first()->permissions()->attach(Permission::where('name', AnalyticsPage::PERMISSION)->value('id'));
         $this->actingAs($viewer->fresh())
-            ->get(AnalyticsPage::getUrl())
+            ->get(AnalyticsPage::getUrl([AnalyticsPage::TAB_QUERY_KEY => 'money']))
             ->assertOk()
             ->assertDontSee(__('admin.analytics.export.button'));
     }

@@ -13,8 +13,8 @@
   regímenes: el **agregado y exento** (sesiones anónimas: embudo, fuentes, campañas, al 100 %; guía AEPD 2024)
   y el **identificado** (navegación atada a la cuenta, PostHog), **solo con la categoría `analytics`**. Toda
   herramienta externa es intercambiable y solo ve lo que se le envía, con consentimiento.
-- **Empieza por** §1 → §4.1 → §4.2 → §4.3 → §7.1 (lo que corrigió la revisión); para el cuadro, §4.5. Las
-  tandas, en §4.8.
+- **Empieza por** §1 → §4.1 → §4.2 → §4.3 → §7.1 (lo que corrigió la revisión); para el cuadro, §4.5 y
+  `analitica-para-decidir.md` §4.13. Las tandas, en §4.8.
 - **Trampas** (las cinco las destapó la revisión, §7.1):
   - ⚠️⚠️ **Tres hechos de dinero NO son transiciones de `Order`**: rechazado vive en `Payment`, expirado es un
     UPDATE de query builder (`ExpireOrders`) y reembolsado son filas `PaymentRefund`. Y un observador diferido
@@ -495,7 +495,9 @@ compre entera.
 ▶ **27-09, `[DECIDIDO owner]` `#755`**: el cuadro se REORDENA en siete pestañas por pregunta, con una anatomía común de
 cifra (veredicto, referencia, «cómo se calcula»), el tiempo comparado por el tramo transcurrido y lo que falta para
 decidir (ocupación, cartera, gasto, correos por cliente, cohortes): `analitica-para-decidir.md`. Lo que sigue es la T2
-tal como se construyó; `ad_spend` sale de la T2e y va a la T5 de esa spec.
+tal como se construyó; `ad_spend` sale de la T2e y va a la T5 de esa spec. ▶ **28-09, la T3a de esa spec (`#759`, §4.13)**:
+la forma de hoy —siete pestañas, solo se pinta la abierta, las cifras en un catálogo por informe, «Conversión» es
+«Marketing» y «Encuestas» es «Satisfacción»—; los nombres de widget de abajo son los de entonces.
 
 ⚠️ **Revisión 23-09**: permiso propio, zona horaria del parque, saneado de lo que teclea el visitante,
 agregados diarios desde T2, «anterior a la medición». ▶ **24-09, owner**: el cuadro cuenta además **el

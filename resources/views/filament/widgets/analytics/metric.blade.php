@@ -5,8 +5,12 @@
     calcula?». Este último es un `<details>`: se abre con el dedo en la tablet (sin hover) y sin JavaScript, con una
     zona de toque de 44 px. Todo lo decide `Metric`; aquí solo se pinta.
 
+    En «Resumen» (T3a, `#759`) la tarjeta lleva además un enlace a su pestaña: un enlace aparte, al pie, y no la tarjeta
+    entera (dentro va el `<details>`, que no puede vivir dentro de un `<a>`).
+
     @var \App\Filament\Analytics\Metric $metric
     @var array{line: ?string, color: string, icon: ?\Filament\Support\Icons\Heroicon, notes: list<string>} $reading
+    @var array{url: string, label: string}|null $link
 --}}
 @php
     use Filament\Support\View\ComponentAttributeBag as FilamentComponentAttributeBag;
@@ -61,5 +65,11 @@
             </summary>
             <p class="pb-1">{{ $metric->how }}</p>
         </details>
+
+        @if (($link ?? null) !== null)
+            <a href="{{ $link['url'] }}" class="inline-flex min-h-11 items-center text-sm font-medium text-primary-600 hover:underline dark:text-primary-400" data-metric-link>
+                {{ $link['label'] }}
+            </a>
+        @endif
     </div>
 </div>

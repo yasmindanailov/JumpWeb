@@ -2,15 +2,16 @@
 
 namespace App\Filament\Widgets\Analytics;
 
-use App\Domain\Platform\Services\Analytics\RejectedEvents;
 use App\Filament\Analytics\FunnelReport;
 use App\Filament\Widgets\Analytics\Concerns\AnalyticsWidget;
 use Filament\Widgets\Concerns\InteractsWithPageFilters;
 use Filament\Widgets\Widget;
 
 /**
- * **Por dónde entran, por dónde se van, con qué, en qué idioma, qué eligen y cómo contactan** (`specs/analitica.md`
- * §4.5, T2c), y los eventos que la ingesta rechazó en la última semana. Todo agregado y escapado.
+ * **Por dónde entran, por dónde se van, cuándo, con qué, en qué idioma, qué eligen y cómo contactan** (`specs/analitica.md`
+ * §4.5, T2c). Todo agregado y escapado. Desde la T3a (`#759`) las horas y los dispositivos son TABLA y no gráfico (tres
+ * gráficos por pestaña, §2) —la de las horas es nueva: su dato no estaba en ninguna tabla ni en el CSV— y los eventos
+ * rechazados viven en «Calidad del dato» ({@see DataQualityWidget}).
  */
 class PagesWidget extends Widget
 {
@@ -34,12 +35,27 @@ class PagesWidget extends Widget
             'tables' => [
                 $this->routes(__('admin.analytics.traffic.entries'), $report['entries'], 'visits', __('admin.analytics.traffic.col.visits')),
                 $this->routes(__('admin.analytics.traffic.exits'), $report['exits'], 'count', __('admin.analytics.traffic.col.reached')),
+                $this->hours($report['hours']),
                 $this->keyed(__('admin.analytics.traffic.devices'), $report['devices'], 'admin.analytics.traffic.device.'),
                 $this->keyed(__('admin.analytics.traffic.locales'), $report['locales'], null),
                 $this->products($report['products']),
                 $this->contact($report['contact']),
-                $this->rejected($report['rejected']),
             ],
+        ];
+    }
+
+    /**
+     * Las visitas por hora del PARQUE (no la UTC de la sesión), las 24: era el gráfico de las horas.
+     *
+     * @param  list<int>  $hours
+     * @return array{heading: string, columns: list<string>, rows: list<list<string>>}
+     */
+    private function hours(array $hours): array
+    {
+        return [
+            'heading' => __('admin.analytics.traffic.hours_heading'),
+            'columns' => [__('admin.analytics.occupancy.col.hour'), __('admin.analytics.traffic.col.visits')],
+            'rows' => array_map(static fn (int $h): array => [sprintf('%02d h', $h), (string) ($hours[$h] ?? 0)], range(0, 23)),
         ];
     }
 
@@ -104,26 +120,6 @@ class PagesWidget extends Widget
 
         return [
             'heading' => __('admin.analytics.traffic.contact_heading'),
-            'columns' => [__('admin.analytics.money.col.what'), __('admin.analytics.money.col.count')],
-            'rows' => $rows,
-        ];
-    }
-
-    /**
-     * @param  array{days: int, total: int, by_reason: array<string, int>, by_day: array<string, int>, dropped_events: int}  $rejected
-     * @return array{heading: string, columns: list<string>, rows: list<list<string>>}
-     */
-    private function rejected(array $rejected): array
-    {
-        $rows = [];
-        foreach (RejectedEvents::REASONS as $reason) {
-            $rows[] = [__('admin.analytics.traffic.rejected_reason.'.$reason), (string) ($rejected['by_reason'][$reason] ?? 0)];
-        }
-        $rows[] = [__('admin.analytics.traffic.rejected_total'), (string) $rejected['total']];
-        $rows[] = [__('admin.analytics.traffic.dropped_events'), (string) $rejected['dropped_events']];
-
-        return [
-            'heading' => __('admin.analytics.traffic.rejected_heading', ['days' => $rejected['days']]),
             'columns' => [__('admin.analytics.money.col.what'), __('admin.analytics.money.col.count')],
             'rows' => $rows,
         ];
