@@ -163,8 +163,12 @@ class GateSurveyTest extends TestCase
         $this->assertSame(1, AnalyticsEvent::query()->where('name', 'visit_checked_in')->count());
     }
 
-    /** Buscar por correo abre la ficha pero NO acredita (puede ser una consulta): sin visita no hay oferta. */
-    public function test_a_typed_lookup_offers_nothing_until_the_visit_is_registered(): void
+    /**
+     * `#756` (el owner, 27-09): buscar por correo o móvil TAMBIÉN acredita la visita, como el escaneo, y la encuesta se
+     * ofrece en el mismo gesto. Hasta entonces (`#741`) no acreditaba («puede ser una consulta»): por eso la visita
+     * guarda su ORIGEN, `lookup`, y el cuadro puede separarla del escaneo.
+     */
+    public function test_a_typed_lookup_registers_the_visit_as_lookup_and_offers_the_survey(): void
     {
         [$holder] = $this->customer();
         $this->survey();
@@ -172,15 +176,17 @@ class GateSurveyTest extends TestCase
         $page = Livewire::actingAs($this->staff())->test(ValidarRegistro::class)->set('input', 'ana@example.com')->call('search');
         $page->assertSet('profile.holder_name', 'Ana Titular')
             ->assertSet('profile.via', 'lookup')
-            ->assertSet('profile.visit_registered_today', false)
-            ->assertSet('survey', null)
-            ->assertDontSee('data-gate-survey', false);
-        $this->assertSame(0, CustomerVisit::query()->count());
+            ->assertSet('profile.visit_registered_today', true)
+            ->assertSet('survey.state', 'offer');
 
+        $visit = CustomerVisit::query()->sole();
+        $this->assertSame($holder->id, (int) $visit->user_id);
+        $this->assertSame('lookup', $visit->source);
+
+        // Otra búsqueda el mismo día no duplica, y `registerVisit()` sobre una ficha acreditada tampoco.
         $page->call('registerVisit');
-
-        $page->assertSet('profile.visit_registered_today', true)->assertSet('survey.state', 'offer');
-        $this->assertSame($holder->id, (int) $page->get('profileUserId'));
+        Livewire::actingAs($this->staff())->test(ValidarRegistro::class)->set('input', 'ana@example.com')->call('search');
+        $this->assertSame(1, CustomerVisit::query()->count());
     }
 
     public function test_without_the_profile_permission_there_is_no_sheet_and_no_survey(): void

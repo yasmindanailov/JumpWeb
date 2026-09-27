@@ -12,7 +12,7 @@
 set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
-FILTER='ReportPeriodTest|MoneyReportTest|WindowLabelTest|AnalyticsPageTest|MetricTest|AnalyticsCensusTest|FunnelReportTest|PartiesReportTest'
+FILTER='ReportPeriodTest|MoneyReportTest|WindowLabelTest|AnalyticsPageTest|MetricTest|AnalyticsCensusTest|FunnelReportTest|PartiesReportTest|CustomersReportTest|GateSurveyTest|ValidarRegistroProfileTest|GateVisitsTest'
 RUN="docker compose exec -u sail -T laravel.test php artisan test --filter=${FILTER}"
 
 TMP="$(mktemp -d)"
@@ -29,6 +29,10 @@ FICHEROS=(
     lang/zh_CN/admin.php
     app/Filament/Analytics/FunnelReport.php
     app/Filament/Analytics/PartiesReport.php
+    app/Filament/Analytics/CustomersReport.php
+    app/Livewire/Admin/Puerta/ValidarRegistro.php
+    app/Domain/Identity/Services/GateVisits.php
+    app/Filament/Widgets/Analytics/GateWidget.php
 )
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$TMP/$(basename "$f")" "$f"; touch "$f"; done; }
 trap 'restaurar; rm -rf "$TMP"' EXIT
@@ -274,6 +278,62 @@ mutar "los widgets del cuadro vuelven a sondear cada 5 s" "$AW" \
 mutar "una cifra pierde su «¿Cómo se calcula?» en chino" "lang/zh_CN/admin.php" \
   "                'scale_mean' => '本时段回答中第一个评分题（1 到 5）的平均分。'," \
   ''
+
+# ── T0c · LOS QUE VUELVEN (§4.8.bis, #756) ────────────────────────────────────────────────────
+CR=app/Filament/Analytics/CustomersReport.php
+VR=app/Livewire/Admin/Puerta/ValidarRegistro.php
+
+mutar "la búsqueda por correo o móvil deja de acreditar la visita (vuelve #741)" "$VR" \
+  'app(GateVisits::class)->register($user, Auth::user(), DisplayTime::today(), CustomerVisit::SOURCE_LOOKUP);' \
+  '// sin acreditar'
+
+mutar "la visita deja de guardar su origen" "app/Domain/Identity/Services/GateVisits.php" \
+  "'source' => \$source," \
+  "'source' => null,"
+
+mutar "el escaneo se apunta como búsqueda" "$VR" \
+  'DisplayTime::today(), CustomerVisit::SOURCE_CARD);' \
+  'DisplayTime::today(), CustomerVisit::SOURCE_LOOKUP);'
+
+mutar "el periodo se filtra ANTES del LAG (la primera visita del periodo no ve la de antes)" "$CR" \
+  "->where('visited_on', '<=', \$window->dateTo());" \
+  "->whereBetween('visited_on', [\$window->dateFrom(), \$window->dateTo()]);"
+
+mutar "la mediana toma la de arriba de las dos centrales" "$CR" \
+  'return $n === 0 ? null : $sorted[intdiv($n - 1, 2)];' \
+  'return $n === 0 ? null : $sorted[intdiv($n, 2)];'
+
+mutar "«en una semana» deja fuera el día 7" "$CR" \
+  'static fn (int $d): bool => $d <= 7)' \
+  'static fn (int $d): bool => $d < 7)'
+
+mutar "«en tres meses» se come el día 91" "$CR" \
+  'static fn (int $d): bool => $d > 30 && $d <= 90)' \
+  'static fn (int $d): bool => $d > 30 && $d <= 91)'
+
+mutar "el periodo comparado olvida a los que vuelven" "$CR" \
+  "'first_time' => \$returns['first_time']," \
+  "'first_time' => 0,"
+
+mutar "«repiten por la web» cuenta también a los nuevos" "app/Filament/Analytics/MoneyReport.php" \
+  "->filter(static fn (object \$row): bool => (int) \$row->web_now === 1)->reject(\$isNew)->count()," \
+  "->filter(static fn (object \$row): bool => (int) \$row->web_now === 1)->count(),"
+
+mutar "«la web» deja fuera la app" "app/Filament/Analytics/MoneyReport.php" \
+  '[$from, $to, $from, $to, AttributionContext::CHANNEL_WEB, AttributionContext::CHANNEL_APP],' \
+  '[$from, $to, $from, $to, AttributionContext::CHANNEL_WEB, AttributionContext::CHANNEL_WEB],'
+
+mutar "«Visitas acreditadas» cambia el carné por la búsqueda" "app/Filament/Widgets/Analytics/GateWidget.php" \
+  "['card' => \$card, 'lookup' => \$lookup]" \
+  "['card' => \$lookup, 'lookup' => \$card]"
+
+mutar "las visitas de antes, sin origen, dejan de decirse" "app/Filament/Widgets/Analytics/GateWidget.php" \
+  'return $other > 0 ?' \
+  'return $other > 999 ?'
+
+mutar "los compradores se comparan consigo mismos y no con el periodo anterior" "app/Filament/Analytics/MoneyReport.php" \
+  "'previous' => \$this->buyerCounts(\$baseline, \$this->buyerRows(\$baseline))," \
+  "'previous' => \$this->buyerCounts(\$window, \$this->buyerRows(\$window)),"
 
 # ── El CONTROL: tocar un comentario no puede poner nada en rojo ─────────────────────────────────
 control "un comentario de Window" "$W" \

@@ -13,11 +13,21 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * empleado; se escribe una vez y no se edita.
  *
  * Único escritor: `Identity\Services\GateVisits`.
+ *
+ * ▶ `source` (`#756`): de dónde vino —el escaneo del carné o la búsqueda por correo o móvil—; `null` en las de antes (el
+ * botón retirado en `#234`). No se reconstruyen visitas desde el rastro de la puerta (`[DECIDIDO owner]` 27-09): la
+ * historia empieza cuando la puerta empezó a acreditar.
  */
-#[Fillable(['user_id', 'visited_on', 'registered_by'])]
+#[Fillable(['user_id', 'visited_on', 'registered_by', 'source'])]
 class CustomerVisit extends Model
 {
     public const UPDATED_AT = null;
+
+    /** El escaneo del carné QR (`#741`). */
+    public const SOURCE_CARD = 'card';
+
+    /** La búsqueda por correo o móvil en la puerta (`#756`). */
+    public const SOURCE_LOOKUP = 'lookup';
 
     /** @return array<string, string> */
     protected function casts(): array

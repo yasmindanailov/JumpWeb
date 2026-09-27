@@ -17,25 +17,31 @@ use Carbon\CarbonInterface;
  * veces mira el empleado. El único `(user_id, visited_on)` hace la idempotencia por construcción; se audita
  * SOLO cuando se escribe (`puerta.visit_registered`, target el cliente, `by` el operador de la petición).
  *
- * ▶ **Quién lo llama, desde `#741`** (`specs/encuestas.md` §4.2): el ESCANEO del carné en la puerta —la
- * persona está delante con su carné— y, si algún día vuelve el botón, «Registrar visita». Una búsqueda
- * TECLEADA no acredita: puede ser una consulta. Hasta `#741` era «un acto explícito, nunca un efecto de
- * abrir la ficha»; el botón que lo hacía explícito se retiró en `#234` y `customer_visits` dejó de crecer.
+ * ▶ **Quién lo llama** (`specs/encuestas.md` §4.2): el ESCANEO del carné en la puerta (`#741`) y, desde `#756`, la
+ * BÚSQUEDA por correo o móvil que encuentra al cliente (el owner, 27-09: «hay que medir como que vienen aquellos que
+ * también se busquen por correo o número móvil»). Cada una deja su `source`: la primera del día manda (la fila es única).
+ * Hasta `#741` era «un acto explícito, nunca un efecto de abrir la ficha»; el botón que lo hacía explícito se retiró en
+ * `#234` y `customer_visits` dejó de crecer.
  */
 final class GateVisits
 {
-    /** `true` si la visita se ha registrado AHORA; `false` si ya estaba registrada ese día. */
-    public function register(User $customer, ?User $by, CarbonInterface $day): bool
+    /**
+     * `true` si la visita se ha registrado AHORA; `false` si ya estaba registrada ese día.
+     *
+     * @param  string|null  $source  `CustomerVisit::SOURCE_*`; `null` = sin dato (quien no lo sabe, no lo inventa)
+     */
+    public function register(User $customer, ?User $by, CarbonInterface $day, ?string $source = null): bool
     {
         $written = CustomerVisit::query()->insertOrIgnore([
             'user_id' => $customer->getKey(),
             'visited_on' => $day->toDateString(),
             'registered_by' => $by?->getKey(),
+            'source' => $source,
             'created_at' => now(),
         ]);
 
         if ($written > 0) {
-            AuditLogger::log('puerta.visit_registered', $customer, ['visited_on' => $day->toDateString()]);
+            AuditLogger::log('puerta.visit_registered', $customer, ['visited_on' => $day->toDateString(), 'source' => $source]);
 
             // El libro de eventos (`specs/analitica.md` §4.2, T2b): la visita acreditada es un hecho del
             // servidor, y se anota UNA vez por (cliente, día), igual que la fila: la idempotencia de arriba

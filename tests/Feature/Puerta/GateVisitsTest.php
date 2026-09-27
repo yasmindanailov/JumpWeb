@@ -41,7 +41,7 @@ class GateVisitsTest extends TestCase
         $audit = AuditLog::where('action', 'puerta.visit_registered')->sole();
         $this->assertSame($operator->id, (int) $audit->user_id);
         $this->assertSame($customer->id, (int) $audit->target_id);
-        $this->assertSame(['visited_on' => '2026-09-05'], $audit->payload);
+        $this->assertSame(['visited_on' => '2026-09-05', 'source' => null], $audit->payload, 'sin origen dicho, `null`: no se inventa (`#756`)');
 
         // Otro día es otra visita.
         $this->assertTrue($visits->register($customer, $operator, $today->addDay()));

@@ -53,8 +53,30 @@ class GateWidget extends StatsOverviewWidget
             $this->metric(Metric::count('customers.found', __('admin.analytics.customers.found'), $g['found'], null, Polarity::Neutral, self::how('customers.found'), detail: __('admin.analytics.customers.not_found_line', ['count' => $g['not_found']]))),
             $this->metric(Metric::count('customers.customers', __('admin.analytics.customers.customers'), $g['customers'], null, Polarity::Neutral, self::how('customers.customers'))),
             $this->metric(Metric::count('customers.profile_views', __('admin.analytics.customers.profile_views'), $g['profile_views'], null, Polarity::Neutral, self::how('customers.profile_views'))),
-            $this->metric(Metric::count('customers.visits', __('admin.analytics.customers.visits'), $g['visits'], $p['visits'], Polarity::UpIsGood, self::how('customers.visits'))),
+            $this->metric(Metric::count('customers.visits', __('admin.analytics.customers.visits'), $g['visits'], $p['visits'], Polarity::UpIsGood, self::how('customers.visits'), detail: self::bySource($report['returns']['by_source']))),
             $this->metric(Metric::count('customers.visitors', __('admin.analytics.customers.visitors'), $g['visitors'], null, Polarity::UpIsGood, self::how('customers.visitors'))),
         ];
+    }
+
+    /**
+     * Cómo se acreditaron las visitas (`#756`): por carné o por búsqueda, y las de antes sin origen. Una búsqueda puede ser
+     * una consulta sin visita; por eso se enseñan separadas.
+     *
+     * @param  array<string, int>  $bySource
+     */
+    private static function bySource(array $bySource): ?string
+    {
+        $total = array_sum($bySource);
+
+        if ($total === 0) {
+            return null;
+        }
+
+        $card = $bySource['card'] ?? 0;
+        $lookup = $bySource['lookup'] ?? 0;
+        $line = __('admin.analytics.customers.visits_by_source', ['card' => $card, 'lookup' => $lookup]);
+        $other = $total - $card - $lookup;
+
+        return $other > 0 ? __('admin.analytics.customers.visits_by_source_other', ['line' => $line, 'other' => $other]) : $line;
     }
 }

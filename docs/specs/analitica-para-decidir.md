@@ -16,7 +16,7 @@
   inactivas de Filament CARGAN (12 peticiones al abrir, `#736`): con siete, carga por pestaña; (4) el texto para IA
   sale a un tercero: SOLO agregados, con guarda; (5) los enlaces FIRMADOS de los correos: la marca de envío va por el
   camino de `EmailUtm` (tras firmar, ignorada al validar); (6) aperturas solo con consentimiento (`[PENDIENTE: asesoría]`).
-- **Estado**: ✅ aprobada (27-09, `#755`); 🟦 T0. La T1 es la T5 de `encuestas.md` (`#754`). **Nada de lo medido se
+- **Estado**: ✅ aprobada (27-09, `#755`); T0a·T0b·T0c ✅ → **T1** = la T5 de `encuestas.md` (`#754`). **Nada de lo medido se
   pierde** (§4.1.bis, con guarda): se resume arriba y lo demás queda plegado o en su pestaña.
 - **Invariantes**: `RGPD-01`, `RGPD-04`, `RGPD-07`, `SEC-04`, `SUITE-01`. Dinero y aforo: solo lectura.
 
@@ -132,7 +132,7 @@ en una tarjeta, una tabla plegada o el CSV; quitar una rompe el test.
 
 ### 4.2 La anatomía de una cifra (un solo componente)
 
-> 🟦 **T0b, construida (27-09; en el árbol, falta el ojo del owner)** — y corrige lo de abajo en DOS cosas: (1) **el color
+> ✅ **T0b, construida (27-09; `6243e8d9`, vista y aprobada por el owner)** — y corrige lo de abajo en DOS cosas: (1) **el color
 > es de un cambio CLARO al 95 %, no de tener base**: recuentos, prueba binomial condicionada con la duración de cada
 > ventana; tasas, intervalos de Wilson que no se solapan; dinero, la SUMA DE LOS CUADRADOS de sus importes (una suma:
 > Poisson compuesto; una media: dos medias con su error), que los informes traen de las mismas consultas (`*_sq`). Sin
@@ -258,6 +258,41 @@ informes dejan de devolver arrays sueltos para las tarjetas (las tablas y el CSV
   ALTURAS el año pasado (cobros hasta hoy − 1 año para visitas en la ventana − 1 año); sin año anterior, frente a la
   media de las 4 semanas previas al mismo horizonte. Por semana que viene, barras «vendido ya» frente a «a estas alturas».
 
+### 4.8.bis Los que VUELVEN (T0c, `#756`) — ✅ vista y aprobada por el owner (27-09: «buen trabajo»)
+
+**El owner, 27-09**: «los clientes que vuelven no los veo, o sea que se registran y vienen otro día y se escanea de nuevo su
+QR, o cuántas veces vuelven cada X tiempo… hay que medir como que vienen aquellos que también se busquen por correo o
+número móvil»; y de las compras: «clientes recurrentes sí, eso me sirve». Adelantada a la T1 (antes era parte de la T3/T6).
+
+**Medido antes**: el cuadro solo tenía «Clientes con visita acreditada» (distintos del periodo, no quién repite) y
+«Recurrentes» (repiten compra por CUALQUIER canal, sin comparación). Una visita solo se acreditaba al escanear el carné
+(`#741`); la búsqueda por correo o móvil abría la ficha sin acreditar; y del 28-08 al 25-09 no se acreditó ninguna
+(`DEUDA.md`).
+
+**Construido**:
+- **La puerta** (`#756`): `ValidarRegistro::search()` acredita al cliente encontrado por correo o móvil como el escaneo
+  (idempotente por cliente y día, con el permiso de la ficha); `customer_visits.source` (migración aditiva) dice `card` o
+  `lookup`, y `null` en las del botón de antes. Consecuencia declarada: la encuesta interna se ofrece también
+  tras la búsqueda, y la EXTERNA del día siguiente llega a quien se buscó así (si fue una consulta, también).
+- **`CustomersReport::returns()`**: UNA consulta —cada visita del periodo con la ANTERIOR del cliente (`LAG` sobre toda su
+  historia en una tabla derivada; el periodo se filtra después)—: `returning` (ya había venido), `first_time`, `repeat` (dos
+  o más días en el periodo), la mediana de días entre vueltas y su reparto (una semana · un mes · tres meses · más), y las
+  visitas por origen. El periodo comparado trae `returning`, `first_time` y `repeat`.
+- **`ReturnsWidget`** («Vuelven al parque», en Clientes, tras «La puerta»): cuatro tarjetas con la anatomía de la T0b —ya
+  habían venido, vienen por primera vez, vinieron dos o más días, cada cuánto vuelven—. Cómo se acreditó cada visita
+  (carné · búsqueda · de antes, sin origen) va como DETALLE de «Visitas acreditadas»: como tarjeta partía el valor en dos
+  líneas (sonda del 27-09), y es un desglose de las visitas, no una cifra.
+- **«Repiten por la web»** (`MoneyReport::buyerCounts()`): compradores del periodo que ya habían comprado (por cualquier
+  canal) y ahora compran por la web o la app; los recuentos de compradores traen ya su periodo comparado. ⚠️ No se dice
+  si antes compraban en el mostrador: los pedidos de antes de medir no guardan canal.
+- Censo: 44 + 5 tarjetas; el CSV lleva las nuevas. Tests: `CustomersReportTest` +2 (vuelven, con fixture a mano; los
+  bordes 7/30/90), `MoneyReportTest` +1, `AnalyticsCensusTest` +1 (el desglose por origen, asimétrico), los de la puerta
+  cambiados A PROPÓSITO (`GateSurveyTest`, `ValidarRegistroProfileTest`, `GateVisitsTest`). Arnés: 55 mutaciones.
+- ⚠️ **Lo que el diseño NO cubre**: quien entra sin cuenta o como invitado de una fiesta no se acredita; si hubo días sin
+  acreditar (el hueco de agosto y septiembre), quien vino solo entonces cuenta como «primera vez». `[DECIDIDO owner]`
+  27-09: **no se reconstruye** la historia desde el rastro de la puerta (se ofreció con `puerta.profile_viewed`); cuenta
+  desde que la puerta empezó a acreditar.
+
 ### 4.9 Marketing con coste y los correos por cliente (T5)
 
 - **Gasto tecleado**: `ad_spend` (futuro): plataforma, campaña (el `utm_campaign` de sus anuncios), mes, céntimos, nota.
@@ -312,7 +347,7 @@ informes dejan de devolver arrays sueltos para las tarjetas (las tablas y el CSV
 
 | | Tanda | Entrega | Verificación |
 |---|---|---|---|
-| T0 | **El rigor del tiempo y la anatomía** — **T0a ✅** (el tiempo, `0dc5d317`, visto por el owner; §4.3) · **T0b 🟦** (la anatomía, en el árbol; §4.2) | §4.3 (tramo transcurrido, mismo día de la semana) · `Metric` (futuro) con polaridad, base mínima, puntos, Wilson · las 44 tarjetas de hoy pasadas por el componente, sin datos nuevos · el censo de §4.1.bis y su guarda | test del tramo (el 27 contra el 27), de la polaridad y de la base pequeña, con su mutación · sonda |
+| T0 | **El rigor del tiempo y la anatomía** — **T0a ✅** (el tiempo, `0dc5d317`; §4.3) · **T0b ✅** (la anatomía, `6243e8d9`; §4.2) · **T0c ✅** (los que vuelven, `#756`; §4.8.bis) — las tres vistas y aprobadas por el owner | §4.3 (tramo transcurrido, mismo día de la semana) · `Metric` (futuro) con polaridad, base mínima, puntos, Wilson · las 44 tarjetas de hoy pasadas por el componente, sin datos nuevos · el censo de §4.1.bis y su guarda | test del tramo (el 27 contra el 27), de la polaridad y de la base pequeña, con su mutación · sonda |
 | T1 | **Encuestas anónimas** | `encuestas.md` §4.7 (`#754`) | las de esa spec |
 | T2 | **Ocupación y anticipación** | la pestaña, §4.8 | tests de la regla con aforo y líneas vivas · `EXPLAIN` con un año sintético · sonda · ojo |
 | T3 | **Resumen y la reorganización** | §4.1, §4.4–§4.7, §4.11: las siete pestañas, los objetivos, las referencias (su historia; el sector con fuentes que se traen al owner), las frases, «lo que ha cambiado», el texto para IA y su guarda, la carga por pestaña, el glosario | guardas de IA y jerga · sonda (primera cifra en la primera pantalla, peticiones al abrir) · ojo |

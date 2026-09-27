@@ -207,6 +207,7 @@ final class CsvExport
             [__('admin.analytics.money.buyers'), (string) $c['buyers']],
             [__('admin.analytics.money.new'), (string) $c['new']],
             [__('admin.analytics.money.returning'), (string) $c['returning']],
+            [__('admin.analytics.money.returning_web'), (string) $c['returning_web']],
             [__('admin.analytics.money.avg_per_customer'), Money::format($c['avg_per_customer'])],
             [__('admin.analytics.money.lifetime_avg'), Money::format($c['lifetime_avg'])],
         ]);
@@ -220,6 +221,8 @@ final class CsvExport
         $reg = $r['registrations'];
         /** @var array<string, int> $g */
         $g = $r['gate'];
+        /** @var array{returning: int, first_time: int, repeat: int, gap_median_days: ?int} $ret */
+        $ret = $r['returns'];
 
         return $this->summary([
             [__('admin.analytics.customers.registrations'), (string) $reg['total']],
@@ -233,6 +236,11 @@ final class CsvExport
             [__('admin.analytics.customers.profile_views'), (string) $g['profile_views']],
             [__('admin.analytics.customers.visits'), (string) $g['visits']],
             [__('admin.analytics.customers.visitors'), (string) $g['visitors']],
+            // T0c (`#756`): los que vuelven al parque.
+            [__('admin.analytics.customers.returning_visitors'), (string) $ret['returning']],
+            [__('admin.analytics.customers.first_visit'), (string) $ret['first_time']],
+            [__('admin.analytics.customers.repeat'), (string) $ret['repeat']],
+            [__('admin.analytics.customers.return_gap'), $ret['gap_median_days'] === null ? '' : (string) $ret['gap_median_days']],
         ]);
     }
 

@@ -35,6 +35,7 @@ use App\Filament\Widgets\Analytics\PartiesOverviewWidget;
 use App\Filament\Widgets\Analytics\PartiesTimingChart;
 use App\Filament\Widgets\Analytics\RegistrationMethodsChart;
 use App\Filament\Widgets\Analytics\RegistrationsWidget;
+use App\Filament\Widgets\Analytics\ReturnsWidget;
 use App\Filament\Widgets\Analytics\SegmentsWidget;
 use App\Filament\Widgets\Analytics\SourcesChart;
 use App\Filament\Widgets\Analytics\SourcesWidget;
@@ -163,6 +164,8 @@ class AnalyticsPageTest extends TestCase
         MoneyBreakdownWidget::class,
         RegistrationsWidget::class,
         GateWidget::class,
+        // T0c (#756): los que vuelven al parque.
+        ReturnsWidget::class,
         CustomersSeriesChart::class,
         GateHoursChart::class,
         RegistrationMethodsChart::class,

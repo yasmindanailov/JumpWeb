@@ -2,8 +2,10 @@
 
 namespace Tests\Feature\Analytics;
 
+use App\Domain\Identity\Models\CustomerVisit;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Services\GateVisits;
 use App\Domain\Platform\Enums\Comparison;
 use App\Domain\Platform\Enums\ReportPeriod;
 use App\Domain\Platform\Models\Setting;
@@ -16,6 +18,7 @@ use App\Filament\Widgets\Analytics\MoneyCustomersWidget;
 use App\Filament\Widgets\Analytics\MoneyOverviewWidget;
 use App\Filament\Widgets\Analytics\PartiesOverviewWidget;
 use App\Filament\Widgets\Analytics\RegistrationsWidget;
+use App\Filament\Widgets\Analytics\ReturnsWidget;
 use App\Filament\Widgets\Analytics\SurveysOverviewWidget;
 use App\Filament\Widgets\Analytics\TrafficWidget;
 use Carbon\CarbonImmutable;
@@ -64,8 +67,15 @@ class AnalyticsCensusTest extends TestCase
     /** Los widgets de tarjetas del cuadro (T0b: todos pasan por `Metric`). */
     private const TILE_WIDGETS = [
         MoneyOverviewWidget::class, MoneyCustomersWidget::class, RegistrationsWidget::class, GateWidget::class,
+        ReturnsWidget::class,
         TrafficWidget::class, PartiesOverviewWidget::class, SurveysOverviewWidget::class,
     ];
+
+    /**
+     * Las 44 del 27-09 y las que se añaden después, cada una con su tanda (T0c, `#756`: cinco —ya habían venido, primera
+     * vez, dos o más días, cada cuánto vuelven y repiten por la web—; cómo se acreditó la visita va como detalle).
+     */
+    private const TILES = 44 + 5;
 
     protected function setUp(): void
     {
@@ -114,8 +124,26 @@ class AnalyticsCensusTest extends TestCase
             }
         }
 
-        $this->assertCount(44, $keys);
-        $this->assertCount(44, array_unique($keys), 'cada tarjeta, una clave');
+        $this->assertCount(self::TILES, $keys);
+        $this->assertCount(self::TILES, array_unique($keys), 'cada tarjeta, una clave');
+    }
+
+    /** «Visitas acreditadas» dice cómo se acreditó cada una (`#756`): por carné, por búsqueda, y las de antes sin origen. */
+    public function test_the_visits_tile_says_how_each_visit_was_registered(): void
+    {
+        $this->actingAs($this->admin());
+        $visits = app(GateVisits::class);
+        // Asimétrico a propósito (2 · 1 · 1): con cifras iguales, cambiar carné por búsqueda no se vería.
+        $visits->register(User::factory()->create(), null, Carbon::parse('2026-06-03'), CustomerVisit::SOURCE_CARD);
+        $visits->register(User::factory()->create(), null, Carbon::parse('2026-06-03'), CustomerVisit::SOURCE_CARD);
+        $visits->register(User::factory()->create(), null, Carbon::parse('2026-06-04'), CustomerVisit::SOURCE_LOOKUP);
+        $visits->register(User::factory()->create(), null, Carbon::parse('2026-06-05'));
+
+        /** @var list<Stat> $stats */
+        $stats = (new \ReflectionMethod(GateWidget::class, 'getStats'))->invoke(new GateWidget);
+        $tile = collect($stats)->first(fn (Stat $s): bool => $s->getViewData()['metric']->key === 'customers.visits');
+
+        $this->assertSame('2 por carné · 1 por búsqueda · 1 de antes, sin origen', $tile->getViewData()['metric']->detail);
     }
 
     /** La prueba de un recuento compara RITMOS: marzo (31 días) contra febrero (28) no pesan lo mismo. */

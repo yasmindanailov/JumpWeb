@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin\Puerta;
 
 use App\Domain\Identity\Exceptions\WaiverDocumentStaleException;
+use App\Domain\Identity\Models\CustomerVisit;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\CardToken;
 use App\Domain\Identity\Services\CustomerCards;
@@ -269,6 +270,15 @@ class ValidarRegistro extends Component
         }
 
         $this->result = $this->stateFor($user, $raw);
+
+        // `#756` · **LA BÚSQUEDA POR CORREO O MÓVIL TAMBIÉN ACREDITA** (el owner, 27-09: «hay que medir como que vienen
+        // aquellos que también se busquen por correo o número móvil»). Igual que el escaneo: idempotente por (cliente,
+        // día), con el permiso de la ficha y ANTES de componerla. Deja `source = lookup`: una tecleada puede ser una
+        // consulta sin visita (`#741`), y así el cuadro y JumpPoints pueden separarlas.
+        if ($this->canViewProfile()) {
+            app(GateVisits::class)->register($user, Auth::user(), DisplayTime::today(), CustomerVisit::SOURCE_LOOKUP);
+        }
+
         $this->openProfile($user, 'lookup');
     }
 
@@ -300,10 +310,10 @@ class ValidarRegistro extends Component
         // claro de «ha venido», y entre dos clientes no puede haber ninguno (`#234`). Idempotente por (cliente,
         // día) —`GateVisits`—, ANTES de componer la ficha para que nazca con la visita puesta y la encuesta
         // interna se ofrezca en el mismo gesto (`specs/encuestas.md` §4.2). Con el mismo permiso que la ficha:
-        // sin `puerta.profile` el escaneo sigue siendo solo el semáforo. La búsqueda TECLEADA no acredita
-        // («me he dejado el móvil» puede ser una consulta): ahí sigue `registerVisit()`.
+        // sin `puerta.profile` el escaneo sigue siendo solo el semáforo. Desde `#756` la búsqueda tecleada también
+        // acredita ({@see search()}), con su propio `source`.
         if ($this->canViewProfile()) {
-            app(GateVisits::class)->register($card->user, Auth::user(), DisplayTime::today());
+            app(GateVisits::class)->register($card->user, Auth::user(), DisplayTime::today(), CustomerVisit::SOURCE_CARD);
         }
 
         $this->openProfile($card->user, 'card');
@@ -400,9 +410,9 @@ class ValidarRegistro extends Component
      * Acreditar la VISITA (§8.3): idempotente por (cliente, día). Requiere la ficha viva y el permiso; la
      * interacción reinicia el reloj.
      *
-     * ▶ Desde `#741` el ESCANEO del carné acredita solo ({@see searchByCard}); este método queda para la ficha
-     * abierta por BÚSQUEDA TECLEADA (sin botón en la vista desde `#234`: hoy solo lo llaman los tests y, el día
-     * que vuelva un botón o llegue JumpPoints, ese botón).
+     * ▶ Desde `#741` el ESCANEO acredita solo ({@see searchByCard}) y desde `#756` también la BÚSQUEDA TECLEADA
+     * ({@see search()}); este método queda para el día que vuelva un botón o llegue JumpPoints (sin botón en la vista
+     * desde `#234`: hoy solo lo llaman los tests). Ante una ficha ya acreditada no escribe nada (idempotente).
      */
     public function registerVisit(): void
     {

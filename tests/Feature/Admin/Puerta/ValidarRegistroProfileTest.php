@@ -392,13 +392,15 @@ class ValidarRegistroProfileTest extends TestCase
 
         $page = Livewire::actingAs($staff)->test(ValidarRegistro::class)->set('input', $token)->call('search');
         $this->assertSame(1, CustomerVisit::count(), '`#741`: ESCANEAR el carné acredita la visita, sin ningún gesto más');
+        $this->assertSame('card', CustomerVisit::sole()->source);
 
-        // Y una búsqueda TECLEADA no: puede ser una consulta («me he dejado el móvil», un correo mal dado).
+        // `#756` (el owner, 27-09): la búsqueda TECLEADA también acredita, y deja su origen, `lookup` (puede ser una
+        // consulta: así se separa). Hasta `#756` no acreditaba.
         $otra = User::factory()->create(['email' => 'otra@example.com']);
         Livewire::actingAs($staff)->test(ValidarRegistro::class)->set('input', 'otra@example.com')->call('search')
             ->assertSet('profile.holder_name', $otra->name)
-            ->assertSet('profile.visit_registered_today', false);
-        $this->assertSame(0, CustomerVisit::where('user_id', $otra->id)->count(), 'abrir la ficha por búsqueda no acredita nada');
+            ->assertSet('profile.visit_registered_today', true);
+        $this->assertSame('lookup', CustomerVisit::where('user_id', $otra->id)->sole()->source);
 
         // #234: la TARJETA de visita se retiró de la pantalla hasta que exista JumpPoints, así que
         // ya no hay `data-gate-visit` que aseverar. La MAQUINARIA sigue entera y es lo que este caso
@@ -415,10 +417,10 @@ class ValidarRegistroProfileTest extends TestCase
         $page->call('registerVisit');
 
         $this->assertSame(1, CustomerVisit::where('user_id', $holder->id)->count(), 'una por día: volver a pulsar no suma');
-        $visit = CustomerVisit::sole();
+        $visit = CustomerVisit::where('user_id', $holder->id)->sole();
         $this->assertSame(self::TODAY, $visit->visited_on->toDateString());
         $this->assertSame($staff->id, (int) $visit->registered_by);
-        $this->assertSame(1, AuditLog::where('action', 'puerta.visit_registered')->count());
+        $this->assertSame(2, AuditLog::where('action', 'puerta.visit_registered')->count(), 'la del titular (escaneo) y la de «otra» (búsqueda, `#756`)');
 
         // Y al volver a escanear, la ficha ya lo dice.
         Livewire::actingAs($staff)->test(ValidarRegistro::class)->set('input', $token)->call('search')
@@ -428,7 +430,12 @@ class ValidarRegistroProfileTest extends TestCase
         // vuelve a ser solo el semáforo.
         Livewire::actingAs($this->staffWithoutProfile())->test(ValidarRegistro::class)->call('registerVisit')->assertForbidden();
         Livewire::actingAs($this->staffWithoutProfile())->test(ValidarRegistro::class)->set('input', $token)->call('search')->assertSet('profile', null);
-        $this->assertSame(1, CustomerVisit::count(), 'el escaneo sin `puerta.profile` no acredita');
+        $this->assertSame(1, CustomerVisit::where('user_id', $holder->id)->count(), 'el escaneo sin `puerta.profile` no acredita');
+
+        // Ni la búsqueda tecleada sin ese permiso (`#756`: el mismo permiso que el escaneo).
+        $tercera = User::factory()->create(['email' => 'tercera@example.com']);
+        Livewire::actingAs($this->staffWithoutProfile())->test(ValidarRegistro::class)->set('input', 'tercera@example.com')->call('search');
+        $this->assertSame(0, CustomerVisit::where('user_id', $tercera->id)->count(), 'la búsqueda sin `puerta.profile` no acredita');
     }
 
     // ─── El rediseño (§9.7 C·5): un solo semáforo y NUNCA el nombre de un menor ──

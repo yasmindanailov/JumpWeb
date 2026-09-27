@@ -6,6 +6,7 @@ use App\Domain\Booking\Models\Order;
 use App\Domain\Identity\Models\CustomerVisit;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Services\GateVisits;
 use App\Domain\Platform\Enums\ReportPeriod;
 use App\Domain\Platform\Models\AnalyticsEvent;
 use App\Domain\Platform\Models\AuditLog;
@@ -119,13 +120,71 @@ class CustomersReportTest extends TestCase
             'visits' => 3,
             'visitors' => 2,
         ], $r['gate']);
-        $this->assertSame(['registrations' => 1, 'lookups' => 1, 'found' => 1, 'visits' => 1], $r['previous']);
+        // T0c (#756): en mayo, una sola visita y sin ninguna antes → una «primera vez».
+        $this->assertSame(['registrations' => 1, 'lookups' => 1, 'found' => 1, 'visits' => 1, 'returning' => 0, 'first_time' => 1, 'repeat' => 0], $r['previous']);
 
         $series = collect($r['series'])->keyBy('key');
         $this->assertSame(['key' => '2026-06-05', 'registrations' => 1, 'verified' => 0, 'lookups' => 3, 'found' => 2, 'customers' => 1, 'visits' => 1], $series['2026-06-05']);
         $this->assertSame(2, $series['2026-06-08']['visits']);
         $this->assertSame(1, $series['2026-06-10']['lookups'], 'la búsqueda de las 22:30 UTC del 9 es del 10 en el parque');
         $this->assertSame(0, $series['2026-06-09']['lookups']);
+    }
+
+    /**
+     * **Los que VUELVEN** (T0c, `#756`; el owner, 27-09: «cuántas veces vuelven cada X tiempo»). Con el reloj en el 10 de
+     * junio a las 11:00 de Madrid, «Este mes» es del 1 al 10:
+     *  - A: 1-abr (sin origen, el botón de antes), 3-jun (carné), 8-jun (búsqueda) → vuelve y viene dos veces; 63 y 5 días.
+     *  - B: 5-jun (carné) → primera vez.
+     *  - C: 20-may (carné), 9-jun (búsqueda) → vuelve; 20 días.
+     *  - D: 1-dic-2025, 10-jun (carné) → vuelve; 191 días.
+     *  - F: 2-may → no es de junio (y en mayo cuenta en el tramo comparado).
+     * Huecos [5, 20, 63, 191]: mediana 20 (la de abajo de las dos centrales), uno en cada tramo.
+     */
+    public function test_the_ones_who_come_back_how_often_and_by_which_door(): void
+    {
+        $visit = fn (User $u, string $day, ?string $source) => app(GateVisits::class)->register($u, null, Carbon::parse($day), $source);
+        [$a, $b, $c, $d, $f] = [User::factory()->create(), User::factory()->create(), User::factory()->create(), User::factory()->create(), User::factory()->create()];
+
+        $visit($a, '2026-04-01', null);
+        $visit($a, '2026-06-03', CustomerVisit::SOURCE_CARD);
+        $visit($a, '2026-06-08', CustomerVisit::SOURCE_LOOKUP);
+        $visit($b, '2026-06-05', CustomerVisit::SOURCE_CARD);
+        $visit($c, '2026-05-20', CustomerVisit::SOURCE_CARD);
+        $visit($c, '2026-06-09', CustomerVisit::SOURCE_LOOKUP);
+        $visit($d, '2025-12-01', CustomerVisit::SOURCE_CARD);
+        $visit($d, '2026-06-10', CustomerVisit::SOURCE_CARD);
+        $visit($f, '2026-05-02', CustomerVisit::SOURCE_CARD);
+
+        $r = (new CustomersReport)->compute(ReportPeriod::ThisMonth->window());
+
+        $this->assertSame([
+            'visitors' => 4,
+            'returning' => 3,
+            'first_time' => 1,
+            'repeat' => 1,
+            'gap_median_days' => 20,
+            'gap_buckets' => ['week' => 1, 'month' => 1, 'quarter' => 1, 'longer' => 1],
+            'by_source' => ['card' => 3, 'lookup' => 2],
+        ], $r['returns']);
+        $this->assertSame(1, $r['previous']['first_time'], 'F en el 1–10 de mayo');
+        $this->assertSame(0, $r['previous']['returning']);
+    }
+
+    /** Los bordes de «cada cuánto vuelven»: 7 días es «en una semana», 30 «en un mes», 90 «en tres meses»; uno más, el siguiente. */
+    public function test_the_return_gaps_fall_in_their_brackets_at_the_edges(): void
+    {
+        $visit = fn (User $u, string $day) => app(GateVisits::class)->register($u, null, Carbon::parse($day), CustomerVisit::SOURCE_CARD);
+
+        foreach ([7, 8, 30, 31, 90, 91] as $gap) {
+            $u = User::factory()->create();
+            $visit($u, Carbon::parse('2026-06-05')->subDays($gap)->toDateString());
+            $visit($u, '2026-06-05');
+        }
+
+        $r = (new CustomersReport)->compute(ReportPeriod::ThisMonth->window())['returns'];
+
+        $this->assertSame(['week' => 1, 'month' => 2, 'quarter' => 2, 'longer' => 1], $r['gap_buckets']);
+        $this->assertSame(30, $r['gap_median_days'], 'huecos [7, 8, 30, 31, 90, 91]: la de abajo de las dos centrales');
     }
 
     public function test_the_hours_are_the_park_hours(): void

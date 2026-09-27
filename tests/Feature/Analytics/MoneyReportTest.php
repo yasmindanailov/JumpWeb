@@ -250,9 +250,36 @@ class MoneyReportTest extends TestCase
             'buyers' => 3,
             'new' => 2,          // Bea y Carl: su primer pedido cobrado es de junio
             'returning' => 1,    // Ana ya compró en mayo
+            'returning_web' => 1,         // … y en junio vuelve a comprar por la web (O1) (T0c, #756)
             'avg_per_customer' => 4500,   // 13.500 entre tres
             'lifetime_avg' => 5400,       // Ana 9.700 + Bea 5.000 + Carl 1.500, entre tres
+            'previous' => ['buyers' => 0, 'new' => 0, 'returning' => 0, 'returning_web' => 0],   // del 1 al 10 de mayo, nadie
         ], $r['customers']);
+    }
+
+    /**
+     * «Repiten por la web» (T0c, `#756`; el owner: «cuántos clientes compran de nuevo por la web»): los que ya habían
+     * comprado (por cualquier canal) y en el periodo compran por la web o la app. Ni el que repite en el mostrador, ni el
+     * nuevo que compra por la web, ni el pedido sin canal (anterior a la medición).
+     */
+    public function test_returning_buyers_by_the_web_or_the_app(): void
+    {
+        [$web, $counter, $fresh, $unknown, $app] = [User::factory()->create(), User::factory()->create(), User::factory()->create(), User::factory()->create(), User::factory()->create()];
+        foreach ([[$web, 'panel'], [$counter, 'panel'], [$unknown, 'web'], [$app, null]] as [$who, $channel]) {
+            $this->payment($this->order($who, 1000, '2026-04-10 10:00:00', $channel), 1000, '2026-04-10 10:00:00');
+        }
+        $this->payment($this->order($web, 2000, '2026-06-04 10:00:00', 'web'), 2000, '2026-06-04 10:00:00');
+        $this->payment($this->order($app, 2000, '2026-06-04 12:00:00', 'app'), 2000, '2026-06-04 12:00:00');   // la app también es «la web»
+        $this->payment($this->order($counter, 2000, '2026-06-04 11:00:00', 'panel'), 2000, '2026-06-04 11:00:00');
+        $this->payment($this->order($fresh, 2000, '2026-06-05 10:00:00', 'app'), 2000, '2026-06-05 10:00:00');
+        $this->payment($this->order($unknown, 2000, '2026-06-06 10:00:00', null), 2000, '2026-06-06 10:00:00');
+
+        $c = (new MoneyReport)->compute(ReportPeriod::ThisMonth->window())['customers'];
+
+        $this->assertSame(5, $c['buyers']);
+        $this->assertSame(1, $c['new'], 'el nuevo de la app es nuevo');
+        $this->assertSame(4, $c['returning']);
+        $this->assertSame(2, $c['returning_web'], 'los que ya habían comprado y ahora compran por la web o por la app');
     }
 
     public function test_lost_orders_declined_payments_and_incidents(): void
@@ -276,7 +303,7 @@ class MoneyReportTest extends TestCase
         $this->assertSame(0, $r['totals']['collected']);
         $this->assertSame(0, $r['totals']['avg_order']);
         $this->assertSame([], $r['by_product']);
-        $this->assertSame(['buyers' => 0, 'new' => 0, 'returning' => 0, 'avg_per_customer' => 0, 'lifetime_avg' => 0], $r['customers']);
+        $this->assertSame(['buyers' => 0, 'new' => 0, 'returning' => 0, 'returning_web' => 0, 'avg_per_customer' => 0, 'lifetime_avg' => 0, 'previous' => ['buyers' => 0, 'new' => 0, 'returning' => 0, 'returning_web' => 0]], $r['customers']);
         $this->assertCount(1, $r['series']);
     }
 

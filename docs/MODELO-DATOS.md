@@ -556,10 +556,11 @@ de la FK no cubre ese caso: la supresión no borra la fila de `users`.
 ### `customer_visits` (CustomerVisit) — Fase 6 · subsistema A (la visita acreditada)
 El HECHO OBSERVABLE que JumpPoints no tenía (`identidad-qr-puerta.md` §8.3; `lealtad-jumppoints.md`
 §8.1): `user_id` FK **CASCADE** · `visited_on` (date) · `registered_by` FK users nullOnDelete ·
-`created_at` (sin `updated_at`) · **único `(user_id, visited_on)`**. Lo escribe la pantalla de puerta con
-un acto EXPLÍCITO del empleado («registrar visita»), nunca al abrir la ficha; el único hace la
-idempotencia por construcción y `Identity\Services\GateVisits::register()` audita
-`puerta.visit_registered` SOLO cuando escribe.
+`source` string(16) nullable (`card` · `lookup`; `null` en las de antes, `#756`) ·
+`created_at` (sin `updated_at`) · **único `(user_id, visited_on)`**. Lo escribe la pantalla de puerta al
+ESCANEAR el carné (`#741`) o al encontrar al cliente por correo o móvil (`#756`); la primera del día manda,
+el único hace la idempotencia por construcción y `Identity\Services\GateVisits::register()` audita
+`puerta.visit_registered` (con su `source`) SOLO cuando escribe.
 
 ### `audit_logs` (AuditLog — inmutable, append-only)
 `user_id` nullable `nullOnDelete` (null = sistema) · `action` index (`dominio.verbo`) ·

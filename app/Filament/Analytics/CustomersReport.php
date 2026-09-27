@@ -48,6 +48,18 @@ final class CustomersReport
 
     public const METHOD_UNKNOWN = 'unknown';
 
+    /** Una visita sin origen dicho (las del botón retirado en `#234`). */
+    public const VISIT_SOURCE_UNKNOWN = 'unknown';
+
+    /** Los tramos de «cada cuánto vuelven» (días desde la visita anterior): una semana, un mes, tres meses, más. */
+    public const GAP_WEEK = 'week';
+
+    public const GAP_MONTH = 'month';
+
+    public const GAP_QUARTER = 'quarter';
+
+    public const GAP_LONGER = 'longer';
+
     /** @var list<string> */
     private const BUYER_STATUSES = [Order::STATUS_PAID, Order::STATUS_REFUNDED];
 
@@ -61,7 +73,7 @@ final class CustomersReport
 
     public static function cacheKey(Window $window, Window $baseline): string
     {
-        return 'analytics:customers:v2:'.$window->timezone.':'.$window->dateFrom().':'.$window->dateTo().':'.$baseline->dateFrom().':'.$baseline->dateTo();
+        return 'analytics:customers:v3:'.$window->timezone.':'.$window->dateFrom().':'.$window->dateTo().':'.$baseline->dateFrom().':'.$baseline->dateTo();
     }
 
     /** @param  Window|null  $baseline  con qué se compara; sin ella, el periodo anterior */
@@ -107,6 +119,8 @@ final class CustomersReport
                 'visits' => array_sum($visits),
                 'visitors' => $this->visitors($window),
             ],
+            // T0c (`#756`): los que VUELVEN, cada cuánto, y de dónde vino cada visita.
+            'returns' => $this->returns($window),
             'previous' => $this->totalsOnly($baseline),
             'series' => $this->series($window, $registrations, $lookups, $customersByKey, $visits),
             'hours' => $hours,
@@ -261,6 +275,81 @@ final class CustomersReport
             ->count('user_id');
     }
 
+    /**
+     * **Los que VUELVEN al parque** (T0c de `analitica-para-decidir.md` §4.8.bis, `#756`; el owner, 27-09: «los clientes
+     * que vuelven no los veo… cuántas veces vuelven cada X tiempo»). UNA consulta: cada visita acreditada del periodo con
+     * la ANTERIOR de ese cliente (`LAG` sobre toda su historia, en una tabla derivada, y el periodo se filtra DESPUÉS: si
+     * se filtrara antes, la primera visita del periodo no vería la de antes). De ahí salen:
+     *  - `returning`: clientes cuya primera visita del periodo tenía una anterior (ya habían venido);
+     *  - `first_time`: los que no; `repeat`: los que vinieron dos o más días dentro del periodo;
+     *  - `gaps`: los días entre cada visita del periodo y la anterior del mismo cliente —su mediana es «cada cuánto
+     *    vuelven»— y su reparto (una semana, un mes, tres meses, más);
+     *  - `by_source`: las visitas por su origen (`card`, `lookup`; `null` las del botón retirado, `#234`).
+     *
+     * ⚠️ La historia de visitas tiene un HUECO (`DEUDA.md`): del 28-08 al 25-09 no se acreditó ninguna; quien vino solo en
+     * ese hueco cuenta como «primera vez». Lo dice su «¿Cómo se calcula?».
+     *
+     * @return array{visitors: int, returning: int, first_time: int, repeat: int, gap_median_days: ?int, gap_buckets: array<string, int>, by_source: array<string, int>}
+     */
+    private function returns(Window $window): array
+    {
+        $ranked = DB::table('customer_visits')
+            ->select(['user_id', 'visited_on', 'source'])
+            ->selectRaw('LAG(visited_on) OVER (PARTITION BY user_id ORDER BY visited_on) AS previous_on')
+            ->where('visited_on', '<=', $window->dateTo());
+
+        $rows = DB::query()->fromSub($ranked, 'v')
+            ->whereBetween('visited_on', [$window->dateFrom(), $window->dateTo()])
+            ->orderBy('user_id')
+            ->orderBy('visited_on')
+            ->get();
+
+        $byUser = [];
+        $gaps = [];
+        $bySource = [];
+        foreach ($rows as $row) {
+            $user = (int) $row->user_id;
+            $byUser[$user] ??= ['visits' => 0, 'came_before' => $row->previous_on !== null];
+            $byUser[$user]['visits']++;
+            $source = (string) ($row->source ?? self::VISIT_SOURCE_UNKNOWN);
+            $bySource[$source] = ($bySource[$source] ?? 0) + 1;
+
+            if ($row->previous_on !== null) {
+                $gaps[] = (int) CarbonImmutable::parse((string) $row->previous_on)->diffInDays(CarbonImmutable::parse((string) $row->visited_on));
+            }
+        }
+
+        $returning = count(array_filter($byUser, static fn (array $u): bool => $u['came_before']));
+        sort($gaps);
+
+        return [
+            'visitors' => count($byUser),
+            'returning' => $returning,
+            'first_time' => count($byUser) - $returning,
+            'repeat' => count(array_filter($byUser, static fn (array $u): bool => $u['visits'] >= 2)),
+            'gap_median_days' => self::median($gaps),
+            'gap_buckets' => [
+                self::GAP_WEEK => count(array_filter($gaps, static fn (int $d): bool => $d <= 7)),
+                self::GAP_MONTH => count(array_filter($gaps, static fn (int $d): bool => $d > 7 && $d <= 30)),
+                self::GAP_QUARTER => count(array_filter($gaps, static fn (int $d): bool => $d > 30 && $d <= 90)),
+                self::GAP_LONGER => count(array_filter($gaps, static fn (int $d): bool => $d > 90)),
+            ],
+            'by_source' => $bySource,
+        ];
+    }
+
+    /**
+     * La mediana de una lista ORDENADA de días (la de abajo de las dos centrales si son pares: un día entero); `null` sin datos.
+     *
+     * @param  list<int>  $sorted
+     */
+    private static function median(array $sorted): ?int
+    {
+        $n = count($sorted);
+
+        return $n === 0 ? null : $sorted[intdiv($n - 1, 2)];
+    }
+
     // ─── El periodo anterior y la serie ─────────────────────────────────────────────────────────
 
     /** @return array<string, int> */
@@ -278,12 +367,16 @@ final class CustomersReport
         $visits = DB::table('customer_visits')
             ->whereBetween('visited_on', [$window->dateFrom(), $window->dateTo()])
             ->count();
+        $returns = $this->returns($window);
 
         return [
             'registrations' => $registrations,
             'lookups' => (int) ($lookups->n ?? 0),
             'found' => (int) ($lookups->found ?? 0),
             'visits' => $visits,
+            'returning' => $returns['returning'],
+            'first_time' => $returns['first_time'],
+            'repeat' => $returns['repeat'],
         ];
     }
 

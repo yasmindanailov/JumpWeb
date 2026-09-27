@@ -8,6 +8,7 @@ use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Models\PaymentRefund;
 use App\Domain\Platform\Enums\Comparison;
 use App\Domain\Platform\Models\AuditLog;
+use App\Domain\Platform\Services\Analytics\AttributionContext;
 use App\Domain\Platform\Services\Analytics\Reports\SqlTime;
 use App\Domain\Platform\Services\Analytics\Reports\Window;
 use App\Domain\Platform\Services\DisplayTime;
@@ -110,7 +111,7 @@ final class MoneyReport
             'by_channel' => $this->byChannel($window),
             'by_method' => $this->byMethod($window),
             'by_product' => $this->byProduct($window),
-            'customers' => $this->customers($window),
+            'customers' => $this->customers($window, $baseline),
             'lost' => $this->lost($window),
         ];
     }
@@ -386,22 +387,12 @@ final class MoneyReport
      *
      * @return array{buyers: int, new: int, returning: int, avg_per_customer: int, lifetime_avg: int}
      */
-    private function customers(Window $window): array
+    private function customers(Window $window, Window $baseline): array
     {
-        $from = $window->utcFrom()->format('Y-m-d H:i:s');
-        $to = $window->utcTo()->format('Y-m-d H:i:s');
-
-        $buyers = $this->collectedOrders($window)->whereNotNull('user_id')->select('user_id');
-
-        $rows = DB::table('orders')
-            ->selectRaw('user_id, MIN(paid_at) AS first_paid, SUM(CASE WHEN paid_at >= ? AND paid_at < ? THEN total ELSE 0 END) AS period_sold', [$from, $to])
-            ->whereIn('status', self::COLLECTED_STATUSES)
-            ->whereIn('user_id', $buyers)
-            ->groupBy('user_id')
-            ->get();
-
-        $count = $rows->count();
-        $new = $rows->filter(fn (object $row): bool => $window->contains(CarbonImmutable::parse((string) $row->first_paid, 'UTC')))->count();
+        $rows = $this->buyerRows($window);
+        $counts = $this->buyerCounts($window, $rows);
+        $count = $counts['buyers'];
+        $new = $counts['new'];
         $periodSold = (int) $rows->sum(static fn (object $row): int => (int) $row->period_sold);
 
         $lifetime = DB::table('orders')
@@ -414,9 +405,59 @@ final class MoneyReport
         return [
             'buyers' => $count,
             'new' => $new,
-            'returning' => $count - $new,
+            'returning' => $counts['returning'],
+            'returning_web' => $counts['returning_web'],
             'avg_per_customer' => $count > 0 ? intdiv($periodSold, $count) : 0,
             'lifetime_avg' => $lifetimeCustomers > 0 ? intdiv((int) $lifetime->sold, $lifetimeCustomers) : 0,
+            // T0c (`#756`): los mismos recuentos del periodo comparado, para que «Recurrentes» y «Repiten por la web» se
+            // comparen (una consulta más; el presupuesto sigue por debajo de 20).
+            'previous' => $this->buyerCounts($baseline, $this->buyerRows($baseline)),
+        ];
+    }
+
+    /**
+     * Una fila por comprador del periodo: su PRIMER pedido cobrado de siempre, lo vendido en el periodo, y dos marcas de
+     * canal —si compró por la web o la app EN el periodo—. Una sola consulta.
+     *
+     * @return Collection<int, stdClass>
+     */
+    private function buyerRows(Window $window): Collection
+    {
+        $from = $window->utcFrom()->format('Y-m-d H:i:s');
+        $to = $window->utcTo()->format('Y-m-d H:i:s');
+
+        return DB::table('orders')
+            ->selectRaw(
+                'user_id, MIN(paid_at) AS first_paid, '
+                .'SUM(CASE WHEN paid_at >= ? AND paid_at < ? THEN total ELSE 0 END) AS period_sold, '
+                .'MAX(CASE WHEN paid_at >= ? AND paid_at < ? AND attribution_channel IN (?, ?) THEN 1 ELSE 0 END) AS web_now',
+                [$from, $to, $from, $to, AttributionContext::CHANNEL_WEB, AttributionContext::CHANNEL_APP],
+            )
+            ->whereIn('status', self::COLLECTED_STATUSES)
+            ->whereIn('user_id', $this->collectedOrders($window)->whereNotNull('user_id')->select('user_id'))
+            ->groupBy('user_id')
+            ->get();
+    }
+
+    /**
+     * Compradores, nuevos (su primer pedido cae en el periodo), recurrentes (ya habían comprado antes, por cualquier canal)
+     * y **recurrentes que compran por la web o la app** en el periodo (T0c, `#756`; el owner: «cuántos clientes compran de
+     * nuevo por la web»). ⚠️ No se dice si antes compraban en el mostrador: los pedidos de antes de la medición no tienen
+     * canal, y no se inventa.
+     *
+     * @param  Collection<int, stdClass>  $rows
+     * @return array{buyers: int, new: int, returning: int, returning_web: int}
+     */
+    private function buyerCounts(Window $window, Collection $rows): array
+    {
+        $isNew = fn (object $row): bool => $window->contains(CarbonImmutable::parse((string) $row->first_paid, 'UTC'));
+        $new = $rows->filter($isNew)->count();
+
+        return [
+            'buyers' => $rows->count(),
+            'new' => $new,
+            'returning' => $rows->count() - $new,
+            'returning_web' => $rows->filter(static fn (object $row): bool => (int) $row->web_now === 1)->reject($isNew)->count(),
         ];
     }
 

@@ -34,17 +34,20 @@ class MoneyCustomersWidget extends StatsOverviewWidget
     protected function getStats(): array
     {
         $report = $this->money();
-        /** @var array<string, int> $c */
+        /** @var array{buyers: int, new: int, returning: int, returning_web: int, avg_per_customer: int, lifetime_avg: int, previous: array{buyers: int, new: int, returning: int, returning_web: int}} $c */
         $c = $report['customers'];
         /** @var array<string, int> $t */
         $t = $report['totals'];
 
-        // T0b (`#755`): el informe no trae estas cifras del periodo comparado, así que van sin cambio (como antes) y con su
-        // «¿Cómo se calcula?»; la polaridad se declara igual, para cuando lo traiga.
+        // T0c (`#756`): los recuentos de compradores traen ya su periodo comparado; «Repiten por la web» es nueva (el owner:
+        // «cuántos clientes compran de nuevo por la web»). Los valores medios siguen sin él, como antes.
+        $p = $c['previous'];
+
         return [
-            $this->metric(Metric::count('money.buyers', __('admin.analytics.money.buyers'), $c['buyers'], null, Polarity::UpIsGood, self::how('money.buyers'))),
-            $this->metric(Metric::count('money.new', __('admin.analytics.money.new'), $c['new'], null, Polarity::UpIsGood, self::how('money.new'))),
-            $this->metric(Metric::count('money.returning', __('admin.analytics.money.returning'), $c['returning'], null, Polarity::UpIsGood, self::how('money.returning'))),
+            $this->metric(Metric::count('money.buyers', __('admin.analytics.money.buyers'), $c['buyers'], $p['buyers'], Polarity::UpIsGood, self::how('money.buyers'))),
+            $this->metric(Metric::count('money.new', __('admin.analytics.money.new'), $c['new'], $p['new'], Polarity::UpIsGood, self::how('money.new'))),
+            $this->metric(Metric::count('money.returning', __('admin.analytics.money.returning'), $c['returning'], $p['returning'], Polarity::UpIsGood, self::how('money.returning'))),
+            $this->metric(Metric::count('money.returning_web', __('admin.analytics.money.returning_web'), $c['returning_web'], $p['returning_web'], Polarity::UpIsGood, self::how('money.returning_web'))),
             $this->metric(Metric::money('money.avg_per_customer', __('admin.analytics.money.avg_per_customer'), $c['avg_per_customer'], null, $c['buyers'], null, Polarity::UpIsGood, self::how('money.avg_per_customer'))),
             $this->metric(Metric::money('money.lifetime_avg', __('admin.analytics.money.lifetime_avg'), $c['lifetime_avg'], null, $c['buyers'], null, Polarity::UpIsGood, self::how('money.lifetime_avg'))),
             $this->metric(Metric::money('money.adjustments', __('admin.analytics.money.adjustments'), $t['adjustments'], null, 0, null, Polarity::Neutral, self::how('money.adjustments'))),

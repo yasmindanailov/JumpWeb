@@ -190,7 +190,8 @@ await abrirPestana('Dinero', 'El desglose');
 await llega('Cobrado');   // «Cobrado online» hasta la T0b (#755): sumaba también el mostrador
 await llega('Vendido por producto');
 informe.pestanas.dinero = { stats: await leerStats(), canvas: await canvasVisibles() };
-ok('dinero: doce tarjetas', informe.pestanas.dinero.stats.length === 12, String(informe.pestanas.dinero.stats.length));
+// T0c (#756): +1, «Repiten por la web».
+ok('dinero: trece tarjetas', informe.pestanas.dinero.stats.length === 13, String(informe.pestanas.dinero.stats.length));
 ok('dinero: tres gráficos', informe.pestanas.dinero.canvas === 3, String(informe.pestanas.dinero.canvas));
 ok('dinero: el desglose nace plegado', await page.locator('section.fi-collapsed').count() >= 1);
 await captura('escritorio-dinero');
@@ -202,7 +203,8 @@ await abrirPestana('Clientes', 'Registros y puerta, al detalle');
 await llega('Registros de clientes');
 await llega('La puerta');
 informe.pestanas.clientes = { stats: await leerStats(), canvas: await canvasVisibles() };
-ok('clientes: once tarjetas', informe.pestanas.clientes.stats.length === 11, String(informe.pestanas.clientes.stats.length));
+// T0c (#756): +4, «Vuelven al parque».
+ok('clientes: quince tarjetas', informe.pestanas.clientes.stats.length === 15, String(informe.pestanas.clientes.stats.length));
 ok('clientes: tres gráficos', informe.pestanas.clientes.canvas === 3, String(informe.pestanas.clientes.canvas));
 await captura('escritorio-clientes');
 await bajaHasta('Búsquedas en la puerta por hora del parque');

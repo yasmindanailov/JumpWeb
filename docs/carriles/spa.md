@@ -2,7 +2,7 @@
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb` a secas; la instancia al lado, en
 > `~/proyectos/instancias/playjump`, clon de `github.com/yasmindanailov/instancia-playjump`, montada el 25-09) ·
-> Banda: **730–759** (700–729 agotada el 20-09) · Último usado: **`#755`** · La banda está dada de alta en la tabla de
+> Banda: **730–759** (700–729 agotada el 20-09) · Último usado: **`#756`** · La banda está dada de alta en la tabla de
 > `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: **`analitica-para-decidir.md`
 > §0** (la tarea en curso, `#755`) · `encuestas.md` §0 y §4.7 (`#754`) · `analitica.md` §0 y §4.5 · `isla-y-landing-nueva.md`
 > §4.11 · `celebracion-e-invitacion.md` §0 · `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 ·
@@ -12,15 +12,11 @@
 > una feature baja a su spec (las trampas por tanda de la analítica T1→T5 viven en `analitica.md` §4.9,
 > mudadas verbatim el 24-09; las de la ficha de Google en su §9.1; las de la invitación en su §10.20).
 
-## Foto (2026-09-27, tarde)
+## Foto (2026-09-27, noche)
 
-- ▶▶▶ **27-09: LA ANALÍTICA PARA DECIDIR es la tarea** (`[DECIDIDO owner]`): revisé el cuadro con la sonda
-  (`revision-2709`: 44 tarjetas, 15 gráficos, 33 tablas, ninguna con veredicto; «Este mes» compara 27 días con 30) y
-  el owner decidió **`#754`** (encuestas ANÓNIMAS: participación y respuesta sin clave común, día + empleado + franja,
-  sello cifrado de 90 días para «volvió quien puntuó mal», aviso fijo) y **`#755`** (siete pestañas por pregunta, la
-  anatomía de una cifra, referencias con fuente, texto para IA solo con agregados, ocupación, cartera, gasto tecleado,
-  correos por cliente, cohortes). Specs: `analitica-para-decidir.md` (⬜ borrador: el owner revisa §4.1, §4.2 y §4.11)
-  y `encuestas.md` §4.7. **Nada en código.**
+- ▶▶▶ **27-09: LA ANALÍTICA PARA DECIDIR es la tarea** (`#755`, spec ✅). **T0a, T0b y T0c en `main` y aprobadas por el
+  owner** (el tramo transcurrido; la anatomía de una cifra en las 44 tarjetas; los que vuelven al parque, `#756`). Sigue
+  la **T1 = encuestas anónimas** (`#754`), que el owner quiere empezar en la próxima sesión.
 - ▶ **LA FIESTA DEL SISTEMA NUEVO ES MÍA (`#765`, `[DECIDIDO owner]` 25-09)**: la lista de invitados, la invitación con
   su recibo y la autorización, vestidas con «Saltia» para la v2.0.0, en paralelo con la web pública. El traspaso,
   `isla-y-landing-nueva.md` §4.11; el censo HAY/FALTA, el método y las tandas, `specs/fiesta-sistema-nuevo.md` (§1.4,
@@ -95,13 +91,15 @@
 ## Por dónde retomar, en orden
 
 1. ❗❗❗ **LA ANALÍTICA PARA DECIDIR (`#755`) — `specs/analitica-para-decidir.md` ✅ APROBADA (27-09; antes que correos y
-   puerta; nada de lo medido se pierde, §4.1.bis).** ✅ **T0a** (`0dc5d317`: el tramo transcurrido) · 🟦 **T0b EN EL
-   ÁRBOL, falta el ojo del owner** (§4.2: `Metric`, las 44 tarjetas, el color solo si el cambio es claro —el dinero con sus
-   sumas de cuadrados—, «Cobrado» sin «online», sin sondeo; arnés 42/42; sonda `t0b` 35/35) → **T1** = la T5 de `encuestas.md` (§4.7,
-   `#754`) → T2 ocupación → T3 Resumen y la reorganización → T4 cartera → T5 marketing y correos → T6 cohortes → T7 pérdidas
-   → T8 satisfacción (§4.12). Cada tanda, al ojo del owner en vivo ANTES del commit (tablet 1080, móvil 390, escritorio).
-   Línea base de la sonda: `storage/app/audit/analitica-panel-revision-2709*`. `[PENDIENTE: asesoría]`: los 90 días del
-   sello, los clics por persona y el píxel (y el (5) del correo de servicio de las encuestas).
+   puerta; nada de lo medido se pierde, §4.1.bis).** ✅ **T0a** (`0dc5d317`) · ✅ **T0b** (`6243e8d9`) · ✅ **T0c** (§4.8.bis,
+   `#756`; no se reconstruyen visitas desde el rastro, `[DECIDIDO owner]`) → ▶ **T1 = la T5 de `encuestas.md` §4.7**
+   (`#754`; el diseño entero, sus guardas y sus residuos, allí; `surveys:resolve-returns` sube `deploy.sh`: avisar a
+   plataforma; el export cambia de forma: el contrato, tras el último de plataforma —`main` va por 1.44.0—) → T2
+   ocupación → T3 Resumen → T4 cartera → T5 marketing y correos → T6 cohortes → T7 pérdidas → T8 satisfacción (§4.12).
+   Cada tanda, al ojo del owner en vivo ANTES del commit. **Trampas de hoy**: una tarjeta nueva va por `metric()` con su
+   `Polarity`, su «¿Cómo se calcula?» (es y zh_CN), `TILES` del censo y el recuento de la sonda; el arnés
+   `mutar-analitica-decidir.sh` (55, ~16 min) en segundo plano, sin medir nada mientras; tras rebasar, los dos bundles y
+   re-medir la suite (spec §4.2, §4.3). `[PENDIENTE: asesoría]`: los 90 días del sello, los clics por persona y el píxel (y el (5) de las encuestas).
 2. ✅ **LA FIESTA DEL SISTEMA NUEVO (`#765`, `fiesta-sistema-nuevo.md` ✅ `#743`): T1a→T4 y F1→F9 en `main` y aprobadas
    (`#747`→`#753`, §4.6–§4.15) — en código NO TIENE NADA PENDIENTE**; espera la v2.0.0 (las páginas vivas se visten con
    las hojas de la instancia, `#769`). **Si llega un zip nuevo**: `git pull` en la instancia, `git diff <antes>..HEAD` de
@@ -114,15 +112,14 @@
    correos rehechos del diseño (`paginas/correos*.card.html` y `paginas/correos/` de la instancia) y la puerta (su diseño,
    en el PRÓXIMO zip). El orden frente a la analítica lo dice el owner. **T2·9** (las reseñas en la API): caras y fotos,
    decididas en `#771`, y `/reviews` (1.31.0) ya las sirve: al retomarla, ver si queda algo (la selección) o se retira.
-4. **Lo que el ✅ del owner a la invitación NO cubre**, declarado sin medir: el `.ics` en un TELÉFONO de verdad
-   (§4.6; si Android no lo abre, Google Calendar como segunda opción) · el justificante EN PRODUCCIÓN con el
-   Turnstile REAL · `§7.2·R12`. ⚠️ `og:image` sale del logotipo del tema (1200×441): en tarjeta 2:1, bandas.
-5. **Los diez puntos de `§10.4.7·B`** de la invitación, ninguno urgente con los interruptores apagados.
-   ▶ Empieza por la RAÍZ: `matches()` y `takeSlotFor()` no son la misma regla.
-6. De la Fase 4: el **ojo del owner en un teléfono de verdad** (ninguna de las 25 pantallas) · el cuaderno de
-   entrega del cajón · el botón del sistema (16/800 con borde).
-7. Del plugin quedan **dos frases** por ver: `/dod` y `/ligero` (`/sonda` va bien; ⚠️ al recrear el contenedor
-   se pierde `socat`: la receta de la skill lo repone; Chromium sobrevive en `node_modules`).
+4. ❗ **`audit-clock.sh` (27-09): 10/10 pases en rojo por tests AJENOS a la analítica** (los de la analítica, verdes en
+   todos): `GoogleReviewImagesTest::test_el_barrido_no_toca_lo_recien_escrito` (10/10: el barrido mira el `mtime` REAL
+   del fichero contra el reloj CONGELADO de Laravel; en producción coinciden: es del test), `InvitationSharingTest` (6
+   casos, 404 en 4 fechas frontera; sin analizar) y `ScheduleFactsTest` (el conocido, Trampas ⏰). Arreglar antes de la v2.0.0.
+5. **La invitación, lo que su ✅ NO cubre** (el `.ics` en un teléfono, el Turnstile real, `§7.2·R12`, `og:image` con bandas) y
+   **los diez puntos de `§10.4.7·B`** (empieza por la RAÍZ: `matches()` y `takeSlotFor()` no son la misma regla).
+6. De la Fase 4: el **ojo del owner en un teléfono de verdad** · el cuaderno de entrega del cajón · el botón del sistema.
+   Del plugin, `/dod` y `/ligero` por ver (⚠️ al recrear el contenedor se pierde `socat`; la skill `/sonda` lo repone).
 
 ## Ficheros de este carril
 
@@ -307,8 +304,8 @@ el repo de la instancia (lo nuevo), nunca a `main`.
   código `MIN_REVIEWS = 1` (`#494`): no la toco yo.
 
 ### Atendido
-- **Plataforma 27-09 noche** (`#789`: correos y puerta, míos; el zip (4) sin correos ni fiesta; `Medir` aplazado; T2·9):
-  atendidos, en «Por dónde retomar» 3.
+- **Plataforma 27-09 noche** (`#789`: correos y puerta, míos; el zip (4) sin correos ni fiesta; `Medir` aplazado; T2·9;
+  `#822`: `sugerirCorreo` mudada a `ui/correo.js`, `logica.js` la reexporta, 19/19 y 12/12): atendidos.
 - **Plataforma 27-09** (ESLint sobre la fiesta y mis `/* global */` fuera, la isla sin valores de PlayJump, `#788` con la
   1.43.0, la Z4 y el zip tercero `#780`): atendidos; el zip tercero, portado a la fiesta en F9 (§4.15).
 - **Plataforma 25-09** (`#765` el traspaso de la fiesta, la calculadora T4d junto a mi motor, las peticiones (1) y (2),

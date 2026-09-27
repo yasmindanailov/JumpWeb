@@ -129,6 +129,9 @@ WhatsApp; recompensas (JumpPoints) por contestar.
 
 ### 4.2 La interna: en la puerta, con la persona delante
 
+- ⚠️ **Corregido por `#756` (27-09)**: la visita se acredita también al BUSCAR al cliente por correo o móvil (no solo al
+  escanear), así que la interna se ofrece también ahí, y la externa del día siguiente llega a quien se buscó así; la visita
+  guarda su `source` (`card` · `lookup`). Lo que sigue es la T2 tal como se construyó.
 - **Cuándo**: solo tras `registerVisit()` con éxito (o si la visita de hoy ya estaba acreditada), si hay una encuesta
   interna viva y este cliente no tiene fila para ella (ni contestada ni declinada). Una encuesta contestada no
   vuelve a ofrecerse; una declinada tampoco. La baja de los correos (`surveys_opt_out`) NO calla la puerta: el
