@@ -339,7 +339,8 @@ function goBack() {
             :locale="locale"
             :need="buyerNeed"
             :due-errors="buyerDue.errors"
-            :terms-url="urls.terms ?? ''" />
+            :terms-url="urls.terms ?? ''"
+            :cancellation-terms="cartStore.payTerms" />
 
         <RedirectStep
             v-else-if="store.step === STEPS.REDIRECTING"

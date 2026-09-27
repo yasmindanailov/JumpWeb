@@ -217,8 +217,11 @@ return [
     'pay_notice' => 'Pago seguro con tarjeta a través de tu banco. Tu tarjeta no se guarda en esta web.',
     // La POLÍTICA de cambios y cancelación, dicha antes de pagar (`#586`, `[DECIDIDO owner]`): es lo que
     // el cliente quiere saber justo antes de comprometerse, y el documento entero sigue en «Leer las
-    // condiciones». ⚠️ Es la política de ESTA instalación: la escribe su diccionario, no el producto.
-    'pay_policy' => 'Entradas: cambio o devolución hasta 24 h antes. Cumpleaños y excursiones: te devolvemos la señal si cancelas con 5 días.',
+    // condiciones». ⚠️ Desde `#788` (owner, 27-09) la dicen los DATOS de cada producto de la cesta —su plazo
+    // (`:written`, «hasta 3 días antes») y, si el producto lo promete, la señal—, como Mi cuenta: la frase fija
+    // de antes decía «5 días» y los packs tienen 3. Una frase por producto; sin plazo publicado, ninguna.
+    'pay_terms' => ':product: puedes cambiar o cancelar :written.',
+    'pay_terms_deposit' => ':product: puedes cambiar o cancelar :written, y te devolvemos la señal.',
     'pay_confirm' => 'Pagar con tarjeta',
     'pay_redirecting' => 'Te llevamos a la pasarela de pago segura. Si no se redirige en unos segundos, pulsa el botón.',
     'pay_redirecting_title' => 'Redirigiendo al pago',

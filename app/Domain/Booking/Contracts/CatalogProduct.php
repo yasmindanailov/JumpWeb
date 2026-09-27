@@ -135,6 +135,11 @@ final readonly class CatalogProduct
         public ?int $cancellationCutoffHours = null,
         /** El plazo ya redactado («hasta 24 h antes», «hasta 3 días antes»), o `null` ({@see CancellationCutoffRule}). */
         public ?string $cancellationWritten = null,
+        /**
+         * Si al cancelar en plazo se DEVUELVE la señal (`#788`): el interruptor del producto (`#775`) y que el producto
+         * cobre señal, la misma regla que la línea de un pedido. «Pagar» del cajón lo dice junto al plazo.
+         */
+        public bool $cancellationDepositRefundable = false,
     ) {}
 
     public function isPack(): bool

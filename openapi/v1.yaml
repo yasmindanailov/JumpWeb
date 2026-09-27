@@ -8249,7 +8249,7 @@ components:
             El plazo de CAMBIO Y CANCELACIÓN del producto (1.26.0, `#699`). **Ausente entero** si el
             producto no lo publica. ⚠️ Lo INFORMA, no lo aplica: los cambios y las cancelaciones los hace
             el personal del parque.
-          required: [cutoff_hours, written]
+          required: [cutoff_hours, written, deposit_refundable]
           additionalProperties: false
           properties:
             cutoff_hours:
@@ -8261,6 +8261,13 @@ components:
               description: |
                 El plazo ya redactado en el idioma activo: en horas por debajo de dos días («hasta 24 h
                 antes») y en días justos a partir de ahí («hasta 3 días antes»).
+            deposit_refundable:
+              type: boolean
+              description: |
+                Si al cancelar en plazo se DEVUELVE la señal (1.42.0, `DECISIONES #788`): el interruptor del
+                producto que la instalación enciende solo si sus condiciones lo prometen, y solo si el producto
+                cobra señal —la misma regla que `OrderItem.cancellation.deposit_refundable`—. Con él, «Pagar»
+                dice el plazo de cada producto y, si toca, «y te devolvemos la señal».
 
     CatalogProductDetail:
       type: object
@@ -8350,8 +8357,8 @@ components:
           description: 'Igual que en `CatalogProduct`: minutos, y no es `period_label`.'
         cancellation:
           type: object
-          description: 'Igual que en `CatalogProduct` (1.26.0): el plazo de cambio y cancelación, ausente si no se publica.'
-          required: [cutoff_hours, written]
+          description: 'Igual que en `CatalogProduct` (1.26.0; la señal, 1.42.0): el plazo de cambio y cancelación, ausente si no se publica.'
+          required: [cutoff_hours, written, deposit_refundable]
           additionalProperties: false
           properties:
             cutoff_hours:
@@ -8359,6 +8366,8 @@ components:
               minimum: 0
             written:
               type: string
+            deposit_refundable:
+              type: boolean
         min_quantity:
           type: integer
           description: |

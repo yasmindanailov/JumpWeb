@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { addLine, allPendingAnswered, cartRows, decideOwnership, eventAnswers, hasPendingEventFields, load, pendingAnswers, pendingEventFields, reconcile, removeLine, sanitizeLine, save, toApiItems, toCheckoutItems, todayIso } from './cart.js';
+import { addLine, allPendingAnswered, cancellationTerms, cartRows, decideOwnership, eventAnswers, hasPendingEventFields, load, pendingAnswers, pendingEventFields, reconcile, removeLine, sanitizeLine, save, toApiItems, toCheckoutItems, todayIso } from './cart.js';
 
 /**
  * Fase 4 · paso 4.3·2 — la red de la cesta (criterio CE-6).
@@ -723,5 +723,43 @@ describe('reconciliar con el presupuesto', () => {
 
         assert.equal(changed, false);
         assert.equal(lines[0], cart[0], 'la misma referencia: nada que reescribir');
+    });
+});
+
+describe('lo que «Pagar» dice del plazo de cada producto (#788)', () => {
+    const catalogo = [
+        { id: 1, name: 'Kids · 1 hora', cancellation: { cutoff_hours: 24, written: 'hasta 24 h antes', deposit_refundable: false } },
+        { id: 5, name: 'Pack Cumpleaños', cancellation: { cutoff_hours: 72, written: 'hasta 3 días antes', deposit_refundable: true } },
+        { id: 9, name: 'Excursión' },
+    ];
+    const fila = (product_id, product_name) => ({ index: 0, product_id, product_name, quantity: 1 });
+
+    test('una frase por PRODUCTO, en el orden de la cesta y sin repetir, con la señal solo si se promete', () => {
+        const filas = [fila(5, 'Pack Cumpleaños'), fila(1, 'Kids · 1 hora'), fila(5, 'Pack Cumpleaños')];
+
+        assert.deepEqual(cancellationTerms(filas, catalogo), [
+            { product: 'Pack Cumpleaños', written: 'hasta 3 días antes', depositRefundable: true },
+            { product: 'Kids · 1 hora', written: 'hasta 24 h antes', depositRefundable: false },
+        ]);
+    });
+
+    test('un producto sin plazo publicado —o que el listado ya no trae— no dice nada', () => {
+        assert.deepEqual(cancellationTerms([fila(9, 'Excursión'), fila(42, 'Retirado')], catalogo), []);
+    });
+
+    test('el nombre es el de la fila de la cesta; sin él, el del catálogo', () => {
+        assert.equal(cancellationTerms([fila(1, 'Kids 1 h')], catalogo)[0].product, 'Kids 1 h');
+        assert.equal(cancellationTerms([{ product_id: 1 }], catalogo)[0].product, 'Kids · 1 hora');
+    });
+
+    test('sin catálogo o sin filas, nada (el listado no llegó: se calla, no se inventa)', () => {
+        assert.deepEqual(cancellationTerms([fila(1, 'Kids')], undefined), []);
+        assert.deepEqual(cancellationTerms(undefined, catalogo), []);
+    });
+
+    test('la señal se promete SOLO con `true`: un dato que falta no es un sí', () => {
+        const sinDato = [{ id: 1, cancellation: { cutoff_hours: 24, written: 'hasta 24 h antes' } }];
+
+        assert.equal(cancellationTerms([fila(1, 'Kids')], sinDato)[0].depositRefundable, false);
     });
 });

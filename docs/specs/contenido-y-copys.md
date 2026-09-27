@@ -308,7 +308,7 @@ Terreno del carril del SPA: se avisa en `ESTADO.md` antes de tocar nada. **Hecho
 |---|---|---|
 | Catálogo · tarjeta 2 | «Grupos · La zona entera para vosotros» | «Cumpleaños y excursiones · Para celebrar o venir con el cole» |
 | Paso de la hora | «Entra cuando quieras dentro de tu franja.» | «Tu tiempo empieza a la hora que elijas: llega unos minutos antes.» |
-| Pagar · política | (nada) | «Entradas: cambio o devolución hasta 24 h antes. Cumpleaños y excursiones: te devolvemos la señal si cancelas con 5 días.» |
+| Pagar · política | (nada) | «Entradas: cambio o devolución hasta 24 h antes. Cumpleaños y excursiones: te devolvemos la señal si cancelas con 5 días.» → **`[DECIDIDO owner]` 2026-09-27 (`#788`)**: el plazo y la señal de CADA producto, de sus datos, como Mi cuenta («Pack Cumpleaños KIDS: puedes cambiar o cancelar hasta 3 días antes, y te devolvemos la señal»); la frase fija decía 5 días a packs de 3 |
 | Pagar · pago seguro | `pay_notice` sin pintar | «Pago seguro con tarjeta a través de tu banco. Tu tarjeta no se guarda en esta web.» |
 | Pies de fecha, hora y carrito | «…El pago se realiza de forma segura con Redsys.» | «Precios con IVA incluido.» |
 | Crear cuenta · descargo | la casilla sin explicación | «Es la hoja que firma todo el que entra a saltar: normas de seguridad y responsabilidad. Sin ella no se puede entrar al parque.» |

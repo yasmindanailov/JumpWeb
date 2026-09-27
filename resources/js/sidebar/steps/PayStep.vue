@@ -1,5 +1,6 @@
 <script setup>
-import { t as translate } from '../i18n.js';
+import { computed } from 'vue';
+import { t as translate, tp as translateWith } from '../i18n.js';
 import SummaryLine from './SummaryLine.vue';
 
 /**
@@ -50,6 +51,11 @@ const props = defineProps({
      * diff de árbol, así que si se quemara aquí un slug roto pasaría el gate en verde.
      */
     termsUrl: { type: String, default: '' },
+    /**
+     * El plazo de cambio y cancelación de cada producto de la cesta (`#788`), ya compuesto por
+     * `cart.js::cancellationTerms()` desde el catálogo: `[{product, written, depositRefundable}]`.
+     */
+    cancellationTerms: { type: Array, default: () => [] },
 });
 
 // ⚠️ Este paso ya no emite nada: su «Volver» lo trae la banda desde `#555`.
@@ -63,6 +69,11 @@ const acceptTerms = defineModel('acceptTerms', { type: Boolean, default: false }
 const phone = defineModel('phone', { type: String, default: '' });
 
 const t = (key) => translate(props.messages, key);
+
+/** Una frase por producto, con «y te devolvemos la señal» solo si el producto lo promete (`#788`). */
+const cancellationText = computed(() => props.cancellationTerms
+    .map((c) => translateWith(props.messages, c.depositRefundable ? 'pay_terms_deposit' : 'pay_terms', { product: c.product, written: c.written }))
+    .join(' '));
 </script>
 
 <template>
@@ -162,8 +173,10 @@ const t = (key) => translate(props.messages, key);
     <!-- eslint-disable-next-line vue/no-v-html -- literal de `lang/` + `route()`, sin entrada de usuario -->
     <p v-if="! need.terms" class="paydue__legal" v-html="t('terms_link')"></p>
     <!-- La política de cambios y el pago seguro, dichos ANTES de pagar (`#588`, contenido T5): es lo que
-         el cliente quiere saber justo antes de comprometerse. El documento entero sigue en su fila. -->
-    <p class="paydue__legal">{{ t('pay_policy') }}</p>
+         el cliente quiere saber justo antes de comprometerse. El documento entero sigue en su fila.
+         ⚠️ Desde `#788`, el plazo de CADA producto y su señal, de sus datos: la frase fija decía «5 días» y los
+         packs tienen 3; sin ningún producto que publique plazo, no se dice nada. -->
+    <p v-if="cancellationTerms.length" class="paydue__legal">{{ cancellationText }}</p>
     <p class="paydue__legal">{{ t('pay_notice') }}</p>
 
     <div class="purchase__foot purchase__foot--info">

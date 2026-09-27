@@ -186,6 +186,40 @@ export function cartRows(quoteLines, cart, fieldsByProduct = {}, dependentsById 
 }
 
 /**
+ * Lo que «Pagar» dice del plazo de CAMBIO Y CANCELACIÓN (`#788`, el owner: el plazo y la señal de cada producto, como
+ * Mi cuenta): uno por PRODUCTO de la cesta, en el orden de sus filas y sin repetir.
+ *
+ * ⚠️ **Aquí no se decide nada**: la frase («hasta 3 días antes») y si en plazo se devuelve la señal llegan hechas del
+ * catálogo (`GET /catalog/products`, su `cancellation`), que el cajón ya tiene en memoria. Un producto que no publica
+ * plazo —o que el listado ya no trae— no dice nada. Antes era una frase FIJA («5 días») que los datos desmentían.
+ *
+ * @param {Array<{product_id: number, product_name?: string}>} rows  las filas de la cesta (`cartRows`)
+ * @param {Array<{id: number, name?: string, cancellation?: {written?: string, deposit_refundable?: boolean}}>} products
+ * @returns {Array<{product: string, written: string, depositRefundable: boolean}>}
+ */
+export function cancellationTerms(rows, products) {
+    const byId = new Map((Array.isArray(products) ? products : []).map((p) => [Number(p?.id), p]));
+    const seen = new Set();
+    const terms = [];
+
+    for (const row of Array.isArray(rows) ? rows : []) {
+        const id = Number(row?.product_id);
+        const product = byId.get(id);
+
+        if (seen.has(id) || ! product?.cancellation?.written) continue;
+
+        seen.add(id);
+        terms.push({
+            product: row.product_name ?? product.name ?? '',
+            written: product.cancellation.written,
+            depositRefundable: product.cancellation.deposit_refundable === true,
+        });
+    }
+
+    return terms;
+}
+
+/**
  * Los campos OBLIGATORIOS del pack que esta línea todavía no tiene contestados
  * (Fase 4 · paso 4.5·1).
  *

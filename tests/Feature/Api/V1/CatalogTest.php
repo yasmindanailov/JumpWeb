@@ -294,7 +294,7 @@ class CatalogTest extends ApiTestCase
 
             $publicado = $this->getJson(self::ROOT.'/catalog/products')->assertOk()->assertValidResponse(200)->json('data.0.cancellation');
 
-            $this->assertSame(['cutoff_hours' => $horas, 'written' => $frase], $publicado, "con {$horas} h");
+            $this->assertSame(['cutoff_hours' => $horas, 'written' => $frase, 'deposit_refundable' => false], $publicado, "con {$horas} h");
         }
 
         // Cifra y unidad con espacio DURO (`#763`, la regla de `contenido.js` del diseño): partido en dos renglones,
@@ -303,6 +303,34 @@ class CatalogTest extends ApiTestCase
         $this->assertSame("hasta 24\u{00A0}h antes", __('landing.products.cancellation_hours', ['n' => 24]));
         $this->getJson(self::ROOT.'/catalog/products/'.$producto->id)->assertOk()->assertValidResponse(200)
             ->assertJsonPath('cancellation.cutoff_hours', 0);
+    }
+
+    /**
+     * **Si en plazo se devuelve la SEÑAL** (1.42.0, `#788`): «Pagar» del cajón lo dice junto al plazo de cada producto,
+     * como Mi cuenta. Hace falta el interruptor del producto (`#775`) Y que el producto cobre señal —la regla de la
+     * línea de un pedido—: el interruptor encendido en una entrada que se paga entera no promete nada.
+     */
+    public function test_the_cancellation_says_whether_the_deposit_is_refunded_in_time(): void
+    {
+        $senal = ['deposit_type' => TicketType::DEPOSIT_FIXED, 'deposit_value' => 3000];
+        $casos = [
+            'interruptor y señal' => [['deposit_refundable_in_time' => true] + $senal, true],
+            'interruptor sin señal' => [['deposit_refundable_in_time' => true, 'deposit_type' => TicketType::DEPOSIT_NONE, 'deposit_value' => 0], false],
+            'señal sin interruptor' => [['deposit_refundable_in_time' => false] + $senal, false],
+        ];
+
+        $ids = [];
+        foreach ($casos as $caso => [$atributos]) {
+            $ids[$caso] = $this->priced($this->product("Cumple · {$caso}", ['type' => TicketType::TYPE_PACK, 'cancellation_cutoff_hours' => 72] + $atributos), 18000)->id;
+        }
+
+        $lista = collect($this->getJson(self::ROOT.'/catalog/products')->assertOk()->assertValidResponse(200)->json('data'))->keyBy('id');
+
+        foreach ($casos as $caso => [, $esperado]) {
+            $this->assertSame($esperado, $lista[$ids[$caso]]['cancellation']['deposit_refundable'] ?? null, "{$caso}, en la lista");
+            $this->assertSame($esperado, $this->getJson(self::ROOT.'/catalog/products/'.$ids[$caso])->assertOk()->assertValidResponse(200)
+                ->json('cancellation.deposit_refundable'), "{$caso}, en la ficha");
+        }
     }
 
     /** Un producto que no publica su plazo no emite el bloque, ni en la lista ni en su ficha. */

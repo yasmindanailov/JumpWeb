@@ -885,7 +885,10 @@ class SidebarBundleBudgetTest extends TestCase
     // T5d de la isla (`#777`, plataforma): Mi cuenta usa del motor, sin tocarlos, el store de menores, sus reglas
     // (`account/dependents.js`) y `fieldError`, y el motor los EXPORTA a su trozo: 296,99 → 297,09 (+0,10, medido
     // construyendo el JS de `HEAD` y el de la T5d), sin una línea de código más. El techo, a 298, con esa medida.
-    private const SIDEBAR_CHUNK_MAX_KB = 298;
+    // `#788` (owner, 27-09): «Pagar» dice el plazo y la señal de CADA producto de la cesta, de sus datos, en vez de una
+    // frase fija que decía «5 días» a packs de 3 (`cart.js::cancellationTerms()`, el getter `payTerms` y la prop de
+    // `PayStep`). Medido construyendo el JS de `HEAD` y el de `#788`: 297,51 → 298,19 (+0,68). El techo, a 299.
+    private const SIDEBAR_CHUNK_MAX_KB = 299;
 
     // T3e·2: la compra de la isla, chunk diferido del motor que solo trae una instalación con la isla. Medido 93,36 KiB
     // (la sección, la pantalla 0, la isla y sus piezas); su hoja va aparte (7,2 KiB).

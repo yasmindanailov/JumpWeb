@@ -145,6 +145,8 @@ class CatalogReader implements ProductCatalog
             // El plazo de cambio y cancelación (`#699`), con su frase: lo que la página y la isla DICEN.
             cancellationCutoffHours: $product->cancellation_cutoff_hours,
             cancellationWritten: (new CancellationCutoffRule)->written($product->cancellation_cutoff_hours),
+            // Y si en plazo se devuelve la señal (`#788`): la regla de `OrderItemResource`, con la señal del PRODUCTO.
+            cancellationDepositRefundable: (bool) $product->deposit_refundable_in_time && $product->hasDeposit(),
         );
     }
 

@@ -695,6 +695,35 @@ class SidebarDomContractTest extends TestCase
     }
 
     /**
+     * **Lo que «Pagar» DICE del plazo de cambio y cancelación** (`#788`, el owner: el plazo y la señal de cada producto,
+     * como Mi cuenta). El árbol de arriba no ve texto; esto sí. Antes era una frase fija —«te devolvemos la señal si
+     * cancelas con 5 días»— y los packs tienen 3: ahora la dicen los datos del producto, por el mismo camino que el
+     * navegador (el listado del catálogo → `cancellationTerms()` → la pantalla).
+     */
+    public function test_the_pay_step_says_each_products_cancellation_terms_from_its_data(): void
+    {
+        $this->setUpFullCart();
+        $this->actingAs(User::factory()->create());
+
+        $pagar = fn (): string => $this->renderVue(8, [], api: $this->cartApiPayload($this->fullCartItems()), state: $this->clientState(step: 8));
+
+        $html = html_entity_decode(strip_tags($pagar()), ENT_QUOTES | ENT_HTML5);
+        $this->assertStringContainsString("Cumpleaños: puedes cambiar o cancelar hasta 3\u{00A0}días antes, y te devolvemos la señal.", $html);
+        $this->assertStringNotContainsString('5 días', $html, 'la frase fija de antes no vuelve');
+
+        // Sin la señal prometida, el plazo solo; sin plazo publicado, nada.
+        TicketType::query()->where('type', TicketType::TYPE_PACK)->update(['deposit_refundable_in_time' => false]);
+        $html = html_entity_decode(strip_tags($pagar()), ENT_QUOTES | ENT_HTML5);
+        $this->assertStringContainsString("Cumpleaños: puedes cambiar o cancelar hasta 3\u{00A0}días antes.", $html);
+        $this->assertStringNotContainsString('te devolvemos la señal', $html);
+
+        TicketType::query()->update(['cancellation_cutoff_hours' => null]);
+        $crudo = $pagar();
+        $this->assertStringNotContainsString('puedes cambiar o cancelar', html_entity_decode(strip_tags($crudo), ENT_QUOTES | ENT_HTML5));
+        $this->assertDoesNotMatchRegularExpression('#<p class="paydue__legal">\s*</p>#', $crudo, 'sin plazo, ni el párrafo vacío');
+    }
+
+    /**
      * El paso 8 **con lo que falta antes de pagar** (`#562`).
      *
      * ⚠️⚠️ **El caso de arriba NO ve este bloque, y estuvo así desde `#349`.** Su comprador tiene
@@ -1557,6 +1586,10 @@ class SidebarDomContractTest extends TestCase
         $pack->update([
             'deposit_type' => 'fixed',
             'deposit_value' => 3000,
+            // El plazo de un cumpleaños y su señal en plazo (`#788`): así «Pagar» emite la frase de su producto y el
+            // árbol congelado la sigue viendo (sin plazo publicado, el párrafo no sale).
+            'cancellation_cutoff_hours' => 72,
+            'deposit_refundable_in_time' => true,
             'event_fields' => [
                 ['key' => 'celebrant', 'type' => 'text', 'required' => true, 'stage' => 'booking', 'label' => ['es' => 'Homenajeado']],
             ],
@@ -1721,6 +1754,8 @@ class SidebarDomContractTest extends TestCase
             'quote' => $this->postJson('/api/v1/orders/quote', ['items' => $items])->assertOk()->json(),
             'cart' => $items,
             'fieldsByProduct' => $fields,
+            // El listado que el motor pide al montar: de él sale el plazo de cada producto en «Pagar» (`#788`).
+            'catalog' => $this->getJson('/api/v1/catalog/products')->assertOk()->json(),
         ];
     }
 

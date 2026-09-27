@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import {
-    cartRows, clear as forgetStored, decideOwnership, load as readStored, reconcile,
+    cancellationTerms, cartRows, clear as forgetStored, decideOwnership, load as readStored, reconcile,
     removeLine as removeCartLine, save as writeStored, toApiItems,
 } from '../cart.js';
 import { applyRejections, reconcileAssignments, toggleDependent } from '../assignment.js';
@@ -81,6 +81,14 @@ export const useCartStore = defineStore('cart', {
             // Y los NOMBRES de los menores asignados (tanda 4) salen del store de menores: en la
             // línea viajan solo ids, y el nombre se pone al pintar.
             return cartRows(this.quote?.lines ?? [], this.lines, useCatalogStore().fieldsByProduct, useDependentsStore().byId);
+        },
+
+        /**
+         * El plazo de cambio y cancelación de cada producto de la cesta, para «Pagar» (`#788`): de las filas y del
+         * listado del catálogo, que el motor pide al montar. Lo compone `cart.js::cancellationTerms()`.
+         */
+        payTerms() {
+            return cancellationTerms(this.rows, useCatalogStore().products);
         },
     },
 

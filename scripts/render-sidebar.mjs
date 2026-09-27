@@ -53,7 +53,7 @@ import {
     weekdayHeaders,
 } from '../resources/js/sidebar/calendar.js';
 import { dayPriceCents, initialQuantity, maxQuantityFor, minQuantityFor } from '../resources/js/sidebar/offer.js';
-import { cartRows } from '../resources/js/sidebar/cart.js';
+import { cancellationTerms, cartRows } from '../resources/js/sidebar/cart.js';
 import { assignableOptions, dependentsById } from '../resources/js/sidebar/assignment.js';
 import { buildProgress } from '../resources/js/sidebar/progress.js';
 import { buildFooter } from '../resources/js/sidebar/foot.js';
@@ -210,15 +210,21 @@ const PROPS_FROM_API = {
      * ⚠️ Los errores por campo van vacíos a propósito: son el «no» de un intento anterior, y el árbol
      * que se congela es el de la pantalla **en reposo**, como el velo del armazón.
      */
-    [STEPS.PAY]: (api, messages, state) => ({
-        lines: cartRows(api.quote?.lines ?? [], api.cart ?? [], api.fieldsByProduct ?? {}, dependentsById(api.dependents?.data ?? [])),
-        error: state.error ?? '',
-        messages,
-        locale: state.locale ?? 'es',
-        need: buyerNeeds(api.accountContext ?? null, {}),
-        // La ruta la compone el SERVIDOR, como `contactUrl` del paso 10: el cajón no las conoce.
-        termsUrl: state.termsUrl ?? '',
-    }),
+    [STEPS.PAY]: (api, messages, state) => {
+        const lines = cartRows(api.quote?.lines ?? [], api.cart ?? [], api.fieldsByProduct ?? {}, dependentsById(api.dependents?.data ?? []));
+
+        return {
+            lines,
+            error: state.error ?? '',
+            messages,
+            locale: state.locale ?? 'es',
+            need: buyerNeeds(api.accountContext ?? null, {}),
+            // La ruta la compone el SERVIDOR, como `contactUrl` del paso 10: el cajón no las conoce.
+            termsUrl: state.termsUrl ?? '',
+            // El plazo de cada producto (`#788`), del listado del catálogo: lo mismo que el getter `payTerms` del store.
+            cancellationTerms: cancellationTerms(lines, api.catalog?.data ?? []),
+        };
+    },
 
     /**
      * ⚠️ El paso 9 traduce el sobre `payment` de la API a la lista de `<input>` que el navegador

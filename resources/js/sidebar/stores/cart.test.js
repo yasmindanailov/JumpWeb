@@ -2,6 +2,7 @@ import { test, describe, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { createPinia, setActivePinia } from 'pinia';
 import { useCartStore } from './cart.js';
+import { useCatalogStore } from './catalog.js';
 import { STORAGE_KEY } from '../cart.js';
 
 /**
@@ -307,5 +308,16 @@ describe('el store de la cesta', () => {
 
         c.applyLineProblems({});
         assert.equal(c.error, '', 'sin problemas, sin aviso');
+    });
+
+    test('«Pagar» lee el plazo de cada producto de las filas y del LISTADO del catálogo (#788)', () => {
+        const c = store();
+        c.setQuote({ lines: [{ index: 0, product_id: 5, product_name: 'Pack Cumpleaños', quantity: 10 }] });
+
+        assert.deepEqual(c.payTerms, [], 'sin el listado, nada: se calla, no se inventa');
+
+        useCatalogStore().setProducts([{ id: 5, cancellation: { cutoff_hours: 72, written: 'hasta 3 días antes', deposit_refundable: true } }]);
+
+        assert.deepEqual(c.payTerms, [{ product: 'Pack Cumpleaños', written: 'hasta 3 días antes', depositRefundable: true }]);
     });
 });
