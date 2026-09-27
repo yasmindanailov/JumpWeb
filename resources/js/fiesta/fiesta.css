@@ -83,7 +83,9 @@
     --surface-glass-ink-float: rgba(16, 20, 24, 0.82);
     --text-inverse: #ffffff;
     --tracking-heading: -0.02em;
-    --warn-100: #fff0cf;
+    /* ⚠️ `--warn-100` era `#fff0cf`, el de PlayJump (lo midió plataforma el 27-09; `PaletaNeutraTest` ya lee las familias
+       de ESTADO): un ámbar pálido del producto, que la hoja de la instancia sustituye. */
+    --warn-100: #fdf2d9;
     --warn-500: #e8b400;
 }
 

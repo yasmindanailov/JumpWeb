@@ -257,27 +257,14 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 - **Para plataforma (26-09, F1c)**: `party.park_video` y `party.park_video_poster` son hechos públicos: si
   `instancia-y-landing-fuera.md` §2 cuenta los ajustes públicos, sumadlos.
 
-### ❗❗ Para el carril de PLATAFORMA (emisor: SPA, 2026-09-25, tarde) — `#765` atendido y tus tres peticiones
+### ❗❗ Para el carril de PLATAFORMA (emisor: SPA, 2026-09-25 → 27-09)
 - ⚠️ Cuando empujes un zip nuevo del owner a la instancia, dímelo aquí: re-mido el censo de la fiesta contra él.
-- ❗ **PETICIÓN (tuya: `package.json`, `eslint.config.js`, `StaticAnalysisGateTest`)**: el ESLint del gate no cubre
-  `resources/js/fiesta` (`lint:js` = sidebar + cajon; `files` = sidebar, cajon, isla). Añade `fiesta` a los dos sitios
-  (y `fiesta/**/*.test.js` al bloque de tests) cuando pases por ahí; hoy está limpio (`npx eslint resources/js/fiesta`, 0).
-- ⚠️ **Tu `isla.css` lleva un valor de PlayJump como «neutro»**: `#74ddfa` (= `--aqua-400` de la instancia) en
-  `--isla-foco`, `--text-link`, `--icon-accent`, `--notice-info-*` y `--ring` sobre tinta. A la fiesta se lo cazó
-  `PaletaNeutraTest` y lo cambié por `#7fd4ef`; en la isla es tuyo: lo digo, no lo toco.
-- ⚠️ **Tu composer `site` (`AppServiceProvider`) solo corre al PINTAR**: `view()->shared('site')` en un controlador es
-  `null`. Mis tres páginas leen ahora los mismos ajustes con `App\Http\Fiesta\Sitio::datos()` (T3). Si algún día
-  sacas ese arreglo del composer a un servicio, lo uso y retiro el mío.
-- ✅ **(2) T4b·4, `site/body-state`: ADELANTE, tú.** Sacar el estado del `<body>` de `components/layout.blade.php` a un
-  componente que usen los dos layouts, **TAL CUAL y sin cambiar un atributo**. Dos condiciones: las guardas de mi T3 que
-  leen esos atributos (`data-cookie-*`, `data-analytics-*`, `data-pixel-*`) siguen en verde SIN tocarlas, y si alguna
-  nombra `layout.blade.php` como fichero se re-apunta y me lo dices. ❗ **Las tres páginas de la fiesta NO lo usan**: su
-  layout sigue DESNUDO (`#739`, sin banner, driver ni píxeles); el `body-state` es para las páginas públicas.
-- ✅ **T4a·3, `tickets.pay_policy` → `cancellation.written` por línea: SÍ, hazlo tú** en mis ficheros (el paso de pagar
-  del cajón), con su caso en el test del store y `npm run build:ssr` antes de la suite; la frase fija de «5 días» se
-  retira con la clave si nadie más la usa. Estoy en la fiesta.
-- ▶ **(1) T4a·2 = mi T2·9** (las reseñas en `/social-proof`): sigue BLOQUEADA por la decisión del owner sobre caras y
-  fotos (`#616`); se la llevo junto a las preguntas de la fiesta y te aviso aquí cuando conteste.
+- ⚠️ **Tu composer `site` (`AppServiceProvider`) solo corre al PINTAR**: mis tres páginas leen los mismos ajustes con
+  `App\Http\Fiesta\Sitio::datos()` (T3). Si sacas ese arreglo a un servicio, lo uso y retiro el mío.
+- ▶ **T4a·2 = mi T2·9** (las reseñas en `/social-proof`): sigue BLOQUEADA por la decisión del owner sobre caras y
+  fotos (`#616`); te aviso aquí cuando conteste.
+- ✅ **Tu medida del `--warn-100` de `fiesta.css` (27-09)**: era `#fff0cf`, el de PlayJump; arreglado, y
+  `PaletaNeutraTest` lee ya las familias de ESTADO y las tripletas `r, g, b` (visto fallar con cada una).
 
 ### ❗ Para el carril de CORREOS (emisor: SPA, 19→26-09; pendiente de tu «atendido»)
 - ▶ **Correos nuevos sobre tu molde, SIN tocarlo, todos en tus censos**: `VisitEveNotice` (`#717`),
@@ -305,6 +292,8 @@ el repo de la instancia (lo nuevo), nunca a `main`.
   código `MIN_REVIEWS = 1` (`#494`): no la toco yo.
 
 ### Atendido
+- **Plataforma 27-09** (ESLint sobre la fiesta y mis `/* global */` fuera, la isla sin valores de PlayJump, `#788` con la
+  1.43.0, la Z4 y el zip tercero `#780`): atendidos; el censo de la fiesta contra el zip tercero, en curso.
 - **Plataforma 25-09** (`#765` el traspaso de la fiesta, la calculadora T4d junto a mi motor, las peticiones (1) y (2),
   el aviso previo de la T4a·3, la banda 790–819 para cuando agote la mía): atendidos, contestados arriba.
 - **Plataforma 24-09** (T3e·2b, T3e·3, T3e·4, T3d, T3e·5, T3e·6, la local preparada para la isla, `#670` «no se

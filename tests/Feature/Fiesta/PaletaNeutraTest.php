@@ -31,6 +31,13 @@ class PaletaNeutraTest extends TestCase
     /** Los primitivos de PlayJump: las siete familias del diseño, por su forma. */
     private const PRIMITIVOS = '/--(?:ink-\d{3}|snow|aqua-\d{3}|sun-\d{3}|volt-\d{3}|berry-\d{3}|flare-\d{3})\b/';
 
+    /**
+     * Las familias de ESTADO, que Saltia también define CON VALOR (`--warn-100: #fff0cf`…). Sus NOMBRES son del producto
+     * (la fiesta los declara con respaldo); sus VALORES de PlayJump, no. Lo midió plataforma el 27-09: el `--warn-100` de
+     * `fiesta.css` era el de PlayJump y esta guarda, que solo leía las siete familias, no lo veía.
+     */
+    private const ESTADOS = '/--(?:danger|success|warn|info)-\d{3}\b/';
+
     /** Las hojas del producto que RESPALDAN a la fiesta: la suya y la de la isla, que importa. */
     private const RESPALDO = ['resources/js/fiesta/fiesta.css', 'resources/js/isla/isla.css'];
 
@@ -87,7 +94,7 @@ class PaletaNeutraTest extends TestCase
                 continue;
             }
             preg_match_all(
-                '/'.trim(self::PRIMITIVOS, '/').'\s*:\s*(#[0-9a-fA-F]{3,8})\b/',
+                '/(?:'.trim(self::PRIMITIVOS, '/').'|'.trim(self::ESTADOS, '/').')\s*:\s*(#[0-9a-fA-F]{3,8})\b/',
                 $this->sinComentarios((string) file_get_contents($hoja)),
                 $m,
             );
@@ -135,12 +142,27 @@ class PaletaNeutraTest extends TestCase
         }
         $this->assertGreaterThan(20, count($hex), 'la hoja de la instancia tiene que dar sus primitivos con valor');
 
+        // El mismo color escrito como TRIPLETA (`rgba(11, 46, 74, .8)` es `#0b2e4a`): la otra forma de colarlo.
+        $tripletas = [];
+        foreach ($hex as $h) {
+            if (strlen($h) === 7) {
+                $tripletas[implode(',', array_map('hexdec', str_split(substr($h, 1), 2)))] = $h;
+            }
+        }
+
         $culpables = [];
         foreach ($this->corpus() as $ruta => $src) {
             preg_match_all('/#[0-9a-fA-F]{6}\b/', $src, $m);
             $vistos = array_intersect(array_unique(array_map('strtolower', $m[0])), $hex);
+            preg_match_all('/rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\b/', $src, $t, PREG_SET_ORDER);
+            foreach ($t as $trio) {
+                $clave = (int) $trio[1].','.(int) $trio[2].','.(int) $trio[3];
+                if (isset($tripletas[$clave])) {
+                    $vistos[] = "rgb({$clave}) = {$tripletas[$clave]}";
+                }
+            }
             if ($vistos !== []) {
-                $culpables[] = $ruta.': '.implode(', ', $vistos);
+                $culpables[] = $ruta.': '.implode(', ', array_unique($vistos));
             }
         }
 
