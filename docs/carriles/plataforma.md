@@ -44,18 +44,15 @@ PANTALLA (spec §4.15, `#820`/`#821`), (1) la CONVERSIÓN del zip tercero (§4.1
 conexión, cada bloque protegido— y `#825` —«Añade a tus hijos» es tarea solo si el PRODUCTO es de menores, por su tramo de
 edad del panel—; contrato **1.45.0**; `sonda-cuenta.mjs` 250/250, arneses `mutar-t5f.sh` 14/14 y
 `mutar-hijos-de-producto.sh` 12/12). Lo medido de cada tanda, en la spec.
-▶ **EN MARCHA: (3) T6** (spec §4.17). ✅ con el ojo del owner: la PORTADA (`#827`→`#829`; `instancias/playjump/web/inicio/`,
-instancia `5c2b9cf`; `sonda-portada.mjs`), el CALENDARIO (`#830`) y la FLECHA DE «ATRÁS» (`#831`, su censo en §4.17).
-**EN MARCHA: T6b, Cumpleaños** (censo, plan, lo medido: spec §4.18). T6b·1 ✅ («aprobado»; instancia `b969ec7`).
-**T6b·2 ✅** con el ojo del owner (`#834` 1.47.0, `#835` 1.48.0; `mutar-hechos-de-la-fiesta.sh` 15/15; instancia
-`fb6e736`). **T6b·3 ✅** con el ojo del owner (`#836`, §4.18: la intención `fiesta`, la calculadora de la fiesta con su
-entrada propia y la pieza 6 de la instancia `e178535`). **T6b·4 ✅** (`scripts/sonda-cumpleanos.mjs` 20/20 a 390 y 1280;
-la primera pantalla, como en la T6b·1). **LA T6b, CUMPLEAÑOS, ✅.** ▶ **EN MARCHA: la T6c, Colegios**: el censo y su
+▶ **EN MARCHA: (3) T6** (spec §4.17). ✅ con el ojo del owner: la PORTADA (`#827`→`#831`, `sonda-portada.mjs`) y
+CUMPLEAÑOS (`#832`→`#836`, §4.18, `sonda-cumpleanos.mjs`). ▶ **EN MARCHA: la T6c, Colegios**: el censo y su
 plan, en la spec §4.19; `#837` (el owner): la hoja para dirección AHORA, solo WhatsApp, el cálculo que se retoma (enlace y
 dispositivo), sin «avísame». La verdad manda: un profesor gratis por cada 15 (no «todos»), sin plazo de cambio hasta que el
-panel lo tenga. Sigue la T6c·1 (la página sin su calculadora, en la instancia). **Sigue la T6b·3** (la calculadora en la página: `compra/fiesta.js`, `CalendarioMes`, `SelectorHoras`; «Reservar
-y pagar la señal» a la compra con la selección entera, `#785`; los días con hueco la abren con su fecha; compartir SOLO por
-WhatsApp, `#833`) y la T6b·4 (sonda y ojo). La ISLA la repiensa el owner con Claude Design: no atar nada nuevo a ella. **Para iterar con el owner** (no
+panel lo tenga. ❗ **T6c·1 🟦**: `/colegios` en `instancias/playjump` SIN COMMIT hasta el ojo del owner EN VIVO (su lista
+de páginas, `web/colegios.blade.php`, `web/colegios/` —modelo y piezas 1 y 3–9—, `entradas/modelo.php` —el menú y el pie
+a Colegios—, `cumple.css` —la tabla de la pieza 6— y los textos `colegios` es/en/fr); en el producto, `services` en
+`PageFacts`. ❗ La compra de la isla NO vende excursiones (todo pack es fiesta): va en la T6c·3 (§4.19). La ISLA la
+repiensa el owner con Claude Design: no atar nada nuevo a ella. **Para iterar con el owner** (no
 ahora): la isla «muy sola» y el «Reservar» solo en la isla del móvil (A/B propuesto: las páginas de la instancia aún no
 reciben su variante). Orden de la T6: portada, Cumpleaños, Colegios, Visítanos (SIN formulario: `/contacto` con 301) y Normas, y los 301
 → **(4)** Bizum, Apple (entra) y el día liberado → material y revisión del owner, al final (los datos: playjump.es). **Los

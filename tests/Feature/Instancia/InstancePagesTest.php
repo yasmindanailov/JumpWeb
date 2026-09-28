@@ -6,6 +6,7 @@ use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Content\Models\LandingService;
 use App\Domain\Content\Services\ShellSettings;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Services\MarcasDePago;
@@ -539,6 +540,24 @@ BLADE);
         Carbon::setTestNow(Carbon::parse('2026-10-17 00:01', 'Europe/Madrid'));
         $this->assertSame(['2026-12-12'], $this->hechosDe('/cumple')['availability_weekends'][1]['dates']);
         Carbon::setTestNow();
+    }
+
+    /**
+     * **Los servicios, por su nombre** (`services`, T6c): el MISMO JSON que `GET /api/v1/services`; de él saca Colegios el
+     * horario de excursiones. Con un servicio de verdad: una lista vacía coincidiría por casualidad.
+     */
+    public function test_a_page_asks_for_the_services_and_gets_the_same_json_as_the_api(): void
+    {
+        LandingService::query()->create([
+            'slug' => 'excursiones', 'title' => ['es' => 'Excursiones de colegio'], 'is_active' => true, 'position' => 1,
+            'specs' => [['label' => ['es' => 'Horario'], 'value' => ['es' => 'Todos los días, de 8:00 a 21:30']]],
+        ]);
+        $this->declarar(['kids' => ['vista' => 'kids', 'hechos' => ['services']]]);
+
+        $servicios = $this->hechosDe('/kids')['services'];
+
+        $this->assertSame('Excursiones de colegio', $servicios['services'][0]['title'] ?? null);
+        $this->assertSame($this->getJson('/api/v1/services?lang=es')->assertOk()->json(), $servicios);
     }
 
     /** **La configuración pública, por su nombre** (`config`, T6b·2): el MISMO JSON que `GET /api/v1/config`. */

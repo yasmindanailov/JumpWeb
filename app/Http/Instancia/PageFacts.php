@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\V1\PromotionsFactsController;
 use App\Http\Controllers\Api\V1\ReviewsFactsController;
 use App\Http\Controllers\Api\V1\RulesFactsController;
 use App\Http\Controllers\Api\V1\ScheduleFactsController;
+use App\Http\Controllers\Api\V1\ServicesFactsController;
 use App\Http\Controllers\Api\V1\SiteFactsController;
 use App\Http\Controllers\Api\V1\SocialProofFactsController;
 use App\Http\Resources\Api\V1\OfferedTimeResource;
@@ -60,6 +61,9 @@ final class PageFacts
         // Las OPINIONES publicadas, cada una con sus páginas (`#771`): la página toma las de su etiqueta.
         'reviews' => [ReviewsFactsController::class, '__invoke', true],
         'faqs' => [FaqsFactsController::class, '__invoke', true],
+        // Los SERVICIOS (su mitad editorial, `#671`): de aquí saca Colegios (T6c) el horario de excursiones, su duración y
+        // su grupo, que el parque escribe en el panel y no son el horario de la zona.
+        'services' => [ServicesFactsController::class, '__invoke', true],
         'social_proof' => [SocialProofFactsController::class, '__invoke', false],
         'zones' => [CatalogZonesController::class, 'index', false],
         'products' => [CatalogProductsController::class, 'index', false],

@@ -1862,14 +1862,24 @@ playjump.es) y lo que falta:
 | isla | la frase que quita el miedo de cada pieza; «esa hora ya no está libre»; «te avisamos si se libera» | — |
 
 Además: el cálculo se GUARDA en el dispositivo y viaja en el enlace (`?c=60_2_2026-10-20_10:00`), y al volver se retoma
-diciendo si la hora se ocupó. **Lo que manda la verdad y no el mockup**: un profesor por cada 15; sin plazo de cambio
+diciendo si la hora se ocupó. ❗ **Y la compra de la isla NO vende excursiones** (medido al escribir la T6c·1): trata
+todo pack como una fiesta (`borradorDeFiesta`, `packsDeFiesta` exige la edad, que las excursiones no tienen) y no pregunta
+los datos de reserva del pack —`school`, `lead` y `lead_phone` obligatorios, `course` no; `stage = booking`—. El mockup
+de la compra no dibuja ese paso: se hace con el sistema (`#773`·d), en «Tus datos», y se enseña en vivo. **Lo que manda la verdad y no el mockup**: un profesor por cada 15; sin plazo de cambio
 hasta que el panel lo tenga; sin voces de docentes; sin la línea de Bizum; el material de grupos escolares, sin hueco
 (`#761`·3). `[DECIDIDO owner]` 28-09 (`#837`): la hoja para dirección se hace AHORA (página imprimible con su QR, el
 PDF desde el navegador); compartir SOLO por WhatsApp; el cálculo se guarda en el dispositivo y viaja en el enlace
 (`?c=`), y se retoma diciendo si la hora se ocupó; «te avisamos si se libera», fuera por ahora. Plan: T6c·1 la página sin
 su calculadora (instancia); T6c·2 los hechos (los días con hueco de cualquier día; en LOCAL, franjas para la zona
-`excursiones`); T6c·3 la calculadora (la de entradas con los dos packs); T6c·4 la hoja y el cálculo que se retoma;
+`excursiones`); T6c·3 la calculadora (la de entradas con los dos packs) y la COMPRA de una excursión en la isla (sus
+packs sin edad, como las entradas; sus datos de reserva en «Tus datos»); T6c·4 la hoja y el cálculo que se retoma;
 T6c·5 la sonda y el ojo del owner.
+- ▶ **T6c·1 🟦 (28-09)**, a falta del ojo del owner: `PageFacts` sirve `services` (el horario de excursiones, del
+  servicio del panel; `InstancePagesTest`, el mismo JSON que la API). En la instancia, `/colegios` con sus nueve piezas
+  (la 6, hasta la calculadora, la escalera de precios por alumno: 15/17 · 13/15 · 12/14 € y «3 horas: 3 € más por alumno
+  en cada tramo», solo porque la diferencia es la MISMA en todos) y el menú y el pie apuntando a ella. Medido: 200 en
+  es/en/fr sin marcadores sin rellenar; la primera pantalla contra el mockup, la vuelta 114/114 (el mockup, 113) y la
+  primera visita 101/111 como él; en 390 no se sale de ancho.
 
 ## 5. Impacto en invariantes
 
