@@ -3,7 +3,9 @@
 namespace App\Filament\Analytics\Metrics;
 
 use App\Domain\Platform\Enums\Comparison;
+use App\Domain\Platform\Services\Analytics\AnalyticsGoals;
 use App\Domain\Platform\Services\Analytics\Reports\Window;
+use App\Filament\Analytics\Goal;
 use App\Filament\Analytics\Metric;
 use Illuminate\Support\Facades\Cache;
 use LogicException;
@@ -33,7 +35,26 @@ abstract class MetricSet
     {
         $report = static::report($window, $comparison);
 
-        return static::judged(static::from($report), $report, $window);
+        return self::withGoals(static::judged(static::from($report), $report, $window), $window);
+    }
+
+    /**
+     * Las cifras con su objetivo del mes (T3c·2, `#759`): solo si la ventana es un mes y la cifra lo admite (lo decide
+     * {@see Goal::of()}). Así lo dice la tarjeta en su pestaña y en «Resumen», que es la misma.
+     *
+     * @param  array<string, Metric>  $metrics
+     * @return array<string, Metric>
+     */
+    public static function withGoals(array $metrics, Window $window): array
+    {
+        foreach (AnalyticsGoals::forMonth($window->from) as $key => $target) {
+            $goal = isset($metrics[$key]) ? Goal::of($key, $target, $window) : null;
+            if ($goal !== null) {
+                $metrics[$key] = $metrics[$key]->withGoal($goal);
+            }
+        }
+
+        return $metrics;
     }
 
     /**

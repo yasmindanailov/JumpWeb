@@ -596,6 +596,13 @@ enteros positivos, no porcentajes; el orden es el reparto: cambiarlo rebaraja, a
 se abre otro) · `active` bool · `started_at`/`ended_at` nullable (vivo = activo y dentro de la ventana) · timestamps.
 Guardar o borrar una fila olvida la caché de 60 s de los vivos.
 
+### `analytics_goals` (AnalyticsGoal) — los objetivos del mes del cuadro · `#759` (T3c·2)
+
+`specs/analitica-para-decidir.md` §4.13. Configuración del producto en `Platform`, sin PII: `metric_key` string(64) (la
+clave del catálogo, `money.net`…) · `month` date (su PRIMER día) · `target` unsigned bigint, en la unidad de la cifra
+(céntimos, unidades o puntos básicos) · `set_by` FK nullOnDelete · timestamps. **UNIQUE `(metric_key, month)`**. Único
+escritor `AnalyticsGoals::save()`: rastro `analytics.goals_updated` con el antes y el después, y olvida la caché del mes.
+
 ### `surveys` · `survey_participations` · `survey_responses` · `survey_spent_tokens` — las encuestas, ANÓNIMAS · `#740`, `#754`, `#757`
 
 `specs/encuestas.md` §4.1 y §4.7. **Participación y respuesta NO comparten clave**: nada en la base une lo contestado con

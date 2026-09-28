@@ -318,6 +318,28 @@ return [
             'none' => '[1,*] 没有异常：有历史数据的 :n 个数字都在正常范围内。',
             'no_history' => '历史数据不足，暂无法判断有哪些变化：需要 8 个有数据的:unit。',
         ],
+        // T3c·2（`#759`）：卡片上的本月目标，以及「概览」底部的表单。
+        'goal' => [
+            'on_pace' => '本月目标：:target。进度正常：已完成 :progress，本月已过去 :elapsed。',
+            'behind' => '本月目标：:target。进度落后：已完成 :progress，本月已过去 :elapsed。',
+            'early' => '本月目标：:target。已完成 :progress；现在判断进度还为时过早。',
+            'reached' => '本月目标：:target。已达成（:progress）。',
+            'missed' => '本月目标：:target。未达成（:progress）。',
+            'above' => '本月目标：:target。高于目标。',
+            'below' => '本月目标：:target。低于目标。',
+            'how' => '目标由乐园在「概览」底部的「本月目标」中设置。对于累计型数字（金额、订单、访客、派对、账户），进度按本月已过去的比例来比较已完成的部分，假设每天权重相同；前三天不作判断。对于比率，只看高于还是低于目标。',
+        ],
+        'goals' => [
+            'button' => '本月目标',
+            'modal_heading' => '本月目标',
+            'modal_description' => '你希望每个数字达到多少。留空表示不设目标。选择「本月」或「上月」时显示。',
+            'month' => '月份',
+            'month_option' => ':year年:month',
+            'last_month' => '上月：:value',
+            'submit' => '保存',
+            'saved' => '目标已保存',
+            'unchanged' => '没有需要修改的内容',
+        ],
         // 上座率（`specs/analitica-para-decidir.md` §4.8.ter，T2，`#758`）：门票与派对分开，绝不相加。
         'occupancy' => [
             'note' => '按到访的日期和时段统计本时段已经过去的部分。门票按名额计算，派对按每个时段的派对数计算：分开显示。',
@@ -2167,6 +2189,7 @@ return [
             'reports_export' => '导出分析数据(CSV)',
             'customers_insights' => '在客户档案中查看客户360',
             'analytics_export' => '导出客户分群（仅限已同意接收通讯者）',
+            'analytics_manage' => '设置数据分析的本月目标',
             'audit_view' => '查看审计日志',
             'access_manage' => '管理角色与权限',
         ],

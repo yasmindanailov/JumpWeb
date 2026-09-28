@@ -6,7 +6,7 @@
 > tabla de `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: **`analitica-para-decidir.md`
 > §0** (la tarea en curso, `#755`) · `encuestas.md` §0 y §4.7 (`#754`) · `analitica.md` §0 y §4.5 · `isla-y-landing-nueva.md`
 > §4.11 · `celebracion-e-invitacion.md` §0 · `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 ·
-> `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-09-28 (cierre: T3a, T3b y T3c·1 en `main`).
+> `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-09-28 (cierre: la T3c entera en `main`; la TP decidida, `#792`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`). El
 > contador de la suite va en el trailer del commit (`#618`), no aquí. **Se muda, no se raspa**: el detalle de
 > una feature baja a su spec (las trampas por tanda de la analítica T1→T5 viven en `analitica.md` §4.9,
@@ -17,9 +17,10 @@
 - ▶▶▶ **LA ANALÍTICA PARA DECIDIR es la tarea** (`#755`, spec ✅). En `main` y APROBADAS por el owner: T0a·T0b·T0c (`#756`),
   T1 encuestas anónimas (`#754`/`#757`), T2 ocupación (`#758`) y, el 28-09, **T3a la forma** (`#759`: siete pestañas, solo
   pide la abierta, un catálogo de 58 cifras), **T3b el veredicto** (`#790` `[DECIDIDO owner]`: «normal» es el mín–máx de los 12
-  periodos anteriores) y **T3c·1 «lo que ha cambiado»** (`#791`). Lo construido y lo que enseñó cada una: spec §4.13. ▶ **Sigue
-  la T3c·2, los objetivos del mes: DISEÑADA en §4.13, sin empezar.** Y detrás, **la TP, el público** (`#792` `[DECIDIDO owner]`
-  28-09: la fecha de nacimiento del titular, entera y opcional; los padres por la edad de sus hijos con el opt-in de hoy; §4.14).
+  periodos anteriores), **T3c·1 «lo que ha cambiado»** (`#791`) y **T3c·2 los objetivos del mes** (el botón al pie de «Resumen», la
+  línea en la tarjeta; permiso `analytics.manage`). Lo construido y lo que enseñó cada una: spec §4.13. ▶ **Sigue la TP, el
+  público** (`#792` `[DECIDIDO owner]` 28-09: la fecha de nacimiento del titular, entera y opcional; los padres por la edad de sus
+  hijos con el opt-in de hoy; §4.14), SIN «al detalle» aún.
 - ▶ **LA FIESTA DEL SISTEMA NUEVO ES MÍA (`#765`, `[DECIDIDO owner]` 25-09)**: la lista de invitados, la invitación con
   su recibo y la autorización, vestidas con «Saltia» para la v2.0.0, en paralelo con la web pública. El traspaso,
   `isla-y-landing-nueva.md` §4.11; el censo HAY/FALTA, el método y las tandas, `specs/fiesta-sistema-nuevo.md` (§1.4,
@@ -65,9 +66,8 @@
 ## Por dónde retomar, en orden
 
 1. ❗❗❗ **LA ANALÍTICA PARA DECIDIR (`#755`, `specs/analitica-para-decidir.md`)**: ✅ T0a·T0b·T0c · T1 · T2 · T3a · T3b ·
-   T3c·1, todas en `main` y aprobadas (§4.3–§4.13) → ▶ **T3c·2 los objetivos del mes** (diseño en §4.13 «La T3c·2 al detalle»:
-   `analytics_goals`, ocho cifras, la frase por tipo, el formulario al pie de «Resumen», permiso `analytics.manage` re-exigido
-   —`SEC-04`— y rastro; ❗ toca ficheros COMPARTIDOS, aviso previo ya en el buzón) → **TP el público** (§4.14, `#792`: TP·1 la
+   T3c·1 · T3c·2, todas en `main` y aprobadas (§4.3–§4.13) → ▶ **TP el público** (§4.14, `#792`; empieza por su «al detalle»,
+   medido: las cinco altas, el contrato, el export y el borrado, la isla por buzón; TP·1 la
    fecha en las cinco altas y Mi cuenta —la isla, de plataforma, por buzón—, TP·2 «Quién viene» en Clientes, TP·3 los padres por
    la edad de sus hijos, `[PENDIENTE: asesoría]` antes de exportar) → T3d el texto para IA (§4.7; lee `Changes` y
    los veredictos; sin PII ni celdas < 5) → T3e el SECTOR (primera búsqueda en §4.13: casi todo son medias, no rangos; AL OWNER
@@ -75,7 +75,8 @@
    encuestas, con la T8; el cruce por EMPLEADO, `[PENDIENTE: owner]` (27-09, sin respuesta).
    **Cómo se trabaja una tanda** (lo de esta sesión): medir antes y escribir «La Tx al detalle» en §4.13; toda cifra por el
    catálogo (`Filament\Analytics\Metrics\*::from()`, su «¿Cómo se calcula?» es/zh_CN y el censo); el arnés
-   `mutar-analitica-decidir.sh` (115, ~70 min) en segundo plano y **nadie mira localhost mientras corre** (muta en su sitio); un
+   `mutar-analitica-decidir.sh` con `SOLO=<tanda>` (~5 min; el entero, ~95 min, al cerrar un bloque: owner, 28-09), en
+   segundo plano y **nadie mira localhost mientras corre** (muta en su sitio); un
    superviviente es un caso que falta; tras el arnés, los dos bundles; tras rebasar, re-medir la suite. En local «Este mes» dice
    «aún sin historia» (3 meses de datos): para el ojo, «La semana pasada». La tanda, aparcada en `wip/…` hasta el visto bueno y
    después *fast-forward* a `main`. **Trampas**: `OccupancyReader` COPIA la aritmética del aforo (`OccupancyReaderParityTest`);
@@ -143,7 +144,8 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 ## Trampas vivas (las de esta máquina y del repo; las de cada feature, en su spec)
 
 - **El trailer lleva el TOTAL de la suite** (la línea `Tests: N` del gate, con los omitidos dentro), no los «passed» de
-  `--compact`: 6077 passed + 1 skipped se declara 6078, o el gate dice que el commit MIENTE (26-09).
+  `--compact`: 6077 passed + 1 skipped se declara 6078, o el gate dice que el commit MIENTE (26-09). Las ASERCIONES varían
+  con el reloj (28-09: 42882 → 42853, mismo código): vale la del gate de ESE push.
 - 🏠 **Esta máquina y la instancia (25-09)**: `compose.yaml` monta `../instancias` (aquí `~/proyectos/instancias`) en
   `/var/www/instancias`; si la carpeta no existe, **Docker la crea de ROOT y vacía**: `rmdir` funciona igual (el padre es
   tuyo) y después `mkdir` + clon. Cambiar la carpeta por debajo del montaje exige **recrear `laravel.test`**
@@ -228,10 +230,10 @@ el repo de la instancia (lo nuevo), nunca a `main`.
   comerciales (`[PENDIENTE: asesoría]`).
 - ❗ **Para plataforma (28-09, la T3 de la analítica, `#759`/`#790`/`#791`)**: (1) Toqué dos descripciones de TU hub de Ajustes
   en `lang/{es,zh_CN}/admin.php`: Experimentos y Encuestas decían «Analítica → Conversión / Encuestas» y ahora «→ Marketing /
-  Satisfacción» (las pestañas se renombraron; `?pestana=traffic` y `surveys` siguen abriendo la suya). (2) **AVISO PREVIO**: la
-  T3c·2 (objetivos del mes) tocará `PermissionSeeder`/`PermissionCatalog` (permiso `analytics.manage`), `AuditLog::ACTIONS`
-  (`analytics.goals_updated`), el morfo de `AppServiceProvider` (`AnalyticsGoal`) y el recuento de migraciones de `README.md` y
-  `MODELO-DATOS.md`; si tienes algo a medias ahí, dímelo. Sin contrato nuevo.
+  Satisfacción» (las pestañas se renombraron; `?pestana=traffic` y `surveys` siguen abriendo la suya). (2) **HECHO (T3c·2)**:
+  toqué `PermissionSeeder`/`PermissionCatalog` (+`analytics.manage`, de gestión; llega con el seeder del despliegue),
+  `AuditLog::ACTIONS` (+`analytics.goals_updated`), el morfo de `AppServiceProvider` (+`analytics_goal`), `docs/README.md` (55
+  modelos · 149 migraciones) y `MODELO-DATOS.md` (`analytics_goals`). Tras el `pull`, `php artisan migrate`. Sin contrato nuevo.
 - ❗❗ **Para plataforma (27-09 noche, la T2 de la analítica, `#758` `[DECIDIDO owner]`)**: la «demanda sin hueco» se mide
   desde ya: el CAJÓN emite `availability_missing {product, month}` al cargar la oferta de un producto (por cada mes sin días
   desde el en curso; una vez por producto y mes en la visita). **La isla no pasa por `selectProduct()` y no lo emite**: te

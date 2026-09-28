@@ -62,6 +62,24 @@
             </p>
         @endif
 
+        {{-- El objetivo del mes (T3c·2, `#759`): solo con una ventana que es un mes y en las cifras que lo admiten. --}}
+        @php($goal = $metric->goal?->read($metric))
+        @if ($goal !== null)
+            <p
+                @class([
+                    'flex items-start gap-1.5 text-sm font-medium',
+                    'text-success-700 dark:text-success-400' => $goal['tone'] === \App\Filament\Analytics\Metric::TONE_GOOD,
+                    'text-warning-700 dark:text-warning-400' => $goal['tone'] === \App\Filament\Analytics\Metric::TONE_WATCH,
+                    'text-gray-700 dark:text-gray-300' => $goal['tone'] === \App\Filament\Analytics\Metric::TONE_NEUTRAL,
+                ])
+                data-metric-goal="{{ $goal['state'] }}"
+                data-metric-goal-tone="{{ $goal['tone'] }}"
+            >
+                {{ \Filament\Support\generate_icon_html(\Filament\Support\Icons\Heroicon::OutlinedFlag, attributes: (new \Filament\Support\View\ComponentAttributeBag)->class(['mt-0.5 h-4 w-4 shrink-0'])) }}
+                <span>{{ $goal['line'] }}</span>
+            </p>
+        @endif
+
         @if ($reading['line'] !== null)
             <div
                 {{ (new FilamentComponentAttributeBag)->color(DescriptionComponent::class, $reading['color'])->class(['fi-wi-stats-overview-stat-description']) }}
@@ -90,6 +108,9 @@
             <p class="pb-1">{{ $metric->how }}</p>
             @if ($verdict !== null)
                 <p class="pb-1">{{ __('admin.analytics.verdict.how') }}</p>
+            @endif
+            @if ($goal !== null)
+                <p class="pb-1">{{ __('admin.analytics.goal.how') }}</p>
             @endif
         </details>
 

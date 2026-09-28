@@ -71,6 +71,7 @@ use App\Domain\Platform\Contracts\VisitFacts;
 use App\Domain\Platform\Listeners\ApplyBusinessSender;
 use App\Domain\Platform\Listeners\RecordEmailSent;
 use App\Domain\Platform\Models\AnalyticsEvent;
+use App\Domain\Platform\Models\AnalyticsGoal;
 use App\Domain\Platform\Models\AnalyticsSession;
 use App\Domain\Platform\Models\AuditLog;
 use App\Domain\Platform\Models\Experiment;
@@ -292,6 +293,8 @@ class AppServiceProvider extends ServiceProvider
             // El libro de eventos (`#678`): sin relaciones polimórficas hoy, pero todo modelo lleva alias.
             'analytics_session' => AnalyticsSession::class,
             'analytics_event' => AnalyticsEvent::class,
+            // Los objetivos del mes (T3c·2 de la analítica para decidir): sin relaciones polimórficas, pero todo modelo lleva alias.
+            'analytics_goal' => AnalyticsGoal::class,
             // `#536`: las imágenes de `/bar` (la carta y la foto del local). Todo modelo necesita
             // alias de morfo — lo exige `MorphMapTest` y es lo que hace que el AUDIT guarde `bar_image`
             // y no el nombre de clase, que se rompe al mover el fichero de sitio.

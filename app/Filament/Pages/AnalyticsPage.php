@@ -4,8 +4,10 @@ namespace App\Filament\Pages;
 
 use App\Domain\Platform\Enums\Comparison;
 use App\Domain\Platform\Enums\ReportPeriod;
+use App\Domain\Platform\Services\Analytics\AnalyticsGoals;
 use App\Domain\Platform\Services\Analytics\Reports\Window;
 use App\Filament\Analytics\CsvExport;
+use App\Filament\Analytics\GoalsForm;
 use App\Filament\Analytics\SegmentsReport;
 use App\Filament\Analytics\WindowLabel;
 use App\Filament\Widgets\Analytics\AnticipationChart;
@@ -55,6 +57,7 @@ use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
+use Filament\Notifications\Notification;
 use Filament\Pages\Dashboard as BaseDashboard;
 use Filament\Pages\Dashboard\Concerns\HasFiltersForm;
 use Filament\Schemas\Components\Actions;
@@ -70,6 +73,7 @@ use Filament\Support\Enums\Alignment;
 use Filament\Support\Icons\Heroicon;
 use Filament\Widgets\Widget;
 use Livewire\Attributes\Url;
+use LogicException;
 
 /**
  * **«Analítica», el cuadro de mando** (`docs/specs/analitica.md` §4.5; `DECISIONES #735`, `#736`; y desde la T3a de
@@ -111,6 +115,15 @@ class AnalyticsPage extends BaseDashboard
      * propio y fuera del staff por defecto, y cada descarga deja rastro con el segmento y el recuento.
      */
     public const PERMISSION_SEGMENTS_EXPORT = 'analytics.export';
+
+    /**
+     * Poner los objetivos del mes (T3c·2, `#759`): cambia lo que el cuadro dice de todos, así que es de gestión y propio
+     * —el admin lo tiene por `Gate::before`—, y se vuelve a exigir al guardar (`SEC-04`).
+     */
+    public const PERMISSION_GOALS = 'analytics.manage';
+
+    /** El evento con el que las tarjetas se vuelven a pintar tras guardar los objetivos. */
+    public const GOALS_SAVED_EVENT = 'analytics-goals-saved';
 
     /** La pestaña con la que se abre. */
     public const DEFAULT_TAB = 'summary';
@@ -286,7 +299,7 @@ class AnalyticsPage extends BaseDashboard
         return __('admin.analytics.questions.'.self::normalizeTab($this->tab));
     }
 
-    /** Sin botones arriba (T3a): el CSV va al pie de cada pestaña, y el segmento, al pie de «Clientes». */
+    /** Sin botones arriba (T3a): el CSV va al pie de cada pestaña; el segmento, al pie de «Clientes»; los objetivos, al de «Resumen». */
     protected function getHeaderActions(): array
     {
         return [];
@@ -402,7 +415,48 @@ class AnalyticsPage extends BaseDashboard
             $actions[] = $this->exportSegmentAction();
         }
 
+        if ($tab === self::DEFAULT_TAB) {
+            $actions[] = $this->goalsAction();
+        }
+
         return $actions === [] ? [] : [Actions::make($actions)->alignment(Alignment::End)];
+    }
+
+    /**
+     * «Objetivos del mes» (T3c·2, `#759`): al pie de «Resumen», un formulario con el mes —este o el siguiente— y un campo
+     * por cifra ({@see GoalsForm}). Se esconde sin `analytics.manage`. Pública: Filament la resuelve por su nombre.
+     *
+     * ⚠️ `SEC-04` lo cumple el propio `visible()`: al enviar, Filament lo vuelve a evaluar (`callMountedAction` →
+     * `isDisabled()` → `isHidden()`, medido el 28-09) y con el permiso retirado no llama a `action()`; una segunda
+     * comprobación aquí dentro no se podría alcanzar. Lo vigila `AnalyticsGoalsTest` (el permiso retirado con el
+     * formulario abierto). Tampoco llega un mes forjado: el `Select` valida contra sus opciones al enviar (este y el
+     * siguiente, recalculadas en ese momento).
+     */
+    public function goalsAction(): Action
+    {
+        return Action::make('goals')
+            ->label(__('admin.analytics.goals.button'))
+            ->icon(Heroicon::OutlinedFlag)
+            ->color('gray')
+            ->visible(fn (): bool => auth()->user()?->hasPermission(self::PERMISSION_GOALS) ?? false)
+            ->modalHeading(__('admin.analytics.goals.modal_heading'))
+            ->modalDescription(__('admin.analytics.goals.modal_description'))
+            ->modalSubmitActionLabel(__('admin.analytics.goals.submit'))
+            ->modalWidth('lg')
+            ->fillForm(fn (): array => GoalsForm::fill(GoalsForm::months()[array_key_first(GoalsForm::months())]))
+            ->schema(fn (): array => GoalsForm::schema())
+            ->action(function (array $data): void {
+                $month = GoalsForm::month($data['month'] ?? null)
+                    ?? throw new LogicException('El mes de los objetivos llega validado por su Select.');
+
+                $changed = AnalyticsGoals::save($month, GoalsForm::targets($data), auth()->id());
+
+                Notification::make()
+                    ->title(__($changed ? 'admin.analytics.goals.saved' : 'admin.analytics.goals.unchanged'))
+                    ->success()
+                    ->send();
+                $this->dispatch(self::GOALS_SAVED_EVENT);
+            });
     }
 
     /** El CSV de un informe con el filtro de la página (T2d). */

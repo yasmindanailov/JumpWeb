@@ -6,6 +6,7 @@ use App\Domain\Platform\Enums\Comparison;
 use App\Domain\Platform\Enums\ReportPeriod;
 use App\Domain\Platform\Models\Setting;
 use App\Filament\Analytics\FunnelReport;
+use App\Filament\Analytics\Goal;
 use App\Filament\Analytics\Metric;
 use App\Filament\Analytics\Metrics\CustomersMetrics;
 use App\Filament\Analytics\Metrics\MarketingMetrics;
@@ -116,5 +117,31 @@ class MetricsCatalogTest extends TestCase
 
         $this->assertCount(58, $keys, 'las 58 cifras del cuadro (44 del 27-09 + 5 de la T0c + 6 de la T2 + 3 de la T3a)');
         $this->assertSame($keys, array_values(array_unique($keys)), 'una clave, una cifra');
+    }
+
+    /**
+     * Las ocho cifras con objetivo del mes (T3c·2) existen en el catálogo, se guardan en SU unidad y suben cuando van bien
+     * (el tono del objetivo no mira la polaridad); las de nivel son justo las tasas.
+     */
+    public function test_the_goal_figures_exist_in_their_unit_and_go_up_when_good(): void
+    {
+        $window = ReportPeriod::ThisMonth->window();
+        $catalog = [];
+        foreach ([MoneyMetrics::class, OccupancyMetrics::class, CustomersMetrics::class, MarketingMetrics::class, PartiesMetrics::class] as $set) {
+            $catalog += $set::for($window, Comparison::Previous);
+        }
+
+        $this->assertSame(Goal::KEYS, array_keys(Goal::UNITS), 'las mismas ocho, en el mismo orden');
+        $this->assertSame([
+            'money.net', 'money.sold', 'money.orders', 'occupancy.visitors', 'parties.parties', 'customers.registrations',
+            'occupancy.entries', 'traffic.conversion',
+        ], Goal::KEYS);
+
+        foreach (Goal::UNITS as $key => $unit) {
+            $this->assertArrayHasKey($key, $catalog, "«{$key}» no está en el catálogo");
+            $this->assertSame($unit, $catalog[$key]->unit, "«{$key}» se guarda en otra unidad que la de su tarjeta");
+            $this->assertSame(Polarity::UpIsGood, $catalog[$key]->polarity, "«{$key}» no sube cuando va bien");
+            $this->assertSame($unit === Metric::UNIT_RATE, in_array($key, Goal::LEVEL, true), "«{$key}»: de nivel si y solo si es una tasa");
+        }
     }
 }

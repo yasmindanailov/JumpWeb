@@ -80,6 +80,8 @@ final readonly class Metric
         public ?array $history = null,
         /** Cómo se dice la unidad de la historia: `month`, `week`, `quarter`, `year`, `span` o `day:1…7` (el día ISO). */
         public ?string $historyUnit = null,
+        /** El objetivo del mes (T3c·2): solo en las cifras que lo admiten y con una ventana que es un mes. */
+        public ?Goal $goal = null,
     ) {}
 
     /** Periodos de historia que hacen falta para decir si una cifra es normal (§4.4). */
@@ -187,7 +189,17 @@ final readonly class Metric
         return new self(
             $this->key, $this->label, $this->unit, $this->polarity, $this->how, $this->value, $this->previous, $this->base, $this->previousBase,
             $this->hits, $this->previousHits, $this->display, $this->detail, $this->squares, $this->previousSquares, $this->isMean,
-            $history, $unit,
+            $history, $unit, $this->goal,
+        );
+    }
+
+    /** La misma cifra con su objetivo del mes (T3c·2). */
+    public function withGoal(Goal $goal): self
+    {
+        return new self(
+            $this->key, $this->label, $this->unit, $this->polarity, $this->how, $this->value, $this->previous, $this->base, $this->previousBase,
+            $this->hits, $this->previousHits, $this->display, $this->detail, $this->squares, $this->previousSquares, $this->isMean,
+            $this->history, $this->historyUnit, $goal,
         );
     }
 

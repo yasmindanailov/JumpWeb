@@ -246,6 +246,33 @@ informe.cambios = await page.evaluate(() => ({
 }));
 ok('«Lo que ha cambiado»: su lista (≤ 5, cada una con tono y enlace) o por qué no hay', (informe.cambios.frases.length > 0 && informe.cambios.frases.length <= 5 && informe.cambios.frases.every((f) => ['good', 'watch', 'neutral'].includes(f.tono) && f.enlace)) || (informe.cambios.frases.length === 0 && (informe.cambios.vacio ?? '') !== ''), JSON.stringify(informe.cambios).slice(0, 200));
 
+// 3 bis. Los objetivos del mes (T3c·2, `#759`): el botón al pie de «Resumen» abre el formulario —el mes y ocho cifras, cada
+// una con lo que valió el mes pasado—; se guardan dos (idempotente: la segunda vuelta dice «No había nada que cambiar») y
+// las tarjetas los dicen con su tono. ⚠️ Escribe en la BD LOCAL dos objetivos del mes en curso (para el ojo del owner).
+paso = 'objetivos';
+await page.getByRole('button', { name: 'Objetivos del mes' }).first().click();
+const modal = page.locator('.fi-modal-window:visible');
+await modal.first().waitFor({ timeout: ESPERA_WIDGETS_MS });
+await asentar(900);
+informe.objetivos = await modal.first().evaluate((m) => ({
+    campos: m.querySelectorAll('input[type="number"]').length,
+    mes: m.querySelectorAll('select').length,
+    pistas: [...m.querySelectorAll('.fi-fo-field-wrp-helper-text, .fi-sc-text')].map((p) => p.textContent.trim()).filter((t) => t.startsWith('El mes pasado:')).length,
+}));
+ok('objetivos: el mes y ocho cifras, cada una con el mes pasado', informe.objetivos.campos === 8 && informe.objetivos.mes === 1 && informe.objetivos.pistas === 8, JSON.stringify(informe.objetivos));
+await captura('escritorio-objetivos-formulario');
+await modal.getByLabel('Ingresos netos', { exact: true }).fill('3000');
+await modal.getByLabel('Conversión', { exact: true }).fill('8');
+await modal.getByRole('button', { name: 'Guardar' }).click();
+ok('objetivos: se guardan', await llega('Objetivos guardados') || await page.getByText('No había nada que cambiar').count() > 0);
+await page.waitForTimeout(2500);
+informe.objetivos.tarjetas = await page.evaluate(() => [...document.querySelectorAll('.fi-sc-tabs [data-metric]')]
+    .filter((s) => s.querySelector('[data-metric-goal]'))
+    .map((s) => ({ clave: s.dataset.metric, estado: s.querySelector('[data-metric-goal]').dataset.metricGoal, tono: s.querySelector('[data-metric-goal]').dataset.metricGoalTone, texto: s.querySelector('[data-metric-goal]').textContent.replace(/\s+/g, ' ').trim() })));
+ok('objetivos: las dos tarjetas lo dicen, con su tono', ['money.net', 'traffic.conversion'].every((k) => informe.objetivos.tarjetas.some((t) => t.clave === k && ['good', 'watch', 'neutral'].includes(t.tono))), JSON.stringify(informe.objetivos.tarjetas).slice(0, 200));
+await page.evaluate(() => window.scrollTo(0, 0));
+await captura('escritorio-objetivos-tarjetas');
+
 // 3 bis. La ocupación: el mapa de calor escribe el % en cada celda, con su tooltip.
 paso = 'mapa';
 await page.getByRole('tab', { name: 'Ocupación' }).first().click();
@@ -325,6 +352,14 @@ await page.waitForTimeout(600);
 ok('móvil: la píldora abre el filtro', await page.evaluate(() => getComputedStyle(document.getElementById('analitica-filtros')).display !== 'none'));
 await captura('movil-filtro-abierto');
 await page.locator('[data-analytics-filter-pill] button').click();
+// El formulario de los objetivos, en el móvil: cabe sin desplazamiento horizontal.
+await page.getByRole('button', { name: 'Objetivos del mes' }).first().click();
+await page.locator('.fi-modal-window:visible').first().waitFor({ timeout: ESPERA_WIDGETS_MS });
+await asentar(900);
+ok('móvil: el formulario de los objetivos sin desplazamiento horizontal', await page.evaluate(() => document.documentElement.scrollWidth <= 390), await page.evaluate(() => document.documentElement.scrollWidth));
+await captura('movil-objetivos-formulario');
+await page.keyboard.press('Escape');
+await page.waitForTimeout(600);
 await page.locator('[data-analytics-tab-select] select').selectOption('money');
 await page.waitForTimeout(1500);
 ok('móvil: el selector cambia de pestaña', page.url().includes('pestana=money') && (await page.locator('.fi-header-subheading').textContent())?.trim() === '¿Cuánto ganamos y de qué?', page.url());

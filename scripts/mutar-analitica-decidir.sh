@@ -12,7 +12,20 @@
 set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
-FILTER='ReportPeriodTest|MoneyReportTest|WindowLabelTest|AnalyticsPageTest|MetricTest|AnalyticsCensusTest|FunnelReportTest|PartiesReportTest|CustomersReportTest|GateSurveyTest|ValidarRegistroProfileTest|GateVisitsTest|OccupancyReaderParityTest|OccupancyReportTest|AnalyticsTabsTest|AnalyticsJargonTest|MetricsCatalogTest|AnalyticsExportTest|SegmentsExportTest|MetricsHistoryTest|ChangesTest'
+FILTER='ReportPeriodTest|MoneyReportTest|WindowLabelTest|AnalyticsPageTest|MetricTest|AnalyticsCensusTest|FunnelReportTest|PartiesReportTest|CustomersReportTest|GateSurveyTest|ValidarRegistroProfileTest|GateVisitsTest|OccupancyReaderParityTest|OccupancyReportTest|AnalyticsTabsTest|AnalyticsJargonTest|MetricsCatalogTest|AnalyticsExportTest|SegmentsExportTest|MetricsHistoryTest|ChangesTest|GoalTest|AnalyticsGoalsTest'
+# Modo «solo una tanda» (`SOLO=<tanda> bash scripts/mutar-analitica-decidir.sh`; 28-09, el owner: esperar ~95 min por tanda
+# es inviable). Corre SOLO las mutaciones de esa sección y con SUS pruebas: un filtro más estrecho nunca inventa un «muerde»,
+# como mucho esconde uno, y el veredicto sigue siendo por código de salida. La base verde y el CONTROL corren siempre. El arnés
+# entero se reserva para cerrar un bloque (la T3 entera, la TP…). Una tanda nueva: su `SECCION=` y su filtro aquí.
+declare -A FILTRO_DE=(
+    [T3c2]='GoalTest|AnalyticsGoalsTest|MetricsCatalogTest'
+)
+SOLO="${SOLO:-}"
+SECCION=''
+if [[ -n "$SOLO" ]]; then
+    [[ -n "${FILTRO_DE[$SOLO]:-}" ]] || { echo "✗ SOLO=$SOLO no es una tanda de este arnés (${!FILTRO_DE[*]})" >&2; exit 2; }
+    FILTER="${FILTRO_DE[$SOLO]}"
+fi
 RUN="docker compose exec -u sail -T laravel.test php artisan test --filter=${FILTER}"
 
 TMP="$(mktemp -d)"
@@ -50,6 +63,9 @@ FICHEROS=(
     app/Filament/Widgets/Analytics/OccupancyHeatmapWidget.php
     resources/js/sidebar/calendar.js
     resources/js/sidebar/missing.js
+    app/Filament/Analytics/Goal.php
+    app/Filament/Analytics/GoalsForm.php
+    app/Domain/Platform/Services/Analytics/AnalyticsGoals.php
 )
 # La copia de cada fichero, por su RUTA entera (T3a): por su nombre, `lang/es/admin.php` y `lang/zh_CN/admin.php` chocaban.
 copia() { echo "$TMP/$(echo "$1" | tr '/' '_')"; }
@@ -75,6 +91,9 @@ aplicar() {
 
 mutar() {
     local nombre="$1" fichero="$2" buscar="$3" poner="$4"
+    if [[ -n "$SOLO" && "$SECCION" != "$SOLO" ]]; then
+        return
+    fi
     total=$((total + 1))
     aplicar "$fichero" "$buscar" "$poner"; local unico=$?
     if cmp -s "$fichero" "$(copia "$fichero")"; then
@@ -632,11 +651,150 @@ mutar "una frase de «lo que ha cambiado» lleva a «Resumen»" "$AP" \
             }' \
   ''
 
+# ── T3c·2 · LOS OBJETIVOS DEL MES (§4.13, `#759`) ────────────────────────────────────────────────────────────────
+G=app/Filament/Analytics/Goal.php
+GS=app/Domain/Platform/Services/Analytics/AnalyticsGoals.php
+GF=app/Filament/Analytics/GoalsForm.php
+SECCION=T3c2
+mutar "el ritmo se mide contra el objetivo entero" "$G" \
+  'return $value >= $this->target * $this->elapsed ? self::STATE_ON_PACE : self::STATE_BEHIND;' \
+  'return $value >= $this->target ? self::STATE_ON_PACE : self::STATE_BEHIND;'
+
+mutar "ir justo al ritmo es ir por detrás" "$G" \
+  'return $value >= $this->target * $this->elapsed ? self::STATE_ON_PACE' \
+  'return $value > $this->target * $this->elapsed ? self::STATE_ON_PACE'
+
+mutar "los primeros días se juzga el ritmo" "$G" \
+  'if ($this->elapsed < self::MIN_ELAPSED) {' \
+  'if (false) {'
+
+mutar "los primeros días son la mitad" "$G" \
+  'public const MIN_ELAPSED = 0.1;' \
+  'public const MIN_ELAPSED = 0.05;'
+
+mutar "una tasa se juzga por el ritmo" "$G" \
+  '        if ($this->level) {' \
+  '        if (false) {'
+
+mutar "un mes cerrado se juzga por el ritmo" "$G" \
+  'if ($this->elapsed >= 1.0) {' \
+  'if ($this->elapsed > 1.0) {'
+
+mutar "llegar justo no es alcanzarlo" "$G" \
+  'return $value >= $this->target ? self::STATE_REACHED' \
+  'return $value > $this->target ? self::STATE_REACHED'
+
+mutar "cualquier ventana tiene objetivo" "$G" \
+  'return $window->unit === Window::UNIT_MONTH && $window->from->day === 1;' \
+  'return true;'
+
+mutar "cualquier cifra admite objetivo" "$G" \
+  'if (! in_array($key, self::KEYS, true) || $target <= 0 || ! self::applies($window)) {' \
+  'if ($target <= 0 || ! self::applies($window)) {'
+
+mutar "ir por detrás no pide atención" "$G" \
+  'self::STATE_BEHIND, self::STATE_MISSED, self::STATE_BELOW => Metric::TONE_WATCH,' \
+  'self::STATE_MISSED, self::STATE_BELOW => Metric::TONE_WATCH,'
+
+mutar "el avance se dice sobre lo que falta" "$G" \
+  'return (int) round($value / $this->target * 10000);' \
+  'return (int) round(($this->target - $value) / $this->target * 10000);'
+
+mutar "guardar no olvida la caché del mes" "$GS" \
+  '        Cache::forget(self::cacheKey($first));' \
+  ''
+
+mutar "vaciar un campo no quita el objetivo" "$GS" \
+  '$row?->delete();' \
+  '$row?->touch();'
+
+mutar "guardar lo mismo también escribe y deja rastro" "$GS" \
+  'if ($old === $target) {' \
+  'if (false) {'
+
+mutar "el rastro no lleva el antes" "$GS" \
+  '$changes['"'"'before'"'"'][$key] = $old;' \
+  ''
+
+mutar "guardar no deja rastro" "$GS" \
+  "        AuditLogger::log('analytics.goals_updated', null, ['month' => \$first->format('Y-m')] + \$changed);" \
+  ''
+
+mutar "un objetivo de cero se acepta" "$GS" \
+  'if ($target !== null && $target <= 0) {' \
+  'if ($target !== null && $target < 0) {'
+
+mutar "cualquier clave se acepta" "$GS" \
+  'if (preg_match(self::KEY_RE, $key) !== 1) {' \
+  'if (false) {'
+
+mutar "el mes se guarda por el día que llega" "$GS" \
+  "return CarbonImmutable::parse(\$month->format('Y-m-01'));" \
+  "return CarbonImmutable::parse(\$month->format('Y-m-d'));"
+
+mutar "no se guarda quién lo puso" "$GS" \
+  "'month' => \$first->toDateString(), 'target' => \$target, 'set_by' => \$setBy]" \
+  "'month' => \$first->toDateString(), 'target' => \$target, 'set_by' => null]"
+
+mutar "los euros se guardan como euros" "$GF" \
+  '                Metric::UNIT_MONEY, Metric::UNIT_RATE => (int) round($number * 100),' \
+  '                Metric::UNIT_RATE => (int) round($number * 100),'
+
+mutar "una tasa pasa del 100 %" "$GF" \
+  '$target = min($target, 10000);' \
+  '$target = $target;'
+
+mutar "se puede tocar cualquier mes" "$GF" \
+  "return is_string(\$key) ? (self::months()[\$key] ?? null) : null;" \
+  "return is_string(\$key) ? CarbonImmutable::parse(\$key.'-01') : null;"
+
+mutar "un cero pone objetivo" "$GF" \
+  '$targets[$key] = $target !== null && $target > 0 ? $target : null;' \
+  '$targets[$key] = $target;'
+
+mutar "las tarjetas no llevan su objetivo" "$MS" \
+  'return self::withGoals(static::judged(static::from($report), $report, $window), $window);' \
+  'return static::judged(static::from($report), $report, $window);'
+
+mutar "la historia pierde el objetivo" "$M" \
+  '            $history, $unit, $this->goal,' \
+  '            $history, $unit,'
+
+mutar "el objetivo pierde la historia" "$M" \
+  '            $this->history, $this->historyUnit, $goal,' \
+  '            null, null, $goal,'
+
+mutar "la tarjeta no pinta el objetivo" "resources/views/filament/widgets/analytics/metric.blade.php" \
+  '@php($goal = $metric->goal?->read($metric))' \
+  '@php($goal = null)'
+
+mutar "la tarjeta no dice el tono del objetivo" "resources/views/filament/widgets/analytics/metric.blade.php" \
+  "data-metric-goal-tone=\"{{ \$goal['tone'] }}\"" \
+  'data-metric-goal-tone="neutral"'
+
+mutar "el botón de los objetivos se ve sin permiso" "$AP" \
+  '->visible(fn (): bool => auth()->user()?->hasPermission(self::PERMISSION_GOALS) ?? false)' \
+  '->visible(fn (): bool => true)'
+
+mutar "las tarjetas no se enteran del guardado" "$AP" \
+  '                $this->dispatch(self::GOALS_SAVED_EVENT);' \
+  ''
+
+mutar "el botón de los objetivos no está al pie de «Resumen»" "$AP" \
+  '        if ($tab === self::DEFAULT_TAB) {
+            $actions[] = $this->goalsAction();' \
+  "        if (\$tab === 'nada') {
+            \$actions[] = \$this->goalsAction();"
+
+mutar "las tarjetas no escuchan el guardado" "app/Filament/Widgets/Analytics/MetricsWidget.php" \
+  '    #[On(AnalyticsPage::GOALS_SAVED_EVENT)]' \
+  ''
+
 # ── El CONTROL: tocar un comentario no puede poner nada en rojo ─────────────────────────────────
 control "un comentario de Window" "$W" \
   'Un día' \
   'Un dia'
 
 echo
-echo "$muerden/$total muerden"
+echo "$muerden/$total muerden${SOLO:+ (solo la tanda $SOLO)}"
 [[ $muerden -eq $total && $control_ok -eq 1 ]]

@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets\Analytics;
 
 use App\Filament\Analytics\Metric;
+use App\Filament\Pages\AnalyticsPage;
 use App\Filament\Widgets\Analytics\Concerns\AnalyticsWidget;
 use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Section;
@@ -10,6 +11,7 @@ use Filament\Widgets\Concerns\InteractsWithPageFilters;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Support\Str;
+use Livewire\Attributes\On;
 
 /**
  * **Un grupo de tarjetas del cuadro** (T3a de `specs/analitica-para-decidir.md` §4.13, `#759`): ELIGE claves del catálogo
@@ -44,6 +46,13 @@ abstract class MetricsWidget extends StatsOverviewWidget
      * @return array<string, Metric>
      */
     abstract protected function metrics(): array;
+
+    /**
+     * Tras guardar los objetivos del mes (T3c·2) la tarjeta se vuelve a pintar y los lee de nuevo: el guardado olvidó su
+     * caché. No hace nada más: escuchar el evento ya es pedir otra vuelta.
+     */
+    #[On(AnalyticsPage::GOALS_SAVED_EVENT)]
+    public function goalsSaved(): void {}
 
     /** @return array<int, Stat> */
     protected function getStats(): array

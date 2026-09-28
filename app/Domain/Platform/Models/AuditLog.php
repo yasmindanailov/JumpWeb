@@ -196,6 +196,9 @@ class AuditLog extends Model
         // «Ajustes»; el payload lleva la clave, la clase, el estado y cuántas preguntas, sin PII.
         'surveys.saved',
         'surveys.deleted',
+        // T3c·2 de la analítica para decidir (`#759`): los objetivos del mes se guardan desde «Resumen»; el payload lleva
+        // el mes y el antes y el después de cada clave que cambió, sin PII.
+        'analytics.goals_updated',
 
         // ── Incidencias de cobro (llegan por CONSTANTE, no por literal) ────────────────────
         self::ACTION_DUPLICATE_CAPTURE,

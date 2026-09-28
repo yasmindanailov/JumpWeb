@@ -112,6 +112,8 @@ class PermissionSeeder extends Seeder
         'customers.insights' => 'Ver la 360 del cliente en su ficha',
         // Los segmentos (T4b): exportar una lista de personas con opt-in, con rastro. Distinto de `reports.export`.
         'analytics.export' => 'Exportar segmentos de clientes (con opt-in)',
+        // Los objetivos del mes (T3c·2 de la analítica para decidir): de gestión, fuera del staff por defecto.
+        'analytics.manage' => 'Poner los objetivos del mes de la analítica',
         'audit.view' => 'Ver registro de auditoría',
     ];
 

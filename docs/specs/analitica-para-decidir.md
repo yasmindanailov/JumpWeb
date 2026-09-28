@@ -1,6 +1,6 @@
 # [SPEC] La analítica para decidir — un cuadro que se entiende, dice si va bien o mal y cubre las decisiones del operador
 
-> Estado: ✅ **aprobada por el owner el 27-09** (§7; `#755`) → ✅ **T0, T1 y T2** · 🟦 **T3** (✅ T3a · ✅ T3b · ✅ T3c·1 · ⬜ T3c·2→T3e, §4.13) · ⬜ **TP el público** (§4.14) · Última actualización: 2026-09-28 ·
+> Estado: ✅ **aprobada por el owner el 27-09** (§7; `#755`) → ✅ **T0, T1 y T2** · 🟦 **T3** (✅ T3a · ✅ T3b · ✅ T3c · ⬜ T3d·T3e, §4.13) · ⬜ **TP el público** (§4.14) · Última actualización: 2026-09-28 ·
 > Decisiones: `#755` (esta), `#754` (encuestas anónimas, su T1), `#758` (la T2), `#759` (la T3 en cinco tandas), `#792` (el público) · Carril: **SPA** (banda 790–819). Amplía `analitica.md`
 > (el libro, los regímenes y la T2 siguen siendo suyos).
 
@@ -17,8 +17,8 @@
   sale a un tercero: SOLO agregados, con guarda; (5) los enlaces FIRMADOS de los correos: la marca de envío va por el
   camino de `EmailUtm` (tras firmar, ignorada al validar); (6) aperturas solo con consentimiento (`[PENDIENTE: asesoría]`).
 - **Estado**: ✅ aprobada (27-09, `#755`); T0a·T0b·T0c ✅ · **T1** ✅ (la T5 de `encuestas.md`, `#754`, `#757`) · **T2** ✅ ocupación (§4.8.ter, `#758`) → **T3** Resumen, en cinco tandas (§4.13,
-  `#759`): ✅ T3a la forma · ✅ T3b veredicto (mín–máx, `#790`) · ✅ T3c·1 lo que ha cambiado (`#791`) → ▶ T3c·2 objetivos →
-  **TP el público** (§4.14, `#792`) → T3d.
+  `#759`): ✅ T3a la forma · ✅ T3b veredicto (mín–máx, `#790`) · ✅ T3c·1 lo que ha cambiado (`#791`) · ✅ T3c·2 objetivos →
+  ▶ **TP el público** (§4.14, `#792`) → T3d.
   **Nada de lo medido se pierde** (§4.1.bis, con guarda): se resume arriba y lo demás queda
   plegado o en su pestaña.
 - **Invariantes**: `RGPD-01`, `RGPD-04`, `RGPD-07`, `SEC-04`, `SUITE-01`. Dinero y aforo: solo lectura.
@@ -602,7 +602,7 @@ PHPUnit y finales —un ayudante con ese nombre tumba el fichero con un error fa
 veredicto, por el código de salida—. (2) El arnés dejó viva «el dinero deja de ir delante»: en la prueba los céntimos ya
 pesaban más que cualquier distancia relativa. Faltaba el caso que las separa —un céntimo fuera frente a 1,5 veces el borde—.
 
-**La T3c·2 al detalle (diseño, 28-09; ⬜ sin empezar)** — los objetivos del mes (§4.4), decidido contra el objetivo y vetable:
+**La T3c·2 al detalle (diseño, 28-09)** — los objetivos del mes (§4.4), decidido contra el objetivo y vetable:
 - **Dato**: `analytics_goals` (futuro) — `metric_key`, `month` (su primer día), `target` (en la unidad de la cifra: céntimos,
   unidades o puntos básicos), `set_by` (`nullOnDelete`), fechas; única por cifra y mes. Modelo `Platform\Models\AnalyticsGoal`
   (futuro) con su alias de morfo; sin datos personales.
@@ -616,6 +616,36 @@ pesaban más que cualquier distancia relativa. Faltaba el caso que las separa �
   rastro `analytics.goals_updated` (antes y después, sin PII).
 - **Compartido (aviso antes, por buzón)**: `PermissionSeeder`/`PermissionCatalog`, `AuditLog::ACTIONS`, el morfo de
   `AppServiceProvider` y el recuento de migraciones de `docs/README.md` y `MODELO-DATOS.md`.
+
+**Cómo se construyó la T3c·2 (28-09; ✅ vista en vivo y aprobada por el owner el 28-09: «buen trabajo, tienes el visto bueno»)**:
+- **Dato**: `analytics_goals` y `Platform\Models\AnalyticsGoal` (alias `analytics_goal`), con su único lector y escritor
+  `Platform\Services\Analytics\AnalyticsGoals`: `forMonth()` (caché de una hora por mes) y `save()` (un número pone o cambia, `null`
+  quita, lo que no viene no se toca; bajo `lockForUpdate`; sin cambios no escribe ni deja rastro; olvida la caché del mes;
+  rastro `analytics.goals_updated` con el mes y el antes y el después de las claves que cambiaron).
+- **La regla**, pura, en `Filament\Analytics\Goal`: las ocho de `KEYS` con su unidad (`UNITS`); `applies()` solo con la unidad
+  `month` que empieza el día 1 («Este mes», «El mes pasado»; un tramo a medida del 1 al 30 no); lo que se acumula, por el RITMO
+  —lo que llevas contra la parte del mes que ha pasado, lineal— y, cerrado, alcanzado o no (llegar justo cuenta); una tasa, por
+  encima o por debajo; **los tres primeros días (`MIN_ELAPSED` = 10 % del mes) el ritmo no se juzga** (del agente, vetable: un
+  día de ventas no dice nada). `Metric::withGoal()` la lleva junto a su historia; `MetricSet::for()` la cuelga (`withGoals()`),
+  así sale en su pestaña y en «Resumen»; la tarjeta pinta la línea con bandera, palabra y tono (`data-metric-goal`).
+- **El formulario** (`Filament\Analytics\GoalsForm`, acción `goals` al pie de «Resumen»): el mes (este o el siguiente) y las ocho
+  en la unidad del operador (euros, personas, %), cada una con **«El mes pasado: …»** del mismo catálogo; en blanco o cero, sin
+  objetivo; una tasa, como mucho el 100 %. Tras guardar, las tarjetas se repintan sin recargar (evento `analytics-goals-saved`).
+- **Medido**: `SEC-04` lo cumple el propio `visible()` del botón, porque Filament lo vuelve a evaluar al enviar
+  (`callMountedAction` → `isDisabled()` → `isHidden()`), y un mes forjado lo para la validación del `Select` contra sus opciones:
+  las dos comprobaciones que había escrito DENTRO de la acción no se alcanzaban nunca y se quitaron; las vigilan dos pruebas.
+  Sonda del panel **111/111** (+3: el formulario con sus nueve campos y sus pistas, guardar y las dos tarjetas con su tono, el
+  formulario a 390 px), consola limpia; con 3.000 € y 8 % de prueba el 28-09: «Por detrás del ritmo: llevas el 50 % y ha pasado
+  el 92 % del mes» y «Por debajo».
+- **Tests**: `GoalTest` (7, las ventanas a mano: el día 16 de junio a las 00:00 es la mitad exacta), `AnalyticsGoalsTest` (10: el
+  guardado y su rastro, la caché, lo que se rechaza, las unidades, los meses, el botón solo al pie de «Resumen», la tarjeta en su
+  pestaña y en «Resumen», fuera de un mes, el permiso, el permiso retirado con el formulario abierto, el mes forjado, el oyente)
+  y `MetricsCatalogTest` +1 (las ocho existen en su unidad y suben cuando van bien). Arnés: +33, **33/33 + control** con el modo
+  nuevo `SOLO=T3c2` (5 min 25 s; el entero, 148 a ~38 s cada una, ~95 min, se paró en 55/55 porque el owner no podía esperar:
+  desde el 28-09 el entero se corre al cerrar un bloque y cada tanda, con `SOLO=`).
+- **Lo que enseñó**: (1) `Livewire::withQueryParams()` se QUEDA para la siguiente `test()` del mismo caso: la segunda página se
+  abría en la pestaña de la primera. (2) En una prueba de Livewire cualquier ida y vuelta repinta, así que el oyente del evento
+  no se ve fallar por lo pintado: se comprueba que está, y el navegador (la sonda) que repinta.
 
 **T3e, primera búsqueda de fuentes (28-09; NADA sembrado, para el owner)**: casi todo lo publicado son MEDIAS de un
 informe, no rangos, y pocas veces de parques de salto. Candidatas, con su pega: (a) ROLLER, *2025 Attractions Industry

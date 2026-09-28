@@ -362,6 +362,28 @@ return [
             'none' => '{1} Nada fuera de lo normal: la cifra con historia está dentro de su rango.|[2,*] Nada fuera de lo normal: las :n cifras con historia están dentro de su rango.',
             'no_history' => 'Aún sin historia para decir qué ha cambiado: hacen falta 8 :unit con datos.',
         ],
+        // T3c·2 (`#759`): el objetivo del mes en la tarjeta y el formulario al pie de «Resumen».
+        'goal' => [
+            'on_pace' => 'Objetivo del mes: :target. Al ritmo: llevas el :progress y ha pasado el :elapsed del mes.',
+            'behind' => 'Objetivo del mes: :target. Por detrás del ritmo: llevas el :progress y ha pasado el :elapsed del mes.',
+            'early' => 'Objetivo del mes: :target. Llevas el :progress; aún es pronto para saber si vas al ritmo.',
+            'reached' => 'Objetivo del mes: :target. Alcanzado (:progress).',
+            'missed' => 'Objetivo del mes: :target. No alcanzado (:progress).',
+            'above' => 'Objetivo del mes: :target. Por encima.',
+            'below' => 'Objetivo del mes: :target. Por debajo.',
+            'how' => 'El objetivo lo pone el parque en «Objetivos del mes», al pie de «Resumen». En lo que se acumula (dinero, pedidos, visitantes, fiestas, cuentas), el ritmo compara lo que llevas con la parte del mes que ha pasado, como si todos los días valieran lo mismo; los tres primeros días no se juzga. En una tasa, se mira si está por encima o por debajo.',
+        ],
+        'goals' => [
+            'button' => 'Objetivos del mes',
+            'modal_heading' => 'Objetivos del mes',
+            'modal_description' => 'Cuánto quieres que valga cada cifra. En blanco, sin objetivo. Se ven con «Este mes» o «El mes pasado».',
+            'month' => 'Mes',
+            'month_option' => ':month de :year',
+            'last_month' => 'El mes pasado: :value',
+            'submit' => 'Guardar',
+            'saved' => 'Objetivos guardados',
+            'unchanged' => 'No había nada que cambiar',
+        ],
         // La ocupación (la T2 de `specs/analitica-para-decidir.md` §4.8.ter, `#758`): entradas y fiestas, nunca sumadas.
         'occupancy' => [
             'note' => 'Por el día y la hora de la visita, lo que ya pasó del periodo. Las entradas se miden en plazas y las fiestas en fiestas por franja: por separado.',
@@ -2661,6 +2683,7 @@ return [
             'reports_export' => 'Exportar la analítica en CSV',
             'customers_insights' => 'Ver la 360 del cliente en su ficha',
             'analytics_export' => 'Exportar segmentos de clientes (solo con opt-in)',
+            'analytics_manage' => 'Poner los objetivos del mes de la analítica',
             'audit_view' => 'Ver registro de auditoría',
             'access_manage' => 'Gestionar roles y permisos',
         ],

@@ -306,6 +306,11 @@ ofrecer la interna. ⚠️ El `OJO=desmontar` previo a la siembra se llevó TAMB
 en vivo el 25-09 (ya anónima, no había forma de separarla de las del fixture); su participación (cliente 593) sigue, así
 que la puerta no le vuelve a ofrecer la interna a esa cuenta.
 
+(15) **De la T3c·2, los objetivos del mes (28-09, `#759`)**: la sonda del panel (`sonda-analitica-panel.mjs`) GUARDA en la BD
+local, por el formulario, dos objetivos del mes en curso —Ingresos netos 3.000 € y Conversión 8 %— en cada pasada (la segunda
+dice «No había nada que cambiar»). Se quitan vaciando esos dos campos en «Objetivos del mes» o borrando sus filas de
+`analytics_goals`; quedan dos filas `analytics.goals_updated` en el rastro.
+
 ## Anexo · La fila del enrutador, mudada el 2026-09-16
 
 > Lo que decía la fila **«El carril del SPA en el OTRO ordenador · rediseñar el cajón (Fase 4) · el material de PlayJump en otra máquina · la rama `cliente/playjump` · qué ficheros son de cada carril»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila
