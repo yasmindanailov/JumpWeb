@@ -6,6 +6,7 @@ use App\Domain\Platform\Enums\Comparison;
 use App\Domain\Platform\Services\Analytics\Reports\Window;
 use App\Domain\Platform\Services\Money;
 use App\Filament\Analytics\Metrics\OccupancyMetrics;
+use App\Filament\Widgets\Analytics\AudienceWidget;
 use App\Filament\Widgets\Analytics\CustomersBreakdownWidget;
 use App\Filament\Widgets\Analytics\DataQualityWidget;
 use App\Filament\Widgets\Analytics\FunnelWidget;
@@ -132,6 +133,8 @@ final class CsvExport
             self::REPORT_CUSTOMERS => [
                 $this->customersSummary($window, $comparison),
                 ...(new CustomersBreakdownWidget)->tablesFor($window, $comparison),
+                // TP·2 (`#792`): quién viene, con los MISMOS mínimos que la pestaña (ninguna celda de 1 a 4).
+                ...(new AudienceWidget)->tablesFor($window, $comparison),
             ],
             self::REPORT_FUNNEL => [
                 $this->funnelSummary($window, $comparison),

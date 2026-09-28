@@ -317,6 +317,10 @@ fuera de git, en `storage/app/audit/sonda-tp1-panel.mjs` (no guarda nada: escrib
 cajón, `sonda-tp1-cajon.mjs`, pone y QUITA la fecha de `probe-card` (termina sin ella). ⚠️ **Medido el 28-09: la local ya NO
 abre la isla** —no hay fila `sidebar.shell` y el valor por defecto es el cajón—; lo de arriba sobre la isla es de su fecha.
 
+(17) **De la TP·2, quién viene (28-09, `#792`)**: `ojo-tp2.php` (en la carpeta de auditoría de `storage`, fuera de git) puso fecha de nacimiento a 53
+titulares con visita pagada de julio a octubre que no la tenían y 81 menores con `surname = OJO-TP2`; lo de antes, en
+`ojo-tp2-antes.json`. `OJO=desmontar` borra esos menores y devuelve esas fechas a `null`.
+
 ## Anexo · La fila del enrutador, mudada el 2026-09-16
 
 > Lo que decía la fila **«El carril del SPA en el OTRO ordenador · rediseñar el cajón (Fase 4) · el material de PlayJump en otra máquina · la rama `cliente/playjump` · qué ficheros son de cada carril»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila

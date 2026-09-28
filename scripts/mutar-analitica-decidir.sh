@@ -12,7 +12,7 @@
 set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
-FILTER='ReportPeriodTest|MoneyReportTest|WindowLabelTest|AnalyticsPageTest|MetricTest|AnalyticsCensusTest|FunnelReportTest|PartiesReportTest|CustomersReportTest|GateSurveyTest|ValidarRegistroProfileTest|GateVisitsTest|OccupancyReaderParityTest|OccupancyReportTest|AnalyticsTabsTest|AnalyticsJargonTest|MetricsCatalogTest|AnalyticsExportTest|SegmentsExportTest|MetricsHistoryTest|ChangesTest|GoalTest|AnalyticsGoalsTest|HolderBirthDateTest|HolderBirthDatePanelTest|AnonymizeCoversEveryUserColumnTest|MeTest|SidebarTranslationKeysExistTest'
+FILTER='ReportPeriodTest|MoneyReportTest|WindowLabelTest|AnalyticsPageTest|MetricTest|AnalyticsCensusTest|FunnelReportTest|PartiesReportTest|CustomersReportTest|GateSurveyTest|ValidarRegistroProfileTest|GateVisitsTest|OccupancyReaderParityTest|OccupancyReportTest|AnalyticsTabsTest|AnalyticsJargonTest|MetricsCatalogTest|AnalyticsExportTest|SegmentsExportTest|MetricsHistoryTest|ChangesTest|GoalTest|AnalyticsGoalsTest|HolderBirthDateTest|HolderBirthDatePanelTest|AnonymizeCoversEveryUserColumnTest|MeTest|SidebarTranslationKeysExistTest|AudienceReportTest'
 # Modo «solo una tanda» (`SOLO=<tanda> bash scripts/mutar-analitica-decidir.sh`; 28-09, el owner: esperar ~95 min por tanda
 # es inviable). Corre SOLO las mutaciones de esa sección y con SUS pruebas: un filtro más estrecho nunca inventa un «muerde»,
 # como mucho esconde uno, y el veredicto sigue siendo por código de salida. La base verde y el CONTROL corren siempre. El arnés
@@ -20,6 +20,7 @@ FILTER='ReportPeriodTest|MoneyReportTest|WindowLabelTest|AnalyticsPageTest|Metri
 declare -A FILTRO_DE=(
     [T3c2]='GoalTest|AnalyticsGoalsTest|MetricsCatalogTest'
     [TP1]='HolderBirthDateTest|HolderBirthDatePanelTest|AnonymizeCoversEveryUserColumnTest|MeTest|SidebarTranslationKeysExistTest'
+    [TP2]='AudienceReportTest|AnalyticsCensusTest|AnalyticsPageTest'
 )
 SOLO="${SOLO:-}"
 SECCION=''
@@ -84,6 +85,8 @@ FICHEROS=(
     resources/js/sidebar/register.js
     resources/js/sidebar/account/google.js
     resources/js/sidebar/stores/profile.js
+    app/Filament/Analytics/AudienceReport.php
+    app/Filament/Widgets/Analytics/AudienceWidget.php
 )
 # La copia de cada fichero, por su RUTA entera (T3a): por su nombre, `lang/es/admin.php` y `lang/zh_CN/admin.php` chocaban.
 copia() { echo "$TMP/$(echo "$1" | tr '/' '_')"; }
@@ -903,6 +906,87 @@ if [[ -z "$SOLO" || "$SOLO" == TP1 ]]; then
     control "un comentario de la política de la fecha" "$BP" \
       'Más años que esto es una errata' \
       'Mas años que esto es una errata'
+fi
+
+# ── TP·2 · QUIÉN VIENE (§4.14, `#792`): una persona una vez con su primer día, sus hijos MENORES, con quién viene, las fiestas, y
+# ninguna celda de 1 a 4 (`RGPD-07`). Al CSV (el censo) y a la pestaña «Clientes».
+SECCION=TP2
+AR=app/Filament/Analytics/AudienceReport.php
+AW=app/Filament/Widgets/Analytics/AudienceWidget.php
+
+mutar "cuentan también las reservas sin pagar" "$AR" \
+  "            ->where('o.status', Order::STATUS_PAID)" \
+  ''
+
+mutar "cuentan también las líneas canceladas" "$AR" \
+  "            ->whereNull('i.cancelled_at')" \
+  ''
+
+mutar "la edad es la de la ÚLTIMA visita del periodo, no la primera" "$AR" \
+  '            $firstDay[$user] = isset($firstDay[$user]) ? min($firstDay[$user], $day) : $day;' \
+  '            $firstDay[$user] = $day;'
+
+mutar "la edad de quien reserva se cuenta HOY, no el día de su visita" "$AR" \
+  '            $ages[] = Dependent::ageBetween(substr((string) $date, 0, 10), CarbonImmutable::parse($firstDay[(int) $id]));' \
+  '            $ages[] = Dependent::ageBetween(substr((string) $date, 0, 10), CarbonImmutable::now());'
+
+mutar "los hijos retirados cuentan" "$AR" \
+  "            ->whereNull('removed_at')" \
+  ''
+
+mutar "un hijo que ya cumplió 18 cuenta como niño que viene" "$AR" \
+  '                return $age === null || $age >= Dependent::ADULT_AGE ? null' \
+  '                return $age === null ? null'
+
+mutar "un reparto de menos de cinco con dato se enseña" "$AR" \
+  "        return ['of' => \$of, 'with_data' => \$counted, 'rows' => \$counted < self::MIN_CELL ? [] : self::foldRanges(\$buckets)];" \
+  "        return ['of' => \$of, 'with_data' => \$counted, 'rows' => self::foldRanges(\$buckets)];"
+
+mutar "una celda pequeña no se funde con la vecina" "$AR" \
+  "            if (\$open['count'] === 0 || \$open['count'] >= self::MIN_CELL) {" \
+  '            if (true) {'
+
+mutar "un resto pequeño al final se queda solo" "$AR" \
+  "        while (\$open !== null && \$open['count'] > 0 && \$open['count'] < self::MIN_CELL && \$out !== []) {" \
+  '        while (false) {'
+
+mutar "una categoría pequeña no va a «Otros»" "$AR" \
+  '            if ($n > 0 && $n < self::MIN_CELL) {' \
+  '            if (false) {'
+
+mutar "el parentesco «otro» y «Otros» son dos filas" "$AR" \
+  '        if (array_key_exists(self::OTHER, $kept)) {' \
+  '        if (false) {'
+
+mutar "con menores es solo la entrada asignada (el producto de menores no cuenta)" "$AR" \
+  '        $withMinors = $lines->filter(fn ($l): bool => isset($assigned[$l->id]) || in_array((int) $l->ticket_type_id, $minorsOnly, true))->count();' \
+  '        $withMinors = $lines->filter(fn ($l): bool => isset($assigned[$l->id]))->count();'
+
+mutar "sin invitación, la edad de quien cumple se pierde" "$AR" \
+  '            $age = $party->partyInvitation->honoree_age ?? self::celebrantAge($party, $type);' \
+  '            $age = $party->partyInvitation->honoree_age ?? null;'
+
+mutar "quien cumple cuenta como invitado" "$AR" \
+  '                if ($i === 0 && $party->hasHonoreeRow()) {' \
+  '                if (false) {'
+
+mutar "un recuento de 1 a 4 se enseña" "$AW" \
+  '        return $n > 0 && $n < AudienceReport::MIN_CELL ? __(' \
+  '        return false ? __('
+
+mutar "el CSV de «Clientes» no lleva quién viene" "app/Filament/Analytics/CsvExport.php" \
+  '                ...(new AudienceWidget)->tablesFor($window, $comparison),' \
+  ''
+
+mutar "la pestaña «Clientes» no enseña quién viene" "app/Filament/Pages/AnalyticsPage.php" \
+  '            AudienceWidget::class,
+            RegistrationsWidget::class,' \
+  '            RegistrationsWidget::class,'
+
+if [[ -z "$SOLO" || "$SOLO" == TP2 ]]; then
+    control "un comentario del informe de quién viene" "$AR" \
+      'Los tramos de edad de quien reserva' \
+      'Los tramos de edad de quien reservó'
 fi
 
 # ── El CONTROL: tocar un comentario no puede poner nada en rojo ─────────────────────────────────

@@ -86,7 +86,12 @@ class AnalyticsCensusTest extends TestCase
             'Ocupación de las entradas', 'Fiestas por franja', 'Franjas llenas', 'Ingreso por plaza-hora', 'Anticipación',
             'Demanda sin hueco', 'Visitantes',
         ],
-        CsvExport::REPORT_CUSTOMERS => ['Visitantes', 'Compradores nuevos', 'Compradores recurrentes', 'Valor de vida medio'],
+        // TP·2 (`#792`): «Quién viene», las siete tablas (los repartos, sin celdas de 1 a 4).
+        CsvExport::REPORT_CUSTOMERS => [
+            'Visitantes', 'Compradores nuevos', 'Compradores recurrentes', 'Valor de vida medio',
+            'La edad de quien reserva', 'Cuántos hijos ha declarado', 'La edad de sus hijos el día de la visita', 'Quién los declara',
+            'Con quién viene', 'La edad de quien cumple', 'La edad de los invitados',
+        ],
         CsvExport::REPORT_MONEY => ['Pendiente de cobrar en el parque'],
         CsvExport::REPORT_SURVEYS => ['Tasa de respuesta'],
         // T3a: el gráfico de las horas es tabla (antes su dato no estaba en ningún CSV), y los rechazados salen de «Calidad

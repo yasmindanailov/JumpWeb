@@ -13,6 +13,7 @@ use App\Domain\Platform\Services\Analytics\Visitor;
 use App\Filament\Pages\AnalyticsPage;
 use App\Filament\Pages\Dashboard;
 use App\Filament\Widgets\Analytics\AnticipationChart;
+use App\Filament\Widgets\Analytics\AudienceWidget;
 use App\Filament\Widgets\Analytics\CategoryChart;
 use App\Filament\Widgets\Analytics\ChangesWidget;
 use App\Filament\Widgets\Analytics\CustomersBreakdownWidget;
@@ -184,6 +185,8 @@ class AnalyticsPageTest extends TestCase
         // T4b: los segmentos, un estado de hoy; lo plegado, después.
         SegmentsWidget::class,
         CustomersMoreWidget::class,
+        // TP·2 (`#792`): quién viene, plegado.
+        AudienceWidget::class,
         RegistrationsWidget::class,
         GateWidget::class,
         CustomersBreakdownWidget::class,

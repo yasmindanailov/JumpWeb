@@ -730,6 +730,35 @@ con su medida, tras sacar `profileBody` de `account/profile.js` (lo metía enter
 montaje con sesión, 10.738 → 10.836 B, techo a 10.900 tras acortar la pista; (5) la sonda del panel: el selector de Filament
 abre en HOY y no se teclea, y una fecha de nacimiento se DICTA: en el mostrador va el `type="date"` NATIVO (el del cajón).
 
+**La TP·2 al detalle — medido el 28-09, antes de codificar.** Local: 1 titular con fecha, 6 menores de 2 cuentas (3 sin
+parentesco), 1 entrada asignada, 23 de 26 invitaciones con la edad de quien cumple, 127 reservas pagadas con visita en 90 días de
+63 titulares. El molde ya existe: un widget de TABLAS plegado (`tables.blade.php`, `tablesFor()`) que el CSV de «Clientes» reutiliza,
+y `SurveysReport::MIN_CELL` (5). Lo que se construye (lo técnico, mío y vetable):
+- **Quién viene = los titulares con una reserva pagada cuyo DÍA DE VISITA cae en el periodo** (`paidScheduledPrincipal` +
+  `slotDateBetween`, la base de «Ocupación»), cada persona UNA vez y con la edad de su primer día de visita del periodo.
+- **Seis tablas en «Quién viene»** (`AudienceReport` + `AudienceWidget`, plegado tras «Más de los clientes»), cada una con «de N
+  con dato»: (1) la edad de quien reserva: 18–24 · 25–34 · 35–44 · 45–54 · 55 o más; (2) cuántos hijos ha declarado: 1 · 2 · 3 o
+  más, y aparte «sin menores declarados» (no declarar no es no tener); (3) la edad de esos hijos el día de la visita, de 3 en 3
+  (0–2 … 15–17; los que ya cumplieron 18 no cuentan); (4) quién los declara, por titular: madre · padre · tutor · abuelo/a · otro ·
+  varios · sin dato; (5) con quién vienen, por RESERVA: con menores (una entrada asignada a un menor o un producto solo para menores,
+  `onlyGuestsUnder(18)`) · sin dato; (6) de las fiestas cuyo día cae en el periodo (la regla de `PartiesReport`): la edad de quien
+  cumple (`honoree_age`) y la de los invitados (la edad de cada ficha, con la clave del pack; sin la fila de quien cumple), por año.
+- **Ninguna celda de 1 a 4**: en las ordenadas se funde con la vecina («25–44»), en las de categoría va a «Otros»; con menos de 5
+  con dato, la tabla no se reparte («Menos de 5 con dato»). Sin nombres ni ids: solo recuentos. ≤ 20 consultas, caché 5 min.
+- **Al CSV y al censo** (`AnalyticsCensusTest`, tecleado a mano); el «¿cómo se calcula?» de cada tabla va en su nota. Las tarjetas
+  no cambian (el catálogo de cifras es de números sueltos; esto son repartos).
+
+**TP·2, lo construido (28-09, 🟦 en `wip/tp2-quien-viene`, falta el ojo)**: `AudienceReport` + `AudienceWidget` (plegado, tras «Más
+de los clientes»), al CSV de «Clientes» y al censo. Cambios al escribirlo: (1) los hijos que cuentan son los **MENORES el día de la
+visita** en las tres tablas de hijos (uno declarado que ya cumplió 18 no es un niño que viene); (2) el título de cada tabla es FIJO
+(el censo lo busca exacto en el CSV) y la cobertura va de primera fila, «Con dato · 12 de 63»; (3) «Con quién viene» son dos filas
+que suman todas las reservas, con «menos de 5» en vez de un recuento de 1 a 4. Pruebas: `AudienceReportTest` (8: fundir y su
+propiedad en tramos y categorías, la población con su paridad contra `paidScheduledPrincipal`, el primer día, los menores de ese
+día, con quién viene, las fiestas, ≤ 12 consultas fijas, la pantalla). Arnés `SOLO=TP2`. **Lo que enseñó**: dos supervivientes en
+«Otros» (el bucle que lo junta hasta cinco COMPENSABA las dos mutaciones con los casos que tenía): faltaban el caso de una pequeña
+sola y el de «otro» ≥ 5 con otras dos que ya suman cinco. Fixture del ojo, `ojo-tp2.php` (carpeta de auditoría de `storage`, fuera de git; reversible) y
+sonda `sonda-tp2-panel.mjs` (la pantalla contra el informe, ninguna cifra de 1 a 4, el CSV).
+
 ## 5. Impacto en invariantes
 
 `RGPD-01` (purga y export de `email_sends`, de las tablas de `#754` y de `users.born_on` (futuro), TP·1) · `RGPD-04` (`no-store` en el píxel y en el texto

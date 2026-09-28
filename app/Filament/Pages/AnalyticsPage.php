@@ -11,6 +11,7 @@ use App\Filament\Analytics\GoalsForm;
 use App\Filament\Analytics\SegmentsReport;
 use App\Filament\Analytics\WindowLabel;
 use App\Filament\Widgets\Analytics\AnticipationChart;
+use App\Filament\Widgets\Analytics\AudienceWidget;
 use App\Filament\Widgets\Analytics\ChangesWidget;
 use App\Filament\Widgets\Analytics\CustomersBreakdownWidget;
 use App\Filament\Widgets\Analytics\CustomersMoreWidget;
@@ -164,6 +165,8 @@ class AnalyticsPage extends BaseDashboard
             // T4b: los segmentos, un estado de HOY (no dependen del periodo).
             SegmentsWidget::class,
             CustomersMoreWidget::class,
+            // TP·2 (`#792`): quién viene —su edad, sus hijos, con quién—, plegado.
+            AudienceWidget::class,
             RegistrationsWidget::class,
             GateWidget::class,
             CustomersBreakdownWidget::class,
