@@ -7,6 +7,7 @@ import { landOnAccount } from '../after-auth.js';
 import { api } from '../../api.js';
 import { t as translate } from '../../i18n.js';
 import WaiverDoc from '../../WaiverDoc.vue';
+import BornOnField from '../../steps/BornOnField.vue';
 
 /**
  * **COMPLETAR un alta que viene de Google** (`specs/auth-con-google.md` §7, tanda T2).
@@ -132,6 +133,9 @@ async function submit() {
                     <input id="gs-name" v-model="store.form.name" type="text" autocomplete="name" required>
                     <span v-if="ui.errors.fields.name" class="form__error">{{ ui.errors.fields.name }}</span>
                 </div>
+
+                <!-- La fecha de nacimiento, opcional (TP·1, `#792`): Google no la da. La misma pieza que el alta. -->
+                <BornOnField id="gs-born-on" v-model="store.form.born_on" :account="account" :error="ui.errors.fields.born_on ?? ''" />
 
                 <div class="form__checks">
                     <!-- El aviso de privacidad, VISIBLE y sin casilla (§7.1). Se reutiliza el literal

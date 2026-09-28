@@ -104,6 +104,7 @@ async function submit() {
         v-model:name="store.form.name"
         v-model:email="store.form.email"
         v-model:phone="store.form.phone"
+        v-model:born-on="store.form.born_on"
         v-model:password="store.form.password"
         v-model:accept-waiver="store.form.accept_waiver"
         v-model:website="store.form.website"

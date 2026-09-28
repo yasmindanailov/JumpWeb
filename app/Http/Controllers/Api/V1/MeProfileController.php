@@ -45,12 +45,13 @@ class MeProfileController extends Controller
 
         $data = $request->validate($rules);
 
+        // La fecha de nacimiento (TP·1), solo si VIAJA: ausente no cambia nada (ver `AccountProfile::rules()`).
         $result = $profile->apply($user, [
             'name' => $data['name'],
             'phone' => $data['phone'],
             'locale' => $data['locale'],
             'email' => $data['email'],
-        ], $data['current_password'] ?? null, (string) $request->ip());
+        ] + array_intersect_key($data, ['born_on' => true]), $data['current_password'] ?? null, (string) $request->ip());
 
         if ($result->failed()) {
             return $this->denial($result);

@@ -1,7 +1,7 @@
 import { test, describe, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { createPinia, setActivePinia } from 'pinia';
-import { useProfileStore } from './profile.js';
+import { profileBody, useProfileStore } from './profile.js';
 
 const MESSAGES = { errors: { try_later: 'Espera un minuto.' } };
 const AUTH = { throttle: 'Espera :seconds segundos.' };
@@ -96,6 +96,34 @@ describe('guardar el perfil', () => {
 
         assert.equal(store.fields.current_password[0], 'No es correcta.');
         assert.equal(store.user.name, 'Ana', 'el perfil de pantalla se ha movido con un guardado que falló');
+    });
+});
+
+describe('la fecha de nacimiento al guardar (TP·1, `#792`)', () => {
+    beforeEach(() => setActivePinia(createPinia()));
+
+    const FORM = { name: 'Ana', email: 'ana@x.test', phone: '611', locale: 'es', currentPassword: '' };
+
+    async function sent(form) {
+        const api = fakeApi({ 'PATCH /me': ok(PERFIL) });
+
+        await useProfileStore().apply(form, ctx(api));
+
+        return api.llamadas[0].body;
+    }
+
+    test('con fecha, viaja tal cual', async () => {
+        assert.equal((await sent({ ...FORM, born_on: '1985-01-02' })).born_on, '1985-01-02');
+    });
+
+    test('vaciada en «Tus datos», viaja como `null` y la borra (vacía sería un 422 por esquema)', async () => {
+        assert.equal((await sent({ ...FORM, born_on: '' })).born_on, null);
+        assert.equal((await sent({ ...FORM, born_on: '  ' })).born_on, null);
+    });
+
+    test('⚠️⚠️ sin la clave NO viaja: es como guarda la ISLA, y el servidor no la toca', async () => {
+        assert.equal('born_on' in (await sent(FORM)), false);
+        assert.equal('born_on' in profileBody(FORM), false);
     });
 });
 

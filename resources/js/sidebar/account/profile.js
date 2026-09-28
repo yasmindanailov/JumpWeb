@@ -12,6 +12,7 @@ export function profileForm(user) {
         name: String(user?.name ?? ''),
         email: String(user?.email ?? ''),
         phone: String(user?.phone ?? ''),
+        born_on: String(user?.born_on ?? ''),
         locale: String(user?.locale ?? ''),
     };
 }

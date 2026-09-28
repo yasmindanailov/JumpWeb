@@ -55,6 +55,8 @@ class AnonymizeCoversEveryUserColumnTest extends TestCase
         'pending_email',
         'pending_email_sent_at',
         'phone',
+        // TP·1 (`#792`): la fecha de nacimiento del titular identifica, junto al resto; se borra con la cuenta.
+        'born_on',
         'locale',
         'last_login_at',
         'marketing_opt_in',
@@ -193,6 +195,7 @@ class AnonymizeCoversEveryUserColumnTest extends TestCase
             'name' => 'Ana Pérez',
             'email' => 'ana.censo@example.com',
             'phone' => '600111222',
+            'born_on' => '1988-03-12',
             'locale' => 'fr',
             'marketing_opt_in' => true,
             // T3a·3 de la analítica: la oposición y la primera atribución, con valor para que la purga se vea.

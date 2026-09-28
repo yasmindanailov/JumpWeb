@@ -18,6 +18,7 @@ use App\Domain\Booking\Services\SlotAvailability;
 use App\Domain\Booking\Services\SlotOffer;
 use App\Domain\Identity\Models\LegalDocumentVersion;
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Services\BirthDatePolicy;
 use App\Domain\Identity\Services\CheckoutDuties;
 use App\Domain\Identity\Services\CustomerRegistrar;
 use App\Domain\Identity\Services\DependentAssigner;
@@ -33,6 +34,7 @@ use Carbon\CarbonInterface;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\CheckboxList;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -184,7 +186,7 @@ class CreateManualOrderPage extends Page
      * mostramos las coincidencias para que el operador reutilice o cree uno nuevo. `null` = sin alta
      * pendiente.
      *
-     * @var array{name:string, phone:string}|null
+     * @var array{name:string, phone:string, waiver_declared?:bool, born_on?:string|null}|null
      */
     public ?array $pendingNoEmailCustomer = null;
 
@@ -617,6 +619,14 @@ class CreateManualOrderPage extends Page
                                         ->tel()
                                         ->required()
                                         ->maxLength(30),
+                                    // TP·1 (`#792`): la fecha de nacimiento, opcional, con la política de las cuatro puertas.
+                                    DatePicker::make('born_on')
+                                        ->label(__('admin.orders.create_manual.register_born_on'))
+                                        ->helperText(__('admin.orders.create_manual.register_born_on_help'))
+                                        ->native(false)
+                                        ->displayFormat('d/m/Y')
+                                        ->maxDate(DisplayTime::today())
+                                        ->rules(BirthDatePolicy::rules('admin.orders.create_manual.born_on_errors')),
                                     Checkbox::make('privacy_informed')
                                         ->label(__('admin.orders.create_manual.register_privacy'))
                                         ->accepted()
@@ -1223,7 +1233,7 @@ class CreateManualOrderPage extends Page
      *    Si el teléfono ya existe, NO crea: avisa y deja al operador elegir reutilizar o crear nuevo
      *    (decisión clienta). Si no hay coincidencia, crea una cuenta sin email (vive solo en el panel).
      *
-     * @param  array{name?:string, email?:?string, phone?:?string, privacy_informed?:bool}  $data
+     * @param  array{name?:string, email?:?string, phone?:?string, privacy_informed?:bool, waiver_declared?:bool, born_on?:?string}  $data
      */
     public function registerCustomerFromData(array $data): void
     {
@@ -1242,6 +1252,7 @@ class CreateManualOrderPage extends Page
         $phone = trim((string) ($data['phone'] ?? ''));
         // La declaración del waiver viaja hasta `performRegistration`, también por el camino del cliente sin email (`#178`).
         $waiverDeclared = (bool) ($data['waiver_declared'] ?? false);
+        $bornOn = BirthDatePolicy::normalize($data['born_on'] ?? null);
 
         // El teléfono es obligatorio (identidad del cliente cuando no hay email + clave de
         // deduplicación/rate-limit). El modal ya lo exige; defensa en profundidad en servidor.
@@ -1257,7 +1268,7 @@ class CreateManualOrderPage extends Page
         if ($email === null) {
             $matches = app(CustomerRegistrar::class)->customersMatchingPhone($phone);
             if ($matches->isNotEmpty()) {
-                $this->pendingNoEmailCustomer = ['name' => $name, 'phone' => $phone, 'waiver_declared' => $waiverDeclared];
+                $this->pendingNoEmailCustomer = ['name' => $name, 'phone' => $phone, 'waiver_declared' => $waiverDeclared, 'born_on' => $bornOn];
                 $this->phoneMatchOptions = $matches
                     ->mapWithKeys(fn (User $u): array => [$u->id => $this->customerDisplay($u)])
                     ->all();
@@ -1272,7 +1283,7 @@ class CreateManualOrderPage extends Page
             }
         }
 
-        $this->performRegistration($name, $email, $phone, $waiverDeclared);
+        $this->performRegistration($name, $email, $phone, $waiverDeclared, $bornOn);
     }
 
     /**
@@ -1281,8 +1292,17 @@ class CreateManualOrderPage extends Page
      * se aplica AQUÍ (en el alta real), con clave por email o, sin email, por teléfono normalizado
      * (nunca `md5('')`, que metería todas las altas sin email en el mismo cubo).
      */
-    private function performRegistration(string $name, ?string $email, string $phone, bool $waiverDeclared = false): void
+    private function performRegistration(string $name, ?string $email, string $phone, bool $waiverDeclared = false, ?string $bornOn = null): void
     {
+        // TP·1 (`#792`): la fecha, otra vez AQUÍ. El modal ya la valida, pero las dos vías que llegan son llamables sin él
+        // —`registerCustomerFromData()` es pública y `createNewCustomerAnyway()` lee `$pendingNoEmailCustomer`, que el
+        // navegador puede reescribir—, como ya pasa con la privacidad y el teléfono.
+        if (($error = BirthDatePolicy::firstError($bornOn, 'admin.orders.create_manual.born_on_errors')) !== null) {
+            Notification::make()->warning()->title($error)->send();
+
+            return;
+        }
+
         $rateLimitId = $email ?? 'phone:'.(CustomerRegistrar::normalizePhone($phone) ?? $phone);
         $key = 'manual-register:'.md5($rateLimitId);
         if (RateLimiter::tooManyAttempts($key, 5)) {
@@ -1294,7 +1314,7 @@ class CreateManualOrderPage extends Page
         RateLimiter::hit($key, 3600);
 
         try {
-            $result = app(CustomerRegistrar::class)->register($name, $email, $phone, waiverDeclared: $waiverDeclared);
+            $result = app(CustomerRegistrar::class)->register($name, $email, $phone, waiverDeclared: $waiverDeclared, bornOn: BirthDatePolicy::normalize($bornOn));
         } catch (\Throwable $e) {
             Log::warning('manual_order.register_failed', ['error' => $e->getMessage()]);
             Notification::make()->danger()
@@ -1369,7 +1389,7 @@ class CreateManualOrderPage extends Page
         // NO limpiamos el aviso aquí (#264-audit): si `performRegistration` aborta (p. ej. rate-limit),
         // el panel de elección debe seguir visible para no perder el alta tecleada. En el camino feliz
         // lo limpia `selectCustomer()` → `clearPhoneMatch()` al crear/seleccionar.
-        $this->performRegistration((string) $pending['name'], null, (string) $pending['phone'], (bool) ($pending['waiver_declared'] ?? false));
+        $this->performRegistration((string) $pending['name'], null, (string) $pending['phone'], (bool) ($pending['waiver_declared'] ?? false), is_string($pending['born_on'] ?? null) ? $pending['born_on'] : null);
     }
 
     /** Descarta el aviso de duplicado sin actuar. */

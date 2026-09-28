@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.48.0
+  version: 1.49.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -5012,6 +5012,7 @@ components:
         - name
         - email
         - phone
+        - born_on
         - locale
         - marketing_opt_in
         - analytics_opt_out
@@ -5034,6 +5035,13 @@ components:
         phone:
           type: string
           nullable: true
+        born_on:
+          type: string
+          format: date
+          nullable: true
+          description: |
+            La fecha de nacimiento del titular (**1.49.0**, `DECISIONES #792`), `Y-m-d`. Opcional: `null` si no la dio.
+            Se cambia con `PATCH /me`.
         locale:
           type: string
           enum: [es, en, fr]
@@ -5102,7 +5110,8 @@ components:
     ProfileUpdateRequest:
       type: object
       description: |
-        Los cuatro campos del perfil. `current_password` **solo hace falta si `email` cambia**.
+        Los cuatro campos del perfil y, opcional, la fecha de nacimiento (1.49.0). `current_password` **solo hace falta
+        si `email` cambia**.
       required: [name, phone, locale, email]
       additionalProperties: false
       properties:
@@ -5112,6 +5121,13 @@ components:
         phone:
           type: string
           maxLength: 30
+        born_on:
+          type: string
+          format: date
+          nullable: true
+          description: |
+            La fecha de nacimiento (**1.49.0**, `DECISIONES #792`), `Y-m-d`. **Ausente, no cambia nada; `null`, la borra.**
+            No se admite futura, de menos de 18 años ni de más de 120 (422 sobre `born_on`).
         locale:
           type: string
           description: Uno de los idiomas que la instalación sirve.
@@ -5297,6 +5313,7 @@ components:
         - pending_email
         - pending_email_sent_at
         - phone
+        - born_on
         - locale
         - marketing_opt_in
         - email_verified_at
@@ -5319,6 +5336,11 @@ components:
         phone:
           type: string
           nullable: true
+        born_on:
+          type: string
+          format: date
+          nullable: true
+          description: La fecha de nacimiento que dio (1.49.0, `DECISIONES #792`), o `null`.
         locale:
           type: string
           nullable: true
@@ -9222,6 +9244,13 @@ components:
         name:
           type: string
           maxLength: 255
+        born_on:
+          type: string
+          format: date
+          nullable: true
+          description: |
+            La fecha de nacimiento, opcional (**1.49.0**, `DECISIONES #792`): Google no la da. `Y-m-d`; no se admite futura,
+            de menos de 18 años ni de más de 120 (422 sobre `born_on`).
         accept_waiver:
           type: boolean
           nullable: true
@@ -9270,6 +9299,13 @@ components:
           description: |
             **Opcional desde 1.41.0** (`DECISIONES #787`): el teléfono es obligatorio solo para reservar un PACK (una
             fiesta), y eso lo exige `POST /orders`. Sin él, la cuenta nace sin teléfono.
+        born_on:
+          type: string
+          format: date
+          nullable: true
+          description: |
+            La fecha de nacimiento, **opcional** (1.49.0, `DECISIONES #792`), `Y-m-d`. No se admite futura, de menos de 18
+            años ni de más de 120 (422 sobre `born_on`). Sin ella, la cuenta nace sin fecha.
         password:
           type: string
           format: password

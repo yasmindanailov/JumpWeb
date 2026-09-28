@@ -84,6 +84,19 @@ describe('el envío', () => {
         assert.equal(api.sent[0].path, '/auth/google/complete');
     });
 
+    /** TP·1 (`#792`): la fecha de nacimiento es lo cuarto que Google no sabe, y solo viaja si hay una. */
+    test('la fecha de nacimiento viaja si hay una, y el correo sigue sin viajar', async () => {
+        const conFecha = apiThatCaptures();
+        const sinFecha = apiThatCaptures();
+
+        await runGoogleSignup({ form: { name: 'Ana', email: 'otra@x.test', born_on: '1987-02-14', accept_waiver: true }, api: conFecha, waiver: { id: 7 } });
+        await runGoogleSignup({ form: { name: 'Ana', born_on: '' }, api: sinFecha });
+
+        assert.deepEqual(Object.keys(conFecha.sent[0].body).sort(), ['accept_waiver', 'born_on', 'name', 'waiver_document_id']);
+        assert.equal(conFecha.sent[0].body.born_on, '1987-02-14');
+        assert.equal('born_on' in sinFecha.sent[0].body, false);
+    });
+
     test('la casilla del descargo viaja con el id del texto que se sirvió', async () => {
         const api = apiThatCaptures();
 

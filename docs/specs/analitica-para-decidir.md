@@ -1,6 +1,6 @@
 # [SPEC] La analítica para decidir — un cuadro que se entiende, dice si va bien o mal y cubre las decisiones del operador
 
-> Estado: ✅ **aprobada por el owner el 27-09** (§7; `#755`) → ✅ **T0, T1 y T2** · 🟦 **T3** (✅ T3a · ✅ T3b · ✅ T3c · ⬜ T3d·T3e, §4.13) · ⬜ **TP el público** (§4.14) · Última actualización: 2026-09-28 ·
+> Estado: ✅ **aprobada por el owner el 27-09** (§7; `#755`) → ✅ **T0, T1 y T2** · 🟦 **T3** (✅ T3a · ✅ T3b · ✅ T3c · ⬜ T3d·T3e, §4.13) · 🟦 **TP el público** (§4.14: 🟦 TP·1 · ⬜ TP·2 · ⬜ TP·3) · Última actualización: 2026-09-28 ·
 > Decisiones: `#755` (esta), `#754` (encuestas anónimas, su T1), `#758` (la T2), `#759` (la T3 en cinco tandas), `#792` (el público) · Carril: **SPA** (banda 790–819). Amplía `analitica.md`
 > (el libro, los regímenes y la T2 siguen siendo suyos).
 
@@ -18,7 +18,7 @@
   camino de `EmailUtm` (tras firmar, ignorada al validar); (6) aperturas solo con consentimiento (`[PENDIENTE: asesoría]`).
 - **Estado**: ✅ aprobada (27-09, `#755`); T0a·T0b·T0c ✅ · **T1** ✅ (la T5 de `encuestas.md`, `#754`, `#757`) · **T2** ✅ ocupación (§4.8.ter, `#758`) → **T3** Resumen, en cinco tandas (§4.13,
   `#759`): ✅ T3a la forma · ✅ T3b veredicto (mín–máx, `#790`) · ✅ T3c·1 lo que ha cambiado (`#791`) · ✅ T3c·2 objetivos →
-  ▶ **TP el público** (§4.14, `#792`) → T3d.
+  ▶ **TP el público** (§4.14, `#792`; 🟦 TP·1 la fecha, en `wip/`, falta el ojo) → T3d.
   **Nada de lo medido se pierde** (§4.1.bis, con guarda): se resume arriba y lo demás queda
   plegado o en su pestaña.
 - **Invariantes**: `RGPD-01`, `RGPD-04`, `RGPD-07`, `SEC-04`, `SUITE-01`. Dinero y aforo: solo lectura.
@@ -694,6 +694,39 @@ pide y nada sale antes de la v2.0.0— y la T3d y la T3e no. Cada una, con su «
   y rastro. `[PENDIENTE: asesoría]` antes de la primera exportación; el texto del opt-in (hoy «Quiero recibir novedades y
   ofertas del parque.») y `/privacidad` lo nombran (carril web). Los padres de los INVITADOS no se segmentan (ni cuenta ni
   opt-in): su marketing es «Avísame de fechas» (`#750`).
+
+**La TP·1 al detalle — medido el 28-09, antes de codificar.** Tres correcciones al plan de arriba:
+- **Las altas son cuatro puertas, no cinco**: `ValidarRegistro` (la puerta) NO crea cuentas (medido: los únicos `User::create`
+  del producto son `SelfSignup`, `GoogleSignup` y `CustomerRegistrar`). El alta de mostrador es el modal «Dar de alta» de
+  `CreateManualOrderPage`. Las cuatro: el alta con correo (`POST /auth/register`: el cajón, suelta y en la compra, y la isla), el
+  paso tras Google (`POST /auth/google/complete`: el cajón y la isla), el mostrador, y Mi cuenta (`PATCH /me`: el cajón y la isla).
+- ⚠️⚠️ **En `PATCH /me` la fecha AUSENTE no cambia nada** (`null` la borra): la isla guarda Mi cuenta con `{name, phone, locale,
+  email}` (`isla/cuenta/useAjustesCuenta.js:128`) y, con la regla contraria, cada guardado de la isla la borraría. Con su caso.
+- **Sin descargo interno, la pantalla tras Google no se pinta** (Q6, `GoogleSignupController::waiverRequired()`): esa alta no
+  puede pedir la fecha y queda Mi cuenta. Local: modo interno, 82 clientes, ninguno con fecha (la columna no existe).
+
+**Lo que se construye** (vetable lo técnico): `users.born_on` (DATE, nula; `immutable_date`, como `dependents.born_on`) · UNA regla,
+`Identity\Rules\AdultBirthDate`, para las cuatro puertas: `Y-m-d`, no futura, **≥ 18 años el día del parque** (`DisplayTime::
+today()` y `Dependent::ageBetween()`, fecha con fecha: el día del 18.º cumpleaños ya vale) y **≤ 120 años** (una errata como
+`0198` envenenaría las cifras de la TP·2); tres avisos distintos · el alta y la pantalla de Google la aceptan opcional, el mostrador
+con un `DatePicker` opcional, Mi cuenta con `sometimes` · el control del cajón, **el `<input type="date">` que ya pide la fecha de
+un hijo** (`DependentsZone.vue`): uno solo en el producto · `RGPD-01`: `anonymize()` la pone a `null` y entra en `SCRUBBED` del censo;
+el export la lleva en `profile` · la ficha del panel, «Fecha de nacimiento» con la edad · contrato **1.49.0** (`User`,
+`RegisterRequest`, `GoogleSignupRequest`, `ProfileUpdateRequest`, `ExportedProfile`) · la isla, por buzón: el motor ya la reenvía
+si su formulario la trae (`runRegister`, `runGoogleSignup`, `profile.apply` solo si la clave viene).
+- **Fuera de la TP·1**: la puerta (la edad en su ficha, si se quiere, va aparte) y cualquier cifra (TP·2).
+
+**TP·1, lo construido (28-09, 🟦 en `wip/tp1-captura`, falta el ojo del owner)**: lo de arriba entero, más la edad de hoy en la ficha
+(`User::age()`, la cuenta de un hijo) y la pieza del cajón `steps/BornOnField.vue` (rótulo, `type="date"`, `autocomplete="bday"` y
+la pista «Opcional. Para conocer mejor a nuestro público.», atada con `aria-describedby`). Pruebas: `Api\V1\HolderBirthDateTest` (10:
+las tres puertas de la API, el 18.º cumpleaños a las 00:30 de Madrid, «ausente no cambia», el export), `Admin\Users\
+HolderBirthDatePanelTest` (4: el mostrador y sus dos vías sin formulario, la ficha), el censo de `RGPD-01` y los `node --test` del
+alta, Google y «Tus datos»; arnés `SOLO=TP1`. **Lo que enseñó**: (1) `registerCustomerFromData()` es PÚBLICA en Livewire y
+`$pendingNoEmailCustomer` la reescribe el navegador: la fecha se re-valida en `performRegistration()`, por donde pasan las dos vías;
+(2) Larastan no entiende `immutable_date` (la toma por `string`): `@property` a mano en `User`, y la línea base ENCOGE cuatro
+entradas del mostrador que eran el mismo hueco de tipos; (3) el motor ya pesaba 298,83 kB con techo 299: la TP·1 lo sube a 301
+con su medida, tras sacar `profileBody` de `account/profile.js` (lo metía entero en la descarga, +0,77); (4) los textos del
+montaje con sesión, 10.738 → 10.836 B, techo a 10.900 tras acortar la pista.
 
 ## 5. Impacto en invariantes
 

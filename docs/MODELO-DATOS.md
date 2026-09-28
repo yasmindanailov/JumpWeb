@@ -355,6 +355,7 @@ pinta) · `applied_by` FK restrict · índices `(order_id,type)`, `(order_item_i
 | `email` | unique **NULLABLE** (clientes de agenda dados de alta por el panel con solo teléfono; varios NULL conviven en el unique de MySQL). Alta sin email DEBE persistir `NULL`, nunca `''` (`CustomerRegistrar` normaliza) |
 | `pending_email` (unique) + `pending_email_sent_at` | cambio de email seguro: el viejo vive hasta confirmar el nuevo (anti-takeover) |
 | `phone` | nullable en BD, obligatorio en registro web (validación form) |
+| `born_on` (date, nullable) | la fecha de nacimiento del titular (TP·1, `#792`): entera y OPCIONAL en las cuatro puertas (alta, Google, mostrador, Mi cuenta) con UNA política (`BirthDatePolicy`: no futura, ≥ 18 el día del parque, ≤ 120). `PATCH /me` sin la clave no la toca. `anonymize()` la borra; el export y `GET /me` la llevan |
 | `locale` (default `es`) | idioma del CLIENTE (web + emails) · `panel_locale` nullable = idioma del panel admin, **separado** (soporta `es`/`zh_CN`) |
 | `last_login_at`, `marketing_opt_in` | — |
 | `waiver_pending_document_id` (FK `legal_document_versions`, RESTRICT) + `waiver_pending_channel` + `waiver_pending_ip` + `waiver_pending_user_agent` | la aceptación marcada en el ALTA, a la espera del correo verificado (`#179`, spec §7·5): al verificar, `SignPendingWaiverOnVerification` la convierte en firma **tras el commit** y **con la IP/UA del momento de marcar la casilla** (`#183`: `Verified` también lo emite el cobro) si el texto sigue vigente, y nulifica las cuatro; `anonymize()` también las nulifica |

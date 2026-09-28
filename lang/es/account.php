@@ -286,6 +286,9 @@ return [
         // cualquier cosa de tu reserva». La anterior —«para avisarte si algo cambia»— **prometía menos
         // de lo que se hace**, y una promesa corta sobre un dato personal se rompe sola.
         'phone_hint' => 'Para llamarte por cualquier cosa de tu reserva.',
+        // TP·1 (`#792`): entera y OPCIONAL, y la pista dice para qué (art. 13). La reutilizan «Tus datos» y la pantalla de Google.
+        'born_on' => 'Fecha de nacimiento',
+        'born_on_hint' => 'Opcional. Para conocer mejor a nuestro público.',
         'password' => 'Contraseña',
         'password_hint' => 'Mínimo 8 caracteres. Evita contraseñas comunes o filtradas.',
         'must_accept' => 'Debes aceptar esta condición para continuar.',

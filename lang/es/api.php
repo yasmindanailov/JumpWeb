@@ -85,6 +85,13 @@ return [
         'online_sales_disabled' => 'La compra online no está disponible por ahora. Llámanos o ven al parque para reservar.',
     ],
 
+    // TP·1 (`#792`): la fecha de nacimiento del titular, en las cuatro puertas (`Identity\Services\BirthDatePolicy`).
+    'born_on' => [
+        'future' => 'La fecha de nacimiento no puede ser futura.',
+        'minor' => 'La cuenta es para mayores de edad (:age años o más).',
+        'implausible' => 'Revisa el año: esa fecha dice más de :max años.',
+    ],
+
     // Entrar y registrarse con Google (`specs/auth-con-google.md`).
     'google' => [
         // Entre que se pintó la pantalla y se envió, esa identidad dejó de poder entrar: apareció una

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Domain\Identity\Contracts\SignupResult;
 use App\Domain\Identity\Models\WaiverSignature;
+use App\Domain\Identity\Services\BirthDatePolicy;
 use App\Domain\Identity\Services\LegalDocuments;
 use App\Domain\Identity\Services\PasswordPolicy;
 use App\Domain\Identity\Services\SelfSignup;
@@ -65,6 +66,8 @@ class AuthRegistrationController extends Controller
             // Opcional desde `#787` (`[DECIDIDO owner, 2026-09-27]`): obligatorio solo en una reserva de PACK, y eso lo
             // exige `POST /orders` (`CheckoutDuties::pendingForOrder`), que es donde se sabe qué se compra.
             'phone' => ['nullable', 'string', 'max:30'],
+            // TP·1 (`#792`, `[DECIDIDO owner]`): entera y opcional; sin menores ni erratas (la política, una para las cuatro puertas).
+            'born_on' => BirthDatePolicy::rules(),
             'password' => PasswordPolicy::rules(),
             // ⚠️⚠️ **Aquí NO hay casillas legales, desde la T8·c** (`[DECIDIDO owner, 2026-09-02]`,
             // spec §21.4.3). La privacidad se INFORMA con un enlace visible —el art. 13 no pide que
@@ -131,6 +134,7 @@ class AuthRegistrationController extends Controller
             'name' => __('account.register.name'),
             'email' => __('account.register.email'),
             'phone' => __('account.register.phone'),
+            'born_on' => __('account.register.born_on'),
             'password' => __('account.register.password'),
         ];
     }
@@ -182,6 +186,7 @@ class AuthRegistrationController extends Controller
                 'email' => $data['email'],
                 // Opcional (`#787`): sin él, la cuenta nace sin teléfono y se le pide al reservar un pack.
                 'phone' => $data['phone'] ?? null,
+                'born_on' => $data['born_on'] ?? null,
                 'password' => $data['password'],
                 'waiver' => $waiver,
             ],

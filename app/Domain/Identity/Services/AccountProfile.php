@@ -70,6 +70,9 @@ class AccountProfile
         return [
             'name' => ['required', 'string', 'max:255'],
             'phone' => ['required', 'string', 'max:30'],
+            // TP·1 (`#792`): opcional y con `sometimes` —AUSENTE no cambia nada, `null` la borra—. La isla guarda Mi cuenta
+            // sin este campo (`isla/cuenta/useAjustesCuenta.js`): con la regla contraria, cada guardado suyo la borraría.
+            'born_on' => ['sometimes', ...BirthDatePolicy::rules()],
             'locale' => ['required', Rule::in(SiteLocales::SUPPORTED)],
             'email' => [
                 'required', 'string', 'email:rfc', 'max:255',
@@ -92,7 +95,7 @@ class AccountProfile
      * escribir la contraseña para corregir una errata en el teléfono no defiende nada y hace que el
      * titular acabe evitando la pantalla.
      *
-     * @param  array{name: string, phone: string, locale: string, email: string}  $data
+     * @param  array{name: string, phone: string, born_on?: ?string, locale: string, email: string}  $data  sin `born_on`, la fecha no se toca
      */
     public function apply(User $user, array $data, ?string $currentPassword, string $ip): ProfileUpdateResult
     {
@@ -113,6 +116,10 @@ class AccountProfile
         $user->name = $data['name'];
         $user->phone = $data['phone'];
         $user->locale = $data['locale'];
+
+        if (array_key_exists('born_on', $data)) {
+            $user->fill(['born_on' => BirthDatePolicy::normalize($data['born_on'])]);
+        }
 
         if ($emailChanged) {
             $user->pending_email = $email;

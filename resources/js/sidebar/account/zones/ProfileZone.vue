@@ -6,6 +6,7 @@ import { fieldError } from '../form-outcome.js';
 import { pendingNotice, profileForm } from '../profile.js';
 import { t as translate, tp as translateWith } from '../../i18n.js';
 import PasswordInput from '../../steps/PasswordInput.vue';
+import BornOnField from '../../steps/BornOnField.vue';
 import NoPasswordHint from '../NoPasswordHint.vue';
 
 /**
@@ -88,6 +89,9 @@ const pending = computed(() => pendingNotice(store.user, props.account, Date.now
                 <input id="acct-phone" v-model="form.phone" type="tel" autocomplete="tel" required>
                 <span v-if="fieldError(store.fields, 'phone')" class="form__error">{{ fieldError(store.fields, 'phone') }}</span>
             </div>
+
+            <!-- TP·1 (`#792`): la fecha de nacimiento, opcional. Vaciarla y guardar la BORRA (`stores/profile.js::profileBody`). -->
+            <BornOnField id="acct-born-on" v-model="form.born_on" :account="account" :error="fieldError(store.fields, 'born_on')" />
 
             <div class="form__field">
                 <label class="form__label" for="acct-locale">{{ a('account.profile.locale') }}</label>

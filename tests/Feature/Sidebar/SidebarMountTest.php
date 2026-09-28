@@ -377,7 +377,10 @@ class SidebarMountTest extends TestCase
                 // ⚠️ **`phone_hint` viaja con su campo** (`#561`, grieta 14 del canvas): el teléfono es
                 // obligatorio y el alta lo pedía **sin decir para qué**, mientras el paso de pagar sí lo
                 // hacía. El ORDEN lo fija `lang/*/account.php`, y ahí va pegada a `phone` por lo mismo.
-                'phone_hint', 'password',
+                'phone_hint',
+                // TP·1 (`#792`): la fecha de nacimiento, OPCIONAL, y su pista (para qué se pide). Las pinta
+                // `steps/BornOnField.vue` en el alta, en la pantalla tras Google y en «Tus datos».
+                'born_on', 'born_on_hint', 'password',
                 // ⚠️ **`privacy_read` entra con la FILA** (`#566`, grieta 13): el enlace de la política
                 // salió de su frase a un control propio de 48 px, y su rótulo tiene que viajar o la
                 // fila se pinta muda (`t()` devuelve cadena vacía sin fallar, `#333`).
@@ -968,8 +971,13 @@ class SidebarMountTest extends TestCase
         // rótulos (`surveys_label`, `surveys_hint`), ya podados a una frase cada uno (+135 B sobre los 34 que
         // quedaban). El techo sube a 10.800 a propósito: es un presupuesto, y el interruptor es la salida
         // proporcionada de un correo de servicio (la baja también vive en el propio correo).
+        // ▶ **10.800 → 10.900 en la TP·1 de la analítica (`#792`, 28-09)**: la fecha de nacimiento del titular, opcional,
+        // con su rótulo y su pista —el «para qué» (art. 13)—, que pintan el alta, la pantalla tras Google y «Tus datos».
+        // Medido **10.738 → 10.836 B (+98)**. ⚠️ **Se podó antes**: la pista pasó de «Nos sirve para conocer mejor a quién
+        // viene al parque» a «Para conocer mejor a nuestro público» (−16 B). Viaja en `register` porque el alta la pinta
+        // SIN sesión, y «Tus datos» la reutiliza en vez de traer una segunda copia. **10.900 deja 64 B.**
         $this->assertLessThan(
-            10800, $bytes,
+            10900, $bytes,
             "Los textos del montaje con sesión pesan {$bytes} B. Poda antes de subir el techo: el ".
             'grupo `account` entero son 9,6 kB, y la diferencia la paga cada página que el cliente abre.'
         );

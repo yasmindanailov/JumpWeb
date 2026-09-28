@@ -24,7 +24,7 @@ class StaticAnalysisGateTest extends TestCase
      * el número aquí en el mismo commit. Si el test te pide SUBIRLO, has metido un error nuevo en la
      * línea base en vez de arreglarlo.
      */
-    private const FROZEN_ERRORS = 448;   // `#787`: las cinco de `SelfSignup` se fueron al declarar en su tipo la clave `waiver` que siempre leyó (y el teléfono, ya opcional)
+    private const FROZEN_ERRORS = 444;   // TP·1 (`#792`): las cuatro del mostrador se fueron al declarar en sus tipos `waiver_declared` (que siempre leyó) y `born_on`
 
     private function config(): string
     {

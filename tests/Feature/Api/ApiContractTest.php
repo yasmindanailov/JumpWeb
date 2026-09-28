@@ -186,7 +186,9 @@ class ApiContractTest extends TestCase
         // contraseña para corregir una errata en el teléfono —que no defiende nada y hace que el
         // titular acabe evitando la pantalla—, y OpenAPI 3.0 no sabe expresar «obligatorio si otro
         // campo cambia»: quien lo decide es el servidor, que la exige cuando toca.
-        'ProfileUpdateRequest' => ['current_password'],
+        // ▶ Y la FECHA DE NACIMIENTO (TP·1, `#792`, 1.49.0): opcional de verdad y con semántica propia —AUSENTE no cambia
+        // nada, `null` la borra—. La isla guarda Mi cuenta sin ella: exigirla borraría o rechazaría cada guardado suyo.
+        'ProfileUpdateRequest' => ['current_password', 'born_on'],
         // Cuerpo de PETICIÓN, y la opcionalidad vuelve a ser CONDICIONAL (`#349`): las condiciones
         // solo se envían si esta instalación las publica **y** este titular no tiene aceptada la
         // versión vigente; el teléfono, solo si la cuenta no lo tiene. Exigir los dos siempre
@@ -214,7 +216,8 @@ class ApiContractTest extends TestCase
         // ⚠️ `marketing` estuvo aquí hasta la T8·c (`#350`) y ya no está en el esquema: el alta no lo
         // pide, lo pide el interruptor de «Mi cuenta → Privacidad» (`PUT /me/marketing`).
         // Y desde `#787` (27-09) el TELÉFONO: obligatorio solo para reservar un pack, y eso lo exige `POST /orders`.
-        'RegisterRequest' => ['phone', 'context', 'website', 'turnstile_token', 'accept_waiver', 'waiver_document_id'],
+        // Y la FECHA DE NACIMIENTO (TP·1, `#792` `[DECIDIDO owner]`: «entera y OPCIONAL»): sin ella la cuenta nace igual.
+        'RegisterRequest' => ['phone', 'born_on', 'context', 'website', 'turnstile_token', 'accept_waiver', 'waiver_document_id'],
         // Cuerpo de PETICIÓN del alta con Google (`specs/auth-con-google.md` §7). Las dos claves del
         // descargo son opcionales por la MISMA razón que arriba y una más: en una instalación en modo
         // externo —o sin versión publicada— **no hay texto que aceptar**, así que exigirlas convertiría
@@ -222,7 +225,8 @@ class ApiContractTest extends TestCase
         // es el servidor, que las exige justo cuando `GET /legal/waiver` sirve un documento.
         // ⚠️ Lo que sigue mordiendo es `additionalProperties: false`: es lo que impide colar aquí un
         // `email` que el servidor ignoraría en silencio — y ese silencio sería la vulnerabilidad.
-        'GoogleSignupRequest' => ['accept_waiver', 'waiver_document_id'],
+        // ▶ La FECHA DE NACIMIENTO (TP·1, `#792`): opcional, como en el alta con correo; Google no la da.
+        'GoogleSignupRequest' => ['born_on', 'accept_waiver', 'waiver_document_id'],
         // `#574` · cuerpo de PETICIÓN de la INVITACIÓN DIGITAL, y aquí la opcionalidad es **el
         // diseño de la feature**, no una concesión: `[DECIDIDO owner]` D10 y §2.1 de
         // `specs/celebracion-e-invitacion.md` dicen que **el padre contesta con un nombre y un

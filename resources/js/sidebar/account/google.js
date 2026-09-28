@@ -14,7 +14,7 @@
  * una respuesta acabarían diciendo cosas distintas del mismo «no».
  */
 
-import { registerErrors } from '../register.js';
+import { bornOnField, registerErrors } from '../register.js';
 
 /** El código que el servidor devuelve cuando el texto del descargo ya no es el vigente. */
 export const WAIVER_STALE = 'waiver_document_stale';
@@ -81,6 +81,8 @@ export async function runGoogleSignup({ form, api, waiver = null, messages = {},
         // los pide el checkout. `GoogleSignupRequest` es `additionalProperties: false`, así que
         // mandarlos aquí sería un 422 por ESQUEMA, no por lógica.
         name: form?.name ?? '',
+        // La fecha de nacimiento (TP·1), opcional y solo si hay una: Google no la da.
+        ...bornOnField(form),
         accept_waiver: acceptWaiver,
         waiver_document_id: acceptWaiver ? waiver.id : null,
     });

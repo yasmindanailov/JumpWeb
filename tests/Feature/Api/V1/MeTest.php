@@ -69,6 +69,8 @@ class MeTest extends ApiTestCase
             'name',
             'email',
             'phone',
+            // TP·1 (`#792`, contrato 1.49.0): la fecha de nacimiento, que «Tus datos» pinta y edita.
+            'born_on',
             'locale',
             'marketing_opt_in',
             'analytics_opt_out',

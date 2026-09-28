@@ -54,12 +54,15 @@ class CustomerRegistrar
      *                                vigente y declara que el cliente lo acepta. Sin esto, en mostrador
      *                                NO se registra ninguna firma — hasta `#178` se registraba una
      *                                «declarada» que nadie había declarado (revisión `#169` §10.1).
+     * @param  string|null  $bornOn  TP·1 (`#792`): la fecha de nacimiento, opcional y ya validada con `BirthDatePolicy`.
+     *                               Solo al CREAR: una cuenta que ya existía no la recibe de aquí.
      */
-    public function register(string $name, ?string $email, ?string $phone, bool $waiverDeclared = false): array
+    public function register(string $name, ?string $email, ?string $phone, bool $waiverDeclared = false, ?string $bornOn = null): array
     {
         $name = trim($name);
         $email = self::normalizeEmail($email);
         $phone = $phone !== null && trim($phone) !== '' ? trim($phone) : null;
+        $bornOn = BirthDatePolicy::normalize($bornOn);
 
         if ($email !== null) {
             $existing = User::where('email', $email)->first();
@@ -82,11 +85,12 @@ class CustomerRegistrar
         $now = now();
         $ip = request()?->ip();
 
-        $user = DB::transaction(function () use ($name, $email, $phone, $plainPassword, $now, $ip, $waiverDeclared): User {
+        $user = DB::transaction(function () use ($name, $email, $phone, $bornOn, $plainPassword, $now, $ip, $waiverDeclared): User {
             $user = User::create([
                 'name' => $name,
                 'email' => $email,                 // NULL para el cliente de agenda sin correo
                 'phone' => $phone,
+                'born_on' => $bornOn,
                 'password' => $plainPassword,
                 'locale' => 'es',
                 'marketing_opt_in' => false,

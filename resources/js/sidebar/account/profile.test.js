@@ -16,13 +16,17 @@ const AHORA = Date.parse('2026-08-22T10:00:00Z');
 describe('el formulario', () => {
     test('sale de lo que publica `GET /me`, sin inventar campos', () => {
         assert.deepEqual(
-            profileForm({ name: 'Ana', email: 'a@x.test', phone: '600', locale: 'es', id: 7 }),
-            { name: 'Ana', email: 'a@x.test', phone: '600', locale: 'es' },
+            profileForm({ name: 'Ana', email: 'a@x.test', phone: '600', born_on: '1985-01-02', locale: 'es', id: 7 }),
+            { name: 'Ana', email: 'a@x.test', phone: '600', born_on: '1985-01-02', locale: 'es' },
         );
     });
 
     test('un perfil incompleto no produce `undefined` en un input', () => {
-        assert.deepEqual(profileForm(null), { name: '', email: '', phone: '', locale: '' });
+        assert.deepEqual(profileForm(null), { name: '', email: '', phone: '', born_on: '', locale: '' });
+    });
+
+    test('sin fecha de nacimiento, el campo nace vacío (`null` no es una fecha que pintar)', () => {
+        assert.equal(profileForm({ name: 'Ana', born_on: null }).born_on, '');
     });
 });
 

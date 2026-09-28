@@ -3,6 +3,29 @@ import { api as httpClient } from '../api.js';
 import { formState, runForm } from '../account/form-run.js';
 
 /**
+ * El cuerpo de `PATCH /me` a partir de lo que el formulario trae.
+ *
+ * ⚠️⚠️ **La fecha de nacimiento (TP·1, `#792`) viaja SOLO si el formulario la trae**, y vacía viaja como `null` (la borra).
+ * Ausente, el servidor no la toca: Mi cuenta de la ISLA llama a este mismo store con `{name, phone, locale, email}` y,
+ * si aquí se mandase siempre, cada guardado suyo la borraría.
+ *
+ * ⚠️ Vive AQUÍ y no en `account/profile.js`, medido: importarla de allí metía ese módulo entero en la descarga del motor
+ * (+0,77 kB, `SidebarBundleBudgetTest`). Es una función pura y tiene sus casos en `profile.test.js`, sin Pinia.
+ *
+ * ⚠️ **`current_password` solo se manda si de verdad hay algo escrito.** El contrato la declara opcional porque solo hace
+ * falta al cambiar el correo; mandarla vacía cuando no toca la convertiría en un 422 por un campo que no tocaba.
+ */
+export function profileBody(form) {
+    const body = { name: form?.name, phone: form?.phone, locale: form?.locale, email: form?.email };
+
+    if (form && 'born_on' in form) body.born_on = String(form.born_on ?? '').trim() || null;
+
+    if (form?.currentPassword) body.current_password = form.currentPassword;
+
+    return body;
+}
+
+/**
  * **El perfil del titular y el ciclo del cambio de correo** (`specs/area-cliente.md` §9, paso 7b).
  *
  * Guarda el perfil tal como lo publica `GET /me` —crudo, sin componer— y llama a los tres endpoints.
@@ -46,23 +69,11 @@ export const useProfileStore = defineStore('profile', {
         },
 
         /**
-         * Guarda el perfil. Devuelve si salió.
-         *
-         * ⚠️ **`current_password` solo se manda si de verdad hay algo escrito.** El contrato la
-         * declara opcional porque solo hace falta al cambiar el correo; mandarla vacía cuando no toca
-         * la convertiría en un 422 por un campo que el cliente no tenía por qué rellenar.
+         * Guarda el perfil. Devuelve si salió. Qué viaja lo decide {@link profileBody}: la contraseña solo si hay algo
+         * escrito, y la fecha de nacimiento solo si el formulario la trae.
          */
         async apply(form, { api = httpClient, messages = {}, auth = {} } = {}) {
-            const body = {
-                name: form.name,
-                phone: form.phone,
-                locale: form.locale,
-                email: form.email,
-            };
-
-            if (form.currentPassword) body.current_password = form.currentPassword;
-
-            return this.run(() => api.patch('/me', body), { api, messages, auth });
+            return this.run(() => api.patch('/me', profileBody(form)), { api, messages, auth });
         },
 
         /** Cancela el cambio de correo pedido. */

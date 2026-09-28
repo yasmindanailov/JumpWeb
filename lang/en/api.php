@@ -73,6 +73,12 @@ return [
         'online_sales_disabled' => 'Online booking is not available yet. Call us or come to the park to book.',
     ],
 
+    'born_on' => [
+        'future' => 'Your date of birth cannot be in the future.',
+        'minor' => 'Accounts are for adults (:age or older).',
+        'implausible' => 'Check the year: that date means over :max years old.',
+    ],
+
     'google' => [
         'refused' => 'We could not finish signing you up with that Google account. Try again, or sign up with your email and a password.',
     ],

@@ -193,6 +193,7 @@ class AccountPrivacy
                 'pending_email' => $user->pending_email,
                 'pending_email_sent_at' => $user->pending_email_sent_at?->toIso8601String(),
                 'phone' => $user->phone,
+                'born_on' => $user->born_on?->toDateString(),
                 'locale' => $user->locale,
                 'marketing_opt_in' => (bool) $user->marketing_opt_in,
                 'email_verified_at' => $user->email_verified_at?->toIso8601String(),

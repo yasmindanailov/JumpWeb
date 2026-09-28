@@ -888,7 +888,13 @@ class SidebarBundleBudgetTest extends TestCase
     // `#788` (owner, 27-09): «Pagar» dice el plazo y la señal de CADA producto de la cesta, de sus datos, en vez de una
     // frase fija que decía «5 días» a packs de 3 (`cart.js::cancellationTerms()`, el getter `payTerms` y la prop de
     // `PayStep`). Medido construyendo el JS de `HEAD` y el de `#788`: 297,51 → 298,19 (+0,68). El techo, a 299.
-    private const SIDEBAR_CHUNK_MAX_KB = 299;
+    // TP·1 de la analítica (`#792`, 28-09): la fecha de nacimiento del titular, opcional, en el alta, la pantalla tras
+    // Google y «Tus datos» —una pieza, `steps/BornOnField.vue`, y la regla de que solo viaje si hay una
+    // (`register.js::bornOnField`, `stores/profile.js::profileBody`)—. Medido construyendo el JS de `main` (`1bc76458`,
+    // que ya pesaba 298,83 con lo de plataforma de después de `#788`) y el de la TP·1: 298,83 → 300,46 (+1,63). Podado lo
+    // obvio antes de subir: `profileBody` vivía en `account/profile.js` y lo metía entero en la descarga (+0,77); vive en
+    // el store. El techo, a 301.
+    private const SIDEBAR_CHUNK_MAX_KB = 301;
 
     // T3e·2: la compra de la isla, chunk diferido del motor que solo trae una instalación con la isla. Medido 93,36 KiB
     // (la sección, la pantalla 0, la isla y sus piezas); su hoja va aparte (7,2 KiB).

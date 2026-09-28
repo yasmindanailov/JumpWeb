@@ -6,7 +6,7 @@
 > tabla de `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: **`analitica-para-decidir.md`
 > §0** (la tarea en curso, `#755`) · `encuestas.md` §0 y §4.7 (`#754`) · `analitica.md` §0 y §4.5 · `isla-y-landing-nueva.md`
 > §4.11 · `celebracion-e-invitacion.md` §0 · `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 ·
-> `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-09-28 (cierre: la T3c entera en `main`; la TP decidida, `#792`).
+> `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-09-28 noche (la TP·1 en `wip/tp1-captura`, a la espera del ojo).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`). El
 > contador de la suite va en el trailer del commit (`#618`), no aquí. **Se muda, no se raspa**: el detalle de
 > una feature baja a su spec (las trampas por tanda de la analítica T1→T5 viven en `analitica.md` §4.9,
@@ -18,9 +18,10 @@
   T1 encuestas anónimas (`#754`/`#757`), T2 ocupación (`#758`) y, el 28-09, **T3a la forma** (`#759`: siete pestañas, solo
   pide la abierta, un catálogo de 58 cifras), **T3b el veredicto** (`#790` `[DECIDIDO owner]`: «normal» es el mín–máx de los 12
   periodos anteriores), **T3c·1 «lo que ha cambiado»** (`#791`) y **T3c·2 los objetivos del mes** (el botón al pie de «Resumen», la
-  línea en la tarjeta; permiso `analytics.manage`). Lo construido y lo que enseñó cada una: spec §4.13. ▶ **Sigue la TP, el
+  línea en la tarjeta; permiso `analytics.manage`). Lo construido y lo que enseñó cada una: spec §4.13. ▶ **La TP, el
   público** (`#792` `[DECIDIDO owner]` 28-09: la fecha de nacimiento del titular, entera y opcional; los padres por la edad de sus
-  hijos con el opt-in de hoy; §4.14), SIN «al detalle» aún.
+  hijos con el opt-in de hoy; §4.14): 🟦 **TP·1 la captura, código completo en `wip/tp1-captura`** (su «al detalle» y lo que enseñó,
+  §4.14; contrato **1.49.0**), falta el OJO del owner y el *fast-forward*; después TP·2.
 - ▶ **LA FIESTA DEL SISTEMA NUEVO ES MÍA (`#765`, `[DECIDIDO owner]` 25-09)**: la lista de invitados, la invitación con
   su recibo y la autorización, vestidas con «Saltia» para la v2.0.0, en paralelo con la web pública. El traspaso,
   `isla-y-landing-nueva.md` §4.11; el censo HAY/FALTA, el método y las tandas, `specs/fiesta-sistema-nuevo.md` (§1.4,
@@ -56,19 +57,17 @@
 - ⚠️⚠️ **LO MONTADO EN LA BD LOCAL para el ojo del owner** (ajustes falsos, el experimento `carcasa` vivo, los fixtures
   `probe-ojo-*`, las fiestas `JW-OJO-F1…F8` con sus guiones `OJO=desmontar`, y la ISLA encendida por plataforma —«no
   deshacer sin él»—): el inventario entero, mudado verbatim a `docs/CARRIL-SPA.md` §8 (27-09). Todo reversible.
-- ✅ **La ficha de Google (`#524`), T1 y T2·1→T2·8 en el árbol** (`#720`→`#734`), vistas por el owner con su ✅
-  en vivo (21-09). ❗ Lo demás va **contra un DOBLE**: la ficha de PlayJump no llega a los 60 días (finales de
-  octubre). ⚠️ Cuatro migraciones de esa spec y las de la analítica, aplicadas SOLO en la BD local.
-- ✅ **La invitación digital no tiene nada pendiente de código** (`#718`, spec §10.18) y tiene el ✅ del owner
-  en vivo (20-09). **Sin desplegar** (`#670`: todo con la v2.0.0). Los dos interruptores son dato del owner.
-- **Las 25 pantallas del cajón están construidas** (`#550`→`#568`).
+- ✅ Con su ✅ en vivo y sin desplegar (`#670`): **la ficha de Google** (`#720`→`#734`; el resto, contra un DOBLE hasta finales
+  de octubre: `google-business-profile.md` §0) · **la invitación digital** (`#718`, `celebracion-e-invitacion.md` §10.18) · **las
+  25 pantallas del cajón** (`#550`→`#568`).
 
 ## Por dónde retomar, en orden
 
 1. ❗❗❗ **LA ANALÍTICA PARA DECIDIR (`#755`, `specs/analitica-para-decidir.md`)**: ✅ T0a·T0b·T0c · T1 · T2 · T3a · T3b ·
-   T3c·1 · T3c·2, todas en `main` y aprobadas (§4.3–§4.13) → ▶ **TP el público** (§4.14, `#792`; empieza por su «al detalle»,
-   medido: las cinco altas, el contrato, el export y el borrado, la isla por buzón; TP·1 la
-   fecha en las cinco altas y Mi cuenta —la isla, de plataforma, por buzón—, TP·2 «Quién viene» en Clientes, TP·3 los padres por
+   T3c·1 · T3c·2, todas en `main` y aprobadas (§4.3–§4.13) → ▶ **TP el público** (§4.14, `#792`): 🟦 **TP·1 en
+   `wip/tp1-captura`** (las CUATRO puertas —la puerta no da de alta—, contrato 1.49.0, arnés `SOLO=TP1`): falta el ojo del owner
+   (el cajón solo se ve con `sidebar.shell = cajon`, y la local está en `isla` por plataforma: preguntar antes de tocarlo) y
+   el *fast-forward*; luego el buzón a plataforma (la isla) → TP·2 «Quién viene» en Clientes → TP·3 los padres por
    la edad de sus hijos, `[PENDIENTE: asesoría]` antes de exportar) → T3d el texto para IA (§4.7; lee `Changes` y
    los veredictos; sin PII ni celdas < 5) → T3e el SECTOR (primera búsqueda en §4.13: casi todo son medias, no rangos; AL OWNER
    antes de sembrar) → T4 cartera → T5 marketing y correos → T6 cohortes → T7 pérdidas → T8 satisfacción (§4.12). Los CRUCES de
@@ -224,22 +223,16 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 
 ## Buzón
 
-- ❗ **Para plataforma y la web (28-09, AVISO PREVIO de la TP, `#792`)**: el titular tendrá `users.born_on` (fecha entera,
-  opcional; < 18 se rechaza). **Plataforma**: el alta de la isla y su Mi cuenta la pedirán (contrato menor, `User.born_on`; el
-  número, al llegar). **Web**: `/privacidad` nombrará esa fecha y el uso de la edad de los hijos en las comunicaciones
-  comerciales (`[PENDIENTE: asesoría]`).
-- ❗ **Para plataforma (28-09, la T3 de la analítica, `#759`/`#790`/`#791`)**: (1) Toqué dos descripciones de TU hub de Ajustes
-  en `lang/{es,zh_CN}/admin.php`: Experimentos y Encuestas decían «Analítica → Conversión / Encuestas» y ahora «→ Marketing /
-  Satisfacción» (las pestañas se renombraron; `?pestana=traffic` y `surveys` siguen abriendo la suya). (2) **HECHO (T3c·2)**:
-  toqué `PermissionSeeder`/`PermissionCatalog` (+`analytics.manage`, de gestión; llega con el seeder del despliegue),
-  `AuditLog::ACTIONS` (+`analytics.goals_updated`), el morfo de `AppServiceProvider` (+`analytics_goal`), `docs/README.md` (55
-  modelos · 149 migraciones) y `MODELO-DATOS.md` (`analytics_goals`). Tras el `pull`, `php artisan migrate`. Sin contrato nuevo.
-- ❗❗ **Para plataforma (27-09 noche, la T2 de la analítica, `#758` `[DECIDIDO owner]`)**: la «demanda sin hueco» se mide
-  desde ya: el CAJÓN emite `availability_missing {product, month}` al cargar la oferta de un producto (por cada mes sin días
-  desde el en curso; una vez por producto y mes en la visita). **La isla no pasa por `selectProduct()` y no lo emite**: te
-  pido que la isla lo haga con la misma regla, sin copiarla —`sidebar/missing.js::createMissingReporter(track)` y
-  `calendar.js::missingMonths()`, puros y con sus `node --test`—, donde la isla reciba los días de un producto. Sin contrato
-  nuevo (el evento ya estaba en `Contract`). Y el cuadro gana la pestaña «Ocupación» y el CSV `occupancy` (tu hub, sin tocar).
+- ❗❗ **Para plataforma (28-09, la TP·1, `#792`)**: `users.born_on`, entera y opcional (`BirthDatePolicy`: no futura, ≥ 18 el
+  día del parque, ≤ 120). Contrato **1.49.0**, mío (`User`, `RegisterRequest`, `GoogleSignupRequest`, `ProfileUpdateRequest`
+  —AUSENTE no la toca, `null` la borra—, `ExportedProfile`): tu siguiente, 1.50.0. **La isla**: el motor ya la reenvía si tu
+  formulario la trae (`runRegister` y `runGoogleSignup` leen `form.born_on`; `profile.apply` solo si la clave viene): falta en
+  `formularioDeAlta` y en tus «Tus datos» (la pieza `steps/BornOnField.vue` y sus textos `account.register.born_on[_hint]`,
+  ya en el montaje). Toqué lo compartido: techos de `SidebarBundleBudgetTest` (299 → **301**; el motor ya pesaba 298,83) y
+  `SidebarMountTest` (10.900), `SidebarBoot` (dos claves), `ApiContractTest`, `phpstan-baseline.neon` (−4, el mostrador),
+  `CreateManualOrderPage` (el campo), `README`/`MODELO-DATOS`/`INVARIANTES`. Tras el `pull`, `php artisan migrate`.
+- ❗ **Para la web (28-09, TP·1, `#792`)**: `/privacidad` tiene que nombrar la fecha de nacimiento del titular (opcional; para
+  conocer al público) y, con la TP·3, el uso de la edad de los hijos en las comunicaciones comerciales (`[PENDIENTE: asesoría]`).
 - ❗❗ **Para plataforma (27-09 noche, `#754`/`#757`, YA EN CÓDIGO)**: (1) `scripts/deploy.sh` espera **11** tareas (entra
   `surveys:resolve-returns`, 04:20); toqué solo esa línea y su comentario. (2) El CONTRATO **1.46.0** es mío: te respeté la
   1.45.0 reservada; `PersonalDataExport.surveys` pasa a `ExportedSurveys` `{participations, sealed_responses}`. Tu

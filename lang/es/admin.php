@@ -1146,6 +1146,14 @@ return [
             'register_email' => 'Email del cliente',
             'register_email_optional' => 'Opcional. Si no lo tienes, déjalo vacío: la reserva quedará en el sistema con su teléfono (no recibirá correos y el enlace del formulario se copia desde el icono del producto).',
             'register_phone' => 'Teléfono del cliente',
+            // TP·1 (`#792`): la fecha de nacimiento, opcional (`BirthDatePolicy`).
+            'register_born_on' => 'Fecha de nacimiento',
+            'register_born_on_help' => 'Opcional: solo si el cliente la da. Sirve para conocer al público, nunca se le enseña a nadie más.',
+            'born_on_errors' => [
+                'future' => 'La fecha de nacimiento no puede ser futura.',
+                'minor' => 'La cuenta es para mayores de edad (:age años o más): el cliente tiene que ser el adulto.',
+                'implausible' => 'Revisa el año: esa fecha dice más de :max años.',
+            ],
             'register_privacy' => 'He informado al cliente de la política de privacidad y crea su cuenta con su consentimiento.',
             'register_privacy_required' => 'Debes confirmar que has informado al cliente de la política de privacidad.',
             'register_waiver' => 'Le he enseñado al cliente el descargo de responsabilidad vigente y declara que lo acepta.',
@@ -2438,6 +2446,9 @@ return [
         'col_name' => 'Nombre',
         'col_email' => 'Email',
         'col_phone' => 'Teléfono',
+        // TP·1 (`#792`): la fecha que dio el cliente y la edad que cumple hoy (día del parque).
+        'col_born_on' => 'Fecha de nacimiento',
+        'born_on_value' => ':date · :age años',
         'col_roles' => 'Rol',
         'col_status' => 'Estado',
         'col_verified' => 'Email verificado',

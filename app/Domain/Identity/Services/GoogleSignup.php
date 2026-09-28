@@ -46,7 +46,7 @@ final class GoogleSignup
     ) {}
 
     /**
-     * @param  array{name: string}  $data  lo que la pantalla añade, ya validado
+     * @param  array{name: string, born_on?: ?string}  $data  lo que la pantalla añade, ya validado (la fecha, opcional: TP·1)
      * @param  LegalDocumentVersion|null  $waiver  el texto que la pantalla SIRVIÓ, o `null` si en esta
      *                                             instalación no se firma (modo externo o sin versión)
      *
@@ -81,6 +81,8 @@ final class GoogleSignup
                 // nadie puede entrar con ella. Quien quiera una la pide con «he olvidado mi
                 // contraseña», que es lo que hace que esta cuenta no dependa de Google para siempre.
                 'password' => Str::random(60),
+                // TP·1 (`#792`): Google no la da (pedirla exige un permiso sensible, descartado); la pantalla sí, opcional.
+                'born_on' => BirthDatePolicy::normalize($data['born_on'] ?? null),
                 'locale' => app()->getLocale(),
                 // ⚠️ **El marketing NO se pide aquí** (`[DECIDIDO owner]` Q9): el art. 7.4 prohíbe
                 // empaquetarlo con lo demás. Se ofrece en «Mi cuenta → Privacidad», con su

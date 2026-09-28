@@ -45,6 +45,8 @@ class UserResource extends JsonResource
             'name' => $this->name,
             'email' => $this->email,
             'phone' => $this->phone,
+            // TP·1 (`#792`): la fecha de nacimiento, `Y-m-d` o `null`; la pinta «Mi cuenta → Tus datos».
+            'born_on' => $this->born_on?->toDateString(),
             'locale' => $this->locale,
             'marketing_opt_in' => (bool) $this->marketing_opt_in,
             // La OPOSICIÓN al régimen identificado (`specs/analitica.md` §4.3, T3a·3): lo que pinta el

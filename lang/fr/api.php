@@ -73,6 +73,12 @@ return [
         'online_sales_disabled' => 'La réservation en ligne n’est pas encore disponible. Appelez-nous ou venez au parc pour réserver.',
     ],
 
+    'born_on' => [
+        'future' => 'La date de naissance ne peut pas être dans le futur.',
+        'minor' => 'Le compte est réservé aux majeurs (:age ans ou plus).',
+        'implausible' => 'Vérifiez l’année : cette date indique plus de :max ans.',
+    ],
+
     'google' => [
         'refused' => "Nous n'avons pas pu terminer l'inscription avec ce compte Google. Réessaie, ou inscris-toi avec ton e-mail et un mot de passe.",
     ],

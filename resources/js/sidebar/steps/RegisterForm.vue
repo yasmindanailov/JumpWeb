@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { t as translate } from '../i18n.js';
 import PasswordInput from './PasswordInput.vue';
+import BornOnField from './BornOnField.vue';
 import GoogleButton from './GoogleButton.vue';
 import WaiverDoc from '../WaiverDoc.vue';
 import { mountTurnstile } from '../turnstile.js';
@@ -94,6 +95,7 @@ defineEmits(['submit']);
 const name = defineModel('name', { type: String, default: '' });
 const email = defineModel('email', { type: String, default: '' });
 const phone = defineModel('phone', { type: String, default: '' });
+const bornOn = defineModel('bornOn', { type: String, default: '' });
 const password = defineModel('password', { type: String, default: '' });
 
 /**
@@ -200,6 +202,9 @@ const summary = computed(() => props.errors?.summary ?? []);
                     <span v-if="fieldErrors.phone" class="form__error">{{ fieldErrors.phone }}</span>
                 </div>
             </div>
+
+            <!-- ⚠️ **8. La fecha de nacimiento, OPCIONAL** (TP·1, `#792`), antes de la contraseña: es un dato de la persona. -->
+            <BornOnField id="reg-born-on" v-model="bornOn" :account="account" :error="fieldErrors.born_on ?? ''" />
 
             <div class="form__field">
                 <label class="form__label" for="reg-password">{{ a('register.password') }}</label>

@@ -155,6 +155,9 @@ final class SidebarBoot
                     // sin fallar — el hueco de `#333`, que se ve como un campo sin explicación y no
                     // como algo roto.
                     'password_hint', 'phone_hint', 'accept_waiver', 'waiver_read', 'privacy_notice',
+                    // TP·1 (`#792`): la fecha de nacimiento y su pista (para qué se pide). Las pintan el alta, la
+                    // pantalla tras Google y «Tus datos» (`steps/BornOnField.vue`); sin ellas aquí, VACÍAS (`#333`).
+                    'born_on', 'born_on_hint',
                     // ⚠️ La pista del descargo (`#588`): sin ella aquí, `t()` la devuelve VACÍA (`#333`).
                     'waiver_hint',
                     // ⚠️ El rótulo de la fila que abre la política (`#566`). Sin él aquí, la fila se

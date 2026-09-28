@@ -76,7 +76,7 @@ class SelfSignup
     public const RESEND_EMAIL_COOLDOWN_SECONDS = 60;
 
     /**
-     * @param  array{name:string,email:string,phone:?string,password:string,waiver?:array{document?:LegalDocumentVersion,channel?:string,user_agent?:?string}|null}  $data  ya validado por el llamante (el teléfono, opcional desde `#787`; el descargo aceptado, si lo hay)
+     * @param  array{name:string,email:string,phone:?string,born_on?:?string,password:string,waiver?:array{document?:LegalDocumentVersion,channel?:string,user_agent?:?string}|null}  $data  ya validado por el llamante (el teléfono, opcional desde `#787`; la fecha de nacimiento, opcional, TP·1; el descargo aceptado, si lo hay)
      * @param  bool  $notifyByEmail  `false` en la compra: pay-first no manda verificación (`DECISIONES` del 2026-06-14 —
      *                               el pago la sustituye, y un bot no paga)
      * @param  string  $honeypot  campo señuelo; si llega con algo, es un bot
@@ -207,7 +207,7 @@ class SelfSignup
     }
 
     /**
-     * @param  array{name:string,email:string,phone:?string,password:string,waiver?:array{document?:LegalDocumentVersion,channel?:string,user_agent?:?string}|null}  $data
+     * @param  array{name:string,email:string,phone:?string,born_on?:?string,password:string,waiver?:array{document?:LegalDocumentVersion,channel?:string,user_agent?:?string}|null}  $data
      */
     private function createAccount(array $data, string $email, string $ip): User
     {
@@ -220,6 +220,8 @@ class SelfSignup
                 // Opcional desde `#787`: sin él, la cuenta nace sin teléfono —el estado del alta con Google y del de
                 // mostrador— y `CheckoutDuties` se lo pide al reservar un pack. Uno de espacios no es un teléfono.
                 'phone' => is_string($data['phone'] ?? null) && trim($data['phone']) !== '' ? trim($data['phone']) : null,
+                // TP·1 (`#792`): opcional; la valida el llamante con `BirthDatePolicy::rules()`.
+                'born_on' => BirthDatePolicy::normalize($data['born_on'] ?? null),
                 'password' => $data['password'],
                 'locale' => app()->getLocale(),
                 // ⚠️ **El marketing NO se pide en el alta** (`[DECIDIDO owner, 2026-09-02]`, T8·c): se

@@ -104,6 +104,7 @@ const a = (key) => translate(props.account, key);
         v-model:name="form.name"
         v-model:email="form.email"
         v-model:phone="form.phone"
+        v-model:born-on="form.born_on"
         v-model:password="form.password"
         v-model:accept-waiver="form.accept_waiver"
         v-model:website="form.website"

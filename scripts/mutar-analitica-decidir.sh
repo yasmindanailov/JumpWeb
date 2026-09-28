@@ -12,13 +12,14 @@
 set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
-FILTER='ReportPeriodTest|MoneyReportTest|WindowLabelTest|AnalyticsPageTest|MetricTest|AnalyticsCensusTest|FunnelReportTest|PartiesReportTest|CustomersReportTest|GateSurveyTest|ValidarRegistroProfileTest|GateVisitsTest|OccupancyReaderParityTest|OccupancyReportTest|AnalyticsTabsTest|AnalyticsJargonTest|MetricsCatalogTest|AnalyticsExportTest|SegmentsExportTest|MetricsHistoryTest|ChangesTest|GoalTest|AnalyticsGoalsTest'
+FILTER='ReportPeriodTest|MoneyReportTest|WindowLabelTest|AnalyticsPageTest|MetricTest|AnalyticsCensusTest|FunnelReportTest|PartiesReportTest|CustomersReportTest|GateSurveyTest|ValidarRegistroProfileTest|GateVisitsTest|OccupancyReaderParityTest|OccupancyReportTest|AnalyticsTabsTest|AnalyticsJargonTest|MetricsCatalogTest|AnalyticsExportTest|SegmentsExportTest|MetricsHistoryTest|ChangesTest|GoalTest|AnalyticsGoalsTest|HolderBirthDateTest|HolderBirthDatePanelTest|AnonymizeCoversEveryUserColumnTest|MeTest|SidebarTranslationKeysExistTest'
 # Modo «solo una tanda» (`SOLO=<tanda> bash scripts/mutar-analitica-decidir.sh`; 28-09, el owner: esperar ~95 min por tanda
 # es inviable). Corre SOLO las mutaciones de esa sección y con SUS pruebas: un filtro más estrecho nunca inventa un «muerde»,
 # como mucho esconde uno, y el veredicto sigue siendo por código de salida. La base verde y el CONTROL corren siempre. El arnés
 # entero se reserva para cerrar un bloque (la T3 entera, la TP…). Una tanda nueva: su `SECCION=` y su filtro aquí.
 declare -A FILTRO_DE=(
     [T3c2]='GoalTest|AnalyticsGoalsTest|MetricsCatalogTest'
+    [TP1]='HolderBirthDateTest|HolderBirthDatePanelTest|AnonymizeCoversEveryUserColumnTest|MeTest|SidebarTranslationKeysExistTest'
 )
 SOLO="${SOLO:-}"
 SECCION=''
@@ -66,6 +67,23 @@ FICHEROS=(
     app/Filament/Analytics/Goal.php
     app/Filament/Analytics/GoalsForm.php
     app/Domain/Platform/Services/Analytics/AnalyticsGoals.php
+    app/Domain/Identity/Services/BirthDatePolicy.php
+    app/Domain/Identity/Services/AccountProfile.php
+    app/Http/Controllers/Api/V1/MeProfileController.php
+    app/Http/Controllers/Api/V1/AuthRegistrationController.php
+    app/Http/Controllers/Api/V1/GoogleSignupController.php
+    app/Domain/Identity/Services/SelfSignup.php
+    app/Domain/Identity/Services/GoogleSignup.php
+    app/Domain/Identity/Services/CustomerRegistrar.php
+    app/Filament/Pages/CreateManualOrderPage.php
+    app/Domain/Identity/Models/User.php
+    app/Domain/Identity/Services/AccountPrivacy.php
+    app/Http/Resources/Api/V1/UserResource.php
+    app/Filament/Resources/Users/Schemas/UserInfolist.php
+    app/Http/Sidebar/SidebarBoot.php
+    resources/js/sidebar/register.js
+    resources/js/sidebar/account/google.js
+    resources/js/sidebar/stores/profile.js
 )
 # La copia de cada fichero, por su RUTA entera (T3a): por su nombre, `lang/es/admin.php` y `lang/zh_CN/admin.php` chocaban.
 copia() { echo "$TMP/$(echo "$1" | tr '/' '_')"; }
@@ -73,8 +91,9 @@ restaurar() { for f in "${FICHEROS[@]}"; do cp "$(copia "$f")" "$f"; touch "$f";
 trap 'restaurar; rm -rf "$TMP"' EXIT
 for f in "${FICHEROS[@]}"; do cp "$f" "$(copia "$f")"; done
 
-# La T2 (`#758`) añade dos módulos de JS del cajón (la demanda sin hueco): su red es `node --test`, no la suite.
-verde() { $RUN >/dev/null 2>&1 && docker compose exec -u sail -T laravel.test node --test resources/js/sidebar/calendar.test.js resources/js/sidebar/missing.test.js >/dev/null 2>&1; }
+# La T2 (`#758`) añade dos módulos de JS del cajón (la demanda sin hueco): su red es `node --test`, no la suite. Y la TP·1
+# (`#792`) tres más: la fecha de nacimiento solo viaja si hay una (el alta, Google) y «Tus datos» no la borra por omisión.
+verde() { $RUN >/dev/null 2>&1 && docker compose exec -u sail -T laravel.test node --test resources/js/sidebar/calendar.test.js resources/js/sidebar/missing.test.js resources/js/sidebar/register.test.js resources/js/sidebar/account/google.test.js resources/js/sidebar/stores/profile.test.js >/dev/null 2>&1; }
 
 if ! verde; then
     echo '✗ la base NO está verde antes de mutar: el veredicto de abajo no valdría nada.' >&2
@@ -789,6 +808,102 @@ mutar "el botón de los objetivos no está al pie de «Resumen»" "$AP" \
 mutar "las tarjetas no escuchan el guardado" "app/Filament/Widgets/Analytics/MetricsWidget.php" \
   '    #[On(AnalyticsPage::GOALS_SAVED_EVENT)]' \
   ''
+
+# ── TP·1 · LA FECHA DE NACIMIENTO DEL TITULAR (§4.14, `#792` `[DECIDIDO owner]`: entera y opcional) ──────────────
+# Una política para las cuatro puertas (alta, Google, mostrador, Mi cuenta): no futura, ≥ 18 el día del PARQUE, ≤ 120.
+# «Tus datos» sin la clave NO la toca (la isla guarda así); la purga la borra, el export y `GET /me` la llevan.
+SECCION=TP1
+BP=app/Domain/Identity/Services/BirthDatePolicy.php
+
+mutar "la edad se cuenta con el reloj del contenedor (UTC), no el día del parque" "$BP" \
+  '        $today ??= DisplayTime::today();' \
+  "        \$today ??= CarbonImmutable::today('UTC');"
+
+mutar "un menor de edad pasa" "$BP" \
+  '        if ($age < Dependent::ADULT_AGE) {' \
+  '        if ($age < 0) {'
+
+mutar "el día del 18.º cumpleaños todavía no vale" "$BP" \
+  '        if ($age < Dependent::ADULT_AGE) {' \
+  '        if ($age <= Dependent::ADULT_AGE) {'
+
+mutar "una fecha futura se avisa como si fuera de un menor" "$BP" \
+  "        if (\$born->greaterThan(CarbonImmutable::createFromFormat('!Y-m-d', \$today->toDateString(), 'UTC'))) {" \
+  '        if (false) {'
+
+mutar "un año con una errata (0198) pasa" "$BP" \
+  '        return $age > self::MAX_AGE ? self::IMPLAUSIBLE : null;' \
+  '        return null;'
+
+mutar "el alta con correo no valida la fecha" "app/Http/Controllers/Api/V1/AuthRegistrationController.php" \
+  "            'born_on' => BirthDatePolicy::rules()," \
+  "            'born_on' => ['nullable', 'date_format:Y-m-d'],"
+
+mutar "el alta con correo no la guarda" "app/Domain/Identity/Services/SelfSignup.php" \
+  "                'born_on' => BirthDatePolicy::normalize(\$data['born_on'] ?? null)," \
+  "                'born_on' => null,"
+
+mutar "la pantalla tras Google no valida la fecha" "app/Http/Controllers/Api/V1/GoogleSignupController.php" \
+  "            'born_on' => BirthDatePolicy::rules()," \
+  "            'born_on' => ['nullable', 'date_format:Y-m-d'],"
+
+mutar "la pantalla tras Google no la guarda" "app/Domain/Identity/Services/GoogleSignup.php" \
+  "                'born_on' => BirthDatePolicy::normalize(\$data['born_on'] ?? null)," \
+  "                'born_on' => null,"
+
+mutar "Mi cuenta no valida la fecha" "app/Domain/Identity/Services/AccountProfile.php" \
+  "            'born_on' => ['sometimes', ...BirthDatePolicy::rules()]," \
+  "            'born_on' => ['sometimes', 'nullable'],"
+
+mutar "Mi cuenta BORRA la fecha cuando no viaja (cada guardado de la isla)" "app/Http/Controllers/Api/V1/MeProfileController.php" \
+  "        ] + array_intersect_key(\$data, ['born_on' => true]), \$data['current_password'] ?? null, (string) \$request->ip());" \
+  "        ] + ['born_on' => \$data['born_on'] ?? null], \$data['current_password'] ?? null, (string) \$request->ip());"
+
+mutar "el mostrador no la guarda" "app/Domain/Identity/Services/CustomerRegistrar.php" \
+  "                'born_on' => \$bornOn," \
+  "                'born_on' => null,"
+
+mutar "el mostrador se fía del formulario (la llamada directa y el pendiente reescrito pasan)" "app/Filament/Pages/CreateManualOrderPage.php" \
+  "        if ((\$error = BirthDatePolicy::firstError(\$bornOn, 'admin.orders.create_manual.born_on_errors')) !== null) {" \
+  '        if (false) {'
+
+mutar "la supresión (art. 17) se deja la fecha" "app/Domain/Identity/Models/User.php" \
+  "                'born_on' => null,                               // TP·1 (\`#792\`): la fecha de nacimiento es PII" \
+  ''
+
+mutar "el export (art. 20) no la lleva" "app/Domain/Identity/Services/AccountPrivacy.php" \
+  "                'born_on' => \$user->born_on?->toDateString()," \
+  ''
+
+mutar "GET /me no la sirve" "app/Http/Resources/Api/V1/UserResource.php" \
+  "            'born_on' => \$this->born_on?->toDateString()," \
+  ''
+
+mutar "la ficha del panel no dice la edad de hoy" "app/Filament/Resources/Users/Schemas/UserInfolist.php" \
+  "                                    'age' => \$record->age()," \
+  "                                    'age' => 0,"
+
+mutar "el rótulo y la pista no viajan al cajón (se pintarían VACÍOS)" "app/Http/Sidebar/SidebarBoot.php" \
+  "                    'born_on', 'born_on_hint'," \
+  ''
+
+mutar "el alta manda la fecha vacía (un 422 por esquema)" "resources/js/sidebar/register.js" \
+  "    return value === '' ? {} : { born_on: value };" \
+  '    return { born_on: value };'
+
+mutar "la pantalla tras Google no la manda" "resources/js/sidebar/account/google.js" \
+  '        ...bornOnField(form),' \
+  ''
+
+mutar "«Tus datos» la manda aunque el formulario no la traiga (la isla la borraría)" "resources/js/sidebar/stores/profile.js" \
+  "    if (form && 'born_on' in form) body.born_on = String(form.born_on ?? '').trim() || null;" \
+  "    body.born_on = String(form?.born_on ?? '').trim() || null;"
+
+if [[ -z "$SOLO" || "$SOLO" == TP1 ]]; then
+    control "un comentario de la política de la fecha" "$BP" \
+      'Más años que esto es una errata' \
+      'Mas años que esto es una errata'
+fi
 
 # ── El CONTROL: tocar un comentario no puede poner nada en rojo ─────────────────────────────────
 control "un comentario de Window" "$W" \

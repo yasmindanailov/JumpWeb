@@ -40,6 +40,14 @@ class UserInfolist
                                 ->copyable()
                                 ->placeholder('—'),
 
+                            // TP·1 (`#792`): la fecha que dio, con la edad de hoy. Sin fecha, la raya.
+                            TextEntry::make('born_on')
+                                ->label(__('admin.users.col_born_on'))
+                                ->state(fn (User $record): string => $record->born_on === null ? '—' : __('admin.users.born_on_value', [
+                                    'date' => $record->born_on->format('d/m/Y'),
+                                    'age' => $record->age(),
+                                ])),
+
                             TextEntry::make('locale')
                                 ->label(__('admin.users.col_locale'))
                                 ->state(fn (User $record): string => $record->locale

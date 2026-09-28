@@ -71,7 +71,17 @@ export const TOO_MANY_REQUESTS = 'too_many_requests';
  */
 
 /** El orden en que se listan los avisos del banner: el de las reglas de validación del servidor. */
-const FIELD_ORDER = ['name', 'email', 'phone', 'password', 'accept_waiver', 'waiver_document_id'];
+const FIELD_ORDER = ['name', 'email', 'phone', 'born_on', 'password', 'accept_waiver', 'waiver_document_id'];
+
+/**
+ * La fecha de nacimiento (TP·1, `DECISIONES #792`), **solo si hay una**: es opcional y el contrato la declara `format: date`,
+ * así que una cadena vacía sería un 422 por esquema y no «sin fecha». La comparten el alta con correo y la de Google.
+ */
+export function bornOnField(form) {
+    const value = typeof form?.born_on === 'string' ? form.born_on.trim() : '';
+
+    return value === '' ? {} : { born_on: value };
+}
 
 function clean() {
     return { summary: [], fields: {} };
@@ -184,6 +194,7 @@ export async function runRegister({ form, api, messages = {}, auth = {}, context
         name: form?.name ?? '',
         email: form?.email ?? '',
         phone: form?.phone ?? '',
+        ...bornOnField(form),
         password: form?.password ?? '',
         // ⚠️ **Ni privacidad, ni condiciones, ni marketing** (T8·c): `RegisterRequest` es
         // `additionalProperties: false`, así que mandarlos hoy sería un 422 por ESQUEMA.

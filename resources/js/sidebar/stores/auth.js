@@ -35,7 +35,8 @@ import { useWaiverStore } from './waiver.js';
  */
 const emptyForm = () => ({
     email: '', password: '', remember: false,
-    name: '', phone: '',
+    // `born_on` (TP·1, `#792`): opcional, en `Y-m-d`; `register.js` y `google.js` solo la mandan si hay una.
+    name: '', phone: '', born_on: '',
     // ⚠️ **Ni privacidad, ni condiciones, ni marketing: la T8·c las sacó de las dos altas**
     // (`specs/auth-con-google.md` §21.4.3). La privacidad es un enlace informativo, las condiciones
     // se aceptan al contratar (`buyer-due.js`) y el marketing vive en el interruptor de la cuenta.

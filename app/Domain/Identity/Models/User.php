@@ -10,9 +10,11 @@ use App\Domain\Platform\Models\AnalyticsEvent;
 use App\Domain\Platform\Models\AnalyticsSession;
 use App\Domain\Platform\Models\SurveyParticipation;
 use App\Domain\Platform\Services\AuditLogger;
+use App\Domain\Platform\Services\DisplayTime;
 use App\Domain\Platform\Services\Surveys\SurveySeals;
 use App\Notifications\PasswordReset;
 use App\Notifications\VerifyEmailAddress;
+use Carbon\CarbonImmutable;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
@@ -32,8 +34,13 @@ use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 use Laravel\Sanctum\PersonalAccessToken;
 
+/**
+ * @property CarbonImmutable|null $born_on La fecha de nacimiento (TP·1, `#792`). ⚠️ Anotada A MANO: Larastan no entiende el
+ *                                         cast `immutable_date` y la tomaría por `string` (la de los hijos vive por eso en
+ *                                         la línea base, que solo encoge).
+ */
 #[Fillable([
-    'name', 'email', 'password', 'phone', 'locale', 'panel_locale', 'last_login_at',
+    'name', 'email', 'password', 'phone', 'born_on', 'locale', 'panel_locale', 'last_login_at',
     'marketing_opt_in', 'analytics_opt_out', 'surveys_opt_out', 'first_attribution', 'privacy_accepted_at', 'terms_accepted_at', 'waiver_accepted_at',
     'analytics_notified_at', 'analytics_notice_seen_at',
     'pending_email', 'pending_email_sent_at',
@@ -91,6 +98,8 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference,
             'terms_accepted_at' => 'datetime',
             'waiver_accepted_at' => 'datetime',
             'pending_email_sent_at' => 'datetime',
+            // TP·1 (`#792`): solo fecha, como `dependents.born_on`; la edad se deriva el día del parque.
+            'born_on' => 'immutable_date',
             'marketing_opt_in' => 'boolean',
             // T3a·3 de la analítica: la oposición al régimen identificado y la primera atribución (inmutable).
             'analytics_opt_out' => 'boolean',
@@ -113,6 +122,15 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference,
         $first = $trimmed->before(' ')->toString();
 
         return $first !== '' ? $first : $trimmed->toString();
+    }
+
+    /**
+     * Los años que cumple HOY, el día del parque, o `null` si no dio la fecha (TP·1, `#792`). La misma cuenta que la de un
+     * hijo ({@see Dependent::ageBetween()}): fecha con fecha, sin horas ni zona.
+     */
+    public function age(): ?int
+    {
+        return $this->born_on === null ? null : Dependent::ageBetween($this->born_on->toDateString(), DisplayTime::today());
     }
 
     /**
@@ -460,6 +478,7 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference,
                 'name' => 'Cliente eliminado',
                 'email' => 'deleted_'.$this->getKey().'@'.self::ANONYMIZED_EMAIL_DOMAIN,
                 'phone' => null,
+                'born_on' => null,                               // TP·1 (`#792`): la fecha de nacimiento es PII
                 'locale' => 'es',
                 'password' => Str::random(60),                  // hash aleatorio → login imposible
                 'remember_token' => null,

@@ -1285,12 +1285,6 @@ parameters:
 			path: app/Filament/Pages/CreateManualOrderPage.php
 
 		-
-			message: '#^If condition is always false\.$#'
-			identifier: if.alwaysFalse
-			count: 1
-			path: app/Filament/Pages/CreateManualOrderPage.php
-
-		-
 			message: '#^Offset ''h'' on array\{h\: string, p\: string\} on left side of \?\? always exists and is not nullable\.$#'
 			identifier: nullCoalesce.offset
 			count: 1
@@ -1312,24 +1306,6 @@ parameters:
 			message: '#^Offset ''type'' on array\{key\: string, label\: array\<string, string\>\|string, type\: string, required\: bool, stage\: string\} on left side of \?\? always exists and is not nullable\.$#'
 			identifier: nullCoalesce.offset
 			count: 2
-			path: app/Filament/Pages/CreateManualOrderPage.php
-
-		-
-			message: '#^Offset ''waiver_declared'' on array\{name\: string, phone\: string\} on left side of \?\? does not exist\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: app/Filament/Pages/CreateManualOrderPage.php
-
-		-
-			message: '#^Offset ''waiver_declared'' on array\{name\: string, phone\: string\}\|null on left side of \?\? does not exist\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: app/Filament/Pages/CreateManualOrderPage.php
-
-		-
-			message: '#^Offset ''waiver_declared'' on array\{name\?\: string, email\?\: string\|null, phone\?\: string\|null, privacy_informed\: true\} on left side of \?\? does not exist\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
 			path: app/Filament/Pages/CreateManualOrderPage.php
 
 		-

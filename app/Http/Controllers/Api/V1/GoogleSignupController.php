@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Domain\Identity\Exceptions\WaiverDocumentStaleException;
+use App\Domain\Identity\Services\BirthDatePolicy;
 use App\Domain\Identity\Services\GoogleAuth;
 use App\Domain\Identity\Services\GoogleSignup;
 use App\Domain\Identity\Services\LegalDocuments;
@@ -103,7 +104,7 @@ class GoogleSignupController extends Controller
         try {
             $result = $signup->register(
                 $profile,
-                ['name' => $data['name']],
+                ['name' => $data['name'], 'born_on' => $data['born_on'] ?? null],
                 (string) $request->ip(),
                 $request->userAgent(),
                 $waiver,
@@ -146,6 +147,8 @@ class GoogleSignupController extends Controller
     {
         return [
             'name' => ['required', 'string', 'max:255'],
+            // TP·1 (`#792`): la fecha de nacimiento, opcional. Google no la da: la teclea la persona.
+            'born_on' => BirthDatePolicy::rules(),
             'accept_waiver' => $this->waiverRequired() ? ['accepted'] : ['sometimes', 'nullable', 'boolean'],
             'waiver_document_id' => $this->waiverRequired()
                 ? ['required', 'integer', 'min:1']
@@ -171,6 +174,7 @@ class GoogleSignupController extends Controller
     {
         return [
             'name' => __('account.register.name'),
+            'born_on' => __('account.register.born_on'),
         ];
     }
 

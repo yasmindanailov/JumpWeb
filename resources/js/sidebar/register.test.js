@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { registerErrors, runRegister, signupRequiresCaptcha, CONTEXT_PURCHASE, CONTEXT_STANDALONE } from './register.js';
+import { bornOnField, registerErrors, runRegister, signupRequiresCaptcha, CONTEXT_PURCHASE, CONTEXT_STANDALONE } from './register.js';
 
 /**
  * Fase 4 · paso 4.4b·1 — la red del alta embebida (criterio CE-6).
@@ -192,6 +192,48 @@ describe('el token del anti-bot en el envío', () => {
 
         assert.equal(api.calls[0].body.turnstile_token, '');
         assert.notEqual(api.calls[0].body.turnstile_token, null);
+    });
+});
+
+describe('la fecha de nacimiento (TP·1, `#792`)', () => {
+    function apiSpy() {
+        const calls = [];
+
+        return { calls, post: async (path, body) => { calls.push({ path, body }); return ok(null, 201); }, get: async () => ok({ id: 7 }) };
+    }
+
+    test('con fecha, viaja en `Y-m-d`', async () => {
+        const api = apiSpy();
+
+        await runRegister({ form: { email: 'a@b.c', born_on: '1990-05-17' }, api });
+
+        assert.equal(api.calls[0].body.born_on, '1990-05-17');
+    });
+
+    test('⚠️ sin fecha NO viaja: el contrato la declara `format: date` y una cadena vacía sería un 422 por esquema', async () => {
+        for (const form of [{ email: 'a@b.c' }, { email: 'a@b.c', born_on: '' }, { email: 'a@b.c', born_on: '  ' }]) {
+            const api = apiSpy();
+
+            await runRegister({ form, api });
+
+            assert.equal('born_on' in api.calls[0].body, false);
+        }
+    });
+
+    test('`bornOnField` es la regla sola, la misma para la pantalla de Google', () => {
+        assert.deepEqual(bornOnField({ born_on: ' 1990-05-17 ' }), { born_on: '1990-05-17' });
+        assert.deepEqual(bornOnField({ born_on: '' }), {});
+        assert.deepEqual(bornOnField(null), {});
+    });
+
+    test('su aviso va en el banner tras el teléfono y antes de la contraseña, el orden de las reglas', () => {
+        const errors = errorsOf(fail(422, {
+            code: 'validation_failed',
+            fields: { password: ['clave'], born_on: ['fecha'], phone: ['teléfono'] },
+        }));
+
+        assert.deepEqual(errors.summary, ['teléfono', 'fecha', 'clave']);
+        assert.equal(errors.fields.born_on, 'fecha');
     });
 });
 

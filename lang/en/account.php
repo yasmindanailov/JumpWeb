@@ -237,6 +237,8 @@ return [
         // The phone says WHAT FOR (`#561`): the sign-up asked for it without explaining while the pay
         // step did. The wording is the one closed by the owner: «about anything to do with your booking».
         'phone_hint' => 'So we can call you about anything to do with your booking.',
+        'born_on' => 'Date of birth',
+        'born_on_hint' => 'Optional. It helps us know our visitors better.',
         'password' => 'Password',
         'password_hint' => 'At least 8 characters. Avoid common or breached passwords.',
         'must_accept' => 'You must accept this to continue.',
