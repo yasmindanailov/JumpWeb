@@ -83,11 +83,18 @@ describe('la intención de la landing', () => {
         }
     });
 
-    test('«Reservar y pagar» de la calculadora (T4d): la selección entera; una entrada que no está, «Para hoy»', () => {
+    test('«Reservar y pagar» de la calculadora (T4d): la selección entera; un producto que no está, «Para hoy»', () => {
         const b = borradorDeIntencion({ type: 'linea', id: 101, date: '2026-09-26', time: '17:00:00', quantity: 3, addons: [{ product_id: 110, quantity: 2 }], continuar: true }, productos);
         assert.deepEqual([b.zona, b.fila, b.dia, b.hora, b.n, b.cal, b.elegirZona], ['kids', 101, '2026-09-26', '17:00:00', 3, 2, false]);
         assert.deepEqual([borradorDeIntencion({ type: 'linea', id: 101, quantity: 0 }, productos).n, borradorDeIntencion({ type: 'linea', id: 101 }, productos).cal], [1, 0]);
-        assert.equal(borradorDeIntencion({ type: 'linea', id: 105 }, productos).elegirZona, true);
+        assert.equal(borradorDeIntencion({ type: 'linea', id: 999 }, productos).elegirZona, true);
+    });
+
+    test('la de un PACK (colegios, T6c·3): su día, su hora y cuántos, por el camino de la fiesta, que decide con la ficha', () => {
+        const b = borradorDeIntencion({ type: 'linea', id: 105, date: '2026-10-20', time: '10:00:00', quantity: 60, continuar: true }, productos);
+
+        assert.deepEqual([b.fiesta, b.zona, b.fila, b.dia, b.hora, b.n, b.edad, b.elegirZona], [true, 'cumpleanos', 105, '2026-10-20', '10:00:00', 60, null, false]);
+        assert.equal(borradorDeIntencion({ type: 'linea', id: 105 }, productos).n, null, 'sin cantidad, la pone la ficha (su mínimo)');
     });
 
     test('«Reservar y pagar la señal» de la calculadora de la FIESTA (T6b·3): el pack, la edad, el día, la hora, los niños, el menú y la hora extra', () => {

@@ -10,6 +10,7 @@ const textos = {
         proxima: {
             numero: 'Nº :code', aria: ':dia a las :hora', senal: 'Señal pagada: :importe', resto: 'El día de la fiesta: :importe',
             senal_rotulo: 'Señal pagada', resto_rotulo: 'El día de la fiesta', complemento: ':nombre · :cantidad',
+            resto_visita: 'El día de la visita: :importe', resto_rotulo_visita: 'El día de la visita',
             plazo: 'Puedes cambiar o cancelar hasta el :dia a las :hora.',
             fuera: 'Quedan menos de :tramo: ya no se puede cambiar ni cancelar. Si ha pasado algo, escríbenos y lo vemos.',
             fuera_sin_tramo: 'Ya no se puede cambiar ni cancelar. Si ha pasado algo, escríbenos y lo vemos.',
@@ -41,6 +42,8 @@ const entrada = (extra = {}) => ({
 const cumple = () => {
     const c = entrada({
         product_name: 'Pack Kids', quantity_label: '10 niños', charged_subtotal_cents: 16950, addons: [], shows_deposit_note: true,
+        // Pagada, una fiesta trae su formulario de invitados: es lo que la distingue de una excursión (T6c·3).
+        guest_form_url: '/reserva/7/datos-invitados',
         ledger: libro(16950, { paid_cents: 5000, balance: { kind: 'pay_at_park', cents: 11950, rest_at_park_cents: 0 } }),
         cancellation: { cutoff_hours: 72, written: `hasta 3${NB}días antes`, span: `3${NB}días`, until: '2026-09-23T17:00:00+02:00', open: true, deposit_refundable: true },
     });
@@ -134,6 +137,15 @@ describe('«Ver el pago»', () => {
         const p = pagoDe(cumple(), ctx);
 
         assert.deepEqual([p.now, p.later], [{ label: 'Señal pagada', value: `50${NB}€` }, { label: 'El día de la fiesta', value: `119,50${NB}€` }]);
+    });
+
+    test('con señal y SIN lista de invitados (una excursión, T6c·3): «El día de la visita», aquí y bajo la tarjeta', () => {
+        const excursion = cumple();
+        excursion.reservation.guest_form_url = null;
+        const p = pagoDe(excursion, ctx);
+
+        assert.deepEqual(p.later, { label: 'El día de la visita', value: `119,50${NB}€` });
+        assert.ok(lineasDe(excursion, ctx).some((l) => l.texto === `El día de la visita: 119,50${NB}€`));
     });
 
     test('lo incluido sin cargo dice «Incluido»', () => {

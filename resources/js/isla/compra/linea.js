@@ -27,6 +27,9 @@ import { t } from '../../sidebar/i18n.js';
  */
 export function pedidoDe(borrador, { minimo = 1, maximo = null, calcetin = null, guardian = 'none', evento = {}, elecciones = [], extras = [] } = {}) {
     return {
+        // Si es una FIESTA (sus invitados son «niños» y el resto se paga «el día de la fiesta»): un pack sin edad —una
+        // excursión, T6c·3— no lo es, y el recibo lo dice con sus palabras (`recibo.js`).
+        fiesta: borrador.fiesta === true,
         fila: borrador.fila,
         dia: borrador.dia,
         hora: borrador.hora,

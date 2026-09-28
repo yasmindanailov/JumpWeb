@@ -85,9 +85,12 @@ export function lineasDe(card, { locale = 'es', textos = {} } = {}) {
     const l = r.ledger ?? {};
     const lineas = [];
 
+    // El resto, «el día de la fiesta» o, de un pack sin lista de invitados (una excursión, T6c·3), «el día de la visita».
+    const deFiesta = Boolean(r.guest_form_url);
+
     if (r.shows_deposit_note) {
         lineas.push({ icon: 'wallet', fuerte: true, texto: tp(textos, 'mi_cuenta.proxima.senal', { importe: euros(l.paid_cents ?? 0, locale) }) });
-        lineas.push({ icon: 'store', texto: tp(textos, 'mi_cuenta.proxima.resto', { importe: euros(Math.abs(Number(l.balance?.cents ?? 0)), locale) }) });
+        lineas.push({ icon: 'store', texto: tp(textos, deFiesta ? 'mi_cuenta.proxima.resto' : 'mi_cuenta.proxima.resto_visita', { importe: euros(Math.abs(Number(l.balance?.cents ?? 0)), locale) }) });
     }
 
     for (const a of r.addons ?? []) {
@@ -129,7 +132,7 @@ export function pagoDe(card, { locale = 'es', textos = {} } = {}) {
     return {
         ...base, lines,
         now: { label: texto(textos, 'mi_cuenta.proxima.senal_rotulo'), value: euros(l.paid_cents ?? 0, locale) },
-        later: { label: texto(textos, 'mi_cuenta.proxima.resto_rotulo'), value: euros(Math.abs(Number(l.balance?.cents ?? 0)), locale) },
+        later: { label: texto(textos, r.guest_form_url ? 'mi_cuenta.proxima.resto_rotulo' : 'mi_cuenta.proxima.resto_rotulo_visita'), value: euros(Math.abs(Number(l.balance?.cents ?? 0)), locale) },
     };
 }
 

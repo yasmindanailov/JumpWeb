@@ -946,7 +946,11 @@ class SidebarBundleBudgetTest extends TestCase
     // (`compra/intencion.js`, los `extras` del pedido). Medido 160,08 (en `a30e02e7` pasaba bajo 160). Lo que solo usa la
     // compra salió de `oferta.js` a `intencion.js`: en aquél viajaba también con las calculadoras de la página, y las hacía
     // crecer sin tocarlas (medido: la de entradas pasaba de 183 con él dentro). El techo, a 161.
-    private const ISLA_COMPRA_CHUNK_MAX_KB = 161;
+    // T6c·3 (`#839`): la compra vende una EXCURSIÓN —un pack sin edad por la pantalla de las entradas, con lo que pide al
+    // reservar—. Medido 162,13 (en `e6996e0d` pasaba bajo 161). Por el mismo motivo que `#836`, la pantalla 0 salió de
+    // `vista.js` a `pantalla-cuando.js` (con ella dentro, las dos calculadoras pasaban de su techo sin tocarlas), y el bloque
+    // de los datos va DIFERIDO con los pasos (`datos-reserva.js`: dentro, la compra medía 168,06). El techo, a 163.
+    private const ISLA_COMPRA_CHUNK_MAX_KB = 163;
 
     // T4d·4 (`specs/isla-y-landing-nueva.md` §4.12): la CALCULADORA de una página, entrada propia que la página pide
     // (`scripts` de `<x-pagina>`) y se monta al acercarse su pieza. Su DESCARGA entera, como la mide el navegador que
@@ -997,7 +1001,9 @@ class SidebarBundleBudgetTest extends TestCase
     // también la isla de CADA página (+0,37). El techo, a 41.
     // `#822`: «¿Querías decir…?» en los campos de correo (`CampoSistema`, con `ui/correo.js` en su trozo de 1,48 KiB) y
     // la hora perdida al continuar (`PantallaPerdida`). Medido 40,85 → 43,38 (base: el `HEAD` de `#821`). El techo, a 44.
-    private const ISLA_PASOS_CHUNK_MAX_KB = 44;
+    // T6c·3 (`#839`): «Datos de la reserva» de un pack (`DatosReserva.vue`), aquí con el campo del sistema que ya viajaba.
+    // Medido 44,06 (en `e6996e0d` pasaba bajo 44). El techo, a 45.
+    private const ISLA_PASOS_CHUNK_MAX_KB = 45;
 
     // T5b (`#775`): MI CUENTA de la isla, trozo diferido del motor que se pide a la primera apertura de la cuenta. Su
     // descarga, sobre lo que ya tiene quien la abre (el motor y la compra, que la isla monta con el motor). Medido el

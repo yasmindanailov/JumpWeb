@@ -206,6 +206,12 @@ return [
             'par' => 'par',
             'pares' => 'pares',
             'no_disponible' => 'No se vende este día',
+            // T6c·3: un PACK sin edad (una excursión) por esta pantalla: su gente, su «desde» (el tramo más barato) y lo
+            // que pide al reservar (`#839`), con las etiquetas del panel.
+            'persona' => 'persona',
+            'personas' => 'personas',
+            'desde_precio' => 'desde :precio',
+            'pregunta_datos' => 'Datos de la reserva',
             // T3e·5: la pantalla 0 de una FIESTA (`PjcCuandoCumple`), con el literal del diseño; las cifras (el mínimo,
             // las horas de ajuste, los tramos de edad, el precio del menú) llegan de los datos.
             'titulo_fiesta' => 'Un cumpleaños',
@@ -287,6 +293,8 @@ return [
             'condiciones_enlace' => 'condiciones de reserva',
             'retencion' => 'Tu hora queda guardada hasta las :hora.',
             'senal' => 'Hoy pagas :senal de señal; el resto, :resto, el día de la fiesta.',
+            // T6c·3: de un pack sin lista de invitados (una excursión), que no es una fiesta.
+            'senal_visita' => 'Hoy pagas :senal de señal; el resto, :resto, el día de la visita.',
             'hoy_pagas' => 'Hoy pagas :importe',
             // T3e·3: el precio publicado bajo cada línea del recibo («8 € por entrada», «2 € el par»), como el diseño.
             'precio_por' => ':precio por :unidad',
@@ -373,8 +381,10 @@ return [
             'cambiar' => 'Cambiar o cancelar',
             'senal' => 'Señal pagada: :importe',
             'resto' => 'El día de la fiesta: :importe',
+            'resto_visita' => 'El día de la visita: :importe',
             'senal_rotulo' => 'Señal pagada',
             'resto_rotulo' => 'El día de la fiesta',
+            'resto_rotulo_visita' => 'El día de la visita',
             // Un complemento sin aviso escrito en el panel (`#775`): su nombre y su cantidad, sin prometer nada.
             'complemento' => ':nombre · :cantidad',
             'plazo' => 'Puedes cambiar o cancelar hasta el :dia a las :hora.',

@@ -27,9 +27,11 @@ describe('el pedido de la pantalla 0', () => {
         const p = pedidoDe(borrador, { minimo: 1, maximo: 12, calcetin, guardian: 'required' });
 
         assert.deepEqual(p, {
-            fila: 100, dia: '2026-09-26', hora: '17:00:00', n: 2, cal: 1, minimo: 1, maximo: 12,
+            fiesta: false, fila: 100, dia: '2026-09-26', hora: '17:00:00', n: 2, cal: 1, minimo: 1, maximo: 12,
             calcetin: { id: 110, price_cents: 200, max_quantity: 40 }, guardian: true, evento: {}, elecciones: [], extras: [],
         });
+        // Si es una FIESTA, del borrador (T6c·3): el recibo llama «niños» a sus invitados y «personas» a los de una excursión.
+        assert.equal(pedidoDe({ ...borrador, fiesta: true }).fiesta, true);
     });
 
     test('de una FIESTA con hora extra (T6b·3, `#836`): se recuerda y se PIDE, así «Pagar» no la pierde al rehacer la línea', () => {

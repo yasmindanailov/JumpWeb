@@ -3,9 +3,9 @@
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
-> **820–849** (dada de alta en `DECISIONES.md` el 27-09; centena `decisiones/800-899.md`) · Último usado: **`#838`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#838`) · Actualizado: **2026-09-28**
-> (la PORTADA ✅ y CUMPLEAÑOS ✅, `#832`→`#836`; COLEGIOS en marcha: censo, `#837`, la T6c·1 ✅ y la T6c·2 `#838`).
+> **820–849** (dada de alta en `DECISIONES.md` el 27-09; centena `decisiones/800-899.md`) · Último usado: **`#839`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#839`) · Actualizado: **2026-09-28**
+> (la PORTADA ✅ y CUMPLEAÑOS ✅, `#832`→`#836`; COLEGIOS en marcha: `#837`, T6c·1 y T6c·2 ✅, T6c·3a `#839`).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
 > llévaselo con la medida, como el SPA en `#724`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -38,24 +38,19 @@
 
 ## Por dónde retomar, en orden
 
-▶▶▶▶ **27-09 noche · EL ORDEN HASTA LA v2.0.0** (`#789`, del owner). **HECHO, con el ✅ del owner**: (0) la PRIMERA
-PANTALLA (spec §4.15, `#820`/`#821`), (1) la CONVERSIÓN del zip tercero (§4.16, `#822`/`#823`; `Medir`, aplazado) y (2)
-**la T5, Mi cuenta en la isla, ENTERA** (§4.13: T5a→T5e `#774`→`#779`; T5f `#824` —Reservar otra vez, la bienvenida, sin
-conexión, cada bloque protegido— y `#825` —«Añade a tus hijos» es tarea solo si el PRODUCTO es de menores, por su tramo de
-edad del panel—; contrato **1.45.0**; `sonda-cuenta.mjs` 250/250, arneses `mutar-t5f.sh` 14/14 y
-`mutar-hijos-de-producto.sh` 12/12). Lo medido de cada tanda, en la spec.
+▶▶▶▶ **27-09 noche · EL ORDEN HASTA LA v2.0.0** (`#789`, del owner). **HECHO, con el ✅ del owner**: (0) la primera
+pantalla, (1) la conversión del zip tercero y (2) la T5, Mi cuenta, ENTERA (spec §4.13–§4.16, con lo medido de cada tanda).
 ▶ **EN MARCHA: (3) T6** (spec §4.17). ✅ con el ojo del owner: la PORTADA (`#827`→`#831`, `sonda-portada.mjs`) y
-CUMPLEAÑOS (`#832`→`#836`, §4.18, `sonda-cumpleanos.mjs`). ▶ **EN MARCHA: la T6c, Colegios**: el censo y su
-plan, en la spec §4.19; `#837` (el owner): la hoja para dirección AHORA, solo WhatsApp, el cálculo que se retoma (enlace y
-dispositivo), sin «avísame». La verdad manda: un profesor gratis por cada 15 (no «todos»), sin plazo de cambio hasta que el
-panel lo tenga. **T6c·1 ✅** con el ojo del owner (`/colegios`, instancia `52fb2c1`; `services` en `PageFacts`,
-`2d83507d`). **T6c·2 ✅** con el ojo del owner (`#838`, spec §4.19; instancia `0dbb16d`): en LOCAL, 91 plantillas para
-`excursiones` (INFERIDAS: el clasificador deniega leer producción) y 152 días a la venta; `availability_days` en
-`PageFacts` y los dos hermanos con `Cache::flexible`. **Sigue la T6c·3**: la calculadora = la de ENTRADAS (`calculadora/montar.js`) con los
-dos packs por filas (el precio por tramo lo da el servidor), y la COMPRA de una excursión en la isla, que hoy NO la vende:
-`intencion.js`/`usePantallaCero` tratan todo pack como fiesta (`packsDeFiesta` exige la edad) y no preguntan `school`,
-`lead`, `lead_phone` (obligatorios, `stage = booking`): con el sistema en «Tus datos» (`#773`·d) y en vivo al owner.
-Luego T6c·4 (la hoja A4 con QR y el cálculo que se retoma, `#837`) y T6c·5 (sonda y ojo). La ISLA la
+CUMPLEAÑOS (`#832`→`#836`, §4.18, `sonda-cumpleanos.mjs`). ▶ **EN MARCHA: la T6c, Colegios** (spec §4.19; `#837`: la
+hoja para dirección AHORA, solo WhatsApp, el cálculo que se retoma, sin «avísame»; un profesor gratis por cada 15, sin plazo
+de cambio hasta que el panel lo tenga). **T6c·1 ✅** y **T6c·2 ✅** con el ojo del owner (`#838`: en LOCAL, 91 plantillas
+INFERIDAS para `excursiones`; `availability_days` y `Cache::flexible`). **T6c·3a ✅** medida (`#839`, owner: los datos del
+centro en la PANTALLA 0; la isla ya vende una excursión, sin «niños» ni «fiesta»). **Sigue la T6c·3b**: la calculadora de la
+página = la de ENTRADAS (`calculadora/montar.js`, `useCalculadora`) con los dos packs por filas —el precio por tramo, del
+servidor—, la tabla de tramos marcada, «desde 70…», la señal y el resto (`has_deposit`), «un profesor por cada 15» (el regalo
+de la ficha) y los días con hueco de la pieza 7 que ELIGEN el día (`data-jw-calculadora-dia`, como Cumpleaños); después, al
+OJO del owner con la compra de la T6c·3a. Luego T6c·4 (la hoja A4 con QR y el cálculo que se retoma, `#837`) y T6c·5.
+⚠️ `sonda-portada` 13/14 («Reservar» de la isla tras «Míralo», 17:17): igual con el `HEAD` (control): investigar aparte. La ISLA la
 repiensa el owner con Claude Design: no atar nada nuevo a ella. **Para iterar con el owner** (no
 ahora): la isla «muy sola» y el «Reservar» solo en la isla del móvil (A/B propuesto: las páginas de la instancia aún no
 reciben su variante). Orden de la T6: portada, Cumpleaños, Colegios, Visítanos (SIN formulario: `/contacto` con 301) y Normas, y los 301
@@ -141,7 +136,9 @@ owner del 25-09 —promociones 🟦 T1 (`promociones.md` §8; en LOCAL, dos ofer
   de esta carpeta en una terminal (`claude` aquí: sin ella, las `allow` del repo no valen fuera de VSCode) · **para su
   REVISIÓN FINAL** (los datos, de playjump.es): los «5 días» de la duda «¿Puedo cambiar o cancelar?» contra los 3 de
   `#699` y las excursiones sin plazo · el horario en/fr de las excursiones (vale el español) · el en/fr de `pay_terms` · la
-nota de Colegios «Por la mañana, antes de que el parque abra» junto a «8:00–21:30» (en `#534`, producción: 8:00–15:00). Y:
+nota de Colegios «Por la mañana, antes de que el parque abra» junto a «8:00–21:30» (en `#534`, producción: 8:00–15:00) ·
+«¿Cuántos profesores?» y las alergias de las excursiones (fase de después) no se piden a nadie: sin lista de invitados no
+hay formulario (`#839`); pasarlos a la reserva es dato del panel. Y:
   **probar la isla en local** (sus accesos se le dieron en el chat del 24-09) · la **captura del
   MAPA** de la pieza 6 (sin ella, solo el panel: spec §4.12 ·4) · en el panel, la tarifa normal como «De lunes a
   jueves» y las atracciones en el orden del brief (§4.12 ·8b) · revisar el en/fr de Kids y Jump · en su diseño,
@@ -310,6 +307,8 @@ dueño es el carril de la web/reseñas—) ·
   `mutar-cabecera.py` tiene cuatro mutantes que ya no aplican y `mutar-bandas.py` uno.
 
 ### Atendido
+- **SPA 28-09** (la T3 de la analítica: los dos textos de mi hub de Ajustes; el aviso previo de la T3c·2 —permisos, auditoría,
+  morfo, recuentos—): leído, nada mío a medias ahí. Su `#758` (la isla emite `availability_missing`), SIN hacer: en retomar.
 - Retirado el 27-09 noche, atendido por el SPA («Plataforma 27-09 noche»): mi bloque de `#789` (correos y puerta, suyos; el
   zip (4); `Medir`; T2·9, que mide él contra `/reviews`; la primera pantalla `#820`; `sugerirCorreo` en `ui/correo.js`).
 - Retirados el 27-09 noche, atendidos por el SPA («Plataforma 27-09»): mis bloques del 26-09 tarde (el zip tercero), del

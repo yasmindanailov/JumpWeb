@@ -1,6 +1,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { DIAS_TIRA, calendarioDeTira, diaCorto, diaLargo, euros, horasCercanas, horasDelSelector, pantallaCuando, tiraDias, zonasConEntradas } from './vista.js';
+import { DIAS_TIRA, calendarioDeTira, diaCorto, diaLargo, euros, horasCercanas, horasDelSelector, tiraDias } from './vista.js';
+import { datosCompletos, datosDeReserva, filasDeZona, pantallaCuando, respuestasDe, zonasConEntradas } from './pantalla-cuando.js';
 
 /**
  * La vista pura de la compra de la isla (T3e de `specs/isla-y-landing-nueva.md` §4.10): del estado del motor a las
@@ -18,7 +19,9 @@ const textos = {
             pregunta_hora: '¿A qué hora?', pregunta_tiempo: '¿Cuánto tiempo?', pregunta_cuantos: '¿Cuántos venís?',
             pregunta_calcetines: '¿Calcetines antideslizantes?', pista_calcetines: ':precio el par. Si ya los tenéis, traedlos.',
             entrada: 'entrada', entradas: 'entradas', par: 'par', pares: 'pares', no_disponible: 'No se vende este día',
+            persona: 'persona', personas: 'personas', desde_precio: 'desde :precio', pregunta_datos: 'Datos de la reserva',
         },
+        pagar: { hoy_pagas: 'Hoy pagas :importe' },
     },
 };
 
@@ -200,5 +203,80 @@ describe('la pantalla 0 de las entradas', () => {
         assert.deepEqual(props.zonas, [{ value: 'kids', title: 'KIDS' }, { value: 'jump', title: 'JUMP' }]);
         assert.equal(props.preguntas, null);
         assert.equal(ck.summary, null);
+    });
+});
+
+/**
+ * **Un PACK SIN EDAD por la pantalla de las entradas** (T6c·3 de §4.19: las excursiones). Con la forma real medida en
+ * local el 28-09: los packs 395 y 396, sus días (el precio del tramo MÁS BARATO: 12 € entre semana) y su ficha con lo que
+ * pide al reservar (`#839`: el centro, el curso opcional, el responsable y su teléfono).
+ */
+describe('la pantalla 0 de un pack sin edad (una excursión)', () => {
+    const excursiones = { id: 241, slug: 'excursiones', name: 'Excursiones' };
+    const catalogo = [
+        ...productos,
+        { id: 395, type: 'pack', name: 'Excursión escolar · 2 horas', zone: excursiones, duration_min: 120 },
+        { id: 396, type: 'pack', name: 'Excursión escolar · 3 horas', zone: excursiones, duration_min: 180 },
+    ];
+    const campo = (key, label, required, type = 'text') => ({ key, label, type, required, min: null, max: null });
+    const ficha = {
+        id: 395, type: 'pack', min_quantity: 30, max_quantity: 100, guardian_authorization: 'required',
+        event_fields: [campo('school', 'Nombre del centro', true), campo('course', 'Curso o edades', false), campo('lead', 'Persona responsable el día de la visita', true), campo('lead_phone', 'Teléfono de contacto ese día', true)],
+    };
+    const dias = { 395: [{ date: '2026-10-01', price_cents: 1200, rate_key: 'normal' }], 396: [{ date: '2026-10-01', price_cents: 1500, rate_key: 'normal' }] };
+    const deExcursion = (cambios = {}) => estado({
+        productos: catalogo, precios: dias, ficha, calcetin: null, minimo: 30,
+        borrador: borrador({ zona: 'excursiones', fila: 395, dia: '2026-10-01', n: 60, evento: {} }), ...cambios,
+    });
+    const contestado = { school: 'CEIP San José', lead: 'Marta Ruiz', lead_phone: '600 000 000' };
+
+    test('las filas de una zona sin entradas son sus packs; con entradas, solo ellas', () => {
+        assert.deepEqual(filasDeZona(catalogo, 'excursiones').map((p) => p.id), [395, 396]);
+        assert.deepEqual(filasDeZona(catalogo, 'kids').map((p) => p.id), [100, 101, 102]);
+    });
+
+    test('el título es la zona, se cuentan personas con el tope de la ficha y cada pack dice «desde» su tramo más barato', () => {
+        const { props } = pantallaCuando(deExcursion());
+
+        assert.equal(props.titulo, 'Excursiones', 'no «Entrada Excursiones»: la zona no vende entradas');
+        assert.deepEqual(props.cuantos, { n: 60, uno: 'persona', varios: 'personas', min: 30, max: 100 });
+        assert.deepEqual(props.filas.map((f) => f.price), ['desde 12 €', 'desde 15 €']);
+        assert.equal(props.preguntas.datos.titulo, 'Datos de la reserva');
+        assert.deepEqual(props.preguntas.datos.campos.map((d) => [d.key, d.label, d.required, d.valor]), [
+            ['school', 'Nombre del centro', true, ''], ['course', 'Curso o edades', false, ''],
+            ['lead', 'Persona responsable el día de la visita', true, ''], ['lead_phone', 'Teléfono de contacto ese día', true, ''],
+        ]);
+    });
+
+    test('con hora y su línea: el precio de ESA cantidad (el del servidor), el total y lo que se paga hoy', () => {
+        const linea = { unit_price_cents: 1300, total_cents: 78000, has_deposit: true, deposit_cents: 10000 };
+        const { props, ck } = pantallaCuando(deExcursion({ borrador: borrador({ zona: 'excursiones', fila: 395, dia: '2026-10-01', hora: '10:00:00', n: 60, evento: contestado }), linea }));
+
+        assert.deepEqual(props.filas.map((f) => f.price), ['13 €', 'desde 15 €']);
+        assert.equal(ck.summary, 'Excursión escolar · 2 horas · jue 1, 10:00 · 60 personas');
+        assert.deepEqual([ck.total, ck.today], ['780 €', 'Hoy pagas 100 €']);
+    });
+
+    test('no se puede continuar sin lo que el pack exige al reservar; el curso es opcional', () => {
+        const conHora = (evento) => pantallaCuando(deExcursion({ borrador: borrador({ zona: 'excursiones', fila: 395, dia: '2026-10-01', hora: '10:00:00', n: 60, evento }), linea: { total_cents: 78000 } }));
+
+        assert.equal(conHora({}).listo, false);
+        assert.equal(conHora({ ...contestado, lead: '   ' }).listo, false, 'solo espacios no es contestar: el servidor los quita');
+        assert.equal(conHora(contestado).listo, true);
+        assert.equal(conHora(contestado).ck.action.disabled, false);
+    });
+
+    test('lo que viaja en la línea: los campos del pack contestados, sin espacios y nada más', () => {
+        const datos = datosDeReserva(ficha, { ...contestado, course: '  ', otra: 'x', school: ' CEIP San José ' });
+
+        assert.equal(datosCompletos(datos), true);
+        assert.deepEqual(respuestasDe(datos), { school: 'CEIP San José', lead: 'Marta Ruiz', lead_phone: '600 000 000' });
+    });
+
+    test('una entrada no pide nada; de una fiesta, la edad de quien cumple no (la pregunta su pantalla); un número se teclea como tal', () => {
+        assert.deepEqual(datosDeReserva({ type: 'entry', event_fields: ficha.event_fields }), []);
+        const fiesta = { type: 'pack', event_fields: [campo('age', '¿Cuántos años cumple?', true, 'celebrant_age'), campo('adults', '¿Cuántos adultos?', false, 'adults')] };
+
+        assert.deepEqual(datosDeReserva(fiesta).map((d) => [d.key, d.numero]), [['adults', true]]);
     });
 });

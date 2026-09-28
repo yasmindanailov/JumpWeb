@@ -10,10 +10,23 @@
 import { t as texto, tp as textoCon } from '../../sidebar/i18n.js';
 import { diaCorto, diaLargo, euros, horaCorta } from './vista.js';
 
-/** La unidad de una línea: invitados de un PACK («niños») o ENTRADAS. `is_pack` lo dice el servidor. */
-const unidad = (textos, esPack = false) => (esPack
-    ? { uno: texto(textos, 'compra.cuando.nino'), varios: texto(textos, 'compra.cuando.ninos') }
-    : { uno: texto(textos, 'compra.cuando.entrada'), varios: texto(textos, 'compra.cuando.entradas') });
+/**
+ * La unidad de una línea: ENTRADAS o, de un PACK, los invitados de una FIESTA («niños») o las «personas» de uno sin lista
+ * de invitados (una excursión, T6c·3). `is_pack` lo dice el servidor; si es una fiesta, quien llama (`fiesta`).
+ */
+const unidad = (textos, esPack = false, fiesta = true) => {
+    if (! esPack) return { uno: texto(textos, 'compra.cuando.entrada'), varios: texto(textos, 'compra.cuando.entradas') };
+
+    return fiesta
+        ? { uno: texto(textos, 'compra.cuando.nino'), varios: texto(textos, 'compra.cuando.ninos') }
+        : { uno: texto(textos, 'compra.cuando.persona'), varios: texto(textos, 'compra.cuando.personas') };
+};
+
+/**
+ * ¿Es una FIESTA la línea de un pedido que ya existe? La que tiene LISTA DE INVITADOS (su formulario, `guest_form_url`, que
+ * el servidor da con el pedido pagado): una excursión no la tiene. Mientras se compra lo sabe el pedido (`pedido.fiesta`).
+ */
+export const esFiesta = (linea) => Boolean(linea?.guest_form_url);
 const pares = (textos) => ({ uno: texto(textos, 'compra.cuando.par'), varios: texto(textos, 'compra.cuando.pares') });
 const cuantos = (n, u) => `${n} ${n === 1 ? u.uno : u.varios}`;
 
@@ -22,7 +35,7 @@ const cuantos = (n, u) => `${n} ${n === 1 ? u.uno : u.varios}`;
  * 17:00 · 10 niños». De líneas con `product_name`, `date`, `time`, `quantity` e `is_pack`, que es la forma del
  * presupuesto y la del resumen del pedido.
  */
-export function resumenDe(lineas, { textos = {}, locale = 'es' } = {}) {
+export function resumenDe(lineas, { textos = {}, locale = 'es', fiesta = () => true } = {}) {
     const primera = Array.isArray(lineas) ? lineas[0] : null;
 
     if (! primera) return null;
@@ -30,7 +43,7 @@ export function resumenDe(lineas, { textos = {}, locale = 'es' } = {}) {
     return [
         lineas.map((l) => l.product_name).join(' + '),
         `${diaCorto(primera.date, locale)}${primera.time ? `, ${horaCorta(primera.time)}` : ''}`,
-        lineas.map((l) => cuantos(l.quantity, unidad(textos, l.is_pack === true))).join(' + '),
+        lineas.map((l) => cuantos(l.quantity, unidad(textos, l.is_pack === true, fiesta(l)))).join(' + '),
     ].join(' · ');
 }
 
@@ -41,12 +54,12 @@ export function hoyPagas(online, total, { textos = {}, locale = 'es' } = {}) {
         : null;
 }
 
-/** Lo de debajo mientras se compra: la línea, el total y la señal de la cesta presupuestada. */
-export function resumenDeLaCesta(quote, { textos = {}, locale = 'es' } = {}) {
+/** Lo de debajo mientras se compra: la línea, el total y la señal de la cesta presupuestada. `fiesta`: la del pedido. */
+export function resumenDeLaCesta(quote, { textos = {}, locale = 'es', fiesta = true } = {}) {
     if (! quote?.lines?.length) return { summary: null, total: null, today: null };
 
     return {
-        summary: resumenDe(quote.lines, { textos, locale }),
+        summary: resumenDe(quote.lines, { textos, locale, fiesta: () => fiesta }),
         total: euros(quote.total_cents, locale),
         today: hoyPagas(quote.online_amount_cents, quote.total_cents, { textos, locale }),
     };
@@ -76,7 +89,7 @@ export function reciboDe({ quote, pedido, textos = {}, locale = 'es' }) {
 
     for (const l of quote?.lines ?? []) {
         const delPedido = pedido !== null && pedido !== undefined && l.product_id === pedido.fila;
-        const u = unidad(textos, l.is_pack === true);
+        const u = unidad(textos, l.is_pack === true, pedido?.fiesta !== false);
         const menu = (l.addons ?? []).find((a) => elegidos.has(Number(a.product_id))) ?? null;
         const menuEnElRotulo = menu !== null && Number(menu.subtotal_cents) === 0;
 
@@ -109,8 +122,9 @@ export function reciboDe({ quote, pedido, textos = {}, locale = 'es' }) {
     return {
         lineas,
         total: euros(quote?.total_cents ?? 0, locale),
+        // El resto, «el día de la fiesta» o, de un pack sin lista de invitados (una excursión), «el día de la visita».
         nota: hoyPagas(online, quote?.total_cents, { textos, locale })
-            ? textoCon(textos, 'compra.pagar.senal', { senal: euros(online, locale), resto: euros(resto, locale) })
+            ? textoCon(textos, pedido?.fiesta === false ? 'compra.pagar.senal_visita' : 'compra.pagar.senal', { senal: euros(online, locale), resto: euros(resto, locale) })
             : '',
         otraEntrada: false,
         calcetines: calcetin && ! conCalcetines ? {
@@ -154,17 +168,21 @@ export function lineaListo(confirmacion, { textos = {}, locale = 'es' } = {}) {
     return [
         primera?.date ? diaLargo(primera.date, locale) : '',
         primera?.time ? horaCorta(primera.time) : '',
-        ...lineas.map((l) => `${l.product_name} · ${cuantos(l.quantity, unidad(textos, l.is_pack === true))}`),
+        ...lineas.map((l) => `${l.product_name} · ${cuantos(l.quantity, unidad(textos, l.is_pack === true, esFiesta(l)))}`),
         textoCon(textos, 'compra.listo.pedido', { codigo: confirmacion?.code ?? '' }),
     ].filter(Boolean).join(' · ');
 }
 
-/** Lo que la isla enseña siempre debajo (la línea, el total, la señal) de un pedido que ya existe: el banco y los desenlaces. */
-export function resumenDelPedido(confirmacion, { textos = {}, locale = 'es' } = {}) {
+/**
+ * Lo que la isla enseña siempre debajo (la línea, el total, la señal) de un pedido que ya existe: el banco y los
+ * desenlaces. `fiesta`: la del pedido si aún se tiene; si no (la vuelta del banco), la de cada línea (`esFiesta`, que
+ * pide el pedido PAGADO: mientras se verifica, un cumpleaños se lee «personas»).
+ */
+export function resumenDelPedido(confirmacion, { textos = {}, locale = 'es', fiesta = esFiesta } = {}) {
     if (! confirmacion) return { summary: null, total: null, today: null };
 
     return {
-        summary: resumenDe(confirmacion.lines, { textos, locale }),
+        summary: resumenDe(confirmacion.lines, { textos, locale, fiesta }),
         total: euros(confirmacion.total_cents, locale),
         today: hoyPagas(confirmacion.online_cents, confirmacion.total_cents, { textos, locale }),
     };

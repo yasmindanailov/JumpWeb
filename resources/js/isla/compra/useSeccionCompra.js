@@ -72,8 +72,10 @@ export function useSeccionCompra(props) {
     let cola = Promise.resolve();
     const enCola = (tarea) => (cola = cola.then(tarea, tarea));
 
-    // Una FIESTA (un pack) es lo único que pide el teléfono (`#787`).
-    const datos = useDatosCompra({ flow, props, textos, esFiesta: () => Boolean(compra.borrador.fiesta) });
+    // Un PACK es lo único que pide el teléfono (`#787`: el servidor lo exige con cualquiera, `TicketType::anyPack`): una
+    // fiesta y, desde la T6c·3, una excursión, que se vende por la pantalla de las entradas.
+    const esPack = () => Boolean(compra.borrador.fiesta) || catalogStore.products.find((p) => p.id === compra.borrador.fila)?.type === 'pack';
+    const datos = useDatosCompra({ flow, props, textos, esFiesta: esPack });
     const pago = usePagoCompra({ flow, props, textos, compra, enCola, alPagarMal, alLlenarse });
     const { vista, situar, cambiar, cargarHoras, extrasDelPedido } = usePantallaCero({ flow, compra, enCola, textos });
 
@@ -410,7 +412,8 @@ export function useSeccionCompra(props) {
 
     // ── Lo que se pinta ──────────────────────────────────────────────────────────────────────────────
 
-    const deLaCesta = (quote) => resumenDeLaCesta(quote, { textos, locale: flow.locale });
+    // Si el pedido es una FIESTA («niños») o no (una excursión: «personas», T6c·3): lo sabe el pedido mientras se tiene.
+    const deLaCesta = (quote) => resumenDeLaCesta(quote, { textos, locale: flow.locale, fiesta: compra.pedido?.fiesta !== false });
 
     // La foto de la última cesta presupuestada: se vacía al crear el pedido, y «saliendo al banco» sigue enseñándola.
     watch(() => cartStore.quote, (quote) => { if (quote?.lines?.length) compra.pagado = deLaCesta(quote); }, { immediate: true });
@@ -427,7 +430,9 @@ export function useSeccionCompra(props) {
             return { summary: c.summary ?? null, total: c.total ?? null, today: c.today ?? null };
         }
         if (['datos', 'pagar', 'perdida'].includes(paso.value)) return deLaCesta(cartStore.quote);
-        if (outcomeStore.confirmation) return resumenDelPedido(outcomeStore.confirmation, { textos, locale: flow.locale });
+        if (outcomeStore.confirmation) {
+            return resumenDelPedido(outcomeStore.confirmation, { textos, locale: flow.locale, ...(compra.pedido ? { fiesta: () => compra.pedido.fiesta !== false } : {}) });
+        }
 
         return paso.value === 'banco' ? (compra.pagado ?? {}) : {};
     });

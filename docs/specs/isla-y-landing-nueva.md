@@ -1895,6 +1895,26 @@ T6c·5 la sonda y el ojo del owner.
   puntos de las abreviaturas), con el punto de la tarifa especial y «, tarifa especial» en la lectura; es/en/fr.
   **Guardas**: `InstancePagesTest` +2 (26 casos: la regla y la caché servida pasada), `scripts/mutar-dias-con-hueco.sh`
   14/14 y `mutar-hechos-de-la-fiesta.sh` re-apuntado a la regla común (15/15).
+- ▶ **T6c·3a ✅ (28-09, `#839` `[DECIDIDO owner]`) · la isla VENDE una excursión**, medido en el navegador (falta el ojo del
+  owner, con la calculadora). **Dónde se piden los datos del centro** (el pack exige al reservar `school`, `lead`,
+  `lead_phone`; `course`, opcional): el owner eligió primero «después de pagar» y era INVIABLE —medido: el formulario de
+  después solo existe con lista de invitados (`guestFormStatus()`, `guest_fields`), y las excursiones no tienen: sus
+  `teachers` y `needs` de esa fase HOY no se piden nunca (dato del owner)—; con eso delante, **en la pantalla 0**.
+  **Cómo**: `linea` acepta un pack y va por el camino de la fiesta, que decide con las fichas (`situarFiesta`): con packs de
+  edad pregunta la edad; sin ellos, se vende como las entradas (`filasDeZona`: sin entradas, los packs de la zona), con lo
+  que traía elegido. En esa pantalla (`compra/pantalla-cuando.js`, mudada de `vista.js`: con ella dentro, las dos
+  calculadoras pasaban de su techo sin tocarlas): el título de su zona, «personas», el tope de su ficha, el precio «desde» (el
+  del día es el tramo más barato) o el de ESA cantidad con su línea, «Hoy pagas» la señal y «Datos de la reserva» —los
+  `event_fields` de la ficha, genéricos, menos la edad de quien cumple (`DatosReserva.vue`, DIFERIDO con los pasos:
+  dentro, la compra medía 168,06)—; sin los obligatorios no se continúa. El teléfono, para cualquier pack (`#787`). «Pagar»,
+  «Listo» y Mi cuenta ya no dicen «niños» ni «el día de la fiesta» de un pack sin lista de invitados: el pedido lo sabe
+  (`pedidoDe().fiesta`) y, tras el banco, la línea (`guest_form_url`). **Medido**: `test:js` 1.555 (+13); en vivo, una sonda
+  de un solo uso a 390 y 1280, 17/17 (invitado → «Tus datos» con teléfono; con la cuenta de pruebas → «Pagar»: 15 € por
+  persona —60 es el tramo de 30 a 69—, 900 €, «Hoy pagas 100 €… el día de la visita»); sin regresión `sonda-compra-directa`
+  16/16, `sonda-cumpleanos` 20/20 y `sonda-calculadora`. Pesos: compra 162,13 (techo 163), pasos 44,06 (techo 45); las
+  calculadoras, por debajo del suyo. ⚠️ `sonda-portada` 13/14 a las 17:17 —«Reservar» de la isla tras «Míralo»—, IGUAL con
+  el `HEAD` (control con copia): no es de esta tanda. ⚠️ No verificado: la vuelta de Google con una excursión (la cesta no
+  guarda `event_data`, `#38(d)`).
 
 ## 5. Impacto en invariantes
 

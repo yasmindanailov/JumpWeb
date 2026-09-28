@@ -199,7 +199,9 @@ export function pantallaListo({ linea, confirmacion, correo, qrSrc = '', cuentaN
     const menores = firmaDentro && deMenores ? { id: 'menores', icon: 'user-round-plus', texto: t('compra.listo.menores'), botones: [t('compra.listo.menores_boton')] } : null;
 
     return {
-        fiesta: pack !== null,
+        // «¡Fiesta reservada!» es de un pack con LISTA DE INVITADOS (su formulario, `guest_form_url`): una excursión es un
+        // pack sin ella (T6c·3), y tras la vuelta del banco la isla ya no tiene su borrador para saberlo de otro modo.
+        fiesta: Boolean(pack?.guest_form_url),
         linea,
         codigo: confirmacion?.code ?? '',
         qrSrc,

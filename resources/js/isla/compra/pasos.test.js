@@ -202,6 +202,14 @@ describe('«¡Fiesta reservada!» (T3e·5)', () => {
         assert.deepEqual(listo.tareas.map((x) => x.id), ['fiesta']);
     });
 
+    test('«Listo» de un pack SIN lista de invitados (una excursión, T6c·3): «¡Reservado!» y sin tarea de fiesta', () => {
+        const excursion = { ...pack, guest_form_url: null, guest_count_deadline: null, invitation_url: null };
+        const listo = pantallaListo({ linea: 'x', confirmacion: { code: 'R-2', lines: [excursion] }, correo: 'a@b.es', firmaDentro: true, textos: textosFiesta });
+
+        assert.equal(listo.fiesta, false);
+        assert.deepEqual(listo.tareas, []);
+    });
+
     test('debajo de cada paso, la SEÑAL («Hoy pagas…») cuando la hay', () => {
         assert.equal(ck('pagar', { resumen: { ...resumen, today: 'Hoy pagas 50 €' } }).today, 'Hoy pagas 50 €');
         assert.equal(ck('datos').today, null);

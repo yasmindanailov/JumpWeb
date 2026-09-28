@@ -136,8 +136,40 @@ describe('el recibo de una FIESTA (T3e·5)', () => {
             summary: 'Pack Kids · sáb 26, 17:00 · 10 niños', total: '149,50 €', today: 'Hoy pagas 50 €',
         });
         assert.equal(hoyPagas(1600, 1600, { textos }), null, 'sin señal no hay «hoy pagas»');
-        assert.equal(lineaListo({ code: 'R-1', lines: [{ product_name: 'Pack Kids', quantity: 10, is_pack: true, date: '2026-09-26', time: '17:00:00' }] }, { textos }),
+        // Pagada, la fiesta trae su formulario de invitados (`guest_form_url`): es lo que la hace fiesta en «Listo».
+        assert.equal(lineaListo({ code: 'R-1', lines: [{ product_name: 'Pack Kids', quantity: 10, is_pack: true, date: '2026-09-26', time: '17:00:00', guest_form_url: '/reserva/7/datos-invitados' }] }, { textos }),
             'Sábado 26 de septiembre · 17:00 · Pack Kids · 10 niños · Nº de pedido R-1');
+    });
+});
+
+/**
+ * **Un pack SIN lista de invitados** (una excursión, T6c·3): no es una fiesta. Su gente son «personas» y el resto se paga
+ * «el día de la visita». Mientras se compra lo dice el pedido (`pedido.fiesta`, de `linea.js::pedidoDe`); después, la línea
+ * del pedido, que no trae formulario de invitados. Visto en el navegador el 28-09: «60 niños» y «el día de la fiesta».
+ */
+describe('el recibo de un pack que no es una fiesta (T6c·3)', () => {
+    const conPersonas = { ...textos, compra: { ...textos.compra, cuando: { ...textos.compra.cuando, persona: 'persona', personas: 'personas' }, pagar: { ...textos.compra.pagar, senal_visita: 'Hoy pagas :senal de señal; el resto, :resto, el día de la visita.' } } };
+    const pedido = { fiesta: false, fila: 395, dia: '2026-10-05', hora: '10:00:00', n: 60, cal: 0, minimo: 30, maximo: 100, calcetin: null, elecciones: [] };
+    const excursion = {
+        index: 0, product_id: 395, product_name: 'Excursión escolar · 2 horas', is_pack: true, date: '2026-10-05', time: '10:00:00', quantity: 60,
+        unit_price_cents: 1500, subtotal_cents: 90000, has_deposit: true, deposit_cents: 10000, gate_remainder_cents: 80000, addons: [], icon: 'bus',
+    };
+    const q = { lines: [excursion], total_cents: 90000, online_amount_cents: 10000 };
+
+    test('en «Pagar», personas y «el día de la visita»', () => {
+        const r = reciboDe({ quote: q, pedido, textos: conPersonas });
+
+        assert.equal(nb(r.lineas[0].sub), '15 € por persona');
+        assert.deepEqual(r.lineas[0].control, { n: 60, min: 30, max: 100, uno: 'persona', varios: 'personas' });
+        assert.equal(nb(r.nota), 'Hoy pagas 100 € de señal; el resto, 800 €, el día de la visita.');
+        assert.equal(resumenDeLaCesta(q, { textos: conPersonas, fiesta: false }).summary, 'Excursión escolar · 2 horas · lun 5, 10:00 · 60 personas');
+    });
+
+    test('después, sin formulario de invitados en su línea: personas en «Listo» y en el resumen del pedido', () => {
+        const pagado = { code: 'R-2', total_cents: 90000, online_cents: 10000, lines: [{ ...excursion, guest_form_url: null }] };
+
+        assert.equal(lineaListo(pagado, { textos: conPersonas }), 'Lunes 5 de octubre · 10:00 · Excursión escolar · 2 horas · 60 personas · Nº de pedido R-2');
+        assert.equal(resumenDelPedido(pagado, { textos: conPersonas }).summary, 'Excursión escolar · 2 horas · lun 5, 10:00 · 60 personas');
     });
 });
 

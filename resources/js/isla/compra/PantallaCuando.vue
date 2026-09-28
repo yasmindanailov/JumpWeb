@@ -8,7 +8,8 @@
  *
  * Pinta y avisa (`cambiar(campo, valor)`, `otra`, `quitarOtra`): qué días, horas y tiempos hay, y sus precios,
  * llegan hechos del motor. Con `modo: 'otra'` es «Añadir otra entrada»: el día y la hora ya están fijados.
- * `preguntas` son las del widget de la zona (`dia`, `hora`, `tiempo`, `cuantos`, `calcetines`): de la instalación.
+ * `preguntas` son las del widget de la zona (`dia`, `hora`, `tiempo`, `cuantos`, `calcetines`): de la instalación; y
+ * `datos`, lo que un pack pide al reservar (T6c·3, `#839`).
  */
 import { useTextos } from '../piezas/textos.js';
 import PasoCompra from './PasoCompra.vue';
@@ -23,6 +24,7 @@ import SelectorHoras from '../ui/SelectorHoras.vue';
 import TarjetasOpcion from '../ui/TarjetasOpcion.vue';
 import EsqueletoCarga from '../ui/EsqueletoCarga.vue';
 import AvisoDestacado from '../ui/AvisoDestacado.vue';
+import DatosReserva from './datos-reserva.js';
 
 defineProps({
     titulo: { type: String, required: true },
@@ -179,6 +181,18 @@ const { t } = useTextos();
                 v-if="horaExtra"
                 name="hora-extra"
             />
+            <!-- Lo que un PACK pide al reservar (`#839`: el centro y su responsable de una excursión), con las etiquetas del
+                 panel: `preguntas.datos` trae su título y sus campos. El diseño no dibuja este paso: es el campo del sistema. -->
+            <PreguntaCompra
+                v-if="!otraEntrada && preguntas.datos"
+                id="pjc-q-datos"
+                :titulo="preguntas.datos.titulo"
+            >
+                <DatosReserva
+                    :datos="preguntas.datos.campos"
+                    @cambiar="emit('cambiar', 'evento', $event)"
+                />
+            </PreguntaCompra>
             <template v-if="!otraEntrada">
                 <section
                     v-if="otra"

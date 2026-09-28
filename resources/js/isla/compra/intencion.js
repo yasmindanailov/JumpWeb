@@ -29,6 +29,7 @@ export const sigueSola = (intencion) => ['linea', 'fiesta'].includes(intencion?.
  *  · `{ type: 'packs' }`: la fiesta del primer pack del catálogo;
  *  · `{ type: 'zone', slug }`: esa zona, con su primera fila; si solo vende packs, su fiesta;
  *  · `{ type: 'linea', … }` y `{ type: 'fiesta', … }`: la selección entera de la calculadora de la página (T4d, T6b·3);
+ *    `linea` de un PACK (T6c·3), la de colegios: por el camino de la fiesta, que decide con la ficha;
  *  · sin intención, o con una que no casa con el catálogo: «Para hoy», eligiendo zona. Nunca inventa una fila: sale
  *    del listado del servidor. ⚠️ Que el pack sea DE FIESTA (pregunta la edad) lo dice su ficha, que aún no está: lo
  *    comprueba la pantalla al llegar (`fiesta.js::packsDeFiesta`).
@@ -48,6 +49,17 @@ export function borradorDeIntencion(intencion, productos) {
         return {
             ...borradorVacio(), zona: linea.zone.slug, fila: linea.id, dia: intencion.date ?? null, hora: intencion.time ?? null,
             n: Math.max(1, Number(intencion.quantity) || 1), cal: Number(intencion.addons?.[0]?.quantity) || 0,
+        };
+    }
+    // La de un PACK (la calculadora de colegios, T6c·3): su día, su hora y cuántos, por el camino de las fiestas, que
+    // carga las fichas de su zona y decide al llegar (`usePantallaCero::situarFiesta`): con packs de edad, la fiesta pide
+    // la edad; sin ellos (una excursión), se vende como las entradas, con esto ya elegido.
+    const packDeLinea = intencion?.type === 'linea' ? packs.find((p) => p.id === intencion.id) : null;
+
+    if (packDeLinea) {
+        return {
+            ...borradorDeFiesta(packDeLinea.zone.slug, packDeLinea.id), dia: intencion.date ?? null, hora: intencion.time ?? null,
+            n: Number(intencion.quantity) > 0 ? Number(intencion.quantity) : null,
         };
     }
     // «Reservar y pagar la señal» de la calculadora de la FIESTA de la página (T6b·3, `#836`): el pack de la edad, la edad,

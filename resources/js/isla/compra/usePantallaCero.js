@@ -14,8 +14,8 @@ import { computed } from 'vue';
 import { api } from '../../sidebar/api.js';
 import { todayIso } from '../../sidebar/cart.js';
 import { calcetinDe, cargarDiasDeFilas, cargarFichas, cargarGrupos, horaDelMotor, horaQueCabe, primerDia } from './oferta.js';
-import { borradorDeIntencion } from './intencion.js';
-import { filasDeZona, pantallaCuando } from './vista.js';
+import { borradorDeIntencion, borradorVacio } from './intencion.js';
+import { datosDeReserva, filasDeZona, pantallaCuando, respuestasDe } from './pantalla-cuando.js';
 import { campoDeEdad, eleccionesDe, menuElegido, packPorEdad, packsDeFiesta, pantallaCuandoFiesta } from './fiesta.js';
 
 export function usePantallaCero({ flow, compra, enCola, textos }) {
@@ -94,13 +94,21 @@ export function usePantallaCero({ flow, compra, enCola, textos }) {
         Object.assign(compra, { fichas, precios });
         const b = compra.borrador;
 
+        // Un pack SIN edad (una excursión, T6c·3) no es una fiesta: se vende como las entradas, con los packs de su zona
+        // por filas (`filasDeZona`), lo que pida al reservar (`#839`) y lo que ya traía elegido (la calculadora).
+        if (packs.value.length === 0) {
+            return situar({ ...borradorVacio(), zona: b.zona, fila: b.fila, dia: b.dia, hora: b.hora, n: b.n ?? fichas[b.fila]?.min_quantity ?? 1 }, precios);
+        }
         if (! fichas[b.fila]) b.fila = packs.value[0]?.id ?? b.fila;
         if (b.n == null) b.n = fichas[b.fila]?.min_quantity ?? 1;
         await cargarPack();
     }
 
-    /** Sitúa la pantalla 0 en un borrador: los días de TODAS las filas de su zona, y con ellos el día y la fila. */
-    async function situar(borrador) {
+    /**
+     * Sitúa la pantalla 0 en un borrador: los días de TODAS las filas de su zona, y con ellos el día y la fila. `cargados`:
+     * los días que ya trajo quien llama (la fiesta que resultó no serlo), para no pedirlos dos veces.
+     */
+    async function situar(borrador, cargados = null) {
         if (borrador.fiesta) return situarFiesta(borrador);
         compra.borrador = borrador;
         compra.precios = {};
@@ -109,7 +117,7 @@ export function usePantallaCero({ flow, compra, enCola, textos }) {
 
         // Mientras llegan los días, las horas enseñan su hueco (el esqueleto del diseño): nada salta después.
         compra.cargandoHoras = true;
-        compra.precios = await cargarDiasDeFilas({ api, ids: filas.map((p) => p.id) });
+        compra.precios = cargados ?? await cargarDiasDeFilas({ api, ids: filas.map((p) => p.id) });
         const dias = compra.precios[borrador.fila] ?? [];
         if (! dias.some((d) => d.date === borrador.dia)) compra.borrador.dia = dias.some((d) => d.date === todayIso()) ? todayIso() : primerDia(dias);
         await cargarFila();
@@ -154,6 +162,8 @@ export function usePantallaCero({ flow, compra, enCola, textos }) {
         if (campo === 'hora') { b.hora = horaDelMotor(timeStore.offered, valor); return enCola(resolverLinea); }
         if (campo === 'n') { b.n = valor; return b.hora ? enCola(cargarHoras) : null; }
         if (campo === 'cal') { b.cal = valor; return enCola(resolverLinea); }
+        // Un dato de la reserva de un pack (`#839`): se escribe en el borrador y viaja al continuar; no cambia la oferta.
+        if (campo === 'evento') { b.evento = { ...(b.evento ?? {}), [valor.key]: valor.valor }; return null; }
 
         return null;
     }
@@ -162,7 +172,8 @@ export function usePantallaCero({ flow, compra, enCola, textos }) {
     function extrasDelPedido() {
         const b = compra.borrador;
 
-        if (! b.fiesta) return { calcetin: calcetinDe(catalogStore.product), evento: {}, elecciones: [] };
+        // De un pack sin edad, lo que pide al reservar (`#839`): solo sus campos y contestados, como los valida el servidor.
+        if (! b.fiesta) return { calcetin: calcetinDe(catalogStore.product), evento: respuestasDe(datosDeReserva(catalogStore.product, b.evento)), elecciones: [] };
         const campo = campoDeEdad(compra.fichas[b.fila]);
 
         return { calcetin: null, evento: campo ? { [campo.key]: b.edad } : {}, elecciones: eleccionesDe(compra.grupos, b.menu), extras: b.extras ?? [] };
@@ -177,7 +188,7 @@ export function usePantallaCero({ flow, compra, enCola, textos }) {
 
         return b.fiesta
             ? pantallaCuandoFiesta({ ...comun, packs: packs.value, grupos: compra.grupos, corte: flow.configuracion.value?.guest_count_cutoff_hours })
-            : pantallaCuando({ ...comun, productos: catalogStore.products, minimo: catalogStore.minQuantity, umbral: timeStore.lowMax, calcetin: calcetinDe(catalogStore.product) });
+            : pantallaCuando({ ...comun, productos: catalogStore.products, minimo: catalogStore.minQuantity, umbral: timeStore.lowMax, calcetin: calcetinDe(catalogStore.product), ficha: catalogStore.product });
     });
 
     return { vista, situar, cambiar, cargarHoras, extrasDelPedido };
