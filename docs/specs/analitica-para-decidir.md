@@ -375,6 +375,10 @@ número móvil»; y de las compras: «clientes recurrentes sí, eso me sirve». 
 
 ### 4.9 Marketing con coste y los correos por cliente (T5)
 
+▶▶ **Rehecha el 28-09 (owner)**: el **gasto en anuncios, aplazado** («no lo haremos ahora mismo»); los **correos por cliente
+van PRIMERO y con spec propia**, `correos-salientes.md` (⬜ borrador): ver lo que recibe cada cliente, su vista previa y si
+lo abrió y pulsó, y DESPUÉS, en conjunto, a «Marketing». Lo de abajo es el plan de antes y queda como referencia.
+
 - **Gasto tecleado**: `ad_spend` (futuro): plataforma, campaña (el `utm_campaign` de sus anuncios), mes, céntimos, nota.
   Un formulario en «Marketing → Gasto en anuncios», con permiso propio (`analytics.manage` (futuro), admin por defecto) y
   rastro. **Coste por venta** = gasto / pedidos atribuidos (último toque); **retorno por euro** = ingresos atribuidos /
@@ -703,7 +707,8 @@ el copy al máximo». Tres tandas, cada una con su «al detalle» medido y **sin
 - **TP·3b Retirar «Exportar segmento»**: la acción del pie de «Clientes», su ruta y `SegmentsExportController`; los segmentos
   quedan como recuentos. A medir en su «al detalle»: el permiso `analytics.export` (si no tiene otro uso, sale del catálogo y
   del seeder: compartido, aviso a plataforma), la columna «con opt-in» (sin exportación, ¿dice algo?) y las pruebas que la vigilan.
-- **TP·3c Las felicitaciones** (correos, del carril desde `#789`; su spec antes que el código): al titular el día de su
+- **TP·3c Las felicitaciones** — ⏸ **con el rediseño de la plantilla de correos** (owner, 28-09: «los correos los haremos
+  cuando hagamos el rediseño de la plantilla de correos»). Su spec antes que el código: al titular el día de su
   cumpleaños (`users.born_on`) y al adulto el del cumpleaños de su hijo menor (`dependents.born_on`, `Dependent::active()`),
   **solo con `marketing_opt_in`**, una por persona y año, por la mañana del parque, nunca a una cuenta anonimizada, la baja en
   un toque (LSSI art. 22.1) y un interruptor por felicitación en el panel. **Sin precios, sin botón de reservar, sin

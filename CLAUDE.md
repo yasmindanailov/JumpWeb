@@ -91,7 +91,7 @@ contador de la suite va en el trailer del commit** (`#618`). Si no salta: `git c
 | Menú del panel · añadir un Resource/Page · Ajustes · buscador · puerta en tablet · rol `puerta` | `docs/specs/panel-navegacion.md` §0 |
 | El cajón en móvil · el paso de fecha y de hora | `docs/specs/cajon-en-movil.md` §0 |
 | Cumpleaños mixto · edad de los invitados · el suplemento · el sello · solapes de tramos | `docs/specs/cumple-mixto.md` §0 |
-| Los correos · tema · firma y remitente · línea de adelanto · el libro en un correo | `docs/specs/correos-desde-canvas.md` §0 |
+| Correos: tema y remitente · los enviados | `docs/specs/correos-desde-canvas.md` §0 · `docs/specs/correos-salientes.md` §0 |
 | Post-form de invitados | `docs/sistemas/POSTFORM-INVITADOS.md` |
 | La fiesta del sistema nuevo · «Avísame de fechas» | `docs/specs/fiesta-sistema-nuevo.md` §0 · `docs/specs/avisame-de-fechas.md` §0 |
 | Tests / suite / fakes / datos de prueba | `docs/TESTING.md` · `docs/CONVENCIONES.md` §3.bis/§3.ter |

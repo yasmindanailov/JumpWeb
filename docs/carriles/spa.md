@@ -68,9 +68,9 @@
 1. ❗❗❗ **LA ANALÍTICA PARA DECIDIR (`#755`, `specs/analitica-para-decidir.md`)**: ✅ T0a·T0b·T0c · T1 · T2 · T3a · T3b ·
    T3c·1 · T3c·2 y **TP·1** (la fecha de nacimiento, `#792`; arnés `SOLO=TP1`, sondas `storage/app/audit/sonda-tp1-*.mjs`),
    **TP·2** («Quién viene»; arnés `SOLO=TP2`; fixture `ojo-tp2.php` montado, `OJO=desmontar`), todas en `main` y aprobadas →
-   ▶ **TP·3 REHECHA por `#793`** (`[DECIDIDO owner]` 28-09: el público es ANÓNIMO, nada exporta personas; **«no escribas
-   código»** hasta que la vea): TP·3a los tramos de las plataformas de anuncios · TP·3b retirar «Exportar segmento» · TP·3c las
-   dos felicitaciones sin vender (titular e hijo, con opt-in; el COPY con el owner antes, `[PENDIENTE: owner]`); §4.14 → T3d el texto para IA (§4.7; lee `Changes` y
+   ▶ owner 28-09, «cerrar lo que queda», en este orden: **los correos salientes PRIMERO** (`specs/correos-salientes.md` ⬜,
+   esperando su ✅ antes de la C1) · **TP·3a** los tramos de los anuncios y **TP·3b** retirar «Exportar segmento» (`#793`) ·
+   la TP·3c (felicitaciones) y el gasto en anuncios, ⏸ con el rediseño de la plantilla / aplazado; §4.14 y §4.9 → T3d el texto para IA (§4.7; lee `Changes` y
    los veredictos; sin PII ni celdas < 5) → T3e el SECTOR (primera búsqueda en §4.13: casi todo son medias, no rangos; AL OWNER
    antes de sembrar) → T4 cartera → T5 marketing y correos → T6 cohortes → T7 pérdidas → T8 satisfacción (§4.12). Los CRUCES de
    encuestas, con la T8; el cruce por EMPLEADO, `[PENDIENTE: owner]` (27-09, sin respuesta).
@@ -234,6 +234,7 @@ el repo de la instancia (lo nuevo), nunca a `main`.
   ya en el montaje). Toqué lo compartido: techos de `SidebarBundleBudgetTest` (299 → **301**; el motor ya pesaba 298,83) y
   `SidebarMountTest` (10.900), `SidebarBoot` (dos claves), `ApiContractTest`, `phpstan-baseline.neon` (−4, el mostrador),
   `CreateManualOrderPage` (el campo), `README`/`MODELO-DATOS`/`INVARIANTES`. Tras el `pull`, `php artisan migrate`.
+- **Para plataforma (28-09)**: acorté la fila de los correos de `CLAUDE.md` para meter `correos-salientes.md` (12.282 B).
 - ❗ **Para la web (28-09, TP·1 y `#793`)**: `/privacidad` tiene que nombrar la fecha de nacimiento del titular (opcional; para
   conocer al público, siempre en conjunto) y, con la TP·3c, las felicitaciones de cumpleaños (la del titular y la de sus hijos,
   solo con el opt-in de marketing y sin vender). Ya NO habrá exportación de personas (`#793`). `[PENDIENTE: asesoría]`.
