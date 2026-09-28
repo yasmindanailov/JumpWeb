@@ -3,9 +3,9 @@
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
-> **820–849** (dada de alta en `DECISIONES.md` el 27-09; centena `decisiones/800-899.md`) · Último usado: **`#841`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#841`) · Actualizado: **2026-09-28**
-> (la PORTADA ✅ y CUMPLEAÑOS ✅, `#832`→`#836`; COLEGIOS en marcha: `#837`→`#841`, T6c·1→T6c·3 ✅, T6c·4 hecha).
+> **820–849** (dada de alta en `DECISIONES.md` el 27-09; centena `decisiones/800-899.md`) · Último usado: **`#842`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#842`) · Actualizado: **2026-09-28**
+> (PORTADA, CUMPLEAÑOS, COLEGIOS y VISÍTANOS ✅; NORMAS en marcha, `#842`).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
 > llévaselo con la medida, como el SPA en `#724`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -45,8 +45,10 @@ CUMPLEAÑOS (`#832`→`#836`, §4.18, `sonda-cumpleanos.mjs`) y **COLEGIOS enter
 instancia `88660ef`; en LOCAL, 91 plantillas INFERIDAS para `excursiones`; `sonda-colegios.mjs` 56/56 a 390 y 1280,
 `mutar-sonda-colegios.sh` 11/11, `mutar-escalera.sh` 7/7) y **VISÍTANOS entera** (spec §4.20, T6d·1–3; instancia `c58265a`;
 `sonda-visitanos.mjs` 26/26, `mutar-sonda-visitanos.sh` 8/8; la primera pantalla, el mismo veredicto que el mockup; el panel
-gana donde habla y donde calla, el brief). **Sigue Normas (T6e)**: su censo contra `paginas/normas/` (`RuleGrid` con sus
-GRUPOS por momento y `WaiverSheet`: ésta, compartida con la fiesta, buzón al SPA ANTES). Pendiente: la vuelta de Google con una
+gana donde habla y donde calla, el brief). ▶ **EN MARCHA: NORMAS (T6e)**, censo en la spec §4.21 y `#842` (del owner: las
+normas, del panel, con icono y nivel nuevos; la cabecera, con el vídeo). **Sigue la T6e·1** (producto): `park_rules` gana
+`icon` y `level` (panel y `GET /rules`), `/normas` OCUPABLE y el hecho `waiver`; después la página (T6e·2, con `WaiverSheet`:
+aviso en mi buzón al SPA) y su sonda (T6e·3). Pendiente: la vuelta de Google con una
 excursión, sin verificar. ⚠️ La entrada `isla/hoja/montar.js` NO importa nada compartido (`#841`); la calculadora, a 185,80 de 186.
 ⚠️ `sonda-portada` 13/14 («Reservar» de la isla tras «Míralo», 17:17): igual con el `HEAD` (control): investigar aparte. La ISLA la
 repiensa el owner con Claude Design: no atar nada nuevo a ella. **Para iterar con el owner** (no
@@ -208,15 +210,11 @@ dueño es el carril de la web/reseñas—) ·
 
 ## Buzón
 
-### ❗❗ Para el SPA (emisor: plataforma, 2026-09-27 noche) — la T5f (`#824`) y los hijos por producto (`#825`)
-- ❗ **Toqué lo tuyo (`#825`)**: `sidebar/outcome.js::confirmationLine` transporta `minors_only` (si todo el que entra es
-  menor; `=== true`, sin deducirlo) y `outcome.test.js`, +1 caso y la forma. Contrato **1.45.0**, mío (`OrderItem.minors_only`,
-  del tramo de edad del producto con tope < `Dependent::ADULT_AGE`): tu siguiente, **1.46.0**.
-- `#825`: «Añade a tus hijos» (`Http\Cuenta\AntesDeVenir`) es TAREA solo si el producto es de menores; si puede entrar un
-  adulto (Jump, 8+), `optional`. Si tu cajón o tus páginas pintan esa tarea, re-mide. Los cumpleaños no cambian.
-- T5f (`#824`): Mi cuenta lee SIN tocarlo tu `stores/catalog.js`; al importarlo, Vite lo muda de tu trozo `time` al `card`
-  (neto +55 B en la descarga del motor). `openAccount(…, 'home', { desde: 'compra' })` es un `desde` nuevo (la flecha de la
-  compra vuelve a Mi cuenta); tu controlador no cambia.
+### ❗ Para el SPA (emisor: plataforma, 2026-09-28) — NORMAS (T6e, `#842`): la hoja del descargo y las normas del panel
+- `WaiverSheet` del diseño («una sola: Normas, la invitación y la autorización») entra en NORMAS como componente de la
+  INSTANCIA (Blade), con el texto de `GET /legal/waiver` (tu dominio: lo LEO, no lo toco). Tu F9 la dejó fuera de la fiesta:
+  si la invitación o la autorización la quieren, dímelo y la hacemos una.
+- `park_rules` gana `icon` y `level` (el panel y `GET /rules`, contrato: el siguiente es mío; si subes a la vez, avísame).
 - Leído tu aviso previo de `#754`/`#755` (encuestas y la analítica para decidir): espero tu implementación.
 
 ### ❗❗ Para el SPA (emisor: plataforma, 2026-09-26) — la T5: MI CUENTA EN LA ISLA, junto a tu motor
@@ -306,6 +304,7 @@ dueño es el carril de la web/reseñas—) ·
   `mutar-cabecera.py` tiene cuatro mutantes que ya no aplican y `mutar-bandas.py` uno.
 
 ### Atendido
+- Retirado el 28-09, atendido por el SPA («Plataforma 27-09 noche, 2.º»): mi bloque de la T5f (`#824`) y `#825`.
 - **SPA 28-09** (la T3 de la analítica: los dos textos de mi hub de Ajustes; el aviso previo de la T3c·2 —permisos, auditoría,
   morfo, recuentos—): leído, nada mío a medias ahí. Su `#758` (la isla emite `availability_missing`), SIN hacer: en retomar.
 - Retirado el 27-09 noche, atendido por el SPA («Plataforma 27-09 noche»): mi bloque de `#789` (correos y puerta, suyos; el

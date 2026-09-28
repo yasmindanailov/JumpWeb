@@ -2041,6 +2041,32 @@ el diseño les añadió, sin cambiar sus otras páginas); **T6d·3** la sonda y 
   (`sonda-primera-pantalla.mjs comparar visitanos`): el MISMO veredicto regla a regla —la vuelta 114/114 · 45/45; la primera
   visita 103/111, los mismos ocho que el mockup—. **La T6d, Visítanos, ✅.**
 
+### 4.21 La T6e: NORMAS — el censo (MEDIDO 28-09)
+
+`paginas/normas/` del zip (ocho piezas, `contenido.js`, `isla.jsx`) y su sección del README («Normas y seguridad · la página
+entera», 25-09). Página de apoyo que CONVIERTE (decisión del cliente en el diseño): la cabecera y el cierre del sistema con
+«Reservar», que abre el selector de planes, y la nota de Google; sin precios (el único, el de los calcetines, es de una norma).
+Hoy `/normas` es una ruta del PRODUCTO (el tablero del panel, `#533`), y solo cede su sitio la portada y `/cumpleanos`
+(`InstancePages::OCUPABLES`).
+
+| Pieza | Lo que pinta el mockup | Piezas del sistema | Datos (medidos) |
+|---|---|---|---|
+| 1 · cabecera | titular, texto, «Reservar» (el selector) y la nota de Google; sin precio ni [Hoy] (lo dice la isla) | `video-hero` ✓ (`ctaPlanes`) | `social_proof` ✓; la foto del MONITOR falta: el vídeo del parque (`#842`) |
+| 2 · tres cosas que hacemos siempre | en su fila: zonas por edad, monitores, acrobacias, cada una con la causa de lesión que evita | `answer-row`, `proof-list` ✓ | las edades y alturas, de `zones` ✓; «mínimo tres», texto del brief |
+| 3 · las normas, y por qué están | `RuleGrid` sobre gris, por MOMENTOS: dos columnas equilibradas y «Siempre» a lo ancho | `rule-grid` ✓ SIN grupos, ni `tone="subtle"` | ❗ el panel (`rules`) tiene 10 normas en 3 momentos, cada una con su porqué; el brief, otras 9 en 4: **manda el panel** (`#842`), con icono y nivel nuevos |
+| 4 · quién salta, y con quién | en su fila: por edad y altura, por salud, menores de 14, desde los 14; la puerta a Visítanos | `answer-row`, `proof-list` ✓ | `zones` ✓; «hasta los 16, los registra su padre», también la norma del panel |
+| 5 · qué firmas, y por qué | el descargo en sus tres ideas, lo que protege al que firma (`InfoCallout`) y «Leer el descargo» → la hoja | `WaiverSheet` ✗ (compartida en el diseño con la invitación: buzón al SPA) · `info-callout` ✓ | el texto, PÚBLICO: `GET /legal/waiver` (sus secciones, la versión vigente); no es aún un hecho de página |
+| 6 · si pasa algo | en su fila: monitores en la zona, botiquín, 112 | `answer-row`, `proof-list` ✓ | texto del brief |
+| 7 · dudas | nueve | `accordion` ✓ | las alturas y el precio de los calcetines, de los hechos |
+| 8 · cierre | «Con eso, a saltar», «Reservar» sin `from`, y el camino asistido | `cta-band` ✓ | `site.contact` ✓ |
+| isla | situación 15: cede su «Reservar» a la vista del de la página y se queda con [Hoy] | producto ✓ | `kind: 'apoyo'` |
+
+**`[DECIDIDO owner]` 2026-09-28 (`#842`)**: las normas, del panel, con icono y nivel por norma; la cabecera, con el vídeo del
+parque. Lo demás, la regla de Visítanos: donde el panel habla, gana; donde calla, el brief. **Plan**: **T6e·1** (producto) —
+`park_rules` gana `icon` y `level` (el panel y `GET /rules`, contrato +1), `/normas` pasa a OCUPABLE (su controlador pregunta
+`queOcupa`) y el descargo como hecho de página (`waiver`, de `GET /legal/waiver`)—; **T6e·2** la página en la instancia
+(`rule-grid` con grupos por momento y sobre gris, `waiver-sheet`); **T6e·3** su sonda, la primera pantalla y el ojo del owner.
+
 ## 5. Impacto en invariantes
 
 - `PAY-*`: solo si entra Bizum; entonces `VERIFY_CONC=1` y la lista del `CRITICAL_RE`.
