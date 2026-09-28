@@ -1,6 +1,6 @@
 # [SPEC] La analítica para decidir — un cuadro que se entiende, dice si va bien o mal y cubre las decisiones del operador
 
-> Estado: ✅ **aprobada por el owner el 27-09** (§7; `#755`) → ✅ **T0, T1 y T2** · 🟦 **T3** (✅ T3a · ✅ T3b · ✅ T3c · ⬜ T3d·T3e, §4.13) · 🟦 **TP el público** (§4.14: ✅ TP·1 · ⬜ TP·2 · ⬜ TP·3) · Última actualización: 2026-09-28 ·
+> Estado: ✅ **aprobada por el owner el 27-09** (§7; `#755`) → ✅ **T0, T1 y T2** · 🟦 **T3** (✅ T3a · ✅ T3b · ✅ T3c · ⬜ T3d·T3e, §4.13) · 🟦 **TP el público** (§4.14: ✅ TP·1 · ✅ TP·2 · ⬜ TP·3) · Última actualización: 2026-09-28 ·
 > Decisiones: `#755` (esta), `#754` (encuestas anónimas, su T1), `#758` (la T2), `#759` (la T3 en cinco tandas), `#792` (el público) · Carril: **SPA** (banda 790–819). Amplía `analitica.md`
 > (el libro, los regímenes y la T2 siguen siendo suyos).
 
@@ -18,7 +18,7 @@
   camino de `EmailUtm` (tras firmar, ignorada al validar); (6) aperturas solo con consentimiento (`[PENDIENTE: asesoría]`).
 - **Estado**: ✅ aprobada (27-09, `#755`); T0a·T0b·T0c ✅ · **T1** ✅ (la T5 de `encuestas.md`, `#754`, `#757`) · **T2** ✅ ocupación (§4.8.ter, `#758`) → **T3** Resumen, en cinco tandas (§4.13,
   `#759`): ✅ T3a la forma · ✅ T3b veredicto (mín–máx, `#790`) · ✅ T3c·1 lo que ha cambiado (`#791`) · ✅ T3c·2 objetivos →
-  ▶ **TP el público** (§4.14, `#792`; ✅ TP·1 la fecha · ▶ TP·2 quién viene) → T3d.
+  ▶ **TP el público** (§4.14, `#792`; ✅ TP·1 la fecha · ✅ TP·2 quién viene · ▶ TP·3 los padres) → T3d.
   **Nada de lo medido se pierde** (§4.1.bis, con guarda): se resume arriba y lo demás queda
   plegado o en su pestaña.
 - **Invariantes**: `RGPD-01`, `RGPD-04`, `RGPD-07`, `SEC-04`, `SUITE-01`. Dinero y aforo: solo lectura.
@@ -748,7 +748,7 @@ y `SurveysReport::MIN_CELL` (5). Lo que se construye (lo técnico, mío y vetabl
 - **Al CSV y al censo** (`AnalyticsCensusTest`, tecleado a mano); el «¿cómo se calcula?» de cada tabla va en su nota. Las tarjetas
   no cambian (el catálogo de cifras es de números sueltos; esto son repartos).
 
-**TP·2, lo construido (28-09, 🟦 en `wip/tp2-quien-viene`, falta el ojo)**: `AudienceReport` + `AudienceWidget` (plegado, tras «Más
+**TP·2, lo construido (28-09, ✅ vista y aprobada por el owner: «buen trabajo, continúa con rigor»)**: `AudienceReport` + `AudienceWidget` (plegado, tras «Más
 de los clientes»), al CSV de «Clientes» y al censo. Cambios al escribirlo: (1) los hijos que cuentan son los **MENORES el día de la
 visita** en las tres tablas de hijos (uno declarado que ya cumplió 18 no es un niño que viene); (2) el título de cada tabla es FIJO
 (el censo lo busca exacto en el CSV) y la cobertura va de primera fila, «Con dato · 12 de 63»; (3) «Con quién viene» son dos filas
