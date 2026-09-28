@@ -3,9 +3,9 @@
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
-> **820–849** (dada de alta en `DECISIONES.md` el 27-09; centena `decisiones/800-899.md`) · Último usado: **`#836`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#836`) · Actualizado: **2026-09-28**
-> (la PORTADA ✅ y CUMPLEAÑOS ✅, `#832`→`#836`; sigue la T6c, Colegios).
+> **820–849** (dada de alta en `DECISIONES.md` el 27-09; centena `decisiones/800-899.md`) · Último usado: **`#837`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#837`) · Actualizado: **2026-09-28**
+> (la PORTADA ✅ y CUMPLEAÑOS ✅, `#832`→`#836`; la T6c, Colegios, en marcha: censo y `#837`).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
 > llévaselo con la medida, como el SPA en `#724`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -50,8 +50,10 @@ instancia `5c2b9cf`; `sonda-portada.mjs`), el CALENDARIO (`#830`) y la FLECHA DE
 **T6b·2 ✅** con el ojo del owner (`#834` 1.47.0, `#835` 1.48.0; `mutar-hechos-de-la-fiesta.sh` 15/15; instancia
 `fb6e736`). **T6b·3 ✅** con el ojo del owner (`#836`, §4.18: la intención `fiesta`, la calculadora de la fiesta con su
 entrada propia y la pieza 6 de la instancia `e178535`). **T6b·4 ✅** (`scripts/sonda-cumpleanos.mjs` 20/20 a 390 y 1280;
-la primera pantalla, como en la T6b·1). **LA T6b, CUMPLEAÑOS, ✅.** ▶ **Sigue la T6c, Colegios** (`paginas/colegios` del
-zip): censo primero, como §4.18 (qué pinta el mockup, qué dice el panel, qué falta), y su plan en la spec. **Sigue la T6b·3** (la calculadora en la página: `compra/fiesta.js`, `CalendarioMes`, `SelectorHoras`; «Reservar
+la primera pantalla, como en la T6b·1). **LA T6b, CUMPLEAÑOS, ✅.** ▶ **EN MARCHA: la T6c, Colegios**: el censo y su
+plan, en la spec §4.19; `#837` (el owner): la hoja para dirección AHORA, solo WhatsApp, el cálculo que se retoma (enlace y
+dispositivo), sin «avísame». La verdad manda: un profesor gratis por cada 15 (no «todos»), sin plazo de cambio hasta que el
+panel lo tenga. Sigue la T6c·1 (la página sin su calculadora, en la instancia). **Sigue la T6b·3** (la calculadora en la página: `compra/fiesta.js`, `CalendarioMes`, `SelectorHoras`; «Reservar
 y pagar la señal» a la compra con la selección entera, `#785`; los días con hueco la abren con su fecha; compartir SOLO por
 WhatsApp, `#833`) y la T6b·4 (sonda y ojo). La ISLA la repiensa el owner con Claude Design: no atar nada nuevo a ella. **Para iterar con el owner** (no
 ahora): la isla «muy sola» y el «Reservar» solo en la isla del móvil (A/B propuesto: las páginas de la instancia aún no

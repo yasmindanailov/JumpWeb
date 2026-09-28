@@ -1842,6 +1842,35 @@ página (calculado, elegido, la frase de cada pieza); T6b·4 la sonda y el ojo d
   pantalla contra el mockup, como en la T6b·1: la vuelta 114/114 · 45/45, y la primera visita igual salvo 1280×560 (el
   mockup lleva una oferta que el panel no tiene: otra rama). **La T6b, Cumpleaños, ✅.** Sigue la T6c, Colegios.
 
+### 4.19 La T6c: COLEGIOS — el censo (MEDIDO 28-09)
+
+`paginas/colegios/` del zip (nueve piezas, `contenido.js`, `calculo.js` y `hoja.jsx`; 79 KB). Es la página con más
+funcionalidad nueva: todos sus botones llevan a la calculadora (`#calcula`) y un solo cálculo lo leen la hoja para
+dirección (pieza 5), los días con hueco (7) y el cierre (9). Lo que pinta, lo que dice el panel (medido en local y en
+playjump.es) y lo que falta:
+
+| Pieza | Lo que pinta el mockup | Datos (medidos) |
+|---|---|---|
+| 1-2 · cabecera y garantías | vídeo, «desde 12 € por alumno», 30–100 alumnos, 2 o 3 h, 8:00–21:30; «Reservas con 100 €», «Todos los profesores gratis», «el precio es el total» | los packs 395 (2 h) y 396 (3 h): señal 100 € ✓, 30–100 ✓, tramos 15/17 · 13/15 · 12/14 (+3 €) ✓ en `/prices.tiers`; ❗ **«un profesor gratis por cada 15 alumnos»** (regalo de la ficha, y playjump.es lo dice igual): el «todos» del mockup NO es verdad |
+| 3 · así es la excursión | tres momentos (vídeo y dos fotos, material de grupo escolar pendiente) | «23 atracciones» (hecho `attractions`), las zonas y sus edades |
+| 4 · tranquilidad | cuidados (zonas, monitores, «si pasa algo», accesibilidad) y dos reseñas de docentes | ❗ 0 reseñas etiquetadas `colegios`: la nota sí, las voces no |
+| 5 · para llevar al centro | lo que incluye; **la propuesta en una hoja** (A4 con QR, «Ver», «Descargar», WhatsApp); tres pasos | la ficha: `features` y el regalo; la hoja es FUNCIONALIDAD NUEVA |
+| 6 · calcula | alumnos (stepper), 2 o 3 horas, día, hora (las que no caben, apagadas), el precio por alumno del tramo, el total, la señal, la tabla de tramos marcada, «Desde 70, 13 €: calcular con 70», compartir por WhatsApp y correo | ✅ la calculadora de ENTRADAS sirve casi tal cual: sus filas son los dos packs, el precio lo da el servidor por tramo (`GroupRateTables`); ❗ la zona `excursiones` NO tiene franjas en local (0 días a la venta) |
+| 7 · dónde y cuándo | «Horario de excursiones: todos los días 8:00–21:30»; **6 próximos días con hueco** (cualquier día) | `availability_weekends` es de fines de semana: hace falta su hermano de cualquier día |
+| 8 · dudas | ocho, con cifras | ❗ el plazo de cambio: la ficha NO lo publica (`cancellation: null`; el mockup, 5 días): no se dice |
+| 9 · cierre | la pregunta, WhatsApp con el cálculo, la línea de Bizum, «¿Lo decide dirección? Descarga la propuesta» | sin la línea de Bizum (`#829`) |
+| isla | la frase que quita el miedo de cada pieza; «esa hora ya no está libre»; «te avisamos si se libera» | — |
+
+Además: el cálculo se GUARDA en el dispositivo y viaja en el enlace (`?c=60_2_2026-10-20_10:00`), y al volver se retoma
+diciendo si la hora se ocupó. **Lo que manda la verdad y no el mockup**: un profesor por cada 15; sin plazo de cambio
+hasta que el panel lo tenga; sin voces de docentes; sin la línea de Bizum; el material de grupos escolares, sin hueco
+(`#761`·3). `[DECIDIDO owner]` 28-09 (`#837`): la hoja para dirección se hace AHORA (página imprimible con su QR, el
+PDF desde el navegador); compartir SOLO por WhatsApp; el cálculo se guarda en el dispositivo y viaja en el enlace
+(`?c=`), y se retoma diciendo si la hora se ocupó; «te avisamos si se libera», fuera por ahora. Plan: T6c·1 la página sin
+su calculadora (instancia); T6c·2 los hechos (los días con hueco de cualquier día; en LOCAL, franjas para la zona
+`excursiones`); T6c·3 la calculadora (la de entradas con los dos packs); T6c·4 la hoja y el cálculo que se retoma;
+T6c·5 la sonda y el ojo del owner.
+
 ## 5. Impacto en invariantes
 
 - `PAY-*`: solo si entra Bizum; entonces `VERIFY_CONC=1` y la lista del `CRITICAL_RE`.
