@@ -42,11 +42,11 @@
 pantalla, (1) la conversión del zip tercero y (2) la T5, Mi cuenta, ENTERA (spec §4.13–§4.16, con lo medido de cada tanda).
 ▶ **EN MARCHA: (3) T6** (spec §4.17). ✅ con el ojo del owner: la PORTADA (`#827`→`#831`, `sonda-portada.mjs`) y
 CUMPLEAÑOS (`#832`→`#836`, §4.18, `sonda-cumpleanos.mjs`). ▶ **EN MARCHA: la T6c, Colegios**: T6c·1→T6c·4 ✅ con el ojo
-del owner (spec §4.19, `#837`→`#841`; instancia `ce20609`; en LOCAL, 91 plantillas INFERIDAS para `excursiones`). **Sigue
-la T6c·5**: versionar `scripts/sonda-colegios.mjs` desde las CUATRO de un solo uso que pasan a 390 y 1280 (en esta máquina,
-`storage/app/audit/`, ignoradas: `compra-excursion`, `calculadora-colegios`, `calculo-retomado`, `hoja-colegios`), con su
-mutación; después, Visítanos (T6d). Pendientes: la escalera no marca el tramo elegido (el mockup sí) y la vuelta de Google
-con una excursión, sin verificar. ⚠️ La entrada `isla/hoja/montar.js` NO importa nada compartido (`#841`).
+del owner (spec §4.19, `#837`→`#841`; instancia `ce20609`; en LOCAL, 91 plantillas INFERIDAS para `excursiones`) y la
+T6c·5 ✅, su sonda (`scripts/sonda-colegios.mjs`, 50/50 a 390 y 1280; `mutar-sonda-colegios.sh` 7/7). **Sigue la T6c·6**:
+la escalera marca lo elegido como el mockup (`RateTable` con `active`: la duración en la cabecera y sus precios, la fila
+del tramo y la celda de la tarifa del día); después, Visítanos (T6d). Pendiente: la vuelta de Google con una excursión,
+sin verificar. ⚠️ La entrada `isla/hoja/montar.js` NO importa nada compartido (`#841`).
 ⚠️ `sonda-portada` 13/14 («Reservar» de la isla tras «Míralo», 17:17): igual con el `HEAD` (control): investigar aparte. La ISLA la
 repiensa el owner con Claude Design: no atar nada nuevo a ella. **Para iterar con el owner** (no
 ahora): la isla «muy sola» y el «Reservar» solo en la isla del móvil (A/B propuesto: las páginas de la instancia aún no

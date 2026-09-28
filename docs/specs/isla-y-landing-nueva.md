@@ -1952,6 +1952,15 @@ T6c·5 la sonda y el ojo del owner.
   sitemap), `SidebarBundleBudgetTest` +1 (la hoja: 14,98, techo 16; la calculadora a 186), `test:js` 1.569; en vivo, la hoja
   con cálculo (75 alumnos, 13 € y 975 €, del servidor), un A4 de 794 × 1123 con el pie dentro, el PDF en UNA página, sin
   cálculo las cifras generales, la miniatura a 1280 y 390 sin salirse, una sola `h1`, y la descarga desde la calculadora.
+- ✅ **T6c·5 (28-09) · LA SONDA de Colegios**: `scripts/sonda-colegios.mjs` funde las cuatro de un solo uso (la compra, la
+  calculadora, el cálculo retomado y la hoja) y compara cada cifra con OTRA fuente, sin cifras de la instalación escritas en
+  ella: los tramos, con `/prices`; el total, la señal y el resto, con la línea del servidor para esa selección (`PAY-12`); los
+  datos del centro, con los `event_fields` de la ficha. **50/50 a 390 y a 1280.** Su arnés, `scripts/mutar-sonda-colegios.sh`
+  (recompila la isla al mutar y al restaurar): **7/7 muerden**, y cada una por SU comprobación —el precio del tramo, el aviso
+  del tramo cercano, la hora en el enlace, la hora perdida sin decirla, el foco en lo que falta, los datos del centro fuera
+  de la línea, la hoja con la señal por total—. ⚠️ Sin ninguna hora apagada ese día, la hora perdida se prueba con una fuera
+  de horario (23:30): el mismo camino. ⚠️ Entra con `probe-card@` hasta «Pagar» y NO paga. Pendientes: la escalera no marca
+  el tramo elegido (el mockup sí: T6c·6) y la vuelta de Google con una excursión, sin verificar.
 
 ## 5. Impacto en invariantes
 
