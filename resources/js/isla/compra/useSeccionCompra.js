@@ -28,6 +28,7 @@ import { usePantallaCero } from './usePantallaCero.js';
 import { borradorDeIntencion, sigueSola } from './intencion.js';
 import { euros, horasCercanas, horasDelSelector } from './vista.js';
 import { meterLinea, pedidoDe } from './linea.js';
+import { alPrincipio, irA } from './ir-a.js';
 import { lineaListo, marcasDe, reciboDe, resumenDeLaCesta, resumenDelPedido } from './recibo.js';
 import { ckDelPaso, direccion, empiezaOtra, pantallaListo, pasoDelMotor, rango, volverDeLaPantallaCero } from './pasos.js';
 import {
@@ -214,7 +215,8 @@ export function useSeccionCompra(props) {
         });
         const situada = enCola(() => situar(borradorDeIntencion(intencion, catalogStore.products)));
 
-        if (sola) situada.then(() => (vista.value?.listo ? continuar() : undefined)).finally(() => { compra.preparando = false; });
+        // Si no puede seguir sola (falta un dato, la hora ya no cabe…), la capa va a lo que falta (el owner, 28-09, `ir-a.js`).
+        if (sola) situada.then(() => (vista.value?.listo ? continuar() : irA(vista.value?.falta))).finally(() => { compra.preparando = false; });
     }
 
     watch(() => catalogStore.products, () => applyIntent());
@@ -249,7 +251,8 @@ export function useSeccionCompra(props) {
 
                 return;
             }
-            if (! r.ok) { compra.aviso = r.aviso; return; }
+            // El «no» del servidor se pinta ARRIBA de la pantalla 0: la capa sube a él (se continúa desde abajo).
+            if (! r.ok) { compra.aviso = r.aviso; alPrincipio(); return; }
             compra.pedido = { ...pedido, n: cartStore.lines[0]?.quantity ?? pedido.n };
             await admitir();
         } finally {
@@ -264,6 +267,7 @@ export function useSeccionCompra(props) {
 
         if (store.step !== STEPS.IDENTIFY && store.step !== STEPS.PAY) {
             Object.assign(compra, { paso: 'cuando', aviso: cartStore.error || t(props.messages, 'errors.try_later') });
+            alPrincipio();
 
             return;
         }
@@ -452,9 +456,15 @@ export function useSeccionCompra(props) {
 
             // Nacida en Mi cuenta (T5f), la flecha vuelve a ella, al mismo punto; nacida del selector (`#831`), lo reabre; si
             // no, no hay nada detrás: solo la X.
+            // Sin estar lista, «Continuar» no es un botón muerto: lleva la capa a lo que falta (el owner, 28-09, `ir-a.js`).
+            const falta = vista.value.falta;
+
             return {
                 ...c, dir: compra.dir, onBack: volverDeLaPantallaCero(compra.desde, { aLaCuenta, alSelector }), onClose: cerrar,
-                action: { ...c.action, onClick: continuar, loading: compra.ocupado === 'cuando' ? t(textos, 'pieza.cargando') : false },
+                action: {
+                    ...c.action, disabled: Boolean(c.action.disabled) && ! falta, onClick: vista.value.listo ? continuar : () => irA(falta),
+                    loading: compra.ocupado === 'cuando' ? t(textos, 'pieza.cargando') : false,
+                },
             };
         }
 

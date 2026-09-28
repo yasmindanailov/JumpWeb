@@ -950,7 +950,9 @@ class SidebarBundleBudgetTest extends TestCase
     // reservar—. Medido 162,13 (en `e6996e0d` pasaba bajo 161). Por el mismo motivo que `#836`, la pantalla 0 salió de
     // `vista.js` a `pantalla-cuando.js` (con ella dentro, las dos calculadoras pasaban de su techo sin tocarlas), y el bloque
     // de los datos va DIFERIDO con los pasos (`datos-reserva.js`: dentro, la compra medía 168,06). El techo, a 163.
-    private const ISLA_COMPRA_CHUNK_MAX_KB = 163;
+    // Y la capa va a lo que falta (el owner, 28-09: `compra/ir-a.js`, el «qué falta» de cada pantalla 0 y «Continuar» que
+    // lleva a ello). Medido 163,66. El techo, a 164.
+    private const ISLA_COMPRA_CHUNK_MAX_KB = 164;
 
     // T4d·4 (`specs/isla-y-landing-nueva.md` §4.12): la CALCULADORA de una página, entrada propia que la página pide
     // (`scripts` de `<x-pagina>`) y se monta al acercarse su pieza. Su DESCARGA entera, como la mide el navegador que
@@ -962,7 +964,10 @@ class SidebarBundleBudgetTest extends TestCase
     // en un trozo que comparte con los pasos de la compra). Medido 178,90 → 180,14 (base: el `HEAD` de `#783`). El techo, a 181.
     // `#830`: a fin de mes, dos meses a la vez (`CalendarioMes` con `months`, `mesesDelCalendario`); y el calendario pasa a
     // su trozo propio, que la compra pide con `import()`. Medido 180,84 → 182,75 (base: el `HEAD` de `#829`). El techo, a 183.
-    private const CALCULADORA_MAX_KB = 183;
+    // T6c·3b: la misma calculadora es la de COLEGIOS —los packs por filas con su escalera por alumno, el tramo cercano, la
+    // señal y el resto, los días de la página que la eligen y la cifra que se escribe (`CifraEscribible`, en su ranura: en el
+    // control común viajaba también con la compra)—. Medido 183,15 (en `20c88c90` pasaba bajo 183). El techo, a 184.
+    private const CALCULADORA_MAX_KB = 184;
 
     // La calculadora de la FIESTA (T6b·3, `#836`): su entrada propia, con lo que comparte con la de entradas (Vue, Pinia,
     // los stores de la oferta, el calendario y sus piezas) y lo suyo (la vista, el composable y `FilaMejora`). Medido al

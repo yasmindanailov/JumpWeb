@@ -39,6 +39,12 @@ export function montarCalculadora(sitio, { textos = {}, owner = null, locale = '
             // la isla (`jw:calculadora`), y su «Reservar para hoy» elige hoy aquí (`jw:calculadora:hoy`).
             watch(() => calculadora.vista.value.isla, (detail) => document.dispatchEvent(new CustomEvent('jw:calculadora', { detail })), { deep: true });
             document.addEventListener('jw:calculadora:hoy', () => calculadora.elegirHoy());
+            // Un día con hueco de la página, por su marca (`data-jw-calculadora-dia`, como la fiesta): elegido aquí (T6c·3b).
+            document.addEventListener('click', (ev) => {
+                const dia = ev.target?.closest?.('[data-jw-calculadora-dia]')?.dataset.jwCalculadoraDia;
+
+                if (/^\d{4}-\d{2}-\d{2}$/.test(dia ?? '')) calculadora.elegirDia(dia);
+            });
 
             return () => h(CalculadoraEntradas, { v: calculadora.vista.value, lado, marcas, onCambiar: calculadora.cambiar, onReservar: calculadora.reservar });
         },
@@ -48,7 +54,7 @@ export function montarCalculadora(sitio, { textos = {}, owner = null, locale = '
     app.provide(CLAVE_TEXTOS, () => textos);
     app.mount(sitio);
 
-    return { app, lado, arrancar: () => calculadora.arrancar() };
+    return { app, lado, ancla: pagina.ancla ?? 'precio', arrancar: () => calculadora.arrancar() };
 }
 
 /** Lo del motor que da el layout, o lo mínimo si no está. */
@@ -60,13 +66,14 @@ function motorDeLaPagina(doc) {
     }
 }
 
-/** Monta ya y arranca al acercarse, al primer toque o en el acto si se llega a la pieza (`#precio`). */
+/** Monta ya y arranca al acercarse, al primer toque o en el acto si se llega a la pieza (su ancla, `#precio` o la suya). */
 export function montarYArrancarAlAcercarse({ doc = document, win = window } = {}) {
     const sitio = doc.querySelector('[data-jw-calculadora]');
     const montada = sitio ? montarCalculadora(sitio, motorDeLaPagina(doc)) : null;
 
     if (! montada) return null;
-    if (win.location.hash === '#precio' || typeof win.IntersectionObserver !== 'function') {
+    // Se llega a la pieza (su ancla: `#precio` en Kids y Jump; la que declare la página, `#calcula` en colegios): en el acto.
+    if (win.location.hash === `#${montada.ancla}` || typeof win.IntersectionObserver !== 'function') {
         montada.arrancar();
         return montada;
     }

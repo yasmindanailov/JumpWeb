@@ -141,6 +141,8 @@ export function pantallaCuandoFiesta(e) {
     return {
         props,
         listo,
+        // Lo PRIMERO que falta para continuar, por su `id`: a donde la capa lleva la vista (`ir-a.js`, el owner 28-09).
+        falta: listo ? null : (! pack ? 'pjc-q-edad' : ! b.dia ? 'pjc-q-dia' : 'pjc-q-hora'),
         ck: {
             key: 'cuando',
             stepStrong: '',

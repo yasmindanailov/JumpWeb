@@ -169,5 +169,8 @@ export function useCalculadora({ pagina, textos, locale, owner = null }) {
     /** «Reservar para hoy» desde la isla o la página (el `pedirHoy` del diseño): hoy elegido; queda la hora. */
     const elegirHoy = () => cambiar('dia', hoy);
 
-    return { vista, arrancar, cambiar, reservar, elegirHoy };
+    /** Un día con hueco de la página (colegios, «Próximos días con hueco», T6c·3b): elegido aquí; queda la hora. */
+    const elegirDia = (dia) => cambiar('dia', dia);
+
+    return { vista, arrancar, cambiar, reservar, elegirHoy, elegirDia };
 }

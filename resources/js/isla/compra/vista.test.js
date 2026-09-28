@@ -266,6 +266,18 @@ describe('la pantalla 0 de un pack sin edad (una excursión)', () => {
         assert.equal(conHora(contestado).ck.action.disabled, false);
     });
 
+    /** El owner, 28-09: «siempre mover el scroll hasta donde es necesario X campo o X acción para continuar». */
+    test('lo PRIMERO que falta, por su id: el día, la hora y, con todo elegido, el primer campo obligatorio sin contestar', () => {
+        const con = (cambios) => pantallaCuando(deExcursion({ borrador: borrador({ zona: 'excursiones', fila: 395, dia: '2026-10-01', hora: '10:00:00', n: 60, evento: {}, ...cambios }), linea: { total_cents: 78000 } }));
+
+        assert.equal(con({ dia: null, hora: null }).falta, 'pjc-q-dia');
+        assert.equal(con({ hora: null }).falta, 'pjc-q-hora');
+        assert.equal(con({}).falta, 'pjc-dato-school');
+        assert.equal(con({ evento: { school: 'CEIP', course: '' } }).falta, 'pjc-dato-lead', 'el curso es opcional: se salta');
+        assert.equal(con({ evento: contestado }).falta, null, 'lista: nada que buscar');
+        assert.equal(pantallaCuando(estado({ borrador: borrador({ zona: null, elegirZona: true, fila: null }) })).falta, 'pjc-q-zona');
+    });
+
     test('lo que viaja en la línea: los campos del pack contestados, sin espacios y nada más', () => {
         const datos = datosDeReserva(ficha, { ...contestado, course: '  ', otra: 'x', school: ' CEIP San José ' });
 

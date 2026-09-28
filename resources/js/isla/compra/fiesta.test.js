@@ -140,4 +140,11 @@ describe('la pantalla 0 de una fiesta', () => {
         assert.equal(props.pack, '');
         assert.equal(listo, false);
     });
+
+    /** El owner, 28-09: la capa va a lo que falta para continuar (`ir-a.js`). */
+    test('lo PRIMERO que falta, por su id: la edad, el día y la hora; lista, nada', () => {
+        const falta = (b) => pantallaCuandoFiesta({ ...base, linea: { total_cents: 1 }, borrador: { edad: 5, n: 10, dia: '2026-09-25', hora: '17:00:00', menu: null, fila: 105, ...b } }).falta;
+
+        assert.deepEqual([falta({ edad: null }), falta({ dia: null, hora: null }), falta({ hora: null }), falta({})], ['pjc-q-edad', 'pjc-q-dia', 'pjc-q-hora', null]);
+    });
 });

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { DIAS_PARA_UN_MES, cierreDelDia, mesesDelCalendario, vistaCalculadora } from './vista.js';
+import { DIAS_PARA_UN_MES, cierreDelDia, mesesDelCalendario, precioDelTramo, tramoCerca, vistaCalculadora } from './vista.js';
 
 const NBSP = String.fromCharCode(0xa0);
 const textos = {
@@ -122,4 +122,79 @@ test('con dos meses, un día elegido en el de abajo deja la pareja quieta; uno m
 test('la hora de cierre de un día: la de su día especial, si no la de su día de la semana; sin abrir, ninguna', () => {
     const cierres = { semana: { 1: '21:30', 6: '21:30' }, dias: { '2026-10-12': '20:00' } };
     assert.deepEqual([cierreDelDia(cierres, '2026-09-26'), cierreDelDia(cierres, '2026-10-12'), cierreDelDia(cierres, '2026-09-27'), cierreDelDia(cierres, null)], ['21:30', '20:00', null, null]);
+});
+
+/**
+ * **La calculadora de COLEGIOS: la de entradas con los dos packs de excursión por filas** (T6c·3b, §4.19). El precio por
+ * alumno depende de CUÁNTOS (su tramo): se LEE de la escalera que la página trae de `/prices.tiers` —la de local, 15/17 ·
+ * 13/15 · 12/14 € desde 30, 70 y 100, y el pack de 3 horas, 3 € más—; el del día de la API es el del tramo más barato y
+ * aquí no vale. El total, la señal y el resto, de la línea del servidor.
+ */
+const tramos = (mas = 0) => [{ desde: 30, normal: 1500 + mas, especial: 1700 + mas }, { desde: 70, normal: 1300 + mas, especial: 1500 + mas }, { desde: 100, normal: 1200 + mas, especial: 1400 + mas }];
+const colegios = {
+    zona: 'excursiones', zonaNombre: 'Excursiones', nombre: 'Parque', url: 'https://parque.test/colegios',
+    filas: [
+        { id: 395, tipo: 'pack', label: '2 horas', horas: 2, desde_cents: 1200, min: 30, max: 100, tramos: tramos() },
+        { id: 396, tipo: 'pack', label: '3 horas', horas: 3, desde_cents: 1500, min: 30, max: 100, tramos: tramos(300) },
+    ],
+    columnas: ['De lunes a jueves', 'Tarifa especial'],
+    textos: {
+        preguntas: ['¿Cuántos alumnos?', '¿Cuánto tiempo?', '¿Qué día?', '¿A qué hora?'], persona: ['alumno', 'alumnos'],
+        cuantos: { label: 'Alumnos', sub: 'De 30 a 100', nota: 'n', editable: true }, tiempo: 't', boton: 'Reservar y pagar la señal', junto: 'j',
+        nota: 'Un profesor gratis por cada 15 alumnos', notaIcono: 'user-round', ahora: 'Hoy pagas la señal', luego: 'El día de la visita', senal: '100 €',
+        compartir: 'WhatsApp',
+        calculadora: { mensaje: ':nombre: ', tramo_cerca: 'Desde :n alumnos, :precio por alumno.', tramo_calcular: 'Calcular con :n' },
+    },
+};
+const conPack = { ...textos, calculadora: { ...textos.calculadora, linea_pack: ':pack · :n × :precio' } };
+const diasPack = {
+    395: [{ date: '2026-10-05', price_cents: 1200, rate_key: 'normal' }, { date: '2026-10-09', price_cents: 1400, rate_key: 'special' }],
+    396: [{ date: '2026-10-05', price_cents: 1500, rate_key: 'normal' }, { date: '2026-10-09', price_cents: 1700, rate_key: 'special' }],
+};
+const deColegios = (cambios = {}) => vistaCalculadora({
+    pagina: colegios, textos: conPack, locale: 'es', hoy: '2026-09-28', precios: diasPack, calcetin: null, horas: [], linea: null, cargoCalcetines: null, cierre: '21:30',
+    ...cambios, borrador: { fila: 395, dia: null, hora: null, n: 60, cal: 0, ...(cambios.borrador ?? {}) },
+});
+const eur = (n) => `${n}${NBSP}€`;
+
+test('la escalera: el precio del TRAMO de esa gente, en la columna de la tarifa; bajo el primero, ninguno', () => {
+    const f = colegios.filas[0];
+
+    assert.deepEqual([precioDelTramo(f, 30), precioDelTramo(f, 69), precioDelTramo(f, 70, true), precioDelTramo(f, 100), precioDelTramo(f, 29)], [1500, 1500, 1500, 1200, null]);
+    assert.deepEqual([tramoCerca(f, 60), tramoCerca(f, 59), tramoCerca(f, 95, true), tramoCerca(f, 100)], [{ n: 70, cents: 1300 }, null, { n: 100, cents: 1400 }, null]);
+});
+
+test('sin día: «desde» el tramo de 60 en la tarifa normal, en el contador y en cada duración; y el tramo siguiente, a un toque', () => {
+    const v = deColegios();
+
+    assert.equal(v.cuantos.precio, `desde ${eur(15)} por alumno`, 'no los 12 € del día: esos son de 100 alumnos');
+    assert.deepEqual(v.tiempo.items.map((i) => i.price), [`desde ${eur(15)}`, `desde ${eur(18)}`]);
+    assert.deepEqual([v.cuantos.min, v.cuantos.max, v.cuantos.editable], [30, 100, true], 'el mínimo y el máximo, de la fila, antes de la ficha');
+    assert.deepEqual(v.cuantos.cerca, { texto: `Desde 70 alumnos, ${eur(13)} por alumno.`, accion: 'Calcular con 70', n: 70 });
+    assert.deepEqual(v.resumen.ahora, { label: 'Hoy pagas la señal', value: '100 €' }, 'la señal de la ficha, antes de la línea');
+    assert.equal(v.resumen.notaIcono, 'user-round');
+});
+
+test('un día de tarifa especial: el tramo en SU columna, y el eco lo dice', () => {
+    const v = deColegios({ borrador: { dia: '2026-10-09' } });
+
+    assert.equal(v.cuantos.precio, `${eur(17)} por alumno`);
+    assert.deepEqual(v.tiempo.items.map((i) => i.price), [eur(17), eur(20)]);
+    assert.deepEqual([v.dia.eco.antes, v.dia.eco.cifra], ['Tarifa especial: ', eur(17)]);
+});
+
+test('con hora y la línea del servidor: su línea, su total, lo que se paga hoy y lo que queda para el día', () => {
+    const linea = { unit_price_cents: 1500, subtotal_cents: 90000, total_cents: 90000, has_deposit: true, deposit_cents: 10000, gate_remainder_cents: 80000, addons: [] };
+    const v = deColegios({ borrador: { dia: '2026-10-05', hora: '10:00:00' }, horas: [{ time: '10:00:00', available: 100, sellable: true }], linea });
+
+    assert.deepEqual(v.resumen.lineas.map((l) => [l.label, l.value]), [[`2 horas · 60 × ${eur(15)}`, eur(900)]]);
+    assert.deepEqual([v.resumen.total, v.resumen.listo], [eur(900), true]);
+    assert.deepEqual([v.resumen.ahora, v.resumen.luego], [{ label: 'Hoy pagas la señal', value: eur(100) }, { label: 'El día de la visita', value: eur(800) }]);
+    assert.equal(v.cuantos.cerca.n, 70);
+});
+
+test('las entradas no cambian: sin señal, sin tramos, sin contador escribible y con la nota del QR', () => {
+    const v = vista();
+
+    assert.deepEqual([v.resumen.ahora, v.resumen.luego, v.cuantos.editable, v.cuantos.cerca, v.resumen.notaIcono], [null, null, false, null, 'qr-code']);
 });

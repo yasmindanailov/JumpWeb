@@ -7,7 +7,9 @@
  * Sin calcetines que vender, la pregunta no sale y la de la hora cierra la lista.
  */
 import CalendarioMes from '../ui/CalendarioMes.vue';
+import CifraEscribible from '../ui/CifraEscribible.vue';
 import ContadorCantidad from '../ui/ContadorCantidad.vue';
+import EnlaceSistema from '../ui/EnlaceSistema.vue';
 import EtiquetaSistema from '../ui/EtiquetaSistema.vue';
 import IconoLucide from '../ui/IconoLucide.vue';
 import SelectorHoras from '../ui/SelectorHoras.vue';
@@ -22,7 +24,12 @@ const cambiar = (campo, valor) => emit('cambiar', campo, valor);
 
 <template>
     <PreguntaCalculadora id="p3-cuantos" :titulo="v.cuantos.titulo">
-        <ContadorCantidad :label="v.cuantos.label" :sublabel="v.cuantos.sub" :model-value="v.cuantos.n" :min="v.cuantos.min" :max="v.cuantos.max" :price="v.cuantos.precio" @update:model-value="cambiar('n', $event)" />
+        <ContadorCantidad :label="v.cuantos.label" :sublabel="v.cuantos.sub" :model-value="v.cuantos.n" :min="v.cuantos.min" :max="v.cuantos.max" :price="v.cuantos.precio" @update:model-value="cambiar('n', $event)">
+            <!-- La cifra se ESCRIBE si la página lo pide (colegios, T6c·3b: un grupo de 30 a 100). -->
+            <template v-if="v.cuantos.editable" #cifra="{ valor, poner }"><CifraEscribible :valor="valor" :etiqueta="v.cuantos.label" @poner="poner" /></template>
+        </ContadorCantidad>
+        <!-- El tramo siguiente de un pack, si está cerca (colegios, T6c·3b): su precio y, a un toque, calcular con él. -->
+        <p v-if="v.cuantos.cerca" :style="PISTA"><span>{{ v.cuantos.cerca.texto }}</span> <EnlaceSistema @click="cambiar('n', v.cuantos.cerca.n)">{{ v.cuantos.cerca.accion }}</EnlaceSistema></p>
         <p :style="PISTA">{{ v.cuantos.nota }}</p>
     </PreguntaCalculadora>
     <PreguntaCalculadora :titulo="v.tiempo.titulo">

@@ -1915,6 +1915,23 @@ T6c·5 la sonda y el ojo del owner.
   calculadoras, por debajo del suyo. ⚠️ `sonda-portada` 13/14 a las 17:17 —«Reservar» de la isla tras «Míralo»—, IGUAL con
   el `HEAD` (control con copia): no es de esta tanda. ⚠️ No verificado: la vuelta de Google con una excursión (la cesta no
   guarda `event_data`, `#38(d)`).
+- ✅ **T6c·3b (28-09) · la CALCULADORA de colegios**, con el ✅ del owner («buen trabajo»; instancia `f96ff1a`). Es la de ENTRADAS
+  (`calculadora/montar.js`, `vista.js`) con los packs por filas: la página declara cada fila con `tipo: 'pack'`, sus topes y
+  su ESCALERA (`tramos`, de `/prices.tiers`); la vista LEE el precio del tramo de esa gente en la columna de la tarifa del día
+  (`precioDelTramo`; sin día, «desde»: el del día de la API es el del tramo más barato y aquí mentía) y el tramo siguiente a 10
+  o menos («Desde 70 alumnos, 13 €… Calcular con 70», `tramoCerca`); el total, la señal y el resto, de la línea (`ahora`,
+  `luego`); la nota, el regalo de los profesores (`notaIcono`); la cifra se ESCRIBE (`ui/CifraEscribible.vue`, el `editable`
+  del diseño, en la ranura `cifra` del contador: en el control común viajaba con la compra); y los días con hueco de la pieza 7
+  la eligen (`data-jw-calculadora-dia`). En la instancia: el modelo, la pieza 6 (la retícula de Kids y la escalera debajo,
+  `escalera.blade.php`) y los textos es/en/fr. Pesos: la calculadora 183,15 (techo 184).
+- ✅ **La capa va a LO QUE FALTA** (`#840`, `[DECIDIDO owner]` 28-09: «siempre mover el scroll hasta donde es necesario el
+  campo o la acción para continuar con el pago»). Cada pantalla 0 dice lo primero que falta por su `id` (`falta`: la zona, el
+  día, la hora, la edad o el primer campo obligatorio vacío); al llegar con la selección hecha y pararse, la capa baja ahí y
+  enfoca el campo (`compra/ir-a.js`, con reintentos: los datos llegan en su trozo); «Continuar» sin estar lista ya no está
+  apagado: lleva a lo que falta (y con Intro en el último campo, igual); el «no» del servidor, arriba, sube la capa a él.
+  «Tus datos» ya enfocaba su primer error. **Medido**: `test:js` 1.563; en vivo, a 390 y 1280, la compra abierta desde la
+  calculadora queda en «Nombre del centro» enfocado y «Continuar» lleva al siguiente vacío; sin regresión
+  `sonda-compra-directa` 16/16, `sonda-cumpleanos` 20/20, `sonda-calculadora`. La compra, 163,66 (techo 164).
 
 ## 5. Impacto en invariantes
 

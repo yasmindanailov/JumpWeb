@@ -4,6 +4,7 @@
  * precio y botones, para un widget de página. `variant="bare"`: solo − cifra +, para una fila de recibo o una
  * pregunta que ya tiene su título. Con `format`, la cifra se lee con su unidad («2 niños») y así se anuncia al
  * cambiar. Sirve igual sobre claro y sobre tinta. La cantidad, con `v-model` y dentro de sus topes (`acotar()`).
+ * La ranura `cifra` (con el valor y su `poner`, ya acotado) pasa al control: la de escribir, `CifraEscribible` (T6c·3b).
  */
 import { computed } from 'vue';
 import { acotar } from './piezas.js';
@@ -45,7 +46,17 @@ const poner = (n) => emit('update:modelValue', acotar(n, props.min, props.max));
         <ControlesCantidad
             v-bind="controles"
             @poner="poner"
-        />
+        >
+            <template
+                v-if="$slots.cifra"
+                #cifra="s"
+            >
+                <slot
+                    name="cifra"
+                    v-bind="s"
+                />
+            </template>
+        </ControlesCantidad>
     </div>
     <div
         v-else
@@ -69,7 +80,17 @@ const poner = (n) => emit('update:modelValue', acotar(n, props.min, props.max));
             <ControlesCantidad
                 v-bind="controles"
                 @poner="poner"
-            />
+            >
+                <template
+                    v-if="$slots.cifra"
+                    #cifra="s"
+                >
+                    <slot
+                        name="cifra"
+                        v-bind="s"
+                    />
+                </template>
+            </ControlesCantidad>
         </div>
     </div>
 </template>

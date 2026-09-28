@@ -55,6 +55,32 @@ export function mesesDelCalendario(dias, { hoy, dia = null }) {
     return { mes: doble && mesDia === siguiente ? esteMes : mesDia, meses: doble ? 2 : 1 };
 }
 
+/**
+ * El precio PUBLICADO por persona de una fila de PACK para `n` personas (T6c·3b, colegios): el de su TRAMO en la escalera
+ * que la página trae de `/prices.tiers` (`fila.tramos`: `{ desde, normal, especial }`, en céntimos), en la columna de la
+ * tarifa del día; `null` sin tramo. Se LEE de la escalera, no se calcula (`PAY-12`): el total, la señal y el resto siguen
+ * siendo los de la línea del servidor. (El precio del día de la API, en un pack, es el del tramo más barato.)
+ */
+export function precioDelTramo(fila, n, especial = false) {
+    const tramo = [...(Array.isArray(fila?.tramos) ? fila.tramos : [])].sort((a, b) => b.desde - a.desde).find((t) => n >= t.desde) ?? null;
+    const cents = tramo ? tramo[especial ? 'especial' : 'normal'] : null;
+
+    return Number.isInteger(cents) ? cents : null;
+}
+
+/** A cuántos está el tramo SIGUIENTE para decirlo (el diseño: con 60 a 69, «Desde 70 alumnos, 13 €: calcular con 70»). */
+export const CERCA_DEL_TRAMO = 10;
+
+/** El tramo siguiente si está cerca, con su precio publicado, o `null`. */
+export function tramoCerca(fila, n, especial = false) {
+    const siguiente = (Array.isArray(fila?.tramos) ? fila.tramos : [])
+        .filter((t) => t.desde > n && t.desde - n <= CERCA_DEL_TRAMO)
+        .sort((a, b) => a.desde - b.desde)[0] ?? null;
+    const cents = siguiente ? precioDelTramo(fila, siguiente.desde, especial) : null;
+
+    return cents === null ? null : { n: siguiente.desde, cents };
+}
+
 /** Las cantidades del resumen como las escribe la página: en letra hasta donde llegue su lista («para dos»). */
 function enLetra(n, numeros) {
     return (Array.isArray(numeros) && numeros[n]) || String(n);
@@ -78,7 +104,13 @@ export function vistaCalculadora(e) {
     const fila = pg.filas.find((f) => f.id === b.fila) ?? pg.filas[0];
     const dias = e.precios?.[fila.id] ?? [];
     const delDia = dias.find((d) => d.date === b.dia) ?? null;
-    const unidad = delDia ? delDia.price_cents : null;
+    // De un PACK (colegios, T6c·3b), el precio por persona es el de su TRAMO para esta gente, y sin día «desde»: la tarifa
+    // especial cuesta más. De una entrada, el del día.
+    const esPack = fila.tipo === 'pack';
+    const especial = delDia?.rate_key === 'special';
+    const unidad = esPack ? precioDelTramo(fila, b.n, especial) : (delDia ? delDia.price_cents : null);
+    const precioUnidad = unidad === null ? null : (esPack && ! delDia ? tp('desde', { precio: euros(unidad, locale) }) : euros(unidad, locale));
+    const cerca = esPack ? tramoCerca(fila, b.n, especial) : null;
     const horas = b.dia ? horasDelSelector(e.horas, { gente: b.n, textos }) : null;
     const h = b.dia && b.hora && (horas ?? []).some((x) => x.time === horaCorta(b.hora) && ! x.disabled) ? horaCorta(b.hora) : null;
     const linea = h ? e.linea : null;
@@ -90,13 +122,20 @@ export function vistaCalculadora(e) {
         label: tp('linea_complemento', { nombre: a.product_name, n: a.quantity, precio: e.calcetin && a.product_id === e.calcetin.id ? euros(e.calcetin.price_cents, locale) : '' }),
         value: euros(a.subtotal_cents, locale),
     }));
-    const lineas = linea ? [{ label: tp('linea_entradas', { n: b.n, precio: euros(linea.unit_price_cents, locale) }), value: euros(linea.subtotal_cents, locale) }, ...complementos] : [];
+    const lineas = linea ? [{ label: tp(esPack ? 'linea_pack' : 'linea_entradas', { pack: fila.label, n: b.n, precio: euros(linea.unit_price_cents, locale) }), value: euros(linea.subtotal_cents, locale) }, ...complementos] : [];
     const total = linea ? euros(linea.total_cents, locale) : '';
     const precioDe = (f) => {
-        if (! b.dia) return tp('desde', { precio: euros(f.desde_cents, locale) });
-        const cents = precioDelDia(e.precios, f.id, b.dia);
+        const cents = b.dia ? precioDelDia(e.precios, f.id, b.dia) : null;
 
-        return cents === null ? null : euros(cents, locale);
+        if (b.dia && cents === null) return null;
+        // Un pack, el de su tramo para esta gente (sin día, «desde»); una entrada, el del día.
+        if (f.tipo === 'pack') {
+            const deTramo = precioDelTramo(f, b.n, especial);
+
+            return deTramo === null ? null : (b.dia ? euros(deTramo, locale) : tp('desde', { precio: euros(deTramo, locale) }));
+        }
+
+        return b.dia ? euros(cents, locale) : tp('desde', { precio: euros(f.desde_cents, locale) });
     };
     const mensaje = `${pp('mensaje', { nombre: pg.nombre, zona: pg.zonaNombre })}${seleccion}${total ? ` · ${total}` : ''} · ${pg.url}${p.compartirNota ? `\n${p.compartirNota}` : ''}`;
     const ultimo = dias.length ? dias[dias.length - 1].date.slice(0, 7) : null;
@@ -104,7 +143,13 @@ export function vistaCalculadora(e) {
 
     return {
         locale,
-        cuantos: { titulo: p.preguntas[0], label: p.cuantos.label, sub: p.cuantos.sub, n: b.n, min: e.minimo ?? 1, max: e.maximo ?? 30, precio: unidad !== null ? tp('por', { precio: euros(unidad, locale), persona: p.persona[0] }) : '', nota: p.cuantos.nota },
+        // El mínimo y el máximo de un pack llegan con su fila (su ficha), antes de que el motor traiga la suya. `editable`: la
+        // cifra se escribe (un grupo de 30 a 100); `cerca`: el tramo siguiente, a un toque.
+        cuantos: {
+            titulo: p.preguntas[0], label: p.cuantos.label, sub: p.cuantos.sub, n: b.n, min: Math.max(e.minimo ?? 1, fila.min ?? 1), max: e.maximo ?? fila.max ?? 30,
+            precio: precioUnidad !== null ? tp('por', { precio: precioUnidad, persona: p.persona[0] }) : '', nota: p.cuantos.nota, editable: p.cuantos.editable === true,
+            cerca: cerca ? { texto: pp('tramo_cerca', { n: cerca.n, precio: euros(cerca.cents, locale) }), accion: pp('tramo_calcular', { n: cerca.n }), n: cerca.n } : null,
+        },
         tiempo: {
             titulo: p.preguntas[1], name: `p3-tiempo-${pg.zona}`, fila: String(fila.id), columnas: String(pg.filas.length),
             items: pg.filas.map((f) => ({ value: String(f.id), title: f.label, price: precioDe(f), description: f.descripcion ?? null })),
@@ -112,7 +157,7 @@ export function vistaCalculadora(e) {
         dia: {
             titulo: p.preguntas[2], mes: vistaMes.mes, meses: vistaMes.meses, desde: e.hoy.slice(0, 7), hasta: ultimo && ultimo > e.hoy.slice(0, 7) ? ultimo : e.hoy.slice(0, 7),
             hoy: e.hoy, dias: dias.map((d) => ({ date: d.date, special: d.rate_key === 'special' })), valor: b.dia, nota: fila.aviso ?? '',
-            eco: unidad !== null ? { antes: tp('eco_dia_antes', { tarifa: pg.columnas[delDia.rate_key === 'special' ? 1 : 0] }), cifra: euros(unidad, locale), despues: tp('eco_dia_despues', { persona: p.persona[0] }) } : null,
+            eco: delDia && unidad !== null ? { antes: tp('eco_dia_antes', { tarifa: pg.columnas[especial ? 1 : 0] }), cifra: euros(unidad, locale), despues: tp('eco_dia_despues', { persona: p.persona[0] }) } : null,
         },
         hora: {
             titulo: p.preguntas[3], horas, valor: h, espera: tp('espera_hora'),
@@ -124,11 +169,19 @@ export function vistaCalculadora(e) {
             cadaUno: { texto: pp('cada_uno', { persona: p.persona[0], n: b.n }), elegido: b.cal === b.n, n: b.n },
         } : null,
         // `pendiente`: hay una petición en camino (más gente, otro par): el botón espera a la última respuesta.
-        resumen: { seleccion, lineas, total, falta, listo: Boolean(linea) && ! e.pendiente, faltaHref: ! b.dia ? '#p3-dia' : '#p3-hora', boton: p.boton, junto: p.junto, nota: p.nota, abriendo: Boolean(e.abriendo) },
+        resumen: {
+            seleccion, lineas, total, falta, listo: Boolean(linea) && ! e.pendiente, faltaHref: ! b.dia ? '#p3-dia' : '#p3-hora', boton: p.boton, junto: p.junto, nota: p.nota,
+            abriendo: Boolean(e.abriendo),
+            // Con señal (un pack), lo que se paga hoy y lo que queda para el día, de la línea del servidor; antes, la señal que
+            // la página conoce de su ficha. Y el icono de la nota, el que diga la página (sin él, el del QR de las entradas).
+            ahora: linea?.has_deposit && p.ahora ? { label: p.ahora, value: euros(linea.deposit_cents, locale) } : (p.senal && p.ahora ? { label: p.ahora, value: p.senal } : null),
+            luego: linea?.has_deposit && p.luego ? { label: p.luego, value: euros(linea.gate_remainder_cents, locale) } : null,
+            notaIcono: p.notaIcono ?? 'qr-code',
+        },
         // Lo que la calculadora le cuenta a la ISLA de la página (T4e, el `onCalculo` de `pagina.jsx` del diseño): qué
         // pregunta falta y, con todo elegido, lo elegido en corto con el total DEL SERVIDOR («Sáb 26 · 17:00 · 3 niños ·
         // 24 €»). Solo cuenta si alguien la ha tocado (`tocada`): los valores de partida no son un cálculo.
         isla: e.tocada ? { falta: ! b.dia ? 'dia' : ! h ? 'hora' : '', elegido: linea ? `${mayuscula(diaCorto(b.dia, locale))} · ${h} · ${quien(b.n)} · ${total}` : null, boton: p.boton } : null,
-        compartir: { value: `${pg.url}#precio`, items: [{ kind: 'whatsapp', label: p.compartir, href: `https://wa.me/?text=${encodeURIComponent(mensaje)}` }] },
+        compartir: { value: `${pg.url}#${pg.ancla ?? 'precio'}`, items: [{ kind: 'whatsapp', label: p.compartir, href: `https://wa.me/?text=${encodeURIComponent(mensaje)}` }] },
     };
 }

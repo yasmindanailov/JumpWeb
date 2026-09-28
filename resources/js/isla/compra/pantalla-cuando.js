@@ -141,10 +141,15 @@ export function pantallaCuando(e) {
     const resumen = fila && b.dia
         ? [fila.name, `${diaCorto(b.dia, locale)}${b.hora ? `, ${horaCorta(b.hora)}` : ''}`, `${b.n} ${b.n === 1 ? unidad.uno : unidad.varios}`].join(' · ')
         : null;
+    const sinContestar = datos.find((d) => d.required && d.valor.trim() === '');
 
     return {
         props,
         listo,
+        // Lo PRIMERO que falta para continuar, por su `id` en la pantalla: a donde la capa lleva la vista (`ir-a.js`, el owner
+        // 28-09) al llegar con la selección hecha y al pulsar «Continuar» sin estar lista. De un dato, su CAMPO.
+        falta: listo ? null : (b.elegirZona && ! b.zona ? 'pjc-q-zona' : ! fila ? null : ! b.dia ? 'pjc-q-dia' : ! b.hora ? 'pjc-q-hora'
+            : (sinContestar ? `pjc-dato-${sinContestar.key}` : null)),
         ck: {
             key: 'cuando',
             stepStrong: '',

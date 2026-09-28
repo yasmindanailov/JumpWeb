@@ -1,7 +1,8 @@
 <script setup>
 /**
  * El − cifra + del selector de cantidad (`QuantityStepper.jsx`, su `controls`): el mismo en la tarjeta y suelto.
- * Pinta y avisa; los topes y los textos los pone `ContadorCantidad`.
+ * Pinta y avisa; los topes y los textos los pone `ContadorCantidad`. La cifra se puede cambiar por otra (ranura `cifra`,
+ * con el valor y su `poner`): la que se escribe, `CifraEscribible` (T6c·3b).
  */
 import IconoLucide from './IconoLucide.vue';
 
@@ -37,10 +38,16 @@ const boton = (activo) => ({
                 :size="18"
             />
         </button>
-        <output
-            aria-live="polite"
-            :style="{ minWidth: conUnidad ? '96px' : '34px', textAlign: 'center', color: 'var(--text-strong)', fontVariantNumeric: 'tabular-nums', fontFamily: conUnidad ? 'var(--font-ui)' : 'var(--font-display)', fontSize: conUnidad ? 'var(--fs-body-sm)' : '1.25rem', fontWeight: conUnidad ? 'var(--fw-bold)' : 'var(--fw-black)' }"
-        >{{ texto }}</output>
+        <slot
+            name="cifra"
+            :valor="valor"
+            :poner="(n) => emit('poner', n)"
+        >
+            <output
+                aria-live="polite"
+                :style="{ minWidth: conUnidad ? '96px' : '34px', textAlign: 'center', color: 'var(--text-strong)', fontVariantNumeric: 'tabular-nums', fontFamily: conUnidad ? 'var(--font-ui)' : 'var(--font-display)', fontSize: conUnidad ? 'var(--fs-body-sm)' : '1.25rem', fontWeight: conUnidad ? 'var(--fw-bold)' : 'var(--fw-black)' }"
+            >{{ texto }}</output>
+        </slot>
         <button
             type="button"
             :aria-label="nombres[1]"
