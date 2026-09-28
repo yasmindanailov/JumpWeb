@@ -183,7 +183,7 @@ final class InstancePages
         }
 
         /** @var string $slug */
-        /** @var array{vista: string, hechos?: list<string>, prioridad?: string|float, frecuencia?: string, portada?: bool, ocupa?: string} $declarada */
+        /** @var array{vista: string, hechos?: list<string>, prioridad?: string|float, frecuencia?: string, portada?: bool, ocupa?: string, sitemap?: bool} $declarada */
         return new InstancePage(
             slug: $slug,
             vista: $declarada['vista'],
@@ -192,6 +192,8 @@ final class InstancePages
             frecuencia: $declarada['frecuencia'] ?? 'weekly',
             // `'portada' => true` es el caso `home` de `ocupa` (`#827` antes que `#832`).
             ocupa: ($declarada['portada'] ?? false) ? 'home' : ($declarada['ocupa'] ?? null),
+            // Fuera del sitemap solo si lo dice con un `false` de verdad (T6c·4b): cualquier otra cosa, dentro.
+            sitemap: ($declarada['sitemap'] ?? true) !== false,
         );
     }
 }

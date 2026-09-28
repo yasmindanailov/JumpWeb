@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { DIAS_PARA_UN_MES, cierreDelDia, mesesDelCalendario, precioDelTramo, tramoCerca, vistaCalculadora } from './vista.js';
+import { DIAS_PARA_UN_MES, cierreDelDia, codificarCalculo, leerCalculo, mesesDelCalendario, precioDelTramo, tramoCerca, vistaCalculadora } from './vista.js';
 
 const NBSP = String.fromCharCode(0xa0);
 const textos = {
@@ -132,7 +132,7 @@ test('la hora de cierre de un día: la de su día especial, si no la de su día 
  */
 const tramos = (mas = 0) => [{ desde: 30, normal: 1500 + mas, especial: 1700 + mas }, { desde: 70, normal: 1300 + mas, especial: 1500 + mas }, { desde: 100, normal: 1200 + mas, especial: 1400 + mas }];
 const colegios = {
-    zona: 'excursiones', zonaNombre: 'Excursiones', nombre: 'Parque', url: 'https://parque.test/colegios',
+    zona: 'excursiones', zonaNombre: 'Excursiones', nombre: 'Parque', url: 'https://parque.test/colegios', ancla: 'calcula',
     filas: [
         { id: 395, tipo: 'pack', label: '2 horas', horas: 2, desde_cents: 1200, min: 30, max: 100, tramos: tramos() },
         { id: 396, tipo: 'pack', label: '3 horas', horas: 3, desde_cents: 1500, min: 30, max: 100, tramos: tramos(300) },
@@ -191,6 +191,52 @@ test('con hora y la línea del servidor: su línea, su total, lo que se paga hoy
     assert.deepEqual([v.resumen.total, v.resumen.listo], [eur(900), true]);
     assert.deepEqual([v.resumen.ahora, v.resumen.luego], [{ label: 'Hoy pagas la señal', value: eur(100) }, { label: 'El día de la visita', value: eur(800) }]);
     assert.equal(v.cuantos.cerca.n, 70);
+});
+
+/**
+ * **El cálculo que se RETOMA** (T6c·4a, `#837`): viaja en el enlace (`?c=`) y se guarda en el dispositivo; al leerlo, lo que
+ * no vale se suelta —una fila ajena, una cantidad fuera de sus topes, un día pasado (y con él la hora)—.
+ */
+test('el cálculo en una cadena, y de vuelta: lo que no vale se suelta', () => {
+    const conPagina = { ...colegios, recordar: 'pj-colegios-calculo' };
+
+    assert.equal(codificarCalculo({ n: 60, fila: 395, dia: '2026-10-20', hora: '10:00:00' }), '60_395_2026-10-20_10:00');
+    assert.equal(codificarCalculo({ n: 60, fila: 395, dia: null, hora: null }), '60_395__');
+    assert.deepEqual(leerCalculo('60_395_2026-10-20_10:00', conPagina, '2026-09-28'), { fila: 395, n: 60, dia: '2026-10-20', hora: '10:00:00' });
+    assert.deepEqual(leerCalculo('75_396__', conPagina, '2026-09-28'), { fila: 396, n: 75, dia: null, hora: null });
+    assert.deepEqual(leerCalculo('60_395_2026-09-01_10:00', conPagina, '2026-09-28'), { fila: 395, n: 60, dia: null, hora: null }, 'un día pasado se suelta, y su hora');
+    for (const malo of ['60_101_2026-10-20_10:00', '20_395__', '101_395__', 'x_395__', '', null]) {
+        assert.equal(leerCalculo(malo, conPagina, '2026-09-28'), null, String(malo));
+    }
+});
+
+test('retomado: el enlace lo lleva dentro, la isla lo dice como suyo y, si su hora se ocupó, se avisa hasta elegir otra', () => {
+    const pagina = { ...colegios, recordar: 'pj-colegios-calculo', textos: { ...colegios.textos, tuya: 'Tu excursión: ', hora_perdida: 'Esa hora ya no está libre. Mira las que quedan.' } };
+    const linea = { unit_price_cents: 1500, subtotal_cents: 90000, total_cents: 90000, has_deposit: true, deposit_cents: 10000, gate_remainder_cents: 80000, addons: [] };
+    const v = vistaCalculadora({
+        pagina, textos: conPack, locale: 'es', hoy: '2026-09-28', precios: diasPack, calcetin: null, horas: [{ time: '10:00:00', available: 100, sellable: true }], linea,
+        cargoCalcetines: null, cierre: '21:30', tocada: true, vuelta: 'enlace', borrador: { fila: 395, dia: '2026-10-05', hora: '10:00:00', n: 60, cal: 0 },
+    });
+
+    assert.equal(v.compartir.value, 'https://parque.test/colegios?c=60_395_2026-10-05_10%3A00#calcula');
+    assert.ok(decodeURIComponent(v.compartir.items[0].href).endsWith('https://parque.test/colegios?c=60_395_2026-10-05_10%3A00#calcula'), 'y el mensaje de WhatsApp');
+    assert.equal(v.isla.elegido, `Tu excursión: lun 5 · 10:00 · 60 alumnos · ${eur(900)}`);
+    const perdida = vistaCalculadora({
+        pagina, textos: conPack, locale: 'es', hoy: '2026-09-28', precios: diasPack, calcetin: null, horas: [], linea: null, cargoCalcetines: null, cierre: '21:30',
+        tocada: true, vuelta: 'guardado', perdida: true, borrador: { fila: 395, dia: '2026-10-05', hora: null, n: 60, cal: 0 },
+    });
+    assert.equal(perdida.hora.perdida, 'Esa hora ya no está libre. Mira las que quedan.');
+    assert.equal(deColegios().compartir.value, 'https://parque.test/colegios#calcula', 'sin tocar, el enlace va limpio');
+});
+
+test('con la HOJA de la página (T6c·4b), su descarga: con el cálculo solo si hay línea del servidor; sin hoja, nada', () => {
+    const pagina = { ...colegios, recordar: 'pj-colegios-calculo', hoja: 'https://parque.test/colegios-propuesta', textos: { ...colegios.textos, descargar: 'Descargar la propuesta', descargar_calculo: 'Descargar la propuesta con este cálculo' } };
+    const linea = { unit_price_cents: 1500, subtotal_cents: 90000, total_cents: 90000, addons: [] };
+    const con = (cambios) => vistaCalculadora({ pagina, textos: conPack, locale: 'es', hoy: '2026-09-28', precios: diasPack, calcetin: null, horas: [{ time: '10:00:00', available: 100, sellable: true }], cargoCalcetines: null, cierre: '21:30', tocada: true, linea: null, ...cambios, borrador: { fila: 395, dia: '2026-10-05', hora: '10:00:00', n: 60, cal: 0 } });
+
+    assert.deepEqual(con({ linea }).compartir.items[1], { kind: 'link', label: 'Descargar la propuesta con este cálculo', href: 'https://parque.test/colegios-propuesta?c=60_395_2026-10-05_10%3A00&imprimir=1' });
+    assert.deepEqual(con({}).compartir.items[1], { kind: 'link', label: 'Descargar la propuesta', href: 'https://parque.test/colegios-propuesta?imprimir=1' });
+    assert.equal(deColegios().compartir.items.length, 1, 'sin hoja declarada, solo WhatsApp');
 });
 
 test('las entradas no cambian: sin señal, sin tramos, sin contador escribible y con la nota del QR', () => {

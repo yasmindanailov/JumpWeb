@@ -3,9 +3,9 @@
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
-> **820–849** (dada de alta en `DECISIONES.md` el 27-09; centena `decisiones/800-899.md`) · Último usado: **`#840`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#840`) · Actualizado: **2026-09-28**
-> (la PORTADA ✅ y CUMPLEAÑOS ✅, `#832`→`#836`; COLEGIOS en marcha: `#837`→`#840`, T6c·1→T6c·3 ✅).
+> **820–849** (dada de alta en `DECISIONES.md` el 27-09; centena `decisiones/800-899.md`) · Último usado: **`#841`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#841`) · Actualizado: **2026-09-28**
+> (la PORTADA ✅ y CUMPLEAÑOS ✅, `#832`→`#836`; COLEGIOS en marcha: `#837`→`#841`, T6c·1→T6c·3 ✅, T6c·4 hecha).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
 > llévaselo con la medida, como el SPA en `#724`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -41,13 +41,12 @@
 ▶▶▶▶ **27-09 noche · EL ORDEN HASTA LA v2.0.0** (`#789`, del owner). **HECHO, con el ✅ del owner**: (0) la primera
 pantalla, (1) la conversión del zip tercero y (2) la T5, Mi cuenta, ENTERA (spec §4.13–§4.16, con lo medido de cada tanda).
 ▶ **EN MARCHA: (3) T6** (spec §4.17). ✅ con el ojo del owner: la PORTADA (`#827`→`#831`, `sonda-portada.mjs`) y
-CUMPLEAÑOS (`#832`→`#836`, §4.18, `sonda-cumpleanos.mjs`). ▶ **EN MARCHA: la T6c, Colegios** (spec §4.19; `#837`: la
-hoja para dirección AHORA, solo WhatsApp, el cálculo que se retoma, sin «avísame»; un profesor gratis por cada 15, sin plazo
-de cambio hasta que el panel lo tenga). **T6c·1 ✅** y **T6c·2 ✅** con el ojo del owner (`#838`: en LOCAL, 91 plantillas
-INFERIDAS para `excursiones`; `availability_days` y `Cache::flexible`). **T6c·3a y T6c·3b ✅** (`#839`: los datos del centro
-en la pantalla 0; la calculadora = la de entradas con los packs y su escalera; `#840`: la capa va a lo que falta). **Sigue la
-T6c·4** (la hoja A4 con QR y el cálculo que se retoma, `#837`) y la T6c·5; pendientes: la escalera no marca el tramo elegido
-(el mockup sí) y la vuelta de Google con una excursión, sin verificar.
+CUMPLEAÑOS (`#832`→`#836`, §4.18, `sonda-cumpleanos.mjs`). ▶ **EN MARCHA: la T6c, Colegios**: T6c·1→T6c·4 ✅ con el ojo
+del owner (spec §4.19, `#837`→`#841`; instancia `ce20609`; en LOCAL, 91 plantillas INFERIDAS para `excursiones`). **Sigue
+la T6c·5**: versionar `scripts/sonda-colegios.mjs` desde las CUATRO de un solo uso que pasan a 390 y 1280 (en esta máquina,
+`storage/app/audit/`, ignoradas: `compra-excursion`, `calculadora-colegios`, `calculo-retomado`, `hoja-colegios`), con su
+mutación; después, Visítanos (T6d). Pendientes: la escalera no marca el tramo elegido (el mockup sí) y la vuelta de Google
+con una excursión, sin verificar. ⚠️ La entrada `isla/hoja/montar.js` NO importa nada compartido (`#841`).
 ⚠️ `sonda-portada` 13/14 («Reservar» de la isla tras «Míralo», 17:17): igual con el `HEAD` (control): investigar aparte. La ISLA la
 repiensa el owner con Claude Design: no atar nada nuevo a ella. **Para iterar con el owner** (no
 ahora): la isla «muy sola» y el «Reservar» solo en la isla del móvil (A/B propuesto: las páginas de la instancia aún no
@@ -146,7 +145,8 @@ hay formulario (`#839`); pasarlos a la reserva es dato del panel. Y:
   el cuándo) · el **ojo** que le falta a la compra de la T5 de F4 y a las promociones.
   ▶ Contestadas y retiradas de aquí: la vía A (los platos, 23-09), cuándo se despliega (`#670`), el dinero en la API
   (`#677`), la analítica (`#678`), el modelo de las promociones (`#770`), caras y fotos de las reseñas (`#771`) y, el
-  27-09, los `topics` (dato de cada instalación), `/contacto`, la Ómnibus, `Medir` y el reparto (`#789`).
+  27-09, los `topics` (dato de cada instalación), `/contacto`, la Ómnibus, `Medir` y el reparto (`#789`); el 28-09, «Tus
+  datos» con sesión: SE QUEDA (solo si la cuenta nunca firmó o le falta el teléfono en un pack, `#785`).
 
 ## Ficheros de este carril
 

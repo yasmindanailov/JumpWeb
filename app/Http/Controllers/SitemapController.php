@@ -51,8 +51,9 @@ class SitemapController extends Controller
         // Las páginas que declara el paquete de la instancia (T4b, `specs/isla-y-landing-nueva.md` §4.2), con la
         // prioridad y la frecuencia que ella declara. Solo las que tienen ruta de verdad: una que pisaba una ruta del
         // producto se descartó al registrarlas, y aquí tampoco entra.
+        // Y la que se declara fuera (`'sitemap' => false`, T6c·4b: la hoja para imprimir), fuera.
         foreach ($paginas->todas() as $pagina) {
-            if (Route::has($pagina->ruta())) {
+            if ($pagina->sitemap && Route::has($pagina->ruta())) {
                 $entries[] = [$pagina->ruta(), $pagina->prioridad, $pagina->frecuencia, $catalog];
             }
         }

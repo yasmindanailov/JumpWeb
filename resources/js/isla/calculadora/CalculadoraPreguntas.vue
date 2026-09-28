@@ -15,7 +15,7 @@ import IconoLucide from '../ui/IconoLucide.vue';
 import SelectorHoras from '../ui/SelectorHoras.vue';
 import TarjetasOpcion from '../ui/TarjetasOpcion.vue';
 import PreguntaCalculadora from './PreguntaCalculadora.vue';
-import { CIFRA, ECO, PISTA } from './estilos.js';
+import { AVISO, AVISO_ICONO, CIFRA, ECO, PISTA } from './estilos.js';
 
 defineProps({ v: { type: Object, required: true } });
 const emit = defineEmits(['cambiar']);
@@ -41,6 +41,7 @@ const cambiar = (campo, valor) => emit('cambiar', campo, valor);
         <span v-if="v.dia.eco" :style="ECO"><IconoLucide name="check" :size="16" /><span>{{ v.dia.eco.antes }}<span :style="CIFRA">{{ v.dia.eco.cifra }}</span>{{ v.dia.eco.despues }}</span></span>
     </PreguntaCalculadora>
     <PreguntaCalculadora id="p3-hora" :titulo="v.hora.titulo" :ultima="! v.calcetines">
+        <p v-if="v.hora.perdida" role="status" :style="AVISO"><span :style="AVISO_ICONO"><IconoLucide name="clock-alert" :size="16" /></span><span>{{ v.hora.perdida }}</span></p>
         <SelectorHoras v-if="v.hora.horas" :model-value="v.hora.valor" :slots="v.hora.horas" :dia="v.dia.valor" counts="low" columns="repeat(auto-fill, minmax(96px, 1fr))" @update:model-value="cambiar('hora', $event)" />
         <p v-else :style="PISTA">{{ v.hora.espera }}</p>
         <span v-if="v.hora.eco" :style="ECO"><IconoLucide name="clock" :size="16" /><span :style="CIFRA">{{ v.hora.eco }}</span></span>

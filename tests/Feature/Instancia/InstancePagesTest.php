@@ -304,6 +304,26 @@ BLADE);
     }
 
     /**
+     * **Una página que se declara fuera del sitemap** (`'sitemap' => false`, T6c·4b: la hoja para imprimir de colegios) se
+     * sirve igual y no se lista; solo un `false` de verdad la saca.
+     */
+    public function test_a_page_declared_out_of_the_sitemap_is_served_and_not_listed(): void
+    {
+        $this->declarar([
+            'kids' => ['vista' => 'kids', 'hechos' => []],
+            'hoja' => ['vista' => 'kids', 'hechos' => [], 'sitemap' => false],
+            'jump' => ['vista' => 'kids', 'hechos' => [], 'sitemap' => 'no'],
+        ]);
+
+        $this->get('/hoja')->assertOk();
+        $xml = (string) $this->get('/sitemap.xml')->assertOk()->getContent();
+
+        $this->assertStringNotContainsString('<loc>'.route('instancia.hoja').'</loc>', $xml);
+        $this->assertStringContainsString('<loc>'.route('instancia.kids').'</loc>', $xml, 'el control: las demás, dentro');
+        $this->assertStringContainsString('<loc>'.route('instancia.jump').'</loc>', $xml, 'un «no» no es un `false`');
+    }
+
+    /**
      * **Una página puede pedir las FICHAS del catálogo, con el mismo JSON que la API** (T4c·8, `#763`). El precio de un
      * complemento («2 € el par» de calcetines) no está en ninguna lista: vive en la ficha de cada producto
      * (`GET /catalog/products/{id}`, `addons[].price_cents`). `product_details` las trae todas, en el orden del

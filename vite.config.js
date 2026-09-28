@@ -22,6 +22,8 @@ export default defineConfig({
                 'resources/js/isla/calculadora/montar.js',
                 // T6b·3 — la calculadora de la FIESTA (`#836`): su entrada, para que Kids y Jump no carguen la fiesta.
                 'resources/js/isla/calculadora/montarFiesta.js',
+                // T6c·4b — la HOJA para dirección de colegios: las cifras del grupo, del servidor (`isla/hoja/montar.js`).
+                'resources/js/isla/hoja/montar.js',
                 // La FIESTA del sistema nuevo (`specs/fiesta-sistema-nuevo.md` §4.5, carril del SPA): la lista de
                 // invitados, con su hoja `fiesta.css` (roles neutros + piezas). La carga `<x-pagina-enfocada>`; no
                 // entra en el chunk del cajón ni en `app.js`.

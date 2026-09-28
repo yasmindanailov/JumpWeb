@@ -16,6 +16,8 @@ final readonly class InstancePage
      * @param  ?string  $ocupa  la RUTA DEL PRODUCTO que ocupa, sin ruta propia (`#827`, `#832`): `home` —la portada, que
      *                          pintan `/` y sus puertas— o una de {@see InstancePages::OCUPABLES}, cuyo controlador le
      *                          cede el sitio (`cumpleanos`, T6b de `isla-y-landing-nueva.md` §4.18)
+     * @param  bool  $sitemap  si entra en el sitemap (`'sitemap' => false`, T6c·4b: la hoja para imprimir de colegios no es
+     *                         una página que buscar; la vista dice además `noindex`)
      */
     public function __construct(
         public string $slug,
@@ -24,6 +26,7 @@ final readonly class InstancePage
         public string $prioridad,
         public string $frecuencia,
         public ?string $ocupa = null,
+        public bool $sitemap = true,
     ) {}
 
     /** El nombre de su ruta. */

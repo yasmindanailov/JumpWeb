@@ -14,7 +14,7 @@
  * ⚠️ El borrador nace SIN día (`inicio="vacio"` del diseño: un día de fábrica es un día que alguien puede pagar sin
  * haberlo elegido), y elegir una fila que no se vende ese día vacía el día y la hora: el precio no cambia a escondidas.
  */
-import { computed, reactive } from 'vue';
+import { computed, reactive, watch } from 'vue';
 import { api } from '../../sidebar/api.js';
 import { todayIso } from '../../sidebar/cart.js';
 import { useCartStore } from '../../sidebar/stores/cart.js';
@@ -23,7 +23,22 @@ import { useSelectionStore } from '../../sidebar/stores/selection.js';
 import { useTimeStore } from '../../sidebar/stores/time.js';
 import { calcetinDe, cargarDiasDeFilas, horaDelMotor, horaQueCabe } from '../compra/oferta.js';
 import { cargarCargo } from './cargo.js';
-import { cierreDelDia, vistaCalculadora } from './vista.js';
+import { cierreDelDia, codificarCalculo, leerCalculo, vistaCalculadora } from './vista.js';
+
+/**
+ * **El cálculo que se RETOMA** (T6c·4a, `#837`; solo si la página lo pide con `recordar`, la clave del dispositivo): el del
+ * enlace (`?c=`) o, si no, el guardado en este dispositivo. ⚠️ El almacén puede no estar (modo privado): sin él, nada.
+ */
+function retomar(pagina, hoy) {
+    if (! pagina.recordar) return null;
+    const leer = (fn) => { try { return fn(); } catch { return null; } };
+    const delEnlace = leerCalculo(leer(() => new URLSearchParams(window.location.search).get('c')), pagina, hoy);
+
+    if (delEnlace) return { calculo: delEnlace, origen: 'enlace' };
+    const guardado = leerCalculo(leer(() => window.localStorage.getItem(pagina.recordar)), pagina, hoy);
+
+    return guardado ? { calculo: guardado, origen: 'guardado' } : null;
+}
 
 export function useCalculadora({ pagina, textos, locale, owner = null }) {
     const catalogStore = useCatalogStore();
@@ -31,9 +46,17 @@ export function useCalculadora({ pagina, textos, locale, owner = null }) {
     const selectionStore = useSelectionStore();
     const cartStore = useCartStore();
     const hoy = todayIso();
+    const retomado = retomar(pagina, hoy);
+    // `vuelta`: de dónde se retomó (hasta que se toque algo); `perdida`: su hora ya no estaba libre y se soltó.
     const e = reactive({
-        borrador: { fila: pagina.filas[0]?.id ?? null, dia: null, hora: null, n: Number(pagina.textos.inicio?.personas) || 1, cal: 0 },
-        precios: {}, cargoCalcetines: null, pendientes: 0, tocada: false, abriendo: false,
+        borrador: { fila: pagina.filas[0]?.id ?? null, dia: null, hora: null, n: Number(pagina.textos.inicio?.personas) || 1, cal: 0, ...(retomado?.calculo ?? {}) },
+        precios: {}, cargoCalcetines: null, pendientes: 0, tocada: Boolean(retomado), abriendo: false, vuelta: retomado?.origen ?? null, perdida: false,
+    });
+
+    // Cada cambio de un cálculo tocado, al dispositivo (`recordar`): quien vuelve, lo encuentra como lo dejó.
+    watch(() => codificarCalculo(e.borrador), (texto) => {
+        if (! pagina.recordar || ! e.tocada) return;
+        try { window.localStorage.setItem(pagina.recordar, texto); } catch { /* sin almacén */ }
     });
 
     let cola = Promise.resolve();
@@ -103,7 +126,15 @@ export function useCalculadora({ pagina, textos, locale, owner = null }) {
         cartStore.setLines(cartStore.restore(hoy).lines);
         arrancada = enCola(async () => {
             e.precios = await cargarDiasDeFilas({ api, ids: pagina.filas.map((f) => f.id) });
+            const b = e.borrador;
+
+            // Un cálculo retomado cuyo día ya no se vende: sin día ni hora (quien llega elige otro).
+            if (b.dia && ! (e.precios[b.fila] ?? []).some((d) => d.date === b.dia)) Object.assign(b, { dia: null, hora: null });
+            const horaRetomada = retomado ? b.hora : null;
+
             await cargarFila();
+            // Y si su HORA ya no cabe, `cargarHoras` la soltó: se dice (T6c·4a, el diseño: «Esa hora ya no está libre»).
+            if (horaRetomada && b.dia && ! b.hora) e.perdida = true;
         });
 
         return arrancada;
@@ -114,7 +145,8 @@ export function useCalculadora({ pagina, textos, locale, owner = null }) {
         const b = e.borrador;
 
         arrancar();
-        e.tocada = true;
+        // Tocado, deja de ser «el retomado»; con otro día u otra hora, el aviso de la perdida sobra.
+        Object.assign(e, { tocada: true, vuelta: null, perdida: e.perdida && campo !== 'dia' && campo !== 'hora' });
 
         if (campo === 'dia') { b.dia = valor; return enCola(cargarHoras); }
         if (campo === 'hora') { b.hora = horaDelMotor(timeStore.offered, valor); return enCola(resolver); }
@@ -163,7 +195,7 @@ export function useCalculadora({ pagina, textos, locale, owner = null }) {
         pagina, textos, locale, hoy, borrador: e.borrador, precios: e.precios, horas: timeStore.offered, linea: selectionStore.line,
         cargoCalcetines: e.cargoCalcetines, calcetin: calcetinActual(), minimo: catalogStore.minQuantity,
         maximo: e.borrador.hora ? timeStore.maxQuantity : null, cierre: cierreDelDia(pagina.cierres, e.borrador.dia), pendiente: e.pendientes > 0,
-        tocada: e.tocada, abriendo: e.abriendo,
+        tocada: e.tocada, abriendo: e.abriendo, vuelta: e.vuelta, perdida: e.perdida,
     }));
 
     /** «Reservar para hoy» desde la isla o la página (el `pedirHoy` del diseño): hoy elegido; queda la hora. */
@@ -172,5 +204,6 @@ export function useCalculadora({ pagina, textos, locale, owner = null }) {
     /** Un día con hueco de la página (colegios, «Próximos días con hueco», T6c·3b): elegido aquí; queda la hora. */
     const elegirDia = (dia) => cambiar('dia', dia);
 
-    return { vista, arrancar, cambiar, reservar, elegirHoy, elegirDia };
+    // `retomada`: quien monta la arranca en el acto (hay un cálculo que enseñar con sus días y sus horas).
+    return { vista, arrancar, cambiar, reservar, elegirHoy, elegirDia, retomada: Boolean(retomado) };
 }

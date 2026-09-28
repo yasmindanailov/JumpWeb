@@ -1932,6 +1932,26 @@ T6c·5 la sonda y el ojo del owner.
   «Tus datos» ya enfocaba su primer error. **Medido**: `test:js` 1.563; en vivo, a 390 y 1280, la compra abierta desde la
   calculadora queda en «Nombre del centro» enfocado y «Continuar» lleva al siguiente vacío; sin regresión
   `sonda-compra-directa` 16/16, `sonda-cumpleanos` 20/20, `sonda-calculadora`. La compra, 163,66 (techo 164).
+- ✅ **T6c·4a (28-09) · el CÁLCULO QUE SE RETOMA** (`#837`), con el ojo del owner («buen trabajo»). La calculadora, si la página lo pide (`recordar`: la clave del
+  dispositivo), guarda cada cambio y pone el cálculo en el enlace que comparte (`?c=60_395_2026-10-20_10:00`:
+  `codificarCalculo`/`leerCalculo`, lo que no vale se suelta); al montar, lo del enlace o lo guardado, y arranca en el acto;
+  si su hora ya no cabe, la suelta y lo dice («Esa hora ya no está libre. Mira las que quedan.», el aviso del sistema en
+  pequeño), y la isla dice lo elegido como suyo («Tu excursión: …»). Solo Colegios lo pide. Calculadora, 184,94 (techo 185).
+- ✅ **T6c·4b (28-09, `#841`) · LA HOJA PARA DIRECCIÓN**, con el ojo del owner: `/colegios-propuesta` (una página de un segmento; fuera del
+  sitemap —`'sitemap' => false`, opción nueva de `InstancePage`— y `noindex`), el A4 del diseño en px (794 × 1123: se
+  imprime y se pinta en miniatura), con los datos de la página (los cuidados de la 4, lo que incluye, la escalera, los pasos,
+  el contacto) y el QR (`<x-qr>`, mecanismo nuevo del producto sobre `QrCode::svg`) que abre Colegios con el cálculo. Con
+  `?c=`, las cifras del GRUPO (alumnos, por alumno, total y cuándo) las escribe `isla/hoja/montar.js` con la línea del
+  SERVIDOR; sin respuesta, las generales. «Guardar en PDF o imprimir» y `?imprimir=1` (imprime sola): el PDF, del navegador.
+  En la página: la miniatura de verdad en la pieza 5 (la misma hoja con `zoom`, sin su `h1`), «Ver la hoja», «Enviar por
+  WhatsApp» y «Descargarla»; «¿Lo decide dirección? Descarga la propuesta» en la 9; y «Descargar la propuesta con este
+  cálculo» en la fila de compartir de la calculadora. ⚠️ **La entrada de la hoja NO importa nada compartido, y medido**: con
+  `api.js` y las vistas de la compra y la calculadora, Vite reagrupaba los trozos y el motor (299,12), la compra (164,14) y
+  la calculadora pasaban de su techo sin tocarlos (control: sin la entrada, bajo el techo); lleva COPIAS mínimas de tres
+  reglas, que `montar.test.js` compara con las originales. **Medido**: `QrComponentTest` 2, `InstancePagesTest` +1 (el
+  sitemap), `SidebarBundleBudgetTest` +1 (la hoja: 14,98, techo 16; la calculadora a 186), `test:js` 1.569; en vivo, la hoja
+  con cálculo (75 alumnos, 13 € y 975 €, del servidor), un A4 de 794 × 1123 con el pie dentro, el PDF en UNA página, sin
+  cálculo las cifras generales, la miniatura a 1280 y 390 sin salirse, una sola `h1`, y la descarga desde la calculadora.
 
 ## 5. Impacto en invariantes
 

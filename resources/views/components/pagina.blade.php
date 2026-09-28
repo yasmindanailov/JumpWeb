@@ -19,11 +19,12 @@
     // nombra ficheros del producto, y un nombre que no está aquí no carga nada. `cajon`: el cargador del paquete (la
     // compra se abre en la isla o en el lateral, según `sidebar.shell`); `calculadora`: la de la pieza de precio;
     // `calculadora-fiesta`: la de la fiesta (T6b·3, `#836`); `isla`: la isla EN REPOSO de la página (T4e), con lo que la
-    // página le da en `isla`.
+    // página le da en `isla`; `hoja`: las cifras del grupo en la hoja para imprimir (T6c·4b).
     $entradas = array_values(array_intersect_key([
         'cajon' => 'resources/js/cajon/paquete.js',
         'calculadora' => 'resources/js/isla/calculadora/montar.js',
         'calculadora-fiesta' => 'resources/js/isla/calculadora/montarFiesta.js',
+        'hoja' => 'resources/js/isla/hoja/montar.js',
         'isla' => 'resources/js/isla/pagina/montar.js',
     ], array_flip($scripts)));
     // La isla de la página (T4e): lo que da la página —su tipo, su acción, su «desde», hoy, el menú, el contacto— más lo

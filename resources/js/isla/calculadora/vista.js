@@ -81,6 +81,28 @@ export function tramoCerca(fila, n, especial = false) {
     return cents === null ? null : { n: siguiente.desde, cents };
 }
 
+/**
+ * **EL CÁLCULO QUE SE RETOMA** (T6c·4a, `#837`: la excursión la aprueba otro días después): el borrador en una cadena que
+ * viaja en el enlace (`?c=`) y se guarda en el dispositivo —`60_395_2026-10-20_10:00`: cuántos, la fila, el día y la hora—.
+ */
+export const codificarCalculo = (b) => [b.n, b.fila, b.dia ?? '', horaCorta(b.hora) ?? ''].join('_');
+
+/**
+ * Lee un cálculo guardado o del enlace para ESTA página, o `null`. Lo que no vale se suelta: una fila que no es suya, una
+ * cantidad fuera de sus topes, un día pasado o mal escrito (y con él, la hora). Si la hora sigue libre lo dice después el
+ * motor, al cargar las del día.
+ */
+export function leerCalculo(texto, pagina, hoy) {
+    const [n, fila, dia, hora] = String(texto ?? '').split('_');
+    const suya = (pagina?.filas ?? []).find((f) => String(f.id) === fila);
+    const cuantos = Number.parseInt(n, 10);
+
+    if (! suya || ! Number.isInteger(cuantos) || cuantos < (suya.min ?? 1) || cuantos > (suya.max ?? Infinity)) return null;
+    const elDia = /^\d{4}-\d{2}-\d{2}$/.test(dia ?? '') && dia >= hoy ? dia : null;
+
+    return { fila: suya.id, n: cuantos, dia: elDia, hora: elDia && /^\d{2}:\d{2}$/.test(hora ?? '') ? `${hora}:00` : null };
+}
+
 /** Las cantidades del resumen como las escribe la página: en letra hasta donde llegue su lista («para dos»). */
 function enLetra(n, numeros) {
     return (Array.isArray(numeros) && numeros[n]) || String(n);
@@ -137,7 +159,9 @@ export function vistaCalculadora(e) {
 
         return b.dia ? euros(cents, locale) : tp('desde', { precio: euros(f.desde_cents, locale) });
     };
-    const mensaje = `${pp('mensaje', { nombre: pg.nombre, zona: pg.zonaNombre })}${seleccion}${total ? ` · ${total}` : ''} · ${pg.url}${p.compartirNota ? `\n${p.compartirNota}` : ''}`;
+    // Con el cálculo que se retoma (`recordar`, T6c·4a), el enlace lo lleva dentro (`?c=`) y abre la pieza (su ancla).
+    const enlace = pg.recordar && e.tocada ? `${pg.url}?c=${encodeURIComponent(codificarCalculo(b))}#${pg.ancla ?? 'precio'}` : pg.url;
+    const mensaje = `${pp('mensaje', { nombre: pg.nombre, zona: pg.zonaNombre })}${seleccion}${total ? ` · ${total}` : ''} · ${enlace}${p.compartirNota ? `\n${p.compartirNota}` : ''}`;
     const ultimo = dias.length ? dias[dias.length - 1].date.slice(0, 7) : null;
     const vistaMes = mesesDelCalendario(dias, { hoy: e.hoy, dia: b.dia });
 
@@ -162,6 +186,8 @@ export function vistaCalculadora(e) {
         hora: {
             titulo: p.preguntas[3], horas, valor: h, espera: tp('espera_hora'),
             eco: h ? (fila.horas ? tp('eco_hora', { desde: h, hasta: reloj(minutos(h) + fila.horas * 60) }) : tp('eco_hora_cierre', { desde: h, cierre: e.cierre ?? '' })) : null, regla: p.tiempo,
+            // El cálculo retomado cuya hora ya no está libre (T6c·4a): se soltó y se dice, hasta elegir otra.
+            perdida: e.perdida && ! h ? (p.hora_perdida ?? '') : '',
         },
         calcetines: e.calcetin ? {
             titulo: p.preguntas[4], sub: p.calcetines.sub, label: c.calcetines, sublabel: b.cal ? '' : c.sin_calcetines, n: b.cal, max: e.calcetin.max_quantity ?? 40,
@@ -181,7 +207,21 @@ export function vistaCalculadora(e) {
         // Lo que la calculadora le cuenta a la ISLA de la página (T4e, el `onCalculo` de `pagina.jsx` del diseño): qué
         // pregunta falta y, con todo elegido, lo elegido en corto con el total DEL SERVIDOR («Sáb 26 · 17:00 · 3 niños ·
         // 24 €»). Solo cuenta si alguien la ha tocado (`tocada`): los valores de partida no son un cálculo.
-        isla: e.tocada ? { falta: ! b.dia ? 'dia' : ! h ? 'hora' : '', elegido: linea ? `${mayuscula(diaCorto(b.dia, locale))} · ${h} · ${quien(b.n)} · ${total}` : null, boton: p.boton } : null,
-        compartir: { value: `${pg.url}#${pg.ancla ?? 'precio'}`, items: [{ kind: 'whatsapp', label: p.compartir, href: `https://wa.me/?text=${encodeURIComponent(mensaje)}` }] },
+        // Retomado (del enlace o del dispositivo), lo elegido lo dice como SUYO («Tu excursión: …», el diseño).
+        isla: e.tocada ? {
+            falta: ! b.dia ? 'dia' : ! h ? 'hora' : '', boton: p.boton,
+            elegido: linea ? `${e.vuelta && p.tuya ? p.tuya : ''}${e.vuelta && p.tuya ? diaCorto(b.dia, locale) : mayuscula(diaCorto(b.dia, locale))} · ${h} · ${quien(b.n)} · ${total}` : null,
+        } : null,
+        compartir: {
+            value: pg.recordar && e.tocada ? enlace : `${pg.url}#${pg.ancla ?? 'precio'}`,
+            items: [
+                { kind: 'whatsapp', label: p.compartir, href: `https://wa.me/?text=${encodeURIComponent(mensaje)}` },
+                // La HOJA de la página (T6c·4b: la propuesta para dirección), con este cálculo si está hecho; se abre e imprime.
+                ...(pg.hoja ? [{
+                    kind: 'link', label: linea ? (p.descargar_calculo ?? p.descargar) : p.descargar,
+                    href: `${pg.hoja}?${linea && pg.recordar ? `c=${encodeURIComponent(codificarCalculo(b))}&` : ''}imprimir=1`,
+                }] : []),
+            ],
+        },
     };
 }

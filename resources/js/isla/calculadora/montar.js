@@ -54,7 +54,7 @@ export function montarCalculadora(sitio, { textos = {}, owner = null, locale = '
     app.provide(CLAVE_TEXTOS, () => textos);
     app.mount(sitio);
 
-    return { app, lado, ancla: pagina.ancla ?? 'precio', arrancar: () => calculadora.arrancar() };
+    return { app, lado, ancla: pagina.ancla ?? 'precio', retomada: calculadora.retomada, arrancar: () => calculadora.arrancar() };
 }
 
 /** Lo del motor que da el layout, o lo mínimo si no está. */
@@ -73,7 +73,8 @@ export function montarYArrancarAlAcercarse({ doc = document, win = window } = {}
 
     if (! montada) return null;
     // Se llega a la pieza (su ancla: `#precio` en Kids y Jump; la que declare la página, `#calcula` en colegios): en el acto.
-    if (win.location.hash === `#${montada.ancla}` || typeof win.IntersectionObserver !== 'function') {
+    // Con un cálculo retomado (T6c·4a), también: hay días y horas que enseñar con lo que se eligió.
+    if (win.location.hash === `#${montada.ancla}` || montada.retomada || typeof win.IntersectionObserver !== 'function') {
         montada.arrancar();
         return montada;
     }

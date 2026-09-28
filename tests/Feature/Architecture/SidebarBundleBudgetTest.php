@@ -967,12 +967,21 @@ class SidebarBundleBudgetTest extends TestCase
     // T6c·3b: la misma calculadora es la de COLEGIOS —los packs por filas con su escalera por alumno, el tramo cercano, la
     // señal y el resto, los días de la página que la eligen y la cifra que se escribe (`CifraEscribible`, en su ranura: en el
     // control común viajaba también con la compra)—. Medido 183,15 (en `20c88c90` pasaba bajo 183). El techo, a 184.
-    private const CALCULADORA_MAX_KB = 184;
+    // T6c·4a: el cálculo que se RETOMA (del enlace `?c=` y del dispositivo, con el aviso de la hora que se ocupó), solo en la
+    // página que lo pide (`recordar`). Medido 184,94. El techo, a 185.
+    // T6c·4b: «Descargar la propuesta (con este cálculo)» en su fila de compartir, si la página declara su hoja. Medido
+    // 185,09. El techo, a 186. (La hoja, entrada aparte y SIN importar nada compartido: importándolo, reagrupaba los trozos
+    // y el motor, la compra y esta calculadora pasaban de su techo sin tocarlos —control: sin la hoja, bajo el techo—.)
+    private const CALCULADORA_MAX_KB = 186;
 
     // La calculadora de la FIESTA (T6b·3, `#836`): su entrada propia, con lo que comparte con la de entradas (Vue, Pinia,
     // los stores de la oferta, el calendario y sus piezas) y lo suyo (la vista, el composable y `FilaMejora`). Medido al
     // nacer: 191,87 (con la de entradas en 183: trae además la regla de la edad de `compra/fiesta.js`). El techo, a 193.
     private const CALCULADORA_FIESTA_MAX_KB = 193;
+
+    // La HOJA para dirección de colegios (T6c·4b): escribe las cifras del grupo con la línea del servidor (`api.js`,
+    // `leerCalculo`, los formatos de la compra). Sin Vue ni motor. Medida al nacer: 14,98. El techo, a 16.
+    private const HOJA_MAX_KB = 16;
 
     // T4e (`specs/isla-y-landing-nueva.md` §4.12): la ISLA EN REPOSO de una página, entrada propia que la página pide
     // (`isla` en `scripts` de `<x-pagina>`) y que se monta al cargar. Su descarga ENTERA, como la del navegador que llega
@@ -1423,6 +1432,24 @@ class SidebarBundleBudgetTest extends TestCase
         $this->assertLessThanOrEqual(self::CALCULADORA_MAX_KB, $kb, sprintf(
             'La calculadora de la página pesa %.2f kB (techo: %s kB).', $kb, self::CALCULADORA_MAX_KB
         ));
+    }
+
+    /**
+     * **La HOJA para dirección es su propia entrada, pequeña** (T6c·4b): una página para imprimir no carga ni Vue ni el motor
+     * del cajón para escribir tres cifras, y su descarga tiene techo.
+     */
+    public function test_the_proposal_sheet_is_its_own_small_entry_without_vue_or_the_engine(): void
+    {
+        $manifest = $this->manifest();
+        $clave = 'resources/js/isla/hoja/montar.js';
+
+        $this->assertArrayHasKey($clave, $manifest, 'La hoja ya no es una entrada propia.');
+        $this->assertTrue((bool) ($manifest[$clave]['isEntry'] ?? false), 'La hoja ya no es una ENTRADA: alguien la importa.');
+        $this->assertNotContains('resources/js/sidebar/index.js', $this->alcanceEstatico($clave), 'La hoja trae el motor entero.');
+        $this->assertNotContains('node_modules/vue/dist/vue.runtime.esm-bundler.js', $this->alcanceEstatico($clave), 'La hoja trae Vue.');
+
+        $kb = $this->descargaDe($clave, []);
+        $this->assertLessThanOrEqual(self::HOJA_MAX_KB, $kb, sprintf('La hoja pesa %.2f kB (techo: %s kB).', $kb, self::HOJA_MAX_KB));
     }
 
     /**
