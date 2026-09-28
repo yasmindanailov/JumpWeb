@@ -1,6 +1,6 @@
 # [SPEC] La analítica para decidir — un cuadro que se entiende, dice si va bien o mal y cubre las decisiones del operador
 
-> Estado: ✅ **aprobada por el owner el 27-09** (§7; `#755`) → ✅ **T0, T1 y T2** · 🟦 **T3** (✅ T3a · ✅ T3b · ✅ T3c · ⬜ T3d·T3e, §4.13) · 🟦 **TP el público** (§4.14: 🟦 TP·1 · ⬜ TP·2 · ⬜ TP·3) · Última actualización: 2026-09-28 ·
+> Estado: ✅ **aprobada por el owner el 27-09** (§7; `#755`) → ✅ **T0, T1 y T2** · 🟦 **T3** (✅ T3a · ✅ T3b · ✅ T3c · ⬜ T3d·T3e, §4.13) · 🟦 **TP el público** (§4.14: ✅ TP·1 · ⬜ TP·2 · ⬜ TP·3) · Última actualización: 2026-09-28 ·
 > Decisiones: `#755` (esta), `#754` (encuestas anónimas, su T1), `#758` (la T2), `#759` (la T3 en cinco tandas), `#792` (el público) · Carril: **SPA** (banda 790–819). Amplía `analitica.md`
 > (el libro, los regímenes y la T2 siguen siendo suyos).
 
@@ -18,7 +18,7 @@
   camino de `EmailUtm` (tras firmar, ignorada al validar); (6) aperturas solo con consentimiento (`[PENDIENTE: asesoría]`).
 - **Estado**: ✅ aprobada (27-09, `#755`); T0a·T0b·T0c ✅ · **T1** ✅ (la T5 de `encuestas.md`, `#754`, `#757`) · **T2** ✅ ocupación (§4.8.ter, `#758`) → **T3** Resumen, en cinco tandas (§4.13,
   `#759`): ✅ T3a la forma · ✅ T3b veredicto (mín–máx, `#790`) · ✅ T3c·1 lo que ha cambiado (`#791`) · ✅ T3c·2 objetivos →
-  ▶ **TP el público** (§4.14, `#792`; 🟦 TP·1 la fecha, en `wip/`, falta el ojo) → T3d.
+  ▶ **TP el público** (§4.14, `#792`; ✅ TP·1 la fecha · ▶ TP·2 quién viene) → T3d.
   **Nada de lo medido se pierde** (§4.1.bis, con guarda): se resume arriba y lo demás queda
   plegado o en su pestaña.
 - **Invariantes**: `RGPD-01`, `RGPD-04`, `RGPD-07`, `SEC-04`, `SUITE-01`. Dinero y aforo: solo lectura.
@@ -716,7 +716,8 @@ el export la lleva en `profile` · la ficha del panel, «Fecha de nacimiento» c
 si su formulario la trae (`runRegister`, `runGoogleSignup`, `profile.apply` solo si la clave viene).
 - **Fuera de la TP·1**: la puerta (la edad en su ficha, si se quiere, va aparte) y cualquier cifra (TP·2).
 
-**TP·1, lo construido (28-09, 🟦 en `wip/tp1-captura`, falta el ojo del owner)**: lo de arriba entero, más la edad de hoy en la ficha
+**TP·1, lo construido (28-09, ✅ vista y aprobada por el owner en vivo: «perfecto, continuamos»; la pantalla tras Google, solo
+por tests —en local no hay Google—; el formulario de la isla, de plataforma por buzón)**: lo de arriba entero, más la edad de hoy en la ficha
 (`User::age()`, la cuenta de un hijo) y la pieza del cajón `steps/BornOnField.vue` (rótulo, `type="date"`, `autocomplete="bday"` y
 la pista «Opcional. Para conocer mejor a nuestro público.», atada con `aria-describedby`). Pruebas: `Api\V1\HolderBirthDateTest` (10:
 las tres puertas de la API, el 18.º cumpleaños a las 00:30 de Madrid, «ausente no cambia», el export), `Admin\Users\

@@ -6,7 +6,7 @@
 > tabla de `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: **`analitica-para-decidir.md`
 > §0** (la tarea en curso, `#755`) · `encuestas.md` §0 y §4.7 (`#754`) · `analitica.md` §0 y §4.5 · `isla-y-landing-nueva.md`
 > §4.11 · `celebracion-e-invitacion.md` §0 · `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 ·
-> `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-09-28 noche (la TP·1 en `wip/tp1-captura`, a la espera del ojo).
+> `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-09-28 noche (la TP·1 en `main` y aprobada; sigue la TP·2).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`). El
 > contador de la suite va en el trailer del commit (`#618`), no aquí. **Se muda, no se raspa**: el detalle de
 > una feature baja a su spec (las trampas por tanda de la analítica T1→T5 viven en `analitica.md` §4.9,
@@ -20,8 +20,8 @@
   periodos anteriores), **T3c·1 «lo que ha cambiado»** (`#791`) y **T3c·2 los objetivos del mes** (el botón al pie de «Resumen», la
   línea en la tarjeta; permiso `analytics.manage`). Lo construido y lo que enseñó cada una: spec §4.13. ▶ **La TP, el
   público** (`#792` `[DECIDIDO owner]` 28-09: la fecha de nacimiento del titular, entera y opcional; los padres por la edad de sus
-  hijos con el opt-in de hoy; §4.14): 🟦 **TP·1 la captura, código completo en `wip/tp1-captura`** (su «al detalle» y lo que enseñó,
-  §4.14; contrato **1.49.0**), falta el OJO del owner y el *fast-forward*; después TP·2.
+  hijos con el opt-in de hoy; §4.14): ✅ **TP·1 la captura, en `main` y APROBADA** (28-09; su «al detalle» y lo que enseñó,
+  §4.14; contrato **1.49.0**) → ▶ **TP·2 «Quién viene»**.
 - ▶ **LA FIESTA DEL SISTEMA NUEVO ES MÍA (`#765`, `[DECIDIDO owner]` 25-09)**: la lista de invitados, la invitación con
   su recibo y la autorización, vestidas con «Saltia» para la v2.0.0, en paralelo con la web pública. El traspaso,
   `isla-y-landing-nueva.md` §4.11; el censo HAY/FALTA, el método y las tandas, `specs/fiesta-sistema-nuevo.md` (§1.4,
@@ -64,10 +64,9 @@
 ## Por dónde retomar, en orden
 
 1. ❗❗❗ **LA ANALÍTICA PARA DECIDIR (`#755`, `specs/analitica-para-decidir.md`)**: ✅ T0a·T0b·T0c · T1 · T2 · T3a · T3b ·
-   T3c·1 · T3c·2, todas en `main` y aprobadas (§4.3–§4.13) → ▶ **TP el público** (§4.14, `#792`): 🟦 **TP·1 en
-   `wip/tp1-captura`** (las CUATRO puertas —la puerta no da de alta—, contrato 1.49.0, arnés `SOLO=TP1`, sondas del panel y
-   del cajón en `storage/app/audit/sonda-tp1-*.mjs`): falta el ojo del owner y el *fast-forward* → TP·2 «Quién viene» en
-   Clientes → TP·3 los padres por
+   T3c·1 · T3c·2 y **TP·1** (la fecha de nacimiento, `#792`; arnés `SOLO=TP1`, sondas `storage/app/audit/sonda-tp1-*.mjs`),
+   todas en `main` y aprobadas (§4.3–§4.14) → ▶ **TP·2 «Quién viene» en Clientes** (§4.14; empieza por su «al detalle»,
+   medido) → TP·3 los padres por
    la edad de sus hijos, `[PENDIENTE: asesoría]` antes de exportar) → T3d el texto para IA (§4.7; lee `Changes` y
    los veredictos; sin PII ni celdas < 5) → T3e el SECTOR (primera búsqueda en §4.13: casi todo son medias, no rangos; AL OWNER
    antes de sembrar) → T4 cartera → T5 marketing y correos → T6 cohortes → T7 pérdidas → T8 satisfacción (§4.12). Los CRUCES de
