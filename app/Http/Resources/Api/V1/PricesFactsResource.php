@@ -5,6 +5,7 @@ namespace App\Http\Resources\Api\V1;
 use App\Domain\Booking\Concerns\ReadsRateFacts;
 use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Services\AddonOccupancy;
 use App\Domain\Booking\Services\GroupRateTables;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -108,6 +109,7 @@ class PricesFactsResource extends JsonResource
                 'unit' => $producto->tr('period_label') ?: null,
                 'prices' => $this->porTarifa($producto),
                 'tiers' => $this->escalera($producto),
+                'stay_extensions' => $this->extensiones($producto),
             ], fn ($valor): bool => $valor !== null && $valor !== []))->values()->all(),
         ];
     }
@@ -141,6 +143,47 @@ class PricesFactsResource extends JsonResource
         }
 
         return count($filas) > 1 ? $filas : [];
+    }
+
+    /**
+     * **Lo que ALARGA la estancia de un producto** (T6b·2, `isla-y-landing-nueva.md` §4.18): sus complementos con forma
+     * de EXTENSOR —la fiesta dura más, `hora-extra.md` §10—, reconocidos por su FORMA y no por su nombre (`CE-4`), con
+     * lo que alarga cada bloque, si se cobra por invitado y su precio en cada tarifa.
+     *
+     * ⚠️⚠️ **Aquí y no en la ficha** (`/catalog/products/{id}.addons`), y es medido: la ficha es la OFERTA DE HOY —su
+     * `price_cents` es el de la tarifa vigente (300 un lunes, 500 un sábado, la misma hora extra) y un complemento sin
+     * precio hoy ni siquiera sale—, así que un «desde» leído de ella cambiaría con el día de la visita y la duda de la
+     * hora extra desaparecería los días que no se vende (`#443`: no se vende el fin de semana). El precio POR TARIFA es
+     * el hecho de esta ruta, y la tarifa que falta dice qué días no se vende.
+     * ⚠️ Si se puede vender como extensor lo decide el dominio (`AddonOccupancy::sellableStayExtension()`), no una
+     * copia: un extensor con la configuración rota no se anuncia, igual que no se vende. Sin ninguno, la clave FALTA.
+     *
+     * @return list<array{id: int, name: string, minutes: int, per_guest: bool, prices: list<array{rate: string, cents: int}>}>
+     */
+    private function extensiones(TicketType $producto): array
+    {
+        $salida = [];
+
+        foreach ($producto->addons as $complemento) {
+            $precios = $this->porTarifa($complemento);
+
+            // Sin precio en ninguna tarifa no se vende ningún día: anunciarlo sería ofrecer lo que el embudo rechaza.
+            if (! AddonOccupancy::sellableStayExtension($complemento) || $precios === []) {
+                continue;
+            }
+
+            $salida[] = [
+                'id' => $complemento->id,
+                'name' => $complemento->tr('name'),
+                // Lo que alarga UN bloque. Por invitado, el bloque es uno para todos: lo que escala es el PRECIO
+                // (`#443`, `AddonOccupancy::blocksFor()`).
+                'minutes' => (int) $complemento->duration_min,
+                'per_guest' => $complemento->addonPivot()?->isPerGuest() ?? false,
+                'prices' => $precios,
+            ];
+        }
+
+        return $salida;
     }
 
     /**

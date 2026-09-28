@@ -120,6 +120,28 @@ class PricesFactsTest extends ApiTestCase
         }
     }
 
+    /**
+     * Un complemento con forma de EXTENSOR —la hora extra de una fiesta, `hora-extra.md` §10— enganchado a ese pack.
+     *
+     * @param  array<string, int>  $precios  céntimos por clave de tarifa
+     */
+    private function extensor(TicketType $pack, string $nombre, array $precios, string $modo = 'per_guest', int $minutos = 60): TicketType
+    {
+        $complemento = TicketType::create([
+            'name' => ['es' => $nombre],
+            'type' => TicketType::TYPE_ADDON,
+            'duration_min' => $minutos,
+            'extends_parent_stay' => true,
+            'is_sellable' => true,
+            'is_active' => true,
+        ]);
+        $this->precios($complemento, $precios);
+        // Por bloques, el dominio le exige un máximo por reserva (`hora-extra.md` §10.5·2), como el panel.
+        $pack->configurableAddons()->attach($complemento->id, ['quantity_mode' => $modo, 'position' => 1, 'max_qty' => 1]);
+
+        return $complemento;
+    }
+
     /** @return array<string, mixed> el producto servido con ese nombre */
     private function servido(string $nombre): array
     {
@@ -493,5 +515,97 @@ class PricesFactsTest extends ApiTestCase
             fn (array $p): bool => isset($p['tiers']),
         ), 'el caso nace sin sujeto: no hay cuatro escaleras');
         $this->assertSame($conUno, $consultas(), 'la escalera consulta por producto');
+    }
+
+    /**
+     * **Lo que alarga una fiesta se reconoce por su FORMA, no por su nombre** (T6b·2, `#834`, `CE-4`): el extensor sale
+     * con lo que alarga y su precio en cada tarifa; un complemento que solo SE LLAMA «hora extra» no sale.
+     */
+    public function test_a_pack_publishes_what_extends_its_stay_recognised_by_its_form(): void
+    {
+        $this->tarifa('normal', 'Lunes a jueves');
+        $this->tarifa('special', 'Viernes y festivos', especial: true);
+        $pack = $this->grupo('Pack cumple', 8, 20, ['normal' => 1495, 'special' => 1695]);
+        $media = $this->extensor($pack, 'Media hora más', ['normal' => 300, 'special' => 500], minutos: 30);
+        $nombre = TicketType::create(['name' => ['es' => 'Hora extra'], 'type' => TicketType::TYPE_ADDON, 'is_sellable' => true, 'is_active' => true]);
+        $this->precios($nombre, ['normal' => 200]);
+        $pack->configurableAddons()->attach($nombre->id, ['quantity_mode' => 'fixed', 'position' => 2]);
+
+        $this->getJson(self::ROOT.'/prices?lang=es')->assertOk()->assertValidRequest()->assertValidResponse(200);
+
+        $this->assertSame([[
+            'id' => $media->id,
+            'name' => 'Media hora más',
+            'minutes' => 30,
+            'per_guest' => true,
+            'prices' => [['rate' => 'normal', 'cents' => 300], ['rate' => 'special', 'cents' => 500]],
+        ]], $this->servido('Pack cumple')['stay_extensions']);
+    }
+
+    /**
+     * **La tarifa en la que no se vende se CALLA** (`#443`: la hora extra no se vende el fin de semana): es lo que le
+     * dice a una landing qué días se puede alargar, sin un «0» que anunciaría una hora gratis.
+     */
+    public function test_a_rate_the_extension_is_not_sold_in_is_omitted(): void
+    {
+        $this->tarifa('normal', 'Lunes a jueves');
+        $this->tarifa('special', 'Viernes y festivos', especial: true);
+        $pack = $this->grupo('Pack cumple', 8, 20, ['normal' => 1495, 'special' => 1695]);
+        $this->extensor($pack, 'Una hora más', ['normal' => 300]);
+
+        $this->assertSame([['rate' => 'normal', 'cents' => 300]], $this->servido('Pack cumple')['stay_extensions'][0]['prices']);
+    }
+
+    /** Enganchada por BLOQUES (cantidad fija), cada bloque se cobra una vez: no es «por niño». */
+    public function test_an_extension_charged_per_block_is_not_per_guest(): void
+    {
+        $this->tarifa('normal', 'Lunes a jueves');
+        $pack = $this->grupo('Pack cumple', 8, 20, ['normal' => 1495]);
+        $this->extensor($pack, 'Una hora más', ['normal' => 300], modo: 'fixed');
+
+        $this->assertFalse($this->servido('Pack cumple')['stay_extensions'][0]['per_guest']);
+    }
+
+    /**
+     * **Lo que no se vende no se anuncia**: un extensor con la configuración ROTA —metida por `Query\Builder::update()`,
+     * que los guardas del modelo no ven— y uno sin precio en ninguna tarifa. Sin ninguno, la clave FALTA.
+     */
+    public function test_a_broken_or_unpriced_extension_is_not_announced(): void
+    {
+        $this->tarifa('normal', 'Lunes a jueves');
+        $pack = $this->grupo('Pack cumple', 8, 20, ['normal' => 1495]);
+        $roto = $this->extensor($pack, 'Rota', ['normal' => 300]);
+        $this->extensor($pack, 'Sin precio', []);
+        DB::table('ticket_types')->where('id', $roto->id)->update(['duration_min' => null]);
+
+        $this->assertArrayNotHasKey('stay_extensions', $this->servido('Pack cumple'));
+    }
+
+    /** Las extensiones se cargan con el resto: cuatro packs con su hora extra consultan lo mismo que uno. */
+    public function test_the_extensions_do_not_query_per_product(): void
+    {
+        $this->tarifa('normal', 'Lunes a jueves');
+        $consultas = function (): int {
+            $this->getJson('/api/v1/prices?lang=es')->assertOk();
+            DB::flushQueryLog();
+            DB::enableQueryLog();
+            $this->getJson('/api/v1/prices?lang=es')->assertOk();
+            DB::disableQueryLog();
+
+            return count(DB::getQueryLog());
+        };
+
+        $this->extensor($this->grupo('Pack 1', 8, 20, ['normal' => 1495]), 'Hora 1', ['normal' => 300]);
+        $conUno = $consultas();
+
+        foreach ([2, 3, 4] as $n) {
+            $this->extensor($this->grupo("Pack {$n}", 8, 20, ['normal' => 1495]), "Hora {$n}", ['normal' => 300]);
+        }
+
+        $this->assertCount(4, array_filter(
+            $this->getJson('/api/v1/prices?lang=es')->json('products'),
+            fn (array $p): bool => isset($p['stay_extensions']),
+        ), 'el caso nace sin sujeto: no hay cuatro packs con hora extra');
+        $this->assertSame($conUno, $consultas(), 'las extensiones consultan por producto');
     }
 }

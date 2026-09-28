@@ -159,7 +159,8 @@ class ApiContractTest extends TestCase
         // ❗ Y la ESCALERA de tramos (`#677`), cuya ausencia AFIRMA algo: que el precio no depende de la
         // cantidad. Emitirla siempre obligaría a una fila única que repite `prices`, y la landing tendría
         // que distinguir «escalera de una fila» de «sin escalera» para una sola realidad.
-        'Prices.products.items' => ['zone', 'unit', 'tiers'],
+        // ❗ Y lo que ALARGA la estancia (`#834`), por lo mismo: su ausencia afirma que el producto no se alarga.
+        'Prices.products.items' => ['zone', 'unit', 'tiers', 'stay_extensions'],
         // El lote del libro de eventos (`#678`): de un evento, `route`, `props` y `occurred_at` son opcionales
         // porque no todo hecho tiene página, propiedades ni reloj (un `call_clicked` no lleva nada), y el
         // sobre `meta` entero porque solo viaja cuando hay algo que decir del lote. Lo que va siempre es lo

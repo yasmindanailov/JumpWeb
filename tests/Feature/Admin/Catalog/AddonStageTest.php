@@ -551,6 +551,9 @@ class AddonStageTest extends TestCase
             'app/Domain/Booking/Services/AddonOfferReader.php' => 'vende: la oferta del embudo',
             'app/Domain/Booking/Services/CatalogReader.php' => 'vende: la ficha pública del producto',
             'app/Domain/Content/Services/LandingAddonPresenter.php' => 'vende: anuncia bajo la tarjeta',
+            // `#834` · NO filtra por fase, y es deliberado: responde «¿se puede alargar la fiesta?», y la respuesta es
+            // sí tanto si la hora se añade al reservar como después. Anuncia; quien vende filtra.
+            'app/Http/Resources/Api/V1/PricesFactsResource.php' => 'anuncia lo que alarga la estancia, en cualquier fase',
             // ⚠️ `RateTable.php` estuvo aquí: llevaba la hora extra a una fila de `/precios` (`#531`) y
             // dejó de leer complementos cuando la web dejó de publicarlos (`#583`).
             'app/Filament/Pages/CreateManualOrderPage.php' => 'vende: el alta manual del mostrador',

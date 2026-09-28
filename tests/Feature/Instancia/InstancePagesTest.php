@@ -465,6 +465,73 @@ BLADE);
     }
 
     /**
+     * **Los próximos días de fin de semana con hueco de cada zona de packs** (`availability_weekends`, T6b·2, `#834`):
+     * «Próximos fines de semana con hueco» de la página de cumpleaños. Un día cuenta si la API lo vende
+     * (`GET /availability/{id}/dates`) Y le da una hora a la venta (`POST /availability/{id}/times`); se para en cuatro
+     * y no pasa de ocho semanas. El domingo 11 se vende pero la fiesta de dos horas no cabe en su única franja: es el
+     * día que separa «se vende» de «tiene hueco».
+     */
+    public function test_a_page_gets_the_next_weekend_days_with_room_of_each_pack_zone(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-10-06 10:00', 'Europe/Madrid'));
+        $tarifa = RateType::create(['key' => RateType::KEY_NORMAL, 'label' => ['es' => 'Normal'], 'weekdays' => null, 'priority' => 0]);
+        $zona = Zone::create(['slug' => 'fiestas', 'name' => ['es' => 'Fiestas'], 'position' => 1, 'is_active' => true, 'max_guests_per_slot' => 60, 'max_per_slot' => 0, 'prep_blocks_cupo' => false]);
+        $otra = Zone::create(['slug' => 'grupos', 'name' => ['es' => 'Grupos'], 'position' => 2, 'is_active' => true, 'max_guests_per_slot' => 60, 'max_per_slot' => 0, 'prep_blocks_cupo' => false]);
+        $franjas = fn (Zone $z, string $dia, array $inicios) => array_map(fn (string $i) => Slot::create(['zone_id' => $z->id, 'date' => $dia, 'start_time' => $i, 'end_time' => Carbon::parse($i)->addHour()->format('H:i:s'), 'capacity' => 60, 'online_capacity' => 60]), $inicios);
+        // En una zona, un miércoles (no es fin de semana), cinco sábados con hueco (se para en cuatro) y un domingo en el
+        // que no cabe; en la otra, un miércoles y un sábado a diez semanas (fuera del horizonte): sin ninguno.
+        foreach (['2026-10-07', '2026-10-10', '2026-10-17', '2026-10-24', '2026-10-31', '2026-11-07'] as $dia) {
+            $franjas($zona, $dia, ['11:00:00', '12:00:00', '13:00:00']);
+        }
+        $franjas($zona, '2026-10-11', ['11:00:00']);
+        foreach (['2026-10-07', '2026-12-12'] as $dia) {
+            $franjas($otra, $dia, ['11:00:00', '12:00:00', '13:00:00']);
+        }
+        foreach ([[$zona, 'Fiesta', 1], [$otra, 'Grupo', 2]] as [$z, $nombre, $posicion]) {
+            $pack = TicketType::create(['name' => ['es' => $nombre], 'type' => TicketType::TYPE_PACK, 'zone_id' => $z->id, 'duration_min' => 120, 'min_qty' => 8, 'max_qty' => 20, 'seats_per_unit' => 1, 'is_sellable' => true, 'is_active' => true, 'position' => $posicion]);
+            $pack->prices()->create(['rate_type_id' => $tarifa->id, 'amount_cents' => 1500]);
+            $packs[] = $pack;
+        }
+        [$fiesta, $grupo] = $packs;
+        $this->declarar(['cumple' => ['vista' => 'kids', 'hechos' => ['availability_weekends']]]);
+
+        $fines = $this->hechosDe('/cumple')['availability_weekends'];
+
+        $this->assertSame([
+            ['zone' => 'fiestas', 'dates' => ['2026-10-10', '2026-10-17', '2026-10-24', '2026-10-31']],
+            ['zone' => 'grupos', 'dates' => []],
+        ], $fines);
+        // El domingo 11 existe para la API —se vende— y no tiene hora: el caso tiene sujeto.
+        $this->assertContains('2026-10-11', array_column($this->getJson("/api/v1/availability/{$fiesta->id}/dates")->assertOk()->json('data'), 'date'));
+        $this->assertSame([], $this->postJson("/api/v1/availability/{$fiesta->id}/times", ['date' => '2026-10-11'])->assertOk()->json('data'));
+        $this->assertNotSame([], $this->postJson("/api/v1/availability/{$fiesta->id}/times", ['date' => '2026-10-10'])->assertOk()->json('data'));
+        // Y el sábado lejano también se vende y tiene hora: lo deja fuera solo el horizonte.
+        $this->assertContains('2026-12-12', array_column($this->getJson("/api/v1/availability/{$grupo->id}/dates")->assertOk()->json('data'), 'date'));
+        $this->assertNotSame([], $this->postJson("/api/v1/availability/{$grupo->id}/times", ['date' => '2026-12-12'])->assertOk()->json('data'));
+
+        // Lo que se guarda vale para un día DEL PARQUE, no para siempre: tres minutos después, pasada la medianoche, el
+        // horizonte avanza un día y el sábado 12 de diciembre entra. ⚠️ Dentro de los cinco minutos que vale lo guardado:
+        // con días de distancia caducaría solo y el caso no distinguiría nada (medido con su mutación).
+        Carbon::setTestNow(Carbon::parse('2026-10-16 23:58', 'Europe/Madrid'));
+        $this->assertSame([], $this->hechosDe('/cumple')['availability_weekends'][1]['dates']);
+        Carbon::setTestNow(Carbon::parse('2026-10-17 00:01', 'Europe/Madrid'));
+        $this->assertSame(['2026-12-12'], $this->hechosDe('/cumple')['availability_weekends'][1]['dates']);
+        Carbon::setTestNow();
+    }
+
+    /** **La configuración pública, por su nombre** (`config`, T6b·2): el MISMO JSON que `GET /api/v1/config`. */
+    public function test_a_page_asks_for_the_public_config_and_gets_the_same_json_as_the_api(): void
+    {
+        Setting::query()->updateOrCreate(['key' => 'packs.guest_count_cutoff_hours'], ['value' => '48', 'group' => 'packs']);
+        $this->declarar(['kids' => ['vista' => 'kids', 'hechos' => ['config']]]);
+
+        $config = $this->hechosDe('/kids')['config'];
+
+        $this->assertSame(48, $config['guest_count_cutoff_hours']);
+        $this->assertSame($this->getJson('/api/v1/config')->assertOk()->json(), $config);
+    }
+
+    /**
      * **La ISLA de una página, por su nombre** (T4e de §4.12): con `isla` en `scripts`, la página carga la entrada de la
      * isla y el layout le da, en `#jw-isla-pagina`, lo de la página (su `isla`) más lo que solo sabe el producto —si hay
      * sesión, dónde está la política de cookies y los textos de la isla SIN los de la compra ni la calculadora, que

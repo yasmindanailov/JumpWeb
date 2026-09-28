@@ -1791,14 +1791,21 @@ el panel no se dice (los extras, la invitación, el precio de lanzamiento sin pr
 calculadora (instancia: las piezas y sus cinco componentes nuevos); T6b·2 el hecho de los días con hueco (producto); T6b·3
 la calculadora de la fiesta en la página (producto, reutilizando la pantalla de la fiesta de la isla) y la isla de la
 página (calculado, elegido, la frase de cada pieza); T6b·4 la sonda y el ojo del owner.
-- ▶ **T6b·1 🟦 (28-09)**: `#832` (la página OCUPA `/cumpleanos`) empujado; la página, en la instancia y SIN COMMIT hasta el
-  ojo del owner (`web/cumple.blade.php`, `web/cumple/`, las cinco piezas nuevas, `step-list` con `end`, `cumple.css`,
-  textos es/en/fr). Medido: la primera pantalla idéntica al mockup en la vuelta (114/114 · 45/45) y en la primera visita
-  103/111 como él, salvo 1280×560 (el mockup lleva una oferta que el panel no tiene: otra rama); `step-list` sin `end`,
-  byte a byte igual. La isla de la página SIN [Hoy] (una fiesta no se reserva para hoy). **Datos que faltan para la
-  T6b·2**: `extends_stay` en los complementos de la ficha (la hora extra, por su forma: `CE-4`), el plazo de ajuste de
-  invitados (`/config`: `guest_count_cutoff_hours`) y los fines de semana con hueco de los packs. `#833`: compartir
-  la calculadora, solo por WhatsApp.
+- ✅ **T6b·1 (28-09)**, con el ojo del owner («aprobado»): `#832` en el producto y la página en la instancia (`b969ec7`).
+  Medido: la primera pantalla idéntica al mockup en la vuelta (114/114 · 45/45) y en la primera visita 103/111 como él,
+  salvo 1280×560 (el mockup lleva una oferta que el panel no tiene); `step-list` sin `end`, byte a byte igual. La isla de
+  la página SIN [Hoy] (una fiesta no se reserva para hoy). `#833`: compartir la calculadora, solo por WhatsApp.
+- ▶ **T6b·2 🟦 (28-09, `#834`)**, a falta del ojo del owner en la página. Tres hechos: `/prices.products[].stay_extensions`
+  (contrato **1.47.0**; la hora extra por su FORMA —el nombre `extends_stay` que esperaba la T6b·1 no existía: el
+  producto la modela con `extends_parent_stay`, `hora-extra.md` §10— y con su precio POR TARIFA, porque la ficha da el
+  de hoy: 300 un lunes y 500 un sábado para la misma hora), `config` en `PageFacts` (`guest_count_cutoff_hours`, la misma
+  cifra que la isla) y `availability_weekends` (por zona de packs, los días de fin de semana con una hora a la venta;
+  medido: ~55 ms y ~42 consultas por día en `times()`, 278 ms en frío y 0,9 ms guardado; se para en cuatro, ocho semanas,
+  5 min por día del parque). La página: «reserva con 8 y ajusta hasta 24 h antes», «Sí, con una hora extra: desde 3 €»
+  (sin «por niño»: en LOCAL la hora extra está enganchada POR BLOQUES —`#443` la quería por invitado—; con `per_guest`,
+  la unidad del pack) y los cuatro días con hueco. Guardas: `PricesFactsTest` (+5) e `InstancePagesTest` (+2),
+  `mutar-hechos-de-la-fiesta.sh` 12/12 (uno equivalente, fuera y explicado: para un pack `sellable` es siempre cierto).
+  **Sigue la T6b·3**: la calculadora en la página, y los días con hueco llevan a ella con la fecha elegida.
 
 ## 5. Impacto en invariantes
 

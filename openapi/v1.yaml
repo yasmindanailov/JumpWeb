@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.46.0
+  version: 1.47.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -4590,6 +4590,43 @@ components:
                     prices:
                       type: array
                       description: 'El precio por unidad en cada tarifa en la que se vende a esa cantidad.'
+                      items:
+                        type: object
+                        additionalProperties: false
+                        required: [rate, cents]
+                        properties:
+                          rate: { type: string }
+                          cents: { type: integer, description: Céntimos enteros. }
+              stay_extensions:
+                type: array
+                description: |
+                  **1.47.0** (`isla-y-landing-nueva.md` §4.18, `DECISIONES #834`). Lo que ALARGA la estancia de
+                  este producto —la hora extra de una fiesta—: sus complementos con forma de extensor, reconocidos
+                  por su forma y no por su nombre. **Ausente** = no se puede alargar.
+
+                  ⚠️ Es el precio POR TARIFA, no el de hoy: la ficha (`/catalog/products/{id}.addons`) da la
+                  oferta del día —otro precio el viernes, y nada el día que no se vende—. Una tarifa que falta
+                  aquí es un día en el que no se vende.
+                items:
+                  type: object
+                  additionalProperties: false
+                  required: [id, name, minutes, per_guest, prices]
+                  properties:
+                    id: { type: integer }
+                    name: { type: string }
+                    minutes:
+                      type: integer
+                      minimum: 1
+                      example: 60
+                      description: Lo que alarga UN bloque.
+                    per_guest:
+                      type: boolean
+                      description: |
+                        Se cobra por invitado: el bloque es uno para todos y lo que escala es el precio. Si
+                        no, cada bloque se cobra una vez.
+                    prices:
+                      type: array
+                      description: El precio de un bloque (o por invitado) en cada tarifa en la que se vende.
                       items:
                         type: object
                         additionalProperties: false

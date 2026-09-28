@@ -42,6 +42,8 @@ class SoldLineUnitHasOneSourceTest extends TestCase
         // `#528` · el escaparate de `/cumpleanos`: escribe «por niño» en la hora extra si el
         // enganche de HOY es por invitado. Pregunta por lo que se vende hoy, nunca por una línea.
         'app/Domain/Booking/Services/BirthdayComparison.php',
+        // `#834` · `/prices.stay_extensions`: si la hora extra que se vende HOY se cobra por invitado. Tampoco una línea.
+        'app/Http/Resources/Api/V1/PricesFactsResource.php',
         // El panel: el alta manual vende NUEVO, y el catálogo edita la configuración.
         'app/Filament/Pages/CreateManualOrderPage.php',
         'app/Filament/Resources/Catalog/RelationManagers/AddonsRelationManager.php',

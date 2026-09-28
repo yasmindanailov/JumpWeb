@@ -17,8 +17,9 @@ use Illuminate\Validation\Rule;
  * ⚠️ **Solo lo que se vende hoy**: productos activos, de zonas activas, y tarifas activas. Un producto
  * apagado en el panel no tiene precio público — y publicarlo sería anunciar algo que el embudo rechaza.
  *
- * ⚠️ Se cargan `prices.rateType` y `priceTiers` de golpe: sin eso, una instalación con veinte productos
- * hace una consulta por producto y por tarifa para pintar una tabla que cabe en una pantalla.
+ * ⚠️ Se cargan `prices.rateType`, `priceTiers` y los complementos con sus precios de golpe: sin eso, una
+ * instalación con veinte productos hace una consulta por producto y por tarifa para pintar una tabla que cabe
+ * en una pantalla.
  */
 class PricesFactsController extends Controller
 {
@@ -29,7 +30,8 @@ class PricesFactsController extends Controller
         app()->setLocale($datos['lang']);
 
         $productos = TicketType::query()
-            ->with(['prices.rateType', 'priceTiers', 'zone'])
+            // Los complementos, con sus precios: de ahí sale lo que ALARGA una fiesta (`stay_extensions`, T6b·2).
+            ->with(['prices.rateType', 'priceTiers', 'zone', 'addons.prices', 'addons.priceTiers'])
             ->where('is_active', true)
             ->whereHas('zone', fn ($q) => $q->where('is_active', true))
             ->orderBy('position')

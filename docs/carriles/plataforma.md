@@ -3,9 +3,9 @@
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
-> **820–849** (dada de alta en `DECISIONES.md` el 27-09; centena `decisiones/800-899.md`) · Último usado: **`#833`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#833`) · Actualizado: **2026-09-28**
-> (la PORTADA ✅ con el ojo del owner; la T6b de Cumpleaños EN MARCHA: su T6b·1 en la instancia SIN COMMIT).
+> **820–849** (dada de alta en `DECISIONES.md` el 27-09; centena `decisiones/800-899.md`) · Último usado: **`#834`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#834`) · Actualizado: **2026-09-28**
+> (la PORTADA ✅; Cumpleaños: T6b·1 ✅ con el ojo del owner, T6b·2 🟦 —los hechos, `#834`—, sigue la T6b·3).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
 > llévaselo con la medida, como el SPA en `#724`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -46,16 +46,15 @@ edad del panel—; contrato **1.45.0**; `sonda-cuenta.mjs` 250/250, arneses `mut
 `mutar-hijos-de-producto.sh` 12/12). Lo medido de cada tanda, en la spec.
 ▶ **EN MARCHA: (3) T6** (spec §4.17). ✅ con el ojo del owner: la PORTADA (`#827`→`#829`; `instancias/playjump/web/inicio/`,
 instancia `5c2b9cf`; `sonda-portada.mjs`), el CALENDARIO (`#830`) y la FLECHA DE «ATRÁS» (`#831`, su censo en §4.17).
-**EN MARCHA: T6b, Cumpleaños** (censo, plan, datos medidos y lo que falta: spec §4.18). `#832` ✅ empujado (la página
-OCUPA `/cumpleanos`; `mutar-portada-declarada.sh` 12/12). ❗ **La T6b·1 (la página sin su calculadora) está en
-`instancias/playjump` SIN COMMIT, a la espera del ojo del owner EN VIVO** en `localhost:8081/cumpleanos` (regla 7):
-su lista de páginas (`cumple`, que ocupa `cumpleanos`), `web/cumple.blade.php`, `web/cumple/` (modelo y piezas 1, 3–9), cinco piezas nuevas en
-`web/components/` (`moment-card`, `included-list`, `after-booking-panel`, `steps-panel`, `next-days`), `step-list` con
-`end`, `cumple.css`, `entradas.css` (su sección T6b), `movimiento.js` (`data-pj-bucle`) y los textos `cumple` de
-`lang/{es,en,fr}/paginas.php`; ya copiado a `public/instancia`. Con su ✅: commit en la instancia y push. **Sigue la
-T6b·2** (producto: `extends_stay` en la ficha, el plazo de invitados y los fines de semana con hueco, §4.18) y **la T6b·3**
-(la calculadora en la página; compartir SOLO por WhatsApp, `#833`). La ISLA la repiensa el owner con Claude Design: no
-atar nada nuevo a ella en la T6b (la de Cumpleaños, SIN [Hoy]). **Para iterar con el owner** (no
+**EN MARCHA: T6b, Cumpleaños** (censo, plan, lo medido: spec §4.18). T6b·1 ✅ («aprobado»; instancia `b969ec7`).
+**T6b·2 🟦** (`#834`, contrato 1.47.0): `/prices.stay_extensions`, `config` y `availability_weekends` en el producto
+(`mutar-hechos-de-la-fiesta.sh` 12/12); en la instancia, SIN COMMIT hasta el ojo del owner EN VIVO en
+`localhost:8081/cumpleanos` (regla 7), el modelo (`web/cumple/modelo.php`: la hora extra de `/prices`, el ajuste de
+`/config`, los días con hueco), su lista de hechos y los textos es/en/fr (dudas «cuántos» y «alargar», formatos de día).
+❓ Del owner: en LOCAL la hora extra está enganchada por bloques (sale «desde 3 €» sin «por niño»; `#443` la quería por
+invitado). **Sigue la T6b·3** (la calculadora en la página: `compra/fiesta.js`, `CalendarioMes`, `SelectorHoras`; «Reservar
+y pagar la señal» a la compra con la selección entera, `#785`; los días con hueco la abren con su fecha; compartir SOLO por
+WhatsApp, `#833`) y la T6b·4 (sonda y ojo). La ISLA la repiensa el owner con Claude Design: no atar nada nuevo a ella. **Para iterar con el owner** (no
 ahora): la isla «muy sola» y el «Reservar» solo en la isla del móvil (A/B propuesto: las páginas de la instancia aún no
 reciben su variante). Orden de la T6: portada, Cumpleaños, Colegios, Visítanos (SIN formulario: `/contacto` con 301) y Normas, y los 301
 → **(4)** Bizum, Apple (entra) y el día liberado → material y revisión del owner, al final (los datos: playjump.es). **Los
