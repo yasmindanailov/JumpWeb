@@ -22,6 +22,17 @@ final class OccupancyMetrics extends MetricSet
         return OccupancyReport::for($window, $comparison);
     }
 
+    protected static function baselineTotals(Window $period): array
+    {
+        return OccupancyReport::baselineTotals($period);
+    }
+
+    /** Las plazas salen de los pedidos cobrados; la demanda sin hueco, de su evento, que se emite desde la T2. */
+    protected static function sources(): array
+    {
+        return ['*' => MeasuredSince::ORDERS, 'occupancy.missing' => MeasuredSince::MISSING];
+    }
+
     public static function from(array $report): array
     {
         /** @var array<string, mixed> $e */

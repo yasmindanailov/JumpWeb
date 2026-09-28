@@ -2,7 +2,7 @@
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb` a secas; la instancia al lado, en
 > `~/proyectos/instancias/playjump`, clon de `github.com/yasmindanailov/instancia-playjump`, montada el 25-09) ·
-> Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#759`** · La banda está dada de alta en la
+> Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#790`** · La banda está dada de alta en la
 > tabla de `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: **`analitica-para-decidir.md`
 > §0** (la tarea en curso, `#755`) · `encuestas.md` §0 y §4.7 (`#754`) · `analitica.md` §0 y §4.5 · `isla-y-landing-nueva.md`
 > §4.11 · `celebracion-e-invitacion.md` §0 · `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 ·
@@ -19,7 +19,10 @@
   ocupación (`#758`; §4.8.ter). **T3 en cinco tandas** (§4.13, `#759`): ✅ **la T3a, la forma, en `main` y aprobada por el owner
   el 28-09** («buen trabajo, todo correcto»: siete pestañas, solo la abierta pide —10 → 1 al abrir—, el catálogo de 58 cifras,
   ≤ 6 arriba y lo demás plegado, «Resumen», móvil con selector y píldora —primera cifra 732 → 416 px—, el glosario; sonda
-  107/107; el detalle, §4.13 «Cómo se construyó»). ▶ **Sigue la T3b, el veredicto y la frase.**
+  107/107; el detalle, §4.13 «Cómo se construyó»). ✅ **T3b, el veredicto y la frase, en `main` y aprobada por el owner
+  el 28-09** (`#790` `[DECIDIDO owner]`: «normal» es el mín–máx de los 12 periodos anteriores; la historia por los totales de
+  cada informe, desde que su fuente mide; §4.13). ⚠️ Arreglado de paso: la caché de la ocupación iba al segundo (`efae3692`).
+  ▶ **Sigue la T3c: «lo que ha cambiado» y los objetivos del mes.**
 - ▶ **LA FIESTA DEL SISTEMA NUEVO ES MÍA (`#765`, `[DECIDIDO owner]` 25-09)**: la lista de invitados, la invitación con
   su recibo y la autorización, vestidas con «Saltia» para la v2.0.0, en paralelo con la web pública. El traspaso,
   `isla-y-landing-nueva.md` §4.11; el censo HAY/FALTA, el método y las tandas, `specs/fiesta-sistema-nuevo.md` (§1.4,
@@ -71,7 +74,8 @@
    `probe-ojo-anonimas.php`, `CARRIL-SPA.md` §8·14). Los CRUCES por franja, tipo de visita y primera visita (datos ya
    guardados) llegan con la T8; el cruce por EMPLEADO, `[PENDIENTE: owner]` (preguntado el 27-09, sin respuesta aún). →
    ✅ **T2 ocupación y anticipación** (§4.8.ter, `#758`) → ▶ **T3 Resumen y la reorganización, EN CINCO TANDAS** (§4.13,
-   `#759`, 28-09; medido antes): ✅ **T3a la forma** (aprobada; §4.13 «Cómo se construyó») → ▶ **T3b veredicto y frase**
+   `#759`, 28-09; medido antes): ✅ **T3a la forma** (aprobada; §4.13 «Cómo se construyó») → ✅ **T3b veredicto y frase**
+   (aprobada; en local, «La semana pasada» enseña veredictos: solo hay 3 meses) → ▶ **T3c**
    (§4.4 su historia, §4.6) → T3c «lo que ha cambiado» y objetivos → T3d el texto para IA (§4.7, sin PII ni celdas < 5) → T3e
    el SECTOR (fuentes AL OWNER antes de sembrar nada) → T4 cartera → T5 marketing y correos → T6 cohortes → T7
    pérdidas → T8 satisfacción (§4.12). **Trampas de la T2**, en la spec §4.8.ter: `OccupancyReader` COPIA la aritmética del

@@ -479,6 +479,18 @@ final class SurveysReport
     }
 
     /**
+     * Los totales de una ventana tal como este informe los usa para su periodo comparado: la historia de la T3b (`#790`).
+     *
+     * @return array{previous: array<string, int>}
+     */
+    public static function baselineTotals(Window $window): array
+    {
+        $report = new self;
+
+        return ['previous' => $report->totalsOnly($window, $report->surveys($window->timezone))];
+    }
+
+    /**
      * Las cifras de las tarjetas para el periodo de comparación.
      *
      * @param  array<int, array<string, mixed>>  $surveys

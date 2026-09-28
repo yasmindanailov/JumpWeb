@@ -20,6 +20,17 @@ final class CustomersMetrics extends MetricSet
         return CustomersReport::for($window, $comparison);
     }
 
+    protected static function baselineTotals(Window $period): array
+    {
+        return CustomersReport::baselineTotals($period);
+    }
+
+    /** La puerta y los que vuelven, desde la primera visita acreditada; las cuentas nuevas, desde la primera cuenta. */
+    protected static function sources(): array
+    {
+        return ['*' => MeasuredSince::GATE, 'customers.registrations' => MeasuredSince::ACCOUNTS];
+    }
+
     public static function from(array $report): array
     {
         /** @var array{total: int, verified: int, buyers: int} $r */

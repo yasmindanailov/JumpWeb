@@ -1,6 +1,6 @@
 # [SPEC] La analítica para decidir — un cuadro que se entiende, dice si va bien o mal y cubre las decisiones del operador
 
-> Estado: ✅ **aprobada por el owner el 27-09** (§7; `#755`) → ✅ **T0, T1 y T2** · 🟦 **T3** (✅ T3a · ⬜ T3b→T3e, §4.13) · Última actualización: 2026-09-28 ·
+> Estado: ✅ **aprobada por el owner el 27-09** (§7; `#755`) → ✅ **T0, T1 y T2** · 🟦 **T3** (✅ T3a · ✅ T3b · ⬜ T3c→T3e, §4.13) · Última actualización: 2026-09-28 ·
 > Decisiones: `#755` (esta), `#754` (encuestas anónimas, su T1), `#758` (la T2), `#759` (la T3 en cinco tandas) · Carril: **SPA** (banda 730–759). Amplía `analitica.md`
 > (el libro, los regímenes y la T2 siguen siendo suyos).
 
@@ -17,7 +17,7 @@
   sale a un tercero: SOLO agregados, con guarda; (5) los enlaces FIRMADOS de los correos: la marca de envío va por el
   camino de `EmailUtm` (tras firmar, ignorada al validar); (6) aperturas solo con consentimiento (`[PENDIENTE: asesoría]`).
 - **Estado**: ✅ aprobada (27-09, `#755`); T0a·T0b·T0c ✅ · **T1** ✅ (la T5 de `encuestas.md`, `#754`, `#757`) · **T2** ✅ ocupación (§4.8.ter, `#758`) → **T3** Resumen, en cinco tandas (§4.13,
-  `#759`): ✅ T3a la forma → ▶ T3b veredicto y frase. **Nada de lo medido se pierde** (§4.1.bis, con guarda): se resume arriba y lo demás queda
+  `#759`): ✅ T3a la forma · ✅ T3b veredicto y frase (mín–máx, `#790`) → ▶ T3c. **Nada de lo medido se pierde** (§4.1.bis, con guarda): se resume arriba y lo demás queda
   plegado o en su pestaña.
 - **Invariantes**: `RGPD-01`, `RGPD-04`, `RGPD-07`, `SEC-04`, `SUITE-01`. Dinero y aforo: solo lectura.
 
@@ -206,7 +206,8 @@ informes dejan de devolver arrays sueltos para las tarjetas (las tablas y el CSV
 
 ### 4.4 Referencias: normal, bajo o alto
 
-- **Tu historia, primero** (la más fiable): la banda «normal para ti» es el intervalo entre los percentiles 25 y 75 de la
+- **Tu historia, primero** (la más fiable): la banda «normal para ti» es el intervalo entre ~~los percentiles 25 y 75~~ **la
+  más baja y la más alta** (`[DECIDIDO owner]` 28-09, `#790`: la P25–P75 marcaba el 57 % de los periodos normales; §4.13) de la
   misma cifra en los últimos 12 periodos COMPARABLES (mismo mes o mismo día de la semana); hacen falta ≥ 8, y antes dice
   «aún sin historia».
 - **El sector, solo con fuente**: `analytics_benchmarks` (futuro): sector, clave de la cifra, bajo, alto, unidad, fuente
@@ -524,6 +525,50 @@ inactiva se pinta vacía y sus widgets ni existen ni piden.
   caché de la OCUPACIÓN (T2) llevaba el corte al segundo en su clave —los otros cinco informes, por fechas—, así que no
   servía entre los widgets de una pestaña y cada uno recalculaba el informe; ahora va por fechas (`OccupancyReportTest`,
   con su mutación).
+
+**La T3b al detalle — medido el 28-09, antes de codificar (`#790`)**:
+- **Medido**: la BD local tiene pedidos de julio a septiembre (3 meses) y sesiones desde el 26-07: «este mes» dirá «aún sin
+  historia»; por semanas y por día de la semana hay 9. La historia por el informe entero (12 periodos con sus desgloses y sus
+  comparados) cuesta de 0,2 a 1,1 s y hasta 638 consultas por informe; por sus TOTALES (`totalsOnly()`, lo que ya alimenta la
+  comparación) es ~10 veces menos (dinero: 49 ms y 36 consultas). Simulado: un periodo NORMAL cae fuera de la banda P25–P75 de
+  12 periodos el **57 %** de las veces (P10–P90, 32 %; mín–máx, 15 %; con 8 periodos, 60 · 36 · 22 %).
+- **`[DECIDIDO owner]` 28-09 (`#790`)**: «normal para ti» es el rango **mín–máx de los últimos 12 periodos comparables**;
+  fuera de él, «la más alta / la más baja de tus últimos 12 …». Sustituye a la P25–P75 de §4.4.
+- **La historia**: los 12 periodos anteriores encadenando `previous()` (la misma unidad y el mismo tramo: día y semana, el mismo
+  día de la semana), cada uno por los TOTALES de su informe, y leída con el MISMO catálogo (el valor «comparado» de cada cifra):
+  la banda sale de la misma fórmula que la tarjeta. Un periodo cuenta solo si empieza cuando su fuente YA medía (pedidos,
+  sesiones, visitas de la puerta, cuentas, encuestas): un cero de antes de medir no es un dato. Hacen falta 8; si no, «aún sin
+  historia (N de 8)». Una cifra sin comparación (las medias de siempre, los textos) no lleva veredicto.
+- **El veredicto** (en `Metric`): normal · alta · baja · sin historia · pocos datos (una tasa con menos de 20 casos); el tono
+  (bien · atención · neutro) sale de la POLARIDAD. **La frase** (§4.6) es la línea del veredicto, con icono, palabra y la
+  banda: «Normal para ti: entre 1.200 € y 1.900 € en tus últimos 12 meses». La del cambio ya estaba en la tarjeta (T0b): no se
+  repite. La unidad se dice: meses, semanas, «tus últimos 12 lunes».
+- **Caché**: por fechas y la hora del corte redondeada a la caducidad: 5 min en día y semana (una hora de más en un día
+  sesgaría) y 1 h en mes, trimestre, año y tramo (una hora en un mes es ~0,1 %).
+
+**Cómo se construyó la T3b (28-09; ✅ vista en vivo y aprobada por el owner el 28-09: «buen trabajo, visto bueno»)**:
+- `XReport::baselineTotals()` (los seis): una envoltura pública de su `totalsOnly()`, sin copiar su aritmética. `MetricSet`:
+  `for()` = `from()` + `judged()`; `history()` encadena 12 `previous()`, pone los totales de cada periodo donde van los del
+  comparado (`withTotals()`; el dinero cambia además `customers.previous`) y lee con `from()` el valor «comparado» de cada
+  cifra. `MeasuredSince`: el primer registro de cada fuente (pedidos, sesiones, puerta, cuentas, encuestas, demanda sin
+  hueco), una hora en caché; cada catálogo dice su fuente (`sources()`).
+- `Metric`: `history`, `historyUnit`, `withHistory()`, `verdict()` (mín–máx, `#790`), `verdictLine()` y `format()`. La
+  tarjeta pinta la frase bajo la cifra con icono, palabra y color de refuerzo (`data-metric-verdict`/`-tone`), y la regla de la
+  banda dentro de «¿Cómo se calcula?».
+- **Medido** (BD local): pintar las tarjetas de arriba de una pestaña con su historia, en frío, 130–790 ms (hasta 633
+  consultas, «Resumen» con cuatro informes); en caliente, ≤ 12 ms. Con «La semana pasada», veredictos reales (la conversión:
+  «Atención: la más baja de tus últimas 8 semanas (iba de 6,3 % a 13,3 %)»); con «Este mes», «aún sin historia (1 de 8
+  meses)»: en local solo hay tres meses.
+- **Tests**: `MetricTest` +5 (la banda con sus bordes, el tono por polaridad, los 8 periodos, pocos casos, la historia plana),
+  `MetricsHistoryTest` (5, fixture a mano: la historia desde que se mide, la PARIDAD —el periodo más reciente de la historia es
+  el comparado de la tarjeta—, la fuente que aún no mide, el mismo día de la semana y la media sin casos, la tarjeta con su
+  color). Arnés: +13.
+- **Lo que enseñó (el navegador, no la suite)**: (1) un lunes a primera hora, «esta semana» y sus 12 anteriores valían 0: la
+  frase decía «entre 0,00 € y 0,00 €» → una historia PLANA dice «siempre 0,00 €». (2) «Valor medio del pedido» de una semana
+  SIN pedidos entraba en la historia como 0 €: una media o una tasa sin casos no existe y no entra; y una media con menos de 20
+  casos no se juzga, como una tasa. (3) «tus últimos 12 semanas»: el adjetivo va con la unidad. (4) La clave de la fuente
+  de las visitas se llamaba `'sessions'` y `AccessRevocationTest` (nadie nombra la tabla de credenciales fuera de su punto
+  único) la paró en la suite completa: ahora es `web_visits`.
 
 **T3e, primera búsqueda de fuentes (28-09; NADA sembrado, para el owner)**: casi todo lo publicado son MEDIAS de un
 informe, no rangos, y pocas veces de parques de salto. Candidatas, con su pega: (a) ROLLER, *2025 Attractions Industry

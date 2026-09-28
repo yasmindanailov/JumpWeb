@@ -92,6 +92,84 @@ class MetricTest extends TestCase
         $this->assertSame(['Pocos datos para comparar (menos de 20 casos antes)'], $few['notes']);
     }
 
+    // ─── ¿Es normal para ti? (T3b, `#790`) ───────────────────────────────────────────────────────
+
+    /** Normal es el rango mín–máx de su historia, con los dos bordes dentro (`[DECIDIDO owner]` 28-09). */
+    public function test_normal_is_between_the_lowest_and_the_highest_of_its_history(): void
+    {
+        $history = [150000, 120000, 190000, 160000, 140000, 170000, 130000, 180000];
+
+        foreach ([120000 => 'normal', 190000 => 'normal', 155000 => 'normal', 119999 => 'low', 190001 => 'high'] as $value => $state) {
+            $v = Metric::money('t.band', 'Ingresos netos', $value, null, 30, null, Polarity::UpIsGood, $this->how())->withHistory($history, 'month')->verdict();
+            $this->assertSame($state, $v['state'], "{$value} céntimos");
+            $this->assertSame([120000, 190000, 8], [$v['low'], $v['high'], $v['n']]);
+        }
+
+        $this->assertSame(
+            'Normal para ti: entre 1.200 € y 1.900 € en tus últimos 8 meses.',
+            Metric::money('t.band', 'Ingresos netos', 155000, null, 30, null, Polarity::UpIsGood, $this->how())->withHistory($history, 'month')->verdictLine(),
+        );
+    }
+
+    /** El tono sale de la polaridad: subir es bien, mal o ni lo uno ni lo otro; y la frase lo dice con palabra. */
+    public function test_the_tone_follows_the_polarity_and_the_sentence_says_it(): void
+    {
+        $history = [10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32];
+        $at = static fn (int $value, Polarity $p): Metric => Metric::count('t.tone', 'Pedidos cobrados', $value, null, $p, 'Definición.')->withHistory($history, 'week');
+
+        $this->assertSame(['high', 'good'], [$at(40, Polarity::UpIsGood)->verdict()['state'], $at(40, Polarity::UpIsGood)->verdict()['tone']]);
+        $this->assertSame('watch', $at(5, Polarity::UpIsGood)->verdict()['tone']);
+        $this->assertSame('watch', $at(40, Polarity::DownIsGood)->verdict()['tone']);
+        $this->assertSame('good', $at(5, Polarity::DownIsGood)->verdict()['tone']);
+        $this->assertSame('neutral', $at(40, Polarity::Neutral)->verdict()['tone']);
+        $this->assertSame('neutral', $at(20, Polarity::UpIsGood)->verdict()['tone'], 'lo normal no es ni bien ni mal');
+
+        // «últimAs semanas»: el adjetivo concuerda con la unidad (la primera versión decía «tus últimos 12 semanas»).
+        $this->assertSame('Bien: la más alta de tus últimas 12 semanas (iba de 10 a 32).', $at(40, Polarity::UpIsGood)->verdictLine());
+        $this->assertSame('Atención: la más baja de tus últimas 12 semanas (iba de 10 a 32).', $at(5, Polarity::UpIsGood)->verdictLine());
+        $this->assertSame('Fuera de lo normal: la más alta de tus últimas 12 semanas (iba de 10 a 32).', $at(40, Polarity::Neutral)->verdictLine());
+        $this->assertSame(
+            'Normal para ti: entre 10 y 32 en tus últimos 12 miércoles.',
+            Metric::count('t.day', 'Pedidos cobrados', 20, null, Polarity::UpIsGood, 'Definición.')->withHistory($history, 'day:3')->verdictLine(),
+        );
+    }
+
+    /**
+     * Una historia PLANA se dice «siempre», no «entre 0,00 € y 0,00 €» (visto el 28-09 en el navegador, un lunes a primera
+     * hora); y una MEDIA con pocos casos no se juzga, como una tasa.
+     */
+    public function test_a_flat_history_says_always_and_a_mean_with_few_cases_is_not_judged(): void
+    {
+        $zeros = array_fill(0, 12, 0);
+        $net = static fn (int $cents): Metric => Metric::money('t.flat', 'Ingresos netos', $cents, null, 0, null, Polarity::UpIsGood, 'Definición.')->withHistory($zeros, 'week');
+
+        $this->assertSame('Normal para ti: siempre 0,00 € en tus últimas 12 semanas.', $net(0)->verdictLine());
+        $this->assertSame('Bien: la más alta de tus últimas 12 semanas (siempre había sido 0,00 €).', $net(5000)->verdictLine());
+
+        $mean = Metric::money('t.mean', 'Valor medio del pedido', 7000, null, 19, null, Polarity::UpIsGood, $this->how(), mean: true)->withHistory(array_fill(0, 12, 6000), 'month');
+        $this->assertSame('few', $mean->verdict()['state'], '19 pedidos');
+    }
+
+    /** Sin 8 periodos no se juzga, y se dice cuántos hay; en un día, la unidad es su día de la semana. */
+    public function test_without_eight_periods_it_says_how_many_there_are(): void
+    {
+        $m = Metric::count('t.few', 'Visitas a la web', 30, null, Polarity::UpIsGood, $this->how())->withHistory([20, 25, 30], 'day:3');
+
+        $this->assertSame(['no_history', 'neutral', 3], [$m->verdict()['state'], $m->verdict()['tone'], $m->verdict()['n']]);
+        $this->assertSame('Aún sin historia para decir si es normal (3 de 8 miércoles).', $m->verdictLine());
+    }
+
+    /** Una tasa con pocos casos no se juzga; una cifra sin historia (sin comparación) o de texto, ni se dice. */
+    public function test_a_rate_with_few_cases_is_not_judged_and_without_history_nothing_is_said(): void
+    {
+        $rate = Metric::rate('t.rate', 'Conversión', 1, 12, null, null, Polarity::UpIsGood, $this->how())->withHistory(array_fill(0, 12, 500), 'month');
+        $this->assertSame('few', $rate->verdict()['state'], '12 visitas');
+        $this->assertSame('Pocos casos para decir si es normal (menos de 20).', $rate->verdictLine());
+
+        $this->assertNull(Metric::count('t.none', 'Fichas abiertas', 5, null, Polarity::Neutral, $this->how())->verdict());
+        $this->assertNull(Metric::text('t.text', 'Nota media', '4,2 / 5', $this->how())->withHistory([1, 2, 3, 4, 5, 6, 7, 8], 'month')->verdict());
+    }
+
     public function test_zero_before_is_no_data_and_equal_is_equal(): void
     {
         $none = Metric::count('t.none', 'Fiestas', 15, 0, Polarity::UpIsGood, $this->how())->reading(Comparison::YearAgo);

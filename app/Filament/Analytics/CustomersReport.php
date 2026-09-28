@@ -352,6 +352,16 @@ final class CustomersReport
 
     // ─── El periodo anterior y la serie ─────────────────────────────────────────────────────────
 
+    /**
+     * Los totales de una ventana tal como este informe los usa para su periodo comparado: la historia de la T3b (`#790`).
+     *
+     * @return array{previous: array<string, int>}
+     */
+    public static function baselineTotals(Window $window): array
+    {
+        return ['previous' => (new self)->totalsOnly($window)];
+    }
+
     /** @return array<string, int> */
     private function totalsOnly(Window $window): array
     {

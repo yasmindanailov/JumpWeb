@@ -22,6 +22,17 @@ final class MarketingMetrics extends MetricSet
         return FunnelReport::for($window, $comparison);
     }
 
+    protected static function baselineTotals(Window $period): array
+    {
+        return FunnelReport::baselineTotals($period);
+    }
+
+    /** Todo desde las visitas a la web: la compra atribuida también empieza con ellas. */
+    protected static function sources(): array
+    {
+        return ['*' => MeasuredSince::WEB_VISITS];
+    }
+
     public static function from(array $report): array
     {
         /** @var array<string, int> $s */

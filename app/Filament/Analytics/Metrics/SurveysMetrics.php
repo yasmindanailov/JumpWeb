@@ -20,6 +20,16 @@ final class SurveysMetrics extends MetricSet
         return SurveysReport::for($window, $comparison);
     }
 
+    protected static function baselineTotals(Window $period): array
+    {
+        return SurveysReport::baselineTotals($period);
+    }
+
+    protected static function sources(): array
+    {
+        return ['*' => MeasuredSince::SURVEYS];
+    }
+
     public static function from(array $report): array
     {
         /** @var array<string, int> $t */

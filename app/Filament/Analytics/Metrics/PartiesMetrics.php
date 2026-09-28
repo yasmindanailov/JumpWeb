@@ -21,6 +21,16 @@ final class PartiesMetrics extends MetricSet
         return PartiesReport::for($window, $comparison);
     }
 
+    protected static function baselineTotals(Window $period): array
+    {
+        return PartiesReport::baselineTotals($period);
+    }
+
+    protected static function sources(): array
+    {
+        return ['*' => MeasuredSince::ORDERS];
+    }
+
     public static function from(array $report): array
     {
         /** @var array<string, mixed> $m */

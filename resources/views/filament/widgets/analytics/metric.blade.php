@@ -38,6 +38,30 @@
             {{ $getValue() }}
         </div>
 
+        {{-- ¿Es normal para ti? (T3b, `#790`): la frase del veredicto, con icono y palabra; el color, solo de refuerzo. --}}
+        @php($verdict = $metric->verdict())
+        @if ($verdict !== null)
+            <p
+                @class([
+                    'flex items-start gap-1.5 text-sm font-medium',
+                    'text-success-700 dark:text-success-400' => $verdict['tone'] === \App\Filament\Analytics\Metric::TONE_GOOD,
+                    'text-warning-700 dark:text-warning-400' => $verdict['tone'] === \App\Filament\Analytics\Metric::TONE_WATCH,
+                    'text-gray-700 dark:text-gray-300' => $verdict['tone'] === \App\Filament\Analytics\Metric::TONE_NEUTRAL,
+                ])
+                data-metric-verdict="{{ $verdict['state'] }}"
+                data-metric-tone="{{ $verdict['tone'] }}"
+            >
+                {{ \Filament\Support\generate_icon_html(match (true) {
+                    $verdict['tone'] === \App\Filament\Analytics\Metric::TONE_GOOD => \Filament\Support\Icons\Heroicon::OutlinedCheckCircle,
+                    $verdict['tone'] === \App\Filament\Analytics\Metric::TONE_WATCH => \Filament\Support\Icons\Heroicon::OutlinedExclamationTriangle,
+                    in_array($verdict['state'], [\App\Filament\Analytics\Metric::VERDICT_HIGH, \App\Filament\Analytics\Metric::VERDICT_LOW], true) => \Filament\Support\Icons\Heroicon::OutlinedArrowsUpDown,
+                    $verdict['state'] === \App\Filament\Analytics\Metric::VERDICT_NORMAL => \Filament\Support\Icons\Heroicon::OutlinedMinusCircle,
+                    default => \Filament\Support\Icons\Heroicon::OutlinedClock,
+                }, attributes: (new \Filament\Support\View\ComponentAttributeBag)->class(['mt-0.5 h-4 w-4 shrink-0'])) }}
+                <span>{{ $metric->verdictLine() }}</span>
+            </p>
+        @endif
+
         @if ($reading['line'] !== null)
             <div
                 {{ (new FilamentComponentAttributeBag)->color(DescriptionComponent::class, $reading['color'])->class(['fi-wi-stats-overview-stat-description']) }}
@@ -64,6 +88,9 @@
                 {{ __('admin.analytics.metric.how') }}
             </summary>
             <p class="pb-1">{{ $metric->how }}</p>
+            @if ($verdict !== null)
+                <p class="pb-1">{{ __('admin.analytics.verdict.how') }}</p>
+            @endif
         </details>
 
         @if (($link ?? null) !== null)

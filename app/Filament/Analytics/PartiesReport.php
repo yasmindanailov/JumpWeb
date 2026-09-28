@@ -623,6 +623,16 @@ final class PartiesReport
         return $series;
     }
 
+    /**
+     * Los totales de una ventana tal como este informe los usa para su periodo comparado: la historia de la T3b (`#790`).
+     *
+     * @return array{previous: array<string, int>}
+     */
+    public static function baselineTotals(Window $window): array
+    {
+        return ['previous' => (new self)->totalsOnly($window)];
+    }
+
     /** Las cifras de las tarjetas para el periodo de comparación. @return array<string, int> */
     private function totalsOnly(Window $window): array
     {

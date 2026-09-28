@@ -203,6 +203,22 @@ final class MoneyReport
 
     // ─── Los totales, sin cubos (el periodo anterior) ────────────────────────────────────────────
 
+    /**
+     * Los totales de una ventana TAL COMO este informe los usa para su periodo comparado (T3b, `#790`): con ellos se lee la
+     * HISTORIA de cada cifra —los 12 periodos anteriores— con la misma fórmula que su tarjeta. Sin cubos ni desgloses.
+     *
+     * @return array{previous: array<string, int>, customers_previous: array<string, int>}
+     */
+    public static function baselineTotals(Window $window): array
+    {
+        $report = new self;
+
+        return [
+            'previous' => $report->totalsOnly($window),
+            'customers_previous' => $report->buyerCounts($window, $report->buyerRows($window)),
+        ];
+    }
+
     /** @return array<string, int> */
     private function totalsOnly(Window $window): array
     {

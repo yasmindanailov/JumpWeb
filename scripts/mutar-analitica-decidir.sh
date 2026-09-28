@@ -12,7 +12,7 @@
 set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
-FILTER='ReportPeriodTest|MoneyReportTest|WindowLabelTest|AnalyticsPageTest|MetricTest|AnalyticsCensusTest|FunnelReportTest|PartiesReportTest|CustomersReportTest|GateSurveyTest|ValidarRegistroProfileTest|GateVisitsTest|OccupancyReaderParityTest|OccupancyReportTest|AnalyticsTabsTest|AnalyticsJargonTest|MetricsCatalogTest|AnalyticsExportTest|SegmentsExportTest'
+FILTER='ReportPeriodTest|MoneyReportTest|WindowLabelTest|AnalyticsPageTest|MetricTest|AnalyticsCensusTest|FunnelReportTest|PartiesReportTest|CustomersReportTest|GateSurveyTest|ValidarRegistroProfileTest|GateVisitsTest|OccupancyReaderParityTest|OccupancyReportTest|AnalyticsTabsTest|AnalyticsJargonTest|MetricsCatalogTest|AnalyticsExportTest|SegmentsExportTest|MetricsHistoryTest'
 RUN="docker compose exec -u sail -T laravel.test php artisan test --filter=${FILTER}"
 
 TMP="$(mktemp -d)"
@@ -36,6 +36,8 @@ FICHEROS=(
     app/Filament/Analytics/Metrics/CustomersMetrics.php
     app/Filament/Analytics/Metrics/MoneyMetrics.php
     app/Filament/Analytics/Metrics/SurveysMetrics.php
+    app/Filament/Analytics/Metrics/MetricSet.php
+    resources/views/filament/widgets/analytics/metric.blade.php
     app/Filament/Widgets/Analytics/SummaryWidget.php
     app/Filament/Widgets/Analytics/MoneyOverviewWidget.php
     app/Filament/Widgets/Analytics/OccupancyBreakdownWidget.php
@@ -533,6 +535,60 @@ mutar "la tabla de las horas pierde una" "app/Filament/Widgets/Analytics/PagesWi
 mutar "la caché de la ocupación vuelve a cambiar cada segundo" "$OP" \
   "'analytics:occupancy:v3:'.\$window->timezone.':'.\$window->dateFrom().':'.\$window->dateTo()" \
   "'analytics:occupancy:v3:'.\$window->timezone.':'.\$window->utcFrom()->format('YmdHis').':'.\$window->utcTo()->format('YmdHis')"
+
+# ── T3b · ¿ES NORMAL PARA TI? (§4.13, `#790` `[DECIDIDO owner]`: el rango mín–máx de los últimos 12) ─────────────
+MS=app/Filament/Analytics/Metrics/MetricSet.php
+mutar "el borde de abajo de la banda deja de ser normal" "$M" \
+  '$this->value < $low => self::VERDICT_LOW,' \
+  '$this->value <= $low => self::VERDICT_LOW,'
+
+mutar "se juzga con menos de 8 periodos" "$M" \
+  'if ($n < self::MIN_HISTORY) {' \
+  'if ($n < 3) {'
+
+mutar "el tono ignora la polaridad (subir siempre es malo)" "$M" \
+  '($state === self::VERDICT_HIGH) === ($this->polarity === Polarity::UpIsGood) => self::TONE_GOOD,' \
+  '($state === self::VERDICT_HIGH) !== ($this->polarity === Polarity::UpIsGood) => self::TONE_GOOD,'
+
+mutar "una media con pocos casos se juzga" "$M" \
+  'if (($this->unit === self::UNIT_RATE || $this->isMean) && ($this->base ?? 0) < self::MIN_BASE) {' \
+  'if ($this->unit === self::UNIT_RATE && ($this->base ?? 0) < self::MIN_BASE) {'
+
+mutar "una historia plana dice «entre 0 y 0»" "$M" \
+  "\$flat = \$verdict['low'] === \$verdict['high'];" \
+  '$flat = false;'
+
+mutar "cuentan los periodos de antes de medir" "$MS" \
+  'return $since !== null && $period->from->greaterThanOrEqualTo($since);' \
+  'return $since !== null;'
+
+mutar "una fuente que aún no mide tiene historia" "$MS" \
+  'return $since !== null && $period->from->greaterThanOrEqualTo($since);' \
+  'return $since === null || $period->from->greaterThanOrEqualTo($since);'
+
+mutar "la media de un periodo sin casos entra como cero" "$MS" \
+  "\$undefined = (\$metric->unit === Metric::UNIT_RATE || \$metric->isMean) && (\$metric->previousBase ?? 0) === 0;" \
+  '$undefined = false;'
+
+mutar "la historia mira años atrás y no los periodos anteriores" "$MS" \
+  '$period = $period->previous();' \
+  '$period = $period->yearAgo();'
+
+mutar "la historia mira 11 periodos" "$MS" \
+  'public const HISTORY = 12;' \
+  'public const HISTORY = 11;'
+
+mutar "un día se compara con todos los lunes" "$MS" \
+  "'day:'.\$window->from->isoWeekday()" \
+  "'day:1'"
+
+mutar "los compradores del dinero no cambian de periodo en la historia" "app/Filament/Analytics/Metrics/MoneyMetrics.php" \
+  "        \$report['customers']['previous'] = \$totals['customers_previous'];" \
+  ''
+
+mutar "el «bien» se pinta como una atención" "resources/views/filament/widgets/analytics/metric.blade.php" \
+  "'text-success-700 dark:text-success-400' => \$verdict['tone'] === \\App\\Filament\\Analytics\\Metric::TONE_GOOD," \
+  "'text-success-700 dark:text-success-400' => \$verdict['tone'] === \\App\\Filament\\Analytics\\Metric::TONE_WATCH,"
 
 # ── El CONTROL: tocar un comentario no puede poner nada en rojo ─────────────────────────────────
 control "un comentario de Window" "$W" \

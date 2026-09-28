@@ -696,6 +696,42 @@ return [
             'unclear' => 'No es un cambio claro: puede ser azar',
             'interval' => 'Con :n casos, entre :low y :high',
         ],
+        // T3b (`#790`, `[DECIDIDO owner]`): ¿es normal para ti? El rango entre la más baja y la más alta de los 12 periodos
+        // anteriores iguales a este. La frase lleva la banda y la unidad; el cambio ya lo dice su línea.
+        'verdict' => [
+            'normal' => 'Normal para ti: :range en tus :span.',
+            'high_good' => 'Bien: la más alta de tus :span (:before).',
+            'low_good' => 'Bien: la más baja de tus :span (:before).',
+            'high_watch' => 'Atención: la más alta de tus :span (:before).',
+            'low_watch' => 'Atención: la más baja de tus :span (:before).',
+            'high_neutral' => 'Fuera de lo normal: la más alta de tus :span (:before).',
+            'low_neutral' => 'Fuera de lo normal: la más baja de tus :span (:before).',
+            // La banda, y la de una historia PLANA («siempre 0,00 €», no «entre 0,00 € y 0,00 €»).
+            'range' => 'entre :low y :high',
+            'flat' => 'siempre :low',
+            'before_range' => 'iba de :low a :high',
+            'before_flat' => 'siempre había sido :low',
+            'no_history' => 'Aún sin historia para decir si es normal (:n de :min :unit).',
+            // «Tus últimas 12 semanas», «tus últimos 12 miércoles»: el adjetivo concuerda con la unidad.
+            'span' => [
+                'month' => 'últimos :n meses',
+                'week' => 'últimas :n semanas',
+                'quarter' => 'últimos :n trimestres',
+                'year' => 'últimos :n años',
+                'span' => 'últimos :n periodos iguales',
+                'day' => 'últimos :n :weekday',
+            ],
+            'few' => 'Pocos casos para decir si es normal (menos de :min).',
+            'how' => '«Normal para ti» es el tramo entre la cifra más baja y la más alta de los 12 periodos anteriores iguales a este —el mismo tramo de cada mes o semana y, si es un día, el mismo día de la semana—, contados desde que hay datos; hacen falta 8.',
+            'unit' => [
+                'month' => 'meses',
+                'week' => 'semanas',
+                'quarter' => 'trimestres',
+                'year' => 'años',
+                'span' => 'periodos iguales',
+            ],
+            'weekday' => [1 => 'lunes', 2 => 'martes', 3 => 'miércoles', 4 => 'jueves', 5 => 'viernes', 6 => 'sábados', 7 => 'domingos'],
+        ],
         // «¿Cómo se calcula?» de cada cifra, escrito desde el código de su informe (27-09), no desde su rótulo.
         'how' => [
             // La T2 (`specs/analitica-para-decidir.md` §4.8.ter, `#758`): desde `OccupancyReader`, con la regla del aforo.

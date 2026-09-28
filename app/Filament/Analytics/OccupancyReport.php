@@ -390,6 +390,16 @@ final class OccupancyReport
     }
 
     /**
+     * Los totales de una ventana tal como este informe los usa para su periodo comparado: la historia de la T3b (`#790`).
+     *
+     * @return array{previous: array<string, int>}
+     */
+    public static function baselineTotals(Window $window): array
+    {
+        return ['previous' => (new self)->totalsOnly($window, app(OccupancyReader::class))];
+    }
+
+    /**
      * Las cifras de las tarjetas para el periodo de comparación.
      *
      * @return array{seats: int, capacity: int, full: int, revenue_cents: int, seat_minutes: int, lines: int, present: int, cap: int, visitors: int, visitor_lines: int, visitors_sq: int, missing: int}

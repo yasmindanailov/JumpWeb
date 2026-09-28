@@ -71,7 +71,35 @@ final readonly class Metric
         public ?int $previousSquares = null,
         /** ¿Es una MEDIA de importes (valor medio del pedido) y no una suma? Cambia la prueba. */
         public bool $isMean = false,
+        /**
+         * La HISTORIA (T3b, `#790`): el valor de la cifra en los periodos comparables anteriores que cuentan —los que empezaron
+         * cuando su fuente ya medía—, con la misma fórmula que la tarjeta. `null`: la cifra no tiene historia (sin comparación).
+         *
+         * @var list<int>|null
+         */
+        public ?array $history = null,
+        /** Cómo se dice la unidad de la historia: `month`, `week`, `quarter`, `year`, `span` o `day:1…7` (el día ISO). */
+        public ?string $historyUnit = null,
     ) {}
+
+    /** Periodos de historia que hacen falta para decir si una cifra es normal (§4.4). */
+    public const MIN_HISTORY = 8;
+
+    public const VERDICT_NORMAL = 'normal';
+
+    public const VERDICT_HIGH = 'high';
+
+    public const VERDICT_LOW = 'low';
+
+    public const VERDICT_NO_HISTORY = 'no_history';
+
+    public const VERDICT_FEW = 'few';
+
+    public const TONE_GOOD = 'good';
+
+    public const TONE_WATCH = 'watch';
+
+    public const TONE_NEUTRAL = 'neutral';
 
     public static function count(string $key, string $label, int $value, ?int $previous, Polarity $polarity, string $how, ?string $display = null, ?string $detail = null): self
     {
@@ -136,15 +164,113 @@ final readonly class Metric
     /** El valor como se lee en la tarjeta. */
     public function displayValue(): string
     {
-        if ($this->display !== null) {
-            return $this->display;
+        return $this->display ?? $this->format($this->value);
+    }
+
+    /** Un número de esta cifra, escrito como su valor (euros, porcentaje o recuento): la banda de la historia lo usa. */
+    public function format(int $value): string
+    {
+        return match ($this->unit) {
+            self::UNIT_MONEY => self::euros($value),
+            self::UNIT_RATE => self::percent($value),
+            default => number_format($value, 0, ',', '.'),
+        };
+    }
+
+    /**
+     * La misma cifra con su historia (T3b, `#790`).
+     *
+     * @param  list<int>  $history
+     */
+    public function withHistory(array $history, string $unit): self
+    {
+        return new self(
+            $this->key, $this->label, $this->unit, $this->polarity, $this->how, $this->value, $this->previous, $this->base, $this->previousBase,
+            $this->hits, $this->previousHits, $this->display, $this->detail, $this->squares, $this->previousSquares, $this->isMean,
+            $history, $unit,
+        );
+    }
+
+    /**
+     * **¿Es normal para ti?** (T3b; `[DECIDIDO owner]` 28-09, `#790`): normal si cae entre la más baja y la más alta de su
+     * historia —el rango mín–máx—; fuera, alta o baja. Hacen falta {@see MIN_HISTORY} periodos; una TASA con menos de
+     * {@see MIN_BASE} casos no se juzga. El TONO sale de la polaridad: subir es bien, mal o ni lo uno ni lo otro.
+     *
+     * Simulado el 28-09: un periodo normal cae fuera del mín–máx de 12 el 15 % de las veces (de la P25–P75, el 57 %).
+     *
+     * @return array{state: string, tone: string, low: ?int, high: ?int, n: int}|null `null`: sin historia (ni se dice)
+     */
+    public function verdict(): ?array
+    {
+        if ($this->history === null || $this->unit === self::UNIT_TEXT) {
+            return null;
         }
 
-        return match ($this->unit) {
-            self::UNIT_MONEY => self::euros($this->value),
-            self::UNIT_RATE => self::percent($this->value),
-            default => number_format($this->value, 0, ',', '.'),
+        $n = count($this->history);
+        $none = ['tone' => self::TONE_NEUTRAL, 'low' => null, 'high' => null, 'n' => $n];
+
+        if ($n < self::MIN_HISTORY) {
+            return ['state' => self::VERDICT_NO_HISTORY] + $none;
+        }
+
+        // Una tasa o una MEDIA con pocos casos no se juzga: con dos pedidos, el valor medio es casi azar.
+        if (($this->unit === self::UNIT_RATE || $this->isMean) && ($this->base ?? 0) < self::MIN_BASE) {
+            return ['state' => self::VERDICT_FEW] + $none;
+        }
+
+        $low = min($this->history);
+        $high = max($this->history);
+        $state = match (true) {
+            $this->value < $low => self::VERDICT_LOW,
+            $this->value > $high => self::VERDICT_HIGH,
+            default => self::VERDICT_NORMAL,
         };
+        $tone = match (true) {
+            $state === self::VERDICT_NORMAL, $this->polarity === Polarity::Neutral => self::TONE_NEUTRAL,
+            ($state === self::VERDICT_HIGH) === ($this->polarity === Polarity::UpIsGood) => self::TONE_GOOD,
+            default => self::TONE_WATCH,
+        };
+
+        return ['state' => $state, 'tone' => $tone, 'low' => $low, 'high' => $high, 'n' => $n];
+    }
+
+    /**
+     * **La frase del veredicto** (§4.6): lo que la tarjeta dice en palabras, con la banda y la unidad («Normal para ti: entre
+     * 1.200 € y 1.900 € en tus últimos 12 meses»). El cambio ya lo dice su línea (T0b): aquí no se repite.
+     */
+    public function verdictLine(): ?string
+    {
+        $verdict = $this->verdict();
+
+        if ($verdict === null) {
+            return null;
+        }
+
+        $unit = (string) $this->historyUnit;
+        $weekday = str_starts_with($unit, 'day:') ? __('admin.analytics.verdict.weekday.'.substr($unit, 4)) : null;
+
+        if ($verdict['state'] === self::VERDICT_NO_HISTORY) {
+            return __('admin.analytics.verdict.no_history', ['n' => $verdict['n'], 'min' => self::MIN_HISTORY, 'unit' => $weekday ?? __('admin.analytics.verdict.unit.'.$unit)]);
+        }
+
+        if ($verdict['state'] === self::VERDICT_FEW) {
+            return __('admin.analytics.verdict.few', ['min' => self::MIN_BASE]);
+        }
+
+        // «tus últimas 12 semanas», «tus últimos 12 miércoles»: el adjetivo concuerda con la unidad.
+        $span = $weekday !== null
+            ? __('admin.analytics.verdict.span.day', ['n' => $verdict['n'], 'weekday' => $weekday])
+            : __('admin.analytics.verdict.span.'.$unit, ['n' => $verdict['n']]);
+        $key = $verdict['state'] === self::VERDICT_NORMAL ? 'normal' : $verdict['state'].'_'.$verdict['tone'];
+        // Una historia PLANA dice «siempre 0,00 €», no «entre 0,00 € y 0,00 €» (visto el 28-09: un lunes a primera hora).
+        $flat = $verdict['low'] === $verdict['high'];
+        $values = ['low' => $this->format((int) $verdict['low']), 'high' => $this->format((int) $verdict['high'])];
+
+        return __('admin.analytics.verdict.'.$key, [
+            'span' => $span,
+            'range' => __('admin.analytics.verdict.'.($flat ? 'flat' : 'range'), $values),
+            'before' => __('admin.analytics.verdict.'.($flat ? 'before_flat' : 'before_range'), $values),
+        ]);
     }
 
     /**

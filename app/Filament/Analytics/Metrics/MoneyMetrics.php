@@ -22,6 +22,26 @@ final class MoneyMetrics extends MetricSet
         return MoneyReport::for($window, $comparison);
     }
 
+    protected static function baselineTotals(Window $period): array
+    {
+        return MoneyReport::baselineTotals($period);
+    }
+
+    /** Los compradores comparados viven dentro de `customers` (T0c): también se cambian. */
+    protected static function withTotals(array $report, Window $period): array
+    {
+        $totals = MoneyReport::baselineTotals($period);
+        $report['previous'] = $totals['previous'];
+        $report['customers']['previous'] = $totals['customers_previous'];
+
+        return $report;
+    }
+
+    protected static function sources(): array
+    {
+        return ['*' => MeasuredSince::ORDERS];
+    }
+
     public static function from(array $report): array
     {
         /** @var array<string, int> $t */
