@@ -1832,7 +1832,15 @@ página (calculado, elegido, la frase de cada pieza); T6b·4 la sonda y el ojo d
   Medido en el navegador: al llegar, «Elige cuántos años cumple…» y la hora extra «desde 3 €»; con 9 años, sábado 3 a las
   11:00, Menú 2 y la hora extra, 8 × 19,95 = 159,60 €, Menú 2 16 €, hora extra 8 €, **183,60 €**, hoy 50 € y 133,60 € el
   día de la fiesta, y la isla con «Sáb 3 · 11:00 · 8 niños · 183,60 €»; «Reservar y pagar la señal» valida `age: 9`,
-  108×8 y 316×1. **Sigue la T6b·4**: la sonda versionada de la página y la primera pantalla contra el mockup.
+  108×8 y 316×1.
+- ✅ **T6b·4 (28-09)**: `scripts/sonda-cumpleanos.mjs` 20/20 a 390 y a 1280 —la página con sus hechos (la invitación y la
+  firma solo si todos los packs las tienen, leído de la API; la duda de la hora extra; el ajuste; los días con su fecha;
+  sin salirse de ancho), la calculadora al llegar, el día con hueco que queda elegido, la isla que pide la edad (mirada
+  desde una pieza sin botones: con uno a la vista no repite el suyo, el diseño), el total, la señal y el resto IGUALES a
+  los del servidor para esa selección, y la línea validada con la edad, el menú y la hora extra—; control: sus lecturas
+  coinciden con las de las sondas de un solo uso (183,60 €, el 3 de octubre, «Elige la edad → #p6-edad»). La primera
+  pantalla contra el mockup, como en la T6b·1: la vuelta 114/114 · 45/45, y la primera visita igual salvo 1280×560 (el
+  mockup lleva una oferta que el panel no tiene: otra rama). **La T6b, Cumpleaños, ✅.** Sigue la T6c, Colegios.
 
 ## 5. Impacto en invariantes
 
