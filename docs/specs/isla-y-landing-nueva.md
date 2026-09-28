@@ -1961,6 +1961,24 @@ T6c·5 la sonda y el ojo del owner.
   de la línea, la hoja con la señal por total—. ⚠️ Sin ninguna hora apagada ese día, la hora perdida se prueba con una fuera
   de horario (23:30): el mismo camino. ⚠️ Entra con `probe-card@` hasta «Pagar» y NO paga. Pendientes: la escalera no marca
   el tramo elegido (el mockup sí: T6c·6) y la vuelta de Google con una excursión, sin verificar.
+- ✅ **T6c·6 (28-09) · LA ESCALERA MARCA LO ELEGIDO** (el `RateTable` con `active` de `CalculaColegios`: «se ve de dónde sale el
+  precio»), con el ojo del owner («perfecto»; instancia `88660ef`). **La T6c, Colegios, ✅** (queda sin verificar la vuelta de
+  Google con una excursión). El censo contra el mockup dio cuatro diferencias, no una: la marca, el título «Precios
+  por alumno» (el texto ya estaba en la instancia y no se pintaba), el tamaño `md` (era `lg`) y la cabecera con la duración
+  ELEGIDA y sus precios (era siempre la de 2 horas). **Contrato página↔calculadora**, como `data-jw-calculadora-dia`: la
+  página pinta UNA ESCALERA POR PACK (`data-jw-escalera`, su id; sus tramos con `data-jw-tramo` y sus celdas con
+  `data-jw-tarifa`) y la calculadora (`calculadora/escalera.js`, lo que marca sale de `vista.escalera`) enseña la de la
+  duración elegida, pone `data-jw-activo` en el tramo de esa gente y, con día, en la celda de su tarifa (con `aria-current`);
+  sin JavaScript, la primera. En la instancia: `rate-table` gana `key` por fila y por columna (sin `key`, nada: Kids, Jump,
+  Cumpleaños, la portada y la hoja, byte a byte iguales, medido), `escalera.blade.php` y el estilo de la marca, copiado del
+  `RateTable` (la fila en `--bg-subtle`, la celda con la caja aqua). ⚠️ **`.pj-rt` es `display:grid` y le gana al `[hidden]`
+  del navegador**: sin `.pj-rt[hidden]{display:none}` se veían las dos escaleras (la instancia no tiene regla global). **Medido**:
+  `test:js` 1.569 → 1.573 (`escalera.test.js` 3, con un DOM de mentira; `vista.test.js` +1); la calculadora 185,09 → 185,80
+  (techo 186); `sonda-colegios` 56/56 a 390 y 1280 (+6: la escalera sola, sus precios contra `/prices` de ESE pack, el tramo
+  en gris, el cambio de duración, y con día la celda de la tarifa del día en la API con el precio por persona de la línea del
+  servidor). Arneses: `mutar-sonda-colegios.sh` 11/11 (+4 de la escalera, la regla de `[hidden]` sobre la hoja servida) y
+  `mutar-escalera.sh` 7/7, el de las pruebas unitarias: su primer pase dejó UN superviviente —el `aria-current` que se quedaba
+  colgado en la celda de antes no se veía, porque la prueba solo contaba las celdas con las dos marcas— y se arregló la prueba.
 
 ## 5. Impacto en invariantes
 

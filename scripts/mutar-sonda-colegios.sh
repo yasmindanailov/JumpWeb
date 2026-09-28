@@ -3,9 +3,12 @@
 # `scripts/sonda-colegios.mjs` —la página, su calculadora, la compra de una excursión, el cálculo que se retoma y la hoja
 # para dirección, en un navegador—, y cada mutación rompe UN mecanismo de los que la T6c añadió: el precio del tramo de
 # esa gente, el aviso del tramo cercano, el cálculo que viaja en el enlace, la hora retomada que ya no está libre, la
-# capa que enfoca lo que falta, los datos del centro en la línea y las cifras del grupo en la hoja.
+# capa que enfoca lo que falta, los datos del centro en la línea, las cifras del grupo en la hoja y, desde la T6c·6, la
+# escalera que marca lo elegido (la de esa duración, su tramo y la celda de la tarifa del día).
 #
-# ⚠️ Todas son de la isla (`resources/js/isla/**`): obligan a recompilar (`npm run build`) al mutar y al restaurar.
+# ⚠️ Las de la isla (`resources/js/isla/**`) obligan a recompilar (`npm run build`) al mutar y al restaurar.
+# ⚠️ La de la hoja de estilos se aplica a la COPIA que sirve el producto (`public/instancia/`, ignorada por git): es lo que
+# el navegador mide. Por eso la base comprueba antes que la copia es IDÉNTICA a su fuente de la instancia.
 #
 # Reglas de la casa dentro: verde antes de mutar · veredicto por código de salida · comprobar que la mutación SE APLICÓ ·
 # restaurar por COPIA DE SEGURIDAD (por RUTA, nunca por `basename`) y `touch`, nunca con `git checkout`.
@@ -13,6 +16,7 @@ set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
 ANCHO="${1:-390}"
+INSTANCIA="${INSTANCIA:-../instancias/playjump}"
 RUN="docker compose exec -u sail -T -e PLAYWRIGHT_BROWSERS_PATH=/home/sail/pw-browsers laravel.test node scripts/sonda-colegios.mjs ${ANCHO}"
 BUILD="docker compose exec -u sail -T laravel.test npm run build"
 
@@ -21,7 +25,9 @@ CALC=resources/js/isla/calculadora/useCalculadora.js
 IR_A=resources/js/isla/compra/ir-a.js
 LINEA=resources/js/isla/compra/linea.js
 HOJA=resources/js/isla/hoja/montar.js
-FICHEROS=("$VISTA" "$CALC" "$IR_A" "$LINEA" "$HOJA")
+ESC=resources/js/isla/calculadora/escalera.js
+CSS=public/instancia/css/entradas.css
+FICHEROS=("$VISTA" "$CALC" "$IR_A" "$LINEA" "$HOJA" "$ESC" "$CSS")
 
 TMP="$(mktemp -d)"
 copia() { echo "$TMP/${1//\//__}"; }
@@ -29,6 +35,12 @@ compilar() { $BUILD >/dev/null 2>&1; }
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$(copia "$f")" "$f"; touch "$f"; done; compilar; }
 for f in "${FICHEROS[@]}"; do cp "$f" "$(copia "$f")"; done
 trap 'restaurar; rm -rf "$TMP"' EXIT
+
+fuente="$INSTANCIA/publico/${CSS#public/}"
+if ! cmp -s "$CSS" "$fuente"; then
+    echo "✗ la copia servida «$CSS» NO es su fuente ($fuente): copia antes \`publico/instancia\` a \`public/\`." >&2
+    exit 1
+fi
 
 # La salida de cada corrida, para decir QUÉ comprobación cae: que muerda por la razón que la mutación rompe.
 SALIDA="$TMP/salida.txt"
@@ -100,6 +112,23 @@ mutar "los datos del centro no viajan en la línea" "$LINEA" \
 mutar "la hoja escribe como total la señal" "$HOJA" \
   "poner('[data-jw-hoja-cifra=\"total\"]', euros(linea.total_cents, locale));" \
   "poner('[data-jw-hoja-cifra=\"total\"]', euros(linea.deposit_cents, locale));"
+
+# ── La escalera que marca lo elegido (T6c·6) ──────────────────────────────────────────────────────────────────────
+mutar "la escalera de la otra duración no se oculta" "$ESC" \
+  "escalera.hidden = ! suya(escalera);" \
+  "escalera.hidden = false;"
+
+mutar "la escalera marca siempre el primer tramo" "$VISTA" \
+  "tramo: tramoDe(fila, b.n)?.desde ?? null," \
+  "tramo: fila.tramos[0]?.desde ?? null,"
+
+mutar "con día, ninguna celda se marca" "$ESC" \
+  "const marcada = activa && celda.dataset.jwTarifa === marca.tarifa;" \
+  "const marcada = false;"
+
+mutar "la hoja de estilos olvida que \`display:grid\` le gana a \`[hidden]\` (se ven las dos escaleras)" "$CSS" \
+  ".pj-rt[hidden]{display:none}" \
+  ".pj-rt[hidden]{}"
 
 echo "$muerden/$total muerden"
 [[ $muerden -eq $total ]]

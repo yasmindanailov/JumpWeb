@@ -7,10 +7,13 @@
  *   1. LA PÁGINA: monta la calculadora con sus packs, una sola `h1`, la miniatura de la hoja y los días con hueco con su
  *      fecha; la nota es el regalo de la ficha; en el móvil no se sale de ancho.
  *   2. LA CALCULADORA, al llegar: el «desde» por persona es el del tramo de esa gente en `/prices`, cada duración con el
- *      suyo, y el tramo siguiente, si está cerca, a un toque («Calcular con…» pone su cifra).
- *   3. LA CIFRA SE ESCRIBE: otra gente, su tramo; lejos del siguiente, sin aviso.
+ *      suyo, y el tramo siguiente, si está cerca, a un toque («Calcular con…» pone su cifra). LA ESCALERA (T6c·6, el
+ *      `RateTable` con `active` del diseño): la de la duración elegida, sola, con los precios de `/prices` y el tramo de
+ *      esa gente en gris.
+ *   3. LA CIFRA SE ESCRIBE: otra gente, su tramo, también en la escalera; lejos del siguiente, sin aviso. Otra duración:
+ *      su escalera, con ella en la cabecera y sus precios.
  *   4. UN DÍA de «Próximos días con hueco», pulsado, trae sus horas; con la primera libre, el total, la señal y el resto son
- *      los del servidor, y la isla lo dice.
+ *      los del servidor, y la isla lo dice; la escalera marca la celda de la tarifa de ese día con el precio del servidor.
  *   5. «RESERVAR Y PAGAR LA SEÑAL» valida la línea (pack, gente, día, hora) y abre la compra de la isla, que baja al primer
  *      dato obligatorio del centro y lo enfoca; «Continuar» sin estar lista lleva al siguiente; con todo, a «Tus datos».
  *   6. CON LA CUENTA DE PRUEBAS, hasta «Pagar» (NUNCA paga): el precio por persona, la gente, el total y la señal «el día
@@ -100,6 +103,27 @@ async function recibo(page, textos) {
         resto: lado.match(new RegExp(`${escapar(textos.luego)} ([\\d.,]+\\s?€)`))?.[1],
     };
 }
+/**
+ * La ESCALERA a la vista (T6c·6, el `RateTable` con `active` del diseño): cuáles se ven, su cabecera, sus precios por tramo y
+ * tarifa, el tramo marcado (y si se ve en gris) y la celda marcada (su tarifa, `aria-current` y si lleva la caja).
+ */
+const escaleraVista = (page) => page.evaluate(() => {
+    const todas = [...document.querySelectorAll('[data-jw-escalera]')];
+    const visibles = todas.filter((x) => x.getBoundingClientRect().height > 0);
+    const e = visibles[0];
+    const activa = e?.querySelector('[data-jw-tramo][data-jw-activo]');
+    const otra = e?.querySelector('[data-jw-tramo]:not([data-jw-activo])');
+    const celda = e?.querySelector('[data-jw-tarifa][data-jw-activo]');
+
+    return {
+        visibles: visibles.map((x) => x.dataset.jwEscalera), total: todas.length, unidad: e?.querySelector('thead th')?.innerText.trim() ?? '',
+        precios: e ? [...e.querySelectorAll('[data-jw-tramo]')].map((f) => [Number(f.dataset.jwTramo), [...f.querySelectorAll('[data-jw-tarifa]')].map((c) => [c.dataset.jwTarifa, c.innerText.trim()])]) : [],
+        tramo: activa ? Number(activa.dataset.jwTramo) : null,
+        gris: Boolean(activa && otra) && window.getComputedStyle(activa).backgroundColor !== window.getComputedStyle(otra).backgroundColor,
+        tarifa: celda?.dataset.jwTarifa ?? null, actual: celda?.getAttribute('aria-current') ?? null, precioMarcado: celda?.innerText.trim() ?? null,
+        caja: Boolean(celda?.firstElementChild) && window.getComputedStyle(celda.firstElementChild).boxShadow !== 'none',
+    };
+});
 
 try {
     // ── 1 · La página ─────────────────────────────────────────────────────────────────────────────────────────────
@@ -141,6 +165,13 @@ try {
     ok(`el «desde» por ${persona} es el de su tramo en \`/prices\``, centimos(t.match(desde())?.[1]) === masBarato(tramoDe(precioDe[fila.id], n0)), `${t.match(desde())?.[0]} · /prices ${masBarato(tramoDe(precioDe[fila.id], n0))}`);
     const duraciones = packs.map((f) => ({ f, visto: centimos(t.match(new RegExp(`${escapar(f.label)}[\\s\\S]{0,40}?desde ([\\d.,]+)\\s?€`))?.[1]), api: masBarato(tramoDe(precioDe[f.id], n0)) }));
     ok('cada duración, con el «desde» de su tramo', duraciones.every((d) => d.visto === d.api), duraciones.map((d) => `${d.f.label} ${d.visto}/${d.api}`).join(' · '));
+    // La escalera (T6c·6): la de esta duración, con SUS precios de `/prices`, y el tramo de esa gente marcado.
+    const precioEnPrices = (id, desde, tarifa) => precioDe[id].tiers.find((x) => x.from_quantity === desde)?.prices.find((x) => x.rate === tarifa)?.cents;
+    const preciosDe = (esc, id) => esc.precios.length > 0 && esc.precios.every(([desde, celdas]) => celdas.every(([tarifa, txt]) => centimos(txt) === precioEnPrices(id, desde, tarifa)));
+    let esc = await escaleraVista(a.page);
+    ok('la escalera de la duración elegida, sola (las demás, ocultas)', esc.visibles.join() === String(fila.id) && esc.total === packs.length, `${esc.visibles.join()} de ${esc.total}`);
+    ok('sus precios son los de `/prices` de ese pack, tramo a tramo y tarifa a tarifa', preciosDe(esc, fila.id), JSON.stringify(esc.precios).slice(0, 120));
+    ok('marca el tramo de esa gente, en gris; sin día, ninguna celda', esc.tramo === tramoDe(precioDe[fila.id], n0).from_quantity && esc.gris && esc.tarifa === null, `tramo ${esc.tramo} · gris ${esc.gris}`);
     const { lado: ladoAlLlegar, hoy: senalAlLlegar } = await recibo(a.page, textos);
     ok('antes de elegir, sin total y con la señal', Boolean(senalAlLlegar) && ! /Total \d/.test(ladoAlLlegar), ladoAlLlegar.slice(0, 120));
     const siguiente = tramoSiguiente(precioDe[fila.id], n0);
@@ -154,7 +185,7 @@ try {
         await calcularCon.click();
         await a.page.waitForTimeout(1500);
         t = await pieza.innerText();
-        ok('«Calcular con…» pone la cifra de ese tramo y su precio', Number(await cifraDe(a.page).inputValue()) === siguiente.from_quantity && centimos(t.match(desde())?.[1]) === masBarato(siguiente));
+        ok('«Calcular con…» pone la cifra de ese tramo y su precio, y la escalera lo marca', Number(await cifraDe(a.page).inputValue()) === siguiente.from_quantity && centimos(t.match(desde())?.[1]) === masBarato(siguiente) && (await escaleraVista(a.page)).tramo === siguiente.from_quantity);
     } else if (cerca) {
         ok('«Calcular con…» pone la cifra de ese tramo y su precio', false, 'no está');
     }
@@ -167,6 +198,20 @@ try {
     t = await pieza.innerText();
     ok(`se escribe ${n1}: el «desde» de su tramo`, Number(await cifraDe(a.page).inputValue()) === n1 && centimos(t.match(desde())?.[1]) === masBarato(tramoDe(precioDe[fila.id], n1)), t.match(desde())?.[0]);
     ok('lejos del tramo siguiente, sin aviso', ! t.includes(textos.calculadora.tramo_calcular.split(':n')[0]));
+    ok('la escalera marca el tramo nuevo', (await escaleraVista(a.page)).tramo === tramoDe(precioDe[fila.id], n1).from_quantity);
+    // Otra duración: SU escalera —su duración en la cabecera, sus precios— con el mismo tramo marcado; y se vuelve.
+    if (packs.length > 1) {
+        const otra = packs[1];
+        await a.page.locator(`#calcula input[type="radio"][value="${otra.id}"]`).check({ force: true });
+        await a.page.waitForTimeout(1500);
+        esc = await escaleraVista(a.page);
+        ok('otra duración: su escalera, con ella en la cabecera, sus precios y el tramo de esa gente', esc.visibles.join() === String(otra.id) && esc.unidad.includes(otra.label) && preciosDe(esc, otra.id) && esc.tramo === tramoDe(precioDe[otra.id], n1).from_quantity, `${esc.unidad} · tramo ${esc.tramo}`);
+        await a.page.locator('[data-jw-escalera]:not([hidden])').first().scrollIntoViewIfNeeded();
+        await a.page.waitForTimeout(400);
+        await foto(a.page, '1b-escalera-otra-duracion');
+        await a.page.locator(`#calcula input[type="radio"][value="${fila.id}"]`).check({ force: true });
+        await a.page.waitForTimeout(1500);
+    }
 
     // ── 4 · Un día con hueco y su primera hora libre: lo que se ve es lo del servidor ────────────────────────────
     const dia = dias[0];
@@ -186,6 +231,13 @@ try {
     ok('la señal de antes de elegir era la del servidor', centimos(senalAlLlegar) === linea?.deposit_cents, senalAlLlegar);
     const isla = await texto(a.page, '[data-jw-isla]');
     ok('la isla de la página dice lo elegido con su total', isla.includes(`${n1} `) && Boolean(r.total) && isla.includes(r.total), isla.slice(0, 120));
+    // Con día, la escalera marca la CELDA de su tarifa (la del día en la API), y su precio es el por persona del servidor.
+    const rateDelDia = await a.page.evaluate(async (q) => (await (await fetch(`/api/v1/availability/${q.id}/dates`, { headers: { Accept: 'application/json' } })).json()).data.find((x) => x.date === q.dia)?.rate_key, { id: fila.id, dia });
+    esc = await escaleraVista(a.page);
+    ok('con día, la celda de su tarifa, marcada también para el lector, con el precio por persona del servidor', esc.tramo === tramoDe(precioDe[fila.id], n1).from_quantity && esc.tarifa === (rateDelDia === 'special' ? 'special' : 'normal') && esc.actual === 'true' && esc.caja && centimos(esc.precioMarcado) === linea?.unit_price_cents, `${esc.tarifa} (el día: ${rateDelDia}) · ${esc.precioMarcado} · caja ${esc.caja}`);
+    await a.page.locator('[data-jw-escalera]:not([hidden])').first().scrollIntoViewIfNeeded();
+    await a.page.waitForTimeout(400);
+    await foto(a.page, '2b-escalera');
     await a.page.locator('[data-jw-calculadora-lado]').scrollIntoViewIfNeeded();
     await a.page.waitForTimeout(500);
     await foto(a.page, '2-total');

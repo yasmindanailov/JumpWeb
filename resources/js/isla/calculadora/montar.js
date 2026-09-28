@@ -17,6 +17,7 @@ import { createApp, h, watch } from 'vue';
 import { createPinia } from 'pinia';
 import '../isla.css';
 import CalculadoraEntradas from './CalculadoraEntradas.vue';
+import { marcarEscaleras } from './escalera.js';
 import { useCalculadora } from './useCalculadora.js';
 import { CLAVE_TEXTOS } from '../piezas/textos.js';
 
@@ -28,7 +29,8 @@ export function montarCalculadora(sitio, { textos = {}, owner = null, locale = '
     let pagina = null;
 
     try { pagina = JSON.parse(sitio?.dataset?.jwCalculadora ?? 'null'); } catch { pagina = null; }
-    const lado = sitio?.closest('section')?.querySelector('[data-jw-calculadora-lado]');
+    const seccion = sitio?.closest('section');
+    const lado = seccion?.querySelector('[data-jw-calculadora-lado]');
 
     if (! pagina?.filas?.length || ! lado) return null;
     let calculadora = null;
@@ -45,6 +47,8 @@ export function montarCalculadora(sitio, { textos = {}, owner = null, locale = '
 
                 if (/^\d{4}-\d{2}-\d{2}$/.test(dia ?? '')) calculadora.elegirDia(dia);
             });
+            // La escalera de la página, marcada con lo elegido (T6c·6): la de esta fila, su tramo y, con día, su tarifa.
+            watch(() => calculadora.vista.value.escalera, (marca) => marcarEscaleras(seccion, marca), { immediate: true, deep: true });
 
             return () => h(CalculadoraEntradas, { v: calculadora.vista.value, lado, marcas, onCambiar: calculadora.cambiar, onReservar: calculadora.reservar });
         },

@@ -55,6 +55,11 @@ export function mesesDelCalendario(dias, { hoy, dia = null }) {
     return { mes: doble && mesDia === siguiente ? esteMes : mesDia, meses: doble ? 2 : 1 };
 }
 
+/** El tramo de `n` personas en la escalera de una fila de pack: el de mayor «desde» que no pasa de `n`, o `null`. */
+function tramoDe(fila, n) {
+    return [...(Array.isArray(fila?.tramos) ? fila.tramos : [])].sort((a, b) => b.desde - a.desde).find((t) => n >= t.desde) ?? null;
+}
+
 /**
  * El precio PUBLICADO por persona de una fila de PACK para `n` personas (T6c·3b, colegios): el de su TRAMO en la escalera
  * que la página trae de `/prices.tiers` (`fila.tramos`: `{ desde, normal, especial }`, en céntimos), en la columna de la
@@ -62,7 +67,7 @@ export function mesesDelCalendario(dias, { hoy, dia = null }) {
  * siendo los de la línea del servidor. (El precio del día de la API, en un pack, es el del tramo más barato.)
  */
 export function precioDelTramo(fila, n, especial = false) {
-    const tramo = [...(Array.isArray(fila?.tramos) ? fila.tramos : [])].sort((a, b) => b.desde - a.desde).find((t) => n >= t.desde) ?? null;
+    const tramo = tramoDe(fila, n);
     const cents = tramo ? tramo[especial ? 'especial' : 'normal'] : null;
 
     return Number.isInteger(cents) ? cents : null;
@@ -204,6 +209,9 @@ export function vistaCalculadora(e) {
             luego: linea?.has_deposit && p.luego ? { label: p.luego, value: euros(linea.gate_remainder_cents, locale) } : null,
             notaIcono: p.notaIcono ?? 'qr-code',
         },
+        // Lo que la ESCALERA de la página marca (T6c·6; el `RateTable` con `active` del diseño, `escalera.js`): la de esta fila,
+        // el tramo de esta gente y, con día, su tarifa. Solo de un pack con escalera.
+        escalera: esPack && fila.tramos?.length ? { fila: fila.id, tramo: tramoDe(fila, b.n)?.desde ?? null, tarifa: delDia ? (especial ? 'special' : 'normal') : null } : null,
         // Lo que la calculadora le cuenta a la ISLA de la página (T4e, el `onCalculo` de `pagina.jsx` del diseño): qué
         // pregunta falta y, con todo elegido, lo elegido en corto con el total DEL SERVIDOR («Sáb 26 · 17:00 · 3 niños ·
         // 24 €»). Solo cuenta si alguien la ha tocado (`tocada`): los valores de partida no son un cálculo.

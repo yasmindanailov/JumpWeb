@@ -244,3 +244,12 @@ test('las entradas no cambian: sin señal, sin tramos, sin contador escribible y
 
     assert.deepEqual([v.resumen.ahora, v.resumen.luego, v.cuantos.editable, v.cuantos.cerca, v.resumen.notaIcono], [null, null, false, null, 'qr-code']);
 });
+
+/** **La escalera marcada** (T6c·6, `active` del diseño): la de la fila elegida, el tramo de esa gente y, con día, su tarifa. */
+test('la escalera que marca: su fila, el tramo de esa gente y, solo con día, su tarifa; de unas entradas, ninguna', () => {
+    assert.deepEqual(deColegios().escalera, { fila: 395, tramo: 30, tarifa: null }, 'sin día: el tramo, sin celda');
+    assert.deepEqual(deColegios({ borrador: { n: 75 } }).escalera, { fila: 395, tramo: 70, tarifa: null });
+    assert.deepEqual(deColegios({ borrador: { n: 100, dia: '2026-10-05' } }).escalera, { fila: 395, tramo: 100, tarifa: 'normal' });
+    assert.deepEqual(deColegios({ borrador: { fila: 396, dia: '2026-10-09' } }).escalera, { fila: 396, tramo: 30, tarifa: 'special' });
+    assert.equal(vista().escalera, null);
+});
