@@ -1980,6 +1980,35 @@ T6c·5 la sonda y el ojo del owner.
   `mutar-escalera.sh` 7/7, el de las pruebas unitarias: su primer pase dejó UN superviviente —el `aria-current` que se quedaba
   colgado en la celda de antes no se veía, porque la prueba solo contaba las celdas con las dos marcas— y se arregló la prueba.
 
+### 4.20 La T6d: VISÍTANOS — el censo (MEDIDO 28-09)
+
+`paginas/visitanos/` del zip (ocho piezas, `contenido.js`, `texto.jsx`) y su sección del README (`readme.md` §«Visítanos»).
+Página de APOYO: «responde sin hacer buscar»; no vende, su acción es la de la isla (situación 15, `kind: 'apoyo'`: ya
+portada en la T2, `situacion.js`) —«Reservar» abre el selector de planes, como en la portada— y «Cómo llegar». Sin
+formulario: `/contacto` le cede con un 301 en la T6f (`#789`). Lo que pinta, lo que dicen el panel y playjump.es:
+
+| Pieza | Lo que pinta el mockup | Piezas del sistema | Datos (medidos) |
+|---|---|---|---|
+| 1 · cabecera | titular, [Hoy] grande bajo él (o «Abrimos mañana…»), el texto y «Cómo llegar» en botón blanco; SIN primario, precio, nota ni garantías | `video-hero` ✓ (`route`, sin primario, `today` grande) | `schedule_now`, `availability_today`, `site.address` ✓; ❗ falta la FOTO DE LA ENTRADA: sin ella la tarjeta queda en tinta (`#761`·3, la regla de `video-hero`) |
+| 2 · horario | en su fila (`AnswerRow`): las filas, la nota de la tarifa especial, [Fechas especiales] y dos líneas (cumpleaños, excursiones) | `AnswerRow` ✗ · `opening-hours` ✓ pero sin `size="lg"`, `specialNote`, `exceptions` ni la fila de hoy del sistema | `schedule.weekly` y `special_days` ✓ (8 festivos, TODOS 11:00–21:30 como la fila del fin de semana: la lista, que dice solo lo que CAMBIA, no sale en local) |
+| 3 · cómo llegar | `ParkLocation` a lo ancho y en grande, el mapa que lleva a la ruta | `park-location` ✓ sin `size="lg"` | `site.address` (`maps_url`) ✓; la captura del mapa, pendiente como en la T4 |
+| 4 · qué traer | tres `RuleCard` (Obligatorio, Seguridad, Bueno saber) | `RuleGrid`/`RuleCard` ✗ | los calcetines, de la ficha (2 €) y de `rules`; ❗ el panel dice «taquillas GRATIS» y «ni móvil» en la zona de salto (el mockup: «de pago», «bajo tu responsabilidad») |
+| 5 · quién necesita un adulto | cuatro casos en su fila (`ProofList`) y «Ver normas y seguridad» | `proof-list` ✓ · `AnswerRow` ✗ | Kids y Jump, de `zones` (edad, altura, `escort`) ✓; «el adulto que acompaña no paga», de `faqs` ✓; ❗ «menores de 14 no se quedan solos / desde los 14 vienen solos»: NINGÚN hecho (el panel solo dice «a los menores de 16 los registra su padre») |
+| 6 · la cafetería | `PromoSplit` sobre gris, con su foto, lo que hay en una línea y el texto | `promo-split` ✓ | «sin entrada», de `faqs` ✓ (y `barFreeEntry`); ❗ la FOTO está en el panel (la de `/bar`, `BarPage::venuePhoto()`) pero no es un hecho; «tartas con el pack» choca con `rules` (se puede traer, 10 €) |
+| 7 · dudas | doce, en dos columnas, con su respuesta corta; «aquí» abre el selector | `accordion` ✓ (sin `hint`) | nueve con respuesta del panel (`faqs`) o de un hecho (plazos por producto, `zones`, idiomas del producto); ❗ accesibilidad y formas de pago en el parque: ningún hecho |
+| 8 · contacto y cierre | `CTABand` en tinta SIN botón: teléfono y WhatsApp, el horario, el correo y las redes | `cta-band` ✓ sin `primary={false}` | `site.contact` (teléfono; correo `info@`, el mockup `hola@`) y `site.social` ✓ |
+| isla | situación 15 y el selector de planes | producto ✓ (T2, T6a) | la página compone las opciones, como la portada |
+
+**Lo que manda la verdad y no el mockup** (la regla de `#768`/`#789`: la verdad es el panel y playjump.es; el owner lo revisa
+todo al final con el dueño): donde el panel HABLA, gana el panel (taquillas gratis, sin móvil en la zona de salto, la tarta se
+trae con su cargo, el correo `info@`, los plazos de cada producto); lo que el mockup dice de más SIN hecho no se dice (la
+oferta «calcetines incluidos online», que el README ya marcaba; los 14 años; accesibilidad y formas de pago; «combos y
+cubos»), y queda para su revisión final. Sin foto de la entrada, la cabecera en tinta; la de la cafetería, del panel.
+**Plan**: **T6d·1** el hecho de la CAFETERÍA en el producto (su foto con su `alt`, su nombre y si se entra sin entrada: lo
+que ya publica `/bar`, que se retira en la T6f); **T6d·2** la página en la instancia (`/visitanos`, sus hechos, las ocho
+piezas, `AnswerRow` y `RuleGrid`/`RuleCard` nuevas, y `opening-hours`, `park-location`, `accordion` y `cta-band` con lo que
+el diseño les añadió, sin cambiar sus otras páginas); **T6d·3** la sonda y el ojo del owner.
+
 ## 5. Impacto en invariantes
 
 - `PAY-*`: solo si entra Bizum; entonces `VERIFY_CONC=1` y la lista del `CRITICAL_RE`.
