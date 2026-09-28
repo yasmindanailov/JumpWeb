@@ -75,8 +75,10 @@ export function propsDeLaIsla({ config, estado, acciones, textos }) {
     const cuenta = config.owner ? (config.cuenta ?? null) : null;
     const conHoy = Boolean(config.today) && ! estado.vista.hoy && ! falta;
     const huecos = Boolean(config.today?.slots);
+    // Lo que falta, con su texto (`elige_dia`, `elige_hora` y, de la fiesta, `elige_edad`) y su ancla: la que manda la
+    // calculadora (`faltaHref`, T6b·3) o, sin ella, la de la pieza 3 de Kids y Jump.
     const accion = falta
-        ? { label: textos?.accion?.[falta === 'dia' ? 'elige_dia' : 'elige_hora'] ?? '', href: falta === 'dia' ? '#p3-dia' : '#p3-hora' }
+        ? { label: textos?.accion?.[`elige_${falta}`] ?? '', href: calculo.faltaHref || (falta === 'dia' ? '#p3-dia' : '#p3-hora') }
         : { ...config.page.action, onClick: () => acciones.reservar(conHoy && huecos) };
 
     return {

@@ -14,6 +14,7 @@ return [
         'manual' => 'Ou nous réservons pour vous et vous payez par Bizum',
         'elige_dia' => 'Choisissez le jour',
         'elige_hora' => 'Choisissez l’heure',
+        'elige_edad' => 'Choisissez l’âge',
     ],
     'hoy' => [
         'antes' => 'Nous ouvrons aujourd’hui à :hora.',
@@ -144,6 +145,15 @@ return [
         'a_las' => ':dia à :hora',
         'linea_entradas' => 'Entrées · :n × :precio',
         'linea_complemento' => ':nombre · :n × :precio',
+        'falta_edad' => 'Choisis l’âge qu’il fête pour voir le total',
+        'linea_pack' => ':pack · :n × :precio',
+        'menu_incluido' => 'Inclus',
+        'menu_mas' => '+:precio par :persona',
+        'extra_mas' => '+:precio',
+        'extra_por' => '+:precio par :persona',
+        'extra_total' => '+:precio au total',
+        'extra_sin_hora' => 'Choisis l’heure pour savoir si ça rentre.',
+        'extra_no_cabe' => 'À :hora, ça ne rentre pas.',
     ],
     'compra' => [
         'paso' => 'Étape :n sur :total',

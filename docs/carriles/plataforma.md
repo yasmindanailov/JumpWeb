@@ -48,8 +48,10 @@ edad del panel—; contrato **1.45.0**; `sonda-cuenta.mjs` 250/250, arneses `mut
 instancia `5c2b9cf`; `sonda-portada.mjs`), el CALENDARIO (`#830`) y la FLECHA DE «ATRÁS» (`#831`, su censo en §4.17).
 **EN MARCHA: T6b, Cumpleaños** (censo, plan, lo medido: spec §4.18). T6b·1 ✅ («aprobado»; instancia `b969ec7`).
 **T6b·2 ✅** con el ojo del owner (`#834` 1.47.0, `#835` 1.48.0; `mutar-hechos-de-la-fiesta.sh` 15/15; instancia
-`fb6e736`). **T6b·3 EN MARCHA** (`#836`, plan en §4.18): 3a ✅ (la intención `fiesta` y la hora extra hasta «Pagar»);
-sigue la 3b (la calculadora: vista pura, composable, piezas y entrada propia), la 3c (pieza 6 de la instancia) y la 3d. **Sigue la T6b·3** (la calculadora en la página: `compra/fiesta.js`, `CalendarioMes`, `SelectorHoras`; «Reservar
+`fb6e736`). **T6b·3 ✅** con el ojo del owner (`#836`, §4.18: la intención `fiesta`, la calculadora de la fiesta con su
+entrada propia y la pieza 6 de la instancia). **Sigue la T6b·4**: la sonda VERSIONADA de Cumpleaños (lo medido con
+sondas de un solo uso en `storage/app/audit/`: la calculadora, la intención y la isla que pide la edad) y la primera
+pantalla contra el mockup; después T6c (Colegios). **Sigue la T6b·3** (la calculadora en la página: `compra/fiesta.js`, `CalendarioMes`, `SelectorHoras`; «Reservar
 y pagar la señal» a la compra con la selección entera, `#785`; los días con hueco la abren con su fecha; compartir SOLO por
 WhatsApp, `#833`) y la T6b·4 (sonda y ojo). La ISLA la repiensa el owner con Claude Design: no atar nada nuevo a ella. **Para iterar con el owner** (no
 ahora): la isla «muy sola» y el «Reservar» solo en la isla del móvil (A/B propuesto: las páginas de la instancia aún no

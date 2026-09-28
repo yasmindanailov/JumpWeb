@@ -18,10 +18,12 @@
     // Las entradas del PRODUCTO que una página puede pedir, por su NOMBRE (T4d, contrato de página): la instancia no
     // nombra ficheros del producto, y un nombre que no está aquí no carga nada. `cajon`: el cargador del paquete (la
     // compra se abre en la isla o en el lateral, según `sidebar.shell`); `calculadora`: la de la pieza de precio;
-    // `isla`: la isla EN REPOSO de la página (T4e), con lo que la página le da en `isla`.
+    // `calculadora-fiesta`: la de la fiesta (T6b·3, `#836`); `isla`: la isla EN REPOSO de la página (T4e), con lo que la
+    // página le da en `isla`.
     $entradas = array_values(array_intersect_key([
         'cajon' => 'resources/js/cajon/paquete.js',
         'calculadora' => 'resources/js/isla/calculadora/montar.js',
+        'calculadora-fiesta' => 'resources/js/isla/calculadora/montarFiesta.js',
         'isla' => 'resources/js/isla/pagina/montar.js',
     ], array_flip($scripts)));
     // La isla de la página (T4e): lo que da la página —su tipo, su acción, su «desde», hoy, el menú, el contacto— más lo
@@ -54,9 +56,13 @@
     // arranque del motor (`SidebarBoot`: leer la cesta con otro la purgaría)—, el idioma y las formas de pago que acepta la
     // instalación con su logotipo, para bajo «Reservar y pagar» (`#784`, `MarcasDePago`: sin ninguna, lista vacía). ⚠️ En
     // una variable: `@json` parte su argumento por las comas, y un arreglo escrito dentro no se compila.
-    $motorCalculadora = in_array('calculadora', $scripts, true)
+    // La de la FIESTA (T6b·3) lleva además los rótulos del pack de la compra (`pack_de_a`, `pack_desde`): la edad elige el
+    // pack con la misma regla y el mismo texto que la isla.
+    $motorCalculadora = array_intersect($scripts, ['calculadora', 'calculadora-fiesta']) !== []
         ? [
-            'textos' => ['pieza' => __('isla.pieza'), 'calculadora' => __('isla.calculadora')], 'owner' => auth()->id(), 'locale' => app()->getLocale(),
+            'textos' => ['pieza' => __('isla.pieza'), 'calculadora' => __('isla.calculadora')]
+                + (in_array('calculadora-fiesta', $scripts, true) ? ['compra' => ['cuando' => \Illuminate\Support\Arr::only((array) __('isla.compra.cuando'), ['pack_de_a', 'pack_desde'])]] : []),
+            'owner' => auth()->id(), 'locale' => app()->getLocale(),
             'marcas' => \App\Domain\Payments\Services\MarcasDePago::activas(),
         ]
         : null;

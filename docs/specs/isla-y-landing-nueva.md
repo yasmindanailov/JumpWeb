@@ -1818,10 +1818,21 @@ página (calculado, elegido, la frase de cada pieza); T6b·4 la sonda y el ojo d
   **3a ✅** la compra de la isla entiende la intención `fiesta` (pack, edad, día, hora, niños, menú, `extras` y
   `continuar`) y lleva la hora extra hasta «Pagar» (medido en el navegador: sigue sola a «Tus datos» con «Pack Cumpleaños
   KIDS · sáb 3, 11:00 · 10 niños», 194,50 € —Menú 2 y la hora extra— y la línea validada con `age`, 108×10 y 317×1);
-  lo que solo usa la compra sale de `oferta.js` a `intencion.js` (viajaba con las calculadoras); **3b** la calculadora
-  (vista pura con `node --test`, su composable sobre los stores del motor, sus piezas —la hora extra, una fila nueva— y una
-  entrada propia, que Kids y Jump no carguen la fiesta); **3c** la pieza 6 de la instancia y los días con hueco que eligen
-  su fecha; **3d** la isla de la página (lo que falta y lo elegido, como en Kids).
+  lo que solo usa la compra sale de `oferta.js` a `intencion.js` (viajaba con las calculadoras). **3b, 3c y 3d ✅** con el
+  ojo del owner en vivo («buen trabajo», 28-09). La calculadora:
+  `calculadora/vistaFiesta.js` (pura, 14 casos: sin edad no hay pack ni total; el total, la señal y el RESTO son los del
+  servidor —`total_cents`, `deposit_cents`, `gate_remainder_cents`, `PAY-12`—; la hora extra que el servidor no ofrece a
+  esa hora «no cabe»), `useCalculadoraFiesta.js` (nace SIN edad, día ni hora extra; cambiar de pack ajusta los niños y
+  vacía el día que no vende), `CalculadoraFiesta*.vue`, `ui/FilaMejora.vue` (el `UpgradeRow`; `clock` y no `timer`: el
+  registro de iconos viaja en todos los trozos) y su entrada `montarFiesta.js` (`calculadora-fiesta` en `scripts`; techo
+  193 kB, medido 191,87; ninguna de las dos calculadoras arrastra a la otra). La pieza 6 en la instancia: la retícula de
+  Kids (`pj-p3__*`, los valores del `.p6-grid`), «Niños de dos edades» con dos packs; los días con hueco la eligen por su
+  marca (`data-jw-calculadora-dia`: pulsado el 3 de octubre, queda elegido). La isla: lo que falta con su ancla
+  (`faltaHref`): sin edad, «Elige la edad → #p6-edad» (medido).
+  Medido en el navegador: al llegar, «Elige cuántos años cumple…» y la hora extra «desde 3 €»; con 9 años, sábado 3 a las
+  11:00, Menú 2 y la hora extra, 8 × 19,95 = 159,60 €, Menú 2 16 €, hora extra 8 €, **183,60 €**, hoy 50 € y 133,60 € el
+  día de la fiesta, y la isla con «Sáb 3 · 11:00 · 8 niños · 183,60 €»; «Reservar y pagar la señal» valida `age: 9`,
+  108×8 y 316×1. **Sigue la T6b·4**: la sonda versionada de la página y la primera pantalla contra el mockup.
 
 ## 5. Impacto en invariantes
 

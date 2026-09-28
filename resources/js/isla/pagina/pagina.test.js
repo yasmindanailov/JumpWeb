@@ -6,7 +6,7 @@ import { paginaConSelector } from './con-selector.js';
 /**
  * T4e — la isla viva en una página declarada (`pagina.js`), contra lo que hace `paginas/entradas/pagina.jsx` del diseño.
  */
-const textos = { accion: { elige_dia: 'Elige el día', elige_hora: 'Elige la hora' } };
+const textos = { accion: { elige_dia: 'Elige el día', elige_hora: 'Elige la hora', elige_edad: 'Elige la edad' } };
 const config = {
     page: { kind: 'producto', product: 'kids', action: { label: 'Reservar Kids', href: '#precio' }, from: 'Desde 8 €' },
     today: { state: 'antes', opensAt: '16:30', closesAt: '21:30' },
@@ -80,6 +80,11 @@ describe('las props de la isla', () => {
     test('mientras se calcula, la acción es el paso que falta', () => {
         assert.deepEqual(props({ calculo: { falta: 'dia', elegido: null } }).page.action, { label: 'Elige el día', href: '#p3-dia' });
         assert.deepEqual(props({ calculo: { falta: 'hora', elegido: null } }).page.action, { label: 'Elige la hora', href: '#p3-hora' });
+    });
+
+    test('de la calculadora de la FIESTA (T6b·3): la edad también falta, y el ancla es la que manda ella', () => {
+        assert.deepEqual(props({ calculo: { falta: 'edad', faltaHref: '#p6-edad', elegido: null } }).page.action, { label: 'Elige la edad', href: '#p6-edad' });
+        assert.deepEqual(props({ calculo: { falta: 'dia', faltaHref: '#p6-dia', elegido: null } }).page.action, { label: 'Elige el día', href: '#p6-dia' });
     });
 
     test('con todo elegido, lo elegido y el botón de la calculadora; sin botón si el de la página se ve', () => {

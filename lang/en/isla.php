@@ -14,6 +14,7 @@ return [
         'manual' => 'Or we book it for you and you pay by Bizum',
         'elige_dia' => 'Choose the day',
         'elige_hora' => 'Choose the time',
+        'elige_edad' => 'Choose the age',
     ],
     'hoy' => [
         'antes' => 'We open today at :hora.',
@@ -144,6 +145,15 @@ return [
         'a_las' => ':dia at :hora',
         'linea_entradas' => 'Tickets · :n × :precio',
         'linea_complemento' => ':nombre · :n × :precio',
+        'falta_edad' => 'Choose how old they are turning to see the total',
+        'linea_pack' => ':pack · :n × :precio',
+        'menu_incluido' => 'Included',
+        'menu_mas' => '+:precio per :persona',
+        'extra_mas' => '+:precio',
+        'extra_por' => '+:precio per :persona',
+        'extra_total' => '+:precio in total',
+        'extra_sin_hora' => 'Choose the time to see if it fits.',
+        'extra_no_cabe' => 'At :hora it does not fit.',
     ],
     'compra' => [
         'paso' => 'Step :n of :total',

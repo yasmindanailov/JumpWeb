@@ -960,6 +960,11 @@ class SidebarBundleBudgetTest extends TestCase
     // su trozo propio, que la compra pide con `import()`. Medido 180,84 → 182,75 (base: el `HEAD` de `#829`). El techo, a 183.
     private const CALCULADORA_MAX_KB = 183;
 
+    // La calculadora de la FIESTA (T6b·3, `#836`): su entrada propia, con lo que comparte con la de entradas (Vue, Pinia,
+    // los stores de la oferta, el calendario y sus piezas) y lo suyo (la vista, el composable y `FilaMejora`). Medido al
+    // nacer: 191,87 (con la de entradas en 183: trae además la regla de la edad de `compra/fiesta.js`). El techo, a 193.
+    private const CALCULADORA_FIESTA_MAX_KB = 193;
+
     // T4e (`specs/isla-y-landing-nueva.md` §4.12): la ISLA EN REPOSO de una página, entrada propia que la página pide
     // (`isla` en `scripts` de `<x-pagina>`) y que se monta al cargar. Su descarga ENTERA, como la del navegador que llega
     // sin nada: la isla (`IslaFlotante` y sus piezas), Vue, el almacén de cookies y la API; el motor y la compra, NO.
@@ -1406,6 +1411,32 @@ class SidebarBundleBudgetTest extends TestCase
         $kb = $this->descargaDe($clave, []);
         $this->assertLessThanOrEqual(self::CALCULADORA_MAX_KB, $kb, sprintf(
             'La calculadora de la página pesa %.2f kB (techo: %s kB).', $kb, self::CALCULADORA_MAX_KB
+        ));
+    }
+
+    /**
+     * **La calculadora de la FIESTA es otra entrada propia** (T6b·3, `#836`): como la de entradas —ni con la landing, ni
+     * con el cargador, ni con el motor ni la compra—, y además NINGUNA de las dos arrastra a la otra: Kids y Jump no
+     * pagan la fiesta, ni Cumpleaños las entradas. Su descarga tiene techo.
+     */
+    public function test_the_party_calculator_is_its_own_entry_apart_from_the_tickets_one_under_its_budget(): void
+    {
+        $manifest = $this->manifest();
+        $clave = 'resources/js/isla/calculadora/montarFiesta.js';
+        $entradas = 'resources/js/isla/calculadora/montar.js';
+
+        $this->assertArrayHasKey($clave, $manifest, 'La calculadora de la fiesta ya no es una entrada propia.');
+        $this->assertTrue((bool) ($manifest[$clave]['isEntry'] ?? false), 'La calculadora de la fiesta ya no es una ENTRADA: alguien la importa.');
+        $this->assertNotContains($clave, $this->alcanceEstatico('resources/js/app.js'), 'La calculadora de la fiesta viaja con la landing.');
+        $this->assertNotContains($clave, $this->alcanceEstatico('resources/js/cajon/paquete.js'), 'La calculadora de la fiesta viaja con el cargador del cajón.');
+        $this->assertNotContains('resources/js/sidebar/index.js', $this->alcanceEstatico($clave), 'La calculadora de la fiesta trae el motor entero.');
+        $this->assertNotContains('resources/js/isla/SeccionCompra.vue', $this->alcanceEstatico($clave), 'La calculadora de la fiesta trae la compra de la isla.');
+        $this->assertNotContains('resources/js/isla/calculadora/CalculadoraEntradas.vue', $this->alcanceEstatico($clave), 'La de la fiesta trae la de entradas.');
+        $this->assertNotContains('resources/js/isla/calculadora/CalculadoraFiesta.vue', $this->alcanceEstatico($entradas), 'La de entradas trae la de la fiesta.');
+
+        $kb = $this->descargaDe($clave, []);
+        $this->assertLessThanOrEqual(self::CALCULADORA_FIESTA_MAX_KB, $kb, sprintf(
+            'La calculadora de la fiesta pesa %.2f kB (techo: %s kB).', $kb, self::CALCULADORA_FIESTA_MAX_KB
         ));
     }
 

@@ -16,6 +16,8 @@ return [
         // T4e: con la calculadora de la página a medias, la acción es el paso que falta (`pagina.jsx`).
         'elige_dia' => 'Elige el día',
         'elige_hora' => 'Elige la hora',
+        // T6b·3: la calculadora de la fiesta pregunta antes la edad (elige el pack).
+        'elige_edad' => 'Elige la edad',
     ],
     'hoy' => [
         'antes' => 'Hoy abrimos a las :hora.',
@@ -159,6 +161,16 @@ return [
         'a_las' => ':dia a las :hora',
         'linea_entradas' => 'Entradas · :n × :precio',
         'linea_complemento' => ':nombre · :n × :precio',
+        // La calculadora de la FIESTA (T6b·3): la edad elige el pack, y lo que alarga la fiesta se ve si cabe a esa hora.
+        'falta_edad' => 'Elige cuántos años cumple para ver el total',
+        'linea_pack' => ':pack · :n × :precio',
+        'menu_incluido' => 'Incluido',
+        'menu_mas' => '+:precio por :persona',
+        'extra_mas' => '+:precio',
+        'extra_por' => '+:precio por :persona',
+        'extra_total' => '+:precio en total',
+        'extra_sin_hora' => 'Elige la hora para saber si cabe.',
+        'extra_no_cabe' => 'A las :hora no cabe.',
     ],
     // Las pantallas de la COMPRA (T3c), con el literal de su diseño (`paginas/compra/datos.js`). Lo que depende de
     // los datos del parque —nombres de zona, precios, las preguntas de su widget, los plazos de sus condiciones—

@@ -416,6 +416,28 @@ BLADE);
     }
 
     /**
+     * **La calculadora de la FIESTA, por su nombre** (`calculadora-fiesta`, T6b·3, `#836`): su propia entrada, no la de
+     * entradas, y lo del motor con los rótulos del pack de la compra (la edad elige el pack con el mismo texto que la isla).
+     */
+    public function test_a_page_asks_for_the_party_calculator_by_name_and_gets_its_own_entry_and_the_pack_labels(): void
+    {
+        File::put($this->paquete.'/web/con-fiesta.blade.php', <<<'BLADE'
+<x-pagina titulo="Cumple" :scripts="['calculadora-fiesta']"><p>hola</p></x-pagina>
+BLADE);
+        $this->declarar(['cumple' => ['vista' => 'con-fiesta', 'hechos' => []]]);
+
+        $html = (string) $this->get('/cumple')->assertOk()->getContent();
+        $this->assertMatchesRegularExpression('#<script type="module" src="[^"]*/build/assets/montarFiesta-[\w-]+\.js"#', $html);
+        $this->assertDoesNotMatchRegularExpression('#/build/assets/montar-[\w-]+\.js#', $html, 'no carga la calculadora de entradas');
+
+        $this->assertSame(1, preg_match('#<script type="application/json" id="jw-calculadora-motor">(.*?)</script>#s', $html, $m));
+        $motor = json_decode($m[1], true, 512, JSON_THROW_ON_ERROR);
+        $this->assertSame(__('isla.calculadora'), $motor['textos']['calculadora']);
+        $this->assertSame(['pack_de_a', 'pack_desde'], array_keys($motor['textos']['compra']['cuando']));
+        $this->assertSame(__('isla.compra.cuando.pack_desde'), $motor['textos']['compra']['cuando']['pack_desde']);
+    }
+
+    /**
      * **La compra que vuelve de Google se REABRE en una página declarada** (`#785`): el `<body>` lleva las mismas marcas de
      * compra que el layout de siempre (`components/site/body-compra.blade.php`). Sin ellas, la compra que salía a Google
      * desde Kids o Jump volvía a `?compra=reanudar` y no se reabría —el owner, 26-09: «al volver de Google te lleva a Mi
