@@ -3574,6 +3574,19 @@ return [
             'gate' => '在入口',
             'inside' => '在园内',
         ],
+        // 图标和级别（`DECISIONES #842`）：规则在网站 /normas 上的卡片。
+        'field_icon' => '图标',
+        'field_icon_hint' => '规则在网站上的图标。留空则由网站选择。',
+        'field_icon_none' => '未选择',
+        'field_level' => '级别',
+        'field_level_hint' => '规则的颜色和对应的文字。留空则显示为「安全」。',
+        'field_level_none' => '未选择',
+        'levels' => [
+            'must' => '必须',
+            'safety' => '安全',
+            'forbidden' => '禁止',
+            'info' => '须知',
+        ],
 
         'lang' => [
             'es' => '西班牙语',

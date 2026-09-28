@@ -109,6 +109,33 @@ class ParkRuleResourceTest extends TestCase
         $this->assertSame(0, VenueRule::count());
     }
 
+    /**
+     * **El icono y el nivel se eligen en el panel** (`#842`): de las listas del producto, y se pueden dejar vacíos («sin
+     * elegir»: la norma se publica igual). Un valor fuera de la lista no se guarda.
+     */
+    public function test_icon_and_level_are_chosen_from_the_product_lists(): void
+    {
+        Livewire::actingAs($this->admin())
+            ->test(CreateParkRule::class)
+            ->fillForm($this->validForm(['icon' => 'footprints', 'level' => 'must']))
+            ->call('create')
+            ->assertHasNoFormErrors();
+        $this->assertSame(['footprints', 'must'], [VenueRule::firstOrFail()->icon, VenueRule::firstOrFail()->level]);
+
+        Livewire::actingAs($this->admin())
+            ->test(CreateParkRule::class)
+            ->fillForm($this->validForm(['name' => ['es' => 'Otra'], 'icon' => 'no-existe', 'level' => 'rarisimo']))
+            ->call('create')
+            ->assertHasFormErrors(['icon', 'level']);
+
+        Livewire::actingAs($this->admin())
+            ->test(CreateParkRule::class)
+            ->fillForm($this->validForm(['name' => ['es' => 'Sin elegir']]))
+            ->call('create')
+            ->assertHasNoFormErrors();
+        $this->assertSame([null, null], [VenueRule::latest('id')->firstOrFail()->icon, VenueRule::latest('id')->firstOrFail()->level]);
+    }
+
     public function test_edit_updates_and_audits(): void
     {
         $rule = VenueRule::create(['name' => ['es' => 'N'], 'position' => 1]);

@@ -10,6 +10,7 @@ use App\Domain\Content\Models\BarImage;
 use App\Domain\Content\Models\LandingService;
 use App\Domain\Content\Services\ShellSettings;
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Services\LegalDocumentPublisher;
 use App\Domain\Payments\Services\MarcasDePago;
 use App\Domain\Payments\Services\RedsysReturnOutcome;
 use App\Domain\Platform\Models\Setting;
@@ -203,6 +204,44 @@ BLADE);
         $this->get('/fiesta')->assertNotFound();
         $this->get('/sitemap.xml')->assertOk()->assertDontSee('/fiesta');
         $this->get('/kids')->assertOk()->assertSee('Saltan hasta caer rendidos');
+    }
+
+    /**
+     * **`/normas` también se cede** (`#842`, T6e de §4.21): la página declarada con `'ocupa' => 'normas'` la pinta ahí, con
+     * sus hechos y conservando la dirección; sin ella, el tablero de siempre (`PageController::rules`).
+     */
+    public function test_a_page_can_occupy_the_rules_route(): void
+    {
+        File::put($this->paquete.'/web/reglas.blade.php', <<<'BLADE'
+<h1>Las normas nuevas</h1>
+<p id="url">{{ $pagina['url'] }}</p>
+<script type="application/json" id="hechos">{!! json_encode($hechos) !!}</script>
+BLADE);
+        $this->declarar(['reglas' => ['vista' => 'reglas', 'hechos' => ['rules'], 'ocupa' => 'normas']]);
+
+        $this->get('/normas')->assertOk()->assertSee('Las normas nuevas')->assertSee('<p id="url">'.route('normas').'</p>', false);
+        $this->assertSame($this->getJson('/api/v1/rules?lang=es')->assertOk()->json(), $this->hechosDe('/normas')['rules']);
+        $this->assertSame('reglas', app(InstancePages::class)->queOcupa('normas')?->slug);
+        $this->get('/reglas')->assertNotFound();
+
+        $this->declarar(['kids' => ['vista' => 'kids', 'hechos' => []]]);
+        $this->get('/normas')->assertOk()->assertDontSee('Las normas nuevas');
+    }
+
+    /**
+     * **El descargo, por su nombre** (`waiver`, `#842`): el MISMO JSON que `GET /api/v1/legal/waiver` —la versión vigente
+     * con sus secciones—; de él lee Normas la hoja «Leer el descargo». Con un descargo publicado de verdad.
+     */
+    public function test_a_page_asks_for_the_waiver_and_gets_the_same_json_as_the_api(): void
+    {
+        Setting::query()->updateOrCreate(['key' => 'waiver.mode'], ['value' => 'interno', 'group' => 'waiver']);
+        app(LegalDocumentPublisher::class)->publish('waiver', ['es' => ['title' => 'Descargo', 'body' => [['h' => 'Riesgos', 'p' => 'Saltar tiene riesgos.']]]]);
+        $this->declarar(['kids' => ['vista' => 'kids', 'hechos' => ['waiver']]]);
+
+        $descargo = $this->hechosDe('/kids')['waiver'];
+
+        $this->assertSame('Saltar tiene riesgos.', $descargo['document']['sections'][0]['p'] ?? null);
+        $this->assertSame($this->getJson('/api/v1/legal/waiver')->assertOk()->json(), $descargo);
     }
 
     /**

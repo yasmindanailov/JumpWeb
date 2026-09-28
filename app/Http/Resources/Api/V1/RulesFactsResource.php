@@ -77,6 +77,9 @@ class RulesFactsResource extends JsonResource
                 // El PORQUÉ de la norma, que en esta casa se escribe al lado de la norma: es lo que separa
                 // «prohibido entrar con comida» de una norma que alguien entiende y cumple.
                 'reason' => $norma->tr('reason'),
+                // Su ICONO y su NIVEL (`#842`, 1.50.0), si el panel los eligió y son de las listas del producto.
+                'icon' => $norma->iconOrNull(),
+                'level' => $norma->levelOrNull(),
             ], fn ($valor): bool => $valor !== null && $valor !== ''))->all(),
         ];
     }

@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\V1\CatalogProductsController;
 use App\Http\Controllers\Api\V1\CatalogZonesController;
 use App\Http\Controllers\Api\V1\ConfigController;
 use App\Http\Controllers\Api\V1\FaqsFactsController;
+use App\Http\Controllers\Api\V1\LegalWaiverController;
 use App\Http\Controllers\Api\V1\PricesFactsController;
 use App\Http\Controllers\Api\V1\PromotionsFactsController;
 use App\Http\Controllers\Api\V1\ReviewsFactsController;
@@ -67,6 +68,9 @@ final class PageFacts
         // La CAFETERÍA (T6d·1): su nombre, su entradilla, si se entra sin entrada y su FOTO con su `alt` —lo que publica
         // `/bar`, que se retira en la T6f—; de aquí la pinta Visítanos.
         'bar' => [BarFactsController::class, '__invoke', true],
+        // El DESCARGO (T6e, `#842`): la versión vigente con sus secciones —lo mismo que `GET /legal/waiver`, público—; de
+        // aquí lee Normas su hoja «Leer el descargo». El idioma, el de la visita (el controlador no pide `?lang=`).
+        'waiver' => [LegalWaiverController::class, 'show', false],
         // Los SERVICIOS (su mitad editorial, `#671`): de aquí saca Colegios (T6c) el horario de excursiones, su duración y
         // su grupo, que el parque escribe en el panel y no son el horario de la zona.
         'services' => [ServicesFactsController::class, '__invoke', true],

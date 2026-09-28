@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.49.0
+  version: 1.50.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -4168,6 +4168,18 @@ components:
               name: { type: string }
               description: { type: string }
               reason: { type: string, description: 'El PORQUÉ de la norma, que es lo que hace que se cumpla.' }
+              icon:
+                type: string
+                description: |
+                  Su ICONO (**1.50.0**, `DECISIONES #842`): un nombre de Lucide de la lista del producto
+                  (`VenueRule::ICONS`), el juego del sistema de diseño. **Ausente** si el panel no lo eligió: quien pinta
+                  pone el suyo.
+              level:
+                type: string
+                enum: [must, safety, forbidden, info]
+                description: |
+                  Su NIVEL (**1.50.0**, `#842`), el de la tarjeta de la norma: `must` Obligatorio, `safety` Seguridad,
+                  `forbidden` Prohibido, `info` Bueno saber. **Ausente** si el panel no lo eligió.
 
     Promotions:
       type: object

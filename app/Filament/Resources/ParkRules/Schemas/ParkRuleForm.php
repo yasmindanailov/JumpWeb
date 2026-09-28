@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\ParkRules\Schemas;
 
 use App\Domain\Content\Models\VenueRule;
+use App\Domain\Content\Services\Lucide;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -53,6 +54,31 @@ class ParkRuleForm
                             ->label(__('admin.park_rules.field_is_active'))
                             ->helperText(__('admin.park_rules.field_is_active_hint'))
                             ->default(true),
+                        /*
+                         * EL ICONO y EL NIVEL (`DECISIONES #842`): la tarjeta de la norma en la web (su dibujo y su
+                         * color con la palabra que lo dice). De las listas del producto, y vacíos a propósito: «sin
+                         * elegir» no esconde la norma, la web pone los suyos. El icono se ELIGE VIENDO su dibujo: su
+                         * nombre de Lucide no le dice nada a quien opera el parque.
+                         */
+                        Select::make('icon')
+                            ->label(__('admin.park_rules.field_icon'))
+                            ->helperText(__('admin.park_rules.field_icon_hint'))
+                            ->options(fn (): array => collect(VenueRule::ICONS)
+                                ->mapWithKeys(fn (string $icono): array => [$icono => '<span style="display:inline-flex;align-items:center;gap:8px">'
+                                    .'<span style="display:inline-flex;width:18px;height:18px">'.Lucide::svg($icono).'</span>'.e($icono).'</span>'])
+                                ->all())
+                            ->allowHtml()
+                            ->searchable()
+                            ->placeholder(__('admin.park_rules.field_icon_none'))
+                            ->native(false),
+                        Select::make('level')
+                            ->label(__('admin.park_rules.field_level'))
+                            ->helperText(__('admin.park_rules.field_level_hint'))
+                            ->options(fn (): array => collect(VenueRule::LEVELS)
+                                ->mapWithKeys(fn (string $nivel): array => [$nivel => __('admin.park_rules.levels.'.$nivel)])
+                                ->all())
+                            ->placeholder(__('admin.park_rules.field_level_none'))
+                            ->native(false),
                     ]),
 
                 Tabs::make('translations')->tabs([

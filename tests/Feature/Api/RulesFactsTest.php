@@ -3,6 +3,7 @@
 namespace Tests\Feature\Api;
 
 use App\Domain\Content\Models\VenueRule;
+use App\Domain\Content\Services\Lucide;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -109,6 +110,34 @@ class RulesFactsTest extends TestCase
         $this->getJson('/api/v1/rules?lang=es')
             ->assertOk()
             ->assertJsonPath('updated_at', $norma->fresh()->updated_at->toIso8601String());
+    }
+
+    /**
+     * **El ICONO y el NIVEL de cada norma** (`#842`, 1.50.0): viajan si el panel los eligió y son de las listas del
+     * producto (`VenueRule::ICONS`, `LEVELS`). Uno que no está en ellas —una fila vieja, un valor por la puerta de atrás—
+     * no viaja: quien pinta pondría un icono que no existe o un color que no significa nada.
+     */
+    public function test_each_rule_carries_its_icon_and_level_only_if_the_product_knows_them(): void
+    {
+        $this->norma(['name' => ['es' => 'Calcetines'], 'moment' => 'gate', 'icon' => 'footprints', 'level' => 'must']);
+        $this->norma(['name' => ['es' => 'Rara'], 'moment' => 'inside', 'icon' => 'no-existe', 'level' => 'rarisimo']);
+
+        $normas = $this->getJson('/api/v1/rules?lang=es')->assertOk()->json('rules');
+
+        $this->assertSame(['footprints', 'must'], [$normas[0]['icon'] ?? null, $normas[0]['level'] ?? null]);
+        $this->assertArrayNotHasKey('icon', $normas[1]);
+        $this->assertArrayNotHasKey('level', $normas[1]);
+    }
+
+    /**
+     * **Todo icono que el panel ofrece EXISTE en el juego del diseño** (`Lucide`): un nombre de la lista sin su dibujo
+     * pintaría un hueco en la tarjeta de la norma, sin fallar.
+     */
+    public function test_every_icon_the_panel_offers_exists_in_the_design_icon_set(): void
+    {
+        foreach (VenueRule::ICONS as $icono) {
+            $this->assertFileExists(Lucide::path($icono), "El icono «{$icono}» no está en resources/icons/lucide.");
+        }
     }
 
     /** Lo que la instalación no escribió no viaja, igual que en `/site`. */

@@ -41,8 +41,11 @@ final class InstancePages
 {
     public const FICHERO = 'config'.DIRECTORY_SEPARATOR.'paginas.php';
 
-    /** Las rutas del producto que una página del paquete puede ocupar: las que su controlador sabe cederle. */
-    public const OCUPABLES = ['home', 'cumpleanos'];
+    /**
+     * Las rutas del producto que una página del paquete puede ocupar: las que su controlador sabe cederle. `normas`, desde la
+     * T6e (`#842`): `PageController::rules`.
+     */
+    public const OCUPABLES = ['home', 'cumpleanos', 'normas'];
 
     private const SLUG = '/^[a-z0-9]+(?:-[a-z0-9]+)*$/';
 

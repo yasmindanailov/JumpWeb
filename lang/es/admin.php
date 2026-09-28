@@ -4368,6 +4368,23 @@ return [
             'inside' => 'Dentro',
         ],
 
+        /*
+         * EL ICONO y EL NIVEL (`DECISIONES #842`): la tarjeta de la norma en /normas —su dibujo y su color, con la palabra
+         * que lo dice—. Vacíos, la norma sale igual, con los de la web.
+         */
+        'field_icon' => 'Icono',
+        'field_icon_hint' => 'El dibujo de la norma en la web. Si lo dejas vacío, la web pone uno.',
+        'field_icon_none' => 'Sin elegir',
+        'field_level' => 'Nivel',
+        'field_level_hint' => 'El color de la norma y la palabra que lo dice. Si lo dejas vacío, sale como «Seguridad».',
+        'field_level_none' => 'Sin elegir',
+        'levels' => [
+            'must' => 'Obligatorio',
+            'safety' => 'Seguridad',
+            'forbidden' => 'Prohibido',
+            'info' => 'Bueno saber',
+        ],
+
         'lang' => [
             'es' => 'Español',
             'en' => 'Inglés',

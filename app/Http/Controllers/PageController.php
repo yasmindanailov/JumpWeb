@@ -8,7 +8,9 @@ use App\Domain\Content\Models\Page;
 use App\Domain\Content\Models\VenueRule;
 use App\Domain\Content\Services\RuleBoard;
 use App\Domain\Identity\Services\WaiverSettings;
+use App\Http\Instancia\InstancePages;
 use App\Http\Instancia\InstanceViews;
+use App\Http\Instancia\PageFacts;
 
 /**
  * Las dos páginas de texto del producto: `/normas` y los cinco legales.
@@ -32,9 +34,15 @@ class PageController extends Controller
     /**
      * `/normas` (`DECISIONES #533`, artboard `Normas PJP`): las normas agrupadas por MOMENTO, con su
      * porqué, la escala de altura y el enlace al descargo.
+     * ▶ Desde `#842` (T6e de `isla-y-landing-nueva.md` §4.21): si el paquete declara una página que OCUPA esta ruta
+     * (`'ocupa' => 'normas'`), la pinta ella, con sus hechos, como `/cumpleanos`; sin ella, el tablero de siempre.
      */
-    public function rules(RuleBoard $board)
+    public function rules(RuleBoard $board, InstancePages $paginas, PageFacts $hechos)
     {
+        if (($pagina = $paginas->queOcupa('normas')) !== null) {
+            return InstancePageController::pintar($pagina, $hechos, route('normas'));
+        }
+
         $rules = VenueRule::where('is_active', true)->orderBy('position')->get();
 
         /*

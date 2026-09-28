@@ -81,8 +81,8 @@ class ApiContractTest extends TestCase
         // sobra—, así que exigirlos obligaría a declararle una semana que no tiene.
         'Prices.rates.items' => ['weekdays'],
         // Y de una norma: el momento —el negocio puede no haberla situado— y los dos textos largos. El
-        // nombre va siempre: una norma sin nombre no es una norma.
-        'Rules.rules.items' => ['moment', 'description', 'reason'],
+        // nombre va siempre: una norma sin nombre no es una norma. El icono y el nivel (`#842`), igual: «sin elegir».
+        'Rules.rules.items' => ['moment', 'description', 'reason', 'icon', 'level'],
         // De una PROMOCIÓN (`#770`): el fin falta en la que no acaba (un regalo permanente) —emitirlo obligaría a
         // inventar una fecha—, y el objetivo lleva la zona O el producto según su `type`, nunca los dos.
         'Promotions.promotions.items' => ['ends_on'],

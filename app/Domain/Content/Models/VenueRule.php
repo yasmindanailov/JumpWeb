@@ -21,6 +21,23 @@ class VenueRule extends Model
      */
     public const MOMENTS = ['before', 'gate', 'inside'];
 
+    /**
+     * **LOS NIVELES de una norma** (`DECISIONES #842`, los de `RuleCard` del diseño): el color de su tarjeta y la palabra que
+     * lo dice —Obligatorio, Seguridad, Prohibido, Bueno saber—. Los elige el panel; la lista, el producto.
+     */
+    public const LEVELS = ['must', 'safety', 'forbidden', 'info'];
+
+    /**
+     * **LOS ICONOS que puede llevar una norma** (`#842`): nombres de Lucide, el juego del sistema de diseño
+     * (`Lucide::svg()`). Una lista CERRADA y no un campo libre: un nombre mal escrito pintaría un hueco sin avisar. Son los
+     * de las normas y los cuidados del diseño (Normas, Visítanos); una norma nueva que necesite otro, se añade aquí.
+     */
+    public const ICONS = [
+        'footprints', 'shirt', 'utensils-crossed', 'person-standing', 'user', 'users', 'ban', 'rotate-ccw', 'scan-eye',
+        'megaphone', 'ruler', 'heart-pulse', 'shield-check', 'hand-heart', 'eye', 'baby', 'user-check', 'smartphone',
+        'qr-code', 'id-card', 'clock', 'cookie', 'cake', 'briefcase-medical', 'info',
+    ];
+
     protected $table = 'park_rules';
 
     protected $guarded = [];
@@ -44,5 +61,17 @@ class VenueRule extends Model
     public function momentOrNull(): ?string
     {
         return in_array($this->moment, self::MOMENTS, true) ? $this->moment : null;
+    }
+
+    /** El icono, solo si es uno de la lista (`ICONS`); si no, `null`: «sin elegir», y quien pinta pone el suyo. */
+    public function iconOrNull(): ?string
+    {
+        return in_array($this->icon, self::ICONS, true) ? $this->icon : null;
+    }
+
+    /** El nivel, solo si es uno de la lista (`LEVELS`); si no, `null`: «sin elegir». */
+    public function levelOrNull(): ?string
+    {
+        return in_array($this->level, self::LEVELS, true) ? $this->level : null;
     }
 }

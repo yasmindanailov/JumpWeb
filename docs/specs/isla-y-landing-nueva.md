@@ -2066,6 +2066,15 @@ parque. Lo demás, la regla de Visítanos: donde el panel habla, gana; donde cal
 `park_rules` gana `icon` y `level` (el panel y `GET /rules`, contrato +1), `/normas` pasa a OCUPABLE (su controlador pregunta
 `queOcupa`) y el descargo como hecho de página (`waiver`, de `GET /legal/waiver`)—; **T6e·2** la página en la instancia
 (`rule-grid` con grupos por momento y sobre gris, `waiver-sheet`); **T6e·3** su sonda, la primera pantalla y el ojo del owner.
+- ✅ **T6e·1 (28-09) · el producto**: `park_rules` gana `icon` y `level` (migración aditiva, nullables: «sin elegir»), de las
+  listas del producto (`VenueRule::ICONS`, 25 nombres de Lucide; `LEVELS`, los cuatro de `RuleCard`) con `iconOrNull()` y
+  `levelOrNull()` como `momentOrNull()`; el panel los elige (el icono, VIÉNDOLO: sus opciones llevan su dibujo; es/zh_CN) y
+  `GET /rules` los publica (contrato **1.50.0**). `/normas` pasa a OCUPABLE (`PageController::rules` pregunta `queOcupa`) y
+  el descargo es un hecho de página (`waiver`, `GET /legal/waiver`). **Guardas**: `RulesFactsTest` +2 (viajan solo los de
+  la lista; todo icono ofrecido existe en el juego del diseño), `ParkRuleResourceTest` +1, `InstancePagesTest` +2 (ocupar
+  `/normas`; el descargo, el mismo JSON que la API, con uno publicado), vistas en ROJO antes del código;
+  `scripts/mutar-normas-del-panel.sh` 6/6 (entre ellas, el filtro de lo que no es de la lista). En LOCAL, icono y nivel
+  para las 10 normas; en PRODUCCIÓN, el owner.
 
 ## 5. Impacto en invariantes
 

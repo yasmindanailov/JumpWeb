@@ -46,9 +46,9 @@ instancia `88660ef`; en LOCAL, 91 plantillas INFERIDAS para `excursiones`; `sond
 `mutar-sonda-colegios.sh` 11/11, `mutar-escalera.sh` 7/7) y **VISÍTANOS entera** (spec §4.20, T6d·1–3; instancia `c58265a`;
 `sonda-visitanos.mjs` 26/26, `mutar-sonda-visitanos.sh` 8/8; la primera pantalla, el mismo veredicto que el mockup; el panel
 gana donde habla y donde calla, el brief). ▶ **EN MARCHA: NORMAS (T6e)**, censo en la spec §4.21 y `#842` (del owner: las
-normas, del panel, con icono y nivel nuevos; la cabecera, con el vídeo). **Sigue la T6e·1** (producto): `park_rules` gana
-`icon` y `level` (panel y `GET /rules`), `/normas` OCUPABLE y el hecho `waiver`; después la página (T6e·2, con `WaiverSheet`:
-aviso en mi buzón al SPA) y su sonda (T6e·3). Pendiente: la vuelta de Google con una
+normas, del panel, con icono y nivel nuevos; la cabecera, con el vídeo). T6e·1 ✅ (contrato 1.50.0; en LOCAL, icono y nivel
+de las 10 normas; en PRODUCCIÓN, el owner). **Sigue la T6e·2**, la página (con `WaiverSheet`: aviso en mi buzón al SPA),
+y su sonda (T6e·3). Pendiente: la vuelta de Google con una
 excursión, sin verificar. ⚠️ La entrada `isla/hoja/montar.js` NO importa nada compartido (`#841`); la calculadora, a 185,80 de 186.
 ⚠️ `sonda-portada` 13/14 («Reservar» de la isla tras «Míralo», 17:17): igual con el `HEAD` (control): investigar aparte. La ISLA la
 repiensa el owner con Claude Design: no atar nada nuevo a ella. **Para iterar con el owner** (no
