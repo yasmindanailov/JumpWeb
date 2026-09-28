@@ -313,7 +313,9 @@ dice «No había nada que cambiar»). Se quitan vaciando esos dos campos en «Ob
 
 (16) **De la TP·1, la fecha de nacimiento (28-09, `#792`)**: el cliente de sondas 2179 (`sonda-puerta@jumpweb.test`) lleva
 `born_on = 1988-03-12` para enseñar la ficha («12/03/1988 · 38 años»); se quita poniéndola a `null`. La sonda del panel vive
-fuera de git, en `storage/app/audit/sonda-tp1-panel.mjs` (no guarda nada: escribe la fecha en el modal y lo cierra).
+fuera de git, en `storage/app/audit/sonda-tp1-panel.mjs` (no guarda nada: escribe la fecha en el modal y lo cierra); la del
+cajón, `sonda-tp1-cajon.mjs`, pone y QUITA la fecha de `probe-card` (termina sin ella). ⚠️ **Medido el 28-09: la local ya NO
+abre la isla** —no hay fila `sidebar.shell` y el valor por defecto es el cajón—; lo de arriba sobre la isla es de su fecha.
 
 ## Anexo · La fila del enrutador, mudada el 2026-09-16
 

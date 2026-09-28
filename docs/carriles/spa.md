@@ -65,9 +65,9 @@
 
 1. ❗❗❗ **LA ANALÍTICA PARA DECIDIR (`#755`, `specs/analitica-para-decidir.md`)**: ✅ T0a·T0b·T0c · T1 · T2 · T3a · T3b ·
    T3c·1 · T3c·2, todas en `main` y aprobadas (§4.3–§4.13) → ▶ **TP el público** (§4.14, `#792`): 🟦 **TP·1 en
-   `wip/tp1-captura`** (las CUATRO puertas —la puerta no da de alta—, contrato 1.49.0, arnés `SOLO=TP1`): falta el ojo del owner
-   (el cajón solo se ve con `sidebar.shell = cajon`, y la local está en `isla` por plataforma: preguntar antes de tocarlo) y
-   el *fast-forward*; luego el buzón a plataforma (la isla) → TP·2 «Quién viene» en Clientes → TP·3 los padres por
+   `wip/tp1-captura`** (las CUATRO puertas —la puerta no da de alta—, contrato 1.49.0, arnés `SOLO=TP1`, sondas del panel y
+   del cajón en `storage/app/audit/sonda-tp1-*.mjs`): falta el ojo del owner y el *fast-forward* → TP·2 «Quién viene» en
+   Clientes → TP·3 los padres por
    la edad de sus hijos, `[PENDIENTE: asesoría]` antes de exportar) → T3d el texto para IA (§4.7; lee `Changes` y
    los veredictos; sin PII ni celdas < 5) → T3e el SECTOR (primera búsqueda en §4.13: casi todo son medias, no rangos; AL OWNER
    antes de sembrar) → T4 cartera → T5 marketing y correos → T6 cohortes → T7 pérdidas → T8 satisfacción (§4.12). Los CRUCES de
@@ -79,7 +79,8 @@
    superviviente es un caso que falta; tras el arnés, los dos bundles; tras rebasar, re-medir la suite. En local «Este mes» dice
    «aún sin historia» (3 meses de datos): para el ojo, «La semana pasada». La tanda, aparcada en `wip/…` hasta el visto bueno y
    después *fast-forward* a `main`. **Trampas**: `OccupancyReader` COPIA la aritmética del aforo (`OccupancyReaderParityTest`);
-   ⚠️ no verificado en navegador que el cajón emita `availability_missing` (la local abre la ISLA); `AccessRevocationTest` no
+   ⚠️ no verificado en navegador que el cajón emita `availability_missing` (medido el 28-09: la local ya sirve el CAJÓN —sin
+   fila `sidebar.shell`—, así que ya se puede); `AccessRevocationTest` no
    deja escribir el literal `'sessions'`; `TestCase::count()` y `countOf()` son finales. `[PENDIENTE: asesoría]`: los 90 días
    del sello, los clics por persona y el píxel (y el (5) de las encuestas).
 2. ✅ **LA FIESTA DEL SISTEMA NUEVO (`#765`, `fiesta-sistema-nuevo.md` ✅ `#743`): T1a→T4 y F1→F9 en `main` y aprobadas
