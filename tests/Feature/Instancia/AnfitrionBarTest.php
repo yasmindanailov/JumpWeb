@@ -30,6 +30,8 @@ class AnfitrionBarTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        // ⚠️ `public/uploads` DE VERDAD sin esto: las imágenes de prueba pisaban las del bar de la instalación local (28-09).
+        Storage::fake(BarImage::IMAGE_DISK);
         $this->seed(LandingContentSeeder::class);
         Setting::updateOrCreate(['key' => 'bar.name.es'], ['value' => 'El bar de prueba', 'group' => 'bar']);
         Cache::flush();

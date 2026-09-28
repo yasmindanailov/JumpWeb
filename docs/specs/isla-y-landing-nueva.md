@@ -2001,9 +2001,12 @@ formulario: `/contacto` le cede con un 301 en la T6f (`#789`). Lo que pinta, lo 
 
 **Lo que manda la verdad y no el mockup** (la regla de `#768`/`#789`: la verdad es el panel y playjump.es; el owner lo revisa
 todo al final con el dueño): donde el panel HABLA, gana el panel (taquillas gratis, sin móvil en la zona de salto, la tarta se
-trae con su cargo, el correo `info@`, los plazos de cada producto); lo que el mockup dice de más SIN hecho no se dice (la
-oferta «calcetines incluidos online», que el README ya marcaba; los 14 años; accesibilidad y formas de pago; «combos y
-cubos»), y queda para su revisión final. Sin foto de la entrada, la cabecera en tinta; la de la cafetería, del panel.
+trae, el correo `info@`, los plazos de cada producto, lo que incluye cada pack); donde CALLA, vale el texto del brief (son
+palabras del owner; el precedente es Colegios, aprobada con su «¿Es accesible?»): los 14 años, la accesibilidad, las formas de
+pago, «combos y cubos». Fuera, la oferta «calcetines incluidos online» (no hay promoción que la sostenga; el README ya la
+marcaba) y «en los cumpleaños van incluidos» (la ficha del pack no los incluye). Todo, a su revisión final. Sin foto de la
+entrada, la cabecera en tinta (`#761`·3); la de la cafetería, del panel. *(Corregido tras medir el precedente: la primera
+versión de este censo dejaba fuera también lo que el panel calla.)*
 **Plan**: **T6d·1** el hecho de la CAFETERÍA en el producto (su foto con su `alt`, su nombre y si se entra sin entrada: lo
 que ya publica `/bar`, que se retira en la T6f); **T6d·2** la página en la instancia (`/visitanos`, sus hechos, las ocho
 piezas, `AnswerRow` y `RuleGrid`/`RuleCard` nuevas, y `opening-hours`, `park-location`, `accordion` y `cta-band` con lo que
@@ -2012,6 +2015,20 @@ el diseño les añadió, sin cambiar sus otras páginas); **T6d·3** la sonda y 
   menú de `#673`: nombre, entradilla, `free_entry`, la carta y la foto `venue` con su `alt`); faltaba en la lista blanca de
   `PageFacts::HECHOS`. `InstancePagesTest` +1 (el mismo JSON que la API, con un bar publicado y su foto real), vista ROJA
   antes de la entrada (404: la página que pide un hecho desconocido no se registra).
+- ✅ **T6d·2 (28-09) · LA PÁGINA**, con el ojo del owner («buen trabajo»; instancia `c58265a`). `/visitanos`, con los hechos de la
+  portada y `bar`; su modelo reutiliza el de la portada (el selector de planes, [Hoy] con sus huecos, el horario, el contacto,
+  el pie). Piezas nuevas del sistema en la instancia: `answer-row` y `rule-grid` (por su propio ancho, `@container`, como el
+  `ResizeObserver` del diseño) y `partes.php` (el texto del brief en partes: negrita, saltos y enlaces; «aquí» abre el selector
+  con `data-isla-planes`). Ampliadas sin cambiar sus otras páginas (Kids, Jump, Cumpleaños, la portada y la hoja: el MISMO HTML,
+  medido sin la caché ni los hashes de Vite): `video-hero` (`ctaPrimary = false`, `route`, [Hoy] grande bajo el titular),
+  `opening-hours` (`lg`, `specialNote`, `exceptions`), `park-location` (`lg`), `cta-band` (`primary = false`) y `today-line`.
+  ⚠️ **`[data-hoy-linea] > p`**: la marca va en el ENVOLTORIO de la línea (en la `<p>` la isla no callaba; medido). **Fechas
+  especiales**: solo las cerradas o con otro horario que la fila que dice «festivos» (la misma regla que su etiqueta); en local
+  no sale ninguna. **Medido**: 200 en es/en/fr sin marcadores ni claves sueltas; a 390 y 1280 sin salirse de ancho, una `h1`,
+  sin errores de consola; la isla calla al llegar y dice [Hoy] al bajar; el pie y la isla marcan Visítanos como la actual.
+  ⚠️ **Encontrado de camino**: `BarFactsTest`, `BarPageTest` y `AnfitrionBarTest` escribían en `public/uploads` DE VERDAD y
+  pisaban las fotos del bar de la instalación local (la de la cafetería, un PNG negro): ahora falsean su disco (medido: tras
+  correrlas, `uploads` intacto). La foto local, repuesta con la real del zip (`foto-113`), solo en la BD local.
 
 ## 5. Impacto en invariantes
 

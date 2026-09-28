@@ -19,6 +19,17 @@ class BarFactsTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * ⚠️ El disco de las imágenes del bar es `public/uploads` DE VERDAD: sin falsearlo, cada corrida escribía sus imágenes
+     * negras encima de las fotos del bar de la instalación local (medido el 28-09: `bar/mesas.jpg`, la foto de la
+     * cafetería, era un PNG negro de 1240 × 1754, el tamaño por defecto de `imagen()`).
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Storage::fake(BarImage::IMAGE_DISK);
+    }
+
     private function ajuste(string $clave, string $valor): void
     {
         Setting::query()->updateOrCreate(['key' => $clave], ['value' => $valor]);

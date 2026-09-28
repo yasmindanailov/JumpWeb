@@ -30,6 +30,8 @@ class BarPageTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        // ⚠️ `public/uploads` DE VERDAD sin esto: las imágenes de prueba pisaban las del bar de la instalación local (28-09).
+        Storage::fake(BarImage::IMAGE_DISK);
         $this->seed(LandingContentSeeder::class);
         Cache::flush();
         Setting::flushMemo();
