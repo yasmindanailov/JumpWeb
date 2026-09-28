@@ -2,11 +2,13 @@
 
 namespace App\Notifications\Support;
 
+use App\Domain\Platform\Models\EmailSend;
 use App\Domain\Platform\Services\Analytics\EmailUtm;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Lang;
+use Symfony\Component\Mime\Email;
 
 /**
  * El MOLDE de los correos del producto (`DECISIONES #503`; artboard `Correos PJP` 1a).
@@ -42,7 +44,28 @@ class BrandedMailMessage extends MailMessage
     {
         if ($notification !== null) {
             $this->campaign(EmailUtm::keyOf($notification));
+            $this->markSend($notification);
         }
+    }
+
+    /**
+     * La marca del envío (`specs/correos-salientes.md` §4.6, `#794`): la cabecera {@see EmailSend::HEADER} con el id de la
+     * notificación —uno por destinatario y el mismo en cada reintento de la cola—, que `RecordEmailSend` lee del mensaje que
+     * salió. Solo en los correos AL CLIENTE (los que llevan clave) y solo si el framework ya le dio un id: un `toMail()`
+     * llamado a mano (una prueba, una vista previa) no es un envío y no se apunta.
+     */
+    private function markSend(Notification $notification): void
+    {
+        // El framework declara el id como texto, pero hasta que lo fija el que envía es NULO: un `toMail()` a mano no lo tiene.
+        $send = (string) $notification->id;
+
+        if ($this->campaign === null || $send === '') {
+            return;
+        }
+
+        $this->withSymfonyMessage(static function (Email $message) use ($send): void {
+            $message->getHeaders()->addTextHeader(EmailSend::HEADER, $send);
+        });
     }
 
     /**

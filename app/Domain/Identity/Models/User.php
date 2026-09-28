@@ -8,6 +8,7 @@ use App\Domain\Booking\Models\Ticket;
 use App\Domain\Platform\Jobs\ForgetPersonInDriver;
 use App\Domain\Platform\Models\AnalyticsEvent;
 use App\Domain\Platform\Models\AnalyticsSession;
+use App\Domain\Platform\Models\EmailSend;
 use App\Domain\Platform\Models\SurveyParticipation;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Domain\Platform\Services\DisplayTime;
@@ -468,6 +469,9 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference,
             // no puede depender de que un trabajo llegue a correr. Sin sello, sus respuestas ya no son de nadie.
             SurveyParticipation::forgetPerson((int) $this->getKey());
             app(SurveySeals::class)->forget((int) $this->getKey());
+            // LOS CORREOS SALIENTES (`specs/correos-salientes.md`, `#794`): sus envíos pierden la copia, el asunto y la
+            // dirección, y a él; las cifras quedan, sin nadie. Aquí, en la transacción: el art. 17 no espera a la poda.
+            EmailSend::forgetPerson((int) $this->getKey());
             $this->orders()->whereNotNull('attribution')->get(['id', 'attribution'])->each(function (Order $order): void {
                 $order->forceFill([
                     'attribution' => array_diff_key((array) $order->attribution, array_flip(['visitor_id', 'session_id', 'click_ids', 'browser_ids'])),

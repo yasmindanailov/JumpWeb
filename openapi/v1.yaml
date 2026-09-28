@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.50.0
+  version: 1.51.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -5192,7 +5192,7 @@ components:
 
         Su forma la componen dos módulos: Identity pone perfil, consentimientos y roles, y Booking
         pone `orders` por contrato (`Booking\Contracts\CustomerOrderHistory`) — porque son sus datos.
-      required: [exported_at, profile, consents, roles, identities, dependents, orders, analytics, surveys]
+      required: [exported_at, profile, consents, roles, identities, dependents, orders, analytics, surveys, emails]
       additionalProperties: false
       properties:
         exported_at:
@@ -5237,6 +5237,39 @@ components:
           $ref: '#/components/schemas/ExportedAnalytics'
         surveys:
           $ref: '#/components/schemas/ExportedSurveys'
+        emails:
+          type: array
+          description: |
+            **1.51.0** (`specs/correos-salientes.md` §4.1, `DECISIONES #794`): los correos que le hemos enviado, del más
+            antiguo al más reciente —qué correo, su asunto, cuándo salió o si falló—. La COPIA del correo no viaja (ya está
+            en su buzón). Vacío si no le hemos enviado ninguno.
+          items:
+            $ref: '#/components/schemas/ExportedEmailSend'
+
+    ExportedEmailSend:
+      type: object
+      required: [mail, subject, sent_at, failed_at, failures]
+      additionalProperties: false
+      properties:
+        mail:
+          type: string
+          description: Qué correo es (la clave de `EmailUtm`), p. ej. `order_confirmation`.
+        subject:
+          type: string
+          nullable: true
+          description: Su asunto; `null` cuando la copia ya se borró (a los seis meses).
+        sent_at:
+          type: string
+          format: date-time
+          nullable: true
+        failed_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: El último intento fallido, si lo hubo.
+        failures:
+          type: integer
+          minimum: 0
 
     ExportedSurveys:
       type: object

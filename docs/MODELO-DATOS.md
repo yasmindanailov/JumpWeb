@@ -604,6 +604,18 @@ clave del catálogo, `money.net`…) · `month` date (su PRIMER día) · `target
 (céntimos, unidades o puntos básicos) · `set_by` FK nullOnDelete · timestamps. **UNIQUE `(metric_key, month)`**. Único
 escritor `AnalyticsGoals::save()`: rastro `analytics.goals_updated` con el antes y el después, y olvida la caché del mes.
 
+### `email_sends` (EmailSend, **MassPrunable**) — los correos que recibe cada cliente · `#794` (C1)
+
+`specs/correos-salientes.md` §4.1 y §4.6. Una fila por correo AL CLIENTE que sale o que falla al salir: `send_key` uuid
+**UNIQUE** (el id de la notificación: uno por destinatario y el mismo en cada reintento, así que un fallo y su reintento son UNA
+fila) · `user_id` nullable indexado, **sin FK** (como el libro: la fila de `users` no se borra y la poda va por edad) ·
+`recipient` · `mail_key` (`EmailUtm::keyOf()`) · `subject` · `html` longText (la COPIA exacta de lo que salió, sin adjuntos) ·
+`attachments` json (solo nombres) · `copy_purged_at` · `failures` · `sent_at` · `failed_at` · timestamps. Único escritor
+`Platform\Listeners\RecordEmailSend` (`NotificationSent` y `NotificationFailed`, dentro de un try/catch: apuntar nunca rompe
+el envío). **Plazos** (`[DECIDIDO owner]`): la copia se borra a los **6 meses** (`email-sends:trim`) y la fila a los **24**
+(`model:prune`). `anonymize()` borra `html`, `subject`, `recipient` y `attachments` de las del titular y suelta `user_id`; el
+export del art. 20 lleva qué correo, su asunto y cuándo (sin la copia).
+
 ### `surveys` · `survey_participations` · `survey_responses` · `survey_spent_tokens` — las encuestas, ANÓNIMAS · `#740`, `#754`, `#757`
 
 `specs/encuestas.md` §4.1 y §4.7. **Participación y respuesta NO comparten clave**: nada en la base une lo contestado con

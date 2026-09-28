@@ -8,6 +8,7 @@ use App\Domain\Identity\Models\GuardianAuthorization;
 use App\Domain\Identity\Models\WaiverSignature;
 use App\Domain\Platform\Models\AnalyticsEvent;
 use App\Domain\Platform\Models\AnalyticsSession;
+use App\Domain\Platform\Models\EmailSend;
 use App\Domain\Platform\Models\SurveyParticipation;
 use App\Domain\Platform\Models\SurveyResponse;
 use Illuminate\Foundation\Inspiring;
@@ -124,8 +125,21 @@ Schedule::command('business-profile:sweep-photos')->dailyAt('05:00')->withoutOve
  * ⚠️ Los EVENTOS van antes que las SESIONES: sin claves foráneas, el orden es lo único que evita eventos
  * huérfanos entre las dos pasadas. Y es la misma tarea de siempre: el recuento de `deploy.sh` no cambia.
  */
-Schedule::command('model:prune', ['--model' => [CookieConsentLog::class, WaiverSignature::class, GuardianAuthorization::class, Dependent::class, InvitationReply::class, GoogleBusinessReview::class, AnalyticsEvent::class, AnalyticsSession::class, SurveyResponse::class, SurveyParticipation::class]])
+/*
+ * ▶ Y los CORREOS SALIENTES (`specs/correos-salientes.md`, `#794`): la fila de un envío, a los 24 meses. Su COPIA se va antes,
+ * a los 6, con `email-sends:trim` (abajo).
+ */
+Schedule::command('model:prune', ['--model' => [CookieConsentLog::class, WaiverSignature::class, GuardianAuthorization::class, Dependent::class, InvitationReply::class, GoogleBusinessReview::class, AnalyticsEvent::class, AnalyticsSession::class, SurveyResponse::class, SurveyParticipation::class, EmailSend::class]])
     ->daily()
+    ->withoutOverlapping();
+
+/*
+ * La COPIA de cada correo enviado (lo que permite verlo tal cual) se borra a los SEIS meses (`#794`, `[DECIDIDO owner]`:
+ * tres correos llevan el nombre de un menor); la fila y sus cifras siguen hasta los 24 (arriba). ❗ Una tarea MÁS del
+ * planificador: las «esperadas» de `deploy.sh` suben a 12 en este mismo commit.
+ */
+Schedule::command('email-sends:trim')
+    ->dailyAt('04:40')
     ->withoutOverlapping();
 
 /*

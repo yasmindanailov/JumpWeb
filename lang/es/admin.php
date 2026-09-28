@@ -54,6 +54,8 @@ return [
             'experiments' => ['label' => 'Experimentos', 'description' => 'Pruebas A/B de la web: variantes, pesos y cuándo están vivas. Los resultados, en Analítica → Marketing.'],
             // T1 de las encuestas: la descripción nombra «encuesta», «preguntas», «puerta» y «correo» para el buscador.
             'surveys' => ['label' => 'Encuestas', 'description' => 'Las encuestas a los clientes: internas en la puerta al validar la entrada y externas por correo al día siguiente; sus preguntas, en tres idiomas. Los resultados, en Analítica → Satisfacción.'],
+            // `#794`: la descripción nombra «correo», «enviado» y «cliente» para el buscador.
+            'email_sends' => ['label' => 'Correos enviados', 'description' => 'Cada correo que ha salido a un cliente, cuándo y si salió, y el correo tal cual lo recibió (la copia, seis meses).'],
             // `#320`: la puerta sale del menú lateral y su puerta de entrada pasa a ser ésta. La
             // descripción menciona «entrada», «validar» y «escanear» porque el buscador global busca
             // también dentro de la descripción, y nadie recuerda cómo se llama una pantalla.
@@ -2739,6 +2741,7 @@ return [
             'customers_insights' => 'Ver la 360 del cliente en su ficha',
             'analytics_export' => 'Exportar segmentos de clientes (solo con opt-in)',
             'analytics_manage' => 'Poner los objetivos del mes de la analítica',
+            'emails_view' => 'Ver los correos enviados a los clientes (tal cual salieron)',
             'audit_view' => 'Ver registro de auditoría',
             'access_manage' => 'Gestionar roles y permisos',
         ],
@@ -4620,5 +4623,63 @@ return [
     'dependents' => [
         'settings_max' => 'Menores a cargo por cuenta (máx.)',
         'settings_max_hint' => 'Cuántas personas a cargo puede declarar cada cuenta de cliente. Es un tope de servidor —no solo de pantalla— y no afecta a las que ya estén declaradas. Vacío = 20.',
+    ],
+    // Los correos enviados a los clientes (`specs/correos-salientes.md`, `#794`).
+    'email_sends' => [
+        'nav_label' => 'Correos enviados',
+        'model_label_singular' => 'correo enviado',
+        'model_label_plural' => 'Correos enviados',
+        'subheading' => 'Cada correo que ha salido a un cliente, tal cual lo recibió. La copia se guarda seis meses; lo demás, dos años.',
+        'section' => 'Correos',
+        'none_for_user' => 'Todavía no le hemos enviado ningún correo.',
+        'see_all' => 'Ver todos sus correos',
+        'preview' => 'Ver el correo',
+        'close' => 'Cerrar',
+        'forgotten' => 'Cliente eliminado',
+        'col' => [
+            'when' => 'Cuándo',
+            'to' => 'A quién',
+            'mail' => 'Correo',
+            'status' => 'Estado',
+        ],
+        'filter' => [
+            'customer' => 'Cliente',
+            'sent' => 'Enviados',
+            'failed' => 'No salieron',
+        ],
+        'state' => [
+            'sent' => 'Enviado',
+            'sent_after_failures' => 'Enviado tras :count fallo|Enviado tras :count fallos',
+            'failed' => 'No salió (:count intento)|No salió (:count intentos)',
+        ],
+        'mails' => [
+            'account_already_exists' => 'Ya tienes cuenta',
+            'analytics_link_notice' => 'Aviso de la analítica',
+            'birthday_coming_notice' => 'El cumple se acerca',
+            'customer_account_created' => 'Cuenta creada en el parque',
+            'email_change_completed' => 'Correo cambiado',
+            'email_change_requested' => 'Aviso de cambio de correo',
+            'guardian_authorization_request' => 'Petición de autorización',
+            'guardian_authorization_signed' => 'Justificante firmado',
+            'guest_form_request' => 'Lista de invitados',
+            'mixed_party_surcharge_changed' => 'Suplemento de la fiesta',
+            'order_cancelled' => 'Pedido cancelado',
+            'order_confirmation' => 'Confirmación del pedido',
+            'order_expired_without_payment' => 'Pedido caducado sin pago',
+            'order_item_cancelled' => 'Reserva cancelada',
+            'order_item_modified' => 'Reserva cambiada',
+            'order_item_refunded' => 'Reserva reembolsada',
+            'order_payment_declined' => 'Pago rechazado',
+            'order_processed_after_expiration' => 'Pago tras caducar',
+            'order_refunded' => 'Pedido reembolsado',
+            'password_reset' => 'Restablecer la contraseña',
+            'post_form_addons_changed' => 'Extras de la fiesta',
+            'social_identity_linked' => 'Google vinculado',
+            'survey_invitation' => 'Encuesta',
+            'verify_email_address' => 'Verificar el correo',
+            'verify_email_for_purchase' => 'Verificar el correo (compra)',
+            'verify_pending_email' => 'Confirmar el correo nuevo',
+            'visit_eve_notice' => 'Aviso de la víspera',
+        ],
     ],
 ];

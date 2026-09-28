@@ -69,11 +69,13 @@ use App\Domain\Payments\Services\PaymentSettings;
 use App\Domain\Platform\Contracts\ConsentLedger;
 use App\Domain\Platform\Contracts\VisitFacts;
 use App\Domain\Platform\Listeners\ApplyBusinessSender;
+use App\Domain\Platform\Listeners\RecordEmailSend;
 use App\Domain\Platform\Listeners\RecordEmailSent;
 use App\Domain\Platform\Models\AnalyticsEvent;
 use App\Domain\Platform\Models\AnalyticsGoal;
 use App\Domain\Platform\Models\AnalyticsSession;
 use App\Domain\Platform\Models\AuditLog;
+use App\Domain\Platform\Models\EmailSend;
 use App\Domain\Platform\Models\Experiment;
 use App\Domain\Platform\Models\GoogleBusinessConnection;
 use App\Domain\Platform\Models\Setting;
@@ -91,6 +93,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Mail\Events\MessageSending;
+use Illuminate\Notifications\Events\NotificationFailed;
 use Illuminate\Notifications\Events\NotificationSent;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
@@ -274,6 +277,11 @@ class AppServiceProvider extends ServiceProvider
         // la misma clave que llevan sus enlaces (`EmailUtm`), también cuando lo manda el worker de la cola.
         Event::listen(NotificationSent::class, RecordEmailSent::class);
 
+        // Y cada correo al cliente, con su COPIA para verlo tal cual (`specs/correos-salientes.md`, `#794`): el que sale y el
+        // que falla al salir. Apuntar nunca rompe el envío: el oyente se lo traga todo (un fallo reintentaría el trabajo).
+        Event::listen(NotificationSent::class, [RecordEmailSend::class, 'sent']);
+        Event::listen(NotificationFailed::class, [RecordEmailSend::class, 'failed']);
+
         // El REMITENTE de todo correo sale del PANEL y no del `.env` (`#500`, T2 de
         // `specs/correos-desde-canvas.md`). Va como listener y no como `Mail::alwaysFrom()` para no
         // consultar `settings` en peticiones que no envían nada: `MessageSending` solo se dispara
@@ -295,6 +303,8 @@ class AppServiceProvider extends ServiceProvider
             'analytics_event' => AnalyticsEvent::class,
             // Los objetivos del mes (T3c·2 de la analítica para decidir): sin relaciones polimórficas, pero todo modelo lleva alias.
             'analytics_goal' => AnalyticsGoal::class,
+            // Los correos salientes (`#794`): sin relaciones polimórficas, pero todo modelo lleva alias.
+            'email_send' => EmailSend::class,
             // `#536`: las imágenes de `/bar` (la carta y la foto del local). Todo modelo necesita
             // alias de morfo — lo exige `MorphMapTest` y es lo que hace que el AUDIT guarde `bar_image`
             // y no el nombre de clase, que se rompe al mover el fichero de sitio.

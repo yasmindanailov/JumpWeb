@@ -1,6 +1,6 @@
 # [SPEC] Los correos que recibe el cliente — cada envío a la vista, su previsualización, y si lo abrió y pulsó
 
-> Estado: ⬜ borrador (para el owner) · Última actualización: 2026-09-28 · Decisión asociada: #794 al aprobarse ·
+> Estado: ✅ **aprobada por el owner** (28-09, `#794`) → C1 en curso · Última actualización: 2026-09-28 · Decisión: `#794` ·
 > Carril: **SPA** (los correos son suyos desde `#789`; banda 790–819). Adelanta la T5 «correos por cliente» de
 > `analitica-para-decidir.md` §4.9; el gasto en anuncios, aplazado; las felicitaciones (TP·3c), con el rediseño de la plantilla.
 
@@ -15,7 +15,9 @@
   (`EmailUtm::IGNORED_QUERY`); (3) `sendmail` no avisa de entregas ni rebotes: «entregado» no se puede saber, «falló al
   enviar» sí; (4) el píxel de apertura exige consentimiento (LSSI 22.2) y Apple Mail abre solo: las aperturas son
   APROXIMADAS; (5) los escáneres de enlaces de Outlook y Gmail pulsan solos: un clic en el primer segundo tras el envío no cuenta.
-- **Estado**: ⬜ borrador; nada construido. Cuatro tandas (§4.5), cada una con su «al detalle» y el ojo del owner.
+- **Estado**: ✅ aprobada (`#794`: la COPIA 6 meses, las cifras 24); ▶ C1 (§4.6). Cuatro tandas, cada una con el ojo del owner.
+- **Apuntar un envío NUNCA rompe el envío** (`#794`): un fallo del registro reintentaría el trabajo y duplicaría el correo.
+  Y se apunta TRAS el commit (`afterCommit`, como `Recorder`): con la cola `sync`, un deadlock desharía la transacción de quien envía.
 - **Invariantes**: `RGPD-01` (la supresión borra el HTML y la dirección), `RGPD-02`, `RGPD-04` (`no-store` en la vista previa),
   `RGPD-07` (la analítica, agregada), `SEC-04`. Ningún fichero del `CRITICAL_RE`.
 
@@ -62,7 +64,9 @@ salió, sin adjuntos), `attachments` (solo sus nombres), `tracked_opens` (si lle
 `opens`/`first_opened_at`/`last_opened_at`, `clicks`/`first_clicked_at`/`last_clicked_at`, timestamps.
 - Nace en `BrandedMailMessage` (el `id` y una cabecera `X-JumpWeb-Send`) y se completa al salir con el `MessageSent` del
   framework (asunto, destinatario y HTML); `NotificationFailed` pone `failed_at`. Un solo sitio, no 25.
-- **Plazo**: 24 meses (`model:prune`). **`RGPD-01`**: `anonymize()` borra `html`, `recipient` y `subject` de las del titular
+- **Plazo** (`#794`, `[DECIDIDO owner]`): la COPIA —`html`, `subject`, `attachments`— se borra a los **6 meses**; la fila con
+  sus cifras vive **24 meses** (`model:prune`). Tres correos llevan el nombre de un menor (el justificante firmado, la víspera
+  y «El cumple se acerca»; medido: ninguno lleva alergias). **`RGPD-01`**: `anonymize()` borra `html`, `recipient` y `subject` de las del titular
   y suelta `user_id` (las cifras quedan, sin nadie). El export del art. 20 lleva sus envíos (qué, cuándo, abierto, clics).
 
 ### 4.2 Dónde se ve
@@ -97,6 +101,42 @@ desde cada correo (para las felicitaciones) y el tiempo hasta el primer clic. Lo
 - **C3 Las aperturas**: el píxel con su condición de consentimiento.
 - **C4 A la analítica**: «Marketing» por correo (§4.4).
 
+### 4.6 La C1 al detalle — medido el 28-09, antes de codificar
+- **La clave del envío es el id de la notificación**: `NotificationSender` fija un UUID por destinatario (`sendNow` y
+  `queueNotification`) y el trabajo de la cola lo conserva entre reintentos. Los 25 correos construyen `new
+  BrandedMailMessage($this)` (30 construcciones, todas con `$this`): ahí se añade la cabecera `X-JumpWeb-Send` con ese id,
+  solo en los correos AL CLIENTE (`EmailUtm::isCustomerKey()`).
+- **Un oyente, dos eventos** (`RecordEmailSend`, futuro): `NotificationSent` (la respuesta es un `SentMessage`: de su mensaje
+  original salen el asunto, el destinatario, el HTML y los nombres de los adjuntos) y `NotificationFailed` (el envío falló;
+  el framework reintenta). Upsert por la clave: un reintento que acaba bien completa la MISMA fila. **Todo dentro de un
+  try/catch**: una excepción en el oyente subiría hasta el trabajo, que se reintentaría y duplicaría el correo. **Y tras el
+  commit** (`DB::afterCommit`, añadido al cerrar la C1: ver §4.7 (4)).
+- **Los datos**: `email_sends` (futuro) sin FK a `users` (como el libro: la poda borra por edad y la fila de `users` no se
+  borra nunca); alias de morfo; la copia se borra a los 6 meses (`email-sends:trim` (futuro), diario: una tarea más en
+  `scripts/deploy.sh`) y la fila a los 24 (`model:prune`).
+- **El panel**: `EmailSendResource` (futuro) —lista con filtros y la vista previa en un modal con el HTML en un `iframe`
+  `srcdoc` aislado (`sandbox` sin permisos: ni scripts ni enlaces que salgan)—, fuera del menú plano (`#223`): se llega desde
+  «Clientes» y desde la ficha. Permiso `emails.view` (catálogo y seeder, de gestión); `emails.previewed` al rastro.
+- **El export del art. 20** lleva los envíos del titular (qué correo, cuándo, si salió): contrato **1.51.0** (la 1.50.0 es de
+  plataforma). `anonymize()` borra `html`, `subject`, `recipient` y `attachments` de los suyos y suelta `user_id`.
+
+### 4.7 La C1, lo construido (28-09, 🟦 en `wip/correos-c1`, falta el ojo del owner)
+`email_sends` (migración y `Platform\Models\EmailSend`), la cabecera en `BrandedMailMessage`, `RecordEmailSend` (los dos
+eventos, blindado), `email-sends:trim` (04:40) y la poda, `anonymize()` y el export (contrato 1.51.0), el permiso `emails.view`
+y `emails.previewed` al rastro, `EmailSendResource` (en «Ajustes → Sistema», en «Clientes» y en la ficha) con la vista previa
+aislada, y los rótulos de los 27 correos en es y zh_CN. Pruebas: `Mail\EmailSendsRecordTest` y `Admin\EmailSendsPanelTest`;
+arnés `scripts/mutar-correos-salientes.sh`. **Lo que enseñó**: (1) la prueba de Livewire NO pinta el contenido de un modal de
+Filament 4 (la acción se monta y el HTML no lo trae): el contenido se le pide a la acción de verdad y el navegador lo ve en la
+sonda; (2) un superviviente del arnés era una aserción por SUBCADENA (`email-sends:trim-no` contiene `email-sends:trim`): el
+nombre exacto; (3) Larastan declara `Notification::$id` como texto aunque es NULO hasta que el framework lo fija; (4) ⚠️⚠️
+**el `try/catch` solo no bastaba**: en producción la cola es `database` y el worker envía fuera de toda transacción, pero con
+`QUEUE_CONNECTION=sync` (el `.env.example`, el local) el correo sale DENTRO de la transacción de quien lo dispara; un deadlock
+en el INSERT desharía en InnoDB la transacción ENTERA y, tragado el error, el código de fuera seguiría escribiendo sin ella.
+Se apunta en `DB::afterCommit` como `Recorder` (prueba `…record_waits_for_its_commit`, roja antes del arreglo; su mutación en
+el arnés). El deadlock NO se reprodujo: es el comportamiento documentado de InnoDB. Coste: con `sync`, si la transacción de
+fuera se deshace, el correo salió y no queda apuntado; (5) la copia guardada y la que recibió Mailpit difieren SOLO en los
+finales de línea: el SMTP lleva CRLF (RFC 5322) y la copia se toma antes del transporte, con LF. Es el mismo correo.
+
 ## 5. Impacto en invariantes
 
 `RGPD-01` (la supresión borra lo personal de los envíos del titular; no hay columna nueva en `users`) · `RGPD-02` (el rastro
@@ -116,4 +156,7 @@ validando con `jw_e`) · `RGPD-07` (la analítica, en conjunto) · `SEC-04` (el 
   cuántas veces. Después con esos datos los implementamos en las analíticas; si valoras que necesitamos más datos en relación a
   los correos, dímelo. No sé si poner los correos individual en cada página de cliente, o una página para ver todos». El gasto
   en anuncios, «no ahora». → este borrador (§3: las dos superficies; §4.4: los datos que propongo).
-- **Pendiente**: el ✅ del owner a §3 y §4 antes de la C1; `[PENDIENTE: asesoría]` (§4.3).
+- **28-09, owner — APROBADA**: «perfecto, lo acepto. Vamos a ello… de la manera más profesional; si hay riesgo me lo dices».
+  Con los riesgos delante (las copias con nombres de menores; que apuntar rompa el envío; la vista previa contando como
+  apertura; la asesoría), eligió **la copia 6 meses** (recomendada) → `#794`.
+- **Pendiente**: `[PENDIENTE: asesoría]` los clics por persona y el píxel ANTES de encenderlos en producción (§4.3).

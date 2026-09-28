@@ -199,6 +199,8 @@ class AuditLog extends Model
         // T3c·2 de la analítica para decidir (`#759`): los objetivos del mes se guardan desde «Resumen»; el payload lleva
         // el mes y el antes y el después de cada clave que cambió, sin PII.
         'analytics.goals_updated',
+        // Los correos salientes (`#794`): cada vista previa de un correo enviado deja rastro (qué envío, sin su contenido).
+        'emails.previewed',
 
         // ── Incidencias de cobro (llegan por CONSTANTE, no por literal) ────────────────────
         self::ACTION_DUPLICATE_CAPTURE,

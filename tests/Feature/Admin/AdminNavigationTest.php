@@ -371,9 +371,10 @@ class AdminNavigationTest extends TestCase
         // ⚠️ La cifra se TECLEA a mano y no se deriva del hub: derivarla la compararía consigo misma
         // y una tarjeta que desapareciera pasaría en verde (la lección 2 de `#660`).
         $this->assertSame(
-            26,
+            27,
             array_sum(array_map(fn (array $a): int => count($a['items']), $areas)),
-            'El admin debe ver las 26 tarjetas de Ajustes (19 + la puerta, que bajó del menú en `#320`, '.
+            'El admin debe ver las 27 tarjetas de Ajustes (19 + la puerta, que bajó del menú en `#320`, '.
+            '+ «Correos enviados», que entró con `#794` (los correos que recibe cada cliente, en «Sistema»), '.
             '+ «Promociones», que entró con `#770` (ofertas con fecha y regalos, en «Venta»), '.
             '+ «Avisos de cumple», que entró con «Avísame de fechas» (`#750`, en «Venta»), '.
             '+ «Experimentos», que entró con la T5b de la analítica (`#678`, `#737`), '.

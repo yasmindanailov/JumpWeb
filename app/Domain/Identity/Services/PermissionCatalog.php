@@ -75,6 +75,8 @@ final class PermissionCatalog
             // Poner los objetivos del mes del cuadro (T3c·2 de la analítica para decidir, `#759`): cambian lo que el cuadro
             // dice de todos; se re-exige al guardar.
             'analytics.manage',
+            // Ver los correos enviados a los clientes, tal cual salieron (`#794`): datos de una persona, a veces de un menor.
+            'emails.view',
         ],
         // Sistema (incluye el admin-exclusivo `access.manage`, mostrado pero no asignable).
         'sistema' => [

@@ -12,6 +12,7 @@ use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Models\UserIdentity;
 use App\Domain\Platform\Models\AnalyticsEvent;
 use App\Domain\Platform\Models\AnalyticsSession;
+use App\Domain\Platform\Models\EmailSend;
 use App\Domain\Platform\Models\SurveyParticipation;
 use App\Domain\Platform\Services\Analytics\AttributionContext;
 use App\Domain\Platform\Services\Surveys\SurveySeals;
@@ -242,6 +243,16 @@ class AccountPrivacy
             'orders' => $this->withAssignedDependents($this->orders->exportFor((int) $user->id)),
             'analytics' => $this->analyticsFor($user),
             'surveys' => $this->surveysFor($user),
+            // LOS CORREOS QUE LE HEMOS ENVIADO (`specs/correos-salientes.md` §4.1, `#794`): qué correo, cuándo salió o si
+            // falló, y su asunto. La COPIA no viaja: es una foto de lo que ya tiene en su buzón, y su asunto la nombra.
+            'emails' => EmailSend::query()->where('user_id', $user->getKey())->orderBy('id')->get()
+                ->map(static fn (EmailSend $send): array => [
+                    'mail' => (string) $send->mail_key,
+                    'subject' => $send->subject,
+                    'sent_at' => $send->sent_at?->toIso8601String(),
+                    'failed_at' => $send->failed_at?->toIso8601String(),
+                    'failures' => (int) $send->failures,
+                ])->values()->all(),
         ];
     }
 

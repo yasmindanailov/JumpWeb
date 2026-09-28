@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Users\Schemas;
 
 use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Services\DisplayTime;
+use App\Filament\Resources\EmailSends\EmailSendResource;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Flex;
 use Filament\Schemas\Components\Group;
@@ -149,6 +150,14 @@ class UserInfolist
                         ->visible(fn (): bool => auth()->user()?->hasPermission('customers.insights') ?? false)
                         ->schema([
                             View::make('filament.users.partials.insights'),
+                        ]),
+
+                    // **Sus correos** (`specs/correos-salientes.md` §4.2, `#794`): los diez últimos y «Ver todos» a la página de
+                    // los enviados, filtrada. Con permiso PROPIO (`emails.view`): leer un correo es leer datos de una persona.
+                    Section::make(__('admin.email_sends.section'))
+                        ->visible(fn (): bool => auth()->user()?->hasPermission(EmailSendResource::PERMISSION) ?? false)
+                        ->schema([
+                            View::make('filament.users.partials.email-sends'),
                         ]),
                 ]),
             ])

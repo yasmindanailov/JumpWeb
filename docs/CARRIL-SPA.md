@@ -321,6 +321,17 @@ abre la isla** —no hay fila `sidebar.shell` y el valor por defecto es el cajó
 titulares con visita pagada de julio a octubre que no la tenían y 81 menores con `surname = OJO-TP2`; lo de antes, en
 `ojo-tp2-antes.json`. `OJO=desmontar` borra esos menores y devuelve esas fechas a `null`.
 
+(18) **Mudado verbatim del carril el 28-09 (su techo)**: 🩹 **En la BD LOCAL hay 19 firmas de waiver HUÉRFANAS (15 titulares;
+basura del 26–27 de agosto)**: apuntan a versiones legales 10…34 que no existen (solo viven las tres v1; la FK RESTRICT está,
+así que fue un reseteo por debajo). La ficha del cliente 70 caía con un 500 («version on null» en `WaiverStatus::build()`);
+desde el 25-09 una firma sin versión cuenta como ANTERIOR (señalada, re-firma en la siguiente compra), con test y mutación
+(`WaiverStatusBatchTest`). Sonda de solo lectura: `probe-waiver-70.php` en la carpeta de almacenamiento. Si mides cadenas,
+compara ANTES/DESPUÉS.
+
+(19) **De la C1 de los correos salientes (28-09, `#794`)**: `c1-enviar.php` (en la carpeta de auditoría de `storage`, fuera de
+git) manda «Ya tienes cuenta» de verdad al cliente de sondas 593 —una fila en `email_sends` y un correo en Mailpit— y la sonda
+`sonda-c1-correos.mjs` compara la copia con Mailpit y mira el panel. Se quitan borrando esas filas de `email_sends`.
+
 ## Anexo · La fila del enrutador, mudada el 2026-09-16
 
 > Lo que decía la fila **«El carril del SPA en el OTRO ordenador · rediseñar el cajón (Fase 4) · el material de PlayJump en otra máquina · la rama `cliente/playjump` · qué ficheros son de cada carril»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila

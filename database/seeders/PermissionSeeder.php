@@ -114,6 +114,9 @@ class PermissionSeeder extends Seeder
         'analytics.export' => 'Exportar segmentos de clientes (con opt-in)',
         // Los objetivos del mes (T3c·2 de la analítica para decidir): de gestión, fuera del staff por defecto.
         'analytics.manage' => 'Poner los objetivos del mes de la analítica',
+        // Los correos salientes (`specs/correos-salientes.md`, `#794`): ver qué recibió cada cliente, TAL CUAL (a veces el
+        // nombre de un menor). Leer un correo es leer datos de una persona: permiso propio, fuera del staff por defecto.
+        'emails.view' => 'Ver los correos enviados a los clientes',
         'audit.view' => 'Ver registro de auditoría',
     ];
 

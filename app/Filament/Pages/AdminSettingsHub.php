@@ -7,6 +7,7 @@ use App\Filament\Resources\AuditLogs\AuditLogResource;
 use App\Filament\Resources\BarImages\BarImageResource;
 use App\Filament\Resources\BirthdayReminders\BirthdayReminderResource;
 use App\Filament\Resources\Catalog\CatalogResource;
+use App\Filament\Resources\EmailSends\EmailSendResource;
 use App\Filament\Resources\Experiments\ExperimentResource;
 use App\Filament\Resources\Faqs\FaqResource;
 use App\Filament\Resources\LandingServices\LandingServiceResource;
@@ -144,6 +145,8 @@ class AdminSettingsHub extends Page
                 // Las encuestas (`specs/encuestas.md` §4.4, T1): internas en la puerta y externas por correo; se
                 // crean aquí con `settings.manage` y sus resultados se miran en «Analítica → Encuestas».
                 ['key' => 'surveys', 'class' => SurveyResource::class],
+                // Los correos enviados a los clientes (`specs/correos-salientes.md`, `#794`): también desde «Clientes» y la ficha.
+                ['key' => 'email_sends', 'class' => EmailSendResource::class],
                 // `#320`: la PUERTA, y esta tarjeta es el ESPEJO EXACTO del ítem de menú. Al admin se
                 // le retiró del menú (`[DECIDIDO owner]`: no atiende por ahí, atiende por el buscador)
                 // y aparece aquí; a quien sí lo tiene en el menú —el empleado— no se le repite, o

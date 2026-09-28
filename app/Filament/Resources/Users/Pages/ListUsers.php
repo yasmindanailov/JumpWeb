@@ -2,7 +2,9 @@
 
 namespace App\Filament\Resources\Users\Pages;
 
+use App\Filament\Resources\EmailSends\EmailSendResource;
 use App\Filament\Resources\Users\UserResource;
+use Filament\Actions\Action;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Support\Icons\Heroicon;
@@ -25,9 +27,20 @@ class ListUsers extends ListRecords
      * Sin acción "Crear": los clientes se dan de alta por invitación firmada
      * (Fase 7.3), no desde aquí (`UserResource::canCreate()` = false).
      */
+    /**
+     * «Correos enviados» (`specs/correos-salientes.md` §4.2, `#794`): la página de todos los correos a los clientes, fuera del
+     * menú plano (`#223`). Solo con `emails.view`.
+     */
     protected function getHeaderActions(): array
     {
-        return [];
+        return [
+            Action::make('emailSends')
+                ->label(__('admin.email_sends.nav_label'))
+                ->icon(Heroicon::OutlinedEnvelope)
+                ->color('gray')
+                ->visible(fn (): bool => EmailSendResource::canViewAny())
+                ->url(fn (): string => EmailSendResource::getUrl('index')),
+        ];
     }
 
     /**
