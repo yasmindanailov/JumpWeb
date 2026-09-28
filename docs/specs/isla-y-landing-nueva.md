@@ -1791,6 +1791,14 @@ el panel no se dice (los extras, la invitación, el precio de lanzamiento sin pr
 calculadora (instancia: las piezas y sus cinco componentes nuevos); T6b·2 el hecho de los días con hueco (producto); T6b·3
 la calculadora de la fiesta en la página (producto, reutilizando la pantalla de la fiesta de la isla) y la isla de la
 página (calculado, elegido, la frase de cada pieza); T6b·4 la sonda y el ojo del owner.
+- ▶ **T6b·1 🟦 (28-09)**: `#832` (la página OCUPA `/cumpleanos`) empujado; la página, en la instancia y SIN COMMIT hasta el
+  ojo del owner (`web/cumple.blade.php`, `web/cumple/`, las cinco piezas nuevas, `step-list` con `end`, `cumple.css`,
+  textos es/en/fr). Medido: la primera pantalla idéntica al mockup en la vuelta (114/114 · 45/45) y en la primera visita
+  103/111 como él, salvo 1280×560 (el mockup lleva una oferta que el panel no tiene: otra rama); `step-list` sin `end`,
+  byte a byte igual. La isla de la página SIN [Hoy] (una fiesta no se reserva para hoy). **Datos que faltan para la
+  T6b·2**: `extends_stay` en los complementos de la ficha (la hora extra, por su forma: `CE-4`), el plazo de ajuste de
+  invitados (`/config`: `guest_count_cutoff_hours`) y los fines de semana con hueco de los packs. `#833`: compartir
+  la calculadora, solo por WhatsApp.
 
 ## 5. Impacto en invariantes
 
