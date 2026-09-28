@@ -520,7 +520,10 @@ inactiva se pinta vacía y sus widgets ni existen ni piden.
   un grupo va por `->id()`: por `extraAttributes` pierde contra el suyo vacío. (4) El instrumento contaba las peticiones de
   «Hoy» (12 en vez de 10): se espera a que termine. (5) La pestaña por defecto no se escribe en la URL. (6) Un grupo que
   RECUERDA su estado lleva `fi-collapsed` desde el servidor aunque nazca abierto: lo que decide es `isCollapsed:
-  $persist(true)` de Alpine; la prueba miraba la clase y el arnés la dejó en evidencia.
+  $persist(true)` de Alpine; la prueba miraba la clase y el arnés la dejó en evidencia. (7) Al medir la T3b (28-09): la
+  caché de la OCUPACIÓN (T2) llevaba el corte al segundo en su clave —los otros cinco informes, por fechas—, así que no
+  servía entre los widgets de una pestaña y cada uno recalculaba el informe; ahora va por fechas (`OccupancyReportTest`,
+  con su mutación).
 
 **T3e, primera búsqueda de fuentes (28-09; NADA sembrado, para el owner)**: casi todo lo publicado son MEDIAS de un
 informe, no rangos, y pocas veces de parques de salto. Candidatas, con su pega: (a) ROLLER, *2025 Attractions Industry

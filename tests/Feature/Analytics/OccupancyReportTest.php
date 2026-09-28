@@ -153,6 +153,25 @@ class OccupancyReportTest extends TestCase
         $this->assertSame([25, 3, 253], [$r['previous']['visitors'], $r['previous']['visitor_lines'], $r['previous']['visitors_sq']]);
     }
 
+    /**
+     * La caché de cinco minutos SIRVE entre las peticiones de una pestaña (T3a, `#759`): la misma ventana dos segundos
+     * después —otro corte «hasta ahora»— es la misma clave; otro día, u otra comparación, no. Hasta la T3a la clave llevaba
+     * el corte al segundo y cada widget recalculaba el informe (medido el 28-09).
+     */
+    public function test_the_cache_is_shared_by_the_widgets_of_a_tab(): void
+    {
+        $now = ReportPeriod::ThisMonth->window();
+        $this->travel(2)->seconds();
+        $later = ReportPeriod::ThisMonth->window();
+        $this->assertNotEquals($now->utcTo(), $later->utcTo(), 'el corte avanza con el reloj');
+
+        $this->assertSame(OccupancyReport::cacheKey($now, $now->previous()), OccupancyReport::cacheKey($later, $later->previous()));
+        $this->assertNotSame(OccupancyReport::cacheKey($now, $now->previous()), OccupancyReport::cacheKey($now, $now->yearAgo()));
+        $this->travel(1)->days();
+        $tomorrow = ReportPeriod::ThisMonth->window();
+        $this->assertNotSame(OccupancyReport::cacheKey($now, $now->previous()), OccupancyReport::cacheKey($tomorrow, $tomorrow->previous()));
+    }
+
     public function test_the_anticipation_by_kind_and_by_weekday(): void
     {
         $this->seedJune();

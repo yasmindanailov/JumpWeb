@@ -41,11 +41,16 @@ final class OccupancyReport
         return Cache::remember(self::cacheKey($window, $baseline), self::CACHE_SECONDS, fn (): array => (new self)->compute($window, $baseline));
     }
 
+    /**
+     * Por FECHAS, como los otros informes del cuadro. ⚠️ Hasta la T3a llevaba el corte al SEGUNDO: como toda ventana que
+     * llega a hoy se corta «hasta ahora» (T0a), la clave cambiaba cada segundo y la caché no servía entre las peticiones de
+     * una misma pestaña —cada widget recalculaba el informe— (medido el 28-09). Dos ventanas con las mismas fechas son la
+     * misma ventana en el mismo instante; la caché de cinco minutos da, como en los demás, un corte de hasta cinco minutos
+     * antes. v2 (T3a, `#759`): el informe lleva «visitors».
+     */
     public static function cacheKey(Window $window, Window $baseline): string
     {
-        // v2 (T3a, `#759`): el informe lleva «visitors»; una entrada de la v1 en caché no lo tendría.
-        return 'analytics:occupancy:v2:'.$window->timezone.':'.$window->utcFrom()->format('YmdHis').':'.$window->utcTo()->format('YmdHis').':'
-            .$baseline->utcFrom()->format('YmdHis').':'.$baseline->utcTo()->format('YmdHis').':'.app()->getLocale();
+        return 'analytics:occupancy:v3:'.$window->timezone.':'.$window->dateFrom().':'.$window->dateTo().':'.$baseline->dateFrom().':'.$baseline->dateTo().':'.app()->getLocale();
     }
 
     /**

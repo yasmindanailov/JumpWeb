@@ -529,6 +529,11 @@ mutar "la tabla de las horas pierde una" "app/Filament/Widgets/Analytics/PagesWi
   'range(0, 23)' \
   'range(0, 22)'
 
+# 28-09: la caché de la ocupación llevaba el corte al SEGUNDO y no servía entre los widgets de una pestaña.
+mutar "la caché de la ocupación vuelve a cambiar cada segundo" "$OP" \
+  "'analytics:occupancy:v3:'.\$window->timezone.':'.\$window->dateFrom().':'.\$window->dateTo()" \
+  "'analytics:occupancy:v3:'.\$window->timezone.':'.\$window->utcFrom()->format('YmdHis').':'.\$window->utcTo()->format('YmdHis')"
+
 # ── El CONTROL: tocar un comentario no puede poner nada en rojo ─────────────────────────────────
 control "un comentario de Window" "$W" \
   'Un día' \
