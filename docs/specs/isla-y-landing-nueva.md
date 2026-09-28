@@ -1811,8 +1811,17 @@ página (calculado, elegido, la frase de cada pieza); T6b·4 la sonda y el ojo d
   tarjeta, una MUESTRA con el próximo sábado; «sus datos aparecen», no «entran solos»: se PROPONEN al anfitrión, §3.1 de
   `celebracion-e-invitacion.md`), el paso 3 con la invitación y su pista, y vuelve «quien prefiere irse firma desde el
   móvil»; cada cosa solo si TODOS los packs la tienen (control: apagada en el 106, las tres desaparecen). En PRODUCCIÓN
-  la invitación está apagada (`#670`): saldrá el día que el owner la encienda.
-  **Sigue la T6b·3**: la calculadora en la página, y los días con hueco llevan a ella con la fecha elegida.
+  la invitación está apagada (`#670`): saldrá el día que el owner la encienda. ✅ con el ojo del owner (instancia `fb6e736`).
+- ▶ **T6b·3, la calculadora de la fiesta en la página** (`#836`). Lo que pinta el mockup (`Pieza6`) y lo que la verdad
+  quita: fuera la línea del precio de lanzamiento (sin promoción), el hueco de [Jump Club] (`#761`·3), el correo (`#833`)
+  y los extras de después de reservar (la ficha no los publica); el máximo, el del pack (20, el mockup: 40). Tandas:
+  **3a ✅** la compra de la isla entiende la intención `fiesta` (pack, edad, día, hora, niños, menú, `extras` y
+  `continuar`) y lleva la hora extra hasta «Pagar» (medido en el navegador: sigue sola a «Tus datos» con «Pack Cumpleaños
+  KIDS · sáb 3, 11:00 · 10 niños», 194,50 € —Menú 2 y la hora extra— y la línea validada con `age`, 108×10 y 317×1);
+  lo que solo usa la compra sale de `oferta.js` a `intencion.js` (viajaba con las calculadoras); **3b** la calculadora
+  (vista pura con `node --test`, su composable sobre los stores del motor, sus piezas —la hora extra, una fila nueva— y una
+  entrada propia, que Kids y Jump no carguen la fiesta); **3c** la pieza 6 de la instancia y los días con hueco que eligen
+  su fecha; **3d** la isla de la página (lo que falta y lo elegido, como en Kids).
 
 ## 5. Impacto en invariantes
 

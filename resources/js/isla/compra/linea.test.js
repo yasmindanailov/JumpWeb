@@ -28,8 +28,16 @@ describe('el pedido de la pantalla 0', () => {
 
         assert.deepEqual(p, {
             fila: 100, dia: '2026-09-26', hora: '17:00:00', n: 2, cal: 1, minimo: 1, maximo: 12,
-            calcetin: { id: 110, price_cents: 200, max_quantity: 40 }, guardian: true, evento: {}, elecciones: [],
+            calcetin: { id: 110, price_cents: 200, max_quantity: 40 }, guardian: true, evento: {}, elecciones: [], extras: [],
         });
+    });
+
+    test('de una FIESTA con hora extra (T6b·3, `#836`): se recuerda y se PIDE, así «Pagar» no la pierde al rehacer la línea', () => {
+        const p = pedidoDe({ ...borrador, fila: 105, n: 10, cal: 0 }, { evento: { age: 5 }, extras: [{ product_id: 317, quantity: 1, sobra: true }] });
+
+        assert.deepEqual(p.extras, [{ product_id: 317, quantity: 1 }]);
+        assert.deepEqual(complementosDe(p), [{ product_id: 317, quantity: 1 }]);
+        assert.deepEqual(complementosDe({ ...pedidoDe(borrador, { calcetin }), extras: [{ product_id: 317, quantity: 1 }] }), [{ product_id: 110, quantity: 1 }, { product_id: 317, quantity: 1 }]);
     });
 
     test('de una FIESTA (T3e·5): la edad de quien cumple viaja en la línea, y el menú se recuerda para rehacerla', () => {

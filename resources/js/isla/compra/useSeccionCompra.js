@@ -25,7 +25,7 @@ import { useSuperficie } from './useSuperficie.js';
 import { useDatosCompra } from './useDatosCompra.js';
 import { usePagoCompra } from './usePagoCompra.js';
 import { usePantallaCero } from './usePantallaCero.js';
-import { borradorDeIntencion } from './oferta.js';
+import { borradorDeIntencion, sigueSola } from './intencion.js';
 import { euros, horasCercanas, horasDelSelector } from './vista.js';
 import { meterLinea, pedidoDe } from './linea.js';
 import { lineaListo, marcasDe, reciboDe, resumenDeLaCesta, resumenDelPedido } from './recibo.js';
@@ -116,7 +116,7 @@ export function useSeccionCompra(props) {
         compra.intencion = store.machine?.takeIntent?.() ?? compra.intencion;
         // La que sigue SOLA (`#785`) prepara ya, también mientras espera al catálogo: si no, la pantalla 0 se pintaba vacía
         // hasta que llegaba. Si el montaje acaba sin catálogo, se suelta: nunca un esqueleto eterno.
-        if (compra.intencion?.type === 'linea' && compra.intencion.continuar === true) {
+        if (sigueSola(compra.intencion)) {
             compra.preparando = true;
             flow.ready.then(() => { if (catalogStore.products.length === 0) compra.preparando = false; });
         }
@@ -195,13 +195,14 @@ export function useSeccionCompra(props) {
     function empezar(intencion) {
         cartStore.setError('');
         if (isOutcome(store.step)) flow.addAnother();
-        // «Reservar y pagar» de la calculadora de la página (T4d): con su selección entera, la compra sigue SOLA por su
+        // «Reservar y pagar» de la calculadora de la página (T4d; la de la fiesta, T6b·3): con su selección entera —de una
+        // fiesta, también la edad, el menú y la hora extra—, la compra sigue SOLA por su
         // camino de siempre (`continuar`: la línea se valida, entra en la cesta y se admite) hasta «Pagar», o hasta «Tus
         // datos» si falta algo (`#785`). Mientras, «preparando»: la pantalla 0 no se enseña, porque no hay nada que elegir
         // y se podía tocar mientras cargaba. Si al situarla ya no cabe —la hora se llenó— o el servidor dice que no, a la
         // pantalla 0 con lo que quepa y su aviso. ⚠️ FUERA de la cola: `continuar` la espera, y desde dentro se esperaría
         // a sí misma.
-        const sola = intencion?.type === 'linea' && intencion.continuar === true;
+        const sola = sigueSola(intencion);
 
         Object.assign(compra, {
             paso: 'cuando', aviso: '', pedido: null, pagado: null, preparando: sola, sinDatos: false, alEntrar: false,

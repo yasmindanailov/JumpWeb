@@ -21,10 +21,11 @@ import { t } from '../../sidebar/i18n.js';
 /**
  * Lo que la isla recuerda del pedido al salir de la pantalla 0: el borrador y lo que en ese momento decían los datos
  * (el mínimo, lo que cabe a esa hora, el complemento por cantidad y el justificante), que el motor olvida al añadir.
- * De una FIESTA (T3e·5), además, su respuesta de reserva —la edad de quien cumple, en la clave de su campo— y su
- * elección de grupo —el menú—: el recibo los necesita para rehacer la línea sin perderlos.
+ * De una FIESTA (T3e·5), además, su respuesta de reserva —la edad de quien cumple, en la clave de su campo—, su
+ * elección de grupo —el menú— y lo que la alarga (`extras`, la hora extra de la calculadora de la página, T6b·3): el
+ * recibo los necesita para rehacer la línea sin perderlos.
  */
-export function pedidoDe(borrador, { minimo = 1, maximo = null, calcetin = null, guardian = 'none', evento = {}, elecciones = [] } = {}) {
+export function pedidoDe(borrador, { minimo = 1, maximo = null, calcetin = null, guardian = 'none', evento = {}, elecciones = [], extras = [] } = {}) {
     return {
         fila: borrador.fila,
         dia: borrador.dia,
@@ -37,11 +38,18 @@ export function pedidoDe(borrador, { minimo = 1, maximo = null, calcetin = null,
         guardian: guardian === 'required',
         evento: { ...evento },
         elecciones: [...elecciones],
+        extras: extras.map((x) => ({ product_id: x.product_id, quantity: x.quantity })),
     };
 }
 
-/** Los complementos que se PIDEN: el de por cantidad (los calcetines), con los pares del pedido. */
-export const complementosDe = (p) => (p.calcetin && p.cal > 0 ? [{ product_id: p.calcetin.id, quantity: p.cal }] : []);
+/**
+ * Los complementos que se PIDEN: el de por cantidad (los calcetines), con los pares del pedido, y los de la fiesta que la
+ * alargan (`extras`). ⚠️ Sin ellos, cambiar los niños en «Pagar» rehacía la línea SIN la hora extra elegida.
+ */
+export const complementosDe = (p) => [
+    ...(p.calcetin && p.cal > 0 ? [{ product_id: p.calcetin.id, quantity: p.cal }] : []),
+    ...(Array.isArray(p.extras) ? p.extras : []),
+];
 
 /** La línea candidata, con los complementos que RESOLVIÓ el servidor (`selection`), no los pedidos. */
 export function lineaDe(p, resueltos) {

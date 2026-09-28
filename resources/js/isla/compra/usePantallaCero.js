@@ -13,9 +13,8 @@
 import { computed } from 'vue';
 import { api } from '../../sidebar/api.js';
 import { todayIso } from '../../sidebar/cart.js';
-import {
-    borradorDeIntencion, calcetinDe, cargarDiasDeFilas, cargarFichas, cargarGrupos, horaDelMotor, horaQueCabe, primerDia,
-} from './oferta.js';
+import { calcetinDe, cargarDiasDeFilas, cargarFichas, cargarGrupos, horaDelMotor, horaQueCabe, primerDia } from './oferta.js';
+import { borradorDeIntencion } from './intencion.js';
 import { filasDeZona, pantallaCuando } from './vista.js';
 import { campoDeEdad, eleccionesDe, menuElegido, packPorEdad, packsDeFiesta, pantallaCuandoFiesta } from './fiesta.js';
 
@@ -33,7 +32,9 @@ export function usePantallaCero({ flow, compra, enCola, textos }) {
         timeStore.select(b.hora);
         selectionStore.setQuantity(b.n);
         const calcetin = b.fiesta ? null : calcetinDe(catalogStore.product);
-        selectionStore.setQuantities(calcetin && b.cal > 0 ? [{ product_id: calcetin.id, quantity: b.cal }] : []);
+        // De una fiesta, lo que la alarga (la hora extra de la calculadora de la página, T6b·3): si a esa hora no cabe, el
+        // servidor no la ofrece y la suelta de `selection` (lo que se guarda); el borrador la sigue pidiendo por si cabe.
+        selectionStore.setQuantities(b.fiesta ? (b.extras ?? []) : (calcetin && b.cal > 0 ? [{ product_id: calcetin.id, quantity: b.cal }] : []));
         selectionStore.setChoices(b.fiesta ? eleccionesDe(compra.grupos, b.menu) : []);
         await selectionStore.loadAddons({ api, productId: b.fila, date: b.dia, time: b.hora });
         // Con hora, los menús vuelven RESUELTOS para esa gente: son los que se pintan.
@@ -127,6 +128,8 @@ export function usePantallaCero({ flow, compra, enCola, textos }) {
 
             if (! pack || pack.id === b.fila) return null;
             b.fila = pack.id;
+            // La hora extra es de CADA pack (otro complemento, otro precio): la del anterior no vale en éste.
+            b.extras = [];
             b.n = Math.min(Math.max(b.n ?? 0, pack.min_quantity ?? 1), pack.max_quantity ?? Infinity);
 
             return enCola(cargarPack);
@@ -162,7 +165,7 @@ export function usePantallaCero({ flow, compra, enCola, textos }) {
         if (! b.fiesta) return { calcetin: calcetinDe(catalogStore.product), evento: {}, elecciones: [] };
         const campo = campoDeEdad(compra.fichas[b.fila]);
 
-        return { calcetin: null, evento: campo ? { [campo.key]: b.edad } : {}, elecciones: eleccionesDe(compra.grupos, b.menu) };
+        return { calcetin: null, evento: campo ? { [campo.key]: b.edad } : {}, elecciones: eleccionesDe(compra.grupos, b.menu), extras: b.extras ?? [] };
     }
 
     const vista = computed(() => {

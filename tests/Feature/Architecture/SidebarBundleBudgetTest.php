@@ -942,7 +942,11 @@ class SidebarBundleBudgetTest extends TestCase
     // `calendarioDeTira`; la tira que se desliza hasta el día elegido). Medido 156,72 → 159,27 (base: el `HEAD` de `#829`,
     // construido aparte con el mismo cálculo). El calendario de meses entra con `import()` al abrirlo: dentro del trozo
     // sumaba otros 5,6 (T4d·4). El techo, a 160.
-    private const ISLA_COMPRA_CHUNK_MAX_KB = 160;
+    // `#836` (T6b·3a): la compra entiende la intención de la calculadora de la FIESTA y lleva su hora extra hasta «Pagar»
+    // (`compra/intencion.js`, los `extras` del pedido). Medido 160,08 (en `a30e02e7` pasaba bajo 160). Lo que solo usa la
+    // compra salió de `oferta.js` a `intencion.js`: en aquél viajaba también con las calculadoras de la página, y las hacía
+    // crecer sin tocarlas (medido: la de entradas pasaba de 183 con él dentro). El techo, a 161.
+    private const ISLA_COMPRA_CHUNK_MAX_KB = 161;
 
     // T4d·4 (`specs/isla-y-landing-nueva.md` §4.12): la CALCULADORA de una página, entrada propia que la página pide
     // (`scripts` de `<x-pagina>`) y se monta al acercarse su pieza. Su DESCARGA entera, como la mide el navegador que

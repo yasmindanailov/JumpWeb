@@ -3,9 +3,9 @@
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
-> **820–849** (dada de alta en `DECISIONES.md` el 27-09; centena `decisiones/800-899.md`) · Último usado: **`#835`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#835`) · Actualizado: **2026-09-28**
-> (la PORTADA ✅; Cumpleaños: T6b·1 ✅, T6b·2 🟦 —los hechos, `#834`/`#835`—, sigue la T6b·3).
+> **820–849** (dada de alta en `DECISIONES.md` el 27-09; centena `decisiones/800-899.md`) · Último usado: **`#836`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#836`) · Actualizado: **2026-09-28**
+> (la PORTADA ✅; Cumpleaños: T6b·1 y T6b·2 ✅, T6b·3 en marcha —3a ✅, `#836`—).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
 > llévaselo con la medida, como el SPA en `#724`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -47,11 +47,9 @@ edad del panel—; contrato **1.45.0**; `sonda-cuenta.mjs` 250/250, arneses `mut
 ▶ **EN MARCHA: (3) T6** (spec §4.17). ✅ con el ojo del owner: la PORTADA (`#827`→`#829`; `instancias/playjump/web/inicio/`,
 instancia `5c2b9cf`; `sonda-portada.mjs`), el CALENDARIO (`#830`) y la FLECHA DE «ATRÁS» (`#831`, su censo en §4.17).
 **EN MARCHA: T6b, Cumpleaños** (censo, plan, lo medido: spec §4.18). T6b·1 ✅ («aprobado»; instancia `b969ec7`).
-**T6b·2 🟦** (`#834` contrato 1.47.0: `/prices.stay_extensions`, `config` y `availability_weekends`; `#835` 1.48.0: la
-ficha publica `guest_invitation` y `guardian_mode`; `mutar-hechos-de-la-fiesta.sh` 15/15). El owner dio su visto bueno a
-la hora extra, el ajuste y los días con hueco; en la instancia, SIN COMMIT hasta que vea EN VIVO lo de `#835` en
-`localhost:8081/cumpleanos` (la invitación en la pieza 5, el paso 3, «quien prefiere irse firma»): el modelo
-(`web/cumple/modelo.php`), `pieza-5`, su lista de hechos y los textos es/en/fr. Con su ✅, commit en la instancia. **Sigue la T6b·3** (la calculadora en la página: `compra/fiesta.js`, `CalendarioMes`, `SelectorHoras`; «Reservar
+**T6b·2 ✅** con el ojo del owner (`#834` 1.47.0, `#835` 1.48.0; `mutar-hechos-de-la-fiesta.sh` 15/15; instancia
+`fb6e736`). **T6b·3 EN MARCHA** (`#836`, plan en §4.18): 3a ✅ (la intención `fiesta` y la hora extra hasta «Pagar»);
+sigue la 3b (la calculadora: vista pura, composable, piezas y entrada propia), la 3c (pieza 6 de la instancia) y la 3d. **Sigue la T6b·3** (la calculadora en la página: `compra/fiesta.js`, `CalendarioMes`, `SelectorHoras`; «Reservar
 y pagar la señal» a la compra con la selección entera, `#785`; los días con hueco la abren con su fecha; compartir SOLO por
 WhatsApp, `#833`) y la T6b·4 (sonda y ojo). La ISLA la repiensa el owner con Claude Design: no atar nada nuevo a ella. **Para iterar con el owner** (no
 ahora): la isla «muy sola» y el «Reservar» solo en la isla del móvil (A/B propuesto: las páginas de la instancia aún no

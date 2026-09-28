@@ -1,8 +1,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import {
-    borradorDeIntencion, calcetinDe, cargarDiasDeFilas, cargarFichas, cargarGrupos, horaDelMotor, horaQueCabe, primerDia,
-} from './oferta.js';
+import { calcetinDe, cargarDiasDeFilas, cargarFichas, cargarGrupos, horaDelMotor, horaQueCabe, primerDia } from './oferta.js';
+import { borradorDeIntencion, sigueSola } from './intencion.js';
 
 /**
  * Lo que la pantalla 0 de la isla pide al motor (T3e de `specs/isla-y-landing-nueva.md` §4.10). La API se dobla:
@@ -89,6 +88,23 @@ describe('la intención de la landing', () => {
         assert.deepEqual([b.zona, b.fila, b.dia, b.hora, b.n, b.cal, b.elegirZona], ['kids', 101, '2026-09-26', '17:00:00', 3, 2, false]);
         assert.deepEqual([borradorDeIntencion({ type: 'linea', id: 101, quantity: 0 }, productos).n, borradorDeIntencion({ type: 'linea', id: 101 }, productos).cal], [1, 0]);
         assert.equal(borradorDeIntencion({ type: 'linea', id: 105 }, productos).elegirZona, true);
+    });
+
+    test('«Reservar y pagar la señal» de la calculadora de la FIESTA (T6b·3): el pack, la edad, el día, la hora, los niños, el menú y la hora extra', () => {
+        const b = borradorDeIntencion({ type: 'fiesta', id: 105, edad: 6, date: '2026-10-03', time: '17:00:00', quantity: 12, menu: 108, extras: [{ product_id: 317, quantity: 1 }, { product_id: 'x', quantity: 1 }, { product_id: 316, quantity: 0 }], continuar: true }, productos);
+
+        assert.deepEqual([b.fiesta, b.zona, b.fila, b.edad, b.dia, b.hora, b.n, b.menu, b.elegirZona], [true, 'cumpleanos', 105, 6, '2026-10-03', '17:00:00', 12, '108', false]);
+        assert.deepEqual(b.extras, [{ product_id: 317, quantity: 1 }], 'solo lo que es un complemento con cantidad');
+        const sinNada = borradorDeIntencion({ type: 'fiesta', id: 105 }, productos);
+        assert.deepEqual([sinNada.edad, sinNada.n, sinNada.menu, sinNada.extras], [null, null, null, []], 'lo que no llega, lo decide la pantalla 0');
+        assert.equal(borradorDeIntencion({ type: 'fiesta', id: 101 }, productos).fiesta, undefined, 'una ENTRADA no es una fiesta');
+    });
+
+    test('sigue SOLA hasta «Pagar» la selección entera de una calculadora (`#785`): la de entradas y la de la fiesta, con `continuar`', () => {
+        assert.deepEqual(
+            [{ type: 'linea', continuar: true }, { type: 'fiesta', continuar: true }, { type: 'fiesta' }, { type: 'product', continuar: true }, null].map(sigueSola),
+            [true, true, false, false, false],
+        );
     });
 });
 
