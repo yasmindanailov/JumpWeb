@@ -43,11 +43,10 @@ pantalla, (1) la conversión del zip tercero y (2) la T5, Mi cuenta, ENTERA (spe
 ▶ **EN MARCHA: (3) T6** (spec §4.17). ✅ con el ojo del owner: la PORTADA (`#827`→`#831`, `sonda-portada.mjs`) y
 CUMPLEAÑOS (`#832`→`#836`, §4.18, `sonda-cumpleanos.mjs`) y **COLEGIOS entera** (spec §4.19, `#837`→`#841` y T6c·5–6;
 instancia `88660ef`; en LOCAL, 91 plantillas INFERIDAS para `excursiones`; `sonda-colegios.mjs` 56/56 a 390 y 1280,
-`mutar-sonda-colegios.sh` 11/11, `mutar-escalera.sh` 7/7). ▶ **EN MARCHA: Visítanos (T6d)**, censo en la spec §4.20 (el
-panel gana donde habla; donde calla, el brief). T6d·1 ✅ (el hecho `bar`) y T6d·2 ✅ con el ojo del owner (instancia
-`c58265a`). **Sigue la T6d·3**: `scripts/sonda-visitanos.mjs` (desde `storage/app/audit/visitanos-capturas.mjs`, de un solo
-uso; las URL de los hechos llevan el 8081: reescribirlas al 80 dentro del contenedor) con su mutación, y la primera pantalla
-contra el mockup (`sonda-primera-pantalla.mjs`). Pendiente: la vuelta de Google con una
+`mutar-sonda-colegios.sh` 11/11, `mutar-escalera.sh` 7/7) y **VISÍTANOS entera** (spec §4.20, T6d·1–3; instancia `c58265a`;
+`sonda-visitanos.mjs` 26/26, `mutar-sonda-visitanos.sh` 8/8; la primera pantalla, el mismo veredicto que el mockup; el panel
+gana donde habla y donde calla, el brief). **Sigue Normas (T6e)**: su censo contra `paginas/normas/` (`RuleGrid` con sus
+GRUPOS por momento y `WaiverSheet`: ésta, compartida con la fiesta, buzón al SPA ANTES). Pendiente: la vuelta de Google con una
 excursión, sin verificar. ⚠️ La entrada `isla/hoja/montar.js` NO importa nada compartido (`#841`); la calculadora, a 185,80 de 186.
 ⚠️ `sonda-portada` 13/14 («Reservar» de la isla tras «Míralo», 17:17): igual con el `HEAD` (control): investigar aparte. La ISLA la
 repiensa el owner con Claude Design: no atar nada nuevo a ella. **Para iterar con el owner** (no

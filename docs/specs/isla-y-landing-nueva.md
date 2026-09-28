@@ -2029,6 +2029,17 @@ el diseño les añadió, sin cambiar sus otras páginas); **T6d·3** la sonda y 
   ⚠️ **Encontrado de camino**: `BarFactsTest`, `BarPageTest` y `AnfitrionBarTest` escribían en `public/uploads` DE VERDAD y
   pisaban las fotos del bar de la instalación local (la de la cafetería, un PNG negro): ahora falsean su disco (medido: tras
   correrlas, `uploads` intacto). La foto local, repuesta con la real del zip (`foto-113`), solo en la BD local.
+- ✅ **T6d·3 (28-09) · LA SONDA y la primera pantalla**: `scripts/sonda-visitanos.mjs`, **26/26 a 390 y 1280**, cada dato contra
+  SU hecho —[Hoy] contra `/schedule` (hoy, o mañana si ya cerró), las franjas y las fechas especiales, los calcetines contra la
+  calculadora de Kids, las alturas contra `/catalog/zones`, la foto contra `/bar`, los plazos contra sus productos, los grupos
+  contra las fichas de las excursiones, el cierre contra `/site`—, que «aquí» ABRE el selector, la isla que calla y dice
+  [Hoy], el pie y el menú con la actual, y en/fr sin marcadores. Su arnés, `scripts/mutar-sonda-visitanos.sh` (muta la
+  instancia): **8/8**, cada una por su comprobación (entre ellas, los «5 días» del brief en vez del plazo del producto). ⚠️ Dos
+  trampas pagadas: la comprobación de «calla» leía la línea POR la marca y quedaba vacía sin ella (ahora se lee por sí misma y
+  la marca se comprueba aparte), y **opcache revalida cada 2 s**: medida al instante, la primera mutación no mordió en la
+  corrida entera y sí sola (el arnés espera 3 s tras mutar y restaurar). **Primera pantalla contra el mockup**
+  (`sonda-primera-pantalla.mjs comparar visitanos`): el MISMO veredicto regla a regla —la vuelta 114/114 · 45/45; la primera
+  visita 103/111, los mismos ocho que el mockup—. **La T6d, Visítanos, ✅.**
 
 ## 5. Impacto en invariantes
 
