@@ -2,7 +2,7 @@
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb` a secas; la instancia al lado, en
 > `~/proyectos/instancias/playjump`, clon de `github.com/yasmindanailov/instancia-playjump`, montada el 25-09) ·
-> Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#791`** · La banda está dada de alta en la
+> Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#792`** · La banda está dada de alta en la
 > tabla de `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: **`analitica-para-decidir.md`
 > §0** (la tarea en curso, `#755`) · `encuestas.md` §0 y §4.7 (`#754`) · `analitica.md` §0 y §4.5 · `isla-y-landing-nueva.md`
 > §4.11 · `celebracion-e-invitacion.md` §0 · `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 ·
@@ -18,7 +18,8 @@
   T1 encuestas anónimas (`#754`/`#757`), T2 ocupación (`#758`) y, el 28-09, **T3a la forma** (`#759`: siete pestañas, solo
   pide la abierta, un catálogo de 58 cifras), **T3b el veredicto** (`#790` `[DECIDIDO owner]`: «normal» es el mín–máx de los 12
   periodos anteriores) y **T3c·1 «lo que ha cambiado»** (`#791`). Lo construido y lo que enseñó cada una: spec §4.13. ▶ **Sigue
-  la T3c·2, los objetivos del mes: DISEÑADA en §4.13, sin empezar.**
+  la T3c·2, los objetivos del mes: DISEÑADA en §4.13, sin empezar.** Y detrás, **la TP, el público** (`#792` `[DECIDIDO owner]`
+  28-09: la fecha de nacimiento del titular, entera y opcional; los padres por la edad de sus hijos con el opt-in de hoy; §4.14).
 - ▶ **LA FIESTA DEL SISTEMA NUEVO ES MÍA (`#765`, `[DECIDIDO owner]` 25-09)**: la lista de invitados, la invitación con
   su recibo y la autorización, vestidas con «Saltia» para la v2.0.0, en paralelo con la web pública. El traspaso,
   `isla-y-landing-nueva.md` §4.11; el censo HAY/FALTA, el método y las tandas, `specs/fiesta-sistema-nuevo.md` (§1.4,
@@ -66,7 +67,9 @@
 1. ❗❗❗ **LA ANALÍTICA PARA DECIDIR (`#755`, `specs/analitica-para-decidir.md`)**: ✅ T0a·T0b·T0c · T1 · T2 · T3a · T3b ·
    T3c·1, todas en `main` y aprobadas (§4.3–§4.13) → ▶ **T3c·2 los objetivos del mes** (diseño en §4.13 «La T3c·2 al detalle»:
    `analytics_goals`, ocho cifras, la frase por tipo, el formulario al pie de «Resumen», permiso `analytics.manage` re-exigido
-   —`SEC-04`— y rastro; ❗ toca ficheros COMPARTIDOS, aviso previo ya en el buzón) → T3d el texto para IA (§4.7; lee `Changes` y
+   —`SEC-04`— y rastro; ❗ toca ficheros COMPARTIDOS, aviso previo ya en el buzón) → **TP el público** (§4.14, `#792`: TP·1 la
+   fecha en las cinco altas y Mi cuenta —la isla, de plataforma, por buzón—, TP·2 «Quién viene» en Clientes, TP·3 los padres por
+   la edad de sus hijos, `[PENDIENTE: asesoría]` antes de exportar) → T3d el texto para IA (§4.7; lee `Changes` y
    los veredictos; sin PII ni celdas < 5) → T3e el SECTOR (primera búsqueda en §4.13: casi todo son medias, no rangos; AL OWNER
    antes de sembrar) → T4 cartera → T5 marketing y correos → T6 cohortes → T7 pérdidas → T8 satisfacción (§4.12). Los CRUCES de
    encuestas, con la T8; el cruce por EMPLEADO, `[PENDIENTE: owner]` (27-09, sin respuesta).
@@ -219,6 +222,10 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 
 ## Buzón
 
+- ❗ **Para plataforma y la web (28-09, AVISO PREVIO de la TP, `#792`)**: el titular tendrá `users.born_on` (fecha entera,
+  opcional; < 18 se rechaza). **Plataforma**: el alta de la isla y su Mi cuenta la pedirán (contrato menor, `User.born_on`; el
+  número, al llegar). **Web**: `/privacidad` nombrará esa fecha y el uso de la edad de los hijos en las comunicaciones
+  comerciales (`[PENDIENTE: asesoría]`).
 - ❗ **Para plataforma (28-09, la T3 de la analítica, `#759`/`#790`/`#791`)**: (1) Toqué dos descripciones de TU hub de Ajustes
   en `lang/{es,zh_CN}/admin.php`: Experimentos y Encuestas decían «Analítica → Conversión / Encuestas» y ahora «→ Marketing /
   Satisfacción» (las pestañas se renombraron; `?pestana=traffic` y `surveys` siguen abriendo la suya). (2) **AVISO PREVIO**: la
@@ -243,14 +250,6 @@ el repo de la instancia (lo nuevo), nunca a `main`.
   `[PENDIENTE: asesoría]`, el texto es tuyo.
 - **Para correos (27-09, `#754`)**: `SurveyInvitation` gana UNA línea (el aviso del anonimato, tras la intro) y recibe el
   token en claro en vez de la fila; tu molde, sin tocar. La marca por envío (`jw_e`) y el píxel, en la T5: aviso antes.
-- ❗ **Para plataforma (27-09, F7 `#752` y F8 `#753`)**: leído tu aviso de la Z4 (atendido). Los CONTRATOS **1.42.0** (F7:
-  `GuestForm.honoree_waiver`, `PUT …/honoree-waiver`) y **1.44.0** (F8: `POST …/invitation/shares`, `Invitation.shared_at`; tras tu 1.43.0,
-  `#788`) son míos; tu siguiente, 1.45.0. F8 añade `party_invitations.shared_at` y un paso al informe de fiestas. ⚠️ Tu
-  `AntesDeVenir` (`#776`): una línea, su enlace con `?c=wa` (tu guarda de paridad lo pidió); su envío NO se mide: si
-  quieres, al pulsar, el `POST …/invitation/shares` {via: whatsapp}. Tocado lo tuyo, mínimo: en
-  la puerta, `livewire/admin/puerta/validar.blade.php` (la pastilla «su cumple»), `.gate-minor` de
-  `filament/admin/theme.css` (salta de línea: en tablet cortaba las pastillas) y dos claves en `lang/{es,zh_CN}/admin.php`;
-  `x-pieza.casilla` gana `form`. Un contrato nuevo de Booking, `HonoreeWaivers` (binding en `AppServiceProvider`).
 - **Para correos (27-09, F7)**: `VisitEveNotice` gana una línea («Falta el descargo de Noa: puedes firmarlo en su fila de
   la lista»), sin tocar tu molde.
 - ❗ **Para la web (26-09, `#750`)**: «Avísame de fechas» es un tratamiento NUEVO (correo comercial a quien firma la

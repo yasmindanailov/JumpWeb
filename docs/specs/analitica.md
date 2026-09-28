@@ -648,7 +648,8 @@ ventana y comparación.
 ### 4.6 Conocer al cliente (T4)
 
 ⚠️ **Revisión 23-09**: la navegación por persona solo con `analytics`; los menores no se segmentan por
-`born_on`; la 360 tiene permiso; la pregunta tras pagar se descartó.
+`born_on`; la 360 tiene permiso; la pregunta tras pagar se descartó. ▶ **Sustituida en lo de `born_on` por `#792`**
+(`[DECIDIDO owner]` 28-09): los PADRES se segmentan por la edad de sus hijos, con opt-in (`analitica-para-decidir.md` §4.14).
 
 En la ficha de usuario del panel, la **pestaña 360** (permiso **`customers.insights`**): pedidos, ingresos,
 última compra, frecuencia, productos, contactos recibidos, `marketing_opt_in` — todo del contrato, al 100 %;

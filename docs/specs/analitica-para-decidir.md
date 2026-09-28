@@ -1,7 +1,7 @@
 # [SPEC] La analítica para decidir — un cuadro que se entiende, dice si va bien o mal y cubre las decisiones del operador
 
-> Estado: ✅ **aprobada por el owner el 27-09** (§7; `#755`) → ✅ **T0, T1 y T2** · 🟦 **T3** (✅ T3a · ✅ T3b · ✅ T3c·1 · ⬜ T3c·2→T3e, §4.13) · Última actualización: 2026-09-28 ·
-> Decisiones: `#755` (esta), `#754` (encuestas anónimas, su T1), `#758` (la T2), `#759` (la T3 en cinco tandas) · Carril: **SPA** (banda 730–759). Amplía `analitica.md`
+> Estado: ✅ **aprobada por el owner el 27-09** (§7; `#755`) → ✅ **T0, T1 y T2** · 🟦 **T3** (✅ T3a · ✅ T3b · ✅ T3c·1 · ⬜ T3c·2→T3e, §4.13) · ⬜ **TP el público** (§4.14) · Última actualización: 2026-09-28 ·
+> Decisiones: `#755` (esta), `#754` (encuestas anónimas, su T1), `#758` (la T2), `#759` (la T3 en cinco tandas), `#792` (el público) · Carril: **SPA** (banda 790–819). Amplía `analitica.md`
 > (el libro, los regímenes y la T2 siguen siendo suyos).
 
 ## §0 · Antes de tocar
@@ -17,7 +17,8 @@
   sale a un tercero: SOLO agregados, con guarda; (5) los enlaces FIRMADOS de los correos: la marca de envío va por el
   camino de `EmailUtm` (tras firmar, ignorada al validar); (6) aperturas solo con consentimiento (`[PENDIENTE: asesoría]`).
 - **Estado**: ✅ aprobada (27-09, `#755`); T0a·T0b·T0c ✅ · **T1** ✅ (la T5 de `encuestas.md`, `#754`, `#757`) · **T2** ✅ ocupación (§4.8.ter, `#758`) → **T3** Resumen, en cinco tandas (§4.13,
-  `#759`): ✅ T3a la forma · ✅ T3b veredicto (mín–máx, `#790`) · ✅ T3c·1 lo que ha cambiado (`#791`) → ▶ T3c·2 objetivos.
+  `#759`): ✅ T3a la forma · ✅ T3b veredicto (mín–máx, `#790`) · ✅ T3c·1 lo que ha cambiado (`#791`) → ▶ T3c·2 objetivos →
+  **TP el público** (§4.14, `#792`) → T3d.
   **Nada de lo medido se pierde** (§4.1.bis, con guarda): se resume arriba y lo demás queda
   plegado o en su pestaña.
 - **Invariantes**: `RGPD-01`, `RGPD-04`, `RGPD-07`, `SEC-04`, `SUITE-01`. Dinero y aforo: solo lectura.
@@ -430,6 +431,7 @@ número móvil»; y de las compras: «clientes recurrentes sí, eso me sirve». 
 | T1 | **Encuestas anónimas** — ✅ (27-09, `#757`; vista y aprobada por el owner: «está perfecto, visto bueno») | `encuestas.md` §4.7 (`#754`; lo construido, su «Cómo se construyó») | las de esa spec |
 | T2 | **Ocupación y anticipación** — ✅ (27-09, `#758`; aprobada por el owner: «buen trabajo») | la pestaña, §4.8 y §4.8.ter | tests de la regla con aforo y líneas vivas · `EXPLAIN` con un año sintético · sonda · ojo |
 | T3 | **Resumen y la reorganización** — en cinco tandas, T3a→T3e (§4.13, `#759`) | §4.1, §4.4–§4.7, §4.11: las siete pestañas, los objetivos, las referencias (su historia; el sector con fuentes que se traen al owner), las frases, «lo que ha cambiado», el texto para IA y su guarda, la carga por pestaña, el glosario | guardas de IA y jerga · sonda (primera cifra en la primera pantalla, peticiones al abrir) · ojo |
+| TP | **El público** (`#792`; tras la T3c·2 y antes de la T3d) | §4.14: TP·1 la captura · TP·2 las cifras de conjunto · TP·3 los padres por la edad de sus hijos | tests de la fecha (futura, < 18, borrada al anonimizar), de las celdas < 5 y del opt-in al exportar, con su mutación · sonda · ojo |
 | T4 | **La cartera** | §4.8 | test «a estas alturas» con fechas fijas · ojo |
 | T5 | **Marketing con coste y correos por cliente** | §4.9 | tests de la marca en enlaces firmados, del píxel con y sin consentimiento, de la oposición · `Http` y Mailpit · ojo |
 | T6 | **Cohortes** | §4.10 | test de cohorte con fechas fijas · `EXPLAIN` · ojo |
@@ -624,9 +626,48 @@ en menos del 5 % (3,64 % Norteamérica · 4,41 % Asia-Pacífico). (c) Contentsqu
 (6.500 webs; «Viajes y hostelería», 539): la conversión por sector está en el informe descargable, no en abierto.
 Descartado: los «60–70 % de ocupación en punta» y los «2,5–3 % de conversión» de blogs sin método.
 
+### 4.14 El público (TP) — `#792`, medido el 28-09
+
+`[DECIDIDO owner]` 28-09 («conocer mejor al público… este tipo de analítica ayuda a crear marketing especializado»): la
+pregunta de «Clientes», «¿quién viene?», con su edad, sus hijos y con quién viene; y listas de padres por la edad de sus hijos.
+
+**Lo que ya hay** (medido en el código y en la BD local):
+
+| Dato | Dónde | Hoy |
+|---|---|---|
+| Los hijos del titular: fecha y parentesco (padre, madre, tutor, abuelo, otro) | `dependents.born_on`, `relationship` | solo de quien los declara (al asignar una entrada o firmar el descargo); local: 6 menores de 2 cuentas |
+| Una entrada asignada a un menor | `dependent_assignments` | local: 1 |
+| Un producto solo para menores | tramo de edad con tope < 18 (`TicketType::onlyGuestsUnder`, `#825`) | del catálogo |
+| El titular salta | su propio descargo (`waiver_signatures` sin sujeto) | |
+| Los invitados: edad, parentesco y contacto del adulto | `guardian_authorizations.minor_born_on`, `guardian_relationship`; la edad por invitado en `order_items.guest_data`; `party_invitations.honoree_age` | local: 45 autorizaciones, 26 invitaciones |
+| **La edad del titular** | — | **no existe**: `users.born_on` (futuro) |
+
+- **Google no la da**: pedimos `openid email profile` (`GoogleOAuth::SCOPES`); la fecha exige `user.birthday.read`, un permiso
+  SENSIBLE, con verificación de la app por Google y una pantalla más para el cliente. Descartado (`#792`).
+- **«¿Vino solo o con sus hijos?»** no se guarda: se DEDUCE del pedido (con menores si lleva una entrada asignada a un menor o un
+  producto solo para menores); si no se puede saber, «sin dato», nunca se adivina.
+- **El hueco** (lo señaló el owner): ningún alta declara la mayoría de edad y nadie la comprueba. Queda abierto (`#792`); una
+  fecha que diga menos de 18 años se rechaza.
+
+**En tres tandas**, TP·1 y TP·2 tras la T3c·2 y antes de la T3d: la captura tiene PLAZO —el dato solo se acumula desde que se
+pide y nada sale antes de la v2.0.0— y la T3d y la T3e no. Cada una, con su «al detalle» medido antes de codificar y al ojo:
+- **TP·1 La captura**: `users.born_on` (futuro), fecha entera y opcional, en las cinco altas —el registro del cajón y de la API
+  (`SelfSignup`), el paso tras Google (`GoogleSignup`), la puerta (`ValidarRegistro`), el pedido manual (`CreateManualOrderPage`)
+  y la isla (plataforma, por buzón)— y en Mi cuenta; se rechaza si es futura o dice < 18 (`Dependent::ADULT_AGE`). Contrato
+  menor (`User.born_on`). `RGPD-01`: `anonymize()` la borra y el export la lleva. La ficha del panel la enseña.
+- **TP·2 Las cifras de conjunto**, en «Clientes», grupo plegado «Quién viene»: la edad de los titulares por tramos; las familias
+  por número de hijos declarados; la edad de los hijos el día de la visita; quién los declara; con quién vienen (con menores ·
+  sin dato); y de las fiestas, la edad del cumpleañero y la de los invitados. Sin persona, **ninguna celda < 5** (se agrupa) y
+  siempre «de N con dato». Al catálogo, al censo y al CSV.
+- **TP·3 Los padres por la edad de sus hijos** (`SegmentsReport`): «un hijo cumple en las próximas N semanas» y «con hijos de X
+  a Y años» (N, X e Y, dato del panel), desde `Dependent::active()`; se exportan SOLO con `marketing_opt_in`, `analytics.export`
+  y rastro. `[PENDIENTE: asesoría]` antes de la primera exportación; el texto del opt-in (hoy «Quiero recibir novedades y
+  ofertas del parque.») y `/privacidad` lo nombran (carril web). Los padres de los INVITADOS no se segmentan (ni cuenta ni
+  opt-in): su marketing es «Avísame de fechas» (`#750`).
+
 ## 5. Impacto en invariantes
 
-`RGPD-01` (purga y export de `email_sends` y de las tablas de `#754`) · `RGPD-04` (`no-store` en el píxel y en el texto
+`RGPD-01` (purga y export de `email_sends`, de las tablas de `#754` y de `users.born_on` (futuro), TP·1) · `RGPD-04` (`no-store` en el píxel y en el texto
 para IA) · `RGPD-07` (el libro sigue sin persona en el régimen exento; los correos por persona van en su tabla, no en
 el libro) · `SEC-04` (re-autorizar al guardar objetivos, referencias y gasto) · `SUITE-01`. Dinero y aforo: **solo
 lectura**; ningún fichero del `CRITICAL_RE` (a confirmar con `grep` en cada tanda).
@@ -655,4 +696,8 @@ lectura**; ningún fichero del `CRITICAL_RE` (a confirmar con `grep` en cada tan
   referencias del sector solo con fuente.
 - **27-09, owner — APROBADA**: «la apruebo, pero no quitaremos contenido, ¿no?, ¿o lo resumiremos?; primero analítica,
   sí» → se resume y no se quita (§4.1.bis, con guarda), y la analítica va antes que los correos y la puerta (`#789`).
-- **Pendiente**: `[PENDIENTE: asesoría]` los correos por persona y el píxel.
+- **28-09, owner** («conocer mejor al público: sabemos que tienen hijos, su edad y cuántos… la fecha de nacimiento en el
+  registro… la lista de invitados tiene mucha información… marketing especializado»; «tú valoras cuándo») → la tanda TP
+  (§4.14): fecha ENTERA y OPCIONAL, el opt-in de hoy para el marketing por la edad de los hijos, el hueco de los menores que
+  se registran sin cerrar (`#792`, contra mis tres recomendaciones: la casilla propia, el año, la casilla «soy mayor de edad»).
+- **Pendiente**: `[PENDIENTE: asesoría]` los correos por persona y el píxel; y los padres por la edad de sus hijos (TP·3).
