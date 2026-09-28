@@ -1148,7 +1148,7 @@ return [
             'register_phone' => 'Teléfono del cliente',
             // TP·1 (`#792`): la fecha de nacimiento, opcional (`BirthDatePolicy`).
             'register_born_on' => 'Fecha de nacimiento',
-            'register_born_on_help' => 'Opcional: solo si el cliente la da. Sirve para conocer al público, nunca se le enseña a nadie más.',
+            'register_born_on_help' => 'Opcional: solo si el cliente la da. Sirve para conocer al público.',
             'born_on_errors' => [
                 'future' => 'La fecha de nacimiento no puede ser futura.',
                 'minor' => 'La cuenta es para mayores de edad (:age años o más): el cliente tiene que ser el adulto.',

@@ -726,7 +726,8 @@ alta, Google y «Tus datos»; arnés `SOLO=TP1`. **Lo que enseñó**: (1) `regis
 (2) Larastan no entiende `immutable_date` (la toma por `string`): `@property` a mano en `User`, y la línea base ENCOGE cuatro
 entradas del mostrador que eran el mismo hueco de tipos; (3) el motor ya pesaba 298,83 kB con techo 299: la TP·1 lo sube a 301
 con su medida, tras sacar `profileBody` de `account/profile.js` (lo metía entero en la descarga, +0,77); (4) los textos del
-montaje con sesión, 10.738 → 10.836 B, techo a 10.900 tras acortar la pista.
+montaje con sesión, 10.738 → 10.836 B, techo a 10.900 tras acortar la pista; (5) la sonda del panel: el selector de Filament
+abre en HOY y no se teclea, y una fecha de nacimiento se DICTA: en el mostrador va el `type="date"` NATIVO (el del cajón).
 
 ## 5. Impacto en invariantes
 

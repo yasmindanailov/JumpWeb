@@ -620,11 +620,13 @@ class CreateManualOrderPage extends Page
                                         ->required()
                                         ->maxLength(30),
                                     // TP·1 (`#792`): la fecha de nacimiento, opcional, con la política de las cuatro puertas.
+                                    // ⚠️ NATIVO, al revés que el resto del panel (medido en la sonda): el selector de Filament abre
+                                    // en HOY y no se teclea, y el cliente la DICTA; el nativo se teclea (12/03/1988) y es el mismo
+                                    // control que el cajón.
                                     DatePicker::make('born_on')
                                         ->label(__('admin.orders.create_manual.register_born_on'))
                                         ->helperText(__('admin.orders.create_manual.register_born_on_help'))
-                                        ->native(false)
-                                        ->displayFormat('d/m/Y')
+                                        ->native()
                                         ->maxDate(DisplayTime::today())
                                         ->rules(BirthDatePolicy::rules('admin.orders.create_manual.born_on_errors')),
                                     Checkbox::make('privacy_informed')

@@ -1076,7 +1076,7 @@ return [
             'register_email_optional' => '可选。如果没有，请留空：预订将以电话保存在系统中（不发送邮件，表单链接可从产品图标复制）。',
             'register_phone' => '客户电话',
             'register_born_on' => '出生日期',
-            'register_born_on_help' => '选填：仅在客户愿意提供时填写。用于了解客户群体，不会向其他人展示。',
+            'register_born_on_help' => '选填：仅在客户愿意提供时填写。用于了解客户群体。',
             'born_on_errors' => [
                 'future' => '出生日期不能是未来的日期。',
                 'minor' => '账户仅限成年人（:age 岁及以上）：客户必须是成年人。',
