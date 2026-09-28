@@ -4,6 +4,7 @@ namespace App\Http\Instancia;
 
 use App\Domain\Booking\Contracts\AvailabilityOffer;
 use App\Domain\Booking\Contracts\CatalogProduct;
+use App\Domain\Booking\Contracts\OfferedDate;
 use App\Domain\Booking\Contracts\OfferedTime;
 use App\Domain\Booking\Contracts\ProductCatalog;
 use App\Domain\Platform\Services\DisplayTime;
@@ -24,6 +25,7 @@ use App\Http\Controllers\Api\V1\SiteFactsController;
 use App\Http\Controllers\Api\V1\SocialProofFactsController;
 use App\Http\Resources\Api\V1\OfferedTimeResource;
 use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use LogicException;
@@ -76,6 +78,9 @@ final class PageFacts
         // Los próximos días de FIN DE SEMANA con hueco de cada zona de packs (T6b·2): «Próximos fines de semana con
         // hueco» de la página de cumpleaños. Se resuelve en {@see finesDeSemanaConHueco()}.
         'availability_weekends' => [AvailabilityController::class, 'dates', false],
+        // Su hermano de CUALQUIER día (T6c·2): «Próximos días con hueco» de la página de colegios, cada día con su tarifa
+        // (el punto de la especial). Se resuelve en {@see diasConHueco()}.
+        'availability_days' => [AvailabilityController::class, 'dates', false],
         // La configuración pública (T6b·2): hasta cuándo se ajustan los invitados de una fiesta
         // (`guest_count_cutoff_hours`), lo mismo que ya dice la isla al elegir cuántos niños.
         'config' => [ConfigController::class, '__invoke', false],
@@ -86,8 +91,18 @@ final class PageFacts
 
     private const FINDE_SEMANAS = 8;
 
-    /** Segundos que vale la respuesta de los fines de semana con hueco (ver {@see finesDeSemanaConHueco()}). */
-    private const FINDE_CACHE_S = 300;
+    /** Cuántos días (cualquiera) con hueco se buscan por zona —los seis del diseño de colegios—, y en cuántas semanas. */
+    private const DIAS_DIAS = 6;
+
+    private const DIAS_SEMANAS = 3;
+
+    /**
+     * Segundos que valen las respuestas de los días con hueco (ver {@see conHuecoPorZona()}): frescas cinco minutos y,
+     * hasta media hora, se sirven como están y se rehacen DESPUÉS de responder (`Cache::flexible`). Medido (28-09, local):
+     * `/colegios` tarda ~0,71 s en frío y ~0,19 s con lo guardado; en una página de poco tráfico casi toda visita llegaba
+     * con lo guardado caducado. Así, la que lo encuentra pasado lo sirve y la siguiente ya lo tiene fresco.
+     */
+    private const CON_HUECO_CACHE_S = [300, 1800];
 
     /**
      * Los hechos que son una FICHA por producto del catálogo: se invoca su controlador una vez por producto, con el
@@ -111,8 +126,12 @@ final class PageFacts
                 throw new LogicException("«{$nombre}» no es un hecho que una página pueda pedir");
             }
 
-            if ($nombre === 'availability_today' || $nombre === 'availability_weekends') {
-                $hechos[$nombre] = $nombre === 'availability_today' ? $this->horasDeHoy() : $this->finesDeSemanaConHueco();
+            if (in_array($nombre, ['availability_today', 'availability_weekends', 'availability_days'], true)) {
+                $hechos[$nombre] = match ($nombre) {
+                    'availability_today' => $this->horasDeHoy(),
+                    'availability_weekends' => $this->finesDeSemanaConHueco(),
+                    'availability_days' => $this->diasConHueco(),
+                };
 
                 continue;
             }
@@ -161,15 +180,9 @@ final class PageFacts
 
     /**
      * **Los próximos días de fin de semana con hueco de cada zona de PACKS** (T6b·2 de `isla-y-landing-nueva.md` §4.18,
-     * `#834`), con las MISMAS dos preguntas que la API —los días que se venden (`GET /availability/{id}/dates`) y sus
-     * horas (`POST /availability/{id}/times`)—: un día cuenta si ALGÚN pack de la zona tiene una hora a la venta. Una
-     * fila por zona, en el orden del catálogo: `{zone, dates}`, con las fechas (`Y-m-d`) de menor a mayor.
-     *
-     * ⚠️ Medido (28-09): cada día cuesta ~55 ms y ~42 consultas —es `times()`, el motor de aforo, que no se toca por
-     * esto—; por eso se para en cuanto hay {@see FINDE_DIAS}, el siguiente pack solo se mira si el anterior no tiene
-     * hueco, no se pasa de {@see FINDE_SEMANAS} semanas y la respuesta vale {@see FINDE_CACHE_S} segundos. Es una
-     * PISTA: quien pulsa un día llega a la calculadora, que vuelve a preguntar; un día que se llenó entre medias sale
-     * allí sin horas, y nunca se vende de más (`AFORO-01`: lo garantiza `OrderCreator` bajo lock).
+     * `#834`): «Próximos fines de semana con hueco» de cumpleaños. Una fila por zona, en el orden del catálogo: `{zone,
+     * dates}`, con las fechas (`Y-m-d`) de menor a mayor; como mucho {@see FINDE_DIAS} en {@see FINDE_SEMANAS} semanas.
+     * La regla y su coste, en {@see conHuecoPorZona()}.
      *
      * @return list<array{zone: string, dates: list<string>}>
      */
@@ -177,41 +190,83 @@ final class PageFacts
     {
         $hoy = DisplayTime::today();
 
-        return Cache::remember('instancia:hechos:availability_weekends:'.$hoy->toDateString(), self::FINDE_CACHE_S, function () use ($hoy): array {
-            $oferta = app(AvailabilityOffer::class);
-            $hasta = $hoy->copy()->addWeeks(self::FINDE_SEMANAS)->toDateString();
-            $packs = array_filter(app(ProductCatalog::class)->products(null), fn (CatalogProduct $p): bool => $p->isPack() && $p->zone !== null);
-            $zonas = [];
+        return Cache::flexible('instancia:hechos:availability_weekends:'.$hoy->toDateString(), self::CON_HUECO_CACHE_S, fn (): array => array_map(
+            fn (array $fila): array => ['zone' => $fila['zone'], 'dates' => array_map(fn (OfferedDate $dia): string => $dia->date, $fila['dates'])],
+            $this->conHuecoPorZona($hoy, self::FINDE_SEMANAS, self::FINDE_DIAS, soloFinDeSemana: true),
+        ));
+    }
 
-            foreach ($packs as $pack) {
-                // Los días de fin de semana en los que ESTE pack se vende, dentro del horizonte.
-                foreach ($oferta->dates($pack->id) as $dia) {
-                    if ($dia->date <= $hasta && CarbonImmutable::parse($dia->date)->isWeekend()) {
-                        $zonas[$pack->zone->slug][$dia->date][] = $pack->id;
-                    }
+    /**
+     * **Los próximos días —CUALQUIERA— con hueco de cada zona de PACKS** (T6c·2 de `isla-y-landing-nueva.md` §4.19): el
+     * hermano de {@see finesDeSemanaConHueco()} para «Próximos días con hueco» de colegios, que va todos los días. Cada
+     * fecha lleva su tarifa (`rate_key`, la de `GET /availability/{id}/dates`) para el punto de la especial: en
+     * excursiones cambia el precio por alumno. Como mucho {@see DIAS_DIAS} en {@see DIAS_SEMANAS} semanas: el tope y el
+     * horizonte son los que pagan (en local, 28-09: ~50 ms y ~54 consultas por día de un pack de excursión).
+     *
+     * ⚠️ Por ZONA y no por pack, como su hermano: el diseño los recalcula con la duración elegida (2 o 3 horas), y por pack
+     * costaba el doble (~860 ms en frío, medido) para decir lo que la calculadora vuelve a preguntar al pulsar el día.
+     *
+     * @return list<array{zone: string, dates: list<array{date: string, rate_key: string}>}>
+     */
+    private function diasConHueco(): array
+    {
+        $hoy = DisplayTime::today();
+
+        return Cache::flexible('instancia:hechos:availability_days:'.$hoy->toDateString(), self::CON_HUECO_CACHE_S, fn (): array => array_map(
+            fn (array $fila): array => ['zone' => $fila['zone'], 'dates' => array_map(fn (OfferedDate $dia): array => ['date' => $dia->date, 'rate_key' => $dia->rateKey], $fila['dates'])],
+            $this->conHuecoPorZona($hoy, self::DIAS_SEMANAS, self::DIAS_DIAS, soloFinDeSemana: false),
+        ));
+    }
+
+    /**
+     * **Los próximos días con hueco de cada zona de PACKS**, con las MISMAS dos preguntas que la API —los días que se
+     * venden (`GET /availability/{id}/dates`) y sus horas (`POST /availability/{id}/times`)—: un día cuenta si ALGÚN pack
+     * de la zona tiene una hora a la venta, y lleva lo que ESE pack dice del día (su tarifa). Una fila por zona, en el
+     * orden del catálogo, con los días de menor a mayor.
+     *
+     * ⚠️ Medido (28-09): cada día cuesta ~55 ms y ~42 consultas —es `times()`, el motor de aforo, que no se toca por
+     * esto—; por eso se para en cuanto hay `$cuantos`, el siguiente pack solo se mira si el anterior no tiene hueco, no
+     * se pasa de `$semanas` y quien lo llama lo guarda ({@see CON_HUECO_CACHE_S}). Es una PISTA: quien pulsa un día
+     * llega a la calculadora, que vuelve a preguntar; un día que se llenó entre medias sale allí sin horas, y nunca se
+     * vende de más (`AFORO-01`: lo garantiza `OrderCreator` bajo lock).
+     *
+     * @return list<array{zone: string, dates: list<OfferedDate>}>
+     */
+    private function conHuecoPorZona(CarbonInterface $hoy, int $semanas, int $cuantos, bool $soloFinDeSemana): array
+    {
+        $oferta = app(AvailabilityOffer::class);
+        $hasta = $hoy->copy()->addWeeks($semanas)->toDateString();
+        $packs = array_filter(app(ProductCatalog::class)->products(null), fn (CatalogProduct $p): bool => $p->isPack() && $p->zone !== null);
+        $zonas = [];
+
+        foreach ($packs as $pack) {
+            // Los días en los que ESTE pack se vende, dentro del horizonte (y de fin de semana, si se piden así).
+            foreach ($oferta->dates($pack->id) as $dia) {
+                if ($dia->date <= $hasta && (! $soloFinDeSemana || CarbonImmutable::parse($dia->date)->isWeekend())) {
+                    $zonas[$pack->zone->slug][$dia->date][] = [$pack->id, $dia];
                 }
-                $zonas[$pack->zone->slug] ??= [];
             }
+            $zonas[$pack->zone->slug] ??= [];
+        }
 
-            $filas = [];
-            foreach ($zonas as $zona => $dias) {
-                ksort($dias);
-                $conHueco = [];
-                foreach ($dias as $dia => $idsPacks) {
-                    $hayHueco = collect($idsPacks)->contains(fn (int $id): bool => collect($oferta->times($id, (string) $dia))
-                        ->contains(fn (OfferedTime $hora): bool => $hora->sellable));
-                    if (! $hayHueco) {
-                        continue;
-                    }
-                    $conHueco[] = (string) $dia;
-                    if (count($conHueco) === self::FINDE_DIAS) {
-                        break;
-                    }
+        $filas = [];
+        foreach ($zonas as $zona => $dias) {
+            ksort($dias);
+            $conHueco = [];
+            foreach ($dias as $packsDelDia) {
+                $conHora = collect($packsDelDia)->first(fn (array $par): bool => collect($oferta->times($par[0], $par[1]->date))
+                    ->contains(fn (OfferedTime $hora): bool => $hora->sellable));
+                if ($conHora === null) {
+                    continue;
                 }
-                $filas[] = ['zone' => (string) $zona, 'dates' => $conHueco];
+                $conHueco[] = $conHora[1];
+                if (count($conHueco) === $cuantos) {
+                    break;
+                }
             }
+            $filas[] = ['zone' => (string) $zona, 'dates' => $conHueco];
+        }
 
-            return $filas;
-        });
+        return $filas;
     }
 }

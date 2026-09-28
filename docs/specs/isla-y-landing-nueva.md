@@ -1880,6 +1880,21 @@ T6c·5 la sonda y el ojo del owner.
   en cada tramo», solo porque la diferencia es la MISMA en todos) y el menú y el pie apuntando a ella. Medido: 200 en
   es/en/fr sin marcadores sin rellenar; la primera pantalla contra el mockup, la vuelta 114/114 (el mockup, 113) y la
   primera visita 101/111 como él; en 390 no se sale de ancho.
+- ✅ **T6c·2 (28-09, `#838`, `[DECIDIDO]` 2026-09-28)**, con el ojo del owner (instancia `0dbb16d`). **En LOCAL, franjas para `excursiones`**: 91
+  plantillas —cada día, de 8:00 a 20:00, de 60 min como las de las otras zonas y aforo 100, el de la zona—, INFERIDAS: la
+  lectura de producción la deniega el clasificador (en `#534` tenía 138 franjas de 8:00 a 15:00; hoy la zona dice
+  8:00–21:30). Generadas hasta el 1-3-2027, el último día de las otras zonas, que quedan igual salvo las franjas de diez
+  FESTIVOS abiertos del panel que les faltaban (60 por zona: lo que haría la tarea diaria). Resultado: 152 días a la venta
+  desde el 1-10 (la antelación del pack); el de 2 h, hasta las 19:00, y el de 3 h, hasta las 18:00. **El hecho**
+  `availability_days` (`PageFacts`): el hermano de `availability_weekends` de CUALQUIER día, por zona de packs, seis
+  (los del diseño) en tres semanas, cada día con su `rate_key`; la regla, común (`conHuecoPorZona`). Por zona y no por
+  pack (`#838`): el diseño los recalcula con la duración elegida, pero por pack costaba ~860 ms en frío para decir lo que
+  la calculadora vuelve a preguntar. **Lo guardado se sirve pasado y se rehace tras responder** (`Cache::flexible`, 5 min
+  frescos y hasta media hora, en los dos hermanos): medido, `/colegios` tardaba 0,71 s en frío y 0,19 s guardado, y en una
+  página de poco tráfico casi toda visita llegaba en frío. **La pieza 7** (instancia): «Jue 1 oct», como el diseño (sin los
+  puntos de las abreviaturas), con el punto de la tarifa especial y «, tarifa especial» en la lectura; es/en/fr.
+  **Guardas**: `InstancePagesTest` +2 (26 casos: la regla y la caché servida pasada), `scripts/mutar-dias-con-hueco.sh`
+  14/14 y `mutar-hechos-de-la-fiesta.sh` re-apuntado a la regla común (15/15).
 
 ## 5. Impacto en invariantes
 

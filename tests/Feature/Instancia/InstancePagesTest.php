@@ -543,6 +543,103 @@ BLADE);
     }
 
     /**
+     * **Su hermano de CUALQUIER día** (`availability_days`, T6c·2): «Próximos días con hueco» de la página de colegios. Un
+     * día entre semana cuenta; cuenta si ALGÚN pack de la zona tiene hora —el jueves 8 solo cabe el de dos horas, que va
+     * SEGUNDO en el catálogo—; el viernes 9 se vende y no cabe ninguno; se para en seis, no pasa de tres semanas y cada
+     * día lleva su tarifa (el fin de semana, la especial). Y en la MISMA página que su hermano, cada uno con lo suyo.
+     */
+    public function test_a_page_gets_the_next_days_with_room_of_each_pack_zone_with_their_rate(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-10-06 10:00', 'Europe/Madrid'));
+        $normal = RateType::create(['key' => RateType::KEY_NORMAL, 'label' => ['es' => 'Normal'], 'weekdays' => null, 'priority' => 0]);
+        $especial = RateType::create(['key' => RateType::KEY_SPECIAL, 'label' => ['es' => 'Especial'], 'is_special' => true, 'weekdays' => [0, 6], 'priority' => 10, 'is_active' => true]);
+        $zona = Zone::create(['slug' => 'grupos', 'name' => ['es' => 'Grupos'], 'position' => 1, 'is_active' => true, 'max_guests_per_slot' => 60, 'max_per_slot' => 0, 'prep_blocks_cupo' => false]);
+        $otra = Zone::create(['slug' => 'lejos', 'name' => ['es' => 'Lejos'], 'position' => 2, 'is_active' => true, 'max_guests_per_slot' => 60, 'max_per_slot' => 0, 'prep_blocks_cupo' => false]);
+        $franjas = fn (Zone $z, string $dia, array $inicios) => array_map(fn (string $i) => Slot::create(['zone_id' => $z->id, 'date' => $dia, 'start_time' => $i, 'end_time' => Carbon::parse($i)->addHour()->format('H:i:s'), 'capacity' => 60, 'online_capacity' => 60]), $inicios);
+        // Tres horas seguidas caben las dos duraciones; dos, solo la de dos horas; una, ninguna. Siete días con hueco (se
+        // para en seis) y, en la otra zona, uno a tres semanas y un día: fuera del horizonte.
+        foreach (['2026-10-07', '2026-10-10', '2026-10-11', '2026-10-12', '2026-10-13', '2026-10-14'] as $dia) {
+            $franjas($zona, $dia, ['10:00:00', '11:00:00', '12:00:00']);
+        }
+        $franjas($zona, '2026-10-08', ['11:00:00', '12:00:00']);
+        $franjas($zona, '2026-10-09', ['11:00:00']);
+        $franjas($otra, '2026-10-28', ['10:00:00', '11:00:00', '12:00:00']);
+        foreach ([[$zona, 'Tres horas', 180, 1], [$zona, 'Dos horas', 120, 2], [$otra, 'Lejos', 120, 3]] as [$z, $nombre, $minutos, $posicion]) {
+            $pack = TicketType::create(['name' => ['es' => $nombre], 'type' => TicketType::TYPE_PACK, 'zone_id' => $z->id, 'duration_min' => $minutos, 'min_qty' => 8, 'max_qty' => 20, 'seats_per_unit' => 1, 'is_sellable' => true, 'is_active' => true, 'position' => $posicion]);
+            $pack->prices()->create(['rate_type_id' => $normal->id, 'amount_cents' => 1500]);
+            $pack->prices()->create(['rate_type_id' => $especial->id, 'amount_cents' => 1700]);
+            $packs[] = $pack;
+        }
+        [$tres, $dos, $lejos] = $packs;
+        $this->declarar(['colegios' => ['vista' => 'kids', 'hechos' => ['availability_weekends', 'availability_days']]]);
+
+        $hechos = $this->hechosDe('/colegios');
+
+        $conTarifa = fn (string $fecha, string $tarifa): array => ['date' => $fecha, 'rate_key' => $tarifa];
+        $this->assertSame([
+            ['zone' => 'grupos', 'dates' => [
+                $conTarifa('2026-10-07', 'normal'), $conTarifa('2026-10-08', 'normal'), $conTarifa('2026-10-10', 'special'),
+                $conTarifa('2026-10-11', 'special'), $conTarifa('2026-10-12', 'normal'), $conTarifa('2026-10-13', 'normal'),
+            ]],
+            ['zone' => 'lejos', 'dates' => []],
+        ], $hechos['availability_days']);
+        $this->assertSame([
+            ['zone' => 'grupos', 'dates' => ['2026-10-10', '2026-10-11']],
+            ['zone' => 'lejos', 'dates' => []],
+        ], $hechos['availability_weekends'], 'Su hermano, en la misma página, con lo suyo.');
+        // Cada caso tiene sujeto: el jueves 8 el primer pack no cabe y el segundo sí; el viernes 9 se vende sin hora; el
+        // miércoles 14 tiene hora (lo deja fuera el tope); el 28 se vende y tiene hora (lo deja fuera el horizonte).
+        $this->assertSame([], $this->postJson("/api/v1/availability/{$tres->id}/times", ['date' => '2026-10-08'])->assertOk()->json('data'));
+        $this->assertNotSame([], $this->postJson("/api/v1/availability/{$dos->id}/times", ['date' => '2026-10-08'])->assertOk()->json('data'));
+        $this->assertContains('2026-10-09', array_column($this->getJson("/api/v1/availability/{$dos->id}/dates")->assertOk()->json('data'), 'date'));
+        $this->assertSame([], $this->postJson("/api/v1/availability/{$dos->id}/times", ['date' => '2026-10-09'])->assertOk()->json('data'));
+        $this->assertNotSame([], $this->postJson("/api/v1/availability/{$tres->id}/times", ['date' => '2026-10-14'])->assertOk()->json('data'));
+        $this->assertNotSame([], $this->postJson("/api/v1/availability/{$lejos->id}/times", ['date' => '2026-10-28'])->assertOk()->json('data'));
+
+        // Lo guardado vale para un día DEL PARQUE: pasada la medianoche el horizonte avanza y el 28 entra (dentro de los
+        // cinco minutos que vale lo guardado, como su hermano).
+        Carbon::setTestNow(Carbon::parse('2026-10-06 23:58', 'Europe/Madrid'));
+        $this->assertSame([], $this->hechosDe('/colegios')['availability_days'][1]['dates']);
+        Carbon::setTestNow(Carbon::parse('2026-10-07 00:01', 'Europe/Madrid'));
+        $this->assertSame([$conTarifa('2026-10-28', 'normal')], $this->hechosDe('/colegios')['availability_days'][1]['dates']);
+        Carbon::setTestNow();
+    }
+
+    /**
+     * **Los días con hueco, pasados sus cinco minutos, se sirven como estaban y se rehacen DESPUÉS de responder** (T6c·2):
+     * medido, la página tardaba ~0,5 s más en frío, y en una de poco tráfico casi toda visita llegaba en frío. El sábado 10
+     * deja de venderse: a los diez minutos la visita aún lo ve (lo guardado, sin esperar al cálculo) y la siguiente ya no.
+     * Los DOS hermanos, en la misma página.
+     */
+    public function test_the_days_with_room_are_served_stale_once_and_refreshed_after_the_response(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-10-06 10:00', 'Europe/Madrid'));
+        $tarifa = RateType::create(['key' => RateType::KEY_NORMAL, 'label' => ['es' => 'Normal'], 'weekdays' => null, 'priority' => 0]);
+        $zona = Zone::create(['slug' => 'grupos', 'name' => ['es' => 'Grupos'], 'position' => 1, 'is_active' => true, 'max_guests_per_slot' => 60, 'max_per_slot' => 0, 'prep_blocks_cupo' => false]);
+        foreach (['2026-10-10', '2026-10-11'] as $dia) {
+            foreach (['11:00:00', '12:00:00'] as $inicio) {
+                Slot::create(['zone_id' => $zona->id, 'date' => $dia, 'start_time' => $inicio, 'end_time' => Carbon::parse($inicio)->addHour()->format('H:i:s'), 'capacity' => 60, 'online_capacity' => 60]);
+            }
+        }
+        $pack = TicketType::create(['name' => ['es' => 'Grupo'], 'type' => TicketType::TYPE_PACK, 'zone_id' => $zona->id, 'duration_min' => 120, 'min_qty' => 8, 'max_qty' => 20, 'seats_per_unit' => 1, 'is_sellable' => true, 'is_active' => true, 'position' => 1]);
+        $pack->prices()->create(['rate_type_id' => $tarifa->id, 'amount_cents' => 1500]);
+        $this->declarar(['colegios' => ['vista' => 'kids', 'hechos' => ['availability_weekends', 'availability_days']]]);
+        $fechas = fn (array $hechos): array => [
+            $hechos['availability_weekends'][0]['dates'],
+            array_column($hechos['availability_days'][0]['dates'], 'date'),
+        ];
+
+        $this->assertSame([['2026-10-10', '2026-10-11'], ['2026-10-10', '2026-10-11']], $fechas($this->hechosDe('/colegios')));
+        Slot::where('date', '2026-10-10')->delete();
+
+        Carbon::setTestNow(Carbon::parse('2026-10-06 10:10', 'Europe/Madrid'));
+        $this->assertSame([['2026-10-10', '2026-10-11'], ['2026-10-10', '2026-10-11']], $fechas($this->hechosDe('/colegios')), 'Pasado, pero dentro de la media hora: lo guardado.');
+        Carbon::setTestNow(Carbon::parse('2026-10-06 10:10:01', 'Europe/Madrid'));
+        $this->assertSame([['2026-10-11'], ['2026-10-11']], $fechas($this->hechosDe('/colegios')), 'Rehecho tras la visita anterior.');
+        Carbon::setTestNow();
+    }
+
+    /**
      * **Los servicios, por su nombre** (`services`, T6c): el MISMO JSON que `GET /api/v1/services`; de él saca Colegios el
      * horario de excursiones. Con un servicio de verdad: una lista vacía coincidiría por casualidad.
      */

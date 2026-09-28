@@ -79,8 +79,10 @@ mutar "las extensiones sin precargar" "$PC" ", 'addons.prices', 'addons.priceTie
 # Los fines de semana con hueco, en `PageFacts`.
 mutar "un día entre semana cuenta" "$PF" "CarbonImmutable::parse(\$dia->date)->isWeekend()" "true"
 mutar "sin horizonte" "$PF" "if (\$dia->date <= \$hasta && " "if ("
-mutar "sin tope de cuatro" "$PF" "if (count(\$conHueco) === self::FINDE_DIAS) {" "if (false) {"
-mutar "un día que se vende cuenta aunque no tenga hueco" "$PF" "if (! \$hayHueco) {" "if (false) {"
+# Desde la T6c·2 la regla es común con su hermano de cualquier día (`conHuecoPorZona`, re-apuntado; el resto de sus
+# mutantes, en `mutar-dias-con-hueco.sh`): el tope de cuatro es el de la llamada de los fines de semana.
+mutar "sin tope de cuatro" "$PF" "self::FINDE_SEMANAS, self::FINDE_DIAS, soloFinDeSemana: true" "self::FINDE_SEMANAS, 99, soloFinDeSemana: true"
+mutar "un día que se vende cuenta aunque no tenga hueco" "$PF" "if (\$conHora === null) {" "if (false) {"
 # ⚠️ Sin mutante, y medido: «una hora que no está a la venta cuenta» es EQUIVALENTE hoy —para un pack, `SlotOffer` salta
 # las franjas bajo el mínimo y pone `'sellable' => true` en las demás—. La comprobación de `sellable` se queda para el
 # día que el motor devuelva horas de pack que no se venden; un mutante que no puede morir aquí solo sería ruido.
