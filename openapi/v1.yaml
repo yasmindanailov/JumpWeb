@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.47.0
+  version: 1.48.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -8434,6 +8434,8 @@ components:
         - event_fields
         - addons
         - guardian_authorization
+        - guest_invitation
+        - guardian_mode
       additionalProperties: false
       properties:
         id:
@@ -8545,6 +8547,22 @@ components:
               `CartLine.guardian_authorization`.
             · `required` — hace falta siempre (una excursión de colegio). **No se pregunta**: la
               pantalla informa, y el servidor marca la línea llegue lo que llegue en el cuerpo.
+
+            ⚠️ Es lo que PREGUNTA el embudo: con `guest_invitation` es `none` aunque el producto admita la
+            firma, porque la pregunta la hace la invitación (cada familia dice si su hijo necesita firma).
+            Lo que el producto ADMITE es `guardian_mode`.
+        guest_invitation:
+          type: boolean
+          description: |
+            **1.48.0** (`isla-y-landing-nueva.md` §4.18, `DECISIONES #835`). La reserva de este pack trae la
+            INVITACIÓN DIGITAL: el anfitrión la comparte y cada familia contesta. `false` en una entrada.
+        guardian_mode:
+          type: string
+          enum: [none, optional, required]
+          description: |
+            **1.48.0** (`DECISIONES #835`). El modo del justificante que el PRODUCTO admite, tal y como
+            está en el panel: para quien lo CUENTA («quien prefiere irse firma desde el móvil»). Quien
+            pinta la compra lee `guardian_authorization`, que es lo que se pregunta.
         image_url:
           type: string
           format: uri

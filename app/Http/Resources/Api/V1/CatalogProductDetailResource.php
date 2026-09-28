@@ -50,6 +50,11 @@ class CatalogProductDetailResource extends JsonResource
             // menor invitado. La pantalla decide con esto si pinta una CASILLA (`optional`), una NOTA
             // (`required`) o nada (`none`).
             'guardian_authorization' => $this->resource->guardianAuthorization,
+            // `#835` (1.48.0) — lo que el producto OFRECE, para quien lo cuenta: la invitación digital y el modo del
+            // justificante del panel. ⚠️ Con la invitación, `guardian_authorization` (lo que pregunta el embudo) es
+            // `none` aunque el pack admita la firma: pregunta la invitación.
+            'guest_invitation' => $this->resource->guestInvitation,
+            'guardian_mode' => $this->resource->guardianMode,
         ] + (
             // Qué es este producto (`#632` P1). Como la foto en la lista: si la instalación no lo
             // escribió, la clave NO viaja — ni como `""`.

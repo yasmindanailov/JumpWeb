@@ -147,6 +147,33 @@ class InvitationCatalogTest extends TestCase
             ->assertJsonPath('guardian_authorization', TicketType::GUARDIAN_OPTIONAL);
     }
 
+    /**
+     * **La puerta de una LANDING: lo que el pack OFRECE** (`#835`, 1.48.0). La primera página de cumpleaños leyó el modo
+     * del embudo (`none` con la invitación) como «no admite la firma» y calló dos verdades: la invitación y «quien se va
+     * firma desde el móvil». Una fila forzada (una entrada con la columna encendida) no ofrece invitación.
+     */
+    public function test_a_landing_receives_what_the_pack_offers_not_what_the_funnel_asks(): void
+    {
+        $withInvitation = $this->pack([
+            'guest_invitation' => true,
+            'guardian_authorization' => TicketType::GUARDIAN_OPTIONAL,
+        ]);
+        $plain = $this->pack(['guardian_authorization' => TicketType::GUARDIAN_OPTIONAL]);
+        $forced = $this->pack(['type' => TicketType::TYPE_ENTRY]);
+        DB::table('ticket_types')->where('id', $forced->id)->update(['guest_invitation' => true]);
+
+        $this->getJson('/api/v1/catalog/products/'.$withInvitation->id)->assertOk()
+            ->assertJsonPath('guardian_authorization', TicketType::GUARDIAN_NONE)
+            ->assertJsonPath('guest_invitation', true)
+            ->assertJsonPath('guardian_mode', TicketType::GUARDIAN_OPTIONAL);
+        $this->getJson('/api/v1/catalog/products/'.$plain->id)->assertOk()
+            ->assertJsonPath('guest_invitation', false)
+            ->assertJsonPath('guardian_mode', TicketType::GUARDIAN_OPTIONAL);
+        $this->getJson('/api/v1/catalog/products/'.$forced->id)->assertOk()
+            ->assertJsonPath('guest_invitation', false)
+            ->assertJsonPath('guardian_mode', TicketType::GUARDIAN_NONE);
+    }
+
     // ─── 3 · La columna nueva atraviesa las CUATRO puertas ────────────────────
 
     /**

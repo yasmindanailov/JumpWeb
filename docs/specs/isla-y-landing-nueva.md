@@ -1805,6 +1805,13 @@ página (calculado, elegido, la frase de cada pieza); T6b·4 la sonda y el ojo d
   (sin «por niño»: en LOCAL la hora extra está enganchada POR BLOQUES —`#443` la quería por invitado—; con `per_guest`,
   la unidad del pack) y los cuatro días con hueco. Guardas: `PricesFactsTest` (+5) e `InstancePagesTest` (+2),
   `mutar-hechos-de-la-fiesta.sh` 12/12 (uno equivalente, fuera y explicado: para un pack `sellable` es siempre cierto).
+  ▶ **`#835`** (la pregunta del owner, «¿por qué no sale la invitación?»): la ficha publica `guest_invitation` y
+  `guardian_mode` (contrato **1.48.0**). La T6b·1 había leído `guardian_authorization: none` —lo que pregunta el embudo,
+  que con la invitación no pregunta— como «no admite la firma». Ahora la pieza 5 lleva «O comparte la invitación» (la
+  tarjeta, una MUESTRA con el próximo sábado; «sus datos aparecen», no «entran solos»: se PROPONEN al anfitrión, §3.1 de
+  `celebracion-e-invitacion.md`), el paso 3 con la invitación y su pista, y vuelve «quien prefiere irse firma desde el
+  móvil»; cada cosa solo si TODOS los packs la tienen (control: apagada en el 106, las tres desaparecen). En PRODUCCIÓN
+  la invitación está apagada (`#670`): saldrá el día que el owner la encienda.
   **Sigue la T6b·3**: la calculadora en la página, y los días con hueco llevan a ella con la fecha elegida.
 
 ## 5. Impacto en invariantes

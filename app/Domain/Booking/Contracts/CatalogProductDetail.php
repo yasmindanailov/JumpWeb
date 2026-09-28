@@ -57,5 +57,19 @@ final readonly class CatalogProductDetail
          * `null` y no `''`: lo que la instalación no rellenó no viaja.
          */
         public ?string $description,
+        /**
+         * ¿La reserva de este pack trae la INVITACIÓN DIGITAL? (`celebracion-e-invitacion.md`, `#835`): el anfitrión la
+         * comparte y cada familia contesta. Es `TicketType::offersGuestInvitation()` —el interruptor y lo que la hace
+         * posible—, no la columna a pelo.
+         */
+        public bool $guestInvitation,
+        /**
+         * El modo del justificante que el PRODUCTO admite (`none` · `optional` · `required`), el del panel (`#835`).
+         *
+         * ⚠️⚠️ **No es `guardianAuthorization`**, y la diferencia es la que confundió a la primera página de cumpleaños:
+         * aquel es lo que PREGUNTA el embudo, y con la invitación encendida es `none` porque pregunta la invitación
+         * (D15, `#575`). Para decir «quien prefiere irse firma desde el móvil», la pregunta es ésta.
+         */
+        public string $guardianMode,
     ) {}
 }

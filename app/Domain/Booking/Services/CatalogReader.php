@@ -90,6 +90,9 @@ class CatalogReader implements ProductCatalog
             guardianAuthorization: $product->funnelGuardianMode(),
             // Qué es este producto (`#632` P1). `?:` y no `??`: una traducción vacía es «no escrita».
             description: $product->tr('description') ?: null,
+            // `#835`: lo que el producto OFRECE, para quien lo cuenta (una landing), no lo que pregunta el embudo.
+            guestInvitation: $product->offersGuestInvitation(),
+            guardianMode: $product->guardianMode(),
         );
     }
 

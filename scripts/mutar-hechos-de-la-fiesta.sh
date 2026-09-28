@@ -2,7 +2,8 @@
 # Arnés de mutación de LOS HECHOS DE LA FIESTA (T6b·2 de `specs/isla-y-landing-nueva.md` §4.18, `#834`): lo que ALARGA
 # una fiesta en `/prices` (`stay_extensions`: por su FORMA, con su precio por tarifa, solo si se vende), los próximos
 # días de fin de semana con hueco de cada zona de packs (`availability_weekends` de `PageFacts`: fin de semana, dentro
-# del horizonte, con hora a la venta, cuatro como mucho, guardado por día) y la configuración pública como hecho.
+# del horizonte, con hora a la venta, cuatro como mucho, guardado por día), la configuración pública como hecho y, desde
+# `#835`, lo que la ficha dice que el pack OFRECE (`guest_invitation`, `guardian_mode`).
 #
 # Reglas de la casa dentro (`/mutar`): verde antes de mutar · veredicto por código de salida · ancla ÚNICA · comprobar
 # que la mutación SE APLICÓ · restaurar por COPIA DE SEGURIDAD (por ruta entera) y `touch`, nunca `git checkout`.
@@ -11,13 +12,15 @@
 set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
-PHP="docker compose exec -u sail -T laravel.test php artisan test --filter=PricesFactsTest|InstancePagesTest"
+PHP="docker compose exec -u sail -T laravel.test php artisan test --filter=PricesFactsTest|InstancePagesTest|InvitationCatalogTest"
 
 TMP="$(mktemp -d)"
 FICHEROS=(
     app/Http/Resources/Api/V1/PricesFactsResource.php
     app/Http/Controllers/Api/V1/PricesFactsController.php
     app/Http/Instancia/PageFacts.php
+    app/Domain/Booking/Services/CatalogReader.php
+    app/Http/Resources/Api/V1/CatalogProductDetailResource.php
 )
 copia() { echo "$TMP/$(echo "$1" | tr '/' '_')"; }
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$(copia "$f")" "$f"; touch "$f"; done; }
@@ -62,6 +65,8 @@ mutar() {
 PR=app/Http/Resources/Api/V1/PricesFactsResource.php
 PC=app/Http/Controllers/Api/V1/PricesFactsController.php
 PF=app/Http/Instancia/PageFacts.php
+CR=app/Domain/Booking/Services/CatalogReader.php
+CD=app/Http/Resources/Api/V1/CatalogProductDetailResource.php
 
 # Lo que alarga una fiesta, en `/prices`.
 mutar "/prices no publica las extensiones" "$PR" "                'stay_extensions' => \$this->extensiones(\$producto),
@@ -83,6 +88,10 @@ mutar "lo guardado vale para siempre" "$PF" "'instancia:hechos:availability_week
 # La configuración pública, como hecho.
 mutar "config no es un hecho" "$PF" "        'config' => [ConfigController::class, '__invoke', false],
 " ""
+# `#835`: la ficha dice lo que el pack OFRECE (la invitación y el modo del justificante del panel).
+mutar "la invitación es la columna a pelo" "$CR" "guestInvitation: \$product->offersGuestInvitation()," "guestInvitation: (bool) \$product->guest_invitation,"
+mutar "el modo del producto es el del embudo" "$CR" "guardianMode: \$product->guardianMode()," "guardianMode: \$product->funnelGuardianMode(),"
+mutar "la ficha no publica la invitación" "$CD" "'guest_invitation' => \$this->resource->guestInvitation," "'guest_invitation' => false,"
 
 echo
 echo "$muerden de $total mutantes muertos"
