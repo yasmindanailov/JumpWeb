@@ -2,7 +2,7 @@
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb` a secas; la instancia al lado, en
 > `~/proyectos/instancias/playjump`, clon de `github.com/yasmindanailov/instancia-playjump`, montada el 25-09) ·
-> Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#792`** · La banda está dada de alta en la
+> Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#793`** · La banda está dada de alta en la
 > tabla de `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: **`analitica-para-decidir.md`
 > §0** (la tarea en curso, `#755`) · `encuestas.md` §0 y §4.7 (`#754`) · `analitica.md` §0 y §4.5 · `isla-y-landing-nueva.md`
 > §4.11 · `celebracion-e-invitacion.md` §0 · `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 ·
@@ -21,7 +21,8 @@
   línea en la tarjeta; permiso `analytics.manage`). Lo construido y lo que enseñó cada una: spec §4.13. ▶ **La TP, el
   público** (`#792` `[DECIDIDO owner]` 28-09: la fecha de nacimiento del titular, entera y opcional; los padres por la edad de sus
   hijos con el opt-in de hoy; §4.14): ✅ **TP·1 la captura, en `main` y APROBADA** (28-09; su «al detalle» y lo que enseñó,
-  §4.14; contrato **1.49.0**) · ✅ **TP·2 «Quién viene»** en `main` y aprobada → ▶ **TP·3**. ⚠️ Visto de paso: la ficha
+  §4.14; contrato **1.49.0**) · ✅ **TP·2 «Quién viene»** en `main` y aprobada → ▶ **TP·3, rehecha por `#793`** (anónima, sin
+  exportar personas; felicitaciones sin vender; sin código hasta que el owner la vea). ⚠️ Visto de paso: la ficha
   del cliente en `zh_CN` pinta el parentesco de sus menores como la clave cruda (`admin.users.dependents.relationship_*` solo en es).
 - ▶ **LA FIESTA DEL SISTEMA NUEVO ES MÍA (`#765`, `[DECIDIDO owner]` 25-09)**: la lista de invitados, la invitación con
   su recibo y la autorización, vestidas con «Saltia» para la v2.0.0, en paralelo con la web pública. El traspaso,
@@ -67,8 +68,9 @@
 1. ❗❗❗ **LA ANALÍTICA PARA DECIDIR (`#755`, `specs/analitica-para-decidir.md`)**: ✅ T0a·T0b·T0c · T1 · T2 · T3a · T3b ·
    T3c·1 · T3c·2 y **TP·1** (la fecha de nacimiento, `#792`; arnés `SOLO=TP1`, sondas `storage/app/audit/sonda-tp1-*.mjs`),
    **TP·2** («Quién viene»; arnés `SOLO=TP2`; fixture `ojo-tp2.php` montado, `OJO=desmontar`), todas en `main` y aprobadas →
-   ▶ **TP·3 los padres por la edad de sus hijos** (§4.14; empieza por su «al detalle», medido; `[PENDIENTE: asesoría]` antes de
-   la primera exportación) → T3d el texto para IA (§4.7; lee `Changes` y
+   ▶ **TP·3 REHECHA por `#793`** (`[DECIDIDO owner]` 28-09: el público es ANÓNIMO, nada exporta personas; **«no escribas
+   código»** hasta que la vea): TP·3a los tramos de las plataformas de anuncios · TP·3b retirar «Exportar segmento» · TP·3c las
+   dos felicitaciones sin vender (titular e hijo, con opt-in; el COPY con el owner antes, `[PENDIENTE: owner]`); §4.14 → T3d el texto para IA (§4.7; lee `Changes` y
    los veredictos; sin PII ni celdas < 5) → T3e el SECTOR (primera búsqueda en §4.13: casi todo son medias, no rangos; AL OWNER
    antes de sembrar) → T4 cartera → T5 marketing y correos → T6 cohortes → T7 pérdidas → T8 satisfacción (§4.12). Los CRUCES de
    encuestas, con la T8; el cruce por EMPLEADO, `[PENDIENTE: owner]` (27-09, sin respuesta).
@@ -232,8 +234,9 @@ el repo de la instancia (lo nuevo), nunca a `main`.
   ya en el montaje). Toqué lo compartido: techos de `SidebarBundleBudgetTest` (299 → **301**; el motor ya pesaba 298,83) y
   `SidebarMountTest` (10.900), `SidebarBoot` (dos claves), `ApiContractTest`, `phpstan-baseline.neon` (−4, el mostrador),
   `CreateManualOrderPage` (el campo), `README`/`MODELO-DATOS`/`INVARIANTES`. Tras el `pull`, `php artisan migrate`.
-- ❗ **Para la web (28-09, TP·1, `#792`)**: `/privacidad` tiene que nombrar la fecha de nacimiento del titular (opcional; para
-  conocer al público) y, con la TP·3, el uso de la edad de los hijos en las comunicaciones comerciales (`[PENDIENTE: asesoría]`).
+- ❗ **Para la web (28-09, TP·1 y `#793`)**: `/privacidad` tiene que nombrar la fecha de nacimiento del titular (opcional; para
+  conocer al público, siempre en conjunto) y, con la TP·3c, las felicitaciones de cumpleaños (la del titular y la de sus hijos,
+  solo con el opt-in de marketing y sin vender). Ya NO habrá exportación de personas (`#793`). `[PENDIENTE: asesoría]`.
 - ❗❗ **Para plataforma (27-09 noche, `#754`/`#757`, YA EN CÓDIGO)**: (1) `scripts/deploy.sh` espera **11** tareas (entra
   `surveys:resolve-returns`, 04:20); toqué solo esa línea y su comentario. (2) El CONTRATO **1.46.0** es mío: te respeté la
   1.45.0 reservada; `PersonalDataExport.surveys` pasa a `ExportedSurveys` `{participations, sealed_responses}`. Tu

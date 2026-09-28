@@ -1,7 +1,7 @@
 # [SPEC] La analítica para decidir — un cuadro que se entiende, dice si va bien o mal y cubre las decisiones del operador
 
 > Estado: ✅ **aprobada por el owner el 27-09** (§7; `#755`) → ✅ **T0, T1 y T2** · 🟦 **T3** (✅ T3a · ✅ T3b · ✅ T3c · ⬜ T3d·T3e, §4.13) · 🟦 **TP el público** (§4.14: ✅ TP·1 · ✅ TP·2 · ⬜ TP·3) · Última actualización: 2026-09-28 ·
-> Decisiones: `#755` (esta), `#754` (encuestas anónimas, su T1), `#758` (la T2), `#759` (la T3 en cinco tandas), `#792` (el público) · Carril: **SPA** (banda 790–819). Amplía `analitica.md`
+> Decisiones: `#755` (esta), `#754` (encuestas anónimas, su T1), `#758` (la T2), `#759` (la T3 en cinco tandas), `#792` (el público), `#793` (el público, anónimo; las felicitaciones) · Carril: **SPA** (banda 790–819). Amplía `analitica.md`
 > (el libro, los regímenes y la T2 siguen siendo suyos).
 
 ## §0 · Antes de tocar
@@ -18,7 +18,7 @@
   camino de `EmailUtm` (tras firmar, ignorada al validar); (6) aperturas solo con consentimiento (`[PENDIENTE: asesoría]`).
 - **Estado**: ✅ aprobada (27-09, `#755`); T0a·T0b·T0c ✅ · **T1** ✅ (la T5 de `encuestas.md`, `#754`, `#757`) · **T2** ✅ ocupación (§4.8.ter, `#758`) → **T3** Resumen, en cinco tandas (§4.13,
   `#759`): ✅ T3a la forma · ✅ T3b veredicto (mín–máx, `#790`) · ✅ T3c·1 lo que ha cambiado (`#791`) · ✅ T3c·2 objetivos →
-  ▶ **TP el público** (§4.14, `#792`; ✅ TP·1 la fecha · ✅ TP·2 quién viene · ▶ TP·3 los padres) → T3d.
+  ▶ **TP el público** (§4.14, `#792`/`#793`; ✅ TP·1 · ✅ TP·2 · ⬜ TP·3 anónima: tramos, retirar la exportación, felicitaciones) → T3d.
   **Nada de lo medido se pierde** (§4.1.bis, con guarda): se resume arriba y lo demás queda
   plegado o en su pestaña.
 - **Invariantes**: `RGPD-01`, `RGPD-04`, `RGPD-07`, `SEC-04`, `SUITE-01`. Dinero y aforo: solo lectura.
@@ -689,11 +689,27 @@ pide y nada sale antes de la v2.0.0— y la T3d y la T3e no. Cada una, con su «
   por número de hijos declarados; la edad de los hijos el día de la visita; quién los declara; con quién vienen (con menores ·
   sin dato); y de las fiestas, la edad del cumpleañero y la de los invitados. Sin persona, **ninguna celda < 5** (se agrupa) y
   siempre «de N con dato». Al catálogo, al censo y al CSV.
-- **TP·3 Los padres por la edad de sus hijos** (`SegmentsReport`): «un hijo cumple en las próximas N semanas» y «con hijos de X
-  a Y años» (N, X e Y, dato del panel), desde `Dependent::active()`; se exportan SOLO con `marketing_opt_in`, `analytics.export`
-  y rastro. `[PENDIENTE: asesoría]` antes de la primera exportación; el texto del opt-in (hoy «Quiero recibir novedades y
-  ofertas del parque.») y `/privacidad` lo nombran (carril web). Los padres de los INVITADOS no se segmentan (ni cuenta ni
-  opt-in): su marketing es «Avísame de fechas» (`#750`).
+- ~~**TP·3 Los padres por la edad de sus hijos**, exportables con opt-in~~ → **rehecha por `#793`** (`[DECIDIDO owner]` 28-09,
+  abajo): el público es ANÓNIMO y nada exporta personas; las fechas sirven para felicitar, sin vender.
+
+**La TP·3 rehecha (`#793`, `[DECIDIDO owner]` 28-09)** — «no necesito sus datos, solo saber el público que es»: los segmentos
+son para definir el público de Google, Meta y TikTok Ads y pulir el tono y el copy (madres, padres, con hijos o sin, jóvenes);
+y «felicitar al padre en su cumpleaños si tenemos su fecha… para el del niño lo mismo, sin vender, un detalle; hay que trabajar
+el copy al máximo». Tres tandas, cada una con su «al detalle» medido y **sin código hasta que el owner lo vea** (lo pidió):
+- **TP·3a Los tramos de las plataformas** (vetable, mío): «Quién viene» (TP·2) reparte con los cortes que piden los anuncios,
+  para copiarlos tal cual: quien reserva 18–24 · 25–34 · 35–44 · 45–54 · 55–64 · 65+ (Google y Meta); los hijos 0–2 · 3–5 ·
+  6–8 · 9–12 · 13–17 (los «padres de…» de Meta); y dos cifras: con hijos declarados (el «estado parental») y madres frente a
+  padres (el parentesco es lo único que dice el sexo: no se pregunta). Anónimo, con los mínimos de `RGPD-07`.
+- **TP·3b Retirar «Exportar segmento»**: la acción del pie de «Clientes», su ruta y `SegmentsExportController`; los segmentos
+  quedan como recuentos. A medir en su «al detalle»: el permiso `analytics.export` (si no tiene otro uso, sale del catálogo y
+  del seeder: compartido, aviso a plataforma), la columna «con opt-in» (sin exportación, ¿dice algo?) y las pruebas que la vigilan.
+- **TP·3c Las felicitaciones** (correos, del carril desde `#789`; su spec antes que el código): al titular el día de su
+  cumpleaños (`users.born_on`) y al adulto el del cumpleaños de su hijo menor (`dependents.born_on`, `Dependent::active()`),
+  **solo con `marketing_opt_in`**, una por persona y año, por la mañana del parque, nunca a una cuenta anonimizada, la baja en
+  un toque (LSSI art. 22.1) y un interruptor por felicitación en el panel. **Sin precios, sin botón de reservar, sin
+  descuento**: el éxito no se mide en conversión. El copy se escribe CON el owner (es/en/fr) antes de construir: `[PENDIENTE:
+  owner]`. Se apoya en lo que ya hay de `#750` (el aviso a invitados: su comando horario, su «una vez por cumpleaños» y su baja),
+  que sigue igual. `/privacidad` lo nombra (buzón a la web).
 
 **La TP·1 al detalle — medido el 28-09, antes de codificar.** Tres correcciones al plan de arriba:
 - **Las altas son cuatro puertas, no cinco**: `ValidarRegistro` (la puerta) NO crea cuentas (medido: los únicos `User::create`
@@ -794,4 +810,9 @@ lectura**; ningún fichero del `CRITICAL_RE` (a confirmar con `grep` en cada tan
   registro… la lista de invitados tiene mucha información… marketing especializado»; «tú valoras cuándo») → la tanda TP
   (§4.14): fecha ENTERA y OPCIONAL, el opt-in de hoy para el marketing por la edad de los hijos, el hueco de los menores que
   se registran sin cerrar (`#792`, contra mis tres recomendaciones: la casilla propia, el año, la casilla «soy mayor de edad»).
-- **Pendiente**: `[PENDIENTE: asesoría]` los correos por persona y el píxel; y los padres por la edad de sus hijos (TP·3).
+- **28-09, owner** (ante la exportación de la TP·3: «la idea es todo anónimo para las analíticas… no quiero exportar datos de
+  los menores ni de los clientes… solo analítica. No escribas código»; «los segmentos a mí solo me hacen falta para ir a Google
+  Ads, Meta Ads o TikTok Ads y definir mi público objetivo… pulir mi tono, mi copy»; «felicitar al padre en su cumpleaños…
+  para el cumpleaños del niño lo mismo, sin vender, un detalle») → `#793`: nada exporta personas y la TP·3 se rehace (§4.14).
+- **Pendiente**: `[PENDIENTE: asesoría]` los correos por persona y el píxel; `[PENDIENTE: owner]` el copy de las dos
+  felicitaciones (TP·3c), escrito con él antes de construirlas.
