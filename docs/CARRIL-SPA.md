@@ -311,6 +311,10 @@ local, por el formulario, dos objetivos del mes en curso —Ingresos netos 3.000
 dice «No había nada que cambiar»). Se quitan vaciando esos dos campos en «Objetivos del mes» o borrando sus filas de
 `analytics_goals`; quedan dos filas `analytics.goals_updated` en el rastro.
 
+(16) **De la TP·1, la fecha de nacimiento (28-09, `#792`)**: el cliente de sondas 2179 (`sonda-puerta@jumpweb.test`) lleva
+`born_on = 1988-03-12` para enseñar la ficha («12/03/1988 · 38 años»); se quita poniéndola a `null`. La sonda del panel vive
+fuera de git, en `storage/app/audit/sonda-tp1-panel.mjs` (no guarda nada: escribe la fecha en el modal y lo cierra).
+
 ## Anexo · La fila del enrutador, mudada el 2026-09-16
 
 > Lo que decía la fila **«El carril del SPA en el OTRO ordenador · rediseñar el cajón (Fase 4) · el material de PlayJump en otra máquina · la rama `cliente/playjump` · qué ficheros son de cada carril»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila
