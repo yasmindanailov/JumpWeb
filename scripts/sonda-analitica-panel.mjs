@@ -39,7 +39,7 @@ const ESPERA_WIDGETS_MS = 30000;
  * tarjetas, cuántos gráficos (`null`: uno o ninguno, según haya datos), el informe de su CSV y el último texto que carga.
  */
 const PESTANAS = {
-    summary: { nombre: 'Resumen', pregunta: '¿Cómo vamos?', arriba: 7, plegados: 0, graficos: 0, csv: null, ultimo: 'Ver en Satisfacción' },
+    summary: { nombre: 'Resumen', pregunta: '¿Cómo vamos?', arriba: 7, plegados: 0, graficos: 0, csv: null, ultimo: 'Lo que ha cambiado' },
     money: { nombre: 'Dinero', pregunta: '¿Cuánto ganamos y de qué?', arriba: 6, plegados: 1, graficos: 3, csv: 'money', ultimo: 'El desglose' },
     occupancy: { nombre: 'Ocupación', pregunta: '¿Cómo de lleno está el parque, y cuándo?', arriba: 6, plegados: 0, graficos: null, csv: 'occupancy', ultimo: 'La ocupación, al detalle' },
     customers: { nombre: 'Clientes', pregunta: '¿Quién viene y quién vuelve?', arriba: 6, plegados: 3, graficos: 3, csv: 'customers', ultimo: 'Registros y puerta, al detalle' },
@@ -233,6 +233,18 @@ for (const [clave, p] of Object.entries(PESTANAS)) {
     await captura(`escritorio-${clave}`);
 }
 ok('«Exportar segmento», solo en Clientes', informe.pestanas.customers.segmento && Object.entries(informe.pestanas).every(([k, v]) => k === 'customers' || ! v.segmento));
+
+// 3 bis. «Lo que ha cambiado» (T3c·1, `#791`): en «Resumen», o su lista (≤ 5, cada frase con su tono y su enlace) o POR QUÉ
+// no hay ninguna.
+paso = 'lo que ha cambiado';
+await page.getByRole('tab', { name: 'Resumen' }).first().click();
+await page.waitForTimeout(700);
+await recorrer('Lo que ha cambiado');
+informe.cambios = await page.evaluate(() => ({
+    frases: [...document.querySelectorAll('[data-change]')].map((li) => ({ clave: li.dataset.change, tono: li.dataset.changeTone, enlace: Boolean(li.querySelector('a[href*="pestana="]')), texto: li.textContent.replace(/\s+/g, ' ').trim() })),
+    vacio: document.querySelector('[data-analytics-changes-empty]')?.textContent?.trim() ?? null,
+}));
+ok('«Lo que ha cambiado»: su lista (≤ 5, cada una con tono y enlace) o por qué no hay', (informe.cambios.frases.length > 0 && informe.cambios.frases.length <= 5 && informe.cambios.frases.every((f) => ['good', 'watch', 'neutral'].includes(f.tono) && f.enlace)) || (informe.cambios.frases.length === 0 && (informe.cambios.vacio ?? '') !== ''), JSON.stringify(informe.cambios).slice(0, 200));
 
 // 3 bis. La ocupación: el mapa de calor escribe el % en cada celda, con su tooltip.
 paso = 'mapa';

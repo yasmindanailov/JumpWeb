@@ -132,6 +132,19 @@ class AnalyticsTabsTest extends TestCase
     }
 
     /**
+     * Dónde vive una cifra (T3c·1): la pestaña donde está arriba o plegada —adonde lleva su frase en «lo que ha cambiado»—;
+     * «Resumen» no cuenta, solo repite.
+     */
+    public function test_each_figure_lives_in_a_tab_that_is_not_the_summary(): void
+    {
+        $this->assertSame('customers', AnalyticsPage::tabOf('occupancy.visitors'), 'está en Resumen y arriba de Clientes');
+        $this->assertSame('money', AnalyticsPage::tabOf('money.net'));
+        $this->assertSame('money', AnalyticsPage::tabOf('money.collected'), 'plegada');
+        $this->assertSame('marketing', AnalyticsPage::tabOf('traffic.identified'), 'en «Calidad del dato»');
+        $this->assertNull(AnalyticsPage::tabOf('no.existe'));
+    }
+
+    /**
      * Lo plegado nace plegado y recuerda su estado por widget; lo de arriba, no. ⚠️ Lo que decide es el estado INICIAL de
      * Alpine (`isCollapsed: $persist(true)`): la clase `fi-collapsed` la pinta Filament en el servidor siempre que el estado
      * se recuerde, plegado o no (el arnés lo cazó el 28-09: una prueba que miraba la clase no veía nacer abierto lo plegado).

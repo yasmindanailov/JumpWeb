@@ -1,6 +1,6 @@
 # [SPEC] La analítica para decidir — un cuadro que se entiende, dice si va bien o mal y cubre las decisiones del operador
 
-> Estado: ✅ **aprobada por el owner el 27-09** (§7; `#755`) → ✅ **T0, T1 y T2** · 🟦 **T3** (✅ T3a · ✅ T3b · ⬜ T3c→T3e, §4.13) · Última actualización: 2026-09-28 ·
+> Estado: ✅ **aprobada por el owner el 27-09** (§7; `#755`) → ✅ **T0, T1 y T2** · 🟦 **T3** (✅ T3a · ✅ T3b · ✅ T3c·1 · ⬜ T3c·2→T3e, §4.13) · Última actualización: 2026-09-28 ·
 > Decisiones: `#755` (esta), `#754` (encuestas anónimas, su T1), `#758` (la T2), `#759` (la T3 en cinco tandas) · Carril: **SPA** (banda 730–759). Amplía `analitica.md`
 > (el libro, los regímenes y la T2 siguen siendo suyos).
 
@@ -17,7 +17,8 @@
   sale a un tercero: SOLO agregados, con guarda; (5) los enlaces FIRMADOS de los correos: la marca de envío va por el
   camino de `EmailUtm` (tras firmar, ignorada al validar); (6) aperturas solo con consentimiento (`[PENDIENTE: asesoría]`).
 - **Estado**: ✅ aprobada (27-09, `#755`); T0a·T0b·T0c ✅ · **T1** ✅ (la T5 de `encuestas.md`, `#754`, `#757`) · **T2** ✅ ocupación (§4.8.ter, `#758`) → **T3** Resumen, en cinco tandas (§4.13,
-  `#759`): ✅ T3a la forma · ✅ T3b veredicto y frase (mín–máx, `#790`) → ▶ T3c. **Nada de lo medido se pierde** (§4.1.bis, con guarda): se resume arriba y lo demás queda
+  `#759`): ✅ T3a la forma · ✅ T3b veredicto (mín–máx, `#790`) · ✅ T3c·1 lo que ha cambiado (`#791`) → ▶ T3c·2 objetivos.
+  **Nada de lo medido se pierde** (§4.1.bis, con guarda): se resume arriba y lo demás queda
   plegado o en su pestaña.
 - **Invariantes**: `RGPD-01`, `RGPD-04`, `RGPD-07`, `SEC-04`, `SUITE-01`. Dinero y aforo: solo lectura.
 
@@ -569,6 +570,50 @@ inactiva se pinta vacía y sus widgets ni existen ni piden.
   casos no se juzga, como una tasa. (3) «tus últimos 12 semanas»: el adjetivo va con la unidad. (4) La clave de la fuente
   de las visitas se llamaba `'sessions'` y `AccessRevocationTest` (nadie nombra la tabla de credenciales fuera de su punto
   único) la paró en la suite completa: ahora es `web_visits`.
+
+**La T3c al detalle — medido el 28-09, antes de codificar (`#791`)**: en dos, cada una al ojo del owner: **T3c·1 «lo que ha
+cambiado»** (sin esquema nuevo) y **T3c·2 los objetivos del mes** (tabla, permiso y formulario).
+- **Medido** (BD local, los seis catálogos de la T3b): leerlos todos cuesta ~1–1,3 s en frío (~900 consultas) y ≤ 15 ms en
+  caliente. Con «La semana pasada» salen de su rango 5 cifras; tres son la misma historia (la web vendió menos: compras,
+  conversión y lo cobrado) y varias son números diminutos («siempre había sido 1» → 0 visitas por primera vez un domingo).
+- **La regla** (§4.5; del agente contra el objetivo, vetable, `#791`): entran TODAS las cifras de los seis catálogos, también
+  las plegadas —su valor es sacar lo que no está arriba— cuyo veredicto es alta o baja (que ya exige 8 periodos y, en tasas y
+  medias, 20 casos) **y** cuya escala llega a 20: `max(base, base comparada) ≥ 20` (la base de un recuento es él mismo; la del
+  dinero, sus operaciones). Se ordenan por **dinero en juego** —los euros fuera de su banda— y después las que no son dinero,
+  por lo lejos que quedan de su banda (relativo a ella). Como mucho 5, y si hay más, «y N más» (nunca un tope callado).
+- **Cada frase**: el icono y el tono del veredicto, «Conversión: 5,4 %. Atención: la más baja de tus últimas 8 semanas (iba de
+  6,3 % a 13,3 %).» y el enlace a su pestaña. **Sin ninguna**: «Nada fuera de lo normal» (y cuántas se miraron); sin historia
+  en ninguna, «aún sin historia para decir qué ha cambiado».
+- **Dónde**: `ChangesWidget` en «Resumen», bajo sus cifras; la selección, pura, en `Filament\Analytics\Changes` (la leerán
+  también los objetivos y el texto para IA).
+
+**Cómo se construyó la T3c·1 (28-09; ✅ vista en vivo y aprobada por el owner el 28-09: «buen trabajo, visto bueno»)**: `Changes::select()` (puro) y `Changes::for()` (los seis
+catálogos con su historia); `AnalyticsPage::tabOf()` (dónde vive una cifra, sin contar «Resumen») para el enlace; `ChangesWidget`
+con su vista (icono, palabra y color del veredicto, como la tarjeta; «y N más»; y por qué no hay nada: «Nada fuera de lo
+normal: las N cifras con historia…» o «Aún sin historia… hacen falta 8 meses con datos»). **Medido**: con «La semana pasada»
+salen las dos que predijo la medida —«Conversión: 5,4 %. Atención: la más baja…» y «Cuentas nuevas: 33. Bien: la más alta…»—
+y ningún número diminuto; a 390 px sin desbordar; sonda 108/108. **Tests**: `ChangesTest` (5: la entrada con escala —también
+la de una bajada, por el periodo de antes—, el orden —dinero delante; lo demás relativo, con un caso en que lo absoluto
+mentiría—, el tope con «y N más», los dos vacíos y la lista con su enlace), `AnalyticsTabsTest` +1 (`tabOf`). Arnés: +9,
+**114/115 + control y la 115.ª vista morder aparte**. **Lo que enseñó**: (1) `TestCase::count()` y `Assert::countOf()` son de
+PHPUnit y finales —un ayudante con ese nombre tumba el fichero con un error fatal que un filtro por «⨯» no enseña: el
+veredicto, por el código de salida—. (2) El arnés dejó viva «el dinero deja de ir delante»: en la prueba los céntimos ya
+pesaban más que cualquier distancia relativa. Faltaba el caso que las separa —un céntimo fuera frente a 1,5 veces el borde—.
+
+**La T3c·2 al detalle (diseño, 28-09; ⬜ sin empezar)** — los objetivos del mes (§4.4), decidido contra el objetivo y vetable:
+- **Dato**: `analytics_goals` (futuro) — `metric_key`, `month` (su primer día), `target` (en la unidad de la cifra: céntimos,
+  unidades o puntos básicos), `set_by` (`nullOnDelete`), fechas; única por cifra y mes. Modelo `Platform\Models\AnalyticsGoal`
+  (futuro) con su alias de morfo; sin datos personales.
+- **Qué cifras**: las que ACUMULAN en el mes —Ingresos netos, Vendido, Pedidos cobrados, Visitantes, Fiestas, Cuentas nuevas— y
+  dos tasas de NIVEL —Ocupación de las entradas y Conversión—. Las demás no tienen «objetivo del mes» que tenga sentido.
+- **Qué dice la tarjeta** (solo con «Este mes» o «El mes pasado», que son el mes del objetivo): acumulada y en curso, «Objetivo:
+  20.000 € · vas al 82 % con el 90 % del mes pasado» (bien si el avance llega al ritmo; atención si no); acumulada y cerrada,
+  «alcanzado (104 %)» o «no alcanzado (82 %)»; una tasa, «Objetivo: 8,0 % · por encima / por debajo».
+- **Dónde se ponen**: «Objetivos del mes», al pie de «Resumen»: un formulario con el mes (este o el siguiente) y un campo por
+  cifra. Permiso propio `analytics.manage` (futuro; de gestión, el admin por `Gate::before`), re-exigido al guardar (`SEC-04`), y
+  rastro `analytics.goals_updated` (antes y después, sin PII).
+- **Compartido (aviso antes, por buzón)**: `PermissionSeeder`/`PermissionCatalog`, `AuditLog::ACTIONS`, el morfo de
+  `AppServiceProvider` y el recuento de migraciones de `docs/README.md` y `MODELO-DATOS.md`.
 
 **T3e, primera búsqueda de fuentes (28-09; NADA sembrado, para el owner)**: casi todo lo publicado son MEDIAS de un
 informe, no rangos, y pocas veces de parques de salto. Candidatas, con su pega: (a) ROLLER, *2025 Attractions Industry

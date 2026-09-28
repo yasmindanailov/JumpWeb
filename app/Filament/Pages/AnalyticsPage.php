@@ -9,6 +9,7 @@ use App\Filament\Analytics\CsvExport;
 use App\Filament\Analytics\SegmentsReport;
 use App\Filament\Analytics\WindowLabel;
 use App\Filament\Widgets\Analytics\AnticipationChart;
+use App\Filament\Widgets\Analytics\ChangesWidget;
 use App\Filament\Widgets\Analytics\CustomersBreakdownWidget;
 use App\Filament\Widgets\Analytics\CustomersMoreWidget;
 use App\Filament\Widgets\Analytics\CustomersOverviewWidget;
@@ -19,6 +20,7 @@ use App\Filament\Widgets\Analytics\FunnelChart;
 use App\Filament\Widgets\Analytics\FunnelWidget;
 use App\Filament\Widgets\Analytics\GateHoursChart;
 use App\Filament\Widgets\Analytics\GateWidget;
+use App\Filament\Widgets\Analytics\MetricsWidget;
 use App\Filament\Widgets\Analytics\MoneyBreakdownWidget;
 use App\Filament\Widgets\Analytics\MoneyChannelsChart;
 use App\Filament\Widgets\Analytics\MoneyMoreWidget;
@@ -121,9 +123,10 @@ class AnalyticsPage extends BaseDashboard
      * @var array<string, list<class-string<Widget>>>
      */
     public const TABS = [
-        // T3a (`#759`): las cifras clave, las mismas de su pestaña.
+        // T3a (`#759`): las cifras clave, las mismas de su pestaña; T3c·1 (`#791`): lo que ha cambiado, de todas.
         'summary' => [
             SummaryWidget::class,
+            ChangesWidget::class,
         ],
         'money' => [
             MoneyOverviewWidget::class,
@@ -231,6 +234,26 @@ class AnalyticsPage extends BaseDashboard
     public static function getNavigationLabel(): string
     {
         return __('admin.analytics.nav_label');
+    }
+
+    /**
+     * La pestaña donde vive una cifra (arriba o plegada): adonde lleva su frase en «lo que ha cambiado» (T3c·1). «Resumen» no
+     * cuenta: solo repite.
+     */
+    public static function tabOf(string $key): ?string
+    {
+        foreach (self::TABS as $tab => $widgets) {
+            if ($tab === self::DEFAULT_TAB) {
+                continue;
+            }
+            foreach ($widgets as $widget) {
+                if (is_subclass_of($widget, MetricsWidget::class) && in_array($key, $widget::KEYS, true)) {
+                    return $tab;
+                }
+            }
+        }
+
+        return null;
     }
 
     /** Una clave vieja abre su pestaña de ahora; una desconocida, «Resumen». */

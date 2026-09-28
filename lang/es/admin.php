@@ -353,6 +353,15 @@ return [
         'summary' => [
             'see' => 'Ver en :tab',
         ],
+        // T3c·1 (`#791`): lo que ha cambiado, de TODAS las cifras del cuadro; primero el dinero en juego.
+        'changes' => [
+            'heading' => 'Lo que ha cambiado',
+            'note' => 'Las cifras de todo el cuadro que se salen de lo normal para ti —la más alta o la más baja de sus 12 periodos anteriores— con una escala que merezca decirse. Primero las de dinero, por los euros en juego.',
+            'item' => ':label: :value. :verdict',
+            'more' => '{1} Y :n más fuera de lo normal: está en su pestaña.|[2,*] Y :n más fuera de lo normal: están en su pestaña.',
+            'none' => '{1} Nada fuera de lo normal: la cifra con historia está dentro de su rango.|[2,*] Nada fuera de lo normal: las :n cifras con historia están dentro de su rango.',
+            'no_history' => 'Aún sin historia para decir qué ha cambiado: hacen falta 8 :unit con datos.',
+        ],
         // La ocupación (la T2 de `specs/analitica-para-decidir.md` §4.8.ter, `#758`): entradas y fiestas, nunca sumadas.
         'occupancy' => [
             'note' => 'Por el día y la hora de la visita, lo que ya pasó del periodo. Las entradas se miden en plazas y las fiestas en fiestas por franja: por separado.',

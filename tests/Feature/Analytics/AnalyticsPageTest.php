@@ -14,6 +14,7 @@ use App\Filament\Pages\AnalyticsPage;
 use App\Filament\Pages\Dashboard;
 use App\Filament\Widgets\Analytics\AnticipationChart;
 use App\Filament\Widgets\Analytics\CategoryChart;
+use App\Filament\Widgets\Analytics\ChangesWidget;
 use App\Filament\Widgets\Analytics\CustomersBreakdownWidget;
 use App\Filament\Widgets\Analytics\CustomersMoreWidget;
 use App\Filament\Widgets\Analytics\CustomersOverviewWidget;
@@ -162,8 +163,9 @@ class AnalyticsPageTest extends TestCase
      * forma de la T3a (`#759`, §4.13), tecleada a mano.
      */
     private const WIDGETS = [
-        // «Resumen»: las cifras clave, las mismas de su pestaña.
+        // «Resumen»: las cifras clave, las mismas de su pestaña; y lo que ha cambiado, de todas (T3c·1).
         SummaryWidget::class,
+        ChangesWidget::class,
         MoneyOverviewWidget::class,
         MoneySeriesChart::class,
         MoneyProductsChart::class,

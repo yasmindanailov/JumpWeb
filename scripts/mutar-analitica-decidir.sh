@@ -12,7 +12,7 @@
 set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
-FILTER='ReportPeriodTest|MoneyReportTest|WindowLabelTest|AnalyticsPageTest|MetricTest|AnalyticsCensusTest|FunnelReportTest|PartiesReportTest|CustomersReportTest|GateSurveyTest|ValidarRegistroProfileTest|GateVisitsTest|OccupancyReaderParityTest|OccupancyReportTest|AnalyticsTabsTest|AnalyticsJargonTest|MetricsCatalogTest|AnalyticsExportTest|SegmentsExportTest|MetricsHistoryTest'
+FILTER='ReportPeriodTest|MoneyReportTest|WindowLabelTest|AnalyticsPageTest|MetricTest|AnalyticsCensusTest|FunnelReportTest|PartiesReportTest|CustomersReportTest|GateSurveyTest|ValidarRegistroProfileTest|GateVisitsTest|OccupancyReaderParityTest|OccupancyReportTest|AnalyticsTabsTest|AnalyticsJargonTest|MetricsCatalogTest|AnalyticsExportTest|SegmentsExportTest|MetricsHistoryTest|ChangesTest'
 RUN="docker compose exec -u sail -T laravel.test php artisan test --filter=${FILTER}"
 
 TMP="$(mktemp -d)"
@@ -38,6 +38,8 @@ FICHEROS=(
     app/Filament/Analytics/Metrics/SurveysMetrics.php
     app/Filament/Analytics/Metrics/MetricSet.php
     resources/views/filament/widgets/analytics/metric.blade.php
+    app/Filament/Analytics/Changes.php
+    app/Filament/Widgets/Analytics/ChangesWidget.php
     app/Filament/Widgets/Analytics/SummaryWidget.php
     app/Filament/Widgets/Analytics/MoneyOverviewWidget.php
     app/Filament/Widgets/Analytics/OccupancyBreakdownWidget.php
@@ -589,6 +591,46 @@ mutar "los compradores del dinero no cambian de periodo en la historia" "app/Fil
 mutar "el «bien» se pinta como una atención" "resources/views/filament/widgets/analytics/metric.blade.php" \
   "'text-success-700 dark:text-success-400' => \$verdict['tone'] === \\App\\Filament\\Analytics\\Metric::TONE_GOOD," \
   "'text-success-700 dark:text-success-400' => \$verdict['tone'] === \\App\\Filament\\Analytics\\Metric::TONE_WATCH,"
+
+# ── T3c·1 · LO QUE HA CAMBIADO (§4.5 y §4.13, `#791`) ─────────────────────────────────────────────────────────
+CH=app/Filament/Analytics/Changes.php
+mutar "la escala de una bajada deja de mirar el periodo de antes" "$CH" \
+  'max($metric->base ?? 0, $metric->previousBase ?? 0) < Metric::MIN_BASE' \
+  '($metric->base ?? 0) < Metric::MIN_BASE'
+
+mutar "entran los números diminutos (sin escala)" "$CH" \
+  ' || max($metric->base ?? 0, $metric->previousBase ?? 0) < Metric::MIN_BASE' \
+  ''
+
+mutar "el dinero deja de ir delante" "$CH" \
+  '? [1, (float) $outside]' \
+  '? [0, (float) $outside]'
+
+mutar "lo que no es dinero se ordena por lo absoluto" "$CH" \
+  ': [0, $outside / max(abs($edge), $high - $low, 1)];' \
+  ': [0, (float) $outside];'
+
+mutar "caben seis" "$CH" \
+  'public const MAX = 5;' \
+  'public const MAX = 6;'
+
+mutar "las que no caben se callan" "$CH" \
+  "'more' => max(0, count(\$out) - self::MAX)" \
+  "'more' => 0"
+
+mutar "no se cuenta cuántas cifras se miraron" "$CH" \
+  '            $judged++;' \
+  ''
+
+mutar "con historia y nada fuera, dice «sin historia»" "app/Filament/Widgets/Analytics/ChangesWidget.php" \
+  "\$changes['judged'] > 0" \
+  "\$changes['judged'] > 999999"
+
+mutar "una frase de «lo que ha cambiado» lleva a «Resumen»" "$AP" \
+  '            if ($tab === self::DEFAULT_TAB) {
+                continue;
+            }' \
+  ''
 
 # ── El CONTROL: tocar un comentario no puede poner nada en rojo ─────────────────────────────────
 control "un comentario de Window" "$W" \

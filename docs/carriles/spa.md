@@ -2,27 +2,23 @@
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb` a secas; la instancia al lado, en
 > `~/proyectos/instancias/playjump`, clon de `github.com/yasmindanailov/instancia-playjump`, montada el 25-09) ·
-> Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#790`** · La banda está dada de alta en la
+> Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#791`** · La banda está dada de alta en la
 > tabla de `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: **`analitica-para-decidir.md`
 > §0** (la tarea en curso, `#755`) · `encuestas.md` §0 y §4.7 (`#754`) · `analitica.md` §0 y §4.5 · `isla-y-landing-nueva.md`
 > §4.11 · `celebracion-e-invitacion.md` §0 · `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 ·
-> `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-09-28 (madrugada: la T3 medida y troceada, §4.13).
+> `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-09-28 (cierre: T3a, T3b y T3c·1 en `main`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`). El
 > contador de la suite va en el trailer del commit (`#618`), no aquí. **Se muda, no se raspa**: el detalle de
 > una feature baja a su spec (las trampas por tanda de la analítica T1→T5 viven en `analitica.md` §4.9,
 > mudadas verbatim el 24-09; las de la ficha de Google en su §9.1; las de la invitación en su §10.20).
 
-## Foto (2026-09-28, madrugada)
+## Foto (2026-09-28, cierre)
 
-- ▶▶▶ **LA ANALÍTICA PARA DECIDIR es la tarea** (`#755`, spec ✅). En `main` y aprobadas por el owner: **T0a·T0b·T0c** (el
-  tramo, la anatomía, los que vuelven, `#756`), **T1** encuestas anónimas (`#754`/`#757`; `encuestas.md` §4.7) y **T2**
-  ocupación (`#758`; §4.8.ter). **T3 en cinco tandas** (§4.13, `#759`): ✅ **la T3a, la forma, en `main` y aprobada por el owner
-  el 28-09** («buen trabajo, todo correcto»: siete pestañas, solo la abierta pide —10 → 1 al abrir—, el catálogo de 58 cifras,
-  ≤ 6 arriba y lo demás plegado, «Resumen», móvil con selector y píldora —primera cifra 732 → 416 px—, el glosario; sonda
-  107/107; el detalle, §4.13 «Cómo se construyó»). ✅ **T3b, el veredicto y la frase, en `main` y aprobada por el owner
-  el 28-09** (`#790` `[DECIDIDO owner]`: «normal» es el mín–máx de los 12 periodos anteriores; la historia por los totales de
-  cada informe, desde que su fuente mide; §4.13). ⚠️ Arreglado de paso: la caché de la ocupación iba al segundo (`efae3692`).
-  ▶ **Sigue la T3c: «lo que ha cambiado» y los objetivos del mes.**
+- ▶▶▶ **LA ANALÍTICA PARA DECIDIR es la tarea** (`#755`, spec ✅). En `main` y APROBADAS por el owner: T0a·T0b·T0c (`#756`),
+  T1 encuestas anónimas (`#754`/`#757`), T2 ocupación (`#758`) y, el 28-09, **T3a la forma** (`#759`: siete pestañas, solo
+  pide la abierta, un catálogo de 58 cifras), **T3b el veredicto** (`#790` `[DECIDIDO owner]`: «normal» es el mín–máx de los 12
+  periodos anteriores) y **T3c·1 «lo que ha cambiado»** (`#791`). Lo construido y lo que enseñó cada una: spec §4.13. ▶ **Sigue
+  la T3c·2, los objetivos del mes: DISEÑADA en §4.13, sin empezar.**
 - ▶ **LA FIESTA DEL SISTEMA NUEVO ES MÍA (`#765`, `[DECIDIDO owner]` 25-09)**: la lista de invitados, la invitación con
   su recibo y la autorización, vestidas con «Saltia» para la v2.0.0, en paralelo con la web pública. El traspaso,
   `isla-y-landing-nueva.md` §4.11; el censo HAY/FALTA, el método y las tandas, `specs/fiesta-sistema-nuevo.md` (§1.4,
@@ -67,24 +63,22 @@
 
 ## Por dónde retomar, en orden
 
-1. ❗❗❗ **LA ANALÍTICA PARA DECIDIR (`#755`) — `specs/analitica-para-decidir.md` ✅ APROBADA (27-09; antes que correos y
-   puerta; nada de lo medido se pierde, §4.1.bis).** ✅ **T0a** (`0dc5d317`) · ✅ **T0b** (`6243e8d9`) · ✅ **T0c** (§4.8.bis,
-   `#756`; no se reconstruyen visitas desde el rastro, `[DECIDIDO owner]`) · ✅ **T1 = la T5 de `encuestas.md` §4.7**
-   (`#754` + `#757`; `deploy.sh` espera 11; contrato 1.46.0; la BD local migrada y re-sembrada con
-   `probe-ojo-anonimas.php`, `CARRIL-SPA.md` §8·14). Los CRUCES por franja, tipo de visita y primera visita (datos ya
-   guardados) llegan con la T8; el cruce por EMPLEADO, `[PENDIENTE: owner]` (preguntado el 27-09, sin respuesta aún). →
-   ✅ **T2 ocupación y anticipación** (§4.8.ter, `#758`) → ▶ **T3 Resumen y la reorganización, EN CINCO TANDAS** (§4.13,
-   `#759`, 28-09; medido antes): ✅ **T3a la forma** (aprobada; §4.13 «Cómo se construyó») → ✅ **T3b veredicto y frase**
-   (aprobada; en local, «La semana pasada» enseña veredictos: solo hay 3 meses) → ▶ **T3c**
-   (§4.4 su historia, §4.6) → T3c «lo que ha cambiado» y objetivos → T3d el texto para IA (§4.7, sin PII ni celdas < 5) → T3e
-   el SECTOR (fuentes AL OWNER antes de sembrar nada) → T4 cartera → T5 marketing y correos → T6 cohortes → T7
-   pérdidas → T8 satisfacción (§4.12). **Trampas de la T2**, en la spec §4.8.ter: `OccupancyReader` COPIA la aritmética del
-   aforo (`OccupancyReaderParityTest` lo caza); ⚠️ **no verificado en navegador** que el cajón emita `availability_missing`
-   (la local abre la ISLA, «no deshacer sin él»). Al tocar un texto que un arnés usa de ancla, se corre ESE arnés.
-   Cada tanda, al ojo del owner en vivo ANTES del commit. **Trampas de hoy**: una tarjeta nueva va por `metric()` con su
-   `Polarity`, su «¿Cómo se calcula?» (es y zh_CN), `TILES` del censo y el recuento de la sonda; el arnés
-   `mutar-analitica-decidir.sh` (55, ~16 min) en segundo plano, sin medir nada mientras; tras rebasar, los dos bundles y
-   re-medir la suite (spec §4.2, §4.3). `[PENDIENTE: asesoría]`: los 90 días del sello, los clics por persona y el píxel (y el (5) de las encuestas).
+1. ❗❗❗ **LA ANALÍTICA PARA DECIDIR (`#755`, `specs/analitica-para-decidir.md`)**: ✅ T0a·T0b·T0c · T1 · T2 · T3a · T3b ·
+   T3c·1, todas en `main` y aprobadas (§4.3–§4.13) → ▶ **T3c·2 los objetivos del mes** (diseño en §4.13 «La T3c·2 al detalle»:
+   `analytics_goals`, ocho cifras, la frase por tipo, el formulario al pie de «Resumen», permiso `analytics.manage` re-exigido
+   —`SEC-04`— y rastro; ❗ toca ficheros COMPARTIDOS, aviso previo ya en el buzón) → T3d el texto para IA (§4.7; lee `Changes` y
+   los veredictos; sin PII ni celdas < 5) → T3e el SECTOR (primera búsqueda en §4.13: casi todo son medias, no rangos; AL OWNER
+   antes de sembrar) → T4 cartera → T5 marketing y correos → T6 cohortes → T7 pérdidas → T8 satisfacción (§4.12). Los CRUCES de
+   encuestas, con la T8; el cruce por EMPLEADO, `[PENDIENTE: owner]` (27-09, sin respuesta).
+   **Cómo se trabaja una tanda** (lo de esta sesión): medir antes y escribir «La Tx al detalle» en §4.13; toda cifra por el
+   catálogo (`Filament\Analytics\Metrics\*::from()`, su «¿Cómo se calcula?» es/zh_CN y el censo); el arnés
+   `mutar-analitica-decidir.sh` (115, ~70 min) en segundo plano y **nadie mira localhost mientras corre** (muta en su sitio); un
+   superviviente es un caso que falta; tras el arnés, los dos bundles; tras rebasar, re-medir la suite. En local «Este mes» dice
+   «aún sin historia» (3 meses de datos): para el ojo, «La semana pasada». La tanda, aparcada en `wip/…` hasta el visto bueno y
+   después *fast-forward* a `main`. **Trampas**: `OccupancyReader` COPIA la aritmética del aforo (`OccupancyReaderParityTest`);
+   ⚠️ no verificado en navegador que el cajón emita `availability_missing` (la local abre la ISLA); `AccessRevocationTest` no
+   deja escribir el literal `'sessions'`; `TestCase::count()` y `countOf()` son finales. `[PENDIENTE: asesoría]`: los 90 días
+   del sello, los clics por persona y el píxel (y el (5) de las encuestas).
 2. ✅ **LA FIESTA DEL SISTEMA NUEVO (`#765`, `fiesta-sistema-nuevo.md` ✅ `#743`): T1a→T4 y F1→F9 en `main` y aprobadas
    (`#747`→`#753`, §4.6–§4.15) — en código NO TIENE NADA PENDIENTE**; espera la v2.0.0 (las páginas vivas se visten con
    las hojas de la instancia, `#769`). **Si llega un zip nuevo**: `git pull` en la instancia, `git diff <antes>..HEAD` de
@@ -225,6 +219,12 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 
 ## Buzón
 
+- ❗ **Para plataforma (28-09, la T3 de la analítica, `#759`/`#790`/`#791`)**: (1) Toqué dos descripciones de TU hub de Ajustes
+  en `lang/{es,zh_CN}/admin.php`: Experimentos y Encuestas decían «Analítica → Conversión / Encuestas» y ahora «→ Marketing /
+  Satisfacción» (las pestañas se renombraron; `?pestana=traffic` y `surveys` siguen abriendo la suya). (2) **AVISO PREVIO**: la
+  T3c·2 (objetivos del mes) tocará `PermissionSeeder`/`PermissionCatalog` (permiso `analytics.manage`), `AuditLog::ACTIONS`
+  (`analytics.goals_updated`), el morfo de `AppServiceProvider` (`AnalyticsGoal`) y el recuento de migraciones de `README.md` y
+  `MODELO-DATOS.md`; si tienes algo a medias ahí, dímelo. Sin contrato nuevo.
 - ❗❗ **Para plataforma (27-09 noche, la T2 de la analítica, `#758` `[DECIDIDO owner]`)**: la «demanda sin hueco» se mide
   desde ya: el CAJÓN emite `availability_missing {product, month}` al cargar la oferta de un producto (por cada mes sin días
   desde el en curso; una vez por producto y mes en la visita). **La isla no pasa por `selectProduct()` y no lo emite**: te
@@ -301,6 +301,7 @@ el repo de la instancia (lo nuevo), nunca a `main`.
   código `MIN_REVIEWS = 1` (`#494`): no la toco yo.
 
 ### Atendido
+- **Plataforma 28-09** (`#836`): `openWith()` pasa el producto de la intención `fiesta` a `drawer_opened`: correcto.
 - **Plataforma 27-09 noche, 2.º** (T5f `#824` y los hijos por producto `#825`: `outcome.js::confirmationLine` con
   `minors_only`, la 1.45.0 suya y la 1.46.0 mía, `catalog.js` al trozo `card`): atendido, nada mío choca.
 - **Plataforma 27-09 noche** (`#789`: correos y puerta, míos; el zip (4) sin correos ni fiesta; `Medir` aplazado; T2·9;
