@@ -5,7 +5,7 @@
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
 > **820–849** (dada de alta en `DECISIONES.md` el 27-09; centena `decisiones/800-899.md`) · Último usado: **`#837`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#837`) · Actualizado: **2026-09-28**
-> (la PORTADA ✅ y CUMPLEAÑOS ✅, `#832`→`#836`; la T6c, Colegios, en marcha: censo y `#837`).
+> (la PORTADA ✅ y CUMPLEAÑOS ✅, `#832`→`#836`; COLEGIOS en marcha: censo, `#837` y la T6c·1 ✅).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
 > llévaselo con la medida, como el SPA en `#724`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -48,10 +48,15 @@ edad del panel—; contrato **1.45.0**; `sonda-cuenta.mjs` 250/250, arneses `mut
 CUMPLEAÑOS (`#832`→`#836`, §4.18, `sonda-cumpleanos.mjs`). ▶ **EN MARCHA: la T6c, Colegios**: el censo y su
 plan, en la spec §4.19; `#837` (el owner): la hoja para dirección AHORA, solo WhatsApp, el cálculo que se retoma (enlace y
 dispositivo), sin «avísame». La verdad manda: un profesor gratis por cada 15 (no «todos»), sin plazo de cambio hasta que el
-panel lo tenga. ❗ **T6c·1 🟦**: `/colegios` en `instancias/playjump` SIN COMMIT hasta el ojo del owner EN VIVO (su lista
-de páginas, `web/colegios.blade.php`, `web/colegios/` —modelo y piezas 1 y 3–9—, `entradas/modelo.php` —el menú y el pie
-a Colegios—, `cumple.css` —la tabla de la pieza 6— y los textos `colegios` es/en/fr); en el producto, `services` en
-`PageFacts`. ❗ La compra de la isla NO vende excursiones (todo pack es fiesta): va en la T6c·3 (§4.19). La ISLA la
+panel lo tenga. **T6c·1 ✅** con el ojo del owner (`/colegios`, instancia `52fb2c1`; `services` en `PageFacts`,
+`2d83507d`). **Sigue la T6c·2**: (a) en LOCAL, franjas para la zona `excursiones` (hoy 0: ningún día a la venta; mirar
+cómo genera las demás `SlotGenerator` y su horario —el servicio dice 8:00–21:30—); (b) los próximos días con hueco de
+CUALQUIER día para la pieza 7 (6, el mockup): el hermano de `availability_weekends` en `PageFacts` (por zona de packs,
+sin el filtro de fin de semana). **Después la T6c·3**: la calculadora = la de ENTRADAS (`calculadora/montar.js`) con los
+dos packs por filas (el precio por tramo lo da el servidor), y la COMPRA de una excursión en la isla, que hoy NO la vende:
+`intencion.js`/`usePantallaCero` tratan todo pack como fiesta (`packsDeFiesta` exige la edad) y no preguntan `school`,
+`lead`, `lead_phone` (obligatorios, `stage = booking`): con el sistema en «Tus datos» (`#773`·d) y en vivo al owner.
+Luego T6c·4 (la hoja A4 con QR y el cálculo que se retoma, `#837`) y T6c·5 (sonda y ojo). La ISLA la
 repiensa el owner con Claude Design: no atar nada nuevo a ella. **Para iterar con el owner** (no
 ahora): la isla «muy sola» y el «Reservar» solo en la isla del móvil (A/B propuesto: las páginas de la instancia aún no
 reciben su variante). Orden de la T6: portada, Cumpleaños, Colegios, Visítanos (SIN formulario: `/contacto` con 301) y Normas, y los 301

@@ -1874,7 +1874,7 @@ su calculadora (instancia); T6c·2 los hechos (los días con hueco de cualquier 
 `excursiones`); T6c·3 la calculadora (la de entradas con los dos packs) y la COMPRA de una excursión en la isla (sus
 packs sin edad, como las entradas; sus datos de reserva en «Tus datos»); T6c·4 la hoja y el cálculo que se retoma;
 T6c·5 la sonda y el ojo del owner.
-- ▶ **T6c·1 🟦 (28-09)**, a falta del ojo del owner: `PageFacts` sirve `services` (el horario de excursiones, del
+- ✅ **T6c·1 (28-09)**, con el ojo del owner (instancia `52fb2c1`): `PageFacts` sirve `services` (el horario de excursiones, del
   servicio del panel; `InstancePagesTest`, el mismo JSON que la API). En la instancia, `/colegios` con sus nueve piezas
   (la 6, hasta la calculadora, la escalera de precios por alumno: 15/17 · 13/15 · 12/14 € y «3 horas: 3 € más por alumno
   en cada tramo», solo porque la diferencia es la MISMA en todos) y el menú y el pie apuntando a ella. Medido: 200 en
