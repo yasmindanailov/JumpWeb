@@ -11,6 +11,7 @@ use App\Domain\Platform\Services\DisplayTime;
 use App\Http\Api\ApiCollection;
 use App\Http\Controllers\Api\V1\AttractionsFactsController;
 use App\Http\Controllers\Api\V1\AvailabilityController;
+use App\Http\Controllers\Api\V1\BarFactsController;
 use App\Http\Controllers\Api\V1\CatalogProductsController;
 use App\Http\Controllers\Api\V1\CatalogZonesController;
 use App\Http\Controllers\Api\V1\ConfigController;
@@ -63,6 +64,9 @@ final class PageFacts
         // Las OPINIONES publicadas, cada una con sus páginas (`#771`): la página toma las de su etiqueta.
         'reviews' => [ReviewsFactsController::class, '__invoke', true],
         'faqs' => [FaqsFactsController::class, '__invoke', true],
+        // La CAFETERÍA (T6d·1): su nombre, su entradilla, si se entra sin entrada y su FOTO con su `alt` —lo que publica
+        // `/bar`, que se retira en la T6f—; de aquí la pinta Visítanos.
+        'bar' => [BarFactsController::class, '__invoke', true],
         // Los SERVICIOS (su mitad editorial, `#671`): de aquí saca Colegios (T6c) el horario de excursiones, su duración y
         // su grupo, que el parque escribe en el panel y no son el horario de la zona.
         'services' => [ServicesFactsController::class, '__invoke', true],

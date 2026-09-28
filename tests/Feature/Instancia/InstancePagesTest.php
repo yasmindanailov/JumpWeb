@@ -6,6 +6,7 @@ use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Content\Models\BarImage;
 use App\Domain\Content\Models\LandingService;
 use App\Domain\Content\Services\ShellSettings;
 use App\Domain\Identity\Models\User;
@@ -21,6 +22,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 /**
@@ -675,6 +677,29 @@ BLADE);
 
         $this->assertSame('Excursiones de colegio', $servicios['services'][0]['title'] ?? null);
         $this->assertSame($this->getJson('/api/v1/services?lang=es')->assertOk()->json(), $servicios);
+    }
+
+    /**
+     * **La cafetería, por su nombre** (`bar`, T6d·1): el MISMO JSON que `GET /api/v1/bar`; de él saca Visítanos su foto con
+     * su `alt`, su nombre y si se entra sin entrada. Con un bar publicado y su foto: sin nombre la clave no viaja, y dos
+     * respuestas vacías coincidirían por casualidad. La foto, real (`BarImage` mide el fichero al guardarse).
+     */
+    public function test_a_page_asks_for_the_bar_and_gets_the_same_json_as_the_api(): void
+    {
+        Storage::fake(BarImage::IMAGE_DISK);
+        Setting::query()->updateOrCreate(['key' => 'bar.name.es'], ['value' => 'Cafetería']);
+        Setting::query()->updateOrCreate(['key' => 'bar.free_entry'], ['value' => 'yes']);
+        $imagen = imagecreatetruecolor(1600, 900);
+        ob_start();
+        imagepng($imagen);
+        Storage::disk(BarImage::IMAGE_DISK)->put('bar/mesas.png', (string) ob_get_clean());
+        BarImage::query()->create(['kind' => BarImage::KIND_VENUE, 'image' => 'bar/mesas.png', 'alt' => ['es' => 'Las mesas'], 'is_active' => true, 'position' => 0]);
+        $this->declarar(['kids' => ['vista' => 'kids', 'hechos' => ['bar']]]);
+
+        $bar = $this->hechosDe('/kids')['bar'];
+
+        $this->assertSame(['Cafetería', true, 'Las mesas'], [$bar['bar']['name'] ?? null, $bar['bar']['free_entry'] ?? null, $bar['bar']['venue']['alt'] ?? null]);
+        $this->assertSame($this->getJson('/api/v1/bar?lang=es')->assertOk()->json(), $bar);
     }
 
     /** **La configuración pública, por su nombre** (`config`, T6b·2): el MISMO JSON que `GET /api/v1/config`. */

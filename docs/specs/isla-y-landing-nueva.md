@@ -2008,6 +2008,10 @@ cubos»), y queda para su revisión final. Sin foto de la entrada, la cabecera e
 que ya publica `/bar`, que se retira en la T6f); **T6d·2** la página en la instancia (`/visitanos`, sus hechos, las ocho
 piezas, `AnswerRow` y `RuleGrid`/`RuleCard` nuevas, y `opening-hours`, `park-location`, `accordion` y `cta-band` con lo que
 el diseño les añadió, sin cambiar sus otras páginas); **T6d·3** la sonda y el ojo del owner.
+- ✅ **T6d·1 (28-09) · la CAFETERÍA, un hecho de página**: el hecho YA existía en la API (`GET /bar`, `BarFactsController`, del
+  menú de `#673`: nombre, entradilla, `free_entry`, la carta y la foto `venue` con su `alt`); faltaba en la lista blanca de
+  `PageFacts::HECHOS`. `InstancePagesTest` +1 (el mismo JSON que la API, con un bar publicado y su foto real), vista ROJA
+  antes de la entrada (404: la página que pide un hecho desconocido no se registra).
 
 ## 5. Impacto en invariantes
 
