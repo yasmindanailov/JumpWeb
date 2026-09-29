@@ -719,6 +719,36 @@ el copy al máximo». Tres tandas, cada una con su «al detalle» medido y **sin
   owner]`. Se apoya en lo que ya hay de `#750` (el aviso a invitados: su comando horario, su «una vez por cumpleaños» y su baja),
   que sigue igual. `/privacidad` lo nombra (buzón a la web).
 
+**La TP·3a y la TP·3b al detalle — medido el 29-09, antes de codificar** (⬜ esperan el ojo del owner: «sin código hasta que
+lo vea»):
+- **Medido, lo que hay** («Quién viene», TP·2, `AudienceReport`): quien reserva en 18–24 · 25–34 · 35–44 · 45–54 · 55+; los
+  hijos de tres en tres (0–2 … 15–17); cuántos hijos (1 · 2 · 3+); **quién los declara** (padre, madre, tutor, abuelo, otro:
+  «madres frente a padres» YA está, `Dependent::RELATIONSHIPS`); con quién viene; las fiestas. Todo con los mínimos de `RGPD-07`.
+- **Medido, lo que piden los anuncios** (fuentes oficiales, 29-09):
+  - [Google Ads](https://support.google.com/google-ads/answer/2580383?hl=en): 18-24 · 25-34 · 35-44 · 45-54 · 55-64 · 65+; y
+    el «estado parental», con Parent, Not a parent y Unknown.
+  - [TikTok](https://ads.tiktok.com/help/article/age-and-gender-targeting?lang=en): 18-24 · 25-34 · 35-44 · 45-54 · 55+.
+  - Meta: un rango libre de 13 a 65+. Sus categorías «padres de…» por la edad del hijo NO las he podido verificar hoy
+    (Meta retiró opciones detalladas entre 2022 y 2024): se proponen por etapas y se comprueban en el Administrador de anuncios.
+- ⚠️ **El producto NO sabe «no es padre»**: no declarar hijos no es no tenerlos. El estado parental solo puede decir «con hijos
+  declarados» o «sin dato», nunca «no es padre».
+- **TP·3a, propuesta (vetable)**:
+  - Quien reserva, con los cortes de Google: 18–24 · 25–34 · 35–44 · 45–54 · 55–64 · 65+ (TikTok junta los dos últimos).
+  - Los hijos, por etapas: 0–2 · 3–5 · 6–8 · 9–12 · 13–17.
+  - Una fila «Para los anuncios» que dice el estado parental como Google (con hijos declarados / sin dato) y el pie de las
+    fuentes. Es un cambio de cortes en `AudienceReport` y sus rótulos, con sus pruebas.
+- **TP·3b, medido**: la exportación vive en la acción `exportSegment` del pie de «Clientes» (`AnalyticsPage`, con
+  `PERMISSION_SEGMENTS_EXPORT`), la ruta `/admin/analitica/segmentos/csv` con `SegmentsExportController`, la acción del rastro
+  `segments.exported`, el permiso `analytics.export` (catálogo y seeder, COMPARTIDOS con plataforma), sus textos y
+  `SegmentsExportTest`. Hay precedente para retirar un permiso ya sembrado: una migración borra su fila y el pivote cae en
+  cascada (`drop_contact_messages_table`).
+- **TP·3b, propuesta**:
+  - Retirar la acción, la ruta, el controlador, el permiso (con su migración y aviso a plataforma) y la prueba.
+  - `segments.exported` se QUEDA en `AuditLog::ACTIONS`, para que el rastro viejo se siga leyendo.
+  - La columna «con opt-in» se queda: dice a cuántos se les podría escribir (las felicitaciones de la TP·3c), en conjunto.
+  - ⚠️ **Visto al medir**: `SegmentsWidget` enseña recuentos de 1 a 4 sin tapar. Con `#793` (el público es anónimo) se
+    propone taparlos como en «Quién viene».
+
 **La TP·1 al detalle — medido el 28-09, antes de codificar.** Tres correcciones al plan de arriba:
 - **Las altas son cuatro puertas, no cinco**: `ValidarRegistro` (la puerta) NO crea cuentas (medido: los únicos `User::create`
   del producto son `SelfSignup`, `GoogleSignup` y `CustomerRegistrar`). El alta de mostrador es el modal «Dar de alta» de

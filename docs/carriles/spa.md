@@ -60,7 +60,7 @@
    T3c·1 · T3c·2 y **TP·1** (la fecha de nacimiento, `#792`; arnés `SOLO=TP1`, sondas `storage/app/audit/sonda-tp1-*.mjs`),
    **TP·2** («Quién viene»; arnés `SOLO=TP2`; fixture `ojo-tp2.php` montado, `OJO=desmontar`), todas en `main` y aprobadas →
    ▶ owner 28-09, «cerrar lo que queda», en este orden: **los correos salientes PRIMERO** (`specs/correos-salientes.md` ✅
-   `#794`; ✅ C1→C4 en `main`, aprobadas 29-09) → ▶ ahora · **TP·3a** los tramos de los anuncios y **TP·3b** retirar «Exportar segmento» (`#793`) ·
+   `#794`; ✅ C1→C4 en `main`, aprobadas 29-09) → ▶ ahora · **TP·3a** los tramos de los anuncios y **TP·3b** retirar «Exportar segmento» (`#793`; su «al detalle» escrito el 29-09 en §4.14, ESPERA el ojo del owner antes de codificar) ·
    la TP·3c (felicitaciones) y el gasto en anuncios, ⏸ con el rediseño de la plantilla / aplazado; §4.14 y §4.9 → T3d el texto para IA (§4.7; lee `Changes` y
    los veredictos; sin PII ni celdas < 5) → T3e el SECTOR (primera búsqueda en §4.13: casi todo son medias, no rangos; AL OWNER
    antes de sembrar) → T4 cartera → T5 marketing y correos → T6 cohortes → T7 pérdidas → T8 satisfacción (§4.12). Los CRUCES de
