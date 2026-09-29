@@ -2084,6 +2084,18 @@ parque. Lo demás, la regla de Visítanos: donde el panel habla, gana; donde cal
   un solo uso `storage/app/audit/normas-capturas.mjs`): 200 en es/en/fr sin marcadores; a 390 y 1280 sin salirse, una `h1`,
   sin errores; la hoja se abre y Esc la cierra. ⚠️ Desaparece la ESCALA DE ALTURA del `/normas` viejo (el mockup no la
   trae); las normas del brief que el panel no tiene (calentamiento, espuma, volteretas dobles), a darlas de alta el parque.
+- ✅ **T6e·3 (29-09) · LA SONDA y la primera pantalla**: `scripts/sonda-normas.mjs`, **37/37 a 390 y 1280**, cada dato contra SU
+  hecho —las normas contra `/rules` (sus momentos y su orden, el porqué, el NIVEL con la palabra de `RuleCard.jsx` y el ICONO
+  contra el MISMO fichero de `resources/icons/lucide/`), el reparto contra el `rgSplit` de `RuleGrid.jsx` y la maqueta contra su
+  fórmula con el ancho medido (una columna a 390; dos con el chip al lado a 1280), la hoja contra `/legal/waiver` (título,
+  versión, fecha y secciones; Esc y «Cerrar»; sin JavaScript, `/waiver`), las edades contra las entradas y las alturas contra
+  `/catalog/zones`, la nota contra `/social-proof`, los calcetines contra la calculadora de Kids—, la isla que CEDE ante la
+  cabecera y el cierre, los tres «Reservar» que abren el selector, el pie con Normas actual y en/fr con las normas de
+  `/rules?lang=`. Su arnés, `scripts/mutar-sonda-normas.sh`: **16/16**, cada una por SU comprobación y sin excepciones (el
+  «Reservar» se busca por ser el primario de su pieza, no por sus marcas: por la marca, dos mordían por un `click` agotado y
+  cortaban la corrida). **Primera pantalla** (`sonda-primera-pantalla.mjs comparar normas`): el MISMO veredicto regla a regla
+  —la vuelta 114/114 · 45/45; la primera visita 101/111, los mismos diez que el mockup—. ⚠️ **No verificado con datos**: las
+  normas SIN momento, a lo ancho (en local, las diez tienen momento). **La T6e, Normas, ✅.**
 
 ## 5. Impacto en invariantes
 

@@ -5,7 +5,7 @@
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
 > **820–849** (dada de alta en `DECISIONES.md` el 27-09; centena `decisiones/800-899.md`) · Último usado: **`#842`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#842`) · Actualizado: **2026-09-29**
-> (PORTADA, CUMPLEAÑOS, COLEGIOS y VISÍTANOS ✅; NORMAS: T6e·1–2 ✅, sigue su sonda, T6e·3).
+> (PORTADA, CUMPLEAÑOS, COLEGIOS, VISÍTANOS y NORMAS ✅; sigue la T6f).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
 > llévaselo con la medida, como el SPA en `#724`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -43,16 +43,13 @@ conversión del zip tercero y (2) la T5, Mi cuenta (spec §4.13–§4.16). ▶ *
 owner en cada página: PORTADA (`#827`→`#831`, `sonda-portada.mjs`), CUMPLEAÑOS (§4.18, `#832`→`#836`, `sonda-cumpleanos.mjs`),
 COLEGIOS (§4.19, `#837`→`#841`, T6c·5–6; `sonda-colegios.mjs` 56/56, `mutar-sonda-colegios.sh` 11/11, `mutar-escalera.sh` 7/7;
 en LOCAL, 91 plantillas INFERIDAS para `excursiones`) y VISÍTANOS (§4.20, T6d·1–3; `sonda-visitanos.mjs` 26/26,
-`mutar-sonda-visitanos.sh` 8/8; el panel gana donde habla y donde calla, el brief). ▶ **NORMAS (T6e, §4.21, `#842`)**: T6e·1 ✅
-(producto: `park_rules.icon`/`level`, contrato 1.50.0, `/normas` ocupable, el hecho `waiver`) y T6e·2 ✅ con el ojo del owner
-(instancia `dae276f`: la página `seguridad` OCUPA `/normas`). **SIGUE la T6e·3**: versionar `scripts/sonda-normas.mjs` desde
-`storage/app/audit/normas-capturas.mjs` (de un solo uso) con el molde de `sonda-visitanos.mjs` —cada dato contra su hecho: las
-normas contra `/rules` con su icono y su nivel, la hoja contra `/legal/waiver`, las alturas contra `/catalog/zones`; la isla
-que cede su botón; en/fr—, su arnés (molde `mutar-sonda-visitanos.sh`, con su espera de 3 s por opcache) y la primera pantalla
-(`sonda-primera-pantalla.mjs comparar normas 0,1`, con el servidor del diseño en el 8129). Después, la **T6f**: los 301
-(`/contacto` → `/visitanos`, `/servicios` → `/colegios`…) y retirar las vistas viejas de la instancia (§1.6.4; también
-`normas.blade.php`), con la sonda de todas (la T4f de Kids y Jump va aquí). **Del owner, en PRODUCCIÓN**: el icono y el nivel
-de cada norma, y dar de alta las del brief que falten (calentamiento, espuma, volteretas dobles).
+`mutar-sonda-visitanos.sh` 8/8; el panel gana donde habla y donde calla, el brief) y NORMAS (§4.21, `#842`, T6e·1–3: `seguridad`
+OCUPA `/normas`; `sonda-normas.mjs` 37/37, `mutar-sonda-normas.sh` 16/16, la primera pantalla con el veredicto del mockup).
+**SIGUE la T6f**: los 301 (`/contacto` → `/visitanos`, `/servicios` → `/colegios`…) y retirar las vistas viejas de la instancia
+(§1.6.4; también `normas.blade.php`), con la sonda de todas (la T4f de Kids y Jump va aquí). ❗ **Y el `#792` del SPA, SIN
+hacer**: la fecha de nacimiento del titular en el alta de la isla (`formularioDeAlta`) y en «Tus datos» (su pieza
+`steps/BornOnField.vue` y sus textos, ya en el montaje). **Del owner, en PRODUCCIÓN**: el icono y el nivel de cada norma, y
+dar de alta las del brief que falten (calentamiento, espuma, volteretas dobles).
 Pendiente: la vuelta de Google con una excursión, sin verificar. ⚠️ La entrada `isla/hoja/montar.js` NO importa nada
 compartido (`#841`); la calculadora, a 185,80 de 186.
 ⚠️ `sonda-portada` 13/14 («Reservar» de la isla tras «Míralo», 17:17): igual con el `HEAD` (control): investigar aparte. La ISLA la
@@ -139,6 +136,7 @@ owner del 25-09 —promociones 🟦 T1 (`promociones.md` §8; en LOCAL, dos ofer
   de esta carpeta en una terminal (`claude` aquí: sin ella, las `allow` del repo no valen fuera de VSCode) · **para su
   REVISIÓN FINAL** (los datos, de playjump.es): los «5 días» de la duda «¿Puedo cambiar o cancelar?» contra los 3 de
   `#699` y las excursiones sin plazo · el horario en/fr de las excursiones (vale el español) · el en/fr de `pay_terms` · la
+norma «Zona Kids: de 4 a 8 años» contra las entradas, de 4 a 7 (en LOCAL; `/normas` pinta las dos) · la
 nota de Colegios «Por la mañana, antes de que el parque abra» junto a «8:00–21:30» (en `#534`, producción: 8:00–15:00) ·
 «¿Cuántos profesores?» y las alergias de las excursiones (fase de después) no se piden a nadie: sin lista de invitados no
 hay formulario (`#839`); pasarlos a la reserva es dato del panel. Y:
@@ -307,6 +305,8 @@ dueño es el carril de la web/reseñas—) ·
   `mutar-cabecera.py` tiene cuatro mutantes que ya no aplican y `mutar-bandas.py` uno.
 
 ### Atendido
+- **SPA 27→28-09** (`#757`: 11 tareas, 1.46.0; `#792`: `born_on`, 1.49.0; `#794`: 1.51.0, 12 tareas): leídos; `#792` en la isla, SIN
+  hacer: en retomar.
 - Retirado el 28-09, atendido por el SPA («Plataforma 27-09 noche, 2.º»): mi bloque de la T5f (`#824`) y `#825`.
 - **SPA 28-09** (la T3 de la analítica: los dos textos de mi hub de Ajustes; el aviso previo de la T3c·2 —permisos, auditoría,
   morfo, recuentos—): leído, nada mío a medias ahí. Su `#758` (la isla emite `availability_missing`), SIN hacer: en retomar.
