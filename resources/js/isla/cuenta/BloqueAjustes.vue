@@ -15,6 +15,7 @@ import './iconos-ajustes.js';
 import { useTextos } from '../piezas/textos.js';
 import { CUENTA } from './estilos.js';
 import { PLEGABLES } from './ajustes.js';
+import { fechaTecleada } from '../ui/fecha.js';
 import FilaAjuste from './FilaAjuste.vue';
 import AcordeonSistema from '../ui/AcordeonSistema.vue';
 import CampoSistema from '../ui/CampoSistema.vue';
@@ -96,6 +97,19 @@ const correoSub = computed(() => {
                         :model-value="ajustes.datos.telefono"
                         :error="ajustes.datos.errores.telefono"
                         @update:model-value="(v) => emit('dato', 'telefono', v)"
+                    />
+                    <!-- La fecha del titular, opcional (`#792`): el campo del alta; vaciarla la borra. -->
+                    <CampoSistema
+                        id="mc-aj-nacimiento"
+                        :label="t('compra.datos.nacimiento')"
+                        inputmode="numeric"
+                        autocomplete="off"
+                        :placeholder="t('compra.datos.formato_fecha')"
+                        maxlength="10"
+                        :hint="t('compra.datos.pista_nacimiento')"
+                        :model-value="ajustes.datos.nacimiento"
+                        :error="ajustes.datos.errores.nacimiento"
+                        @update:model-value="(v) => emit('dato', 'nacimiento', fechaTecleada(v))"
                     />
                     <SelectorSistema
                         id="mc-aj-idioma"

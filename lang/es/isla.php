@@ -238,6 +238,12 @@ return [
             'correo' => 'Correo',
             'telefono' => 'Teléfono',
             'pista_telefono' => 'Para avisarte de tu reserva. No lo usamos para nada más.',
+            // `#792`: la del titular, entera y opcional. Se pide como su CUMPLEAÑOS, que es para lo que sirve, y la pista dice
+            // solo que es opcional (el owner, 29-09).
+            'nacimiento' => 'Tu cumpleaños',
+            'pista_nacimiento' => 'Opcional',
+            // El de la fecha de un hijo (`mi_cuenta.hijos.pista_fecha`), aquí porque la compra no recibe los de Mi cuenta.
+            'formato_fecha' => 'DD/MM/AAAA',
             'google' => 'Continuar con Google',
             'apple' => 'Continuar con Apple',
             'existe' => 'Esta cuenta ya existe.',
@@ -263,6 +269,7 @@ return [
                 'nombre' => 'Escribe tu nombre y apellidos.',
                 'correo' => 'Revisa el correo: falta algo.',
                 'telefono' => 'Revisa el teléfono: son 9 cifras.',
+                'nacimiento' => 'Revisa la fecha: día, mes y año.',
                 'contrasena' => 'Escribe una contraseña de 8 caracteres o más.',
                 'clave' => 'Escribe tu contraseña.',
                 'descargo' => 'Marca la casilla para seguir.',

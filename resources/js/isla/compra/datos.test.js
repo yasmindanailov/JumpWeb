@@ -2,7 +2,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import {
     cuentaQueYaExiste, datosVacios, entradaVacia, errorDeEntrar, erroresDelAcceso, erroresDelServidor, firmaPendiente,
-    formularioDeAlta, hayQuePedir, revisarDatos,
+    formularioDeAlta, hayQuePedir, nacimientoDeAlta, revisarDatos,
 } from './datos.js';
 
 /**
@@ -147,6 +147,31 @@ describe('«Tus datos», solo si falta algo (`#785`)', () => {
 
 test('el formulario del alta del motor, sin espacios de más (la contraseña, tal cual)', () => {
     assert.deepEqual(formularioDeAlta({ ...lleno, nombre: ' Ana García ', correo: ' ana@correo.es ', contrasena: ' clave con espacios ' }), {
-        name: 'Ana García', email: 'ana@correo.es', phone: '612345214', password: ' clave con espacios ', accept_waiver: true,
+        name: 'Ana García', email: 'ana@correo.es', phone: '612345214', born_on: '', password: ' clave con espacios ', accept_waiver: true,
+    });
+});
+
+describe('la fecha de nacimiento del titular, entera y opcional (`#792`)', () => {
+    test('vacía no viaja; completa, en Y-m-d; a medias o inexistente, `null`', () => {
+        assert.equal(nacimientoDeAlta(''), '');
+        assert.equal(nacimientoDeAlta('   '), '');
+        assert.equal(nacimientoDeAlta('07/03/1988'), '1988-03-07');
+        assert.equal(nacimientoDeAlta('07/03'), null);
+        assert.equal(nacimientoDeAlta('31/02/1990'), null, 'el 31 de febrero no se desborda a marzo');
+        assert.equal(formularioDeAlta({ ...lleno, nacimiento: '07/03/1988' }).born_on, '1988-03-07');
+    });
+
+    test('revisarDatos solo para la que está a medias: vacía pasa (opcional), en el alta y en la de Google', () => {
+        const conTextos = { compra: { datos: { errores: { ...textos.compra.datos.errores, nacimiento: 'Revisa la fecha: día, mes y año.' } } } };
+
+        assert.deepEqual(revisarDatos(lleno, { textos: conTextos }), {});
+        assert.deepEqual(revisarDatos({ ...lleno, nacimiento: '07/03/1988' }, { textos: conTextos }), {});
+        assert.deepEqual(revisarDatos({ ...lleno, nacimiento: '07/03' }, { textos: conTextos }), { nacimiento: 'Revisa la fecha: día, mes y año.' });
+        assert.deepEqual(revisarDatos({ ...datosVacios(), cuenta: 'google', nombre: 'Ana', nacimiento: '99/99/1988' }, { textos: conTextos }), { nacimiento: 'Revisa la fecha: día, mes y año.' });
+        assert.deepEqual(revisarDatos({ ...datosVacios(), cuenta: 'dentro', nacimiento: '07/03' }, { textos: conTextos }), {}, 'con sesión no se pide aquí: es de Mi cuenta');
+    });
+
+    test('el «no» del servidor a la fecha va bajo su campo', () => {
+        assert.deepEqual(erroresDelServidor({ born_on: 'Tienes que ser mayor de edad.' }).errores, { nacimiento: 'Tienes que ser mayor de edad.' });
     });
 });

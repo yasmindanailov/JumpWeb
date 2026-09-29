@@ -14,6 +14,10 @@
 import { tp, t as texto } from '../../sidebar/i18n.js';
 import { RELATIONSHIPS, bornOnLabel, dependentWaiverAction } from '../../sidebar/account/dependents.js';
 import { fieldError } from '../../sidebar/account/form-outcome.js';
+import { fechaTecleada, isoDeFecha } from '../ui/fecha.js';
+
+// La fecha como se teclea vive en `ui/fecha.js` desde `#792` (la usa también la del titular); se reexporta aquí.
+export { fechaTecleada, isoDeFecha };
 
 let siguiente = 1;
 
@@ -22,26 +26,6 @@ export const fichaVacia = () => ({ id: siguiente++, nombre: '', fecha: '', rel: 
 
 /** El formulario de «Añade a tus hijos»: una ficha y la casilla del descargo, sin marcar. */
 export const formularioHijos = () => ({ lista: [fichaVacia()], descargo: false });
-
-/** «07032019» → «07/03/2019»: la fecha como se dice, con las barras solas (`PMC.fecha` del mockup). */
-export function fechaTecleada(valor) {
-    const d = String(valor ?? '').replace(/\D/g, '').slice(0, 8);
-
-    if (d.length > 4) return `${d.slice(0, 2)}/${d.slice(2, 4)}/${d.slice(4)}`;
-
-    return d.length > 2 ? `${d.slice(0, 2)}/${d.slice(2)}` : d;
-}
-
-/** «07/03/2019» → «2019-03-07», o `null` si no es un día que exista (el 30 de febrero no se desborda a marzo). */
-export function isoDeFecha(fecha) {
-    const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(String(fecha ?? ''));
-
-    if (m === null) return null;
-    const iso = `${m[3]}-${m[2]}-${m[1]}`;
-    const dia = new Date(`${iso}T12:00:00Z`);
-
-    return ! Number.isNaN(dia.getTime()) && dia.toISOString().slice(0, 10) === iso ? iso : null;
-}
 
 /** La edad que diría esa fecha en `hoy` (`Y-m-d`): una pista junto al campo, o `null`. */
 export function edadDe(fecha, hoy) {

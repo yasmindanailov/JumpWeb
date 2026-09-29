@@ -20,7 +20,7 @@ import { useWaiverStore } from '../../sidebar/stores/waiver.js';
 import { useAccountContextStore } from '../../sidebar/stores/accountContext.js';
 import {
     cuentaQueYaExiste, datosVacios, entradaVacia, errorDeEntrar, erroresDelAcceso, erroresDelServidor, firmaPendiente,
-    formularioDeAlta, hayQuePedir, revisarDatos,
+    formularioDeAlta, hayQuePedir, nacimientoDeAlta, revisarDatos,
 } from './datos.js';
 
 /** La marca de «la cuenta nace en esta compra», que sobrevive al viaje al banco (misma pestaña) y no lleva datos. */
@@ -107,7 +107,7 @@ export function useDatosCompra({ flow, props, textos, esFiesta = () => false }) 
     async function altaGoogle() {
         const { runGoogleSignup } = await altaDeGoogle();
         const r = await runGoogleSignup({
-            form: { name: estado.f.nombre.trim(), accept_waiver: estado.f.descargo === true },
+            form: { name: estado.f.nombre.trim(), born_on: nacimientoDeAlta(estado.f.nacimiento) ?? '', accept_waiver: estado.f.descargo === true },
             api, waiver: waiverStore.document, messages: props.messages, auth: props.auth,
         });
 

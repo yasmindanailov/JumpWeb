@@ -9,9 +9,22 @@
  */
 import { t as texto } from '../../sidebar/i18n.js';
 import { INVALID_CREDENTIALS } from '../../sidebar/login.js';
+import { isoDeFecha } from '../ui/fecha.js';
 
-/** El formulario en blanco. `cuenta`: `nueva` (alta), `existe` (su contraseña) o `dentro` (con sesión). */
-export const datosVacios = () => ({ nombre: '', correo: '', telefono: '', contrasena: '', descargo: false, cuenta: 'nueva' });
+/**
+ * El formulario en blanco. `cuenta`: `nueva` (alta), `existe` (su contraseña) o `dentro` (con sesión). `nacimiento`, la
+ * fecha del titular como se teclea («07/03/1988»): entera y OPCIONAL (`DECISIONES #792`).
+ */
+export const datosVacios = () => ({ nombre: '', correo: '', telefono: '', nacimiento: '', contrasena: '', descargo: false, cuenta: 'nueva' });
+
+/**
+ * **La fecha de nacimiento, para el servidor**: vacía, `''` (no se manda: `register.js` y `google.js` solo la llevan si
+ * hay una); completa y de un día que existe, en `Y-m-d`; a medias, `null` —`revisarDatos` la para antes—. Qué fechas
+ * valen (no futura, mayor de edad) lo decide el SERVIDOR (`BirthDatePolicy`), y su «no» sale bajo el campo.
+ */
+export function nacimientoDeAlta(valor) {
+    return String(valor ?? '').trim() === '' ? '' : isoDeFecha(String(valor).trim());
+}
 
 /**
  * «Entra» en blanco (`PjcEntrar`, T3e·4): `paso` `id` (correo y contraseña) u `olvido` (la confirmación del enlace);
@@ -42,6 +55,7 @@ export function revisarDatos(f, { pedirTelefono = false, firmaPendiente = false,
         // teléfono en una fiesta.
         if (vacio(f.nombre)) errores.nombre = t('nombre');
         if (pedirTelefono && vacio(f.telefono)) errores.telefono = t('telefono');
+        if (nacimientoDeAlta(f.nacimiento) === null) errores.nacimiento = t('nacimiento');
     } else if (f.cuenta === 'existe') {
         if (! String(f.correo ?? '').includes('@')) errores.correo = t('correo');
         if (vacio(f.contrasena)) errores.contrasena = t('clave');
@@ -52,6 +66,8 @@ export function revisarDatos(f, { pedirTelefono = false, firmaPendiente = false,
         if (! String(f.correo ?? '').includes('@')) errores.correo = t('correo');
         // El teléfono, solo en una fiesta (`#787`): en una entrada el alta va sin él.
         if (pedirTelefono && vacio(f.telefono)) errores.telefono = t('telefono');
+        // Opcional: solo se para la que está A MEDIAS o no existe («31/02/1990»); vacía, pasa.
+        if (nacimientoDeAlta(f.nacimiento) === null) errores.nacimiento = t('nacimiento');
         if (vacio(f.contrasena)) errores.contrasena = t('contrasena');
     }
 
@@ -73,7 +89,7 @@ export function hayQuePedir({ identificado, pedirTelefono = false, firma = false
 }
 
 /** El campo de la isla que corresponde a cada campo del alta. Lo que no está aquí va arriba, al resumen. */
-const CAMPOS = { name: 'nombre', email: 'correo', phone: 'telefono', password: 'contrasena', accept_waiver: 'descargo', waiver_document_id: 'descargo' };
+const CAMPOS = { name: 'nombre', email: 'correo', phone: 'telefono', born_on: 'nacimiento', password: 'contrasena', accept_waiver: 'descargo', waiver_document_id: 'descargo' };
 
 /**
  * Los «no» del servidor, a su campo, con SU mensaje.
@@ -137,7 +153,10 @@ export function firmaPendiente({ cuenta, contexto = null, documento = null }) {
     return contexto?.waiver?.required === true && contexto?.waiver?.pending !== true;
 }
 
-/** El formulario de la isla, en el del alta del motor (`stores/auth.js`). */
+/** El formulario de la isla, en el del alta del motor (`stores/auth.js`). La fecha, en `Y-m-d` o vacía (`#792`). */
 export function formularioDeAlta(f) {
-    return { name: f.nombre.trim(), email: f.correo.trim(), phone: f.telefono.trim(), password: f.contrasena, accept_waiver: f.descargo === true };
+    return {
+        name: f.nombre.trim(), email: f.correo.trim(), phone: f.telefono.trim(), born_on: nacimientoDeAlta(f.nacimiento) ?? '',
+        password: f.contrasena, accept_waiver: f.descargo === true,
+    };
 }

@@ -2242,6 +2242,30 @@ la página y su ojo en vivo.
   apoyo (como Normas) y el pie nuevo, con la legal en la que se está sin enlazarse. **Medido**: las cinco en 200; `sonda-web`
   17/17 a 360 y 1280 —ya SIN la excepción de las legales: ninguna página enlaza a una ruta que redirige—.
 
+### 4.24 La fecha de nacimiento del titular en la isla (`#792` del SPA, `[DECIDIDO owner]`)
+
+El owner la quiere **entera y opcional en las cinco altas y en Mi cuenta** (`#792`); el servidor ya la valida (`BirthDatePolicy`:
+no futura, mayor de edad, ≤ 120 años) y el motor ya la reenvía si el formulario la trae. El mockup no la dibuja: va con el sistema.
+- **Dónde, en la isla**: «Tus datos» de la compra (el alta y la que vuelve de Google), «Crea tu cuenta» de Mi cuenta (la misma
+  pantalla), el alta tras Google de Mi cuenta (`CuentaAltaGoogle`) y «Tus datos» de sus Ajustes, donde vaciarla la BORRA
+  (`profile.apply` manda `null`). En el orden del SPA: tras el teléfono, antes de la contraseña.
+- **Cómo**: el MISMO control que la fecha de un hijo (teclado de números y las barras solas, «DD/MM/AAAA»). `[DECIDIDO owner]`
+  2026-09-29, al verlo: se pide como **«Tu cumpleaños»** («enmarca el propósito») y la pista dice solo **«Opcional»** (fuera «Para
+  conocer mejor a nuestro público»); en/fr, «Your birthday»/«Optional» y «Votre anniversaire»/«Facultatif». Vacía no viaja; a
+  medias o inexistente («31/02») se para antes de preguntar; el «no» del servidor (`born_on`) va bajo su campo.
+- **Por qué `ui/fecha.js`**: la fecha tecleada vivía en `cuenta/hijos.js`; importarla desde la compra metía el módulo de los
+  menores en su trozo (el precedente de `ui/correo.js`, §4.16). Se muda tal cual y `hijos.js` la REEXPORTA (una prueba lo fija).
+- **Peso** (el cálculo de `SidebarBundleBudgetTest`; base: el `HEAD` de `#844` construido aparte en un `git worktree`): la compra
+  163,94 → 164,80, Mi cuenta 116,37 → 117,18 y sus Ajustes 27,82 → 28,50. Los tres techos, un kB más (165, 118, 29).
+- **Guardas**: `datos.test.js` (vacía no viaja, a medias se para, el «no» del servidor a su campo), `ajustes.test.js` (de
+  `born_on`, vaciarla es un cambio) y `ui/fecha.test.js` (y que `hijos.js` reexporta, no copia): un arnés de un solo uso, **9/9**
+  muerden. **Visto en el navegador** (390 y 1280, sin crear cuentas ni guardar): el orden, la pista, «DD/MM/AAAA», las barras
+  solas, la que está a medias parada con su frase y los Ajustes con «Guardar los cambios» al cambiarla. ⚠️ Cazado ahí: el
+  marcador salía VACÍO en la compra —era `mi_cuenta.hijos.pista_fecha`, y la compra no recibe los textos de Mi cuenta (la
+  guarda de textos solo mira que la clave EXISTA)—: ahora `compra.datos.formato_fecha`. **Estado ✅**, con el ojo del owner
+  («todo ok, buen trabajo», con el cambio de texto de arriba). El cajón del SPA sigue diciendo «Fecha de nacimiento» y la
+  pista larga (`account.register.born_on*`, suyos): avisado en el buzón.
+
 ## 5. Impacto en invariantes
 
 - `PAY-*`: solo si entra Bizum; entonces `VERIFY_CONC=1` y la lista del `CRITICAL_RE`.

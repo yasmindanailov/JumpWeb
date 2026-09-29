@@ -2,7 +2,8 @@
 /**
  * Paso 1 de la compra, «Tus datos» (`PjcDatos` del diseño, `paginas/compra/pasos-1-2.jsx`). Sin sesión: «¿Ya has
  * venido? Entra», Google o Apple ANTES de los campos (después ya no ahorran nada), nombre, correo, contraseña —y el
- * teléfono SOLO en un cumpleaños (`pedirTelefono`, `#787`)— y la casilla del descargo. Con sesión, solo el saludo y lo
+ * teléfono SOLO en un cumpleaños (`pedirTelefono`, `#787`); la fecha de nacimiento, opcional (`#792`: el mockup no la
+ * dibuja, va con el sistema)— y la casilla del descargo. Con sesión, solo el saludo y lo
  * que de verdad falta: el teléfono en un cumpleaños si entró con Google o Apple, y la casilla si esa cuenta nunca la firmó. «Esta cuenta ya existe» pide
  * su contraseña; sale al ENVIAR, no al teclear (`#688`). Con errores, un resumen arriba que se lee primero.
  *
@@ -19,6 +20,7 @@
  */
 import { computed } from 'vue';
 import { useTextos } from '../piezas/textos.js';
+import { fechaTecleada } from '../ui/fecha.js';
 import { PASO } from './estilos.js';
 import PasoCompra from './PasoCompra.vue';
 import IconoLucide from '../ui/IconoLucide.vue';
@@ -162,6 +164,20 @@ const cambiar = (campo) => (valor) => emit('cambiar', campo, valor);
                         :hint="t('compra.datos.pista_telefono')"
                         :error="errores.telefono || ''"
                         @update:model-value="cambiar('telefono')($event)"
+                    />
+                    <!-- La fecha del titular, entera y OPCIONAL (`#792`), con el control de la de un hijo: teclado de números
+                         y las barras solas. Qué fechas valen lo dice el servidor. -->
+                    <CampoSistema
+                        id="pjc-nacimiento"
+                        :label="t('compra.datos.nacimiento')"
+                        inputmode="numeric"
+                        autocomplete="off"
+                        :placeholder="t('compra.datos.formato_fecha')"
+                        maxlength="10"
+                        :model-value="valores.nacimiento"
+                        :hint="t('compra.datos.pista_nacimiento')"
+                        :error="errores.nacimiento || ''"
+                        @update:model-value="cambiar('nacimiento')(fechaTecleada($event))"
                     />
                     <CampoSistema
                         v-if="cuenta !== 'google'"

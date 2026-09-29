@@ -958,7 +958,10 @@ class SidebarBundleBudgetTest extends TestCase
     // de los datos va DIFERIDO con los pasos (`datos-reserva.js`: dentro, la compra medía 168,06). El techo, a 163.
     // Y la capa va a lo que falta (el owner, 28-09: `compra/ir-a.js`, el «qué falta» de cada pantalla 0 y «Continuar» que
     // lleva a ello). Medido 163,66. El techo, a 164.
-    private const ISLA_COMPRA_CHUNK_MAX_KB = 164;
+    // `#792` en la isla (§4.24): la fecha de nacimiento del titular en «Tus datos», opcional, con el control de la de un hijo
+    // (`ui/fecha.js`, mudado de `cuenta/hijos.js` para no arrastrar los menores a este trozo). Medido 163,94 → 164,80 (base:
+    // el `HEAD` de `#844` construido aparte en un `git worktree`, el mismo cálculo). El techo, a 165.
+    private const ISLA_COMPRA_CHUNK_MAX_KB = 165;
 
     // T4d·4 (`specs/isla-y-landing-nueva.md` §4.12): la CALCULADORA de una página, entrada propia que la página pide
     // (`scripts` de `<x-pagina>`) y se monta al acercarse su pieza. Su DESCARGA entera, como la mide el navegador que
@@ -1060,13 +1063,17 @@ class SidebarBundleBudgetTest extends TestCase
     // red no se descarga. ⚠️ De paso el catálogo del motor (`stores/catalog.js`, que ahora lee Mi cuenta) se muda de un
     // trozo del motor a otro (`time` −1.753 B, `card` +1.808): neto +55 B, que paga el motor. Con `#825` («¿Vienen
     // menores?» en su sitio y el icono de la tarea), 115,94. El techo, a 117.
-    private const ISLA_CUENTA_CHUNK_MAX_KB = 117;
+    // `#792` en la isla (§4.24): la fecha del titular en «Crea tu cuenta» y en el alta tras Google. Medido 116,37 → 117,18
+    // (base: el `HEAD` de `#844`, construido aparte). El techo, a 118.
+    private const ISLA_CUENTA_CHUNK_MAX_KB = 118;
 
     // T5e (`#778`): los AJUSTES de Mi cuenta, su trozo —el bloque y su lógica, pedidos al pintar el inicio—, sobre lo que ya
     // tiene quien abre Mi cuenta. Medido: 26,92 (el bloque 12,70, la lógica 6,56, `ajustes.js` 3,44, el interruptor que
     // comparte con las cookies 2,76 y los iconos 1,46). Sus PASOS (contraseña, correo, sesiones, Google, descargo, borrar),
     // otro trozo al abrir uno: 6,18. El techo, a 28.
-    private const ISLA_AJUSTES_MAX_KB = 28;
+    // `#792` en la isla (§4.24): la fecha del titular en «Tus datos» de los Ajustes (vaciarla la borra). Medido 27,82 → 28,50
+    // (base: el `HEAD` de `#844`, construido aparte). El techo, a 29.
+    private const ISLA_AJUSTES_MAX_KB = 29;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

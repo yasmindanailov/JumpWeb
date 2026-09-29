@@ -32,7 +32,7 @@ import { paginaConSelector } from '../pagina/con-selector.js';
 import { useSuperficie } from '../compra/useSuperficie.js';
 import {
     cuentaQueYaExiste, datosVacios, entradaVacia, errorDeEntrar, erroresDelServidor, firmaPendiente, formularioDeAlta,
-    revisarDatos,
+    nacimientoDeAlta, revisarDatos,
 } from '../compra/datos.js';
 import { VISTA, ckDeCuenta, lineaProxima, vistaDeApertura } from './vista.js';
 import { avisoDeAnalitica, avisoDeCuenta } from './avisos.js';
@@ -65,12 +65,13 @@ export function useSeccionCuenta(props) {
      * `vista` y `subpaso` (el olvido de Entrar, el descargo de Crear); `dir`, la entrada de la vista; `desde` y
      * `qrDesde`, a dónde vuelve la flecha; `ocupado`, lo que espera al servidor; `aviso`, la confirmación de arriba
      * (se queda hasta salir de su vista: WCAG 2.2.1); `renovar`, la pregunta de «Renovar mi QR»; `ent`, «Entra»; `f`,
-     * «Crea tu cuenta», con sus `errores` y su `avisoAlta`; `token`, el del anti-bot; `google`, el alta que vuelve.
+     * «Crea tu cuenta», con sus `errores` y su `avisoAlta`; `token`, el del anti-bot; `google`, el alta que vuelve, y
+     * `googleNacimiento`, su fecha como se TECLEA (el motor la quiere en `Y-m-d`: se convierte al enviar, `#792`).
      */
     const e = reactive({
         vista: VISTA.INICIO, subpaso: '', dir: null, desde: null, qrDesde: null, ocupado: null, aviso: null,
         renovar: false, ent: entradaVacia(), f: datosVacios(), errores: {}, avisoAlta: '', token: '',
-        google: emptyGoogleScreen(), rSel: null, cambiarDesdeReserva: false,
+        google: emptyGoogleScreen(), googleNacimiento: '', errorNacimiento: '', rSel: null, cambiarDesdeReserva: false,
     });
     let scroll = 0;
     // Las reservas (T5b): la próxima, las otras y el historial, y el contacto del parque para «Cambiar o cancelar».
@@ -518,6 +519,16 @@ export function useSeccionCuenta(props) {
      */
     async function completarGoogle() {
         if (e.ocupado) return;
+        // La fecha, opcional (`#792`): a medias o de un día que no existe se para aquí; vacía no viaja.
+        const nacimiento = nacimientoDeAlta(e.googleNacimiento);
+
+        if (nacimiento === null) {
+            e.errorNacimiento = t(textos, 'compra.datos.errores.nacimiento');
+            enfocarError();
+
+            return null;
+        }
+        authStore.form.born_on = nacimiento;
         e.ocupado = 'google';
         const { state, result } = await submitGoogleScreen({ state: e.google, form: authStore.form, api, waiver: waiverStore.document, messages: props.messages, auth: props.auth });
 
@@ -712,7 +723,14 @@ export function useSeccionCuenta(props) {
         cambiarAlta: (campo, valor) => { e.f[campo] = valor; if (e.errores[campo]) e.errores = { ...e.errores, [campo]: '' }; },
         aCrear: () => { Object.assign(e, { vista: VISTA.CREAR, subpaso: '', dir: 'fwd', f: datosVacios(), errores: {}, avisoAlta: '' }); cargar(VISTA.CREAR); },
         leerDescargo: () => Object.assign(e, { subpaso: 'descargo', dir: 'fwd' }),
-        google: computed(() => ({ ...e.google, nombre: authStore.form.name, descargo: Boolean(authStore.form.accept_waiver) })),
-        cambiarGoogle: (campo, valor) => { if (campo === 'nombre') authStore.form.name = valor; if (campo === 'descargo') authStore.form.accept_waiver = valor; },
+        google: computed(() => ({
+            ...e.google, nombre: authStore.form.name, descargo: Boolean(authStore.form.accept_waiver),
+            nacimiento: e.googleNacimiento, errorNacimiento: e.errorNacimiento || e.google.errors?.fields?.born_on || '',
+        })),
+        cambiarGoogle: (campo, valor) => {
+            if (campo === 'nombre') authStore.form.name = valor;
+            if (campo === 'descargo') authStore.form.accept_waiver = valor;
+            if (campo === 'nacimiento') { e.googleNacimiento = valor; e.errorNacimiento = ''; }
+        },
     };
 }

@@ -6,10 +6,13 @@
  * La secuencia es la del cajón (`account/google.js`); aquí solo se pinta.
  *
  *   · **El correo se ENSEÑA, no se pide**: es la identidad que Google acaba de verificar.
- *   · **El nombre es lo único que se teclea**: Google a veces trae «Ana G.», y ese nombre va a la reserva y a la firma.
+ *   · **El nombre es lo único que se PIDE**: Google a veces trae «Ana G.», y ese nombre va a la reserva y a la firma. La
+ *     fecha de nacimiento se ofrece, opcional (`#792`: Google no la da sin un permiso sensible).
  *   · **La privacidad no es casilla**: se informa, con su enlace; el descargo, sí, si hay texto que firmar.
  *   · **Sin nada que completar** (caducó, ya se hizo), la única salida es empezar otra vez: un enlace a Google.
  */
+import { useTextos } from '../piezas/textos.js';
+import { fechaTecleada } from '../ui/fecha.js';
 import { PASO } from '../compra/estilos.js';
 import PasoCompra from '../compra/PasoCompra.vue';
 import CampoSistema from '../ui/CampoSistema.vue';
@@ -26,6 +29,7 @@ defineProps({
     urls: { type: Object, default: () => ({}) },
 });
 const emit = defineEmits(['cambiar', 'descargo']);
+const { t } = useTextos();
 </script>
 
 <template>
@@ -77,6 +81,19 @@ const emit = defineEmits(['cambiar', 'descargo']);
             :model-value="pantalla.nombre"
             :error="pantalla.errors.fields.name || ''"
             @update:model-value="emit('cambiar', 'nombre', $event)"
+        />
+        <!-- La fecha del titular, opcional (`#792`): el mismo campo que «Tus datos» de la compra. -->
+        <CampoSistema
+            id="mc-google-nacimiento"
+            :label="t('compra.datos.nacimiento')"
+            inputmode="numeric"
+            autocomplete="off"
+            :placeholder="t('compra.datos.formato_fecha')"
+            maxlength="10"
+            :model-value="pantalla.nacimiento"
+            :hint="t('compra.datos.pista_nacimiento')"
+            :error="pantalla.errorNacimiento || ''"
+            @update:model-value="emit('cambiar', 'nacimiento', fechaTecleada($event))"
         />
         <div :style="{ display: 'grid', gap: '4px' }">
             <p :style="PASO.pista">{{ rotulos.privacidad }}</p>

@@ -34,7 +34,6 @@
   ⚠️ Consecuencias en «retomar» 2. `#627`: la app en React Native + Expo.
 - **`#628` · la promo «−20 % online» sigue EN PRODUCCIÓN** (cuatro filas `promo.*`; receta de fin en
   `ENTORNOS.md` §6 y en «retomar» 5).
-- ✅ **El plugin, reinstalado en la ruta nueva el 27-09** (`CAPA-DE-AGENTE.md` §4): una sesión NUEVA ya tiene `/carril`.
 
 ## Por dónde retomar, en orden
 
@@ -46,13 +45,12 @@ paquete y 25 clases del producto), **`#844`** (el botón que no cabe parte —en
 aire—; las pestañas de zona se apilan midiendo una COPIA oculta) y la **T6h** (§4.23: `legales` OCUPA las cinco legales, con el
 hecho `legal`). Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas}.mjs`) y la web entera
 (`sonda-web.mjs`, 17/17 a 360, 390 y 1280); arneses `mutar-sonda-web.sh` 12/12 (a 360), `mutar-sustituye.sh` 12/12,
-`mutar-legales-ocupadas.sh` 7/7. **SIGUE, en orden**: (a) la **T4f** —Kids y Jump, cada dato contra su hecho (molde de
-`sonda-visitanos`), y la compra de `sonda-isla` sobre `/kids` y no sobre su andamio—; (b) la **T6g** (propuesta, §4.22): el
-mural (`site/facade`, `trio`, `kit-ico`, `zone-sticker`), las 5 ranuras «NADIE desde la T6f» de
-`MATERIAL_CONSUMIDO_POR_LA_INSTANCIA` y el kit, en un corte (regenera el kit de PRODUCCIÓN: guarda 7); (c) ❗ el **`#792` del SPA,
-SIN hacer**: la fecha de nacimiento del titular en el alta de la isla (`formularioDeAlta`) y en «Tus datos» (`steps/BornOnField.vue`
-y sus textos, ya en el montaje): visible, con el ojo del owner. **Del owner, en PRODUCCIÓN**: el icono y el nivel de cada norma, y
-dar de alta las del brief que falten (calentamiento, espuma, volteretas dobles).
+`mutar-legales-ocupadas.sh` 7/7. **29-09 tarde, ✅**: la **T4f** (§4.12: `sonda-entradas.mjs` 89/89, arnés 25/25; `sonda-isla`
+desde `/kids` y `/cumpleanos`) y el **`#792` en la isla** (§4.24: «Tu cumpleaños», «Opcional», con el ✅ del owner). **SIGUE**: la
+**T6g** (§4.22; con su sí del 29-09): el mural (`site/facade`, `trio`, `kit-ico`, `zone-sticker`) Y el laboratorio `/_diseno`, las
+ranuras que queden sin nadie y el kit, en un corte (el kit de PRODUCCIÓN se reinstala podado con la v2.0.0: guarda 7, un paso más
+del despliegue); después, **los diseños nuevos del owner** (Claude Design, sobre la web). **Del owner, en PRODUCCIÓN**: el icono y
+el nivel de cada norma, y dar de alta las del brief que falten (calentamiento, espuma, volteretas dobles).
 Pendiente: la vuelta de Google con una excursión, sin verificar. ⚠️ La entrada `isla/hoja/montar.js` NO importa nada
 compartido (`#841`); la calculadora, a 186,08 de 187 (`#844`).
 ⚠️ `sonda-portada` 13/14 («Reservar» de la isla tras «Míralo», 17:17): igual con el `HEAD` (control): investigar aparte. La ISLA la
@@ -109,8 +107,8 @@ owner del 25-09 —promociones 🟦 T1 (`promociones.md` §8; en LOCAL, dos ofer
    sus decisiones (`#681`→`#688`, `#697`, `#760`) y T0→T2, en la spec (§0, §1.6, §4.8, §4.9, §4.11; mudado de aquí el
    27-09). El zip entra SOLO por `diseno/actualizar.py`. ❓ El en/fr de `lang/*/isla.php`, a revisar por el owner.
    ▶▶ **T3, la compra ✅** (§4.10, `#689`→`#698`: cada tanda, allí). Queda: la sonda en STAGING, con el ensayo de la v2.0.0.
-   Probar la isla: `sidebar.shell = isla` en local, **`scripts/sonda-isla.mjs [390|1280]`** (monta y borra su página;
-   19/19), `public/_isla-prueba.html` para el ojo (se BORRA antes de desplegar: guarda 9) y el banco
+   Probar la isla: `sidebar.shell = isla` en local, **`scripts/sonda-isla.mjs [390|1280]`** (desde `/kids` y `/cumpleanos`;
+   22/22), `public/_isla-prueba.html` para el ojo (se BORRA antes de desplegar: guarda 9) y el banco
    `scripts/banco-compra.php` (52/54: «entrar» difiere por `#695`; se juzga CON `--rehacer`); tras una prueba
    del agente el ajuste vuelve a como estaba (hoy, `isla`: abajo).
    ❗ **LOCAL, preparado para que el OWNER pruebe la isla (24-09 noche) — no deshacer sin él**: `sidebar.shell =
@@ -214,6 +212,11 @@ dueño es el carril de la web/reseñas—) ·
 
 ## Buzón
 
+### ❗ Para el SPA (emisor: plataforma, 2026-09-29) — `#792`: el owner la pide como «Tu cumpleaños», con solo «Opcional»
+- En la isla ya es así (§4.24; `lang/*/isla.php`, `compra.datos.nacimiento`). Tu cajón dice «Fecha de nacimiento» y «Opcional. Para
+  conocer mejor a nuestro público.» (`account.register.born_on*`, tuyos): el owner quitó esa frase. Toqué de lo tuyo SOLO la
+  mudanza de la fecha tecleada a `isla/ui/fecha.js` (`cuenta/hijos.js` la reexporta) y tres techos de la isla (+1 kB, medidos).
+
 ### ❗ Para el SPA (emisor: plataforma, 2026-09-28) — NORMAS (T6e, `#842`): la hoja del descargo y las normas del panel
 - `WaiverSheet` del diseño («una sola: Normas, la invitación y la autorización») entra en NORMAS como componente de la
   INSTANCIA (Blade), con el texto de `GET /legal/waiver` (tu dominio: lo LEO, no lo toco). Tu F9 la dejó fuera de la fiesta:
@@ -314,8 +317,8 @@ dueño es el carril de la web/reseñas—) ·
   `mutar-cabecera.py` tiene cuatro mutantes que ya no aplican y `mutar-bandas.py` uno.
 
 ### Atendido
-- **SPA 27→28-09** (`#757`: 11 tareas, 1.46.0; `#792`: `born_on`, 1.49.0; `#794`: 1.51.0, 12 tareas): leídos; `#792` en la isla, SIN
-  hacer: en retomar.
+- **SPA 27→29-09** (`#757`, `#792` —en la isla ✅, §4.24—, `#794`, C2/C2b/C3 `#795`→`#797` hasta 1.54.0, TP·3b `#793`, T3d):
+  leídos y migrado; nada mío a medias.
 - **SPA 28-09** (la T3 de la analítica: los dos textos de mi hub de Ajustes; el aviso previo de la T3c·2): leído, nada mío a
   medias ahí. Su `#758` (la isla emite `availability_missing`), SIN hacer: en retomar.
 - **SPA 25→27-09** (ESLint de la fiesta, `#74ddfa`, la T4a·3, el `body-state` —en `#785`—, F7, F8, su 1.44.0, `AntesDeVenir` con

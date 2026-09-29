@@ -30,6 +30,7 @@ import {
     correoDe, datosDe, descargoDe, googleDe, hayCambios, idiomasDe, interruptoresDe, recibosDe, reservaQueImpide,
     revisarCorreo, revisarDatosCuenta,
 } from './ajustes.js';
+import { nacimientoDeAlta } from '../compra/datos.js';
 
 const POR_PAGINA_RECIBOS = 10;
 
@@ -119,13 +120,19 @@ export function useAjustesCuenta({ textos, props, locale, proxima, contexto, dec
         if (s.erroresDatos[campo]) s.erroresDatos = { ...s.erroresDatos, [campo]: '' };
     }
 
-    /** «Guardar los cambios»: el nombre, el teléfono y el idioma; el correo es el de ahora (cambiarlo es su paso). */
+    /**
+     * «Guardar los cambios»: el nombre, el teléfono, la fecha de nacimiento (vacía, la BORRA: `profile.apply` manda
+     * `null`) y el idioma; el correo es el de ahora (cambiarlo es su paso).
+     */
     async function guardarDatos() {
         const falta = revisarDatosCuenta(s.d, textos);
 
         s.erroresDatos = falta;
         if (Object.keys(falta).length || ! perfil.user) return 'error';
-        const ok = await perfil.apply({ name: s.d.nombre.trim(), phone: s.d.telefono.trim(), locale: s.d.idioma, email: perfil.user.email }, opciones());
+        const ok = await perfil.apply({
+            name: s.d.nombre.trim(), phone: s.d.telefono.trim(), born_on: nacimientoDeAlta(s.d.nacimiento) ?? '', locale: s.d.idioma,
+            email: perfil.user.email,
+        }, opciones());
 
         if (ok) {
             s.tocado = false;
@@ -136,7 +143,10 @@ export function useAjustesCuenta({ textos, props, locale, proxima, contexto, dec
 
             return 'ok';
         }
-        s.erroresDatos = { nombre: fieldError(perfil.fields, 'name'), telefono: fieldError(perfil.fields, 'phone'), idioma: fieldError(perfil.fields, 'locale') };
+        s.erroresDatos = {
+            nombre: fieldError(perfil.fields, 'name'), telefono: fieldError(perfil.fields, 'phone'),
+            nacimiento: fieldError(perfil.fields, 'born_on'), idioma: fieldError(perfil.fields, 'locale'),
+        };
         if (perfil.notice) decir(perfil.notice, 'danger');
 
         return perfil.expired ? 'caducada' : 'error';

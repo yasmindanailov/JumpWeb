@@ -18,6 +18,8 @@ import { t as texto, tp } from '../../sidebar/i18n.js';
 import { minutesLeft } from '../../sidebar/account/profile.js';
 import { waiverAwaitsVerification, waiverNeedsSignature } from '../../sidebar/account/waiver.js';
 import { diaDelPlazo, euros, horaCorta } from '../compra/vista.js';
+import { nacimientoDeAlta } from '../compra/datos.js';
+import { fechaDeIso } from '../ui/fecha.js';
 import { hojaDelDia, tituloDe } from './reservas.js';
 
 /** Los plegables del bloque, en el orden del diseño, con su icono. */
@@ -28,9 +30,15 @@ export const PLEGABLES = [
     { id: 'recibos', icono: 'receipt' },
 ];
 
-/** Lo que edita «Tus datos», tal como llega de `GET /me`. */
+/**
+ * Lo que edita «Tus datos», tal como llega de `GET /me`. `nacimiento`, la fecha del titular (`#792`: entera y opcional),
+ * como se teclea.
+ */
 export function datosDe(user) {
-    return { nombre: String(user?.name ?? ''), telefono: String(user?.phone ?? ''), idioma: String(user?.locale ?? '') };
+    return {
+        nombre: String(user?.name ?? ''), telefono: String(user?.phone ?? ''), nacimiento: fechaDeIso(user?.born_on),
+        idioma: String(user?.locale ?? ''),
+    };
 }
 
 /** ¿Ha cambiado algo? «Guardar los cambios» solo sale entonces (el diseño: «un botón que solo sale cuando algo cambia»). */
@@ -38,12 +46,18 @@ export function hayCambios(d, user) {
     if (! user) return false;
     const g = datosDe(user);
 
-    return d.nombre !== g.nombre || d.telefono !== g.telefono || d.idioma !== g.idioma;
+    return d.nombre !== g.nombre || d.telefono !== g.telefono || d.nacimiento !== g.nacimiento || d.idioma !== g.idioma;
 }
 
-/** Lo que falta se dice antes de preguntar: el nombre. El resto de las reglas (el teléfono, el idioma) son del servidor. */
+/**
+ * Lo que falta se dice antes de preguntar: el nombre, y la fecha si está A MEDIAS (vacía se puede: la borra). El resto de
+ * las reglas (el teléfono, qué fechas valen, el idioma) son del servidor.
+ */
 export function revisarDatosCuenta(d, textos) {
-    return d.nombre.trim() ? {} : { nombre: texto(textos, 'compra.datos.errores.nombre') };
+    return {
+        ...(d.nombre.trim() ? {} : { nombre: texto(textos, 'compra.datos.errores.nombre') }),
+        ...(nacimientoDeAlta(d.nacimiento) === null ? { nacimiento: texto(textos, 'compra.datos.errores.nacimiento') } : {}),
+    };
 }
 
 /** Los idiomas de la instalación con su nombre nativo (`SiteLocales`: los del cajón), no los dos del mockup. */

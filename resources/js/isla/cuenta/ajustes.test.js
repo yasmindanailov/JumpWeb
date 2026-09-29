@@ -36,16 +36,29 @@ describe('Tus datos', () => {
     test('el formulario sale de GET /me, y «Guardar los cambios» solo con algo cambiado', () => {
         const d = datosDe(usuario());
 
-        assert.deepEqual(d, { nombre: 'Ana García López', telefono: '612345214', idioma: 'es' });
+        assert.deepEqual(d, { nombre: 'Ana García López', telefono: '612345214', nacimiento: '', idioma: 'es' });
         assert.equal(hayCambios(d, usuario()), false);
         assert.equal(hayCambios({ ...d, telefono: '612345215' }, usuario()), true);
         assert.equal(hayCambios({ ...d, idioma: 'fr' }, usuario()), true);
         assert.equal(hayCambios(d, null), false, 'sin el perfil aún no hay nada que guardar');
     });
 
-    test('lo que falta se dice antes: el nombre', () => {
-        assert.deepEqual(revisarDatosCuenta({ nombre: '  ', telefono: '', idioma: 'es' }, textos), { nombre: 'Escribe tu nombre y apellidos.' });
-        assert.deepEqual(revisarDatosCuenta({ nombre: 'Ana', telefono: '', idioma: 'es' }, textos), {});
+    test('la fecha de nacimiento (`#792`): de `born_on`, como se teclea, y cambiarla o vaciarla es un cambio', () => {
+        const d = datosDe(usuario({ born_on: '1988-03-07' }));
+
+        assert.equal(d.nacimiento, '07/03/1988');
+        assert.equal(hayCambios(d, usuario({ born_on: '1988-03-07' })), false);
+        assert.equal(hayCambios({ ...d, nacimiento: '' }, usuario({ born_on: '1988-03-07' })), true, 'vaciarla la borra: es un cambio');
+        assert.equal(hayCambios({ ...d, nacimiento: '08/03/1988' }, usuario({ born_on: '1988-03-07' })), true);
+    });
+
+    test('lo que falta se dice antes: el nombre, y la fecha si está a medias (vacía se puede)', () => {
+        const conFecha = { compra: { datos: { errores: { ...textos.compra.datos.errores, nacimiento: 'Revisa la fecha: día, mes y año.' } } } };
+
+        assert.deepEqual(revisarDatosCuenta({ nombre: '  ', telefono: '', nacimiento: '', idioma: 'es' }, textos), { nombre: 'Escribe tu nombre y apellidos.' });
+        assert.deepEqual(revisarDatosCuenta({ nombre: 'Ana', telefono: '', nacimiento: '', idioma: 'es' }, textos), {});
+        assert.deepEqual(revisarDatosCuenta({ nombre: 'Ana', telefono: '', nacimiento: '07/03/1988', idioma: 'es' }, conFecha), {});
+        assert.deepEqual(revisarDatosCuenta({ nombre: 'Ana', telefono: '', nacimiento: '07/03', idioma: 'es' }, conFecha), { nacimiento: 'Revisa la fecha: día, mes y año.' });
     });
 
     test('los idiomas son los de la instalación, no los dos del mockup', () => {
