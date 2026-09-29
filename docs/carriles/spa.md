@@ -14,6 +14,8 @@
 
 ## Foto (2026-09-29)
 
+- ✅ **LA R1b (los iconos), EN `main` Y APROBADA** (29-09: «buen trabajo, acepto los correos»; §4.1.3): máscaras de paleta
+  teñidas por su `PLTE`, sin GD; arnés 12/12. El `--correo-icono` de PlayJump, empujado a la instancia con la hoja.
 - ✅ **LA R1a DE LOS CORREOS, EN `main` Y APROBADA** (29-09, el owner: «visto bueno, buen trabajo»; `correos-rediseno.md` §4.1.1
   y §4.1.2, `#803` el botón como el diseño, `#804` los enlaces legales se quedan): la plantilla del diseño en el molde, los 28
   sin tocarlos; arnés 39/39, sonda 28/28; la hoja de PlayJump, empujada al repo de la instancia. ⚠️ **MONTADO EN LOCAL**:
@@ -46,13 +48,10 @@
 
 ## Por dónde retomar, en orden
 
-0. ▶▶▶ **LA R1b, los iconos, EN `wip/correos-r1b` AL OJO DEL OWNER** (`correos-rediseno.md` §4.1.3: máscaras de PALETA
-   teñidas por su `PLTE`, sin GD; la ruta como el píxel, con `no-store` por `RGPD-04`; el rol `icono` a 3:1; hoy, el pie;
-   arnés 12/12, sonda 28/28 con los iconos cargados). Con su visto bueno: rebase, suite, *fast-forward*, y la hoja de PlayJump
-   (su `--correo-icono`), commit y push en la instancia. El
-   banco (`php scripts/banco-correos.php [filtro]`) y la sonda (`node storage/app/audit/sonda-correos-r1a.mjs N`) sirven igual.
-   ⬜ **Y la LISTA DE INVITADOS del owner** (`#847`, buzón de plataforma del 29-09): nada de la autorización para quien invita,
-   confirmado sin otra variante, «No podemos» aparte y suave, los adultos como el mockup (`fiesta-sistema-nuevo.md`).
+0. ▶▶▶ **LA LISTA DE INVITADOS del owner** (`#847`, buzón de plataforma del 29-09): nada de la autorización para quien
+   invita, confirmado sin otra variante, «No podemos» aparte y suave, los adultos como el mockup (`fiesta-sistema-nuevo.md`);
+   su «al detalle» medido antes de codificar. Después, la **R1·T** (los textos editables, `#802`, §4.2). El banco de correos
+   (`php scripts/banco-correos.php [filtro]`) y su sonda (`node storage/app/audit/sonda-correos-r1a.mjs N`) sirven igual.
 1. ▶▶▶ **LOS CORREOS (`specs/correos-rediseno.md`: §0 → §1 el censo → §4 las tandas → §4.1 la R1 → §4.2 los textos;
    `#789`, `#800`→`#802`)**: el rediseño desde el zip de la instancia (la carpeta `paginas/correos` y su brief en `uploads`;
    `git pull` de la instancia y `sha256sum -c` antes de cada tanda). En orden, cada tanda con su «al detalle» MEDIDO en la spec

@@ -20,8 +20,8 @@
   en `List-Unsubscribe` (LSSI 22.1, `#750`), y sale solo con su consentimiento; (4) la marca `jw_e` y el píxel siguen sus
   reglas (`#795`, `#797`); (5) los de la reserva, sin ofertas; (6) «nada que ya no sea verdad»: con la cuenta con contraseña
   (23-09), los textos del 8 del brief están desfasados, y el diseño lo dice.
-- **Estado**: 🟦 ✅ **R1a la plantilla, en `main` y aprobada** (29-09, §4.1.2; `#803`, `#804`) → ▶ R1b los iconos →
-  **R1·T los textos editables** (§4.2, `#802`) → R1c → la R2.
+- **Estado**: 🟦 ✅ **R1a la plantilla y R1b los iconos, en `main` y aprobadas** (29-09, §4.1.2 y §4.1.3; `#803`, `#804`)
+  → ▶ **R1·T los textos editables** (§4.2, `#802`) → R1c → la R2.
 - **Invariantes**: `RGPD-01` (lo enviado), `RGPD-07`, el consentimiento de marketing; `PAY-14` (se encolan).
 
 ## 1. Contexto — medido el 29-09
@@ -227,7 +227,7 @@ una sonda por tanda; los comerciales con su prueba de consentimiento y de «una 
   la abre con el color pedido; la ruta da 404 fuera del manifiesto o del formato, sin `Set-Cookie` y con su caché; cada icono
   que pinta la plantilla está en el manifiesto; el rol, a 3:1 en los cuatro fondos. Con su arnés.
 - **Compartido**: `routes/web.php` fuera del grupo de la fiesta (aviso previo a plataforma, en el buzón).
-- **Lo construido (29-09, `wip/correos-r1b`; 🟦 falta el ojo del owner)**: `scripts/correo-mascaras.mjs` (determinista: dos
+- **Lo construido (29-09; ✅ ojo del owner en Mailpit: «buen trabajo, acepto los correos»)**: `scripts/correo-mascaras.mjs` (determinista: dos
   pasadas, el mismo manifiesto byte a byte) y cinco máscaras (`map-pin`, `clock`, `phone`, `message-circle`, `mail`, de 1,7 a
   2,2 kB), `MailIcons` (manifiesto, URL, teñido), `EmailIconController` y `correo.icono`, el rol `icono` (`#737B83`;
   PlayJump `#0E8FC4` en su hoja) y el pie con su columna y sus iconos en línea. `MailIconsTest` (6) y la guarda «con una hoja,
