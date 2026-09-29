@@ -235,8 +235,10 @@ portada declarada, `/` pinta la vista de siempre con su contrato. `CONTRATO` no 
 
 ▶ **Y cualquier ruta del producto que ceda su sitio** (`[DECIDIDO]` 2026-09-27, `#832`; T6b de `isla-y-landing-nueva.md`
 §4.18): `'ocupa' => '<ruta>'` —la portada es el caso `home`, y `'portada' => true` sigue valiendo—. Solo las de
-`InstancePages::OCUPABLES` (hoy `home`, `cumpleanos` y `normas`, esta desde `#842`), porque solo sus controladores preguntan
-(`InstancePages::queOcupa`, en `HomeController`, `EventsController` y `PageController::rules`); una ruta fuera de la lista, una
+`InstancePages::OCUPABLES` (hoy `home`, `cumpleanos`, `normas` —desde `#842`— y `legal` —desde la T6h, `#844`: las CINCO rutas
+legales a la vez, cada una con su texto en el hecho `legal`, el mismo JSON que `GET /legal/documents/{clave}`, que la ruta le pasa
+como contexto—), porque solo sus controladores preguntan (`InstancePages::queOcupa`, en `HomeController`, `EventsController`,
+`PageController::rules` y `PageController::show`); una ruta fuera de la lista, una
 segunda página en la misma o una portada que ocupa otra dejan esa página fuera con aviso. Conserva la dirección (la de más
 valor en Google), sin 301. Una ruta que se quiera ceder entra en la lista con su controlador en el mismo cambio.
 `InstancePagesTest` +2 y el arnés, 12/12.

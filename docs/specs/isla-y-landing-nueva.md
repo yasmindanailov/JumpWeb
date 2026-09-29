@@ -2203,6 +2203,28 @@ vieja a su sitio con su `?query`, el sitemap igual al mapa, cada página en es/e
   la vez —`kit:build` rechaza el desfase—, y sus specs), no un añadido de la T6f·3. (`site/addon-chip` y `site/pagination`
   ya estaban sin uso desde la fundación: no son de esta tanda.)
 
+### 4.23 La T6h: LAS LEGALES con el sistema nuevo (`#844`, del owner)
+
+**Medido (29-09)**: las cinco rutas legales (`/privacidad`, `/condiciones`, `/waiver`, `/cookies`, `/aviso-legal`) son del
+PRODUCTO (`PageController::show`) y pintaban la vista legal de la vía B, con el armazón VIEJO —su menú y su pie enlazaban a las
+cinco rutas que desde la T6f son 301—. El diseño no trae página legal: el owner eligió vestirlas con piezas del sistema nuevo
+(`#844`). La API ya publica cada texto con sus marcadores resueltos (`GET /legal/documents/{clave}`, y su versión firmada).
+**Plan**: **T6h·1** (producto) — las legales, OCUPABLES por una página del paquete (`'ocupa' => 'legal'`: las cinco a la vez),
+y el hecho `legal`, el texto de la ruta que se pinta (la ruta se lo pasa como contexto a `PageFacts::resolver`); **T6h·2** (paquete)
+la página y su ojo en vivo.
+- ✅ **T6h·1 (29-09) · el producto**: `InstancePages::OCUPABLES` gana `legal`; `PageController::show` cede su sitio (un texto
+  desactivado sigue en 404 —en el camino ocupado lo da también el propio hecho, como la API—); `PageFacts` gana el hecho `legal`
+  (el MISMO JSON que `GET /legal/documents/{clave}`), que solo resuelve quien pinta una ruta legal (`resolver($nombres,
+  $contexto)`, y `InstancePageController::pintar(…, contexto:)`); fuera de ella, `null`. **Guardas**: `InstancePagesTest` +1 (cada
+  ruta con SU texto igual al de la API y sus marcadores resueltos, sin ruta propia, el 404, `null` fuera, y sin declaración la
+  vista de siempre) y `scripts/mutar-legales-ocupadas.sh` **7/7** (el del 404 sobrevivió a la primera: la prueba no lo miraba
+  SIN declaración, donde es el único que lo da).
+- ✅ **T6h·2 (29-09) · la página en el paquete**, con el ojo del owner en vivo («perfecto, buen trabajo»; instancia `d9535a1`, que
+  retira la vista legal vieja y ya no tiene `docs/paginas/`): `legales`, que OCUPA las cinco. Titular, «Actualizado
+  el…» y, si se firma, «Versión N · vigente desde…»; el texto a la medida de lectura (`--container-narrow`, `.pj-doc`); la isla de
+  apoyo (como Normas) y el pie nuevo, con la legal en la que se está sin enlazarse. **Medido**: las cinco en 200; `sonda-web`
+  17/17 a 360 y 1280 —ya SIN la excepción de las legales: ninguna página enlaza a una ruta que redirige—.
+
 ## 5. Impacto en invariantes
 
 - `PAY-*`: solo si entra Bizum; entonces `VERIFY_CONC=1` y la lista del `CRITICAL_RE`.

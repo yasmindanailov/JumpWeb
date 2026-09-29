@@ -23,10 +23,20 @@ class PageController extends Controller
 {
     public function __construct(private readonly InstanceViews $instancia) {}
 
-    /** Página de texto legal (contenido desde la tabla `pages`). Las cinco rutas `legal.*` pasan por aquí. */
+    /**
+     * Página de texto legal (contenido desde la tabla `pages`). Las cinco rutas `legal.*` pasan por aquí.
+     * ▶ Desde la T6h (`#844`): si el paquete declara una página que OCUPA las legales (`'ocupa' => 'legal'`), la pinta ella
+     * en cada una de las cinco rutas, con sus hechos y el texto de ESTA ruta (el hecho `legal`, el mismo JSON que
+     * `GET /legal/documents/{clave}`); sin ella, la vista de siempre. Un texto desactivado sigue dando 404 en las dos.
+     * (Las dependencias se piden aquí dentro: las cinco rutas llaman `show($slug)` a mano.)
+     */
     public function show(string $slug)
     {
         $page = Page::where('slug', $slug)->where('is_active', true)->firstOrFail();
+
+        if (($pagina = app(InstancePages::class)->queOcupa('legal')) !== null) {
+            return InstancePageController::pintar($pagina, app(PageFacts::class), route('legal.'.$slug), contexto: ['legal' => $slug]);
+        }
 
         return view($this->instancia->pick('legal', 'anfitrion.legal'), ['page' => $page]);
     }

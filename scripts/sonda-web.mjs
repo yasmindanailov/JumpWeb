@@ -29,8 +29,6 @@ const BASE = process.env.SONDA_BASE ?? 'http://localhost';
 const ANCHO = Number(process.argv[2] ?? 390);
 const SALIDA = 'storage/app/audit';
 const POLITICA = '2026-09-24'; // CookieConsent::POLICY_VERSION
-/** Las legales, que siguen con el armazón viejo: sus enlaces a las rutas viejas son una divergencia DECLARADA (§4.22). */
-const LEGALES = ['/privacidad', '/condiciones', '/waiver', '/cookies', '/aviso-legal'];
 /**
  * Desbordes DECLARADOS, a la espera de una decisión: «idioma ruta» → por qué. ⚠️ **Solo encoge**: una declaración que ya no
  * desborda pone la sonda en rojo, para que se retire. ▶ Vacía desde `#844`: el botón de la calculadora («Reservar y pagar la
@@ -176,13 +174,11 @@ try {
         sobran.length ? `ya no desbordan, retíralas: ${sobran.join(' · ')}` : declaradas.map((d) => `${d}: ${DESBORDES_DECLARADOS[d]}`).join(' · ') || 'ninguno a este ancho');
 
     // ── 4 · Los enlaces internos ─────────────────────────────────────────────────────────────────────────────────────
+    // ▶ Desde la T6h (`#844`) también las legales van con el sistema nuevo: ya no hay excepción declarada.
     const aSustituidas = sustituidas.map((r) => r.desde);
     const saltos = [...enlaces].filter(([c]) => aSustituidas.includes(c));
-    const saltosNuevos = saltos.filter(([, desde]) => [...desde].some((d) => ! LEGALES.includes(d)));
-    ok('ningún enlace de las páginas nuevas lleva a una ruta sustituida (un salto de más)', saltosNuevos.length === 0,
-        saltosNuevos.map(([c, d]) => `${c} desde ${[...d].filter((x) => ! LEGALES.includes(x)).join(',')}`).join(' · '));
-    const declarados = saltos.filter(([, desde]) => [...desde].every((d) => LEGALES.includes(d)));
-    ok(`DECLARADO (❓ del owner, §4.22): las legales, con el armazón viejo, enlazan a ${declarados.length} rutas sustituidas`, true, declarados.map(([c]) => c).join(' '));
+    ok('ningún enlace de ninguna página lleva a una ruta sustituida (un salto de más)', saltos.length === 0,
+        saltos.map(([c, d]) => `${c} desde ${[...d].join(',')}`).join(' · '));
     const rotos = [];
     for (const [c, desde] of enlaces) {
         if (aSustituidas.includes(c)) continue;

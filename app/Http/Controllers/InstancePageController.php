@@ -32,8 +32,12 @@ class InstancePageController extends Controller
      * **La vista de una página declarada**, con su contrato (`InstanceViews::CONTRATO_DE_PAGINA`: `pagina` y `hechos`).
      * Una sola mano: la usan su ruta y, para la PORTADA declarada, `HomeController` (T6a de §4.17), que es quien sabe si
      * la petición es una puerta de entrar (`noindex`: `/login` y compañía no se indexan nunca, `SeoTest`).
+     * `contexto` es lo que solo sabe la ruta que pinta y necesita un hecho: la clave del texto legal (T6h,
+     * {@see PageController::show()}).
+     *
+     * @param  array{legal?: string}  $contexto
      */
-    public static function pintar(InstancePage $pagina, PageFacts $hechos, string $url, bool $noindex = false): View
+    public static function pintar(InstancePage $pagina, PageFacts $hechos, string $url, bool $noindex = false, array $contexto = []): View
     {
         return view(InstanceViews::NAMESPACE.'::'.$pagina->vista, [
             'pagina' => [
@@ -41,7 +45,7 @@ class InstancePageController extends Controller
                 'url' => $url,
                 'noindex' => $noindex,
             ],
-            'hechos' => $hechos->resolver($pagina->hechos),
+            'hechos' => $hechos->resolver($pagina->hechos, $contexto),
         ]);
     }
 }

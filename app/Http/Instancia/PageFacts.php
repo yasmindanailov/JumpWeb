@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\V1\CatalogProductsController;
 use App\Http\Controllers\Api\V1\CatalogZonesController;
 use App\Http\Controllers\Api\V1\ConfigController;
 use App\Http\Controllers\Api\V1\FaqsFactsController;
+use App\Http\Controllers\Api\V1\LegalDocumentsController;
 use App\Http\Controllers\Api\V1\LegalWaiverController;
 use App\Http\Controllers\Api\V1\PricesFactsController;
 use App\Http\Controllers\Api\V1\PromotionsFactsController;
@@ -71,6 +72,10 @@ final class PageFacts
         // El DESCARGO (T6e, `#842`): la versión vigente con sus secciones —lo mismo que `GET /legal/waiver`, público—; de
         // aquí lee Normas su hoja «Leer el descargo». El idioma, el de la visita (el controlador no pide `?lang=`).
         'waiver' => [LegalWaiverController::class, 'show', false],
+        // El TEXTO LEGAL de la ruta que se pinta (T6h, `#844`): lo mismo que `GET /legal/documents/{clave}` —título, secciones
+        // con los marcadores ya resueltos, su versión firmada si la tiene—. Solo lo resuelve la página que OCUPA las legales
+        // (`'ocupa' => 'legal'`), que le pasa la clave de su ruta ({@see resolver()}); en cualquier otra, `null`.
+        'legal' => [LegalDocumentsController::class, 'show', true],
         // Los SERVICIOS (su mitad editorial, `#671`): de aquí saca Colegios (T6c) el horario de excursiones, su duración y
         // su grupo, que el parque escribe en el panel y no son el horario de la zona.
         'services' => [ServicesFactsController::class, '__invoke', true],
@@ -122,9 +127,10 @@ final class PageFacts
 
     /**
      * @param  list<string>  $nombres
+     * @param  array{legal?: string}  $contexto  lo que solo sabe la ruta que pinta: `legal`, la clave del texto legal (T6h)
      * @return array<string, mixed> nombre => el cuerpo JSON de su recurso, ya decodificado
      */
-    public function resolver(array $nombres): array
+    public function resolver(array $nombres, array $contexto = []): array
     {
         $idioma = app()->getLocale();
         $hechos = [];
@@ -149,6 +155,12 @@ final class PageFacts
             $pedir = fn (array $argumentos = []): array => app()
                 ->call([app($controlador), $metodo], ['request' => $peticion, ...$argumentos])
                 ->toResponse($peticion)->getData(true);
+
+            if ($nombre === 'legal') {
+                $hechos[$nombre] = isset($contexto['legal']) ? $pedir(['clave' => $contexto['legal']]) : null;
+
+                continue;
+            }
 
             $hechos[$nombre] = in_array($nombre, self::POR_PRODUCTO, true)
                 ? array_map(fn (CatalogProduct $producto): array => $pedir(['product' => $producto->id]), app(ProductCatalog::class)->products(null))

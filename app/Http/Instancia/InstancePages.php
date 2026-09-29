@@ -49,9 +49,10 @@ final class InstancePages
 
     /**
      * Las rutas del producto que una página del paquete puede ocupar: las que su controlador sabe cederle. `normas`, desde la
-     * T6e (`#842`): `PageController::rules`.
+     * T6e (`#842`): `PageController::rules`. `legal`, desde la T6h (`#844`): las CINCO rutas legales a la vez
+     * (`PageController::show`), cada una con su texto en el hecho `legal`.
      */
-    public const OCUPABLES = ['home', 'cumpleanos', 'normas'];
+    public const OCUPABLES = ['home', 'cumpleanos', 'normas', 'legal'];
 
     /**
      * Las rutas del producto que una página puede SUSTITUIR con un 301 (`#843`): las páginas viejas de la landing, solo en GET

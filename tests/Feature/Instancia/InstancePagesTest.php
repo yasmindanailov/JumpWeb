@@ -8,6 +8,7 @@ use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Content\Models\BarImage;
 use App\Domain\Content\Models\LandingService;
+use App\Domain\Content\Models\Page;
 use App\Domain\Content\Services\ShellSettings;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\LegalDocumentPublisher;
@@ -227,6 +228,45 @@ BLADE);
 
         $this->declarar(['kids' => ['vista' => 'kids', 'hechos' => []]]);
         $this->get('/normas')->assertOk()->assertDontSee('Las normas nuevas');
+    }
+
+    /**
+     * **Las cinco LEGALES también se ceden, y cada ruta con SU texto** (T6h, `#844`): la página que ocupa `legal` pinta
+     * `/privacidad`, `/cookies`… con el hecho `legal` IGUAL al de `GET /legal/documents/{clave}` —el de esa ruta, con los
+     * marcadores resueltos—, sin ruta propia. Un texto desactivado sigue dando 404; fuera de una ruta legal el hecho no tiene
+     * texto; y sin la declaración, la vista de siempre.
+     */
+    public function test_a_page_can_occupy_the_legal_routes_each_with_its_own_text(): void
+    {
+        Setting::query()->updateOrCreate(['key' => 'business.legal_name'], ['value' => 'Parque de Prueba S.L.', 'group' => 'business']);
+        Setting::flushMemo();
+        $texto = fn (string $slug, string $p, bool $activa = true) => Page::query()->create([
+            'slug' => $slug, 'title' => ['es' => 'Título de '.$slug], 'body' => ['es' => [['h' => 'Qué', 'p' => $p]]], 'is_active' => $activa,
+        ]);
+        $texto('privacidad', 'El responsable es :legal_name.');
+        $texto('cookies', 'Solo las técnicas.');
+        $texto('aviso-legal', 'Retirado.', false);
+        File::put($this->paquete.'/web/legales.blade.php', <<<'BLADE'
+<h1>La legal nueva</h1>
+<p id="url">{{ $pagina['url'] }}</p>
+<script type="application/json" id="hechos">{!! json_encode($hechos) !!}</script>
+BLADE);
+        $this->declarar(['legales' => ['vista' => 'legales', 'hechos' => ['site', 'legal'], 'ocupa' => 'legal']]);
+
+        $this->get('/privacidad')->assertOk()->assertSee('La legal nueva')->assertSee('<p id="url">'.route('legal.privacidad').'</p>', false);
+        $privacidad = $this->hechosDe('/privacidad')['legal'];
+        $this->assertSame($this->getJson('/api/v1/legal/documents/privacidad?lang=es')->assertOk()->json(), $privacidad);
+        $this->assertStringContainsString('Parque de Prueba S.L.', json_encode($privacidad, JSON_UNESCAPED_UNICODE), 'el texto viaja con sus marcadores resueltos');
+        $this->assertSame($this->getJson('/api/v1/legal/documents/cookies?lang=es')->assertOk()->json(), $this->hechosDe('/cookies')['legal']);
+        $this->get('/aviso-legal')->assertNotFound();
+        $this->get('/legales')->assertNotFound();
+        $this->assertSame('legales', app(InstancePages::class)->queOcupa('legal')?->slug);
+
+        $this->declarar(['kids' => ['vista' => 'kids', 'hechos' => ['legal']]]);
+        $this->assertNull($this->hechosDe('/kids')['legal'], 'fuera de una ruta legal, el hecho no tiene texto');
+        $this->get('/privacidad')->assertOk()->assertDontSee('La legal nueva');
+        // Y sin la declaración, el texto desactivado también en 404 (con ella lo da además el propio hecho, como la API).
+        $this->get('/aviso-legal')->assertNotFound();
     }
 
     /**

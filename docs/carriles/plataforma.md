@@ -5,7 +5,7 @@
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
 > **820–849** (dada de alta en `DECISIONES.md` el 27-09; centena `decisiones/800-899.md`) · Último usado: **`#844`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#844`) · Actualizado: **2026-09-29**
-> (PORTADA, CUMPLEAÑOS, COLEGIOS, VISÍTANOS y NORMAS ✅; la T6f, su censo §4.22).
+> (cierre: T6 hasta NORMAS ✅; T6f ✅, los 301 y la web vieja fuera; `#844` ✅, lo que no cabía a 360; T6h ✅, las legales).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
 > llévaselo con la medida, como el SPA en `#724`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -39,26 +39,22 @@
 ## Por dónde retomar, en orden
 
 ▶▶▶▶ **EL ORDEN HASTA LA v2.0.0** (`#789`, del owner). **HECHO, con el ✅ del owner**: (0) la primera pantalla, (1) la
-conversión del zip tercero y (2) la T5, Mi cuenta (spec §4.13–§4.16). ▶ **EN MARCHA: (3) T6** (spec §4.17), con el ojo del
-owner en cada página: PORTADA (`#827`→`#831`, `sonda-portada.mjs`), CUMPLEAÑOS (§4.18, `#832`→`#836`, `sonda-cumpleanos.mjs`),
-COLEGIOS (§4.19, `#837`→`#841`, T6c·5–6; `sonda-colegios.mjs` 56/56, `mutar-sonda-colegios.sh` 11/11, `mutar-escalera.sh` 7/7;
-en LOCAL, 91 plantillas INFERIDAS para `excursiones`) y VISÍTANOS (§4.20, T6d·1–3; `sonda-visitanos.mjs` 26/26,
-`mutar-sonda-visitanos.sh` 8/8; el panel gana donde habla y donde calla, el brief) y NORMAS (§4.21, `#842`, T6e·1–3: `seguridad`
-OCUPA `/normas`; `sonda-normas.mjs` 37/37, `mutar-sonda-normas.sh` 16/16, la primera pantalla con el veredicto del mockup).
-**EN MARCHA la T6f** (censo §4.22, `#843`): T6f·1 ✅ (`'sustituye'`, el 301 con su `?query`, el sitemap, la canónica de
-`/entradas`, que SE QUEDA; `mutar-sustituye.sh` 12/12) · T6f·2 ✅ (instancia `d9f9267`: los 301 y las ocho vistas fuera) ·
-T6f·3 ✅ (25 clases y 2 tokens podados; las 5 ranuras del kit, a la T6g) · T6f·4 ✅ (`sonda-web.mjs` 18/18,
-`mutar-sonda-web.sh` 10/10). **SIGUE**: la **T4f** (Kids y Jump, cada dato contra su hecho; la compra de `sonda-isla` en
-`/kids`) y la **T6g** (propuesta, §4.22: el mural, el kit y sus ranuras en un corte; regenera el kit de producción).
-✅ **`#844` (owner, 29-09)**: el botón que no cabe parte (producto `isla/ui/estilos.js`; instancia `button` y `.pj-btn`) y las
-pestañas de zona se apilan si no caben (copia oculta medida en `entradas.js`); `sonda-web` a 360 sin desbordes (§4.22). Sigue la
-**T6h**: vestir las legales con el sistema nuevo, con el ojo del owner en vivo.
-❗ **Y el `#792` del SPA, SIN
-hacer**: la fecha de nacimiento del titular en el alta de la isla (`formularioDeAlta`) y en «Tus datos» (su pieza
-`steps/BornOnField.vue` y sus textos, ya en el montaje). **Del owner, en PRODUCCIÓN**: el icono y el nivel de cada norma, y
+conversión del zip tercero, (2) la T5 (§4.13–§4.16) y de (3) T6 (§4.17): PORTADA (`#827`→`#831`), CUMPLEAÑOS (§4.18), COLEGIOS
+(§4.19; en LOCAL, 91 plantillas INFERIDAS para `excursiones`), VISÍTANOS (§4.20), NORMAS (§4.21, `#842`), la **T6f** (§4.22,
+`#843`: `'sustituye'` y los 301 con su `?query`, el sitemap, `/entradas` que SE QUEDA con canónica `/`; la web vieja fuera del
+paquete y 25 clases del producto), **`#844`** (el botón que no cabe parte —en el de ancho completo el texto se come antes el
+aire—; las pestañas de zona se apilan midiendo una COPIA oculta) y la **T6h** (§4.23: `legales` OCUPA las cinco legales, con el
+hecho `legal`). Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas}.mjs`) y la web entera
+(`sonda-web.mjs`, 17/17 a 360, 390 y 1280); arneses `mutar-sonda-web.sh` 12/12 (a 360), `mutar-sustituye.sh` 12/12,
+`mutar-legales-ocupadas.sh` 7/7. **SIGUE, en orden**: (a) la **T4f** —Kids y Jump, cada dato contra su hecho (molde de
+`sonda-visitanos`), y la compra de `sonda-isla` sobre `/kids` y no sobre su andamio—; (b) la **T6g** (propuesta, §4.22): el
+mural (`site/facade`, `trio`, `kit-ico`, `zone-sticker`), las 5 ranuras «NADIE desde la T6f» de
+`MATERIAL_CONSUMIDO_POR_LA_INSTANCIA` y el kit, en un corte (regenera el kit de PRODUCCIÓN: guarda 7); (c) ❗ el **`#792` del SPA,
+SIN hacer**: la fecha de nacimiento del titular en el alta de la isla (`formularioDeAlta`) y en «Tus datos» (`steps/BornOnField.vue`
+y sus textos, ya en el montaje): visible, con el ojo del owner. **Del owner, en PRODUCCIÓN**: el icono y el nivel de cada norma, y
 dar de alta las del brief que falten (calentamiento, espuma, volteretas dobles).
 Pendiente: la vuelta de Google con una excursión, sin verificar. ⚠️ La entrada `isla/hoja/montar.js` NO importa nada
-compartido (`#841`); la calculadora, a 185,80 de 186.
+compartido (`#841`); la calculadora, a 186,08 de 187 (`#844`).
 ⚠️ `sonda-portada` 13/14 («Reservar» de la isla tras «Míralo», 17:17): igual con el `HEAD` (control): investigar aparte. La ISLA la
 repiensa el owner con Claude Design: no atar nada nuevo a ella. **Para iterar con el owner** (no ahora): la isla «muy sola» y
 el «Reservar» solo en la isla del móvil (A/B propuesto). Tras la T6 → **(4)** Bizum, Apple (entra) y el día liberado →
