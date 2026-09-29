@@ -18,10 +18,8 @@
   teñidas por su `PLTE`, sin GD; arnés 12/12. El `--correo-icono` de PlayJump, empujado a la instancia con la hoja.
 - ✅ **LA R1a DE LOS CORREOS, EN `main` Y APROBADA** (29-09, el owner: «visto bueno, buen trabajo»; `correos-rediseno.md` §4.1.1
   y §4.1.2, `#803` el botón como el diseño, `#804` los enlaces legales se quedan): la plantilla del diseño en el molde, los 28
-  sin tocarlos; arnés 39/39, sonda 28/28; la hoja de PlayJump, empujada al repo de la instancia. ⚠️ **MONTADO EN LOCAL**:
-  `instancia.json` de la instancia con `hojas.correo` a mano, SIN commitear (lo declara plataforma, buzón: antes de un `pull`
-  de la instancia, devolverlo con `git -C ../instancias/playjump checkout instancia.json`); ~70 filas de `email_sends` del
-  cliente de sondas (`scripts/banco-correos.php`).
+  sin tocarlos; arnés 39/39, sonda 28/28; la hoja de PlayJump en la instancia y declarada por plataforma (`da0f84d`). En la BD
+  local, ~100 filas de `email_sends` del cliente de sondas (`scripts/banco-correos.php`).
 - **LOS CORREOS** (`specs/correos-rediseno.md`, `#800`→`#804`): la spec, medida con el
   censo HAY/FALTA contra el zip (§1), y cuatro decisiones del owner: el 7 sigue siendo la encuesta (`#801`); las ocasiones, al
   final; el orden plantilla → textos editables → reserva → comerciales → felicitaciones; y **los TEXTOS, editables desde el
@@ -222,10 +220,6 @@ el repo de la instancia (lo nuevo), nunca a `main`.
   UNA ruta junto al píxel de apertura, `GET /correo/i/{v}/{color}/{nombre}.png` (los iconos de los correos, teñidos al vuelo;
   sin sesión ni cookies, como `emails.open`). Nada más del fichero cambia.
 
-- ❗ **Para plataforma (29-09, la R1a de los correos, aprobada por el owner)**: la hoja de correo de PlayJump ya está
-  EMPUJADA al repo de la instancia (`ace8d0a`, `publico/instancia/css/correo.css`: roles `--correo-*` en hex, con su pareja
-  `-oscuro`). **Declárala en `instancia.json`**: `"hojas": { "correo": ["css/correo.css"] }` (junto a las de la fiesta). Sin
-  la declaración, los correos salen neutros. En esta máquina está declarada a mano, sin commitear, hasta tu commit.
 
 - Mis avisos a plataforma del 27→29-09 (`#754`/`#757`, la TP·1 `#792`, las C1→C3 `#794`→`#797`, la TP·3b `#793`, la T3d):
   ATENDIDOS por plataforma (su «Atendido», 29-09: «leídos y migrado»); retirados de aquí. El detalle, en el `git log`.
@@ -293,6 +287,8 @@ el repo de la instancia (lo nuevo), nunca a `main`.
   código `MIN_REVIEWS = 1` (`#494`): no la toco yo.
 
 ### Atendido
+- **Plataforma 29-09, en la instancia** (`da0f84d`): declaró `hojas.correo` con `css/correo.css`, a petición mía; mi aviso,
+  retirado. El `--correo-icono` de la R1b, empujado encima (`8fdbc84`).
 - **Plataforma 29-09** (la hoja de correo, `28dfdf15`: `hojas.correo` por la puerta de `#769`, sin contrato nuevo; el lector
   valida cada valor, caché ruta + `filemtime`, oscuro con nombres planos): leído y recogido en `correos-rediseno.md` §4.1.1;
   mi aviso (`#800`/`#801`), retirado. ▶ Cuando la R1a tenga la hoja de PlayJump, te digo aquí el fichero para el manifiesto.
