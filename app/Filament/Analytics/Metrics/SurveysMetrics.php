@@ -38,10 +38,12 @@ final class SurveysMetrics extends MetricSet
         $p = $report['previous'];
         /** @var array{survey: string, question: string, mean: ?float, n: int, suppressed: bool}|null $scale */
         $scale = $report['scale'];
-        // `#754`: una media de menos de cinco respuestas no se enseña (con el registro de la puerta diría quién puntuó).
+        // `#754`: una media de menos de cinco respuestas no se enseña (con el registro de la puerta diría quién puntuó). Y se dice
+        // «Sin nota», no «menos de 5» a secas: junto a una nota del 1 al 5 se leía como la nota (visto al escribir la T3d, 29-09);
+        // cuántas respuestas hubo ya lo dice la línea de debajo.
         $scaleValue = match (true) {
             $scale === null => __('admin.analytics.parties.none'),
-            $scale['suppressed'] || $scale['mean'] === null => __('admin.analytics.surveys.fewer_than_min', ['min' => SurveysReport::MIN_CELL]),
+            $scale['suppressed'] || $scale['mean'] === null => __('admin.analytics.surveys.mean_hidden'),
             default => number_format($scale['mean'], 1, ',', '.').' / 5',
         };
 

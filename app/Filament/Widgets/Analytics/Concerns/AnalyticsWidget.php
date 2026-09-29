@@ -144,17 +144,11 @@ trait AnalyticsWidget
     }
 
     /**
-     * Qué parte del tiempo de las dos ventanas es la del periodo: 0,5 si duran lo mismo. Un mes de 31 días contra uno de
-     * 28 no lo son, y la prueba de un recuento compara RITMOS, no totales ({@see Metric::reading()}). ⚠️ No se llama
-     * `share()`: un widget ya tenía el suyo y lo pisaba (lo cazó el censo, 27-09).
+     * Qué parte del tiempo de las dos ventanas es la del periodo ({@see Comparison::share()}, que lo calcula para la tarjeta y
+     * para el texto para IA). ⚠️ No se llama `share()`: un widget ya tenía el suyo y lo pisaba (lo cazó el censo, 27-09).
      */
     private function windowShare(): float
     {
-        $window = $this->window();
-        $baseline = $this->comparison()->baseline($window);
-        $now = $window->to->getTimestamp() - $window->from->getTimestamp();
-        $before = $baseline->to->getTimestamp() - $baseline->from->getTimestamp();
-
-        return $now + $before > 0 ? $now / ($now + $before) : 0.5;
+        return $this->comparison()->share($this->window());
     }
 }

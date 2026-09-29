@@ -200,6 +200,9 @@ class AuditLog extends Model
         // T3c·2 de la analítica para decidir (`#759`): los objetivos del mes se guardan desde «Resumen»; el payload lleva
         // el mes y el antes y el después de cada clave que cambió, sin PII.
         'analytics.goals_updated',
+        // T3d (`analitica-para-decidir.md` §4.7): el texto para IA se prepara (y sale del panel en el portapapeles); el payload
+        // lleva el periodo, la comparación, el idioma, los bytes y cuántas cifras, sin PII —como el CSV—.
+        'analytics.explained',
         // Los correos salientes (`#794`): cada vista previa de un correo enviado deja rastro (qué envío, sin su contenido).
         'emails.previewed',
         // Y cada vez que se mira CUÁNDO lo abrió y lo pulsó (`#796`, la línea de tiempo): qué envío, sin las horas.

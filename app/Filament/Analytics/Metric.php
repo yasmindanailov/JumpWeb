@@ -103,6 +103,20 @@ final readonly class Metric
 
     public const TONE_NEUTRAL = 'neutral';
 
+    /** El cambio ({@see shift()}): antes era 0 y no se sabe si no pasó nada o no se medía. */
+    public const SHIFT_NONE = 'none';
+
+    public const SHIFT_SAME = 'same';
+
+    /** Un cambio claro al 95 %. */
+    public const SHIFT_CLEAR = 'clear';
+
+    /** Con base, pero puede ser azar. */
+    public const SHIFT_UNCLEAR = 'unclear';
+
+    /** Sin base para juzgarlo ({@see MIN_BASE}). */
+    public const SHIFT_FEW = 'few';
+
     public static function count(string $key, string $label, int $value, ?int $previous, Polarity $polarity, string $how, ?string $display = null, ?string $detail = null): self
     {
         return new self($key, $label, self::UNIT_COUNT, $polarity, $how, $value, $previous, $value, $previous, display: $display, detail: $detail);
@@ -306,45 +320,33 @@ final readonly class Metric
             ]);
         }
 
-        if ($this->unit === self::UNIT_TEXT || $this->previous === null) {
+        $shift = $this->shift($share);
+
+        if ($shift === null) {
             return ['line' => null, 'color' => 'gray', 'icon' => null, 'notes' => $notes];
         }
 
-        // Un cero antes puede ser «no pasó nada» o «aún no se medía» (sin datos de 2025): «+1.531 € frente al año pasado»
-        // sugeriría un crecimiento que nadie ha visto. Se dice lo que se sabe (y va antes que «igual»: 0 contra 0 también).
-        if ($this->previous === 0) {
+        if ($shift['state'] === self::SHIFT_NONE || $shift['state'] === self::SHIFT_SAME) {
             return [
-                'line' => __('admin.analytics.delta.none_'.$comparison->value),
+                'line' => __('admin.analytics.delta.'.$shift['state'].'_'.$comparison->value),
                 'color' => 'gray',
                 'icon' => Heroicon::OutlinedMinus,
                 'notes' => $notes,
             ];
         }
 
-        $diff = $this->value - $this->previous;
+        $clear = $shift['state'] === self::SHIFT_CLEAR;
 
-        if ($diff === 0) {
-            return [
-                'line' => __('admin.analytics.delta.same_'.$comparison->value),
-                'color' => 'gray',
-                'icon' => Heroicon::OutlinedMinus,
-                'notes' => $notes,
-            ];
-        }
-
-        $enough = $this->hasBase();
-        $clear = $enough && $this->isClear($share);
-
-        if (! $enough) {
+        if ($shift['state'] === self::SHIFT_FEW) {
             $notes[] = __('admin.analytics.metric.few', ['min' => self::MIN_BASE]);
         } elseif (! $clear) {
             $notes[] = __('admin.analytics.metric.unclear');
         }
 
-        $up = $diff > 0;
+        $up = (bool) $shift['up'];
 
         return [
-            'line' => __('admin.analytics.delta.vs_'.$comparison->value, ['delta' => $this->change($diff, $enough)]),
+            'line' => __('admin.analytics.delta.vs_'.$comparison->value, ['delta' => $shift['delta']]),
             'color' => match (true) {
                 ! $clear, $this->polarity === Polarity::Neutral => 'gray',
                 $up === ($this->polarity === Polarity::UpIsGood) => 'success',
@@ -353,6 +355,41 @@ final readonly class Metric
             'icon' => $up ? Heroicon::OutlinedArrowTrendingUp : Heroicon::OutlinedArrowTrendingDown,
             'notes' => $notes,
         ];
+    }
+
+    /**
+     * **El cambio, sin su frase** (T3d de `analitica-para-decidir.md` §4.13): lo que la tarjeta ({@see reading()}) y el texto
+     * para IA dicen del cambio, con la MISMA prueba. `null`: la cifra no se compara.
+     *
+     * @param  float  $share  {@see Comparison::share()}
+     * @return array{state: string, delta: ?string, up: ?bool}|null `state`: uno de los `SHIFT_*`; `delta`: «+13 (+38 %)»
+     */
+    public function shift(float $share = 0.5): ?array
+    {
+        if ($this->unit === self::UNIT_TEXT || $this->previous === null) {
+            return null;
+        }
+
+        // Un cero antes puede ser «no pasó nada» o «aún no se medía» (sin datos de 2025): «+1.531 € frente al año pasado»
+        // sugeriría un crecimiento que nadie ha visto. Se dice lo que se sabe (y va antes que «igual»: 0 contra 0 también).
+        if ($this->previous === 0) {
+            return ['state' => self::SHIFT_NONE, 'delta' => null, 'up' => null];
+        }
+
+        $diff = $this->value - $this->previous;
+
+        if ($diff === 0) {
+            return ['state' => self::SHIFT_SAME, 'delta' => null, 'up' => null];
+        }
+
+        $enough = $this->hasBase();
+        $state = match (true) {
+            ! $enough => self::SHIFT_FEW,
+            $this->isClear($share) => self::SHIFT_CLEAR,
+            default => self::SHIFT_UNCLEAR,
+        };
+
+        return ['state' => $state, 'delta' => $this->change($diff, $enough), 'up' => $diff > 0];
     }
 
     /** ¿Tiene el periodo comparado casos suficientes (y la tasa, también el actual)? */

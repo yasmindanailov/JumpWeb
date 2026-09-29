@@ -75,6 +75,14 @@ final class Changes
         return ['items' => array_slice($out, 0, self::MAX), 'more' => max(0, count($out) - self::MAX), 'judged' => $judged];
     }
 
+    /** «meses», «semanas», «domingos»…: la unidad de la historia de una ventana, para «aún sin historia». */
+    public static function unitOf(Window $window): string
+    {
+        return $window->unit === Window::UNIT_DAY
+            ? __('admin.analytics.verdict.weekday.'.$window->from->isoWeekday())
+            : __('admin.analytics.verdict.unit.'.$window->unit);
+    }
+
     /**
      * Lo que pesa una cifra fuera de su banda: el dinero va delante (sus euros fuera de la banda), lo demás detrás (lo lejos
      * que queda, relativo a la banda). Un par ordenable.

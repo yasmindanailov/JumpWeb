@@ -12,7 +12,7 @@
 set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
-FILTER='ReportPeriodTest|MoneyReportTest|WindowLabelTest|AnalyticsPageTest|MetricTest|AnalyticsCensusTest|FunnelReportTest|PartiesReportTest|CustomersReportTest|GateSurveyTest|ValidarRegistroProfileTest|GateVisitsTest|OccupancyReaderParityTest|OccupancyReportTest|AnalyticsTabsTest|AnalyticsJargonTest|MetricsCatalogTest|AnalyticsExportTest|SegmentsReportTest|MetricsHistoryTest|ChangesTest|GoalTest|AnalyticsGoalsTest|HolderBirthDateTest|HolderBirthDatePanelTest|AnonymizeCoversEveryUserColumnTest|MeTest|SidebarTranslationKeysExistTest|AudienceReportTest'
+FILTER='ReportPeriodTest|MoneyReportTest|WindowLabelTest|AnalyticsPageTest|MetricTest|AnalyticsCensusTest|FunnelReportTest|PartiesReportTest|CustomersReportTest|GateSurveyTest|ValidarRegistroProfileTest|GateVisitsTest|OccupancyReaderParityTest|OccupancyReportTest|AnalyticsTabsTest|AnalyticsJargonTest|MetricsCatalogTest|AnalyticsExportTest|SegmentsReportTest|ExplainerTest|MetricsHistoryTest|ChangesTest|GoalTest|AnalyticsGoalsTest|HolderBirthDateTest|HolderBirthDatePanelTest|AnonymizeCoversEveryUserColumnTest|MeTest|SidebarTranslationKeysExistTest|AudienceReportTest'
 # Modo «solo una tanda» (`SOLO=<tanda> bash scripts/mutar-analitica-decidir.sh`; 28-09, el owner: esperar ~95 min por tanda
 # es inviable). Corre SOLO las mutaciones de esa sección y con SUS pruebas: un filtro más estrecho nunca inventa un «muerde»,
 # como mucho esconde uno, y el veredicto sigue siendo por código de salida. La base verde y el CONTROL corren siempre. El arnés
@@ -22,6 +22,7 @@ declare -A FILTRO_DE=(
     [TP1]='HolderBirthDateTest|HolderBirthDatePanelTest|AnonymizeCoversEveryUserColumnTest|MeTest|SidebarTranslationKeysExistTest'
     [TP2]='AudienceReportTest|AnalyticsCensusTest|AnalyticsPageTest'
     [TP3]='AudienceReportTest|SegmentsReportTest|AnalyticsPageTest|AccessI18nParityTest'
+    [T3d]='ExplainerTest|MetricTest|ChangesTest|AnalyticsPageTest'
 )
 SOLO="${SOLO:-}"
 SECCION=''
@@ -92,6 +93,9 @@ FICHEROS=(
     app/Domain/Identity/Services/PermissionCatalog.php
     database/seeders/PermissionSeeder.php
     database/migrations/2026_09_29_110000_drop_analytics_export_permission.php
+    app/Domain/Platform/Enums/Comparison.php
+    app/Filament/Analytics/Explainer.php
+    resources/views/filament/pages/analytics/explain.blade.php
 )
 # La copia de cada fichero, por su RUTA entera (T3a): por su nombre, `lang/es/admin.php` y `lang/zh_CN/admin.php` chocaban.
 copia() { echo "$TMP/$(echo "$1" | tr '/' '_')"; }
@@ -250,7 +254,8 @@ mutar "la prueba del recuento ignora la duración de cada ventana" "$M" \
   '$z = ($current - $n * $share) / sqrt($n * $share * (1 - $share));' \
   '$z = ($current - $n * 0.5) / sqrt($n * 0.25);'
 
-mutar "el widget no pasa la duración de las ventanas (siempre mitad y mitad)" "$AW" \
+# La proporción vive en `Comparison::share()` desde la T3d (la tarjeta y el texto para IA juzgan igual).
+mutar "el widget no pasa la duración de las ventanas (siempre mitad y mitad)" "app/Domain/Platform/Enums/Comparison.php" \
   'return $now + $before > 0 ? $now / ($now + $before) : 0.5;' \
   'return 0.5;'
 
@@ -1064,6 +1069,66 @@ if [[ -z "$SOLO" || "$SOLO" == TP3 ]]; then
     control "un comentario del widget de los segmentos" "$SW" \
       'Un recuento de 1 a 4, dicho «menos de 5».' \
       'Un recuento de 1 a 4, dicho «menos de cinco».'
+fi
+
+# ── T3d · «EXPLÍCAMELO CON IA» (§4.7 y §4.13; el techo, 12 KB, `#798`): el texto sale a un tercero —solo cifras de conjunto, y
+# si algo tiene pinta de correo o teléfono NO se enseña—; lleva las de arriba y las plegadas que se salen de lo normal, cada una
+# con la primera frase de su definición; juzga el cambio como la tarjeta; y el botón es de quien exporta, con su rastro.
+SECCION=T3d
+EX=app/Filament/Analytics/Explainer.php
+
+mutar "la guarda deja pasar un correo o un teléfono" "$EX" \
+  "        \$hits = preg_match_all(Contract::PII_VALUE_RE, \$composed['text']);" \
+  '        $hits = 0;'
+
+mutar "el modal pinta la caja de texto aunque la guarda lo rechazara" "resources/views/filament/pages/analytics/explain.blade.php" \
+  "@if (\$explanation['refused'] || \$explanation['text'] === null)" \
+  '@if (false)'
+
+mutar "las de arriba incluyen las plegadas (vuelven las 58)" "app/Filament/Pages/AnalyticsPage.php" \
+  '                if (is_subclass_of($widget, MetricsWidget::class) && ! $widget::FOLDED) {' \
+  '                if (is_subclass_of($widget, MetricsWidget::class)) {'
+
+mutar "una plegada fuera de lo normal no entra en su tabla" "$EX" \
+  "            if (\$tab !== null && ! isset(\$seen[\$key])) {" \
+  '            if (false) {'
+
+mutar "la definición es el «¿Cómo se calcula?» entero" "$EX" \
+  "        return preg_match('/^.+?(?:\\.(?=\\s|\$)|。)/u', \$how, \$m) === 1 ? \$m[0] : \$how;" \
+  '        return $how;'
+
+mutar "el texto juzga el cambio con mitad y mitad" "$EX" \
+  '        $share = $comparison->share($window);' \
+  '        $share = 0.5;'
+
+mutar "el cambio se da como claro sin prueba" "$M" \
+  '            $this->isClear($share) => self::SHIFT_CLEAR,' \
+  '            true => self::SHIFT_CLEAR,'
+
+mutar "lo que vende cuenta también lo que ya no se vende" "$EX" \
+  "        \$types = TicketType::query()->where('is_active', true)->where('is_sellable', true)->distinct()->pluck('type')->all();" \
+  "        \$types = TicketType::query()->where('is_sellable', true)->distinct()->pluck('type')->all();"
+
+mutar "la media tapada vuelve a decir «menos de 5» (se lee como la nota)" "app/Filament/Analytics/Metrics/SurveysMetrics.php" \
+  "            \$scale['suppressed'] || \$scale['mean'] === null => __('admin.analytics.surveys.mean_hidden')," \
+  "            \$scale['suppressed'] || \$scale['mean'] === null => __('admin.analytics.surveys.fewer_than_min', ['min' => 5]),"
+
+mutar "abrir el texto no deja rastro" "app/Filament/Pages/AnalyticsPage.php" \
+  "                AuditLogger::log('analytics.explained', null, [" \
+  "                if (false) AuditLogger::log('analytics.explained', null, ["
+
+mutar "el botón es de quien ve el cuadro, no de quien exporta" "app/Filament/Pages/AnalyticsPage.php" \
+  "            ->icon(Heroicon::OutlinedSparkles)
+            ->color('gray')
+            ->visible(fn (): bool => auth()->user()?->hasPermission(self::PERMISSION_EXPORT) ?? false)" \
+  "            ->icon(Heroicon::OutlinedSparkles)
+            ->color('gray')
+            ->visible(fn (): bool => auth()->user()?->hasPermission(self::PERMISSION) ?? false)"
+
+if [[ -z "$SOLO" || "$SOLO" == T3d ]]; then
+    control "un comentario del texto para IA" "$EX" \
+      'Una celda de tabla en una línea y sin romper la tabla.' \
+      'Una celda de tabla en una sola línea y sin romper la tabla.'
 fi
 
 # ── El CONTROL: tocar un comentario no puede poner nada en rojo ─────────────────────────────────

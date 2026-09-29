@@ -6,7 +6,9 @@ use App\Domain\Platform\Enums\Comparison;
 use App\Domain\Platform\Enums\ReportPeriod;
 use App\Domain\Platform\Services\Analytics\AnalyticsGoals;
 use App\Domain\Platform\Services\Analytics\Reports\Window;
+use App\Domain\Platform\Services\AuditLogger;
 use App\Filament\Analytics\CsvExport;
+use App\Filament\Analytics\Explainer;
 use App\Filament\Analytics\GoalsForm;
 use App\Filament\Analytics\WindowLabel;
 use App\Filament\Widgets\Analytics\AnticipationChart;
@@ -74,6 +76,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Enums\Alignment;
 use Filament\Support\Icons\Heroicon;
 use Filament\Widgets\Widget;
+use Illuminate\Contracts\View\View as ViewContract;
 use Livewire\Attributes\Url;
 use LogicException;
 
@@ -232,6 +235,14 @@ class AnalyticsPage extends BaseDashboard
     #[Url(as: 'pestana')]
     public string $tab = self::DEFAULT_TAB;
 
+    /**
+     * El texto para IA de ESTA petición (T3d): el modal lo pinta y el rastro lo mide sin componerlo dos veces. No es de Livewire:
+     * no viaja al navegador ni sobrevive a la petición.
+     *
+     * @var array{text: ?string, bytes: int, metrics: int, refused: bool}|null
+     */
+    protected ?array $explained = null;
+
     protected static string $routePath = 'analitica';
 
     protected static ?string $slug = 'analitica';
@@ -270,6 +281,29 @@ class AnalyticsPage extends BaseDashboard
         return null;
     }
 
+    /**
+     * Las cifras de ARRIBA de cada pestaña —las de sus widgets de tarjetas no plegados—, en su orden: las que el cuadro dice
+     * que deciden (§0), y las que lleva el texto para IA (T3d). «Resumen» no cuenta: solo repite.
+     *
+     * @return array<string, list<string>>
+     */
+    public static function topKeys(): array
+    {
+        $out = [];
+        foreach (self::TABS as $tab => $widgets) {
+            if ($tab === self::DEFAULT_TAB) {
+                continue;
+            }
+            foreach ($widgets as $widget) {
+                if (is_subclass_of($widget, MetricsWidget::class) && ! $widget::FOLDED) {
+                    $out[$tab] = array_merge($out[$tab] ?? [], $widget::KEYS);
+                }
+            }
+        }
+
+        return $out;
+    }
+
     /** Una clave vieja abre su pestaña de ahora; una desconocida, «Resumen». */
     public static function normalizeTab(string $tab): string
     {
@@ -300,7 +334,7 @@ class AnalyticsPage extends BaseDashboard
         return __('admin.analytics.questions.'.self::normalizeTab($this->tab));
     }
 
-    /** Sin botones arriba (T3a): el CSV va al pie de cada pestaña; el segmento, al pie de «Clientes»; los objetivos, al de «Resumen». */
+    /** Sin botones arriba (T3a): el CSV va al pie de cada pestaña; el texto para IA y los objetivos, al de «Resumen». */
     protected function getHeaderActions(): array
     {
         return [];
@@ -394,8 +428,8 @@ class AnalyticsPage extends BaseDashboard
 
     /**
      * Los botones al pie de una pestaña (§4.11): «Descargar CSV» de SU informe —sin modal: el periodo y la comparación son
-     * los del filtro— y, en «Clientes», «Exportar segmento». El botón se esconde sin su permiso y la ruta lo vuelve a
-     * exigir (esconder no es autorizar).
+     * los del filtro— y, en «Resumen», «Explícamelo con IA» (T3d) y los objetivos del mes. Cada botón se esconde sin su permiso
+     * y lo vuelve a exigir quien actúa (esconder no es autorizar).
      *
      * @return list<Component>
      */
@@ -416,6 +450,7 @@ class AnalyticsPage extends BaseDashboard
         // de los clientes… solo analítica»): los segmentos quedan como recuentos. Nada del cuadro sale con nombres.
 
         if ($tab === self::DEFAULT_TAB) {
+            $actions[] = $this->explainAction();
             $actions[] = $this->goalsAction();
         }
 
@@ -457,6 +492,72 @@ class AnalyticsPage extends BaseDashboard
                     ->send();
                 $this->dispatch(self::GOALS_SAVED_EVENT);
             });
+    }
+
+    /**
+     * «Explícamelo con IA» (T3d, §4.7 y §4.13): al pie de «Resumen», un modal con el texto para pegar en un asistente de IA
+     * ({@see Explainer}), con el periodo y la comparación del filtro. Permiso `reports.export`, el del CSV: es el mismo acto
+     * —sacar agregados del panel—. Al abrirlo queda el rastro `analytics.explained`, sin PII. Pública: Filament la resuelve
+     * por su nombre.
+     */
+    public function explainAction(): Action
+    {
+        return Action::make('explain')
+            ->label(__('admin.analytics.explain.button'))
+            ->icon(Heroicon::OutlinedSparkles)
+            ->color('gray')
+            ->visible(fn (): bool => auth()->user()?->hasPermission(self::PERMISSION_EXPORT) ?? false)
+            ->modalHeading(__('admin.analytics.explain.modal_heading'))
+            ->modalDescription(__('admin.analytics.explain.modal_description'))
+            ->modalWidth('3xl')
+            ->modalSubmitAction(false)
+            ->modalCancelActionLabel(__('admin.analytics.explain.close'))
+            ->mountUsing(function (): void {
+                $explanation = $this->explanation();
+                if ($explanation['refused']) {
+                    return;
+                }
+                [$window, $comparison] = $this->filtered();
+                AuditLogger::log('analytics.explained', null, [
+                    'period' => ReportPeriod::fromValue(($this->filters ?? [])['period'] ?? null)->value,
+                    'from' => $window->dateFrom(),
+                    'to' => $window->dateTo(),
+                    'compare' => $comparison->value,
+                    'locale' => app()->getLocale(),
+                    'bytes' => $explanation['bytes'],
+                    'metrics' => $explanation['metrics'],
+                ]);
+            })
+            ->modalContent(fn (): ViewContract => view('filament.pages.analytics.explain', ['explanation' => $this->explanation()]));
+    }
+
+    /**
+     * El texto para IA de lo que tiene puesto el filtro, una vez por petición (el modal lo pinta y el rastro lo mide).
+     *
+     * @return array{text: ?string, bytes: int, metrics: int, refused: bool}
+     */
+    private function explanation(): array
+    {
+        [$window, $comparison] = $this->filtered();
+
+        return $this->explained ??= Explainer::for($window, $comparison);
+    }
+
+    /**
+     * La ventana y la comparación del filtro de la página, como las resuelve el CSV ({@see csvUrl()}).
+     *
+     * @return array{0: Window, 1: Comparison}
+     */
+    private function filtered(): array
+    {
+        $filters = $this->filters ?? [];
+        $from = $filters['from'] ?? null;
+        $to = $filters['to'] ?? null;
+
+        return [
+            ReportPeriod::fromValue($filters['period'] ?? null)->window(is_string($from) ? substr($from, 0, 10) : null, is_string($to) ? substr($to, 0, 10) : null),
+            Comparison::fromValue($filters['compare'] ?? null),
+        ];
     }
 
     /** El CSV de un informe con el filtro de la página (T2d). */

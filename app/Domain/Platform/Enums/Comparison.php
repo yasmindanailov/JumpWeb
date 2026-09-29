@@ -30,6 +30,20 @@ enum Comparison: string
         };
     }
 
+    /**
+     * Qué parte del tiempo de las dos ventanas es la del periodo: 0,5 si duran lo mismo. Un mes de 31 días contra uno de
+     * 28 no lo son, y la prueba de un recuento compara RITMOS, no totales (`Metric::reading()`). Aquí y no en cada sitio
+     * que juzga un cambio: la tarjeta y el texto para IA (T3d) tienen que juzgar igual.
+     */
+    public function share(Window $window): float
+    {
+        $baseline = $this->baseline($window);
+        $now = $window->to->getTimestamp() - $window->from->getTimestamp();
+        $before = $baseline->to->getTimestamp() - $baseline->from->getTimestamp();
+
+        return $now + $before > 0 ? $now / ($now + $before) : 0.5;
+    }
+
     public function label(): string
     {
         return __('admin.analytics.compare.'.$this->value);

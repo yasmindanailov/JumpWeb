@@ -202,7 +202,7 @@ final class CsvExport
         $scale = $r['scale'];
         $mean = match (true) {
             $scale === null => __('admin.analytics.parties.none'),
-            $scale['suppressed'] || $scale['mean'] === null => __('admin.analytics.surveys.fewer_than_min', ['min' => SurveysReport::MIN_CELL]),
+            $scale['suppressed'] || $scale['mean'] === null => __('admin.analytics.surveys.mean_hidden_long', ['min' => SurveysReport::MIN_CELL]),
             default => number_format($scale['mean'], 1, ',', '.').' / 5',
         };
 

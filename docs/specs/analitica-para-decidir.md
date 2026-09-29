@@ -1,7 +1,7 @@
 # [SPEC] La analítica para decidir — un cuadro que se entiende, dice si va bien o mal y cubre las decisiones del operador
 
-> Estado: ✅ **aprobada por el owner el 27-09** (§7; `#755`) → ✅ **T0, T1 y T2** · 🟦 **T3** (✅ T3a · ✅ T3b · ✅ T3c · ⬜ T3d·T3e, §4.13) · 🟦 **TP el público** (§4.14: ✅ TP·1 · ✅ TP·2 · ✅ TP·3a·3b · ⏸ TP·3c) · Última actualización: 2026-09-29 ·
-> Decisiones: `#755` (esta), `#754` (encuestas anónimas, su T1), `#758` (la T2), `#759` (la T3 en cinco tandas), `#792` (el público), `#793` (el público, anónimo; las felicitaciones) · Carril: **SPA** (banda 790–819). Amplía `analitica.md`
+> Estado: ✅ **aprobada por el owner el 27-09** (§7; `#755`) → ✅ **T0, T1 y T2** · 🟦 **T3** (✅ T3a · ✅ T3b · ✅ T3c · 🟦 T3d, espera el ojo · ⬜ T3e, §4.13) · 🟦 **TP el público** (§4.14: ✅ TP·1 · ✅ TP·2 · ✅ TP·3a·3b · ⏸ TP·3c) · Última actualización: 2026-09-29 ·
+> Decisiones: `#755` (esta), `#754` (encuestas anónimas, su T1), `#758` (la T2), `#759` (la T3 en cinco tandas), `#792` (el público), `#793` (el público, anónimo; las felicitaciones), `#798` (el techo del texto para IA) · Carril: **SPA** (banda 790–819). Amplía `analitica.md`
 > (el libro, los regímenes y la T2 siguen siendo suyos).
 
 ## §0 · Antes de tocar
@@ -18,7 +18,8 @@
   camino de `EmailUtm` (tras firmar, ignorada al validar); (6) aperturas solo con consentimiento (`[PENDIENTE: asesoría]`).
 - **Estado**: ✅ aprobada (27-09, `#755`); T0a·T0b·T0c ✅ · **T1** ✅ (la T5 de `encuestas.md`, `#754`, `#757`) · **T2** ✅ ocupación (§4.8.ter, `#758`) → **T3** Resumen, en cinco tandas (§4.13,
   `#759`): ✅ T3a la forma · ✅ T3b veredicto (mín–máx, `#790`) · ✅ T3c·1 lo que ha cambiado (`#791`) · ✅ T3c·2 objetivos →
-  ✅ **TP el público** (§4.14, `#792`/`#793`; TP·1 · TP·2 · TP·3a tramos · TP·3b sin exportación · ⏸ TP·3c) → ▶ T3d.
+  ✅ **TP el público** (§4.14, `#792`/`#793`; TP·1 · TP·2 · TP·3a tramos · TP·3b sin exportación · ⏸ TP·3c) → 🟦 T3d en `wip/`
+  (el texto para IA, techo 12 KB por `#798`; espera el ojo) → T3e.
   **Nada de lo medido se pierde** (§4.1.bis, con guarda): se resume arriba y lo demás queda
   plegado o en su pestaña.
 - **Invariantes**: `RGPD-01`, `RGPD-04`, `RGPD-07`, `SEC-04`, `SUITE-01`. Dinero y aforo: solo lectura.
@@ -68,7 +69,8 @@ Criterios de éxito, medibles (sonda y tests):
 4. Móvil (390×844) y tablet (1080×810, el aparato del panel): la primera cifra dentro de la primera pantalla y las siete
    pestañas alcanzables sin desplazamiento escondido.
 5. «Resumen»: ≤ 8 cifras y ≤ 5 frases de «lo que ha cambiado».
-6. El texto para IA: solo agregados (guarda: ni nombre, ni correo, ni teléfono, ni texto libre, ni celdas < 5), ≤ 8 KB.
+6. El texto para IA: solo agregados (guarda: ni nombre, ni correo, ni teléfono, ni texto libre, ni celdas < 5), ≤ 12 KB
+   (`[DECIDIDO owner]` 29-09, `#798`; eran 8 KB, y el peor caso medido ocupa 10,2).
 7. Abrir una pestaña pide solo sus widgets; cada informe ≤ 20 consultas con caché de 5 min (el presupuesto de la T2).
 8. Cero rótulos de la lista de jerga (§4.11) en pantalla.
 
@@ -238,7 +240,7 @@ informes dejan de devolver arrays sueltos para las tarjetas (las tablas y el CSV
 
 ### 4.7 «Explícamelo con IA»
 
-- Un botón en «Resumen» abre un texto listo para copiar (Markdown, ≤ 8 KB) y «Copiar». Lleva: las instrucciones
+- Un botón en «Resumen» abre un texto listo para copiar (Markdown, ≤ 12 KB desde `#798`) y «Copiar». Lleva: las instrucciones
   («explica en lenguaje llano; tres cosas que van bien, tres que vigilar y tres acciones; di cuándo hay pocos datos; no
   inventes»), el negocio en genérico (sector, idioma), el periodo y su comparación, cada cifra con su definición, valor,
   comparación y referencia CON su fuente, «lo que ha cambiado» y las notas de calidad del dato. En el idioma del panel.
@@ -653,6 +655,72 @@ pesaban más que cualquier distancia relativa. Faltaba el caso que las separa �
 - **Lo que enseñó**: (1) `Livewire::withQueryParams()` se QUEDA para la siguiente `test()` del mismo caso: la segunda página se
   abría en la pestaña de la primera. (2) En una prueba de Livewire cualquier ida y vuelta repinta, así que el oyente del evento
   no se ve fallar por lo pintado: se comprueba que está, y el navegador (la sonda) que repinta.
+
+**La T3d al detalle — medido el 29-09, antes de codificar** (§4.7; decidido por el agente contra el objetivo, vetable al ojo):
+- **Medido** (BD local, con `medir-t3d.php` en la carpeta de auditoría de `storage`, fuera de git; solo lectura): las **58** cifras de los seis catálogos con todo lo que
+  dice su tarjeta ocupan **15,5–16,8 KB** («La semana pasada», «Este mes», «Últimos 90 días»; es y zh_CN). Sin su «¿Cómo se
+  calcula?», 7,6–8,9 KB. El techo de §2 es 8 KB: con las 58 no cabe. Las de ARRIBA de cada pestaña son **28** (6 · 6 · 6 · 2
+  · 6 · 2); con la tarjeta entera y la primera frase de su definición, 7,0 KB en es y 8,2 KB en zh_CN, sin instrucciones.
+  Leer los seis catálogos, 0,2–1 s en frío (ya los lee «lo que ha cambiado»).
+- **Qué cifras**: las 28 de arriba —las que el propio cuadro dice que deciden (§0: «lo que no ayuda a decidir se pliega»)— y
+  las plegadas que estén en «lo que ha cambiado», que mira todas. Las demás, contadas en una línea («N cifras más en el panel,
+  plegadas y dentro de lo normal»): nunca un tope callado.
+- **La forma** (Markdown): las instrucciones de §4.7 · el negocio sin su nombre (lo que vende, desde los tipos de producto
+  activos; la moneda) · el periodo y su comparación (`WindowLabel`) · «lo que ha cambiado» (`Changes`, con sus frases) · una
+  tabla por pestaña, compacta: cifra · valor · antes · cambio (con «claro», «puede ser azar» o «pocos datos») · normal para
+  ti (el rango y cuántos periodos, o «aún sin historia», o «pocos casos») · qué es cada cifra (su «¿Cómo se calcula?»: una sola
+  definición, sin copia que se desvíe) · la calidad del dato (visitas identificadas y fuera del recuento, eventos rechazados,
+  cuántas sin historia o con pocos casos, y que aún no hay referencia del sector: T3e). La referencia y su fuente: «normal»
+  es el mín–máx de la historia del PROPIO negocio (`#790`), y el texto lo dice.
+- **La guarda** (`#793`, `RGPD-07`): (1) se construye SOLO desde `Metric` y `Changes`: ni filas, ni tablas de desglose, ni el
+  texto de una pregunta de encuesta; (2) antes de enseñarlo, si algo casa con `Contract::PII_VALUE_RE` (correo o teléfono), NO
+  se enseña —se avisa y se anota en el log, sin el contenido—: falla cerrada, como la ingesta; (3) una prueba con nombres,
+  correos, teléfonos, textos libres de encuesta y una encuesta de 2 respuestas comprueba que nada de eso sale, que el tamaño
+  queda por debajo de 8 KB en es y zh_CN, y que un texto normal no dispara la guarda (las fechas se escriben como en el
+  panel: una fecha ISO seguida de otra casaba como teléfono).
+- **Dónde y quién**: «Explícamelo con IA» al pie de «Resumen», junto a los objetivos: un modal con el texto de solo lectura,
+  su tamaño y «Copiar». Permiso **`reports.export`**, el del CSV: es el mismo acto —sacar agregados del panel— y no hace falta
+  un permiso nuevo en el catálogo compartido. Rastro `analytics.explained` al prepararlo (periodo, comparación, idioma, bytes
+  y cifras; sin PII), como el CSV. En el idioma del panel (es y zh_CN), y la IA contesta en él.
+- **Código**: `Filament\Analytics\Explainer` (capa de entrega, como `Changes`), con la composición pura separada de la
+  lectura; `Metric` gana la lectura compacta del cambio sin duplicar su prueba; la proporción de tiempo entre las dos
+  ventanas pasa de la traza de los widgets a `Comparison::share()`, para que el texto y la tarjeta juzguen igual.
+- **Fuera**: mandarlo a la API de una IA desde el panel (§4.7, «después, si el owner quiere»: proveedor, clave y coste son suyos).
+
+**Cómo se construyó la T3d (29-09; 🟦 en `wip/analitica-t3d`, espera el ojo del owner)**:
+- **El techo, `[DECIDIDO owner]` 29-09 (`#798`): 12 KB**. Lo medido al construir: con las 28 y todo lo de arriba, lo normal
+  ocupa **7,7–8,0 KB** en es y 7,2 en zh_CN, y el peor caso —rangos de siete cifras y cinco plegadas fuera de lo normal, cada
+  una con su fila y su definición— **10,2 KB** en es y 9,4 en zh_CN. Con 8 KB no cabía; el owner eligió subirlo.
+- **Lo que cambió frente al plan de arriba, y por qué**: (1) sin columna «antes»: el cambio con su signo ya la lleva, y era
+  ~0,3 KB; (2) de las plegadas fuera de lo normal entran en las tablas las cinco que nombra «lo que ha cambiado», y las demás
+  se cuentan («y N más»): así el tamaño tiene techo aunque se salgan muchas; (3) «lo que ha cambiado» no copia las frases del
+  panel —hablan al operador («tus últimas 8 semanas») y el texto habla a la IA en primera persona—, sino la misma lectura
+  corta de la tabla; (4) la unidad de la historia va una vez, en la nota («en sus semanas anteriores (entre paréntesis,
+  cuántos)»), y cada fila dice cuántos periodos; (5) la definición es la PRIMERA frase de «¿Cómo se calcula?»: lo que sigue
+  habla de la tarjeta («Debajo, …»); (6) los descartes de navegación solo se dicen si hay.
+- **Visto al leer el texto**: «Nota media | menos de 5» se leía como la NOTA (menor que 5). La tarjeta, el resumen del CSV y
+  el texto dicen ahora «Sin nota» (la tarjeta ya dice debajo cuántas respuestas; el CSV lo dice entero), y la primera frase
+  de su «¿Cómo se calcula?» lleva la regla. Los recuentos de 1 a 4 siguen diciendo «menos de 5».
+- **Piezas**: `Explainer::for()` (lee) · `compose()` (pura) · `guarded()` (falla cerrada y anota en el log el número de casos,
+  nunca el contenido); `AnalyticsPage::topKeys()`, `explainAction()` —al pie de «Resumen», antes de los objetivos— y la vista
+  `filament.pages.analytics.explain` (el texto EN EL HTML, «Copiar» con Alpine y la vuelta de `execCommand`); `Metric::shift()`
+  (lo que `reading()` usaba por dentro); `Comparison::share()`; `Changes::unitOf()`; la acción de auditoría
+  `analytics.explained`; `admin.analytics.explain.*` en es y zh_CN.
+- **Pruebas**: `ExplainerTest` (6): lo que dice y en qué idioma · el cambio juzgado con la duración de cada ventana (julio
+  contra junio: 61 frente a 41 es claro con mitad y mitad y puede ser azar con la real) · nada de una persona en es y zh_CN
+  (nombres, correos, teléfonos, un texto libre y una encuesta de 2 respuestas) y el pack inactivo fuera · la guarda (un
+  correo, un teléfono y dos fechas ISO seguidas, rechazados y anotados; importes, porcentajes y fechas del panel, no) y el
+  modal de un texto rechazado · el peor caso contra 12 KB en los dos idiomas · el botón (solo con `reports.export`) y su
+  rastro sin PII. Arnés `SOLO=T3d`: **11/11 muerden** y los controles quedan en verde; la mutación de la proporción, mudada a
+  `Comparison.php`, vista morder aparte.
+- **Sonda** (`storage/app/audit/sonda-t3d-panel.mjs`, 22/22): el botón al pie de «Resumen», el modal con el texto, que es el
+  MISMO que da el informe (7.860 bytes con «La semana pasada»), «Copiar» lo lleva entero al portapapeles (se lee de vuelta) y
+  dice «Copiado», sin desbordar a 1280 ni a 390, consola limpia.
+- **Lo que enseñó**: (1) en Livewire 4 los modales de Filament son un `wire:partial`: su contenido no está en el HTML de una
+  prueba tras `mountAction()`; se mira en `getModalContent()`, como hace `WaiverProofActionTest`. (2) La expresión de
+  teléfonos cuenta cifras con separadores: dos fechas ISO con un guion entre ellas son un «teléfono»; el texto usa las fechas
+  del panel. (3) Una cifra tapada que dice «menos de 5» junto a una escala del 1 al 5 se lee como el valor: el instrumento
+  (leer el texto entero antes de medirlo) lo vio antes que nadie.
 
 **T3e, primera búsqueda de fuentes (28-09; NADA sembrado, para el owner)**: casi todo lo publicado son MEDIAS de un
 informe, no rangos, y pocas veces de parques de salto. Candidatas, con su pega: (a) ROLLER, *2025 Attractions Industry

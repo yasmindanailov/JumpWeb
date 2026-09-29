@@ -2,7 +2,6 @@
 
 namespace App\Filament\Widgets\Analytics;
 
-use App\Domain\Platform\Services\Analytics\Reports\Window;
 use App\Filament\Analytics\Changes;
 use App\Filament\Pages\AnalyticsPage;
 use App\Filament\Widgets\Analytics\Concerns\AnalyticsWidget;
@@ -52,15 +51,7 @@ class ChangesWidget extends Widget
             'more' => $changes['more'],
             'empty' => $items !== [] ? null : ($changes['judged'] > 0
                 ? trans_choice('admin.analytics.changes.none', $changes['judged'], ['n' => $changes['judged']])
-                : __('admin.analytics.changes.no_history', ['unit' => self::unitOf($window)])),
+                : __('admin.analytics.changes.no_history', ['unit' => Changes::unitOf($window)])),
         ];
-    }
-
-    /** «meses», «semanas», «domingos»…: la unidad de la historia de esta ventana. */
-    private static function unitOf(Window $window): string
-    {
-        return $window->unit === Window::UNIT_DAY
-            ? __('admin.analytics.verdict.weekday.'.$window->from->isoWeekday())
-            : __('admin.analytics.verdict.unit.'.$window->unit);
     }
 }
