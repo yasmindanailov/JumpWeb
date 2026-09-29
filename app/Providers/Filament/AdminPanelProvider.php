@@ -12,6 +12,7 @@ use App\Http\Middleware\RequiresPanelRole;
 use App\Http\Middleware\RestrictsPuertaRole;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetAdminLocale;
+use App\Http\PanelPath;
 use Filament\Actions\Action;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -99,7 +100,8 @@ class AdminPanelProvider extends PanelProvider
         return $panel
             ->default()
             ->id('admin')
-            ->path('admin')
+            // Su dirección, de la configuración (`PANEL_PATH`; en producción, secreta: `#850`, `specs/panel-a-salvo.md` §4.2).
+            ->path(PanelPath::path())
             ->viteTheme('resources/css/filament/admin/theme.css')
             // Su PROPIO guard (`docs/specs/panel-a-salvo.md`, `#850`): una sesión de la web no abre el panel.
             ->authGuard('admin')

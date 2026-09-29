@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Domain\Platform\Services\Analytics\EmailClicks;
 use App\Domain\Platform\Services\Analytics\EmailUtm;
 use App\Domain\Platform\Services\Analytics\Recorder;
+use App\Http\PanelPath;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -41,7 +42,8 @@ final class RecordEmailClick
 
     public function handle(Request $request, Closure $next): Response
     {
-        if (! $request->isMethod('GET') || $request->is('admin', 'admin/*')) {
+        // El panel, en SU dirección (`PanelPath`, `#850`).
+        if (! $request->isMethod('GET') || PanelPath::matches($request)) {
             return $next($request);
         }
 

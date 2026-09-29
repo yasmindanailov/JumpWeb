@@ -41,6 +41,10 @@
              salía verde donde hay paquete y rojo donde no (medido el 19-09, `paquete-de-instancia.md`
              §4.5). La landing de una instancia se prueba con la huella de maquetación, no con PHPUnit. -->
         <env name="INSTANCIA_RUTA" value=""/>
+        <!-- `#850` (`specs/panel-a-salvo.md` §4.2): el panel, en `/admin` para la suite, sea cual sea el `.env` de la
+             máquina (con uno secreto, las pruebas que lo llaman por su dirección caerían por la máquina, no por el código).
+             `PanelSecretPathTest` arranca la aplicación con una secreta. -->
+        <env name="PANEL_PATH" value="admin"/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>

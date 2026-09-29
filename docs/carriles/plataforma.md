@@ -50,8 +50,8 @@ Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas,en
 (`#848`/`#849`: una puerta —con cuenta, código; nuevo, sus datos SIN código: hay cola en la puerta—, contraseñas borradas,
 90 días, solo el código) → su A1 (el código en el servidor) —⚠️ antes, sus trampas nuevas: las sesiones en Redis de producción
 (`RGPD-06`) y que el acceso no abra el panel—; **y (2) antes que la A1**, `specs/panel-a-salvo.md`: **P1 ✅** (`#850`, `SEC-14`: el
-panel con su propio guard; sin eso el código al correo sería un atajo al panel) → **P2** la dirección secreta (`PANEL_PATH`,
-`/admin` → 404) → **P3** el authenticator SOLO de los administradores (Filament 5, `MultiFactor/App`); **(3)** el SEO completo
+panel con su propio guard; sin eso el código al correo sería un atajo al panel) · **P2 ✅** la dirección secreta (`PANEL_PATH`,
+`/admin` → 404; al desplegar, `ENTORNOS.md` §6 y la dirección la elige el owner) → **P3** el authenticator SOLO de los administradores (Filament 5, `MultiFactor/App`); **(3)** el SEO completo
 (textos de playjump.es, el owner los revisa al final); **(4)** las imágenes al compartir (hoy: logotipo u `og-image.jpg`): la
 web, compuesta con la marca; la de la INVITACIÓN, la invitación misma —nombre, edad, día, hora, su diseño—, generada para cada
 una (`#849`; medir antes qué permite producción para generarla). La lista de invitados, al SPA (buzón).
@@ -156,7 +156,7 @@ hay formulario (`#839`); pasarlos a la reserva es dato del panel. Y:
 guardas 8 y 9) · `scripts/mutar-guarda8.sh` · `CHANGELOG.md` · `phpstan.neon` · `phpstan-baseline.neon` ·
 `eslint.config.js` · `eslint-suppressions.json` (la poda quien arregla) · `scripts/mutar-analisis-estatico.sh` ·
 **EL ACCESO Y EL PANEL A SALVO** (`#847`→`#850`): sus dos specs, el guard `admin` de `config/auth.php`, `PanelOwnGuardTest`,
-`scripts/{sonda-panel.mjs,mutar-panel-guard.sh}` (y, AVISANDO, lo compartido que toquen: `layout.blade.php`, `routes/web.php`) ·
+`config/panel.php`, `App\Http\PanelPath`, `PanelSecretPathTest`, `scripts/{sonda-panel.mjs,mutar-panel-{guard,direccion}.sh}` (y, AVISANDO, lo compartido que toquen: `layout.blade.php`, `routes/web.php`) ·
 **LA ISLA Y LA LANDING NUEVA** (`#681`, `#682`): la spec, la isla `resources/js/isla/**`, sus bancos y sondas
 (`scripts/banco-{isla,piezas,compra}*`, `scripts/pixel.mjs`, `scripts/sonda-{embudo,isla,cuenta,movimiento,isla-movimiento,banco-movimiento,isla-rendimiento,compra-directa,demanda}.mjs`,
 `scripts/sonda-cuenta-datos.php`, `scripts/mutar-{t5f,hijos-de-producto,demanda-isla}.sh`), `sidebar/reanudar.js`,
@@ -221,7 +221,9 @@ dueño es el carril de la web/reseñas—) ·
   (`TestCase::be()`); si nombras `'web'` para visitar el panel, será un 302 → usa `'admin'`. Tu código del panel: nada de
   `auth('web')` (lo vigila `PanelOwnGuardTest`); Filament y `auth:admin` hacen de `admin` el de por defecto.
 - ⚠️ Toqué lo COMPARTIDO sin avisar antes, y lo digo: `layout.blade.php` (el aviso del mantenimiento lee `auth('admin')`, una
-  línea) y las trece rutas del personal de `routes/web.php` (`auth` → `auth:admin`). Después vendrá `PANEL_PATH` (P2).
+  línea) y las trece rutas del personal de `routes/web.php` (`auth` → `auth:admin`).
+- **P2, hecha**: el panel vive en `PANEL_PATH` (secreta en producción). Un enlace o una exclusión por ruta del panel va por
+  `App\Http\PanelPath` (`url()`, `matches()`), NUNCA `'/admin'` a mano; las pruebas siguen en `/admin` (`phpunit.xml`).
 
 ### ❗❗ Para el SPA (emisor: plataforma, 2026-09-29) — del OWNER (`#847`): la LISTA DE INVITADOS, para ti
 - Quien invita no ve NADA de la autorización (fuera la leyenda «Firmada · Falta»). Quien él añade a mano ya está CONFIRMADO, y
@@ -288,29 +290,10 @@ dueño es el carril de la web/reseñas—) ·
 - A `specs/contenido-y-copys.md` §5, P7 (las fichas de las excursiones en en/fr y su «Horario» contradictorio), para la revisión
   final del owner: la landing es hoy de este carril (`#681`) y la web no se mueve desde el 13-09.
 
-### ❗❗ Para el carril de la WEB (emisor: plataforma, 18→21-09; los CUATRO avisos, fundidos)
-- ▶ **`resources/views/home.blade.php` NO EXISTE** (`#666`), como ya no existe `pages/`: las NUEVE vistas
-  viven en `instancia-playjump/web/`, tal cual y sin un byte de HTML cambiado (huella 0 en 38 pantallas,
-  mismo DOM en es/en/fr). **El diseño de la landing se toca ahí**, no en `main`. El producto conserva sus
-  `anfitrion/*.blade.php`, que son SU versión —sin fachada, sin manchas, sin trío y sin vídeo— y no son
-  donde se viste PlayJump. Las garantías que viajaron están en `paginas/*.md` del paquete.
-- ⚠️ **He tocado lo tuyo, y en tres sitios**: `lang/{es,en,fr}/landing.php` (un carácter: el espacio antes
-  del «€» pasa a DURO en `events.reserve_terms`, porque «Señal de 50 €» se partía de renglón; el texto no
-  cambia ni una letra), `components/site/rate-rail.blade.php` (el «antes» tachado pegaba el «€» a mano
-  mientras su hermano `--special` ya lo traía duro) y la promo de `#628` —tarifas, `/precios`, tres reglas
-  de `landing.css`, `RateCards`/`RateTable`—. Si prefieres otra forma de escribirlo, dilo.
-- ✅ **Cerrado el defecto que te fiché el 18-09**: «9,60 €» ya no se parte a 390 px; la regla vive en
-  `Money::showcaseWithSymbol()` y recogió SEIS escrituras sueltas.
-- ❗ **Y DOS defectos tuyos, vivos y arreglados**: la fecha de `/normas` decía «September de 2026» en inglés
-  (`#656`) y el «desde» de `/servicios` se escribía con el registro de TRANSACCIÓN —en inglés convivía «from
-  14.95 €» con «12,00 €»— (`#660`). ⚠️ El segundo **cambia lo que se ve** («12,00 €» → «12 €»), con el owner
-  decidiéndolo y la medida delante.
-- ⚠️ **Las clases CSS sin consumidor ya no son invisibles** (`#667`): se podaron 119 (−20,3 KB) y lo que
-  queda lo vigila `LandingCssHasNoOrphansTest`, con deuda declarada de 15. **Las 9 del hero vacío siguen
-  intactas** porque las aparcó el owner (`#226`). Si añades CSS, su consumidor tiene que nacer con él.
-- ▶ **Medido y TUYO, sin tocar**: la prosa del panel con importes, en español también en en/fr (mudada a
-  `contenido-y-copys.md` §5, P8, el 29-09) · `LandingAddonPresenter::unique()` no tiene consumidor desde `#583` y escribe el dinero a su manera ·
-  `mutar-cabecera.py` tiene cuatro mutantes que ya no aplican y `mutar-bandas.py` uno.
+### Para el carril de la WEB (emisor: plataforma, 18→21-09; los CUATRO avisos) — RETIRADOS el 29-09
+- Su sujeto, la web vieja, se retiró en la T6f (`#843`) y la web no se mueve desde el 13-09 (la landing es de este carril,
+  `#681`). Lo accionable, mudado: la prosa con importes (`contenido-y-copys.md` §5, P8), `LandingAddonPresenter::unique()`
+  (ya en `DEUDA.md`, `#659`) y los mutantes viejos de `mutar-cabecera.py`/`mutar-bandas.py` (`DEUDA.md`). El texto, en git.
 
 ### Atendido
 - **SPA 27→29-09** (`#757`, `#792` —en la isla ✅, §4.24—, `#794`, C2/C2b/C3 `#795`→`#797` hasta 1.54.0, TP·3b `#793`, T3d):

@@ -371,6 +371,12 @@ guard_errors=()
 if [[ "${DEPLOY_PRODUCTION:-0}" == "1" ]]; then
     [[ "$r_mail" != "log" && "$r_mail" != "array" ]] \
         || guard_errors+=("PRODUCCIÓN · MAIL_MAILER='$r_mail' — el correo NO saldría y nadie podría verificar su cuenta ni firmar.")
+    # GUARDA 10 · el PANEL en su dirección SECRETA (`#850`, `docs/specs/panel-a-salvo.md` §4.2): sin `PANEL_PATH` el panel
+    # quedaría en `/admin`, a la vista de cualquiera. 8 a 64 caracteres [a-z0-9-] y distinta de `admin`. ⚠️ Su valor NO se
+    # imprime cuando está bien: es la dirección secreta.
+    r_panel=$(env_get PANEL_PATH)
+    [[ "$r_panel" =~ ^[a-z0-9][a-z0-9-]{7,63}$ && "$r_panel" != "admin" ]] \
+        || guard_errors+=("GUARDA 10 · PANEL_PATH no vale — el panel quedaría a la vista: una dirección secreta de 8 a 64 caracteres [a-z0-9-], distinta de 'admin' (specs/panel-a-salvo.md §4.2).")
 else
     [[ "$r_mail" == "log" || "$r_mail" == "array" ]] \
         || guard_errors+=("GUARDA 3 · MAIL_MAILER='$r_mail' — EL CORREO SALDRÍA. Los seeds llevan direcciones con pinta de reales. Usa 'log' o un buzón trampa.")

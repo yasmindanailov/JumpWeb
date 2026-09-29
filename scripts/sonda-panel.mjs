@@ -106,6 +106,12 @@ try {
     ok('control: la misma cuenta entra por la web', web === 200, `HTTP ${web}`);
     await b.page.goto(`${BASE}/${PANEL}`, { waitUntil: 'networkidle' });
     ok('y esa sesión de la web NO abre el panel (va a su login)', new URL(b.page.url()).pathname === `/${PANEL}/login`, b.page.url());
+
+    // ── 6 · Con dirección secreta (P2), `/admin` ya no existe ─────────────────────────────────────────────────────
+    if (PANEL !== 'admin') {
+        const viejas = await Promise.all(['/admin', '/admin/login', '/admin/puerta/validar'].map(async (r) => [r, (await b.page.request.get(`${BASE}${r}`, { maxRedirects: 0 })).status()]));
+        ok('con dirección secreta, `/admin`, su login y la puerta de siempre dan 404', viejas.every(([, s]) => s === 404), JSON.stringify(viejas));
+    }
     await b.ctx.close();
 
     ok('sin errores en la consola', errores.length === 0, errores.slice(0, 3).join(' | '));

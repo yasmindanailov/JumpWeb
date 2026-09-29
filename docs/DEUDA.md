@@ -965,3 +965,11 @@ sitio, que es justo lo que la hace fácil de olvidar.
 `LandingAddonsTest` por su SUJETO, no por la regla que menciona— o, si alguna landing de instancia lo
 acaba necesitando, unificar su escritura con `Money`. No se hizo en `#659` porque la tanda era la mudanza
 de la vista y retirar un servicio con sus pruebas es otra cirugía.
+
+## ▶ Baja · dos arneses de mutación con mutantes que ya no aplican (medido 18→21-09; mudado del carril de plataforma el 29-09)
+
+`scripts/mutar-cabecera.py` tiene cuatro mutantes cuyo ancla ya no está en el código y `scripts/mutar-bandas.py`, uno:
+dicen «NO APLICA» en vez de medir. Se midió al mudar la landing a la instancia (`#666`) y se avisó al carril de la web, que
+no se mueve desde el 13-09; con la T6f (`#843`) la web vieja se retiró, así que parte de su sujeto ya no existe.
+**Qué hacer**: re-apuntar cada mutante a su código de hoy o retirarlo, y retirar el arnés entero si su sujeto se fue
+(`CONVENCIONES §3.quater`).

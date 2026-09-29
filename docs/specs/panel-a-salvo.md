@@ -16,7 +16,7 @@
   (`auth:admin`). (2) `EnsureSiteAvailable` (`SEC-02`) excluye el panel POR RUTA y deja al personal ver la web: los dos,
   a la dirección y al guard. (3) Las pruebas: `TestCase::be()` sin guard autentica los dos (§4.1). (4) La dirección
   secreta no sale en ninguna página pública, ni en el repo: vive en el `.env` de producción.
-- **Estado**: **P1 ✅** (29-09, §4.1: `SEC-14`) → P2 (dirección) → P3 (authenticator), cada una con su prueba y su mutación.
+- **Estado**: **P1 ✅** (§4.1, `SEC-14`) · **P2 ✅** (§4.2, 29-09) → P3 (authenticator). Al desplegar: `ENTORNOS.md` §6.
 - **Invariantes**: `SEC-01`, `SEC-02` (a la dirección configurada), `SEC-04`; nace la del guard propio (§5).
 
 ## 1. Contexto — medido el 29-09
@@ -75,6 +75,21 @@ sobrevivía. **En navegador**, `scripts/sonda-panel.mjs` (su administrador tempo
 `config/panel.php` (futuro): `path` = `PANEL_PATH`, `admin` por defecto. El panel y las trece rutas cuelgan de ella; las dos
 vistas, por nombre de ruta; `EnsureSiteAvailable`, por la configuración. Guarda del despliegue: en producción,
 `PANEL_PATH` existe y no es `admin`. La dirección la elige el owner y se le da en el chat, nunca en el repo.
+
+✅ **Hecho (29-09)**. `config/panel.php` y `App\Http\PanelPath` (la dirección en UN sitio: `path()`, `matches()`, `url()`);
+Filament, las trece rutas (`$panel` en `routes/web.php`), los TRES middleware que excluyen el panel por ruta (el
+mantenimiento, `RecordEmailClick` y `ResolveVisitor`: medido al buscar, no dos) y los dos enlaces. `phpunit.xml` fija
+`PANEL_PATH=admin` (la suite no depende del `.env` de la máquina); `.env.example` y `.env.production.example` la nombran.
+**Guarda 10** de `deploy.sh`, en producción: 8-64 [a-z0-9-] y no `admin` (controles en bash: vacío, `admin`, mayúsculas,
+corta, con barra y con guion inicial paran; `gestion-7f3k9q2x` pasa); no imprime la dirección. **Pruebas**:
+`PanelSecretPathTest` (4: arranca la aplicación con una secreta; `/admin` y `/admin/login` 404; las trece rutas debajo; lo
+que excluye o enlaza por ruta; la analítica, que deja el panel en paz) y `mutar-panel-direccion.sh` **9/9**. ⚠️ **Cazado
+por el arnés, dos veces**: la exclusión del mantenimiento sobrevivía. Medido por qué: Filament no va por el grupo `web`;
+sin sesión, Laravel sube `auth:admin` por prioridad y redirige ANTES del mantenimiento; `admin` y `staff` pasan por su
+guard. **Solo decide para el rol `puerta`** (con la sesión del panel y sin paso libre): la prueba lo fija ahí. **En
+navegador**, `sonda-panel.mjs` con `PANEL_PATH` temporal en el `.env` local (devuelto byte a byte): **10/10**, y `/admin`,
+su login y la puerta de siempre, 404. **Al desplegar** (`ENTORNOS.md` §6): la dirección en el `.env`, los favoritos de las
+tablets de la puerta y la URI de retorno de la ficha de Google.
 
 ### 4.3 P3 · El authenticator de los administradores
 `->multiFactorAuthentication([AppAuthentication::make()->recoverable()], isRequired: …)`, obligatorio solo para el rol

@@ -118,7 +118,7 @@
     @if (auth('admin')->check() && (auth('admin')->user()->hasRole('admin') || auth('admin')->user()->hasRole('staff')) && \App\Domain\Platform\Services\MaintenanceSettings::siteInMaintenance())
         <div class="maint-banner" role="status">
             <span class="maint-banner__text">{{ __('site.maintenance.preview_banner') }}</span>
-            <a href="{{ url('/admin/configuracion/maintenance') }}" class="maint-banner__link">{{ __('site.maintenance.preview_manage') }} →</a>
+            <a href="{{ \App\Http\PanelPath::url('configuracion/maintenance') }}" class="maint-banner__link">{{ __('site.maintenance.preview_manage') }} →</a>
         </div>
     @endif
 

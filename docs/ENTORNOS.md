@@ -496,6 +496,12 @@ instalación de un cliente. Si se configura a mano deja de ser una prueba del pr
 > despliegue da la guarda 7 en ROJO (esperado, y el sitio ya está arriba); entonces `php artisan kit:build --podar --check`
 > (el ensayo: cuáles quitaría y si el resto es servible), si cuadra `php artisan kit:build --podar`, y `kit:build --check`
 > otra vez: verde. Ensayarlo antes en STAGING, con el resto de la v2.0.0.
+> ❗❗ **Y el PANEL, en su dirección SECRETA** (`#850`, `specs/panel-a-salvo.md` §4.2): ANTES de desplegar, el owner elige
+> la dirección (8 a 64 caracteres [a-z0-9-], nunca `admin`) y va al `.env` de producción como `PANEL_PATH` —la GUARDA 10
+> para el despliegue sin ella—. Nunca en el repo ni en un documento: se da en el chat. Con la v2.0.0, `/admin` da 404, así
+> que: (1) las TABLETS de la puerta cambian su favorito a `/<PANEL_PATH>/puerta/validar`; (2) el personal, la dirección
+> nueva; (3) la URI de retorno de la ficha de Google, dada de alta con la ruta nueva (`/<PANEL_PATH>/ficha-google/callback`).
+> Y desde `#850` (`SEC-14`) una sesión de la web no abre el panel: quien estaba dentro por la web, entra por su login.
 > ❗❗❗ **El tercero se paró en la GUARDA 1 y dejó el sitio 3 minutos en 503** (`#594`): el owner había
 > pasado Redsys a `live` a las 17:29. Se levantó con `artisan up` y se completaron a mano las franjas,
 > `artisan optimize` y la salud. Desde `#594`, en producción la guarda admite `test` o `live`.

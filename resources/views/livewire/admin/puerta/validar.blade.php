@@ -10,7 +10,7 @@
             <h1 class="gate-head__title">{{ __('admin.puerta.validar.title') }}</h1>
             <p class="gate-head__intro">{{ __('admin.puerta.validar.intro') }}</p>
         </div>
-        <a href="{{ url('/admin') }}" class="gate-head__back">{{ __('admin.puerta.validar.back_to_panel') }}</a>
+        <a href="{{ \App\Http\PanelPath::url() }}" class="gate-head__back">{{ __('admin.puerta.validar.back_to_panel') }}</a>
     </header>
 
     {{-- Búsqueda. Fase 6 · subsistema A: el lector de carnés es un «keyboard wedge» — teclea el token y

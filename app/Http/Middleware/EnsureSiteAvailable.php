@@ -6,6 +6,7 @@ use App\Domain\Platform\Services\MaintenanceSettings;
 use App\Http\Api\ApiErrorCode;
 use App\Http\Api\ApiErrorResponse;
 use App\Http\Api\ApiSurface;
+use App\Http\PanelPath;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -129,9 +130,8 @@ class EnsureSiteAvailable
             return true;
         }
 
-        return $request->is(
-            'admin',
-            'admin/*',
+        // El panel, en SU dirección (`PanelPath`, `#850`): en producción no es `/admin`.
+        return PanelPath::matches($request) || $request->is(
             'pago/redsys/*',
             'lang/*',
             'up',

@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Domain\Platform\Services\Analytics\AttributionContext;
 use App\Domain\Platform\Services\Analytics\Visitor;
+use App\Http\PanelPath;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -37,7 +38,8 @@ final class ResolveVisitor
     {
         $minted = null;
 
-        if ($mode === self::MINT && Visitor::fromRequest($request) === null && ! $request->is('admin', 'admin/*')) {
+        // El panel, en SU dirección (`PanelPath`, `#850`).
+        if ($mode === self::MINT && Visitor::fromRequest($request) === null && ! PanelPath::matches($request)) {
             $minted = Visitor::mint();
             $request->attributes->set(Visitor::ATTRIBUTE, $minted);
         }
