@@ -44,6 +44,14 @@ return [
         'badge' => 'À confirmer',
         'headline' => 'Vérifie ton e-mail',
     ],
+    'login_code' => [
+        'subject' => ':code est ton code de connexion',
+        'preheader' => "Saisis-le là où tu l'as demandé. Si tu ne l'as pas demandé, ignore ce message.",
+        'badge' => 'Ton code de connexion',
+        'headline' => ':code',
+        'validity' => "Saisis-le sur l'écran où tu l'as demandé. Il est valable :minutes minutes et une seule fois.",
+        'ignore' => "Si tu ne l'as pas demandé, ignore ce message : sans ce code, personne ne peut entrer dans ton compte.",
+    ],
     'verify_purchase' => [
         'subject' => 'Confirme ton e-mail · :code',
         'preheader' => 'Ta place est gardée le temps de confirmer. Un clic et tu poursuis le paiement.',

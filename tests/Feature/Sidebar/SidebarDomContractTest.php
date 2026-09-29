@@ -586,9 +586,11 @@ class SidebarDomContractTest extends TestCase
         // comodidad.
         // ⚠️ Desde `#787` (plataforma, 27-09; avisado en su buzón) el teléfono es OPCIONAL en el alta: vacío ya no falla.
         // Para seguir con cuatro campos en rojo va DEMASIADO LARGO (`max:30`), que es la regla que le queda.
+        // ⚠️ Y desde `#853` (plataforma, 29-09; avisado en su buzón) la CONTRASEÑA también es opcional (el acceso con
+        // código): va DEMASIADO CORTA (`min:8`), la regla que le queda mientras el alta la admita (hasta la A5).
         $api = ['register' => [
             'status' => 422,
-            'body' => $this->postJson('/api/v1/auth/register', ['phone' => str_repeat('6', 31)])->assertStatus(422)->json(),
+            'body' => $this->postJson('/api/v1/auth/register', ['phone' => str_repeat('6', 31), 'password' => 'corta'])->assertStatus(422)->json(),
         ]];
 
         // La precondición sigue viva y ahora se lee del MISMO 422 que consume el cajón: con un solo

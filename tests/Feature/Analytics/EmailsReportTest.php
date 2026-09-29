@@ -45,7 +45,8 @@ class EmailsReportTest extends TestCase
     {
         $customer = array_values(array_filter(EmailUtm::keys(), static fn (string $k): bool => EmailUtm::isCustomerKey($k)));
 
-        $this->assertCount(27, $customer);
+        // 28 desde el código para entrar (`#853`, `LoginCode`, provocado).
+        $this->assertCount(28, $customer);
         $this->assertEqualsCanonicalizing($customer, [...EmailTiming::PROVOKED, ...EmailTiming::RECEIVED]);
         $this->assertSame([], array_values(array_intersect(EmailTiming::PROVOKED, EmailTiming::RECEIVED)));
         $this->assertFalse(EmailTiming::isReceived('order_confirmation'), 'la confirmación la provoca él al pagar');

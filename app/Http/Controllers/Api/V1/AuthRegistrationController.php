@@ -68,7 +68,9 @@ class AuthRegistrationController extends Controller
             'phone' => ['nullable', 'string', 'max:30'],
             // TP·1 (`#792`, `[DECIDIDO owner]`): entera y opcional; sin menores ni erratas (la política, una para las cuatro puertas).
             'born_on' => BirthDatePolicy::rules(),
-            'password' => PasswordPolicy::rules(),
+            // OPCIONAL desde la A1 del acceso con código (`#848`/`#849`): la cuenta nace sin contraseña y se entra con un
+            // código al correo. Quien aún la manda, con la misma exigencia; la A5 la retira del alta.
+            'password' => PasswordPolicy::optionalRules(),
             // ⚠️⚠️ **Aquí NO hay casillas legales, desde la T8·c** (`[DECIDIDO owner, 2026-09-02]`,
             // spec §21.4.3). La privacidad se INFORMA con un enlace visible —el art. 13 no pide que
             // se acepte— y las condiciones se aceptan **en el momento del contrato**, que es donde
@@ -188,7 +190,7 @@ class AuthRegistrationController extends Controller
                 // Opcional (`#787`): sin él, la cuenta nace sin teléfono y se le pide al reservar un pack.
                 'phone' => $data['phone'] ?? null,
                 'born_on' => $data['born_on'] ?? null,
-                'password' => $data['password'],
+                'password' => $data['password'] ?? null,
                 'waiver' => $waiver,
             ],
             (string) $request->ip(),
@@ -218,8 +220,11 @@ class AuthRegistrationController extends Controller
         // alta real siguen contestando lo mismo; lo que cambia es que una de las dos deja cookie.
         // Eso el bot ya podía deducirlo pidiendo `GET /me`, y **no le da ninguna cuenta que no
         // tuviera**: el señuelo sigue haciendo su trabajo, que es no crearla.
+        //
+        // ▶ **Y RECORDADA 90 días sin uso** (A1 de `specs/acceso-con-codigo.md` §4.4, `#848`·3): sin contraseña, volver a
+        // entrar cuesta un correo; el dispositivo del alta se queda dentro como el de quien entra con el código.
         if ($result->user !== null && $request->hasSession()) {
-            Auth::login($result->user);
+            Auth::login($result->user, remember: true);
             $request->session()->regenerate();
         }
 

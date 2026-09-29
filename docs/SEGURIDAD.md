@@ -59,10 +59,15 @@ tras varios intentos fallidos. Motivo: el producto trata **datos personales** (R
   limitadores: por email+IP y por IP sola, anti-spraying), `SelfSignup` (señuelo + límite por IP +
   límite por correo + anti-bot) y `PasswordRecovery`—. Ningún controlador ni componente los
   reimplementa: si alguno lo hiciera, la puerta floja sería la que se olvidara del segundo.
+- **El código al correo** (`specs/acceso-con-codigo.md`, A1, `#853`): la puerta (`POST /auth/code`) dice si un correo tiene
+  cuenta, como el alta (`#849`), acotada a 10 peticiones/min por IP; el código, 1/min y 5/h por correo, 10 minutos y 5
+  intentos. Verificarlo pasa por `Identity\Services\LoginGate`, los MISMOS dos cubos que la contraseña.
 
 ### 3. Sesión — ASVS V3
 - **Regenerar** el ID de sesión al iniciar sesión; invalidar al cerrar.
 - **"Cerrar sesión en todos los dispositivos"** disponible.
+- **El dispositivo recordado 90 días sin uso** (`#848`·3, `#854`): la cookie «recuérdame» del guard `web`, alargada con el
+  uso; salir cierra ESTE dispositivo; «cerrar las demás» rota el `remember_token` y la palanca de `RGPD-06` lo vacía.
 - Cookies: `http_only` (ok), `same_site=lax` (ok), **`secure=true` en producción**, valorar `encrypt=true`.
 - **Reconfirmar contraseña** antes de acciones sensibles (cambiar email, borrar cuenta).
 - **El PANEL, aparte** (`specs/panel-a-salvo.md`, 29-09): su PROPIO inicio de sesión (guard `admin`, `SEC-14`: una sesión

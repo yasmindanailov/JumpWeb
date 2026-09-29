@@ -53,6 +53,7 @@ use App\Domain\Identity\Models\Dependent;
 use App\Domain\Identity\Models\DependentAssignment;
 use App\Domain\Identity\Models\GuardianAuthorization;
 use App\Domain\Identity\Models\LegalDocumentVersion;
+use App\Domain\Identity\Models\LoginCode;
 use App\Domain\Identity\Models\Permission;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
@@ -357,6 +358,9 @@ class AppServiceProvider extends ServiceProvider
             'invitation_reply' => InvitationReply::class,
             'landing_service' => LandingService::class,
             'legal_document_version' => LegalDocumentVersion::class,
+            // Los códigos de un solo uso (`#853`, `specs/acceso-con-codigo.md`): sin relaciones polimórficas, pero todo
+            // modelo lleva alias.
+            'login_code' => LoginCode::class,
             // ⚠️ Aquí estaba `'offer'`, y se va con su modelo (`#668`). **Las filas de auditoría que
             // lo lleven siguen legibles**: `AuditLogTable` trata `target_type` como TEXTO
             // (`class_basename`) y nunca resuelve la clase — comprobado antes de retirarlo, porque

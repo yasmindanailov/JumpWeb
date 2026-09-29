@@ -57,6 +57,19 @@ return [
         'badge' => 'Falta confirmar',
         'headline' => 'Verifica tu email',
     ],
+    /*
+     * EL CÓDIGO PARA ENTRAR (A1 de `specs/acceso-con-codigo.md`, `#848`): solo el código, sin enlace. Va en el asunto
+     * —se lee en el aviso del móvil sin abrir el correo— y es el titular. La línea de adelanto no lleva la cifra de los
+     * minutos: el molde no le pasa reemplazos (la dice el cuerpo, desde `LoginCodes::TTL_MINUTES`).
+     */
+    'login_code' => [
+        'subject' => ':code es tu código para entrar',
+        'preheader' => 'Escríbelo donde lo pediste. Si no lo has pedido tú, ignora este correo.',
+        'badge' => 'Tu código para entrar',
+        'headline' => ':code',
+        'validity' => 'Escríbelo en la pantalla donde lo pediste. Vale :minutes minutos y una sola vez.',
+        'ignore' => 'Si no lo has pedido tú, ignora este correo: sin este código nadie puede entrar en tu cuenta.',
+    ],
     'verify_purchase' => [
         'subject' => 'Confirma tu email · :code',
         'preheader' => 'Tu plaza está apartada mientras confirmas. Un clic y sigues con el pago.',

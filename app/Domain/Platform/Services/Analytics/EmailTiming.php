@@ -25,6 +25,8 @@ final class EmailTiming
         'customer_account_created',
         'email_change_completed',
         'email_change_requested',
+        // El código para entrar (`#853`): lo pide y lo abre en segundos, con la pantalla esperando.
+        'login_code',
         'password_reset',
         'social_identity_linked',
         'verify_email_address',

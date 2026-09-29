@@ -1,6 +1,7 @@
 <?php
 
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Services\RememberedDevice;
 
 return [
 
@@ -41,6 +42,9 @@ return [
         'web' => [
             'driver' => 'session',
             'provider' => 'users',
+            // El dispositivo RECORDADO 90 días sin uso (`docs/specs/acceso-con-codigo.md` §4.4, `DECISIONES #848`): la
+            // cookie «recuérdame» de quien entra con el código o se da de alta. La alarga `RefreshRememberedDevice`.
+            'remember' => RememberedDevice::MINUTES,
         ],
         // EL PANEL solo confía en SU inicio de sesión (`docs/specs/panel-a-salvo.md`, `DECISIONES #850`): una sesión de
         // la web —contraseña, código al correo o Google— no lo abre, ni la suya abre la web. Mismos usuarios, otra clave

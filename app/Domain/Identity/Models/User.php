@@ -5,6 +5,7 @@ namespace App\Domain\Identity\Models;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\Ticket;
+use App\Domain\Identity\Services\RememberedDevice;
 use App\Domain\Platform\Jobs\ForgetPersonInDriver;
 use App\Domain\Platform\Models\AnalyticsEvent;
 use App\Domain\Platform\Models\AnalyticsSession;
@@ -123,6 +124,19 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
     }
 
     /**
+     * La contraseña que ve el guard: su hash, o `''` si la cuenta NO TIENE (el acceso con código, `#848`/`#853`).
+     *
+     * ⚠️ Medido en la A1: al recordar el dispositivo, el framework pasa esto por `hash_hmac()`
+     * (`SessionGuard::hashPasswordForCookie()`), y en PHP 8.5 un `NULL` ahí es un aviso de obsoleto en cada entrada —en
+     * la próxima versión, un error que tumbaría el login de toda cuenta sin contraseña—. `''` no abre nada: el hasher
+     * rechaza un hash vacío (`AbstractHasher::check()`), igual que el proveedor rechazaba el `NULL`.
+     */
+    public function getAuthPassword(): string
+    {
+        return (string) $this->password;
+    }
+
+    /**
      * **El authenticator del panel** (P3 de `specs/panel-a-salvo.md` §4.3, `#851`): lo que Filament pide al modelo. Lo exige
      * a los ADMINISTRADORES `RequiresAdminAppAuthentication`; se escribe con `forceFill` porque no es asignable en masa.
      */
@@ -224,8 +238,34 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
     {
         $this->purgeSessions(exceptCurrent: false);
         $this->tokens()->delete();
+        $this->forgetRememberedDevices(keepCurrent: false);
         $this->revokeCards($cardReason);
         $this->purgeIdentities();
+    }
+
+    /**
+     * La cookie «recuérdame» es una credencial más, y desde el acceso con código dura **90 días sin uso** en todo
+     * dispositivo que entra (`DECISIONES #848`/`#853`, `RememberedDevice`): no puede sobrevivir a la palanca.
+     *
+     * ⚠️⚠️ Medido antes de la A1: `revokeOtherAccess()` no la tocaba, así que «cerrar las demás sesiones» (y el cambio de
+     * contraseña) dejaba entrar al otro dispositivo en cuanto caducaba su sesión —su cookie volvía a abrirla—. Hasta
+     * entonces solo la tenía quien marcaba «recuérdame»; con la A1 la tiene todo el que entra.
+     *
+     * El `remember_token` es UNO por cuenta y la cookie lo lleva dentro: cambiarlo anula TODAS las cookies. Con
+     * `$keepCurrent` (el «todas menos la mía») se pone uno nuevo y el dispositivo en curso recibe su cookie con él; sin él
+     * (la palanca de «me han entrado» y la supresión) se vacía, y ninguna cookie vale hasta el próximo inicio de sesión.
+     * Se escribe por consulta y no guardando el modelo: quien llama puede tener otros cambios sin guardar.
+     */
+    private function forgetRememberedDevices(bool $keepCurrent): void
+    {
+        $token = $keepCurrent ? Str::random(60) : null;
+
+        static::query()->whereKey($this->getKey())->update(['remember_token' => $token]);
+        $this->forceFill(['remember_token' => $token])->syncOriginalAttribute('remember_token');
+
+        if ($keepCurrent) {
+            RememberedDevice::keepCurrent($this);
+        }
     }
 
     /**
@@ -286,6 +326,7 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
     public function revokeOtherAccess(): void
     {
         $this->purgeSessions(exceptCurrent: true);
+        $this->forgetRememberedDevices(keepCurrent: true);
 
         $tokens = $this->tokens();
         $current = $this->currentAccessToken();
@@ -354,6 +395,10 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
      * Borra las filas de `sessions` del titular. Solo aplica con el driver de base de datos: con
      * `array`/`file`/`redis` no hay tabla que purgar y el resto de la invalidación (rotación del
      * `remember_token`, `logoutOtherDevices`) sigue haciendo su trabajo.
+     *
+     * ⚠️⚠️ Con `redis` (producción, medido el 01-09) la SESIÓN de otro dispositivo sigue viva hasta que caduque (2 h sin
+     * uso): la cookie de recuerdo ya cae ({@see forgetRememberedDevices()}), la sesión no. Lo resuelve la A2 de
+     * `specs/acceso-con-codigo.md` §4.4, medido en producción antes de elegir.
      */
     private function purgeSessions(bool $exceptCurrent): void
     {
@@ -492,6 +537,11 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
             // A10: el token de reset aún lleva el email ORIGINAL en claro → rastro identificable tras
             // la supresión. Se borra dentro de la misma transacción.
             DB::table('password_reset_tokens')->where('email', $originalEmail)->delete();
+
+            // Y por la misma razón los CÓDIGOS de un solo uso (`specs/acceso-con-codigo.md`, `#853`): cada fila lleva el
+            // correo y la IP de quien lo pidió. Van por correo, no por cuenta —el cambio de correo verifica el NUEVO con un
+            // código a ESE correo—, así que se borran los del original y los del pendiente.
+            LoginCode::query()->whereIn('email', array_values(array_filter([$originalEmail, (string) $this->pending_email])))->delete();
 
             // LA ANALÍTICA (`specs/analitica.md` §4.7, `#678`, T1e): el régimen IDENTIFICADO se desata. Las
             // sesiones y los hechos que se ataron a esta cuenta —solo con la categoría `analytics`— pierden su

@@ -180,7 +180,12 @@ class ApiContractTest extends TestCase
         // opcionales. `remember` por defecto es `false`, y exigirlo obligaría a todo cliente a
         // enviarlo. Lo que sigue mordiendo aquí es `additionalProperties: false`, que es lo que
         // impide colar un campo que el servidor ignoraría en silencio.
-        'LoginRequest' => ['remember'],
+        // ▶ Y desde 1.55.0 (A1 de `specs/acceso-con-codigo.md`, `#853`) la CREDENCIAL es una de dos —`password` o `code`,
+        // excluyentes—: OpenAPI 3.0 sin `oneOf` no sabe decir «exactamente uno», así que lo decide el servidor
+        // (`required_without` + `prohibits`, 422). La contraseña se retira en la A5 y `code` pasará a obligatorio.
+        'LoginRequest' => ['remember', 'password', 'code'],
+        // El mismo caso en la emisión de tokens (la app entra con el código, `specs/acceso-con-codigo.md` §4.4).
+        'TokenRequest' => ['password', 'code'],
         // Cuerpo de PETICIÓN, y aquí la opcionalidad es CONDICIONAL: `current_password` solo hace
         // falta si `email` cambia (tanda 2 · paso 7). Exigirla siempre obligaría a reconfirmar la
         // contraseña para corregir una errata en el teléfono —que no defiende nada y hace que el
@@ -217,7 +222,8 @@ class ApiContractTest extends TestCase
         // pide, lo pide el interruptor de «Mi cuenta → Privacidad» (`PUT /me/marketing`).
         // Y desde `#787` (27-09) el TELÉFONO: obligatorio solo para reservar un pack, y eso lo exige `POST /orders`.
         // Y la FECHA DE NACIMIENTO (TP·1, `#792` `[DECIDIDO owner]`: «entera y OPCIONAL»): sin ella la cuenta nace igual.
-        'RegisterRequest' => ['phone', 'born_on', 'context', 'website', 'turnstile_token', 'accept_waiver', 'waiver_document_id'],
+        // Y la CONTRASEÑA desde 1.55.0 (`#848`/`#849`): la cuenta nace sin ella y se entra con un código al correo.
+        'RegisterRequest' => ['phone', 'born_on', 'password', 'context', 'website', 'turnstile_token', 'accept_waiver', 'waiver_document_id'],
         // Cuerpo de PETICIÓN del alta con Google (`specs/auth-con-google.md` §7). Las dos claves del
         // descargo son opcionales por la MISMA razón que arriba y una más: en una instalación en modo
         // externo —o sin versión publicada— **no hay texto que aceptar**, así que exigirlas convertiría

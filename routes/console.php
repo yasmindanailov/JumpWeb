@@ -5,6 +5,7 @@ use App\Domain\Content\Models\GoogleBusinessReview;
 use App\Domain\Identity\Models\CookieConsentLog;
 use App\Domain\Identity\Models\Dependent;
 use App\Domain\Identity\Models\GuardianAuthorization;
+use App\Domain\Identity\Models\LoginCode;
 use App\Domain\Identity\Models\WaiverSignature;
 use App\Domain\Platform\Models\AnalyticsEvent;
 use App\Domain\Platform\Models\AnalyticsSession;
@@ -128,8 +129,10 @@ Schedule::command('business-profile:sweep-photos')->dailyAt('05:00')->withoutOve
 /*
  * ▶ Y los CORREOS SALIENTES (`specs/correos-salientes.md`, `#794`): la fila de un envío, a los 24 meses. Su COPIA se va antes,
  * a los 6, con `email-sends:trim` (abajo).
+ * ▶ Y los CÓDIGOS DE UN SOLO USO (`specs/acceso-con-codigo.md`, `#853`): un código muere a los 10 minutos y su fila —el correo
+ * y la IP de quien lo pidió— al día. La misma tarea: el recuento de `deploy.sh` no cambia.
  */
-Schedule::command('model:prune', ['--model' => [CookieConsentLog::class, WaiverSignature::class, GuardianAuthorization::class, Dependent::class, InvitationReply::class, GoogleBusinessReview::class, AnalyticsEvent::class, AnalyticsSession::class, SurveyResponse::class, SurveyParticipation::class, EmailSend::class]])
+Schedule::command('model:prune', ['--model' => [CookieConsentLog::class, WaiverSignature::class, GuardianAuthorization::class, Dependent::class, InvitationReply::class, GoogleBusinessReview::class, AnalyticsEvent::class, AnalyticsSession::class, SurveyResponse::class, SurveyParticipation::class, EmailSend::class, LoginCode::class]])
     ->daily()
     ->withoutOverlapping();
 

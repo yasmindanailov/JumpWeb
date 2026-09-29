@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Domain\Identity\Contracts\LoginResult;
+use App\Domain\Identity\Services\EmailCodeLogin;
 use App\Domain\Identity\Services\PasswordLogin;
 use App\Http\Api\ApiErrorCode;
 use App\Http\Api\ApiErrorResponse;
@@ -10,6 +11,7 @@ use App\Http\Api\Concerns\RequiresStatefulSession;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\UserResource;
 use App\Http\Sidebar\SidebarEntry;
+use Illuminate\Auth\SessionGuard;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -39,8 +41,13 @@ class AuthSessionController extends Controller
     /**
      * Abre sesión y devuelve el perfil, la misma forma que `GET me`: quien acaba de identificarse
      * necesita justo eso, y devolverlo evita una segunda petición para pintar la pantalla.
+     *
+     * ▶ **Con la contraseña o con el CÓDIGO al correo** (A1 de `specs/acceso-con-codigo.md`, `#848`): uno de los dos,
+     * nunca los dos. El código lo pide antes `POST /auth/code`. Quien entra con el código queda **recordado 90 días sin
+     * uso** en este dispositivo (`#848`·3, `RememberedDevice`): el `remember` de la petición no aplica ahí. La
+     * contraseña se retira en la A5.
      */
-    public function login(Request $request, PasswordLogin $passwordLogin): UserResource|JsonResponse
+    public function login(Request $request, PasswordLogin $passwordLogin, EmailCodeLogin $codeLogin): UserResource|JsonResponse
     {
         // Sin sesión no hay dónde abrirla (ver `RequiresStatefulSession`). Se comprueba ANTES de
         // validar y de tocar el limitador: no tiene sentido gastarle intentos a quien no puede
@@ -52,7 +59,8 @@ class AuthSessionController extends Controller
 
         $credentials = $request->validate([
             'email' => ['required', 'string', 'email'],
-            'password' => ['required', 'string'],
+            'password' => ['required_without:code', 'prohibits:code', 'string'],
+            'code' => ['required_without:password', 'string', 'max:16'],
             'remember' => ['sometimes', 'boolean'],
         ]);
 
@@ -60,12 +68,21 @@ class AuthSessionController extends Controller
         // instante `Auth::attempt()` lo habrá sustituido; para qué sirve, más abajo.
         $previousId = Auth::id();
 
-        $result = $passwordLogin->attempt(
-            $credentials['email'],
-            $credentials['password'],
-            (bool) ($credentials['remember'] ?? false),
-            (string) $request->ip(),
-        );
+        if (isset($credentials['code'])) {
+            // El servicio solo verifica (sirve también al token); abrir la sesión, recordada, es de aquí.
+            $result = $codeLogin->verify($credentials['email'], $credentials['code'], (string) $request->ip());
+
+            if ($result->user !== null) {
+                Auth::guard('web')->login($result->user, remember: true);
+            }
+        } else {
+            $result = $passwordLogin->attempt(
+                $credentials['email'],
+                $credentials['password'],
+                (bool) ($credentials['remember'] ?? false),
+                (string) $request->ip(),
+            );
+        }
 
         if ($result->failed()) {
             return $this->denial($result);
@@ -116,8 +133,16 @@ class AuthSessionController extends Controller
 
         // Con sesión: invalidar y rotar el token CSRF. `hasSession()` distingue las dos vías — una
         // petición Bearer pura no pasa por `StartSession` y no tiene ninguna que invalidar.
+        //
+        // ⚠️ `logoutCurrentDevice()` y no `logout()` (A1 de `specs/acceso-con-codigo.md`, `#853`): el dispositivo queda
+        // recordado «hasta cerrar sesión» (`#848`·3) —ESTE—. `logout()` rota el `remember_token`, que es uno por cuenta,
+        // y echaría también al móvil cuando se sale en el portátil. Borra la cookie de recuerdo de aquí igual. Echar a
+        // los demás es «cerrar las demás sesiones» (`User::revokeOtherAccess()`).
         if ($request->hasSession()) {
-            auth('web')->logout();
+            // El guard `web` es de sesión (`config/auth.php`): el contrato `StatefulGuard` no declara el método.
+            /** @var SessionGuard $web */
+            $web = auth('web');
+            $web->logoutCurrentDevice();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
         }

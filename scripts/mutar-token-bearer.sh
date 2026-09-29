@@ -15,6 +15,9 @@ SAIL="docker compose exec -u sail -T laravel.test"
 TESTS="$SAIL php artisan test --filter=AuthTokenTest|ApiTokenAbilityTest"
 
 LOGIN=app/Domain/Identity/Services/PasswordLogin.php
+# El núcleo de los limitadores salió de `PasswordLogin` TAL CUAL a `LoginGate` (A1 del acceso con código, `#853`): sus dos
+# mutantes se re-apuntan allí con el mismo texto.
+GATE=app/Domain/Identity/Services/LoginGate.php
 ISSUER=app/Domain/Identity/Services/ApiTokenIssuer.php
 USER=app/Domain/Identity/Models/User.php
 ROUTES=routes/api.php
@@ -22,7 +25,7 @@ BOOT=bootstrap/app.php
 BASE=tests/TestCase.php
 
 TMP="$(mktemp -d)"
-FICHEROS=("$LOGIN" "$ISSUER" "$USER" "$ROUTES" "$BOOT" "$BASE")
+FICHEROS=("$LOGIN" "$GATE" "$ISSUER" "$USER" "$ROUTES" "$BOOT" "$BASE")
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$TMP/$(basename "$f")" "$f"; touch "$f"; done; }
 trap 'restaurar; rm -rf "$TMP"' EXIT
 for f in "${FICHEROS[@]}"; do cp "$f" "$TMP/$(basename "$f")"; done
@@ -57,11 +60,11 @@ mutar() {
 }
 
 # ── La puerta nueva no es una segunda oportunidad (`SEC-06`) ───────────────────────────────────
-mutar "un fallo deja de contar en el cubo (correo, IP)" "$LOGIN" \
+mutar "un fallo deja de contar en el cubo (correo, IP)" "$GATE" \
   "            RateLimiter::hit(\$compositeKey, self::WINDOW);
 " ""
 
-mutar "el limitador por IP sola deja de bloquear (el barrido pasa entero)" "$LOGIN" \
+mutar "el limitador por IP sola deja de bloquear (el barrido pasa entero)" "$GATE" \
   "
             || RateLimiter::tooManyAttempts(\$ipKey, self::MAX_ATTEMPTS_PER_IP)" ""
 

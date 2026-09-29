@@ -58,4 +58,15 @@ final class PasswordPolicy
     {
         return ['required', 'string', Password::min(self::MIN_LENGTH)];
     }
+
+    /**
+     * La misma regla, pero OPCIONAL: el alta del cliente ya no la pide (A1 de `specs/acceso-con-codigo.md`, `#848`/`#849`;
+     * entra con un código al correo). Quien todavía la manda la manda con la misma exigencia; la A5 la retira del alta.
+     *
+     * @return array<int, mixed>
+     */
+    public static function optionalRules(): array
+    {
+        return ['nullable', 'string', Password::min(self::MIN_LENGTH)];
+    }
 }

@@ -3,6 +3,7 @@
 namespace App\Domain\Platform\Listeners;
 
 use App\Domain\Identity\Models\User;
+use App\Domain\Platform\Contracts\HidesSecretsInCopy;
 use App\Domain\Platform\Models\EmailSend;
 use App\Domain\Platform\Services\Analytics\EmailClickMarks;
 use App\Domain\Platform\Services\Analytics\EmailOpenMarks;
@@ -48,14 +49,18 @@ final class RecordEmailSend
                 return;
             }
 
+            // ⚠️ Una CREDENCIAL no se guarda aunque viaje en el correo (el código para entrar, `#853`): se tapa en el asunto
+            // y en la copia, y lo demás queda tal como salió.
+            $secrets = $event->notification instanceof HidesSecretsInCopy ? $event->notification->secretsInCopy() : [];
+
             $now = now();
             DB::table('email_sends')->upsert([[
                 'send_key' => $send,
                 'user_id' => $this->userOf($event->notifiable),
                 'recipient' => $this->firstAddress($email),
                 'mail_key' => $key,
-                'subject' => mb_substr((string) $email->getSubject(), 0, 255),
-                'html' => $this->htmlOf($email),
+                'subject' => mb_substr(self::hide((string) $email->getSubject(), $secrets), 0, 255),
+                'html' => self::hide($this->htmlOf($email), $secrets),
                 'attachments' => json_encode(array_values(array_map(static fn (DataPart $p): string => (string) $p->getFilename(), $email->getAttachments()))),
                 // Si salió con la marca del envío en sus enlaces (la C2, §4.8): sin ella, sus clics «no se miden».
                 'tracks_clicks' => EmailClickMarks::for($event->notification) !== null,
@@ -150,6 +155,22 @@ final class RecordEmailSend
         }
 
         return is_string($html) && $html !== '' ? $html : null;
+    }
+
+    /**
+     * Cada secreto, tapado con tantos `•` como caracteres tenga (los espacios se quedan: «482 913» → «••• •••»).
+     *
+     * @param  list<string>  $secrets
+     */
+    private static function hide(?string $text, array $secrets): ?string
+    {
+        $secrets = array_values(array_filter($secrets, static fn (string $s): bool => $s !== ''));
+
+        if ($text === null || $secrets === []) {
+            return $text;
+        }
+
+        return str_replace($secrets, array_map(static fn (string $s): string => (string) preg_replace('/\S/u', '•', $s), $secrets), $text);
     }
 
     /**

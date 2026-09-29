@@ -76,7 +76,7 @@ class SelfSignup
     public const RESEND_EMAIL_COOLDOWN_SECONDS = 60;
 
     /**
-     * @param  array{name:string,email:string,phone:?string,born_on?:?string,password:string,waiver?:array{document?:LegalDocumentVersion,channel?:string,user_agent?:?string}|null}  $data  ya validado por el llamante (el teléfono, opcional desde `#787`; la fecha de nacimiento, opcional, TP·1; el descargo aceptado, si lo hay)
+     * @param  array{name:string,email:string,phone:?string,born_on?:?string,password?:?string,waiver?:array{document?:LegalDocumentVersion,channel?:string,user_agent?:?string}|null}  $data  ya validado por el llamante (el teléfono, opcional desde `#787`; la fecha de nacimiento, opcional, TP·1; la contraseña, opcional desde el acceso con código, `#848`; el descargo aceptado, si lo hay)
      * @param  bool  $notifyByEmail  `false` en la compra: pay-first no manda verificación (`DECISIONES` del 2026-06-14 —
      *                               el pago la sustituye, y un bot no paga)
      * @param  string  $honeypot  campo señuelo; si llega con algo, es un bot
@@ -134,6 +134,8 @@ class SelfSignup
         Log::info('auth.registered', ['user_id' => $user->id, 'ip' => $ip, 'purchase' => ! $notifyByEmail]);
 
         // El libro de eventos (`specs/analitica.md` §4.1, `#678`): el alta es un hecho del servidor.
+        // ⚠️ `password` quiere decir desde la A1 «con el formulario del correo», lleve contraseña o no: el cuadro del SPA
+        // (`CustomersReport::METHODS`) agrupa por este valor, y renombrarlo es suyo (avisado en el buzón, `#853`).
         app(Recorder::class)->fact('user_registered', ['method' => 'password'], ['user_id' => (int) $user->id]);
         // Y el régimen identificado (§4.3, T3a·3): con la categoría `analytics`, la navegación que trajo el alta
         // se ata a la cuenta recién creada. Desde el panel no hay visitante y no ata nada.
@@ -207,7 +209,7 @@ class SelfSignup
     }
 
     /**
-     * @param  array{name:string,email:string,phone:?string,born_on?:?string,password:string,waiver?:array{document?:LegalDocumentVersion,channel?:string,user_agent?:?string}|null}  $data
+     * @param  array{name:string,email:string,phone:?string,born_on?:?string,password?:?string,waiver?:array{document?:LegalDocumentVersion,channel?:string,user_agent?:?string}|null}  $data
      */
     private function createAccount(array $data, string $email, string $ip): User
     {
@@ -222,7 +224,9 @@ class SelfSignup
                 'phone' => is_string($data['phone'] ?? null) && trim($data['phone']) !== '' ? trim($data['phone']) : null,
                 // TP·1 (`#792`): opcional; la valida el llamante con `BirthDatePolicy::rules()`.
                 'born_on' => BirthDatePolicy::normalize($data['born_on'] ?? null),
-                'password' => $data['password'],
+                // Sin ella, la cuenta nace SIN contraseña (`NULL`, A1 de `specs/acceso-con-codigo.md`): entra con un código
+                // al correo o con Google, y ninguna contraseña la abre (el proveedor no valida contra `NULL`).
+                'password' => $data['password'] ?? null,
                 'locale' => app()->getLocale(),
                 // ⚠️ **El marketing NO se pide en el alta** (`[DECIDIDO owner, 2026-09-02]`, T8·c): se
                 // ofrece con su interruptor en «Mi cuenta → Privacidad», donde además se puede retirar

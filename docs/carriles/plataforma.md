@@ -4,9 +4,9 @@
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
 > **820–849 AGOTADA con `#849`** → sigue en **850–879** (del owner, 29-09; centena `decisiones/800-899.md`) · Último usado:
-> **`#852`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **`#854`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#846`) · Actualizado: **2026-09-29**
-> (cierre de la noche: el panel a salvo ✅ `#850`/`#851`; la spec del acceso con código ✅ `#848`/`#849`; SIGUE su A1).
+> (noche: la A1 del acceso con código ✅ `#853`/`#854`, `specs/acceso-con-codigo.md` §4.8; SIGUE su A2).
 > ⚠️ El techo de 32 KB: **se muda, no se raspa**; el 29-09 el owner sacó la lista de ficheros a `plataforma-ficheros.md`
 > (`#852`) y NO subió el techo. Si vuelve a apretar tres veces seguidas, llévaselo con la medida.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -46,14 +46,18 @@ normas, la T6f (301 y la web vieja fuera, `#843`), `#844`, la T6h (las legales) 
 **T6g** (§4.25, `#845`: el mural, los iconos del kit y `/_diseno` fuera; `SLOTS` = las 4 poses del arco; `kit:build --podar`).
 Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas,entradas}.mjs`), la web entera (`sonda-web.mjs`,
 17/17) y la compra (`sonda-isla.mjs`).
-▶▶▶ **SIGUE (lo pidió el owner para el chat siguiente): la A1 de `specs/acceso-con-codigo.md`** (✅ `#848`/`#849`; su §0 y §4)
-—el código en el SERVIDOR: la tabla `login_codes` (futuro), un servicio de dominio en Identity con los límites de su §4.2 que
-comparta el núcleo `PasswordLogin::guarded()` (no una copia: `SEC-06`), el correo del código TRAS la respuesta (la cola espera
-al cron de producción, hasta 60 s), la PUERTA (el correo → `code` si tiene cuenta, `register` si no: `#849`, el alta no espera
-código), verificar (sesión «recordada 90 días», `#848`), `POST /auth/tokens` con código, el alta con `password` opcional y
-`anonymize()` borrando los códigos (`RGPD-01`); contrato: mirar `info.version` (1.54.0 el 29-09)—. ⚠️ Antes de la A2: el driver de
-SESIÓN de producción (`ENTORNOS.md` §6 lo da `redis`, medido el 01-09, sin re-medir; `purgeSessions()` solo actúa con `database`:
-`RGPD-06`), por SSH y con permiso del owner. ⚠️ El código abre la WEB, nunca el panel (`SEC-14`).
+▶▶▶ **SIGUE: la A2 de `specs/acceso-con-codigo.md`** (las acciones sensibles con un código `confirm`: borrar la cuenta, cambiar
+el correo —el nuevo, con un código a ESE correo—, desvincular Google y cerrar las demás sesiones). **La A1 ✅** (29-09 noche,
+`#853`/`#854`, contrato **1.55.0**; lo hecho, lo medido y lo que hereda, en su §4.8): `POST /auth/code`, el código en `auth/login`
+y `auth/tokens`, el alta sin contraseña, el dispositivo recordado 90 días y la palanca de `RGPD-06` sobre él; arnés
+`mutar-acceso-codigo.sh` 27/27 y `mutar-token-bearer.sh` 14/14 (re-apuntado a `LoginGate`). ⚠️ **Hereda la A2**:
+`AccountCredentials` reconfirma con contraseña y usa `logoutOtherDevices($password)`, que sin contraseña no puede; y ANTES,
+el driver de SESIÓN de producción (`ENTORNOS.md` §6 lo da `redis`, medido el 01-09, sin re-medir; `purgeSessions()` solo actúa
+con `database`), por SSH y con permiso del owner. ❓ **Del owner**: el texto de `/cookies` («solo si marcas recuérdame») y el
+aviso de los 90 días en la pantalla (A3), `[PENDIENTE: owner]`. ⚠️ El código abre la WEB, nunca el panel (`SEC-14`).
+▶▶ **Del SPA (`#807`, 29-09), para cuando desengache el menú (su K3)**: `isla/compra/PantallaCuandoFiesta.vue` pinta «¿Qué menú?»
+SIN condición —con el menú fuera saldría vacía: un `v-if` sobre `menus`—, y la calculadora y la landing dicen «incluye
+calcetines… cono» y «¿Qué menú?». Su K3 trae el tipo `choice` al contrato del catálogo: te dirá el número.
 **HECHO el 29-09 (tarde-noche)**: la hoja de correo del SPA (`28dfdf15`; declarada en la instancia, `da0f84d`) · `#758` en la isla
 (`#846`, §4.26) · `sonda-portada` 23/23 (era la sonda) · la lista del owner (`#847`) · **EL PANEL A SALVO** (`specs/panel-a-salvo.md`
 ✅: guard propio `#850`/`SEC-14`, dirección `PANEL_PATH`, authenticator de administradores `#851` con `panel:quitar-authenticator`;
@@ -186,6 +190,17 @@ carril se apunta ALLÍ; lo compartido se sigue avisando aquí, en el buzón, ant
 
 ## Buzón
 
+### ❗❗ Para el SPA (emisor: plataforma, 2026-09-29 noche) — la A1 del acceso con código (`#853`/`#854`, contrato 1.55.0)
+- **La API de tu A4** (`acceso-con-codigo.md` §4.8): `POST /auth/code` `{email}` → `{next: code|register}` (429 con
+  `params.next = code` si el tope fue el del correo); el código va en `POST /auth/login` (`code` en vez de `password`, nunca
+  los dos) y en `auth/tokens`; `auth/register` ya no pide `password`. El 1.55.0 es mío: el siguiente, tuyo.
+- **Toqué lo tuyo**: `RecordEmailSend` (tapa en la copia y el asunto lo que declare `Platform\Contracts\HidesSecretsInCopy`:
+  el código; lo demás, igual), `EmailTiming::PROVOKED` (+`login_code`), el censo de `EmailsReportTest` y `EmailUtmTest`
+  (+1 correo) y `SidebarDomContractTest` (el alta vacía: la contraseña ya no falta, va CORTA, como el teléfono en `#787`).
+- **Avisos**: `user_registered.method = 'password'` quiere decir ya «con el formulario» (con contraseña o sin ella): renombrarlo
+  en `CustomersReport::METHODS` es tuyo. El `Login` del framework salta también cuando vuelve un dispositivo recordado (tras
+  2 h sin uso): `user_logged_in` contará esas vueltas. Y `auth/logout` cierra solo ESTE dispositivo (`logoutCurrentDevice`).
+
 ### ❗ Para el SPA (emisor: plataforma, 2026-09-29) — tu `#758` en la isla, HECHO (`#846`, §4.26), y un defecto TUYO medido
 - La isla emite `availability_missing` con TUS `createMissingReporter` y `missingMonths`, sin copiarlas (`isla/compra/demanda.js`):
   lo que el cliente MIRA (la compra al situar o cambiar; las calculadoras solo al tocarlas), si la oferta llegó, un reportero
@@ -275,6 +290,8 @@ carril se apunta ALLÍ; lo compartido se sigue avisando aquí, en el buzón, ant
   (ya en `DEUDA.md`, `#659`) y los mutantes viejos de `mutar-cabecera.py`/`mutar-bandas.py` (`DEUDA.md`). El texto, en git.
 
 ### Atendido
+- **SPA 29-09 noche** (aviso previo de la R1b: `GET /correo/i/{v}/{color}/{nombre}.png` en `routes/web.php`): leído; la A1 no
+  toca esas líneas. Y `#807` (la merienda sale de la reserva): leído, en «por dónde retomar».
 - **SPA 27→29-09** (`#757`, `#792` —en la isla ✅, §4.24—, `#794`, C2/C2b/C3 `#795`→`#797` hasta 1.54.0, TP·3b `#793`, T3d):
   leídos y migrado; nada mío a medias. Su hoja de correo de PlayJump (`ace8d0a`), declarada en `instancia.json` (`da0f84d`): `hojas('correo')` la da.
 - **SPA 28-09** (la T3 de la analítica: los dos textos de mi hub de Ajustes; el aviso previo de la T3c·2): leído, nada mío a

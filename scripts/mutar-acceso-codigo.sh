@@ -1,0 +1,192 @@
+#!/usr/bin/env bash
+# Arnés de mutación del ACCESO CON CÓDIGO, tanda A1 (`docs/specs/acceso-con-codigo.md` §6, `DECISIONES #853`).
+#
+# Entrar con un código al correo es una credencial nueva, y lo que la acota son reglas pequeñas que se caen sin ruido:
+# que el código caduque, se gaste y muera al quinto intento; que su huella lleve clave y correo; que pedirlo tenga techo
+# por IP y por correo; que el correo salga TRAS la respuesta y no por la cola; que verificar comparta los cubos de la
+# contraseña; que el código no quede en la copia del registro ni en el rastro; que la supresión se lleve las filas; y que
+# el dispositivo recordado 90 días siga siendo una credencial que la palanca única alcanza (`RGPD-06`). Cada mutación
+# quita una y un test tiene que morir.
+#
+# Reglas de la casa dentro: verde antes de mutar · veredicto por código de salida · comprobar que la mutación SE APLICÓ ·
+# restaurar por COPIA DE SEGURIDAD —por RUTA completa, nunca por nombre— y no con `git checkout` (`#181`).
+set -uo pipefail
+cd "$(git rev-parse --show-toplevel)"
+
+SAIL="docker compose exec -u sail -T laravel.test"
+TESTS="$SAIL php artisan test --filter=AuthCodeTest|LoginCodesTest|RememberedDeviceTest"
+
+CODES=app/Domain/Identity/Services/LoginCodes.php
+LOGIN=app/Domain/Identity/Services/EmailCodeLogin.php
+COPY=app/Domain/Platform/Listeners/RecordEmailSend.php
+USER=app/Domain/Identity/Models/User.php
+BOOT=bootstrap/app.php
+SESSION=app/Http/Controllers/Api/V1/AuthSessionController.php
+SIGNUP=app/Http/Controllers/Api/V1/AuthRegistrationController.php
+AUTHCONF=config/auth.php
+
+TMP="$(mktemp -d)"
+FICHEROS=("$CODES" "$LOGIN" "$COPY" "$USER" "$BOOT" "$SESSION" "$SIGNUP" "$AUTHCONF")
+copia() { echo "$TMP/${1//\//__}"; }
+restaurar() { for f in "${FICHEROS[@]}"; do cp "$(copia "$f")" "$f"; touch "$f"; done; }
+trap 'restaurar; rm -rf "$TMP"' EXIT
+for f in "${FICHEROS[@]}"; do cp "$f" "$(copia "$f")"; done
+
+verde() { $TESTS >/dev/null 2>&1; }
+
+if ! verde; then
+    echo '✗ los tests del acceso con código NO están verdes antes de mutar: el veredicto de abajo no valdría nada.' >&2
+    exit 1
+fi
+echo '✓ base verde'
+
+muerden=0; total=0
+
+# $1 nombre · $2 fichero · $3 buscar · $4 poner · $5 veces (1 por defecto; 0 = todas)
+mutar() {
+    local nombre="$1" fichero="$2" buscar="$3" poner="$4" veces="${5:-1}"
+    total=$((total + 1))
+    python3 -c 'import sys; p=sys.argv[1]; n=int(sys.argv[4]); s=open(p,encoding="utf-8").read(); open(p,"w",encoding="utf-8").write(s.replace(sys.argv[2], sys.argv[3], n if n > 0 else -1))' \
+        "$fichero" "$buscar" "$poner" "$veces"
+    if cmp -s "$fichero" "$(copia "$fichero")"; then
+        echo "  ⚠ «$nombre» NO SE APLICÓ (el patrón no casa): el veredicto no vale"
+        return
+    fi
+    touch "$fichero"
+    if verde; then
+        echo "  ✗ NO muerde: $nombre"
+    else
+        echo "  ✓ muerde:    $nombre"
+        muerden=$((muerden + 1))
+    fi
+    cp "$(copia "$fichero")" "$fichero"; touch "$fichero"
+}
+
+# ── El código (`LoginCodes`) ───────────────────────────────────────────────────────────────────
+mutar "el código no caduca" "$CODES" \
+  "            ->where('expires_at', '>', now())
+" "" 0
+
+mutar "un código se usa dos veces" "$CODES" \
+  "        return LoginCode::query()
+            ->whereKey(\$live->getKey())
+            ->whereNull('used_at')
+            ->update(['used_at' => now()]) === 1;" \
+  "        return true;"
+
+# La que SOLO caza la prueba del hueco (`test_two_uses_in_the_gap…`): el segundo uso SEGUIDO lo sigue parando la lectura;
+# dos a la vez, no. La carrera real contra MySQL no la discrimina (su control también da un solo 201).
+mutar "dos usos a la vez entran los dos (el intento y el uso sin condicionar)" "$CODES" \
+  "            ->whereKey(\$live->getKey())
+            ->whereNull('used_at')
+" "            ->whereKey(\$live->getKey())
+" 0
+
+mutar "los intentos no tienen tope" "$CODES" \
+  "            ->where('attempts', '<', self::MAX_ATTEMPTS)
+" "" 0
+
+mutar "pedir otro no anula el anterior" "$CODES" \
+  "            LoginCode::query()->where('email', \$email)->where('purpose', \$purpose)->delete();
+" ""
+
+mutar "la huella no lleva el correo" "$CODES" \
+  "hash_hmac('sha256', \$purpose.'|'.\$email.'|'.\$code, (string) config('app.key'))" \
+  "hash_hmac('sha256', \$purpose.'|'.\$code, (string) config('app.key'))"
+
+mutar "la huella no lleva clave (un millón de candidatos, en un instante)" "$CODES" \
+  "hash_hmac('sha256', \$purpose.'|'.\$email.'|'.\$code, (string) config('app.key'))" \
+  "hash('sha256', \$purpose.'|'.\$email.'|'.\$code)"
+
+mutar "la tabla guarda el código en claro" "$CODES" \
+  "'code_hash' => self::fingerprint(\$email, \$purpose, \$code)," \
+  "'code_hash' => str_pad(\$code, 64, '0'),"
+
+# ── La puerta y verificar (`EmailCodeLogin`) ────────────────────────────────────────────────────
+mutar "la puerta no tiene techo por IP (el barrido de correos pasa entero)" "$LOGIN" \
+  "        if (RateLimiter::tooManyAttempts(\$ipKey, self::MAX_PER_IP)) {" \
+  "        if (false) {"
+
+mutar "un correo recibe códigos en ráfaga (sin el de un minuto)" "$LOGIN" \
+  "RateLimiter::tooManyAttempts(\$minuteKey, self::MAX_PER_EMAIL_PER_MINUTE)
+            || " ""
+
+mutar "el buzón de la víctima no tiene techo por hora" "$LOGIN" \
+  "
+            || RateLimiter::tooManyAttempts(\$hourKey, self::MAX_PER_EMAIL_PER_HOUR)" ""
+
+mutar "el correo sale DURANTE la respuesta (el SMTP hace esperar)" "$LOGIN" \
+  "        defer(fn () => \$this->send(\$user, \$code));" \
+  "        \$this->send(\$user, \$code);"
+
+mutar "el correo espera a la cola (hasta 60 s en producción)" "$LOGIN" \
+  "\$user->notifyNow(new LoginCodeMail(\$code));" \
+  "\$user->notify(new LoginCodeMail(\$code));"
+
+mutar "verificar con cubos propios (intentos gratis además de los de la contraseña)" "$LOGIN" \
+  "\$result = \$this->gate->guarded(\$email, \$ip, 'auth.code_login', function (string \$email) use (\$code): ?User {" \
+  "\$result = (static fn (string \$email, \\Closure \$check): LoginResult => (\$u = \$check(Str::lower(trim(\$email)))) ? LoginResult::success(\$u) : LoginResult::invalidCredentials())(\$email, function (string \$email) use (\$code): ?User {"
+
+mutar "un código bueno no confirma el correo" "$LOGIN" \
+  "        if (\$user !== null && ! \$user->hasVerifiedEmail()) {" \
+  "        if (false) {"
+
+mutar "el rastro lleva el correo" "$LOGIN" \
+  "Log::info('auth.code_requested', ['user_id' => \$user->id, 'ip' => \$ip]);" \
+  "Log::info('auth.code_requested', ['user_id' => \$user->id, 'email' => \$email, 'ip' => \$ip]);"
+
+# ── Lo que no se guarda ─────────────────────────────────────────────────────────────────────────
+mutar "la copia del registro de correos guarda el código" "$COPY" \
+  "'html' => self::hide(\$this->htmlOf(\$email), \$secrets)," \
+  "'html' => \$this->htmlOf(\$email),"
+
+mutar "la supresión deja los códigos del titular" "$USER" \
+  "            LoginCode::query()->whereIn('email', array_values(array_filter([\$originalEmail, (string) \$this->pending_email])))->delete();
+" ""
+
+# ── El dispositivo recordado y la palanca (`RGPD-06`) ───────────────────────────────────────────
+mutar "cerrar las demás sesiones no toca las cookies de recuerdo (el hueco de antes)" "$USER" \
+  "        \$this->forgetRememberedDevices(keepCurrent: true);
+" ""
+
+mutar "cerrar las demás sesiones echa también a quien lo pide" "$USER" \
+  "            RememberedDevice::keepCurrent(\$this);
+" ""
+
+mutar "la palanca de «me han entrado» deja cookies de recuerdo vivas" "$USER" \
+  "        \$this->forgetRememberedDevices(keepCurrent: false);
+" ""
+
+mutar "una cuenta sin contraseña pasa NULL al hash del recuerdo" "$USER" \
+  "    public function getAuthPassword(): string
+    {
+        return (string) \$this->password;
+    }
+" ""
+
+mutar "la cookie de recuerdo no se alarga con el uso" "$BOOT" \
+  "            RefreshRememberedDevice::class,
+" ""
+
+mutar "el recuerdo dura lo de Laravel (400 días) y no 90" "$AUTHCONF" \
+  "            'remember' => RememberedDevice::MINUTES,
+" ""
+
+mutar "salir en un dispositivo echa a todos los demás" "$SESSION" \
+  "\$web->logoutCurrentDevice();" \
+  "\$web->logout();"
+
+mutar "entrar con el código no recuerda el dispositivo" "$SESSION" \
+  "Auth::guard('web')->login(\$result->user, remember: true);" \
+  "Auth::guard('web')->login(\$result->user);"
+
+mutar "el alta no recuerda el dispositivo" "$SIGNUP" \
+  "Auth::login(\$result->user, remember: true);" \
+  "Auth::login(\$result->user);"
+
+echo
+echo "mutaciones que muerden: ${muerden}/${total}"
+if [ "$muerden" -eq "$total" ]; then
+    exit 0
+fi
+exit 1

@@ -44,6 +44,14 @@ return [
         'badge' => 'Needs confirming',
         'headline' => 'Verify your email',
     ],
+    'login_code' => [
+        'subject' => ':code is your sign-in code',
+        'preheader' => "Type it where you asked for it. If you didn't ask for it, ignore this email.",
+        'badge' => 'Your sign-in code',
+        'headline' => ':code',
+        'validity' => 'Type it on the screen where you asked for it. It works for :minutes minutes and only once.',
+        'ignore' => "If you didn't ask for it, ignore this email: nobody can get into your account without this code.",
+    ],
     'verify_purchase' => [
         'subject' => 'Confirm your email · :code',
         'preheader' => 'Your slot is on hold while you confirm. One click and you can finish paying.',

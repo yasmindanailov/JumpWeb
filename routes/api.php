@@ -2,6 +2,7 @@
 
 use App\Domain\Identity\Services\ApiTokenIssuer;
 use App\Http\Controllers\Api\V1\AttractionsFactsController;
+use App\Http\Controllers\Api\V1\AuthCodeController;
 use App\Http\Controllers\Api\V1\AuthRegistrationController;
 use App\Http\Controllers\Api\V1\AuthSessionController;
 use App\Http\Controllers\Api\V1\AuthTokenController;
@@ -93,6 +94,12 @@ Route::name('api.v1.')->group(function (): void {
     // no una copia con otros números. El `throttle:api` del grupo cuenta además cada intento,
     // porque esta ruta es pública (spec §10, punto 2).
     Route::post('/auth/login', [AuthSessionController::class, 'login'])->name('auth.login');
+
+    // ── La PUERTA del acceso con código (A1 de `specs/acceso-con-codigo.md`, `#848`/`#849`) — PÚBLICA ─────────────
+    // El correo decide por dónde se sigue: con cuenta, se le envía un código (que se escribe en `auth/login` o en
+    // `auth/tokens`); nuevo, el alta. Sin sesión ni CSRF de más: la usa también la app. Sus límites —por IP y por
+    // correo— viven en `Identity\Services\EmailCodeLogin`, no aquí; el `throttle:api` del grupo se suma como suelo.
+    Route::post('/auth/code', [AuthCodeController::class, 'request'])->name('auth.code');
     // El logout se declara con `auth:sanctum`: cerrar sesión sin tenerla no es una operación, y
     // dejarlo público daría una respuesta idéntica a quien no ha entrado nunca.
     Route::post('/auth/logout', [AuthSessionController::class, 'logout'])

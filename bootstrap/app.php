@@ -12,6 +12,7 @@ use App\Http\Middleware\EnsureSiteAvailable;
 use App\Http\Middleware\NoStore;
 use App\Http\Middleware\NoStoreWebResponses;
 use App\Http\Middleware\RecordEmailClick;
+use App\Http\Middleware\RefreshRememberedDevice;
 use App\Http\Middleware\RequiresAdminAppAuthentication;
 use App\Http\Middleware\RequiresPanelRole;
 use App\Http\Middleware\ResolveAttribution;
@@ -94,6 +95,9 @@ return Application::configure(basePath: dirname(__DIR__))
             // `email_clicked` (T1c): la llegada desde un correo, por su `utm_source=email`. DESPUÉS del
             // visitante, que es quien deja el contexto al que el hecho se ata (solo con `analytics`).
             RecordEmailClick::class,
+            // El dispositivo recordado 90 días SIN USO (`specs/acceso-con-codigo.md` §4.4, `#848`): la cookie de
+            // recuerdo vuelve con 90 días más en cada página que la usa.
+            RefreshRememberedDevice::class,
         ]);
 
         // ── Grupo `api` — declarado PIEZA A PIEZA (Fase 3 · paso 0, spec §4.7) ────────────────

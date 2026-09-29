@@ -50,8 +50,8 @@ class EmailUtmTest extends TestCase
         $this->assertFalse(EmailUtm::isCustomerKey('lo_que_sea'), 'una clave que no es de un correo no cuenta');
         // 26 desde la T3a·4 (`AnalyticsLinkNotice`, el aviso a las cuentas existentes); 27 desde la T3 de las
         // encuestas (`SurveyInvitation`, el correo del día siguiente); 28 desde «Avísame de fechas» (`#750`,
-        // `BirthdayComingNotice`, el correo semanas antes del cumple).
-        $this->assertCount(28, EmailUtm::keys());
+        // `BirthdayComingNotice`, el correo semanas antes del cumple); 29 desde el acceso con código (`#853`, `LoginCode`).
+        $this->assertCount(29, EmailUtm::keys());
     }
 
     public function test_the_tag_only_touches_our_own_links_and_keeps_the_fragment(): void

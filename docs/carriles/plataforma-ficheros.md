@@ -12,6 +12,10 @@ guardas 8, 9 y 10) · `scripts/mutar-guarda8.sh` · `CHANGELOG.md` · `phpstan.n
 **EL ACCESO Y EL PANEL A SALVO** (`#847`→`#851`): sus dos specs, el guard `admin` de `config/auth.php`, `config/panel.php`,
 `App\Http\PanelPath`, `RequiresAdminAppAuthentication`, `panel:quitar-authenticator`, `Panel{OwnGuard,SecretPath,AppAuthentication}Test`,
 `scripts/{sonda-panel.mjs,mutar-panel-{guard,direccion,authenticator}.sh}` (y, AVISANDO, lo compartido: `layout.blade.php`, `routes/web.php`, `TestCase`) ·
+**EL ACCESO CON CÓDIGO, la A1** (`#853`/`#854`): `Identity\Models\LoginCode`, `Identity\Services\{LoginCodes,EmailCodeLogin,LoginGate,RememberedDevice}`,
+`Identity\Contracts\CodeRequestResult`, `Platform\Contracts\HidesSecretsInCopy`, `Notifications\LoginCode`, `AuthCodeController`,
+`RefreshRememberedDevice`, sus dos migraciones, `{LoginCodes,RememberedDevice}Test`, `Api\V1\AuthCodeTest` y `scripts/mutar-acceso-codigo.sh`
+(y, AVISANDO, del SPA: `RecordEmailSend`, `EmailTiming`) ·
 **LA ISLA Y LA LANDING NUEVA** (`#681`, `#682`): la spec, la isla `resources/js/isla/**`, sus bancos y sondas
 (`scripts/banco-{isla,piezas,compra}*`, `scripts/pixel.mjs`, `scripts/sonda-{embudo,isla,cuenta,movimiento,isla-movimiento,banco-movimiento,isla-rendimiento,compra-directa,demanda}.mjs`,
 `scripts/sonda-cuenta-datos.php`, `scripts/mutar-{t5f,hijos-de-producto,demanda-isla}.sh`), `sidebar/reanudar.js`,

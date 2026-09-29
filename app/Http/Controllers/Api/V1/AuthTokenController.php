@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Domain\Identity\Contracts\LoginResult;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\ApiTokenIssuer;
+use App\Domain\Identity\Services\EmailCodeLogin;
 use App\Domain\Identity\Services\PasswordLogin;
 use App\Http\Api\ApiErrorCode;
 use App\Http\Api\ApiErrorResponse;
@@ -30,15 +31,23 @@ use Laravel\Sanctum\NewAccessToken;
  */
 class AuthTokenController extends Controller
 {
-    public function issue(Request $request, PasswordLogin $passwordLogin, ApiTokenIssuer $issuer): JsonResponse
+    /**
+     * ▶ Con la contraseña o con el CÓDIGO al correo (A1 de `specs/acceso-con-codigo.md` §4.4: «la app, `POST
+     * /auth/tokens` con correo + código»), uno de los dos. Los dos pasan por los MISMOS cubos de `SEC-06`
+     * (`LoginGate`): los fallos con uno cuentan para el otro, aquí y en `auth/login`.
+     */
+    public function issue(Request $request, PasswordLogin $passwordLogin, EmailCodeLogin $codeLogin, ApiTokenIssuer $issuer): JsonResponse
     {
         $data = $request->validate([
             'email' => ['required', 'string', 'email'],
-            'password' => ['required', 'string'],
+            'password' => ['required_without:code', 'prohibits:code', 'string'],
+            'code' => ['required_without:password', 'string', 'max:16'],
             'device_name' => ['required', 'string', 'min:1', 'max:60'],
         ]);
 
-        $result = $passwordLogin->verify($data['email'], $data['password'], (string) $request->ip());
+        $result = isset($data['code'])
+            ? $codeLogin->verify($data['email'], $data['code'], (string) $request->ip())
+            : $passwordLogin->verify($data['email'], $data['password'], (string) $request->ip());
 
         if ($result->failed()) {
             return $this->denial($result);

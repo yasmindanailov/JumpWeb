@@ -1,8 +1,9 @@
 # [SPEC] Entrar con un código al correo — la contraseña del cliente se retira
 
-> Estado: ✅ aprobada (29-09: el owner contestó el §7) → a implementar · Última actualización: 2026-09-29 ·
+> Estado: ✅ aprobada (29-09: el owner contestó el §7) → **A1 ✅** (§4.8), sigue la A2 · Última actualización: 2026-09-29 ·
 > Decisiones: `#847` (el owner: código al correo y Google; fuera la contraseña) · `#848` (el §7: una sola puerta, borrar
 > las contraseñas, 90 días, solo el código) · `#849` (corrige el 1: el registro NO espera al código, hay cola en la puerta) ·
+> `#853`/`#854` (la A1: el código en el servidor; el dispositivo recordado y `RGPD-06`) ·
 > Carril: plataforma (el servidor, el contrato y la isla); el cajón, del SPA por buzón.
 
 ## §0 · Antes de tocar
@@ -19,7 +20,8 @@
   (§4.4). (3) Las cuentas de Google llevan hoy una contraseña aleatoria (0 nulas de 53 en local). (4) Los limitadores
   son de DOMINIO (`SEC-06`): ningún controlador los reimplementa. (5) La puerta dice si un correo tiene cuenta, como el
   alta de hoy (`#31`): la acotan los límites de §4.2.
-- **Estado**: ✅ aprobada (`#848`); sin código. Sigue la A1 (§4.7).
+- **Estado**: ✅ aprobada (`#848`). **A1 ✅** (29-09, `#853`/`#854`, §4.8: lo hecho, lo medido y lo que hereda la A2).
+  Sigue la A2 (§4.7).
 - **Invariantes**: `SEC-06` (se amplía al código), `RGPD-01` (la purga borra los códigos), `RGPD-06` (sin cambio de
   forma). Ningún fichero del `CRITICAL_RE`.
 
@@ -129,6 +131,34 @@ suya. Es un borrado de datos en producción: con su receta de `ENTORNOS.md` §5 
 **A1** el código en el servidor (tabla, servicio de dominio, límites, correo, `request`/`verify`, sesión y token) ·
 **A2** las acciones sensibles con `confirmar` · **A3** la isla (Entra, «Tus datos», Mi cuenta) · **A4** el cajón (SPA,
 por buzón) · **A5** la retirada y las contraseñas de §4.6 · **A6** staging: la latencia real del correo, antes de la v2.0.0.
+
+### 4.8 La A1, hecha — `[DECIDIDO]` 2026-09-29 (`#853`, `#854`)
+- **La API** (contrato **1.55.0**): `POST /auth/code` `{email}` → `200 {next: code|register}`; con `code` el código ya va
+  de camino. `429` con `retry_after` y, si el tope fue el del CORREO, `params.next = code` (la pantalla puede seguir a
+  escribirlo). El código se escribe en `POST /auth/login` o `POST /auth/tokens`: **`password` o `code`**, nunca los dos
+  (422). `POST /auth/register` ya no exige `password`. Lo que la A3 y la A4 necesitan para pintar, esto.
+- **Las piezas**: `Identity\Models\LoginCode` (tabla `login_codes`, poda diaria a las 24 h) · `Services\LoginCodes` (emitir
+  y gastar: HMAC con la clave de la app sobre propósito, correo y código; intento y uso CONDICIONADOS) ·
+  `Services\EmailCodeLogin` (la puerta y verificar) · `Services\LoginGate` (el núcleo `guarded()` de `PasswordLogin`,
+  movido tal cual: los dos cubos de `SEC-06` los comparten la contraseña y el código) · `Notifications\LoginCode` (el
+  código en el asunto y como titular, «482 913»). Límites: IP 10/min (todas las peticiones de la puerta); correo 1/min y
+  5/h (solo cuando se envía).
+- **El envío**: `sendNow()` dentro de `defer()`, tras la respuesta. La notificación sigue `ShouldQueue` (`PAY-14`): quien
+  la notificara por el camino normal la encolaría. En local, el correo está en Mailpit a los ~300 ms de la petición; en
+  LiteSpeed, sin medir (A6).
+- **La copia**: el registro de correos salientes (`#794`) guardaba el HTML y el asunto TAL CUAL, código incluido;
+  `HidesSecretsInCopy` lo tapa («••• •••»). Medido en MySQL tras la sonda.
+- **El dispositivo recordado** (`#854`): la cookie «recuérdame» del guard `web`, 90 días (`Max-Age=7776000`, medido), la
+  alarga `RefreshRememberedDevice` en cada página; salir cierra solo este dispositivo. Google y el enlace de verificación
+  no recuerdan: su entrada no cuesta un correo. `User::getAuthPassword()` da `''` sin contraseña (con `NULL`, PHP 8.5
+  avisaba de obsoleto en cada entrada recordada).
+- **Medido con control**: la carrera de diez `POST /auth/tokens` con el mismo código contra MySQL da un solo 201… y su
+  control (sin las condiciones) también: cuatro procesos no abren el hueco. La prueba que discrimina es determinista
+  (`LoginCodesTest`, el segundo uso dentro del hueco con `DB::listen`), con su mutación.
+- ⚠️ **Hereda la A2**: `AccountCredentials` reconfirma con la contraseña y usa `logoutOtherDevices($password)`, que sin
+  contraseña no puede; y las sesiones de producción en Redis (§4.4). ⚠️ **Del owner**: `/cookies` dice que la cookie de
+  persistencia solo se pone «si marcas recuérdame» —ya no es así— y la AEPD exime las de autenticación «de sesión»:
+  el texto y el aviso en la pantalla (A3), `[PENDIENTE: owner]`.
 
 ## 5. Impacto en invariantes
 

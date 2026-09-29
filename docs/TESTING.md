@@ -418,6 +418,15 @@ son de cualquiera que mida, no de un carril.
 - **Cambiar un estilo dentro de un `@container` y medir al instante devuelve el tamaño de ANTES** (`#844`): quitarle una
   marca a un elemento y leer su caja en la misma tarea daba lo viejo. Para decidir por su tamaño, se mide una COPIA oculta
   (el molde de la franja de garantías de la instancia), y en una caja de tamaño cero: suelta, cuenta para el desplazamiento.
+- **`getJson()`/`postJson()` NO mandan cookies** (A1 del acceso con código, `#854`, 29-09): sin `withCredentials()` la cookie
+  ni viaja, y el 401 parece «la cookie no vale». Y con `SESSION_DRIVER=array` el almacén de sesión es el MISMO objeto en
+  todas las peticiones de una prueba: una petición sin cookie de sesión HEREDA sus atributos —el inicio de sesión de la
+  anterior incluido—, y «el otro dispositivo sigue fuera» daba 200 por la sesión de otro. Un «dispositivo» nuevo:
+  `Auth::forgetGuards()` + `app('session')->driver()->flush()` (`RememberedDeviceTest::device()`).
+- **Una carrera que no discrimina no prueba nada** (`#853`): diez `POST /auth/tokens` a la vez con el mismo código contra
+  MySQL dan un solo 201, y su CONTROL —el código sin las condiciones atómicas— también: cuatro procesos de `artisan serve`
+  no abren el hueco. La propiedad se prueba DETERMINISTA (el segundo uso dentro del hueco, con `DB::listen`) y se muta.
+  Y una sonda que repite la carrera limpia antes los cubos que la anterior agotó (`SEC-06` la bloquea: 429 en todo).
 
 ### 3. Guardas de arquitectura — `tests/Feature/Architecture/`
 Tests que no prueban una feature sino una REGLA estructural; sin ellos el refactor de Fase 2 se
