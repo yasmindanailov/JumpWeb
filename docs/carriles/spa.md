@@ -2,13 +2,13 @@
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb` a secas; la instancia al lado, en
 > `~/proyectos/instancias/playjump`, clon de `github.com/yasmindanailov/instancia-playjump`, montada el 25-09) ·
-> Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#806`** · La banda está dada de alta en la
+> Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#807`** · La banda está dada de alta en la
 > tabla de `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs:
 > **`fiesta-sistema-nuevo.md` §4.17** (lo siguiente, `#806`) · `correos-rediseno.md` §0 (`#800`→`#804`; la R1·T) ·
 > `analitica-para-decidir.md` §0 (en pausa, `#755`) · `encuestas.md` §0 y §4.7 (`#754`) · `analitica.md` §0 y §4.5 ·
 > `isla-y-landing-nueva.md` §4.11 · `celebracion-e-invitacion.md` §0 · `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 ·
-> `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-09-29, 23:00 (cierre: R1a, R1b y la lista del
-> owner en `main` y aprobadas; lo siguiente, los complementos en dos).
+> `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-09-29, 23:10 (los complementos en dos, medidos y
+> contestados por el owner, `#807`; lo siguiente, K1).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`). El
 > contador de la suite va en el trailer del commit (`#618`), no aquí. **Se muda, no se raspa**: el detalle de
 > una feature baja a su spec (las trampas por tanda de la analítica T1→T5 viven en `analitica.md` §4.9,
@@ -19,13 +19,9 @@
 - ✅ **LA LISTA DE INVITADOS DEL OWNER, EN `main` Y APROBADA** (`#805`, del `#847`; `fiesta-sistema-nuevo.md` §4.16; «vale,
   visto bueno»): todos confirmados, sin firmas de los invitados (el descargo de quien cumple, sí), sin cifras ni recordatorio
   (RETIRADO entero, con sus textos y su test), el «No podemos» aparte y suave; arnés `mutar-lista-805.sh` 6/6.
-- ⬜ **LOS COMPLEMENTOS EN DOS** (`#806`, §4.17): pedido del owner el 29-09, NADA medido ni escrito todavía (ver retomar 0).
-- ✅ **LA R1b (los iconos), EN `main` Y APROBADA** (29-09: «buen trabajo, acepto los correos»; §4.1.3): máscaras de paleta
-  teñidas por su `PLTE`, sin GD; arnés 12/12. El `--correo-icono` de PlayJump, empujado a la instancia con la hoja.
-- ✅ **LA R1a DE LOS CORREOS, EN `main` Y APROBADA** (29-09, el owner: «visto bueno, buen trabajo»; `correos-rediseno.md` §4.1.1
-  y §4.1.2, `#803` el botón como el diseño, `#804` los enlaces legales se quedan): la plantilla del diseño en el molde, los 28
-  sin tocarlos; arnés 39/39, sonda 28/28; la hoja de PlayJump en la instancia y declarada por plataforma (`da0f84d`). En la BD
-  local, ~100 filas de `email_sends` del cliente de sondas (`scripts/banco-correos.php`).
+- 🟦 **LOS COMPLEMENTOS EN DOS** (`#806`, `#807`, §4.17): MEDIDOS y CONTESTADOS por el owner el 29-09 (la merienda, pregunta
+  del pack sin dinero; calcetines y cono, fuera del pack; varias tartas); sin código todavía (ver retomar 0).
+- ✅ R1a y R1b de los correos, en `main` y aprobadas (29-09): su foto, mudada verbatim a `CARRIL-SPA.md` §9.
 - **LOS CORREOS** (`specs/correos-rediseno.md`, `#800`→`#804`): la spec, medida con el
   censo HAY/FALTA contra el zip (§1), y cuatro decisiones del owner: el 7 sigue siendo la encuesta (`#801`); las ocasiones, al
   final; el orden plantilla → textos editables → reserva → comerciales → felicitaciones; y **los TEXTOS, editables desde el
@@ -48,15 +44,14 @@
 
 ## Por dónde retomar, en orden
 
-0. ▶▶▶ **LOS COMPLEMENTOS DE LA FIESTA, EN DOS** (`#806`, `fiesta-sistema-nuevo.md` §4.17; SPEC ANTES DE CÓDIGO): la zona de
-   los extras de la lista pasa a «Complementos para los niños» y «Complementos para los adultos», fiel al sistema de diseño,
-   clara y sin saturar. El owner pidió: VARIAS tartas de distintos tipos (hoy una y «Añadir otra tarta», `#749`); calcetines
-   para TODOS los niños o solo para algunos; UNA merienda que quien reserva ELIGE en la lista (sándwich, pizza o perrito) y
-   chuches como complemento; los de los adultos (combos, cubos, cuántos se quedan), como hoy. Primero MEDIR el modelo
-   (`product_addons`: `postform_block`, `family`, `serves`; las listas `menu_*` de F1b; `#521`), cómo se reserva y se cobra
-   (en el parque, el libro) y las piezas del sistema de diseño (`AddonCard`…); después proponer en §4.17 con preguntas al
-   owner (¿merienda por niño o una para todos?, ¿tipos de tarta como productos del catálogo?, ¿calcetines por talla?) y
-   esperar sus respuestas. Toca dinero (cobro en el parque): `INVARIANTES` §1 antes. Después, la **R1·T** (punto 1).
+0. ▶▶▶ **LOS COMPLEMENTOS DE LA FIESTA, EN DOS** (`#806`, `#807`, `fiesta-sistema-nuevo.md` §4.17): MEDIDO y CONTESTADO
+   (29-09, 23:00): lo medido (1–6), la propuesta P1–P4 y las cuatro respuestas del owner, en §4.17. Siguen tres tandas, cada
+   una con su «al detalle» MEDIDO en §4.17 antes de codificar, en `wip/…` y al ojo del owner: **K1** las dos secciones y «Uno
+   para cada niño» (vista, JS, textos) → **K2** varias tartas (el controlador deja de traducir `cake`) → **K3** la merienda
+   (campo `choice` del evento, sin dinero: catálogo, panel, lista, invitación F1b, hoja del parque, API minor). En la local,
+   de prueba: desenganchar Menú 1/2 de los packs 105/106 y pasar calcetines y cono a `postform` (con tope ≥ 20 y plazo).
+   ⚠️ La merienda es sin dinero SOLO si todas cuestan lo mismo (`#807`); con suplemento, otra tanda por el `CRITICAL_RE`.
+   Después, la **R1·T** (punto 1).
 1. ▶▶ **LOS CORREOS (`specs/correos-rediseno.md`: §0 → §4.2 los textos; `#789`, `#800`→`#804`)**: ✅ R1a la plantilla y ✅
    R1b los iconos, en `main` y aprobadas (§4.1.2, §4.1.3). Lo siguiente es la **R1·T**; cada tanda con su «al detalle» MEDIDO
    en la spec antes de codificar, en `wip/…`, con su arnés y al ojo del owner en Mailpit (el banco,
@@ -226,6 +221,10 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 
 ## Buzón
 
+- ❗ **Para plataforma (29-09, `#807` del owner) — la merienda sale de la reserva**: se elige en la lista, sin dinero; calcetines
+  y cono de chuches dejan el pack. Tuyo: (1) `isla/compra/PantallaCuandoFiesta.vue` pinta «¿Qué menú?» SIN condición (medido):
+  con el menú desenganchado saldría vacía (un `v-if` sobre `menus`); (2) la calculadora y la landing (brief, pieza 5 y 6: «incluye
+  calcetines… cono», «¿Qué menú?»). Mi K3 añade el tipo `choice` al contrato del catálogo (minor): te digo aquí su número.
 - ❗ **Para plataforma (29-09) — AVISO PREVIO, `routes/web.php`** (fuera del grupo de la fiesta): la R1b de los correos añade
   UNA ruta junto al píxel de apertura, `GET /correo/i/{v}/{color}/{nombre}.png` (los iconos de los correos, teñidos al vuelo;
   sin sesión ni cookies, como `emails.open`). Nada más del fichero cambia.
@@ -297,6 +296,7 @@ el repo de la instancia (lo nuevo), nunca a `main`.
   código `MIN_REVIEWS = 1` (`#494`): no la toco yo.
 
 ### Atendido
+- **Plataforma 29-09** (T6f `#843` y T6g: `.rays` y `--rayos*` fuera de `site.css`, `cajon.css` regenerado): leído; nada mío a medias.
 - **Plataforma 29-09, en la instancia** (`da0f84d`): declaró `hojas.correo` con `css/correo.css`, a petición mía; mi aviso,
   retirado. El `--correo-icono` de la R1b, empujado encima (`8fdbc84`).
 - **Plataforma 29-09** (la hoja de correo, `28dfdf15`: `hojas.correo` por la puerta de `#769`, sin contrato nuevo; el lector

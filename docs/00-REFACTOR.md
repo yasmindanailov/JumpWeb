@@ -28,7 +28,7 @@ programa «producto e instancias» separa el producto de sus instancias.
 - [ ] F5 · instancia PlayJump y la landing fuera, v2.0.0 · **ABIERTA el 19-09 por el CENSO** (`#639`). Detalle: `specs/instancia-y-landing-fuera.md` §4.1 y §4.6, y `specs/paquete-de-instancia.md`; aquí, los marcadores. **T1→T4 ✅** (`#640`→`#669`) · **la VÍA A y sus cuatro platos ✅** (`#670`→`#674`) · **el CENSO `#675` y sus cuatro hechos ✅** (`#676`, `#677`, contrato 1.17.0): **el menú, COMPLETO** ⚠️ La **T5** (cortar v2.0.0) es el final del programa entero, no de esta fase (`#670`)
 - [ ] Analítica (`specs/analitica.md`): T1 ✅ · T2 🟦 (T2e ⬜) · T3 ✅ · T4 ✅ · T5 🟦 (T5c ⬜) · T6 ✅ · T7 🟦 encuestas (anónimas ✅ `#757`) · **para decidir 🟦** (`#755`: T4 ✅, T5 ✗ `#800`, T6–T8 ⬜)
 - [ ] Landing nueva e isla (`specs/isla-y-landing-nueva.md` §0, `#681`·`#682`): T0→T3 ✅ · **T4 🟦** (§4.12) · **T5 ✅** (§4.13) · Z ✅ (§4.14, §4.16; `Medir` aplazado) · 1.ª pantalla ✅ (§4.15) · T6 ✅ §4.17–25 · `#758` ✅ §4.26
-- [ ] Antes de desplegar (`#847`): **entrar con código** (`specs/acceso-con-codigo.md` ✅ `#848`·`#849`: A1→A6 ⬜) · panel (`specs/panel-a-salvo.md`): guard ✅ `#850` · dirección ✅ · authenticator ✅ `#851` · SEO ⬜ · imágenes al compartir ⬜ · la lista de invitados (SPA) ⬜
+- [ ] Antes de desplegar (`#847`): **entrar con código** (`specs/acceso-con-codigo.md` ✅ `#848`·`#849`: A1→A6 ⬜) · panel (`specs/panel-a-salvo.md`): guard ✅ `#850` · dirección ✅ · authenticator ✅ `#851` · SEO ⬜ · imágenes al compartir ⬜ · la lista de invitados (SPA) ✅ `#805`
 - [ ] F6 · app nativa: spec con pila y alcance · pila decidida (`#627`): React Native + Expo en TypeScript, a confirmar con la prueba corta
 
 ### Fase 0 — Fundación ✅
@@ -109,7 +109,7 @@ programa «producto e instancias» separa el producto de sus instancias.
 - [x] **T5–T7 y el borde `§7.1·5`: la invitación digital, CERRADA** (`#701`→`#718`, spec §10.5–§10.18, ✅ del owner 20-09). ⚠️ **SIN DESPLEGAR**, con una migración (`order_items.eve_notice_at`).
 - [ ] La invitación: solo falta **desplegar** (T5–T7 + migración) y **encender** (dato del owner); los tres huecos del ✅, en el §0 de la spec.
 - [ ] ▶ **LA FIESTA DEL SISTEMA NUEVO** (`specs/fiesta-sistema-nuevo.md` ✅ `#743`): T0→T4 y F1→F9 ✅ (`#747`→`#753`) · la
-  lista del owner ✅ (`#805`, 29-09) · ⬜ los complementos en dos (`#806`, §4.17: spec antes de código).
+  lista del owner ✅ (`#805`, 29-09) · 🟦 los complementos en dos (`#806`·`#807`, §4.17: contestada; K1→K3 ⬜).
 - [ ] El OJO del owner en un teléfono de verdad · el cuaderno de entrega del cajón · el botón del sistema.
 
 ### El PANEL: la exención del menor y el ROL DE PUERTA ✅ código — `#320`

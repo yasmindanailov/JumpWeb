@@ -2,7 +2,7 @@
 
 > Estado: ✅ **APROBADA por el owner el 2026-09-25 con sus ocho respuestas (`#743`)** · en ejecución: T0 ✅, sigue
 > la T1 · Última actualización: 2026-09-29 · Decisiones: `#765` (el traspaso) · **`#743`** (la aprobación y las ocho
-> respuestas de §7) · `#805` (la lista del owner, §4.16) · `#806` (los complementos en dos, §4.17).
+> respuestas de §7) · `#805` (la lista del owner, §4.16) · `#806` y `#807` (los complementos en dos, §4.17).
 > Carril: 🧩 **SPA** (banda 730–759). Fuente del diseño: `instancias/playjump/diseno/playjump-design-system/`
 > (el zip de Claude Design, `#760`): `paginas/lista-invitados.card.html`, `paginas/invitacion.card.html`,
 > `paginas/autorizacion.card.html`, `components/invitados/*`, `components/forms/SaveBar.jsx`, el `readme.md`
@@ -839,16 +839,70 @@ no los usa: el Listo es su propia vista).
   rutas enfocadas pasa de 18 a 17; y `MountsAParty::replyOf()` no sabía crear un «no» (PHP acepta argumentos de más sin
   avisar: gana `$attending`). Arnés `scripts/mutar-lista-805.sh` 6/6, el árbol byte a byte; suite 6553 / 45031.
 
-### 4.17 Los complementos de la fiesta, en dos (`[DECIDIDO owner]` `#806`, 29-09) — ⬜ por medir, spec antes de código
+### 4.17 Los complementos de la fiesta, en dos (`[DECIDIDO owner]` `#806`, `#807`, 29-09) — 🟦 contestada; sigue K1
 
 - **El pedido del owner**: la zona de los extras se reordena en «Complementos para los niños» y «Complementos para los
   adultos», fiel al sistema de diseño, clara y sin saturar: VARIAS tartas de distintos tipos (hoy, una y «Añadir otra tarta»,
   `#749`); calcetines para todos los niños o solo para algunos; UNA merienda que quien reserva elige en la lista (sándwich,
   pizza o perrito) y chuches como complemento. Los de los adultos, como hoy (combos y cubos, con cuántos se quedan).
-- **Por medir antes de proponer**: el modelo de hoy (`product_addons`: `postform_block`, `family`, `serves`; las listas
-  `menu_*` de F1b; `#521`, solo lo comprado), cómo se reserva y se cobra (en el parque, el libro del pedido) y lo que FALTA:
-  el tipo de tarta, el complemento por niño, la merienda como elección dentro del pack, las chuches; y las piezas del sistema
-  que lo pintan (`AddonCard` y compañía) contra el catálogo. Con sus preguntas al owner, en simple.
+
+**Medido (29-09, 22:57; el código, la local y la instancia en `8fdbc84`)**:
+1. **La zona 4 pinta SOLO lo de venta posterior** (`PostFormAddons` → `AddonResolver::forStage(postform)`), en tres lotes de
+   `ListaDeInvitados::extras()`: la tarta (`cake`: una pregunta de UNA respuesta entre las tartas del catálogo y «Sin tarta»,
+   con «¿Cuántas tartas?» de la elegida; la web manda `cake` y `cake_quantity` y el controlador los traduce), lo de los padres
+   (`adults`: familias, «¿Cuántos adultos se quedan?», `cubrir()`) y el resto en una rejilla sin título.
+2. **La merienda NO está en la lista**: es el grupo excluyente `menu` de venta AL RESERVAR (Menú 1 incluido a 0 €, Menú 2 a
+   2 €), y lo preguntan la isla (`isla/compra/PantallaCuandoFiesta.vue`, plataforma), su calculadora y el cajón. Después, solo
+   el operador lo cambia (`OrderItemEditor::edit`: un miembro del grupo sustituye al presente; la diferencia, al parque).
+3. **Los calcetines del pack** son un complemento de venta AL RESERVAR (2 €, sin tope, en los dos packs de la local): no salen
+   en la lista. Un mismo enganche no puede ser de las dos fases (`ProductAddon::STAGES`, sin `both`).
+4. **Lo que la puerta del cliente no admite** (`ProductAddon::postFormProblem()`): `per_guest`, grupo excluyente, incluido,
+   obligatorio; y solo toca líneas que nacieron a 0 € (`LineFacts::birthValue() === 0`, D9 de `complementos-post-reserva.md`):
+   una merienda comprada al reservar NO la puede cambiar el cliente sin una regla nueva de dinero (`PAY-16/17`, `CRITICAL_RE`).
+5. **El brief del cliente** (`brief-cumpleanos-playjump.md`, piezas 5, 6 y 8) dice lo CONTRARIO en tres puntos: el pack
+   incluye «merienda para cada niño», «calcetines antideslizantes para todos» y «cono de chuches para cada niño»; el menú se
+   elige al reservar (pregunta 5); los extras son tarta de 12 (25 €), «traer vuestra tarta» (10 €), combos y cubos. El diseño
+   de la lista (`paginas/lista-invitados/datos.js`) pinta la tarta como `OptionCards` («La nuestra», «La grande», «Traemos la
+   nuestra», «Sin tarta») y lo de los padres como `AddonCard` por variante; la compra trae «los calcetines, de un toque»: «Un
+   par para cada persona · 4» junto al contador (readme, 371).
+6. La cita «`#521`» de esta sección era un error: la regla «solo lo comprado» del menú de la invitación es la D12 de
+   `celebracion-e-invitacion.md` (`#573`); `#521` es de los destinos del menú de la web.
+
+**Propuesta (el mecanismo; lo de negocio, en las preguntas)**. Todo DATO del panel, nada de PlayJump en el producto:
+- **P1 · Dos secciones sin dato nuevo**: «Para los adultos» = el bloque `adults` de hoy, tal cual; «Para los niños» = todo lo
+  demás (la tarta, la merienda si la hay, el resto de la rejilla). Títulos en `lang/*/fiesta.php`.
+- **P2 · Varias tartas**: una `AddonCard` por tipo, cada una con su cantidad (el mismo `addons[i]` que el resto; el controlador
+  deja de traducir `cake`), las raciones SUMADAS contra los niños («Sois 14: 24 raciones») y «Sin tarta» como decisión que
+  calla el aviso (`cake_declined`, ya existe). «Traemos la nuestra» es una tarta más del bloque (dato).
+- **P3 · «Uno para cada niño»**: en la sección de los niños, un complemento con «para 1» (`serves = 1`) ofrece «Un par para
+  cada niño · 14» junto al contador (el patrón de la compra; la cuenta, la de `cubrir()` con los niños en vez de los adultos).
+  Sin casillas por niño: no satura la lista.
+- **P4 · La merienda**: según la pregunta 1 (abajo); la opción A es la única que toca dinero y la frontera con plataforma.
+
+**Preguntas al owner** (con su coste): (1) la merienda — A: se elige SOLO en la lista, con su precio (pizza o perrito +2 € por
+niño, en el parque): bloque nuevo que sigue al número de niños, fuera la pregunta del menú al reservar (isla y calculadora de
+plataforma, cajón mío), coste alto · B: el menú sigue al reservar y en la lista solo «¿pizza o perrito?», sin dinero, coste bajo
+· C: se elige en la lista y todas cuestan lo mismo, coste medio. (2) Los calcetines: ¿incluidos en el pack, como dice el brief,
+o se piden en la lista a 2 € el par? (3) Las chuches: ¿el cono sigue incluido y el complemento es otra cosa, o sale del pack?
+(4) Las tartas: ¿se piden a la vez de varios tipos (P2) o una sola tarta y se elige el tipo?
+
+**Contestadas (29-09, 23:00; `[DECIDIDO owner]` `#807`)**: (1) «No toca dinero, es configuración del producto: quitamos el
+menú al reservar y añadimos opciones de merienda en la lista» = la **C**: las meriendas, al MISMO precio (el suplemento del
+Menú 2 desaparece; si una llegara a costar más, sería otra tanda, con dinero). (2) «Los calcetines ya no son gratis; se
+añaden en la lista» (P3). (3) El cono de chuches SALE del pack y se pide en la lista (P3, como los calcetines). (4) Varias
+tartas a la vez (P2).
+- **La merienda, sin dinero**: una PREGUNTA del pack, no un complemento. Tipo de campo nuevo del evento, `choice` («¿Qué
+  merienda?», sus opciones i18n, cada una con qué lleva), contestado en la lista como el de los adultos (`adults`), pintado
+  como `OptionCards` en «Para los niños»; la invitación (F1b) y la hoja del parque enseñan la elegida. Contrato del catálogo
+  (`EVENT_FIELD_TYPES` + `CatalogFieldTypesMatchContractTest`) y del post-form: minor.
+- **Quitar el menú al reservar es DATO** (desenganchar Menú 1 y 2 de los packs) **más una línea de plataforma**: la isla pinta
+  «¿Qué menú?» sin condición (`PantallaCuandoFiesta.vue`, medido), y la landing dice «incluye calcetines y cono» (brief, pieza
+  5): aviso en mi buzón. Lo vendido con menú se queda como está (su línea nació con el pedido).
+- **Calcetines y cono, DATO**: sus enganches en los packs pasan a `postform` (con tope y plazo), «para 1»; lo ya comprado al
+  reservar sale cerrado, «comprado al reservar» (`REASON_SOLD_AT_BOOKING`, ya existe).
+- **Tandas** (en `wip/…`, cada una al ojo del owner): **K1** las dos secciones y «Uno para cada niño» (P1, P3; vista, JS,
+  textos; sin dominio) · **K2** varias tartas (P2; el controlador deja de traducir `cake`; `PostFormAddons` intacto) · **K3**
+  la merienda (`choice`: esquema, panel, lista, invitación, hoja, API). Cada una con su «al detalle» medido antes de codificar.
 
 ## 5. Impacto en invariantes
 
