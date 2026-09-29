@@ -1,4 +1,4 @@
-@props(['utm' => null])
+@props(['utm' => null, 'clickMark' => null])
 <tr>
 <td>
 <table class="footer" align="center" width="600" cellpadding="0" cellspacing="0" role="presentation">
@@ -28,9 +28,10 @@
      (`route()` las genera absolutas en email) y etiquetas data-driven/i18n (reusan las del footer
      web, `landing.footer.legal`). Estilos inline (email-safe), color atenuado del footer. --}}
 {{-- Y con la UTM del correo (`EmailUtm::tag()`, analítica §4.1): cada uno de los cuatro es un enlace a esta
-     casa, y quien llega por él ha llegado por ESTE correo. Sin clave, las URL tal cual. --}}
+     casa, y quien llega por él ha llegado por ESTE correo. Sin clave, las URL tal cual. Con la marca del envío si sus
+     clics se cuentan (`correos-salientes.md` §4.8). --}}
 @php($legal = (array) __('landing.footer.legal'))
-@php($con = static fn (string $url): string => \App\Domain\Platform\Services\Analytics\EmailUtm::tag($url, $utm))
+@php($con = static fn (string $url): string => \App\Domain\Platform\Services\Analytics\EmailUtm::tag($url, $utm, $clickMark))
 <p style="margin:10px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.7;color:#626A72;">
 <a href="{{ $con(route('legal.privacidad')) }}" style="color:#626A72;text-decoration:underline;">{{ $legal[1] ?? 'Privacidad' }}</a>
 &nbsp;&middot;&nbsp;

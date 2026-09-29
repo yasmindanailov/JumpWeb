@@ -4,6 +4,7 @@ namespace App\Domain\Platform\Listeners;
 
 use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\EmailSend;
+use App\Domain\Platform\Services\Analytics\EmailClickMarks;
 use App\Domain\Platform\Services\Analytics\EmailUtm;
 use Illuminate\Mail\SentMessage;
 use Illuminate\Notifications\Events\NotificationFailed;
@@ -55,10 +56,12 @@ final class RecordEmailSend
                 'subject' => mb_substr((string) $email->getSubject(), 0, 255),
                 'html' => $this->htmlOf($email),
                 'attachments' => json_encode(array_values(array_map(static fn (DataPart $p): string => (string) $p->getFilename(), $email->getAttachments()))),
+                // Si salió con la marca del envío en sus enlaces (la C2, §4.8): sin ella, sus clics «no se miden».
+                'tracks_clicks' => EmailClickMarks::for($event->notification) !== null,
                 'sent_at' => $now,
                 'created_at' => $now,
                 'updated_at' => $now,
-            ]], ['send_key'], ['user_id', 'recipient', 'mail_key', 'subject', 'html', 'attachments', 'sent_at', 'updated_at']);
+            ]], ['send_key'], ['user_id', 'recipient', 'mail_key', 'subject', 'html', 'attachments', 'tracks_clicks', 'sent_at', 'updated_at']);
         });
     }
 

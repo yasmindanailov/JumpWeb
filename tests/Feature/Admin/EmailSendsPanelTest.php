@@ -6,12 +6,17 @@ use App\Domain\Identity\Models\Permission;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\AuditLog;
+use App\Domain\Platform\Models\EmailClick;
 use App\Domain\Platform\Models\EmailSend;
+use App\Domain\Platform\Models\Setting;
+use App\Domain\Platform\Services\Analytics\EmailClickMarks;
+use App\Filament\Pages\Settings;
 use App\Filament\Resources\EmailSends\EmailSendResource;
 use App\Filament\Resources\EmailSends\Pages\ListEmailSends;
 use App\Filament\Resources\EmailSends\Tables\EmailSendTable;
 use App\Filament\Resources\Users\Pages\ListUsers;
 use App\Filament\Resources\Users\Pages\ViewUser;
+use Database\Seeders\LandingContentSeeder;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Filament\Actions\Testing\TestAction;
@@ -101,6 +106,53 @@ class EmailSendsPanelTest extends TestCase
             ->assertDontSee('Ver todos sus correos');
     }
 
+    // ─── Los clics (la C2, §4.8) ─────────────────────────────────────────────────────────────────
+
+    /** Los de una persona cuentan; los de un escáner, aparte; sin la marca, «No se mide» y no un cero que mentiría. */
+    public function test_the_list_counts_the_clicks_apart_from_the_scanner_and_says_when_they_are_not_measured(): void
+    {
+        $cliente = User::factory()->create(['name' => 'Lucía Martín']);
+        $medido = $this->send($cliente->id, 'order_confirmation', sentAt: now(), tracks: true);
+        $this->click($medido, null);
+        $this->click($medido, null);
+        $this->click($medido, EmailClick::VERDICT_REPEAT);
+        $this->click($medido, EmailClick::VERDICT_SWEEP);
+        $this->click($medido, EmailClick::VERDICT_EARLY);
+        $sinPulsar = $this->send($cliente->id, 'visit_reminder', sentAt: now(), tracks: true);
+        $sinMedir = $this->send($cliente->id, 'survey_invitation', sentAt: now(), tracks: false);
+
+        $lista = Livewire::actingAs($this->withRole('admin'))->test(ListEmailSends::class)
+            ->assertSee('2 clics')
+            ->assertSee('+2 de un escáner')
+            ->assertSee('Sin clics')
+            ->assertSee('No se mide');
+
+        $lista->filterTable('clicks', EmailSendTable::CLICKED)->assertCanSeeTableRecords([$medido])->assertCanNotSeeTableRecords([$sinPulsar, $sinMedir]);
+        $lista->filterTable('clicks', EmailSendTable::NOT_CLICKED)->assertCanSeeTableRecords([$sinPulsar])->assertCanNotSeeTableRecords([$medido, $sinMedir]);
+        $lista->filterTable('clicks', EmailSendTable::NOT_MEASURED)->assertCanSeeTableRecords([$sinMedir])->assertCanNotSeeTableRecords([$medido, $sinPulsar]);
+
+        Livewire::actingAs($this->withRole('admin'))->test(ViewUser::class, ['record' => $cliente->id])
+            ->assertSee('2 clics')
+            ->assertSee('No se mide');
+    }
+
+    /** El interruptor: APAGADO de fábrica (marca blanca, `[PENDIENTE: asesoría]`) y se enciende desde Ajustes. */
+    public function test_counting_clicks_is_off_by_default_and_turned_on_from_the_settings(): void
+    {
+        // Los ajustes obligatorios de la página, como en `ThemeColorTest` (el `maps_url` del seeder no pasa su validación).
+        $this->seed(LandingContentSeeder::class);
+        Setting::updateOrCreate(['key' => 'address.maps_url'], ['value' => '', 'group' => 'contact']);
+        $this->assertFalse(EmailClickMarks::enabled());
+
+        Livewire::actingAs($this->withRole('admin'))->test(Settings::class)
+            ->fillForm([EmailClickMarks::SETTING => true])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertTrue(EmailClickMarks::enabled());
+        $this->assertSame('1', Setting::value(EmailClickMarks::SETTING));
+    }
+
     public function test_the_customers_list_links_to_the_page_only_with_the_permission(): void
     {
         Livewire::actingAs($this->withRole('admin'))->test(ListUsers::class)
@@ -131,14 +183,19 @@ class EmailSendsPanelTest extends TestCase
         return $user;
     }
 
-    private function send(?int $userId, string $key, ?\DateTimeInterface $sentAt, int $failures = 0, ?string $recipient = 'cliente@example.test', ?string $html = '<p>Hola</p>'): EmailSend
+    private function send(?int $userId, string $key, ?\DateTimeInterface $sentAt, int $failures = 0, ?string $recipient = 'cliente@example.test', ?string $html = '<p>Hola</p>', bool $tracks = false): EmailSend
     {
         $id = DB::table('email_sends')->insertGetId([
             'send_key' => (string) Str::uuid(), 'user_id' => $userId, 'recipient' => $recipient, 'mail_key' => $key,
-            'subject' => 'Asunto', 'html' => $html, 'attachments' => '[]', 'failures' => $failures,
+            'subject' => 'Asunto', 'html' => $html, 'attachments' => '[]', 'failures' => $failures, 'tracks_clicks' => $tracks,
             'sent_at' => $sentAt, 'failed_at' => $failures > 0 ? now() : null, 'created_at' => now(), 'updated_at' => now(),
         ]);
 
         return EmailSend::query()->findOrFail($id);
+    }
+
+    private function click(EmailSend $send, ?string $verdict): void
+    {
+        DB::table('email_clicks')->insert(['email_send_id' => $send->id, 'route' => '/', 'verdict' => $verdict, 'clicked_at' => now()]);
     }
 }

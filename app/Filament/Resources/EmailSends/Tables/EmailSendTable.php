@@ -27,10 +27,16 @@ class EmailSendTable
 
     public const FAILED = 'failed';
 
+    public const CLICKED = 'clicked';
+
+    public const NOT_CLICKED = 'not_clicked';
+
+    public const NOT_MEASURED = 'not_measured';
+
     public static function configure(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(static fn (Builder $query) => $query->with('user'))
+            ->modifyQueryUsing(static fn (Builder $query): Builder => self::withCounts($query))
             ->columns([
                 TextColumn::make('created_at')
                     ->label(__('admin.email_sends.col.when'))
@@ -56,6 +62,11 @@ class EmailSendTable
                         self::SENT_AFTER_FAILURES => 'warning',
                         default => 'danger',
                     }),
+                // Los clics (la C2, §4.8): los de una persona; los de un escáner, aparte y sin contar. Sin marca, «no se mide».
+                TextColumn::make('clicks_counted')
+                    ->label(__('admin.email_sends.col.clicks'))
+                    ->getStateUsing(static fn (EmailSend $r): string => self::clicks($r))
+                    ->description(static fn (EmailSend $r): string => self::scannerClicks($r)),
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
@@ -75,6 +86,19 @@ class EmailSendTable
                     ->query(static fn (Builder $query, array $data): Builder => match ($data['value'] ?? null) {
                         self::SENT => $query->whereNotNull('sent_at'),
                         self::FAILED => $query->whereNull('sent_at')->whereNotNull('failed_at'),
+                        default => $query,
+                    }),
+                SelectFilter::make('clicks')
+                    ->label(__('admin.email_sends.col.clicks'))
+                    ->options([
+                        self::CLICKED => __('admin.email_sends.filter.clicked'),
+                        self::NOT_CLICKED => __('admin.email_sends.filter.not_clicked'),
+                        self::NOT_MEASURED => __('admin.email_sends.filter.not_measured'),
+                    ])
+                    ->query(static fn (Builder $query, array $data): Builder => match ($data['value'] ?? null) {
+                        self::CLICKED => $query->whereHas('clicks', static fn (Builder $clicks) => $clicks->whereNull('verdict')),
+                        self::NOT_CLICKED => $query->where('tracks_clicks', true)->whereDoesntHave('clicks', static fn (Builder $clicks) => $clicks->whereNull('verdict')),
+                        self::NOT_MEASURED => $query->where('tracks_clicks', false),
                         default => $query,
                     }),
             ])
@@ -115,6 +139,40 @@ class EmailSendTable
             $record->wasSent() => self::SENT,
             default => self::FAILED,
         };
+    }
+
+    /**
+     * Sus clics de una persona («3 clics», «Sin clics»), o «No se mide» si salió sin la marca del envío (a quien se opuso,
+     * sin cuenta, la encuesta, o con el interruptor apagado): un cero ahí mentiría. Lee `withClickCounts()` si se cargó.
+     */
+    public static function clicks(EmailSend $record): string
+    {
+        if (! $record->tracks_clicks) {
+            return (string) __('admin.email_sends.clicks_not_measured');
+        }
+
+        $count = (int) ($record->clicks_counted ?? $record->clicks()->whereNull('verdict')->count());
+
+        return trans_choice('admin.email_sends.clicks', $count, ['count' => $count]);
+    }
+
+    /** «+N de escáner» si los hubo (no cuentan: `EmailClick::SCANNER_VERDICTS`); vacío si no. */
+    public static function scannerClicks(EmailSend $record): string
+    {
+        $count = (int) ($record->clicks_scanner ?? 0);
+
+        return $count > 0 ? trans_choice('admin.email_sends.clicks_scanner', $count, ['count' => $count]) : '';
+    }
+
+    /**
+     * La cuenta de cada fila y sus dos recuentos de clics (`EmailSend::scopeWithClickCounts()`).
+     *
+     * @param  Builder<EmailSend>  $query
+     * @return Builder<EmailSend>
+     */
+    private static function withCounts(Builder $query): Builder
+    {
+        return $query->with('user')->withClickCounts();
     }
 
     /** El nombre del correo por su clave (`EmailUtm::keyOf()`); una clave sin rótulo se enseña tal cual. */

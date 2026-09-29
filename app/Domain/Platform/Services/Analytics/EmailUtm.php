@@ -33,12 +33,21 @@ final class EmailUtm
     public const SOURCE = 'email';
 
     /**
-     * Lo que la validación de una firma IGNORA: la lista blanca de atribución, la misma que la ingesta admite
-     * en una ruta (`RouteNormalizer`). Una clave fuera de esta lista pegada a un enlace firmado sigue dando 403.
+     * La marca del ENVÍO (`specs/correos-salientes.md` §4.8, la C2): `jw_e=<send_key>`, para contar los clics de cada
+     * correo. Solo la llevan los correos que {@see EmailClickMarks} deja; `RecordEmailClick` la quita de la URL al llegar.
+     */
+    public const MARK = 'jw_e';
+
+    /**
+     * Lo que la validación de una firma IGNORA: la lista blanca de atribución (la que la ingesta admite en una ruta,
+     * `RouteNormalizer`) y la marca del envío. Una clave fuera de esta lista pegada a un enlace firmado sigue dando 403.
+     *
+     * ⚠️⚠️ La marca va AQUÍ y NUNCA en `RouteNormalizer::QUERY_ALLOWLIST`: ata una visita a una persona, y la analítica es
+     * anónima (`#793`). Por eso son dos listas y no una (`#794`, C2).
      *
      * @var list<string>
      */
-    public const IGNORED_QUERY = RouteNormalizer::QUERY_ALLOWLIST;
+    public const IGNORED_QUERY = [...RouteNormalizer::QUERY_ALLOWLIST, self::MARK];
 
     /**
      * Correos que NO lee un cliente: sin UTM y sin `email_sent`.
@@ -82,17 +91,23 @@ final class EmailUtm
     }
 
     /**
-     * La URL con el UTM pegado al final — si es de esta casa, hay clave y no lo llevaba ya. Una URL FIRMADA
-     * sale igual de válida: sus claves van declaradas como ignoradas (ver la cabecera).
+     * La URL con el UTM pegado al final — si es de esta casa, hay clave y no lo llevaba ya —, y con la marca del envío
+     * detrás si la hay (`$mark`, de {@see EmailClickMarks::for()}). Una URL FIRMADA sale igual de válida: sus claves van
+     * declaradas como ignoradas (ver la cabecera).
      */
-    public static function tag(string $url, ?string $key): string
+    public static function tag(string $url, ?string $key, ?string $mark = null): string
     {
         if ($key === null || $key === '' || ! self::isOurs($url) || str_contains($url, 'utm_source=')) {
             return $url;
         }
 
+        $params = self::params($key);
+        if ($mark !== null && $mark !== '') {
+            $params[self::MARK] = $mark;
+        }
+
         [$base, $fragment] = array_pad(explode('#', $url, 2), 2, null);
-        $base .= (str_contains($base, '?') ? '&' : '?').http_build_query(self::params($key));
+        $base .= (str_contains($base, '?') ? '&' : '?').http_build_query($params);
 
         return $fragment === null ? $base : $base.'#'.$fragment;
     }

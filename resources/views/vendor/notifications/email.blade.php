@@ -3,8 +3,9 @@
      puede ir ANTES de la cabecera: metida en el cuerpo, lo primero que se lee sigue siendo el
      `alt` del logotipo. La notificación no la escribe: la deriva `hero()` de su grupo. --}}
 {{-- `:utm` es la CLAVE del correo (`EmailUtm`, analítica §4.1): con ella el logotipo y los enlaces del pie
-     llevan `utm_source=email&utm_medium=<clave>`, como el botón. La pone el molde (`BrandedMailMessage($this)`). --}}
-<x-mail::message :preheader="$preheader ?? null" :utm="$utm ?? null">
+     llevan `utm_source=email&utm_medium=<clave>`, como el botón. La pone el molde (`BrandedMailMessage($this)`).
+     `:click-mark` es la marca del ENVÍO (`jw_e`, `specs/correos-salientes.md` §4.8): solo si sus clics se cuentan. --}}
+<x-mail::message :preheader="$preheader ?? null" :utm="$utm ?? null" :click-mark="$clickMark ?? null">
 {{-- LA CABECERA EN TINTA (`#503`) — chapa + titular + resguardo, la caja oscura que abre el correo.
      La notificación aporta DATOS (`viewData['hero']`), no HTML: componer marcado dentro de una
      notificación es cómo se acaba con veintitrés moldes en vez de uno.

@@ -610,11 +610,20 @@ escritor `AnalyticsGoals::save()`: rastro `analytics.goals_updated` con el antes
 **UNIQUE** (el id de la notificación: uno por destinatario y el mismo en cada reintento, así que un fallo y su reintento son UNA
 fila) · `user_id` nullable indexado, **sin FK** (como el libro: la fila de `users` no se borra y la poda va por edad) ·
 `recipient` · `mail_key` (`EmailUtm::keyOf()`) · `subject` · `html` longText (la COPIA exacta de lo que salió, sin adjuntos) ·
-`attachments` json (solo nombres) · `copy_purged_at` · `failures` · `sent_at` · `failed_at` · timestamps. Único escritor
-`Platform\Listeners\RecordEmailSend` (`NotificationSent` y `NotificationFailed`, dentro de un try/catch: apuntar nunca rompe
-el envío). **Plazos** (`[DECIDIDO owner]`): la copia se borra a los **6 meses** (`email-sends:trim`) y la fila a los **24**
-(`model:prune`). `anonymize()` borra `html`, `subject`, `recipient` y `attachments` de las del titular y suelta `user_id`; el
-export del art. 20 lleva qué correo, su asunto y cuándo (sin la copia).
+`attachments` json (solo nombres) · `copy_purged_at` · `failures` · `sent_at` · `failed_at` · `tracks_clicks` bool (si salió
+con la marca `jw_e` en sus enlaces, la C2; sin ella sus clics «no se miden») · timestamps. Único escritor
+`Platform\Listeners\RecordEmailSend` (`NotificationSent` y `NotificationFailed`, tras el commit y dentro de un try/catch: apuntar
+nunca rompe el envío). **Plazos** (`[DECIDIDO owner]`): la copia se borra a los **6 meses** (`email-sends:trim`) y la fila a los
+**24** (`model:prune`). `anonymize()` borra `html`, `subject`, `recipient` y `attachments` de las del titular y suelta `user_id`;
+el export del art. 20 lleva qué correo, su asunto, cuándo y sus clics (sin la copia).
+
+### `email_clicks` (EmailClick) — las visitas que llegan con la marca de un envío · `#795` (C2)
+
+`specs/correos-salientes.md` §4.8. `email_send_id` FK **cascadeOnDelete** (se va con su envío: la poda de `email_sends` es un
+borrado en bloque) · `route` (la ruta normalizada por `RouteNormalizer::path()`: qué enlace, sin query ni tokens) · `verdict`
+nullable (`null` cuenta; `repeat`, `early`, `sweep` no: el mismo enlace, antes de poder leerlo, la ráfaga de un escáner) ·
+`clicked_at`. Índice `(email_send_id, clicked_at)`. **Sin IP ni agente de usuario, sin nada personal**: la persona está en su
+envío. Único escritor `Services\Analytics\EmailClicks::record()` (desde `RecordEmailClick`, con el envío bloqueado).
 
 ### `surveys` · `survey_participations` · `survey_responses` · `survey_spent_tokens` — las encuestas, ANÓNIMAS · `#740`, `#754`, `#757`
 

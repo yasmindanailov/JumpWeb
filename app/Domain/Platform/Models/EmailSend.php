@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\MassPrunable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -20,6 +21,10 @@ use Illuminate\Support\Facades\DB;
  * {@see COPY_MONTHS} meses —tres correos llevan el nombre de un menor— y la fila, con lo que dice (qué correo, a quién, cuándo,
  * si falló), a los {@see RETENTION_MONTHS}. Y la supresión del titular (`RGPD-01`) se lleva lo personal en el acto:
  * {@see forgetPerson()}.
+ *
+ * @property bool $tracks_clicks si salió con la marca del envío en sus enlaces (la C2)
+ * @property-read int|null $clicks_counted con {@see scopeWithClickCounts()}: los clics de una persona
+ * @property-read int|null $clicks_scanner con {@see scopeWithClickCounts()}: las visitas de un escáner
  */
 class EmailSend extends Model
 {
@@ -43,6 +48,7 @@ class EmailSend extends Model
         'user_id' => 'integer',
         'attachments' => 'array',
         'failures' => 'integer',
+        'tracks_clicks' => 'boolean',
         'sent_at' => 'datetime',
         'failed_at' => 'datetime',
         'copy_purged_at' => 'datetime',
@@ -56,6 +62,31 @@ class EmailSend extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Las visitas que llegaron con su marca (la C2, §4.8): cuentan las que no llevan veredicto.
+     *
+     * @return HasMany<EmailClick, $this>
+     */
+    public function clicks(): HasMany
+    {
+        return $this->hasMany(EmailClick::class);
+    }
+
+    /**
+     * Con sus dos recuentos de clics (la C2): `clicks_counted`, los de una persona, y `clicks_scanner`, los de un escáner
+     * (`EmailClick::SCANNER_VERDICTS`). Una sola forma de contarlos para la lista, la ficha y el export.
+     *
+     * @param  Builder<static>  $query
+     * @return Builder<static>
+     */
+    public function scopeWithClickCounts(Builder $query): Builder
+    {
+        return $query->withCount([
+            'clicks as clicks_counted' => static fn (Builder $clicks) => $clicks->whereNull('verdict'),
+            'clicks as clicks_scanner' => static fn (Builder $clicks) => $clicks->whereIn('verdict', EmailClick::SCANNER_VERDICTS),
+        ]);
     }
 
     /** ¿Salió? (Pudo fallar antes y salir en un reintento: entonces también.) */

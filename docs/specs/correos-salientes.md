@@ -15,7 +15,9 @@
   (`EmailUtm::IGNORED_QUERY`); (3) `sendmail` no avisa de entregas ni rebotes: «entregado» no se puede saber, «falló al
   enviar» sí; (4) el píxel de apertura exige consentimiento (LSSI 22.2) y Apple Mail abre solo: las aperturas son
   APROXIMADAS; (5) los escáneres de enlaces de Outlook y Gmail pulsan solos: un clic en el primer segundo tras el envío no cuenta.
-- **Estado**: ✅ aprobada (`#794`: la COPIA 6 meses, las cifras 24); ✅ C1 en `main` (ojo del owner, 29-09); ▶ C2 (§4.3).
+- **Estado**: ✅ aprobada (`#794`: la COPIA 6 meses, las cifras 24); ✅ C1 en `main` (ojo del owner, 29-09); 🟦 C2 (§4.8–§4.9).
+- **C2**: `jw_e` va en `EmailUtm::IGNORED_QUERY` y NUNCA en `RouteNormalizer::QUERY_ALLOWLIST` (la analítica es anónima);
+  la encuesta no lleva marca (`#754`); el escáner se reconoce por la RÁFAGA, no por el reloj (§4.8).
 - **Apuntar un envío NUNCA rompe el envío** (`#794`): un fallo del registro reintentaría el trabajo y duplicaría el correo.
   Y se apunta TRAS el commit (`afterCommit`, como `Recorder`): con la cola `sync`, un deadlock desharía la transacción de quien envía.
 - **Invariantes**: `RGPD-01` (la supresión borra el HTML y la dirección), `RGPD-02`, `RGPD-04` (`no-store` en la vista previa),
@@ -136,6 +138,64 @@ Se apunta en `DB::afterCommit` como `Recorder` (prueba `…record_waits_for_its_
 el arnés). El deadlock NO se reprodujo: es el comportamiento documentado de InnoDB. Coste: con `sync`, si la transacción de
 fuera se deshace, el correo salió y no queda apuntado; (5) la copia guardada y la que recibió Mailpit difieren SOLO en los
 finales de línea: el SMTP lleva CRLF (RFC 5322) y la copia se toma antes del transporte, con LF. Es el mismo correo.
+
+### 4.8 La C2 al detalle — medido el 29-09, antes de codificar · `[DECIDIDO]` 29-09, `#795`
+**Medido**:
+- (a) Llevan UTM el botón (`BrandedMailMessage::action()`), el logotipo y los cuatro enlaces del pie (la vista, con `viewData['utm']`).
+  Solo dos correos llevan un enlace propio en el cuerpo y los dos son de BAJA (`BirthdayComingNotice`, `SurveyInvitation`), sin UTM.
+- (b) `RecordEmailClick` (grupo `web`) cuenta hoy `email_clicked` con CUALQUIER GET: los escáneres ya lo inflan.
+- (c) `EmailUtm::IGNORED_QUERY` ES `RouteNormalizer::QUERY_ALLOWLIST`: la lista que ignora la firma y la que la analítica
+  anónima admite en una ruta son la misma constante. La ingesta guarda solo la ruta y esa lista.
+- (d) La encuesta es anónima (`#754`): la participación NO guarda si contestó y la respuesta lleva día y franja.
+- (e) `toMail()` no recibe a quién va en el molde; `NotificationSending` (con el destinatario) se dispara justo antes, con el
+  MISMO objeto de notificación que llega a `toMail()`.
+- (f) Escáneres, con fuentes ([Mautic #16263](https://github.com/mautic/mautic/issues/16263),
+  [Mailchimp](https://mailchimp.com/resources/bot-clicks-in-email-marketing/)): pulsan al ENTREGARSE (a menudo decenas de
+  segundos tras el envío), TODOS los enlaces (medido allí: 23 visitas desde 10 IP en 15 s) y con agente de navegador falso.
+
+**Decidido** (el owner dio el objetivo: «si ha hecho clic y cuántas veces»):
+1. **La marca**: `jw_e=<send_key>` (el UUID del envío, no el id autoincremental: no se puede recorrer), pegada por
+   `EmailUtm::tag()` junto a la UTM en los mismos enlaces. Las bajas, sin marca.
+2. **Quién la lleva**: el correo a una CUENTA sin `analytics_opt_out`, con el interruptor `emails.track_clicks` encendido,
+   y nunca la encuesta (por (d): «abrió la encuesta a las 10:03» junto al día y la franja de la respuesta la destaparía).
+   El interruptor, APAGADO por defecto: el producto es de marca blanca y §7 pide encenderlo tras la asesoría. En local, encendido.
+   Se decide al ENVIAR (un oyente de `NotificationSending` lo anota en un `WeakMap` por la notificación; sin el evento —un
+   `toMail()` a mano— no hay marca) y se RE-COMPRUEBA al pulsar. Descartado: `$notifiable` en los 25 `toMail()` (la trampa
+   (1) del §0), y decidir solo al pulsar (la marca viajaría a quien se opuso).
+3. **La firma**: `IGNORED_QUERY` = la lista de la analítica + `jw_e`; `jw_e` NUNCA entra en `QUERY_ALLOWLIST`.
+4. **El clic**: un GET con `jw_e` apunta la visita si procede y responde **302 a la misma URL sin `jw_e`**. Así, recargar no
+   cuenta, y la barra de direcciones o un enlace compartido no llevan la marca. El navegador conserva el `#fragmento` y la
+   firma sigue valiendo. Si apuntar falla, la página se abre igual.
+5. **Los datos**: `email_clicks`, con `email_send_id` (se borra con su envío), la `route` normalizada (qué enlace:
+   §4.4), `clicked_at` y el `verdict`. Sin IP ni agente de usuario. Sustituye a los contadores de §4.1, porque la ráfaga
+   necesita la hora de cada visita.
+6. **El escáner**: `early` (< 10 s tras el envío), `sweep` (≥ 3 visitas al envío en 30 s: todas las de esa ventana) y
+   `repeat` (el mismo enlace en 30 s: el doble paso de Safe Links al pulsar, o un doble clic). Cuenta lo que no lleva
+   veredicto. Cada envío se serializa con un bloqueo de su fila, porque los escáneres llegan en paralelo. Descartado: contar
+   IP distintas (obliga a guardarlas) y el agente de usuario (falso).
+7. **Se ve**: «Clics» en la lista, con «+N de escáner», y el filtro «con clic»; en la ficha. El export lleva `clicks`
+   (contrato 1.52.0).
+
+### 4.9 La C2, lo construido (29-09; 🟦 en `wip/correos-c2`, falta el ojo del owner)
+Construido: `email_clicks` y `email_sends.tracks_clicks` (una migración); `EmailClickMarks` (la regla, el interruptor
+`emails.track_clicks` y el oyente de `NotificationSending` con su `WeakMap`); `EmailClicks` (el veredicto, con el envío
+bloqueado); la marca en `EmailUtm::tag()` (botón, logotipo y pie); `IGNORED_QUERY` separado de la lista de la analítica; el 302
+de `RecordEmailClick`; la columna y el filtro «Clics», también en la ficha; la sección «Correos a los clientes» en Ajustes →
+Avanzado; y el export (contrato 1.52.0). Pruebas: `Mail\EmailClicksTest` (15) y `Admin\EmailSendsPanelTest` (+2). Arnés
+`SOLO=C2` 24/24, con control.
+
+**Lo que enseñó**:
+1. ⚠️⚠️ **La sonda del bloqueo tuvo que ampliarse para medir algo.** Con 6 visitas en paralelo sale bien CON y SIN bloqueo:
+   la ráfaga reescribe hacia atrás su ventana y cura la carrera, y la ventana entre leer y escribir dura milisegundos. Con 3
+   visitas y 300 ms de pausa en los DOS brazos: sin bloqueo cuentan las 3 (dos rondas); con él, ninguna.
+2. La primera sonda exigía «ninguna petición fuera de la casa», y eso es falso en la web pública (carga sus fuentes de
+   `THEME_FONTS`). La propiedad buena es que ningún tercero reciba la marca: el Referer que reciben es solo el origen.
+3. Pint lee `{@see SETTING}` como la clase `Setting` importada y lo reescribe. Se escribe `self::SETTING`.
+4. Un borrado en bloque de `settings` no vacía la memoria de `Setting::value()`; guardar desde el panel sí. ⚠️ En producción
+   el worker de la cola conserva esa memoria mientras vive (≤ 50 s con el cron): encender o apagar tarda hasta un minuto en
+   notarse en los correos. Al pulsar, la regla se re-comprueba en cada petición.
+5. PHP lee `?jw.e=` como `jw_e`, pero en la query cruda no se llama así. Por eso se quita solo lo que de verdad está, y si no
+   hay nada que quitar no hay 302 (sería un bucle).
 
 ## 5. Impacto en invariantes
 

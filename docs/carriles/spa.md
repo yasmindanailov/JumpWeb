@@ -2,7 +2,7 @@
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb` a secas; la instancia al lado, en
 > `~/proyectos/instancias/playjump`, clon de `github.com/yasmindanailov/instancia-playjump`, montada el 25-09) ·
-> Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#794`** · La banda está dada de alta en la
+> Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#795`** · La banda está dada de alta en la
 > tabla de `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: **`analitica-para-decidir.md`
 > §0** (la tarea en curso, `#755`) · `encuestas.md` §0 y §4.7 (`#754`) · `analitica.md` §0 y §4.5 · `isla-y-landing-nueva.md`
 > §4.11 · `celebracion-e-invitacion.md` §0 · `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 ·
@@ -16,7 +16,8 @@
 
 - ▶▶▶ **LOS CORREOS SALIENTES** (`specs/correos-salientes.md`, `#794`; adelanta la T5 de la analítica, owner 28-09): ✅ **C1 el
   registro y la vista previa, en `main` y APROBADA** (29-09: «buen trabajo, visto bueno»; lo construido y lo que enseñó, §4.7)
-  → ▶ **C2 los clics por envío** (§4.3) → C3 las aperturas → C4 a «Marketing». C2 y C3, `[PENDIENTE: asesoría]` antes de producción.
+  → 🟦 **C2 los clics por envío** (`#795`, §4.8: en `wip/correos-c2`, falta el ojo) → C3 las aperturas → C4 a «Marketing». C2 y
+  C3, `[PENDIENTE: asesoría]` antes de producción: el interruptor de la C2 sale APAGADO de fábrica (Ajustes → Avanzado → Correos).
 - ▶▶▶ **LA ANALÍTICA PARA DECIDIR es la tarea** (`#755`, spec ✅). En `main` y APROBADAS por el owner: T0a·T0b·T0c (`#756`),
   T1 encuestas anónimas (`#754`/`#757`), T2 ocupación (`#758`) y, el 28-09, **T3a la forma** (`#759`: siete pestañas, solo
   pide la abierta, un catálogo de 58 cifras), **T3b el veredicto** (`#790` `[DECIDIDO owner]`: «normal» es el mín–máx de los 12
@@ -58,7 +59,7 @@
    T3c·1 · T3c·2 y **TP·1** (la fecha de nacimiento, `#792`; arnés `SOLO=TP1`, sondas `storage/app/audit/sonda-tp1-*.mjs`),
    **TP·2** («Quién viene»; arnés `SOLO=TP2`; fixture `ojo-tp2.php` montado, `OJO=desmontar`), todas en `main` y aprobadas →
    ▶ owner 28-09, «cerrar lo que queda», en este orden: **los correos salientes PRIMERO** (`specs/correos-salientes.md` ✅
-   `#794`; ✅ C1 en `main`, aprobada 29-09; ▶ C2 clics · C3 aperturas · C4 a la analítica) · **TP·3a** los tramos de los anuncios y **TP·3b** retirar «Exportar segmento» (`#793`) ·
+   `#794`; ✅ C1 en `main`, aprobada 29-09; 🟦 C2 clics en `wip/correos-c2` (`#795`) · C3 aperturas · C4 a la analítica) · **TP·3a** los tramos de los anuncios y **TP·3b** retirar «Exportar segmento» (`#793`) ·
    la TP·3c (felicitaciones) y el gasto en anuncios, ⏸ con el rediseño de la plantilla / aplazado; §4.14 y §4.9 → T3d el texto para IA (§4.7; lee `Changes` y
    los veredictos; sin PII ni celdas < 5) → T3e el SECTOR (primera búsqueda en §4.13: casi todo son medias, no rangos; AL OWNER
    antes de sembrar) → T4 cartera → T5 marketing y correos → T6 cohortes → T7 pérdidas → T8 satisfacción (§4.12). Los CRUCES de
@@ -210,6 +211,11 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 
 ## Buzón
 
+- ❗ **Para plataforma (29-09, la C2 de los correos, `#795`)**: contrato **1.52.0**, mío (`ExportedEmailSend.clicks`); tu
+  siguiente, 1.53.0. Toqué lo compartido: `Settings.php` (una sección «Correos a los clientes» en Avanzado, con el interruptor
+  `emails.track_clicks` en `BOOL_KEYS` y `MANAGED`), `AppServiceProvider` (un oyente de `NotificationSending` y el morfo
+  `email_click`), `RecordEmailClick` (el 302 que quita `jw_e`) y `EmailUtm::IGNORED_QUERY` (ya NO es la lista de la analítica:
+  lleva además `jw_e`). Migra (`email_clicks` y `email_sends.tracks_clicks`).
 - ❗❗ **Para plataforma (28-09, la TP·1, `#792`)**: `users.born_on`, entera y opcional (`BirthDatePolicy`: no futura, ≥ 18 el
   día del parque, ≤ 120). Contrato **1.49.0**, mío (`User`, `RegisterRequest`, `GoogleSignupRequest`, `ProfileUpdateRequest`
   —AUSENTE no la toca, `null` la borra—, `ExportedProfile`): tu siguiente, 1.50.0. **La isla**: el motor ya la reenvía si tu
@@ -222,7 +228,7 @@ el repo de la instancia (lo nuevo), nunca a `main`.
   (el export lleva `emails`; tu 1.50.0 sigue siendo tuya). Toqué lo compartido: `AppServiceProvider` (dos oyentes y el morfo
   `email_send`), tu hub (`Correos enviados` en «Sistema»; `AdminNavigationTest` 27 tarjetas), `ListUsers` (un botón), el
   permiso `emails.view` (seeder y catálogo), `AuditLog::ACTIONS`, `routes/console.php` y `deploy.sh` (**12** tareas). Migra.
-  29-09, rebasada sobre tu `0cef4365`: la 1.51.0 va encima de tu 1.50.0 (normas) y `README` dice 56 modelos · 152 migraciones.
+  29-09, rebasada sobre tu `0cef4365`: la 1.51.0 va encima de tu 1.50.0 (normas) y el recuento del `README` suma tu migración.
 - ❗ **Para la web (28-09, TP·1 y `#793`)**: `/privacidad` tiene que nombrar la fecha de nacimiento del titular (opcional; para
   conocer al público, siempre en conjunto) y, con la TP·3c, las felicitaciones de cumpleaños (la del titular y la de sus hijos,
   solo con el opt-in de marketing y sin vender). Ya NO habrá exportación de personas (`#793`). `[PENDIENTE: asesoría]`.

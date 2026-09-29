@@ -3574,6 +3574,11 @@ return [
         'analytics_matomo_site_id' => 'Id del sitio en Matomo',
         'analytics_posthog_requires_token' => 'No se puede activar PostHog sin el token público del proyecto (empieza por «phc_»). No se ha guardado ningún cambio.',
         'analytics_matomo_requires_host' => 'No se puede activar Matomo sin el servidor (https://…) y el id del sitio. No se ha guardado ningún cambio.',
+        // Los clics de cada correo (`specs/correos-salientes.md` §4.8, la C2): apagado por defecto.
+        'section_emails' => 'Correos a los clientes',
+        'section_emails_hint' => 'Lo que se mide de los correos que reciben los clientes. Se ve en Clientes → «Correos enviados».',
+        'emails_track_clicks' => 'Contar los clics de cada correo',
+        'emails_track_clicks_hint' => 'Cuántas veces pulsa cada cliente los enlaces de cada correo. Solo con cuenta y sin oposición a la analítica, y nunca en la encuesta, que es anónima. Enciéndelo cuando la política de privacidad lo explique.',
         // Los píxeles de anuncios (T3b·1): ids públicos por plataforma; cargan solo con la categoría «marketing».
         'section_ads' => 'Píxeles de anuncios',
         'section_ads_hint' => 'Google Ads, Meta (Facebook e Instagram) y TikTok. Cada píxel se carga solo si el visitante acepta la categoría «marketing» del aviso de cookies, y la compra se comunica con el código del pedido. Vacío = sin píxel. Las claves privadas de las APIs de conversiones viven en el servidor.',
@@ -4636,16 +4641,24 @@ return [
         'preview' => 'Ver el correo',
         'close' => 'Cerrar',
         'forgotten' => 'Cliente eliminado',
+        // Los clics de cada correo (la C2, `specs/correos-salientes.md` §4.8).
+        'clicks' => '{0} Sin clics|{1} :count clic|[2,*] :count clics',
+        'clicks_scanner' => '+:count de un escáner|+:count de un escáner',
+        'clicks_not_measured' => 'No se mide',
         'col' => [
             'when' => 'Cuándo',
             'to' => 'A quién',
             'mail' => 'Correo',
             'status' => 'Estado',
+            'clicks' => 'Clics',
         ],
         'filter' => [
             'customer' => 'Cliente',
             'sent' => 'Enviados',
             'failed' => 'No salieron',
+            'clicked' => 'Con clic',
+            'not_clicked' => 'Sin clic',
+            'not_measured' => 'No se mide',
         ],
         'state' => [
             'sent' => 'Enviado',

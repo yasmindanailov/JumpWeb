@@ -3,6 +3,7 @@
 namespace App\Notifications\Support;
 
 use App\Domain\Platform\Models\EmailSend;
+use App\Domain\Platform\Services\Analytics\EmailClickMarks;
 use App\Domain\Platform\Services\Analytics\EmailUtm;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -37,6 +38,9 @@ class BrandedMailMessage extends MailMessage
     /** La clave del correo (`EmailUtm::keyOf()`), o `null` si este correo no lleva UTM (los avisos al negocio). */
     private ?string $campaign = null;
 
+    /** La marca del envío en sus enlaces (`jw_e`, la C2), o `null` si sus clics no se cuentan (`EmailClickMarks`). */
+    private ?string $clickMark = null;
+
     /**
      * @param  Notification|null  $notification  el correo que se está componiendo: **`$this` en `toMail()`**.
      */
@@ -66,6 +70,11 @@ class BrandedMailMessage extends MailMessage
         $this->withSymfonyMessage(static function (Email $message) use ($send): void {
             $message->getHeaders()->addTextHeader(EmailSend::HEADER, $send);
         });
+
+        // La marca de sus ENLACES (§4.8, la C2): solo si `EmailClickMarks` la anotó al enviar (a una cuenta que no se opuso,
+        // con el interruptor encendido). Viaja a la vista para el logotipo y el pie, como la UTM.
+        $this->clickMark = EmailClickMarks::for($notification);
+        $this->viewData['clickMark'] = $this->clickMark;
     }
 
     /**
@@ -90,7 +99,7 @@ class BrandedMailMessage extends MailMessage
      */
     public function action($text, $url): static
     {
-        parent::action($text, EmailUtm::tag((string) $url, $this->campaign));
+        parent::action($text, EmailUtm::tag((string) $url, $this->campaign, $this->clickMark));
 
         return $this;
     }

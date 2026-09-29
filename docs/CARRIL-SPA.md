@@ -333,6 +333,11 @@ git) manda «Ya tienes cuenta» de verdad al cliente de sondas 593 —una fila e
 `sonda-c1-correos.mjs` compara la copia con Mailpit y mira el panel. Se quitan borrando esas filas de `email_sends` (el 29-09,
 las filas 1 y 2: una por lanzamiento).
 
+(20) **De la C2 (29-09, `#795`)**: el interruptor `emails.track_clicks` ENCENDIDO en local (`php artisan app:set-setting
+emails.track_clicks 0` lo apaga) y los envíos de sonda 3–8 y 11–12 del cliente 593 con sus clics (`c2-enviar.php`,
+`sonda-c2-clics.mjs` y `c2-veredictos.php`, en la carpeta de auditoría). Los 9 y 10 salieron del control SIN bloqueo, con
+«3 clics» falsos, y se borraron. Se quitan borrando esas filas de `email_sends`: sus clics se van en cascada.
+
 ## 9 · La foto vieja del carril (mudada VERBATIM de `carriles/spa.md` el 2026-09-29, su techo)
 
 - ✅ **27-09, TODO EN `main` Y APROBADO POR EL OWNER**: **F7** (`#752`, la exención de quien cumple: la lista y su
