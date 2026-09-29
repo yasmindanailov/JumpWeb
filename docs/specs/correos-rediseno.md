@@ -1,7 +1,8 @@
 # [SPEC] El rediseño de los correos — la plantilla nueva, los de la reserva al brief y los comerciales
 
-> Estado: ⬜ **borrador, medido el 29-09** · Última actualización: 2026-09-29 · Decisiones: `#800` (el orden: ahora los
-> correos), `#789` (los correos, del carril del SPA), `#793` (las felicitaciones, sin vender) y la de su aprobación ·
+> Estado: 🟦 **medida el 29-09; el orden y el 7, decididos por el owner (`#801`)** · Última actualización: 2026-09-29 ·
+> Decisiones: `#800` (ahora los correos), `#801` (el 7, las ocasiones y el orden), `#789` (los correos, del carril del SPA),
+> `#793` (las felicitaciones, sin vender) ·
 > Carril: **SPA** (banda 790–819). Amplía `correos-desde-canvas.md` (el molde de septiembre sigue siendo suyo).
 
 ## §0 · Antes de tocar
@@ -15,7 +16,8 @@
   en `List-Unsubscribe` (LSSI 22.1, `#750`), y sale solo con su consentimiento; (4) la marca `jw_e` y el píxel siguen sus
   reglas (`#795`, `#797`); (5) los de la reserva, sin ofertas; (6) «nada que ya no sea verdad»: con la cuenta con contraseña
   (23-09), los textos del 8 del brief están desfasados, y el diseño lo dice.
-- **Estado**: ⬜ borrador; §7 espera al owner (lo que tiene «por ahí», el 7, las ocasiones y el orden).
+- **Estado**: 🟦 el orden y el 7, decididos (`#801`); ▶ la R1, la plantilla, con su «al detalle» en §4.1 (roles de color
+  que pone la instancia, iconos teñidos en el servidor); ⬜ lo que el owner tiene «por ahí».
 - **Invariantes**: `RGPD-01` (lo enviado), `RGPD-07`, el consentimiento de marketing; `PAY-14` (se encolan).
 
 ## 1. Contexto — medido el 29-09
@@ -89,9 +91,34 @@ anonimizada, nunca), `RGPD-07` (la analítica de los correos, sin persona), LSSI
 Las guardas del molde (la versión de texto y el contraste en claro y en oscuro); cada correo en Mailpit contra su mockup y
 una sonda por tanda; los comerciales con su prueba de consentimiento y de «una vez», con su mutación; el ojo del owner.
 
-## 7. Revisión y decisión — espera al owner
+### 4.1 La R1 al detalle — medida el 29-09, antes de codificar (del agente contra el objetivo, vetable al ojo)
 
-1. «Alguna otra cosa que tengo por ahí» (29-09): qué es.
-2. **El 7**: el diseño pide la reseña en Google y «Reservar otra vez»; hoy sale la encuesta anónima (`#754`).
-3. **Por ocasiones**: una herramienta para escribir y mandar un correo a un público; ¿ahora o después?
-4. El orden de las tandas (§4).
+- **Medido**: la plantilla del diseño es un motor entero —un documento con `color-scheme`, el adelanto con su relleno, el
+  oscuro por CLASE (`prefers-color-scheme` y los `data-ogsc`/`data-ogsb` de Outlook.com) y quince bloques que se pintan dos
+  veces, en tablas y en texto: cabecera (una franja de cuatro colores, el logotipo, la foto de las ocasiones, una chapa con
+  el hecho y el titular), resguardo (la hoja del calendario, la hora, qué, el importe, el número, sus filas y dos enlaces
+  claros; con la fecha de antes tachada cuando cambia), QR, texto, lista (con iconos en su círculo), pasos, sección,
+  botón, botones, línea, aviso, motivo, resguardo corto, hueco y pie (la ayuda, dónde, el horario de HOY, teléfono,
+  WhatsApp y correo; y en los comerciales, por qué lo recibes y la baja). El aire entre bloques lo pone la plantilla
+  (16 px dentro de una zona, 28 entre zonas, 32 antes de un filete): quitar un bloque no deja hueco.
+- **El nudo: los colores y las fuentes son de PlayJump** (su tinta, su cian, su naranja, la franja; Archivo, Figtree y DM
+  Mono). El molde de hoy toma del panel el logotipo, el nombre y el color del botón (`ThemeSettings::brand()`), y el resto son
+  neutros del producto en `brand.css`, porque el correo no lee `var()`. **Propuesta**: ROLES de correo —fondo, texto fuerte,
+  texto, apagado, filete, sutil, enlace, acción y su letra, la hoja, los cuatro tonos, la franja, las tres familias—, con su
+  valor NEUTRO en el producto y su pareja oscura, que la instancia redefine en una hoja propia de su paquete (la receta de
+  `#769`, como la isla con sus `--isla-*`). El producto la lee EN EL SERVIDOR (un lector de propiedades de una sola
+  indirección, en caché) y la escribe en línea. Sin hoja, el correo sale con los neutros: ninguna instalación se rompe.
+- **Los iconos**: el diseño los pide como PNG del color de su rol. Se guarda cada icono de Lucide (licencia ISC) UNA vez como
+  máscara PNG en el producto, generada del SVG, y se tiñe con GD al pedirse (en caché); sin imagen, queda su círculo, como
+  pide el diseño. GD está en el contenedor; en producción, no verificado.
+- **Por partes**: **R1a** el documento y los bloques con sus roles (los que usan los 27 de hoy); **R1b** los iconos; **R1c**
+  los 27 pasan a la plantilla nueva sin cambiar su contenido. Cada una, al ojo en Mailpit, en claro y en oscuro.
+- **Compartido (aviso por buzón a plataforma)**: la hoja de correo en el paquete de la instancia y su clave en el manifiesto.
+
+## 7. Revisión y decisión
+
+- ✅ **`[DECIDIDO owner]` 29-09 (`#801`)**: (1) **el 7**: el correo sigue siendo la encuesta anónima y, al terminarla, la
+  página de gracias invita a todos a la reseña en Google, sin filtrar por la nota; **si no hay encuesta activa, el correo
+  pide solo la reseña**. (2) **Por ocasiones, después** de lo demás. (3) **El orden, el de §4**: la plantilla → la reserva →
+  los comerciales automáticos → las felicitaciones → lo demás.
+- ⬜ Espera al owner: «alguna otra cosa que tengo por ahí» (29-09).

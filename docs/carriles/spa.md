@@ -2,7 +2,7 @@
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb` a secas; la instancia al lado, en
 > `~/proyectos/instancias/playjump`, clon de `github.com/yasmindanailov/instancia-playjump`, montada el 25-09) ·
-> Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#800`** · La banda está dada de alta en la
+> Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#801`** · La banda está dada de alta en la
 > tabla de `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: **`analitica-para-decidir.md`
 > §0** (la tarea en curso, `#755`) · `encuestas.md` §0 y §4.7 (`#754`) · `analitica.md` §0 y §4.5 · `isla-y-landing-nueva.md`
 > §4.11 · `celebracion-e-invitacion.md` §0 · `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 ·
@@ -14,9 +14,9 @@
 
 ## Foto (2026-09-29)
 
-- ▶▶▶ **AHORA, LOS CORREOS** (owner 29-09, `#800`): el REDISEÑO de la plantilla, los correos NUEVOS de marketing —con ellos las
-  felicitaciones de la TP·3c (`#793`)— y «alguna otra cosa» que el owner concretará. Son míos desde `#789` (los quince correos
-  del diseño, `paginas/correos*` de la instancia). La analítica espera: T5 no se hace (`#800`) y T6–T8, después.
+- ▶▶▶ **AHORA, LOS CORREOS** (owner 29-09, `#800`/`#801`; `specs/correos-rediseno.md`): la plantilla → la reserva → los
+  comerciales automáticos → las felicitaciones (TP·3c) → las ocasiones. ▶ la R1 (la plantilla), su «al detalle» en §4.1.
+  ⬜ «Alguna otra cosa» del owner. La analítica espera: T5 no se hace (`#800`) y T6–T8, después.
 - ✅ **LOS CORREOS SALIENTES, CERRADOS** (`specs/correos-salientes.md`, `#794`→`#797`, 29-09): C1 el registro y la vista previa,
   C2 los clics por envío, C2b la actividad y el aparato, C3 las aperturas y C4 «cuándo» en Marketing, todo en `main` y
   APROBADO por el owner (lo construido y lo que enseñó cada una, §4.7–§4.15). Queda en PRODUCCIÓN: encender los dos
@@ -204,8 +204,9 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 
 ## Buzón
 
-- **Para plataforma (29-09, `#800`)**: la spec `correos-rediseno.md` entra en `CLAUDE.md` en la fila de los correos; para que
-  cupiera (techo 12 KB) acorté dos filas mías: la de la analítica y la del área de cliente del cajón.
+- **Para plataforma (29-09, `#800`/`#801`)**: la spec `correos-rediseno.md` entra en `CLAUDE.md` en la fila de los correos
+  (acorté dos filas mías para caber). ❗ **Aviso ANTES de tocarlo** (§4.1): la R1 propone una HOJA DE CORREO en el paquete de la
+  instancia (roles `--correo-*`, la receta de `#769`) y su clave en el manifiesto: tu contrato. Dime si prefieres otra puerta.
 - **Para plataforma (29-09, la T3d)**: `analytics.explained` entra en `AuditLog::ACTIONS` (el texto para IA, sin PII). Nada más tuyo.
 - ❗ **Para plataforma (29-09, la TP·3b, `#793`)**: retiré el permiso `analytics.export` de tu catálogo y del seeder
   (COMPARTIDOS), con la migración `drop_analytics_export_permission`, que borra su fila (el pivote cae en cascada). También la
