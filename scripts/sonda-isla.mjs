@@ -1,33 +1,35 @@
 /**
  * SONDA DE LA ISLA — la compra en la isla, de punta a punta, en un navegador de verdad (T3e·6 de
- * `docs/specs/isla-y-landing-nueva.md` §4.10). Es la versionada; las de cada sub-tanda (`storage/app/sonda-isla-t3e*.mjs`)
- * eran desechables. Recorre:
- *   1. una ENTRADA: la pantalla 0, «Tus datos» entrando con la cuenta de pruebas, «Pagar»… y la HORA SE LLENA justo antes
- *      de pagar (la sonda llena esa franja en la BD): «Esa hora ya no está libre», las horas cercanas, «Elegir esta hora»
- *      y de vuelta a «Pagar» con la línea rehecha; la pasarela con su formulario firmado;
+ * `docs/specs/isla-y-landing-nueva.md` §4.10), desde las PÁGINAS de verdad (T4f, §4.12: hasta entonces, desde un andamio
+ * con dos botones). Recorre:
+ *   1. una ENTRADA desde `/kids`: su calculadora (el primer día y la primera hora libres), «Reservar y pagar», «Tus datos»
+ *      entrando con la cuenta de pruebas, «Pagar»… y la HORA SE LLENA justo antes de pagar (la sonda llena esa franja en la
+ *      BD): «Esa hora ya no está libre», las horas cercanas, «Elegir esta hora» y de vuelta a «Pagar» con la línea rehecha;
+ *      la pasarela con su formulario firmado;
  *   2. los DESENLACES por la vuelta real del banco: sin datos («verificando»), el rechazo («El pago no se ha
  *      completado», con su motivo) y reintentar, y el sí («¡Reservado!» con el QR del carné);
- *   3. un CUMPLEAÑOS: la pantalla 0 de la fiesta, la SEÑAL a la pasarela (5000 céntimos) y «¡Fiesta reservada!».
+ *   3. un CUMPLEAÑOS desde `/cumpleanos`: su calculadora (la edad elige el pack, el primer día con hueco y su primera hora),
+ *      «Reservar y pagar la señal», la SEÑAL a la pasarela (5000 céntimos) y «¡Fiesta reservada!».
  *
  *   docker compose exec -u sail -T -e PLAYWRIGHT_BROWSERS_PATH=/home/sail/pw-browsers laravel.test \
  *       node scripts/sonda-isla.mjs [390|1280]
  *
- * Solo en LOCAL, con la isla como carcasa (`sidebar.shell = isla`, en el panel) y la cuenta de pruebas
- * (`probe-card@jumpweb.test`, que no viaja en el repo: si falta, la sonda da su receta). La pasarela se intercepta: nada
- * sale a Redsys; el «sí» y el «no» del banco se escriben como los escribiría su notificación firmada.
- * ⚠️ Monta su propia página (`public/_sonda-isla.html`, las hojas de Saltia y el paquete del cajón, como lo hará una
- * página nueva) y la BORRA al acabar: un andamio olvidado en `public/` lo para la guarda 9 del despliegue.
+ * Solo en LOCAL, con la isla como carcasa (`sidebar.shell = isla`, en el panel), el paquete de la instancia (sus páginas
+ * `/kids` y `/cumpleanos`) y la cuenta de pruebas (`probe-card@jumpweb.test`, que no viaja en el repo: si falta, la sonda
+ * da su receta). La pasarela se intercepta: nada sale a Redsys; el «sí» y el «no» del banco se escriben como los
+ * escribiría su notificación firmada.
  * ⚠️ La franja que llena la devuelve a su cupo exacto, también si la sonda se corta. Deja pedidos PAGADOS en la BD
  * local, como una compra de verdad; los pendientes, caducados. Sale con 1 si falla algo, y deja las fotos en
  * `storage/app/audit/isla-<ancho>-*.png`.
  */
 import { chromium } from 'playwright-core';
+import { Buffer } from 'node:buffer';
 import { execFileSync } from 'node:child_process';
-import { mkdir, rm, writeFile } from 'node:fs/promises';
+import { mkdir } from 'node:fs/promises';
 
 const BASE = process.env.SONDA_BASE ?? 'http://localhost';
 const SALIDA = 'storage/app/audit';
-const PAGINA = 'public/_sonda-isla.html';
+const POLITICA = '2026-09-24'; // CookieConsent::POLICY_VERSION: con el aviso ya contestado, la isla no lo antepone
 const ANCHO = Number(process.argv[2] ?? 1280);
 const CLIENTE = { email: 'probe-card@jumpweb.test', password: 'Probe-card-2026!' };
 const tinker = (php) => execFileSync('php', ['artisan', 'tinker', '--execute', php], { encoding: 'utf8' }).trim();
@@ -43,6 +45,10 @@ const RECETA = [
 if (tinker('echo app()->environment();') !== 'local') { console.error('✗ solo en LOCAL'); process.exit(1); }
 if (tinker('echo App\\Domain\\Content\\Services\\ShellSettings::shell();') !== 'isla') {
     console.error('✗ la carcasa de esta instalación no es la isla: ponla en el panel (Ajustes · el cajón, «isla») y vuelve a correrla');
+    process.exit(1);
+}
+if (tinker('$p = app(App\\Http\\Instancia\\InstancePages::class); echo $p->queOcupa("cumpleanos")?->slug !== null && Illuminate\\Support\\Facades\\Route::has("instancia.kids") ? 1 : 0;') !== '1') {
+    console.error('✗ el paquete de la instancia no declara `/kids` ni una página que ocupe `/cumpleanos`: la compra se prueba desde ellas');
     process.exit(1);
 }
 if (tinker(`echo App\\Domain\\Identity\\Models\\User::where('email', '${CLIENTE.email}')->exists() ? 1 : 0;`) !== '1') {
@@ -64,25 +70,10 @@ const filas = [];
 const ok = (nombre, cierto, detalle = '') => filas.push(`${cierto ? '✓' : '✗'} ${nombre}${detalle ? ` — ${String(detalle).replace(/\s+/g, ' ').slice(0, 170)}` : ''}`);
 
 await mkdir(SALIDA, { recursive: true });
-await writeFile(PAGINA, `<!doctype html>
-<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sonda de la isla (temporal)</title>
-<!-- La monta scripts/sonda-isla.mjs y la BORRA al acabar (guarda 9). -->
-<link rel="stylesheet" href="/instancia/css/fuentes.css"><link rel="stylesheet" href="/instancia/css/saltia.css">
-<link rel="stylesheet" href="/instancia/css/isla.css"><link rel="stylesheet" href="/css/cajon.css">
-<style>body{margin:0;min-height:1600px}main{max-width:720px;margin:0 auto;padding:24px 16px}</style>
-</head><body><main><h1>Sonda de la isla</h1>
-<button id="abrir-kids" type="button" data-jw-open-zone="kids">Reservar Kids</button>
-<button id="abrir-packs" type="button" data-jw-open="packs">Reservar un cumpleaños</button>
-</main><script type="module">
-const manifiesto = await (await fetch('/build/manifest.json')).json();
-await import('/build/' + manifiesto['resources/js/cajon/paquete.js'].file);
-</script></body></html>
-`);
-
 limitadoresACero();
 const navegador = await chromium.launch();
-const ctx = await navegador.newContext({ viewport: { width: ANCHO, height: ANCHO < 600 ? 844 : 900 } });
+const ctx = await navegador.newContext({ viewport: { width: ANCHO, height: ANCHO < 600 ? 844 : 900 }, locale: 'es-ES' });
+await ctx.addCookies([{ name: 'cookie_consent', value: Buffer.from(JSON.stringify({ v: POLITICA, cats: {} })).toString('base64'), url: BASE }]);
 const pasarela = [];
 await ctx.route(/redsys\.es/, (ruta) => {
     pasarela.push(ruta.request().postData() ?? '');
@@ -100,7 +91,6 @@ const cuerpo = () => page.locator('[data-isla-scroll]').innerText().catch(() => 
 const debajo = () => page.locator('[data-isla] [aria-live="polite"]').last().innerText().catch(() => '');
 const accion = (nombre) => page.locator('[data-isla] button', { hasText: nombre }).last();
 const boton = (texto) => page.locator('[data-isla-scroll] button', { hasText: texto });
-const horaLibre = () => page.locator('[data-isla-scroll] button:not([disabled])', { hasText: /^\d{2}:\d{2}/ }).first();
 const foto = (n) => page.screenshot({ path: `${SALIDA}/isla-${ANCHO}-${n}.png` });
 const quieta = async () => { await page.waitForLoadState('networkidle').catch(() => {}); await page.waitForTimeout(450); };
 const espera = (fn, arg, ms = 15000) => page.waitForFunction(fn, arg, { timeout: ms });
@@ -174,17 +164,18 @@ const devolverFranja = () => {
 };
 
 try {
-    // ── 1. Una ENTRADA, y la hora que se llena justo antes de pagar ──────────────────────────────────────
-    await page.goto(`${BASE}/_sonda-isla.html`, { waitUntil: 'networkidle' });
-    await page.click('#abrir-kids');
-    await page.waitForSelector('#isla-compra-paso', { timeout: 15000 });
-    await enElCuerpo(/€/);
+    // ── 1. Una ENTRADA desde `/kids`, y la hora que se llena justo antes de pagar ────────────────────────
+    await page.goto(`${BASE}/kids`, { waitUntil: 'networkidle' });
+    await page.locator('#precio').scrollIntoViewIfNeeded();
+    await page.waitForSelector('[data-jw-calculadora] button[aria-label*=", libre"]:not([disabled])', { timeout: 20000 });
+    await page.locator('[data-jw-calculadora] button[aria-label*=", libre"]:not([disabled])').first().click();
+    await page.waitForSelector('[data-jw-calculadora] [role=group] button:not([disabled])', { timeout: 15000 });
+    await page.locator('[data-jw-calculadora] [role=group] button:not([disabled])').first().click();
+    await espera(() => { const b = [...document.querySelectorAll('[data-jw-calculadora-lado] button')].find((x) => x.textContent.includes('Reservar y pagar')); return b && ! b.disabled; }, null, 15000);
     await quieta();
-    await horaLibre().click();
-    await espera(() => /€/.test([...document.querySelectorAll('[data-isla] [aria-live="polite"]')].pop()?.textContent ?? ''), null, 10000);
-    await quieta();
-    ok('la pantalla 0: una hora elegida, con su línea y su total debajo', /entrada/.test(await debajo()), await debajo());
-    await accion(/^Continuar$/).click();
+    const calculado = await page.locator('[data-jw-calculadora-lado]').innerText();
+    ok('la calculadora de /kids: un día y una hora elegidos, con su total', /\d\s?€/.test(calculado), calculado.slice(0, 90));
+    await page.locator('[data-jw-calculadora-lado] button', { hasText: 'Reservar y pagar' }).click();
     await hastaPagar();
     ok('«Tus datos» con la cuenta → «Paso 2 de 2 · Pagar»', (await paso()).includes('Pagar'), await paso());
     // Las formas de pago (`#784`, `#786`): las del arranque, BAJO el botón de pagar (fuera del recibo), en su versión para
@@ -259,25 +250,31 @@ try {
     ok('el sí → «¡Reservado!» con su Nº de pedido y el QR del carné', /Nº de pedido/.test(await cuerpo()) && await page.locator('[data-isla-scroll] img[src*="/me/card/png"]').count() === 1);
     await foto('5-reservado');
 
-    // ── 3. Un CUMPLEAÑOS con señal (y la cuenta SIN teléfono: la fiesta lo pide, `#787`) ─────────────────
+    // ── 3. Un CUMPLEAÑOS con señal desde `/cumpleanos` (y la cuenta SIN teléfono: la fiesta lo pide, `#787`) ──
     limitadoresACero();
     quitarTelefono();
-    await page.goto(`${BASE}/_sonda-isla.html`, { waitUntil: 'networkidle' });
-    await page.click('#abrir-packs');
-    await espera(() => (document.querySelector('[data-isla-scroll] h1')?.textContent ?? '') === 'Un cumpleaños', null, 20000);
-    await enElCuerpo(/Menú 1/);
+    await page.goto(`${BASE}/cumpleanos`, { waitUntil: 'networkidle' });
+    await page.waitForSelector('#p6-edad', { timeout: 20000 });
+    const fiesta = await page.evaluate(() => JSON.parse(document.querySelector('[data-jw-calculadora-fiesta]')?.dataset.jwCalculadoraFiesta ?? 'null'));
+    await page.evaluate(() => document.querySelector('#calcula')?.scrollIntoView());
     await quieta();
-    await boton(/^5$/).click();
+    // Cinco años: el pack de los pequeños. El día, el primero con hueco que la página ofrece (sin ninguno en ocho semanas,
+    // la fiesta no se puede comprar aquí: se dice en vez de probar otra cosa).
+    await page.locator('#p6-edad button', { hasText: /^5$/ }).click();
     await quieta();
-    await page.locator('[data-isla-scroll] button', { hasText: /^(lun|mar|mié|jue|vie|sáb|dom|hoy)/ }).first().click();
-    await enElCuerpo(/¿A qué hora\?/);
+    if (await page.locator('[data-jw-calculadora-dia]').count() === 0) throw new Error('sin días de fiesta con hueco en ocho semanas: la compra de la fiesta no se puede probar');
+    await page.locator('[data-jw-calculadora-dia]').first().click();
+    await page.waitForSelector('#p6-hora [data-hora]:not([disabled])', { timeout: 15000 });
+    await page.locator('#p6-hora [data-hora]:not([disabled])').first().click();
+    await espera(() => /Hoy pagas la señal/.test(document.querySelector('[data-jw-calculadora-lado]')?.textContent ?? '') && /Total/.test(document.querySelector('[data-jw-calculadora-lado]')?.textContent ?? ''), null, 15000);
     await quieta();
-    await horaLibre().click();
-    await espera(() => /Hoy pagas/.test([...document.querySelectorAll('[data-isla]')].pop()?.textContent ?? ''), null, 15000);
-    await quieta();
-    ok('la fiesta: la edad elige el pack, los niños en su mínimo y «Hoy pagas 50 €»', /KIDS, de 4 a 7 años/.test(await cuerpo()) && /8 niños/.test(await debajo()) && /Hoy pagas 50\s€/.test(await page.locator('[data-isla]').innerText()));
-    await accion(/^Continuar$/).click();
+    const eco = await page.locator('#p6-edad').innerText();
+    const packFiesta = (fiesta?.packs ?? []).find((p) => eco.includes(p.name));
+    const ladoFiesta = await page.locator('[data-jw-calculadora-lado]').innerText();
+    ok('la fiesta: la edad elige el pack de su tramo y «Hoy pagas la señal 50 €»', packFiesta?.guest_age_min <= 5 && /Hoy pagas la señal\s*50\s€/.test(ladoFiesta), `${packFiesta?.name ?? eco.slice(-40)} · ${ladoFiesta.match(/Hoy pagas[^\n]*\n?[^\n]*/)?.[0] ?? ''}`);
+    await page.locator('[data-jw-calculadora-lado] [data-isla-cta]').click();
     await hastaPaso('Tus datos');
+    ok('la compra abre con los niños en el mínimo del pack', new RegExp(`${packFiesta?.min_quantity} niños`).test(await debajo()), await debajo());
     await quieta();
     ok('una fiesta con la cuenta SIN teléfono: «Tus datos» se lo pide, y solo eso (`#787`)', await page.locator('#pjc-tel').count() === 1 && /^Hola/.test(await page.locator('[data-isla-scroll] h1').innerText()), (await cuerpo()).slice(0, 90));
     await hastaPagar();
@@ -301,7 +298,6 @@ try {
     tinker(`$o = ${ULTIMO}; if ($o && $o->status === 'pending') { $o->expires_at = now()->subMinute(); $o->save(); }`);
     execFileSync('php', ['artisan', 'orders:expire'], { encoding: 'utf8' });
     await navegador.close();
-    await rm(PAGINA, { force: true });
 }
 
 ok('sin errores en la consola', errores.length === 0, errores.join(' | '));

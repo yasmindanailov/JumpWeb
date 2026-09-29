@@ -1243,8 +1243,27 @@ juzga «idéntico», con los datos del diseño.
   pieza en reposo a 390 y 1280, sin estados, ~5 min—. Cazó un defecto del port del zip: el margen del icono del parking
   iba al `svg` y `<x-lucide>` pinta una `<span>` que lo envuelve (instancia `d1114ad`). La isla, 60/60 en su banco; la
   compra, 52/54 («entrar», `#695`).
-- **T4f · la sonda de las dos páginas** (`scripts/sonda-isla.mjs` crece): llegar, la isla en reposo, calcular,
-  «Reservar y pagar», la pasarela; en 390 y 1280.
+- ✅ **T4f (29-09) · la sonda de las dos páginas**, en dos piezas (el plan decía «`sonda-isla` crece»; la calculadora en vivo
+  ya la juzgaba `sonda-calculadora.mjs`, así que no se repite):
+  · **`scripts/sonda-entradas.mjs`** (el molde de `sonda-visitanos`): `/kids` y `/jump`, cada dato contra SU hecho de la API
+    —el título y la descripción (ciudad, edades, «desde»), la foto para compartir, «1 hora, por niño» y sus tarifas, «Hoy» en la
+    de hoy, la nota de Google, el botón («Reservar para hoy» solo si hoy abre y quedan huecos: `POST /availability/{id}/times`),
+    el plazo, las ofertas, la tabla fila a fila (y el ahorro de la de 2 horas CALCULADO), la unidad y las etiquetas del panel,
+    las filas y los calcetines que recibe la calculadora, las atracciones y su «play», los cuidados, las tres voces con su
+    etiqueta, el titular, la dirección, «Cómo llegar», las franjas y [Hoy], las dudas (edades, alturas, calcetines, plazo, el
+    pack de cumpleaños de su tramo, los días especiales) y sus puertas, el cierre (teléfono, WhatsApp con su mensaje, sin la
+    promesa de Bizum), el pie y la isla— y en/fr sin marcadores. **89/89 a 390 y a 1280.** Los hechos se piden UNA vez para las
+    dos páginas (el suelo de la API sin sesión). Su arnés, `scripts/mutar-sonda-entradas.sh` (muta la instancia; vacía el
+    limitador de la API antes de cada corrida): **25/25**, cada una por su comprobación (24 en la corrida entera; la de [Hoy] no
+    se aplicó por su ancla, `'comun.hoy_abrimos'`, y corregida muerde sola; solo cuenta con el parque abierto hoy, el arnés
+    lo mira en `/schedule` y lo dice si no). ⚠️ La franja de garantías
+    pinta la frase SIN su punto cuando es entera el titular (`reassurance-band`): la sonda lee el titular, no la franja.
+  · **`sonda-isla.mjs` sin andamio**: la entrada se compra desde `/kids` (su calculadora → «Reservar y pagar» → «Tus datos» →
+    la hora que se llena → los desenlaces del banco) y la fiesta desde `/cumpleanos` (la edad elige el pack, el primer día con
+    hueco, «Reservar y pagar la señal» → la señal de 50 €). Ya no escribe `public/_sonda-isla.html`. **22/22 a 1280 y a 390**
+    (sus cuatro pedidos, a `sonda-compra@` después: `TESTING.md` §2.octies). ⚠️ «Tu hora sigue guardada hasta las 15:26» con
+    el parque a las 17:26 NO es un defecto: el Chromium de la sonda va en UTC y esa hora se pinta a propósito en el reloj de
+    quien mira (`sidebar/outcome.js::holdUntilLabel`).
 
 ### 4.13 La T5: Mi cuenta en la isla — el censo (MEDIDO 26-09) y el plan (`#773`)
 
@@ -2192,9 +2211,7 @@ vieja a su sitio con su `?query`, el sitemap igual al mapa, cada página en es/e
     en la misma caja salvo esos casos (con un control: la cabecera de Kids y Jump baila 47 px entre dos corridas iguales); el
     botón del producto, 0 píxeles distintos donde cabía. `sonda-web` 18/18 a 360, 390 y 1280, ya sin desbordes declarados;
     su arnés se corre a 360 y suma dos mutantes (las pestañas que no se apilan, el botón que no parte): **12/12**.
-  ▶ **La T4f** (Kids y Jump) queda como tanda propia: su calculadora en vivo ya la juzga `sonda-calculadora.mjs` y la compra
-  hasta el banco `sonda-isla.mjs` (sobre su andamio); falta la sonda de cada dato contra su hecho (el molde de Visítanos) y
-  llevar la compra de `sonda-isla` a `/kids` de verdad.
+  ▶ **La T4f** (Kids y Jump) quedó como tanda propia: ✅ el 29-09 (§4.12: `sonda-entradas.mjs` y `sonda-isla` sin andamio).
 - ▶ **Medido de camino: lo que las guardas de huérfanos NO ven.** Sin las ocho vistas, cuatro componentes del producto se
   quedan sin nadie que los pinte —`site/facade` (el MURAL, `#580`) con `site/trio` (solo lo usa `facade`), `site/kit-ico` y
   `site/zone-sticker`—, y las guardas cuentan al propio componente como consumidor: su CSS y sus ranuras del kit (las poses
