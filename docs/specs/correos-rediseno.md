@@ -117,6 +117,50 @@ una sonda por tanda; los comerciales con su prueba de consentimiento y de «una 
 - **Por partes**: **R1a** el documento y los bloques con sus roles (los que usan los 27 de hoy); **R1b** los iconos; **R1c**
   los 27 pasan a la plantilla nueva sin cambiar su contenido. Cada una, al ojo en Mailpit, en claro y en oscuro.
 - **Compartido (aviso por buzón a plataforma)**: la hoja de correo en el paquete de la instancia y su clave en el manifiesto.
+  ✅ Contestado (29-09, `28dfdf15`): `hojas.correo` en `instancia.json`, leída con `InstanceViews::hojas('correo')` (ya valida
+  ruta y extensión; sin paquete, `[]`), sin contrato nuevo. Plataforma pide del lector: validar cada valor antes de escribirlo
+  en línea, caché con clave ruta + `filemtime`, y el oscuro con nombres planos (`--correo-fondo-oscuro`) en un solo `:root`.
+
+#### 4.1.1 La R1a al detalle — medida el 29-09 (del agente contra el objetivo; vetable)
+
+- **Medido, el molde de hoy**: el Markdown de Laravel (`notifications::email` → `x-mail::message` → siete componentes html y
+  siete de texto), una hoja (`themes/brand.css`, 11,7 kB) que `CssToInlineStyles` pega en cada etiqueta, y el oscuro en el
+  `<style>` del layout **por el COLOR escrito** (`[style*="color:#101418"]`) con `!important`. Los 28 correos del molde le
+  hablan por cinco verbos: `hero()` 28 · `line()` 28 · `action()` 21 · `notice()` 6 · `outro()` 3 (dos con un `HtmlString`:
+  el libro del pedido y la ficha de producto, marcado propio con colores en línea) · `level('sell')` 2 · `salutation()` 1.
+  El resguardo de hoy (`EmailSlip`) son filas rótulo → valor, no los campos del diseño (día, hora, qué, código).
+- **Por qué no se re-viste el Markdown**: el aire del diseño depende del bloque SIGUIENTE (16/28/32 px) y su oscuro va por
+  CLASE (`.pjm-*` y los `data-ogsc`/`data-ogsb` de Outlook.com); un parser de Markdown no conoce al vecino, y el inliner
+  descarta lo que no puede pegar (ya pasó con la `@media`, `#503`).
+- **La forma**: `BrandedMailMessage` pinta con **vistas propias** (`->view(['html' => …, 'text' => …])`, que el framework
+  ya admite) sobre los MISMOS datos (`introLines`, `hero`, `notice`, `actionText`, `outroLines`…): los 28 heredan sin tocar
+  ni uno (eso es la R1c, que luego les da sus bloques). Dentro, un **documento** (el `<head>` del diseño, el adelanto con su
+  relleno, el ancho de 600 y lo de Outlook) y una **lista de bloques**, cada uno una pieza Blade con su gemela de texto y el
+  aire calculado por el vecino (el `aire()` del diseño). Los bloques de la R1a son **los que usan los 28 hoy**: cabecera
+  (chapa y titular), resguardo **de filas** (el de campos llega con la R2, cuando `EmailSlip` los dé), texto, aviso, botón
+  y pie. QR, pasos, lista, sección, motivo, resguardo corto, botones y hueco nacen con su primer consumidor (R2, C1): una
+  pieza no se declara antes que su consumidor (`#503`).
+- **Los roles**: un lector (`MailTheme`, futuro) devuelve los ~30 roles del `tema()` del diseño —fondo, fuerte, cuerpo,
+  apagado, filete, sutil, callado y su borde, enlace, punto, acción y su letra, la hoja y su letra, los cuatro tonos (fondo y
+  letra), la franja, los tres del icono, las tres familias y los radios—, en claro y en oscuro. Neutros del producto (sin
+  franja) y encima los de la hoja `hojas.correo`, leídos con `InstanceViews::hojas('correo')`: solo `:root`, nombres planos
+  (`--correo-fuerte`, `--correo-fuerte-oscuro`), UNA indirección `var()` dentro de las mismas hojas, y cada valor validado
+  (un color `#rgb`/`#rrggbb`, una familia de caracteres seguros, un radio en px); lo demás fuera con aviso en el log. Caché
+  con clave ruta + `filemtime`. Sin hoja, el correo sale neutro y entero.
+- **El libro y la ficha de producto**: su marcado propio gana las clases de rol (`pjm-strong`, `pjm-body`, `pjm-muted`,
+  `pjm-line`) y sus colores salen del lector: sin eso, en oscuro, quedarían a 1,12 : 1 como ya pasó (`#503`).
+- **Decidido aquí, contra el objetivo** (vetable): (1) **ninguna fuente web** —el diseño la trae con `fuentes`; el molde
+  vigila que no viaje (`MailThemeTest`): cada apertura avisaría a Google de la IP del cliente, y Gmail la ignora—: las
+  familias de la instancia van primero en la pila y detrás las de sistema del diseño; (2) **sin firma ni «si el botón no
+  funciona…»**: el diseño no los tiene; el pie nombra al parque y la versión de texto lleva cada enlace; la firma propia
+  del único que la escribe (`GuardianAuthorizationSigned`) pasa a una línea.
+- ❓ **Para el owner**: el diseño pinta el botón PRINCIPAL de cada correo en el color de acción (el naranja de PlayJump);
+  `#503` decidió que el naranja solo vende (2 de 21) y los demás van en tinta. Ver §7.
+- **Las guardas**: `MailThemeTest` se reescribe por PROPIEDADES sobre el documento nuevo (ninguna fuente web, la marca del
+  negocio y nunca la del producto, radios de la hoja, el oscuro en el HTML enviado, cada texto AA en los dos modos por la
+  aritmética, cada bloque con su gemela de texto); `MailMoldTest`, `MailInboxLineTest`, `EmailUtmTest`, `EmailClicksTest`
+  y `EmailOpensTest`, sin tocar y en verde; el lector, con su arnés de mutación. En `wip/correos-r1a`, al ojo del owner en
+  Mailpit (claro y oscuro, 390 y 1280) con los 28 enviados de golpe.
 
 ### 4.2 Los textos, editables desde el panel — pregunta del owner (29-09), análisis sin código
 
@@ -153,3 +197,8 @@ una sonda por tanda; los comerciales con su prueba de consentimiento y de «una 
   pide solo la reseña**. (2) **Por ocasiones, después** de lo demás. (3) **El orden, el de §4**: la plantilla → la reserva →
   los comerciales automáticos → las felicitaciones → lo demás.
 - ✅ «Alguna otra cosa» (29-09): nada más —los comerciales, la plantilla y editar algunos correos—, y la pregunta de §4.2.
+- ❓ **`[PENDIENTE: owner]` (29-09, R1a §4.1.1): el color del botón principal.** El diseño lo pinta siempre en el color de
+  acción (el naranja de PlayJump), uno por correo, y la secundaria clara. `#503` (10-09) decidió «el naranja solo vende»: 2
+  de 21 en naranja y los demás en tinta, como el cajón y Mi cuenta. (A) el diseño: todo principal en acción, y `#503` se
+  sustituye en los correos; (B) `#503`: acción solo en los dos que venden, el resto en el color fuerte del rol. Lo demás de la
+  R1a no depende de esto: el color sale de un rol y cambiarlo es una línea.

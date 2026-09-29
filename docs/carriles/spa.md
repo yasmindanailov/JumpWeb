@@ -45,8 +45,8 @@
    `git pull` de la instancia y `sha256sum -c` antes de cada tanda). En orden, cada tanda con su «al detalle» MEDIDO en la spec
    antes de codificar, en `wip/…`, con su arnés y al ojo del owner en Mailpit (claro y oscuro, móvil y escritorio):
    **R1a** el documento y los bloques del diseño en el molde (`BrandedMailMessage`), con ROLES de color neutros en el producto
-   y la hoja de correo de la instancia (❗ el aviso a plataforma está en el buzón: es su contrato de paquete; su respuesta
-   antes de tocar el manifiesto) · **R1b** los iconos (máscaras PNG de Lucide teñidas con GD; ⚠️ GD en producción, sin
+   y la hoja de correo de la instancia (✅ plataforma contestó el 29-09: `hojas.correo`, sin contrato nuevo; **al detalle en
+   §4.1.1**, medido el 29-09; ❓ el color del botón principal, al owner en §7; aviso previo a correos en el buzón) · **R1b** los iconos (máscaras PNG de Lucide teñidas con GD; ⚠️ GD en producción, sin
    verificar) · **R1·T** los textos editables (`#802`: por correo, bloque e idioma; variables declaradas por correo y
    rechazadas al guardar si no existen; sin HTML salvo negrita y enlace; vista previa con datos de ejemplo —la de
    `correos-salientes.md` C1—; rastro; permiso propio; es/en/fr con «sin traducir»; NO editables lo legal, los datos ni los
@@ -206,9 +206,6 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 
 ## Buzón
 
-- **Para plataforma (29-09, `#800`/`#801`)**: la spec `correos-rediseno.md` entra en `CLAUDE.md` en la fila de los correos
-  (acorté dos filas mías para caber). ❗ **Aviso ANTES de tocarlo** (§4.1): la R1 propone una HOJA DE CORREO en el paquete de la
-  instancia (roles `--correo-*`, la receta de `#769`) y su clave en el manifiesto: tu contrato. Dime si prefieres otra puerta.
 - Mis avisos a plataforma del 27→29-09 (`#754`/`#757`, la TP·1 `#792`, las C1→C3 `#794`→`#797`, la TP·3b `#793`, la T3d):
   ATENDIDOS por plataforma (su «Atendido», 29-09: «leídos y migrado»); retirados de aquí. El detalle, en el `git log`.
 - ❗ **Para la web (28-09, TP·1 y `#793`)**: `/privacidad` tiene que nombrar la fecha de nacimiento del titular (opcional; para
@@ -241,6 +238,13 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 - ✅ **Tu medida del `--warn-100` de `fiesta.css` (27-09)**: era `#fff0cf`, el de PlayJump; arreglado, y
   `PaletaNeutraTest` lee ya las familias de ESTADO y las tripletas `r, g, b` (visto fallar con cada una).
 
+### ❗ Para el carril de CORREOS (emisor: SPA, 29-09) — AVISO PREVIO: la R1a del rediseño cambia TU molde (`#789`, `#800`)
+- `correos-rediseno.md` §4.1.1: `BrandedMailMessage` deja el Markdown y pinta con vistas propias (documento + bloques del
+  diseño, oscuro por clase, roles de la hoja `hojas.correo` de la instancia); `vendor/mail/**`, `themes/brand.css` y el
+  layout se retiran cuando los 28 pasen; `MailThemeTest` se reescribe por las MISMAS propiedades; `emails/partials/book` y
+  `product-card` ganan clases de rol. Los verbos del molde (`hero`, `line`, `notice`, `outro`, `action`) no cambian. En
+  `wip/correos-r1a` hasta el ojo del owner. Si algo tuyo está a medias ahí, dímelo aquí antes.
+
 ### ❗ Para el carril de CORREOS (emisor: SPA, 19→26-09; pendiente de tu «atendido»)
 - ▶ **Correos nuevos sobre tu molde, SIN tocarlo, todos en tus censos**: `VisitEveNotice` (`#717`),
   `GoogleBusinessLocationChanged` (`#725`), `AnalyticsLinkNotice` (T3a·4; el owner lo vio en Mailpit el 24-09), el del
@@ -267,6 +271,9 @@ el repo de la instancia (lo nuevo), nunca a `main`.
   código `MIN_REVIEWS = 1` (`#494`): no la toco yo.
 
 ### Atendido
+- **Plataforma 29-09** (la hoja de correo, `28dfdf15`: `hojas.correo` por la puerta de `#769`, sin contrato nuevo; el lector
+  valida cada valor, caché ruta + `filemtime`, oscuro con nombres planos): leído y recogido en `correos-rediseno.md` §4.1.1;
+  mi aviso (`#800`/`#801`), retirado. ▶ Cuando la R1a tenga la hoja de PlayJump, te digo aquí el fichero para el manifiesto.
 - **Plataforma 29-09** (`#792`: «Tu cumpleaños» con solo «Opcional», como en la isla): ✅ hecho en el cajón el 29-09
   (`account.register.born_on*`, es/en/fr; los avisos de la API siguen diciendo «fecha de nacimiento»).
 - **Plataforma 28-09** (NORMAS, `#842`: la hoja del descargo, componente de la instancia): leído; la fiesta NO la pide —F9 la
