@@ -6,9 +6,9 @@
 > **820–849 AGOTADA con `#849`** → sigue en **850–879** (del owner, 29-09; centena `decisiones/800-899.md`) · Último usado:
 > **`#852`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#846`) · Actualizado: **2026-09-29**
-> (tarde: `#758` en la isla ✅ `#846`; la lista del owner, `#847`; el acceso con código ✅ `#848`/`#849`; el panel a salvo ✅ `#850`/`#851`).
-> ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
-> llévaselo con la medida, como el SPA en `#724`).
+> (cierre de la noche: el panel a salvo ✅ `#850`/`#851`; la spec del acceso con código ✅ `#848`/`#849`; SIGUE su A1).
+> ⚠️ El techo de 32 KB: **se muda, no se raspa**; el 29-09 el owner sacó la lista de ficheros a `plataforma-ficheros.md`
+> (`#852`) y NO subió el techo. Si vuelve a apretar tres veces seguidas, llévaselo con la medida.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
 > Techo **32 KB** (check 10; subido de 24 en `#724` con la medida delante). El contador de la suite no
 > vive aquí: va en el trailer del commit.
@@ -46,15 +46,22 @@ normas, la T6f (301 y la web vieja fuera, `#843`), `#844`, la T6h (las legales) 
 **T6g** (§4.25, `#845`: el mural, los iconos del kit y `/_diseno` fuera; `SLOTS` = las 4 poses del arco; `kit:build --podar`).
 Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas,entradas}.mjs`), la web entera (`sonda-web.mjs`,
 17/17) y la compra (`sonda-isla.mjs`).
-▶▶▶ **AHORA, la lista del owner ANTES DE DESPLEGAR** (`#847`, 29-09), mientras él diseña: **(1)** `specs/acceso-con-codigo.md` ✅
-(`#848`/`#849`: una puerta —con cuenta, código; nuevo, sus datos SIN código: hay cola en la puerta—, contraseñas borradas,
-90 días, solo el código) → su A1 (el código en el servidor) —⚠️ antes, sus trampas nuevas: las sesiones en Redis de producción
-(`RGPD-06`) y que el acceso no abra el panel—; **(2) HECHO**, `specs/panel-a-salvo.md`: P1 guard propio (`#850`, `SEC-14`) · P2
-dirección secreta (`PANEL_PATH`; al desplegar, `ENTORNOS.md` §6, la elige el owner) · P3 authenticator SOLO de administradores
-(`#851`; `panel:quitar-authenticator` si pierde el móvil; en local, el del owner lo pide ya); **(3)** el SEO completo
-(textos de playjump.es, el owner los revisa al final); **(4)** las imágenes al compartir (hoy: logotipo u `og-image.jpg`): la
-web, compuesta con la marca; la de la INVITACIÓN, la invitación misma —nombre, edad, día, hora, su diseño—, generada para cada
-una (`#849`; medir antes qué permite producción para generarla). La lista de invitados, al SPA (buzón).
+▶▶▶ **SIGUE (lo pidió el owner para el chat siguiente): la A1 de `specs/acceso-con-codigo.md`** (✅ `#848`/`#849`; su §0 y §4)
+—el código en el SERVIDOR: la tabla `login_codes` (futuro), un servicio de dominio en Identity con los límites de su §4.2 que
+comparta el núcleo `PasswordLogin::guarded()` (no una copia: `SEC-06`), el correo del código TRAS la respuesta (la cola espera
+al cron de producción, hasta 60 s), la PUERTA (el correo → `code` si tiene cuenta, `register` si no: `#849`, el alta no espera
+código), verificar (sesión «recordada 90 días», `#848`), `POST /auth/tokens` con código, el alta con `password` opcional y
+`anonymize()` borrando los códigos (`RGPD-01`); contrato: mirar `info.version` (1.54.0 el 29-09)—. ⚠️ Antes de la A2: el driver de
+SESIÓN de producción (`ENTORNOS.md` §6 lo da `redis`, medido el 01-09, sin re-medir; `purgeSessions()` solo actúa con `database`:
+`RGPD-06`), por SSH y con permiso del owner. ⚠️ El código abre la WEB, nunca el panel (`SEC-14`).
+**HECHO el 29-09 (tarde-noche)**: la hoja de correo del SPA (`28dfdf15`; declarada en la instancia, `da0f84d`) · `#758` en la isla
+(`#846`, §4.26) · `sonda-portada` 23/23 (era la sonda) · la lista del owner (`#847`) · **EL PANEL A SALVO** (`specs/panel-a-salvo.md`
+✅: guard propio `#850`/`SEC-14`, dirección `PANEL_PATH`, authenticator de administradores `#851` con `panel:quitar-authenticator`;
+`sonda-panel.mjs` 11/11) · la lista de ficheros aparte (`#852`). ⚠️ En LOCAL, el administrador del owner ya pide el authenticator.
+**Después, de `#847`**: (3) el SEO completo (textos de playjump.es; el owner los revisa al final); (4) las imágenes al compartir —la
+web, con la marca; la de la INVITACIÓN, la invitación misma (nombre, edad, día, hora, su diseño), generada para cada una (medir
+antes qué permite producción)—. La lista de invitados es del SPA (su `#805`/`#806`). **Al desplegar la v2.0.0** (`ENTORNOS.md` §6):
+`PANEL_PATH` (la elige el owner, por el chat), favoritos de las tablets, la URI de la ficha de Google y su authenticator.
 ▶▶ **Y los diseños NUEVOS del owner** cuando baje el zip: entra SOLO por `diseno/actualizar.py` (`#760`), el diseño se toma del
 mockup (`#767`) y se verifica una vez al final (`#768`). Después, Bizum, Apple (entra) y el día liberado. Correos y puerta, del SPA.
 **Abierto, medido y sin hacer** (HECHOS el 29-09: el `#758` del SPA, `#846`, §4.26; y `sonda-portada` 13/14, que era la SONDA
@@ -66,10 +73,12 @@ móvil (A/B). La ISLA la repiensa él con Claude Design: no atar nada nuevo a el
 dobles); el aviso de los calcetines, «se devuelve la señal» y el TRAMO DE EDAD de cada entrada (`#825`); `payment.marks` (en
 LOCAL, `bizum,visa,mastercard`). BD LOCAL con los valores de `#699`/`#761`.
 ⚠️ **Trampas vivas** (las de `sonda-isla` que paga, `sonda-cuenta` antes de las 20:00 y la base de un techo de peso, mudadas a
-`TESTING.md` §2.octies el 29-09): (b) el tracker está a ~15 B de su techo (16 KB): la próxima línea obliga a MUDAR algo a su spec;
+`TESTING.md` §2.octies el 29-09): (b) el tracker, a ~450 B de su techo (16 KB): se hizo sitio llevando la línea de F4 y la de F5 a
+sus marcadores (el detalle vive en sus specs); la próxima vez, otra cerrada;
 (d) Vue 3.5 reevalúa un `computed` fuera del `try` de quien lo lee: se protege DENTRO (`seguro.js`, §4.13); (f) un texto de la isla que
 use la COMPRA tiene que estar en un grupo que la compra recibe (`mi_cuenta.*` no le llega: §4.24); (g) `isla/hoja/montar.js` NO
-importa nada compartido (`#841`) y la calculadora va a 186,08 de 187; (h) toda página nueva usa `video-hero` SIN `height` y entra
+importa nada compartido (`#841`); la calculadora va a 187,80 de 188, la de la fiesta a 194,26 de 195 y la compra a 165,44 de 166
+(`#846`: un `import()` suma el `preload-helper` al cálculo por entrada); (h) toda página nueva usa `video-hero` SIN `height` y entra
 en `sonda-primera-pantalla.mjs`; (i) tras tocar `instancias/playjump/publico/`, copiarlo a `public/instancia`.
 
 1. **F4 · CERRADA el 19-09** (`specs/cajon-empaquetable.md`: sus cinco tandas y sus seis trampas). ⚠️ **Le
