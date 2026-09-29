@@ -2,7 +2,7 @@
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb` a secas; la instancia al lado, en
 > `~/proyectos/instancias/playjump`, clon de `github.com/yasmindanailov/instancia-playjump`, montada el 25-09) ·
-> Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#804`** · La banda está dada de alta en la
+> Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#806`** · La banda está dada de alta en la
 > tabla de `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: **`correos-rediseno.md`
 > §0** (la tarea en curso, `#800`→`#802`) · `analitica-para-decidir.md` §0 (en pausa, `#755`) · `encuestas.md` §0 y §4.7 (`#754`) · `analitica.md` §0 y §4.5 · `isla-y-landing-nueva.md`
 > §4.11 · `celebracion-e-invitacion.md` §0 · `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 ·
@@ -46,9 +46,9 @@
 
 ## Por dónde retomar, en orden
 
-0. ▶▶▶ **LA LISTA DE INVITADOS del owner** (`#847`, buzón de plataforma del 29-09): nada de la autorización para quien
-   invita, confirmado sin otra variante, «No podemos» aparte y suave, los adultos como el mockup (`fiesta-sistema-nuevo.md`);
-   su «al detalle» medido antes de codificar. Después, la **R1·T** (los textos editables, `#802`, §4.2). El banco de correos
+0. ▶▶▶ **LA LISTA DE INVITADOS del owner** (`#847` → `#805`, al detalle en `fiesta-sistema-nuevo.md` §4.16), en
+   `wip/lista-805`; después **LOS COMPLEMENTOS en dos** (`#806`, §4.17: medir el modelo y proponer, con preguntas al owner,
+   ANTES de código) y la **R1·T** de los correos (los textos editables, `#802`, §4.2). El banco de correos
    (`php scripts/banco-correos.php [filtro]`) y su sonda (`node storage/app/audit/sonda-correos-r1a.mjs N`) sirven igual.
 1. ▶▶▶ **LOS CORREOS (`specs/correos-rediseno.md`: §0 → §1 el censo → §4 las tandas → §4.1 la R1 → §4.2 los textos;
    `#789`, `#800`→`#802`)**: el rediseño desde el zip de la instancia (la carpeta `paginas/correos` y su brief en `uploads`;

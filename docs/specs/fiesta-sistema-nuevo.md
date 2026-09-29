@@ -1,8 +1,8 @@
 # [SPEC] La fiesta del sistema nuevo — vestir la lista de invitados, la invitación y la autorización
 
 > Estado: ✅ **APROBADA por el owner el 2026-09-25 con sus ocho respuestas (`#743`)** · en ejecución: T0 ✅, sigue
-> la T1 · Última actualización: 2026-09-25 · Decisiones: `#765` (el traspaso) · **`#743`** (la aprobación y las ocho
-> respuestas de §7).
+> la T1 · Última actualización: 2026-09-29 · Decisiones: `#765` (el traspaso) · **`#743`** (la aprobación y las ocho
+> respuestas de §7) · `#805` (la lista del owner, §4.16) · `#806` (los complementos en dos, §4.17).
 > Carril: 🧩 **SPA** (banda 730–759). Fuente del diseño: `instancias/playjump/diseno/playjump-design-system/`
 > (el zip de Claude Design, `#760`): `paginas/lista-invitados.card.html`, `paginas/invitacion.card.html`,
 > `paginas/autorizacion.card.html`, `components/invitados/*`, `components/forms/SaveBar.jsx`, el `readme.md`
@@ -809,6 +809,38 @@ no los usa: el Listo es su propia vista).
 | Parte | Qué | Verificación |
 |---|---|---|
 | **F9** ✅ | `suggest` en `x-pieza.campo` (correo: el botón escondido, atado a su campo; `comun.js::sugerencias`) y `arrive` en `x-pieza.boton` (`data-llega` en el primario sin bloquear; `comun.js::llegadas` lo calla sobre tinta y con «reducir movimiento»), en las tres páginas. | `logica.test.js` 19 (con los que NO se tocan: «lve», «ona», «orange.fr») · `ZipTerceroTest` 3 · arnés `mutar-zip-tercero.sh` **12/12** (el superviviente de los dominios cortos llevó sus dos casos) · `sonda-f9.mjs` (390 y 1280: «ana@gmial.com» → un toque → «ana@gmail.com»; «Firmar» llega una vez; con «reducir movimiento», nunca). Aprobada por el owner (27-09). |
+
+### 4.16 L1 · La lista del owner (`[DECIDIDO owner]` `#805`, 29-09) — al detalle, medido antes de codificar
+
+- **Medido** (la local, `JW-OJO-F8`, a 390): arriba, tres cifras (confirmados · no pueden · sin contestar) y dos acciones que
+  viven del «sin contestar» («Recordárselo a los N que faltan», «Nombrar a las N familias»); en «La lista», la leyenda
+  «Autorización: Firmada · Falta», el «Falta» de cada fila y la chapa «Sin contestar» en los añadidos a mano; un «no» suelto
+  DENTRO de la lista, apagado, con «Al final viene». El mockup del 27-09 aún los pinta: `#805` manda sobre él, como `#753`.
+- **Cambia**: (1) zona 1, fuera `.pli-estado` (cifras, recordar, nombrar, «Lo escribiste…»); el `aria-live` de los avisos
+  (`data-aviso-vivo`) se queda, fuera del bloque. (2) Zona 2, fuera la leyenda; cada fila con `firma=false` (la pieza ya lo
+  admite); una fila sin respuesta es `confirmado`, sin chapa; el descargo de quien cumple (`firma-cumple`) se QUEDA. (3) Los
+  «No podemos», APARTE y en tono suave bajo la lista, con la nota de bajar el número y «Al final viene»: los sueltos y los
+  emparejados, que siguen siendo fichas del formulario (cambian de contenedor; sus campos viajan igual; medir en `lista.js`
+  lo que lee `[data-filas]`). (4) Zona 3, la frase del número sin «que añadiste»: «Seréis 10: Noa y los 9 confirmados.»
+  (servidor y `lista.js`). (5) Lo que se queda sin consumidor se RETIRA (`CONVENCIONES §3.quater`): el formulario
+  `fiesta-recordatorio`, su ruta y su acción, y las claves muertas (`ClavesDeIdiomaTest`); `invitation_reminded` deja de
+  emitirse y su cifra en «Fiestas» se queda con su historia.
+- **No cambia**: los suelos del número (del dominio, `GuestCountPolicy`: presentación pura, fuera del `CRITICAL_RE`);
+  enviar, copiar y personalizar; «Por repasar» (quien dijo «vamos» entra al guardar, ya confirmado); los adultos.
+- **Guardas**: las pruebas que aseveran las cifras, la leyenda y «Sin contestar», re-apuntadas a lo nuevo, con su caso:
+  ninguna firma de invitados en la página del anfitrión, un añadido a mano sin chapa, el «no» fuera de `[data-filas]`.
+  Arnés, y una pasada ligera a 390 y 1280 (`#768`).
+
+### 4.17 Los complementos de la fiesta, en dos (`[DECIDIDO owner]` `#806`, 29-09) — ⬜ por medir, spec antes de código
+
+- **El pedido del owner**: la zona de los extras se reordena en «Complementos para los niños» y «Complementos para los
+  adultos», fiel al sistema de diseño, clara y sin saturar: VARIAS tartas de distintos tipos (hoy, una y «Añadir otra tarta»,
+  `#749`); calcetines para todos los niños o solo para algunos; UNA merienda que quien reserva elige en la lista (sándwich,
+  pizza o perrito) y chuches como complemento. Los de los adultos, como hoy (combos y cubos, con cuántos se quedan).
+- **Por medir antes de proponer**: el modelo de hoy (`product_addons`: `postform_block`, `family`, `serves`; las listas
+  `menu_*` de F1b; `#521`, solo lo comprado), cómo se reserva y se cobra (en el parque, el libro del pedido) y lo que FALTA:
+  el tipo de tarta, el complemento por niño, la merienda como elección dentro del pack, las chuches; y las piezas del sistema
+  que lo pintan (`AddonCard` y compañía) contra el catálogo. Con sus preguntas al owner, en simple.
 
 ## 5. Impacto en invariantes
 
