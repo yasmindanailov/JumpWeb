@@ -45,7 +45,7 @@ contador de la suite va en el trailer del commit** (`#618`). Si no salta: `git c
 | Landing FUERA (F5) · menú de hechos · API pública · paquete de instancia | `docs/specs/instancia-y-landing-fuera.md` §0 · `docs/specs/paquete-de-instancia.md` §0 |
 | **La isla** · la landing nueva (Saltia) | `docs/specs/isla-y-landing-nueva.md` §0 |
 | Promociones · ofertas y regalos · la etiqueta de oferta | `docs/specs/promociones.md` §0 |
-| Analítica · el cuadro · conversión · consentimiento · fiesta · encuestas | `docs/specs/analitica-para-decidir.md` §0 · `docs/specs/analitica.md` §0 · `docs/specs/analitica-fiesta.md` §0 · `docs/specs/encuestas.md` §0 |
+| Analítica · cuadro · consentimiento · fiesta · encuestas | `docs/specs/analitica-para-decidir.md` §0 · `docs/specs/analitica.md` §0 · `docs/specs/analitica-fiesta.md` §0 · `docs/specs/encuestas.md` §0 |
 | F4 · cajón empaquetable · token Bearer | `docs/specs/cajon-empaquetable.md` §0 · `docs/specs/token-bearer.md` §0 |
 | La capa de agente · el plugin `jumpweb-agente` · skills · hooks · reglas del owner | `docs/sistemas/CAPA-DE-AGENTE.md` |
 | Dinero / pagos / Redsys / reembolsos | `docs/INVARIANTES.md` §1 + §6 · `docs/sistemas/REDSYS.md` · `docs/MODELO-DATOS.md` §2 |
@@ -72,7 +72,7 @@ contador de la suite va en el trailer del commit** (`#618`). Si no salta: `git c
 | El hueco de ilustración por instalación · `client-kit.svg` · `<use>` externo | `docs/specs/hueco-ilustracion.md` §0 |
 | `/servicios` · precios por tramo de grupo · reservas de grupo | `docs/specs/landing-white-label.md` §0 · `docs/sistemas/SERVICIOS-CMS.md` |
 | El libro del pedido · desglose +/− · saldo en el parque · cortesía · reembolso | `docs/specs/desglose-libro.md` §0 |
-| Área de cliente en el cajón · «Mis reservas» por reserva · historial | `docs/specs/area-cliente.md` §0 · `docs/specs/mis-reservas-por-reserva.md` §0 |
+| Área de cliente del cajón · «Mis reservas» | `docs/specs/area-cliente.md` §0 · `docs/specs/mis-reservas-por-reserva.md` §0 |
 | Bloque de cuenta del cajón (`.acct`) · el `no-store` de la web | `docs/specs/account-context-vue.md` §0 |
 | Sidebar SPA · Vue · pantallas del cajón | `docs/specs/sidebar-spa.md` §0 · `docs/CARRIL-SPA.md` |
 | Justificante de un menor invitado (waiver offshore) · activación · plazas | `docs/specs/waiver-por-reserva.md` §0 |
@@ -91,7 +91,7 @@ contador de la suite va en el trailer del commit** (`#618`). Si no salta: `git c
 | Menú del panel · añadir un Resource/Page · Ajustes · buscador · puerta en tablet · rol `puerta` | `docs/specs/panel-navegacion.md` §0 |
 | El cajón en móvil · el paso de fecha y de hora | `docs/specs/cajon-en-movil.md` §0 |
 | Cumpleaños mixto · edad de los invitados · el suplemento · el sello · solapes de tramos | `docs/specs/cumple-mixto.md` §0 |
-| Correos: tema y remitente · los enviados | `docs/specs/correos-desde-canvas.md` §0 · `docs/specs/correos-salientes.md` §0 |
+| Correos: rediseño · tema y remitente · enviados | `docs/specs/correos-rediseno.md` §0 · `docs/specs/correos-desde-canvas.md` §0 · `docs/specs/correos-salientes.md` §0 |
 | Post-form de invitados | `docs/sistemas/POSTFORM-INVITADOS.md` |
 | La fiesta del sistema nuevo · «Avísame de fechas» | `docs/specs/fiesta-sistema-nuevo.md` §0 · `docs/specs/avisame-de-fechas.md` §0 |
 | Tests / suite / fakes / datos de prueba | `docs/TESTING.md` · `docs/CONVENCIONES.md` §3.bis/§3.ter |

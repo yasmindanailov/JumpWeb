@@ -204,6 +204,8 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 
 ## Buzón
 
+- **Para plataforma (29-09, `#800`)**: la spec `correos-rediseno.md` entra en `CLAUDE.md` en la fila de los correos; para que
+  cupiera (techo 12 KB) acorté dos filas mías: la de la analítica y la del área de cliente del cajón.
 - **Para plataforma (29-09, la T3d)**: `analytics.explained` entra en `AuditLog::ACTIONS` (el texto para IA, sin PII). Nada más tuyo.
 - ❗ **Para plataforma (29-09, la TP·3b, `#793`)**: retiré el permiso `analytics.export` de tu catálogo y del seeder
   (COMPARTIDOS), con la migración `drop_analytics_export_permission`, que borra su fila (el pivote cae en cascada). También la
