@@ -3,10 +3,10 @@
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
-> **820–849** (dada de alta en `DECISIONES.md` el 27-09; centena `decisiones/800-899.md`) · Último usado: **`#847`** (quedan 2: pedir
+> **820–849** (dada de alta en `DECISIONES.md` el 27-09; centena `decisiones/800-899.md`) · Último usado: **`#848`** (queda 1: pedir
 > otra banda al owner) · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#846`) · Actualizado: **2026-09-29**
-> (tarde: `#758` en la isla ✅ `#846`; la lista del owner antes de desplegar, `#847`: la spec del acceso con código, ⬜ para él).
+> (tarde: `#758` en la isla ✅ `#846`; la lista del owner antes de desplegar, `#847`; la spec del acceso con código ✅ `#848`).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
 > llévaselo con la medida, como el SPA en `#724`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -46,8 +46,8 @@ normas, la T6f (301 y la web vieja fuera, `#843`), `#844`, la T6h (las legales) 
 **T6g** (§4.25, `#845`: el mural, los iconos del kit y `/_diseno` fuera; `SLOTS` = las 4 poses del arco; `kit:build --podar`).
 Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas,entradas}.mjs`), la web entera (`sonda-web.mjs`,
 17/17) y la compra (`sonda-isla.mjs`).
-▶▶▶ **AHORA, la lista del owner ANTES DE DESPLEGAR** (`#847`, 29-09), mientras él diseña: **(1)** `specs/acceso-con-codigo.md` ⬜
-—el owner revisa su §7 ANTES del código—; **mientras**, **(2)** el panel en una dirección secreta (`/admin` → «no existe») con
+▶▶▶ **AHORA, la lista del owner ANTES DE DESPLEGAR** (`#847`, 29-09), mientras él diseña: **(1)** `specs/acceso-con-codigo.md` ✅
+(`#848`: una puerta, contraseñas borradas, 90 días, solo el código) → su A1 (el código en el servidor); **y**, **(2)** el panel en una dirección secreta (`/admin` → «no existe») con
 authenticator SOLO para administradores (Filament 5 lo trae: `MultiFactor/App`, sin dependencia nueva); **(3)** el SEO completo
 (textos de playjump.es, el owner los revisa al final); **(4)** las imágenes al compartir, la web y la invitación (hoy: logotipo u
 `og-image.jpg`), compuestas con la marca. La lista de invitados, al SPA (buzón).

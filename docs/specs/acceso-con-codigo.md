@@ -1,7 +1,8 @@
 # [SPEC] Entrar con un código al correo — la contraseña del cliente se retira
 
-> Estado: ⬜ borrador (para el owner, ANTES del código) · Última actualización: 2026-09-29 ·
-> Decisiones: `#847` (el owner: código al correo y Google; fuera la contraseña) · la del diseño, al aprobarse ·
+> Estado: ✅ aprobada (29-09: el owner contestó el §7) → a implementar · Última actualización: 2026-09-29 ·
+> Decisiones: `#847` (el owner: código al correo y Google; fuera la contraseña) · `#848` (el §7: una sola puerta, borrar
+> las contraseñas, 90 días, solo el código) ·
 > Carril: plataforma (el servidor, el contrato y la isla); el cajón, del SPA por buzón.
 
 ## §0 · Antes de tocar
@@ -11,13 +12,13 @@
   respuesta al pedir un código es idéntica exista o no la cuenta. El personal del panel NO cambia (su contraseña, y el
   authenticator de los administradores, `#847`).
 - **Empieza por** §1 (lo que hoy pide contraseña: sus rutas, 21 pantallas y 35 ficheros de pruebas) → §4 (el diseño) →
-  §7 (lo que espera al owner).
+  §7 (lo que decidió el owner).
 - **Trampas**: (1) la cola sale por el cron CADA MINUTO en producción (`ENTORNOS.md` §6): un código encolado puede tardar
   60 s; se envía en la misma petición, tras la respuesta (§4.3). (2) La reconfirmación de las acciones sensibles
   (`SEGURIDAD.md` §3: borrar la cuenta, cambiar el correo, desvincular Google) hoy es la contraseña: pasa a un código
   (§4.4). (3) Las cuentas de Google llevan hoy una contraseña aleatoria (0 nulas de 53 en local). (4) Los limitadores
   son de DOMINIO (`SEC-06`): ningún controlador los reimplementa.
-- **Estado**: ⬜ borrador; sin código. Tandas en §4.7.
+- **Estado**: ✅ aprobada (`#848`); sin código. Sigue la A1 (§4.7).
 - **Invariantes**: `SEC-06` (se amplía al código), `RGPD-01` (la purga borra los códigos), `RGPD-06` (sin cambio de
   forma). Ningún fichero del `CRITICAL_RE`.
 
@@ -80,16 +81,18 @@
   ignóralo». Sin enlace (§3).
 
 ### 4.4 Los flujos
-- **Entrar o darse de alta** (isla, cajón): correo → «Te hemos enviado un código» → el código. Con cuenta, dentro. Sin
-  ella, se crea al verificar, con lo que el alta pide hoy (nombre, aceptación de privacidad y términos; el descargo, donde
-  toca) en «Tus datos». Un código verificado **verifica el correo** (`email_verified_at`): sobra el enlace de verificación
-  para las cuentas nuevas.
+- **Entrar o darse de alta** (isla, cajón), UNA puerta, «Entra o crea tu cuenta» (`#848`): correo → «Te hemos enviado un
+  código» → el código. Con cuenta, dentro. Sin ella, la pantalla del registro: **el nombre, aceptar el descargo (con lo
+  legal que ya se pide) y «Tu cumpleaños», opcional** («y poco más», el owner); el teléfono, solo donde hoy (un pack,
+  `#787`). Un código verificado **verifica el correo** (`email_verified_at`): sobra el enlace de verificación para las
+  cuentas nuevas.
 - **La app** (`#630`): `POST /auth/tokens` con correo + código en vez de contraseña; la rotación, igual.
 - **Acciones sensibles**: `current_password` → un código `confirmar` al correo de la cuenta (borrar la cuenta, cambiar el
   correo, desvincular Google, cerrar las demás sesiones).
 - **Cambio de correo**: el nuevo se verifica con un código a ESE correo.
 - **Google**: sin cambios; su alta sigue completándose donde hoy.
-- **Sesión**: se regenera al entrar; «recuérdame» por defecto en el dispositivo (cada entrada cuesta un correo) — §7.
+- **Sesión**: se regenera al entrar; el dispositivo queda **recordado 90 días sin uso** o hasta cerrar sesión (`#848`: cada
+  entrada cuesta un correo).
 
 ### 4.5 Lo que se retira (tanda de retirada, §3.quater)
 `POST /auth/login` con contraseña, `/auth/password/{forgot,reset}`, `PUT /me/password`, las páginas web de recuperar y
@@ -97,9 +100,9 @@ restablecer, «Cambiar la contraseña» de Mi cuenta y del cajón, `PasswordPoli
 las pruebas que solo probaban eso. El contrato cambia de forma: su versión, al implementarlo (mirar `info.version`).
 
 ### 4.6 Las contraseñas que ya existen
-Las de los clientes dejan de servir en cualquier superficie de cliente. Propuesta (§7): **borrarlas** en las cuentas sin
-rol de panel (minimización, RGPD art. 5.1.c: un hash que no se usa solo sirve a quien robe la base). El personal conserva
-la suya.
+Las de los clientes dejan de servir en cualquier superficie de cliente y **se borran** en las cuentas sin rol de panel
+(`#848`; minimización, RGPD art. 5.1.c: un hash que no se usa solo sirve a quien robe la base). El personal conserva la
+suya. Es un borrado de datos en producción: con su receta de `ENTORNOS.md` §5 (valor esperado por fila, doble pasada).
 
 ### 4.7 Las tandas
 **A1** el código en el servidor (tabla, servicio de dominio, límites, correo, `request`/`verify`, sesión y token) ·
@@ -120,11 +123,12 @@ con su arnés de mutación; pruebas de API por endpoint; la suite entera tras la
 darse de alta en la compra, borrar la cuenta con código) con el correo leído de Mailpit; y en staging, la latencia del
 correo real. El ojo del owner en las pantallas nuevas.
 
-## 7. Revisión y decisión — lo que espera al owner
+## 7. Revisión y decisión
 
-1. **Correo nuevo = alta en el mismo paso** (§4.4): ¿vale que quien escribe un correo sin cuenta la cree al poner el
-   código, sin pantalla de «Crea tu cuenta» aparte?
-2. **Las contraseñas de hoy** (§4.6): ¿se borran las de los clientes (recomendado) o se dejan sin uso?
-3. **La sesión**: ¿el dispositivo queda recordado (recomendado: hasta cerrar sesión, 90 días sin uso) o se pide código
-   cada vez que caduca la sesión de 2 horas?
-4. **¿Un enlace además del código** en el correo (§3, B)? Recomendado: no, solo el código.
+✅ **`[DECIDIDO owner]` 2026-09-29 (`#848`)**, con opciones y la recomendada en las cuatro:
+1. **Una sola puerta**, «Entra o crea tu cuenta»: correo → código → dentro, o, si el correo es nuevo, la pantalla del
+   registro (nombre, descargo, cumpleaños opcional). Explicado con dos ejemplos: el owner preguntó «si no hay crear cuenta,
+   ¿cómo se crean?» — la pantalla existe, se llega sola cuando el correo es nuevo.
+2. **Las contraseñas de los clientes se borran** (§4.6).
+3. **El dispositivo, recordado 90 días sin uso** o hasta cerrar sesión.
+4. **Solo el código** en el correo, sin enlace.
