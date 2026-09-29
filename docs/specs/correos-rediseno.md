@@ -14,14 +14,14 @@
   el contenido es el del brief, TAL CUAL: «no inventes correos, bloques, textos ni ofertas». Lo del parque (marca, datos,
   precios) va por Blade desde el panel y el catálogo, nunca en el producto (`correos-desde-canvas.md` §2).
 - **Empieza por** §1 (el censo HAY/FALTA) → §4 (las tandas) → §7 (lo que espera al owner).
-- **Trampas**: (1) el molde es `BrandedMailMessage` y todo componente nace dos veces, html y texto (`#500`→`#508`); (2) el
-  modo oscuro, solo en el `<style>` del layout y por color; (3) un comercial lleva su porqué y la baja de un toque, también
+- **Trampas**: (1) el molde es `BrandedMailMessage`, que pinta `correo/html` y `correo/texto` (R1a); cada bloque nace dos
+  veces y su gemela no escapa; (2) colores y radios, roles de `MailTheme` (nada a mano); el oscuro, por CLASE y con la de
+  Outlook.com (`MailThemeTest`); (3) un comercial lleva su porqué y la baja de un toque, también
   en `List-Unsubscribe` (LSSI 22.1, `#750`), y sale solo con su consentimiento; (4) la marca `jw_e` y el píxel siguen sus
   reglas (`#795`, `#797`); (5) los de la reserva, sin ofertas; (6) «nada que ya no sea verdad»: con la cuenta con contraseña
   (23-09), los textos del 8 del brief están desfasados, y el diseño lo dice.
-- **Estado**: 🟦 el orden y el 7, decididos (`#801`); ▶ la R1, la plantilla, con su «al detalle» en §4.1 (roles de color
-  que pone la instancia, iconos teñidos en el servidor) → **R1·T los textos editables** desde el panel, en es/en/fr y con
-  permiso propio (§4.2, `#802`) → la R2. Nada escrito en código aún.
+- **Estado**: 🟦 ✅ **R1a la plantilla, en `main` y aprobada** (29-09, §4.1.2; `#803`, `#804`) → ▶ R1b los iconos →
+  **R1·T los textos editables** (§4.2, `#802`) → R1c → la R2.
 - **Invariantes**: `RGPD-01` (lo enviado), `RGPD-07`, el consentimiento de marketing; `PAY-14` (se encolan).
 
 ## 1. Contexto — medido el 29-09
@@ -163,7 +163,7 @@ una sonda por tanda; los comerciales con su prueba de consentimiento y de «una 
   y `EmailOpensTest`, sin tocar y en verde; el lector, con su arnés de mutación. En `wip/correos-r1a`, al ojo del owner en
   Mailpit (claro y oscuro, 390 y 1280) con los 28 enviados de golpe.
 
-#### 4.1.2 La R1a, lo construido (29-09, en `wip/correos-r1a`; 🟦 falta el OJO del owner y la hoja declarada por plataforma)
+#### 4.1.2 La R1a, lo construido (29-09; ✅ ojo del owner en Mailpit: «visto bueno, buen trabajo»; falta que plataforma declare la hoja)
 
 - **Piezas**: `MailTheme` (los roles: neutros de las familias del producto —`fiesta.css` y el molde de septiembre—, la hoja
   `hojas.correo` encima, cada valor validado y la memoria por ruta + `filemtime`), `MailDocument` (los bloques desde
@@ -197,9 +197,8 @@ una sonda por tanda; los comerciales con su prueba de consentimiento y de «una 
   390, en claro y en oscuro, con la hoja de PlayJump (las capturas, en `storage/app/audit/correos-r1a/`). ⚠️ En la sonda el
   logotipo sale roto: apunta a `localhost:8081` y el Chromium del contenedor no llega (en Mailpit, desde el navegador, sí).
   Visto así: el libro llevaba su margen de septiembre y el aire se duplicaba (46 px donde van 28); fuera.
-- **Falta**: el OJO del owner en Mailpit; la hoja de PlayJump (`publico/instancia/css/correo.css`, en el repo de la
-  instancia, sin empujar) y su declaración en el manifiesto (plataforma, por buzón; en local, declarada a mano y sin
-  commitear); la R1c retira `vendor/mail/**` y `vendor/notifications` cuando los dos avisos internos (`Mail/`) pasen a la
+- **Falta**: la declaración de la hoja de PlayJump (`publico/instancia/css/correo.css`, empujada al repo de la instancia) en
+  su manifiesto (plataforma, por buzón; en local, a mano y sin commitear); la R1c retira `vendor/mail/**` y `vendor/notifications` cuando los dos avisos internos (`Mail/`) pasen a la
   plantilla.
 
 ### 4.2 Los textos, editables desde el panel — pregunta del owner (29-09), análisis sin código

@@ -14,11 +14,12 @@
 
 ## Foto (2026-09-29)
 
-- ▶▶▶ **LA R1a DE LOS CORREOS, EN `wip/correos-r1a`, AL OJO DEL OWNER** (29-09; `correos-rediseno.md` §4.1.1 y §4.1.2,
-  `#803` el botón como el diseño, `#804` los enlaces legales se quedan): la plantilla del diseño en el molde, los 28 sin
-  tocarlos; arnés 39/39, suite verde, sonda 28/28. ⚠️ **MONTADO EN LOCAL, reversible**: `instancia.json` de la instancia con
-  `hojas.correo` a mano (sin commitear: el de verdad lo declara plataforma, buzón), `correo.css` copiada a `public/instancia/css/`
-  y sin empujar en el repo de la instancia, y ~70 filas de `email_sends` del cliente de sondas por `scripts/banco-correos.php`.
+- ✅ **LA R1a DE LOS CORREOS, EN `main` Y APROBADA** (29-09, el owner: «visto bueno, buen trabajo»; `correos-rediseno.md` §4.1.1
+  y §4.1.2, `#803` el botón como el diseño, `#804` los enlaces legales se quedan): la plantilla del diseño en el molde, los 28
+  sin tocarlos; arnés 39/39, sonda 28/28; la hoja de PlayJump, empujada al repo de la instancia. ⚠️ **MONTADO EN LOCAL**:
+  `instancia.json` de la instancia con `hojas.correo` a mano, SIN commitear (lo declara plataforma, buzón: antes de un `pull`
+  de la instancia, devolverlo con `git -C ../instancias/playjump checkout instancia.json`); ~70 filas de `email_sends` del
+  cliente de sondas (`scripts/banco-correos.php`).
 - **LOS CORREOS** (`specs/correos-rediseno.md`, `#800`→`#804`): la spec, medida con el
   censo HAY/FALTA contra el zip (§1), y cuatro decisiones del owner: el 7 sigue siendo la encuesta (`#801`); las ocasiones, al
   final; el orden plantilla → textos editables → reserva → comerciales → felicitaciones; y **los TEXTOS, editables desde el
@@ -45,10 +46,11 @@
 
 ## Por dónde retomar, en orden
 
-0. ▶▶▶ **LA R1a, AL OJO DEL OWNER** (`wip/correos-r1a`): los 28 están en Mailpit (`:8028`; para volver a mandarlos,
-   `php scripts/banco-correos.php [filtro]`, y la sonda, `node storage/app/audit/sonda-correos-r1a.mjs 28`). Con su visto
-   bueno: rebase sobre `main`, suite, *fast-forward* y push (el gate re-mide); la hoja de PlayJump, commit y push en el repo de
-   la instancia. Después, la R1b (los iconos).
+0. ▶▶▶ **LA R1b, los iconos** (`correos-rediseno.md` §4.1: máscaras PNG de Lucide teñidas con GD, ⚠️ GD en producción sin
+   verificar; la columna de iconos del pie y el círculo de la lista): su «al detalle» medido en la spec antes de codificar. El
+   banco (`php scripts/banco-correos.php [filtro]`) y la sonda (`node storage/app/audit/sonda-correos-r1a.mjs N`) sirven igual.
+   ⬜ **Y la LISTA DE INVITADOS del owner** (`#847`, buzón de plataforma del 29-09): nada de la autorización para quien invita,
+   confirmado sin otra variante, «No podemos» aparte y suave, los adultos como el mockup (`fiesta-sistema-nuevo.md`).
 1. ▶▶▶ **LOS CORREOS (`specs/correos-rediseno.md`: §0 → §1 el censo → §4 las tandas → §4.1 la R1 → §4.2 los textos;
    `#789`, `#800`→`#802`)**: el rediseño desde el zip de la instancia (la carpeta `paginas/correos` y su brief en `uploads`;
    `git pull` de la instancia y `sha256sum -c` antes de cada tanda). En orden, cada tanda con su «al detalle» MEDIDO en la spec
@@ -291,15 +293,9 @@ el repo de la instancia (lo nuevo), nunca a `main`.
   mi aviso (`#800`/`#801`), retirado. ▶ Cuando la R1a tenga la hoja de PlayJump, te digo aquí el fichero para el manifiesto.
 - **Plataforma 29-09** (`#792`: «Tu cumpleaños» con solo «Opcional», como en la isla): ✅ hecho en el cajón el 29-09
   (`account.register.born_on*`, es/en/fr; los avisos de la API siguen diciendo «fecha de nacimiento»).
-- **Plataforma 28-09** (NORMAS, `#842`: la hoja del descargo, componente de la instancia): leído; la fiesta NO la pide —F9 la
-  dejó fuera a propósito: el texto se presenta en el flujo (`waiver-probatorio.md` §4.4)—. `park_rules` con `icon` y `level`: visto.
-- **Plataforma 28-09** (`#836`): `openWith()` pasa el producto de la intención `fiesta` a `drawer_opened`: correcto.
-- **Plataforma 27-09 noche, 2.º** (T5f `#824` y los hijos por producto `#825`: `outcome.js::confirmationLine` con
-  `minors_only`, la 1.45.0 suya y la 1.46.0 mía, `catalog.js` al trozo `card`): atendido, nada mío choca.
-- **Plataforma 27-09 noche** (`#789`: correos y puerta, míos; el zip (4) sin correos ni fiesta; `Medir` aplazado; T2·9;
-  `#822`: `sugerirCorreo` mudada a `ui/correo.js`, `logica.js` la reexporta, 19/19 y 12/12): atendidos.
-- **Plataforma 27-09** (ESLint sobre la fiesta y mis `/* global */` fuera, la isla sin valores de PlayJump, `#788` con la
-  1.43.0, la Z4 y el zip tercero `#780`): atendidos; el zip tercero, portado a la fiesta en F9 (§4.15).
-- **Plataforma 25-09** (`#765` el traspaso de la fiesta, la calculadora T4d junto a mi motor, las peticiones (1) y (2),
-  el aviso previo de la T4a·3, la banda 790–819 para cuando agote la mía): atendidos, contestados arriba.
-- **Web `#540`** (12-09): atendido el 13-09. (Los de plataforma del 21 y el 24-09, retirados por su emisor: en git.)
+- **Plataforma 29-09** (`#847`/`#848`): (1) la LISTA DE INVITADOS del owner —nada de la autorización para quien invita; quien
+  se añade a mano o dice «vamos», confirmado sin otra variante; «No podemos», aparte y en tono suave; los adultos, como el
+  mockup—: leído, ⬜ **tarea MÍA**, en «por dónde retomar» 1; (2) aviso previo de `acceso-con-codigo.md`: el cajón (entrar,
+  alta, recuperar, cambiar contraseña) será su tanda A4; y el correo del código, sobre la plantilla de la R1a.
+- Del 25 al 28-09 (NORMAS `#842`, `#836`, T5f `#824`/`#825`, `#789`/`#822`, ESLint y `#788`/`#780`, `#765`) y web `#540`:
+  mudados verbatim a `CARRIL-SPA.md` §9 (29-09).
