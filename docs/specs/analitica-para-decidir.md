@@ -1,6 +1,6 @@
 # [SPEC] La analítica para decidir — un cuadro que se entiende, dice si va bien o mal y cubre las decisiones del operador
 
-> Estado: ✅ **aprobada por el owner el 27-09** (§7; `#755`) → ✅ **T0, T1 y T2** · 🟦 **T3** (✅ T3a · ✅ T3b · ✅ T3c · 🟦 T3d, espera el ojo · ⬜ T3e, §4.13) · 🟦 **TP el público** (§4.14: ✅ TP·1 · ✅ TP·2 · ✅ TP·3a·3b · ⏸ TP·3c) · Última actualización: 2026-09-29 ·
+> Estado: ✅ **aprobada por el owner el 27-09** (§7; `#755`) → ✅ **T0, T1 y T2** · 🟦 **T3** (✅ T3a · ✅ T3b · ✅ T3c · ✅ T3d · ⬜ T3e, §4.13) · 🟦 **TP el público** (§4.14: ✅ TP·1 · ✅ TP·2 · ✅ TP·3a·3b · ⏸ TP·3c) · Última actualización: 2026-09-29 ·
 > Decisiones: `#755` (esta), `#754` (encuestas anónimas, su T1), `#758` (la T2), `#759` (la T3 en cinco tandas), `#792` (el público), `#793` (el público, anónimo; las felicitaciones), `#798` (el techo del texto para IA) · Carril: **SPA** (banda 790–819). Amplía `analitica.md`
 > (el libro, los regímenes y la T2 siguen siendo suyos).
 
@@ -18,8 +18,8 @@
   camino de `EmailUtm` (tras firmar, ignorada al validar); (6) aperturas solo con consentimiento (`[PENDIENTE: asesoría]`).
 - **Estado**: ✅ aprobada (27-09, `#755`); T0a·T0b·T0c ✅ · **T1** ✅ (la T5 de `encuestas.md`, `#754`, `#757`) · **T2** ✅ ocupación (§4.8.ter, `#758`) → **T3** Resumen, en cinco tandas (§4.13,
   `#759`): ✅ T3a la forma · ✅ T3b veredicto (mín–máx, `#790`) · ✅ T3c·1 lo que ha cambiado (`#791`) · ✅ T3c·2 objetivos →
-  ✅ **TP el público** (§4.14, `#792`/`#793`; TP·1 · TP·2 · TP·3a tramos · TP·3b sin exportación · ⏸ TP·3c) → 🟦 T3d en `wip/`
-  (el texto para IA, techo 12 KB por `#798`; espera el ojo) → T3e.
+  ✅ **TP el público** (§4.14, `#792`/`#793`; TP·1 · TP·2 · TP·3a tramos · TP·3b sin exportación · ⏸ TP·3c) → ✅ T3d
+  (el texto para IA, techo 12 KB por `#798`) → ▶ T3e (el sector: las fuentes, al owner antes de sembrar).
   **Nada de lo medido se pierde** (§4.1.bis, con guarda): se resume arriba y lo demás queda
   plegado o en su pestaña.
 - **Invariantes**: `RGPD-01`, `RGPD-04`, `RGPD-07`, `SEC-04`, `SUITE-01`. Dinero y aforo: solo lectura.
@@ -687,7 +687,7 @@ pesaban más que cualquier distancia relativa. Faltaba el caso que las separa �
   ventanas pasa de la traza de los widgets a `Comparison::share()`, para que el texto y la tarjeta juzguen igual.
 - **Fuera**: mandarlo a la API de una IA desde el panel (§4.7, «después, si el owner quiere»: proveedor, clave y coste son suyos).
 
-**Cómo se construyó la T3d (29-09; 🟦 en `wip/analitica-t3d`, espera el ojo del owner)**:
+**Cómo se construyó la T3d (29-09; ✅ vista y aprobada por el owner el 29-09: «buen trabajo, visto bueno ok»)**:
 - **El techo, `[DECIDIDO owner]` 29-09 (`#798`): 12 KB**. Lo medido al construir: con las 28 y todo lo de arriba, lo normal
   ocupa **7,7–8,0 KB** en es y 7,2 en zh_CN, y el peor caso —rangos de siete cifras y cinco plegadas fuera de lo normal, cada
   una con su fila y su definición— **10,2 KB** en es y 9,4 en zh_CN. Con 8 KB no cabía; el owner eligió subirlo.
