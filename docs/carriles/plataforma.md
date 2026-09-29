@@ -5,7 +5,7 @@
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
 > **820–849** (dada de alta en `DECISIONES.md` el 27-09; centena `decisiones/800-899.md`) · Último usado: **`#845`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#845`) · Actualizado: **2026-09-29**
-> (cierre: T6 hasta NORMAS ✅; T6f ✅, los 301 y la web vieja fuera; `#844` ✅, lo que no cabía a 360; T6h ✅, las legales).
+> (cierre de la noche: T4f ✅, `#792` en la isla ✅, T6g ✅ `#845` — la T6 entera; sigue lo nuevo del owner en Claude Design).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
 > llévaselo con la medida, como el SPA en `#724`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -37,45 +37,36 @@
 
 ## Por dónde retomar, en orden
 
-▶▶▶▶ **EL ORDEN HASTA LA v2.0.0** (`#789`, del owner). **HECHO, con el ✅ del owner**: (0) la primera pantalla, (1) la
-conversión del zip tercero, (2) la T5 (§4.13–§4.16) y de (3) T6 (§4.17): PORTADA (`#827`→`#831`), CUMPLEAÑOS (§4.18), COLEGIOS
-(§4.19; en LOCAL, 91 plantillas INFERIDAS para `excursiones`), VISÍTANOS (§4.20), NORMAS (§4.21, `#842`), la **T6f** (§4.22,
-`#843`: `'sustituye'` y los 301 con su `?query`, el sitemap, `/entradas` que SE QUEDA con canónica `/`; la web vieja fuera del
-paquete y 25 clases del producto), **`#844`** (el botón que no cabe parte —en el de ancho completo el texto se come antes el
-aire—; las pestañas de zona se apilan midiendo una COPIA oculta) y la **T6h** (§4.23: `legales` OCUPA las cinco legales, con el
-hecho `legal`). Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas}.mjs`) y la web entera
-(`sonda-web.mjs`, 17/17 a 360, 390 y 1280); arneses `mutar-sonda-web.sh` 12/12 (a 360), `mutar-sustituye.sh` 12/12,
-`mutar-legales-ocupadas.sh` 7/7. **29-09 tarde, ✅**: la **T4f** (§4.12: `sonda-entradas.mjs` 89/89, arnés 25/25; `sonda-isla`
-desde `/kids` y `/cumpleanos`), el **`#792` en la isla** (§4.24: «Tu cumpleaños», «Opcional», ✅ del owner) y la **T6g** (§4.25: el
-mural y `/_diseno` fuera, `SLOTS` = el arco, `kit:build --podar`; el kit de PRODUCCIÓN se poda con la v2.0.0, `ENTORNOS` §6).
-**SIGUE: los diseños nuevos del owner** (Claude Design, sobre la web). **Del owner, en PRODUCCIÓN**: el icono y el nivel de cada
-norma, y dar de alta las del brief que falten (calentamiento, espuma, volteretas dobles).
-Pendiente: la vuelta de Google con una excursión, sin verificar. ⚠️ La entrada `isla/hoja/montar.js` NO importa nada
-compartido (`#841`); la calculadora, a 186,08 de 187 (`#844`).
-⚠️ `sonda-portada` 13/14 («Reservar» de la isla tras «Míralo», 17:17): igual con el `HEAD` (control): investigar aparte. La ISLA la
-repiensa el owner con Claude Design: no atar nada nuevo a ella. **Para iterar con el owner** (no ahora): la isla «muy sola» y
-el «Reservar» solo en la isla del móvil (A/B propuesto). Tras la T6 → **(4)** Bizum, Apple (entra) y el día liberado →
-material y revisión del owner, al final (los datos: playjump.es). **Los correos del sistema y la puerta, del SPA**, en
-paralelo. ❗ **Sin atender, del buzón del SPA (27-09, `#758`)**: la isla emite `availability_missing` como el cajón, con SUS
-funciones (`sidebar/missing.js`, `calendar.js::missingMonths`). La T6 HEREDA: toda página nueva usa `video-hero` SIN `height` y
-entra en `sonda-primera-pantalla.mjs` (el mockup de la portada NO pinta el aviso de cookies: su primera visita no se compara).
-⚠️ **Trampas vivas**: (a) `sonda-isla` PAGA con la cuenta de pruebas y rompe `sonda-cuenta` si corre antes (sus pedidos, a
-`sonda-compra@` entre las dos, `TESTING.md` §2.octies); (b) el tracker está a ~20 B de su techo (16 KB): la próxima línea
-obliga a MUDAR algo de él (a su spec); (c) `sonda-cuenta` monta «HOY» solo antes de las 20:00 del parque: 125 checks por
-ancho, después 118 (con `SONDA_SOLO=t5f`, tras entrar, solo la T5f); (d) **Vue 3.5 reevalúa un `computed` del que se
-depende FUERA del `try` de quien lo lee** (`isDirty` → `refreshComputed`): lo que no deba tumbar a quien depende se protege
-DENTRO de su `computed` (`seguro.js`, `seguro.test.js`, spec §4.13).
-▶▶▶ **Hecho el 25→27-09** (spec §4.12, §4.14): la T4, Z1→Z4 (`#780`→`#788`). Marcas: en LOCAL `payment.marks` =
-`bizum,visa,mastercard`; en PRODUCCIÓN, el owner. ⚠️ Tras tocar `instancias/playjump/publico/`, copiarlo a
-`public/instancia` (el producto sirve la copia).
-⚠️ En PRODUCCIÓN, el owner pone en el panel el aviso de los calcetines, «se devuelve la señal» de los packs y el TRAMO DE
-EDAD de cada entrada (de él depende `#825`; en LOCAL, puestos). Lo que la sonda toca de `probe-card@`: `TESTING.md` §2.octies.
-▶ **HECHO (25/26-09)**: la **T4** (spec §4.12; banco de la isla 60/60; `#768`: sin bancos por tanda) y el encargo del
-owner del 25-09 —promociones 🟦 T1 (`promociones.md` §8; en LOCAL, dos ofertas de muestra), el play de los vídeos 🟦
-(falta el MATERIAL; en LOCAL, una muestra WebM) y las reseñas 🟦 (`#771`, `#772`: 18 publicadas, Places retirado;
-⚠️ al desplegar, `playjump-curado.json`)—: a los tres les falta el OJO del owner. ❓ Suya: la línea Ómnibus bajo las reseñas.
-▶ La T4f (la sonda de Kids y Jump) va con la T6. La FIESTA, del SPA (`#765`). ⚠️ BD LOCAL con los valores de
-`#699`/`#761`; en PRODUCCIÓN, el owner.
+▶▶▶▶ **EL ORDEN HASTA LA v2.0.0** (`#789`, del owner). **HECHO** (lo visible, con el ✅ del owner): la primera pantalla, la
+conversión del zip tercero, la T5 (§4.13–§4.16) y **la T6 ENTERA** (§4.17–§4.25): portada, cumpleaños, colegios, visítanos,
+normas, la T6f (301 y la web vieja fuera, `#843`), `#844`, la T6h (las legales) y, el 29-09 tarde, la **T4f** (§4.12:
+`sonda-entradas.mjs` 89/89 a 390 y 1280, arnés `mutar-sonda-entradas.sh` 25/25; `sonda-isla` compra desde `/kids` y
+`/cumpleanos`, 22/22), el **`#792` en la isla** (§4.24: «Tu cumpleaños» y solo «Opcional», ✅ del owner; `isla/ui/fecha.js`) y la
+**T6g** (§4.25, `#845`: el mural, los iconos del kit y `/_diseno` fuera; `SLOTS` = las 4 poses del arco; `kit:build --podar`).
+Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas,entradas}.mjs`), la web entera (`sonda-web.mjs`,
+17/17) y la compra (`sonda-isla.mjs`).
+▶▶ **SIGUE: los diseños NUEVOS del owner** (29-09: «después te presento nuevos diseños, modificaciones de Claude Design sobre la
+web»): el zip entra SOLO por `diseno/actualizar.py` (`#760`), el diseño se toma del mockup (`#767`) y se verifica una vez al final
+(`#768`). Después, **(4)** Bizum, Apple (entra) y el día liberado → material y revisión del owner (los datos, de playjump.es). Los
+correos del sistema y la puerta, del SPA, en paralelo.
+**Abierto, medido y sin hacer**: (a) ❗ del buzón del SPA (27-09, `#758`): la isla emite `availability_missing` como el cajón, con
+SUS funciones (`sidebar/missing.js`, `calendar.js::missingMonths`); (b) `sonda-portada` 13/14 («Reservar» de la isla tras
+«Míralo»; igual con el `HEAD` de control): investigar aparte; (c) la vuelta de Google con una excursión, sin verificar; (d) la T4
+sigue 🟦 por lo del owner: el MATERIAL de los vídeos (en LOCAL, una muestra WebM), su ojo sobre las voces y las promociones (T1
+🟦), y ❓ la línea Ómnibus. **Para iterar con el owner** (no ahora): la isla «muy sola» y el «Reservar» solo en la isla del
+móvil (A/B). La ISLA la repiensa él con Claude Design: no atar nada nuevo a ella.
+**Del owner, en PRODUCCIÓN**: el icono y el nivel de cada norma y las del brief que falten (calentamiento, espuma, volteretas
+dobles); el aviso de los calcetines, «se devuelve la señal» y el TRAMO DE EDAD de cada entrada (`#825`); `payment.marks` (en
+LOCAL, `bizum,visa,mastercard`). BD LOCAL con los valores de `#699`/`#761`.
+⚠️ **Trampas vivas**: (a) `sonda-isla` PAGA con `probe-card@` y rompe `sonda-cuenta` si corre antes: sus pedidos, a
+`sonda-compra@` entre las dos (`TESTING.md` §2.octies; hecho con los 4 de hoy); su «hasta las 15:26» es el reloj UTC de su
+Chromium, no un defecto; (b) el tracker está a ~15 B de su techo (16 KB): la próxima línea obliga a MUDAR algo a su spec;
+(c) `sonda-cuenta` monta «HOY» solo antes de las 20:00 del parque; (d) Vue 3.5 reevalúa un `computed` fuera del `try` de quien
+lo lee: se protege DENTRO (`seguro.js`, §4.13); (e) subir un techo de peso de la isla pide la base del `HEAD` construida aparte
+en un `git worktree` (enlazando `node_modules` y `vendor`) y medida con el cálculo del test (§4.24); (f) un texto de la isla que
+use la COMPRA tiene que estar en un grupo que la compra recibe (`mi_cuenta.*` no le llega: §4.24); (g) `isla/hoja/montar.js` NO
+importa nada compartido (`#841`) y la calculadora va a 186,08 de 187; (h) toda página nueva usa `video-hero` SIN `height` y entra
+en `sonda-primera-pantalla.mjs`; (i) tras tocar `instancias/playjump/publico/`, copiarlo a `public/instancia`.
 
 1. **F4 · CERRADA el 19-09** (`specs/cajon-empaquetable.md`: sus cinco tandas y sus seis trampas). ⚠️ **Le
    falta un ojo humano sobre la COMPRA de la T5** (medida, no vista): se enseña con el banco de su §4.8,
@@ -93,8 +84,9 @@ owner del 25-09 —promociones 🟦 T1 (`promociones.md` §8; en LOCAL, dos ofer
    supera el `max_qty` de su pack —desde `#677` la tabla de `/servicios` deja de anunciarlos, y aquí no se
    puede medir—; (b) la portada que vaya a producción pinta la línea del FILTRO de reseñas
    (`socialSelection`, la Ómnibus) y la tarjeta de la T2·8 — buzón del SPA del 21/22-09, abajo en Atendido.
-   ✅ **(c) El PLANIFICADOR en `deploy.sh`**: el SPA subió la cifra a **10** con la tarea de las encuestas
-   (`0d9a54db`, avisado); medido en local el 25-09, `schedule:list` = 10. Es propiedad del repo, no del servidor.
+   ✅ **(c) El PLANIFICADOR en `deploy.sh`**: la cifra la sube el SPA con cada tarea (**12** con `#794`, avisado en su
+   buzón). Es propiedad del repo, no del servidor. **(d) El KIT** (`#845`): la guarda 7 del despliegue sale en ROJO hasta
+   podarlo con `kit:build --podar` (primero con `--check`), tras desplegar: `ENTORNOS.md` §6.
 3. **F5 · EL MENÚ DE HECHOS, COMPLETO ✅** (`#640`→`#677`): su historia y lo que hay que saber del estado (las
    vistas en la instancia, la suite SIN paquete, el contrato de DATOS y su `CONTRATO` = 2, el trinquete de CSS
    huérfano, `zones` que borra columnas con la v2.0.0), en `instancia-y-landing-fuera.md` y `paquete-de-instancia.md`
