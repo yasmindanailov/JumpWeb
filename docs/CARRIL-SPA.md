@@ -437,6 +437,14 @@ de plataforma a los que responden, ya retirados por su emisor):
   el aviso previo de la T4a·3, la banda 790–819 para cuando agote la mía): atendidos, contestados arriba.
 - **Web `#540`** (12-09): atendido el 13-09. (Los de plataforma del 21 y el 24-09, retirados por su emisor: en git.)
 
+De la foto, mudado VERBATIM el 2026-09-29 a las 23:00 al cerrar la lista del owner (`#805`; el carril, en su techo):
+
+- ✅ **LOS CORREOS SALIENTES, CERRADOS** (`specs/correos-salientes.md`, `#794`→`#797`, 29-09): C1 el registro y la vista previa,
+  C2 los clics por envío, C2b la actividad y el aparato, C3 las aperturas y C4 «cuándo» en Marketing, todo en `main` y
+  APROBADO por el owner (lo construido y lo que enseñó cada una, §4.7–§4.15). Queda en PRODUCCIÓN: encender los dos
+  interruptores (Ajustes → Avanzado → Correos, APAGADOS de fábrica) cuando `/privacidad` y `/cookies` los nombren
+  (`[PENDIENTE: asesoría]`). Fixture `c4-ojo.php` montado en local (`OJO=desmontar`).
+
 ## Anexo · La fila del enrutador, mudada el 2026-09-16
 
 > Lo que decía la fila **«El carril del SPA en el OTRO ordenador · rediseñar el cajón (Fase 4) · el material de PlayJump en otra máquina · la rama `cliente/playjump` · qué ficheros son de cada carril»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila

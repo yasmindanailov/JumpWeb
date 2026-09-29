@@ -3,17 +3,23 @@
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb` a secas; la instancia al lado, en
 > `~/proyectos/instancias/playjump`, clon de `github.com/yasmindanailov/instancia-playjump`, montada el 25-09) ·
 > Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#806`** · La banda está dada de alta en la
-> tabla de `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: **`correos-rediseno.md`
-> §0** (la tarea en curso, `#800`→`#802`) · `analitica-para-decidir.md` §0 (en pausa, `#755`) · `encuestas.md` §0 y §4.7 (`#754`) · `analitica.md` §0 y §4.5 · `isla-y-landing-nueva.md`
-> §4.11 · `celebracion-e-invitacion.md` §0 · `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 ·
-> `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-09-29, noche (cierre: los correos empiezan en la sesión siguiente, por la R1).
+> tabla de `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs:
+> **`fiesta-sistema-nuevo.md` §4.17** (lo siguiente, `#806`) · `correos-rediseno.md` §0 (`#800`→`#804`; la R1·T) ·
+> `analitica-para-decidir.md` §0 (en pausa, `#755`) · `encuestas.md` §0 y §4.7 (`#754`) · `analitica.md` §0 y §4.5 ·
+> `isla-y-landing-nueva.md` §4.11 · `celebracion-e-invitacion.md` §0 · `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 ·
+> `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-09-29, 23:00 (cierre: R1a, R1b y la lista del
+> owner en `main` y aprobadas; lo siguiente, los complementos en dos).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`). El
 > contador de la suite va en el trailer del commit (`#618`), no aquí. **Se muda, no se raspa**: el detalle de
 > una feature baja a su spec (las trampas por tanda de la analítica T1→T5 viven en `analitica.md` §4.9,
 > mudadas verbatim el 24-09; las de la ficha de Google en su §9.1; las de la invitación en su §10.20).
 
-## Foto (2026-09-29)
+## Foto (2026-09-29, 23:00)
 
+- ✅ **LA LISTA DE INVITADOS DEL OWNER, EN `main` Y APROBADA** (`#805`, del `#847`; `fiesta-sistema-nuevo.md` §4.16; «vale,
+  visto bueno»): todos confirmados, sin firmas de los invitados (el descargo de quien cumple, sí), sin cifras ni recordatorio
+  (RETIRADO entero, con sus textos y su test), el «No podemos» aparte y suave; arnés `mutar-lista-805.sh` 6/6.
+- ⬜ **LOS COMPLEMENTOS EN DOS** (`#806`, §4.17): pedido del owner el 29-09, NADA medido ni escrito todavía (ver retomar 0).
 - ✅ **LA R1b (los iconos), EN `main` Y APROBADA** (29-09: «buen trabajo, acepto los correos»; §4.1.3): máscaras de paleta
   teñidas por su `PLTE`, sin GD; arnés 12/12. El `--correo-icono` de PlayJump, empujado a la instancia con la hoja.
 - ✅ **LA R1a DE LOS CORREOS, EN `main` Y APROBADA** (29-09, el owner: «visto bueno, buen trabajo»; `correos-rediseno.md` §4.1.1
@@ -25,11 +31,6 @@
   final; el orden plantilla → textos editables → reserva → comerciales → felicitaciones; y **los TEXTOS, editables desde el
   panel** con estructura fija, en es/en/fr y con permiso propio (`#802`: «profesional y robusta, sin chapuzas»). La analítica,
   en pausa tras la T4 (T5 no se hace, `#800`; T6–T8 después).
-- ✅ **LOS CORREOS SALIENTES, CERRADOS** (`specs/correos-salientes.md`, `#794`→`#797`, 29-09): C1 el registro y la vista previa,
-  C2 los clics por envío, C2b la actividad y el aparato, C3 las aperturas y C4 «cuándo» en Marketing, todo en `main` y
-  APROBADO por el owner (lo construido y lo que enseñó cada una, §4.7–§4.15). Queda en PRODUCCIÓN: encender los dos
-  interruptores (Ajustes → Avanzado → Correos, APAGADOS de fábrica) cuando `/privacidad` y `/cookies` los nombren
-  (`[PENDIENTE: asesoría]`). Fixture `c4-ojo.php` montado en local (`OJO=desmontar`).
 - ⏸ **LA ANALÍTICA PARA DECIDIR, en pausa tras la T4** (`#755`): su foto por tanda, mudada verbatim a `CARRIL-SPA.md` §9
   (29-09); lo que queda, en «por dónde retomar» 2. ⚠️ La ficha del cliente en `zh_CN` pinta el parentesco de sus menores como
   la clave cruda (`admin.users.dependents.relationship_*` solo en es): sin arreglar.
@@ -42,23 +43,25 @@
 - ⚠️⚠️ **LO MONTADO EN LA BD LOCAL para el ojo del owner** (ajustes falsos, el experimento `carcasa` vivo, los fixtures
   `probe-ojo-*`, las fiestas `JW-OJO-F1…F8` con sus guiones `OJO=desmontar`, y la ISLA encendida por plataforma —«no
   deshacer sin él»—): el inventario entero, mudado verbatim a `docs/CARRIL-SPA.md` §8 (27-09). Todo reversible.
-- De la foto, mudados verbatim a `CARRIL-SPA.md` §9 (29-09): la máquina montada para la fiesta y lo que tiene su ✅ sin desplegar.
+- De la foto, mudados verbatim a `CARRIL-SPA.md` §9 (29-09): la máquina montada para la fiesta, lo que tiene su ✅ sin desplegar
+  y ✅ los correos salientes (`#794`→`#797`; en producción, los dos interruptores esperan a `/privacidad` y `/cookies`).
 
 ## Por dónde retomar, en orden
 
-0. ▶▶▶ **LA LISTA DE INVITADOS del owner** (`#847` → `#805`, `fiesta-sistema-nuevo.md` §4.16), en `wip/lista-805` AL OJO
-   DEL OWNER (fiesta de prueba `JW-OJO-F8`: su guion local `ojo-f8.php`, de la carpeta de auditoría, da el enlace; arnés
-   6/6); después **LOS COMPLEMENTOS en dos** (`#806`, §4.17: medir el modelo y proponer, con preguntas al owner,
-   ANTES de código) y la **R1·T** de los correos (los textos editables, `#802`, §4.2). El banco de correos
-   (`php scripts/banco-correos.php [filtro]`) y su sonda (`node storage/app/audit/sonda-correos-r1a.mjs N`) sirven igual.
-1. ▶▶▶ **LOS CORREOS (`specs/correos-rediseno.md`: §0 → §1 el censo → §4 las tandas → §4.1 la R1 → §4.2 los textos;
-   `#789`, `#800`→`#802`)**: el rediseño desde el zip de la instancia (la carpeta `paginas/correos` y su brief en `uploads`;
-   `git pull` de la instancia y `sha256sum -c` antes de cada tanda). En orden, cada tanda con su «al detalle» MEDIDO en la spec
-   antes de codificar, en `wip/…`, con su arnés y al ojo del owner en Mailpit (claro y oscuro, móvil y escritorio):
-   **R1a** el documento y los bloques del diseño en el molde (`BrandedMailMessage`), con ROLES de color neutros en el producto
-   y la hoja de correo de la instancia (✅ plataforma contestó el 29-09: `hojas.correo`, sin contrato nuevo; **al detalle en
-   §4.1.1**, medido el 29-09; el botón principal, como el diseño: `#803`; aviso previo a correos en el buzón) · **R1b** los iconos (máscaras PNG de Lucide teñidas con GD; ⚠️ GD en producción, sin
-   verificar) · **R1·T** los textos editables (`#802`: por correo, bloque e idioma; variables declaradas por correo y
+0. ▶▶▶ **LOS COMPLEMENTOS DE LA FIESTA, EN DOS** (`#806`, `fiesta-sistema-nuevo.md` §4.17; SPEC ANTES DE CÓDIGO): la zona de
+   los extras de la lista pasa a «Complementos para los niños» y «Complementos para los adultos», fiel al sistema de diseño,
+   clara y sin saturar. El owner pidió: VARIAS tartas de distintos tipos (hoy una y «Añadir otra tarta», `#749`); calcetines
+   para TODOS los niños o solo para algunos; UNA merienda que quien reserva ELIGE en la lista (sándwich, pizza o perrito) y
+   chuches como complemento; los de los adultos (combos, cubos, cuántos se quedan), como hoy. Primero MEDIR el modelo
+   (`product_addons`: `postform_block`, `family`, `serves`; las listas `menu_*` de F1b; `#521`), cómo se reserva y se cobra
+   (en el parque, el libro) y las piezas del sistema de diseño (`AddonCard`…); después proponer en §4.17 con preguntas al
+   owner (¿merienda por niño o una para todos?, ¿tipos de tarta como productos del catálogo?, ¿calcetines por talla?) y
+   esperar sus respuestas. Toca dinero (cobro en el parque): `INVARIANTES` §1 antes. Después, la **R1·T** (punto 1).
+1. ▶▶ **LOS CORREOS (`specs/correos-rediseno.md`: §0 → §4.2 los textos; `#789`, `#800`→`#804`)**: ✅ R1a la plantilla y ✅
+   R1b los iconos, en `main` y aprobadas (§4.1.2, §4.1.3). Lo siguiente es la **R1·T**; cada tanda con su «al detalle» MEDIDO
+   en la spec antes de codificar, en `wip/…`, con su arnés y al ojo del owner en Mailpit (el banco,
+   `php scripts/banco-correos.php [filtro]`, y la sonda de la carpeta de auditoría, `sonda-correos-r1a.mjs N`):
+   **R1·T** los textos editables (`#802`: por correo, bloque e idioma; variables declaradas por correo y
    rechazadas al guardar si no existen; sin HTML salvo negrita y enlace; vista previa con datos de ejemplo —la de
    `correos-salientes.md` C1—; rastro; permiso propio; es/en/fr con «sin traducir»; NO editables lo legal, los datos ni los
    hechos que cambian) · **R1c** los 27 correos a la plantilla → **R2** la reserva (1, 1b, 2, 3, 4, 5, 6: el QR dentro, el
@@ -66,10 +69,12 @@
    13a/b, 6b: consentimiento, «una vez», la baja LSSI) → **C2** las felicitaciones (TP·3c; el copy, con el owner) → **C3** las
    ocasiones. El 7: la encuesta y Google en su página de gracias; sin encuesta activa, solo la reseña (`#801`). Los grupos
    8–10, cuando el diseño tenga sus textos. También míos (`#789`): la PUERTA (su diseño, en el próximo zip) y **T2·9** (las
-   reseñas en la API, `#771`: ver si queda la selección o se retira). ✅ **Lo pequeño de antes de la R1, hecho (29-09)**: el
-   cajón dice «Tu cumpleaños» con solo «Opcional», como la isla (`#792`; fr «Ton anniversaire», el tú del cajón); visto en vivo
-   por el owner («perfecto»). ▶ **La R1a empieza** por lo que no espera a plataforma: el molde con los roles neutros del producto.
-2. ⏸ **LA ANALÍTICA PARA DECIDIR (`#755`, `specs/analitica-para-decidir.md`), EN PAUSA tras la T4**: en `main` y aprobadas
+   reseñas en la API, `#771`: ver si queda la selección o se retira). Al acabar la R1c se retiran `vendor/mail/**`,
+   `themes/brand.css` y el layout viejo (§4.1.1). El cajón ya dice «Tu cumpleaños» (`#792`, 29-09, visto por el owner).
+2. ⏸ **LA ANALÍTICA PARA DECIDIR (`#755`, `specs/analitica-para-decidir.md`), EN PAUSA tras la T4**: ❗ **defecto MÍO, medido
+   por plataforma (29-09)**: `OccupancyReport::missing()` (y el `missing` de los totales) no cruza con `analytics_sessions`,
+   así que cuenta robots (`webdriver`, las sondas) y personal, que el embudo y los experimentos excluyen; arreglarlo con su
+   mutación antes de retomar la analítica (su `sonda-demanda.mjs` borra lo suyo). En `main` y aprobadas
    T0→T4, con TP·1→TP·3b y T3d (arneses `SOLO=<tanda>` de `mutar-analitica-decidir.sh`; sondas y fixtures `ojo-tp2.php` y
    `ojo-tp3.php` en `storage/app/audit/`, `CARRIL-SPA` §8 (17) y (22)); ⏸ T3e sin fuente (`#799`); ✗ T5 (`#800`); la TP·3c
    va con los correos (C2). Al retomarla: T6 cohortes → T7 pérdidas → T8 satisfacción (§4.12); el cruce por EMPLEADO,
@@ -111,6 +116,10 @@ y lo nuevo (T1a→T4): `app/Http/Fiesta/` (los modelos de página, `Temas`, `Mar
 `resources/js/fiesta/`, `lang/*/fiesta.php`, `tests/Feature/Fiesta/`, `scripts/banco-fiesta.php`, `banco-fiesta/modelos.php`,
 `mutar-fiesta.sh`; los valores de PlayJump, en `publico/instancia/` del repo de la instancia (se empuja allí, nunca a
 `main`). El contrato de hojas (`InstanceViews::hojas`) es de plataforma (`#769`).
+**Los correos (`#789`, R1a/R1b)**: `app/Notifications/Support/{MailTheme,MailDocument,MailPie,MailIcons}.php`,
+`BrandedMailMessage`, `EmailIconController` y su ruta `correo.icono`, `resources/views/correo/**`, `emails/partials/{book,
+product-card}`, `resources/correo/iconos/`, `scripts/{correo-mascaras.mjs,banco-correos.php,mutar-correo-r1a.sh,
+mutar-correo-r1b.sh}`, `tests/Feature/Mail/Mail*Test`, `tests/Feature/MailThemeTest`; la hoja `css/correo.css`, en el repo de la instancia.
 **La analítica entera desde `#735`**: `app/Domain/Platform/Models/Analytics*`, `app/Domain/Platform/Services/
 Analytics/**` (T1 de plataforma incluida: `Contract`, `Recorder`, `EventIngestor`, `AttributionContext`,
 `SessionResolver`, `EmailUtm`, `RouteNormalizer`, y desde la T6 `PartyFacts`), los tres observadores
@@ -295,9 +304,12 @@ el repo de la instancia (lo nuevo), nunca a `main`.
   mi aviso (`#800`/`#801`), retirado. ▶ Cuando la R1a tenga la hoja de PlayJump, te digo aquí el fichero para el manifiesto.
 - **Plataforma 29-09** (`#792`: «Tu cumpleaños» con solo «Opcional», como en la isla): ✅ hecho en el cajón el 29-09
   (`account.register.born_on*`, es/en/fr; los avisos de la API siguen diciendo «fecha de nacimiento»).
-- **Plataforma 29-09** (`#847`/`#848`): (1) la LISTA DE INVITADOS del owner —nada de la autorización para quien invita; quien
-  se añade a mano o dice «vamos», confirmado sin otra variante; «No podemos», aparte y en tono suave; los adultos, como el
-  mockup—: leído, ⬜ **tarea MÍA**, en «por dónde retomar» 1; (2) aviso previo de `acceso-con-codigo.md`: el cajón (entrar,
-  alta, recuperar, cambiar contraseña) será su tanda A4; y el correo del código, sobre la plantilla de la R1a.
+- **Plataforma 29-09** (`#847`/`#848`): (1) la LISTA DE INVITADOS del owner: ✅ HECHA y aprobada (`#805`, en `main` el 29-09);
+  (2) aviso previo de `acceso-con-codigo.md`: el cajón (entrar, alta, recuperar, cambiar contraseña) será su tanda A4; y el
+  correo del código, sobre la plantilla de la R1a.
+- **Plataforma 29-09** (`#846`, mi `#758` en la isla con mis `createMissingReporter`/`missingMonths`): leído; no cambio su
+  firma sin avisar. Su defecto medido de `OccupancyReport::missing()`, tarea mía en «por dónde retomar» 2.
+- **Plataforma 29-09** (`#850`/`#851`, el guard `admin`, `PANEL_PATH`, el authenticator): leído; mis pruebas del panel usan
+  `actingAs` sin guard (medido al fusionar: suite verde sobre su árbol) y nada mío llama a `auth('web')` en el panel.
 - Del 25 al 28-09 (NORMAS `#842`, `#836`, T5f `#824`/`#825`, `#789`/`#822`, ESLint y `#788`/`#780`, `#765`) y web `#540`:
   mudados verbatim a `CARRIL-SPA.md` §9 (29-09).

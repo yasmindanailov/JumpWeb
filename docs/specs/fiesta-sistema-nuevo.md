@@ -830,7 +830,7 @@ no los usa: el Listo es su propia vista).
 - **Guardas**: las pruebas que aseveran las cifras, la leyenda y «Sin contestar», re-apuntadas a lo nuevo, con su caso:
   ninguna firma de invitados en la página del anfitrión, un añadido a mano sin chapa, el «no» fuera de `[data-filas]`.
   Arnés, y una pasada ligera a 390 y 1280 (`#768`).
-- **Lo construido (29-09, `wip/lista-805`; 🟦 falta el ojo del owner)**: las vistas (zonas 1-3, la fila, los formularios
+- **Lo construido (29-09; ✅ ojo del owner en vivo: «vale, visto bueno»)**: las vistas (zonas 1-3, la fila, los formularios
   auxiliares), `ListaDeInvitados::cuentas()`, `lista.js` (la frase) y `fiesta.css` (fuera cifras, leyenda y recordatorio;
   dentro el bloque `.pli-no`). RETIRADO el recordatorio entero (la ruta, `writeReminder`, `remind()`, `reminderTextFor()`,
   `awaitingNamesIn()`, `invitationSignedRemindUrl()`, sus textos en es/en/fr y `InvitationReminderTest`, 14 casos de un
