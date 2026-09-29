@@ -1,7 +1,9 @@
 # [SPEC] El rediseño de los correos — la plantilla nueva, los de la reserva al brief y los comerciales
 
-> Estado: 🟦 **medida el 29-09; el orden y el 7, decididos por el owner (`#801`)** · Última actualización: 2026-09-29 ·
-> Decisiones: `#800` (ahora los correos), `#801` (el 7, las ocasiones y el orden), `#789` (los correos, del carril del SPA),
+> Estado: 🟦 **medida el 29-09; el orden, el 7 y los textos editables, decididos por el owner (`#801`, `#802`)** ·
+> Última actualización: 2026-09-29 ·
+> Decisiones: `#800` (ahora los correos), `#801` (el 7, las ocasiones y el orden), `#802` (los textos, editables desde el
+> panel), `#789` (los correos, del carril del SPA),
 > `#793` (las felicitaciones, sin vender) ·
 > Carril: **SPA** (banda 790–819). Amplía `correos-desde-canvas.md` (el molde de septiembre sigue siendo suyo).
 
@@ -17,8 +19,8 @@
   reglas (`#795`, `#797`); (5) los de la reserva, sin ofertas; (6) «nada que ya no sea verdad»: con la cuenta con contraseña
   (23-09), los textos del 8 del brief están desfasados, y el diseño lo dice.
 - **Estado**: 🟦 el orden y el 7, decididos (`#801`); ▶ la R1, la plantilla, con su «al detalle» en §4.1 (roles de color
-  que pone la instancia, iconos teñidos en el servidor); ⬜ los textos editables desde el panel (§4.2, pregunta del owner,
-  analizada sin código): espera su respuesta.
+  que pone la instancia, iconos teñidos en el servidor) → **R1·T los textos editables** desde el panel, en es/en/fr y con
+  permiso propio (§4.2, `#802`) → la R2. Nada escrito en código aún.
 - **Invariantes**: `RGPD-01` (lo enviado), `RGPD-07`, el consentimiento de marketing; `PAY-14` (se encolan).
 
 ## 1. Contexto — medido el 29-09
@@ -140,7 +142,9 @@ una sonda por tanda; los comerciales con su prueba de consentimiento y de «una 
 - **Coste y momento**: el almacén, la pantalla y la vista previa, una tanda (como la C1 de los salientes). Cada correo se
   escribe ya contra sus claves en la R2 y la C1, que se iban a rehacer igual: AHORA es el momento más barato; después sería
   reescribirlos dos veces. Y «por ocasiones» sale casi sola: la misma plantilla, textos libres y un público.
-- ⬜ **Espera al owner**: (1) ¿la C? (2) ¿quién edita? (3) ¿los tres idiomas desde el panel?
+- ✅ **`[DECIDIDO owner]` 29-09 (`#802`)**: la C, con **permiso propio** y **los tres idiomas** desde el panel; «de manera
+  profesional y robusta, sin chapuzas». Va como tanda propia tras la R1 (**R1·T**: el almacén, la pantalla, la vista previa),
+  y la R2 y la C1 se escriben contra sus claves. Empieza en la sesión siguiente.
 
 ## 7. Revisión y decisión
 

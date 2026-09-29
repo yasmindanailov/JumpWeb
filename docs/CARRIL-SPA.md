@@ -371,6 +371,21 @@ de la TP·2**. La sonda: `sonda-tp3-panel.mjs`, con los `ESPERADO_*` de tinker (
   Quedan: `[PENDIENTE: asesoría]` (5) del correo de servicio, la **T2e** solo si el volumen lo pide, el `EXPLAIN` con
   volumen en staging. Todo espera la v2.0.0 (`#670`). Las trampas pagadas en la T7 viven en `encuestas.md` §4.6.
 
+De la foto, mudado VERBATIM el 2026-09-29 al cerrar la sesión (su techo, con `#802`):
+
+- ⏸ **LA ANALÍTICA PARA DECIDIR, en pausa tras la T4** (`#755`, spec ✅; T6–T8 después de los correos). En `main` y APROBADAS por el owner: T0a·T0b·T0c (`#756`),
+  T1 encuestas anónimas (`#754`/`#757`), T2 ocupación (`#758`) y, el 28-09, **T3a la forma** (`#759`: siete pestañas, solo
+  pide la abierta, un catálogo de 58 cifras), **T3b el veredicto** (`#790` `[DECIDIDO owner]`: «normal» es el mín–máx de los 12
+  periodos anteriores), **T3c·1 «lo que ha cambiado»** (`#791`) y **T3c·2 los objetivos del mes** (el botón al pie de «Resumen», la
+  línea en la tarjeta; permiso `analytics.manage`). Lo construido y lo que enseñó cada una: spec §4.13. ▶ **La TP, el
+  público** (`#792` `[DECIDIDO owner]` 28-09: la fecha de nacimiento del titular, entera y opcional; los padres por la edad de sus
+  hijos con el opt-in de hoy; §4.14): ✅ **TP·1 la captura, en `main` y APROBADA** (28-09; su «al detalle» y lo que enseñó,
+  §4.14; contrato **1.49.0**) · ✅ **TP·2 «Quién viene»** en `main` y aprobada → ✅ **TP·3a y TP·3b en `main` y aprobadas**
+  (`#793`: los tramos de los anuncios y fuera «Exportar segmento»; arnés `SOLO=TP3` 12/12, sonda 20/20; 29-09) · ⏸ TP·3c ·
+  ✅ **T3d «Explícamelo con IA»** en `main` y aprobada (techo 12 KB, `#798` `[DECIDIDO owner]`; 29-09) · ⏸ T3e (`#799`) ·
+  ✅ **T4 la cartera** en `main` y aprobada (§4.8.quater; arnés `SOLO=T4` 16/16, sonda `sonda-t4-panel.mjs` 17/17) · ✗ T5 (`#800`). ⚠️ Visto de paso: la ficha
+  del cliente en `zh_CN` pinta el parentesco de sus menores como la clave cruda (`admin.users.dependents.relationship_*` solo en es).
+
 De la foto, mudado VERBATIM el 2026-09-29 por la noche (su techo, con `#800`):
 
 - ✅ **LA FIESTA DEL SISTEMA NUEVO: T1a→T4, F1→F5, F6a y F6b EN `main` (25/26-09)**, F1/F2/F6a **aprobadas por el owner**

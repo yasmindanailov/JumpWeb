@@ -26,7 +26,7 @@ programa «producto e instancias» separa el producto de sus instancias.
 - [x] F3 · versión (`#624`): v1.0.0 = `1272cb93` etiquetada, `CHANGELOG.md`, guarda 8 del despliegue con su arnés (9/9) y producción DICE v1.0.0 (`storage/app/version`, 2026-09-17 22:05) · el noveno despliegue (v1.1.0, 18-09) estrenó la escritura y la relectura dentro del script ✓
 - [x] F4 · cajón empaquetable y login por token, contrato 1.1.0 · **CERRADA el 2026-09-19**: una página que no es del producto monta el cajón, abre y COMPRA (criterio de salida de §2·1), con la landing idéntica píxel a píxel. Dos mitades: **el token** (`specs/token-bearer.md`, `#630`) y **el cajón en cinco tandas** (`specs/cajon-empaquetable.md` §4, `#631`→`#637`). En navegador: sonda **42/42** y juez en 0 diferencias sobre 1.640 nodos. ⚠️ El **anfitrión mínimo** de §4.4 es de F5 por diseño (`#631`), no un pendiente; la compra de la T5 está medida pero **sin ojo del owner**. El detalle de cada tanda, en su spec
 - [ ] F5 · instancia PlayJump y la landing fuera, v2.0.0 · **ABIERTA el 19-09 por el CENSO** (`#639`). Detalle: `specs/instancia-y-landing-fuera.md` §4.1 y §4.6, y `specs/paquete-de-instancia.md`; aquí, los marcadores. **T1→T4 ✅** (`#640`→`#669`): el menú servido, las NUEVE vistas de la landing fuera con `CONTRATO_DE_VISTAS`, el CSS huérfano podado con trinquete, el contrato de instancia a **2** y `zones` adelgazada. ▶ **LA VÍA A** (`#670`) y **SUS CUATRO PLATOS, SERVIDOS ✅** (`#671`→`#674`, contrato 1.15.0): dudas, servicios —su mitad EDITORIAL—, el bar y los juegos. ▶ **CENSO `#675`**: faltaban **cuatro HECHOS**. **Sus tres lotes, HECHOS** (`#676`, contrato **1.16.0**): altura y edad de zona, días de tarifa, edad y duración de producto, asuntos de contacto. **Y el cuarto, los tramos de grupo, SERVIDO** (`#677`, **1.17.0**): en `/prices` y en céntimos — **el menú, COMPLETO** ⚠️ La **T5** (cortar v2.0.0) es el final del programa entero, no de esta fase (`#670`)
-- [ ] Analítica (`specs/analitica.md`): T1 ✅ · T2 🟦 (T2e ⬜) · T3 ✅ · T4 ✅ · T5 🟦 (T5c ⬜) · T6 ✅ · T7 🟦 encuestas (anónimas ✅ `#757`) · **para decidir 🟦** (`#755`)
+- [ ] Analítica (`specs/analitica.md`): T1 ✅ · T2 🟦 (T2e ⬜) · T3 ✅ · T4 ✅ · T5 🟦 (T5c ⬜) · T6 ✅ · T7 🟦 encuestas (anónimas ✅ `#757`) · **para decidir 🟦** (`#755`: T4 ✅, T5 ✗ `#800`, T6–T8 ⬜)
 - [ ] Landing nueva e isla (`specs/isla-y-landing-nueva.md` §0, `#681`·`#682`): T0→T3 ✅ · **T4 🟦** (§4.12) · **T5 ✅** (§4.13) · Z ✅ (§4.14, §4.16; `Medir` aplazado) · 1.ª pantalla ✅ (§4.15) · T6 🟦 §4.17–23
 - [ ] F6 · app nativa: spec con pila y alcance · pila decidida (`#627`): React Native + Expo en TypeScript, a confirmar con la prueba corta
 
@@ -96,6 +96,7 @@ programa «producto e instancias» separa el producto de sus instancias.
 ### CORREOS 🟦 — `specs/correos-desde-canvas.md` §0 (`#500`→`#508`)
 - [x] El carril entero: 25 correos, molde, remitente, modo oscuro, bandeja, fiesta mixta y los dos del framework.
 - [ ] Los cuatro ámbar (§16) y el OJO del owner en Gmail y Outlook.
+- [ ] ▶ El REDISEÑO (`specs/correos-rediseno.md`, `#800`→`#802`): plantilla · textos editables · reserva · comerciales.
 
 ### EL CAJÓN · FASE 4 DEL DISEÑO 🟦 — `carriles/spa.md` (`#550`→`#572`, el otro ordenador)
 - [x] Las 25 pantallas construidas (`#550`→`#568`) · T1 y T2 de `specs/celebracion-e-invitacion.md` (`#570`, `#571`).
@@ -103,7 +104,7 @@ programa «producto e instancias» separa el producto de sus instancias.
 - [x] T3 · la piel del justificante (`#572`), con el ✅ del owner en vivo (17-09).
 - [x] Desplegada la T3 en **v1.1.0** (18-09, noveno despliegue): la barra de firmar ya no está rota en producción.
 - [x] T4 · la invitación digital, **cerrada** en seis unidades verdes (spec §10.4, `#573`→`#578`; concurrencia verificada sobre InnoDB, RGPD al día, la API). ⚠️ En producción desde v1.1.0 **con los dos interruptores APAGADOS**: encenderlos es DATO del owner.
-- [x] **T5, T6, T7 y el borde `§7.1·5`: la invitación digital, CERRADA ENTERA** (`#701`→`#718`, spec §10.5–§10.18, ✅ del owner en vivo el 20-09): la página pública, el aterrizaje, los tres correos y el orden de las fichas al recortar; el detalle, en su § de la spec. ⚠️ **SIN DESPLEGAR**, con **una migración** (`order_items.eve_notice_at`).
+- [x] **T5–T7 y el borde `§7.1·5`: la invitación digital, CERRADA** (`#701`→`#718`, spec §10.5–§10.18, ✅ del owner 20-09). ⚠️ **SIN DESPLEGAR**, con una migración (`order_items.eve_notice_at`).
 - [ ] La invitación: solo falta **desplegar** (T5–T7 + migración) y **encender** (dato del owner); los tres huecos del ✅, en el §0 de la spec.
 - [ ] ▶ **LA FIESTA DEL SISTEMA NUEVO** (`specs/fiesta-sistema-nuevo.md` ✅ `#743`): T0→T4 y F1→F9 ✅ (`#747`→`#753`).
 - [ ] El OJO del owner en un teléfono de verdad · el cuaderno de entrega del cajón · el botón del sistema.

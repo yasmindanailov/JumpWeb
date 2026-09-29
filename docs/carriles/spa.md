@@ -1,12 +1,12 @@
-# Carril · Diseño del SPA (el cajón) — la ANALÍTICA y, desde el 25-09, LA FIESTA del sistema nuevo
+# Carril · Diseño del SPA (el cajón) — los CORREOS (desde el 29-09), la ANALÍTICA y LA FIESTA del sistema nuevo
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb` a secas; la instancia al lado, en
 > `~/proyectos/instancias/playjump`, clon de `github.com/yasmindanailov/instancia-playjump`, montada el 25-09) ·
-> Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#801`** · La banda está dada de alta en la
-> tabla de `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: **`analitica-para-decidir.md`
-> §0** (la tarea en curso, `#755`) · `encuestas.md` §0 y §4.7 (`#754`) · `analitica.md` §0 y §4.5 · `isla-y-landing-nueva.md`
+> Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#802`** · La banda está dada de alta en la
+> tabla de `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: **`correos-rediseno.md`
+> §0** (la tarea en curso, `#800`→`#802`) · `analitica-para-decidir.md` §0 (en pausa, `#755`) · `encuestas.md` §0 y §4.7 (`#754`) · `analitica.md` §0 y §4.5 · `isla-y-landing-nueva.md`
 > §4.11 · `celebracion-e-invitacion.md` §0 · `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 ·
-> `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-09-29 (T4 en `main`; T5 no se hace, `#800`; ahora, los correos).
+> `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-09-29, noche (cierre: los correos empiezan en la sesión siguiente, por la R1).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`). El
 > contador de la suite va en el trailer del commit (`#618`), no aquí. **Se muda, no se raspa**: el detalle de
 > una feature baja a su spec (las trampas por tanda de la analítica T1→T5 viven en `analitica.md` §4.9,
@@ -14,26 +14,19 @@
 
 ## Foto (2026-09-29)
 
-- ▶▶▶ **AHORA, LOS CORREOS** (owner 29-09, `#800`/`#801`; `specs/correos-rediseno.md`): la plantilla → la reserva → los
-  comerciales automáticos → las felicitaciones (TP·3c) → las ocasiones. ▶ la R1 (la plantilla), su «al detalle» en §4.1.
-  ⬜ «Alguna otra cosa» del owner. La analítica espera: T5 no se hace (`#800`) y T6–T8, después.
+- ▶▶▶ **AHORA, LOS CORREOS** (`specs/correos-rediseno.md`, `#800`→`#802`; **NADA escrito en código**): la spec, medida con el
+  censo HAY/FALTA contra el zip (§1), y cuatro decisiones del owner: el 7 sigue siendo la encuesta (`#801`); las ocasiones, al
+  final; el orden plantilla → textos editables → reserva → comerciales → felicitaciones; y **los TEXTOS, editables desde el
+  panel** con estructura fija, en es/en/fr y con permiso propio (`#802`: «profesional y robusta, sin chapuzas»). La analítica,
+  en pausa tras la T4 (T5 no se hace, `#800`; T6–T8 después).
 - ✅ **LOS CORREOS SALIENTES, CERRADOS** (`specs/correos-salientes.md`, `#794`→`#797`, 29-09): C1 el registro y la vista previa,
   C2 los clics por envío, C2b la actividad y el aparato, C3 las aperturas y C4 «cuándo» en Marketing, todo en `main` y
   APROBADO por el owner (lo construido y lo que enseñó cada una, §4.7–§4.15). Queda en PRODUCCIÓN: encender los dos
   interruptores (Ajustes → Avanzado → Correos, APAGADOS de fábrica) cuando `/privacidad` y `/cookies` los nombren
   (`[PENDIENTE: asesoría]`). Fixture `c4-ojo.php` montado en local (`OJO=desmontar`).
-- ⏸ **LA ANALÍTICA PARA DECIDIR, en pausa tras la T4** (`#755`, spec ✅; T6–T8 después de los correos). En `main` y APROBADAS por el owner: T0a·T0b·T0c (`#756`),
-  T1 encuestas anónimas (`#754`/`#757`), T2 ocupación (`#758`) y, el 28-09, **T3a la forma** (`#759`: siete pestañas, solo
-  pide la abierta, un catálogo de 58 cifras), **T3b el veredicto** (`#790` `[DECIDIDO owner]`: «normal» es el mín–máx de los 12
-  periodos anteriores), **T3c·1 «lo que ha cambiado»** (`#791`) y **T3c·2 los objetivos del mes** (el botón al pie de «Resumen», la
-  línea en la tarjeta; permiso `analytics.manage`). Lo construido y lo que enseñó cada una: spec §4.13. ▶ **La TP, el
-  público** (`#792` `[DECIDIDO owner]` 28-09: la fecha de nacimiento del titular, entera y opcional; los padres por la edad de sus
-  hijos con el opt-in de hoy; §4.14): ✅ **TP·1 la captura, en `main` y APROBADA** (28-09; su «al detalle» y lo que enseñó,
-  §4.14; contrato **1.49.0**) · ✅ **TP·2 «Quién viene»** en `main` y aprobada → ✅ **TP·3a y TP·3b en `main` y aprobadas**
-  (`#793`: los tramos de los anuncios y fuera «Exportar segmento»; arnés `SOLO=TP3` 12/12, sonda 20/20; 29-09) · ⏸ TP·3c ·
-  ✅ **T3d «Explícamelo con IA»** en `main` y aprobada (techo 12 KB, `#798` `[DECIDIDO owner]`; 29-09) · ⏸ T3e (`#799`) ·
-  ✅ **T4 la cartera** en `main` y aprobada (§4.8.quater; arnés `SOLO=T4` 16/16, sonda `sonda-t4-panel.mjs` 17/17) · ✗ T5 (`#800`). ⚠️ Visto de paso: la ficha
-  del cliente en `zh_CN` pinta el parentesco de sus menores como la clave cruda (`admin.users.dependents.relationship_*` solo en es).
+- ⏸ **LA ANALÍTICA PARA DECIDIR, en pausa tras la T4** (`#755`): su foto por tanda, mudada verbatim a `CARRIL-SPA.md` §9
+  (29-09); lo que queda, en «por dónde retomar» 2. ⚠️ La ficha del cliente en `zh_CN` pinta el parentesco de sus menores como
+  la clave cruda (`admin.users.dependents.relationship_*` solo en es): sin arreglar.
 - ▶ **LA FIESTA DEL SISTEMA NUEVO ES MÍA (`#765`, `[DECIDIDO owner]` 25-09)**: la lista de invitados, la invitación con
   su recibo y la autorización, vestidas con «Saltia» para la v2.0.0, en paralelo con la web pública. El traspaso,
   `isla-y-landing-nueva.md` §4.11; el censo HAY/FALTA, el método y las tandas, `specs/fiesta-sistema-nuevo.md` (§1.4,
@@ -47,16 +40,29 @@
 
 ## Por dónde retomar, en orden
 
-1. ❗❗❗ **LA ANALÍTICA PARA DECIDIR (`#755`, `specs/analitica-para-decidir.md`)**: ✅ T0a·T0b·T0c · T1 · T2 · T3a · T3b ·
-   T3c·1 · T3c·2 y **TP·1** (la fecha de nacimiento, `#792`; arnés `SOLO=TP1`, sondas `storage/app/audit/sonda-tp1-*.mjs`),
-   **TP·2** («Quién viene»; arnés `SOLO=TP2`; fixture `ojo-tp2.php` montado, `OJO=desmontar`), todas en `main` y aprobadas →
-   ▶ owner 28-09, «cerrar lo que queda», en este orden: **los correos salientes PRIMERO** (`specs/correos-salientes.md` ✅
-   `#794`; ✅ C1→C4 en `main`, aprobadas 29-09) → ✅ **TP·3a y TP·3b en `main` y aprobadas** (§4.14; fixture `ojo-tp3.php` montado encima del de la TP·2, `CARRIL-SPA` §8 (22)) ·
-   la TP·3c (felicitaciones) y el gasto en anuncios, ⏸ con el rediseño de la plantilla / aplazado; §4.14 y §4.9 → ✅ **T3d** el texto para IA, en `main` y aprobada (§4.13;
-   arnés `SOLO=T3d` 11/11, sonda `sonda-t3d-panel.mjs` 22/22) → ⏸ **T3e** el sector: no hay rangos con método, nada sembrado
-   (`#799` `[DECIDIDO owner]`, §4.13) → ✅ **T4 cartera** → ✗ T5 marketing con coste (`#800`) → ⏸ DESPUÉS DE LOS CORREOS (punto 3):
-   T6 cohortes → T7 pérdidas → T8 satisfacción (§4.12). Los CRUCES de
-   encuestas, con la T8; el cruce por EMPLEADO, `[PENDIENTE: owner]` (27-09, sin respuesta).
+1. ▶▶▶ **LOS CORREOS (`specs/correos-rediseno.md`: §0 → §1 el censo → §4 las tandas → §4.1 la R1 → §4.2 los textos;
+   `#789`, `#800`→`#802`)**: el rediseño desde el zip de la instancia (la carpeta `paginas/correos` y su brief en `uploads`;
+   `git pull` de la instancia y `sha256sum -c` antes de cada tanda). En orden, cada tanda con su «al detalle» MEDIDO en la spec
+   antes de codificar, en `wip/…`, con su arnés y al ojo del owner en Mailpit (claro y oscuro, móvil y escritorio):
+   **R1a** el documento y los bloques del diseño en el molde (`BrandedMailMessage`), con ROLES de color neutros en el producto
+   y la hoja de correo de la instancia (❗ el aviso a plataforma está en el buzón: es su contrato de paquete; su respuesta
+   antes de tocar el manifiesto) · **R1b** los iconos (máscaras PNG de Lucide teñidas con GD; ⚠️ GD en producción, sin
+   verificar) · **R1·T** los textos editables (`#802`: por correo, bloque e idioma; variables declaradas por correo y
+   rechazadas al guardar si no existen; sin HTML salvo negrita y enlace; vista previa con datos de ejemplo —la de
+   `correos-salientes.md` C1—; rastro; permiso propio; es/en/fr con «sin traducir»; NO editables lo legal, los datos ni los
+   hechos que cambian) · **R1c** los 27 correos a la plantilla → **R2** la reserva (1, 1b, 2, 3, 4, 5, 6: el QR dentro, el
+   calendario, «Cómo llegar», WhatsApp, responder al parque) → **R3** el 2b → **C1** los comerciales (11, el 12 ampliado,
+   13a/b, 6b: consentimiento, «una vez», la baja LSSI) → **C2** las felicitaciones (TP·3c; el copy, con el owner) → **C3** las
+   ocasiones. El 7: la encuesta y Google en su página de gracias; sin encuesta activa, solo la reseña (`#801`). Los grupos
+   8–10, cuando el diseño tenga sus textos. También míos (`#789`): la PUERTA (su diseño, en el próximo zip) y **T2·9** (las
+   reseñas en la API, `#771`: ver si queda la selección o se retira). ⬜ **Pequeño, antes de la R1**: el cajón dice «Fecha de
+   nacimiento» y «Opcional. Para conocer mejor a nuestro público.» (`account.register.born_on*`, es/en/fr); el owner lo quiere
+   como la isla, «Tu cumpleaños» con solo «Opcional» (aviso de plataforma del 29-09, `#792`).
+2. ⏸ **LA ANALÍTICA PARA DECIDIR (`#755`, `specs/analitica-para-decidir.md`), EN PAUSA tras la T4**: en `main` y aprobadas
+   T0→T4, con TP·1→TP·3b y T3d (arneses `SOLO=<tanda>` de `mutar-analitica-decidir.sh`; sondas y fixtures `ojo-tp2.php` y
+   `ojo-tp3.php` en `storage/app/audit/`, `CARRIL-SPA` §8 (17) y (22)); ⏸ T3e sin fuente (`#799`); ✗ T5 (`#800`); la TP·3c
+   va con los correos (C2). Al retomarla: T6 cohortes → T7 pérdidas → T8 satisfacción (§4.12); el cruce por EMPLEADO,
+   `[PENDIENTE: owner]` (27-09, sin respuesta).
    **Cómo se trabaja una tanda** (lo de esta sesión): medir antes y escribir «La Tx al detalle» en §4.13; toda cifra por el
    catálogo (`Filament\Analytics\Metrics\*::from()`, su «¿Cómo se calcula?» es/zh_CN y el censo); el arnés
    `mutar-analitica-decidir.sh` con `SOLO=<tanda>` (~5 min; el entero, ~95 min, al cerrar un bloque: owner, 28-09), en
@@ -68,7 +74,7 @@
    fila `sidebar.shell`—, así que ya se puede); `AccessRevocationTest` no
    deja escribir el literal `'sessions'`; `TestCase::count()` y `countOf()` son finales. `[PENDIENTE: asesoría]`: los 90 días
    del sello, los clics por persona y el píxel (y el (5) de las encuestas).
-2. ✅ **LA FIESTA DEL SISTEMA NUEVO (`#765`, `fiesta-sistema-nuevo.md` ✅ `#743`): T1a→T4 y F1→F9 en `main` y aprobadas
+3. ✅ **LA FIESTA DEL SISTEMA NUEVO (`#765`, `fiesta-sistema-nuevo.md` ✅ `#743`): T1a→T4 y F1→F9 en `main` y aprobadas
    (`#747`→`#753`, §4.6–§4.15) — en código NO TIENE NADA PENDIENTE**; espera la v2.0.0 (las páginas vivas se visten con
    las hojas de la instancia, `#769`). **Si llega un zip nuevo**: `git pull` en la instancia, `git diff <antes>..HEAD` de
    `diseno/`, copiar `publico/instancia` a `public/`, `optimize:clear`, y una tanda F10 en §4. **A prueba**: «Invitar a
@@ -76,10 +82,6 @@
    (`#781`). Para el ojo: `JW-OJO-F8`, `F7`, `F5`, `F3`, `F1`. **Reglas en pie**: el suelo sin JavaScript · `#739` · la
    firma y su prueba (`waiver-probatorio.md` §4.4) · hoja en blanco (§7.2·R1) · `#706`. Sueltos de la analítica de
    antes: **T5c** cuando el owner nombre la hipótesis (`#738`) · el `EXPLAIN` con volumen en staging.
-3. ▶▶▶ **AHORA (owner 29-09, `#800`): LOS CORREOS Y LA PUERTA, MÍOS desde `#789`** (owner con plataforma, 27-09 noche): los quince
-   correos rehechos del diseño (`paginas/correos*.card.html` y `paginas/correos/` de la instancia), los NUEVOS de marketing
-   (con las felicitaciones de la TP·3c) y la puerta (su diseño, en el PRÓXIMO zip). Y «otra cosa» que el owner concretará. **T2·9** (las reseñas en la API): caras y fotos,
-   decididas en `#771`, y `/reviews` (1.31.0) ya las sirve: al retomarla, ver si queda algo (la selección) o se retira.
 4. ❗ **`audit-clock.sh` (27-09): 10/10 pases en rojo por tests AJENOS a la analítica** (los de la analítica, verdes en
    todos): `GoogleReviewImagesTest::test_el_barrido_no_toca_lo_recien_escrito` (10/10: el barrido mira el `mtime` REAL
    del fichero contra el reloj CONGELADO de Laravel; en producción coinciden: es del test), `InvitationSharingTest` (6
@@ -207,35 +209,8 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 - **Para plataforma (29-09, `#800`/`#801`)**: la spec `correos-rediseno.md` entra en `CLAUDE.md` en la fila de los correos
   (acorté dos filas mías para caber). ❗ **Aviso ANTES de tocarlo** (§4.1): la R1 propone una HOJA DE CORREO en el paquete de la
   instancia (roles `--correo-*`, la receta de `#769`) y su clave en el manifiesto: tu contrato. Dime si prefieres otra puerta.
-- **Para plataforma (29-09, la T3d)**: `analytics.explained` entra en `AuditLog::ACTIONS` (el texto para IA, sin PII). Nada más tuyo.
-- ❗ **Para plataforma (29-09, la TP·3b, `#793`)**: retiré el permiso `analytics.export` de tu catálogo y del seeder
-  (COMPARTIDOS), con la migración `drop_analytics_export_permission`, que borra su fila (el pivote cae en cascada). También la
-  ruta `/admin/analitica/segmentos/csv` de `routes/web.php`. `segments.exported` sigue en `AuditLog::ACTIONS`. El contrato no
-  cambia. Migra.
-- ❗ **Para plataforma (29-09, la C3 de los correos, `#797`)**: contrato **1.54.0**, mío (`ExportedEmailSend.opens`): la
-  **1.53.0 sigue siendo tuya**. Toqué lo compartido: `routes/web.php` (el píxel `GET /e/{send}.gif`, fuera de sesión, cookies y
-  visitante con `withoutMiddleware`: ojo, en Laravel 13 el CSRF del grupo es `PreventRequestForgery`), el contrato
-  `ConsentLedger` (`accountConsentedNow()`, implementado en `CookieConsentLedger`), `Settings.php` (otro interruptor,
-  `emails.track_opens`) y `AppServiceProvider` (un oyente y el morfo `email_open`). Migra (`email_opens`, `tracks_opens`).
-- ❗ **Para plataforma (29-09, la C2 de los correos, `#795`)**: contrato **1.52.0**, mío (`ExportedEmailSend.clicks`); tu
-  siguiente, 1.53.0. Toqué lo compartido: `Settings.php` (una sección «Correos a los clientes» en Avanzado, con el interruptor
-  `emails.track_clicks` en `BOOL_KEYS` y `MANAGED`), `AppServiceProvider` (un oyente de `NotificationSending` y el morfo
-  `email_click`), `RecordEmailClick` (el 302 que quita `jw_e`) y `EmailUtm::IGNORED_QUERY` (ya NO es la lista de la analítica:
-  lleva además `jw_e`). Migra (`email_clicks` y `email_sends.tracks_clicks`). Y la C2b (`#796`): `emails.activity_viewed` en
-  `AuditLog::ACTIONS` y `email_clicks.device` (otra migración).
-- ❗❗ **Para plataforma (28-09, la TP·1, `#792`)**: `users.born_on`, entera y opcional (`BirthDatePolicy`: no futura, ≥ 18 el
-  día del parque, ≤ 120). Contrato **1.49.0**, mío (`User`, `RegisterRequest`, `GoogleSignupRequest`, `ProfileUpdateRequest`
-  —AUSENTE no la toca, `null` la borra—, `ExportedProfile`): tu siguiente, 1.50.0. **La isla**: el motor ya la reenvía si tu
-  formulario la trae (`runRegister` y `runGoogleSignup` leen `form.born_on`; `profile.apply` solo si la clave viene): falta en
-  `formularioDeAlta` y en tus «Tus datos» (la pieza `steps/BornOnField.vue` y sus textos `account.register.born_on[_hint]`,
-  ya en el montaje). Toqué lo compartido: techos de `SidebarBundleBudgetTest` (299 → **301**; el motor ya pesaba 298,83) y
-  `SidebarMountTest` (10.900), `SidebarBoot` (dos claves), `ApiContractTest`, `phpstan-baseline.neon` (−4, el mostrador),
-  `CreateManualOrderPage` (el campo), `README`/`MODELO-DATOS`/`INVARIANTES`. Tras el `pull`, `php artisan migrate`.
-- ❗ **Para plataforma (28-09, la C1 de los correos, `#794`)**: acorté la fila de los correos de `CLAUDE.md`; contrato **1.51.0**
-  (el export lleva `emails`; tu 1.50.0 sigue siendo tuya). Toqué lo compartido: `AppServiceProvider` (dos oyentes y el morfo
-  `email_send`), tu hub (`Correos enviados` en «Sistema»; `AdminNavigationTest` 27 tarjetas), `ListUsers` (un botón), el
-  permiso `emails.view` (seeder y catálogo), `AuditLog::ACTIONS`, `routes/console.php` y `deploy.sh` (**12** tareas). Migra.
-  29-09, rebasada sobre tu `0cef4365`: la 1.51.0 va encima de tu 1.50.0 (normas) y el recuento del `README` suma tu migración.
+- Mis avisos a plataforma del 27→29-09 (`#754`/`#757`, la TP·1 `#792`, las C1→C3 `#794`→`#797`, la TP·3b `#793`, la T3d):
+  ATENDIDOS por plataforma (su «Atendido», 29-09: «leídos y migrado»); retirados de aquí. El detalle, en el `git log`.
 - ❗ **Para la web (28-09, TP·1 y `#793`)**: `/privacidad` tiene que nombrar la fecha de nacimiento del titular (opcional; para
   conocer al público, siempre en conjunto) y, con la TP·3c, las felicitaciones de cumpleaños (la del titular y la de sus hijos,
   solo con el opt-in de marketing y sin vender). Ya NO habrá exportación de personas (`#793`). `[PENDIENTE: asesoría]`.
@@ -292,6 +267,10 @@ el repo de la instancia (lo nuevo), nunca a `main`.
   código `MIN_REVIEWS = 1` (`#494`): no la toco yo.
 
 ### Atendido
+- **Plataforma 29-09** (`#792`: «Tu cumpleaños» con solo «Opcional», como en la isla): leído; ⬜ **pendiente MÍO**, los
+  textos del cajón `account.register.born_on*` (quitar la frase que el owner quitó), en «por dónde retomar» 1.
+- **Plataforma 28-09** (NORMAS, `#842`: la hoja del descargo, componente de la instancia): leído; la fiesta NO la pide —F9 la
+  dejó fuera a propósito: el texto se presenta en el flujo (`waiver-probatorio.md` §4.4)—. `park_rules` con `icon` y `level`: visto.
 - **Plataforma 28-09** (`#836`): `openWith()` pasa el producto de la intención `fiesta` a `drawer_opened`: correcto.
 - **Plataforma 27-09 noche, 2.º** (T5f `#824` y los hijos por producto `#825`: `outcome.js::confirmationLine` con
   `minors_only`, la 1.45.0 suya y la 1.46.0 mía, `catalog.js` al trozo `card`): atendido, nada mío choca.
