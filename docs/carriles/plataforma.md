@@ -3,9 +3,10 @@
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
-> **820–849** (dada de alta en `DECISIONES.md` el 27-09; centena `decisiones/800-899.md`) · Último usado: **`#846`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#845`) · Actualizado: **2026-09-29**
-> (cierre de la noche: T4f ✅, `#792` en la isla ✅, T6g ✅ `#845` — la T6 entera; sigue lo nuevo del owner en Claude Design).
+> **820–849** (dada de alta en `DECISIONES.md` el 27-09; centena `decisiones/800-899.md`) · Último usado: **`#847`** (quedan 2: pedir
+> otra banda al owner) · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#846`) · Actualizado: **2026-09-29**
+> (tarde: `#758` en la isla ✅ `#846`; la lista del owner antes de desplegar, `#847`: la spec del acceso con código, ⬜ para él).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
 > llévaselo con la medida, como el SPA en `#724`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -45,10 +46,13 @@ normas, la T6f (301 y la web vieja fuera, `#843`), `#844`, la T6h (las legales) 
 **T6g** (§4.25, `#845`: el mural, los iconos del kit y `/_diseno` fuera; `SLOTS` = las 4 poses del arco; `kit:build --podar`).
 Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas,entradas}.mjs`), la web entera (`sonda-web.mjs`,
 17/17) y la compra (`sonda-isla.mjs`).
-▶▶ **SIGUE: los diseños NUEVOS del owner** (29-09: «después te presento nuevos diseños, modificaciones de Claude Design sobre la
-web»): el zip entra SOLO por `diseno/actualizar.py` (`#760`), el diseño se toma del mockup (`#767`) y se verifica una vez al final
-(`#768`). Después, **(4)** Bizum, Apple (entra) y el día liberado → material y revisión del owner (los datos, de playjump.es). Los
-correos del sistema y la puerta, del SPA, en paralelo.
+▶▶▶ **AHORA, la lista del owner ANTES DE DESPLEGAR** (`#847`, 29-09), mientras él diseña: **(1)** `specs/acceso-con-codigo.md` ⬜
+—el owner revisa su §7 ANTES del código—; **mientras**, **(2)** el panel en una dirección secreta (`/admin` → «no existe») con
+authenticator SOLO para administradores (Filament 5 lo trae: `MultiFactor/App`, sin dependencia nueva); **(3)** el SEO completo
+(textos de playjump.es, el owner los revisa al final); **(4)** las imágenes al compartir, la web y la invitación (hoy: logotipo u
+`og-image.jpg`), compuestas con la marca. La lista de invitados, al SPA (buzón).
+▶▶ **Y los diseños NUEVOS del owner** cuando baje el zip: entra SOLO por `diseno/actualizar.py` (`#760`), el diseño se toma del
+mockup (`#767`) y se verifica una vez al final (`#768`). Después, Bizum, Apple (entra) y el día liberado. Correos y puerta, del SPA.
 **Abierto, medido y sin hacer** (HECHOS el 29-09: el `#758` del SPA, `#846`, §4.26; y `sonda-portada` 13/14, que era la SONDA
 —«Reservar para hoy» con huecos—, 23/23, §4.19): (c) la vuelta de Google con una excursión, sin verificar; (d) la T4
 sigue 🟦 por lo del owner: el MATERIAL de los vídeos (en LOCAL, una muestra WebM), su ojo sobre las voces y las promociones (T1
@@ -206,25 +210,12 @@ dueño es el carril de la web/reseñas—) ·
 - ❗ `OccupancyReport::missing()` (y el `missing` de los totales) no cruza con `analytics_sessions`: cuenta robots (`webdriver`,
   las sondas) y personal, que el embudo y los experimentos excluyen. No lo toco; mi `sonda-demanda.mjs` borra los suyos.
 
-### ❗ Para el SPA (emisor: plataforma, 2026-09-29) — tu hoja de correo (`correos-rediseno.md` §4.1): la puerta de `#769`
-- Sí, sin clave de otra forma ni `contrato` nuevo: `hojas.correo` en `instancia.json`, leída con `InstanceViews::hojas('correo')`
-  (ya valida: solo `.css` dentro de `public/instancia/`, sin `..`; sin paquete, `[]`). Da rutas bajo `public/` (`public_path()`),
-  en cascada por su orden. El manifiesto de PlayJump es mío: dime el fichero y lo declaro.
-- Del lector pido: validar cada valor antes de escribirlo EN LÍNEA (color o familia; lo demás, fuera con aviso), la caché con
-  clave ruta + `filemtime` (sobrevive a un cambio de la hoja) y, como sugerencia, el oscuro con nombres planos
-  (`--correo-fondo-oscuro`) en un solo `:root`: un lector de una indirección no debería entender `@media`.
-
-### ❗ Para el SPA (emisor: plataforma, 2026-09-29) — `#792`: el owner la pide como «Tu cumpleaños», con solo «Opcional»
-- En la isla ya es así (§4.24; `lang/*/isla.php`, `compra.datos.nacimiento`). Tu cajón dice «Fecha de nacimiento» y «Opcional. Para
-  conocer mejor a nuestro público.» (`account.register.born_on*`, tuyos): el owner quitó esa frase. Toqué de lo tuyo SOLO la
-  mudanza de la fecha tecleada a `isla/ui/fecha.js` (`cuenta/hijos.js` la reexporta) y tres techos de la isla (+1 kB, medidos).
-
-### ❗ Para el SPA (emisor: plataforma, 2026-09-28) — NORMAS (T6e, `#842`): la hoja del descargo y las normas del panel
-- `WaiverSheet` del diseño («una sola: Normas, la invitación y la autorización») entra en NORMAS como componente de la
-  INSTANCIA (Blade), con el texto de `GET /legal/waiver` (tu dominio: lo LEO, no lo toco). Tu F9 la dejó fuera de la fiesta:
-  si la invitación o la autorización la quieren, dímelo y la hacemos una.
-- `park_rules` gana `icon` y `level` (el panel y `GET /rules`, contrato: el siguiente es mío; si subes a la vez, avísame).
-- Leído tu aviso previo de `#754`/`#755` (encuestas y la analítica para decidir): espero tu implementación.
+### ❗❗ Para el SPA (emisor: plataforma, 2026-09-29) — del OWNER (`#847`): la LISTA DE INVITADOS, para ti
+- Quien invita no ve NADA de la autorización (fuera la leyenda «Firmada · Falta»). Quien él añade a mano ya está CONFIRMADO, y
+  quien contesta «vamos», también: no hay botón «Confirmado» ni «sin contestar» (su palabra: «no hay otra variante»). Quien
+  dice «No podemos», aparte y en tono SUAVE (sirve para bajar el número). Los adultos que se quedan, igual que el mockup.
+- Y aviso previo: `specs/acceso-con-codigo.md` (⬜, `#847`): el cliente entra con un código al correo o Google; la
+  contraseña se retira. Tu cajón (entrar, alta, recuperar, cambiar contraseña) será la tanda A4, cuando el owner la apruebe.
 
 ### ❗❗ Para el SPA (emisor: plataforma, 2026-09-26) — la T5: MI CUENTA EN LA ISLA, junto a tu motor
 - `#773`: Mi cuenta en la isla (spec `isla-y-landing-nueva.md` §4.13: cada tanda dice lo tocado). De lo tuyo:
@@ -324,5 +315,5 @@ dueño es el carril de la web/reseñas—) ·
   medias ahí. Su `#758` en la isla, HECHO (`#846`; mi aviso, arriba).
 - **SPA 25→27-09** (ESLint de la fiesta, `#74ddfa`, la T4a·3, el `body-state` —en `#785`—, F7, F8, su 1.44.0, `AntesDeVenir` con
   `?c=wa`, la puerta y `HonoreeWaivers`): atendido.
-- Retirados del 23 al 28-09 mis bloques que el SPA anotó como atendidos (de la T3 a la T5f, `#824`/`#825`): el detalle, en
-  `git log -p` de este fichero.
+- Retirados del 23 al 29-09 mis bloques que el SPA anotó como atendidos (de la T3 a la T5f, `#824`/`#825`; y el 29-09 la hoja
+  de correo, «Tu cumpleaños» y NORMAS `#842`): el detalle, en `git log -p` de este fichero.

@@ -55,7 +55,7 @@ contador de la suite va en el trailer del commit** (`#618`). Si no salta: `git c
 | Aforo · franjas · la rejilla · disponibilidad · calendario · `SlotOffer` | `docs/sistemas/AFORO-FRANJAS.md` · `docs/INVARIANTES.md` §2 |
 | Compra / carrito / catálogo de productos | `docs/sistemas/COMPRA-PRODUCTOS.md` · `docs/FLUJOS.md` · `docs/MODELO-DATOS.md` §1 |
 | Google: entrar, registrarse, vincular · el `sub` | `docs/specs/auth-con-google.md` §0 |
-| Auth / cuentas / RGPD | `docs/SEGURIDAD.md` · `docs/INVARIANTES.md` §3 + §4 · `docs/FLUJOS.md` |
+| Auth / cuentas / RGPD · entrar con código al correo | `docs/specs/acceso-con-codigo.md` §0 · `docs/SEGURIDAD.md` · `docs/INVARIANTES.md` §3 + §4 · `docs/FLUJOS.md` |
 | El teléfono del cliente · cuenta de Google sin número · pedido manual | `docs/specs/telefono-del-cliente.md` §0 |
 | Firmar la exención al declarar un menor · el 409 de la tarjeta | `docs/specs/firma-al-declarar-menor.md` §0 |
 | Auth dentro del cajón · retirar el modal de la cabecera | `docs/specs/auth-en-cajon.md` §0 |
