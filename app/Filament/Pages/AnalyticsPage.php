@@ -18,6 +18,8 @@ use App\Filament\Widgets\Analytics\CustomersMoreWidget;
 use App\Filament\Widgets\Analytics\CustomersOverviewWidget;
 use App\Filament\Widgets\Analytics\CustomersSeriesChart;
 use App\Filament\Widgets\Analytics\DataQualityWidget;
+use App\Filament\Widgets\Analytics\EmailsHeatmapWidget;
+use App\Filament\Widgets\Analytics\EmailsWidget;
 use App\Filament\Widgets\Analytics\ExperimentsWidget;
 use App\Filament\Widgets\Analytics\FunnelChart;
 use App\Filament\Widgets\Analytics\FunnelWidget;
@@ -182,6 +184,9 @@ class AnalyticsPage extends BaseDashboard
             FunnelWidget::class,
             SourcesWidget::class,
             PagesWidget::class,
+            // La C4 de los correos salientes (`#796`): cada correo en conjunto y CUÁNDO abren y pulsan, plegados.
+            EmailsWidget::class,
+            EmailsHeatmapWidget::class,
             DataQualityWidget::class,
         ],
         // T2 de la fiesta (`specs/analitica-fiesta.md` §4.3, `#739`): de reservar a celebrar, por DÍA DE LA FIESTA.

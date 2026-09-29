@@ -15,7 +15,7 @@
   (`EmailUtm::IGNORED_QUERY`); (3) `sendmail` no avisa de entregas ni rebotes: «entregado» no se puede saber, «falló al
   enviar» sí; (4) el píxel de apertura exige consentimiento (LSSI 22.2) y Apple Mail abre solo: las aperturas son
   APROXIMADAS; (5) los escáneres de enlaces de Outlook y Gmail pulsan solos: un clic en el primer segundo tras el envío no cuenta.
-- **Estado**: ✅ aprobada (`#794`: la COPIA 6 meses, las cifras 24); ✅ C1, C2, C2b y C3 en `main` (ojo del owner, 29-09); ▶ C4 «cuándo» (§4.10).
+- **Estado**: ✅ aprobada (`#794`: la COPIA 6 meses, las cifras 24); ✅ C1, C2, C2b y C3 en `main` (ojo del owner, 29-09); 🟦 C4 «cuándo» (§4.14–§4.15).
 - **C2**: `jw_e` va en `EmailUtm::IGNORED_QUERY` y NUNCA en `RouteNormalizer::QUERY_ALLOWLIST` (la analítica es anónima);
   la encuesta no lleva marca (`#754`); el escáner se reconoce por la RÁFAGA, no por el reloj (§4.8).
 - **Apuntar un envío NUNCA rompe el envío** (`#794`): un fallo del registro reintentaría el trabajo y duplicaría el correo.
@@ -298,6 +298,52 @@ interruptor; la vista previa sin píxel; y el export (1.54.0). Pruebas: `Mail\Em
 4. La sonda pide el píxel como Apple (`Mozilla/5.0`), abre el correo REAL en un iPhone (el navegador pide la imagen al
    pintarlo) y como Gmail. En la base: `apple:apple`, `direct:-` (móvil) y `gmail:repeat`. Su control, sin quitar el píxel
    de la vista previa: abrir la vista previa lo pidió y apuntó una apertura desde el ordenador del panel.
+
+### 4.14 La C4 al detalle: «cuándo» en Marketing — medido el 29-09, antes de codificar · dentro de `#796`
+**Medido**:
+- (a) «Marketing» tiene diez widgets y reglas con guarda: arriba solo las tarjetas del catálogo (≤ 6) y lo demás PLEGADO
+  (`AnalyticsTabsTest`); cada tabla viaja al CSV de su pestaña (`tablesFor()`, `CsvExport`); ningún rótulo dice «sesión»,
+  «sistema», «bot», «interna» ni «embudo» (`AnalyticsJargonTest`); y «Calidad del dato» va la última (`AnalyticsPageTest`).
+- (b) Ya hay un mapa día × hora, el de la ocupación (`OccupancyHeatmapWidget`, vista `heatmap`), sin plegar.
+- (c) De los 27 correos al cliente, 18 los PROVOCA él en ese momento: su cuenta, sus contraseñas y verificaciones, la
+  confirmación y el fallo del pago, los formularios de después de pagar y los dos avisos de cuando guarda el formulario de
+  invitados. Los otros 9 le LLEGAN: las cancelaciones, cambios y devoluciones del parque, la víspera, el aviso de la
+  analítica, «El cumple se acerca» y la encuesta (estos dos, sin marca: nunca darán datos).
+- (d) La hora del parque es un ajuste (`DisplayTime::timezone()`), y el MySQL de producción puede no tener las tablas de
+  zonas (`CONVERT_TZ`): el reparto por hora se hace en PHP.
+
+**Decidido**:
+1. **Un grupo PLEGADO, «Los correos»**, en «Marketing» antes de «Calidad del dato», con dos piezas:
+   - la tabla POR CORREO de los que salieron en el periodo: enviados, % con clic y % abiertos (aprox.), los dos entre los
+     medidos, y la mediana de lo que tardan en pulsar;
+   - «Cuándo abren y pulsan»: el mapa día × hora de los CLICS que cuentan (el dato fiable) y el de las APERTURAS que cuentan
+     (aprox.), SOLO de los correos que le llegan (`EmailTiming::RECEIVED`).
+2. **Solo en conjunto** (`#793`, `RGPD-07`): una celda de 1 a 4 se escribe «—», y un % sobre menos de 5 medidos, también.
+3. **El censo**: `EmailTiming::PROVOKED` y `RECEIVED` reparten los 27 correos sin huecos ni solapes. Un correo nuevo sin
+   clasificar pone la suite en rojo.
+4. **El periodo** son los envíos cuyo `sent_at` cae en él; sus clics y aperturas cuentan aunque lleguen después.
+5. **Al CSV de «Marketing»**, las mismas tablas (el mapa, como tabla día × hora).
+6. **Fuera, por ahora**: las compras que trae cada correo (§4.4) y el experimento de la hora de envío (§4.10 (5)), con los
+   correos de marketing.
+7. **Las SUMAS del mapa** (añadido al verlo en pantalla, 29-09): «Todo el día» por día y «Toda la semana» por hora, cada una
+   en su escala y con los mismos mínimos. Con poco volumen casi todas las casillas se quedan por debajo de 5, y las sumas son
+   las que contestan «¿a qué hora?» y «¿qué día?». El mapa se reparte si el TOTAL llega a 5.
+
+### 4.15 La C4, lo construido (29-09; 🟦 en `wip/correos-c4`, falta el ojo del owner)
+Construido: `EmailTiming` (el censo), `Filament\Analytics\EmailsReport`, `EmailsWidget` (la tabla por correo) y
+`EmailsHeatmapWidget` (los dos mapas con sus sumas), plegados en «Marketing» antes de «Calidad del dato» y en su CSV; la
+rejilla del mapa sale a `heatmap-grid` (la comparten la ocupación y los correos). Pruebas: `Analytics\EmailsReportTest` (7);
+`AnalyticsPageTest`, con los dos widgets nuevos. Arnés `SOLO=C4`.
+
+**Lo que enseñó**:
+1. ⚠️ **Un mapa con mínimos no contesta con poco volumen.** Con un mes del fixture (252 envíos, 93 clics de correos que
+   llegan), solo 20 clics caían en casillas de 5 o más: casi todo «—». Las sumas por hora y por día sí contestan (las 18:00,
+   con 23 de 93). Lo vio la pantalla, no la prueba.
+2. **La sonda cruza con una consulta APARTE** (`c4-esperado.php`: SQL propia y el reparto a mano, sin `EmailsReport`). Las 98
+   casillas, las 7 sumas por día y las 15 por hora coinciden, con la misma regla de mínimos.
+3. El tema del panel escanea `resources/views/filament/**` y `public/build` no se versiona: una clase nueva en una vista no
+   existe hasta `npm run build`. En producción lo compila el despliegue.
+4. Un hijo de `grid` se ensancha al ancho de su tabla (`min-width: auto`) y la sección recortaba la nota a 390: `min-w-0`.
 
 ## 5. Impacto en invariantes
 

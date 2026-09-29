@@ -378,6 +378,9 @@ número móvil»; y de las compras: «clientes recurrentes sí, eso me sirve». 
 ▶▶ **Rehecha el 28-09 (owner)**: el **gasto en anuncios, aplazado** («no lo haremos ahora mismo»); los **correos por cliente
 van PRIMERO y con spec propia**, `correos-salientes.md` (⬜ borrador): ver lo que recibe cada cliente, su vista previa y si
 lo abrió y pulsó, y DESPUÉS, en conjunto, a «Marketing». Lo de abajo es el plan de antes y queda como referencia.
+▶▶ **29-09: hecho allí**, C1→C4 (`#794`→`#797`): «Marketing» gana dos grupos plegados antes de «Calidad del dato», «Los
+correos» (por correo) y «Cuándo abren y pulsan» (día × hora con sus sumas, solo con los correos que al cliente le llegan).
+Detalle: `correos-salientes.md` §4.14–§4.15.
 
 - **Gasto tecleado**: `ad_spend` (futuro): plataforma, campaña (el `utm_campaign` de sus anuncios), mes, céntimos, nota.
   Un formulario en «Marketing → Gasto en anuncios», con permiso propio (`analytics.manage` (futuro), admin por defecto) y

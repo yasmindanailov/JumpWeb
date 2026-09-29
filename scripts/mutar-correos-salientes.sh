@@ -18,13 +18,14 @@
 set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
-FILTER='EmailSendsRecordTest|EmailSendsPanelTest|EmailClicksTest|EmailUtmTest|EmailOpensTest'
+FILTER='EmailSendsRecordTest|EmailSendsPanelTest|EmailClicksTest|EmailUtmTest|EmailOpensTest|EmailsReportTest|AnalyticsPageTest'
 # Modo «solo una tanda» (`SOLO=C2 bash scripts/mutar-correos-salientes.sh`), como en `mutar-analitica-decidir.sh`: corre SOLO
 # las mutaciones de esa sección y con SUS pruebas. La base verde y el CONTROL de esa sección corren siempre.
 declare -A FILTRO_DE=(
     [C1]='EmailSendsRecordTest|EmailSendsPanelTest'
     [C2]='EmailClicksTest|EmailSendsPanelTest|EmailSendsRecordTest|EmailUtmTest'
     [C3]='EmailOpensTest|EmailSendsPanelTest|EmailSendsRecordTest|EmailClicksTest'
+    [C4]='EmailsReportTest|AnalyticsPageTest'
 )
 SOLO="${SOLO:-}"
 SECCION=''
@@ -64,6 +65,12 @@ FICHEROS=(
     routes/web.php
     resources/views/vendor/mail/html/layout.blade.php
     database/migrations/2026_09_29_070000_add_email_open_tracking.php
+    app/Domain/Platform/Services/Analytics/EmailTiming.php
+    app/Filament/Analytics/EmailsReport.php
+    app/Filament/Widgets/Analytics/EmailsWidget.php
+    app/Filament/Widgets/Analytics/EmailsHeatmapWidget.php
+    app/Filament/Analytics/CsvExport.php
+    app/Filament/Pages/AnalyticsPage.php
 )
 copia() { echo "$TMP/$(echo "$1" | tr '/' '_')"; }
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$(copia "$f")" "$f"; touch "$f"; done; }
@@ -483,6 +490,91 @@ mutar "la poda no arrastra las aperturas (la FK sin cascada)" "database/migratio
 control "un comentario del servicio de las aperturas" "$OS" \
   'Apunta cada vez que se pide el píxel de un envío' \
   'Apunta cada vez que se pidió el píxel de un envío'
+
+# ══ C4 · «CUÁNDO» EN MARKETING (`#796`, §4.14) ═══════════════════════════════════════════════════
+SECCION=C4
+ER=app/Filament/Analytics/EmailsReport.php
+EW=app/Filament/Widgets/Analytics/EmailsWidget.php
+EH=app/Filament/Widgets/Analytics/EmailsHeatmapWidget.php
+
+mutar "el censo deja un correo provocado entre los que llegan" "app/Domain/Platform/Services/Analytics/EmailTiming.php" \
+  "    public const RECEIVED = [
+        'order_cancelled'," \
+  "    public const RECEIVED = [
+        'order_confirmation',
+        'order_cancelled',"
+
+mutar "el mapa con TODOS los correos (los provocados darían una hora falsa)" "$ER" \
+  "        return \$query->whereIn('s.mail_key', EmailTiming::RECEIVED);" \
+  '        return $query;'
+
+mutar "el mapa de clics cuenta los de un escáner" "$ER" \
+  "            ->whereNull('c.verdict')->pluck('c.clicked_at');" \
+  "            ->pluck('c.clicked_at');"
+
+mutar "el mapa de aperturas cuenta las de Apple" "$ER" \
+  "            ->whereNull('o.verdict')->pluck('o.opened_at');" \
+  "            ->pluck('o.opened_at');"
+
+mutar "el mapa en la hora UTC y no en la del parque" "$ER" \
+  "            \$local = CarbonImmutable::parse((string) \$instant, 'UTC')->setTimezone(\$timezone);" \
+  "            \$local = CarbonImmutable::parse((string) \$instant, 'UTC');"
+
+mutar "el periodo se come los envíos de después" "$ER" \
+  "            ->where('s.sent_at', '<', \$window->utcTo()->format('Y-m-d H:i:s'));" \
+  "            ->where('s.sent_at', '<', '2999-01-01 00:00:00');"
+
+mutar "la tabla cuenta como clic el de un escáner" "$ER" \
+  "            ->whereNull('c.verdict')->groupBy('c.email_send_id')" \
+  "            ->groupBy('c.email_send_id')"
+
+mutar "la tabla cuenta como abierto lo de Apple" "$ER" \
+  "            ->whereNull('o.verdict')->groupBy('o.email_send_id')" \
+  "            ->groupBy('o.email_send_id')"
+
+mutar "lo que tardan en pulsar, hasta el ÚLTIMO clic" "$ER" \
+  "DB::raw('MIN(c.clicked_at) as first_at')" \
+  "DB::raw('MAX(c.clicked_at) as first_at')"
+
+mutar "la tabla enseña recuentos de 1 a 4" "$EW" \
+  '        return $n > 0 && $n < EmailsReport::MIN_CELL ?' \
+  '        return false ?'
+
+mutar "un % sobre menos de cinco medidos" "$EW" \
+  "            \$of < EmailsReport::MIN_CELL => '—'," \
+  "            false => '—',"
+
+mutar "la mediana con menos de cinco" "$EW" \
+  "            \$m['clicks_timed'] < EmailsReport::MIN_CELL ? '—'" \
+  "            false ? '—'"
+
+mutar "el mapa enseña casillas de 1 a 4" "$EH" \
+  '        if ($n < EmailsReport::MIN_CELL) {' \
+  '        if (false) {'
+
+mutar "el mapa se reparte sin llegar a cinco en total" "$EH" \
+  '        if ($total >= EmailsReport::MIN_CELL) {' \
+  '        if ($total >= 1) {'
+
+mutar "«Todo el día» no suma" "$EH" \
+  '                $byDay[$weekday] += $n;' \
+  '                $byDay[$weekday] += 0;'
+
+mutar "«Toda la semana» no suma" "$EH" \
+  '                $byHour[$hour] += $n;' \
+  '                $byHour[$hour] += 0;'
+
+mutar "el CSV de «Marketing» sin los correos" "app/Filament/Analytics/CsvExport.php" \
+  '                ...(new EmailsWidget)->tablesFor($window, $comparison),' \
+  ''
+
+mutar "la pestaña «Marketing» sin los correos" "app/Filament/Pages/AnalyticsPage.php" \
+  '            EmailsWidget::class,' \
+  ''
+
+control "un comentario del informe de los correos" "$ER" \
+  'LOS CORREOS, EN CONJUNTO' \
+  'LOS CORREOS, JUNTOS'
 
 echo
 echo "$muerden/$total muerden${SOLO:+ (solo la tanda $SOLO)}"

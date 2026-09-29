@@ -9,6 +9,8 @@ use App\Filament\Analytics\Metrics\OccupancyMetrics;
 use App\Filament\Widgets\Analytics\AudienceWidget;
 use App\Filament\Widgets\Analytics\CustomersBreakdownWidget;
 use App\Filament\Widgets\Analytics\DataQualityWidget;
+use App\Filament\Widgets\Analytics\EmailsHeatmapWidget;
+use App\Filament\Widgets\Analytics\EmailsWidget;
 use App\Filament\Widgets\Analytics\FunnelWidget;
 use App\Filament\Widgets\Analytics\MoneyBreakdownWidget;
 use App\Filament\Widgets\Analytics\OccupancyBreakdownWidget;
@@ -141,6 +143,9 @@ final class CsvExport
                 ...(new FunnelWidget)->tablesFor($window, $comparison),
                 ...(new SourcesWidget)->tablesFor($window, $comparison),
                 ...(new PagesWidget)->tablesFor($window, $comparison),
+                // La C4 de los correos (`#796`): cada correo y CUÁNDO abren y pulsan, con los MISMOS mínimos que la pestaña.
+                ...(new EmailsWidget)->tablesFor($window, $comparison),
+                ...(new EmailsHeatmapWidget)->tablesFor($window, $comparison),
                 // T3a (`#759`): los eventos rechazados viven en «Calidad del dato».
                 ...(new DataQualityWidget)->tablesFor($window, $comparison),
             ],

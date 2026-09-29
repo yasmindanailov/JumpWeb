@@ -343,6 +343,11 @@ emails.track_clicks 0` lo apaga) y los envíos de sonda 3–8 y 11–12 del clie
 emails.track_opens 0` lo apaga), una fila de `cookie_consent_logs` del cliente 593 con «análisis» aceptado (se quita
 borrándola) y los envíos 19 y 20 con sus aperturas; el 21, del control sin la protección, se borró.
 
+(21) **De la C4 (29-09, `#796`)**: `c4-ojo.php` (en la carpeta de auditoría) monta un mes de correos con el destinatario
+`ojo-c4@jumpweb.test` y sin cuenta —vísperas a las 18:00, cancelaciones con la ráfaga de un escáner, confirmaciones—, con sus
+clics y aperturas repartidos, para ver «Marketing → Los correos» y «Cuándo abren y pulsan». `OJO=desmontar` lo borra todo
+(clics y aperturas en cascada). La sonda: `sonda-c4-cuando.mjs`, con `ESPERADO` de `c4-esperado.php`.
+
 ## 9 · La foto vieja del carril (mudada VERBATIM de `carriles/spa.md` el 2026-09-29, su techo)
 
 - ✅ **27-09, TODO EN `main` Y APROBADO POR EL OWNER**: **F7** (`#752`, la exención de quien cumple: la lista y su
