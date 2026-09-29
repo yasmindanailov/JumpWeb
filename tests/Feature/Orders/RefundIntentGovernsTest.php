@@ -244,7 +244,8 @@ class RefundIntentGovernsTest extends ApiTestCase
         $this->assertTrue($result['ok'], json_encode($result));
 
         // El panel: la línea del libro y, debajo, el motivo — fuera de la línea que lee el cliente.
-        $page = $this->actingAs($staff, 'web')->get('/admin/orders/'.$order->code)->assertOk()->getContent();
+        // Por la puerta del PANEL (`#850`): una sesión de la web ya no lo abre.
+        $page = $this->actingAs($staff, 'admin')->get('/admin/orders/'.$order->code)->assertOk()->getContent();
         $this->assertStringContainsString('Descuento por cortesía', $page);
         $this->assertStringContainsString('data-book-note', $page);
         $this->assertStringContainsString(__('admin.orders.book.movement_note', ['note' => $note]), $page);

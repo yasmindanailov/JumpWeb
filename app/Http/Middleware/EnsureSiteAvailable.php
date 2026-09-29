@@ -52,7 +52,9 @@ class EnsureSiteAvailable
 
         // Bypass del personal del panel (admin/staff): ve la web real para hacer QA, tanto del
         // mantenimiento de sitio como del de una página concreta (el layout pinta el aviso).
-        $user = $request->user();
+        // ⚠️ Por el guard del PANEL (`#850`): es quien entró por su login el que hace QA; una sesión de la web con una
+        // cuenta del personal ya no abre el panel, y tampoco le salta el mantenimiento.
+        $user = $request->user('admin');
         $isStaff = $user !== null && ($user->hasRole('admin') || $user->hasRole('staff'));
 
         // Precedencia: sitio entero (item 2) por encima de página concreta (item 1).

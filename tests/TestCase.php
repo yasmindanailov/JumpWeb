@@ -141,6 +141,18 @@ abstract class TestCase extends BaseTestCase
             $user->withAccessToken(new TransientToken);
         }
 
+        // **Sin guard, el usuario de la prueba entra por las DOS puertas de sesión** (`#850`, `specs/panel-a-salvo.md` §4.1):
+        // desde que el panel tiene su propio guard (`admin`), «un miembro del personal que ha entrado» es un usuario en los
+        // dos; plantarlo solo en el de por defecto daría pruebas del panel que fallan por algo que en producción no pasa.
+        // Las que prueban la FRONTERA entre las dos puertas nombran su guard, y entonces solo entra por esa.
+        if ($guard === null) {
+            foreach (['web', 'admin'] as $puerta) {
+                if ($puerta !== Auth::getDefaultDriver()) {
+                    Auth::guard($puerta)->setUser($user);
+                }
+            }
+        }
+
         return parent::be($user, $guard);
     }
 

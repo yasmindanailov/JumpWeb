@@ -100,6 +100,13 @@
   (90 días). Un código de entrar verificado también lo confirma (`email_verified_at`). El riesgo de registrar el correo de
   otro queda como hoy.
 - **Si en la puerta no llega el código** a quien vuelve: el personal lo busca por su nombre, como hoy.
+- ⚠️⚠️ **Medido el 29-09, y es de ANTES**: `User::purgeSessions()` solo actúa con `session.driver = database`, y
+  `ENTORNOS.md` §6 da producción con `SESSION_DRIVER=redis` (medido el 01-09; hoy, sin mirar). Si sigue así, «cerrar las
+  demás sesiones», el cambio de contraseña y el borrado de la cuenta NO cierran las sesiones de otros dispositivos allí
+  (`RGPD-06`). Con sesiones de 90 días pesa más: la A2 lo resuelve (la sesión en base de datos, como staging `#137`, o una
+  revocación que no dependa del driver), medido en producción antes de elegir.
+- ⚠️ **El panel no se abre con estas entradas** desde `#850` (`SEC-14`, `specs/panel-a-salvo.md`): el código al correo y
+  Google abren la WEB; el panel tiene su propio guard. Sin eso, este acceso habría sido un atajo al panel.
 - **La app** (`#630`): `POST /auth/tokens` con correo + código en vez de contraseña; la rotación, igual.
 - **Acciones sensibles**: `current_password` → un código `confirmar` al correo de la cuenta (borrar la cuenta, cambiar el
   correo, desvincular Google, cerrar las demás sesiones).

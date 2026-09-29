@@ -101,7 +101,8 @@ class BookSurfacesParityTest extends ApiTestCase
     /** La ficha entera lleva el bloque del pedido y una tarjeta por reserva, del MISMO pintor. */
     public function test_the_order_page_has_the_block_and_one_card_per_reservation(): void
     {
-        $page = $this->actingAs($this->staff, 'web')->get('/admin/orders/'.$this->order->code)->assertOk()->getContent();
+        // Por la puerta del PANEL (`#850`): una sesión de la web ya no lo abre.
+        $page = $this->actingAs($this->staff, 'admin')->get('/admin/orders/'.$this->order->code)->assertOk()->getContent();
 
         $this->assertSame(3, substr_count($page, 'data-book>'), 'el bloque del pedido y una tarjeta por reserva');
         $this->assertStringContainsString(__('admin.orders.order_financial.heading'), $page);

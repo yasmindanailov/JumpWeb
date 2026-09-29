@@ -101,6 +101,8 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->viteTheme('resources/css/filament/admin/theme.css')
+            // Su PROPIO guard (`docs/specs/panel-a-salvo.md`, `#850`): una sesión de la web no abre el panel.
+            ->authGuard('admin')
             ->login()
             // Avatar LOCAL (data-URI) en vez del ui-avatars.com externo, que la CSP bloquea.
             ->defaultAvatarProvider(InitialsAvatarProvider::class)

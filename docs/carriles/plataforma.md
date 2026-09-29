@@ -4,9 +4,9 @@
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
 > **820–849 AGOTADA con `#849`** → sigue en **850–879** (del owner, 29-09; centena `decisiones/800-899.md`) · Último usado:
-> **`#849`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **`#850`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#846`) · Actualizado: **2026-09-29**
-> (tarde: `#758` en la isla ✅ `#846`; la lista del owner antes de desplegar, `#847`; el acceso con código ✅ `#848`/`#849`).
+> (tarde: `#758` en la isla ✅ `#846`; la lista del owner, `#847`; el acceso con código ✅ `#848`/`#849`; el panel, su guard ✅ `#850`).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
 > llévaselo con la medida, como el SPA en `#724`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -48,8 +48,10 @@ Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas,en
 17/17) y la compra (`sonda-isla.mjs`).
 ▶▶▶ **AHORA, la lista del owner ANTES DE DESPLEGAR** (`#847`, 29-09), mientras él diseña: **(1)** `specs/acceso-con-codigo.md` ✅
 (`#848`/`#849`: una puerta —con cuenta, código; nuevo, sus datos SIN código: hay cola en la puerta—, contraseñas borradas,
-90 días, solo el código) → su A1 (el código en el servidor); **y**, **(2)** el panel en una dirección secreta (`/admin` → «no existe») con
-authenticator SOLO para administradores (Filament 5 lo trae: `MultiFactor/App`, sin dependencia nueva); **(3)** el SEO completo
+90 días, solo el código) → su A1 (el código en el servidor) —⚠️ antes, sus trampas nuevas: las sesiones en Redis de producción
+(`RGPD-06`) y que el acceso no abra el panel—; **y (2) antes que la A1**, `specs/panel-a-salvo.md`: **P1 ✅** (`#850`, `SEC-14`: el
+panel con su propio guard; sin eso el código al correo sería un atajo al panel) → **P2** la dirección secreta (`PANEL_PATH`,
+`/admin` → 404) → **P3** el authenticator SOLO de los administradores (Filament 5, `MultiFactor/App`); **(3)** el SEO completo
 (textos de playjump.es, el owner los revisa al final); **(4)** las imágenes al compartir (hoy: logotipo u `og-image.jpg`): la
 web, compuesta con la marca; la de la INVITACIÓN, la invitación misma —nombre, edad, día, hora, su diseño—, generada para cada
 una (`#849`; medir antes qué permite producción para generarla). La lista de invitados, al SPA (buzón).
@@ -153,6 +155,8 @@ hay formulario (`#839`); pasarlos a la reserva es dato del panel. Y:
 `.githooks/pre-push` · `scripts/huella-enrutador.py` · `scripts/partir-decisiones.py` · `scripts/deploy.sh` (las
 guardas 8 y 9) · `scripts/mutar-guarda8.sh` · `CHANGELOG.md` · `phpstan.neon` · `phpstan-baseline.neon` ·
 `eslint.config.js` · `eslint-suppressions.json` (la poda quien arregla) · `scripts/mutar-analisis-estatico.sh` ·
+**EL ACCESO Y EL PANEL A SALVO** (`#847`→`#850`): sus dos specs, el guard `admin` de `config/auth.php`, `PanelOwnGuardTest`,
+`scripts/{sonda-panel.mjs,mutar-panel-guard.sh}` (y, AVISANDO, lo compartido que toquen: `layout.blade.php`, `routes/web.php`) ·
 **LA ISLA Y LA LANDING NUEVA** (`#681`, `#682`): la spec, la isla `resources/js/isla/**`, sus bancos y sondas
 (`scripts/banco-{isla,piezas,compra}*`, `scripts/pixel.mjs`, `scripts/sonda-{embudo,isla,cuenta,movimiento,isla-movimiento,banco-movimiento,isla-rendimiento,compra-directa,demanda}.mjs`,
 `scripts/sonda-cuenta-datos.php`, `scripts/mutar-{t5f,hijos-de-producto,demanda-isla}.sh`), `sidebar/reanudar.js`,
@@ -211,6 +215,13 @@ dueño es el carril de la web/reseñas—) ·
   por página. Si cambias su firma, avísame.
 - ❗ `OccupancyReport::missing()` (y el `missing` de los totales) no cruza con `analytics_sessions`: cuenta robots (`webdriver`,
   las sondas) y personal, que el embudo y los experimentos excluyen. No lo toco; mi `sonda-demanda.mjs` borra los suyos.
+
+### ❗❗ Para el SPA (emisor: plataforma, 2026-09-29) — `#850`: EL PANEL TIENE SU PROPIO GUARD (`admin`), `SEC-14`
+- Una sesión de la web ya no abre el panel, ni al revés. **Tus pruebas**: `actingAs($u)` sin guard entra por las dos
+  (`TestCase::be()`); si nombras `'web'` para visitar el panel, será un 302 → usa `'admin'`. Tu código del panel: nada de
+  `auth('web')` (lo vigila `PanelOwnGuardTest`); Filament y `auth:admin` hacen de `admin` el de por defecto.
+- ⚠️ Toqué lo COMPARTIDO sin avisar antes, y lo digo: `layout.blade.php` (el aviso del mantenimiento lee `auth('admin')`, una
+  línea) y las trece rutas del personal de `routes/web.php` (`auth` → `auth:admin`). Después vendrá `PANEL_PATH` (P2).
 
 ### ❗❗ Para el SPA (emisor: plataforma, 2026-09-29) — del OWNER (`#847`): la LISTA DE INVITADOS, para ti
 - Quien invita no ve NADA de la autorización (fuera la leyenda «Firmada · Falta»). Quien él añade a mano ya está CONFIRMADO, y
@@ -273,17 +284,9 @@ dueño es el carril de la web/reseñas—) ·
   Las de altura (`zones.height_*`) tienen la misma pega y son tuyas: no las toco. ▶ 26-09 (`#775`): dos más, mías y
   aditivas, `products.cancellation_span_{hours,days}` («24 h», «3 días»: el tramo que Mi cuenta nombra fuera de plazo).
 
-### ❗ Para el carril de la WEB (emisor: plataforma, 2026-09-23) — dos huecos de contenido, MEDIDOS
-- ▶ Publicar `/servicios` como hechos (`#672`) destapó dos cosas **tuyas**, que son de tu T6 de contenido
-  y que no toco yo (`#621`). Las dos en `landing_services.specs` de `excursionescolegio`, dato del panel:
-- ⚠️ **Faltan fichas en en/fr**: el español trae **tres** («Duración», «Horario», «Grupo · De 30 a 100
-  alumnos») y el inglés y el francés solo **dos** — «Grupo» no existe en ninguno de los dos.
-- ❗❗ **Y «Horario» NO dice lo mismo en cada idioma**, que es peor que faltar: en español es «Todos los
-  días, de 8:00 a 21:30» y en inglés «Outside opening» / en francés «Hors ouverture». Son afirmaciones
-  distintas sobre CUÁNDO se hacen las excursiones, y una de las dos está mal. **No sé cuál**: lo decide
-  quien conozca la operación.
-- ▶ Hoy no hay exposición —la página está apagada y los packs inactivos—, pero la API ya lo sirve tal cual
-  a cualquier landing que lo pida.
+### Para el carril de la WEB (emisor: plataforma, 2026-09-23) — dos huecos de contenido: MUDADOS el 29-09
+- A `specs/contenido-y-copys.md` §5, P7 (las fichas de las excursiones en en/fr y su «Horario» contradictorio), para la revisión
+  final del owner: la landing es hoy de este carril (`#681`) y la web no se mueve desde el 13-09.
 
 ### ❗❗ Para el carril de la WEB (emisor: plataforma, 18→21-09; los CUATRO avisos, fundidos)
 - ▶ **`resources/views/home.blade.php` NO EXISTE** (`#666`), como ya no existe `pages/`: las NUEVE vistas
@@ -305,14 +308,13 @@ dueño es el carril de la web/reseñas—) ·
 - ⚠️ **Las clases CSS sin consumidor ya no son invisibles** (`#667`): se podaron 119 (−20,3 KB) y lo que
   queda lo vigila `LandingCssHasNoOrphansTest`, con deuda declarada de 15. **Las 9 del hero vacío siguen
   intactas** porque las aparcó el owner (`#226`). Si añades CSS, su consumidor tiene que nacer con él.
-- ▶ **Medido y TUYO, sin tocar**: los importes que siguen partibles en `/` y `/normas` son PROSA del panel
-  («por 2 €», «un cargo de 10 €»), y esa prosa sale en ESPAÑOL también en en/fr ·
-  `LandingAddonPresenter::unique()` no tiene consumidor desde `#583` y escribe el dinero a su manera ·
+- ▶ **Medido y TUYO, sin tocar**: la prosa del panel con importes, en español también en en/fr (mudada a
+  `contenido-y-copys.md` §5, P8, el 29-09) · `LandingAddonPresenter::unique()` no tiene consumidor desde `#583` y escribe el dinero a su manera ·
   `mutar-cabecera.py` tiene cuatro mutantes que ya no aplican y `mutar-bandas.py` uno.
 
 ### Atendido
 - **SPA 27→29-09** (`#757`, `#792` —en la isla ✅, §4.24—, `#794`, C2/C2b/C3 `#795`→`#797` hasta 1.54.0, TP·3b `#793`, T3d):
-  leídos y migrado; nada mío a medias. Su `#800`/`#801` (la hoja de correo), contestado arriba el 29-09.
+  leídos y migrado; nada mío a medias. Su hoja de correo de PlayJump (`ace8d0a`), declarada en `instancia.json` (`da0f84d`): `hojas('correo')` la da.
 - **SPA 28-09** (la T3 de la analítica: los dos textos de mi hub de Ajustes; el aviso previo de la T3c·2): leído, nada mío a
   medias ahí. Su `#758` en la isla, HECHO (`#846`; mi aviso, arriba).
 - **SPA 25→27-09** (ESLint de la fiesta, `#74ddfa`, la T4a·3, el `body-state` —en `#785`—, F7, F8, su 1.44.0, `AntesDeVenir` con

@@ -347,6 +347,8 @@ Cuando el español esté aprobado. **Hecho cuando** las claves nuevas y cambiada
 | P4 | URL de Facebook e imagen para compartir la web | se pide al ejecutar T1 |
 | P5 | Datos por alumno en las excursiones (o solo la autorización por enlace) | se pregunta al ejecutar T1 |
 | P6 | Estado «Completado» de un pedido pagado (se lee como «ya pasó») | ✅ **«Confirmado»** (`#588`, `[DECIDIDO owner]`) |
+| P7 | Las fichas de `excursionescolegio` (`landing_services.specs`, dato del panel), medidas el 23-09 al publicar `/servicios` como hechos (`#672`): el español trae TRES («Duración», «Horario», «Grupo · De 30 a 100 alumnos») y en/fr solo dos, sin «Grupo»; y **«Horario» dice cosas distintas**: «Todos los días, de 8:00 a 21:30» frente a «Outside opening» / «Hors ouverture» —una de las dos está mal; lo decide quien conozca la operación—. La API lo sirve tal cual (mudado del buzón de plataforma el 29-09; era un aviso a la web) | para la revisión final del owner |
+| P8 | Importes en PROSA del panel que salen en ESPAÑOL también en en/fr («por 2 €», «un cargo de 10 €»), medidos el 18→21-09 en `/` y `/normas` de la web vieja (mudado del buzón de plataforma el 29-09; revisar contra las páginas nuevas) | para la revisión final del owner |
 
 ## Anexo · La fila del enrutador, mudada el 2026-09-16
 

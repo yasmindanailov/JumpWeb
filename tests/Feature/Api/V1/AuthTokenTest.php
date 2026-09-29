@@ -279,8 +279,9 @@ class AuthTokenTest extends ApiTestCase
         $admin = $this->customer('admin@jumpweb.test');
         $admin->roles()->sync([Role::where('name', 'admin')->value('id')]);
 
-        // Control: con SESIÓN ese mismo usuario sí entra — si no, la redirección de abajo no probaría nada.
-        $this->actingAs($admin, 'web')->get('/admin')->assertOk();
+        // Control: con la sesión del PANEL ese mismo usuario sí entra — si no, la redirección de abajo no probaría nada.
+        // (Desde `#850` el panel tiene su propio guard: una sesión de la web tampoco lo abre, `PanelOwnGuardTest`.)
+        $this->actingAs($admin, 'admin')->get('/admin')->assertOk();
         Auth::forgetGuards();
         $this->app['auth']->shouldUse('web');
 

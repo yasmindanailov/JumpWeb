@@ -83,7 +83,7 @@ contador de la suite va en el trailer del commit** (`#618`). Si no salta: `git c
 | Contenido y copys · festivos · jerga de la web | `docs/specs/contenido-y-copys.md` §0 |
 | Diseño previo a implementación (spec) | `docs/specs/PLANTILLA.md` · `docs/CONVENCIONES.md` §5 |
 | Cookies / consentimiento | `docs/sistemas/COOKIES.md` · `docs/SEGURIDAD.md` |
-| Panel admin / puerta / operación diaria | `docs/PANEL-ADMIN.md` · `docs/OPERATIVA-SECTOR-ORIGEN.md` |
+| Panel admin / puerta / operación diaria · entrar al panel | `docs/PANEL-ADMIN.md` · `docs/OPERATIVA-SECTOR-ORIGEN.md` · `docs/specs/panel-a-salvo.md` §0 |
 | El asistente de «Crear pedido» · pasos · carrito · desenlace | `docs/specs/asistente-crear-pedido.md` §0 |
 | UI/UX del panel · el panel en tablet · ruido y jerarquía | `docs/specs/auditoria-panel-admin.md` §0 |
 | Menú del panel · añadir un Resource/Page · Ajustes · buscador · puerta en tablet · rol `puerta` | `docs/specs/panel-navegacion.md` §0 |

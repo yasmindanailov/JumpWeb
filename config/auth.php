@@ -42,6 +42,13 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+        // EL PANEL solo confía en SU inicio de sesión (`docs/specs/panel-a-salvo.md`, `DECISIONES #850`): una sesión de
+        // la web —contraseña, código al correo o Google— no lo abre, ni la suya abre la web. Mismos usuarios, otra clave
+        // de sesión; lo declara `AdminPanelProvider` y lo exigen las rutas del personal de `routes/web.php`.
+        'admin' => [
+            'driver' => 'session',
+            'provider' => 'users',
+        ],
     ],
 
     /*
