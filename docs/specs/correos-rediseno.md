@@ -17,7 +17,8 @@
   reglas (`#795`, `#797`); (5) los de la reserva, sin ofertas; (6) «nada que ya no sea verdad»: con la cuenta con contraseña
   (23-09), los textos del 8 del brief están desfasados, y el diseño lo dice.
 - **Estado**: 🟦 el orden y el 7, decididos (`#801`); ▶ la R1, la plantilla, con su «al detalle» en §4.1 (roles de color
-  que pone la instancia, iconos teñidos en el servidor); ⬜ lo que el owner tiene «por ahí».
+  que pone la instancia, iconos teñidos en el servidor); ⬜ los textos editables desde el panel (§4.2, pregunta del owner,
+  analizada sin código): espera su respuesta.
 - **Invariantes**: `RGPD-01` (lo enviado), `RGPD-07`, el consentimiento de marketing; `PAY-14` (se encolan).
 
 ## 1. Contexto — medido el 29-09
@@ -115,10 +116,36 @@ una sonda por tanda; los comerciales con su prueba de consentimiento y de «una 
   los 27 pasan a la plantilla nueva sin cambiar su contenido. Cada una, al ojo en Mailpit, en claro y en oscuro.
 - **Compartido (aviso por buzón a plataforma)**: la hoja de correo en el paquete de la instancia y su clave en el manifiesto.
 
+### 4.2 Los textos, editables desde el panel — pregunta del owner (29-09), análisis sin código
+
+> Owner, 29-09: «¿y si hacemos una plantilla general y poder editar los textos con variables desde el panel? ¿cómo lo ves?
+> no escribas código». La plantilla general ya es la R1; lo nuevo es EDITAR los textos.
+
+- **Medido**: 254 textos de correo por idioma (762 en es, en y fr), todos en el producto (`lang/*/emails.php`): cambiar una
+  coma pide un despliegue. Y el copy del brief es de PlayJump (los calcetines, el polígono, «Kids desde 8 €»): con la receta
+  de hoy acabaría DENTRO del producto, contra el principio white-label.
+- **Opciones**: (A) como hoy, los textos en el código: el cliente dentro del producto y un despliegue por cada coma; (B)
+  plantillas LIBRES, con bloques que se añaden, quitan y ordenan en un editor: la más cara y la que rompe las reglas del
+  brief (una acción, el QR, sin ofertas en la reserva, la baja); (C, **la recomendada**) la ESTRUCTURA fija por correo —la
+  del diseño: sus bloques, su orden, lo que sale solo si hace falta, lo legal— y los TEXTOS de cada bloque editables, por
+  correo e idioma, con las variables que ese correo conoce, su vista previa y «volver al texto de fábrica».
+- **Cómo sería la C**: un almacén de textos por correo, bloque e idioma; el de fábrica, neutro y del producto; el del parque,
+  en su base de datos (el copy del brief entra ahí, no en el código). Variables entre llaves (`{nombre}`, `{dia}`, `{hora}`,
+  `{codigo}`…): cada correo declara las suyas con un ejemplo, y al guardar se rechaza una que ese correo no conoce. Sin HTML
+  (a lo sumo negrita y un enlace, con su marca). La vista previa con datos de ejemplo (la de `correos-salientes.md` C1), en
+  claro y en oscuro. Rastro de cada cambio, permiso propio y «sin traducir» cuando falta un idioma.
+- **Lo que NO se edita**: lo legal (por qué lo recibes y la baja de un comercial); los DATOS (el resguardo, el QR, las listas
+  calculadas); y los HECHOS que cambian —plazos, precios, horarios—, que van por variable: un «hasta el viernes» escrito a
+  mano deja de ser verdad («nada que ya no sea verdad», regla 5 del brief).
+- **Coste y momento**: el almacén, la pantalla y la vista previa, una tanda (como la C1 de los salientes). Cada correo se
+  escribe ya contra sus claves en la R2 y la C1, que se iban a rehacer igual: AHORA es el momento más barato; después sería
+  reescribirlos dos veces. Y «por ocasiones» sale casi sola: la misma plantilla, textos libres y un público.
+- ⬜ **Espera al owner**: (1) ¿la C? (2) ¿quién edita? (3) ¿los tres idiomas desde el panel?
+
 ## 7. Revisión y decisión
 
 - ✅ **`[DECIDIDO owner]` 29-09 (`#801`)**: (1) **el 7**: el correo sigue siendo la encuesta anónima y, al terminarla, la
   página de gracias invita a todos a la reseña en Google, sin filtrar por la nota; **si no hay encuesta activa, el correo
   pide solo la reseña**. (2) **Por ocasiones, después** de lo demás. (3) **El orden, el de §4**: la plantilla → la reserva →
   los comerciales automáticos → las felicitaciones → lo demás.
-- ⬜ Espera al owner: «alguna otra cosa que tengo por ahí» (29-09).
+- ✅ «Alguna otra cosa» (29-09): nada más —los comerciales, la plantilla y editar algunos correos—, y la pregunta de §4.2.
