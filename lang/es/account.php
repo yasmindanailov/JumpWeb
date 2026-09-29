@@ -286,9 +286,11 @@ return [
         // cualquier cosa de tu reserva». La anterior —«para avisarte si algo cambia»— **prometía menos
         // de lo que se hace**, y una promesa corta sobre un dato personal se rompe sola.
         'phone_hint' => 'Para llamarte por cualquier cosa de tu reserva.',
-        // TP·1 (`#792`): entera y OPCIONAL, y la pista dice para qué (art. 13). La reutilizan «Tus datos» y la pantalla de Google.
-        'born_on' => 'Fecha de nacimiento',
-        'born_on_hint' => 'Opcional. Para conocer mejor a nuestro público.',
+        // TP·1 (`#792`): entera y OPCIONAL. La reutilizan «Tus datos» y la pantalla de Google. El owner la quiere como en la
+        // isla (29-09): «Tu cumpleaños», con solo «Opcional». ⚠️ Es el RÓTULO: los errores de la API nombran el campo con
+        // `validation.attributes.born_on` («fecha de nacimiento»), no con esto.
+        'born_on' => 'Tu cumpleaños',
+        'born_on_hint' => 'Opcional',
         'password' => 'Contraseña',
         'password_hint' => 'Mínimo 8 caracteres. Evita contraseñas comunes o filtradas.',
         'must_accept' => 'Debes aceptar esta condición para continuar.',

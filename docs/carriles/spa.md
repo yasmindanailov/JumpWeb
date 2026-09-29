@@ -55,9 +55,9 @@
    13a/b, 6b: consentimiento, «una vez», la baja LSSI) → **C2** las felicitaciones (TP·3c; el copy, con el owner) → **C3** las
    ocasiones. El 7: la encuesta y Google en su página de gracias; sin encuesta activa, solo la reseña (`#801`). Los grupos
    8–10, cuando el diseño tenga sus textos. También míos (`#789`): la PUERTA (su diseño, en el próximo zip) y **T2·9** (las
-   reseñas en la API, `#771`: ver si queda la selección o se retira). ⬜ **Pequeño, antes de la R1**: el cajón dice «Fecha de
-   nacimiento» y «Opcional. Para conocer mejor a nuestro público.» (`account.register.born_on*`, es/en/fr); el owner lo quiere
-   como la isla, «Tu cumpleaños» con solo «Opcional» (aviso de plataforma del 29-09, `#792`).
+   reseñas en la API, `#771`: ver si queda la selección o se retira). ✅ **Lo pequeño de antes de la R1, hecho (29-09)**: el
+   cajón dice «Tu cumpleaños» con solo «Opcional», como la isla (`#792`; fr «Ton anniversaire», el tú del cajón); visto en vivo
+   por el owner («perfecto»). ▶ **La R1a empieza** por lo que no espera a plataforma: el molde con los roles neutros del producto.
 2. ⏸ **LA ANALÍTICA PARA DECIDIR (`#755`, `specs/analitica-para-decidir.md`), EN PAUSA tras la T4**: en `main` y aprobadas
    T0→T4, con TP·1→TP·3b y T3d (arneses `SOLO=<tanda>` de `mutar-analitica-decidir.sh`; sondas y fixtures `ojo-tp2.php` y
    `ojo-tp3.php` en `storage/app/audit/`, `CARRIL-SPA` §8 (17) y (22)); ⏸ T3e sin fuente (`#799`); ✗ T5 (`#800`); la TP·3c
@@ -267,8 +267,8 @@ el repo de la instancia (lo nuevo), nunca a `main`.
   código `MIN_REVIEWS = 1` (`#494`): no la toco yo.
 
 ### Atendido
-- **Plataforma 29-09** (`#792`: «Tu cumpleaños» con solo «Opcional», como en la isla): leído; ⬜ **pendiente MÍO**, los
-  textos del cajón `account.register.born_on*` (quitar la frase que el owner quitó), en «por dónde retomar» 1.
+- **Plataforma 29-09** (`#792`: «Tu cumpleaños» con solo «Opcional», como en la isla): ✅ hecho en el cajón el 29-09
+  (`account.register.born_on*`, es/en/fr; los avisos de la API siguen diciendo «fecha de nacimiento»).
 - **Plataforma 28-09** (NORMAS, `#842`: la hoja del descargo, componente de la instancia): leído; la fiesta NO la pide —F9 la
   dejó fuera a propósito: el texto se presenta en el flujo (`waiver-probatorio.md` §4.4)—. `park_rules` con `icon` y `level`: visto.
 - **Plataforma 28-09** (`#836`): `openWith()` pasa el producto de la intención `fiesta` a `drawer_opened`: correcto.

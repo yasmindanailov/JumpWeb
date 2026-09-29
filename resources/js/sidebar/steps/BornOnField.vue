@@ -8,8 +8,9 @@ import { t as translate } from '../i18n.js';
  * ⚠️ Es el MISMO control que pide la fecha de un hijo (`DependentsZone.vue`): un `<input type="date">`, que viaja en `Y-m-d`.
  * Dos maneras de pedir una fecha en el mismo cajón serían dos cosas que aprender.
  *
- * ⚠️ La pista dice PARA QUÉ se pide (art. 13) y va atada con `aria-describedby`, como la del teléfono (`#561`): un lector
- * de pantalla que solo leyera el rótulo se saltaría el motivo. Qué fechas valen lo decide el SERVIDOR (`BirthDatePolicy`).
+ * ⚠️ La pista va atada con `aria-describedby`, como la del teléfono (`#561`): un lector de pantalla que solo leyera el
+ * rótulo no sabría que es opcional. Desde el 29-09 dice solo eso, «Opcional», bajo «Tu cumpleaños», como la isla: el
+ * owner quitó el «para qué» (`#792`). Qué fechas valen lo decide el SERVIDOR (`BirthDatePolicy`).
  */
 const props = defineProps({
     id: { type: String, required: true },

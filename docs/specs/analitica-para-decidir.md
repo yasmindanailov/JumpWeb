@@ -950,7 +950,9 @@ si su formulario la trae (`runRegister`, `runGoogleSignup`, `profile.apply` solo
 **TP·1, lo construido (28-09, ✅ vista y aprobada por el owner en vivo: «perfecto, continuamos»; la pantalla tras Google, solo
 por tests —en local no hay Google—; el formulario de la isla, de plataforma por buzón)**: lo de arriba entero, más la edad de hoy en la ficha
 (`User::age()`, la cuenta de un hijo) y la pieza del cajón `steps/BornOnField.vue` (rótulo, `type="date"`, `autocomplete="bday"` y
-la pista «Opcional. Para conocer mejor a nuestro público.», atada con `aria-describedby`). Pruebas: `Api\V1\HolderBirthDateTest` (10:
+la pista «Opcional. Para conocer mejor a nuestro público.», atada con `aria-describedby`; **desde el 29-09, «Tu cumpleaños» con
+solo «Opcional», como la isla** —el owner quitó la frase; en fr «Ton anniversaire», el tú del cajón—, ✅ en vivo: «perfecto»; y las
+dos altas de la API nombran el campo en sus avisos con `validation.attributes.born_on`, no con el rótulo). Pruebas: `Api\V1\HolderBirthDateTest` (10:
 las tres puertas de la API, el 18.º cumpleaños a las 00:30 de Madrid, «ausente no cambia», el export), `Admin\Users\
 HolderBirthDatePanelTest` (4: el mostrador y sus dos vías sin formulario, la ficha), el censo de `RGPD-01` y los `node --test` del
 alta, Google y «Tus datos»; arnés `SOLO=TP1`. **Lo que enseñó**: (1) `registerCustomerFromData()` es PÚBLICA en Livewire y

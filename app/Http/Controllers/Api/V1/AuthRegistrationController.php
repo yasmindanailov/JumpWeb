@@ -134,7 +134,8 @@ class AuthRegistrationController extends Controller
             'name' => __('account.register.name'),
             'email' => __('account.register.email'),
             'phone' => __('account.register.phone'),
-            'born_on' => __('account.register.born_on'),
+            // ⚠️ El rótulo es «Tu cumpleaños» (`#792`), que en un aviso dice mal: «El campo tu cumpleaños no corresponde…».
+            'born_on' => __('validation.attributes.born_on'),
             'password' => __('account.register.password'),
         ];
     }

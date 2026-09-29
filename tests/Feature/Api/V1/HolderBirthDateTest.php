@@ -90,8 +90,10 @@ class HolderBirthDateTest extends ApiTestCase
             ->assertStatus(422)->assertJsonPath('error.fields.born_on.0', self::FUTURE);
         $this->register('errata@jumpweb.test', ['born_on' => '0198-03-12'])
             ->assertStatus(422)->assertJsonPath('error.fields.born_on.0', self::IMPLAUSIBLE);
+        // ⚠️ El aviso nombra el CAMPO (`validation.attributes`, como «Tus datos»), no su rótulo: el rótulo es «Tu cumpleaños»
+        // (`#792`) y diría «Tu cumpleaños no corresponde al formato…». Las dos puertas, en el caso de Google abajo.
         $this->register('formato@jumpweb.test', ['born_on' => '12/03/1998'])
-            ->assertStatus(422)->assertJsonStructure(['error' => ['fields' => ['born_on']]]);
+            ->assertStatus(422)->assertJsonPath('error.fields.born_on.0', 'fecha de nacimiento no corresponde al formato Y-m-d.');
 
         $this->assertSame(0, User::whereIn('email', ['futura@jumpweb.test', 'errata@jumpweb.test', 'formato@jumpweb.test'])->count());
     }
@@ -121,6 +123,8 @@ class HolderBirthDateTest extends ApiTestCase
         $minor = CarbonImmutable::now('Europe/Madrid')->subYears(12)->toDateString();
         $this->fromDrawer(self::ROOT.'/auth/google/complete', ['name' => 'Ana Google', 'born_on' => $minor])
             ->assertStatus(422)->assertJsonPath('error.fields.born_on.0', self::MINOR);
+        $this->fromDrawer(self::ROOT.'/auth/google/complete', ['name' => 'Ana Google', 'born_on' => '14/02/1987'])
+            ->assertStatus(422)->assertJsonPath('error.fields.born_on.0', 'fecha de nacimiento no corresponde al formato Y-m-d.');
         $this->assertDatabaseMissing('users', ['email' => self::GOOGLE_EMAIL]);
 
         // El 422 no consume el perfil: la misma pantalla, corregida, crea la cuenta.

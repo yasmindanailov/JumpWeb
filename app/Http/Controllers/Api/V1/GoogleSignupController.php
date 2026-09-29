@@ -174,7 +174,7 @@ class GoogleSignupController extends Controller
     {
         return [
             'name' => __('account.register.name'),
-            'born_on' => __('account.register.born_on'),
+            'born_on' => __('validation.attributes.born_on'),   // no el rótulo, «Tu cumpleaños» (`#792`)
         ];
     }
 

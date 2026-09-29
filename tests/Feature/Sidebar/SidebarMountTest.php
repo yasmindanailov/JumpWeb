@@ -975,7 +975,8 @@ class SidebarMountTest extends TestCase
         // con su rótulo y su pista —el «para qué» (art. 13)—, que pintan el alta, la pantalla tras Google y «Tus datos».
         // Medido **10.738 → 10.836 B (+98)**. ⚠️ **Se podó antes**: la pista pasó de «Nos sirve para conocer mejor a quién
         // viene al parque» a «Para conocer mejor a nuestro público» (−16 B). Viaja en `register` porque el alta la pinta
-        // SIN sesión, y «Tus datos» la reutiliza en vez de traer una segunda copia. **10.900 deja 64 B.**
+        // SIN sesión, y «Tus datos» la reutiliza en vez de traer una segunda copia. **10.900 deja 64 B.** El 29-09 el owner
+        // la dejó en «Tu cumpleaños» con solo «Opcional», como la isla: el techo no baja (es un presupuesto, no una medida).
         $this->assertLessThan(
             10900, $bytes,
             "Los textos del montaje con sesión pesan {$bytes} B. Poda antes de subir el techo: el ".

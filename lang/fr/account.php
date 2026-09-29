@@ -237,8 +237,8 @@ return [
         'phone' => 'Téléphone',
         // Le téléphone dit À QUOI IL SERT (`#561`).
         'phone_hint' => "Pour t'appeler à propos de ta réservation, quoi qu'il arrive.",
-        'born_on' => 'Date de naissance',
-        'born_on_hint' => 'Facultatif. Pour mieux connaître notre public.',
+        'born_on' => 'Ton anniversaire',
+        'born_on_hint' => 'Facultatif',
         'password' => 'Mot de passe',
         'password_hint' => 'Au moins 8 caractères. Évitez les mots de passe courants ou compromis.',
         'must_accept' => 'Vous devez accepter cette condition pour continuer.',
