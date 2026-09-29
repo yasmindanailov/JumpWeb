@@ -435,53 +435,6 @@ class GuestFormController extends Controller
     }
 
     /**
-     * **«Escribir el recordatorio»** (T6·6, §4.7): compone el texto con el enlace —y con los nombres
-     * de quienes faltan **solo si el anfitrión marca la casilla**— y deja escrito que avisó.
-     *
-     * ❗❗ **No envía nada** (§2.2): del padre no tenemos correo y no se le pide. Lo que esta pantalla
-     * puede hacer es escribirle el mensaje al anfitrión para que lo pegue donde ya repartió el enlace.
-     *
-     * ⚠️ El texto vuelve por la SESIÓN y no por la URL: lleva los nombres de menores de la lista del
-     * anfitrión, y un `?texto=` acabaría en el historial del navegador y en cualquier referer.
-     *
-     * ⚠️ Escribe SOLO `party_invitations`, así que es su propio POST, como personalizar y descartar.
-     */
-    public function writeReminder(Request $request, OrderItem $reservation): RedirectResponse
-    {
-        $this->authorizeGuestFormAccess($request, $reservation);
-
-        if ($reservation->isFinishedInPractice()) {
-            return redirect()
-                ->to($this->backUrl($request, $reservation))
-                ->with('status', 'guest-form-readonly');
-        }
-
-        $invitations = app(PartyInvitations::class);
-        $invitation = $invitations->forReservation($reservation);
-
-        if ($invitation === null) {
-            abort(404);
-        }
-
-        // La casilla, con la misma trampa que `show_host_phone`: sin marcar **no se envía**, así que
-        // el valor por defecto es «sin nombres» — el que no señala a nadie.
-        $withNames = $request->boolean('with_names');
-
-        // ⚠️ El texto se compone ANTES de marcar el aviso: si la composición fallara, el anfitrión se
-        // habría quedado con una fecha de aviso y sin nada que pegar.
-        $text = $invitations->reminderTextFor($reservation, $withNames);
-
-        $invitations->remind($invitation);
-        $this->partyFact($request, $reservation, 'invitation_reminded', ['listed' => $withNames]);
-
-        // ▶ A WHATSAPP, con el mensaje escrito (F8, `fiesta-sistema-nuevo.md` §4.14, `#753`): el formulario abre una
-        // pestaña nueva y aquí se la manda, en vez de volver a la lista con el texto para copiarlo y pegarlo.
-        // ⚠️ Con nombres de menores si él lo pidió: viajan en el enlace de WHATSAPP, que es su destino, y nunca en una URL
-        // nuestra (la petición es un POST sin ellos); la regla de `#743` —ni en el historial ni en un referer nuestro—.
-        return redirect()->away('https://wa.me/?text='.rawurlencode($text));
-    }
-
-    /**
      * **La invitación SALIÓ por un botón de la lista** (F8, §4.14, `#753`): «Enviar por WhatsApp», «Copiar el enlace» o
      * «Invitar a más», que lo mandan al pulsarse (`sendBeacon`: el enlace de WhatsApp sigue directo). Deja el hecho de la
      * reserva —canal y zona— y la primera vez, `shared_at`.
@@ -641,7 +594,7 @@ class GuestFormController extends Controller
      * cabe no tiene ficha donde pintarse. Los dos son avisos sobre la lista, no filas de la lista.
      *
      * @param  list<array{id: int, child_name: string, attending: bool, companion: string|null, guest_data: array<string, string>, slot_index: int|null, repeated: bool}>  $proposals
-     * @return array{invitation: PartyInvitation, url: string|null, shareable: bool, replies_open: bool, deadline: string, summary: array{yes: int, no: int, pending: int}, action: string, dismiss: string, remind: string, share: string, url_wa: string|null, url_copy: string|null, awaiting: int, reminded_on: string, themes: list<string>, declined: list<array{id: int, child_name: string, slot_index: int|null}>, unplaced: int}|null
+     * @return array{invitation: PartyInvitation, url: string|null, shareable: bool, replies_open: bool, deadline: string, summary: array{yes: int, no: int, pending: int}, action: string, dismiss: string, share: string, url_wa: string|null, url_copy: string|null, themes: list<string>, declined: list<array{id: int, child_name: string, slot_index: int|null}>, unplaced: int}|null
      */
     private function invitationView(Request $request, OrderItem $reservation, array $proposals, bool $readonly): ?array
     {
@@ -674,26 +627,12 @@ class GuestFormController extends Controller
             'dismiss' => $signed
                 ? $reservation->invitationSignedDismissUrl()
                 : route('reservation.invitation.dismiss', ['reservation' => $reservation]),
-            'remind' => $signed
-                ? $reservation->invitationSignedRemindUrl()
-                : route('reservation.invitation.remind', ['reservation' => $reservation]),
             // F8 (`#753`): a dónde avisa cada botón de que la invitación salió, y el enlace de cada canal.
             'share' => $signed
                 ? $reservation->invitationSignedShareUrl()
                 : route('reservation.invitation.share', ['reservation' => $reservation]),
             'url_wa' => $invitations->shareUrlFor($invitation, 'wa'),
             'url_copy' => $invitations->shareUrlFor($invitation, 'copia'),
-            // Quiénes faltan (T6·6): la pantalla solo necesita CUÁNTOS son —para ofrecer la casilla y
-            // decir a cuántos señala—. Los nombres los pone el texto, y el texto lo compone el
-            // dominio: pintarlos aquí sería una segunda copia de la misma lista.
-            'awaiting' => count($invitations->awaitingNamesIn($reservation)),
-            // ⏰ **`dayLabel()` NO convierte de zona** —sus llamantes le pasan un Carbon ya construido
-            // en la del parque—, y `reminded_at` sale de la BD en UTC: sin este `setTimezone` un aviso
-            // escrito a las 00:30 de Madrid se fecharía **el día anterior**. La trampa de `#426`, en
-            // otra superficie.
-            'reminded_on' => $invitation->reminded_at === null
-                ? ''
-                : DisplayTime::dayLabel($invitation->reminded_at->copy()->setTimezone(DisplayTime::timezone())),
             'themes' => PartyInvitation::THEMES,
             'declined' => $invitations->declinedPendingIn($reservation),
             // Los «sí» que llegaron cuando ya no quedaba ficha (§7.1·3): la carrera, dicha. No es una

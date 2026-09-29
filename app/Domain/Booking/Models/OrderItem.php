@@ -773,12 +773,6 @@ class OrderItem extends Model
         return $this->signedGuestFormRoute('reservation.invitation.dismiss');
     }
 
-    /** El enlace firmado de «Escribir el recordatorio» (T6·6, §4.7), tercera puerta del mismo formulario. */
-    public function invitationSignedRemindUrl(): string
-    {
-        return $this->signedGuestFormRoute('reservation.invitation.remind');
-    }
-
     /** El enlace firmado de «la invitación salió» (F8, `#753`): la cuarta puerta del mismo formulario. */
     public function invitationSignedShareUrl(): string
     {

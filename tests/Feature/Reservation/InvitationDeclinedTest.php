@@ -86,13 +86,18 @@ class InvitationDeclinedTest extends TestCase
         // La fila del «no» y la frase de D3 son las de la lista del sistema nuevo (`fiesta.php`): la T4 retiró las
         // claves viejas, que este test mantenía vivas porque su texto coincidía letra a letra con el nuevo.
         $this->assertStringContainsString(__('fiesta.fila.no'), $html);
-        // La frase de D3 lleva la fecha, no un plazo en horas.
+        // La frase de D3 lleva la fecha, no un plazo en horas. ⚠️ Sin el punto de la fecha abreviada: la frase pone el suyo
+        // (hasta el 29-09 este caso aseveraba «…hasta el Jue. 8 oct..», el doble punto, y lo tenía CEMENTADO).
         $deadline = app(GuestCountPolicy::class)->deadlineFor($item);
         $this->assertNotNull($deadline);
         $this->assertStringContainsString(
-            __('fiesta.lista.la_lista.no_vienen_baja', ['plazo' => DisplayTime::dayLabel($deadline)]),
+            __('fiesta.lista.la_lista.no_vienen_baja', ['plazo' => rtrim(DisplayTime::dayLabel($deadline), '.')]),
             $html,
         );
+        // Y la del defecto NO: la fecha con su punto más el de la frase. (Solo tiene sujeto si la fecha acaba en punto —en
+        // español siempre: «Jue. 8 oct.»—; la de arriba, por subcadena, pasaría también con el doble.)
+        $this->assertStringEndsWith('.', DisplayTime::dayLabel($deadline), 'CONTROL: la fecha abreviada acaba en punto');
+        $this->assertStringNotContainsString(__('fiesta.lista.la_lista.no_vienen_baja', ['plazo' => DisplayTime::dayLabel($deadline)]), $html, 'sin doble punto');
     }
 
     public function test_a_no_that_matches_a_written_card_marks_that_card(): void

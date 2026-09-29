@@ -56,13 +56,5 @@ return [
         'rejected_title' => "We haven't saved that",
         'rejected' => 'Links and email addresses are not allowed in “Whose birthday it is” or “Invited by”: the invitation is published on our website and anyone could tap them. Remove them and save again.',
 
-        // The reminder (T6·6, §4.7). Nothing is sent: we have no email for the parent, so this writes
-        // the message and the host pastes it where they already shared the link.
-        'remind_names' => '{1} Name the family we are missing|[2,*] Name the :count families we are missing',
-        'remind_last' => '{1} You wrote it once, last on :when|[2,*] You wrote it :count times, last on :when',
-        'reminder_text' => "We are still missing replies for :name's birthday. If you have not told us whether you are coming, it only takes a moment here:",
-        'reminder_text_generic' => 'We are still missing replies for our party. If you have not told us whether you are coming, it only takes a moment here:',
-        'reminder_names' => 'We are missing: :names.',
-        'reminder_deadline' => 'You can reply until :when',
     ],
 ];

@@ -46,8 +46,9 @@
 
 ## Por dónde retomar, en orden
 
-0. ▶▶▶ **LA LISTA DE INVITADOS del owner** (`#847` → `#805`, al detalle en `fiesta-sistema-nuevo.md` §4.16), en
-   `wip/lista-805`; después **LOS COMPLEMENTOS en dos** (`#806`, §4.17: medir el modelo y proponer, con preguntas al owner,
+0. ▶▶▶ **LA LISTA DE INVITADOS del owner** (`#847` → `#805`, `fiesta-sistema-nuevo.md` §4.16), en `wip/lista-805` AL OJO
+   DEL OWNER (fiesta de prueba `JW-OJO-F8`: su guion local `ojo-f8.php`, de la carpeta de auditoría, da el enlace; arnés
+   6/6); después **LOS COMPLEMENTOS en dos** (`#806`, §4.17: medir el modelo y proponer, con preguntas al owner,
    ANTES de código) y la **R1·T** de los correos (los textos editables, `#802`, §4.2). El banco de correos
    (`php scripts/banco-correos.php [filtro]`) y su sonda (`node storage/app/audit/sonda-correos-r1a.mjs N`) sirven igual.
 1. ▶▶▶ **LOS CORREOS (`specs/correos-rediseno.md`: §0 → §1 el censo → §4 las tandas → §4.1 la R1 → §4.2 los textos;

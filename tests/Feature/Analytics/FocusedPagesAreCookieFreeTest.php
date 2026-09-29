@@ -39,12 +39,12 @@ class FocusedPagesAreCookieFreeTest extends TestCase
     use RefreshDatabase;
 
     /**
-     * Las dieciocho rutas de los cuatro controladores: GET y POST del post-form y sus CUATRO POST de la invitación
-     * —personalizar, descartar, recordar y, desde F8 (`#753`), «salió»— (6), GET y POST del justificante (2), la
-     * invitación: página, respuesta, calendario, recibo y su guardado (5), y la encuesta del correo (T3 de
-     * `specs/encuestas.md`): página, respuesta, gracias, baja y su confirmación (5).
+     * Las diecisiete rutas de los cuatro controladores: GET y POST del post-form y sus TRES POST de la invitación
+     * —personalizar, descartar y, desde F8 (`#753`), «salió»— (5), GET y POST del justificante (2), la invitación: página,
+     * respuesta, calendario, recibo y su guardado (5), y la encuesta del correo (T3 de `specs/encuestas.md`): página,
+     * respuesta, gracias, baja y su confirmación (5). (Eran dieciocho: el POST de «recordar» se retiró con `#805`.)
      */
-    private const FOCUSED_ROUTES = 18;
+    private const FOCUSED_ROUTES = 17;
 
     /**
      * @param  array{order: Order, reservation: OrderItem, invitation: PartyInvitation}  $party

@@ -178,11 +178,10 @@ class QuienCumpleFilaTest extends TestCase
         $this->assertNotNull($propuesta);
         $this->assertSame(2, $propuesta['slot_index'], 'una respuesta cayó en la ficha de quien cumple');
 
-        // Con su nombre ya escrito: no se le recuerda que conteste. ⚠️ ANTES de que exista un «no» con su nombre: con él,
-        // Lucía ya contaría como contestada y la aserción pasaría por casualidad (lo cazó el arnés).
+        // Con su nombre ya escrito en la ficha 0. (Aquí se comprobaba que no se le «recordaba» contestar; el recordatorio se
+        // retiró con `#805` y esa aserción con él.)
         $reservation->submitGuestForm([['name' => 'Lucía'], ['name' => 'Mateo']], null, 'account');
         $reservation = $reservation->fresh() ?? $reservation;
-        $this->assertSame(['Mateo'], app(PartyInvitations::class)->awaitingNamesIn($reservation), 'se le recuerda a quien cumple que conteste');
 
         // Y un «no» con el mismo nombre no marca su ficha.
         $this->reply($reservation, $invitation, 'Lucía', false);

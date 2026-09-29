@@ -49,41 +49,62 @@ class ListaDeInvitadosTest extends TestCase
      * las cifras son un resumen (no filtran); el recordatorio sale junto a ellas solo con la invitación ENVIADA y alguien
      * de la lista sin contestar, y abre WhatsApp en una pestaña nueva; «Invitar a más», un solo rótulo.
      */
-    public function test_one_action_per_task_and_the_figures_are_a_summary(): void
+    /**
+     * ❗❗ **LA LISTA DEL OWNER** (`[DECIDIDO owner]` `#805`, 29-09; sustituye en parte a `#753`): una acción por tarea para
+     * la invitación —enviar, el MISMO botón antes y después—, y NADA de cifras ni de «Recordárselo»; todo el de la lista está
+     * confirmado —el añadido a mano, sin chapa «Sin contestar»—; quien invita no ve la firma de los invitados (ni la leyenda
+     * ni el «Firmada · Falta» de las filas); y el «No podemos», APARTE: en su bloque suave y fuera de `[data-filas]`.
+     *
+     * ⚠️ Los rótulos van escritos A MANO: una aserción con `__()` pasa también con la clave vacía (`#734`).
+     */
+    public function test_the_owners_list_all_confirmed_no_figures_no_foreign_signatures_and_the_noes_apart(): void
     {
         ['reservation' => $reservation, 'invitation' => $invitation, 'host' => $host] = $this->mountParty();
         $reservation->forceFill(['guest_data' => [['name' => 'Ana Soler'], ['name' => 'Iris Vela']]])->save();
         $html = fn (): string => $this->actingAs($host)->get(route('reservation.guests', ['reservation' => $reservation]))->assertOk()->getContent();
 
-        // Sin enviar todavía: ni cifras ni recordatorio (antes se ofrecía recordar una invitación que no había salido).
-        $antes = $html();
-        $this->assertSame(1, substr_count($antes, 'data-envio="whatsapp" data-envio-donde="invitation"'), 'enviar: un botón');
-        $this->assertStringContainsString(e(__('fiesta.lista.enviar')), $antes);
-        $this->assertStringNotContainsString('data-recordatorio-escribir', $antes);
-        $this->assertStringNotContainsString('pli-tally', $antes);
+        foreach (['antes de enviar' => $html(), 'enviada' => ($invitation->forceFill(['shared_at' => now()])->save() ? $html() : '')] as $cuando => $pagina) {
+            $this->assertSame(1, substr_count($pagina, 'data-envio="whatsapp" data-envio-donde="invitation"'), "{$cuando}: enviar, un botón");
+            // ⚠️ El MARCADO se mira en el HTML y el TEXTO en lo que se lee (sin etiquetas): la pieza de la fila le pasa a su
+            // JS TODOS sus rótulos en un atributo —«Sin contestar» incluido, porque es un port del diseño—, y ese JSON no lo
+            // lee nadie. Medido al escribir este caso: la aguja casaba ahí con la página correcta.
+            $texto = strip_tags($pagina);
+            foreach (['pli-tally' => $pagina, 'data-cuenta=' => $pagina, 'data-recordatorio' => $pagina, 'fiesta-recordatorio' => $pagina,
+                'pli-leyenda' => $pagina, 'Recordárselo' => $texto, 'sin contestar' => $texto, 'Sin contestar' => $texto,
+                'Autorización:' => $texto] as $fuera => $en) {
+                $donde = strpos($en, $fuera);
+                $this->assertFalse($donde, "{$cuando}: «{$fuera}» no está en la lista del owner; aparece en: "
+                    .($donde === false ? '' : substr($en, max(0, $donde - 120), 240)));
+            }
+        }
 
-        // Enviada: el MISMO botón, las cifras sin botón y el recordatorio con su formulario.
-        $invitation->forceFill(['shared_at' => now()])->save();
-        $despues = $html();
-        $this->assertSame(1, substr_count($despues, 'data-envio="whatsapp" data-envio-donde="invitation"'), 'el mismo, antes y después');
-        $this->assertStringNotContainsString('data-filtro', $despues, 'las cifras ya no filtran');
-        $this->assertSame(0, preg_match('#<button[^>]*class="pli-cuenta#', $despues), 'las cifras no son botones');
-        $this->assertStringContainsString(e(trans_choice('fiesta.lista.recordar', 2, ['count' => 2])), $despues, 'recordar a los 2 sin contestar');
-        // Un solo `type`, y es `submit` (T1b), con su formulario, que abre una pestaña NUEVA (va a WhatsApp).
-        $this->assertSame(1, preg_match('#<button[^>]*data-recordatorio-escribir[^>]*>#', $despues, $boton), 'el recordatorio es un botón');
-        $this->assertSame(1, substr_count($boton[0], 'type='), $boton[0]);
-        $this->assertStringContainsString('type="submit"', $boton[0]);
-        $this->assertStringContainsString('form="fiesta-recordatorio"', $boton[0]);
-        $this->assertMatchesRegularExpression('#<form[^>]*id="fiesta-recordatorio"[^>]*target="_blank"#', $despues);
+        // Los añadidos a mano, confirmados y SIN estado de firma: ni «Firmada» ni «Falta» en sus filas.
+        $pagina = $html();
+        // …y en la frase del número CUENTAN como confirmados: «Seréis 2: los 2 confirmados.», sin «que añadiste».
+        $this->assertSame(1, preg_match('#<span data-numero-frase>([^<]*)</span>#', $pagina, $frase), 'la frase del número');
+        $this->assertStringContainsString('los 2 confirmados', $frase[1], 'los añadidos a mano son confirmados');
+        $this->assertStringNotContainsString('añadiste', $frase[1]);
+        foreach (['g0', 'g1'] as $fila) {
+            $this->assertStringNotContainsString('circle-dashed', $this->filaDe($pagina, $fila), "{$fila}: sin «Falta»");
+            $this->assertStringNotContainsString('>Falta<', $this->filaDe($pagina, $fila), "{$fila}: sin «Falta»");
+        }
+
         // El enlace de cada canal dice su canal.
-        $this->assertStringContainsString(rawurlencode('?c=wa'), $despues, 'el de WhatsApp');
-        $this->assertStringContainsString('data-valor="'.e(route('invitation.show', ['token' => $invitation->token, 'c' => 'copia'])).'"', $despues, 'el copiado');
-        $this->assertStringContainsString('data-envio-url=', $despues, 'a dónde avisan los botones');
+        $this->assertStringContainsString(rawurlencode('?c=wa'), $pagina, 'el de WhatsApp');
+        $this->assertStringContainsString('data-valor="'.e(route('invitation.show', ['token' => $invitation->token, 'c' => 'copia'])).'"', $pagina, 'el copiado');
+        $this->assertStringContainsString('data-envio-url=', $pagina, 'a dónde avisan los botones');
 
-        // CONTROL del recordatorio: con todos contestados no hay a quién recordar.
-        $this->replyOf($invitation, $reservation, 'Ana Soler');
-        $this->replyOf($invitation, $reservation, 'Iris Vela');
-        $this->assertStringNotContainsString('data-recordatorio-escribir', $html());
+        // «No podemos», APARTE: su bloque, con su nombre, y fuera de la lista (`[data-filas]`). CONTROL: antes, sin él.
+        $this->assertStringNotContainsString('data-no-vienen', $pagina, 'CONTROL: sin un «no», no hay bloque');
+        $this->replyOf($invitation, $reservation, 'Pablo Gil', false);
+        $conNo = $html();
+        $this->assertSame(1, preg_match('#<div class="pli-no" data-no-vienen>(.*?)</ul>\s*</div>#s', $conNo, $bloque), 'el bloque de los que no pueden venir');
+        $this->assertStringContainsString('Pablo Gil', $bloque[1]);
+        $this->assertStringContainsString('No viene', $bloque[1], 'su cabecera, suave');
+        $this->assertStringContainsString('puedes bajar el número', $bloque[1], 'CONTROL: la nota del plazo está');
+        $this->assertStringNotContainsString('..', strip_tags($bloque[1]), 'la fecha abreviada ya trae su punto: sin doble punto');
+        $this->assertSame(1, preg_match('#<ul class="pli-ul" data-filas>(.*?)</ul>#s', $conNo, $lista));
+        $this->assertStringNotContainsString('Pablo Gil', $lista[1], 'el «no» no está en la lista');
     }
 
     public function test_invite_more_only_while_the_number_can_still_grow(): void
@@ -128,7 +149,12 @@ class ListaDeInvitadosTest extends TestCase
         $this->assertStringContainsString('form="fiesta-descartar" name="reply" value="'.$reply->getKey().'"', $html, '«No lo apuntes» va por su formulario');
     }
 
-    public function test_the_model_says_who_signed_by_name_key_and_who_said_no(): void
+    /**
+     * El «no» empareja con su ficha por su clave de nombre, y sigue viajando escondido para que el guardado no la borre.
+     * ⚠️ Desde `#805` la FIRMA de un invitado no se enseña a quien invita, aunque la haya (aquí, Ana): este caso asevera
+     * que el justificante existe y aun así su fila no dice «Firmada».
+     */
+    public function test_the_no_pairs_by_name_key_and_the_host_does_not_see_the_guests_signatures(): void
     {
         ['reservation' => $reservation, 'invitation' => $invitation, 'host' => $host, 'document' => $document] = $this->mountParty();
         $reservation->forceFill(['guest_data' => [['name' => 'Ana Gómez Ruiz', 'age' => '8'], ['name' => 'Leo Sánchez']]])->save();
@@ -148,13 +174,21 @@ class ListaDeInvitadosTest extends TestCase
         $html = $this->actingAs($host)->get(route('reservation.guests', ['reservation' => $reservation]))->assertOk()->getContent();
 
         $this->assertMatchesRegularExpression('#data-fila="g0"[^>]*data-respuesta=""#', $html);
-        $this->assertStringContainsString('circle-check', $this->filaDe($html, 'g0'), 'Ana tiene justificante: «Firmada»');
-        // Un «no» se pinta apagado y sin su autorización (el diseño: «No puede venir» y nada más), y su ficha sigue
-        // viajando escondida para que el guardado no la borre.
+        $this->assertSame(1, GuardianAuthorization::query()->where('order_item_id', $reservation->getKey())->count(), 'CONTROL: Ana tiene justificante');
+        $this->assertStringNotContainsString('circle-check', $this->filaDe($html, 'g0'), 'quien invita no ve la firma de Ana (`#805`)');
+        $this->assertStringNotContainsString('>Firmada<', $this->filaDe($html, 'g0'));
+        // Un «no» se pinta apagado (el diseño: «No puede venir» y nada más), y su ficha sigue viajando escondida para que el
+        // guardado no la borre.
         $this->assertStringContainsString(__('fiesta.fila.no'), $this->filaDe($html, 'g1'), 'Leo: «No puede venir»');
         $this->assertStringNotContainsString('circle-check', $this->filaDe($html, 'g1'));
         $this->assertMatchesRegularExpression('#data-fila="g1"[^>]*data-respuesta="no"#', $html, 'el «no» de Leo empareja con su ficha');
         $this->assertStringContainsString('type="hidden" name="guests[1][name]" value="Leo Sánchez"', $html);
+        // Y va APARTE (`#805`): en el bloque de los que no pueden venir, fuera de `[data-filas]`, y su ficha viaja igual.
+        $this->assertSame(1, preg_match('#data-no-vienen>(.*?)</ul>\s*</div>#s', $html, $aparte), 'el bloque de los que no vienen');
+        $this->assertStringContainsString('data-fila="g1"', $aparte[1], 'el «no» emparejado va aparte');
+        $this->assertSame(1, preg_match('#<ul class="pli-ul" data-filas>(.*?)</ul>#s', $html, $lista));
+        $this->assertStringNotContainsString('data-fila="g1"', $lista[1], 'y no en la lista');
+        $this->assertStringContainsString('data-fila="g0"', $lista[1], 'CONTROL: Ana sí está en la lista');
     }
 
     public function test_without_the_honoree_name_the_page_is_only_the_first_question(): void

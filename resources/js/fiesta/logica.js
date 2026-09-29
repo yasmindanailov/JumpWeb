@@ -1,7 +1,7 @@
 /**
  * LA LÓGICA PURA de la lista de invitados del sistema nuevo (`specs/fiesta-sistema-nuevo.md` §4.5): sin DOM, para
  * probarla con `node --test` (`logica.test.js`). Es el port de lo que `paginas/lista-invitados/estado.jsx` y
- * `zonas-1-2.jsx` del diseño hacen en el navegador —limpiar una lista pegada, normalizar un nombre, las cuentas, el
+ * `zonas-1-2.jsx` del diseño hacen en el navegador —limpiar una lista pegada, normalizar un nombre, el
  * estado de una ficha, la vista previa de la invitación (F2)— y de `choice()`, el plural de Laravel resuelto en el
  * navegador.
  */
@@ -61,24 +61,6 @@ export function estadoFicha(campos, sinProducto = false) {
     };
 }
 
-/**
- * Las cuentas de la zona 1 sobre las filas de la página: confirmados (los «sí»), no pueden y sin contestar; y
- * cuántas hay en la lista (con datos).
- *
- * @param {{vacia: boolean, respuesta: 'si'|'no'|null}[]} filas
- */
-export function cuentas(filas) {
-    const c = { confirmados: 0, noPueden: 0, sinContestar: 0, enLista: 0 };
-    filas.forEach((f) => {
-        if (f.vacia) return;
-        c.enLista++;
-        if (f.respuesta === 'si') c.confirmados++;
-        else if (f.respuesta === 'no') c.noPueden++;
-        else c.sinContestar++;
-    });
-
-    return c;
-}
 
 /**
  * Una cadena con plural en el formato de Laravel, resuelta en el navegador: admite «uno|varios» y los intervalos

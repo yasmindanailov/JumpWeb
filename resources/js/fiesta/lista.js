@@ -434,13 +434,12 @@ function lista(form) {
         pon('[data-numero-libres]', choice(t('numero.libres', ''), Math.max(1, elegido - n), { count: Math.max(1, elegido - n) }));
         pon('[data-numero-tienes]', choice(t('numero.tienes', ''), 1, { plazas: elegido, lista: n }));
         pon('[data-numero-listo]', choice(t('numero.listo', ''), 1, { n: elegido }));
-        // «Seréis 12: Vera, los 9 confirmados y 2 que añadiste.»
-        const confirmados = ninos.filter((f) => f.dataset.origen !== 'cumple' && f.dataset.respuesta === 'si').length;
-        const anadidos = ninos.filter((f) => f.dataset.origen !== 'cumple' && f.dataset.respuesta !== 'si').length;
+        // «Seréis 12: Vera y los 11 confirmados.» Desde `#805` todo el de la lista está confirmado —a mano o por «vamos»—:
+        // cuentan todos menos quien cumple y los «no» (la misma regla que `ListaDeInvitados::cuentas()`).
+        const confirmados = ninos.filter((f) => f.dataset.origen !== 'cumple' && f.dataset.respuesta !== 'no').length;
         const nombreCumple = filaCumple ? (camposDe(filaCumple).name?.value.trim() ?? '') : '';
         const partes = [nombreCumple,
-            confirmados ? choice(t('numero.confirmados', ''), confirmados, { count: confirmados }) : '',
-            anadidos ? choice(t('numero.anadidos', ''), anadidos, { count: anadidos }) : ''].filter(Boolean);
+            confirmados ? choice(t('numero.confirmados', ''), confirmados, { count: confirmados }) : ''].filter(Boolean);
         const listaTexto = partes.length > 1 ? partes.slice(0, -1).join(', ') + t('numero.y', ' y ') + partes[partes.length - 1] : (partes[0] || '');
         pon('[data-numero-frase]', choice(t('numero.frase', ''), 1, { n, lista: listaTexto }));
         const precio = vista.dataset.precio || '';

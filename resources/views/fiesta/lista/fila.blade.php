@@ -1,11 +1,12 @@
 {{-- Una fila del formulario POSICIONAL, pintada con la pieza del diseño: sus tres campos con los `name` de siempre
      (`guests[i][columna]`), la marca de adopción FUERA de la fila (`adopt[]`, §7.2·R3) y las columnas del pack que
-     la ficha no dibuja, escondidas con su valor para que un guardado no las borre. --}}
+     la ficha no dibuja, escondidas con su valor para que un guardado no las borre.
+     ⚠️ `#805`: sin respuesta es CONFIRMADO (lo añadió quien invita), y la firma de los invitados no se enseña (`firma=false`). --}}
 @php
-    $estado = $n['respuesta'] === 'si' ? 'confirmado' : ($n['respuesta'] === 'no' ? 'no' : 'sin-contestar');
+    $estado = $n['respuesta'] === 'no' ? 'no' : 'confirmado';
     $descartar = $n['pendiente'] && $n['editable'] ? 'fiesta-descartar' : null;
 @endphp
-<x-fiesta.fila-invitado :id="$n['id']" :name="$n['nombre']" :age="$n['edad']" :allergies="$n['alergias']" :state="$estado" :birthday="$n['origen'] === 'cumple'" :viaInvite="$n['origen'] === 'invitacion'" :signed="$n['firmada']" :firma="$n['firma'] ?? true" :editable="$n['editable']" :last="$ultima" :campos="$n['campos']" :vacia="$n['vacia']" :quitar="$n['editable'] && $n['origen'] === 'mano'" :omitir="$n['pendiente'] && $n['editable']" :omitirForm="$descartar" :omitirValue="$n['reply_id']" :volver="$n['no_reply_id'] !== null && $n['editable']" :volverValue="$n['editable'] ? $n['no_reply_id'] : null" data-indice="{{ $n['indice'] }}" data-completa="{{ $n['completa'] ? '1' : '0' }}" data-origen="{{ $n['origen'] }}" data-respuesta="{{ $n['respuesta'] ?? '' }}" :data-regimen="$n['regimen']" :data-sin-producto="$n['sin_producto'] ? '1' : null">
+<x-fiesta.fila-invitado :id="$n['id']" :name="$n['nombre']" :age="$n['edad']" :allergies="$n['alergias']" :state="$estado" :birthday="$n['origen'] === 'cumple'" :viaInvite="$n['origen'] === 'invitacion'" :signed="$n['firmada']" :firma="false" :editable="$n['editable']" :last="$ultima" :campos="$n['campos']" :vacia="$n['vacia']" :quitar="$n['editable'] && $n['origen'] === 'mano'" :omitir="$n['pendiente'] && $n['editable']" :omitirForm="$descartar" :omitirValue="$n['reply_id']" :volver="$n['no_reply_id'] !== null && $n['editable']" :volverValue="$n['editable'] ? $n['no_reply_id'] : null" data-indice="{{ $n['indice'] }}" data-completa="{{ $n['completa'] ? '1' : '0' }}" data-origen="{{ $n['origen'] }}" data-respuesta="{{ $n['respuesta'] ?? '' }}" :data-regimen="$n['regimen']" :data-sin-producto="$n['sin_producto'] ? '1' : null">
     {{-- Una fila que NO abre ficha (un «no», o solo lectura) sigue siendo una posición del formulario: sus tres
          columnas viajan escondidas, o el guardado las borraría (la lista entera se sustituye). ⚠️ Y un «no» que empareja
          con una ficha del anfitrión SIGUE siendo su ficha, y cuenta (T6·3, «nadie se quita solo»): el emparejado es por

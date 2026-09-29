@@ -90,13 +90,17 @@ trait MountsAParty
         ];
     }
 
-    /** Un «sí» ya contestado desde la invitación. */
-    protected function replyOf(PartyInvitation $invitation, OrderItem $reservation, string $child = 'Hugo Ruiz'): InvitationReply
+    /**
+     * Una respuesta ya contestada desde la invitación: un «sí» por defecto, o un «no» con `$attending = false`.
+     * ⚠️ El parámetro existe desde `#805`: PHP acepta argumentos DE MÁS sin avisar, y un `replyOf(…, false)` sin él creaba un
+     * «sí» sin que nada fallara.
+     */
+    protected function replyOf(PartyInvitation $invitation, OrderItem $reservation, string $child = 'Hugo Ruiz', bool $attending = true): InvitationReply
     {
         return InvitationReply::query()->create([
             'party_invitation_id' => $invitation->getKey(),
             'order_item_id' => $reservation->getKey(),
-            'attending' => true,
+            'attending' => $attending,
             'child_name' => $child,
             'child_key' => PersonNameKey::for($child),
         ]);

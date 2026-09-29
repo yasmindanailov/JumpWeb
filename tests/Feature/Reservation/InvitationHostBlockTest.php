@@ -89,7 +89,7 @@ class InvitationHostBlockTest extends TestCase
 
     // ─── Lo que se ve ────────────────────────────────────────────────────────────────
 
-    public function test_the_block_hands_over_the_link_the_deadline_as_a_date_and_the_tally(): void
+    public function test_the_block_hands_over_the_link_and_the_deadline_as_a_date_without_a_tally(): void
     {
         $item = $this->reservation(10, ['celebrant' => 'Lucía']);
 
@@ -108,16 +108,17 @@ class InvitationHostBlockTest extends TestCase
         $this->assertNotNull($deadline);
         $this->assertStringContainsString(DisplayTime::dayLabel($deadline), $html, 'el plazo se escribe como FECHA');
 
-        // El resumen de §4.7 (las tres cifras) solo cuando la invitación ya se ha compartido: recién pagada, manda
-        // «Compartir por WhatsApp» (diseño, Z1). Con una respuesta, las cifras aparecen y cuentan.
-        $this->assertStringNotContainsString('data-cuenta=', $html, 'sin respuestas no hay cifras que enseñar');
+        // Sin cifras, ni antes ni con respuestas (`[DECIDIDO owner]` `#805`, que retira el resumen de §4.7): el «sí» que
+        // llega se ve donde se decide, en «Por repasar», con su nombre.
+        $this->assertStringNotContainsString('data-cuenta=', $html);
         InvitationReply::query()->create([
             'party_invitation_id' => $invitation->getKey(), 'order_item_id' => $item->getKey(),
             'attending' => true, 'child_name' => 'Hugo Ruiz', 'child_key' => PersonNameKey::for('Hugo Ruiz'),
         ]);
         $html = $this->get($item->guestFormSignedUrl())->assertOk()->getContent();
-        $this->assertStringContainsString('data-cuenta="confirmados">1<', $html, 'un «sí» pendiente cuenta como confirmado');
-        $this->assertStringContainsString('data-cuenta="no">0<', $html);
+        $this->assertStringNotContainsString('data-cuenta=', $html, 'una respuesta no trae cifras');
+        $this->assertSame(1, preg_match('#data-repasar>(.*?)</ul>#s', $html, $repasar), 'el «sí» llega a «Por repasar»');
+        $this->assertStringContainsString('Hugo Ruiz', $repasar[1]);
     }
 
     public function test_a_product_without_the_invitation_paints_nothing_and_creates_no_row(): void

@@ -1,35 +1,14 @@
-{{-- ZONA 1 · Estado y envío (F8, `#753`: una acción por tarea). Enviada la invitación, las tres cifras son un RESUMEN
-     (no filtran: hasta 50 niños, el orden de la lista ya agrupa) y, si alguien de la lista no ha contestado, «Recordárselo»
-     a WhatsApp en un toque. La vista previa es la invitación de verdad, con «Enviar por WhatsApp» —el MISMO rótulo antes y
-     después— y «Copiar el enlace»; «Personalizar» abre el tema, quién cumple y su edad, «te invita» y el teléfono: escriben
-     `party_invitations` con el mismo Guardar. Fuera de plazo, un aviso en lugar de enviar. --}}
+{{-- ZONA 1 · El envío (F8, `#753`: una acción por tarea). La vista previa es la invitación de verdad, con «Enviar por
+     WhatsApp» —el MISMO rótulo antes y después— y «Copiar el enlace»; «Personalizar» abre el tema, quién cumple y su edad, «te
+     invita» y el teléfono: escriben `party_invitations` con el mismo Guardar. Fuera de plazo, un aviso en lugar de enviar.
+     ⚠️ Sin cifras ni «Recordárselo» desde `#805` (el owner, 29-09): todo el de la lista está confirmado —añadido a mano o por
+     «vamos»—, así que no hay «sin contestar» que contar ni a quién recordar. --}}
 @php($inv = $m['invitacion'])
-@php($c = $m['cuentas'])
 {{-- `id="gf-invite"` es el ANCLA con la que el correo de «Compartir la invitación» (`GuestFormRequest`) y la API
      (`invitation_url` de `/me/orders`) aterrizan aquí: es contrato en correos ya enviados y se conserva con su nombre. --}}
 <section class="pli-zona pli-z1" id="gf-invite" data-zona="1" aria-labelledby="pli-h1">
-    @if ($inv['compartida'])
-        <div class="pli-estado">
-            <p aria-label="{{ __('fiesta.lista.respuestas') }}" class="pli-tally">
-                @foreach ([['confirmados', $c['confirmados'], __('fiesta.lista.confirmados'), 'var(--success-500)'], ['no', $c['no_pueden'], __('fiesta.lista.no_pueden'), 'var(--fiesta-tinta-400)'], ['sin', $c['sin_contestar'], __('fiesta.lista.sin_contestar'), 'var(--warn-500)']] as [$k, $n, $label, $dot])
-                    <span class="pli-cuenta"><span class="pli-cuenta-top"><span class="pli-cuenta-n" data-cuenta="{{ $k }}">{{ $n }}</span><span class="pli-dot" style="background: {{ $dot }};"></span></span><span class="pli-cuenta-l">{{ $label }}</span></span>
-                @endforeach
-            </p>
-            {{-- RECORDAR (F8): su formulario (`fiesta-recordatorio`) abre una pestaña nueva y el servidor, tras apuntarlo,
-                 la manda a WhatsApp con el mensaje escrito. Sin JavaScript, igual. Nombrar, opcional y desmarcado. --}}
-            @if ($inv['respuestas_abiertas'] && $inv['faltan'] > 0)
-                <div class="pli-rec" data-recordatorio>
-                    {{-- De contorno: el ÚNICO principal de la zona es «Enviar por WhatsApp». --}}
-                    <x-pieza.boton variant="outline" size="sm" type="submit" form="fiesta-recordatorio" data-recordatorio-escribir><x-slot:izquierda><x-lucide name="message-circle" :size="17" /></x-slot:izquierda>{{ trans_choice('fiesta.lista.recordar', $inv['faltan'], ['count' => $inv['faltan']]) }}</x-pieza.boton>
-                    <x-pieza.casilla id="pli-rec-nombres" name="with_names" value="1" form="fiesta-recordatorio" :label="trans_choice('guestform.invite.remind_names', $inv['faltan'], ['count' => $inv['faltan']])" />
-                    @if ($inv['recordado_veces'] > 0 && $inv['recordado_el'] !== '')
-                        <p class="pli-sub">{{ trans_choice('guestform.invite.remind_last', $inv['recordado_veces'], ['count' => $inv['recordado_veces'], 'when' => $inv['recordado_el']]) }}</p>
-                    @endif
-                </div>
-            @endif
-            <span class="pli-vivo" role="status" aria-live="polite" data-aviso-vivo></span>
-        </div>
-    @endif
+    {{-- Los avisos de `lista.js` para el lector de pantalla (una respuesta que entra, lo guardado). --}}
+    <span class="pli-vivo" role="status" aria-live="polite" data-aviso-vivo></span>
     @if (! $inv['respuestas_abiertas'])
         <x-pieza.aviso tone="neutral" size="sm"><x-slot:icono><x-lucide name="lock" :size="17" /></x-slot:icono>{{ '' }}{{ __('fiesta.lista.invitacion.cerrada', ['plazo' => $inv['plazo']]) }}</x-pieza.aviso>
     @else

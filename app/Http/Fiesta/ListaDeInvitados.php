@@ -88,7 +88,7 @@ final class ListaDeInvitados
             'fila' => $reservation->hasHonoreeRow(),
         ];
         $ninos = self::ninos($reservation, $type, $rows, $proposals, $columnas, $firmas, $adoptadas, $declinadas, $v, $cumple, $cobertura, $firmaVisible);
-        $cuentas = self::cuentas($ninos, $invitacion['summary'] ?? null);
+        $cuentas = self::cuentas($ninos);
         $reserva = self::reserva($reservation, $type, $site, $invitacion);
         // F5 (`#749`): cuántos sois para la tarta (el `sois` de `PliZona4`: el número, o la lista si lo supera).
         $extras = self::extras($v['addons'], $v['extrasTotal'], $reservation, $type, $readonly, $reserva, max((int) $reservation->quantity, $cuentas['en_lista']));
@@ -108,7 +108,6 @@ final class ListaDeInvitados
             'primero' => $inv !== null && ! $readonly && $cumple['nombre'] === '',
             'invitacion' => $inv === null ? null : self::invitacion($invitacion, $inv, $reservation, $cumple, $reserva, $status),
             'ninos' => $ninos,
-            'firma_visible' => $firmaVisible,
             // El descargo de QUIEN CUMPLE (F7b, §4.13, `#752`): el panel bajo su fila, o `null` si no toca.
             'firma_cumple' => self::firmaCumple($v, $reservation, $cumple, $cobertura, $firmaVisible, $readonly),
             // F4 (§4.9, `#747`): la ficha que `lista.js` copia para añadir niños MÁS ALLÁ del número (con el número en
@@ -344,18 +343,16 @@ final class ListaDeInvitados
     }
 
     /**
-     * Las cifras de la zona 1 y de la 3: «confirmados» son los «sí» (pendientes o adoptados) SIN contar dos veces
-     * a un niño; «sin contestar», las fichas con nombre que no llegaron por la invitación; «no pueden», los «no».
-     * Quien cumple solo suma en «en la lista», que es lo que el número compara.
+     * Las cifras de la zona 3: «confirmados» son TODOS los de la lista —añadidos a mano o por «vamos», sin contar dos
+     * veces a un niño— salvo quien cumple y los «no» (`#805`: no hay otra variante; antes, los añadidos a mano eran «sin
+     * contestar»). Quien cumple solo suma en «en la lista», que es lo que el número compara.
      *
      * @param  list<array<string, mixed>>  $ninos
-     * @param  array{yes: int, no: int, pending: int}|null  $summary
-     * @return array{confirmados: int, no_pueden: int, sin_contestar: int, en_lista: int}
+     * @return array{confirmados: int, en_lista: int}
      */
-    private static function cuentas(array $ninos, ?array $summary): array
+    private static function cuentas(array $ninos): array
     {
         $confirmados = 0;
-        $sin = 0;
         $enLista = 0;
         foreach ($ninos as $n) {
             // ⚠️ Un «no» que empareja con una ficha del anfitrión SÍ cuenta (F4, §4.9): sigue siendo su ficha, porque el
@@ -364,23 +361,13 @@ final class ListaDeInvitados
                 continue;
             }
             $enLista++;
-            // Quien cumple (F3a, `#747`) cuenta en el número pero no es una respuesta: fuera de las cifras de la zona 1.
-            if ($n['origen'] === 'cumple') {
-                continue;
-            }
-            if ($n['respuesta'] === 'si') {
+            // Quien cumple (F3a, `#747`) cuenta en el número pero no es una respuesta: fuera de «confirmados».
+            if ($n['origen'] !== 'cumple' && $n['respuesta'] !== 'no') {
                 $confirmados++;
-            } elseif ($n['respuesta'] === null) {
-                $sin++;
             }
         }
 
-        return [
-            'confirmados' => $confirmados,
-            'no_pueden' => (int) ($summary['no'] ?? 0),
-            'sin_contestar' => $sin,
-            'en_lista' => $enLista,
-        ];
+        return ['confirmados' => $confirmados, 'en_lista' => $enLista];
     }
 
     /**
@@ -419,7 +406,7 @@ final class ListaDeInvitados
 
     /**
      * El bloque de la invitación (zona 1): tema, quién cumple, «te invita», el teléfono, compartir, el plazo, el
-     * resumen, los avisos («no caben», «no vienen»), el recordatorio y las rutas de sus gestos.
+     * resumen, los avisos («no caben», «no vienen») y las rutas de sus gestos (el recordatorio se retiró con `#805`).
      *
      * @param  array<string, mixed>  $vista
      * @param  array{nombre: string, edad: string}  $cumple
@@ -467,10 +454,6 @@ final class ListaDeInvitados
             'mensaje' => $mensaje,
             'accion' => (string) $vista['action'],
             'descartar' => (string) $vista['dismiss'],
-            'recordatorio' => (string) $vista['remind'],
-            'faltan' => (int) $vista['awaiting'],
-            'recordado_el' => (string) $vista['reminded_on'],
-            'recordado_veces' => (int) $inv->reminded_count,
             'no_caben' => (int) $vista['unplaced'],
             'no_vienen' => array_values(array_map(fn (array $r): array => ['id' => (int) $r['id'], 'nombre' => (string) $r['child_name'], 'indice' => $r['slot_index']], $vista['declined'])),
             'texto_rechazado' => $status === 'invitation-text-rejected',
@@ -485,7 +468,7 @@ final class ListaDeInvitados
      * El número final (zona 3): lo que hay, sus límites y su plazo, y cuántos hay en la lista.
      *
      * @param  array{editable: bool, min: int, max: ?int, locked_reason: ?string, hint: string}  $control
-     * @param  array{confirmados: int, no_pueden: int, sin_contestar: int, en_lista: int}  $cuentas
+     * @param  array{confirmados: int, en_lista: int}  $cuentas
      * @return array<string, mixed>
      */
     private static function numero(OrderItem $reservation, array $control, array $cuentas, bool $readonly): array

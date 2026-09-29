@@ -1,7 +1,12 @@
-{{-- ZONA 2 · La lista. Una fila por niño (`fila-invitado`): nombre, edad, alergias y Firmada · Falta. Las respuestas
-     que llegan por la invitación van justo debajo, en «Por repasar», con la chapa, y entran en la lista al guardar
-     (`adopt[]`). Las fichas VACÍAS del formulario posicional salen abiertas sin JavaScript y escondidas con él:
-     «Añadir a mano» las rellena una detrás de otra. --}}
+{{-- ZONA 2 · La lista. Una fila por niño (`fila-invitado`): nombre, edad y alergias. Las respuestas que llegan por la
+     invitación van justo debajo, en «Por repasar», con la chapa, y entran en la lista al guardar (`adopt[]`). Las fichas
+     VACÍAS del formulario posicional salen abiertas sin JavaScript y escondidas con él: «Añadir a mano» las rellena una
+     detrás de otra.
+     ⚠️ Desde `#805` (el owner, 29-09): quien invita NO ve las autorizaciones de los invitados (ni la leyenda ni el «Falta»
+     de cada fila: `firma=false`; el descargo de SU hijo sí, `firma-cumple`); todo el de la lista está CONFIRMADO —añadido a
+     mano o por «vamos»—, sin chapa ni otra variante; y los «No podemos» van APARTE, en un bloque suave bajo la lista, con la
+     nota de bajar el número. Los emparejados con una ficha siguen siendo fichas del formulario: cambian de contenedor, y
+     sus campos viajan igual (`form` es uno solo). --}}
 @php
     $inv = $m['invitacion'];
     // Quien cumple (F3a, `#747`) abre la lista, en su propia `ul`, como el diseño (`conCumple`): no entra en «Por repasar»
@@ -9,14 +14,15 @@
     $cumpleFila = collect($m['ninos'])->first(fn (array $n): bool => $n['origen'] === 'cumple');
     $ninos = array_values(array_filter($m['ninos'], fn (array $n): bool => $n['origen'] !== 'cumple'));
     $repasar = array_values(array_filter($ninos, fn (array $n): bool => $n['pendiente']));
-    $resto = array_values(array_filter($ninos, fn (array $n): bool => ! $n['pendiente'] && ! $n['vacia']));
+    $resto = array_values(array_filter($ninos, fn (array $n): bool => ! $n['pendiente'] && ! $n['vacia'] && $n['respuesta'] !== 'no'));
+    $noEmparejados = array_values(array_filter($ninos, fn (array $n): bool => ! $n['pendiente'] && ! $n['vacia'] && $n['respuesta'] === 'no'));
     $vacias = array_values(array_filter($ninos, fn (array $n): bool => ! $n['pendiente'] && $n['vacia']));
     $noVienenSueltos = $inv === null ? [] : array_values(array_filter($inv['no_vienen'], fn (array $r): bool => $r['indice'] === null));
+    $noVienen = count($noEmparejados) + count($noVienenSueltos);
     $conDatos = $repasar !== [] || $resto !== [];
     // Se añade gente mientras el formulario se pueda editar: con lo que HAY, añadir es rellenar una ficha VACÍA de la
     // reserva, que no mueve el número. (Sumar por encima de la reserva es lo que FALTA, spec §7·3.)
     $sumar = ! $m['solo_lectura'];
-    $estado = static fn (array $n): string => $n['respuesta'] === 'si' ? 'confirmado' : ($n['respuesta'] === 'no' ? 'no' : 'sin-contestar');
 @endphp
 <section class="pli-zona" data-zona="2" aria-labelledby="pli-h-lista" data-la-lista>
     <div class="pli-cab-z">
@@ -25,11 +31,6 @@
     {{-- El progreso, para el lector de pantalla (el diseño no lo dibuja): la fuente de verdad del servidor. --}}
     @if ($m['progreso']['total'] > 0)
         <p class="pz-sr" role="status">{{ $m['progreso']['done'] >= $m['progreso']['total'] ? __('guestform.progress_complete', ['total' => $m['progreso']['total']]) : __('guestform.progress', ['done' => $m['progreso']['done'], 'total' => $m['progreso']['total']]) }}</p>
-    @endif
-    {{-- La leyenda de la firma, solo donde la firma APLICA (F7b, `#752`): el descargo dentro y un producto que la pide. --}}
-    @if ($m['firma_visible'] ?? true)
-        @php($ley = __('fiesta.lista.la_lista.leyenda'))
-        <p class="pli-leyenda">{{ $ley[0] }} <span class="ok"><x-lucide name="circle-check" :size="15" />{{ $ley[1] }}</span> {{ $ley[2] }} <span><x-lucide name="circle-dashed" :size="15" />{{ $ley[3] }}</span></p>
     @endif
     @if ($cumpleFila !== null)
         {{-- Sin borde si detrás viene «Por repasar» o nada; con él si le sigue la lista, que continúa debajo (el diseño). --}}
@@ -51,15 +52,10 @@
     @endif
     <ul class="pli-ul" data-filas>
         @foreach ($resto as $k => $n)
-            @include('fiesta.lista.fila', ['n' => $n, 'ultima' => $k === count($resto) - 1 && $vacias === [] && $noVienenSueltos === []])
+            @include('fiesta.lista.fila', ['n' => $n, 'ultima' => $k === count($resto) - 1 && $vacias === []])
         @endforeach
         @foreach ($vacias as $k => $n)
-            @include('fiesta.lista.fila', ['n' => $n, 'ultima' => $k === count($vacias) - 1 && $noVienenSueltos === []])
-        @endforeach
-        {{-- Los «no» que NO emparejan con ninguna ficha: no son filas del formulario, pero el anfitrión tiene que verlos. --}}
-        @foreach ($noVienenSueltos as $k => $r)
-            {{-- «Al final viene» (F3c, `#747`): vuelve a contarle; al guardar entra en la primera ficha libre. --}}
-            <x-fiesta.fila-invitado :id="'no'.$r['id']" :name="$r['nombre']" state="no" viaInvite :editable="false" :last="$k === count($noVienenSueltos) - 1" omitir :omitirForm="$sumar ? 'fiesta-descartar' : null" :omitirValue="$r['id']" :volver="$sumar" :volverValue="$sumar ? $r['id'] : null" data-suelto />
+            @include('fiesta.lista.fila', ['n' => $n, 'ultima' => $k === count($vacias) - 1])
         @endforeach
     </ul>
     @if (! $conDatos && $sumar)
@@ -88,7 +84,25 @@
         @php($cerrada = __('fiesta.lista.la_lista.cerrada'))
         <p class="pli-sub">{{ $cerrada[0] }}<a href="tel:{{ $m['reserva']['tel'] }}">{{ $cerrada[1] }}</a>{{ $cerrada[2] }}</p>
     @endif
-    @if ($inv !== null && $inv['no_vienen'] !== [] && $sumar && $inv['plazo'] !== '')
-        <p class="pli-sub">{{ __('fiesta.lista.la_lista.no_vienen_baja', ['plazo' => $inv['plazo']]) }}</p>
+    {{-- LOS QUE NO PUEDEN VENIR, APARTE Y EN TONO SUAVE (`#805`): sirven para bajar el número. Los emparejados con una ficha
+         (siguen siendo filas del formulario) y los sueltos (sin ficha: solo se ven). «Al final viene» (F3c, `#747`) vuelve a
+         contarles: al guardar entran en su ficha o en la primera libre. --}}
+    @if ($noVienen > 0)
+        <div class="pli-no" data-no-vienen>
+            <p class="pli-no-cab">{{ trans_choice('fiesta.lista.la_lista.no_vienen', $noVienen, ['count' => $noVienen]) }}</p>
+            @if ($sumar && $inv !== null && $inv['plazo'] !== '')
+                {{-- ⚠️ La fecha abreviada termina en punto en es y fr («Vie. 2 oct.») y la frase pone el suyo: sin el
+                     `rtrim`, «…hasta el Vie. 2 oct..» (medido el 29-09; en inglés, «Fri 2 Oct», no cambia). --}}
+                <p class="pli-sub">{{ __('fiesta.lista.la_lista.no_vienen_baja', ['plazo' => rtrim($inv['plazo'], '.')]) }}</p>
+            @endif
+            <ul class="pli-ul">
+                @foreach ($noEmparejados as $k => $n)
+                    @include('fiesta.lista.fila', ['n' => $n, 'ultima' => $k === count($noEmparejados) - 1 && $noVienenSueltos === []])
+                @endforeach
+                @foreach ($noVienenSueltos as $k => $r)
+                    <x-fiesta.fila-invitado :id="'no'.$r['id']" :name="$r['nombre']" state="no" viaInvite :firma="false" :editable="false" :last="$k === count($noVienenSueltos) - 1" omitir :omitirForm="$sumar ? 'fiesta-descartar' : null" :omitirValue="$r['id']" :volver="$sumar" :volverValue="$sumar ? $r['id'] : null" data-suelto />
+                @endforeach
+            </ul>
+        </div>
     @endif
 </section>

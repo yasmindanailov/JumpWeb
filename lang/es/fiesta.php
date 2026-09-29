@@ -79,13 +79,8 @@ return [
         'de_a' => 'De :hora a :fin',
         'resguardo' => ':corto · :hora · :pack · Nº :codigo',
         'ha_cambiado' => 'Ha cambiado',
-        'respuestas' => 'Respuestas a la invitación',
-        'confirmados' => 'confirmados',
-        'no_pueden' => 'no pueden',
-        'sin_contestar' => 'sin contestar',
-        // F8 (`#753`): una acción por tarea. Enviar, siempre el mismo rótulo; recordar, junto a las cifras.
+        // F8 (`#753`): una acción por tarea. Enviar, siempre el mismo rótulo. (Las cifras y «recordar», fuera con `#805`.)
         'enviar' => 'Enviar por WhatsApp',
-        'recordar' => '{1} Recordárselo al que falta|[2,*] Recordárselo a los :count que faltan',
         'copiar' => 'Copiar el enlace',
         'personalizar' => 'Personalizar',
         'pers' => ['tema' => 'Tema', 'quien' => 'Quién cumple', 'edad' => 'Su edad', 'invita' => 'Te invita', 'palabras' => 'Unas palabras de la familia', 'pistas' => 'Pistas para el regalo', 'telefono' => 'Enseñar mi teléfono'],
@@ -112,7 +107,6 @@ return [
         ],
         'la_lista' => [
             'titulo' => 'La lista',
-            'leyenda' => ['Autorización:', 'Firmada', '·', 'Falta, que se resuelve en la puerta.'],
             'vacia' => 'Añade a cada invitado a mano, o pega la lista del grupo. Los que contesten a la invitación aparecerán aquí solos.',
             'por_repasar' => 'Por repasar',
             'por_repasar_nota' => 'Llegaron por la invitación. Entran en la lista al guardar.',
@@ -160,7 +154,6 @@ return [
             // F4 (§4.9, `#747`): la lista que supera la reserva.
             'frase' => 'Seréis :n: :lista.',
             'confirmados' => '{1} 1 confirmado|[2,*] los :count confirmados',
-            'anadidos' => ':count que añadiste',
             'y' => ' y ',
             'mas' => '{1} Tu reserva es de :plazas: es 1 niño más, a :precio, que se paga en el parque.|[2,*] Tu reserva es de :plazas: son :count niños más, a :precio cada uno, que se pagan en el parque.',
             'mas_sin_precio' => '{1} Tu reserva es de :plazas: es 1 niño más, que se paga en el parque.|[2,*] Tu reserva es de :plazas: son :count niños más, que se pagan en el parque.',

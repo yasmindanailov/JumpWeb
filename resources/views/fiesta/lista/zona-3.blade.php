@@ -11,11 +11,11 @@
     $estado = $num['en_lista'] < $num['valor'] ? 'libres' : ($num['en_lista'] === $num['valor'] ? 'listo' : 'mas');
     $oculto = static fn (string $e): string => $e === $estado ? '' : ' hidden';
     $mas = $estado === 'mas';
-    // «Seréis 12: Vera, los 9 confirmados y 2 que añadiste.» — quien cumple delante si su fila está en la lista (F3a).
+    // «Seréis 12: Vera y los 11 confirmados.» — quien cumple delante si su fila está en la lista (F3a). Desde `#805` todo el
+    // de la lista está confirmado: se acabó el «y 2 que añadiste».
     $partes = array_values(array_filter([
         $m['cumple']['fila'] ? $m['cumple']['nombre'] : '',
         $c['confirmados'] > 0 ? trans_choice('fiesta.lista.numero.confirmados', $c['confirmados'], ['count' => $c['confirmados']]) : '',
-        $c['sin_contestar'] > 0 ? __('fiesta.lista.numero.anadidos', ['count' => $c['sin_contestar']]) : '',
     ]));
     $lista = count($partes) > 1 ? implode(', ', array_slice($partes, 0, -1)).__('fiesta.lista.numero.y').end($partes) : ($partes[0] ?? '');
     // «Invitar a más» (F8, `#753`): el mismo envío que la invitación, aquí porque es donde se decide el número. Con plazas

@@ -830,6 +830,14 @@ no los usa: el Listo es su propia vista).
 - **Guardas**: las pruebas que aseveran las cifras, la leyenda y «Sin contestar», re-apuntadas a lo nuevo, con su caso:
   ninguna firma de invitados en la página del anfitrión, un añadido a mano sin chapa, el «no» fuera de `[data-filas]`.
   Arnés, y una pasada ligera a 390 y 1280 (`#768`).
+- **Lo construido (29-09, `wip/lista-805`; 🟦 falta el ojo del owner)**: las vistas (zonas 1-3, la fila, los formularios
+  auxiliares), `ListaDeInvitados::cuentas()`, `lista.js` (la frase) y `fiesta.css` (fuera cifras, leyenda y recordatorio;
+  dentro el bloque `.pli-no`). RETIRADO el recordatorio entero (la ruta, `writeReminder`, `remind()`, `reminderTextFor()`,
+  `awaitingNamesIn()`, `invitationSignedRemindUrl()`, sus textos en es/en/fr y `InvitationReminderTest`, 14 casos de un
+  sujeto que se fue); se quedan sus columnas, su hecho con su historia y el canal `rec`. Tres hallazgos: el doble punto de
+  «hasta el Vie. 2 oct..» (la fecha abreviada ya trae el suyo) estaba CEMENTADO por `InvitationDeclinedTest`; el censo de
+  rutas enfocadas pasa de 18 a 17; y `MountsAParty::replyOf()` no sabía crear un «no» (PHP acepta argumentos de más sin
+  avisar: gana `$attending`). Arnés `scripts/mutar-lista-805.sh` 6/6, el árbol byte a byte; suite 6553 / 45031.
 
 ### 4.17 Los complementos de la fiesta, en dos (`[DECIDIDO owner]` `#806`, 29-09) — ⬜ por medir, spec antes de código
 

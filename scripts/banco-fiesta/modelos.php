@@ -206,10 +206,6 @@ return [
                 'mensaje' => $mensaje,
                 'accion' => '#invitacion',
                 'descartar' => '#descartar',
-                'recordatorio' => '#recordatorio',
-                'faltan' => 0,
-                'recordado_el' => '',
-                'recordado_veces' => 0,
                 'no_caben' => 0,
                 'no_vienen' => [],
                 'texto_rechazado' => false,
@@ -219,13 +215,11 @@ return [
                 'host_max' => PartyInvitation::HOST_LINE_MAX,
             ],
             'ninos' => $ninos,
-            // El descargo de quien cumple (F7b, `#752`): la firma se enseña (el parque la gestiona dentro) y, en `guardado`,
-            // Vera ya está firmada (el diseño), así que no hay panel.
-            'firma_visible' => true,
+            // El descargo de quien cumple (F7b, `#752`): en `guardado`, Vera ya está firmada (el diseño), así que no hay panel.
             'firma_cumple' => null,
             'plantilla' => null,
             'columnas' => ['name' => 'name', 'age' => 'age', 'allergies' => 'allergies', 'extra' => [], 'labels' => ['name' => 'Nombre', 'age' => 'Edad', 'allergies' => 'Alergias o menú especial']],
-            'cuentas' => ['confirmados' => $confirmados, 'no_pueden' => 0, 'sin_contestar' => 0, 'en_lista' => $confirmados + 1],
+            'cuentas' => ['confirmados' => $confirmados, 'en_lista' => $confirmados + 1],
             'numero' => [
                 'valor' => $RESERVA['reservados'], 'suelo' => 8, 'techo' => null, 'editable' => true, 'motivo' => null,
                 'pista' => 'Hasta el viernes 25',

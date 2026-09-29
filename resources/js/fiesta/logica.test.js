@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { caducaEn, capitalizar, choice, clave, cuentas, cubrir, deLaFiesta, estadoFicha, euros, importe, limpiar, misRespuestas, soloEdad, sugerirCorreo, vistaInvitacion } from './logica.js';
+import { caducaEn, capitalizar, choice, clave, cubrir, deLaFiesta, estadoFicha, euros, importe, limpiar, misRespuestas, soloEdad, sugerirCorreo, vistaInvitacion } from './logica.js';
 
 // F9 (§4.15, el zip tercero `#780`): el correo mal escrito, como `forms/Field.jsx` del diseño.
 test('el correo mal escrito se corrige: una letra, dos cambiadas, la terminación que no existe, el punto que falta', () => {
@@ -97,14 +97,6 @@ test('el estado de una ficha: completa, con datos y qué le falta', () => {
     assert.deepEqual(estadoFicha(campos(true, false)), { completa: false, conDatos: true, falta: 'Edad' });
     assert.deepEqual(estadoFicha(campos(false, false)), { completa: false, conDatos: false, falta: null });
     assert.equal(estadoFicha(campos(true, true), true).completa, false, 'una edad sin producto no está completa');
-});
-
-test('las cuentas de la zona 1 no cuentan las fichas vacías', () => {
-    const c = cuentas([
-        { vacia: false, respuesta: 'si' }, { vacia: false, respuesta: 'si' }, { vacia: false, respuesta: 'no' },
-        { vacia: false, respuesta: null }, { vacia: true, respuesta: null },
-    ]);
-    assert.deepEqual(c, { confirmados: 2, noPueden: 1, sinContestar: 1, enLista: 4 });
 });
 
 test('choice resuelve el plural de Laravel con intervalos y marcadores', () => {
