@@ -3,7 +3,7 @@
 > Estado: 🟦 **medida el 29-09; el orden, el 7 y los textos editables, decididos por el owner (`#801`, `#802`)** ·
 > Última actualización: 2026-09-29 ·
 > Decisiones: `#800` (ahora los correos), `#801` (el 7, las ocasiones y el orden), `#802` (los textos, editables desde el
-> panel), `#789` (los correos, del carril del SPA),
+> panel), `#803` (el botón principal, como el diseño), `#789` (los correos, del carril del SPA),
 > `#793` (las felicitaciones, sin vender) ·
 > Carril: **SPA** (banda 790–819). Amplía `correos-desde-canvas.md` (el molde de septiembre sigue siendo suyo).
 
@@ -154,8 +154,8 @@ una sonda por tanda; los comerciales con su prueba de consentimiento y de «una 
   familias de la instancia van primero en la pila y detrás las de sistema del diseño; (2) **sin firma ni «si el botón no
   funciona…»**: el diseño no los tiene; el pie nombra al parque y la versión de texto lleva cada enlace; la firma propia
   del único que la escribe (`GuardianAuthorizationSigned`) pasa a una línea.
-- ❓ **Para el owner**: el diseño pinta el botón PRINCIPAL de cada correo en el color de acción (el naranja de PlayJump);
-  `#503` decidió que el naranja solo vende (2 de 21) y los demás van en tinta. Ver §7.
+- ✅ **El botón principal, como el diseño** (`[DECIDIDO owner]` 29-09, `#803`, §7): en el rol de acción, uno por correo;
+  `MailMoldTest` pasa de «exactamente dos venden» a «un solo principal por correo».
 - **Las guardas**: `MailThemeTest` se reescribe por PROPIEDADES sobre el documento nuevo (ninguna fuente web, la marca del
   negocio y nunca la del producto, radios de la hoja, el oscuro en el HTML enviado, cada texto AA en los dos modos por la
   aritmética, cada bloque con su gemela de texto); `MailMoldTest`, `MailInboxLineTest`, `EmailUtmTest`, `EmailClicksTest`
@@ -197,8 +197,6 @@ una sonda por tanda; los comerciales con su prueba de consentimiento y de «una 
   pide solo la reseña**. (2) **Por ocasiones, después** de lo demás. (3) **El orden, el de §4**: la plantilla → la reserva →
   los comerciales automáticos → las felicitaciones → lo demás.
 - ✅ «Alguna otra cosa» (29-09): nada más —los comerciales, la plantilla y editar algunos correos—, y la pregunta de §4.2.
-- ❓ **`[PENDIENTE: owner]` (29-09, R1a §4.1.1): el color del botón principal.** El diseño lo pinta siempre en el color de
-  acción (el naranja de PlayJump), uno por correo, y la secundaria clara. `#503` (10-09) decidió «el naranja solo vende»: 2
-  de 21 en naranja y los demás en tinta, como el cajón y Mi cuenta. (A) el diseño: todo principal en acción, y `#503` se
-  sustituye en los correos; (B) `#503`: acción solo en los dos que venden, el resto en el color fuerte del rol. Lo demás de la
-  R1a no depende de esto: el color sale de un rol y cambiarlo es una línea.
+- ✅ **`[DECIDIDO owner]` 29-09 (`#803`): el botón principal, como el diseño.** Uno por correo, en el color de acción (el
+  naranja de PlayJump) y la secundaria clara; sustituye en los correos el «naranja solo vende» de `#503` (el cajón y Mi
+  cuenta no cambian). Descartado: acción solo en los dos que venden y el resto en el color fuerte.

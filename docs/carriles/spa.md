@@ -2,7 +2,7 @@
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb` a secas; la instancia al lado, en
 > `~/proyectos/instancias/playjump`, clon de `github.com/yasmindanailov/instancia-playjump`, montada el 25-09) ·
-> Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#802`** · La banda está dada de alta en la
+> Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#803`** · La banda está dada de alta en la
 > tabla de `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: **`correos-rediseno.md`
 > §0** (la tarea en curso, `#800`→`#802`) · `analitica-para-decidir.md` §0 (en pausa, `#755`) · `encuestas.md` §0 y §4.7 (`#754`) · `analitica.md` §0 y §4.5 · `isla-y-landing-nueva.md`
 > §4.11 · `celebracion-e-invitacion.md` §0 · `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 ·
@@ -46,7 +46,7 @@
    antes de codificar, en `wip/…`, con su arnés y al ojo del owner en Mailpit (claro y oscuro, móvil y escritorio):
    **R1a** el documento y los bloques del diseño en el molde (`BrandedMailMessage`), con ROLES de color neutros en el producto
    y la hoja de correo de la instancia (✅ plataforma contestó el 29-09: `hojas.correo`, sin contrato nuevo; **al detalle en
-   §4.1.1**, medido el 29-09; ❓ el color del botón principal, al owner en §7; aviso previo a correos en el buzón) · **R1b** los iconos (máscaras PNG de Lucide teñidas con GD; ⚠️ GD en producción, sin
+   §4.1.1**, medido el 29-09; el botón principal, como el diseño: `#803`; aviso previo a correos en el buzón) · **R1b** los iconos (máscaras PNG de Lucide teñidas con GD; ⚠️ GD en producción, sin
    verificar) · **R1·T** los textos editables (`#802`: por correo, bloque e idioma; variables declaradas por correo y
    rechazadas al guardar si no existen; sin HTML salvo negrita y enlace; vista previa con datos de ejemplo —la de
    `correos-salientes.md` C1—; rastro; permiso propio; es/en/fr con «sin traducir»; NO editables lo legal, los datos ni los
@@ -243,7 +243,8 @@ el repo de la instancia (lo nuevo), nunca a `main`.
   diseño, oscuro por clase, roles de la hoja `hojas.correo` de la instancia); `vendor/mail/**`, `themes/brand.css` y el
   layout se retiran cuando los 28 pasen; `MailThemeTest` se reescribe por las MISMAS propiedades; `emails/partials/book` y
   `product-card` ganan clases de rol. Los verbos del molde (`hero`, `line`, `notice`, `outro`, `action`) no cambian. En
-  `wip/correos-r1a` hasta el ojo del owner. Si algo tuyo está a medias ahí, dímelo aquí antes.
+  `wip/correos-r1a` hasta el ojo del owner. Si algo tuyo está a medias ahí, dímelo aquí antes. Y `#803` (owner, 29-09)
+  sustituye tu mapa del naranja en los correos: el principal de cada correo va en el color de acción, como el diseño.
 
 ### ❗ Para el carril de CORREOS (emisor: SPA, 19→26-09; pendiente de tu «atendido»)
 - ▶ **Correos nuevos sobre tu molde, SIN tocarlo, todos en tus censos**: `VisitEveNotice` (`#717`),
