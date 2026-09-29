@@ -371,6 +371,19 @@ de la TP·2**. La sonda: `sonda-tp3-panel.mjs`, con los `ESPERADO_*` de tinker (
   Quedan: `[PENDIENTE: asesoría]` (5) del correo de servicio, la **T2e** solo si el volumen lo pide, el `EXPLAIN` con
   volumen en staging. Todo espera la v2.0.0 (`#670`). Las trampas pagadas en la T7 viven en `encuestas.md` §4.6.
 
+De la foto, mudado VERBATIM el 2026-09-29 por la noche (su techo, con `#800`):
+
+- ✅ **LA FIESTA DEL SISTEMA NUEVO: T1a→T4, F1→F5, F6a y F6b EN `main` (25/26-09)**, F1/F2/F6a **aprobadas por el owner**
+  (`#747`, menos «Crear mi QR», que no va) — **F3 (`#747`)**: quien cumple es la PRIMERA fila (ajuste del pack
+  `honoree_counts`, sello `honoree_row` al reservar, ficha 0 con espejo en la invitación, clavada, con su plaza en el
+  suelo y su firma de menor a cargo; la lista guardada a 0 px) y «Al final viene» (web, API 1.36.0 y sin JS) — las
+  tres páginas con lo que HAY a
+  0 px (`#768`), la piel vieja FUERA (T4), **la invitación ENTERA como el mockup (F1)**, **personalizar en tiempo real
+  (F2)** y **la firma DENTRO del recibo (F6a, `#746`)**: una fuente para las dos pantallas (`ComposesGuardianForm`), el
+  recibo contra `InvPagina` a 0 px en sus diagnósticos, y seis defectos arreglados que vio el navegador y no la suite
+  (el 429 del cupo compartido, el reenvío mudo, el foco tras un ancla, la cabecera que desborda en móvil —el diseño
+  también—, el color del botón, la fiesta llena con un «sí» atado). El detalle, spec §4.6; lo que enseñó, §4.7.
+
 De la foto, mudado VERBATIM el 2026-09-29 por la tarde (su techo, con la TP·3):
 
 - ✅ **Esta máquina, montada para la fiesta (25-09)**: la instancia clonada en `~/proyectos/instancias/playjump` (el

@@ -2,11 +2,11 @@
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb` a secas; la instancia al lado, en
 > `~/proyectos/instancias/playjump`, clon de `github.com/yasmindanailov/instancia-playjump`, montada el 25-09) ·
-> Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#799`** · La banda está dada de alta en la
+> Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#800`** · La banda está dada de alta en la
 > tabla de `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: **`analitica-para-decidir.md`
 > §0** (la tarea en curso, `#755`) · `encuestas.md` §0 y §4.7 (`#754`) · `analitica.md` §0 y §4.5 · `isla-y-landing-nueva.md`
 > §4.11 · `celebracion-e-invitacion.md` §0 · `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 ·
-> `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-09-29 (la T4, la cartera, en `wip/analitica-t4`: espera el ojo).
+> `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-09-29 (T4 en `main`; T5 no se hace, `#800`; ahora, los correos).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`). El
 > contador de la suite va en el trailer del commit (`#618`), no aquí. **Se muda, no se raspa**: el detalle de
 > una feature baja a su spec (las trampas por tanda de la analítica T1→T5 viven en `analitica.md` §4.9,
@@ -14,12 +14,15 @@
 
 ## Foto (2026-09-29)
 
+- ▶▶▶ **AHORA, LOS CORREOS** (owner 29-09, `#800`): el REDISEÑO de la plantilla, los correos NUEVOS de marketing —con ellos las
+  felicitaciones de la TP·3c (`#793`)— y «alguna otra cosa» que el owner concretará. Son míos desde `#789` (los quince correos
+  del diseño, `paginas/correos*` de la instancia). La analítica espera: T5 no se hace (`#800`) y T6–T8, después.
 - ✅ **LOS CORREOS SALIENTES, CERRADOS** (`specs/correos-salientes.md`, `#794`→`#797`, 29-09): C1 el registro y la vista previa,
   C2 los clics por envío, C2b la actividad y el aparato, C3 las aperturas y C4 «cuándo» en Marketing, todo en `main` y
   APROBADO por el owner (lo construido y lo que enseñó cada una, §4.7–§4.15). Queda en PRODUCCIÓN: encender los dos
   interruptores (Ajustes → Avanzado → Correos, APAGADOS de fábrica) cuando `/privacidad` y `/cookies` los nombren
   (`[PENDIENTE: asesoría]`). Fixture `c4-ojo.php` montado en local (`OJO=desmontar`).
-- ▶▶▶ **LA ANALÍTICA PARA DECIDIR es la tarea** (`#755`, spec ✅). En `main` y APROBADAS por el owner: T0a·T0b·T0c (`#756`),
+- ⏸ **LA ANALÍTICA PARA DECIDIR, en pausa tras la T4** (`#755`, spec ✅; T6–T8 después de los correos). En `main` y APROBADAS por el owner: T0a·T0b·T0c (`#756`),
   T1 encuestas anónimas (`#754`/`#757`), T2 ocupación (`#758`) y, el 28-09, **T3a la forma** (`#759`: siete pestañas, solo
   pide la abierta, un catálogo de 58 cifras), **T3b el veredicto** (`#790` `[DECIDIDO owner]`: «normal» es el mín–máx de los 12
   periodos anteriores), **T3c·1 «lo que ha cambiado»** (`#791`) y **T3c·2 los objetivos del mes** (el botón al pie de «Resumen», la
@@ -29,23 +32,14 @@
   §4.14; contrato **1.49.0**) · ✅ **TP·2 «Quién viene»** en `main` y aprobada → ✅ **TP·3a y TP·3b en `main` y aprobadas**
   (`#793`: los tramos de los anuncios y fuera «Exportar segmento»; arnés `SOLO=TP3` 12/12, sonda 20/20; 29-09) · ⏸ TP·3c ·
   ✅ **T3d «Explícamelo con IA»** en `main` y aprobada (techo 12 KB, `#798` `[DECIDIDO owner]`; 29-09) · ⏸ T3e (`#799`) ·
-  🟦 **T4 la cartera** en `wip/analitica-t4` (§4.8.quater; arnés `SOLO=T4` 16/16, sonda `sonda-t4-panel.mjs` 17/17), espera el ojo. ⚠️ Visto de paso: la ficha
+  ✅ **T4 la cartera** en `main` y aprobada (§4.8.quater; arnés `SOLO=T4` 16/16, sonda `sonda-t4-panel.mjs` 17/17) · ✗ T5 (`#800`). ⚠️ Visto de paso: la ficha
   del cliente en `zh_CN` pinta el parentesco de sus menores como la clave cruda (`admin.users.dependents.relationship_*` solo en es).
 - ▶ **LA FIESTA DEL SISTEMA NUEVO ES MÍA (`#765`, `[DECIDIDO owner]` 25-09)**: la lista de invitados, la invitación con
   su recibo y la autorización, vestidas con «Saltia» para la v2.0.0, en paralelo con la web pública. El traspaso,
   `isla-y-landing-nueva.md` §4.11; el censo HAY/FALTA, el método y las tandas, `specs/fiesta-sistema-nuevo.md` (§1.4,
   §4.6, §7). ⚠️ **El zip entra SOLO por plataforma** y llega con `git pull` de la instancia (`cd diseno && sha256sum -c`).
 - ✅ F7·F8·F9 (27-09) y la analítica entera T1→T7 (`#735`, 24/25-09): aprobadas; su foto, en `CARRIL-SPA.md` §9.
-- ✅ **LA FIESTA DEL SISTEMA NUEVO: T1a→T4, F1→F5, F6a y F6b EN `main` (25/26-09)**, F1/F2/F6a **aprobadas por el owner**
-  (`#747`, menos «Crear mi QR», que no va) — **F3 (`#747`)**: quien cumple es la PRIMERA fila (ajuste del pack
-  `honoree_counts`, sello `honoree_row` al reservar, ficha 0 con espejo en la invitación, clavada, con su plaza en el
-  suelo y su firma de menor a cargo; la lista guardada a 0 px) y «Al final viene» (web, API 1.36.0 y sin JS) — las
-  tres páginas con lo que HAY a
-  0 px (`#768`), la piel vieja FUERA (T4), **la invitación ENTERA como el mockup (F1)**, **personalizar en tiempo real
-  (F2)** y **la firma DENTRO del recibo (F6a, `#746`)**: una fuente para las dos pantallas (`ComposesGuardianForm`), el
-  recibo contra `InvPagina` a 0 px en sus diagnósticos, y seis defectos arreglados que vio el navegador y no la suite
-  (el 429 del cupo compartido, el reenvío mudo, el foco tras un ancla, la cabecera que desborda en móvil —el diseño
-  también—, el color del botón, la fiesta llena con un «sí» atado). El detalle, spec §4.6; lo que enseñó, §4.7.
+- ✅ La fiesta del sistema nuevo, T1a→F6b en `main` (25/26-09): su foto, mudada verbatim a `CARRIL-SPA.md` §9 (29-09).
 - ⚠️⚠️ **LO MONTADO EN LA BD LOCAL para el ojo del owner** (ajustes falsos, el experimento `carcasa` vivo, los fixtures
   `probe-ojo-*`, las fiestas `JW-OJO-F1…F8` con sus guiones `OJO=desmontar`, y la ISLA encendida por plataforma —«no
   deshacer sin él»—): el inventario entero, mudado verbatim a `docs/CARRIL-SPA.md` §8 (27-09). Todo reversible.
@@ -60,7 +54,8 @@
    `#794`; ✅ C1→C4 en `main`, aprobadas 29-09) → ✅ **TP·3a y TP·3b en `main` y aprobadas** (§4.14; fixture `ojo-tp3.php` montado encima del de la TP·2, `CARRIL-SPA` §8 (22)) ·
    la TP·3c (felicitaciones) y el gasto en anuncios, ⏸ con el rediseño de la plantilla / aplazado; §4.14 y §4.9 → ✅ **T3d** el texto para IA, en `main` y aprobada (§4.13;
    arnés `SOLO=T3d` 11/11, sonda `sonda-t3d-panel.mjs` 22/22) → ⏸ **T3e** el sector: no hay rangos con método, nada sembrado
-   (`#799` `[DECIDIDO owner]`, §4.13) → 🟦 **T4 cartera** en `wip/analitica-t4`, espera el ojo → T5 marketing y correos → T6 cohortes → T7 pérdidas → T8 satisfacción (§4.12). Los CRUCES de
+   (`#799` `[DECIDIDO owner]`, §4.13) → ✅ **T4 cartera** → ✗ T5 marketing con coste (`#800`) → ⏸ DESPUÉS DE LOS CORREOS (punto 3):
+   T6 cohortes → T7 pérdidas → T8 satisfacción (§4.12). Los CRUCES de
    encuestas, con la T8; el cruce por EMPLEADO, `[PENDIENTE: owner]` (27-09, sin respuesta).
    **Cómo se trabaja una tanda** (lo de esta sesión): medir antes y escribir «La Tx al detalle» en §4.13; toda cifra por el
    catálogo (`Filament\Analytics\Metrics\*::from()`, su «¿Cómo se calcula?» es/zh_CN y el censo); el arnés
@@ -81,9 +76,9 @@
    (`#781`). Para el ojo: `JW-OJO-F8`, `F7`, `F5`, `F3`, `F1`. **Reglas en pie**: el suelo sin JavaScript · `#739` · la
    firma y su prueba (`waiver-probatorio.md` §4.4) · hoja en blanco (§7.2·R1) · `#706`. Sueltos de la analítica de
    antes: **T5c** cuando el owner nombre la hipótesis (`#738`) · el `EXPLAIN` con volumen en staging.
-3. ❗❗ **LOS CORREOS Y LA PUERTA, MÍOS desde `#789`** (owner con plataforma, 27-09 noche; en paralelo): los quince
-   correos rehechos del diseño (`paginas/correos*.card.html` y `paginas/correos/` de la instancia) y la puerta (su diseño,
-   en el PRÓXIMO zip). El orden frente a la analítica lo dice el owner. **T2·9** (las reseñas en la API): caras y fotos,
+3. ▶▶▶ **AHORA (owner 29-09, `#800`): LOS CORREOS Y LA PUERTA, MÍOS desde `#789`** (owner con plataforma, 27-09 noche): los quince
+   correos rehechos del diseño (`paginas/correos*.card.html` y `paginas/correos/` de la instancia), los NUEVOS de marketing
+   (con las felicitaciones de la TP·3c) y la puerta (su diseño, en el PRÓXIMO zip). Y «otra cosa» que el owner concretará. **T2·9** (las reseñas en la API): caras y fotos,
    decididas en `#771`, y `/reviews` (1.31.0) ya las sirve: al retomarla, ver si queda algo (la selección) o se retira.
 4. ❗ **`audit-clock.sh` (27-09): 10/10 pases en rojo por tests AJENOS a la analítica** (los de la analítica, verdes en
    todos): `GoogleReviewImagesTest::test_el_barrido_no_toca_lo_recien_escrito` (10/10: el barrido mira el `mtime` REAL

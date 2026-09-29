@@ -1,7 +1,7 @@
 # [SPEC] La analítica para decidir — un cuadro que se entiende, dice si va bien o mal y cubre las decisiones del operador
 
-> Estado: ✅ **aprobada por el owner el 27-09** (§7; `#755`) → ✅ **T0, T1 y T2** · 🟦 **T3** (✅ T3a · ✅ T3b · ✅ T3c · ✅ T3d · ⏸ T3e sin fuente, `#799`; §4.13) · 🟦 **TP el público** (§4.14: ✅ TP·1 · ✅ TP·2 · ✅ TP·3a·3b · ⏸ TP·3c) · 🟦 **T4 la cartera** (§4.8.quater, espera el ojo) · Última actualización: 2026-09-29 ·
-> Decisiones: `#755` (esta), `#754` (encuestas anónimas, su T1), `#758` (la T2), `#759` (la T3 en cinco tandas), `#792` (el público), `#793` (el público, anónimo; las felicitaciones), `#798` (el techo del texto para IA), `#799` (sin referencias del sector) · Carril: **SPA** (banda 790–819). Amplía `analitica.md`
+> Estado: ✅ **aprobada por el owner el 27-09** (§7; `#755`) → ✅ **T0, T1 y T2** · 🟦 **T3** (✅ T3a · ✅ T3b · ✅ T3c · ✅ T3d · ⏸ T3e sin fuente, `#799`; §4.13) · 🟦 **TP el público** (§4.14: ✅ TP·1 · ✅ TP·2 · ✅ TP·3a·3b · ⏸ TP·3c) · ✅ **T4 la cartera** (§4.8.quater) · ✗ **T5 el marketing con coste, no se hace** (`#800`) · ⬜ T6–T8 · Última actualización: 2026-09-29 ·
+> Decisiones: `#755` (esta), `#754` (encuestas anónimas, su T1), `#758` (la T2), `#759` (la T3 en cinco tandas), `#792` (el público), `#793` (el público, anónimo; las felicitaciones), `#798` (el techo del texto para IA), `#799` (sin referencias del sector), `#800` (sin marketing con coste) · Carril: **SPA** (banda 790–819). Amplía `analitica.md`
 > (el libro, los regímenes y la T2 siguen siendo suyos).
 
 ## §0 · Antes de tocar
@@ -19,8 +19,8 @@
 - **Estado**: ✅ aprobada (27-09, `#755`); T0a·T0b·T0c ✅ · **T1** ✅ (la T5 de `encuestas.md`, `#754`, `#757`) · **T2** ✅ ocupación (§4.8.ter, `#758`) → **T3** Resumen, en cinco tandas (§4.13,
   `#759`): ✅ T3a la forma · ✅ T3b veredicto (mín–máx, `#790`) · ✅ T3c·1 lo que ha cambiado (`#791`) · ✅ T3c·2 objetivos →
   ✅ **TP el público** (§4.14, `#792`/`#793`; TP·1 · TP·2 · TP·3a tramos · TP·3b sin exportación · ⏸ TP·3c) → ✅ T3d
-  (el texto para IA, techo 12 KB por `#798`) → ⏸ T3e (sin rangos con método: nada sembrado, `#799`) → 🟦 T4 la cartera, en `wip/`
-  (§4.8.quater; espera el ojo) → T5.
+  (el texto para IA, `#798`) → ⏸ T3e (sin fuente, `#799`) → ✅ T4 la cartera (§4.8.quater) → ✗ T5 marketing con coste,
+  no se hace (`#800`) → ⬜ T6–T8.
   **Nada de lo medido se pierde** (§4.1.bis, con guarda): se resume arriba y lo demás queda
   plegado o en su pestaña.
 - **Invariantes**: `RGPD-01`, `RGPD-04`, `RGPD-07`, `SEC-04`, `SUITE-01`. Dinero y aforo: solo lectura.
@@ -410,7 +410,7 @@ número móvil»; y de las compras: «clientes recurrentes sí, eso me sirve». 
   antes, un pedido cancelado sin fecha, los complementos, la foto válida o no, −364 frente a las 4 semanas, la historia), la
   paridad con `paidLines()`, su arnés `SOLO=T4`, la sonda y el ojo.
 
-**Cómo se construyó la T4 (29-09; 🟦 en `wip/analitica-t4`, espera el ojo del owner)**:
+**Cómo se construyó la T4 (29-09; ✅ vista y aprobada por el owner el 29-09: «procede, visto bueno ok»)**:
 - **Piezas**: `OccupancyReader::bookedLines()` (las líneas con sus complementos —que cuelgan de la franja de su principal y caen
   con ella— y sus fechas de cobro y de cancelación) y `leadDays()`; `Filament\Analytics\BookedReport` (dos lecturas —estas
   semanas y, si vale, la de hace un año— y las fotos en PHP; 5 min de caché; 55 ms en local); `BookedMetrics` (seis cifras con
@@ -442,6 +442,9 @@ lo abrió y pulsó, y DESPUÉS, en conjunto, a «Marketing». Lo de abajo es el 
 ▶▶ **29-09: hecho allí**, C1→C4 (`#794`→`#797`): «Marketing» gana dos grupos plegados antes de «Calidad del dato», «Los
 correos» (por correo) y «Cuándo abren y pulsan» (día × hora con sus sumas, solo con los correos que al cliente le llegan).
 Detalle: `correos-salientes.md` §4.14–§4.15.
+✗ **`[DECIDIDO owner]` 29-09 (`#800`): el marketing con coste NO se hace** («marketing con costes como te dije no lo haremos»):
+ni gasto tecleado, ni coste por venta, ni retorno por euro, ni sus tarjetas en «Marketing» (§4.1). Lo de abajo queda como
+referencia de lo que se descartó.
 
 - **Gasto tecleado**: `ad_spend` (futuro): plataforma, campaña (el `utm_campaign` de sus anuncios), mes, céntimos, nota.
   Un formulario en «Marketing → Gasto en anuncios», con permiso propio (`analytics.manage` (futuro), admin por defecto) y
@@ -500,8 +503,8 @@ Detalle: `correos-salientes.md` §4.14–§4.15.
 | T2 | **Ocupación y anticipación** — ✅ (27-09, `#758`; aprobada por el owner: «buen trabajo») | la pestaña, §4.8 y §4.8.ter | tests de la regla con aforo y líneas vivas · `EXPLAIN` con un año sintético · sonda · ojo |
 | T3 | **Resumen y la reorganización** — en cinco tandas, T3a→T3e (§4.13, `#759`) | §4.1, §4.4–§4.7, §4.11: las siete pestañas, los objetivos, las referencias (su historia; el sector con fuentes que se traen al owner), las frases, «lo que ha cambiado», el texto para IA y su guarda, la carga por pestaña, el glosario | guardas de IA y jerga · sonda (primera cifra en la primera pantalla, peticiones al abrir) · ojo |
 | TP | **El público** (`#792`; tras la T3c·2 y antes de la T3d) | §4.14: TP·1 la captura · TP·2 las cifras de conjunto · TP·3 los padres por la edad de sus hijos | tests de la fecha (futura, < 18, borrada al anonimizar), de las celdas < 5 y del opt-in al exportar, con su mutación · sonda · ojo |
-| T4 | **La cartera** — 🟦 construida (29-09), espera el ojo | §4.8 y §4.8.quater | test «a estas alturas» con fechas fijas · ojo |
-| T5 | **Marketing con coste y correos por cliente** | §4.9 | tests de la marca en enlaces firmados, del píxel con y sin consentimiento, de la oposición · `Http` y Mailpit · ojo |
+| T4 | **La cartera** — ✅ (29-09, aprobada por el owner) | §4.8 y §4.8.quater | test «a estas alturas» con fechas fijas · ojo |
+| T5 | ~~**Marketing con coste** y correos por cliente~~ — ✗ el coste NO se hace (`[DECIDIDO owner]` 29-09, `#800`); los correos por cliente, hechos en `correos-salientes.md` (C1→C4) | §4.9 | — |
 | T6 | **Cohortes** | §4.10 | test de cohorte con fechas fijas · `EXPLAIN` · ojo |
 | T7 | **Pérdidas y complementos** | §4.10 (promociones con plataforma) | tests · ojo |
 | T8 | **Satisfacción** | §4.10 (la foto diaria de Google) | tests · ojo |
