@@ -186,7 +186,7 @@ URLs; `/atracciones`, `/bar` y `/entradas` existen fuera de él.
 | `/cumpleanos`, `/normas` | Igual | La página nueva, en su sitio |
 | Las cinco legales (`/privacidad`, `/condiciones`, `/waiver`, `/cookies`, `/aviso-legal`) | Igual | Sin cambio de URL |
 | `/contacto`, `/bar` | `/visitanos` | 301: la dirección, el horario, el contacto y la cafetería viven ahí |
-| `/precios`, `/entradas`, `/atracciones` | `/` | 301 **propuesto** a la portada, que reparte hacia Kids, Jump y Cumpleaños |
+| `/precios`, `/entradas`, `/atracciones` | `/` | 301 **propuesto** a la portada, que reparte hacia Kids, Jump y Cumpleaños (▶ `/entradas` se QUEDA: es el enlace que abre la compra, §4.22, `#843`) |
 | `/servicios` | `/colegios` | 301 cuando exista Colegios; hasta entonces sigue su vista de hoy |
 | — | `/kids`, `/jump` | Nuevas, y las primeras en la T4 |
 
@@ -1700,8 +1700,9 @@ cabecera (acababa en 1000px de una pantalla de 560)—. **Después**: Kids y Jum
 en vivo antes de cerrar (la identidad con el mockup, una vez y al final: `#768`): **T6a · la portada** (y, con ella, el
 SELECTOR DE PLANES de la isla, que hoy no tiene ninguna página) · **T6b · Cumpleaños** · **T6c · Colegios** · **T6d ·
 Visítanos** (sin formulario: `/contacto` con 301, `#789`) · **T6e · Normas** · **T6f · los 301 y retirar las páginas
-viejas** de la instancia (`atracciones`, `bar`, `servicios`, `precios`, `contacto`, `entradas`, la portada y el
-cumpleaños de hoy; §1.6.4), con la sonda de todas (la T4f de Kids y Jump va aquí).
+viejas** de la instancia (`atracciones`, `bar`, `servicios`, `precios`, `contacto`, la portada, el cumpleaños y las
+normas de hoy; §1.6.4 y §4.22 —`entradas.blade.php` es el molde de Kids y Jump y se queda—), con la sonda de todas (la T4f
+de Kids y Jump va aquí).
 
 **La portada del diseño** (`paginas/portada.card.html`, sin sección en el README: su guion es la tarjeta): ocho piezas y
 el pie, con la isla viva. **Lo que hay y lo que falta, medido** (las piezas de la T4 viven en `instancias/playjump/web/
@@ -2096,6 +2097,43 @@ parque. Lo demás, la regla de Visítanos: donde el panel habla, gana; donde cal
   cortaban la corrida). **Primera pantalla** (`sonda-primera-pantalla.mjs comparar normas`): el MISMO veredicto regla a regla
   —la vuelta 114/114 · 45/45; la primera visita 101/111, los mismos diez que el mockup—. ⚠️ **No verificado con datos**: las
   normas SIN momento, a lo ancho (en local, las diez tienen momento). **La T6e, Normas, ✅.**
+
+### 4.22 La T6f: los 301 y las vistas viejas — el censo (MEDIDO 29-09, `#843`)
+
+`[DECIDIDO]` 2026-09-29 (`#843`, técnica): los 301 los declara la página; `/entradas` se queda; el material sin sujeto se poda.
+
+**Hoy, medido** (`curl` y el navegador, en local, con el paquete): las seis rutas viejas responden **200** —`/precios`,
+`/atracciones`, `/servicios`, `/bar` y `/contacto` pintan las vistas viejas del paquete; `/entradas`, la portada nueva—, y el
+sitemap anuncia todavía `/precios`, `/servicios` y `/contacto` (las páginas nuevas ya entran por la declaración del paquete). Las
+rutas son del PRODUCTO (`routes/web.php`) y pintan con `InstanceViews::pick()`: **sin la vista del paquete caen al ANFITRIÓN
+mínimo**, así que retirar las vistas sin el 301 antes publicaría páginas sin arte.
+
+**El mapa, corregido contra la medida** (§1.6.4 lo proponía):
+
+| Hoy | Queda | Por qué |
+|---|---|---|
+| `/precios`, `/atracciones` | 301 → `/` | la portada reparte a Kids, Jump y Cumpleaños con sus precios y enseña cada zona; afinable con Search Console CAMBIANDO la instancia, sin código |
+| `/contacto`, `/bar` | 301 → `/visitanos` | el contacto y la cafetería viven ahí (sin formulario, `#789`: el `POST /contacto` sigue en el producto para quien lo pinte) |
+| `/servicios` | 301 → `/colegios` | |
+| `/entradas` | **se queda**, con su canónica en `/` | ❗ NO es una página: es el ENLACE PROFUNDO que abre la compra (`data-purchase-open`; medido: pinta la portada con la isla en «Cuándo y cuántos»). El 301 que proponía §1.6.4 lo rompía. Hoy se declara canónica de sí misma e indexable: un duplicado de `/` |
+| `/`, `/cumpleanos`, `/normas` | ocupadas (`#827`, `#832`, `#842`) | |
+| las cinco legales | igual | ❓ siguen con el armazón VIEJO (`x-layout`, el menú y el pie de siempre, que enlazan a las rutas que pasan a 301); el diseño no trae página legal |
+
+**El mecanismo (producto)**: la página lo declara, como `'ocupa'` —`'sustituye' => ['contacto', 'bar']`—, de una lista del
+producto (`InstancePages::SUSTITUIBLES`: las cinco páginas viejas, solo GET); una ruta, un dueño (ni dos páginas ni ocupada y
+sustituida a la vez: la segunda se descarta con aviso); un middleware en esas cinco rutas responde **301 a la URL de la
+página, con su `?query`** (las `utm_` de una campaña vieja no se pierden) y solo si la página tiene ruta de verdad; el
+sitemap las deja fuera. Middleware y no cinco controladores: una regla en un sitio, visible en `routes/web.php`.
+**Las vistas que se retiran (instancia)**: ocho, 3.161 líneas —`portada`, `atracciones`, `bar`, `contacto`, `cumpleanos`,
+`normas`, `precios` y `servicios`—. ⚠️ **`entradas.blade.php` NO**: es el MOLDE de Kids y Jump (la lista de §4.17 lo
+nombraba por error). `legal.blade.php`, tampoco.
+**El material que se queda sin sujeto (producto)**: las 30 piezas de `InstanceViews::MATERIAL_CONSUMIDO_POR_LA_INSTANCIA`
+nombran TODAS una de esas ocho vistas (25 clases de `landing.css`, 5 ranuras del kit): la lista se vacía —su propio
+comentario lo predice— y las guardas de huérfanos (`FacadeCssHasNoOrphansTest`, `LandingCssHasNoOrphansTest`, la de
+ranuras) dicen qué se poda. `landing.css` es del carril de la web: aviso en el buzón ANTES.
+**Plan**: **T6f·1** (producto) `'sustituye'`, el 301 y el sitemap, y la canónica de `/entradas`; **T6f·2** (instancia) los
+301 declarados y las ocho vistas fuera; **T6f·3** (producto) el material sin sujeto; **T6f·4** la sonda de TODAS —cada ruta
+vieja a su sitio con su `?query`, el sitemap igual al mapa, cada página en es/en/fr— y la T4f (Kids y Jump).
 
 ## 5. Impacto en invariantes
 

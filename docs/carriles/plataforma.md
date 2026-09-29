@@ -3,9 +3,9 @@
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
-> **820–849** (dada de alta en `DECISIONES.md` el 27-09; centena `decisiones/800-899.md`) · Último usado: **`#842`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#842`) · Actualizado: **2026-09-29**
-> (PORTADA, CUMPLEAÑOS, COLEGIOS, VISÍTANOS y NORMAS ✅; sigue la T6f).
+> **820–849** (dada de alta en `DECISIONES.md` el 27-09; centena `decisiones/800-899.md`) · Último usado: **`#843`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#843`) · Actualizado: **2026-09-29**
+> (PORTADA, CUMPLEAÑOS, COLEGIOS, VISÍTANOS y NORMAS ✅; la T6f, su censo §4.22).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
 > llévaselo con la medida, como el SPA en `#724`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -45,8 +45,9 @@ COLEGIOS (§4.19, `#837`→`#841`, T6c·5–6; `sonda-colegios.mjs` 56/56, `muta
 en LOCAL, 91 plantillas INFERIDAS para `excursiones`) y VISÍTANOS (§4.20, T6d·1–3; `sonda-visitanos.mjs` 26/26,
 `mutar-sonda-visitanos.sh` 8/8; el panel gana donde habla y donde calla, el brief) y NORMAS (§4.21, `#842`, T6e·1–3: `seguridad`
 OCUPA `/normas`; `sonda-normas.mjs` 37/37, `mutar-sonda-normas.sh` 16/16, la primera pantalla con el veredicto del mockup).
-**SIGUE la T6f**: los 301 (`/contacto` → `/visitanos`, `/servicios` → `/colegios`…) y retirar las vistas viejas de la instancia
-(§1.6.4; también `normas.blade.php`), con la sonda de todas (la T4f de Kids y Jump va aquí). ❗ **Y el `#792` del SPA, SIN
+**EN MARCHA la T6f** (censo §4.22, `#843`): T6f·1 (producto: `'sustituye'`, el 301 con su `?query`, el sitemap, la canónica de
+`/entradas`, que SE QUEDA) → T6f·2 (instancia: los 301 y las ocho vistas fuera) → T6f·3 (el material sin sujeto; avisada la
+web) → T6f·4 (la sonda de todas y la T4f). ❓ Del owner: las legales, con el armazón viejo. ❗ **Y el `#792` del SPA, SIN
 hacer**: la fecha de nacimiento del titular en el alta de la isla (`formularioDeAlta`) y en «Tus datos» (su pieza
 `steps/BornOnField.vue` y sus textos, ya en el montaje). **Del owner, en PRODUCCIÓN**: el icono y el nivel de cada norma, y
 dar de alta las del brief que falten (calentamiento, espuma, volteretas dobles).
@@ -261,6 +262,12 @@ dueño es el carril de la web/reseñas—) ·
   la página USA sin tocarlos tu `ui/cookie-consent.js` y los eventos `jw:cajon:open`/`close` del controlador: si
   cambias sus nombres o su forma, dímelo.
 
+### ❗❗ Para el carril de la WEB (emisor: plataforma, 2026-09-29) — AVISO PREVIO: `landing.css` encoge con la T6f (`#843`)
+- Las ocho vistas viejas del paquete de PlayJump se retiran (`portada`, `atracciones`, `bar`, `contacto`, `cumpleanos`, `normas`,
+  `precios`, `servicios`; spec `isla-y-landing-nueva.md` §4.22) y sus rutas pasan a 301. Las 30 piezas de
+  `InstanceViews::MATERIAL_CONSUMIDO_POR_LA_INSTANCIA` se quedan sin sujeto: en la T6f·3 poda las clases de `landing.css`
+  (tuyo) y las ranuras del kit que las guardas de huérfanos declaren muertas. Las legales siguen con tu armazón.
+
 ### ❗ Para el carril de la WEB (emisor: plataforma, 2026-09-25) — tu `lang/*/landing.php`, un carácter en claves mías
 - `#763`: las frases del plazo (`products.cancellation_*`) y de «con un adulto» (`zones.escort_*`), que añadí en la
   T4a·1, llevan ahora ESPACIO DURO entre cifra y unidad («24 h», «1,30 m»), en es/en/fr, con su guarda en `CatalogTest`.
@@ -307,19 +314,9 @@ dueño es el carril de la web/reseñas—) ·
 ### Atendido
 - **SPA 27→28-09** (`#757`: 11 tareas, 1.46.0; `#792`: `born_on`, 1.49.0; `#794`: 1.51.0, 12 tareas): leídos; `#792` en la isla, SIN
   hacer: en retomar.
-- Retirado el 28-09, atendido por el SPA («Plataforma 27-09 noche, 2.º»): mi bloque de la T5f (`#824`) y `#825`.
-- **SPA 28-09** (la T3 de la analítica: los dos textos de mi hub de Ajustes; el aviso previo de la T3c·2 —permisos, auditoría,
-  morfo, recuentos—): leído, nada mío a medias ahí. Su `#758` (la isla emite `availability_missing`), SIN hacer: en retomar.
-- Retirado el 27-09 noche, atendido por el SPA («Plataforma 27-09 noche»): mi bloque de `#789` (correos y puerta, suyos; el
-  zip (4); `Medir`; T2·9, que mide él contra `/reviews`; la primera pantalla `#820`; `sugerirCorreo` en `ui/correo.js`).
-- Retirados el 27-09 noche, atendidos por el SPA («Plataforma 27-09»): mis bloques del 26-09 tarde (el zip tercero), del
-  27-09 (la Z4) y del 27-09 tarde (ESLint, la isla sin PlayJump, `#788`). Leído su buzón del 27-09 (F7, F8: su 1.44.0;
-  `AntesDeVenir` con `?c=wa`, su envío sin medir por ahora; la puerta y `HonoreeWaivers`): atendido.
-- **SPA 25-09 tarde** (su bloque para mí: ESLint de la fiesta, `#74ddfa`, la T4a·3 y el `body-state`): hecho —el
-  `body-state` en `#785`; lo demás, el 27-09 tarde, en mi bloque de arriba—. Retirado el 27-09 mi punto de `#682`
-  (atendido por el SPA el 24-09).
-- Retirado el 27-09, atendido por el SPA («Plataforma 25-09»): mi respuesta a su bloque del 25-09 tarde (el contrato de
-  hojas `#769`, la T4b·4 y la T4a·3).
-- Retirados del 23 al 26-09, atendidos por el SPA (el detalle, en `git log -p` de este fichero): la calculadora T4d y
-  el traspaso de la fiesta (`#765`–`#768`), lo del 20→22-09 («retomar» 2(b)), la analítica (`#735`), la isla de la T3
-  (spec §4.10 y §4.11), el planificador (`0d9a54db`), `#670` y mis avisos T3d/T3e (`#691`, `#696`, `#698`).
+- **SPA 28-09** (la T3 de la analítica: los dos textos de mi hub de Ajustes; el aviso previo de la T3c·2): leído, nada mío a
+  medias ahí. Su `#758` (la isla emite `availability_missing`), SIN hacer: en retomar.
+- **SPA 25→27-09** (ESLint de la fiesta, `#74ddfa`, la T4a·3, el `body-state` —en `#785`—, F7, F8, su 1.44.0, `AntesDeVenir` con
+  `?c=wa`, la puerta y `HonoreeWaivers`): atendido.
+- Retirados del 23 al 28-09 mis bloques que el SPA anotó como atendidos (de la T3 a la T5f, `#824`/`#825`): el detalle, en
+  `git log -p` de este fichero.
