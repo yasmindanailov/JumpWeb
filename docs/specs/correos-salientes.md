@@ -15,7 +15,7 @@
   (`EmailUtm::IGNORED_QUERY`); (3) `sendmail` no avisa de entregas ni rebotes: «entregado» no se puede saber, «falló al
   enviar» sí; (4) el píxel de apertura exige consentimiento (LSSI 22.2) y Apple Mail abre solo: las aperturas son
   APROXIMADAS; (5) los escáneres de enlaces de Outlook y Gmail pulsan solos: un clic en el primer segundo tras el envío no cuenta.
-- **Estado**: ✅ aprobada (`#794`: la COPIA 6 meses, las cifras 24); ✅ C1, C2, C2b y C3 en `main` (ojo del owner, 29-09); 🟦 C4 «cuándo» (§4.14–§4.15).
+- **Estado**: ✅ aprobada (`#794`: la COPIA 6 meses, las cifras 24); ✅ **C1→C4 en `main`, todas con el ojo del owner (29-09)**. Queda: encender en producción tras la asesoría.
 - **C2**: `jw_e` va en `EmailUtm::IGNORED_QUERY` y NUNCA en `RouteNormalizer::QUERY_ALLOWLIST` (la analítica es anónima);
   la encuesta no lleva marca (`#754`); el escáner se reconoce por la RÁFAGA, no por el reloj (§4.8).
 - **Apuntar un envío NUNCA rompe el envío** (`#794`): un fallo del registro reintentaría el trabajo y duplicaría el correo.
@@ -329,7 +329,7 @@ interruptor; la vista previa sin píxel; y el export (1.54.0). Pruebas: `Mail\Em
    en su escala y con los mismos mínimos. Con poco volumen casi todas las casillas se quedan por debajo de 5, y las sumas son
    las que contestan «¿a qué hora?» y «¿qué día?». El mapa se reparte si el TOTAL llega a 5.
 
-### 4.15 La C4, lo construido (29-09; 🟦 en `wip/correos-c4`, falta el ojo del owner)
+### 4.15 La C4, lo construido (29-09; ✅ ojo del owner el 29-09: «visto bueno, buen trabajo»)
 Construido: `EmailTiming` (el censo), `Filament\Analytics\EmailsReport`, `EmailsWidget` (la tabla por correo) y
 `EmailsHeatmapWidget` (los dos mapas con sus sumas), plegados en «Marketing» antes de «Calidad del dato» y en su CSV; la
 rejilla del mapa sale a `heatmap-grid` (la comparten la ocupación y los correos). Pruebas: `Analytics\EmailsReportTest` (7);
