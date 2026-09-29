@@ -1933,7 +1933,9 @@ T6c·5 la sonda y el ojo del owner.
   persona —60 es el tramo de 30 a 69—, 900 €, «Hoy pagas 100 €… el día de la visita»); sin regresión `sonda-compra-directa`
   16/16, `sonda-cumpleanos` 20/20 y `sonda-calculadora`. Pesos: compra 162,13 (techo 163), pasos 44,06 (techo 45); las
   calculadoras, por debajo del suyo. ⚠️ `sonda-portada` 13/14 a las 17:17 —«Reservar» de la isla tras «Míralo»—, IGUAL con
-  el `HEAD` (control con copia): no es de esta tanda. ⚠️ No verificado: la vuelta de Google con una excursión (la cesta no
+  el `HEAD` (control con copia): no es de esta tanda. ✅ **Resuelto el 29-09: era la SONDA**. Con huecos hoy y el parque por
+  abrir o abierto, la acción de la isla es «Reservar para hoy» (`situacion.js::leerHoy`) y la sonda buscaba «Reservar» a
+  secas; ahora la espera según `today`: 23/23 a 390 y 1280 (la rama «Reservar», cerrado o sin huecos, no vista). ⚠️ No verificado: la vuelta de Google con una excursión (la cesta no
   guarda `event_data`, `#38(d)`).
 - ✅ **T6c·3b (28-09) · la CALCULADORA de colegios**, con el ✅ del owner («buen trabajo»; instancia `f96ff1a`). Es la de ENTRADAS
   (`calculadora/montar.js`, `vista.js`) con los packs por filas: la página declara cada fila con `tipo: 'pack'`, sus topes y

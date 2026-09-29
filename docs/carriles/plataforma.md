@@ -49,8 +49,8 @@ Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas,en
 web»): el zip entra SOLO por `diseno/actualizar.py` (`#760`), el diseño se toma del mockup (`#767`) y se verifica una vez al final
 (`#768`). Después, **(4)** Bizum, Apple (entra) y el día liberado → material y revisión del owner (los datos, de playjump.es). Los
 correos del sistema y la puerta, del SPA, en paralelo.
-**Abierto, medido y sin hacer** (el `#758` del SPA, HECHO el 29-09: `#846`, §4.26): (b) `sonda-portada` 13/14 («Reservar» de la
-isla tras «Míralo»; igual con el `HEAD` de control): investigar aparte; (c) la vuelta de Google con una excursión, sin verificar; (d) la T4
+**Abierto, medido y sin hacer** (HECHOS el 29-09: el `#758` del SPA, `#846`, §4.26; y `sonda-portada` 13/14, que era la SONDA
+—«Reservar para hoy» con huecos—, 23/23, §4.19): (c) la vuelta de Google con una excursión, sin verificar; (d) la T4
 sigue 🟦 por lo del owner: el MATERIAL de los vídeos (en LOCAL, una muestra WebM), su ojo sobre las voces y las promociones (T1
 🟦), y ❓ la línea Ómnibus. **Para iterar con el owner** (no ahora): la isla «muy sola» y el «Reservar» solo en la isla del
 móvil (A/B). La ISLA la repiensa él con Claude Design: no atar nada nuevo a ella.

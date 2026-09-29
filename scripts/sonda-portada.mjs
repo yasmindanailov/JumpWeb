@@ -14,7 +14,7 @@
  *      vídeo de la cabecera, que corre en bucle y, con «reducir movimiento», se queda en su póster.
  * Sin pagar: no deja pedidos. Sale con 1 si algo falla; las fotos, en `storage/app/audit/portada-<ancho>-*.png`.
  * ⚠️ «Para hoy» solo se puede ver con huecos HOY (la hora del parque): fuera de ese rato, la sonda lo dice y comprueba
- * que no está.
+ * que no está. Y en ese rato la acción de la isla es «Reservar para hoy», no «Reservar»: la sonda la espera según `today`.
  *
  *   docker compose exec -u sail -T -e PLAYWRIGHT_BROWSERS_PATH=/home/sail/pw-browsers laravel.test \
  *       node scripts/sonda-portada.mjs [390|1280]
@@ -140,8 +140,12 @@ try {
     await h.cargar('/');
     await a.page.evaluate(() => window.scrollTo(0, document.getElementById('miralo').offsetTop));
     await a.page.waitForTimeout(900);
-    await a.page.locator('[data-isla]').getByRole('button', { name: 'Reservar', exact: true }).first().click();
-    ok('«Reservar» de la isla abre el selector', await h.hastaSelector());
+    // Con huecos hoy y el parque por abrir o abierto, la acción de la isla es «Reservar para hoy» (`situacion.js::leerHoy`);
+    // buscando «Reservar» a secas, la sonda fallaba a esas horas (29-09: 13/14, también con el `HEAD` de control).
+    const hoy = pagina.config.today ?? {};
+    const accionIsla = hoy.slots && ['antes', 'abierto'].includes(hoy.state) ? 'Reservar para hoy' : 'Reservar';
+    await a.page.locator('[data-isla]').getByRole('button', { name: accionIsla, exact: true }).first().click();
+    ok(`«${accionIsla}» de la isla abre el selector`, await h.hastaSelector(), hoy.state ?? 'sin hoy');
 
     await h.cargar('/');
     await a.page.locator('.pj-q3__planos [data-pj-visor-abrir]').first().scrollIntoViewIfNeeded();

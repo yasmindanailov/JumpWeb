@@ -17,7 +17,7 @@
  *   docker compose exec -u sail -T -e PLAYWRIGHT_BROWSERS_PATH=/home/sail/pw-browsers laravel.test \
  *       node scripts/sonda-demanda.mjs [390|1280]
  */
-/* global console, document, window, fetch -- Node y, dentro de `evaluate`, el navegador */
+/* global console, document, window, fetch, setTimeout, Event -- Node y, dentro de `evaluate`, el navegador */
 import process from 'node:process';
 import { Buffer } from 'node:buffer';
 import { chromium } from 'playwright-core';
