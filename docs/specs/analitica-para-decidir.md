@@ -1,6 +1,6 @@
 # [SPEC] La analítica para decidir — un cuadro que se entiende, dice si va bien o mal y cubre las decisiones del operador
 
-> Estado: ✅ **aprobada por el owner el 27-09** (§7; `#755`) → ✅ **T0, T1 y T2** · 🟦 **T3** (✅ T3a · ✅ T3b · ✅ T3c · ✅ T3d · ⏸ T3e sin fuente, `#799`; §4.13) · 🟦 **TP el público** (§4.14: ✅ TP·1 · ✅ TP·2 · ✅ TP·3a·3b · ⏸ TP·3c) · Última actualización: 2026-09-29 ·
+> Estado: ✅ **aprobada por el owner el 27-09** (§7; `#755`) → ✅ **T0, T1 y T2** · 🟦 **T3** (✅ T3a · ✅ T3b · ✅ T3c · ✅ T3d · ⏸ T3e sin fuente, `#799`; §4.13) · 🟦 **TP el público** (§4.14: ✅ TP·1 · ✅ TP·2 · ✅ TP·3a·3b · ⏸ TP·3c) · 🟦 **T4 la cartera** (§4.8.quater, espera el ojo) · Última actualización: 2026-09-29 ·
 > Decisiones: `#755` (esta), `#754` (encuestas anónimas, su T1), `#758` (la T2), `#759` (la T3 en cinco tandas), `#792` (el público), `#793` (el público, anónimo; las felicitaciones), `#798` (el techo del texto para IA), `#799` (sin referencias del sector) · Carril: **SPA** (banda 790–819). Amplía `analitica.md`
 > (el libro, los regímenes y la T2 siguen siendo suyos).
 
@@ -19,7 +19,8 @@
 - **Estado**: ✅ aprobada (27-09, `#755`); T0a·T0b·T0c ✅ · **T1** ✅ (la T5 de `encuestas.md`, `#754`, `#757`) · **T2** ✅ ocupación (§4.8.ter, `#758`) → **T3** Resumen, en cinco tandas (§4.13,
   `#759`): ✅ T3a la forma · ✅ T3b veredicto (mín–máx, `#790`) · ✅ T3c·1 lo que ha cambiado (`#791`) · ✅ T3c·2 objetivos →
   ✅ **TP el público** (§4.14, `#792`/`#793`; TP·1 · TP·2 · TP·3a tramos · TP·3b sin exportación · ⏸ TP·3c) → ✅ T3d
-  (el texto para IA, techo 12 KB por `#798`) → ⏸ T3e (sin rangos con método: nada sembrado, `#799`) → ▶ T4 la cartera.
+  (el texto para IA, techo 12 KB por `#798`) → ⏸ T3e (sin rangos con método: nada sembrado, `#799`) → 🟦 T4 la cartera, en `wip/`
+  (§4.8.quater; espera el ojo) → T5.
   **Nada de lo medido se pierde** (§4.1.bis, con guarda): se resume arriba y lo demás queda
   plegado o en su pestaña.
 - **Invariantes**: `RGPD-01`, `RGPD-04`, `RGPD-07`, `SEC-04`, `SUITE-01`. Dinero y aforo: solo lectura.
@@ -377,6 +378,62 @@ número móvil»; y de las compras: «clientes recurrentes sí, eso me sirve». 
   27-09: **no se reconstruye** la historia desde el rastro de la puerta (se ofreció con `puerta.profile_viewed`); cuenta
   desde que la puerta empezó a acreditar.
 
+### 4.8.quater La T4 al detalle — la cartera, medida el 29-09 antes de codificar (decidido por el agente, vetable al ojo)
+
+- **Medido** (BD local, 29-09): vendido para los próximos 7 días, 14 líneas, 82 plazas y 1.352 €; para 30 y 90, 23 líneas,
+  148 plazas y 2.006 € (lo más lejano, el 27-10). Los complementos: 29 líneas hijas, 25 sin franja propia (cuelgan de la visita
+  de su línea principal). La antelación entre el cobro y la visita: mediana 13 días, p95 29, máximo 34 (datos de montaje). Los
+  pedidos, desde el 04-07: en local no hay año anterior. `Order::STATUS_REFUNDED` ya no lo pone nadie (datos antiguos), y
+  cancelar un pedido FECHA cada línea (`cancelLiveItems`, `#127`): 2 pedidos cancelados antiguos tienen líneas sin fecha.
+- **Qué es**: lo ya vendido para las visitas de los próximos 7, 30 y 90 días (de hoy en adelante, en días del parque): plazas
+  (las líneas principales vivas, la regla de `OccupancyReader::paidLines()`) y euros (lo cobrable de la línea y de sus
+  complementos vivos). Mira hacia delante: NO depende del filtro de la página (§4.3).
+- **«A estas alturas»** (la foto de un instante *s*): cuenta una línea si su pedido se cobró antes de *s* y la línea no se había
+  cancelado antes de *s* (`cancelled_at` vacío o posterior); una línea de pedido cancelado SIN fecha no cuenta en ninguna foto
+  (no se sabe cuándo). La foto de *ahora* coincide con `paidLines()`, y una prueba lo ata. **Límite declarado**: una línea que
+  se cambió de fecha después de *s* cuenta en su fecha de hoy (el libro no guarda la fecha anterior).
+- **La referencia**: la foto de hace un año con **−364 días** (el mismo día de la semana: una ventana de 7 días lleva los mismos
+  sábados); si no vale, la **media de las fotos de hace 1, 2, 3 y 4 semanas** al mismo horizonte (§4.8), diciendo cuántas
+  valieron. Una foto VALE si los pedidos se miden desde antes de *s* menos la antelación p95 del último año (mínimo 7 días): un
+  sistema recién puesto aún no ve lo que se vendió antes de existir. Sin ninguna, «aún sin con qué comparar».
+- **Normal para ti** (`#790`): las fotos de las últimas 12 semanas al mismo horizonte (las que valen; hacen falta 8), su
+  mín–máx, con la frase de siempre. El cambio frente a la referencia va en la línea de detalle y **sin color**: las fotos
+  semanales se solapan (una ventana de 30 días comparte 23 con la de la semana anterior) y la prueba de la T0b no vale ahí.
+- **Dónde**: en «Resumen», la octava cifra (`booked.cents_30`, «Vendido para los próximos 30 días»: euros, y las plazas en su
+  detalle); en «Ocupación», bajo las tarjetas, un gráfico por semana (esta y las 12 siguientes, en plazas: «vendido ya» frente
+  a «a estas alturas») con su tabla plegada (plazas y euros), y plegadas las seis cifras (plazas y euros a 7, 30 y 90 días).
+  Al CSV de «Ocupación» y al censo; a «lo que ha cambiado» y al texto para IA como las demás.
+- **Código**: el lector, en `Booking` (`OccupancyReader::bookedLines()`, con los complementos y las fechas de cancelación);
+  el informe, `Filament\Analytics\BookedReport` (futuro; las fotos, en PHP sobre una sola lectura, 5 min de caché); las cifras,
+  `BookedMetrics` (futuro; con su historia de fotos, no la de `MetricSet`).
+- **Verificación**: pruebas con fechas fijas («a estas alturas» con una línea cobrada tarde, otra cancelada después y otra
+  antes, un pedido cancelado sin fecha, los complementos, la foto válida o no, −364 frente a las 4 semanas, la historia), la
+  paridad con `paidLines()`, su arnés `SOLO=T4`, la sonda y el ojo.
+
+**Cómo se construyó la T4 (29-09; 🟦 en `wip/analitica-t4`, espera el ojo del owner)**:
+- **Piezas**: `OccupancyReader::bookedLines()` (las líneas con sus complementos —que cuelgan de la franja de su principal y caen
+  con ella— y sus fechas de cobro y de cancelación) y `leadDays()`; `Filament\Analytics\BookedReport` (dos lecturas —estas
+  semanas y, si vale, la de hace un año— y las fotos en PHP; 5 min de caché; 55 ms en local); `BookedMetrics` (seis cifras con
+  su historia de fotos y la comparación en el detalle); `BookedChart` (13 semanas, «Vendido ya» y «A estas alturas») y
+  `BookedMoreWidget` (plegado) en «Ocupación»; la tabla por semana en su grupo plegado y las seis en el resumen del CSV;
+  `booked.cents_30` en «Resumen»; la cartera en «lo que ha cambiado» y en el texto para IA.
+- **Frente al plan**: (1) la cifra de «Resumen» vive PLEGADA en su pestaña —«Ocupación» ya lleva seis arriba (§4.1, §4.11)—;
+  `AnalyticsTabsTest` lo declara como su única excepción, y el texto para IA lleva lo de «Resumen» aunque esté plegado. (2) El
+  gráfico es 1:1 y con todos sus rótulos: con el 2:1 de siempre medía ~200 px y Chart.js saltaba la mitad de las semanas.
+- **Medido en local** (datos de montaje): margen 30 días (el p95 de la antelación); sin año anterior, la referencia es la media
+  de 4 semanas y la historia tiene 8 fotos: «Vendido para los próximos 30 días: 2.224 €. Normal para ti: entre 2.155 € y 3.704 €
+  en tus últimas 8 semanas. 148 plazas · a estas alturas, de media en las 4 semanas anteriores: 2.355 € (−6 %)».
+- **Pruebas**: `BookedReportTest` (11: la foto con su borde al segundo, el lector —complementos, el cancelado sin fecha, el
+  pendiente—, la paridad con `paidLines()`, −364 frente a 365 y la media de 4 semanas, el margen del p95, la foto de antes de
+  medir, las semanas con los dos cambios de hora, el gráfico, «lo que ha cambiado» y el detalle), `ExplainerTest` +1 aserción,
+  el censo (+6 tarjetas y 7 rótulos del CSV), `AnalyticsTabsTest` y `AnalyticsPageTest` al día. Arnés `SOLO=T4`: **16/16** y
+  los controles en verde. Sonda `storage/app/audit/sonda-t4-panel.mjs` 17/17, cifra a cifra contra el informe, a 1280 y a 390.
+- **Lo que enseñó**: (1) un `round()` «por el cambio de hora» sobrevivió al arnés: Carbon cuenta días de CALENDARIO en la zona
+  del parque —de medianoche a medianoche sale 6,0 también cuando la noche dura 23 horas (medido)—; era código muerto y se
+  quitó, y la prueba de primavera se queda vigilando el resultado. (2) Filament no deja un `Chart` global: los datos del
+  gráfico se leen de su `x-data` (`chart({ cachedData, … })`). (3) Tres expectativas de la prueba estaban mal y el código
+  bien (una suma, el punto de «oct.» y el redondeo de 2.354,50 €): el instrumento, primero.
+
 ### 4.9 Marketing con coste y los correos por cliente (T5)
 
 ▶▶ **Rehecha el 28-09 (owner)**: el **gasto en anuncios, aplazado** («no lo haremos ahora mismo»); los **correos por cliente
@@ -443,7 +500,7 @@ Detalle: `correos-salientes.md` §4.14–§4.15.
 | T2 | **Ocupación y anticipación** — ✅ (27-09, `#758`; aprobada por el owner: «buen trabajo») | la pestaña, §4.8 y §4.8.ter | tests de la regla con aforo y líneas vivas · `EXPLAIN` con un año sintético · sonda · ojo |
 | T3 | **Resumen y la reorganización** — en cinco tandas, T3a→T3e (§4.13, `#759`) | §4.1, §4.4–§4.7, §4.11: las siete pestañas, los objetivos, las referencias (su historia; el sector con fuentes que se traen al owner), las frases, «lo que ha cambiado», el texto para IA y su guarda, la carga por pestaña, el glosario | guardas de IA y jerga · sonda (primera cifra en la primera pantalla, peticiones al abrir) · ojo |
 | TP | **El público** (`#792`; tras la T3c·2 y antes de la T3d) | §4.14: TP·1 la captura · TP·2 las cifras de conjunto · TP·3 los padres por la edad de sus hijos | tests de la fecha (futura, < 18, borrada al anonimizar), de las celdas < 5 y del opt-in al exportar, con su mutación · sonda · ojo |
-| T4 | **La cartera** | §4.8 | test «a estas alturas» con fechas fijas · ojo |
+| T4 | **La cartera** — 🟦 construida (29-09), espera el ojo | §4.8 y §4.8.quater | test «a estas alturas» con fechas fijas · ojo |
 | T5 | **Marketing con coste y correos por cliente** | §4.9 | tests de la marca en enlaces firmados, del píxel con y sin consentimiento, de la oposición · `Http` y Mailpit · ojo |
 | T6 | **Cohortes** | §4.10 | test de cohorte con fechas fijas · `EXPLAIN` · ojo |
 | T7 | **Pérdidas y complementos** | §4.10 (promociones con plataforma) | tests · ojo |

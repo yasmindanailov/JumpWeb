@@ -13,6 +13,8 @@ use App\Filament\Analytics\GoalsForm;
 use App\Filament\Analytics\WindowLabel;
 use App\Filament\Widgets\Analytics\AnticipationChart;
 use App\Filament\Widgets\Analytics\AudienceWidget;
+use App\Filament\Widgets\Analytics\BookedChart;
+use App\Filament\Widgets\Analytics\BookedMoreWidget;
 use App\Filament\Widgets\Analytics\ChangesWidget;
 use App\Filament\Widgets\Analytics\CustomersBreakdownWidget;
 use App\Filament\Widgets\Analytics\CustomersMoreWidget;
@@ -153,6 +155,9 @@ class AnalyticsPage extends BaseDashboard
             OccupancyOverviewWidget::class,
             OccupancyHeatmapWidget::class,
             AnticipationChart::class,
+            // T4 (§4.8.quater): lo ya vendido para lo que viene —por semana, junto a la anticipación, y plegadas sus seis cifras—.
+            BookedChart::class,
+            BookedMoreWidget::class,
             OccupancyBreakdownWidget::class,
         ],
         'customers' => [

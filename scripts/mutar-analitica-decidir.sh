@@ -23,6 +23,7 @@ declare -A FILTRO_DE=(
     [TP2]='AudienceReportTest|AnalyticsCensusTest|AnalyticsPageTest'
     [TP3]='AudienceReportTest|SegmentsReportTest|AnalyticsPageTest|AccessI18nParityTest'
     [T3d]='ExplainerTest|MetricTest|ChangesTest|AnalyticsPageTest'
+    [T4]='BookedReportTest|ExplainerTest|AnalyticsTabsTest|AnalyticsCensusTest'
 )
 SOLO="${SOLO:-}"
 SECCION=''
@@ -96,6 +97,9 @@ FICHEROS=(
     app/Domain/Platform/Enums/Comparison.php
     app/Filament/Analytics/Explainer.php
     resources/views/filament/pages/analytics/explain.blade.php
+    app/Filament/Analytics/BookedReport.php
+    app/Filament/Analytics/Metrics/BookedMetrics.php
+    app/Filament/Widgets/Analytics/BookedChart.php
 )
 # La copia de cada fichero, por su RUTA entera (T3a): por su nombre, `lang/es/admin.php` y `lang/zh_CN/admin.php` chocaban.
 copia() { echo "$TMP/$(echo "$1" | tr '/' '_')"; }
@@ -1129,6 +1133,87 @@ if [[ -z "$SOLO" || "$SOLO" == T3d ]]; then
     control "un comentario del texto para IA" "$EX" \
       'Una celda de tabla en una línea y sin romper la tabla.' \
       'Una celda de tabla en una sola línea y sin romper la tabla.'
+fi
+
+# ── T4 · LA CARTERA (§4.8.quater): lo ya vendido para lo que viene frente a «a estas alturas» —lo cobrado antes del instante y no
+# cancelado antes—; los complementos con su visita; el año con −364 días o la media de cuatro semanas; la foto de antes de medir
+# no vale (el margen, el p95 de la antelación); las semanas con el cambio de hora; y la cartera en «Resumen», en «lo que ha
+# cambiado», en el texto para IA y en el CSV.
+SECCION=T4
+BR=app/Filament/Analytics/BookedReport.php
+OR=app/Domain/Booking/Services/OccupancyReader.php
+BOOKED_LINE="            if (\$line['date'] < \$from || \$line['date'] > \$to || \$line['paid_at'] > \$at || (\$line['cancelled_at'] !== null && \$line['cancelled_at'] <= \$at)) {"
+
+mutar "una línea cobrada DESPUÉS de la foto cuenta en ella" "$BR" \
+  "$BOOKED_LINE" \
+  "            if (\$line['date'] < \$from || \$line['date'] > \$to || (\$line['cancelled_at'] !== null && \$line['cancelled_at'] <= \$at)) {"
+
+mutar "una línea cancelada después de la foto deja de contar en ella" "$BR" \
+  "$BOOKED_LINE" \
+  "            if (\$line['date'] < \$from || \$line['date'] > \$to || \$line['paid_at'] > \$at || \$line['cancelled_at'] !== null) {"
+
+mutar "un pedido cancelado SIN fecha cuenta" "$OR" \
+  '                if ($row->status === Order::STATUS_CANCELLED && $cancelled === null) {' \
+  '                if (false) {'
+
+mutar "el complemento no cae con su principal cancelada" "$OR" \
+  '                    $own === null => $parent,' \
+  '                    $own === null => null,'
+
+mutar "el complemento sin franja se queda fuera (no cuelga de su principal)" "$OR" \
+  "            ->join('slots as s', 's.id', '=', DB::raw('COALESCE(p.slot_id, i.slot_id)'))" \
+  "            ->join('slots as s', 's.id', '=', 'i.slot_id')"
+
+mutar "el año con 365 días (deja de ser el mismo día de la semana)" "$BR" \
+  '    public const YEAR_DAYS = 364;' \
+  '    public const YEAR_DAYS = 365;'
+
+mutar "la media de las cuatro semanas deja de ser una media" "$BR" \
+  "                return ['seats' => \$sum['seats'] / count(\$fallback), 'cents' => \$sum['cents'] / count(\$fallback)];" \
+  "                return ['seats' => (float) \$sum['seats'], 'cents' => (float) \$sum['cents']];"
+
+mutar "una foto de antes de que el sistema midiera vale" "$BR" \
+  '        $valid = static fn (CarbonImmutable $s): bool => $since !== null && $since->lessThanOrEqualTo($s->subDays($margin));' \
+  '        $valid = static fn (CarbonImmutable $s): bool => $since !== null;'
+
+mutar "el margen es siempre el mínimo (no sale de la antelación)" "$BR" \
+  '        $margin = max(self::MIN_MARGIN_DAYS, self::percentile($leads, 0.95));' \
+  '        $margin = self::MIN_MARGIN_DAYS;'
+
+# (Una mutación que quitaba un `round()` de las semanas sobrevivió: Carbon ya da días enteros con el cambio de hora —medido—, y el
+# `round()` era código muerto; se quitó. La prueba de primavera se queda: vigila el resultado.)
+mutar "las semanas empiezan un día antes" "$BR" \
+  '            $from = max(0, (int) $today->diffInDays($weeksStart->addDays(7 * $j), false));' \
+  '            $from = max(0, (int) $today->diffInDays($weeksStart->addDays(7 * $j - 1), false));'
+
+mutar "el cambio frente a «a estas alturas» sale al revés" "app/Filament/Analytics/Metrics/BookedMetrics.php" \
+  "        \$delta = \$value > 0 ? ' ('.self::signed((int) round((\$metric->value - \$value) / \$value * 100)).')' : '';" \
+  "        \$delta = \$value > 0 ? ' ('.self::signed((int) round((\$value - \$metric->value) / \$value * 100)).')' : '';"
+
+mutar "el gráfico pierde «a estas alturas»" "app/Filament/Widgets/Analytics/BookedChart.php" \
+  "        if (array_filter(array_column(\$weeks, 'baseline')) !== []) {" \
+  '        if (false) {'
+
+mutar "la cartera sale de «lo que ha cambiado»" "app/Filament/Analytics/Changes.php" \
+  '            + BookedMetrics::for(),' \
+  ''
+
+mutar "el texto para IA pierde lo de «Resumen» plegado (la cartera)" "$EX" \
+  '            if ($tab !== null && ! in_array($key, $top[$tab] ?? [], true)) {' \
+  '            if (false) {'
+
+mutar "«Resumen» pierde la cartera" "app/Filament/Widgets/Analytics/SummaryWidget.php" \
+  "'surveys.scale_mean', 'booked.cents_30'];" \
+  "'surveys.scale_mean'];"
+
+mutar "el CSV de la ocupación pierde la cartera" "app/Filament/Analytics/CsvExport.php" \
+  "            ...array_map(static fn (Metric \$m): array => [\$m->label, \$m->unit === Metric::UNIT_MONEY ? Money::format(\$m->value) : (string) \$m->value], array_values(BookedMetrics::for()))," \
+  ''
+
+if [[ -z "$SOLO" || "$SOLO" == T4 ]]; then
+    control "un comentario de la cartera" "$BR" \
+      'Las semanas del gráfico: la de hoy y las 12 siguientes (~90 días).' \
+      'Las semanas del gráfico: la de hoy y las doce siguientes (~90 días).'
 fi
 
 # ── El CONTROL: tocar un comentario no puede poner nada en rojo ─────────────────────────────────

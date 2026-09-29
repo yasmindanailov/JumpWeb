@@ -13,6 +13,7 @@ use App\Domain\Platform\Services\Analytics\Reports\Window;
 use App\Filament\Analytics\CsvExport;
 use App\Filament\Analytics\Metric;
 use App\Filament\Pages\AnalyticsPage;
+use App\Filament\Widgets\Analytics\BookedMoreWidget;
 use App\Filament\Widgets\Analytics\CustomersMoreWidget;
 use App\Filament\Widgets\Analytics\CustomersOverviewWidget;
 use App\Filament\Widgets\Analytics\DataQualityWidget;
@@ -85,6 +86,10 @@ class AnalyticsCensusTest extends TestCase
         CsvExport::REPORT_OCCUPANCY => [
             'Ocupación de las entradas', 'Fiestas por franja', 'Franjas llenas', 'Ingreso por plaza-hora', 'Anticipación',
             'Demanda sin hueco', 'Visitantes',
+            // La T4 (§4.8.quater): la cartera —sus seis cifras— y su tabla por semana.
+            'Vendido para los próximos 7 días', 'Vendido para los próximos 30 días', 'Vendido para los próximos 90 días',
+            'Plazas vendidas para los próximos 7 días', 'Plazas vendidas para los próximos 30 días', 'Plazas vendidas para los próximos 90 días',
+            'Lo ya vendido, por semana que viene',
         ],
         // TP·2 (`#792`): «Quién viene», las siete tablas (los repartos, sin celdas de 1 a 4).
         CsvExport::REPORT_CUSTOMERS => [
@@ -105,7 +110,7 @@ class AnalyticsCensusTest extends TestCase
      */
     private const TILE_WIDGETS = [
         MoneyOverviewWidget::class, MoneyMoreWidget::class,
-        OccupancyOverviewWidget::class,
+        OccupancyOverviewWidget::class, BookedMoreWidget::class,
         CustomersOverviewWidget::class, CustomersMoreWidget::class, RegistrationsWidget::class, GateWidget::class,
         TrafficWidget::class, TrafficMoreWidget::class, DataQualityWidget::class,
         PartiesOverviewWidget::class, PartiesMoreWidget::class,
@@ -115,9 +120,10 @@ class AnalyticsCensusTest extends TestCase
     /**
      * Las 44 del 27-09 y las que se añaden después, cada una con su tanda (T0c, `#756`: cinco —ya habían venido, primera
      * vez, dos o más días, cada cuánto vuelven y repiten por la web—; cómo se acreditó la visita va como detalle · T2,
-     * `#758`: las seis de la ocupación · T3a, `#759`: visitantes, pendiente de cobrar en el parque y tasa de respuesta).
+     * `#758`: las seis de la ocupación · T3a, `#759`: visitantes, pendiente de cobrar en el parque y tasa de respuesta · T4: las
+     * seis de la cartera, euros y plazas a 7, 30 y 90 días).
      */
-    private const TILES = 44 + 5 + 6 + 3;
+    private const TILES = 44 + 5 + 6 + 3 + 6;
 
     protected function setUp(): void
     {

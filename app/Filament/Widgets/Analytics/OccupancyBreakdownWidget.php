@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets\Analytics;
 
 use App\Domain\Platform\Services\Money;
+use App\Filament\Analytics\BookedReport;
 use App\Filament\Analytics\Metrics\OccupancyMetrics;
 use App\Filament\Analytics\OccupancyReport;
 use App\Filament\Widgets\Analytics\Concerns\AnalyticsWidget;
@@ -13,8 +14,9 @@ use Illuminate\Support\Carbon;
 /**
  * **La ocupación, al detalle** (`specs/analitica-para-decidir.md` §4.8.ter, la T2): plegado al pie de la pestaña y entero
  * en el CSV — por hora de inicio (con sus franjas llenas), por zona (las plazas y, en las de fiestas, las fiestas frente
- * al tope), por producto (plazas y lo vendido), la anticipación por tipo y por día de la semana, y la demanda sin hueco
- * por producto y mes. Es la vista de tabla del mapa de calor y del gráfico de la anticipación.
+ * al tope), por producto (plazas y lo vendido), la anticipación por tipo y por día de la semana, la demanda sin hueco
+ * por producto y mes y, desde la T4, lo ya vendido por semana que viene. Es la vista de tabla del mapa de calor, del gráfico
+ * de la anticipación y del de la cartera.
  */
 class OccupancyBreakdownWidget extends Widget
 {
@@ -44,7 +46,36 @@ class OccupancyBreakdownWidget extends Widget
                 $this->anticipationByKind($r['anticipation']),
                 $this->anticipationByWeekday($r['anticipation']),
                 $this->missing($r['missing']),
+                $this->booked(),
             ],
+        ];
+    }
+
+    /**
+     * Lo ya vendido por semana que viene (T4, §4.8.quater): la vista de tabla de {@see BookedChart}, con los euros. No depende
+     * del periodo del filtro. «A estas alturas» puede ser una media (la de las cuatro semanas anteriores): lleva un decimal.
+     *
+     * @return array{heading: string, columns: list<string>, rows: list<list<string>>}
+     */
+    private function booked(): array
+    {
+        /** @var list<array{from: string, to: string, seats: int, cents: int, baseline: array{seats: float, cents: float}|null}> $weeks */
+        $weeks = BookedReport::for()['weeks'];
+        $seats = static fn (float $n): string => floor($n) === $n ? number_format($n, 0, ',', '.') : number_format($n, 1, ',', '.');
+
+        return [
+            'heading' => __('admin.analytics.booked.by_week'),
+            'columns' => [
+                __('admin.analytics.booked.col.week'), __('admin.analytics.booked.col.seats_now'), __('admin.analytics.booked.col.seats_before'),
+                __('admin.analytics.booked.col.cents_now'), __('admin.analytics.booked.col.cents_before'),
+            ],
+            'rows' => array_map(static fn (array $w): array => [
+                BookedChart::weekLabel($w),
+                $seats((float) $w['seats']),
+                $w['baseline'] === null ? '—' : $seats(round($w['baseline']['seats'], 1)),
+                Money::format($w['cents']),
+                $w['baseline'] === null ? '—' : Money::format((int) round($w['baseline']['cents'])),
+            ], $weeks),
         ];
     }
 

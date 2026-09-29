@@ -7,6 +7,7 @@ use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\Setting;
 use App\Filament\Analytics\Metric;
 use App\Filament\Pages\AnalyticsPage;
+use App\Filament\Widgets\Analytics\BookedMoreWidget;
 use App\Filament\Widgets\Analytics\GateWidget;
 use App\Filament\Widgets\Analytics\MetricsWidget;
 use App\Filament\Widgets\Analytics\MoneyMoreWidget;
@@ -106,14 +107,16 @@ class AnalyticsTabsTest extends TestCase
 
     /**
      * «Resumen» enseña las cifras clave de §4.5 —tecleadas a mano—, y cada una es LA MISMA de arriba de su pestaña: la misma
-     * clave, el mismo valor, la misma definición, con el enlace a esa pestaña. La cartera llega con la T4.
+     * clave, el mismo valor, la misma definición, con el enlace a esa pestaña. La cartera (T4, §4.8.quater) es la excepción
+     * DECLARADA: «Ocupación» ya lleva sus seis tarjetas arriba (§4.1 no la cuenta entre ellas; §4.11, ≤ 6), así que en su
+     * pestaña va en su grupo plegado, bajo el gráfico por semana.
      */
     public function test_the_summary_shows_the_same_figures_as_the_top_of_their_tab(): void
     {
         $this->actingAs($this->admin());
 
         $this->assertSame(
-            ['money.net', 'occupancy.entries', 'occupancy.visitors', 'traffic.conversion', 'money.avg_order', 'money.returning', 'surveys.scale_mean'],
+            ['money.net', 'occupancy.entries', 'occupancy.visitors', 'traffic.conversion', 'money.avg_order', 'money.returning', 'surveys.scale_mean', 'booked.cents_30'],
             SummaryWidget::KEYS,
         );
 
@@ -121,7 +124,8 @@ class AnalyticsTabsTest extends TestCase
             /** @var Metric $metric */
             $metric = $stat->getViewData()['metric'];
             $tab = SummaryWidget::TABS[$metric->key];
-            $top = AnalyticsPage::TABS[$tab][0];
+            $top = $metric->key === 'booked.cents_30' ? BookedMoreWidget::class : AnalyticsPage::TABS[$tab][0];
+            $this->assertContains($top, AnalyticsPage::TABS[$tab], "«{$metric->key}» enlaza a «{$tab}» y su grupo no está allí");
             $this->assertContains($metric->key, $top::KEYS, "«{$metric->key}» enlaza a «{$tab}» y no está arriba allí");
 
             $there = collect(self::stats(new $top))->first(fn (Stat $s): bool => $s->getViewData()['metric']->key === $metric->key)->getViewData()['metric'];

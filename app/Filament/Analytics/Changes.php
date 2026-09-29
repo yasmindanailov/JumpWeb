@@ -4,6 +4,7 @@ namespace App\Filament\Analytics;
 
 use App\Domain\Platform\Enums\Comparison;
 use App\Domain\Platform\Services\Analytics\Reports\Window;
+use App\Filament\Analytics\Metrics\BookedMetrics;
 use App\Filament\Analytics\Metrics\CustomersMetrics;
 use App\Filament\Analytics\Metrics\MarketingMetrics;
 use App\Filament\Analytics\Metrics\MoneyMetrics;
@@ -29,7 +30,7 @@ final class Changes
     public const MAX = 5;
 
     /**
-     * Lo que ha cambiado en una ventana, de los seis catálogos (con su historia; cacheados).
+     * Lo que ha cambiado en una ventana, de los seis catálogos y la cartera (T4) (con su historia; cacheados).
      *
      * @return array{items: list<array{metric: Metric, verdict: array{state: string, tone: string, low: ?int, high: ?int, n: int}}>, more: int, judged: int}
      */
@@ -41,7 +42,9 @@ final class Changes
             + CustomersMetrics::for($window, $comparison)
             + MarketingMetrics::for($window, $comparison)
             + PartiesMetrics::for($window, $comparison)
-            + SurveysMetrics::for($window, $comparison),
+            + SurveysMetrics::for($window, $comparison)
+            // La cartera (T4): no depende de la ventana, y su historia son las fotos de las semanas anteriores.
+            + BookedMetrics::for(),
         );
     }
 

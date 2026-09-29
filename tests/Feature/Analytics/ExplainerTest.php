@@ -166,6 +166,7 @@ class ExplainerTest extends TestCase
         Cache::flush();
         $text = (string) Explainer::for($this->june(), Comparison::Previous)['text'];
         $this->assertStringContainsString('Vende entradas por franja horaria. Los importes', $text, 'solo lo activo y a la venta: el pack viejo, no');
+        $this->assertStringContainsString('| Vendido para los próximos 30 días |', $text, 'lo de «Resumen» va aunque en su pestaña esté plegado (la cartera, T4)');
         $this->assertStringContainsString('| Nota media | Sin nota |', $text, 'una media de 2 respuestas no se enseña, y no se lee como la nota');
         $this->assertStringContainsString('- **Nota media**: La media de la primera pregunta de escala (del 1 al 5) en las respuestas del periodo; con menos de 5 respuestas no se enseña («Sin nota»), porque son anónimas.', $text, 'y su definición dice por qué');
     }

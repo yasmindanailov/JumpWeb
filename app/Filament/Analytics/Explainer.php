@@ -6,6 +6,7 @@ use App\Domain\Booking\Models\TicketType;
 use App\Domain\Platform\Enums\Comparison;
 use App\Domain\Platform\Services\Analytics\Contract;
 use App\Domain\Platform\Services\Analytics\Reports\Window;
+use App\Filament\Analytics\Metrics\BookedMetrics;
 use App\Filament\Analytics\Metrics\CustomersMetrics;
 use App\Filament\Analytics\Metrics\MarketingMetrics;
 use App\Filament\Analytics\Metrics\MoneyMetrics;
@@ -13,6 +14,7 @@ use App\Filament\Analytics\Metrics\OccupancyMetrics;
 use App\Filament\Analytics\Metrics\PartiesMetrics;
 use App\Filament\Analytics\Metrics\SurveysMetrics;
 use App\Filament\Pages\AnalyticsPage;
+use App\Filament\Widgets\Analytics\SummaryWidget;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -54,12 +56,32 @@ final class Explainer
             + CustomersMetrics::for($window, $comparison)
             + MarketingMetrics::for($window, $comparison)
             + PartiesMetrics::for($window, $comparison)
-            + SurveysMetrics::for($window, $comparison);
+            + SurveysMetrics::for($window, $comparison)
+            + BookedMetrics::for();
 
         /** @var array{days: int, total: int} $rejected */
         $rejected = FunnelReport::for($window, $comparison)['rejected'];
 
-        return self::guarded(self::compose($metrics, AnalyticsPage::topKeys(), $window, $comparison, self::sells(), $rejected));
+        return self::guarded(self::compose($metrics, self::top(), $window, $comparison, self::sells(), $rejected));
+    }
+
+    /**
+     * Las de arriba de cada pestaña y, en la suya, las de «Resumen» que allí van plegadas (la cartera de 30 días, T4): lo que
+     * «Resumen» enseña decide por definición.
+     *
+     * @return array<string, list<string>>
+     */
+    private static function top(): array
+    {
+        $top = AnalyticsPage::topKeys();
+        foreach (SummaryWidget::KEYS as $key) {
+            $tab = AnalyticsPage::tabOf($key);
+            if ($tab !== null && ! in_array($key, $top[$tab] ?? [], true)) {
+                $top[$tab][] = $key;
+            }
+        }
+
+        return $top;
     }
 
     /**

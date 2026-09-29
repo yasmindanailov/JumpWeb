@@ -6,6 +6,7 @@ use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Platform\Services\DisplayTime;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -167,6 +168,81 @@ final class OccupancyReader
                     'paid_at' => $row->paid_at === null ? null : (string) $row->paid_at,
                 ];
             })
+            ->values()
+            ->all();
+    }
+
+    /**
+     * **Lo vendido para las visitas de `[$from, $to]`, con lo necesario para saber qué estaba vendido EN CUALQUIER INSTANTE**
+     * (la cartera, T4 de `analitica-para-decidir.md` §4.8.quater): cada línea —la principal con sus plazas y sus complementos,
+     * que cuelgan de su visita— de un pedido cobrado, con cuándo se cobró y cuándo se canceló. Una línea contaba en el
+     * instante *s* si se cobró antes y no se había cancelado antes; la foto de AHORA es {@see paidLines()} (lo ata una prueba).
+     *
+     * Entran también los pedidos CANCELADOS: cancelar un pedido fecha cada línea (`Order::cancelLiveItems()`, `#127`), así que
+     * antes de esa fecha contaban. Uno cancelado cuya línea NO tiene fecha (datos de antes) no entra: no se sabe cuándo dejó de
+     * contar. El complemento de una línea cancelada, cancelado con ella.
+     *
+     * @return list<array{date: string, principal: bool, seats: int, cents: int, paid_at: string, cancelled_at: ?string}>
+     */
+    public function bookedLines(string $from, string $to): array
+    {
+        return DB::table('order_items as i')
+            ->join('orders as o', 'o.id', '=', 'i.order_id')
+            ->leftJoin('order_items as p', 'p.id', '=', 'i.parent_item_id')
+            ->join('slots as s', 's.id', '=', DB::raw('COALESCE(p.slot_id, i.slot_id)'))
+            ->whereIn('o.status', [Order::STATUS_PAID, Order::STATUS_CANCELLED])
+            ->whereNotNull('o.paid_at')
+            ->whereBetween('s.date', [$from, $to])
+            ->select(['s.date', 'i.parent_item_id', 'i.seats', 'i.quantity', 'i.free_quantity', 'i.unit_price', 'i.cancelled_at', 'p.cancelled_at as parent_cancelled_at', 'o.paid_at', 'o.status'])
+            ->orderBy('i.id')
+            ->get()
+            ->map(static function (object $row): ?array {
+                $own = $row->cancelled_at === null ? null : (string) $row->cancelled_at;
+                $parent = $row->parent_cancelled_at === null ? null : (string) $row->parent_cancelled_at;
+                $cancelled = match (true) {
+                    $own === null => $parent,
+                    $parent === null => $own,
+                    default => min($own, $parent),
+                };
+                if ($row->status === Order::STATUS_CANCELLED && $cancelled === null) {
+                    return null;
+                }
+                $principal = $row->parent_item_id === null;
+
+                return [
+                    'date' => substr((string) $row->date, 0, 10),
+                    'principal' => $principal,
+                    'seats' => $principal ? (int) $row->seats : 0,
+                    // `OrderItem::chargedSubtotalCents()`, como `paidLines()`.
+                    'cents' => max(0, (int) $row->quantity - (int) $row->free_quantity) * (int) $row->unit_price,
+                    'paid_at' => (string) $row->paid_at,
+                    'cancelled_at' => $cancelled,
+                ];
+            })
+            ->filter()
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Con cuántos días de antelación (del día del cobro al de la visita, en días del parque) se compraron las visitas cobradas
+     * desde `$paidFrom` (UTC): de ahí sale desde cuándo una foto de la cartera es de fiar (§4.8.quater).
+     *
+     * @return list<int>
+     */
+    public function leadDays(string $paidFrom): array
+    {
+        $tz = DisplayTime::timezone();
+
+        return DB::table('order_items as i')
+            ->join('orders as o', 'o.id', '=', 'i.order_id')
+            ->join('slots as s', 's.id', '=', 'i.slot_id')
+            ->where('o.status', Order::STATUS_PAID)
+            ->whereNull('i.parent_item_id')
+            ->where('o.paid_at', '>=', $paidFrom)
+            ->get(['s.date', 'o.paid_at'])
+            ->map(static fn (object $row): int => max(0, (int) Carbon::parse((string) $row->paid_at, 'UTC')->setTimezone($tz)->startOfDay()
+                ->diffInDays(Carbon::parse(substr((string) $row->date, 0, 10), $tz), false)))
             ->values()
             ->all();
     }

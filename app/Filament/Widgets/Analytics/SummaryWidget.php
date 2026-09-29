@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets\Analytics;
 
 use App\Filament\Analytics\Metric;
+use App\Filament\Analytics\Metrics\BookedMetrics;
 use App\Filament\Analytics\Metrics\MarketingMetrics;
 use App\Filament\Analytics\Metrics\MoneyMetrics;
 use App\Filament\Analytics\Metrics\OccupancyMetrics;
@@ -15,14 +16,14 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
  * LAS MISMAS de su pestaña —misma clave, misma definición, el mismo catálogo—: aquí no se compone ninguna. Cada una lleva
  * un enlace a la pestaña donde se explica.
  *
- * Siete de las ocho de §4.5: la cartera de los próximos 30 días llega con la T4. El veredicto y la frase (T3b), «lo que ha
- * cambiado» y los objetivos (T3c) y «Explícamelo con IA» (T3d), después.
+ * Las ocho de §4.5; la octava, lo ya vendido para los próximos 30 días (la cartera, T4), que no depende del periodo del filtro
+ * y enlaza a «Ocupación».
  */
 class SummaryWidget extends MetricsWidget
 {
     public const MAX_TOP = 8;
 
-    public const KEYS = ['money.net', 'occupancy.entries', 'occupancy.visitors', 'traffic.conversion', 'money.avg_order', 'money.returning', 'surveys.scale_mean'];
+    public const KEYS = ['money.net', 'occupancy.entries', 'occupancy.visitors', 'traffic.conversion', 'money.avg_order', 'money.returning', 'surveys.scale_mean', 'booked.cents_30'];
 
     /** Adónde lleva cada cifra: la pestaña donde está arriba. @var array<string, string> */
     public const TABS = [
@@ -33,6 +34,7 @@ class SummaryWidget extends MetricsWidget
         'money.avg_order' => 'money',
         'money.returning' => 'customers',
         'surveys.scale_mean' => 'satisfaction',
+        'booked.cents_30' => 'occupancy',
     ];
 
     protected static ?int $sort = 1;
@@ -47,7 +49,8 @@ class SummaryWidget extends MetricsWidget
         return MoneyMetrics::for($window, $comparison)
             + OccupancyMetrics::for($window, $comparison)
             + MarketingMetrics::for($window, $comparison)
-            + SurveysMetrics::for($window, $comparison);
+            + SurveysMetrics::for($window, $comparison)
+            + BookedMetrics::for();
     }
 
     protected function tile(Metric $metric): Stat

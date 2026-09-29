@@ -449,6 +449,30 @@ return [
             'saved' => 'Objetivos guardados',
             'unchanged' => 'No había nada que cambiar',
         ],
+        // La cartera (T4 de `analitica-para-decidir.md` §4.8.quater): lo ya vendido para lo que viene, frente a lo vendido «a estas
+        // alturas». Mira hacia delante: no depende del periodo del filtro.
+        'booked' => [
+            'cents' => 'Vendido para los próximos :days días',
+            'seats' => 'Plazas vendidas para los próximos :days días',
+            'seats_short' => '{1} :n plaza|[0,*] :n plazas',
+            'vs_year' => 'a estas alturas hace un año: :value:delta',
+            'vs_weeks' => '{1} a estas alturas la semana pasada: :value:delta|[2,*] a estas alturas, de media en las :n semanas anteriores: :value:delta',
+            'no_baseline' => 'aún sin con qué comparar a estas alturas',
+            'more_heading' => 'Lo ya vendido: 7, 30 y 90 días',
+            'more_note' => 'Mira hacia delante: no depende del periodo de arriba. «A estas alturas» es lo que se había vendido en el mismo punto hace un año (el mismo día de la semana) o, si aún no hay año, la media de las cuatro semanas anteriores. «Normal para ti», lo vendido a estas alturas en cada una de las semanas anteriores.',
+            'chart' => 'Lo ya vendido para cada semana que viene (plazas)',
+            'chart_now' => 'Vendido ya',
+            'chart_before' => 'A estas alturas',
+            'by_week' => 'Lo ya vendido, por semana que viene',
+            'week' => ':from – :to',
+            'col' => [
+                'week' => 'Semana',
+                'seats_now' => 'Plazas vendidas',
+                'seats_before' => 'Plazas a estas alturas',
+                'cents_now' => 'Vendido',
+                'cents_before' => 'Vendido a estas alturas',
+            ],
+        ],
         // La ocupación (la T2 de `specs/analitica-para-decidir.md` §4.8.ter, `#758`): entradas y fiestas, nunca sumadas.
         'occupancy' => [
             'note' => 'Por el día y la hora de la visita, lo que ya pasó del periodo. Las entradas se miden en plazas y las fiestas en fiestas por franja: por separado.',
@@ -821,6 +845,15 @@ return [
         ],
         // «¿Cómo se calcula?» de cada cifra, escrito desde el código de su informe (27-09), no desde su rótulo.
         'how' => [
+            // La cartera (T4, §4.8.quater): lo ya vendido para lo que viene; la primera frase es su definición (el texto para IA).
+            'booked' => [
+                'cents_7' => 'Lo ya vendido para las visitas de los próximos 7 días, hoy incluido: lo cobrable de cada línea viva de un pedido cobrado y de sus complementos. Debajo, las plazas y lo que se había vendido a estas alturas —hace un año, el mismo día de la semana, o de media en las cuatro semanas anteriores si aún no hay año—; el cambio no se colorea, porque esas fotos se solapan. «Normal para ti» es lo vendido a estas alturas en cada una de las semanas anteriores.',
+                'cents_30' => 'Lo ya vendido para las visitas de los próximos 30 días, hoy incluido: lo cobrable de cada línea viva de un pedido cobrado y de sus complementos. Debajo, las plazas y lo que se había vendido a estas alturas —hace un año, el mismo día de la semana, o de media en las cuatro semanas anteriores si aún no hay año—; el cambio no se colorea, porque esas fotos se solapan. «Normal para ti» es lo vendido a estas alturas en cada una de las semanas anteriores.',
+                'cents_90' => 'Lo ya vendido para las visitas de los próximos 90 días, hoy incluido: lo cobrable de cada línea viva de un pedido cobrado y de sus complementos. Debajo, las plazas y lo que se había vendido a estas alturas —hace un año, el mismo día de la semana, o de media en las cuatro semanas anteriores si aún no hay año—; el cambio no se colorea, porque esas fotos se solapan. «Normal para ti» es lo vendido a estas alturas en cada una de las semanas anteriores.',
+                'seats_7' => 'Las plazas ya vendidas para las visitas de los próximos 7 días, hoy incluido: las de cada línea viva de un pedido cobrado. Debajo, lo cobrable y lo que se había vendido a estas alturas —hace un año, el mismo día de la semana, o de media en las cuatro semanas anteriores si aún no hay año—.',
+                'seats_30' => 'Las plazas ya vendidas para las visitas de los próximos 30 días, hoy incluido: las de cada línea viva de un pedido cobrado. Debajo, lo cobrable y lo que se había vendido a estas alturas —hace un año, el mismo día de la semana, o de media en las cuatro semanas anteriores si aún no hay año—.',
+                'seats_90' => 'Las plazas ya vendidas para las visitas de los próximos 90 días, hoy incluido: las de cada línea viva de un pedido cobrado. Debajo, lo cobrable y lo que se había vendido a estas alturas —hace un año, el mismo día de la semana, o de media en las cuatro semanas anteriores si aún no hay año—.',
+            ],
             // La T2 (`specs/analitica-para-decidir.md` §4.8.ter, `#758`): desde `OccupancyReader`, con la regla del aforo.
             'occupancy' => [
                 'entries' => 'Las plazas ocupadas entre las ofrecidas, en las zonas que venden entradas y en las franjas que ya pasaron del periodo. Cada media hora de la rejilla cuenta una vez: una entrada de 1 h ocupa su plaza en las franjas que empiezan mientras está dentro, como cuenta el aforo. Solo pedidos cobrados (web, app y los del panel, también la taquilla que se apunta en él); lo que se cobre sin pasar por la web ni por el panel no aparece. Una franja cerrada no cuenta como ofrecida.',

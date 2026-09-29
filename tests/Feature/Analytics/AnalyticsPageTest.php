@@ -14,6 +14,8 @@ use App\Filament\Pages\AnalyticsPage;
 use App\Filament\Pages\Dashboard;
 use App\Filament\Widgets\Analytics\AnticipationChart;
 use App\Filament\Widgets\Analytics\AudienceWidget;
+use App\Filament\Widgets\Analytics\BookedChart;
+use App\Filament\Widgets\Analytics\BookedMoreWidget;
 use App\Filament\Widgets\Analytics\CategoryChart;
 use App\Filament\Widgets\Analytics\ChangesWidget;
 use App\Filament\Widgets\Analytics\CustomersBreakdownWidget;
@@ -179,6 +181,9 @@ class AnalyticsPageTest extends TestCase
         OccupancyOverviewWidget::class,
         OccupancyHeatmapWidget::class,
         AnticipationChart::class,
+        // La T4 (§4.8.quater): lo ya vendido para lo que viene, por semana y sus seis cifras plegadas.
+        BookedChart::class,
+        BookedMoreWidget::class,
         OccupancyBreakdownWidget::class,
         CustomersOverviewWidget::class,
         CustomersSeriesChart::class,

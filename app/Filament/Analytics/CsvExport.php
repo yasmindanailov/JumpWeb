@@ -5,6 +5,7 @@ namespace App\Filament\Analytics;
 use App\Domain\Platform\Enums\Comparison;
 use App\Domain\Platform\Services\Analytics\Reports\Window;
 use App\Domain\Platform\Services\Money;
+use App\Filament\Analytics\Metrics\BookedMetrics;
 use App\Filament\Analytics\Metrics\OccupancyMetrics;
 use App\Filament\Widgets\Analytics\AudienceWidget;
 use App\Filament\Widgets\Analytics\CustomersBreakdownWidget;
@@ -189,6 +190,8 @@ final class CsvExport
             [__('admin.analytics.occupancy.missing'), (string) $r['missing']['count']],
             // T3a (`#759`): las plazas de las visitas pagadas del periodo.
             [__('admin.analytics.occupancy.visitors'), (string) $r['visitors']['seats']],
+            // T4 (§4.8.quater): lo ya vendido para lo que viene —de HOY, no del periodo—, del mismo catálogo que la pantalla.
+            ...array_map(static fn (Metric $m): array => [$m->label, $m->unit === Metric::UNIT_MONEY ? Money::format($m->value) : (string) $m->value], array_values(BookedMetrics::for())),
         ]);
     }
 
