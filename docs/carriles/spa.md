@@ -6,7 +6,7 @@
 > tabla de `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: **`analitica-para-decidir.md`
 > §0** (la tarea en curso, `#755`) · `encuestas.md` §0 y §4.7 (`#754`) · `analitica.md` §0 y §4.5 · `isla-y-landing-nueva.md`
 > §4.11 · `celebracion-e-invitacion.md` §0 · `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 ·
-> `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-09-29 (la TP·3a y la TP·3b en `wip/analitica-tp3`, esperan el ojo).
+> `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-09-29 (la TP·3a y la TP·3b en `main` y aprobadas; sigue la T3d).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`). El
 > contador de la suite va en el trailer del commit (`#618`), no aquí. **Se muda, no se raspa**: el detalle de
 > una feature baja a su spec (las trampas por tanda de la analítica T1→T5 viven en `analitica.md` §4.9,
@@ -26,8 +26,8 @@
   línea en la tarjeta; permiso `analytics.manage`). Lo construido y lo que enseñó cada una: spec §4.13. ▶ **La TP, el
   público** (`#792` `[DECIDIDO owner]` 28-09: la fecha de nacimiento del titular, entera y opcional; los padres por la edad de sus
   hijos con el opt-in de hoy; §4.14): ✅ **TP·1 la captura, en `main` y APROBADA** (28-09; su «al detalle» y lo que enseñó,
-  §4.14; contrato **1.49.0**) · ✅ **TP·2 «Quién viene»** en `main` y aprobada → 🟦 **TP·3a y TP·3b en `wip/analitica-tp3`**
-  (`#793`: los tramos de los anuncios y fuera «Exportar segmento»; arnés `SOLO=TP3` 12/12, sonda 20/20; esperan el ojo) · ⏸ TP·3c. ⚠️ Visto de paso: la ficha
+  §4.14; contrato **1.49.0**) · ✅ **TP·2 «Quién viene»** en `main` y aprobada → ✅ **TP·3a y TP·3b en `main` y aprobadas**
+  (`#793`: los tramos de los anuncios y fuera «Exportar segmento»; arnés `SOLO=TP3` 12/12, sonda 20/20; 29-09) · ⏸ TP·3c. ⚠️ Visto de paso: la ficha
   del cliente en `zh_CN` pinta el parentesco de sus menores como la clave cruda (`admin.users.dependents.relationship_*` solo en es).
 - ▶ **LA FIESTA DEL SISTEMA NUEVO ES MÍA (`#765`, `[DECIDIDO owner]` 25-09)**: la lista de invitados, la invitación con
   su recibo y la autorización, vestidas con «Saltia» para la v2.0.0, en paralelo con la web pública. El traspaso,
@@ -55,8 +55,8 @@
    T3c·1 · T3c·2 y **TP·1** (la fecha de nacimiento, `#792`; arnés `SOLO=TP1`, sondas `storage/app/audit/sonda-tp1-*.mjs`),
    **TP·2** («Quién viene»; arnés `SOLO=TP2`; fixture `ojo-tp2.php` montado, `OJO=desmontar`), todas en `main` y aprobadas →
    ▶ owner 28-09, «cerrar lo que queda», en este orden: **los correos salientes PRIMERO** (`specs/correos-salientes.md` ✅
-   `#794`; ✅ C1→C4 en `main`, aprobadas 29-09) → 🟦 **TP·3a y TP·3b en `wip/analitica-tp3`, esperan el ojo** (§4.14; fixture `ojo-tp3.php` encima del de la TP·2, con «Últimos 90 días»; con el visto bueno, a `main`) ·
-   la TP·3c (felicitaciones) y el gasto en anuncios, ⏸ con el rediseño de la plantilla / aplazado; §4.14 y §4.9 → T3d el texto para IA (§4.7; lee `Changes` y
+   `#794`; ✅ C1→C4 en `main`, aprobadas 29-09) → ✅ **TP·3a y TP·3b en `main` y aprobadas** (§4.14; fixture `ojo-tp3.php` montado encima del de la TP·2, `CARRIL-SPA` §8 (22)) ·
+   la TP·3c (felicitaciones) y el gasto en anuncios, ⏸ con el rediseño de la plantilla / aplazado; §4.14 y §4.9 → ▶ ahora **T3d** el texto para IA (§4.7; lee `Changes` y
    los veredictos; sin PII ni celdas < 5) → T3e el SECTOR (primera búsqueda en §4.13: casi todo son medias, no rangos; AL OWNER
    antes de sembrar) → T4 cartera → T5 marketing y correos → T6 cohortes → T7 pérdidas → T8 satisfacción (§4.12). Los CRUCES de
    encuestas, con la T8; el cruce por EMPLEADO, `[PENDIENTE: owner]` (27-09, sin respuesta).

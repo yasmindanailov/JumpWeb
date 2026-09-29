@@ -1,6 +1,6 @@
 # [SPEC] La analítica para decidir — un cuadro que se entiende, dice si va bien o mal y cubre las decisiones del operador
 
-> Estado: ✅ **aprobada por el owner el 27-09** (§7; `#755`) → ✅ **T0, T1 y T2** · 🟦 **T3** (✅ T3a · ✅ T3b · ✅ T3c · ⬜ T3d·T3e, §4.13) · 🟦 **TP el público** (§4.14: ✅ TP·1 · ✅ TP·2 · 🟦 TP·3a·3b, esperan el ojo · ⏸ TP·3c) · Última actualización: 2026-09-29 ·
+> Estado: ✅ **aprobada por el owner el 27-09** (§7; `#755`) → ✅ **T0, T1 y T2** · 🟦 **T3** (✅ T3a · ✅ T3b · ✅ T3c · ⬜ T3d·T3e, §4.13) · 🟦 **TP el público** (§4.14: ✅ TP·1 · ✅ TP·2 · ✅ TP·3a·3b · ⏸ TP·3c) · Última actualización: 2026-09-29 ·
 > Decisiones: `#755` (esta), `#754` (encuestas anónimas, su T1), `#758` (la T2), `#759` (la T3 en cinco tandas), `#792` (el público), `#793` (el público, anónimo; las felicitaciones) · Carril: **SPA** (banda 790–819). Amplía `analitica.md`
 > (el libro, los regímenes y la T2 siguen siendo suyos).
 
@@ -18,7 +18,7 @@
   camino de `EmailUtm` (tras firmar, ignorada al validar); (6) aperturas solo con consentimiento (`[PENDIENTE: asesoría]`).
 - **Estado**: ✅ aprobada (27-09, `#755`); T0a·T0b·T0c ✅ · **T1** ✅ (la T5 de `encuestas.md`, `#754`, `#757`) · **T2** ✅ ocupación (§4.8.ter, `#758`) → **T3** Resumen, en cinco tandas (§4.13,
   `#759`): ✅ T3a la forma · ✅ T3b veredicto (mín–máx, `#790`) · ✅ T3c·1 lo que ha cambiado (`#791`) · ✅ T3c·2 objetivos →
-  ▶ **TP el público** (§4.14, `#792`/`#793`; ✅ TP·1 · ✅ TP·2 · 🟦 TP·3a tramos y TP·3b sin exportación, en `wip/` · ⏸ TP·3c) → T3d.
+  ✅ **TP el público** (§4.14, `#792`/`#793`; TP·1 · TP·2 · TP·3a tramos · TP·3b sin exportación · ⏸ TP·3c) → ▶ T3d.
   **Nada de lo medido se pierde** (§4.1.bis, con guarda): se resume arriba y lo demás queda
   plegado o en su pestaña.
 - **Invariantes**: `RGPD-01`, `RGPD-04`, `RGPD-07`, `SEC-04`, `SUITE-01`. Dinero y aforo: solo lectura.
@@ -748,7 +748,7 @@ construido, al final de la lista):
   - La columna «con opt-in» se queda: dice a cuántos se les podría escribir (las felicitaciones de la TP·3c), en conjunto.
   - ⚠️ **Visto al medir**: `SegmentsWidget` enseña recuentos de 1 a 4 sin tapar. Con `#793` (el público es anónimo) se
     propone taparlos como en «Quién viene».
-- 🟦 **Lo construido (29-09, en `wip/analitica-tp3`; espera el ojo del owner)**:
+- ✅ **Lo construido (29-09; el owner lo vio y lo aprobó: «Bien. Buen trabajo», 29-09)**:
   - **TP·3a**: `AudienceReport::ADULT_BRACKETS` con los cortes de Google (55–64 y 65+) y `CHILD_BRACKETS` por etapas (9–12 ·
     13–17). La tabla «Para los anuncios» cierra «Quién viene» (`AudienceWidget::forAds`), sobre las personas que vienen: «Con
     hijos declarados» y «Sin dato». Con menos de 5 personas no tiene filas, y un grupo de 1 a 4 se escribe «menos de 5», sin su %.
