@@ -1,15 +1,15 @@
 /**
- * SONDA DE LOS SEGMENTOS — la sección «Segmentos de clientes» de «Analítica → Clientes» y su exportación
- * (`docs/specs/analitica.md` §4.6, T4b), en el navegador real: que la pestaña la pinta con sus cuatro filas, que el
- * botón «Exportar segmento» abre su modal, que la descarga responde un CSV con cabecera y `no-store`, y dos
- * capturas para el ojo del owner.
+ * SONDA DE LOS SEGMENTOS — la sección «Segmentos de clientes» de «Analítica → Clientes» (`docs/specs/analitica.md`
+ * §4.6, T4b), en el navegador real: que la pestaña la pinta con sus cinco filas y, desde la TP·3b
+ * (`specs/analitica-para-decidir.md` §4.14, `#793`: el público es ANÓNIMO), que ya NO hay «Exportar segmento» ni su
+ * descarga, que ninguna cifra de 1 a 4 se escribe tal cual y que la sección no lleva ni un correo. Una captura para el
+ * ojo del owner.
  *
  * ── CÓMO SE CORRE ────────────────────────────────────────────────────────────────────────────────
  *     docker compose exec -u sail -T -e SONDA_PANEL_EMAIL=… -e SONDA_PANEL_PASSWORD=… laravel.test \
  *         node scripts/sonda-segmentos.mjs [etiqueta]
  *   Base: `SONDA_BASE` o `http://localhost`. Salida: `storage/app/audit/segmentos-<etiqueta>*.{json,png}`.
- * ⚠️ El login del panel tiene limitador: UNA sesión por pasada. ⚠️ La descarga deja una fila de auditoría en la
- *    BD local (`segments.exported`), como haría un operador.
+ * ⚠️ El login del panel tiene limitador: UNA sesión por pasada.
  */
 import { chromium } from 'playwright-core';
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -65,25 +65,15 @@ ok('las cinco filas, con sus dos cifras', presentes.every(Boolean), JSON.stringi
 await asentar();
 await page.screenshot({ path: `${SALIDA}/segmentos-${ETIQUETA}-tabla.png` });
 
-const boton = page.getByRole('button', { name: 'Exportar segmento' }).first();
-ok('el botón «Exportar segmento» está (el admin tiene el permiso)', await boton.count() > 0);
-await boton.click();
-const modal = page.getByText('Exportar un segmento de clientes').first();
-await modal.waitFor({ timeout: 10000 }).catch(() => null);
-ok('abre su modal con el selector de segmento', await modal.count() > 0 && await page.getByText('Solo las personas con opt-in').count() > 0);
-await asentar(600);
-await page.screenshot({ path: `${SALIDA}/segmentos-${ETIQUETA}-modal.png` });
-
-// La descarga, con la sesión del navegador: un CSV con su cabecera y sin caché.
-const csv = await page.evaluate(async (base) => {
-    const res = await fetch(`${base}/admin/analitica/segmentos/csv?segment=once_never_back`, { credentials: 'include' });
-    return { status: res.status, type: res.headers.get('content-type'), cache: res.headers.get('cache-control'), head: (await res.text()).split('\n')[0] };
-}, BASE);
-ok('la descarga responde un CSV', csv.status === 200 && /text\/csv/.test(csv.type ?? ''), JSON.stringify(csv));
-ok('con la cabecera nombre;correo;teléfono;última compra', /Nombre;Correo;Tel/.test(csv.head), csv.head);
-ok('y sin caché (`no-store`)', /no-store/.test(csv.cache ?? ''), csv.cache ?? '');
-const desconocido = await page.evaluate(async (base) => (await fetch(`${base}/admin/analitica/segmentos/csv?segment=todos`, { credentials: 'include' })).status, BASE);
-ok('un segmento desconocido es 404', desconocido === 404, String(desconocido));
+// TP·3b: solo recuentos. Las cifras de la tabla, leídas del DOM: ninguna entre 1 y 4, y ni un correo en la sección.
+const seccion = page.locator('section, .fi-section').filter({ hasText: 'Segmentos de clientes' }).last();
+const celdas = await seccion.locator('td').allInnerTexts();
+const cifras = celdas.map((t) => t.trim()).filter((t) => /^\d+$/.test(t)).map(Number);
+ok('ninguna cifra de 1 a 4 escrita tal cual', cifras.every((n) => n === 0 || n >= 5), JSON.stringify(celdas));
+ok('la sección no lleva ni un correo', ! (await seccion.innerText()).includes('@'));
+ok('ya no hay botón «Exportar segmento»', await page.getByRole('button', { name: 'Exportar segmento' }).count() === 0);
+const retirada = await page.evaluate(async (base) => (await fetch(`${base}/admin/analitica/segmentos/csv?segment=once_never_back`, { credentials: 'include' })).status, BASE);
+ok('y su descarga ya no existe (404)', retirada === 404, String(retirada));
 
 await browser.close();
 await writeFile(`${SALIDA}/segmentos-${ETIQUETA}.json`, JSON.stringify({ base: BASE, etiqueta: ETIQUETA, comprobaciones }, null, 2));

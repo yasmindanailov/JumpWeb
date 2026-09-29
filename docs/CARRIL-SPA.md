@@ -348,6 +348,11 @@ borrándola) y los envíos 19 y 20 con sus aperturas; el 21, del control sin la 
 clics y aperturas repartidos, para ver «Marketing → Los correos» y «Cuándo abren y pulsan». `OJO=desmontar` lo borra todo
 (clics y aperturas en cascada). La sonda: `sonda-c4-cuando.mjs`, con `ESPERADO` de `c4-esperado.php`.
 
+(22) **De la TP·3a (29-09, `#793`)**: `ojo-tp3.php` (en la carpeta de auditoría) va ENCIMA de `ojo-tp2.php`: reparte las fechas
+de sus 53 titulares entre los seis tramos de Google y las de sus 81 menores (`OJO-TP2`) entre las cinco etapas; lo de antes, en
+`ojo-tp3-antes.json`. Para verlo, «Últimos 90 días». `OJO=desmontar` devuelve las fechas: ⚠️ **desmontar este ANTES que el
+de la TP·2**. La sonda: `sonda-tp3-panel.mjs`, con los `ESPERADO_*` de tinker (spec §4.14).
+
 ## 9 · La foto vieja del carril (mudada VERBATIM de `carriles/spa.md` el 2026-09-29, su techo)
 
 - ✅ **27-09, TODO EN `main` Y APROBADO POR EL OWNER**: **F7** (`#752`, la exención de quien cumple: la lista y su
@@ -365,6 +370,15 @@ clics y aperturas repartidos, para ver «Marketing → Los correos» y «Cuándo
   enseñó» en `encuestas.md` §4.6; el owner contestó una en vivo desde la puerta y cerró con «buen trabajo»).
   Quedan: `[PENDIENTE: asesoría]` (5) del correo de servicio, la **T2e** solo si el volumen lo pide, el `EXPLAIN` con
   volumen en staging. Todo espera la v2.0.0 (`#670`). Las trampas pagadas en la T7 viven en `encuestas.md` §4.6.
+
+De la foto, mudado VERBATIM el 2026-09-29 por la tarde (su techo, con la TP·3):
+
+- ✅ **Esta máquina, montada para la fiesta (25-09)**: la instancia clonada en `~/proyectos/instancias/playjump` (el
+  diseño con su sha256 verificado), `INSTANCIA_RUTA=/var/www/instancias/playjump` en el `.env` (ruta DEL CONTENEDOR),
+  `public/instancia/` copiado de `publico/instancia/` (ignorado por git); la receta entera, en Trampas vivas 🏠.
+- ✅ Con su ✅ en vivo y sin desplegar (`#670`): **la ficha de Google** (`#720`→`#734`; el resto, contra un DOBLE hasta finales
+  de octubre: `google-business-profile.md` §0) · **la invitación digital** (`#718`, `celebracion-e-invitacion.md` §10.18) · **las
+  25 pantallas del cajón** (`#550`→`#568`).
 
 Del buzón del carril, mudado VERBATIM el 2026-09-29 (su techo; mensajes a plataforma del 26-09, ya leídos):
 

@@ -12,7 +12,7 @@
 set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
-FILTER='ReportPeriodTest|MoneyReportTest|WindowLabelTest|AnalyticsPageTest|MetricTest|AnalyticsCensusTest|FunnelReportTest|PartiesReportTest|CustomersReportTest|GateSurveyTest|ValidarRegistroProfileTest|GateVisitsTest|OccupancyReaderParityTest|OccupancyReportTest|AnalyticsTabsTest|AnalyticsJargonTest|MetricsCatalogTest|AnalyticsExportTest|SegmentsExportTest|MetricsHistoryTest|ChangesTest|GoalTest|AnalyticsGoalsTest|HolderBirthDateTest|HolderBirthDatePanelTest|AnonymizeCoversEveryUserColumnTest|MeTest|SidebarTranslationKeysExistTest|AudienceReportTest'
+FILTER='ReportPeriodTest|MoneyReportTest|WindowLabelTest|AnalyticsPageTest|MetricTest|AnalyticsCensusTest|FunnelReportTest|PartiesReportTest|CustomersReportTest|GateSurveyTest|ValidarRegistroProfileTest|GateVisitsTest|OccupancyReaderParityTest|OccupancyReportTest|AnalyticsTabsTest|AnalyticsJargonTest|MetricsCatalogTest|AnalyticsExportTest|SegmentsReportTest|MetricsHistoryTest|ChangesTest|GoalTest|AnalyticsGoalsTest|HolderBirthDateTest|HolderBirthDatePanelTest|AnonymizeCoversEveryUserColumnTest|MeTest|SidebarTranslationKeysExistTest|AudienceReportTest'
 # Modo «solo una tanda» (`SOLO=<tanda> bash scripts/mutar-analitica-decidir.sh`; 28-09, el owner: esperar ~95 min por tanda
 # es inviable). Corre SOLO las mutaciones de esa sección y con SUS pruebas: un filtro más estrecho nunca inventa un «muerde»,
 # como mucho esconde uno, y el veredicto sigue siendo por código de salida. La base verde y el CONTROL corren siempre. El arnés
@@ -21,6 +21,7 @@ declare -A FILTRO_DE=(
     [T3c2]='GoalTest|AnalyticsGoalsTest|MetricsCatalogTest'
     [TP1]='HolderBirthDateTest|HolderBirthDatePanelTest|AnonymizeCoversEveryUserColumnTest|MeTest|SidebarTranslationKeysExistTest'
     [TP2]='AudienceReportTest|AnalyticsCensusTest|AnalyticsPageTest'
+    [TP3]='AudienceReportTest|SegmentsReportTest|AnalyticsPageTest|AccessI18nParityTest'
 )
 SOLO="${SOLO:-}"
 SECCION=''
@@ -87,6 +88,10 @@ FICHEROS=(
     resources/js/sidebar/stores/profile.js
     app/Filament/Analytics/AudienceReport.php
     app/Filament/Widgets/Analytics/AudienceWidget.php
+    app/Filament/Widgets/Analytics/SegmentsWidget.php
+    app/Domain/Identity/Services/PermissionCatalog.php
+    database/seeders/PermissionSeeder.php
+    database/migrations/2026_09_29_110000_drop_analytics_export_permission.php
 )
 # La copia de cada fichero, por su RUTA entera (T3a): por su nombre, `lang/es/admin.php` y `lang/zh_CN/admin.php` chocaban.
 copia() { echo "$TMP/$(echo "$1" | tr '/' '_')"; }
@@ -987,6 +992,78 @@ if [[ -z "$SOLO" || "$SOLO" == TP2 ]]; then
     control "un comentario del informe de quién viene" "$AR" \
       'Los tramos de edad de quien reserva' \
       'Los tramos de edad de quien reservó'
+fi
+
+# ── TP·3 · PARA LOS ANUNCIOS Y SIN NOMBRES (§4.14, `#793`). La TP·3a: los tramos de Google Ads y el estado parental como lo puede
+# decir el producto («con hijos declarados» o «sin dato», nunca «no es padre»). La TP·3b: fuera «Exportar segmento» con su permiso
+# —el público es ANÓNIMO— y los segmentos, solo recuentos con 1–4 dicho «menos de 5».
+SECCION=TP3
+SW=app/Filament/Widgets/Analytics/SegmentsWidget.php
+
+mutar "55–64 y 65+ vuelven a ser un solo «55+»" "$AR" \
+  '    public const ADULT_BRACKETS = [[18, 24], [25, 34], [35, 44], [45, 54], [55, 64], [65, null]];' \
+  '    public const ADULT_BRACKETS = [[18, 24], [25, 34], [35, 44], [45, 54], [55, null]];'
+
+mutar "los hijos vuelven a ir de tres en tres (9–11, 12–14, 15–17)" "$AR" \
+  '    public const CHILD_BRACKETS = [[0, 2], [3, 5], [6, 8], [9, 12], [13, 17]];' \
+  '    public const CHILD_BRACKETS = [[0, 2], [3, 5], [6, 8], [9, 11], [12, 14], [15, 17]];'
+
+mutar "«sin dato» cuenta a todos, también a los que declararon hijos" "$AW" \
+  "            \$noData = \$t['of'] - \$t['with_data'];
+            \$rows = [
+                [__('admin.analytics.audience.ads.parents')," \
+  "            \$noData = \$t['of'];
+            \$rows = [
+                [__('admin.analytics.audience.ads.parents'),"
+
+mutar "«Para los anuncios» se pinta con menos de cinco personas" "$AW" \
+  "    private function forAds(array \$t): array
+    {
+        \$rows = [];
+        if (\$t['of'] >= AudienceReport::MIN_CELL) {" \
+  "    private function forAds(array \$t): array
+    {
+        \$rows = [];
+        if (true) {"
+
+mutar "«con hijos declarados» de 1 a 4 se enseña, con su %" "$AW" \
+  "[__('admin.analytics.audience.ads.parents'), self::masked(\$t['with_data']), self::share(\$t['with_data'], \$t['of'], masked: true)]," \
+  "[__('admin.analytics.audience.ads.parents'), (string) \$t['with_data'], self::share(\$t['with_data'], \$t['of'])],"
+
+mutar "«sin dato» se rotula «no es padre» (no declarar no es no tener)" "lang/es/admin.php" \
+  "                'unknown' => 'Sin dato («Desconocido»; no declarar no es no tener)'," \
+  "                'unknown' => 'No es padre',"
+
+mutar "la tabla «Para los anuncios» sale de quién viene" "$AW" \
+  "                \$this->forAds(\$r['kids_count'])," \
+  ''
+
+mutar "un segmento de 1 a 4 se escribe tal cual" "$SW" \
+  '        return $n > 0 && $n < AudienceReport::MIN_CELL ? __(' \
+  '        return false ? __('
+
+mutar "los del opt-in de un segmento se escriben sin máscara" "$SW" \
+  "            self::masked((int) \$counts[\$segment]['opt_in'])," \
+  "            (string) \$counts[\$segment]['opt_in'],"
+
+mutar "el permiso de exportar personas vuelve al catálogo" "app/Domain/Identity/Services/PermissionCatalog.php" \
+  "            'analytics.manage'," \
+  "            'analytics.export',
+            'analytics.manage',"
+
+mutar "el seeder vuelve a sembrar el permiso de exportar personas" "database/seeders/PermissionSeeder.php" \
+  "        'analytics.manage' => 'Poner los objetivos del mes de la analítica'," \
+  "        'analytics.export' => 'Exportar segmentos de clientes (con opt-in)',
+        'analytics.manage' => 'Poner los objetivos del mes de la analítica',"
+
+mutar "la migración deja el permiso viejo donde ya estaba sembrado" "database/migrations/2026_09_29_110000_drop_analytics_export_permission.php" \
+  "        DB::table('permissions')->where('name', 'analytics.export')->delete();" \
+  ''
+
+if [[ -z "$SOLO" || "$SOLO" == TP3 ]]; then
+    control "un comentario del widget de los segmentos" "$SW" \
+      'Un recuento de 1 a 4, dicho «menos de 5».' \
+      'Un recuento de 1 a 4, dicho «menos de cinco».'
 fi
 
 # ── El CONTROL: tocar un comentario no puede poner nada en rojo ─────────────────────────────────

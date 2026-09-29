@@ -186,7 +186,8 @@ class AuditLog extends Model
         // La descarga del CSV de «Analítica» (`specs/analitica.md` §4.5, T2d): informe, periodo y recuento; sin PII.
         'reports.exported',
         // T4b de la analítica: la descarga de un SEGMENTO (una lista de personas con opt-in), con el segmento y
-        // el recuento en el payload, sin PII.
+        // el recuento en el payload, sin PII. ⚠️ La descarga se RETIRÓ con la TP·3b (`#793`): la acción se QUEDA aquí para
+        // que el rastro viejo se siga leyendo; nada nuevo la escribe.
         'segments.exported',
         // T5b de la analítica: un experimento se crea, se cambia (encender, apagar, ventana) o se borra desde
         // «Ajustes»; el payload lleva la clave, las variantes y el estado, sin PII.

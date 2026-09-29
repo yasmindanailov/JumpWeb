@@ -215,11 +215,11 @@ Acciones: **«Marcar preparada»** y **«Marcar canjeada»**.
     y productos —siempre, desde los pedidos cobrados—; y, solo si el cliente consintió «análisis» y no se opuso,
     su primera fuente y campaña, las visitas antes de comprar y los contactos recibidos. Una cuenta anonimizada
     no enseña nada.
-- **Analítica → Clientes → «Segmentos de clientes»** (`specs/analitica.md` §4.6, T4b): cuatro listas de hoy
-  —compró una vez y no volvió, fiesta hace un año, invitado que no compró, escribió y no tiene pedido— con
-  cuántos son y cuántos dieron el opt-in. **«Exportar segmento»** (`analytics.export`, permiso propio que el
-  staff no lleva por defecto): un CSV solo con las personas con opt-in de comunicaciones (nombre, correo,
-  teléfono, última compra); cada descarga queda en la auditoría con el segmento y el recuento.
+- **Analítica → Clientes → «Segmentos de clientes»** (`specs/analitica.md` §4.6, T4b): cinco grupos de hoy
+  —compró una vez y no volvió, fiesta hace un año, invitado que no compró, vino invitado y luego compró, escribió
+  y no tiene pedido— con cuántos son y cuántos dieron el opt-in. **Solo recuentos**, y una cifra de 1 a 4 se
+  escribe «menos de 5»: «Exportar segmento» y su permiso `analytics.export` se retiraron el 29-09 (TP·3b de
+  `specs/analitica-para-decidir.md` §4.14, `#793`: el público es anónimo, nada del cuadro sale con nombres).
 - **Pedidos y reembolsos:** ver compras, reembolsar, reenviar entradas.
 
 ---

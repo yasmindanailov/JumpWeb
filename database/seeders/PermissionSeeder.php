@@ -110,8 +110,6 @@ class PermissionSeeder extends Seeder
         // La 360 del cliente (`specs/analitica.md` §4.6, T4a): la historia comercial y, en el régimen
         // identificado, la navegación de UNA persona; permiso propio, fuera del staff por defecto.
         'customers.insights' => 'Ver la 360 del cliente en su ficha',
-        // Los segmentos (T4b): exportar una lista de personas con opt-in, con rastro. Distinto de `reports.export`.
-        'analytics.export' => 'Exportar segmentos de clientes (con opt-in)',
         // Los objetivos del mes (T3c·2 de la analítica para decidir): de gestión, fuera del staff por defecto.
         'analytics.manage' => 'Poner los objetivos del mes de la analítica',
         // Los correos salientes (`specs/correos-salientes.md`, `#794`): ver qué recibió cada cliente, TAL CUAL (a veces el

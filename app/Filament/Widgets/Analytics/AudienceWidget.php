@@ -43,7 +43,34 @@ class AudienceWidget extends Widget
                 $this->company($r['company']),
                 $this->ranged('honorees', $r['honorees'], __('admin.analytics.audience.col.parties'), 'years'),
                 $this->ranged('guests', $r['guests'], __('admin.analytics.audience.col.guests'), 'years'),
+                $this->forAds($r['kids_count']),
             ],
+        ];
+    }
+
+    /**
+     * **Para los anuncios** (TP·3a, `#793`): el «estado parental» de Google Ads, dicho como el producto PUEDE decirlo. No declarar
+     * hijos no es no tenerlos: nunca «no es padre», solo «con hijos declarados» (sus «Padres») y «sin dato» (su «Desconocido»).
+     * Sobre las personas que vienen, con los mínimos de siempre.
+     *
+     * @param  array{of: int, with_data: int}  $t
+     * @return array{heading: string, columns: list<string>, rows: list<list<string>>}
+     */
+    private function forAds(array $t): array
+    {
+        $rows = [];
+        if ($t['of'] >= AudienceReport::MIN_CELL) {
+            $noData = $t['of'] - $t['with_data'];
+            $rows = [
+                [__('admin.analytics.audience.ads.parents'), self::masked($t['with_data']), self::share($t['with_data'], $t['of'], masked: true)],
+                [__('admin.analytics.audience.ads.unknown'), self::masked($noData), self::share($noData, $t['of'], masked: true)],
+            ];
+        }
+
+        return [
+            'heading' => __('admin.analytics.audience.tables.ads'),
+            'columns' => [__('admin.analytics.audience.col.group'), __('admin.analytics.audience.col.people'), '%'],
+            'rows' => $rows,
         ];
     }
 

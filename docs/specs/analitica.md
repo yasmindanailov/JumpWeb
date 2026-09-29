@@ -659,7 +659,8 @@ y, **solo en el régimen identificado**, primera fuente y campaña (`users.first
 de comprar. Los menores a cargo se muestran con la sección existente (`admin.users.section_dependents`) y su
 permiso, sin exponer edades en otro sitio. **Segmentos** (compró una vez y no volvió, fiesta hace ~11 meses
 —calculada desde los PEDIDOS, nunca desde `dependents.born_on`—, invitado que no compró, contacto sin pedido),
-exportables **solo con opt-in**, con `analytics.export` y rastro. Cualquier consulta a `dependents` pasa por
+exportables **solo con opt-in**, con `analytics.export` y rastro (⚠️ **retirado el 29-09** por la TP·3b de
+`analitica-para-decidir.md` §4.14, `#793`: el público es anónimo y los segmentos quedan como recuentos). Cualquier consulta a `dependents` pasa por
 `active()`. La pregunta «¿cómo nos has conocido?» **se descartó** (`[DECIDIDO owner]`): lo offline queda con la
 fuente del operador en el pedido manual (§4.1).
 
@@ -685,7 +686,8 @@ fuente del operador en el pedido manual (§4.1).
   `dependents.born_on`—; «invitado que no compró» = un correo de responsable en `guardian_authorizations` sin
   ninguna compra, contado en minúsculas y **solo contado**: no tiene cuenta, así que no dio opt-in y no se
   exporta a nadie; «escribió y no tiene pedido» = `contact_received` con `user_id` (régimen identificado) sin
-  pedido cobrado. El equipo y las cuentas anonimizadas no cuentan. Dos cifras por segmento (personas · con
+  pedido cobrado. El equipo y las cuentas anonimizadas no cuentan. ⚠️ **La exportación de abajo se RETIRÓ el 29-09** (TP·3b,
+  `#793`: nada del cuadro sale con nombres): quedan los recuentos, con 1–4 dicho «menos de 5». Dos cifras por segmento (personas · con
   opt-in) porque la exportación SOLO lleva a quien dio `marketing_opt_in`: es una lista de personas, y por
   eso el permiso es otro (`analytics.export`, fuera del staff por defecto), el CSV lleva nombre, correo, teléfono
   y última compra saneados (`CsvExport::cell`), y cada descarga deja `segments.exported` con el segmento y el

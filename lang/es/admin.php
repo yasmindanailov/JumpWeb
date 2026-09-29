@@ -643,11 +643,11 @@ return [
                 'rate' => 'Conversión (IC 95 %)',
             ],
         ],
-        // Los segmentos (`specs/analitica.md` §4.6, T4b): cuatro listas de personas, desde los PEDIDOS y el libro;
-        // la exportación solo lleva a quien dio el opt-in y tiene permiso propio (`analytics.export`).
+        // Los segmentos (`specs/analitica.md` §4.6, T4b): cuántas personas hay en cada grupo, desde los PEDIDOS y el libro.
+        // Solo recuentos: la exportación se retiró con la TP·3b (`#793`, el público es anónimo).
         'segments' => [
             'heading' => 'Segmentos de clientes',
-            'note' => 'Cinco listas para volver a hablar con alguien, calculadas hoy desde los pedidos (nunca desde la edad de un menor): compró una vez y lleva :days días sin volver; su última fiesta fue hace entre :from y :to meses; vino invitado y nunca compró; vino invitado y luego compró con su cuenta; escribió y no tiene pedido. Solo se exporta a quien dio el opt-in de comunicaciones, y cada descarga queda en la auditoría.',
+            'note' => 'Cinco grupos, calculados hoy desde los pedidos (nunca desde la edad de un menor): compró una vez y lleva :days días sin volver; su última fiesta fue hace entre :from y :to meses; vino invitado y nunca compró; vino invitado y luego compró con su cuenta; escribió y no tiene pedido. Solo recuentos, sin nombres: una cifra de menos de :min se escribe «menos de :min». «Con opt-in» son los que aceptaron recibir comunicaciones.',
             'table_heading' => 'Cuántos son hoy',
             'col' => [
                 'segment' => 'Segmento',
@@ -660,19 +660,6 @@ return [
                 'guest_no_purchase' => 'Invitado que no ha comprado',
                 'guest_became_customer' => 'Vino invitado y luego compró',
                 'contact_no_order' => 'Escribió y no tiene pedido',
-            ],
-            'export' => [
-                'button' => 'Exportar segmento',
-                'modal_heading' => 'Exportar un segmento de clientes',
-                'modal_description' => 'Solo las personas con opt-in de comunicaciones: nombre, correo, teléfono y última compra. Los invitados sin cuenta no se exportan. La descarga queda en la auditoría.',
-                'segment_label' => 'Segmento',
-                'submit' => 'Descargar',
-            ],
-            'csv' => [
-                'name' => 'Nombre',
-                'email' => 'Correo',
-                'phone' => 'Teléfono',
-                'last_purchase' => 'Última compra',
             ],
         ],
         'period' => [
@@ -985,7 +972,7 @@ return [
         // TP·2 (`#792`): quién viene. Solo recuentos, y ninguna cifra de 1 a 4 (`AudienceReport::MIN_CELL`).
         'audience' => [
             'heading' => 'Quién viene',
-            'note' => 'De quien tiene una reserva pagada con visita en el periodo —cada persona una vez— y de las fiestas del periodo. Solo recuentos: una cifra de menos de :min se junta con la vecina o va a «Otros».',
+            'note' => 'De quien tiene una reserva pagada con visita en el periodo —cada persona una vez— y de las fiestas del periodo. Solo recuentos: una cifra de menos de :min se junta con la vecina o va a «Otros». Los tramos de edad son los de Google Ads (TikTok junta 55–64 y 65+), para copiarlos tal cual en un anuncio.',
             'with_data' => 'Con dato',
             'coverage' => ':with de :of',
             'coverage_few' => 'menos de :min de :of',
@@ -999,6 +986,11 @@ return [
                 'company' => 'Con quién viene',
                 'honorees' => 'La edad de quien cumple',
                 'guests' => 'La edad de los invitados',
+                'ads' => 'Para los anuncios: con hijos o sin dato',
+            ],
+            'ads' => [
+                'parents' => 'Con hijos declarados («Padres» en Google Ads)',
+                'unknown' => 'Sin dato («Desconocido»; no declarar no es no tener)',
             ],
             'col' => [
                 'group' => 'Grupo',
@@ -2777,7 +2769,6 @@ return [
             'reports_view' => 'Ver la analítica (informes)',
             'reports_export' => 'Exportar la analítica en CSV',
             'customers_insights' => 'Ver la 360 del cliente en su ficha',
-            'analytics_export' => 'Exportar segmentos de clientes (solo con opt-in)',
             'analytics_manage' => 'Poner los objetivos del mes de la analítica',
             'emails_view' => 'Ver los correos enviados a los clientes (tal cual salieron)',
             'audit_view' => 'Ver registro de auditoría',

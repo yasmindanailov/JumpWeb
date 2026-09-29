@@ -20,15 +20,15 @@ use Illuminate\Support\Facades\DB;
  *    {@see PARTY_FROM_MONTHS} y {@see PARTY_TO_MONTHS} meses: el cumpleaños del año que viene se acerca.
  *    Calculado desde los pedidos, nunca desde la fecha de nacimiento de un menor.
  *  - `guest_no_purchase` — vino invitado (un responsable que autorizó a un menor invitado, con correo) y ese
- *    correo no tiene ninguna compra. Cuenta personas SIN cuenta: solo se cuentan, no se exportan.
+ *    correo no tiene ninguna compra. Cuenta personas SIN cuenta.
  *  - `guest_became_customer` — vino invitado (su correo firmó un justificante de menor invitado) y DESPUÉS compró
- *    con una cuenta (T3 de `specs/analitica-fiesta.md`): la invitación trajo un cliente. Se exporta con opt-in.
+ *    con una cuenta (T3 de `specs/analitica-fiesta.md`): la invitación trajo un cliente.
  *  - `contact_no_order` — escribió (`contact_received` en el régimen identificado) y no tiene pedido cobrado.
  *
- * Dos cifras por segmento: cuántos son y cuántos tienen `marketing_opt_in`, porque **la exportación solo lleva
- * a quien dio el opt-in** ({@see members()}): un segmento es una lista de personas y sin consentimiento de
- * comunicaciones no hay nada que llevarse. Las cuentas anonimizadas nunca cuentan. Los recuentos se
- * memorizan {@see CACHE_SECONDS}; la lista se calcula al exportar, que es un acto auditado.
+ * Dos cifras por segmento: cuántos son y cuántos tienen `marketing_opt_in` (a cuántos se les podría escribir). ⚠️ **Solo
+ * recuentos** (TP·3b de `specs/analitica-para-decidir.md` §4.14, `#793`): la lista de personas y su exportación se
+ * retiraron —el público es anónimo, nada del cuadro sale con nombres—. Las cuentas anonimizadas nunca cuentan. Los
+ * recuentos se memorizan {@see CACHE_SECONDS}.
  */
 final class SegmentsReport
 {
@@ -86,41 +86,6 @@ final class SegmentsReport
         return $out;
     }
 
-    /**
-     * Las personas de un segmento que se pueden EXPORTAR: con cuenta, con `marketing_opt_in` y sin anonimizar.
-     *
-     * @return list<array{name: string, email: string, phone: string, last_purchase: string}>
-     */
-    public function members(string $segment): array
-    {
-        if ($segment === self::GUEST_NO_PURCHASE) {
-            // Los invitados no tienen cuenta: no dieron ningún opt-in y no hay a quién exportar.
-            return [];
-        }
-
-        $rows = $this->users($segment)
-            ->where('users.marketing_opt_in', true)
-            ->select(['users.id', 'users.name', 'users.email', 'users.phone'])
-            ->orderBy('users.id')
-            ->get();
-
-        $ids = $rows->pluck('id')->all();
-        $last = $ids === [] ? [] : DB::table('orders')
-            ->whereIn('user_id', $ids)
-            ->whereIn('status', self::COLLECTED_STATUSES)
-            ->groupBy('user_id')
-            ->selectRaw('user_id, MAX(paid_at) AS last_at')
-            ->pluck('last_at', 'user_id')
-            ->all();
-
-        return $rows->map(static fn (object $row): array => [
-            'name' => (string) $row->name,
-            'email' => (string) $row->email,
-            'phone' => (string) ($row->phone ?? ''),
-            'last_purchase' => isset($last[$row->id]) ? DisplayTime::format((string) $last[$row->id], 'd/m/Y') : '',
-        ])->all();
-    }
-
     /** Las cuentas de CLIENTE (sin rol de equipo) y sin anonimizar, que es de donde salen tres segmentos. */
     private function customers(): Builder
     {
@@ -164,7 +129,7 @@ final class SegmentsReport
 
     /**
      * Los responsables de un menor INVITADO (`guardian_authorizations.guardian_email`) cuyo correo no tiene
-     * compra: ni como cuenta con pedido cobrado. Personas sin cuenta, casi siempre: se cuentan, no se exportan.
+     * compra: ni como cuenta con pedido cobrado. Personas sin cuenta, casi siempre: nadie dio un opt-in.
      *
      * @return array{size: int, opt_in: int}
      */

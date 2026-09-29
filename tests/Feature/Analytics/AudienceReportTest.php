@@ -116,7 +116,8 @@ class AudienceReportTest extends TestCase
 
         $this->assertSame(6, $r['holders']['of']);
         $this->assertSame(5, $r['holders']['with_data']);
-        $this->assertSame([['from' => 18, 'to' => 24, 'count' => 5], ['from' => 25, 'to' => 34, 'count' => 0], ['from' => 35, 'to' => 44, 'count' => 0], ['from' => 45, 'to' => 54, 'count' => 0], ['from' => 55, 'to' => null, 'count' => 0]], $r['holders']['rows']);
+        // Los tramos de Google Ads (TP·3a): 55–64 y 65+ por separado.
+        $this->assertSame([['from' => 18, 'to' => 24, 'count' => 5], ['from' => 25, 'to' => 34, 'count' => 0], ['from' => 35, 'to' => 44, 'count' => 0], ['from' => 45, 'to' => 54, 'count' => 0], ['from' => 55, 'to' => 64, 'count' => 0], ['from' => 65, 'to' => null, 'count' => 0]], $r['holders']['rows']);
 
         // La paridad con el alcance de Eloquent (`paidScheduledPrincipal` + `slotDateBetween`): las mismas personas.
         $scope = OrderItem::query()->paidScheduledPrincipal()->slotDateBetween('2026-06-01', '2026-06-30')->with('order')->get()->pluck('order.user_id')->unique()->count();
@@ -145,10 +146,77 @@ class AudienceReportTest extends TestCase
 
         $this->assertSame(['of' => 6, 'with_data' => 6], array_intersect_key($r['kids_count'], ['of' => 0, 'with_data' => 0]));
         $this->assertSame([['from' => 1, 'to' => 1, 'count' => 6], ['from' => 2, 'to' => 2, 'count' => 0], ['from' => 3, 'to' => null, 'count' => 0]], $r['kids_count']['rows']);
-        // 5 de 6–8 y 1 de 15–17: el resto de uno se funde HACIA ATRÁS a través de los ceros.
+        // 5 de 6–8 y 1 de 13–17: el resto de uno se funde HACIA ATRÁS a través de los ceros (9–12).
         $this->assertSame([['from' => 0, 'to' => 2, 'count' => 0], ['from' => 3, 'to' => 5, 'count' => 0], ['from' => 6, 'to' => 17, 'count' => 6]], $r['kids_ages']['rows']);
         $this->assertSame([['key' => 'mother', 'count' => 5]], $r['declared_by']['rows']);
         $this->assertSame(1, $r['declared_by']['unknown'], 'el menor sin parentesco no se adivina');
+    }
+
+    /** TP·3a (`#793`): los cortes de los ANUNCIOS —55–64 y 65+ separados (Google); los hijos por etapas, con 9–12 juntos—. */
+    public function test_the_brackets_are_the_ones_the_ads_ask_for(): void
+    {
+        foreach (range(1, 5) as $i) {
+            $sesenta = $this->holder("sesenta{$i}", '1966-01-01');       // 60 el 10-06
+            $this->visit($sesenta, '2026-06-10');
+            $this->kid($sesenta, '2014-01-01', 'father');                  // 12: de 9–12, no de 12–14
+            $this->visit($this->holder("sesentaycinco{$i}", '1961-01-01'), '2026-06-10'); // 65
+        }
+
+        $r = (new AudienceReport)->compute($this->june());
+
+        $this->assertSame([[18, 24], [25, 34], [35, 44], [45, 54], [55, 64], [65, null]], AudienceReport::ADULT_BRACKETS);
+        $this->assertSame([[0, 2], [3, 5], [6, 8], [9, 12], [13, 17]], AudienceReport::CHILD_BRACKETS);
+        $this->assertSame([5, 5], [$r['holders']['rows'][4]['count'], $r['holders']['rows'][5]['count']], '55–64 y 65+, cada uno con los suyos');
+        $this->assertSame(['from' => 9, 'to' => 12, 'count' => 5], $r['kids_ages']['rows'][3]);
+    }
+
+    /**
+     * «Para los anuncios» (TP·3a): el estado parental como lo puede decir el producto —con hijos declarados o SIN DATO—, nunca
+     * «no es padre»: no declarar no es no tener. Con los mínimos de siempre.
+     */
+    public function test_the_ads_table_says_parents_or_no_data_never_not_a_parent(): void
+    {
+        foreach (range(1, 5) as $i) {
+            $u = $this->holder("conhijos{$i}", '1990-01-01');
+            $this->visit($u, '2026-06-10');
+            $this->kid($u, '2018-06-15', 'mother');
+            $this->visit($this->holder("sindato{$i}", '1990-01-01'), '2026-06-11');
+        }
+        $this->visit($this->holder('otro', '1990-01-01'), '2026-06-12');
+
+        $anuncios = collect((new AudienceWidget)->tablesFor($this->june()))->firstWhere('heading', 'Para los anuncios: con hijos o sin dato');
+
+        $this->assertSame([
+            ['Con hijos declarados («Padres» en Google Ads)', '5', '45 %'],
+            ['Sin dato («Desconocido»; no declarar no es no tener)', '6', '55 %'],
+        ], $anuncios['rows']);
+        $this->assertStringNotContainsStringIgnoringCase('no es padre', (string) json_encode($anuncios, JSON_UNESCAPED_UNICODE));
+    }
+
+    /** «Para los anuncios», con los mínimos (`RGPD-07`): un grupo de 1 a 4 se dice «menos de 5» y sin su %; con menos de cinco personas, vacía. */
+    public function test_the_ads_table_masks_a_small_group_and_stays_empty_under_five_people(): void
+    {
+        foreach (range(1, 3) as $i) {
+            $u = $this->holder("pocos{$i}", '1990-01-01');
+            $this->visit($u, '2026-06-10');
+            $this->kid($u, '2018-06-15', 'mother');
+        }
+        foreach (range(1, 5) as $i) {
+            $this->visit($this->holder("muchos{$i}", '1990-01-01'), '2026-06-11');
+        }
+        foreach (range(1, 4) as $i) {
+            $this->visit($this->holder("julio{$i}", '1990-01-01'), '2026-07-10');
+        }
+        $heading = 'Para los anuncios: con hijos o sin dato';
+
+        $junio = collect((new AudienceWidget)->tablesFor($this->june()))->firstWhere('heading', $heading);
+        $julio = collect((new AudienceWidget)->tablesFor(ReportPeriod::Custom->window('2026-07-01', '2026-07-31')))->firstWhere('heading', $heading);
+
+        $this->assertSame([
+            ['Con hijos declarados («Padres» en Google Ads)', 'menos de 5', '—'],
+            ['Sin dato («Desconocido»; no declarar no es no tener)', '5', '63 %'],
+        ], $junio['rows']);
+        $this->assertSame([], $julio['rows'], 'cuatro personas: ni una fila');
     }
 
     public function test_with_minors_is_an_assigned_minor_or_a_product_only_for_minors_and_otherwise_unknown(): void

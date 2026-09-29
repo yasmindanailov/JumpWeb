@@ -1,6 +1,6 @@
 # [SPEC] La analítica para decidir — un cuadro que se entiende, dice si va bien o mal y cubre las decisiones del operador
 
-> Estado: ✅ **aprobada por el owner el 27-09** (§7; `#755`) → ✅ **T0, T1 y T2** · 🟦 **T3** (✅ T3a · ✅ T3b · ✅ T3c · ⬜ T3d·T3e, §4.13) · 🟦 **TP el público** (§4.14: ✅ TP·1 · ✅ TP·2 · ⬜ TP·3) · Última actualización: 2026-09-28 ·
+> Estado: ✅ **aprobada por el owner el 27-09** (§7; `#755`) → ✅ **T0, T1 y T2** · 🟦 **T3** (✅ T3a · ✅ T3b · ✅ T3c · ⬜ T3d·T3e, §4.13) · 🟦 **TP el público** (§4.14: ✅ TP·1 · ✅ TP·2 · 🟦 TP·3a·3b, esperan el ojo · ⏸ TP·3c) · Última actualización: 2026-09-29 ·
 > Decisiones: `#755` (esta), `#754` (encuestas anónimas, su T1), `#758` (la T2), `#759` (la T3 en cinco tandas), `#792` (el público), `#793` (el público, anónimo; las felicitaciones) · Carril: **SPA** (banda 790–819). Amplía `analitica.md`
 > (el libro, los regímenes y la T2 siguen siendo suyos).
 
@@ -18,7 +18,7 @@
   camino de `EmailUtm` (tras firmar, ignorada al validar); (6) aperturas solo con consentimiento (`[PENDIENTE: asesoría]`).
 - **Estado**: ✅ aprobada (27-09, `#755`); T0a·T0b·T0c ✅ · **T1** ✅ (la T5 de `encuestas.md`, `#754`, `#757`) · **T2** ✅ ocupación (§4.8.ter, `#758`) → **T3** Resumen, en cinco tandas (§4.13,
   `#759`): ✅ T3a la forma · ✅ T3b veredicto (mín–máx, `#790`) · ✅ T3c·1 lo que ha cambiado (`#791`) · ✅ T3c·2 objetivos →
-  ▶ **TP el público** (§4.14, `#792`/`#793`; ✅ TP·1 · ✅ TP·2 · ⬜ TP·3 anónima: tramos, retirar la exportación, felicitaciones) → T3d.
+  ▶ **TP el público** (§4.14, `#792`/`#793`; ✅ TP·1 · ✅ TP·2 · 🟦 TP·3a tramos y TP·3b sin exportación, en `wip/` · ⏸ TP·3c) → T3d.
   **Nada de lo medido se pierde** (§4.1.bis, con guarda): se resume arriba y lo demás queda
   plegado o en su pestaña.
 - **Invariantes**: `RGPD-01`, `RGPD-04`, `RGPD-07`, `SEC-04`, `SUITE-01`. Dinero y aforo: solo lectura.
@@ -719,8 +719,8 @@ el copy al máximo». Tres tandas, cada una con su «al detalle» medido y **sin
   owner]`. Se apoya en lo que ya hay de `#750` (el aviso a invitados: su comando horario, su «una vez por cumpleaños» y su baja),
   que sigue igual. `/privacidad` lo nombra (buzón a la web).
 
-**La TP·3a y la TP·3b al detalle — medido el 29-09, antes de codificar** (⬜ esperan el ojo del owner: «sin código hasta que
-lo vea»):
+**La TP·3a y la TP·3b al detalle — medido el 29-09, antes de codificar** (✅ el owner lo vio: «Bien. Continúa», 29-09; lo
+construido, al final de la lista):
 - **Medido, lo que hay** («Quién viene», TP·2, `AudienceReport`): quien reserva en 18–24 · 25–34 · 35–44 · 45–54 · 55+; los
   hijos de tres en tres (0–2 … 15–17); cuántos hijos (1 · 2 · 3+); **quién los declara** (padre, madre, tutor, abuelo, otro:
   «madres frente a padres» YA está, `Dependent::RELATIONSHIPS`); con quién viene; las fiestas. Todo con los mínimos de `RGPD-07`.
@@ -748,6 +748,27 @@ lo vea»):
   - La columna «con opt-in» se queda: dice a cuántos se les podría escribir (las felicitaciones de la TP·3c), en conjunto.
   - ⚠️ **Visto al medir**: `SegmentsWidget` enseña recuentos de 1 a 4 sin tapar. Con `#793` (el público es anónimo) se
     propone taparlos como en «Quién viene».
+- 🟦 **Lo construido (29-09, en `wip/analitica-tp3`; espera el ojo del owner)**:
+  - **TP·3a**: `AudienceReport::ADULT_BRACKETS` con los cortes de Google (55–64 y 65+) y `CHILD_BRACKETS` por etapas (9–12 ·
+    13–17). La tabla «Para los anuncios» cierra «Quién viene» (`AudienceWidget::forAds`), sobre las personas que vienen: «Con
+    hijos declarados» y «Sin dato». Con menos de 5 personas no tiene filas, y un grupo de 1 a 4 se escribe «menos de 5», sin su %.
+    Entra en el CSV de «Clientes» por `tablesFor()`, y en es y zh_CN.
+  - **TP·3b**: fuera la acción `exportSegment`, `PERMISSION_SEGMENTS_EXPORT`, la ruta, `SegmentsExportController`,
+    `SegmentsExportTest`, sus textos y **`SegmentsReport::members()`** (devolvía nombre, correo y teléfono; su única llamada era
+    el controlador). El permiso `analytics.export` sale del catálogo y del seeder, y la migración
+    `drop_analytics_export_permission` borra su fila (el pivote cae en cascada). `SegmentsWidget` escribe 1–4 como «menos de 5»
+    en las dos columnas. `segments.exported` se queda en `AuditLog::ACTIONS`.
+  - **Pruebas**: `AudienceReportTest` +2 (los cortes y el reparto; el enmascarado y la tabla vacía con menos de cinco) y
+    `SegmentsReportTest` +2 (el widget enmascara y no nombra a nadie; nada exporta personas: el catálogo, el seeder, el 404 y la
+    migración con su pivote); sin las aserciones de `members()`. Arnés `SOLO=TP3`: **12/12 muerden** y los controles quedan en
+    verde. La sonda versionada `sonda-segmentos.mjs` se reescribe para la retirada.
+  - **Sonda del ojo** (`storage/app/audit/sonda-tp3-panel.mjs`, 20/20): con `ojo-tp3.php` montado y «Últimos 90 días», los seis
+    tramos, las cinco etapas y la tabla «Para los anuncios» coinciden cifra a cifra con el informe (9·9·8·8·7·8 · 11·11·12·22·20
+    · 40·18). Además: ninguna cifra de 1 a 4, ni un correo, sin botón y con el 404, sin desplazamiento lateral a 1280 y a 390,
+    y el CSV con la tabla nueva.
+  - **Lo que enseñó**: con pocos datos, los tramos pequeños se funden con el vecino (`RGPD-07`). Con los 34 de «Este mes» en
+    local se leía «18–34 · 35 o más» y parecía que los cortes nuevos no estaban: el instrumento, no el producto. Para ver los
+    tramos hacen falta cinco por tramo.
 
 **La TP·1 al detalle — medido el 28-09, antes de codificar.** Tres correcciones al plan de arriba:
 - **Las altas son cuatro puertas, no cinco**: `ValidarRegistro` (la puerta) NO crea cuentas (medido: los únicos `User::create`

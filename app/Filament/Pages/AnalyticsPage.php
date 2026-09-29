@@ -8,7 +8,6 @@ use App\Domain\Platform\Services\Analytics\AnalyticsGoals;
 use App\Domain\Platform\Services\Analytics\Reports\Window;
 use App\Filament\Analytics\CsvExport;
 use App\Filament\Analytics\GoalsForm;
-use App\Filament\Analytics\SegmentsReport;
 use App\Filament\Analytics\WindowLabel;
 use App\Filament\Widgets\Analytics\AnticipationChart;
 use App\Filament\Widgets\Analytics\AudienceWidget;
@@ -112,12 +111,6 @@ class AnalyticsPage extends BaseDashboard
 
     /** El permiso del CSV (T2d): auditado, sin PII, con recuento. */
     public const PERMISSION_EXPORT = 'reports.export';
-
-    /**
-     * Exportar un SEGMENTO (T4b): una lista de PERSONAS —solo con opt-in—, no agregados; por eso es otro permiso,
-     * propio y fuera del staff por defecto, y cada descarga deja rastro con el segmento y el recuento.
-     */
-    public const PERMISSION_SEGMENTS_EXPORT = 'analytics.export';
 
     /**
      * Poner los objetivos del mes (T3c·2, `#759`): cambia lo que el cuadro dice de todos, así que es de gestión y propio
@@ -419,9 +412,8 @@ class AnalyticsPage extends BaseDashboard
                 ->url(fn (): string => $this->csvUrl(self::REPORTS[$tab]), shouldOpenInNewTab: true);
         }
 
-        if ($tab === 'customers') {
-            $actions[] = $this->exportSegmentAction();
-        }
+        // «Exportar segmento» (T4b), RETIRADO por la TP·3b (`#793`, owner 28-09: «no quiero exportar datos de los menores ni
+        // de los clientes… solo analítica»): los segmentos quedan como recuentos. Nada del cuadro sale con nombres.
 
         if ($tab === self::DEFAULT_TAB) {
             $actions[] = $this->goalsAction();
@@ -479,38 +471,6 @@ class AnalyticsPage extends BaseDashboard
             'from' => is_string($filters['from'] ?? null) ? substr($filters['from'], 0, 10) : null,
             'to' => is_string($filters['to'] ?? null) ? substr($filters['to'], 0, 10) : null,
         ], static fn ($v): bool => $v !== null));
-    }
-
-    /**
-     * «Exportar segmento» (T4b): una lista de personas con opt-in. Se esconde sin `analytics.export`; el controlador de la
-     * ruta vuelve a comprobarlo y audita cada descarga. Pública: Filament la resuelve por su nombre (`exportSegment`), y
-     * se pinta al pie de «Clientes».
-     */
-    public function exportSegmentAction(): Action
-    {
-        return Action::make('exportSegment')
-            ->label(__('admin.analytics.segments.export.button'))
-            ->icon(Heroicon::OutlinedUserGroup)
-            ->color('gray')
-            ->visible(fn (): bool => auth()->user()?->hasPermission(self::PERMISSION_SEGMENTS_EXPORT) ?? false)
-            ->modalHeading(__('admin.analytics.segments.export.modal_heading'))
-            ->modalDescription(__('admin.analytics.segments.export.modal_description'))
-            ->modalSubmitActionLabel(__('admin.analytics.segments.export.submit'))
-            ->modalWidth('md')
-            ->schema([
-                Select::make('segment')
-                    ->label(__('admin.analytics.segments.export.segment_label'))
-                    ->options(array_combine(SegmentsReport::SEGMENTS, array_map(static fn (string $s): string => __('admin.analytics.segments.name.'.$s), SegmentsReport::SEGMENTS)))
-                    ->default(SegmentsReport::ONCE_NEVER_BACK)
-                    ->required()
-                    ->selectablePlaceholder(false)
-                    ->native(false),
-            ])
-            ->action(function (array $data): void {
-                $this->dispatch('open-url-new-tab', url: route('admin.analitica.segmentos.csv', [
-                    'segment' => (string) ($data['segment'] ?? SegmentsReport::ONCE_NEVER_BACK),
-                ]));
-            });
     }
 
     /** «Este mes · frente al periodo anterior»: lo que dice la píldora del filtro en el móvil. */

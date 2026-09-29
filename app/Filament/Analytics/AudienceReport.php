@@ -31,11 +31,17 @@ final class AudienceReport
 
     public const MIN_CELL = SurveysReport::MIN_CELL;
 
-    /** Los tramos de edad de quien reserva: `[desde, hasta]`, el último sin tope. */
-    public const ADULT_BRACKETS = [[18, 24], [25, 34], [35, 44], [45, 54], [55, null]];
+    /**
+     * Los tramos de edad de quien reserva: `[desde, hasta]`, el último sin tope. Son los de Google Ads (TP·3a, `#793`: para
+     * copiarlos tal cual al montar un anuncio); TikTok junta los dos últimos en «55+».
+     */
+    public const ADULT_BRACKETS = [[18, 24], [25, 34], [35, 44], [45, 54], [55, 64], [65, null]];
 
-    /** Los tramos de edad de los hijos, de tres en tres: por debajo de los 18 (los que ya los cumplieron no cuentan). */
-    public const CHILD_BRACKETS = [[0, 2], [3, 5], [6, 8], [9, 11], [12, 14], [15, 17]];
+    /**
+     * Los tramos de edad de los hijos, por ETAPAS (TP·3a): bebé, preescolar, primaria, preadolescente y adolescente —las de los
+     * «padres de…» de los anuncios—; por debajo de los 18 (los que ya los cumplieron no cuentan).
+     */
+    public const CHILD_BRACKETS = [[0, 2], [3, 5], [6, 8], [9, 12], [13, 17]];
 
     /** Cuántos hijos ha declarado: uno, dos, tres o más. */
     public const KIDS_BRACKETS = [[1, 1], [2, 2], [3, null]];
