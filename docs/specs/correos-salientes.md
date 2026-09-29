@@ -15,7 +15,7 @@
   (`EmailUtm::IGNORED_QUERY`); (3) `sendmail` no avisa de entregas ni rebotes: «entregado» no se puede saber, «falló al
   enviar» sí; (4) el píxel de apertura exige consentimiento (LSSI 22.2) y Apple Mail abre solo: las aperturas son
   APROXIMADAS; (5) los escáneres de enlaces de Outlook y Gmail pulsan solos: un clic en el primer segundo tras el envío no cuenta.
-- **Estado**: ✅ aprobada (`#794`: la COPIA 6 meses, las cifras 24); ✅ C1, C2 y C2b en `main` (ojo del owner, 29-09); 🟦 C3 aperturas (§4.12–§4.13).
+- **Estado**: ✅ aprobada (`#794`: la COPIA 6 meses, las cifras 24); ✅ C1, C2, C2b y C3 en `main` (ojo del owner, 29-09); ▶ C4 «cuándo» (§4.10).
 - **C2**: `jw_e` va en `EmailUtm::IGNORED_QUERY` y NUNCA en `RouteNormalizer::QUERY_ALLOWLIST` (la analítica es anónima);
   la encuesta no lleva marca (`#754`); el escáner se reconoce por la RÁFAGA, no por el reloj (§4.8).
 - **Apuntar un envío NUNCA rompe el envío** (`#794`): un fallo del registro reintentaría el trabajo y duplicaría el correo.
@@ -281,7 +281,7 @@ Construido: «Actividad» en «Correos enviados» (`EmailSendTable::activity()`,
 6. **Se ve**: la columna «Aperturas», con «+N automáticas» aparte y «No se mide» sin el píxel; las aperturas en «Actividad»;
    `opens` en el export (contrato 1.54.0: la 1.53.0 es de plataforma).
 
-### 4.13 La C3, lo construido (29-09; 🟦 en `wip/correos-c3`, falta el ojo del owner)
+### 4.13 La C3, lo construido (29-09; ✅ ojo del owner el 29-09: «buen trabajo, visto bueno ok»)
 Construido: `email_opens` y `email_sends.tracks_opens` (una migración); `EmailOpenMarks` (la regla y su oyente);
 `ConsentLedger::accountConsentedNow()`; el píxel en el molde (`layout.blade.php`); `EmailOpenController` y la ruta
 `emails.open`; `EmailOpens` (el origen, el veredicto, el tope); la columna, el filtro, la ficha y «Actividad»; el segundo
