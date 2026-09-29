@@ -2075,6 +2075,15 @@ parque. Lo demás, la regla de Visítanos: donde el panel habla, gana; donde cal
   `/normas`; el descargo, el mismo JSON que la API, con uno publicado), vistas en ROJO antes del código;
   `scripts/mutar-normas-del-panel.sh` 6/6 (entre ellas, el filtro de lo que no es de la lista). En LOCAL, icono y nivel
   para las 10 normas; en PRODUCCIÓN, el owner.
+- ✅ **T6e·2 (29-09) · LA PÁGINA**, con el ojo del owner («buen trabajo»; instancia `dae276f`): `seguridad`, que OCUPA `/normas`
+  (sin ella, el tablero de siempre). Las normas del panel por momento («Antes de venir», «Al llegar», «Mientras saltas»; las
+  sin momento, a lo ancho), cada tarjeta con su descripción y su PORQUÉ detrás; sin nivel, «Seguridad», y sin icono, el
+  escudo. Componentes: `rule-card` (sacada de `rule-grid`: el «Qué traer» de Visítanos, el MISMO HTML, medido), `rule-grid`
+  con GRUPOS (el `rgSplit` del diseño; con las del panel sale 7 a 3) y `tone="subtle"`, y `waiver-sheet` (un `<dialog>`
+  nativo: Esc, foco y fondo del navegador; sin JavaScript o sin texto publicado, el enlace a `/waiver`). **Medido** (sonda de
+  un solo uso `storage/app/audit/normas-capturas.mjs`): 200 en es/en/fr sin marcadores; a 390 y 1280 sin salirse, una `h1`,
+  sin errores; la hoja se abre y Esc la cierra. ⚠️ Desaparece la ESCALA DE ALTURA del `/normas` viejo (el mockup no la
+  trae); las normas del brief que el panel no tiene (calentamiento, espuma, volteretas dobles), a darlas de alta el parque.
 
 ## 5. Impacto en invariantes
 

@@ -4,8 +4,8 @@
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
 > **820–849** (dada de alta en `DECISIONES.md` el 27-09; centena `decisiones/800-899.md`) · Último usado: **`#842`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#842`) · Actualizado: **2026-09-28**
-> (PORTADA, CUMPLEAÑOS, COLEGIOS y VISÍTANOS ✅; NORMAS en marcha, `#842`).
+> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#842`) · Actualizado: **2026-09-29**
+> (PORTADA, CUMPLEAÑOS, COLEGIOS y VISÍTANOS ✅; NORMAS: T6e·1–2 ✅, sigue su sonda, T6e·3).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
 > llévaselo con la medida, como el SPA en `#724`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -38,27 +38,30 @@
 
 ## Por dónde retomar, en orden
 
-▶▶▶▶ **27-09 noche · EL ORDEN HASTA LA v2.0.0** (`#789`, del owner). **HECHO, con el ✅ del owner**: (0) la primera
-pantalla, (1) la conversión del zip tercero y (2) la T5, Mi cuenta, ENTERA (spec §4.13–§4.16, con lo medido de cada tanda).
-▶ **EN MARCHA: (3) T6** (spec §4.17). ✅ con el ojo del owner: la PORTADA (`#827`→`#831`, `sonda-portada.mjs`) y
-CUMPLEAÑOS (`#832`→`#836`, §4.18, `sonda-cumpleanos.mjs`) y **COLEGIOS entera** (spec §4.19, `#837`→`#841` y T6c·5–6;
-instancia `88660ef`; en LOCAL, 91 plantillas INFERIDAS para `excursiones`; `sonda-colegios.mjs` 56/56 a 390 y 1280,
-`mutar-sonda-colegios.sh` 11/11, `mutar-escalera.sh` 7/7) y **VISÍTANOS entera** (spec §4.20, T6d·1–3; instancia `c58265a`;
-`sonda-visitanos.mjs` 26/26, `mutar-sonda-visitanos.sh` 8/8; la primera pantalla, el mismo veredicto que el mockup; el panel
-gana donde habla y donde calla, el brief). ▶ **EN MARCHA: NORMAS (T6e)**, censo en la spec §4.21 y `#842` (del owner: las
-normas, del panel, con icono y nivel nuevos; la cabecera, con el vídeo). T6e·1 ✅ (contrato 1.50.0; en LOCAL, icono y nivel
-de las 10 normas; en PRODUCCIÓN, el owner). **Sigue la T6e·2**, la página (con `WaiverSheet`: aviso en mi buzón al SPA),
-y su sonda (T6e·3). Pendiente: la vuelta de Google con una
-excursión, sin verificar. ⚠️ La entrada `isla/hoja/montar.js` NO importa nada compartido (`#841`); la calculadora, a 185,80 de 186.
+▶▶▶▶ **EL ORDEN HASTA LA v2.0.0** (`#789`, del owner). **HECHO, con el ✅ del owner**: (0) la primera pantalla, (1) la
+conversión del zip tercero y (2) la T5, Mi cuenta (spec §4.13–§4.16). ▶ **EN MARCHA: (3) T6** (spec §4.17), con el ojo del
+owner en cada página: PORTADA (`#827`→`#831`, `sonda-portada.mjs`), CUMPLEAÑOS (§4.18, `#832`→`#836`, `sonda-cumpleanos.mjs`),
+COLEGIOS (§4.19, `#837`→`#841`, T6c·5–6; `sonda-colegios.mjs` 56/56, `mutar-sonda-colegios.sh` 11/11, `mutar-escalera.sh` 7/7;
+en LOCAL, 91 plantillas INFERIDAS para `excursiones`) y VISÍTANOS (§4.20, T6d·1–3; `sonda-visitanos.mjs` 26/26,
+`mutar-sonda-visitanos.sh` 8/8; el panel gana donde habla y donde calla, el brief). ▶ **NORMAS (T6e, §4.21, `#842`)**: T6e·1 ✅
+(producto: `park_rules.icon`/`level`, contrato 1.50.0, `/normas` ocupable, el hecho `waiver`) y T6e·2 ✅ con el ojo del owner
+(instancia `dae276f`: la página `seguridad` OCUPA `/normas`). **SIGUE la T6e·3**: versionar `scripts/sonda-normas.mjs` desde
+`storage/app/audit/normas-capturas.mjs` (de un solo uso) con el molde de `sonda-visitanos.mjs` —cada dato contra su hecho: las
+normas contra `/rules` con su icono y su nivel, la hoja contra `/legal/waiver`, las alturas contra `/catalog/zones`; la isla
+que cede su botón; en/fr—, su arnés (molde `mutar-sonda-visitanos.sh`, con su espera de 3 s por opcache) y la primera pantalla
+(`sonda-primera-pantalla.mjs comparar normas 0,1`, con el servidor del diseño en el 8129). Después, la **T6f**: los 301
+(`/contacto` → `/visitanos`, `/servicios` → `/colegios`…) y retirar las vistas viejas de la instancia (§1.6.4; también
+`normas.blade.php`), con la sonda de todas (la T4f de Kids y Jump va aquí). **Del owner, en PRODUCCIÓN**: el icono y el nivel
+de cada norma, y dar de alta las del brief que falten (calentamiento, espuma, volteretas dobles).
+Pendiente: la vuelta de Google con una excursión, sin verificar. ⚠️ La entrada `isla/hoja/montar.js` NO importa nada
+compartido (`#841`); la calculadora, a 185,80 de 186.
 ⚠️ `sonda-portada` 13/14 («Reservar» de la isla tras «Míralo», 17:17): igual con el `HEAD` (control): investigar aparte. La ISLA la
-repiensa el owner con Claude Design: no atar nada nuevo a ella. **Para iterar con el owner** (no
-ahora): la isla «muy sola» y el «Reservar» solo en la isla del móvil (A/B propuesto: las páginas de la instancia aún no
-reciben su variante). Orden de la T6: portada, Cumpleaños, Colegios, Visítanos (SIN formulario: `/contacto` con 301) y Normas, y los 301
-→ **(4)** Bizum, Apple (entra) y el día liberado → material y revisión del owner, al final (los datos: playjump.es). **Los
-correos del sistema y la puerta, del SPA**, en paralelo. ❗ **Sin atender, del buzón del SPA (27-09, `#758`)**: la isla
-emite `availability_missing` como el cajón, con SUS funciones (`sidebar/missing.js`, `calendar.js::missingMonths`). Faltan piezas para la T6: `AnswerRow`, `RuleGrid`/`RuleCard` y
-`WaiverSheet` (buzón al SPA ANTES). La T6 HEREDA: toda página nueva usa `video-hero` SIN `height` y entra en
-`sonda-primera-pantalla.mjs` (el mockup de la portada NO pinta el aviso de cookies: su primera visita no se compara).
+repiensa el owner con Claude Design: no atar nada nuevo a ella. **Para iterar con el owner** (no ahora): la isla «muy sola» y
+el «Reservar» solo en la isla del móvil (A/B propuesto). Tras la T6 → **(4)** Bizum, Apple (entra) y el día liberado →
+material y revisión del owner, al final (los datos: playjump.es). **Los correos del sistema y la puerta, del SPA**, en
+paralelo. ❗ **Sin atender, del buzón del SPA (27-09, `#758`)**: la isla emite `availability_missing` como el cajón, con SUS
+funciones (`sidebar/missing.js`, `calendar.js::missingMonths`). La T6 HEREDA: toda página nueva usa `video-hero` SIN `height` y
+entra en `sonda-primera-pantalla.mjs` (el mockup de la portada NO pinta el aviso de cookies: su primera visita no se compara).
 ⚠️ **Trampas vivas**: (a) `sonda-isla` PAGA con la cuenta de pruebas y rompe `sonda-cuenta` si corre antes (sus pedidos, a
 `sonda-compra@` entre las dos, `TESTING.md` §2.octies); (b) el tracker está a ~20 B de su techo (16 KB): la próxima línea
 obliga a MUDAR algo de él (a su spec); (c) `sonda-cuenta` monta «HOY» solo antes de las 20:00 del parque: 125 checks por
