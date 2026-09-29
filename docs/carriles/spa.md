@@ -2,11 +2,11 @@
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb` a secas; la instancia al lado, en
 > `~/proyectos/instancias/playjump`, clon de `github.com/yasmindanailov/instancia-playjump`, montada el 25-09) ·
-> Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#798`** · La banda está dada de alta en la
+> Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#799`** · La banda está dada de alta en la
 > tabla de `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: **`analitica-para-decidir.md`
 > §0** (la tarea en curso, `#755`) · `encuestas.md` §0 y §4.7 (`#754`) · `analitica.md` §0 y §4.5 · `isla-y-landing-nueva.md`
 > §4.11 · `celebracion-e-invitacion.md` §0 · `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 ·
-> `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-09-29 (la T3d en `main` y aprobada; sigue la T3e).
+> `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-09-29 (T3d en `main`; T3e en espera por `#799`; sigue la T4).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`). El
 > contador de la suite va en el trailer del commit (`#618`), no aquí. **Se muda, no se raspa**: el detalle de
 > una feature baja a su spec (las trampas por tanda de la analítica T1→T5 viven en `analitica.md` §4.9,
@@ -58,8 +58,8 @@
    ▶ owner 28-09, «cerrar lo que queda», en este orden: **los correos salientes PRIMERO** (`specs/correos-salientes.md` ✅
    `#794`; ✅ C1→C4 en `main`, aprobadas 29-09) → ✅ **TP·3a y TP·3b en `main` y aprobadas** (§4.14; fixture `ojo-tp3.php` montado encima del de la TP·2, `CARRIL-SPA` §8 (22)) ·
    la TP·3c (felicitaciones) y el gasto en anuncios, ⏸ con el rediseño de la plantilla / aplazado; §4.14 y §4.9 → ✅ **T3d** el texto para IA, en `main` y aprobada (§4.13;
-   arnés `SOLO=T3d` 11/11, sonda `sonda-t3d-panel.mjs` 22/22) → ▶ ahora **T3e** el SECTOR (primera búsqueda en §4.13: casi todo son medias, no rangos; AL OWNER
-   antes de sembrar) → T4 cartera → T5 marketing y correos → T6 cohortes → T7 pérdidas → T8 satisfacción (§4.12). Los CRUCES de
+   arnés `SOLO=T3d` 11/11, sonda `sonda-t3d-panel.mjs` 22/22) → ⏸ **T3e** el sector: no hay rangos con método, nada sembrado
+   (`#799` `[DECIDIDO owner]`, §4.13) → ▶ ahora **T4 cartera** → T5 marketing y correos → T6 cohortes → T7 pérdidas → T8 satisfacción (§4.12). Los CRUCES de
    encuestas, con la T8; el cruce por EMPLEADO, `[PENDIENTE: owner]` (27-09, sin respuesta).
    **Cómo se trabaja una tanda** (lo de esta sesión): medir antes y escribir «La Tx al detalle» en §4.13; toda cifra por el
    catálogo (`Filament\Analytics\Metrics\*::from()`, su «¿Cómo se calcula?» es/zh_CN y el censo); el arnés

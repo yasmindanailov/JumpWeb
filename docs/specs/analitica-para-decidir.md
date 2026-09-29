@@ -1,7 +1,7 @@
 # [SPEC] La analítica para decidir — un cuadro que se entiende, dice si va bien o mal y cubre las decisiones del operador
 
-> Estado: ✅ **aprobada por el owner el 27-09** (§7; `#755`) → ✅ **T0, T1 y T2** · 🟦 **T3** (✅ T3a · ✅ T3b · ✅ T3c · ✅ T3d · ⬜ T3e, §4.13) · 🟦 **TP el público** (§4.14: ✅ TP·1 · ✅ TP·2 · ✅ TP·3a·3b · ⏸ TP·3c) · Última actualización: 2026-09-29 ·
-> Decisiones: `#755` (esta), `#754` (encuestas anónimas, su T1), `#758` (la T2), `#759` (la T3 en cinco tandas), `#792` (el público), `#793` (el público, anónimo; las felicitaciones), `#798` (el techo del texto para IA) · Carril: **SPA** (banda 790–819). Amplía `analitica.md`
+> Estado: ✅ **aprobada por el owner el 27-09** (§7; `#755`) → ✅ **T0, T1 y T2** · 🟦 **T3** (✅ T3a · ✅ T3b · ✅ T3c · ✅ T3d · ⏸ T3e sin fuente, `#799`; §4.13) · 🟦 **TP el público** (§4.14: ✅ TP·1 · ✅ TP·2 · ✅ TP·3a·3b · ⏸ TP·3c) · Última actualización: 2026-09-29 ·
+> Decisiones: `#755` (esta), `#754` (encuestas anónimas, su T1), `#758` (la T2), `#759` (la T3 en cinco tandas), `#792` (el público), `#793` (el público, anónimo; las felicitaciones), `#798` (el techo del texto para IA), `#799` (sin referencias del sector) · Carril: **SPA** (banda 790–819). Amplía `analitica.md`
 > (el libro, los regímenes y la T2 siguen siendo suyos).
 
 ## §0 · Antes de tocar
@@ -19,7 +19,7 @@
 - **Estado**: ✅ aprobada (27-09, `#755`); T0a·T0b·T0c ✅ · **T1** ✅ (la T5 de `encuestas.md`, `#754`, `#757`) · **T2** ✅ ocupación (§4.8.ter, `#758`) → **T3** Resumen, en cinco tandas (§4.13,
   `#759`): ✅ T3a la forma · ✅ T3b veredicto (mín–máx, `#790`) · ✅ T3c·1 lo que ha cambiado (`#791`) · ✅ T3c·2 objetivos →
   ✅ **TP el público** (§4.14, `#792`/`#793`; TP·1 · TP·2 · TP·3a tramos · TP·3b sin exportación · ⏸ TP·3c) → ✅ T3d
-  (el texto para IA, techo 12 KB por `#798`) → ▶ T3e (el sector: las fuentes, al owner antes de sembrar).
+  (el texto para IA, techo 12 KB por `#798`) → ⏸ T3e (sin rangos con método: nada sembrado, `#799`) → ▶ T4 la cartera.
   **Nada de lo medido se pierde** (§4.1.bis, con guarda): se resume arriba y lo demás queda
   plegado o en su pestaña.
 - **Invariantes**: `RGPD-01`, `RGPD-04`, `RGPD-07`, `SEC-04`, `SUITE-01`. Dinero y aforo: solo lectura.
@@ -214,6 +214,8 @@ informes dejan de devolver arrays sueltos para las tarjetas (las tablas y el CSV
   más baja y la más alta** (`[DECIDIDO owner]` 28-09, `#790`: la P25–P75 marcaba el 57 % de los periodos normales; §4.13) de la
   misma cifra en los últimos 12 periodos COMPARABLES (mismo mes o mismo día de la semana); hacen falta ≥ 8, y antes dice
   «aún sin historia».
+- ⏸ **`[DECIDIDO owner]` 29-09 (`#799`): sin referencias del sector por ahora** —no hay en abierto un rango con método para
+  un parque de salto (§4.13, «T3e, la búsqueda completa»)—; lo de abajo se retoma solo si aparece esa fuente.
 - **El sector, solo con fuente**: `analytics_benchmarks` (futuro): sector, clave de la cifra, bajo, alto, unidad, fuente
   (título, enlace, fecha), editable en «Ajustes». El producto trae de serie SOLO los rangos con fuente publicada; sin
   fuente, no hay fila. El sector de la instalación es un ajuste (JumpWeb es multisector). La lista de rangos y sus
@@ -730,6 +732,32 @@ reservan con 2–4 semanas. (b) Revinate, *2026 Hospitality Benchmark Report* (H
 en menos del 5 % (3,64 % Norteamérica · 4,41 % Asia-Pacífico). (c) Contentsquare, *Digital Experience Benchmark 2026*
 (6.500 webs; «Viajes y hostelería», 539): la conversión por sector está en el informe descargable, no en abierto.
 Descartado: los «60–70 % de ocupación en punta» y los «2,5–3 % de conversión» de blogs sin método.
+
+**T3e, la búsqueda completa (29-09; NADA sembrado, para el owner)**. Solo las TASAS admiten referencia del sector (conversión,
+repetición, antelación, ocupación, tasa de respuesta, nota media); los recuentos y el dinero dependen del tamaño de cada
+negocio. Lo que hay publicado:
+- **ROLLER, *2026 Attractions Industry Benchmark Report*** ([resumen](https://www.roller.software/blog/2026-attractions-industry-benchmark-report-key-stats-roller),
+  [fiestas](https://www.roller.software/blog/party-insights-2026-benchmark-report)): «más de 3.500 locales» de su software, sin
+  método ni periodo publicados; todo MEDIAS del sector entero, nada por parques de salto: nota media de sus encuestas **4,29 / 5**
+  (3,95 el año anterior); vuelven el **40,8 %** de los clientes de los locales con fiestas y el **25,6 %** de los que no las tienen;
+  el **33 %** de las reservas es online y trae el 45 % de los ingresos. La edición de 2025 da el **31 %** online en parques de salto
+  y «la mayoría de las fiestas se reservan con **2–4 semanas**» (sin decir cuántas).
+- **Contentsquare, *Digital Experience Benchmark 2026*** ([guía](https://contentsquare.com/guides/travel-hospitality-digital-experience/conversions/)):
+  6.000 webs, del T4 2024 al T4 2025; en abierto solo los cambios interanuales («Entertainment & Restaurants», +2,3 %); la
+  tasa absoluta, en el informe que se descarga dejando un correo. Un buscador citó 4,5 % en escritorio y 2,1 % en móvil para
+  viajes y hostelería: **no verificado** (la página no lo dice).
+- **Encuestas por correo, en HOTELES**: GuestRevu 2025 ([nota](https://www.hospitalitynet.org/news/4130210.html); 1.245
+  campañas): **~20 %** de respuesta de media, del 17 al 23 % según el asunto; Revinate: completadas **< 5 %** (3,64–4,41 % por
+  región). Otro sector y otra definición.
+- **IAAPA, *2025 Benchmark Series – Entertainment Centers*** ([ficha](https://iaapa.org/research/2025-iaapa-benchmark-series-entertainment-centers)):
+  datos de 2024, mundial con Europa; la única que podría traer RANGOS de centros de ocio (no verificado: la ficha no lo dice).
+  **De pago**: 499 $ sin ser socio. Y usar sus cifras dentro del producto exige mirar su licencia.
+- **Descartado**: Arival (turistas que reservan experiencias de viaje, no familias del barrio); los 14 $ por persona de una
+  nota de prensa antigua; las horquillas de ocupación de blogs sin método.
+- **Conclusión**: no hay en abierto ni un RANGO con método para las cifras de un parque de salto. Las medias de ROLLER son las
+  más cercanas, sin método publicado. Sembrarlas contradice §4.4 («solo rangos con fuente»): se lleva al owner.
+- ⏸ **`[DECIDIDO owner]` 29-09 (`#799`): no se siembra nada** y la T3e queda en espera hasta que aparezca una fuente con rangos y
+  método; el cuadro sigue con la historia propia. Descartados: comprar IAAPA, las medias de ROLLER, una tabla vacía editable.
 
 ### 4.14 El público (TP) — `#792`, medido el 28-09
 
