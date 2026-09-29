@@ -2,22 +2,23 @@
 
 > Estado: ✅ aprobada (29-09: el owner contestó el §7) → a implementar · Última actualización: 2026-09-29 ·
 > Decisiones: `#847` (el owner: código al correo y Google; fuera la contraseña) · `#848` (el §7: una sola puerta, borrar
-> las contraseñas, 90 días, solo el código) ·
+> las contraseñas, 90 días, solo el código) · `#849` (corrige el 1: el registro NO espera al código, hay cola en la puerta) ·
 > Carril: plataforma (el servidor, el contrato y la isla); el cajón, del SPA por buzón.
 
 ## §0 · Antes de tocar
 
-- **La regla**: el cliente demuestra que el correo es suyo con un código de un solo uso cada vez que entra, y con
-  Google si lo prefiere. Entrar y darse de alta son EL MISMO paso (correo → código → si es nuevo, sus datos), y la
-  respuesta al pedir un código es idéntica exista o no la cuenta. El personal del panel NO cambia (su contraseña, y el
-  authenticator de los administradores, `#847`).
+- **La regla**: el cliente ENTRA con un código de un solo uso al correo, o con Google. UNA puerta, el correo: con cuenta,
+  el código; nuevo, sus datos y dentro, SIN código —el registro no espera a ningún correo: en la puerta hay cola (`#849`)—,
+  y el correo se confirma después, sin frenar. El personal del panel NO cambia (su contraseña, y el authenticator de los
+  administradores, `#847`).
 - **Empieza por** §1 (lo que hoy pide contraseña: sus rutas, 21 pantallas y 35 ficheros de pruebas) → §4 (el diseño) →
   §7 (lo que decidió el owner).
 - **Trampas**: (1) la cola sale por el cron CADA MINUTO en producción (`ENTORNOS.md` §6): un código encolado puede tardar
   60 s; se envía en la misma petición, tras la respuesta (§4.3). (2) La reconfirmación de las acciones sensibles
   (`SEGURIDAD.md` §3: borrar la cuenta, cambiar el correo, desvincular Google) hoy es la contraseña: pasa a un código
   (§4.4). (3) Las cuentas de Google llevan hoy una contraseña aleatoria (0 nulas de 53 en local). (4) Los limitadores
-  son de DOMINIO (`SEC-06`): ningún controlador los reimplementa.
+  son de DOMINIO (`SEC-06`): ningún controlador los reimplementa. (5) La puerta dice si un correo tiene cuenta, como el
+  alta de hoy (`#31`): la acotan los límites de §4.2.
 - **Estado**: ✅ aprobada (`#848`); sin código. Sigue la A1 (§4.7).
 - **Invariantes**: `SEC-06` (se amplía al código), `RGPD-01` (la purga borra los códigos), `RGPD-06` (sin cambio de
   forma). Ningún fichero del `CRITICAL_RE`.
@@ -38,15 +39,18 @@
 - **Cuentas** (local): 53; 3 con Google; 31 con rol de panel; ninguna sin contraseña. En producción, sin medir (ssh).
 - **Correo**: `sendmail` local en producción (dos pruebas a Gmail sin spam, `ENTORNOS.md` §6); la cola, `database`,
   la vacía el cron del panel cada minuto con `queue:work --stop-when-empty --max-time=50`.
-- **Hoy el alta dice si un correo ya tiene cuenta** (`#31a`, decisión de conversión): con el código, entrar y darse de
-  alta se funden y esa enumeración desaparece sin coste.
+- **Hoy el alta dice si un correo ya tiene cuenta** (`#31`, decisión de conversión). ✱ Corregido por `#849`: la puerta lo
+  sigue diciendo (el correo decide si va al código o al registro); lo acotan los límites. Antes decía: «con el código,
+  entrar y darse de alta se funden y esa enumeración desaparece sin coste».
+- **En la puerta del parque hay cola** (el owner, 29-09): quien llega sin cuenta se registra en su móvil para enseñar su
+  descargo. Hoy la verificación del correo no frena el alta, y no debe empezar a frenarla.
 
 ## 2. Objetivo
 
 - Ningún cliente escribe una contraseña: entra con correo + código (o Google), en la isla, en el cajón y en la app.
 - Las acciones sensibles se confirman con un código al correo de la cuenta.
 - **Éxito**: el código llega en segundos (medido en staging con `sendmail` real); un código no se adivina (límites de
-  §4.2 con su prueba y su mutación); la misma respuesta para un correo con y sin cuenta (prueba); las superficies de
+  §4.2 con su prueba y su mutación); el registro no espera a ningún correo (prueba y sonda); las superficies de
   contraseña del cliente, retiradas con sus pruebas clasificadas por su sujeto (`CONVENCIONES` §3.quater).
 - **Fuera**: el panel (su contraseña y el authenticator de los administradores van aparte, `#847`); el teléfono como
   vía de entrada; las claves de acceso (passkeys), que serían una tanda futura.
@@ -59,20 +63,24 @@
   del CORREO, no en el de la compra, y los filtros de correo que visitan enlaces lo gastan. Queda como opción de §7.
 - **C: mantener la contraseña como alternativa**. Descartada por el owner (`#847`): dos caminos que mantener y la
   contraseña olvidada sigue siendo la primera causa de «no puedo entrar».
+- **D: el código también para darse de alta** (antes o al final del registro), para confirmar el correo antes de crear
+  la cuenta. Descartada (`#849`): con cola en la puerta, esperar un correo frena el alta, que hoy no espera. La errata
+  en el correo se ataja sin frenar (§4.4).
 
 ## 4. Diseño elegido
 
 ### 4.1 El código
 - 6 cifras, válido **10 minutos**, de un solo uso, **5 intentos** y muere. Uno vivo por (correo, propósito): pedir otro
   anula el anterior. Se guarda su HMAC (clave de la app + correo), nunca el código.
-- Dos propósitos: `entrar` (entrar o darse de alta) y `confirmar` (una acción sensible, ya con sesión).
+- Dos propósitos: `entrar` (una cuenta que ya existe) y `confirmar` (una acción sensible, ya con sesión).
 - Tabla `login_codes` (futuro): correo, propósito, huella, caduca, intentos, usado, IP, creado.
 
 ### 4.2 Los límites (`SEC-06`, de dominio)
 - Pedir: 1 por minuto y 5 por hora por correo; por IP, un techo para el rociado. Verificar: los 5 intentos del código
   y un limitador por IP. Probabilidad de adivinar: 5/10⁶ por código y, con 5 códigos por hora, 2,5·10⁻⁵ por hora.
-- La respuesta a «pedir» es la MISMA con cuenta y sin ella, y el correo sale en los dos casos (a un correo sin cuenta,
-  «tu código para crear tu cuenta»). Rechazos y bloqueos, auditados sin PII (`SEGURIDAD.md` §8).
+- ✱ Corregido por `#849`: la puerta dice si el correo tiene cuenta (va al código) o no (va al registro), como el alta de
+  hoy (`#31`); lo acotan el límite por IP y el de por correo. Antes decía: «la respuesta es la MISMA con cuenta y sin ella».
+  Rechazos y bloqueos, auditados sin PII (`SEGURIDAD.md` §8).
 
 ### 4.3 El envío
 - En la misma petición, tras la respuesta (`afterResponse`), no por la cola: la cola espera al cron. ⚠️ Con LiteSpeed,
@@ -81,11 +89,17 @@
   ignóralo». Sin enlace (§3).
 
 ### 4.4 Los flujos
-- **Entrar o darse de alta** (isla, cajón), UNA puerta, «Entra o crea tu cuenta» (`#848`): correo → «Te hemos enviado un
-  código» → el código. Con cuenta, dentro. Sin ella, la pantalla del registro: **el nombre, aceptar el descargo (con lo
-  legal que ya se pide) y «Tu cumpleaños», opcional** («y poco más», el owner); el teléfono, solo donde hoy (un pack,
-  `#787`). Un código verificado **verifica el correo** (`email_verified_at`): sobra el enlace de verificación para las
-  cuentas nuevas.
+- ✱ **Corregido por `#849`** (el registro no espera al código). **UNA puerta**, «Entra o crea tu cuenta» (isla, cajón): el
+  correo. **Con cuenta** → «Te hemos enviado un código» → el código → dentro. **Nuevo** → la pantalla del registro, sin
+  código: **el nombre, aceptar el descargo (con lo legal que ya se pide) y «Tu cumpleaños», opcional** («y poco más», el
+  owner); el teléfono, solo donde hoy (un pack, `#787`) → dentro, con su QR y su descargo al momento. Antes decía: «correo
+  → código → con cuenta, dentro; sin ella, el registro» (el código delante del alta).
+- **El correo del registro se confirma DESPUÉS, sin frenar**: el mensaje de verificación de hoy. Contra la errata, tres
+  redes que no esperan: la sugerencia de `ui/correo.js` («¿Quisiste decir…?»), el correo a la vista al terminar («Te hemos
+  escrito a …, ¿está bien?») y, en Mi cuenta, «Confirma tu correo» con la opción de corregirlo mientras dure la sesión
+  (90 días). Un código de entrar verificado también lo confirma (`email_verified_at`). El riesgo de registrar el correo de
+  otro queda como hoy.
+- **Si en la puerta no llega el código** a quien vuelve: el personal lo busca por su nombre, como hoy.
 - **La app** (`#630`): `POST /auth/tokens` con correo + código en vez de contraseña; la rotación, igual.
 - **Acciones sensibles**: `current_password` → un código `confirmar` al correo de la cuenta (borrar la cuenta, cambiar el
   correo, desvincular Google, cerrar las demás sesiones).
@@ -111,24 +125,31 @@ por buzón) · **A5** la retirada y las contraseñas de §4.6 · **A6** staging:
 
 ## 5. Impacto en invariantes
 
-`SEC-06` se amplía: los dos limitadores cubren también pedir y verificar el código. `RGPD-01`: la purga borra los códigos
+`SEC-06` se amplía: los dos limitadores cubren también pedir y verificar el código, y el límite de la puerta acota que
+diga si un correo tiene cuenta (`#849`, como el alta de `#31`). `RGPD-01`: la purga borra los códigos
 del titular. `RGPD-06`: sin cambio de forma (entrar con código crea la misma sesión o el mismo token). `SEGURIDAD.md` §1
 (contraseñas) pasa a ser solo del panel y §3 (reconfirmar) se reescribe con el código. El cambio de invariantes es del
 owner (`CONVENCIONES` §9): va con la aprobación de esta spec.
 
 ## 6. Plan de verificación
 
-Pruebas de dominio del código (caduca, un solo uso, 5 intentos, uno vivo, la misma respuesta con y sin cuenta, el HMAC)
-con su arnés de mutación; pruebas de API por endpoint; la suite entera tras la retirada; sonda de la isla (entrar,
-darse de alta en la compra, borrar la cuenta con código) con el correo leído de Mailpit; y en staging, la latencia del
-correo real. El ojo del owner en las pantallas nuevas.
+Pruebas de dominio del código (caduca, un solo uso, 5 intentos, uno vivo, el HMAC) con su arnés de mutación; pruebas de
+API por endpoint (y que el registro no pide código); la suite entera tras la retirada; sonda de la isla (entrar con el
+código leído de Mailpit, darse de alta en la compra SIN esperar ningún correo, borrar la cuenta con código); y en
+staging, la latencia del correo real. El ojo del owner en las pantallas nuevas.
 
 ## 7. Revisión y decisión
 
+✅ **`[DECIDIDO owner]` 2026-09-29, más tarde (`#849`) — CORRIGE el 1 de abajo**: «hay cola y los clientes se tienen que
+registrar para entrar y mostrar su descargo; en el registro actual la verificación no frena el registro, pero ahora sí».
+El agente había defendido el código al final del registro (la errata deja sin cuenta a quien no tiene contraseña; el
+descargo se prueba con el correo) y cambió su recomendación con el argumento de la cola. Queda: UNA puerta, su idea
+original —el correo; con cuenta, el código; nuevo, sus datos y dentro, sin código— y el correo confirmado después (§4.4).
+
 ✅ **`[DECIDIDO owner]` 2026-09-29 (`#848`)**, con opciones y la recomendada en las cuatro:
-1. **Una sola puerta**, «Entra o crea tu cuenta»: correo → código → dentro, o, si el correo es nuevo, la pantalla del
-   registro (nombre, descargo, cumpleaños opcional). Explicado con dos ejemplos: el owner preguntó «si no hay crear cuenta,
-   ¿cómo se crean?» — la pantalla existe, se llega sola cuando el correo es nuevo.
+1. ~~**Una sola puerta**, «Entra o crea tu cuenta»: correo → código → dentro, o, si el correo es nuevo, la pantalla del
+   registro (nombre, descargo, cumpleaños opcional).~~ Corregido por `#849` (arriba). Explicado con dos ejemplos: el owner
+   preguntó «si no hay crear cuenta, ¿cómo se crean?» — la pantalla existe, se llega sola cuando el correo es nuevo.
 2. **Las contraseñas de los clientes se borran** (§4.6).
 3. **El dispositivo, recordado 90 días sin uso** o hasta cerrar sesión.
-4. **Solo el código** en el correo, sin enlace.
+4. **Solo el código** en el correo de entrar, sin enlace (la confirmación del alta, `#849`, sigue siendo el mensaje de hoy).

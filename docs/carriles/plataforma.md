@@ -3,10 +3,10 @@
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
-> **820–849** (dada de alta en `DECISIONES.md` el 27-09; centena `decisiones/800-899.md`) · Último usado: **`#848`** (queda 1: pedir
-> otra banda al owner) · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **820–849 AGOTADA con `#849`** → sigue en **850–879** (del owner, 29-09; centena `decisiones/800-899.md`) · Último usado:
+> **`#849`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#846`) · Actualizado: **2026-09-29**
-> (tarde: `#758` en la isla ✅ `#846`; la lista del owner antes de desplegar, `#847`; la spec del acceso con código ✅ `#848`).
+> (tarde: `#758` en la isla ✅ `#846`; la lista del owner antes de desplegar, `#847`; el acceso con código ✅ `#848`/`#849`).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
 > llévaselo con la medida, como el SPA en `#724`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -47,10 +47,12 @@ normas, la T6f (301 y la web vieja fuera, `#843`), `#844`, la T6h (las legales) 
 Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas,entradas}.mjs`), la web entera (`sonda-web.mjs`,
 17/17) y la compra (`sonda-isla.mjs`).
 ▶▶▶ **AHORA, la lista del owner ANTES DE DESPLEGAR** (`#847`, 29-09), mientras él diseña: **(1)** `specs/acceso-con-codigo.md` ✅
-(`#848`: una puerta, contraseñas borradas, 90 días, solo el código) → su A1 (el código en el servidor); **y**, **(2)** el panel en una dirección secreta (`/admin` → «no existe») con
+(`#848`/`#849`: una puerta —con cuenta, código; nuevo, sus datos SIN código: hay cola en la puerta—, contraseñas borradas,
+90 días, solo el código) → su A1 (el código en el servidor); **y**, **(2)** el panel en una dirección secreta (`/admin` → «no existe») con
 authenticator SOLO para administradores (Filament 5 lo trae: `MultiFactor/App`, sin dependencia nueva); **(3)** el SEO completo
-(textos de playjump.es, el owner los revisa al final); **(4)** las imágenes al compartir, la web y la invitación (hoy: logotipo u
-`og-image.jpg`), compuestas con la marca. La lista de invitados, al SPA (buzón).
+(textos de playjump.es, el owner los revisa al final); **(4)** las imágenes al compartir (hoy: logotipo u `og-image.jpg`): la
+web, compuesta con la marca; la de la INVITACIÓN, la invitación misma —nombre, edad, día, hora, su diseño—, generada para cada
+una (`#849`; medir antes qué permite producción para generarla). La lista de invitados, al SPA (buzón).
 ▶▶ **Y los diseños NUEVOS del owner** cuando baje el zip: entra SOLO por `diseno/actualizar.py` (`#760`), el diseño se toma del
 mockup (`#767`) y se verifica una vez al final (`#768`). Después, Bizum, Apple (entra) y el día liberado. Correos y puerta, del SPA.
 **Abierto, medido y sin hacer** (HECHOS el 29-09: el `#758` del SPA, `#846`, §4.26; y `sonda-portada` 13/14, que era la SONDA
