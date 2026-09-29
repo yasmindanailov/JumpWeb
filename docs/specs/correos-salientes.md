@@ -15,7 +15,7 @@
   (`EmailUtm::IGNORED_QUERY`); (3) `sendmail` no avisa de entregas ni rebotes: «entregado» no se puede saber, «falló al
   enviar» sí; (4) el píxel de apertura exige consentimiento (LSSI 22.2) y Apple Mail abre solo: las aperturas son
   APROXIMADAS; (5) los escáneres de enlaces de Outlook y Gmail pulsan solos: un clic en el primer segundo tras el envío no cuenta.
-- **Estado**: ✅ aprobada (`#794`: la COPIA 6 meses, las cifras 24); ✅ C1 en `main` (ojo del owner, 29-09); 🟦 C2 (§4.8–§4.9); ▶ «cuándo» (§4.10).
+- **Estado**: ✅ aprobada (`#794`: la COPIA 6 meses, las cifras 24); ✅ C1, C2 y C2b en `main` (ojo del owner, 29-09); ▶ C3 aperturas (§4.10).
 - **C2**: `jw_e` va en `EmailUtm::IGNORED_QUERY` y NUNCA en `RouteNormalizer::QUERY_ALLOWLIST` (la analítica es anónima);
   la encuesta no lleva marca (`#754`); el escáner se reconoce por la RÁFAGA, no por el reloj (§4.8).
 - **Apuntar un envío NUNCA rompe el envío** (`#794`): un fallo del registro reintentaría el trabajo y duplicaría el correo.
@@ -176,7 +176,7 @@ finales de línea: el SMTP lleva CRLF (RFC 5322) y la copia se toma antes del tr
 7. **Se ve**: «Clics» en la lista, con «+N de escáner», y el filtro «con clic»; en la ficha. El export lleva `clicks`
    (contrato 1.52.0).
 
-### 4.9 La C2, lo construido (29-09; 🟦 en `wip/correos-c2`, falta el ojo del owner)
+### 4.9 La C2, lo construido (29-09; ✅ ojo del owner el 29-09: «procede, visto bueno»)
 Construido: `email_clicks` y `email_sends.tracks_clicks` (una migración); `EmailClickMarks` (la regla, el interruptor
 `emails.track_clicks` y el oyente de `NotificationSending` con su `WeakMap`); `EmailClicks` (el veredicto, con el envío
 bloqueado); la marca en `EmailUtm::tag()` (botón, logotipo y pie); `IGNORED_QUERY` separado de la lista de la analítica; el 302
@@ -236,7 +236,7 @@ hora sería correcto enviarles los correos de marketing. Si valoras añadir más
 
 Tandas: C2b va en la rama de la C2, y siguen C3 (aperturas) y C4 («cuándo» en Marketing).
 
-### 4.11 La C2b, lo construido (29-09; 🟦 en `wip/correos-c2`, falta el ojo del owner)
+### 4.11 La C2b, lo construido (29-09; ✅ ojo del owner el 29-09: «procede, visto bueno»)
 Construido: «Actividad» en «Correos enviados» (`EmailSendTable::activity()`, con el rastro `emails.activity_viewed`),
 `email_clicks.device`, el veredicto `bot` y la vista previa DESACTIVADA (`EmailSendTable::inert()`). Pruebas en
 `Mail\EmailClicksTest` y `Admin\EmailSendsPanelTest`. Arnés `SOLO=C2`, con sus diez mutaciones.

@@ -16,8 +16,8 @@
 
 - ▶▶▶ **LOS CORREOS SALIENTES** (`specs/correos-salientes.md`, `#794`; adelanta la T5 de la analítica, owner 28-09): ✅ **C1 el
   registro y la vista previa, en `main` y APROBADA** (29-09: «buen trabajo, visto bueno»; lo construido y lo que enseñó, §4.7)
-  → 🟦 **C2 los clics por envío** (`#795`, §4.8) **+ C2b «cuándo»** (`#796`, §4.10–§4.11: la línea de tiempo, el dispositivo, los
-  robots, la vista previa desactivada), en `wip/correos-c2`, falta el ojo → C3 las aperturas → C4 «cuándo» en Marketing. C2 y
+  → ✅ **C2 los clics por envío** (`#795`, §4.8) **+ C2b «cuándo»** (`#796`, §4.10–§4.11: la línea de tiempo, el dispositivo, los
+  robots, la vista previa desactivada), en `main` y APROBADAS (29-09) → ▶ C3 las aperturas → C4 «cuándo» en Marketing. C2 y
   C3, `[PENDIENTE: asesoría]` antes de producción: el interruptor de la C2 sale APAGADO de fábrica (Ajustes → Avanzado → Correos).
 - ▶▶▶ **LA ANALÍTICA PARA DECIDIR es la tarea** (`#755`, spec ✅). En `main` y APROBADAS por el owner: T0a·T0b·T0c (`#756`),
   T1 encuestas anónimas (`#754`/`#757`), T2 ocupación (`#758`) y, el 28-09, **T3a la forma** (`#759`: siete pestañas, solo
@@ -60,7 +60,7 @@
    T3c·1 · T3c·2 y **TP·1** (la fecha de nacimiento, `#792`; arnés `SOLO=TP1`, sondas `storage/app/audit/sonda-tp1-*.mjs`),
    **TP·2** («Quién viene»; arnés `SOLO=TP2`; fixture `ojo-tp2.php` montado, `OJO=desmontar`), todas en `main` y aprobadas →
    ▶ owner 28-09, «cerrar lo que queda», en este orden: **los correos salientes PRIMERO** (`specs/correos-salientes.md` ✅
-   `#794`; ✅ C1 en `main`, aprobada 29-09; 🟦 C2 clics en `wip/correos-c2` (`#795`) · C3 aperturas · C4 a la analítica) · **TP·3a** los tramos de los anuncios y **TP·3b** retirar «Exportar segmento» (`#793`) ·
+   `#794`; ✅ C1, C2 y C2b en `main`, aprobadas 29-09; ▶ C3 aperturas · C4 a la analítica) · **TP·3a** los tramos de los anuncios y **TP·3b** retirar «Exportar segmento» (`#793`) ·
    la TP·3c (felicitaciones) y el gasto en anuncios, ⏸ con el rediseño de la plantilla / aplazado; §4.14 y §4.9 → T3d el texto para IA (§4.7; lee `Changes` y
    los veredictos; sin PII ni celdas < 5) → T3e el SECTOR (primera búsqueda en §4.13: casi todo son medias, no rangos; AL OWNER
    antes de sembrar) → T4 cartera → T5 marketing y correos → T6 cohortes → T7 pérdidas → T8 satisfacción (§4.12). Los CRUCES de
