@@ -2,7 +2,7 @@
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb` a secas; la instancia al lado, en
 > `~/proyectos/instancias/playjump`, clon de `github.com/yasmindanailov/instancia-playjump`, montada el 25-09) ·
-> Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#803`** · La banda está dada de alta en la
+> Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#804`** · La banda está dada de alta en la
 > tabla de `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: **`correos-rediseno.md`
 > §0** (la tarea en curso, `#800`→`#802`) · `analitica-para-decidir.md` §0 (en pausa, `#755`) · `encuestas.md` §0 y §4.7 (`#754`) · `analitica.md` §0 y §4.5 · `isla-y-landing-nueva.md`
 > §4.11 · `celebracion-e-invitacion.md` §0 · `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 ·
@@ -14,7 +14,12 @@
 
 ## Foto (2026-09-29)
 
-- ▶▶▶ **AHORA, LOS CORREOS** (`specs/correos-rediseno.md`, `#800`→`#802`; **NADA escrito en código**): la spec, medida con el
+- ▶▶▶ **LA R1a DE LOS CORREOS, EN `wip/correos-r1a`, AL OJO DEL OWNER** (29-09; `correos-rediseno.md` §4.1.1 y §4.1.2,
+  `#803` el botón como el diseño, `#804` los enlaces legales se quedan): la plantilla del diseño en el molde, los 28 sin
+  tocarlos; arnés 39/39, suite verde, sonda 28/28. ⚠️ **MONTADO EN LOCAL, reversible**: `instancia.json` de la instancia con
+  `hojas.correo` a mano (sin commitear: el de verdad lo declara plataforma, buzón), `correo.css` copiada a `public/instancia/css/`
+  y sin empujar en el repo de la instancia, y ~70 filas de `email_sends` del cliente de sondas por `scripts/banco-correos.php`.
+- **LOS CORREOS** (`specs/correos-rediseno.md`, `#800`→`#804`): la spec, medida con el
   censo HAY/FALTA contra el zip (§1), y cuatro decisiones del owner: el 7 sigue siendo la encuesta (`#801`); las ocasiones, al
   final; el orden plantilla → textos editables → reserva → comerciales → felicitaciones; y **los TEXTOS, editables desde el
   panel** con estructura fija, en es/en/fr y con permiso propio (`#802`: «profesional y robusta, sin chapuzas»). La analítica,
@@ -40,6 +45,10 @@
 
 ## Por dónde retomar, en orden
 
+0. ▶▶▶ **LA R1a, AL OJO DEL OWNER** (`wip/correos-r1a`): los 28 están en Mailpit (`:8028`; para volver a mandarlos,
+   `php scripts/banco-correos.php [filtro]`, y la sonda, `node storage/app/audit/sonda-correos-r1a.mjs 28`). Con su visto
+   bueno: rebase sobre `main`, suite, *fast-forward* y push (el gate re-mide); la hoja de PlayJump, commit y push en el repo de
+   la instancia. Después, la R1b (los iconos).
 1. ▶▶▶ **LOS CORREOS (`specs/correos-rediseno.md`: §0 → §1 el censo → §4 las tandas → §4.1 la R1 → §4.2 los textos;
    `#789`, `#800`→`#802`)**: el rediseño desde el zip de la instancia (la carpeta `paginas/correos` y su brief en `uploads`;
    `git pull` de la instancia y `sha256sum -c` antes de cada tanda). En orden, cada tanda con su «al detalle» MEDIDO en la spec
@@ -205,6 +214,11 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 - Commit por NOMBRE de fichero, nunca `git add -A`. La decisión, al final de `decisiones/700-799.md`.
 
 ## Buzón
+
+- ❗ **Para plataforma (29-09, la R1a de los correos)**: la hoja de correo de PlayJump está escrita en el repo de la
+  instancia, `publico/instancia/css/correo.css` (roles `--correo-*` en hex, con su pareja `-oscuro`; los valores del `tema()`
+  de la plantilla sobre `tokens/colors.css` y `shape.css`). Cuando la empuje, **declárala en `instancia.json`**:
+  `"hojas": { "correo": ["css/correo.css"] }` (junto a las de la fiesta). Sin la declaración, los correos salen neutros.
 
 - Mis avisos a plataforma del 27→29-09 (`#754`/`#757`, la TP·1 `#792`, las C1→C3 `#794`→`#797`, la TP·3b `#793`, la T3d):
   ATENDIDOS por plataforma (su «Atendido», 29-09: «leídos y migrado»); retirados de aquí. El detalle, en el `git log`.

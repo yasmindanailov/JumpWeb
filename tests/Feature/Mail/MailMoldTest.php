@@ -31,15 +31,6 @@ class MailMoldTest extends TestCase
     use RefreshDatabase;
 
     /**
-     * Los DOS únicos correos que VENDEN. El mapa del naranja: el relleno de acción solo significa
-     * comprar (`[DECIDIDO owner, 2026-09-10]`).
-     */
-    private const VENDEN = [
-        'OrderPaymentDeclined',       // «Reintentar el pago»
-        'OrderExpiredWithoutPayment', // «Hacer una nueva reserva»
-    ];
-
-    /**
      * Correos que NO pasan por el molde, cada uno con su motivo.
      * ⚠️ Esta lista **solo encoge**.
      */
@@ -123,7 +114,8 @@ class MailMoldTest extends TestCase
             $html = (string) $mail->render();
             $clase = class_basename($notificacion);
 
-            $this->assertStringContainsString('class="hero', $html, "$clase: sin cabecera en el HTML");
+            // La cabecera del documento de la plantilla (`correo/html/cabecera`, la R1a): su fila lleva `data-bloque`.
+            $this->assertStringContainsString('data-bloque="cabecera"', $html, "$clase: sin cabecera en el HTML");
             $this->assertArrayHasKey('preheader', $mail->viewData, "$clase: sin línea de adelanto");
             $this->assertNotEmpty($mail->subject, "$clase: sin asunto");
             $this->assertNotEmpty($mail->actionUrl, "$clase: el botón se quedó sin URL");
@@ -199,29 +191,25 @@ class MailMoldTest extends TestCase
     }
 
     /**
-     * ❗❗❗ **EL MAPA DEL NARANJA: SOLO DOS CORREOS VENDEN.** El relleno de acción significa comprar;
-     * los otros diecinueve llevan a mirar, a rellenar o a firmar y van en TINTA. Medido antes de la
-     * tanda: **15 correos con botón y ninguno declaraba `level`**, así que «ver mis reservas»
-     * gritaba igual que «reintentar el pago».
+     * ❗❗ **EL COLOR DEL BOTÓN LO PONE EL ROL, NO `level`** (`[DECIDIDO owner]` `#803`, 29-09): el principal de cada
+     * correo va en el color de ACCIÓN, como el diseño, y sustituye el mapa del naranja de `#503` —que usaba
+     * `->level('sell')` en los dos que vendían—. La plantilla (`correo/html/boton`) no lee `level`, así que un
+     * `->level()` en un correo prometería un color que nadie pinta.
      *
-     * ⚠️ El caso vigila las DOS direcciones: que ningún tercero se apunte, y que ninguno de los dos
-     * se caiga — apagar el mapa entero es el defecto simétrico y se ve igual de poco.
+     * ▶ Sustituye a `test_exactly_two_mails_carry_the_selling_button`, cuyo sujeto se fue con `#803`
+     * (`CONVENCIONES §3.quater`): lo que vigilaba —qué botón lleva el color de acción— lo mide ahora, renderizando,
+     * `MailThemeTest::test_the_main_button_takes_the_action_role_and_its_label_passes_aa`.
      */
-    public function test_exactly_two_mails_carry_the_selling_button(): void
+    public function test_no_mail_declares_a_level_the_template_does_not_paint(): void
     {
-        $venden = [];
+        $con = [];
         foreach ($this->correos() as $nombre => $src) {
-            if (str_contains($src, "->level('sell')")) {
-                $venden[] = $nombre;
+            if (preg_match('/->level\(/', $src) === 1) {
+                $con[] = $nombre;
             }
         }
-        sort($venden);
-        $esperados = self::VENDEN;
-        sort($esperados);
 
-        $this->assertSame($esperados, $venden,
-            'el mapa del naranja se ha movido. Solo VENDEN «Reintentar el pago» y «Hacer una nueva '.
-            'reserva»; cambiar esta lista es una decisión del owner, no un ajuste.');
+        $this->assertSame([], $con, 'estos declaran un `level` que la plantilla no pinta: '.implode(', ', $con));
     }
 
     /**

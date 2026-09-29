@@ -25,6 +25,9 @@ class EmailProductCardTest extends TestCase
 {
     use RefreshDatabase;
 
+    /** La aguja de la tarjeta EMITIDA: el comienzo de su atributo `class`. Su control, al final del fichero. */
+    private const TARJETA = 'class="product-card';
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -85,7 +88,9 @@ class EmailProductCardTest extends TestCase
         // Y NO la tarjeta, que aquí duplicaba.
         // ⚠️ Se acota a la CLASE EMITIDA, no a la subcadena: «product-card» aparece también dentro
         // de un comentario del `<style>` del molde, y aseverar por subcadena daba un falso positivo.
-        $this->assertStringNotContainsString('class="product-card"', $html);
+        // ⚠️⚠️ Y por el COMIENZO del atributo, sin cerrar comillas: desde la R1a la tarjeta lleva además sus clases de rol
+        // (`class="product-card pjm-line pjm-bg"`), y la aguja entera `class="product-card"` pasaba esta negación SIEMPRE.
+        $this->assertStringNotContainsString(self::TARJETA, $html);
 
         // ❗ Ni un emoji: el sistema del canvas no usa ninguno en ningún correo.
         $this->assertSame(0, preg_match('/[\x{1F300}-\x{1FAFF}]/u', $html), 'un correo no lleva emojis');
@@ -130,7 +135,7 @@ class EmailProductCardTest extends TestCase
         // ⚠️⚠️ YA NO LLEVA TARJETA (`#503`): este correo también tiene su CABECERA con resguardo, que
         // dice qué y cuándo. Lo que este caso protege —que el correo identifique la reserva a la que
         // pertenece el enlace— sigue protegido, y por eso se asevera el DATO y no el contenedor.
-        $this->assertStringNotContainsString('class="product-card"', $html);
+        $this->assertStringNotContainsString(self::TARJETA, $html);
         $this->assertStringContainsString(__('emails.slip.what'), $html);
         $this->assertStringContainsString('8 invitados', $html);
         $this->assertSame(0, preg_match('/[\x{1F300}-\x{1FAFF}]/u', $html), 'un correo no lleva emojis');
@@ -190,6 +195,7 @@ class EmailProductCardTest extends TestCase
         $item = $empty->items()->create([
             'ticket_type_id' => $type->id, 'slot_id' => null, 'quantity' => 1, 'seats' => 1, 'unit_price' => 1000,
         ]);
-        $this->assertStringContainsString('product-card', EmailProductCard::forItem($item->fresh())->toHtml());
+        // Y es el CONTROL de la aguja de las negaciones de arriba: una tarjeta de verdad casa con ella.
+        $this->assertStringContainsString(self::TARJETA, EmailProductCard::forItem($item->fresh())->toHtml());
     }
 }

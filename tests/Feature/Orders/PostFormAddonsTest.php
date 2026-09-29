@@ -673,7 +673,8 @@ class PostFormAddonsTest extends TestCase
                 $mail = $n->toMail($item->order->user);
                 $book = array_values(array_filter(
                     $mail->introLines,
-                    static fn (string $line): bool => str_starts_with($line, '<table class="book"'),
+                    // El comienzo del atributo: desde la R1a el libro lleva además sus clases de rol (`book pjm-line pjm-bg`).
+                    static fn (string $line): bool => str_starts_with($line, '<table class="book'),
                 ));
 
                 // Un solo bloque de libro, y dentro el extra recién pedido: si el correo trajera el

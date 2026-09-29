@@ -95,7 +95,7 @@ class AnalyticsLinkNoticeTest extends TestCase
 
             $html = $mail->render();
             $this->assertStringContainsString('SaltoPark', $html, "$locale: el cuerpo no nombra al negocio");
-            $this->assertStringContainsString('class="hero', $html, "$locale: sin cabecera del molde");
+            $this->assertStringContainsString('data-bloque="cabecera"', $html, "$locale: sin cabecera del molde");
             $this->assertStringNotContainsString('account.analytics_mail', $html, "$locale: una clave sin traducir llega al cliente");
         }
     }

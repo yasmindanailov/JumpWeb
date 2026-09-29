@@ -93,9 +93,10 @@ class MixedPartyMailShapeTest extends TestCase
     {
         $html = $this->render(0, 400);
 
-        $aviso = strpos($html, 'class="notice');
+        // Los bloques de la plantilla (la R1a) marcan su fila con `data-bloque`.
+        $aviso = strpos($html, 'data-bloque="aviso"');
         $libro = strpos($html, 'data-book');
-        $cabecera = strpos($html, 'class="hero');
+        $cabecera = strpos($html, 'data-bloque="cabecera"');
 
         $this->assertNotFalse($cabecera, 'CONTROL: sin cabecera este caso no mide una jerarquía');
         $this->assertNotFalse($libro, 'CONTROL: sin libro no hay nada por encima de lo que estar');
@@ -117,7 +118,11 @@ class MixedPartyMailShapeTest extends TestCase
         $html = $this->render(0, 400);
 
         $this->assertGreaterThan(0, preg_match_all('/<tr[^>]*data-book/', $html), 'el libro no pinta sus filas');
-        $this->assertStringNotContainsString('border-collapse', strip_tags($html), 'el HTML del libro se está leyendo como texto');
+        // ⚠️ Sin el `<style>` del documento, que DECLARA `border-collapse` y `strip_tags` deja como texto: lo que se mide
+        // es que el libro no se lea como frase en el cuerpo (medido en la R1a: con el `<style>` dentro, rojo con el
+        // producto sano).
+        $cuerpo = (string) preg_replace('#<style\b.*?</style>#is', '', $html);
+        $this->assertStringNotContainsString('border-collapse', strip_tags($cuerpo), 'el HTML del libro se está leyendo como texto');
     }
 
     /**
@@ -172,7 +177,8 @@ class MixedPartyMailShapeTest extends TestCase
      */
     public function test_the_product_card_does_not_come_back(): void
     {
-        $aguja = 'class="product-card"';
+        // El comienzo del atributo: desde la R1a la tarjeta lleva además sus clases de rol (`product-card pjm-line pjm-bg`).
+        $aguja = 'class="product-card';
 
         $conTarjeta = (string) (new OrderItemRefunded(
             $this->item->order, $this->item, 500,

@@ -13,6 +13,16 @@ return [
         'order' => 'Pedido',
     ],
 
+    /*
+     * EL PIE de todos los correos (la R1a, `correos-rediseno.md` §4.1.1; brief: «dirección, horario de hoy, teléfono,
+     * WhatsApp y correo»). El horario lleva su DÍA: el correo se puede leer mañana, y «hoy abrimos» sin fecha dejaría de
+     * ser verdad.
+     */
+    'pie' => [
+        'hoy_abierto' => 'Hoy, :dia, abrimos de :desde a :hasta.',
+        'hoy_cerrado' => 'Hoy, :dia, no abrimos.',
+    ],
+
     'customer_account_created' => [
         'subject' => 'Tu cuenta ya está lista',
         'preheader' => 'Dentro tienes tu contraseña temporal: cámbiala la primera vez que entres.',

@@ -9,7 +9,6 @@ use App\Notifications\AccountAlreadyExists;
 use App\Notifications\OrderConfirmation;
 use App\Notifications\Support\BrandedMailMessage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Mail\Markdown;
 use Illuminate\Support\Facades\Lang;
 use Tests\TestCase;
 
@@ -314,7 +313,7 @@ class MailInboxLineTest extends TestCase
 
         $linea = (string) Lang::get('emails.order_confirmation.preheader', [], 'es');
         $posLinea = strpos($html, $linea);
-        $posCabecera = strpos($html, 'class="header"');
+        $posCabecera = strpos($html, 'data-bloque="cabecera"');
 
         $this->assertNotFalse($posCabecera, 'CONTROL: el correo no pinta cabecera, así que este caso no mide nada');
         $this->assertNotFalse($posLinea, 'la línea de adelanto no llega al correo');
@@ -332,8 +331,9 @@ class MailInboxLineTest extends TestCase
         $user = User::factory()->create(['locale' => 'es']);
         $mensaje = (new AccountAlreadyExists)->toMail($user);
 
-        $texto = (string) app(Markdown::class)
-            ->renderText('notifications::email', $mensaje->data());
+        // ⚠️ La vista de texto QUE SE ENVÍA (`BrandedMailMessage::VISTAS`). Hasta la R1a este caso pintaba
+        // `notifications::email` con Markdown, y desde que el molde dejó de usarlo seguía verde midiendo un camino muerto.
+        $texto = (string) view(BrandedMailMessage::VISTAS['text'], $mensaje->data())->render();
 
         $linea = (string) Lang::get('account.exists_mail.preheader', [], 'es');
 

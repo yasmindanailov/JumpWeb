@@ -33,9 +33,16 @@ use Symfony\Component\Mime\Email;
  * logotipo y los enlaces del pie llevan `utm_source=email&utm_medium=<clave>` — el mismo nombre con el que
  * se cuentan el envío (`email_sent`) y la vuelta (`email_clicked`). Sin `$this` no hay UTM y nada falla;
  * por eso `EmailUtmTest` lee las fuentes y exige que los veinticinco lo pasen.
+ *
+ * ▶▶ **Y desde la R1a del rediseño (`specs/correos-rediseno.md` §4.1.1) pinta con la PLANTILLA DEL DISEÑO**, no con el
+ * Markdown de Laravel: vistas propias (`correo/html`, `correo/texto`) sobre un documento de bloques (`MailDocument`)
+ * compuesto de los MISMOS datos que dan estos verbos. Los correos no cambian: cambia quién los pinta.
  */
 class BrandedMailMessage extends MailMessage
 {
+    /** Las vistas de la plantilla: el documento y su versión de texto. */
+    public const VISTAS = ['html' => 'correo.html', 'text' => 'correo.texto'];
+
     /** La clave del correo (`EmailUtm::keyOf()`), o `null` si este correo no lleva UTM (los avisos al negocio). */
     private ?string $campaign = null;
 
@@ -47,6 +54,11 @@ class BrandedMailMessage extends MailMessage
      */
     public function __construct(?Notification $notification = null)
     {
+        // ⚠️ Asignadas, no con `view()`: `view()` VACÍA `viewData`, y lo que escriben `campaign()` y `markSend()` —la UTM,
+        // la marca del envío, el píxel— se perdería sin que nada fallara. Sin `markdown`, `MailChannel` usa estas vistas.
+        $this->view = self::VISTAS;
+        $this->markdown = null;
+
         if ($notification !== null) {
             $this->campaign(EmailUtm::keyOf($notification));
             $this->markSend($notification);
@@ -80,6 +92,21 @@ class BrandedMailMessage extends MailMessage
         // Y el PÍXEL de apertura (§4.12, la C3): solo si `EmailOpenMarks` lo anotó al enviar (con su interruptor y el
         // consentimiento de la cuenta). Viaja a la vista, que lo pone al final del cuerpo.
         $this->viewData['openMark'] = EmailOpenMarks::for($notification);
+    }
+
+    /**
+     * Los datos de la vista, con el DOCUMENTO del correo (`$correo`) compuesto de ellos. Es el punto por el que pasan los
+     * dos caminos —el envío (`MailChannel`) y `render()`—, así que el documento sale igual en los dos: el tema, el pie y el
+     * horario de hoy se leen AL PINTAR, no al construir el mensaje (un correo en cola se pinta cuando sale).
+     *
+     * @return array<string, mixed>
+     */
+    public function data()
+    {
+        $data = parent::data();
+        $data['correo'] = MailDocument::desde($data);
+
+        return $data;
     }
 
     /**

@@ -3,7 +3,8 @@
 > Estado: 🟦 **medida el 29-09; el orden, el 7 y los textos editables, decididos por el owner (`#801`, `#802`)** ·
 > Última actualización: 2026-09-29 ·
 > Decisiones: `#800` (ahora los correos), `#801` (el 7, las ocasiones y el orden), `#802` (los textos, editables desde el
-> panel), `#803` (el botón principal, como el diseño), `#789` (los correos, del carril del SPA),
+> panel), `#803` (el botón principal, como el diseño), `#804` (los enlaces legales se quedan en el pie), `#789` (los
+> correos, del carril del SPA),
 > `#793` (las felicitaciones, sin vender) ·
 > Carril: **SPA** (banda 790–819). Amplía `correos-desde-canvas.md` (el molde de septiembre sigue siendo suyo).
 
@@ -161,6 +162,45 @@ una sonda por tanda; los comerciales con su prueba de consentimiento y de «una 
   aritmética, cada bloque con su gemela de texto); `MailMoldTest`, `MailInboxLineTest`, `EmailUtmTest`, `EmailClicksTest`
   y `EmailOpensTest`, sin tocar y en verde; el lector, con su arnés de mutación. En `wip/correos-r1a`, al ojo del owner en
   Mailpit (claro y oscuro, 390 y 1280) con los 28 enviados de golpe.
+
+#### 4.1.2 La R1a, lo construido (29-09, en `wip/correos-r1a`; 🟦 falta el OJO del owner y la hoja declarada por plataforma)
+
+- **Piezas**: `MailTheme` (los roles: neutros de las familias del producto —`fiesta.css` y el molde de septiembre—, la hoja
+  `hojas.correo` encima, cada valor validado y la memoria por ruta + `filemtime`), `MailDocument` (los bloques desde
+  `data()`, el aire por el vecino, la negrita escapada, el marcado con su rol de enlace, el texto de un HTML y el CSS del
+  oscuro), `MailPie` (del panel y de `OperatingCalendar::windowFor()`); vistas `correo/html` y `correo/texto` y sus ocho
+  bloques, cada uno con su gemela (`{!! !!}`: la versión de texto no se escapa). `BrandedMailMessage` asigna las vistas en
+  el constructor (⚠️ `view()` vaciaría `viewData`: la UTM, la marca y el píxel) y redefine `data()`.
+- **Decidido al construir**: la ACCIÓN es `ThemeSettings::action() ?? brand()` (el color de acción de la instalación, y si no
+  lo declara, su marca); la letra de los tonos lleva clase propia (`pjm-tono-*-t`) —⚠️ en el diseño no la tiene y en el
+  oscuro AUTOMÁTICO la chapa conservaba su letra clara sobre el fondo oscuro; su visor no lo enseña porque fuerza el oscuro
+  con la paleta—; el `alt` del logotipo, con clase (con imágenes bloqueadas, tinta sobre tinta); el punto de la chapa, en
+  píldora (4 px no es de la escala); sin la fila de iconos del pie hasta la R1b. **Los enlaces legales del pie se quedan**,
+  discretos, al final (`[DECIDIDO owner]` `#804`). El libro y la ficha de producto, con los roles y sus clases.
+- **Guardas**: `MailThemeTest` reescrita (las nueve propiedades de septiembre y tres nuevas: ningún color a mano en las
+  plantillas, con una hoja cada color sale de ella, todo texto con color con su clase de oscuro), `MailThemeRolesTest`,
+  `MailDocumentTest`, `MailPieTest`. ⚠️⚠️ **Cuatro guardas medían el camino MUERTO** y seguían verdes: pintaban a mano
+  `notifications::email` con Markdown (`ThemeColorTest` ×2, `MailInboxLineTest` del texto plano) o buscaban la clase vieja
+  de la cabecera; re-apuntadas al camino que se envía (`render()` y `BrandedMailMessage::VISTAS`). Y tres negaciones de la
+  ficha (`class="product-card"`) habrían pasado SIEMPRE con la clase de rol añadida: acotadas al comienzo del atributo, con
+  su control. `MailMoldTest::test_exactly_two_mails_carry_the_selling_button` se retira (`#803`) por
+  `test_no_mail_declares_a_level_the_template_does_not_paint`; `level('sell')`, fuera de los dos correos.
+- **Arnés**: `scripts/mutar-correo-r1a.sh`, **39/39 muerden** (~7 min; cada mutante con el filtro de la guarda que lo
+  mata) y el árbol, byte a byte como estaba (huella por fichero). Tres trampas de instrumento, pagadas: un filtro que no
+  ejecutaba nada (sale ≠ 0 y contaba como «muerde»), un mutante equivalente por un valor trivial (la pareja oscura de prueba
+  era el neutro) y ⚠️⚠️ **la guarda estática no veía NINGUNA etiqueta estilada con `ty()`**: el `>` de `$correo->ty(…)`
+  cortaba los atributos en `[^>]*`. Lo destapó un superviviente (el `alt` del logotipo sin clase, 37/38): ahora neutraliza
+  las expresiones de Blade antes de partir etiquetas, con control (> 15 etiquetas con `ty()`), y el recorrido dinámico
+  corre también con el logotipo.
+- **Verificado**: suite 6556 / 43847 · Larastan sin errores y sin tocar la línea base · `scripts/banco-correos.php` manda
+  los 28 a Mailpit con datos de la base local (28/28) · sonda `storage/app/audit/sonda-correos-r1a.mjs` 28/28 sin desborde a
+  390, en claro y en oscuro, con la hoja de PlayJump (las capturas, en `storage/app/audit/correos-r1a/`). ⚠️ En la sonda el
+  logotipo sale roto: apunta a `localhost:8081` y el Chromium del contenedor no llega (en Mailpit, desde el navegador, sí).
+  Visto así: el libro llevaba su margen de septiembre y el aire se duplicaba (46 px donde van 28); fuera.
+- **Falta**: el OJO del owner en Mailpit; la hoja de PlayJump (`publico/instancia/css/correo.css`, en el repo de la
+  instancia, sin empujar) y su declaración en el manifiesto (plataforma, por buzón; en local, declarada a mano y sin
+  commitear); la R1c retira `vendor/mail/**` y `vendor/notifications` cuando los dos avisos internos (`Mail/`) pasen a la
+  plantilla.
 
 ### 4.2 Los textos, editables desde el panel — pregunta del owner (29-09), análisis sin código
 

@@ -9,6 +9,12 @@ return [
         'order' => 'Order',
     ],
 
+    /* THE FOOTER of every mail. Today's hours carry their DAY: a mail can be read tomorrow. */
+    'pie' => [
+        'hoy_abierto' => 'Today, :dia, we’re open from :desde to :hasta.',
+        'hoy_cerrado' => 'Today, :dia, we’re closed.',
+    ],
+
     'customer_account_created' => [
         'subject' => 'Your account is ready',
         'preheader' => 'Your temporary password is inside: change it the first time you sign in.',

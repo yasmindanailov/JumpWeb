@@ -15,7 +15,6 @@ use Database\Seeders\LandingContentSeeder;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Mail\Markdown;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -189,6 +188,7 @@ class ThemeColorTest extends TestCase
         $this->sinPaqueteDelCliente();
 
         Setting::updateOrCreate(['key' => 'theme.brand'], ['value' => '#0A0B0C', 'group' => 'theme']);
+        Setting::flushMemo();
 
         $user = User::factory()->create();
         $order = Order::create([
@@ -196,32 +196,27 @@ class ThemeColorTest extends TestCase
             'subtotal' => 2500, 'total' => 2500, 'currency' => 'EUR',
         ]);
 
-        $message = (new OrderConfirmation($order))->toMail($user);
-        // ⚠️ `data()`, no `toArray()`: el segundo deja fuera `viewData`, donde viajan la cabecera y
-        // el aviso — y el correo saldría a medias sin que nada fallara.
-        $html = (string) app(Markdown::class)->render('notifications::email', $message->data());
+        // ⚠️ El camino que SE ENVÍA (`render()`, las vistas de la plantilla). Hasta la R1a este caso pintaba a mano
+        // `notifications::email` con Markdown, y desde que el molde dejó de usarlo seguía verde midiendo un camino muerto.
+        $html = (string) (new OrderConfirmation($order))->toMail($user)->render();
 
-        // El wordmark del header (brand-dot) lleva el color de marca inline en TODOS los emails.
-        $this->assertStringContainsString('#0A0B0C', $html);
-
-        // ❗❗ PERO EL BOTÓN **NO** SIGUE LA MARCA, y eso es la decisión, no un descuido
-        // (`[DECIDIDO owner, 2026-09-10]`, `#503`): el naranja solo significa COMPRAR. La
-        // confirmación lleva a MIRAR, así que su botón va en relleno de TINTA. Hasta hoy este caso
-        // aseveraba lo contrario, que es como los veintiuno acabaron con el mismo botón.
-        $this->assertStringNotContainsString(
-            'background-color: #0A0B0C; border-top', $html,
-            'el botón de un correo que no vende no puede llevar el color de marca'
-        );
-        $this->assertStringContainsString('button-ink', $html);
+        // ❗❗ EL PRINCIPAL DE CADA CORREO VA EN EL COLOR DE ACCIÓN (`[DECIDIDO owner]` `#803`, como el diseño; sustituye el
+        // «naranja solo vende» de `#503`): sin color de acción declarado en el panel, la marca. La confirmación lleva a
+        // MIRAR y aun así lo lleva: es el único botón del correo.
+        $this->assertMatchesRegularExpression('/class="pjm-btn"[^>]*background:#0A0B0C;/', $html);
+        $this->assertStringContainsString('class="pjm-btn-t"', $html);
     }
 
     /**
-     * ❗ Y EL CASO QUE FALTABA: **uno de los dos que SÍ venden**. Sin él, la guarda de arriba se
-     * cumpliría también con el mapa del naranja apagado del todo — que es el defecto simétrico.
+     * ❗ Y EL OTRO LADO: con un color de ACCIÓN en el panel (`theme.action`), el botón toma ése y no la marca, con la letra
+     * que le da AA (`ThemeSettings::onAction()`). Sin este caso, la guarda de arriba se cumpliría también con el rol de
+     * acción cableado a la marca.
      */
-    public function test_the_two_selling_mails_do_follow_the_brand_colour(): void
+    public function test_the_mail_button_takes_the_installation_action_colour_over_the_brand(): void
     {
         Setting::updateOrCreate(['key' => 'theme.brand'], ['value' => '#0A0B0C', 'group' => 'theme']);
+        Setting::updateOrCreate(['key' => 'theme.action'], ['value' => '#FFD400', 'group' => 'theme']);
+        Setting::flushMemo();
 
         $user = User::factory()->create();
         $order = Order::create([
@@ -229,11 +224,11 @@ class ThemeColorTest extends TestCase
             'subtotal' => 2500, 'total' => 2500, 'currency' => 'EUR',
         ]);
 
-        $message = (new OrderPaymentDeclined($order))->toMail($user);
-        $html = (string) app(Markdown::class)->render('notifications::email', $message->data());
+        $html = (string) (new OrderPaymentDeclined($order))->toMail($user)->render();
 
-        $this->assertStringContainsString('button-accion', $html, 'reintentar el pago SÍ vende');
-        $this->assertStringContainsString('background-color: #0A0B0C', $html);
+        $this->assertMatchesRegularExpression('/class="pjm-btn"[^>]*background:#FFD400;/', $html);
+        $this->assertMatchesRegularExpression('/class="pjm-btn-t"[^>]*color:#14130F;/', $html, 'sobre amarillo, letra de tinta');
+        $this->assertDoesNotMatchRegularExpression('/class="pjm-btn"[^>]*background:#0A0B0C;/', $html);
     }
 
     // ─────────── El acento de zona deja de viajar por el nombre de la clase (`#138`) ───────────

@@ -57,10 +57,6 @@ class OrderPaymentDeclined extends Notification implements ShouldQueue
             // correo, y como frase suelta en medio del cuerpo se leía como una más.
             ->notice(__('emails.order_declined.notice_title'), $reasonText, 'err')
             ->action(__('emails.order_declined.action'), route('account.orders'))
-            // ❗ UNO DE LOS DOS ÚNICOS CORREOS QUE VENDEN (`#503`, el mapa del naranja): su botón
-            // va en relleno de ACCIÓN y los otros diecinueve en tinta. `level` es la única palanca
-            // que Laravel da aquí, porque `action()` no acepta color. Lo vigila `MailMoldTest::test_exactly_two_mails_carry_the_selling_button`.
-            ->level('sell')
             ->line(__('emails.order_declined.contact'));
     }
 }

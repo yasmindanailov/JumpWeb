@@ -9,6 +9,12 @@ return [
         'order' => 'Commande',
     ],
 
+    /* LE PIED de chaque e-mail. L’horaire du jour porte son JOUR : un e-mail peut se lire demain. */
+    'pie' => [
+        'hoy_abierto' => 'Aujourd’hui, :dia, nous ouvrons de :desde à :hasta.',
+        'hoy_cerrado' => 'Aujourd’hui, :dia, nous sommes fermés.',
+    ],
+
     'customer_account_created' => [
         'subject' => 'Ton compte est prêt',
         'preheader' => "Ton mot de passe provisoire est à l'intérieur : change-le dès ta première connexion.",
