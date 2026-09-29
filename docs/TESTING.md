@@ -404,6 +404,12 @@ son de cualquiera que mida, no de un carril.
   se come los 30 s una vez de cada varias (medido: el evento SÍ queda grabado en la BD, 5 s después; no es un defecto). Una
   sonda que recorre muchas páginas espera a `load` y a su pieza (`sonda-web.mjs`). Y el `fetch` de Node 24 (`undici`)
   revienta con `assert(!this.paused)` si no se CONSUME el cuerpo de una respuesta pedida con `redirect: 'manual'`.
+- **`text-wrap` es un ATAJO que también decide si se parte** (T6f·4, `#844`): en el Chromium de las sondas fija
+  `text-wrap-mode`, igual que `white-space`, así que el que va DETRÁS gana. Un `white-space: nowrap` inyectado o mutado
+  seguido de un `text-wrap` sigue partiendo: una reproducción del «antes» salió falsa y un mutante «no mordía» por eso.
+- **Cambiar un estilo dentro de un `@container` y medir al instante devuelve el tamaño de ANTES** (`#844`): quitarle una
+  marca a un elemento y leer su caja en la misma tarea daba lo viejo. Para decidir por su tamaño, se mide una COPIA oculta
+  (el molde de la franja de garantías de la instancia), y en una caja de tamaño cero: suelta, cuenta para el desplazamiento.
 
 ### 3. Guardas de arquitectura — `tests/Feature/Architecture/`
 Tests que no prueban una feature sino una REGLA estructural; sin ellos el refactor de Fase 2 se

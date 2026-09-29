@@ -47,6 +47,15 @@ const VARIANTES_BOTON = {
 /** El hueco entre el icono y el texto de cada talla: el contenido lo lleva en su propia caja (Z3). */
 export const huecoBoton = (size) => (TALLAS_BOTON[size] || TALLAS_BOTON.md).gap;
 
+/**
+ * El margen de la caja del TEXTO de un botón (`#844`): en el de ancho completo SIN iconos, el aire lateral de su talla, en
+ * negativo; en los demás, ninguno (con iconos, el texto se les montaría encima). Su ancho es el de su hueco, así que su aire es
+ * un MÁXIMO y no un mínimo —el texto que no cabe con él se lo come, como con el `Button` del diseño, y solo parte si no cabe
+ * en la píldora entera—, y su ancho mínimo deja de sumarlo: era ESO lo que ensanchaba la columna de la calculadora y sacaba la
+ * página de lado (medido: 294 px de mínimo, 214 de texto + 80 de aire). Aquí y no en el componente (`CE-6`): así se prueba.
+ */
+export const margenTextoBoton = ({ full, iconos, size }) => (full && ! iconos ? '-' + (TALLAS_BOTON[size] || TALLAS_BOTON.md).padding.slice(2) : undefined);
+
 /** La capa del botón que va ENCIMA de su contenido (la bola de carga), del mismo tamaño: así el botón no cambia de ancho. */
 export const CAPA_BOTON = { position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' };
 
@@ -56,9 +65,16 @@ export const BRILLO_BOTON = { position: 'absolute', inset: 0, pointerEvents: 'no
 /**
  * El estilo del botón, en el orden del diseño: base, talla, variante y, encima, su `hover`. Desde el 26-09 (Z3) es la
  * caja de sus capas (`position`, `overflow`: el brillo no se sale) y, si `llega`, bota (`isla-bote`).
+ * ❗ **El de ANCHO COMPLETO parte su texto si no cabe** (`#844`, `[DECIDIDO owner]` 2026-09-29): el `Button` del diseño es
+ * de alto fijo y una línea, y «Reservar y pagar la señal» pedía 294 px de ancho mínimo donde un Android de 360 deja 270 (la
+ * página se salía de lado; en francés, ya a 390). Así que su alto pasa a MÍNIMO, con aire arriba y abajo, y el texto parte
+ * equilibrado SOLO si no cabe en la píldora entera (su caja de texto se come el aire lateral: `margenTextoBoton`); si
+ * cabe, el mismo botón de siempre —una línea en su alto de talla—. El que no es de ancho completo sigue como en el diseño.
  */
 export function estiloBoton({ variant, size, full, bloqueado, loading, hover, press, llega = false }) {
     const v = VARIANTES_BOTON[variant] || VARIANTES_BOTON.primary;
+    const talla = TALLAS_BOTON[size] || TALLAS_BOTON.md;
+    const parte = Boolean(full);
     return {
         display: full ? 'flex' : 'inline-flex',
         alignItems: 'center',
@@ -71,7 +87,7 @@ export function estiloBoton({ variant, size, full, bloqueado, loading, hover, pr
         borderRadius: 'var(--r-pill)',
         cursor: bloqueado ? 'not-allowed' : 'pointer',
         textDecoration: 'none',
-        whiteSpace: variant === 'quiet' ? 'normal' : 'nowrap',
+        whiteSpace: variant === 'quiet' || parte ? 'normal' : 'nowrap',
         textAlign: 'center',
         gap: '9px',
         transition: 'var(--t-hover)',
@@ -80,7 +96,10 @@ export function estiloBoton({ variant, size, full, bloqueado, loading, hover, pr
         position: 'relative',
         overflow: 'hidden',
         animation: llega ? 'isla-bote var(--dur-bote) linear both' : undefined,
-        ...(TALLAS_BOTON[size] || TALLAS_BOTON.md),
+        ...talla,
+        // ⚠️ SIN `lineHeight` propio: medido, un 1,2 movía las letras del botón que SÍ cabe (1.420 píxeles en su fila, con
+        // el control a 0); el interlineado heredado sirve para las dos líneas y deja idéntico el de una.
+        ...(parte ? { height: undefined, minHeight: talla.height, paddingBlock: '10px', textWrap: 'balance' } : {}),
         ...v.base,
         ...(hover && !bloqueado ? v.hover : {}),
     };

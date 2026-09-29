@@ -2171,6 +2171,27 @@ vieja a su sitio con su `?query`, el sitemap igual al mapa, cada página en es/e
   la página se sale 5 px en `/cumpleanos` y `/colegios` —en español cabe por 6 px—; arreglarlo cambia el sistema (partir el
   texto con el botón más alto, un rótulo más corto o menos aire en móvil); (2) las legales, con el armazón viejo, enlazan a
   las cinco rutas sustituidas (un salto cada una) y el diseño no trae página legal.
+  `[DECIDIDO owner]` 2026-09-29 (`#844`), respuesta a las dos: (1) el botón que no cabe PARTE su texto en dos líneas y crece;
+  si cabe, igual que antes —⚠️ y no era solo francés: en español a 360 la página también se salía—; (2) las legales se visten
+  con el sistema nuevo (**T6h**). Con su sí, la misma regla para los dos desbordes que `sonda-web` destapó a **360**: el botón
+  del CIERRE de Kids y Jump en francés y las pestañas de «¿Qué hay en cada zona?» de la portada (la edad baja debajo del
+  nombre). **Cómo quedó, medido**:
+  · **La causa** en la calculadora no era el ancho del botón sino su ancho MÍNIMO (214 de texto + 80 de aire = 294), que
+    ensanchaba la columna. El de ANCHO COMPLETO sin iconos deja que su texto se coma el aire lateral (`margenTextoBoton`; en la
+    instancia, `.pj-btn--full > .pj-btn__texto`), como el `nowrap` de antes, y solo parte si no cabe en la píldora entera. Así,
+    con los textos de hoy, NINGUNO parte: «Reservar y pagar la señal» va en una línea a 360 y la página ya no se sale. (Una
+    primera versión partía con el aire como mínimo y cambiaba botones que se veían bien —«Voir les jours libres»—: corregida.)
+  · **El de ancho propio** (el del cierre) parte si el botón entero no cabe en su hueco: `white-space: normal`, `max-width:
+    100%`, `flex-shrink: 0` (en fila, baja la fila como antes) y alto de talla como mínimo. En francés a 360 y a 390, dos líneas:
+    antes sobresalía 16,5 px de su tarjeta.
+  · **Las pestañas** se apilan si su fila no cabe, y lo decide `entradas.js` midiendo una COPIA oculta de la fila (en una caja
+    de tamaño cero: suelta, contaba para el desplazamiento de la página). ⚠️ Medir la fila de verdad tras quitarle la marca
+    devolvía el tamaño de antes (el estilo cambia dentro de su `@container`): la primera versión apilaba lo que cabía. Se apilan
+    en español a 360 y 375 y en francés a 360 (antes sobresalían 15 y 2 px de la columna); en lo demás, las mismas medidas.
+  · **Lo que no cambia, medido**: las 84 pantallas (7 páginas × es/en/fr × 360/390/430/1280), cada `.pj-btn` y cada pestaña
+    en la misma caja salvo esos casos (con un control: la cabecera de Kids y Jump baila 47 px entre dos corridas iguales); el
+    botón del producto, 0 píxeles distintos donde cabía. `sonda-web` 18/18 a 360, 390 y 1280, ya sin desbordes declarados;
+    su arnés se corre a 360 y suma dos mutantes (las pestañas que no se apilan, el botón que no parte): **12/12**.
   ▶ **La T4f** (Kids y Jump) queda como tanda propia: su calculadora en vivo ya la juzga `sonda-calculadora.mjs` y la compra
   hasta el banco `sonda-isla.mjs` (sobre su andamio); falta la sonda de cada dato contra su hecho (el molde de Visítanos) y
   llevar la compra de `sonda-isla` a `/kids` de verdad.

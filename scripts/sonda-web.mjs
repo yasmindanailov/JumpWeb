@@ -32,15 +32,12 @@ const POLITICA = '2026-09-24'; // CookieConsent::POLICY_VERSION
 /** Las legales, que siguen con el armazón viejo: sus enlaces a las rutas viejas son una divergencia DECLARADA (§4.22). */
 const LEGALES = ['/privacidad', '/condiciones', '/waiver', '/cookies', '/aviso-legal'];
 /**
- * Desbordes DECLARADOS, a la espera del owner (§4.22): «idioma ruta» → por qué. En francés, a 390, el botón principal de la
- * calculadora («Réserver et payer l’acompte») no cabe: es de alto fijo y sin partir, como el `Button` del diseño, y pide
- * 325 px donde hay 300 (en español, 294). Arreglarlo cambia cómo se ve el sistema: es del owner. ⚠️ **Solo encoge**: una
- * declaración que ya no desborda pone la sonda en rojo, para que se retire.
+ * Desbordes DECLARADOS, a la espera de una decisión: «idioma ruta» → por qué. ⚠️ **Solo encoge**: una declaración que ya no
+ * desborda pone la sonda en rojo, para que se retire. ▶ Vacía desde `#844`: el botón de la calculadora («Reservar y pagar la
+ * señal», 294 px) no cabía en español a 360 ni en francés a 390, y el de ancho completo parte ahora su texto si no cabe (el
+ * owner lo eligió así). Esta sonda se corre también a 360, el ancho donde se vio.
  */
-const DESBORDES_DECLARADOS = ANCHO < 400 ? {
-    'fr /cumpleanos': 'el botón de la calculadora, 325 px en 300 (❓ owner)',
-    'fr /colegios': 'el botón de la calculadora, 325 px en 300 (❓ owner)',
-} : {};
+const DESBORDES_DECLARADOS = {};
 const filas = [];
 const ok = (nombre, cierto, detalle = '') => filas.push(`${cierto ? '✓' : '✗'} ${nombre}${detalle ? ` — ${String(detalle).replace(/\s+/g, ' ').slice(0, 200)}` : ''}`);
 const errores = [];

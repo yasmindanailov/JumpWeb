@@ -3,8 +3,9 @@
 # `scripts/sonda-web.mjs` —los 301 de las rutas viejas, el sitemap, cada página en es/en/fr y los enlaces internos—, y cada
 # mutación es un DEFECTO de verdad, en el producto o en el paquete: el 301 que pierde la consulta o pasa a 302, el sitemap
 # que anuncia lo que redirige, la canónica, `/entradas` que ya no abre la compra, un enlace con un salto de más, una clave
-# sin traducir, dos `h1`, un desborde y un enlace roto. (Quitar un `'sustituye'` NO es un defecto: la sonda sigue a la
-# declaración, que es del cliente.)
+# sin traducir, dos `h1`, un desborde y un enlace roto; y, a 360 (`#844`), las pestañas de zona que no se apilan y el botón
+# de la instancia que no parte. (Quitar un `'sustituye'` NO es un defecto: la sonda sigue a la declaración, que es del
+# cliente.) Se corre a **360**, el ancho donde se vieron los desbordes (`bash scripts/mutar-sonda-web.sh [ancho]`).
 #
 # ⚠️ Muta el PRODUCTO y la INSTANCIA (`../instancias/playjump`, montada en el contenedor). Se ESPERA 3 s tras mutar y tras
 # restaurar: opcache revalida cada 2 s (la trampa pagada en `mutar-sonda-visitanos.sh`). Cada corrida de la sonda tarda
@@ -15,7 +16,7 @@
 set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
-ANCHO="${1:-390}"
+ANCHO="${1:-360}"
 INSTANCIA="${INSTANCIA:-../instancias/playjump}"
 RUN="docker compose exec -u sail -T -e PLAYWRIGHT_BROWSERS_PATH=/home/sail/pw-browsers laravel.test node scripts/sonda-web.mjs ${ANCHO}"
 
@@ -27,7 +28,10 @@ P7="$INSTANCIA/web/inicio/pieza-7.blade.php"
 V2="$INSTANCIA/web/visitanos/pieza-2.blade.php"
 VB="$INSTANCIA/web/visitanos.blade.php"
 PIE="$INSTANCIA/web/components/site-footer.blade.php"
-FICHEROS=("$MW" "$SM" "$PG" "$BC" "$P7" "$V2" "$VB" "$PIE")
+# ⚠️ Las hojas y el JS del paquete se sirven desde su COPIA en `public/instancia` (gitignorada): se muta la copia servida.
+CSS=public/instancia/css/entradas.css
+JS=public/instancia/js/entradas.js
+FICHEROS=("$MW" "$SM" "$PG" "$BC" "$P7" "$V2" "$VB" "$PIE" "$CSS" "$JS")
 
 TMP="$(mktemp -d)"
 copia() { echo "$TMP/${1//\//__}"; }
@@ -110,6 +114,16 @@ mutar "Visítanos se sale de ancho" "$VB" \
 mutar "el pie enlaza a una página que no existe" "$PIE" \
   "<a href=\"{{ \$brand['href'] ?? '#' }}\"" \
   "<a href=\"/no-existe\""
+
+# ── Lo que no cabe a 360 (`#844`; solo muerden a ese ancho, el de este arnés) ─────────────────────────────────────────
+mutar "las pestañas de zona no se apilan aunque no quepan" "$JS" \
+  "if (copia.offsetWidth > explorador.clientWidth + 1) lista.dataset.layout = 'apiladas';" \
+  "if (false) lista.dataset.layout = 'apiladas';"
+# ⚠️ Con su `text-wrap` fuera: en este Chromium es un atajo que fija también el «partir o no», y detrás de un `nowrap` lo
+# anulaba (medido: con él, la mutación seguía partiendo y «no mordía»).
+mutar "el botón de la instancia no parte su texto" "$CSS" \
+  "white-space:normal;max-width:100%;flex-shrink:0;text-wrap:balance;" \
+  "white-space:nowrap;max-width:none;flex-shrink:0;"
 
 echo "$muerden/$total muerden"
 [[ $muerden -eq $total ]]

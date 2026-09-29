@@ -3,8 +3,8 @@
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
-> **820–849** (dada de alta en `DECISIONES.md` el 27-09; centena `decisiones/800-899.md`) · Último usado: **`#843`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#843`) · Actualizado: **2026-09-29**
+> **820–849** (dada de alta en `DECISIONES.md` el 27-09; centena `decisiones/800-899.md`) · Último usado: **`#844`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#844`) · Actualizado: **2026-09-29**
 > (PORTADA, CUMPLEAÑOS, COLEGIOS, VISÍTANOS y NORMAS ✅; la T6f, su censo §4.22).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
 > llévaselo con la medida, como el SPA en `#724`).
@@ -50,8 +50,10 @@ OCUPA `/normas`; `sonda-normas.mjs` 37/37, `mutar-sonda-normas.sh` 16/16, la pri
 T6f·3 ✅ (25 clases y 2 tokens podados; las 5 ranuras del kit, a la T6g) · T6f·4 ✅ (`sonda-web.mjs` 18/18,
 `mutar-sonda-web.sh` 10/10). **SIGUE**: la **T4f** (Kids y Jump, cada dato contra su hecho; la compra de `sonda-isla` en
 `/kids`) y la **T6g** (propuesta, §4.22: el mural, el kit y sus ranuras en un corte; regenera el kit de producción).
-❓ **Del owner** (declarado en `sonda-web`): el botón de la calculadora en FRANCÉS no cabe a 390 (opciones en §4.22) y las
-legales con el armazón viejo. ❓ Del owner: las legales, con el armazón viejo. ❗ **Y el `#792` del SPA, SIN
+✅ **`#844` (owner, 29-09)**: el botón que no cabe parte (producto `isla/ui/estilos.js`; instancia `button` y `.pj-btn`) y las
+pestañas de zona se apilan si no caben (copia oculta medida en `entradas.js`); `sonda-web` a 360 sin desbordes (§4.22). Sigue la
+**T6h**: vestir las legales con el sistema nuevo, con el ojo del owner en vivo.
+❗ **Y el `#792` del SPA, SIN
 hacer**: la fecha de nacimiento del titular en el alta de la isla (`formularioDeAlta`) y en «Tus datos» (su pieza
 `steps/BornOnField.vue` y sus textos, ya en el montaje). **Del owner, en PRODUCCIÓN**: el icono y el nivel de cada norma, y
 dar de alta las del brief que falten (calentamiento, espuma, volteretas dobles).

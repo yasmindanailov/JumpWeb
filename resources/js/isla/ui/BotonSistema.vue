@@ -12,7 +12,7 @@
  * la primera vez que se ve (`useLlegada`). El `done` del diseño (lima con el visto) no se porta: nadie lo usa todavía.
  */
 import { computed, ref, useSlots } from 'vue';
-import { BRILLO_BOTON, CAPA_BOTON, estiloBoton, huecoBoton } from './estilos.js';
+import { BRILLO_BOTON, CAPA_BOTON, estiloBoton, huecoBoton, margenTextoBoton } from './estilos.js';
 import { textoDeRanura } from './piezas.js';
 import { useLlegada } from './useLlegada.js';
 import { useTextos } from '../piezas/textos.js';
@@ -38,6 +38,8 @@ const raiz = ref(null);
 const hover = ref(false);
 const press = ref(false);
 const bloqueado = computed(() => props.disabled || props.loading);
+// `#844`: el de ancho completo SIN iconos deja que su texto se coma el aire lateral antes de partir (`margenTextoBoton`).
+const margenTexto = computed(() => margenTextoBoton({ full: props.full, iconos: Boolean(slots['icono-izquierda'] || slots['icono-derecha']), size: props.size }));
 const llega = useLlegada(raiz, () => props.variant === 'primary' && ! bloqueado.value);
 const etiqueta = computed(() => (props.href && !bloqueado.value ? 'a' : 'button'));
 const estilo = computed(() => estiloBoton({
@@ -68,7 +70,7 @@ function pulsar(e) {
         @pointerdown="press = true"
         @pointerup="press = false"
     >
-        <span :style="{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: huecoBoton(size), minWidth: 0, visibility: loading ? 'hidden' : 'visible' }">
+        <span :style="{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: huecoBoton(size), minWidth: 0, marginInline: margenTexto, visibility: loading ? 'hidden' : 'visible' }">
             <slot name="icono-izquierda" />
             <slot />
             <span

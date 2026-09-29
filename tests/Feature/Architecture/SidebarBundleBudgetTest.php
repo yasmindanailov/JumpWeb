@@ -978,7 +978,10 @@ class SidebarBundleBudgetTest extends TestCase
     // T6c·4b: «Descargar la propuesta (con este cálculo)» en su fila de compartir, si la página declara su hoja. Medido
     // 185,09. El techo, a 186. (La hoja, entrada aparte y SIN importar nada compartido: importándolo, reagrupaba los trozos
     // y el motor, la compra y esta calculadora pasaban de su techo sin tocarlos —control: sin la hoja, bajo el techo—.)
-    private const CALCULADORA_MAX_KB = 186;
+    // `#844` (owner): el botón de ancho completo que no cabe parte su texto, y su caja de texto se come el aire lateral antes
+    // (`margenTextoBoton`, en `ui/estilos.js`: su botón «Reservar y pagar la señal» sacaba la página de lado a 360). Medido
+    // 185,80 → 186,08 (base: el `HEAD` de `c0bd32b8`), ya con las dos funciones fundidas en una. El techo, a 187.
+    private const CALCULADORA_MAX_KB = 187;
 
     // La calculadora de la FIESTA (T6b·3, `#836`): su entrada propia, con lo que comparte con la de entradas (Vue, Pinia,
     // los stores de la oferta, el calendario y sus piezas) y lo suyo (la vista, el composable y `FilaMejora`). Medido al
