@@ -3,8 +3,10 @@
 namespace App\Http\Instancia;
 
 use App\Http\Controllers\InstancePageController;
+use App\Http\Middleware\RedirectToInstancePage;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Route;
 use Throwable;
 
 /**
@@ -36,6 +38,10 @@ use Throwable;
  * mano para las páginas del producto que la landing nueva sustituye conservando su dirección (la de más valor en
  * Google). Solo las de {@see self::OCUPABLES}, porque solo sus controladores preguntan (`queOcupa`); la portada es el
  * caso `home`. Una por ruta: la segunda se descarta con aviso.
+ * ▶▶▶ **Y las RUTAS VIEJAS que una página SUSTITUYE** (`'sustituye' => ['contacto', 'bar']`, `#843`, T6f de §4.22): esas
+ * responden **301** a la página, con su `?query` ({@see RedirectToInstancePage}), y salen del sitemap. Qué ruta va adónde es
+ * del cliente —lo afina con lo que Google tenga indexado—; el producto solo pone la lista de las que puede soltar
+ * ({@see self::SUSTITUIBLES}) y la regla, una vez ({@see self::redireccionDe()}). Una por ruta, como `ocupa`.
  */
 final class InstancePages
 {
@@ -46,6 +52,15 @@ final class InstancePages
      * T6e (`#842`): `PageController::rules`.
      */
     public const OCUPABLES = ['home', 'cumpleanos', 'normas'];
+
+    /**
+     * Las rutas del producto que una página puede SUSTITUIR con un 301 (`#843`): las páginas viejas de la landing, solo en GET
+     * (el `POST /contacto` del formulario sigue en su sitio). Cada una lleva {@see RedirectToInstancePage} en
+     * `routes/web.php`, y `InstancePagesTest` lo exige: una ruta en la lista sin el middleware no redirigiría nunca.
+     * ⚠️ `entradas` NO: es el enlace profundo que abre la compra sobre la portada, no una página. Y ninguna es ocupable: una
+     * ruta, o conserva la dirección, o la suelta.
+     */
+    public const SUSTITUIBLES = ['precios', 'atracciones', 'servicios', 'bar', 'contacto'];
 
     private const SLUG = '/^[a-z0-9]+(?:-[a-z0-9]+)*$/';
 
@@ -80,6 +95,26 @@ final class InstancePages
             if ($pagina->ocupa === $ruta) {
                 return $pagina;
             }
+        }
+
+        return null;
+    }
+
+    /**
+     * **Adónde responde 301 esa ruta vieja del producto** (`#843`), o `null` si ninguna página la sustituye y sigue pintando
+     * lo suyo. La URL de la página: la de la ruta que ocupa (la portada, `/`) o la suya. ⚠️ Solo si esa URL EXISTE: una
+     * página que pisaba una ruta del producto no se registró, y redirigir a ella sería mandar a Google a un 404. La leen el
+     * middleware y el sitemap: una sola regla para lo que se redirige y lo que se deja de anunciar.
+     */
+    public function redireccionDe(string $ruta): ?string
+    {
+        foreach ($this->todas() as $pagina) {
+            if (! in_array($ruta, $pagina->sustituye, true)) {
+                continue;
+            }
+            $suya = $pagina->ocupa ?? $pagina->ruta();
+
+            return Route::has($suya) ? route($suya) : null;
         }
 
         return null;
@@ -142,6 +177,7 @@ final class InstancePages
 
         $paginas = [];
         $ocupadas = [];
+        $sustituidas = [];
         foreach ($declaradas as $slug => $declarada) {
             $pagina = $this->validar($slug, $declarada);
             if ($pagina === null) {
@@ -154,9 +190,16 @@ final class InstancePages
 
                 continue;
             }
+            // Y una por ruta sustituida (`#843`), con la misma doctrina: dos destinos para un 301 es un paquete mal escrito.
+            if (($repetidas = array_values(array_intersect($pagina->sustituye, array_keys($sustituidas)))) !== []) {
+                Log::warning('instancia: la página no se registra: otra ya sustituye esa ruta', ['slug' => $pagina->slug, 'sustituye' => $repetidas]);
+
+                continue;
+            }
             if ($pagina->ocupa !== null) {
                 $ocupadas[$pagina->ocupa] = true;
             }
+            $sustituidas += array_fill_keys($pagina->sustituye, true);
             $paginas[$pagina->slug] = $pagina;
         }
 
@@ -176,6 +219,7 @@ final class InstancePages
             ! is_bool($declarada['portada'] ?? false) => 'la marca de portada no es verdadero o falso',
             isset($declarada['ocupa']) && ! in_array($declarada['ocupa'], self::OCUPABLES, true) => 'la ruta que ocupa no es una que el producto ceda',
             ($declarada['portada'] ?? false) === true && isset($declarada['ocupa']) && $declarada['ocupa'] !== 'home' => 'es la portada y ocupa otra ruta',
+            ! self::sustituyeBien($declarada['sustituye'] ?? []) => 'sustituye una ruta que el producto no suelta con un 301',
             default => null,
         };
 
@@ -186,7 +230,7 @@ final class InstancePages
         }
 
         /** @var string $slug */
-        /** @var array{vista: string, hechos?: list<string>, prioridad?: string|float, frecuencia?: string, portada?: bool, ocupa?: string, sitemap?: bool} $declarada */
+        /** @var array{vista: string, hechos?: list<string>, prioridad?: string|float, frecuencia?: string, portada?: bool, ocupa?: string, sitemap?: bool, sustituye?: list<string>} $declarada */
         return new InstancePage(
             slug: $slug,
             vista: $declarada['vista'],
@@ -197,6 +241,14 @@ final class InstancePages
             ocupa: ($declarada['portada'] ?? false) ? 'home' : ($declarada['ocupa'] ?? null),
             // Fuera del sitemap solo si lo dice con un `false` de verdad (T6c·4b): cualquier otra cosa, dentro.
             sitemap: ($declarada['sitemap'] ?? true) !== false,
+            sustituye: array_values(array_unique($declarada['sustituye'] ?? [])),
         );
+    }
+
+    /** `'sustituye'` es una LISTA de nombres de {@see self::SUSTITUIBLES}; una cadena suelta o un nombre ajeno, no. */
+    private static function sustituyeBien(mixed $rutas): bool
+    {
+        return is_array($rutas) && array_is_list($rutas)
+            && array_filter($rutas, fn (mixed $r): bool => ! is_string($r) || ! in_array($r, self::SUSTITUIBLES, true)) === [];
     }
 }

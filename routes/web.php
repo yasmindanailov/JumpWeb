@@ -35,6 +35,7 @@ use App\Http\Controllers\ServicesController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\SurveyPageController;
 use App\Http\Instancia\InstancePages;
+use App\Http\Middleware\RedirectToInstancePage;
 use App\Http\Middleware\ResolveVisitor;
 use App\Http\Middleware\SetAdminLocale;
 use App\Http\Middleware\SetLocale;
@@ -174,25 +175,29 @@ Route::get('/resenas/foto/{fichero}', ReviewPhotoController::class)
     ->name('resenas.foto');
 
 // Páginas de catálogo (contenido desde la BD).
-Route::get('/precios', PricingController::class)->name('precios');
+// ⚠️ Las cinco páginas VIEJAS de la landing (`/precios`, `/atracciones`, `/servicios`, `/bar` y `/contacto`) llevan
+// `RedirectToInstancePage` (`#843`): si una página del paquete de la instancia las SUSTITUYE, responden 301 a ella con su
+// `?query`; si no, pintan lo de siempre. La lista es `InstancePages::SUSTITUIBLES` y `InstancePagesTest` exige el middleware
+// en cada una.
+Route::get('/precios', PricingController::class)->middleware(RedirectToInstancePage::class)->name('precios');
 Route::get('/cumpleanos', EventsController::class)->name('cumpleanos');
 
 // Las 23 atracciones, con su zona en la pestaña (carril de diseño, T2d · `Atracciones PJP` 1a/1c).
 // ⚠️ La sección 03 de la portada enseña CINCO y su única puerta lleva aquí: esta ruta es el destino
 // que la regla del canvas exige («si dos secciones cerradas apuntan al mismo destino inexistente,
 // ese destino existe: hay que escribirlo»). La zona de llegada va en `?zona=`, no en el hash.
-Route::get('/atracciones', AttractionsController::class)->name('atracciones');
+Route::get('/atracciones', AttractionsController::class)->middleware(RedirectToInstancePage::class)->name('atracciones');
 
 // Servicios: página data-driven (#256, modelo A). Las secciones editoriales salen de la entidad CMS
 // `LandingService` (panel); cada una conserva su anchor estable (el nav enlaza a /servicios#slug).
-Route::get('/servicios', ServicesController::class)->name('servicios');
+Route::get('/servicios', ServicesController::class)->middleware(RedirectToInstancePage::class)->name('servicios');
 
 // El bar (`#536`, carril de diseño Fase 3 · T3b, artboard `Bar PJP`). ⚠️ La CARTA se publica como
 // IMAGEN (`[DECIDIDO owner]`), subida en «Ajustes → El bar». ⚠️⚠️ **Sin nombre del bar en el panel
 // la ruta da 404**: el titular de la página es el nombre del local y el producto no se lo inventa
 // —lo decide `BarPage::isPublished()`, el mismo predicado que decide si el destino sale en el menú,
 // en el pie y en la portada—.
-Route::get('/bar', BarController::class)->name('bar');
+Route::get('/bar', BarController::class)->middleware(RedirectToInstancePage::class)->name('bar');
 
 // Compra de entradas (Fase 5.2): el sidebar de compra se abre sobre la página. `/entradas`
 // es un enlace profundo: renderiza la home y abre el sidebar (vía data-purchase-open en el layout).
@@ -223,7 +228,7 @@ Route::middleware('throttle:120,1')->group(function (): void {
 });
 
 // Contacto (formulario → guarda en BD + envía email).
-Route::get('/contacto', [ContactController::class, 'show'])->name('contacto');
+Route::get('/contacto', [ContactController::class, 'show'])->middleware(RedirectToInstancePage::class)->name('contacto');
 Route::post('/contacto', [ContactController::class, 'store'])
     ->middleware('throttle:5,1') // A5/A4 auditoría Fase 1: corta el mail-bombing al admin (envío SMTP síncrono)
     ->name('contacto.store');

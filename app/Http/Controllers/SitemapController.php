@@ -48,6 +48,10 @@ class SitemapController extends Controller
             ['legal.aviso-legal', '0.3', 'yearly', $legalMods['aviso-legal'] ?? null],
         ];
 
+        // Las rutas viejas que una página del paquete SUSTITUYE responden 301 (`#843`, T6f): un sitemap que anuncia una URL
+        // que redirige le dice a Google dos cosas a la vez. La MISMA regla que el middleware (`redireccionDe`).
+        $entries = array_values(array_filter($entries, fn (array $e): bool => $paginas->redireccionDe($e[0]) === null));
+
         // Las páginas que declara el paquete de la instancia (T4b, `specs/isla-y-landing-nueva.md` §4.2), con la
         // prioridad y la frecuencia que ella declara. Solo las que tienen ruta de verdad: una que pisaba una ruta del
         // producto se descartó al registrarlas, y aquí tampoco entra.

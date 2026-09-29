@@ -18,6 +18,7 @@ use App\Domain\Platform\Services\Analytics\Pixels;
 use App\Http\Controllers\Payments\RedsysReturnController;
 use App\Http\Instancia\InstancePages;
 use App\Http\Instancia\InstanceViews;
+use App\Http\Middleware\RedirectToInstancePage;
 use App\Http\Sidebar\SidebarEntry;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -267,6 +268,116 @@ BLADE);
         // La portada con `ocupa => home` es la misma que con la marca.
         $this->declarar(['inicio' => ['vista' => 'kids', 'hechos' => [], 'portada' => true, 'ocupa' => 'home']]);
         $this->assertSame('inicio', app(InstancePages::class)->portada()?->slug);
+    }
+
+    /**
+     * **Una ruta vieja que una página SUSTITUYE responde 301 a ella, con su `?query`** (`#843`, T6f de §4.22). Antes del
+     * controlador: `/bar` sin bar publicado daría 404 y aquí redirige. El formulario (`POST /contacto`) no se toca, y la
+     * ruta que ninguna página sustituye sigue pintando lo suyo.
+     */
+    public function test_an_old_route_a_page_substitutes_answers_a_301_to_it_keeping_the_query(): void
+    {
+        $this->declarar(['visitanos' => ['vista' => 'kids', 'hechos' => [], 'sustituye' => ['contacto', 'bar']]]);
+
+        $this->get('/contacto?utm_campaign=verano&utm_source=google')->assertStatus(301)
+            ->assertRedirect(route('instancia.visitanos').'?utm_campaign=verano&utm_source=google');
+        $this->get('/bar')->assertStatus(301)->assertRedirect(route('instancia.visitanos'));
+        $this->assertNotSame(301, $this->post('/contacto', [])->status(), 'el formulario no se redirige');
+        $this->get('/precios')->assertOk();
+        $this->get('/visitanos')->assertOk()->assertSee('Saltan hasta caer rendidos');
+    }
+
+    /**
+     * **El destino es la URL de la página**: la portada declarada, `/`; la que ocupa una ruta del producto, esa ruta. Sin
+     * la consulta, la URL tal cual.
+     */
+    public function test_the_301_goes_to_the_portada_or_to_the_route_the_page_occupies(): void
+    {
+        $this->declarar([
+            'inicio' => ['vista' => 'kids', 'hechos' => [], 'portada' => true, 'sustituye' => ['precios', 'atracciones']],
+            'reglas' => ['vista' => 'kids', 'hechos' => [], 'ocupa' => 'normas', 'sustituye' => ['servicios']],
+        ]);
+
+        $this->get('/precios')->assertStatus(301)->assertRedirect(route('home'));
+        $this->get('/atracciones?zona=jump')->assertStatus(301)->assertRedirect(route('home').'?zona=jump');
+        $this->get('/servicios')->assertStatus(301)->assertRedirect(route('normas'));
+    }
+
+    /**
+     * **El sitemap deja de anunciar lo que redirige**, con la misma regla que el 301; lo demás del producto, y la página
+     * que sustituye, dentro.
+     */
+    public function test_the_sitemap_leaves_out_the_old_routes_a_page_substitutes(): void
+    {
+        $this->declarar(['visitanos' => ['vista' => 'kids', 'hechos' => [], 'sustituye' => ['contacto']]]);
+
+        $xml = (string) $this->get('/sitemap.xml')->assertOk()->getContent();
+
+        $this->assertStringNotContainsString('<loc>'.route('contacto').'</loc>', $xml);
+        $this->assertStringContainsString('<loc>'.route('precios').'</loc>', $xml, 'el control: la que nadie sustituye, dentro');
+        $this->assertStringContainsString('<loc>'.route('instancia.visitanos').'</loc>', $xml);
+    }
+
+    /**
+     * **Solo las rutas que el producto SUELTA, y un dueño por ruta**: la segunda página que sustituye la misma se descarta
+     * ENTERA (como `ocupa`); una ruta fuera de la lista o una cadena suelta, también. Y una página que no llegó a tener
+     * ruta (pisaba `/precios`) no redirige a ningún sitio: sería mandar a Google a un 404.
+     */
+    public function test_only_the_routes_the_product_lets_go_one_page_each_and_only_to_a_real_url(): void
+    {
+        $this->declarar([
+            'una' => ['vista' => 'kids', 'hechos' => [], 'sustituye' => ['bar']],
+            'otra' => ['vista' => 'kids', 'hechos' => [], 'sustituye' => ['contacto', 'bar']],
+            'ajena' => ['vista' => 'kids', 'hechos' => [], 'sustituye' => ['cumpleanos']],
+            'suelta' => ['vista' => 'kids', 'hechos' => [], 'sustituye' => 'servicios'],
+            'kids' => ['vista' => 'kids', 'hechos' => []],
+        ]);
+
+        $this->assertSame(['una', 'kids'], array_keys(app(InstancePages::class)->todas()));
+        $this->get('/bar')->assertStatus(301)->assertRedirect(route('instancia.una'));
+        $this->get('/contacto')->assertOk();
+        $this->get('/servicios')->assertOk();
+
+        $this->declarar(['precios' => ['vista' => 'kids', 'hechos' => [], 'sustituye' => ['atracciones']]]);
+        $this->assertFalse(Route::has('instancia.precios'));
+        $this->assertNull(app(InstancePages::class)->redireccionDe('atracciones'));
+        $this->get('/atracciones')->assertOk();
+    }
+
+    /**
+     * **Cada ruta de la lista lleva el middleware, y solo ellas**: una ruta que entrara en `SUSTITUIBLES` sin él se aceptaría
+     * en la declaración y no redirigiría nunca. Solo GET (el formulario es otra ruta), y ninguna es ocupable: una ruta, o
+     * conserva su dirección o la suelta. `entradas` no está: es el enlace que abre la compra.
+     */
+    public function test_every_route_the_product_lets_go_carries_the_redirect_and_no_other_does(): void
+    {
+        $con = collect(Route::getRoutes()->getRoutes())
+            ->filter(fn ($ruta): bool => in_array(RedirectToInstancePage::class, $ruta->gatherMiddleware(), true))
+            ->map(fn ($ruta): ?string => $ruta->getName())->sort()->values()->all();
+
+        $this->assertSame(collect(InstancePages::SUSTITUIBLES)->sort()->values()->all(), $con);
+        foreach (InstancePages::SUSTITUIBLES as $nombre) {
+            $this->assertSame(['GET', 'HEAD'], Route::getRoutes()->getByName($nombre)?->methods(), $nombre);
+        }
+        $this->assertSame([], array_intersect(InstancePages::SUSTITUIBLES, InstancePages::OCUPABLES));
+        $this->assertNotContains('entradas', InstancePages::SUSTITUIBLES);
+    }
+
+    /**
+     * **`/entradas` se queda y su canónica es la portada** (`#843`): pinta la portada declarada —el enlace que abre la
+     * compra— y se declaraba canónica de sí misma, un duplicado indexable de `/`. Cualquier otra página, la suya.
+     */
+    public function test_the_entradas_door_paints_the_portada_with_the_portada_as_its_canonical(): void
+    {
+        File::put($this->paquete.'/web/portada.blade.php', '<x-pagina titulo="Portada"><p>La portada nueva</p></x-pagina>');
+        $this->declarar([
+            'inicio' => ['vista' => 'portada', 'hechos' => [], 'portada' => true],
+            'otra' => ['vista' => 'portada', 'hechos' => []],
+        ]);
+        $canonica = fn (string $url): string => '<link rel="canonical" href="'.$url.'">';
+
+        $this->get('/entradas')->assertOk()->assertSee('La portada nueva')->assertSee($canonica(route('home')), false);
+        $this->get('/otra')->assertOk()->assertSee($canonica(route('instancia.otra')), false);
     }
 
     /**

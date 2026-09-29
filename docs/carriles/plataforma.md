@@ -45,9 +45,9 @@ COLEGIOS (§4.19, `#837`→`#841`, T6c·5–6; `sonda-colegios.mjs` 56/56, `muta
 en LOCAL, 91 plantillas INFERIDAS para `excursiones`) y VISÍTANOS (§4.20, T6d·1–3; `sonda-visitanos.mjs` 26/26,
 `mutar-sonda-visitanos.sh` 8/8; el panel gana donde habla y donde calla, el brief) y NORMAS (§4.21, `#842`, T6e·1–3: `seguridad`
 OCUPA `/normas`; `sonda-normas.mjs` 37/37, `mutar-sonda-normas.sh` 16/16, la primera pantalla con el veredicto del mockup).
-**EN MARCHA la T6f** (censo §4.22, `#843`): T6f·1 (producto: `'sustituye'`, el 301 con su `?query`, el sitemap, la canónica de
-`/entradas`, que SE QUEDA) → T6f·2 (instancia: los 301 y las ocho vistas fuera) → T6f·3 (el material sin sujeto; avisada la
-web) → T6f·4 (la sonda de todas y la T4f). ❓ Del owner: las legales, con el armazón viejo. ❗ **Y el `#792` del SPA, SIN
+**EN MARCHA la T6f** (censo §4.22, `#843`): T6f·1 ✅ (producto: `'sustituye'`, el 301 con su `?query`, el sitemap, la canónica
+de `/entradas`, que SE QUEDA; `mutar-sustituye.sh` 12/12) → **SIGUE T6f·2** (instancia: los 301 y las ocho vistas fuera) →
+T6f·3 (el material sin sujeto; avisada la web) → T6f·4 (la sonda de todas y la T4f). ❓ Del owner: las legales, con el armazón viejo. ❗ **Y el `#792` del SPA, SIN
 hacer**: la fecha de nacimiento del titular en el alta de la isla (`formularioDeAlta`) y en «Tus datos» (su pieza
 `steps/BornOnField.vue` y sus textos, ya en el montaje). **Del owner, en PRODUCCIÓN**: el icono y el nivel de cada norma, y
 dar de alta las del brief que falten (calentamiento, espuma, volteretas dobles).

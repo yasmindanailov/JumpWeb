@@ -2134,6 +2134,14 @@ ranuras) dicen qué se poda. `landing.css` es del carril de la web: aviso en el 
 **Plan**: **T6f·1** (producto) `'sustituye'`, el 301 y el sitemap, y la canónica de `/entradas`; **T6f·2** (instancia) los
 301 declarados y las ocho vistas fuera; **T6f·3** (producto) el material sin sujeto; **T6f·4** la sonda de TODAS —cada ruta
 vieja a su sitio con su `?query`, el sitemap igual al mapa, cada página en es/en/fr— y la T4f (Kids y Jump).
+- ✅ **T6f·1 (29-09) · el producto**: `'sustituye'` en la declaración de la página (`InstancePages::SUSTITUIBLES`, una página
+  por ruta, validada), `InstancePages::redireccionDe()` —la URL de la página, la suya o la que ocupa, solo si existe—, el
+  middleware `RedirectToInstancePage` en las cinco rutas (301 con su `?query`, antes del controlador) y el sitemap que las
+  deja fuera; la canónica de `/entradas`, la portada (`components/pagina`). La mano, en `paquete-de-instancia.md` §4.6.bis.
+  **Guardas**: `InstancePagesTest` +6 (el 301 con su consulta y el formulario intacto; el destino portada u ocupada; el
+  sitemap; un dueño por ruta, la lista y la URL que no existe; cada ruta de la lista con su middleware y ninguna más;
+  `/entradas`), y `scripts/mutar-sustituye.sh` **12/12**, cada mutante por su prueba. **Medido en local** con el paquete
+  real, que aún no declara nada: las seis rutas siguen en 200, el sitemap igual (15), y `/entradas` pasa a canónica `/`.
 
 ## 5. Impacto en invariantes
 

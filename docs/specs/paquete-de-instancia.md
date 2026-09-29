@@ -235,11 +235,22 @@ portada declarada, `/` pinta la vista de siempre con su contrato. `CONTRATO` no 
 
 ▶ **Y cualquier ruta del producto que ceda su sitio** (`[DECIDIDO]` 2026-09-27, `#832`; T6b de `isla-y-landing-nueva.md`
 §4.18): `'ocupa' => '<ruta>'` —la portada es el caso `home`, y `'portada' => true` sigue valiendo—. Solo las de
-`InstancePages::OCUPABLES` (hoy `home` y `cumpleanos`), porque solo sus controladores preguntan
-(`InstancePages::queOcupa`, en `HomeController` y `EventsController`); una ruta fuera de la lista, una segunda página en
-la misma o una portada que ocupa otra dejan esa página fuera con aviso. Conserva la dirección (la de más valor en Google),
-sin 301. Una ruta que se quiera ceder entra en la lista con su controlador en el mismo cambio. `InstancePagesTest` +2 y
-el arnés, 12/12.
+`InstancePages::OCUPABLES` (hoy `home`, `cumpleanos` y `normas`, esta desde `#842`), porque solo sus controladores preguntan
+(`InstancePages::queOcupa`, en `HomeController`, `EventsController` y `PageController::rules`); una ruta fuera de la lista, una
+segunda página en la misma o una portada que ocupa otra dejan esa página fuera con aviso. Conserva la dirección (la de más
+valor en Google), sin 301. Una ruta que se quiera ceder entra en la lista con su controlador en el mismo cambio.
+`InstancePagesTest` +2 y el arnés, 12/12.
+
+▶▶ **Y las rutas VIEJAS que una página SUSTITUYE, con un 301** (`[DECIDIDO]` 2026-09-29, `#843`; T6f de
+`isla-y-landing-nueva.md` §4.22): `'sustituye' => ['contacto', 'bar']`. Esas rutas del producto responden **301 a la URL de
+la página** —la suya, o la que ocupa: la portada, `/`— **con su `?query`** (las `utm_` de una campaña vieja), ANTES de que
+su controlador pinte (sin la vista del paquete, `pick()` caería al anfitrión mínimo), y el sitemap deja de anunciarlas. La
+regla es una, `InstancePages::redireccionDe()`, y la leen el middleware `RedirectToInstancePage` y el sitemap. Solo las de
+`InstancePages::SUSTITUIBLES` (`precios`, `atracciones`, `servicios`, `bar`, `contacto`; solo GET: el `POST /contacto`
+sigue); una ruta, una página (la segunda se descarta entera, como con `ocupa`); y nunca a una URL que no existe (una página
+que pisaba una ruta del producto no redirige). **Qué ruta va adónde es del cliente**: lo cambia en su `paginas.php`, sin
+código. ⚠️ `entradas` NO se suelta: es el enlace profundo que abre la compra sobre la portada, y su canónica es `/`
+(`components/pagina`). Lo vigilan `InstancePagesTest` (+6) y `scripts/mutar-sustituye.sh` (12/12).
 
 ### 4.7 Una regla escrita DENTRO de una vista se va con la vista (`#650`)
 

@@ -18,6 +18,8 @@ final readonly class InstancePage
      *                          cede el sitio (`cumpleanos`, T6b de `isla-y-landing-nueva.md` §4.18)
      * @param  bool  $sitemap  si entra en el sitemap (`'sitemap' => false`, T6c·4b: la hoja para imprimir de colegios no es
      *                         una página que buscar; la vista dice además `noindex`)
+     * @param  list<string>  $sustituye  las RUTAS VIEJAS del producto que responden 301 a esta página (`#843`, T6f de
+     *                                   `isla-y-landing-nueva.md` §4.22), de {@see InstancePages::SUSTITUIBLES}
      */
     public function __construct(
         public string $slug,
@@ -27,6 +29,7 @@ final readonly class InstancePage
         public string $frecuencia,
         public ?string $ocupa = null,
         public bool $sitemap = true,
+        public array $sustituye = [],
     ) {}
 
     /** El nombre de su ruta. */

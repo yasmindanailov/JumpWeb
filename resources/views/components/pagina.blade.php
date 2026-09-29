@@ -13,7 +13,9 @@
 --}}
 @props(['titulo', 'descripcion' => null, 'imagen' => null, 'hojas' => [], 'scripts' => [], 'isla' => null, 'noindex' => false, 'transiciones' => false])
 @php
-    $canonical = url()->current();
+    // `/entradas` es una PUERTA de la portada —la pinta con la compra abierta (`#843`: no es una página y no pasa a 301)—, así
+    // que su canónica es la portada: sin esto se anunciaba canónica de sí misma, un duplicado indexable de `/`.
+    $canonical = request()->routeIs('entradas') ? route('home') : url()->current();
     $imagenOg = $imagen ? asset($imagen) : ($site['og_image'] ?? null ?: asset('og-image.jpg'));
     // Las entradas del PRODUCTO que una página puede pedir, por su NOMBRE (T4d, contrato de página): la instancia no
     // nombra ficheros del producto, y un nombre que no está aquí no carga nada. `cajon`: el cargador del paquete (la
