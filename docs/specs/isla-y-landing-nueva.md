@@ -2157,6 +2157,23 @@ vieja a su sitio con su `?query`, el sitemap igual al mapa, cada página en es/e
   `grain--fade`; la ficha de `DEUDA.md` de `.reserve__tag`, cerrada. ⚠️ **Las cinco RANURAS del kit se quedan en la lista, a
   sabiendas** («NADIE desde la T6f»): el kit no viaja en ningún repo y la guarda 7 del despliegue lo valida contra
   `IllustrationKit::SLOTS`, así que quitarlas obliga a regenerar el kit de producción: se van con él en un solo corte (T6g).
+- ✅ **T6f·4 (29-09) · LA SONDA DE LA WEB ENTERA**: `scripts/sonda-web.mjs`, **18/18 a 390 y 1280**, contra lo que DECLARA el
+  paquete (leído con tinker: la sonda no teclea rutas del cliente): las cinco rutas viejas, 301 a su página con su consulta y
+  allí 200 sin otro salto; el sitemap (12 URL en 200 sin redirigir, ninguna sustituida, las páginas declaradas que entran y
+  no las de fuera); las 13 páginas en es/en/fr (200, su `lang`, una `h1` de la PÁGINA —la isla abierta en `/entradas` lleva
+  la suya—, sin salirse, sin marcadores, su canónica); los 28 destinos internos, y ningún enlace nuevo a una ruta sustituida;
+  `/entradas`, que sigue abriendo la compra. Su arnés, `scripts/mutar-sonda-web.sh`, **10/10** (producto y paquete: la
+  consulta, el 302, el sitemap, la canónica, `/entradas`, un salto, una clave, dos `h1`, un desborde, un enlace roto). La
+  sonda cazó un salto de más en la portada nueva («Más en Visítanos» → `/contacto`: arreglado en el paquete) y una trampa del
+  instrumento (la analítica con `keepalive` cuelga `networkidle` a ratos: `TESTING.md` §2.octies).
+  ❓ **Del owner, DECLARADO en la sonda** (se pone en rojo si deja de ser cierto): (1) en FRANCÉS a 390 el botón de la
+  calculadora («Réserver et payer l’acompte», alto fijo y sin partir como el `Button` del diseño) pide 325 px donde hay 300 y
+  la página se sale 5 px en `/cumpleanos` y `/colegios` —en español cabe por 6 px—; arreglarlo cambia el sistema (partir el
+  texto con el botón más alto, un rótulo más corto o menos aire en móvil); (2) las legales, con el armazón viejo, enlazan a
+  las cinco rutas sustituidas (un salto cada una) y el diseño no trae página legal.
+  ▶ **La T4f** (Kids y Jump) queda como tanda propia: su calculadora en vivo ya la juzga `sonda-calculadora.mjs` y la compra
+  hasta el banco `sonda-isla.mjs` (sobre su andamio); falta la sonda de cada dato contra su hecho (el molde de Visítanos) y
+  llevar la compra de `sonda-isla` a `/kids` de verdad.
 - ▶ **Medido de camino: lo que las guardas de huérfanos NO ven.** Sin las ocho vistas, cuatro componentes del producto se
   quedan sin nadie que los pinte —`site/facade` (el MURAL, `#580`) con `site/trio` (solo lo usa `facade`), `site/kit-ico` y
   `site/zone-sticker`—, y las guardas cuentan al propio componente como consumidor: su CSS y sus ranuras del kit (las poses

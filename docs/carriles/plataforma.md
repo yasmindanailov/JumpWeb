@@ -47,8 +47,11 @@ en LOCAL, 91 plantillas INFERIDAS para `excursiones`) y VISÍTANOS (§4.20, T6d�
 OCUPA `/normas`; `sonda-normas.mjs` 37/37, `mutar-sonda-normas.sh` 16/16, la primera pantalla con el veredicto del mockup).
 **EN MARCHA la T6f** (censo §4.22, `#843`): T6f·1 ✅ (`'sustituye'`, el 301 con su `?query`, el sitemap, la canónica de
 `/entradas`, que SE QUEDA; `mutar-sustituye.sh` 12/12) · T6f·2 ✅ (instancia `d9f9267`: los 301 y las ocho vistas fuera) ·
-T6f·3 ✅ (25 clases y 2 tokens podados; las 5 ranuras del kit, a la T6g) → **SIGUE T6f·4** (la sonda de todas y la T4f).
-Después, **T6g** (propuesta, §4.22): el mural, el kit y sus ranuras, en un corte (regenera el kit de producción). ❓ Del owner: las legales, con el armazón viejo. ❗ **Y el `#792` del SPA, SIN
+T6f·3 ✅ (25 clases y 2 tokens podados; las 5 ranuras del kit, a la T6g) · T6f·4 ✅ (`sonda-web.mjs` 18/18,
+`mutar-sonda-web.sh` 10/10). **SIGUE**: la **T4f** (Kids y Jump, cada dato contra su hecho; la compra de `sonda-isla` en
+`/kids`) y la **T6g** (propuesta, §4.22: el mural, el kit y sus ranuras en un corte; regenera el kit de producción).
+❓ **Del owner** (declarado en `sonda-web`): el botón de la calculadora en FRANCÉS no cabe a 390 (opciones en §4.22) y las
+legales con el armazón viejo. ❓ Del owner: las legales, con el armazón viejo. ❗ **Y el `#792` del SPA, SIN
 hacer**: la fecha de nacimiento del titular en el alta de la isla (`formularioDeAlta`) y en «Tus datos» (su pieza
 `steps/BornOnField.vue` y sus textos, ya en el montaje). **Del owner, en PRODUCCIÓN**: el icono y el nivel de cada norma, y
 dar de alta las del brief que falten (calentamiento, espuma, volteretas dobles).

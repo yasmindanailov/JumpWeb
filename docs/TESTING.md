@@ -399,6 +399,11 @@ son de cualquiera que mida, no de un carril.
   instalación desechable en el `/tmp` del contenedor y `--config` apuntándola, con el cwd en el repo.
 - **«The command 'docker' could not be found» es Docker Desktop APAGADO** (mudada del carril el 25-09): se arranca
   desde WSL con `"/mnt/c/Program Files/Docker/Docker/Docker Desktop.exe"` en segundo plano y `until docker info`.
+- **`networkidle` se cuelga A RATOS por la analítica** (T6f·4, 29-09): `cajon/track.js` envía los eventos con
+  `fetch(…, { keepalive: true })`, y Playwright no ve cuándo acaba esa petición, así que la red «nunca» reposa y la página
+  se come los 30 s una vez de cada varias (medido: el evento SÍ queda grabado en la BD, 5 s después; no es un defecto). Una
+  sonda que recorre muchas páginas espera a `load` y a su pieza (`sonda-web.mjs`). Y el `fetch` de Node 24 (`undici`)
+  revienta con `assert(!this.paused)` si no se CONSUME el cuerpo de una respuesta pedida con `redirect: 'manual'`.
 
 ### 3. Guardas de arquitectura — `tests/Feature/Architecture/`
 Tests que no prueban una feature sino una REGLA estructural; sin ellos el refactor de Fase 2 se
