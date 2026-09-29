@@ -4643,8 +4643,30 @@ return [
         'forgotten' => 'Cliente eliminado',
         // Los clics de cada correo (la C2, `specs/correos-salientes.md` §4.8).
         'clicks' => '{0} Sin clics|{1} :count clic|[2,*] :count clics',
-        'clicks_scanner' => '+:count de un escáner|+:count de un escáner',
+        'clicks_scanner' => '+:count automático|+:count automáticos',
         'clicks_not_measured' => 'No se mide',
+        'preview_inert' => 'Los enlaces de esta vista están desactivados: pulsarlos aquí no abre nada ni cuenta como un clic del cliente.',
+        // La línea de tiempo de cada envío (`#796`, §4.10).
+        'activity' => [
+            'action' => 'Actividad',
+            'heading' => 'Actividad · :mail',
+            'no_clicks' => 'Todavía no ha pulsado ningún enlace de este correo.',
+            'kind' => [
+                'sent' => 'Enviado',
+                'click' => 'Clic',
+            ],
+        ],
+        'device' => [
+            'mobile' => 'Móvil',
+            'tablet' => 'Tableta',
+            'desktop' => 'Ordenador',
+        ],
+        'verdict' => [
+            'early' => 'No cuenta: antes de que nadie pudiera leerlo',
+            'sweep' => 'No cuenta: la ráfaga de un escáner',
+            'bot' => 'No cuenta: la vista previa de un chat o un robot',
+            'repeat' => 'No cuenta: el mismo clic otra vez',
+        ],
         'col' => [
             'when' => 'Cuándo',
             'to' => 'A quién',

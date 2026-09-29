@@ -54,6 +54,7 @@ FICHEROS=(
     app/Providers/AppServiceProvider.php
     resources/views/vendor/mail/html/footer.blade.php
     database/migrations/2026_09_29_050000_add_email_click_tracking.php
+    app/Domain/Platform/Models/EmailClick.php
 )
 copia() { echo "$TMP/$(echo "$1" | tr '/' '_')"; }
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$(copia "$f")" "$f"; touch "$f"; done; }
@@ -314,6 +315,47 @@ mutar "el export no lleva los clics" "app/Domain/Identity/Services/AccountPrivac
 mutar "la poda no arrastra los clics (la FK sin cascada)" "database/migrations/2026_09_29_050000_add_email_click_tracking.php" \
   "            \$table->foreignId('email_send_id')->constrained('email_sends')->cascadeOnDelete();" \
   "            \$table->foreignId('email_send_id')->constrained('email_sends');"
+
+# ── C2b · CUÁNDO (`#796`): la línea de tiempo, el dispositivo, los robots y la vista previa que no pulsa ─────────────
+mutar "la vista previa deja los enlaces vivos (el equipo pulsaría por el cliente)" "$T" \
+  "        \$base = '<base target=\"_blank\">';" \
+  "        \$base = '';"
+
+mutar "la vista previa conserva la marca del envío" "$T" \
+  "        if (\$sendKey !== '') {" \
+  '        if (false) {'
+
+mutar "el robot que se anuncia cuenta como clic" "$C" \
+  '                Device::isBot($userAgent) => EmailClick::VERDICT_BOT,' \
+  '                false => EmailClick::VERDICT_BOT,'
+
+mutar "el robot entra en la ráfaga y hace escáner al cliente" "$C" \
+  '                ->reject(static fn (EmailClick $click): bool => $click->verdict === EmailClick::VERDICT_BOT);' \
+  '                ->reject(static fn (EmailClick $click): bool => false);'
+
+mutar "el dispositivo no se guarda" "$C" \
+  "            \$send->clicks()->create(['route' => \$route, 'device' => \$device, 'verdict' => \$verdict, 'clicked_at' => \$now]);" \
+  "            \$send->clicks()->create(['route' => \$route, 'device' => null, 'verdict' => \$verdict, 'clicked_at' => \$now]);"
+
+mutar "el middleware no pasa el agente" "$W" \
+  '            $this->clicks->record($mark, $request->getPathInfo(), $request->userAgent());' \
+  '            $this->clicks->record($mark, $request->getPathInfo(), null);'
+
+mutar "el panel cuenta al robot como persona (fuera de los automáticos)" "app/Domain/Platform/Models/EmailClick.php" \
+  '    public const SCANNER_VERDICTS = [self::VERDICT_EARLY, self::VERDICT_SWEEP, self::VERDICT_BOT];' \
+  '    public const SCANNER_VERDICTS = [self::VERDICT_EARLY, self::VERDICT_SWEEP];'
+
+mutar "mirar la actividad no deja rastro" "$T" \
+  "                AuditLogger::log('emails.activity_viewed', \$record, ['mail_key' => \$record->mail_key]);" \
+  ''
+
+mutar "la actividad se ofrece aunque el correo no llevara la marca" "$T" \
+  '            ->visible(static fn (EmailSend $record): bool => EmailSendResource::canViewAny() && $record->tracks_clicks)' \
+  '            ->visible(static fn (EmailSend $record): bool => EmailSendResource::canViewAny())'
+
+mutar "la hora de cada clic, en UTC y no en la del parque" "$T" \
+  "                'at' => DisplayTime::format(\$click->clicked_at, 'd/m/Y H:i:s')," \
+  "                'at' => \$click->clicked_at->format('d/m/Y H:i:s'),"
 
 control "un comentario del servicio de los clics" "$C" \
   'Apunta la visita que llega con la marca de un envío' \

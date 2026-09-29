@@ -2,7 +2,7 @@
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb` a secas; la instancia al lado, en
 > `~/proyectos/instancias/playjump`, clon de `github.com/yasmindanailov/instancia-playjump`, montada el 25-09) ·
-> Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#795`** · La banda está dada de alta en la
+> Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#796`** · La banda está dada de alta en la
 > tabla de `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: **`analitica-para-decidir.md`
 > §0** (la tarea en curso, `#755`) · `encuestas.md` §0 y §4.7 (`#754`) · `analitica.md` §0 y §4.5 · `isla-y-landing-nueva.md`
 > §4.11 · `celebracion-e-invitacion.md` §0 · `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 ·
@@ -16,7 +16,8 @@
 
 - ▶▶▶ **LOS CORREOS SALIENTES** (`specs/correos-salientes.md`, `#794`; adelanta la T5 de la analítica, owner 28-09): ✅ **C1 el
   registro y la vista previa, en `main` y APROBADA** (29-09: «buen trabajo, visto bueno»; lo construido y lo que enseñó, §4.7)
-  → 🟦 **C2 los clics por envío** (`#795`, §4.8: en `wip/correos-c2`, falta el ojo) → C3 las aperturas → C4 a «Marketing». C2 y
+  → 🟦 **C2 los clics por envío** (`#795`, §4.8) **+ C2b «cuándo»** (`#796`, §4.10–§4.11: la línea de tiempo, el dispositivo, los
+  robots, la vista previa desactivada), en `wip/correos-c2`, falta el ojo → C3 las aperturas → C4 «cuándo» en Marketing. C2 y
   C3, `[PENDIENTE: asesoría]` antes de producción: el interruptor de la C2 sale APAGADO de fábrica (Ajustes → Avanzado → Correos).
 - ▶▶▶ **LA ANALÍTICA PARA DECIDIR es la tarea** (`#755`, spec ✅). En `main` y APROBADAS por el owner: T0a·T0b·T0c (`#756`),
   T1 encuestas anónimas (`#754`/`#757`), T2 ocupación (`#758`) y, el 28-09, **T3a la forma** (`#759`: siete pestañas, solo
@@ -215,7 +216,8 @@ el repo de la instancia (lo nuevo), nunca a `main`.
   siguiente, 1.53.0. Toqué lo compartido: `Settings.php` (una sección «Correos a los clientes» en Avanzado, con el interruptor
   `emails.track_clicks` en `BOOL_KEYS` y `MANAGED`), `AppServiceProvider` (un oyente de `NotificationSending` y el morfo
   `email_click`), `RecordEmailClick` (el 302 que quita `jw_e`) y `EmailUtm::IGNORED_QUERY` (ya NO es la lista de la analítica:
-  lleva además `jw_e`). Migra (`email_clicks` y `email_sends.tracks_clicks`).
+  lleva además `jw_e`). Migra (`email_clicks` y `email_sends.tracks_clicks`). Y la C2b (`#796`): `emails.activity_viewed` en
+  `AuditLog::ACTIONS` y `email_clicks.device` (otra migración).
 - ❗❗ **Para plataforma (28-09, la TP·1, `#792`)**: `users.born_on`, entera y opcional (`BirthDatePolicy`: no futura, ≥ 18 el
   día del parque, ≤ 120). Contrato **1.49.0**, mío (`User`, `RegisterRequest`, `GoogleSignupRequest`, `ProfileUpdateRequest`
   —AUSENTE no la toca, `null` la borra—, `ExportedProfile`): tu siguiente, 1.50.0. **La isla**: el motor ya la reenvía si tu

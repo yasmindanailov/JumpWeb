@@ -7,6 +7,8 @@ use App\Domain\Platform\Services\Analytics\EmailUtm;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Filament\Resources\EmailSends\EmailSendResource;
+use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
 use Filament\Actions\Action;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
@@ -102,7 +104,7 @@ class EmailSendTable
                         default => $query,
                     }),
             ])
-            ->recordActions([self::previewAction()])
+            ->recordActions([self::previewAction(), self::activityAction()])
             ->toolbarActions([]);
     }
 
@@ -123,7 +125,82 @@ class EmailSendTable
             ->mountUsing(static function (EmailSend $record): void {
                 AuditLogger::log('emails.previewed', $record, ['mail_key' => $record->mail_key]);
             })
-            ->modalContent(static fn (EmailSend $record): View => view('filament.email-sends.preview', ['html' => (string) $record->html]));
+            ->modalContent(static fn (EmailSend $record): View => view('filament.email-sends.preview', ['html' => self::inert((string) $record->html, (string) $record->send_key)]));
+    }
+
+    /**
+     * ⚠️⚠️ **La copia, con los enlaces DESACTIVADOS para pintarla aquí** (`#796`): un `iframe` con `sandbox` vacío no abre
+     * ventanas, pero SÍ navega dentro de sí mismo. Un enlace pulsado en la vista previa cargaría la web con la marca del envío
+     * y contaría como un clic del CLIENTE. Dos capas: `<base target="_blank">` (sin `allow-popups`, el navegador lo bloquea) y
+     * la marca fuera de sus enlaces. La copia guardada no se toca; lo que se ve es idéntico.
+     */
+    public static function inert(string $html, string $sendKey): string
+    {
+        if ($sendKey !== '') {
+            $html = str_replace(['&amp;'.EmailUtm::MARK.'='.$sendKey, '&'.EmailUtm::MARK.'='.$sendKey], '', $html);
+        }
+
+        $base = '<base target="_blank">';
+        $withBase = preg_replace('/<head(\s[^>]*)?>/i', '$0'.$base, $html, 1, $count);
+
+        return $count === 1 && is_string($withBase) ? $withBase : $base.$html;
+    }
+
+    /**
+     * «Actividad»: CUÁNDO salió, se abrió y se pulsó (`#796`, §4.10). Deja rastro al abrirse, con el envío y sin las horas.
+     * Solo si sus clics se miden (la marca, la C2).
+     */
+    public static function activityAction(): Action
+    {
+        return Action::make('activity')
+            ->label(__('admin.email_sends.activity.action'))
+            ->icon(Heroicon::OutlinedClock)
+            ->visible(static fn (EmailSend $record): bool => EmailSendResource::canViewAny() && $record->tracks_clicks)
+            ->modalHeading(static fn (EmailSend $record): string => __('admin.email_sends.activity.heading', ['mail' => self::label($record->mail_key)]))
+            ->modalWidth('2xl')
+            ->modalSubmitAction(false)
+            ->modalCancelActionLabel(__('admin.email_sends.close'))
+            ->mountUsing(static function (EmailSend $record): void {
+                AuditLogger::log('emails.activity_viewed', $record, ['mail_key' => $record->mail_key]);
+            })
+            ->modalContent(static fn (EmailSend $record): View => view('filament.email-sends.activity', ['events' => self::activity($record)]));
+    }
+
+    /**
+     * La línea de tiempo de un envío, en la hora del PARQUE: su salida y cada visita con su marca —la hora, cuánto después del
+     * envío, qué enlace y desde qué—. Las de una máquina van también, con su porqué y sin contar.
+     *
+     * @return list<array{kind: string, at: string, after: string|null, route: string|null, device: string|null, counts: bool, why: string|null}>
+     */
+    public static function activity(EmailSend $record): array
+    {
+        $sent = $record->sent_at;
+        $events = [];
+
+        if ($sent !== null) {
+            $events[] = ['kind' => 'sent', 'at' => DisplayTime::format($sent, 'd/m/Y H:i'), 'after' => null, 'route' => null, 'device' => null, 'counts' => true, 'why' => null];
+        }
+
+        foreach ($record->clicks()->orderBy('clicked_at')->orderBy('id')->get() as $click) {
+            $events[] = [
+                'kind' => 'click',
+                'at' => DisplayTime::format($click->clicked_at, 'd/m/Y H:i:s'),
+                'after' => $sent !== null ? self::after($sent, $click->clicked_at) : null,
+                'route' => $click->route,
+                'device' => $click->device !== null ? (string) __('admin.email_sends.device.'.$click->device) : null,
+                'counts' => $click->verdict === null,
+                'why' => $click->verdict !== null ? (string) __('admin.email_sends.verdict.'.$click->verdict) : null,
+            ];
+        }
+
+        return $events;
+    }
+
+    /** «13 minutos después», «1 hora 5 minutos después»: cuánto después del envío, en el idioma del panel. */
+    private static function after(CarbonInterface $sent, CarbonInterface $at): string
+    {
+        return CarbonImmutable::instance($at)->locale(app()->getLocale())
+            ->diffForHumans($sent, ['syntax' => CarbonInterface::DIFF_RELATIVE_TO_OTHER, 'parts' => 2]);
     }
 
     /** A quién: el nombre de la cuenta o, sin cuenta, la dirección. */

@@ -619,11 +619,12 @@ el export del art. 20 lleva qué correo, su asunto, cuándo y sus clics (sin la 
 
 ### `email_clicks` (EmailClick) — las visitas que llegan con la marca de un envío · `#795` (C2)
 
-`specs/correos-salientes.md` §4.8. `email_send_id` FK **cascadeOnDelete** (se va con su envío: la poda de `email_sends` es un
-borrado en bloque) · `route` (la ruta normalizada por `RouteNormalizer::path()`: qué enlace, sin query ni tokens) · `verdict`
-nullable (`null` cuenta; `repeat`, `early`, `sweep` no: el mismo enlace, antes de poder leerlo, la ráfaga de un escáner) ·
-`clicked_at`. Índice `(email_send_id, clicked_at)`. **Sin IP ni agente de usuario, sin nada personal**: la persona está en su
-envío. Único escritor `Services\Analytics\EmailClicks::record()` (desde `RecordEmailClick`, con el envío bloqueado).
+`specs/correos-salientes.md` §4.8 y §4.10. `email_send_id` FK **cascadeOnDelete** (se va con su envío: la poda de
+`email_sends` es un borrado en bloque) · `route` (la ruta normalizada por `RouteNormalizer::path()`: qué enlace, sin query ni
+tokens) · `device` nullable (`mobile`/`tablet`/`desktop`, la clase de `Device` al pulsar, `#796`) · `verdict` nullable (`null`
+cuenta; `repeat`, `early`, `sweep`, `bot` no: el mismo enlace, antes de poder leerlo, la ráfaga de un escáner, un robot que se
+anuncia) · `clicked_at`. Índice `(email_send_id, clicked_at)`. **Sin IP ni agente de usuario, sin nada personal**: la persona
+está en su envío. Único escritor `Services\Analytics\EmailClicks::record()` (desde `RecordEmailClick`, con el envío bloqueado).
 
 ### `surveys` · `survey_participations` · `survey_responses` · `survey_spent_tokens` — las encuestas, ANÓNIMAS · `#740`, `#754`, `#757`
 

@@ -15,7 +15,7 @@
   (`EmailUtm::IGNORED_QUERY`); (3) `sendmail` no avisa de entregas ni rebotes: «entregado» no se puede saber, «falló al
   enviar» sí; (4) el píxel de apertura exige consentimiento (LSSI 22.2) y Apple Mail abre solo: las aperturas son
   APROXIMADAS; (5) los escáneres de enlaces de Outlook y Gmail pulsan solos: un clic en el primer segundo tras el envío no cuenta.
-- **Estado**: ✅ aprobada (`#794`: la COPIA 6 meses, las cifras 24); ✅ C1 en `main` (ojo del owner, 29-09); 🟦 C2 (§4.8–§4.9).
+- **Estado**: ✅ aprobada (`#794`: la COPIA 6 meses, las cifras 24); ✅ C1 en `main` (ojo del owner, 29-09); 🟦 C2 (§4.8–§4.9); ▶ «cuándo» (§4.10).
 - **C2**: `jw_e` va en `EmailUtm::IGNORED_QUERY` y NUNCA en `RouteNormalizer::QUERY_ALLOWLIST` (la analítica es anónima);
   la encuesta no lleva marca (`#754`); el escáner se reconoce por la RÁFAGA, no por el reloj (§4.8).
 - **Apuntar un envío NUNCA rompe el envío** (`#794`): un fallo del registro reintentaría el trabajo y duplicaría el correo.
@@ -196,6 +196,64 @@ Avanzado; y el export (contrato 1.52.0). Pruebas: `Mail\EmailClicksTest` (15) y 
    notarse en los correos. Al pulsar, la regla se re-comprueba en cada petición.
 5. PHP lee `?jw.e=` como `jw_e`, pero en la query cruda no se llama así. Por eso se quita solo lo que de verdad está, y si no
    hay nada que quitar no hay 302 (sería un bucle).
+
+### 4.10 CUÁNDO: la hora de cada apertura y de cada clic — medido el 29-09, antes de codificar · `#796`
+El owner (29-09): «medir a qué hora se abre el correo, a qué hora es cada clic, si se vuelve a abrir después… para saber a qué
+hora sería correcto enviarles los correos de marketing. Si valoras añadir más detalles, procedemos».
+
+**Medido**:
+- (a) La hora de cada clic YA se guarda (`email_clicks.clicked_at`, la C2); el panel solo enseñaba la cuenta.
+- (b) Las aperturas, con fuentes ([Apple, SocketLabs](https://help.socketlabs.com/docs/identifying-apple-mpp-opens-in-notification-api-events);
+  [Gmail, Suped](https://www.suped.com/learn/email-deliverability/how-does-gmails-image-proxy-affect-email-open-tracking-and-what-could-cause-very-fast-opens)):
+  - Apple Mail descarga las imágenes AL ENTREGAR, desde sus servidores y con el agente `Mozilla/5.0` a secas. La apertura de
+    verdad sale de la memoria del aparato: su hora NO se puede saber.
+  - Gmail pide la imagen al abrir, así que la hora de la primera apertura es real. Luego la guarda: las reaperturas no se ven.
+  - Outlook bloquea las imágenes a menudo.
+  - ⇒ Para la hora, la señal fiable es el CLIC; la apertura es un complemento, con su origen dicho.
+- (c) Los correos programados salen a hora FIJA (la víspera a las 18:00, «El cumple se acerca» a las 10:00, hora del parque):
+  a qué hora se abren depende de a qué hora salen.
+- (d) De los 27 correos al cliente, 16 los PROVOCA él en ese momento (su cuenta, sus contraseñas, su compra) y se abren al
+  instante: no dicen nada de sus horarios.
+
+**Decidido** (el objetivo es del owner; el diseño, mío):
+1. **La línea de tiempo de cada envío** (C2b): «Actividad» en «Correos enviados», con cuándo salió y cada apertura y cada clic.
+   De cada uno: la hora del parque, cuánto después del envío, qué enlace y desde qué dispositivo. Lo de un escáner o de Apple,
+   aparte y sin contar. Deja rastro (`emails.activity_viewed`), como la vista previa.
+2. **El dispositivo, a grandes rasgos**: `mobile`, `tablet` o `desktop`, sacado del agente AL PULSAR y sin guardar el agente.
+   `null` si no se sabe (un proxy).
+3. **Las aperturas** (C3): cada una con su hora, también las reaperturas, y su ORIGEN: `apple` (de máquina, no cuenta),
+   `gmail` o `direct`. Solo con el consentimiento de §4.3, y nunca en la encuesta. La vista previa del panel no la cuenta: el
+   píxel se quita al pintarla.
+4. **«Cuándo» en Marketing** (C4), SOLO en conjunto (`#793`, `RGPD-07`, celdas ≥ 5): el mapa día × hora de los clics y de las
+   aperturas de verdad, y la mediana de cuánto se tarda en abrir y en pulsar. Solo con los correos que le LLEGAN: los que
+   provoca él quedan fuera, por censo (un correo nuevo sin clasificar pone la suite en rojo).
+5. **Descartado**: la «hora de cada cliente» para mandarle a él (perfilar a cada persona: `#793` y la asesoría) y la IP con su
+   ubicación. **Para después**: la MEJOR hora exige mandar a horas distintas y comparar (un experimento, `analitica.md` §4.5).
+   Se propone cuando haya correos de marketing.
+6. **Los robots que SE ANUNCIAN** (`Device::isBot()`: la vista previa de WhatsApp, Slack o Telegram cuando alguien pega el
+   enlace en un chat) son `bot`: no cuentan y no entran en la cuenta de la ráfaga. Los escáneres de correo se disfrazan y se
+   siguen viendo por el ritmo (§4.8).
+
+Tandas: C2b va en la rama de la C2, y siguen C3 (aperturas) y C4 («cuándo» en Marketing).
+
+### 4.11 La C2b, lo construido (29-09; 🟦 en `wip/correos-c2`, falta el ojo del owner)
+Construido: «Actividad» en «Correos enviados» (`EmailSendTable::activity()`, con el rastro `emails.activity_viewed`),
+`email_clicks.device`, el veredicto `bot` y la vista previa DESACTIVADA (`EmailSendTable::inert()`). Pruebas en
+`Mail\EmailClicksTest` y `Admin\EmailSendsPanelTest`. Arnés `SOLO=C2`, con sus diez mutaciones.
+
+**Lo que enseñó**:
+1. ⚠️⚠️ **Un defecto de la C2, cazado al leer la vista previa**: un `iframe` con `sandbox` vacío no abre ventanas, pero SÍ
+   navega dentro de sí mismo. Un enlace pulsado en la vista previa habría cargado la web con la marca, y eso contaría como un
+   clic del cliente. El comentario de la C1 afirmaba lo contrario sin haberlo probado. Ahora el HTML se pinta con
+   `<base target="_blank">` (bloqueado sin `allow-popups`) y sin la marca. La sonda pulsa dentro de la vista previa de verdad.
+   **El control tardó tres vueltas en distinguir algo**, y cada una enseñó una trampa:
+   - El BOTÓN del molde ya lleva `target="_blank"` (el sandbox lo bloquea de por sí): los que navegan son el pie y el logotipo.
+   - Con el panel en `:80` y los enlaces en `:8081`, la CSP del panel (`frame-src 'self'`) cortaba la navegación por ser OTRO
+     origen, y la vista previa PARECÍA segura. En el navegador del owner los dos son `:8081`. La sonda va con
+     `BASE=http://localhost:8081` y el puente `socat`.
+   - Así, sin la protección, pulsar el pie navegó el marco y el servidor apuntó una visita al envío del cliente. Con ella:
+     ni navega, ni sale la marca, ni se apunta nada.
+2. Las sondas van con el agente de un iPhone: `HeadlessChrome` es un robot para `Device::isBot()` y su clic sería `bot`.
 
 ## 5. Impacto en invariantes
 

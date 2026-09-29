@@ -16,6 +16,7 @@ use App\Filament\Resources\EmailSends\Pages\ListEmailSends;
 use App\Filament\Resources\EmailSends\Tables\EmailSendTable;
 use App\Filament\Resources\Users\Pages\ListUsers;
 use App\Filament\Resources\Users\Pages\ViewUser;
+use Carbon\CarbonImmutable;
 use Database\Seeders\LandingContentSeeder;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
@@ -75,7 +76,7 @@ class EmailSendsPanelTest extends TestCase
         // no lo trae); se le pide a la acción de verdad —su `modalContent`— y el navegador lo ve entero en la sonda.
         $html = EmailSendTable::previewAction()->record($send)->getModalContent()?->render() ?? '';
         $this->assertStringContainsString('sandbox=""', $html, 'el iframe va AISLADO: ni scripts ni enlaces que salgan');
-        $this->assertStringContainsString('srcdoc="&lt;p&gt;Tu pedido &lt;strong&gt;JW-1&lt;/strong&gt; &amp; más&lt;/p&gt;"', $html, 'la copia, entera y escapada UNA vez para el atributo');
+        $this->assertStringContainsString('srcdoc="&lt;base target=&quot;_blank&quot;&gt;&lt;p&gt;Tu pedido &lt;strong&gt;JW-1&lt;/strong&gt; &amp; más&lt;/p&gt;"', $html, 'la copia, entera y escapada UNA vez para el atributo, con los enlaces desactivados');
 
         $trace = AuditLog::query()->where('action', 'emails.previewed')->sole();
         $this->assertSame('email_send', $trace->target_type);
@@ -118,12 +119,13 @@ class EmailSendsPanelTest extends TestCase
         $this->click($medido, EmailClick::VERDICT_REPEAT);
         $this->click($medido, EmailClick::VERDICT_SWEEP);
         $this->click($medido, EmailClick::VERDICT_EARLY);
+        $this->click($medido, EmailClick::VERDICT_BOT);
         $sinPulsar = $this->send($cliente->id, 'visit_reminder', sentAt: now(), tracks: true);
         $sinMedir = $this->send($cliente->id, 'survey_invitation', sentAt: now(), tracks: false);
 
         $lista = Livewire::actingAs($this->withRole('admin'))->test(ListEmailSends::class)
             ->assertSee('2 clics')
-            ->assertSee('+2 de un escáner')
+            ->assertSee('+3 automáticos')
             ->assertSee('Sin clics')
             ->assertSee('No se mide');
 
@@ -134,6 +136,73 @@ class EmailSendsPanelTest extends TestCase
         Livewire::actingAs($this->withRole('admin'))->test(ViewUser::class, ['record' => $cliente->id])
             ->assertSee('2 clics')
             ->assertSee('No se mide');
+    }
+
+    /**
+     * ⚠️⚠️ La vista previa NO puede pulsar por el cliente (`#796`): el `sandbox` vacío no impide que el marco navegue dentro de
+     * sí mismo, así que el HTML llega con `<base target="_blank">` (bloqueado sin `allow-popups`) y sin la marca del envío.
+     * Lo demás, igual: la UTM se queda.
+     */
+    public function test_the_preview_links_are_inert_and_carry_no_mark(): void
+    {
+        $send = $this->send(User::factory()->create()->id, 'account_already_exists', sentAt: now(), tracks: true);
+        $key = (string) $send->send_key;
+        $copia = '<html><head><title>x</title></head><body><a href="http://localhost:8081/login?utm_source=email&amp;utm_medium=account_already_exists&amp;jw_e='.$key.'">Entrar</a></body></html>';
+        DB::table('email_sends')->where('id', $send->id)->update(['html' => $copia]);
+        $send->refresh();
+
+        $pintada = EmailSendTable::inert($copia, $key);
+
+        $this->assertStringContainsString('<head><base target="_blank"><title>', $pintada);
+        $this->assertStringNotContainsString('jw_e', $pintada);
+        $this->assertStringContainsString('utm_medium=account_already_exists"', $pintada);
+        $this->assertSame($copia, $send->fresh()?->html, 'la copia guardada no se toca');
+
+        $html = EmailSendTable::previewAction()->record($send)->getModalContent()?->render() ?? '';
+        $this->assertStringNotContainsString('jw_e', $html);
+        $this->assertStringContainsString('&lt;base target=&quot;_blank&quot;&gt;', $html);
+    }
+
+    /** La línea de tiempo: cuándo salió y cada visita con su hora, cuánto después, qué enlace y desde qué; y deja rastro. */
+    public function test_the_activity_shows_when_each_click_happened_and_leaves_a_trace(): void
+    {
+        $this->travelTo(CarbonImmutable::parse('2026-09-29 08:00:00', 'UTC'));
+        $send = $this->send(User::factory()->create()->id, 'order_cancelled', sentAt: now(), tracks: true);
+        DB::table('email_clicks')->insert([
+            ['email_send_id' => $send->id, 'route' => '/login', 'device' => 'mobile', 'verdict' => null, 'clicked_at' => now()->addMinutes(13)],
+            ['email_send_id' => $send->id, 'route' => '/', 'device' => 'desktop', 'verdict' => EmailClick::VERDICT_BOT, 'clicked_at' => now()->addMinutes(65)],
+        ]);
+
+        $eventos = EmailSendTable::activity($send);
+
+        $this->assertSame(['sent', 'click', 'click'], array_column($eventos, 'kind'));
+        $this->assertSame('29/09/2026 10:00', $eventos[0]['at'], 'en la hora del PARQUE (Madrid, UTC+2 en septiembre)');
+        $this->assertSame('29/09/2026 10:13:00', $eventos[1]['at']);
+        $this->assertSame('13 minutos después', $eventos[1]['after']);
+        $this->assertSame(['/login', 'Móvil', true], [$eventos[1]['route'], $eventos[1]['device'], $eventos[1]['counts']]);
+        $this->assertSame('1 hora 5 minutos después', $eventos[2]['after']);
+        $this->assertFalse($eventos[2]['counts']);
+        $this->assertSame('No cuenta: la vista previa de un chat o un robot', $eventos[2]['why']);
+
+        Livewire::actingAs($this->withRole('admin'))->test(ListEmailSends::class)
+            ->mountAction(TestAction::make('activity')->table($send))
+            ->assertActionMounted(TestAction::make('activity')->table($send));
+
+        $trace = AuditLog::query()->where('action', 'emails.activity_viewed')->sole();
+        $this->assertSame((int) $send->id, (int) $trace->target_id);
+        $this->assertStringNotContainsString('10:13', (string) json_encode($trace->payload), 'el rastro dice QUÉ envío se miró, no sus horas');
+
+        $modal = EmailSendTable::activityAction()->record($send)->getModalContent()?->render() ?? '';
+        $this->assertStringContainsString('/login', $modal);
+        $this->assertStringContainsString('13 minutos después', $modal);
+    }
+
+    public function test_without_the_mark_there_is_no_activity(): void
+    {
+        $send = $this->send(User::factory()->create()->id, 'order_confirmation', sentAt: now(), tracks: false);
+
+        Livewire::actingAs($this->withRole('admin'))->test(ListEmailSends::class)
+            ->assertActionHidden(TestAction::make('activity')->table($send));
     }
 
     /** El interruptor: APAGADO de fábrica (marca blanca, `[PENDIENTE: asesoría]`) y se enciende desde Ajustes. */

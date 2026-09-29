@@ -144,6 +144,37 @@ class EmailClicksTest extends ApiTestCase
         $this->assertSame(2, (int) EmailSend::query()->withClickCounts()->sole()->clicks_counted);
     }
 
+    /** Desde qué se pulsó (`#796`): la CLASE del aparato; ni el agente ni la IP se guardan en ningún sitio. */
+    public function test_the_device_is_kept_and_the_agent_is_not(): void
+    {
+        [$row, $boton] = $this->sentWithMark();
+        $this->travel(1)->minutes();
+        $iphone = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
+
+        $this->withHeader('User-Agent', $iphone)->get($boton)->assertRedirect();
+
+        $this->assertSame('mobile', EmailClick::query()->sole()->device);
+        $this->assertEqualsCanonicalizing(['id', 'email_send_id', 'route', 'device', 'verdict', 'clicked_at'], Schema::getColumnListing('email_clicks'), 'ni agente ni IP');
+        $this->assertSame((int) $row->id, (int) EmailClick::query()->sole()->email_send_id);
+    }
+
+    /**
+     * Un robot que DICE quién es (la vista previa de WhatsApp al pegar el enlace) no cuenta, y tampoco hace escáner al cliente
+     * que pulsa después: no entra en la cuenta de la ráfaga.
+     */
+    public function test_a_robot_that_says_so_does_not_count_nor_makes_the_customer_a_scanner(): void
+    {
+        [$row] = $this->sentWithMark();
+        $this->travel(1)->minutes();
+
+        $this->withHeader('User-Agent', 'WhatsApp/2.24.19.86 A')->get('/?jw_e='.$row->send_key)->assertRedirect();
+        $this->withHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/128.0 Safari/537.36')->get('/?jw_e='.$row->send_key)->assertRedirect();
+        $this->withHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/128.0 Safari/537.36')->get('/login?jw_e='.$row->send_key)->assertRedirect();
+
+        $this->assertSame([EmailClick::VERDICT_BOT, null, null], EmailClick::query()->orderBy('id')->pluck('verdict')->all());
+        $this->assertSame(2, (int) EmailSend::query()->withClickCounts()->sole()->clicks_counted);
+    }
+
     /** La regla se RE-COMPRUEBA al pulsar: si se opuso después, o se apagó el interruptor, nada; y la URL se limpia igual. */
     public function test_the_rule_is_checked_again_when_clicking(): void
     {

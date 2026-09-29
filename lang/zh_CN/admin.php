@@ -3749,8 +3749,29 @@ return [
         'close' => '关闭',
         'forgotten' => '已删除的客户',
         'clicks' => '{0} 无点击|[1,*] :count 次点击',
-        'clicks_scanner' => '另有 :count 次来自扫描器|另有 :count 次来自扫描器',
+        'clicks_scanner' => '另有 :count 次自动访问|另有 :count 次自动访问',
         'clicks_not_measured' => '不统计',
+        'preview_inert' => '此预览中的链接已停用：在这里点击不会打开任何页面，也不会算作客户的点击。',
+        'activity' => [
+            'action' => '动态',
+            'heading' => '动态 · :mail',
+            'no_clicks' => '客户尚未点击此邮件中的任何链接。',
+            'kind' => [
+                'sent' => '已发送',
+                'click' => '点击',
+            ],
+        ],
+        'device' => [
+            'mobile' => '手机',
+            'tablet' => '平板',
+            'desktop' => '电脑',
+        ],
+        'verdict' => [
+            'early' => '不计入：在任何人能阅读之前',
+            'sweep' => '不计入：扫描器的连续访问',
+            'bot' => '不计入：聊天预览或机器人',
+            'repeat' => '不计入：同一次点击的重复',
+        ],
         'col' => [
             'when' => '时间',
             'to' => '收件人',

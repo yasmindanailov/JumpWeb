@@ -201,6 +201,8 @@ class AuditLog extends Model
         'analytics.goals_updated',
         // Los correos salientes (`#794`): cada vista previa de un correo enviado deja rastro (qué envío, sin su contenido).
         'emails.previewed',
+        // Y cada vez que se mira CUÁNDO lo abrió y lo pulsó (`#796`, la línea de tiempo): qué envío, sin las horas.
+        'emails.activity_viewed',
 
         // ── Incidencias de cobro (llegan por CONSTANTE, no por literal) ────────────────────
         self::ACTION_DUPLICATE_CAPTURE,

@@ -94,7 +94,7 @@ final class RecordEmailClick
         }
 
         try {
-            $this->clicks->record($mark, $request->getPathInfo());
+            $this->clicks->record($mark, $request->getPathInfo(), $request->userAgent());
         } catch (Throwable $e) {
             Log::warning('email_clicks.record_failed', ['error' => $e::class]);
         }

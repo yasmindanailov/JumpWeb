@@ -11,7 +11,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  *
  * ⚠️ **Cuenta la que no lleva veredicto.** Los escáneres de correo (Safe Links, Mimecast, Proofpoint…) visitan TODOS los
  * enlaces al entregarse el correo y con un agente de navegador falso, así que se reconocen por el RITMO, no por quién dicen
- * ser: {@see VERDICT_EARLY}, {@see VERDICT_SWEEP} y {@see VERDICT_REPEAT} (§4.8 (6), con sus fuentes).
+ * ser: {@see VERDICT_EARLY}, {@see VERDICT_SWEEP} y {@see VERDICT_REPEAT} (§4.8 (6), con sus fuentes). Los robots que sí
+ * dicen quiénes son, {@see VERDICT_BOT}. Y `device` es la clase del aparato (`Device`), nunca el agente (§4.10).
  */
 class EmailClick extends Model
 {
@@ -24,8 +25,14 @@ class EmailClick extends Model
     /** La ráfaga de un escáner: {@see SWEEP_HITS} visitas o más al mismo envío dentro de la ventana. */
     public const VERDICT_SWEEP = 'sweep';
 
-    /** Los veredictos de un escáner (lo que el panel enseña como «de escáner»). */
-    public const SCANNER_VERDICTS = [self::VERDICT_EARLY, self::VERDICT_SWEEP];
+    /**
+     * Un robot que SE ANUNCIA (`Device::isBot()`): la vista previa de WhatsApp, Slack o Telegram cuando alguien pega el enlace
+     * del correo en un chat. Los escáneres de correo se disfrazan de navegador y por eso se ven por el ritmo; estos no (§4.10).
+     */
+    public const VERDICT_BOT = 'bot';
+
+    /** Los veredictos de una máquina (lo que el panel enseña como «de escáner»). */
+    public const SCANNER_VERDICTS = [self::VERDICT_EARLY, self::VERDICT_SWEEP, self::VERDICT_BOT];
 
     /** Segundos de la ventana en la que se miran la ráfaga y la repetición. */
     public const WINDOW_SECONDS = 30;
