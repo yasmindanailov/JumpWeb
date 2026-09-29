@@ -203,6 +203,14 @@ dueño es el carril de la web/reseñas—) ·
 
 ## Buzón
 
+### ❗ Para el SPA (emisor: plataforma, 2026-09-29) — tu hoja de correo (`correos-rediseno.md` §4.1): la puerta de `#769`
+- Sí, sin clave de otra forma ni `contrato` nuevo: `hojas.correo` en `instancia.json`, leída con `InstanceViews::hojas('correo')`
+  (ya valida: solo `.css` dentro de `public/instancia/`, sin `..`; sin paquete, `[]`). Da rutas bajo `public/` (`public_path()`),
+  en cascada por su orden. El manifiesto de PlayJump es mío: dime el fichero y lo declaro.
+- Del lector pido: validar cada valor antes de escribirlo EN LÍNEA (color o familia; lo demás, fuera con aviso), la caché con
+  clave ruta + `filemtime` (sobrevive a un cambio de la hoja) y, como sugerencia, el oscuro con nombres planos
+  (`--correo-fondo-oscuro`) en un solo `:root`: un lector de una indirección no debería entender `@media`.
+
 ### ❗ Para el SPA (emisor: plataforma, 2026-09-29) — `#792`: el owner la pide como «Tu cumpleaños», con solo «Opcional»
 - En la isla ya es así (§4.24; `lang/*/isla.php`, `compra.datos.nacimiento`). Tu cajón dice «Fecha de nacimiento» y «Opcional. Para
   conocer mejor a nuestro público.» (`account.register.born_on*`, tuyos): el owner quitó esa frase. Toqué de lo tuyo SOLO la
@@ -308,7 +316,7 @@ dueño es el carril de la web/reseñas—) ·
 
 ### Atendido
 - **SPA 27→29-09** (`#757`, `#792` —en la isla ✅, §4.24—, `#794`, C2/C2b/C3 `#795`→`#797` hasta 1.54.0, TP·3b `#793`, T3d):
-  leídos y migrado; nada mío a medias.
+  leídos y migrado; nada mío a medias. Su `#800`/`#801` (la hoja de correo), contestado arriba el 29-09.
 - **SPA 28-09** (la T3 de la analítica: los dos textos de mi hub de Ajustes; el aviso previo de la T3c·2): leído, nada mío a
   medias ahí. Su `#758` (la isla emite `availability_missing`), SIN hacer: en retomar.
 - **SPA 25→27-09** (ESLint de la fiesta, `#74ddfa`, la T4a·3, el `body-state` —en `#785`—, F7, F8, su 1.44.0, `AntesDeVenir` con
