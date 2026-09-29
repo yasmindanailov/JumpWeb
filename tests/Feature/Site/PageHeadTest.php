@@ -168,14 +168,8 @@ class PageHeadTest extends TestCase
         $this->assertSame(0, $x->query('.//'.$this->clase('div', 'rays'), $cabecera)->length,
             'el abanico de «/precios» ha vuelto a la cabecera, donde se recorta en una banda');
 
-        // ⚠️⚠️ **La otra mitad —que el abanico SÍ está en su ranura de fachada— cambia de sujeto con la
-        // mudanza** (`#658`): la página de PlayJump vive en su instancia y lo que el producto sirve es el
-        // anfitrión mínimo, SIN arte. Se prueba donde hoy vive el sujeto, que es del producto: el
-        // COMPONENTE de fachada, que es quien coloca la pieza. No queda más débil —sigue exigiendo que el
-        // abanico esté DENTRO de la ranura— y deja de depender del diseño de un cliente.
-        $x = $this->xpath((string) $this->blade('<x-site.facade en="page-precios" />'));
-        $this->assertSame(1, $x->query('//'.$this->clase('div', 'fac-slot').'/'.$this->clase('div', 'rays'))->length,
-            'el abanico de «page-precios» ya no está en su ranura de fachada');
+        // ▶ La otra mitad —que el abanico SÍ estaba en su ranura de fachada— se probaba sobre el componente de
+        // fachada (`#658`); se fue con él en la T6g (`isla-y-landing-nueva.md` §4.25): su sujeto ya no existe.
     }
 
     /**

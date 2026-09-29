@@ -588,27 +588,6 @@ Route::get('/admin/analitica/csv', AnalyticsExportController::class)
 // La exportación de un SEGMENTO (T4b, una lista de personas) se RETIRÓ con la TP·3b (`#793`): nada del cuadro sale con nombres.
 
 /*
- * ══ EL LABORATORIO DE FACHADA ══════════════════════════════════════════════════════════════════
- * `DECISIONES #545` · pasada de vestido (`#497`). Dos pantallas donde el owner elige MIRANDO cómo
- * se coloca el material de fachada, con el mecanismo real (`<x-site.ilu>` sobre el kit de la
- * instalación) y no con una maqueta aparte.
- *
- * ❗❗❗ **CERRADAS POR ENTORNO Y TEMPORALES.** Fuera de `local` la ruta **no se registra**, así que
- * en producción es un 404 y no una página oculta: una pantalla de prototipo alcanzable por URL es
- * exactamente la clase de superficie que nadie revisa y que acaba indexada. Llevan además su
- * `noindex`. ▶ El owner ya eligió (la variante 2, `#580`) y 14 de las 18 ranuras que esto declaraba
- * tienen hoy pantalla de producción: el día que estas dos rutas se vayan, con ellas se van solo las
- * cuatro manchas que nadie más pinta (`IllustrationKit::SLOTS`, «EL LABORATORIO DE FACHADA»).
- *
- * ⚠️ Sin `web` completo a propósito: no necesitan sesión, ni CSRF, ni cookies. Lo único que piden
- * es el idioma, para que los tokens y las fuentes sean los de la web.
- */
-if (app()->environment('local')) {
-    Route::get('/_diseno/splash', fn () => view('lab.splash'))->name('lab.splash');
-    Route::get('/_diseno/siluetas', fn () => view('lab.siluetas'))->name('lab.siluetas');
-}
-
-/*
  * **LAS PÁGINAS QUE DECLARA EL PAQUETE DE LA INSTANCIA** (T4b de `specs/isla-y-landing-nueva.md` §4.2; `#681`):
  * «kids» o «jump» son nombres de un cliente, no rutas del producto. Van las ÚLTIMAS a propósito: así ven todas las
  * del producto y descartan la página que pisaría una (`InstancePages::registrarRutas()`). ⚠️ Las rutas se cachean

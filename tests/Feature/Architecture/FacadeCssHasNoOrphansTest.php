@@ -85,9 +85,10 @@ class FacadeCssHasNoOrphansTest extends TestCase
         // retirarse el mapa de `/contacto` y se fue de la hoja, así que el control quedó apuntando a
         // una clase que ya no está —y puso este caso en rojo con el producto sano, que es
         // exactamente lo que una guarda-de-la-guarda tiene que hacer—. Y `grain--fade` salió en la T6f
-        // (`#843`) por lo mismo: su única pantalla era `/normas` de la web vieja. Las cuatro que quedan
-        // siguen declaradas y cubren las dos hojas.
-        foreach (['grain', 'rays', 'brand-strip--wedge', 'ilu'] as $needle) {
+        // (`#843`) por lo mismo: su única pantalla era `/normas` de la web vieja; y `rays` en la T6g, con el
+        // mural de `/precios` (su sitio lo toma `arc`, que sigue en la portada del anfitrión). Las cuatro
+        // que quedan siguen declaradas y cubren las dos hojas.
+        foreach (['grain', 'arc', 'brand-strip--wedge', 'ilu'] as $needle) {
             $this->assertContains(
                 $needle, $classes,
                 "el escaneo de las hojas no ve `.{$needle}`, que está declarada: el parser se ha ".
@@ -114,9 +115,10 @@ class FacadeCssHasNoOrphansTest extends TestCase
      *
      * ⚠️⚠️ Es la ceguera más peligrosa de esta guarda y no la ve ningún otro caso: si las hojas de
      * `public/css` entraran en el corpus, **toda clase declarada estaría «viva» por estar declarada**
-     * y el test de huérfanas saldría verde vigilando la nada. El centinela es `--rayos-size`, un
-     * token que hoy solo existe dentro de la hoja; si algún día alguien lo escribe en una vista, este
-     * caso se cae y hay que elegir otro — que es lo que tiene que pasar, no quedarse verde.
+     * y el test de huérfanas saldría verde vigilando la nada. El centinela es `--trama`, un token que
+     * hoy solo existe dentro de las hojas; si algún día alguien lo escribe en una vista, este caso se
+     * cae y hay que elegir otro — que es lo que tiene que pasar, no quedarse verde. (Era `--rayos-size`,
+     * y se fue con su pieza en la T6g: este caso se puso en ROJO, que es lo que tenía que pasar.)
      *
      * ⚠️⚠️ **Y aquí hay una lección de MUTACIÓN que cuesta creerse el resultado equivocado.** La
      * defensa son DOS piezas —el corpus solo recorre `public/build`, *y* además excluye
@@ -135,12 +137,12 @@ class FacadeCssHasNoOrphansTest extends TestCase
     public function test_the_corpus_does_not_include_the_stylesheets_it_measures(): void
     {
         $this->assertStringContainsString(
-            '--rayos-size', implode("\n", $this->siteSheets()),
+            '--trama', implode("\n", $this->siteSheets()),
             'el centinela ya no está en la hoja: elige otro token que solo viva en `public/css`.',
         );
 
         $this->assertStringNotContainsString(
-            '--rayos-size', $this->consumerCorpus(),
+            '--trama', $this->consumerCorpus(),
             'las hojas de `public/css` han entrado en el corpus de consumidores: con eso, TODA clase '.
             'declarada se demuestra viva a sí misma y la guarda de huérfanas vigila la nada.',
         );

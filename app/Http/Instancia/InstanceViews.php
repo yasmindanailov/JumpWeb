@@ -205,19 +205,14 @@ class InstanceViews
      * de las ocho vistas de la vía B que el paquete de PlayJump retiró. Las **25 clases de CSS se podaron** en el mismo cambio
      * (lo que las guardas de huérfanos declararon muerto al quitarlas de aquí). ⚠️ Quedan las **cinco RANURAS del kit**, y a
      * sabiendas: el kit es un artefacto de la instalación (no viaja en ningún repo) que el despliegue valida contra
-     * `IllustrationKit::SLOTS` (guarda 7), así que quitarlas obliga a regenerar el kit de producción. Se van con el kit
-     * ENTERO y el mural en la **T6g**, en un solo corte. La lista se queda, y las guardas la siguen leyendo, para la siguiente
-     * instalación que vista una vista del contrato por la vía B.
+     * `IllustrationKit::SLOTS` (guarda 7), así que quitarlas obliga a regenerar el kit de producción.
+     * ✅ **Vacía desde la T6g** (29-09, §4.25 de esa spec): las cinco se fueron de `SLOTS` con el mural, y el kit instalado se
+     * poda con `kit:build --podar`. La lista se queda, y las guardas la siguen leyendo, para la siguiente instalación que
+     * vista una vista del contrato por la vía B: vacía es su estado correcto.
      *
      * @var array<string, string> pieza (clase CSS de la fachada, o ranura del kit) => quién la consume
      */
-    public const MATERIAL_CONSUMIDO_POR_LA_INSTANCIA = [
-        'slot-ico-altura' => 'NADIE desde la T6f (`#843`): la pintaba `web/normas.blade.php` de la vía B, retirada; se va con el kit (T6g)',
-        'slot-ico-saltador' => 'NADIE desde la T6f (`#843`): la pintaba `web/normas.blade.php` de la vía B, retirada; se va con el kit (T6g)',
-        'slot-dudas' => 'NADIE desde la T6f (`#843`): la pintaba `web/portada.blade.php` de la vía B, retirada; se va con el kit (T6g)',
-        'slot-resenas' => 'NADIE desde la T6f (`#843`): la pintaba `web/portada.blade.php` de la vía B, retirada; se va con el kit (T6g)',
-        'slot-ico-calcetines' => 'NADIE desde la T6f (`#843`): la pintaba `web/portada.blade.php` de la vía B, retirada; se va con el kit (T6g)',
-    ];
+    public const MATERIAL_CONSUMIDO_POR_LA_INSTANCIA = [];
 
     /**
      * Lo que el composer global (`View::composer('*')`) pone en TODA vista. ⚠️ Se va con el menú de hechos

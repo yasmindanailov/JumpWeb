@@ -67,11 +67,11 @@ DEL_PARQUE = [
 ]
 # ⚠️ Solo se emiten las que tienen PANTALLA: una clave que `IllustrationKit::SLOTS` no declara hace
 # que `kit:build` rechace el kit ENTERO. Añadir aquí es añadir allí, con su consumidor, en el mismo cambio.
-# ▶ Con pantalla hoy (`[DECIDIDO owner, 2026-09-13]`): calcetines en «Antes de venir», altura en «La
-#   altura, de un vistazo» y el saltador en «Mientras saltas», los dos en `/normas`. Cama, canasta y
-#   bote ESPERAN a tener pantalla: por zona del parque no tienen ninguna que sea suya.
-EMITIR = ['zone-jump', 'zone-kids', 'zone-cumpleanos',
-          'slot-ico-calcetines', 'slot-ico-altura', 'slot-ico-saltador']
+# ▶ Desde la T6g (29-09, `specs/isla-y-landing-nueva.md` §4.25) NINGÚN «Del parque» tiene pantalla: sus
+#   tres (calcetines en «Antes de venir», altura y saltador en `/normas`) se fueron con las vistas de la
+#   web vieja (T6f) y sus ranuras con la T6g. La tabla se queda —leerla del artboard es lo que cuesta—;
+#   volver a emitir uno es declarar antes su ranura con su consumidor.
+EMITIR = ['zone-jump', 'zone-kids', 'zone-cumpleanos']
 
 PROHIBIDOS = ['fill', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin',
               'stroke-dasharray', 'stroke-dashoffset', 'style', 'color', 'opacity',

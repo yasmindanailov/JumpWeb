@@ -490,6 +490,12 @@ instalación de un cliente. Si se configura a mano deja de ser una prueba del pr
 > guarda también la nota de la ficha. Sin ese paso, la sección y la nota se quedan vacías hasta el Perfil de Empresa.
 > El fichero es `storage/app/resenas/playjump-curado.json` del ordenador del owner (gitignorado: datos personales); y
 > se borran en «Opiniones» las 3 opiniones propias antiguas (Ángela M., Jose Luis R., Marta S.), como pidió el owner.
+> ❗ **Y el KIT de ilustración, podado** (T6g, `isla-y-landing-nueva.md` §4.25): la v2.0.0 retira 19 ranuras (el mural, sus
+> iconos y el laboratorio) y el `client-kit.svg` de producción las sigue trayendo: la GUARDA 7 saldría en rojo con el sitio
+> sano (medido en local: 19 problemas). Como `--podar` llega CON la v2.0.0 (el código viejo no lo tiene), el orden es: el
+> despliegue da la guarda 7 en ROJO (esperado, y el sitio ya está arriba); entonces `php artisan kit:build --podar --check`
+> (el ensayo: cuáles quitaría y si el resto es servible), si cuadra `php artisan kit:build --podar`, y `kit:build --check`
+> otra vez: verde. Ensayarlo antes en STAGING, con el resto de la v2.0.0.
 > ❗❗❗ **El tercero se paró en la GUARDA 1 y dejó el sitio 3 minutos en 503** (`#594`): el owner había
 > pasado Redsys a `live` a las 17:29. Se levantó con `artisan up` y se completaron a mano las franjas,
 > `artisan optimize` y la salud. Desde `#594`, en producción la guarda admite `test` o `live`.

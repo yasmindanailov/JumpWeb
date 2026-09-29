@@ -62,8 +62,6 @@ contador de la suite va en el trailer del commit** (`#618`). Si no salta: `git c
 | Landing · tema (tokens) · CMS · white-label | `docs/specs/landing-white-label.md` §0 |
 | Capa de tema · superficies · radios · sombras · foco · fuentes · logotipo · táctil | `docs/specs/tema-por-instalacion.md` §0 |
 | El armazón · barra · menú · hamburguesa · CTA de la esquina · cajón móvil | `docs/specs/armazon-y-menu.md` §0 |
-| La pasada de vestido · presupuesto de marcado | `docs/specs/pasada-de-vestido.md` §0 |
-| Material del mural · manchas · poses · iconos de zona | `docs/specs/elementos-fachada.md` §0 |
 | Rediseño desde el canvas · 8 secciones · 7 páginas | `docs/specs/rediseno-desde-canvas.md` §0 |
 | Idioma visual heredado · badges · auditoría de diseño | `docs/specs/auditoria-diseno.md` §0 · `docs/specs/idioma-visual-heredado.md` §0 |
 | La hora extra · complemento que ocupa aforo · su precio por día · mover fecha · su sello | `docs/specs/hora-extra.md` §0 |

@@ -1868,57 +1868,9 @@ img { display: block; max-width: 100%; }
    del anfitrión lo sigue pintando y retirarlo movería lo que se posicione dentro. */
 .rev { position: relative; isolation: isolate; }
 
-/* ══ LA FACHADA · EL MURAL (`#580`, `[DECIDIDO owner]`: la variante 2 «mural») ═══════════════════
-   El DIBUJO sale del kit de la instalación (`client-kit.svg`) y la COLOCACIÓN vive aquí; el mapa de
-   qué pieza va en cada sitio es `<x-site.facade>`. Sin kit no se emite ninguna pieza.
-
-   ⚠️⚠️ **El anfitrión tiene que ser contexto de apilamiento Y de posición, y los dos se piden AQUÍ.**
-   Con `z-index: -1` y sin `isolation` la pieza se hunde por detrás del fondo de la página y
-   desaparece sin fallar (`#286`); sin `position` se coloca contra otro ancestro (`#547`, la mancha
-   de reseñas). Por `:has()` la pieza se lleva su requisito consigo: un anfitrión nuevo no tiene que
-   acordarse de nada, y un navegador sin `:has()` degrada hacia NO decorar.
-   ⚠️ Solo el anfitrión de una pieza lo recibe: crear un contexto de apilamiento puede mover cualquier
-   `z-index` de dentro, y `.section` y `.page` las comparten todas las vistas. */
-:is(.section, .page):has(> .fac-slot, > .trio-stand) { position: relative; isolation: isolate; }
-
-/* El recorte es del ANFITRIÓN: una figura más alta que su caja se corta por el borde en vez de
-   empujar el alto de la página. */
-.fac-slot { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
-.fac-p { position: absolute; height: auto; }
-
-/* ── PORTADA · ancladas a la banda de la CABECERA de su sección ──────────────────────────────────
-   ⚠️⚠️ Arriba y no abajo: con `bottom` caían al fondo de secciones de 1.150 px, detrás de las
-   tarjetas (`#547`). El papel libre de una sección está al lado de su titular.
-   ⚠️ Dos clases en el selector a propósito: `site.css` se carga DESPUÉS y su `.ilu` declara
-   `height` y `max-width`, que a igual especificidad ganarían. */
-.fac-p.fac-p--zones      { right: 0; top: 50px; height: 400px; --ilu-fg: var(--strip-1); opacity: 0.30; }
-.fac-p.fac-p--zones-nino { right: 170px; top: 130px; height: 220px; --ilu-fg: var(--strip-2); opacity: 0.30; }
-.fac-p.fac-p--before     { right: 10px; top: 0; width: 420px; --ilu-fg: var(--strip-1); opacity: 0.55; }
-.fac-p.fac-p--info       { right: 0; top: 20px; height: 340px; --ilu-fg: var(--strip-1); opacity: 0.32; }
-
-/* ── PÁGINAS · una pieza por cabecera ────────────────────────────────────────────────────────────
-   ▶ En estrecho el titular ocupa el ancho entero y no hay lateral: la pieza se queda pequeña y
-   tenue en la esquina, detrás del rótulo y del titular, **sin bajar a la entradilla** (regla 02 del
-   kit: la pintura nunca va debajo de un párrafo). */
-/* ⚠️⚠️ **Los 104 px no son un tamaño a ojo: son lo que cabe ENCIMA de la entradilla más temprana.**
-   Con un titular de una línea («Cantina», «Hablamos») la entradilla empieza a ~170 px a 390, y la
-   pieza va de 60 a 164. La primera versión medía 128 desde 56 y la mancha de `/bar` caía sobre «y
-   carta corta» — lo vio la captura. Un titular más largo solo baja la entradilla: nunca la acerca. */
-.fac-p.fac-p--page     { right: -16px; top: 60px; height: 104px; --ilu-fg: var(--strip-1); opacity: 0.22; }
-.fac-p.fac-p--page-bar { height: auto; width: 104px; opacity: 0.45; }
-/* ── A3 · LOS RAYOS DE `/precios`, centrados en su figura ─────────────────────────────────────────
-   Su nota: «foco detrás de un precio o de una silueta. Uno por página». La FORMA es la de `.rays`
-   (`site.css`, suya al dígito); aquí va solo el sitio y el tamaño, que es lo que pone un consumidor.
-   ⚠️⚠️ **El centro del abanico es el de la figura, CALCULADO**: en ancho la figura mide 222 × 190 a
-   99 px del canto y 90 del techo → centro a 210 del canto derecho y 185 del techo; en estrecho,
-   122 × 104 a −16 y 60 → 45 y 112. Si la figura se mueve, estos dos números se mueven con ella.
-   ⚠️ En la capa del mural y NO en la cabecera: allí el conjunto rótulo + titular lo recortaba en una
-   banda de 80 px con los dos cantos rectos (lo vio el owner). Aquí su caja es la de la página y el
-   desvanecido circular termina entero. */
-.fac-slot > .rays.fac-rays--precios { --rayos-size: 220px; right: -65px; top: 2px; }
-@media (min-width: 1024px) {
-  .fac-slot > .rays.fac-rays--precios { --rayos-size: 340px; right: 40px; top: 15px; }
-}
+/* ⚠️ El MURAL de la variante 2 (`#580`: `<x-site.facade>`, sus colocaciones, los rayos de `/precios` y el trío) se
+   retiró con su última pantalla en la T6g (`isla-y-landing-nueva.md` §4.25); queda el ARCO, abajo, que pinta la
+   portada del anfitrión. */
 
 /* ── A1 · LA TRAMA DENTRO DE LAS TARJETAS DE TINTA (`#580`) ──────────────────────────────────────
    Su grupo, en el artboard: «van debajo del contenido, siempre dentro de un contenedor; nunca como
@@ -1938,67 +1890,8 @@ img { display: block; max-width: 100%; }
 .before__code > .grain { border-radius: var(--r-lg); }
 :is(.answers, .bar-counter) > .grain { border-radius: var(--r); }
 
-/* ══ LOS ICONOS DEL KIT (`#582`, pasada de vestido · eje de iconos) ══════════════════════════════
-   Los DIBUJOS son de la instalación (`client-kit.svg`, generados por `scripts/kit-iconos.py`); aquí
-   solo va lo que los PRESENTA. Sin kit, los componentes no emiten nada y estas reglas no tienen sujeto.
-
-   ── LA PEGATINA DE ZONA (`Iconos PJP` §07) ──────────────────────────────────────────────────────
-   Sus números, del artboard: keyline de tinta de 2, sombra dura de 5 y el glifo a dos tercios de la
-   caja (58 de 88 · 48 de 72). ⚠️ La sombra es el ROL `--shadow-float` y no su `5px 5px 0` escrito: en
-   este paquete vale eso mismo, y otra instalación trae la suya. */
-.zone-sticker {
-  --sticker: 56px;
-  flex: none; display: grid; place-items: center;
-  width: var(--sticker); height: var(--sticker);
-  border: 2px solid var(--paper-fg); border-radius: var(--r-lg);
-  background: var(--sticker-bg, var(--zone-1));
-  box-shadow: var(--shadow-float);
-}
-/* ⚠️ 48 es su SUELO («ninguna baja de 48»), y a esa talla el canto de 16 se come la caja: baja al
-   escalón de la escala que le toca, sin inventar un radio. */
-.zone-sticker--sm { --sticker: 48px; border-radius: var(--r-btn); }
-.zone-sticker--lg { --sticker: 64px; }
-/* ⚠️ Dos clases: `site.css` se carga después y su `.ilu` declara `height: auto`. */
-.zone-sticker .zone-sticker__g { width: 66%; height: 66%; --ilu-fg: var(--sticker-fg, var(--paper-fg)); }
-
-/* Dónde va: SOLO junto a la cifra de `/atracciones`. ⚠️ Estuvo también en las tarjetas de «Para quién»
-   y en las cabeceras de `/precios`, y se retiró de las dos (`[DECIDIDO owner, 2026-09-13]`, `#583`).
-   La fila de la cifra se alinea por la LÍNEA BASE del número, y una caja sin texto
-   se colgaría de esa línea por su borde inferior. */
-.rides-zone__count > .zone-sticker { align-self: center; }
-
-/* ── LOS «DEL PARQUE» (`slot-ico-*`, rejilla 24) ──────────────────────────────────────────────────
-   Heredan el color del texto que acompañan, como todo el set. */
-.ilu.kit-ico { --ilu-fg: currentColor; flex: none; width: 24px; height: 24px; }
-.rules-axis__title:has(> .kit-ico) { display: flex; align-items: center; gap: var(--sp-8); }
-/* En un titular de rótulo el icono va a la talla de la LETRA (`1em`), no a 24: al lado de un Bungee de
-   26–36 px un glifo fijo de 24 se lee como una errata. */
-.rules-group__title:has(> .kit-ico) { display: flex; align-items: center; gap: var(--sp-10); }
-.rules-group__title > .ilu.kit-ico { width: 1em; height: 1em; }
-
-@media (min-width: 1024px) {
-  /* ⚠️ Todas entre el racimo del armazón (acaba a 72 px) y la primera fila de contenido (330): en ese
-     tramo el titular deja libre la derecha de la columna. La de `/precios` va centrada en su abanico
-     (`.pricing__rays`), que es la composición: las rayas salen de detrás de la figura — y a 90 px y
-     no a 76, porque a 76 la mano de la figura tocaba el borde del racimo. */
-  .fac-p.fac-p--page             { opacity: 0.30; }
-  .fac-p.fac-p--page-atracciones { right: 20px; top: 84px; height: 240px; }
-  .fac-p.fac-p--page-precios     { right: 99px; top: 90px; height: 190px; }
-  .fac-p.fac-p--page-normas      { right: 30px; top: 80px; height: 210px; }
-  .fac-p.fac-p--page-contacto    { right: 40px; top: 80px; height: 230px; }
-  .fac-p.fac-p--page-bar         { right: 0; top: 80px; width: 270px; opacity: 0.55; }
-}
-
-/* En teléfono las figuras de la portada se encogen y se apartan: a 390 px una silueta de 400 tapa
-   media sección. ⚠️ `.fac-slot .fac-p` y no `.fac-p`, por el `.ilu` de `site.css` (arriba). */
-@media (max-width: 700px) {
-  .fac-slot .fac-p { max-height: 46vh; max-width: 62vw; }
-
-  /* «Antes de venir»: la mancha se muda DETRÁS DE LA TARJETA del QR y asoma por su canto inferior
-     izquierdo (`[DECIDIDO owner]`, `#548`). En escritorio vive al lado del titular; en móvil no hay
-     lado. */
-  .fac-p.fac-p--before { left: -66px; right: auto; top: 330px; width: 240px; max-width: none; max-height: none; }
-}
+/* ⚠️ Los ICONOS DEL KIT (`#582`: la pegatina de zona `<x-site.zone-sticker>` y los «Del parque» `<x-site.kit-ico>`) se
+   retiraron sin pantalla en la T6g (§4.25 de esa spec). */
 
 /* ── EL ARCO DE REBOTE (`F3`) ────────────────────────────────────────────────────────────────────
    Sobre la banda entre las pestañas y las tarjetas de «Cuánto». La curva se estira al ancho
@@ -2044,39 +1937,6 @@ img { display: block; max-width: 100%; }
   .arc { --arc-h: 104px; max-width: 340px; margin-top: var(--sp-28); }
 }
 
-/* ── EL TRÍO DE NIÑOS (`G4`) ─────────────────────────────────────────────────────────────────────
-   En ancho va al lado del titular, en la capa de fondo: el soporte no genera caja (`display:
-   contents`) y el trío se coloca contra su anfitrión. */
-.trio-stand { display: contents; }
-.trio {
-  position: absolute; z-index: -1; pointer-events: none;
-  display: flex; align-items: flex-end; opacity: 0.9;
-}
-.trio__n { display: block; flex: 0 0 auto; }
-/*
- * ⚠️⚠️ **Entre 1024 y 1280 la columna encoge más deprisa que el titular**, y medido con la TINTA del
- * titular (un `Range` sobre su texto, no la caja del `<h1>`, que ocupa la columna entera y acusa a
- * todas): a 1024 el trío se montaba 45 px sobre «DETALLE» y la figura de `/atracciones` 13 px sobre
- * «DENTRO». Desde 1180 las seis tienen holgura, así que el ajuste se acota a este tramo.
- */
-@media (min-width: 1024px) and (max-width: 1279px) {
-  .fac-p.fac-p--page-atracciones { height: 200px; }
-}
-/*
- * ⚠️⚠️ **EN ESTRECHO SE APOYA EN LA TARJETA DE DEBAJO** (`[DECIDIDO owner]`, `#548`: «encima de la
- * card 2h»). El soporte pasa a ser un bloque que RESERVA su sitio y el trío se sienta en su borde
- * inferior con los pies dentro de la tarjeta — **por ENCIMA** de ella, porque es opaca.
- * ▶ Con la reserva lo largo que sea el texto de encima deja de importar: el prototipo lo colocaba a
- * `top: 196px` de la sección, y a 390 px los brazos tapaban «14,95 € por niño». A 0,34 el trío mide
- * 71 px: 17 caen dentro de la tarjeta y el resto sale de estos 36 y del aire que la cabecera ya deja.
- */
-@media (max-width: 900px) {
-  .trio-stand { display: block; position: relative; height: 36px; }
-  .trio-stand > .trio {
-    z-index: 2; top: auto; right: 6px; bottom: -17px;
-    scale: 0.34; transform-origin: right bottom; opacity: 1;
-  }
-}
 @media (min-width: 1024px) {
   .sec-head,
   .page__head { margin-bottom: 40px; }

@@ -48,89 +48,37 @@ class IllustrationKit
      * @var list<string>
      */
     public const SLOTS = [
-        // ❗❗❗ **LA PASADA DE VESTIDO LA VUELVE A LLENAR, Y CON TRES** (`#497`, primera tanda de
-        // fachada). Estuvo VACÍA desde `#496` a propósito —el rediseño había retirado la última—, y
-        // el reparto de hoy **no lo eligió nadie: lo fijan las reglas duras del propio canvas**,
-        // medidas sección a sección sobre la portada de hoy:
-        //
-        //     02 «Cuánto»          su artboard: «cero superficies nuevas y cero manchas»
-        //     03 «Qué hay dentro»  su artboard: «la foto de apertura es la mancha grande: aquí no
-        //                          entra ninguna otra» — y medido, 5 `<img>`
-        //     01 «Para quién»      2 `<img>`: las fotos de zona
-        //     05 «Antes de venir»  ya lleva dibujo (el QR y el teléfono)
-        //     04 «Cumpleaños»      0 `<img>`, pero **solo porque el owner aún no ha mandado sus dos
-        //                          fotos** (`#528`): una mancha aquí la desplazaría al llegar
-        //     06 · 07 · 08         **cero imagen y cero dibujo** — y son justo las tres zonas que
-        //                          `#537` midió como 100 % papel
-        //
-        // ▶ Tres coincide **al dígito** con el presupuesto heredado de `#292` («una pieza por
-        // sección, tres en toda la portada»), que la pasada tenía como decisión abierta (su D3).
-        // *No hacía falta decidirla: las reglas duras ya la fijaban.*
-        // ⚠️ El canvas sí coloca dos piezas —la trama de puntos y el sello del CIERRE
-        // (`Escritorio PJP` 1e)— y **las dos ya estaban puestas**: aquí no se toca ninguna.
-        // ⚠️ **`slot-visitanos` se fue en `#547`** (`[DECIDIDO owner]`, viendo la portada vestida:
-        // «en la sección de dónde estamos quitamos el splash, con la silueta es suficiente»). La
-        // sección recibió figura de fachada y dos piezas en la misma cabecera se estorban — que es
-        // el presupuesto del canvas aplicado a una sección concreta, no un cambio de criterio.
-        'slot-resenas',
-        'slot-dudas',
+        // ── EL ARCO (`#580`) ─────────────────────────────────────────────────────────────────
+        // Las cuatro poses de adulto que pinta `<x-site.arc>`, dentro de `<x-site.rate-rail>` en la
+        // portada del ANFITRIÓN del producto (la que ve una instalación sin paquete). Es lo único que
+        // queda del mural de la variante 2: el resto se retiró con su última pantalla (T6g, abajo).
+        'slot-pose-p2', 'slot-pose-p5', 'slot-pose-p8', 'slot-pose-p9',
 
-        // ── EL MURAL (`#580`) ────────────────────────────────────────────────────────────────
-        // ❗ La variante 2 de la fachada, elegida por el owner y en producción: sus consumidores
-        // son `<x-site.facade>` (portada y las seis páginas), `<x-site.arc>` y `<x-site.trio>`.
-        //     manchas   · 4 «Antes de venir» · 6 `/bar`
-        //     adultos   · p1 `/atracciones` · p2 p8 p9 el arco · p3 «Visítanos» · p4 `/normas`
-        //               · p5 «Para quién» y la cumbre del arco · p6 `/precios` · p7 `/contacto`
-        //     niños     · k1 k2 k3 el trío · k3 también al lado del adulto en «Para quién»
-        'slot-splash-4', 'slot-splash-6',
-        'slot-pose-p1', 'slot-pose-p2', 'slot-pose-p3', 'slot-pose-p4', 'slot-pose-p5',
-        'slot-pose-p6', 'slot-pose-p7', 'slot-pose-p8', 'slot-pose-p9',
-        'slot-pose-k1', 'slot-pose-k2', 'slot-pose-k3',
-
-        // ── LOS ICONOS «DEL PARQUE» (`#582`) ─────────────────────────────────────────────────
-        // Los del set de 24 que son de PlayJump (`#475`) y por eso entran por aquí, cada uno el día
-        // que tiene pantalla. Los genera `scripts/kit-iconos.py`, con los trazos pasados a relleno.
-        //     calcetines · la nota de «Antes de venir» (portada)
-        //     altura     · «La altura, de un vistazo» (`/normas`)
-        //     saltador   · el grupo «Mientras saltas» (`/normas`)
-        // ⚠️ Desde `#655` la vista de `/normas` vive en la INSTANCIA: `altura` y `saltador` siguen
-        // declaradas aquí porque las trae el kit y las pinta esa vista, y quien lo sabe es
-        // `InstanceViews::MATERIAL_CONSUMIDO_POR_LA_INSTANCIA` (la guarda de ranuras lo lee de ahí).
-        // ❗ Y desde la T6f (`#843`) esa vista y la portada vieja ya no existen: estas tres, `slot-resenas` y
-        // `slot-dudas` no las pinta NADIE. Se quedan a sabiendas —quitarlas obliga a regenerar el kit de
-        // producción, que la guarda 7 valida contra esta lista— y se van con el kit entero en la T6g.
-        // ⚠️ `cama`, `canasta` y `bote` NO están, a propósito (`[DECIDIDO owner, 2026-09-13]`): con los
-        // iconos por zona del parque no tienen pantalla, y declararlas sin ella tumba esta guarda.
-        'slot-ico-calcetines', 'slot-ico-altura', 'slot-ico-saltador',
-
-        // ── EL LABORATORIO DE FACHADA ────────────────────────────────────────────────────────
-        // ⚠️⚠️ **Estas cuatro son TEMPORALES y su ÚNICO consumidor es el laboratorio**
-        // (`/_diseno/splash`, `#545`, solo en `local`). El día que el laboratorio se retire se van
-        // con él —la regla de siempre: una ranura vive lo que vive su consumidor— y el kit de cada
-        // instalación tiene que dejar de traerlas en el mismo cambio, o `kit:build` lo rechaza.
-        'slot-splash-1', 'slot-splash-2', 'slot-splash-3', 'slot-splash-5',
-
-        // ⚠️⚠️ **SEXTA VEZ QUE ESTA LISTA ENCOGIÓ POR LA MISMA REGLA: una ranura vive exactamente lo
+        // ⚠️⚠️ **SÉPTIMA VEZ QUE ESTA LISTA ENCOGIÓ POR LA MISMA REGLA: una ranura vive exactamente lo
         // que vive su consumidor.** El historial, para que nadie lo lea como un olvido:
         //
         //     `slot-mancha-esquina` · `slot-friso-1..5` · `slot-normas`   → se fueron en `#300`
         //     `slot-tarifas`        (el friso familiar `G3` de tarifas)   → `#479`
         //     `slot-normas-registro` · `slot-normas-calcetines`           → `#485`
         //     `slot-zonas`          (la mancha `B1·02` tras el titular)   → `#496`
+        //     `slot-visitanos`      (la mancha de «Visítanos», el owner)  → `#547`
+        //     `slot-resenas` · `slot-dudas` (el reparto de la pasada de vestido, `#497`), las manchas
+        //     `slot-splash-1..6`, las poses `p1 p3 p4 p6 p7` y `k1..k3` (el mural `#580`: `<x-site.facade>`
+        //     y `<x-site.trio>`), los iconos `slot-ico-*` (`#582`, `<x-site.kit-ico>`) y el laboratorio
+        //     `/_diseno` (`#545`)                                           → la T6g, 29-09
         //
-        // ▶ Las tres últimas se fueron con la sección que el canvas rehízo **sin ninguna pieza de
-        // dibujo**, no porque estorbaran. ⚠️ Y las de hoy **no son aquéllas con otro nombre**: son
-        // otras secciones y otra regla —la del canvas, no la del carril anterior—.
+        // ▶ La T6g: la web vieja de PlayJump salió del paquete en la T6f (`#843`) y con ella la última
+        // pantalla de todo eso; el laboratorio ya había cumplido (el owner eligió en `#580`). El kit de
+        // cada instalación se PODA con `kit:build --podar` (en PRODUCCIÓN, con la v2.0.0: guarda 7).
         //
         // ⚠️ **Dejar declarada una ranura sin pantalla NO es inocuo**: `kit:build` seguiría
         // exigiendo un dibujo que no pinta nadie y **la guarda de paridad se pondría roja con el
         // producto sano** (`#479`). La gramática es CERRADA en las dos direcciones.
         //
         // ⚠️ **Lo que NO gobierna esta lista son las claves `zone-<slug>`**, que salen de
-        // `zones.slug` y son IDENTIDAD, no decoración (`#302`). ⚠️ Desde `#528` no las pinta
-        // NINGUNA pantalla: la silueta de la banda vieja de `/cumpleanos` era la última, y la
-        // página rehecha no lleva dibujo. El mecanismo sigue en pie; dónde vuelve a entrar lo
-        // decide la pasada de vestido (`#497`).
+        // `zones.slug` y son IDENTIDAD, no decoración (`#302`). No las pinta NINGUNA pantalla (la
+        // última, `<x-site.zone-sticker>`, se fue en la T6g sin consumidor): el mecanismo sigue en pie
+        // y la poda no las toca.
         //
         // ▶ Y la regla que sigue en pie y no la toca nada de esto es la que vigila
         // `FacadeDecorationIsPerScreenTest`: **ninguna pieza decorativa dentro de un bucle**.
@@ -279,6 +227,41 @@ class IllustrationKit
 
     /** @var array<string, array<string, array{viewBox: ?string, stroke: ?float}>> */
     private static array $meta = [];
+
+    /**
+     * **El kit SIN las ranuras que el producto ya no declara** (T6g, `specs/isla-y-landing-nueva.md` §4.25).
+     *
+     * `SLOTS` encoge con sus pantallas —siete veces ya—, y cada vez el kit INSTALADO de cada instalación pasa a traer
+     * claves que `problems()` rechaza con razón (un dibujo que nadie pinta). Rehacerlo desde el canvas pide su copia, que
+     * solo vive en la máquina de quien lo diseñó; esto quita esas claves del fichero que ya hay, y nada más.
+     *
+     * ⚠️ **No sanea, PODA**: quita símbolos ENTEROS, y solo los `slot-*` que no están en `$slots` —nunca un `zone-*`
+     * (identidad, `#302`), nunca una clave ajena a la gramática (ésa la rechaza `problems()`, que es lo que debe verla)—.
+     * El dibujo que queda no se toca, y quien poda sigue validando lo que queda antes de escribirlo (`kit:build --podar`).
+     *
+     * @param  list<string>  $slots  las ranuras decorativas que el PRODUCTO declara
+     * @return array{svg: string, removed: list<string>}
+     */
+    public static function withoutRetiredSlots(string $svg, array $slots): array
+    {
+        $removed = [];
+        $pruned = (string) preg_replace_callback(
+            '#[ \t]*<symbol\b(?<attrs>[^>]*)>.*?</symbol\s*>[ \t]*\R?#is',
+            static function (array $m) use ($slots, &$removed): string {
+                $id = self::attr($m['attrs'], 'id');
+
+                if ($id === null || ! str_starts_with($id, 'slot-') || in_array($id, $slots, true)) {
+                    return $m[0];
+                }
+                $removed[] = $id;
+
+                return '';
+            },
+            $svg,
+        );
+
+        return ['svg' => $pruned, 'removed' => $removed];
+    }
 
     /**
      * Devuelve la lista de problemas. **Vacía = el kit es servible.**

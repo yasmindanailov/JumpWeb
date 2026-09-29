@@ -3,8 +3,8 @@
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
-> **820–849** (dada de alta en `DECISIONES.md` el 27-09; centena `decisiones/800-899.md`) · Último usado: **`#844`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#844`) · Actualizado: **2026-09-29**
+> **820–849** (dada de alta en `DECISIONES.md` el 27-09; centena `decisiones/800-899.md`) · Último usado: **`#845`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#845`) · Actualizado: **2026-09-29**
 > (cierre: T6 hasta NORMAS ✅; T6f ✅, los 301 y la web vieja fuera; `#844` ✅, lo que no cabía a 360; T6h ✅, las legales).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
 > llévaselo con la medida, como el SPA en `#724`).
@@ -46,11 +46,10 @@ aire—; las pestañas de zona se apilan midiendo una COPIA oculta) y la **T6h**
 hecho `legal`). Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas}.mjs`) y la web entera
 (`sonda-web.mjs`, 17/17 a 360, 390 y 1280); arneses `mutar-sonda-web.sh` 12/12 (a 360), `mutar-sustituye.sh` 12/12,
 `mutar-legales-ocupadas.sh` 7/7. **29-09 tarde, ✅**: la **T4f** (§4.12: `sonda-entradas.mjs` 89/89, arnés 25/25; `sonda-isla`
-desde `/kids` y `/cumpleanos`) y el **`#792` en la isla** (§4.24: «Tu cumpleaños», «Opcional», con el ✅ del owner). **SIGUE**: la
-**T6g** (§4.22; con su sí del 29-09): el mural (`site/facade`, `trio`, `kit-ico`, `zone-sticker`) Y el laboratorio `/_diseno`, las
-ranuras que queden sin nadie y el kit, en un corte (el kit de PRODUCCIÓN se reinstala podado con la v2.0.0: guarda 7, un paso más
-del despliegue); después, **los diseños nuevos del owner** (Claude Design, sobre la web). **Del owner, en PRODUCCIÓN**: el icono y
-el nivel de cada norma, y dar de alta las del brief que falten (calentamiento, espuma, volteretas dobles).
+desde `/kids` y `/cumpleanos`), el **`#792` en la isla** (§4.24: «Tu cumpleaños», «Opcional», ✅ del owner) y la **T6g** (§4.25: el
+mural y `/_diseno` fuera, `SLOTS` = el arco, `kit:build --podar`; el kit de PRODUCCIÓN se poda con la v2.0.0, `ENTORNOS` §6).
+**SIGUE: los diseños nuevos del owner** (Claude Design, sobre la web). **Del owner, en PRODUCCIÓN**: el icono y el nivel de cada
+norma, y dar de alta las del brief que falten (calentamiento, espuma, volteretas dobles).
 Pendiente: la vuelta de Google con una excursión, sin verificar. ⚠️ La entrada `isla/hoja/montar.js` NO importa nada
 compartido (`#841`); la calculadora, a 186,08 de 187 (`#844`).
 ⚠️ `sonda-portada` 13/14 («Reservar» de la isla tras «Míralo», 17:17): igual con el `HEAD` (control): investigar aparte. La ISLA la
@@ -267,11 +266,10 @@ dueño es el carril de la web/reseñas—) ·
   la página USA sin tocarlos tu `ui/cookie-consent.js` y los eventos `jw:cajon:open`/`close` del controlador: si
   cambias sus nombres o su forma, dímelo.
 
-### ❗❗ Para el carril de la WEB (emisor: plataforma, 2026-09-29) — AVISO PREVIO: `landing.css` encoge con la T6f (`#843`)
-- Las ocho vistas viejas del paquete de PlayJump se retiran (`portada`, `atracciones`, `bar`, `contacto`, `cumpleanos`, `normas`,
-  `precios`, `servicios`; spec `isla-y-landing-nueva.md` §4.22) y sus rutas pasan a 301. Las 30 piezas de
-  `InstanceViews::MATERIAL_CONSUMIDO_POR_LA_INSTANCIA` se quedan sin sujeto: en la T6f·3 poda las clases de `landing.css`
-  (tuyo) y las ranuras del kit que las guardas de huérfanos declaren muertas. Las legales siguen con tu armazón.
+### ❗❗ Para la WEB y el SPA (emisor: plataforma, 2026-09-29) — `landing.css` y `site.css` encogen: T6f (`#843`) y T6g
+- T6f: las ocho vistas viejas de PlayJump, fuera (301); sus 25 clases, podadas (§4.22). T6g (§4.25): el mural, el trío, los
+  iconos del kit y `/_diseno`, fuera; de `landing.css` (web) sus reglas, y de `site.css` `.rays` con `--rayos*` (`cajon.css`
+  regenerado: SPA). Tus specs `elementos-fachada.md` y `pasada-de-vestido.md`, al archivo (su sujeto se fue).
 
 ### ❗ Para el carril de la WEB (emisor: plataforma, 2026-09-25) — tu `lang/*/landing.php`, un carácter en claves mías
 - `#763`: las frases del plazo (`products.cancellation_*`) y de «con un adulto» (`zones.escort_*`), que añadí en la

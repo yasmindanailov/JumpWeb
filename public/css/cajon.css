@@ -1,7 +1,7 @@
 /* GENERADO por scripts/hoja-del-cajon.py desde public/css/{site,landing,spinner}.css. NO se edita a mano:
  * se toca la regla en su fuente y se vuelve a generar. `HojaDelCajonTest` vigila que no se separen.
  * Qué entra y por qué: la cabecera de ese guion y `specs/cajon-empaquetable.md` §4.3.
- * FUENTES landing.css:62017487f0f2 spinner.css:8270bcfe03ab site.css:6c3dded609ab */
+ * FUENTES landing.css:0e3f25655c5c spinner.css:8270bcfe03ab site.css:428d0893ebd2 */
 /* La BASE del paquete: lo que el cajón heredaba del `<body>` del producto y ahora se da
  * a sí mismo, para no tocar el documento del anfitrión. Ver la cabecera del generador. */
 :where(.sidecart), :where(.sidecart) * {
@@ -3365,10 +3365,7 @@ details > summary.legal-more ~ p {
     /* ⚠️ `--spray` se fue con su pieza en `#535`: la niebla A5 perdió su única pantalla al retirarse
     el mapa de `/contacto`. Un token sin consumidor deja de vigilar nada y encima invita a
     reintroducir la pieza sin decidirlo (la regla que `#550` aplicó a `--fs-9`). */
-    --rayos: 1;
-    /* A3 · el abanico quieto */
-    --rayos-size: 520px;
-    /* suyo */
+    /* ⚠️ `--rayos` y `--rayos-size` se fueron con su pieza (A3) en la T6g: la pintaba solo el mural de `/precios`. */
 }
 :where(.sidecart) {
     --dots-tile: radial-gradient(circle, var(--paper-fg) 3px, transparent 3.4px);

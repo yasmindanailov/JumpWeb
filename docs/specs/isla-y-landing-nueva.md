@@ -2216,9 +2216,8 @@ vieja a su sitio con su `?query`, el sitemap igual al mapa, cada página en es/e
   quedan sin nadie que los pinte —`site/facade` (el MURAL, `#580`) con `site/trio` (solo lo usa `facade`), `site/kit-ico` y
   `site/zone-sticker`—, y las guardas cuentan al propio componente como consumidor: su CSS y sus ranuras del kit (las poses
   y manchas del mural) siguen «vivos» para ellas. Es el sistema de ilustración de la web vieja; retirarlo es una tanda
-  propia con su censo (**T6g**, propuesta: el mural, sus ranuras en `IllustrationKit::SLOTS` y en el kit de la instancia a
-  la vez —`kit:build` rechaza el desfase—, y sus specs), no un añadido de la T6f·3. (`site/addon-chip` y `site/pagination`
-  ya estaban sin uso desde la fundación: no son de esta tanda.)
+  propia con su censo (**T6g**, ✅ en §4.25), no un añadido de la T6f·3. (`site/addon-chip` y `site/pagination` ya estaban
+  sin uso desde la fundación: no son de esta tanda.)
 
 ### 4.23 La T6h: LAS LEGALES con el sistema nuevo (`#844`, del owner)
 
@@ -2265,6 +2264,31 @@ no futura, mayor de edad, ≤ 120 años) y el motor ya la reenvía si el formula
   guarda de textos solo mira que la clave EXISTA)—: ahora `compra.datos.formato_fecha`. **Estado ✅**, con el ojo del owner
   («todo ok, buen trabajo», con el cambio de texto de arriba). El cajón del SPA sigue diciendo «Fecha de nacimiento» y la
   pista larga (`account.register.born_on*`, suyos): avisado en el buzón.
+
+### 4.25 La T6g: el mural y el laboratorio, fuera — el censo (MEDIDO 29-09) y lo hecho
+
+`[DECIDIDO owner]` 2026-09-29 (`#845`): con su sí al plan («todo ok»), incluido retirar el laboratorio; `--podar`, técnico. **El censo**: sin las vistas viejas (T6f) no pintaba
+nadie `site/facade` (el mural `#580`), `site/trio`, `site/kit-ico` ni `site/zone-sticker`; y el laboratorio `/_diseno/{splash,
+siluetas}` (`#545`, solo en local; el owner ya eligió en `#580`) era lo ÚNICO que mantenía «vivas» para la guarda de ranuras
+diez de ellas. De `IllustrationKit::SLOTS` solo tiene pantalla el ARCO (`p2 p5 p8 p9`, en `rate-rail` de la portada del
+ANFITRIÓN). Las pruebas, clasificadas por su sujeto (`CONVENCIONES` §3.quater): muere la mitad de un caso de `PageHeadTest`
+(probaba el componente de fachada); las guardas generales se quedan y encogen sus listas.
+- **Retirado**: los cuatro componentes, las tres vistas del laboratorio y sus rutas; 19 ranuras de `SLOTS` (quedan 4) y
+  `MATERIAL_CONSUMIDO_POR_LA_INSTANCIA`, vacía (su estado correcto); el CSS que las guardas declararon sin consumidor —en
+  `landing.css`, el mural `fac-*`, el trío, `kit-ico` y `zone-sticker` (ésta no salía huérfana: la guarda contaba como
+  consumidor una PRUEBA que asevera su ausencia); en `site.css`, `.rays` (el abanico de `/precios`) con sus dos tokens, y
+  `cajon.css` regenerado—. La guarda de la guarda de la fachada cambia su aguja (`rays` → `arc`) y su centinela
+  (`--rayos-size` → `--trama`); sus FAMILIAS se quedan (vigilan que no vuelvan sin consumidor). Los generadores del kit
+  (`kit-fachada.py`, `kit-iconos.py`) emiten solo lo declarado. Specs `elementos-fachada.md` y `pasada-de-vestido.md`, al
+  archivo (su sujeto se fue); `hueco-ilustracion.md` sigue (el mecanismo).
+- **Nuevo, `kit:build --podar`**: quita del kit instalado SOLO los `slot-*` que `SLOTS` ya no declara (dice cuáles; nunca un
+  `zone-*` ni una clave ajena, que la validación tiene que ver) y valida el resto antes de escribir; con `--check`, el ensayo.
+  Es la séptima vez que `SLOTS` encoge, y cada una obligaba a rehacer el kit desde una copia del canvas que solo vive en una
+  máquina. **Medido en local**: sin podar, `kit:build --check` daba 19 problemas (la guarda 7); el ensayo, 19 a quitar y 7
+  servibles; podado, 7 símbolos (las 4 poses y las 3 zonas) y la portada en 200. **En PRODUCCIÓN, con la v2.0.0**
+  (`ENTORNOS.md` §6): la guarda 7 del despliegue saldrá en rojo y se poda después, ensayado antes en staging.
+- **Guardas**: `IllustrationKitTest` +2 (la poda pura y el comando sobre un `public/` propio, nunca el kit de la máquina);
+  un arnés de un solo uso, **6/6** muerden. Las de huérfanos, ranuras, cabecera y anfitriones, verdes.
 
 ## 5. Impacto en invariantes
 

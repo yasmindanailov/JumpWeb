@@ -6808,8 +6808,7 @@ body[data-has-hero].nav--live .nav:not(.nav--hidden) .nav__brand-logo--inline {
     /* ⚠️ `--spray` se fue con su pieza en `#535`: la niebla A5 perdió su única pantalla al retirarse
        el mapa de `/contacto`. Un token sin consumidor deja de vigilar nada y encima invita a
        reintroducir la pieza sin decidirlo (la regla que `#550` aplicó a `--fs-9`). */
-    --rayos: 1;           /* A3 · el abanico quieto */
-    --rayos-size: 520px;  /* suyo */
+    /* ⚠️ `--rayos` y `--rayos-size` se fueron con su pieza (A3) en la T6g: la pintaba solo el mural de `/precios`. */
 }
 
 /* ── A1 · TRAMA DE PUNTOS ──────────────────────────────────────────────────────────────────────
@@ -6841,26 +6840,9 @@ body[data-has-hero].nav--live .nav:not(.nav--hidden) .nav__brand-logo--inline {
    del cliente; el día que tenga pantalla, vuelve con ella, como pide `#287`: *una pieza nace en el
    mismo cambio que su consumidor*. */
 
-/* ── A3 · RAYOS, la variante QUIETA ────────────────────────────────────────────────────────────
-   ⚠️ **No confundir con el estallido del widget de ofertas**, que era 2,6°/15° (24 rayos), animado
-   y con máscara de anillo: se retiró con el widget en `#668`. Éste es el panel de la fachada:
-   **3,2°/8°, o sea 45 rayos**, y no se mueve. Su regla al colocarlo: **uno por página**. */
-.rays {
-    position: absolute; pointer-events: none;
-    width: var(--rayos-size); height: var(--rayos-size);
-    background: repeating-conic-gradient(from 0deg at 50% 50%,
-        color-mix(in srgb, var(--paper-fg) 12%, transparent) 0deg 3.2deg, transparent 3.2deg 8deg);
-    opacity: var(--rayos);
-    /* ⚠️⚠️ **Sin esto el abanico se corta en un RECTÁNGULO DURO y parece un fallo.** En su artboard
-       el corte lo da el borde de la tarjeta y el centro del abanico queda FUERA de ella, así que
-       nunca se ve un canto recto. Aquí el contenedor es otro, así que el desvanecido se lo pone la
-       propia pieza — el mismo recurso que el anillo del widget de ofertas usaba antes de `#668`.
-       ⚠️⚠️ Y va `closest-side`: **por defecto un `radial-gradient` mide hasta la ESQUINA**, así que
-       el desvanecido no llega a terminar dentro de la caja y el canto recto SIGUE viéndose. Es
-       exactamente la trampa que `#259` dejó escrita, y se cayó en ella igual. */
-    -webkit-mask-image: radial-gradient(closest-side circle at 50% 50%, #000 30%, transparent 100%);
-    mask-image: radial-gradient(closest-side circle at 50% 50%, #000 30%, transparent 100%);
-}
+/* ── A3 · RAYOS, la variante QUIETA · RETIRADA EN LA T6g ─────────────────────────────────────────
+   Su única pantalla era el mural de `/precios` (`<x-site.facade en="page-precios">`), que se fue con la web vieja. Sus
+   números (3,2°/8°, 45 rayos, la máscara `closest-side` de `#259`) están en el kit del artboard y en `git log`. */
 
 /* ── C2 · LAS DOS VARIANTES DE TIRA QUE FALTABAN ───────────────────────────────────────────────
    La continua ya existía y coincide con la suya **en orden 5 de 5**. Éstas son sus otras dos formas:

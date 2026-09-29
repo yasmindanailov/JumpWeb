@@ -21,12 +21,19 @@ use Throwable;
  *
  * ⚠️ **Y esto no basta**, dicho para que nadie se confíe: si alguien copia un sprite a mano en el
  * servidor, este comando no se entera. Por eso la validación se repite al desplegar (`§14·U5`).
+ *
+ * ▶ **`--podar`** (T6g, `specs/isla-y-landing-nueva.md` §4.25): cuando el producto RETIRA ranuras, el kit instalado
+ * pasa a traer claves que se rechazan. Esto las quita —solo los `slot-*` que `SLOTS` ya no declara, dichos uno a uno—
+ * y valida lo que queda antes de escribirlo; sin origen, poda el instalado. Con `--check`, el ensayo: dice qué
+ * quitaría y si el resto es servible, sin escribir. No es la política de «validar, no sanear» rota: no toca ningún
+ * dibujo que se quede; quita los que ya no tienen dónde pintarse.
  */
 class BuildIllustrationKit extends Command
 {
     protected $signature = 'kit:build
         {origen? : Ruta del SVG que entrega el diseñador. Sin ella se valida el kit YA instalado.}
-        {--check : No escribe nada; solo dice si el kit es servible. Es el modo del despliegue.}';
+        {--check : No escribe nada; solo dice si el kit es servible. Es el modo del despliegue.}
+        {--podar : Quita las ranuras `slot-*` que el producto ya no declara (dice cuáles) y escribe el resto si es servible.}';
 
     protected $description = 'Valida el kit de ilustración de la instalación y lo instala en public/img/client-kit.svg';
 
@@ -34,7 +41,9 @@ class BuildIllustrationKit extends Command
     {
         $destino = public_path(IllustrationKit::PATH);
         $origen = $this->argument('origen') ?? $destino;
-        $soloComprobar = (bool) $this->option('check') || $this->argument('origen') === null;
+        $podar = (bool) $this->option('podar');
+        // Sin origen se COMPRUEBA el instalado, salvo que se pida podarlo: entonces se reescribe (si queda servible).
+        $soloComprobar = (bool) $this->option('check') || ($this->argument('origen') === null && ! $podar);
 
         if (! is_file($origen) || ! is_readable($origen)) {
             // ⚠️ Sin kit NO es un error del producto: es el estado normal de este repo y de
@@ -51,6 +60,14 @@ class BuildIllustrationKit extends Command
         }
 
         $svg = (string) file_get_contents($origen);
+
+        if ($podar) {
+            ['svg' => $svg, 'removed' => $quitadas] = IllustrationKit::withoutRetiredSlots($svg, $this->slots());
+            $this->line($quitadas === []
+                ? 'Ninguna ranura que podar: el kit solo trae las que el producto declara.'
+                : ($soloComprobar ? 'Se quitarían ' : 'Se quitan ').count($quitadas).' ranura(s) que el producto ya no declara: '.implode(', ', $quitadas).'.');
+        }
+
         $problemas = IllustrationKit::problems($svg, $this->zoneSlugs(), $this->slots());
 
         if ($problemas !== []) {

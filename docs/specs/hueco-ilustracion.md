@@ -53,6 +53,8 @@
   `currentColor` pinta el 100 % de la caja**: rechazar al instalar y negro EXPLÍCITO en el `<use>`.
 - **§2.3: no medido en WebKit ni Firefox**, por eso `--deco-blob-*` y `--deco-tag` no se tocan. El kit NO viaja
   en el `rsync`; `kit:build --check` es lo único que mira el fichero real.
+- **T6g (29-09)**: `SLOTS` = las 4 poses del ARCO (portada del anfitrión); el mural y el laboratorio, fuera.
+  Un kit con ranuras retiradas se poda con `kit:build --podar` (con `--check`, el ensayo).
 - §12 corrige tres afirmaciones de `elementos-fachada.md`; §14.3: comparar capturas de la portada no demuestra
   nada (ruido del 64 %). Anexo al final con la fila del enrutador.
 

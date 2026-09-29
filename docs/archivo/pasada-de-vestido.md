@@ -1,5 +1,8 @@
 # [SPEC] La pasada de vestido — dónde se ubican los elementos de diseño
 
+> 📜 **ARCHIVADA el 2026-09-29 (T6g, `isla-y-landing-nueva.md` §4.25)**: vestía la web vieja, que salió del paquete de
+> PlayJump en la T6f (`#843`); el mural, el laboratorio `/_diseno` y sus ranuras se retiraron en la T6g. Sus decisiones
+> abiertas decaen con su sujeto. Lo de abajo es historia.
 > **Estado**: 🟦 **CONSTRUIDA SOBRE LA PORTADA** (`#544`→`#549`, §3.ter) y desplegada a staging;
 > las dos VARIANTES siguen siendo prototipo local (`?fachada=`) y su colocación final es del owner.
 > Lo medido va en §3.bis y **caduca la D1 de §3**.

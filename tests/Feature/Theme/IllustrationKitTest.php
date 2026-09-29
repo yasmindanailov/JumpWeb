@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Theme;
 
+use App\Domain\Booking\Models\Zone;
 use App\Domain\Content\Services\IllustrationKit;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -262,6 +263,65 @@ class IllustrationKitTest extends TestCase
             'alguna ranura declarada no empieza por `slot-`: quedaría fuera de la gramática y su '.
             'propio dibujo se rechazaría.',
         );
+    }
+
+    // ══ LA PODA (T6g): lo que el producto retira sale del kit instalado, y nada más ══════════════
+
+    /**
+     * **Poda SOLO lo retirado**: un `slot-*` sin declarar sale entero; el declarado, el `zone-*` (identidad) y una clave
+     * ajena a la gramática se quedan —ésa la tiene que ver `problems()`, no desaparecer aquí sin que nadie lo sepa—.
+     */
+    public function test_pruning_removes_only_undeclared_slots(): void
+    {
+        $simbolo = fn (string $id, string $vb = '0 0 8 8') => '  <symbol id="'.$id.'" viewBox="'.$vb.'"><title>'.$id.'</title><path d="M0 0h8v8H0Z"/></symbol>'."\n";
+        $svg = '<svg xmlns="http://www.w3.org/2000/svg">'."\n"
+            .$simbolo('slot-vieja').$simbolo('slot-viva').$simbolo('zone-foam-pit', '0 0 64 64').$simbolo('pose-ajena').'</svg>';
+
+        ['svg' => $podado, 'removed' => $quitadas] = IllustrationKit::withoutRetiredSlots($svg, ['slot-viva']);
+
+        $this->assertSame(['slot-vieja'], $quitadas);
+        $this->assertStringNotContainsString('slot-vieja', $podado, 'la ranura retirada sigue en el kit');
+        foreach (['slot-viva', 'zone-foam-pit', 'pose-ajena'] as $queda) {
+            $this->assertStringContainsString('id="'.$queda.'"', $podado, "la poda se llevó «{$queda}», que no es una ranura retirada");
+        }
+        $this->assertNotEmpty(IllustrationKit::problems($podado, self::ZONAS, ['slot-viva']), 'la clave ajena tiene que seguir ahí para que la rechace la validación');
+        $this->assertSame([], IllustrationKit::problems(str_replace($simbolo('pose-ajena'), '', $podado), self::ZONAS, ['slot-viva']),
+            'lo que queda tras podar no es servible: la poda rompió el fichero');
+    }
+
+    /**
+     * **`kit:build --podar` reescribe el instalado sin lo retirado, y con `--check` solo lo DICE.** Sobre un `public/`
+     * PROPIO: escribir en el real pisaría el kit de la máquina que corre la suite (la trampa de `BarFactsTest`).
+     */
+    public function test_kit_build_prune_rewrites_the_installed_kit_and_its_dry_run_does_not(): void
+    {
+        $dir = sys_get_temp_dir().'/jw-kit-podar-'.getmypid().'-'.uniqid();
+        mkdir($dir.'/img', 0o777, true);
+        $this->app->usePublicPath($dir);
+        Zone::create(['slug' => 'foam-pit', 'name' => ['es' => 'Foso'], 'is_active' => true]);
+        $instalado = public_path(IllustrationKit::PATH);
+        file_put_contents($instalado, '<svg xmlns="http://www.w3.org/2000/svg">'."\n"
+            .'  <symbol id="slot-retirada-de-prueba" viewBox="0 0 8 8"><title>Vieja</title><path d="M0 0h8v8H0Z"/></symbol>'."\n"
+            .'  <symbol id="zone-foam-pit" viewBox="0 0 64 64"><title>Foso</title><path d="M8 8h48v48H8Z"/></symbol>'."\n"
+            .'</svg>');
+
+        try {
+            $this->artisan('kit:build --check')->assertFailed();
+            $this->artisan('kit:build --podar --check')
+                ->expectsOutputToContain('Se quitarían 1 ranura(s) que el producto ya no declara: slot-retirada-de-prueba.')
+                ->assertSuccessful();
+            $this->assertStringContainsString('slot-retirada-de-prueba', (string) file_get_contents($instalado), 'el ensayo escribió');
+
+            $this->artisan('kit:build --podar')->expectsOutputToContain('Se quitan 1 ranura(s)')->assertSuccessful();
+            $queda = (string) file_get_contents($instalado);
+            $this->assertStringNotContainsString('slot-retirada-de-prueba', $queda);
+            $this->assertStringContainsString('id="zone-foam-pit"', $queda);
+            $this->artisan('kit:build --check')->assertSuccessful();
+        } finally {
+            @unlink($instalado);
+            @rmdir($dir.'/img');
+            @rmdir($dir);
+        }
     }
 
     // ══ LOS SÍMBOLOS TIENEN QUE SER PEDIBLES ════════════════════════════════════════════════════

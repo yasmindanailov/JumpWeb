@@ -1,5 +1,8 @@
 # [SPEC] «Elementos Fachada» — el kit de material gráfico del 2.º cliente
 
+> 📜 **ARCHIVADA el 2026-09-29 (T6g, `isla-y-landing-nueva.md` §4.25)**: su sujeto —el mural de la web vieja, sus
+> manchas, poses, trío e iconos— se retiró con su última pantalla. Del kit solo quedan las cuatro poses del ARCO en la
+> portada del anfitrión (`IllustrationKit::SLOTS`); el mecanismo vive en `hueco-ilustracion.md`. Lo de abajo es historia.
 > Estado: ⬜ **BORRADOR — es una VALORACIÓN, no un plan de obra aprobado.**
 > ⏸️ **PARADA a petición del owner (2026-08-30)**: va a **volver a subir el artboard** —esta
 > valoración corre sobre la versión pegada el 2026-08-30, que puede no ser la definitiva— y a
