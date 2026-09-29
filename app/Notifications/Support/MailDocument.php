@@ -248,6 +248,23 @@ final class MailDocument
             .'font-weight:'.$peso.';color:'.$color.';mso-line-height-rule:exactly;'.$extra;
     }
 
+    /**
+     * Un icono de Lucide como imagen del color del rol `icono` (el `icono()` y el `enLinea()` del diseño; la R1b): decorativo,
+     * con `alt` vacío porque el dato va en el texto. Sin máscara para ese nombre, NADA: la plantilla deja su hueco.
+     */
+    public function icono(string $nombre, int $px, bool $enLinea = false): string
+    {
+        $src = MailIcons::url($nombre, $this->tema->claro('icono'));
+        if ($src === null) {
+            return '';
+        }
+        $estilo = $enLinea
+            ? "display:inline-block;width:{$px}px;height:{$px}px;border:0;outline:none;vertical-align:-3px;margin-right:7px;"
+            : "display:block;width:{$px}px;height:{$px}px;border:0;outline:none;";
+
+        return '<img src="'.e($src).'" width="'.$px.'" height="'.$px.'" alt="" style="'.$estilo.'">';
+    }
+
     /** Un hueco de alto fijo (el `hueco()` del diseño). */
     public function hueco(int $alto): string
     {

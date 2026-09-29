@@ -46,8 +46,10 @@
 
 ## Por dónde retomar, en orden
 
-0. ▶▶▶ **LA R1b, los iconos** (`correos-rediseno.md` §4.1.3, medida el 29-09: máscaras de PALETA teñidas reescribiendo su
-   `PLTE`, sin GD en producción; la ruta como el píxel; el rol `icono` a 3:1; hoy, el pie), en `wip/correos-r1b`. El
+0. ▶▶▶ **LA R1b, los iconos, EN `wip/correos-r1b` AL OJO DEL OWNER** (`correos-rediseno.md` §4.1.3: máscaras de PALETA
+   teñidas por su `PLTE`, sin GD; la ruta como el píxel, con `no-store` por `RGPD-04`; el rol `icono` a 3:1; hoy, el pie;
+   arnés 12/12, sonda 28/28 con los iconos cargados). Con su visto bueno: rebase, suite, *fast-forward*, y la hoja de PlayJump
+   (su `--correo-icono`), commit y push en la instancia. El
    banco (`php scripts/banco-correos.php [filtro]`) y la sonda (`node storage/app/audit/sonda-correos-r1a.mjs N`) sirven igual.
    ⬜ **Y la LISTA DE INVITADOS del owner** (`#847`, buzón de plataforma del 29-09): nada de la autorización para quien invita,
    confirmado sin otra variante, «No podemos» aparte y suave, los adultos como el mockup (`fiesta-sistema-nuevo.md`).

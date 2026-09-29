@@ -215,8 +215,10 @@ una sonda por tanda; los comerciales con su prueba de consentimiento y de «una 
   alfa; teñida por `PLTE`, GD la abre y pinta `rgb(14,143,196)`, y el navegador la enseña.
 - **La ruta** `GET /correo/i/{v}/{color}/{nombre}.png` (futuro), como el píxel (`#797`): fuera de sesión, cookies y visitante,
   sin limitador (el proxy de Gmail); `color` seis hex y `nombre` del manifiesto, o 404; `v` la versión del manifiesto (rompe
-  las cachés cuando cambian las máscaras; una `v` vieja se sirve igual: un correo ya enviado no se rompe). `image/png` con
-  `public, max-age=31536000, immutable`. No lleva nada de la persona: pedir un icono no es una apertura.
+  las cachés cuando cambian las máscaras; una `v` vieja se sirve igual: un correo ya enviado no se rompe). `image/png`. No
+  lleva nada de la persona: pedir un icono no es una apertura. ⚠️ **Medido al construir: sale con `no-store`**, porque
+  `NoStoreWebResponses` es GLOBAL por `RGPD-04`; no se le abre excepción por unos iconos de 2 kB (el criterio de las fotos de
+  las reseñas, `#524`) y el coste va con `PERF-02` —con la `v` en la URL, cachearlos el día que se decida es quitar la cabecera—.
 - **El rol** `icono`: UNO para los dos modos (una imagen no cambia con el oscuro), ≥ 3:1 (WCAG 1.4.11) contra el fondo y el
   sutil en claro y en oscuro. Medido: el apagado `#626A72` da 2,84 sobre el sutil oscuro; **`#737B83`**, el más parejo (≥ 3,63
   en los cuatro). PlayJump, su `--icon-accent` `#0E8FC4` (≥ 3,1 en los cuatro). Los del círculo, con la R2.
@@ -225,6 +227,13 @@ una sonda por tanda; los comerciales con su prueba de consentimiento y de «una 
   la abre con el color pedido; la ruta da 404 fuera del manifiesto o del formato, sin `Set-Cookie` y con su caché; cada icono
   que pinta la plantilla está en el manifiesto; el rol, a 3:1 en los cuatro fondos. Con su arnés.
 - **Compartido**: `routes/web.php` fuera del grupo de la fiesta (aviso previo a plataforma, en el buzón).
+- **Lo construido (29-09, `wip/correos-r1b`; 🟦 falta el ojo del owner)**: `scripts/correo-mascaras.mjs` (determinista: dos
+  pasadas, el mismo manifiesto byte a byte) y cinco máscaras (`map-pin`, `clock`, `phone`, `message-circle`, `mail`, de 1,7 a
+  2,2 kB), `MailIcons` (manifiesto, URL, teñido), `EmailIconController` y `correo.icono`, el rol `icono` (`#737B83`;
+  PlayJump `#0E8FC4` en su hoja) y el pie con su columna y sus iconos en línea. `MailIconsTest` (6) y la guarda «con una hoja,
+  cada color sale de ella», ampliada al color de la URL de cada icono. Arnés `scripts/mutar-correo-r1b.sh` **12/12**, el
+  árbol byte a byte; suite 6562 / 45044; Larastan limpio; sonda 28/28 con sus iconos CARGADOS (0 rotos) en claro y oscuro
+  (la sonda reescribe `localhost:8081` al `:80` del contenedor, que es donde la alcanza su Chromium).
 
 ### 4.2 Los textos, editables desde el panel — pregunta del owner (29-09), análisis sin código
 

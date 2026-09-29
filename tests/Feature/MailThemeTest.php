@@ -299,6 +299,11 @@ class MailThemeTest extends TestCase
         $cuerpo = substr($html, (int) strpos($html, '<body'));
         preg_match_all('/#[0-9A-Fa-f]{6}\b/', $cuerpo, $m);
 
+        // Y el color que viaja DENTRO de la URL de cada icono (la R1b): sin `#`, así que el escaneo de arriba no lo ve.
+        preg_match_all('#/correo/i/[a-z0-9]+/([0-9a-f]{6})/#', $cuerpo, $iconos);
+        $this->assertNotEmpty($iconos[1], 'CONTROL: el escaneo no ve los iconos');
+        $m[0] = [...$m[0], ...array_map(static fn (string $h): string => '#'.$h, $iconos[1])];
+
         $ajenos = array_values(array_diff(array_unique(array_map('strtoupper', $m[0])), $valores));
         $this->assertNotEmpty($m[0], 'CONTROL: el escaneo no ve ningún color');
         $this->assertSame([], $ajenos, 'colores que NO salen de la hoja de la instancia: '.implode(', ', $ajenos));

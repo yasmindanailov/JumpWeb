@@ -61,6 +61,10 @@ final class MailTheme
         'aviso-letra' => ['#101418', '#FFCF4D'],
         'info-fondo' => ['#ECEFF2', '#202F36'],
         'info-letra' => ['#101418', '#7FD4EF'],
+        // El de los ICONOS (la R1b, §4.1.3): uno para los dos modos, porque una imagen no cambia con el oscuro; a ≥ 3:1
+        // (WCAG 1.4.11) contra el fondo y el sutil en claro y en oscuro. Medido: el apagado da 2,84 sobre el sutil oscuro;
+        // éste, ≥ 3,63 en los cuatro. Su pareja oscura no se usa.
+        'icono' => ['#737B83', '#737B83'],
     ];
 
     /** Los radios, en px: los de la escala del producto (`0 · 10 · 16 · 999`). La píldora no es un rol. */

@@ -19,6 +19,7 @@ use App\Http\Controllers\BarController;
 use App\Http\Controllers\BirthdayReminderController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\CookieConsentController;
+use App\Http\Controllers\EmailIconController;
 use App\Http\Controllers\EmailOpenController;
 use App\Http\Controllers\EventsController;
 use App\Http\Controllers\GuardianAuthorizationController;
@@ -257,6 +258,23 @@ Route::get('/e/{send}.gif', EmailOpenController::class)
         RecordEmailClick::class,
     ])
     ->name('emails.open');
+
+// ═══ LOS ICONOS DE LOS CORREOS (`specs/correos-rediseno.md` §4.1.3, la R1b) ════════════════════════════════════════════
+// El icono de Lucide teñido del color de su rol. Aislada como el píxel —sin sesión, cookies ni visitante; sin limitador, por
+// el proxy de Gmail—, pero no apunta nada: la URL es la misma para todos (`EmailIconController`).
+Route::get('/correo/i/{v}/{color}/{nombre}.png', EmailIconController::class)
+    ->where(['v' => '[a-z0-9]{1,32}', 'color' => '[0-9a-fA-F]{6}', 'nombre' => '[a-z0-9]+(?:-[a-z0-9]+)*'])
+    ->withoutMiddleware([
+        EncryptCookies::class,
+        AddQueuedCookiesToResponse::class,
+        StartSession::class,
+        ShareErrorsFromSession::class,
+        PreventRequestForgery::class,
+        SetLocale::class,
+        ResolveVisitor::class.':'.ResolveVisitor::MINT,
+        RecordEmailClick::class,
+    ])
+    ->name('correo.icono');
 
 // ═══ LAS PÁGINAS ENFOCADAS DE LA FIESTA: EL INVITADO NO ES UN VISITANTE ═══════════════════════════
 // (`specs/analitica-fiesta.md` §4.1, `DECISIONES #739`). El post-form, el justificante y la invitación
