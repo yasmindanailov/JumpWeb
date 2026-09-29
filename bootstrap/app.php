@@ -12,6 +12,7 @@ use App\Http\Middleware\EnsureSiteAvailable;
 use App\Http\Middleware\NoStore;
 use App\Http\Middleware\NoStoreWebResponses;
 use App\Http\Middleware\RecordEmailClick;
+use App\Http\Middleware\RequiresAdminAppAuthentication;
 use App\Http\Middleware\RequiresPanelRole;
 use App\Http\Middleware\ResolveAttribution;
 use App\Http\Middleware\ResolveVisitor;
@@ -146,6 +147,8 @@ return Application::configure(basePath: dirname(__DIR__))
         // Ver `docs/PLAN-FASE-7-PANEL.md` §1.3.
         $middleware->alias([
             'panel_role' => RequiresPanelRole::class,
+            // El authenticator de los ADMINISTRADORES en las rutas del personal fuera de Filament (`#851`).
+            'panel_mfa' => RequiresAdminAppAuthentication::class,
             // `no-store` para respuestas con PII de menores (PDFs operativos + post-form, L1).
             'no-store' => NoStore::class,
             // F4 (`DECISIONES #630`): la ability que exige toda ruta autenticada de `/api/v1`. Sanctum

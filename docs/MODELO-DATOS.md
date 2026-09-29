@@ -349,7 +349,7 @@ pinta) · `applied_by` FK restrict · índices `(order_id,type)`, `(order_item_i
 
 ## 3. Dominio IDENTIDAD, ROLES Y RGPD
 
-### `users` (User — FilamentUser, MustVerifyEmail, HasLocalePreference)
+### `users` (User — FilamentUser, HasAppAuthentication(+Recovery), MustVerifyEmail, HasLocalePreference)
 | Campo | Notas |
 |---|---|
 | `email` | unique **NULLABLE** (clientes de agenda dados de alta por el panel con solo teléfono; varios NULL conviven en el unique de MySQL). Alta sin email DEBE persistir `NULL`, nunca `''` (`CustomerRegistrar` normaliza) |
@@ -360,6 +360,7 @@ pinta) · `applied_by` FK restrict · índices `(order_id,type)`, `(order_item_i
 | `last_login_at`, `marketing_opt_in` | — |
 | `waiver_pending_document_id` (FK `legal_document_versions`, RESTRICT) + `waiver_pending_channel` + `waiver_pending_ip` + `waiver_pending_user_agent` | la aceptación marcada en el ALTA, a la espera del correo verificado (`#179`, spec §7·5): al verificar, `SignPendingWaiverOnVerification` la convierte en firma **tras el commit** y **con la IP/UA del momento de marcar la casilla** (`#183`: `Verified` también lo emite el cobro) si el texto sigue vigente, y nulifica las cuatro; `anonymize()` también las nulifica |
 | `privacy_accepted_at`,`terms_accepted_at`,`waiver_accepted_at` | sellos; la prueba detallada vive en `consents`. ⚠️ **Fase 6**: para el waiver en modo `interno` la PRUEBA vive en `waiver_signatures`; el sello es presentación (lo escribe `WaiverSigner`, lo nulifica `anonymize()`) |
+| `app_authentication_secret` + `app_authentication_recovery_codes` (text, nullable) | el authenticator del PANEL (`#851`, `specs/panel-a-salvo.md` §4.3): obligatorio para el rol `admin`. Cifrados (`encrypted`, `encrypted:array`; los códigos, además, con hash de Filament), ocultos (`Hidden`), fuera de la API y del export; `anonymize()` los borra; `panel:quitar-authenticator` los quita a una cuenta que perdió el móvil |
 
 `User::anonymize()` = supresión RGPD compatible con obligación fiscal (~4 años factura):
 conserva la fila y los pedidos; pisa PII, borra consents, detach roles, vacía

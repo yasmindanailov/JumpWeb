@@ -17,6 +17,8 @@ use App\Notifications\PasswordReset;
 use App\Notifications\VerifyEmailAddress;
 use Carbon\CarbonImmutable;
 use Database\Factories\UserFactory;
+use Filament\Auth\MultiFactor\App\Contracts\HasAppAuthentication;
+use Filament\Auth\MultiFactor\App\Contracts\HasAppAuthenticationRecovery;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -39,6 +41,9 @@ use Laravel\Sanctum\PersonalAccessToken;
  * @property CarbonImmutable|null $born_on La fecha de nacimiento (TP·1, `#792`). ⚠️ Anotada A MANO: Larastan no entiende el
  *                                         cast `immutable_date` y la tomaría por `string` (la de los hijos vive por eso en
  *                                         la línea base, que solo encoge).
+ * @property array<int, string>|null $app_authentication_recovery_codes Los códigos de recuperación del authenticator del panel
+ *                                                                      (`#851`), con hash. ⚠️ A MANO por lo mismo: Larastan
+ *                                                                      no entiende `encrypted:array` y los tomaría por texto.
  */
 #[Fillable([
     'name', 'email', 'password', 'phone', 'born_on', 'locale', 'panel_locale', 'last_login_at',
@@ -46,8 +51,8 @@ use Laravel\Sanctum\PersonalAccessToken;
     'analytics_notified_at', 'analytics_notice_seen_at',
     'pending_email', 'pending_email_sent_at',
 ])]
-#[Hidden(['password', 'remember_token'])]
-class User extends Authenticatable implements FilamentUser, HasLocalePreference, MustVerifyEmail
+#[Hidden(['password', 'remember_token', 'app_authentication_secret', 'app_authentication_recovery_codes'])]
+class User extends Authenticatable implements FilamentUser, HasAppAuthentication, HasAppAuthenticationRecovery, HasLocalePreference, MustVerifyEmail
 {
     /**
      * `HasApiTokens` (Fase 3 · paso 0): habilita los tokens Bearer de Sanctum para el cliente
@@ -110,7 +115,42 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference,
             'analytics_notified_at' => 'datetime',
             'analytics_notice_seen_at' => 'datetime',
             'password' => 'hashed',
+            // El authenticator del panel (`#851`, `specs/panel-a-salvo.md` §4.3): cifrados en reposo; Filament guarda los
+            // códigos de recuperación ya con hash.
+            'app_authentication_secret' => 'encrypted',
+            'app_authentication_recovery_codes' => 'encrypted:array',
         ];
+    }
+
+    /**
+     * **El authenticator del panel** (P3 de `specs/panel-a-salvo.md` §4.3, `#851`): lo que Filament pide al modelo. Lo exige
+     * a los ADMINISTRADORES `RequiresAdminAppAuthentication`; se escribe con `forceFill` porque no es asignable en masa.
+     */
+    public function getAppAuthenticationSecret(): ?string
+    {
+        return $this->app_authentication_secret;
+    }
+
+    public function saveAppAuthenticationSecret(#[\SensitiveParameter] ?string $secret): void
+    {
+        $this->forceFill(['app_authentication_secret' => $secret])->save();
+    }
+
+    public function getAppAuthenticationHolderName(): string
+    {
+        return (string) $this->email;
+    }
+
+    /** @return array<int, string>|null */
+    public function getAppAuthenticationRecoveryCodes(): ?array
+    {
+        return $this->app_authentication_recovery_codes;
+    }
+
+    /** @param  array<int, string>|null  $codes */
+    public function saveAppAuthenticationRecoveryCodes(#[\SensitiveParameter] ?array $codes): void
+    {
+        $this->forceFill(['app_authentication_recovery_codes' => $codes])->save();
     }
 
     /**
@@ -486,6 +526,8 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference,
                 'locale' => 'es',
                 'password' => Str::random(60),                  // hash aleatorio → login imposible
                 'remember_token' => null,
+                'app_authentication_secret' => null,             // el authenticator del panel (`#851`): una credencial más
+                'app_authentication_recovery_codes' => null,
                 'email_verified_at' => null,
                 'pending_email' => null,
                 'pending_email_sent_at' => null,

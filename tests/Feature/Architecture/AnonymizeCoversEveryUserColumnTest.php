@@ -78,6 +78,10 @@ class AnonymizeCoversEveryUserColumnTest extends TestCase
         'email_verified_at',
         'password',
         'remember_token',
+        // El authenticator del panel (`#851`): credenciales, no identifican al titular, pero una cuenta suprimida no
+        // conserva ninguna forma de entrar.
+        'app_authentication_secret',
+        'app_authentication_recovery_codes',
     ];
 
     /**
@@ -227,6 +231,8 @@ class AnonymizeCoversEveryUserColumnTest extends TestCase
             'waiver_accepted_at' => now()->subMonth(),
             'email_verified_at' => now()->subMonth(),
             'remember_token' => 'centinela-remember-token',
+            'app_authentication_secret' => 'CENTINELASECRETO',
+            'app_authentication_recovery_codes' => ['centinela-codigo'],
         ])->save();
 
         return $user->fresh();

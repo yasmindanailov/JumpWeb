@@ -6,32 +6,59 @@
  *   3. LA PUERTA (`/admin/puerta/validar`, Livewire fuera de Filament): buscar un cliente responde 200 y pinta
  *      un resultado —si Livewire no reaplicara `auth:admin`, `authorizeAccess()` daría 403—;
  *   4. una ruta del personal fuera de Filament (el resumen del día, PDF) responde 200;
- *   5. en otro navegador, entrar por la WEB (`POST /api/v1/auth/login`) con la misma cuenta NO abre el panel.
- * Monta su propio administrador temporal (`sonda-panel@jumpweb.test`, contraseña aleatoria) y lo BORRA al terminar. Solo
- * en LOCAL. Sale con 1 si algo falla.
+ *   5. en otro navegador, entrar por la WEB (`POST /api/v1/auth/login`) con la misma cuenta NO abre el panel;
+ *   6. con dirección secreta (P2), `/admin` y los suyos dan 404;
+ *   7. EL AUTHENTICATOR (P3, `#851`): el login de un administrador con él pide el código de su app (la sonda lo calcula,
+ *      TOTP de 6 cifras y 30 s, y sin él no entra); uno SIN él acaba, tras su contraseña, en la página de configurarlo.
+ * Monta sus administradores temporales (`sonda-panel@` con un secreto conocido, `sonda-panel-sin@` sin él; contraseñas
+ * aleatorias) y los BORRA al terminar. Solo en LOCAL. Sale con 1 si algo falla.
  *
  *   docker compose exec -u sail -T -e PLAYWRIGHT_BROWSERS_PATH=/home/sail/pw-browsers laravel.test \
  *       node scripts/sonda-panel.mjs [390|1280]
  */
 /* global console, document, fetch, URL -- Node y, dentro de `evaluate`, el navegador */
 import process from 'node:process';
-import { randomBytes } from 'node:crypto';
+import { Buffer } from 'node:buffer';
+import { createHmac, randomBytes } from 'node:crypto';
 import { chromium } from 'playwright-core';
 import { execFileSync } from 'node:child_process';
 
 const BASE = process.env.SONDA_BASE ?? 'http://localhost';
 const ANCHO = Number(process.argv[2] ?? 1280);
 const EMAIL = 'sonda-panel@jumpweb.test';
+const EMAIL_SIN = 'sonda-panel-sin@jumpweb.test';
 const CLAVE = randomBytes(18).toString('base64url');
 const CLIENTE = 'probe-card@jumpweb.test';
 const tinker = (php) => execFileSync('php', ['artisan', 'tinker', '--execute', php], { encoding: 'utf8' }).trim();
 
+/** El código de 6 cifras de una app de autenticación (TOTP, RFC 6238: HMAC-SHA1, pasos de 30 s) para un secreto base32. */
+function totp(secreto, ahora = Date.now()) {
+    const alfabeto = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+    let bits = '';
+    for (const c of secreto.replace(/=+$/, '').toUpperCase()) bits += alfabeto.indexOf(c).toString(2).padStart(5, '0');
+    const clave = Buffer.from(bits.match(/.{8}/g).map((b) => parseInt(b, 2)));
+    const paso = Buffer.alloc(8);
+    paso.writeBigUInt64BE(BigInt(Math.floor(ahora / 30000)));
+    const h = createHmac('sha1', clave).update(paso).digest();
+    const o = h[h.length - 1] & 0xf;
+
+    return String((h.readUInt32BE(o) & 0x7fffffff) % 1000000).padStart(6, '0');
+}
+
 if (tinker('echo app()->environment();') !== 'local') { console.error('✗ solo en LOCAL'); process.exit(1); }
 const PANEL = tinker("echo trim((string) (config('panel.path') ?? 'admin'), '/');") || 'admin';
-tinker(`$u = App\\Domain\\Identity\\Models\\User::firstOrNew(['email' => '${EMAIL}']);
+const montar = (email, conSecreto) => tinker(`$u = App\\Domain\\Identity\\Models\\User::firstOrNew(['email' => '${email}']);
     $u->forceFill(['name' => 'Sonda del panel', 'password' => '${CLAVE}', 'email_verified_at' => now()])->save();
     $u->roles()->sync([App\\Domain\\Identity\\Models\\Role::where('name', 'admin')->value('id')]);
-    foreach (['login-ip|127.0.0.1', md5('api'.'ip:127.0.0.1')] as $k) { Illuminate\\Support\\Facades\\RateLimiter::clear($k); }`);
+    $s = ${conSecreto ? 'app(PragmaRX\\Google2FA\\Google2FA::class)->generateSecretKey()' : 'null'};
+    $u->saveAppAuthenticationSecret($s);
+    foreach (['login-ip|127.0.0.1', md5('api'.'ip:127.0.0.1'), 'livewire-rate-limiter:'.sha1(Filament\\Auth\\Pages\\Login::class.'|authenticate|127.0.0.1')] as $k) { Illuminate\\Support\\Facades\\RateLimiter::clear($k); }
+    echo $s ?? '';`);
+// ⚠️ La última clave es el limitador del login de Filament (5 por minuto e IP): dos pasadas seguidas lo agotaban (medido: la
+// segunda, a 390 justo tras la de 1280, dio 9/11).
+const SECRETO = montar(EMAIL, true);
+montar(EMAIL_SIN, false);
+const CONFIGURAR = new URL(tinker("echo Filament\\Facades\\Filament::getPanel('admin')->getSetUpRequiredMultiFactorAuthenticationUrl();")).pathname;
 
 const filas = [];
 const ok = (nombre, cierto, detalle = '') => filas.push(`${cierto ? '✓' : '✗'} ${nombre}${detalle ? ` — ${String(detalle).replace(/\s+/g, ' ').slice(0, 170)}` : ''}`);
@@ -59,13 +86,18 @@ async function livewire(page, accion) {
 }
 
 try {
-    // ── 1 · El login del panel, y su sesión no abre la web ────────────────────────────────────────────────────────
+    // ── 1 · El login del panel —con el reto del authenticator—, y su sesión no abre la web ──────────────────────────
     const a = await contexto();
     await a.page.goto(`${BASE}/${PANEL}/login`, { waitUntil: 'networkidle' });
     await a.page.fill('input[type="email"]', EMAIL);
     await a.page.fill('input[type="password"]', CLAVE);
+    await a.page.click('button[type="submit"]');
+    const codigo = a.page.locator('input[autocomplete="one-time-code"], input[id*="multiFactor"]').first();
+    await codigo.waitFor({ timeout: 15000 });
+    ok('P3: con la contraseña sola, el administrador NO entra: le pide el código de su app', new URL(a.page.url()).pathname.endsWith('/login'), a.page.url());
+    await codigo.fill(totp(SECRETO));
     await Promise.all([a.page.waitForURL((u) => ! u.pathname.endsWith('/login'), { timeout: 20000 }), a.page.click('button[type="submit"]')]);
-    ok('el login del panel entra', new URL(a.page.url()).pathname.startsWith(`/${PANEL}`), a.page.url());
+    ok('y con el código de su app, entra', new URL(a.page.url()).pathname.startsWith(`/${PANEL}`) && ! a.page.url().endsWith('/login'), a.page.url());
     const me = await a.page.evaluate(async () => (await fetch('/api/v1/me', { headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })).status);
     ok('su sesión NO abre la web (`/api/v1/me`)', me === 401, `HTTP ${me}`);
 
@@ -114,13 +146,23 @@ try {
     }
     await b.ctx.close();
 
+    // ── 7 · Un administrador SIN authenticator: tras su contraseña, a configurarlo ─────────────────────────────────
+    const c = await contexto();
+    await c.page.goto(`${BASE}/${PANEL}/login`, { waitUntil: 'networkidle' });
+    await c.page.fill('input[type="email"]', EMAIL_SIN);
+    await c.page.fill('input[type="password"]', CLAVE);
+    await Promise.all([c.page.waitForURL((u) => ! u.pathname.endsWith('/login'), { timeout: 20000 }), c.page.click('button[type="submit"]')]);
+    await c.page.goto(`${BASE}/${PANEL}/orders`, { waitUntil: 'networkidle' });
+    ok('P3: un administrador sin authenticator acaba en la página de configurarlo', new URL(c.page.url()).pathname === CONFIGURAR, `${c.page.url()} · esperada ${CONFIGURAR}`);
+    await c.ctx.close();
+
     ok('sin errores en la consola', errores.length === 0, errores.slice(0, 3).join(' | '));
 } catch (e) {
     ok('la sonda terminó', false, e.message);
 } finally {
     await navegador.close();
-    tinker(`App\\Domain\\Identity\\Models\\User::where('email', '${EMAIL}')->first()?->delete();`);
-    filas.push(`· borrado el administrador temporal ${EMAIL}`);
+    tinker(`App\\Domain\\Identity\\Models\\User::whereIn('email', ['${EMAIL}', '${EMAIL_SIN}'])->get()->each->delete();`);
+    filas.push(`· borrados los administradores temporales ${EMAIL} y ${EMAIL_SIN}`);
 }
 
 console.log(`SONDA DEL PANEL · /${PANEL} · ${ANCHO}px\n${filas.join('\n')}`);

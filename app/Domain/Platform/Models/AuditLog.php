@@ -182,6 +182,9 @@ class AuditLog extends Model
         'orders.value_reduction_applied',   // T1 del libro: la bajada de una gestión, como UN hecho
 
         // ── Panel ──────────────────────────────────────────────────────────────────────────
+        // El authenticator de un administrador, quitado por CLI (`panel:quitar-authenticator`, `#851`): móvil y códigos
+        // perdidos. Sin PII en el payload; el objetivo es la cuenta.
+        'panel.app_authentication_removed',
         'panel.locale_changed',
         // La descarga del CSV de «Analítica» (`specs/analitica.md` §4.5, T2d): informe, periodo y recuento; sin PII.
         'reports.exported',

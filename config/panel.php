@@ -10,4 +10,12 @@
  */
 return [
     'path' => trim((string) env('PANEL_PATH', 'admin'), '/') ?: 'admin',
+
+    /*
+     * El authenticator OBLIGATORIO para los administradores (P3, `#851`; lo aplica `RequiresAdminAppAuthentication`).
+     * ⚠️ NO sale del `.env` a propósito: apagarlo en producción no puede ser una línea de configuración. La suite lo apaga
+     * en `Tests\TestCase` (las pruebas del panel entran como administrador sin app) y `PanelAppAuthenticationTest` lo
+     * enciende: es la que lo prueba.
+     */
+    'admin_mfa' => true,
 ];

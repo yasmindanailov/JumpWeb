@@ -63,8 +63,8 @@ mutar "el panel vuelve al guard de la web" "$PANEL" \
   "->authGuard('web')"
 
 mutar "una ruta del personal (el calendario) vuelve a la sesión de la web" "$RUTAS" \
-  "['web', 'auth:admin', 'panel_role', SetAdminLocale::class, 'no-store']" \
-  "['web', 'auth', 'panel_role', SetAdminLocale::class, 'no-store']"
+  "['web', 'auth:admin', 'panel_role', 'panel_mfa', SetAdminLocale::class, 'no-store']" \
+  "['web', 'auth', 'panel_role', 'panel_mfa', SetAdminLocale::class, 'no-store']"
 
 mutar "el paso libre del mantenimiento lee la sesión de la web" "$MANT" \
   "\$user = \$request->user('admin');" \

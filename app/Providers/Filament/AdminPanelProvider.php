@@ -8,12 +8,14 @@ use App\Filament\Pages\AdminSettingsHub;
 use App\Filament\Pages\Dashboard;
 use App\Filament\Support\InitialsAvatarProvider;
 use App\Filament\Support\PanelGlobalSearchProvider;
+use App\Http\Middleware\RequiresAdminAppAuthentication;
 use App\Http\Middleware\RequiresPanelRole;
 use App\Http\Middleware\RestrictsPuertaRole;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetAdminLocale;
 use App\Http\PanelPath;
 use Filament\Actions\Action;
+use Filament\Auth\MultiFactor\App\AppAuthentication;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -106,6 +108,12 @@ class AdminPanelProvider extends PanelProvider
             // Su PROPIO guard (`docs/specs/panel-a-salvo.md`, `#850`): una sesión de la web no abre el panel.
             ->authGuard('admin')
             ->login()
+            // El AUTHENTICATOR (P3, `#851`): obligatorio SOLO para los administradores. Filament decide «obligatorio» al
+            // registrar las rutas, sin usuario: se activa para el panel y `RequiresAdminAppAuthentication` ocupa el sitio de
+            // su middleware para exigirlo por rol. Recuperable (ocho códigos, con hash); ventana de ±1 min (la de Filament,
+            // ±4, es holgada para un reloj con NTP).
+            ->multiFactorAuthentication([AppAuthentication::make()->recoverable()->codeWindow(2)], isRequired: true)
+            ->multiFactorAuthenticationRequiredMiddlewareName(RequiresAdminAppAuthentication::class)
             // Avatar LOCAL (data-URI) en vez del ui-avatars.com externo, que la CSP bloquea.
             ->defaultAvatarProvider(InitialsAvatarProvider::class)
             // Mismo icono de marca que la web pública (favicon «J» sobre naranja).

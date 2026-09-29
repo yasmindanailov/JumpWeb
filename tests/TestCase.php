@@ -79,6 +79,11 @@ abstract class TestCase extends BaseTestCase
         parent::setUp();
         $this->withHeader('Accept-Language', '');
 
+        // El authenticator OBLIGATORIO de los administradores (`#851`), apagado para la suite: las pruebas del panel entran
+        // como un administrador sin app (medido al encenderlo: 132 caían, todas por eso). Lo prueba —encendido—
+        // `PanelAppAuthenticationTest`. En producción no se puede apagar: `config/panel.php` no lo lee del `.env`.
+        config(['panel.admin_mfa' => false]);
+
         // Guarda anti-red (ver `docs/TESTING.md`): NINGÚN test debe hacer una petición HTTP
         // real. Las salidas externas (Redsys REST, Cloudflare Turnstile, Have I Been Pwned vía
         // `Password::uncompromised`) se simulan con `Http::fake` o sustituyendo el contrato

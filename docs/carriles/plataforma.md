@@ -4,9 +4,9 @@
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
 > **820–849 AGOTADA con `#849`** → sigue en **850–879** (del owner, 29-09; centena `decisiones/800-899.md`) · Último usado:
-> **`#850`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **`#851`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#846`) · Actualizado: **2026-09-29**
-> (tarde: `#758` en la isla ✅ `#846`; la lista del owner, `#847`; el acceso con código ✅ `#848`/`#849`; el panel, su guard ✅ `#850`).
+> (tarde: `#758` en la isla ✅ `#846`; la lista del owner, `#847`; el acceso con código ✅ `#848`/`#849`; el panel a salvo ✅ `#850`/`#851`).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
 > llévaselo con la medida, como el SPA en `#724`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -49,9 +49,9 @@ Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas,en
 ▶▶▶ **AHORA, la lista del owner ANTES DE DESPLEGAR** (`#847`, 29-09), mientras él diseña: **(1)** `specs/acceso-con-codigo.md` ✅
 (`#848`/`#849`: una puerta —con cuenta, código; nuevo, sus datos SIN código: hay cola en la puerta—, contraseñas borradas,
 90 días, solo el código) → su A1 (el código en el servidor) —⚠️ antes, sus trampas nuevas: las sesiones en Redis de producción
-(`RGPD-06`) y que el acceso no abra el panel—; **y (2) antes que la A1**, `specs/panel-a-salvo.md`: **P1 ✅** (`#850`, `SEC-14`: el
-panel con su propio guard; sin eso el código al correo sería un atajo al panel) · **P2 ✅** la dirección secreta (`PANEL_PATH`,
-`/admin` → 404; al desplegar, `ENTORNOS.md` §6 y la dirección la elige el owner) → **P3** el authenticator SOLO de los administradores (Filament 5, `MultiFactor/App`); **(3)** el SEO completo
+(`RGPD-06`) y que el acceso no abra el panel—; **(2) HECHO**, `specs/panel-a-salvo.md`: P1 guard propio (`#850`, `SEC-14`) · P2
+dirección secreta (`PANEL_PATH`; al desplegar, `ENTORNOS.md` §6, la elige el owner) · P3 authenticator SOLO de administradores
+(`#851`; `panel:quitar-authenticator` si pierde el móvil; en local, el del owner lo pide ya); **(3)** el SEO completo
 (textos de playjump.es, el owner los revisa al final); **(4)** las imágenes al compartir (hoy: logotipo u `og-image.jpg`): la
 web, compuesta con la marca; la de la INVITACIÓN, la invitación misma —nombre, edad, día, hora, su diseño—, generada para cada
 una (`#849`; medir antes qué permite producción para generarla). La lista de invitados, al SPA (buzón).
@@ -155,8 +155,9 @@ hay formulario (`#839`); pasarlos a la reserva es dato del panel. Y:
 `.githooks/pre-push` · `scripts/huella-enrutador.py` · `scripts/partir-decisiones.py` · `scripts/deploy.sh` (las
 guardas 8 y 9) · `scripts/mutar-guarda8.sh` · `CHANGELOG.md` · `phpstan.neon` · `phpstan-baseline.neon` ·
 `eslint.config.js` · `eslint-suppressions.json` (la poda quien arregla) · `scripts/mutar-analisis-estatico.sh` ·
-**EL ACCESO Y EL PANEL A SALVO** (`#847`→`#850`): sus dos specs, el guard `admin` de `config/auth.php`, `PanelOwnGuardTest`,
-`config/panel.php`, `App\Http\PanelPath`, `PanelSecretPathTest`, `scripts/{sonda-panel.mjs,mutar-panel-{guard,direccion}.sh}` (y, AVISANDO, lo compartido que toquen: `layout.blade.php`, `routes/web.php`) ·
+**EL ACCESO Y EL PANEL A SALVO** (`#847`→`#851`): sus dos specs, el guard `admin` de `config/auth.php`, `config/panel.php`,
+`App\Http\PanelPath`, `RequiresAdminAppAuthentication`, `panel:quitar-authenticator`, `Panel{OwnGuard,SecretPath,AppAuthentication}Test`,
+`scripts/{sonda-panel.mjs,mutar-panel-{guard,direccion,authenticator}.sh}` (y, AVISANDO, lo compartido: `layout.blade.php`, `routes/web.php`, `TestCase`) ·
 **LA ISLA Y LA LANDING NUEVA** (`#681`, `#682`): la spec, la isla `resources/js/isla/**`, sus bancos y sondas
 (`scripts/banco-{isla,piezas,compra}*`, `scripts/pixel.mjs`, `scripts/sonda-{embudo,isla,cuenta,movimiento,isla-movimiento,banco-movimiento,isla-rendimiento,compra-directa,demanda}.mjs`,
 `scripts/sonda-cuenta-datos.php`, `scripts/mutar-{t5f,hijos-de-producto,demanda-isla}.sh`), `sidebar/reanudar.js`,
@@ -224,6 +225,8 @@ dueño es el carril de la web/reseñas—) ·
   línea) y las trece rutas del personal de `routes/web.php` (`auth` → `auth:admin`).
 - **P2, hecha**: el panel vive en `PANEL_PATH` (secreta en producción). Un enlace o una exclusión por ruta del panel va por
   `App\Http\PanelPath` (`url()`, `matches()`), NUNCA `'/admin'` a mano; las pruebas siguen en `/admin` (`phpunit.xml`).
+- **P3, hecha** (`#851`): authenticator obligatorio para el rol `admin`. `TestCase` lo apaga (`panel.admin_mfa`), así que tus
+  pruebas del panel no cambian; una ruta nueva del personal en `web.php` lleva `panel_mfa` junto a `panel_role`.
 
 ### ❗❗ Para el SPA (emisor: plataforma, 2026-09-29) — del OWNER (`#847`): la LISTA DE INVITADOS, para ti
 - Quien invita no ve NADA de la autorización (fuera la leyenda «Firmada · Falta»). Quien él añade a mano ya está CONFIRMADO, y

@@ -16,7 +16,7 @@
   (`auth:admin`). (2) `EnsureSiteAvailable` (`SEC-02`) excluye el panel POR RUTA y deja al personal ver la web: los dos,
   a la dirección y al guard. (3) Las pruebas: `TestCase::be()` sin guard autentica los dos (§4.1). (4) La dirección
   secreta no sale en ninguna página pública, ni en el repo: vive en el `.env` de producción.
-- **Estado**: **P1 ✅** (§4.1, `SEC-14`) · **P2 ✅** (§4.2, 29-09) → P3 (authenticator). Al desplegar: `ENTORNOS.md` §6.
+- **Estado**: **P1 ✅** (§4.1, `SEC-14`) · **P2 ✅** (§4.2) · **P3 ✅** (§4.3, `#851`), 29-09. Al desplegar: `ENTORNOS.md` §6.
 - **Invariantes**: `SEC-01`, `SEC-02` (a la dirección configurada), `SEC-04`; nace la del guard propio (§5).
 
 ## 1. Contexto — medido el 29-09
@@ -95,6 +95,22 @@ tablets de la puerta y la URI de retorno de la ficha de Google.
 `->multiFactorAuthentication([AppAuthentication::make()->recoverable()], isRequired: …)`, obligatorio solo para el rol
 `admin`: el primer inicio de sesión le pide configurarlo (QR para la app y códigos de recuperación). Migración con el
 secreto y los códigos, cifrados (`encrypted`), ocultos (`Hidden`) y fuera de la exportación RGPD.
+
+✅ **Hecho (29-09, `#851`)**. ⚠️ **Medido al leer Filament**: su «obligatorio» se evalúa al REGISTRAR las rutas (sin usuario):
+vale para todo el panel o para nadie. Se enciende para el panel y `RequiresAdminAppAuthentication` ocupa el sitio de su
+middleware (`multiFactorAuthenticationRequiredMiddlewareName`) y lo exige solo a `admin`; va también en las trece rutas
+del personal (alias `panel_mfa`). `AppAuthentication::make()->recoverable()->codeWindow(2)` (±1 min; la de Filament, ±4).
+`User` implementa `HasAppAuthentication(+Recovery)`; migración con las dos columnas; `anonymize()` las borra (el censo de
+`RGPD-01`, `AnonymizeCoversEveryUserColumnTest`, lo exigió: SCRUBBED). `panel.admin_mfa` = `true`, **sin `.env`**: medido,
+con el requisito encendido **132** pruebas del panel caían (entran como administrador sin app); `TestCase` lo apaga y
+`PanelAppAuthenticationTest` lo enciende. Sin página de perfil: `panel:quitar-authenticator <email>` (auditado,
+`panel.app_authentication_removed`). **Pruebas**: `PanelAppAuthenticationTest` (5: sin authenticator, a configurarlo —también
+desde un PDF—; mostrador y puerta sin él; el login real pide el código y solo entra con el de la app; cifrado, oculto y
+borrado al anonimizar; el comando) y `mutar-panel-authenticator.sh` **9/9**. **En navegador**, `sonda-panel.mjs` con un
+administrador de secreto conocido (la sonda calcula el TOTP) y otro sin él: **11/11 a 1280 y 390** —la contraseña sola no
+entra; con el código, sí; sin authenticator, a `/admin/multi-factor-authentication/set-up`—, y tres pasadas seguidas tras
+limpiar el limitador del login de Filament (sin eso, la segunda dio 9/11). ⚠️ **En local**, el administrador del owner
+también lo configurará en su próximo inicio de sesión.
 
 ## 5. Impacto en invariantes
 

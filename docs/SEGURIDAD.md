@@ -65,6 +65,10 @@ tras varios intentos fallidos. Motivo: el producto trata **datos personales** (R
 - **"Cerrar sesión en todos los dispositivos"** disponible.
 - Cookies: `http_only` (ok), `same_site=lax` (ok), **`secure=true` en producción**, valorar `encrypt=true`.
 - **Reconfirmar contraseña** antes de acciones sensibles (cambiar email, borrar cuenta).
+- **El PANEL, aparte** (`specs/panel-a-salvo.md`, 29-09): su PROPIO inicio de sesión (guard `admin`, `SEC-14`: una sesión
+  de la web no lo abre), una dirección SECRETA (`PANEL_PATH`; `/admin` → 404; guarda 10 del despliegue) y el
+  **authenticator obligatorio para los administradores** (`#851`: TOTP de Filament, ±1 min, ocho códigos de recuperación;
+  mostrador y puerta sin él, `#847`). Quien pierde móvil y códigos: `php artisan panel:quitar-authenticator <email>` por SSH.
 
 ### 4. Verificación de email — ASVS V2.5
 - Enlace **firmado y caduco** (~60 min). **Re-verificar** si el usuario cambia su email.

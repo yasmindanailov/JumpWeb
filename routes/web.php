@@ -523,7 +523,7 @@ $panel = PanelPath::path();
 // Panel admin (Fase 7.0): cambio de idioma del panel — separado del de la web pública.
 // Soporta solo `es` y `zh_CN` (decisión #123). Persistido en `users.panel_locale`.
 Route::post('/'.$panel.'/lang/{locale}', PanelLocaleController::class)
-    ->middleware(['web', 'auth:admin', 'panel_role'])
+    ->middleware(['web', 'auth:admin', 'panel_role', 'panel_mfa'])
     ->name('admin.lang.switch');
 
 // Panel admin — Fase 7.1a (decisiones #119, #126): validar registro en puerta.
@@ -531,7 +531,7 @@ Route::post('/'.$panel.'/lang/{locale}', PanelLocaleController::class)
 // tablet/PC dedicado en la entrada del parque. Aplica el locale del panel
 // (ES/ZH_CN) para coherencia con el resto del entorno admin.
 Route::get('/'.$panel.'/puerta/validar', ValidarRegistro::class)
-    ->middleware(['web', 'auth:admin', 'panel_role', SetAdminLocale::class])
+    ->middleware(['web', 'auth:admin', 'panel_role', 'panel_mfa', SetAdminLocale::class])
     ->name('admin.puerta.validar');
 
 // Panel admin — Hoja de reserva imprimible (PDF A4, decisión #183): un OrderItem
@@ -539,7 +539,7 @@ Route::get('/'.$panel.'/puerta/validar', ValidarRegistro::class)
 // se fuerza en español en el controlador (documento del personal del parque).
 // `throttle:30,1` acota el abuso de ancho de banda (generación de PDF).
 Route::get('/'.$panel.'/pedidos/{order}/items/{item}/imprimir', ReservationSlipController::class)
-    ->middleware(['web', 'auth:admin', 'panel_role', SetAdminLocale::class, 'throttle:30,1', 'no-store'])
+    ->middleware(['web', 'auth:admin', 'panel_role', 'panel_mfa', SetAdminLocale::class, 'throttle:30,1', 'no-store'])
     ->name('admin.orders.items.slip'); // L1: la hoja imprime nombres+alergias de menores (art. 9).
 
 // Panel admin — conectar la FICHA DE GOOGLE (`specs/google-business-profile.md` §4.2·2, `#524`).
@@ -552,29 +552,29 @@ Route::get('/'.$panel.'/pedidos/{order}/items/{item}/imprimir', ReservationSlipC
 // cualquier página que le cargue una imagen. El callback es GET porque lo redirige Google.
 // Limitadores en las dos (`SEC-06`, §4.2·2).
 Route::post('/'.$panel.'/ficha-google/conectar', [GoogleBusinessConnectController::class, 'connect'])
-    ->middleware(['web', 'auth:admin', 'panel_role', 'throttle:10,1'])
+    ->middleware(['web', 'auth:admin', 'panel_role', 'panel_mfa', 'throttle:10,1'])
     ->name('admin.google_business.connect');
 Route::get('/'.$panel.'/ficha-google/callback', [GoogleBusinessConnectController::class, 'callback'])
-    ->middleware(['web', 'auth:admin', 'panel_role', 'throttle:30,1'])
+    ->middleware(['web', 'auth:admin', 'panel_role', 'panel_mfa', 'throttle:30,1'])
     ->name('admin.google_business.callback');
 // Elegir la ficha (§4.2·4). POST: cambia de qué negocio son las reseñas que publica la portada.
 Route::post('/'.$panel.'/ficha-google/elegir', [GoogleBusinessConnectController::class, 'chooseLocation'])
-    ->middleware(['web', 'auth:admin', 'panel_role', 'throttle:20,1'])
+    ->middleware(['web', 'auth:admin', 'panel_role', 'panel_mfa', 'throttle:20,1'])
     ->name('admin.google_business.choose');
 // Ocultar una reseña y dejar de ocultarla (T2·5, §4.3·7, `#731`). POST las dos: ocultar borra en el
 // acto el nombre, la foto y el texto de un tercero, y eso no puede depender de abrir un enlace.
 // ⚠️ El limitador es MÁS ancho que el de conectar: ocultar es una tarea de repaso, y un admin que
 // atienda varias peticiones seguidas no puede chocar con un 429.
 Route::post('/'.$panel.'/ficha-google/ocultar', [GoogleBusinessConnectController::class, 'hideReview'])
-    ->middleware(['web', 'auth:admin', 'panel_role', 'throttle:60,1'])
+    ->middleware(['web', 'auth:admin', 'panel_role', 'panel_mfa', 'throttle:60,1'])
     ->name('admin.google_business.hide_review');
 Route::post('/'.$panel.'/ficha-google/mostrar', [GoogleBusinessConnectController::class, 'unhideReview'])
-    ->middleware(['web', 'auth:admin', 'panel_role', 'throttle:60,1'])
+    ->middleware(['web', 'auth:admin', 'panel_role', 'panel_mfa', 'throttle:60,1'])
     ->name('admin.google_business.unhide_review');
 // Desconectar (§4.2·8). **Solo POST**: retirar el permiso sobre la ficha del parque no puede
 // depender de que alguien abra un enlace.
 Route::post('/'.$panel.'/ficha-google/desconectar', [GoogleBusinessConnectController::class, 'disconnect'])
-    ->middleware(['web', 'auth:admin', 'panel_role', 'throttle:10,1'])
+    ->middleware(['web', 'auth:admin', 'panel_role', 'panel_mfa', 'throttle:10,1'])
     ->name('admin.google_business.disconnect');
 
 // Panel admin — Fase 6 · waiver: PDF del REGISTRO probatorio de una firma (`specs/waiver-probatorio.md`
@@ -582,7 +582,7 @@ Route::post('/'.$panel.'/ficha-google/desconectar', [GoogleBusinessConnectContro
 // usuario de la URL) + auditoría de cada consulta. `no-store` (`RGPD-04`): lleva nombre, email, ip y
 // user-agent del firmante. Se sirve en el idioma del texto firmado.
 Route::get('/'.$panel.'/usuarios/{user}/waiver/{signature}/pdf', WaiverProofController::class)
-    ->middleware(['web', 'auth:admin', 'panel_role', SetAdminLocale::class, 'throttle:30,1', 'no-store'])
+    ->middleware(['web', 'auth:admin', 'panel_role', 'panel_mfa', SetAdminLocale::class, 'throttle:30,1', 'no-store'])
     ->name('admin.users.waiver.proof');
 
 // Panel admin — Fase 7.4 (decisión #14): feed JSON del calendario unificado.
@@ -593,7 +593,7 @@ Route::get('/'.$panel.'/usuarios/{user}/waiver/{signature}/pdf', WaiverProofCont
 // (no Livewire) → Symfony solo pone `no-cache, private`; se fuerza `no-store` como en sus hermanas
 // con PII (slip y resumen-día), evitando la persistencia en disco de tablets compartidas de puerta.
 Route::get('/'.$panel.'/calendario/eventos', CalendarEventsController::class)
-    ->middleware(['web', 'auth:admin', 'panel_role', SetAdminLocale::class, 'no-store'])
+    ->middleware(['web', 'auth:admin', 'panel_role', 'panel_mfa', SetAdminLocale::class, 'no-store'])
     ->name('admin.calendario.eventos');
 
 // Panel admin — Resumen del día imprimible (PDF A4 horizontal, decisión #184):
@@ -601,14 +601,14 @@ Route::get('/'.$panel.'/calendario/eventos', CalendarEventsController::class)
 // Botón "Imprimir resumen" en Calendario y Escritorio. Permiso `calendar.view`;
 // la hoja se fuerza en español en el controlador. `throttle` por ancho de banda.
 Route::get('/'.$panel.'/calendario/resumen-dia', DailySummaryController::class)
-    ->middleware(['web', 'auth:admin', 'panel_role', SetAdminLocale::class, 'throttle:30,1', 'no-store'])
+    ->middleware(['web', 'auth:admin', 'panel_role', 'panel_mfa', SetAdminLocale::class, 'throttle:30,1', 'no-store'])
     ->name('admin.calendario.resumen-dia'); // L1: el resumen lista clientes/teléfonos/cumpleañeros (PII).
 
 // Panel admin — «Analítica», el CSV (`specs/analitica.md` §4.5, T2d): un informe (dinero · registros y puerta ·
 // conversión) y un periodo. Permiso `reports.export` en el controlador (el botón solo lo esconde), auditado con
 // recuento y sin PII: el fichero solo lleva agregados. `no-store`: son las cifras del parque.
 Route::get('/'.$panel.'/analitica/csv', AnalyticsExportController::class)
-    ->middleware(['web', 'auth:admin', 'panel_role', SetAdminLocale::class, 'throttle:30,1', 'no-store'])
+    ->middleware(['web', 'auth:admin', 'panel_role', 'panel_mfa', SetAdminLocale::class, 'throttle:30,1', 'no-store'])
     ->name('admin.analitica.csv');
 // La exportación de un SEGMENTO (T4b, una lista de personas) se RETIRÓ con la TP·3b (`#793`): nada del cuadro sale con nombres.
 

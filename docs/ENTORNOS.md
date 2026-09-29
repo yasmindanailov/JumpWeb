@@ -502,6 +502,10 @@ instalación de un cliente. Si se configura a mano deja de ser una prueba del pr
 > que: (1) las TABLETS de la puerta cambian su favorito a `/<PANEL_PATH>/puerta/validar`; (2) el personal, la dirección
 > nueva; (3) la URI de retorno de la ficha de Google, dada de alta con la ruta nueva (`/<PANEL_PATH>/ficha-google/callback`).
 > Y desde `#850` (`SEC-14`) una sesión de la web no abre el panel: quien estaba dentro por la web, entra por su login.
+> ❗ **El AUTHENTICATOR de los administradores** (`#851`): en su PRIMER inicio de sesión tras la v2.0.0, el panel le pide al
+> owner configurarlo (una app en el móvil: Google Authenticator, Authy…) y le da OCHO códigos de recuperación, que tiene que
+> guardar fuera del móvil. Si pierde móvil y códigos: `php artisan panel:quitar-authenticator <su correo>` por SSH, y en su
+> siguiente inicio de sesión lo configura de nuevo. Mostrador y puerta, sin cambios.
 > ❗❗❗ **El tercero se paró en la GUARDA 1 y dejó el sitio 3 minutos en 503** (`#594`): el owner había
 > pasado Redsys a `live` a las 17:29. Se levantó con `artisan up` y se completaron a mano las franjas,
 > `artisan optimize` y la salud. Desde `#594`, en producción la guarda admite `test` o `live`.
