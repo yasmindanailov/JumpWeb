@@ -6,14 +6,17 @@
 > tabla de `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: **`analitica-para-decidir.md`
 > §0** (la tarea en curso, `#755`) · `encuestas.md` §0 y §4.7 (`#754`) · `analitica.md` §0 y §4.5 · `isla-y-landing-nueva.md`
 > §4.11 · `celebracion-e-invitacion.md` §0 · `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 ·
-> `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-09-28 noche (TP·1 y TP·2 en `main` y aprobadas; sigue la TP·3).
+> `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-09-29 (la C1 de los correos en `main` y aprobada; sigue la C2).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`). El
 > contador de la suite va en el trailer del commit (`#618`), no aquí. **Se muda, no se raspa**: el detalle de
 > una feature baja a su spec (las trampas por tanda de la analítica T1→T5 viven en `analitica.md` §4.9,
 > mudadas verbatim el 24-09; las de la ficha de Google en su §9.1; las de la invitación en su §10.20).
 
-## Foto (2026-09-28, cierre)
+## Foto (2026-09-29)
 
+- ▶▶▶ **LOS CORREOS SALIENTES** (`specs/correos-salientes.md`, `#794`; adelanta la T5 de la analítica, owner 28-09): ✅ **C1 el
+  registro y la vista previa, en `main` y APROBADA** (29-09: «buen trabajo, visto bueno»; lo construido y lo que enseñó, §4.7)
+  → ▶ **C2 los clics por envío** (§4.3) → C3 las aperturas → C4 a «Marketing». C2 y C3, `[PENDIENTE: asesoría]` antes de producción.
 - ▶▶▶ **LA ANALÍTICA PARA DECIDIR es la tarea** (`#755`, spec ✅). En `main` y APROBADAS por el owner: T0a·T0b·T0c (`#756`),
   T1 encuestas anónimas (`#754`/`#757`), T2 ocupación (`#758`) y, el 28-09, **T3a la forma** (`#759`: siete pestañas, solo
   pide la abierta, un catálogo de 58 cifras), **T3b el veredicto** (`#790` `[DECIDIDO owner]`: «normal» es el mín–máx de los 12
@@ -28,13 +31,7 @@
   su recibo y la autorización, vestidas con «Saltia» para la v2.0.0, en paralelo con la web pública. El traspaso,
   `isla-y-landing-nueva.md` §4.11; el censo HAY/FALTA, el método y las tandas, `specs/fiesta-sistema-nuevo.md` (§1.4,
   §4.6, §7). ⚠️ **El zip entra SOLO por plataforma** y llega con `git pull` de la instancia (`cd diseno && sha256sum -c`).
-- ✅ **27-09, TODO EN `main` Y APROBADO POR EL OWNER**: **F7** (`#752`, la exención de quien cumple: la lista y su
-  justificante, la puerta, la víspera y la API 1.42.0; §4.13; arnés `mutar-exencion-cumple.sh` 55) · **F8** (`#753`, una
-  acción por tarea para la invitación, las cifras sin filtro, cada envío medido; API 1.44.0; §4.14; arnés
-  `mutar-envio-invitacion.sh` 28/28) · **F9** (el zip tercero `#780`: «¿Querías decir …?» en el correo de la firma y el
-  primario que llega; `WaiverSheet` NO, el texto se presenta en el flujo, `waiver-probatorio.md` §4.4; §4.15; arnés
-  `mutar-zip-tercero.sh` 12/12) · y el `--warn-100` de PlayJump fuera de `fiesta.css` (`PaletaNeutraTest` lee ya las
-  familias de estado y las tripletas `r, g, b`). La instancia de esta máquina, al día (`100dd09`, el zip tercero dentro).
+- ✅ F7·F8·F9 (27-09) y la analítica entera T1→T7 (`#735`, 24/25-09): aprobadas; su foto, en `CARRIL-SPA.md` §9.
 - ✅ **Esta máquina, montada para la fiesta (25-09)**: la instancia clonada en `~/proyectos/instancias/playjump` (el
   diseño con su sha256 verificado), `INSTANCIA_RUTA=/var/www/instancias/playjump` en el `.env` (ruta DEL CONTENEDOR),
   `public/instancia/` copiado de `publico/instancia/` (ignorado por git); la receta entera, en Trampas vivas 🏠.
@@ -48,14 +45,6 @@
   recibo contra `InvPagina` a 0 px en sus diagnósticos, y seis defectos arreglados que vio el navegador y no la suite
   (el 429 del cupo compartido, el reenvío mudo, el foco tras un ancla, la cabecera que desborda en móvil —el diseño
   también—, el color del botón, la fiesta llena con un «sí» atado). El detalle, spec §4.6; lo que enseñó, §4.7.
-- ✅ **LA ANALÍTICA, ENTERA (`#735`), T1→T7 en `main` y vista por el owner en vivo** (24 y 25-09): T2 (el cuadro), T3
-  (consentimiento, driver, píxeles, `/cookies`), T4 (la 360, segmentos, opt-in), T5a·T5b (experimentos; **T5c decidida en
-  `#738`**: sin mecanismo de textos, la hipótesis la nombra el owner tras la v2.0.0), **T6 la fiesta** (`#739`: *el invitado
-  no es un visitante*; `PartiesReport`, la pestaña «Fiestas», el segmento `guest_became_customer`; el detalle por tanda en
-  `analitica-fiesta.md` §4.6) y **T7 las encuestas** (`#740`→`#742`; el detalle por tanda, las guardas y «lo que
-  enseñó» en `encuestas.md` §4.6; el owner contestó una en vivo desde la puerta y cerró con «buen trabajo»).
-  Quedan: `[PENDIENTE: asesoría]` (5) del correo de servicio, la **T2e** solo si el volumen lo pide, el `EXPLAIN` con
-  volumen en staging. Todo espera la v2.0.0 (`#670`). Las trampas pagadas en la T7 viven en `encuestas.md` §4.6.
 - ⚠️⚠️ **LO MONTADO EN LA BD LOCAL para el ojo del owner** (ajustes falsos, el experimento `carcasa` vivo, los fixtures
   `probe-ojo-*`, las fiestas `JW-OJO-F1…F8` con sus guiones `OJO=desmontar`, y la ISLA encendida por plataforma —«no
   deshacer sin él»—): el inventario entero, mudado verbatim a `docs/CARRIL-SPA.md` §8 (27-09). Todo reversible.
@@ -69,7 +58,7 @@
    T3c·1 · T3c·2 y **TP·1** (la fecha de nacimiento, `#792`; arnés `SOLO=TP1`, sondas `storage/app/audit/sonda-tp1-*.mjs`),
    **TP·2** («Quién viene»; arnés `SOLO=TP2`; fixture `ojo-tp2.php` montado, `OJO=desmontar`), todas en `main` y aprobadas →
    ▶ owner 28-09, «cerrar lo que queda», en este orden: **los correos salientes PRIMERO** (`specs/correos-salientes.md` ✅
-   `#794`; 🟦 C1 en `wip/correos-c1`, falta el ojo; luego C2 clics · C3 aperturas · C4 a la analítica) · **TP·3a** los tramos de los anuncios y **TP·3b** retirar «Exportar segmento» (`#793`) ·
+   `#794`; ✅ C1 en `main`, aprobada 29-09; ▶ C2 clics · C3 aperturas · C4 a la analítica) · **TP·3a** los tramos de los anuncios y **TP·3b** retirar «Exportar segmento» (`#793`) ·
    la TP·3c (felicitaciones) y el gasto en anuncios, ⏸ con el rediseño de la plantilla / aplazado; §4.14 y §4.9 → T3d el texto para IA (§4.7; lee `Changes` y
    los veredictos; sin PII ni celdas < 5) → T3e el SECTOR (primera búsqueda en §4.13: casi todo son medias, no rangos; AL OWNER
    antes de sembrar) → T4 cartera → T5 marketing y correos → T6 cohortes → T7 pérdidas → T8 satisfacción (§4.12). Los CRUCES de
@@ -233,6 +222,7 @@ el repo de la instancia (lo nuevo), nunca a `main`.
   (el export lleva `emails`; tu 1.50.0 sigue siendo tuya). Toqué lo compartido: `AppServiceProvider` (dos oyentes y el morfo
   `email_send`), tu hub (`Correos enviados` en «Sistema»; `AdminNavigationTest` 27 tarjetas), `ListUsers` (un botón), el
   permiso `emails.view` (seeder y catálogo), `AuditLog::ACTIONS`, `routes/console.php` y `deploy.sh` (**12** tareas). Migra.
+  29-09, rebasada sobre tu `0cef4365`: la 1.51.0 va encima de tu 1.50.0 (normas) y `README` dice 56 modelos · 152 migraciones.
 - ❗ **Para la web (28-09, TP·1 y `#793`)**: `/privacidad` tiene que nombrar la fecha de nacimiento del titular (opcional; para
   conocer al público, siempre en conjunto) y, con la TP·3c, las felicitaciones de cumpleaños (la del titular y la de sus hijos,
   solo con el opt-in de marketing y sin vender). Ya NO habrá exportación de personas (`#793`). `[PENDIENTE: asesoría]`.

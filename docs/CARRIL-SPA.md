@@ -330,7 +330,26 @@ compara ANTES/DESPUÉS.
 
 (19) **De la C1 de los correos salientes (28-09, `#794`)**: `c1-enviar.php` (en la carpeta de auditoría de `storage`, fuera de
 git) manda «Ya tienes cuenta» de verdad al cliente de sondas 593 —una fila en `email_sends` y un correo en Mailpit— y la sonda
-`sonda-c1-correos.mjs` compara la copia con Mailpit y mira el panel. Se quitan borrando esas filas de `email_sends`.
+`sonda-c1-correos.mjs` compara la copia con Mailpit y mira el panel. Se quitan borrando esas filas de `email_sends` (el 29-09,
+las filas 1 y 2: una por lanzamiento).
+
+## 9 · La foto vieja del carril (mudada VERBATIM de `carriles/spa.md` el 2026-09-29, su techo)
+
+- ✅ **27-09, TODO EN `main` Y APROBADO POR EL OWNER**: **F7** (`#752`, la exención de quien cumple: la lista y su
+  justificante, la puerta, la víspera y la API 1.42.0; §4.13; arnés `mutar-exencion-cumple.sh` 55) · **F8** (`#753`, una
+  acción por tarea para la invitación, las cifras sin filtro, cada envío medido; API 1.44.0; §4.14; arnés
+  `mutar-envio-invitacion.sh` 28/28) · **F9** (el zip tercero `#780`: «¿Querías decir …?» en el correo de la firma y el
+  primario que llega; `WaiverSheet` NO, el texto se presenta en el flujo, `waiver-probatorio.md` §4.4; §4.15; arnés
+  `mutar-zip-tercero.sh` 12/12) · y el `--warn-100` de PlayJump fuera de `fiesta.css` (`PaletaNeutraTest` lee ya las
+  familias de estado y las tripletas `r, g, b`). La instancia de esta máquina, al día (`100dd09`, el zip tercero dentro).
+- ✅ **LA ANALÍTICA, ENTERA (`#735`), T1→T7 en `main` y vista por el owner en vivo** (24 y 25-09): T2 (el cuadro), T3
+  (consentimiento, driver, píxeles, `/cookies`), T4 (la 360, segmentos, opt-in), T5a·T5b (experimentos; **T5c decidida en
+  `#738`**: sin mecanismo de textos, la hipótesis la nombra el owner tras la v2.0.0), **T6 la fiesta** (`#739`: *el invitado
+  no es un visitante*; `PartiesReport`, la pestaña «Fiestas», el segmento `guest_became_customer`; el detalle por tanda en
+  `analitica-fiesta.md` §4.6) y **T7 las encuestas** (`#740`→`#742`; el detalle por tanda, las guardas y «lo que
+  enseñó» en `encuestas.md` §4.6; el owner contestó una en vivo desde la puerta y cerró con «buen trabajo»).
+  Quedan: `[PENDIENTE: asesoría]` (5) del correo de servicio, la **T2e** solo si el volumen lo pide, el `EXPLAIN` con
+  volumen en staging. Todo espera la v2.0.0 (`#670`). Las trampas pagadas en la T7 viven en `encuestas.md` §4.6.
 
 ## Anexo · La fila del enrutador, mudada el 2026-09-16
 

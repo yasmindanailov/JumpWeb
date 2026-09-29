@@ -15,7 +15,7 @@
   (`EmailUtm::IGNORED_QUERY`); (3) `sendmail` no avisa de entregas ni rebotes: «entregado» no se puede saber, «falló al
   enviar» sí; (4) el píxel de apertura exige consentimiento (LSSI 22.2) y Apple Mail abre solo: las aperturas son
   APROXIMADAS; (5) los escáneres de enlaces de Outlook y Gmail pulsan solos: un clic en el primer segundo tras el envío no cuenta.
-- **Estado**: ✅ aprobada (`#794`: la COPIA 6 meses, las cifras 24); ▶ C1 (§4.6). Cuatro tandas, cada una con el ojo del owner.
+- **Estado**: ✅ aprobada (`#794`: la COPIA 6 meses, las cifras 24); ✅ C1 en `main` (ojo del owner, 29-09); ▶ C2 (§4.3).
 - **Apuntar un envío NUNCA rompe el envío** (`#794`): un fallo del registro reintentaría el trabajo y duplicaría el correo.
   Y se apunta TRAS el commit (`afterCommit`, como `Recorder`): con la cola `sync`, un deadlock desharía la transacción de quien envía.
 - **Invariantes**: `RGPD-01` (la supresión borra el HTML y la dirección), `RGPD-02`, `RGPD-04` (`no-store` en la vista previa),
@@ -120,7 +120,7 @@ desde cada correo (para las felicitaciones) y el tiempo hasta el primer clic. Lo
 - **El export del art. 20** lleva los envíos del titular (qué correo, cuándo, si salió): contrato **1.51.0** (la 1.50.0 es de
   plataforma). `anonymize()` borra `html`, `subject`, `recipient` y `attachments` de los suyos y suelta `user_id`.
 
-### 4.7 La C1, lo construido (28-09, 🟦 en `wip/correos-c1`, falta el ojo del owner)
+### 4.7 La C1, lo construido (28-09; ✅ ojo del owner el 29-09: «buen trabajo, visto bueno ok»)
 `email_sends` (migración y `Platform\Models\EmailSend`), la cabecera en `BrandedMailMessage`, `RecordEmailSend` (los dos
 eventos, blindado), `email-sends:trim` (04:40) y la poda, `anonymize()` y el export (contrato 1.51.0), el permiso `emails.view`
 y `emails.previewed` al rastro, `EmailSendResource` (en «Ajustes → Sistema», en «Clientes» y en la ficha) con la vista previa
