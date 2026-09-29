@@ -46,8 +46,8 @@
 
 ## Por dónde retomar, en orden
 
-0. ▶▶▶ **LA R1b, los iconos** (`correos-rediseno.md` §4.1: máscaras PNG de Lucide teñidas con GD, ⚠️ GD en producción sin
-   verificar; la columna de iconos del pie y el círculo de la lista): su «al detalle» medido en la spec antes de codificar. El
+0. ▶▶▶ **LA R1b, los iconos** (`correos-rediseno.md` §4.1.3, medida el 29-09: máscaras de PALETA teñidas reescribiendo su
+   `PLTE`, sin GD en producción; la ruta como el píxel; el rol `icono` a 3:1; hoy, el pie), en `wip/correos-r1b`. El
    banco (`php scripts/banco-correos.php [filtro]`) y la sonda (`node storage/app/audit/sonda-correos-r1a.mjs N`) sirven igual.
    ⬜ **Y la LISTA DE INVITADOS del owner** (`#847`, buzón de plataforma del 29-09): nada de la autorización para quien invita,
    confirmado sin otra variante, «No podemos» aparte y suave, los adultos como el mockup (`fiesta-sistema-nuevo.md`).
@@ -216,6 +216,10 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 - Commit por NOMBRE de fichero, nunca `git add -A`. La decisión, al final de `decisiones/700-799.md`.
 
 ## Buzón
+
+- ❗ **Para plataforma (29-09) — AVISO PREVIO, `routes/web.php`** (fuera del grupo de la fiesta): la R1b de los correos añade
+  UNA ruta junto al píxel de apertura, `GET /correo/i/{v}/{color}/{nombre}.png` (los iconos de los correos, teñidos al vuelo;
+  sin sesión ni cookies, como `emails.open`). Nada más del fichero cambia.
 
 - ❗ **Para plataforma (29-09, la R1a de los correos, aprobada por el owner)**: la hoja de correo de PlayJump ya está
   EMPUJADA al repo de la instancia (`ace8d0a`, `publico/instancia/css/correo.css`: roles `--correo-*` en hex, con su pareja

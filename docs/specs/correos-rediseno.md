@@ -113,8 +113,8 @@ una sonda por tanda; los comerciales con su prueba de consentimiento y de «una 
   `#769`, como la isla con sus `--isla-*`). El producto la lee EN EL SERVIDOR (un lector de propiedades de una sola
   indirección, en caché) y la escribe en línea. Sin hoja, el correo sale con los neutros: ninguna instalación se rompe.
 - **Los iconos**: el diseño los pide como PNG del color de su rol. Se guarda cada icono de Lucide (licencia ISC) UNA vez como
-  máscara PNG en el producto, generada del SVG, y se tiñe con GD al pedirse (en caché); sin imagen, queda su círculo, como
-  pide el diseño. GD está en el contenedor; en producción, no verificado.
+  máscara PNG en el producto, generada del SVG; sin imagen, queda su círculo, como pide el diseño. ▶ Teñirla con GD quedó
+  SUSTITUIDO en §4.1.3 (29-09): máscaras de PALETA que se tiñen reescribiendo su `PLTE`, sin GD en producción.
 - **Por partes**: **R1a** el documento y los bloques con sus roles (los que usan los 27 de hoy); **R1b** los iconos; **R1c**
   los 27 pasan a la plantilla nueva sin cambiar su contenido. Cada una, al ojo en Mailpit, en claro y en oscuro.
 - **Compartido (aviso por buzón a plataforma)**: la hoja de correo en el paquete de la instancia y su clave en el manifiesto.
@@ -200,6 +200,31 @@ una sonda por tanda; los comerciales con su prueba de consentimiento y de «una 
 - **Falta**: la declaración de la hoja de PlayJump (`publico/instancia/css/correo.css`, empujada al repo de la instancia) en
   su manifiesto (plataforma, por buzón; en local, a mano y sin commitear); la R1c retira `vendor/mail/**` y `vendor/notifications` cuando los dos avisos internos (`Mail/`) pasen a la
   plantilla.
+
+#### 4.1.3 La R1b al detalle — los iconos, medida el 29-09 antes de codificar (del agente contra el objetivo; vetable)
+
+- **Medido, el diseño**: iconos Lucide como PNG del color de su rol (`o.icono(nombre, color)` → `…/correo/i/<color>/<nombre>.png`)
+  en el PIE (`map-pin` y `clock` a 18 px en su columna de 28; `phone`, `message-circle` y `mail` a 16 en línea), en la lista
+  (en su círculo), en los enlaces claros del resguardo (`map-pin`, `calendar-plus`), en «Responde a este correo» (`reply`) y,
+  opcional, en el aviso. Sin imagen, queda la columna o el círculo. Hoy el consumidor es el PIE; lo demás llega con la R2.
+- **La forma (sustituye el «teñir con GD» de §4.1)**: máscaras PNG de **PALETA** —256 entradas del mismo color, cada una con
+  su alfa en `tRNS`, el índice de cada píxel = su alfa—, generadas UNA vez del SVG de `resources/icons/lucide` (0.544.0, ISC,
+  integridad de npm, `#686`) con el Chromium del contenedor y versionadas en `resources/correo/iconos/` con su manifiesto
+  (nombre, lado 72 = 3× de 24, sha256). **Teñir = reescribir el trozo `PLTE` y su CRC**: PHP puro, sin GD ni Imagick en
+  producción (el «GD sin verificar» desaparece), sin escribir en disco. Medido: `map-pin` a 72 px, 2.190 B y 193 niveles de
+  alfa; teñida por `PLTE`, GD la abre y pinta `rgb(14,143,196)`, y el navegador la enseña.
+- **La ruta** `GET /correo/i/{v}/{color}/{nombre}.png` (futuro), como el píxel (`#797`): fuera de sesión, cookies y visitante,
+  sin limitador (el proxy de Gmail); `color` seis hex y `nombre` del manifiesto, o 404; `v` la versión del manifiesto (rompe
+  las cachés cuando cambian las máscaras; una `v` vieja se sirve igual: un correo ya enviado no se rompe). `image/png` con
+  `public, max-age=31536000, immutable`. No lleva nada de la persona: pedir un icono no es una apertura.
+- **El rol** `icono`: UNO para los dos modos (una imagen no cambia con el oscuro), ≥ 3:1 (WCAG 1.4.11) contra el fondo y el
+  sutil en claro y en oscuro. Medido: el apagado `#626A72` da 2,84 sobre el sutil oscuro; **`#737B83`**, el más parejo (≥ 3,63
+  en los cuatro). PlayJump, su `--icon-accent` `#0E8FC4` (≥ 3,1 en los cuatro). Los del círculo, con la R2.
+- **El pie**: la columna de 28 px y los iconos en línea del diseño (`filaI` y `enLinea`), con `alt=""` (el dato va en el texto).
+- **Guardas**: las máscaras cuadran con su manifiesto (sha256, lado, paleta con `tRNS`); el teñido cambia SOLO el `PLTE` y GD
+  la abre con el color pedido; la ruta da 404 fuera del manifiesto o del formato, sin `Set-Cookie` y con su caché; cada icono
+  que pinta la plantilla está en el manifiesto; el rol, a 3:1 en los cuatro fondos. Con su arnés.
+- **Compartido**: `routes/web.php` fuera del grupo de la fiesta (aviso previo a plataforma, en el buzón).
 
 ### 4.2 Los textos, editables desde el panel — pregunta del owner (29-09), análisis sin código
 
