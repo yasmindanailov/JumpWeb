@@ -50,7 +50,7 @@ export function useCalculadora({ pagina, textos, locale, owner = null }) {
     // `vuelta`: de dónde se retomó (hasta que se toque algo); `perdida`: su hora ya no estaba libre y se soltó.
     const e = reactive({
         borrador: { fila: pagina.filas[0]?.id ?? null, dia: null, hora: null, n: Number(pagina.textos.inicio?.personas) || 1, cal: 0, ...(retomado?.calculo ?? {}) },
-        precios: {}, cargoCalcetines: null, pendientes: 0, tocada: Boolean(retomado), abriendo: false, vuelta: retomado?.origen ?? null, perdida: false,
+        precios: {}, llegaron: [], cargoCalcetines: null, pendientes: 0, tocada: Boolean(retomado), abriendo: false, vuelta: retomado?.origen ?? null, perdida: false,
     });
 
     // Cada cambio de un cálculo tocado, al dispositivo (`recordar`): quien vuelve, lo encuentra como lo dejó.
@@ -125,7 +125,9 @@ export function useCalculadora({ pagina, textos, locale, owner = null }) {
         cartStore.setOwner(owner);
         cartStore.setLines(cartStore.restore(hoy).lines);
         arrancada = enCola(async () => {
-            e.precios = await cargarDiasDeFilas({ api, ids: pagina.filas.map((f) => f.id) });
+            const oferta = await cargarDiasDeFilas({ api, ids: pagina.filas.map((f) => f.id) });
+
+            Object.assign(e, { precios: oferta.dias, llegaron: oferta.llegaron });
             const b = e.borrador;
 
             // Un cálculo retomado cuyo día ya no se vende: sin día ni hora (quien llega elige otro).
@@ -140,11 +142,24 @@ export function useCalculadora({ pagina, textos, locale, owner = null }) {
         return arrancada;
     }
 
+    /**
+     * La demanda sin hueco (`#758`, `demanda.js`): la fila que el cliente mira, cuando TOCA la calculadora —no al arrancar
+     * ella sola al acercarse la pieza, que es pasar por la página—. Va tras `arrancar()`: con sus días ya llegados.
+     * ⚠️ Con `import()` y la fila tomada ANTES: estático, arrastraba el calendario del motor a la descarga de la página
+     * (+3,17 kB, §4.26); diferido, llega al primer toque y es el MISMO módulo —y reportero— que el de la compra.
+     */
+    const mirada = () => {
+        const fila = { id: e.borrador.fila, dias: e.precios[e.borrador.fila], llegaron: e.llegaron };
+
+        import('../compra/demanda.js').then((m) => m.informarDemanda(fila)).catch(() => {});
+    };
+
     /** Lo que la vista avisa que ha cambiado. */
     function cambiar(campo, valor) {
         const b = e.borrador;
 
-        arrancar();
+        // El `then` corre cuando `cambiar` ya ha escrito el borrador: informa la fila de DESPUÉS del cambio.
+        arrancar().then(mirada);
         // Tocado, deja de ser «el retomado»; con otro día u otra hora, el aviso de la perdida sobra.
         Object.assign(e, { tocada: true, vuelta: null, perdida: e.perdida && campo !== 'dia' && campo !== 'hora' });
 

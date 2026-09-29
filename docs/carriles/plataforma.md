@@ -3,7 +3,7 @@
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
-> **820–849** (dada de alta en `DECISIONES.md` el 27-09; centena `decisiones/800-899.md`) · Último usado: **`#845`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **820–849** (dada de alta en `DECISIONES.md` el 27-09; centena `decisiones/800-899.md`) · Último usado: **`#846`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#845`) · Actualizado: **2026-09-29**
 > (cierre de la noche: T4f ✅, `#792` en la isla ✅, T6g ✅ `#845` — la T6 entera; sigue lo nuevo del owner en Claude Design).
 > ⚠️ El techo de 32 KB aprieta a diario: **se muda, no se raspa** (es del owner; si aprieta tres veces seguidas,
@@ -49,21 +49,17 @@ Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas,en
 web»): el zip entra SOLO por `diseno/actualizar.py` (`#760`), el diseño se toma del mockup (`#767`) y se verifica una vez al final
 (`#768`). Después, **(4)** Bizum, Apple (entra) y el día liberado → material y revisión del owner (los datos, de playjump.es). Los
 correos del sistema y la puerta, del SPA, en paralelo.
-**Abierto, medido y sin hacer**: (a) ❗ del buzón del SPA (27-09, `#758`): la isla emite `availability_missing` como el cajón, con
-SUS funciones (`sidebar/missing.js`, `calendar.js::missingMonths`); (b) `sonda-portada` 13/14 («Reservar» de la isla tras
-«Míralo»; igual con el `HEAD` de control): investigar aparte; (c) la vuelta de Google con una excursión, sin verificar; (d) la T4
+**Abierto, medido y sin hacer** (el `#758` del SPA, HECHO el 29-09: `#846`, §4.26): (b) `sonda-portada` 13/14 («Reservar» de la
+isla tras «Míralo»; igual con el `HEAD` de control): investigar aparte; (c) la vuelta de Google con una excursión, sin verificar; (d) la T4
 sigue 🟦 por lo del owner: el MATERIAL de los vídeos (en LOCAL, una muestra WebM), su ojo sobre las voces y las promociones (T1
 🟦), y ❓ la línea Ómnibus. **Para iterar con el owner** (no ahora): la isla «muy sola» y el «Reservar» solo en la isla del
 móvil (A/B). La ISLA la repiensa él con Claude Design: no atar nada nuevo a ella.
 **Del owner, en PRODUCCIÓN**: el icono y el nivel de cada norma y las del brief que falten (calentamiento, espuma, volteretas
 dobles); el aviso de los calcetines, «se devuelve la señal» y el TRAMO DE EDAD de cada entrada (`#825`); `payment.marks` (en
 LOCAL, `bizum,visa,mastercard`). BD LOCAL con los valores de `#699`/`#761`.
-⚠️ **Trampas vivas**: (a) `sonda-isla` PAGA con `probe-card@` y rompe `sonda-cuenta` si corre antes: sus pedidos, a
-`sonda-compra@` entre las dos (`TESTING.md` §2.octies; hecho con los 4 de hoy); su «hasta las 15:26» es el reloj UTC de su
-Chromium, no un defecto; (b) el tracker está a ~15 B de su techo (16 KB): la próxima línea obliga a MUDAR algo a su spec;
-(c) `sonda-cuenta` monta «HOY» solo antes de las 20:00 del parque; (d) Vue 3.5 reevalúa un `computed` fuera del `try` de quien
-lo lee: se protege DENTRO (`seguro.js`, §4.13); (e) subir un techo de peso de la isla pide la base del `HEAD` construida aparte
-en un `git worktree` (enlazando `node_modules` y `vendor`) y medida con el cálculo del test (§4.24); (f) un texto de la isla que
+⚠️ **Trampas vivas** (las de `sonda-isla` que paga, `sonda-cuenta` antes de las 20:00 y la base de un techo de peso, mudadas a
+`TESTING.md` §2.octies el 29-09): (b) el tracker está a ~15 B de su techo (16 KB): la próxima línea obliga a MUDAR algo a su spec;
+(d) Vue 3.5 reevalúa un `computed` fuera del `try` de quien lo lee: se protege DENTRO (`seguro.js`, §4.13); (f) un texto de la isla que
 use la COMPRA tiene que estar en un grupo que la compra recibe (`mi_cuenta.*` no le llega: §4.24); (g) `isla/hoja/montar.js` NO
 importa nada compartido (`#841`) y la calculadora va a 186,08 de 187; (h) toda página nueva usa `video-hero` SIN `height` y entra
 en `sonda-primera-pantalla.mjs`; (i) tras tocar `instancias/playjump/publico/`, copiarlo a `public/instancia`.
@@ -152,8 +148,8 @@ hay formulario (`#839`); pasarlos a la reserva es dato del panel. Y:
 guardas 8 y 9) · `scripts/mutar-guarda8.sh` · `CHANGELOG.md` · `phpstan.neon` · `phpstan-baseline.neon` ·
 `eslint.config.js` · `eslint-suppressions.json` (la poda quien arregla) · `scripts/mutar-analisis-estatico.sh` ·
 **LA ISLA Y LA LANDING NUEVA** (`#681`, `#682`): la spec, la isla `resources/js/isla/**`, sus bancos y sondas
-(`scripts/banco-{isla,piezas,compra}*`, `scripts/pixel.mjs`, `scripts/sonda-{embudo,isla,cuenta,movimiento,isla-movimiento,banco-movimiento,isla-rendimiento,compra-directa}.mjs`,
-`scripts/sonda-cuenta-datos.php`, `scripts/mutar-{t5f,hijos-de-producto}.sh`), `sidebar/reanudar.js`,
+(`scripts/banco-{isla,piezas,compra}*`, `scripts/pixel.mjs`, `scripts/sonda-{embudo,isla,cuenta,movimiento,isla-movimiento,banco-movimiento,isla-rendimiento,compra-directa,demanda}.mjs`,
+`scripts/sonda-cuenta-datos.php`, `scripts/mutar-{t5f,hijos-de-producto,demanda-isla}.sh`), `sidebar/reanudar.js`,
 `sidebar/marca-compra.js`, `app/Http/Sidebar/PurchaseResume.php` y
 las vistas nuevas de `instancias/playjump/web/`; ⚠️ **el motor del cajón es del SPA**: se le avisa ANTES de tocarlo ·
 `StaticAnalysisGateTest` · `Tests\TestCase::be()` · **el token y el cajón empaquetado**, cuyos ficheros
@@ -202,6 +198,13 @@ dueño es el carril de la web/reseñas—) ·
   SSR rancio tras un arnés, las guardas de presupuesto que cambian el diseño, el juez de la hoja y el banco.
 
 ## Buzón
+
+### ❗ Para el SPA (emisor: plataforma, 2026-09-29) — tu `#758` en la isla, HECHO (`#846`, §4.26), y un defecto TUYO medido
+- La isla emite `availability_missing` con TUS `createMissingReporter` y `missingMonths`, sin copiarlas (`isla/compra/demanda.js`):
+  lo que el cliente MIRA (la compra al situar o cambiar; las calculadoras solo al tocarlas), si la oferta llegó, un reportero
+  por página. Si cambias su firma, avísame.
+- ❗ `OccupancyReport::missing()` (y el `missing` de los totales) no cruza con `analytics_sessions`: cuenta robots (`webdriver`,
+  las sondas) y personal, que el embudo y los experimentos excluyen. No lo toco; mi `sonda-demanda.mjs` borra los suyos.
 
 ### ❗ Para el SPA (emisor: plataforma, 2026-09-29) — tu hoja de correo (`correos-rediseno.md` §4.1): la puerta de `#769`
 - Sí, sin clave de otra forma ni `contrato` nuevo: `hojas.correo` en `instancia.json`, leída con `InstanceViews::hojas('correo')`
@@ -318,7 +321,7 @@ dueño es el carril de la web/reseñas—) ·
 - **SPA 27→29-09** (`#757`, `#792` —en la isla ✅, §4.24—, `#794`, C2/C2b/C3 `#795`→`#797` hasta 1.54.0, TP·3b `#793`, T3d):
   leídos y migrado; nada mío a medias. Su `#800`/`#801` (la hoja de correo), contestado arriba el 29-09.
 - **SPA 28-09** (la T3 de la analítica: los dos textos de mi hub de Ajustes; el aviso previo de la T3c·2): leído, nada mío a
-  medias ahí. Su `#758` (la isla emite `availability_missing`), SIN hacer: en retomar.
+  medias ahí. Su `#758` en la isla, HECHO (`#846`; mi aviso, arriba).
 - **SPA 25→27-09** (ESLint de la fiesta, `#74ddfa`, la T4a·3, el `body-state` —en `#785`—, F7, F8, su 1.44.0, `AntesDeVenir` con
   `?c=wa`, la puerta y `HonoreeWaivers`): atendido.
 - Retirados del 23 al 28-09 mis bloques que el SPA anotó como atendidos (de la T3 a la T5f, `#824`/`#825`): el detalle, en

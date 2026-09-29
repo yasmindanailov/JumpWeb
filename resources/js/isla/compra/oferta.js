@@ -9,16 +9,21 @@
 
 /**
  * Los días que se venden de cada fila, EN PARALELO: son peticiones independientes, y en cadena sumarían esperas
- * donde cabe una. Una fila que falla se queda sin días —se pinta apagada— en vez de tumbar la pantalla.
+ * donde cabe una. Una fila que falla se queda sin días —se pinta apagada— en vez de tumbar la pantalla, y FUERA de
+ * `llegaron`: es lo que separa «no hay días» de «no se supo» (la demanda sin hueco, `demanda.js`: una red caída no es
+ * un mes lleno).
  *
  * @param {{api: {get: Function}, ids: number[]}} deps
- * @returns {Promise<Record<number, Array<{date: string, price_cents: number, rate_key: string}>>>}
+ * @returns {Promise<{dias: Record<number, Array<{date: string, price_cents: number, rate_key: string}>>, llegaron: number[]}>}
  */
 export async function cargarDiasDeFilas({ api, ids }) {
     const unicos = [...new Set(Array.isArray(ids) ? ids : [])];
     const respuestas = await Promise.all(unicos.map((id) => api.get(`/availability/${id}/dates`)));
 
-    return Object.fromEntries(unicos.map((id, i) => [id, respuestas[i].ok ? (respuestas[i].data?.data ?? []) : []]));
+    return {
+        dias: Object.fromEntries(unicos.map((id, i) => [id, respuestas[i].ok ? (respuestas[i].data?.data ?? []) : []])),
+        llegaron: unicos.filter((id, i) => respuestas[i].ok),
+    };
 }
 
 /**

@@ -14,6 +14,7 @@ import { computed } from 'vue';
 import { api } from '../../sidebar/api.js';
 import { todayIso } from '../../sidebar/cart.js';
 import { calcetinDe, cargarDiasDeFilas, cargarFichas, cargarGrupos, horaDelMotor, horaQueCabe, primerDia } from './oferta.js';
+import { informarDemanda } from './demanda.js';
 import { borradorDeIntencion, borradorVacio } from './intencion.js';
 import { datosDeReserva, filasDeZona, pantallaCuando, respuestasDe } from './pantalla-cuando.js';
 import { campoDeEdad, eleccionesDe, menuElegido, packPorEdad, packsDeFiesta, pantallaCuandoFiesta } from './fiesta.js';
@@ -53,8 +54,12 @@ export function usePantallaCero({ flow, compra, enCola, textos }) {
         await resolverLinea();
     }
 
+    /** La demanda sin hueco (`#758`, `demanda.js`): la fila o el pack que la pantalla 0 enseña es el que el cliente mira. */
+    const mirada = () => informarDemanda({ id: compra.borrador.fila, dias: compra.precios[compra.borrador.fila], llegaron: compra.llegaron });
+
     /** La ficha de la fila (su complemento por cantidad) y sus horas. */
     async function cargarFila() {
+        mirada();
         catalogStore.select(compra.borrador.fila);
         await catalogStore.loadProduct({ api, id: compra.borrador.fila });
         await cargarHoras();
@@ -69,6 +74,7 @@ export function usePantallaCero({ flow, compra, enCola, textos }) {
         const b = compra.borrador;
         const ficha = compra.fichas[b.fila] ?? null;
 
+        mirada();
         if (! ficha) { compra.cargandoHoras = false; return; }
         catalogStore.select(b.fila);
         catalogStore.setProduct(ficha);
@@ -87,17 +93,17 @@ export function usePantallaCero({ flow, compra, enCola, textos }) {
      */
     async function situarFiesta(borrador) {
         compra.borrador = borrador;
-        Object.assign(compra, { precios: {}, fichas: {}, grupos: [], cargandoHoras: true });
+        Object.assign(compra, { precios: {}, llegaron: [], fichas: {}, grupos: [], cargandoHoras: true });
         const ids = catalogStore.products.filter((p) => p?.type === 'pack' && p.zone?.slug === borrador.zona).map((p) => p.id);
-        const [fichas, precios] = await Promise.all([cargarFichas({ api, ids }), cargarDiasDeFilas({ api, ids })]);
+        const [fichas, oferta] = await Promise.all([cargarFichas({ api, ids }), cargarDiasDeFilas({ api, ids })]);
 
-        Object.assign(compra, { fichas, precios });
+        Object.assign(compra, { fichas, precios: oferta.dias, llegaron: oferta.llegaron });
         const b = compra.borrador;
 
         // Un pack SIN edad (una excursión, T6c·3) no es una fiesta: se vende como las entradas, con los packs de su zona
         // por filas (`filasDeZona`), lo que pida al reservar (`#839`) y lo que ya traía elegido (la calculadora).
         if (packs.value.length === 0) {
-            return situar({ ...borradorVacio(), zona: b.zona, fila: b.fila, dia: b.dia, hora: b.hora, n: b.n ?? fichas[b.fila]?.min_quantity ?? 1 }, precios);
+            return situar({ ...borradorVacio(), zona: b.zona, fila: b.fila, dia: b.dia, hora: b.hora, n: b.n ?? fichas[b.fila]?.min_quantity ?? 1 }, oferta);
         }
         if (! fichas[b.fila]) b.fila = packs.value[0]?.id ?? b.fila;
         if (b.n == null) b.n = fichas[b.fila]?.min_quantity ?? 1;
@@ -106,18 +112,20 @@ export function usePantallaCero({ flow, compra, enCola, textos }) {
 
     /**
      * Sitúa la pantalla 0 en un borrador: los días de TODAS las filas de su zona, y con ellos el día y la fila. `cargados`:
-     * los días que ya trajo quien llama (la fiesta que resultó no serlo), para no pedirlos dos veces.
+     * la oferta que ya trajo quien llama (`{dias, llegaron}`: la fiesta que resultó no serlo), para no pedirla dos veces.
      */
     async function situar(borrador, cargados = null) {
         if (borrador.fiesta) return situarFiesta(borrador);
         compra.borrador = borrador;
-        compra.precios = {};
+        Object.assign(compra, { precios: {}, llegaron: [] });
         if (! borrador.zona) return;
         const filas = filasDeZona(catalogStore.products, borrador.zona);
 
         // Mientras llegan los días, las horas enseñan su hueco (el esqueleto del diseño): nada salta después.
         compra.cargandoHoras = true;
-        compra.precios = cargados ?? await cargarDiasDeFilas({ api, ids: filas.map((p) => p.id) });
+        const oferta = cargados ?? await cargarDiasDeFilas({ api, ids: filas.map((p) => p.id) });
+
+        Object.assign(compra, { precios: oferta.dias, llegaron: oferta.llegaron });
         const dias = compra.precios[borrador.fila] ?? [];
         if (! dias.some((d) => d.date === borrador.dia)) compra.borrador.dia = dias.some((d) => d.date === todayIso()) ? todayIso() : primerDia(dias);
         await cargarFila();

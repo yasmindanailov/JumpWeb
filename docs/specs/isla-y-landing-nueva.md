@@ -2290,6 +2290,35 @@ ANFITRIÓN). Las pruebas, clasificadas por su sujeto (`CONVENCIONES` §3.quater)
 - **Guardas**: `IllustrationKitTest` +2 (la poda pura y el comando sobre un `public/` propio, nunca el kit de la máquina);
   un arnés de un solo uso, **6/6** muerden. Las de huérfanos, ranuras, cabecera y anfitriones, verdes.
 
+### 4.26 La demanda sin hueco en la isla (`#758` del SPA; `#846`)
+
+`[DECIDIDO owner]` 27-09 (`#758`): la demanda sin hueco se mide desde ya; el cajón la emite al abrir un producto y la isla,
+plataforma (buzón del SPA). **Medido antes** (29-09): la isla no emitía nada. Pide los días de TODAS las filas de una zona a
+la vez (la pantalla 0 y las dos calculadoras), las calculadoras arrancan solas al acercarse su pieza, y el cuadro
+(`OccupancyReport::missing()`) cuenta FILAS.
+- **La regla** `[DECIDIDO]` 29-09 (`#846`): `compra/demanda.js`, con `sidebar/missing.js` y `calendar.js::missingMonths` del
+  SPA, sin copiarlas. Informa la fila que el cliente MIRA: en la compra, la situada o cambiada (fila, o pack por la edad); en
+  las calculadoras, al TOCARLAS, nunca al arrancar solas (pasar por la página no es mirar un producto). Solo si su oferta
+  LLEGÓ: `oferta.js::cargarDiasDeFilas` devuelve `{dias, llegaron}` (lo que se pinta no cambia: la fila que falla sigue
+  apagada). Y con UN reportero por página: calculadora y compra comparten el módulo, así que «Reservar y pagar» no cuenta dos
+  veces. Las calculadoras lo piden con `import()` y toman la fila ANTES de pedirlo.
+- **Peso** (el cálculo de `SidebarBundleBudgetTest`; base: el build del gate sobre `28dfdf15`): estático, `missing.js`
+  arrastraba el calendario del motor a las calculadoras (186,08 → 189,25). Con `import()`: calculadora 187,80 y la de la
+  fiesta 194,26 (1,17 son el `preload-helper` de Vite, que la página ya baja con la isla y el cargador del cajón; el trozo de
+  la demanda, 3,05, solo al primer toque), la compra 164,80 → 165,44. Techos: 188, 195 y 166.
+- **Guardas**: `compra/demanda.test.js` (11: la regla, el reportero de la página y las tres superficies con la API doblada
+  en `fetch`) y `oferta.test.js`. `scripts/mutar-demanda-isla.sh`, **18/18** muerden, tras cazar uno que sobrevivía (la
+  prueba no miraba la fila justo después de cambiarla). **En vivo**, `scripts/sonda-demanda.mjs`, **11/11 a 390 y 1280**
+  contra la BD, en `/colegios` (las excursiones se venden desde octubre): llegar, ninguno (control: su `page_viewed` llega);
+  tocar, `395|2026-09`; otra duración, `396|2026-09`; la compra con la misma fila, ninguno (control: `drawer_opened`); otra
+  visita con la compra primero, cuenta, y la calculadora después, no. Regresión: `sonda-colegios` 56, `sonda-entradas` 89 y
+  `sonda-cumpleanos` 20, en verde.
+- ⚠️ **Del SPA, medido y sin tocar**: `missing()` no cruza con la sesión, así que cuenta robots (`webdriver`) y personal, que
+  el embudo y los experimentos excluyen. Por eso la sonda borra al terminar los suyos. Avisado en el buzón.
+- **No verificado por prueba**: tomar la fila antes del `import()` (un toque mientras llega el módulo no cambia lo que se
+  informa). Con el módulo ya cargado, en node no se observa.
+- **Estado ✅**: sin cambio visible, así que no hay ojo del owner que pedir.
+
 ## 5. Impacto en invariantes
 
 - `PAY-*`: solo si entra Bizum; entonces `VERIFY_CONC=1` y la lista del `CRITICAL_RE`.

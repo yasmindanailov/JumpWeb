@@ -36,7 +36,7 @@ export function useCalculadoraFiesta({ pagina, textos, locale, owner = null }) {
     const packs = pagina.packs ?? [];
     const e = reactive({
         borrador: { edad: null, n: packs[0]?.min_quantity ?? 1, dia: null, hora: null, menu: null, horaExtra: false },
-        precios: {}, grupos: null, pendientes: 0, tocada: false, abriendo: false,
+        precios: {}, llegaron: [], grupos: null, pendientes: 0, tocada: false, abriendo: false,
     });
 
     let cola = Promise.resolve();
@@ -87,7 +87,9 @@ export function useCalculadoraFiesta({ pagina, textos, locale, owner = null }) {
         cartStore.setOwner(owner);
         cartStore.setLines(cartStore.restore(hoy).lines);
         arrancada = enCola(async () => {
-            e.precios = await cargarDiasDeFilas({ api, ids: packs.map((p) => p.id) });
+            const oferta = await cargarDiasDeFilas({ api, ids: packs.map((p) => p.id) });
+
+            Object.assign(e, { precios: oferta.dias, llegaron: oferta.llegaron });
             await cargarHoras();
         });
 
@@ -111,11 +113,24 @@ export function useCalculadoraFiesta({ pagina, textos, locale, owner = null }) {
         return enCola(cargarHoras);
     }
 
+    /**
+     * La demanda sin hueco (`#758`, `demanda.js`): el pack cuyos días enseña (el de la edad o, sin ella, el primero), cuando
+     * el cliente TOCA la calculadora —no al arrancar ella sola al acercarse la pieza—. Con `import()` y el pack tomado
+     * ANTES, como la de entradas (`useCalculadora.js`: estático, arrastraba el calendario del motor a la página).
+     */
+    const mirada = () => {
+        const p = pack() ?? packs[0];
+        const fila = { id: p?.id, dias: e.precios[p?.id], llegaron: e.llegaron };
+
+        import('../compra/demanda.js').then((m) => m.informarDemanda(fila)).catch(() => {});
+    };
+
     /** Lo que la vista avisa que ha cambiado. */
     function cambiar(campo, valor) {
         const b = e.borrador;
 
-        arrancar();
+        // El `then` corre cuando `cambiar` ya ha escrito el borrador: informa el pack de DESPUÉS del cambio (la edad).
+        arrancar().then(mirada);
         e.tocada = true;
         if (campo === 'edad') return cambiarEdad(valor);
         if (campo === 'n') { b.n = valor; return enCola(cargarHoras); }

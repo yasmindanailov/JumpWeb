@@ -373,11 +373,19 @@ son de cualquiera que mida, no de un carril.
   con prefijo propio, borrado al empezar y en el `finally`, y las franjas que tuvo que crear, apuntadas y borradas.
 - **`sonda-cuenta.mjs` toca la cuenta de pruebas y la deja como estaba** (mudada del carril de plataforma el 26-09): le
   RENUEVA el carné (es lo que prueba), le declara y quita hijos, y cambia y DESHACE datos de su cuenta (teléfono,
-  encuesta, un correo pendiente; la contraseña, a la misma). No la uses para nada que dependa de su QR.
+  encuesta, un correo pendiente; la contraseña, a la misma). No la uses para nada que dependa de su QR. Monta «HOY» solo
+  antes de las 20:00 del parque (mudado del carril de plataforma el 29-09).
 - ⚠️ **Pero `sonda-isla.mjs` PAGA de verdad con la MISMA cuenta de pruebas** (26-09, Z3): sus pedidos no llevan el
   prefijo y se quedan, y uno de mañana pasa a ser «Tu próxima reserva» —`sonda-cuenta.mjs`, 22 fallos que no eran del
   código—. Tras una corrida de la compra, sus pedidos se pasan a `sonda-compra@jumpweb.test` (tinker, solo en local, con
-  el recuento esperado por fila) antes de la de la cuenta.
+  el recuento esperado por fila) antes de la de la cuenta. Su «hasta las 15:26» es el reloj UTC de su Chromium, no un
+  defecto (mudado del carril el 29-09).
+- **Subir un techo de peso de la isla pide la BASE medida con el cálculo del test** (mudada del carril de plataforma el
+  29-09; `SidebarBundleBudgetTest::descargaDe()`): el `HEAD` construido aparte en un `git worktree` (enlazando
+  `node_modules` y `vendor`), o el build que el gate acaba de hacer sobre `HEAD` si se mide ANTES de tocar el JS
+  (`isla-y-landing-nueva.md` §4.24 y §4.26). ⚠️ Importar código del motor en una ENTRADA de página reagrupa los trozos y
+  arrastra lo que viaja con él (`#846`: `missing.js` traía el calendario, +3,17 kB); con `import()` no, pero el cálculo
+  por entrada suma el `preload-helper` de Vite (1,17 kB) aunque la página ya lo baje con otra entrada.
 - **La vuelta de Google, SIN Google** (27-09, `#785`, `scripts/sonda-compra-directa.mjs`): la ida es `/auth/google`
   (no `/auth/google/redirect`: ése es el NOMBRE de la ruta; con el patrón equivocado la sonda salió a Google de verdad) y
   se intercepta devolviendo un 302 a su `next`. La cuenta EXISTENTE se simula entrando por la API ANTES de pulsar —desde

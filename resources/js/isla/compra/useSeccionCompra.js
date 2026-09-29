@@ -61,7 +61,7 @@ export function useSeccionCompra(props) {
      * reabre —`desdeHoy`: tal como se abrió, desde «Reservar para hoy» o no—.
      */
     const compra = reactive({
-        borrador: borradorDeIntencion(null, []), precios: {}, fichas: {}, grupos: [], cargandoHoras: false, intencion: null,
+        borrador: borradorDeIntencion(null, []), precios: {}, llegaron: [], fichas: {}, grupos: [], cargandoHoras: false, intencion: null,
         paso: 'cuando', aviso: '', ocupado: null, pedido: null, pagado: null, dir: null, cercanas: [], horaNueva: null,
         preparando: false, sinDatos: false, alEntrar: false, desde: null, desdeHoy: false,
     });

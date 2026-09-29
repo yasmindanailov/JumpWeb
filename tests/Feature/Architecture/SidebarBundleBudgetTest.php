@@ -961,7 +961,10 @@ class SidebarBundleBudgetTest extends TestCase
     // `#792` en la isla (§4.24): la fecha de nacimiento del titular en «Tus datos», opcional, con el control de la de un hijo
     // (`ui/fecha.js`, mudado de `cuenta/hijos.js` para no arrastrar los menores a este trozo). Medido 163,94 → 164,80 (base:
     // el `HEAD` de `#844` construido aparte en un `git worktree`, el mismo cálculo). El techo, a 165.
-    private const ISLA_COMPRA_CHUNK_MAX_KB = 165;
+    // `#758` en la isla (§4.26): la demanda sin hueco —`compra/demanda.js`, su trozo de 0,31 que comparte con las
+    // calculadoras, y las filas cuya oferta LLEGÓ—; `missing.js` y el calendario ya viajan con el motor. Medido 164,80 →
+    // 165,44 (base: el build del gate sobre `28dfdf15`, el mismo cálculo). El techo, a 166.
+    private const ISLA_COMPRA_CHUNK_MAX_KB = 166;
 
     // T4d·4 (`specs/isla-y-landing-nueva.md` §4.12): la CALCULADORA de una página, entrada propia que la página pide
     // (`scripts` de `<x-pagina>`) y se monta al acercarse su pieza. Su DESCARGA entera, como la mide el navegador que
@@ -984,12 +987,17 @@ class SidebarBundleBudgetTest extends TestCase
     // `#844` (owner): el botón de ancho completo que no cabe parte su texto, y su caja de texto se come el aire lateral antes
     // (`margenTextoBoton`, en `ui/estilos.js`: su botón «Reservar y pagar la señal» sacaba la página de lado a 360). Medido
     // 185,80 → 186,08 (base: el `HEAD` de `c0bd32b8`), ya con las dos funciones fundidas en una. El techo, a 187.
-    private const CALCULADORA_MAX_KB = 187;
+    // `#758` en la isla (§4.26): al TOCARLA informa la demanda sin hueco, con `import()` de `compra/demanda.js`. Estático
+    // arrastraba `sidebar/missing.js` y con él el calendario del motor: 186,08 → 189,25. Diferido, 187,80 (base: el build
+    // del gate sobre `28dfdf15`): 1,17 son el `preload-helper` de Vite, que la página ya baja con la isla y el cargador del
+    // cajón; los 3,05 del trozo de la demanda, solo al primer toque. El techo, a 188.
+    private const CALCULADORA_MAX_KB = 188;
 
     // La calculadora de la FIESTA (T6b·3, `#836`): su entrada propia, con lo que comparte con la de entradas (Vue, Pinia,
     // los stores de la oferta, el calendario y sus piezas) y lo suyo (la vista, el composable y `FilaMejora`). Medido al
     // nacer: 191,87 (con la de entradas en 183: trae además la regla de la edad de `compra/fiesta.js`). El techo, a 193.
-    private const CALCULADORA_FIESTA_MAX_KB = 193;
+    // `#758` (§4.26): igual que la de entradas, con `import()`. Medido 192,55 → 194,26 (estático, 195,72). El techo, a 195.
+    private const CALCULADORA_FIESTA_MAX_KB = 195;
 
     // La HOJA para dirección de colegios (T6c·4b): escribe las cifras del grupo con la línea del servidor (`api.js`,
     // `leerCalculo`, los formatos de la compra). Sin Vue ni motor. Medida al nacer: 14,98. El techo, a 16.

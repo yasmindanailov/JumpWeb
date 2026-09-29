@@ -17,19 +17,21 @@ describe('los días de las filas', () => {
             },
         };
 
-        const dias = await cargarDiasDeFilas({ api, ids: [100, 101, 100] });
+        const { dias, llegaron } = await cargarDiasDeFilas({ api, ids: [100, 101, 100] });
 
         assert.deepEqual(pedidas, ['/availability/100/dates', '/availability/101/dates']);
         assert.equal(dias[101][0].price_cents, 800);
+        assert.deepEqual(llegaron, [100, 101]);
     });
 
-    test('una fila que falla se queda sin días, y las demás siguen', async () => {
+    test('una fila que falla se queda sin días —y fuera de las que llegaron—, y las demás siguen', async () => {
         const api = { get: async (ruta) => (ruta.includes('101') ? { ok: false } : { ok: true, data: { data: [{ date: '2026-09-25' }] } }) };
 
-        const dias = await cargarDiasDeFilas({ api, ids: [100, 101] });
+        const { dias, llegaron } = await cargarDiasDeFilas({ api, ids: [100, 101] });
 
         assert.equal(dias[100].length, 1);
-        assert.deepEqual(dias[101], []);
+        assert.deepEqual(dias[101], [], 'se pinta apagada, como una sin días');
+        assert.deepEqual(llegaron, [100], 'pero «no se supo» no es «no hay días»: la demanda sin hueco los separa (`#758`)');
         assert.equal(primerDia(dias[100]), '2026-09-25');
         assert.equal(primerDia(dias[101]), null);
     });
