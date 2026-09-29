@@ -291,7 +291,7 @@
        No son tiempos de respuesta a un gesto, así que no compiten con los siete de arriba. Cada
        uno tiene su token para que una instalación pueda calmarlos sin reescribir `@keyframes`. */
     --dur-invite: 4.6s;   /* el latido que invita a descubrir el CTA doble (2c·7) */
-    --dur-cinta: 34s;     /* AMBIENTAL · la cinta `C3`: «en la web se mueve despacio» */
+    /* ⚠️ `--dur-cinta` se fue con la cinta `C3` en la T6f (`#843`): su única pantalla era `/servicios` de la web vieja. */
     --dur-switch: 3.4s;   /* el ciclo del interruptor del titular. Es el número del artboard (6d) */
 
     /* ⚠️ **Y el interruptor YA NO es un bucle**: salta este número de veces y se queda encendido
@@ -702,63 +702,6 @@
 .svc-hero__jump:hover {
   background: var(--fg); color: var(--bg); border-color: var(--fg);
 }
-
-/* ---------- marquee (títulos de los servicios) ---------- */
-/* ══ C3 · LA CINTA ═════════════════════════════════════════════════════════════════════════════
-   «La banda inferior del mural: rótulo sobre tinta, girada, cruzando la página de lado a lado. En
-   la web se mueve despacio.» Sustituye a la marquesina heredada del cliente antiguo.
-
-   ⚠️⚠️ **Aquí vivía `.svc-marquee`, y su separador era el motivo «foam» del cliente ANTIGUO**
-   —13 px, radio 3,5, girado 22°— **copiado como geometría en vez de con la clase `.jj-block`**, que
-   es por lo que sobrevivió al barrido que retiró aquélla. *Un motivo copiado a mano no aparece
-   buscando su nombre.* Ahora el separador es el punto de color de su `C3`.
-
-   ⚠️ **Su nota dice «girada 2°» y su marcado usa −2,4°**: se toma el marcado, que es lo que se ve.
-   Es la enésima contradicción medida de este artboard y va anotada, no corregida en silencio.
-
-   ⚠️⚠️ **El ancho del 120 % con `margin-left: -10%` NO es adorno: es lo que hace posible el giro.**
-   Una banda del ancho exacto de la ventana, al girarse, deja **dos cuñas de papel** en las esquinas
-   superiores e inferiores. Sus dos números resuelven eso, y el recorte lo pone el envoltorio —
-   NUNCA `overflow-x` en `html`/`body`, que es lo que `#226` demostró que **rompe todos los
-   `sticky`** del sitio. */
-/* ⚠️⚠️ **El alto extra NO es aire: es GEOMETRÍA, y sin él la cinta se recorta a sí misma.** Al
-   girar, el interior sobresale por arriba y por abajo `½ · ancho · sen(giro)`, y `overflow: hidden`
-   se lo lleva: medido antes de ponerlo, **8 elementos cortados y el peor a 40,5 px** — el rótulo de
-   los extremos entraba partido por el canto de la banda.
-   ▶ El número sale de la fórmula, no del ojo: el interior mide el 120 % del ancho, así que por lado
-   son `0,6 · 100vw · sen(2,4°) = 2,51vw`. Va **2,6vw**, con el margen justo para el redondeo. */
-.brand-band { overflow: hidden; padding-block: 2.6vw; }
-.brand-band__inner {
-  width: 120%; margin-left: -10%;          /* suyos, al dígito */
-  background: var(--paper-fg);
-  padding: var(--sp-14) 0;                          /* suyo */
-  overflow: hidden;
-  transform: rotate(-2.4deg);               /* suyo (su nota dice 2°) */
-}
-.brand-band__track {
-  display: flex; align-items: center; gap: 26px;   /* su gap */
-  width: max-content; padding-left: 24px;          /* su sangrado */
-  animation: brandBand var(--dur-cinta) linear infinite;
-}
-.brand-band__item {
-  font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
-  font-size: clamp(18px, 2.4vw, 26px);      /* su talla arriba; abajo, la del teléfono */
-  letter-spacing: -0.01em; text-transform: uppercase; white-space: nowrap;
-  color: var(--paper-bg);
-}
-/* Su cinta alterna un rótulo en amarillo. Aquí el número de ítems lo manda la BD, así que la
-   alternancia va por posición: los ítems son los hijos impares (1, 3, 5…) y los puntos los pares. */
-.brand-band__item:nth-child(4n + 3) { color: var(--strip-3); }
-.brand-band__dot {
-  width: 12px; height: 12px; border-radius: 50%; flex: 0 0 auto;   /* suyos */
-  background: var(--strip-2);
-}
-.brand-band__dot:nth-child(4n) { background: var(--strip-1); }
-@keyframes brandBand { to { transform: translateX(-50%); } }
-/* ⚠️ El reposo NO se escribe aquí dentro: sin movimiento la cinta se queda en su fotograma 0, que
-   es el estado por defecto. Es la lección de `#280` —el reposo de una pieza no puede vivir solo
-   dentro de una excepción de accesibilidad—, y aquí se cumple sin escribir nada. */
-@media (prefers-reduced-motion: reduce) { .brand-band__track { animation: none; } }
 
 /* ---------- átomos compartidos ---------- */
 .svc-cta {
@@ -3119,21 +3062,6 @@ body[data-has-hero] { --cierre-runway: max(420px, 75vh); }
 .reserve__box--jugando .reserve__body p { opacity: 0; }
 .reserve__box--jugando .reserve__actions { opacity: 0; transform: translateY(-10px); pointer-events: none; }
 
-/* ── EL TAG DE LA CIUDAD ───────────────────────────────────────────────────────────────────────
-   Una pieza de marca girada en la esquina. El producto pone el hueco; el dibujo lo trae el
-   paquete de instalación en `--deco-tag` (`INSTALACION-CLIENTE.md` §4.e).
-   ⚠️ Aquí NO hace falta el truco de la máscara transparente que sí necesitan las manchas del menú:
-   con `background-image: none` no se pinta nada, porque este hueco no lleva color de fondo. */
-.reserve__tag {
-    position: absolute; z-index: 4; pointer-events: none;
-    right: clamp(24px, 4vw, 56px); bottom: clamp(20px, 3vw, 40px);
-    width: clamp(72px, 8vw, 108px); aspect-ratio: 377 / 197;
-    background-image: var(--deco-tag); background-size: contain;
-    background-repeat: no-repeat; background-position: center;
-    transform: rotate(-7deg);
-    filter: drop-shadow(0 8px 20px color-mix(in srgb, var(--paper-fg) 45%, transparent));
-}
-
 /* El recorrido, al FINAL del documento. Es lo que da scroll para que la tarjeta acabe de crecer
    con el pie ya pasado por detrás. */
 .reserve__runway { height: var(--cierre-runway); }
@@ -3408,8 +3336,6 @@ body[data-has-hero].nav--live .hero__pair-slot {
 .hero--full .hero__stage-content { justify-content: center; align-items: center; text-align: center; }
 /* Mantén el placeholder como FALLBACK detrás del vídeo: si el vídeo no carga, se ve el fondo. */
 .hero--full .hero__stage[data-has-video="true"] .hero__stage-placeholder { display: block; }
-/* Vídeo de fondo del hero (placeholder): cubre el escenario, bajo el velo y el texto. */
-.hero__video { position: absolute; inset: 0; z-index: 2; width: 100%; height: 100%; object-fit: cover; }
 /* ⚠️ En móvil solo cambian los VALORES, no las reglas — y eso es la prueba de que el diseño
    está en el sitio correcto. Antes aquí había un `height: 80vh` y un `padding-top: 69px` que
    sobreescribían la estructura; ahora los dos estados se ajustan moviendo cuatro tokens. */
@@ -6878,7 +6804,7 @@ body[data-has-hero].nav--live .nav:not(.nav--hidden) .nav__brand-logo--inline {
        EXACTAMENTE como estaba antes de generalizarla — 55 % de tinta × 0.2 = el 11 % que tenía
        horneado. Generalizar no puede cambiar lo que ya se ve. */
     --trama: 0.2;
-    --trama-fade: 0.55;   /* A2 · la variante que se apaga; suya al dígito */
+    /* ⚠️ `--trama-fade` se fue con su pieza (A2) en la T6f (`#843`): la pintaba solo `/normas` de la web vieja. */
     /* ⚠️ `--spray` se fue con su pieza en `#535`: la niebla A5 perdió su única pantalla al retirarse
        el mapa de `/contacto`. Un token sin consumidor deja de vigilar nada y encima invita a
        reintroducir la pieza sin decidirlo (la regla que `#550` aplicó a `--fs-9`). */
@@ -6902,22 +6828,8 @@ body[data-has-hero].nav--live .nav:not(.nav--hidden) .nav__brand-logo--inline {
    (2 · 2,3 · 14×14 · al 50 % · media altura) y vuelve en cuanto haya una pantalla que la pida —
    *una pieza nace en el MISMO cambio que su consumidor*. */
 
-/* ── A2 · TRAMA QUE SE APAGA ───────────────────────────────────────────────────────────────────
-   Puntos más gordos y más juntos (2,2 · 2,5 · 15×15) que entran por una esquina y desaparecen.
-   ⚠️ **Él lo hace TAPANDO con el color del papel; aquí es una MÁSCARA de verdad**, y no es purismo:
-   su versión solo funciona si el fondo es exactamente ese papel, y esto tiene que servir sobre
-   cualquier superficie. Su ángulo —115°— y su parada —74 %— se conservan. */
-.grain--fade {
-    background-image: radial-gradient(circle, color-mix(in srgb, var(--paper-fg) 55%, transparent) 2.2px, transparent 2.5px);
-    background-size: 15px 15px;
-    opacity: var(--trama-fade);
-    /* ⚠️ La parada es PERILLA porque su `74 %` es para un tile decorativo sin texto. Sobre una
-       tarjeta con párrafo, a 74 % los puntos llegan debajo de la letra — y eso incumple SU regla
-       02 («la pintura nunca va debajo de un párrafo»). Su nota de A2 y su regla 02 se contradicen,
-       y aquí manda la regla: quien coloque baja la parada hasta que el texto quede limpio. */
-    -webkit-mask-image: linear-gradient(115deg, #000, transparent var(--trama-fade-stop, 74%));
-    mask-image: linear-gradient(115deg, #000, transparent var(--trama-fade-stop, 74%));
-}
+/* ── A2 · TRAMA QUE SE APAGA · RETIRADA EN LA T6f (`#843`) ─────────────────────────────────────────
+   Su único consumidor era la cabecera de `/normas` de la web vieja, que se fue con ella. */
 
 /* ── A5 · NIEBLA DE SPRAY · RETIRADA EN `#535` ─────────────────────────────────────────────────
    ⚠️ Tres halos difusos, sin borde. Su nota decía «versión suave para fondos claros: formularios

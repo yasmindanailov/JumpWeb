@@ -83,10 +83,13 @@ class UsedTokenIsDeclaredTest extends TestCase
      *
      * Misma disciplina que la lista de arriba: **solo encoge**, y cada entrada tiene que seguir
      * teniendo sujeto (usarse sin fallback y no estar declarada en el repo).
+     * ❗ **Y encogió a cero en la T6f** (`#843`): `--deco-tag` lo leía solo `.reserve__tag`, el tag de la
+     * ciudad de la portada vieja de PlayJump, que se fue con ella. La lista se queda para el siguiente
+     * token que declare un paquete.
      *
      * @var list<string>
      */
-    private const DECLARED_BY_INSTALLATION = ['--deco-tag'];
+    private const DECLARED_BY_INSTALLATION = [];
 
     /** @return array<string, list<string>> token → hojas que lo usan sin fallback */
     private function usedWithoutFallback(): array
@@ -241,16 +244,16 @@ class UsedTokenIsDeclaredTest extends TestCase
             $declaradosEnElRepo = array_merge($declaradosEnElRepo, $m[1]);
         }
 
-        foreach (self::DECLARED_BY_INSTALLATION as $token) {
-            $this->assertContains(
-                $token, $usados,
-                "`{$token}` ya no se usa sin fallback: bórralo de DECLARED_BY_INSTALLATION — una excepción sin sujeto no vigila nada.",
-            );
-            $this->assertNotContains(
-                $token, $declaradosEnElRepo,
-                "`{$token}` lo declara ya una hoja DEL REPO: bórralo de la lista, que solo encoge.",
-            );
-        }
+        // Por CONJUNTOS y no en un bucle: con la lista vacía (T6f, `#843`) un bucle no afirmaba nada y la
+        // guarda pasaba sin mirar; así afirma siempre, y el mensaje nombra cada entrada que sobra.
+        $sinSujeto = array_values(array_diff(self::DECLARED_BY_INSTALLATION, $usados));
+        $this->assertSame([], $sinSujeto,
+            'ya no se usan sin fallback: '.implode(', ', $sinSujeto).' — bórralos de DECLARED_BY_INSTALLATION: una excepción sin sujeto no vigila nada.',
+        );
+        $delRepo = array_values(array_intersect(self::DECLARED_BY_INSTALLATION, $declaradosEnElRepo));
+        $this->assertSame([], $delRepo,
+            'los declara ya una hoja DEL REPO: '.implode(', ', $delRepo).' — bórralos de la lista, que solo encoge.',
+        );
     }
 
     public function test_the_exception_list_only_shrinks(): void

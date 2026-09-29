@@ -201,60 +201,22 @@ class InstanceViews
      *
      * ▶ **El día que el material se mude con las vistas (T3–T5), esta lista se vacía.** Una entrada sin
      * sujeto en el paquete es deuda que hay que ver.
+     * ❗ **Desde la T6f** (`#843`, `isla-y-landing-nueva.md` §4.22) sus 30 piezas se quedaron sin sujeto: nombraban TODAS una
+     * de las ocho vistas de la vía B que el paquete de PlayJump retiró. Las **25 clases de CSS se podaron** en el mismo cambio
+     * (lo que las guardas de huérfanos declararon muerto al quitarlas de aquí). ⚠️ Quedan las **cinco RANURAS del kit**, y a
+     * sabiendas: el kit es un artefacto de la instalación (no viaja en ningún repo) que el despliegue valida contra
+     * `IllustrationKit::SLOTS` (guarda 7), así que quitarlas obliga a regenerar el kit de producción. Se van con el kit
+     * ENTERO y el mural en la **T6g**, en un solo corte. La lista se queda, y las guardas la siguen leyendo, para la siguiente
+     * instalación que vista una vista del contrato por la vía B.
      *
      * @var array<string, string> pieza (clase CSS de la fachada, o ranura del kit) => quién la consume
      */
     public const MATERIAL_CONSUMIDO_POR_LA_INSTANCIA = [
-        'grain--fade' => 'web/normas.blade.php · la trama que se apaga, en la cabecera de /normas (`#655`)',
-        // ⚠️ `.trio` y `.trio-stand` siguen teniendo consumidor en el producto (la sección 04 de la
-        // portada), así que solo el MODIFICADOR de la página se queda sin sujeto: el trío de
-        // `/cumpleanos` va a la derecha del titular y a escala 0,8, y eso solo lo pide esa página.
-        'trio--page' => 'web/cumpleanos.blade.php · la colocación del trío en la página (`#659`)',
-        // ⚠️⚠️ Aquí la familia ENTERA se queda sin sujeto en el producto: la cinta `C3` solo la pintaba
-        // `/servicios`, y se va con ella (`#660`). Se declaran las CINCO clases, no la familia: las
-        // guardas de huérfanos miran clase a clase, y con solo el bloque sus cuatro hijos seguían
-        // saliendo huérfanos (medido: el test los nombró uno a uno).
-        'brand-band' => 'web/servicios.blade.php · la cinta C3, la única pantalla que la pinta (`#660`)',
-        'brand-band__inner' => 'web/servicios.blade.php · el recorte de la cinta C3 (`#660`)',
-        'brand-band__track' => 'web/servicios.blade.php · el carril que desplaza la cinta C3 (`#660`)',
-        'brand-band__item' => 'web/servicios.blade.php · cada título dentro de la cinta C3 (`#660`)',
-        'brand-band__dot' => 'web/servicios.blade.php · el punto separador de la cinta C3 (`#660`)',
-        'slot-ico-altura' => 'web/normas.blade.php · el icono de «La altura, de un vistazo» (`#655`)',
-        'slot-ico-saltador' => 'web/normas.blade.php · el icono del grupo «Mientras saltas» (`#655`)',
-        // ⚠️⚠️ **LA PORTADA** (`#666`). De las 208 clases que se quedaron sin consumidor al mudarla
-        // (`#665`), las guardas del producto ven exactamente CUATRO piezas: el modificador del trío
-        // —`.trio` y `.trio-stand` las emite el COMPONENTE, que es del producto, así que conservan
-        // su sujeto— y las tres ranuras del kit que solo pintaba la portada. Las otras 207 son CSS y
-        // se van con la **T2c** (`instancia-y-landing-fuera.md` §4.6): esta lista mira pieza a pieza
-        // lo que alguien declaró, no la hoja entera.
-        'trio--events' => 'web/portada.blade.php · el trío junto al titular de la sección 04 (`#666`)',
-        'slot-dudas' => 'web/portada.blade.php · la mancha del lockup de «Dudas» (`#666`)',
-        'slot-resenas' => 'web/portada.blade.php · la mancha detrás de la tarjeta de opinión (`#666`)',
-        'slot-ico-calcetines' => 'web/portada.blade.php · el icono del aviso de los calcetines (`#666`)',
-        /*
-         * **LAS DIECISIETE DE LA T2c** (`#667`), y son POCAS a propósito: `#665` esperaba 208 y la
-         * medida con el anfitrión real dio éstas. No son deuda que crezca — son las piezas que el
-         * producto NO pinta en su portada mínima: el arte, el vídeo del cliente y el recorte de la
-         * reseña. ⚠️ Su CSS sigue en `public/css/` hasta que la **vía A** se lleve las hojas con las
-         * páginas (`instancia-y-landing-fuera.md` §3), y las vigila `LandingCssHasNoOrphansTest`.
-         */
-        'hero__video' => 'web/portada.blade.php · el vídeo del hero, que es MATERIAL del cliente (`#663`)',
-        'hero__stage-label' => 'web/portada.blade.php · el rótulo del vídeo del hero (`#667`)',
-        'before__device' => 'web/portada.blade.php · el marco del teléfono de la sección 05 (`#667`)',
-        'before__ear' => 'web/portada.blade.php · el auricular del teléfono (`#667`)',
-        'before__chin' => 'web/portada.blade.php · la barbilla del teléfono (`#667`)',
-        'before__i--sock' => 'web/portada.blade.php · la pegatina con el icono de calcetines (`#667`)',
-        'rev__mancha' => 'web/portada.blade.php · la mancha detrás de la tarjeta de opinión (`#667`)',
-        'rev__text--clamp' => 'web/portada.blade.php · el recorte de la reseña, que se mide (`#667`)',
-        'rev__text--open' => 'web/portada.blade.php · la reseña abierta por «Ver más» (`#667`)',
-        'rev__toggle' => 'web/portada.blade.php · el propio «Ver más» de la reseña (`#667`)',
-        'sec-head__lockup' => 'web/portada.blade.php · el lockup de la cabecera de «Dudas» (`#667`)',
-        'sec-head__mancha' => 'web/portada.blade.php · la mancha de ese lockup (`#667`)',
-        'sec-head__mancha--xxl' => 'web/portada.blade.php · su talla (`#667`)',
-        'reserve__tag' => 'web/portada.blade.php · el tag de ciudad del cierre, dibujo del cliente (`#667`)',
-        'contact-form__lede' => 'web/contacto.blade.php · la entradilla del formulario (`#667`)',
-        'contact-form__note' => 'web/contacto.blade.php · el aviso de privacidad como nota (`#667`)',
-        'where__cta' => 'web/contacto.blade.php · la salida al ancla `/#info` de la portada (`#667`)',
+        'slot-ico-altura' => 'NADIE desde la T6f (`#843`): la pintaba `web/normas.blade.php` de la vía B, retirada; se va con el kit (T6g)',
+        'slot-ico-saltador' => 'NADIE desde la T6f (`#843`): la pintaba `web/normas.blade.php` de la vía B, retirada; se va con el kit (T6g)',
+        'slot-dudas' => 'NADIE desde la T6f (`#843`): la pintaba `web/portada.blade.php` de la vía B, retirada; se va con el kit (T6g)',
+        'slot-resenas' => 'NADIE desde la T6f (`#843`): la pintaba `web/portada.blade.php` de la vía B, retirada; se va con el kit (T6g)',
+        'slot-ico-calcetines' => 'NADIE desde la T6f (`#843`): la pintaba `web/portada.blade.php` de la vía B, retirada; se va con el kit (T6g)',
     ];
 
     /**

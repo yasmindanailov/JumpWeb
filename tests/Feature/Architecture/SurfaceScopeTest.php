@@ -544,8 +544,10 @@ class SurfaceScopeTest extends TestCase
             // en `#227` (`[DECIDIDO owner]`): existía para hacer legible el TEXTO sobre el vídeo, y
             // `#226` vació el hero. Quedan tres filas y siguen cubriendo lo que importa —el fondo,
             // el sustituto del vídeo y el rótulo—, así que la guarda no pierde alcance.
+            // ⚠️ Y el RÓTULO (`.hero__stage-label`) se fue en la T6f (`#843`) con la portada vieja, su única
+            // pantalla: dentro del hero ya no queda ningún texto con color propio (medido: solo `.blink`, que
+            // va sobre el color de marca y no sobre el fondo oscuro). Quedan el fondo y el sustituto del vídeo.
             ['.hero__stage-placeholder', 'background', 'dark'],
-            ['.hero__stage-label', 'color', 'light'],
         ];
 
         $declarations = $this->heroColourDeclarations();

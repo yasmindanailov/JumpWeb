@@ -59,6 +59,9 @@ const SALIDA = 'storage/app/audit';
  * esta lista: `/waiver` es **uno de los cinco legales que `#655` ya mudó**, o sea que aquella tanda dio
  * «huella idéntica» habiendo medido cuatro de sus cinco páginas. Se añaden con la mudanza de
  * `/atracciones`, que es justo la vista que esta tanda saca del producto.
+ * ⚠️⚠️ **Con el paquete de PlayJump, desde la T6f (`#843`), esta huella ya no mide la landing vieja**: `/precios`,
+ * `/atracciones`, `/servicios`, `/bar` y `/contacto` responden 301 a las páginas nuevas, y `/`, `/cumpleanos` y `/normas`
+ * las ocupan ellas. Sirve SIN paquete (el anfitrión del producto); las páginas nuevas las juzga su sonda (`sonda-*.mjs`).
  */
 const VISTAS = [
     '/', '/entradas', '/precios', '/cumpleanos', '/atracciones', '/servicios', '/normas', '/contacto',

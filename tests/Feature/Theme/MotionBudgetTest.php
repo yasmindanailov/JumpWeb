@@ -35,7 +35,7 @@ class MotionBudgetTest extends TestCase
         // se rehizo desde su artboard y su chip es una pastilla QUIETA dentro de una fila de tabla.
         // La lista solo encoge, que es la regla.
         '.map-pin' => 'el pin del mapa sin inserción (#279)',
-        '.brand-band__track' => 'la cinta del eslogan, AMBIENTAL (`--dur-cinta`)',
+        // ⚠️ La cinta del eslogan (`.brand-band__track`) se fue en la T6f (`#843`) con `/servicios` de la web vieja.
         '.catalog__item--feat .catalog__badge' => 'cajón: la chapa del catálogo',
         '.ic-b1 svg .flame' => 'cajón: la llama del icono b1',
         '.ic-b7 svg .pop' => 'cajón: el icono b7',

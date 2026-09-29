@@ -1,7 +1,7 @@
 /* GENERADO por scripts/hoja-del-cajon.py desde public/css/{site,landing,spinner}.css. NO se edita a mano:
  * se toca la regla en su fuente y se vuelve a generar. `HojaDelCajonTest` vigila que no se separen.
  * Qué entra y por qué: la cabecera de ese guion y `specs/cajon-empaquetable.md` §4.3.
- * FUENTES landing.css:075c01f32ca8 spinner.css:8270bcfe03ab site.css:d686c51061aa */
+ * FUENTES landing.css:62017487f0f2 spinner.css:8270bcfe03ab site.css:6c3dded609ab */
 /* La BASE del paquete: lo que el cajón heredaba del `<body>` del producto y ahora se da
  * a sí mismo, para no tocar el documento del anfitrión. Ver la cabecera del generador. */
 :where(.sidecart), :where(.sidecart) * {
@@ -978,8 +978,7 @@
     uno tiene su token para que una instalación pueda calmarlos sin reescribir `@keyframes`. */
     --dur-invite: 4.6s;
     /* el latido que invita a descubrir el CTA doble (2c·7) */
-    --dur-cinta: 34s;
-    /* AMBIENTAL · la cinta `C3`: «en la web se mueve despacio» */
+    /* ⚠️ `--dur-cinta` se fue con la cinta `C3` en la T6f (`#843`): su única pantalla era `/servicios` de la web vieja. */
     --dur-switch: 3.4s;
     /* el ciclo del interruptor del titular. Es el número del artboard (6d) */
     /* ⚠️ **Y el interruptor YA NO es un bucle**: salta este número de veces y se queda encendido
@@ -3362,8 +3361,7 @@ details > summary.legal-more ~ p {
     EXACTAMENTE como estaba antes de generalizarla — 55 % de tinta × 0.2 = el 11 % que tenía
     horneado. Generalizar no puede cambiar lo que ya se ve. */
     --trama: 0.2;
-    --trama-fade: 0.55;
-    /* A2 · la variante que se apaga; suya al dígito */
+    /* ⚠️ `--trama-fade` se fue con su pieza (A2) en la T6f (`#843`): la pintaba solo `/normas` de la web vieja. */
     /* ⚠️ `--spray` se fue con su pieza en `#535`: la niebla A5 perdió su única pantalla al retirarse
     el mapa de `/contacto`. Un token sin consumidor deja de vigilar nada y encima invita a
     reintroducir la pieza sin decidirlo (la regla que `#550` aplicó a `--fs-9`). */

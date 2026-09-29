@@ -2142,6 +2142,28 @@ vieja a su sitio con su `?query`, el sitemap igual al mapa, cada página en es/e
   sitemap; un dueño por ruta, la lista y la URL que no existe; cada ruta de la lista con su middleware y ninguna más;
   `/entradas`), y `scripts/mutar-sustituye.sh` **12/12**, cada mutante por su prueba. **Medido en local** con el paquete
   real, que aún no declara nada: las seis rutas siguen en 200, el sitemap igual (15), y `/entradas` pasa a canónica `/`.
+- ✅ **T6f·2 (29-09) · la instancia** (`d9f9267`): la portada sustituye `/precios` y `/atracciones`, Visítanos `/contacto` y
+  `/bar`, Colegios `/servicios`; fuera las ocho vistas de la vía B (3.161 líneas, cero referencias `instancia::`: solo usaban
+  componentes y textos del producto) y sus ocho fichas de `docs/paginas/`; «Excursiones» de la portada, directa a Colegios.
+  **Medido en local**: las cinco, 301 a su sitio con su consulta; `/entradas`, las páginas nuevas y las legales, 200; el
+  sitemap, 12 URLs (eran 15); las sondas a 390 —cumpleaños 20/20, colegios 56/56, visítanos 26/26, normas 37/37, portada
+  13/14 con el fallo ya anotado el 28-09 (la isla tras «Míralo»), igual con el `HEAD` de control—.
+- ✅ **T6f·3 (29-09) · el material sin sujeto, en el producto**: las **25 clases** de `MATERIAL_CONSUMIDO_POR_LA_INSTANCIA`
+  podadas: 18 de `landing.css` y 8 de `site.css` (la cinta C3 con su `@keyframes`, la trama A2 y el tag de la ciudad; el
+  vídeo del hero vivía en las dos), con los dos tokens que solo ellas leían (`--dur-cinta`, `--trama-fade`) —el precedente de `#535`: un token se
+  va con su pieza—; lo que las guardas dijeron al quitarlas de la lista, ni una más. De camino: `BrandBandTest` se retira
+  con su sujeto; `MotionBudgetTest` y `MotionScaleTest` pierden su fila; `SurfaceScopeTest` pierde la del rótulo del hero
+  (medido: dentro del hero no queda ningún texto con color propio); el control de `FacadeCssHasNoOrphansTest` deja
+  `grain--fade`; la ficha de `DEUDA.md` de `.reserve__tag`, cerrada. ⚠️ **Las cinco RANURAS del kit se quedan en la lista, a
+  sabiendas** («NADIE desde la T6f»): el kit no viaja en ningún repo y la guarda 7 del despliegue lo valida contra
+  `IllustrationKit::SLOTS`, así que quitarlas obliga a regenerar el kit de producción: se van con él en un solo corte (T6g).
+- ▶ **Medido de camino: lo que las guardas de huérfanos NO ven.** Sin las ocho vistas, cuatro componentes del producto se
+  quedan sin nadie que los pinte —`site/facade` (el MURAL, `#580`) con `site/trio` (solo lo usa `facade`), `site/kit-ico` y
+  `site/zone-sticker`—, y las guardas cuentan al propio componente como consumidor: su CSS y sus ranuras del kit (las poses
+  y manchas del mural) siguen «vivos» para ellas. Es el sistema de ilustración de la web vieja; retirarlo es una tanda
+  propia con su censo (**T6g**, propuesta: el mural, sus ranuras en `IllustrationKit::SLOTS` y en el kit de la instancia a
+  la vez —`kit:build` rechaza el desfase—, y sus specs), no un añadido de la T6f·3. (`site/addon-chip` y `site/pagination`
+  ya estaban sin uso desde la fundación: no son de esta tanda.)
 
 ## 5. Impacto en invariantes
 

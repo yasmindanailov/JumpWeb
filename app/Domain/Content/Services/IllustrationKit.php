@@ -96,6 +96,9 @@ class IllustrationKit
         // ⚠️ Desde `#655` la vista de `/normas` vive en la INSTANCIA: `altura` y `saltador` siguen
         // declaradas aquí porque las trae el kit y las pinta esa vista, y quien lo sabe es
         // `InstanceViews::MATERIAL_CONSUMIDO_POR_LA_INSTANCIA` (la guarda de ranuras lo lee de ahí).
+        // ❗ Y desde la T6f (`#843`) esa vista y la portada vieja ya no existen: estas tres, `slot-resenas` y
+        // `slot-dudas` no las pinta NADIE. Se quedan a sabiendas —quitarlas obliga a regenerar el kit de
+        // producción, que la guarda 7 valida contra esta lista— y se van con el kit entero en la T6g.
         // ⚠️ `cama`, `canasta` y `bote` NO están, a propósito (`[DECIDIDO owner, 2026-09-13]`): con los
         // iconos por zona del parque no tienen pantalla, y declararlas sin ella tumba esta guarda.
         'slot-ico-calcetines', 'slot-ico-altura', 'slot-ico-saltador',

@@ -458,10 +458,17 @@ class InlineBrandLogoTest extends TestCase
         }
 
         // ⚠️ Control positivo: sin esto el caso pasaría en verde con el barrido roto o con la hoja
-        // vacía. Hay otras familias que SÍ usan `drop-shadow` y tienen que seguir apareciendo.
+        // vacía. ❗ Se hacía con «otras familias que SÍ usan `drop-shadow`», y la última —el tag de la
+        // ciudad— se fue en la T6f (`#843`): el control dependía de que ALGUIEN usara sombra, que no es
+        // lo que vigila. Ahora son dos, cada uno de lo suyo: el barrido encuentra `drop-shadow` en una
+        // regla de muestra, y la hoja real se lee (sus `box-shadow`, que no faltan).
         $this->assertNotEmpty(
-            $this->reglasQueDeclaran($css, 'drop-shadow'),
-            'el barrido no encuentra ninguna regla con `drop-shadow`: es el instrumento, no la hoja',
+            $this->reglasQueDeclaran('.muestra { filter: drop-shadow(0 8px 20px #000); }', 'drop-shadow'),
+            'el barrido no encuentra `drop-shadow` en una regla que lo declara: es el instrumento, no la hoja',
+        );
+        $this->assertNotEmpty(
+            $this->reglasQueDeclaran($css, 'box-shadow'),
+            'el barrido no encuentra ninguna regla en `site.css`: la hoja no se está leyendo',
         );
     }
 

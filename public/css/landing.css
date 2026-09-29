@@ -1225,14 +1225,6 @@ img { display: block; max-width: 100%; }
   background: var(--bg);
   box-shadow: none;
 }
-.hero__video {
-  position: absolute; inset: 0;
-  width: 100%; height: 100%;
-  object-fit: cover;
-  display: block;
-  z-index: 2;
-  background: transparent;
-}
 /* moody placeholder behind video.
    ⚠️ **Aquí vivían las DOS zonas del primer cliente**, escritas en decimal dentro de un
    `background` de tres líneas: `rgba(255,91,34,.22)` (el naranja de Jump) y `rgba(198,255,58,.16)`
@@ -1409,16 +1401,8 @@ img { display: block; max-width: 100%; }
   font-size: clamp(56px, 10.5vw, 168px);
   margin: 0;
   text-shadow: 0 4px 40px color-mix(in srgb, var(--paper-fg) 18%, transparent);
-}.hero__stage-label {
-  position: absolute;
-  left: clamp(20px, 3vw, 40px); bottom: clamp(16px, 2vw, 28px);
-  font-family: var(--font-body); font-size: var(--fs-11);
-  text-transform: uppercase; letter-spacing: 0.16em;
-  color: color-mix(in srgb, var(--fg) 50%, transparent);
-  pointer-events: none;
-  z-index: 6;
 }
-.hero__stage[data-has-video="true"] .hero__stage-label { display: none; }.hero__title {
+.hero__title {
   font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
   font-size: clamp(96px, 18vw, 320px);
   line-height: 0.82; letter-spacing: -0.045em; margin: 0;
@@ -1879,81 +1863,10 @@ img { display: block; max-width: 100%; }
 .sec-head__lede,
 .page__lede { margin-top: var(--sp-16); }
 
-/* ══ LA MANCHA DE SECCIÓN (`#497`, pasada de vestido · primera tanda de fachada) ═══════════════
-   El dibujo lo trae la INSTALACIÓN en su kit (`<x-site.ilu>`); aquí solo se decide dónde cae, de
-   qué tamaño y con qué tinta. Sin paquete el componente **no emite nada** y estas dos reglas se
-   quedan sin sujeto — que es la conducta querida: nunca una caja vacía.
-
-   ⚠️⚠️ **Va anclada al TITULAR, no a la cabecera entera**, y es la lección más cara de `#303`: la
-   mancha de zonas se colocó contra el bloque completo y, al acortarse los titulares, su `top` —un
-   porcentaje de una cabecera que encogió de 264 a 153 px— **la dejó cayendo sobre el párrafo**
-   (11.016 px² medidos). *Un ajuste sobrevive a la razón que lo justificaba.* Contra el titular no
-   puede alcanzarlo por mucho que crezca la entradilla.
-   ⚠️ **Contexto de apilamiento PROPIO** (`isolation`): con `z-index: -1` y sin él, la mancha se
-   hunde por detrás del fondo de la sección y desaparece. Es el patrón de `#286`.
-   ⚠️⚠️ **Las medidas son FIJAS y no porcentajes, y eso corrige a `#302`/`#309`.** Aquélla usaba
-   `width: min(22%, 165px)` con `left: -5%`, porcentajes del ANCHO del contenedor — y ese ancho ya
-   no es el mismo en las tres secciones: `#reviews` y `#faq` meten su cabecera en una columna de
-   **352 px** de la rejilla de doce (`#488`) y `#info` la deja a **750**. Medido con la regla
-   heredada: **77 px en dos secciones y 165 en la otra**, la misma pieza con dos tallas. Con
-   valores fijos las tres miden igual y el aire de arriba tampoco depende de si el titular ocupa
-   una línea o dos. ▶ La opacidad **sí** se conserva de `#309` (0,30, el doble de la original):
-   *se ve más porque pinta más, no porque ocupe más.*
-   ⚠️⚠️ **La tinta es `--strip-1` y NO `--zone-1`**, que es lo que usaba la mancha de `#302`: aquel
-   `--zone-1` lo tiñe en vivo la zona activa dentro de `#rides`, y fuera de ahí cae al naranja por
-   defecto del PRODUCTO — el color que `#541` acaba de sacar de la web. `--strip-1` es el Cian PJP,
-   que el sistema del cliente declara como su identidad y que `#537` midió ocupando **0,10 % de la
-   página** contra el 30 % que ese mismo sistema pide. */
-.sec-head__lockup { position: relative; isolation: isolate; }
-.sec-head__mancha {
-  position: absolute; z-index: -1; pointer-events: none;
-  left: -26px; top: -72px; width: 132px; height: auto;
-  --ilu-fg: var(--strip-1);
-  opacity: 0.30;
-}
-@media (min-width: 1024px) {
-  .sec-head__mancha { left: -34px; top: -88px; width: 165px; }
-}
-
-/* ⚠️ **XXL** (`#547`, `[DECIDIDO owner]`: «en la sección de reseñas el splash lo hacemos XXL donde
-   está»). Es la MISMA pieza en el MISMO sitio, a escala de fondo — no una colocación nueva.
-   ⚠️⚠️ **La opacidad BAJA al crecer, y eso no es un ajuste a ojo**: a 165 px la mancha es un acento
-   al lado del titular; a 420 pasa por detrás de él y de su entradilla, así que al 30 % competiría
-   con el texto. La misma lección que `#309` dejó escrita al revés —*se ve más porque pinta más*—
-   aplicada en la otra dirección: cuando lo que crece es el ÁREA, la tinta tiene que ceder. */
-.sec-head__mancha--xxl { left: -70px; top: -120px; width: 300px; opacity: 0.16; }
-@media (min-width: 1024px) {
-  .sec-head__mancha--xxl { left: -110px; top: -190px; width: 440px; opacity: 0.16; }
-}
-
-/* ══ LA MANCHA DE RESEÑAS, DETRÁS DE LA TARJETA DE OPINIÓN (`#547`, `[DECIDIDO owner]`) ════════
-   Sale de la cabecera —donde `#544` la puso— y baja al carril de opiniones: la sección de reseñas
-   es la única de las ocho **sin una sola imagen ni dibujo**, y su tarjeta flotaba sobre papel liso.
-
-   ⚠️⚠️ **Va en el CARRIL y no dentro de la tarjeta**: las opiniones se pintan en un `@foreach` y
-   `FacadeDecorationIsPerScreenTest` prohíbe decoración dentro de un bucle — saldría una mancha por
-   opinión, y además cambiaría de sitio al pasar de una a otra.
-   ⚠️ `isolation` en el carril, por lo de siempre: sin contexto de apilamiento propio, `z-index: -1`
-   la hunde por detrás del fondo de la página y no se ve (el patrón de `#286`).
-   ⚠️⚠️ **Y `position: relative`, que es lo que faltaba y no se veía como error.** Sin él la mancha
-   no se posiciona contra el carril sino contra el primer ancestro posicionado —la sección—, así que
-   un `left: -70px` pensado para asomar por el canto de la tarjeta la mandaba **al otro extremo,
-   encima del titular**. Medido: la caja salía en `x −70..270` cuando la tarjeta empieza en 384.
-   *`isolation` crea contexto de apilamiento, no de posición: son dos cosas distintas.* */
+/* El carril de opiniones, con contexto de apilamiento y de posición propios. Nació para la mancha de
+   reseñas (`#547`), que se fue con la portada vieja en la T6f (`#843`); se conserva porque el carril
+   del anfitrión lo sigue pintando y retirarlo movería lo que se posicione dentro. */
 .rev { position: relative; isolation: isolate; }
-/* ⚠️⚠️ **En MÓVIL asoma por el LATERAL, no por arriba** (`[DECIDIDO owner]`: «en la sección de
-   reseñas el splash lo ponemos en un lateral para que se vea un poco más»). En estrecho la tarjeta
-   ocupa el ancho entero —medido: `x 0..358` de 358—, así que una mancha anclada arriba a la
-   izquierda se sale de la pantalla y solo se intuye; pegada al canto derecho y más abajo, lo que
-   sobresale cae dentro del papel de la sección y se ve. */
-.rev__mancha {
-  position: absolute; z-index: -1; pointer-events: none;
-  right: -64px; left: auto; top: 92px; width: 250px; height: auto;
-  --ilu-fg: var(--strip-1); opacity: 0.22;
-}
-@media (min-width: 1024px) {
-  .rev__mancha { left: -70px; right: auto; top: -60px; width: 340px; }
-}
 
 /* ══ LA FACHADA · EL MURAL (`#580`, `[DECIDIDO owner]`: la variante 2 «mural») ═══════════════════
    El DIBUJO sale del kit de la instalación (`client-kit.svg`) y la COLOCACIÓN vive aquí; el mapa de
@@ -2063,15 +1976,6 @@ img { display: block; max-width: 100%; }
 .rules-group__title:has(> .kit-ico) { display: flex; align-items: center; gap: var(--sp-10); }
 .rules-group__title > .ilu.kit-ico { width: 1em; height: 1em; }
 
-/* Los CALCETINES en la pegatina de aviso. ⚠️ La «i» del set dibuja ELLA el disco, así que la pegatina
-   no tenía fondo propio; el calcetín es un glifo suelto y el disco lo pone la caja. Y a 24 un calcetín
-   dentro de un disco de 24 no se lee: el disco sube a 32 y la línea del niño invitado se alinea con él.
-   ⚠️⚠️ **Dos clases, y con una fallaba sin avisar**: `.before__i` se declara MÁS ABAJO en esta hoja y a
-   igual especificidad le ganaba el `color` —el calcetín salía amarillo sobre su disco amarillo, o sea
-   invisible— y la talla, mientras el fondo sí se aplicaba. Lo vio la captura. */
-.before__i.before__i--sock { width: 32px; height: 32px; margin-top: 0; background: var(--attn); color: var(--paper-fg); }
-.before__i--sock > .ilu.kit-ico { width: 20px; height: 20px; }
-.section:has(.before__i--sock) .before__guest { padding-left: calc(32px + var(--sp-12)); }
 @media (min-width: 1024px) {
   /* ⚠️ Todas entre el racimo del armazón (acaba a 72 px) y la primera fila de contenido (330): en ese
      tramo el titular deja libre la derecha de la columna. La de `/precios` va centrada en su abanico
@@ -2149,12 +2053,6 @@ img { display: block; max-width: 100%; }
   display: flex; align-items: flex-end; opacity: 0.9;
 }
 .trio__n { display: block; flex: 0 0 auto; }
-/* Portada · la cabecera de Cumpleaños deja 512 px libres a la derecha del titular (medido, `#547`). */
-.trio--events { right: 8px; top: 30px; }
-/* `/cumpleanos` · a 0,8 del de la portada: su titular es más largo.
-   ⚠️ `transform-origin: right top`: `scale` encoge el DIBUJO y no la caja, y con el origen abajo el
-   dibujo se despegaría de donde dice `top` (la trampa medida en `#548`). */
-.trio--page { right: 0; top: 96px; scale: 0.8; transform-origin: right top; }
 /*
  * ⚠️⚠️ **Entre 1024 y 1280 la columna encoge más deprisa que el titular**, y medido con la TINTA del
  * titular (un `Range` sobre su texto, no la caja del `<h1>`, que ocupa la columna entera y acusa a
@@ -2163,7 +2061,6 @@ img { display: block; max-width: 100%; }
  */
 @media (min-width: 1024px) and (max-width: 1279px) {
   .fac-p.fac-p--page-atracciones { height: 200px; }
-  .trio--page { scale: 0.62; }
 }
 /*
  * ⚠️⚠️ **EN ESTRECHO SE APOYA EN LA TARJETA DE DEBAJO** (`[DECIDIDO owner]`, `#548`: «encima de la
@@ -3140,12 +3037,6 @@ img { display: block; max-width: 100%; }
 .before__object { display: flex; gap: var(--sp-16); align-items: center; }
 .before__id { flex: none; display: grid; gap: var(--sp-10); justify-items: start; }
 
-/* EL MÓVIL DIBUJADO. En teléfono el marco se retira —dibujar un teléfono dentro de un teléfono no
-   dice nada— y queda su pantalla, que es exactamente la tarjeta blanca del artboard de móvil. */
-.before__device { display: inline-grid; }
-.before__ear,
-.before__chin { display: none; }
-
 /* ⚠️⚠️ **BLANCO EXPLÍCITO, no `--bg-card`.** Dentro de esta superficie `--bg-card` vale
    `--ink-bg-card` (#1A1F25), así que el código se dibujaría oscuro sobre oscuro — el defecto que
    `#483` y `#484` pagaron dos veces. La pantalla de un móvil es blanca en cualquier superficie. */
@@ -3329,27 +3220,6 @@ img { display: block; max-width: 100%; }
     gap: 40px; align-items: start;
   }
 
-  /* EL TELÉFONO. Cuerpo de tinta con keyline, radio 16 fuera y 10 dentro —el escalón
-     inmediatamente inferior—, con su auricular y su botón. ⚠️ Los dos son `aria-hidden` y no
-     llevan texto: son el DIBUJO de que esto es un móvil. */
-  .before__device {
-    background: var(--bg);
-    border: 2px solid var(--line);
-    border-radius: var(--r-lg);
-    padding: var(--sp-12);
-    justify-self: start;
-  }
-  .before__ear,
-  .before__chin {
-    display: grid; place-items: center; height: 20px;
-  }
-  .before__ear::after,
-  .before__chin::after {
-    content: ''; display: block; height: 4px; border-radius: var(--r-pill);
-    background: var(--line);
-  }
-  .before__ear::after { width: 48px; }
-  .before__chin::after { width: 88px; }
   .before__screen { padding: 26px; }
   /* El código crece de 112 a 260 y el hueco del icono con él: la proporción es la misma (34 %),
      así que no hay una segunda medida que mantener. */
@@ -3606,27 +3476,16 @@ img { display: block; max-width: 100%; }
 /* La foto del autor sustituye a la inicial. Misma caja, para que la fila no se mueva. */
 .rev__ini--photo { object-fit: cover; }
 
-/* ❗❗ **El texto nace RECORTADO y lo abre «Ver más» aquí mismo** (`[DECIDIDO owner]`). El recorte es
-   visual —el texto servido está completo—, así que no altera el contenido del usuario (R4): lo que
-   se retira es la obligación de irse a Google para leerlo. */
-.rev__text--clamp { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; overflow: hidden; }
-/* ⚠️ Al abrir hay que deshacer las TRES declaraciones del recorte, no solo el número de líneas: con
-   `display: -webkit-box` puesto, subir el `line-clamp` deja el párrafo en una caja que sigue
-   comportándose distinto. */
-.rev__text--open { display: block; -webkit-line-clamp: unset; overflow: visible; }
-/* Las dos salidas van en una fila: abrir el texto y, si la reseña es de Google, su acreditación.
-   ❗❗ **«Ver en Google» va SIEMPRE a la derecha** (`[DECIDIDO owner, 2026-09-10]`, `#494`).
-   ⚠️⚠️ Con `justify-content: space-between` no bastaría: cuando el texto es corto no hay botón «Ver
-   más» —se decide MIDIENDO, no contando caracteres—, y con un solo hijo la fila lo dejaría a la
-   IZQUIERDA. El `margin-left: auto` del propio enlace lo empuja haya o no compañero. */
+/* La fila de salidas de la reseña: si es de Google, su acreditación.
+   ❗❗ **«Ver en Google» va SIEMPRE a la derecha** (`[DECIDIDO owner, 2026-09-10]`, `#494`): el
+   `margin-left: auto` del propio enlace lo empuja haya o no compañero. (El «Ver más» que abría el
+   texto recortado era de la portada vieja y se fue con ella en la T6f, `#843`.) */
 .rev__acts { display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-16); }
 .rev__acts > .rev__more { margin-left: auto; }
-.rev__toggle,
 .rev__more {
   display: inline-flex; align-items: center; gap: var(--sp-7); min-height: 48px;
   font-size: var(--fs-14); font-weight: 800; color: var(--interactive);
 }
-.rev__toggle { background: none; border: 0; padding: 0; cursor: pointer; }
 .rev__more .arrow { transition: transform var(--dur-entra) var(--ease-entra); }
 .rev__more:hover .arrow { transform: translateX(5px); }
 
@@ -4166,13 +4025,8 @@ select:focus-visible {
   /* hero */
   .hero { padding: 92px 0 40px; min-height: auto; }
   .hero__stage { aspect-ratio: 3 / 4; border-radius: var(--r); }
-  /* En móvil el stage es vertical (3/4) y el vídeo es apaisado: `cover` recorta. Sesgamos el
-     encuadre hacia el centro-superior para que el chaval saltando quede dentro del recorte.
-     Ajustable: si el sujeto está más abajo/lado, cambiar este object-position. */
-  .hero__video { object-position: 78% 32%; }
   .hero__stage-content { padding: 22px 20px 24px; }  /* el corte de móvil lo afina `site.css` */
   .hero__title--onvideo { font-size: clamp(56px, 18vw, 96px); }
-  .hero__stage-label { display: none; }
   /* ⚠️⚠️ **AQUÍ NO SE REESCALA EL TITULAR NI LA ENTRADILLA, y es la mitad del arreglo de `#479`.**
      Display L y Entradilla son `clamp` de TRES tramos —móvil, interpolado y escritorio—, así que
      una regla de móvil que fije otro tamaño **gana al clamp entero** y deja el nivel del sistema
@@ -5053,7 +4907,6 @@ select:focus-visible {
    encontraba la tarjeta, que es exactamente lo que tenía que hacer. */
 .page--contact .contact-form { max-width: none; margin: 0; }
 .contact-form__title { margin: 0; font-family: var(--font-display); font-size: var(--fs-22); line-height: 1.1; font-weight: 400; }
-.contact-form__lede { margin: calc(var(--sp-10) * -1) 0 0; font-size: var(--fs-16); line-height: 1.5; color: var(--fg-mute); }
 /* El pie del campo opcional, dentro de su propia etiqueta: peso normal para que no compita con el
    nombre del campo, que es lo que se busca al leer en diagonal. */
 .form__opt { font-style: normal; font-weight: 400; color: var(--fg-mute); }
@@ -5074,10 +4927,8 @@ select:focus-visible {
   color: var(--interactive); text-decoration: underline; font-weight: 700; font-size: var(--fs-15);
 }
 
-/* La fila de envío. El plazo va AL LADO del botón, que es donde se decide enviar (el artboard lo
-   pide ahí a propósito, no solo en la entradilla). */
+/* La fila de envío. */
 .contact-form__send { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-16); }
-.contact-form__note { flex: 1; min-width: 12rem; font-size: var(--fs-15); line-height: 1.45; color: var(--fg-mute); }
 
 /* ── EL VESTIDO DEL CAMPO, ACOTADO A ESTA PÁGINA ────────────────────────────────────────────
    ❗❗❗ **ACOTADO A PROPÓSITO, y no es timidez.** `.form__field` vive en `site.css` y sus
@@ -5112,20 +4963,14 @@ select:focus-visible {
 .answers__link:hover { text-decoration: underline; }
 
 /* ── DÓNDE ESTAMOS ──────────────────────────────────────────────────────────────────────────
-   Rótulo, dirección escrita y la salida al mapa. ⚠️ La dirección va en peso fuerte porque es EL
-   dato de este bloque; el enlace es lo secundario. */
+   Rótulo y dirección escrita. ⚠️ La dirección va en peso fuerte porque es EL dato de este bloque.
+   (La salida al mapa era de la página de contacto vieja y se fue con ella, T6f `#843`.) */
 .where { border-top: 1.5px solid var(--line-strong); padding-top: var(--sp-18); }
 .where__label {
   margin: 0; font-family: var(--font-mono); font-size: var(--fs-11); font-weight: 500;
   text-transform: uppercase; letter-spacing: 0.14em; color: var(--fg-mute);
 }
 .where__addr { margin: var(--sp-8) 0 0; font-size: var(--fs-17); line-height: 1.5; font-weight: 700; }
-.where__cta {
-  display: inline-flex; align-items: center; gap: var(--sp-8);
-  min-height: var(--tap-min);
-  font-weight: 800; font-size: var(--fs-16); color: var(--interactive);
-}
-.where__cta:hover { text-decoration: underline; }
 
 .contact-layout__side { display: grid; gap: var(--sp-20); align-content: start; }
 
