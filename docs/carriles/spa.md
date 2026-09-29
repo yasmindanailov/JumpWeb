@@ -217,10 +217,10 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 
 ## Buzón
 
-- ❗ **Para plataforma (29-09, la R1a de los correos)**: la hoja de correo de PlayJump está escrita en el repo de la
-  instancia, `publico/instancia/css/correo.css` (roles `--correo-*` en hex, con su pareja `-oscuro`; los valores del `tema()`
-  de la plantilla sobre `tokens/colors.css` y `shape.css`). Cuando la empuje, **declárala en `instancia.json`**:
-  `"hojas": { "correo": ["css/correo.css"] }` (junto a las de la fiesta). Sin la declaración, los correos salen neutros.
+- ❗ **Para plataforma (29-09, la R1a de los correos, aprobada por el owner)**: la hoja de correo de PlayJump ya está
+  EMPUJADA al repo de la instancia (`ace8d0a`, `publico/instancia/css/correo.css`: roles `--correo-*` en hex, con su pareja
+  `-oscuro`). **Declárala en `instancia.json`**: `"hojas": { "correo": ["css/correo.css"] }` (junto a las de la fiesta). Sin
+  la declaración, los correos salen neutros. En esta máquina está declarada a mano, sin commitear, hasta tu commit.
 
 - Mis avisos a plataforma del 27→29-09 (`#754`/`#757`, la TP·1 `#792`, las C1→C3 `#794`→`#797`, la TP·3b `#793`, la T3d):
   ATENDIDOS por plataforma (su «Atendido», 29-09: «leídos y migrado»); retirados de aquí. El detalle, en el `git log`.
