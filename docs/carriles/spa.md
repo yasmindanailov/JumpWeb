@@ -2,7 +2,7 @@
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb` a secas; la instancia al lado, en
 > `~/proyectos/instancias/playjump`, clon de `github.com/yasmindanailov/instancia-playjump`, montada el 25-09) ·
-> Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#796`** · La banda está dada de alta en la
+> Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#797`** · La banda está dada de alta en la
 > tabla de `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: **`analitica-para-decidir.md`
 > §0** (la tarea en curso, `#755`) · `encuestas.md` §0 y §4.7 (`#754`) · `analitica.md` §0 y §4.5 · `isla-y-landing-nueva.md`
 > §4.11 · `celebracion-e-invitacion.md` §0 · `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 ·
@@ -17,7 +17,8 @@
 - ▶▶▶ **LOS CORREOS SALIENTES** (`specs/correos-salientes.md`, `#794`; adelanta la T5 de la analítica, owner 28-09): ✅ **C1 el
   registro y la vista previa, en `main` y APROBADA** (29-09: «buen trabajo, visto bueno»; lo construido y lo que enseñó, §4.7)
   → ✅ **C2 los clics por envío** (`#795`, §4.8) **+ C2b «cuándo»** (`#796`, §4.10–§4.11: la línea de tiempo, el dispositivo, los
-  robots, la vista previa desactivada), en `main` y APROBADAS (29-09) → ▶ C3 las aperturas → C4 «cuándo» en Marketing. C2 y
+  robots, la vista previa desactivada), en `main` y APROBADAS (29-09) → 🟦 **C3 las aperturas** (`#797`, §4.12: el píxel con
+  su interruptor y el «sí» de análisis; Apple no cuenta), en `wip/correos-c3`, falta el ojo → C4 «cuándo» en Marketing. C2 y
   C3, `[PENDIENTE: asesoría]` antes de producción: el interruptor de la C2 sale APAGADO de fábrica (Ajustes → Avanzado → Correos).
 - ▶▶▶ **LA ANALÍTICA PARA DECIDIR es la tarea** (`#755`, spec ✅). En `main` y APROBADAS por el owner: T0a·T0b·T0c (`#756`),
   T1 encuestas anónimas (`#754`/`#757`), T2 ocupación (`#758`) y, el 28-09, **T3a la forma** (`#759`: siete pestañas, solo
@@ -60,7 +61,7 @@
    T3c·1 · T3c·2 y **TP·1** (la fecha de nacimiento, `#792`; arnés `SOLO=TP1`, sondas `storage/app/audit/sonda-tp1-*.mjs`),
    **TP·2** («Quién viene»; arnés `SOLO=TP2`; fixture `ojo-tp2.php` montado, `OJO=desmontar`), todas en `main` y aprobadas →
    ▶ owner 28-09, «cerrar lo que queda», en este orden: **los correos salientes PRIMERO** (`specs/correos-salientes.md` ✅
-   `#794`; ✅ C1, C2 y C2b en `main`, aprobadas 29-09; ▶ C3 aperturas · C4 a la analítica) · **TP·3a** los tramos de los anuncios y **TP·3b** retirar «Exportar segmento» (`#793`) ·
+   `#794`; ✅ C1, C2 y C2b en `main`, aprobadas 29-09; 🟦 C3 aperturas en `wip/correos-c3` · C4 a la analítica) · **TP·3a** los tramos de los anuncios y **TP·3b** retirar «Exportar segmento» (`#793`) ·
    la TP·3c (felicitaciones) y el gasto en anuncios, ⏸ con el rediseño de la plantilla / aplazado; §4.14 y §4.9 → T3d el texto para IA (§4.7; lee `Changes` y
    los veredictos; sin PII ni celdas < 5) → T3e el SECTOR (primera búsqueda en §4.13: casi todo son medias, no rangos; AL OWNER
    antes de sembrar) → T4 cartera → T5 marketing y correos → T6 cohortes → T7 pérdidas → T8 satisfacción (§4.12). Los CRUCES de
@@ -212,6 +213,11 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 
 ## Buzón
 
+- ❗ **Para plataforma (29-09, la C3 de los correos, `#797`)**: contrato **1.54.0**, mío (`ExportedEmailSend.opens`): la
+  **1.53.0 sigue siendo tuya**. Toqué lo compartido: `routes/web.php` (el píxel `GET /e/{send}.gif`, fuera de sesión, cookies y
+  visitante con `withoutMiddleware`: ojo, en Laravel 13 el CSRF del grupo es `PreventRequestForgery`), el contrato
+  `ConsentLedger` (`accountConsentedNow()`, implementado en `CookieConsentLedger`), `Settings.php` (otro interruptor,
+  `emails.track_opens`) y `AppServiceProvider` (un oyente y el morfo `email_open`). Migra (`email_opens`, `tracks_opens`).
 - ❗ **Para plataforma (29-09, la C2 de los correos, `#795`)**: contrato **1.52.0**, mío (`ExportedEmailSend.clicks`); tu
   siguiente, 1.53.0. Toqué lo compartido: `Settings.php` (una sección «Correos a los clientes» en Avanzado, con el interruptor
   `emails.track_clicks` en `BOOL_KEYS` y `MANAGED`), `AppServiceProvider` (un oyente de `NotificationSending` y el morfo
@@ -251,16 +257,7 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 - ❗ **Para la web (26-09, `#750`)**: «Avísame de fechas» es un tratamiento NUEVO (correo comercial a quien firma la
   autorización de un invitado y marca la casilla; consentimiento; baja en cada correo): **`/privacidad` tiene que
   nombrarlo**, `[PENDIENTE: asesoría]`. El texto es tuyo (`LegalContent`); yo no lo toco.
-- **Para plataforma (26-09, F6b, `#750`)**: `scripts/deploy.sh` espera ya **10** tareas (entra `birthday-reminders:send`,
-  horaria); una tarjeta en tu hub («Precios y productos → Avisos de cumple») y un ajuste en `Settings.php`
-  (`party.birthday_reminder_weeks`). El contrato NO cambia. En `fiesta.css`, `[hidden]` oculta ya sin `.js`.
-- ❗ **Para plataforma (26-09, F5, `#749`)**: el CONTRATO **1.39.0** es mío (tras tu 1.38.0): en `PostFormAddon`
-  `serves`, `family`, `block` e `image_url`; en `GuestForm` `cake_declined` y `saved_at`; `PUT` acepta `cake_declined`;
-  `adults` en el `enum` de tipos de campo del catálogo. Tu siguiente, **1.40.0**. ⚠️ `PostFormAddons::viewFor()` (lo
-  que lees en «Antes de venir», si lo lees) lleva cuatro datos más, sin cambiar los de antes. Leído tu buzón de la T5e·1
-  (`#778`): nada tuyo toca la fiesta.
-- **Para plataforma (26-09, F1c)**: `party.park_video` y `party.park_video_poster` son hechos públicos: si
-  `instancia-y-landing-fuera.md` §2 cuenta los ajustes públicos, sumadlos.
+- Los mensajes a plataforma del 26-09 (F6b, F5, F1c), ya leídos: mudados verbatim a `CARRIL-SPA.md` §9.
 
 ### ❗❗ Para el carril de PLATAFORMA (emisor: SPA, 2026-09-25 → 27-09)
 - ⚠️ Cuando empujes un zip nuevo del owner a la instancia, dímelo aquí: re-mido el censo de la fiesta contra él.

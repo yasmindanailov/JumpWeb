@@ -18,12 +18,13 @@
 set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
-FILTER='EmailSendsRecordTest|EmailSendsPanelTest|EmailClicksTest|EmailUtmTest'
+FILTER='EmailSendsRecordTest|EmailSendsPanelTest|EmailClicksTest|EmailUtmTest|EmailOpensTest'
 # Modo «solo una tanda» (`SOLO=C2 bash scripts/mutar-correos-salientes.sh`), como en `mutar-analitica-decidir.sh`: corre SOLO
 # las mutaciones de esa sección y con SUS pruebas. La base verde y el CONTROL de esa sección corren siempre.
 declare -A FILTRO_DE=(
     [C1]='EmailSendsRecordTest|EmailSendsPanelTest'
     [C2]='EmailClicksTest|EmailSendsPanelTest|EmailSendsRecordTest|EmailUtmTest'
+    [C3]='EmailOpensTest|EmailSendsPanelTest|EmailSendsRecordTest|EmailClicksTest'
 )
 SOLO="${SOLO:-}"
 SECCION=''
@@ -55,6 +56,14 @@ FICHEROS=(
     resources/views/vendor/mail/html/footer.blade.php
     database/migrations/2026_09_29_050000_add_email_click_tracking.php
     app/Domain/Platform/Models/EmailClick.php
+    app/Domain/Platform/Services/Analytics/EmailOpenMarks.php
+    app/Domain/Platform/Services/Analytics/EmailOpens.php
+    app/Domain/Platform/Models/EmailOpen.php
+    app/Http/Controllers/EmailOpenController.php
+    app/Domain/Identity/Services/CookieConsentLedger.php
+    routes/web.php
+    resources/views/vendor/mail/html/layout.blade.php
+    database/migrations/2026_09_29_070000_add_email_open_tracking.php
 )
 copia() { echo "$TMP/$(echo "$1" | tr '/' '_')"; }
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$(copia "$f")" "$f"; touch "$f"; done; }
@@ -360,6 +369,120 @@ mutar "la hora de cada clic, en UTC y no en la del parque" "$T" \
 control "un comentario del servicio de los clics" "$C" \
   'Apunta la visita que llega con la marca de un envío' \
   'Apunta la visita que llegó con la marca de un envío'
+
+# ══ C3 · LAS APERTURAS (`#797`, §4.12) ═══════════════════════════════════════════════════════════
+SECCION=C3
+OM=app/Domain/Platform/Services/Analytics/EmailOpenMarks.php
+OS=app/Domain/Platform/Services/Analytics/EmailOpens.php
+OE=app/Domain/Platform/Models/EmailOpen.php
+
+# ── Quién lleva el píxel ────────────────────────────────────────────────────────────────────────
+mutar "el píxel, ENCENDIDO de fábrica" "$OM" \
+  "        return (string) Setting::value(self::SETTING, '0') === '1';" \
+  "        return (string) Setting::value(self::SETTING, '1') === '1';"
+
+mutar "el píxel sin el «sí» de análisis (basta con no haber dicho que no)" "$OM" \
+  "            && app(ConsentLedger::class)->accountConsentedNow((int) \$recipient->getKey(), 'analytics') === true;" \
+  "            && app(ConsentLedger::class)->accountConsentedNow((int) \$recipient->getKey(), 'analytics') !== false;"
+
+mutar "el píxel a quien se opuso, sin cuenta o en la encuesta" "$OM" \
+  '            && EmailClickMarks::personAllows($recipient, $key)' \
+  '            && true'
+
+mutar "manda la PRIMERA decisión de cookies, no la última" "app/Domain/Identity/Services/CookieConsentLedger.php" \
+  "        \$last = \$rows->orderByDesc('accepted_at')->orderByDesc('id')->first();" \
+  "        \$last = \$rows->orderBy('accepted_at')->orderBy('id')->first();"
+
+mutar "nadie decide el píxel (el oyente no se registra)" "app/Providers/AppServiceProvider.php" \
+  '        Event::listen(NotificationSending::class, [EmailOpenMarks::class, '"'"'sending'"'"']);' \
+  ''
+
+mutar "el píxel no llega al correo" "resources/views/vendor/mail/html/layout.blade.php" \
+  '@isset($openMark)' \
+  '@isset($nada)'
+
+mutar "el envío no apunta que llevó el píxel" "$L" \
+  "                'tracks_opens' => EmailOpenMarks::for(\$event->notification) !== null," \
+  "                'tracks_opens' => false,"
+
+# ── El píxel, al abrir ──────────────────────────────────────────────────────────────────────────
+mutar "el píxel abre sesión (deja cookie)" "routes/web.php" \
+  '        StartSession::class,' \
+  ''
+
+mutar "el píxel acuña la cookie del visitante" "routes/web.php" \
+  "        ResolveVisitor::class.':'.ResolveVisitor::MINT,
+        RecordEmailClick::class," \
+  '        RecordEmailClick::class,'
+
+mutar "apuntar la apertura puede romper el píxel" "app/Http/Controllers/EmailOpenController.php" \
+  "            Log::warning('email_opens.record_failed', ['error' => \$e::class]);" \
+  '            throw $e;'
+
+mutar "la de Apple cuenta como una lectura" "$OE" \
+  "            \$ua === 'Mozilla/5.0' => self::SOURCE_APPLE," \
+  '            false => self::SOURCE_APPLE,'
+
+mutar "el proxy de Gmail no se reconoce" "$OE" \
+  "            str_contains(\$ua, 'GoogleImageProxy') => self::SOURCE_GMAIL," \
+  '            false => self::SOURCE_GMAIL,'
+
+mutar "sin «early»: lo de antes de poder leerlo cuenta" "$OS" \
+  '$now->getTimestamp() - $send->sent_at->getTimestamp() < EmailOpen::EARLY_SECONDS' \
+  '$now->getTimestamp() - $send->sent_at->getTimestamp() < 0'
+
+mutar "sin «repeat»: la misma lectura cuenta dos veces" "$OS" \
+  '                $lastCounted !== null && $now->getTimestamp()' \
+  '                false && $now->getTimestamp()'
+
+mutar "sin tope por envío" "$OS" \
+  '->count() >= EmailOpen::FLOOD_PER_MINUTE) {' \
+  '->count() >= 999999) {'
+
+mutar "no se re-comprueba la regla al abrir" "$OS" \
+  '            if ($send === null || ! $send->tracks_opens || ! EmailOpenMarks::allows($send->user, $send->mail_key)) {' \
+  '            if ($send === null || ! $send->tracks_opens) {'
+
+mutar "cuenta aperturas de un envío que salió sin píxel" "$OS" \
+  '            if ($send === null || ! $send->tracks_opens || ! EmailOpenMarks::allows($send->user, $send->mail_key)) {' \
+  '            if ($send === null || ! EmailOpenMarks::allows($send->user, $send->mail_key)) {'
+
+mutar "el aparato de una apertura por proxy" "$OS" \
+  '        $device = $source === EmailOpen::SOURCE_DIRECT && $userAgent !== null' \
+  '        $device = $userAgent !== null'
+
+# ── Se ve, se exporta, se poda ──────────────────────────────────────────────────────────────────
+mutar "la vista previa pide el píxel (contaría como apertura)" "$T" \
+  "            \$html = (string) preg_replace('#<img\\b[^>]*/e/'.preg_quote(\$sendKey, '#').'\\.gif[^>]*>#i', '', \$html);" \
+  ''
+
+mutar "el panel cuenta también las automáticas y las repeticiones" "$M" \
+  "            'opens as opens_counted' => static fn (Builder \$opens) => \$opens->whereNull('verdict')," \
+  "            'opens as opens_counted' => static fn (Builder \$opens) => \$opens,"
+
+mutar "sin píxel, el panel dice «Sin abrir» (un cero que miente)" "$T" \
+  '        if (! $record->tracks_opens) {' \
+  '        if (false) {'
+
+mutar "«Actividad» sin las aperturas" "$T" \
+  "        foreach (\$record->opens()->orderBy('opened_at')->orderBy('id')->get() as \$open) {" \
+  "        foreach (\$record->opens()->whereRaw('1 = 0')->get() as \$open) {"
+
+mutar "«Actividad» sin ordenar por hora" "$T" \
+  '        usort($events, static fn (array $a, array $b): int => [$a[0], $a[1]] <=> [$b[0], $b[1]]);' \
+  ''
+
+mutar "el export no lleva las aperturas" "app/Domain/Identity/Services/AccountPrivacy.php" \
+  "                    'opens' => \$send->tracks_opens ? (int) \$send->opens_counted : null," \
+  "                    'opens' => null,"
+
+mutar "la poda no arrastra las aperturas (la FK sin cascada)" "database/migrations/2026_09_29_070000_add_email_open_tracking.php" \
+  "            \$table->foreignId('email_send_id')->constrained('email_sends')->cascadeOnDelete();" \
+  "            \$table->foreignId('email_send_id')->constrained('email_sends');"
+
+control "un comentario del servicio de las aperturas" "$OS" \
+  'Apunta cada vez que se pide el píxel de un envío' \
+  'Apunta cada vez que se pidió el píxel de un envío'
 
 echo
 echo "$muerden/$total muerden${SOLO:+ (solo la tanda $SOLO)}"

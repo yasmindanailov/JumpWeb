@@ -245,8 +245,8 @@ class AccountPrivacy
             'surveys' => $this->surveysFor($user),
             // LOS CORREOS QUE LE HEMOS ENVIADO (`specs/correos-salientes.md` §4.1, `#794`): qué correo, cuándo salió o si
             // falló, y su asunto. La COPIA no viaja: es una foto de lo que ya tiene en su buzón, y su asunto la nombra.
-            // Y sus clics (la C2, §4.8): los de una persona, o `null` si ese correo no los contaba.
-            'emails' => EmailSend::query()->where('user_id', $user->getKey())->withClickCounts()->orderBy('id')->get()
+            // Y sus clics (la C2, §4.8) y sus aperturas (la C3, §4.12): las que cuentan, o `null` si ese correo no las medía.
+            'emails' => EmailSend::query()->where('user_id', $user->getKey())->withClickCounts()->withOpenCounts()->orderBy('id')->get()
                 ->map(static fn (EmailSend $send): array => [
                     'mail' => (string) $send->mail_key,
                     'subject' => $send->subject,
@@ -254,6 +254,7 @@ class AccountPrivacy
                     'failed_at' => $send->failed_at?->toIso8601String(),
                     'failures' => (int) $send->failures,
                     'clicks' => $send->tracks_clicks ? (int) $send->clicks_counted : null,
+                    'opens' => $send->tracks_opens ? (int) $send->opens_counted : null,
                 ])->values()->all(),
         ];
     }

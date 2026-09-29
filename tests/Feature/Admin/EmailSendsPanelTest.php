@@ -7,9 +7,11 @@ use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\AuditLog;
 use App\Domain\Platform\Models\EmailClick;
+use App\Domain\Platform\Models\EmailOpen;
 use App\Domain\Platform\Models\EmailSend;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\Analytics\EmailClickMarks;
+use App\Domain\Platform\Services\Analytics\EmailOpenMarks;
 use App\Filament\Pages\Settings;
 use App\Filament\Resources\EmailSends\EmailSendResource;
 use App\Filament\Resources\EmailSends\Pages\ListEmailSends;
@@ -129,6 +131,10 @@ class EmailSendsPanelTest extends TestCase
             ->assertSee('Sin clics')
             ->assertSee('No se mide');
 
+        // ⚠️ Por la columna, no por el texto de la página: desde la C3 la de aperturas también dice «No se mide».
+        $this->assertSame('No se mide', EmailSendTable::clicks($sinMedir), 'sin la marca, un cero mentiría');
+        $this->assertSame('Sin clics', EmailSendTable::clicks($sinPulsar));
+
         $lista->filterTable('clicks', EmailSendTable::CLICKED)->assertCanSeeTableRecords([$medido])->assertCanNotSeeTableRecords([$sinPulsar, $sinMedir]);
         $lista->filterTable('clicks', EmailSendTable::NOT_CLICKED)->assertCanSeeTableRecords([$sinPulsar])->assertCanNotSeeTableRecords([$medido, $sinMedir]);
         $lista->filterTable('clicks', EmailSendTable::NOT_MEASURED)->assertCanSeeTableRecords([$sinMedir])->assertCanNotSeeTableRecords([$medido, $sinPulsar]);
@@ -197,6 +203,76 @@ class EmailSendsPanelTest extends TestCase
         $this->assertStringContainsString('13 minutos después', $modal);
     }
 
+    /** Las aperturas (la C3): las que cuentan, las automáticas aparte, «No se mide» sin píxel, el filtro y la ficha. */
+    public function test_the_list_counts_the_opens_apart_from_the_automatic_ones(): void
+    {
+        $cliente = User::factory()->create();
+        $abierto = $this->send($cliente->id, 'order_confirmation', sentAt: now(), opens: true);
+        $this->open($abierto, EmailOpen::SOURCE_DIRECT, null);
+        $this->open($abierto, EmailOpen::SOURCE_GMAIL, null);
+        $this->open($abierto, EmailOpen::SOURCE_DIRECT, EmailOpen::VERDICT_REPEAT);
+        $this->open($abierto, EmailOpen::SOURCE_APPLE, EmailOpen::VERDICT_APPLE);
+        $sinAbrir = $this->send($cliente->id, 'order_cancelled', sentAt: now(), opens: true);
+        $sinMedir = $this->send($cliente->id, 'survey_invitation', sentAt: now(), opens: false);
+
+        $lista = Livewire::actingAs($this->withRole('admin'))->test(ListEmailSends::class)
+            ->assertSee('Aperturas')
+            ->assertSee('2 aperturas')
+            ->assertSee('+1 automática')
+            ->assertSee('Sin abrir');
+
+        // ⚠️ Por la columna, no por el texto de la página: esa fila dice «No se mide» también en la de clics (lo cazó el arnés).
+        $this->assertSame('No se mide', EmailSendTable::opens($sinMedir), 'sin píxel, un cero mentiría');
+        $this->assertSame('Sin abrir', EmailSendTable::opens($sinAbrir));
+
+        $lista->filterTable('opens', EmailSendTable::OPENED)->assertCanSeeTableRecords([$abierto])->assertCanNotSeeTableRecords([$sinAbrir, $sinMedir]);
+        $lista->filterTable('opens', EmailSendTable::NOT_OPENED)->assertCanSeeTableRecords([$sinAbrir])->assertCanNotSeeTableRecords([$abierto, $sinMedir]);
+        $lista->filterTable('opens', EmailSendTable::NOT_MEASURED)->assertCanSeeTableRecords([$sinMedir])->assertCanNotSeeTableRecords([$abierto, $sinAbrir]);
+
+        Livewire::actingAs($this->withRole('admin'))->test(ViewUser::class, ['record' => $cliente->id])
+            ->assertSee('2 aperturas');
+    }
+
+    /** En «Actividad», las aperturas con su origen y los clics, en el orden en que pasaron; la de Apple, con su porqué. */
+    public function test_the_activity_puts_opens_and_clicks_in_the_order_they_happened(): void
+    {
+        $this->travelTo(CarbonImmutable::parse('2026-09-29 08:00:00', 'UTC'));
+        $send = $this->send(User::factory()->create()->id, 'order_cancelled', sentAt: now(), tracks: true, opens: true);
+        DB::table('email_opens')->insert([
+            ['email_send_id' => $send->id, 'source' => EmailOpen::SOURCE_APPLE, 'device' => null, 'verdict' => EmailOpen::VERDICT_APPLE, 'opened_at' => now()->addSeconds(40)],
+            ['email_send_id' => $send->id, 'source' => EmailOpen::SOURCE_GMAIL, 'device' => null, 'verdict' => null, 'opened_at' => now()->addHours(3)],
+        ]);
+        // Un clic ENTRE las dos aperturas: sin ordenar por hora, saldría detrás de las dos.
+        DB::table('email_clicks')->insert(['email_send_id' => $send->id, 'route' => '/login', 'device' => 'mobile', 'verdict' => null, 'clicked_at' => now()->addHours(2)]);
+
+        $eventos = EmailSendTable::activity($send);
+
+        $this->assertSame(['sent', 'open', 'click', 'open'], array_column($eventos, 'kind'));
+        $this->assertFalse($eventos[1]['counts']);
+        $this->assertSame('No cuenta: Apple lo descarga al entregarlo, lo lea o no', $eventos[1]['why']);
+        $this->assertSame(['Gmail', true, '29/09/2026 13:00:00'], [$eventos[3]['via'], $eventos[3]['counts'], $eventos[3]['at']]);
+        $this->assertSame('3 horas después', $eventos[3]['after']);
+
+        Livewire::actingAs($this->withRole('admin'))->test(ListEmailSends::class)
+            ->assertActionVisible(TestAction::make('activity')->table($send));
+    }
+
+    /** El interruptor de las aperturas: APAGADO de fábrica y SEPARADO del de los clics (`#797`). */
+    public function test_counting_opens_is_off_by_default_and_apart_from_the_clicks(): void
+    {
+        $this->seed(LandingContentSeeder::class);
+        Setting::updateOrCreate(['key' => 'address.maps_url'], ['value' => '', 'group' => 'contact']);
+        $this->assertFalse(EmailOpenMarks::enabled());
+
+        Livewire::actingAs($this->withRole('admin'))->test(Settings::class)
+            ->fillForm([EmailOpenMarks::SETTING => true])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertTrue(EmailOpenMarks::enabled());
+        $this->assertFalse(EmailClickMarks::enabled(), 'encender las aperturas no enciende los clics');
+    }
+
     public function test_without_the_mark_there_is_no_activity(): void
     {
         $send = $this->send(User::factory()->create()->id, 'order_confirmation', sentAt: now(), tracks: false);
@@ -252,11 +328,16 @@ class EmailSendsPanelTest extends TestCase
         return $user;
     }
 
-    private function send(?int $userId, string $key, ?\DateTimeInterface $sentAt, int $failures = 0, ?string $recipient = 'cliente@example.test', ?string $html = '<p>Hola</p>', bool $tracks = false): EmailSend
+    private function open(EmailSend $send, string $source, ?string $verdict): void
+    {
+        DB::table('email_opens')->insert(['email_send_id' => $send->id, 'source' => $source, 'verdict' => $verdict, 'opened_at' => now()]);
+    }
+
+    private function send(?int $userId, string $key, ?\DateTimeInterface $sentAt, int $failures = 0, ?string $recipient = 'cliente@example.test', ?string $html = '<p>Hola</p>', bool $tracks = false, bool $opens = false): EmailSend
     {
         $id = DB::table('email_sends')->insertGetId([
             'send_key' => (string) Str::uuid(), 'user_id' => $userId, 'recipient' => $recipient, 'mail_key' => $key,
-            'subject' => 'Asunto', 'html' => $html, 'attachments' => '[]', 'failures' => $failures, 'tracks_clicks' => $tracks,
+            'subject' => 'Asunto', 'html' => $html, 'attachments' => '[]', 'failures' => $failures, 'tracks_clicks' => $tracks, 'tracks_opens' => $opens,
             'sent_at' => $sentAt, 'failed_at' => $failures > 0 ? now() : null, 'created_at' => now(), 'updated_at' => now(),
         ]);
 

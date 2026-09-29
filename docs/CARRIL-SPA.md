@@ -338,7 +338,10 @@ emails.track_clicks 0` lo apaga) y los envíos de sonda 3–8 y 11–12 del clie
 `sonda-c2-clics.mjs` y `c2-veredictos.php`, en la carpeta de auditoría). Los 9 y 10 salieron del control SIN bloqueo, con
 «3 clics» falsos, y se borraron. Se quitan borrando esas filas de `email_sends`: sus clics se van en cascada. De la C2b
 (`sonda-c2b-cuando.mjs`, con `BASE=http://localhost:8081` y el puente `socat` dentro del contenedor): los envíos 13 y 18; los
-14–17 salieron de los controles SIN la protección de la vista previa y se borraron.
+14–17 salieron de los controles SIN la protección de la vista previa y se borraron. De la C3 (`#797`,
+`sonda-c3-aperturas.mjs` y `c3-aperturas.php`): el interruptor `emails.track_opens` ENCENDIDO (`app:set-setting
+emails.track_opens 0` lo apaga), una fila de `cookie_consent_logs` del cliente 593 con «análisis» aceptado (se quita
+borrándola) y los envíos 19 y 20 con sus aperturas; el 21, del control sin la protección, se borró.
 
 ## 9 · La foto vieja del carril (mudada VERBATIM de `carriles/spa.md` el 2026-09-29, su techo)
 
@@ -357,6 +360,19 @@ emails.track_clicks 0` lo apaga) y los envíos de sonda 3–8 y 11–12 del clie
   enseñó» en `encuestas.md` §4.6; el owner contestó una en vivo desde la puerta y cerró con «buen trabajo»).
   Quedan: `[PENDIENTE: asesoría]` (5) del correo de servicio, la **T2e** solo si el volumen lo pide, el `EXPLAIN` con
   volumen en staging. Todo espera la v2.0.0 (`#670`). Las trampas pagadas en la T7 viven en `encuestas.md` §4.6.
+
+Del buzón del carril, mudado VERBATIM el 2026-09-29 (su techo; mensajes a plataforma del 26-09, ya leídos):
+
+- **Para plataforma (26-09, F6b, `#750`)**: `scripts/deploy.sh` espera ya **10** tareas (entra `birthday-reminders:send`,
+  horaria); una tarjeta en tu hub («Precios y productos → Avisos de cumple») y un ajuste en `Settings.php`
+  (`party.birthday_reminder_weeks`). El contrato NO cambia. En `fiesta.css`, `[hidden]` oculta ya sin `.js`.
+- ❗ **Para plataforma (26-09, F5, `#749`)**: el CONTRATO **1.39.0** es mío (tras tu 1.38.0): en `PostFormAddon`
+  `serves`, `family`, `block` e `image_url`; en `GuestForm` `cake_declined` y `saved_at`; `PUT` acepta `cake_declined`;
+  `adults` en el `enum` de tipos de campo del catálogo. Tu siguiente, **1.40.0**. ⚠️ `PostFormAddons::viewFor()` (lo
+  que lees en «Antes de venir», si lo lees) lleva cuatro datos más, sin cambiar los de antes. Leído tu buzón de la T5e·1
+  (`#778`): nada tuyo toca la fiesta.
+- **Para plataforma (26-09, F1c)**: `party.park_video` y `party.park_video_poster` son hechos públicos: si
+  `instancia-y-landing-fuera.md` §2 cuenta los ajustes públicos, sumadlos.
 
 ## Anexo · La fila del enrutador, mudada el 2026-09-16
 

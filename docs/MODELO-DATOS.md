@@ -611,7 +611,8 @@ escritor `AnalyticsGoals::save()`: rastro `analytics.goals_updated` con el antes
 fila) · `user_id` nullable indexado, **sin FK** (como el libro: la fila de `users` no se borra y la poda va por edad) ·
 `recipient` · `mail_key` (`EmailUtm::keyOf()`) · `subject` · `html` longText (la COPIA exacta de lo que salió, sin adjuntos) ·
 `attachments` json (solo nombres) · `copy_purged_at` · `failures` · `sent_at` · `failed_at` · `tracks_clicks` bool (si salió
-con la marca `jw_e` en sus enlaces, la C2; sin ella sus clics «no se miden») · timestamps. Único escritor
+con la marca `jw_e` en sus enlaces, la C2; sin ella sus clics «no se miden») · `tracks_opens` bool (si salió con el píxel, la
+C3) · timestamps. Único escritor
 `Platform\Listeners\RecordEmailSend` (`NotificationSent` y `NotificationFailed`, tras el commit y dentro de un try/catch: apuntar
 nunca rompe el envío). **Plazos** (`[DECIDIDO owner]`): la copia se borra a los **6 meses** (`email-sends:trim`) y la fila a los
 **24** (`model:prune`). `anonymize()` borra `html`, `subject`, `recipient` y `attachments` de las del titular y suelta `user_id`;
@@ -625,6 +626,14 @@ tokens) · `device` nullable (`mobile`/`tablet`/`desktop`, la clase de `Device` 
 cuenta; `repeat`, `early`, `sweep`, `bot` no: el mismo enlace, antes de poder leerlo, la ráfaga de un escáner, un robot que se
 anuncia) · `clicked_at`. Índice `(email_send_id, clicked_at)`. **Sin IP ni agente de usuario, sin nada personal**: la persona
 está en su envío. Único escritor `Services\Analytics\EmailClicks::record()` (desde `RecordEmailClick`, con el envío bloqueado).
+
+### `email_opens` (EmailOpen) — cada vez que se pide el píxel de un envío · `#797` (C3)
+
+`specs/correos-salientes.md` §4.12. `email_send_id` FK **cascadeOnDelete** · `source` (`apple`: Apple Mail al entregar, de
+máquina; `gmail`: su proxy, primera hora real y sin reaperturas; `direct`) · `device` nullable (la clase de `Device`, solo si
+lo pide el gestor directamente) · `verdict` nullable (`null` cuenta; `apple`, `early`, `repeat` no) · `opened_at`. Índice
+`(email_send_id, opened_at)`. **Sin IP ni agente de usuario.** Único escritor `Services\Analytics\EmailOpens::record()` (desde
+`EmailOpenController`, `GET /e/{send}.gif` sin sesión ni cookies, con el envío bloqueado y un tope por envío y minuto).
 
 ### `surveys` · `survey_participations` · `survey_responses` · `survey_spent_tokens` — las encuestas, ANÓNIMAS · `#740`, `#754`, `#757`
 

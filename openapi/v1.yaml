@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.52.0
+  version: 1.54.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -5248,7 +5248,7 @@ components:
 
     ExportedEmailSend:
       type: object
-      required: [mail, subject, sent_at, failed_at, failures, clicks]
+      required: [mail, subject, sent_at, failed_at, failures, clicks, opens]
       additionalProperties: false
       properties:
         mail:
@@ -5277,6 +5277,14 @@ components:
           description: |
             **1.52.0** (`specs/correos-salientes.md` §4.8, la C2): cuántas veces pulsó sus enlaces (sin las visitas de un
             escáner). `null` si sus clics no se contaban (se opuso a la analítica, el correo no los cuenta o estaba apagado).
+        opens:
+          type: integer
+          minimum: 0
+          nullable: true
+          description: |
+            **1.54.0** (`specs/correos-salientes.md` §4.12, la C3): cuántas veces lo abrió, sin las descargas automáticas
+            (Apple al entregar) ni las repeticiones de una misma lectura. `null` si el correo salió sin el píxel (sin su
+            consentimiento de «análisis», se opuso, el correo no lo lleva o estaba apagado).
 
     ExportedSurveys:
       type: object

@@ -12,7 +12,7 @@
     use App\Filament\Resources\EmailSends\EmailSendResource;
     use App\Filament\Resources\EmailSends\Tables\EmailSendTable;
 
-    $sends = EmailSend::query()->where('user_id', $record->getKey())->withClickCounts()->latest('id')->limit(10)->get();
+    $sends = EmailSend::query()->where('user_id', $record->getKey())->withClickCounts()->withOpenCounts()->latest('id')->limit(10)->get();
 @endphp
 
 @if ($sends->isEmpty())
@@ -27,7 +27,7 @@
                 </div>
                 <div class="shrink-0 text-right text-xs text-gray-600 dark:text-gray-300">
                     <p>{{ trans_choice('admin.email_sends.state.'.EmailSendTable::state($send), $send->failures, ['count' => $send->failures]) }}</p>
-                    <p class="text-gray-500 dark:text-gray-400" data-email-send-clicks>{{ EmailSendTable::clicks($send) }}</p>
+                    <p class="text-gray-500 dark:text-gray-400"><span data-email-send-opens>{{ EmailSendTable::opens($send) }}</span> · <span data-email-send-clicks>{{ EmailSendTable::clicks($send) }}</span></p>
                 </div>
             </li>
         @endforeach

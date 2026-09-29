@@ -2948,6 +2948,8 @@ return [
         'section_emails_hint' => '对客户收到的邮件进行的统计。可在「客户 → 已发送邮件」中查看。',
         'emails_track_clicks' => '统计每封邮件的点击',
         'emails_track_clicks_hint' => '每位客户点击每封邮件中链接的次数。仅限有账户且未拒绝分析的客户，问卷邮件永不统计（问卷是匿名的）。请在隐私政策说明此事后再开启。',
+        'emails_track_opens' => '统计每封邮件的打开',
+        'emails_track_opens_hint' => '一张不可见的图片记录每位客户打开每封邮件的时间。仅限在 Cookie 提示中接受「分析」的客户，问卷邮件永不统计。结果是近似值：Apple 邮件在送达时自动下载一切（不计入），Gmail 不报告再次打开。请在 Cookie 政策说明此事后再开启。',
         'section_ads' => '广告像素',
         'section_ads_hint' => 'Google Ads、Meta（Facebook 与 Instagram）和 TikTok。仅当访客在 Cookie 提示中接受「营销」类别时才加载各像素，购买会以订单编号上报。留空 = 不启用。转化 API 的私密密钥存放在服务器上。',
         'ads_google_conversion_id' => 'Google Ads 转化 ID',
@@ -3755,11 +3757,24 @@ return [
         'activity' => [
             'action' => '动态',
             'heading' => '动态 · :mail',
-            'no_clicks' => '客户尚未点击此邮件中的任何链接。',
+            'nothing_yet' => '客户尚未打开此邮件，也未点击任何链接（或无法得知）。',
             'kind' => [
                 'sent' => '已发送',
+                'open' => '已打开',
                 'click' => '点击',
             ],
+        ],
+        'opens' => '{0} 未打开|[1,*] :count 次打开',
+        'opens_automatic' => '另有 :count 次自动打开|另有 :count 次自动打开',
+        'opens_not_measured' => '不统计',
+        'source' => [
+            'apple' => 'Apple 邮件',
+            'gmail' => 'Gmail',
+        ],
+        'open_verdict' => [
+            'apple' => '不计入：Apple 在送达时自动下载，无论是否阅读',
+            'early' => '不计入：在任何人能阅读之前',
+            'repeat' => '不计入：同一次阅读的重复',
         ],
         'device' => [
             'mobile' => '手机',
@@ -3778,6 +3793,7 @@ return [
             'mail' => '邮件',
             'status' => '状态',
             'clicks' => '点击',
+            'opens' => '打开',
         ],
         'filter' => [
             'customer' => '客户',
@@ -3786,6 +3802,8 @@ return [
             'clicked' => '有点击',
             'not_clicked' => '无点击',
             'not_measured' => '不统计',
+            'opened' => '已打开',
+            'not_opened' => '未打开',
         ],
         'state' => [
             'sent' => '已发送',

@@ -3579,6 +3579,8 @@ return [
         'section_emails_hint' => 'Lo que se mide de los correos que reciben los clientes. Se ve en Clientes → «Correos enviados».',
         'emails_track_clicks' => 'Contar los clics de cada correo',
         'emails_track_clicks_hint' => 'Cuántas veces pulsa cada cliente los enlaces de cada correo. Solo con cuenta y sin oposición a la analítica, y nunca en la encuesta, que es anónima. Enciéndelo cuando la política de privacidad lo explique.',
+        'emails_track_opens' => 'Contar las aperturas de cada correo',
+        'emails_track_opens_hint' => 'Una imagen invisible dice cuándo abre cada cliente cada correo. Solo si aceptó «análisis» en el aviso de cookies, y nunca en la encuesta. Aproximado: Apple Mail lo descarga todo al entregarlo (no cuenta) y Gmail no avisa de las reaperturas. Enciéndelo cuando la política de cookies lo explique.',
         // Los píxeles de anuncios (T3b·1): ids públicos por plataforma; cargan solo con la categoría «marketing».
         'section_ads' => 'Píxeles de anuncios',
         'section_ads_hint' => 'Google Ads, Meta (Facebook e Instagram) y TikTok. Cada píxel se carga solo si el visitante acepta la categoría «marketing» del aviso de cookies, y la compra se comunica con el código del pedido. Vacío = sin píxel. Las claves privadas de las APIs de conversiones viven en el servidor.',
@@ -4650,11 +4652,25 @@ return [
         'activity' => [
             'action' => 'Actividad',
             'heading' => 'Actividad · :mail',
-            'no_clicks' => 'Todavía no ha pulsado ningún enlace de este correo.',
+            'nothing_yet' => 'Todavía no lo ha abierto ni ha pulsado ningún enlace (o no se puede saber).',
             'kind' => [
                 'sent' => 'Enviado',
+                'open' => 'Abierto',
                 'click' => 'Clic',
             ],
+        ],
+        // Las aperturas (la C3, §4.12).
+        'opens' => '{0} Sin abrir|{1} :count apertura|[2,*] :count aperturas',
+        'opens_automatic' => '+:count automática|+:count automáticas',
+        'opens_not_measured' => 'No se mide',
+        'source' => [
+            'apple' => 'Apple Mail',
+            'gmail' => 'Gmail',
+        ],
+        'open_verdict' => [
+            'apple' => 'No cuenta: Apple lo descarga al entregarlo, lo lea o no',
+            'early' => 'No cuenta: antes de que nadie pudiera leerlo',
+            'repeat' => 'No cuenta: la misma lectura otra vez',
         ],
         'device' => [
             'mobile' => 'Móvil',
@@ -4673,6 +4689,7 @@ return [
             'mail' => 'Correo',
             'status' => 'Estado',
             'clicks' => 'Clics',
+            'opens' => 'Aperturas',
         ],
         'filter' => [
             'customer' => 'Cliente',
@@ -4681,6 +4698,8 @@ return [
             'clicked' => 'Con clic',
             'not_clicked' => 'Sin clic',
             'not_measured' => 'No se mide',
+            'opened' => 'Abiertos',
+            'not_opened' => 'Sin abrir',
         ],
         'state' => [
             'sent' => 'Enviado',

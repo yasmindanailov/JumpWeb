@@ -4,6 +4,7 @@ namespace App\Notifications\Support;
 
 use App\Domain\Platform\Models\EmailSend;
 use App\Domain\Platform\Services\Analytics\EmailClickMarks;
+use App\Domain\Platform\Services\Analytics\EmailOpenMarks;
 use App\Domain\Platform\Services\Analytics\EmailUtm;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -75,6 +76,10 @@ class BrandedMailMessage extends MailMessage
         // con el interruptor encendido). Viaja a la vista para el logotipo y el pie, como la UTM.
         $this->clickMark = EmailClickMarks::for($notification);
         $this->viewData['clickMark'] = $this->clickMark;
+
+        // Y el PÍXEL de apertura (§4.12, la C3): solo si `EmailOpenMarks` lo anotó al enviar (con su interruptor y el
+        // consentimiento de la cuenta). Viaja a la vista, que lo pone al final del cuerpo.
+        $this->viewData['openMark'] = EmailOpenMarks::for($notification);
     }
 
     /**

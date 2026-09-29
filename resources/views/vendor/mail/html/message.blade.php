@@ -1,5 +1,5 @@
-@props(['preheader' => null, 'utm' => null, 'clickMark' => null])
-<x-mail::layout :preheader="$preheader">
+@props(['preheader' => null, 'utm' => null, 'clickMark' => null, 'openMark' => null])
+<x-mail::layout :preheader="$preheader" :open-mark="$openMark">
 {{-- Header --}}
 <x-slot:header>
 {{-- El logotipo lleva la UTM del correo (`EmailUtm::tag()`, analítica §4.1) y, si sus clics se cuentan, la marca del

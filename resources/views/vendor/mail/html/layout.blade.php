@@ -218,5 +218,13 @@ border-bottom-color: #2A3138 !important;
 </td>
 </tr>
 </table>
+{{-- EL PÍXEL DE APERTURA (`specs/correos-salientes.md` §4.12, `#797`): solo si el correo lo lleva (`EmailOpenMarks`: su
+     interruptor y el consentimiento de la cuenta). Al final y sin alto, para no mover nada del correo; `alt` vacío, para que
+     un gestor que bloquea imágenes no pinte un texto. --}}
+@isset($openMark)
+@if ($openMark !== null && $openMark !== '')
+<img src="{{ route('emails.open', ['send' => $openMark]) }}" width="1" height="1" alt="" style="display:block; width:1px; height:1px; border:0; margin:0; padding:0;" />
+@endif
+@endisset
 </body>
 </html>

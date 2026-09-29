@@ -18,6 +18,7 @@ use App\Domain\Payments\Services\Redsys;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\Analytics\Drivers;
 use App\Domain\Platform\Services\Analytics\EmailClickMarks;
+use App\Domain\Platform\Services\Analytics\EmailOpenMarks;
 use App\Domain\Platform\Services\Analytics\Pixels;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Domain\Platform\Services\Surveys\SurveySettings;
@@ -77,7 +78,7 @@ class Settings extends Page
     public ?array $data = [];
 
     /** Ajustes booleanos (se guardan como '1'/'0'). */
-    private const BOOL_KEYS = ['packs.prep_blocks_cupo', 'cookies.banner_enabled', EmailClickMarks::SETTING];
+    private const BOOL_KEYS = ['packs.prep_blocks_cupo', 'cookies.banner_enabled', EmailClickMarks::SETTING, EmailOpenMarks::SETTING];
 
     /**
      * Toggles cuyo DEFAULT de runtime es ON (sus helpers defensivos devuelven true sin fila). Si la
@@ -260,6 +261,8 @@ class Settings extends Page
         // Los clics de cada correo (`specs/correos-salientes.md` §4.8, la C2): APAGADO por defecto (marca blanca; se enciende
         // cuando `/privacidad` lo nombra, `[PENDIENTE: asesoría]`).
         EmailClickMarks::SETTING => 'emails',
+        // Y las aperturas (la C3, §4.12): su PROPIO interruptor, apagado, porque el píxel pide consentimiento (`#797`).
+        EmailOpenMarks::SETTING => 'emails',
         // Los píxeles de anuncios (T3b·1): ids PÚBLICOS; cargan solo con la categoría `marketing`. Los tokens de
         // las APIs de conversiones van en `.env` (`services.meta`, `services.tiktok`), nunca aquí.
         Pixels::KEY_GOOGLE_ADS_ID => 'marketing',
@@ -599,6 +602,8 @@ class Settings extends Page
      * Los correos a los clientes (`specs/correos-salientes.md` §4.8, la C2): contar los clics de CADA correo. Apagado por
      * defecto: cada instalación lo enciende cuando su `/privacidad` lo nombra (`[PENDIENTE: asesoría]`). No depende del
      * aviso de cookies —no hay cookie—, y nunca a quien se opuso a la analítica ni en la encuesta, que es anónima.
+     * Y las aperturas (la C3, §4.12), con su PROPIO interruptor, también apagado: el píxel sí pide el consentimiento de
+     * «análisis» de la cuenta, y `/cookies` tiene que nombrarlo antes.
      */
     private function emailsSection(): Section
     {
@@ -610,6 +615,9 @@ class Settings extends Page
                 Toggle::make(EmailClickMarks::SETTING)
                     ->label(__('admin.settings.emails_track_clicks'))
                     ->helperText(__('admin.settings.emails_track_clicks_hint')),
+                Toggle::make(EmailOpenMarks::SETTING)
+                    ->label(__('admin.settings.emails_track_opens'))
+                    ->helperText(__('admin.settings.emails_track_opens_hint')),
             ]);
     }
 

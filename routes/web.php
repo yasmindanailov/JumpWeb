@@ -20,6 +20,7 @@ use App\Http\Controllers\BarController;
 use App\Http\Controllers\BirthdayReminderController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\CookieConsentController;
+use App\Http\Controllers\EmailOpenController;
 use App\Http\Controllers\EventsController;
 use App\Http\Controllers\GuardianAuthorizationController;
 use App\Http\Controllers\GuestFormController;
@@ -35,12 +36,18 @@ use App\Http\Controllers\ServicesController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\SurveyPageController;
 use App\Http\Instancia\InstancePages;
+use App\Http\Middleware\RecordEmailClick;
 use App\Http\Middleware\RedirectToInstancePage;
 use App\Http\Middleware\ResolveVisitor;
 use App\Http\Middleware\SetAdminLocale;
 use App\Http\Middleware\SetLocale;
 use App\Livewire\Admin\Puerta\ValidarRegistro;
+use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use Illuminate\Cookie\Middleware\EncryptCookies;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
+use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
+use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 Route::get('/', HomeController::class)->name('home');
 
@@ -232,6 +239,25 @@ Route::get('/contacto', [ContactController::class, 'show'])->middleware(Redirect
 Route::post('/contacto', [ContactController::class, 'store'])
     ->middleware('throttle:5,1') // A5/A4 auditoría Fase 1: corta el mail-bombing al admin (envío SMTP síncrono)
     ->name('contacto.store');
+
+// ═══ EL PÍXEL DE APERTURA DE LOS CORREOS (`specs/correos-salientes.md` §4.12, `#797`, la C3) ══════════════════
+// Lo pide el gestor de correo de quien abre un correo con píxel. ⚠️⚠️ FUERA de la sesión, de las cookies y del visitante: un
+// píxel no puede dejar nada en quien lo abre (lo vigila `EmailOpensTest`). ⚠️ SIN limitador por IP, a propósito: el proxy
+// de Gmail pide las imágenes de miles de personas desde las mismas IP; el tope es por ENVÍO (`EmailOpens`).
+Route::get('/e/{send}.gif', EmailOpenController::class)
+    ->whereUuid('send')
+    ->withoutMiddleware([
+        EncryptCookies::class,
+        AddQueuedCookiesToResponse::class,
+        StartSession::class,
+        ShareErrorsFromSession::class,
+        // Laravel 13 llama así al CSRF del grupo `web` (antes `ValidateCsrfToken`); sin sesión, pondría su cookie y caería.
+        PreventRequestForgery::class,
+        SetLocale::class,
+        ResolveVisitor::class.':'.ResolveVisitor::MINT,
+        RecordEmailClick::class,
+    ])
+    ->name('emails.open');
 
 // ═══ LAS PÁGINAS ENFOCADAS DE LA FIESTA: EL INVITADO NO ES UN VISITANTE ═══════════════════════════
 // (`specs/analitica-fiesta.md` §4.1, `DECISIONES #739`). El post-form, el justificante y la invitación

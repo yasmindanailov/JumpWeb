@@ -23,8 +23,11 @@ use Illuminate\Support\Facades\DB;
  * {@see forgetPerson()}.
  *
  * @property bool $tracks_clicks si salió con la marca del envío en sus enlaces (la C2)
+ * @property bool $tracks_opens si salió con el píxel de apertura (la C3)
  * @property-read int|null $clicks_counted con {@see scopeWithClickCounts()}: los clics de una persona
  * @property-read int|null $clicks_scanner con {@see scopeWithClickCounts()}: las visitas de un escáner
+ * @property-read int|null $opens_counted con {@see scopeWithOpenCounts()}: las aperturas que cuentan
+ * @property-read int|null $opens_automatic con {@see scopeWithOpenCounts()}: las de una máquina (Apple, antes de poder leerlo)
  */
 class EmailSend extends Model
 {
@@ -49,6 +52,7 @@ class EmailSend extends Model
         'attachments' => 'array',
         'failures' => 'integer',
         'tracks_clicks' => 'boolean',
+        'tracks_opens' => 'boolean',
         'sent_at' => 'datetime',
         'failed_at' => 'datetime',
         'copy_purged_at' => 'datetime',
@@ -86,6 +90,31 @@ class EmailSend extends Model
         return $query->withCount([
             'clicks as clicks_counted' => static fn (Builder $clicks) => $clicks->whereNull('verdict'),
             'clicks as clicks_scanner' => static fn (Builder $clicks) => $clicks->whereIn('verdict', EmailClick::SCANNER_VERDICTS),
+        ]);
+    }
+
+    /**
+     * Las veces que se pidió su píxel (la C3, §4.12): cuentan las que no llevan veredicto.
+     *
+     * @return HasMany<EmailOpen, $this>
+     */
+    public function opens(): HasMany
+    {
+        return $this->hasMany(EmailOpen::class);
+    }
+
+    /**
+     * Con sus dos recuentos de aperturas (la C3): `opens_counted`, las que cuentan, y `opens_automatic`, las de una máquina
+     * (`EmailOpen::AUTOMATIC_VERDICTS`). Las repeticiones de una misma lectura no están en ninguno.
+     *
+     * @param  Builder<static>  $query
+     * @return Builder<static>
+     */
+    public function scopeWithOpenCounts(Builder $query): Builder
+    {
+        return $query->withCount([
+            'opens as opens_counted' => static fn (Builder $opens) => $opens->whereNull('verdict'),
+            'opens as opens_automatic' => static fn (Builder $opens) => $opens->whereIn('verdict', EmailOpen::AUTOMATIC_VERDICTS),
         ]);
     }
 

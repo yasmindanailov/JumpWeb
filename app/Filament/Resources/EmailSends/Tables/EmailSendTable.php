@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\EmailSends\Tables;
 
+use App\Domain\Platform\Models\EmailOpen;
 use App\Domain\Platform\Models\EmailSend;
 use App\Domain\Platform\Services\Analytics\EmailUtm;
 use App\Domain\Platform\Services\AuditLogger;
@@ -34,6 +35,10 @@ class EmailSendTable
     public const NOT_CLICKED = 'not_clicked';
 
     public const NOT_MEASURED = 'not_measured';
+
+    public const OPENED = 'opened';
+
+    public const NOT_OPENED = 'not_opened';
 
     public static function configure(Table $table): Table
     {
@@ -69,6 +74,11 @@ class EmailSendTable
                     ->label(__('admin.email_sends.col.clicks'))
                     ->getStateUsing(static fn (EmailSend $r): string => self::clicks($r))
                     ->description(static fn (EmailSend $r): string => self::scannerClicks($r)),
+                // Las aperturas (la C3, §4.12): las que cuentan; las de una máquina (Apple al entregar), aparte. Sin píxel, «no se mide».
+                TextColumn::make('opens_counted')
+                    ->label(__('admin.email_sends.col.opens'))
+                    ->getStateUsing(static fn (EmailSend $r): string => self::opens($r))
+                    ->description(static fn (EmailSend $r): string => self::automaticOpens($r)),
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
@@ -103,6 +113,19 @@ class EmailSendTable
                         self::NOT_MEASURED => $query->where('tracks_clicks', false),
                         default => $query,
                     }),
+                SelectFilter::make('opens')
+                    ->label(__('admin.email_sends.col.opens'))
+                    ->options([
+                        self::OPENED => __('admin.email_sends.filter.opened'),
+                        self::NOT_OPENED => __('admin.email_sends.filter.not_opened'),
+                        self::NOT_MEASURED => __('admin.email_sends.filter.not_measured'),
+                    ])
+                    ->query(static fn (Builder $query, array $data): Builder => match ($data['value'] ?? null) {
+                        self::OPENED => $query->whereHas('opens', static fn (Builder $opens) => $opens->whereNull('verdict')),
+                        self::NOT_OPENED => $query->where('tracks_opens', true)->whereDoesntHave('opens', static fn (Builder $opens) => $opens->whereNull('verdict')),
+                        self::NOT_MEASURED => $query->where('tracks_opens', false),
+                        default => $query,
+                    }),
             ])
             ->recordActions([self::previewAction(), self::activityAction()])
             ->toolbarActions([]);
@@ -132,12 +155,14 @@ class EmailSendTable
      * ⚠️⚠️ **La copia, con los enlaces DESACTIVADOS para pintarla aquí** (`#796`): un `iframe` con `sandbox` vacío no abre
      * ventanas, pero SÍ navega dentro de sí mismo. Un enlace pulsado en la vista previa cargaría la web con la marca del envío
      * y contaría como un clic del CLIENTE. Dos capas: `<base target="_blank">` (sin `allow-popups`, el navegador lo bloquea) y
-     * la marca fuera de sus enlaces. La copia guardada no se toca; lo que se ve es idéntico.
+     * la marca fuera de sus enlaces. Y SIN el píxel de apertura (§4.12): pintarla lo pediría y contaría como una apertura. La
+     * copia guardada no se toca; lo que se ve es idéntico.
      */
     public static function inert(string $html, string $sendKey): string
     {
         if ($sendKey !== '') {
             $html = str_replace(['&amp;'.EmailUtm::MARK.'='.$sendKey, '&'.EmailUtm::MARK.'='.$sendKey], '', $html);
+            $html = (string) preg_replace('#<img\b[^>]*/e/'.preg_quote($sendKey, '#').'\.gif[^>]*>#i', '', $html);
         }
 
         $base = '<base target="_blank">';
@@ -148,14 +173,14 @@ class EmailSendTable
 
     /**
      * «Actividad»: CUÁNDO salió, se abrió y se pulsó (`#796`, §4.10). Deja rastro al abrirse, con el envío y sin las horas.
-     * Solo si sus clics se miden (la marca, la C2).
+     * Solo si algo de él se mide (la marca de los clics, la C2, o el píxel, la C3).
      */
     public static function activityAction(): Action
     {
         return Action::make('activity')
             ->label(__('admin.email_sends.activity.action'))
             ->icon(Heroicon::OutlinedClock)
-            ->visible(static fn (EmailSend $record): bool => EmailSendResource::canViewAny() && $record->tracks_clicks)
+            ->visible(static fn (EmailSend $record): bool => EmailSendResource::canViewAny() && ($record->tracks_clicks || $record->tracks_opens))
             ->modalHeading(static fn (EmailSend $record): string => __('admin.email_sends.activity.heading', ['mail' => self::label($record->mail_key)]))
             ->modalWidth('2xl')
             ->modalSubmitAction(false)
@@ -167,10 +192,11 @@ class EmailSendTable
     }
 
     /**
-     * La línea de tiempo de un envío, en la hora del PARQUE: su salida y cada visita con su marca —la hora, cuánto después del
-     * envío, qué enlace y desde qué—. Las de una máquina van también, con su porqué y sin contar.
+     * La línea de tiempo de un envío, en la hora del PARQUE: su salida, cada apertura (con su origen) y cada visita con su
+     * marca —la hora, cuánto después del envío, qué enlace y desde qué—, en el orden en que pasaron. Lo de una máquina va
+     * también, con su porqué y sin contar.
      *
-     * @return list<array{kind: string, at: string, after: string|null, route: string|null, device: string|null, counts: bool, why: string|null}>
+     * @return list<array{kind: string, at: string, after: string|null, route: string|null, device: string|null, via: string|null, counts: bool, why: string|null}>
      */
     public static function activity(EmailSend $record): array
     {
@@ -178,22 +204,40 @@ class EmailSendTable
         $events = [];
 
         if ($sent !== null) {
-            $events[] = ['kind' => 'sent', 'at' => DisplayTime::format($sent, 'd/m/Y H:i'), 'after' => null, 'route' => null, 'device' => null, 'counts' => true, 'why' => null];
+            $events[] = [0, 0, ['kind' => 'sent', 'at' => DisplayTime::format($sent, 'd/m/Y H:i'), 'after' => null, 'route' => null, 'device' => null, 'via' => null, 'counts' => true, 'why' => null]];
+        }
+
+        foreach ($record->opens()->orderBy('opened_at')->orderBy('id')->get() as $open) {
+            $events[] = [$open->opened_at->getTimestamp(), 1, [
+                'kind' => 'open',
+                'at' => DisplayTime::format($open->opened_at, 'd/m/Y H:i:s'),
+                'after' => $sent !== null ? self::after($sent, $open->opened_at) : null,
+                'route' => null,
+                'device' => $open->device !== null ? (string) __('admin.email_sends.device.'.$open->device) : null,
+                'via' => $open->source !== EmailOpen::SOURCE_DIRECT ? (string) __('admin.email_sends.source.'.$open->source) : null,
+                'counts' => $open->verdict === null,
+                'why' => $open->verdict !== null ? (string) __('admin.email_sends.open_verdict.'.$open->verdict) : null,
+            ]];
         }
 
         foreach ($record->clicks()->orderBy('clicked_at')->orderBy('id')->get() as $click) {
-            $events[] = [
+            $events[] = [$click->clicked_at->getTimestamp(), 2, [
                 'kind' => 'click',
                 'at' => DisplayTime::format($click->clicked_at, 'd/m/Y H:i:s'),
                 'after' => $sent !== null ? self::after($sent, $click->clicked_at) : null,
                 'route' => $click->route,
                 'device' => $click->device !== null ? (string) __('admin.email_sends.device.'.$click->device) : null,
+                'via' => null,
                 'counts' => $click->verdict === null,
                 'why' => $click->verdict !== null ? (string) __('admin.email_sends.verdict.'.$click->verdict) : null,
-            ];
+            ]];
         }
 
-        return $events;
+        // Por hora; a igual segundo, la salida, luego la apertura y luego el clic (el orden en que pueden pasar). `usort` es
+        // estable desde PHP 8: dentro de cada clase se queda el orden de la consulta.
+        usort($events, static fn (array $a, array $b): int => [$a[0], $a[1]] <=> [$b[0], $b[1]]);
+
+        return array_map(static fn (array $event): array => $event[2], $events);
     }
 
     /** «13 minutos después», «1 hora 5 minutos después»: cuánto después del envío, en el idioma del panel. */
@@ -233,6 +277,29 @@ class EmailSendTable
         return trans_choice('admin.email_sends.clicks', $count, ['count' => $count]);
     }
 
+    /**
+     * Sus aperturas que cuentan («2 aperturas», «Sin abrir»), o «No se mide» si salió sin píxel (el interruptor, el
+     * consentimiento, la oposición, sin cuenta, la encuesta). Lee `withOpenCounts()` si se cargó.
+     */
+    public static function opens(EmailSend $record): string
+    {
+        if (! $record->tracks_opens) {
+            return (string) __('admin.email_sends.opens_not_measured');
+        }
+
+        $count = (int) ($record->opens_counted ?? $record->opens()->whereNull('verdict')->count());
+
+        return trans_choice('admin.email_sends.opens', $count, ['count' => $count]);
+    }
+
+    /** «+N automáticas» si las hubo (Apple al entregar, antes de poder leerlo: `EmailOpen::AUTOMATIC_VERDICTS`); vacío si no. */
+    public static function automaticOpens(EmailSend $record): string
+    {
+        $count = (int) ($record->opens_automatic ?? 0);
+
+        return $count > 0 ? trans_choice('admin.email_sends.opens_automatic', $count, ['count' => $count]) : '';
+    }
+
     /** «+N de escáner» si los hubo (no cuentan: `EmailClick::SCANNER_VERDICTS`); vacío si no. */
     public static function scannerClicks(EmailSend $record): string
     {
@@ -242,14 +309,15 @@ class EmailSendTable
     }
 
     /**
-     * La cuenta de cada fila y sus dos recuentos de clics (`EmailSend::scopeWithClickCounts()`).
+     * La cuenta de cada fila y sus recuentos de clics y de aperturas (`EmailSend::scopeWithClickCounts()`,
+     * `scopeWithOpenCounts()`).
      *
      * @param  Builder<EmailSend>  $query
      * @return Builder<EmailSend>
      */
     private static function withCounts(Builder $query): Builder
     {
-        return $query->with('user')->withClickCounts();
+        return $query->with('user')->withClickCounts()->withOpenCounts();
     }
 
     /** El nombre del correo por su clave (`EmailUtm::keyOf()`); una clave sin rótulo se enseña tal cual. */

@@ -49,8 +49,16 @@ final class EmailClickMarks
     /** ¿Se cuentan los clics de este correo a este destinatario? La regla de arriba; la misma al enviar y al pulsar. */
     public static function allows(mixed $recipient, string $key): bool
     {
-        return self::enabled()
-            && $recipient instanceof User
+        return self::enabled() && self::personAllows($recipient, $key);
+    }
+
+    /**
+     * La regla de PERSONA, sin el interruptor: una cuenta que no se opuso, un correo al cliente y nunca uno de {@see NEVER}.
+     * La comparten los clics y las aperturas (`EmailOpenMarks`, que le suma el consentimiento).
+     */
+    public static function personAllows(mixed $recipient, string $key): bool
+    {
+        return $recipient instanceof User
             && ! $recipient->analytics_opt_out
             && EmailUtm::isCustomerKey($key)
             && ! in_array($key, self::NEVER, true);

@@ -18,4 +18,11 @@ interface ConsentLedger
      * del visitante: sin decisión viva no hay conversión de servidor, que es lo correcto.
      */
     public function consentedNow(string $visitorId, string $category): ?bool;
+
+    /**
+     * ¿Consintió esta CUENTA la categoría en su ÚLTIMA decisión, desde cualquier aparato en el que hubiera entrado? `null` si
+     * nunca decidió con la sesión iniciada. Lo pregunta el píxel de apertura de los correos (`correos-salientes.md` §4.12):
+     * sin un «sí» vivo, el correo sale sin él.
+     */
+    public function accountConsentedNow(int $userId, string $category): ?bool;
 }
