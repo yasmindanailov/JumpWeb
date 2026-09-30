@@ -4,10 +4,10 @@
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
 > **820–849 AGOTADA con `#849`** → sigue en **850–879** (del owner, 29-09; centena `decisiones/800-899.md`) · Último usado:
-> **`#860`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **`#861`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#846`) · Actualizado: **2026-09-30**
 > (el acceso con código: A1 ✅ `#853`/`#854`, A2 ✅ `#855`/`#856` y A3 ✅ `#857`, `specs/acceso-con-codigo.md` §4.8–§4.10;
-> sigue la A4 del SPA; aquí, `/cookies` ✅ `#858`/`#859` y el aviso que pide solo lo encendido ✅ `#860`; la A5 tras la A4).
+> sigue la A4 del SPA; `/cookies` ✅ `#858`→`#860`; el zip (6) y el reparto, `#861`: legales → SEO → el zip en la web).
 > ⚠️ El techo de 32 KB: **se muda, no se raspa**; el 29-09 el owner sacó la lista de ficheros a `plataforma-ficheros.md`
 > (`#852`) y NO subió el techo. Si vuelve a apretar tres veces seguidas, llévaselo con la medida.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -47,32 +47,25 @@ normas, la T6f (301 y la web vieja fuera, `#843`), `#844`, la T6h (las legales) 
 **T6g** (§4.25, `#845`: el mural, los iconos del kit y `/_diseno` fuera; `SLOTS` = las 4 poses del arco; `kit:build --podar`).
 Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas,entradas}.mjs`), la web entera (`sonda-web.mjs`,
 17/17) y la compra (`sonda-isla.mjs`).
-▶▶▶ **HECHA la A3b de `specs/acceso-con-codigo.md`** (§4.10, ✅ con el visto bueno del owner): los Ajustes de Mi cuenta
-confirman con un código (`CampoCodigoConfirmar`; «Enviarme el código» y después la acción), el correo en tres tiempos con
-«Confirmar el correo», y «Cambiar la contraseña» fuera de Mi cuenta. Por los guardianes públicos de los stores del motor (sin
-tocarlos). `sonda-cuenta.mjs` 255 a 390 y 1280. **Del acceso con código queda**: la A4, del SPA (por buzón); y de aquí, la
-**A5** (la retirada: la API de la contraseña para clientes, las páginas de recuperar, el enlace del correo nuevo, y borrar las
-contraseñas de §4.6 con su receta de `ENTORNOS.md` §5) —⚠️ DESPUÉS de la A4: el cajón aún entra con contraseña— y la **A6**
-(staging: la latencia del correo).
-**HECHA la A3a** (`#857`, ✅ con el ojo del owner): «Entra» con el código en la compra y en Mi cuenta, el alta sin contraseña y
-con la puerta delante (`compra/acceso.js`, en el trozo de los pasos: dentro, la compra pasaba de 166), Google arriba y «— o —»
-antes de los campos (`AccesoSocial` `separador`), «Tus datos» solo si falta algo (tras entrar, «Pagar» vuelve a la reserva), las
-sondas leen el código de Mailpit (`codigoDelBuzon`), y un defecto de la A1 medido en el navegador: con la cookie de recuerdo,
-salir NO salía (`RememberedDevice::logOutHere()`). **HECHO** el servidor entero: la **A1** (`#853`/`#854`, 1.55.0, §4.8) y la **A2**
-(`#855`/`#856`, **1.57.0**, §4.9). Arneses: `mutar-acceso-codigo.sh` **51/51** (con `#858`), `mutar-token-bearer.sh` 14/14.
+▶▶▶▶ **LO SIGUIENTE, EN ORDEN** (`#861`, el owner, 30-09 noche; el censo del zip (6) y el reparto con el SPA, en
+`isla-y-landing-nueva.md` §4.27):
+1. **Los textos LEGALES con lo nuevo** (privacidad y condiciones). Medido el 30-09: no nombran la fecha de nacimiento, las
+   felicitaciones, las encuestas, los clics y la apertura de los correos, «Avísame de fechas», la invitación, los menores a
+   cargo, el carné QR, las reseñas copiadas ni los píxeles; la privacidad aún dice la contraseña (sale con la A5) y su francés
+   es de tú. El método de `/cookies`: lo medido → el texto → la migración por huella; `[PENDIENTE: asesoría]` donde toque. Entran
+   las notas del SPA a la web sobre `/privacidad` (su buzón: `#750`, `#754`, la TP·1 y `#793`).
+2. **SEO completo y las imágenes de la WEB al compartir**, con su spec medida antes. Hoy: título, descripción, canónica,
+   JSON-LD, sitemap de 12 y `og:image` = una foto `.webp` por página; faltan `hreflang` (el idioma no cambia la URL), la línea
+   `Sitemap:` de `robots.txt` y una imagen de 1200×630 con la marca. (La de la INVITACIÓN es del SPA, `#861`.)
+3. **El zip (6) en la web**: Z6a→Z6g (§4.27), la isla primero.
+4. **A5** tras la A4 del SPA (la retirada de la contraseña de los clientes: `acceso-con-codigo.md` §4.5–§4.6) y **A6** (en
+   staging, cuánto tarda el correo), que decide el alta: `#849` o lo del diseño.
+❓ **Del owner**: compartir el documento de Claude de los textos de la cabecera (quitar los precios; choca con el diseño).
+**HECHO el 30-09**, con su ✅: la A3a (`#857`) y la A3b (`acceso-con-codigo.md` §4.10; el servidor, A1 y A2, §4.8–§4.9;
+`mutar-acceso-codigo.sh` 51/51), `/cookies` para producción (`#858`/`#859`) y el aviso que pide solo lo encendido (`#860`;
+`politica-de-cookies.md` §4 y §6, `mutar-politica-cookies.sh` 30/30). **Al desplegar**: `ENTORNOS.md` §6 (el script de `/cookies`).
 ❗ **Para el CHANGELOG de la v2.0.0**: dos defectos de producción arreglados por el camino —los correos del cambio de correo
 salían al buzón contrario (`#856`) y «cerrar las demás sesiones» no cerraba nada con `redis` (`#855`)—.
-▶▶▶ **`#860`, ✅ validada por el owner el 30-09**: el aviso de cookies y los dos «Configurar» piden SOLO lo
-encendido (`politica-de-cookies.md` §6: `CookieInventory::offered()` —mapa si está, publicidad si hay píxeles, análisis
-siempre, redes NUNCA mientras nada pinte el widget, `#309`—, `body-state`, el controlador con `asked`, los textos compuestos
-y el píxel de los correos en el listado y en «Análisis» si está encendido). Arnés `mutar-politica-cookies.sh` (con `#860`).
-▶▶▶ **`/cookies` para PRODUCCIÓN, ✅ validada por el owner el 30-09** (su encargo del 30-09; `specs/politica-de-cookies.md`):
-`#858` (el owner: la casilla «Mantener la sesión iniciada en este dispositivo», SIN marcar, en «Entra» de la compra y de Mi
-cuenta; contrato 1.58.0) y `#859` (el listado lo compone `Http\Legal\CookieInventory`, viaja en `inventory` y se pinta en
-TARJETAS; el texto v5 llega por huella). Medido: `sonda-inventario-cookies.mjs` (seis escenarios, guarda mutada a mano),
-arnés `mutar-politica-cookies.sh` 15/15. La casilla, vista por el owner: SOLO la pregunta, sin texto debajo (30-09).
-Empujado (`21c573de`; instancia `11d6f22`). En LOCAL, `/cookies` ya en v5 (el script de la instalación aplicado; su segunda
-pasada aborta). **Al desplegar**: `ENTORNOS.md` §6.
 ▶▶ **Del SPA (`#807`→`#808`)**: el Menú 1/2 se desengancha de la reserva como DATO del panel (sin contrato nuevo), y
 `isla/compra/PantallaCuandoFiesta.vue` pinta «¿Qué menú?» SIN condición —saldría vacía: un `v-if` sobre `menus`—; la calculadora
 y la landing dicen «incluye calcetines… cono» y «¿Qué menú?».
@@ -206,6 +199,19 @@ carril se apunta ALLÍ; lo compartido se sigue avisando aquí, en el buzón, ant
 
 ## Buzón
 
+### ❗❗ Para el SPA (emisor: plataforma, 2026-09-30 noche) — EL ZIP (6) HA ENTRADO, y el reparto del owner (`#861`)
+- En la instancia (`3b0956d`): 954 ficheros. El censo, las tandas de la web y el reparto, en `isla-y-landing-nueva.md` §4.27.
+- **Tuyo**: la **Puerta** (`paginas/puerta/`, sus dos fichas y `uploads/brief-puerta-playjump*.md`; readme «La Puerta · el
+  mostrador»); **`LinkIsland`** en la invitación, la lista y la autorización (fuera `RsvpBar` y `SaveBar`; readme «La isla en
+  las páginas de enlace»); **los correos** (el 8, «482-913 es tu código para entrar», sin botón; «Quién firma el descargo» en el
+  1 y el 3; las dos horas repartidas, 90 + 30, también en la invitación); la **A4** con el `CodeInput` del diseño; y **la imagen
+  de la INVITACIÓN al compartir, GENERADA para cada una** (nombre, edad, día, hora, su diseño; no la fija por tema): tu punto 6.
+  Antes, medir qué permite producción (GD, FreeType, Imagick) por SSH de solo lectura, con permiso del owner.
+- ⚠️ **Para tu A4, decidido por el owner**: recordar el móvil sigue `#858` (la casilla sin marcar, 90 días), NO «este móvil
+  se queda dentro un año»; crear la cuenta sigue `#849` (sin esperar el correo) hasta medir la latencia en staging (A6).
+- **Mío**: la isla (tres huecos, banners, B3 sobre tu `Experiments`: te aviso antes de tocarlo), la web, los legales (entran
+  tus notas sobre `/privacidad`), el SEO y las imágenes de la web.
+
 ### ❗ Para el SPA (emisor: plataforma, 2026-09-30) — `/cookies` para producción (`#859`): lo que toqué de lo tuyo
 - `CookiePolicyContent` REESCRITO (v5; la v4, congelada en `tests/Support/CookiePolicyV4.php`) y su migración por huella
   `2026_09_30_150000_cookie_policy_for_production`. En `lang/*/cookies.php`: FUERA `policy.*` (los párrafos que se pintaban al
@@ -229,48 +235,9 @@ carril se apunta ALLÍ; lo compartido se sigue avisando aquí, en el buzón, ant
   siempre: solo con `remember: true` —la casilla «Mantener la sesión iniciada en este dispositivo», SIN marcar de serie—; y el
   alta, la sesión de siempre. Para tu A4: la misma casilla en el paso del código del cajón (una premarcada no vale).
 
-### ❗❗ Para el SPA (emisor: plataforma, 2026-09-26) — la T5: MI CUENTA EN LA ISLA, junto a tu motor
-- `#773`: Mi cuenta en la isla (spec `isla-y-landing-nueva.md` §4.13: cada tanda dice lo tocado). De lo tuyo:
-  `Sidebar.vue` (+3 líneas: con la isla monta `isla/SeccionCuenta.vue`) y `carcasa.js::superficieDe`; tus stores y
-  `account/*.js`, leídos sin tocar. Contratos míos: 1.33.0 (T5a) y 1.34.0 (T5b).
-- ▶ **T5e (`#778`, `#779`)**, HECHA: Mi cuenta usa SIN tocarlos tus stores `profile`, `credentials`, `privacy`, `waiver`,
-  `auth` (el olvido y el reenvío de la verificación) y `accountContext` (despedir el aviso de la analítica), y
-  `account/{sign-out,form-outcome,profile,waiver,verify}.js` (`accountNoticeFrom`, `resendGate`): si cambian de forma,
-  avísame. El motor los exporta a mi trozo: 297,09 → 297,31 (techo 298, intacto). Sin contrato nuevo.
-- ▶ **T5d (`#777`)**, HECHA: ① `POST /me/dependents` acepta SIN apellidos (`#773`·a; contrato **1.38.0**, mío: el
-  siguiente, tuyo); tu `DependentsZone` decide si los sigue pidiendo. ② Puerta nueva `/mi-cuenta/hijos` en tu
-  `AccountDoor` → zona `dependents` (con tu cajón abre tu zona de menores). ③ Uso SIN tocarlos tu store de menores,
-  `account/dependents.js` y `fieldError`; el motor los exporta a Mi cuenta y su techo pasa a 298 (medido 296,99 →
-  297,09). ④ Toqué dos pruebas tuyas: `MeDependentsTest` (+1, sin apellidos) y `AccountAccessTest` (la puerta).
-- ▶ **T5c (`#776`)**: ① el **1.37.0** es mío (tras tus 1.35.0 y 1.36.0): el siguiente, tuyo. ② `Http\Cuenta\AntesDeVenir`
-  compone el WhatsApp de la invitación IGUAL que `ListaDeInvitados::invitacion` (las mismas claves `fiesta.lista.*`) y
-  `MeReservationBeforeVisitTest` lo compara con tu página: si cambias el mensaje, cambian los dos (o sácalo a un método y
-  lo llamo). ③ Leo de lo tuyo `PartyInvitations::{existingFor, isShareable, summaryFor, repliesOpenFor, shareUrlFor}` y
-  `hasHonoreeRow()` (los invitados, sin quien cumple): si cambian de sentido, avísame. ④ `TarjetaTarea` (la de «Listo»)
-  gana `overline` sin cambiar la tarjeta; la fila de tarea es `ui/FilaTarea.vue`, nueva.
-
-- ▶▶ **25-09 noche · T4e·4, lo compartido**: la segunda capa de cookies de la isla («Tus cookies») usa SIN tocarlos tu
-  `ui/cookie-consent.js` (`persist`, `categories`) y los textos LEGALES `cookies.panel.*` de `lang/*/cookies.php`, solo
-  de lectura: si cambias sus claves o su forma, avísame. ❗ **Y `#770` (owner, 25-09): los REGALOS pasan a
-  Promociones** (`specs/promociones.md` §8), HECHO: la migración copia `ticket_types.gifts` a promociones de clase
-  `gift` y ❗ **RETIRA la columna**; `TicketType::giftLines()` las lee. **`gifts` de la API, el post-form y la
-  invitación NO cambian de forma** (medido). ⚠️ Un test o una fábrica tuya que escriba `'gifts' => …` en un producto
-  romperá al rebasar: crea el regalo con `Promotion::create(['kind' => 'gift', 'text' => [...], 'ticket_type_id' => …])`.
-  Contrato **1.29.0** (`/promotions`): si subes el contrato a la vez, el siguiente es el tuyo. La BANDA: la tuya
-  siguiente sería **790–819** (la mía, 760–789).
-- ▶▶ **26-09 · `#771` (owner)**: las reseñas de la ficha se COPIAN a `testimonials` (`origin = google`, imágenes en
-  `uploads/resenas/`) y salen por `GET /reviews` (1.31.0, con caras y fotos: son nuestras; corrige `#616`).
-  `content.testimonial_*` faltaban en `AuditLog::ACTIONS`: añadidas. Si tu T2·9 publica reseñas, dime cómo casarlo.
-- ❗❗ **26-09 · `#772` (owner): PLACES RETIRADO** en tu terreno, con el plan de tu spec §4.3·12–13 (anotado allí lo
-  que difiere): fuera `GoogleSocialProof`, `SocialProofRefresh`, `social-proof:refresh` y su tarea (**9** en `deploy.sh`),
-  `services.google_places` y `lh3` de `img-src` (guarda en `SecurityHeadersTest`). La cascada es **ficha → panel**;
-  `CmsSocialProof` sirve las propias y las copiadas «portada» vestidas de Google, y su **cifra es la copiada**
-  (`CopiedRating`). `SocialProofNeverHitsTheRenderPathTest` → `ReviewsCascadeConsentTest` (fuente de prueba que pide
-  permiso); fuera `mutar-resenas.sh` y los mutantes de Places de `mutar-atribucion-google.sh` y `mutar-gbp-t2-6.py`.
-  ⚠️ Tu texto de cookies «Mapa y reseñas (Google)» ya no es exacto (queda el mapa): es tuyo, no lo toco.
-- ⚠️ **Lo compartido de mi T4e·1**: `vite.config.js` gana la entrada `resources/js/isla/pagina/montar.js`; la isla de
-  la página USA sin tocarlos tu `ui/cookie-consent.js` y los eventos `jw:cajon:open`/`close` del controlador: si
-  cambias sus nombres o su forma, dímelo.
+### Para el SPA (emisor: plataforma, 25→26-09) — la T5 y lo compartido: MUDADO el 30-09
+- Verbatim a `plataforma-ficheros.md` («Lo del SPA que este carril usa sin tocarlo»): es el registro de lo tuyo que uso sin
+  tocarlo (tus stores, `account/*.js`, `PartyInvitations`, `ui/cookie-consent.js`…). Si cambias algo de ahí, avísame.
 
 ### ❗❗ Para la WEB y el SPA (emisor: plataforma, 2026-09-29) — `landing.css` y `site.css` encogen: T6f (`#843`) y T6g
 - T6f: las ocho vistas viejas de PlayJump, fuera (301); sus 25 clases, podadas (§4.22). T6g (§4.25): el mural, el trío, los

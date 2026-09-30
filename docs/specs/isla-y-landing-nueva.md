@@ -2321,6 +2321,38 @@ la vez (la pantalla 0 y las dos calculadoras), las calculadoras arrancan solas a
   informa). Con el módulo ya cargado, en node no se observa.
 - **Estado ✅**: sin cambio visible, así que no hay ojo del owner que pedir.
 
+### 4.27 El zip (6) del 30-09: el censo, el reparto y las tandas de la web (`#861`)
+
+⬜ Entró por `diseno/actualizar.py` (instancia `3b0956d`): 954 ficheros (antes 626; 334 nuevos, 6 fuera, 151 cambiados). La
+fuente de cada punto es su `readme.md` (la sección entre comillas) y su componente; **el diseño se toma del mockup** (`#767`).
+
+**Lo de la WEB y la ISLA (este carril), en tandas, cada una medida y escrita «al detalle» aquí antes de codificar:**
+
+| Tanda | Qué | Del readme | Lo más grande |
+|---|---|---|---|
+| Z6a | La isla en **tres huecos** (menú · acción · cuenta), la frase siempre, la acción siempre (a secundaria con un botón de la página a la vista), la cuenta con el QR y su punto, 13/14 fuera de la barra, el menú reordenado, «¿Lo hablamos?», **cristal 82 %** y **morph** en cada cambio, sin `compact` | «La isla · tres huecos, cristal y morph (28-09)» | `ParkIsland.jsx` (822 líneas cambiadas) |
+| Z6b | **Banners «Da la razón»**: con un botón de la página a la vista, la razón en vez del naranja (razón · vivo · espera · hecho), la compra que no corta al cerrar, el aviso a isla entera, `isla_razon` | «La isla · banners, opción C (29-09)» | `explorations/isla-banners` (las razones de cada página) |
+| Z6c | **Experimento B3** contra la isla de hoy, con `Experiments` (asigna el servidor por visitante; `variante` en los eventos) y las frases cortas de cada página | «Experimento B3 (29-09)» | la cabecera sin botón en la primera pantalla del móvil |
+| Z6d | **La firma** de la cabecera (logo y nota de Google juntos, `--scrim-firma`), las garantías del móvil en lista, `Sticker` y `ProofChip`, el filo del gris (`--edge-subtle`) | «La cabecera · la firma», «Las garantías en el móvil», «Las pegatinas», «La prueba de los cuidados» | `VideoHero`, `ReassuranceBand`, `ProofList` |
+| Z6e | Cumpleaños **«Todo resuelto» (6a)** y **las dos horas repartidas** (90 min saltando y 30 de merienda: la cabecera, la pieza 3, el selector, las dudas, la hora extra) | «Rehecha el 29-09», «Las dos horas, repartidas (28-09)» | `IncludedList`, `AfterBookingPanel` |
+| Z6f | **El pie** rehecho: dos zonas y un filete, claro y en tarjeta | «Rehecho el 29-09: dos zonas y un solo filete» | `SiteFooter.jsx` (318) |
+| Z6g | La compra y Mi cuenta: **`CodeInput`** (6 casillas, se comprueba con la sexta, «Reenviar» a los 30 s), **«Quién firma el descargo»** (Tus datos, Listo con «Añadir menores», Mi cuenta), el acceso en Ajustes; y lo que cambia en Normas, Visítanos, Colegios y Entradas | «La cuenta sin contraseña (30-09)», «Quién firma el descargo (30-09)» | `compra/entrar.jsx`, `compra.jsx` |
+
+**Del otro carril (SPA), por buzón:** la **Puerta** (el mostrador, `paginas/puerta/` y su brief), **`LinkIsland`** en la
+invitación, la lista y la autorización (fuera `RsvpBar` y `SaveBar`), los **correos** (el 8, «482-913 es tu código para
+entrar», sin botón; las dos horas y «Quién firma» en el 1 y el 3), la **A4** y **la imagen de la invitación** al compartir.
+
+**Lo que el owner decidió al ver los choques (`#861`)**: (1) crear la cuenta en Mi cuenta: sigue `#849` (sin esperar el
+correo) hasta medir en staging cuánto tarda en llegar (A6); si llega en segundos, pasa a lo del diseño (código siempre; no
+dice quién tiene cuenta). (2) Recordar el móvil: sigue `#858` (la casilla, 90 días); «este móvil se queda dentro un año»
+del diseño NO se hace. (3) La imagen de la invitación: GENERADA para cada una (nombre, edad, día, hora, su diseño), no la
+fija por tema del diseño; antes se mide qué permite producción (SSH de solo lectura, con permiso del owner). (4) Esa imagen
+la hace el SPA.
+
+**Sin leer**: el documento de Claude sobre los textos de la cabecera (quitar los precios; referencias de conversión) no es
+accesible desde aquí (su enlace no está compartido). Choca con el diseño («titular y precio no ceden nunca»; B3 cuenta con el
+precio de la cabecera): se decide al leerlo.
+
 ## 5. Impacto en invariantes
 
 - `PAY-*`: solo si entra Bizum; entonces `VERIFY_CONC=1` y la lista del `CRITICAL_RE`.
