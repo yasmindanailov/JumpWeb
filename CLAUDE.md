@@ -42,7 +42,7 @@ contador de la suite va en el trailer del commit** (`#618`). Si no salta: `git c
 |---|---|
 | Refactor · fases · arquitectura de módulos · fronteras | `docs/00-REFACTOR.md` · `docs/specs/modulos-dominio.md` §0 |
 | **Producto e instancias** · repos · versionado · F0→F6 | `docs/specs/producto-e-instancias.md` §0 · `CHANGELOG.md` |
-| Landing FUERA (F5) · menú de hechos · API pública · paquete de instancia | `docs/specs/instancia-y-landing-fuera.md` §0 · `docs/specs/paquete-de-instancia.md` §0 |
+| Landing FUERA (F5) · menú de hechos · paquete de instancia | `docs/specs/instancia-y-landing-fuera.md` §0 · `docs/specs/paquete-de-instancia.md` §0 |
 | **La isla** · la landing nueva (Saltia) | `docs/specs/isla-y-landing-nueva.md` §0 |
 | Promociones · ofertas y regalos · la etiqueta de oferta | `docs/specs/promociones.md` §0 |
 | Analítica · cuadro · consentimiento · fiesta · encuestas | `docs/specs/analitica-para-decidir.md` §0 · `docs/specs/analitica.md` §0 · `docs/specs/analitica-fiesta.md` §0 · `docs/specs/encuestas.md` §0 |
@@ -67,7 +67,7 @@ contador de la suite va en el trailer del commit** (`#618`). Si no salta: `git c
 | La hora extra · complemento que ocupa aforo · su precio por día · mover fecha · su sello | `docs/specs/hora-extra.md` §0 |
 | Añadir o quitar invitados de una reserva pagada · el plazo | `docs/specs/invitados-en-post-form.md` §0 |
 | Complemento vendido después de reservar · el post-form · plazo de corte | `docs/specs/complementos-post-reserva.md` §0 |
-| El hueco de ilustración por instalación · `client-kit.svg` · `<use>` externo | `docs/specs/hueco-ilustracion.md` §0 |
+| El hueco de ilustración · `client-kit.svg` · `<use>` externo | `docs/specs/hueco-ilustracion.md` §0 |
 | `/servicios` · precios por tramo de grupo · reservas de grupo | `docs/specs/landing-white-label.md` §0 · `docs/sistemas/SERVICIOS-CMS.md` |
 | El libro del pedido · desglose +/− · saldo en el parque · cortesía · reembolso | `docs/specs/desglose-libro.md` §0 |
 | Área de cliente del cajón · «Mis reservas» | `docs/specs/area-cliente.md` §0 · `docs/specs/mis-reservas-por-reserva.md` §0 |
@@ -82,7 +82,8 @@ contador de la suite va en el trailer del commit** (`#618`). Si no salta: `git c
 | Reseñas de Google · Business Profile | `docs/specs/google-business-profile.md` §0 · `docs/specs/google-reviews.md` §0 |
 | Contenido y copys · festivos · jerga de la web | `docs/specs/contenido-y-copys.md` §0 |
 | Diseño previo a implementación (spec) | `docs/specs/PLANTILLA.md` · `docs/CONVENCIONES.md` §5 |
-| Cookies · consentimiento · la política de `/cookies` | `docs/specs/politica-de-cookies.md` §0 · `docs/sistemas/COOKIES.md` |
+| Cookies · consentimiento · `/cookies` | `docs/specs/politica-de-cookies.md` §0 · `docs/sistemas/COOKIES.md` |
+| SEO · la imagen al compartir | `docs/specs/seo.md` §0 |
 | Panel admin / puerta / operación diaria · entrar al panel | `docs/PANEL-ADMIN.md` · `docs/OPERATIVA-SECTOR-ORIGEN.md` · `docs/specs/panel-a-salvo.md` §0 |
 | El asistente de «Crear pedido» · pasos · carrito · desenlace | `docs/specs/asistente-crear-pedido.md` §0 |
 | UI/UX del panel · el panel en tablet · ruido y jerarquía | `docs/specs/auditoria-panel-admin.md` §0 |

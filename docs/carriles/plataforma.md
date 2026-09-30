@@ -49,16 +49,18 @@ Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas,en
 17/17) y la compra (`sonda-isla.mjs`).
 ▶▶▶▶ **LO SIGUIENTE, EN ORDEN** (`#861`, el owner, 30-09 noche; el censo del zip (6) y el reparto con el SPA, en
 `isla-y-landing-nueva.md` §4.27):
+0. ▶▶ **EL SEO, PRIMERO** (el owner, 30-09: «IMPORTANTÍSIMO»; `specs/seo.md`, ⬜): investigado (Google, con fuentes) y medido
+   (`scripts/sonda-seo.mjs`, Search Console y PageSpeed de campo del owner, en §2). Lo que dicen los datos: la marca ya está en
+   el 1 y **cumpleaños no existe para Google** (27 impresiones en tres meses). Aquí, S3 (no empeorar los Core Web Vitals: la
+   cabecera de Kids y Jump), S4 (`robots`, JSON-LD, largos) y S5 (la imagen de cada página); del owner, S1/S2 (Perfil de
+   Empresa y directorios, con los textos que prepare) y S6 (el H1).
 1. **Los textos LEGALES con lo nuevo** (privacidad y condiciones). Medido el 30-09: no nombran la fecha de nacimiento, las
    felicitaciones, las encuestas, los clics y la apertura de los correos, «Avísame de fechas», la invitación, los menores a
    cargo, el carné QR, las reseñas copiadas ni los píxeles; la privacidad aún dice la contraseña (sale con la A5) y su francés
    es de tú. El método de `/cookies`: lo medido → el texto → la migración por huella; `[PENDIENTE: asesoría]` donde toque. Entran
    las notas del SPA a la web sobre `/privacidad` (su buzón: `#750`, `#754`, la TP·1 y `#793`).
-2. **SEO completo y las imágenes de la WEB al compartir**, con su spec medida antes. Hoy: título, descripción, canónica,
-   JSON-LD, sitemap de 12 y `og:image` = una foto `.webp` por página; faltan `hreflang` (el idioma no cambia la URL), la línea
-   `Sitemap:` de `robots.txt` y una imagen de 1200×630 con la marca. (La de la INVITACIÓN es del SPA, `#861`.)
-3. **El zip (6) en la web**: Z6a→Z6g (§4.27), la isla primero.
-4. **A5** tras la A4 del SPA (la retirada de la contraseña de los clientes: `acceso-con-codigo.md` §4.5–§4.6) y **A6** (en
+2. **El zip (6) en la web**: Z6a→Z6g (§4.27), la isla primero. (La imagen de la INVITACIÓN es del SPA, `#861`.)
+3. **A5** tras la A4 del SPA (la retirada de la contraseña de los clientes: `acceso-con-codigo.md` §4.5–§4.6) y **A6** (en
    staging, cuánto tarda el correo), que decide el alta: `#849` o lo del diseño.
 ❓ **Del owner**: compartir el documento de Claude de los textos de la cabecera (quitar los precios; choca con el diseño).
 **HECHO el 30-09**, con su ✅: la A3a (`#857`) y la A3b (`acceso-con-codigo.md` §4.10; el servidor, A1 y A2, §4.8–§4.9;
