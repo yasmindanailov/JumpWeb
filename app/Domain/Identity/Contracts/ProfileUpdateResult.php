@@ -18,6 +18,9 @@ final readonly class ProfileUpdateResult
     /** La contraseña de reconfirmación no es la que se ha escrito. */
     public const WRONG_PASSWORD = 'wrong_password';
 
+    /** El código de confirmar no casa, caducó o ya se usó (A2a, `#855`). */
+    public const WRONG_CODE = 'wrong_code';
+
     /** Demasiados intentos fallidos de reconfirmación. */
     public const RATE_LIMITED = 'rate_limited';
 
@@ -45,6 +48,11 @@ final readonly class ProfileUpdateResult
     public static function wrongPassword(): self
     {
         return new self(false, reason: self::WRONG_PASSWORD);
+    }
+
+    public static function wrongCode(): self
+    {
+        return new self(false, reason: self::WRONG_CODE);
     }
 
     public static function rateLimited(int $retryAfter): self

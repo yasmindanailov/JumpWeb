@@ -70,6 +70,25 @@ return [
         'validity' => 'Escríbelo en la pantalla donde lo pediste. Vale :minutes minutos y una sola vez.',
         'ignore' => 'Si no lo has pedido tú, ignora este correo: sin este código nadie puede entrar en tu cuenta.',
     ],
+    /*
+     * EL CÓDIGO PARA CONFIRMAR una acción sensible (A2a, `#855`): dice PARA QUÉ es, porque solo se pide con la sesión
+     * abierta —quien lo recibe sin haberlo pedido sabe que alguien la tiene—.
+     */
+    'confirmation_code' => [
+        'subject' => ':code es tu código para confirmar',
+        'preheader' => 'Escríbelo donde lo pediste. Si no lo has pedido tú, no se lo des a nadie.',
+        'badge' => 'Tu código para confirmar',
+        'headline' => ':code',
+        'for' => 'Es para :action.',
+        'actions' => [
+            'delete_account' => 'borrar tu cuenta',
+            'change_email' => 'cambiar el correo de tu cuenta',
+            'unlink_google' => 'desvincular tu cuenta de Google',
+            'close_sessions' => 'cerrar la sesión en tus otros dispositivos',
+        ],
+        'validity' => 'Vale :minutes minutos y una sola vez.',
+        'ignore' => 'Si no lo has pedido tú, no se lo des a nadie: lo ha pedido alguien con tu cuenta abierta en otro dispositivo.',
+    ],
     'verify_purchase' => [
         'subject' => 'Confirma tu email · :code',
         'preheader' => 'Tu plaza está apartada mientras confirmas. Un clic y sigues con el pago.',

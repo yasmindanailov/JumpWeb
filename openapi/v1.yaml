@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.55.0
+  version: 1.56.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -2514,6 +2514,8 @@ paths:
         pierde el acceso** — y además recibe un aviso al buzón viejo, con la dirección nueva
         enmascarada.
 
+        **1.56.0**: se reconfirma con la contraseña o con un código de `POST /me/confirm-code` (`action: change_email`).
+
         ⚠️ **Reconfirmar la contraseña solo hace falta si el correo cambia.** Pedirla para corregir
         una errata en el teléfono no defiende nada y hace que el titular evite la pantalla. Cuando se
         pide, cuenta para el **mismo limitador** que `PUT /me/password`.
@@ -2561,7 +2563,8 @@ paths:
         personales han salido, y su correo queda **libre** para registrarse de nuevo.
 
         ⚠️ **Es irreversible, y por eso exige reconfirmar la contraseña actual** — con el mismo
-        limitador por (titular, IP) que `PUT /me/password`: cinco fallos seguidos y responde `429`.
+        limitador por (titular, IP) que `PUT /me/password`: cinco fallos seguidos y responde `429`. Desde **1.56.0**,
+        la contraseña o un código de `POST /me/confirm-code` (`action: delete_account`).
 
         ⚠️ **Todas las credenciales del titular dejan de valer**, incluida la de esta petición: en el
         art. 17 no hay ninguna que conservar. Un cliente por Bearer debe dar su token por muerto tras
@@ -2769,7 +2772,9 @@ paths:
         Cierra las demás sesiones del titular y revoca sus demás tokens; **la credencial en curso
         sobrevive**, para que no se autoexpulse al defenderse.
 
-        Exige reconfirmar la contraseña actual, con el **mismo limitador** que `PUT /me/password`.
+        Exige reconfirmar —la contraseña actual o, desde **1.56.0**, un código de `POST /me/confirm-code`—, con el
+        **mismo limitador** que `PUT /me/password`. Desde 1.56.0 cierra también las SESIONES vivas de los demás
+        dispositivos con cualquier almacén de sesiones: en su próxima petición dejan de estar dentro.
       security:
         - sessionCookie: []
         - bearerAuth: []
@@ -2782,6 +2787,40 @@ paths:
       responses:
         '204':
           description: Las demás credenciales han dejado de valer.
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
+  /me/confirm-code:
+    post:
+      tags: [Cuenta]
+      operationId: requestMyConfirmationCode
+      summary: Pedir el código para confirmar una acción sensible
+      description: |
+        **1.56.0** (`specs/acceso-con-codigo.md`, A2a). Envía un código de seis cifras al correo de la cuenta para
+        confirmar `action`: borrar la cuenta (`DELETE /me`), cambiar el correo (`PATCH /me`), desvincular Google
+        (`DELETE /me/identities/{provider}`) o cerrar las demás sesiones. Esas cuatro lo aceptan como `code` en vez de
+        `current_password`. Vale 10 minutos, una sola vez y 5 intentos; pedir otro anula el anterior.
+
+        El correo dice para qué es: solo se pide con la sesión abierta, así que quien lo recibe sin haberlo pedido sabe
+        que alguien la tiene. Un código por minuto y cinco por hora.
+      security:
+        - sessionCookie: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmationCodeRequest'
+      responses:
+        '202':
+          description: El código va de camino (sale tras esta respuesta).
         '401':
           $ref: '#/components/responses/Unauthenticated'
         '422':
@@ -3028,7 +3067,8 @@ paths:
         ⚠️ **Exige la contraseña actual** y comparte el limitador de `PUT /me/password` — cinco
         intentos por titular e IP—. No es una contradicción con el art. 12.2: la contraseña es lo que
         impide que alguien se cierre a sí mismo la única puerta que tenía. Quien entró con Google y no
-        tiene ninguna la crea con «he olvidado mi contraseña».
+        tiene ninguna la crea con «he olvidado mi contraseña». Desde **1.56.0**, en vez de la contraseña, un código de
+        `POST /me/confirm-code` (`action: unlink_google`): sin Google, se entra con un código al correo.
 
         ⚠️ **Idempotente**: desvincular lo que ya no está responde 204 igual. El titular pide un
         estado, no una transición.
@@ -5206,19 +5246,39 @@ components:
         current_password:
           type: string
           format: password
-          description: Obligatoria **solo** cuando `email` cambia.
+          description: |
+            Obligatoria **solo** cuando `email` cambia —ella o `code` (1.56.0), una de las dos—.
+        code:
+          type: string
+          maxLength: 16
+          description: '**1.56.0**. El código de `POST /me/confirm-code` (`action: change_email`), en vez de la contraseña.'
 
     PasswordConfirmation:
       type: object
       description: |
-        La contraseña actual del titular, para reconfirmar una acción sensible. **No se envía junto a
-        ningún identificador**: quién la manda lo dice la credencial de la petición.
-      required: [current_password]
+        Con qué reconfirma el titular una acción sensible: la contraseña actual o, desde **1.56.0**, el código de
+        `POST /me/confirm-code` —**una de las dos**; con las dos, o sin ninguna, `422`—. Si falla, el `422` va sobre el
+        campo que se mandó. **No se envía junto a ningún identificador**: quién la manda lo dice la credencial de la
+        petición.
       additionalProperties: false
       properties:
         current_password:
           type: string
           format: password
+        code:
+          type: string
+          maxLength: 16
+          description: '**1.56.0**. El código de seis cifras de `POST /me/confirm-code`.'
+
+    ConfirmationCodeRequest:
+      type: object
+      description: '**1.56.0**. Para qué se pide el código: el correo lo dice.'
+      required: [action]
+      additionalProperties: false
+      properties:
+        action:
+          type: string
+          enum: [delete_account, change_email, unlink_google, close_sessions]
     PasswordChangeRequest:
       type: object
       description: 'La contraseña actual —para reconfirmar— y la nueva.'

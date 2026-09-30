@@ -6,6 +6,7 @@ use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\Ticket;
 use App\Domain\Identity\Services\RememberedDevice;
+use App\Domain\Identity\Services\SessionBinding;
 use App\Domain\Platform\Jobs\ForgetPersonInDriver;
 use App\Domain\Platform\Models\AnalyticsEvent;
 use App\Domain\Platform\Models\AnalyticsSession;
@@ -265,6 +266,9 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
 
         if ($keepCurrent) {
             RememberedDevice::keepCurrent($this);
+            // Y desde la A2a (`#855`) las SESIONES van atadas a este mismo token (`SessionBinding`): la de quien lo pide se
+            // re-ata al nuevo; las demás se cierran en su próxima petición, con cualquier driver de sesión.
+            SessionBinding::rebindCurrent($this);
         }
     }
 
@@ -396,9 +400,9 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
      * `array`/`file`/`redis` no hay tabla que purgar y el resto de la invalidación (rotación del
      * `remember_token`, `logoutOtherDevices`) sigue haciendo su trabajo.
      *
-     * ⚠️⚠️ Con `redis` (producción, medido el 01-09) la SESIÓN de otro dispositivo sigue viva hasta que caduque (2 h sin
-     * uso): la cookie de recuerdo ya cae ({@see forgetRememberedDevices()}), la sesión no. Lo resuelve la A2 de
-     * `specs/acceso-con-codigo.md` §4.4, medido en producción antes de elegir.
+     * ⚠️⚠️ Con `redis` (producción, medido el 01-09) aquí no se borra nada. Desde la A2a (`#855`) no hace falta para
+     * revocar: cada sesión va atada al `remember_token` (`SessionBinding`), y rotarlo o vaciarlo en
+     * {@see forgetRememberedDevices()} cierra las demás con cualquier driver. Esto queda como limpieza de filas.
      */
     private function purgeSessions(bool $exceptCurrent): void
     {

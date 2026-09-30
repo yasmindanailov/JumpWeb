@@ -3,7 +3,11 @@
 namespace App\Domain\Identity\Services;
 
 use App\Domain\Identity\Contracts\CredentialChangeResult;
+use App\Domain\Identity\Contracts\Reconfirmation;
+use App\Domain\Identity\Contracts\ResendResult;
+use App\Domain\Identity\Models\LoginCode;
 use App\Domain\Identity\Models\User;
+use App\Notifications\ConfirmationCode;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -26,6 +30,16 @@ use Illuminate\Support\Facades\RateLimiter;
  */
 class AccountCredentials
 {
+    /**
+     * Las acciones que se confirman con un código (A2a de `specs/acceso-con-codigo.md` §4.9, `#855`). El correo dice cuál:
+     * solo se pide con la sesión abierta, y quien lo recibe sin haberlo pedido sabe que alguien la tiene.
+     *
+     * @var list<string>
+     */
+    public const CONFIRM_ACTIONS = ['delete_account', 'change_email', 'unlink_google', 'close_sessions'];
+
+    public function __construct(private readonly LoginCodes $codes) {}
+
     /**
      * Fallos seguidos por (titular, IP) antes del bloqueo temporal.
      *
@@ -59,7 +73,8 @@ class AccountCredentials
      */
     public function changePassword(User $user, string $currentPassword, string $newPassword, string $ip): CredentialChangeResult
     {
-        return $this->reauthenticated($user, $currentPassword, $ip, function () use ($user, $newPassword): void {
+        // Solo con la contraseña: cambiarla es de quien la tiene, y se retira entera en la A5.
+        return $this->reauthenticated($user, Reconfirmation::password($currentPassword), $ip, function () use ($user, $newPassword): void {
             $user->update(['password' => $newPassword]);
 
             $this->closeOtherSessions($user, $newPassword);
@@ -69,17 +84,44 @@ class AccountCredentials
     }
 
     /** Cierra la sesión en los demás dispositivos, conservando la actual. */
-    public function revokeOtherSessions(User $user, string $currentPassword, string $ip): CredentialChangeResult
+    public function revokeOtherSessions(User $user, Reconfirmation $with, string $ip): CredentialChangeResult
     {
-        return $this->reauthenticated($user, $currentPassword, $ip, function () use ($user, $currentPassword): void {
-            $this->closeOtherSessions($user, $currentPassword);
+        return $this->reauthenticated($user, $with, $ip, function () use ($user, $with): void {
+            $this->closeOtherSessions($user, $with->password);
 
             Log::info('account.logout_other_devices', ['user_id' => $user->id]);
         });
     }
 
     /**
-     * **Reconfirma la contraseña del titular, contando el intento.** Devuelve el veredicto.
+     * **Envía el código para CONFIRMAR `$action`** al correo de la cuenta (A2a, `#855`), tras la respuesta ({@see CodeMail}).
+     *
+     * Con techo por CUENTA —uno por minuto y cinco por hora, los números del código de entrar—: quien tiene la sesión podría
+     * si no llenar de códigos el buzón del dueño. Pedir otro anula el anterior.
+     */
+    public function requestConfirmationCode(User $user, string $action, string $ip): ResendResult
+    {
+        $hash = SelfSignup::emailHash((string) $user->email);
+        $minuteKey = 'confirm-code|'.$hash;
+        $hourKey = 'confirm-code-hour|'.$hash;
+
+        if (RateLimiter::tooManyAttempts($minuteKey, EmailCodeLogin::MAX_PER_EMAIL_PER_MINUTE)
+            || RateLimiter::tooManyAttempts($hourKey, EmailCodeLogin::MAX_PER_EMAIL_PER_HOUR)) {
+            return ResendResult::throttled(max(RateLimiter::availableIn($minuteKey), RateLimiter::availableIn($hourKey)));
+        }
+        RateLimiter::hit($minuteKey, 60);
+        RateLimiter::hit($hourKey, 3600);
+
+        $code = $this->codes->issue((string) $user->email, LoginCode::PURPOSE_CONFIRM, $ip);
+        CodeMail::sendAfterResponse($user, new ConfirmationCode($code, $action));
+
+        Log::info('account.confirmation_code_requested', ['user_id' => $user->id, 'action' => $action, 'ip' => $ip]);
+
+        return ResendResult::sent();
+    }
+
+    /**
+     * **Reconfirma al titular —con su contraseña o con un código `confirm`—, contando el intento.** Devuelve el veredicto.
      *
      * ⚠️ **Es público porque lo necesitan MÁS gestiones que las dos de esta clase**: el cambio de
      * email del perfil y el borrado de cuenta piden lo mismo, y cada uno con su propio `Hash::check`
@@ -88,8 +130,12 @@ class AccountCredentials
      *
      * ⚠️ **El contador se limpia al acertar**, como el limitador por (email, IP) del login: el dueño
      * legítimo que se equivocó dos veces no debe arrastrar esos fallos el resto del minuto.
+     *
+     * ▶ **Desde la A2a (`#855`) también con el CÓDIGO**, bajo el MISMO limitador: la contraseña y el código son la misma
+     * puerta a efectos de ataque, y un código de ENTRAR no vale aquí (el propósito va en su huella). El código se gasta
+     * al acertar; cada uno muere además a los cinco intentos.
      */
-    public function verify(User $user, string $currentPassword, string $ip): CredentialChangeResult
+    public function verify(User $user, Reconfirmation $with, string $ip): CredentialChangeResult
     {
         $key = $this->key($user, $ip);
 
@@ -97,10 +143,14 @@ class AccountCredentials
             return CredentialChangeResult::rateLimited(RateLimiter::availableIn($key));
         }
 
-        if (! Hash::check($currentPassword, (string) $user->password)) {
+        $confirmed = $with->isCode()
+            ? $this->codes->consume((string) $user->email, LoginCode::PURPOSE_CONFIRM, (string) $with->code)
+            : Hash::check((string) $with->password, (string) $user->password);
+
+        if (! $confirmed) {
             RateLimiter::hit($key, self::WINDOW);
 
-            return CredentialChangeResult::wrongPassword();
+            return $with->isCode() ? CredentialChangeResult::wrongCode() : CredentialChangeResult::wrongPassword();
         }
 
         RateLimiter::clear($key);
@@ -109,9 +159,9 @@ class AccountCredentials
     }
 
     /** El guardián común de esta clase: reconfirmar y, si pasa, actuar. */
-    private function reauthenticated(User $user, string $currentPassword, string $ip, callable $action): CredentialChangeResult
+    private function reauthenticated(User $user, Reconfirmation $with, string $ip, callable $action): CredentialChangeResult
     {
-        $verdict = $this->verify($user, $currentPassword, $ip);
+        $verdict = $this->verify($user, $with, $ip);
 
         if ($verdict->failed()) {
             return $verdict;
@@ -134,12 +184,16 @@ class AccountCredentials
      *
      * ⚠️ El guard solo sabe hacer lo primero si es de SESIÓN. Un cliente por token no tiene sello que
      * rehashear, y ahí `revokeOtherAccess()` es todo lo que hay — motivo de más para no separarlas.
+     *
+     * ▶ **Desde la A2a (`#855`) `revokeOtherAccess()` cierra también las SESIONES vivas, con cualquier driver**: cada
+     * sesión de la web va atada al `remember_token` (`SessionBinding`), y rotarlo deja fuera a las que no son esta. Por
+     * eso, confirmado con un CÓDIGO —sin contraseña que rehashear—, el rehash sobra; con contraseña sigue hasta la A5.
      */
-    private function closeOtherSessions(User $user, string $password): void
+    private function closeOtherSessions(User $user, ?string $password): void
     {
         $guard = Auth::guard();
 
-        if (method_exists($guard, 'logoutOtherDevices')) {
+        if ($password !== null && method_exists($guard, 'logoutOtherDevices')) {
             $guard->logoutOtherDevices($password);
         }
 

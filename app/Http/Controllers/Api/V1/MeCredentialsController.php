@@ -3,16 +3,22 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Domain\Identity\Contracts\CredentialChangeResult;
+use App\Domain\Identity\Contracts\Reconfirmation;
+use App\Domain\Identity\Contracts\ResendResult;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\AccountCredentials;
 use App\Domain\Identity\Services\PasswordPolicy;
 use App\Domain\Identity\Services\SocialIdentities;
 use App\Http\Api\ApiCollection;
+use App\Http\Api\ApiErrorCode;
+use App\Http\Api\ApiErrorResponse;
 use App\Http\Api\Concerns\TranslatesCredentialVerdicts;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\UserIdentityResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Validation\Rule;
 
 /**
  * **Las gestiones de credenciales del titular** (`specs/area-cliente.md` §9.3, tanda 2 · paso 6).
@@ -81,12 +87,14 @@ class MeCredentialsController extends Controller
      */
     public function unlinkIdentity(Request $request, string $provider, SocialIdentities $identities): JsonResponse
     {
-        $data = $request->validate(['current_password' => ['required', 'string']]);
+        // La contraseña o un código `confirm` (A2a, `#855`): quien entró con Google y no tiene contraseña ya no se queda
+        // sin puerta al desvincular —entra con un código al correo—.
+        $data = $request->validate($this->reconfirmationRules());
 
         /** @var User $user */
         $user = $request->user();
 
-        return $this->respond($identities->unlink($user, $provider, $data['current_password'], (string) $request->ip()));
+        return $this->respond($identities->unlink($user, $provider, Reconfirmation::from($data), (string) $request->ip()));
     }
 
     /**
@@ -97,14 +105,45 @@ class MeCredentialsController extends Controller
      */
     public function revokeOtherSessions(Request $request, AccountCredentials $credentials): JsonResponse
     {
-        $data = $request->validate(['current_password' => ['required', 'string']]);
+        // La contraseña o un código `confirm` (A2a, `#855`).
+        $data = $request->validate($this->reconfirmationRules());
 
         /** @var User $user */
         $user = $request->user();
 
         return $this->respond($credentials->revokeOtherSessions(
-            $user, $data['current_password'], (string) $request->ip(),
+            $user, Reconfirmation::from($data), (string) $request->ip(),
         ));
+    }
+
+    /**
+     * `POST /me/confirm-code` — el código para CONFIRMAR una acción sensible (A2a de `specs/acceso-con-codigo.md` §4.9,
+     * `#855`), al correo de la cuenta y tras la respuesta. `action` dice cuál, y el correo lo cuenta: solo se pide con la
+     * sesión abierta, así que quien lo recibe sin haberlo pedido sabe que alguien la tiene.
+     *
+     * `202` sin cuerpo; `429` con `retry_after` (uno por minuto y cinco por hora).
+     */
+    public function requestConfirmationCode(Request $request, AccountCredentials $credentials): Response|JsonResponse
+    {
+        $data = $request->validate([
+            'action' => ['required', 'string', Rule::in(AccountCredentials::CONFIRM_ACTIONS)],
+        ]);
+
+        /** @var User $user */
+        $user = $request->user();
+
+        $result = $credentials->requestConfirmationCode($user, $data['action'], (string) $request->ip());
+
+        if ($result->reason === ResendResult::THROTTLED) {
+            return ApiErrorResponse::make(
+                ApiErrorCode::TooManyRequests,
+                429,
+                params: ['retry_after' => $result->retryAfter],
+                headers: ['Retry-After' => (string) $result->retryAfter],
+            );
+        }
+
+        return response()->noContent(202);
     }
 
     /**

@@ -3,6 +3,7 @@
 namespace App\Domain\Identity\Services;
 
 use App\Domain\Identity\Contracts\CredentialChangeResult;
+use App\Domain\Identity\Contracts\Reconfirmation;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Models\UserIdentity;
 use App\Domain\Platform\Services\AuditLogger;
@@ -49,9 +50,10 @@ final class SocialIdentities
      * un ESTADO —«que no haya vínculo con Google»—, y dos clics seguidos no pueden dar respuestas
      * distintas ni dejar dos entradas de auditoría de un solo acto.
      */
-    public function unlink(User $user, string $provider, string $currentPassword, string $ip): CredentialChangeResult
+    public function unlink(User $user, string $provider, Reconfirmation $with, string $ip): CredentialChangeResult
     {
-        $verdict = $this->credentials->verify($user, $currentPassword, $ip);
+        // Con la contraseña o con un código `confirm` al correo de la cuenta (A2a, `#855`).
+        $verdict = $this->credentials->verify($user, $with, $ip);
 
         if ($verdict->failed()) {
             return $verdict;

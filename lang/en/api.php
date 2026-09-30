@@ -79,6 +79,10 @@ return [
         'implausible' => 'Check the year: that date means over :max years old.',
     ],
 
+    'confirm' => [
+        'wrong_code' => 'The code is not right or has expired. Ask for another one.',
+    ],
+
     'google' => [
         'refused' => 'We could not finish signing you up with that Google account. Try again, or sign up with your email and a password.',
     ],

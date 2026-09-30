@@ -11,9 +11,6 @@ use Illuminate\Auth\Events\Verified;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
-use Throwable;
-
-use function Illuminate\Support\defer;
 
 /**
  * **Entrar con un código al correo** (A1 de `docs/specs/acceso-con-codigo.md` §4.2–§4.4, `DECISIONES #848`/`#849`): la
@@ -28,9 +25,8 @@ use function Illuminate\Support\defer;
  *    que la contraseña ({@see LoginGate}): cinco fallos con una bloquean la otra.
  * Con 5 intentos por código y 5 códigos por hora, acertar a ciegas es 2,5·10⁻⁵ por hora y correo (§4.2).
  *
- * ⚠️⚠️ **El correo sale TRAS la respuesta, no por la cola** (§4.3): la cola la vacía el cron cada minuto en producción, y
- * un código que tarda 60 s en la puerta del parque es un código que no llega. `defer()` lo manda en la misma petición,
- * cuando el cliente ya tiene su respuesta —el SMTP no le hace esperar, que es lo que pide `PAY-14`—.
+ * ⚠️⚠️ **El correo sale TRAS la respuesta, no por la cola** (§4.3, {@see CodeMail}): la cola la vacía el cron cada minuto
+ * en producción, y un código que tarda 60 s en la puerta del parque es un código que no llega.
  */
 class EmailCodeLogin
 {
@@ -85,7 +81,7 @@ class EmailCodeLogin
         RateLimiter::hit($hourKey, 3600);
 
         $code = $this->codes->issue($email, LoginCode::PURPOSE_LOGIN, $ip);
-        defer(fn () => $this->send($user, $code));
+        CodeMail::sendAfterResponse($user, new LoginCodeMail($code));
 
         Log::info('auth.code_requested', ['user_id' => $user->id, 'ip' => $ip]);
 
@@ -115,18 +111,5 @@ class EmailCodeLogin
         }
 
         return $result;
-    }
-
-    /**
-     * El envío, ya fuera de la respuesta. Un fallo del transporte no puede subir a ninguna parte (la respuesta ya
-     * salió): se registra sin la dirección ni el código, y el cliente puede pedir otro.
-     */
-    private function send(User $user, string $code): void
-    {
-        try {
-            $user->notifyNow(new LoginCodeMail($code));
-        } catch (Throwable $e) {
-            Log::warning('auth.code_mail_failed', ['user_id' => $user->id, 'error' => $e::class]);
-        }
     }
 }

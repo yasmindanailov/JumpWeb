@@ -8,6 +8,7 @@ use App\Http\Api\ApiExceptionRenderer;
 use App\Http\Api\ApiSurface;
 use App\Http\Middleware\Api\ApiLocale;
 use App\Http\Middleware\Api\NoStoreWhenAuthenticated;
+use App\Http\Middleware\EnsureSessionIsCurrent;
 use App\Http\Middleware\EnsureSiteAvailable;
 use App\Http\Middleware\NoStore;
 use App\Http\Middleware\NoStoreWebResponses;
@@ -19,6 +20,7 @@ use App\Http\Middleware\ResolveAttribution;
 use App\Http\Middleware\ResolveVisitor;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetLocale;
+use Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -81,6 +83,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(NoStoreWebResponses::class);
 
         $middleware->web(append: [
+            // La sesión que su cuenta ya no reconoce, fuera (`SessionBinding`, A2a del acceso con código, `#855`): lo
+            // PRIMERO, antes de que nadie —el idioma del usuario, la página— la trate como de alguien dentro.
+            EnsureSessionIsCurrent::class,
             SetLocale::class,
             SecurityHeaders::class,
             // Mantenimiento de sitio entero (#218, item 2). Va el ÚLTIMO de los tres: corre tras
@@ -135,9 +140,12 @@ return Application::configure(basePath: dirname(__DIR__))
         //     ⚠️ `POST /events` es la ÚNICA ruta del grupo que sale del `throttle:api` y del modo
         //     stateful (`withoutMiddleware` en su ruta): apilado, la analítica se comería el cubo del
         //     embudo, y `sendBeacon` no puede llevar cabecera CSRF (`SEC-01`, spec §7.1).
+        //  2.bis `EnsureSessionIsCurrent` — la sesión que su cuenta ya no reconoce, fuera (A2a del acceso con código,
+        //     `#855`): justo después de que haya sesión y antes de que nadie la lea como de alguien dentro.
         $middleware->group('api', [
             SecurityHeaders::class,
             EnsureFrontendRequestsAreStateful::class,
+            EnsureSessionIsCurrent::class,
             ApiLocale::class,
             EnsureSiteAvailable::class,
             NoStoreWhenAuthenticated::class,
@@ -145,6 +153,12 @@ return Application::configure(basePath: dirname(__DIR__))
             SubstituteBindings::class,
             ResolveVisitor::class,
         ]);
+
+        // ⚠️⚠️ `EnsureSessionIsCurrent` corre ANTES de autenticar (A2a del acceso con código, `#855`). Laravel REORDENA por
+        // `$middlewarePriority` y sube `Authenticate` por delante de lo añadido a un grupo: medido, en `/mi-cuenta/exportar`
+        // el `auth` dejaba pasar la sesión cerrada y el controlador recibía un titular nulo (500). En la lista de
+        // prioridad, justo delante de la autenticación —y detrás de `StartSession`, que va antes en esa lista—.
+        $middleware->prependToPriorityList(AuthenticatesRequests::class, EnsureSessionIsCurrent::class);
 
         // Panel admin (Fase 7): alias para rutas que exigen rol admin o staff.
         // Defense in depth junto a `User::canAccessPanel()` (gate de Filament).

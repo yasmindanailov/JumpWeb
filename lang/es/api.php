@@ -92,6 +92,11 @@ return [
         'implausible' => 'Revisa el año: esa fecha dice más de :max años.',
     ],
 
+    // El código para confirmar una acción sensible (A2a de `specs/acceso-con-codigo.md`, `#855`): el 422 sobre `code`.
+    'confirm' => [
+        'wrong_code' => 'El código no es correcto o ha caducado. Pide otro.',
+    ],
+
     // Entrar y registrarse con Google (`specs/auth-con-google.md`).
     'google' => [
         // Entre que se pintó la pantalla y se envió, esa identidad dejó de poder entrar: apareció una

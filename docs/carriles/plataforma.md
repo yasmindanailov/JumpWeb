@@ -4,9 +4,9 @@
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
 > **820–849 AGOTADA con `#849`** → sigue en **850–879** (del owner, 29-09; centena `decisiones/800-899.md`) · Último usado:
-> **`#854`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#846`) · Actualizado: **2026-09-29**
-> (noche: la A1 del acceso con código ✅ `#853`/`#854`, `specs/acceso-con-codigo.md` §4.8; SIGUE su A2).
+> **`#855`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#846`) · Actualizado: **2026-09-30**
+> (el acceso con código: A1 ✅ `#853`/`#854` y A2a ✅ `#855`, `specs/acceso-con-codigo.md` §4.8–§4.9; SIGUE su A2b).
 > ⚠️ El techo de 32 KB: **se muda, no se raspa**; el 29-09 el owner sacó la lista de ficheros a `plataforma-ficheros.md`
 > (`#852`) y NO subió el techo. Si vuelve a apretar tres veces seguidas, llévaselo con la medida.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -46,15 +46,16 @@ normas, la T6f (301 y la web vieja fuera, `#843`), `#844`, la T6h (las legales) 
 **T6g** (§4.25, `#845`: el mural, los iconos del kit y `/_diseno` fuera; `SLOTS` = las 4 poses del arco; `kit:build --podar`).
 Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas,entradas}.mjs`), la web entera (`sonda-web.mjs`,
 17/17) y la compra (`sonda-isla.mjs`).
-▶▶▶ **SIGUE: la A2 de `specs/acceso-con-codigo.md`** (las acciones sensibles con un código `confirm`: borrar la cuenta, cambiar
-el correo —el nuevo, con un código a ESE correo—, desvincular Google y cerrar las demás sesiones). **La A1 ✅** (29-09 noche,
-`#853`/`#854`, contrato **1.55.0**; lo hecho, lo medido y lo que hereda, en su §4.8): `POST /auth/code`, el código en `auth/login`
-y `auth/tokens`, el alta sin contraseña, el dispositivo recordado 90 días y la palanca de `RGPD-06` sobre él; arnés
-`mutar-acceso-codigo.sh` 27/27 y `mutar-token-bearer.sh` 14/14 (re-apuntado a `LoginGate`). ⚠️ **Hereda la A2**:
-`AccountCredentials` reconfirma con contraseña y usa `logoutOtherDevices($password)`, que sin contraseña no puede; y ANTES,
-el driver de SESIÓN de producción (`ENTORNOS.md` §6 lo da `redis`, medido el 01-09, sin re-medir; `purgeSessions()` solo actúa
-con `database`), por SSH y con permiso del owner. ❓ **Del owner**: el texto de `/cookies` («solo si marcas recuérdame») y el
-aviso de los 90 días en la pantalla (A3), `[PENDIENTE: owner]`. ⚠️ El código abre la WEB, nunca el panel (`SEC-14`).
+▶▶▶ **SIGUE: la A2b de `specs/acceso-con-codigo.md` §4.9** —el correo NUEVO verificado con un código a ESE correo (propósito
+`new_email`; `POST /me/email/confirm {code}`; el enlace firmado de hoy sigue hasta la A3/A4 y se va en la A5)—; después la A3
+(la isla). **HECHO**: la **A1** (29-09, `#853`/`#854`, contrato 1.55.0, §4.8: `POST /auth/code`, el código en `auth/login` y
+`auth/tokens`, el alta sin contraseña, el dispositivo recordado 90 días) y la **A2a** (30-09, `#855`, contrato **1.56.0**,
+§4.9: `POST /me/confirm-code` y `code` en las cuatro acciones sensibles; cada sesión web ATADA al `remember_token`, así que
+«cerrar las demás» echa sesiones vivas con cualquier driver —el de `redis` de producción ya no hay que medirlo para elegir—;
+`POST /logout` cierra solo este dispositivo). Arneses: `mutar-acceso-codigo.sh` **40/40**, `mutar-token-bearer.sh` 14/14.
+⚠️ Dos trampas de la A2a, en §4.9: el reordenado por `$middlewarePriority` y la caché del guard `sanctum`.
+❓ **Del owner**: el texto de `/cookies` («solo si marcas recuérdame») y el aviso de los 90 días en la pantalla (A3),
+`[PENDIENTE: owner]`. ⚠️ El código abre la WEB, nunca el panel (`SEC-14`).
 ▶▶ **Del SPA (`#807`, 29-09), para cuando desengache el menú (su K3)**: `isla/compra/PantallaCuandoFiesta.vue` pinta «¿Qué menú?»
 SIN condición —con el menú fuera saldría vacía: un `v-if` sobre `menus`—, y la calculadora y la landing dicen «incluye
 calcetines… cono» y «¿Qué menú?». Su K3 trae el tipo `choice` al contrato del catálogo: te dirá el número.
@@ -189,6 +190,15 @@ carril se apunta ALLÍ; lo compartido se sigue avisando aquí, en el buzón, ant
   SSR rancio tras un arnés, las guardas de presupuesto que cambian el diseño, el juez de la hoja y el banco.
 
 ## Buzón
+
+### ❗❗ Para el SPA (emisor: plataforma, 2026-09-30) — la A2a: reconfirmar con un código (`#855`, contrato 1.56.0)
+- **Para tu A4**: `POST /me/confirm-code {action}` (`delete_account`, `change_email`, `unlink_google`, `close_sessions`) → 202, y
+  las cuatro acciones aceptan `code` en vez de `current_password`; el 422 va sobre el campo que se mandó (`code` o
+  `current_password`). El 1.56.0 es mío: el siguiente, tuyo.
+- **Toqué lo tuyo otra vez**: `EmailTiming::PROVOKED` (+`confirmation_code`) y los censos de `EmailsReportTest`/`EmailUtmTest`.
+- **Aviso**: cada sesión de la web va atada al `remember_token` de su cuenta (`SessionBinding`) y `EnsureSessionIsCurrent`
+  corre en la web y en la API con sesión, en la lista de PRIORIDAD delante de la autenticación. Una prueba tuya que cambie el
+  token a mano (o llame a `logout()`) verá su sesión cerrada en la siguiente petición: es lo esperado.
 
 ### ❗❗ Para el SPA (emisor: plataforma, 2026-09-29 noche) — la A1 del acceso con código (`#853`/`#854`, contrato 1.55.0)
 - **La API de tu A4** (`acceso-con-codigo.md` §4.8): `POST /auth/code` `{email}` → `{next: code|register}` (429 con

@@ -482,6 +482,11 @@ Route::name('api.v1.')->group(function (): void {
         Route::post('/me/sessions/revoke-others', [MeCredentialsController::class, 'revokeOtherSessions'])
             ->name('me.sessions.revoke-others');
 
+        // El código para CONFIRMAR una acción sensible (A2a de `specs/acceso-con-codigo.md` §4.9, `#855`): al correo de la
+        // cuenta. Borrar la cuenta, cambiar el correo, desvincular Google y cerrar las demás sesiones lo aceptan en vez de
+        // la contraseña. Su techo (1/min, 5/h por cuenta) vive en `AccountCredentials`, no aquí.
+        Route::post('/me/confirm-code', [MeCredentialsController::class, 'requestConfirmationCode'])->name('me.confirm-code');
+
         // ── Las identidades EXTERNAS del titular (`specs/auth-con-google.md` §8) ──────────────────
         // ⚠️⚠️ Desvincular es el **contrapeso** del aviso de vinculación: el vínculo se crea solo y se
         // avisa por correo, y ese aviso solo sirve si quien lo recibe puede deshacerlo. Sin esto, la

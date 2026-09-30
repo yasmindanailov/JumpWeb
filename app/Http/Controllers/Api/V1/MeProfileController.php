@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Domain\Identity\Contracts\ProfileUpdateResult;
+use App\Domain\Identity\Contracts\Reconfirmation;
 use App\Domain\Identity\Contracts\ResendResult;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\AccountProfile;
@@ -39,8 +40,11 @@ class MeProfileController extends Controller
 
         // ⚠️ Solo se exige la PRESENCIA de la contraseña, y solo si el correo cambia: comprobarla es
         // del servicio, que además cuenta el intento para el limitador (§9.4).
-        if ($request->string('email')->lower()->trim()->value() !== $user->email) {
-            $rules['current_password'] = ['required', 'string'];
+        // ▶ Desde la A2a (`#855`), la contraseña O un código `confirm` (`POST /me/confirm-code`), uno de los dos.
+        $emailChanges = $request->string('email')->lower()->trim()->value() !== $user->email;
+        if ($emailChanges) {
+            $rules['current_password'] = ['required_without:code', 'prohibits:code', 'string'];
+            $rules['code'] = ['required_without:current_password', 'string', 'max:16'];
         }
 
         $data = $request->validate($rules);
@@ -51,7 +55,7 @@ class MeProfileController extends Controller
             'phone' => $data['phone'],
             'locale' => $data['locale'],
             'email' => $data['email'],
-        ] + array_intersect_key($data, ['born_on' => true]), $data['current_password'] ?? null, (string) $request->ip());
+        ] + array_intersect_key($data, ['born_on' => true]), $emailChanges ? Reconfirmation::from($data) : null, (string) $request->ip());
 
         if ($result->failed()) {
             return $this->denial($result);
@@ -145,9 +149,12 @@ class MeProfileController extends Controller
         // ⚠️ La carrera de UNIQUE se enseña **en el campo del correo**, no como error de servidor:
         // para el cliente es exactamente lo mismo que si la validación lo hubiera rechazado, y
         // distinguirlo solo le daría un caso más que aprender para hacer lo mismo.
-        $field = $result->reason === ProfileUpdateResult::EMAIL_TAKEN
-            ? ['email' => [__('validation.unique', ['attribute' => __('account.account.profile.email')])]]
-            : ['current_password' => [__('account.account.wrong_password')]];
+        $field = match ($result->reason) {
+            ProfileUpdateResult::EMAIL_TAKEN => ['email' => [__('validation.unique', ['attribute' => __('account.account.profile.email')])]],
+            // Sobre el campo que se mandó (A2a, `#855`): el código, o la contraseña.
+            ProfileUpdateResult::WRONG_CODE => ['code' => [__('api.confirm.wrong_code')]],
+            default => ['current_password' => [__('account.account.wrong_password')]],
+        };
 
         return ApiErrorResponse::make(ApiErrorCode::ValidationFailed, 422, fields: $field);
     }

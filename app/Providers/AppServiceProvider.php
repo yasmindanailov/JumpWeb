@@ -42,6 +42,7 @@ use App\Domain\Content\Services\HeroStatus;
 use App\Domain\Content\Services\MapsEmbed;
 use App\Domain\Content\Services\ScheduleDisplay;
 use App\Domain\Content\Services\SocialEmbed;
+use App\Domain\Identity\Listeners\BindSessionOnLogin;
 use App\Domain\Identity\Listeners\RecordLoginFact;
 use App\Domain\Identity\Listeners\SignPendingWaiverOnVerification;
 use App\Domain\Identity\Models\BirthdayReminder;
@@ -278,6 +279,10 @@ class AppServiceProvider extends ServiceProvider
         // framework, que disparan todas las puertas (contraseña, Google, verificación). El listener vive en
         // Identity por el mismo motivo que el de arriba.
         Event::listen(Login::class, RecordLoginFact::class);
+
+        // Y la sesión de la web, ATADA a su cuenta al entrar (`SessionBinding`, A2a del acceso con código, `#855`): lo que
+        // deja a «cerrar las demás sesiones» cerrar las SESIONES vivas con cualquier driver. Mismo motivo de sitio.
+        Event::listen(Login::class, BindSessionOnLogin::class);
 
         // Y `email_sent` desde el `NotificationSent` del framework (T1c): cada correo al cliente que sale, con
         // la misma clave que llevan sus enlaces (`EmailUtm`), también cuando lo manda el worker de la cola.

@@ -43,10 +43,27 @@ trait TranslatesCredentialVerdicts
             );
         }
 
+        // Sobre el campo que se mandó (A2a de `specs/acceso-con-codigo.md`, `#855`): el código, o la contraseña.
         return ApiErrorResponse::make(
             ApiErrorCode::ValidationFailed,
             422,
-            fields: ['current_password' => [__('account.account.wrong_password')]],
+            fields: $result->wasWrongCode()
+                ? ['code' => [__('api.confirm.wrong_code')]]
+                : ['current_password' => [__('account.account.wrong_password')]],
         );
+    }
+
+    /**
+     * Las reglas de la reconfirmación: la contraseña actual **o** un código `confirm` (A2a, `#855`), uno de los dos. La
+     * contraseña del cliente se retira en la A5 y el código pasará a ser el único.
+     *
+     * @return array<string, array<int, string>>
+     */
+    private function reconfirmationRules(): array
+    {
+        return [
+            'current_password' => ['required_without:code', 'prohibits:code', 'string'],
+            'code' => ['required_without:current_password', 'string', 'max:16'],
+        ];
     }
 }

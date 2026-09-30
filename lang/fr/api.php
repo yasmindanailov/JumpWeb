@@ -79,6 +79,10 @@ return [
         'implausible' => 'Vérifiez l’année : cette date indique plus de :max ans.',
     ],
 
+    'confirm' => [
+        'wrong_code' => "Le code n'est pas bon ou a expiré. Demandes-en un autre.",
+    ],
+
     'google' => [
         'refused' => "Nous n'avons pas pu terminer l'inscription avec ce compte Google. Réessaie, ou inscris-toi avec ton e-mail et un mot de passe.",
     ],

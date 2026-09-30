@@ -52,6 +52,21 @@ return [
         'validity' => 'Type it on the screen where you asked for it. It works for :minutes minutes and only once.',
         'ignore' => "If you didn't ask for it, ignore this email: nobody can get into your account without this code.",
     ],
+    'confirmation_code' => [
+        'subject' => ':code is your confirmation code',
+        'preheader' => "Type it where you asked for it. If you didn't ask for it, don't give it to anyone.",
+        'badge' => 'Your confirmation code',
+        'headline' => ':code',
+        'for' => 'It is to :action.',
+        'actions' => [
+            'delete_account' => 'delete your account',
+            'change_email' => 'change the email of your account',
+            'unlink_google' => 'unlink your Google account',
+            'close_sessions' => 'sign out of your other devices',
+        ],
+        'validity' => 'It works for :minutes minutes and only once.',
+        'ignore' => "If you didn't ask for it, don't give it to anyone: someone with your account open on another device asked for it.",
+    ],
     'verify_purchase' => [
         'subject' => 'Confirm your email · :code',
         'preheader' => 'Your slot is on hold while you confirm. One click and you can finish paying.',

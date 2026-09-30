@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Arnés de mutación del ACCESO CON CÓDIGO, tanda A1 (`docs/specs/acceso-con-codigo.md` §6, `DECISIONES #853`).
+# Arnés de mutación del ACCESO CON CÓDIGO, tandas A1 y A2a (`docs/specs/acceso-con-codigo.md` §6, `DECISIONES #853`–`#855`).
 #
 # Entrar con un código al correo es una credencial nueva, y lo que la acota son reglas pequeñas que se caen sin ruido:
 # que el código caduque, se gaste y muera al quinto intento; que su huella lleve clave y correo; que pedirlo tenga techo
@@ -14,19 +14,27 @@ set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
 SAIL="docker compose exec -u sail -T laravel.test"
-TESTS="$SAIL php artisan test --filter=AuthCodeTest|LoginCodesTest|RememberedDeviceTest"
+TESTS="$SAIL php artisan test --filter=AuthCodeTest|LoginCodesTest|RememberedDeviceTest|MeConfirmationCodeTest|SessionBindingTest"
 
 CODES=app/Domain/Identity/Services/LoginCodes.php
 LOGIN=app/Domain/Identity/Services/EmailCodeLogin.php
+CODEMAIL=app/Domain/Identity/Services/CodeMail.php
 COPY=app/Domain/Platform/Listeners/RecordEmailSend.php
 USER=app/Domain/Identity/Models/User.php
 BOOT=bootstrap/app.php
 SESSION=app/Http/Controllers/Api/V1/AuthSessionController.php
 SIGNUP=app/Http/Controllers/Api/V1/AuthRegistrationController.php
 AUTHCONF=config/auth.php
+# La A2a (`#855`)
+CREDS=app/Domain/Identity/Services/AccountCredentials.php
+BINDING=app/Domain/Identity/Services/SessionBinding.php
+PROVIDER=app/Providers/AppServiceProvider.php
+VERDICTS=app/Http/Api/Concerns/TranslatesCredentialVerdicts.php
+WEBOUT=app/Http/Controllers/Auth/LogoutController.php
+CONFIRMMAIL=app/Notifications/ConfirmationCode.php
 
 TMP="$(mktemp -d)"
-FICHEROS=("$CODES" "$LOGIN" "$COPY" "$USER" "$BOOT" "$SESSION" "$SIGNUP" "$AUTHCONF")
+FICHEROS=("$CODES" "$LOGIN" "$CODEMAIL" "$COPY" "$USER" "$BOOT" "$SESSION" "$SIGNUP" "$AUTHCONF" "$CREDS" "$BINDING" "$PROVIDER" "$VERDICTS" "$WEBOUT" "$CONFIRMMAIL")
 copia() { echo "$TMP/${1//\//__}"; }
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$(copia "$f")" "$f"; touch "$f"; done; }
 trap 'restaurar; rm -rf "$TMP"' EXIT
@@ -115,13 +123,14 @@ mutar "el buzón de la víctima no tiene techo por hora" "$LOGIN" \
   "
             || RateLimiter::tooManyAttempts(\$hourKey, self::MAX_PER_EMAIL_PER_HOUR)" ""
 
-mutar "el correo sale DURANTE la respuesta (el SMTP hace esperar)" "$LOGIN" \
-  "        defer(fn () => \$this->send(\$user, \$code));" \
-  "        \$this->send(\$user, \$code);"
+# El envío vive en `CodeMail` desde la A2a (extraído en la segunda copia): los dos mutantes, re-apuntados allí.
+mutar "el correo sale DURANTE la respuesta (el SMTP hace esperar)" "$CODEMAIL" \
+  "        defer(static function () use (\$user, \$mail): void {" \
+  "        call_user_func(static function () use (\$user, \$mail): void {"
 
-mutar "el correo espera a la cola (hasta 60 s en producción)" "$LOGIN" \
-  "\$user->notifyNow(new LoginCodeMail(\$code));" \
-  "\$user->notify(new LoginCodeMail(\$code));"
+mutar "el correo espera a la cola (hasta 60 s en producción)" "$CODEMAIL" \
+  "\$user->notifyNow(\$mail);" \
+  "\$user->notify(\$mail);"
 
 mutar "verificar con cubos propios (intentos gratis además de los de la contraseña)" "$LOGIN" \
   "\$result = \$this->gate->guarded(\$email, \$ip, 'auth.code_login', function (string \$email) use (\$code): ?User {" \
@@ -183,6 +192,75 @@ mutar "entrar con el código no recuerda el dispositivo" "$SESSION" \
 mutar "el alta no recuerda el dispositivo" "$SIGNUP" \
   "Auth::login(\$result->user, remember: true);" \
   "Auth::login(\$result->user);"
+
+# ── A2a · reconfirmar con un código (`#855`) ────────────────────────────────────────────────────
+mutar "un código de ENTRAR confirma acciones sensibles" "$CREDS" \
+  "? \$this->codes->consume((string) \$user->email, LoginCode::PURPOSE_CONFIRM, (string) \$with->code)" \
+  "? \$this->codes->consume((string) \$user->email, LoginCode::PURPOSE_LOGIN, (string) \$with->code)"
+
+mutar "un código fallido no cuenta en el limitador de la contraseña (intentos gratis)" "$CREDS" \
+  "            RateLimiter::hit(\$key, self::WINDOW);
+
+            return \$with->isCode()" \
+  "            if (! \$with->isCode()) {
+                RateLimiter::hit(\$key, self::WINDOW);
+            }
+
+            return \$with->isCode()"
+
+mutar "el código de confirmar no tiene techo (el buzón del dueño, lleno)" "$CREDS" \
+  "        if (RateLimiter::tooManyAttempts(\$minuteKey, EmailCodeLogin::MAX_PER_EMAIL_PER_MINUTE)
+            || RateLimiter::tooManyAttempts(\$hourKey, EmailCodeLogin::MAX_PER_EMAIL_PER_HOUR)) {" \
+  "        if (false) {"
+
+mutar "el correo del código no dice para qué es" "$CONFIRMMAIL" \
+  "            ->line(__('emails.confirmation_code.for', ['action' => __('emails.confirmation_code.actions.'.\$this->action)]))
+" ""
+
+mutar "el 422 de un código malo va sobre la contraseña" "$VERDICTS" \
+  "            fields: \$result->wasWrongCode()" \
+  "            fields: false"
+
+# ── A2a · la revocación que no depende del driver (`RGPD-06`) ───────────────────────────────────
+mutar "la sesión no se ata al entrar" "$PROVIDER" \
+  "        Event::listen(Login::class, BindSessionOnLogin::class);
+" ""
+
+mutar "nadie mira si la sesión sigue atada (la API)" "$BOOT" \
+  "            EnsureFrontendRequestsAreStateful::class,
+            EnsureSessionIsCurrent::class," \
+  "            EnsureFrontendRequestsAreStateful::class,"
+
+mutar "nadie mira si la sesión sigue atada (la web)" "$BOOT" \
+  "            EnsureSessionIsCurrent::class,
+            SetLocale::class," \
+  "            SetLocale::class,"
+
+mutar "en la web se autentica ANTES de mirar la atadura (el reordenado por prioridad)" "$BOOT" \
+  "        \$middleware->prependToPriorityList(AuthenticatesRequests::class, EnsureSessionIsCurrent::class);
+" ""
+
+mutar "la sesión desatada se cierra en el guard web y la caché de sanctum la deja dentro" "$BINDING" \
+  "        Auth::forgetGuards();
+" ""
+
+mutar "una sesión de antes de la atadura no se ata nunca (no se podría cerrar)" "$BINDING" \
+  "        if (! is_string(\$bound)) {
+            self::bind(\$session, \$user);
+
+            return;
+        }" \
+  "        if (! is_string(\$bound)) {
+            return;
+        }"
+
+mutar "cerrar las demás echa también la sesión de quien lo pide" "$USER" \
+  "            SessionBinding::rebindCurrent(\$this);
+" ""
+
+mutar "salir en la web rota el token y echa a todos los dispositivos" "$WEBOUT" \
+  "\$web->logoutCurrentDevice();" \
+  "\$web->logout();"
 
 echo
 echo "mutaciones que muerden: ${muerden}/${total}"

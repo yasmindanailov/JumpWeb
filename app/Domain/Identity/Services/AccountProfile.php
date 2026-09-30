@@ -3,6 +3,7 @@
 namespace App\Domain\Identity\Services;
 
 use App\Domain\Identity\Contracts\ProfileUpdateResult;
+use App\Domain\Identity\Contracts\Reconfirmation;
 use App\Domain\Identity\Contracts\ResendResult;
 use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Services\SiteLocales;
@@ -95,20 +96,24 @@ class AccountProfile
      * escribir la contraseña para corregir una errata en el teléfono no defiende nada y hace que el
      * titular acabe evitando la pantalla.
      *
+     * ▶ Desde la A2a (`#855`) se reconfirma con la contraseña **o con un código `confirm`** al correo de la cuenta.
+     *
      * @param  array{name: string, phone: string, born_on?: ?string, locale: string, email: string}  $data  sin `born_on`, la fecha no se toca
      */
-    public function apply(User $user, array $data, ?string $currentPassword, string $ip): ProfileUpdateResult
+    public function apply(User $user, array $data, ?Reconfirmation $with, string $ip): ProfileUpdateResult
     {
         $email = Str::lower(trim($data['email']));
         $emailChanged = $email !== $user->email;
 
         if ($emailChanged) {
-            $verdict = $this->credentials->verify($user, (string) $currentPassword, $ip);
+            $verdict = $this->credentials->verify($user, $with ?? Reconfirmation::password(''), $ip);
 
             if ($verdict->failed()) {
-                return $verdict->wasRateLimited()
-                    ? ProfileUpdateResult::rateLimited($verdict->retryAfter)
-                    : ProfileUpdateResult::wrongPassword();
+                return match (true) {
+                    $verdict->wasRateLimited() => ProfileUpdateResult::rateLimited($verdict->retryAfter),
+                    $verdict->wasWrongCode() => ProfileUpdateResult::wrongCode(),
+                    default => ProfileUpdateResult::wrongPassword(),
+                };
             }
         }
 

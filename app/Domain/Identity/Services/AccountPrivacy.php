@@ -5,6 +5,7 @@ namespace App\Domain\Identity\Services;
 use App\Domain\Booking\Contracts\CustomerOrderHistory;
 use App\Domain\Booking\Contracts\CustomerReservations;
 use App\Domain\Identity\Contracts\CredentialChangeResult;
+use App\Domain\Identity\Contracts\Reconfirmation;
 use App\Domain\Identity\Exceptions\AccountHasUpcomingReservationsException;
 use App\Domain\Identity\Models\Consent;
 use App\Domain\Identity\Models\Dependent;
@@ -85,9 +86,10 @@ class AccountPrivacy
      *
      * @throws AccountHasUpcomingReservationsException
      */
-    public function anonymize(User $user, string $currentPassword, string $ip): CredentialChangeResult
+    public function anonymize(User $user, Reconfirmation $with, string $ip): CredentialChangeResult
     {
-        $verdict = $this->credentials->verify($user, $currentPassword, $ip);
+        // Con la contraseña o con un código `confirm` al correo de la cuenta (A2a, `#855`).
+        $verdict = $this->credentials->verify($user, $with, $ip);
 
         if ($verdict->failed()) {
             return $verdict;

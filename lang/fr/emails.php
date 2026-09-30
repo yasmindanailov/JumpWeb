@@ -52,6 +52,21 @@ return [
         'validity' => "Saisis-le sur l'écran où tu l'as demandé. Il est valable :minutes minutes et une seule fois.",
         'ignore' => "Si tu ne l'as pas demandé, ignore ce message : sans ce code, personne ne peut entrer dans ton compte.",
     ],
+    'confirmation_code' => [
+        'subject' => ':code est ton code de confirmation',
+        'preheader' => "Saisis-le là où tu l'as demandé. Si tu ne l'as pas demandé, ne le donne à personne.",
+        'badge' => 'Ton code de confirmation',
+        'headline' => ':code',
+        'for' => "C'est pour :action.",
+        'actions' => [
+            'delete_account' => 'supprimer ton compte',
+            'change_email' => "changer l'e-mail de ton compte",
+            'unlink_google' => 'dissocier ton compte Google',
+            'close_sessions' => 'te déconnecter de tes autres appareils',
+        ],
+        'validity' => 'Il est valable :minutes minutes et une seule fois.',
+        'ignore' => "Si tu ne l'as pas demandé, ne le donne à personne : quelqu'un qui a ton compte ouvert sur un autre appareil l'a demandé.",
+    ],
     'verify_purchase' => [
         'subject' => 'Confirme ton e-mail · :code',
         'preheader' => 'Ta place est gardée le temps de confirmer. Un clic et tu poursuis le paiement.',

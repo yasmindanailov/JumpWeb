@@ -193,7 +193,11 @@ class ApiContractTest extends TestCase
         // campo cambia»: quien lo decide es el servidor, que la exige cuando toca.
         // ▶ Y la FECHA DE NACIMIENTO (TP·1, `#792`, 1.49.0): opcional de verdad y con semántica propia —AUSENTE no cambia
         // nada, `null` la borra—. La isla guarda Mi cuenta sin ella: exigirla borraría o rechazaría cada guardado suyo.
-        'ProfileUpdateRequest' => ['current_password', 'born_on'],
+        // ▶ Y el CÓDIGO de confirmar (1.56.0, A2a de `specs/acceso-con-codigo.md`, `#855`), la alternativa a la contraseña.
+        'ProfileUpdateRequest' => ['current_password', 'code', 'born_on'],
+        // La reconfirmación de las acciones sensibles (1.56.0, `#855`): la contraseña O el código, excluyentes. OpenAPI 3.0
+        // sin `oneOf` no sabe decir «exactamente uno»: lo decide el servidor (`required_without` + `prohibits`, 422).
+        'PasswordConfirmation' => ['current_password', 'code'],
         // Cuerpo de PETICIÓN, y la opcionalidad vuelve a ser CONDICIONAL (`#349`): las condiciones
         // solo se envían si esta instalación las publica **y** este titular no tiene aceptada la
         // versión vigente; el teléfono, solo si la cuenta no lo tiene. Exigir los dos siempre

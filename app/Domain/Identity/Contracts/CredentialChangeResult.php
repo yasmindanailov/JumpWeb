@@ -21,6 +21,9 @@ final readonly class CredentialChangeResult
     /** La contraseña actual no es la que se ha escrito. */
     public const WRONG_PASSWORD = 'wrong_password';
 
+    /** El CÓDIGO de confirmar no casa, caducó o ya se usó (A2a, `#855`): el 422 va sobre `code`, no sobre la contraseña. */
+    public const WRONG_CODE = 'wrong_code';
+
     /** Demasiados intentos fallidos seguidos desde esta IP para esta cuenta. */
     public const RATE_LIMITED = 'rate_limited';
 
@@ -41,6 +44,11 @@ final readonly class CredentialChangeResult
         return new self(false, self::WRONG_PASSWORD);
     }
 
+    public static function wrongCode(): self
+    {
+        return new self(false, self::WRONG_CODE);
+    }
+
     public static function rateLimited(int $retryAfter): self
     {
         return new self(false, self::RATE_LIMITED, $retryAfter);
@@ -54,5 +62,10 @@ final readonly class CredentialChangeResult
     public function wasRateLimited(): bool
     {
         return $this->reason === self::RATE_LIMITED;
+    }
+
+    public function wasWrongCode(): bool
+    {
+        return $this->reason === self::WRONG_CODE;
     }
 }

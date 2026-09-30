@@ -1,9 +1,11 @@
 # [SPEC] Entrar con un código al correo — la contraseña del cliente se retira
 
-> Estado: ✅ aprobada (29-09: el owner contestó el §7) → **A1 ✅** (§4.8), sigue la A2 · Última actualización: 2026-09-29 ·
+> Estado: ✅ aprobada (29-09: el owner contestó el §7) → **A1 ✅** (§4.8) · **A2a ✅** (§4.9), sigue la A2b · Última
+> actualización: 2026-09-30 ·
 > Decisiones: `#847` (el owner: código al correo y Google; fuera la contraseña) · `#848` (el §7: una sola puerta, borrar
 > las contraseñas, 90 días, solo el código) · `#849` (corrige el 1: el registro NO espera al código, hay cola en la puerta) ·
-> `#853`/`#854` (la A1: el código en el servidor; el dispositivo recordado y `RGPD-06`) ·
+> `#853`/`#854` (la A1: el código en el servidor; el dispositivo recordado y `RGPD-06`) · `#855` (la A2a: reconfirmar con
+> un código; cada sesión atada al token) ·
 > Carril: plataforma (el servidor, el contrato y la isla); el cajón, del SPA por buzón.
 
 ## §0 · Antes de tocar
@@ -20,8 +22,8 @@
   (§4.4). (3) Las cuentas de Google llevan hoy una contraseña aleatoria (0 nulas de 53 en local). (4) Los limitadores
   son de DOMINIO (`SEC-06`): ningún controlador los reimplementa. (5) La puerta dice si un correo tiene cuenta, como el
   alta de hoy (`#31`): la acotan los límites de §4.2.
-- **Estado**: ✅ aprobada (`#848`). **A1 ✅** (29-09, `#853`/`#854`, §4.8: lo hecho, lo medido y lo que hereda la A2).
-  Sigue la A2 (§4.7).
+- **Estado**: ✅ aprobada (`#848`). **A1 ✅** (29-09, `#853`/`#854`, §4.8) · **A2a ✅** (30-09, `#855`, §4.9: reconfirmar con
+  un código y cada sesión atada al token). Sigue la A2b (§4.9).
 - **Invariantes**: `SEC-06` (se amplía al código), `RGPD-01` (la purga borra los códigos), `RGPD-06` (sin cambio de
   forma). Ningún fichero del `CRITICAL_RE`.
 
@@ -106,7 +108,8 @@
   `ENTORNOS.md` §6 da producción con `SESSION_DRIVER=redis` (medido el 01-09; hoy, sin mirar). Si sigue así, «cerrar las
   demás sesiones», el cambio de contraseña y el borrado de la cuenta NO cierran las sesiones de otros dispositivos allí
   (`RGPD-06`). Con sesiones de 90 días pesa más: la A2 lo resuelve (la sesión en base de datos, como staging `#137`, o una
-  revocación que no dependa del driver), medido en producción antes de elegir.
+  revocación que no dependa del driver), medido en producción antes de elegir. ✱ **Resuelto en la A2a** (`#855`, §4.9):
+  cada sesión va atada al token de la cuenta, y la revocación ya no depende del driver.
 - ⚠️ **El panel no se abre con estas entradas** desde `#850` (`SEC-14`, `specs/panel-a-salvo.md`): el código al correo y
   Google abren la WEB; el panel tiene su propio guard. Sin eso, este acceso habría sido un atajo al panel.
 - **La app** (`#630`): `POST /auth/tokens` con correo + código en vez de contraseña; la rotación, igual.
@@ -159,6 +162,35 @@ por buzón) · **A5** la retirada y las contraseñas de §4.6 · **A6** staging:
   contraseña no puede; y las sesiones de producción en Redis (§4.4). ⚠️ **Del owner**: `/cookies` dice que la cookie de
   persistencia solo se pone «si marcas recuérdame» —ya no es así— y la AEPD exime las de autenticación «de sesión»:
   el texto y el aviso en la pantalla (A3), `[PENDIENTE: owner]`.
+
+### 4.9 La A2, diseño — `[DECIDIDO]` 2026-09-30 (`#855`)
+Partida en dos tandas que se verifican solas. **A2a · reconfirmar con un código y revocar sin depender del driver**:
+- `POST /me/confirm-code` `{action}` (`delete_account`, `change_email`, `unlink_google`, `close_sessions`) → `202`: un código
+  `confirm` al correo de la cuenta, con el mismo mecanismo (`LoginCodes`, tras la respuesta). El correo dice PARA QUÉ es:
+  quien no lo pidió sabe que alguien tiene su sesión. Límites: 1/min y 5/h por cuenta.
+- `DELETE /me`, `PATCH /me` (si cambia el correo), `DELETE /me/identities/{provider}` y `POST /me/sessions/revoke-others`
+  aceptan `code` o `current_password` (la contraseña se va en la A5), con el mismo limitador de siempre (titular, IP). El
+  422 va sobre el campo que se mandó. Un código de ENTRAR no confirma nada (el propósito va en la huella).
+- **La revocación que no depende del driver** (§4.4): cada SESIÓN de la web queda atada al `remember_token` de la cuenta
+  (su huella, puesta al entrar por un oyente del `Login`); un middleware en la web y en la API con sesión cierra la que ya
+  no casa. `revokeOtherAccess()` rota el token y re-ata la sesión en curso; `revokeAllAccess()` lo vacía. Así «cerrar las
+  demás» echa también a las sesiones vivas con Redis, no solo a las cookies de recuerdo; la medida de producción ya no
+  decide nada (queda como comprobación al desplegar). El token ya no está nunca vacío con alguien dentro: se crea al entrar.
+  ⚠️ Salir del PANEL (`logout()` del guard `admin`) rota el token y cierra también la web de esa persona: se acepta.
+- `POST /logout` (la web) cierra solo este dispositivo, como `auth/logout` (el hueco de la A1: rotaba el token).
+- ✅ **A2a HECHA** (30-09, contrato **1.56.0**): `Reconfirmation` (contraseña o código) en `AccountCredentials::verify`,
+  `AccountProfile`, `AccountPrivacy` y `SocialIdentities`; `CodeMail` (el envío tras la respuesta, extraído en la segunda
+  copia); `ConfirmationCode`; `SessionBinding` + `BindSessionOnLogin` + `EnsureSessionIsCurrent`. Pruebas
+  `MeConfirmationCodeTest` y `SessionBindingTest` —con el driver `array` de la suite, donde `purgeSessions()` no hace nada:
+  la medida que vale—; arnés `mutar-acceso-codigo.sh` 40/40. En local (driver `database`): dos dispositivos, el código por
+  Mailpit, el portátil a 401 y el móvil dentro; esa sonda NO discrimina el driver (allí la purga también lo echaría).
+  ⚠️ **Dos trampas medidas**: (1) Laravel reordena por `$middlewarePriority` y sube `Authenticate` por delante de lo
+  añadido a un grupo —la sesión cerrada llegaba al controlador con un titular nulo (500)—: `EnsureSessionIsCurrent` va en
+  la lista de prioridad, delante de la autenticación; (2) el guard `sanctum` guarda en caché al titular (lo resuelve antes
+  el `AuthenticateSession` de Sanctum): cerrar el `web` no basta, hace falta `Auth::forgetGuards()`.
+**A2b · el correo nuevo, con un código a ESE correo** (propósito `new_email`, para no mezclarlo con el de confirmar): el
+cambio se pide como hoy (`pending_email`) y se completa con `POST /me/email/confirm` `{code}`; el enlace firmado de hoy
+sigue valiendo hasta que la isla y el cajón pinten el código (A3/A4) y se retira en la A5.
 
 ## 5. Impacto en invariantes
 

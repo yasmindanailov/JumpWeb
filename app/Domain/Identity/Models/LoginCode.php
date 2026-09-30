@@ -27,8 +27,11 @@ class LoginCode extends Model
 {
     use MassPrunable;
 
-    /** ENTRAR en una cuenta que ya existe. La A2 añade `confirm` (una acción sensible, ya con sesión). */
+    /** ENTRAR en una cuenta que ya existe. */
     public const PURPOSE_LOGIN = 'login';
+
+    /** CONFIRMAR una acción sensible, ya con sesión (A2a, `#855`): al correo de la cuenta. */
+    public const PURPOSE_CONFIRM = 'confirm';
 
     /** Horas que vive la fila tras nacer; el código muere mucho antes (10 minutos). */
     public const RETENTION_HOURS = 24;

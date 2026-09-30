@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Domain\Identity\Contracts\Reconfirmation;
 use App\Domain\Identity\Exceptions\AccountHasUpcomingReservationsException;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\AccountAnalytics;
@@ -45,13 +46,14 @@ class MePrivacyController extends Controller
      */
     public function destroy(Request $request, AccountPrivacy $privacy): JsonResponse
     {
-        $data = $request->validate(['current_password' => ['required', 'string']]);
+        // La contraseña o un código `confirm` (A2a, `#855`).
+        $data = $request->validate($this->reconfirmationRules());
 
         /** @var User $user */
         $user = $request->user();
 
         try {
-            $result = $privacy->anonymize($user, $data['current_password'], (string) $request->ip());
+            $result = $privacy->anonymize($user, Reconfirmation::from($data), (string) $request->ip());
         } catch (AccountHasUpcomingReservationsException) {
             return ApiErrorResponse::make(ApiErrorCode::AccountHasUpcomingReservations, 409);
         }
