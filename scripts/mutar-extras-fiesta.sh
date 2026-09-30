@@ -238,9 +238,10 @@ mutar "el pie no dice hasta cuándo" "$LDI" \
 mutar "el pie no reconoce «el mismo día»" "$LDI" \
   "\$fiesta !== null && \$c->isSameDay(\$fiesta)" \
   "false"
-mutar "la rejilla pierde «para cuántas personas»" "$LDI" \
-  "\$a->serves === null ? '' : trans_choice('fiesta.lista.extras.para_personas'" \
-  "true ? '' : trans_choice('fiesta.lista.extras.para_personas'"
+# K1 de §4.17 (`#806`/`#807`): los sueltos son de «Para los niños» y su chapa se cuenta en niños (fuera `para_personas`).
+mutar "los sueltos pierden «para cuántos niños»" "$LDI" \
+  "\$a->serves === null ? '' : trans_choice('fiesta.lista.ninos.para'" \
+  "true ? '' : trans_choice('fiesta.lista.ninos.para'"
 mutar "sin foto, la tarjeta pinta el hueco del diseño" "$COMP" \
   "@if (\$image || \$imageNote !== '')<div" \
   "@if (true)<div"
