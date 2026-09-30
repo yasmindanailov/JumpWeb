@@ -119,12 +119,13 @@ return [
         $confirmados = count($conDatos);
 
         // `EXTRAS` del diseño con las claves de `ListaDeInvitados::extras()` (F5, `#749`): lo de los padres en sus dos
-        // familias, «para N adultos»; y la tarta con las opciones que el diseño ENSEÑA en este estado (la grande solo sale
-        // cuando no llega, y aquí sois 10 para 12 raciones): «La nuestra», «Traemos la nuestra» y «Sin tarta».
-        $addon = static fn (int $i, string $nombre, string $linea, int $precio, int $cantidad, int $para): array => [
-            'indice' => $i, 'id' => $i + 1, 'nombre' => $nombre, 'linea' => $linea, 'que_lleva' => [$linea], 'regalos' => [],
+        // familias, «para N adultos»; y la tarta, desde K2 (§4.17, `#807`), una TARJETA por tarta —varias a la vez— con las que
+        // el diseño enseña en este estado (la grande solo sale cuando no llega, y aquí sois 10 para 12 raciones): «La
+        // nuestra» y «Traemos la nuestra»; «Sin tarta» es una casilla. ⚠️ Desvío DECIDIDO del mockup (`#807` manda, como `#753`).
+        $addon = static fn (int $i, string $nombre, string $linea, int $precio, int $cantidad, ?int $para, string $paraTexto = ''): array => [
+            'indice' => $i, 'id' => $i + 1, 'nombre' => $nombre, 'linea' => $linea, 'que_lleva' => $linea === '' ? [] : [$linea], 'regalos' => [],
             'precio' => $precio.$NB.'€', 'precio_unidad' => $precio * 100,
-            'serves' => $para, 'para' => 'Para '.$para.' adultos', 'foto' => null,
+            'serves' => $para, 'para' => $paraTexto !== '' ? $paraTexto : ($para === null ? '' : 'Para '.$para.' adultos'), 'foto' => null,
             'plazo' => 'Hasta el sábado 26', 'cambia' => 'Lo cambias hasta el sábado 26',
             'cantidad' => $cantidad, 'tope' => 60, 'cerrado' => false, 'motivo' => '',
             'total' => $cantidad > 0 ? ($precio * $cantidad).$NB.'€ en total' : '',
@@ -133,22 +134,12 @@ return [
             'hay' => true,
             'tarta' => [
                 'abierta' => true,
-                'foto' => '',
-                'opciones' => [
-                    ['value' => '101', 'title' => 'La nuestra', 'description' => 'De 12 raciones', 'price' => '25'.$NB.'€', 'disabled' => false],
-                    ['value' => '102', 'title' => 'Traemos la nuestra', 'description' => 'Se cobra el cubierto', 'price' => '10'.$NB.'€', 'disabled' => false],
-                    ['value' => 'none', 'title' => 'Sin tarta', 'description' => '', 'price' => '', 'disabled' => false],
+                'tarjetas' => [
+                    $addon(0, 'La nuestra', '', 25, $guardado ? 1 : 0, 12, 'De 12 raciones'),
+                    $addon(1, 'Traemos la nuestra', 'Se cobra el cubierto', 10, 0, null),
                 ],
-                'elegida' => $guardado ? '101' : null,
-                'cantidad' => 1,
-                // «¿Cuántas tartas?» (el owner, 26-09): el diseño no la dibuja; el diagnóstico de `guardado` la esconde.
-                'tope' => 5,
-                'con' => $guardado,
-                'cuenta' => $guardado ? '12 raciones · 25,00 €' : '',
-                'datos' => ['101' => ['serves' => 12, 'max' => 5, 'precio' => 2500, 'desc' => null], '102' => ['serves' => null, 'max' => 1, 'precio' => 1000, 'desc' => 'Se cobra el cubierto']],
+                'declinada' => false,
                 // «Aquí, hoy es jueves 24» (`datos.js`): la tarta cierra hoy a las 17:00.
-                'pista_plazo' => 'Hasta hoy a las 17:00',
-                'pista_cambia' => 'Lo cambias hasta hoy a las 17:00',
                 'cuando' => 'hoy a las 17:00',
                 'pronto' => true,
                 'urgente' => ! $guardado,
@@ -159,12 +150,12 @@ return [
                 'adultos' => ['clave' => 'adultos', 'name' => 'general[adultos]', 'valor' => $guardado ? 8 : 0],
                 'familias' => [
                     ['titulo' => 'Combos', 'tarjetas' => [
-                        $addon(0, 'Combo café', 'Café o infusión y bollería', 39, 0, 6),
-                        $addon(1, 'Combo picoteo', 'Refrescos, café y algo de picar', 59, $guardado ? 1 : 0, 10),
+                        $addon(2, 'Combo café', 'Café o infusión y bollería', 39, 0, 6),
+                        $addon(3, 'Combo picoteo', 'Refrescos, café y algo de picar', 59, $guardado ? 1 : 0, 10),
                     ]],
                     ['titulo' => 'Cubos de bebidas', 'tarjetas' => [
-                        $addon(2, 'Cubo de 6', 'Refrescos o aguas, con hielo', 16, 0, 6),
-                        $addon(3, 'Cubo de 10', 'Refrescos o aguas, con hielo', 24, $guardado ? 1 : 0, 10),
+                        $addon(4, 'Cubo de 6', 'Refrescos o aguas, con hielo', 16, 0, 6),
+                        $addon(5, 'Cubo de 10', 'Refrescos o aguas, con hielo', 24, $guardado ? 1 : 0, 10),
                     ]],
                 ],
                 'nada_guardado' => ! $guardado,

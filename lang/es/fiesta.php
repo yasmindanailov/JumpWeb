@@ -181,20 +181,13 @@ return [
         ],
         // LA TARTA (F5, `PliZona4` y `PliAvisoTarta`; sin tarta grande: «Añadir otra tarta», `#749`).
         'tarta' => [
+            // K2 (§4.17, `#807`): varias a la vez, una tarjeta por tarta («De 12 raciones»); debajo, sus raciones contra los niños
+            // («Cubre a los 14 niños.» es `ninos.cubierto`). Fuera, con el radio, «¿Cuántas tartas?» y «Añadir otra tarta».
             'pregunta' => '¿La tarta?',
-            'foto' => 'La tarta de la fiesta',
             'sin' => 'Sin tarta',
             'raciones' => 'De :n raciones',
-            'no_llega' => 'De :r raciones: no llega para :n',
             'poca' => 'Sois :n y la tarta es de :r raciones.',
             'poca_varias' => 'Sois :n y :q tartas son :r raciones.',
-            'otra' => 'Añadir otra tarta',
-            // «¿Cuántas tartas?» (el owner, 26-09): la cantidad a la vista, con su cuenta («24 raciones · 50,00 €»).
-            'cuantas' => '¿Cuántas tartas?',
-            'raciones_total' => ':n raciones',
-            'una_menos' => 'Una tarta menos',
-            'una_mas' => 'Una tarta más',
-            'fija' => '{1} 1 tarta · :cuenta|[2,*] :count tartas · :cuenta',
             'pasada' => 'El plazo de la tarta pasó.',
             'aviso' => '¿La tarta? Se elige hasta :cuando.',
             'aviso_ir' => 'Elegir la tarta',

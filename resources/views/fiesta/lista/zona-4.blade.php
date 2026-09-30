@@ -1,14 +1,14 @@
 {{-- ZONA 4 · Los complementos de venta posterior (`PliZona4`; F5 de la spec §4.11, `[DECIDIDO owner]` `#749`), en los
      bloques que dice cada enganche:
-       · LA TARTA: su foto, «¿La tarta?» con una opción por complemento y «Sin tarta» (un radio `cake`), «¿Cuántas tartas?»
-         (`cake_quantity`, con su cuenta) y, si los niños no caben en sus raciones, «Añadir otra tarta» — sin tarta grande
-         (`#749`). Fuera de plazo, solo la elegida y «El plazo de la tarta pasó. Llámanos y lo vemos.».
+       · LA TARTA (K2 de §4.17, `#807`: varias a la vez): «¿La tarta?» con una tarjeta por tarta del panel, cada una con su
+         cantidad; debajo, sus raciones contra los niños; y «Sin tarta», una casilla. Fuera de plazo, las pedidas (cerradas)
+         o «Sin tarta», y «El plazo de la tarta pasó. Llámanos y lo vemos.».
        · PARA LOS PADRES: «¿Cuántos adultos se quedan?» (el campo general de tipo `adults`) y una familia por `family`, con
          su sugerencia debajo («Para 8 adultos: 1 Combo picoteo, 59 €» y «Ponerlo»), que nunca se pone sola.
        · Los que no dicen bloque, en grupos (una familia junta; cada suelto, solo).
      Desde K1 (§4.17, `[DECIDIDO owner]` `#806`/`#807`), en DOS: «Para los niños» (la tarta y los sueltos, con «Uno para cada
      niño» contado con los niños de la fiesta) y «Para los adultos» (lo de los padres). Un bloque vacío no se pinta.
-     Los ids viajan SIEMPRE, también en los cerrados. Sin JavaScript: radios y campos numéricos, un formulario completo. --}}
+     Los ids viajan SIEMPRE, también en los cerrados. Sin JavaScript: casillas y campos numéricos, un formulario completo. --}}
 @php
     $x = $m['extras'];
     $ta = $x['tarta'];
@@ -22,31 +22,28 @@
     <div class="pli-ninos-g" id="pli-extras-ninos" data-ninos data-sois="{{ $ni['sois'] }}">
     <h3 class="pli-h3">{{ __('fiesta.lista.ninos.titulo') }}</h3>
     @if ($ta !== null)
-        <div class="pli-tarta" id="pli-tarta" data-tarta data-tartas="{{ json_encode($ta['datos']) }}" data-sois="{{ $ta['sois'] }}" data-pista-plazo="{{ $ta['pista_plazo'] }}" data-pista-cambia="{{ $ta['pista_cambia'] }}" data-guardar-texto="{{ $ta['cuando'] !== '' ? __('fiesta.lista.tarta.guardar', ['cuando' => $ta['cuando']]) : '' }}" data-pronto="{{ $ta['pronto'] ? '1' : '0' }}">
-            {{-- La tarta es el momento de la fiesta y el extra más alto: su foto, grande. Sin foto, sin marco. --}}
-            @if ($ta['foto'] !== '')
-                <x-pieza.marco kind="image" :src="$ta['foto']" :alt="__('fiesta.lista.tarta.foto')" aspect="16 / 9" flat />
-            @endif
-            @if ($ta['opciones'] !== [])
-                <x-pieza.opciones name="cake" :label="__('fiesta.lista.tarta.pregunta')" :hint="$ta['abierta'] ? ($ta['elegida'] !== null ? $ta['pista_cambia'] : $ta['pista_plazo']) : ''" :columns="count($ta['opciones']) > 3 && $ta['abierta'] ? 2 : 3" :value="$ta['elegida']" :items="$ta['opciones']" />
-            @else
-                <p class="pli-tarta-l">{{ __('fiesta.lista.tarta.pregunta') }}</p>
-            @endif
-            @if ($ta['abierta'])
-                {{-- «¿Cuántas tartas?» (el owner, 26-09: «no se ven cantidades»): la cantidad A LA VISTA y con su cuenta, con la
-                     pieza de «¿Cuántos adultos se quedan?» (el `QuantityStepper` desnudo del diseño). Sin tarta elegida, con
-                     JavaScript se esconde (`--sin`); sin él se ve siempre: se elige la tarta y su cantidad a la vez. --}}
-                <div @class(['pli-adultos', 'pli-tarta-n', 'pli-tarta-n--sin' => ! $ta['con']]) data-tarta-cantidad>
-                    <span class="pli-adultos-t"><strong>{{ __('fiesta.lista.tarta.cuantas') }}</strong><span data-tarta-cuenta>{{ $ta['cuenta'] }}</span></span>
-                    <x-pieza.cantidad variant="bare" :label="__('fiesta.lista.tarta.cuantas')" :value="$ta['cantidad']" :min="1" :max="$ta['tope']" :labels="[__('fiesta.lista.tarta.una_menos'), __('fiesta.lista.tarta.una_mas')]" name="cake_quantity" id="pli-tarta-n" />
+        <div class="pli-tarta" id="pli-tarta" data-tarta data-sois="{{ $ta['sois'] }}" data-guardar-texto="{{ $ta['cuando'] !== '' ? __('fiesta.lista.tarta.guardar', ['cuando' => $ta['cuando']]) : '' }}" data-pronto="{{ $ta['pronto'] ? '1' : '0' }}">
+            <h4 class="pli-h4">{{ __('fiesta.lista.tarta.pregunta') }}</h4>
+            {{-- Una tarjeta por tarta del panel (su foto, «De 12 raciones», precio, tope y plazo): se piden varias a la vez. --}}
+            @if ($ta['tarjetas'] !== [])
+                <div class="pli-grid2">
+                    @foreach ($ta['tarjetas'] as $e)
+                        @include('fiesta.lista.tarjeta-extra', ['e' => $e, 'x' => $x])
+                    @endforeach
                 </div>
-                {{-- «Sois 14 y la tarta es de 12 raciones.» con «Añadir otra tarta» (el + de arriba), solo mientras no llegue.
-                     Lo pinta `lista.js` con lo que se teclea. --}}
-                <p class="pli-sug" data-tarta-sug hidden><span data-tarta-sug-texto></span><x-pieza.boton variant="quiet" size="sm" data-tarta-otra><x-slot:izquierda><x-lucide name="plus" :size="16" /></x-slot:izquierda>{{ __('fiesta.lista.tarta.otra') }}</x-pieza.boton></p>
+            @endif
+            {{-- Las raciones de lo pedido contra los niños (`racionesTarta()`): «Sois 14 y la tarta es de 12 raciones.» o «Cubre a
+                 los 14 niños.». Las pinta `lista.js` con lo que se teclea; sin JavaScript, no salen. --}}
+            <p class="pli-sug" data-tarta-sug hidden><span data-tarta-sug-texto></span></p>
+            <p class="pli-sug ok" data-tarta-ok hidden><span class="pli-cubre"><x-lucide name="circle-check" :size="15" /><span data-tarta-ok-texto></span></span></p>
+            @if ($ta['abierta'])
+                {{-- «Sin tarta» decide (el aviso de arriba se va). El 0 oculto va DELANTE: marcada, manda el 1; desmarcada, el 0
+                     —sin él no se sabría si la desmarcó o no la vio—. Solo con alguna tarta en plazo, como el controlador. --}}
+                <input type="hidden" name="cake_declined" value="0">
+                <x-pieza.casilla name="cake_declined" value="1" id="pli-sin-tarta" :checked="$ta['declinada']" :label="__('fiesta.lista.tarta.sin')" />
             @else
-                {{-- Cerrada, la cantidad también se ve (solo leída): «2 tartas · 24 raciones · 50,00 €». --}}
-                @if ($ta['con'])<p class="pli-tarta-fija" data-tarta-fija>{{ trans_choice('fiesta.lista.tarta.fija', $ta['cantidad'], ['count' => $ta['cantidad'], 'cuenta' => $ta['cuenta']]) }}</p>@endif
-                <x-pieza.aviso tone="warn" size="sm"><x-slot:icono><x-lucide name="clock-alert" :size="17" /></x-slot:icono>{{ '' }}{{ __('fiesta.lista.tarta.pasada') }}{!! $llamanos !!}</x-pieza.aviso>
+                @if ($ta['declinada'])<p class="pli-tarta-fija">{{ __('fiesta.lista.tarta.sin') }}</p>@endif
+                @if ($ta['tarjetas'] === [])<x-pieza.aviso tone="warn" size="sm"><x-slot:icono><x-lucide name="clock-alert" :size="17" /></x-slot:icono>{{ '' }}{{ __('fiesta.lista.tarta.pasada') }}{!! $llamanos !!}</x-pieza.aviso>@endif
             @endif
         </div>
     @endif

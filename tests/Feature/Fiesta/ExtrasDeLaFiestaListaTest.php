@@ -27,62 +27,73 @@ class ExtrasDeLaFiestaListaTest extends TestCase
     use MountsAParty;
     use RefreshDatabase;
 
-    public function test_the_cake_is_a_question_with_its_photo_its_options_and_no_cake(): void
+    public function test_each_cake_is_a_card_and_no_cake_is_a_checkbox(): void
     {
+        // K2 de §4.17 (`[DECIDIDO owner]` `#807`): varias tartas a la vez. Una tarjeta por tarta del panel —su foto, sus
+        // raciones, su precio, su tope— con su cantidad en `addons[i]`; «Sin tarta», una casilla con su 0 oculto DELANTE.
         ['reservation' => $r, 'host' => $host] = $this->mountParty();
         $tarta = $this->extra($this->tipo($r), 'La nuestra', 2500, ['postform_block' => ProductAddon::BLOCK_CAKE, 'max_qty' => 3], ['serves' => 12, 'image' => 'productos/tarta.webp']);
         $traemos = $this->extra($this->tipo($r), 'Traemos la nuestra', 1000, ['postform_block' => ProductAddon::BLOCK_CAKE], ['features' => ['es' => ['Se cobra el cubierto']]]);
 
         $z4 = $this->zona4($this->pagina($r, $host));
 
-        $this->assertStringContainsString('<legend class="pz-opciones__legend">¿La tarta?</legend>', $z4);
-        foreach ([(string) $tarta->id, (string) $traemos->id, 'none'] as $valor) {
-            $this->assertStringContainsString('name="cake" value="'.$valor.'"', $z4, 'una opción por tarta, y «Sin tarta»');
+        $this->assertStringContainsString('<h4 class="pli-h4">¿La tarta?</h4>', $z4);
+        foreach ([$tarta, $traemos] as $t) {
+            $this->assertMatchesRegularExpression('#name="addons\[\d+\]\[product_id\]" value="'.$t->id.'"#', $z4, 'cada tarta, una tarjeta con su cantidad');
         }
         $this->assertStringContainsString('De 12 raciones', $z4);
-        $this->assertStringContainsString('Se cobra el cubierto', $z4, 'sin «para cuántas», su primera línea');
-        $this->assertStringContainsString('Sin tarta', $z4);
-        $this->assertStringContainsString('/uploads/productos/tarta.webp', $z4, 'la foto de la tarta, grande');
-        $this->assertStringContainsString('name="cake_quantity" value="1"', $z4);
-        $this->assertStringNotContainsString('][product_id]" value="'.$tarta->id.'"', $z4, 'la tarta viaja como la pregunta, no como una tarjeta más');
-        // «¿Cuántas tartas?» (el owner, 26-09: «no se ven cantidades»): la cantidad A LA VISTA con la pieza de los adultos,
-        // un campo numérico de verdad (sin JavaScript también se cambia). Sin tarta elegida, `--sin` (el JS la esconde) y
-        // el tope, el mayor de las tartas (aquí el de «Traemos», 10).
-        $this->assertMatchesRegularExpression('#<div class="pli-adultos pli-tarta-n pli-tarta-n--sin" data-tarta-cantidad>.*?¿Cuántas tartas\?.*?<input type="number" id="pli-tarta-n" name="cake_quantity" value="1" min="1"\s+max="10"#s', $z4);
-
-        // Con más niños que raciones, la opción lo dice (sin tarta grande: «Añadir otra tarta» la pone `lista.js`).
-        $r->forceFill(['quantity' => 14])->save();
-        $this->assertStringContainsString('De 12 raciones: no llega para 14', $this->zona4($this->pagina($r, $host)));
-
-        // Elegida «La nuestra», el tope es el SUYO (3), no el mayor de las dos (10).
-        $this->guardar($r, $host, ['cake' => (string) $tarta->id, 'cake_quantity' => '1']);
-        $this->assertMatchesRegularExpression('#name="cake_quantity" value="1" min="1"\s+max="3"#', $this->zona4($this->pagina($r, $host)));
+        $this->assertStringContainsString('Se cobra el cubierto', $z4, 'sin raciones, su primera línea');
+        $this->assertStringContainsString('/uploads/productos/tarta.webp', $z4, 'la foto de cada tarta, en su tarjeta');
+        $this->assertMatchesRegularExpression('#data-serves="12"\s+data-max="3"\s+data-nombre="La nuestra"#', $z4, 'lo que `lista.js` necesita para las raciones');
+        $this->assertMatchesRegularExpression('#data-serves="0"\s+data-max="10"\s+data-nombre="Traemos la nuestra"#', $z4, 'sin raciones: la cuenta no se sabe');
+        $this->assertStringNotContainsString('name="cake"', $z4, 'ya no es una pregunta de una respuesta');
+        $this->assertStringNotContainsString('cake_quantity', $z4);
+        // «Sin tarta»: el 0 oculto va DELANTE de la casilla (marcada, manda el 1; desmarcada, el 0).
+        $oculto = strpos($z4, '<input type="hidden" name="cake_declined" value="0">');
+        $this->assertNotFalse($oculto);
+        $this->assertSame(1, preg_match('#id="pli-sin-tarta" type="checkbox"\s+name="cake_declined"\s+value="1"(?!\s+checked)#', $z4, $m, PREG_OFFSET_CAPTURE), 'sin decidir, desmarcada');
+        $this->assertLessThan($m[0][1], $oculto);
+        // La tarta es lo primero de «Para los niños».
+        $this->assertLessThan(strpos($z4, 'data-tarta '), strpos($z4, '<h3 class="pli-h3">Para los niños</h3>'));
     }
 
-    public function test_the_saved_answer_comes_back_checked_with_its_quantity(): void
+    public function test_two_cakes_at_once_come_back_with_their_quantities_and_closed_only_the_ordered(): void
     {
         ['reservation' => $r, 'host' => $host] = $this->mountParty();
-        $tarta = $this->extra($this->tipo($r), 'Tarta', 2500, ['postform_block' => ProductAddon::BLOCK_CAKE, 'max_qty' => 3], ['serves' => 12]);
+        $nata = $this->extra($this->tipo($r), 'Tarta de nata', 2500, ['postform_block' => ProductAddon::BLOCK_CAKE, 'max_qty' => 3], ['serves' => 12]);
+        $chocolate = $this->extra($this->tipo($r), 'Tarta de chocolate', 2800, ['postform_block' => ProductAddon::BLOCK_CAKE, 'max_qty' => 2], ['serves' => 12]);
+        $fila = static fn (TicketType $t, int $n): array => ['product_id' => $t->id, 'quantity' => $n];
 
-        $this->guardar($r, $host, ['cake' => (string) $tarta->id, 'cake_quantity' => '2']);
+        $this->guardar($r, $host, ['addons' => [$fila($nata, 2), $fila($chocolate, 1)], 'cake_declined' => '0']);
         $z4 = $this->zona4($this->pagina($r, $host));
-        $this->assertMatchesRegularExpression('#name="cake" value="'.$tarta->id.'"\s+checked#', $z4);
-        $this->assertStringContainsString('name="cake_quantity" value="2"', $z4);
-        $this->assertStringContainsString('Lo cambias hasta', $z4, 'elegida, la pista dice hasta cuándo se cambia');
-        // Elegida, «¿Cuántas tartas?» se ve con su cuenta (lo cobrado, como el precio de la opción) y el tope de ESA tarta.
-        $this->assertStringContainsString('<div class="pli-adultos pli-tarta-n" data-tarta-cantidad>', $z4);
-        $this->assertStringContainsString('<span data-tarta-cuenta>24 raciones · 50,00 €</span>', $z4);
-        $this->assertMatchesRegularExpression('#name="cake_quantity" value="2" min="1"\s+max="3"#', $z4);
+        $this->assertMatchesRegularExpression('#id="x-'.$nata->id.'" name="addons\[\d+\]\[quantity\]" value="2"#', $z4, 'las dos, cada una con lo suyo');
+        $this->assertMatchesRegularExpression('#id="x-'.$chocolate->id.'" name="addons\[\d+\]\[quantity\]" value="1"#', $z4);
+        $this->assertStringContainsString('50,00 € en total', $z4);
+        $this->assertStringContainsString('28,00 € en total', $z4);
+        $this->assertStringContainsString('Lo cambias hasta', $z4, 'pedida, su plazo dice hasta cuándo se cambia');
 
-        $this->guardar($r, $host, ['cake' => 'none']);
-        $this->assertMatchesRegularExpression('#name="cake" value="none"\s+checked#', $this->zona4($this->pagina($r, $host)));
+        // «Sin tarta» (con las tartas a 0, lo que hace el JS): vuelve marcada.
+        $this->guardar($r, $host, ['addons' => [$fila($nata, 0), $fila($chocolate, 0)], 'cake_declined' => '1']);
+        $this->assertMatchesRegularExpression('#id="pli-sin-tarta" type="checkbox"\s+name="cake_declined"\s+value="1"\s+checked#', $this->zona4($this->pagina($r, $host)));
 
-        // Cerrado el plazo, la cantidad también se VE (solo leída), y ya no se cambia.
-        $this->guardar($r, $host, ['cake' => (string) $tarta->id, 'cake_quantity' => '2']);
-        DB::table('product_addons')->where('addon_id', $tarta->id)->update(['postform_cutoff_hours' => 24 * 30]);
+        // Cerrado el plazo: solo las PEDIDAS, cerradas y con lo pedido; ni casilla ni campos que se envíen para cambiarlas.
+        $this->guardar($r, $host, ['addons' => [$fila($nata, 2)], 'cake_declined' => '0']);
+        DB::table('product_addons')->whereIn('addon_id', [$nata->id, $chocolate->id])->update(['postform_cutoff_hours' => 24 * 30]);
         $cerrada = $this->zona4($this->pagina($r, $host));
-        $this->assertStringContainsString('<p class="pli-tarta-fija" data-tarta-fija>2 tartas · 24 raciones · 50,00 €</p>', $cerrada);
-        $this->assertStringNotContainsString('name="cake_quantity"', $cerrada);
+        $this->assertStringContainsString('Tarta de nata', $cerrada);
+        $this->assertStringNotContainsString('Tarta de chocolate', $cerrada, 'una tarta que ya no se puede pedir no es una opción');
+        $this->assertStringNotContainsString('name="cake_declined"', $cerrada);
+        $this->assertStringNotContainsString('id="x-'.$nata->id.'"', $cerrada, 'cerrada, su cantidad no se cambia (viaja oculta, tal cual)');
+        $this->assertStringNotContainsString('El plazo de la tarta pasó.', $cerrada, 'con una pedida, el motivo lo dice su tarjeta');
+
+        // Cerrada y sin nada pedido: «Sin tarta» (si lo decidió) y el plazo que pasó.
+        $this->guardar($r, $host, []);
+        DB::table('product_addons')->whereIn('addon_id', [$nata->id, $chocolate->id])->update(['postform_cutoff_hours' => 48]);
+        $this->guardar($r, $host, ['addons' => [$fila($nata, 0)], 'cake_declined' => '1']);
+        DB::table('product_addons')->whereIn('addon_id', [$nata->id, $chocolate->id])->update(['postform_cutoff_hours' => 24 * 30]);
+        $sinNada = $this->zona4($this->pagina($r, $host));
+        $this->assertStringContainsString('<p class="pli-tarta-fija">Sin tarta</p>', $sinNada);
+        $this->assertStringContainsString('El plazo de la tarta pasó.', $sinNada);
     }
 
     public function test_the_parents_block_groups_by_family_and_asks_how_many_adults_stay(): void
@@ -134,10 +145,12 @@ class ExtrasDeLaFiestaListaTest extends TestCase
         $this->assertGreaterThan(strpos($html, '</header>'), strpos($html, 'data-aviso-tarta'), 'bajo la cabecera…');
         $this->assertLessThan(strpos($html, 'id="gf-invite"'), strpos($html, 'data-aviso-tarta'), '…y antes de la invitación');
 
-        // Decidida (también «Sin tarta»), se va: depende de lo GUARDADO.
-        $this->guardar($r, $host, ['cake' => 'none']);
+        // Decidida (también «Sin tarta»), se va: depende de lo GUARDADO. Y deshecha la decisión, vuelve (CONTROL).
+        $this->guardar($r, $host, ['cake_declined' => '1']);
         $this->assertStringNotContainsString('data-aviso-tarta', $this->pagina($r, $host));
-        $this->guardar($r, $host, ['cake' => (string) $tarta->id]);
+        $this->guardar($r, $host, ['cake_declined' => '0']);
+        $this->assertStringContainsString('data-aviso-tarta', $this->pagina($r, $host));
+        $this->guardar($r, $host, ['addons' => [['product_id' => $tarta->id, 'quantity' => 1]], 'cake_declined' => '0']);
         $this->assertStringNotContainsString('data-aviso-tarta', $this->pagina($r, $host));
     }
 

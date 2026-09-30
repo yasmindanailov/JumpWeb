@@ -518,13 +518,13 @@ final class ListaDeInvitados
 
     /**
      * Los complementos de venta posterior (zona 4, `PliZona4`; F5 de la spec §4.11, `#749`), en TRES bloques según el
-     * enganche: LA TARTA (la pregunta con foto: una opción por complemento y «Sin tarta», «Añadir otra tarta» si no llega
-     * para los niños), PARA LOS PADRES (con «¿Cuántos adultos se quedan?» y una familia por `family`, cada una con su
-     * sugerencia) y los que no dicen bloque. Desde K1 (§4.17, `#806`/`#807`) la zona va en DOS: «Para los niños» (la tarta y
-     * esos, en grupos contados en niños) y «Para los adultos» (lo de los padres). Cada tarjeta con su plazo y su estado.
+     * enganche: LA TARTA (desde K2, una tarjeta por tarta, varias a la vez, y «Sin tarta»), PARA LOS PADRES (con «¿Cuántos
+     * adultos se quedan?» y una familia por `family`, cada una con su sugerencia) y los que no dicen bloque. Desde K1 (§4.17,
+     * `#806`/`#807`) la zona va en DOS: «Para los niños» (la tarta y esos, en grupos contados en niños) y «Para los adultos»
+     * (lo de los padres). Cada tarjeta con su plazo y su estado.
      *
-     * ⚠️ `indice` numera `addons[i]` en TODAS las tarjetas (padres y niños): la tarta no lleva `addons[i]`, viaja como
-     * `cake` y `cake_quantity` y el controlador la traduce a cantidades antes del reconciliador.
+     * ⚠️ `indice` numera `addons[i]` en TODAS las tarjetas (tartas, niños y padres): el formulario manda las cantidades de
+     * todas por el mismo camino, y el reconciliador es el único que toca el dinero.
      *
      * @param  list<PostFormAddonView>  $addons
      * @param  array<string, string|int>  $reserva
@@ -571,58 +571,29 @@ final class ListaDeInvitados
         $porBloque = static fn (?string $bloque): array => array_values(array_filter($addons, fn (PostFormAddonView $a): bool => $a->block === $bloque));
         $sueltos = collect($porBloque(null))->sortBy(fn (PostFormAddonView $a): int => $a->closed ? 1 : 0)->values()->all();
 
-        // ── LA TARTA ──
+        // ── LA TARTA (K2 de §4.17, `#806`/`#807`): VARIAS A LA VEZ. Una tarjeta por tarta del panel (su foto, «De 12
+        // raciones», su precio, su tope y su plazo), con su cantidad en `addons[i]` como cualquier complemento; «Sin tarta»,
+        // una casilla (`cake_declined`). Las raciones contra los niños las cuenta `lista.js` (`racionesTarta()`). ──
         $tartas = $porBloque(ProductAddon::BLOCK_CAKE);
         $tarta = null;
         if ($tartas !== []) {
-            $elegidaVista = collect($tartas)->first(fn (PostFormAddonView $a): bool => $a->quantity > 0);
-            $elegida = $elegidaVista !== null ? (string) $elegidaVista->productId : ($reservation->cakeDeclined($addons) ? 'none' : null);
-            $cantidad = $elegidaVista !== null ? $elegidaVista->quantity : 1;
+            $pedida = collect($tartas)->contains(fn (PostFormAddonView $a): bool => $a->quantity > 0);
+            $declinada = $reservation->cakeDeclined($addons);
             $abierta = $abiertos($tartas);
             $cierra = $plazoDe($tartas);
             $cuando = $cierra === null ? '' : self::plazoEscrito($cierra);
-            $opciones = [];
-            foreach ($tartas as $t) {
-                $mia = $elegida === (string) $t->productId;
-                $raciones = $t->serves === null ? null : $t->serves * ($mia ? $cantidad : 1);
-                $opciones[] = [
-                    'value' => (string) $t->productId,
-                    'title' => $t->productName,
-                    // «De 12 raciones», o «De 12 raciones: no llega para 14» si los niños no caben (en las que eligió, con
-                    // las que pidió). Sin «para cuántas», su primera línea.
-                    'description' => $t->serves === null
-                        ? ($t->features[0] ?? '')
-                        : ($sois > (int) $raciones ? __('fiesta.lista.tarta.no_llega', ['r' => $t->serves, 'n' => $sois]) : __('fiesta.lista.tarta.raciones', ['n' => $t->serves])),
-                    'price' => $t->note,
-                    'disabled' => $t->closed || $readonly,
-                ];
-            }
-            $opciones[] = ['value' => 'none', 'title' => __('fiesta.lista.tarta.sin'), 'description' => '', 'price' => '', 'disabled' => ! $abierta];
-            // «¿Cuántas tartas?» (el owner, 26-09): la cantidad se VE y se sube, con su cuenta al lado. El tope, el de la
-            // elegida (sin elegida, el mayor: sin JavaScript se elige la tarta y su cantidad a la vez).
-            $tope = $elegidaVista !== null ? $elegidaVista->maxQuantity : max(array_map(fn (PostFormAddonView $a): int => $a->maxQuantity, $tartas));
+            // Fuera de plazo, solo las pedidas (como el diseño): una tarta que ya no se puede pedir no es una opción.
+            $visibles = $abierta ? $tartas : array_values(array_filter($tartas, fn (PostFormAddonView $a): bool => $a->quantity > 0));
             $tarta = [
                 'abierta' => $abierta,
-                'foto' => (string) (collect($tartas)->map(fn (PostFormAddonView $a): ?string => $a->imageUrl)->filter()->first() ?? ''),
-                // Fuera de plazo, solo la elegida (como el diseño); sin elegida, la pregunta sin opciones.
-                'opciones' => $abierta ? $opciones : array_values(array_filter($opciones, fn (array $o): bool => $o['value'] === $elegida)),
-                'elegida' => $elegida,
-                'cantidad' => $cantidad,
-                'tope' => max(1, $tope),
-                'con' => $elegidaVista !== null,
-                'cuenta' => $elegidaVista === null ? '' : self::cuentaTarta($elegidaVista, $cantidad, $moneda),
-                // Para `lista.js`: las raciones, el tope, el precio y la descripción de cada una, con las que repinta al teclear.
-                'datos' => collect($tartas)->mapWithKeys(fn (PostFormAddonView $a): array => [(string) $a->productId => [
-                    'serves' => $a->serves, 'max' => $a->maxQuantity, 'precio' => $a->unitPriceCents, 'desc' => $a->serves === null ? ($a->features[0] ?? '') : null,
-                ]])->all(),
-                'pista_plazo' => $cuando === '' ? '' : __('fiesta.lista.extras.hasta', ['cuando' => $cuando]),
-                'pista_cambia' => $cuando === '' ? '' : __('fiesta.lista.extras.cambia', ['cuando' => $cuando]),
+                'tarjetas' => array_map(fn (PostFormAddonView $a): array => $tarjeta($a, $a->serves === null ? '' : __('fiesta.lista.tarta.raciones', ['n' => $a->serves])), $visibles),
+                'declinada' => $declinada,
                 'cuando' => $cuando,
-                // Cierra hoy o mañana (`tartaUrgente` del diseño): la barra lo dice con la tarta elegida y sin guardar…
+                // Cierra hoy o mañana (`tartaUrgente` del diseño): la barra lo dice con una tarta pedida y sin guardar…
                 'pronto' => $pronto = $abierta && $cierra !== null
                     && ($cierra->isSameDay(DisplayTime::today()) || $cierra->isSameDay(DisplayTime::today()->addDay())),
                 // …y el aviso de arriba (`PliAvisoTarta`), si además está sin decidir en lo GUARDADO.
-                'urgente' => $pronto && $elegida === null,
+                'urgente' => $pronto && ! $pedida && ! $declinada,
                 'sois' => $sois,
             ];
         }
@@ -722,18 +693,6 @@ final class ListaDeInvitados
         }
 
         return __('fiesta.lista.extras.el_dia', ['dia' => DisplayTime::dayInSentence($fue), 'hora' => $hora]);
-    }
-
-    /**
-     * La cuenta de «¿Cuántas tartas?»: «24 raciones · 50,00 €» (sin «para cuántas», solo el importe). Lo cobrado se escribe
-     * como lo cobrado (`Money::format`), igual que el precio de la opción; `lista.js` la reescribe al tocar (`importe()`).
-     */
-    private static function cuentaTarta(PostFormAddonView $tarta, int $cantidad, string $moneda): string
-    {
-        return implode(' · ', array_filter([
-            $tarta->serves === null ? '' : __('fiesta.lista.tarta.raciones_total', ['n' => $tarta->serves * $cantidad]),
-            Money::format($tarta->unitPriceCents * $cantidad, $moneda),
-        ]));
     }
 
     /** «hoy a las 17:00», «mañana a las 17:00» o «el jueves 24 a las 17:00», como lo lee quien lo lee. */

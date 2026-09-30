@@ -358,6 +358,16 @@ pack 105, los calcetines (110) pasan a `postform` (tope 20, plazo 0 h, «para 1�
 (1,50 €); y la fiesta `JW-OJO-K1` (reserva 11225, 14 niños, el 04-10). Lo de antes, en `ojo-k1-antes.json`. `OJO=desmontar`
 lo deja como estaba: ⚠️ **desmontar este ANTES que el de F5**. La sonda: `sonda-k1.mjs "<url>"`.
 
+(24) **De K2 (30-09, `#807`)**: `ojo-k2.php` va ENCIMA de `ojo-k1.php`: dos tartas NUEVAS de prueba en el bloque de la tarta del
+pack 105 («Tarta de chocolate», 12 raciones, 28 €; «Traemos la nuestra», 10 €), en `ojo-k2-antes.json`. `OJO=desmontar` las
+borra (y sus líneas): ⚠️ **desmontar este ANTES que el de K1 y el de F5**. La sonda: `sonda-k2.mjs "<url de JW-OJO-K1>"`.
+
+(25) **«Solo configuración» (30-09, `#808`)**: `ojo-config.php` va ENCIMA de `ojo-k2.php`: el PACK 106 configurado solo con lo que
+el panel escribe —la merienda como tres complementos NUEVOS a 0 € (familia «Merienda», tope 1, en la invitación), el Menú 1/2
+DESENGANCHADO, las tartas sin bloque en «Tartas», calcetines y cono en la lista, combos y cubos en «Para los adultos», la
+invitación ENCENDIDA— y la fiesta `JW-OJO-CFG` (reserva 11236, 14 niños, el 06-10). Lo de antes, en `ojo-config-antes.json`.
+`OJO=desmontar` lo deja como estaba: ⚠️ **desmontar este el PRIMERO**. La sonda: `sonda-config.mjs "<lista>" "<invitación>"`.
+
 ## 9 · La foto vieja del carril (mudada VERBATIM de `carriles/spa.md` el 2026-09-29, su techo)
 
 - ✅ **27-09, TODO EN `main` Y APROBADO POR EL OWNER**: **F7** (`#752`, la exención de quien cumple: la lista y su

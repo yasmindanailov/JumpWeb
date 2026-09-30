@@ -14,7 +14,7 @@
  */
 import './fiesta.css';
 import { llegadas } from './comun.js';
-import { NBSP, capitalizar, choice, clave, cubrir, euros, importe, limpiar, soloEdad, vistaInvitacion } from './logica.js';
+import { NBSP, capitalizar, choice, clave, cubrir, euros, importe, limpiar, racionesTarta, soloEdad, vistaInvitacion } from './logica.js';
 
 const de = document.documentElement;
 const q = (sel, raiz = document) => raiz.querySelector(sel);
@@ -108,15 +108,14 @@ function lista(form) {
 
     // Lo que había al abrir: para saber qué cambió (el punto en la inicial, la cuenta de la barra) y para deshacer.
     const inicial = new Map();
-    const campos = () => qa('input:not([type=hidden]):not([type=submit]), textarea, select, input[type=hidden][name^="guests["], input[type=hidden][name="cake_quantity"]', form)
+    const campos = () => qa('input:not([type=hidden]):not([type=submit]), textarea, select, input[type=hidden][name^="guests["]', form)
         .filter((el) => el.name && !['_token', 'expected_version', 'reply', 'with_names'].includes(el.name) && el.form === form);
     const valorDe = (el) => (el.type === 'checkbox' || el.type === 'radio' ? (el.checked ? el.value : '') : el.value);
     campos().forEach((el) => inicial.set(el, valorDe(el)));
-    // Cada «Al final viene» pendiente de guardar (su `rejoin[]`) es un cambio más. La TARTA (F5) cuenta UNO, como en el
-    // diseño (`a.tarta !== b.tarta`), aunque cambiar de opción mueva dos radios y su cantidad.
-    const cambios = () => campos().filter((el) => el.name !== 'cake' && el.name !== 'cake_quantity' && inicial.has(el) && inicial.get(el) !== valorDe(el)).length
-        + qa('input[type="hidden"][name="rejoin[]"]', form).length
-        + tartaCambio();
+    // Cada «Al final viene» pendiente de guardar (su `rejoin[]`) es un cambio más. Desde K2 (`#807`) cada tarta es un campo
+    // como cualquier complemento, y «Sin tarta» una casilla: cuentan como los demás.
+    const cambios = () => campos().filter((el) => inicial.has(el) && inicial.get(el) !== valorDe(el)).length
+        + qa('input[type="hidden"][name="rejoin[]"]', form).length;
 
     // ── Cada fila: abrir y cerrar, el resumen que se reescribe al teclear, Listo, Quitar con deshacer ──
     const pintaFila = (fila) => {
@@ -457,71 +456,43 @@ function lista(form) {
         actualiza();
     });
 
-    // ── F5 (§4.11, `#749`): LA TARTA (`PliZona4`, `PliAvisoTarta`) ──
-    // «¿La tarta?» es un radio `cake` (el id de una tarta, o `none`) y «¿Cuántas tartas?» su `cake_quantity`, A LA VISTA con
-    // su cuenta (el owner, 26-09); el servidor lo traduce a las cantidades de siempre. Sin tarta grande (`#749`): si los
-    // niños no caben, «Añadir otra tarta» es el + de esa cantidad.
+    // ── K2 (§4.17, `#807`): LA TARTA, VARIAS A LA VEZ (y `PliAvisoTarta`) ──
+    // Una tarjeta por tarta del panel, con su cantidad en `addons[i]` como cualquier complemento (el listener del formulario
+    // repinta y guarda el borrador); debajo, sus raciones contra los niños (`racionesTarta()`); y «Sin tarta», una casilla:
+    // marcarla pone las tartas a 0, y subir una la desmarca.
     const tarta = q('[data-tarta]', form);
-    const radiosTarta = tarta ? qa('input[name="cake"]', tarta) : [];
-    const cantidadTarta = tarta ? q('input[name="cake_quantity"]', tarta) : null;
-    const filaCantidad = tarta ? q('[data-tarta-cantidad]', tarta) : null;
-    const cajaCantidad = filaCantidad ? q('[data-cantidad]', filaCantidad) : null;
-    const datosTartas = (() => { try { return JSON.parse(tarta?.dataset.tartas || '{}'); } catch { return {}; } })();
-    const tartaElegida = () => radiosTarta.find((r) => r.checked)?.value ?? '';
-    const tartaInicial = { v: tartaElegida(), n: cantidadTarta?.value ?? '' };
-    function tartaCambio() {
-        return tarta && (tartaElegida() !== tartaInicial.v || (cantidadTarta?.value ?? '') !== tartaInicial.n) ? 1 : 0;
-    }
+    const sinTarta = tarta ? q('input[type="checkbox"][name="cake_declined"]', tarta) : null;
+    const camposTarta = () => (tarta ? qa('[data-variante] [data-cantidad-campo]', tarta) : []);
+    // Lo pedido de cada tarta: lo tecleado en las abiertas y lo pedido en las cerradas.
+    const pedidoTarta = (c) => { const campo = q('[data-cantidad-campo]', c); return campo ? (parseInt(campo.value, 10) || 0) : Number(c.dataset.pedido || 0); };
+    const tartasPedidas = () => (tarta ? qa('[data-variante]', tarta).reduce((suma, c) => suma + pedidoTarta(c), 0) : 0);
+    // ¿Cambió alguna tarta desde que se abrió? (la barra dice «La tarta se guarda hasta…» con una pedida y sin guardar).
+    const tartaCambiada = () => camposTarta().some((el) => inicial.has(el) && inicial.get(el) !== valorDe(el));
     // Cuántos sois (el `sois` del diseño): el número elegido, o la lista si lo supera.
     // Sin el campo del número (cerrado), el que dio el servidor: en la tarta o, sin tarta, en «Para los niños» (K1).
     const soisServidor = () => Number(tarta?.dataset.sois || q('[data-ninos]', form)?.dataset.sois || 0);
     const sois = () => Math.max(campoNumero ? (parseInt(campoNumero.value, 10) || 0) : soisServidor(), enLaLista().length);
     const pintaTarta = () => {
         if (!tarta) return;
-        const v = tartaElegida();
-        const d = datosTartas[v] || null;
-        const n = Math.max(1, parseInt(cantidadTarta?.value ?? '1', 10) || 1);
-        const s = sois();
-        // «De 12 raciones», o «De 12 raciones: no llega para 14» (en la elegida, con las que pidió).
-        radiosTarta.forEach((r) => {
-            const dr = datosTartas[r.value];
-            const desc = q('.pz-opciones__desc', r.closest('label'));
-            if (!dr || !dr.serves || !desc) return;
-            desc.textContent = s > dr.serves * (r.value === v ? n : 1)
-                ? choice(t('tarta.no_llega', ''), 1, { r: dr.serves, n: s })
-                : choice(t('tarta.raciones', ''), 1, { n: dr.serves });
-        });
-        const pista = q('.pz-opciones__pista', tarta);
-        if (pista) pista.textContent = v ? (tarta.dataset.pistaCambia || '') : (tarta.dataset.pistaPlazo || '');
-        // «¿Cuántas tartas?»: con una tarta elegida, su tope y su cuenta («24 raciones · 50,00 €»); sin ella, fuera.
-        if (filaCantidad) {
-            filaCantidad.classList.toggle('pli-tarta-n--sin', !d);
-            if (d && cajaCantidad) {
-                const tope = Math.max(1, d.max || 1);
-                cajaCantidad.dataset.max = String(tope);
-                cantidadTarta.max = String(tope);
-                if ((parseInt(cantidadTarta.value, 10) || 1) > tope) cantidadTarta.value = String(tope);
-                // ⚠️ `cantidad:repinta` y no `input`: la tarta escucha `input` para repintarse y sería un bucle.
-                cajaCantidad.dispatchEvent(new Event('cantidad:repinta'));
-            }
-            const cuenta = q('[data-tarta-cuenta]', filaCantidad);
-            if (cuenta) cuenta.textContent = d ? [d.serves ? choice(t('tarta.raciones_total', ''), 1, { n: d.serves * n }) : '', importe((d.precio || 0) * n)].filter(Boolean).join(' · ') : '';
-        }
+        const n = sois();
+        // «Sois 14 y la tarta es de 12 raciones.» / «Sois 14 y 2 tartas son 24 raciones.» o «Cubre a los 14 niños.»; sin
+        // nada pedido, o con una pedida sin raciones («Traemos la nuestra»), nada.
+        const cuenta = racionesTarta(qa('[data-variante]', tarta).map((c) => ({ uds: pedidoTarta(c), serves: Number(c.dataset.serves || 0) || null })), n);
         const sug = q('[data-tarta-sug]', tarta);
+        const ok = q('[data-tarta-ok]', tarta);
         if (sug) {
-            const total = d && d.serves ? d.serves * n : 0;
-            const otra = q('[data-tarta-otra]', sug);
-            const texto = q('[data-tarta-sug-texto]', sug);
-            // Solo mientras NO llegue; «Añadir otra tarta» es el + de la cantidad y se va en el tope.
-            if (total && s > total) {
-                texto.textContent = n === 1 ? choice(t('tarta.poca', ''), 1, { n: s, r: d.serves }) : choice(t('tarta.poca_varias', ''), 1, { n: s, q: n, r: total });
-                otra.hidden = n >= (d.max || 1);
-                sug.hidden = false;
-            } else {
-                sug.hidden = true;
-            }
+            sug.hidden = !cuenta || cuenta.cubre;
+            if (!sug.hidden) q('[data-tarta-sug-texto]', sug).textContent = cuenta.uds === 1
+                ? choice(t('tarta.poca', ''), 1, { n, r: cuenta.raciones })
+                : choice(t('tarta.poca_varias', ''), 1, { n, q: cuenta.uds, r: cuenta.raciones });
         }
-        // El aviso de arriba: elegida y sin guardar, cambia el texto EN EL MISMO HUECO (no se va: la página subiría).
+        if (ok) {
+            ok.hidden = !cuenta || !cuenta.cubre;
+            if (!ok.hidden) q('[data-tarta-ok-texto]', ok).textContent = choice(t('ninos.cubierto', ''), n, { count: n });
+        }
+        // El aviso de arriba: pedida (o «Sin tarta») y sin guardar, cambia el texto EN EL MISMO HUECO (no se va: la página
+        // subiría bajo el dedo).
+        const v = sinTarta?.checked ? 'none' : (tartasPedidas() > 0 ? 'elegida' : '');
         const aviso = q('[data-aviso-tarta]', form);
         if (aviso) {
             const tx = q('[data-aviso-texto]', aviso);
@@ -533,19 +504,20 @@ function lista(form) {
             qa('[data-aviso-icono]', aviso).forEach((ic) => { ic.hidden = (ic.dataset.avisoIcono === 'elegida') !== Boolean(v); });
         }
     };
-    // La última TARTA elegida (nunca «Sin tarta»): pasar por «Sin tarta» y volver a la misma no pierde la cantidad.
-    let tartaAntes = tartaElegida();
-    radiosTarta.forEach((r) => r.addEventListener('change', () => {
-        // Otra tarta es otra cantidad: se vuelve a una.
-        if (cantidadTarta && r.value !== 'none' && tartaAntes !== '' && tartaAntes !== 'none' && r.value !== tartaAntes) cantidadTarta.value = '1';
-        if (r.value !== 'none') tartaAntes = r.value;
-        actualiza();
-        guardaBorrador();
-    }));
-    // «¿Cuántas tartas?»: cada paso del − y el + (o lo tecleado sin JavaScript) repinta la cuenta, la sugerencia y la barra.
-    cantidadTarta?.addEventListener('input', () => { actualiza(); guardaBorrador(); });
-    // «Añadir otra tarta» ES el + de esa cantidad: la cifra de arriba sube a la vista.
-    q('[data-tarta-otra]', form)?.addEventListener('click', () => { if (cajaCantidad) q('[data-cantidad-mas]', cajaCantidad)?.click(); });
+    // «Sin tarta» marcada: las tartas a 0, cada campo avisando como si se hubiera tocado (el − y el + se repintan).
+    sinTarta?.addEventListener('change', () => {
+        if (!sinTarta.checked) return;
+        camposTarta().forEach((campo) => {
+            if ((parseInt(campo.value, 10) || 0) === 0) return;
+            campo.value = '0';
+            campo.dispatchEvent(new Event('input', { bubbles: true }));
+        });
+    });
+    // Subir una tarta desmarca «Sin tarta» (va ANTES que el listener del formulario, que repinta con la casilla ya al día).
+    tarta?.addEventListener('input', (e) => {
+        const campo = e.target.closest?.('[data-cantidad-campo]');
+        if (campo && sinTarta?.checked && (parseInt(campo.value, 10) || 0) > 0) sinTarta.checked = false;
+    });
 
     // ── F5 y K1: LOS GRUPOS DE COMPLEMENTOS (`PliFamilia`): con la cuenta puesta, la más barata de cada grupo ──
     // Los padres cuentan con «¿Cuántos adultos se quedan?»; los niños (K1 de §4.17, `#806`/`#807`), con los niños de la
@@ -724,9 +696,8 @@ function lista(form) {
             let detalle = n > 0
                 ? [repasar ? choice(t('guardar.respuestas', ''), repasar) : '', recuperado ? t('guardar.recuperado', 'Borrador recuperado de este móvil') : t('guardar.movil', 'Borrador en este móvil')].filter(Boolean).join(' · ')
                 : t('guardar.entran', 'Entran en la lista al guardar');
-            // F5: con la tarta ELEGIDA y sin guardar, y su plazo cerrando hoy o mañana, la barra lo dice (`guardarTarta`).
-            const v = tarta ? tartaElegida() : '';
-            if (tarta?.dataset.pronto === '1' && v && v !== 'none' && v !== tartaInicial.v && tarta.dataset.guardarTexto) detalle = tarta.dataset.guardarTexto;
+            // F5/K2: con alguna tarta PEDIDA y sin guardar, y su plazo cerrando hoy o mañana, la barra lo dice (`guardarTarta`).
+            if (tarta?.dataset.pronto === '1' && tartasPedidas() > 0 && tartaCambiada() && tarta.dataset.guardarTexto) detalle = tarta.dataset.guardarTexto;
             pintaBarra('dirty', status, detalle);
         } else if (barra?.dataset.estado === 'saved' || barra?.dataset.estadoInicial === 'saved') {
             // «Guardado hoy a las 16:05» (F5c): el del servidor, no un «Guardado» a secas.
@@ -814,7 +785,6 @@ function lista(form) {
 
     // ── Arranque: el borrador, las filas, la primera pendiente abierta, la barra ──
     recuperaBorrador();
-    tartaAntes = tartaElegida();
     filas().forEach((f) => { pintaFila(f); abre(f, false); });
     const primeraPendiente = filas().find((f) => f.dataset.completa === '0' && !f.classList.contains('fi-fila--vacia') && f.dataset.respuesta !== 'no' && camposDe(f).name);
     if (primeraPendiente) abre(primeraPendiente, true);

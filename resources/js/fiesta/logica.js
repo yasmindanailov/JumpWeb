@@ -159,6 +159,25 @@ export function cubrir(variantes, adultos) {
 }
 
 /**
+ * LA TARTA, VARIAS A LA VEZ (K2 de `fiesta-sistema-nuevo.md` §4.17, `#807`): lo pedido de cada tarta del panel contra los niños
+ * de la fiesta, para la línea de debajo de sus tarjetas. `null` si no hay nada que decir: nada pedido, ningún niño, o alguna
+ * pedida que no dice raciones («Traemos la nuestra»: su cuenta no se sabe, y afirmar que no llega sería mentir). Si no, cuántas
+ * tartas son (`uds`), cuántas raciones hacen y si cubren a los niños (`cubre`).
+ *
+ * @param {{uds: number, serves: number|null}[]} tartas  lo pedido de cada una y sus raciones (del panel)
+ * @param {number} ninos
+ * @returns {{cubre: boolean, uds: number, raciones: number}|null}
+ */
+export function racionesTarta(tartas, ninos) {
+    const pedidas = (tartas ?? []).filter((t) => t.uds > 0);
+    if (pedidas.length === 0 || !(ninos > 0) || pedidas.some((t) => !(t.serves > 0))) return null;
+    const uds = pedidas.reduce((suma, t) => suma + t.uds, 0);
+    const raciones = pedidas.reduce((suma, t) => suma + t.uds * t.serves, 0);
+
+    return { cubre: raciones >= ninos, uds, raciones };
+}
+
+/**
  * «TUS RESPUESTAS» (F6b de `fiesta-sistema-nuevo.md` §4.12, `InvMias`): la lista de este móvil sin lo caducado y, con
  * `nueva`, con esa respuesta guardada o renovada (una por fiesta e id). Cada entrada: `{fiesta, id, nombre, url, hasta}`,
  * con `hasta` en milisegundos. Lo que no tenga esa forma se tira: el almacenamiento es del navegador, no nuestro.

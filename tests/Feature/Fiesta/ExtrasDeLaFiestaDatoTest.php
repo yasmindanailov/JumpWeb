@@ -24,8 +24,8 @@ use Tests\TestCase;
  *
  * ⚠️ Lo que se vigila de verdad es lo que calla al romperse: las listas blancas del enganche (una clave olvidada se cae
  * sin error), el saneo del bloque (un enganche que se vende al reservar no tiene bloque de la lista), que «Guardado» no
- * mueva el TESTIGO de la página, y que la pregunta de la tarta llegue al reconciliador como cantidades y no como otra
- * cosa.
+ * mueva el TESTIGO de la página, y que las tartas lleguen al reconciliador como cantidades (desde K2, `#807`, varias a la
+ * vez) y «Sin tarta» como una casilla que solo cuenta con alguna tarta en plazo.
  */
 class ExtrasDeLaFiestaDatoTest extends TestCase
 {
@@ -161,42 +161,54 @@ class ExtrasDeLaFiestaDatoTest extends TestCase
         $this->putJson($urls['save'], ['addons' => [['product_id' => $tarta->id, 'quantity' => 0]]])->assertOk()->assertJsonPath('cake_declined', false);
     }
 
-    /** La web manda la PREGUNTA (`cake`, `cake_quantity`) y llega al reconciliador como cantidades. */
-    public function test_the_web_cake_answer_becomes_quantities_of_the_cakes_on_sale(): void
+    /**
+     * K2 de §4.17 (`#807`): la web manda CADA tarta como una cantidad —varias a la vez, por `addons[]` como cualquier
+     * complemento— y «Sin tarta» como una casilla (`cake_declined`, con su 0 oculto). El reconciliador sigue mandando.
+     */
+    public function test_the_web_sends_each_cake_as_a_quantity_and_no_cake_as_a_checkbox(): void
     {
         ['reservation' => $reservation, 'host' => $host] = $this->mountParty();
         $type = $reservation->ticketType;
         $this->assertNotNull($type);
         $tarta = $this->extra($type, 'Tarta', 2500, ['postform_block' => ProductAddon::BLOCK_CAKE, 'max_qty' => 3], ['serves' => 12]);
+        $chocolate = $this->extra($type, 'Tarta de chocolate', 2800, ['postform_block' => ProductAddon::BLOCK_CAKE, 'max_qty' => 2], ['serves' => 12]);
         $traemos = $this->extra($type, 'Traemos la nuestra', 1000, ['postform_block' => ProductAddon::BLOCK_CAKE]);
         $combo = $this->extra($type, 'Combo café', 3900, ['postform_block' => ProductAddon::BLOCK_ADULTS]);
         $guardar = fn (array $datos) => $this->actingAs($host)->post(route('reservation.guests.store', ['reservation' => $reservation]), $datos)->assertRedirect();
+        $fila = static fn (TicketType $t, int $n): array => ['product_id' => $t->id, 'quantity' => $n];
+        $decidida = fn (): bool => (bool) $reservation->fresh()?->cakeDeclined(array_values($this->vistas($reservation)));
 
-        $guardar(['cake' => (string) $tarta->id]);
-        $this->assertSame([$tarta->id => 1, $traemos->id => 0, $combo->id => 0], $this->cantidades($reservation));
+        // Dos tipos a la vez.
+        $guardar(['addons' => [$fila($tarta, 1), $fila($chocolate, 1)], 'cake_declined' => '0']);
+        $this->assertSame([$tarta->id => 1, $chocolate->id => 1, $traemos->id => 0, $combo->id => 0], $this->cantidades($reservation));
 
-        // «Añadir otra tarta», hasta el tope del enganche (la autoridad sigue siendo el reconciliador).
-        $guardar(['cake' => (string) $tarta->id, 'cake_quantity' => '2']);
-        $this->assertSame(2, $this->cantidades($reservation)[$tarta->id]);
-        $guardar(['cake' => (string) $tarta->id, 'cake_quantity' => '50']);
-        $this->assertSame(3, $this->cantidades($reservation)[$tarta->id]);
+        // El tope de cada enganche manda (la autoridad sigue siendo el reconciliador), y lo que no viene no se toca.
+        $guardar(['addons' => [$fila($tarta, 50)]]);
+        $this->assertSame([$tarta->id => 3, $chocolate->id => 1, $traemos->id => 0, $combo->id => 0], $this->cantidades($reservation));
 
-        // Cambiar de opción: la elegida sube y la otra se retira.
-        $guardar(['cake' => (string) $traemos->id]);
-        $this->assertSame([$tarta->id => 0, $traemos->id => 1, $combo->id => 0], $this->cantidades($reservation));
+        // «Sin tarta» con las tartas a 0 (lo que hace el JS al marcarla): contestada.
+        $guardar(['addons' => [$fila($tarta, 0), $fila($chocolate, 0)], 'cake_declined' => '1']);
+        $this->assertSame(0, array_sum($this->cantidades($reservation)));
+        $this->assertTrue($decidida());
 
-        // «Sin tarta»: todas a 0 y la pregunta, contestada.
-        $guardar(['cake' => 'none']);
-        $this->assertSame([$tarta->id => 0, $traemos->id => 0, $combo->id => 0], $this->cantidades($reservation));
-        $this->assertTrue($reservation->fresh()?->cakeDeclined(array_values($this->vistas($reservation))));
+        // CONTROL: sin la casilla en el envío (la tarta cerrada no la pinta), o con un valor que no es suyo, no se toca.
+        $guardar([]);
+        $this->assertTrue($decidida());
+        $guardar(['cake_declined' => 'none']);
+        $this->assertTrue($decidida());
 
-        // CONTROL: un id que NO es una tarta ofrecida no compra nada (ni el combo por la puerta de la tarta).
-        $guardar(['cake' => (string) $combo->id]);
-        $this->assertSame([$tarta->id => 0, $traemos->id => 0, $combo->id => 0], $this->cantidades($reservation));
-        $this->assertTrue($reservation->fresh()?->cakeDeclined(array_values($this->vistas($reservation))), 'y la respuesta de antes sigue');
+        // Desmarcada (llega su 0 oculto): deja de estar decidida.
+        $guardar(['cake_declined' => '0']);
+        $this->assertFalse($decidida());
+        $this->assertNull($reservation->fresh()?->cake_declined_at);
+
+        // Sin JavaScript, marcada CON una tarta puesta: manda la tarta, y la marca no se queda (`settleCakeAnswer`).
+        $guardar(['addons' => [$fila($chocolate, 1)], 'cake_declined' => '1']);
+        $this->assertSame(1, $this->cantidades($reservation)[$chocolate->id]);
+        $this->assertNull($reservation->fresh()?->cake_declined_at);
     }
 
-    /** Fuera de plazo la pregunta no se envía (radio `disabled`), y si llega igual, no toca nada ni avisa de un bloqueo. */
+    /** Fuera de plazo la tarjeta no se ofrece (el reconciliador no la toca) y «Sin tarta» ya no se decide desde aquí. */
     public function test_a_closed_cake_is_left_alone(): void
     {
         ['reservation' => $reservation, 'host' => $host] = $this->mountParty();
@@ -205,10 +217,12 @@ class ExtrasDeLaFiestaDatoTest extends TestCase
         // La fiesta es dentro de 12 días: un plazo de 30 días ya venció.
         $tarta = $this->extra($type, 'Tarta', 2500, ['postform_block' => ProductAddon::BLOCK_CAKE, 'postform_cutoff_hours' => 24 * 30]);
 
-        $this->actingAs($host)->post(route('reservation.guests.store', ['reservation' => $reservation]), ['cake' => (string) $tarta->id])
-            ->assertRedirect()->assertSessionHas('status', 'guest-form-saved');
+        $this->actingAs($host)->post(route('reservation.guests.store', ['reservation' => $reservation]), [
+            'addons' => [['product_id' => $tarta->id, 'quantity' => 1]], 'cake_declined' => '1',
+        ])->assertRedirect();
 
         $this->assertSame([$tarta->id => 0], $this->cantidades($reservation));
+        $this->assertNull($reservation->fresh()?->cake_declined_at, 'cerrada, «Sin tarta» no se escribe');
     }
 
     public function test_the_panel_writes_serves_family_and_the_block(): void

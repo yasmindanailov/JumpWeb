@@ -2,7 +2,7 @@
 
 > Estado: ✅ **APROBADA por el owner el 2026-09-25 con sus ocho respuestas (`#743`)** · en ejecución: T0 ✅, sigue
 > la T1 · Última actualización: 2026-09-29 · Decisiones: `#765` (el traspaso) · **`#743`** (la aprobación y las ocho
-> respuestas de §7) · `#805` (la lista del owner, §4.16) · `#806` y `#807` (los complementos en dos, §4.17).
+> respuestas de §7) · `#805` (la lista del owner, §4.16) · `#806`, `#807` y `#808` (los complementos en dos, §4.17).
 > Carril: 🧩 **SPA** (banda 730–759). Fuente del diseño: `instancias/playjump/diseno/playjump-design-system/`
 > (el zip de Claude Design, `#760`): `paginas/lista-invitados.card.html`, `paginas/invitacion.card.html`,
 > `paginas/autorizacion.card.html`, `components/invitados/*`, `components/forms/SaveBar.jsx`, el `readme.md`
@@ -839,7 +839,7 @@ no los usa: el Listo es su propia vista).
   rutas enfocadas pasa de 18 a 17; y `MountsAParty::replyOf()` no sabía crear un «no» (PHP acepta argumentos de más sin
   avisar: gana `$attending`). Arnés `scripts/mutar-lista-805.sh` 6/6, el árbol byte a byte; suite 6553 / 45031.
 
-### 4.17 Los complementos de la fiesta, en dos (`[DECIDIDO owner]` `#806`, `#807`, 29-09) — 🟦 K1 ✅; sigue K2
+### 4.17 Los complementos de la fiesta, en dos (`[DECIDIDO owner]` `#806`, `#807`, `#808`) — ✅ K1 y K2; K3 es DATO del panel
 
 - **El pedido del owner**: la zona de los extras se reordena en «Complementos para los niños» y «Complementos para los
   adultos», fiel al sistema de diseño, clara y sin saturar: VARIAS tartas de distintos tipos (hoy, una y «Añadir otra tarta»,
@@ -891,10 +891,8 @@ menú al reservar y añadimos opciones de merienda en la lista» = la **C**: las
 Menú 2 desaparece; si una llegara a costar más, sería otra tanda, con dinero). (2) «Los calcetines ya no son gratis; se
 añaden en la lista» (P3). (3) El cono de chuches SALE del pack y se pide en la lista (P3, como los calcetines). (4) Varias
 tartas a la vez (P2).
-- **La merienda, sin dinero**: una PREGUNTA del pack, no un complemento. Tipo de campo nuevo del evento, `choice` («¿Qué
-  merienda?», sus opciones i18n, cada una con qué lleva), contestado en la lista como el de los adultos (`adults`), pintado
-  como `OptionCards` en «Para los niños»; la invitación (F1b) y la hoja del parque enseñan la elegida. Contrato del catálogo
-  (`EVENT_FIELD_TYPES` + `CatalogFieldTypesMatchContractTest`) y del post-form: minor.
+- ~~**La merienda, sin dinero**: una PREGUNTA del pack (tipo de campo nuevo `choice`)~~ — **sustituido por `#808`** (30-09): la
+  merienda se hace SIN CÓDIGO, con la configuración que el panel ya tiene (ver «K3» abajo).
 - **Quitar el menú al reservar es DATO** (desenganchar Menú 1 y 2 de los packs) **más una línea de plataforma**: la isla pinta
   «¿Qué menú?» sin condición (`PantallaCuandoFiesta.vue`, medido), y la landing dice «incluye calcetines y cono» (brief, pieza
   5): aviso en mi buzón. Lo vendido con menú se queda como está (su línea nació con el pedido).
@@ -926,6 +924,50 @@ grupo sin título) y `lista` (los sueltos, rejilla sin título, chapa «Para N p
   10 · `FiestaModeloTest` (el banco, re-apuntado) · arnés **10/10** · la sonda a 390 y 1280 (tocar, quitar uno, el número a
   16, guardar, sin JavaScript) sin errores ni desborde. ⚠️ **DATO**: el tope del «para 1» debe llegar al máximo del pack, o
   «Uno para cada niño» no sale (no mentiría).
+
+**K2 al detalle (medido 30-09, 07:10)**. Hoy la tarta es una pregunta de UNA respuesta: `x-pieza.opciones` (radio `cake`: una
+opción por tarta del bloque y «Sin tarta»), «¿Cuántas tartas?» de la elegida (`cake_quantity`), «Añadir otra tarta» y la foto
+grande del bloque; `GuestFormController::cakeAnswer()` traduce el radio a cantidades. **El dominio y la API ya admiten varias**
+(`OrderItem::settleCakeAnswer()`/`cakeDeclined()` miran «alguna tarta con cantidad»; la API manda cantidades y
+`cake_declined`): K2 es de la web y del texto del panel, sin dinero (`PostFormAddons` intacto). Fijan: `ExtrasDeLaFiestaListaTest`
+(3 casos), `ExtrasDeLaFiestaDatoTest` (2 de la web), `FiestaModeloTest` y 17 mutaciones de `mutar-extras-fiesta.sh`.
+- **Cambia**: la tarta, primer grupo de «Para los niños», «¿La tarta?» con UNA `AddonCard` por tarta del panel (su foto, «De 12
+  raciones», precio, tope y plazo; `addons[i]` como las demás): varias a la vez. Debajo, las raciones contra los niños
+  (`racionesTarta()`, pura en `logica.js`): «Cubre a los 14 niños.», o «Sois 14 y la tarta es de 12 raciones.» / «Sois 14 y 2
+  tartas son 24 raciones.»; sin cuenta si alguna pedida no dice raciones («Traemos la nuestra»). «Sin tarta», una casilla
+  (`cake_declined` con su 0 oculto: sin JavaScript también se decide; solo con alguna tarta en plazo, como hoy): marcarla pone
+  las tartas a 0 y subir una la desmarca. Fuera de plazo: las pedidas, cerradas, o «Sin tarta», y «El plazo de la tarta pasó».
+- **El panel dice la verdad**: el bloque vacío pasa a «Para los niños», «Para los padres» a «Para los adultos», y las ayudas de
+  bloque, «para cuántas» y familia cuentan lo de K1 y K2 (es; zh_CN no tiene esas claves).
+- **Se retira** (§3.quater): el radio y `cakeAnswer()`, «¿Cuántas tartas?» y «Añadir otra tarta» (la cantidad ya se ve en cada
+  tarjeta, `#751`), la foto grande (cada tarjeta lleva la suya), sus textos y clases; en `mutar-extras-fiesta.sh`, lo que muta
+  lo retirado sale y lo que sigue se re-apunta. **No cambia**: el aviso de arriba (sin decidir en lo guardado), la barra, el pie.
+- **Guardas**: ListaTest y DatoTest re-escritos (dos tartas a la vez, la casilla, cerrada, un id ajeno); `node --test`
+  (`racionesTarta`); arnés `mutar-complementos-k2.sh`; la sonda sobre `JW-OJO-K1` con una segunda tarta de prueba.
+- **Lo construido (30-09, 07:40; ✅ el owner, 30-09: «Quedarme con K2», con lo medido delante: «varias a la vez» también salía
+  CONFIGURANDO —tartas sin bloque y en una familia— pero perdía el aviso, «Sin tarta» y «De 12 raciones»; `#808`)**: `extras()` da la tarta como `tarjetas` y `declinada` (fuera `cuentaTarta()`,
+  la foto grande, el radio y «¿Cuántas tartas?»); `GuestFormController::cakeDeclinedAnswer()` en lugar de `cakeAnswer()`;
+  `racionesTarta()`; en `lista.js`, la tarta por sus tarjetas y «Sin tarta» a 0 / desmarcada al subir una; 8 claves de texto
+  retiradas (×3 idiomas) y sus clases; los textos del panel, al día. **Medido en el camino**: `FiestaModeloTest` no miraba
+  DENTRO de la zona 4 (su fiesta no tenía complementos y el comparador salta los `null`): ahora los monta, y su mutación
+  muerde; y el arnés de F5, auditado (12 mutaciones retiradas con su sujeto, 1 re-apuntada). **Verificación**: la carpeta de
+  la fiesta 129 · vecinos (post-form, complementos, catálogo, invitación) 942 · `node --test` 20 · Larastan y Pint limpios ·
+  arneses `mutar-complementos-k2.sh` **16/16** y `mutar-extras-fiesta.sh` **34/34** · la sonda `sonda-k2.mjs` a 390 y 1280
+  (una no llega, dos tipos cubren, «Traemos» sin cuenta, «Sin tarta», guardar, sin JavaScript) sin errores ni desborde.
+
+**K3 · la merienda, SIN CÓDIGO (`[DECIDIDO owner]` `#808`, 30-09)**. El owner: «no desarrolles código si en el panel tenemos la
+opción configurable». Medido antes de responder: «complemento con opciones e incluido» existe solo AL RESERVAR (grupo excluyente
+e «incluido»); en venta posterior el panel los ESCONDE (`AddonsRelationManager`) y el modelo los RECHAZA (`ProductAddon::
+postFormProblem()`: un grupo post-venta no sabe decir «ninguno» y lo incluido rompe la igualdad del cobro). Y se consigue en la
+lista solo configurando, probado en el pack 106 de la local (`ojo-config.php` + `sonda-config.mjs`; `CARRIL-SPA` §8 (25)):
+- **La receta (DATO del panel, por pack)**: uno por opción (Sándwich, Pizza, Perrito…) como complemento con precio **0 €**,
+  familia «Merienda», enganche de **venta posterior** con su plazo y **tope 1**, «Se enseña en la invitación» marcado, y lo que
+  lleva en «En la invitación · Para beber / Para comer / Y para terminar» (F1b). El Menú 1/2, **desenganchado de la reserva**.
+  La lista los agrupa bajo «Merienda» en «Para los niños»; la invitación enseña la elegida («Para beber: Refresco o zumo · Agua
+  — Para comer: Pizza margarita o de jamón», medido); la hoja del parque, como cualquier línea.
+- **Límites aceptados**: no obliga a elegir UNA (se pueden pedir dos, o ninguna); el precio dice «0,00 €» (no «Incluido»).
+- **De paso, también configurables**: calcetines y cono (venta posterior, «para 1», tope ≥ máximo del pack); las tartas, en el
+  bloque «La tarta» (K2). ⚠️ Al desenganchar el menú, la isla pinta «¿Qué menú?» vacía hasta el `v-if` de plataforma (avisado).
 
 ## 5. Impacto en invariantes
 

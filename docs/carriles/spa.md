@@ -21,7 +21,8 @@
   (RETIRADO entero, con sus textos y su test), el «No podemos» aparte y suave; arnés `mutar-lista-805.sh` 6/6.
 - 🟦 **LOS COMPLEMENTOS EN DOS** (`#806`, `#807`, §4.17): ✅ **K1 APROBADA** (30-09: «buen trabajo, visto bueno… respetando la
   config del panel»): «Para los niños» / «Para los adultos», «Uno para cada niño» (el `Tag` de la calculadora); arnés
-  `mutar-complementos-k1.sh` 10/10, sonda `sonda-k1.mjs`, fiesta `JW-OJO-K1` (`CARRIL-SPA` §8 (23)). Siguen K2 y K3.
+  `mutar-complementos-k1.sh` 10/10, sonda `sonda-k1.mjs`, fiesta `JW-OJO-K1` (`CARRIL-SPA` §8 (23)). 🟦 **K2** (varias tartas)
+  en `wip/complementos-k2`, verificada y SIN commit hasta el ojo del owner (§4.17; `CARRIL-SPA` §8 (24)). Sigue K3.
 - ✅ R1a y R1b de los correos, en `main` y aprobadas (29-09): su foto, mudada verbatim a `CARRIL-SPA.md` §9.
 - Los correos: sus cuatro decisiones del owner (`#800`→`#804`), mudadas verbatim a `CARRIL-SPA.md` §9 (30-09).
 - ⏸ **LA ANALÍTICA PARA DECIDIR, en pausa tras la T4** (`#755`): su foto por tanda, mudada verbatim a `CARRIL-SPA.md` §9

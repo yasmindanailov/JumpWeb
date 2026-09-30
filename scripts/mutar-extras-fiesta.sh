@@ -3,8 +3,9 @@
 #
 # Protege lo que calla al romperse: las tres listas blancas del enganche para `postform_block` (una clave olvidada se cae
 # sin error), el saneo del bloque (solo venta posterior, lista cerrada), lo que la tarjeta del post-form lleva a la lista
-# y a la API, el campo de adultos por TIPO y acotado, que «Guardado» no mueva el TESTIGO ni lo selle el parque, y que la
-# pregunta de la tarta llegue al reconciliador como cantidades de las tartas EN PLAZO, sin comprar otra cosa.
+# y a la API, el campo de adultos por TIPO y acotado, y que «Guardado» no mueva el TESTIGO ni lo selle el parque.
+# ▶ La tarta como PREGUNTA de una respuesta (su radio, «¿Cuántas tartas?», la traducción del controlador) se RETIRÓ en K2
+#   (§4.17, `#807`: varias a la vez) con sus 12 mutaciones; lo de K2 lo muerde `scripts/mutar-complementos-k2.sh`.
 #
 # Reglas de la casa dentro (`/mutar`): verde antes de mutar · veredicto por código de salida · ancla ÚNICA · comprobar
 # que la mutación SE APLICÓ · restaurar por COPIA DE SEGURIDAD (por ruta entera) y `touch`, nunca `git checkout`.
@@ -24,14 +25,12 @@ FICHEROS=(
     app/Domain/Booking/Models/OrderItem.php
     app/Domain/Booking/Services/PostFormAddons.php
     app/Filament/Resources/Catalog/RelationManagers/AddonsRelationManager.php
-    app/Http/Controllers/GuestFormController.php
     app/Http/Controllers/Api/V1/GuestFormController.php
     app/Http/Resources/Api/V1/GuestFormResource.php
     app/Http/Fiesta/ListaDeInvitados.php
     resources/views/fiesta/lista.blade.php
     resources/views/fiesta/lista/zona-3.blade.php
     resources/views/components/fiesta/complemento.blade.php
-    resources/views/fiesta/lista/zona-4.blade.php
     resources/js/fiesta/logica.js
 )
 copia() { echo "$TMP/$(echo "$1" | tr '/' '_')"; }
@@ -83,7 +82,6 @@ PA=app/Domain/Booking/Models/ProductAddon.php
 OI=app/Domain/Booking/Models/OrderItem.php
 PFA=app/Domain/Booking/Services/PostFormAddons.php
 ARM=app/Filament/Resources/Catalog/RelationManagers/AddonsRelationManager.php
-GFW=app/Http/Controllers/GuestFormController.php
 GFA=app/Http/Controllers/Api/V1/GuestFormController.php
 GFR=app/Http/Resources/Api/V1/GuestFormResource.php
 
@@ -149,22 +147,7 @@ mutar "la API no aplica cake_declined" "$GFA" \
   "            array_key_exists('cake_declined', \$validated) ? (bool) \$validated['cake_declined'] : null," \
   "            null,"
 
-# ── 5 · La pregunta de la tarta en la web ───────────────────────────────────────────────────────
-mutar "la pregunta de la tarta compra lo que no es una tarta" "$GFW" \
-  "        if (\$cakes === [] || (! \$none && ! in_array(\$chosen, array_map(static fn (PostFormAddonView \$a): int => \$a->productId, \$cakes), true))) {" \
-  "        if (\$cakes === [] && false) {"
-mutar "la pregunta de la tarta toca tartas fuera de plazo" "$GFW" \
-  "static fn (PostFormAddonView \$a): bool => \$a->block === ProductAddon::BLOCK_CAKE && ! \$a->closed," \
-  "static fn (PostFormAddonView \$a): bool => \$a->block === ProductAddon::BLOCK_CAKE,"
-mutar "«Añadir otra tarta» no sube la cantidad" "$GFW" \
-  "'quantity' => \$cake->productId === \$chosen ? \$quantity : 0];" \
-  "'quantity' => \$cake->productId === \$chosen ? 1 : 0];"
-mutar "la web no guarda «Sin tarta»" "$GFW" \
-  "        return ['rows' => \$rows, 'declined' => \$none];" \
-  "        return ['rows' => \$rows, 'declined' => null];"
-mutar "la respuesta de la tarta no llega al reconciliador" "$GFW" \
-  $'        if ($cake[\'rows\'] !== []) {\n            $desired = array_merge($desired ?? [], $cake[\'rows\']);' \
-  $'        if (false) {\n            $desired = array_merge($desired ?? [], $cake[\'rows\']);'
+# ── 5 · (la pregunta de la tarta en la web: retirada en K2 con su sujeto; ver la cabecera) ───────
 
 LDI=app/Http/Fiesta/ListaDeInvitados.php
 LISTA=resources/views/fiesta/lista.blade.php
@@ -172,39 +155,12 @@ Z3=resources/views/fiesta/lista/zona-3.blade.php
 COMP=resources/views/components/fiesta/complemento.blade.php
 
 # ── 6 · F5b: la zona 4 como el mockup ───────────────────────────────────────────────────────────
-mutar "la tarta pierde «Sin tarta»" "$LDI" \
-  "            \$opciones[] = ['value' => 'none', 'title' => __('fiesta.lista.tarta.sin'), 'description' => '', 'price' => '', 'disabled' => ! \$abierta];" \
-  ""
-mutar "la opción nunca dice que no llega" "$LDI" \
-  ": (\$sois > (int) \$raciones ? __('fiesta.lista.tarta.no_llega'" \
-  ": (false ? __('fiesta.lista.tarta.no_llega'"
-mutar "la tarta viaja también como tarjeta" "$LDI" \
+# (La tarta como pregunta —«Sin tarta» entre sus opciones, «no llega» en la opción, la elegida, «¿Cuántas tartas?», su
+#  tope y su cuenta, y su línea cerrada— se retiró en K2 con sus mutaciones: ver la cabecera.)
+mutar "la tarta viaja también como tarjeta suelta" "$LDI" \
   "fn (PostFormAddonView \$a): bool => \$a->block === \$bloque));" \
   "fn (PostFormAddonView \$a): bool => \$bloque === null || \$a->block === \$bloque));"
-mutar "la tarta guardada vuelve sin marcar" "$LDI" \
-  "                'elegida' => \$elegida," \
-  "                'elegida' => null,"
-mutar "la tarta guardada vuelve con una sola" "$LDI" \
-  "\$cantidad = \$elegidaVista !== null ? \$elegidaVista->quantity : 1;" \
-  "\$cantidad = 1;"
-# «¿Cuántas tartas?» (el owner, 26-09: «no se ven cantidades»)
-Z4=resources/views/fiesta/lista/zona-4.blade.php
 LJ=resources/js/fiesta/logica.js
-mutar "«¿Cuántas tartas?» se ve sin tarta elegida" "$LDI" \
-  "'con' => \$elegidaVista !== null," \
-  "'con' => true,"
-mutar "el tope es el mayor, no el de la elegida" "$LDI" \
-  "\$tope = \$elegidaVista !== null ? \$elegidaVista->maxQuantity : max(" \
-  "\$tope = max("
-mutar "la cuenta sin sus raciones" "$LDI" \
-  "\$tarta->serves === null ? '' : __('fiesta.lista.tarta.raciones_total'" \
-  "true ? '' : __('fiesta.lista.tarta.raciones_total'"
-mutar "la cuenta a precio de una tarta" "$LDI" \
-  "Money::format(\$tarta->unitPriceCents * \$cantidad, \$moneda)," \
-  "Money::format(\$tarta->unitPriceCents, \$moneda),"
-mutar "cerrada, la cantidad no se ve" "$Z4" \
-  "@if (\$ta['con'])<p class=\"pli-tarta-fija\"" \
-  "@if (false)<p class=\"pli-tarta-fija\""
 mutar "el importe cobrado sin sus dos decimales" "$LJ" \
   "String(abs % 100).padStart(2, '0')" \
   "String(abs % 100)" js
@@ -217,8 +173,9 @@ mutar "los adultos se preguntan con lo de los padres cerrado" "$LDI" \
 mutar "las familias no agrupan" "$LDI" \
   "\$familias[\$a->family][] = \$tarjeta(" \
   "\$familias[''][] = \$tarjeta("
+# Re-apuntada en K2 (`#807`): «decidida» es ahora una tarta PEDIDA o «Sin tarta».
 mutar "el aviso de la tarta sigue con la tarta decidida" "$LDI" \
-  "'urgente' => \$pronto && \$elegida === null," \
+  "'urgente' => \$pronto && ! \$pedida && ! \$declinada," \
   "'urgente' => \$pronto,"
 mutar "el aviso de la tarta sale aunque cierre lejos" "$LDI" \
   "&& (\$cierra->isSameDay(DisplayTime::today()) || \$cierra->isSameDay(DisplayTime::today()->addDay()))," \

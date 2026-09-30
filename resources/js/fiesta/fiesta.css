@@ -580,12 +580,8 @@ body.fiesta-lista { margin: 0; background: var(--bg-subtle); font-family: var(--
 .pli-editar{display:grid;gap:10px}
 .pli-pagas,.pli-pie-z{margin:0;display:flex;align-items:flex-start;gap:8px;font:400 var(--fs-body-sm)/1.45 var(--font-ui);color:var(--text-body)}
 .pli-pagas svg,.pli-pie-z svg{flex:0 0 auto;margin-top:2px;color:var(--icon-accent)}
-.pli-tarta{display:grid;gap:10px}
-.pli-tarta-l{margin:0;font:var(--type-label);color:var(--text-strong)}
-.pli-tarta{scroll-margin-top:16px}
-/* «¿Cuántas tartas?» (el owner, 26-09): la fila de «¿Cuántos adultos se quedan?». Sin tarta elegida la esconde el JS; sin
-   JavaScript se ve siempre (se elige la tarta y su cantidad a la vez). Cerrada, la cantidad se lee en una línea. */
-.js .pli-tarta-n--sin{display:none}
+/* La tarta (K2, `#807`): «¿La tarta?», sus tarjetas, sus raciones y «Sin tarta»; cerrada y sin tarta, esa línea. */
+.pli-tarta{display:grid;gap:10px;scroll-margin-top:16px}
 .pli-tarta-fija{margin:0;font:600 var(--fs-body-sm)/1.4 var(--font-ui);color:var(--fiesta-tinta-900)}
 .pli-h3{margin:0;font:800 clamp(1.125rem,3.8vw,1.3rem)/1.15 var(--font-display);letter-spacing:-.015em;color:var(--fiesta-tinta-900)}
 .pli-h4{margin:0;font:700 var(--fs-body)/1.3 var(--font-ui);color:var(--fiesta-tinta-900)}

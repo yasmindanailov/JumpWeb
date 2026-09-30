@@ -291,13 +291,10 @@ class GuestFormController extends Controller
         $status = ($countChange !== null && ! $countChange->applied && $countChange->reason !== GuestCountChange::REASON_NOOP)
             ? 'guest-count-'.$countChange->reason
             : ($rejectedText ? 'invitation-text-rejected' : ($rejoinFull ? 'invitation-rejoin-full' : 'guest-form-saved'));
+        // LA TARTA (K2 de `fiesta-sistema-nuevo.md` §4.17, `#807`): cada tarta viaja en `addons[]` como cualquier complemento
+        // —varias a la vez— y el reconciliador sigue siendo el único que toca el dinero (R1, R2, escrituras asimétricas).
         $desired = $this->submittedGuestFormArray($request, 'addons');
-        // LA TARTA (F5 de `fiesta-sistema-nuevo.md` §4.11, `#749`): la pregunta se traduce a las cantidades de siempre ANTES
-        // del reconciliador, que sigue siendo el único que toca el dinero (R1, R2, escrituras asimétricas intactas).
-        $cake = $this->cakeAnswer($request, $reservation);
-        if ($cake['rows'] !== []) {
-            $desired = array_merge($desired ?? [], $cake['rows']);
-        }
+        $cakeDeclined = $this->cakeDeclinedAnswer($request, $reservation);
         $extrasCents = 0;
         if ($desired !== null) {
             $fresh = $reservation->fresh(['ticketType.addons', 'order', 'slot', 'children']);
@@ -324,7 +321,7 @@ class GuestFormController extends Controller
             }
         }
         // «Sin tarta» decidido o deshecho, DESPUÉS de los extras: con una tarta puesta, la marca se borra.
-        ($reservation->fresh(['ticketType.addons']) ?? $reservation)->settleCakeAnswer($cake['declined']);
+        ($reservation->fresh(['ticketType.addons']) ?? $reservation)->settleCakeAnswer($cakeDeclined);
 
         // El hecho de la RESERVA (`specs/analitica-fiesta.md` §4.2), con lo que esta petición movió: invitados
         // (solo si el ajuste se aplicó), céntimos de extras (con signo) y respuestas adoptadas. Sin nombres.
@@ -667,37 +664,21 @@ class GuestFormController extends Controller
     }
 
     /**
-     * LA TARTA (F5 de `fiesta-sistema-nuevo.md` §4.11, `#749`): lo que mandó la pregunta —`cake` (el id de uno de sus
-     * complementos, o `none`) y `cake_quantity` («Añadir otra tarta»)— traducido a filas `{product_id, quantity}` de las
-     * tartas EN PLAZO, y si decidió «Sin tarta». Sin `cake` (sin contestar, o cerrada: un radio `disabled` no se envía) no
-     * hay filas y no se toca nada; un id que no es una tarta ofrecida, tampoco. La cantidad NO se acota aquí: el
-     * reconciliador la acota al tope del enganche (`AddonResolver::effectiveQuantity`), y un segundo tope en esta capa no
-     * decidiría nada (medido: su mutación sobrevive).
-     *
-     * @return array{rows: list<array{product_id: int, quantity: int}>, declined: ?bool}
+     * «SIN TARTA» (K2 de `fiesta-sistema-nuevo.md` §4.17, `#807`): la casilla `cake_declined`, con su 0 oculto delante. Sin
+     * ella (el formulario de la tarta cerrada no la pinta, o un envío que no la trae) es `null`: no se toca nada. Y solo si
+     * queda ALGUNA tarta en plazo, como cuando era una pregunta: pasado el plazo, «Sin tarta» ya no se decide desde aquí.
+     * Las cantidades de las tartas no pasan por aquí: van en `addons[]` y las gobierna el reconciliador.
      */
-    private function cakeAnswer(Request $request, OrderItem $reservation): array
+    private function cakeDeclinedAnswer(Request $request, OrderItem $reservation): ?bool
     {
-        $answer = $request->input('cake');
-        if (! is_scalar($answer) || (string) $answer === '') {
-            return ['rows' => [], 'declined' => null];
+        $answer = $request->input('cake_declined');
+        if (! is_scalar($answer) || ! in_array((string) $answer, ['0', '1'], true)) {
+            return null;
         }
-        $cakes = array_values(array_filter(
-            app(PostFormAddons::class)->viewFor($reservation),
-            static fn (PostFormAddonView $a): bool => $a->block === ProductAddon::BLOCK_CAKE && ! $a->closed,
-        ));
-        $none = (string) $answer === 'none';
-        $chosen = $none ? null : (int) $answer;
-        if ($cakes === [] || (! $none && ! in_array($chosen, array_map(static fn (PostFormAddonView $a): int => $a->productId, $cakes), true))) {
-            return ['rows' => [], 'declined' => null];
-        }
-        $quantity = max(1, (int) (is_scalar($request->input('cake_quantity')) ? $request->input('cake_quantity') : 1));
-        $rows = [];
-        foreach ($cakes as $cake) {
-            $rows[] = ['product_id' => $cake->productId, 'quantity' => $cake->productId === $chosen ? $quantity : 0];
-        }
+        $abierta = collect(app(PostFormAddons::class)->viewFor($reservation))
+            ->contains(static fn (PostFormAddonView $a): bool => $a->block === ProductAddon::BLOCK_CAKE && ! $a->closed);
 
-        return ['rows' => $rows, 'declined' => $none];
+        return $abierta ? (string) $answer === '1' : null;
     }
 
     /**

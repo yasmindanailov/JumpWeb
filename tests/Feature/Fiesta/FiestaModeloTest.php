@@ -2,8 +2,10 @@
 
 namespace Tests\Feature\Fiesta;
 
+use App\Domain\Booking\Models\ProductAddon;
 use App\Domain\Booking\Services\PartyInvitations;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\AttachesPartyExtras;
 use Tests\Support\MountsAParty;
 use Tests\TestCase;
 
@@ -22,6 +24,7 @@ use Tests\TestCase;
  */
 class FiestaModeloTest extends TestCase
 {
+    use AttachesPartyExtras;
     use MountsAParty;
     use RefreshDatabase;
 
@@ -32,6 +35,13 @@ class FiestaModeloTest extends TestCase
     {
         ['reservation' => $reservation, 'invitation' => $invitation, 'host' => $host] = $this->mountParty();
         $this->replyOf($invitation, $reservation, 'Hugo Ruiz');
+        // ⚠️ CON complementos (K2 de §4.17, `#807`): sin ellos la tarta, los niños y los padres son `null` en el controlador y
+        //    el comparador no mira dentro —medido el 30-09: el banco pintaba la tarta vieja y esta prueba seguía en verde—.
+        $tipo = $reservation->ticketType;
+        $this->assertNotNull($tipo);
+        $this->extra($tipo, 'Tarta', 2500, ['postform_block' => ProductAddon::BLOCK_CAKE], ['serves' => 12]);
+        $this->extra($tipo, 'Calcetines', 200, ['max_qty' => 20], ['serves' => 1]);
+        $this->extra($tipo, 'Combo café', 3900, ['postform_block' => ProductAddon::BLOCK_ADULTS], ['serves' => 6, 'family' => ['es' => 'Combos']]);
         $modelos = $this->modelos();
 
         $pagina = $this->actingAs($host)->get(route('reservation.guests', ['reservation' => $reservation]))->assertOk()->viewData('m');

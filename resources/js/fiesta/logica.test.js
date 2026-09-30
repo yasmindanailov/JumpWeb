@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { caducaEn, capitalizar, choice, clave, cubrir, deLaFiesta, estadoFicha, euros, importe, limpiar, misRespuestas, soloEdad, sugerirCorreo, vistaInvitacion } from './logica.js';
+import { caducaEn, capitalizar, choice, clave, cubrir, deLaFiesta, estadoFicha, euros, importe, limpiar, misRespuestas, racionesTarta, soloEdad, sugerirCorreo, vistaInvitacion } from './logica.js';
 
 // F9 (§4.15, el zip tercero `#780`): el correo mal escrito, como `forms/Field.jsx` del diseño.
 test('el correo mal escrito se corrige: una letra, dos cambiadas, la terminación que no existe, el punto que falta', () => {
@@ -64,6 +64,25 @@ test('lo de los padres: el tope de cada complemento manda, y sin adultos no se p
     assert.equal(cubrir(COMBOS, 0), null);
     assert.equal(cubrir([], 8), null);
     assert.equal(cubrir([{ para: 0, precio: 100 }], 8), null, 'una variante sin «para cuántas» no entra en la cuenta');
+});
+
+// K2 (§4.17, `#807`): varias tartas a la vez, sus raciones contra los niños.
+test('la tarta: las raciones de todas las pedidas suman, y cubren a los niños o no', () => {
+    const tartas = (a, b) => [{ uds: a, serves: 12 }, { uds: b, serves: 20 }];
+    assert.deepEqual(racionesTarta(tartas(1, 0), 14), { cubre: false, uds: 1, raciones: 12 }, 'una de 12 no llega para 14');
+    assert.deepEqual(racionesTarta(tartas(1, 1), 14), { cubre: true, uds: 2, raciones: 32 }, 'dos tipos a la vez suman');
+    assert.deepEqual(racionesTarta(tartas(2, 0), 24), { cubre: true, uds: 2, raciones: 24 }, 'justas, llega');
+    assert.deepEqual(racionesTarta(tartas(2, 0), 25), { cubre: false, uds: 2, raciones: 24 }, 'una menos que los niños, no');
+});
+
+test('la tarta: sin nada pedido, sin niños o con una sin raciones, no se dice nada', () => {
+    assert.equal(racionesTarta([{ uds: 0, serves: 12 }], 14), null, 'nada pedido');
+    assert.equal(racionesTarta([{ uds: 1, serves: 12 }], 0), null, 'sin niños');
+    assert.equal(racionesTarta([{ uds: 1, serves: 12 }, { uds: 1, serves: null }], 14), null, '«Traemos la nuestra»: su cuenta no se sabe');
+    // CONTROL: la que no dice raciones pero NO se pidió no calla la cuenta.
+    assert.deepEqual(racionesTarta([{ uds: 1, serves: 12 }, { uds: 0, serves: null }], 14), { cubre: false, uds: 1, raciones: 12 });
+    assert.equal(racionesTarta([], 14), null);
+    assert.equal(racionesTarta(undefined, 14), null);
 });
 
 test('la clave de un nombre ignora tildes, mayúsculas y espacios de más', () => {
