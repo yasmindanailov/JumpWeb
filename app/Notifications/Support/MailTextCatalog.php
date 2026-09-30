@@ -15,7 +15,9 @@ use Illuminate\Support\Str;
  * Lo que NUNCA se edita, por regla y no a mano (cada uno con su porqué):
  *  - el SALUDO (`greeting`): la cabecera lo sustituyó (`#506`) y ya no se pinta: un bloque que no sale confundiría;
  *  - lo LEGAL de un comercial: por qué lo recibes y la baja (`porque`, `baja`, `optout`; LSSI 22.1, `#750`, `#754`);
- *  - los DATOS y los FRAGMENTOS que otra frase inserta (`providers.*`, `actions.*`): no son un bloque del correo;
+ *  - los DATOS y los FRAGMENTOS que otra frase inserta (`providers.*`, `actions.*`, y los sueltos: el nombre de reserva
+ *    de un producto borrado, `product_fallback`, que va también al ASUNTO, y los importes rotulados del suplemento,
+ *    `amount_discount`/`amount_surcharge`): no son un bloque del correo, y su formato lo pone la frase que los recibe;
  *  - lo que no usa nadie (`reason_prefix`) y los PLURALES (`{1} …|[2,*] …`), que un editor de texto no sabe guardar.
  * Una guarda comprueba que cada clave editable la pinta SU correo y ningún otro sitio (la web no cambia desde aquí).
  * Fuera del catálogo, los del EQUIPO (la ficha de Google, la incidencia de un cobro, el mensaje de contacto).
@@ -29,7 +31,8 @@ final class MailTextCatalog
     public const IDIOMA_BASE = 'es';
 
     /**
-     * clave del correo → [clase, tipo, tramos de idioma]. El orden, el de la pantalla dentro de cada tipo.
+     * clave del correo → [clase, tipo, tramos de idioma]. El orden, el de la pantalla dentro de cada tipo. Un tramo puede ser
+     * UN texto (`emails.verify_pending_email.action`): el correo usa ese y no sus hermanos, que son de una versión que ya no sale.
      *
      * @var array<string, array{0: class-string, 1: string, 2: list<string>}>
      */
@@ -60,7 +63,8 @@ final class MailTextCatalog
         'login_code' => [N\LoginCode::class, 'cuenta', ['emails.login_code']],
         'confirmation_code' => [N\ConfirmationCode::class, 'cuenta', ['emails.confirmation_code']],
         'password_reset' => [N\PasswordReset::class, 'cuenta', ['emails.password_reset']],
-        'verify_pending_email' => [N\VerifyPendingEmail::class, 'cuenta', ['emails.verify_pending_email', 'emails.verify_pending_email_code']],
+        // El que sale lleva el CÓDIGO (`#856`): sus bloques y, de la versión de antes, solo el botón y «si no fuiste tú».
+        'verify_pending_email' => [N\VerifyPendingEmail::class, 'cuenta', ['emails.verify_pending_email_code', 'emails.verify_pending_email.action', 'emails.verify_pending_email.ignore']],
         'email_change_requested' => [N\EmailChangeRequested::class, 'cuenta', ['emails.email_change_requested']],
         'email_change_completed' => [N\EmailChangeCompleted::class, 'cuenta', ['emails.email_change_completed']],
         'account_already_exists' => [N\AccountAlreadyExists::class, 'cuenta', ['account.exists_mail']],
@@ -70,8 +74,8 @@ final class MailTextCatalog
         'survey_invitation' => [N\SurveyInvitation::class, 'encuestas', ['surveys.mail']],
     ];
 
-    /** @var list<string> El último tramo de lo que nunca se edita (ver la cabecera). */
-    private const NUNCA = ['greeting', 'porque', 'baja', 'optout', 'reason_prefix'];
+    /** @var list<string> El último tramo de lo que nunca se edita (ver la cabecera), con los fragmentos sueltos al final. */
+    private const NUNCA = ['greeting', 'porque', 'baja', 'optout', 'reason_prefix', 'product_fallback', 'amount_discount', 'amount_surcharge'];
 
     /** @var list<string> Un tramo intermedio de lo que nunca se edita: datos y fragmentos. */
     private const NUNCA_TRAMOS = ['providers', 'actions'];
@@ -115,9 +119,13 @@ final class MailTextCatalog
         $cargador = self::cargador();
         $claves = [];
         foreach (self::CORREOS[$correo][2] as $tramo) {
-            foreach ($cargador->hojasDeFabrica(self::IDIOMA_BASE, $tramo) as $dentro => $texto) {
-                if (self::seEdita((string) $dentro, $texto)) {
-                    $claves[] = $tramo.'.'.$dentro;
+            // Un tramo que es UN texto da ese bloque; si no, cada hoja del tramo.
+            $unTexto = $cargador->deFabrica(self::IDIOMA_BASE, $tramo);
+            $hojas = $unTexto !== null ? ['' => $unTexto] : $cargador->hojasDeFabrica(self::IDIOMA_BASE, $tramo);
+            foreach ($hojas as $dentro => $texto) {
+                $clave = $dentro === '' ? $tramo : $tramo.'.'.$dentro;
+                if (self::seEdita($clave, $texto)) {
+                    $claves[] = $clave;
                 }
             }
         }
@@ -161,9 +169,10 @@ final class MailTextCatalog
         self::$indice = null;
     }
 
-    private static function seEdita(string $dentro, string $texto): bool
+    /** Por la clave ENTERA: su último nombre y sus tramos intermedios (ningún grupo ni correo se llama como un fragmento). */
+    private static function seEdita(string $clave, string $texto): bool
     {
-        $tramos = explode('.', $dentro);
+        $tramos = explode('.', $clave);
         if (in_array(end($tramos), self::NUNCA, true)) {
             return false;
         }

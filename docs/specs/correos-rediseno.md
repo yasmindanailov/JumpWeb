@@ -1,7 +1,7 @@
 # [SPEC] El rediseño de los correos — la plantilla nueva, los de la reserva al brief y los comerciales
 
 > Estado: 🟦 **medida el 29-09; el orden, el 7 y los textos editables, decididos por el owner (`#801`, `#802`); la R1·T,
-> construida el 30-09** · Última actualización: 2026-09-30 ·
+> en `main` el 30-09 con su visto bueno** · Última actualización: 2026-09-30 ·
 > Decisiones: `#800` (ahora los correos), `#801` (el 7, las ocasiones y el orden), `#802` (los textos, editables desde el
 > panel), `#803` (el botón principal, como el diseño), `#804` (los enlaces legales se quedan en el pie), `#789` (los
 > correos, del carril del SPA),
@@ -19,10 +19,10 @@
   Outlook.com (`MailThemeTest`); (3) un comercial lleva su porqué y la baja de un toque, también
   en `List-Unsubscribe` (LSSI 22.1, `#750`), y sale solo con su consentimiento; (4) la marca `jw_e` y el píxel siguen sus
   reglas (`#795`, `#797`); (5) los de la reserva, sin ofertas; (6) «nada que ya no sea verdad»: con la cuenta con contraseña
-  (23-09), los textos del 8 del brief están desfasados, y el diseño lo dice.
-- **Estado**: 🟦 ✅ **R1a la plantilla y R1b los iconos, en `main` y aprobadas** (29-09, §4.1.2 y §4.1.3; `#803`, `#804`)
-  → 🟦 **R1·T los textos editables, CONSTRUIDA** (§4.2, `#802`; al detalle §4.2.1, lo construido §4.2.2; falta el ojo del
-  owner) → R1c → la R2.
+  (23-09), los textos del 8 del brief están desfasados, y el diseño lo dice; (7) todo texto de un correo al cliente es
+  editable (R1·T): un bloque nuevo sale en el panel, la negrita solo en párrafos y avisos, y `MailPreviewsTest` lo pinta.
+- **Estado**: 🟦 ✅ **R1a la plantilla y R1b los iconos** (29-09, §4.1.2 y §4.1.3; `#803`, `#804`) y ✅ **R1·T los textos
+  editables** (30-09, §4.2, `#802`; revisada antes de `main`, §4.2.2), en `main` y aprobadas → R1c → la R2.
 - **Invariantes**: `RGPD-01` (lo enviado), `RGPD-07`, el consentimiento de marketing; `PAY-14` (se encolan).
 
 ## 1. Contexto — medido el 29-09
@@ -286,8 +286,9 @@ una sonda por tanda; los comerciales con su prueba de consentimiento y de «una 
      comprueba que ninguna editable se usa fuera de su correo). El cargador solo superpone claves del catálogo.
   4. **Las reglas al guardar** (`MailTexts::guardar`, con su motivo por idioma): las `{variables}` del texto de fábrica son
      OBLIGATORIAS y no se admiten otras (un plazo o un código no puede desaparecer: «nada que ya no sea verdad»); sin HTML
-     (solo `**negrita**`, balanceada); llaves balanceadas; ni vacío ni más largo que su tope (asunto y chapa, 150; el resto,
-     1.000). Rastro por cambio (`emails.text_updated` / `emails.text_restored`, con el texto: no es de una persona).
+     (solo `**negrita**`, balanceada, y solo donde el molde la pinta: párrafos y avisos, §4.2.2); llaves balanceadas; ni
+     vacío ni más largo que su tope (asunto y chapa, 150; el resto, 1.000). Rastro por cambio (`emails.text_updated` /
+     `emails.text_restored`, con el texto: no es de una persona).
   5. **La pantalla**: Ajustes → Sistema → «Textos de los correos» (`MailTexts`), permiso propio `emails.edit_texts` (gestión,
      no del staff por defecto). La lista por categoría con su estado (de fábrica · personalizado · «sin traducir» si un idioma
      cambió y otro no); dentro, un bloque por texto con su nombre humano (Asunto, Chapa, Titular, Adelanto…), el de fábrica
@@ -303,7 +304,7 @@ una sonda por tanda; los comerciales con su prueba de consentimiento y de «una 
   (cada correo del catálogo pinta o dice su motivo; el borrador no se guarda ni se filtra a otro pintado), la guarda de claves
   compartidas y `AdminNavigationTest`; arnés `scripts/mutar-correo-r1t.sh`; sonda en el panel; `MODELO-DATOS` y `PANEL-ADMIN`.
 
-#### 4.2.2 La R1·T, lo construido (30-09; 🟦 falta el ojo del owner en el panel)
+#### 4.2.2 La R1·T, lo construido (30-09; ✅ revisada antes de `main` y con el visto bueno del owner, «visto bueno, a main»)
 
 - **Piezas**: la tabla `mail_texts` y `Content\Models\MailText` (alias `mail_text`); `MailTextRules` (lógica pura: variables
   de fábrica `:code` ↔ del parque `{code}`, topes 150/200/1.000, siete motivos en su orden); `MailTexts` (la ÚNICA puerta de
@@ -314,8 +315,9 @@ una sonda por tanda; los comerciales con su prueba de consentimiento y de «una 
 - **Decidido al construir** (del agente contra `#802`; vetable al ojo): (1) guardar es **TODO o NADA** en los tres idiomas y
   solo lo que cambió: con un bloque roto no se guarda ninguno y cada uno dice el suyo en su campo; (2) **igual que el de
   fábrica = de fábrica**: se BORRA la fila, o congelaría el correo y el siguiente arreglo del producto no llegaría; (3) una
-  fila cuyas variables ya no casan con el texto de fábrica de hoy **no se pinta** (sale el de fábrica) y la lista la marca
-  «desfasado»; (4) con la caché caída, la BASE, nunca el de fábrica en silencio; (5) la vista previa EJECUTA el correo con el
+  fila que HOY no pasaría las reglas de guardar (sus variables ya no casan con el texto de fábrica, o cambió una regla)
+  **no se pinta** (sale el de fábrica) y la lista la marca «desfasado»: el cargador y la página usan el mismo filtro,
+  `MailTextRules::problema`; (4) con la caché caída, la BASE, nunca el de fábrica en silencio; (5) la vista previa EJECUTA el correo con el
   caso real más reciente a nombre de quien mira; un bloque del borrador que no pasa sus reglas no se pinta; (6) «Volver al de
   fábrica» solo en el bloque que difiere —en todos era ruido, visto en la sonda— y el campo avisa a la página al salir
   (`live(onBlur)`, 160–180 ms medidos) para ese botón y la chapa de su pestaña; (7) quedan fuera el saludo (ya no se pinta),
@@ -325,17 +327,34 @@ una sonda por tanda; los comerciales con su prueba de consentimiento y de «una 
 - **El permiso en cada acción** (`SEC-04`) lo pone Filament: `CanAuthorizeAccess::hydrateCanAuthorizeAccess()` corre
   `canAccess()` en CADA petición. La página llevaba una copia que el arnés midió EQUIVALENTE (sobrevivía): se retiró, y
   `test_the_permission_is_asked_again_on_every_action` fija la propiedad venga de donde venga.
-- **Guardas**: `MailTextsTest` (12), `MailTextCatalogTest` (5), `MailPreviewsTest` (4), `EmailTextsPageTest` (11) y
-  `AdminNavigationTest` (28 tarjetas). Arnés `scripts/mutar-correo-r1t.sh` (`SOLO=` por nombre), **48/48 muerden** (~15 min;
-  cada mutante con las pruebas de su capa). Tres supervivientes en la primera pasada, los tres preguntas al test: una
-  etiqueta que solo abre (`<br>`), un borrador con el grupo ya en memoria del traductor y el permiso de arriba.
+- **Revisado antes de `main`** (30-09 tarde, con el owner: «arreglar antes»). Medido pintando los 29 correos con una MARCA
+  en cada bloque, en es/en/fr (el medidor `medir-r1t-bloques.php`, en la carpeta de auditoría, fuera de git; `CARRIL-SPA`
+  §8 (26)), salieron cuatro defectos:
+  (1) **la negrita donde el molde no la pinta**: el panel la ofrecía en todos los bloques y en 141 de 278 (asunto, adelanto,
+  chapa, titular, botones, títulos y etiquetas) llegaba con sus asteriscos → `MailTextRules::admiteNegrita` (por el último
+  tramo, como el tope) y el motivo `sin_negrita`; (2) **tres fragmentos sueltos editables**: el nombre de reserva de un
+  producto borrado (`product_fallback`, que va también al ASUNTO) y los importes rotulados del suplemento → fuera, como
+  `actions.*`; (3) **«Confirmar un correo nuevo» se previsualizaba sin código**, la versión que ya no sale (`#856`): los 6
+  bloques de la real no se veían y el panel repetía cinco nombres → la vista previa con código, y un tramo del catálogo
+  puede ser UN texto (del de antes, solo el botón y «si no fuiste tú»); (4) **la copia de una autorización en EN/FR pintaba
+  la firma española** (sale en el idioma de la versión firmada) → el caso, la última firma en el idioma de la pestaña; sin
+  ella, el motivo lo dice. Y lo que pidió plataforma (un correo de código sin `{code}`) ya lo impedían guardar y el
+  cargador: ahora el cargador aplica las reglas ENTERAS de guardar, con prueba sobre las claves reales. Añadido (visto
+  bueno): encima de la vista previa, **lo que se lee en la bandeja** (asunto y adelanto), que el cuerpo no enseña.
+- **Guardas**: `MailTextsTest` (14), `MailTextCatalogTest` (6), `MailPreviewsTest` (7: la del MOLDE pinta cada correo con
+  su marca por bloque —todo bloque sale, y la negrita solo en `<strong>`— con 34 condicionales declarados, cada uno con su
+  condición), `EmailTextsPageTest` (15) y `AdminNavigationTest` (28 tarjetas). Arnés `scripts/mutar-correo-r1t.sh`
+  (`SOLO=` por nombre), **63/63 muerden** (~20 min; cada mutante con las pruebas de su capa; dos de la negrita, solo con la
+  del molde). En la primera pasada (48) hubo tres supervivientes, los tres preguntas al test: una etiqueta que solo abre
+  (`<br>`), un borrador con el grupo ya en memoria del traductor y el permiso de arriba.
 - **Verificado**: sonda `storage/app/audit/sonda-r1t.mjs` a 1280, 820 y 390 (sin desborde ni errores de consola): la lista
   (29), un correo (45 bloques), la vista previa en claro y oscuro con el borrador dentro e inerte, un texto roto que no se
   guarda y lo dice en su campo, guardar («Personalizado», y en pantalla solo ese aviso) y volver al de fábrica (la fila,
-  borrada). El fixture del ojo,
-  `ojo-r1t.php` (`CARRIL-SPA` §8 (26)).
-- **Falta**: el ojo del owner; el copy del brief lo escribe el parque en SU panel al desplegar (white-label). La R2 y la C1
-  se escriben contra estas claves.
+  borrada). La revisión, `sonda-r1t-revision.mjs` a 1280 y 390: la negrita en el asunto, la bandeja, el correo nuevo (8
+  bloques, el código) y la firma por idioma. El fixture del ojo, `ojo-r1t.php` (`CARRIL-SPA` §8 (26)).
+- **Queda** (propuesta, no hecha): 38 bloques condicionales no salen en la vista previa si el último caso no los trae
+  («Cambio de día u hora»…); se podrían marcar «solo sale si…» o pintar con un caso de ejemplo. El copy del brief lo escribe
+  el parque en SU panel al desplegar (white-label). La R2 y la C1 se escriben contra estas claves.
 
 ## 7. Revisión y decisión
 

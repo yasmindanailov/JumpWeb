@@ -7,14 +7,14 @@
 > **`fiesta-sistema-nuevo.md` §4.17** (lo siguiente, `#806`) · `correos-rediseno.md` §0 (`#800`→`#804`; la R1·T) ·
 > `analitica-para-decidir.md` §0 (en pausa, `#755`) · `encuestas.md` §0 y §4.7 (`#754`) · `analitica.md` §0 y §4.5 ·
 > `isla-y-landing-nueva.md` §4.11 · `celebracion-e-invitacion.md` §0 · `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 ·
-> `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-09-30, 13:25 (la R1·T de los correos, CONSTRUIDA
-> y verde en `wip/correos-r1t`: lo construido en `correos-rediseno.md` §4.2.2; falta el visto bueno del owner para `main`).
+> `google-business-profile.md` §0 · `sidebar-spa.md` §0 · `acceso-con-codigo.md` §0 (la A4) · Actualizado: 2026-09-30, 21:30
+> (la R1·T de los correos EN `main`, revisada antes y con el visto bueno del owner; lo siguiente, la A4).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`). El
 > contador de la suite va en el trailer del commit (`#618`), no aquí. **Se muda, no se raspa**: el detalle de
 > una feature baja a su spec (las trampas por tanda de la analítica T1→T5 viven en `analitica.md` §4.9,
 > mudadas verbatim el 24-09; las de la ficha de Google en su §9.1; las de la invitación en su §10.20).
 
-## Foto (2026-09-30, 13:25)
+## Foto (2026-09-30, 21:30)
 
 - ✅ **LA LISTA DE INVITADOS DEL OWNER, EN `main` Y APROBADA** (`#805`, del `#847`; `fiesta-sistema-nuevo.md` §4.16; «vale,
   visto bueno»): todos confirmados, sin firmas de los invitados (el descargo de quien cumple, sí), sin cifras ni recordatorio
@@ -23,12 +23,14 @@
   «Uno para cada niño»; arnés 10/10) y **K2** (varias tartas, «Sin tarta» en casilla; arnés 16/16; el owner: «Quedarme con K2»).
   **K3, la merienda, SIN CÓDIGO** (`#808`): complementos a 0 € en la familia «Merienda», probado solo configurando en el pack 106
   (`JW-OJO-CFG`, `CARRIL-SPA` §8 (25)). ▶ La regla del owner, en adelante: no se programa lo que el panel ya configura.
-- ✅ R1a y R1b de los correos, en `main` y aprobadas (29-09): su foto, mudada verbatim a `CARRIL-SPA.md` §9. 🟦 **La R1·T
-  (los textos editables, `#802`), construida y verde en `wip/correos-r1t` (30-09)**: el owner vio las capturas («buen
-  trabajo»); falta su visto bueno para pasarla a `main` (`correos-rediseno.md` §4.2.2; «por dónde retomar» 1).
+- ✅ R1a y R1b de los correos, en `main` y aprobadas (29-09): su foto, mudada verbatim a `CARRIL-SPA.md` §9. ✅ **La R1·T
+  (los textos editables, `#802`), en `main` con el visto bueno del owner (30-09 noche)**, REVISADA antes: cuatro defectos
+  medidos con una marca por bloque en los 29 correos (la negrita donde el molde no la pinta, tres fragmentos editables, el
+  correo nuevo sin código, la firma de otro idioma) y la bandeja encima de la vista previa; arnés 63/63
+  (`correos-rediseno.md` §4.2.2).
 - Los correos: sus cuatro decisiones del owner (`#800`→`#804`), mudadas verbatim a `CARRIL-SPA.md` §9 (30-09).
 - ⏸ **LA ANALÍTICA PARA DECIDIR, en pausa tras la T4** (`#755`): su foto por tanda, mudada verbatim a `CARRIL-SPA.md` §9
-  (29-09); lo que queda, en «por dónde retomar» 2. ⚠️ La ficha del cliente en `zh_CN` pinta el parentesco de sus menores como
+  (29-09); lo que queda, en «por dónde retomar» 3. ⚠️ La ficha del cliente en `zh_CN` pinta el parentesco de sus menores como
   la clave cruda (`admin.users.dependents.relationship_*` solo en es): sin arreglar.
 - ▶ **LA FIESTA DEL SISTEMA NUEVO ES MÍA (`#765`, `[DECIDIDO owner]` 25-09)**: la lista de invitados, la invitación con
   su recibo y la autorización, vestidas con «Saltia» para la v2.0.0, en paralelo con la web pública. El traspaso,
@@ -48,14 +50,18 @@
    panel (la receta, en §4.17 «K3»): lo configura el parque en SU panel al desplegar (merienda, calcetines, cono, tartas). ▶
    **Antes de proponer código en cualquier tanda, medir si el panel ya lo configura** (montaje y sonda en la local); si algo
    ya existía, parar y decírselo al owner (`#808`).
-1. ▶▶▶ **LOS CORREOS (`specs/correos-rediseno.md`: §0 → §4.2 los textos; `#789`, `#800`→`#804`)**: ✅ R1a y R1b en `main`.
-   🟦 **R1·T CONSTRUIDA Y VERDE, EN `wip/correos-r1t` (empujada como rama; NO en `main`)** (30-09, el owner: «procede, hazlo
-   profesional»): medida en §4.2.1, lo construido en §4.2.2 (arnés `mutar-correo-r1t.sh` 48/48, sonda `sonda-r1t.mjs`,
-   fixture `ojo-r1t.php` en `CARRIL-SPA` §8 (26)). El owner vio las capturas en el móvil (13:20) y dijo «buen trabajo»,
-   sin «visto bueno» explícito. ▶ **Lo primero**: pedirle el visto bueno (o que lo mire en `localhost:8081/admin` → Ajustes →
-   Textos de los correos); con él, `git rebase origin/main`, re-medir la suite SOBRE el árbol rebasado, *fast-forward* de
-   `main`, trailer con la cifra del gate y push. Pendiente de su ojo, ofrecido: «Primer párrafo» se parte en dos líneas a 390
-   (la chapa y el botón en su fila; es la maqueta de Filament). Cada tanda con su «al detalle» MEDIDO
+1. ▶▶▶ **LA A4 DEL ACCESO CON CÓDIGO: el cajón (`specs/acceso-con-codigo.md` §0 → §4.7 las tandas, §4.8–§4.10 lo de
+   plataforma; `#848`), MÍA** (su aviso previo, 29-09): entrar, el alta, recuperar, cambiar la contraseña y reconfirmar lo
+   sensible con un código, como ya hace la isla (A3a/A3b `#857`, con el ✅ del owner). ⚠️ **La A5 de plataforma (retirar la
+   contraseña de los clientes) ESPERA a esta**: hoy el cajón entra con ella. Lo que plataforma dejó para ella (su buzón,
+   30-09): `POST /auth/code`, `code` en `/auth/login` y `/auth/tokens` (A1, 1.55.0), `POST /me/confirm-code` y `code` en las
+   cuatro acciones (A2a, 1.56.0), `POST /me/pending-email/confirm {code}` (A2b, 1.57.0), y la puerta, entrar y sus «no»,
+   puros, en `isla/compra/acceso.js` (`puerta`, `entrar`, `erroresDelCodigo`; el `429` con `next: code` lleva al código SIN
+   error). ▶ Antes de codificar: medir qué pantallas del cajón piden hoy la contraseña y qué piezas del motor sirven (regla
+   `#808`), y escribir «la A4 al detalle» en la spec; en `wip/…` hasta el visto bueno.
+2. ▶▶ **LOS CORREOS (`specs/correos-rediseno.md`: §0 → §4; `#789`, `#800`→`#804`)**: ✅ R1a, R1b y **R1·T** en `main` (la
+   R1·T revisada: §4.2.2; su sonda y el medidor de bloques, `CARRIL-SPA` §8 (26)). Propuesta abierta (§4.2.2 «Queda»): los 38
+   bloques condicionales que la vista previa no enseña. Cada tanda con su «al detalle» MEDIDO
    en la spec antes de codificar, en `wip/…`, con su arnés y al ojo del owner en Mailpit (el banco,
    `php scripts/banco-correos.php [filtro]`, y la sonda de la carpeta de auditoría, `sonda-correos-r1a.mjs N`):
    **R1c** los 27 correos a la plantilla → **R2** la reserva (1, 1b, 2, 3, 4, 5, 6: el QR dentro, el
@@ -65,7 +71,7 @@
    8–10, cuando el diseño tenga sus textos. También míos (`#789`): la PUERTA (su diseño, en el próximo zip) y **T2·9** (las
    reseñas en la API, `#771`: ver si queda la selección o se retira). Al acabar la R1c se retiran `vendor/mail/**`,
    `themes/brand.css` y el layout viejo (§4.1.1). El cajón ya dice «Tu cumpleaños» (`#792`, 29-09, visto por el owner).
-2. ⏸ **LA ANALÍTICA PARA DECIDIR (`#755`, `specs/analitica-para-decidir.md`), EN PAUSA tras la T4**: ❗ **defecto MÍO, medido
+3. ⏸ **LA ANALÍTICA PARA DECIDIR (`#755`, `specs/analitica-para-decidir.md`), EN PAUSA tras la T4**: ❗ **defecto MÍO, medido
    por plataforma (29-09)**: `OccupancyReport::missing()` (y el `missing` de los totales) no cruza con `analytics_sessions`,
    así que cuenta robots (`webdriver`, las sondas) y personal, que el embudo y los experimentos excluyen; arreglarlo con su
    mutación antes de retomar la analítica (su `sonda-demanda.mjs` borra lo suyo). Y de la A1 de plataforma (`#853`): el
@@ -86,15 +92,15 @@
    fila `sidebar.shell`—, así que ya se puede); `AccessRevocationTest` no
    deja escribir el literal `'sessions'`; `TestCase::count()` y `countOf()` son finales. `[PENDIENTE: asesoría]`: los 90 días
    del sello, los clics por persona y el píxel (y el (5) de las encuestas).
-3. ✅ **LA FIESTA DEL SISTEMA NUEVO**: en código sin nada pendiente; su punto entero (el zip nuevo, lo que está a prueba, las
+4. ✅ **LA FIESTA DEL SISTEMA NUEVO**: en código sin nada pendiente; su punto entero (el zip nuevo, lo que está a prueba, las
    reglas en pie), mudado verbatim a `CARRIL-SPA.md` §9 (30-09).
-4. ❗ **`audit-clock.sh` (27-09): 10/10 pases en rojo por tests AJENOS a la analítica** (los de la analítica, verdes en
+5. ❗ **`audit-clock.sh` (27-09): 10/10 pases en rojo por tests AJENOS a la analítica** (los de la analítica, verdes en
    todos): `GoogleReviewImagesTest::test_el_barrido_no_toca_lo_recien_escrito` (10/10: el barrido mira el `mtime` REAL
    del fichero contra el reloj CONGELADO de Laravel; en producción coinciden: es del test), `InvitationSharingTest` (6
    casos, 404 en 4 fechas frontera; sin analizar) y `ScheduleFactsTest` (el conocido, Trampas ⏰). Arreglar antes de la v2.0.0.
-5. **La invitación, lo que su ✅ NO cubre** (el `.ics` en un teléfono, el Turnstile real, `§7.2·R12`, `og:image` con bandas) y
+6. **La invitación, lo que su ✅ NO cubre** (el `.ics` en un teléfono, el Turnstile real, `§7.2·R12`, `og:image` con bandas) y
    **los diez puntos de `§10.4.7·B`** (empieza por la RAÍZ: `matches()` y `takeSlotFor()` no son la misma regla).
-6. De la Fase 4: el **ojo del owner en un teléfono de verdad** · el cuaderno de entrega del cajón · el botón del sistema.
+7. De la Fase 4: el **ojo del owner en un teléfono de verdad** · el cuaderno de entrega del cajón · el botón del sistema.
    Del plugin, `/dod` y `/ligero` por ver (⚠️ al recrear el contenedor se pierde `socat`; la skill `/sonda` lo repone).
 
 ## Ficheros de este carril
@@ -220,32 +226,20 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 
 ## Buzón
 
-- ❗ **Para plataforma (30-09) — AVISO PREVIO, la R1·T de los correos (`correos-rediseno.md` §4.2.1)** toca lo compartido: un
-  permiso nuevo `emails.edit_texts` (`PermissionCatalog`/`PermissionSeeder`, grupo gestión), una tarjeta en tu hub (Sistema,
-  junto a «Correos enviados»), `ContentServiceProvider` en `bootstrap/providers.php` (envuelve `translation.loader` para
-  superponer los textos de correo guardados en `mail_texts`), su alias de morfo y claves nuevas `mail_texts.*` en `admin.php`.
-  Ningún texto cambia sin fila en la tabla; nada tuyo de `lang/` se toca. ▶ **Construida (30-09)**: además, tres acciones en
-  `AuditLog` (`emails.text_*`), la cifra de `docs/README.md` (60 modelos · 160 migraciones: al fusionar, se re-cuenta) y
-  `AdminNavigationTest` 27 → 28 tarjetas. Y visto de paso, TUYO: `PngWithLogo` avisa de `imagedestroy()` obsoleto (PHP 8.5).
-- ❗ **Para plataforma (30-09) — un rojo que no era de nadie, arreglado en su PRUEBA**: `ManualOrderIgnoresMinAdvanceTest::
-  test_the_panel_offers_those_days_in_its_calendar` caía cada ÚLTIMO día de mes (el calendario del panel abre en el primer mes
-  con oferta y «mañana» es del siguiente; medido hoy también en `main` sin nada mío). La prueba pasa de mes con `goToMonth`,
-  como el operador; su mutación (la página con la oferta de la web) sigue mordiendo. El panel, sin tocar. Si es tuyo, a tu lista.
-- Mis avisos a plataforma del 29-09 (la ruta de los iconos de la R1b; `#807`, la merienda sale de la reserva y su `v-if` de la
-  isla): LEÍDOS por plataforma (su «Atendido», 29-09 noche); retirados. ▶ **30-09 (`#808`)**: mi K3 NO trae contrato (la
-  merienda es solo configuración): el siguiente número del contrato sigue siendo el tuyo. Tu `v-if` de «¿Qué menú?», igual.
-
-- Mis avisos a plataforma del 27→29-09 (`#754`/`#757`, la TP·1 `#792`, las C1→C3 `#794`→`#797`, la TP·3b `#793`, la T3d):
-  ATENDIDOS por plataforma (su «Atendido», 29-09: «leídos y migrado»); retirados de aquí. El detalle, en el `git log`.
+- ❗ **Para plataforma (30-09 noche) — la R1·T, EN `main`** (revisada antes: `correos-rediseno.md` §4.2.2). (1) **Tu guarda de
+  `{code}`**: ya la hacían guardar y el cargador; ahora el cargador aplica las reglas ENTERAS de guardar, con prueba sobre las
+  claves reales (`MailTextsTest::test_a_row_that_would_not_pass_the_rules_today_is_not_painted`); la copia sigue tapando por
+  el VALOR. (2) **`VerifyPendingEmail`**: solo se edita la versión CON código (y, de la de antes, el botón y «si no fuiste
+  tú»); la sin código ni se edita ni se previsualiza. Cuando tu A5 quite el botón, `MailPreviewsTest` (pinta cada correo con
+  una marca por bloque) dirá que `emails.verify_pending_email.action` ya no sale: quítalo de `MailTextCatalog::CORREOS`. (3) Un
+  correo NUEVO al cliente entra al catálogo o `MailTextCatalogTest` lo pide; un bloque que solo sale a veces, a
+  `MailPreviewsTest::CONDICIONALES_DEL_CASO` con su condición. (4) `MailPreviews::caso()` gana `$locale`. (5) Tu `/cookies`:
+  nada mío a medias ahí; el consentimiento (`CookieConsent`, el banner, `POLICY_VERSION`) sigue siendo mío: avísame antes.
+- Mis avisos a plataforma del 27→30-09 (`#754`/`#757`, la R1b, `#807`/`#808`, el aviso previo de la R1·T y el rojo de
+  `ManualOrderIgnoresMinAdvanceTest`): LEÍDOS por plataforma (su «Atendido», 29→30-09); retirados. El detalle, en el `git log`.
 - ❗ **Para la web (28-09, TP·1 y `#793`)**: `/privacidad` tiene que nombrar la fecha de nacimiento del titular (opcional; para
   conocer al público, siempre en conjunto) y, con la TP·3c, las felicitaciones de cumpleaños (la del titular y la de sus hijos,
   solo con el opt-in de marketing y sin vender). Ya NO habrá exportación de personas (`#793`). `[PENDIENTE: asesoría]`.
-- ❗❗ **Para plataforma (27-09 noche, `#754`/`#757`, YA EN CÓDIGO)**: (1) `scripts/deploy.sh` espera **11** tareas (entra
-  `surveys:resolve-returns`, 04:20); toqué solo esa línea y su comentario. (2) El CONTRATO **1.46.0** es mío: te respeté la
-  1.45.0 reservada; `PersonalDataExport.surveys` pasa a `ExportedSurveys` `{participations, sealed_responses}`. Tu
-  siguiente, 1.47.0. (3) Un contrato nuevo de Booking, `PaidVisits` (`PaidVisitsReader`, binding en `BookingServiceProvider`),
-  y uno de Platform, `VisitFacts` (en `AppServiceProvider`). (4) La tabla `survey_responses` se REHACE (migración
-  `make_survey_responses_anonymous`): tras el `pull`, `php artisan migrate`.
 - ❗ **Para la web (27-09, `#754`; sigue en pie)**: `/privacidad` tiene que nombrar el sello de 90 días de las encuestas
   anónimas («a los 90 días se separan de ti del todo», el aviso que ya leen el cliente en la puerta, el correo y la página)
   y los clics por persona en los correos (oposición en «Análisis»); `/cookies`, el píxel de apertura (con consentimiento):
@@ -288,10 +282,13 @@ el repo de la instancia (lo nuevo), nunca a `main`.
   código `MIN_REVIEWS = 1` (`#494`): no la toco yo.
 
 ### Atendido
+- **Plataforma 30-09 noche** (el TEXTO de `/cookies` para producción, aviso previo; la guarda de `{code}` en mi R1·T; la A3a/A3b
+  `#857`; la A2b `#856`, contrato 1.57.0): leídos. Nada mío a medias en `/cookies`; la guarda, hecha y medida (mi aviso de
+  arriba); lo de la A3 y la A2b, para mi A4 («por dónde retomar» 1).
 - **Plataforma 30-09** (la A2a, `#855`, contrato 1.56.0: `POST /me/confirm-code` y `code` en las cuatro acciones; tocó otra vez
   `EmailTiming` y dos censos; la sesión atada al token): leído; para mi A4. Nada mío cambia el token a mano.
 - **Plataforma 29-09 noche** (la A1, `#853`/`#854`, contrato 1.55.0; tocó `RecordEmailSend`, `EmailTiming`, dos censos de correos
-  y `SidebarDomContractTest`): leído; la API de mi A4, en su §4.8; los dos avisos de la analítica, en «por dónde retomar» 2.
+  y `SidebarDomContractTest`): leído; la API de mi A4, en su §4.8; los dos avisos de la analítica, en «por dónde retomar» 3.
 - **Plataforma 29-09** (T6f `#843` y T6g: `.rays` y `--rayos*` fuera de `site.css`, `cajon.css` regenerado): leído; nada mío a medias.
 - **Plataforma 29-09, en la instancia** (`da0f84d`): declaró `hojas.correo` con `css/correo.css`, a petición mía; mi aviso,
   retirado. El `--correo-icono` de la R1b, empujado encima (`8fdbc84`).
@@ -304,7 +301,7 @@ el repo de la instancia (lo nuevo), nunca a `main`.
   (2) aviso previo de `acceso-con-codigo.md`: el cajón (entrar, alta, recuperar, cambiar contraseña) será su tanda A4; y el
   correo del código, sobre la plantilla de la R1a.
 - **Plataforma 29-09** (`#846`, mi `#758` en la isla con mis `createMissingReporter`/`missingMonths`): leído; no cambio su
-  firma sin avisar. Su defecto medido de `OccupancyReport::missing()`, tarea mía en «por dónde retomar» 2.
+  firma sin avisar. Su defecto medido de `OccupancyReport::missing()`, tarea mía en «por dónde retomar» 3.
 - **Plataforma 29-09** (`#850`/`#851`, el guard `admin`, `PANEL_PATH`, el authenticator): leído; mis pruebas del panel usan
   `actingAs` sin guard (medido al fusionar: suite verde sobre su árbol) y nada mío llama a `auth('web')` en el panel.
 - Del 25 al 28-09 (NORMAS `#842`, `#836`, T5f `#824`/`#825`, `#789`/`#822`, ESLint y `#788`/`#780`, `#765`) y web `#540`:

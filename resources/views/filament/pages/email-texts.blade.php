@@ -4,7 +4,8 @@
     §4.5); con él, el CORREO: sus bloques en pestañas es/en/fr, «Guardar» y la vista previa.
 
     ⚠️ La vista previa es el correo DE VERDAD con lo que hay en la pantalla, INERTE: `iframe` con `sandbox` vacío y el HTML
-    desactivado (`EmailSendTable::inert`), como la de «Correos enviados» (`#794`, `#796`).
+    desactivado (`EmailSendTable::inert`), como la de «Correos enviados» (`#794`, `#796`). Encima, lo que se lee en la
+    bandeja (el asunto y el adelanto): son bloques que se editan y el cuerpo no los enseña.
 --}}
 <x-filament-panels::page>
     @if ($this->correo === null)
@@ -69,6 +70,14 @@
                         <x-filament::button size="sm" :color="$this->vistaOscuro ? 'primary' : 'gray'" wire:click="verVista(null, true)">{{ __('admin.mail_texts.oscuro') }}</x-filament::button>
                     </div>
                     @if ($this->vistaHtml !== null)
+                        {{-- Lo que se lee en la BANDEJA antes de abrirlo: el asunto y el adelanto, que el cuerpo no enseña. --}}
+                        <div class="mb-3 rounded-lg border border-gray-200 px-4 py-3 dark:border-white/10" data-email-texts-inbox>
+                            <p class="jj-hub__desc">{{ __('admin.mail_texts.bandeja') }}</p>
+                            <p class="font-semibold" data-email-texts-subject>{{ $this->vistaAsunto }}</p>
+                            @if (filled($this->vistaAdelanto))
+                                <p class="jj-hub__desc" data-email-texts-preheader>{{ $this->vistaAdelanto }}</p>
+                            @endif
+                        </div>
                         <iframe
                             title="{{ __('admin.mail_texts.vista') }}"
                             sandbox=""

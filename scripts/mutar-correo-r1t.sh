@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 # Arnés de mutación de la R1·T — LOS TEXTOS DE LOS CORREOS EDITABLES DESDE EL PANEL (`[DECIDIDO owner]` `#802`;
-# `specs/correos-rediseno.md` §4.2.1): las reglas de un texto del parque, el cargador que lo superpone al traductor (y sus
-# tres filtros), el almacén (su caché por versión, su rastro, «igual que el de fábrica = de fábrica», el borrador de la vista
-# previa), la página (todo o nada, solo lo que cambió, el permiso en cada acción, «Volver al de fábrica» solo donde hace
-# algo), lo que el catálogo nunca deja editar y la vista previa que no deja nada en la base.
+# `specs/correos-rediseno.md` §4.2.1): las reglas de un texto del parque (y la negrita solo donde el molde la pinta), el
+# cargador que lo superpone al traductor (y sus tres filtros: el tercero, las reglas de hoy), el almacén (su caché por
+# versión, su rastro, «igual que el de fábrica = de fábrica», el borrador de la vista previa), la página (todo o nada, solo lo
+# que cambió, el permiso en cada acción, «Volver al de fábrica» solo donde hace algo, la bandeja encima), lo que el catálogo
+# nunca deja editar (y los tramos que son un texto) y la vista previa que no deja nada en la base, pinta el correo que SALE y
+# en el idioma de la pestaña (medido el 30-09 antes de `main`, `§4.2.2`).
 #
 # Reglas de la casa dentro: verde antes de mutar · veredicto por código de salida · comprobar que la mutación SE APLICÓ y que
 # su ancla es ÚNICA · restaurar por COPIA DE SEGURIDAD y `touch`, no con `git checkout` (`#181`) · copia por RUTA. Cada
@@ -107,6 +109,18 @@ mutar "«subject_no_date» sin el tope de un asunto" "$REGLAS" \
   "str_starts_with(\$ultimo, 'subject'), \$ultimo === 'badge'" "\$ultimo === 'subject', \$ultimo === 'badge'" "$R"
 mutar "una hora («17:00») cuenta como variable" "$REGLAS" \
   "preg_match_all('/:([a-zA-Z_][a-zA-Z0-9_]*)/', \$fabrica, \$m);" "preg_match_all('/:([a-zA-Z0-9_]+)/', \$fabrica, \$m);" "$R"
+# La negrita, solo donde el molde la pinta (30-09: 141 de 278 textos la enseñaban con sus asteriscos).
+mutar "una negrita donde no se pinta se guarda" "$REGLAS" \
+  "        if (str_contains(\$texto, '**') && ! self::admiteNegrita(\$clave)) {" "        if (false) {" "$R"
+mutar "la negrita se admite en todos los bloques" "$REGLAS" \
+  "        return ! (str_starts_with(\$ultimo, 'subject') ||" "        return true || ! (str_starts_with(\$ultimo, 'subject') ||" "$R"
+mutar "«headline_no_date» admite negrita" "$REGLAS" \
+  "|| str_starts_with(\$ultimo, 'headline') ||" "|| \$ultimo === 'headline' ||" "$R"
+# Estas dos, SOLO con la vista previa: la guarda que pinta cada correo con su marca tiene que verlas sin la lista de la regla.
+mutar "los títulos de aviso admiten negrita (lo ve el molde)" "$REGLAS" \
+  "|| str_ends_with(\$ultimo, '_title') ||" "||" "MailPreviewsTest"
+mutar "los botones admiten negrita (lo ve el molde)" "$REGLAS" \
+  "|| str_starts_with(\$ultimo, 'action') ||" "||" "MailPreviewsTest"
 
 # ── El cargador: sus tres filtros y su conversión ─────────────────────────────────────────────────
 mutar "una fila fuera del catálogo se pinta" "$LOADER" \
@@ -114,9 +128,12 @@ mutar "una fila fuera del catálogo se pinta" "$LOADER" \
 mutar "una fila sin texto de fábrica en su idioma revienta" "$LOADER" \
   $'            if (! is_string($fabrica)) {\n                continue;\n            }\n' "" "$R"
 mutar "una fila con las variables de ayer se pinta" "$LOADER" \
-  "if (MailTextRules::variablesDelParque(\$texto) !== \$variables) {" "if (false) {" "$R"
+  "if (MailTextRules::problema(\$texto, \$fabrica, \$clave) !== null) {" "if (false) {" "$R"
+mutar "el cargador solo mira las variables (se pinta una negrita de antes de la regla)" "$LOADER" \
+  "if (MailTextRules::problema(\$texto, \$fabrica, \$clave) !== null) {" \
+  "if (MailTextRules::variablesDelParque(\$texto) !== MailTextRules::variablesDeFabrica(\$fabrica)) {" "$R"
 mutar "la fila llega al traductor con sus llaves" "$LOADER" \
-  "Arr::set(\$lineas, \$dentro, MailTextRules::aTraductor(\$texto, \$variables));" "Arr::set(\$lineas, \$dentro, \$texto);" "$R"
+  "Arr::set(\$lineas, \$dentro, MailTextRules::aTraductor(\$texto, MailTextRules::variablesDeFabrica(\$fabrica)));" "Arr::set(\$lineas, \$dentro, \$texto);" "$R"
 mutar "el proveedor da por editable cualquier clave" "$PROVIDER" \
   "static fn (string \$clave): bool => MailTextCatalog::esEditable(\$clave)," "static fn (string \$clave): bool => true," "$R"
 
@@ -171,6 +188,11 @@ mutar "el aviso del error no queda apuntado" "$PAGINA" \
   "            \$this->avisoFallido = \$aviso->getId();" "" "$P"
 mutar "un correo que no existe abre un editor vacío" "$PAGINA" \
   "if (\$this->correo !== null && ! MailTextCatalog::existe(\$this->correo)) {" "if (false) {" "$P"
+mutar "«desfasado» solo mira las variables (y no es lo que no sale)" "$PAGINA" \
+  "return \$fabrica !== null && MailTextRules::problema(\$texto, \$fabrica, \$clave) === null;" \
+  "return \$fabrica !== null && MailTextRules::variablesDelParque(\$texto) === MailTextRules::variablesDeFabrica(\$fabrica);" "$P"
+mutar "la vista previa no dice el asunto de la bandeja" "$PAGINA" \
+  "        \$this->vistaAsunto = \$resultado['asunto'] ?? null;" "        \$this->vistaAsunto = null;" "$P"
 
 # ── Lo que el catálogo nunca deja editar ──────────────────────────────────────────────────────────
 mutar "lo legal y el saludo se editan" "$CATALOGO" \
@@ -181,6 +203,17 @@ mutar "un plural se edita con un editor de una frase" "$CATALOGO" \
   "        return ! str_contains(\$texto, '|');" "        return true;" "$C"
 mutar "un correo al cliente se cae del catálogo" "$CATALOGO" \
   "        'login_code' => [N\\LoginCode::class, 'cuenta', ['emails.login_code']]," "" "$C"
+mutar "un fragmento suelto se edita (el nombre de reserva va al asunto)" "$CATALOGO" \
+  "'reason_prefix', 'product_fallback', 'amount_discount', 'amount_surcharge'];" "'reason_prefix'];" "$C"
+mutar "un tramo que es un texto no da su bloque" "$CATALOGO" \
+  "\$hojas = \$unTexto !== null ? ['' => \$unTexto] : \$cargador->hojasDeFabrica(self::IDIOMA_BASE, \$tramo);" \
+  "\$hojas = \$cargador->hojasDeFabrica(self::IDIOMA_BASE, \$tramo);" "$C"
+mutar "el correo nuevo vuelve a ofrecer la versión sin código" "$CATALOGO" \
+  "['emails.verify_pending_email_code', 'emails.verify_pending_email.action', 'emails.verify_pending_email.ignore']" \
+  "['emails.verify_pending_email', 'emails.verify_pending_email_code']" "$C"
+mutar "el correo nuevo vuelve a ofrecer la versión sin código (lo ve el molde)" "$CATALOGO" \
+  "['emails.verify_pending_email_code', 'emails.verify_pending_email.action', 'emails.verify_pending_email.ignore']" \
+  "['emails.verify_pending_email', 'emails.verify_pending_email_code']" "MailPreviewsTest"
 
 # ── La vista previa ───────────────────────────────────────────────────────────────────────────────
 mutar "la vista previa deja en la base lo que escribe un toMail()" "$VISTA" \
@@ -193,6 +226,12 @@ mutar "la página se queda en el idioma de la vista previa" "$VISTA" \
   "            app()->setLocale(\$antes);" "" "$V"
 mutar "el oscuro sale claro" "$VISTA" \
   "        if (\$oscuro) {" "        if (false) {" "$V"
+mutar "la vista previa del correo nuevo, sin su código (la versión que ya no sale)" "$VISTA" \
+  "new N\\VerifyPendingEmail('482913')" "new N\\VerifyPendingEmail" "$V"
+mutar "la firma de otro idioma sirve de caso (lo escrito en la pestaña no se ve)" "$VISTA" \
+  $'                    ->whereHas(\'version\', static fn ($q) => $q->where(\'locale\', $locale))\n' "" "$V"
+mutar "la vista previa no trae el asunto" "$VISTA" \
+  "(string) \$mensaje->subject," "''," "$V"
 
 echo
 echo "$muerden/$total muerden"

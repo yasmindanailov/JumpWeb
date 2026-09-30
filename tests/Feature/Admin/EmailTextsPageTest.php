@@ -199,6 +199,72 @@ class EmailTextsPageTest extends TestCase
         $this->assertStringNotContainsString('ROTO', (string) $pagina->get('vistaHtml'));
     }
 
+    public function test_a_broken_block_in_the_preview_shows_what_would_still_go_out(): void
+    {
+        MailText::query()->create(['key' => self::INTRO, 'locale' => 'es', 'text' => 'GUARDADO {code}']);
+        $this->mountParty();
+
+        // Con un bloque roto no se guarda nada (todo o nada): lo que seguiría saliendo es lo GUARDADO, no el de fábrica. Lo
+        // decide la página; el cargador, sin ella, pintaría el de fábrica.
+        $html = (string) Livewire::withQueryParams(['correo' => self::CORREO])
+            ->actingAs($this->con(['emails.edit_texts']))
+            ->test(EmailTexts::class)
+            ->set('textos.es.'.self::INTRO, 'ROTO <i>{code}</i>')
+            ->call('verVista', 'es')
+            ->get('vistaHtml');
+
+        $this->assertStringNotContainsString('ROTO', $html);
+        $this->assertStringContainsString('GUARDADO R-', $html);
+    }
+
+    public function test_the_preview_shows_what_the_inbox_reads_above_the_mail(): void
+    {
+        // El asunto y el adelanto se editan y el cuerpo no los enseña: van encima, como en la bandeja de entrada.
+        Livewire::withQueryParams(['correo' => 'login_code'])
+            ->actingAs($this->con(['emails.edit_texts']))
+            ->test(EmailTexts::class)
+            ->set('textos.es.emails.login_code.subject', 'Entra con {code}')
+            ->call('verVista', 'es')
+            ->assertSet('vistaAsunto', 'Entra con 482 913')
+            ->assertSet('vistaAdelanto', 'Escríbelo donde lo pediste. Si no lo has pedido tú, ignora este correo.')
+            ->assertSeeHtml('data-email-texts-subject')
+            ->assertSee('Entra con 482 913');
+    }
+
+    public function test_bold_in_a_block_the_mail_paints_as_is_is_refused_in_its_field(): void
+    {
+        $pagina = Livewire::withQueryParams(['correo' => self::CORREO])
+            ->actingAs($this->con(['emails.edit_texts']))
+            ->test(EmailTexts::class)
+            ->set('textos.es.'.self::ASUNTO, '**Asunto** propio {code} {day}')
+            ->call('guardar')
+            ->assertHasErrors(['textos.es.'.self::ASUNTO]);
+
+        $this->assertSame(
+            'Aquí no hay negrita: este bloque sale tal cual y se verían los asteriscos. Quítalos.',
+            $pagina->errors()->first('textos.es.'.self::ASUNTO),
+        );
+        $this->assertSame(0, MailText::query()->count());
+    }
+
+    public function test_a_saved_text_that_would_not_pass_the_rules_today_is_out_of_date(): void
+    {
+        // Una fila que hoy no pasaría las reglas (la negrita en el asunto, de antes de la regla) no sale: la lista la cuenta
+        // «desfasada» y su bloque lo dice. Es el mismo filtro que el cargador.
+        MailText::query()->create(['key' => self::ASUNTO, 'locale' => 'es', 'text' => '**Asunto** propio {code} {day}']);
+        $editor = $this->con(['emails.edit_texts']);
+        $desfasados = static fn (): int => collect(Livewire::actingAs($editor)->test(EmailTexts::class)->instance()->tipos())
+            ->flatMap(static fn (array $t) => $t['items'])->firstWhere('correo', self::CORREO)['desfasados'];
+
+        $this->assertSame(1, $desfasados());
+        Livewire::withQueryParams(['correo' => self::CORREO])->actingAs($editor)->test(EmailTexts::class)
+            ->assertSee('Desfasado: sale el de fábrica');
+
+        // CONTROL: la misma fila sin la negrita está al día.
+        MailText::query()->where('key', self::ASUNTO)->update(['text' => 'Asunto propio {code} {day}']);
+        $this->assertSame(0, $desfasados());
+    }
+
     public function test_the_permission_is_asked_again_on_every_action(): void
     {
         $editor = $this->con(['emails.edit_texts']);

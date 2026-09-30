@@ -84,6 +84,27 @@ class MailTextsTest extends TestCase
         $this->assertSame(MailTextRules::TOPE, MailTextRules::tope('emails.x.intro'));
     }
 
+    public function test_bold_is_refused_where_the_mail_paints_the_text_as_is(): void
+    {
+        // El asunto, la bandeja, la cabecera, los botones, los títulos y las etiquetas salen TAL CUAL: un `**` ahí llegaría al
+        // cliente con sus asteriscos (medido el 30-09: 141 de 278 textos). `MailPreviewsTest` lo casa con el molde de verdad.
+        foreach (['subject', 'subject_no_date', 'preheader', 'badge', 'headline', 'headline_no_date', 'action', 'action_invite', 'boton', 'notice_title', 'balance_title', 'email_label'] as $bloque) {
+            $this->assertFalse(MailTextRules::admiteNegrita('emails.x.'.$bloque), $bloque);
+        }
+        // CONTROL: los párrafos y los avisos la pintan.
+        foreach (['intro', 'line1', 'linea', 'notice_body', 'balance', 'validity', 'ignore', 'outro_invite'] as $bloque) {
+            $this->assertTrue(MailTextRules::admiteNegrita('emails.x.'.$bloque), $bloque);
+        }
+
+        $fabrica = ':code es tu código para entrar';
+        $this->assertSame(['motivo' => 'sin_negrita'], MailTextRules::problema('**{code}** es tu código', $fabrica, 'emails.login_code.subject'));
+        // CONTROL: sin la negrita pasa, y un asterisco suelto no es negrita.
+        $this->assertNull(MailTextRules::problema('{code} es tu código', $fabrica, 'emails.login_code.subject'));
+        $this->assertNull(MailTextRules::problema('{code} es tu código*', $fabrica, 'emails.login_code.subject'));
+        // Y en un párrafo, la misma negrita sí.
+        $this->assertNull(MailTextRules::problema('Usa **{code}**.', ':code', 'emails.login_code.validity'));
+    }
+
     public function test_an_invalid_text_is_not_saved(): void
     {
         $fabrica = (string) MailTextCatalog::fabrica(self::CLAVE, 'es');
@@ -114,6 +135,25 @@ class MailTextsTest extends TestCase
         MailText::query()->where('key', self::CLAVE)->update(['text' => 'Nuevo {code}']);
         $this->invalidar();
         $this->assertSame('Nuevo R-7', trans(self::CLAVE, ['code' => 'R-7'], 'es'));
+    }
+
+    public function test_a_row_that_would_not_pass_the_rules_today_is_not_painted(): void
+    {
+        // Lo que pidió plataforma (30-09): un correo de código no sale sin su código, ni aunque la fila llegue a la base por
+        // otra puerta. Y una negrita donde el molde no la pinta, tampoco: el cargador aplica las reglas de GUARDAR.
+        MailText::query()->create(['key' => 'emails.login_code.headline', 'locale' => 'es', 'text' => 'Tu código']);
+        MailText::query()->create(['key' => 'emails.login_code.subject', 'locale' => 'es', 'text' => '**{code}** para entrar']);
+        $this->invalidar();
+
+        $this->assertSame('482 913', trans('emails.login_code.headline', ['code' => '482 913'], 'es'));
+        $this->assertStringNotContainsString('**', trans('emails.login_code.subject', ['code' => '482 913'], 'es'));
+
+        // CONTROL: las mismas filas, en regla, sí se pintan.
+        MailText::query()->where('key', 'emails.login_code.headline')->update(['text' => 'Código: {code}']);
+        MailText::query()->where('key', 'emails.login_code.subject')->update(['text' => '{code} para entrar']);
+        $this->invalidar();
+        $this->assertSame('Código: 482 913', trans('emails.login_code.headline', ['code' => '482 913'], 'es'));
+        $this->assertSame('482 913 para entrar', trans('emails.login_code.subject', ['code' => '482 913'], 'es'));
     }
 
     public function test_a_row_for_a_key_outside_the_catalog_is_never_painted(): void

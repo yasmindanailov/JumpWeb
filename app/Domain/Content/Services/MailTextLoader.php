@@ -16,9 +16,10 @@ use Illuminate\Support\Arr;
  *  - solo las claves EDITABLES (el catálogo de los correos): una fila de otra clave —otra puerta, un error— no cambia la
  *    web ni lo legal;
  *  - solo si su texto de fábrica EXISTE todavía (una clave renombrada en el producto deja la fila huérfana, no la pinta);
- *  - solo si sus variables son las MISMAS que las del texto de fábrica de hoy: si el producto cambió ese texto y sus datos,
- *    el del parque se queda sin pintar y sale el de fábrica —un correo con una variable que ya no llega saldría con
- *    `{code}` tal cual— y la pantalla lo marca desfasado.
+ *  - solo si PASA HOY LAS REGLAS contra el texto de fábrica de hoy, las mismas que al guardar (`MailTextRules::problema`):
+ *    si el producto cambió ese texto y sus datos, o una regla, el del parque se queda sin pintar y sale el de fábrica —un
+ *    correo con una variable que ya no llega saldría con `{code}` tal cual; uno con negrita donde no se pinta, con sus
+ *    asteriscos— y la pantalla lo marca desfasado. Un código de acceso no puede desaparecer ni por la base.
  */
 final class MailTextLoader implements Loader
 {
@@ -49,11 +50,10 @@ final class MailTextLoader implements Loader
             if (! is_string($fabrica)) {
                 continue;
             }
-            $variables = MailTextRules::variablesDeFabrica($fabrica);
-            if (MailTextRules::variablesDelParque($texto) !== $variables) {
+            if (MailTextRules::problema($texto, $fabrica, $clave) !== null) {
                 continue;
             }
-            Arr::set($lineas, $dentro, MailTextRules::aTraductor($texto, $variables));
+            Arr::set($lineas, $dentro, MailTextRules::aTraductor($texto, MailTextRules::variablesDeFabrica($fabrica)));
         }
 
         return $lineas;

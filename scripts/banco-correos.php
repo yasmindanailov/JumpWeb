@@ -12,7 +12,8 @@
  * correo en Mailpit, a nombre del cliente de sondas. No limpia el buzón: una sonda que borra Mailpit se lleva por delante
  * lo que el owner tenía que mirar (`#503`).
  * ⚠️ Los datos son los que haya en la base: el último pedido pagado con franja, la última fiesta (un pack con franja),
- * la última firma y la primera encuesta. Un correo que no encuentra los suyos se salta con su motivo, no revienta el resto.
+ * la última firma en el idioma del cliente y la primera encuesta. Un correo que no encuentra los suyos se salta con su
+ * motivo, no revienta el resto.
  * ▶ Desde la R1·T (`#802`) los correos al cliente se construyen con `MailPreviews::constructores()` —la MISMA fuente que la
  * vista previa de «Textos de los correos»—, y los textos que el parque guardó en el panel salen en lo que llega.
  */
@@ -38,8 +39,10 @@ if (($idioma = getenv('IDIOMA')) !== false && $idioma !== '') {
 // Los del cliente, de la fuente de la vista previa; el del EQUIPO, que no está en su catálogo, aquí. El nombre, el de la clase.
 /** @var array<string, Closure(): (Correo|string)> */
 $correos = ['GoogleBusinessLocationChanged' => static fn () => new N\GoogleBusinessLocationChanged('Ficha nueva', 'Ficha de antes', 'Ana')];
+// El idioma del cliente elige el caso cuando el correo trae el suyo (la copia de una autorización: una firma en ese idioma).
+$locale = (string) ($cliente->locale ?: config('app.locale'));
 foreach (MailPreviews::constructores() as $clave => $crear) {
-    $correos[Str::studly($clave)] = static fn () => $crear($cliente);
+    $correos[Str::studly($clave)] = static fn () => $crear($cliente, $locale);
 }
 
 $enviados = $fallos = 0;

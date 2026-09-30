@@ -763,7 +763,8 @@ el procedimiento es éste.
 del producto (`lang/*/…`): volver al de fábrica, o guardar uno igual, BORRA la fila. Único escritor `Content\Services\MailTexts`
 (`guardar`/`restaurar`, con rastro `emails.text_updated`/`emails.text_restored`: el texto no es de una persona); la lee
 `MailTextLoader`, que la superpone al traductor solo si la clave es editable (`MailTextCatalog`), su texto de fábrica existe en
-ese idioma y sus variables son las de hoy. Caché por versión (`mail_texts.version`).
+ese idioma y la fila pasa HOY las reglas de guardar (`MailTextRules::problema`: sus variables, su tope, la negrita donde se
+pinta); si no, sale el de fábrica y el panel la marca «desfasada». Caché por versión (`mail_texts.version`).
 
 ### `settings` — clave-valor white-label (Setting)
 `key` unique · `value` text · `group` (default `general`). Lectura vía

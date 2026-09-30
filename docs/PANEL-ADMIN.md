@@ -241,9 +241,11 @@ Acciones: **«Marcar preparada»** y **«Marcar canjeada»**.
     `emails.edit_texts`, de gestión y no del staff por defecto; `[DECIDIDO owner]` `#802`, que
     SUSTITUYE el «solo colores» heredado): lo que dice cada correo al cliente, bloque a bloque y en
     es/en/fr, con el texto de fábrica y sus `{variables}` debajo, «Volver al de fábrica», la vista
-    previa del correo DE VERDAD (último caso real, claro/oscuro, inerte) y el rastro. La estructura,
-    lo legal y los datos NO se editan; las variables de cada texto son obligatorias. Guardar es todo o
-    nada (`specs/correos-rediseno.md` §4.2.2).
+    previa del correo DE VERDAD (último caso real, claro/oscuro, inerte; encima, el asunto y el
+    adelanto de la bandeja) y el rastro. La estructura, lo legal, los datos y los fragmentos NO se
+    editan; las variables de cada texto son obligatorias y la negrita va solo en párrafos y avisos (el
+    asunto, la cabecera, los botones y los títulos salen tal cual). Guardar es todo o nada
+    (`specs/correos-rediseno.md` §4.2.2).
 - **Textos legales** (aviso, privacidad, cookies, condiciones, waiver).
 - **Informes y exportaciones** (ventas, asistencia, reservas).
 

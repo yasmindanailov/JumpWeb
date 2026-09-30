@@ -40,6 +40,8 @@ class MailTextCatalogTest extends TestCase
     public function test_every_editable_text_is_painted_by_its_mail_and_by_nothing_else(): void
     {
         $fuentes = $this->fuentesDelProducto();
+        // El catálogo NOMBRA sus tramos (y un tramo puede ser un texto): declararla no es usarla.
+        unset($fuentes[(string) realpath((string) (new \ReflectionClass(MailTextCatalog::class))->getFileName())]);
         $fantasmas = [];
         $compartidas = [];
         $total = 0;
@@ -72,13 +74,20 @@ class MailTextCatalogTest extends TestCase
         foreach ([
             'fiesta.cumple_mail.baja', 'fiesta.cumple_mail.porque', 'surveys.mail.optout', // lo legal de un comercial
             'account.social_link_mail.providers.google', 'emails.confirmation_code.actions.change_email', // datos y fragmentos
+            // Fragmentos sueltos: el nombre de reserva de un producto borrado (va también al ASUNTO) y los importes rotulados
+            'emails.order_item_cancelled.product_fallback', 'emails.mixed_party_surcharge.amount_discount',
+            'emails.mixed_party_surcharge.amount_surcharge',
             'emails.order_confirmation.greeting', 'emails.order_declined.reason_prefix', // lo que no se pinta
+            'emails.verify_pending_email.subject', 'emails.verify_pending_email.expires', // la versión sin código, que ya no sale
         ] as $clave) {
             $this->assertFalse(MailTextCatalog::esEditable($clave), $clave);
         }
-        // CONTROL: lo de al lado, sí.
+        // CONTROL: lo de al lado, sí (la frase que recibe los importes; el botón que el correo nuevo sigue llevando).
         $this->assertTrue(MailTextCatalog::esEditable('fiesta.cumple_mail.linea'));
         $this->assertTrue(MailTextCatalog::esEditable('surveys.mail.line1'));
+        $this->assertTrue(MailTextCatalog::esEditable('emails.mixed_party_surcharge.changed_direction'));
+        $this->assertTrue(MailTextCatalog::esEditable('emails.verify_pending_email.action'));
+        $this->assertTrue(MailTextCatalog::esEditable('emails.verify_pending_email_code.headline'));
         // Ningún texto editable es un plural ni ninguno de fábrica cambia de variables entre idiomas.
         $mal = [];
         foreach (array_keys(MailTextCatalog::CORREOS) as $correo) {
@@ -95,6 +104,20 @@ class MailTextCatalogTest extends TestCase
             }
         }
         $this->assertSame([], $mal);
+    }
+
+    public function test_no_two_blocks_of_a_mail_share_a_name(): void
+    {
+        // Dos «Asunto» en un correo: ¿cuál sale? (el del correo nuevo ofrecía también los de la versión sin código, 30-09).
+        $repetidos = [];
+        foreach (array_keys(MailTextCatalog::CORREOS) as $correo) {
+            $nombres = array_map(static fn (string $clave): string => MailTextCatalog::etiqueta($clave), MailTextCatalog::claves($correo));
+            foreach (array_keys(array_filter(array_count_values($nombres), static fn (int $n): bool => $n > 1)) as $nombre) {
+                $repetidos[] = "{$correo}: {$nombre}";
+            }
+        }
+
+        $this->assertSame([], $repetidos);
     }
 
     public function test_every_block_and_every_variable_has_its_name_in_both_panel_languages(): void

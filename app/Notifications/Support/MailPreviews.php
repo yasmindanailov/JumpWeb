@@ -20,7 +20,7 @@ use Throwable;
 /**
  * LA VISTA PREVIA DE UN CORREO CON SUS TEXTOS (R1·T de `specs/correos-rediseno.md` §4.2.1, `#802`): pinta el correo DE
  * VERDAD —su notificación, su `toMail()`, el molde— con el CASO REAL más reciente de su tipo (el último pedido pagado, la
- * última fiesta, la última firma…) y el BORRADOR del panel aplicado solo a ese pintado. Es el banco de la R1a
+ * última fiesta, la última firma en ese idioma…) y el BORRADOR del panel aplicado solo a ese pintado. Es el banco de la R1a
  * (`scripts/banco-correos.php`) llevado al producto, y el banco la usa: una sola fuente.
  *
  * ⚠️ Por qué el caso real y no datos inventados: cada correo compone con condiciones (con o sin fecha, con o sin señal, con
@@ -35,15 +35,16 @@ final class MailPreviews
     public const MOTIVOS = ['pedido', 'reserva', 'fiesta', 'firma', 'encuesta', 'error'];
 
     /**
-     * El correo pintado (`html`, en claro u oscuro; quien lo enseñe lo hace INERTE, `EmailSendTable::inert`) o por qué no se
-     * puede (`motivo`).
+     * El correo pintado (`html`, en claro u oscuro; quien lo enseñe lo hace INERTE, `EmailSendTable::inert`) con lo que se lee
+     * en la BANDEJA antes de abrirlo —el `asunto` y el `adelanto`, dos bloques que el parque edita y que el cuerpo no enseña—,
+     * o por qué no se puede (`motivo`).
      *
      * @param  array<string, string>  $borrador  clave → texto del parque (lo que hay en la pantalla, guardado o no)
-     * @return array{html: string}|array{motivo: string}
+     * @return array{html: string, asunto: string, adelanto: string}|array{motivo: string}
      */
     public static function pintar(string $correo, string $locale, array $borrador, User $quienMira, bool $oscuro = false): array
     {
-        $caso = self::caso($correo, $quienMira);
+        $caso = self::caso($correo, $quienMira, $locale);
         if (is_string($caso)) {
             return ['motivo' => $caso];
         }
@@ -55,10 +56,11 @@ final class MailPreviews
         $antes = app()->getLocale();
         DB::beginTransaction();
         try {
-            $html = MailTexts::conBorrador($locale, $borrador, static function () use ($notificacion, $destinatario, $locale): string {
+            [$html, $asunto, $adelanto] = MailTexts::conBorrador($locale, $borrador, static function () use ($notificacion, $destinatario, $locale): array {
                 app()->setLocale($locale);
+                $mensaje = $notificacion->toMail($destinatario);
 
-                return (string) $notificacion->toMail($destinatario)->render();
+                return [(string) $mensaje->render(), (string) $mensaje->subject, (string) ($mensaje->viewData['preheader'] ?? '')];
             });
         } catch (Throwable $e) {
             report($e);
@@ -74,29 +76,32 @@ final class MailPreviews
             $html = (string) preg_replace('/<html\b/i', '<html data-ogsc data-ogsb', $html, 1);
         }
 
-        return ['html' => $html];
+        return ['html' => $html, 'asunto' => $asunto, 'adelanto' => $adelanto];
     }
 
     /**
-     * La notificación y su destinatario para un correo, o el motivo si en la base no hay todavía un caso de su tipo.
+     * La notificación y su destinatario para un correo, o el motivo si en la base no hay todavía un caso de su tipo. El
+     * IDIOMA cuenta cuando el caso trae el suyo: la copia de una autorización sale en el de la versión firmada, así que su caso
+     * es una firma en el idioma de la pestaña (con la de otro, lo escrito en esta no se vería: medido el 30-09 en en/fr).
      *
      * @return array{0: Notification, 1: object}|string
      */
-    public static function caso(string $correo, User $quienMira): array|string
+    public static function caso(string $correo, User $quienMira, string $locale): array|string
     {
         $crear = self::constructores()[$correo] ?? null;
         if ($crear === null) {
             return 'error';
         }
-        $caso = $crear($quienMira);
+        $caso = $crear($quienMira, $locale);
 
         return $caso instanceof Notification ? [$caso, $quienMira] : $caso;
     }
 
     /**
-     * Cómo se construye cada correo con el caso real más reciente. Devuelve la notificación o el MOTIVO si falta el caso.
+     * Cómo se construye cada correo con el caso real más reciente (en el idioma de la pestaña, si el caso lo trae). Devuelve
+     * la notificación o el MOTIVO si falta el caso.
      *
-     * @return array<string, Closure(User): (Notification|string)>
+     * @return array<string, Closure(User, string): (Notification|string)>
      */
     public static function constructores(): array
     {
@@ -126,8 +131,12 @@ final class MailPreviews
             'order_processed_after_expiration' => $conPedido(static fn (Order $o) => new N\OrderProcessedAfterExpiration($o)),
             'guest_form_request' => $conFiesta(static fn (OrderItem $f) => new N\GuestFormRequest($f)),
             'guardian_authorization_request' => $conFiesta(static fn (OrderItem $f) => new N\GuardianAuthorizationRequest($f)),
-            'guardian_authorization_signed' => static function (): Notification|string {
-                $firma = WaiverSignature::query()->latest('id')->first();
+            // La copia sale en el idioma de la versión FIRMADA (`GuardianAuthorizationSigned`), no en el de la pestaña: el caso
+            // es la última firma EN ESE idioma. (Y con su versión: una firma sin ella no tiene texto que copiar.)
+            'guardian_authorization_signed' => static function (User $quienMira, string $locale): Notification|string {
+                $firma = WaiverSignature::query()
+                    ->whereHas('version', static fn ($q) => $q->where('locale', $locale))
+                    ->latest('id')->first();
 
                 return $firma !== null ? new N\GuardianAuthorizationSigned($firma) : 'firma';
             },
@@ -147,7 +156,9 @@ final class MailPreviews
             'login_code' => static fn (): Notification => new N\LoginCode('482913'),
             'confirmation_code' => static fn (): Notification => new N\ConfirmationCode('482913', 'change_email'),
             'password_reset' => static fn (): Notification => new N\PasswordReset('token-de-ejemplo'),
-            'verify_pending_email' => static fn (): Notification => new N\VerifyPendingEmail,
+            // El que sale: con su código (`#856`, `AccountProfile::sendNewEmailCode`). Sin él es la versión de antes, que ya no
+            // se envía (y sus bloques no son editables: `MailTextCatalog`).
+            'verify_pending_email' => static fn (): Notification => new N\VerifyPendingEmail('482913'),
             'email_change_requested' => static fn (): Notification => new N\EmailChangeRequested('n***@example.com'),
             'email_change_completed' => static fn (): Notification => new N\EmailChangeCompleted('n***@example.com'),
             'account_already_exists' => static fn (): Notification => new N\AccountAlreadyExists,

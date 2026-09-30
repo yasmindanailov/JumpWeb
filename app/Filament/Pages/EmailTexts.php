@@ -34,8 +34,9 @@ use Livewire\Attributes\Url;
  * `EmailTextsPageTest::test_the_permission_is_asked_again_on_every_action` fija la propiedad, venga de donde venga.
  *
  * Dos estados en una página (`?correo=`): la LISTA por tipo, con lo que tiene cada correo (de fábrica, cuántos textos
- * propios, «sin traducir» si un idioma cambió y otro no, «desfasado» si el producto cambió sus datos), y el CORREO, con un
- * bloque por texto —su nombre humano, el de fábrica y sus variables debajo— en pestañas es/en/fr.
+ * propios, «sin traducir» si un idioma cambió y otro no, «desfasado» si ya no pasa las reglas de hoy —el producto cambió
+ * sus datos o una regla— y por eso no sale), y el CORREO, con un bloque por texto —su nombre humano, el de fábrica y sus
+ * variables debajo— en pestañas es/en/fr, y su vista previa con el asunto y el adelanto de la bandeja encima.
  *
  * ⚠️ Guardar es TODO o NADA: se valida cada bloque que cambió en los tres idiomas y, con un solo problema, no se guarda
  * ninguno (cada uno dice el suyo en su campo). Un correo a medio guardar diría una cosa en un idioma y otra en otro.
@@ -65,6 +66,11 @@ class EmailTexts extends Page
     public bool $vistaOscuro = false;
 
     public ?string $vistaHtml = null;
+
+    /** Lo que se lee en la bandeja antes de abrirlo: el cuerpo no lo enseña y son dos bloques que se editan. */
+    public ?string $vistaAsunto = null;
+
+    public ?string $vistaAdelanto = null;
 
     public ?string $vistaMotivo = null;
 
@@ -230,7 +236,7 @@ class EmailTexts extends Page
 
         $this->filas = null;
         $this->form->fill($this->cargar());
-        $this->vistaHtml = null;
+        $this->vistaHtml = $this->vistaAsunto = $this->vistaAdelanto = null;
         Notification::make()->title(trans_choice('admin.mail_texts.guardado', count($cambios), ['count' => count($cambios)]))->success()->send();
     }
 
@@ -261,6 +267,8 @@ class EmailTexts extends Page
         AuditLogger::log('emails.text_previewed', null, ['mail' => $this->correo, 'locale' => $this->vistaIdioma]);
 
         $this->vistaHtml = isset($resultado['html']) ? EmailSendTable::inert($resultado['html'], '') : null;
+        $this->vistaAsunto = $resultado['asunto'] ?? null;
+        $this->vistaAdelanto = $resultado['adelanto'] ?? null;
         $this->vistaMotivo = $resultado['motivo'] ?? null;
     }
 
@@ -353,12 +361,15 @@ class EmailTexts extends Page
             : __('admin.mail_texts.estado.desfasado');
     }
 
-    /** ¿El texto del parque sigue casando con las variables de su texto de fábrica de hoy? (si no, sale el de fábrica). */
+    /**
+     * ¿El texto del parque pasa HOY las reglas contra su texto de fábrica de hoy? Si no, sale el de fábrica: es el mismo filtro
+     * que el cargador (`MailTextLoader`), así que lo que la lista llama «desfasado» es exactamente lo que no llega al correo.
+     */
     private function alDia(string $clave, string $locale, string $texto): bool
     {
         $fabrica = MailTextCatalog::fabrica($clave, $locale);
 
-        return $fabrica !== null && MailTextRules::variablesDelParque($texto) === MailTextRules::variablesDeFabrica($fabrica);
+        return $fabrica !== null && MailTextRules::problema($texto, $fabrica, $clave) === null;
     }
 
     /** Cuántos bloques de un idioma difieren de lo guardado (la chapa de su pestaña). */

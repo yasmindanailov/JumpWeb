@@ -12,6 +12,9 @@ namespace App\Domain\Content\Services;
  *    desaparece deja un correo que ya no es verdad («nada que ya no sea verdad», regla 5 del brief), y una que el correo no
  *    conoce saldría tal cual, con sus llaves;
  *  - sin HTML: el molde escapa cada línea y solo entiende `**negrita**` (`MailDocument::rico()`), que va balanceada;
+ *  - la negrita, SOLO donde el molde la pinta: el asunto, el adelanto, la chapa, el titular, los botones, los títulos y las
+ *    etiquetas salen TAL CUAL, y un `**` ahí llegaría al cliente con sus asteriscos (medido el 30-09 pintando los 29 correos
+ *    con una marca en cada bloque: 141 de 278 textos);
  *  - llaves sueltas no: `{nombre` es casi siempre una variable mal escrita;
  *  - ni vacío ni más largo que su tope (el asunto se corta en la bandeja; un párrafo de 1.000 ya no es un correo).
  */
@@ -27,7 +30,7 @@ final class MailTextRules
     public const TOPE = 1000;
 
     /** Los motivos de rechazo, en el orden en que se comprueban (y sus textos, `admin.mail_texts.errores.*`). */
-    public const MOTIVOS = ['vacio', 'largo', 'html', 'llaves', 'desconocida', 'falta', 'negrita'];
+    public const MOTIVOS = ['vacio', 'largo', 'html', 'llaves', 'desconocida', 'falta', 'sin_negrita', 'negrita'];
 
     /**
      * Las variables de un texto de FÁBRICA (`:code`), ordenadas y sin repetir.
@@ -96,6 +99,21 @@ final class MailTextRules
     }
 
     /**
+     * ¿El molde pinta la negrita en este bloque? Por lo que es (su último tramo), como el tope: la cabecera y el asunto
+     * (`subject*`, `preheader`, `badge`, `headline*`), los botones (`action*`, `boton`), los títulos (`*_title`) y las
+     * etiquetas que el correo ya pone en negrita (`*_label`) salen tal cual; los párrafos y los avisos pasan por
+     * `MailDocument::rico()`. `MailPreviewsTest` lo comprueba contra el molde de verdad.
+     */
+    public static function admiteNegrita(string $clave): bool
+    {
+        $ultimo = substr($clave, (int) strrpos($clave, '.') + 1);
+
+        return ! (str_starts_with($ultimo, 'subject') || $ultimo === 'preheader' || $ultimo === 'badge'
+            || str_starts_with($ultimo, 'headline') || str_starts_with($ultimo, 'action') || $ultimo === 'boton'
+            || str_ends_with($ultimo, '_title') || str_ends_with($ultimo, '_label'));
+    }
+
+    /**
      * ¿Qué le pasa a este texto del parque? `null` = se puede guardar. Si no, el PRIMER motivo que falla, con lo que hace
      * falta para decirlo (`tope`, `variables`).
      *
@@ -126,6 +144,9 @@ final class MailTextRules
         $faltan = array_values(array_diff($deFabrica, $delParque));
         if ($faltan !== []) {
             return ['motivo' => 'falta', 'variables' => $faltan];
+        }
+        if (str_contains($texto, '**') && ! self::admiteNegrita($clave)) {
+            return ['motivo' => 'sin_negrita'];
         }
         if (substr_count($texto, '**') % 2 !== 0) {
             return ['motivo' => 'negrita'];

@@ -372,7 +372,9 @@ invitación ENCENDIDA— y la fiesta `JW-OJO-CFG` (reserva 11236, 14 niños, el 
 `ojo-r1t.php` (en la carpeta de auditoría) crea el rol `ojo-correos` (solo `emails.edit_texts` y `settings.manage`) y su empleado
 `ojo-correos@jumpweb.test` / `ojo-correos-2026` (con `staff` para poder entrar al panel, sin authenticator). `OJO=desmontar`
 borra el rol y el empleado; los textos que se guarden en `mail_texts` se quedan (volver al de fábrica los borra). La sonda:
-`sonda-r1t.mjs` (deja la tabla como la encontró).
+`sonda-r1t.mjs` (deja la tabla como la encontró). La de la revisión (30-09 tarde), `sonda-r1t-revision.mjs` (no guarda nada),
+y el MEDIDOR `medir-r1t-bloques.php [es|en|fr]` (`TODOS=1` lista todos): pinta los 29 correos con una marca por bloque y dice
+cuáles salen, con negrita o con asteriscos. Solo lee (cada pintado, en una transacción que se deshace).
 
 ## 9 · La foto vieja del carril (mudada VERBATIM de `carriles/spa.md` el 2026-09-29, su techo)
 
