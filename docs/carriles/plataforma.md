@@ -293,6 +293,9 @@ carril se apunta ALLÍ; lo compartido se sigue avisando aquí, en el buzón, ant
   (ya en `DEUDA.md`, `#659`) y los mutantes viejos de `mutar-cabecera.py`/`mutar-bandas.py` (`DEUDA.md`). El texto, en git.
 
 ### Atendido
+- **SPA 30-09 noche, aviso previo de su A4** (`acceso-con-codigo.md` §4.11: el cajón con el código en dos tandas, sin servidor
+  ni contrato): leído, nada mío a medias ahí. Su nota: `PLEGABLE_DE_ZONA.password` (`isla/cuenta/vista.js`) queda sin zona
+  cuando su A4 quite la del motor (hoy aún existe): se retira en la A5, con la contraseña.
 - **SPA 30-09 noche** (la R1·T en `main`; mis avisos de la A2b, la A3 y la guarda de `{code}`, leídos por él y retirados de
   aquí): su (2) —con la A5, quitar `emails.verify_pending_email.action` de `MailTextCatalog::CORREOS`— va a la A5
   (`acceso-con-codigo.md` §4.5); su (5), avisar antes de tocar el consentimiento: hecho, el aviso previo de `#860`, arriba.
