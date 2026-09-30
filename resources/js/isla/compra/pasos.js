@@ -31,11 +31,11 @@ export function pasoDelMotor(step) {
 
 /**
  * El orden de los pasos, del diseño: avanzar entra por la derecha y volver, por la izquierda. Dentro de «Tus datos»,
- * sus vistas (el descargo, «Entra») van detrás, y el olvido de «Entra», un poco más.
+ * sus vistas (el descargo, «Entra») van detrás, y el código de «Entra» (A3, `#849`), un poco más.
  */
 export function rango(paso, vista = null, pasoEntrada = null) {
     if (paso === 'cuando') return 0;
-    if (paso === 'datos') return vista ? 1.5 + (vista === 'entrar' && pasoEntrada === 'olvido' ? 0.2 : 0) : 1;
+    if (paso === 'datos') return vista ? 1.5 + (vista === 'entrar' && pasoEntrada === 'codigo' ? 0.2 : 0) : 1;
     if (paso === 'pagar') return 2;
     if (paso === 'listo') return 4;
 
@@ -69,7 +69,7 @@ export function direccion(antes, ahora) {
  *
  * @param {object} e
  *   `paso` · `vista` (`descargo` · `entrar`, dentro de «Tus datos») · `entrada` (el estado de «Entra»: `paso`,
- *   `valor`, `clave`) · `textos` · `resumen` ({ summary, total }) · `importe` (lo que cobra la pasarela, ya escrito) ·
+ *   `valor`, `codigo`) · `textos` · `resumen` ({ summary, total }) · `importe` (lo que cobra la pasarela, ya escrito) ·
  *   `ocupado` (el paso que espera al servidor) · `horaNueva` (la elegida en «perdida») · `sinDatos` (se llegó a «Pagar»
  *   sin «Tus datos») · `acciones` ({ volver, continuar, entrar, pagar, salir, reintentar, elegirHora, miQr, cerrar }).
  */
@@ -98,14 +98,16 @@ export function ckDelPaso(e) {
 
     if (e.paso === 'datos') {
         const entrada = e.entrada ?? {};
-        // «Entra» lleva su propia acción (`PjcEntrar`); su olvido y el descargo, ninguna: se vuelve con la flecha.
-        const entrando = e.vista === 'entrar' && entrada.paso === 'id';
+        // «Entra» lleva su propia acción (`PjcEntrar`), en sus dos pasos: con el correo, pedir el código; con el código,
+        // entrar (A3, `#849`). El descargo, ninguna: se vuelve con la flecha.
+        const entrando = e.vista === 'entrar';
+        const conCodigo = entrada.paso === 'codigo';
         const action = entrando
             ? {
-                label: t('compra.entrar.continuar'),
+                label: t(conCodigo ? 'compra.entrar.entrar' : 'compra.entrar.continuar'),
                 onClick: a.entrar,
-                disabled: ! (String(entrada.valor ?? '').trim() && entrada.clave),
-                loading: e.ocupado === 'entrar' ? t('compra.entrar.cargando') : false,
+                disabled: conCodigo ? ! String(entrada.codigo ?? '').trim() : ! String(entrada.valor ?? '').trim(),
+                loading: e.ocupado === 'entrar' ? t(conCodigo ? 'compra.entrar.cargando' : 'compra.entrar.enviando') : false,
             }
             : (e.vista ? null : { label: t('compra.datos.continuar'), onClick: a.continuar, loading: e.ocupado === 'datos' ? t('compra.datos.cargando') : false });
 

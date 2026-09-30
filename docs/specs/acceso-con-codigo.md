@@ -1,11 +1,12 @@
 # [SPEC] Entrar con un código al correo — la contraseña del cliente se retira
 
-> Estado: ✅ aprobada (29-09: el owner contestó el §7) → **A1 ✅** (§4.8) · **A2 ✅** (§4.9), sigue la A3 · Última
-> actualización: 2026-09-30 ·
+> Estado: ✅ aprobada (29-09: el owner contestó el §7) → **A1 ✅** (§4.8) · **A2 ✅** (§4.9) · **A3a ✅** (§4.10), sigue la
+> A3b · Última actualización: 2026-09-30 ·
 > Decisiones: `#847` (el owner: código al correo y Google; fuera la contraseña) · `#848` (el §7: una sola puerta, borrar
 > las contraseñas, 90 días, solo el código) · `#849` (corrige el 1: el registro NO espera al código, hay cola en la puerta) ·
 > `#853`/`#854` (la A1: el código en el servidor; el dispositivo recordado y `RGPD-06`) · `#855` (la A2a: reconfirmar con
-> un código; cada sesión atada al token) · `#856` (la A2b: el correo nuevo con su código, y a su buzón) ·
+> un código; cada sesión atada al token) · `#856` (la A2b: el correo nuevo con su código, y a su buzón) · `#857` (la A3,
+> con las piezas de la isla: el owner) ·
 > Carril: plataforma (el servidor, el contrato y la isla); el cajón, del SPA por buzón.
 
 ## §0 · Antes de tocar
@@ -23,7 +24,8 @@
   son de DOMINIO (`SEC-06`): ningún controlador los reimplementa. (5) La puerta dice si un correo tiene cuenta, como el
   alta de hoy (`#31`): la acotan los límites de §4.2.
 - **Estado**: ✅ aprobada (`#848`). **A1 ✅** (29-09, `#853`/`#854`, §4.8) · **A2 ✅** (30-09, `#855`/`#856`, §4.9: reconfirmar
-  con un código, cada sesión atada al token y el correo nuevo con su código). Sigue la A3, la isla (§4.7).
+  con un código, cada sesión atada al token y el correo nuevo con su código) · **A3a ✅** (`#857`, §4.10: «Entra» y el alta
+  de la isla con el código; visto por el owner). Sigue la A3b, los Ajustes de Mi cuenta.
 - **Invariantes**: `SEC-06` (se amplía al código), `RGPD-01` (la purga borra los códigos), `RGPD-06` (sin cambio de
   forma). Ningún fichero del `CRITICAL_RE`.
 
@@ -200,6 +202,30 @@ la isla y el cajón pinten el código (A3/A4) y se retira en la A5.
   titular. `User::routeNotificationForMail()` respeta ahora `ChoosesRecipient`, y el correo viejo viaja dentro del aviso
   (va por la cola y el titular vuelve de ella con el nuevo). Pruebas `MePendingEmailCodeTest` y `EmailChangeRecipientsTest`
   (el envío de verdad y su dirección); arnés 48/48. En local contra Mailpit, de punta a punta: cada correo a su buzón.
+
+### 4.10 La A3, la isla — `[DECIDIDO owner]` 2026-09-30 (`#857`)
+El mockup no dibuja el código: se construye con las piezas de la isla, se enseña en vivo y el owner lo rediseña si quiere.
+Partida en dos: **A3a**, entrar y darse de alta; **A3b**, los Ajustes de Mi cuenta (reconfirmar con código, el correo
+nuevo con el suyo). Lo de la A3a:
+- **«Entra»** (`PantallaEntrar`, compra y Mi cuenta): el correo → la puerta → con cuenta, el código (`#pjc-ent-codigo`,
+  `one-time-code`, «Pedir otro código» con «otro» en la pista); nuevo, a «Tus datos» o a «Crea tu cuenta» con el correo
+  puesto y una nota NEUTRA. El tope del correo (`429` con `next: code`) va al código sin error: hay uno recién enviado.
+  La flecha del código vuelve al correo. Fuera el olvido de la contraseña. `[DECIDIDO owner]` 30-09: Google y Apple van
+  ARRIBA y «— o —» los separa de los campos, aquí y en el alta (`AccesoSocial` con `separador`: solo si queda algún botón),
+  para que nadie tome el de Google por el que envía el correo.
+- **El alta** («Tus datos», «Crea tu cuenta»): sin contraseña y con la PUERTA delante: un correo con cuenta recibe su
+  código y lo escribe allí mismo («ya existe») o en «Entra» (Mi cuenta), sin intentar el alta —que avisaría al titular
+  de «alguien intentó registrarse»—.
+- `[DECIDIDO owner]` 30-09 · **«Tus datos» solo cuando falta algo de la cuenta**: tras entrar o darse de alta en ella, si
+  ya no falta nada, sale del camino (`sinDatos`): «Pagar» queda como la de quien llega con sesión («Reservas como Ana», sin
+  «Paso 2 de 2») y su flecha vuelve a la RESERVA, no a un «Hola» vacío. `sonda-isla.mjs` lo mira, con su mutación.
+- **Dónde viaja**: la puerta, entrar y sus «no», en `compra/acceso.js`, con los pasos (la compra lo pide con `import()` de
+  su trozo ya descargado): dentro, la compra medía 166,46 de 166. Pesos, con la base construida aparte: compra 165,44 →
+  165,84, pasos 44,45 → 45,37 (techo 46), Mi cuenta 117,22 → 118,87 (techo 120). Las sondas leen el código de Mailpit.
+- ⚠️⚠️ **Medido en el navegador, de la A1**: con la cookie de recuerdo, «Cerrar sesión» NO salía —`/me` 200 después—. El
+  `Auth::forgetGuards()` de salir deja resolver otro guard, y el `$request->user()` de `NoStoreWhenAuthenticated` a la
+  vuelta volvía a entrar con la cookie que aún traía la PETICIÓN. `RememberedDevice::logOutHere()` (las dos salidas) la
+  quita también de la petición; prueba en `RememberedDeviceTest` y su mutación. La prueba de la A1 miraba solo la cookie.
 
 ## 5. Impacto en invariantes
 

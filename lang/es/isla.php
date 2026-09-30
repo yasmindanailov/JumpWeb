@@ -127,6 +127,8 @@ return [
         'continuar_apple' => 'Continuar con Apple',
         'entrar_google' => 'Entrar con Google',
         'entrar_apple' => 'Entrar con Apple',
+        // Entre Google/Apple y los campos (`#857`): «— o —».
+        'o' => 'o',
         'qr' => 'QR',
         'qr_de' => 'QR :codigo',
         'copiado' => 'Enlace copiado',
@@ -247,6 +249,12 @@ return [
             'google' => 'Continuar con Google',
             'apple' => 'Continuar con Apple',
             'existe' => 'Esta cuenta ya existe.',
+            // El acceso con código (A3, `#848`/`#849`): la cuenta que ya existe entra con el código que le llega al correo.
+            'codigo' => 'Código',
+            'codigo_enviado' => 'Te hemos enviado un código a :correo.',
+            'codigo_otro_enviado' => 'Te hemos enviado otro código a :correo.',
+            'otro_codigo' => 'Pedir otro código',
+            'nueva' => 'Aún no tienes cuenta con ese correo: rellena tus datos y entras al momento.',
             'contrasena' => 'Contraseña',
             'pista_contrasena' => '8 caracteres o más.',
             'olvido' => '¿Has olvidado tu contraseña?',
@@ -273,7 +281,9 @@ return [
                 'contrasena' => 'Escribe una contraseña de 8 caracteres o más.',
                 'clave' => 'Escribe tu contraseña.',
                 'descargo' => 'Marca la casilla para seguir.',
-                'entrar' => 'Revisa el correo o la contraseña.',
+                'codigo' => 'Escribe el código que te hemos enviado.',
+                'codigo_mal' => 'El código no es correcto o ha caducado. Pide otro.',
+                'espera' => 'Espera :n segundos para pedir otro código.',
             ],
         ],
         'entrar' => [
@@ -281,6 +291,9 @@ return [
             // `#695` `[DECIDIDO owner]`: solo correo. El diseño decía «correo o teléfono»; el acceso no admite teléfono.
             'texto' => 'Escribe tu correo.',
             'continuar' => 'Continuar',
+            // Con el código (A3, `#849`): con el correo se pide; con el código, se entra.
+            'entrar' => 'Entrar',
+            'enviando' => 'Enviando el código',
             'google' => 'Entrar con Google',
             'apple' => 'Entrar con Apple',
             'olvido_texto' => 'Te hemos enviado un enlace a tu correo para crear una contraseña nueva.',

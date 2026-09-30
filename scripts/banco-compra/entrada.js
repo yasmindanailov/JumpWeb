@@ -200,14 +200,21 @@ function paso(S) {
             ck.action = null;
             ck.onBack = nada;
         } else if (S.vista === 'entrar') {
-            cuerpo = h(PantallaEntrar, { paso: ent.paso, valor: ent.valor, clave: ent.pass, error: ent.error, enApp: S.insta });
-            ck.action = ent.paso === 'id' ? { label: t('compra.entrar.continuar'), onClick: nada, disabled: ! ent.valor.trim() || ! ent.pass, loading: S.ocupado === 'entrar' ? t('compra.entrar.cargando') : false } : null;
+            // Con un código al correo, no con la contraseña del diseño (A3 del acceso con código, `#857`): el correo y, después,
+            // el código.
+            const conCodigo = ent.paso === 'codigo';
+            cuerpo = h(PantallaEntrar, { paso: ent.paso, valor: ent.valor, codigo: ent.codigo ?? '', error: ent.error, enApp: S.insta });
+            ck.action = {
+                label: t(conCodigo ? 'compra.entrar.entrar' : 'compra.entrar.continuar'), onClick: nada,
+                disabled: conCodigo ? ! String(ent.codigo ?? '').trim() : ! ent.valor.trim(),
+                loading: S.ocupado === 'entrar' ? t(conCodigo ? 'compra.entrar.cargando' : 'compra.entrar.enviando') : false,
+            };
             ck.onBack = nada;
         } else {
             cuerpo = h(PantallaDatos, {
                 cuenta: f.cuenta,
                 nombrePila: f.nombre.trim().split(' ')[0],
-                valores: { nombre: f.nombre, correo: f.correo, telefono: f.telefono, contrasena: f.contrasena, descargo: f.descargo },
+                valores: { nombre: f.nombre, correo: f.correo, telefono: f.telefono, codigo: f.codigo ?? '', descargo: f.descargo },
                 firmado: f.firmado,
                 pedirTelefono: pd.tipo === 'cumple' && f.pedirTel,
                 errores: err,

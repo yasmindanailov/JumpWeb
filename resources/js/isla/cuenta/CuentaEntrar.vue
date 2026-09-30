@@ -1,9 +1,9 @@
 <script setup>
 /**
  * **Mi cuenta sin sesión: Entra** (`paginas/mi-cuenta/cuenta.jsx`, la vista `entrar`; T5a de §4.13). Es LA MISMA
- * pantalla que la compra (`compra/PantallaEntrar.vue`: solo correo, `#695`; su contraseña, su olvido y Google), y
- * debajo, «¿Es tu primera vez? Crea tu cuenta». En el olvido ya enviado, solo su confirmación. Arriba, el aviso de una
- * vuelta de Google que no salió (T5e·2, `#779`), con su tono: la pantalla solo tenía el error bajo el campo del correo.
+ * pantalla que la compra (`compra/PantallaEntrar.vue`: solo correo, `#695`; su código al correo —A3 del acceso con
+ * código, `#849`— y Google), y debajo del correo, «¿Es tu primera vez? Crea tu cuenta». Arriba, el aviso de una vuelta
+ * de Google que no salió (T5e·2, `#779`) o el del correo que ya tenía cuenta, con su tono.
  */
 import { useTextos } from '../piezas/textos.js';
 import { CUENTA } from './estilos.js';
@@ -15,7 +15,7 @@ const props = defineProps({
     pantalla: { type: Object, required: true },
     aviso: { type: Object, default: null },
 });
-const emit = defineEmits(['cambiar', 'olvido', 'proveedor', 'crear']);
+const emit = defineEmits(['cambiar', 'otro', 'proveedor', 'crear']);
 const { t } = useTextos();
 </script>
 
@@ -30,7 +30,7 @@ const { t } = useTextos();
         <PantallaEntrar
             v-bind="props.pantalla"
             @cambiar="(campo, valor) => emit('cambiar', campo, valor)"
-            @olvido="emit('olvido')"
+            @otro="emit('otro')"
             @proveedor="(via) => emit('proveedor', via)"
         />
         <p

@@ -13,7 +13,7 @@ const textos = {
     compra: {
         paso: 'Paso :n de :total',
         datos: { banda: 'Tus datos', continuar: 'Continuar al pago', cargando: 'Comprobando tus datos y guardando tu hora' },
-        entrar: { continuar: 'Continuar', cargando: 'Entrando' },
+        entrar: { continuar: 'Continuar', entrar: 'Entrar', cargando: 'Entrando', enviando: 'Enviando el código' },
         pagar: { banda: 'Pagar', tarjeta: 'Pagar :importe con tarjeta', saliendo_boton: 'Continuar al pago' },
         fallido: { tarjeta: 'Volver a intentar con tarjeta' },
         perdida: { boton: 'Elegir esta hora' },
@@ -45,8 +45,8 @@ test('la dirección: avanzar entra por la derecha, volver por la izquierda, y la
     assert.equal(direccion(null, rango('cuando')), null);
     assert.equal(direccion(rango('cuando'), rango('datos')), 'fwd');
     assert.equal(direccion(rango('datos'), rango('datos', 'descargo')), 'fwd');
-    assert.equal(direccion(rango('datos', 'entrar', 'id'), rango('datos', 'entrar', 'olvido')), 'fwd', 'el olvido, detrás de «Entra»');
-    assert.equal(direccion(rango('datos', 'entrar', 'olvido'), rango('datos', 'entrar', 'id')), 'back');
+    assert.equal(direccion(rango('datos', 'entrar', 'id'), rango('datos', 'entrar', 'codigo')), 'fwd', 'el código, detrás del correo de «Entra»');
+    assert.equal(direccion(rango('datos', 'entrar', 'codigo'), rango('datos', 'entrar', 'id')), 'back');
     assert.equal(direccion(rango('pagar'), rango('datos')), 'back');
     assert.equal(direccion(rango('pagar'), rango('banco')), 'fwd');
     assert.equal(direccion(rango('fallido'), rango('listo')), 'fwd');
@@ -66,27 +66,38 @@ describe('la descripción de cada paso', () => {
         assert.equal(c.summary, resumen.summary);
     });
 
-    test('dentro de «Tus datos» (el descargo, el olvido) no hay acción: se vuelve con la flecha', () => {
+    test('dentro de «Tus datos», el descargo no tiene acción: se vuelve con la flecha', () => {
         assert.equal(ck('datos', { vista: 'descargo' }).action, null);
         assert.equal(ck('datos', { vista: 'descargo' }).key, 'datosdescargo');
-        assert.equal(ck('datos', { vista: 'entrar', entrada: { paso: 'olvido' } }).action, null);
-        assert.equal(ck('datos', { vista: 'entrar', entrada: { paso: 'olvido' } }).key, 'datosentrarolvido');
     });
 
-    test('«Entra» (T3e·4): «Continuar», apagado hasta tener correo y contraseña, con su espera', () => {
-        const vacia = ck('datos', { vista: 'entrar', entrada: { paso: 'id', valor: '  ', clave: '' } });
+    test('«Entra» con el CORREO (A3, `#849`): «Continuar» pide el código; apagado sin correo, con su espera', () => {
+        const vacia = ck('datos', { vista: 'entrar', entrada: { paso: 'id', valor: '  ' } });
 
         assert.equal(vacia.action.label, 'Continuar');
         assert.equal(vacia.action.disabled, true);
         assert.equal(vacia.key, 'datosentrarid');
-        assert.equal(ck('datos', { vista: 'entrar', entrada: { paso: 'id', valor: 'ana@correo.es', clave: '' } }).action.disabled, true);
 
-        const lista = ck('datos', { vista: 'entrar', entrada: { paso: 'id', valor: 'ana@correo.es', clave: 'x' }, ocupado: 'entrar' });
+        const lista = ck('datos', { vista: 'entrar', entrada: { paso: 'id', valor: 'ana@correo.es' }, ocupado: 'entrar' });
 
-        assert.equal(lista.action.disabled, false);
+        assert.equal(lista.action.disabled, false, 'basta el correo: ya no hay contraseña');
         assert.equal(lista.action.onClick(), 'entrar');
-        assert.equal(lista.action.loading, 'Entrando');
+        assert.equal(lista.action.loading, 'Enviando el código');
         assert.equal(lista.onBack(), 'volver');
+    });
+
+    test('«Entra» con el CÓDIGO: «Entrar», apagado sin código, con su espera', () => {
+        const sin = ck('datos', { vista: 'entrar', entrada: { paso: 'codigo', valor: 'ana@correo.es', codigo: ' ' } });
+
+        assert.equal(sin.action.label, 'Entrar');
+        assert.equal(sin.action.disabled, true);
+        assert.equal(sin.key, 'datosentrarcodigo');
+
+        const con = ck('datos', { vista: 'entrar', entrada: { paso: 'codigo', valor: 'ana@correo.es', codigo: '482913' }, ocupado: 'entrar' });
+
+        assert.equal(con.action.disabled, false);
+        assert.equal(con.action.onClick(), 'entrar');
+        assert.equal(con.action.loading, 'Entrando');
     });
 
     test('«Pagar»: paso 2 de 2, sin «tu hora queda guardada» (`#688`) y el importe que cobra la pasarela', () => {

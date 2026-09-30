@@ -60,6 +60,26 @@ final class RememberedDevice
     }
 
     /**
+     * **Sale ESTE dispositivo** («hasta cerrar sesión», `#848`·3): su sesión y su cookie de recuerdo, sin rotar el
+     * `remember_token` —uno por cuenta: rotarlo echaría también al móvil al salir en el portátil—.
+     *
+     * ⚠️⚠️ La cookie se quita también de la PETICIÓN en curso, después de que el guard la mande borrar (`logoutCurrentDevice()`
+     * la mira para decidirlo). Si no, un guard resuelto DESPUÉS en esta misma petición —el de `Auth::forgetGuards()`, al que
+     * pregunta `$request->user()` un middleware a la vuelta (`NoStoreWhenAuthenticated`)— volvía a entrar con ella y
+     * dejaba la sesión nueva con el titular dentro. Medido en el navegador (A3, `#857`): tras «Cerrar sesión», `/me` 200.
+     */
+    public static function logOutHere(Request $request): void
+    {
+        $guard = Auth::guard('web');
+        if (! $guard instanceof SessionGuard) {
+            return;
+        }
+
+        $guard->logoutCurrentDevice();
+        $request->cookies->remove($guard->getRecallerName());
+    }
+
+    /**
      * El `remember_token` de `$user` acaba de rotar: si la petición en curso es de SU dispositivo recordado, su cookie
      * se re-emite con el token nuevo. Las de los demás dispositivos quedan con el viejo y dejan de valer.
      */

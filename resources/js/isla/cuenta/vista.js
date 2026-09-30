@@ -58,8 +58,8 @@ const PLEGABLES_DE_ENLACE = ['datos', 'acceso', 'privacidad', 'recibos'];
  * `Http\Sidebar\AccountDoor`; el menú de la isla; el enlace `#mi-cuenta/<bloque>`) y si hay sesión.
  *
  * ⚠️ Completar el alta que vuelve de Google (`google-signup`) va ANTES que la sesión: a esa puerta se llega sin ella, y
- *    es la única que lo hace a propósito. Sin sesión, todo lo demás es Entrar; «¿olvidaste tu contraseña?» también,
- *    porque en la isla el olvido sale de Entrar con el correo ya escrito (`PjcEntrar`).
+ *    es la única que lo hace a propósito. Sin sesión, todo lo demás es Entrar; «¿olvidaste tu contraseña?» también:
+ *    desde la A3 del acceso con código (`#849`) se entra con un código al correo, sin contraseña que olvidar.
  *
  * @param {string} zona  la del motor (`account/navigation.js::ZONES`)
  * @param {{sesion: boolean, bloque?: string}} contexto
@@ -117,8 +117,8 @@ const PASOS_DE_AJUSTES = {
  *
  * @param {{
  *   vista: string, subpaso?: string, desde?: string|null, qrDesde?: string|null, dir?: string|null,
- *   ocupado?: string|null, entrada?: {valor: string, clave: string}, textos: object,
- *   acciones: {cerrar: Function, alMenu: Function, aInicio: Function, aEntrar: Function, entrar: Function,
+ *   ocupado?: string|null, entrada?: {paso: string, valor: string, codigo: string}, textos: object,
+ *   acciones: {cerrar: Function, alMenu: Function, aInicio: Function, aEntrar: Function, aCorreo: Function, entrar: Function,
  *              crear: Function, completarGoogle: Function, volverDelDescargo: Function, aReserva: Function, escribir: Function},
  *   cambiar?: {desdeReserva: boolean, whatsapp: boolean},
  *   hijo?: {nombre: string, firmar: boolean},
@@ -140,13 +140,18 @@ export function ckDeCuenta(e) {
         return { ...base, step: t('mi_cuenta.qr.titulo'), onBack: e.qrDesde === 'cuenta' ? acciones.aInicio : delMenu };
     }
 
+    // Entra, en sus dos pasos (A3 del acceso con código, `#849`), como en la compra: con el correo, pedir el código; con el
+    // código, entrar, y su flecha vuelve al correo (otra clave: la isla anima el cambio).
     if (e.vista === VISTA.ENTRAR) {
-        if (e.subpaso === 'olvido') return { ...base, step: t('compra.datos.olvido'), onBack: acciones.aEntrar };
-        const lleno = Boolean(String(e.entrada?.valor ?? '').trim()) && Boolean(e.entrada?.clave);
+        const conCodigo = e.entrada?.paso === 'codigo';
+        const lleno = Boolean(String((conCodigo ? e.entrada?.codigo : e.entrada?.valor) ?? '').trim());
 
         return {
-            ...base, step: t('compra.entrar.titular'), onBack: delMenu,
-            action: { label: t('compra.entrar.continuar'), onClick: acciones.entrar, disabled: ! lleno, loading: e.ocupado === 'entrar' ? t('compra.entrar.cargando') : false },
+            ...base, key: `${base.key}${conCodigo ? '-codigo' : ''}`, step: t('compra.entrar.titular'), onBack: conCodigo ? acciones.aCorreo : delMenu,
+            action: {
+                label: t(conCodigo ? 'compra.entrar.entrar' : 'compra.entrar.continuar'), onClick: acciones.entrar, disabled: ! lleno,
+                loading: e.ocupado === 'entrar' ? t(conCodigo ? 'compra.entrar.cargando' : 'compra.entrar.enviando') : false,
+            },
         };
     }
 

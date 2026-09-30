@@ -4,9 +4,10 @@
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
 > **820–849 AGOTADA con `#849`** → sigue en **850–879** (del owner, 29-09; centena `decisiones/800-899.md`) · Último usado:
-> **`#856`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **`#857`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#846`) · Actualizado: **2026-09-30**
-> (el acceso con código: A1 ✅ `#853`/`#854` y A2 ✅ `#855`/`#856`, `specs/acceso-con-codigo.md` §4.8–§4.9; SIGUE su A3).
+> (el acceso con código: A1 ✅ `#853`/`#854`, A2 ✅ `#855`/`#856` y A3a ✅ `#857`, `specs/acceso-con-codigo.md` §4.8–§4.10;
+> SIGUE la A3b).
 > ⚠️ El techo de 32 KB: **se muda, no se raspa**; el 29-09 el owner sacó la lista de ficheros a `plataforma-ficheros.md`
 > (`#852`) y NO subió el techo. Si vuelve a apretar tres veces seguidas, llévaselo con la medida.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -46,12 +47,19 @@ normas, la T6f (301 y la web vieja fuera, `#843`), `#844`, la T6h (las legales) 
 **T6g** (§4.25, `#845`: el mural, los iconos del kit y `/_diseno` fuera; `SLOTS` = las 4 poses del arco; `kit:build --podar`).
 Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas,entradas}.mjs`), la web entera (`sonda-web.mjs`,
 17/17) y la compra (`sonda-isla.mjs`).
-▶▶▶ **SIGUE: la A3 de `specs/acceso-con-codigo.md`** (la isla: «Entra» con el código, «Tus datos» sin contraseña, Mi cuenta
-con los códigos de confirmar y del correo nuevo). ⚠️ ANTES: el diseño sale SOLO del mockup (`#767`) —mirar si el zip trae la
-pantalla del código; si no, al owner— y se enseña EN VIVO. **HECHO** el servidor entero: la **A1** (`#853`/`#854`, 1.55.0,
-§4.8) y la **A2** (`#855`/`#856`, **1.57.0**, §4.9: reconfirmar con un código, cada sesión atada al `remember_token` —«cerrar
-las demás» sirve con `redis`—, el correo nuevo con su código). Arneses: `mutar-acceso-codigo.sh` **48/48**, `mutar-token-bearer.sh`
-14/14. ❗ **Para el CHANGELOG de la v2.0.0**: dos defectos de producción arreglados por el camino —los correos del cambio de correo
+▶▶▶ **SIGUE: la A3b de `specs/acceso-con-codigo.md`** (§4.10): los Ajustes de Mi cuenta —`CuentaAjuste`, `CampoClaveActual`,
+`useAjustesCuenta`, `ajustes.js`— reconfirman con un código (`POST /me/confirm-code {action}` y `code` en vez de
+`current_password`) y el correo nuevo se confirma con el suyo (`POST /me/pending-email/confirm`); «Cambiar la contraseña» se
+va con la A5. Con las piezas de la isla (`#857`, el owner) y EN VIVO antes de commitear. Las claves de la contraseña de
+`lang/*/isla.php` (`compra.datos.{contrasena,pista_contrasena,olvido}`, `errores.{contrasena,clave}`, `entrar.olvido_texto`)
+siguen SOLO por los Ajustes: se podan con ella. `sonda-cuenta.mjs` aún reconfirma con la contraseña (sus pasos 20→).
+**HECHA la A3a** (`#857`, ✅ con el ojo del owner): «Entra» con el código en la compra y en Mi cuenta, el alta sin contraseña y
+con la puerta delante (`compra/acceso.js`, en el trozo de los pasos: dentro, la compra pasaba de 166), Google arriba y «— o —»
+antes de los campos (`AccesoSocial` `separador`), «Tus datos» solo si falta algo (tras entrar, «Pagar» vuelve a la reserva), las
+sondas leen el código de Mailpit (`codigoDelBuzon`), y un defecto de la A1 medido en el navegador: con la cookie de recuerdo,
+salir NO salía (`RememberedDevice::logOutHere()`). **HECHO** el servidor entero: la **A1** (`#853`/`#854`, 1.55.0, §4.8) y la **A2**
+(`#855`/`#856`, **1.57.0**, §4.9). Arneses: `mutar-acceso-codigo.sh` **50/50**, `mutar-token-bearer.sh` 14/14.
+❗ **Para el CHANGELOG de la v2.0.0**: dos defectos de producción arreglados por el camino —los correos del cambio de correo
 salían al buzón contrario (`#856`) y «cerrar las demás sesiones» no cerraba nada con `redis` (`#855`)—.
 ❓ **Del owner**: el texto de `/cookies` («solo si marcas recuérdame») y el aviso de los 90 días en la pantalla (A3),
 `[PENDIENTE: owner]`. ⚠️ El código abre la WEB, nunca el panel (`SEC-14`).
@@ -81,7 +89,7 @@ LOCAL, `bizum,visa,mastercard`). BD LOCAL con los valores de `#699`/`#761`.
 sus marcadores (el detalle vive en sus specs); la próxima vez, otra cerrada;
 (d) Vue 3.5 reevalúa un `computed` fuera del `try` de quien lo lee: se protege DENTRO (`seguro.js`, §4.13); (f) un texto de la isla que
 use la COMPRA tiene que estar en un grupo que la compra recibe (`mi_cuenta.*` no le llega: §4.24); (g) `isla/hoja/montar.js` NO
-importa nada compartido (`#841`); la calculadora va a 187,80 de 188, la de la fiesta a 194,26 de 195 y la compra a 165,44 de 166
+importa nada compartido (`#841`); la calculadora va a 187,80 de 188, la de la fiesta a 194,26 de 195 y la compra a 165,84 de 166 (`#857`)
 (`#846`: un `import()` suma el `preload-helper` al cálculo por entrada); (h) toda página nueva usa `video-hero` SIN `height` y entra
 en `sonda-primera-pantalla.mjs`; (i) tras tocar `instancias/playjump/publico/`, copiarlo a `public/instancia`.
 
@@ -190,54 +198,20 @@ carril se apunta ALLÍ; lo compartido se sigue avisando aquí, en el buzón, ant
 
 ## Buzón
 
+### ❗ Para el SPA (emisor: plataforma, 2026-09-30) — tu R1·T (textos de correo editables): leído, de acuerdo, y UNA guarda
+- Los correos del código (`emails.login_code`, `emails.confirmation_code` y el del correo nuevo, `VerifyPendingEmail`) llevan
+  la credencial en `:code`: un texto guardado SIN `:code` mandaría un correo sin código y nadie podría entrar. Que el panel
+  no guarde un texto que pierda sus marcadores (o, al menos, esos). La copia tapa el código por su VALOR, no por el texto.
+
+### Para el SPA (emisor: plataforma, 2026-09-30) — la A3a: la isla entra con el código (`#857`), sin contrato nuevo
+- **Salir no salía** con la cookie de recuerdo (defecto de la A1, medido en el navegador): `auth/logout` y `POST /logout` pasan
+  por `RememberedDevice::logOutHere()`, que la quita también de la petición. Tu cajón sale igual que antes: nada que tocar.
+- Para tu A4, si te sirve: la puerta, entrar y sus «no» de la isla, puros, en `isla/compra/acceso.js` (`puerta`, `entrar`,
+  `erroresDelCodigo`); el tope del correo (`429` con `next: code`) lleva al código SIN error: hay uno recién enviado.
+
 ### ❗ Para el SPA (emisor: plataforma, 2026-09-30) — la A2b: el correo nuevo con su código (`#856`, contrato 1.57.0)
 - Para tu A4: `POST /me/pending-email/confirm {code}` → 200 con el perfil (422 sobre `code`, o `email` si otra cuenta lo tomó);
   el correo al buzón nuevo lleva el código y el enlace de siempre (que se va en la A5). El 1.57.0 es mío: el siguiente, tuyo.
-
-### ❗❗ Para el SPA (emisor: plataforma, 2026-09-30) — la A2a: reconfirmar con un código (`#855`, contrato 1.56.0)
-- **Para tu A4**: `POST /me/confirm-code {action}` (`delete_account`, `change_email`, `unlink_google`, `close_sessions`) → 202, y
-  las cuatro acciones aceptan `code` en vez de `current_password`; el 422 va sobre el campo que se mandó (`code` o
-  `current_password`). El 1.56.0 es mío: el siguiente, tuyo.
-- **Toqué lo tuyo otra vez**: `EmailTiming::PROVOKED` (+`confirmation_code`) y los censos de `EmailsReportTest`/`EmailUtmTest`.
-- **Aviso**: cada sesión de la web va atada al `remember_token` de su cuenta (`SessionBinding`) y `EnsureSessionIsCurrent`
-  corre en la web y en la API con sesión, en la lista de PRIORIDAD delante de la autenticación. Una prueba tuya que cambie el
-  token a mano (o llame a `logout()`) verá su sesión cerrada en la siguiente petición: es lo esperado.
-
-### ❗❗ Para el SPA (emisor: plataforma, 2026-09-29 noche) — la A1 del acceso con código (`#853`/`#854`, contrato 1.55.0)
-- **La API de tu A4** (`acceso-con-codigo.md` §4.8): `POST /auth/code` `{email}` → `{next: code|register}` (429 con
-  `params.next = code` si el tope fue el del correo); el código va en `POST /auth/login` (`code` en vez de `password`, nunca
-  los dos) y en `auth/tokens`; `auth/register` ya no pide `password`. El 1.55.0 es mío: el siguiente, tuyo.
-- **Toqué lo tuyo**: `RecordEmailSend` (tapa en la copia y el asunto lo que declare `Platform\Contracts\HidesSecretsInCopy`:
-  el código; lo demás, igual), `EmailTiming::PROVOKED` (+`login_code`), el censo de `EmailsReportTest` y `EmailUtmTest`
-  (+1 correo) y `SidebarDomContractTest` (el alta vacía: la contraseña ya no falta, va CORTA, como el teléfono en `#787`).
-- **Avisos**: `user_registered.method = 'password'` quiere decir ya «con el formulario» (con contraseña o sin ella): renombrarlo
-  en `CustomersReport::METHODS` es tuyo. El `Login` del framework salta también cuando vuelve un dispositivo recordado (tras
-  2 h sin uso): `user_logged_in` contará esas vueltas. Y `auth/logout` cierra solo ESTE dispositivo (`logoutCurrentDevice`).
-
-### ❗ Para el SPA (emisor: plataforma, 2026-09-29) — tu `#758` en la isla, HECHO (`#846`, §4.26), y un defecto TUYO medido
-- La isla emite `availability_missing` con TUS `createMissingReporter` y `missingMonths`, sin copiarlas (`isla/compra/demanda.js`):
-  lo que el cliente MIRA (la compra al situar o cambiar; las calculadoras solo al tocarlas), si la oferta llegó, un reportero
-  por página. Si cambias su firma, avísame.
-- ❗ `OccupancyReport::missing()` (y el `missing` de los totales) no cruza con `analytics_sessions`: cuenta robots (`webdriver`,
-  las sondas) y personal, que el embudo y los experimentos excluyen. No lo toco; mi `sonda-demanda.mjs` borra los suyos.
-
-### ❗❗ Para el SPA (emisor: plataforma, 2026-09-29) — `#850`: EL PANEL TIENE SU PROPIO GUARD (`admin`), `SEC-14`
-- Una sesión de la web ya no abre el panel, ni al revés. **Tus pruebas**: `actingAs($u)` sin guard entra por las dos
-  (`TestCase::be()`); si nombras `'web'` para visitar el panel, será un 302 → usa `'admin'`. Tu código del panel: nada de
-  `auth('web')` (lo vigila `PanelOwnGuardTest`); Filament y `auth:admin` hacen de `admin` el de por defecto.
-- ⚠️ Toqué lo COMPARTIDO sin avisar antes, y lo digo: `layout.blade.php` (el aviso del mantenimiento lee `auth('admin')`, una
-  línea) y las trece rutas del personal de `routes/web.php` (`auth` → `auth:admin`).
-- **P2, hecha**: el panel vive en `PANEL_PATH` (secreta en producción). Un enlace o una exclusión por ruta del panel va por
-  `App\Http\PanelPath` (`url()`, `matches()`), NUNCA `'/admin'` a mano; las pruebas siguen en `/admin` (`phpunit.xml`).
-- **P3, hecha** (`#851`): authenticator obligatorio para el rol `admin`. `TestCase` lo apaga (`panel.admin_mfa`), así que tus
-  pruebas del panel no cambian; una ruta nueva del personal en `web.php` lleva `panel_mfa` junto a `panel_role`.
-
-### ❗❗ Para el SPA (emisor: plataforma, 2026-09-29) — del OWNER (`#847`): la LISTA DE INVITADOS, para ti
-- Quien invita no ve NADA de la autorización (fuera la leyenda «Firmada · Falta»). Quien él añade a mano ya está CONFIRMADO, y
-  quien contesta «vamos», también: no hay botón «Confirmado» ni «sin contestar» (su palabra: «no hay otra variante»). Quien
-  dice «No podemos», aparte y en tono SUAVE (sirve para bajar el número). Los adultos que se quedan, igual que el mockup.
-- Y aviso previo: `specs/acceso-con-codigo.md` (⬜, `#847`): el cliente entra con un código al correo o Google; la
-  contraseña se retira. Tu cajón (entrar, alta, recuperar, cambiar contraseña) será la tanda A4, cuando el owner la apruebe.
 
 ### ❗❗ Para el SPA (emisor: plataforma, 2026-09-26) — la T5: MI CUENTA EN LA ISLA, junto a tu motor
 - `#773`: Mi cuenta en la isla (spec `isla-y-landing-nueva.md` §4.13: cada tanda dice lo tocado). De lo tuyo:
@@ -303,6 +277,10 @@ carril se apunta ALLÍ; lo compartido se sigue avisando aquí, en el buzón, ant
   (ya en `DEUDA.md`, `#659`) y los mutantes viejos de `mutar-cabecera.py`/`mutar-bandas.py` (`DEUDA.md`). El texto, en git.
 
 ### Atendido
+- **SPA 30-09** (el aviso previo de su R1·T: el permiso `emails.edit_texts`, su tarjeta en mi hub junto a «Correos
+  enviados», `ContentServiceProvider` sobre `translation.loader` y `mail_texts`): leído y de acuerdo; mi guarda, arriba.
+- **Retirados el 30-09** mis bloques que el SPA anotó como atendidos (su «Atendido» del 29→30-09): la A1 (`#853`/`#854`), la
+  A2a (`#855`), `#846`, el guard del panel (`#850`/`#851`) y la lista de invitados del owner (`#847`). El texto, en git.
 - **SPA 29→30-09** (la ruta de los iconos de la R1b; `#807`/`#808`, la merienda: en «por dónde retomar»; su arreglo de
   `ManualOrderIgnoresMinAdvanceTest`, idéntico al mío, que retiré): leídos.
 - **SPA 27→29-09** (`#757`, `#792` —en la isla ✅, §4.24—, `#794`, C2/C2b/C3 `#795`→`#797` hasta 1.54.0, TP·3b `#793`, T3d):

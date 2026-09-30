@@ -1,11 +1,13 @@
 <script setup>
 /**
  * Paso 1 de la compra, «Tus datos» (`PjcDatos` del diseño, `paginas/compra/pasos-1-2.jsx`). Sin sesión: «¿Ya has
- * venido? Entra», Google o Apple ANTES de los campos (después ya no ahorran nada), nombre, correo, contraseña —y el
+ * venido? Entra», Google o Apple ANTES de los campos (después ya no ahorran nada), nombre y correo —y el
  * teléfono SOLO en un cumpleaños (`pedirTelefono`, `#787`); la fecha de nacimiento, opcional (`#792`: el mockup no la
  * dibuja, va con el sistema)— y la casilla del descargo. Con sesión, solo el saludo y lo
  * que de verdad falta: el teléfono en un cumpleaños si entró con Google o Apple, y la casilla si esa cuenta nunca la firmó. «Esta cuenta ya existe» pide
- * su contraseña; sale al ENVIAR, no al teclear (`#688`). Con errores, un resumen arriba que se lee primero.
+ * el CÓDIGO que le acaba de llegar; sale al ENVIAR, no al teclear (`#688`). Con errores, un resumen arriba que se lee primero.
+ * ▶ Sin CONTRASEÑA desde la A3 del acceso con código (`#848`/`#849`; con las piezas de la isla, a la espera del diseño,
+ * `#857`): la cuenta nace sin ella. `nota`, una nota NEUTRA arriba (el correo de «Entra» que aún no tiene cuenta).
  *
  * Pinta y avisa (`cambiar(campo, valor)`, `entrar(modo)`, `descargo`, `proveedor(via)`, `hora(valor)`): quién es,
  * qué falta y si la hora se llenó lo decide quien lleva la compra.
@@ -44,6 +46,7 @@ const props = defineProps({
     horaNueva: { type: String, default: null },
     enApp: { type: Boolean, default: null },
     aviso: { type: String, default: '' },
+    nota: { type: String, default: '' },
     entrar: { type: Boolean, default: true },
     social: { type: Boolean, default: true },
     // T3e·4 (`#695`): Apple, apagado hasta que exista (`#683`); y la «G» del botón de Google.
@@ -83,6 +86,18 @@ const cambiar = (campo) => (valor) => emit('cambiar', campo, valor);
                 :size="18"
             /></template>
         </AvisoDestacado>
+        <AvisoDestacado
+            v-else-if="nota"
+            tone="neutral"
+            size="sm"
+            role="status"
+            :title="nota"
+        >
+            <template #icono><IconoLucide
+                name="circle-user-round"
+                :size="18"
+            /></template>
+        </AvisoDestacado>
         <template v-if="cuenta !== 'dentro'">
             <AvisoDestacado
                 v-if="cuenta === 'google'"
@@ -95,8 +110,10 @@ const cambiar = (campo) => (valor) => emit('cambiar', campo, valor);
                     :size="18"
                 /></template>
             </AvisoDestacado>
+            <!-- «— o —» antes de los campos (el owner, 30-09, `#857`): Google no es el botón que envía lo de debajo. -->
             <AccesoSocial
                 v-else-if="social"
+                separador
                 :in-app="enApp"
                 :apple="apple"
                 :marca="marcaGoogle"
@@ -137,18 +154,20 @@ const cambiar = (campo) => (valor) => emit('cambiar', campo, valor);
                     /></template>
                     <div :style="{ display: 'grid', gap: '4px', marginTop: '10px' }">
                         <CampoSistema
-                            id="pjc-clave-e"
-                            :label="t('compra.datos.contrasena')"
-                            type="password"
-                            autocomplete="current-password"
-                            :model-value="valores.contrasena"
-                            :error="errores.contrasena || ''"
-                            @update:model-value="cambiar('contrasena')($event)"
+                            id="pjc-codigo-e"
+                            :label="t('compra.datos.codigo')"
+                            inputmode="numeric"
+                            autocomplete="one-time-code"
+                            maxlength="7"
+                            :hint="tp('compra.datos.codigo_enviado', { correo: valores.correo })"
+                            :model-value="valores.codigo"
+                            :error="errores.codigo || ''"
+                            @update:model-value="cambiar('codigo')($event)"
                         />
                         <EnlaceSistema
                             :style="{ justifySelf: 'start' }"
-                            @click="emit('entrar', 'olvido')"
-                        >{{ t('compra.datos.olvido') }}</EnlaceSistema>
+                            @click="emit('entrar', 'otro')"
+                        >{{ t('compra.datos.otro_codigo') }}</EnlaceSistema>
                     </div>
                 </AvisoDestacado>
                 <template v-else>
@@ -178,17 +197,6 @@ const cambiar = (campo) => (valor) => emit('cambiar', campo, valor);
                         :hint="t('compra.datos.pista_nacimiento')"
                         :error="errores.nacimiento || ''"
                         @update:model-value="cambiar('nacimiento')(fechaTecleada($event))"
-                    />
-                    <CampoSistema
-                        v-if="cuenta !== 'google'"
-                        id="pjc-clave"
-                        :label="t('compra.datos.contrasena')"
-                        type="password"
-                        autocomplete="new-password"
-                        :model-value="valores.contrasena"
-                        :hint="t('compra.datos.pista_contrasena')"
-                        :error="errores.contrasena || ''"
-                        @update:model-value="cambiar('contrasena')($event)"
                     />
                 </template>
             </div>

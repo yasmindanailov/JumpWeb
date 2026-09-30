@@ -8,14 +8,15 @@
  * diseño es de un teléfono español, y el producto no es de un país—, y uno más laxo solo gasta una petición.
  */
 import { t as texto } from '../../sidebar/i18n.js';
-import { INVALID_CREDENTIALS } from '../../sidebar/login.js';
 import { isoDeFecha } from '../ui/fecha.js';
 
 /**
- * El formulario en blanco. `cuenta`: `nueva` (alta), `existe` (su contraseña) o `dentro` (con sesión). `nacimiento`, la
+ * El formulario en blanco. `cuenta`: `nueva` (alta), `existe` (su código) o `dentro` (con sesión). `nacimiento`, la
  * fecha del titular como se teclea («07/03/1988»): entera y OPCIONAL (`DECISIONES #792`).
+ * ▶ Sin CONTRASEÑA desde la A3 del acceso con código (`specs/acceso-con-codigo.md`, `#848`/`#849`): la cuenta nueva
+ * nace sin ella, y la que ya existe entra con el `codigo` que le llega al correo.
  */
-export const datosVacios = () => ({ nombre: '', correo: '', telefono: '', nacimiento: '', contrasena: '', descargo: false, cuenta: 'nueva' });
+export const datosVacios = () => ({ nombre: '', correo: '', telefono: '', nacimiento: '', codigo: '', descargo: false, cuenta: 'nueva' });
 
 /**
  * **La fecha de nacimiento, para el servidor**: vacía, `''` (no se manda: `register.js` y `google.js` solo la llevan si
@@ -27,11 +28,11 @@ export function nacimientoDeAlta(valor) {
 }
 
 /**
- * «Entra» en blanco (`PjcEntrar`, T3e·4): `paso` `id` (correo y contraseña) u `olvido` (la confirmación del enlace);
- * `solo`, si el olvido se pidió desde «Esta cuenta ya existe» y «volver» regresa a «Tus datos», no a «Entra».
+ * «Entra» en blanco (`PjcEntrar`, T3e·4): `paso` `id` (el correo) o `codigo` (el que le acaba de llegar), la puerta del
+ * acceso con código (A3, `#849`): el correo decide —con cuenta, el código; nuevo, «Tus datos»—.
  * ⚠️ Solo CORREO (`#695`, `[DECIDIDO owner]`): el acceso del producto no admite teléfono (`LoginRequest`).
  */
-export const entradaVacia = (valor = '') => ({ paso: 'id', valor, clave: '', error: '', solo: false });
+export const entradaVacia = (valor = '') => ({ paso: 'id', valor, codigo: '', error: '', reenvios: 0 });
 
 const vacio = (valor) => String(valor ?? '').trim() === '';
 
@@ -58,7 +59,7 @@ export function revisarDatos(f, { pedirTelefono = false, firmaPendiente = false,
         if (nacimientoDeAlta(f.nacimiento) === null) errores.nacimiento = t('nacimiento');
     } else if (f.cuenta === 'existe') {
         if (! String(f.correo ?? '').includes('@')) errores.correo = t('correo');
-        if (vacio(f.contrasena)) errores.contrasena = t('clave');
+        if (vacio(f.codigo)) errores.codigo = t('codigo');
 
         return errores;
     } else {
@@ -68,7 +69,6 @@ export function revisarDatos(f, { pedirTelefono = false, firmaPendiente = false,
         if (pedirTelefono && vacio(f.telefono)) errores.telefono = t('telefono');
         // Opcional: solo se para la que está A MEDIAS o no existe («31/02/1990»); vacía, pasa.
         if (nacimientoDeAlta(f.nacimiento) === null) errores.nacimiento = t('nacimiento');
-        if (vacio(f.contrasena)) errores.contrasena = t('contrasena');
     }
 
     if (firmaPendiente && f.descargo !== true) errores.descargo = t('descargo');
@@ -89,7 +89,7 @@ export function hayQuePedir({ identificado, pedirTelefono = false, firma = false
 }
 
 /** El campo de la isla que corresponde a cada campo del alta. Lo que no está aquí va arriba, al resumen. */
-const CAMPOS = { name: 'nombre', email: 'correo', phone: 'telefono', born_on: 'nacimiento', password: 'contrasena', accept_waiver: 'descargo', waiver_document_id: 'descargo' };
+const CAMPOS = { name: 'nombre', email: 'correo', phone: 'telefono', born_on: 'nacimiento', code: 'codigo', accept_waiver: 'descargo', waiver_document_id: 'descargo' };
 
 /**
  * Los «no» del servidor, a su campo, con SU mensaje.
@@ -109,36 +109,11 @@ export function erroresDelServidor(campos) {
     return { errores, resto };
 }
 
-/** ¿El «no» del alta es que la cuenta YA EXISTE (verificada o no)? Entonces se pide su contraseña, allí mismo. */
-export const cuentaQueYaExiste = (signup) => signup === 'already_registered' || signup === 'pending_verification';
-
 /**
- * El «no» de ENTRAR con la contraseña de una cuenta que ya existe (`runLogin()` tal cual). Las credenciales, con la
- * frase del diseño bajo la contraseña —no dice cuál de las dos falla, como el acceso de siempre (`SEC-06`)—, por su
- * CÓDIGO y no por el texto; un campo, con su mensaje; el limitador y el corte de red, arriba.
- *
- * @returns {{errores: Record<string, string>, aviso: string}}
+ * ¿El «no» del alta es que la cuenta YA EXISTE (verificada o no)? Entonces se pide su código, allí mismo. La puerta, entrar
+ * con el código y sus «no» viven en `acceso.js`, en el trozo diferido de los pasos (A3, `#849`).
  */
-export function erroresDelAcceso(resultado, textos = {}) {
-    if (resultado?.response?.error?.code === INVALID_CREDENTIALS) {
-        return { errores: { contrasena: texto(textos, 'compra.datos.errores.entrar') }, aviso: '' };
-    }
-
-    const campos = resultado?.errors?.fields ?? {};
-    const errores = {};
-
-    if (campos.email) errores.correo = campos.email;
-    if (campos.password) errores.contrasena = campos.password;
-
-    return { errores, aviso: resultado?.errors?.global ?? '' };
-}
-
-/** El mismo «no», en la ÚNICA línea de error de «Entra» (bajo la contraseña, como la pinta el diseño). */
-export function errorDeEntrar(resultado, textos = {}) {
-    const { errores, aviso } = erroresDelAcceso(resultado, textos);
-
-    return errores.contrasena || errores.correo || aviso || '';
-}
+export const cuentaQueYaExiste = (signup) => signup === 'already_registered' || signup === 'pending_verification';
 
 /**
  * ¿Hay descargo que FIRMAR aquí? Sin sesión, si la instalación sirve un texto firmable (`GET /legal/waiver`: solo en
@@ -153,10 +128,13 @@ export function firmaPendiente({ cuenta, contexto = null, documento = null }) {
     return contexto?.waiver?.required === true && contexto?.waiver?.pending !== true;
 }
 
-/** El formulario de la isla, en el del alta del motor (`stores/auth.js`). La fecha, en `Y-m-d` o vacía (`#792`). */
+/**
+ * El formulario de la isla, en el del alta del motor (`stores/auth.js`). La fecha, en `Y-m-d` o vacía (`#792`). ⚠️ La
+ * contraseña va VACÍA (A3, `#849`): el alta ya no la pide (`POST /auth/register` 1.55.0) y el servidor la guarda `NULL`.
+ */
 export function formularioDeAlta(f) {
     return {
         name: f.nombre.trim(), email: f.correo.trim(), phone: f.telefono.trim(), born_on: nacimientoDeAlta(f.nacimiento) ?? '',
-        password: f.contrasena, accept_waiver: f.descargo === true,
+        password: '', accept_waiver: f.descargo === true,
     };
 }

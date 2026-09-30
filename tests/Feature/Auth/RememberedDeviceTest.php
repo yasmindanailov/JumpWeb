@@ -153,6 +153,26 @@ class RememberedDeviceTest extends ApiTestCase
     }
 
     /**
+     * ⚠️⚠️ Tras salir, NADIE dentro: la petición de salir trae la cookie de recuerdo, y un guard resuelto a la vuelta
+     * (`Auth::forgetGuards()` + el `$request->user()` de `NoStoreWhenAuthenticated`) volvía a entrar con ella y dejaba la
+     * sesión NUEVA con el titular dentro. Medido en el navegador (A3, `#857`): tras «Cerrar sesión», `/me` daba 200.
+     */
+    public function test_logging_out_does_not_sign_this_device_back_in(): void
+    {
+        $user = $this->rememberedUser();
+
+        $this->device($this->cookieOf($user))->postJson(self::ROOT.'/auth/logout')->assertNoContent();
+
+        // La siguiente petición del navegador: con su sesión (la del driver `array`, el mismo almacén) y SIN la cookie de
+        // recuerdo, que la respuesta mandó borrar. Sin `device()`: vaciaría la sesión que se quiere mirar.
+        Auth::forgetGuards();
+        $this->defaultCookies = [];
+        $this->withCredentials()->withHeader('Origin', (string) config('app.url'))
+            ->getJson(self::ROOT.'/me')
+            ->assertStatus(401);
+    }
+
+    /**
      * Una cuenta SIN contraseña se recuerda sin avisos: el framework pasa la contraseña por `hash_hmac()`, y un `NULL` ahí
      * es obsoleto en PHP 8.5 (y un error en la siguiente). `User::getAuthPassword()` da `''`.
      */

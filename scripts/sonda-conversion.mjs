@@ -38,8 +38,23 @@ if (tinker(`echo App\\Domain\\Identity\\Models\\User::where('email', '${CLIENTE.
     console.error(`✗ falta la cuenta de pruebas ${CLIENTE.email}: su receta, en scripts/sonda-isla.mjs`);
     process.exit(1);
 }
-// Los limitadores que dos corridas seguidas agotan (los mismos que `sonda-isla.mjs`).
-tinker(`$id = App\\Domain\\Identity\\Models\\User::where('email', '${CLIENTE.email}')->value('id'); foreach ([md5('api'.'user:'.$id), md5('api'.'ip:127.0.0.1'), Illuminate\\Support\\Str::transliterate('${CLIENTE.email}|127.0.0.1'), 'login-ip|127.0.0.1'] as $k) { Illuminate\\Support\\Facades\\RateLimiter::clear($k); }`);
+// Los limitadores que dos corridas seguidas agotan (los mismos que `sonda-isla.mjs`, con los de pedir el código).
+tinker(`$id = App\\Domain\\Identity\\Models\\User::where('email', '${CLIENTE.email}')->value('id'); $h = App\\Domain\\Identity\\Services\\SelfSignup::emailHash('${CLIENTE.email}'); foreach ([md5('api'.'user:'.$id), md5('api'.'ip:127.0.0.1'), Illuminate\\Support\\Str::transliterate('${CLIENTE.email}|127.0.0.1'), 'login-ip|127.0.0.1', 'login-code-ip|127.0.0.1', 'login-code-email|'.$h, 'login-code-email-hour|'.$h] as $k) { Illuminate\\Support\\Facades\\RateLimiter::clear($k); }`);
+
+/** El código para entrar recién llegado al buzón (Mailpit, su asunto), después de `desde`: el de `sonda-isla.mjs`. */
+const MAILPIT = process.env.SONDA_MAILPIT ?? 'http://mailpit:8025';
+async function codigoDelBuzon(desde) {
+    const url = `${MAILPIT}/api/v1/search?query=${encodeURIComponent(`to:"${CLIENTE.email}"`)}&limit=1`;
+
+    for (let i = 0; i < 60; i += 1) {
+        const ultimo = (await fetch(url).then((r) => r.json()).catch(() => null))?.messages?.[0];
+        const cifras = /(\d{3}) (\d{3}) /.exec(ultimo?.Subject ?? '');
+        if (cifras && Date.parse(ultimo.Created) >= desde - 2000) return `${cifras[1]}${cifras[2]}`;
+        await new Promise((listo) => setTimeout(listo, 250));
+    }
+
+    return null;
+}
 
 const filas = [];
 const ok = (nombre, cierto, detalle = '') => filas.push(`${cierto ? '✓' : '✗'} ${ANCHO} · ${nombre}${detalle ? ` — ${String(detalle).replace(/\s+/g, ' ').slice(0, 170)}` : ''}`);
@@ -188,8 +203,12 @@ try {
     // ── 5. La política al final del recibo de «Pagar» ───────────────────────────────────────────────────
     await page.locator('[data-isla-scroll] a, [data-isla-scroll] button', { hasText: /^Entra$/ }).first().click();
     await page.fill('#pjc-ent', CLIENTE.email);
-    await page.fill('#pjc-ent-clave', CLIENTE.password);
+    // Con un código al correo (A3 del acceso con código, `#849`).
+    const desde = Date.now();
     await accion(/^Continuar$/).click();
+    await page.waitForSelector('#pjc-ent-codigo', { timeout: 15000 });
+    await page.fill('#pjc-ent-codigo', (await codigoDelBuzon(desde)) ?? '');
+    await accion(/^Entrar$/).click();
     await espera(() => /^Hola/.test(document.querySelector('[data-isla-scroll] h1')?.textContent ?? '') || (document.querySelector('#isla-compra-paso')?.textContent ?? '').trim().endsWith('Pagar'));
     if (/Tus datos/.test(await paso())) {
         if (await page.locator('#pjc-tel').count()) await page.fill('#pjc-tel', '600000000');

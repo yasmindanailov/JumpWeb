@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Domain\Identity\Services\RememberedDevice;
 use App\Http\Controllers\Controller;
-use Illuminate\Auth\SessionGuard;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -20,12 +20,11 @@ class LogoutController extends Controller
     {
         $userId = Auth::id();
 
-        // ⚠️ `logoutCurrentDevice()` y no `logout()` (A2a del acceso con código, `#855`): salir cierra ESTE dispositivo
+        // ⚠️ ESTE dispositivo y no `logout()` (A2a del acceso con código, `#855`): salir cierra ESTE dispositivo
         // (`#848`·3, como `auth/logout`). `logout()` rota el `remember_token` —uno por cuenta, al que van atadas todas las
-        // sesiones y cookies de recuerdo— y echaría también al móvil al salir en el portátil.
-        /** @var SessionGuard $web */
-        $web = Auth::guard('web');
-        $web->logoutCurrentDevice();
+        // sesiones y cookies de recuerdo— y echaría también al móvil al salir en el portátil. Y su cookie de recuerdo sale
+        // también de esta petición (A3, `#857`): lo que preguntara después por el usuario volvía a entrar con ella.
+        RememberedDevice::logOutHere($request);
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 

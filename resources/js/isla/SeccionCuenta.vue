@@ -41,7 +41,7 @@ defineOptions({ inheritAttrs: false });
 const props = defineProps(PROPS_MOTOR);
 const {
     abierta, textos, e, ck, inicio, vistaQr, social, firma, authStore, waiverStore, rotulosGoogle, tx, sinQr,
-    pantallaEntrar, avisoEntrar, google, abrirQr, aInicio, renovarQr, olvido, aGoogle, guardarQr, pedirRenovar, cambiarEntrada,
+    pantallaEntrar, avisoEntrar, google, abrirQr, aInicio, renovarQr, otroCodigo, aGoogle, guardarQr, pedirRenovar, cambiarEntrada,
     cambiarAlta, aCrear, leerDescargo, cambiarGoogle, irAlBloque, abrirReserva, aCambiar, masHistorial, reservaAbierta,
     cambiarVista, antesAbierta, hacerTarea, pantallaHijos, fichaHijo, abrirHijos, abrirHijo, cambiarHijo, otroHijo,
     quitarFicha, casillaHijos, casillaHijo, preguntarQuitar, quitarHijo, alternarAjuste, datoAjuste, guardarDatos, pasoAjuste,
@@ -168,7 +168,7 @@ const proveedor = (via) => via === 'google' && aGoogle();
                 :pantalla="pantallaEntrar"
                 :aviso="avisoEntrar"
                 @cambiar="cambiarEntrada"
-                @olvido="olvido"
+                @otro="otroCodigo"
                 @proveedor="proveedor"
                 @crear="aCrear"
             />
@@ -181,6 +181,7 @@ const proveedor = (via) => via === 'google' && aGoogle();
                 :firmado="! firma"
                 :errores="e.errores"
                 :aviso="e.avisoAlta"
+                :nota="e.nota"
                 v-bind="social"
                 @cambiar="cambiarAlta"
                 @descargo="leerDescargo"

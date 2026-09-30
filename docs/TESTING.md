@@ -427,6 +427,9 @@ son de cualquiera que mida, no de un carril.
   MySQL dan un solo 201, y su CONTROL —el código sin las condiciones atómicas— también: cuatro procesos de `artisan serve`
   no abren el hueco. La propiedad se prueba DETERMINISTA (el segundo uso dentro del hueco, con `DB::listen`) y se muta.
   Y una sonda que repite la carrera limpia antes los cubos que la anterior agotó (`SEC-06` la bloquea: 429 en todo).
+- **Las sondas ENTRAN con el código del buzón** (A3, `#857`): `codigoDelBuzon(desde)` lo lee del asunto en Mailpit
+  (`http://mailpit:8025` desde el contenedor) y solo si llegó DESPUÉS de pedirlo; sus `limitadoresACero` vacían también los
+  cubos del código (`login-code-*`): con el del minuto vivo, la segunda corrida no recibe otro y lee el de la primera, gastado.
 
 ### 3. Guardas de arquitectura — `tests/Feature/Architecture/`
 Tests que no prueban una feature sino una REGLA estructural; sin ellos el refactor de Fase 2 se

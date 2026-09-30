@@ -5,13 +5,13 @@ namespace App\Http\Controllers\Api\V1;
 use App\Domain\Identity\Contracts\LoginResult;
 use App\Domain\Identity\Services\EmailCodeLogin;
 use App\Domain\Identity\Services\PasswordLogin;
+use App\Domain\Identity\Services\RememberedDevice;
 use App\Http\Api\ApiErrorCode;
 use App\Http\Api\ApiErrorResponse;
 use App\Http\Api\Concerns\RequiresStatefulSession;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\UserResource;
 use App\Http\Sidebar\SidebarEntry;
-use Illuminate\Auth\SessionGuard;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -137,12 +137,10 @@ class AuthSessionController extends Controller
         // ⚠️ `logoutCurrentDevice()` y no `logout()` (A1 de `specs/acceso-con-codigo.md`, `#853`): el dispositivo queda
         // recordado «hasta cerrar sesión» (`#848`·3) —ESTE—. `logout()` rota el `remember_token`, que es uno por cuenta,
         // y echaría también al móvil cuando se sale en el portátil. Borra la cookie de recuerdo de aquí igual. Echar a
-        // los demás es «cerrar las demás sesiones» (`User::revokeOtherAccess()`).
+        // los demás es «cerrar las demás sesiones» (`User::revokeOtherAccess()`). Y la cookie sale también de ESTA
+        // petición ({@see RememberedDevice::logOutHere()}): el guard que resuelve `forgetGuards()`, abajo, volvía a entrar.
         if ($request->hasSession()) {
-            // El guard `web` es de sesión (`config/auth.php`): el contrato `StatefulGuard` no declara el método.
-            /** @var SessionGuard $web */
-            $web = auth('web');
-            $web->logoutCurrentDevice();
+            RememberedDevice::logOutHere($request);
             $request->session()->invalidate();
             $request->session()->regenerateToken();
         }

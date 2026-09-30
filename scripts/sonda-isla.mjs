@@ -32,6 +32,7 @@ const SALIDA = 'storage/app/audit';
 const POLITICA = '2026-09-24'; // CookieConsent::POLICY_VERSION: con el aviso ya contestado, la isla no lo antepone
 const ANCHO = Number(process.argv[2] ?? 1280);
 const CLIENTE = { email: 'probe-card@jumpweb.test', password: 'Probe-card-2026!' };
+const MAILPIT = process.env.SONDA_MAILPIT ?? 'http://mailpit:8025';
 const tinker = (php) => execFileSync('php', ['artisan', 'tinker', '--execute', php], { encoding: 'utf8' }).trim();
 const SUS_PEDIDOS = `App\\Domain\\Booking\\Models\\Order::whereHas('user', fn ($q) => $q->where('email', '${CLIENTE.email}'))`;
 const ULTIMO = `${SUS_PEDIDOS}->latest('id')->first()`;
@@ -61,7 +62,27 @@ if (tinker(`echo App\\Domain\\Identity\\Models\\User::where('email', '${CLIENTE.
  * REINTENTO, cuya clave sin nombre es `sha1(id del titular)` y la comparten los demás `throttle` numéricos (medido: la
  * segunda corrida a 390 daba 429 al reintentar).
  */
-const limitadoresACero = () => tinker(`$id = App\\Domain\\Identity\\Models\\User::where('email', '${CLIENTE.email}')->value('id'); foreach ([md5('api'.'user:'.$id), md5('api'.'ip:127.0.0.1'), Illuminate\\Support\\Str::transliterate('${CLIENTE.email}|127.0.0.1'), 'login-ip|127.0.0.1', 'reservation-confirm:'.$id, sha1((string) $id)] as $k) { Illuminate\\Support\\Facades\\RateLimiter::clear($k); }`);
+// Y los de pedir el código (A3 del acceso con código): con el del minuto vivo, la segunda corrida no recibiría otro y
+// leería del buzón el de la primera, ya gastado.
+const limitadoresACero = () => tinker(`$id = App\\Domain\\Identity\\Models\\User::where('email', '${CLIENTE.email}')->value('id'); $h = App\\Domain\\Identity\\Services\\SelfSignup::emailHash('${CLIENTE.email}'); foreach ([md5('api'.'user:'.$id), md5('api'.'ip:127.0.0.1'), Illuminate\\Support\\Str::transliterate('${CLIENTE.email}|127.0.0.1'), 'login-ip|127.0.0.1', 'login-code-ip|127.0.0.1', 'login-code-email|'.$h, 'login-code-email-hour|'.$h, 'reservation-confirm:'.$id, sha1((string) $id)] as $k) { Illuminate\\Support\\Facades\\RateLimiter::clear($k); }`);
+
+/**
+ * El código para entrar que acaba de llegar al buzón de la cuenta de pruebas (A3 del acceso con código, `#849`): lo lee
+ * de Mailpit —el correo de verdad, enviado tras la respuesta—, de su asunto («123 456 es tu código para entrar»), y solo
+ * uno llegado DESPUÉS de `desde` (el de una corrida anterior ya se gastó).
+ */
+async function codigoDelBuzon(desde) {
+    const url = `${MAILPIT}/api/v1/search?query=${encodeURIComponent(`to:"${CLIENTE.email}"`)}&limit=1`;
+
+    for (let i = 0; i < 60; i += 1) {
+        const ultimo = (await fetch(url).then((r) => r.json()).catch(() => null))?.messages?.[0];
+        const cifras = /(\d{3}) (\d{3}) /.exec(ultimo?.Subject ?? '');
+        if (cifras && Date.parse(ultimo.Created) >= desde - 2000) return `${cifras[1]}${cifras[2]}`;
+        await new Promise((listo) => setTimeout(listo, 250));
+    }
+
+    return null;
+}
 
 /** La notificación firmada del banco, sobre el último cobro de la cuenta: `0000` es el sí. */
 const bancoDice = (respuesta) => tinker(`$o = ${ULTIMO}; $p = $o->payments()->latest('id')->first(); $r = app(App\\Domain\\Payments\\Services\\Redsys::class); $params = strtr(base64_encode(json_encode(['Ds_Order' => $p->gateway_order, 'Ds_Response' => '${respuesta}', 'Ds_Amount' => (string) $p->amount, 'Ds_Currency' => '978', 'Ds_AuthorisationCode' => '123456'])), '+/', '-_'); app(App\\Domain\\Payments\\Services\\RedsysReturnHandler::class)->process(['Ds_SignatureVersion' => 'HMAC_SHA256_V1', 'Ds_MerchantParameters' => $params, 'Ds_Signature' => $r->createMerchantSignatureNotif($r->config()['secret_key'], $params)], 'notification');`);
@@ -103,18 +124,27 @@ const volverDelBanco = async (ruta) => {
 
 /**
  * Hasta «Pagar», con la sesión que haya. Sin sesión, «Tus datos» y su «Entra» con la cuenta de pruebas; con ella y nada
- * que pedir, «Pagar» directamente (`#785`), y si falta algo (el teléfono, el descargo), se da en «Tus datos».
+ * que pedir, «Pagar» directamente (`#785`), y si falta algo (el teléfono, el descargo), se da en «Tus datos». Devuelve si
+ * entró con el código.
  */
 async function hastaPagar() {
     const enDatos = () => (document.querySelector('#isla-compra-paso')?.textContent ?? '').includes('Tus datos');
+    let entro = false;
 
     await espera(() => /Tus datos|Pagar$/.test((document.querySelector('#isla-compra-paso')?.textContent ?? '').trim()), null, 20000);
     await quieta();
     if (await page.evaluate(enDatos) && ! /^Hola/.test(await page.locator('[data-isla-scroll] h1').innerText().catch(() => ''))) {
+        entro = true;
         await page.locator('[data-isla-scroll] a, [data-isla-scroll] button', { hasText: /^Entra$/ }).first().click();
         await page.fill('#pjc-ent', CLIENTE.email);
-        await page.fill('#pjc-ent-clave', CLIENTE.password);
+        // Entra con un código al correo (A3, `#849`): el correo pide el código, y el del buzón entra.
+        const desde = Date.now();
         await accion(/^Continuar$/).click();
+        await page.waitForSelector('#pjc-ent-codigo', { timeout: 15000 });
+        const codigo = await codigoDelBuzon(desde);
+        ok('«Entra»: el correo con cuenta pide el código, y llega al buzón', codigo !== null, codigo ?? 'sin código en Mailpit');
+        await page.fill('#pjc-ent-codigo', codigo ?? '');
+        await accion(/^Entrar$/).click();
         await espera(() => /^Hola/.test(document.querySelector('[data-isla-scroll] h1')?.textContent ?? '') || (document.querySelector('#isla-compra-paso')?.textContent ?? '').trim().endsWith('Pagar'), null, 20000);
     }
     // Lo que la cuenta aún deba (el teléfono, el descargo) se da aquí mismo.
@@ -125,6 +155,8 @@ async function hastaPagar() {
     }
     await hastaPaso('Pagar');
     await quieta();
+
+    return entro;
 }
 
 /** La franja de la línea de la cesta (la que persiste el motor): la de su zona, ese día y a esa hora. */
@@ -176,8 +208,21 @@ try {
     const calculado = await page.locator('[data-jw-calculadora-lado]').innerText();
     ok('la calculadora de /kids: un día y una hora elegidos, con su total', /\d\s?€/.test(calculado), calculado.slice(0, 90));
     await page.locator('[data-jw-calculadora-lado] button', { hasText: 'Reservar y pagar' }).click();
-    await hastaPagar();
-    ok('«Tus datos» con la cuenta → «Paso 2 de 2 · Pagar»', (await paso()).includes('Pagar'), await paso());
+    const entro = await hastaPagar();
+    // Entrar con el código en «Tus datos» y sin nada más que pedir (`#857`, el owner 30-09): «Tus datos» SALE DEL CAMINO.
+    // «Pagar» queda como la de quien llega con sesión —sin «Paso 2 de 2», con «Reservas como …»— y su flecha vuelve a la
+    // reserva, no a una pantalla vacía; y «Continuar» lleva otra vez a «Pagar», directo.
+    ok('«Tus datos» con la cuenta → «Pagar» como quien llega con sesión: sin «Paso 2 de 2» y «Reservas como …»',
+        entro && (await paso()).trim() === 'Pagar' && /Reservas como Sonda/.test(await cuerpo()), `${await paso()} · ${(await cuerpo()).slice(0, 70)}`);
+    await page.locator('[data-isla] button[aria-label="Volver"]').click();
+    await espera(() => ! /Tus datos|Pagar/.test(document.querySelector('#isla-compra-paso')?.textContent ?? ''), null, 15000).catch(() => {});
+    await quieta();
+    const trasVolver = await paso();
+    ok('su flecha vuelve a la RESERVA, no a «Tus datos»', ! /Tus datos|Pagar/.test(trasVolver) && (await accion(/^Continuar$/).count()) > 0, trasVolver);
+    await accion(/^Continuar$/).click();
+    await hastaPaso('Pagar');
+    await quieta();
+    ok('y «Continuar» vuelve a «Pagar» directo, con la sesión', (await paso()).trim() === 'Pagar', await paso());
     // Las formas de pago (`#784`, `#786`): las del arranque, BAJO el botón de pagar (fuera del recibo), en su versión para
     // fondo oscuro (`urls.mark_<id>_ink`: la isla es tinta), en su orden y CARGADAS.
     const marcas = await page.evaluate(async () => {

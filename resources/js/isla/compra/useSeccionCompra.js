@@ -54,7 +54,8 @@ export function useSeccionCompra(props) {
     /**
      * `preparando` (`#785`): la compra va SOLA al paso que toque —«Reservar y pagar» de la calculadora, la vuelta de
      * Google— y la pantalla 0 no se enseña mientras: un esqueleto, sin nada que tocar (el owner: «al usuario le da tiempo
-     * a presionar continuar o editar algo»). `sinDatos`: se llegó a «Pagar» sin pasar por «Tus datos» (nada que pedir).
+     * a presionar continuar o editar algo»). `sinDatos`: «Tus datos» no está en el camino de «Pagar» —no hizo falta, o
+     * con la sesión ya abierta dejó de tener algo que pedir (`#857`)—.
      * `alEntrar` (`#822`, §4.16): la hora se llenó al CONTINUAR de la pantalla 0, no al pagar —la línea aún no está en la
      * cesta y nada se ha cobrado ni pedido—. `desde` (T5f): la compra la abrió Mi cuenta («Reservar otra vez», «Reserva tu
      * primera visita»), y la flecha de la pantalla 0 vuelve a ella; o el SELECTOR de planes (`#831`), y la flecha lo
@@ -276,13 +277,22 @@ export function useSeccionCompra(props) {
         await trasAdmitir();
     }
 
+    /**
+     * De «Tus datos» a «Pagar». ⚠️ Si con la sesión ya no falta nada, «Tus datos» SALE DEL CAMINO (`sinDatos`, el owner,
+     * 30-09, `#857`): «Pagar» queda como la de quien llegó con sesión —«Reservas como Ana», sin «Paso 2 de 2»— y su flecha
+     * vuelve a la reserva, no a una pantalla sin nada que pedir. A «Tus datos» solo se vuelve si falta algo de la cuenta.
+     */
+    async function aPagarDesdeDatos() {
+        Object.assign(compra, { paso: 'pagar', sinDatos: ! await datos.faltaAlgo() });
+    }
+
     /** «Continuar al pago» de «Tus datos». */
     async function continuarDatos() {
         if (compra.ocupado) return;
         compra.ocupado = 'datos';
 
         try {
-            if (await datos.continuar()) compra.paso = 'pagar';
+            if (await datos.continuar()) await aPagarDesdeDatos();
         } finally {
             compra.ocupado = null;
         }
@@ -297,7 +307,7 @@ export function useSeccionCompra(props) {
         compra.ocupado = 'entrar';
 
         try {
-            if (await datos.entrarConClave() && ! await datos.faltaAlgo()) compra.paso = 'pagar';
+            if (await datos.continuarEntrada() && ! await datos.faltaAlgo()) await aPagarDesdeDatos();
         } finally {
             compra.ocupado = null;
         }
@@ -475,7 +485,7 @@ export function useSeccionCompra(props) {
                 horaNueva: compra.horaNueva, sinDatos: compra.sinDatos, alEntrar: compra.alEntrar,
                 acciones: {
                     cerrar,
-                    // De «Pagar» a «Tus datos»; sin «Tus datos» delante (`#785`), a la pantalla 0, que es lo que se eligió. De
+                    // De «Pagar» a «Tus datos» si falta algo de la cuenta; si no (`#785`, `#857`), a la pantalla 0. De
                     // la hora llena al continuar (`#822`), a la pantalla 0 sin tocar la cesta.
                     volver: paso.value === 'pagar' ? (compra.sinDatos ? aCuando : () => { compra.paso = 'datos'; })
                         : paso.value === 'perdida' && compra.alEntrar ? volverDeLaPerdida
@@ -501,6 +511,8 @@ export function useSeccionCompra(props) {
         pedirTelefono: datos.pedirTelefono.value,
         errores: datos.estado.errores,
         aviso: datos.estado.aviso,
+        // La nota NEUTRA de «Entra» con un correo nuevo: «aún no tienes cuenta: rellena tus datos» (A3, `#849`).
+        nota: datos.estado.nota,
         // Lo de después de pagar (los hijos, los adultos) solo tiene sentido si la instalación firma dentro y viene más gente.
         lineaMenores: (datos.contexto.context?.waiver?.mode ?? datos.waiverStore.legal?.mode) === 'interno' && (compra.pedido?.n ?? 0) > 1,
         // El alta que vuelve de Google (`#785`): su correo, a la vista.
@@ -508,11 +520,11 @@ export function useSeccionCompra(props) {
         ...social.value,
     }));
 
-    /** «Entra» (`PjcEntrar`): solo correo (`#695`), su contraseña, su olvido y Google. */
+    /** «Entra» (`PjcEntrar`): solo correo (`#695`), luego su código (A3 del acceso con código, `#849`), y Google. */
     const pantallaEntrar = computed(() => {
-        const { paso: pasoEntrada, valor, clave, error } = datos.estado.ent;
+        const { paso: pasoEntrada, valor, codigo, error, reenvios } = datos.estado.ent;
 
-        return { paso: pasoEntrada, valor, clave, error, ...social.value };
+        return { paso: pasoEntrada, valor, codigo, error, reenvios, ...social.value };
     });
 
     const listo = computed(() => pantallaListo({

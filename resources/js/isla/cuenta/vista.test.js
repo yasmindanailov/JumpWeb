@@ -7,10 +7,10 @@ import { VISTA, ckDeCuenta, lineaProxima, vistaDeApertura } from './vista.js';
 const textos = {
     mi_cuenta: { titulo: 'Mi cuenta', qr: { titulo: 'Tu QR' } },
     mi_cuenta_alta: { crear_titulo: 'Crea tu cuenta', crear_boton: 'Crear mi cuenta', creando: 'Creando tu cuenta' },
-    compra: { entrar: { titular: 'Entra', continuar: 'Continuar', cargando: 'Entrando' }, datos: { olvido: '¿Has olvidado tu contraseña?' } },
+    compra: { entrar: { titular: 'Entra', continuar: 'Continuar', entrar: 'Entrar', cargando: 'Entrando', enviando: 'Enviando el código' }, datos: {} },
 };
 const acciones = {
-    cerrar: () => 'cerrar', alMenu: () => 'menu', aInicio: () => 'inicio', aEntrar: () => 'entrar',
+    cerrar: () => 'cerrar', alMenu: () => 'menu', aInicio: () => 'inicio', aEntrar: () => 'entrar', aCorreo: () => 'correo',
     entrar: () => 'entrar!', crear: () => 'crear!', completarGoogle: () => 'google!', volverDelDescargo: () => 'formulario',
     aReserva: () => 'reserva', escribir: () => 'whatsapp!',
 };
@@ -151,25 +151,31 @@ describe('la banda de cada vista', () => {
         assert.equal(ck({ vista: VISTA.QR }).step, 'Tu QR');
     });
 
-    test('Entrar: «Continuar» apagado hasta tener correo y contraseña, y «Entrando» mientras', () => {
-        assert.equal(ck({ vista: VISTA.ENTRAR, entrada: { valor: '', clave: '' } }).action.disabled, true);
-        assert.equal(ck({ vista: VISTA.ENTRAR, entrada: { valor: 'a@b.es', clave: '' } }).action.disabled, true);
-        assert.equal(ck({ vista: VISTA.ENTRAR, entrada: { valor: '  ', clave: 'x' } }).action.disabled, true);
+    // A3 del acceso con código (`#849`): Entra pide el correo y, después, el código que le llega.
+    test('Entrar con el CORREO: «Continuar» apagado hasta tenerlo, «Enviando el código» mientras, y la flecha del menú', () => {
+        assert.equal(ck({ vista: VISTA.ENTRAR, entrada: { paso: 'id', valor: '' } }).action.disabled, true);
+        assert.equal(ck({ vista: VISTA.ENTRAR, entrada: { paso: 'id', valor: '  ' } }).action.disabled, true);
 
-        const lista = ck({ vista: VISTA.ENTRAR, entrada: { valor: 'a@b.es', clave: 'secreta1' } });
+        const lista = ck({ vista: VISTA.ENTRAR, entrada: { paso: 'id', valor: 'a@b.es' }, desde: 'menu' });
         assert.equal(lista.action.disabled, false);
         assert.equal(lista.action.label, 'Continuar');
         assert.equal(lista.action.loading, false);
         assert.equal(lista.action.onClick(), 'entrar!');
-        assert.equal(ck({ vista: VISTA.ENTRAR, entrada: { valor: 'a@b.es', clave: 'x' }, ocupado: 'entrar' }).action.loading, 'Entrando');
+        assert.equal(lista.onBack(), 'menu');
+        assert.equal(ck({ vista: VISTA.ENTRAR, entrada: { paso: 'id', valor: 'a@b.es' }, ocupado: 'entrar' }).action.loading, 'Enviando el código');
     });
 
-    test('el olvido es un paso de Entrar: su flecha vuelve a Entrar y no lleva acción', () => {
-        const olvido = ck({ vista: VISTA.ENTRAR, subpaso: 'olvido', desde: 'menu' });
-        assert.equal(olvido.step, '¿Has olvidado tu contraseña?');
-        assert.equal(olvido.onBack(), 'entrar');
-        assert.equal(olvido.action, null);
-        assert.notEqual(olvido.key, ck({ vista: VISTA.ENTRAR }).key, 'otra clave: la isla anima el cambio');
+    test('Entrar con el CÓDIGO: «Entrar» apagado hasta escribirlo, «Entrando» mientras, y la flecha vuelve al correo', () => {
+        const sin = ck({ vista: VISTA.ENTRAR, entrada: { paso: 'codigo', valor: 'a@b.es', codigo: ' ' }, desde: 'menu' });
+        assert.equal(sin.action.disabled, true, 'el correo lleno no basta: falta el código');
+        assert.equal(sin.action.label, 'Entrar');
+        assert.equal(sin.onBack(), 'correo', 'desde el menú también: primero, a corregir el correo');
+
+        const con = ck({ vista: VISTA.ENTRAR, entrada: { paso: 'codigo', valor: 'a@b.es', codigo: '123456' } });
+        assert.equal(con.action.disabled, false);
+        assert.equal(con.action.onClick(), 'entrar!');
+        assert.equal(ck({ vista: VISTA.ENTRAR, entrada: { paso: 'codigo', codigo: '123456' }, ocupado: 'entrar' }).action.loading, 'Entrando');
+        assert.notEqual(con.key, ck({ vista: VISTA.ENTRAR, entrada: { paso: 'id' } }).key, 'otra clave: la isla anima el cambio');
     });
 
     test('Crea tu cuenta: vuelve a Entrar y su acción es «Crear mi cuenta», con «Creando tu cuenta»', () => {

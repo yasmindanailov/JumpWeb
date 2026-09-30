@@ -10,7 +10,7 @@
  *   · **Entrar, crear la cuenta o volver de Google abre la sesión RECARGANDO esta página en Mi cuenta**
  *     (`#mi-cuenta`). Lo obliga una medida: los textos de Mi cuenta viajan solo con sesión (`SidebarBoot::personal()`;
  *     mandarlos a todo visitante eran ~5 KB en cada página, `PERF-02`), y es el mismo camino que el área del cajón
- *     (`account/after-auth.js`): la contraseña no sobrevive en memoria y la página entera sabe ya quién es.
+ *     (`account/after-auth.js`): nada del acceso sobrevive en memoria y la página entera sabe ya quién es.
  */
 import { computed, effectScope, inject, nextTick, onScopeDispose, reactive, shallowRef, watch } from 'vue';
 import { TEXTOS_ISLA } from '../../sidebar/carcasa.js';
@@ -31,9 +31,10 @@ import { tomarAvisoDelServidor } from '../pagina/aviso-servidor.js';
 import { paginaConSelector } from '../pagina/con-selector.js';
 import { useSuperficie } from '../compra/useSuperficie.js';
 import {
-    cuentaQueYaExiste, datosVacios, entradaVacia, errorDeEntrar, erroresDelServidor, firmaPendiente, formularioDeAlta,
-    nacimientoDeAlta, revisarDatos,
+    cuentaQueYaExiste, datosVacios, entradaVacia, erroresDelServidor, firmaPendiente, formularioDeAlta, nacimientoDeAlta,
+    revisarDatos,
 } from '../compra/datos.js';
+import { entrar as entrarConCodigo, errorDeEntrar, erroresDelCodigo, puerta } from '../compra/acceso.js';
 import { VISTA, ckDeCuenta, lineaProxima, vistaDeApertura } from './vista.js';
 import { avisoDeAnalitica, avisoDeCuenta } from './avisos.js';
 import { tituloDe } from './reservas.js';
@@ -62,15 +63,16 @@ export function useSeccionCuenta(props) {
     const delMotor = (clave) => t(props.account, clave);
 
     /**
-     * `vista` y `subpaso` (el olvido de Entrar, el descargo de Crear); `dir`, la entrada de la vista; `desde` y
-     * `qrDesde`, a dónde vuelve la flecha; `ocupado`, lo que espera al servidor; `aviso`, la confirmación de arriba
-     * (se queda hasta salir de su vista: WCAG 2.2.1); `renovar`, la pregunta de «Renovar mi QR»; `ent`, «Entra»; `f`,
-     * «Crea tu cuenta», con sus `errores` y su `avisoAlta`; `token`, el del anti-bot; `google`, el alta que vuelve, y
-     * `googleNacimiento`, su fecha como se TECLEA (el motor la quiere en `Y-m-d`: se convierte al enviar, `#792`).
+     * `vista` y `subpaso` (el descargo de Crear); `dir`, la entrada de la vista; `desde` y `qrDesde`, a dónde vuelve la
+     * flecha; `ocupado`, lo que espera al servidor; `aviso`, la confirmación de arriba (se queda hasta salir de su vista:
+     * WCAG 2.2.1); `renovar`, la pregunta de «Renovar mi QR»; `ent`, «Entra» (su correo y, después, su código: A3 del
+     * acceso con código, `#849`); `f`, «Crea tu cuenta», con sus `errores`, su `avisoAlta` y su `nota` (el correo de
+     * «Entra» que aún no tiene cuenta); `token`, el del anti-bot; `google`, el alta que vuelve, y `googleNacimiento`, su
+     * fecha como se TECLEA (el motor la quiere en `Y-m-d`: se convierte al enviar, `#792`).
      */
     const e = reactive({
         vista: VISTA.INICIO, subpaso: '', dir: null, desde: null, qrDesde: null, ocupado: null, aviso: null,
-        renovar: false, ent: entradaVacia(), f: datosVacios(), errores: {}, avisoAlta: '', token: '',
+        renovar: false, ent: entradaVacia(), f: datosVacios(), errores: {}, avisoAlta: '', nota: '', token: '',
         google: emptyGoogleScreen(), googleNacimiento: '', errorNacimiento: '', rSel: null, cambiarDesdeReserva: false,
     });
     let scroll = 0;
@@ -182,7 +184,7 @@ export function useSeccionCuenta(props) {
         const delServidor = tomarAvisoDelServidor(document);
 
         Object.assign(e, {
-            vista, subpaso: '', dir: deLaCompra ? 'back' : null, ocupado: null, renovar: false, errores: {}, avisoAlta: '',
+            vista, subpaso: '', dir: deLaCompra ? 'back' : null, ocupado: null, renovar: false, errores: {}, avisoAlta: '', nota: '',
             aviso: delServidor ? { ...delServidor, en: vista } : null,
             desde: deLaCompra ? deLaCompra.desde : (host?.cuentaDesde ?? null),
             qrDesde: vista === VISTA.QR ? (host?.cuentaDesde ?? 'fuera') : null,
@@ -422,49 +424,74 @@ export function useSeccionCuenta(props) {
         if (! await ajustes.value.salir()) e.ocupado = null;
     }
 
-    // ── Sin sesión: Entra, el olvido, Crea tu cuenta y el alta de Google ────────────────────────────
+    // ── Sin sesión: Entra (con un código al correo), Crea tu cuenta y el alta de Google ──────────────
 
-    /**
-     * La sesión recién abierta: esta página, recargada en Mi cuenta. La acción sigue «cargando» hasta que se va, y
-     * los campos de la contraseña se vacían antes (un dispositivo compartido no la conserva ni un instante de más).
-     */
+    /** La sesión recién abierta: esta página, recargada en Mi cuenta. La acción sigue «cargando» hasta que se va. */
     function recargarEnMiCuenta() {
-        authStore.form.password = '';
-
         try {
             window.history.replaceState(window.history.state, '', `${window.location.pathname}${window.location.search}#mi-cuenta`);
         } catch { /* sin historial: recarga igual y la puerta de siempre la lleva a su cuenta */ }
         window.location.reload();
     }
 
-    async function entrar() {
-        if (e.ocupado) return;
-        e.ocupado = 'entrar';
-        Object.assign(authStore.form, { email: e.ent.valor.trim(), password: e.ent.clave });
-        const r = await authStore.login(opciones());
+    const otraVezLuego = () => t(props.messages, 'errors.try_later');
 
-        if (r?.ok) return recargarEnMiCuenta();
-
-        authStore.form.password = '';
-        e.ocupado = null;
-        e.ent = { ...e.ent, error: errorDeEntrar(r, textos) };
-        enfocarError();
+    /** Un correo que YA tiene cuenta, desde «Crea tu cuenta»: su código va de camino, y se escribe en Entra. */
+    function aSuCodigo(correo) {
+        Object.assign(e, {
+            vista: VISTA.ENTRAR, subpaso: '', dir: 'fwd', ocupado: null, errores: {}, avisoAlta: '', nota: '',
+            ent: { ...entradaVacia(correo), paso: 'codigo' },
+            aviso: { texto: t(textos, 'mi_cuenta_alta.ya_existe'), en: VISTA.ENTRAR, tono: 'info' },
+        });
     }
 
-    /** «¿Has olvidado tu contraseña?»: el enlace al correo escrito, y su confirmación, que no dice si existe (`SEC-06`). */
-    async function olvido() {
-        if (e.ocupado) return;
-        e.ocupado = 'olvido';
-        authStore.form.email = e.ent.valor.trim();
-        const r = await authStore.requestPasswordLink(opciones());
+    /**
+     * «Continuar» de Entra (A3 del acceso con código, `#849`), como en la compra. Con el CORREO, la puerta: con cuenta, a
+     * su código (que ya va de camino; el límite del correo dice lo mismo: hay uno recién enviado); nuevo, a «Crea tu
+     * cuenta» con el correo puesto y una nota NEUTRA —no ha hecho nada mal—. Con el CÓDIGO, entrar (sesión recordada 90
+     * días, `#848`): la página se recarga en Mi cuenta.
+     */
+    async function entrar() {
+        if (e.ocupado) return null;
+        e.ocupado = 'entrar';
+        const correo = e.ent.valor.trim();
+
+        if (e.ent.paso === 'id') {
+            const { siguiente, r } = await puerta(api, correo);
+
+            e.ocupado = null;
+            if (siguiente === 'code') {
+                e.ent = { ...e.ent, paso: 'codigo', codigo: '', error: '' };
+            } else if (siguiente === 'register') {
+                Object.assign(e, { vista: VISTA.CREAR, subpaso: '', dir: 'fwd', f: { ...datosVacios(), correo }, errores: {}, avisoAlta: '', nota: t(textos, 'compra.datos.nueva') });
+                cargar(VISTA.CREAR);
+            } else {
+                e.ent = { ...e.ent, error: errorDeEntrar(r, textos, otraVezLuego()) };
+                enfocarError();
+            }
+
+            return null;
+        }
+
+        const r = await entrarConCodigo(api, correo, e.ent.codigo);
+
+        if (r.ok) return recargarEnMiCuenta();
 
         e.ocupado = null;
-        if (r?.sent) return Object.assign(e, { subpaso: 'olvido', dir: 'fwd' });
-
-        e.ent = { ...e.ent, error: r?.errors?.fields?.email || r?.errors?.global || '' };
+        e.ent = { ...e.ent, error: errorDeEntrar(r, textos, otraVezLuego()) };
         enfocarError();
 
         return null;
+    }
+
+    /** «Pedir otro código»: el nuevo anula el anterior; el límite (uno por minuto) dice cuánto esperar, bajo el código. */
+    async function otroCodigo() {
+        if (e.ocupado) return;
+        e.ocupado = 'otro';
+        const { r } = await puerta(api, e.ent.valor);
+
+        e.ocupado = null;
+        e.ent = { ...e.ent, codigo: '', error: r.ok ? '' : errorDeEntrar(r, textos, otraVezLuego()), reenvios: e.ent.reenvios + (r.ok ? 1 : 0) };
     }
 
     const firma = computed(() => firmaPendiente({ cuenta: 'nueva', documento: waiverStore.document }));
@@ -476,8 +503,10 @@ export function useSeccionCuenta(props) {
 
     /**
      * «Crear mi cuenta»: el alta SUELTA del motor (`registerStandalone`, contexto `standalone`), que abre la sesión
-     * (`#331`). Lo que falta se dice antes de preguntar; los «no» del servidor, bajo su campo, con su mensaje. Un
-     * correo que ya tiene cuenta: «Ya hay una cuenta con este correo: entra con él.» (el diseño).
+     * (`#331`), sin contraseña (A3, `#849`). Lo que falta se dice antes de preguntar; los «no» del servidor, bajo su
+     * campo, con su mensaje. ▶ La PUERTA primero, como en la compra: un correo que ya tiene cuenta recibe su código y va
+     * a escribirlo en Entra («Ya hay una cuenta con este correo: entra con él.»), sin intentar el alta —que avisaría al
+     * titular de «alguien intentó registrarse» por nada—.
      */
     async function crear() {
         if (e.ocupado) return;
@@ -485,7 +514,17 @@ export function useSeccionCuenta(props) {
 
         if (Object.keys(errores).length) return fallarAlta(errores);
 
-        Object.assign(e, { ocupado: 'crear', errores: {}, avisoAlta: '' });
+        Object.assign(e, { ocupado: 'crear', errores: {}, avisoAlta: '', nota: '' });
+        const correo = e.f.correo.trim();
+        const { siguiente, r: rp } = await puerta(api, correo);
+
+        if (siguiente === 'code') return aSuCodigo(correo);
+        if (! rp.ok) {
+            const { errores: delCodigo, aviso: texto } = erroresDelCodigo(rp, textos, otraVezLuego());
+
+            return fallarAlta(delCodigo, texto);
+        }
+
         Object.assign(authStore.form, formularioDeAlta(e.f), { turnstile_token: e.token });
         const r = await authStore.registerStandalone(opciones());
 
@@ -493,13 +532,17 @@ export function useSeccionCuenta(props) {
 
         // El token del anti-bot es de un solo uso: vacío, el widget pide otro.
         e.token = '';
-        authStore.form.password = '';
         // Un 201 sin sesión es el señuelo, que la isla no puede disparar (no pinta su campo): se dice lo genérico.
-        if (r?.ok) return fallarAlta({}, t(props.messages, 'errors.try_later'));
+        if (r?.ok) return fallarAlta({}, otraVezLuego());
 
         const error = r?.errors ?? authStore.registerError;
 
-        if (cuentaQueYaExiste(error?.signup)) return fallarAlta({ correo: t(textos, 'mi_cuenta_alta.ya_existe') });
+        // La cuenta nació entre la puerta y el alta: su código, y a Entra.
+        if (cuentaQueYaExiste(error?.signup)) {
+            await puerta(api, correo);
+
+            return aSuCodigo(correo);
+        }
 
         const { errores: delServidor, resto } = erroresDelServidor(error?.fields);
 
@@ -574,7 +617,9 @@ export function useSeccionCuenta(props) {
             desvincular: guarda(() => hacerPaso('desvincular', 'mi_cuenta.desvincular.hecho')),
             firmar: guarda(() => hacerPaso('firmar', 'mi_cuenta.descargo.firmado')),
             aReserva: () => Object.assign(e, { vista: VISTA.RESERVA, subpaso: '', dir: 'back' }),
-            aEntrar: () => Object.assign(e, { vista: VISTA.ENTRAR, subpaso: '', dir: 'back', errores: {}, avisoAlta: '' }),
+            aEntrar: () => Object.assign(e, { vista: VISTA.ENTRAR, subpaso: '', dir: 'back', errores: {}, avisoAlta: '', nota: '', ent: { ...e.ent, paso: 'id', codigo: '', error: '' } }),
+            // Del código de Entra, a su correo (para corregirlo).
+            aCorreo: () => Object.assign(e, { dir: 'back', ent: { ...e.ent, paso: 'id', codigo: '', error: '' } }),
             volverDelDescargo: () => Object.assign(e, { subpaso: '', dir: 'back' }),
         },
     }));
@@ -650,13 +695,13 @@ export function useSeccionCuenta(props) {
         abierta, textos, e, ck, inicio, vistaQr, social, firma, authStore, waiverStore, rotulosGoogle,
         tx: (clave) => t(textos, clave),
         sinQr: computed(() => delMotor('account.card.unavailable')),
-        pantallaEntrar: computed(() => ({ paso: e.subpaso === 'olvido' ? 'olvido' : 'id', valor: e.ent.valor, clave: e.ent.clave, error: e.ent.error, ...social.value })),
+        pantallaEntrar: computed(() => ({ paso: e.ent.paso, valor: e.ent.valor, codigo: e.ent.codigo, error: e.ent.error, reenvios: e.ent.reenvios, ...social.value })),
         // Lo que se dice arriba de «Entra» (T5e·2): la vuelta de Google que no salió («No has terminado de entrar…»).
         avisoEntrar: computed(() => (e.aviso?.en === VISTA.ENTRAR ? e.aviso : null)),
         abrirQr: () => a(VISTA.QR, { qrDesde: 'cuenta' }),
         aInicio, decir, irAlBloque,
         // Lo que habla con el servidor (o sale a él), por `guarda` (T5f): sin red no se intenta.
-        renovarQr: guarda(renovarQr), olvido: guarda(olvido), aGoogle: guarda(aGoogle),
+        renovarQr: guarda(renovarQr), otroCodigo: guarda(otroCodigo), aGoogle: guarda(aGoogle),
         // Sin conexión (T5f): el aviso de arriba y el reintento de lo último que no se intentó.
         red: computed(() => ({ enLinea: red.enLinea.value, fallo: red.fallo.value !== null })),
         reintentar: () => red.fallo.value?.(),
@@ -721,7 +766,7 @@ export function useSeccionCuenta(props) {
         pedirRenovar: (si) => { e.renovar = si; },
         cambiarEntrada: (campo, valor) => { e.ent = { ...e.ent, [campo]: valor, error: '' }; },
         cambiarAlta: (campo, valor) => { e.f[campo] = valor; if (e.errores[campo]) e.errores = { ...e.errores, [campo]: '' }; },
-        aCrear: () => { Object.assign(e, { vista: VISTA.CREAR, subpaso: '', dir: 'fwd', f: datosVacios(), errores: {}, avisoAlta: '' }); cargar(VISTA.CREAR); },
+        aCrear: () => { Object.assign(e, { vista: VISTA.CREAR, subpaso: '', dir: 'fwd', f: datosVacios(), errores: {}, avisoAlta: '', nota: '' }); cargar(VISTA.CREAR); },
         leerDescargo: () => Object.assign(e, { subpaso: 'descargo', dir: 'fwd' }),
         google: computed(() => ({
             ...e.google, nombre: authStore.form.name, descargo: Boolean(authStore.form.accept_waiver),

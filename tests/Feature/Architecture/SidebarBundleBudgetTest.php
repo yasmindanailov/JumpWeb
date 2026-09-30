@@ -964,6 +964,8 @@ class SidebarBundleBudgetTest extends TestCase
     // `#758` en la isla (§4.26): la demanda sin hueco —`compra/demanda.js`, su trozo de 0,31 que comparte con las
     // calculadoras, y las filas cuya oferta LLEGÓ—; `missing.js` y el calendario ya viajan con el motor. Medido 164,80 →
     // 165,44 (base: el build del gate sobre `28dfdf15`, el mismo cálculo). El techo, a 166.
+    // A3 del acceso con código (`#857`): entrar con un código, sin subir el techo —165,44 → 165,84—: la puerta, entrar y
+    // sus «no» viajan con los pasos (`acceso.js`, pedido con `import()` del trozo ya descargado); dentro medía 166,46.
     private const ISLA_COMPRA_CHUNK_MAX_KB = 166;
 
     // T4d·4 (`specs/isla-y-landing-nueva.md` §4.12): la CALCULADORA de una página, entrada propia que la página pide
@@ -1037,7 +1039,11 @@ class SidebarBundleBudgetTest extends TestCase
     // la hora perdida al continuar (`PantallaPerdida`). Medido 40,85 → 43,38 (base: el `HEAD` de `#821`). El techo, a 44.
     // T6c·3 (`#839`): «Datos de la reserva» de un pack (`DatosReserva.vue`), aquí con el campo del sistema que ya viajaba.
     // Medido 44,06 (en `e6996e0d` pasaba bajo 44). El techo, a 45.
-    private const ISLA_PASOS_CHUNK_MAX_KB = 45;
+    // A3 del acceso con código (`#857`): entrar con un código al correo —la puerta, entrar y sus «no» (`compra/acceso.js`,
+    // en el trozo común con Mi cuenta) y el campo del código con «Pedir otro código» en Entra y en «ya existe»—, menos la
+    // contraseña. Medido 44,45 → 45,37 (base: el `HEAD` de `#856` construido aparte en un `git worktree`). ⚠️ Dentro de la
+    // compra, ésta pasaba de su techo (166,46): va aquí, y la compra lo pide con `import()` de este trozo. El techo, a 46.
+    private const ISLA_PASOS_CHUNK_MAX_KB = 46;
 
     // T5b (`#775`): MI CUENTA de la isla, trozo diferido del motor que se pide a la primera apertura de la cuenta. Su
     // descarga, sobre lo que ya tiene quien la abre (el motor y la compra, que la isla monta con el motor). Medido el
@@ -1073,7 +1079,11 @@ class SidebarBundleBudgetTest extends TestCase
     // menores?» en su sitio y el icono de la tarea), 115,94. El techo, a 117.
     // `#792` en la isla (§4.24): la fecha del titular en «Crea tu cuenta» y en el alta tras Google. Medido 116,37 → 117,18
     // (base: el `HEAD` de `#844`, construido aparte). El techo, a 118.
-    private const ISLA_CUENTA_CHUNK_MAX_KB = 118;
+    // A3 del acceso con código (`#857`): Entra con el código (la puerta, sus dos pasos, «Pedir otro código») y «Crea tu
+    // cuenta» con la puerta delante; lo común con los pasos (`compra/acceso.js`, los campos del código) +0,94 y lo suyo
+    // +0,72, menos el olvido de la contraseña. Medido 117,22 → 118,87 (base: el `HEAD` de `#856` construido aparte). El
+    // techo, a 120: a 119 quedaban 0,13 de margen, un cable trampa.
+    private const ISLA_CUENTA_CHUNK_MAX_KB = 120;
 
     // T5e (`#778`): los AJUSTES de Mi cuenta, su trozo —el bloque y su lógica, pedidos al pintar el inicio—, sobre lo que ya
     // tiene quien abre Mi cuenta. Medido: 26,92 (el bloque 12,70, la lógica 6,56, `ajustes.js` 3,44, el interruptor que

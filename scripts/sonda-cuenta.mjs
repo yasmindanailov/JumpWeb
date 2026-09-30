@@ -68,7 +68,26 @@ if (tinker('echo App\\Domain\\Content\\Services\\ShellSettings::shell();') !== '
 // de `sonda-isla.mjs`.
 /** Las reservas de la sonda (`sonda-cuenta-datos.php`): `montar`, `hoy`, `fiesta` o `borrar`. Devuelve su línea JSON. */
 const datos = (modo) => JSON.parse(tinker(`$modo = '${modo}'; require base_path('scripts/sonda-cuenta-datos.php');`).split('\n').pop());
-const limitadoresACero = () => tinker(`$id = App\\Domain\\Identity\\Models\\User::where('email', '${CLIENTE.email}')->value('id'); foreach ([md5('api'.'user:'.$id), md5('api'.'ip:127.0.0.1'), 'login-ip|127.0.0.1', Illuminate\\Support\\Str::transliterate('${CLIENTE.email}|127.0.0.1')] as $k) { Illuminate\\Support\\Facades\\RateLimiter::clear($k); }`);
+// Y los de pedir el código (A3 del acceso con código): con el del minuto vivo no llegaría otro al buzón.
+const limitadoresACero = () => tinker(`$id = App\\Domain\\Identity\\Models\\User::where('email', '${CLIENTE.email}')->value('id'); $h = App\\Domain\\Identity\\Services\\SelfSignup::emailHash('${CLIENTE.email}'); foreach ([md5('api'.'user:'.$id), md5('api'.'ip:127.0.0.1'), 'login-ip|127.0.0.1', Illuminate\\Support\\Str::transliterate('${CLIENTE.email}|127.0.0.1'), 'login-code-ip|127.0.0.1', 'login-code-email|'.$h, 'login-code-email-hour|'.$h] as $k) { Illuminate\\Support\\Facades\\RateLimiter::clear($k); }`);
+
+/**
+ * El código para entrar que acaba de llegar al buzón de la cuenta de pruebas (A3 del acceso con código, `#849`), de
+ * Mailpit y de su asunto; solo uno llegado DESPUÉS de `desde`. El mismo de `sonda-isla.mjs`.
+ */
+const MAILPIT = process.env.SONDA_MAILPIT ?? 'http://mailpit:8025';
+async function codigoDelBuzon(desde) {
+    const url = `${MAILPIT}/api/v1/search?query=${encodeURIComponent(`to:"${CLIENTE.email}"`)}&limit=1`;
+
+    for (let i = 0; i < 60; i += 1) {
+        const ultimo = (await fetch(url).then((r) => r.json()).catch(() => null))?.messages?.[0];
+        const cifras = /(\d{3}) (\d{3}) /.exec(ultimo?.Subject ?? '');
+        if (cifras && Date.parse(ultimo.Created) >= desde - 2000) return `${cifras[1]}${cifras[2]}`;
+        await new Promise((listo) => setTimeout(listo, 250));
+    }
+
+    return null;
+}
 
 /** Un recorrido entero, apuntando en `informe`; si algo revienta a mitad, lo apuntado se queda (y su página, para la captura). */
 async function recorrer(navegador, ventana, informe) {
@@ -165,11 +184,18 @@ async function recorrer(navegador, ventana, informe) {
     await pagina.getByText('Entrar o crear cuenta').first().click();
     await capa().waitFor({ timeout: 8000 });
     limitadoresACero();
+    // Entra con un código al correo (A3, `#849`): el correo con cuenta pasa a pedir el código, que llega al buzón.
     await pagina.fill('#pjc-ent', CLIENTE.email);
-    await pagina.fill('#pjc-ent-clave', CLIENTE.password);
+    const desde = Date.now();
+    await capa().getByRole('button', { name: 'Continuar' }).click();
+    await capa().locator('#pjc-ent-codigo').waitFor({ timeout: 15000 }).catch(() => {});
+    const delBuzon = await codigoDelBuzon(desde);
+    check('«Continuar» con un correo con cuenta pide el código, y llega al buzón', delBuzon !== null && await capa().locator('#pjc-ent-codigo').isVisible(), delBuzon ?? 'sin código en Mailpit');
+    await captura('2b-codigo');
+    await capa().locator('#pjc-ent-codigo').fill(delBuzon ?? '');
     await Promise.all([
         pagina.waitForURL(/#mi-cuenta$/, { timeout: 15000 }).catch(() => {}),
-        capa().getByRole('button', { name: 'Continuar' }).click(),
+        capa().getByRole('button', { name: 'Entrar' }).click(),
     ]);
     await pagina.waitForLoadState('load');
     await capa().waitFor({ timeout: 15000 }).catch(() => {});

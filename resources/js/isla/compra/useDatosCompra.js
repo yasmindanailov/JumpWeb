@@ -19,8 +19,8 @@ import { t } from '../../sidebar/i18n.js';
 import { useWaiverStore } from '../../sidebar/stores/waiver.js';
 import { useAccountContextStore } from '../../sidebar/stores/accountContext.js';
 import {
-    cuentaQueYaExiste, datosVacios, entradaVacia, errorDeEntrar, erroresDelAcceso, erroresDelServidor, firmaPendiente,
-    formularioDeAlta, hayQuePedir, nacimientoDeAlta, revisarDatos,
+    cuentaQueYaExiste, datosVacios, entradaVacia, erroresDelServidor, firmaPendiente, formularioDeAlta, hayQuePedir,
+    nacimientoDeAlta, revisarDatos,
 } from './datos.js';
 
 /** La marca de «la cuenta nace en esta compra», que sobrevive al viaje al banco (misma pestaña) y no lleva datos. */
@@ -41,7 +41,7 @@ export function useDatosCompra({ flow, props, textos, esFiesta = () => false }) 
      * (`datos.js::entradaVacia`); `token`, el del anti-bot; `google`, el perfil que espera en la sesión tras volver de
      * Google sin cuenta (`{ name, email }`, `#785`).
      */
-    const estado = reactive({ f: datosVacios(), errores: {}, aviso: '', vista: null, ent: entradaVacia(), token: '', google: null });
+    const estado = reactive({ f: datosVacios(), errores: {}, aviso: '', nota: '', vista: null, ent: entradaVacia(), token: '', google: null });
     const aviso = (clave) => t(props.messages, clave);
 
     // Con sesión manda la sesión; sin ella, el alta que vuelve de Google o lo que diga el alta («nueva», o «existe»).
@@ -57,7 +57,7 @@ export function useDatosCompra({ flow, props, textos, esFiesta = () => false }) 
 
     /** Al llegar desde la pantalla 0: el formulario en blanco y el texto del descargo pedido ya. */
     function preparar() {
-        Object.assign(estado, { f: datosVacios(), errores: {}, aviso: '', vista: null, ent: entradaVacia(), google: null });
+        Object.assign(estado, { f: datosVacios(), errores: {}, aviso: '', nota: '', vista: null, ent: entradaVacia(), google: null });
         waiverStore.ensureLegal();
     }
 
@@ -178,7 +178,51 @@ export function useDatosCompra({ flow, props, textos, esFiesta = () => false }) 
         return ! (faltaTelefono || firma.value);
     }
 
+    /**
+     * **Entrar con un código al correo** (A3 del acceso con código, `#848`/`#849`). La puerta, entrar y sus «no» viajan con
+     * los pasos (`acceso.js`): este `import()` es del trozo que la compra ya pidió al montarse, así que no espera a la red, y
+     * la compra no paga su peso.
+     */
+    const acceso = () => import('./pasos-diferidos.js').then((m) => m.acceso);
+    const noDelCodigo = async (r) => (await acceso()).erroresDelCodigo(r, textos, aviso('errors.try_later'));
+
+    /**
+     * **LA PUERTA** (`#849`): ¿tiene cuenta este correo? Con cuenta, el servidor le manda ya el código (`next: code`); nuevo,
+     * `register`. El límite del correo dice `next: code` también: hay uno recién enviado.
+     */
+    async function puerta(correo) {
+        return (await acceso()).puerta(api, correo);
+    }
+
+    /**
+     * ENTRAR con el código (`POST /auth/login`, sesión recordada 90 días, `#848`): el servidor abre la sesión y devuelve el
+     * perfil, y se entra como tras cualquier otra puerta (`flow.enterWith`, como el alta de Google).
+     */
+    async function entrarConCodigo(correo, codigo) {
+        const r = await (await acceso()).entrar(api, correo, codigo);
+
+        if (! r.ok) return { ok: false, r };
+        await flow.enterWith(r);
+
+        return { ok: true, r };
+    }
+
+    /** «Tus datos» con una cuenta que YA EXISTE: su código va de camino (o acaba de ir) y se pide aquí mismo. */
+    async function aSuCodigo(r) {
+        estado.f.cuenta = 'existe';
+        estado.f.codigo = '';
+
+        return r.ok || r.error?.params?.next ? fallar({}) : fallar({}, (await noDelCodigo(r)).aviso);
+    }
+
     async function alta() {
+        // La puerta primero (`#849`): si el correo ya tiene cuenta, se le manda el código y se pide aquí, sin intentar el
+        // alta (que avisaría al titular de «alguien intentó registrarse» por nada).
+        const { siguiente, r: rp } = await puerta(estado.f.correo);
+
+        if (siguiente === 'code') return aSuCodigo(rp);
+        if (! rp.ok) return fallar({}, (await noDelCodigo(rp)).aviso);
+
         Object.assign(authStore.form, formularioDeAlta(estado.f), { turnstile_token: estado.token });
         const r = await flow.submitRegister();
 
@@ -201,11 +245,8 @@ export function useDatosCompra({ flow, props, textos, esFiesta = () => false }) 
 
         const e = r?.errors ?? authStore.registerError;
 
-        if (cuentaQueYaExiste(e?.signup)) {
-            estado.f.cuenta = 'existe';
-
-            return fallar({});
-        }
+        // Otra pestaña la creó entre la puerta y el alta: a su código, como si la puerta lo hubiera dicho.
+        if (cuentaQueYaExiste(e?.signup)) return aSuCodigo((await puerta(estado.f.correo)).r);
 
         const { errores, resto } = erroresDelServidor(e?.fields);
 
@@ -214,13 +255,13 @@ export function useDatosCompra({ flow, props, textos, esFiesta = () => false }) 
         return fallar(errores, resto[0] ?? (Object.keys(errores).length ? '' : e?.summary?.[0] ?? ''));
     }
 
+    /** «Esta cuenta ya existe»: entra con el código que le llegó. */
     async function entrar() {
-        Object.assign(authStore.form, { email: estado.f.correo.trim(), password: estado.f.contrasena });
-        const r = await flow.submitLogin();
+        const { ok, r } = await entrarConCodigo(estado.f.correo, estado.f.codigo);
 
-        if (r?.ok) return trasIdentificarse();
+        if (ok) return trasIdentificarse();
 
-        const { errores, aviso: texto } = erroresDelAcceso(r, textos);
+        const { errores, aviso: texto } = await noDelCodigo(r);
 
         return fallar(errores, texto);
     }
@@ -251,7 +292,7 @@ export function useDatosCompra({ flow, props, textos, esFiesta = () => false }) 
 
         if (Object.keys(errores).length) return fallar(errores);
 
-        Object.assign(estado, { errores: {}, aviso: '' });
+        Object.assign(estado, { errores: {}, aviso: '', nota: '' });
         if (f.cuenta === 'dentro') return deDentro();
         if (f.cuenta === 'google') return altaGoogle();
 
@@ -259,29 +300,27 @@ export function useDatosCompra({ flow, props, textos, esFiesta = () => false }) 
     }
 
     /**
-     * «¿Has olvidado tu contraseña?»: el enlace al correo, y la confirmación que no dice si existe (`SEC-06`). Desde
-     * «Esta cuenta ya existe» (`solo`), con el correo del formulario, y su «volver» regresa a «Tus datos»; desde
-     * «Entra», con el suyo, y vuelve a «Entra» (`PjcEntrar` del diseño).
+     * «Pedir otro código»: desde «Entra» (con su correo) o desde «Esta cuenta ya existe» (con el del formulario). El nuevo
+     * anula el anterior; el límite (uno por minuto) dice cuánto esperar, en la línea de error de cada sitio.
      */
-    async function olvido({ correo, solo }) {
-        authStore.form.email = String(correo ?? '').trim();
-        const r = await authStore.requestPasswordLink({ api, messages: props.messages, auth: props.auth });
+    async function otroCodigo() {
+        const enEntrar = estado.vista === 'entrar';
+        const { r } = await puerta(enEntrar ? estado.ent.valor : estado.f.correo);
+        const error = r.ok ? '' : (await noDelCodigo(r)).aviso;
 
-        if (r?.sent) {
-            Object.assign(estado, { vista: 'entrar', ent: { ...entradaVacia(authStore.form.email), paso: 'olvido', solo } });
-
-            return;
+        if (enEntrar) {
+            Object.assign(estado.ent, { error, codigo: '', reenvios: estado.ent.reenvios + (r.ok ? 1 : 0) });
+        } else if (error) {
+            fallar({}, error);
+        } else {
+            Object.assign(estado, { errores: {}, aviso: '' });
+            estado.f.codigo = '';
         }
-
-        const error = r?.errors?.fields?.email || r?.errors?.global || '';
-
-        if (solo) fallar(r?.errors?.fields?.email ? { correo: error } : {}, r?.errors?.fields?.email ? '' : error);
-        else estado.ent.error = error;
     }
 
-    /** Lo que avisa «Tus datos» de «Entra»: abrirlo (con el correo que ya hubiera) o, desde «ya existe», el olvido. */
+    /** Lo que avisa «Tus datos» de «Entra»: abrirlo (con el correo que ya hubiera) o, desde «ya existe», otro código. */
     function abrirEntrar(modo) {
-        if (modo === 'olvido') return olvido({ correo: estado.f.correo, solo: true });
+        if (modo === 'otro') return otroCodigo();
 
         Object.assign(estado, { vista: 'entrar', ent: entradaVacia(estado.f.correo.trim()), errores: {}, aviso: '' });
 
@@ -294,16 +333,34 @@ export function useDatosCompra({ flow, props, textos, esFiesta = () => false }) 
     }
 
     /**
-     * «Continuar» de «Entra»: el acceso del motor. Al entrar se vuelve a «Tus datos» ya con sesión —«Hola» y solo lo
-     * que falte—, como el diseño (`PjcEntrar`: «al entrar vuelve a Tus datos con todo relleno»), y la contraseña
-     * no se queda en memoria.
+     * «Continuar» de «Entra». Con el CORREO, la puerta: con cuenta, a su código (que ya va de camino); nuevo, a «Tus datos»
+     * con el correo puesto, a darse de alta (`#849`). Con el CÓDIGO, entrar: se vuelve a «Tus datos» ya con sesión —«Hola»
+     * y solo lo que falte—, como el diseño (`PjcEntrar`: «al entrar vuelve a Tus datos con todo relleno»). Devuelve si
+     * ya hay sesión.
      */
-    async function entrarConClave() {
-        Object.assign(authStore.form, { email: estado.ent.valor.trim(), password: estado.ent.clave });
-        const r = await flow.submitLogin();
+    async function continuarEntrada() {
+        if (estado.ent.paso === 'id') {
+            const { siguiente, r } = await puerta(estado.ent.valor);
 
-        if (! r?.ok) {
-            estado.ent.error = errorDeEntrar(r, textos);
+            // El límite del correo también dice `code`: hay uno recién enviado, que se escribe igual (sin error).
+            if (siguiente === 'code') {
+                Object.assign(estado.ent, { paso: 'codigo', codigo: '', error: '' });
+            } else if (siguiente === 'register') {
+                // Una nota NEUTRA, no un error: no ha hecho nada mal, solo aún no tiene cuenta.
+                const correo = estado.ent.valor.trim();
+                Object.assign(estado, { vista: null, ent: entradaVacia(), errores: {}, aviso: '', nota: t(textos, 'compra.datos.nueva') });
+                Object.assign(estado.f, { correo, cuenta: 'nueva' });
+            } else {
+                estado.ent.error = (await acceso()).errorDeEntrar(r, textos, aviso('errors.try_later'));
+            }
+
+            return false;
+        }
+
+        const { ok, r } = await entrarConCodigo(estado.ent.valor, estado.ent.codigo);
+
+        if (! ok) {
+            estado.ent.error = (await acceso()).errorDeEntrar(r, textos, aviso('errors.try_later'));
 
             return false;
         }
@@ -314,10 +371,10 @@ export function useDatosCompra({ flow, props, textos, esFiesta = () => false }) 
         return true;
     }
 
-    /** La flecha dentro del paso: del olvido pedido en «Entra», a «Entra»; de lo demás, a «Tus datos». */
+    /** La flecha dentro del paso: del código de «Entra», a su correo; de lo demás, a «Tus datos». */
     function volver() {
-        if (estado.vista === 'entrar' && estado.ent.paso === 'olvido' && ! estado.ent.solo) {
-            estado.ent.paso = 'id';
+        if (estado.vista === 'entrar' && estado.ent.paso === 'codigo') {
+            Object.assign(estado.ent, { paso: 'id', codigo: '', error: '' });
 
             return;
         }
@@ -340,7 +397,7 @@ export function useDatosCompra({ flow, props, textos, esFiesta = () => false }) 
 
     return {
         estado, cuenta, firma, pedirTelefono, contexto, waiverStore,
-        preparar, cambiar, continuar, olvido, abrirEntrar, cambiarEntrada, entrarConClave, volver, cuentaNueva,
+        preparar, cambiar, continuar, otroCodigo, abrirEntrar, cambiarEntrada, continuarEntrada, volver, cuentaNueva,
         faltaAlgo, altaGooglePendiente,
     };
 }

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Arnés de mutación del ACCESO CON CÓDIGO, tandas A1 y A2a (`docs/specs/acceso-con-codigo.md` §6, `DECISIONES #853`–`#855`).
+# Arnés de mutación del ACCESO CON CÓDIGO, tandas A1 a A3 (`docs/specs/acceso-con-codigo.md` §6, `DECISIONES #853`–`#857`).
 #
 # Entrar con un código al correo es una credencial nueva, y lo que la acota son reglas pequeñas que se caen sin ruido:
 # que el código caduque, se gaste y muera al quinto intento; que su huella lleve clave y correo; que pedirlo tenga techo
@@ -35,9 +35,11 @@ CONFIRMMAIL=app/Notifications/ConfirmationCode.php
 # La A2b (`#856`)
 PROFILE=app/Domain/Identity/Services/AccountProfile.php
 PENDINGMAIL=app/Notifications/VerifyPendingEmail.php
+# La A3 (`#857`)
+REMEMBER=app/Domain/Identity/Services/RememberedDevice.php
 
 TMP="$(mktemp -d)"
-FICHEROS=("$CODES" "$LOGIN" "$CODEMAIL" "$COPY" "$USER" "$BOOT" "$SESSION" "$SIGNUP" "$AUTHCONF" "$CREDS" "$BINDING" "$PROVIDER" "$VERDICTS" "$WEBOUT" "$CONFIRMMAIL" "$PROFILE" "$PENDINGMAIL")
+FICHEROS=("$CODES" "$LOGIN" "$CODEMAIL" "$COPY" "$USER" "$BOOT" "$SESSION" "$SIGNUP" "$AUTHCONF" "$CREDS" "$BINDING" "$PROVIDER" "$VERDICTS" "$WEBOUT" "$CONFIRMMAIL" "$PROFILE" "$PENDINGMAIL" "$REMEMBER")
 copia() { echo "$TMP/${1//\//__}"; }
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$(copia "$f")" "$f"; touch "$f"; done; }
 trap 'restaurar; rm -rf "$TMP"' EXIT
@@ -185,8 +187,16 @@ mutar "el recuerdo dura lo de Laravel (400 días) y no 90" "$AUTHCONF" \
 " ""
 
 mutar "salir en un dispositivo echa a todos los demás" "$SESSION" \
-  "\$web->logoutCurrentDevice();" \
-  "\$web->logout();"
+  "RememberedDevice::logOutHere(\$request);" \
+  "Auth::guard('web')->logout();"
+
+mutar "salir rota el token aunque se salga por la pieza común" "$REMEMBER" \
+  "\$guard->logoutCurrentDevice();" \
+  "\$guard->logout();"
+
+mutar "salir deja la cookie de recuerdo en la petición (y se vuelve a entrar con ella)" "$REMEMBER" \
+  "        \$request->cookies->remove(\$guard->getRecallerName());
+" ""
 
 mutar "entrar con el código no recuerda el dispositivo" "$SESSION" \
   "Auth::guard('web')->login(\$result->user, remember: true);" \
@@ -262,8 +272,8 @@ mutar "cerrar las demás echa también la sesión de quien lo pide" "$USER" \
 " ""
 
 mutar "salir en la web rota el token y echa a todos los dispositivos" "$WEBOUT" \
-  "\$web->logoutCurrentDevice();" \
-  "\$web->logout();"
+  "RememberedDevice::logOutHere(\$request);" \
+  "Auth::guard('web')->logout();"
 
 # ── A2b · el correo nuevo, con un código a ESE buzón (`#856`) ───────────────────────────────────
 mutar "los correos del cambio salen al correo de la cuenta (el defecto de siempre)" "$USER" \

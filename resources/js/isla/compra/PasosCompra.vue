@@ -1,7 +1,7 @@
 <script setup>
 /**
- * **Los pasos de la compra de la isla DESPUÉS de la pantalla 0** (T3e·3): «Tus datos» (con el descargo y el olvido
- * dentro), «Pagar», la salida al banco y los desenlaces. Viajan en su propio trozo (`pasos-diferidos.js`), que
+ * **Los pasos de la compra de la isla DESPUÉS de la pantalla 0** (T3e·3): «Tus datos» (con el descargo y «Entra» con su
+ * código dentro), «Pagar», la salida al banco y los desenlaces. Viajan en su propio trozo (`pasos-diferidos.js`), que
  * `SeccionCompra.vue` pide al montarse: quien abre la compra ve la pantalla 0 sin esperarlos, y cuando pulsa
  * «Continuar» ya están. Pinta (`CE-6`) lo que le da `useSeccionCompra.js` por `inject`.
  */
@@ -38,7 +38,7 @@ const proveedor = (via) => via === 'google' && aGoogle();
             v-else-if="datos.estado.vista === 'entrar'"
             v-bind="pantallaEntrar"
             @cambiar="datos.cambiarEntrada"
-            @olvido="datos.olvido({ correo: datos.estado.ent.valor, solo: false })"
+            @otro="datos.otroCodigo"
             @proveedor="proveedor"
         />
         <PantallaDatos
