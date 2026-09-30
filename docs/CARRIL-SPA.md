@@ -459,6 +459,14 @@ De la foto, mudado VERBATIM el 2026-09-29 a las 23:10 al contestar el owner los 
   sin tocarlos; arnés 39/39, sonda 28/28; la hoja de PlayJump en la instancia y declarada por plataforma (`da0f84d`). En la BD
   local, ~100 filas de `email_sends` del cliente de sondas (`scripts/banco-correos.php`).
 
+De la foto, mudado VERBATIM el 2026-09-30 al cerrar K1 de los complementos (el carril, en su techo):
+
+- **LOS CORREOS** (`specs/correos-rediseno.md`, `#800`→`#804`): la spec, medida con el
+  censo HAY/FALTA contra el zip (§1), y cuatro decisiones del owner: el 7 sigue siendo la encuesta (`#801`); las ocasiones, al
+  final; el orden plantilla → textos editables → reserva → comerciales → felicitaciones; y **los TEXTOS, editables desde el
+  panel** con estructura fija, en es/en/fr y con permiso propio (`#802`: «profesional y robusta, sin chapuzas»). La analítica,
+  en pausa tras la T4 (T5 no se hace, `#800`; T6–T8 después).
+
 ## Anexo · La fila del enrutador, mudada el 2026-09-16
 
 > Lo que decía la fila **«El carril del SPA en el OTRO ordenador · rediseñar el cajón (Fase 4) · el material de PlayJump en otra máquina · la rama `cliente/playjump` · qué ficheros son de cada carril»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila

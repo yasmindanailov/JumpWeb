@@ -244,10 +244,14 @@ class ManualOrderIgnoresMinAdvanceTest extends TestCase
         $operator = User::factory()->create();
         $operator->roles()->sync([Role::where('name', 'staff')->value('id')]);
 
+        // ⚠️ El calendario abre en el PRIMER mes con oferta (`calendarMonthKey()`), y el último día de un mes «mañana» es del
+        // siguiente: la prueba se ponía en rojo cada fin de mes (medido el 30-09, también sin ningún cambio). El operador
+        // pasa de mes con la flecha; la prueba, igual (`goToMonth`), y lo que comprueba sigue siendo que el día se pueda pulsar.
         $page = Livewire::actingAs($operator)
             ->test(CreateManualOrderPage::class)
             ->set('step', CreateManualOrderPage::STEP_WHEN)
             ->call('pickProduct', $this->pack->id)
+            ->call('goToMonth', substr($this->tomorrow(), 0, 7))
             ->instance();
 
         $ofrecibles = [];

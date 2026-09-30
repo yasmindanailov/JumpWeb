@@ -23,11 +23,7 @@
   config del panel»): «Para los niños» / «Para los adultos», «Uno para cada niño» (el `Tag` de la calculadora); arnés
   `mutar-complementos-k1.sh` 10/10, sonda `sonda-k1.mjs`, fiesta `JW-OJO-K1` (`CARRIL-SPA` §8 (23)). Siguen K2 y K3.
 - ✅ R1a y R1b de los correos, en `main` y aprobadas (29-09): su foto, mudada verbatim a `CARRIL-SPA.md` §9.
-- **LOS CORREOS** (`specs/correos-rediseno.md`, `#800`→`#804`): la spec, medida con el
-  censo HAY/FALTA contra el zip (§1), y cuatro decisiones del owner: el 7 sigue siendo la encuesta (`#801`); las ocasiones, al
-  final; el orden plantilla → textos editables → reserva → comerciales → felicitaciones; y **los TEXTOS, editables desde el
-  panel** con estructura fija, en es/en/fr y con permiso propio (`#802`: «profesional y robusta, sin chapuzas»). La analítica,
-  en pausa tras la T4 (T5 no se hace, `#800`; T6–T8 después).
+- Los correos: sus cuatro decisiones del owner (`#800`→`#804`), mudadas verbatim a `CARRIL-SPA.md` §9 (30-09).
 - ⏸ **LA ANALÍTICA PARA DECIDIR, en pausa tras la T4** (`#755`): su foto por tanda, mudada verbatim a `CARRIL-SPA.md` §9
   (29-09); lo que queda, en «por dónde retomar» 2. ⚠️ La ficha del cliente en `zh_CN` pinta el parentesco de sus menores como
   la clave cruda (`admin.users.dependents.relationship_*` solo en es): sin arreglar.
@@ -222,6 +218,10 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 
 ## Buzón
 
+- ❗ **Para plataforma (30-09) — un rojo que no era de nadie, arreglado en su PRUEBA**: `ManualOrderIgnoresMinAdvanceTest::
+  test_the_panel_offers_those_days_in_its_calendar` caía cada ÚLTIMO día de mes (el calendario del panel abre en el primer mes
+  con oferta y «mañana» es del siguiente; medido hoy también en `main` sin nada mío). La prueba pasa de mes con `goToMonth`,
+  como el operador; su mutación (la página con la oferta de la web) sigue mordiendo. El panel, sin tocar. Si es tuyo, a tu lista.
 - Mis avisos a plataforma del 29-09 (la ruta de los iconos de la R1b; `#807`, la merienda sale de la reserva y su `v-if` de la
   isla): LEÍDOS por plataforma (su «Atendido», 29-09 noche); retirados. El número del contrato de mi K3, aquí cuando llegue.
 
