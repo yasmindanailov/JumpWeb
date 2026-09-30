@@ -14,6 +14,7 @@
 import { useTextos } from '../piezas/textos.js';
 import PasoCompra from './PasoCompra.vue';
 import CampoSistema from '../ui/CampoSistema.vue';
+import CasillaSistema from '../ui/CasillaSistema.vue';
 import EnlaceSistema from '../ui/EnlaceSistema.vue';
 import AccesoSocial from '../ui/AccesoSocial.vue';
 
@@ -21,6 +22,8 @@ defineProps({
     paso: { type: String, default: 'id' },
     valor: { type: String, default: '' },
     codigo: { type: String, default: '' },
+    // «Mantener la sesión iniciada en este dispositivo» (`#858`, `[DECIDIDO owner]`): SIN marcar de serie.
+    recordar: { type: Boolean, default: false },
     error: { type: String, default: '' },
     // Cuántos códigos se han pedido OTRA vez: con uno o más, la pista dice «otro».
     reenvios: { type: Number, default: 0 },
@@ -54,6 +57,14 @@ const { t, tp } = useTextos();
                 :style="{ justifySelf: 'start' }"
                 @click="emit('otro')"
             >{{ t('compra.datos.otro_codigo') }}</EnlaceSistema>
+            <!-- Recordar el dispositivo solo si se pide (`#858`): la cookie persistente no está exenta de consentimiento. -->
+            <CasillaSistema
+                id="pjc-ent-recordar"
+                :label="t('compra.datos.recordar')"
+                :model-value="recordar"
+                :style="{ marginTop: '12px' }"
+                @update:model-value="emit('cambiar', 'recordar', $event)"
+            />
         </div>
         <template v-else>
             <!-- Google y Apple ARRIBA, y «— o —» antes del correo (el owner, 30-09, `#857`): el botón de Google no es el

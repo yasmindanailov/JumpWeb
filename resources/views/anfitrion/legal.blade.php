@@ -27,18 +27,32 @@
                 <p>{{ \App\Domain\Content\Services\LegalIdentity::interpolate($section['p'] ?? '') }}</p>
             @endforeach
 
-            {{-- La herramienta de análisis ACTIVA se nombra en el RENDER, no en el texto guardado (T3a·2,
-                 `specs/analitica.md` §4.3): el texto de la política dice «si está activa, la nombramos más
-                 abajo», y el driver es un ajuste que cambia sin migrar la página. Sin driver, nada. --}}
-            @if ($page->slug === 'cookies' && ($analyticsTool = \App\Domain\Platform\Services\Analytics\Drivers::config()) !== null)
-                <p class="page__tool" data-analytics-tool="{{ $analyticsTool['driver'] }}">{{ __('cookies.policy.tool_active', ['tool' => __('cookies.policy.tool_'.$analyticsTool['driver'], ['host' => $analyticsTool['host']])]) }}</p>
-            @endif
-            {{-- Y las plataformas de anuncios ACTIVAS, igual (T3b·3): la política dice «se nombran más abajo»,
-                 y los ids de los píxeles son ajustes que cambian sin migrar la página. Cada una con su empresa
-                 responsable y su garantía de transferencia (`lang/*/cookies.php`, `policy.ads_*`). Sin píxeles,
-                 nada. --}}
-            @if ($page->slug === 'cookies' && ($activePixels = \App\Domain\Platform\Services\Analytics\Pixels::active()) !== [])
-                <p class="page__tool" data-analytics-pixels="{{ implode(',', $activePixels) }}">{{ __('cookies.policy.ads_active', ['platforms' => implode('; ', array_map(static fn (string $platform): string => __('cookies.policy.ads_'.$platform), $activePixels))]) }}</p>
+            {{-- EL LISTADO de la política de cookies (`specs/politica-de-cookies.md` §3): lo compone la configuración
+                 de la instalación (`CookieInventory`), no el texto guardado —el mismo que viaja en
+                 `GET /legal/documents/cookies`—. La herramienta de análisis y las plataformas de anuncios ACTIVAS
+                 (T3a·2, T3b·3) son filas suyas, con su empresa responsable y su garantía de transferencia; sus marcas
+                 `data-analytics-*` siguen en el bloque. --}}
+            @if ($page->slug === 'cookies')
+                @php
+                    $inventario = \App\Http\Resources\Api\V1\LegalDocumentsResource::inventario();
+                    $herramienta = \App\Domain\Platform\Services\Analytics\Drivers::config()['driver'] ?? null;
+                    $pixeles = \App\Domain\Platform\Services\Analytics\Pixels::active();
+                @endphp
+                <section class="page__cookies" data-cookie-inventory
+                    @if ($herramienta !== null) data-analytics-tool="{{ $herramienta }}" @endif
+                    @if ($pixeles !== []) data-analytics-pixels="{{ implode(',', $pixeles) }}" @endif>
+                    <h2 class="page__h2">{{ $inventario['title'] }}</h2>
+                    <p>{{ $inventario['intro'] }}</p>
+                    @foreach ($inventario['cookies'] as $cookie)
+                        <h3 data-cookie="{{ $cookie['key'] }}">{{ $cookie['name'] }} · {{ $cookie['category'] }}</h3>
+                        <p>
+                            <strong>{{ $inventario['labels']['holder'] }}:</strong> {{ $cookie['holder'] }}<br>
+                            <strong>{{ $inventario['labels']['purpose'] }}:</strong> {{ $cookie['purpose'] }}<br>
+                            <strong>{{ $inventario['labels']['duration'] }}:</strong> {{ $cookie['duration'] }}<br>
+                            <strong>{{ $inventario['labels']['when'] }}:</strong> {{ $cookie['when'] }}
+                        </p>
+                    @endforeach
+                </section>
             @endif
         </div>
 

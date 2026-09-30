@@ -43,9 +43,12 @@ class AuthSessionController extends Controller
      * necesita justo eso, y devolverlo evita una segunda petición para pintar la pantalla.
      *
      * ▶ **Con la contraseña o con el CÓDIGO al correo** (A1 de `specs/acceso-con-codigo.md`, `#848`): uno de los dos,
-     * nunca los dos. El código lo pide antes `POST /auth/code`. Quien entra con el código queda **recordado 90 días sin
-     * uso** en este dispositivo (`#848`·3, `RememberedDevice`): el `remember` de la petición no aplica ahí. La
-     * contraseña se retira en la A5.
+     * nunca los dos. El código lo pide antes `POST /auth/code`. La contraseña se retira en la A5.
+     *
+     * ⚠️ **Recordado 90 días sin uso SOLO si lo pide** (`remember`, la casilla «Mantener la sesión iniciada»; `#858`,
+     * `[DECIDIDO owner]`, corrige el «siempre» de `#848`·3): una cookie de autenticación PERSISTENTE no está exenta de
+     * consentimiento (GT29, dictamen 4/2012, §3.2; la guía de la AEPD exime solo las «de sesión»), y la casilla sin marcar
+     * es la forma de que la pida quien la quiere. Sin ella, la sesión de siempre.
      */
     public function login(Request $request, PasswordLogin $passwordLogin, EmailCodeLogin $codeLogin): UserResource|JsonResponse
     {
@@ -69,11 +72,11 @@ class AuthSessionController extends Controller
         $previousId = Auth::id();
 
         if (isset($credentials['code'])) {
-            // El servicio solo verifica (sirve también al token); abrir la sesión, recordada, es de aquí.
+            // El servicio solo verifica (sirve también al token); abrir la sesión —recordada si lo pidió— es de aquí.
             $result = $codeLogin->verify($credentials['email'], $credentials['code'], (string) $request->ip());
 
             if ($result->user !== null) {
-                Auth::guard('web')->login($result->user, remember: true);
+                Auth::guard('web')->login($result->user, remember: (bool) ($credentials['remember'] ?? false));
             }
         } else {
             $result = $passwordLogin->attempt(

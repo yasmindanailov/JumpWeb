@@ -222,6 +222,7 @@ return [
             'codigo_enviado' => 'Nous vous avons envoyé un code à :correo.',
             'codigo_otro_enviado' => 'Nous vous avons envoyé un autre code à :correo.',
             'otro_codigo' => 'Recevoir un autre code',
+            'recordar' => 'Rester connecté sur cet appareil',
             'nueva' => 'Il n\'y a pas encore de compte avec cet e-mail : remplissez vos coordonnées et vous êtes connecté tout de suite.',
             'casilla' => 'J\'ai lu et j\'accepte la décharge de responsabilité.',
             'leer' => 'Lire la décharge de responsabilité',

@@ -14,9 +14,10 @@ import { isoDeFecha } from '../ui/fecha.js';
  * El formulario en blanco. `cuenta`: `nueva` (alta), `existe` (su código) o `dentro` (con sesión). `nacimiento`, la
  * fecha del titular como se teclea («07/03/1988»): entera y OPCIONAL (`DECISIONES #792`).
  * ▶ Sin CONTRASEÑA desde la A3 del acceso con código (`specs/acceso-con-codigo.md`, `#848`/`#849`): la cuenta nueva
- * nace sin ella, y la que ya existe entra con el `codigo` que le llega al correo.
+ * nace sin ella, y la que ya existe entra con el `codigo` que le llega al correo. `recordar`, la casilla «Mantener la
+ * sesión iniciada» de ese código (`#858`): SIN marcar de serie.
  */
-export const datosVacios = () => ({ nombre: '', correo: '', telefono: '', nacimiento: '', codigo: '', descargo: false, cuenta: 'nueva' });
+export const datosVacios = () => ({ nombre: '', correo: '', telefono: '', nacimiento: '', codigo: '', recordar: false, descargo: false, cuenta: 'nueva' });
 
 /**
  * **La fecha de nacimiento, para el servidor**: vacía, `''` (no se manda: `register.js` y `google.js` solo la llevan si
@@ -29,10 +30,12 @@ export function nacimientoDeAlta(valor) {
 
 /**
  * «Entra» en blanco (`PjcEntrar`, T3e·4): `paso` `id` (el correo) o `codigo` (el que le acaba de llegar), la puerta del
- * acceso con código (A3, `#849`): el correo decide —con cuenta, el código; nuevo, «Tus datos»—.
+ * acceso con código (A3, `#849`): el correo decide —con cuenta, el código; nuevo, «Tus datos»—. `recordar`, la casilla
+ * «Mantener la sesión iniciada en este dispositivo» del código (`#858`, `[DECIDIDO owner]`): SIN marcar de serie —una
+ * cookie de autenticación persistente la pide quien la quiere—.
  * ⚠️ Solo CORREO (`#695`, `[DECIDIDO owner]`): el acceso del producto no admite teléfono (`LoginRequest`).
  */
-export const entradaVacia = (valor = '') => ({ paso: 'id', valor, codigo: '', error: '', reenvios: 0 });
+export const entradaVacia = (valor = '') => ({ paso: 'id', valor, codigo: '', recordar: false, error: '', reenvios: 0 });
 
 const vacio = (valor) => String(valor ?? '').trim() === '';
 

@@ -120,7 +120,11 @@
 - **Cambio de correo**: el nuevo se verifica con un código a ESE correo.
 - **Google**: sin cambios; su alta sigue completándose donde hoy.
 - **Sesión**: se regenera al entrar; el dispositivo queda **recordado 90 días sin uso** o hasta cerrar sesión (`#848`: cada
-  entrada cuesta un correo).
+  entrada cuesta un correo). ✱ **Corregido por `#858`** (`[DECIDIDO owner]` 30-09): SOLO si la persona marca «Mantener la
+  sesión iniciada en este dispositivo» al escribir el código (sin marcar de serie); el alta, la sesión de siempre. Una cookie
+  de autenticación persistente no está exenta de consentimiento (GT29, dictamen 4/2012, §3.2; la guía de la AEPD exime solo
+  las «de sesión»), y la casilla es la forma de que la pida quien la quiere (una premarcada no vale: Planet49). Solo la
+  pregunta, sin texto debajo (el owner, 30-09): los 90 días y la cookie los explica `/cookies`, que nombra la casilla.
 
 ### 4.5 Lo que se retira (tanda de retirada, §3.quater)
 `POST /auth/login` con contraseña, `/auth/password/{forgot,reset}`, `PUT /me/password`, las páginas web de recuperar y

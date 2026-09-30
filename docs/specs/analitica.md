@@ -443,7 +443,7 @@ banner conserva sus tres acciones; el job relee el consentimiento vivo; `marketi
   VISTA del cliente** en el párrafo de publicidad y en el de transferencias de `/cookies` (el texto guardado en
   `pages`): un marcador para el asesor no es un texto que se publica. La salida es la misma que la del driver
   (T3a·2): el texto guardado dice «las plataformas activas se nombran más abajo» y `/cookies` las nombra en el
-  RENDER (`Pixels::active()`, `lang/*/cookies.php` `policy.ads_*`), cada una con su empresa responsable y su
+  RENDER (`Pixels::active()`; desde `#859`, filas del listado `Http\Legal\CookieInventory`, `inventory.*`), cada una con su empresa responsable y su
   garantía de transferencia —Google Ireland Limited y Meta Platforms Ireland Limited bajo el EU-US Data Privacy
   Framework, TikTok Technology Limited bajo cláusulas contractuales tipo—; `[PENDIENTE: asesoría]` **queda solo
   en la doc** (`COOKIES.md` §1): validar esas garantías y el texto, no decidirlas aquí. La migración quirúrgica

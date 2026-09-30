@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.57.0
+  version: 1.58.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -90,9 +90,13 @@ paths:
 
         **1.55.0** (`specs/acceso-con-codigo.md`, A1): el `code` es el de seis cifras que `POST /auth/code`
         envía al correo —vale 10 minutos, una sola vez y 5 intentos—. Se manda `password` o `code`, nunca
-        los dos. Quien entra con el código queda **recordado 90 días sin uso en este dispositivo** (la
-        cookie de recuerdo; `remember` no aplica) y, si su correo no estaba confirmado, queda confirmado.
-        La contraseña del cliente se retira en una versión posterior.
+        los dos. Si su correo no estaba confirmado, queda confirmado. La contraseña del cliente se retira
+        en una versión posterior.
+
+        **1.58.0** (`#858`): con el código, el dispositivo queda **recordado 90 días sin uso** SOLO si se
+        manda `remember: true` (la casilla «Mantener la sesión iniciada en este dispositivo», sin marcar de
+        serie): una cookie de autenticación persistente no está exenta de consentimiento. Sin él, la sesión
+        de siempre. Antes (1.55.0–1.57.0) el código recordaba siempre.
 
         **Anti-enumeración** (`SEC-06`): unas credenciales que no casan devuelven siempre
         `invalid_credentials`, sin distinguir si el correo existe. Lo que sí se distingue es el
@@ -1075,7 +1079,8 @@ paths:
       operationId: getLegalDocument
       summary: Un texto legal, con los marcadores ya resueltos
       description: |
-        El documento en secciones `{h, p}`.
+        El documento en secciones `{h, p}`. **1.58.0**: el de `cookies` trae además `inventory`, el listado de las
+        cookies de ESTA instalación compuesto con su configuración (`specs/politica-de-cookies.md`).
 
         ⚠️ **El cuerpo viaja INTERPOLADO**: el texto guardado lleva marcadores (`:legal_name`, `:legal_nif`,
         `:legal_address`, `:legal_email`) que resuelve el servidor. En crudo, una landing publicaría «El
@@ -4911,6 +4916,44 @@ components:
             properties:
               h: { type: string }
               p: { type: string }
+        inventory:
+          type: object
+          additionalProperties: false
+          required: [title, intro, labels, cookies]
+          description: |
+            **1.58.0** (`specs/politica-de-cookies.md` §3). **Solo en `cookies`**: el LISTADO de las cookies de ESTA
+            instalación, compuesto por el servidor con lo que tiene encendido —las propias siempre; las de un tercero (el
+            anti-bot, el mapa, el widget de redes, la herramienta de análisis, cada píxel) solo si está activo—, con sus
+            rótulos ya traducidos para pintarlo sin textos propios. No sale del texto guardado: el texto explica, esto
+            enumera, y cambia en cuanto la configuración cambia.
+          properties:
+            title: { type: string }
+            intro: { type: string }
+            labels:
+              type: object
+              additionalProperties: false
+              required: [holder, purpose, duration, when]
+              properties:
+                holder: { type: string }
+                purpose: { type: string }
+                duration: { type: string }
+                when: { type: string }
+            cookies:
+              type: array
+              items:
+                type: object
+                additionalProperties: false
+                required: [key, name, holder, purpose, duration, category, when]
+                properties:
+                  key:
+                    type: string
+                    description: 'Estable: `session`, `xsrf`, `visitor`, `consent`, `remember`, `redsys`, `turnstile`, `maps`, `social`, `posthog`, `matomo`, `google_ads`, `meta`, `tiktok`.'
+                  name: { type: string, description: 'El nombre de la cookie, o de las de un tercero.' }
+                  holder: { type: string }
+                  purpose: { type: string }
+                  duration: { type: string }
+                  category: { type: string, description: 'La categoría, ya traducida («Necesaria», «Publicidad (con tu permiso)»…).' }
+                  when: { type: string }
 
     SidebarBoot:
       type: object
@@ -9346,8 +9389,9 @@ components:
         remember:
           type: boolean
           description: |
-            Mantener la sesión abierta más allá del cierre del navegador. Solo con `password`: quien entra
-            con `code` queda recordado 90 días sin uso siempre.
+            Mantener la sesión abierta más allá del cierre del navegador: con `code`, 90 días sin uso en
+            este dispositivo (**1.58.0**, `#858`: antes el código recordaba siempre); con `password`, lo de
+            siempre. Solo si la persona lo pide: nunca marcado de serie.
 
     CodeRequest:
       type: object
@@ -9550,8 +9594,9 @@ components:
         La única casilla que queda es la del descargo (`accept_waiver`).
 
         **1.55.0** (`specs/acceso-con-codigo.md`, A1): la contraseña es **opcional**. Sin ella, la cuenta nace
-        sin contraseña y se entra con un código al correo (`POST /auth/code`). Con sesión, el alta deja el
-        dispositivo recordado 90 días sin uso.
+        sin contraseña y se entra con un código al correo (`POST /auth/code`). **1.58.0** (`#858`): con sesión,
+        el alta entra con la sesión de siempre, NO recordada (antes, 90 días): recordar el dispositivo solo se
+        pide al entrar con el código (`remember`).
       required: [name, email]
       additionalProperties: false
       properties:

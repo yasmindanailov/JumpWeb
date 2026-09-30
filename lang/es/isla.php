@@ -254,6 +254,8 @@ return [
             'codigo_enviado' => 'Te hemos enviado un código a :correo.',
             'codigo_otro_enviado' => 'Te hemos enviado otro código a :correo.',
             'otro_codigo' => 'Pedir otro código',
+            // Recordar el dispositivo, SOLO si se pide (`#858`, el owner): la cookie persistente no está exenta de consentimiento.
+            'recordar' => 'Mantener la sesión iniciada en este dispositivo',
             'nueva' => 'Aún no tienes cuenta con ese correo: rellena tus datos y entras al momento.',
             'casilla' => 'He leído y acepto el descargo de responsabilidad.',
             'leer' => 'Leer el descargo de responsabilidad',

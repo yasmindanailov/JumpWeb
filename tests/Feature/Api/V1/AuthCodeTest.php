@@ -188,13 +188,18 @@ class AuthCodeTest extends ApiTestCase
 
     // ── Verificar: la sesión y el token ─────────────────────────────────────────────────────────
 
-    public function test_the_code_opens_a_session_remembered_for_ninety_days(): void
+    /**
+     * ⚠️⚠️ `#858` (`[DECIDIDO owner]`): recordado 90 días SOLO si lo pide («Mantener la sesión iniciada», `remember`). Una
+     * cookie de autenticación persistente no está exenta de consentimiento (GT29, dictamen 4/2012, §3.2): la pide quien
+     * marca la casilla, que va SIN marcar.
+     */
+    public function test_the_code_remembers_the_device_for_ninety_days_only_when_asked(): void
     {
         Notification::fake();
         $user = $this->customer();
         $this->postJson(self::ROOT.'/auth/code', ['email' => self::EMAIL])->assertOk();
 
-        $response = $this->fromSpa('/auth/login', ['email' => self::EMAIL, 'code' => $this->codeSentTo($user)])
+        $response = $this->fromSpa('/auth/login', ['email' => self::EMAIL, 'code' => $this->codeSentTo($user), 'remember' => true])
             ->assertOk()
             ->assertValidRequest()
             ->assertValidResponse(200)
@@ -203,8 +208,22 @@ class AuthCodeTest extends ApiTestCase
         $this->assertAuthenticatedAs($user->fresh());
 
         $cookie = $response->getCookie($this->recallerName(), false);
-        $this->assertNotNull($cookie, 'el dispositivo queda recordado: la cookie de recuerdo sale con el inicio de sesión');
+        $this->assertNotNull($cookie, 'con la casilla, el dispositivo queda recordado: la cookie de recuerdo sale con el inicio de sesión');
         $this->assertEqualsWithDelta(now()->addMinutes(RememberedDevice::MINUTES)->timestamp, $cookie->getExpiresTime(), 5);
+    }
+
+    public function test_without_asking_the_code_opens_a_plain_session(): void
+    {
+        Notification::fake();
+        $user = $this->customer();
+        $this->postJson(self::ROOT.'/auth/code', ['email' => self::EMAIL])->assertOk();
+
+        $response = $this->fromSpa('/auth/login', ['email' => self::EMAIL, 'code' => $this->codeSentTo($user)])
+            ->assertOk()
+            ->assertValidResponse(200);
+
+        $this->assertAuthenticatedAs($user->fresh());
+        $this->assertNull($response->getCookie($this->recallerName(), false), 'sin pedirlo, ninguna cookie de recuerdo');
     }
 
     public function test_a_wrong_code_is_the_generic_401(): void
@@ -294,7 +313,8 @@ class AuthCodeTest extends ApiTestCase
 
     // ── El alta sin contraseña ──────────────────────────────────────────────────────────────────
 
-    public function test_a_customer_signs_up_without_a_password_and_stays_remembered(): void
+    /** El alta entra con la sesión de siempre: recordar el dispositivo solo se pide al entrar con el código (`#858`). */
+    public function test_a_customer_signs_up_without_a_password_and_without_being_remembered(): void
     {
         $response = $this->fromSpa('/auth/register', ['name' => 'Ana Sin Clave', 'email' => 'sin.clave@example.test'])
             ->assertCreated()
@@ -303,10 +323,7 @@ class AuthCodeTest extends ApiTestCase
         $user = User::query()->where('email', 'sin.clave@example.test')->sole();
         $this->assertNull($user->getRawOriginal('password'), 'la cuenta nace SIN contraseña');
         $this->assertAuthenticatedAs($user);
-
-        $cookie = $response->getCookie($this->recallerName(), false);
-        $this->assertNotNull($cookie, 'el dispositivo del alta queda recordado');
-        $this->assertEqualsWithDelta(now()->addMinutes(RememberedDevice::MINUTES)->timestamp, $cookie->getExpiresTime(), 5);
+        $this->assertNull($response->getCookie($this->recallerName(), false), 'el alta no deja una cookie de recuerdo que nadie pidió');
 
         Auth::forgetGuards();
         $this->fromSpa('/auth/login', ['email' => 'sin.clave@example.test', 'password' => 'password'])

@@ -123,10 +123,18 @@ async function recorrer(navegador, ventana, informe) {
     // T5f: el bloque que se rompe A PROPÓSITO se apunta en la consola («Mi cuenta · bloque …»): mientras se busca, se
     // guarda aparte (y se comprueba que se apuntó); fuera de ese paso, sería un error de verdad.
     const huecos = { buscando: false, vistos: [] };
+    // T5f: sin red, el navegador apunta en la consola TODO lo que no pudo cargar. El lote de la analítica (`POST /events`,
+    // cada pocos segundos) cae a veces dentro de la ventana sin red (medido el 30-09: a 1280, en tres corridas seguidas):
+    // se espera, y SOLO él; cualquier otra petición sin red es un error de verdad (lo que guarda no se intenta).
+    const sinRed = { activo: false, otras: [] };
+    pagina.on('requestfailed', (r) => {
+        if (sinRed.activo && r.failure()?.errorText === 'net::ERR_INTERNET_DISCONNECTED' && new URL(r.url()).pathname !== '/api/v1/events') sinRed.otras.push(r.url());
+    });
     pagina.on('pageerror', (e) => errores.push(e.message));
     pagina.on('console', (m) => {
         if (m.type() !== 'error') return;
         if (huecos.buscando && m.text().startsWith('Mi cuenta · bloque')) huecos.vistos.push(m.text());
+        else if (sinRed.activo && m.text().includes('ERR_INTERNET_DISCONNECTED')) return;
         else errores.push(m.text());
     });
     pagina.on('response', (r) => {
@@ -208,6 +216,10 @@ async function recorrer(navegador, ventana, informe) {
     check('«Continuar» con un correo con cuenta pide el código, y llega al buzón', delBuzon !== null && await capa().locator('#pjc-ent-codigo').isVisible(), delBuzon ?? 'sin código en Mailpit');
     await captura('2b-codigo');
     await capa().locator('#pjc-ent-codigo').fill(delBuzon ?? '');
+    // «Mantener la sesión iniciada» (`#858`): sin marcar de serie; aquí se marca, y la cookie de recuerdo sale con 90 días.
+    const recordar = capa().locator('#pjc-ent-recordar');
+    check('«Mantener la sesión iniciada en este dispositivo», SIN marcar de serie', ! (await recordar.isChecked().catch(() => true)));
+    await capa().getByText('Mantener la sesión iniciada en este dispositivo').click();
     await Promise.all([
         pagina.waitForURL(/#mi-cuenta$/, { timeout: 15000 }).catch(() => {}),
         capa().getByRole('button', { name: 'Entrar' }).click(),
@@ -215,6 +227,8 @@ async function recorrer(navegador, ventana, informe) {
     await pagina.waitForLoadState('load');
     await capa().waitFor({ timeout: 15000 }).catch(() => {});
     await pagina.waitForTimeout(800);
+    const recuerdo = (await contexto.cookies()).find((c) => c.name.startsWith('remember_web_'));
+    check('marcada, el dispositivo queda recordado: la cookie de recuerdo, con 90 días', recuerdo && Math.abs((recuerdo.expires - Date.now() / 1000) / 86400 - 90) < 1, recuerdo ? `${Math.round((recuerdo.expires - Date.now() / 1000) / 86400)} días` : 'sin cookie de recuerdo');
     check('entrar recarga la MISMA página en Mi cuenta (`#mi-cuenta`)', new URL(pagina.url()).pathname === '/kids' && (await banda()) === 'Mi cuenta', `${pagina.url()} · banda «${await banda()}»`);
     check('«Hola, …» con su nombre de pila', (await titular()) === `Hola, ${CLIENTE.nombre}`, `titular «${await titular()}»`);
     const mini = await capa().locator('#mi-qr img').first().evaluate((img) => ({ ok: img.complete && img.naturalWidth > 0, src: img.getAttribute('src') })).catch(() => ({ ok: false, src: '' }));
@@ -897,6 +911,7 @@ async function recorrer(navegador, ventana, informe) {
         const qr = async () => (await capa().locator('#mi-qr b').first().textContent().catch(() => '')).trim();
         const qrAntes = await qr();
         await contexto.setOffline(true);
+        sinRed.activo = true;
         await pagina.waitForTimeout(400);
         check('sin red, «Sin conexión» arriba, con su frase', await capa().getByText('Sin conexión', { exact: true }).isVisible() && await capa().getByText('Lo que ves sigue aquí. Cuando vuelva la conexión, podrás guardar.').isVisible());
         await capa().getByRole('button', { name: 'Renovar mi QR' }).click();
@@ -907,6 +922,7 @@ async function recorrer(navegador, ventana, informe) {
         await captura('32-sin-conexion');
         await contexto.setOffline(false);
         await pagina.waitForTimeout(500);
+        sinRed.activo = false;
         check('con la red de vuelta, «Sin conexión» se va y el fallo se queda hasta reintentar',
             ! (await capa().getByText('Sin conexión', { exact: true }).isVisible().catch(() => false)) && await capa().getByRole('button', { name: 'Volver a intentarlo' }).isVisible());
         await capa().getByRole('button', { name: 'Volver a intentarlo' }).click();
@@ -937,15 +953,18 @@ async function recorrer(navegador, ventana, informe) {
         await pagina.getByText('Entrar o crear cuenta').first().click();
         await capa().waitFor({ timeout: 8000 }).catch(() => {});
         await contexto.setOffline(true);
+        sinRed.activo = true;
         await pagina.waitForTimeout(400);
         check('sin sesión, en «Entra», «Sin conexión» arriba', (await titular()) === 'Entra' && await capa().getByText('Sin conexión', { exact: true }).isVisible());
         await contexto.setOffline(false);
         await pagina.waitForTimeout(300);
+        sinRed.activo = false;
 
         // ── 11 · Limpio ──────────────────────────────────────────────────────────────────────────────
         const deCodigo = (codigo) => errores.filter((e) => e.includes(`status of ${codigo}`));
         const inesperados = errores.filter((e) => ! /status of (401|404|422)/.test(e))
-            .concat(deCodigo(401).slice(esperados[401]), deCodigo(404).slice(esperados[404]), deCodigo(422).slice(esperados[422]));
+            .concat(deCodigo(401).slice(esperados[401]), deCodigo(404).slice(esperados[404]), deCodigo(422).slice(esperados[422]))
+            .concat(sinRed.otras.map((u) => `sin red se intentó ${u}`));
         check('consola limpia', inesperados.length === 0, inesperados.join(' | '));
         check('ninguna respuesta de la API falla', malas.length === 0, malas.join(', '));
     }

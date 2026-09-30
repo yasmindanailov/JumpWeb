@@ -21,9 +21,12 @@ export async function puerta(api, correo) {
     return { siguiente: r.ok ? r.data?.next ?? null : r.error?.params?.next ?? null, r };
 }
 
-/** ENTRAR con el código: el servidor abre la sesión (recordada 90 días, `#848`) y devuelve el perfil. */
-export function entrar(api, correo, codigo) {
-    return api.post('/auth/login', { email: String(correo ?? '').trim(), code: String(codigo ?? '').trim() });
+/**
+ * ENTRAR con el código: el servidor abre la sesión y devuelve el perfil. Recordada 90 días SOLO con `recordar` —la casilla
+ * «Mantener la sesión iniciada», sin marcar de serie— (`#858`): una cookie persistente la pide quien la quiere.
+ */
+export function entrar(api, correo, codigo, recordar = false) {
+    return api.post('/auth/login', { email: String(correo ?? '').trim(), code: String(codigo ?? '').trim(), remember: recordar === true });
 }
 
 /** El primer mensaje de un campo del sobre de error de la API (`fields.x` es una lista). */

@@ -506,6 +506,12 @@ instalación de un cliente. Si se configura a mano deja de ser una prueba del pr
 > owner configurarlo (una app en el móvil: Google Authenticator, Authy…) y le da OCHO códigos de recuperación, que tiene que
 > guardar fuera del móvil. Si pierde móvil y códigos: `php artisan panel:quitar-authenticator <su correo>` por SSH, y en su
 > siguiente inicio de sesión lo configura de nuevo. Mostrador y puerta, sin cambios.
+> ❗ **La POLÍTICA DE COOKIES de producción** (`#859`, `specs/politica-de-cookies.md` §4): el `migrate` de la v2.0.0 pasa al
+> texto nuevo SOLO el francés (el español y el inglés llevan la edición de `#592`, y el registro dirá
+> `cookies.policy_not_updated` con `es`/`en`: esperado). Después, el script gitignorado `aplicar-produccion-cookies.php`
+> (del `storage/app/` del owner; se sube a `~/contenido/` y se ejecuta desde `~/public_html`, como el de `#592`): comprueba
+> la huella ESPERADA de cada idioma, sustituye en una transacción y, pasado otra vez, ABORTA (probado en local). Luego, a
+> ojo: `/cookies` con su listado en tarjetas.
 > ❗❗❗ **El tercero se paró en la GUARDA 1 y dejó el sitio 3 minutos en 503** (`#594`): el owner había
 > pasado Redsys a `live` a las 17:29. Se levantó con `artisan up` y se completaron a mano las franjas,
 > `artisan optimize` y la salud. Desde `#594`, en producción la guarda admite `test` o `live`.

@@ -478,7 +478,7 @@ export function useSeccionCuenta(props) {
             return null;
         }
 
-        const r = await entrarConCodigo(api, correo, e.ent.codigo);
+        const r = await entrarConCodigo(api, correo, e.ent.codigo, e.ent.recordar);
 
         if (r.ok) return recargarEnMiCuenta();
 
@@ -701,7 +701,7 @@ export function useSeccionCuenta(props) {
         abierta, textos, e, ck, inicio, vistaQr, social, firma, authStore, waiverStore, rotulosGoogle,
         tx: (clave) => t(textos, clave),
         sinQr: computed(() => delMotor('account.card.unavailable')),
-        pantallaEntrar: computed(() => ({ paso: e.ent.paso, valor: e.ent.valor, codigo: e.ent.codigo, error: e.ent.error, reenvios: e.ent.reenvios, ...social.value })),
+        pantallaEntrar: computed(() => ({ paso: e.ent.paso, valor: e.ent.valor, codigo: e.ent.codigo, recordar: e.ent.recordar, error: e.ent.error, reenvios: e.ent.reenvios, ...social.value })),
         // Lo que se dice arriba de «Entra» (T5e·2): la vuelta de Google que no salió («No has terminado de entrar…»).
         avisoEntrar: computed(() => (e.aviso?.en === VISTA.ENTRAR ? e.aviso : null)),
         abrirQr: () => a(VISTA.QR, { qrDesde: 'cuenta' }),

@@ -19,7 +19,11 @@ guardas 8, 9 y 10) · `scripts/mutar-guarda8.sh` · `CHANGELOG.md` · `phpstan.n
 `Identity\Services\{CodeMail,SessionBinding}`, `Identity\Listeners\BindSessionOnLogin`, `EnsureSessionIsCurrent`,
 `Notifications\ConfirmationCode`, `Auth\LogoutController`, `Api\V1\MeConfirmationCodeTest` y `Auth\SessionBindingTest` · **y la
 A2b** (`#856`): `Identity\Contracts\EmailChangeOutcome`, `Notifications\Support\ChoosesRecipient`, `Account\EmailChangeController`,
-`Api\V1\MePendingEmailCodeTest` y `Account\EmailChangeRecipientsTest` ·
+`Api\V1\MePendingEmailCodeTest` y `Account\EmailChangeRecipientsTest` · **y la A3b** (`#857`): `isla/cuenta/CampoCodigoConfirmar.vue` ·
+**LA POLÍTICA DE COOKIES de producción** (`#858`/`#859`): su spec, `App\Http\Legal\CookieInventory`, la migración
+`cookie_policy_for_production`, `tests/Support/CookiePolicyV4.php`, `Content\CookieInventoryTest`,
+`scripts/{sonda-inventario-cookies.mjs,mutar-politica-cookies.sh}` y `inventory.*` de `lang/*/cookies.php` (y, AVISANDO, del
+SPA: `CookiePolicyContent`, el resto de `cookies.php`, `CookieConsent` y sus tests) ·
 **LA ISLA Y LA LANDING NUEVA** (`#681`, `#682`): la spec, la isla `resources/js/isla/**`, sus bancos y sondas
 (`scripts/banco-{isla,piezas,compra}*`, `scripts/pixel.mjs`, `scripts/sonda-{embudo,isla,cuenta,movimiento,isla-movimiento,banco-movimiento,isla-rendimiento,compra-directa,demanda}.mjs`,
 `scripts/sonda-cuenta-datos.php`, `scripts/mutar-{t5f,hijos-de-producto,demanda-isla}.sh`), `sidebar/reanudar.js`,

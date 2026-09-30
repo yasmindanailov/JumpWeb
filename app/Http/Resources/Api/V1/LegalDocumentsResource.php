@@ -6,6 +6,7 @@ use App\Domain\Content\Models\Page;
 use App\Domain\Content\Services\LegalIdentity;
 use App\Domain\Identity\Services\LegalDocuments;
 use App\Domain\Platform\Services\MetaDescription;
+use App\Http\Legal\CookieInventory;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Collection;
@@ -87,7 +88,22 @@ class LegalDocumentsResource extends JsonResource
                 'published_at' => $version->published_at->toIso8601String(),
             ],
             'sections' => $secciones,
+            // El LISTADO de la política de cookies (`specs/politica-de-cookies.md` §3, 1.58.0): lo compone la configuración
+            // de ESTA instalación (`CookieInventory`), no el texto guardado; con sus rótulos, para que una landing lo pinte
+            // sin textos propios. Solo en `cookies` y con el cuerpo.
+            'inventory' => $this->conCuerpo && $pagina->slug === 'cookies' ? self::inventario() : null,
         ], fn ($valor): bool => $valor !== null);
+    }
+
+    /** @return array{title: string, intro: string, labels: array<string, string>, cookies: list<array<string, string>>} */
+    public static function inventario(): array
+    {
+        return [
+            'title' => (string) __('cookies.inventory.title'),
+            'intro' => (string) __('cookies.inventory.intro'),
+            'labels' => (array) __('cookies.inventory.labels'),
+            'cookies' => CookieInventory::rows(),
+        ];
     }
 
     /**

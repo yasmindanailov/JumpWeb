@@ -433,6 +433,13 @@ son de cualquiera que mida, no de un carril.
   `sonda-cuenta` pide además varios códigos de CONFIRMAR en un minuto (uno por minuto y cuenta): entre pasos vacía
   `confirm-code*`, `pending-email-resend*` y `new-email-confirm:*`. Y confirma un cambio de correo DE VERDAD: la cuenta de
   pruebas vuelve a su correo por tinker justo después y también al EMPEZAR (una corrida cortada a medias la dejaría fuera).
+- **Una migración que reconoce un texto por su HUELLA necesita ese texto CONGELADO** (`#859`): la clase que siembra el
+  texto (`CookiePolicyContent`) cambia con el texto nuevo, así que un test que compara con «lo que sembraba» se compara
+  consigo mismo. La v4 vive copiada en `tests/Support/CookiePolicyV4.php` y un test exige que su sha256 por idioma sea el
+  que la migración reconoce; los tests de las migraciones VIEJAS parten de esa copia, no de la clase viva.
+- **Lo medido tiene que estar declarado, y la guarda se muerde a mano** (`#859`): `sonda-inventario-cookies.mjs` recorre
+  seis escenarios y sale con 1 si una cookie propia puesta no está en el listado de la API. Mutada quitando la fila de
+  `visitor_id` de `CookieInventory`: sale con 1 y la nombra. Lo que la configuración local no enciende no lo mide.
 
 ### 3. Guardas de arquitectura — `tests/Feature/Architecture/`
 Tests que no prueban una feature sino una REGLA estructural; sin ellos el refactor de Fase 2 se

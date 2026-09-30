@@ -7,12 +7,18 @@ use App\Domain\Content\Services\CookiePolicyContent;
 use App\Domain\Platform\Models\Setting;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Log;
+use Tests\Support\CookiePolicyV4;
 use Tests\TestCase;
 
 /**
  * #219 — La política de cookies (2.ª capa) muestra el inventario REAL (no el marcador `[PENDIENTE]`),
  * con los proveedores y las transferencias internacionales; es trilingüe; y la migración de
  * reparación es idempotente y respeta las ediciones de la clienta.
+ *
+ * ▶ Desde la política de PRODUCCIÓN (`specs/politica-de-cookies.md`): el texto se reescribió y el LISTADO lo compone
+ * `CookieInventory`. Las pruebas de las migraciones VIEJAS parten de la «v4» congelada (`Tests\Support\CookiePolicyV4`),
+ * que es lo que dejan; la nueva la reconoce por su huella y la lleva al texto vigente.
  */
 class CookiePolicyContentTest extends TestCase
 {
@@ -24,15 +30,15 @@ class CookiePolicyContentTest extends TestCase
 
         $response = $this->get('/cookies')->assertOk();
 
-        $response->assertDontSee('[PENDIENTE: listado detallado');
-        $response->assertDontSee('[PENDING: detailed list');
-        $response->assertDontSee('[À COMPLÉTER : liste détaillée');
+        $response->assertDontSee('[PENDIENTE');
+        $response->assertDontSee('[PENDING');
+        $response->assertDontSee('[À COMPLÉTER');
 
-        // Proveedores reales + transferencias.
+        // Proveedores reales + transferencias, y el LISTADO debajo (Cloudflare sale en él solo si el anti-bot está activo).
         $response->assertSee('Google');
-        $response->assertSee('Cloudflare');
         $response->assertSee('Redsys');
         $response->assertSee('Data Privacy Framework');
+        $response->assertSee('data-cookie-inventory', false);
     }
 
     // ⚠️ Aquí vivía `test_reviewed_cookie_page_hides_the_draft_notice`: el aviso de borrador y su lista
@@ -90,16 +96,16 @@ class CookiePolicyContentTest extends TestCase
     }
 
     /**
-     * `#592` — **La política dice para qué es el permiso**: la categoría del mapa enseña también las
-     * reseñas de Google y la foto de quien las escribe.
+     * **El mapa ya no promete las reseñas de Google** (antes, `#592`): desde `#771`/`#772` las reseñas son nuestras y no
+     * se piden a Google, así que la categoría del mapa es solo el mapa —la finalidad se ESTRECHA: no se vuelve a pedir—.
      */
-    public function test_policy_names_google_reviews_in_the_map_category(): void
+    public function test_the_map_category_no_longer_promises_google_reviews(): void
     {
         $this->seed(LandingContentSeeder::class);
 
-        $this->withSession(['locale' => 'es'])->get('/cookies')->assertOk()->assertSee('Mapa y reseñas (Google)');
-        $this->withSession(['locale' => 'en'])->get('/cookies')->assertOk()->assertSee('Map and reviews (Google)');
-        $this->withSession(['locale' => 'fr'])->get('/cookies')->assertOk()->assertSee('Carte et avis (Google)');
+        foreach (['es' => ['Mapa (Google)', 'reseñas publicadas en Google'], 'en' => ['Map (Google)', 'reviews published on Google'], 'fr' => ['Carte (Google)', 'avis publiés sur Google']] as $locale => [$mapa, $resenas]) {
+            $this->withSession(['locale' => $locale])->get('/cookies')->assertOk()->assertSee($mapa)->assertDontSee($resenas);
+        }
     }
 
     /**
@@ -109,7 +115,8 @@ class CookiePolicyContentTest extends TestCase
      */
     public function test_reviews_migration_rewrites_only_untouched_paragraphs(): void
     {
-        $nuevo = collect(CookiePolicyContent::body()['es']);
+        // Lo que dejaba esta migración: la v4 congelada (el texto vigente ya no tiene esta sección).
+        $nuevo = collect(CookiePolicyV4::body()['es']);
         $mapaNuevo = $nuevo->firstWhere('h', 'Mapa y reseñas (Google)');
         $transferenciasNuevo = $nuevo->firstWhere('h', 'Transferencias internacionales de datos');
         $this->assertNotNull($mapaNuevo, 'la política ya no tiene la sección del mapa y las reseñas: el caso miraría el vacío');
@@ -145,26 +152,27 @@ class CookiePolicyContentTest extends TestCase
 
     // ─── T3a de la analítica (`specs/analitica.md` §4.3): tres secciones nuevas ──────────────────
 
-    /** La política declara lo exento (la audiencia propia) y explica las dos categorías nuevas, en los tres idiomas. */
-    public function test_policy_declares_the_exempt_measurement_and_the_two_new_purposes(): void
+    /**
+     * La política de producción: lo necesario y lo exento primero, la casilla de `#858`, y cada categoría con permiso
+     * con el MISMO nombre que el aviso de cookies —para que quien lee sepa qué interruptor es—, en los tres idiomas.
+     */
+    public function test_the_production_policy_explains_each_category_with_the_notices_names(): void
     {
         $this->seed(LandingContentSeeder::class);
 
         foreach (['es', 'en', 'fr'] as $locale) {
-            $this->withSession(['locale' => $locale])->get('/cookies')->assertOk()
-                ->assertSee(CookiePolicyContent::AUDIENCE_H[$locale])
-                ->assertSee('visitor_id')
-                ->assertSee(CookiePolicyContent::ANALYTICS_H[$locale])
-                ->assertSee(CookiePolicyContent::MARKETING_H[$locale])
-                ->assertSee('Data Privacy Framework');
+            $response = $this->withSession(['locale' => $locale])->get('/cookies')->assertOk()->assertSee('visitor_id')->assertSee('Data Privacy Framework');
+
+            foreach (['maps', 'social', 'analytics', 'marketing'] as $categoria) {
+                $response->assertSee(__('cookies.panel.'.$categoria.'_title', [], $locale));
+            }
         }
 
-        // El orden: lo exento y las dos categorías van detrás de las cookies técnicas, antes del mapa.
-        $headings = array_column(CookiePolicyContent::body()['es'], 'h');
         $this->assertSame(
-            ['Cookies técnicas y de seguridad (necesarias)', CookiePolicyContent::AUDIENCE_H['es'], CookiePolicyContent::ANALYTICS_H['es'], CookiePolicyContent::MARKETING_H['es'], 'Mapa y reseñas (Google)'],
-            array_slice($headings, 2, 5),
+            ['¿Qué son las cookies?', '¿Quién es el responsable?', 'Qué cookies usamos', 'Cookies necesarias (exentas de consentimiento)', 'Mantener la sesión iniciada', 'Medición de audiencia propia (exenta de consentimiento)', 'Mapa (Google)', 'Redes sociales', 'Análisis de uso identificado', 'Publicidad'],
+            array_slice(array_column(CookiePolicyContent::body()['es'], 'h'), 0, 10),
         );
+        $this->assertStringContainsString('«Mantener la sesión iniciada en este dispositivo»', CookiePolicyContent::body()['es'][4]['p'], '`#858`: la casilla, con su nombre');
     }
 
     /**
@@ -174,28 +182,29 @@ class CookiePolicyContentTest extends TestCase
      */
     public function test_analytics_migration_inserts_the_sections_only_where_the_text_is_the_products(): void
     {
-        $nuevo = CookiePolicyContent::body()['es'];
-        $nuevoEn = CookiePolicyContent::body()['en'];
-        // El párrafo de transferencias de la v2 (anterior a la T3a·1), reconstruido desde el sembrado de HOY (que
-        // desde la T3b·3 ya nombra la herramienta y los anuncios «más abajo»).
+        // Lo que dejan la T3a y la T3b: la v4 congelada (desde la política de producción, el texto vigente es otro).
+        $nuevo = CookiePolicyV4::body()['es'];
+        $nuevoEn = CookiePolicyV4::body()['en'];
+        // El párrafo de transferencias de la v2 (anterior a la T3a·1), reconstruido desde la v4 (que desde la T3b·3 ya
+        // nombra la herramienta y los anuncios «más abajo»).
         $transfersOld = str_replace(
             ['Si activas el mapa y las reseñas, el contenido de redes sociales, el análisis de uso identificado o la publicidad', 'Google LLC (mapa, reseñas y Google Ads)', 'La herramienta de análisis y las plataformas de anuncios activas en esta web se nombran más abajo con su empresa responsable y su garantía de transferencia. '],
             ['Si activas el mapa y las reseñas o el contenido de redes sociales', 'Google LLC (mapa y reseñas)', ''],
-            CookiePolicyContent::TRANSFERS_P['es'],
+            CookiePolicyV4::TRANSFERS_P['es'],
         );
-        $this->assertNotSame(CookiePolicyContent::TRANSFERS_P['es'], $transfersOld, 'el párrafo viejo tiene que ser distinto del nuevo');
+        $this->assertNotSame(CookiePolicyV4::TRANSFERS_P['es'], $transfersOld, 'el párrafo viejo tiene que ser distinto del nuevo');
 
         // La v2: el cuerpo nuevo SIN las tres secciones y con el párrafo viejo de transferencias.
         $v2 = array_map(
             static fn (array $s): array => $s['h'] === 'Transferencias internacionales de datos' ? ['h' => $s['h'], 'p' => $transfersOld] : $s,
-            array_values(array_filter($nuevo, static fn (array $s): bool => ! in_array($s['h'], [CookiePolicyContent::AUDIENCE_H['es'], CookiePolicyContent::ANALYTICS_H['es'], CookiePolicyContent::MARKETING_H['es']], true))),
+            array_values(array_filter($nuevo, static fn (array $s): bool => ! in_array($s['h'], [CookiePolicyV4::AUDIENCE_H['es'], CookiePolicyV4::ANALYTICS_H['es'], CookiePolicyV4::MARKETING_H['es']], true))),
         );
         $this->assertCount(count($nuevo) - 3, $v2);
 
         // Y la clienta reescribió el inglés entero (ni ancla ni transferencias del producto).
         $deLaClienta = [['h' => 'Cookies', 'p' => 'Rewritten by the client.']];
         // El francés sembrado con la v2 pero YA con la sección de analítica puesta a mano: no se duplica.
-        $frConAnalitica = [['h' => 'Cookies techniques et de sécurité (nécessaires)', 'p' => 'x'], ['h' => CookiePolicyContent::ANALYTICS_H['fr'], 'p' => 'y']];
+        $frConAnalitica = [['h' => 'Cookies techniques et de sécurité (nécessaires)', 'p' => 'x'], ['h' => CookiePolicyV4::ANALYTICS_H['fr'], 'p' => 'y']];
 
         $page = Page::create([
             'slug' => 'cookies',
@@ -231,16 +240,17 @@ class CookiePolicyContentTest extends TestCase
      */
     public function test_the_advertisers_migration_replaces_the_two_paragraphs_only_where_they_are_the_products(): void
     {
-        $nuevo = CookiePolicyContent::body()['es'];
-        // Lo que dejó la T3a·1: reconstruido desde el sembrado de hoy.
-        $marketingT3a1 = str_replace('Las plataformas activas en esta web, con la empresa responsable y su garantía de transferencia, se nombran más abajo.', '[PENDIENTE: asesoría — nombrar a las plataformas activas como destinatarias y su garantía de transferencia].', CookiePolicyContent::MARKETING_P['es']);
-        $transfersT3a1 = str_replace('La herramienta de análisis y las plataformas de anuncios activas en esta web se nombran más abajo con su empresa responsable y su garantía de transferencia. Respecto al proveedor del feed social, la garantía', 'Respecto al proveedor del feed social, a la herramienta de análisis y a las demás plataformas de anuncios, la garantía', CookiePolicyContent::TRANSFERS_P['es']);
-        $this->assertNotSame(CookiePolicyContent::MARKETING_P['es'], $marketingT3a1);
-        $this->assertNotSame(CookiePolicyContent::TRANSFERS_P['es'], $transfersT3a1);
+        // Lo que deja la T3b: la v4 congelada.
+        $nuevo = CookiePolicyV4::body()['es'];
+        // Lo que dejó la T3a·1: reconstruido desde la v4.
+        $marketingT3a1 = str_replace('Las plataformas activas en esta web, con la empresa responsable y su garantía de transferencia, se nombran más abajo.', '[PENDIENTE: asesoría — nombrar a las plataformas activas como destinatarias y su garantía de transferencia].', CookiePolicyV4::MARKETING_P['es']);
+        $transfersT3a1 = str_replace('La herramienta de análisis y las plataformas de anuncios activas en esta web se nombran más abajo con su empresa responsable y su garantía de transferencia. Respecto al proveedor del feed social, la garantía', 'Respecto al proveedor del feed social, a la herramienta de análisis y a las demás plataformas de anuncios, la garantía', CookiePolicyV4::TRANSFERS_P['es']);
+        $this->assertNotSame(CookiePolicyV4::MARKETING_P['es'], $marketingT3a1);
+        $this->assertNotSame(CookiePolicyV4::TRANSFERS_P['es'], $transfersT3a1);
         $this->assertStringContainsString('[PENDIENTE: asesoría', $marketingT3a1, 'CONTROL: el texto viejo lleva el marcador');
 
         $viejo = array_map(static fn (array $s): array => match ($s['h']) {
-            CookiePolicyContent::MARKETING_H['es'] => ['h' => $s['h'], 'p' => $marketingT3a1],
+            CookiePolicyV4::MARKETING_H['es'] => ['h' => $s['h'], 'p' => $marketingT3a1],
             'Transferencias internacionales de datos' => ['h' => $s['h'], 'p' => $transfersT3a1],
             default => $s,
         }, $nuevo);
@@ -249,7 +259,7 @@ class CookiePolicyContentTest extends TestCase
         $page = Page::create([
             'slug' => 'cookies',
             'title' => CookiePolicyContent::title(),
-            'body' => ['es' => $viejo, 'en' => $deLaClienta, 'fr' => CookiePolicyContent::body()['fr']],
+            'body' => ['es' => $viejo, 'en' => $deLaClienta, 'fr' => CookiePolicyV4::body()['fr']],
             'is_active' => true,
         ]);
 
@@ -261,7 +271,54 @@ class CookiePolicyContentTest extends TestCase
         $this->assertStringNotContainsString('[PENDIENTE: asesoría', json_encode($page->body['es'], JSON_UNESCAPED_UNICODE), 'el marcador de la analítica sigue a la vista');
         $this->assertStringContainsString('[PENDIENTE: confirmar adhesión', json_encode($page->body['es'], JSON_UNESCAPED_UNICODE), 'el del feed social no es de esta tanda y se conserva');
         $this->assertSame($deLaClienta, $page->body['en'], 'la migración reescribe un texto que editó la clienta');
-        $this->assertSame(CookiePolicyContent::body()['fr'], $page->body['fr'], 'un texto ya nuevo no se toca');
+        $this->assertSame(CookiePolicyV4::body()['fr'], $page->body['fr'], 'un texto ya nuevo no se toca');
+
+        $tras = $page->body;
+        $migration->up();
+        $page->refresh();
+        $this->assertSame($tras, $page->body, 'la migración no es idempotente');
+    }
+
+    // ─── La política de PRODUCCIÓN (`specs/politica-de-cookies.md`) ─────────────────────────────
+
+    /**
+     * La copia congelada de la v4 es la que conoce la migración: su huella, idioma a idioma. Si la copia o la huella se
+     * mueven una letra, la migración dejaría de reconocer el texto viejo en producción sin que nada lo dijera.
+     */
+    public function test_the_frozen_v4_is_what_the_production_migration_recognises(): void
+    {
+        $migration = require database_path('migrations/2026_09_30_150000_cookie_policy_for_production.php');
+
+        foreach (CookiePolicyV4::body() as $locale => $secciones) {
+            $this->assertSame($migration::V4_FINGERPRINTS[$locale], $migration::fingerprint($secciones), $locale);
+        }
+        $this->assertNotSame($migration::V4_FINGERPRINTS['es'], $migration::fingerprint(CookiePolicyContent::body()['es']), 'CONTROL: el texto nuevo no tiene la huella del viejo');
+    }
+
+    /**
+     * ⚠️⚠️ En una BD ya sembrada, cada idioma que sigue siendo EXACTAMENTE la v4 pasa al texto vigente; el que la clienta
+     * reescribió NO se toca y queda en el registro; es idempotente; y lo migrado queda como lo siembra una instalación nueva.
+     * Y de punta a punta: las migraciones viejas dejan la v4, y esta la lleva al texto de producción.
+     */
+    public function test_the_production_migration_replaces_only_the_products_text(): void
+    {
+        Log::spy();
+        $deLaClienta = [['h' => 'Cookies', 'p' => 'Texto reescrito por la clienta.']];
+        $page = Page::create([
+            'slug' => 'cookies',
+            'title' => CookiePolicyContent::title(),
+            'body' => ['es' => CookiePolicyV4::body()['es'], 'en' => $deLaClienta, 'fr' => CookiePolicyV4::body()['fr']],
+            'is_active' => true,
+        ]);
+
+        $migration = require database_path('migrations/2026_09_30_150000_cookie_policy_for_production.php');
+        $migration->up();
+        $page->refresh();
+
+        $this->assertSame(CookiePolicyContent::body()['es'], $page->body['es'], 'el español sin editar no pasa al texto de producción');
+        $this->assertSame(CookiePolicyContent::body()['fr'], $page->body['fr']);
+        $this->assertSame($deLaClienta, $page->body['en'], 'la migración reescribe un texto que editó la clienta');
+        Log::shouldHaveReceived('warning')->once()->with('cookies.policy_not_updated', ['locales' => ['en'], 'reason' => 'edited_in_the_panel']);
 
         $tras = $page->body;
         $migration->up();

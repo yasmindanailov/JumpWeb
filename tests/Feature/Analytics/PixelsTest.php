@@ -142,8 +142,9 @@ class PixelsTest extends TestCase
             ->assertSee('Meta Platforms Ireland Limited')
             ->assertSee('TikTok Technology Limited')
             ->assertDontSee('Google Ireland Limited', 'Google Ads no está configurado');
-        $this->withSession(['locale' => 'en'])->get('/cookies')->assertOk()->assertSee('Advertising platforms active on this site');
-        $this->withSession(['locale' => 'fr'])->get('/cookies')->assertOk()->assertSee('Plateformes publicitaires actives sur ce site');
+        // Desde la política de producción (`specs/politica-de-cookies.md`), cada plataforma es una fila del LISTADO de cookies.
+        $this->withSession(['locale' => 'en'])->get('/cookies')->assertOk()->assertSee('Meta Platforms Ireland Limited (US, under the EU-US Data Privacy Framework)');
+        $this->withSession(['locale' => 'fr'])->get('/cookies')->assertOk()->assertSee('TikTok Technology Limited (hors EEE, sous clauses contractuelles types)');
 
         // La página de privacidad no cambia: el texto guardado no nombra a nadie.
         $this->withSession(['locale' => 'es'])->get('/privacidad')->assertOk()->assertDontSee('data-analytics-pixels', false);

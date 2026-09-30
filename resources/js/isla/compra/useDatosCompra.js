@@ -195,11 +195,12 @@ export function useDatosCompra({ flow, props, textos, esFiesta = () => false }) 
     }
 
     /**
-     * ENTRAR con el código (`POST /auth/login`, sesión recordada 90 días, `#848`): el servidor abre la sesión y devuelve el
-     * perfil, y se entra como tras cualquier otra puerta (`flow.enterWith`, como el alta de Google).
+     * ENTRAR con el código (`POST /auth/login`): el servidor abre la sesión —recordada 90 días solo con la casilla,
+     * `recordar`, `#858`— y devuelve el perfil, y se entra como tras cualquier otra puerta (`flow.enterWith`, como el
+     * alta de Google).
      */
-    async function entrarConCodigo(correo, codigo) {
-        const r = await (await acceso()).entrar(api, correo, codigo);
+    async function entrarConCodigo(correo, codigo, recordar) {
+        const r = await (await acceso()).entrar(api, correo, codigo, recordar);
 
         if (! r.ok) return { ok: false, r };
         await flow.enterWith(r);
@@ -257,7 +258,7 @@ export function useDatosCompra({ flow, props, textos, esFiesta = () => false }) 
 
     /** «Esta cuenta ya existe»: entra con el código que le llegó. */
     async function entrar() {
-        const { ok, r } = await entrarConCodigo(estado.f.correo, estado.f.codigo);
+        const { ok, r } = await entrarConCodigo(estado.f.correo, estado.f.codigo, estado.f.recordar);
 
         if (ok) return trasIdentificarse();
 
@@ -357,7 +358,7 @@ export function useDatosCompra({ flow, props, textos, esFiesta = () => false }) 
             return false;
         }
 
-        const { ok, r } = await entrarConCodigo(estado.ent.valor, estado.ent.codigo);
+        const { ok, r } = await entrarConCodigo(estado.ent.valor, estado.ent.codigo, estado.ent.recordar);
 
         if (! ok) {
             estado.ent.error = (await acceso()).errorDeEntrar(r, textos, aviso('errors.try_later'));

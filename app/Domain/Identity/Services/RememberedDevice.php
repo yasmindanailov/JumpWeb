@@ -9,9 +9,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 /**
- * **El dispositivo RECORDADO** (`docs/specs/acceso-con-codigo.md` §4.4, `DECISIONES #848`·3): quien entra con el código
- * o se da de alta queda dentro **90 días sin uso** o hasta cerrar sesión —cada entrada cuesta un correo—. Es la cookie
- * «recuérdame» del guard `web` (`config/auth.php`), con dos piezas que el framework no trae:
+ * **El dispositivo RECORDADO** (`docs/specs/acceso-con-codigo.md` §4.4, `DECISIONES #848`·3 y `#858`): quien entra con el
+ * código y marca «Mantener la sesión iniciada» queda dentro **90 días sin uso** o hasta cerrar sesión —cada entrada cuesta
+ * un correo—. ⚠️ Solo si lo PIDE (`#858`, `[DECIDIDO owner]`): una cookie de autenticación persistente no está exenta de
+ * consentimiento; sin la casilla, y en el alta, la sesión de siempre. Es la cookie «recuérdame» del guard `web`
+ * (`config/auth.php`), con dos piezas que el framework no trae:
  *  - **«sin uso»**: la cookie nace con 90 días y el framework no la alarga nunca; {@see refresh()} la re-emite en cada
  *    página que la usa (`RefreshRememberedDevice`), así que caduca a los 90 días de la ÚLTIMA visita;
  *  - **conservar el dispositivo en curso al rotar** (`RGPD-06`): el `remember_token` es UNO por cuenta, así que

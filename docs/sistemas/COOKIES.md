@@ -20,6 +20,10 @@ España, encajada en los principios del producto: data-driven · white-label · 
 
 ## 1. Inventario de cookies (heredado del sector origen)
 
+> **El listado PÚBLICO no es esta tabla** (`#859`, 30-09): lo compone `App\Http\Legal\CookieInventory` con lo que la
+> instalación tiene encendido, viaja en `GET /legal/documents/cookies` (`inventory`) y lo pintan las vistas; lo medido
+> y el texto, en `specs/politica-de-cookies.md`. Esta tabla es el mapa para quien toca el código.
+
 El sitio fija **3 cookies propias + hasta 4 de tercero condicionales**; **cero
 analítica/marketing** (no hay GA, GTM, Meta Pixel, Hotjar…). La **CSP**
 ([SecurityHeaders.php](../../app/Http/Middleware/SecurityHeaders.php)) es la prueba
@@ -29,12 +33,12 @@ arquitectónica del universo cerrado de orígenes externos.
 |---|---|---|---|---|
 | Sesión Laravel (nombre derivado de `APP_NAME`) | Propia | Técnica necesaria | **No** | Siempre |
 | `XSRF-TOKEN` | Propia | Seguridad (CSRF) | **No** | Siempre (formularios/Livewire) |
-| `remember_web_<hash>` | Propia | Funcional (login) | **No** | Solo si marca «recordarme» |
-| Google Maps (`NID`, `SOCS`…) y reseñas de Google (foto del autor en `lh3.googleusercontent.com`) | Tercero (google.com) | **Mapa y reseñas** (clave `maps`) | **SÍ** | Mapa: solo si hay `address.maps_embed_url`, home `#info` (`/contacto` ya no lleva mapa, `#535`). Reseñas: home `#reviews` (`#592`); la NOTA media no pide permiso, la trae el servidor |
+| `remember_web_<hash>` | Propia | Funcional (login) | **La casilla es el consentimiento** (GT29, dictamen 4/2012, §3.2) | Solo si marca «Mantener la sesión iniciada en este dispositivo» al entrar con el código (SIN marcar de serie), 90 días sin uso (`#858`: persistente, no está exenta; la casilla es la petición) |
+| Google Maps (`NID`, `SOCS`…) | Tercero (google.com) | **Mapa (Google)** (clave `maps`) | **SÍ** | Solo si hay `address.maps_embed_url`. Desde `#859` la categoría es SOLO el mapa: las reseñas son nuestras (`#771`) y Places se retiró (`#772`); la finalidad se estrecha, sin subir la versión |
 | Feed social (SnapWidget/LightWidget) | Tercero | **Social** | **SÍ** | Solo si hay `social.feed_embed_url`; home `#gallery` |
 | Cloudflare Turnstile (`__cf_bm`) | Tercero | Seguridad | **No** (exenta) | Si Turnstile está activo |
 | Redsys | Tercero (en SU dominio) | Técnica necesaria | **No** | Solo al pagar (redirección, no iframe) |
-| Bunny Fonts | Tercero | **Sin cookies** | **No** | Siempre (elegido GDPR-friendly) |
+| Bunny Fonts | Tercero | **Sin cookies** (medido 30-09: 200 sin `Set-Cookie`) | **No** | Las páginas del armazón del producto (`<x-layout>`: 404, encuestas, reintento de pago); la landing nueva usa fuentes propias. Fuera del listado (no pone cookies); sí en la privacidad (recibe la IP) |
 
 **Cuatro categorías con consentimiento** (`CookieConsent::OPTIONAL`, en el orden del panel): `maps` y
 `social` (iframes opcionales, configurables desde el panel) y, desde la **T3a de la analítica**
@@ -47,11 +51,11 @@ en la sesión server-side, [SetLocale.php](../../app/Http/Middleware/SetLocale.p
 |---|---|---|---|---|
 | `visitor_id` (13 meses, no se renueva) | Propia | **Medición de audiencia exenta** (guía AEPD 2024: estadística anónima del editor, sin cruce ni cesión, datos ≤ 25 meses) | **No** (se declara en la política y en «Necesarias») | Siempre (`ResolveVisitor`, `specs/analitica.md` §4.1) |
 | Herramienta de análisis (PostHog/Matomo) | Tercero | **`analytics`** | **SÍ** | Solo con la categoría y el driver configurado (T3a·2) |
-| Píxeles (Google Ads, Meta, TikTok) | Tercero | **`marketing`** | **SÍ** | Solo con la categoría y el id configurado en «Ajustes → Píxeles de anuncios» (T3b·1 ✅: gtag con Consent Mode v2 básico —`analytics_storage` siempre denegado—, Meta y TikTok; la compra viaja con el código del pedido como id). T3b·3 ✅: `/cookies` nombra las plataformas ACTIVAS al pintar con su empresa responsable y su garantía de transferencia (`lang/*/cookies.php` `policy.ads_*`: Google Ireland Limited y Meta Platforms Ireland Limited bajo el EU-US Data Privacy Framework; TikTok Technology Limited bajo cláusulas contractuales tipo). `[PENDIENTE: asesoría]` **validar esas tres garantías y el texto** (solo aquí: el texto público ya no lleva marcadores) |
+| Píxeles (Google Ads, Meta, TikTok) | Tercero | **`marketing`** | **SÍ** | Solo con la categoría y el id configurado en «Ajustes → Píxeles de anuncios» (T3b·1 ✅: gtag con Consent Mode v2 básico —`analytics_storage` siempre denegado—, Meta y TikTok; la compra viaja con el código del pedido como id). T3b·3 ✅: `/cookies` nombra las plataformas ACTIVAS al pintar con su empresa responsable y su garantía de transferencia (desde `#859`, una fila del listado cada una, `lang/*/cookies.php` `inventory.*`: Google Ireland Limited y Meta Platforms Ireland Limited bajo el EU-US Data Privacy Framework; TikTok Technology Limited bajo cláusulas contractuales tipo). `[PENDIENTE: asesoría]` **validar esas tres garantías y el texto** (solo aquí: el texto público ya no lleva marcadores) |
 
-**Exentas** (sin consentimiento, pero **sí transparencia** en la política): sesión, XSRF,
-`remember_web` (acción del usuario), Turnstile (seguridad), Redsys (técnica, en su dominio) y la
-medición de audiencia propia (`visitor_id`).
+**Exentas** (sin consentimiento, pero **sí transparencia** en la política): sesión, XSRF, Turnstile
+(seguridad), Redsys (técnica, en su dominio) y la medición de audiencia propia (`visitor_id`).
+`remember_web` NO lo es (persistente): la pone la casilla sin marcar de «Entra» (`#858`), que es el consentimiento.
 
 ## 2. Marco legal (resumen accionable — AEPD mayo 2024 + LSSI 22.2 + RGPD)
 

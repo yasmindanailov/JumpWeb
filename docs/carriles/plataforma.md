@@ -4,10 +4,10 @@
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
 > **820–849 AGOTADA con `#849`** → sigue en **850–879** (del owner, 29-09; centena `decisiones/800-899.md`) · Último usado:
-> **`#857`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **`#859`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#846`) · Actualizado: **2026-09-30**
 > (el acceso con código: A1 ✅ `#853`/`#854`, A2 ✅ `#855`/`#856` y A3 ✅ `#857`, `specs/acceso-con-codigo.md` §4.8–§4.10;
-> sigue la A4 del SPA; aquí, `/cookies` para producción, y la A5 tras la A4).
+> sigue la A4 del SPA; aquí, `/cookies` para producción 🟦 `#858`/`#859`, y la A5 tras la A4).
 > ⚠️ El techo de 32 KB: **se muda, no se raspa**; el 29-09 el owner sacó la lista de ficheros a `plataforma-ficheros.md`
 > (`#852`) y NO subió el techo. Si vuelve a apretar tres veces seguidas, llévaselo con la medida.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -59,19 +59,18 @@ con la puerta delante (`compra/acceso.js`, en el trozo de los pasos: dentro, la 
 antes de los campos (`AccesoSocial` `separador`), «Tus datos» solo si falta algo (tras entrar, «Pagar» vuelve a la reserva), las
 sondas leen el código de Mailpit (`codigoDelBuzon`), y un defecto de la A1 medido en el navegador: con la cookie de recuerdo,
 salir NO salía (`RememberedDevice::logOutHere()`). **HECHO** el servidor entero: la **A1** (`#853`/`#854`, 1.55.0, §4.8) y la **A2**
-(`#855`/`#856`, **1.57.0**, §4.9). Arneses: `mutar-acceso-codigo.sh` **50/50**, `mutar-token-bearer.sh` 14/14.
+(`#855`/`#856`, **1.57.0**, §4.9). Arneses: `mutar-acceso-codigo.sh` **51/51** (con `#858`), `mutar-token-bearer.sh` 14/14.
 ❗ **Para el CHANGELOG de la v2.0.0**: dos defectos de producción arreglados por el camino —los correos del cambio de correo
 salían al buzón contrario (`#856`) y «cerrar las demás sesiones» no cerraba nada con `redis` (`#855`)—.
-▶▶▶ **EN CURSO: `/cookies` para PRODUCCIÓN, de este carril** (el owner, 30-09: «los redactarás tú, con rigor y
-profesionalidad, con los datos del cliente»; antes decía `[PENDIENTE: owner]`). Plan: (1) el INVENTARIO MEDIDO en el navegador
-—cada cookie y cada origen de tercero, sin consentimiento, rechazando, aceptando, al entrar con el código y al pagar—, no el
-de `COOKIES.md` §1 (dice mapa y reseñas de Google, y `#771`/`#772` los quitaron); (2) la cookie de recuerdo de 90 días, al
-owner con opciones; (3) el texto en `CookiePolicyContent` y la migración quirúrgica que lo lleva a una BD ya sembrada. Hoy dice que la cookie de persistencia solo se pone «si marcas
-recuérdame», y ya no hay casilla: el dispositivo queda recordado 90 días al entrar con el código (`#848`). ⚠️ La guía de la AEPD
-exime las de autenticación «únicamente de sesión»: una persistente necesita que la persona la pida o su consentimiento —se
-resuelve al redactarla, y si toca el producto (una casilla, un aviso junto al código), se le lleva al owner con opciones—. Los
-datos del cliente viven en su instalación (`#610`), no en el repo. Mirar ANTES de quién es cada pieza (`cookies.php`,
-`CookiePolicyContent` y el consentimiento son del SPA desde `#735`: por buzón). ⚠️ El código abre la WEB, nunca el panel (`SEC-14`).
+▶▶▶ **`/cookies` para PRODUCCIÓN, 🟦 HECHA a falta del OJO del owner** (su encargo del 30-09; `specs/politica-de-cookies.md`):
+`#858` (el owner: la casilla «Mantener la sesión iniciada en este dispositivo», SIN marcar, en «Entra» de la compra y de Mi
+cuenta; contrato 1.58.0) y `#859` (el listado lo compone `Http\Legal\CookieInventory`, viaja en `inventory` y se pinta en
+TARJETAS; el texto v5 llega por huella). Medido: `sonda-inventario-cookies.mjs` (seis escenarios, guarda mutada a mano),
+arnés `mutar-politica-cookies.sh` 15/15. La casilla, vista por el owner: SOLO la pregunta, sin texto debajo (30-09).
+Empujado con el repo de la instancia (`web/legales.blade.php`, `web/legales/modelo.php`, `publico/instancia/css/entradas.css`).
+❓ **Del owner**: su ojo sobre `/cookies` (móvil y escritorio) y la PREGUNTA del aviso (spec §5: el aviso de la isla afirma
+anuncios y «Configurar» ofrece siempre las cuatro categorías; recomendada: nombrar y ofrecer solo lo encendido). En LOCAL,
+`/cookies` ya en v5 (el script de la instalación aplicado; su segunda pasada aborta). **Al desplegar**: `ENTORNOS.md` §6.
 ▶▶ **Del SPA (`#807`→`#808`)**: el Menú 1/2 se desengancha de la reserva como DATO del panel (sin contrato nuevo), y
 `isla/compra/PantallaCuandoFiesta.vue` pinta «¿Qué menú?» SIN condición —saldría vacía: un `v-if` sobre `menus`—; la calculadora
 y la landing dicen «incluye calcetines… cono» y «¿Qué menú?».
@@ -98,7 +97,7 @@ LOCAL, `bizum,visa,mastercard`). BD LOCAL con los valores de `#699`/`#761`.
 sus marcadores (el detalle vive en sus specs); la próxima vez, otra cerrada;
 (d) Vue 3.5 reevalúa un `computed` fuera del `try` de quien lo lee: se protege DENTRO (`seguro.js`, §4.13); (f) un texto de la isla que
 use la COMPRA tiene que estar en un grupo que la compra recibe (`mi_cuenta.*` no le llega: §4.24); (g) `isla/hoja/montar.js` NO
-importa nada compartido (`#841`); la calculadora va a 187,80 de 188, la de la fiesta a 194,26 de 195 y la compra a 165,84 de 166 (`#857`)
+importa nada compartido (`#841`); la calculadora va a 187,80 de 188, la de la fiesta a 194,26 de 195 y la compra a 165,98 de 167 (`#858`)
 (`#846`: un `import()` suma el `preload-helper` al cálculo por entrada); (h) toda página nueva usa `video-hero` SIN `height` y entra
 en `sonda-primera-pantalla.mjs`; (i) tras tocar `instancias/playjump/publico/`, copiarlo a `public/instancia`.
 
@@ -187,8 +186,6 @@ carril se apunta ALLÍ; lo compartido se sigue avisando aquí, en el buzón, ant
 
 - ▶ Las trampas de la T1 de la analítica (PII por cifras, UTM tras firmar, observadores `singleton()`,
   `withCredentials()`) se MUDARON con ella: viven en `carriles/spa.md`, `analitica.md` y `#680`.
-- 🪤 **`DesignSync` corta a 256 KiB y el README del diseño se contradice** (`isla-y-landing-nueva.md` §0): el
-  vídeo y el logotipo, del original; y mandan los ficheros, no el índice del README.
 - ▶ **Mudadas el 27-09** (el techo): el clasificador y `rm -rf`, a `CAPA-DE-AGENTE.md` §6; Sanctum y
   `currentAccessToken()`, a `token-bearer.md` §4.2; taquilla y la tabla `prices`, a `promociones.md` §1.1.
 - **Un guion de datos contra producción**: su receta (valor esperado por fila, doble pasada, tinker por `ssh`), en
@@ -207,11 +204,18 @@ carril se apunta ALLÍ; lo compartido se sigue avisando aquí, en el buzón, ant
 
 ## Buzón
 
-### ❗ Para el SPA (emisor: plataforma, 2026-09-30) — AVISO PREVIO: tomo el TEXTO de `/cookies` (del owner)
-- El owner me encarga la política de cookies para producción. Tocaré lo tuyo de la T3: `Content/Services/CookiePolicyContent`,
-  `lang/{es,en,fr}/cookies.php` (`policy.*`), una migración quirúrgica al estilo de la tuya de la T3a y `COOKIES.md` §1. El
-  consentimiento (`CookieConsent`, el banner, las categorías, `POLICY_VERSION`) no lo toco sin avisarte antes. Si tienes algo a
-  medias ahí, dímelo en tu buzón.
+### ❗ Para el SPA (emisor: plataforma, 2026-09-30) — `/cookies` para producción (`#859`): lo que toqué de lo tuyo
+- `CookiePolicyContent` REESCRITO (v5; la v4, congelada en `tests/Support/CookiePolicyV4.php`) y su migración por huella
+  `2026_09_30_150000_cookie_policy_for_production`. En `lang/*/cookies.php`: FUERA `policy.*` (los párrafos que se pintaban al
+  renderizar: ahora son filas del listado, `inventory.*`, que compone `Http\Legal\CookieInventory`); `banner.text` y
+  `panel.maps_*` ya solo dicen el MAPA («Mapa (Google)»; la clave `maps` y `POLICY_VERSION`, igual: la finalidad se estrecha).
+  `anfitrion/legal.blade.php` pinta el listado y conserva `data-analytics-tool`/`data-analytics-pixels`; `DriversTest` y
+  `PixelsTest` comprueban ahora los textos del listado. `CookieConsent` y el banner de la isla, sin tocar.
+- ⚠️ Una herramienta o un píxel NUEVO entra en la política añadiendo su fila en `CookieInventory` (y sus textos en `inventory.*`).
+- Sugerencia: offline, el faro de la analítica (`/api/v1/events`) deja un error en la consola; mirar `navigator.onLine` antes.
+- ❗ **`#858` (el owner), contrato 1.58.0 (mío; el siguiente, tuyo)**: entrar con el código ya NO recuerda el dispositivo
+  siempre: solo con `remember: true` —la casilla «Mantener la sesión iniciada en este dispositivo», SIN marcar de serie—; y el
+  alta, la sesión de siempre. Para tu A4: la misma casilla en el paso del código del cajón (una premarcada no vale).
 
 ### ❗ Para el SPA (emisor: plataforma, 2026-09-30) — tu R1·T (textos de correo editables): leído, de acuerdo, y UNA guarda
 - Los correos del código (`emails.login_code`, `emails.confirmation_code` y el del correo nuevo, `VerifyPendingEmail`) llevan

@@ -4,7 +4,7 @@ import {
     cuentaQueYaExiste, datosVacios, entradaVacia, erroresDelServidor, firmaPendiente, formularioDeAlta, hayQuePedir,
     nacimientoDeAlta, revisarDatos,
 } from './datos.js';
-import { errorDeEntrar, erroresDelCodigo } from './acceso.js';
+import { entrar, errorDeEntrar, erroresDelCodigo } from './acceso.js';
 
 /**
  * «Tus datos» de la compra de la isla (T3e·3 de `specs/isla-y-landing-nueva.md` §4.10): qué falta antes de preguntar,
@@ -99,7 +99,34 @@ describe('los «no» del servidor', () => {
         assert.equal(errorDeEntrar(limite, textos), 'Espera 30 segundos para pedir otro código.');
         assert.equal(errorDeEntrar(campo, textos), 'Correo no válido.');
         assert.equal(errorDeEntrar({ ok: false, skipped: true }, textos), '', 'un doble clic no inventa un error');
-        assert.deepEqual(entradaVacia('ana@correo.es'), { paso: 'id', valor: 'ana@correo.es', codigo: '', error: '', reenvios: 0 });
+        assert.deepEqual(entradaVacia('ana@correo.es'), { paso: 'id', valor: 'ana@correo.es', codigo: '', recordar: false, error: '', reenvios: 0 });
+    });
+});
+
+// `#858` (el owner): recordar el dispositivo 90 días SOLO si se pide; la casilla va SIN marcar de serie.
+describe('«Mantener la sesión iniciada» (`#858`)', () => {
+    const apiQueApunta = () => {
+        const enviado = [];
+
+        return { enviado, post: async (ruta, cuerpo) => { enviado.push({ ruta, cuerpo }); return { ok: true }; } };
+    };
+
+    test('la casilla nace SIN marcar, en «Entra» y en «Tus datos»', () => {
+        assert.equal(entradaVacia().recordar, false);
+        assert.equal(datosVacios().recordar, false);
+    });
+
+    test('entrar con el código manda `remember` solo si se marcó (y `true` literal, no cualquier cosa)', async () => {
+        const api = apiQueApunta();
+
+        await entrar(api, ' ana@correo.es ', ' 482 913 ');
+        await entrar(api, 'ana@correo.es', '482913', true);
+        await entrar(api, 'ana@correo.es', '482913', 'sí');
+
+        assert.deepEqual(api.enviado.map((e) => e.ruta), ['/auth/login', '/auth/login', '/auth/login']);
+        assert.deepEqual(api.enviado[0].cuerpo, { email: 'ana@correo.es', code: '482 913', remember: false });
+        assert.equal(api.enviado[1].cuerpo.remember, true);
+        assert.equal(api.enviado[2].cuerpo.remember, false);
     });
 });
 

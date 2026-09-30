@@ -520,11 +520,14 @@ export function useSeccionCompra(props) {
         ...social.value,
     }));
 
-    /** «Entra» (`PjcEntrar`): solo correo (`#695`), luego su código (A3 del acceso con código, `#849`), y Google. */
+    /**
+     * «Entra» (`PjcEntrar`): solo correo (`#695`), luego su código (A3 del acceso con código, `#849`) con «Mantener la
+     * sesión iniciada» (`#858`), y Google.
+     */
     const pantallaEntrar = computed(() => {
-        const { paso: pasoEntrada, valor, codigo, error, reenvios } = datos.estado.ent;
+        const { paso: pasoEntrada, valor, codigo, recordar, error, reenvios } = datos.estado.ent;
 
-        return { paso: pasoEntrada, valor, codigo, error, reenvios, ...social.value };
+        return { paso: pasoEntrada, valor, codigo, recordar, error, reenvios, ...social.value };
     });
 
     const listo = computed(() => pantallaListo({

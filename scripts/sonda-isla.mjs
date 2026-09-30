@@ -144,6 +144,7 @@ async function hastaPagar() {
         const codigo = await codigoDelBuzon(desde);
         ok('«Entra»: el correo con cuenta pide el código, y llega al buzón', codigo !== null, codigo ?? 'sin código en Mailpit');
         await page.fill('#pjc-ent-codigo', codigo ?? '');
+        // Sin marcar «Mantener la sesión iniciada» (`#858`): la sesión de siempre, SIN cookie de recuerdo (abajo).
         await accion(/^Entrar$/).click();
         await espera(() => /^Hola/.test(document.querySelector('[data-isla-scroll] h1')?.textContent ?? '') || (document.querySelector('#isla-compra-paso')?.textContent ?? '').trim().endsWith('Pagar'), null, 20000);
     }
@@ -209,6 +210,8 @@ try {
     ok('la calculadora de /kids: un día y una hora elegidos, con su total', /\d\s?€/.test(calculado), calculado.slice(0, 90));
     await page.locator('[data-jw-calculadora-lado] button', { hasText: 'Reservar y pagar' }).click();
     const entro = await hastaPagar();
+    ok('entrar SIN marcar «Mantener la sesión iniciada» no deja cookie de recuerdo (`#858`: solo si se pide)',
+        entro && ! (await ctx.cookies()).some((c) => c.name.startsWith('remember_web_')), (await ctx.cookies()).map((c) => c.name).join(', '));
     // Entrar con el código en «Tus datos» y sin nada más que pedir (`#857`, el owner 30-09): «Tus datos» SALE DEL CAMINO.
     // «Pagar» queda como la de quien llega con sesión —sin «Paso 2 de 2», con «Reservas como …»— y su flecha vuelve a la
     // reserva, no a una pantalla vacía; y «Continuar» lleva otra vez a «Pagar», directo.

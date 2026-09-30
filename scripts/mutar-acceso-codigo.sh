@@ -198,13 +198,20 @@ mutar "salir deja la cookie de recuerdo en la petición (y se vuelve a entrar co
   "        \$request->cookies->remove(\$guard->getRecallerName());
 " ""
 
-mutar "entrar con el código no recuerda el dispositivo" "$SESSION" \
-  "Auth::guard('web')->login(\$result->user, remember: true);" \
-  "Auth::guard('web')->login(\$result->user);"
+# `#858` (el owner): recordado SOLO si se pide —la casilla «Mantener la sesión iniciada»—; el alta, nunca.
+mutar "con la casilla, entrar con el código no recuerda el dispositivo" "$SESSION" \
+  "Auth::guard('web')->login(\$result->user, remember: (bool) (\$credentials['remember'] ?? false));" \
+  "Auth::guard('web')->login(\$result->user, remember: false);"
 
-mutar "el alta no recuerda el dispositivo" "$SIGNUP" \
-  "Auth::login(\$result->user, remember: true);" \
-  "Auth::login(\$result->user);"
+mutar "sin pedirlo, entrar con el código recuerda igual (la cookie persistente sin consentimiento)" "$SESSION" \
+  "Auth::guard('web')->login(\$result->user, remember: (bool) (\$credentials['remember'] ?? false));" \
+  "Auth::guard('web')->login(\$result->user, remember: true);"
+
+mutar "el alta recuerda el dispositivo sin que nadie lo pida" "$SIGNUP" \
+  "            Auth::login(\$result->user);
+            \$request->session()->regenerate();" \
+  "            Auth::login(\$result->user, remember: true);
+            \$request->session()->regenerate();"
 
 # ── A2a · reconfirmar con un código (`#855`) ────────────────────────────────────────────────────
 mutar "un código de ENTRAR confirma acciones sensibles" "$CREDS" \

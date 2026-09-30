@@ -221,10 +221,11 @@ class AuthRegistrationController extends Controller
         // Eso el bot ya podía deducirlo pidiendo `GET /me`, y **no le da ninguna cuenta que no
         // tuviera**: el señuelo sigue haciendo su trabajo, que es no crearla.
         //
-        // ▶ **Y RECORDADA 90 días sin uso** (A1 de `specs/acceso-con-codigo.md` §4.4, `#848`·3): sin contraseña, volver a
-        // entrar cuesta un correo; el dispositivo del alta se queda dentro como el de quien entra con el código.
+        // ⚠️ **Con la sesión de siempre, NO recordada** (`#858`, `[DECIDIDO owner]`; corrige `#848`·3, que la recordaba
+        // 90 días): una cookie de autenticación persistente solo si la persona la pide —la casilla «Mantener la sesión
+        // iniciada», al entrar con el código—, y el alta no la ofrece. Quien vuelve otro día entra con un código.
         if ($result->user !== null && $request->hasSession()) {
-            Auth::login($result->user, remember: true);
+            Auth::login($result->user);
             $request->session()->regenerate();
         }
 

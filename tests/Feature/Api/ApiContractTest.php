@@ -149,8 +149,9 @@ class ApiContractTest extends TestCase
         // opcional: una media sin recuento o sin fuente no se puede publicar —la atribución es obligatoria—.
         'SocialProofFacts' => ['rating'],
         'SocialProofFacts.rating' => ['url'],
-        // Y el RESUMEN (`#653`) falta en un documento sin ningún párrafo, por lo mismo que en `Rules`.
-        'LegalDocument' => ['signed_version', 'summary'],
+        // Y el RESUMEN (`#653`) falta en un documento sin ningún párrafo, por lo mismo que en `Rules`. El LISTADO de
+        // cookies (`inventory`, 1.58.0) solo lo trae el documento `cookies`: los otros cuatro no tienen cookies que listar.
+        'LegalDocument' => ['signed_version', 'summary', 'inventory'],
         // Una sección puede traer solo titular o solo párrafo: los documentos los escribe una persona en el
         // panel, y hay secciones que son un titular con su lista debajo.
         'LegalDocument.sections.items' => ['h', 'p'],

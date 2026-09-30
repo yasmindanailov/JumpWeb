@@ -222,6 +222,7 @@ return [
             'codigo_enviado' => 'We have sent a code to :correo.',
             'codigo_otro_enviado' => 'We have sent another code to :correo.',
             'otro_codigo' => 'Send another code',
+            'recordar' => 'Keep me signed in on this device',
             'nueva' => 'There is no account with that email yet: fill in your details and you are in right away.',
             'casilla' => 'I have read and accept the liability waiver.',
             'leer' => 'Read the liability waiver',

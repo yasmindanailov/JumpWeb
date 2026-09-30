@@ -168,6 +168,14 @@ const cambiar = (campo) => (valor) => emit('cambiar', campo, valor);
                             :style="{ justifySelf: 'start' }"
                             @click="emit('entrar', 'otro')"
                         >{{ t('compra.datos.otro_codigo') }}</EnlaceSistema>
+                        <!-- Es entrar con el código: recordar el dispositivo, solo si se pide (`#858`). -->
+                        <CasillaSistema
+                            id="pjc-recordar-e"
+                            :label="t('compra.datos.recordar')"
+                            :model-value="valores.recordar"
+                            :style="{ marginTop: '8px' }"
+                            @update:model-value="cambiar('recordar')($event)"
+                        />
                     </div>
                 </AvisoDestacado>
                 <template v-else>

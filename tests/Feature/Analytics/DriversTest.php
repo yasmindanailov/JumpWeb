@@ -187,13 +187,14 @@ class DriversTest extends TestCase
             ->assertSee('data-analytics-tool="posthog"', false)
             ->assertSee('PostHog')
             ->assertSee('Unión Europea');
-        $this->withSession(['locale' => 'en'])->get('/cookies')->assertOk()->assertSee('Usage analytics tool active on this site');
-        $this->withSession(['locale' => 'fr'])->get('/cookies')->assertOk()->assertSee('Outil d\'analyse d\'usage actif');
+        // Desde la política de producción (`specs/politica-de-cookies.md`), la herramienta es una fila del LISTADO de cookies.
+        $this->withSession(['locale' => 'en'])->get('/cookies')->assertOk()->assertSee('PostHog Inc. (data hosted on servers in the European Union)');
+        $this->withSession(['locale' => 'fr'])->get('/cookies')->assertOk()->assertSee('PostHog Inc. (données hébergées sur des serveurs de l’Union européenne)');
 
         $this->setting(Drivers::KEY_DRIVER, Drivers::MATOMO);
         $this->setting(Drivers::KEY_MATOMO_HOST, 'https://stats.parque.es');
         $this->setting(Drivers::KEY_MATOMO_SITE_ID, '3');
-        $this->withSession(['locale' => 'es'])->get('/cookies')->assertOk()->assertSee('Matomo (instalación propia en https://stats.parque.es)');
+        $this->withSession(['locale' => 'es'])->get('/cookies')->assertOk()->assertSee('Nosotros, con Matomo instalado en https://stats.parque.es');
 
         // El texto guardado no nombra a nadie: la página de privacidad no cambia.
         $this->withSession(['locale' => 'es'])->get('/privacidad')->assertOk()->assertDontSee('data-analytics-tool', false);

@@ -966,7 +966,9 @@ class SidebarBundleBudgetTest extends TestCase
     // 165,44 (base: el build del gate sobre `28dfdf15`, el mismo cálculo). El techo, a 166.
     // A3 del acceso con código (`#857`): entrar con un código, sin subir el techo —165,44 → 165,84—: la puerta, entrar y
     // sus «no» viajan con los pasos (`acceso.js`, pedido con `import()` del trozo ya descargado); dentro medía 166,46.
-    private const ISLA_COMPRA_CHUNK_MAX_KB = 166;
+    // `#858` (el owner): «Mantener la sesión iniciada» —su estado y pasarlo al entrar—: 165,90 → 165,98 (base: el `HEAD`
+    // `1436ea60`, construido aparte). El techo, a 167: a 166 quedaban 0,02, un cable trampa.
+    private const ISLA_COMPRA_CHUNK_MAX_KB = 167;
 
     // T4d·4 (`specs/isla-y-landing-nueva.md` §4.12): la CALCULADORA de una página, entrada propia que la página pide
     // (`scripts` de `<x-pagina>`) y se monta al acercarse su pieza. Su DESCARGA entera, como la mide el navegador que
@@ -1043,7 +1045,9 @@ class SidebarBundleBudgetTest extends TestCase
     // en el trozo común con Mi cuenta) y el campo del código con «Pedir otro código» en Entra y en «ya existe»—, menos la
     // contraseña. Medido 44,45 → 45,37 (base: el `HEAD` de `#856` construido aparte en un `git worktree`). ⚠️ Dentro de la
     // compra, ésta pasaba de su techo (166,46): va aquí, y la compra lo pide con `import()` de este trozo. El techo, a 46.
-    private const ISLA_PASOS_CHUNK_MAX_KB = 46;
+    // `#857`/`#858` (el owner): «— o —» bajo Google y «Mantener la sesión iniciada» en el código de «Entra» y de «ya
+    // existe». Medido 45,94 → 46,51 (base: el `HEAD` `1436ea60`, construido aparte). El techo, a 47.
+    private const ISLA_PASOS_CHUNK_MAX_KB = 47;
 
     // T5b (`#775`): MI CUENTA de la isla, trozo diferido del motor que se pide a la primera apertura de la cuenta. Su
     // descarga, sobre lo que ya tiene quien la abre (el motor y la compra, que la isla monta con el motor). Medido el
@@ -1083,7 +1087,9 @@ class SidebarBundleBudgetTest extends TestCase
     // cuenta» con la puerta delante; lo común con los pasos (`compra/acceso.js`, los campos del código) +0,94 y lo suyo
     // +0,72, menos el olvido de la contraseña. Medido 117,22 → 118,87 (base: el `HEAD` de `#856` construido aparte). El
     // techo, a 120: a 119 quedaban 0,13 de margen, un cable trampa.
-    private const ISLA_CUENTA_CHUNK_MAX_KB = 120;
+    // `#858` (el owner): «Mantener la sesión iniciada» en el código de Entra (lo común con los pasos). Medido 119,74 →
+    // 120,34 (base: el `HEAD` `1436ea60`, con la A3b dentro: 118,87 → 119,74). El techo, a 121.
+    private const ISLA_CUENTA_CHUNK_MAX_KB = 121;
 
     // T5e (`#778`): los AJUSTES de Mi cuenta, su trozo —el bloque y su lógica, pedidos al pintar el inicio—, sobre lo que ya
     // tiene quien abre Mi cuenta. Medido: 26,92 (el bloque 12,70, la lógica 6,56, `ajustes.js` 3,44, el interruptor que

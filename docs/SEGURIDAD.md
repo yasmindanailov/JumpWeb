@@ -68,6 +68,7 @@ tras varios intentos fallidos. Motivo: el producto trata **datos personales** (R
 - **"Cerrar sesión en todos los dispositivos"** disponible.
 - **El dispositivo recordado 90 días sin uso** (`#848`·3, `#854`): la cookie «recuérdame» del guard `web`, alargada con el
   uso; salir cierra ESTE dispositivo; «cerrar las demás» rota el `remember_token` y la palanca de `RGPD-06` lo vacía.
+  ⚠️ **Solo si se pide** (`#858`): la casilla «Mantener la sesión iniciada», sin marcar, al entrar con el código.
 - Cookies: `http_only` (ok), `same_site=lax` (ok), **`secure=true` en producción**, valorar `encrypt=true`.
 - **Reconfirmar contraseña** antes de acciones sensibles (cambiar email, borrar cuenta). Desde la A2a (`#855`), **o un
   código** al correo de la cuenta (`POST /me/confirm-code`, que dice para qué es), bajo el mismo limitador.
