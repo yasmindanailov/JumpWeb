@@ -4,10 +4,10 @@
 > `~/proyectos/instancias/playjump`, clon de `github.com/yasmindanailov/instancia-playjump`, montada el 25-09) ·
 > Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#808`** · La banda está dada de alta en la
 > tabla de `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs:
-> **`fiesta-sistema-nuevo.md` §4.17** (lo siguiente, `#806`) · `correos-rediseno.md` §0 (`#800`→`#804`; la R1·T) ·
-> `analitica-para-decidir.md` §0 (en pausa, `#755`) · `encuestas.md` §0 y §4.7 (`#754`) · `analitica.md` §0 y §4.5 ·
-> `isla-y-landing-nueva.md` §4.11 · `celebracion-e-invitacion.md` §0 · `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 ·
-> `google-business-profile.md` §0 · `sidebar-spa.md` §0 · `acceso-con-codigo.md` §0 (la A4) · Actualizado: 2026-09-30, 21:30
+> **`acceso-con-codigo.md` §0** (lo siguiente: la A4, `#848`) · `correos-rediseno.md` §0 (`#800`→`#804`; la R1·T, hecha) ·
+> `fiesta-sistema-nuevo.md` §4.17 (`#806`) · `analitica-para-decidir.md` §0 (en pausa, `#755`) · `encuestas.md` §0 y §4.7
+> (`#754`) · `analitica.md` §0 y §4.5 · `isla-y-landing-nueva.md` §4.11 · `celebracion-e-invitacion.md` §0 ·
+> `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 · `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-09-30, 21:30
 > (la R1·T de los correos EN `main`, revisada antes y con el visto bueno del owner; lo siguiente, la A4).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`). El
 > contador de la suite va en el trailer del commit (`#618`), no aquí. **Se muda, no se raspa**: el detalle de
