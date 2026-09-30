@@ -130,6 +130,8 @@
 `POST /auth/login` con contraseña, `/auth/password/{forgot,reset}`, `PUT /me/password`, las páginas web de recuperar y
 restablecer, «Cambiar la contraseña» de Mi cuenta y del cajón, `PasswordPolicy` para clientes (el panel la conserva), y
 las pruebas que solo probaban eso. El contrato cambia de forma: su versión, al implementarlo (mirar `info.version`).
+Y el ENLACE del correo nuevo (`VerifyPendingEmail`): al quitar su botón, `emails.verify_pending_email.action` sale de
+`MailTextCatalog::CORREOS` (los textos editables del SPA, R1·T), o `MailPreviewsTest` dirá que ese bloque ya no se pinta.
 
 ### 4.6 Las contraseñas que ya existen
 Las de los clientes dejan de servir en cualquier superficie de cliente y **se borran** en las cuentas sin rol de panel

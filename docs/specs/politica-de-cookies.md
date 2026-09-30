@@ -1,7 +1,8 @@
 # [SPEC] La política de cookies de producción — medida, y que no pueda mentir
 
-> Estado: 🟦 hecha, a falta del ojo del owner (30-09) · Decisiones: `#858` (el owner: «Mantener la sesión iniciada», sin
-> marcar) · `#859` (el listado lo compone la configuración; el texto llega por huella) · Carril:
+> Estado: ✅ §1–§4 (validada por el owner, 30-09) · ⬜ §6 en curso · Decisiones: `#858` (el owner: «Mantener la sesión
+> iniciada», sin marcar) · `#859` (el listado lo compone la configuración; el texto llega por huella) · `#860` (el owner:
+> el aviso y «Configurar» piden solo lo encendido) · Carril:
 > plataforma (el encargo del owner, 30-09: «los redactarás tú, con rigor y profesionalidad, con los datos del cliente»); el
 > texto y el consentimiento eran del SPA (T3 de la analítica), avisado en el buzón · Sistema: `docs/sistemas/COOKIES.md`.
 
@@ -11,7 +12,7 @@
   LISTADO de cookies no se escribe a mano: lo compone el servidor con la configuración de la instalación
   (`CookieInventory`) y viaja en `GET /legal/documents/cookies` (`inventory`), que pintan la vista del producto y la de la
   instancia. Así un mapa, un anti-bot, una herramienta de análisis o un píxel aparecen en la política cuando se encienden.
-- **Empieza por** §1 (lo medido) → §3 (el diseño) → §4 (el texto).
+- **Empieza por** §1 (lo medido) → §3 (el diseño) → §4 (el texto) → §6 (el aviso pide solo lo encendido, `#860`).
 - **Trampas**: (1) la vista de la instancia (`web/legales.blade.php`, `#844`) pintaba solo las secciones: los párrafos de
   la herramienta y los píxeles activos (T3b·3) se perdían en PlayJump. (2) La página vive en la BD: el texto nuevo llega a
   una instalación existente por una migración QUIRÚRGICA que no pisa lo que la clienta editó. (3) `cookie_consent` pide 24
@@ -79,9 +80,25 @@ cliente (se retira en la A5).
 
 - La **política de privacidad** (`LegalContent`) habla de la contraseña del cliente (se va en la A5), y su francés es de
   tú. (Bunny Fonts, que nombra, SÍ se pide: en las páginas del armazón, §1.)
-- El aviso de la ISLA («…y enseñarte nuestros anuncios en otras webs», fijo en `lang/*/isla.php`) afirma publicidad: cierto
-  solo con algún píxel activo en producción (sin medir desde aquí). Y el panel de preferencias ofrece SIEMPRE las cuatro
-  categorías (`CookieConsent::OPTIONAL`, en `site/body-state`), estén o no encendidas: el listado ya dice solo lo encendido;
-  el aviso y el panel, no. Propuesta: ofrecer y nombrar solo las categorías con algo encendido (las condiciones de
-  `CookieInventory`); el consentimiento es del SPA, el texto de la isla, de aquí.
 - `[PENDIENTE: asesoría]`: las garantías de transferencia de cada tercero (las de la T3b, conservadas).
+
+## 6. El aviso y «Configurar» piden solo lo encendido (`#860`, `[DECIDIDO owner]` 30-09)
+
+Medido: el aviso de la isla decía «…y enseñarte nuestros anuncios en otras webs» y los dos «Configurar» ofrecían SIEMPRE las
+cuatro categorías (`CookieConsent::OPTIONAL`, en `site/body-state`), hubiera o no mapa, widget o píxeles. El owner: «así lo
+haremos, si es lo más profesional y estándar».
+
+- **Qué se ofrece**: `CookieInventory::offered()`, las de `OPTIONAL` con algo detrás, con las MISMAS condiciones que el
+  listado: `maps` (mapa configurado), `social` (widget configurado), `marketing` (algún píxel activo) y `analytics`
+  SIEMPRE (medido: el régimen identificado —`AccountAnalytics` ata la navegación a la cuenta al entrar— y la apertura de
+  los correos, `EmailOpenMarks`, son propios y no tienen interruptor; la herramienta, si la hay, va dentro).
+- **Por dónde llega**: `site/body-state` escribe `offered()` en `data-consent-categories`, de donde leen el almacén
+  (`ui/cookie-consent.js`, sin cambios) y los dos paneles; los textos del aviso (`banner.text` del clásico y los dos de la
+  isla) se COMPONEN con las mismas categorías. Sin nada que pedir, sin aviso.
+- **El servidor manda**: `CookieConsentController` valida solo las ofrecidas y guarda las demás en `false`; la cookie
+  anota qué se preguntó (`asked`). Una cookie válida sin `asked` es de antes de `#860`: se preguntaron las cuatro.
+- **Una categoría que se enciende DESPUÉS**: quien ya decidió vuelve a ver el aviso (hay una pregunta nueva; lo que ya
+  contestó sigue marcado) y, hasta contestar, la nueva está apagada. Por eso no se sube `POLICY_VERSION`.
+- **El píxel de APERTURA de los correos** (`EmailOpenMarks`, `#797`: su interruptor `emails.track_opens`, apagado de fábrica,
+  y el «sí» a `analytics` de la cuenta; su doc: «`/cookies` tiene que nombrarlo antes»): encendido, entra como fila del
+  listado (categoría análisis) y la descripción de «Análisis» lo dice; apagado, no aparece.

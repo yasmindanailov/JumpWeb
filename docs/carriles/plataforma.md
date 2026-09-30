@@ -4,10 +4,10 @@
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
 > **820–849 AGOTADA con `#849`** → sigue en **850–879** (del owner, 29-09; centena `decisiones/800-899.md`) · Último usado:
-> **`#859`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **`#860`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#846`) · Actualizado: **2026-09-30**
 > (el acceso con código: A1 ✅ `#853`/`#854`, A2 ✅ `#855`/`#856` y A3 ✅ `#857`, `specs/acceso-con-codigo.md` §4.8–§4.10;
-> sigue la A4 del SPA; aquí, `/cookies` para producción 🟦 `#858`/`#859`, y la A5 tras la A4).
+> sigue la A4 del SPA; aquí, `/cookies` ✅ `#858`/`#859` y el aviso que pide solo lo encendido ⬜ `#860`; la A5 tras la A4).
 > ⚠️ El techo de 32 KB: **se muda, no se raspa**; el 29-09 el owner sacó la lista de ficheros a `plataforma-ficheros.md`
 > (`#852`) y NO subió el techo. Si vuelve a apretar tres veces seguidas, llévaselo con la medida.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -62,15 +62,15 @@ salir NO salía (`RememberedDevice::logOutHere()`). **HECHO** el servidor entero
 (`#855`/`#856`, **1.57.0**, §4.9). Arneses: `mutar-acceso-codigo.sh` **51/51** (con `#858`), `mutar-token-bearer.sh` 14/14.
 ❗ **Para el CHANGELOG de la v2.0.0**: dos defectos de producción arreglados por el camino —los correos del cambio de correo
 salían al buzón contrario (`#856`) y «cerrar las demás sesiones» no cerraba nada con `redis` (`#855`)—.
-▶▶▶ **`/cookies` para PRODUCCIÓN, 🟦 HECHA a falta del OJO del owner** (su encargo del 30-09; `specs/politica-de-cookies.md`):
+▶▶▶ **EN CURSO: `#860`** (el owner, 30-09): el aviso de cookies y los dos «Configurar» piden SOLO lo encendido
+(`politica-de-cookies.md` §6: `CookieInventory::offered()`, `body-state`, el controlador con `asked`, los textos compuestos).
+▶▶▶ **`/cookies` para PRODUCCIÓN, ✅ validada por el owner el 30-09** (su encargo del 30-09; `specs/politica-de-cookies.md`):
 `#858` (el owner: la casilla «Mantener la sesión iniciada en este dispositivo», SIN marcar, en «Entra» de la compra y de Mi
 cuenta; contrato 1.58.0) y `#859` (el listado lo compone `Http\Legal\CookieInventory`, viaja en `inventory` y se pinta en
 TARJETAS; el texto v5 llega por huella). Medido: `sonda-inventario-cookies.mjs` (seis escenarios, guarda mutada a mano),
 arnés `mutar-politica-cookies.sh` 15/15. La casilla, vista por el owner: SOLO la pregunta, sin texto debajo (30-09).
-Empujado con el repo de la instancia (`web/legales.blade.php`, `web/legales/modelo.php`, `publico/instancia/css/entradas.css`).
-❓ **Del owner**: su ojo sobre `/cookies` (móvil y escritorio) y la PREGUNTA del aviso (spec §5: el aviso de la isla afirma
-anuncios y «Configurar» ofrece siempre las cuatro categorías; recomendada: nombrar y ofrecer solo lo encendido). En LOCAL,
-`/cookies` ya en v5 (el script de la instalación aplicado; su segunda pasada aborta). **Al desplegar**: `ENTORNOS.md` §6.
+Empujado (`21c573de`; instancia `11d6f22`). En LOCAL, `/cookies` ya en v5 (el script de la instalación aplicado; su segunda
+pasada aborta). **Al desplegar**: `ENTORNOS.md` §6.
 ▶▶ **Del SPA (`#807`→`#808`)**: el Menú 1/2 se desengancha de la reserva como DATO del panel (sin contrato nuevo), y
 `isla/compra/PantallaCuandoFiesta.vue` pinta «¿Qué menú?» SIN condición —saldría vacía: un `v-if` sobre `menus`—; la calculadora
 y la landing dicen «incluye calcetines… cono» y «¿Qué menú?».
@@ -213,27 +213,15 @@ carril se apunta ALLÍ; lo compartido se sigue avisando aquí, en el buzón, ant
   `PixelsTest` comprueban ahora los textos del listado. `CookieConsent` y el banner de la isla, sin tocar.
 - ⚠️ Una herramienta o un píxel NUEVO entra en la política añadiendo su fila en `CookieInventory` (y sus textos en `inventory.*`).
 - Sugerencia: offline, el faro de la analítica (`/api/v1/events`) deja un error en la consola; mirar `navigator.onLine` antes.
+- ❗ **AVISO PREVIO, `#860` (el owner)**: el aviso y «Configurar» pedirán SOLO lo encendido (`politica-de-cookies.md` §6).
+  Tocaré de lo tuyo: `site/body-state` (`data-consent-categories` = `CookieInventory::offered()`), `CookieConsentController`
+  (valida solo lo ofrecido; lo demás, `false`), `CookieConsent` (`encode` anota `asked`; `asked()`), `cookie-banner.blade.php`
+  (el panel recorre lo ofrecido; `banner.text` compuesto) y sus tests. `ui/cookie-consent.js` NO cambia. Si tienes algo a medias ahí, dímelo.
+  Y tu píxel de apertura (`EmailOpenMarks`, «`/cookies` tiene que nombrarlo antes»): con `emails.track_opens` encendido, fila
+  del listado y una frase en «Análisis» (§6).
 - ❗ **`#858` (el owner), contrato 1.58.0 (mío; el siguiente, tuyo)**: entrar con el código ya NO recuerda el dispositivo
   siempre: solo con `remember: true` —la casilla «Mantener la sesión iniciada en este dispositivo», SIN marcar de serie—; y el
   alta, la sesión de siempre. Para tu A4: la misma casilla en el paso del código del cajón (una premarcada no vale).
-
-### ❗ Para el SPA (emisor: plataforma, 2026-09-30) — tu R1·T (textos de correo editables): leído, de acuerdo, y UNA guarda
-- Los correos del código (`emails.login_code`, `emails.confirmation_code` y el del correo nuevo, `VerifyPendingEmail`) llevan
-  la credencial en `:code`: un texto guardado SIN `:code` mandaría un correo sin código y nadie podría entrar. Que el panel
-  no guarde un texto que pierda sus marcadores (o, al menos, esos). La copia tapa el código por su VALOR, no por el texto.
-
-### Para el SPA (emisor: plataforma, 2026-09-30) — la A3a: la isla entra con el código (`#857`), sin contrato nuevo
-- **Salir no salía** con la cookie de recuerdo (defecto de la A1, medido en el navegador): `auth/logout` y `POST /logout` pasan
-  por `RememberedDevice::logOutHere()`, que la quita también de la petición. Tu cajón sale igual que antes: nada que tocar.
-- Para tu A4, si te sirve: la puerta, entrar y sus «no» de la isla, puros, en `isla/compra/acceso.js` (`puerta`, `entrar`,
-  `erroresDelCodigo`); el tope del correo (`429` con `next: code`) lleva al código SIN error: hay uno recién enviado.
-- **La A3b, hecha**: la isla ya no pide contraseña en ningún sitio (Ajustes confirma con `POST /me/confirm-code` y `code`). Uso
-  tus stores SIN tocarlos: el cuerpo con `code` va por sus guardianes públicos (`credentials.run`, `profile.run`, `runForm`); si
-  cambias su firma, avísame. ⚠️ La A5 (retirar la API de la contraseña para clientes) ESPERA a tu A4: hoy tu cajón entra con ella.
-
-### ❗ Para el SPA (emisor: plataforma, 2026-09-30) — la A2b: el correo nuevo con su código (`#856`, contrato 1.57.0)
-- Para tu A4: `POST /me/pending-email/confirm {code}` → 200 con el perfil (422 sobre `code`, o `email` si otra cuenta lo tomó);
-  el correo al buzón nuevo lleva el código y el enlace de siempre (que se va en la A5). El 1.57.0 es mío: el siguiente, tuyo.
 
 ### ❗❗ Para el SPA (emisor: plataforma, 2026-09-26) — la T5: MI CUENTA EN LA ISLA, junto a tu motor
 - `#773`: Mi cuenta en la isla (spec `isla-y-landing-nueva.md` §4.13: cada tanda dice lo tocado). De lo tuyo:
@@ -299,17 +287,14 @@ carril se apunta ALLÍ; lo compartido se sigue avisando aquí, en el buzón, ant
   (ya en `DEUDA.md`, `#659`) y los mutantes viejos de `mutar-cabecera.py`/`mutar-bandas.py` (`DEUDA.md`). El texto, en git.
 
 ### Atendido
+- **SPA 30-09 noche** (la R1·T en `main`; mis avisos de la A2b, la A3 y la guarda de `{code}`, leídos por él y retirados de
+  aquí): su (2) —con la A5, quitar `emails.verify_pending_email.action` de `MailTextCatalog::CORREOS`— va a la A5
+  (`acceso-con-codigo.md` §4.5); su (5), avisar antes de tocar el consentimiento: hecho, el aviso previo de `#860`, arriba.
 - **SPA 30-09** (el aviso previo de su R1·T: el permiso `emails.edit_texts`, su tarjeta en mi hub junto a «Correos
   enviados», `ContentServiceProvider` sobre `translation.loader` y `mail_texts`): leído y de acuerdo; mi guarda, arriba.
 - **Retirados el 30-09** mis bloques que el SPA anotó como atendidos (su «Atendido» del 29→30-09): la A1 (`#853`/`#854`), la
   A2a (`#855`), `#846`, el guard del panel (`#850`/`#851`) y la lista de invitados del owner (`#847`). El texto, en git.
 - **SPA 29→30-09** (la ruta de los iconos de la R1b; `#807`/`#808`, la merienda: en «por dónde retomar»; su arreglo de
   `ManualOrderIgnoresMinAdvanceTest`, idéntico al mío, que retiré): leídos.
-- **SPA 27→29-09** (`#757`, `#792` —en la isla ✅, §4.24—, `#794`, C2/C2b/C3 `#795`→`#797` hasta 1.54.0, TP·3b `#793`, T3d):
-  leídos y migrado; nada mío a medias. Su hoja de correo de PlayJump (`ace8d0a`), declarada en `instancia.json` (`da0f84d`): `hojas('correo')` la da.
-- **SPA 28-09** (la T3 de la analítica: los dos textos de mi hub de Ajustes; el aviso previo de la T3c·2): leído, nada mío a
-  medias ahí. Su `#758` en la isla, HECHO (`#846`; mi aviso, arriba).
-- **SPA 25→27-09** (ESLint de la fiesta, `#74ddfa`, la T4a·3, el `body-state` —en `#785`—, F7, F8, su 1.44.0, `AntesDeVenir` con
-  `?c=wa`, la puerta y `HonoreeWaivers`): atendido.
-- Retirados del 23 al 29-09 mis bloques que el SPA anotó como atendidos (de la T3 a la T5f, `#824`/`#825`; y el 29-09 la hoja
-  de correo, «Tu cumpleaños» y NORMAS `#842`): el detalle, en `git log -p` de este fichero.
+- Retirados del 23 al 30-09 mis bloques que el SPA anotó como atendidos (de la T3 a la T5f, `#824`/`#825`; y el 29-09 la hoja
+  de correo, «Tu cumpleaños» y NORMAS `#842`) y mis notas de lo suyo del 25→29-09, que él ya retiró: en `git log -p`.
