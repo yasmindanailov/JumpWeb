@@ -254,73 +254,8 @@ class SidebarTokenBudgetTest extends TestCase
         }
     }
 
-    /**
-     * ⚠️⚠️ **EL CAJÓN NO HEREDA SU ANCHO DEL VIEWPORT** (2026-08-23).
-     *
-     * `.zone-tabs` nace `inline-flex` porque en la landing vive dentro de contenedores que la centran,
-     * y la regla que la pone a ancho completo está **dentro de un media query de MÓVIL**. El cajón no
-     * es una pantalla: es un **panel estrecho a cualquier viewport**, así que heredar de la ventana le
-     * daba dos aspectos para el mismo sitio.
-     *
-     * ▶ **Y el síntoma no fue estético**: sin un bloque delante, la barra de pestañas compartía línea
-     * con el botón «Volver» —`inline-flex` también—, y durante meses lo tapó por accidente el `<h2>`
-     * del armazón. El día que ese título dejó de pintarse en las zonas de auth, quedó a la vista.
-     *
-     * ⚠️ Se asevera que la declaración está **fuera de cualquier `@media`**: dentro volvería a atar el
-     * aspecto del panel al tamaño de la ventana, que es exactamente el fallo.
-     */
-    public function test_the_drawer_tabs_do_not_depend_on_the_viewport(): void
-    {
-        $css = (string) file_get_contents(public_path('css/site.css'));
-
-        // Fuera todo lo que viva dentro de un `@media { … }`: lo que quede es incondicional.
-        $sinMedia = (string) preg_replace('/@media[^{]*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/s', '', $css);
-
-        $this->assertMatchesRegularExpression(
-            '/\.purchase__authtabs\s*\{[^}]*width:\s*100%/s',
-            $sinMedia,
-            "La barra de pestañas del cajón ha dejado de ocupar el ancho del panel, o lo hace dentro de\n".
-            'un `@media` — y entonces vuelve a depender del tamaño de la ventana.'
-        );
-
-        // ❗❗ **Y se ata la PIEZA, que es donde estaba el agujero** (`#561`). El defecto original era que
-        // `.zone-tabs` es `inline-flex` —está pensada para la landing— y en escritorio las pestañas
-        // compartían línea con el «Volver». Desde `#561` la barra usa `.tabset`, la del SISTEMA, que
-        // declara `display: flex` de fábrica; por eso la declaración local sobra. ▶ Pero si alguien
-        // volviera a `.zone-tabs`, el defecto reaparecería **y las dos aserciones de arriba seguirían en
-        // verde**: el ancho estaría puesto y el `inline-flex` heredado haría el resto.
-        // ⚠️ La barra la pinta UN componente desde `#561` —estaba escrita dos veces y hubo que
-        // sincronizarla a mano al cambiar la pieza—, así que basta mirar ése.
-        $barra = (string) preg_replace(
-            '#<!--.*?-->#s', '',
-            (string) file_get_contents(resource_path('js/sidebar/steps/AuthTabset.vue')),
-        );
-
-        $this->assertStringContainsString(
-            'tabset purchase__authtabs',
-            $barra,
-            "La barra de auth ha dejado de usar la pestaña del SISTEMA.\n".
-            '⚠️ `.zone-tabs` es `inline-flex`, así que con ella las pestañas vuelven a compartir línea '.
-            'con el «Volver» en escritorio — y el `width: 100%` de arriba no lo impide.'
-        );
-
-        // ▶ Y que siga siendo UNA: dos copias del mismo control no divergen el día que se escriben,
-        // sino el día que alguien arregla una.
-        foreach (['steps/IdentifyStep.vue', 'account/zones/AuthTabs.vue'] as $consumidor) {
-            $this->assertStringContainsString(
-                '<AuthTabset',
-                (string) file_get_contents(resource_path('js/sidebar/'.$consumidor)),
-                "«{$consumidor}» ha vuelto a pintar la barra de auth por su cuenta.",
-            );
-        }
-
-        $this->assertMatchesRegularExpression(
-            '/\.tabset\s*\{[^}]*display:\s*flex/s',
-            (string) preg_replace('/@media[^{]*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/s', '', (string) file_get_contents(public_path('css/landing.css'))),
-            'La pestaña del sistema ha dejado de declarar `display: flex` incondicionalmente, y el cajón '.
-            'depende de eso: es lo que la barra dejó de declarar por su cuenta al adoptarla.'
-        );
-    }
+    // (La barra de pestañas «Entrar / Crear cuenta» y su guarda de ancho se retiraron con la A4a,
+    // `acceso-con-codigo.md` §4.11: entrar y crear cuenta son UNA puerta, sin pestañas. `CONVENCIONES` §3.quater.)
 
     /**
      * **Las dos filas que son PUERTA comparten receta** (`#562`).

@@ -4974,10 +4974,13 @@ components:
         account:
           type: object
           additionalProperties: true
-          description: Los rótulos de entrar, darse de alta, recuperar la contraseña y el bloque de cuenta.
+          description: |
+            Los rótulos de entrar (la puerta con código), darse de alta y el bloque de cuenta. Los de recuperar la
+            contraseña ya no viajan aquí: con sesión van en `SidebarSession.account`.
         auth:
           type: object
           additionalProperties: true
+          description: La espera del limitador (`throttle`), que pintan la puerta, el alta y los formularios de la cuenta.
         urls:
           type: object
           additionalProperties:
@@ -5028,7 +5031,7 @@ components:
         account:
           type: object
           additionalProperties: true
-          description: Los rótulos del área de cliente. Vacío sin sesión.
+          description: Los rótulos del área de cliente (y los de recuperar la contraseña). Vacío sin sesión.
         locales:
           type: array
           description: Los idiomas que ofrece el selector del perfil. Lista vacía sin sesión.

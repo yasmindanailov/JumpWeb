@@ -1,7 +1,6 @@
 <script setup>
 import { computed, defineAsyncComponent } from 'vue';
 import { useAccountStore } from '../stores/account.js';
-import { useAuthStore } from '../stores/auth.js';
 import { ZONES, bringsOwnHeading, titleKeyOf } from '../account/navigation.js';
 import { t as translate } from '../i18n.js';
 import Shell from '../Shell.vue';
@@ -15,7 +14,6 @@ import PrivacyZone from '../account/zones/PrivacyZone.vue';
 import DependentsZone from '../account/zones/DependentsZone.vue';
 import CardZone from '../account/zones/CardZone.vue';
 import LoginZone from '../account/zones/LoginZone.vue';
-import RegisterZone from '../account/zones/RegisterZone.vue';
 import ForgotZone from '../account/zones/ForgotZone.vue';
 /**
  * ⚠️⚠️ **La ÚNICA zona en carga diferida, y el motivo es una medición** (`#343`): entera pesa
@@ -29,7 +27,6 @@ import ForgotZone from '../account/zones/ForgotZone.vue';
  * lee cualquiera, y separarlos costaría una petición para ahorrar unos cientos de bytes.
  */
 const GoogleSignupZone = defineAsyncComponent(() => import('../account/zones/GoogleSignupZone.vue'));
-import AuthTabs from '../account/zones/AuthTabs.vue';
 
 /**
  * **El ÁREA DE CLIENTE** (`docs/specs/area-cliente.md`), como SECCIÓN hermana del embudo de compra.
@@ -72,19 +69,9 @@ const props = defineProps({
 
 const store = useAccountStore();
 
-/**
- * ⚠️⚠️ **Se llama `authStore` y NO `auth`, y esa letra costó cinco días de un fallo invisible**
- * (2026-08-23 → 2026-08-28, `DECISIONES #210`). Esta sección declara la prop `auth` —el DICCIONARIO
- * con los literales del «no» del servidor— y el store del paso 5 se instanciaba aquí como
- * `const auth = useAuthStore()`. En `<script setup>` **una constante con el nombre de una prop la
- * SOMBREA en la plantilla**: `:auth="auth"` bajaba el STORE a las ocho zonas, `t(store, 'failed')`
- * devolvía `''` y el `v-if` no pintaba nada. El owner pulsaba «Iniciar sesión» con una contraseña
- * mala y **no ocurría nada**: ni «credenciales incorrectas», ni el aviso del limitador (medido en
- * headless: `fields.email` = `""` tras el 401, `global` = `""` tras el 429). Vue no avisa, la suite
- * no lo ve —el árbol descarta el texto y el área no tiene casos de contrato— y el embudo no lo
- * sufría porque allí el store se llama `authStore`. Lo vigila `SidebarSetupBindingsTest`.
- */
-const authStore = useAuthStore();
+// ⚠️ Esta sección declara la prop `auth` (el diccionario del «no» del servidor): ningún binding de aquí puede llamarse
+// igual, o la SOMBREA en la plantilla sin aviso (`DECISIONES #210`, cinco días de un fallo invisible). Lo vigila
+// `SidebarSetupBindingsTest`. El store del paso 5 ya no se usa aquí desde la A4a: las pestañas se fueron.
 
 const title = computed(() => translate(props.account, titleKeyOf(store.zone)));
 
@@ -123,8 +110,8 @@ const signIn = () => store.go(ZONES.LOGIN);
         </button>
 
         <!--
-          ⚠️⚠️ **Las tres pantallas de AUTH traen su propio encabezado, así que aquí no se pone**
-          (2026-08-23). `LoginForm` y `RegisterForm` se reutilizan del paso 5 del embudo —donde no hay
+          ⚠️⚠️ **Las pantallas de AUTH traen su propio encabezado, así que aquí no se pone**
+          (2026-08-23). `EntryForm` y `RegisterForm` se reutilizan del paso 5 del embudo —donde no hay
           armazón que ponga título— y pintan su `auth__title` con el MISMO literal que este `title`:
           el cliente veía «Inicia sesión» o «Crea tu cuenta» **dos veces**, una encima de otra.
           ▶ La regla vive en `account/navigation.js::bringsOwnHeading()`, con su `node --test`, y no
@@ -225,34 +212,11 @@ const signIn = () => store.go(ZONES.LOGIN);
         <!-- Las zonas de INVITADO. Van al final y no es orden alfabético: son las únicas que se
              pintan SIN sesión, así que leerlas juntas dice de un vistazo dónde está esa frontera.
 
-             ⚠️ Las pestañas NO están dentro de cada zona: son el conmutador ENTRE dos de ellas, y
-             repetirlas en las dos habría dejado dos sitios que mantener sincronizados. `FORGOT` no
-             las lleva a propósito — no es una tercera pestaña, es una pantalla a la que se entra
-             desde entrar y de la que se vuelve. -->
-        <!--
-          ⚠️⚠️ **Las pestañas DESAPARECEN mientras hay un alta esperando verificación** (2026-08-23).
-          Ofrecer «Entrar / Crear cuenta» junto a un «acabas de crear tu cuenta, revisa tu correo»
-          invita a abandonar un paso a medias — y **pulsarlas destruía la pantalla**: salir de la zona
-          borra el correo pendiente **a propósito**, porque es PII de alguien que puede no ser el
-          siguiente en usar el dispositivo (lo fija `stores/auth.test.js`).
-          ▶ Esa defensa no se toca. Lo que se retira es la forma ACCIDENTAL de dispararla: la salida
-          deliberada sigue estando dentro de la propia pantalla («¿ya tienes cuenta?»), que además es
-          la única que sabe a dónde lleva.
-        -->
-        <AuthTabs
-            v-if="(store.zone === ZONES.LOGIN || store.zone === ZONES.REGISTER) && ! authStore.awaitingVerification"
-            :account="account"
-            :active="store.zone" />
-
+             ⚠️ **Sin pestañas desde la A4a** (`acceso-con-codigo.md` §4.11, `#849`): entrar y crear cuenta son UNA puerta
+             —el correo decide— y `LoginZone` pinta sus tres caras (el correo, el código y el alta). `FORGOT` sigue hasta
+             la A4b: se llega desde el aviso de quien no tiene contraseña en las acciones que aún la piden. -->
         <LoginZone
             v-if="store.zone === ZONES.LOGIN"
-            :account="account"
-            :messages="messages"
-            :auth="auth"
-            :urls="urls" />
-
-        <RegisterZone
-            v-else-if="store.zone === ZONES.REGISTER"
             :account="account"
             :messages="messages"
             :auth="auth"
@@ -264,9 +228,8 @@ const signIn = () => store.go(ZONES.LOGIN);
             :messages="messages"
             :auth="auth" />
 
-        <!-- La CUARTA pantalla de auth: completar un alta que viene de Google. No lleva pestañas
-             —no es una tercera cara de «entrar / crear cuenta»: se llega volviendo de Google— y por
-             eso queda fuera de la condición de `AuthTabs`, como `FORGOT`. -->
+        <!-- La otra pantalla de auth: completar un alta que viene de Google. No es una cara de la puerta —se llega
+             volviendo de Google—, y por eso es su propia zona, como `FORGOT`. -->
         <GoogleSignupZone
             v-else-if="store.zone === ZONES.GOOGLE_SIGNUP"
             :account="account"

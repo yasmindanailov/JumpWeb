@@ -4,7 +4,9 @@ namespace App\Http\Sidebar;
 
 use App\Domain\Content\Services\ShellSettings;
 use App\Domain\Identity\Services\GoogleAuth;
+use App\Domain\Identity\Services\LoginCodes;
 use App\Domain\Payments\Services\MarcasDePago;
+use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\Analytics\Experiments;
 use App\Domain\Platform\Services\SiteLocales;
 use Illuminate\Support\Arr;
@@ -126,7 +128,13 @@ final class SidebarBoot
                 // landing no tiene de dónde sacar el nombre accesible del botón de cerrar. Son 7 bytes y el
                 // camino es el de `lang/` (`account.close`), como el resto.
                 'close' => __('account.close'),
-                'login' => __('account.login'),
+                // La puerta y el código (A4a, `acceso-con-codigo.md` §4.11): el grupo entero, que `EntryForm` pinta todo. ⚠️ Y
+                // `code_hint` viaja YA compuesto, por lo mismo que `terms_link`: quién manda el correo y cuánto dura el código
+                // los sabe el servidor (`Setting::businessName()`, `LoginCodes::TTL_MINUTES`), y el cajón no tiene de dónde
+                // sacarlos. Escritos en `lang/` serían una segunda copia que mentiría al primer cambio.
+                'login' => array_replace(__('account.login'), [
+                    'code_hint' => __('account.login.code_hint', ['site' => Setting::businessName(), 'minutes' => LoginCodes::TTL_MINUTES]),
+                ]),
                 // ⚠️ El texto de privacidad lleva un `<a href>` dentro y viaja **ya interpolado**: la
                 // URL la compone `route()`, y partirlo en «texto + enlace» obligaría al cliente a
                 // recomponer una frase traducida —que en francés y en inglés no ordena igual—. El
@@ -149,12 +157,13 @@ final class SidebarBoot
                 // de `privacy_notice`, y desde `#566` el enlace vive en su propia fila (`privacy_read`)
                 // con la URL viajando suelta en `urls.privacy`.
                 'register' => Arr::only(__('account.register'), [
-                    'cta', 'title', 'subtitle', 'name', 'email', 'phone', 'password',
-                    // ⚠️ `phone_hint` entra con el campo (`#561`): la pista dice para qué se pide el
-                    // teléfono, y sin ella en esta lista el `t()` del cajón devolvería CADENA VACÍA
-                    // sin fallar — el hueco de `#333`, que se ve como un campo sin explicación y no
-                    // como algo roto.
-                    'password_hint', 'phone_hint', 'accept_waiver', 'waiver_read', 'privacy_notice',
+                    // ⚠️ Sin `password`, `password_hint`, `phone` ni `phone_hint` desde la A4a (`acceso-con-codigo.md`
+                    // §4.11): el alta del cajón ya no pide contraseña (se entra con un código) ni teléfono (lo pide el paso
+                    // de pagar cuando el pedido lo exige, `#787`). Las claves siguen en `lang/`: las leen el servidor
+                    // (los nombres de campo del alta) y la página de restablecer, hasta la A5. Y sin `cta`: era el rótulo
+                    // de la pestaña «Crea tu cuenta», y las pestañas se fueron con ella.
+                    'title', 'subtitle', 'name', 'email',
+                    'accept_waiver', 'waiver_read', 'privacy_notice',
                     // TP·1 (`#792`): la fecha de nacimiento y su pista (para qué se pide). Las pintan el alta, la
                     // pantalla tras Google y «Tus datos» (`steps/BornOnField.vue`); sin ellas aquí, VACÍAS (`#333`).
                     'born_on', 'born_on_hint',
@@ -173,12 +182,10 @@ final class SidebarBoot
                     // desaparece con él, así que viaja igual y por lo mismo.
                     'google_cta', 'or',
                 ]),
-                // ⚠️ **Recuperar contraseña viaja SIN sesión, igual que entrar y darse de alta**
-                // (`specs/auth-en-cajon.md` §4.1): sus tres pantallas son precisamente las que ve
-                // quien NO ha entrado, así que podarlas al invitado dejaría la zona con los rótulos en
-                // blanco — que es el fallo que `i18n.js` no puede avisar. El subgrupo entero son 9
-                // claves.
-                'forgot' => __('account.forgot'),
+                // ⚠️ **Recuperar contraseña ya NO viaja sin sesión** desde la A4a (`acceso-con-codigo.md` §4.11): se entra
+                // con un código, así que ni la compra ni la puerta la ofrecen, y `/recuperar-contrasena` abre la puerta.
+                // Sin sesión eran 410 B en cada página pública para no pintarse nunca. Con sesión viaja con lo personal
+                // ({@see personal()}), hasta que la zona se vaya en la A4b.
                 ...($withGoogleSignup ? ['google' => __('account.google')] : []),
                 // ⚠️⚠️ **Los rótulos del BLOQUE DE CUENTA viajan para TODO EL MUNDO, y no es
                 // comodidad** (`specs/account-context-vue.md` §4.12). El bloque cambia de cara **sin
@@ -188,7 +195,7 @@ final class SidebarBoot
                 // devuelve cadena vacía cuando falta una clave y en producción un texto ausente no
                 // puede tumbar el cajón—, y **nada avisaría**. Es exactamente el bloqueante que la
                 // revisión de `specs/auth-en-cajon.md` paró con los textos del área.
-                // ▶ Misma decisión y mismo motivo que `login`, `register` y `forgot`.
+                // ▶ Misma decisión y mismo motivo que `login` y `register`.
                 // ⚠️ Podados clave a clave: de `nav` se pintan tres de sus rótulos, y de `sidecart`
                 // cinco — `tag` se retiró por muerta.
                 // ⚠️⚠️ **Y `next`/`no_upcoming` salen el 2026-08-28** (`specs/identidad-qr-puerta.md`
@@ -238,7 +245,11 @@ final class SidebarBoot
                     'pending_notice',
                 ]),
             ],
-            'auth' => __('auth'),
+            // ⚠️ **Solo `throttle`** desde la A4a (`acceso-con-codigo.md` §4.11): es el único que pinta alguien —la
+            // espera del limitador, en la puerta, el alta, recuperar y los formularios de la cuenta—. `failed` era el
+            // «no» de la contraseña, que se fue con ella (el del código es `login.code_wrong`), y `password` no lo
+            // leía nadie. Sin esta poda, los tres viajaban en cada página pública.
+            'auth' => Arr::only(__('auth'), ['throttle']),
             // ⚠️ **Las rutas las compone el SERVIDOR, no el cajón** (Fase 4 · paso 4.6·2). Las pintan
             // las pantallas de desenlace —«escribirnos» y «ver mis reservas»— y quemarlas en el JS
             // sería la segunda fuente de una URL que ya decide `routes/web.php`; el día que cambie un
@@ -344,7 +355,7 @@ final class SidebarBoot
                     // La salida de quien entró con Google y no tiene contraseña (`#344`): la pintan
                     // las CUATRO pantallas que exigen contraseña. Va aquí —con sesión— porque ninguna
                     // se ve sin haber entrado. El rótulo de su botón se reutiliza de `forgot.title`,
-                    // que ya viaja para todos.
+                    // que con sesión viaja aquí mismo (desde la A4a, ya no para todos).
                     'no_password' => __('account.account.no_password'),
                     // ⚠️ Los dos subgrupos que pintan las zonas de la tanda 2, ENTEROS y no podados
                     // clave a clave: son 9 y 4 rótulos que la pantalla usa todos —etiqueta, ayuda,
@@ -425,6 +436,10 @@ final class SidebarBoot
                 // `account/navigation.js`, y por el mismo motivo: la ruta `/mi-cuenta/pedidos` es un
                 // contrato que no se puede reasignar.
                 'purchases' => __('account.purchases'),
+                // Recuperar la contraseña, SOLO con sesión desde la A4a (`acceso-con-codigo.md` §4.11): la salida del aviso
+                // «¿no tienes contraseña?» de las cuatro acciones que aún la piden lleva a esa zona, y sin sesión ya no se
+                // llega a ella (se entra con un código). Se va con la zona en la A4b.
+                'forgot' => __('account.forgot'),
             ] : [],
             // Los idiomas que el selector del perfil ofrece, con su nombre nativo. Van solo CON
             // SESIÓN, como el resto de lo que solo pinta el área de cliente.

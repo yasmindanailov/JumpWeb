@@ -194,15 +194,26 @@ return [
         ],
     ],
 
+    // The drawer's DOOR, with a code by email (A4a, `acceso-con-codigo.md` §4.11): the isla's wording (`#857`).
     'login' => [
-        'cta' => 'Log in',
-        'title' => 'Log in',
+        'cta' => 'Sign in',
+        'title' => 'Sign in',
+        'intro' => 'Write your email.',
         'email' => 'Email',
-        'password' => 'Password',
-        'remember' => 'Keep me logged in',
-        'submit' => 'Log in',
-        'submitting' => 'Logging in…',
-        'forgot' => 'Forgot your password?',
+        'continue' => 'Continue',
+        'sending' => 'Sending the code…',
+        'suggest' => 'Did you mean :email?',
+        'code' => '6-digit code',
+        'code_hint' => 'It comes from :site. It expires in :minutes minutes; if you cannot see it, check your spam folder.',
+        'code_sent' => 'We have sent a 6-digit code to :email.',
+        'code_resent' => 'We have sent another one to :email. The previous one no longer works.',
+        'code_again' => 'Resend the code',
+        'code_again_in' => 'Resend the code in :t',
+        'code_wrong' => 'The code is not right or has expired. Ask for another one.',
+        'remember' => 'Keep me signed in on this device',
+        'change_email' => 'Change the email',
+        'submit' => 'Sign in',
+        'submitting' => 'Signing in…',
     ],
 
     'forgot' => [
@@ -228,9 +239,8 @@ return [
     ],
 
     'register' => [
-        'cta' => 'Sign up',
         'title' => 'Create your account',
-        'subtitle' => 'Needed to book tickets and birthdays.',
+        'subtitle' => 'There is no account with that email yet: fill in your details and you are in right away.',
         'name' => 'Full name',
         'email' => 'Email',
         'phone' => 'Phone',

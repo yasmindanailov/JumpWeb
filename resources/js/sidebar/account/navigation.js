@@ -69,13 +69,14 @@ export const ZONES = {
     // en el modal de la cabecera, y su presencia aquí es lo que permite retirarlo: `DECISIONES #66`
     // pedía que la gestión del cliente viviera en UN sitio, y entrar es parte de gestionarse.
 
-    /** Identificarse. Es donde aterriza un invitado que entra al área. */
+    /**
+     * La PUERTA: identificarse o crear la cuenta, con un código al correo (A4a de `acceso-con-codigo.md` §4.11). Es donde
+     * aterriza un invitado que entra al área. Crear cuenta ya no es una zona: es una CARA de ésta, a la que se llega cuando
+     * el correo es nuevo (`#849`).
+     */
     LOGIN: 'login',
 
-    /** Crear cuenta. Alta **suelta**: manda correo de verificación y no abre sesión (§4.3). */
-    REGISTER: 'register',
-
-    /** Pedir el enlace para restablecer la contraseña. */
+    /** Pedir el enlace para restablecer la contraseña (hasta la A4b: se llega desde las acciones que aún la piden). */
     FORGOT: 'forgot',
 
     /**
@@ -139,7 +140,6 @@ export const ZONE_TITLE_KEYS = {
     [ZONES.DEPENDENTS]: 'account.dependents.title',
     [ZONES.CARD]: 'account.card.title',
     [ZONES.LOGIN]: 'login.title',
-    [ZONES.REGISTER]: 'register.title',
     [ZONES.FORGOT]: 'forgot.title',
     [ZONES.GOOGLE_SIGNUP]: 'google.title',
     [ZONES.ORDERS_HISTORY]: 'orders.history.title',
@@ -179,7 +179,7 @@ export const ZONE_PARENTS = {
  * **dos** puertas declaradas en vez de una. Sin esta lista, «alcanzable» se habría convertido en una
  * excepción escrita a mano en el test, que es donde se acaba metiendo cualquier cosa.
  */
-export const GUEST_ZONES = [ZONES.LOGIN, ZONES.REGISTER, ZONES.FORGOT, ZONES.GOOGLE_SIGNUP];
+export const GUEST_ZONES = [ZONES.LOGIN, ZONES.FORGOT, ZONES.GOOGLE_SIGNUP];
 
 /** ¿Esta zona la ve alguien SIN sesión? Lo pregunta la sección para decidir por dónde entrar. */
 export function isGuestZone(value) {
@@ -202,15 +202,12 @@ export function isGuestZone(value) {
  *    y devuelve la compra donde estaba, con su cesta. Por eso quien entra así **no siembra nada**, y
  *    por eso esta decisión es del que llama y no de `enter()`.
  *
- * ⚠️⚠️ **`REGISTER` dejó de sembrar el 2026-08-23** (`DECISIONES #125`, decisión del owner), y con eso
- * la regla pasa de «toda zona de invitado que no sea entrar» a **solo recuperar contraseña**. El
- * motivo es que `LOGIN` y `REGISTER` **no son dos pantallas**: son las dos caras de una, conmutadas
- * por una barra de pestañas que las presenta al mismo nivel. Con la siembra, «Volver» desde «Crear
- * cuenta» cambiaba de pestaña — el mismo armazón, la misma barra, otro formulario— y se leía como un
- * botón que no hace nada. Recuperar contraseña **sí** es una pantalla aparte, se llega a ella desde
- * un enlace dentro de «entrar» y no tiene pestaña: por eso conserva su siembra.
- * ▶ Su pareja es `replace()`: conmutar de pestaña tampoco APILA. Las dos mitades hacen falta —sembrar
- * y apilar son caminos distintos hacia el mismo síntoma— y `navigation.test.js` cubre cada una.
+ * ⚠️⚠️ **Solo recuperar contraseña siembra** (`DECISIONES #125`, decisión del owner): crear cuenta no es una pantalla
+ * aparte sino una cara de la puerta —hasta la A4a lo era de una barra de pestañas; desde ella, del correo que decide—, así
+ * que «Volver» desde ella no puede cambiar de cara: sale. Recuperar contraseña **sí** es una pantalla aparte.
+ * ▶ **Desde la A4a ninguno de los orígenes de arriba llega ya a ella** (`acceso-con-codigo.md` §4.11): entrar no pide
+ * contraseña y `/recuperar-contrasena` abre la puerta. Solo la abre, CON sesión, el aviso de las cuatro acciones que aún
+ * la piden (`NoPasswordHint`), con `go()` y su historia. La siembra queda sin quien la pida y se va con la zona en la A4b.
  */
 export function parentZoneFor(zone) {
     return zone === ZONES.FORGOT ? ZONES.LOGIN : null;
@@ -230,8 +227,8 @@ export const HOME_ENTRIES = [ZONES.ORDERS, ZONES.PURCHASES, ZONES.CARD, ZONES.PR
 /**
  * **Las zonas que traen su PROPIO encabezado**, y por tanto no llevan el del armazón.
  *
- * ⚠️⚠️ **Existe porque el título salía DOS VECES.** Las tres pantallas de auth reutilizan
- * `steps/LoginForm.vue` y `steps/RegisterForm.vue` del paso 5 del embudo —donde no hay armazón que
+ * ⚠️⚠️ **Existe porque el título salía DOS VECES.** Las pantallas de auth reutilizan
+ * `steps/EntryForm.vue` y `steps/RegisterForm.vue` del paso 5 del embudo —donde no hay armazón que
  * ponga título, así que el formulario trae el suyo— y `AccountSection` ponía además el de la zona,
  * con el MISMO literal: «Inicia sesión» encima de «Inicia sesión».
  *
@@ -245,7 +242,7 @@ export const HOME_ENTRIES = [ZONES.ORDERS, ZONES.PURCHASES, ZONES.CARD, ZONES.PR
  *
  * @var {string[]}
  */
-const ZONES_WITH_OWN_HEADING = [ZONES.LOGIN, ZONES.REGISTER, ZONES.FORGOT, ZONES.GOOGLE_SIGNUP];
+const ZONES_WITH_OWN_HEADING = [ZONES.LOGIN, ZONES.FORGOT, ZONES.GOOGLE_SIGNUP];
 
 /** ¿Esta zona pinta ya su encabezado, y el armazón debe callarse? */
 export function bringsOwnHeading(zone) {
@@ -260,6 +257,23 @@ export function titleKeyOf(zone) {
 /** ¿Es una zona que existe? Lo pregunta el store antes de aterrizar en una pantalla que no hay. */
 export function isZone(value) {
     return Object.values(ZONES).includes(value);
+}
+
+/**
+ * **Las zonas RETIRADAS que siguen llegando por su NOMBRE desde fuera del cajón, y a dónde llevan** (A4a,
+ * `acceso-con-codigo.md` §4.11).
+ *
+ * ⚠️⚠️ Muere la ZONA, vive su NOMBRE, por lo mismo que las rutas de `Http\Sidebar\AccountDoor`: `openAccount(zona)` y
+ * `data-jw-open-account` son la API del paquete (`cajon-empaquetable.md` §4.2), con llamadas escritas FUERA de este repo
+ * —la landing de una instancia— y dentro: los CINCO CTA de alta de la landing piden `register` (`AccountDoorWiringTest`).
+ * Sin esto caerían en el índice (`DEFAULT_ZONE`), que un invitado ve con los rótulos EN BLANCO: los del área viajan solo
+ * con sesión. Crear cuenta es desde la A4a una cara de la puerta: el correo decide.
+ */
+const RETIRED_ZONES = { register: ZONES.LOGIN };
+
+/** La zona a la que lleva un nombre pedido desde fuera: una retirada, a su sucesora; el resto, tal cual. */
+export function zoneFor(requested) {
+    return RETIRED_ZONES[requested] ?? requested;
 }
 
 /**
@@ -307,32 +321,6 @@ export function createNavigation({ zone = DEFAULT_ZONE } = {}) {
             const seen = trail.indexOf(next);
 
             trail = seen === -1 ? [...trail, next] : trail.slice(0, seen + 1);
-
-            return true;
-        },
-
-        /**
-         * **Conmuta a una zona SIN dejar rastro**: sustituye la actual en vez de apilarla.
-         *
-         * ⚠️⚠️ **Existe porque una barra de pestañas no es navegación** (2026-08-23, `DECISIONES
-         * #125`). «Entrar» y «Crear cuenta» son dos caras de una misma pantalla, presentadas al mismo
-         * nivel por `AuthTabs`; con `go()`, pulsar una pestaña apilaba, y «Volver» deshacía **la
-         * pestaña** en vez de salir del área: mismo armazón, misma barra, otro formulario. Para quien
-         * mira, el botón no hacía nada.
-         *
-         * ▶ **Y no basta con no apilar**: hay que sustituir. Un `go()` que ignorase la repetición
-         * dejaría la pila creciendo igual al alternar entre las dos pestañas, y una pestaña que no
-         * hiciera nada dejaría la pantalla muerta. Aquí la pila **no cambia de tamaño**, que es
-         * exactamente lo que hace que «Volver» siga significando lo mismo desde las dos caras.
-         *
-         * ⚠️ Lo que hay DEBAJO se conserva a propósito: quien llegó a «entrar» por el enlace de
-         * recuperar contraseña —`[login, forgot]`— y conmuta a «crear cuenta» sigue teniendo su
-         * vuelta. Sustituir la cima nunca borra historia ajena.
-         */
-        replace(next) {
-            if (! isZone(next) || next === this.zone) return false;
-
-            trail = [...trail.slice(0, -1), next];
 
             return true;
         },

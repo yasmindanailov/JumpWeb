@@ -517,17 +517,9 @@ class SidebarDomContractTest extends TestCase
     // ── El paso 5: la identificación ──────────────────────────────────────────────────────────
 
     /**
-     * ⚠️ **El estado se alcanza PULSANDO la pestaña, y no es ceremonia: es lo único que hace que
-     * Livewire renderice el formulario.**
-     *
-     * Medido: `->set('authMode', 'login')` sobre un componente recién montado deja el hijo como
-     * `<div wire:id=… wire:name="auth.login"></div>` **VACÍO** —los componentes hijos se hidratan en
-     * una petición posterior—, así que el árbol del paso 5 tendría **9 nodos** en vez de 31 y este
-     * diff compararía el armazón contra el armazón. Un motor SPA que no emitiera el formulario
-     * pasaría en verde. Llegando por `setAuthMode` el hijo se renderiza entero.
-     *
-     * `embedded` es parte del caso: quita el enlace de «¿olvidaste tu contraseña?» y el pie de «¿no
-     * tienes cuenta?», que dentro del cajón llevarían fuera de la compra.
+     * **La PUERTA, en su primera cara** (A4a, `specs/acceso-con-codigo.md` §4.11): Google arriba con su «o», el correo y
+     * «Continuar». Sin pestañas desde la A4a —el correo decide si se entra con un código o se crea la cuenta—, así que el
+     * árbol que se congelaba (dos pestañas y el login con contraseña) se REGENERÓ a propósito ese día.
      */
     public function test_the_identify_step_emits_the_same_tree_in_both_engines(): void
     {
@@ -535,21 +527,34 @@ class SidebarDomContractTest extends TestCase
         $vue = $this->vueTree(5, $this->identifyProps(), 'wiz__title', withSiblings: true);
 
         $this->assertTree(__FUNCTION__, $vue,
-            "El árbol de la identificación DIFIERE entre los dos motores.\n".
-            'Este paso no tiene banda de progreso, así que su «Volver» es propio; y el formulario que '.
-            "cuelga de las pestañas es el login embebido.\n\n".
-            ''
+            "El árbol de la identificación (la puerta, su cara del correo) ha cambiado.\n".
+            "Si es a propósito, regenéralo y dilo en el commit.\n\n"
         );
     }
 
     /**
-     * ⚠️ **El formulario más largo del cajón, y el que más nodos invisibles tiene.**
-     *
-     * Tres de ellos no se ven nunca y el diff es lo ÚNICO que los vigila: el **honeypot** (`.hp`, que
-     * el CSS oculta y que es el señuelo del servidor), la **fila** `.form__row` que agrupa email y
-     * teléfono, y el `<small class="form__hint">` de la contraseña —que es un `<small>`, no un `<span>`,
-     * y el tipo de elemento es contrato—. Un motor sin honeypot deja al servidor sin su defensa y no se
-     * nota mirando la pantalla.
+     * **La PUERTA, en su cara del CÓDIGO** (A4a): «Te hemos enviado un código a …» (`role="status"`: lo anuncia el lector
+     * sin robar el foco), el campo, «Mantener la sesión iniciada» sin marcar, «Entrar» y la fila de «Pedir otro código» —aquí
+     * DESHABILITADO, con la espera corriendo— y «Cambiar el correo». Sin Google: el correo ya está elegido. ⚠️ El caso le
+     * pasa la ida a Google A PROPÓSITO: sin ella el botón no se pinta en ninguna cara, y esconderlo aquí no se vería.
+     */
+    public function test_the_code_face_of_the_door_emits_its_tree(): void
+    {
+        $props = ['sentTo' => 'ana@example.com', 'wait' => 42, 'googleUrl' => 'https://example.test/auth/google'] + $this->identifyProps('code');
+        $vue = $this->vueTree(5, $props, 'wiz__title', withSiblings: true);
+
+        $this->assertTree(__FUNCTION__, $vue,
+            "El árbol de la cara del CÓDIGO ha cambiado.\n".
+            'Ojo al `role="status"` del aviso y al `disabled` de «Pedir otro código» mientras corre la espera: son contrato '.
+            "(el servidor admite un código por minuto).\n\n"
+        );
+    }
+
+    /**
+     * ⚠️ **El formulario más largo del cajón, y el que tiene un nodo que no se ve nunca**: el **honeypot** (`.hp`, que el
+     * CSS oculta y que es el señuelo del servidor). El diff es lo ÚNICO que lo vigila: un motor sin él deja al servidor sin
+     * su defensa y no se nota mirando la pantalla. Desde la A4a, sin contraseña ni teléfono, y con el correo a la vista —ya
+     * lo escribió en la puerta— y su «Cambiar el correo».
      */
     public function test_the_register_form_emits_the_same_tree_in_both_engines(): void
     {
@@ -557,9 +562,8 @@ class SidebarDomContractTest extends TestCase
         $vue = $this->vueTree(5, $this->identifyProps('register'), 'wiz__title', withSiblings: true);
 
         $this->assertTree(__FUNCTION__, $vue,
-            "El árbol del ALTA DIFIERE entre los dos motores.\n".
-            'Ojo al honeypot (`.hp`), a la fila de email+teléfono y al `<small>` del hint: no se ven, '.
-            "y son parte del contrato.\n\n"
+            "El árbol del ALTA ha cambiado.\n".
+            "Ojo al honeypot (`.hp`): no se ve, y es parte del contrato.\n\n"
         );
     }
 
@@ -568,29 +572,36 @@ class SidebarDomContractTest extends TestCase
      * por aviso, **y además** cada aviso bajo su campo. Las dos cosas, no una.
      *
      * El caso anterior no puede verlo —un formulario recién abierto no tiene errores—, y el número de
-     * `<li>` depende de cuántos campos fallen: se fuerza un envío vacío, que falla en los CUATRO que
-     * quedan (nombre, correo, teléfono y contraseña). ⚠️ Eran seis hasta la T8·c (`#350`), cuando las
-     * dos casillas legales salieron del alta; y desde `#787` el teléfono va demasiado largo, porque vacío ya vale.
+     * `<li>` depende de cuántos campos fallen: se fuerzan CUATRO. ⚠️ Eran seis hasta la T8·c (`#350`), cuando
+     * las dos casillas legales salieron del alta; y desde la A4a (`acceso-con-codigo.md` §4.11) el alta del cajón
+     * no manda ni teléfono ni contraseña, así que los cuatro son los que ESTE formulario puede provocar.
      */
     public function test_the_register_error_banner_emits_the_same_tree_in_both_engines(): void
     {
-        // Un alta VACÍA: falla la validación de todos los campos obligatorios a la vez, que es lo que
-        // llena la lista. Con un solo campo en rojo, un `<li>` de más o de menos no se vería.
-        // ⚠️ La precondición de abajo pide MÁS DE TRES y hoy son exactamente cuatro: si alguien quita
-        // otro campo obligatorio del alta, este caso se pondrá rojo por su precondición y no por el
-        // árbol — que es lo correcto, porque con tres avisos deja de probar lo que dice probar.
+        // Cuatro campos en rojo a la vez, que es lo que llena la lista. Con un solo campo en rojo, un `<li>` de más o
+        // de menos no se vería.
+        // ⚠️ La precondición de abajo pide MÁS DE TRES y hoy son exactamente cuatro: si alguien quita otro campo del
+        // alta, este caso se pondrá rojo por su precondición y no por el árbol.
         // ⚠️ El lado SPA ya no recibe los errores cocinados por el test: recibe el **422 crudo** de
         // `POST /auth/register` y los compone `register.js`. El orden de los avisos —el de las reglas de
         // validación— y el reparto entre banner y campo son SUYOS, y el test los reimplementaba en PHP
         // («el mismo orden que fija `register.js`», decía su comentario): eso es un punto ciego, no una
         // comodidad.
-        // ⚠️ Desde `#787` (plataforma, 27-09; avisado en su buzón) el teléfono es OPCIONAL en el alta: vacío ya no falla.
-        // Para seguir con cuatro campos en rojo va DEMASIADO LARGO (`max:30`), que es la regla que le queda.
-        // ⚠️ Y desde `#853` (plataforma, 29-09; avisado en su buzón) la CONTRASEÑA también es opcional (el acceso con
-        // código): va DEMASIADO CORTA (`min:8`), la regla que le queda mientras el alta la admita (hasta la A5).
+        // ⚠️ Desde la A4a los cuatro son los que el formulario del cajón puede provocar —hasta entonces iban el teléfono
+        // DEMASIADO LARGO y la contraseña DEMASIADO CORTA, que ya no manda—: sin nombre, un correo que no lo es, un
+        // cumpleaños de MENOR (el titular es adulto, `BirthDatePolicy`) y el descargo sin aceptar donde es obligatorio
+        // (modo interno con un texto publicado).
+        Setting::updateOrCreate(['key' => 'waiver.mode'], ['value' => 'interno', 'group' => 'waiver']);
+        Setting::flushMemo();
+        app(LegalDocumentPublisher::class)->publish('waiver', [
+            'es' => ['title' => 'Exención', 'body' => [['h' => 'Riesgo', 'p' => 'Saltar implica riesgos.']]],
+        ]);
+
         $api = ['register' => [
             'status' => 422,
-            'body' => $this->postJson('/api/v1/auth/register', ['phone' => str_repeat('6', 31), 'password' => 'corta'])->assertStatus(422)->json(),
+            'body' => $this->postJson('/api/v1/auth/register', [
+                'email' => 'no-es-un-correo', 'born_on' => now()->subYears(10)->toDateString(),
+            ])->assertStatus(422)->json(),
         ]];
 
         // La precondición sigue viva y ahora se lee del MISMO 422 que consume el cajón: con un solo
@@ -626,8 +637,8 @@ class SidebarDomContractTest extends TestCase
     }
 
     /**
-     * El estado de cliente del paso 5: la pestaña activa y los DOS grupos de diccionario que el
-     * montaje inyecta.
+     * El estado de cliente del paso 5: la cara de la puerta (`email`, `code` o `register`, desde la A4a) y los DOS grupos
+     * de diccionario que el montaje inyecta.
      *
      * ⚠️ `account` va con los dos textos legales **ya interpolados** —llevan un `<a href>` que compone
      * `route()` y el cajón los pinta con `v-html`—, y `auth` es el grupo de Laravel del que sale el
@@ -635,10 +646,10 @@ class SidebarDomContractTest extends TestCase
      *
      * @return array<string, mixed>
      */
-    private function identifyState(string $mode = 'login'): array
+    private function identifyState(string $stage = 'email'): array
     {
         return $this->clientState(step: 5) + [
-            'mode' => $mode,
+            'stage' => $stage,
             'account' => [
                 'login' => __('account.login'),
                 'register' => array_replace(__('account.register'), [
@@ -653,11 +664,11 @@ class SidebarDomContractTest extends TestCase
      * @param  array<string, mixed>|null  $registerErrors
      * @return array<string, mixed>
      */
-    private function identifyProps(string $mode = 'login', ?array $registerErrors = null): array
+    private function identifyProps(string $stage = 'email', ?array $registerErrors = null): array
     {
         return [
-            'mode' => $mode,
-            'loginErrors' => ['global' => '', 'fields' => []],
+            'stage' => $stage,
+            'entryErrors' => ['global' => '', 'fields' => []],
             'registerErrors' => $registerErrors ?? ['summary' => [], 'fields' => []],
             'submitting' => false,
             'form' => [],

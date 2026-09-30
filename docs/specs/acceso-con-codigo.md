@@ -1,12 +1,13 @@
 # [SPEC] Entrar con un código al correo — la contraseña del cliente se retira
 
-> Estado: ✅ aprobada (29-09: el owner contestó el §7) → **A1 ✅** (§4.8) · **A2 ✅** (§4.9) · **A3 ✅** (§4.10), sigue la A4
-> (SPA) · Última actualización: 2026-09-30 ·
+> Estado: ✅ aprobada (29-09: el owner contestó el §7) → **A1 ✅** (§4.8) · **A2 ✅** (§4.9) · **A3 ✅** (§4.10) · **A4a ✅**
+> (SPA, §4.11), sigue la A4b · Última actualización: 2026-10-01 ·
 > Decisiones: `#847` (el owner: código al correo y Google; fuera la contraseña) · `#848` (el §7: una sola puerta, borrar
 > las contraseñas, 90 días, solo el código) · `#849` (corrige el 1: el registro NO espera al código, hay cola en la puerta) ·
 > `#853`/`#854` (la A1: el código en el servidor; el dispositivo recordado y `RGPD-06`) · `#855` (la A2a: reconfirmar con
 > un código; cada sesión atada al token) · `#856` (la A2b: el correo nuevo con su código, y a su buzón) · `#857` (la A3,
-> con las piezas de la isla: el owner) ·
+> con las piezas de la isla: el owner) · `#810` (la A4a: recuperar sigue hasta la A4b, solo con sesión; `register` lleva a
+> la puerta) · `#811` (el `CodeInput` del diseño en el cajón; donde choca con el servidor, manda el servidor) ·
 > Carril: plataforma (el servidor, el contrato y la isla); el cajón, del SPA por buzón.
 
 ## §0 · Antes de tocar
@@ -25,8 +26,9 @@
   alta de hoy (`#31`): la acotan los límites de §4.2.
 - **Estado**: ✅ aprobada (`#848`). **A1 ✅** (29-09, `#853`/`#854`, §4.8) · **A2 ✅** (30-09, `#855`/`#856`, §4.9: reconfirmar
   con un código, cada sesión atada al token y el correo nuevo con su código) · **A3a ✅** (`#857`, §4.10: «Entra» y el alta
-  de la isla con el código; visto por el owner) · **A3b ✅** (los Ajustes de Mi cuenta con el código). Sigue la A4 (SPA):
-  al detalle en §4.11 (A4a entrar y alta; A4b Mi cuenta), sin código hasta el ojo del owner.
+  de la isla con el código; visto por el owner) · **A3b ✅** (los Ajustes de Mi cuenta con el código). La A4 (SPA), al
+  detalle en §4.11: **A4a ✅** (01-10, vista por el owner: entrar y alta en el cajón, con el `CodeInput` del diseño;
+  `#810`, `#811`); sigue la A4b (Mi cuenta con sesión).
 - **Invariantes**: `SEC-06` (se amplía al código), `RGPD-01` (la purga borra los códigos), `RGPD-06` (sin cambio de
   forma). Ningún fichero del `CRITICAL_RE`.
 
@@ -291,6 +293,40 @@ su banner REGENERADOS a propósito (`MANIFEST_REFRESH=1`, justificado en el comm
 sonda en el navegador (en la local sirve el cajón: sin fila `sidebar.shell`) leyendo los códigos de Mailpit, a 390 y 1280.
 **Por buzón a plataforma**: con la A4 en `main`, la A5 puede retirar la contraseña de los clientes; su `PLEGABLE_DE_ZONA`
 (`isla/cuenta/vista.js`) guarda una entrada `password` que se queda sin zona.
+
+**La A4a ✅** (30-09 noche → 01-10; el owner la vio en vivo: «buen trabajo, visto bueno»):
+- **La puerta** (`steps/EntryForm.vue`, en el paso 5 y en Mi cuenta): el correo y «Continuar»; con cuenta, la cara del
+  código en el mismo sitio: «Te hemos enviado un código de 6 cifras a …» (`role="status"`) con «Cambiar el correo» al lado,
+  el **`CodeInput` del diseño** (`#861`, `steps/CodeInput.vue` + `code-input.js`: seis casillas con su guion sobre un solo
+  campo `one-time-code` a 16 px, el foco en él, se comprueba solo con la sexta, se vacía tras un «no», la pista «Te llega
+  de {negocio}. Caduca en 10 minutos…» compuesta por el servidor y «Reenviar el código en 0:58» dentro, como texto hasta
+  poder), «Mantener la sesión…» sin marcar y «Entrar», apagado hasta tener las seis. El componente baja con su cara
+  (`defineAsyncComponent`). Donde el diseño choca con el servidor, manda el servidor (`#811`: 60 s y no 30, un «no» y no
+  tres, 10 minutos y no 15). Nuevo, el alta (`RegisterForm`) sin contraseña ni teléfono, con el correo a la vista y
+  «Cambiar el correo». «¿Querías decir…?» al salir del campo, con `import()`: 1,45 KiB que el motor no baja al abrir. La
+  lógica, en `login.js` (`runDoor`, `runCodeLogin`, `doorErrors`); la cara y la espera, en `stores/auth.js`.
+- **Fuera**: las pestañas (`AuthTabset`, `AuthTabs`), `LoginForm`, la zona `REGISTER` y sus textos (`register.cta`,
+  `login.password`, `login.forgot`), y del montaje `auth.failed` y `auth.password` (nadie los pintaba ya).
+- ✱ **Dos cambios sobre lo de arriba** (`#810`): (1) **`FORGOT` sigue hasta la A4b, solo con sesión**: la abre el aviso de
+  las cuatro acciones que aún piden contraseña (`NoPasswordHint`, de la A4b); sus textos viajan con lo personal y
+  `/recuperar-contrasena` abre la puerta. (2) **El nombre `register` lleva a la puerta** (`navigation.js::zoneFor`): los
+  cinco CTA de alta de la landing lo piden y es API del paquete; sin el alias, un invitado caía en el índice en blanco.
+- **Pesos**, medidos: el motor, 300,60 → 302,08 KiB (techo 303; el `CodeInput`, 2,23 KiB, y la sugerencia, 1,45, bajan
+  aparte); el montaje sin sesión, 2.742 → 2.558 B (techo 2.800 → 2.650: la A4a quitó 322 B y el `CodeInput` puso 138); con
+  sesión, 10.791 → 11.027 B (techo 10.900 → 11.100; la poda que falta es la de la A4b, `forgot` y la contraseña).
+- **Guardas**: los `node --test` de `login.js`, `stores/auth.js`, `register.js`, `code-input.js`, `navigation.js` y
+  `stores/account.js`; los árboles congelados de la puerta, **su cara del código** (nuevo, con el `CodeInput`), el alta y su
+  banner (con los cuatro «no» que ESTE formulario puede dar), regenerados a propósito; el montaje y el arranque por la API
+  (`SidebarMountTest`, `SidebarBootTest`, la pista compuesta); el cursor, declarado en `MotionBudgetTest`; arnés
+  `scripts/mutar-cajon-a4a.sh` **44/44**; `scripts/sonda-cajon-a4a.mjs` (27 puntos a 390 y a 1280: el cableado, la
+  comprobación sola con la sexta —también repitiendo el mismo código, con su control—, la cookie de recordar solo con la
+  casilla, el alta sin esperar). Las seis sondas que entraban con contraseña entran con el código por una pieza común,
+  `scripts/entrar-con-codigo.mjs`.
+- ⚠️ **Trampas medidas**: (1) la local sirve la landing de la INSTANCIA con `cajon.css`, no con `site.css`: un cambio en
+  `site.css` no se ve hasta regenerar la hoja (`python3 scripts/hoja-del-cajon.py --aplicar`), y el control de la sonda
+  sobre `site.css` no mordía por eso. (2) La casilla del descargo del alta llega con `GET /legal/waiver`, después de
+  pintarse: mirarla al rellenar es una carrera (la perdió una corrida de tres a 390); la sonda lo sabe por el servidor.
+  (3) La cuenta de pruebas tiene menores: tras entrar en la compra vuelve al carrito a asignarlos (`#202`), no a «Pagar».
 
 ## 5. Impacto en invariantes
 

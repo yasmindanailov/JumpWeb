@@ -8,6 +8,8 @@ use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\CustomerAccountContext;
+use App\Domain\Identity\Services\LoginCodes;
+use App\Domain\Platform\Models\Setting;
 use App\Http\Middleware\SetLocale;
 use App\Http\Sidebar\SidebarEntry;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -225,7 +227,13 @@ class SidebarMountTest extends TestCase
 
         // ⚠️ `eyebrow` sale de la lista en `#566`: las cinco pantallas de auth pierden su antetítulo
         // (grieta 12), así que pedirlo aquí sería exigir un texto que ya no pinta nadie.
-        foreach (['cta', 'title', 'email', 'password', 'remember', 'submit', 'submitting'] as $key) {
+        // ▶ Desde la A4a (`acceso-con-codigo.md` §4.11) el paso es la PUERTA con código: sin `password`, y con las dos
+        // caras (el correo y el código) que pinta `EntryForm`.
+        foreach ([
+            'cta', 'title', 'intro', 'email', 'continue', 'sending', 'suggest',
+            'code', 'code_hint', 'code_sent', 'code_resent', 'code_again', 'code_again_in', 'code_wrong',
+            'remember', 'change_email', 'submit', 'submitting',
+        ] as $key) {
             $this->assertNotSame(
                 '', (string) ($boot['account']['login'][$key] ?? ''),
                 "El montaje no lleva `account.login.{$key}`, así que ese rótulo se pintaría VACÍO: ".
@@ -233,11 +241,19 @@ class SidebarMountTest extends TestCase
             );
         }
 
-        $this->assertNotSame('', (string) ($boot['account']['register']['cta'] ?? ''), 'falta el rótulo de la pestaña de registro');
+        // ⚠️ **La pista del código viaja YA COMPUESTA** (el `CodeInput` del diseño, `#861`): quién manda el correo y cuánto
+        // dura el código los sabe el servidor. Sin componer, el cajón pintaría «Te llega de :site» tal cual.
+        Setting::updateOrCreate(['key' => 'business.name'], ['value' => 'Parque Prueba', 'group' => 'business']);
+        Setting::flushMemo();
+        $hint = (string) ($this->bootPayload()['account']['login']['code_hint'] ?? '');
+        $this->assertStringContainsString('Parque Prueba', $hint, 'la pista no nombra al negocio que manda el correo');
+        $this->assertStringContainsString((string) LoginCodes::TTL_MINUTES.' minutos', $hint, 'la pista no dice lo que dura el código de verdad');
+        $this->assertStringNotContainsString(':', $hint, 'la pista viaja con un marcador sin sustituir');
 
-        foreach (['failed', 'throttle'] as $key) {
-            $this->assertNotSame('', (string) ($boot['auth'][$key] ?? ''), "El montaje no lleva `auth.{$key}`.");
-        }
+        // ▶ Del grupo `auth`, solo la espera del limitador desde la A4a: `failed` era el «no» de la contraseña (el del
+        // código es `login.code_wrong`) y `password` no lo leía nadie.
+        $this->assertSame(['throttle'], array_keys($boot['auth'] ?? []), 'el grupo `auth` ha dejado de estar podado a lo que el cajón pinta');
+        $this->assertNotSame('', (string) $boot['auth']['throttle'], 'El montaje no lleva `auth.throttle`.');
     }
 
     /** Y lleva TODO lo que el formulario de ALTA pinta: una clave que falte se pinta VACÍA y nada avisa. */
@@ -248,8 +264,11 @@ class SidebarMountTest extends TestCase
         foreach ([
             // ⚠️ `eyebrow` fuera desde `#566` (grieta 12); `privacy_read` entra con él: es el rótulo
             // de la fila que abre la política, y sin él en el payload la fila se pinta MUDA.
-            'cta', 'title', 'subtitle', 'name', 'email', 'phone', 'password',
-            'password_hint', 'privacy_notice', 'privacy_read', 'submit', 'submitting', 'leave_blank', 'fix_errors',
+            // ▶ Sin `phone`, `password` ni sus pistas desde la A4a (`acceso-con-codigo.md` §4.11): el alta del cajón ya no
+            // los pide (la contraseña se fue; el teléfono lo pide el paso de pagar cuando hace falta, `#787`). Ni `cta`, que
+            // rotulaba su pestaña.
+            'title', 'subtitle', 'name', 'email',
+            'privacy_notice', 'privacy_read', 'submit', 'submitting', 'leave_blank', 'fix_errors',
             // El botón de Google y el «o» que lo separa del formulario (T8·d): sin el segundo, la raya
             // se pinta con un hueco en medio y nadie avisa — `i18n.js` devuelve cadena vacía.
             'google_cta', 'or',
@@ -343,9 +362,9 @@ class SidebarMountTest extends TestCase
         // ahorra: la landing anónima es la ruta de más tráfico del sitio —la que `PERF-02` protege— y
         // un invitado **no puede abrir** esa sección. Medido: son ~660 B por página que no pintaban
         // nada (`specs/area-cliente.md`).
-        // ⚠️ **`forgot` entra el 2026-08-23 y viaja SIN sesión a propósito**
-        // (`specs/auth-en-cajon.md` §4.1): las tres pantallas de auth son precisamente las que ve
-        // quien NO ha entrado, así que podarlas al invitado las dejaría con los rótulos en blanco.
+        // ⚠️ **`forgot` entró el 2026-08-23 SIN sesión, y desde la A4a sale de aquí** (`acceso-con-codigo.md` §4.11): se
+        // entra con un código, así que ni la compra ni la puerta ofrecen recuperar la contraseña, y `/recuperar-contrasena`
+        // abre la puerta. Con sesión viaja (la abre el aviso de las cuatro acciones que aún la piden, hasta la A4b).
         // ⚠️⚠️ **`nav` y `sidecart` entran el 2026-08-23 y viajan SIN sesión a propósito**
         // (`specs/account-context-vue.md` §4.12): son los rótulos del bloque de cuenta, que desde hoy
         // pinta Vue y **cambia de cara sin recargar**. Quien entra en el paso 5 del embudo tiene en
@@ -356,7 +375,7 @@ class SidebarMountTest extends TestCase
             // ⚠️ `close` entra en F4 · T3b, y es la única clave que NO pinta una pantalla del cajón: es el
             // nombre accesible de la × de la CARCASA. Desde esa tanda el paquete puede CONSTRUIR la carcasa en
             // una página que no la trae, y quien diseña esa landing no tiene de dónde sacar ese rótulo. 7 bytes.
-            ['close', 'login', 'register', 'forgot', 'nav', 'sidecart', 'account', 'verify'], array_keys($boot['account'] ?? []),
+            ['close', 'login', 'register', 'nav', 'sidecart', 'account', 'verify'], array_keys($boot['account'] ?? []),
             'el montaje anónimo lleva textos que solo pinta quien ha iniciado sesión'
         );
 
@@ -373,19 +392,19 @@ class SidebarMountTest extends TestCase
                 // de auth pierden su antetítulo —era la costura del modal del que se mudaron— y el
                 // canvas solo había contado tres. Con él se va el `array_replace` que interpolaba el
                 // `:url` de `privacy_notice`.
-                'cta', 'title', 'subtitle', 'name', 'email', 'phone',
-                // ⚠️ **`phone_hint` viaja con su campo** (`#561`, grieta 14 del canvas): el teléfono es
-                // obligatorio y el alta lo pedía **sin decir para qué**, mientras el paso de pagar sí lo
-                // hacía. El ORDEN lo fija `lang/*/account.php`, y ahí va pegada a `phone` por lo mismo.
-                'phone_hint',
+                // ⚠️ **Sin `phone`, `phone_hint`, `password` ni `password_hint` desde la A4a** (`acceso-con-codigo.md`
+                // §4.11): el alta del cajón ya no pide contraseña (se entra con un código) ni teléfono (lo pide el paso
+                // de pagar cuando el pedido lo exige, `#787`). Siguen en `lang/`: las lee el servidor. Y sin `cta`, el
+                // rótulo de la pestaña «Crea tu cuenta»: las pestañas se fueron con la A4a.
+                'title', 'subtitle', 'name', 'email',
                 // TP·1 (`#792`): la fecha de nacimiento, OPCIONAL, y su pista (para qué se pide). Las pinta
                 // `steps/BornOnField.vue` en el alta, en la pantalla tras Google y en «Tus datos».
-                'born_on', 'born_on_hint', 'password',
+                'born_on', 'born_on_hint',
                 // ⚠️ **`privacy_read` entra con la FILA** (`#566`, grieta 13): el enlace de la política
                 // salió de su frase a un control propio de 48 px, y su rótulo tiene que viajar o la
                 // fila se pinta muda (`t()` devuelve cadena vacía sin fallar, `#333`).
                 // `waiver_hint` entra con la pista del descargo junto a su casilla (`#588`).
-                'password_hint', 'accept_waiver', 'waiver_hint', 'waiver_read', 'privacy_notice', 'privacy_read',
+                'accept_waiver', 'waiver_hint', 'waiver_read', 'privacy_notice', 'privacy_read',
                 'submit', 'submitting', 'fix_errors', 'leave_blank',
                 // ⚠️ **`google_cta` viaja SIEMPRE y su PANTALLA no** (`#343`): el rótulo lo pintan las
                 // dos pestañas de auth, que las ve quien no tiene sesión, así que no hay condición
@@ -414,6 +433,13 @@ class SidebarMountTest extends TestCase
         $this->assertArrayHasKey('google', $atDoor['account'] ?? [], 'la pantalla de Google no recibe sus textos en su propia puerta');
         $this->assertArrayHasKey('title', $atDoor['account']['google'] ?? []);
         $this->assertArrayHasKey('expired', $atDoor['account']['google'] ?? []);
+
+        // ⚠️⚠️ **Y, desde la A4a, RECUPERAR la contraseña no viaja sin sesión en NINGUNA página** (`acceso-con-codigo.md`
+        // §4.11), ni en la que fue su puerta: `/recuperar-contrasena` abre la puerta del código. Su CONTROL, con sesión, en
+        // `test_the_mount_payload_of_a_signed_in_customer_is_pruned_key_by_key` (la lista de claves la lleva).
+        $this->assertArrayNotHasKey('forgot', $boot['account'] ?? [], 'recuperar la contraseña viaja sin sesión, y sin sesión ya no se ofrece');
+        $atOldDoor = $this->bootPayload((string) $this->get('/recuperar-contrasena')->assertOk()->getContent());
+        $this->assertArrayNotHasKey('forgot', $atOldDoor['account'] ?? [], '`/recuperar-contrasena` sigue mandando los textos de una zona que ya no abre');
 
         // ⚠️⚠️ **`account.title` viaja SIN sesión, y es el rótulo de uno de los botones del
         // bloque.** Sin él, quien entra en el paso 5 y vuelve al catálogo vería ese botón **en
@@ -549,8 +575,20 @@ class SidebarMountTest extends TestCase
         // ▶ **Y lo que NO sube es la pantalla**: los ~380 B del subgrupo `google` viajan **solo en su
         // puerta** (`/registro/google`), porque a esa zona no se llega sin volver de Google. El caso
         // de arriba lo fija con su control. Quedan 31 B de holgura.
+        //
+        // ⚠️ **2.800 → 2.500 el 2026-09-30, y BAJA: la A4a (entrar con un código, `acceso-con-codigo.md` §4.11) quitó más
+        // de lo que puso.** Medido (español, la misma composición que este caso): **2.742 → 2.420 B (−322)**. Entran los
+        // rótulos de la puerta y del código (`login`, 208 → 585 B); salen `forgot` entero (410 B: sin contraseña para
+        // entrar, sin sesión ya no se ofrece recuperarla), del alta la contraseña, el teléfono, sus pistas y la pestaña
+        // (`register`, 976 → 796 B) y de `auth` lo que no pinta nadie (176 → 77 B). Con 2.800 sobraban 380 B, y *un techo
+        // con margen sobrante deja de apretar*: **2.500 deja 80**.
+        // ▶ **2.500 → 2.650 en la misma A4a: el `CodeInput` del diseño** (`#861`). Medido **2.420 → 2.558 B (+138)**: la pista
+        // de quién manda el código y cuánto dura (`login.code_hint`, compuesta por el servidor) y los textos del código del
+        // diseño («Código de 6 cifras», «Reenviar el código», «El anterior ya no vale»). ⚠️ **Se buscó poda y no la hay**: la
+        // puerta y el alta tienen que viajar para todos —la sesión que caduca con el cajón abierto vuelve a la puerta SIN
+        // recargar (`AccountSection::signIn`)—. **2.650 deja 92**, la holgura de siempre.
         $this->assertLessThan(
-            2800, $anonBytes,
+            2650, $anonBytes,
             "Los textos de auth del montaje anónimo pesan {$anonBytes} B. Es un presupuesto, no un ".
             'objetivo: si hace falta subirlo, súbelo a propósito sabiendo que viaja en cada página.'
         );
@@ -575,7 +613,9 @@ class SidebarMountTest extends TestCase
         // revés que `orders`: son 8 rótulos y la pantalla los usa todos, así que podarlo clave a
         // clave sería mantenimiento sin ahorro. Que esté en esta lista es lo que impide que crezca
         // en silencio hasta ser el `__('account.orders')` de conveniencia que esta guarda persigue.
-        $this->assertSame(['close', 'login', 'register', 'forgot', 'nav', 'sidecart', 'account', 'verify', 'orders', 'purchases'], array_keys($boot['account'] ?? []));
+        // ▶ `forgot` va AL FINAL desde la A4a: con sesión viaja con lo personal (la salida de las acciones que aún piden
+        // contraseña), y `array_replace` añade detrás lo que el anónimo ya no trae.
+        $this->assertSame(['close', 'login', 'register', 'nav', 'sidecart', 'account', 'verify', 'orders', 'purchases', 'forgot'], array_keys($boot['account'] ?? []));
         // ⚠️ `guest_minors` entra con la T3 del justificante (`#337`) y **la pantalla lo pinta**:
         // `GuestMinorsPanel.vue` usa sus cinco rótulos —el contador, la capacidad, los dos estados de
         // excepción y la frase del enlace—. Esta guarda es justo la que obliga a comprobarlo: crecer
@@ -977,8 +1017,17 @@ class SidebarMountTest extends TestCase
         // viene al parque» a «Para conocer mejor a nuestro público» (−16 B). Viaja en `register` porque el alta la pinta
         // SIN sesión, y «Tus datos» la reutiliza en vez de traer una segunda copia. **10.900 deja 64 B.** El 29-09 el owner
         // la dejó en «Tu cumpleaños» con solo «Opcional», como la isla: el techo no baja (es un presupuesto, no una medida).
+        // ▶ **La A4a (entrar con un código, 30-09) cabe SIN subirlo**: medido **10.791 → 10.889 B (+98)**. Entran los
+        // diecisiete rótulos de la puerta y del código (`login`, +377 B), todos con quien los pinta (`EntryForm`). ⚠️ **Se
+        // podó antes, y es lo que la hace caber**: del alta, la contraseña, el teléfono, sus pistas y la pestaña (−180 B),
+        // y de `auth`, `failed` y `password`, que ya no pinta nadie (−99 B). `forgot` no cambia aquí: con sesión viaja
+        // igual (la abre el aviso de las acciones que aún piden contraseña), solo que con lo personal. **Deja 11 B**; la A4b
+        // quita `forgot`, `account.password` y el aviso.
+        // ▶ **10.900 → 11.100 con el `CodeInput` del diseño** (`#861`, la misma A4a): medido **10.889 → 11.027 B (+138)**, los
+        // mismos textos que en el montaje anónimo, y por lo mismo: viajan para todos. La poda que falta es la de la A4b
+        // (`forgot`, 410 B, más `account.password` y el aviso). **11.100 deja 73 B.**
         $this->assertLessThan(
-            10900, $bytes,
+            11100, $bytes,
             "Los textos del montaje con sesión pesan {$bytes} B. Poda antes de subir el techo: el ".
             'grupo `account` entero son 9,6 kB, y la diferencia la paga cada página que el cliente abre.'
         );

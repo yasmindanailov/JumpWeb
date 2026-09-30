@@ -4,10 +4,12 @@ import { ref } from 'vue';
 /**
  * **Un campo de contraseña con su botón de mostrar/ocultar.**
  *
- * ⚠️ **Existe porque el mismo bloque estaba ESCRITO DOS VECES** —`LoginForm` y `RegisterForm`— y la
+ * ⚠️ **Existe porque el mismo bloque estaba ESCRITO DOS VECES** —el login y el alta— y la
  * tanda 2 iba a añadir dos más (la contraseña actual y la nueva, en la zona de cambiarla). Cuatro
  * copias de dieciséis líneas con dos `<svg>` dentro: la clase de duplicación que nadie arregla entera
  * el día que el icono cambia.
+ * ▶ Desde la A4a (`acceso-con-codigo.md` §4.11) ya no lo usan ni entrar ni el alta —se entra con un código al correo—;
+ * queda en las cuatro pantallas que aún reconfirman con la contraseña, y se va con ellas en la A4b.
  *
  * ⚠️⚠️ **El árbol que emite es EXACTAMENTE el de antes**, y eso no es una aspiración: lo verifican
  * `SidebarDomContractTest` y las dos paridades de auth, que comparan el árbol renderizado contra un

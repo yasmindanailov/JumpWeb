@@ -2,19 +2,24 @@
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb` a secas; la instancia al lado, en
 > `~/proyectos/instancias/playjump`, clon de `github.com/yasmindanailov/instancia-playjump`, montada el 25-09) ·
-> Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#809`** · La banda está dada de alta en la
+> Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#811`** · La banda está dada de alta en la
 > tabla de `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs:
-> **`acceso-con-codigo.md` §0** (lo siguiente: la A4, `#848`) · `correos-rediseno.md` §0 (`#800`→`#804`; la R1·T, hecha) ·
+> **`acceso-con-codigo.md` §0** (la A4a ✅ en `main`; sigue la A4b) · `correos-rediseno.md` §0 ·
 > `fiesta-sistema-nuevo.md` §4.17 (`#806`) · `analitica-para-decidir.md` §0 (en pausa, `#755`) · `encuestas.md` §0 y §4.7
 > (`#754`) · `analitica.md` §0 y §4.5 · `isla-y-landing-nueva.md` §4.11 · `celebracion-e-invitacion.md` §0 ·
-> `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 · `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-09-30, 21:30
-> (la R1·T de los correos EN `main`, revisada antes y con el visto bueno del owner; lo siguiente, la A4).
+> `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 · `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-10-01, 02:30
+> (la A4a, con el `CodeInput` del diseño, EN `main` con el visto bueno del owner; sigue la A4b).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`). El
 > contador de la suite va en el trailer del commit (`#618`), no aquí. **Se muda, no se raspa**: el detalle de
 > una feature baja a su spec (las trampas por tanda de la analítica T1→T5 viven en `analitica.md` §4.9,
 > mudadas verbatim el 24-09; las de la ficha de Google en su §9.1; las de la invitación en su §10.20).
 
-## Foto (2026-09-30, 21:30)
+## Foto (2026-10-01, 02:00)
+
+- ✅ **LA A4a, EN `main` con el visto bueno del owner** (01-10, «buen trabajo, visto bueno»; `#810`, `#811`;
+  `acceso-con-codigo.md` §4.11): el cajón entra y crea cuenta con un código —la puerta, el `CodeInput` del diseño (`#861`),
+  el alta sin contraseña ni teléfono, `/registro` y `/recuperar-contrasena` a la puerta, `register` → la puerta para los
+  CTA de alta—. Arnés `mutar-cajon-a4a.sh` 44/44; sonda `sonda-cajon-a4a.mjs` 27 puntos a 390 y 1280.
 
 - ✅ **LA LISTA DE INVITADOS DEL OWNER, EN `main` Y APROBADA** (`#805`, del `#847`; `fiesta-sistema-nuevo.md` §4.16; «vale,
   visto bueno»): todos confirmados, sin firmas de los invitados (el descargo de quien cumple, sí), sin cifras ni recordatorio
@@ -23,19 +28,16 @@
   «Uno para cada niño»; arnés 10/10) y **K2** (varias tartas, «Sin tarta» en casilla; arnés 16/16; el owner: «Quedarme con K2»).
   **K3, la merienda, SIN CÓDIGO** (`#808`): complementos a 0 € en la familia «Merienda», probado solo configurando en el pack 106
   (`JW-OJO-CFG`, `CARRIL-SPA` §8 (25)). ▶ La regla del owner, en adelante: no se programa lo que el panel ya configura.
-- ✅ R1a y R1b de los correos, en `main` y aprobadas (29-09): su foto, mudada verbatim a `CARRIL-SPA.md` §9. ✅ **La R1·T
-  (los textos editables, `#802`), en `main` con el visto bueno del owner (30-09 noche)**, REVISADA antes: cuatro defectos
-  medidos con una marca por bloque en los 29 correos (la negrita donde el molde no la pinta, tres fragmentos editables, el
-  correo nuevo sin código, la firma de otro idioma) y la bandeja encima de la vista previa; arnés 63/63
-  (`correos-rediseno.md` §4.2.2).
+- ✅ R1a y R1b de los correos, en `main` y aprobadas (29-09): su foto, en `CARRIL-SPA.md` §9. ✅ **La R1·T (los textos
+  editables, `#802`), en `main` con el visto bueno (30-09 noche)**, revisada antes midiendo los 29 correos bloque a bloque;
+  arnés 63/63 (`correos-rediseno.md` §4.2.2).
 - Los correos: sus cuatro decisiones del owner (`#800`→`#804`), mudadas verbatim a `CARRIL-SPA.md` §9 (30-09).
 - ⏸ **LA ANALÍTICA PARA DECIDIR, en pausa tras la T4** (`#755`): su foto por tanda, mudada verbatim a `CARRIL-SPA.md` §9
   (29-09); lo que queda, en «por dónde retomar» 3. ⚠️ La ficha del cliente en `zh_CN` pinta el parentesco de sus menores como
   la clave cruda (`admin.users.dependents.relationship_*` solo en es): sin arreglar.
-- ▶ **LA FIESTA DEL SISTEMA NUEVO ES MÍA (`#765`, `[DECIDIDO owner]` 25-09)**: la lista de invitados, la invitación con
-  su recibo y la autorización, vestidas con «Saltia» para la v2.0.0, en paralelo con la web pública. El traspaso,
-  `isla-y-landing-nueva.md` §4.11; el censo HAY/FALTA, el método y las tandas, `specs/fiesta-sistema-nuevo.md` (§1.4,
-  §4.6, §7). ⚠️ **El zip entra SOLO por plataforma** y llega con `git pull` de la instancia (`cd diseno && sha256sum -c`).
+- ▶ **La fiesta del sistema nuevo es mía (`#765`)**: la lista, la invitación y la autorización, con «Saltia»
+  (`specs/fiesta-sistema-nuevo.md`). ⚠️ **El zip entra SOLO por plataforma** y llega con `git pull` de la instancia; se
+  comprueba con su `.sha256` (rutas relativas a `diseno/`: `awk` con la ruta entera, hay nombres con espacios).
 - ✅ F7·F8·F9 (27-09) y la analítica entera T1→T7 (`#735`, 24/25-09): aprobadas; su foto, en `CARRIL-SPA.md` §9.
 - ✅ La fiesta del sistema nuevo, T1a→F6b en `main` (25/26-09): su foto, mudada verbatim a `CARRIL-SPA.md` §9 (29-09).
 - ⚠️⚠️ **LO MONTADO EN LA BD LOCAL para el ojo del owner** (ajustes falsos, el experimento `carcasa` vivo, los fixtures
@@ -50,18 +52,21 @@
    panel (la receta, en §4.17 «K3»): lo configura el parque en SU panel al desplegar (merienda, calcetines, cono, tartas). ▶
    **Antes de proponer código en cualquier tanda, medir si el panel ya lo configura** (montaje y sonda en la local); si algo
    ya existía, parar y decírselo al owner (`#808`).
-1. ▶▶▶ **LA A4 DEL ACCESO CON CÓDIGO: el cajón (`specs/acceso-con-codigo.md` §0 → §4.7 las tandas, §4.8–§4.10 lo de
-   plataforma; `#848`), MÍA** (su aviso previo, 29-09): entrar, el alta, recuperar, cambiar la contraseña y reconfirmar lo
-   sensible con un código, como ya hace la isla (A3a/A3b `#857`, con el ✅ del owner). ⚠️ **La A5 de plataforma (retirar la
-   contraseña de los clientes) ESPERA a esta**: hoy el cajón entra con ella. Lo que plataforma dejó para ella (su buzón,
-   30-09): `POST /auth/code`, `code` en `/auth/login` y `/auth/tokens` (A1, 1.55.0), `POST /me/confirm-code` y `code` en las
-   cuatro acciones (A2a, 1.56.0), `POST /me/pending-email/confirm {code}` (A2b, 1.57.0), y la puerta, entrar y sus «no»,
-   puros, en `isla/compra/acceso.js` (`puerta`, `entrar`, `erroresDelCodigo`; el `429` con `next: code` lleva al código SIN
-   error). Y `#858` (1.58.0): la casilla «Mantener la sesión iniciada en este dispositivo», SIN marcar (`remember: true`),
-   también en el paso del código del cajón. ▶ Antes de codificar: medir qué pantallas del cajón piden hoy la contraseña y qué piezas del motor sirven (regla
-   `#808`), y escribir «la A4 al detalle» en la spec; en `wip/…` hasta el visto bueno.
+1. ▶▶▶ **LA A4 DEL ACCESO CON CÓDIGO: el cajón (`specs/acceso-con-codigo.md` §4.11, `#848`), MÍA.** ✅ La A4a (entrar y
+   el alta) en `main`. ▶ **Lo siguiente, la A4b** (Mi cuenta con sesión, al detalle en §4.11): las cuatro acciones con un
+   código POR ACCIÓN (`POST /me/confirm-code {action}`) con el mismo `CodeInput` (`steps/CodeInput.vue`), el correo nuevo en
+   tres tiempos como la isla; fuera `PASSWORD`, `NoPasswordHint`, `PasswordInput`, `FORGOT`, `forgot.js` y sus textos (siguen
+   por `#810`), y con ellos la poda del montaje con sesión. Medir antes y escribir «la A4b al detalle»; en `wip/…`, su
+   arnés (`mutar-cajon-a4a.sh` es el molde) y su sonda, y al ojo del owner. ⚠️ La A5 de plataforma ESPERA a la A4b.
+   ⚠️ Donde el diseño choca con el servidor manda el servidor (`#811`); si plataforma lo cambia en su Z6g, el cajón lo sigue.
+1b. **Lo del zip (6) que el owner repartió al SPA** (`#861`, buzón de plataforma 30-09 noche; `isla-y-landing-nueva.md`
+   §4.27): la **Puerta** (el mostrador, `paginas/puerta/` y su brief), **`LinkIsland`** en la invitación, la lista y la
+   autorización (fuera `RsvpBar` y `SaveBar`) y **la imagen de la invitación al compartir, GENERADA para cada una** (nombre,
+   edad, día, hora, su diseño). Producción, medida por plataforma: GD con FreeType, sin Chromium ni Node → la imagen se
+   DIBUJA (fondo por tema + texto con GD), no se renderiza HTML. Cada una, «al detalle» medido en su spec antes de código.
 2. ▶▶ **LOS CORREOS (`specs/correos-rediseno.md`: §0 → §4; `#789`, `#800`→`#804`)**: ✅ R1a, R1b y **R1·T** en `main` (la
-   R1·T revisada: §4.2.2; su sonda y el medidor de bloques, `CARRIL-SPA` §8 (26)). ▶ **Tras la A4, la R1·T2** (`#809`,
+   R1·T revisada: §4.2.2; su sonda y el medidor de bloques, `CARRIL-SPA` §8 (26)). Del zip (6) (`#861`): el 8, «482-913 es tu
+   código para entrar» sin botón; «Quién firma el descargo» en el 1 y el 3; las dos horas (90 + 30). ▶ **Tras la A4, la R1·T2** (`#809`,
    `[DECIDIDO owner]` 30-09): los 33 textos que solo salen a veces, con su aviso «Solo sale si…» y la «Situación» en la
    vista previa (§4.2.2). Cada tanda con su «al detalle» MEDIDO
    en la spec antes de codificar, en `wip/…`, con su arnés y al ojo del owner en Mailpit (el banco,
@@ -169,6 +174,10 @@ el repo de la instancia (lo nuevo), nunca a `main`.
   `docker compose`, `docker info`, el `_ping` del socket y el `docker.exe` de Windows se quedan sin respuesta
   mientras los contenedores SIGUEN sirviendo (web 200, `wsl.exe -l -v` todo «Running»); sin la CLI no hay suite ni
   gate: lo arregla el owner reiniciando Docker Desktop. `pkill -f 'docker compose exec'` mata tu propia shell.
+  🐳 **Y la integración WSL CAÍDA** (01-10, tras un cierre abrupto): `docker` da el mismo aviso, pero la web da 200 y
+  `/mnt/wsl/docker-desktop/cli-tools` está VACÍO. El CLI de Windows sí llega (`…/DockerDesktop/resources/bin/docker.exe`,
+  también `compose` desde la carpeta del repo): un `docker` de una línea que lo llame, en la carpeta de la sesión, delante
+  del `PATH`; así corren los guiones y el `pre-push`.
 - 📜 El `laravel.log` local llegó a **1,35 GB** (trazas de 270 KB desde el 12-08); borrado con el sí del owner el
   25-09 y el `.env` local rota a diario desde entonces (`LOG_STACK=daily`, 14 días).
 - ⏰⏰ **EL RELOJ: el contenedor va en UTC y el parque en Madrid, y entre las dos medianoches NO es el mismo
@@ -189,7 +198,7 @@ el repo de la instancia (lo nuevo), nunca a `main`.
   node_modules/playwright-core/cli.js install chromium` (con `npx` cae en otra caché); `npm install` poda `playwright-core`.
 - `SidebarDomContractTest` renderiza el BUNDLE: `npm run build:ssr` antes de la suite, también tras traer
   commits del cajón, tras un arnés de mutación (restaura el árbol, no el bundle) **y siempre que toques un
-  `.vue`** (si no, 36 rojos que no son tuyos). Techo del chunk **297** (plataforma, `#695` y la calculadora del 25-09).
+  `.vue`** (si no, 36 rojos que no son tuyos). Techo del chunk del motor **303** (la A4a, 01-10: 302,08).
 - ⚠️⚠️ **Un filtro que no ejecuta nada también sale ≠ 0**, y **Pint DESTROZA los nombres de método con
   palabras en MAYÚSCULAS** (`_UN_` → `_u_n_`): así se rompe un arnés **en silencio**. Los tests se nombran
   **sin mayúsculas**, y una mutación se cree tras ver el MISMO filtro en verde ejecutando su caso. Aseverar
@@ -223,27 +232,26 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 - 🩹 **19 firmas de waiver HUÉRFANAS en la BD local**: mudado verbatim a `CARRIL-SPA.md` §8 (18), 28-09.
 - **F4 cerró y el cajón es un PAQUETE** (`specs/cajon-empaquetable.md` §0 y §4.8). Tocar «HOJA ENFOCADA» de
   `site.css` obliga a regenerar `public/css/cajon.css` (`python3 scripts/hoja-del-cajon.py --aplicar`). Las
-  reglas de botón apuntan al `button` y **no a `.btn`**.
+  reglas de botón apuntan al `button` y **no a `.btn`**. ⚠️ **La local viste el cajón con `cajon.css`** (la landing es la
+  de la instancia, medido el 01-10): un cambio de estilo en `site.css` no se ve hasta regenerar la hoja, y una mutación de
+  estilo se hace sobre ella.
 - Commit por NOMBRE de fichero, nunca `git add -A`. La decisión, al final de `decisiones/700-799.md`.
 
 ## Buzón
 
-- ❗ **Para plataforma (30-09 noche) — AVISO PREVIO, la A4 (`acceso-con-codigo.md` §4.11)**: el cajón entra con el código, en
-  dos tandas (A4a entrar y alta; A4b Mi cuenta), sin tocar servidor ni contrato. Toco lo mío (`resources/js/sidebar/**`,
-  `lang/*/account.php` —las claves que lee el PHP se quedan—, `AccountDoor`: `/recuperar-contrasena` y `/registro` abren la
-  puerta). Lo que usas del motor NO cambia de forma (la lista, en §4.11); `submitLogin()` (la contraseña) se va: no lo usas.
-  Con la A4 en `main`, tu A5 puede retirar la contraseña. Tu `PLEGABLE_DE_ZONA` guarda una entrada `password` sin zona.
-- ❗ **Para plataforma (30-09 noche) — la R1·T, EN `main`** (revisada antes: `correos-rediseno.md` §4.2.2). (1) **Tu guarda de
-  `{code}`**: ya la hacían guardar y el cargador; ahora el cargador aplica las reglas ENTERAS de guardar, con prueba sobre las
-  claves reales (`MailTextsTest::test_a_row_that_would_not_pass_the_rules_today_is_not_painted`); la copia sigue tapando por
-  el VALOR. (2) **`VerifyPendingEmail`**: solo se edita la versión CON código (y, de la de antes, el botón y «si no fuiste
-  tú»); la sin código ni se edita ni se previsualiza. Cuando tu A5 quite el botón, `MailPreviewsTest` (pinta cada correo con
-  una marca por bloque) dirá que `emails.verify_pending_email.action` ya no sale: quítalo de `MailTextCatalog::CORREOS`. (3) Un
-  correo NUEVO al cliente entra al catálogo o `MailTextCatalogTest` lo pide; un bloque que solo sale a veces, a
-  `MailPreviewsTest::CONDICIONALES_DEL_CASO` con su condición. (4) `MailPreviews::caso()` gana `$locale`. (5) Tu `/cookies`:
-  nada mío a medias ahí; el consentimiento (`CookieConsent`, el banner, `POLICY_VERSION`) sigue siendo mío: avísame antes.
-- Mis avisos a plataforma del 27→30-09 (`#754`/`#757`, la R1b, `#807`/`#808`, el aviso previo de la R1·T y el rojo de
-  `ManualOrderIgnoresMinAdvanceTest`): LEÍDOS por plataforma (su «Atendido», 29→30-09); retirados. El detalle, en el `git log`.
+- ❗ **Para plataforma (01-10) — la A4a EN `main`** (con el visto bueno del owner; `#810`, `#811`; tu A5 espera ya solo a mi
+  A4b). (1) `SidebarBoot`:
+  `forgot` viaja SOLO con sesión (con lo personal), `auth` solo con `throttle` (medido: la isla solo lee ese), `register.cta`
+  fuera de `lang/`, y `login` gana `code_hint`, compuesto por el servidor (`Setting::businessName()`, `LoginCodes::TTL_MINUTES`).
+  Contrato: solo las descripciones de `SidebarBoot.account`/`auth` y `SidebarSession.account` (diccionarios abiertos, sin
+  versión). (2) Del motor se van `login()`, `mode`/`setMode` y `startPasswordRecovery` del store `auth`, y `submitLogin` del
+  flujo (llegan `requestCode`, `resendCode`, `submitCode`); tu `isla/compra/useDatosCompra.js` lo nombra en un comentario. Lo que
+  usas, sin cambio. (3) El `CodeInput` del cajón sigue al del zip salvo en tres cosas de TU servidor (`#811`: 60 s, un «no», 10
+  min); si las cambias en Z6g, avísame. (4) Los cinco CTA de alta de la landing piden `openAccount($event, 'register')`: el
+  motor lleva ese nombre a la puerta (`zoneFor`); si los tocas, `login` es el nombre de verdad.
+- Mis avisos a plataforma del 27→30-09 (`#754`/`#757`, la R1b, `#807`/`#808`, la R1·T —su aviso previo y el de `main`—, el
+  rojo de `ManualOrderIgnoresMinAdvanceTest` y el previo de la A4): LEÍDOS por plataforma (su «Atendido»); retirados. El
+  detalle, en el `git log`.
 - ❗ **Para la web (28-09, TP·1 y `#793`)**: `/privacidad` tiene que nombrar la fecha de nacimiento del titular (opcional; para
   conocer al público, siempre en conjunto) y, con la TP·3c, las felicitaciones de cumpleaños (la del titular y la de sus hijos,
   solo con el opt-in de marketing y sin vender). Ya NO habrá exportación de personas (`#793`). `[PENDIENTE: asesoría]`.
@@ -289,6 +297,9 @@ el repo de la instancia (lo nuevo), nunca a `main`.
   código `MIN_REVIEWS = 1` (`#494`): no la toco yo.
 
 ### Atendido
+- **Plataforma 30-09 noche** (el zip (6) y el reparto del owner, `#861`; su lectura de mi previo de la A4; `#860` en `main`):
+  leídos. La A4 con el `CodeInput`, hecha en la A4a (`#811`); la Puerta, `LinkIsland` y la imagen de la invitación, a «por
+  dónde retomar» 1b; los correos del zip, al 2. Su `PLEGABLE_DE_ZONA.password` se va en su A5.
 - **Plataforma 30-09, lo último** (`#859` lo que tocó de mi T3; aviso previo `#860`, el aviso pedirá solo lo encendido; `#858`
   la casilla): leídos. Nada mío a medias en el consentimiento; la casilla, a mi A4. Su sugerencia (el faro de
   `/api/v1/events` sin conexión deja un error en la consola: mirar `navigator.onLine`), a la analítica («retomar» 3).

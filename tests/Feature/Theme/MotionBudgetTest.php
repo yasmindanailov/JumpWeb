@@ -37,6 +37,10 @@ class MotionBudgetTest extends TestCase
         '.map-pin' => 'el pin del mapa sin inserción (#279)',
         // ⚠️ La cinta del eslogan (`.brand-band__track`) se fue en la T6f (`#843`) con `/servicios` de la web vieja.
         '.catalog__item--feat .catalog__badge' => 'cajón: la chapa del catálogo',
+        // A4a (`acceso-con-codigo.md` §4.11): el `CodeInput` del diseño (`#861`) pinta su propio cursor, porque el campo de
+        // verdad es invisible encima de las casillas. Parpadea como el de cualquier campo, solo en la casilla activa y
+        // vacía, y con `prefers-reduced-motion` se queda quieto.
+        '.code-input__box.is-active:not(.is-filled)::after' => 'cajón: el cursor del código, el de un campo de texto',
         '.ic-b1 svg .flame' => 'cajón: la llama del icono b1',
         '.ic-b7 svg .pop' => 'cajón: el icono b7',
         '.ic-b7 svg .c1, .ic-b7 svg .c2, .ic-b7 svg .c3' => 'cajón: los trocitos del icono b7',

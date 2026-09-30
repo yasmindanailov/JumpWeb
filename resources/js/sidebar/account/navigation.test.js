@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { DEFAULT_ZONE, GUEST_ZONES, HOME_ENTRIES, ZONES, ZONE_PARENTS, ZONE_TITLE_KEYS, bringsOwnHeading, createNavigation, isGuestZone, isZone, parentZoneFor, titleKeyOf } from './navigation.js';
+import { DEFAULT_ZONE, GUEST_ZONES, HOME_ENTRIES, ZONES, ZONE_PARENTS, ZONE_TITLE_KEYS, bringsOwnHeading, createNavigation, isGuestZone, isZone, parentZoneFor, titleKeyOf, zoneFor } from './navigation.js';
 import { FUNNEL_STEPS, FUNNEL_TRANSITIONS } from '../machine.js';
 
 /**
@@ -159,22 +159,25 @@ describe('qué significa «volver» según por dónde se entró', () => {
     });
 
     /**
-     * ⚠️⚠️ **Crear cuenta NO se siembra, y hasta el 2026-08-23 sí** (`DECISIONES #125`, owner).
-     *
-     * `LOGIN` y `REGISTER` no son dos pantallas: son las dos caras de una, conmutadas por una barra
-     * de pestañas que las presenta al mismo nivel. Con la siembra, «Volver» desde «Crear cuenta»
-     * cambiaba de pestaña —mismo armazón, misma barra, otro formulario— y se leía como un botón que
-     * no hace nada.
-     *
-     * ⚠️ **Recuperar contraseña sigue sembrando, y la diferencia no es de gusto**: se llega a ella
-     * por un ENLACE dentro de «entrar», no por una pestaña, y no tiene sitio en la barra. Es una
-     * pantalla aparte de verdad.
+     * ⚠️⚠️ **Crear cuenta ya NO es una zona** (A4a de `acceso-con-codigo.md` §4.11, `#849`): es una cara de la puerta, a la
+     * que se llega cuando el correo es nuevo. Antes era la otra pestaña de entrar (`DECISIONES #125`), y ya entonces no se
+     * sembraba: «volver» desde ella no puede cambiar de cara, sale. Una URL vieja con esa zona no abre nada inventado.
      */
-    test('crear cuenta NO se siembra: es la otra cara de entrar, no una pantalla debajo', () => {
-        assert.equal(
-            parentZoneFor(ZONES.REGISTER), null,
-            'con entrar sembrada debajo, «volver» desde el alta cambia de pestaña en vez de salir del área',
-        );
+    test('crear cuenta ya no es una zona: es una cara de la puerta', () => {
+        assert.equal('REGISTER' in ZONES, false);
+        assert.equal(isZone('register'), false);
+        assert.equal(isGuestZone('register'), false);
+    });
+
+    /**
+     * ⚠️⚠️ **Pero su NOMBRE sigue llegando desde fuera, y lleva a la PUERTA**: los cinco CTA de alta de la landing piden
+     * `register` (`AccountDoorWiringTest`), y `openAccount(zona)` es API del paquete. Sin el alias caerían en el índice,
+     * que un invitado ve con los rótulos en blanco. Lo demás pasa tal cual (una zona que no existe la resuelve `reset()`).
+     */
+    test('el nombre de una zona retirada lleva a su sucesora, y el resto pasa tal cual', () => {
+        assert.equal(zoneFor('register'), ZONES.LOGIN);
+        assert.equal(zoneFor(ZONES.ORDERS), ZONES.ORDERS);
+        assert.equal(zoneFor('no-existe'), 'no-existe');
     });
 
     test('entrar no se siembra a sí misma', () => {
@@ -314,68 +317,6 @@ describe('la pila de retorno', () => {
     });
 });
 
-/**
- * **Conmutar de pestaña no es navegar** (`DECISIONES #125`, 2026-08-23).
- *
- * ⚠️⚠️ El síntoma que esto cierra tiene DOS causas, y arreglar una sola lo deja vivo: la siembra
- * (`parentZoneFor`) ponía «entrar» debajo del alta, y `go()` apilaba al pulsar la pestaña. Con
- * cualquiera de las dos, «Volver» desde «Crear cuenta» cambiaba de pestaña en vez de salir del área
- * — mismo armazón, misma barra, otro formulario—. Por eso los dos tienen caso propio.
- */
-describe('conmutar entre las dos caras de una pantalla', () => {
-    test('sustituye la cima en vez de apilar: la pila NO crece', () => {
-        const nav = createNavigation({ zone: ZONES.LOGIN });
-
-        assert.equal(nav.replace(ZONES.REGISTER), true);
-        assert.deepEqual(nav.trail, [ZONES.REGISTER]);
-        assert.equal(nav.canBack, false, '«volver» ha dejado de significar «sal del área»');
-    });
-
-    test('y por eso «volver» desde el alta SALE, en vez de cambiar de pestaña', () => {
-        const nav = createNavigation({ zone: ZONES.LOGIN });
-        nav.replace(ZONES.REGISTER);
-
-        assert.equal(nav.back(), false, 'quien llama traduce este false en salir del área');
-        assert.equal(nav.zone, ZONES.REGISTER, 'la zona no puede moverse sola al no haber a dónde volver');
-    });
-
-    test('ida y vuelta cien veces deja la pila donde estaba', () => {
-        const nav = createNavigation({ zone: ZONES.LOGIN });
-
-        for (let i = 0; i < 100; i++) nav.replace(i % 2 ? ZONES.LOGIN : ZONES.REGISTER);
-
-        assert.equal(nav.trail.length, 1, 'conmutar de pestaña ha hecho crecer la historia');
-    });
-
-    /**
-     * ⚠️ **Lo que hay DEBAJO no es suyo y no se toca.** Quien llegó a «entrar» desde recuperar
-     * contraseña —o por la puerta que la siembra— conserva su vuelta al conmutar de pestaña:
-     * sustituir la cima nunca puede borrar historia ajena.
-     */
-    test('conserva lo que hay debajo: no borra historia que no es suya', () => {
-        const nav = createNavigation();
-        nav.reset(ZONES.FORGOT, ZONES.LOGIN);
-        nav.back();
-
-        assert.deepEqual(nav.trail, [ZONES.LOGIN]);
-
-        nav.reset(ZONES.LOGIN, ZONES.HOME);
-        assert.equal(nav.replace(ZONES.REGISTER), true);
-
-        assert.deepEqual(nav.trail, [ZONES.HOME, ZONES.REGISTER]);
-        assert.equal(nav.back(), true);
-        assert.equal(nav.zone, ZONES.HOME);
-    });
-
-    test('conmutar a la zona en la que ya se está no cuenta, y una inventada se rechaza', () => {
-        const nav = createNavigation({ zone: ZONES.LOGIN });
-
-        assert.equal(nav.replace(ZONES.LOGIN), false);
-        assert.equal(nav.replace('inventada'), false);
-        assert.deepEqual(nav.trail, [ZONES.LOGIN]);
-    });
-});
-
 describe('salir y volver a entrar', () => {
     test('la historia se vacía: no se arrastra el recorrido de la visita anterior', () => {
         const nav = createNavigation();
@@ -410,10 +351,10 @@ describe('el encabezado propio de una zona', () => {
      * del paso 5 del embudo —que trae su propio `auth__title` porque allí no hay armazón— y la
      * sección ponía además el de la zona, con el MISMO literal.
      */
-    test('lo traen exactamente las tres pantallas de auth', () => {
+    test('lo traen exactamente las pantallas de auth: la puerta, recuperar y el alta de Google', () => {
         assert.equal(bringsOwnHeading(ZONES.LOGIN), true);
-        assert.equal(bringsOwnHeading(ZONES.REGISTER), true);
         assert.equal(bringsOwnHeading(ZONES.FORGOT), true);
+        assert.equal(bringsOwnHeading(ZONES.GOOGLE_SIGNUP), true);
     });
 
     /** Y ninguna otra: las zonas con sesión dependen del armazón para tener título. */
@@ -429,7 +370,7 @@ describe('el encabezado propio de una zona', () => {
      * rótulo.
      */
     test('pero su rótulo sigue existiendo', () => {
-        for (const zone of [ZONES.LOGIN, ZONES.REGISTER, ZONES.FORGOT]) {
+        for (const zone of [ZONES.LOGIN, ZONES.FORGOT]) {
             assert.ok(titleKeyOf(zone), `${zone} perdió su clave de rótulo`);
         }
     });

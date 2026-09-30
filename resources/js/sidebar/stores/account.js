@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { DEFAULT_ZONE, createNavigation, parentZoneFor } from '../account/navigation.js';
+import { DEFAULT_ZONE, createNavigation, parentZoneFor, zoneFor } from '../account/navigation.js';
 import { useSectionStore } from './section.js';
 
 /**
@@ -56,20 +56,6 @@ export const useAccountStore = defineStore('account', {
         },
 
         /**
-         * Conmuta a una zona **sin apilar**: lo que hace una barra de pestañas.
-         *
-         * ⚠️ Quien lo usa es `AuthTabs`, y el porqué vive en `navigation.js::replace()`: «entrar» y
-         * «crear cuenta» son dos caras de una pantalla, no dos pantallas, así que «Volver» no puede
-         * significar «la otra pestaña».
-         */
-        replace(zone) {
-            const moved = this.nav.replace(zone);
-            this.sync();
-
-            return moved;
-        },
-
-        /**
          * **Volver.** Devuelve `true` si se quedó dentro del área.
          *
          * ⚠️ **Y cuando no hay historia, SALE a la compra en vez de no hacer nada.** Un «volver» que
@@ -120,9 +106,14 @@ export const useAccountStore = defineStore('account', {
          *
          * ⚠️ **Siembra siempre**, porque quien llega así **no tiene historia dentro del área**: la
          * regla y sus tres casos viven en `account/navigation.js::parentZoneFor()`.
+         *
+         * ⚠️ Y el nombre pedido pasa antes por `zoneFor()`: una zona retirada (`register`, desde la A4a) sigue llegando
+         * desde fuera —los CTA de alta, la API del paquete— y lleva a su sucesora, no al índice.
          */
         openZone(zone = DEFAULT_ZONE) {
-            this.enter(zone, { under: parentZoneFor(zone) });
+            const target = zoneFor(zone);
+
+            this.enter(target, { under: parentZoneFor(target) });
 
             return useSectionStore().showAccount();
         },

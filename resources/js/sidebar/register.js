@@ -70,8 +70,11 @@ export const TOO_MANY_REQUESTS = 'too_many_requests';
  * @typedef {{summary: string[], fields: Record<string, string>}} RegisterErrors
  */
 
-/** El orden en que se listan los avisos del banner: el de las reglas de validación del servidor. */
-const FIELD_ORDER = ['name', 'email', 'phone', 'born_on', 'password', 'accept_waiver', 'waiver_document_id'];
+/**
+ * El orden en que se listan los avisos del banner: el de las reglas de validación del servidor. Sin `password` desde la A4a
+ * (`acceso-con-codigo.md` §4.11): la cuenta nace sin contraseña y se entra con un código al correo.
+ */
+const FIELD_ORDER = ['name', 'email', 'phone', 'born_on', 'accept_waiver', 'waiver_document_id'];
 
 /**
  * La fecha de nacimiento (TP·1, `DECISIONES #792`), **solo si hay una**: es opcional y el contrato la declara `format: date`,
@@ -193,9 +196,11 @@ export async function runRegister({ form, api, messages = {}, auth = {}, context
     const response = await api.post('/auth/register', {
         name: form?.name ?? '',
         email: form?.email ?? '',
+        // El cajón ya no lo pide en el alta (lo pide el paso de pagar cuando el pedido lo exige, `#787`), pero la isla sí
+        // lo pone en este formulario: viaja el que haya, y vacío el servidor lo toma por «sin teléfono».
         phone: form?.phone ?? '',
         ...bornOnField(form),
-        password: form?.password ?? '',
+        // ⚠️ SIN `password` (A4a, `acceso-con-codigo.md` §4.11): la cuenta nace sin ella y se entra con un código al correo.
         // ⚠️ **Ni privacidad, ni condiciones, ni marketing** (T8·c): `RegisterRequest` es
         // `additionalProperties: false`, así que mandarlos hoy sería un 422 por ESQUEMA.
         accept_waiver: acceptWaiver,

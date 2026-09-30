@@ -22,13 +22,14 @@
  */
 import { chromium } from 'playwright-core';
 import { mkdir, writeFile } from 'node:fs/promises';
+import { entrarConCodigo } from './entrar-con-codigo.mjs';
 
 const BASE = 'http://localhost:8081';
 const ETIQUETA = process.argv[2] || 'apertura';
 const SALIDA = 'storage/app/audit';
 const MOVIL = { width: 390, height: 844 };
-// El cliente de pruebas del entorno local, el mismo que usa `scripts/sonda-cajon.mjs`.
-const CLIENTE = { email: 'probe-card@jumpweb.test', password: 'Probe-card-2026!' };
+// El cliente de pruebas del entorno local, el mismo que usa `scripts/sonda-cajon.mjs`. Entra con un código desde la A4a.
+const CLIENTE = { email: 'probe-card@jumpweb.test' };
 
 const filas = [];
 const anotar = (via, que, ok, detalle = '') => filas.push({ via, que, ok: !! ok, detalle: String(detalle) });
@@ -188,11 +189,14 @@ try {
         await page.screenshot({ path: `${SALIDA}/cajon-${ETIQUETA}/A-open@390.png` });
         await cerrar(page, 'A');
 
+        // Desde la A4a (`acceso-con-codigo.md` §4.11) crear cuenta es una cara de la PUERTA, y el nombre `register` —el
+        // que piden los CTA de alta— lleva a ella (`account/navigation.js::zoneFor`), no al índice.
         clic = await pulsarAbridor(page, "$store.purchase.openAccount($event, 'register')");
         await esperar(page, true); await esperarMotor(page);
-        await page.waitForFunction(() => !! document.querySelector('#sidecart-spa input[type="password"], #sidecart-spa input[type="email"]'), null, { timeout: 8000 });
+        await page.waitForFunction(() => !! document.querySelector('#sidecart-spa #login-email'), null, { timeout: 8000 }).catch(() => {});
         e = await estado(page);
-        anotar('A', "`openAccount($event, 'register')` abre EN la zona de alta", e.abierto && e.motor, `${JSON.stringify(clic)} · ${e.modo}`);
+        anotar('A', "`openAccount($event, 'register')` abre la PUERTA (crear cuenta es una cara suya)",
+            e.abierto && e.motor && await page.locator('#sidecart-spa #login-email').isVisible(), `${JSON.stringify(clic)} · ${e.modo}`);
         await cerrar(page, 'A');
 
         clic = await pulsarAbridor(page, "$store.purchase.openWith({ type: 'product'");
@@ -246,7 +250,8 @@ try {
         await page.evaluate(() => { const a = document.getElementById('jw-prueba'); a.removeAttribute('data-jw-open'); a.setAttribute('data-jw-open-account', 'login'); a.href = '/login'; });
         await page.click('#jw-prueba');
         await esperar(page, true); await esperarMotor(page);
-        await page.waitForFunction(() => !! document.querySelector('#sidecart-spa input[type="password"]'), null, { timeout: 8000 });
+        // La zona de entrar es la PUERTA desde la A4a: el correo, sin contraseña.
+        await page.waitForFunction(() => !! document.querySelector('#sidecart-spa #login-email'), null, { timeout: 8000 });
         e = await estado(page);
         anotar('C', '`data-jw-open-account="login"` abre EN la zona de entrar', e.abierto && e.motor && new URL(page.url()).pathname === '/', e.modo);
         await page.close();
@@ -539,27 +544,24 @@ try {
         // El login VA DENTRO del cajón (`specs/auth-en-cajon.md`): en una página ajena no hay ninguna
         // otra puerta, así que si esto no funcionara aquí el paquete no serviría para vender.
         if (await page.locator('#login-email').count()) {
-            dondeVoy = 'entrando en la cuenta desde el cajón';
-            await page.fill('#login-email', CLIENTE.email);
-            await page.fill('#login-password', CLIENTE.password);
-            await page.click('.sidecart__panel button[type="submit"]');
-            dondeVoy = 'esperando el resumen de pago tras entrar';
+            dondeVoy = 'entrando en la cuenta desde el cajón, con un código al correo (A4a)';
 
             // ⚠️ **El cliente de pruebas NO vive en el repo** (se crea con `tinker`, ver
             // `VERIFICACION-E2E-CAJON.md` §5.quindecies), así que en una máquina nueva esto falla — y sin
             // esta comprobación fallaba como un «Timeout 25000ms» que no dice nada. Costó una pasada.
-            const malCreds = await page.waitForSelector('.auth__errors', { timeout: 3000 }).catch(() => null);
-            if (malCreds) {
-                anotar('G', 'el cliente de pruebas existe en esta máquina', false, [
-                    `«${(await malCreds.innerText()).trim()}» con ${CLIENTE.email}.`,
+            // Desde la A4a, un correo sin cuenta no da un «no»: la puerta ofrece el alta, y la pieza común lo dice.
+            try {
+                await entrarConCodigo(page, CLIENTE.email);
+            } catch (error) {
+                anotar('G', 'el cliente de pruebas existe en esta máquina y entra con su código', false, [
+                    error.message,
                     'No es un defecto del paquete: ese cliente se crea a mano y no viaja en el repo. Receta:',
                     'docker compose exec -u sail -T laravel.test php artisan tinker --execute=\'$u = new App\\Domain\\Identity\\Models\\User();',
-                    '  $u->name = "Sonda"; $u->email = "probe-card@jumpweb.test";',
-                    '  $u->password = Illuminate\\Support\\Facades\\Hash::make("Probe-card-2026!");',
-                    '  $u->email_verified_at = now(); $u->save();\'',
+                    '  $u->name = "Sonda"; $u->email = "probe-card@jumpweb.test"; $u->email_verified_at = now(); $u->save();\'',
                 ].join('\n        '));
                 throw new Error('sin cliente de pruebas no se puede comprar');
             }
+            dondeVoy = 'esperando el resumen de pago tras entrar';
 
             await page.waitForSelector('.cart--summary', { timeout: 25000 });
             anotar('G', 'se entra en la cuenta DENTRO del cajón, sin salir de la página ajena', true, page.url());

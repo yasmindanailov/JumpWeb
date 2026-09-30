@@ -28,9 +28,12 @@ class GoogleSignInPlacementTest extends TestCase
 {
     private const BUTTON = 'resources/js/sidebar/steps/GoogleButton.vue';
 
-    /** Los dos formularios que ofrecen el camino alternativo: entrar y crear cuenta. */
+    /**
+     * Los dos formularios que ofrecen el camino alternativo: la PUERTA (desde la A4a, `acceso-con-codigo.md` §4.11: el correo
+     * y el código, en lugar del login con contraseña) y crear cuenta.
+     */
     private const FORMS = [
-        'resources/js/sidebar/steps/LoginForm.vue',
+        'resources/js/sidebar/steps/EntryForm.vue',
         'resources/js/sidebar/steps/RegisterForm.vue',
     ];
 

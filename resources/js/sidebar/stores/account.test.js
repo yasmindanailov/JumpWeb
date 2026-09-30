@@ -116,4 +116,19 @@ describe('entrar y salir', () => {
         assert.equal(store.zone, ZONES.ORDERS);
         assert.equal(store.canBack, false);
     });
+
+    /**
+     * ⚠️⚠️ **Los CTA de alta de la landing siguen pidiendo `register`** (A4a, `acceso-con-codigo.md` §4.11): desde fuera del
+     * cajón esa zona retirada abre la PUERTA —crear cuenta es una cara suya—, y el área se muestra. En el índice, un invitado
+     * lo vería con los rótulos en blanco.
+     */
+    test('abrir desde fuera una zona retirada lleva a su sucesora: `register`, a la puerta', () => {
+        const store = arranca();
+        const section = useSectionStore();
+
+        store.openZone('register');
+
+        assert.equal(store.zone, ZONES.LOGIN);
+        assert.equal(section.active, SECTIONS.ACCOUNT);
+    });
 });

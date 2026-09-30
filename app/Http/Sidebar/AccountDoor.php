@@ -51,9 +51,13 @@ final readonly class AccountDoor
         // están escritos fuera de este repo.
         // ▶ Y no nace un segundo mapa para ellas **a propósito**: un `AuthDoor` aparte sería otro
         // sitio donde equivocarse, y este ya lo cruza `AccountAccessTest` contra las zonas del cajón.
-        'registro' => 'register',
+        // ⚠️ Desde la A4a (`acceso-con-codigo.md` §4.11, `#849`) `/registro` y `/recuperar-contrasena` abren la PUERTA,
+        // como `/login`: el correo decide si se entra con un código o se crea la cuenta (ya no una zona, sino una cara de
+        // ésta), y sin contraseña para entrar no hay nada que recuperar. La zona de recuperar sigue hasta la A4b, pero solo
+        // CON sesión: la abre el aviso de las cuatro acciones que aún piden contraseña.
+        'registro' => 'login',
         'login' => 'login',
-        'password.request' => 'forgot',
+        'password.request' => 'login',
 
         // La CUARTA puerta de auth (`specs/auth-con-google.md` §7): aquí aterriza quien vuelve de
         // Google **sin cuenta**, y el cajón abre la pantalla que completa el alta.

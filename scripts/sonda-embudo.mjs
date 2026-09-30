@@ -36,13 +36,14 @@
 import { chromium } from 'playwright-core';
 import { execFileSync } from 'node:child_process';
 import { mkdir, writeFile } from 'node:fs/promises';
+import { entrarConCodigo } from './entrar-con-codigo.mjs';
 
 const BASE = process.env.SONDA_BASE ?? 'http://localhost';
 const ETIQUETA = process.argv[2] ?? 'antes';
 const SALIDA = 'storage/app/audit';
 
-/** La cuenta de sonda (memoria del proyecto; no está en el repo ni en un seeder). */
-const CLIENTE = { email: 'probe-card@jumpweb.test', password: 'Probe-card-2026!' };
+/** La cuenta de sonda (memoria del proyecto; no está en el repo ni en un seeder). Entra con un código desde la A4a. */
+const CLIENTE = { email: 'probe-card@jumpweb.test' };
 
 const tinker = (php) => execFileSync('php', ['artisan', 'tinker', '--execute', php], { encoding: 'utf8' }).trim();
 
@@ -147,10 +148,10 @@ try {
         await page.waitForSelector('.auth');
     });
 
+    // Con un código al correo desde la A4a (`acceso-con-codigo.md` §4.11): la traza lleva ahora `POST /auth/code` y
+    // `POST /auth/login`, y una traza de antes de la A4a no se compara con una de después.
     await paso('entrar con la cuenta de sonda', async () => {
-        await page.fill('#login-email', CLIENTE.email);
-        await page.fill('#login-password', CLIENTE.password);
-        await page.locator('.auth__submit').click();
+        await entrarConCodigo(page, CLIENTE.email);
         await page.waitForSelector('.cart--summary', { timeout: 20000 });
     });
 

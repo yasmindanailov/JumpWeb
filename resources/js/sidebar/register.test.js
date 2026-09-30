@@ -25,6 +25,10 @@ const offline = () => ({ ok: false, status: 0, data: null, error: null, offline:
 
 const errorsOf = (response) => registerErrors(response, { messages: MESSAGES, auth: AUTH });
 
+/**
+ * El formulario de una isla vieja o de un cliente que aún trae `password`: el alta NO la manda (A4a, `acceso-con-codigo.md`
+ * §4.11). Va puesta a propósito, para que el caso del cuerpo pueda ver que no viaja.
+ */
 const FORM = {
     name: 'Mara', email: 'mara@jumpweb.test', phone: '600111222', password: 'Un4-C0ntraseña-Larga',
     website: '',
@@ -63,10 +67,19 @@ describe('el reparto de los avisos', () => {
         const errors = errorsOf(fail(422, {
             code: 'validation_failed',
             message: 'x',
-            fields: { password: ['pass'], name: ['nombre'], accept_terms: ['términos'], email: ['correo'] },
+            fields: { accept_waiver: ['descargo'], born_on: ['fecha'], name: ['nombre'], email: ['correo'] },
         }));
 
-        assert.deepEqual(errors.summary, ['nombre', 'correo', 'pass', 'términos']);
+        assert.deepEqual(errors.summary, ['nombre', 'correo', 'fecha', 'descargo']);
+    });
+
+    test('un campo que las reglas no conocen va DETRÁS de los conocidos, en el orden del sobre', () => {
+        const errors = errorsOf(fail(422, {
+            code: 'validation_failed',
+            fields: { otro: ['otro'], password: ['clave'], name: ['nombre'] },
+        }));
+
+        assert.deepEqual(errors.summary, ['nombre', 'otro', 'clave']);
     });
 
     /**
@@ -226,13 +239,13 @@ describe('la fecha de nacimiento (TP·1, `#792`)', () => {
         assert.deepEqual(bornOnField(null), {});
     });
 
-    test('su aviso va en el banner tras el teléfono y antes de la contraseña, el orden de las reglas', () => {
+    test('su aviso va en el banner tras el teléfono y antes del descargo, el orden de las reglas', () => {
         const errors = errorsOf(fail(422, {
             code: 'validation_failed',
-            fields: { password: ['clave'], born_on: ['fecha'], phone: ['teléfono'] },
+            fields: { accept_waiver: ['descargo'], born_on: ['fecha'], phone: ['teléfono'] },
         }));
 
-        assert.deepEqual(errors.summary, ['teléfono', 'fecha', 'clave']);
+        assert.deepEqual(errors.summary, ['teléfono', 'fecha', 'descargo']);
         assert.equal(errors.fields.born_on, 'fecha');
     });
 });
@@ -271,6 +284,19 @@ describe('el envío', () => {
 
         assert.equal(api.calls[0].path, '/auth/register');
         assert.equal(api.calls[0].body.context, 'purchase');
+    });
+
+    /**
+     * ⚠️ **La cuenta nace SIN contraseña** (A4a, `acceso-con-codigo.md` §4.11): aunque el formulario la traiga, no viaja; y el
+     * teléfono sí, el que haya (lo pone la isla; el cajón ya no lo pide en el alta).
+     */
+    test('el alta NO manda contraseña aunque el formulario la traiga, y el teléfono sí', async () => {
+        const api = apiDouble();
+
+        await runRegister({ form: FORM, api, messages: MESSAGES, auth: AUTH, context: CONTEXT_PURCHASE });
+
+        assert.equal('password' in api.calls[0].body, false);
+        assert.equal(api.calls[0].body.phone, '600111222');
     });
 
     test('y el alta SUELTA manda el suyo, que es el que sí manda el correo de verificación', async () => {

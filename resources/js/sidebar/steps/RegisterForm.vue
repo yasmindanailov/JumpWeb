@@ -1,7 +1,6 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { t as translate } from '../i18n.js';
-import PasswordInput from './PasswordInput.vue';
 import BornOnField from './BornOnField.vue';
 import GoogleButton from './GoogleButton.vue';
 import WaiverDoc from '../WaiverDoc.vue';
@@ -41,11 +40,11 @@ import { useWaiverStore } from '../stores/waiver.js';
  * casilla, no la constancia*. Las condiciones se fueron al checkout y el marketing al interruptor de
  * «Mi cuenta → Privacidad», así que aquí solo queda la casilla del DESCARGO.
  *
- * ⚠️ **4. El email y el teléfono van en un `.form__row`**, no sueltos: es una fila de dos columnas y
- * su contenedor es un nodo del árbol.
- *
- * ⚠️ **5. La contraseña lleva `.form__hint` DESPUÉS del `.pwd-input`**, con los requisitos. Es un
- * `<small>`, no un `<span>`: el tipo de elemento es contrato (§4.2).
+ * ⚠️⚠️ **4. Es la TERCERA CARA de la puerta, desde la A4a** (`docs/specs/acceso-con-codigo.md` §4.11, `#849`): se llega
+ * cuando el correo NO tiene cuenta, así que el correo ya está escrito —va a la vista, con «Cambiar», que vuelve a la
+ * puerta— y el subtítulo lo dice («Aún no tienes cuenta con ese correo…»). Sin CONTRASEÑA (la cuenta nace sin ella y se
+ * entra con un código) y sin TELÉFONO: lo pide el paso de pagar cuando el pedido lo exige (`buyer-due.js`, `#787`).
+ * ▶ Y por eso se fueron la fila `.form__row` de correo y teléfono y el `<small>` de los requisitos de la contraseña.
  *
  * ⚠️⚠️ **6. El contenedor del anti-bot va con `v-if` y PELADO** (4.4b·2). Las dos cosas son contrato
  * de árbol, medidas contra el manifiesto congelado:
@@ -84,19 +83,18 @@ const props = defineProps({
     /**
      * La ida a Google. Vacía = esta instalación no la ofrece y no se pinta nada, ni botón ni separador.
      *
-     * ⚠️ **Va DENTRO del formulario y encima de sus campos** (T8·d, `#350`, `[DECIDIDO owner]`): ver el
-     * porqué completo en `LoginForm.vue`, que es la misma decisión para la otra pestaña.
+     * ⚠️ **Va DENTRO del formulario y encima de sus campos** (T8·d, `#350`, `[DECIDIDO owner]`): la misma decisión que
+     * en la primera cara de la puerta (`EntryForm.vue`): el camino alternativo, después del título y antes de los campos.
      */
     googleUrl: { type: String, default: '' },
 });
 
-defineEmits(['submit']);
+defineEmits(['submit', 'change-email']);
 
 const name = defineModel('name', { type: String, default: '' });
+/** El correo de la PUERTA: se enseña, no se edita (para cambiarlo, «Cambiar» vuelve a ella). */
 const email = defineModel('email', { type: String, default: '' });
-const phone = defineModel('phone', { type: String, default: '' });
 const bornOn = defineModel('bornOn', { type: String, default: '' });
-const password = defineModel('password', { type: String, default: '' });
 
 /**
  * ⚠️ **7. La casilla del waiver solo existe si hay TEXTO que firmar** (Fase 6,
@@ -151,7 +149,7 @@ const summary = computed(() => props.errors?.summary ?? []);
 
 <template>
     <div class="auth">
-        <!-- Sin antetítulo (`#566`): el «Únete» era la costura del modal. Ver `LoginForm`. -->
+        <!-- Sin antetítulo (`#566`): el «Únete» era la costura del modal; en las otras pantallas el cajón titula y punto. -->
         <div class="auth__head">
             <h2 class="auth__title">{{ a('register.title') }}</h2>
             <p class="auth__sub">{{ a('register.subtitle') }}</p>
@@ -183,35 +181,21 @@ const summary = computed(() => props.errors?.summary ?? []);
                 <span v-if="fieldErrors.name" class="form__error">{{ fieldErrors.name }}</span>
             </div>
 
-            <div class="form__row">
-                <div class="form__field">
-                    <label class="form__label" for="reg-email">{{ a('register.email') }}</label>
-                    <input id="reg-email" v-model="email" type="email" autocomplete="email" required>
-                    <span v-if="fieldErrors.email" class="form__error">{{ fieldErrors.email }}</span>
-                </div>
-                <div class="form__field">
-                    <label class="form__label" for="reg-phone">{{ a('register.phone') }}</label>
-                    <!-- ⚠️ **La pista dice PARA QUÉ se pide** (`#561`, grieta 14 del canvas): el alta lo
-                         exigía sin explicarlo mientras el paso de pagar sí lo hacía — mismo dato, dos
-                         tratamientos, y el que se saltaba la explicación era el PRIMERO que lo pide.
-                         ⚠️ `aria-describedby` y no solo un `<span>` suelto: sin él, quien navega con
-                         lector de pantalla oye «Teléfono, obligatorio» y nunca el motivo. -->
-                    <input id="reg-phone" v-model="phone" type="tel" autocomplete="tel" required
-                           aria-describedby="reg-phone-hint">
-                    <span id="reg-phone-hint" class="form__hint">{{ a('register.phone_hint') }}</span>
-                    <span v-if="fieldErrors.phone" class="form__error">{{ fieldErrors.phone }}</span>
-                </div>
-            </div>
-
-            <!-- ⚠️ **8. La fecha de nacimiento, OPCIONAL** (TP·1, `#792`), antes de la contraseña: es un dato de la persona. -->
-            <BornOnField id="reg-born-on" v-model="bornOn" :account="account" :error="fieldErrors.born_on ?? ''" />
-
+            <!-- El correo de la PUERTA, a la vista (detalle 4): «Cambiar» vuelve a ella. Su aviso, si el servidor dice algo
+                 de él (la cuenta nació entre la puerta y el alta), va aquí debajo. -->
             <div class="form__field">
-                <label class="form__label" for="reg-password">{{ a('register.password') }}</label>
-                <PasswordInput :id="'reg-password'" v-model="password" autocomplete="new-password" />
-                <span v-if="fieldErrors.password" class="form__error">{{ fieldErrors.password }}</span>
-                <small class="form__hint">{{ a('register.password_hint') }}</small>
+                <span class="form__label">{{ a('register.email') }}</span>
+                <!-- ⚠️ El correo como TEXTO, nunca `v-html`: lo escribió el cliente. Clases que ya existen (`auth__sent`,
+                     `auth__link`): ni una regla nueva en la hoja. -->
+                <p class="auth__sent">
+                    {{ email }}
+                    <button type="button" class="auth__link" @click="$emit('change-email')">{{ a('login.change_email') }}</button>
+                </p>
+                <span v-if="fieldErrors.email" class="form__error">{{ fieldErrors.email }}</span>
             </div>
+
+            <!-- ⚠️ **8. La fecha de nacimiento, OPCIONAL** (TP·1, `#792`): es un dato de la persona. -->
+            <BornOnField id="reg-born-on" v-model="bornOn" :account="account" :error="fieldErrors.born_on ?? ''" />
 
             <div class="form__checks">
                 <!-- El enlace de privacidad, VISIBLE y sin casilla (detalle 3). Mismo literal y mismo

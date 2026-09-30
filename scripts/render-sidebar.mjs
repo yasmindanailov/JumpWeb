@@ -185,9 +185,10 @@ const PROPS_FROM_API = {
      * reimplementaba en PHP («el mismo orden que fija `register.js`», decía su comentario), que es la
      * definición de punto ciego. Ahora se le entrega el 422 crudo de `POST /auth/register`.
      */
+    // Desde la A4a (`acceso-con-codigo.md` §4.11) el paso es la PUERTA: su cara (`stage`) y no una pestaña.
     [STEPS.IDENTIFY]: (api, messages, state) => ({
-        mode: state.mode ?? 'login',
-        loginErrors: { global: '', fields: {} },
+        stage: state.stage ?? 'email',
+        entryErrors: { global: '', fields: {} },
         registerErrors: api.register
             ? registerErrors(envelope(api.register.status, api.register.body), { messages, auth: state.auth ?? {} })
             : { summary: [], fields: {} },

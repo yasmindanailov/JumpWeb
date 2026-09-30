@@ -894,7 +894,17 @@ class SidebarBundleBudgetTest extends TestCase
     // que ya pesaba 298,83 con lo de plataforma de después de `#788`) y el de la TP·1: 298,83 → 300,46 (+1,63). Podado lo
     // obvio antes de subir: `profileBody` vivía en `account/profile.js` y lo metía entero en la descarga (+0,77); vive en
     // el store. El techo, a 301.
-    private const SIDEBAR_CHUNK_MAX_KB = 301;
+    // A4a (`specs/acceso-con-codigo.md` §4.11, 30-09): entrar y darse de alta con un CÓDIGO al correo —la puerta con sus
+    // dos caras (`steps/EntryForm.vue`), la espera de «Pedir otro código» y la cara en `stores/auth.js`, la puerta y el
+    // código en `login.js`—, menos lo que se retira: las dos pestañas, el login con contraseña y la contraseña y el
+    // teléfono del alta. Medido construyendo el JS de `main` (`30fd8374`) y el de la A4a: 300,60 → 301,81 (+1,21). Podado
+    // antes de subir: «¿Querías decir…?» (`ui/correo.js`, 1,45 KiB) baja con `import()` al salir del campo del correo, que
+    // es cuando sirve, y no con el motor (con ella dentro, 303,10). El techo, a 302.
+    // ▶ Y el `CodeInput` del diseño (`#861`, las seis casillas y su regla, `code-input.js`), en la misma A4a: 301,81 →
+    // 302,08 (+0,27, lo que queda en el motor: la regla y la cara que lo usa). El componente (2,23 KiB) baja con SU cara
+    // (`defineAsyncComponent`), tras «Continuar», que ya es una ida y vuelta al servidor; dentro del motor eran 304,01. El
+    // techo, a 303.
+    private const SIDEBAR_CHUNK_MAX_KB = 303;
 
     // T3e·2: la compra de la isla, chunk diferido del motor que solo trae una instalación con la isla. Medido 93,36 KiB
     // (la sección, la pantalla 0, la isla y sus piezas); su hoja va aparte (7,2 KiB).

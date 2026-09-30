@@ -1,67 +1,62 @@
 /**
- * El LOGIN embebido del cajón (Fase 4 · paso 4.4a·2).
+ * **ENTRAR EN EL CAJÓN CON UN CÓDIGO AL CORREO** (A4a de `docs/specs/acceso-con-codigo.md` §4.11, `#848`/`#849`): la
+ * PUERTA (`POST /auth/code`), ENTRAR con el código (`POST /auth/login`) y sus «no», sin estado y con su `node --test`.
+ * Sustituye al login con contraseña: ningún cliente la escribe ya (`#847`).
  *
- * El paso 5 de la web monta `<livewire:auth.login :embedded="true">` dentro del cajón; el motor SPA
- * habla con `POST /api/v1/auth/login`, que desde Fase 3 · paso 3b consume **el mismo**
- * `Identity\Services\PasswordLogin` — así que los dos limitadores de `SEC-06`, la comprobación de
- * credenciales y el sello de última entrada son literalmente el mismo código. Aquí no se comprueba
- * nada de eso: se envía, y se traduce el «no».
+ * ⚠️⚠️ **UNA puerta**: el correo decide. Con cuenta, el servidor manda YA el código (`next: code`) y se escribe en el mismo
+ * sitio; nuevo, `next: register` y la pantalla del alta, sin código —el alta no espera a ningún correo: en la puerta del
+ * parque hay cola (`#849`)—. Decir si un correo tiene cuenta lo acotan los límites del servidor (`SEC-06`), como el alta de
+ * siempre (`#31`).
  *
- * ⚠️ **El texto del «no» sale del DICCIONARIO, no del `message` del sobre, y eso está MEDIDO.** Los
- * dos motores decían cosas distintas para el mismo rechazo (`auth.failed` era «Estas credenciales no
- * coinciden con nuestros registros.»); desde `#588` el diccionario dice lo mismo que la API, pero la
- * regla no cambia —el literal lo pone `lang/`, y el sobre puede volver a divergir sin avisar—:
- *  - web (`auth.failed`): «El correo o la contraseña no son correctos.»
- *  - API (`invalid_credentials`): «El correo o la contraseña no son correctos.»
- *  - web (`auth.throttle`): «Demasiados intentos. Inténtalo de nuevo en 59 segundos.»
- *  - API (`too_many_requests`): «Has hecho demasiadas peticiones seguidas…» + `params.retry_after`
+ * ⚠️ **El tope del CORREO no es un «no»** (`429` con `params.next = code`): el servidor acaba de mandar uno a ese buzón, así
+ * que se va a escribirlo sin aviso. El de la IP sí lo es, y va al banner con su espera.
  *
- * Pintar el `message` sería cambiar la copia del cajón sin que ningún gate lo viera —el diff de árbol
- * descarta los nodos de texto—. Ramificar sobre el CÓDIGO y pintar el literal es además lo que el
- * contrato de la API pide de un cliente: los códigos son estables, los mensajes son para humanos que
- * no tienen diccionario.
+ * ⚠️ **El texto del «no» sale del DICCIONARIO, no del `message` del sobre, y eso está MEDIDO** (desde `#588`): ramificar
+ * sobre el CÓDIGO del error y pintar el literal de `lang/` es lo que el contrato pide de un cliente —los códigos son
+ * estables; los mensajes, para humanos sin diccionario— y lo único que el diff de árbol no vería cambiar. El código mal
+ * escrito va BAJO SU CAMPO, con la frase de siempre: no dice si caducó, se gastó o no casa —a quien lo escribe le basta
+ * «pide otro»— (la de la isla, que el owner ya vio).
  *
- * ⚠️ **Y el reparto de los dos avisos tampoco es cosmético** (hallazgo L-02 de la auditoría del
- * origen): el del limitador va al banner `_global` y el de credenciales **bajo el campo email**. Si el
- * del limitador cayera bajo el input se mezclaría con «credenciales incorrectas», que es genérico a
- * propósito para no revelar si el correo existe.
+ * ⚠️ **`INVALID_CREDENTIALS` se exporta y NO cambia de nombre**: la isla lo importa (`isla/compra/acceso.js`).
  */
 
 import { t, tp, firstMessage } from './i18n.js';
 
-/** Los códigos del sobre que este formulario sabe distinguir. El resto cae en el aviso genérico. */
+/** Los códigos del sobre que la puerta y el código saben distinguir. El resto cae en el aviso genérico. */
 export const INVALID_CREDENTIALS = 'invalid_credentials';
 export const TOO_MANY_REQUESTS = 'too_many_requests';
 export const VALIDATION_FAILED = 'validation_failed';
 
+/** Lo que responde la puerta: con cuenta, el código ya va de camino; nuevo, el alta. */
+export const NEXT_CODE = 'code';
+export const NEXT_REGISTER = 'register';
+
 /**
  * Lo que el formulario enseña tras un intento fallido.
  *
- * @typedef {{global: string, fields: {email?: string, password?: string}}} LoginErrors
+ * @typedef {{global: string, fields: {email?: string, code?: string}}} DoorErrors
  */
 
-/** Sin errores. Se devuelve siempre la misma forma para que la vista no compruebe si algo existe. */
+/** Sin errores. Siempre la misma forma, para que la vista no compruebe si algo existe. */
 function clean() {
     return { global: '', fields: {} };
 }
 
 /**
- * El «no» del servidor traducido a lo que pinta el formulario. Espejo de `Auth\Login::login()`.
+ * El «no» de la PUERTA o de ENTRAR CON EL CÓDIGO, en lo que pinta el formulario.
  *
  * @param {{ok: boolean, status: number, data: any, error: object|null}} response
- * @param {{messages: object, auth: object}} texts
- * @returns {LoginErrors}
+ * @param {{messages: object, auth: object, account: object}} texts
+ * @returns {DoorErrors}
  */
-export function loginErrors(response, { messages = {}, auth = {} } = {}) {
+export function doorErrors(response, { messages = {}, auth = {}, account = {} } = {}) {
     if (response?.ok) {
         return clean();
     }
 
     const code = response?.error?.code ?? null;
 
-    // La validación la escribe el servidor con las MISMAS reglas que el componente Livewire
-    // (`required|string|email`), así que sus textos ya coinciden: se pintan tal cual. Reescribirlos
-    // aquí sería una segunda traducción de las reglas de Laravel.
+    // La validación la escribe el servidor con sus reglas y sus nombres de campo: se pinta tal cual, bajo su campo.
     if (code === VALIDATION_FAILED) {
         const fields = response?.error?.fields ?? {};
 
@@ -69,57 +64,62 @@ export function loginErrors(response, { messages = {}, auth = {} } = {}) {
             global: '',
             fields: {
                 ...(firstMessage(fields.email) ? { email: firstMessage(fields.email) } : {}),
-                ...(firstMessage(fields.password) ? { password: firstMessage(fields.password) } : {}),
+                ...(firstMessage(fields.code) ? { code: firstMessage(fields.code) } : {}),
             },
         };
     }
 
-    // ⚠️ Bajo el campo, no en el banner, y con el literal de la web: es un mensaje genérico a
-    // propósito —no revela si el correo existe— y compartirlo es lo que mantiene la copia igual.
+    // ⚠️ Bajo el CÓDIGO y con el literal del cajón: el código no vale (mal escrito, caducado o gastado, que no se distinguen).
     if (code === INVALID_CREDENTIALS) {
-        return { global: '', fields: { email: t(auth, 'failed') } };
+        return { global: '', fields: { code: t(account, 'login.code_wrong') } };
     }
 
-    // ⚠️ El limitador va al banner y lleva los segundos que publica el sobre. `retry_after` es el
-    // MISMO número que el componente Livewire interpola en `:seconds`.
+    // El limitador de la IP (o el de entrar), al banner con los segundos que publica el sobre.
     if (code === TOO_MANY_REQUESTS) {
-        return {
-            global: tp(auth, 'throttle', { seconds: response?.error?.params?.retry_after ?? 0 }),
-            fields: {},
-        };
+        return { global: tp(auth, 'throttle', { seconds: response?.error?.params?.retry_after ?? 0 }), fields: {} };
     }
 
-    // Un corte de red, un 5xx o un código que este formulario no conoce. No es un estado que el
-    // componente Livewire pueda tener —allí el fallo tumba la petición entera—, así que no hay
-    // paridad que respetar: se usa el genérico del cajón, cuyo consejo (esperar y reintentar) es el
-    // correcto para los tres.
+    // Un corte de red, un 5xx o un código que no se conoce: el genérico del cajón (esperar y reintentar vale para todos).
     return { global: t(messages, 'errors.try_later'), fields: {} };
 }
 
 /**
- * Envía las credenciales y devuelve qué pasó.
+ * LA PUERTA: ¿tiene cuenta este correo? Con cuenta, el servidor le manda ya el código.
  *
- * `api` entra por parámetro, como en `admission.js` y por lo mismo: así la secuencia se prueba en
- * Node sin red ni navegador (`CE-6`).
+ * `api` entra por parámetro, como en `admission.js`: la secuencia se prueba en Node sin red (`CE-6`).
  *
- * ⚠️ **La respuesta se devuelve entera**, no solo el `id`: quien llama la pasa por la misma tubería de
- * identidad que `GET /me` —`POST auth/login` devuelve el perfil con la misma forma, justo para que
- * identificarse no cueste una petición más—.
- *
- * @param {{
- *   credentials: {email: string, password: string, remember: boolean},
- *   api: {post: (path: string, body: object) => Promise<object>},
- *   messages: object,
- *   auth: object,
- * }} deps
- * @returns {Promise<{ok: boolean, response: object, errors: LoginErrors}>}
+ * @param {{email: string, api: {post: Function}, messages?: object, auth?: object, account?: object}} deps
+ * @returns {Promise<{next: ?string, response: object, errors: DoorErrors}>} `next` es `code`, `register` o `null` (un «no»)
  */
-export async function runLogin({ credentials, api, messages = {}, auth = {} }) {
+export async function runDoor({ email, api, messages = {}, auth = {}, account = {} }) {
+    const response = await api.post('/auth/code', { email: String(email ?? '').trim() });
+    const next = response.ok ? response.data?.next : response.error?.params?.next;
+
+    if (next === NEXT_CODE || next === NEXT_REGISTER) {
+        return { next, response, errors: clean() };
+    }
+
+    // Un 200 que no dice a dónde ir no es un estado del contrato: sin el genérico, la pantalla se quedaría muda.
+    const errors = response.ok ? { global: t(messages, 'errors.try_later'), fields: {} } : doorErrors(response, { messages, auth, account });
+
+    return { next: null, response, errors };
+}
+
+/**
+ * ENTRAR con el código: el servidor abre la sesión y devuelve el perfil con la forma de `GET /me` (quien llama lo pasa por
+ * la misma tubería de identidad, sin una petición más). El dispositivo queda RECORDADO solo con `remember` —la casilla
+ * «Mantener la sesión iniciada en este dispositivo», SIN marcar de serie (`#858`)—: una cookie de autenticación
+ * persistente la pide quien la quiere.
+ *
+ * @param {{email: string, code: string, remember?: boolean, api: {post: Function}, messages?: object, auth?: object, account?: object}} deps
+ * @returns {Promise<{ok: boolean, response: object, errors: DoorErrors}>}
+ */
+export async function runCodeLogin({ email, code, remember = false, api, messages = {}, auth = {}, account = {} }) {
     const response = await api.post('/auth/login', {
-        email: credentials?.email ?? '',
-        password: credentials?.password ?? '',
-        remember: credentials?.remember === true,
+        email: String(email ?? '').trim(),
+        code: String(code ?? '').trim(),
+        remember: remember === true,
     });
 
-    return { ok: response.ok === true, response, errors: loginErrors(response, { messages, auth }) };
+    return { ok: response.ok === true, response, errors: doorErrors(response, { messages, auth, account }) };
 }

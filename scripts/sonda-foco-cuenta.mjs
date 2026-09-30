@@ -18,9 +18,11 @@
  * casualidad. Medido: con el disparador salía «sano» y con «Cancelar» salía `<BODY>`.
  */
 import { chromium } from 'playwright-core';
+import { entrarConCodigo } from './entrar-con-codigo.mjs';
 
 const BASE = process.env.BASE ?? 'http://localhost';
-const CLIENTE = { email: 'probe-card@jumpweb.test', password: 'Probe-card-2026!' };
+// Entra con un código al correo desde la A4a (`acceso-con-codigo.md` §4.11), leído de Mailpit.
+const CLIENTE = { email: 'probe-card@jumpweb.test' };
 
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
@@ -33,9 +35,7 @@ await page.goto(`${BASE}/mi-cuenta`, { waitUntil: 'networkidle' });
 await page.waitForSelector('.sidecart.is-open .acc-tiles, .sidecart.is-open #login-email', { timeout: 20000 });
 
 if (await page.locator('#login-email').count()) {
-    await page.fill('#login-email', CLIENTE.email);
-    await page.fill('#login-password', CLIENTE.password);
-    await page.click('.sidecart__panel button[type="submit"]');
+    await entrarConCodigo(page, CLIENTE.email);
 }
 await page.waitForSelector('.acc-tiles .acc-tile', { timeout: 20000 });
 

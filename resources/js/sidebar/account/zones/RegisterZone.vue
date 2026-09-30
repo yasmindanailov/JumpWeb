@@ -1,8 +1,6 @@
 <script setup>
 import { onUnmounted, computed } from 'vue';
 import { useAuthStore } from '../../stores/auth.js';
-import { useAccountStore } from '../../stores/account.js';
-import { ZONES } from '../navigation.js';
 import { resendGate } from '../verify.js';
 import { landOnAccount } from '../after-auth.js';
 import { api } from '../../api.js';
@@ -10,15 +8,21 @@ import { t as translate, tp as translateWith } from '../../i18n.js';
 import RegisterForm from '../../steps/RegisterForm.vue';
 
 /**
- * **CREAR CUENTA dentro del cajón, fuera de la compra** (`specs/auth-en-cajon.md` §4.3).
+ * **CREAR CUENTA dentro del cajón, fuera de la compra** (`specs/auth-en-cajon.md` §4.3): desde la A4a
+ * (`acceso-con-codigo.md` §4.11) es la TERCERA CARA de la puerta de Mi cuenta (`LoginZone`), no una zona: se llega cuando el
+ * correo no tiene cuenta, y «Cambiar» vuelve a la primera.
+ *
+ * ⚠️ **No limpia los avisos al montarse**, al revés que cuando era zona: la puerta ya lo hizo al entrar, y aquí borraría la
+ * CARA en la que está (la de el alta) nada más pintarse.
  *
  * ⚠️⚠️ **Manda `context: standalone`, y ahí está toda la diferencia con el paso 5 del embudo.** Con él
- * el servidor **envía el correo de verificación y NO abre sesión**; con `purchase` haría lo contrario,
- * porque allí el pago sustituye a la verificación —un bot no paga—. Reutilizar el formulario del
- * embudo sin decir el contexto habría convertido esta alta en *pay-first* sin que nadie lo decidiera.
+ * el servidor **envía el correo de verificación**; con `purchase` no, porque allí el pago sustituye a la
+ * verificación —un bot no paga—. Desde `#331` las dos abren sesión, y esta zona aterriza en la cuenta, donde
+ * espera el aviso de «confirma tu correo». Reutilizar el formulario del embudo sin decir el contexto habría
+ * convertido esta alta en *pay-first* sin que nadie lo decidiera.
  *
- * ⚠️ **Sin sesión no hay a dónde aterrizar**, así que esta zona tiene DOS caras: el formulario y
- * «revisa tu correo». Es la única de las tres de auth que no acaba navegando.
+ * ⚠️ **Sin sesión no hay a dónde aterrizar** —el señuelo que actuó—, así que esta zona tiene DOS caras: el
+ * formulario y «revisa tu correo».
  *
  * ⚠️⚠️ **Y la segunda cara es la MISMA para un alta buena y para un señuelo que actuó.** El 201 del
  * servidor es idéntico en los dos casos y `runRegister()` lo desempata preguntando por `GET /me`; si
@@ -37,9 +41,6 @@ const props = defineProps({
 });
 
 const store = useAuthStore();
-const nav = useAccountStore();
-
-store.clearNotices();
 
 const a = (key) => translate(props.account, key);
 // ⚠️ Por NOMBRE, no `resendGate(store)`: el store los llama `resendSeconds`/`resendsLeft` y el módulo
@@ -92,10 +93,11 @@ async function submit() {
         <p v-else class="auth__sub">{{ a('verify.resend_limit') }}</p>
 
         <!-- El escape. Sin él, quien ya tenía cuenta se queda en una pantalla sin salida: la página
-             de verificación exige sesión, y el alta suelta no la abre. -->
+             de verificación exige sesión, y el alta sin sesión (el señuelo) no la abre. Vuelve a la
+             primera cara de la puerta, y con ella se va el correo pendiente (PII). -->
         <p class="auth__switch">
             {{ a('verify.already_have_account') }}
-            <button type="button" @click="nav.go(ZONES.LOGIN)">{{ a('login.cta') }}</button>
+            <button type="button" @click="store.clearNotices()">{{ a('login.cta') }}</button>
         </p>
     </div>
 
@@ -103,9 +105,7 @@ async function submit() {
         v-else
         v-model:name="store.form.name"
         v-model:email="store.form.email"
-        v-model:phone="store.form.phone"
         v-model:born-on="store.form.born_on"
-        v-model:password="store.form.password"
         v-model:accept-waiver="store.form.accept_waiver"
         v-model:website="store.form.website"
         v-model:turnstile-token="store.form.turnstile_token"
@@ -115,5 +115,6 @@ async function submit() {
         :account="account"
         :google-url="urls.google ?? ''"
         :privacy-url="urls.privacy ?? ''"
-        @submit="submit" />
+        @submit="submit"
+        @change-email="store.changeEmail()" />
 </template>

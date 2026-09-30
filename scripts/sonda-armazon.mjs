@@ -21,6 +21,7 @@
  */
 import { chromium } from 'playwright-core';
 import { mkdir, writeFile } from 'node:fs/promises';
+import { entrarConCodigo } from './entrar-con-codigo.mjs';
 
 const BASE = 'http://localhost:8081';
 const ETIQUETA = process.argv[2] ?? 'antes';
@@ -29,8 +30,8 @@ const SALIDA = 'storage/app/audit';
 const MOVIL = { width: 390, height: 844, hasTouch: true, isMobile: true };
 const ESCRITORIO = { width: 1280, height: 900 };
 
-/** La cuenta de sonda (memoria del proyecto; no está en el repo ni en un seeder). */
-const CLIENTE = { email: 'probe-card@jumpweb.test', password: 'Probe-card-2026!' };
+/** La cuenta de sonda (memoria del proyecto; no está en el repo ni en un seeder). Entra con un código desde la A4a. */
+const CLIENTE = { email: 'probe-card@jumpweb.test' };
 
 /**
  * Lo que se mide dentro del panel. Corre en el navegador.
@@ -291,9 +292,8 @@ async function recorrer(context, viewport, nombreViewport, informe) {
     // de identificarse, que es por donde entra el cliente.
     paso = 'entrar';
     if (await page.locator('#login-email').count()) {
-        await page.fill('#login-email', CLIENTE.email);
-        await page.fill('#login-password', CLIENTE.password);
-        await page.locator('.auth button[type="submit"]').first().click();
+        // Con un código al correo desde la A4a (`acceso-con-codigo.md` §4.11), leído de Mailpit.
+        await entrarConCodigo(page, CLIENTE.email);
     }
     await page.waitForSelector('.bk-paybreakdown, .bk-cta--sells, .pay__summary', { timeout: 20000 }).catch(() => {});
     await medir('08-pagar');

@@ -1,22 +1,26 @@
 import { defineStore } from 'pinia';
-import { runLogin } from '../login.js';
+import { NEXT_CODE, NEXT_REGISTER, runCodeLogin, runDoor } from '../login.js';
 import { runRegister, CONTEXT_STANDALONE } from '../register.js';
 import { runForgot } from '../forgot.js';
 import { MAX_RESENDS, RESEND_COOLDOWN_SECONDS, nextSecond, resendGate } from '../account/verify.js';
-import { ZONES } from '../account/navigation.js';
-import { useAccountStore } from './account.js';
-import { useSectionStore } from './section.js';
 import { useWaiverStore } from './waiver.js';
+
+/**
+ * Las tres caras de la PUERTA (A4a de `docs/specs/acceso-con-codigo.md` §4.11): el correo; el código, si ese correo tiene
+ * cuenta; el alta, si no. Una sola pantalla que cambia de cara, sin pestañas (`#849`).
+ */
+export const STAGE_EMAIL = 'email';
+export const STAGE_CODE = 'code';
+export const STAGE_REGISTER = 'register';
 
 /**
  * El estado del paso 5 — **IDENTIFICARSE sin salir del cajón** (reorganización del SPA, 2026-08-22).
  *
- * ⚠️ **Ninguna regla de auth vive aquí.** Qué credenciales valen, qué errores se enseñan y si un alta
- * consiguió sesión lo deciden `login.js`, `register.js` y `forgot.js` —módulos planos con sus casos de
- * `node --test`—; y los literales que el servidor manda los fijan `Api\V1\AuthSessionTest` y
- * `Api\V1\AuthRegistrationTest`. ⚠️ Hasta el 2026-08-23 los comparaban además dos paridades de árbol
- * contra el modal de Livewire, que se retiró con él (`DECISIONES #122`). Este store guarda los campos,
- * los avisos del último intento y la pestaña activa, y ofrece las secuencias de petición.
+ * ⚠️ **Ninguna regla de auth vive aquí.** A dónde lleva la puerta, qué «no» se enseña y si un alta
+ * consiguió sesión lo deciden `login.js` (la puerta y el código, desde la A4a), `register.js` y `forgot.js`
+ * —módulos planos con sus casos de `node --test`—; y los literales que el servidor manda los fijan
+ * `Api\V1\AuthCodeTest`, `AuthSessionTest` y `AuthRegistrationTest`. Este store guarda los campos, los avisos
+ * del último intento y la CARA de la puerta (el correo, el código o el alta), y ofrece las secuencias de petición.
  *
  * ⚠️⚠️ **Lo que NO hace, y es el corte deliberado**: lo que pasa DESPUÉS de conseguir sesión —avisar a
  * Livewire, aplicar la identidad a la cesta y continuar el checkout— cruza tres dominios y se queda en
@@ -28,13 +32,14 @@ import { useWaiverStore } from './waiver.js';
  */
 
 /**
- * Los campos de los DOS formularios, en un solo objeto.
+ * Los campos de la PUERTA y del alta, en un solo objeto.
  *
- * Juntos y no en dos porque el paso es uno: al salir se limpian de una vez, y **la contraseña no
- * puede sobrevivir** a un cambio de pantalla en una tablet compartida.
+ * Juntos y no en dos porque el paso es uno: al salir se limpian de una vez, y **el código no puede sobrevivir** a un
+ * cambio de pantalla en una tablet compartida. Sin `password` desde la A4a: ningún cliente la escribe ya (`#847`).
+ * `remember` es la casilla «Mantener la sesión iniciada en este dispositivo», SIN marcar de serie (`#858`).
  */
 const emptyForm = () => ({
-    email: '', password: '', remember: false,
+    email: '', code: '', remember: false,
     // `born_on` (TP·1, `#792`): opcional, en `Y-m-d`; `register.js` y `google.js` solo la mandan si hay una.
     name: '', phone: '', born_on: '',
     // ⚠️ **Ni privacidad, ni condiciones, ni marketing: la T8·c las sacó de las dos altas**
@@ -110,8 +115,26 @@ export const useAuthStore = defineStore('auth', {
         /** `true` mientras hay una petición en vuelo: el botón cambia de rótulo, como en la web. */
         busy: false,
 
-        /** La pestaña activa del paso 5. */
-        mode: 'login',
+        /** La cara de la PUERTA: el correo, el código o el alta (`STAGE_*`). */
+        stage: STAGE_EMAIL,
+
+        /**
+         * El correo al que se mandó el código, y si ya fue OTRO (el rótulo lo dice: «Te hemos enviado otro código a …»).
+         *
+         * ⚠️ **Es PII y se limpia con los avisos**, como `pendingEmail`: en una tablet compartida, el siguiente cliente no
+         * puede encontrarse el correo del anterior en «Te hemos enviado un código a …». Y sin él no hay cara de código: la
+         * puerta vuelve al correo.
+         */
+        codeSentTo: '',
+        codeResent: false,
+
+        /**
+         * Segundos hasta poder «Pedir otro código», y su reloj. El servidor admite uno por minuto y correo: ofrecerlo antes
+         * sería ofrecer un 429. El reloj vive aquí y no en la pantalla por lo mismo que el del reenvío de la verificación
+         * (`SidebarComponentBudgetTest`, `#120(r)`): la secuencia se prueba con `node --test`.
+         */
+        codeWait: 0,
+        codeTicker: null,
 
         /**
          * ¿El alta exige captcha en esta instalación? Sale de `GET /config` (`turnstile_site_key`).
@@ -142,23 +165,12 @@ export const useAuthStore = defineStore('auth', {
     },
     actions: {
         /**
-         * Cambia de pestaña.
+         * Borra los avisos del intento anterior **sin tocar el correo escrito**.
          *
-         * Los avisos son de un intento que ya no se ve: arrastrarlos entre pestañas confunde.
-         */
-        setMode(mode) {
-            this.mode = mode === 'register' ? 'register' : 'login';
-            this.clearNotices();
-        },
-
-        /**
-         * Borra los avisos del intento anterior **sin tocar los campos**.
-         *
-         * ⚠️ Es lo que pide una zona de auth al montarse, y la diferencia con `reset()` importa: en el
-         * área de cliente las tres pantallas comparten formulario, así que quien escribe su correo,
-         * pulsa «he olvidado mi contraseña» y vuelve **no tiene que escribirlo otra vez**. Lo que no
-         * puede sobrevivir a un cambio de pantalla es un aviso —que describiría un intento que ya no
-         * se ve— ni el «ya te hemos enviado el enlace».
+         * ⚠️ Es lo que pide la zona de la puerta al montarse, y la diferencia con `reset()` importa: quien escribe su correo,
+         * se va y vuelve **no tiene que escribirlo otra vez**. Lo que no puede sobrevivir a un cambio de pantalla es un aviso
+         * —que describiría un intento que ya no se ve—, el «ya te hemos enviado el enlace» ni el correo al que fue un código
+         * (PII): sin él, la puerta vuelve a su primera cara, y el código escrito se va con ella.
          */
         clearNotices() {
             this.loginError = NO_LOGIN_ERROR();
@@ -169,6 +181,138 @@ export const useAuthStore = defineStore('auth', {
             this.resendsLeft = 0;
             this.resendSeconds = 0;
             this.resendArmed = false;
+            this.stage = STAGE_EMAIL;
+            this.codeSentTo = '';
+            this.codeResent = false;
+            this.form.code = '';
+            this.stopCodeWait();
+        },
+
+        /**
+         * **LA PUERTA**: con cuenta, a escribir el código que el servidor acaba de mandar; nuevo, al alta. Devuelve el
+         * resultado tal cual lo compone `login.js`.
+         *
+         * ⚠️ La guarda de reentrada vive aquí y no en el botón: `disabled` es presentación y un `Enter` repetido no pasa por
+         * él (y cada «Continuar» de más es un correo de más).
+         */
+        async requestCode({ api, messages, auth, account }) {
+            if (this.busy) {
+                return { next: null, skipped: true };
+            }
+
+            this.busy = true;
+
+            try {
+                const email = String(this.form.email ?? '').trim();
+                const result = await runDoor({ email, api, messages, auth, account });
+
+                this.loginError = result.errors;
+                this.registerError = NO_REGISTER_ERROR();
+
+                if (result.next === NEXT_CODE) {
+                    this.showCode(email, false);
+                } else if (result.next === NEXT_REGISTER) {
+                    this.stage = STAGE_REGISTER;
+                }
+
+                return result;
+            } finally {
+                this.busy = false;
+            }
+        },
+
+        /**
+         * «Pedir otro código», al MISMO correo: la puerta otra vez. Solo cuando la espera llegó a cero —el servidor admite
+         * uno por minuto y correo—, y el rótulo pasa a «Te hemos enviado otro código a …».
+         */
+        async resendCode({ api, messages, auth, account }) {
+            if (this.busy || this.codeWait > 0 || this.codeSentTo === '') {
+                return { next: null, skipped: true };
+            }
+
+            this.busy = true;
+
+            try {
+                const email = this.codeSentTo;
+                const result = await runDoor({ email, api, messages, auth, account });
+
+                this.loginError = result.errors;
+                if (result.next === NEXT_CODE) {
+                    this.showCode(email, true);
+                } else if (result.next === NEXT_REGISTER) {
+                    // La cuenta dejó de existir entre los dos correos (se borró): lo que queda es darse de alta.
+                    this.stage = STAGE_REGISTER;
+                }
+
+                return result;
+            } finally {
+                this.busy = false;
+            }
+        },
+
+        /**
+         * **ENTRAR con el código.** Devuelve el resultado tal cual lo compone `login.js`; quien llama decide qué hacer con la
+         * sesión (la compra sigue, Mi cuenta aterriza). El correo es AL QUE SE MANDÓ el código, no el que haya en el campo.
+         */
+        async loginWithCode({ api, messages, auth, account }) {
+            if (this.busy) {
+                return { ok: false, skipped: true };
+            }
+
+            this.busy = true;
+
+            try {
+                const result = await runCodeLogin({
+                    email: this.codeSentTo, code: this.form.code, remember: this.form.remember, api, messages, auth, account,
+                });
+                this.loginError = result.errors;
+                // El `CodeInput` del diseño (`#861`): tras un «no» AL CÓDIGO se vacía, para escribirlo entero otra vez (y con la
+                // sexta cifra se comprueba solo). Un corte de red o el limitador no lo tocan: ese código puede seguir valiendo.
+                if (result.errors?.fields?.code) this.form.code = '';
+
+                return result;
+            } finally {
+                this.busy = false;
+            }
+        },
+
+        /** La cara del código para ese correo, con la espera de «Pedir otro código» llena. */
+        showCode(email, resent) {
+            this.stage = STAGE_CODE;
+            this.codeSentTo = email;
+            this.codeResent = resent;
+            this.form.code = '';
+            this.startCodeWait();
+        },
+
+        /**
+         * «Cambiar el correo»: de vuelta a la primera cara, con el correo escrito para corregirlo. Se van el código, el correo
+         * al que fue (PII) y los avisos de un intento que ya no se ve.
+         */
+        changeEmail() {
+            this.stage = STAGE_EMAIL;
+            this.codeSentTo = '';
+            this.codeResent = false;
+            this.form.code = '';
+            this.loginError = NO_LOGIN_ERROR();
+            this.registerError = NO_REGISTER_ERROR();
+            this.stopCodeWait();
+        },
+
+        /** Arranca (o reinicia) la espera de «Pedir otro código». Siempre para la anterior: dos relojes la gastarían al doble. */
+        startCodeWait() {
+            this.stopCodeWait();
+            this.codeWait = RESEND_COOLDOWN_SECONDS;
+            this.codeTicker = setInterval(() => { this.codeWait = nextSecond(this.codeWait); }, 1000);
+        },
+
+        /** Para el reloj de la espera. Un temporizador huérfano no muere solo (y deja `node --test` colgado). */
+        stopCodeWait() {
+            if (this.codeTicker !== null) {
+                clearInterval(this.codeTicker);
+                this.codeTicker = null;
+            }
+            this.codeWait = 0;
         },
 
         /**
@@ -238,7 +382,7 @@ export const useAuthStore = defineStore('auth', {
         },
 
         /**
-         * Deja los TRES formularios en blanco. La contraseña no se queda en memoria de más.
+         * Deja la puerta y el alta en blanco, y en su primera cara. El código no se queda en memoria de más.
          *
          * ⚠️ **`forgotSent` también se limpia, y no es simetría gratuita**: es lo que impide que quien
          * abra la pantalla de recuperar se encuentre el «revisa tu correo» de la visita anterior —o
@@ -260,29 +404,6 @@ export const useAuthStore = defineStore('auth', {
          */
         clearCaptchaToken() {
             this.form.turnstile_token = '';
-        },
-
-        /**
-         * Envía las credenciales. Devuelve el resultado tal cual lo compone `login.js`.
-         *
-         * ⚠️ **La guarda de reentrada vive aquí y no en el botón**: `disabled` es presentación y un
-         * `Enter` repetido no pasa por él.
-         */
-        async login({ api, messages, auth }) {
-            if (this.busy) {
-                return { ok: false, skipped: true };
-            }
-
-            this.busy = true;
-
-            try {
-                const result = await runLogin({ credentials: this.form, api, messages, auth });
-                this.loginError = result.errors;
-
-                return result;
-            } finally {
-                this.busy = false;
-            }
         },
 
         /**
@@ -333,39 +454,6 @@ export const useAuthStore = defineStore('auth', {
         },
 
         /**
-         * Pide el enlace de recuperación. Devuelve el resultado tal cual lo compone `forgot.js`.
-         *
-         * ⚠️ **La guarda de reentrada es la MISMA `busy` que los otros dos**, y eso es deliberado: los
-         * tres formularios comparten pantalla dentro de la sección de cuenta, y dos peticiones de auth
-         * a la vez desde el mismo cajón no es un estado que nadie quiera razonar. Vive aquí y no en el
-         * botón porque `disabled` es presentación y un `Enter` repetido no pasa por él.
-         */
-        /**
-         * **Lleva a RECUPERAR la contraseña sin salir del cajón** (`specs/auth-en-cajon.md` §3.4).
-         *
-         * ⚠️ **Cierra un atasco real**: hasta hoy, quien estaba comprando y no recordaba su
-         * contraseña **tenía que abandonar el cajón** —el enlace era una rama `@unless ($embedded)`
-         * que dentro de la compra no se pintaba—, y con él perdía de vista su cesta.
-         *
-         * ⚠️⚠️ **Entra SIN sembrar nada debajo, y eso es lo que hace que «volver» funcione.** De donde
-         * viene el cliente —el paso 5 del embudo— **no es una zona**, así que no hay ninguna a la que
-         * volver: con la pila vacía, `back()` sale de la sección y la compra reaparece donde estaba,
-         * con su cesta. Sembrar `LOGIN` aquí —que es lo correcto cuando se llega por una PUERTA— le
-         * dejaría en el área de cliente. La regla, con sus tres casos, en `parentZoneFor()`.
-         *
-         * ▶ **Y vive en el STORE y no en el componente del embudo por dos razones**, las dos medidas:
-         * `sections/PurchaseSection.vue` está clavado en su presupuesto de 431 líneas y los tres
-         * `import` que esto necesita lo habrían roto; y, sobre todo, **el embudo no tiene por qué
-         * saber de zonas de cuenta** — enseñarle ese vocabulario es volver a mezclar los dos dominios
-         * que `DECISIONES #119` separó.
-         */
-        startPasswordRecovery() {
-            this.clearNotices();
-            useAccountStore().enter(ZONES.FORGOT);
-            useSectionStore().showAccount();
-        },
-
-        /**
          * **El alta SUELTA, con su desenlace.** La usa el área de cliente; el embudo llama a
          * `register()` con su propio contexto.
          *
@@ -374,7 +462,7 @@ export const useAuthStore = defineStore('auth', {
          * limpiar y qué dejar en pantalla— y encadenarlas dentro de un `.vue` las deja sin red, porque
          * los componentes se comparan por su ÁRBOL y un árbol no dice qué se llamó ni en qué orden.
          *
-         * ⚠️ **El correo se captura ANTES de llamar**: `reset()` vacía el formulario —la contraseña no
+         * ⚠️ **El correo se captura ANTES de llamar**: `reset()` vacía el formulario —nada de lo escrito
          * puede sobrevivir a un cambio de pantalla— y sin esa copia no quedaría a quién reenviarle.
          *
          * ⚠️⚠️ **Y el desenlace es el MISMO para un alta buena y para un señuelo que actuó.** El 201
@@ -433,6 +521,14 @@ export const useAuthStore = defineStore('auth', {
             return { ok: response.ok === true, response };
         },
 
+        /**
+         * Pide el enlace de recuperación. Devuelve el resultado tal cual lo compone `forgot.js`.
+         *
+         * ⚠️ Sigue hasta la A4b (`acceso-con-codigo.md` §4.11): la zona de recuperar ya solo se abre CON sesión, desde el
+         * aviso de quien no tiene contraseña en las cuatro acciones que aún la piden (`/recuperar-contrasena` abre la puerta).
+         * La guarda de reentrada es la MISMA `busy` que la de la puerta: dos peticiones de auth a la vez desde el mismo cajón
+         * no es un estado que nadie quiera razonar.
+         */
         async requestPasswordLink({ api, messages, auth }) {
             if (this.busy) {
                 return { ok: false, skipped: true };

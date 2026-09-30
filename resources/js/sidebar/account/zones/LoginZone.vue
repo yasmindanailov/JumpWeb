@@ -1,61 +1,70 @@
 <script setup>
-import { useAuthStore } from '../../stores/auth.js';
-import { useAccountStore } from '../../stores/account.js';
-import { ZONES } from '../navigation.js';
+import { useAuthStore, STAGE_REGISTER } from '../../stores/auth.js';
 import { landOnAccount } from '../after-auth.js';
 import { api } from '../../api.js';
-import LoginForm from '../../steps/LoginForm.vue';
+import EntryForm from '../../steps/EntryForm.vue';
+import RegisterZone from './RegisterZone.vue';
 
 /**
- * **IDENTIFICARSE dentro del cajón, fuera de la compra** (`specs/auth-en-cajon.md` §4.1).
+ * **LA PUERTA de Mi cuenta** (A4a de `docs/specs/acceso-con-codigo.md` §4.11; antes, `specs/auth-en-cajon.md` §4.1): la
+ * zona en la que aterriza un invitado que entra al área de cliente, y la de `/login` y `/registro`
+ * (`App\Http\Sidebar\AccountDoor`). Sus tres caras, sin pestañas (`#849`): el correo y el código (`EntryForm`, el mismo
+ * del paso 5 de la compra) y el alta (`RegisterZone`, contexto `standalone`), con su «revisa tu correo» si el alta
+ * acabó sin sesión (el señuelo).
  *
- * Es la zona en la que aterriza un invitado que entra al área de cliente, y la que sustituye al modal
- * de login de la cabecera — el último de los tres sitios que `DECISIONES #66` quería unificar.
- *
- * ⚠️ **Reutiliza `steps/LoginForm.vue`, no lo copia**: es el mismo formulario del paso 5 del embudo,
- * ya probado contra el servidor. Lo único que enciende esta zona es el enlace de «¿olvidaste tu
- * contraseña?», que en el embudo sigue apagado hasta su propio paso.
- *
- * ⚠️⚠️ **Al entrar bien se NAVEGA, y eso lo obliga una medida**: los textos del área viajan solo con
- * sesión, así que quedarse aquí dejaría el índice con los rótulos en blanco. El porqué completo está
- * en `account/after-auth.js`, que además es lo que hace que la pila de retorno no conserve esta
- * pantalla y que el formulario no sobreviva en un dispositivo compartido.
+ * ⚠️⚠️ **Al entrar bien se NAVEGA, y eso lo obliga una medida**: los textos del área viajan solo con sesión, así que
+ * quedarse aquí dejaría el índice con los rótulos en blanco. El porqué completo, en `account/after-auth.js`, que además hace
+ * que la pila de retorno no conserve esta pantalla y que el código no sobreviva en un dispositivo compartido.
  */
 const props = defineProps({
-    /** El grupo `account`, podado: de aquí salen los rótulos del formulario. */
+    /** El grupo `account`, podado: de aquí salen los rótulos de la puerta y del alta. */
     account: { type: Object, default: () => ({}) },
     /** El grupo `tickets`: el aviso genérico de «inténtalo más tarde». */
     messages: { type: Object, default: () => ({}) },
     /** El grupo `auth`: los literales del «no» del servidor. */
     auth: { type: Object, default: () => ({}) },
-    /** Las rutas que compone el servidor. De aquí sale la puerta a la que se aterriza. */
+    /** Las rutas que compone el servidor. De aquí salen la puerta a la que se aterriza y la ida a Google. */
     urls: { type: Object, default: () => ({}) },
 });
 
 const store = useAuthStore();
-const nav = useAccountStore();
 
-// Los avisos son de un intento que ya no se ve; los CAMPOS no se tocan, para que quien vaya a
-// recuperar su contraseña y vuelva no tenga que escribir su correo dos veces.
+// Los avisos son de un intento que ya no se ve, y el correo al que fue un código es PII: la puerta empieza en su primera
+// cara. El correo ESCRITO se queda: quien vuelve no tiene que teclearlo otra vez.
 store.clearNotices();
 
-async function submit() {
-    const result = await store.login({ api, messages: props.messages, auth: props.auth });
+const texts = () => ({ api, messages: props.messages, auth: props.auth, account: props.account });
+
+async function enter() {
+    const result = await store.loginWithCode(texts());
 
     if (result.ok) landOnAccount({ urls: props.urls });
 }
 </script>
 
 <template>
-    <LoginForm
+    <RegisterZone
+        v-if="store.stage === STAGE_REGISTER || store.pendingEmail"
+        :account="account"
+        :messages="messages"
+        :auth="auth"
+        :urls="urls" />
+
+    <EntryForm
+        v-else
         v-model:email="store.form.email"
-        v-model:password="store.form.password"
+        v-model:code="store.form.code"
         v-model:remember="store.form.remember"
+        :stage="store.stage"
         :errors="store.loginError"
         :submitting="store.busy"
         :account="account"
-        :with-recovery="true"
         :google-url="urls.google ?? ''"
-        @submit="submit"
-        @recover="nav.go(ZONES.FORGOT)" />
+        :sent-to="store.codeSentTo"
+        :resent="store.codeResent"
+        :wait="store.codeWait"
+        @continue="store.requestCode(texts())"
+        @enter="enter"
+        @resend="store.resendCode(texts())"
+        @change-email="store.changeEmail()" />
 </template>

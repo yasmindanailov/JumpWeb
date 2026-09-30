@@ -70,7 +70,11 @@ class SidebarBootTest extends ApiTestCase
             ->assertOk()
             ->assertValidRequest()
             ->assertValidResponse(200)
-            ->assertJsonStructure(['messages', 'ui', 'account' => ['login', 'register', 'forgot', 'nav', 'sidecart', 'verify'], 'auth', 'urls' => ['contact', 'terms', 'privacy']]);
+            ->assertJsonStructure(['messages', 'ui', 'account' => ['login', 'register', 'nav', 'sidecart', 'verify'], 'auth', 'urls' => ['contact', 'terms', 'privacy']])
+            // Los de RECUPERAR la contraseña no son de la mitad compartida desde la A4a (`acceso-con-codigo.md` §4.11):
+            // entrar ya no pide contraseña, y quien aún la usa —las cuatro acciones delicadas, hasta la A4b— tiene sesión,
+            // así que le llegan con lo personal (`sidebar/session`).
+            ->assertJsonMissingPath('account.forgot');
 
         $cache = (string) $response->headers->get('Cache-Control');
         $this->assertStringContainsString('public', $cache);
@@ -146,7 +150,8 @@ class SidebarBootTest extends ApiTestCase
             ->assertOk()
             ->assertValidResponse(200)
             ->assertJsonPath('userId', $holder->id)
-            ->assertJsonStructure(['account' => ['account' => ['title', 'password', 'privacy', 'dependents', 'card'], 'orders', 'purchases'], 'locales', 'accountContext']);
+            // `forgot` viaja AQUÍ desde la A4a: la zona de recuperar se abre desde las cuatro que aún piden contraseña.
+            ->assertJsonStructure(['account' => ['account' => ['title', 'password', 'privacy', 'dependents', 'card'], 'orders', 'purchases', 'forgot'], 'locales', 'accountContext']);
     }
 
     /**

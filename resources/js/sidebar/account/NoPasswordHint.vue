@@ -20,8 +20,9 @@ import { t as translate } from '../i18n.js';
  * siendo verdad y útil —también se olvidan contraseñas—; para quien no, es la única puerta.
  * ▶ La alternativa medida queda en `DEUDA.md` por si algún día compensa.
  *
- * ⚠️ **El rótulo del botón se REUTILIZA** (`forgot.title`), que ya viaja en TODAS las páginas por ser
- * texto de invitado: el rótulo más barato es el que ya está en el payload.
+ * ⚠️ **El rótulo del botón se REUTILIZA** (`forgot.title`): el rótulo más barato es el que ya está en el
+ * payload. Desde la A4a (`acceso-con-codigo.md` §4.11) el subgrupo viaja solo CON sesión —sin ella ya no se
+ * llega a recuperar—, que es justo cuando se pinta este aviso. Los dos se van en la A4b.
  */
 defineProps({
     /** El grupo `account`, del que salen la frase y el rótulo del botón. */

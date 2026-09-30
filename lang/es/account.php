@@ -239,15 +239,31 @@ return [
         ],
     ],
 
+    // LA PUERTA del cajón, con un código al correo (A4a de `acceso-con-codigo.md` §4.11, `#848`/`#849`): el correo decide si
+    // se entra con el código o se crea la cuenta. Las frases, las de la isla que el owner ya vio (A3a, `#857`). Sin
+    // `password` ni `forgot`: ningún cliente escribe ya una contraseña. `cta` es el rótulo corto de los enlaces a la puerta.
     'login' => [
         'cta' => 'Entrar',
-        'title' => 'Inicia sesión',
+        'title' => 'Entra',
+        'intro' => 'Escribe tu correo.',
         'email' => 'Email',
-        'password' => 'Contraseña',
-        'remember' => 'Mantener la sesión iniciada',
+        'continue' => 'Continuar',
+        'sending' => 'Enviando el código…',
+        'suggest' => '¿Querías decir :email?',
+        // Los del CÓDIGO, del `CodeInput` del diseño (zip (6), `#861`). `:site` y `:minutes` los pone el servidor al montar el
+        // cajón (`SidebarBoot`, con el nombre del negocio y la vida del código): el diseño dice «15 minutos» y el código dura 10.
+        'code' => 'Código de 6 cifras',
+        'code_hint' => 'Te llega de :site. Caduca en :minutes minutos; si no lo ves, mira en correo no deseado.',
+        'code_sent' => 'Te hemos enviado un código de 6 cifras a :email.',
+        'code_resent' => 'Te hemos enviado otro a :email. El anterior ya no vale.',
+        'code_again' => 'Reenviar el código',
+        'code_again_in' => 'Reenviar el código en :t',
+        'code_wrong' => 'El código no es correcto o ha caducado. Pide otro.',
+        // `#858`: la casilla, SIN marcar de serie; los 90 días y la cookie los explica `/cookies`.
+        'remember' => 'Mantener la sesión iniciada en este dispositivo',
+        'change_email' => 'Cambiar el correo',
         'submit' => 'Entrar',
         'submitting' => 'Entrando…',
-        'forgot' => '¿Olvidaste tu contraseña?',
     ],
 
     'forgot' => [
@@ -273,9 +289,9 @@ return [
     ],
 
     'register' => [
-        'cta' => 'Crear cuenta',
         'title' => 'Crea tu cuenta',
-        'subtitle' => 'Necesaria para reservar entradas y cumpleaños.',
+        // Desde la A4a el alta es la cara de la puerta para un correo NUEVO: lo dice (la nota de la isla, `#857`).
+        'subtitle' => 'Aún no tienes cuenta con ese correo: rellena tus datos y entras al momento.',
         'name' => 'Nombre y apellidos',
         'email' => 'Email',
         'phone' => 'Teléfono',

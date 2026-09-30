@@ -1090,6 +1090,40 @@
     background: none; border: none; cursor: pointer; padding: 0;
     font: inherit; color: var(--interactive); font-weight: 600; text-decoration: underline;
 }
+/* Deshabilitado, que se VEA (A4a, medido en la sonda): el reenvío de la verificación esperando y «Cerrar sesión» mientras
+   sale se pintaban igual que un enlace vivo, y un toque que no hace nada parece un fallo. Con el color de la fila. */
+.auth__switch button:disabled { color: var(--fg-mute); text-decoration: none; cursor: default; }
+
+/* ---------- el código de un solo uso: el `CodeInput` del diseño (`steps/CodeInput.vue`, A4a, `#861`) ----------
+   Seis casillas que se VEN y un campo de verdad encima, invisible: el que escribe, pega y rellena el móvil. Las casillas,
+   con la receta de los campos del cajón (fondo, línea, radio y el foco en tinta); el campo, a 16 px para que iOS no amplíe. */
+.code-input { display: flex; flex-direction: column; gap: var(--sp-6); margin-bottom: var(--sp-18); }
+.code-input > .form__label { font-family: var(--font-body); font-size: var(--fs-13); font-weight: 600; color: var(--fg); }
+.code-input__boxes { position: relative; display: flex; gap: var(--sp-8); max-width: 400px; }
+.code-input__box {
+    flex: 1 1 0; min-width: 0; max-width: 56px; height: 56px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--r-btn);
+    font-family: var(--font-mono); font-size: 1.5rem; font-weight: 500; line-height: 1; font-variant-numeric: tabular-nums;
+    color: var(--fg); transition: border-color var(--dur-sale) var(--ease-sale);
+}
+.code-input__box.is-filled, .code-input__box.is-active { border-color: var(--fg); }
+.code-input__box.is-active { outline: var(--focus-outline); outline-offset: 2px; }
+.code-input__box.is-active:not(.is-filled)::after {
+    content: ''; width: 2px; height: 24px; background: currentColor; animation: code-caret 1s steps(1) infinite;
+}
+@keyframes code-caret { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .code-input__box.is-active:not(.is-filled)::after { animation: none; } }
+/* El guion entre los dos grupos (482 – 913), como en el correo: solo se ve. */
+.code-input__dash { flex: 0 0 auto; align-self: center; width: 10px; height: 2px; background: var(--fg-mute); }
+.code-input__field {
+    position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; padding: 0; border: 0;
+    opacity: 0; font-size: var(--fs-16); color: transparent; caret-color: transparent; background: transparent; cursor: text;
+}
+.code-input.has-error .code-input__box { border-color: var(--err); }
+.code-input.is-disabled .code-input__boxes { opacity: .42; }
+.code-input.is-disabled .code-input__field { cursor: not-allowed; }
+.code-input .auth__switch { margin-top: var(--sp-6); text-align: left; }
 
 /* ---------- banner de avisos (flash) ---------- */
 .flash {
@@ -3488,22 +3522,6 @@ body[data-has-hero].nav--live .hero__pair-slot {
     from { opacity: 0; transform: rotate(-6deg); }
     to   { opacity: 1; transform: rotate(-6deg); }
 }
-/* ⚠️⚠️ **La barra de pestañas del CAJÓN manda sobre su propio ancho, y no lo hereda del viewport**
-   (2026-08-23). `.zone-tabs` nace `inline-flex` porque en la landing vive dentro de contenedores que
-   la centran (`.ticket-prices__tabs`, `.rides__controls`); la regla que la pone a ancho completo vive
-   **dentro de un media query de MÓVIL**, escrito para aquella pantalla.
-   ▶ El cajón no es una pantalla: es un **panel estrecho a cualquier viewport**, así que depender del
-   ancho de la ventana le daba dos aspectos distintos para el mismo sitio — y, sin un bloque delante,
-   dejaba las pestañas **compartiendo línea con el botón «Volver»**, que es `inline-flex` también. El
-   `<h2>` del armazón lo tapaba por accidente hasta que dejó de pintarse en las zonas de auth.
-   ▶ Se arregla aquí, en el modificador que el cajón YA tenía para este componente, y no tocando
-   `.zone-tabs`: la landing sigue exactamente como estaba. */
-/* La barra de «Entrar / Crear cuenta» ocupa el ancho del panel. ⚠️ Desde `#561` la pieza es
-   `.tabset`, la del SISTEMA, y con ella **se cae la regla que repartía los botones 50/50**: la traía
-   `.zone-tab`, que se dimensionaba por la longitud de su rótulo —medido en `#125`: 103 px y 156 px,
-   con el hueco a la derecha, y «Entrar» leyéndose como menos que «Crear cuenta»—. `.tabset__tab` ya
-   declara `flex: 1` de fábrica, así que el defecto desaparece con su causa en vez de con un parche. */
-.purchase__authtabs { width: 100%; margin-bottom: var(--sp-16); }
 
 /* ====================================================================
    Mis pedidos (Fase 5): lista de reservas con detalle.

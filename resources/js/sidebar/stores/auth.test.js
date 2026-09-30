@@ -1,21 +1,23 @@
 import { test, describe, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { createPinia, setActivePinia } from 'pinia';
-import { useAuthStore } from './auth.js';
+import { useAuthStore, STAGE_CODE, STAGE_EMAIL, STAGE_REGISTER } from './auth.js';
 import { useWaiverStore } from './waiver.js';
 import { MAX_RESENDS, RESEND_COOLDOWN_SECONDS, resendGate } from '../account/verify.js';
-import { createNavigation } from '../account/navigation.js';
-import { useAccountStore } from './account.js';
-import { useSectionStore } from './section.js';
 
 /**
- * La red del store de IDENTIFICARSE.
+ * La red del store de IDENTIFICARSE: la PUERTA con código (A4a de `acceso-con-codigo.md` §4.11), el alta y sus reenvíos.
  *
  * ⚠️ **Se dobla solo la frontera HTTP.** `login.js` y `register.js` corren de verdad —ya tienen sus
  * casos y su paridad contra el servidor—, así que esto prueba el store Y su costura con ellos, que es
  * justo lo que un doble de módulo habría dejado sin comprobar.
  */
 const MENSAJES = { errors: { try_later: 'Espera un minuto.' } };
+
+/** Los textos del cajón que la puerta pinta en sus «no». */
+const CUENTA = { login: { code_wrong: 'El código no es correcto o ha caducado. Pide otro.' } };
+
+const TEXTOS = { messages: MENSAJES, auth: {}, account: CUENTA };
 
 /**
  * ⚠️ **El último store creado se guarda para poder pararle el reloj pase lo que pase.**
@@ -36,6 +38,8 @@ function store() {
 
 afterEach(() => {
     ultimoStore?.stopResendCountdown?.();
+    // Y el de «Pedir otro código» (A4a), por lo mismo: un reloj vivo deja `node --test` colgado.
+    ultimoStore?.stopCodeWait?.();
     ultimoStore = null;
 });
 
@@ -59,71 +63,32 @@ function fakeApi(respuestas) {
 }
 
 describe('el store de identificarse', () => {
-    test('arranca en la pestaña de entrar, sin avisos y con el formulario en blanco', () => {
+    test('arranca en la primera cara de la puerta, sin avisos y con el formulario en blanco', () => {
         const a = store();
 
-        assert.equal(a.mode, 'login');
+        assert.equal(a.stage, STAGE_EMAIL);
         assert.equal(a.busy, false);
         assert.equal(a.form.email, '');
-        assert.equal(a.form.password, '');
+        assert.equal(a.form.code, '');
+        assert.equal(a.form.remember, false, 'la casilla de recordar nace SIN marcar (`#858`)');
+        assert.equal('password' in a.form, false, 'ningún cliente escribe ya una contraseña (A4a)');
         assert.equal(a.form.website, '', 'el señuelo empieza vacío: rellenarlo es lo que delata al bot');
         assert.deepEqual(a.loginError, { global: '', fields: {} });
     });
 
-    test('cambiar de pestaña BORRA los avisos del intento anterior', () => {
-        const a = store();
-        a.loginError = { global: 'Credenciales incorrectas', fields: { email: ['x'] } };
-        a.registerError = { summary: ['algo'], fields: {} };
-
-        a.setMode('register');
-
-        assert.equal(a.mode, 'register');
-        assert.equal(a.loginError.global, '', 'arrastrar un aviso a la otra pestaña confunde');
-        assert.deepEqual(a.registerError.summary, []);
-
-        a.setMode('cualquier-cosa');
-        assert.equal(a.mode, 'login', 'lo que no es «register» es entrar');
-    });
-
-    test('entrar con credenciales buenas devuelve el perfil y no deja avisos', async () => {
-        const a = store();
-        a.form.email = 'cliente@ejemplo.test';
-        a.form.password = 'secreto';
-        const api = fakeApi({ '/auth/login': { ok: true, status: 200, data: { id: 7, email: 'cliente@ejemplo.test' } } });
-
-        const r = await a.login({ api, messages: MENSAJES, auth: {} });
-
-        assert.equal(r.ok, true);
-        assert.equal(a.busy, false, 'el indicador se apaga pase lo que pase');
-        assert.equal(a.loginError.global, '');
-        assert.deepEqual(api.llamadas[0].body, { email: 'cliente@ejemplo.test', password: 'secreto', remember: false });
-    });
-
-    test('un login rechazado deja su aviso y NO limpia el formulario', async () => {
-        const a = store();
-        a.form.email = 'cliente@ejemplo.test';
-        const api = fakeApi({ '/auth/login': { ok: false, status: 422, data: { errors: { email: ['Credenciales incorrectas'] } } } });
-
-        const r = await a.login({ api, messages: MENSAJES, auth: {} });
-
-        assert.equal(r.ok, false);
-        assert.equal(a.form.email, 'cliente@ejemplo.test', 'volver a teclear el correo tras un fallo es hostil');
-        assert.equal(a.busy, false);
-    });
-
     /**
      * ⚠️ La guarda vive en el STORE y no en el `disabled` del botón: `disabled` es presentación, y un
-     * `Enter` repetido no pasa por él. Dos altas simultáneas con el mismo token del anti-bot serían
-     * un «no eres un robot» con el tick verde puesto.
+     * `Enter` repetido no pasa por él. Dos «Continuar» seguidos serían dos correos con dos códigos, y el
+     * primero ya no valdría.
      */
     test('no se puede lanzar una segunda petición con la primera en vuelo', async () => {
         const a = store();
         a.busy = true;
 
         const api = fakeApi({});
-        const r = await a.login({ api, messages: MENSAJES, auth: {} });
 
-        assert.deepEqual(r, { ok: false, skipped: true });
+        assert.deepEqual(await a.requestCode({ api, ...TEXTOS }), { next: null, skipped: true });
+        assert.deepEqual(await a.loginWithCode({ api, ...TEXTOS }), { ok: false, skipped: true });
         assert.equal(api.llamadas.length, 0, 'no debería haber salido ninguna petición');
     });
 
@@ -156,16 +121,20 @@ describe('el store de identificarse', () => {
         assert.equal(a.form.turnstile_token, 'token');
     });
 
-    test('reiniciar deja el formulario en blanco, contraseña incluida', () => {
+    test('reiniciar deja el formulario en blanco, código incluido, y la puerta en su primera cara', () => {
         const a = store();
         a.form.email = 'x@y.z';
-        a.form.password = 'secreto';
+        a.showCode('x@y.z', false);
+        a.form.code = '482913';
         a.loginError = { global: 'algo', fields: {} };
 
         a.reset();
 
-        assert.equal(a.form.password, '', 'la contraseña no sobrevive a un cambio de pantalla');
+        assert.equal(a.form.code, '', 'el código no sobrevive a un cambio de pantalla');
         assert.equal(a.form.email, '');
+        assert.equal(a.stage, STAGE_EMAIL);
+        assert.equal(a.codeSentTo, '');
+        assert.equal(a.codeWait, 0, 'y su reloj, parado');
         assert.equal(a.loginError.global, '');
     });
 
@@ -212,40 +181,162 @@ describe('el CONTEXTO del alta, que decide quien llama', () => {
     });
 });
 
-describe('ir a recuperar la contraseña desde el EMBUDO', () => {
-    /**
-     * ⚠️⚠️ **Lo que se fija aquí es que la pila quede VACÍA, y no es un detalle**
-     * (`specs/auth-en-cajon.md` §3.4). El cliente viene del paso 5 de la compra, que **no es una
-     * zona**: con la pila vacía, «volver» sale de la sección y la compra reaparece donde estaba, con
-     * su cesta. Si esto sembrara `LOGIN` debajo —que es lo correcto cuando se llega por una PUERTA—
-     * el cliente que estaba comprando acabaría en el área de cliente con su compra abandonada.
-     */
-    test('lleva a recuperar y deja «volver» significando SALIR a la compra', () => {
+describe('la PUERTA: el correo decide (A4a, `#849`)', () => {
+    const CODIGO = { '/auth/code': { ok: true, status: 200, data: { next: 'code' }, error: null } };
+
+    test('con cuenta: la cara del código, para el correo al que fue y con la espera de «Pedir otro» llena', async () => {
         const a = store();
-        const cuenta = useAccountStore();
-        cuenta.boot(createNavigation());
+        a.form.email = '  ana@correo.es ';
+        const api = fakeApi(CODIGO);
 
-        a.startPasswordRecovery();
+        const r = await a.requestCode({ api, ...TEXTOS });
 
-        assert.equal(cuenta.zone, 'forgot');
-        assert.equal(useSectionStore().onAccount, true, 'no ha conmutado de sección: seguiría viéndose el embudo');
-        assert.equal(cuenta.canBack, false, 'con algo debajo, «volver» dejaría al cliente en el área en vez de en su compra');
-
-        // Y «volver» devuelve de verdad a la compra.
-        assert.equal(cuenta.back(), false);
-        assert.equal(useSectionStore().onPurchase, true);
+        assert.equal(r.next, 'code');
+        assert.equal(a.stage, STAGE_CODE);
+        assert.equal(a.codeSentTo, 'ana@correo.es', 'el correo recortado: es el que se pinta y al que se entra');
+        assert.equal(a.codeResent, false);
+        assert.equal(a.codeWait, RESEND_COOLDOWN_SECONDS, 'el servidor admite uno por minuto: antes, sería ofrecer un 429');
+        assert.deepEqual(api.llamadas[0], { url: '/auth/code', body: { email: 'ana@correo.es' } });
     });
 
-    test('y limpia los avisos del intento anterior sin borrar el correo escrito', () => {
+    test('nuevo: la cara del alta, sin ningún código', async () => {
         const a = store();
-        useAccountStore().boot(createNavigation());
-        a.form.email = 'cliente@ejemplo.test';
-        a.loginError = { global: 'Credenciales incorrectas', fields: {} };
+        a.form.email = 'nuevo@correo.es';
 
-        a.startPasswordRecovery();
+        await a.requestCode({ api: fakeApi({ '/auth/code': { ok: true, status: 200, data: { next: 'register' }, error: null } }), ...TEXTOS });
 
-        assert.equal(a.loginError.global, '', 'un aviso del login sobre la pantalla de recuperar no describe nada');
-        assert.equal(a.form.email, 'cliente@ejemplo.test', 'volver a teclear el correo aquí sería hostil');
+        assert.equal(a.stage, STAGE_REGISTER);
+        assert.equal(a.codeSentTo, '');
+        assert.equal(a.codeWait, 0);
+    });
+
+    test('el tope del CORREO (429 con `next: code`) lleva al código SIN aviso: hay uno recién enviado', async () => {
+        const a = store();
+        a.form.email = 'ana@correo.es';
+        const limite = { ok: false, status: 429, data: null, error: { code: 'too_many_requests', params: { retry_after: 40, next: 'code' } } };
+
+        await a.requestCode({ api: fakeApi({ '/auth/code': limite }), ...TEXTOS });
+
+        assert.equal(a.stage, STAGE_CODE);
+        assert.deepEqual(a.loginError, { global: '', fields: {} });
+    });
+
+    test('un «no» se queda en el correo, con su aviso', async () => {
+        const a = store();
+        a.form.email = 'ana@correo.es';
+
+        await a.requestCode({ api: fakeApi({}), ...TEXTOS });
+
+        assert.equal(a.stage, STAGE_EMAIL);
+        assert.equal(a.loginError.global, MENSAJES.errors.try_later);
+        assert.equal(a.form.email, 'ana@correo.es', 'volver a teclear el correo tras un fallo es hostil');
+    });
+
+    /**
+     * ⚠️ **Al correo al que FUE el código, no al del campo**: si la persona toca el campo después (o lo cambia otra pantalla
+     * que comparte formulario), el código sigue siendo del primero, y entrar con otro correo sería un «no» sin sentido.
+     */
+    test('entrar manda el código al correo al que fue, y sin recordar el dispositivo si no se marcó', async () => {
+        const a = store();
+        a.showCode('ana@correo.es', false);
+        a.form.email = 'otro@correo.es';
+        a.form.code = '482 913';
+        const api = fakeApi({ '/auth/login': { ok: true, status: 200, data: { id: 7 }, error: null } });
+
+        const r = await a.loginWithCode({ api, ...TEXTOS });
+
+        assert.equal(r.ok, true);
+        assert.equal(a.busy, false, 'el indicador se apaga pase lo que pase');
+        assert.deepEqual(api.llamadas[0].body, { email: 'ana@correo.es', code: '482 913', remember: false });
+
+        a.form.remember = true;
+        await a.loginWithCode({ api, ...TEXTOS });
+        assert.equal(api.llamadas[1].body.remember, true, 'marcada, sí');
+    });
+
+    /**
+     * ⚠️ **El `CodeInput` del diseño VACÍA el código tras un «no»** (`#861`): con la sexta cifra se comprueba solo, así que
+     * dejar el malo escrito obligaría a borrar para volver a probar, y pegar el bueno encima no sustituye nada.
+     */
+    test('un código que no vale deja su aviso bajo el código y lo VACÍA, para escribirlo entero otra vez', async () => {
+        const a = store();
+        a.showCode('ana@correo.es', false);
+        a.form.code = '000000';
+        const no = { ok: false, status: 401, data: null, error: { code: 'invalid_credentials', message: 'otra cosa' } };
+
+        const r = await a.loginWithCode({ api: fakeApi({ '/auth/login': no }), ...TEXTOS });
+
+        assert.equal(r.ok, false);
+        assert.deepEqual(a.loginError.fields, { code: CUENTA.login.code_wrong });
+        assert.equal(a.form.code, '');
+        assert.equal(a.stage, STAGE_CODE);
+    });
+
+    test('un corte de red NO vacía el código: ese código puede seguir valiendo', async () => {
+        const a = store();
+        a.showCode('ana@correo.es', false);
+        a.form.code = '482913';
+
+        const r = await a.loginWithCode({ api: fakeApi({}), ...TEXTOS });
+
+        assert.equal(r.ok, false);
+        assert.equal(a.loginError.global, MENSAJES.errors.try_later);
+        assert.equal(a.form.code, '482913', 'volver a pulsar «Entrar» tiene que bastar');
+    });
+
+    test('«Pedir otro código»: solo con la espera a cero, al MISMO correo, y dice «otro»', async () => {
+        const a = store();
+        a.showCode('ana@correo.es', false);
+        a.form.email = 'cambiado@correo.es';
+        const api = fakeApi(CODIGO);
+
+        assert.deepEqual(await a.resendCode({ api, ...TEXTOS }), { next: null, skipped: true }, 'con la espera corriendo, no');
+        assert.equal(api.llamadas.length, 0);
+
+        a.stopCodeWait();
+        await a.resendCode({ api, ...TEXTOS });
+
+        assert.deepEqual(api.llamadas[0].body, { email: 'ana@correo.es' });
+        assert.equal(a.codeResent, true);
+        assert.equal(a.codeWait, RESEND_COOLDOWN_SECONDS, 'y la espera vuelve a empezar');
+        assert.equal(a.form.code, '', 'el código anterior ya no vale: el campo, vacío');
+    });
+
+    test('«Cambiar el correo» vuelve a la primera cara y se lleva el código y el correo al que fue', () => {
+        const a = store();
+        a.form.email = 'ana@correo.es';
+        a.showCode('ana@correo.es', true);
+        a.form.code = '48';
+        a.loginError = { global: '', fields: { code: 'mal' } };
+
+        a.changeEmail();
+
+        assert.equal(a.stage, STAGE_EMAIL);
+        assert.equal(a.codeSentTo, '');
+        assert.equal(a.codeResent, false);
+        assert.equal(a.form.code, '');
+        assert.equal(a.codeWait, 0);
+        assert.deepEqual(a.loginError, { global: '', fields: {} });
+        assert.equal(a.form.email, 'ana@correo.es', 'el correo se queda escrito para corregirlo');
+    });
+
+    /**
+     * ⚠️⚠️ **El correo al que fue el código es PII**: salir de la pantalla (la zona al montarse) lo borra, como el del alta
+     * pendiente. En una tablet compartida, el siguiente no puede leer «Te hemos enviado un código a …» del anterior.
+     */
+    test('salir de la pantalla se lleva el correo al que fue el código y la puerta vuelve al correo', () => {
+        const a = store();
+        a.form.email = 'ana@correo.es';
+        a.showCode('ana@correo.es', false);
+        a.form.code = '4829';
+
+        a.clearNotices();
+
+        assert.equal(a.stage, STAGE_EMAIL);
+        assert.equal(a.codeSentTo, '');
+        assert.equal(a.codeWait, 0);
+        assert.equal(a.form.code, '', 'el código a medio escribir no sobrevive a un cambio de pantalla');
+        assert.equal(a.form.email, 'ana@correo.es', 'el correo ESCRITO sí: quien vuelve no tiene que teclearlo otra vez');
     });
 });
 
@@ -262,7 +353,6 @@ describe('el alta SUELTA y su «revisa tu correo»', () => {
     test('manda el contexto suelto y deja la pantalla esperando con el correo', async () => {
         const a = store();
         a.form.email = 'nuevo@ejemplo.test';
-        a.form.password = 'un-secreto-muy-largo';
 
         const api = apiDeAltaSuelta();
         await a.registerStandalone({ api, messages: MENSAJES, auth: {} });
@@ -273,18 +363,18 @@ describe('el alta SUELTA y su «revisa tu correo»', () => {
     });
 
     /**
-     * ⚠️ **La contraseña no sobrevive, y el correo SÍ.** `reset()` vacía el formulario —en una tablet
-     * compartida esa contraseña se queda a la vista— pero el correo hace falta para reenviar, así que
+     * ⚠️ **Los datos del formulario no sobreviven, y el correo SÍ.** `reset()` vacía el formulario —en una tablet
+     * compartida el nombre del cliente se queda a la vista— pero el correo hace falta para reenviar, así que
      * se copia antes a `pendingEmail`. Sin esa copia, el botón de reenviar no tendría a quién.
      */
     test('vacía el formulario pero conserva el correo al que reenviar', async () => {
         const a = store();
         a.form.email = 'nuevo@ejemplo.test';
-        a.form.password = 'un-secreto-muy-largo';
+        a.form.name = 'Nora Pérez';
 
         await a.registerStandalone({ api: apiDeAltaSuelta(), messages: MENSAJES, auth: {} });
 
-        assert.equal(a.form.password, '', 'la contraseña no puede quedarse en un campo visible');
+        assert.equal(a.form.name, '', 'los datos del cliente no pueden quedarse en un campo visible');
         assert.equal(a.form.email, '');
         assert.equal(a.pendingEmail, 'nuevo@ejemplo.test');
 

@@ -533,25 +533,31 @@ export function usePurchaseFlow(props) {
 
     // ── El paso 5: identificarse sin salir del cajón ──────────────────────────────────────────────
 
-    /**
-     * Envía las credenciales y, si entra, continúa la compra donde la dejó.
-     *
-     * ⚠️ **Tres cosas pasan al entrar, y ninguna sobra**:
-     *  1. **se avisa de que hay sesión** (`account/session-gained.js`): repinta el bloque de cuenta, que
-     *     hasta ese instante saluda como invitado, e invalida las próximas reservas del titular anterior.
-     *     Sin esto el panel seguiría ofreciendo «Entrar» a alguien que acaba de entrar, y **ningún test
-     *     de este repo lo vería** — solo el navegador. (Hasta el 2026-08-23 era un `dispatch('logged-in')`
-     *     por el bus de Livewire, porque quien escuchaba vivía fuera del motor.);
-     *  2. **se aplica la identidad** con la respuesta del propio login —`POST auth/login` devuelve el
-     *     perfil con la misma forma que `GET /me` justo para esto—, así que la cesta de invitado se queda
-     *     con su nuevo dueño sin una petición más;
-     *  3. **se continúa el checkout**, que es lo que hace `Purchase::onAuthenticated()` llamando a
-     *     `proceed()`: quien se identifica con el tope de pendientes lleno tiene que enterarse aquí.
-     */
-    async function submitLogin() {
-        const result = await tracked(authStore.login({ api, messages: props.messages, auth: props.auth }));
+    /** Los textos de los «no» de la puerta y del código (`login.js`): los avisos del cajón, los del servidor y los rótulos. */
+    const authTexts = () => ({ api, messages: props.messages, auth: props.auth, account: props.account });
 
-        // El resultado se DEVUELVE (T3e·3): el cajón no lo mira, y la isla lee de él el código del «no».
+    /**
+     * **LA PUERTA** (A4a de `docs/specs/acceso-con-codigo.md` §4.11): con cuenta, la cara del código —el servidor ya lo ha
+     * mandado—; nuevo, la del alta. La cara la pone el store; aquí no hay nada que continuar todavía.
+     */
+    async function requestCode() {
+        return tracked(authStore.requestCode(authTexts()));
+    }
+
+    /** «Pedir otro código», al mismo correo (el store guarda la espera: el servidor admite uno por minuto). */
+    async function resendCode() {
+        return tracked(authStore.resendCode(authTexts()));
+    }
+
+    /**
+     * Entra con el código y, si entra, continúa la compra donde la dejó (`enterWith`, como tras cualquier sesión).
+     *
+     * ⚠️ `POST /auth/login` devuelve el perfil con la forma de `GET /me` justo para esto: la cesta de invitado se queda con su
+     * nuevo dueño sin una petición más. Sustituye al login con contraseña (`#847`): ningún cliente la escribe ya.
+     */
+    async function submitCode() {
+        const result = await tracked(authStore.loginWithCode(authTexts()));
+
         if (! result.ok) return result;
 
         await enterWith(result.response);
@@ -1017,7 +1023,7 @@ export function usePurchaseFlow(props) {
         refreshBookingStatus, refreshIdentity, openProduct,
         selectProduct, selectDate, selectTime, applyQuantity, chooseAddon, setAddonQuantity,
         goToTime, goToCart, addToCart, removeLine, updateCartField, addAnother, clearSelection,
-        checkout, submitLogin, submitRegister, confirmReservation, retryPayment,
+        checkout, requestCode, resendCode, submitCode, submitRegister, confirmReservation, retryPayment,
         // Lo que se hace tras identificarse, para la sesión que abre OTRA puerta: el alta con Google que la isla completa
         // dentro de la compra (`#785`, plataforma; avisado en su buzón). La misma secuencia que tras entrar o darse de alta.
         enterWith,

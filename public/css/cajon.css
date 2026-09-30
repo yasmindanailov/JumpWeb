@@ -1,7 +1,7 @@
 /* GENERADO por scripts/hoja-del-cajon.py desde public/css/{site,landing,spinner}.css. NO se edita a mano:
  * se toca la regla en su fuente y se vuelve a generar. `HojaDelCajonTest` vigila que no se separen.
  * Qué entra y por qué: la cabecera de ese guion y `specs/cajon-empaquetable.md` §4.3.
- * FUENTES landing.css:0e3f25655c5c spinner.css:8270bcfe03ab site.css:428d0893ebd2 */
+ * FUENTES landing.css:0e3f25655c5c spinner.css:8270bcfe03ab site.css:81f435d3c425 */
 /* La BASE del paquete: lo que el cajón heredaba del `<body>` del producto y ahora se da
  * a sí mismo, para no tocar el documento del anfitrión. Ver la cabecera del generador. */
 :where(.sidecart), :where(.sidecart) * {
@@ -555,30 +555,6 @@
     background: var(--zone-1);
     flex-shrink: 0;
     vertical-align: middle;
-}
-.tabset {
-    display: flex; gap: var(--sp-4);
-    background: var(--bg-soft);
-    padding: var(--sp-4);
-    border-radius: var(--r-lg);
-}
-.tabset__tab {
-    flex: 1; min-height: var(--tap-min);
-    border: 0; border-radius: var(--r-btn);
-    background: transparent; color: var(--fg-mute);
-    font-family: var(--font-body); font-weight: 800; font-size: var(--fs-15);
-    cursor: pointer;
-    transition:
-    background-color var(--dur-estado) var(--ease-sale),
-    color var(--dur-estado) var(--ease-sale);
-}
-.tabset__tab.is-active {
-    background: var(--bg-card); color: var(--fg);
-}
-@media (min-width: 1024px) {
-    .tabset {
-        width: 352px;
-    }
 }
 .zone-tab.active {
     background: var(--zone-1); color: var(--on-brand);
@@ -1167,6 +1143,58 @@
 .auth__switch button {
     background: none; border: none; cursor: pointer; padding: 0;
     font: inherit; color: var(--interactive); font-weight: 600; text-decoration: underline;
+}
+.auth__switch button:disabled {
+    color: var(--fg-mute); text-decoration: none; cursor: default;
+}
+.code-input {
+    display: flex; flex-direction: column; gap: var(--sp-6); margin-bottom: var(--sp-18);
+}
+.code-input > .form__label {
+    font-family: var(--font-body); font-size: var(--fs-13); font-weight: 600; color: var(--fg);
+}
+.code-input__boxes {
+    position: relative; display: flex; gap: var(--sp-8); max-width: 400px;
+}
+.code-input__box {
+    flex: 1 1 0; min-width: 0; max-width: 56px; height: 56px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--r-btn);
+    font-family: var(--font-mono); font-size: 1.5rem; font-weight: 500; line-height: 1; font-variant-numeric: tabular-nums;
+    color: var(--fg); transition: border-color var(--dur-sale) var(--ease-sale);
+}
+.code-input__box.is-filled, .code-input__box.is-active {
+    border-color: var(--fg);
+}
+.code-input__box.is-active {
+    outline: var(--focus-outline); outline-offset: 2px;
+}
+.code-input__box.is-active:not(.is-filled)::after {
+    content: ''; width: 2px; height: 24px; background: currentColor; animation: code-caret 1s steps(1) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+    .code-input__box.is-active:not(.is-filled)::after {
+        animation: none;
+    }
+}
+.code-input__dash {
+    flex: 0 0 auto; align-self: center; width: 10px; height: 2px; background: var(--fg-mute);
+}
+.code-input__field {
+    position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; padding: 0; border: 0;
+    opacity: 0; font-size: var(--fs-16); color: transparent; caret-color: transparent; background: transparent; cursor: text;
+}
+.code-input.has-error .code-input__box {
+    border-color: var(--err);
+}
+.code-input.is-disabled .code-input__boxes {
+    opacity: .42;
+}
+.code-input.is-disabled .code-input__field {
+    cursor: not-allowed;
+}
+.code-input .auth__switch {
+    margin-top: var(--sp-6); text-align: left;
 }
 .auth__head {
     margin-bottom: var(--sp-18);
@@ -2595,9 +2623,6 @@ details > summary.legal-more ~ p {
     .purchase__stamp {
         animation-name: confirma-sello-quieta;
     }
-}
-.purchase__authtabs {
-    width: 100%; margin-bottom: var(--sp-16);
 }
 .orders {
     list-style: none; margin: 0 0 24px; padding: 0; display: flex; flex-direction: column; gap: var(--sp-16); max-width: 760px;

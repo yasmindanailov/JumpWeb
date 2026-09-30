@@ -195,15 +195,26 @@ return [
         ],
     ],
 
+    // La PORTE du tiroir, avec un code par e-mail (A4a, `acceso-con-codigo.md` §4.11) : les phrases de l'isla (`#857`).
     'login' => [
         'cta' => 'Se connecter',
-        'title' => 'Connexion',
+        'title' => 'Connectez-vous',
+        'intro' => 'Écrivez votre e-mail.',
         'email' => 'E-mail',
-        'password' => 'Mot de passe',
-        'remember' => 'Rester connecté',
+        'continue' => 'Continuer',
+        'sending' => 'Envoi du code…',
+        'suggest' => 'Vouliez-vous dire :email ?',
+        'code' => 'Code à 6 chiffres',
+        'code_hint' => 'Il vient de :site. Il expire dans :minutes minutes ; si vous ne le voyez pas, regardez dans les indésirables.',
+        'code_sent' => 'Nous vous avons envoyé un code à 6 chiffres à :email.',
+        'code_resent' => 'Nous vous en avons envoyé un autre à :email. Le précédent ne fonctionne plus.',
+        'code_again' => 'Renvoyer le code',
+        'code_again_in' => 'Renvoyer le code dans :t',
+        'code_wrong' => "Le code n'est pas bon ou a expiré. Demandez-en un autre.",
+        'remember' => 'Rester connecté sur cet appareil',
+        'change_email' => "Changer l'e-mail",
         'submit' => 'Se connecter',
         'submitting' => 'Connexion…',
-        'forgot' => 'Mot de passe oublié ?',
     ],
 
     'forgot' => [
@@ -229,9 +240,8 @@ return [
     ],
 
     'register' => [
-        'cta' => 'Créer un compte',
         'title' => 'Créez votre compte',
-        'subtitle' => 'Nécessaire pour réserver billets et anniversaires.',
+        'subtitle' => "Il n'y a pas encore de compte avec cet e-mail : remplissez vos coordonnées et vous êtes connecté tout de suite.",
         'name' => 'Nom et prénom',
         'email' => 'E-mail',
         'phone' => 'Téléphone',

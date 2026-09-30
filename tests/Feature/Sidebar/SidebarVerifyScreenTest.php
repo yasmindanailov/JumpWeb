@@ -153,8 +153,11 @@ class SidebarVerifyScreenTest extends TestCase
             'La pantalla de «revisa tu correo» se ha quedado sin el escape «¿ya tienes cuenta?».'
         );
 
+        // ⚠️ Desde la A4a (`acceso-con-codigo.md` §4.11) esta pantalla es una CARA de la puerta, no una zona: el escape
+        // vuelve a su primera cara (el correo) limpiando la pendiente. `nav.go(ZONES.LOGIN)` ya no haría nada: es la
+        // zona en la que está.
         $this->assertStringContainsString(
-            'nav.go(ZONES.LOGIN)', $zone,
+            'store.clearNotices()', $zone,
             'El escape ya no lleva a identificarse: sería un rótulo que no hace nada.'
         );
 

@@ -98,7 +98,7 @@ const {
     refreshBookingStatus, refreshIdentity, openProduct,
     selectProduct, selectDate, selectTime, applyQuantity, chooseAddon, setAddonQuantity,
     goToTime, goToCart, addToCart, removeLine, updateCartField, addAnother, clearSelection,
-    checkout, submitLogin, submitRegister, confirmReservation, retryPayment,
+    checkout, requestCode, resendCode, submitCode, submitRegister, confirmReservation, retryPayment,
 } = usePurchaseFlow(props);
 
 const accountStore = useAccountStore();
@@ -310,8 +310,8 @@ function goBack() {
         <IdentifyStep
             v-else-if="store.step === STEPS.IDENTIFY"
             v-model:form="authStore.form"
-            :mode="authStore.mode"
-            :login-errors="authStore.loginError"
+            :stage="authStore.stage"
+            :entry-errors="authStore.loginError"
             :register-errors="authStore.registerError"
             :submitting="authStore.busy"
             :messages="messages"
@@ -319,10 +319,14 @@ function goBack() {
             :turnstile-site-key="authStore.signupSiteKey"
             :google-url="urls.google ?? ''"
             :privacy-url="urls.privacy ?? ''"
-            @set-mode="authStore.setMode"
-            @submit-login="submitLogin"
-            @submit-register="submitRegister"
-            @recover="authStore.startPasswordRecovery()" />
+            :sent-to="authStore.codeSentTo"
+            :resent="authStore.codeResent"
+            :wait="authStore.codeWait"
+            @continue="requestCode"
+            @enter="submitCode"
+            @resend="resendCode"
+            @change-email="authStore.changeEmail()"
+            @submit-register="submitRegister" />
 
         <VerifyStep
             v-else-if="store.step === STEPS.VERIFY_EMAIL"

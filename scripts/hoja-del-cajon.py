@@ -54,6 +54,8 @@ VUE = RAIZ / 'resources/js/sidebar'
 # ⚠️ **Y `landing.css` no es «solo tokens», que fue la primera suposición y era falsa**: 31 de sus reglas
 # nombran un bloque del cajón y `tabset` —las pestañas de Entrar / Crear cuenta— vive SOLO ahí. Con la hoja
 # tratándola como escala del sistema, esas dos pestañas salían sin vestir: 32 nodos distintos en el juez.
+# (Las pestañas salieron del cajón con la A4a, `acceso-con-codigo.md` §4.11; lo del cajón que hoy declara solo
+# `landing.css` es, p. ej., `.btn--lg`.)
 FUENTES = ('landing.css', 'spinner.css', 'site.css')
 
 # La CARCASA la pinta Blade (o el paquete, en una página ajena), así que sus clases no salen de ningún `.vue`.

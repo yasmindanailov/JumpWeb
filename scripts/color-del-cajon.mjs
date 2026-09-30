@@ -26,13 +26,14 @@
  */
 import { chromium } from 'playwright-core';
 import { mkdir, writeFile } from 'node:fs/promises';
+import { entrarConCodigo } from './entrar-con-codigo.mjs';
 
 const BASE = 'http://localhost:8081';
 const ETIQUETA = process.argv[2] ?? 'antes';
 const SALIDA = 'storage/app/audit';
 
-/** La cuenta de sonda (memoria del proyecto; no está en el repo ni en un seeder). */
-const CLIENTE = { email: 'probe-card@jumpweb.test', password: 'Probe-card-2026!' };
+/** La cuenta de sonda (memoria del proyecto; no está en el repo ni en un seeder). Entra con un código desde la A4a. */
+const CLIENTE = { email: 'probe-card@jumpweb.test' };
 
 const MOVIL = { width: 390, height: 844, hasTouch: true, isMobile: true };
 
@@ -282,9 +283,8 @@ async function recorrer(context, informe) {
 
     if (await page.locator('#login-email').count()) {
         paso = 'entrar';
-        await page.fill('#login-email', CLIENTE.email);
-        await page.fill('#login-password', CLIENTE.password);
-        await page.click('.sidecart__panel button[type="submit"]');
+        // Con un código al correo desde la A4a (`acceso-con-codigo.md` §4.11), leído de Mailpit.
+        await entrarConCodigo(page, CLIENTE.email);
     }
 
     await page.waitForSelector('.acc-tiles .acc-tile', { timeout: 20000 });

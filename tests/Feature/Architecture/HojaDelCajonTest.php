@@ -60,8 +60,10 @@ class HojaDelCajonTest extends TestCase
             'el escáner ve menos de 500 selectores en la hoja del paquete y hay ~780: no la está leyendo entera',
         );
 
-        // Por NOMBRE, no por umbral: un contador no distingue «leo poco» de «leo otra cosa».
-        foreach (['sidecart__panel', 'acct__btn', 'tabset__tab', 'jj-spinner'] as $clase) {
+        // Por NOMBRE, no por umbral: un contador no distingue «leo poco» de «leo otra cosa». Una por fuente: `btn--lg`
+        // la declara SOLO `landing.css` —era `tabset__tab` hasta que las pestañas de Entrar / Crear cuenta salieron del
+        // cajón con la A4a (`acceso-con-codigo.md` §4.11)— y `jj-spinner`, `spinner.css`.
+        foreach (['sidecart__panel', 'acct__btn', 'btn--lg', 'jj-spinner'] as $clase) {
             $this->assertTrue(
                 $this->vestida($clase, $hoja),
                 "el escáner no ve `.{$clase}` en la hoja del paquete, que sí la declara",
@@ -74,15 +76,15 @@ class HojaDelCajonTest extends TestCase
         );
 
         // ⚠️ **Y no da por vestido un bloque porque exista un elemento suyo.** Sin esta estrictez el
-        // trinquete aprobaría un paquete al que le falte `.tabset` mientras lleve `.tabset__tab` — y la
-        // regla que falta sería justo la que reparte los dos botones 50/50. No se puede comprobar por
-        // mutación (relajar el localizador solo lo hace más permisivo, y un test más permisivo sigue
-        // verde), así que se comprueba aquí, con el caso escrito.
+        // trinquete aprobaría un paquete al que le falte `.acct` mientras lleve `.acct__btn` — y la regla
+        // que falta sería justo la que da forma al bloque entero. No se puede comprobar por mutación
+        // (relajar el localizador solo lo hace más permisivo, y un test más permisivo sigue verde), así
+        // que se comprueba aquí, con el caso escrito.
         $this->assertFalse(
-            $this->vestida('tabset', '.tabset__tab { color: red }'),
-            'el localizador da por vestido `.tabset` porque existe `.tabset__tab`',
+            $this->vestida('acct', '.acct__btn { color: red }'),
+            'el localizador da por vestido `.acct` porque existe `.acct__btn`',
         );
-        $this->assertTrue($this->vestida('tabset', '.tabset { display: flex }'), 'el localizador no ve la regla exacta');
+        $this->assertTrue($this->vestida('acct', '.acct { display: flex }'), 'el localizador no ve la regla exacta');
     }
 
     // ─────────────────────────────────────────────────────────────────────────────────
