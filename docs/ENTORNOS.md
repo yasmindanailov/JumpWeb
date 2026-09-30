@@ -390,6 +390,10 @@ instalación de un cliente. Si se configura a mano deja de ser una prueba del pr
 
 ## 6 · PRODUCCIÓN · playjump.es, MEDIDO (2026-09-01, `DECISIONES #325`)
 
+> 🖼 **Dibujar imágenes en producción** (medido el 30-09, SSH de solo lectura, `#861`): PHP 8.5.1; GD con FreeType, JPEG, PNG,
+> WebP y AVIF; Imagick 6.9.12 (JPEG, PNG, WEBP; SVG solo el interno); `convert`; **sin Chromium ni Node**; `memory_limit` 256M;
+> 12 núcleos, 32 GB. Una imagen al compartir se DIBUJA con GD/Imagick; no se puede renderizar HTML aquí. (Medido en la CLI.)
+
 > 🚀 **NOVENO DESPLIEGUE · HECHO Y VERIFICADO · EL PRIMERO POR ETIQUETA** (2026-09-18, 07:23:01–07:23:51
 > local, 50 s con la ventana de 503 dentro; el parque abre a las 16:30, `#594`). Subió **v1.1.0 = `3547de9f`**
 > (`CHANGELOG.md`): la promo tachada y el recuadro (`#628`), la piel del justificante con su barra de firmar

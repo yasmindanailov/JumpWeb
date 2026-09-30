@@ -206,7 +206,10 @@ carril se apunta ALLÍ; lo compartido se sigue avisando aquí, en el buzón, ant
   las páginas de enlace»); **los correos** (el 8, «482-913 es tu código para entrar», sin botón; «Quién firma el descargo» en el
   1 y el 3; las dos horas repartidas, 90 + 30, también en la invitación); la **A4** con el `CodeInput` del diseño; y **la imagen
   de la INVITACIÓN al compartir, GENERADA para cada una** (nombre, edad, día, hora, su diseño; no la fija por tema): tu punto 6.
-  Antes, medir qué permite producción (GD, FreeType, Imagick) por SSH de solo lectura, con permiso del owner.
+  ▶ **Producción, MEDIDA por mí** (30-09, SSH de solo lectura con permiso del owner; tú no tienes SSH): PHP 8.5.1; GD con
+  FreeType, JPEG, PNG, WebP y AVIF; Imagick 6.9.12 (JPEG, PNG, WEBP; su SVG es el interno, limitado); `convert`; SIN Chromium
+  ni Node; `memory_limit` 256M. ⇒ la imagen se DIBUJA (un fondo por tema preparado antes y el texto encima con GD/FreeType y
+  las fuentes del diseño), no se renderiza HTML. ⚠️ Medido en la CLI: las extensiones del PHP de la web, no por separado.
 - ⚠️ **Para tu A4, decidido por el owner**: recordar el móvil sigue `#858` (la casilla sin marcar, 90 días), NO «este móvil
   se queda dentro un año»; crear la cuenta sigue `#849` (sin esperar el correo) hasta medir la latencia en staging (A6).
 - **Mío**: la isla (tres huecos, banners, B3 sobre tu `Experiments`: te aviso antes de tocarlo), la web, los legales (entran

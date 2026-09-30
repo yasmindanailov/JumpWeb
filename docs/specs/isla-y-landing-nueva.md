@@ -2349,9 +2349,10 @@ del diseño NO se hace. (3) La imagen de la invitación: GENERADA para cada una 
 fija por tema del diseño; antes se mide qué permite producción (SSH de solo lectura, con permiso del owner). (4) Esa imagen
 la hace el SPA.
 
-**Sin leer**: el documento de Claude sobre los textos de la cabecera (quitar los precios; referencias de conversión) no es
-accesible desde aquí (su enlace no está compartido). Choca con el diseño («titular y precio no ceden nunca»; B3 cuenta con el
-precio de la cabecera): se decide al leerlo.
+**La regla del precio (30-09, del owner, `instancias/playjump/docs/estrategia/2026-09-30/Web.md`, «Primera pantalla»)**:
+«El precio no abre la página: está a un toque, y entero en su pieza (regla del precio, 30-09; Colegios lo conserva)». Manda
+sobre el readme del zip («titular y precio no ceden nunca», 27-09) y cambia Z6c (B3 contaba con el precio en la cabecera) y
+Z6d (la firma sin cifra grande al lado): se mide en esas tandas.
 
 ## 5. Impacto en invariantes
 
