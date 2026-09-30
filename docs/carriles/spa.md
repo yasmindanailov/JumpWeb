@@ -7,8 +7,8 @@
 > **`fiesta-sistema-nuevo.md` §4.17** (lo siguiente, `#806`) · `correos-rediseno.md` §0 (`#800`→`#804`; la R1·T) ·
 > `analitica-para-decidir.md` §0 (en pausa, `#755`) · `encuestas.md` §0 y §4.7 (`#754`) · `analitica.md` §0 y §4.5 ·
 > `isla-y-landing-nueva.md` §4.11 · `celebracion-e-invitacion.md` §0 · `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 ·
-> `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-09-30, 09:50 (K1 y K2 de los complementos en
-> `main`; K3 es dato del panel, `#808`; lo siguiente, la R1·T de los correos).
+> `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-09-30, 10:50 (la R1·T de los correos, medida y
+> reclamada: su «al detalle» en `correos-rediseno.md` §4.2.1; aviso previo a plataforma en el buzón).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`). El
 > contador de la suite va en el trailer del commit (`#618`), no aquí. **Se muda, no se raspa**: el detalle de
 > una feature baja a su spec (las trampas por tanda de la analítica T1→T5 viven en `analitica.md` §4.9,
@@ -46,8 +46,9 @@
    panel (la receta, en §4.17 «K3»): lo configura el parque en SU panel al desplegar (merienda, calcetines, cono, tartas). ▶
    **Antes de proponer código en cualquier tanda, medir si el panel ya lo configura** (montaje y sonda en la local); si algo
    ya existía, parar y decírselo al owner (`#808`).
-1. ▶▶ **LOS CORREOS (`specs/correos-rediseno.md`: §0 → §4.2 los textos; `#789`, `#800`→`#804`)**: ✅ R1a la plantilla y ✅
-   R1b los iconos, en `main` y aprobadas (§4.1.2, §4.1.3). Lo siguiente es la **R1·T**; cada tanda con su «al detalle» MEDIDO
+1. ▶▶▶ **LOS CORREOS (`specs/correos-rediseno.md`: §0 → §4.2 los textos; `#789`, `#800`→`#804`)**: ✅ R1a y R1b en `main`.
+   🟦 **R1·T EN CURSO** (30-09, el owner: «procede, hazlo profesional»): su «al detalle», MEDIDO, en §4.2.1 (nada configurable
+   hoy: es código); en `wip/correos-r1t`. Cada tanda con su «al detalle» MEDIDO
    en la spec antes de codificar, en `wip/…`, con su arnés y al ojo del owner en Mailpit (el banco,
    `php scripts/banco-correos.php [filtro]`, y la sonda de la carpeta de auditoría, `sonda-correos-r1a.mjs N`):
    **R1·T** los textos editables (`#802`: por correo, bloque e idioma; variables declaradas por correo y
@@ -81,14 +82,8 @@
    fila `sidebar.shell`—, así que ya se puede); `AccessRevocationTest` no
    deja escribir el literal `'sessions'`; `TestCase::count()` y `countOf()` son finales. `[PENDIENTE: asesoría]`: los 90 días
    del sello, los clics por persona y el píxel (y el (5) de las encuestas).
-3. ✅ **LA FIESTA DEL SISTEMA NUEVO (`#765`, `fiesta-sistema-nuevo.md` ✅ `#743`): T1a→T4 y F1→F9 en `main` y aprobadas
-   (`#747`→`#753`, §4.6–§4.15) — en código NO TIENE NADA PENDIENTE**; espera la v2.0.0 (las páginas vivas se visten con
-   las hojas de la instancia, `#769`). **Si llega un zip nuevo**: `git pull` en la instancia, `git diff <antes>..HEAD` de
-   `diseno/`, copiar `publico/instancia` a `public/`, `optimize:clear`, y una tanda F10 en §4. **A prueba**: «Invitar a
-   más» (`#753`: si a los meses casi nadie lo usa, se quita). Ofrecido y sin pedir: las `transiciones` de `<x-pagina>`
-   (`#781`). Para el ojo: `JW-OJO-F8`, `F7`, `F5`, `F3`, `F1`. **Reglas en pie**: el suelo sin JavaScript · `#739` · la
-   firma y su prueba (`waiver-probatorio.md` §4.4) · hoja en blanco (§7.2·R1) · `#706`. Sueltos de la analítica de
-   antes: **T5c** cuando el owner nombre la hipótesis (`#738`) · el `EXPLAIN` con volumen en staging.
+3. ✅ **LA FIESTA DEL SISTEMA NUEVO**: en código sin nada pendiente; su punto entero (el zip nuevo, lo que está a prueba, las
+   reglas en pie), mudado verbatim a `CARRIL-SPA.md` §9 (30-09).
 4. ❗ **`audit-clock.sh` (27-09): 10/10 pases en rojo por tests AJENOS a la analítica** (los de la analítica, verdes en
    todos): `GoogleReviewImagesTest::test_el_barrido_no_toca_lo_recien_escrito` (10/10: el barrido mira el `mtime` REAL
    del fichero contra el reloj CONGELADO de Laravel; en producción coinciden: es del test), `InvitationSharingTest` (6
@@ -217,6 +212,11 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 
 ## Buzón
 
+- ❗ **Para plataforma (30-09) — AVISO PREVIO, la R1·T de los correos (`correos-rediseno.md` §4.2.1)** toca lo compartido: un
+  permiso nuevo `emails.edit_texts` (`PermissionCatalog`/`PermissionSeeder`, grupo gestión), una tarjeta en tu hub (Sistema,
+  junto a «Correos enviados»), `ContentServiceProvider` en `bootstrap/providers.php` (envuelve `translation.loader` para
+  superponer los textos de correo guardados en `mail_texts`), su alias de morfo y claves nuevas `mail_texts.*` en `admin.php`.
+  Ningún texto cambia sin fila en la tabla; nada tuyo de `lang/` se toca.
 - ❗ **Para plataforma (30-09) — un rojo que no era de nadie, arreglado en su PRUEBA**: `ManualOrderIgnoresMinAdvanceTest::
   test_the_panel_offers_those_days_in_its_calendar` caía cada ÚLTIMO día de mes (el calendario del panel abre en el primer mes
   con oferta y «mañana» es del siguiente; medido hoy también en `main` sin nada mío). La prueba pasa de mes con `goToMonth`,

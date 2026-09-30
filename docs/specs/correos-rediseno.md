@@ -21,7 +21,7 @@
   reglas (`#795`, `#797`); (5) los de la reserva, sin ofertas; (6) «nada que ya no sea verdad»: con la cuenta con contraseña
   (23-09), los textos del 8 del brief están desfasados, y el diseño lo dice.
 - **Estado**: 🟦 ✅ **R1a la plantilla y R1b los iconos, en `main` y aprobadas** (29-09, §4.1.2 y §4.1.3; `#803`, `#804`)
-  → ▶ **R1·T los textos editables** (§4.2, `#802`) → R1c → la R2.
+  → 🟦 **R1·T los textos editables** (§4.2, `#802`; al detalle, §4.2.1) → R1c → la R2.
 - **Invariantes**: `RGPD-01` (lo enviado), `RGPD-07`, el consentimiento de marketing; `PAY-14` (se encolan).
 
 ## 1. Contexto — medido el 29-09
@@ -262,6 +262,45 @@ una sonda por tanda; los comerciales con su prueba de consentimiento y de «una 
 - ✅ **`[DECIDIDO owner]` 29-09 (`#802`)**: la C, con **permiso propio** y **los tres idiomas** desde el panel; «de manera
   profesional y robusta, sin chapuzas». Va como tanda propia tras la R1 (**R1·T**: el almacén, la pantalla, la vista previa),
   y la R2 y la C1 se escriben contra sus claves. Empieza en la sesión siguiente.
+
+#### 4.2.1 La R1·T al detalle — medida el 30-09 antes de codificar (del agente contra `#802`; vetable al ojo)
+
+- **¿Se puede configurar ya? NO** (medido, regla `#808`): ningún texto de correo se edita hoy desde el panel —los 279 de
+  `emails.php` (y 27 de otros ficheros) viven en `lang/`— ni hay textos en base de datos que reutilizar. Sí hay piezas: las
+  pestañas es/en/fr de Mantenimiento, la vista previa INERTE de lo enviado (`EmailSendTable::previewAction`) y el rastro.
+- **Medido**: 32 correos (30 notificaciones y 2 `Mailable` del equipo); 27 leen `emails.<correo>.*` y 5 al cliente leen
+  `account.*`, `fiesta.*` o `surveys.*` (26 de sus 27 claves, solo de su correo). TODO texto pasa por el traductor (`__()`, y
+  la cabecera deriva `.badge`/`.headline`/`.preheader` de su grupo): un ÚNICO punto de enganche. Las líneas se escapan y ya
+  admiten `**negrita**` (`MailDocument::rico()`); ningún texto lleva HTML; 2 claves son plurales. Construir un correo a mano
+  no deja marcas (`markSend()` solo con el id del envío), pero algún `toMail()` puede escribir: la vista previa, en una
+  transacción que se deshace. Cada correo compone con condiciones y datos reales: una vista previa fiel EJECUTA el correo.
+- **Diseño** (sin tocar ninguna notificación):
+  1. **El dato**: tabla `mail_texts` (`key`, `locale`, `text`, quién y cuándo), única por clave e idioma; modelo
+     `Content\Models\MailText`. Ausente = el texto de fábrica del producto (neutro); «volver al de fábrica» borra la fila.
+  2. **El enganche**: un cargador que envuelve el de ficheros (`translation.loader`) y superpone las filas a su grupo —
+     `{variable}` pasa a `:variable`—, con caché por idioma y grupo que el guardado invalida; sin tabla (migrando), el de
+     siempre. Proveedor propio del módulo, `ContentServiceProvider`.
+  3. **Qué se edita**: `MailTextCatalog` (junto a los correos) dice por correo su grupo, su categoría y lo que NO se edita:
+     lo legal y los datos (`emails.slip`, `emails.pie`, la baja), los plurales y una clave compartida con la web (una guarda
+     comprueba que ninguna editable se usa fuera de su correo). El cargador solo superpone claves del catálogo.
+  4. **Las reglas al guardar** (`MailTexts::guardar`, con su motivo por idioma): las `{variables}` del texto de fábrica son
+     OBLIGATORIAS y no se admiten otras (un plazo o un código no puede desaparecer: «nada que ya no sea verdad»); sin HTML
+     (solo `**negrita**`, balanceada); llaves balanceadas; ni vacío ni más largo que su tope (asunto y chapa, 150; el resto,
+     1.000). Rastro por cambio (`emails.text_updated` / `emails.text_restored`, con el texto: no es de una persona).
+  5. **La pantalla**: Ajustes → Sistema → «Textos de los correos» (`MailTexts`), permiso propio `emails.edit_texts` (gestión,
+     no del staff por defecto). La lista por categoría con su estado (de fábrica · personalizado · «sin traducir» si un idioma
+     cambió y otro no); dentro, un bloque por texto con su nombre humano (Asunto, Chapa, Titular, Adelanto…), el de fábrica
+     al lado, las variables con lo que significan, pestañas es/en/fr y «Volver al de fábrica».
+  6. **La vista previa**: `MailPreviews` (el banco de la R1a, llevado al producto: el caso real más reciente de cada correo, o
+     su motivo si no hay) pinta el correo DE VERDAD con el borrador aplicado solo a ese pintado, en el idioma de la pestaña,
+     inerte y en claro/oscuro, dentro de una transacción que se deshace; se audita (`emails.text_previewed`, sin contenido).
+     `scripts/banco-correos.php` pasa a usarla (una sola fuente).
+- **No cambia**: las 32 notificaciones, el molde, el envío, la cola, las marcas, la API. **Datos del parque**: el copy del
+  brief lo escribe el parque en SU panel (white-label: nunca en el producto).
+- **Guardas**: el cargador (superpone, respeta el de fábrica, no toca claves fuera del catálogo, caché invalidada), las reglas
+  (una prueba por regla, con su control), la pantalla (permiso, guardar, restaurar, rastro, «sin traducir»), la vista previa
+  (cada correo del catálogo pinta o dice su motivo; el borrador no se guarda ni se filtra a otro pintado), la guarda de claves
+  compartidas y `AdminNavigationTest`; arnés `scripts/mutar-correo-r1t.sh`; sonda en el panel; `MODELO-DATOS` y `PANEL-ADMIN`.
 
 ## 7. Revisión y decisión
 
