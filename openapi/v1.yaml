@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.56.0
+  version: 1.57.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -2681,6 +2681,10 @@ paths:
         adivinando nada, se está mandando correo, y lo que se protege es el buzón del destinatario.
 
         ⚠️ Si no hay nada pendiente responde `204`, por lo mismo que la cancelación.
+
+        **1.57.0**: el correo lleva además un **código de seis cifras** para `POST /me/pending-email/confirm` (cada
+        reenvío anula el anterior), y sale al buzón NUEVO de verdad —hasta esta versión salía al viejo—. También cinco
+        reenvíos por hora.
       security:
         - sessionCookie: []
         - bearerAuth: []
@@ -2691,6 +2695,45 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
         '429':
           $ref: '#/components/responses/TooManyRequests'
+
+  /me/pending-email/confirm:
+    post:
+      tags: [Cuenta]
+      operationId: confirmMyEmailChange
+      summary: Confirmar el correo nuevo con su código
+      description: |
+        **1.57.0** (`specs/acceso-con-codigo.md`, A2b). Completa el cambio de correo pedido en `PATCH /me` con el código
+        que llegó al buzón NUEVO: el correo nuevo pasa a ser el de la cuenta, verificado, y el viejo recibe el aviso. Es
+        la prueba de que el buzón es de quien pidió el cambio, escrita en el mismo dispositivo. El enlace del correo sigue
+        valiendo mientras tanto.
+
+        Devuelve el perfil, ya con el correo nuevo. Lo que no sale bien es un `422` por campo: `code` si el código no
+        casa, la solicitud caducó o no hay nada pendiente; `email` si otra cuenta se quedó ese correo entretanto. El código
+        vale 10 minutos, una sola vez y 5 intentos, con un limitador por titular e IP (`429`).
+      security:
+        - sessionCookie: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewEmailConfirmation'
+      responses:
+        '200':
+          description: El correo nuevo es ya el de la cuenta. El cuerpo es el perfil.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
 
   /me/email/resend:
     post:
@@ -5269,6 +5312,17 @@ components:
           type: string
           maxLength: 16
           description: '**1.56.0**. El código de seis cifras de `POST /me/confirm-code`.'
+
+    NewEmailConfirmation:
+      type: object
+      description: '**1.57.0**. El código que llegó al buzón NUEVO de un cambio de correo.'
+      required: [code]
+      additionalProperties: false
+      properties:
+        code:
+          type: string
+          maxLength: 16
+          description: Seis cifras; se admite partido («482 913»).
 
     ConfirmationCodeRequest:
       type: object

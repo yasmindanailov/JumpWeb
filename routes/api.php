@@ -465,6 +465,10 @@ Route::name('api.v1.')->group(function (): void {
             ->name('me.pending-email.cancel');
         Route::post('/me/pending-email/resend', [MeProfileController::class, 'resendPendingEmail'])
             ->name('me.pending-email.resend');
+        // El correo nuevo, confirmado con el CÓDIGO que llegó a ese buzón (A2b de `specs/acceso-con-codigo.md`, `#856`). Su
+        // limitador —por (titular, IP), solo los fallos— vive en `AccountProfile`, no aquí.
+        Route::post('/me/pending-email/confirm', [MeProfileController::class, 'confirmPendingEmail'])
+            ->name('me.pending-email.confirm');
 
         // `#329` — el hermano AUTENTICADO de `auth/email/resend`: reenvía la verificación del correo
         // de quien ya tiene sesión, sin que tenga que decir cuál es. Existe porque **se puede entrar

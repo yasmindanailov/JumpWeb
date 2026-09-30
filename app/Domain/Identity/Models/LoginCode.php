@@ -33,6 +33,9 @@ class LoginCode extends Model
     /** CONFIRMAR una acción sensible, ya con sesión (A2a, `#855`): al correo de la cuenta. */
     public const PURPOSE_CONFIRM = 'confirm';
 
+    /** Probar el correo NUEVO de un cambio de correo (A2b, `#856`): al buzón nuevo, que todavía no es de nadie. */
+    public const PURPOSE_NEW_EMAIL = 'new_email';
+
     /** Horas que vive la fila tras nacer; el código muere mucho antes (10 minutos). */
     public const RETENTION_HOURS = 24;
 

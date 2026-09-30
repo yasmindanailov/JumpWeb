@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Domain\Identity\Contracts\EmailChangeOutcome;
 use App\Domain\Identity\Contracts\ProfileUpdateResult;
 use App\Domain\Identity\Contracts\Reconfirmation;
 use App\Domain\Identity\Contracts\ResendResult;
@@ -92,7 +93,7 @@ class MeProfileController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        $result = $profile->resendPendingEmail($user);
+        $result = $profile->resendPendingEmail($user, (string) $request->ip());
 
         if (! $result->sent && $result->reason === ResendResult::THROTTLED) {
             return ApiErrorResponse::make(
@@ -104,6 +105,39 @@ class MeProfileController extends Controller
         }
 
         return response()->json(status: 204);
+    }
+
+    /**
+     * `POST /me/pending-email/confirm` — **el correo nuevo, confirmado con el CÓDIGO que llegó a ese buzón** (A2b de
+     * `specs/acceso-con-codigo.md` §4.9, `#856`). Devuelve el perfil, ya con el correo nuevo, como `PATCH /me`.
+     *
+     * Lo que no sale bien es un 422 POR CAMPO, como el resto del perfil: `code` si el código no casa, la solicitud caducó
+     * o no hay nada pendiente; `email` si otra cuenta se quedó ese correo entretanto. `429` con `Retry-After`.
+     */
+    public function confirmPendingEmail(Request $request, AccountProfile $profile): UserResource|JsonResponse
+    {
+        $data = $request->validate(['code' => ['required', 'string', 'max:16']]);
+
+        /** @var User $user */
+        $user = $request->user();
+
+        $result = $profile->confirmPendingEmail($user, $data['code'], (string) $request->ip());
+
+        return match ($result->outcome) {
+            EmailChangeOutcome::CONFIRMED => new UserResource($user->fresh()),
+            EmailChangeOutcome::RATE_LIMITED => ApiErrorResponse::make(
+                ApiErrorCode::TooManyRequests,
+                429,
+                params: ['retry_after' => $result->retryAfter],
+                headers: ['Retry-After' => (string) $result->retryAfter],
+            ),
+            EmailChangeOutcome::TAKEN => ApiErrorResponse::make(ApiErrorCode::ValidationFailed, 422, fields: [
+                'email' => [__('validation.unique', ['attribute' => __('account.account.profile.email')])],
+            ]),
+            default => ApiErrorResponse::make(ApiErrorCode::ValidationFailed, 422, fields: [
+                'code' => [__('api.new_email.'.$result->outcome)],
+            ]),
+        };
     }
 
     /**

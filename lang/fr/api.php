@@ -83,6 +83,12 @@ return [
         'wrong_code' => "Le code n'est pas bon ou a expiré. Demandes-en un autre.",
     ],
 
+    'new_email' => [
+        'wrong_code' => "Le code n'est pas bon ou a expiré. Demandes-en un autre.",
+        'expired' => "La demande a expiré. Redemande le changement d'e-mail.",
+        'nothing_pending' => "Il n'y a aucun changement d'e-mail en attente.",
+    ],
+
     'google' => [
         'refused' => "Nous n'avons pas pu terminer l'inscription avec ce compte Google. Réessaie, ou inscris-toi avec ton e-mail et un mot de passe.",
     ],

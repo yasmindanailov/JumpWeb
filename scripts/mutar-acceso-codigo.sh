@@ -14,7 +14,7 @@ set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
 SAIL="docker compose exec -u sail -T laravel.test"
-TESTS="$SAIL php artisan test --filter=AuthCodeTest|LoginCodesTest|RememberedDeviceTest|MeConfirmationCodeTest|SessionBindingTest"
+TESTS="$SAIL php artisan test --filter=AuthCodeTest|LoginCodesTest|RememberedDeviceTest|MeConfirmationCodeTest|SessionBindingTest|MePendingEmailCodeTest|EmailChangeRecipientsTest|EmailChangeConfirmTest"
 
 CODES=app/Domain/Identity/Services/LoginCodes.php
 LOGIN=app/Domain/Identity/Services/EmailCodeLogin.php
@@ -32,9 +32,12 @@ PROVIDER=app/Providers/AppServiceProvider.php
 VERDICTS=app/Http/Api/Concerns/TranslatesCredentialVerdicts.php
 WEBOUT=app/Http/Controllers/Auth/LogoutController.php
 CONFIRMMAIL=app/Notifications/ConfirmationCode.php
+# La A2b (`#856`)
+PROFILE=app/Domain/Identity/Services/AccountProfile.php
+PENDINGMAIL=app/Notifications/VerifyPendingEmail.php
 
 TMP="$(mktemp -d)"
-FICHEROS=("$CODES" "$LOGIN" "$CODEMAIL" "$COPY" "$USER" "$BOOT" "$SESSION" "$SIGNUP" "$AUTHCONF" "$CREDS" "$BINDING" "$PROVIDER" "$VERDICTS" "$WEBOUT" "$CONFIRMMAIL")
+FICHEROS=("$CODES" "$LOGIN" "$CODEMAIL" "$COPY" "$USER" "$BOOT" "$SESSION" "$SIGNUP" "$AUTHCONF" "$CREDS" "$BINDING" "$PROVIDER" "$VERDICTS" "$WEBOUT" "$CONFIRMMAIL" "$PROFILE" "$PENDINGMAIL")
 copia() { echo "$TMP/${1//\//__}"; }
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$(copia "$f")" "$f"; touch "$f"; done; }
 trap 'restaurar; rm -rf "$TMP"' EXIT
@@ -261,6 +264,40 @@ mutar "cerrar las demás echa también la sesión de quien lo pide" "$USER" \
 mutar "salir en la web rota el token y echa a todos los dispositivos" "$WEBOUT" \
   "\$web->logoutCurrentDevice();" \
   "\$web->logout();"
+
+# ── A2b · el correo nuevo, con un código a ESE buzón (`#856`) ───────────────────────────────────
+mutar "los correos del cambio salen al correo de la cuenta (el defecto de siempre)" "$USER" \
+  "        return \$notification instanceof ChoosesRecipient ? \$notification->recipientFor(\$this) : \$this->email;" \
+  "        return \$this->email;"
+
+mutar "el aviso al buzón viejo pierde el correo viejo en la cola" "$PROFILE" \
+  "new EmailChangeCompleted(self::maskEmail(\$newEmail), \$previousEmail)" \
+  "new EmailChangeCompleted(self::maskEmail(\$newEmail))"
+
+mutar "el correo nuevo se confirma con un código de otro propósito" "$PROFILE" \
+  "\$this->codes->consume((string) \$user->pending_email, LoginCode::PURPOSE_NEW_EMAIL, \$code)" \
+  "\$this->codes->consume((string) \$user->pending_email, LoginCode::PURPOSE_LOGIN, \$code)"
+
+mutar "confirmar el correo nuevo no tiene limitador" "$PROFILE" \
+  "        if (RateLimiter::tooManyAttempts(\$key, self::MAX_CONFIRM_ATTEMPTS)) {" \
+  "        if (false) {"
+
+mutar "el código del correo nuevo espera a la cola" "$PROFILE" \
+  "        CodeMail::sendAfterResponse(\$user, new VerifyPendingEmail(\$code));" \
+  "        \$user->notify(new VerifyPendingEmail(\$code));"
+
+mutar "reenviar no manda un código nuevo" "$PROFILE" \
+  "        \$user->forceFill(['pending_email_sent_at' => now()])->save();
+        \$this->sendNewEmailCode(\$user, \$ip);" \
+  "        \$user->forceFill(['pending_email_sent_at' => now()])->save();
+        \$user->notify(new VerifyPendingEmail);"
+
+mutar "reenviar no tiene techo por hora (el buzón de un tercero, lleno)" "$PROFILE" \
+  " || RateLimiter::tooManyAttempts(\$hourKey, EmailCodeLogin::MAX_PER_EMAIL_PER_HOUR)" ""
+
+mutar "la copia del registro guarda el código del correo nuevo" "$PENDINGMAIL" \
+  "        return \$this->code === null ? [] : [\$this->shown()];" \
+  "        return [];"
 
 echo
 echo "mutaciones que muerden: ${muerden}/${total}"

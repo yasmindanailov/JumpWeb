@@ -364,7 +364,7 @@ pinta) · `applied_by` FK restrict · índices `(order_id,type)`, `(order_item_i
 | `password` (**NULLABLE** desde `#853`) | `NULL` = la cuenta NO tiene contraseña: entra con un código al correo o con Google (`specs/acceso-con-codigo.md`); ninguna contraseña la abre. `getAuthPassword()` da `''` (el hash de la cookie de recuerdo no admite `NULL`). `remember_token`: la cookie «recuérdame» de 90 días (`#854`) y, desde `#855`, la ATADURA de cada sesión de la web (su huella, en la sesión: `SessionBinding`); nunca vacío con alguien dentro. Lo vacía y lo rota la palanca de `RGPD-06` |
 
 ### `login_codes` (LoginCode, **MassPrunable**) — el código de un solo uso (`#853`, `specs/acceso-con-codigo.md` §4.1)
-`email`, `purpose` (`login`; `confirm` desde `#855`), `code_hash` (char 64: HMAC con la clave de la app sobre propósito,
+`email`, `purpose` (`login`; `confirm` desde `#855`; `new_email` —al buzón nuevo de un cambio— desde `#856`), `code_hash` (char 64: HMAC con la clave de la app sobre propósito,
 correo y código — NUNCA el código), `attempts` (≤ 5), `expires_at` (10 min), `used_at`, `ip`, `created_at` (sin
 `updated_at`). Por CORREO y no por cuenta: el cambio de correo verificará el nuevo. Uno vivo por (correo, propósito). La
 escriben solo `LoginCodes` (intento y uso con consultas condicionadas); la poda diaria la borra a las 24 h y

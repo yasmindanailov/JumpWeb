@@ -97,6 +97,13 @@ return [
         'wrong_code' => 'El código no es correcto o ha caducado. Pide otro.',
     ],
 
+    // El código del correo NUEVO (A2b, `#856`): el 422 sobre `code` de `POST /me/pending-email/confirm`, por su motivo.
+    'new_email' => [
+        'wrong_code' => 'El código no es correcto o ha caducado. Pide otro.',
+        'expired' => 'La solicitud ha caducado. Vuelve a pedir el cambio de correo.',
+        'nothing_pending' => 'No hay ningún cambio de correo pendiente.',
+    ],
+
     // Entrar y registrarse con Google (`specs/auth-con-google.md`).
     'google' => [
         // Entre que se pintó la pantalla y se envió, esa identidad dejó de poder entrar: apareció una

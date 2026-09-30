@@ -2,13 +2,17 @@
 
 namespace App\Domain\Identity\Services;
 
+use App\Domain\Identity\Contracts\EmailChangeOutcome;
 use App\Domain\Identity\Contracts\ProfileUpdateResult;
 use App\Domain\Identity\Contracts\Reconfirmation;
 use App\Domain\Identity\Contracts\ResendResult;
+use App\Domain\Identity\Models\LoginCode;
 use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Services\SiteLocales;
+use App\Notifications\EmailChangeCompleted;
 use App\Notifications\EmailChangeRequested;
 use App\Notifications\VerifyPendingEmail;
+use Illuminate\Auth\Events\Verified;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -54,7 +58,13 @@ class AccountProfile
         return $user->pending_email_sent_at->copy()->addMinutes(self::PENDING_EMAIL_HOLD_MINUTES);
     }
 
-    public function __construct(private readonly AccountCredentials $credentials) {}
+    /** Fallos seguidos al confirmar el código del correo nuevo, por (titular, IP), antes del bloqueo (A2b, `#856`). */
+    public const MAX_CONFIRM_ATTEMPTS = 5;
+
+    public function __construct(
+        private readonly AccountCredentials $credentials,
+        private readonly LoginCodes $codes,
+    ) {}
 
     /**
      * Las reglas de validación del perfil, **para las dos superficies**.
@@ -149,7 +159,9 @@ class AccountProfile
             // enlace; el segundo al VIEJO, para que el dueño se entere si esto no lo ha pedido él. El
             // correo nuevo viaja **enmascarado** ahí: un aviso cruzado no puede regalar la dirección
             // completa de otro buzón a quien lea el primero.
-            $user->notify(new VerifyPendingEmail);
+            // ▶ Desde la A2b (`#856`) el primero lleva además un CÓDIGO y sale tras la respuesta (`CodeMail`): quien lo
+            // pidió lo está esperando en la pantalla.
+            $this->sendNewEmailCode($user, $ip);
             $user->notify(new EmailChangeRequested(self::maskEmail($email)));
 
             Log::info('account.email_change_requested', ['user_id' => $user->id]);
@@ -183,28 +195,119 @@ class AccountProfile
      * adivinando nada, se está mandando correo — lo que se protege es el buzón del destinatario y el
      * coste del envío, no la cuenta.
      */
-    public function resendPendingEmail(User $user): ResendResult
+    public function resendPendingEmail(User $user, string $ip = ''): ResendResult
     {
         if (! $user->pending_email) {
             return ResendResult::nothingPending();
         }
 
         $key = 'pending-email-resend:'.$user->id;
+        // ▶ Y por hora (A2b, `#856`): cada reenvío es ya un código nuevo al buzón que eligió quien pide el cambio —que puede
+        // ser el de un tercero—; los números de los demás códigos.
+        $hourKey = 'pending-email-resend-hour:'.$user->id;
 
-        if (RateLimiter::tooManyAttempts($key, 1)) {
-            return ResendResult::throttled(RateLimiter::availableIn($key));
+        if (RateLimiter::tooManyAttempts($key, 1) || RateLimiter::tooManyAttempts($hourKey, EmailCodeLogin::MAX_PER_EMAIL_PER_HOUR)) {
+            return ResendResult::throttled(max(RateLimiter::availableIn($key), RateLimiter::availableIn($hourKey)));
         }
 
         RateLimiter::hit($key, self::RESEND_WINDOW);
+        RateLimiter::hit($hourKey, 3600);
 
         // ⚠️ Se **resella** el envío: la ventana de validez del enlace cuenta desde el último, no
         // desde el primero. Sin esto, reenviar entregaría un enlace que caduca antes de llegar.
         $user->forceFill(['pending_email_sent_at' => now()])->save();
-        $user->notify(new VerifyPendingEmail);
+        $this->sendNewEmailCode($user, $ip);
 
         Log::info('account.email_change_resent', ['user_id' => $user->id]);
 
         return ResendResult::sent();
+    }
+
+    /**
+     * **Confirma el correo nuevo con el CÓDIGO que llegó a ese buzón** (A2b de `specs/acceso-con-codigo.md` §4.9, `#856`):
+     * la prueba de que el buzón es de quien pidió el cambio, escrita en el mismo dispositivo. Con un limitador propio por
+     * (titular, IP) —este secreto no es el de reconfirmar— y los cinco intentos de cada código.
+     */
+    public function confirmPendingEmail(User $user, string $code, string $ip): EmailChangeOutcome
+    {
+        if (! $user->pending_email) {
+            return EmailChangeOutcome::of(EmailChangeOutcome::NOTHING_PENDING);
+        }
+
+        $key = 'new-email-confirm:'.$user->id.'|'.$ip;
+        if (RateLimiter::tooManyAttempts($key, self::MAX_CONFIRM_ATTEMPTS)) {
+            return EmailChangeOutcome::rateLimited(RateLimiter::availableIn($key));
+        }
+
+        if (! $this->codes->consume((string) $user->pending_email, LoginCode::PURPOSE_NEW_EMAIL, $code)) {
+            RateLimiter::hit($key, 60);
+
+            return EmailChangeOutcome::of(EmailChangeOutcome::WRONG_CODE);
+        }
+
+        RateLimiter::clear($key);
+
+        return $this->completeEmailChange($user);
+    }
+
+    /**
+     * **Completa el cambio pedido**: el correo nuevo pasa a ser el de la cuenta, verificado. Lo usan el CÓDIGO (arriba) y el
+     * ENLACE firmado (`EmailChangeController`), que antes lo hacía él mismo: bajó aquí TAL CUAL en la A2b (`#856`) para no
+     * tener dos copias. Quien llama ya ha probado el buzón nuevo (el código, o la firma y el hash del enlace).
+     */
+    public function completeEmailChange(User $user): EmailChangeOutcome
+    {
+        if (! $user->pending_email || ! $user->pending_email_sent_at) {
+            return EmailChangeOutcome::of(EmailChangeOutcome::NOTHING_PENDING);
+        }
+
+        // Caducidad de la solicitud (defensa adicional a la firma de la ruta). Por `pendingEmailExpiresAt()`, la MISMA cuenta
+        // que publica la API: dos fórmulas de la ventana serían dos respuestas a «¿sigue valiendo?».
+        $expiresAt = self::pendingEmailExpiresAt($user);
+        if ($expiresAt === null || $expiresAt->lt(now())) {
+            $user->forceFill(['pending_email' => null, 'pending_email_sent_at' => null])->save();
+
+            return EmailChangeOutcome::of(EmailChangeOutcome::EXPIRED);
+        }
+
+        // Otro usuario pudo haber registrado ese email entre la solicitud y la confirmación.
+        // UNIQUE de BD ya lo blindaría, pero damos un mensaje claro y limpiamos el pending.
+        if (User::where('email', $user->pending_email)->where('id', '!=', $user->id)->exists()) {
+            $user->forceFill(['pending_email' => null, 'pending_email_sent_at' => null])->save();
+
+            return EmailChangeOutcome::of(EmailChangeOutcome::TAKEN);
+        }
+
+        $previousEmail = (string) $user->email;
+        $newEmail = (string) $user->pending_email;
+
+        $user->forceFill([
+            'email' => $newEmail,
+            'email_verified_at' => now(),       // implícitamente verificado (el cliente probó el buzón nuevo)
+            'pending_email' => null,
+            'pending_email_sent_at' => null,
+        ])->save();
+
+        // S-5 (`#181`): confirmar el correo NUEVO es verificarlo — y lo que espera a la verificación (la
+        // aceptación pendiente del waiver) tiene que enterarse, como por el enlace del alta o por el cobro.
+        event(new Verified($user));
+
+        // Aviso al EMAIL VIEJO de que el cambio se consumó (cierre del loop anti-takeover, C-07).
+        // Si la víctima ve este correo en su buzón original y no fue ella, sabe que la cuenta
+        // fue tomada antes de que el atacante haga más daño. ⚠️ El correo viejo viaja DENTRO de la
+        // notificación (va por la cola, y al volver de ella el titular ya tiene el nuevo, `#856`).
+        $user->notify(new EmailChangeCompleted(self::maskEmail($newEmail), $previousEmail));
+
+        Log::info('account.email_change_confirmed', ['user_id' => $user->id]);
+
+        return EmailChangeOutcome::of(EmailChangeOutcome::CONFIRMED);
+    }
+
+    /** Un código nuevo al buzón NUEVO, y el correo con él tras la respuesta ({@see CodeMail}). Anula el anterior. */
+    private function sendNewEmailCode(User $user, string $ip): void
+    {
+        $code = $this->codes->issue((string) $user->pending_email, LoginCode::PURPOSE_NEW_EMAIL, $ip);
+        CodeMail::sendAfterResponse($user, new VerifyPendingEmail($code));
     }
 
     /**

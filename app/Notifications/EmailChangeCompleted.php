@@ -4,6 +4,7 @@ namespace App\Notifications;
 
 use App\Domain\Platform\Models\Setting;
 use App\Notifications\Support\BrandedMailMessage;
+use App\Notifications\Support\ChoosesRecipient;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -17,11 +18,15 @@ use Illuminate\Notifications\Notification;
  * víctima de un takeover ve este mensaje, sabe inmediatamente que su cuenta fue
  * comprometida y puede contactar con soporte antes de perder más.
  */
-class EmailChangeCompleted extends Notification implements ShouldQueue
+class EmailChangeCompleted extends Notification implements ChoosesRecipient, ShouldQueue
 {
     use Queueable;
 
-    public function __construct(public string $newEmailMasked) {}
+    /**
+     * ⚠️ `$previousEmail` viaja DENTRO de la notificación (A2b, `#856`): va por la cola, y al volver de ella el titular se
+     * recarga de la base, donde ya tiene el correo NUEVO. Un atributo puesto en memoria antes de encolar no sobrevive.
+     */
+    public function __construct(public string $newEmailMasked, public ?string $previousEmail = null) {}
 
     /**
      * @return array<int, string>
@@ -31,10 +36,13 @@ class EmailChangeCompleted extends Notification implements ShouldQueue
         return ['mail'];
     }
 
-    /** Forzamos el destino al email PREVIO (el que se acaba de sustituir). */
-    public function routeNotificationForMail(object $notifiable): string
+    /**
+     * El destino es el email PREVIO (el que se acaba de sustituir). Lo lee `User::routeNotificationForMail()`: el método
+     * que había aquí antes, con otro nombre, no lo llamaba nadie y el aviso salía al correo NUEVO (medido, `#856`).
+     */
+    public function recipientFor(object $notifiable): string
     {
-        return (string) $notifiable->previous_email;
+        return (string) ($this->previousEmail ?? $notifiable->email);
     }
 
     public function toMail(object $notifiable): MailMessage

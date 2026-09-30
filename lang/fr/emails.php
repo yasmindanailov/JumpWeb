@@ -89,6 +89,14 @@ return [
         'badge' => 'Il reste une étape',
         'headline' => 'Confirmez votre nouvel e-mail',
     ],
+    'verify_pending_email_code' => [
+        'subject' => ':code est le code de ton nouvel e-mail',
+        'preheader' => 'Saisis-le là où tu as demandé le changement. Sinon, ignore ce message.',
+        'badge' => 'Confirme ton nouvel e-mail',
+        'headline' => ':code',
+        'intro' => "Tu as demandé à changer l'e-mail de ton compte pour celui-ci. Saisis le code sur l'écran où tu l'as demandé.",
+        'validity' => 'Le code est valable :minutes minutes et une seule fois. Tu peux aussi confirmer avec le bouton.',
+    ],
     'email_change_requested' => [
         'subject' => "Changement d'e-mail demandé",
         'preheader' => "Si ce n'était pas toi, ton compte garde cette adresse. On t'explique quoi faire.",

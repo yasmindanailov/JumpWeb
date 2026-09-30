@@ -1,11 +1,11 @@
 # [SPEC] Entrar con un código al correo — la contraseña del cliente se retira
 
-> Estado: ✅ aprobada (29-09: el owner contestó el §7) → **A1 ✅** (§4.8) · **A2a ✅** (§4.9), sigue la A2b · Última
+> Estado: ✅ aprobada (29-09: el owner contestó el §7) → **A1 ✅** (§4.8) · **A2 ✅** (§4.9), sigue la A3 · Última
 > actualización: 2026-09-30 ·
 > Decisiones: `#847` (el owner: código al correo y Google; fuera la contraseña) · `#848` (el §7: una sola puerta, borrar
 > las contraseñas, 90 días, solo el código) · `#849` (corrige el 1: el registro NO espera al código, hay cola en la puerta) ·
 > `#853`/`#854` (la A1: el código en el servidor; el dispositivo recordado y `RGPD-06`) · `#855` (la A2a: reconfirmar con
-> un código; cada sesión atada al token) ·
+> un código; cada sesión atada al token) · `#856` (la A2b: el correo nuevo con su código, y a su buzón) ·
 > Carril: plataforma (el servidor, el contrato y la isla); el cajón, del SPA por buzón.
 
 ## §0 · Antes de tocar
@@ -22,8 +22,8 @@
   (§4.4). (3) Las cuentas de Google llevan hoy una contraseña aleatoria (0 nulas de 53 en local). (4) Los limitadores
   son de DOMINIO (`SEC-06`): ningún controlador los reimplementa. (5) La puerta dice si un correo tiene cuenta, como el
   alta de hoy (`#31`): la acotan los límites de §4.2.
-- **Estado**: ✅ aprobada (`#848`). **A1 ✅** (29-09, `#853`/`#854`, §4.8) · **A2a ✅** (30-09, `#855`, §4.9: reconfirmar con
-  un código y cada sesión atada al token). Sigue la A2b (§4.9).
+- **Estado**: ✅ aprobada (`#848`). **A1 ✅** (29-09, `#853`/`#854`, §4.8) · **A2 ✅** (30-09, `#855`/`#856`, §4.9: reconfirmar
+  con un código, cada sesión atada al token y el correo nuevo con su código). Sigue la A3, la isla (§4.7).
 - **Invariantes**: `SEC-06` (se amplía al código), `RGPD-01` (la purga borra los códigos), `RGPD-06` (sin cambio de
   forma). Ningún fichero del `CRITICAL_RE`.
 
@@ -189,8 +189,17 @@ Partida en dos tandas que se verifican solas. **A2a · reconfirmar con un códig
   la lista de prioridad, delante de la autenticación; (2) el guard `sanctum` guarda en caché al titular (lo resuelve antes
   el `AuthenticateSession` de Sanctum): cerrar el `web` no basta, hace falta `Auth::forgetGuards()`.
 **A2b · el correo nuevo, con un código a ESE correo** (propósito `new_email`, para no mezclarlo con el de confirmar): el
-cambio se pide como hoy (`pending_email`) y se completa con `POST /me/email/confirm` `{code}`; el enlace firmado de hoy
-sigue valiendo hasta que la isla y el cajón pinten el código (A3/A4) y se retira en la A5.
+cambio se pide como hoy (`pending_email`) y se completa con `POST /me/pending-email/confirm` `{code}` (✱ junto a sus hermanas
+`DELETE /me/pending-email` y `/resend`; antes decía `/me/email/confirm`); el enlace firmado de hoy sigue valiendo hasta que
+la isla y el cajón pinten el código (A3/A4) y se retira en la A5.
+- ✅ **A2b HECHA** (30-09, `#856`, contrato **1.57.0**): pedir el cambio y reenviarlo emiten el código al buzón nuevo, tras
+  la respuesta (`CodeMail`), en el mismo correo que el enlace; `AccountProfile::confirmPendingEmail()` (limitador propio por
+  titular e IP) y `completeEmailChange()`, bajado TAL CUAL del controlador del enlace, que ahora lo usa. Reenvíos: 5/h.
+  ⚠️⚠️ **Medido: los dos correos del cambio salían al buzón equivocado desde siempre** —el enlace de «confirma tu nuevo email»
+  al VIEJO, el aviso de «ha cambiado» al NUEVO—: declaraban su destinatario en la notificación y Laravel solo lee el del
+  titular. `User::routeNotificationForMail()` respeta ahora `ChoosesRecipient`, y el correo viejo viaja dentro del aviso
+  (va por la cola y el titular vuelve de ella con el nuevo). Pruebas `MePendingEmailCodeTest` y `EmailChangeRecipientsTest`
+  (el envío de verdad y su dirección); arnés 48/48. En local contra Mailpit, de punta a punta: cada correo a su buzón.
 
 ## 5. Impacto en invariantes
 

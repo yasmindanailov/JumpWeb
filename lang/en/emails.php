@@ -89,6 +89,14 @@ return [
         'badge' => 'One step left',
         'headline' => 'Confirm your new email',
     ],
+    'verify_pending_email_code' => [
+        'subject' => ':code is the code for your new email',
+        'preheader' => "Type it where you asked for the change. If you didn't, ignore this email.",
+        'badge' => 'Confirm your new email',
+        'headline' => ':code',
+        'intro' => 'You asked to change the email of your account to this one. Type the code on the screen where you asked for it.',
+        'validity' => 'The code works for :minutes minutes and only once. You can also confirm with the button.',
+    ],
     'email_change_requested' => [
         'subject' => 'Someone asked to change your email',
         'preheader' => "If it wasn't you, your account keeps this address. Inside we tell you what to do.",

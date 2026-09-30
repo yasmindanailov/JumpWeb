@@ -71,6 +71,9 @@ tras varios intentos fallidos. Motivo: el producto trata **datos personales** (R
 - Cookies: `http_only` (ok), `same_site=lax` (ok), **`secure=true` en producción**, valorar `encrypt=true`.
 - **Reconfirmar contraseña** antes de acciones sensibles (cambiar email, borrar cuenta). Desde la A2a (`#855`), **o un
   código** al correo de la cuenta (`POST /me/confirm-code`, que dice para qué es), bajo el mismo limitador.
+- **El cambio de correo prueba el buzón NUEVO** (`#856`): se pide reconfirmando, el viejo recibe el aviso de que se ha
+  pedido, y se completa con el código que llega al nuevo (o su enlace, hasta la A5); al completarse, el viejo recibe el
+  aviso de que ha cambiado. ⚠️ Hasta el 30-09 esos dos correos salían al buzón contrario (medido).
 - **Cerrar las demás sesiones no depende del driver** (`#855`): cada sesión de la web va atada al `remember_token` de la
   cuenta (`SessionBinding`) y la que ya no casa se cierra en su próxima petición, también con `redis`.
 - **El PANEL, aparte** (`specs/panel-a-salvo.md`, 29-09): su PROPIO inicio de sesión (guard `admin`, `SEC-14`: una sesión

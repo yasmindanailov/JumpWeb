@@ -147,10 +147,11 @@ class EmailChangeConfirmTest extends TestCase
 
         $this->get($this->confirmUrl($user))->assertRedirect(route('account'));
 
-        // La notif al viejo se rutea por `previous_email` (inyectado en runtime, no es atributo
-        // persistido). Verificamos que se envió y que su routing apunta al email anterior.
+        // ⚠️⚠️ Se pregunta la ruta como la pregunta LARAVEL —al titular, `routeNotificationFor('mail', …)`—, no a un método
+        // de la notificación (`#856`): hasta el 30-09 esta prueba llamaba a mano a uno que el framework no lee, y pasaba
+        // mientras el aviso salía al correo NUEVO. El envío de verdad, con su dirección, lo mide `EmailChangeRecipientsTest`.
         Notification::assertSentTo($user, EmailChangeCompleted::class, function ($notif, $channels, $notifiable) {
-            return $notif->routeNotificationForMail($notifiable) === 'ana@example.com';
+            return $notifiable->routeNotificationFor('mail', $notif) === 'ana@example.com';
         });
     }
 

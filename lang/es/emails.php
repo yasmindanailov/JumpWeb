@@ -111,6 +111,15 @@ return [
         'badge' => 'Falta confirmar',
         'headline' => 'Confirma tu nuevo email',
     ],
+    // El mismo correo, con el CÓDIGO (A2b, `#856`): el código es el titular; el botón sigue hasta la A5.
+    'verify_pending_email_code' => [
+        'subject' => ':code es el código de tu nuevo email',
+        'preheader' => 'Escríbelo donde pediste el cambio. Si no lo has pedido tú, ignora este correo.',
+        'badge' => 'Confirma tu nuevo email',
+        'headline' => ':code',
+        'intro' => 'Has pedido cambiar el email de tu cuenta a este. Escribe el código en la pantalla donde lo pediste.',
+        'validity' => 'El código vale :minutes minutos y una sola vez. También puedes confirmarlo con el botón.',
+    ],
     'email_change_requested' => [
         'subject' => 'Se ha pedido cambiar tu email',
         'preheader' => 'Si no has sido tú, tu cuenta sigue con este correo. Dentro te decimos qué hacer.',

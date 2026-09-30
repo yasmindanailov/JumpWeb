@@ -16,6 +16,7 @@ use App\Domain\Platform\Services\AuditLogger;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Domain\Platform\Services\Surveys\SurveySeals;
 use App\Notifications\PasswordReset;
+use App\Notifications\Support\ChoosesRecipient;
 use App\Notifications\VerifyEmailAddress;
 use Carbon\CarbonImmutable;
 use Database\Factories\UserFactory;
@@ -34,6 +35,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
@@ -122,6 +124,16 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
             'app_authentication_secret' => 'encrypted',
             'app_authentication_recovery_codes' => 'encrypted:array',
         ];
+    }
+
+    /**
+     * A qué dirección sale un correo de esta cuenta: la suya, salvo que el correo diga otra ({@see ChoosesRecipient}: el
+     * código del correo NUEVO, al nuevo; el aviso de que cambió, al viejo). Laravel solo pregunta al MODELO: el método
+     * que esas notificaciones declaraban en sí mismas no lo leía nadie (medido el 30-09, `#856`).
+     */
+    public function routeNotificationForMail(?Notification $notification = null): ?string
+    {
+        return $notification instanceof ChoosesRecipient ? $notification->recipientFor($this) : $this->email;
     }
 
     /**

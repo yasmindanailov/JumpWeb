@@ -83,6 +83,12 @@ return [
         'wrong_code' => 'The code is not right or has expired. Ask for another one.',
     ],
 
+    'new_email' => [
+        'wrong_code' => 'The code is not right or has expired. Ask for another one.',
+        'expired' => 'The request has expired. Ask for the email change again.',
+        'nothing_pending' => 'There is no email change waiting to be confirmed.',
+    ],
+
     'google' => [
         'refused' => 'We could not finish signing you up with that Google account. Try again, or sign up with your email and a password.',
     ],

@@ -17,7 +17,9 @@ guardas 8, 9 y 10) · `scripts/mutar-guarda8.sh` · `CHANGELOG.md` · `phpstan.n
 `RefreshRememberedDevice`, sus dos migraciones, `{LoginCodes,RememberedDevice}Test`, `Api\V1\AuthCodeTest` y `scripts/mutar-acceso-codigo.sh`
 (y, AVISANDO, del SPA: `RecordEmailSend`, `EmailTiming`) · **y la A2a** (`#855`): `Identity\Contracts\Reconfirmation`,
 `Identity\Services\{CodeMail,SessionBinding}`, `Identity\Listeners\BindSessionOnLogin`, `EnsureSessionIsCurrent`,
-`Notifications\ConfirmationCode`, `Auth\LogoutController`, `Api\V1\MeConfirmationCodeTest` y `Auth\SessionBindingTest` ·
+`Notifications\ConfirmationCode`, `Auth\LogoutController`, `Api\V1\MeConfirmationCodeTest` y `Auth\SessionBindingTest` · **y la
+A2b** (`#856`): `Identity\Contracts\EmailChangeOutcome`, `Notifications\Support\ChoosesRecipient`, `Account\EmailChangeController`,
+`Api\V1\MePendingEmailCodeTest` y `Account\EmailChangeRecipientsTest` ·
 **LA ISLA Y LA LANDING NUEVA** (`#681`, `#682`): la spec, la isla `resources/js/isla/**`, sus bancos y sondas
 (`scripts/banco-{isla,piezas,compra}*`, `scripts/pixel.mjs`, `scripts/sonda-{embudo,isla,cuenta,movimiento,isla-movimiento,banco-movimiento,isla-rendimiento,compra-directa,demanda}.mjs`,
 `scripts/sonda-cuenta-datos.php`, `scripts/mutar-{t5f,hijos-de-producto,demanda-isla}.sh`), `sidebar/reanudar.js`,
