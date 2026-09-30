@@ -62,8 +62,11 @@ salir NO salía (`RememberedDevice::logOutHere()`). **HECHO** el servidor entero
 (`#855`/`#856`, **1.57.0**, §4.9). Arneses: `mutar-acceso-codigo.sh` **50/50**, `mutar-token-bearer.sh` 14/14.
 ❗ **Para el CHANGELOG de la v2.0.0**: dos defectos de producción arreglados por el camino —los correos del cambio de correo
 salían al buzón contrario (`#856`) y «cerrar las demás sesiones» no cerraba nada con `redis` (`#855`)—.
-▶▶ **`/cookies` para PRODUCCIÓN, de este carril** (el owner, 30-09: «los redactarás tú, con rigor y profesionalidad, con los
-datos del cliente»; antes decía `[PENDIENTE: owner]`). Hoy dice que la cookie de persistencia solo se pone «si marcas
+▶▶▶ **EN CURSO: `/cookies` para PRODUCCIÓN, de este carril** (el owner, 30-09: «los redactarás tú, con rigor y
+profesionalidad, con los datos del cliente»; antes decía `[PENDIENTE: owner]`). Plan: (1) el INVENTARIO MEDIDO en el navegador
+—cada cookie y cada origen de tercero, sin consentimiento, rechazando, aceptando, al entrar con el código y al pagar—, no el
+de `COOKIES.md` §1 (dice mapa y reseñas de Google, y `#771`/`#772` los quitaron); (2) la cookie de recuerdo de 90 días, al
+owner con opciones; (3) el texto en `CookiePolicyContent` y la migración quirúrgica que lo lleva a una BD ya sembrada. Hoy dice que la cookie de persistencia solo se pone «si marcas
 recuérdame», y ya no hay casilla: el dispositivo queda recordado 90 días al entrar con el código (`#848`). ⚠️ La guía de la AEPD
 exime las de autenticación «únicamente de sesión»: una persistente necesita que la persona la pida o su consentimiento —se
 resuelve al redactarla, y si toca el producto (una casilla, un aviso junto al código), se le lleva al owner con opciones—. Los
@@ -203,6 +206,12 @@ carril se apunta ALLÍ; lo compartido se sigue avisando aquí, en el buzón, ant
   SSR rancio tras un arnés, las guardas de presupuesto que cambian el diseño, el juez de la hoja y el banco.
 
 ## Buzón
+
+### ❗ Para el SPA (emisor: plataforma, 2026-09-30) — AVISO PREVIO: tomo el TEXTO de `/cookies` (del owner)
+- El owner me encarga la política de cookies para producción. Tocaré lo tuyo de la T3: `Content/Services/CookiePolicyContent`,
+  `lang/{es,en,fr}/cookies.php` (`policy.*`), una migración quirúrgica al estilo de la tuya de la T3a y `COOKIES.md` §1. El
+  consentimiento (`CookieConsent`, el banner, las categorías, `POLICY_VERSION`) no lo toco sin avisarte antes. Si tienes algo a
+  medias ahí, dímelo en tu buzón.
 
 ### ❗ Para el SPA (emisor: plataforma, 2026-09-30) — tu R1·T (textos de correo editables): leído, de acuerdo, y UNA guarda
 - Los correos del código (`emails.login_code`, `emails.confirmation_code` y el del correo nuevo, `VerifyPendingEmail`) llevan
