@@ -2,27 +2,27 @@
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb` a secas; la instancia al lado, en
 > `~/proyectos/instancias/playjump`, clon de `github.com/yasmindanailov/instancia-playjump`, montada el 25-09) ·
-> Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#807`** · La banda está dada de alta en la
+> Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#808`** · La banda está dada de alta en la
 > tabla de `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs:
 > **`fiesta-sistema-nuevo.md` §4.17** (lo siguiente, `#806`) · `correos-rediseno.md` §0 (`#800`→`#804`; la R1·T) ·
 > `analitica-para-decidir.md` §0 (en pausa, `#755`) · `encuestas.md` §0 y §4.7 (`#754`) · `analitica.md` §0 y §4.5 ·
 > `isla-y-landing-nueva.md` §4.11 · `celebracion-e-invitacion.md` §0 · `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 ·
-> `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-09-30, 07:00 (K1 de los complementos aprobada por
-> el owner; lo siguiente, K2).
+> `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-09-30, 09:50 (K1 y K2 de los complementos en
+> `main`; K3 es dato del panel, `#808`; lo siguiente, la R1·T de los correos).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`). El
 > contador de la suite va en el trailer del commit (`#618`), no aquí. **Se muda, no se raspa**: el detalle de
 > una feature baja a su spec (las trampas por tanda de la analítica T1→T5 viven en `analitica.md` §4.9,
 > mudadas verbatim el 24-09; las de la ficha de Google en su §9.1; las de la invitación en su §10.20).
 
-## Foto (2026-09-30, 07:00)
+## Foto (2026-09-30, 09:50)
 
 - ✅ **LA LISTA DE INVITADOS DEL OWNER, EN `main` Y APROBADA** (`#805`, del `#847`; `fiesta-sistema-nuevo.md` §4.16; «vale,
   visto bueno»): todos confirmados, sin firmas de los invitados (el descargo de quien cumple, sí), sin cifras ni recordatorio
   (RETIRADO entero, con sus textos y su test), el «No podemos» aparte y suave; arnés `mutar-lista-805.sh` 6/6.
-- 🟦 **LOS COMPLEMENTOS EN DOS** (`#806`, `#807`, §4.17): ✅ **K1 APROBADA** (30-09: «buen trabajo, visto bueno… respetando la
-  config del panel»): «Para los niños» / «Para los adultos», «Uno para cada niño» (el `Tag` de la calculadora); arnés
-  `mutar-complementos-k1.sh` 10/10, sonda `sonda-k1.mjs`, fiesta `JW-OJO-K1` (`CARRIL-SPA` §8 (23)). 🟦 **K2** (varias tartas)
-  en `wip/complementos-k2`, verificada y SIN commit hasta el ojo del owner (§4.17; `CARRIL-SPA` §8 (24)). Sigue K3.
+- ✅ **LOS COMPLEMENTOS EN DOS** (`#806`→`#808`, §4.17), en `main`: **K1** (aprobada: «Para los niños» / «Para los adultos» y
+  «Uno para cada niño»; arnés 10/10) y **K2** (varias tartas, «Sin tarta» en casilla; arnés 16/16; el owner: «Quedarme con K2»).
+  **K3, la merienda, SIN CÓDIGO** (`#808`): complementos a 0 € en la familia «Merienda», probado solo configurando en el pack 106
+  (`JW-OJO-CFG`, `CARRIL-SPA` §8 (25)). ▶ La regla del owner, en adelante: no se programa lo que el panel ya configura.
 - ✅ R1a y R1b de los correos, en `main` y aprobadas (29-09): su foto, mudada verbatim a `CARRIL-SPA.md` §9.
 - Los correos: sus cuatro decisiones del owner (`#800`→`#804`), mudadas verbatim a `CARRIL-SPA.md` §9 (30-09).
 - ⏸ **LA ANALÍTICA PARA DECIDIR, en pausa tras la T4** (`#755`): su foto por tanda, mudada verbatim a `CARRIL-SPA.md` §9
@@ -42,12 +42,10 @@
 
 ## Por dónde retomar, en orden
 
-0. ▶▶▶ **LOS COMPLEMENTOS DE LA FIESTA, EN DOS** (`#806`, `#807`, `fiesta-sistema-nuevo.md` §4.17): ✅ K1 en `main`. Siguen,
-   cada una con su «al detalle» MEDIDO en §4.17 antes de codificar, en `wip/…` y al ojo del owner: **K2** varias tartas (el
-   controlador deja de traducir `cake`) → **K3** la merienda (campo `choice` del evento, sin dinero: catálogo, panel, lista,
-   invitación F1b, hoja del parque, API minor). El owner (30-09): «respetando la config del panel»: todo lo nuevo, DATO del
-   panel y editable desde él. ⚠️ La merienda es sin dinero SOLO si todas cuestan lo mismo (`#807`); con suplemento, otra
-   tanda por el `CRITICAL_RE`. Después, la **R1·T** (punto 1).
+0. ✅ **LOS COMPLEMENTOS DE LA FIESTA** (`#806`→`#808`, `fiesta-sistema-nuevo.md` §4.17): K1 y K2 en `main`; K3 es DATO del
+   panel (la receta, en §4.17 «K3»): lo configura el parque en SU panel al desplegar (merienda, calcetines, cono, tartas). ▶
+   **Antes de proponer código en cualquier tanda, medir si el panel ya lo configura** (montaje y sonda en la local); si algo
+   ya existía, parar y decírselo al owner (`#808`).
 1. ▶▶ **LOS CORREOS (`specs/correos-rediseno.md`: §0 → §4.2 los textos; `#789`, `#800`→`#804`)**: ✅ R1a la plantilla y ✅
    R1b los iconos, en `main` y aprobadas (§4.1.2, §4.1.3). Lo siguiente es la **R1·T**; cada tanda con su «al detalle» MEDIDO
    en la spec antes de codificar, en `wip/…`, con su arnés y al ojo del owner en Mailpit (el banco,
@@ -224,7 +222,8 @@ el repo de la instancia (lo nuevo), nunca a `main`.
   con oferta y «mañana» es del siguiente; medido hoy también en `main` sin nada mío). La prueba pasa de mes con `goToMonth`,
   como el operador; su mutación (la página con la oferta de la web) sigue mordiendo. El panel, sin tocar. Si es tuyo, a tu lista.
 - Mis avisos a plataforma del 29-09 (la ruta de los iconos de la R1b; `#807`, la merienda sale de la reserva y su `v-if` de la
-  isla): LEÍDOS por plataforma (su «Atendido», 29-09 noche); retirados. El número del contrato de mi K3, aquí cuando llegue.
+  isla): LEÍDOS por plataforma (su «Atendido», 29-09 noche); retirados. ▶ **30-09 (`#808`)**: mi K3 NO trae contrato (la
+  merienda es solo configuración): el siguiente número del contrato sigue siendo el tuyo. Tu `v-if` de «¿Qué menú?», igual.
 
 - Mis avisos a plataforma del 27→29-09 (`#754`/`#757`, la TP·1 `#792`, las C1→C3 `#794`→`#797`, la TP·3b `#793`, la T3d):
   ATENDIDOS por plataforma (su «Atendido», 29-09: «leídos y migrado»); retirados de aquí. El detalle, en el `git log`.
@@ -292,6 +291,8 @@ el repo de la instancia (lo nuevo), nunca a `main`.
   código `MIN_REVIEWS = 1` (`#494`): no la toco yo.
 
 ### Atendido
+- **Plataforma 30-09** (la A2a, `#855`, contrato 1.56.0: `POST /me/confirm-code` y `code` en las cuatro acciones; tocó otra vez
+  `EmailTiming` y dos censos; la sesión atada al token): leído; para mi A4. Nada mío cambia el token a mano.
 - **Plataforma 29-09 noche** (la A1, `#853`/`#854`, contrato 1.55.0; tocó `RecordEmailSend`, `EmailTiming`, dos censos de correos
   y `SidebarDomContractTest`): leído; la API de mi A4, en su §4.8; los dos avisos de la analítica, en «por dónde retomar» 2.
 - **Plataforma 29-09** (T6f `#843` y T6g: `.rays` y `--rayos*` fuera de `site.css`, `cajon.css` regenerado): leído; nada mío a medias.
