@@ -515,6 +515,25 @@ De «por dónde retomar», mudado VERBATIM el 2026-09-30 al empezar la R1·T (el
   `MailInboxLineTest`). Te queda tu OJO en Gmail/Outlook. Tocado `GuestFormRequest` (solo con invitación). El diseño del
   24-09 trae **quince correos** rehechos (`paginas/correos.card.html` de la instancia): tuyos cuando llegue su tanda.
 
+### «Atendido» del 29-09 (mudado VERBATIM de `carriles/spa.md` el 2026-09-30 noche, su techo)
+- **Plataforma 29-09 noche** (la A1, `#853`/`#854`, contrato 1.55.0; tocó `RecordEmailSend`, `EmailTiming`, dos censos de correos
+  y `SidebarDomContractTest`): leído; la API de mi A4, en su §4.8; los dos avisos de la analítica, en «por dónde retomar» 3.
+- **Plataforma 29-09** (T6f `#843` y T6g: `.rays` y `--rayos*` fuera de `site.css`, `cajon.css` regenerado): leído; nada mío a medias.
+- **Plataforma 29-09, en la instancia** (`da0f84d`): declaró `hojas.correo` con `css/correo.css`, a petición mía; mi aviso,
+  retirado. El `--correo-icono` de la R1b, empujado encima (`8fdbc84`).
+- **Plataforma 29-09** (la hoja de correo, `28dfdf15`: `hojas.correo` por la puerta de `#769`, sin contrato nuevo; el lector
+  valida cada valor, caché ruta + `filemtime`, oscuro con nombres planos): leído y recogido en `correos-rediseno.md` §4.1.1;
+  mi aviso (`#800`/`#801`), retirado. ▶ Cuando la R1a tenga la hoja de PlayJump, te digo aquí el fichero para el manifiesto.
+- **Plataforma 29-09** (`#792`: «Tu cumpleaños» con solo «Opcional», como en la isla): ✅ hecho en el cajón el 29-09
+  (`account.register.born_on*`, es/en/fr; los avisos de la API siguen diciendo «fecha de nacimiento»).
+- **Plataforma 29-09** (`#847`/`#848`): (1) la LISTA DE INVITADOS del owner: ✅ HECHA y aprobada (`#805`, en `main` el 29-09);
+  (2) aviso previo de `acceso-con-codigo.md`: el cajón (entrar, alta, recuperar, cambiar contraseña) será su tanda A4; y el
+  correo del código, sobre la plantilla de la R1a.
+- **Plataforma 29-09** (`#846`, mi `#758` en la isla con mis `createMissingReporter`/`missingMonths`): leído; no cambio su
+  firma sin avisar. Su defecto medido de `OccupancyReport::missing()`, tarea mía en «por dónde retomar» 3.
+- **Plataforma 29-09** (`#850`/`#851`, el guard `admin`, `PANEL_PATH`, el authenticator): leído; mis pruebas del panel usan
+  `actingAs` sin guard (medido al fusionar: suite verde sobre su árbol) y nada mío llama a `auth('web')` en el panel.
+
 ## Anexo · La fila del enrutador, mudada el 2026-09-16
 
 > Lo que decía la fila **«El carril del SPA en el OTRO ordenador · rediseñar el cajón (Fase 4) · el material de PlayJump en otra máquina · la rama `cliente/playjump` · qué ficheros son de cada carril»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila

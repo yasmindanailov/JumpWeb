@@ -5,7 +5,7 @@
 > Decisiones: `#800` (ahora los correos), `#801` (el 7, las ocasiones y el orden), `#802` (los textos, editables desde el
 > panel), `#803` (el botón principal, como el diseño), `#804` (los enlaces legales se quedan en el pie), `#789` (los
 > correos, del carril del SPA),
-> `#793` (las felicitaciones, sin vender) ·
+> `#793` (las felicitaciones, sin vender), `#809` (la vista previa enseña también lo que sale solo a veces; tras la A4) ·
 > Carril: **SPA** (banda 790–819). Amplía `correos-desde-canvas.md` (el molde de septiembre sigue siendo suyo).
 
 ## §0 · Antes de tocar
@@ -352,9 +352,15 @@ una sonda por tanda; los comerciales con su prueba de consentimiento y de «una 
   guarda y lo dice en su campo, guardar («Personalizado», y en pantalla solo ese aviso) y volver al de fábrica (la fila,
   borrada). La revisión, `sonda-r1t-revision.mjs` a 1280 y 390: la negrita en el asunto, la bandeja, el correo nuevo (8
   bloques, el código) y la firma por idioma. El fixture del ojo, `ojo-r1t.php` (`CARRIL-SPA` §8 (26)).
-- **Queda** (propuesta, no hecha): 38 bloques condicionales no salen en la vista previa si el último caso no los trae
-  («Cambio de día u hora»…); se podrían marcar «solo sale si…» o pintar con un caso de ejemplo. El copy del brief lo escribe
-  el parque en SU panel al desplegar (white-label). La R2 y la C1 se escriben contra estas claves.
+- ✅ **`[DECIDIDO owner]` 2026-09-30 (`#809`), la R1·T2 — DESPUÉS de la A4**: 33 textos en 12 correos solo salen en
+  ciertas situaciones y la vista previa del último caso no los pinta (medido con el medidor, es/en/fr; eran 38 antes de
+  retirar los fragmentos): el de la reserva cambiada sale SIN ningún cambio, un correo que no existe (el de verdad siempre
+  lleva uno: `OrderItemEditor`). Las DOS piezas: un aviso gris «Solo sale si…» bajo cada uno de esos campos y un desplegable
+  «Situación» en la vista previa (el último caso real, como hoy, o una situación del correo con el caso real y un cambio de
+  ejemplo, como el «Cubo de refrescos» de los extras; inerte, sin guardar). Descartado: pintarlos todos a la vez (se excluyen
+  entre sí) y solo el aviso. Su guarda: `MailPreviewsTest`, cada situación hace salir sus textos (hoy los declara
+  `CONDICIONALES_DEL_CASO`). El copy del brief lo escribe el parque en SU panel al desplegar (white-label). La R2 y la C1 se
+  escriben contra estas claves.
 
 ## 7. Revisión y decisión
 

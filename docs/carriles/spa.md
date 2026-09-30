@@ -2,7 +2,7 @@
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb` a secas; la instancia al lado, en
 > `~/proyectos/instancias/playjump`, clon de `github.com/yasmindanailov/instancia-playjump`, montada el 25-09) ·
-> Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#808`** · La banda está dada de alta en la
+> Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#809`** · La banda está dada de alta en la
 > tabla de `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs:
 > **`acceso-con-codigo.md` §0** (lo siguiente: la A4, `#848`) · `correos-rediseno.md` §0 (`#800`→`#804`; la R1·T, hecha) ·
 > `fiesta-sistema-nuevo.md` §4.17 (`#806`) · `analitica-para-decidir.md` §0 (en pausa, `#755`) · `encuestas.md` §0 y §4.7
@@ -57,11 +57,13 @@
    30-09): `POST /auth/code`, `code` en `/auth/login` y `/auth/tokens` (A1, 1.55.0), `POST /me/confirm-code` y `code` en las
    cuatro acciones (A2a, 1.56.0), `POST /me/pending-email/confirm {code}` (A2b, 1.57.0), y la puerta, entrar y sus «no»,
    puros, en `isla/compra/acceso.js` (`puerta`, `entrar`, `erroresDelCodigo`; el `429` con `next: code` lleva al código SIN
-   error). ▶ Antes de codificar: medir qué pantallas del cajón piden hoy la contraseña y qué piezas del motor sirven (regla
+   error). Y `#858` (1.58.0): la casilla «Mantener la sesión iniciada en este dispositivo», SIN marcar (`remember: true`),
+   también en el paso del código del cajón. ▶ Antes de codificar: medir qué pantallas del cajón piden hoy la contraseña y qué piezas del motor sirven (regla
    `#808`), y escribir «la A4 al detalle» en la spec; en `wip/…` hasta el visto bueno.
 2. ▶▶ **LOS CORREOS (`specs/correos-rediseno.md`: §0 → §4; `#789`, `#800`→`#804`)**: ✅ R1a, R1b y **R1·T** en `main` (la
-   R1·T revisada: §4.2.2; su sonda y el medidor de bloques, `CARRIL-SPA` §8 (26)). Propuesta abierta (§4.2.2 «Queda»): los 38
-   bloques condicionales que la vista previa no enseña. Cada tanda con su «al detalle» MEDIDO
+   R1·T revisada: §4.2.2; su sonda y el medidor de bloques, `CARRIL-SPA` §8 (26)). ▶ **Tras la A4, la R1·T2** (`#809`,
+   `[DECIDIDO owner]` 30-09): los 33 textos que solo salen a veces, con su aviso «Solo sale si…» y la «Situación» en la
+   vista previa (§4.2.2). Cada tanda con su «al detalle» MEDIDO
    en la spec antes de codificar, en `wip/…`, con su arnés y al ojo del owner en Mailpit (el banco,
    `php scripts/banco-correos.php [filtro]`, y la sonda de la carpeta de auditoría, `sonda-correos-r1a.mjs N`):
    **R1c** los 27 correos a la plantilla → **R2** la reserva (1, 1b, 2, 3, 4, 5, 6: el QR dentro, el
@@ -282,27 +284,14 @@ el repo de la instancia (lo nuevo), nunca a `main`.
   código `MIN_REVIEWS = 1` (`#494`): no la toco yo.
 
 ### Atendido
+- **Plataforma 30-09, lo último** (`#859` lo que tocó de mi T3; aviso previo `#860`, el aviso pedirá solo lo encendido; `#858`
+  la casilla): leídos. Nada mío a medias en el consentimiento; la casilla, a mi A4. Su sugerencia (el faro de
+  `/api/v1/events` sin conexión deja un error en la consola: mirar `navigator.onLine`), a la analítica («retomar» 3).
 - **Plataforma 30-09 noche** (el TEXTO de `/cookies` para producción, aviso previo; la guarda de `{code}` en mi R1·T; la A3a/A3b
   `#857`; la A2b `#856`, contrato 1.57.0): leídos. Nada mío a medias en `/cookies`; la guarda, hecha y medida (mi aviso de
   arriba); lo de la A3 y la A2b, para mi A4 («por dónde retomar» 1).
 - **Plataforma 30-09** (la A2a, `#855`, contrato 1.56.0: `POST /me/confirm-code` y `code` en las cuatro acciones; tocó otra vez
   `EmailTiming` y dos censos; la sesión atada al token): leído; para mi A4. Nada mío cambia el token a mano.
-- **Plataforma 29-09 noche** (la A1, `#853`/`#854`, contrato 1.55.0; tocó `RecordEmailSend`, `EmailTiming`, dos censos de correos
-  y `SidebarDomContractTest`): leído; la API de mi A4, en su §4.8; los dos avisos de la analítica, en «por dónde retomar» 3.
-- **Plataforma 29-09** (T6f `#843` y T6g: `.rays` y `--rayos*` fuera de `site.css`, `cajon.css` regenerado): leído; nada mío a medias.
-- **Plataforma 29-09, en la instancia** (`da0f84d`): declaró `hojas.correo` con `css/correo.css`, a petición mía; mi aviso,
-  retirado. El `--correo-icono` de la R1b, empujado encima (`8fdbc84`).
-- **Plataforma 29-09** (la hoja de correo, `28dfdf15`: `hojas.correo` por la puerta de `#769`, sin contrato nuevo; el lector
-  valida cada valor, caché ruta + `filemtime`, oscuro con nombres planos): leído y recogido en `correos-rediseno.md` §4.1.1;
-  mi aviso (`#800`/`#801`), retirado. ▶ Cuando la R1a tenga la hoja de PlayJump, te digo aquí el fichero para el manifiesto.
-- **Plataforma 29-09** (`#792`: «Tu cumpleaños» con solo «Opcional», como en la isla): ✅ hecho en el cajón el 29-09
-  (`account.register.born_on*`, es/en/fr; los avisos de la API siguen diciendo «fecha de nacimiento»).
-- **Plataforma 29-09** (`#847`/`#848`): (1) la LISTA DE INVITADOS del owner: ✅ HECHA y aprobada (`#805`, en `main` el 29-09);
-  (2) aviso previo de `acceso-con-codigo.md`: el cajón (entrar, alta, recuperar, cambiar contraseña) será su tanda A4; y el
-  correo del código, sobre la plantilla de la R1a.
-- **Plataforma 29-09** (`#846`, mi `#758` en la isla con mis `createMissingReporter`/`missingMonths`): leído; no cambio su
-  firma sin avisar. Su defecto medido de `OccupancyReport::missing()`, tarea mía en «por dónde retomar» 3.
-- **Plataforma 29-09** (`#850`/`#851`, el guard `admin`, `PANEL_PATH`, el authenticator): leído; mis pruebas del panel usan
-  `actingAs` sin guard (medido al fusionar: suite verde sobre su árbol) y nada mío llama a `auth('web')` en el panel.
-- Del 25 al 28-09 (NORMAS `#842`, `#836`, T5f `#824`/`#825`, `#789`/`#822`, ESLint y `#788`/`#780`, `#765`) y web `#540`:
-  mudados verbatim a `CARRIL-SPA.md` §9 (29-09).
+- Del 25 al 29-09 (la A1 `#853`/`#854`, T6f/T6g, la hoja de correo, `#792`, `#847`/`#848`, `#846` —no cambio la firma de
+  `createMissingReporter`/`missingMonths` sin avisar—, `#850`/`#851`, NORMAS `#842`, `#836`, T5f, `#789`/`#822`, ESLint,
+  `#788`/`#780`, `#765`) y web `#540`: mudados verbatim a `CARRIL-SPA.md` §9 (29-09 y 30-09 noche).
