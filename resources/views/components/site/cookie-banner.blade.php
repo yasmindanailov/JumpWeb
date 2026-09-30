@@ -17,8 +17,11 @@
     `<div x-data class="cookie-consent-root">` es OBLIGATORIO y va al final del <body>, fuera del
     `x-data="landing"` de las páginas: sin un x-data propio, Alpine no retira el x-cloak (invisible)
     ni engancha los @click. La tarjeta lleva su PROPIO x-data para el estado local de los toggles.
+    `#860` (`politica-de-cookies.md` §6): se nombran y se ofrecen SOLO las encendidas (`CookieInventory::offered()`), el
+    texto se compone con ellas (`bannerText()`) y el de «Análisis» dice el píxel de los correos si está (`panel()`).
 --}}
-@php($consentCategories = \App\Domain\Identity\Services\CookieConsent::OPTIONAL)
+@php($consentCategories = \App\Http\Legal\CookieInventory::offered())
+@php($consentPanel = \App\Http\Legal\CookieInventory::panel())
 <div x-data class="cookie-consent-root">
     <aside class="cookie" role="region" aria-label="{{ __('cookies.banner.aria') }}"
            :class="{ 'is-open': $store.cookies.panel }"
@@ -45,7 +48,7 @@
                  WCAG exime justamente a los enlaces en línea dentro de un bloque de texto (2.5.5 y
                  2.5.8, «inline»). Es la única excepción de la tanda y es de norma, no de descuido. --}}
             <p class="cookie__body">
-                {{ __('cookies.banner.text') }}
+                {{ \App\Http\Legal\CookieInventory::bannerText() }}
                 <a href="{{ route('legal.cookies') }}">{{ __('cookies.banner.policy') }}</a>
             </p>
 
@@ -80,7 +83,7 @@
                     <div class="pref" data-consent-category="{{ $category }}">
                         <div class="pref__txt">
                             <span class="pref__name">{{ __('cookies.panel.'.$category.'_title') }}</span>
-                            <span class="pref__desc">{{ __('cookies.panel.'.$category.'_desc') }}</span>
+                            <span class="pref__desc">{{ $consentPanel[$category.'_desc'] ?? '' }}</span>
                         </div>
                         <button type="button" class="ck-tgl" data-tap :class="{ 'is-on': local.{{ $category }} }" @click="local.{{ $category }} = !local.{{ $category }}"
                                 :aria-pressed="local.{{ $category }} ? 'true' : 'false'" aria-label="{{ __('cookies.panel.'.$category.'_title') }}"></button>

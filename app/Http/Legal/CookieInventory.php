@@ -3,15 +3,18 @@
 namespace App\Http\Legal;
 
 use App\Domain\Content\Services\MapsEmbed;
-use App\Domain\Content\Services\SocialEmbed;
 use App\Domain\Identity\Services\CookieConsent;
 use App\Domain\Identity\Services\RememberedDevice;
+use App\Domain\Platform\Models\EmailSend;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\Analytics\Drivers;
+use App\Domain\Platform\Services\Analytics\EmailOpenMarks;
 use App\Domain\Platform\Services\Analytics\Pixels;
 use App\Domain\Platform\Services\Analytics\Visitor;
 use App\Domain\Platform\Services\Turnstile;
 use Illuminate\Auth\SessionGuard;
+use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 
 /**
@@ -56,14 +59,17 @@ final class CookieInventory
         if (Turnstile::enabled()) {
             $rows[] = self::third('turnstile', 'necessary', $t);
         }
-        if (MapsEmbed::clean(Setting::value('address.maps_embed_url')) !== null) {
+        if (self::mapsOn()) {
             $rows[] = self::third('maps', 'maps', $t);
         }
-        if (($provider = self::socialProvider()) !== null) {
-            $rows[] = self::third('social', 'social', $t, ['provider' => $provider]);
-        }
+        // ⚠️ Sin fila de REDES SOCIALES aunque el panel tenga un widget: NADA lo pinta desde `#309` (medido el 30-09: ni el
+        // producto ni la instancia leen `social_feed`; el pie de PlayJump lleva ENLACES, sin cookies). Ficha en `DEUDA.md`.
         if (($tool = Drivers::config()) !== null) {
             $rows[] = self::third($tool['driver'], 'analytics', $t, ['host' => (string) $tool['host']]);
+        }
+        // El píxel de apertura de los correos (`#797`): su doc pide que `/cookies` lo nombre antes de encenderlo (`#860`).
+        if (EmailOpenMarks::enabled()) {
+            $rows[] = self::row('email_opens', $t('email_opens.name'), $own, $t('email_opens.purpose'), $t('email_opens.duration', ['n' => EmailSend::RETENTION_MONTHS]), $t('category.analytics'), $t('email_opens.when'));
         }
         foreach (Pixels::active() as $platform) {
             $rows[] = self::third($platform, 'marketing', $t);
@@ -93,16 +99,77 @@ final class CookieInventory
         );
     }
 
-    /** El proveedor del widget de redes, si hay uno configurado (`SocialEmbed` solo admite esos dominios). */
-    private static function socialProvider(): ?string
+    /**
+     * **Las categorías con permiso que ESTA instalación pide** (`#860`, `[DECIDIDO owner]`; `politica-de-cookies.md` §6): las de
+     * `CookieConsent::OPTIONAL`, en su orden, que tienen algo detrás —con las MISMAS condiciones que las filas de arriba—. Es
+     * lo que el `<body>` pone en `data-consent-categories` (de ahí leen el almacén y los dos «Configurar») y con lo que se
+     * componen los textos del aviso; el servidor guarda en `false` lo que no se ofreció (`CookieConsentController`).
+     * ⚠️ `analytics` SIEMPRE: su parte propia —atar la navegación a la cuenta al entrar (`AccountAnalytics`)— no tiene
+     * interruptor; la herramienta y el píxel de los correos, si están, van dentro. Por eso nunca sale vacía: sin lista, el
+     * almacén volvería a sus dos categorías de respaldo (`ui/cookie-consent.js`).
+     * ⚠️ `social` NUNCA, hoy: no la gatea nada desde `#309` (`DEUDA.md`), así que pedirla sería pedir permiso para nada. El
+     * día que un contenido la use, entra aquí con SU condición y su fila arriba, en el mismo cambio.
+     *
+     * @return list<string>
+     */
+    public static function offered(): array
     {
-        $url = SocialEmbed::clean(Setting::value('social.feed_embed_url'));
-        $host = $url === null ? '' : (string) parse_url($url, PHP_URL_HOST);
+        $on = [
+            'maps' => self::mapsOn(),
+            'social' => false,
+            'analytics' => true,
+            'marketing' => Pixels::active() !== [],
+        ];
 
-        return match (true) {
-            str_ends_with($host, 'snapwidget.com') => 'SnapWidget',
-            str_ends_with($host, 'lightwidget.com') => 'LightWidget',
-            default => null,
-        };
+        return array_values(array_filter(CookieConsent::OPTIONAL, static fn (string $category): bool => $on[$category]));
+    }
+
+    /**
+     * ¿Está contestado el aviso? Lo está si hay decisión y en ella se preguntó todo lo que hoy se ofrece: una categoría que
+     * se enciende DESPUÉS es una pregunta nueva, y el aviso vuelve (con lo ya contestado marcado); hasta contestarla, la
+     * nueva está apagada, porque nunca se aceptó (`#860`).
+     */
+    public static function decided(Request $request): bool
+    {
+        return CookieConsent::state($request)['decided']
+            && array_diff(self::offered(), CookieConsent::asked($request)) === [];
+    }
+
+    /**
+     * El texto del aviso de siempre (`site/cookie-banner`): lo propio y, «solo con tu permiso», lo que se ofrece (`#860`).
+     * La isla compone el suyo con las mismas categorías (`isla/pagina/pagina.js`, `avisoDeCookies`).
+     */
+    public static function bannerText(?string $locale = null): string
+    {
+        $purposes = array_map(static fn (string $category): string => (string) __('cookies.banner.purposes.'.$category, [], $locale), self::offered());
+
+        return (string) __('cookies.banner.text', ['purposes' => Arr::join($purposes, ', ', (string) __('cookies.banner.and', [], $locale))], $locale);
+    }
+
+    /**
+     * Los textos de cada finalidad para los dos «Configurar» (`cookies.panel`): los de `lang/`, y el de «Análisis» se
+     * COMPONE (`#860`: se nombra lo que se pide): lo propio, la herramienta si hay una y el píxel de los correos si está
+     * encendido, y al final que la medición anónima no lo necesita.
+     *
+     * @return array<string, string>
+     */
+    public static function panel(?string $locale = null): array
+    {
+        $panel = (array) __('cookies.panel', [], $locale);
+
+        $panel['analytics_desc'] = implode(' ', array_filter([
+            $panel['analytics_desc'],
+            Drivers::config() !== null ? $panel['analytics_tool'] : null,
+            EmailOpenMarks::enabled() ? $panel['analytics_opens'] : null,
+            $panel['analytics_note'],
+        ]));
+        unset($panel['analytics_tool'], $panel['analytics_opens'], $panel['analytics_note']);
+
+        return $panel;
+    }
+
+    private static function mapsOn(): bool
+    {
+        return MapsEmbed::clean(Setting::value('address.maps_embed_url')) !== null;
     }
 }

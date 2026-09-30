@@ -4,6 +4,7 @@ namespace Tests\Feature\Cookies;
 
 use App\Domain\Identity\Services\CookieConsent;
 use App\Domain\Platform\Models\Setting;
+use App\Http\Legal\CookieInventory;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
@@ -100,10 +101,12 @@ class CookieGateBlockingTest extends TestCase
         $this->get('/')->assertOk()
             ->assertSee('data-cookie-enabled="1"', false)
             ->assertSee('data-cookie-decided=""', false)
-            // T3a: una clave por categoría de `OPTIONAL` y la lista que lee el almacén.
+            // T3a: una clave por categoría de `OPTIONAL` y la lista que lee el almacén; desde `#860`, la lista es la de lo
+            // OFRECIDO: el mapa (configurado arriba) y el análisis. Ni redes (el widget no lo pinta nada, `#309`) ni
+            // publicidad (sin píxeles).
             ->assertSee('data-cookie-analytics=""', false)
             ->assertSee('data-cookie-marketing=""', false)
-            ->assertSee('data-consent-categories="'.implode(',', CookieConsent::OPTIONAL).'"', false);
+            ->assertSee('data-consent-categories="maps,analytics"', false);
 
         $this->consent(maps: true, social: false)->get('/')->assertOk()
             ->assertSee('data-cookie-decided="1"', false)
@@ -163,11 +166,16 @@ class CookieGateBlockingTest extends TestCase
             ->assertSee('ck-tgl', false)                    // toggles de finalidad
             ->assertSee(__('cookies.banner.title'));        // título de la tarjeta
 
-        foreach (CookieConsent::OPTIONAL as $category) {
+        // `#860`: se ofrece y se nombra solo lo que está encendido (aquí el mapa, y el análisis siempre).
+        foreach (CookieInventory::offered() as $category) {
             $response->assertSee('data-consent-category="'.$category.'"', false)
                 ->assertSee(__('cookies.panel.'.$category.'_title'))
-                ->assertSee(__('cookies.panel.'.$category.'_desc'));
+                ->assertSee(CookieInventory::panel()[$category.'_desc']);
         }
+        $response->assertDontSee('data-consent-category="social"', false)
+            ->assertDontSee('data-consent-category="marketing"', false)
+            ->assertSee(CookieInventory::bannerText())
+            ->assertDontSee(__('cookies.banner.purposes.marketing').'.');
         // Y ninguna se queda sin texto: una clave sin traducir saldría literal.
         $response->assertDontSee('cookies.panel.');
     }

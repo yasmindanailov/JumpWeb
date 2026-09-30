@@ -9,13 +9,17 @@
      `data-cookie-<categoría>` por cada una de `CookieConsent::OPTIONAL` (T3a: cuatro, ya no dos
      escritas aquí) y la lista en `data-consent-categories`, que es de donde el almacén las lee.
      ⚠️ El tracker (`cajon/track.js`) manda al libro TODAS las `data-cookie-*` como foto del
-     consentimiento; `data-consent-categories` no empieza por `cookie` a propósito. --}}
-      data-cookie-enabled="{{ ($cookieBannerEnabled ?? false) ? '1' : '' }}"
-      data-cookie-decided="{{ ($cookieConsent['decided'] ?? false) ? '1' : '' }}"
+     consentimiento; `data-consent-categories` no empieza por `cookie` a propósito.
+     ▶ `#860` (`politica-de-cookies.md` §6): la lista es la de lo OFRECIDO (`CookieInventory::offered()`, solo lo
+     encendido), y el aviso cuenta como contestado solo si en la decisión se preguntó todo eso
+     (`CookieInventory::decided()`): una categoría encendida después lo hace volver. --}}
+      @php($consentOffered = \App\Http\Legal\CookieInventory::offered())
+      data-cookie-enabled="{{ ($cookieBannerEnabled ?? false) && $consentOffered !== [] ? '1' : '' }}"
+      data-cookie-decided="{{ \App\Http\Legal\CookieInventory::decided(request()) ? '1' : '' }}"
       @foreach (\App\Domain\Identity\Services\CookieConsent::OPTIONAL as $consentCategory)
       data-cookie-{{ $consentCategory }}="{{ ($cookieConsent[$consentCategory] ?? false) ? '1' : '' }}"
       @endforeach
-      data-consent-categories="{{ implode(',', \App\Domain\Identity\Services\CookieConsent::OPTIONAL) }}"
+      data-consent-categories="{{ implode(',', $consentOffered) }}"
       data-cookie-endpoint="{{ route('cookies.consent') }}"
       {{-- La herramienta de análisis (`specs/analitica.md` §4.3, T3a·2): solo con driver activo y completo
            viajan sus datos, y el cargador (`cajon/driver.js`) solo la trae con `data-cookie-analytics="1"`.

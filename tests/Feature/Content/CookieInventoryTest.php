@@ -4,8 +4,10 @@ namespace Tests\Feature\Content;
 
 use App\Domain\Identity\Services\CookieConsent;
 use App\Domain\Identity\Services\RememberedDevice;
+use App\Domain\Platform\Models\EmailSend;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\Analytics\Drivers;
+use App\Domain\Platform\Services\Analytics\EmailOpenMarks;
 use App\Domain\Platform\Services\Analytics\Pixels;
 use App\Domain\Platform\Services\Analytics\Visitor;
 use App\Domain\Platform\Services\Turnstile;
@@ -78,7 +80,7 @@ class CookieInventoryTest extends TestCase
         $this->assertSame('Preferencia (la pides tú)', $this->row('remember')['category']);
     }
 
-    public function test_each_third_party_appears_only_when_it_is_switched_on(): void
+    private function switchEverythingOn(): void
     {
         $this->set('security.turnstile_site_key', '0x4AAAAAAAsitekey');
         $this->set('security.turnstile_secret', '0x4AAAAAAAsecret');
@@ -87,17 +89,74 @@ class CookieInventoryTest extends TestCase
         $this->set('social.feed_embed_url', 'https://snapwidget.com/embed/123456');
         $this->set(Drivers::KEY_DRIVER, Drivers::POSTHOG);
         $this->set(Drivers::KEY_POSTHOG_PROJECT, 'phc_'.str_repeat('a', 24));
+        $this->set(EmailOpenMarks::SETTING, '1');
         $this->set(Pixels::KEY_META_PIXEL_ID, '1234567890123');
+    }
 
-        $this->assertSame(['session', 'xsrf', 'visitor', 'consent', 'remember', 'redsys', 'turnstile', 'maps', 'social', 'posthog', 'meta'], $this->keys());
-        $this->assertStringContainsString('SnapWidget', $this->row('social')['name']);
+    /**
+     * Un tercero (o el píxel de los correos, `#860`), solo si está encendido. ⚠️ El widget de redes NO sale aunque el panel
+     * lo tenga: nada lo pinta desde `#309` (`DEUDA.md`), y una fila suya nombraría un tercero que no se carga.
+     */
+    public function test_each_third_party_appears_only_when_it_is_switched_on(): void
+    {
+        $this->switchEverythingOn();
+
+        $this->assertSame(['session', 'xsrf', 'visitor', 'consent', 'remember', 'redsys', 'turnstile', 'maps', 'posthog', 'email_opens', 'meta'], $this->keys());
         $this->assertSame('Publicidad (con tu permiso)', $this->row('meta')['category']);
+        $this->assertSame('Nosotros (cookie propia)', $this->row('email_opens')['holder']);
+        $this->assertSame(EmailSend::RETENTION_MONTHS.' meses, con el correo enviado', $this->row('email_opens')['duration']);
+    }
+
+    /**
+     * `#860`: lo que se PIDE es lo que está encendido, con las condiciones del listado. `analytics`, siempre (su parte propia
+     * no tiene interruptor); `social`, nunca mientras nada la pinte.
+     */
+    public function test_it_offers_only_the_categories_switched_on(): void
+    {
+        $this->assertSame(['analytics'], CookieInventory::offered());
+
+        $this->set('social.feed_embed_url', 'https://snapwidget.com/embed/123456');
+        $this->assertSame(['analytics'], CookieInventory::offered());
+
+        $this->set(Pixels::KEY_META_PIXEL_ID, '1234567890123');
+        $this->assertSame(['analytics', 'marketing'], CookieInventory::offered());
+
+        $this->set('address.maps_embed_url', 'https://www.google.com/maps/embed?pb=!1m18!1m12');
+        $this->assertSame(['maps', 'analytics', 'marketing'], CookieInventory::offered());
+    }
+
+    /** `#860`: el aviso de siempre nombra solo lo que pide — sin píxeles no dice «publicidad». */
+    public function test_the_banner_names_only_what_it_asks(): void
+    {
+        $intro = 'Usamos cookies propias para que la web funcione y para medir la audiencia de forma anónima. Solo con tu permiso: ';
+
+        $this->assertSame($intro.'el análisis de uso vinculado a tu cuenta.', CookieInventory::bannerText('es'));
+
+        $this->switchEverythingOn();
+        $this->assertSame($intro.'el mapa de Google, el análisis de uso vinculado a tu cuenta y la publicidad.', CookieInventory::bannerText('es'));
+        $this->assertStringEndsWith('the Google map, usage analytics linked to your account and advertising.', CookieInventory::bannerText('en'));
+    }
+
+    /** `#860`: «Análisis» dice la herramienta y el píxel de los correos solo si están encendidos. */
+    public function test_the_analytics_text_names_the_tool_and_the_email_pixel_only_when_on(): void
+    {
+        $this->assertSame(
+            'Permite vincular tu navegación a tu cuenta cuando entras o compras, para entender cómo usas la web. La medición anónima de la audiencia no necesita este permiso.',
+            CookieInventory::panel('es')['analytics_desc'],
+        );
+
+        $this->switchEverythingOn();
+        $desc = CookieInventory::panel('es')['analytics_desc'];
+        $this->assertStringContainsString('También usa una herramienta de análisis', $desc);
+        $this->assertStringContainsString('si abres los correos que te enviamos', $desc);
+        $this->assertStringEndsWith('La medición anónima de la audiencia no necesita este permiso.', $desc);
+        $this->assertArrayNotHasKey('analytics_tool', CookieInventory::panel('es'));
     }
 
     /** Cada fila, entera y en cada idioma: ninguna clave de `lang` a la vista. */
     public function test_every_row_is_complete_in_every_language(): void
     {
-        $this->set('address.maps_embed_url', 'https://www.google.com/maps/embed?pb=!1m18!1m12');
+        $this->switchEverythingOn();
 
         foreach (['es', 'en', 'fr'] as $locale) {
             foreach (CookieInventory::rows($locale) as $row) {

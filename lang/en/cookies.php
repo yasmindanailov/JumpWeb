@@ -9,7 +9,15 @@ return [
         'aria' => 'Cookie notice',
         'eyebrow' => 'Cookies',
         'title' => 'Before you jump…',
-        'text' => 'We use our own cookies to make the site work and to measure the audience anonymously. Only with your permission: the Google map, usage analytics linked to your account, and advertising.',
+        // `#860`: `:purposes` are ONLY the categories this installation asks for (`CookieInventory::bannerText()`), in order.
+        'text' => 'We use our own cookies to make the site work and to measure the audience anonymously. Only with your permission: :purposes.',
+        'purposes' => [
+            'maps' => 'the Google map',
+            'social' => 'the posts from our social media',
+            'analytics' => 'usage analytics linked to your account',
+            'marketing' => 'advertising',
+        ],
+        'and' => ' and ',
         'policy' => 'More information',
         'accept' => 'Accept',
         'reject' => 'Reject',
@@ -26,7 +34,12 @@ return [
         'social_title' => 'Social media',
         'social_desc' => 'Allows our latest Instagram/TikTok posts to be shown through an external widget, which may install its own cookies.',
         'analytics_title' => 'Identified usage analytics',
-        'analytics_desc' => 'Allows your browsing to be linked to your account when you log in or buy, to understand how you use the site, and an analytics tool to be used with an encrypted identifier instead of your name. Anonymous audience measurement does not need this permission.',
+        // `#860`: «Analytics» is composed by `CookieInventory::panel()`: `analytics_desc`, the tool only if there is one, the
+        // email pixel only if it is switched on, and `analytics_note`.
+        'analytics_desc' => 'Allows your browsing to be linked to your account when you log in or buy, to understand how you use the site.',
+        'analytics_tool' => 'It also uses an analytics tool that identifies you with an encrypted code, not your name.',
+        'analytics_opens' => 'And it lets us know whether you open the emails we send you.',
+        'analytics_note' => 'Anonymous audience measurement does not need this permission.',
         'marketing_title' => 'Advertising',
         'marketing_desc' => 'Allows the advertising platforms\' pixels to load and purchases to be reported to them, to measure which campaigns work. Without this permission no pixel loads and nothing is reported.',
         'reject_all' => 'Reject all',
@@ -60,9 +73,10 @@ return [
         'redsys' => ['name' => 'Those of the payment gateway', 'holder' => 'Redsys Servicios de Procesamiento, S.L., on its own website', 'purpose' => 'Processing the card payment you start.', 'duration' => 'Those set by Redsys', 'when' => 'Only when paying, on the Redsys page'],
         'turnstile' => ['name' => 'Those of the anti-bot system (Turnstile)', 'holder' => 'Cloudflare, Inc. (US, under the EU-US Data Privacy Framework)', 'purpose' => 'Telling people from bots in forms.', 'duration' => 'Temporary', 'when' => 'When you sign up'],
         'maps' => ['name' => 'Those of Google Maps', 'holder' => 'Google Ireland Limited (and Google LLC, in the US, under the EU-US Data Privacy Framework)', 'purpose' => 'Showing the map of how to get here.', 'duration' => 'Those set by Google (see its policy)', 'when' => 'Only if you allow «Map (Google)»'],
-        'social' => ['name' => 'Those of the social media widget (:provider)', 'holder' => ':provider (external provider; its transfer safeguard, in its privacy policy)', 'purpose' => 'Showing our latest social media posts.', 'duration' => 'Those set by the provider', 'when' => 'Only if you allow «Social media»'],
         'posthog' => ['name' => 'Those of PostHog (e.g. «ph_…_posthog»)', 'holder' => 'PostHog Inc. (data hosted on servers in the European Union)', 'purpose' => 'Understanding how the site is used with an encrypted identifier, without your name, email or IP address.', 'duration' => 'Up to 12 months', 'when' => 'Only if you allow «Identified usage analytics»'],
         'matomo' => ['name' => 'Those of Matomo (e.g. «_pk_id» and «_pk_ses»)', 'holder' => 'Us, with Matomo installed at :host', 'purpose' => 'Understanding how the site is used with an encrypted identifier, without your name, email or IP address.', 'duration' => 'Up to 13 months («_pk_ses», 30 minutes)', 'when' => 'Only if you allow «Identified usage analytics»'],
+        // `#860`: the email open pixel (`EmailOpenMarks`), only with its switch on.
+        'email_opens' => ['name' => 'Open pixel in our emails', 'purpose' => 'To know whether and when you open the emails we send you, so we know which ones are useful to you. Nothing is stored in your browser: it is an invisible image inside the email.', 'duration' => ':n months, with the email sent', 'when' => 'Only in emails to your account and if you allow «Identified usage analytics»'],
         'google_ads' => ['name' => 'Those of Google Ads (e.g. «_gcl_au»)', 'holder' => 'Google Ireland Limited (US, under the EU-US Data Privacy Framework)', 'purpose' => 'Knowing which ads bring purchases: it receives the purchase with an identifier and your contact details only as an irreversible fingerprint (hash).', 'duration' => 'Up to 90 days', 'when' => 'Only if you allow «Advertising»'],
         'meta' => ['name' => 'Those of Meta, for Facebook and Instagram (e.g. «_fbp»)', 'holder' => 'Meta Platforms Ireland Limited (US, under the EU-US Data Privacy Framework)', 'purpose' => 'Knowing which ads bring purchases: it receives the purchase with an identifier and your contact details only as an irreversible fingerprint (hash).', 'duration' => 'Up to 90 days', 'when' => 'Only if you allow «Advertising»'],
         'tiktok' => ['name' => 'Those of TikTok (e.g. «_ttp»)', 'holder' => 'TikTok Technology Limited (outside the EEA, under standard contractual clauses)', 'purpose' => 'Knowing which ads bring purchases: it receives the purchase with an identifier and your contact details only as an irreversible fingerprint (hash).', 'duration' => 'Up to 13 months', 'when' => 'Only if you allow «Advertising»'],

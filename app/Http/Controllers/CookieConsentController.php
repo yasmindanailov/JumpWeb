@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Domain\Identity\Models\CookieConsentLog;
 use App\Domain\Identity\Services\CookieConsent;
 use App\Domain\Platform\Services\Analytics\Visitor;
+use App\Http\Legal\CookieInventory;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -16,18 +17,20 @@ use Illuminate\Http\Request;
  *   1) Escribe la cookie canónica `cookie_consent` (sin cifrar; la lee el servidor y Alpine).
  *   2) Deja una fila de PRUEBA en `cookie_consent_logs` (acreditación, RGPD art. 5.2/7.1).
  *
- * ⚠️ Valida UNA clave por categoría de {@see CookieConsent::OPTIONAL}, todas obligatorias: el banner manda
- * siempre la decisión completa, y una categoría que falte no puede darse por rechazada en silencio ni
- * por aceptada.
+ * ⚠️ Valida UNA clave por categoría OFRECIDA ({@see CookieInventory::offered()}, `#860`), todas obligatorias: el
+ * aviso manda siempre la decisión completa, y una categoría que falte no puede darse por rechazada en silencio ni
+ * por aceptada. Lo que NO se ofreció se guarda en `false` diga lo que diga la petición —nadie aceptó lo que no se le
+ * preguntó— y la cookie anota lo preguntado, para volver a preguntar si se enciende algo después.
  */
 class CookieConsentController extends Controller
 {
     public function store(Request $request): JsonResponse
     {
-        $validated = $request->validate(array_fill_keys(CookieConsent::OPTIONAL, ['required', 'boolean']));
+        $offered = CookieInventory::offered();
+        $validated = $request->validate(array_fill_keys($offered, ['required', 'boolean']));
 
-        $cats = [];
-        foreach (CookieConsent::OPTIONAL as $category) {
+        $cats = CookieConsent::allSetTo(false);
+        foreach ($offered as $category) {
             $cats[$category] = (bool) $validated[$category];
         }
 
@@ -47,7 +50,7 @@ class CookieConsentController extends Controller
         // la lee) y SameSite=Lax. La vida = 24 meses (máximo de la Guía AEPD).
         $cookie = cookie(
             CookieConsent::COOKIE_NAME,
-            CookieConsent::encode($cats),
+            CookieConsent::encode($cats, $offered),
             CookieConsent::LIFETIME_MINUTES,
             config('session.path') ?? '/',
             config('session.domain'),

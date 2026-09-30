@@ -1,7 +1,8 @@
 /**
- * SONDA DEL BANNER DE COOKIES — el navegador real ante la tarjeta con las CUATRO finalidades de la T3a
- * (`docs/specs/analitica.md` §4.3; `docs/sistemas/COOKIES.md`). Es lo que ni la suite ni `node --test` ven: que
- * el panel pinte un toggle por categoría, que «Guardar» mande las cuatro y el servidor las escriba, que
+ * SONDA DEL BANNER DE COOKIES — el navegador real ante la tarjeta con las finalidades de la T3a
+ * (`docs/specs/analitica.md` §4.3; `docs/sistemas/COOKIES.md`); desde `#860`, las OFRECIDAS (lo encendido, que el
+ * `<body>` dice en `data-consent-categories`). Es lo que ni la suite ni `node --test` ven: que
+ * el panel pinte un toggle por categoría, que «Guardar» mande las ofrecidas y el servidor las escriba, que
  * `consent_shown` y `consent_updated` lleguen al libro, que con el cajón de compra ABIERTO la tarjeta espere,
  * que reabrir desde el pie lleve el foco al título, y que tras recargar el `<body>` diga lo decidido.
  *
@@ -18,6 +19,11 @@ import { chromium } from 'playwright-core';
 import { mkdir, writeFile } from 'node:fs/promises';
 
 const BASE = process.env.SONDA_BASE ?? 'http://localhost';
+// La página con el aviso de SIEMPRE (`site/cookie-banner`, en `components/layout`). ⚠️ Medido el 30-09 (`#860`): con la
+// landing nueva, `/` y `/entradas` son de la ISLA —su propio aviso— y la tarjeta ya no está ahí; la llevan las páginas del
+// armazón del producto (una 404, las encuestas, el reintento de pago): `SONDA_RUTA=/no-existe`. La 3 (el cajón) sigue en
+// `/entradas`: con la isla, su cajón no es el de esta prueba.
+const RUTA = process.env.SONDA_RUTA ?? '/';
 const ETIQUETA = process.argv[2] ?? 'ojo';
 const SALIDA = 'storage/app/audit';
 const LOTE_MS = 5000;
@@ -65,10 +71,10 @@ async function captura(page, nombre) {
     capturas.push(ruta);
 }
 
-// ── 1. Escritorio: la tarjeta, el panel con las cuatro finalidades, guardar y recargar ─────────────────────
+// ── 1. Escritorio: la tarjeta, el panel con las finalidades ofrecidas, guardar y recargar ──────────────────
 {
     const { ctx, page, registro } = await contexto({ width: 1440, height: 900 });
-    await page.goto(`${BASE}/`, { waitUntil: 'load' });
+    await page.goto(`${BASE}${RUTA}`, { waitUntil: 'load' });
     const tarjeta = page.locator('aside.cookie');
     await tarjeta.waitFor({ state: 'visible', timeout: 15000 }).catch(() => null);
     ok('la tarjeta se enseña a un visitante nuevo', await tarjeta.isVisible());
@@ -78,7 +84,10 @@ async function captura(page, nombre) {
     await page.locator('.cookie__config').click();
     await espera(400);
     const toggles = await page.locator('[data-consent-category]').evaluateAll((els) => els.map((el) => el.dataset.consentCategory));
-    ok('el panel lleva UN toggle por categoría, en el orden del servidor', JSON.stringify(toggles) === JSON.stringify(['maps', 'social', 'analytics', 'marketing']), toggles.join(','));
+    // `#860`: el panel ofrece lo que la instalación tiene ENCENDIDO (`data-consent-categories`, `CookieInventory::offered()`):
+    // el análisis siempre; el mapa y la publicidad, si están; las redes, nunca mientras nada las pinte (`#309`).
+    const ofrecidas = await page.evaluate(() => (document.body.dataset.consentCategories ?? '').split(',').filter(Boolean));
+    ok('el panel lleva UN toggle por categoría OFRECIDA, en el orden del servidor', JSON.stringify(toggles) === JSON.stringify(ofrecidas) && ofrecidas.includes('analytics') && ! ofrecidas.includes('social'), toggles.join(','));
     ok('ninguno viene premarcado', await page.locator('[data-consent-category] .ck-tgl.is-on').count() === 0);
     // Medido el 24-09 antes del tope de alto: con cuatro finalidades el título quedaba por encima del borde.
     const caja = await tarjeta.boundingBox();
@@ -91,7 +100,7 @@ async function captura(page, nombre) {
     await page.locator('.cookie__prefs-actions .cookie-btn').nth(1).click();   // Guardar preferencias
     await espera(1500);
     const guardado = registro.consentimientos.at(-1);
-    ok('«Guardar» manda las CUATRO categorías y el servidor responde 200', guardado?.status === 200 && JSON.stringify(guardado.body) === JSON.stringify({ maps: false, social: false, analytics: true, marketing: false }), JSON.stringify(guardado));
+    ok('«Guardar» manda las categorías OFRECIDAS y el servidor responde 200', guardado?.status === 200 && JSON.stringify(guardado.body) === JSON.stringify(Object.fromEntries(ofrecidas.map((c) => [c, c === 'analytics']))), JSON.stringify(guardado));
     ok('la tarjeta se esconde tras la confirmación del servidor', ! (await tarjeta.isVisible()));
 
     await espera(LOTE_MS + 1500);
@@ -103,7 +112,7 @@ async function captura(page, nombre) {
     await page.reload({ waitUntil: 'load' });
     await espera(800);
     const dataset = await page.evaluate(() => ({ ...document.body.dataset }));
-    ok('tras recargar, el body dice lo decidido', dataset.cookieDecided === '1' && dataset.cookieAnalytics === '1' && dataset.cookieMarketing === '' && dataset.consentCategories === 'maps,social,analytics,marketing', JSON.stringify(dataset).slice(0, 150));
+    ok('tras recargar, el body dice lo decidido', dataset.cookieDecided === '1' && dataset.cookieAnalytics === '1' && dataset.cookieMarketing === '' && dataset.consentCategories === ofrecidas.join(','), JSON.stringify(dataset).slice(0, 150));
     ok('y la tarjeta no vuelve', ! (await tarjeta.isVisible()));
 
     // Reabrir desde el pie: el panel, con el foco en el título.
@@ -126,7 +135,7 @@ async function captura(page, nombre) {
 // ── 2. Móvil: la tarjeta y el panel caben ────────────────────────────────────────────────────────────────
 {
     const { ctx, page, registro } = await contexto({ width: 390, height: 844 });
-    await page.goto(`${BASE}/`, { waitUntil: 'load' });
+    await page.goto(`${BASE}${RUTA}`, { waitUntil: 'load' });
     await page.locator('aside.cookie').waitFor({ state: 'visible', timeout: 15000 }).catch(() => null);
     await captura(page, 'movil-capa1');
     await page.locator('.cookie__config').click();
@@ -152,15 +161,17 @@ async function captura(page, nombre) {
     ok('con el cajón delante la tarjeta NO se enseña', abierto && ! (await tarjeta.isVisible()));
     await captura(page, 'escritorio-cajon-abierto');
 
+    // ⚠️ Con la isla, `/entradas` ya no abre este cajón y su botón existe OCULTO (medido el 30-09): el clic se anota como
+    // fallo en vez de tumbar la sonda y perder lo medido en 1 y 2.
     const cerrar = page.locator('.sidecart__close').first();
-    if (await cerrar.count() > 0) {
+    if (await cerrar.isVisible()) {
         await cerrar.click();
         await tarjeta.waitFor({ state: 'visible', timeout: 5000 }).catch(() => null);
         ok('al cerrar el cajón, la tarjeta aparece', await tarjeta.isVisible());
         await espera(LOTE_MS + 1500);
         ok('y `consent_shown` se cuenta entonces, una vez', registro.eventos.filter((e) => e.name === 'consent_shown').length === 1, registro.eventos.map((e) => e.name).join(','));
     } else {
-        ok('el cajón tiene botón de cerrar', false);
+        ok('el cajón tiene botón de cerrar, a la vista', false);
     }
     ok('sin excepciones de JS (cajón)', registro.excepciones.length === 0, registro.excepciones.join(' | '));
     await ctx.close();

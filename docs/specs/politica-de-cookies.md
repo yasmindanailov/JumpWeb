@@ -1,6 +1,6 @@
 # [SPEC] La política de cookies de producción — medida, y que no pueda mentir
 
-> Estado: ✅ §1–§4 (validada por el owner, 30-09) · ⬜ §6 en curso · Decisiones: `#858` (el owner: «Mantener la sesión
+> Estado: ✅ (§1–§4 y §6, validadas por el owner el 30-09) · Decisiones: `#858` (el owner: «Mantener la sesión
 > iniciada», sin marcar) · `#859` (el listado lo compone la configuración; el texto llega por huella) · `#860` (el owner:
 > el aviso y «Configurar» piden solo lo encendido) · Carril:
 > plataforma (el encargo del owner, 30-09: «los redactarás tú, con rigor y profesionalidad, con los datos del cliente»); el
@@ -49,8 +49,8 @@ cliente (se retira en la A5).
 
 - `App\Http\Legal\CookieInventory::rows(string $locale)` (en `Http`: lee de Identidad, Contenido y Plataforma, y
   `ModuleBoundariesTest` no deja que dos dominios se miren): las filas de ESTA instalación —propias (sesión,
-  XSRF, medición, decisión, recuerdo) y de tercero solo si están encendidas (Redsys al pagar; Turnstile; el mapa; el
-  widget de redes; la herramienta de análisis; cada píxel activo)— con nombre, titular, finalidad, duración, categoría y
+  XSRF, medición, decisión, recuerdo) y de tercero solo si están encendidas (Redsys al pagar; Turnstile; el mapa; la
+  herramienta de análisis; el píxel de los correos, `#860`; cada píxel activo; el widget de redes, NO: §6)— con nombre, titular, finalidad, duración, categoría y
   cuándo. Textos en `lang/*/cookies.php` (`inventory.*`). La duración de la sesión sale de su configuración.
 - `GET /legal/documents/cookies` gana `inventory` (contrato 1.58.0, con `#858`); las vistas lo pintan como TARJETAS (una por cookie,
   legible a 360), tras el texto. Los párrafos de la herramienta y de los píxeles activos se funden en el listado.
@@ -89,16 +89,24 @@ cuatro categorías (`CookieConsent::OPTIONAL`, en `site/body-state`), hubiera o 
 haremos, si es lo más profesional y estándar».
 
 - **Qué se ofrece**: `CookieInventory::offered()`, las de `OPTIONAL` con algo detrás, con las MISMAS condiciones que el
-  listado: `maps` (mapa configurado), `social` (widget configurado), `marketing` (algún píxel activo) y `analytics`
-  SIEMPRE (medido: el régimen identificado —`AccountAnalytics` ata la navegación a la cuenta al entrar— y la apertura de
-  los correos, `EmailOpenMarks`, son propios y no tienen interruptor; la herramienta, si la hay, va dentro).
+  listado: `maps` (mapa configurado), `marketing` (algún píxel activo) y `analytics` SIEMPRE (medido: el régimen
+  identificado —`AccountAnalytics` ata la navegación a la cuenta al entrar— es propio y no tiene interruptor; la
+  herramienta y el píxel de los correos, si están, van dentro). ⚠️ `social`, NUNCA hoy: medido el 30-09, nada pinta el
+  widget desde `#309` (ni el producto ni la instancia leen `social_feed`; el pie de PlayJump lleva enlaces, sin cookies),
+  así que tampoco tiene fila en el listado (la de `#859` lo nombraba con el ajuste relleno: corregido). `DEUDA.md`.
+- **Los textos**: el del aviso de siempre (`banner.text` con `:purposes`, `bannerText()`), los dos de la isla (`:para`,
+  `:cortas`, `avisoDeCookies` en `isla/pagina/pagina.js`) y el de «Análisis» en los dos «Configurar» (`panel()`: lo propio,
+  la herramienta si hay una, el píxel de los correos si está, y que la medición anónima no lo necesita).
 - **Por dónde llega**: `site/body-state` escribe `offered()` en `data-consent-categories`, de donde leen el almacén
-  (`ui/cookie-consent.js`, sin cambios) y los dos paneles; los textos del aviso (`banner.text` del clásico y los dos de la
-  isla) se COMPONEN con las mismas categorías. Sin nada que pedir, sin aviso.
+  (`ui/cookie-consent.js`, sin cambios) y los dos paneles. Sin nada que pedir, sin aviso (`data-cookie-enabled` vacío).
 - **El servidor manda**: `CookieConsentController` valida solo las ofrecidas y guarda las demás en `false`; la cookie
   anota qué se preguntó (`asked`). Una cookie válida sin `asked` es de antes de `#860`: se preguntaron las cuatro.
 - **Una categoría que se enciende DESPUÉS**: quien ya decidió vuelve a ver el aviso (hay una pregunta nueva; lo que ya
   contestó sigue marcado) y, hasta contestar, la nueva está apagada. Por eso no se sube `POLICY_VERSION`.
 - **El píxel de APERTURA de los correos** (`EmailOpenMarks`, `#797`: su interruptor `emails.track_opens`, apagado de fábrica,
   y el «sí» a `analytics` de la cuenta; su doc: «`/cookies` tiene que nombrarlo antes»): encendido, entra como fila del
-  listado (categoría análisis) y la descripción de «Análisis» lo dice; apagado, no aparece.
+  listado (propia, categoría análisis, 24 meses con el correo: `EmailSend::RETENTION_MONTHS`, las aperturas se borran con
+  él) y la descripción de «Análisis» lo dice; apagado, no aparece.
+- **Guardas**: `CookieInventoryTest` (lo ofrecido, los textos, el píxel), `CookieConsentEndpointTest` (lo no ofrecido se
+  guarda en `false`, la pregunta nueva, la decisión de antes de `#860`), `CookieGateBlockingTest` (el `<body>` y el panel),
+  `pagina.test.js` (el aviso de la isla); `mutar-politica-cookies.sh` con sus mutantes de `#860`.

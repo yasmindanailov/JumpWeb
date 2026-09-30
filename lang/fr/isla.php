@@ -57,8 +57,16 @@ return [
         'cookies' => 'Cookies',
     ],
     'cookies' => [
-        'texto' => 'Nous utilisons des cookies propres et tiers pour mesurer les visites et vous montrer nos publicités sur d’autres sites. Vous pouvez les accepter, les refuser ou les configurer.',
-        'texto_corto' => 'Cookies propres et tiers : mesure et publicités.',
+        'texto' => 'Nous utilisons des cookies pour faire fonctionner le site et compter les visites. Avec votre accord, aussi pour :para. Vous pouvez les accepter, les refuser ou les configurer.',
+        'texto_corto' => 'Cookies nécessaires et, avec votre accord, :cortas.',
+        'para' => [
+            'maps' => 'vous montrer la carte Google',
+            'social' => 'vous montrer nos réseaux sociaux',
+            'analytics' => 'comprendre comment vous utilisez le site avec votre compte',
+            'marketing' => 'vous montrer nos publicités sur d’autres sites',
+        ],
+        'cortas' => ['maps' => 'carte', 'social' => 'réseaux', 'analytics' => 'analyse', 'marketing' => 'publicités'],
+        'y' => ' et ',
         'aceptar' => 'Accepter',
         'rechazar' => 'Refuser',
         'configurar' => 'Configurer',

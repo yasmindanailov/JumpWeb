@@ -35,7 +35,7 @@ arquitectónica del universo cerrado de orígenes externos.
 | `XSRF-TOKEN` | Propia | Seguridad (CSRF) | **No** | Siempre (formularios/Livewire) |
 | `remember_web_<hash>` | Propia | Funcional (login) | **La casilla es el consentimiento** (GT29, dictamen 4/2012, §3.2) | Solo si marca «Mantener la sesión iniciada en este dispositivo» al entrar con el código (SIN marcar de serie), 90 días sin uso (`#858`: persistente, no está exenta; la casilla es la petición) |
 | Google Maps (`NID`, `SOCS`…) | Tercero (google.com) | **Mapa (Google)** (clave `maps`) | **SÍ** | Solo si hay `address.maps_embed_url`. Desde `#859` la categoría es SOLO el mapa: las reseñas son nuestras (`#771`) y Places se retiró (`#772`); la finalidad se estrecha, sin subir la versión |
-| Feed social (SnapWidget/LightWidget) | Tercero | **Social** | **SÍ** | Solo si hay `social.feed_embed_url`; home `#gallery` |
+| Feed social (SnapWidget/LightWidget) | Tercero | **Social** | **SÍ** | ⚠️ HOY NADA LO PINTA (`#309`; medido el 30-09): aunque haya `social.feed_embed_url`, no se carga, no se ofrece la categoría ni sale en el listado (`#860`, `DEUDA.md`) |
 | Cloudflare Turnstile (`__cf_bm`) | Tercero | Seguridad | **No** (exenta) | Si Turnstile está activo |
 | Redsys | Tercero (en SU dominio) | Técnica necesaria | **No** | Solo al pagar (redirección, no iframe) |
 | Bunny Fonts | Tercero | **Sin cookies** (medido 30-09: 200 sin `Set-Cookie`) | **No** | Las páginas del armazón del producto (`<x-layout>`: 404, encuestas, reintento de pago); la landing nueva usa fuentes propias. Fuera del listado (no pone cookies); sí en la privacidad (recibe la IP) |
@@ -46,6 +46,10 @@ arquitectónica del universo cerrado de orígenes externos.
 la cuenta al entrar o comprar, y la herramienta de análisis con id opaco) y **`marketing`** (píxeles de
 anuncios y comunicación de la compra; los píxeles llegan en la T3b). El idioma **no añade cookie** (vive
 en la sesión server-side, [SetLocale.php](../../app/Http/Middleware/SetLocale.php)).
+▶ **`#860` (`[DECIDIDO owner]` 30-09): se OFRECEN solo las encendidas** (`CookieInventory::offered()`: el mapa si está
+configurado, la publicidad si hay algún píxel, el análisis siempre, las redes nunca mientras nada las pinte). El aviso y los
+dos «Configurar» nombran solo esas; el servidor guarda en `false` lo no ofrecido; la cookie anota lo preguntado (`asked`) y
+una categoría encendida después vuelve a preguntar sin subir `POLICY_VERSION` (`specs/politica-de-cookies.md` §6).
 
 | Cookie | Origen | Categoría | ¿Consentimiento? | Cuándo |
 |---|---|---|---|---|
@@ -93,8 +97,9 @@ solo de cookies técnicas exentas). Test que lo protege: `CookieWallInvariantTes
 - **D4 — Cookie `cookie_consent`:** first-party, **sin cifrar** (la leen el servidor —gate— y
   Alpine —UI—) → en `encryptCookies(except:)` de [bootstrap/app.php](../../bootstrap/app.php).
   `SameSite=Lax`, `Max-Age=24 meses`, `Secure` según config, `httpOnly=false`. Valor =
-  **base64(JSON)** `{"v":<versión>,"cats":{"maps":bool,"social":bool}}` (base64 evita `;`/comas
-  en el valor). La **escribe siempre el servidor**; Alpine solo mantiene prefs en memoria.
+  **base64(JSON)** `{"v":<versión>,"cats":{<cada categoría de OPTIONAL>:bool},"asked":[<las ofrecidas>]}` (base64 evita
+  `;`/comas en el valor; `asked` desde `#860`: sin él, una decisión de esta versión se preguntó con las cuatro). La
+  **escribe siempre el servidor**; Alpine solo mantiene prefs en memoria.
   Renombrada de `jj_cookie_consent` a `cookie_consent` en Fase 1 (los navegadores con la cookie antigua re-consienten). Nota histórica de
   `00-REFACTOR.md` (renombrarla invalida consentimientos ya dados → re-pediría a todos).
 - **D5 — Versión de política como constante** (`CookieConsent::POLICY_VERSION`, patrón de

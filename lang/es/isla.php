@@ -62,9 +62,19 @@ return [
         'cookies' => 'Cookies',
     ],
     'cookies' => [
-        'texto' => 'Usamos cookies propias y de terceros para medir las visitas y enseñarte nuestros anuncios en otras webs. Puedes aceptarlas, rechazarlas o configurarlas.',
+        // `#860`: `:para` y `:cortas` son SOLO las finalidades que esta instalación pide (las del `<body>`), unidas en su orden
+        // (`isla/pagina/pagina.js`, `avisoDeCookies`): el aviso no nombra lo que no hay.
+        'texto' => 'Usamos cookies para que la web funcione y para contar las visitas. Con tu permiso, también para :para. Puedes aceptarlas, rechazarlas o configurarlas.',
         // Abajo (móvil), el aviso compacto (zip del 27-09): una frase, con «Configurar» y «Política» dentro.
-        'texto_corto' => 'Cookies propias y de terceros: medición y anuncios.',
+        'texto_corto' => 'Cookies necesarias y, con tu permiso, :cortas.',
+        'para' => [
+            'maps' => 'enseñarte el mapa de Google',
+            'social' => 'enseñarte nuestras redes sociales',
+            'analytics' => 'entender cómo usas la web con tu cuenta',
+            'marketing' => 'enseñarte nuestros anuncios en otras webs',
+        ],
+        'cortas' => ['maps' => 'mapa', 'social' => 'redes', 'analytics' => 'análisis', 'marketing' => 'anuncios'],
+        'y' => ' y ',
         'aceptar' => 'Aceptar',
         'rechazar' => 'Rechazar',
         'configurar' => 'Configurar',

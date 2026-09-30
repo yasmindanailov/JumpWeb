@@ -313,7 +313,8 @@ banner conserva sus tres acciones; el job relee el consentimiento vivo; `marketi
   setMarketing()`, **único escritor**, con fila en `consents`). Lo nuevo es el MOMENTO: en `ConfirmedStep.vue`,
   solo con `hasSession && marketing_opt_in === false` y sin retirada previa (`consents.revoked_at`), una casilla
   desmarcada que llama al mismo `PUT /me/marketing`; la app, el mismo endpoint. **Hecho en la T4c (24-09)**, §4.6.
-- ✅ **Lo que enseñó la T3a·1 (24-09: categorías sin quemar, banner, política, `POLICY_VERSION` v3)**: las
+- ✅ **Lo que enseñó la T3a·1 (24-09: categorías sin quemar, banner, política, `POLICY_VERSION` v3)** (▶ desde `#860`, el
+  controlador, `data-consent-categories` y el panel usan las OFRECIDAS, `CookieInventory::offered()`: `COOKIES.md` §1): las
   categorías viven SOLO en `CookieConsent::OPTIONAL` y todo las recorre —`state()`, `encode()`, el
   controlador (que exige las CUATRO: un banner de la v2 que mande dos recibe 422, no un «no» tácito), los
   `data-cookie-*` del `<body>` más `data-consent-categories` (que no empieza por `cookie` a propósito: `track.js`

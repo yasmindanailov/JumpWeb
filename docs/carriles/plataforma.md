@@ -7,7 +7,7 @@
 > **`#860`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#846`) · Actualizado: **2026-09-30**
 > (el acceso con código: A1 ✅ `#853`/`#854`, A2 ✅ `#855`/`#856` y A3 ✅ `#857`, `specs/acceso-con-codigo.md` §4.8–§4.10;
-> sigue la A4 del SPA; aquí, `/cookies` ✅ `#858`/`#859` y el aviso que pide solo lo encendido ⬜ `#860`; la A5 tras la A4).
+> sigue la A4 del SPA; aquí, `/cookies` ✅ `#858`/`#859` y el aviso que pide solo lo encendido ✅ `#860`; la A5 tras la A4).
 > ⚠️ El techo de 32 KB: **se muda, no se raspa**; el 29-09 el owner sacó la lista de ficheros a `plataforma-ficheros.md`
 > (`#852`) y NO subió el techo. Si vuelve a apretar tres veces seguidas, llévaselo con la medida.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -62,8 +62,10 @@ salir NO salía (`RememberedDevice::logOutHere()`). **HECHO** el servidor entero
 (`#855`/`#856`, **1.57.0**, §4.9). Arneses: `mutar-acceso-codigo.sh` **51/51** (con `#858`), `mutar-token-bearer.sh` 14/14.
 ❗ **Para el CHANGELOG de la v2.0.0**: dos defectos de producción arreglados por el camino —los correos del cambio de correo
 salían al buzón contrario (`#856`) y «cerrar las demás sesiones» no cerraba nada con `redis` (`#855`)—.
-▶▶▶ **EN CURSO: `#860`** (el owner, 30-09): el aviso de cookies y los dos «Configurar» piden SOLO lo encendido
-(`politica-de-cookies.md` §6: `CookieInventory::offered()`, `body-state`, el controlador con `asked`, los textos compuestos).
+▶▶▶ **`#860`, ✅ validada por el owner el 30-09**: el aviso de cookies y los dos «Configurar» piden SOLO lo
+encendido (`politica-de-cookies.md` §6: `CookieInventory::offered()` —mapa si está, publicidad si hay píxeles, análisis
+siempre, redes NUNCA mientras nada pinte el widget, `#309`—, `body-state`, el controlador con `asked`, los textos compuestos
+y el píxel de los correos en el listado y en «Análisis» si está encendido). Arnés `mutar-politica-cookies.sh` (con `#860`).
 ▶▶▶ **`/cookies` para PRODUCCIÓN, ✅ validada por el owner el 30-09** (su encargo del 30-09; `specs/politica-de-cookies.md`):
 `#858` (el owner: la casilla «Mantener la sesión iniciada en este dispositivo», SIN marcar, en «Entra» de la compra y de Mi
 cuenta; contrato 1.58.0) y `#859` (el listado lo compone `Http\Legal\CookieInventory`, viaja en `inventory` y se pinta en
@@ -218,7 +220,11 @@ carril se apunta ALLÍ; lo compartido se sigue avisando aquí, en el buzón, ant
   (valida solo lo ofrecido; lo demás, `false`), `CookieConsent` (`encode` anota `asked`; `asked()`), `cookie-banner.blade.php`
   (el panel recorre lo ofrecido; `banner.text` compuesto) y sus tests. `ui/cookie-consent.js` NO cambia. Si tienes algo a medias ahí, dímelo.
   Y tu píxel de apertura (`EmailOpenMarks`, «`/cookies` tiene que nombrarlo antes»): con `emails.track_opens` encendido, fila
-  del listado y una frase en «Análisis» (§6).
+  del listado y una frase en «Análisis» (§6). ▶ HECHO así, más: `social` NO se ofrece (nada pinta el widget, `#309`; tu
+  `DEUDA` baja a Baja); tu `sonda-cookies.mjs` lee lo ofrecido del `<body>` en vez de fijar las cuatro; tus tests
+  `CookieConsentEndpointTest` y `CookieGateBlockingTest`, re-apuntados y con los casos de `#860`. ⚠️ Tu sonda llevaba rota
+  desde la isla (`/` y `/entradas` ya no tienen tu tarjeta): gana `SONDA_RUTA` (con `/no-existe`, 1 y 2 enteras, 20/21) y su
+  3 (el cajón en `/entradas`) anota el fallo en vez de tumbarla; esa 3 es tuya de rehacer contra lo que hay hoy.
 - ❗ **`#858` (el owner), contrato 1.58.0 (mío; el siguiente, tuyo)**: entrar con el código ya NO recuerda el dispositivo
   siempre: solo con `remember: true` —la casilla «Mantener la sesión iniciada en este dispositivo», SIN marcar de serie—; y el
   alta, la sesión de siempre. Para tu A4: la misma casilla en el paso del código del cajón (una premarcada no vale).

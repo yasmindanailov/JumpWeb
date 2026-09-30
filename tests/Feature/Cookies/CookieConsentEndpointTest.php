@@ -5,18 +5,23 @@ namespace Tests\Feature\Cookies;
 use App\Domain\Identity\Models\CookieConsentLog;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\CookieConsent;
+use App\Domain\Platform\Models\Setting;
+use App\Domain\Platform\Services\Analytics\Pixels;
 use App\Domain\Platform\Services\Analytics\Visitor;
+use App\Http\Legal\CookieInventory;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
+use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
 /**
  * #219 — Endpoint que registra la decisión de consentimiento: escribe la cookie canónica + deja
  * una fila de PRUEBA (acreditación, RGPD art. 5.2/7.1). Funciona para anónimos y autenticados.
  *
- * T3a de la analítica: la decisión lleva las CUATRO categorías de `CookieConsent::OPTIONAL`, todas
- * obligatorias — un cliente que mande solo dos (el banner de antes) no decide nada.
+ * T3a de la analítica: la decisión lleva las categorías, todas obligatorias — un cliente que mande solo dos (el banner
+ * de antes) no decide nada. Desde `#860`, las OFRECIDAS (`CookieInventory::offered()`: solo lo encendido): lo demás se
+ * guarda en `false` diga lo que diga la petición, y la cookie anota lo preguntado.
  */
 class CookieConsentEndpointTest extends TestCase
 {
@@ -26,8 +31,26 @@ class CookieConsentEndpointTest extends TestCase
 
     private const ALL_OFF = ['maps' => false, 'social' => false, 'analytics' => false, 'marketing' => false];
 
+    /** El mapa y un píxel: se ofrece todo lo que hoy puede ofrecerse (`social` no, `#309`). */
+    private function switchEverythingOn(): void
+    {
+        Setting::query()->updateOrCreate(['key' => 'address.maps_embed_url'], ['value' => 'https://www.google.com/maps/embed?pb=!1m18!1m12']);
+        Setting::query()->updateOrCreate(['key' => Pixels::KEY_META_PIXEL_ID], ['value' => '1234567890123']);
+    }
+
+    private function cookieFrom(TestResponse $response): string
+    {
+        return $response->getCookie(CookieConsent::COOKIE_NAME, false)->getValue(); // sin descifrar
+    }
+
+    private function requestWith(string $cookie): Request
+    {
+        return Request::create('/', 'GET', [], [CookieConsent::COOKIE_NAME => $cookie]);
+    }
+
     public function test_records_consent_and_sets_unencrypted_cookie_for_anonymous(): void
     {
+        $this->switchEverythingOn();
         $decision = ['maps' => true, 'social' => false, 'analytics' => true, 'marketing' => false];
         $response = $this->postJson('/cookies/consentimiento', $decision);
 
@@ -74,15 +97,68 @@ class CookieConsentEndpointTest extends TestCase
 
     public function test_cookie_value_round_trips_to_state(): void
     {
-        $response = $this->postJson('/cookies/consentimiento', self::ALL_ON);
-
-        $value = $response->getCookie(CookieConsent::COOKIE_NAME, false)->getValue(); // sin descifrar
-        $state = CookieConsent::state(Request::create('/', 'GET', [], [CookieConsent::COOKIE_NAME => $value]));
+        $this->switchEverythingOn();
+        $value = $this->cookieFrom($this->postJson('/cookies/consentimiento', self::ALL_ON));
+        $state = CookieConsent::state($this->requestWith($value));
 
         $this->assertTrue($state['decided']);
-        foreach (CookieConsent::OPTIONAL as $category) {
+        foreach (CookieInventory::offered() as $category) {
             $this->assertTrue($state[$category], $category);
         }
+        $this->assertFalse($state['social'], 'lo que no se ofrece no se acepta');
+        $this->assertSame(['maps', 'analytics', 'marketing'], CookieConsent::asked($this->requestWith($value)));
+    }
+
+    /** `#860`: nadie acepta lo que no se le preguntó — aunque la petición diga «sí» a todo. */
+    public function test_what_was_not_offered_is_stored_as_refused_whatever_the_request_says(): void
+    {
+        $value = $this->cookieFrom($this->postJson('/cookies/consentimiento', self::ALL_ON)->assertOk());
+
+        $this->assertSame(['maps' => false, 'social' => false, 'analytics' => true, 'marketing' => false], CookieConsentLog::firstOrFail()->categories);
+        $this->assertSame(['analytics'], CookieConsent::asked($this->requestWith($value)));
+        $this->assertFalse(CookieConsent::state($this->requestWith($value))['marketing']);
+    }
+
+    /** `#860`: sin mapa ni píxeles, decidir es contestar lo único que se pregunta. */
+    public function test_a_bare_installation_decides_with_the_analytics_answer_alone(): void
+    {
+        $this->postJson('/cookies/consentimiento', ['analytics' => false])->assertOk();
+        $this->postJson('/cookies/consentimiento', [])->assertStatus(422)->assertJsonValidationErrors(['analytics']);
+    }
+
+    /**
+     * `#860`: encender algo DESPUÉS es una pregunta nueva — el aviso vuelve, con lo ya contestado marcado, y la nueva
+     * sigue apagada hasta contestarla. Sin subir `POLICY_VERSION`.
+     */
+    public function test_a_category_switched_on_later_asks_again_keeping_what_was_answered(): void
+    {
+        $this->seed(LandingContentSeeder::class);
+        $before = $this->cookieFrom($this->postJson('/cookies/consentimiento', ['analytics' => true])->assertOk());
+
+        $this->withUnencryptedCookie(CookieConsent::COOKIE_NAME, $before)->get('/')->assertOk()
+            ->assertSee('data-cookie-decided="1"', false);
+
+        Setting::query()->updateOrCreate(['key' => Pixels::KEY_META_PIXEL_ID], ['value' => '1234567890123']);
+
+        $this->withUnencryptedCookie(CookieConsent::COOKIE_NAME, $before)->get('/')->assertOk()
+            ->assertSee('data-cookie-decided=""', false)
+            ->assertSee('data-consent-categories="analytics,marketing"', false)
+            ->assertSee('data-cookie-analytics="1"', false)
+            ->assertSee('data-cookie-marketing=""', false);
+
+        $after = $this->cookieFrom($this->postJson('/cookies/consentimiento', ['analytics' => true, 'marketing' => false])->assertOk());
+        $this->withUnencryptedCookie(CookieConsent::COOKIE_NAME, $after)->get('/')->assertOk()
+            ->assertSee('data-cookie-decided="1"', false);
+    }
+
+    /** Una decisión de esta versión sin la lista es de antes de `#860`: entonces se preguntaban siempre las cuatro. */
+    public function test_a_decision_from_before_860_counts_as_having_asked_all_four(): void
+    {
+        $legacy = base64_encode((string) json_encode(['v' => CookieConsent::POLICY_VERSION, 'cats' => self::ALL_OFF]));
+
+        $this->assertSame(CookieConsent::OPTIONAL, CookieConsent::asked($this->requestWith($legacy)));
+        $this->assertTrue(CookieConsent::state($this->requestWith($legacy))['decided']);
+        $this->assertSame([], CookieConsent::asked($this->requestWith('no-es-base64-json')));
     }
 
     public function test_records_user_id_when_authenticated(): void
@@ -106,6 +182,7 @@ class CookieConsentEndpointTest extends TestCase
 
     public function test_validation_requires_a_boolean_per_category(): void
     {
+        $this->switchEverythingOn();
         $this->postJson('/cookies/consentimiento', ['maps' => 'yes'])->assertStatus(422);
         $this->postJson('/cookies/consentimiento', [])->assertStatus(422);
 
@@ -121,6 +198,7 @@ class CookieConsentEndpointTest extends TestCase
     public function test_the_decision_reaches_the_body_attributes_of_the_next_page(): void
     {
         $this->seed(LandingContentSeeder::class);
+        $this->switchEverythingOn();
 
         $value = $this->postJson('/cookies/consentimiento', ['maps' => false, 'social' => false, 'analytics' => true, 'marketing' => false])
             ->assertOk()
@@ -132,7 +210,7 @@ class CookieConsentEndpointTest extends TestCase
             ->assertSee('data-cookie-analytics="1"', false)
             ->assertSee('data-cookie-marketing=""', false)
             ->assertSee('data-cookie-maps=""', false)
-            ->assertSee('data-consent-categories="maps,social,analytics,marketing"', false);
+            ->assertSee('data-consent-categories="maps,analytics,marketing"', false);
     }
 
     public function test_old_logs_are_prunable(): void

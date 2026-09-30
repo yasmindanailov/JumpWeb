@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { cajaSiVisible, medirVista, preferenciasDeCookies, propsDeLaIsla } from './pagina.js';
+import { avisoDeCookies, cajaSiVisible, medirVista, preferenciasDeCookies, propsDeLaIsla } from './pagina.js';
 import { paginaConSelector } from './con-selector.js';
 
 /**
@@ -217,5 +217,35 @@ describe('la segunda capa de las cookies', () => {
         p.onAceptarTodas();
         p.onRechazarTodas();
         assert.deepEqual(hechas, [['social', true], ['todas', true], ['todas', false]]);
+    });
+});
+
+describe('el aviso de cookies nombra solo lo que pide (#860)', () => {
+    // Los textos de `lang/es/isla.php`, tal cual.
+    const textosCookies = { cookies: {
+        texto: 'Usamos cookies para que la web funcione y para contar las visitas. Con tu permiso, también para :para. Puedes aceptarlas, rechazarlas o configurarlas.',
+        texto_corto: 'Cookies necesarias y, con tu permiso, :cortas.',
+        para: { maps: 'enseñarte el mapa de Google', social: 'enseñarte nuestras redes sociales', analytics: 'entender cómo usas la web con tu cuenta', marketing: 'enseñarte nuestros anuncios en otras webs' },
+        cortas: { maps: 'mapa', social: 'redes', analytics: 'análisis', marketing: 'anuncios' },
+        y: ' y ',
+    } };
+
+    test('sin píxeles, no dice «anuncios»: solo el análisis, que se pide siempre', () => {
+        const a = avisoDeCookies(['analytics'], textosCookies);
+        assert.equal(a.text, 'Usamos cookies para que la web funcione y para contar las visitas. Con tu permiso, también para entender cómo usas la web con tu cuenta. Puedes aceptarlas, rechazarlas o configurarlas.');
+        assert.equal(a.shortText, 'Cookies necesarias y, con tu permiso, análisis.');
+    });
+
+    test('lo encendido, en el orden del <body> y dicho como una lista: «a y b», «a, b y c»', () => {
+        assert.equal(avisoDeCookies(['analytics', 'marketing'], textosCookies).shortText, 'Cookies necesarias y, con tu permiso, análisis y anuncios.');
+        const tres = avisoDeCookies(['maps', 'analytics', 'marketing'], textosCookies);
+        assert.equal(tres.shortText, 'Cookies necesarias y, con tu permiso, mapa, análisis y anuncios.');
+        assert.ok(tres.text.includes('para enseñarte el mapa de Google, entender cómo usas la web con tu cuenta y enseñarte nuestros anuncios en otras webs.'));
+    });
+
+    test('la isla lo recibe con el aviso, y la categoría sin frase no deja un hueco en la lista', () => {
+        const p = propsDeLaIsla({ config, estado: estado({ cookies: true, categorias: ['analytics', 'desconocida'] }), acciones, textos: { ...textos, ...textosCookies } });
+        assert.equal(p.cookies.shortText, 'Cookies necesarias y, con tu permiso, análisis.');
+        assert.ok(! p.cookies.text.includes('anuncios'));
     });
 });

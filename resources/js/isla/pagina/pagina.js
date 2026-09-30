@@ -8,6 +8,28 @@
  *   · «Reservar para hoy» lleva a la pieza de precio con hoy ya elegido.
  * Los textos son del grupo `isla` de `lang/` (los de la acción) y de la página (su acción y su «desde»).
  */
+import { tp } from '../../sidebar/i18n.js';
+
+/** Una lista como se dice: «a», «a y b», «a, b y c» (`y`: « y », « and », « et »). */
+function unir(partes, y) {
+    return partes.length < 2 ? partes.join('') : `${partes.slice(0, -1).join(', ')}${y}${partes[partes.length - 1]}`;
+}
+
+/**
+ * **El aviso de cookies de la isla, con lo que ESTA instalación pide** (`#860`, `[DECIDIDO owner]`; `politica-de-cookies.md`
+ * §6): las finalidades de `categorias` —las del `<body>`, `CookieInventory::offered()`, en su orden— dichas en el texto
+ * largo (arriba, `para`) y en el corto (abajo en el móvil, `cortas`). Nunca nombra lo que no hay: sin píxeles no dice
+ * «anuncios». Sin categorías no hay aviso (`data-cookie-enabled` vacío), así que no hace falta su frase.
+ */
+export function avisoDeCookies(categorias = [], textos = {}) {
+    const c = textos?.cookies ?? {};
+    const lista = (grupo) => unir(categorias.map((id) => c[grupo]?.[id]).filter(Boolean), c.y ?? ' y ');
+
+    return {
+        text: tp(textos, 'cookies.texto', { para: lista('para') }),
+        shortText: tp(textos, 'cookies.texto_corto', { cortas: lista('cortas') }),
+    };
+}
 
 /**
  * La caja de un elemento que SE VE, o `null`: lo que la cabecera esconde hasta el primer scroll (la llegada limpia del
@@ -67,7 +89,8 @@ function accionDeTarea({ label, href, zone }, acciones) {
 /**
  * Las props que la página le da a la isla. `config` es lo que da la página (su `page`, su `today` con sus huecos
  * —`slots`, del hecho de la página: los mismos que dicen su cabecera y su cierre—, su menú…); `estado`, lo que cambia
- * (`vista`, `calculo` de la calculadora, `cookies`); `acciones`, lo que hace cada botón. `textos`, el grupo `isla`.
+ * (`vista`, `calculo` de la calculadora, `cookies` y sus `categorias`); `acciones`, lo que hace cada botón. `textos`, el
+ * grupo `isla`.
  */
 export function propsDeLaIsla({ config, estado, acciones, textos }) {
     const calculo = estado.calculo ?? null;
@@ -108,7 +131,9 @@ export function propsDeLaIsla({ config, estado, acciones, textos }) {
         task: cuenta?.task ? { text: cuenta.task.text, product: cuenta.task.product ?? null, action: accionDeTarea(cuenta.task.action, acciones) } : null,
         // El selector de planes (T6a): con él, «Reservar» de la isla lo abre en vez de ir a la página.
         plans: planesDe(config.plans, acciones),
-        cookies: estado.cookies ? { onAccept: acciones.aceptarCookies, onReject: acciones.rechazarCookies, onConfigure: acciones.configurarCookies, onPolicy: acciones.politicaCookies } : null,
+        cookies: estado.cookies
+            ? { ...avisoDeCookies(estado.categorias, textos), onAccept: acciones.aceptarCookies, onReject: acciones.rechazarCookies, onConfigure: acciones.configurarCookies, onPolicy: acciones.politicaCookies }
+            : null,
         cookiePrefs: estado.preferencias ?? null,
         notice: estado.aviso ?? null,
         onNavigate: acciones.navegar,

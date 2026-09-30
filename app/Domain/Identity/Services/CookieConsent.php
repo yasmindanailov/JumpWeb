@@ -27,6 +27,8 @@ use Illuminate\Http\Request;
  * `data-cookie-*` del `<body>`, el almacén de Alpine (`ui/cookie-consent.js`, que lee
  * `data-consent-categories`) y el panel del banner las recorren. Añadir una finalidad es añadirla aquí,
  * darle sus textos (`lang/{es,en,fr}/cookies.php`, `CookiePolicyContent`) y subir {@see POLICY_VERSION}.
+ * ▶ Desde `#860` se OFRECEN solo las que la instalación tiene encendidas (`Http\Legal\CookieInventory::offered()`, que
+ * mira Contenido y Plataforma: por eso no vive aquí); la cookie anota qué se preguntó ({@see asked()}).
  */
 class CookieConsent
 {
@@ -64,22 +66,9 @@ class CookieConsent
      */
     public static function state(Request $request): array
     {
-        $default = self::allSetTo(false) + ['decided' => false];
-
-        $raw = $request->cookie(self::COOKIE_NAME);
-        if (! is_string($raw) || $raw === '') {
-            return $default;
-        }
-
-        $json = base64_decode($raw, true);
-        if ($json === false) {
-            return $default;
-        }
-
-        $data = json_decode($json, true);
-        if (! is_array($data) || ($data['v'] ?? null) !== self::POLICY_VERSION) {
-            // Versión distinta = política cambiada → re-pedir consentimiento.
-            return $default;
+        $data = self::payload($request);
+        if ($data === null) {
+            return self::allSetTo(false) + ['decided' => false];
         }
 
         $cats = is_array($data['cats'] ?? null) ? $data['cats'] : [];
@@ -93,19 +82,65 @@ class CookieConsent
     }
 
     /**
+     * **Qué se PREGUNTÓ en esa decisión** (`#860`, `politica-de-cookies.md` §6): la instalación ofrece solo las categorías
+     * que tiene encendidas, y una que se enciende después es una pregunta nueva —el aviso vuelve— sin subir la versión.
+     * Sin decisión válida, nada. Una decisión de esta versión SIN la lista es de antes de `#860`, cuando se ofrecían
+     * siempre las cuatro.
+     *
+     * @return list<string>
+     */
+    public static function asked(Request $request): array
+    {
+        $data = self::payload($request);
+        if ($data === null) {
+            return [];
+        }
+        if (! is_array($data['asked'] ?? null)) {
+            return self::OPTIONAL;
+        }
+
+        return array_values(array_intersect(self::OPTIONAL, $data['asked']));
+    }
+
+    /**
      * Valor de la cookie a escribir (base64 del JSON con la versión). base64 evita comas/`;` en el
      * valor de la cookie (RFC 6265) y permite extender el esquema sin tocar el formato.
+     * `$asked`: las categorías que se ofrecieron al decidir (`#860`); sin ella, todas.
      *
      * @param  array<string,bool>  $cats
+     * @param  list<string>|null  $asked
      */
-    public static function encode(array $cats): string
+    public static function encode(array $cats, ?array $asked = null): string
     {
-        $payload = ['v' => self::POLICY_VERSION, 'cats' => []];
+        $payload = ['v' => self::POLICY_VERSION, 'cats' => [], 'asked' => array_values(array_intersect(self::OPTIONAL, $asked ?? self::OPTIONAL))];
         foreach (self::OPTIONAL as $cat) {
             $payload['cats'][$cat] = (bool) ($cats[$cat] ?? false);
         }
 
         return base64_encode((string) json_encode($payload));
+    }
+
+    /**
+     * La decisión guardada, o `null` si no hay una válida de ESTA versión (ausente, corrupta o caducada: versión distinta
+     * = política cambiada → re-pedir consentimiento).
+     *
+     * @return array<string, mixed>|null
+     */
+    private static function payload(Request $request): ?array
+    {
+        $raw = $request->cookie(self::COOKIE_NAME);
+        if (! is_string($raw) || $raw === '') {
+            return null;
+        }
+
+        $json = base64_decode($raw, true);
+        if ($json === false) {
+            return null;
+        }
+
+        $data = json_decode($json, true);
+
+        return is_array($data) && ($data['v'] ?? null) === self::POLICY_VERSION ? $data : null;
     }
 
     /**

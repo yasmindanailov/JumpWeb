@@ -12,23 +12,32 @@ set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
 SAIL="docker compose exec -u sail -T laravel.test"
-TESTS="$SAIL php artisan test --filter=CookieInventoryTest|CookiePolicyContentTest|DriversTest|PixelsTest"
+TESTS="$SAIL php artisan test --filter=CookieInventoryTest|CookiePolicyContentTest|DriversTest|PixelsTest|CookieConsentEndpointTest|CookieGateBlockingTest"
+TESTS_JS="$SAIL node --test resources/js/isla/pagina/pagina.test.js"
 
 INVENTORY=app/Http/Legal/CookieInventory.php
 RESOURCE=app/Http/Resources/Api/V1/LegalDocumentsResource.php
 MIGRATION=database/migrations/2026_09_30_150000_cookie_policy_for_production.php
 VIEW=resources/views/anfitrion/legal.blade.php
+# `#860`: el aviso y «Configurar» piden solo lo encendido.
+CONSENT=app/Domain/Identity/Services/CookieConsent.php
+CONTROLLER=app/Http/Controllers/CookieConsentController.php
+BODY=resources/views/components/site/body-state.blade.php
+BANNER=resources/views/components/site/cookie-banner.blade.php
+PAGINA=resources/js/isla/pagina/pagina.js
 
 TMP="$(mktemp -d)"
-FICHEROS=("$INVENTORY" "$RESOURCE" "$MIGRATION" "$VIEW")
+FICHEROS=("$INVENTORY" "$RESOURCE" "$MIGRATION" "$VIEW" "$CONSENT" "$CONTROLLER" "$BODY" "$BANNER" "$PAGINA")
 copia() { echo "$TMP/${1//\//__}"; }
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$(copia "$f")" "$f"; touch "$f"; done; }
 trap 'restaurar; rm -rf "$TMP"' EXIT
 for f in "${FICHEROS[@]}"; do cp "$f" "$(copia "$f")"; done
 
-verde() { $TESTS >/dev/null 2>&1; }
+verde_php() { $TESTS >/dev/null 2>&1; }
+verde_js() { $TESTS_JS >/dev/null 2>&1; }
+verde() { verde_php; }
 
-if ! verde; then
+if ! verde_php || ! verde_js; then
     echo '✗ los tests de la política de cookies NO están verdes antes de mutar: el veredicto de abajo no valdría nada.' >&2
     exit 1
 fi
@@ -57,9 +66,10 @@ mutar() {
 }
 
 # ── El listado (`CookieInventory`) ─────────────────────────────────────────────────────────────────
-mutar "el mapa sale en la política aunque no esté configurado" "$INVENTORY" \
-  "if (MapsEmbed::clean(Setting::value('address.maps_embed_url')) !== null) {" \
-  "if (true) {"
+# Re-apuntado en `#860`: la condición del mapa vive en `mapsOn()`, que usan el listado y lo que se ofrece.
+mutar "el mapa sale en la política (y se pide) aunque no esté configurado" "$INVENTORY" \
+  "return MapsEmbed::clean(Setting::value('address.maps_embed_url')) !== null;" \
+  "return true;"
 
 mutar "el anti-bot no sale aunque esté encendido" "$INVENTORY" \
   "if (Turnstile::enabled()) {" \
@@ -118,6 +128,76 @@ mutar "la migración calla lo que no pudo actualizar" "$MIGRATION" \
 mutar "la huella de la v4 no es la del texto que dejaban las migraciones viejas" "$MIGRATION" \
   "'es' => 'c6f46795b47a509a2b3e42af292fe26c6d963a0bb09feb6de2951d6ed80212df'" \
   "'es' => 'c6f46795b47a509a2b3e42af292fe26c6d963a0bb09feb6de2951d6ed80212de'"
+
+# ── #860: el aviso y «Configurar» piden SOLO lo encendido ─────────────────────────────────────────
+mutar "se pide publicidad sin ningún píxel" "$INVENTORY" \
+  "'marketing' => Pixels::active() !== []," \
+  "'marketing' => true,"
+
+mutar "se piden redes aunque nada pinte el widget (#309)" "$INVENTORY" \
+  "'social' => false," \
+  "'social' => true,"
+
+mutar "el píxel de los correos sale en la política aunque esté apagado" "$INVENTORY" \
+  "        if (EmailOpenMarks::enabled()) {
+            \$rows[] = self::row('email_opens'," \
+  "        if (true) {
+            \$rows[] = self::row('email_opens',"
+
+mutar "«Análisis» nombra la herramienta aunque no haya ninguna" "$INVENTORY" \
+  "Drivers::config() !== null ? \$panel['analytics_tool'] : null," \
+  "\$panel['analytics_tool'],"
+
+mutar "«Análisis» nombra el píxel de los correos aunque esté apagado" "$INVENTORY" \
+  "EmailOpenMarks::enabled() ? \$panel['analytics_opens'] : null," \
+  "\$panel['analytics_opens'],"
+
+mutar "el aviso de siempre nombra las cuatro categorías" "$INVENTORY" \
+  "__('cookies.banner.purposes.'.\$category, [], \$locale), self::offered());" \
+  "__('cookies.banner.purposes.'.\$category, [], \$locale), CookieConsent::OPTIONAL);"
+
+mutar "una categoría encendida después no vuelve a preguntar" "$INVENTORY" \
+  "            && array_diff(self::offered(), CookieConsent::asked(\$request)) === [];" \
+  "            && true;"
+
+mutar "el servidor acepta lo que no se ofreció" "$CONTROLLER" \
+  "        foreach (\$offered as \$category) {
+            \$cats[\$category] = (bool) \$validated[\$category];" \
+  "        foreach (CookieConsent::OPTIONAL as \$category) {
+            \$cats[\$category] = (bool) \$request->input(\$category);"
+
+mutar "el servidor exige contestar lo que no se pregunta" "$CONTROLLER" \
+  "array_fill_keys(\$offered, ['required', 'boolean'])" \
+  "array_fill_keys(CookieConsent::OPTIONAL, ['required', 'boolean'])"
+
+mutar "la cookie no anota lo que se preguntó" "$CONTROLLER" \
+  "CookieConsent::encode(\$cats, \$offered)," \
+  "CookieConsent::encode(\$cats),"
+
+mutar "una decisión de antes de #860 se da por no preguntada" "$CONSENT" \
+  "        if (! is_array(\$data['asked'] ?? null)) {
+            return self::OPTIONAL;" \
+  "        if (! is_array(\$data['asked'] ?? null)) {
+            return [];"
+
+mutar "el <body> da las cuatro categorías al almacén" "$BODY" \
+  "data-consent-categories=\"{{ implode(',', \$consentOffered) }}\"" \
+  "data-consent-categories=\"{{ implode(',', \\App\\Domain\\Identity\\Services\\CookieConsent::OPTIONAL) }}\""
+
+mutar "el «Configurar» de siempre ofrece las cuatro" "$BANNER" \
+  "@php(\$consentCategories = \\App\\Http\\Legal\\CookieInventory::offered())" \
+  "@php(\$consentCategories = \\App\\Domain\\Identity\\Services\\CookieConsent::OPTIONAL)"
+
+# ── #860 en la isla (JS: su propio juez) ───────────────────────────────────────────────────────────
+verde() { verde_js; }
+
+mutar "el aviso de la isla nombra las cuatro finalidades" "$PAGINA" \
+  "const lista = (grupo) => unir(categorias.map(" \
+  "const lista = (grupo) => unir(['maps', 'social', 'analytics', 'marketing'].map("
+
+mutar "la isla pinta su aviso con el texto fijo, no el compuesto" "$PAGINA" \
+  "? { ...avisoDeCookies(estado.categorias, textos), onAccept:" \
+  "? { onAccept:"
 
 echo
 echo "mutaciones que muerden: ${muerden}/${total}"

@@ -45,7 +45,7 @@
             // que la primera apertura no los espere (medido en 4G: 2s). Solo si la compra se abre en la isla y se carga
             // el cajón.
             'config' => $isla + [
-                'owner' => auth()->id(), 'cookiesUrl' => route('legal.cookies'), 'cookiesPanel' => __('cookies.panel'),
+                'owner' => auth()->id(), 'cookiesUrl' => route('legal.cookies'), 'cookiesPanel' => \App\Http\Legal\CookieInventory::panel(),
                 'cuenta' => app(\App\Http\Cuenta\AntesDeVenir::class)->paraLaIsla(auth()->user()),
                 'aviso' => app(\App\Http\Cuenta\AvisoDeSesion::class)->paraLaIsla(session('status')),
                 'carcasa' => $carcasa = \App\Domain\Content\Services\ShellSettings::shell(),

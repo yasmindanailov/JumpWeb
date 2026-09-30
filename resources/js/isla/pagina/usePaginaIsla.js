@@ -145,7 +145,7 @@ export function usePaginaIsla({ config, textos, doc = document, win = window }) 
 
     const props = computed(() => propsDeLaIsla({
         config, textos, acciones,
-        estado: { vista: e.vista, calculo: e.calculo, cookies: cookies.showing, preferencias: preferencias.value, aviso: e.aviso },
+        estado: { vista: e.vista, calculo: e.calculo, cookies: cookies.showing, categorias: cookies.categories, preferencias: preferencias.value, aviso: e.aviso },
     }));
 
     // El hecho `consent_shown`, una vez por página y cuando el aviso se enseña de verdad (como el banner de siempre).
