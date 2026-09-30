@@ -839,7 +839,7 @@ no los usa: el Listo es su propia vista).
   rutas enfocadas pasa de 18 a 17; y `MountsAParty::replyOf()` no sabía crear un «no» (PHP acepta argumentos de más sin
   avisar: gana `$attending`). Arnés `scripts/mutar-lista-805.sh` 6/6, el árbol byte a byte; suite 6553 / 45031.
 
-### 4.17 Los complementos de la fiesta, en dos (`[DECIDIDO owner]` `#806`, `#807`, 29-09) — 🟦 contestada; sigue K1
+### 4.17 Los complementos de la fiesta, en dos (`[DECIDIDO owner]` `#806`, `#807`, 29-09) — 🟦 K1 ✅; sigue K2
 
 - **El pedido del owner**: la zona de los extras se reordena en «Complementos para los niños» y «Complementos para los
   adultos», fiel al sistema de diseño, clara y sin saturar: VARIAS tartas de distintos tipos (hoy, una y «Añadir otra tarta»,
@@ -903,6 +903,29 @@ tartas a la vez (P2).
 - **Tandas** (en `wip/…`, cada una al ojo del owner): **K1** las dos secciones y «Uno para cada niño» (P1, P3; vista, JS,
   textos; sin dominio) · **K2** varias tartas (P2; el controlador deja de traducir `cake`; `PostFormAddons` intacto) · **K3**
   la merienda (`choice`: esquema, panel, lista, invitación, hoja, API). Cada una con su «al detalle» medido antes de codificar.
+
+**K1 al detalle (medido 29-09, 23:20)**. Hoy `extras()` da `tarta`, `padres` (familias por `family`; las sin familia, en UN
+grupo sin título) y `lista` (los sueltos, rejilla sin título, chapa «Para N personas»); `lista.js` sugiere solo en los padres
+(`pintaPadres`, con `cubrir()` y «¿Cuántos adultos se quedan?»). Fijan la zona `ExtrasDeLaFiestaListaTest` (8) y `sonda-f5.mjs`.
+- **Cambia**: bajo el titular de siempre, dos bloques con su `h3`: **«Para los niños»** (la tarta tal cual hasta K2, y los
+  demás en GRUPOS: los de una misma `family` juntos con su `h4`, cada suelto solo) y **«Para los adultos»** (lo de hoy; el sub
+  pierde «Solo para adultos.», que ya dice el título). Un bloque sin nada no se pinta. En los niños la chapa es «Para 1 niño» /
+  «Para N niños», y bajo cada grupo con `serves` la sugerencia de los padres contada con los NIÑOS (`sois()`, la de la tarta):
+  con un solo complemento «para 1», **«Uno para cada niño 14»** (el `Tag` de la calculadora, «Un par para cada niño»,
+  `x-pieza.etiqueta`: marcado si ya los cubre; sin caja ni frase); si no, «Para los 14 niños: …, 28,00 €» + «Ponerlos»;
+  cubierto, «Cubre a los 14 niños.». Nunca se pone sola. Los sueltos, de dos en dos en escritorio; una familia, fila entera.
+- **No cambia**: el dominio, el contrato, `addons[i]`, la tarta, el pie, la línea de la zona 3 y su ancla `#pli-extras-padres`.
+- **Guardas**: `ExtrasDeLaFiestaListaTest` +2 (las dos secciones en su orden y sin título vacío; el suelto «para 1» con su
+  sugerencia y su chapa) y el «Para 4 personas» re-apuntado a «Para 4 niños»; `logica.test.js` si sale lógica pura; arnés
+  `scripts/mutar-complementos-k1.sh`; la sonda a 390 y 1280 sobre `JW-OJO-K1` (`ojo-k1.php`, fuera de git: calcetines y un cono
+  de prueba en `postform` del pack 105, 14 niños dentro de 5 días).
+- **Lo construido (29-09, 23:30; ✅ ojo del owner en vivo, 30-09: «buen trabajo, visto bueno»)**: `ListaDeInvitados::extras()` da `ninos` (`grupos`, `sois`) en vez de
+  `lista`; la pieza `fiesta/lista/grupo-extras` para los dos bloques; `pintaGrupos()`/`pintaUno()` en `lista.js`; textos
+  `fiesta.lista.ninos.*` (es/en/fr), fuera `extras.para_personas`. Medido y cambiado en el camino: la sugerencia en su caja
+  bajo cada tarjeta pesaba demasiado para un solo botón → el `Tag` del diseño. **Verificación**: `ExtrasDeLaFiestaListaTest`
+  10 · `FiestaModeloTest` (el banco, re-apuntado) · arnés **10/10** · la sonda a 390 y 1280 (tocar, quitar uno, el número a
+  16, guardar, sin JavaScript) sin errores ni desborde. ⚠️ **DATO**: el tope del «para 1» debe llegar al máximo del pack, o
+  «Uno para cada niño» no sale (no mentiría).
 
 ## 5. Impacto en invariantes
 

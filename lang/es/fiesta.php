@@ -171,8 +171,8 @@ return [
             'total' => ':x en total',
             'pasado' => 'El plazo pasó.',
             'que_lleva' => 'Qué lleva',
-            // F5 (`#749`): «para cuántas personas» en una tarjeta suelta, los plazos del pie y el «ayer» de «Guardado».
-            'para_personas' => '{1} Para 1 persona|[2,*] Para :count personas',
+            // F5 (`#749`): los plazos del pie y el «ayer» de «Guardado». («Para N personas» de la tarjeta suelta, fuera en K1:
+            // los sueltos son de los niños, `ninos.para`.)
             'pie_tarta' => 'la tarta, hasta :cuando',
             'pie_padres' => 'lo de los padres, hasta :cuando',
             'mismo_dia' => 'el mismo día',
@@ -233,8 +233,9 @@ return [
         ],
         // PARA LOS PADRES (F5, `PliFamilia` y la línea de `PliZona3`).
         'padres' => [
-            'titulo' => 'Para los padres, mientras saltan',
-            'sub' => 'Solo para adultos. Cada uno dice para cuántos es.',
+            // K1 (§4.17, `#806`): la zona va en dos y el owner la nombra así; «Solo para adultos» ya lo dice el título.
+            'titulo' => 'Para los adultos',
+            'sub' => 'Cada uno dice para cuántos es.',
             'adultos' => '¿Cuántos adultos se quedan?',
             'adultos_hint' => 'Opcional: te decimos cuántos pedir.',
             'para' => '{1} Para 1 adulto|[2,*] Para :count adultos',
@@ -246,6 +247,16 @@ return [
             'linea' => '¿Algo para los padres mientras saltan?',
             'ver' => 'Ver :familias',
             'ver_generico' => 'Ver lo de los padres',
+        ],
+        // K1 (§4.17, `#806`/`#807`): «Para los niños», la tarta y lo que no dice bloque, contado con los niños de la fiesta.
+        'ninos' => [
+            'titulo' => 'Para los niños',
+            'para' => '{1} Para 1 niño|[2,*] Para :count niños',
+            // Un solo complemento «para 1» (los calcetines, el cono): el `Tag` de un toque de la calculadora, con la cifra al lado.
+            'uno_para_cada' => 'Uno para cada niño',
+            'sugerencia' => '{1} Para 1 niño: :partes, :precio.|[2,*] Para los :count niños: :partes, :precio.',
+            'poner' => '{1} Ponerlo|[2,*] Ponerlos',
+            'cubierto' => '{1} Cubre a 1 niño.|[2,*] Cubre a los :count niños.',
         ],
         'guardar' => [
             'guardado_el' => 'Guardado :cuando',

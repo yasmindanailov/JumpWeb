@@ -7,20 +7,21 @@
 > **`fiesta-sistema-nuevo.md` §4.17** (lo siguiente, `#806`) · `correos-rediseno.md` §0 (`#800`→`#804`; la R1·T) ·
 > `analitica-para-decidir.md` §0 (en pausa, `#755`) · `encuestas.md` §0 y §4.7 (`#754`) · `analitica.md` §0 y §4.5 ·
 > `isla-y-landing-nueva.md` §4.11 · `celebracion-e-invitacion.md` §0 · `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 ·
-> `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-09-29, 23:10 (los complementos en dos, medidos y
-> contestados por el owner, `#807`; lo siguiente, K1).
+> `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-09-30, 07:00 (K1 de los complementos aprobada por
+> el owner; lo siguiente, K2).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`). El
 > contador de la suite va en el trailer del commit (`#618`), no aquí. **Se muda, no se raspa**: el detalle de
 > una feature baja a su spec (las trampas por tanda de la analítica T1→T5 viven en `analitica.md` §4.9,
 > mudadas verbatim el 24-09; las de la ficha de Google en su §9.1; las de la invitación en su §10.20).
 
-## Foto (2026-09-29, 23:00)
+## Foto (2026-09-30, 07:00)
 
 - ✅ **LA LISTA DE INVITADOS DEL OWNER, EN `main` Y APROBADA** (`#805`, del `#847`; `fiesta-sistema-nuevo.md` §4.16; «vale,
   visto bueno»): todos confirmados, sin firmas de los invitados (el descargo de quien cumple, sí), sin cifras ni recordatorio
   (RETIRADO entero, con sus textos y su test), el «No podemos» aparte y suave; arnés `mutar-lista-805.sh` 6/6.
-- 🟦 **LOS COMPLEMENTOS EN DOS** (`#806`, `#807`, §4.17): MEDIDOS y CONTESTADOS por el owner el 29-09 (la merienda, pregunta
-  del pack sin dinero; calcetines y cono, fuera del pack; varias tartas); sin código todavía (ver retomar 0).
+- 🟦 **LOS COMPLEMENTOS EN DOS** (`#806`, `#807`, §4.17): ✅ **K1 APROBADA** (30-09: «buen trabajo, visto bueno… respetando la
+  config del panel»): «Para los niños» / «Para los adultos», «Uno para cada niño» (el `Tag` de la calculadora); arnés
+  `mutar-complementos-k1.sh` 10/10, sonda `sonda-k1.mjs`, fiesta `JW-OJO-K1` (`CARRIL-SPA` §8 (23)). Siguen K2 y K3.
 - ✅ R1a y R1b de los correos, en `main` y aprobadas (29-09): su foto, mudada verbatim a `CARRIL-SPA.md` §9.
 - **LOS CORREOS** (`specs/correos-rediseno.md`, `#800`→`#804`): la spec, medida con el
   censo HAY/FALTA contra el zip (§1), y cuatro decisiones del owner: el 7 sigue siendo la encuesta (`#801`); las ocasiones, al
@@ -44,14 +45,12 @@
 
 ## Por dónde retomar, en orden
 
-0. ▶▶▶ **LOS COMPLEMENTOS DE LA FIESTA, EN DOS** (`#806`, `#807`, `fiesta-sistema-nuevo.md` §4.17): MEDIDO y CONTESTADO
-   (29-09, 23:00): lo medido (1–6), la propuesta P1–P4 y las cuatro respuestas del owner, en §4.17. Siguen tres tandas, cada
-   una con su «al detalle» MEDIDO en §4.17 antes de codificar, en `wip/…` y al ojo del owner: **K1** las dos secciones y «Uno
-   para cada niño» (vista, JS, textos) → **K2** varias tartas (el controlador deja de traducir `cake`) → **K3** la merienda
-   (campo `choice` del evento, sin dinero: catálogo, panel, lista, invitación F1b, hoja del parque, API minor). En la local,
-   de prueba: desenganchar Menú 1/2 de los packs 105/106 y pasar calcetines y cono a `postform` (con tope ≥ 20 y plazo).
-   ⚠️ La merienda es sin dinero SOLO si todas cuestan lo mismo (`#807`); con suplemento, otra tanda por el `CRITICAL_RE`.
-   Después, la **R1·T** (punto 1).
+0. ▶▶▶ **LOS COMPLEMENTOS DE LA FIESTA, EN DOS** (`#806`, `#807`, `fiesta-sistema-nuevo.md` §4.17): ✅ K1 en `main`. Siguen,
+   cada una con su «al detalle» MEDIDO en §4.17 antes de codificar, en `wip/…` y al ojo del owner: **K2** varias tartas (el
+   controlador deja de traducir `cake`) → **K3** la merienda (campo `choice` del evento, sin dinero: catálogo, panel, lista,
+   invitación F1b, hoja del parque, API minor). El owner (30-09): «respetando la config del panel»: todo lo nuevo, DATO del
+   panel y editable desde él. ⚠️ La merienda es sin dinero SOLO si todas cuestan lo mismo (`#807`); con suplemento, otra
+   tanda por el `CRITICAL_RE`. Después, la **R1·T** (punto 1).
 1. ▶▶ **LOS CORREOS (`specs/correos-rediseno.md`: §0 → §4.2 los textos; `#789`, `#800`→`#804`)**: ✅ R1a la plantilla y ✅
    R1b los iconos, en `main` y aprobadas (§4.1.2, §4.1.3). Lo siguiente es la **R1·T**; cada tanda con su «al detalle» MEDIDO
    en la spec antes de codificar, en `wip/…`, con su arnés y al ojo del owner en Mailpit (el banco,
@@ -69,7 +68,9 @@
 2. ⏸ **LA ANALÍTICA PARA DECIDIR (`#755`, `specs/analitica-para-decidir.md`), EN PAUSA tras la T4**: ❗ **defecto MÍO, medido
    por plataforma (29-09)**: `OccupancyReport::missing()` (y el `missing` de los totales) no cruza con `analytics_sessions`,
    así que cuenta robots (`webdriver`, las sondas) y personal, que el embudo y los experimentos excluyen; arreglarlo con su
-   mutación antes de retomar la analítica (su `sonda-demanda.mjs` borra lo suyo). En `main` y aprobadas
+   mutación antes de retomar la analítica (su `sonda-demanda.mjs` borra lo suyo). Y de la A1 de plataforma (`#853`): el
+   `password` de `CustomersReport::METHODS` ya es «con el formulario» (renombrarlo) y `user_logged_in` cuenta las vueltas de un
+   dispositivo recordado. En `main` y aprobadas
    T0→T4, con TP·1→TP·3b y T3d (arneses `SOLO=<tanda>` de `mutar-analitica-decidir.sh`; sondas y fixtures `ojo-tp2.php` y
    `ojo-tp3.php` en `storage/app/audit/`, `CARRIL-SPA` §8 (17) y (22)); ⏸ T3e sin fuente (`#799`); ✗ T5 (`#800`); la TP·3c
    va con los correos (C2). Al retomarla: T6 cohortes → T7 pérdidas → T8 satisfacción (§4.12); el cruce por EMPLEADO,
@@ -221,14 +222,8 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 
 ## Buzón
 
-- ❗ **Para plataforma (29-09, `#807` del owner) — la merienda sale de la reserva**: se elige en la lista, sin dinero; calcetines
-  y cono de chuches dejan el pack. Tuyo: (1) `isla/compra/PantallaCuandoFiesta.vue` pinta «¿Qué menú?» SIN condición (medido):
-  con el menú desenganchado saldría vacía (un `v-if` sobre `menus`); (2) la calculadora y la landing (brief, pieza 5 y 6: «incluye
-  calcetines… cono», «¿Qué menú?»). Mi K3 añade el tipo `choice` al contrato del catálogo (minor): te digo aquí su número.
-- ❗ **Para plataforma (29-09) — AVISO PREVIO, `routes/web.php`** (fuera del grupo de la fiesta): la R1b de los correos añade
-  UNA ruta junto al píxel de apertura, `GET /correo/i/{v}/{color}/{nombre}.png` (los iconos de los correos, teñidos al vuelo;
-  sin sesión ni cookies, como `emails.open`). Nada más del fichero cambia.
-
+- Mis avisos a plataforma del 29-09 (la ruta de los iconos de la R1b; `#807`, la merienda sale de la reserva y su `v-if` de la
+  isla): LEÍDOS por plataforma (su «Atendido», 29-09 noche); retirados. El número del contrato de mi K3, aquí cuando llegue.
 
 - Mis avisos a plataforma del 27→29-09 (`#754`/`#757`, la TP·1 `#792`, las C1→C3 `#794`→`#797`, la TP·3b `#793`, la T3d):
   ATENDIDOS por plataforma (su «Atendido», 29-09: «leídos y migrado»); retirados de aquí. El detalle, en el `git log`.
@@ -296,6 +291,8 @@ el repo de la instancia (lo nuevo), nunca a `main`.
   código `MIN_REVIEWS = 1` (`#494`): no la toco yo.
 
 ### Atendido
+- **Plataforma 29-09 noche** (la A1, `#853`/`#854`, contrato 1.55.0; tocó `RecordEmailSend`, `EmailTiming`, dos censos de correos
+  y `SidebarDomContractTest`): leído; la API de mi A4, en su §4.8; los dos avisos de la analítica, en «por dónde retomar» 2.
 - **Plataforma 29-09** (T6f `#843` y T6g: `.rays` y `--rayos*` fuera de `site.css`, `cajon.css` regenerado): leído; nada mío a medias.
 - **Plataforma 29-09, en la instancia** (`da0f84d`): declaró `hojas.correo` con `css/correo.css`, a petición mía; mi aviso,
   retirado. El `--correo-icono` de la R1b, empujado encima (`8fdbc84`).

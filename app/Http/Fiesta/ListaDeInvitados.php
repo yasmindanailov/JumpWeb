@@ -520,9 +520,10 @@ final class ListaDeInvitados
      * Los complementos de venta posterior (zona 4, `PliZona4`; F5 de la spec §4.11, `#749`), en TRES bloques según el
      * enganche: LA TARTA (la pregunta con foto: una opción por complemento y «Sin tarta», «Añadir otra tarta» si no llega
      * para los niños), PARA LOS PADRES (con «¿Cuántos adultos se quedan?» y una familia por `family`, cada una con su
-     * sugerencia) y la rejilla de siempre para los que no dicen bloque. Cada tarjeta con su plazo escrito y su estado.
+     * sugerencia) y los que no dicen bloque. Desde K1 (§4.17, `#806`/`#807`) la zona va en DOS: «Para los niños» (la tarta y
+     * esos, en grupos contados en niños) y «Para los adultos» (lo de los padres). Cada tarjeta con su plazo y su estado.
      *
-     * ⚠️ `indice` numera `addons[i]` en TODAS las tarjetas (padres y rejilla): la tarta no lleva `addons[i]`, viaja como
+     * ⚠️ `indice` numera `addons[i]` en TODAS las tarjetas (padres y niños): la tarta no lleva `addons[i]`, viaja como
      * `cake` y `cake_quantity` y el controlador la traduce a cantidades antes del reconciliador.
      *
      * @param  list<PostFormAddonView>  $addons
@@ -653,13 +654,28 @@ final class ListaDeInvitados
             ];
         }
 
-        $lista = array_map(fn (PostFormAddonView $a): array => $tarjeta($a, $a->serves === null ? '' : trans_choice('fiesta.lista.extras.para_personas', $a->serves, ['count' => $a->serves])), $sueltos);
+        // ── PARA LOS NIÑOS (K1 de §4.17, `#806`/`#807`): los que no dicen bloque, en GRUPOS —los de una misma familia juntos,
+        // en el sitio del primero; cada suelto, solo—, con su chapa contada en niños. Solo, a diferencia de los padres: dos
+        // «para 1» distintos (calcetines y cono) no se cubren el uno al otro, y `cubrir()` los mezclaría.
+        $grupos = [];
+        $deFamilia = [];
+        foreach ($sueltos as $a) {
+            $carta = $tarjeta($a, $a->serves === null ? '' : trans_choice('fiesta.lista.ninos.para', $a->serves, ['count' => $a->serves]));
+            if ($a->family === '') {
+                // «Uno para cada niño» (el `Tag` de los calcetines de la calculadora): un suelto «para 1» y abierto.
+                $grupos[] = ['titulo' => '', 'tarjetas' => [$carta], 'uno' => $a->serves === 1 && ! $carta['cerrado']];
+
+                continue;
+            }
+            $deFamilia[$a->family] ??= array_push($grupos, ['titulo' => $a->family, 'tarjetas' => [], 'uno' => false]) - 1;
+            $grupos[$deFamilia[$a->family]]['tarjetas'][] = $carta;
+        }
 
         return [
             'hay' => $addons !== [],
             'tarta' => $tarta,
             'padres' => $padres,
-            'lista' => $lista,
+            'ninos' => $tarta !== null || $grupos !== [] ? ['grupos' => $grupos, 'sois' => $sois] : null,
             'pie' => self::pie($tarta !== null && $tarta['abierta'] ? $plazoDe($tartas) : null, $padres !== null && $padres['abierto'] ? $plazoDe($deLosPadres) : null, $reservation),
             'total' => $total,
             'elegidos' => collect($addons)->filter(fn (PostFormAddonView $a): bool => $a->quantity > 0)->count(),

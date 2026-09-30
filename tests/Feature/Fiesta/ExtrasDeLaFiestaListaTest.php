@@ -96,7 +96,7 @@ class ExtrasDeLaFiestaListaTest extends TestCase
         $html = $this->pagina($r, $host);
         $z4 = $this->zona4($html);
 
-        $this->assertStringContainsString('Para los padres, mientras saltan', $z4);
+        $this->assertStringContainsString('<h3 class="pli-h3">Para los adultos</h3>', $z4);
         $this->assertStringContainsString('¿Cuántos adultos se quedan?', $z4);
         $this->assertStringContainsString('name="general[adultos]"', $z4, 'la pregunta de los adultos ES el campo general de tipo `adults`');
         $this->assertSame(1, substr_count($html, 'name="general[adultos]"'), 'y sale de los campos generales: se pregunta una vez');
@@ -197,12 +197,80 @@ class ExtrasDeLaFiestaListaTest extends TestCase
         $this->extra($this->tipo($r), 'Piñata', 1500, [], ['serves' => 4]);
 
         $z4 = $this->zona4($this->pagina($r, $host));
-        $this->assertStringContainsString('Para 4 personas', $z4, 'en la rejilla, «para cuántas» también se dice');
+        $this->assertStringContainsString('Para 4 niños', $z4, 'en «Para los niños», «para cuántos» se cuenta en niños (K1)');
         $this->assertStringNotContainsString(__('fiesta.pieza.hueco_foto'), $z4, '«Hueco de foto» es un marcador del diseño, no para un cliente');
 
         // CONTROL: con foto, su foto.
         $this->extra($this->tipo($r), 'Photocall', 2000, [], ['image' => 'productos/photocall.webp']);
         $this->assertStringContainsString('/uploads/productos/photocall.webp', $this->zona4($this->pagina($r, $host)));
+    }
+
+    public function test_the_zone_goes_in_two_blocks_kids_first_and_an_empty_block_is_not_painted(): void
+    {
+        // K1 de §4.17 (`[DECIDIDO owner]` `#806`/`#807`): «Para los niños» (la tarta y lo que no dice bloque) y «Para los
+        // adultos» (lo de los padres), en ese orden.
+        ['reservation' => $r, 'host' => $host] = $this->mountParty();
+        $this->extra($this->tipo($r), 'Tarta', 2500, ['postform_block' => ProductAddon::BLOCK_CAKE], ['serves' => 12]);
+        $calcetines = $this->extra($this->tipo($r), 'Calcetines', 200, ['max_qty' => 20], ['serves' => 1]);
+        $combo = $this->extra($this->tipo($r), 'Combo café', 3900, ['postform_block' => ProductAddon::BLOCK_ADULTS], ['serves' => 6, 'family' => ['es' => 'Combos']]);
+
+        $z4 = $this->zona4($this->pagina($r, $host));
+        $ninos = strpos($z4, '<h3 class="pli-h3">Para los niños</h3>');
+        $adultos = strpos($z4, '<h3 class="pli-h3">Para los adultos</h3>');
+        $this->assertNotFalse($ninos);
+        $this->assertNotFalse($adultos);
+        $this->assertLessThan($adultos, $ninos, 'los niños, primero');
+        $this->assertGreaterThan($ninos, strpos($z4, 'data-tarta '), 'la tarta es de los niños…');
+        $this->assertLessThan($adultos, strpos($z4, 'data-tarta '));
+        $this->assertGreaterThan($ninos, strpos($z4, 'value="'.$calcetines->id.'"'), '…y lo que no dice bloque también');
+        $this->assertLessThan($adultos, strpos($z4, 'value="'.$calcetines->id.'"'));
+        $this->assertGreaterThan($adultos, strpos($z4, 'value="'.$combo->id.'"'), 'lo de los padres, en los adultos');
+
+        // CONTROL: con solo lo de los padres, no hay bloque de los niños (ni su título); y al revés.
+        ['reservation' => $soloPadres, 'host' => $h2] = $this->mountParty();
+        $this->extra($this->tipo($soloPadres), 'Cubo de 6', 1600, ['postform_block' => ProductAddon::BLOCK_ADULTS], ['serves' => 6]);
+        $z4 = $this->zona4($this->pagina($soloPadres, $h2));
+        $this->assertStringNotContainsString('data-ninos', $z4);
+        $this->assertStringNotContainsString('Para los niños', $z4);
+        $this->assertStringContainsString('data-padres', $z4);
+
+        ['reservation' => $soloNinos, 'host' => $h3] = $this->mountParty();
+        $this->extra($this->tipo($soloNinos), 'Calcetines', 200, ['max_qty' => 20], ['serves' => 1]);
+        $z4 = $this->zona4($this->pagina($soloNinos, $h3));
+        $this->assertStringContainsString('data-ninos', $z4);
+        $this->assertStringNotContainsString('data-padres', $z4);
+        $this->assertStringNotContainsString('Para los adultos', $z4);
+    }
+
+    public function test_each_loose_kids_extra_is_its_own_group_counted_in_children(): void
+    {
+        // «Uno para cada niño» (K1): lo pinta `lista.js` con los niños de la fiesta; el servidor da el grupo, su chapa y lo que
+        // la sugerencia necesita. Dos «para 1» sueltos NO se cubren el uno al otro: cada uno, su grupo (y su sugerencia).
+        ['reservation' => $r, 'host' => $host] = $this->mountParty();
+        $r->forceFill(['quantity' => 14])->save();
+        $calcetines = $this->extra($this->tipo($r), 'Calcetines', 200, ['max_qty' => 20], ['serves' => 1]);
+        $this->extra($this->tipo($r), 'Cono de chuches', 150, ['max_qty' => 20], ['serves' => 1]);
+        $this->extra($this->tipo($r), 'Bolsa pequeña', 100, [], ['serves' => 1, 'family' => ['es' => 'Bolsas']]);
+        $this->extra($this->tipo($r), 'Bolsa grande', 180, [], ['serves' => 2, 'family' => ['es' => 'Bolsas']]);
+        $this->extra($this->tipo($r), 'Piñata', 1500, [], ['serves' => 4]);
+
+        $z4 = $this->zona4($this->pagina($r, $host));
+        $this->assertStringContainsString('data-ninos data-sois="14"', $z4, 'la cuenta de los niños, para sin JavaScript en el número');
+        $this->assertSame(4, substr_count($z4, 'data-familia>'), 'tres sueltos, cada uno solo, y una familia junta');
+        $this->assertSame(1, substr_count($z4, '<h4 class="pli-h4">Bolsas</h4>'), 'la familia lleva su título; los sueltos, no');
+        $this->assertSame(3, substr_count($z4, 'Para 1 niño<'), 'la chapa, en niños (calcetines, cono y la bolsa pequeña)');
+        $this->assertStringContainsString('Para 2 niños', $z4);
+        $this->assertMatchesRegularExpression('#data-serves="1"\s+data-max="20"\s+data-nombre="Calcetines"#', $z4, 'lo que `lista.js` necesita');
+        $this->assertStringContainsString('value="'.$calcetines->id.'"', $z4);
+        // Los dos sueltos «para 1», «Uno para cada niño» (el `Tag` de la calculadora, con la cifra); la familia, la sugerencia
+        // de siempre. Los dos, escondidos: los pinta el JS con lo que se teclea.
+        $this->assertSame(2, substr_count($z4, 'data-uno hidden'));
+        $this->assertSame(2, preg_match_all('#data-uno-boton(="data-uno-boton")? aria-pressed="false">Uno para cada niño<span class="pz-etiqueta__cuenta">14</span>#', $z4));
+        $this->assertSame(2, substr_count($z4, 'data-familia-sug hidden'), 'la familia (dos variantes) y la piñata «para 4» llevan la sugerencia de siempre');
+
+        // CONTROL: cerrado el plazo, «Uno para cada niño» no sale (no hay nada que poner).
+        DB::table('product_addons')->where('addon_id', $calcetines->id)->update(['postform_cutoff_hours' => 24 * 30]);
+        $this->assertSame(1, substr_count($this->zona4($this->pagina($r, $host)), 'data-uno hidden'));
     }
 
     // ── Montaje ─────────────────────────────────────────────────────────────────────────────────────

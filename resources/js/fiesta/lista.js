@@ -473,7 +473,9 @@ function lista(form) {
         return tarta && (tartaElegida() !== tartaInicial.v || (cantidadTarta?.value ?? '') !== tartaInicial.n) ? 1 : 0;
     }
     // Cuántos sois (el `sois` del diseño): el número elegido, o la lista si lo supera.
-    const sois = () => Math.max(campoNumero ? (parseInt(campoNumero.value, 10) || 0) : Number(tarta?.dataset.sois || 0), enLaLista().length);
+    // Sin el campo del número (cerrado), el que dio el servidor: en la tarta o, sin tarta, en «Para los niños» (K1).
+    const soisServidor = () => Number(tarta?.dataset.sois || q('[data-ninos]', form)?.dataset.sois || 0);
+    const sois = () => Math.max(campoNumero ? (parseInt(campoNumero.value, 10) || 0) : soisServidor(), enLaLista().length);
     const pintaTarta = () => {
         if (!tarta) return;
         const v = tartaElegida();
@@ -545,13 +547,32 @@ function lista(form) {
     // «Añadir otra tarta» ES el + de esa cantidad: la cifra de arriba sube a la vista.
     q('[data-tarta-otra]', form)?.addEventListener('click', () => { if (cajaCantidad) q('[data-cantidad-mas]', cajaCantidad)?.click(); });
 
-    // ── F5: LO DE LOS PADRES (`PliFamilia`): con los adultos puestos, la cuenta más barata de cada familia ──
+    // ── F5 y K1: LOS GRUPOS DE COMPLEMENTOS (`PliFamilia`): con la cuenta puesta, la más barata de cada grupo ──
+    // Los padres cuentan con «¿Cuántos adultos se quedan?»; los niños (K1 de §4.17, `#806`/`#807`), con los niños de la
+    // fiesta (`sois()`, la cuenta de la tarta). Un grupo de los niños con UN solo complemento «para 1» (los calcetines, el
+    // cono) lleva en su lugar «Uno para cada niño» (`[data-uno]`): el `Tag` de la calculadora, marcado si ya los cubre.
     const padres = q('[data-padres]', form);
+    const ninos = q('[data-ninos]', form);
     const campoAdultos = padres ? q('[data-adultos] [data-cantidad-campo]', padres) : null;
-    const pintaPadres = () => {
-        if (!padres) return;
-        const adultos = parseInt(campoAdultos?.value ?? '0', 10) || 0;
-        qa('[data-familia]', padres).forEach((fam) => {
+    const pintaUno = (fam, uno, cuantos) => {
+        const campo = q('[data-cantidad-campo]', fam);
+        const boton = q('[data-uno-boton]', uno);
+        const max = parseInt(campo?.getAttribute('max') || '0', 10) || 0;
+        // Con un tope que no llega a todos, «uno para cada niño» sería mentira: no sale.
+        uno.hidden = !campo || !boton || cuantos <= 0 || (max > 0 && max < cuantos);
+        if (uno.hidden) return;
+        const cifra = q('.pz-etiqueta__cuenta', boton);
+        if (cifra) cifra.textContent = String(cuantos);
+        const cubre = (parseInt(campo.value, 10) || 0) === cuantos;
+        boton.classList.toggle('pz-etiqueta--on', cubre);
+        boton.setAttribute('aria-pressed', cubre ? 'true' : 'false');
+        boton.cuantos = cuantos;
+    };
+    const pintaGrupos = (seccion, cuantos, clave) => {
+        if (!seccion) return;
+        qa('[data-familia]', seccion).forEach((fam) => {
+            const uno = q('[data-uno]', fam);
+            if (uno) { pintaUno(fam, uno, cuantos); return; }
             const sug = q('[data-familia-sug]', fam);
             const ok = q('[data-familia-ok]', fam);
             if (!sug || !ok) return;
@@ -562,32 +583,41 @@ function lista(form) {
             const pedido = (c) => { const campo = q('[data-cantidad-campo]', c); return campo ? (parseInt(campo.value, 10) || 0) : Number(c.dataset.pedido || 0); };
             const hay = tarjetas.reduce((suma, c) => suma + pedido(c) * Number(c.dataset.serves), 0);
             const abiertas = tarjetas.filter((c) => q('[data-cantidad-campo]', c));
-            if (adultos <= 0 || abiertas.length === 0) return;
-            if (hay >= adultos) {
-                q('[data-familia-ok-texto]', ok).textContent = choice(t('padres.cubierto', ''), adultos, { count: adultos });
+            if (cuantos <= 0 || abiertas.length === 0) return;
+            if (hay >= cuantos) {
+                q('[data-familia-ok-texto]', ok).textContent = choice(t(`${clave}.cubierto`, ''), cuantos, { count: cuantos });
                 ok.hidden = false;
                 return;
             }
             const vars = abiertas.map((c) => ({ c, para: Number(c.dataset.serves), precio: Number(c.dataset.precio || 0), max: Number(c.dataset.max || 0) }));
-            const cuenta = cubrir(vars, adultos);
+            const cuenta = cubrir(vars, cuantos);
             if (!cuenta) return;
             const partes = vars.map((v, i) => (cuenta.q[i] ? `${cuenta.q[i]} ${v.c.dataset.nombre || ''}` : '')).filter(Boolean);
             const lista = partes.length > 1 ? partes.slice(0, -1).join(', ') + t('numero.y', ' y ') + partes[partes.length - 1] : partes[0];
-            q('[data-familia-sug-texto]', sug).textContent = choice(t('padres.sugerencia', ''), adultos, { count: adultos, partes: lista, precio: euros(cuenta.coste) });
+            q('[data-familia-sug-texto]', sug).textContent = choice(t(`${clave}.sugerencia`, ''), cuantos, { count: cuantos, partes: lista, precio: euros(cuenta.coste) });
             const poner = q('[data-familia-poner-texto]', sug);
-            if (poner) poner.textContent = choice(t('padres.poner', ''), cuenta.uds);
+            if (poner) poner.textContent = choice(t(`${clave}.poner`, ''), cuenta.uds);
             sug.cuenta = vars.map((v, i) => [q('[data-cantidad-campo]', v.c), cuenta.q[i]]);
             sug.hidden = false;
         });
     };
-    // «Ponerlo(s)»: la cuenta propuesta pasa a las cantidades (nunca sola). Cada campo avisa como si se hubiera tocado.
-    padres?.addEventListener('click', (e) => {
+    const pintaPadres = () => pintaGrupos(padres, parseInt(campoAdultos?.value ?? '0', 10) || 0, 'padres');
+    const pintaNinos = () => pintaGrupos(ninos, sois(), 'ninos');
+    // «Ponerlo(s)» / «Uno para cada niño»: la cuenta propuesta pasa a las cantidades (nunca sola). Cada campo avisa como si se
+    // hubiera tocado.
+    [padres, ninos].forEach((seccion) => seccion?.addEventListener('click', (e) => {
+        const cadaUno = e.target.closest('[data-uno-boton]');
+        if (cadaUno) {
+            const campo = q('[data-cantidad-campo]', cadaUno.closest('[data-familia]'));
+            if (campo && cadaUno.cuantos > 0) { campo.value = String(cadaUno.cuantos); campo.dispatchEvent(new Event('input', { bubbles: true })); }
+            return;
+        }
         const boton = e.target.closest('[data-familia-poner]');
         const sug = boton?.closest('[data-familia-sug]');
         if (!sug || !sug.cuenta) return;
         sug.cuenta.forEach(([campo, n]) => { if (!campo) return; campo.value = String(n); campo.dispatchEvent(new Event('input', { bubbles: true })); });
-    });
-    pintaExtras = () => { pintaTarta(); pintaPadres(); };
+    }));
+    pintaExtras = () => { pintaTarta(); pintaNinos(); pintaPadres(); };
 
     // ── Personalizar la invitación: el panel, la nota de «se ven al guardar», el titular y LA VISTA PREVIA EN VIVO (F2) ──
     const pers = q('[data-pers]', form);

@@ -589,6 +589,10 @@ body.fiesta-lista { margin: 0; background: var(--bg-subtle); font-family: var(--
 .pli-tarta-fija{margin:0;font:600 var(--fs-body-sm)/1.4 var(--font-ui);color:var(--fiesta-tinta-900)}
 .pli-h3{margin:0;font:800 clamp(1.125rem,3.8vw,1.3rem)/1.15 var(--font-display);letter-spacing:-.015em;color:var(--fiesta-tinta-900)}
 .pli-h4{margin:0;font:700 var(--fs-body)/1.3 var(--font-ui);color:var(--fiesta-tinta-900)}
+.pli-ninos-g{display:grid;gap:16px;scroll-margin-top:16px}
+.pli-uno{margin:0;display:flex}
+.pli-grupos{display:grid;gap:16px 12px;align-items:start;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr))}
+.pli-grupos>.pli-fam--titulo{grid-column:1/-1}
 .pli-padres-g{display:grid;gap:16px;padding-top:18px;border-top:1px solid var(--border-subtle);scroll-margin-top:16px}
 .pli-padres-cab{display:grid;gap:4px}
 .pli-adultos{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px;padding:12px 14px;border-radius:var(--r-lg);background:var(--bg-subtle)}

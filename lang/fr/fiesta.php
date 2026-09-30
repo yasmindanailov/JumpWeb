@@ -161,7 +161,6 @@ return [
             'total' => ':x au total',
             'pasado' => 'Le délai est passé.',
             'que_lleva' => 'Ce qui est inclus',
-            'para_personas' => '{1} Pour 1 personne|[2,*] Pour :count personnes',
             'pie_tarta' => 'le gâteau, jusqu’à :cuando',
             'pie_padres' => 'ce qui est pour les parents, jusqu’à :cuando',
             'mismo_dia' => 'le jour même',
@@ -217,8 +216,8 @@ return [
             'err_otro' => 'La signature n’a pas pu être enregistrée. Réessayez.',
         ],
         'padres' => [
-            'titulo' => 'Pour les parents, pendant qu’ils sautent',
-            'sub' => 'Réservé aux adultes. Chacun indique pour combien de personnes.',
+            'titulo' => 'Pour les adultes',
+            'sub' => 'Chacun indique pour combien de personnes.',
             'adultos' => 'Combien d’adultes restent ?',
             'adultos_hint' => 'Facultatif : on vous dit combien commander.',
             'para' => '{1} Pour 1 adulte|[2,*] Pour :count adultes',
@@ -230,6 +229,14 @@ return [
             'linea' => 'Quelque chose pour les parents pendant qu’ils sautent ?',
             'ver' => 'Voir :familias',
             'ver_generico' => 'Voir ce qui est pour les parents',
+        ],
+        'ninos' => [
+            'titulo' => 'Pour les enfants',
+            'para' => '{1} Pour 1 enfant|[2,*] Pour :count enfants',
+            'uno_para_cada' => 'Un pour chaque enfant',
+            'sugerencia' => '{1} Pour 1 enfant : :partes, :precio.|[2,*] Pour les :count enfants : :partes, :precio.',
+            'poner' => '{1} L’ajouter|[2,*] Les ajouter',
+            'cubierto' => '{1} Couvre 1 enfant.|[2,*] Couvre les :count enfants.',
         ],
         'guardar' => [
             'guardado_el' => 'Enregistré :cuando',

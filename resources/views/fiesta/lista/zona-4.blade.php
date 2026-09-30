@@ -5,16 +5,22 @@
          (`#749`). Fuera de plazo, solo la elegida y «El plazo de la tarta pasó. Llámanos y lo vemos.».
        · PARA LOS PADRES: «¿Cuántos adultos se quedan?» (el campo general de tipo `adults`) y una familia por `family`, con
          su sugerencia debajo («Para 8 adultos: 1 Combo picoteo, 59 €» y «Ponerlo»), que nunca se pone sola.
-       · Los que no dicen bloque, en la rejilla de siempre.
+       · Los que no dicen bloque, en grupos (una familia junta; cada suelto, solo).
+     Desde K1 (§4.17, `[DECIDIDO owner]` `#806`/`#807`), en DOS: «Para los niños» (la tarta y los sueltos, con «Uno para cada
+     niño» contado con los niños de la fiesta) y «Para los adultos» (lo de los padres). Un bloque vacío no se pinta.
      Los ids viajan SIEMPRE, también en los cerrados. Sin JavaScript: radios y campos numéricos, un formulario completo. --}}
 @php
     $x = $m['extras'];
     $ta = $x['tarta'];
     $pa = $x['padres'];
+    $ni = $x['ninos'];
     $llamanos = ' <a href="tel:'.e($x['tel']).'">'.e(__('fiesta.lista.numero.llamanos')).'</a>'.e(__('fiesta.lista.numero.y_lo_vemos'));
 @endphp
 <section class="pli-zona" data-zona="4" aria-labelledby="pli-h-extras" data-extras>
     <h2 id="pli-h-extras" class="pli-h2">{{ __('fiesta.lista.extras.titular') }}</h2>
+    @if ($ni !== null)
+    <div class="pli-ninos-g" id="pli-extras-ninos" data-ninos data-sois="{{ $ni['sois'] }}">
+    <h3 class="pli-h3">{{ __('fiesta.lista.ninos.titulo') }}</h3>
     @if ($ta !== null)
         <div class="pli-tarta" id="pli-tarta" data-tarta data-tartas="{{ json_encode($ta['datos']) }}" data-sois="{{ $ta['sois'] }}" data-pista-plazo="{{ $ta['pista_plazo'] }}" data-pista-cambia="{{ $ta['pista_cambia'] }}" data-guardar-texto="{{ $ta['cuando'] !== '' ? __('fiesta.lista.tarta.guardar', ['cuando' => $ta['cuando']]) : '' }}" data-pronto="{{ $ta['pronto'] ? '1' : '0' }}">
             {{-- La tarta es el momento de la fiesta y el extra más alto: su foto, grande. Sin foto, sin marco. --}}
@@ -44,6 +50,17 @@
             @endif
         </div>
     @endif
+    {{-- Los sueltos, de dos en dos en escritorio como lo de los padres (cada uno con su «Uno para cada niño» debajo); una
+         familia con título ocupa la fila entera. --}}
+    @if ($ni['grupos'] !== [])
+    <div class="pli-grupos">
+    @foreach ($ni['grupos'] as $g)
+        @include('fiesta.lista.grupo-extras', ['g' => $g, 'x' => $x, 'sois' => $ni['sois']])
+    @endforeach
+    </div>
+    @endif
+    </div>
+    @endif
     @if ($pa !== null)
         <div class="pli-padres-g" id="pli-extras-padres" data-padres>
             <div class="pli-padres-cab">
@@ -57,24 +74,7 @@
                 </div>
             @endif
             @foreach ($pa['familias'] as $fam)
-                <div class="pli-fam" data-familia>
-                    @if ($fam['titulo'] !== '')<h4 class="pli-h4">{{ $fam['titulo'] }}</h4>@endif
-                    <div class="pli-grid2">
-                        @foreach ($fam['tarjetas'] as $e)
-                            @include('fiesta.lista.tarjeta-extra', ['e' => $e, 'x' => $x])
-                        @endforeach
-                    </div>
-                    {{-- El estado de la familia va DEBAJO de sus tarjetas: si cambia, nada de lo que se toca se mueve bajo el dedo. --}}
-                    <p class="pli-sug" data-familia-sug hidden><span data-familia-sug-texto></span><x-pieza.boton variant="quiet" size="sm" data-familia-poner><x-slot:izquierda><x-lucide name="plus" :size="16" /></x-slot:izquierda><span data-familia-poner-texto>{{ trans_choice('fiesta.lista.padres.poner', 1) }}</span></x-pieza.boton></p>
-                    <p class="pli-sug ok" data-familia-ok hidden><span class="pli-cubre"><x-lucide name="circle-check" :size="15" /><span data-familia-ok-texto></span></span></p>
-                </div>
-            @endforeach
-        </div>
-    @endif
-    @if ($x['lista'] !== [])
-        <div class="pli-grid2">
-            @foreach ($x['lista'] as $e)
-                @include('fiesta.lista.tarjeta-extra', ['e' => $e, 'x' => $x])
+                @include('fiesta.lista.grupo-extras', ['g' => $fam, 'x' => $x])
             @endforeach
         </div>
     @endif

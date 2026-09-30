@@ -170,7 +170,8 @@ return [
                 'nada_guardado' => ! $guardado,
                 'ver' => 'Ver combos y cubos',
             ],
-            'lista' => [],
+            // K1 de §4.17 (`#806`/`#807`): «Para los niños» lleva la tarta; el diseño no tiene sueltos, así que sin grupos.
+            'ninos' => ['grupos' => [], 'sois' => $RESERVA['reservados']],
             // El pie del diseño, tal cual (el producto compone el suyo con los plazos: «lo de los padres, hasta…»).
             'pie' => 'Se pagan el día de la fiesta, en el parque. La tarta, hasta el jueves 24; las bebidas y los combos, hasta el mismo día.',
             'total' => $guardado ? '83'.$NB.'€' : '', 'elegidos' => $guardado ? 3 : 0, 'alguno_abierto' => true,

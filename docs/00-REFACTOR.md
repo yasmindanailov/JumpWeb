@@ -109,7 +109,7 @@ programa «producto e instancias» separa el producto de sus instancias.
 - [x] **T5–T7 y el borde `§7.1·5`: la invitación digital, CERRADA** (`#701`→`#718`, spec §10.5–§10.18, ✅ del owner 20-09). ⚠️ **SIN DESPLEGAR**, con una migración (`order_items.eve_notice_at`).
 - [ ] La invitación: solo falta **desplegar** (T5–T7 + migración) y **encender** (dato del owner); los tres huecos del ✅, en el §0 de la spec.
 - [ ] ▶ **LA FIESTA DEL SISTEMA NUEVO** (`specs/fiesta-sistema-nuevo.md` ✅ `#743`): T0→T4 y F1→F9 ✅ (`#747`→`#753`) · la
-  lista del owner ✅ (`#805`, 29-09) · 🟦 los complementos en dos (`#806`·`#807`, §4.17: contestada; K1→K3 ⬜).
+  lista del owner ✅ (`#805`, 29-09) · 🟦 los complementos en dos (`#806`·`#807`, §4.17: K1 ✅; K2, K3 ⬜).
 - [ ] El OJO del owner en un teléfono de verdad · el cuaderno de entrega del cajón · el botón del sistema.
 
 ### El PANEL: la exención del menor y el ROL DE PUERTA ✅ código — `#320`

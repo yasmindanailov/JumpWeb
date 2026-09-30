@@ -161,7 +161,6 @@ return [
             'total' => ':x in total',
             'pasado' => 'The deadline has passed.',
             'que_lleva' => 'What’s included',
-            'para_personas' => '{1} For 1 person|[2,*] For :count people',
             'pie_tarta' => 'the cake, until :cuando',
             'pie_padres' => 'the parents’ extras, until :cuando',
             'mismo_dia' => 'the same day',
@@ -217,8 +216,8 @@ return [
             'err_otro' => 'It could not be signed. Please try again.',
         ],
         'padres' => [
-            'titulo' => 'For the parents, while they jump',
-            'sub' => 'Adults only. Each one says how many it serves.',
+            'titulo' => 'For the adults',
+            'sub' => 'Each one says how many it serves.',
             'adultos' => 'How many adults are staying?',
             'adultos_hint' => 'Optional: we’ll tell you how much to order.',
             'para' => '{1} For 1 adult|[2,*] For :count adults',
@@ -230,6 +229,14 @@ return [
             'linea' => 'Something for the parents while they jump?',
             'ver' => 'See :familias',
             'ver_generico' => 'See the parents’ extras',
+        ],
+        'ninos' => [
+            'titulo' => 'For the children',
+            'para' => '{1} For 1 child|[2,*] For :count children',
+            'uno_para_cada' => 'One for each child',
+            'sugerencia' => '{1} For 1 child: :partes, :precio.|[2,*] For all :count children: :partes, :precio.',
+            'poner' => '{1} Add it|[2,*] Add them',
+            'cubierto' => '{1} Covers 1 child.|[2,*] Covers all :count children.',
         ],
         'guardar' => [
             'guardado_el' => 'Saved :cuando',

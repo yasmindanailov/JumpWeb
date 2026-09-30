@@ -353,6 +353,11 @@ de sus 53 titulares entre los seis tramos de Google y las de sus 81 menores (`OJ
 `ojo-tp3-antes.json`. Para verlo, «Últimos 90 días». `OJO=desmontar` devuelve las fechas: ⚠️ **desmontar este ANTES que el
 de la TP·2**. La sonda: `sonda-tp3-panel.mjs`, con los `ESPERADO_*` de tinker (spec §4.14).
 
+(23) **De K1 de los complementos (29-09, `#807`)**: `ojo-k1.php` (en la carpeta de auditoría) va ENCIMA de `ojo-f5.php`: en el
+pack 105, los calcetines (110) pasan a `postform` (tope 20, plazo 0 h, «para 1») y un «Cono de chuches» NUEVO de prueba
+(1,50 €); y la fiesta `JW-OJO-K1` (reserva 11225, 14 niños, el 04-10). Lo de antes, en `ojo-k1-antes.json`. `OJO=desmontar`
+lo deja como estaba: ⚠️ **desmontar este ANTES que el de F5**. La sonda: `sonda-k1.mjs "<url>"`.
+
 ## 9 · La foto vieja del carril (mudada VERBATIM de `carriles/spa.md` el 2026-09-29, su techo)
 
 - ✅ **27-09, TODO EN `main` Y APROBADO POR EL OWNER**: **F7** (`#752`, la exención de quien cumple: la lista y su
