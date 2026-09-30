@@ -368,6 +368,12 @@ DESENGANCHADO, las tartas sin bloque en «Tartas», calcetines y cono en la list
 invitación ENCENDIDA— y la fiesta `JW-OJO-CFG` (reserva 11236, 14 niños, el 06-10). Lo de antes, en `ojo-config-antes.json`.
 `OJO=desmontar` lo deja como estaba: ⚠️ **desmontar este el PRIMERO**. La sonda: `sonda-config.mjs "<lista>" "<invitación>"`.
 
+(26) **De la R1·T (30-09, `#802`)**: la migración `mail_texts` APLICADA en local y el permiso `emails.edit_texts` sembrado;
+`ojo-r1t.php` (en la carpeta de auditoría) crea el rol `ojo-correos` (solo `emails.edit_texts` y `settings.manage`) y su empleado
+`ojo-correos@jumpweb.test` / `ojo-correos-2026` (con `staff` para poder entrar al panel, sin authenticator). `OJO=desmontar`
+borra el rol y el empleado; los textos que se guarden en `mail_texts` se quedan (volver al de fábrica los borra). La sonda:
+`sonda-r1t.mjs` (deja la tabla como la encontró).
+
 ## 9 · La foto vieja del carril (mudada VERBATIM de `carriles/spa.md` el 2026-09-29, su techo)
 
 - ✅ **27-09, TODO EN `main` Y APROBADO POR EL OWNER**: **F7** (`#752`, la exención de quien cumple: la lista y su
@@ -487,6 +493,25 @@ De «por dónde retomar», mudado VERBATIM el 2026-09-30 al empezar la R1·T (el
    (`#781`). Para el ojo: `JW-OJO-F8`, `F7`, `F5`, `F3`, `F1`. **Reglas en pie**: el suelo sin JavaScript · `#739` · la
    firma y su prueba (`waiver-probatorio.md` §4.4) · hoja en blanco (§7.2·R1) · `#706`. Sueltos de la analítica de
    antes: **T5c** cuando el owner nombre la hipótesis (`#738`) · el `EXPLAIN` con volumen en staging.
+
+- Mudados VERBATIM del buzón de `carriles/spa.md` el 2026-09-30 (su techo): los dos avisos al carril de CORREOS, que desde
+  `#789` son de este carril:
+
+### ❗ Para el carril de CORREOS (emisor: SPA, 29-09) — AVISO PREVIO: la R1a del rediseño cambia TU molde (`#789`, `#800`)
+- `correos-rediseno.md` §4.1.1: `BrandedMailMessage` deja el Markdown y pinta con vistas propias (documento + bloques del
+  diseño, oscuro por clase, roles de la hoja `hojas.correo` de la instancia); `vendor/mail/**`, `themes/brand.css` y el
+  layout se retiran cuando los 28 pasen; `MailThemeTest` se reescribe por las MISMAS propiedades; `emails/partials/book` y
+  `product-card` ganan clases de rol. Los verbos del molde (`hero`, `line`, `notice`, `outro`, `action`) no cambian. En
+  `wip/correos-r1a` hasta el ojo del owner. Si algo tuyo está a medias ahí, dímelo aquí antes. Y `#803` (owner, 29-09)
+  sustituye tu mapa del naranja en los correos: el principal de cada correo va en el color de acción, como el diseño.
+
+### ❗ Para el carril de CORREOS (emisor: SPA, 19→26-09; pendiente de tu «atendido»)
+- ▶ **Correos nuevos sobre tu molde, SIN tocarlo, todos en tus censos**: `VisitEveNotice` (`#717`),
+  `GoogleBusinessLocationChanged` (`#725`), `AnalyticsLinkNotice` (T3a·4; el owner lo vio en Mailpit el 24-09), el del
+  día siguiente de las encuestas (T7) y, **el 26-09, `BirthdayComingNotice`** («El cumple se acerca», `#750`: comercial,
+  con la baja al pie y en `List-Unsubscribe`; `EmailUtmTest` 27 → 28; el asunto pasa sus datos en línea, como pide
+  `MailInboxLineTest`). Te queda tu OJO en Gmail/Outlook. Tocado `GuestFormRequest` (solo con invitación). El diseño del
+  24-09 trae **quince correos** rehechos (`paginas/correos.card.html` de la instancia): tuyos cuando llegue su tanda.
 
 ## Anexo · La fila del enrutador, mudada el 2026-09-16
 

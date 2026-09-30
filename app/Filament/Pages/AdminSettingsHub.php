@@ -147,6 +147,8 @@ class AdminSettingsHub extends Page
                 ['key' => 'surveys', 'class' => SurveyResource::class],
                 // Los correos enviados a los clientes (`specs/correos-salientes.md`, `#794`): también desde «Clientes» y la ficha.
                 ['key' => 'email_sends', 'class' => EmailSendResource::class],
+                // Lo que DICEN esos correos (R1·T de `specs/correos-rediseno.md`, `#802`): sus textos, editables con su vista previa.
+                ['key' => 'email_texts', 'class' => EmailTexts::class],
                 // `#320`: la PUERTA, y esta tarjeta es el ESPEJO EXACTO del ítem de menú. Al admin se
                 // le retiró del menú (`[DECIDIDO owner]`: no atiende por ahí, atiende por el buscador)
                 // y aparece aquí; a quien sí lo tiene en el menú —el empleado— no se le repite, o

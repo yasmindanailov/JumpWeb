@@ -235,10 +235,15 @@ Acciones: **«Marcar preparada»** y **«Marcar canjeada»**.
     la web mediante el theme de mail heredado
     (`resources/views/vendor/mail/html/themes/brand.css` — renombrado en Fase 1;
     su renombrado está previsto en `00-REFACTOR.md` Fase 1, junto con
-    `config('mail.markdown.theme')`). La personalización de emails desde el panel se acota a
-    **SOLO COLORES** (paleta primaria/acento); los textos de cada plantilla viven en
-    `lang/*/emails.php` (editarlos desde panel introduce riesgo legal/UX). Logo y datos del
-    negocio salen de la configuración general (`settings`), que alimenta web y emails.
+    `config('mail.markdown.theme')`). Logo y datos del negocio salen de la configuración general
+    (`settings`), que alimenta web y emails.
+  - **Textos de los correos** (Ajustes → Sistema, junto a «Correos enviados»; permiso propio
+    `emails.edit_texts`, de gestión y no del staff por defecto; `[DECIDIDO owner]` `#802`, que
+    SUSTITUYE el «solo colores» heredado): lo que dice cada correo al cliente, bloque a bloque y en
+    es/en/fr, con el texto de fábrica y sus `{variables}` debajo, «Volver al de fábrica», la vista
+    previa del correo DE VERDAD (último caso real, claro/oscuro, inerte) y el rastro. La estructura,
+    lo legal y los datos NO se editan; las variables de cada texto son obligatorias. Guardar es todo o
+    nada (`specs/correos-rediseno.md` §4.2.2).
 - **Textos legales** (aviso, privacidad, cookies, condiciones, waiver).
 - **Informes y exportaciones** (ventas, asistencia, reservas).
 

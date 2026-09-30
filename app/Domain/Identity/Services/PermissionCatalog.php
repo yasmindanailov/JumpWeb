@@ -74,6 +74,8 @@ final class PermissionCatalog
             'analytics.manage',
             // Ver los correos enviados a los clientes, tal cual salieron (`#794`): datos de una persona, a veces de un menor.
             'emails.view',
+            // Editar los textos de los correos (R1·T, `#802`): cambian lo que reciben todos los clientes; se re-exige al guardar.
+            'emails.edit_texts',
         ],
         // Sistema (incluye el admin-exclusivo `access.manage`, mostrado pero no asignable).
         'sistema' => [

@@ -97,8 +97,8 @@ programa «producto e instancias» separa el producto de sus instancias.
 ### CORREOS 🟦 — `specs/correos-desde-canvas.md` §0 (`#500`→`#508`)
 - [x] El carril entero: 25 correos, molde, remitente, modo oscuro, bandeja, fiesta mixta y los dos del framework.
 - [ ] Los cuatro ámbar (§16) y el OJO del owner en Gmail y Outlook.
-- [ ] ▶ El REDISEÑO (`specs/correos-rediseno.md`, `#800`→`#804`): ✅ R1a la plantilla y R1b iconos (29-09) · R1·T textos
-  editables · R1c · reserva · comerciales.
+- [ ] ▶ El REDISEÑO (`specs/correos-rediseno.md`, `#800`→`#804`): ✅ R1a la plantilla y R1b iconos (29-09) · 🟦 R1·T textos
+  editables (construida en `wip/correos-r1t` el 30-09, al visto bueno del owner) · R1c · reserva · comerciales.
 
 ### EL CAJÓN · FASE 4 DEL DISEÑO 🟦 — `carriles/spa.md` (`#550`→`#572`, el otro ordenador)
 - [x] Las 25 pantallas construidas (`#550`→`#568`) · T1 y T2 de `specs/celebracion-e-invitacion.md` (`#570`, `#571`).

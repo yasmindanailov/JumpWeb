@@ -1,6 +1,7 @@
 <?php
 
 use App\Domain\Booking\BookingServiceProvider;
+use App\Domain\Content\ContentServiceProvider;
 use App\Domain\Payments\PaymentsServiceProvider;
 use App\Providers\ApiServiceProvider;
 use App\Providers\AppServiceProvider;
@@ -17,4 +18,6 @@ return [
     // `app/Support`. Se añadirán Platform, Content e Identity cuando tengan contrato propio.
     BookingServiceProvider::class,
     PaymentsServiceProvider::class,
+    // Content (R1·T de los correos, `#802`): los textos de correo del parque, superpuestos al traductor.
+    ContentServiceProvider::class,
 ];

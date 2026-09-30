@@ -755,6 +755,16 @@ registro sobrevive a la reseña que lo causó.
 ▶ **`RGPD-01`**: una petición de supresión de un cliente se comprueba también contra las reseñas, y
 el procedimiento es éste.
 
+### `mail_texts` (MailText) — lo que el parque escribió en los correos · `#802` (R1·T)
+
+`specs/correos-rediseno.md` §4.2.2. Una fila por texto de correo CAMBIADO desde el panel («Textos de los correos»): `key`
+(la clave entera del traductor, `emails.order_confirmation.intro`) · `locale` · `text` (con sus variables entre llaves,
+`{code}`) · `updated_by` FK `users` **nullOnDelete** · timestamps. **UNIQUE `(key, locale)`**. **Sin fila = el texto de fábrica**
+del producto (`lang/*/…`): volver al de fábrica, o guardar uno igual, BORRA la fila. Único escritor `Content\Services\MailTexts`
+(`guardar`/`restaurar`, con rastro `emails.text_updated`/`emails.text_restored`: el texto no es de una persona); la lee
+`MailTextLoader`, que la superpone al traductor solo si la clave es editable (`MailTextCatalog`), su texto de fábrica existe en
+ese idioma y sus variables son las de hoy. Caché por versión (`mail_texts.version`).
+
 ### `settings` — clave-valor white-label (Setting)
 `key` unique · `value` text · `group` (default `general`). Lectura vía
 `Setting::value($key, $default)` con **memo estático por petición** (invalidar con

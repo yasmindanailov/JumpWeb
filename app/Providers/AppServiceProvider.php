@@ -32,6 +32,7 @@ use App\Domain\Content\Models\GoogleBusinessReview;
 use App\Domain\Content\Models\GoogleBusinessReviewSummary;
 use App\Domain\Content\Models\GoogleBusinessReviewSuppression;
 use App\Domain\Content\Models\LandingService;
+use App\Domain\Content\Models\MailText;
 use App\Domain\Content\Models\Page;
 use App\Domain\Content\Models\Testimonial;
 use App\Domain\Content\Models\VenueRule;
@@ -362,6 +363,8 @@ class AppServiceProvider extends ServiceProvider
             // en vez de un nombre de clase que se rompe al mover el fichero de sitio.
             'invitation_reply' => InvitationReply::class,
             'landing_service' => LandingService::class,
+            // Los textos de los correos del parque (R1·T, `#802`): el rastro guarda `mail_text`, no un nombre de clase.
+            'mail_text' => MailText::class,
             'legal_document_version' => LegalDocumentVersion::class,
             // Los códigos de un solo uso (`#853`, `specs/acceso-con-codigo.md`): sin relaciones polimórficas, pero todo
             // modelo lleva alias.

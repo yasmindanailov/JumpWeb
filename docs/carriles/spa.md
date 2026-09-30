@@ -7,14 +7,14 @@
 > **`fiesta-sistema-nuevo.md` §4.17** (lo siguiente, `#806`) · `correos-rediseno.md` §0 (`#800`→`#804`; la R1·T) ·
 > `analitica-para-decidir.md` §0 (en pausa, `#755`) · `encuestas.md` §0 y §4.7 (`#754`) · `analitica.md` §0 y §4.5 ·
 > `isla-y-landing-nueva.md` §4.11 · `celebracion-e-invitacion.md` §0 · `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 ·
-> `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-09-30, 10:50 (la R1·T de los correos, medida y
-> reclamada: su «al detalle» en `correos-rediseno.md` §4.2.1; aviso previo a plataforma en el buzón).
+> `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-09-30, 13:25 (la R1·T de los correos, CONSTRUIDA
+> y verde en `wip/correos-r1t`: lo construido en `correos-rediseno.md` §4.2.2; falta el visto bueno del owner para `main`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`). El
 > contador de la suite va en el trailer del commit (`#618`), no aquí. **Se muda, no se raspa**: el detalle de
 > una feature baja a su spec (las trampas por tanda de la analítica T1→T5 viven en `analitica.md` §4.9,
 > mudadas verbatim el 24-09; las de la ficha de Google en su §9.1; las de la invitación en su §10.20).
 
-## Foto (2026-09-30, 09:50)
+## Foto (2026-09-30, 13:25)
 
 - ✅ **LA LISTA DE INVITADOS DEL OWNER, EN `main` Y APROBADA** (`#805`, del `#847`; `fiesta-sistema-nuevo.md` §4.16; «vale,
   visto bueno»): todos confirmados, sin firmas de los invitados (el descargo de quien cumple, sí), sin cifras ni recordatorio
@@ -23,7 +23,9 @@
   «Uno para cada niño»; arnés 10/10) y **K2** (varias tartas, «Sin tarta» en casilla; arnés 16/16; el owner: «Quedarme con K2»).
   **K3, la merienda, SIN CÓDIGO** (`#808`): complementos a 0 € en la familia «Merienda», probado solo configurando en el pack 106
   (`JW-OJO-CFG`, `CARRIL-SPA` §8 (25)). ▶ La regla del owner, en adelante: no se programa lo que el panel ya configura.
-- ✅ R1a y R1b de los correos, en `main` y aprobadas (29-09): su foto, mudada verbatim a `CARRIL-SPA.md` §9.
+- ✅ R1a y R1b de los correos, en `main` y aprobadas (29-09): su foto, mudada verbatim a `CARRIL-SPA.md` §9. 🟦 **La R1·T
+  (los textos editables, `#802`), construida y verde en `wip/correos-r1t` (30-09)**: el owner vio las capturas («buen
+  trabajo»); falta su visto bueno para pasarla a `main` (`correos-rediseno.md` §4.2.2; «por dónde retomar» 1).
 - Los correos: sus cuatro decisiones del owner (`#800`→`#804`), mudadas verbatim a `CARRIL-SPA.md` §9 (30-09).
 - ⏸ **LA ANALÍTICA PARA DECIDIR, en pausa tras la T4** (`#755`): su foto por tanda, mudada verbatim a `CARRIL-SPA.md` §9
   (29-09); lo que queda, en «por dónde retomar» 2. ⚠️ La ficha del cliente en `zh_CN` pinta el parentesco de sus menores como
@@ -47,14 +49,16 @@
    **Antes de proponer código en cualquier tanda, medir si el panel ya lo configura** (montaje y sonda en la local); si algo
    ya existía, parar y decírselo al owner (`#808`).
 1. ▶▶▶ **LOS CORREOS (`specs/correos-rediseno.md`: §0 → §4.2 los textos; `#789`, `#800`→`#804`)**: ✅ R1a y R1b en `main`.
-   🟦 **R1·T EN CURSO** (30-09, el owner: «procede, hazlo profesional»): su «al detalle», MEDIDO, en §4.2.1 (nada configurable
-   hoy: es código); en `wip/correos-r1t`. Cada tanda con su «al detalle» MEDIDO
+   🟦 **R1·T CONSTRUIDA Y VERDE, EN `wip/correos-r1t` (empujada como rama; NO en `main`)** (30-09, el owner: «procede, hazlo
+   profesional»): medida en §4.2.1, lo construido en §4.2.2 (arnés `mutar-correo-r1t.sh` 48/48, sonda `sonda-r1t.mjs`,
+   fixture `ojo-r1t.php` en `CARRIL-SPA` §8 (26)). El owner vio las capturas en el móvil (13:20) y dijo «buen trabajo»,
+   sin «visto bueno» explícito. ▶ **Lo primero**: pedirle el visto bueno (o que lo mire en `localhost:8081/admin` → Ajustes →
+   Textos de los correos); con él, `git rebase origin/main`, re-medir la suite SOBRE el árbol rebasado, *fast-forward* de
+   `main`, trailer con la cifra del gate y push. Pendiente de su ojo, ofrecido: «Primer párrafo» se parte en dos líneas a 390
+   (la chapa y el botón en su fila; es la maqueta de Filament). Cada tanda con su «al detalle» MEDIDO
    en la spec antes de codificar, en `wip/…`, con su arnés y al ojo del owner en Mailpit (el banco,
    `php scripts/banco-correos.php [filtro]`, y la sonda de la carpeta de auditoría, `sonda-correos-r1a.mjs N`):
-   **R1·T** los textos editables (`#802`: por correo, bloque e idioma; variables declaradas por correo y
-   rechazadas al guardar si no existen; sin HTML salvo negrita y enlace; vista previa con datos de ejemplo —la de
-   `correos-salientes.md` C1—; rastro; permiso propio; es/en/fr con «sin traducir»; NO editables lo legal, los datos ni los
-   hechos que cambian) · **R1c** los 27 correos a la plantilla → **R2** la reserva (1, 1b, 2, 3, 4, 5, 6: el QR dentro, el
+   **R1c** los 27 correos a la plantilla → **R2** la reserva (1, 1b, 2, 3, 4, 5, 6: el QR dentro, el
    calendario, «Cómo llegar», WhatsApp, responder al parque) → **R3** el 2b → **C1** los comerciales (11, el 12 ampliado,
    13a/b, 6b: consentimiento, «una vez», la baja LSSI) → **C2** las felicitaciones (TP·3c; el copy, con el owner) → **C3** las
    ocasiones. El 7: la encuesta y Google en su página de gracias; sin encuesta activa, solo la reseña (`#801`). Los grupos
@@ -106,6 +110,10 @@ y lo nuevo (T1a→T4): `app/Http/Fiesta/` (los modelos de página, `Temas`, `Mar
 `BrandedMailMessage`, `EmailIconController` y su ruta `correo.icono`, `resources/views/correo/**`, `emails/partials/{book,
 product-card}`, `resources/correo/iconos/`, `scripts/{correo-mascaras.mjs,banco-correos.php,mutar-correo-r1a.sh,
 mutar-correo-r1b.sh}`, `tests/Feature/Mail/Mail*Test`, `tests/Feature/MailThemeTest`; la hoja `css/correo.css`, en el repo de la instancia.
+**La R1·T (`#802`)**: el módulo `app/Domain/Content/` (`ContentServiceProvider`, `Models/MailText`, `Services/MailText*`),
+`Notifications/Support/{MailTextCatalog,MailPreviews}.php`, `Filament/Pages/EmailTexts.php` y su vista, la migración
+`create_mail_texts_table`, el bloque `mail_texts.*` de `lang/{es,zh_CN}/admin.php`, `EmailTextsPageTest`,
+`scripts/mutar-correo-r1t.sh`.
 **La analítica entera desde `#735`**: `app/Domain/Platform/Models/Analytics*`, `app/Domain/Platform/Services/
 Analytics/**` (T1 de plataforma incluida: `Contract`, `Recorder`, `EventIngestor`, `AttributionContext`,
 `SessionResolver`, `EmailUtm`, `RouteNormalizer`, y desde la T6 `PartyFacts`), los tres observadores
@@ -216,7 +224,9 @@ el repo de la instancia (lo nuevo), nunca a `main`.
   permiso nuevo `emails.edit_texts` (`PermissionCatalog`/`PermissionSeeder`, grupo gestión), una tarjeta en tu hub (Sistema,
   junto a «Correos enviados»), `ContentServiceProvider` en `bootstrap/providers.php` (envuelve `translation.loader` para
   superponer los textos de correo guardados en `mail_texts`), su alias de morfo y claves nuevas `mail_texts.*` en `admin.php`.
-  Ningún texto cambia sin fila en la tabla; nada tuyo de `lang/` se toca.
+  Ningún texto cambia sin fila en la tabla; nada tuyo de `lang/` se toca. ▶ **Construida (30-09)**: además, tres acciones en
+  `AuditLog` (`emails.text_*`), la cifra de `docs/README.md` (60 modelos · 160 migraciones: al fusionar, se re-cuenta) y
+  `AdminNavigationTest` 27 → 28 tarjetas. Y visto de paso, TUYO: `PngWithLogo` avisa de `imagedestroy()` obsoleto (PHP 8.5).
 - ❗ **Para plataforma (30-09) — un rojo que no era de nadie, arreglado en su PRUEBA**: `ManualOrderIgnoresMinAdvanceTest::
   test_the_panel_offers_those_days_in_its_calendar` caía cada ÚLTIMO día de mes (el calendario del panel abre en el primer mes
   con oferta y «mañana» es del siguiente; medido hoy también en `main` sin nada mío). La prueba pasa de mes con `goToMonth`,
@@ -257,21 +267,8 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 - ✅ **Tu medida del `--warn-100` de `fiesta.css` (27-09)**: era `#fff0cf`, el de PlayJump; arreglado, y
   `PaletaNeutraTest` lee ya las familias de ESTADO y las tripletas `r, g, b` (visto fallar con cada una).
 
-### ❗ Para el carril de CORREOS (emisor: SPA, 29-09) — AVISO PREVIO: la R1a del rediseño cambia TU molde (`#789`, `#800`)
-- `correos-rediseno.md` §4.1.1: `BrandedMailMessage` deja el Markdown y pinta con vistas propias (documento + bloques del
-  diseño, oscuro por clase, roles de la hoja `hojas.correo` de la instancia); `vendor/mail/**`, `themes/brand.css` y el
-  layout se retiran cuando los 28 pasen; `MailThemeTest` se reescribe por las MISMAS propiedades; `emails/partials/book` y
-  `product-card` ganan clases de rol. Los verbos del molde (`hero`, `line`, `notice`, `outro`, `action`) no cambian. En
-  `wip/correos-r1a` hasta el ojo del owner. Si algo tuyo está a medias ahí, dímelo aquí antes. Y `#803` (owner, 29-09)
-  sustituye tu mapa del naranja en los correos: el principal de cada correo va en el color de acción, como el diseño.
-
-### ❗ Para el carril de CORREOS (emisor: SPA, 19→26-09; pendiente de tu «atendido»)
-- ▶ **Correos nuevos sobre tu molde, SIN tocarlo, todos en tus censos**: `VisitEveNotice` (`#717`),
-  `GoogleBusinessLocationChanged` (`#725`), `AnalyticsLinkNotice` (T3a·4; el owner lo vio en Mailpit el 24-09), el del
-  día siguiente de las encuestas (T7) y, **el 26-09, `BirthdayComingNotice`** («El cumple se acerca», `#750`: comercial,
-  con la baja al pie y en `List-Unsubscribe`; `EmailUtmTest` 27 → 28; el asunto pasa sus datos en línea, como pide
-  `MailInboxLineTest`). Te queda tu OJO en Gmail/Outlook. Tocado `GuestFormRequest` (solo con invitación). El diseño del
-  24-09 trae **quince correos** rehechos (`paginas/correos.card.html` de la instancia): tuyos cuando llegue su tanda.
+- Los dos avisos al carril de CORREOS (29-09 y 19→26-09; hoy los correos son de este carril, `#789`): mudados verbatim a
+  `CARRIL-SPA.md` §9 (30-09).
 
 ### ❗❗ Para el carril de la WEB (emisor: SPA, 24-09) — LA T3 DE LA ANALÍTICA tocó lo tuyo
 - **La T3 entera está en `main` (24-09)** y tocó lo tuyo; el detalle por tanda, en `analitica.md` §4.3 y §4.9.

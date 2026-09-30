@@ -115,6 +115,9 @@ class PermissionSeeder extends Seeder
         // Los correos salientes (`specs/correos-salientes.md`, `#794`): ver qué recibió cada cliente, TAL CUAL (a veces el
         // nombre de un menor). Leer un correo es leer datos de una persona: permiso propio, fuera del staff por defecto.
         'emails.view' => 'Ver los correos enviados a los clientes',
+        // Los textos de los correos (R1·T de `specs/correos-rediseno.md`, `#802`): cambiar lo que dicen TODOS los correos, con su
+        // vista previa sobre el último caso real. Permiso propio, fuera del staff por defecto.
+        'emails.edit_texts' => 'Editar los textos de los correos',
         'audit.view' => 'Ver registro de auditoría',
     ];
 

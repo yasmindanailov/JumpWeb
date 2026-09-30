@@ -210,6 +210,11 @@ class AuditLog extends Model
         'emails.previewed',
         // Y cada vez que se mira CUÁNDO lo abrió y lo pulsó (`#796`, la línea de tiempo): qué envío, sin las horas.
         'emails.activity_viewed',
+        // Los textos de los correos del parque (R1·T, `#802`): cada cambio con su antes y su después (el copy del parque, no
+        // datos de una persona), cada vuelta al de fábrica, y cada vista previa (qué correo e idioma, sin su contenido).
+        'emails.text_updated',
+        'emails.text_restored',
+        'emails.text_previewed',
 
         // ── Incidencias de cobro (llegan por CONSTANTE, no por literal) ────────────────────
         self::ACTION_DUPLICATE_CAPTURE,
