@@ -5,9 +5,9 @@
  * `node --test`; lo que pide y lo que guarda, en `useAjustesCuenta.js`.
  *
  * Lo que decide la verdad y no el diseño (`#630`, `#773`·d):
- *   · **«Crear una contraseña» no se distingue de «Cambiarla»**: el servidor no sabe si una cuenta nacida con Google
- *     tiene contraseña propia (`DEUDA.md`, la de `password_set_at`). Una sola fila, y dentro, el enlace para crearla.
- *   · **Cambiar el correo, cerrar las otras sesiones, desvincular Google y borrar la cuenta piden la contraseña actual.**
+ *   · **Cambiar el correo, cerrar las otras sesiones, desvincular Google y borrar la cuenta se confirman con un código al
+ *     correo** (A3b del acceso con código, `#857`; antes, la contraseña actual). Y la contraseña ya no se cambia aquí:
+ *     en la isla nadie entra con ella (`#848`).
  *   · **Con una reserva por celebrar, la cuenta no se borra** (`AccountPrivacy::anonymize`, `#284`): se dice, y el botón
  *     no se ofrece —uno que solo puede fallar es la familia de `#117`—.
  *   · **«Descargar mis datos» descarga** (`GET /me/export`): su aviso es «descargado», no «te los enviamos».
@@ -87,16 +87,33 @@ export function correoDe(user, { textos, ahora }) {
     };
 }
 
-/** El correo nuevo, antes de preguntar: que tenga forma de correo y que no sea el de ahora. */
-export function revisarCorreo({ correo, clave }, { actual, textos }) {
+/**
+ * El correo nuevo, antes de preguntar: que tenga forma de correo y que no sea el de ahora. El código que confirma que eres
+ * tú lo mira {@link revisarCodigo}, en su fase (A3b del acceso con código).
+ */
+export function revisarCorreo({ correo }, { actual, textos }) {
     const e = {};
     const v = correo.trim();
 
     if (! /^\S+@\S+\.\S+$/.test(v)) e.correo = texto(textos, 'compra.datos.errores.correo');
     else if (v.toLowerCase() === actual.toLowerCase()) e.correo = texto(textos, 'mi_cuenta.correo.mismo');
-    if (! clave) e.clave = texto(textos, 'compra.datos.errores.clave');
 
     return e;
+}
+
+/**
+ * **Confirmar con un código** (A3b de `specs/acceso-con-codigo.md` §4.10, `#857`): lo que confirma una acción sensible
+ * —cerrar las otras sesiones, desvincular Google, cambiar el correo, borrar la cuenta— ya no es la contraseña. El primer
+ * toque de su acción MANDA el código (`POST /me/confirm-code`) y enseña su campo; el segundo, con el código escrito, la
+ * hace. Aquí, lo que falta antes de preguntar: `{}` si se puede seguir.
+ *
+ * @param {{codigo: string}} f
+ * @param {{enviado: boolean, textos: object}} deps
+ */
+export function revisarCodigo({ codigo }, { enviado, textos }) {
+    if (! enviado) return {};
+
+    return String(codigo ?? '').trim() ? {} : { codigo: texto(textos, 'compra.datos.errores.codigo') };
 }
 
 /**

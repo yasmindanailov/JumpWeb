@@ -6,8 +6,8 @@
 > **820–849 AGOTADA con `#849`** → sigue en **850–879** (del owner, 29-09; centena `decisiones/800-899.md`) · Último usado:
 > **`#857`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#846`) · Actualizado: **2026-09-30**
-> (el acceso con código: A1 ✅ `#853`/`#854`, A2 ✅ `#855`/`#856` y A3a ✅ `#857`, `specs/acceso-con-codigo.md` §4.8–§4.10;
-> SIGUE la A3b).
+> (el acceso con código: A1 ✅ `#853`/`#854`, A2 ✅ `#855`/`#856` y A3 ✅ `#857`, `specs/acceso-con-codigo.md` §4.8–§4.10;
+> sigue la A4 del SPA; aquí, `/cookies` para producción, y la A5 tras la A4).
 > ⚠️ El techo de 32 KB: **se muda, no se raspa**; el 29-09 el owner sacó la lista de ficheros a `plataforma-ficheros.md`
 > (`#852`) y NO subió el techo. Si vuelve a apretar tres veces seguidas, llévaselo con la medida.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -47,12 +47,13 @@ normas, la T6f (301 y la web vieja fuera, `#843`), `#844`, la T6h (las legales) 
 **T6g** (§4.25, `#845`: el mural, los iconos del kit y `/_diseno` fuera; `SLOTS` = las 4 poses del arco; `kit:build --podar`).
 Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas,entradas}.mjs`), la web entera (`sonda-web.mjs`,
 17/17) y la compra (`sonda-isla.mjs`).
-▶▶▶ **SIGUE: la A3b de `specs/acceso-con-codigo.md`** (§4.10): los Ajustes de Mi cuenta —`CuentaAjuste`, `CampoClaveActual`,
-`useAjustesCuenta`, `ajustes.js`— reconfirman con un código (`POST /me/confirm-code {action}` y `code` en vez de
-`current_password`) y el correo nuevo se confirma con el suyo (`POST /me/pending-email/confirm`); «Cambiar la contraseña» se
-va con la A5. Con las piezas de la isla (`#857`, el owner) y EN VIVO antes de commitear. Las claves de la contraseña de
-`lang/*/isla.php` (`compra.datos.{contrasena,pista_contrasena,olvido}`, `errores.{contrasena,clave}`, `entrar.olvido_texto`)
-siguen SOLO por los Ajustes: se podan con ella. `sonda-cuenta.mjs` aún reconfirma con la contraseña (sus pasos 20→).
+▶▶▶ **HECHA la A3b de `specs/acceso-con-codigo.md`** (§4.10, ✅ con el visto bueno del owner): los Ajustes de Mi cuenta
+confirman con un código (`CampoCodigoConfirmar`; «Enviarme el código» y después la acción), el correo en tres tiempos con
+«Confirmar el correo», y «Cambiar la contraseña» fuera de Mi cuenta. Por los guardianes públicos de los stores del motor (sin
+tocarlos). `sonda-cuenta.mjs` 255 a 390 y 1280. **Del acceso con código queda**: la A4, del SPA (por buzón); y de aquí, la
+**A5** (la retirada: la API de la contraseña para clientes, las páginas de recuperar, el enlace del correo nuevo, y borrar las
+contraseñas de §4.6 con su receta de `ENTORNOS.md` §5) —⚠️ DESPUÉS de la A4: el cajón aún entra con contraseña— y la **A6**
+(staging: la latencia del correo).
 **HECHA la A3a** (`#857`, ✅ con el ojo del owner): «Entra» con el código en la compra y en Mi cuenta, el alta sin contraseña y
 con la puerta delante (`compra/acceso.js`, en el trozo de los pasos: dentro, la compra pasaba de 166), Google arriba y «— o —»
 antes de los campos (`AccesoSocial` `separador`), «Tus datos» solo si falta algo (tras entrar, «Pagar» vuelve a la reserva), las
@@ -61,8 +62,13 @@ salir NO salía (`RememberedDevice::logOutHere()`). **HECHO** el servidor entero
 (`#855`/`#856`, **1.57.0**, §4.9). Arneses: `mutar-acceso-codigo.sh` **50/50**, `mutar-token-bearer.sh` 14/14.
 ❗ **Para el CHANGELOG de la v2.0.0**: dos defectos de producción arreglados por el camino —los correos del cambio de correo
 salían al buzón contrario (`#856`) y «cerrar las demás sesiones» no cerraba nada con `redis` (`#855`)—.
-❓ **Del owner**: el texto de `/cookies` («solo si marcas recuérdame») y el aviso de los 90 días en la pantalla (A3),
-`[PENDIENTE: owner]`. ⚠️ El código abre la WEB, nunca el panel (`SEC-14`).
+▶▶ **`/cookies` para PRODUCCIÓN, de este carril** (el owner, 30-09: «los redactarás tú, con rigor y profesionalidad, con los
+datos del cliente»; antes decía `[PENDIENTE: owner]`). Hoy dice que la cookie de persistencia solo se pone «si marcas
+recuérdame», y ya no hay casilla: el dispositivo queda recordado 90 días al entrar con el código (`#848`). ⚠️ La guía de la AEPD
+exime las de autenticación «únicamente de sesión»: una persistente necesita que la persona la pida o su consentimiento —se
+resuelve al redactarla, y si toca el producto (una casilla, un aviso junto al código), se le lleva al owner con opciones—. Los
+datos del cliente viven en su instalación (`#610`), no en el repo. Mirar ANTES de quién es cada pieza (`cookies.php`,
+`CookiePolicyContent` y el consentimiento son del SPA desde `#735`: por buzón). ⚠️ El código abre la WEB, nunca el panel (`SEC-14`).
 ▶▶ **Del SPA (`#807`→`#808`)**: el Menú 1/2 se desengancha de la reserva como DATO del panel (sin contrato nuevo), y
 `isla/compra/PantallaCuandoFiesta.vue` pinta «¿Qué menú?» SIN condición —saldría vacía: un `v-if` sobre `menus`—; la calculadora
 y la landing dicen «incluye calcetines… cono» y «¿Qué menú?».
@@ -208,6 +214,9 @@ carril se apunta ALLÍ; lo compartido se sigue avisando aquí, en el buzón, ant
   por `RememberedDevice::logOutHere()`, que la quita también de la petición. Tu cajón sale igual que antes: nada que tocar.
 - Para tu A4, si te sirve: la puerta, entrar y sus «no» de la isla, puros, en `isla/compra/acceso.js` (`puerta`, `entrar`,
   `erroresDelCodigo`); el tope del correo (`429` con `next: code`) lleva al código SIN error: hay uno recién enviado.
+- **La A3b, hecha**: la isla ya no pide contraseña en ningún sitio (Ajustes confirma con `POST /me/confirm-code` y `code`). Uso
+  tus stores SIN tocarlos: el cuerpo con `code` va por sus guardianes públicos (`credentials.run`, `profile.run`, `runForm`); si
+  cambias su firma, avísame. ⚠️ La A5 (retirar la API de la contraseña para clientes) ESPERA a tu A4: hoy tu cajón entra con ella.
 
 ### ❗ Para el SPA (emisor: plataforma, 2026-09-30) — la A2b: el correo nuevo con su código (`#856`, contrato 1.57.0)
 - Para tu A4: `POST /me/pending-email/confirm {code}` → 200 con el perfil (422 sobre `code`, o `email` si otra cuenta lo tomó);

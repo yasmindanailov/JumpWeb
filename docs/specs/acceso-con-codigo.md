@@ -1,7 +1,7 @@
 # [SPEC] Entrar con un código al correo — la contraseña del cliente se retira
 
-> Estado: ✅ aprobada (29-09: el owner contestó el §7) → **A1 ✅** (§4.8) · **A2 ✅** (§4.9) · **A3a ✅** (§4.10), sigue la
-> A3b · Última actualización: 2026-09-30 ·
+> Estado: ✅ aprobada (29-09: el owner contestó el §7) → **A1 ✅** (§4.8) · **A2 ✅** (§4.9) · **A3 ✅** (§4.10), sigue la A4
+> (SPA) · Última actualización: 2026-09-30 ·
 > Decisiones: `#847` (el owner: código al correo y Google; fuera la contraseña) · `#848` (el §7: una sola puerta, borrar
 > las contraseñas, 90 días, solo el código) · `#849` (corrige el 1: el registro NO espera al código, hay cola en la puerta) ·
 > `#853`/`#854` (la A1: el código en el servidor; el dispositivo recordado y `RGPD-06`) · `#855` (la A2a: reconfirmar con
@@ -25,7 +25,7 @@
   alta de hoy (`#31`): la acotan los límites de §4.2.
 - **Estado**: ✅ aprobada (`#848`). **A1 ✅** (29-09, `#853`/`#854`, §4.8) · **A2 ✅** (30-09, `#855`/`#856`, §4.9: reconfirmar
   con un código, cada sesión atada al token y el correo nuevo con su código) · **A3a ✅** (`#857`, §4.10: «Entra» y el alta
-  de la isla con el código; visto por el owner). Sigue la A3b, los Ajustes de Mi cuenta.
+  de la isla con el código; visto por el owner) · **A3b ✅** (los Ajustes de Mi cuenta con el código). Sigue la A4 (SPA).
 - **Invariantes**: `SEC-06` (se amplía al código), `RGPD-01` (la purga borra los códigos), `RGPD-06` (sin cambio de
   forma). Ningún fichero del `CRITICAL_RE`.
 
@@ -226,6 +226,19 @@ nuevo con el suyo). Lo de la A3a:
   `Auth::forgetGuards()` de salir deja resolver otro guard, y el `$request->user()` de `NoStoreWhenAuthenticated` a la
   vuelta volvía a entrar con la cookie que aún traía la PETICIÓN. `RememberedDevice::logOutHere()` (las dos salidas) la
   quita también de la petición; prueba en `RememberedDeviceTest` y su mutación. La prueba de la A1 miraba solo la cookie.
+
+**La A3b, los Ajustes de Mi cuenta** (30-09): cerrar las otras sesiones, desvincular Google, cambiar el correo y borrar la
+cuenta se confirman con un CÓDIGO (`CampoCodigoConfirmar`, fuera `CampoClaveActual`). El primer toque de la acción dice
+«Enviarme el código» y lo pide (`POST /me/confirm-code`); sale el campo, con el foco y «Pedir otro código»; el segundo hace
+la acción con él —pedirlo al ENTRAR en el paso mandaría un correo a quien solo mira—. El correo, en tres tiempos en la misma
+pantalla: el nuevo y el código de confirmar (al de ahora); ya pendiente, el código del NUEVO y «Confirmar el correo»
+(`/me/pending-email/confirm`). El cambio pendiente dura 60 min y cada código 10: la pantalla habla del cambio, no del código.
+- **Sin tocar los stores del motor** (del SPA): el cuerpo con `code` viaja por sus guardianes públicos (`run`, `runForm`),
+  que limpian, llaman y colocan el veredicto; su `current_password` queda para el cajón hasta su A4.
+- **«Cambiar la contraseña» sale de Mi cuenta ya** (antes, en la A5): en la isla nadie entra con ella (`#848`), y era un
+  callejón. La A5 retira su API. Con ella, sus textos de `lang/*/isla.php`.
+- Pesos: Ajustes 28,50 → 29,03 (techo 30). `sonda-cuenta.mjs` confirma con los códigos de Mailpit —el correo, cambiado de
+  verdad y devuelto por tinker; cerrar las otras sesiones; el código de borrar, sin borrar—: 255 a 390 y 1280.
 
 ## 5. Impacto en invariantes
 

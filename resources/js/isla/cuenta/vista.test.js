@@ -219,8 +219,11 @@ describe('los Ajustes (T5e)', () => {
         mi_cuenta: {
             ...textos.mi_cuenta,
             ajustes: { guardando: 'Guardando' },
-            clave: { titulo: 'Cambiar la contraseña', guardar: 'Guardar la contraseña' },
-            correo: { titulo: 'Correo', enviar: 'Enviar el enlace', enviando: 'Enviando el enlace' },
+            codigo: { enviar: 'Enviarme el código' },
+            correo: {
+                titulo: 'Correo', enviar: 'Enviar el código al correo nuevo', enviando: 'Enviando el código',
+                confirmar: 'Confirmar el correo', confirmando: 'Confirmando',
+            },
             otras_sesiones: { titulo: 'Cerrar sesión en otros dispositivos', boton: 'Cerrar las otras sesiones', cerrando: 'Cerrando' },
             desvincular: { titulo: 'Desvincular Google', boton: 'Desvincular', cargando: 'Desvinculando' },
             descargo: { titulo: 'Tu descargo', firmar: 'Firmar' },
@@ -228,7 +231,10 @@ describe('los Ajustes (T5e)', () => {
             borrar: { titulo: 'Borrar tu cuenta' },
         },
     };
-    const acc = { ...acciones, guardarClave: () => 'clave!', enviarCorreo: () => 'correo!', cerrarOtras: () => 'otras!', desvincular: () => 'desvincular!', firmar: () => 'firmar!' };
+    const acc = {
+        ...acciones, enviarCorreo: () => 'correo!', confirmarCorreo: () => 'confirmar!', cerrarOtras: () => 'otras!', desvincular: () => 'desvincular!',
+        firmar: () => 'firmar!',
+    };
     const cke = (e) => ckDeCuenta({ textos: t5e, acciones: acc, ...e });
 
     test('las zonas del cajón que son un plegable abren Mi cuenta en Ajustes, con ese plegable abierto', () => {
@@ -245,25 +251,50 @@ describe('los Ajustes (T5e)', () => {
         assert.equal(vistaDeApertura('home', { sesion: true, bloque: 'quien' }).plegable, '');
     });
 
-    test('cada paso: su banda, la flecha a Mi cuenta y su acción, con lo que dice mientras espera', () => {
+    test('cada paso: su banda, la flecha a Mi cuenta y su acción, con lo que dice mientras espera (con el código ya pedido)', () => {
         const casos = [
-            [VISTA.CLAVE, 'Cambiar la contraseña', 'Guardar la contraseña', 'clave!', 'Guardando'],
-            [VISTA.CORREO, 'Correo', 'Enviar el enlace', 'correo!', 'Enviando el enlace'],
+            [VISTA.CORREO, 'Correo', 'Enviar el código al correo nuevo', 'correo!', 'Enviando el código'],
             [VISTA.OTRAS, 'Cerrar sesión en otros dispositivos', 'Cerrar las otras sesiones', 'otras!', 'Cerrando'],
             [VISTA.DESVINCULAR, 'Desvincular Google', 'Desvincular', 'desvincular!', 'Desvinculando'],
             [VISTA.FIRMA, 'Tu descargo', 'Firmar', 'firmar!', 'Firmando'],
         ];
 
         for (const [vista, step, label, hace, cargando] of casos) {
-            const r = cke({ vista, ajuste: { enviado: false, firmar: true } });
+            const ajuste = { pendiente: false, firmar: true, codigoPedido: true };
+            const r = cke({ vista, ajuste });
 
             assert.equal(r.step, step, vista);
             assert.equal(r.onBack(), 'inicio', vista);
             assert.equal(r.action.label, label, vista);
             assert.equal(r.action.onClick(), hace, vista);
             assert.equal(r.action.loading, false, vista);
-            assert.equal(cke({ vista, ajuste: { enviado: false, firmar: true }, ocupado: vista }).action.loading, cargando, vista);
+            assert.equal(cke({ vista, ajuste, ocupado: vista }).action.loading, cargando, vista);
         }
+    });
+
+    // A3b del acceso con código (`#857`): lo sensible se confirma con un código, y su acción lo pide primero.
+    test('sin el código pedido, la acción de lo que se confirma dice «Enviarme el código» —y es la misma que lo hace—', () => {
+        for (const [vista, hace] of [[VISTA.CORREO, 'correo!'], [VISTA.OTRAS, 'otras!'], [VISTA.DESVINCULAR, 'desvincular!']]) {
+            const r = cke({ vista, ajuste: { codigoPedido: false } });
+
+            assert.equal(r.action.label, 'Enviarme el código', vista);
+            assert.equal(r.action.onClick(), hace, vista);
+            assert.equal(cke({ vista, ajuste: { codigoPedido: false }, ocupado: vista }).action.loading, 'Enviando el código', vista);
+        }
+        assert.equal(cke({ vista: VISTA.FIRMA, ajuste: { firmar: true, codigoPedido: false } }).action.label, 'Firmar', 'firmar no pide código');
+    });
+
+    test('el correo ya pendiente: «Confirmar el correo» con el código del buzón nuevo, y otra clave (la isla anima el cambio)', () => {
+        const r = cke({ vista: VISTA.CORREO, ajuste: { pendiente: true, codigoPedido: false } });
+
+        assert.equal(r.action.label, 'Confirmar el correo');
+        assert.equal(r.action.onClick(), 'confirmar!');
+        assert.equal(cke({ vista: VISTA.CORREO, ajuste: { pendiente: true }, ocupado: VISTA.CORREO }).action.loading, 'Confirmando');
+        assert.notEqual(r.key, cke({ vista: VISTA.CORREO, ajuste: { pendiente: false } }).key);
+    });
+
+    test('«Cambiar la contraseña» ya no es un paso: en la isla nadie entra con ella (`#848`)', () => {
+        assert.equal(Object.values(VISTA).includes('clave'), false);
     });
 
     test('borrar la cuenta NO lleva acción en la isla: lo destructivo no va en el naranja', () => {
@@ -274,8 +305,7 @@ describe('los Ajustes (T5e)', () => {
         assert.equal(r.onBack(), 'inicio');
     });
 
-    test('el correo ya enviado deja el desenlace sin acción; el descargo sin nada que firmar, también', () => {
-        assert.equal(cke({ vista: VISTA.CORREO, ajuste: { enviado: true } }).action, null);
+    test('el descargo sin nada que firmar no lleva acción', () => {
         assert.equal(cke({ vista: VISTA.FIRMA, ajuste: { firmar: false } }).action, null);
     });
 

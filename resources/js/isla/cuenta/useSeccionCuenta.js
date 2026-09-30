@@ -44,7 +44,7 @@ import { useConexion } from './useConexion.js';
 import { protegido } from './seguro.js';
 
 /** Los pasos de Ajustes (T5e): al entrar en uno, su formulario empieza vacío. */
-const PASOS_DE_AJUSTES = [VISTA.CLAVE, VISTA.CORREO, VISTA.OTRAS, VISTA.DESVINCULAR, VISTA.FIRMA, VISTA.BORRAR];
+const PASOS_DE_AJUSTES = [VISTA.CORREO, VISTA.OTRAS, VISTA.DESVINCULAR, VISTA.FIRMA, VISTA.BORRAR];
 
 /** La «G» del botón de Google: el MISMO fichero que la compra de la isla y el botón oficial del cajón (`#695`). */
 const MARCA_GOOGLE = '/images/providers/google.svg';
@@ -373,15 +373,20 @@ export function useSeccionCuenta(props) {
 
     // ── Con sesión: los Ajustes (T5e) ────────────────────────────────────────────────────────────────
 
-    /** Lo que hizo un paso o un botón de Ajustes: la sesión que murió lleva a Entrar; un «no», a su campo. */
+    /**
+     * Lo que hizo un paso o un botón de Ajustes: la sesión que murió lleva a Entrar; un «no», a su campo; el código recién
+     * pedido (o el correo nuevo ya pendiente, con el suyo de camino), a escribirlo: el foco va a su campo (A3b, `#857`).
+     */
     function tras(r) {
         if (r === 'caducada') Object.assign(e, { vista: VISTA.ENTRAR, subpaso: '', dir: null });
         else if (r === 'error') enfocarError();
+        else if (r === 'enviado' || r === 'pendiente') nextTick(() => caja()?.querySelector('input[autocomplete="one-time-code"]')?.focus());
     }
 
     /**
      * La acción de un paso de Ajustes (la de la isla): espera al servidor y, si sale, vuelve a Mi cuenta —al mismo punto,
-     * con el plegable abierto— y lo dice arriba (`dicho`). El correo no vuelve: queda su desenlace.
+     * con el plegable abierto— y lo dice arriba (`dicho`). Pedir el código de confirmar, o dejar pendiente el correo
+     * nuevo, no sale del paso: queda a escribir el código.
      *
      * @param {string} hace  el método de `useAjustesCuenta` que la hace
      */
@@ -596,11 +601,12 @@ export function useSeccionCuenta(props) {
         entrada: e.ent, textos, altaGoogle: { pendiente: e.google.pending !== null },
         cambiar: e.vista === VISTA.CAMBIAR ? { desdeReserva: e.cambiarDesdeReserva, whatsapp: Boolean(cambiarVista.value?.whatsapp) } : null,
         hijo: e.vista === VISTA.HIJO ? { nombre: hijos.hijo.value?.nombre ?? '', firmar: Boolean(hijos.hijo.value?.firmar) } : null,
-        // Los pasos de Ajustes (T5e): el correo ya pedido deja su desenlace sin acción; tu descargo, «Firmar» solo si
-        // hace falta y hay texto que firmar.
+        // Los pasos de Ajustes (T5e): el correo ya pedido, «Confirmar el correo»; tu descargo, «Firmar» solo si hace falta y
+        // hay texto que firmar; lo que se confirma con un código, «Enviarme el código» hasta pedirlo (A3b, `#857`).
         ajuste: {
-            enviado: e.vista === VISTA.CORREO && Boolean(ajustes.value?.paso.value.correo?.pendiente),
+            pendiente: e.vista === VISTA.CORREO && Boolean(ajustes.value?.paso.value.correo?.pendiente),
             firmar: e.vista === VISTA.FIRMA && Boolean(ajustes.value?.bloque.value.descargo?.firmar && waiverStore.document),
+            codigoPedido: Boolean(ajustes.value?.paso.value.codigo?.enviado),
         },
         rotulos: {
             altaGoogle: t(props.account, 'google.title'), altaGoogleBoton: t(props.account, 'google.submit'),
@@ -611,8 +617,8 @@ export function useSeccionCuenta(props) {
             cerrar, alMenu, aInicio, escribir,
             entrar: guarda(entrar), crear: guarda(crear), completarGoogle: guarda(completarGoogle),
             guardarHijos: guarda(guardarHijos), firmarHijo: guarda(firmarHijo),
-            guardarClave: guarda(() => hacerPaso('guardarClave', 'mi_cuenta.clave.guardada')),
             enviarCorreo: guarda(() => hacerPaso('enviarCorreo')),
+            confirmarCorreo: guarda(() => hacerPaso('confirmarCorreo', 'mi_cuenta.correo.confirmado')),
             cerrarOtras: guarda(() => hacerPaso('cerrarOtras', 'mi_cuenta.otras_sesiones.hecho')),
             desvincular: guarda(() => hacerPaso('desvincular', 'mi_cuenta.desvincular.hecho')),
             firmar: guarda(() => hacerPaso('firmar', 'mi_cuenta.descargo.firmado')),
@@ -754,8 +760,8 @@ export function useSeccionCuenta(props) {
             aviso: e.aviso?.en === e.vista ? e.aviso : null,
         } : null)),
         cambiarPaso: (campo, valor) => ajustes.value?.cambiarPaso(campo, valor),
-        enlaceClave: () => ajustes.value?.enlaceClave(),
-        reenviarCorreo: guarda(() => ajustes.value?.reenviarCorreo()),
+        // «Pedir otro código» de un paso de Ajustes: el de confirmar esa acción, o el del correo nuevo ya pendiente.
+        otroCodigoAjuste: guarda(() => ajustes.value?.otroCodigo(e.vista)),
         cancelarCorreo: guarda(() => ajustes.value?.cancelarCorreo()),
         borrarCuenta: guarda(borrarCuenta),
         // Los avisos de la cuenta (T5e·2).

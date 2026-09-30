@@ -255,9 +255,6 @@ return [
             'codigo_otro_enviado' => 'Te hemos enviado otro código a :correo.',
             'otro_codigo' => 'Pedir otro código',
             'nueva' => 'Aún no tienes cuenta con ese correo: rellena tus datos y entras al momento.',
-            'contrasena' => 'Contraseña',
-            'pista_contrasena' => '8 caracteres o más.',
-            'olvido' => '¿Has olvidado tu contraseña?',
             'casilla' => 'He leído y acepto el descargo de responsabilidad.',
             'leer' => 'Leer el descargo de responsabilidad',
             'pista_descargo' => 'Es la hoja que firma todo el que entra a saltar: normas y responsabilidad. La firmas una vez y vale siempre.',
@@ -278,8 +275,6 @@ return [
                 'correo' => 'Revisa el correo: falta algo.',
                 'telefono' => 'Revisa el teléfono: son 9 cifras.',
                 'nacimiento' => 'Revisa la fecha: día, mes y año.',
-                'contrasena' => 'Escribe una contraseña de 8 caracteres o más.',
-                'clave' => 'Escribe tu contraseña.',
                 'descargo' => 'Marca la casilla para seguir.',
                 'codigo' => 'Escribe el código que te hemos enviado.',
                 'codigo_mal' => 'El código no es correcto o ha caducado. Pide otro.',
@@ -296,7 +291,6 @@ return [
             'enviando' => 'Enviando el código',
             'google' => 'Entrar con Google',
             'apple' => 'Entrar con Apple',
-            'olvido_texto' => 'Te hemos enviado un enlace a tu correo para crear una contraseña nueva.',
             'cargando' => 'Entrando',
         ],
         'pagar' => [
@@ -579,7 +573,7 @@ return [
             'quitado' => ':nombre ya no está en tu cuenta',
         ],
         // Ajustes y sus pasos (T5e, `#778`): los del mockup (`PMC.T.ajustes` y `propuesta`) y, con las piezas del sistema
-        // (`#773`·d), los que la verdad añade: la contraseña que piden cinco gestiones y su salida si entraste con Google,
+        // (`#773`·d), los que la verdad añade: el código que confirman cuatro gestiones (A3b, `#857`; antes, la contraseña),
         // el correo pendiente, desvincular Google, la analítica y la encuesta, tu descargo y por qué no se borra con una
         // reserva viva. Sin Apple ni «Descargar el recibo» (`#773`·c).
         'ajustes' => [
@@ -597,14 +591,13 @@ return [
             'guardado' => 'Guardado',
             'no_guardado' => 'No se ha podido guardar. Inténtalo de nuevo.',
             'correo' => 'Correo',
-            'correo_pista' => 'El correo se cambia con un enlace al nuevo buzón.',
+            'correo_pista' => 'El correo se cambia con un código al nuevo buzón.',
             'correo_pendiente' => 'Esperando a que confirmes :correo',
             'cambiar' => 'Cambiar',
             // Los nombres ENTEROS de los enlaces cortos de las filas (para el lector de pantalla: WCAG 2.5.3).
             'cambiar_correo' => 'Cambiar el correo',
             'firmar_descargo' => 'Firmar tu descargo',
             'descargar_descargo' => 'Descargar tu descargo firmado',
-            'clave' => 'Cambiar la contraseña',
             'google_vinculado' => 'Google: vinculado',
             'google_vincular' => 'Vincular Google',
             'vincular' => 'Vincular',
@@ -629,27 +622,26 @@ return [
             'sin_recibos' => 'Aún no hay recibos.',
             'cerrar' => 'Cerrar sesión',
         ],
-        'clave' => [
-            'titulo' => 'Cambiar la contraseña',
-            'actual' => 'Contraseña actual',
-            'nueva' => 'Contraseña nueva',
-            'guardar' => 'Guardar la contraseña',
-            'guardada' => 'Contraseña guardada',
-            // El servidor no sabe si una cuenta nacida con Google tiene contraseña: la salida se enseña a todos.
-            'sin_clave' => '¿La has olvidado, o entraste con Google y no tienes? Te enviamos un enlace para crear una.',
-            'enlace' => 'Enviarme el enlace',
+        // Confirmar con un código al correo lo sensible de Ajustes (A3b del acceso con código, `#857`; antes, la contraseña):
+        // la acción del paso lo pide y después lo usa.
+        'codigo' => [
+            'para' => 'Para confirmarlo, te enviaremos un código a :correo.',
+            'enviar' => 'Enviarme el código',
         ],
+        // El correo nuevo, en tres tiempos: el nuevo y el código que confirma que eres tú (al de ahora); después, el que
+        // llega al NUEVO. El cambio pendiente dura 60 min; cada código, 10.
         'correo' => [
             'titulo' => 'Correo',
-            'texto' => 'Te enviamos un enlace al correo nuevo. Hasta que lo abras, sigues entrando con el de siempre.',
+            'texto' => 'Primero confirmas que eres tú con un código a tu correo de ahora; después, el nuevo con el suyo. Hasta entonces sigues entrando con el de siempre.',
             'nuevo' => 'Correo nuevo',
-            'enviar' => 'Enviar el enlace',
-            'enviando' => 'Enviando el enlace',
-            'enviado' => 'Te hemos enviado un enlace a :nuevo. Hasta que lo abras, sigues entrando con :actual.',
-            'caduca' => 'El enlace caduca en :minutos min.',
-            'caducado' => 'El enlace ha caducado: pide otro.',
-            'reenviar' => 'Reenviar el enlace',
-            'reenviado' => 'Te hemos reenviado el enlace',
+            'enviar' => 'Enviar el código al correo nuevo',
+            'enviando' => 'Enviando el código',
+            'enviado' => 'Falta confirmar :nuevo con el código que le hemos enviado. Hasta entonces sigues entrando con :actual.',
+            'caduca' => 'El cambio caduca en :minutos min.',
+            'caducado' => 'El cambio ha caducado: pide otro código.',
+            'confirmar' => 'Confirmar el correo',
+            'confirmando' => 'Confirmando',
+            'confirmado' => 'Correo cambiado',
             'cancelar' => 'Cancelar el cambio',
             'cancelado' => 'Cambio de correo cancelado',
             'mismo' => 'Es el correo que ya tienes.',
@@ -663,7 +655,7 @@ return [
         ],
         'desvincular' => [
             'titulo' => 'Desvincular Google',
-            'texto' => 'Ya no podrás entrar con Google (:correo). Seguirás entrando con tu correo y tu contraseña.',
+            'texto' => 'Ya no podrás entrar con Google (:correo). Seguirás entrando con un código a tu correo.',
             'boton' => 'Desvincular',
             'cargando' => 'Desvinculando',
             'hecho' => 'Google: desvinculado',
@@ -698,7 +690,7 @@ return [
             'titulo' => 'Borrar tu cuenta',
             // Lo que hace `User::anonymize()` (`RGPD-01`), no lo que decía el mockup («se borran tus reservas y tus recibos»:
             // los pedidos se conservan sin tu identidad, para las facturas).
-            'texto' => 'Borramos tu nombre, tu correo, tu teléfono y tu contraseña; tus hijos salen de la cuenta y se cierra tu sesión. De tus pedidos guardamos lo mínimo para las facturas, sin tu nombre, como pide la ley. No se puede deshacer.',
+            'texto' => 'Borramos tu nombre, tu correo y tu teléfono; tus hijos salen de la cuenta y se cierra tu sesión. De tus pedidos guardamos lo mínimo para las facturas, sin tu nombre, como pide la ley. No se puede deshacer.',
             'reserva' => 'Tienes una reserva el :dia a las :hora. Mientras tengas una por celebrar, la cuenta no se puede borrar: cuando pase, o si se cancela, sí.',
             'casilla' => 'Entiendo que no se puede deshacer.',
             'boton' => 'Borrar mi cuenta',

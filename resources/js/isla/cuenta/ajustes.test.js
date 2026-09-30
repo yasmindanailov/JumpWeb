@@ -2,7 +2,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import {
     PLEGABLES, correoDe, datosDe, descargoDe, googleDe, hayCambios, idiomasDe, interruptoresDe, recibosDe, reservaQueImpide,
-    revisarCorreo, revisarDatosCuenta,
+    revisarCodigo, revisarCorreo, revisarDatosCuenta,
 } from './ajustes.js';
 
 /**
@@ -10,7 +10,7 @@ import {
  */
 const NB = ' ';
 const textos = {
-    compra: { datos: { errores: { nombre: 'Escribe tu nombre y apellidos.', correo: 'Revisa el correo: falta algo.', clave: 'Escribe tu contraseña.' } } },
+    compra: { datos: { errores: { nombre: 'Escribe tu nombre y apellidos.', correo: 'Revisa el correo: falta algo.', codigo: 'Escribe el código que te hemos enviado.' } } },
     mi_cuenta: {
         proxima: { numero: 'Nº :code' },
         ajustes: { firmado_el: 'Firmado el :fecha · versión :version' },
@@ -90,13 +90,23 @@ describe('el correo', () => {
         assert.equal(c.pendiente.caduca, 'El enlace ha caducado: pide otro.');
     });
 
-    test('el nuevo, antes de preguntar: con forma de correo, distinto del actual, y la contraseña (la pide el servidor)', () => {
+    test('el nuevo, antes de preguntar: con forma de correo y distinto del actual (sin contraseña: A3b, `#857`)', () => {
         const deps = { actual: 'ana@correo.es', textos };
 
-        assert.deepEqual(revisarCorreo({ correo: 'ana@', clave: 'x' }, deps), { correo: 'Revisa el correo: falta algo.' });
-        assert.deepEqual(revisarCorreo({ correo: ' ANA@correo.es ', clave: 'x' }, deps), { correo: 'Es el correo que ya tienes.' });
-        assert.deepEqual(revisarCorreo({ correo: 'ana@nuevo.es', clave: '' }, deps), { clave: 'Escribe tu contraseña.' });
-        assert.deepEqual(revisarCorreo({ correo: 'ana@nuevo.es', clave: 'secreta123' }, deps), {});
+        assert.deepEqual(revisarCorreo({ correo: 'ana@' }, deps), { correo: 'Revisa el correo: falta algo.' });
+        assert.deepEqual(revisarCorreo({ correo: ' ANA@correo.es ' }, deps), { correo: 'Es el correo que ya tienes.' });
+        assert.deepEqual(revisarCorreo({ correo: 'ana@nuevo.es', clave: '' }, deps), {}, 'una contraseña vacía ya no para nada');
+    });
+});
+
+describe('confirmar con un código (A3b, `#857`)', () => {
+    test('sin el código pedido no falta nada: la acción lo pide', () => {
+        assert.deepEqual(revisarCodigo({ codigo: '' }, { enviado: false, textos }), {});
+    });
+
+    test('pedido, falta si está vacío (o solo espacios); escrito, se sigue', () => {
+        assert.deepEqual(revisarCodigo({ codigo: '  ' }, { enviado: true, textos }), { codigo: 'Escribe el código que te hemos enviado.' });
+        assert.deepEqual(revisarCodigo({ codigo: '482913' }, { enviado: true, textos }), {});
     });
 });
 

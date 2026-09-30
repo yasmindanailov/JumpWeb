@@ -27,11 +27,13 @@
  *      «firmado» y «Todo listo»; la ficha de uno, con su firma y su PDF, y quitarlo tras preguntar; y la puerta
  *      `/mi-cuenta/hijos`;
  *   10. LOS AJUSTES (T5e, `DECISIONES #778`): los cuatro plegables cerrados y «Cerrar sesión»; «Tus datos» con los de la
- *      cuenta, «Guardar los cambios» solo al cambiar algo (se guarda y se deja como estaba); el correo nuevo que se pide
- *      con la contraseña y se cancela; la contraseña (una que no es, bajo su campo; la buena, de vuelta a Mi cuenta con
- *      «Acceso» abierto); cerrar las otras sesiones; un interruptor ida y vuelta, sin contraseña; el PDF del descargo;
- *      «Descargar mis datos» que DESCARGA; borrar la cuenta con una reserva por celebrar (lo dice, sin botón) y sin ella
- *      (la contraseña, la casilla y el botón, que no se pulsa); los recibos del libro; `#mi-cuenta/privacidad`; y, al
+ *      cuenta, «Guardar los cambios» solo al cambiar algo (se guarda y se deja como estaba); ▶ CON CÓDIGOS (A3b, `#857`,
+ *      leídos de Mailpit): el correo nuevo —el código de confirmar al de ahora (uno que no es, bajo su campo), el del
+ *      nuevo a su buzón, «Confirmar el correo» de verdad (la cuenta vuelve a su correo por tinker) y otro que se cancela—;
+ *      «Acceso» sin «Cambiar la contraseña»; cerrar las otras sesiones; un interruptor ida y vuelta, sin código; el PDF
+ *      del descargo; «Descargar mis datos» que DESCARGA; borrar la cuenta con una reserva por celebrar (lo dice, sin
+ *      botón) y sin ella (la casilla, el código pedido y «Borrar mi cuenta», que no se pulsa); los recibos del libro;
+ *      `#mi-cuenta/privacidad`; y, al
  *      final, «Cerrar sesión», que sale a la portada sin sesión. Antes, LOS AVISOS (T5e·2, `#779`): «Vincular Google»
  *      hasta la puerta de Google (se corta ahí) y la vuelta cancelada, cuyo aviso del servidor sale en Mi cuenta; y, con
  *      el correo sin confirmar y la analítica pendiente, sus dos avisos, el reenvío con su espera y «Entendido» (la
@@ -40,7 +42,7 @@
  *      API), la compra situada y su flecha de vuelta al MISMO punto; la bienvenida (la API servida vacía) y su compra
  *      eligiendo zona; un bloque con una fecha rota, que deja su hueco y el resto sigue; y sin conexión (`setOffline`): el
  *      aviso, lo que guarda sin intentarse y «Volver a intentarlo». Y, ya sin sesión, «Sin conexión» en «Entra»;
- *   11. la consola queda limpia y ninguna respuesta de la API falla (salvo el «no» buscado de la contraseña).
+ *   11. la consola queda limpia y ninguna respuesta de la API falla (salvo el «no» buscado del código).
  * Sale con 1 si algo falla. Con `SONDA_SOLO=t5f`, tras entrar, solo la 10c y el cierre. Dentro del contenedor, contra su
  * puerto 80, con la cuenta de pruebas de `sonda-isla.mjs`:
  *
@@ -69,15 +71,28 @@ if (tinker('echo App\\Domain\\Content\\Services\\ShellSettings::shell();') !== '
 /** Las reservas de la sonda (`sonda-cuenta-datos.php`): `montar`, `hoy`, `fiesta` o `borrar`. Devuelve su línea JSON. */
 const datos = (modo) => JSON.parse(tinker(`$modo = '${modo}'; require base_path('scripts/sonda-cuenta-datos.php');`).split('\n').pop());
 // Y los de pedir el código (A3 del acceso con código): con el del minuto vivo no llegaría otro al buzón.
-const limitadoresACero = () => tinker(`$id = App\\Domain\\Identity\\Models\\User::where('email', '${CLIENTE.email}')->value('id'); $h = App\\Domain\\Identity\\Services\\SelfSignup::emailHash('${CLIENTE.email}'); foreach ([md5('api'.'user:'.$id), md5('api'.'ip:127.0.0.1'), 'login-ip|127.0.0.1', Illuminate\\Support\\Str::transliterate('${CLIENTE.email}|127.0.0.1'), 'login-code-ip|127.0.0.1', 'login-code-email|'.$h, 'login-code-email-hour|'.$h] as $k) { Illuminate\\Support\\Facades\\RateLimiter::clear($k); }`);
+// Y los de CONFIRMAR con un código y del correo nuevo (A3b, `#857`): uno por minuto por cuenta, y la sonda pide varios.
+const limitadoresACero = () => tinker(`$id = App\\Domain\\Identity\\Models\\User::where('email', '${CLIENTE.email}')->value('id'); $h = App\\Domain\\Identity\\Services\\SelfSignup::emailHash('${CLIENTE.email}'); foreach ([md5('api'.'user:'.$id), md5('api'.'ip:127.0.0.1'), 'login-ip|127.0.0.1', Illuminate\\Support\\Str::transliterate('${CLIENTE.email}|127.0.0.1'), 'login-code-ip|127.0.0.1', 'login-code-email|'.$h, 'login-code-email-hour|'.$h, 'confirm-code|'.$h, 'confirm-code-hour|'.$h, 'pending-email-resend:'.$id, 'pending-email-resend-hour:'.$id, 'new-email-confirm:'.$id.'|127.0.0.1'] as $k) { Illuminate\\Support\\Facades\\RateLimiter::clear($k); }`);
+
+/**
+ * La sonda CONFIRMA un cambio de correo de verdad (A3b): la cuenta de pruebas vuelve a su correo por tinker, y también al
+ * empezar, por si una corrida anterior se cortó a medias. Una fila, o ninguna si ya estaba en el suyo.
+ */
+const CORREO_NUEVO = 'probe-card-nuevo@jumpweb.test';
+const devolverCorreo = () => {
+    const filas = tinker(`echo App\\Domain\\Identity\\Models\\User::where('email', '${CORREO_NUEVO}')->update(['email' => '${CLIENTE.email}', 'pending_email' => null]);`);
+
+    if (! ['0', '1'].includes(filas)) throw new Error(`devolver el correo de la sonda tocó ${filas} filas`);
+};
+devolverCorreo();
 
 /**
  * El código para entrar que acaba de llegar al buzón de la cuenta de pruebas (A3 del acceso con código, `#849`), de
  * Mailpit y de su asunto; solo uno llegado DESPUÉS de `desde`. El mismo de `sonda-isla.mjs`.
  */
 const MAILPIT = process.env.SONDA_MAILPIT ?? 'http://mailpit:8025';
-async function codigoDelBuzon(desde) {
-    const url = `${MAILPIT}/api/v1/search?query=${encodeURIComponent(`to:"${CLIENTE.email}"`)}&limit=1`;
+async function codigoDelBuzon(desde, correo = CLIENTE.email) {
+    const url = `${MAILPIT}/api/v1/search?query=${encodeURIComponent(`to:"${correo}"`)}&limit=1`;
 
     for (let i = 0; i < 60; i += 1) {
         const ultimo = (await fetch(url).then((r) => r.json()).catch(() => null))?.messages?.[0];
@@ -102,7 +117,7 @@ async function recorrer(navegador, ventana, informe) {
     // ⚠️ Dos «no» del servidor son de esperar, y el navegador los apunta en la consola sin su URL (se descuentan por
     // cuenta): los 401 de `/me` sin sesión (el motor pregunta quién es al abrir) y el 404 de `/auth/google/pending` en su
     // puerta, que ES el desenlace «no hay ningún alta esperando» (`account/google.js`, el mismo del cajón).
-    // Y uno más, buscado (T5e): el 422 de «Cambiar la contraseña» con una actual que no es.
+    // Y uno más, buscado (A3b, `#857`): el 422 de cambiar el correo con un código que no es.
     const esperados = { 401: 0, 404: 0, 422: 0 };
     let buscar422 = 0;
     // T5f: el bloque que se rompe A PROPÓSITO se apunta en la consola («Mi cuenta · bloque …»): mientras se busca, se
@@ -118,7 +133,7 @@ async function recorrer(navegador, ventana, informe) {
         const ruta = new URL(r.url()).pathname;
         if (r.status() === 401 && /\/api\/v1\/me(\/[a-z-]+)?$/.test(ruta)) esperados[401] += 1;
         else if (r.status() === 404 && ruta === '/api/v1/auth/google/pending') esperados[404] += 1;
-        else if (r.status() === 422 && ruta === '/api/v1/me/password' && buscar422 > 0) { buscar422 -= 1; esperados[422] += 1; }
+        else if (r.status() === 422 && ruta === '/api/v1/me' && buscar422 > 0) { buscar422 -= 1; esperados[422] += 1; }
         else if (r.status() >= 400 && ruta.startsWith('/api/')) malas.push(`${r.status()} ${r.request().method()} ${ruta}`);
     });
 
@@ -577,54 +592,87 @@ async function recorrer(navegador, ventana, informe) {
     await pagina.waitForTimeout(1000);
     check('y se deja como estaba', deLaSonda('phone') === telefonoDeAntes);
 
+    // El correo, en tres tiempos y con dos códigos (A3b, `#857`): el de confirmar al de AHORA, y el del NUEVO. Se confirma
+    // de verdad y se devuelve por tinker (la cuenta de pruebas vuelve a su correo aunque la sonda se corte: `alEmpezar`).
+    const boton = (nombre) => capa().getByRole('button', { name: nombre, exact: true });
     await ajustes.getByRole('button', { name: 'Cambiar el correo', exact: true }).click();
     await pagina.waitForTimeout(500);
-    check('«Cambiar» del correo abre su paso, con la contraseña (la pide el servidor)', (await banda()) === 'Correo' && await capa().locator('#mc-correo-clave').isVisible(), await banda());
+    check('«Cambiar» del correo abre su paso: el nuevo, y a dónde irá el código SIN pedirlo aún (un correo a quien solo mira, no)',
+        (await banda()) === 'Correo' && await capa().locator('#mc-correo-nuevo').isVisible() && await capa().getByText(`te enviaremos un código a ${CLIENTE.email}`).isVisible()
+            && ! (await capa().locator('#mc-correo-codigo').count()) && await boton('Enviarme el código').isVisible(), await banda());
     await capa().locator('#mc-correo-nuevo').fill(CLIENTE.email);
-    await capa().locator('#mc-correo-clave').fill(CLIENTE.password);
-    await capa().getByRole('button', { name: 'Enviar el enlace' }).click();
+    await boton('Enviarme el código').click();
     await pagina.waitForTimeout(300);
     check('el mismo correo se dice antes de preguntar', await capa().getByText('Es el correo que ya tienes.').isVisible());
-    await capa().locator('#mc-correo-nuevo').fill('probe-card-nuevo@jumpweb.test');
-    await capa().getByRole('button', { name: 'Enviar el enlace' }).click();
-    await capa().getByText(/Te hemos enviado un enlace a probe-card-nuevo/).first().waitFor({ timeout: 8000 }).catch(() => {});
+    await capa().locator('#mc-correo-nuevo').fill(CORREO_NUEVO);
+    let pedidoEn = Date.now();
+    await boton('Enviarme el código').click();
+    await capa().locator('#mc-correo-codigo').waitFor({ timeout: 8000 }).catch(() => {});
+    const deConfirmar = await codigoDelBuzon(pedidoEn);
+    check('«Enviarme el código»: el de CONFIRMAR llega al correo de ahora, sale su campo —con el foco— y la acción pasa a ser la suya',
+        deConfirmar !== null && await capa().locator('#mc-correo-codigo').evaluate((el) => el === document.activeElement).catch(() => false)
+            && await boton('Pedir otro código').isVisible() && await boton('Enviar el código al correo nuevo').isVisible(), deConfirmar ?? 'sin código en Mailpit');
+    await captura('19-correo-codigo');
+    await capa().locator('#mc-correo-codigo').fill(deConfirmar === '000000' ? '111111' : '000000');
+    buscar422 = 1;
+    await boton('Enviar el código al correo nuevo').click();
+    await pagina.waitForTimeout(1000);
+    check('un código que no es: el «no» del servidor, bajo su campo', (await capa().locator('#mc-correo-codigo').getAttribute('aria-invalid')) === 'true' && deLaSonda('pending_email') === '', (await texto(capa())).slice(0, 200));
+    pedidoEn = Date.now();
+    await capa().locator('#mc-correo-codigo').fill(deConfirmar ?? '');
+    await boton('Enviar el código al correo nuevo').click();
+    await capa().locator('#mc-correo-codigo-nuevo').waitFor({ timeout: 8000 }).catch(() => {});
+    const delNuevo = await codigoDelBuzon(pedidoEn, CORREO_NUEVO);
     t = await texto(capa());
-    check('con la contraseña, lo pide: a dónde, con cuál se sigue entrando y cuánto le queda',
-        /Te hemos enviado un enlace a probe-card-nuevo@jumpweb\.test\. Hasta que lo abras, sigues entrando con probe-card@jumpweb\.test\. El enlace caduca en (59|60) min\./.test(t) && deLaSonda('pending_email') === 'probe-card-nuevo@jumpweb.test', t.slice(0, 260));
+    check('con él, el nuevo queda pendiente y SU código llega a ese buzón: se escribe aquí mismo, con «Confirmar el correo»',
+        /Falta confirmar probe-card-nuevo@jumpweb\.test con el código que le hemos enviado\. Hasta entonces sigues entrando con probe-card@jumpweb\.test\. El cambio caduca en (59|60) min\./.test(t)
+            && delNuevo !== null && deLaSonda('pending_email') === CORREO_NUEVO && await boton('Confirmar el correo').isVisible(), t.slice(0, 260));
     await captura('19-correo');
-    await capa().getByRole('button', { name: 'Cancelar el cambio' }).click();
+    await capa().locator('#mc-correo-codigo-nuevo').fill(delNuevo ?? '');
+    await boton('Confirmar el correo').click();
+    await pagina.waitForTimeout(1200);
+    check('«Confirmar el correo» lo cambia, vuelve a Mi cuenta y lo dice arriba', (await banda()) === 'Mi cuenta' && await capa().getByText('Correo cambiado').isVisible() && deLaSonda('pending_email') === ''
+        && tinker(`echo App\\Domain\\Identity\\Models\\User::where('email', '${CORREO_NUEVO}')->count();`) === '1', await banda());
+    devolverCorreo();
+    limitadoresACero();
+
+    // Y cancelar un cambio pedido (con la cuenta ya en su correo: se recarga).
+    await cargar('/kids#mi-cuenta/datos');
+    await ajustes.waitFor({ timeout: 15000 }).catch(() => {});
+    await pagina.waitForTimeout(700);
+    await ajustes.getByRole('button', { name: 'Cambiar el correo', exact: true }).click();
+    await pagina.waitForTimeout(500);
+    await capa().locator('#mc-correo-nuevo').fill(CORREO_NUEVO);
+    pedidoEn = Date.now();
+    await boton('Enviarme el código').click();
+    await capa().locator('#mc-correo-codigo').waitFor({ timeout: 8000 }).catch(() => {});
+    await capa().locator('#mc-correo-codigo').fill((await codigoDelBuzon(pedidoEn)) ?? '');
+    await boton('Enviar el código al correo nuevo').click();
+    await capa().locator('#mc-correo-codigo-nuevo').waitFor({ timeout: 8000 }).catch(() => {});
+    await boton('Cancelar el cambio').click();
     await pagina.waitForTimeout(900);
-    check('«Cancelar el cambio» lo cancela y lo dice', await capa().getByText('Cambio de correo cancelado').isVisible() && deLaSonda('pending_email') === '');
+    check('«Cancelar el cambio» lo cancela, vuelve al primer tiempo y lo dice', await capa().getByText('Cambio de correo cancelado').isVisible() && deLaSonda('pending_email') === '' && await capa().locator('#mc-correo-nuevo').isVisible());
     await volver();
     check('su flecha vuelve a Mi cuenta con «Tus datos» abierto', (await banda()) === 'Mi cuenta' && (await plegable('Tus datos').getAttribute('aria-expanded')) === 'true');
 
     await plegable('Acceso').click();
     await pagina.waitForTimeout(300);
-    check('«Acceso»: la contraseña, «Vincular Google» (aquí se ofrece) y cerrar las otras sesiones; sin Apple',
-        await ajustes.getByText('Vincular Google').isVisible() && await ajustes.getByText('Cerrar sesión en otros dispositivos').isVisible() && ! (await ajustes.getByText(/Apple/).count()));
-    await ajustes.getByRole('button', { name: 'Cambiar la contraseña' }).click();
-    await pagina.waitForTimeout(500);
-    check('«Cambiar la contraseña» abre su paso, con la salida de quien entró con Google', (await banda()) === 'Cambiar la contraseña' && await capa().getByText(/entraste con Google y no tienes/).isVisible());
-    await capa().locator('#mc-clave-actual').fill('No-es-esta-2026');
-    await capa().locator('#mc-clave-nueva').fill(CLIENTE.password);
-    buscar422 = 1;
-    await capa().getByRole('button', { name: 'Guardar la contraseña' }).click();
-    await pagina.waitForTimeout(1000);
-    check('una actual que no es: el «no» del servidor, bajo su campo', (await capa().locator('#mc-clave-actual').getAttribute('aria-invalid')) === 'true' && (await banda()) === 'Cambiar la contraseña', (await texto(capa())).slice(0, 200));
-    await captura('20-clave');
-    await capa().locator('#mc-clave-actual').fill(CLIENTE.password);
-    await capa().getByRole('button', { name: 'Guardar la contraseña' }).click();
-    await pagina.waitForTimeout(1200);
-    check('con la buena, la guarda, vuelve a Mi cuenta —con «Acceso» abierto— y lo dice arriba',
-        (await banda()) === 'Mi cuenta' && await capa().getByText('Contraseña guardada').isVisible() && (await plegable('Acceso').getAttribute('aria-expanded')) === 'true', await banda());
+    check('«Acceso»: «Vincular Google» (aquí se ofrece) y cerrar las otras sesiones; sin «Cambiar la contraseña» (`#848`) ni Apple',
+        await ajustes.getByText('Vincular Google').isVisible() && await ajustes.getByText('Cerrar sesión en otros dispositivos').isVisible()
+            && ! (await ajustes.getByText(/contraseña/i).count()) && ! (await ajustes.getByText(/Apple/).count()));
 
+    limitadoresACero();
     await ajustes.getByRole('button', { name: 'Cerrar sesión en otros dispositivos', exact: true }).click();
     await pagina.waitForTimeout(500);
-    check('«Cerrar» abre «Cerrar sesión en otros dispositivos», que pide la contraseña', (await banda()) === 'Cerrar sesión en otros dispositivos' && await capa().locator('#mc-otras-clave').isVisible(), await banda());
-    await capa().locator('#mc-otras-clave').fill(CLIENTE.password);
-    await capa().getByRole('button', { name: 'Cerrar las otras sesiones' }).click();
+    check('«Cerrar» abre «Cerrar sesión en otros dispositivos»: a dónde irá el código, y «Enviarme el código»',
+        (await banda()) === 'Cerrar sesión en otros dispositivos' && await capa().getByText(`te enviaremos un código a ${CLIENTE.email}`).isVisible() && await boton('Enviarme el código').isVisible(), await banda());
+    pedidoEn = Date.now();
+    await boton('Enviarme el código').click();
+    await capa().locator('#mc-otras-codigo').waitFor({ timeout: 8000 }).catch(() => {});
+    await capa().locator('#mc-otras-codigo').fill((await codigoDelBuzon(pedidoEn)) ?? '');
+    await boton('Cerrar las otras sesiones').click();
     await pagina.waitForTimeout(1200);
-    check('las cierra y lo dice arriba; esta sesión sigue', (await banda()) === 'Mi cuenta' && await capa().getByText('Hemos cerrado la sesión en tus otros dispositivos').isVisible());
+    check('con el código, las cierra y lo dice arriba; esta sesión sigue', (await banda()) === 'Mi cuenta' && await capa().getByText('Hemos cerrado la sesión en tus otros dispositivos').isVisible());
 
     await plegable('Privacidad').click();
     const encuesta = capa().locator('#mc-aj-encuestas');
@@ -635,7 +683,7 @@ async function recorrer(navegador, ventana, informe) {
         (await capa().locator('#mc-aj-novedades').isChecked()) === enServidor.novedades && (await capa().locator('#mc-aj-analitica').isChecked()) === enServidor.analitica && (await encuesta.isChecked()) === enServidor.encuestas, JSON.stringify(enServidor));
     await capa().locator('label[for="mc-aj-encuestas"]').click();
     await pagina.waitForTimeout(1000);
-    check('un interruptor se aplica al momento, sin contraseña, y lo confirma', (deLaSonda('surveys_opt_out') === '1') === enServidor.encuestas && await capa().getByText('Guardado', { exact: true }).first().isVisible());
+    check('un interruptor se aplica al momento, sin código, y lo confirma', (deLaSonda('surveys_opt_out') === '1') === enServidor.encuestas && await capa().getByText('Guardado', { exact: true }).first().isVisible());
     await capa().locator('label[for="mc-aj-encuestas"]').click();
     await pagina.waitForTimeout(1000);
     check('y se deja como estaba', (deLaSonda('surveys_opt_out') !== '1') === enServidor.encuestas);
@@ -676,11 +724,19 @@ async function recorrer(navegador, ventana, informe) {
     check('`#mi-cuenta/privacidad` abre Mi cuenta con «Privacidad» abierto', (await plegable('Privacidad').getAttribute('aria-expanded')) === 'true' && (await plegable('Acceso').getAttribute('aria-expanded')) === 'false');
     await ajustes.getByRole('button', { name: 'Borrar mi cuenta' }).click();
     await pagina.waitForTimeout(600);
-    const borrarBoton = capa().getByRole('button', { name: 'Borrar mi cuenta' });
-    check('sin reservas: la contraseña, «Entiendo…» y el botón en el contenido, apagado hasta marcarla (no naranja: sin acción en la isla)',
-        await capa().locator('#mc-borrar-clave').isVisible() && await borrarBoton.isDisabled() && (await banda()) === 'Borrar tu cuenta');
+    // Con código (A3b, `#857`): el botón del contenido pide el código primero; con él pedido, pasa a «Borrar mi cuenta».
+    const enviarBoton = capa().getByRole('button', { name: 'Enviarme el código', exact: true });
+    check('sin reservas: «Entiendo…», a dónde irá el código y «Enviarme el código» en el contenido, apagado hasta marcarla (no naranja: sin acción en la isla)',
+        await capa().getByText(`te enviaremos un código a ${CLIENTE.email}`).isVisible() && await enviarBoton.isDisabled() && (await banda()) === 'Borrar tu cuenta');
     await capa().getByText('Entiendo que no se puede deshacer.').click();
-    check('marcada, se enciende (aquí no se pulsa)', await borrarBoton.isEnabled());
+    check('marcada, se enciende', await enviarBoton.isEnabled());
+    limitadoresACero();
+    const desdeBorrar = Date.now();
+    await enviarBoton.click();
+    await capa().locator('#mc-borrar-codigo').waitFor({ timeout: 8000 }).catch(() => {});
+    const deBorrar = await codigoDelBuzon(desdeBorrar);
+    check('pulsado, llega el código, sale su campo y el botón pasa a «Borrar mi cuenta» (aquí no se pulsa)',
+        deBorrar !== null && await capa().locator('#mc-borrar-codigo').isVisible() && await capa().getByRole('button', { name: 'Borrar mi cuenta', exact: true }).isEnabled(), deBorrar ?? 'sin código en Mailpit');
     await captura('24-borrar');
     await volver();
 

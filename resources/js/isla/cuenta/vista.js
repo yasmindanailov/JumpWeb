@@ -37,7 +37,6 @@ export const VISTA = {
     HIJOS: 'hijos',
     HIJOS_LISTO: 'hijos-listo',
     HIJO: 'hijo',
-    CLAVE: 'clave',
     CORREO: 'correo',
     OTRAS: 'otras-sesiones',
     DESVINCULAR: 'desvincular',
@@ -100,13 +99,14 @@ export function lineaProxima(reserva, { locale = 'es', titulo = '' } = {}) {
 
 /**
  * Los pasos de Ajustes (T5e): su rótulo, su acción (la clave de `acciones` que la hace) y lo que dice mientras espera.
- * Borrar no tiene acción en la isla (va en el contenido, sin naranja).
+ * Borrar no tiene acción en la isla (va en el contenido, sin naranja). ▶ Los que se confirman con un CÓDIGO (`codigo`,
+ * A3b, `#857`): sin él pedido, su acción dice «Enviarme el código» —es lo que hace—; con él, la suya. El correo ya
+ * pendiente, «Confirmar el correo» con el código del buzón nuevo.
  */
 const PASOS_DE_AJUSTES = {
-    [VISTA.CLAVE]: { titulo: 'mi_cuenta.clave.titulo', accion: 'mi_cuenta.clave.guardar', hace: 'guardarClave', cargando: 'mi_cuenta.ajustes.guardando' },
-    [VISTA.CORREO]: { titulo: 'mi_cuenta.correo.titulo', accion: 'mi_cuenta.correo.enviar', hace: 'enviarCorreo', cargando: 'mi_cuenta.correo.enviando' },
-    [VISTA.OTRAS]: { titulo: 'mi_cuenta.otras_sesiones.titulo', accion: 'mi_cuenta.otras_sesiones.boton', hace: 'cerrarOtras', cargando: 'mi_cuenta.otras_sesiones.cerrando' },
-    [VISTA.DESVINCULAR]: { titulo: 'mi_cuenta.desvincular.titulo', accion: 'mi_cuenta.desvincular.boton', hace: 'desvincular', cargando: 'mi_cuenta.desvincular.cargando' },
+    [VISTA.CORREO]: { titulo: 'mi_cuenta.correo.titulo', accion: 'mi_cuenta.correo.enviar', hace: 'enviarCorreo', cargando: 'mi_cuenta.correo.enviando', codigo: true },
+    [VISTA.OTRAS]: { titulo: 'mi_cuenta.otras_sesiones.titulo', accion: 'mi_cuenta.otras_sesiones.boton', hace: 'cerrarOtras', cargando: 'mi_cuenta.otras_sesiones.cerrando', codigo: true },
+    [VISTA.DESVINCULAR]: { titulo: 'mi_cuenta.desvincular.titulo', accion: 'mi_cuenta.desvincular.boton', hace: 'desvincular', cargando: 'mi_cuenta.desvincular.cargando', codigo: true },
     [VISTA.FIRMA]: { titulo: 'mi_cuenta.descargo.titulo', accion: 'mi_cuenta.descargo.firmar', hace: 'firmar', cargando: 'mi_cuenta.hijo.firmando' },
     [VISTA.BORRAR]: { titulo: 'mi_cuenta.borrar.titulo', accion: null },
 };
@@ -122,7 +122,7 @@ const PASOS_DE_AJUSTES = {
  *              crear: Function, completarGoogle: Function, volverDelDescargo: Function, aReserva: Function, escribir: Function},
  *   cambiar?: {desdeReserva: boolean, whatsapp: boolean},
  *   hijo?: {nombre: string, firmar: boolean},
- *   ajuste?: {enviado: boolean, firmar: boolean},
+ *   ajuste?: {pendiente: boolean, firmar: boolean, codigoPedido: boolean},
  *   rotulos?: {altaGoogle?: string, altaGoogleBoton?: string, altaGoogleEnviando?: string},
  *   altaGoogle?: {pendiente: boolean},
  * }} e
@@ -193,15 +193,28 @@ export function ckDeCuenta(e) {
 
     // Los pasos de Ajustes (T5e): su flecha vuelve a Mi cuenta, al mismo punto y con el plegable abierto; su acción espera
     // al servidor. ⚠️ Borrar la cuenta NO la lleva: «una acción destructiva no va en el naranja de seguir» (el diseño);
-    // su botón vive en el contenido. El correo, ya enviado, tampoco: queda el desenlace.
+    // su botón vive en el contenido. ▶ Con código (A3b, `#857`): sin él pedido, «Enviarme el código»; y el correo ya
+    // pendiente, «Confirmar el correo» con el código del buzón nuevo.
     const paso = PASOS_DE_AJUSTES[e.vista];
 
     if (paso) {
-        const conAccion = paso.accion && ! (e.vista === VISTA.CORREO && e.ajuste?.enviado) && ! (e.vista === VISTA.FIRMA && ! e.ajuste?.firmar);
+        const key = `${base.key}${e.ajuste?.pendiente ? '-pendiente' : ''}`;
+
+        if (e.vista === VISTA.CORREO && e.ajuste?.pendiente) {
+            return {
+                ...base, key, step: t(paso.titulo), onBack: acciones.aInicio,
+                action: { label: t('mi_cuenta.correo.confirmar'), onClick: acciones.confirmarCorreo, loading: e.ocupado === e.vista ? t('mi_cuenta.correo.confirmando') : false },
+            };
+        }
+        const conAccion = paso.accion && ! (e.vista === VISTA.FIRMA && ! e.ajuste?.firmar);
+        const pedir = paso.codigo && ! e.ajuste?.codigoPedido;
 
         return {
-            ...base, step: t(paso.titulo), onBack: acciones.aInicio,
-            action: conAccion ? { label: t(paso.accion), onClick: acciones[paso.hace], loading: e.ocupado === e.vista ? t(paso.cargando) : false } : null,
+            ...base, key, step: t(paso.titulo), onBack: acciones.aInicio,
+            action: conAccion ? {
+                label: t(pedir ? 'mi_cuenta.codigo.enviar' : paso.accion), onClick: acciones[paso.hace],
+                loading: e.ocupado === e.vista ? t(pedir ? 'compra.entrar.enviando' : paso.cargando) : false,
+            } : null,
         };
     }
 

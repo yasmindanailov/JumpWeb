@@ -144,13 +144,9 @@ const correoSub = computed(() => {
                 </div>
             </template>
 
+            <!-- Sin «Cambiar la contraseña» (A3b del acceso con código, `#857`): en la isla se entra con un código al correo. -->
             <template #acceso>
                 <div :style="{ display: 'grid', paddingTop: '4px' }">
-                    <FilaAjuste
-                        :label="t('mi_cuenta.ajustes.clave')"
-                        abre
-                        @click="emit('paso', 'clave')"
-                    />
                     <FilaAjuste
                         v-if="ajustes.google"
                         :label="ajustes.google.vinculada ? t('mi_cuenta.ajustes.google_vinculado') : t('mi_cuenta.ajustes.google_vincular')"

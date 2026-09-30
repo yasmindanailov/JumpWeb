@@ -1091,7 +1091,10 @@ class SidebarBundleBudgetTest extends TestCase
     // otro trozo al abrir uno: 6,18. El techo, a 28.
     // `#792` en la isla (§4.24): la fecha del titular en «Tus datos» de los Ajustes (vaciarla la borra). Medido 27,82 → 28,50
     // (base: el `HEAD` de `#844`, construido aparte). El techo, a 29.
-    private const ISLA_AJUSTES_MAX_KB = 29;
+    // A3b del acceso con código (`#857`): lo sensible se confirma con un CÓDIGO al correo —pedirlo, usarlo por los
+    // guardianes del motor, el correo nuevo con el suyo, «Pedir otro código»— y se va la contraseña (cambiarla, su enlace).
+    // Medido 28,50 → 29,03 (base: el build de `f8771e1c`, medido en la A3a con este cálculo). El techo, a 30.
+    private const ISLA_AJUSTES_MAX_KB = 30;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

@@ -32,9 +32,9 @@ import CajaAntiBot from './compra/CajaAntiBot.vue';
 // Añade a tus hijos y la ficha de un hijo (T5d), en su trozo: se abren a demanda, y Mi cuenta pinta sin esperarlas.
 const CuentaHijos = defineAsyncComponent(() => import('./cuenta/CuentaHijos.vue'));
 const CuentaHijo = defineAsyncComponent(() => import('./cuenta/CuentaHijo.vue'));
-// Los pasos de Ajustes (T5e: la contraseña, el correo, las otras sesiones, desvincular, tu descargo, borrar), igual.
+// Los pasos de Ajustes (T5e: el correo, las otras sesiones, desvincular, tu descargo, borrar), igual.
 const CuentaAjuste = defineAsyncComponent(() => import('./cuenta/CuentaAjuste.vue'));
-const PASOS_DE_AJUSTES = [VISTA.CLAVE, VISTA.CORREO, VISTA.OTRAS, VISTA.DESVINCULAR, VISTA.FIRMA, VISTA.BORRAR];
+const PASOS_DE_AJUSTES = [VISTA.CORREO, VISTA.OTRAS, VISTA.DESVINCULAR, VISTA.FIRMA, VISTA.BORRAR];
 
 // Las MISMAS props que la raíz le pasa con `v-bind="props"`: ninguna acaba de atributo en el DOM.
 defineOptions({ inheritAttrs: false });
@@ -45,7 +45,7 @@ const {
     cambiarAlta, aCrear, leerDescargo, cambiarGoogle, irAlBloque, abrirReserva, aCambiar, masHistorial, reservaAbierta,
     cambiarVista, antesAbierta, hacerTarea, pantallaHijos, fichaHijo, abrirHijos, abrirHijo, cambiarHijo, otroHijo,
     quitarFicha, casillaHijos, casillaHijo, preguntarQuitar, quitarHijo, alternarAjuste, datoAjuste, guardarDatos, pasoAjuste,
-    vincular, interruptor, descargarDatos, masRecibos, salir, pasoDeAjuste, cambiarPaso, enlaceClave, reenviarCorreo,
+    vincular, interruptor, descargarDatos, masRecibos, salir, pasoDeAjuste, cambiarPaso, otroCodigoAjuste,
     cancelarCorreo, borrarCuenta, hacerAviso, hacerAnalitica, otraVez, primeraVisita, red, reintentar,
 } = useSeccionCuenta(props);
 const proveedor = (via) => via === 'google' && aGoogle();
@@ -101,8 +101,7 @@ const proveedor = (via) => via === 'google' && aGoogle();
                 :vista="e.vista"
                 :paso="pasoDeAjuste"
                 @cambiar="cambiarPaso"
-                @enlace="enlaceClave"
-                @reenviar="reenviarCorreo"
+                @otro="otroCodigoAjuste"
                 @cancelar="cancelarCorreo"
                 @descargo="leerDescargo"
                 @borrar="borrarCuenta"

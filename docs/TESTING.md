@@ -430,6 +430,9 @@ son de cualquiera que mida, no de un carril.
 - **Las sondas ENTRAN con el código del buzón** (A3, `#857`): `codigoDelBuzon(desde)` lo lee del asunto en Mailpit
   (`http://mailpit:8025` desde el contenedor) y solo si llegó DESPUÉS de pedirlo; sus `limitadoresACero` vacían también los
   cubos del código (`login-code-*`): con el del minuto vivo, la segunda corrida no recibe otro y lee el de la primera, gastado.
+  `sonda-cuenta` pide además varios códigos de CONFIRMAR en un minuto (uno por minuto y cuenta): entre pasos vacía
+  `confirm-code*`, `pending-email-resend*` y `new-email-confirm:*`. Y confirma un cambio de correo DE VERDAD: la cuenta de
+  pruebas vuelve a su correo por tinker justo después y también al EMPEZAR (una corrida cortada a medias la dejaría fuera).
 
 ### 3. Guardas de arquitectura — `tests/Feature/Architecture/`
 Tests que no prueban una feature sino una REGLA estructural; sin ellos el refactor de Fase 2 se

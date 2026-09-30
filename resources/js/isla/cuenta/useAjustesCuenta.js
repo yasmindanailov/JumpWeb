@@ -4,38 +4,46 @@
  * probado.
  *
  *   · **Los datos son los del motor, usados SIN tocarlo** (como la compra y los hijos): el perfil (`stores/profile.js`),
- *     las credenciales (`credentials.js`), la privacidad (`privacy.js`), el descargo (`waiver.js`), el olvido
- *     (`auth.js`) y el cierre de sesión (`account/sign-out.js`). Son del carril del SPA; aquí se leen y se llaman.
+ *     las credenciales (`credentials.js`), la privacidad (`privacy.js`), el descargo (`waiver.js`) y el cierre de
+ *     sesión (`account/sign-out.js`). Son del carril del SPA; aquí se leen y se llaman.
  *   · **Cada plegable pide lo suyo al ABRIRSE**, una vez: Ajustes va plegado al final («nada esencial vive aquí») y
  *     quien no lo abre no paga `GET /me`, las identidades, el descargo ni los pedidos.
  *   · **Los plegables abiertos y lo escrito en «Tus datos» se conservan** al ir a un paso y volver: la flecha vuelve «al
  *     mismo punto», y un punto con el plegable cerrado ya no es el mismo.
- *   · Los formularios de los pasos (contraseña, correo, otras sesiones, desvincular, firmar, borrar) comparten UN estado
- *     (`f`, `errores`, `fallo`), que se vacía al entrar en cada uno: solo se ve uno a la vez, y una contraseña escrita en
- *     un paso no puede aparecer en otro.
+ *   · Los formularios de los pasos (correo, otras sesiones, desvincular, firmar, borrar) comparten UN estado (`f`,
+ *     `errores`, `fallo`, `codigo`), que se vacía al entrar en cada uno: solo se ve uno a la vez, y un código pedido en un
+ *     paso no puede aparecer en otro.
+ *   · ▶ **Lo sensible se confirma con un CÓDIGO al correo** (A3b de `specs/acceso-con-codigo.md` §4.10, `#857`): el primer
+ *     toque de la acción manda el código (`POST /me/confirm-code`) y enseña su campo; el segundo lo usa. Viaja por los
+ *     GUARDIANES públicos de los stores del motor (`run`, `runForm`: limpian, llaman y colocan el veredicto) con el cuerpo
+ *     de la isla: los stores siguen sin tocarse, y su `current_password` se queda para el cajón hasta su A4.
  */
 import { computed, reactive, watch } from 'vue';
 import { api } from '../../sidebar/api.js';
 import { t as texto, tp } from '../../sidebar/i18n.js';
-import { useProfileStore } from '../../sidebar/stores/profile.js';
+import { useProfileStore, profileBody } from '../../sidebar/stores/profile.js';
 import { useCredentialsStore } from '../../sidebar/stores/credentials.js';
 import { usePrivacyStore } from '../../sidebar/stores/privacy.js';
 import { useWaiverStore } from '../../sidebar/stores/waiver.js';
-import { useAuthStore } from '../../sidebar/stores/auth.js';
 import { fieldError } from '../../sidebar/account/form-outcome.js';
+import { runForm } from '../../sidebar/account/form-run.js';
 import { signOut } from '../../sidebar/account/sign-out.js';
 import { conVuelta } from '../../sidebar/reanudar.js';
 import { protegido } from './seguro.js';
 import {
     correoDe, datosDe, descargoDe, googleDe, hayCambios, idiomasDe, interruptoresDe, recibosDe, reservaQueImpide,
-    revisarCorreo, revisarDatosCuenta,
+    revisarCodigo, revisarCorreo, revisarDatosCuenta,
 } from './ajustes.js';
 import { nacimientoDeAlta } from '../compra/datos.js';
+import { erroresDelCodigo } from '../compra/acceso.js';
 
 const POR_PAGINA_RECIBOS = 10;
 
 /** El formulario de un paso, vacío. */
-const pasoVacio = () => ({ actual: '', nueva: '', correo: '', clave: '', entiendo: false, casilla: false });
+const pasoVacio = () => ({ correo: '', codigo: '', entiendo: false, casilla: false });
+
+/** El código de confirmar de un paso: sin pedir. `reenvios`, cuántos se han pedido OTRA vez (la pista dice «otro»). */
+const codigoVacio = () => ({ enviado: false, reenvios: 0 });
 
 /**
  * @param {{textos: object, props: object, locale: string, proxima: import('vue').ComputedRef, contexto: object,
@@ -46,13 +54,12 @@ export function useAjustesCuenta({ textos, props, locale, proxima, contexto, dec
     const credenciales = useCredentialsStore();
     const privacidad = usePrivacyStore();
     const descargo = useWaiverStore();
-    const auth = useAuthStore();
     const opciones = () => ({ api, messages: props.messages, auth: props.auth });
     const tx = (clave) => texto(textos, clave);
 
     const s = reactive({
         abiertos: [], d: datosDe(null), tocado: false, erroresDatos: {},
-        f: pasoVacio(), errores: {}, fallo: '', enviado: false, interruptor: '',
+        f: pasoVacio(), errores: {}, fallo: '', codigo: codigoVacio(), interruptor: '',
         pedidos: null, pagina: 0, ultima: 1, cargandoRecibos: false,
     });
 
@@ -97,7 +104,7 @@ export function useAjustesCuenta({ textos, props, locale, proxima, contexto, dec
 
     /** Al entrar en un paso: su formulario, vacío; lo que dijo el servidor la vez anterior, fuera. */
     function empezarPaso() {
-        Object.assign(s, { f: pasoVacio(), errores: {}, fallo: '', enviado: false });
+        Object.assign(s, { f: pasoVacio(), errores: {}, fallo: '', codigo: codigoVacio() });
         credenciales.reset();
         privacidad.reset();
         descargo.reset();
@@ -152,65 +159,138 @@ export function useAjustesCuenta({ textos, props, locale, proxima, contexto, dec
         return perfil.expired ? 'caducada' : 'error';
     }
 
-    // ── Los pasos que piden la contraseña actual ───────────────────────────────────────────────────
+    // ── Lo que se confirma con un código al correo (A3b, `#857`) ───────────────────────────────────
 
-    const faltaClave = (campo = 'clave') => (s.f[campo] ? {} : { [campo]: tx('compra.datos.errores.clave') });
+    /**
+     * Pide el código de confirmar `accion` al correo de la cuenta. Con él de camino, el paso enseña su campo (`enviado`).
+     * El tope (uno por minuto) enseña el campo igual —hay uno recién enviado— y dice cuánto esperar bajo él.
+     *
+     * @returns {Promise<'enviado'|'caducada'|'error'>}
+     */
+    async function pedirCodigo(accion, { otro = false } = {}) {
+        const r = await api.post('/me/confirm-code', { action: accion });
 
-    async function guardarClave() {
-        const errores = { ...faltaClave('actual'), ...(s.f.nueva.length >= 8 ? {} : { nueva: tx('compra.datos.errores.contrasena') }) };
+        if (r.status === 401) return 'caducada';
+        if (r.ok || r.error?.code === 'too_many_requests') {
+            s.codigo = { enviado: true, reenvios: s.codigo.reenvios + (r.ok && otro ? 1 : 0) };
+            s.f.codigo = '';
+            // El tope: el campo sale igual (hay uno recién enviado) y, bajo él, cuánto esperar para pedir otro.
+            s.errores = r.ok ? {} : { codigo: erroresDelCodigo(r, textos).aviso };
 
-        Object.assign(s, { errores, fallo: '' });
-        if (Object.keys(errores).length) return 'error';
+            return r.ok ? 'enviado' : 'error';
+        }
+        s.fallo = erroresDelCodigo(r, textos, texto(props.messages, 'errors.try_later')).aviso;
 
-        return (await credenciales.changePassword({ currentPassword: s.f.actual, password: s.f.nueva }, opciones()))
-            ? 'ok' : colocar(credenciales, { actual: 'current_password', nueva: 'password' });
+        return 'error';
     }
 
-    /** El enlace para crear una contraseña (quien entró con Google no tiene) o recuperarla: al correo de la cuenta. */
-    async function enlaceClave() {
-        if (! perfil.user?.email) return;
-        auth.form.email = perfil.user.email;
-        const r = await auth.requestPasswordLink(opciones());
+    /**
+     * Confirmar con el código: sin él pedido, lo pide; con él escrito, hace la acción con él (`hacer(codigo)`). Lo que
+     * falta se dice antes de preguntar.
+     */
+    async function conCodigo(accion, hacer) {
+        Object.assign(s, { fallo: '' });
+        if (! s.codigo.enviado) return pedirCodigo(accion);
 
-        if (r?.sent) decir(tx('compra.entrar.olvido_texto'));
-        else if (! r?.skipped) s.fallo = r?.errors?.fields?.email || r?.errors?.global || texto(props.messages, 'errors.try_later');
+        s.errores = revisarCodigo(s.f, { enviado: true, textos });
+        if (s.errores.codigo) return 'error';
+
+        return hacer(s.f.codigo.trim());
     }
 
+    /** El «no» de una acción con código, en el paso: el del código bajo su campo; el resto, arriba. */
+    const colocarConCodigo = (store, campos = {}) => colocar(store, { codigo: 'code', ...campos });
+
+    /**
+     * «Enviarme el código» y después «Enviar el código al correo nuevo»: el código de CONFIRMAR va al correo de la cuenta,
+     * y con él el servidor deja pendiente el nuevo y le manda SU código (`PATCH /me`, A2). El nuevo se escribe en la misma
+     * pantalla ({@see confirmarCorreo}).
+     */
     async function enviarCorreo() {
         const errores = revisarCorreo(s.f, { actual: perfil.user?.email ?? '', textos });
 
         Object.assign(s, { errores, fallo: '' });
         if (Object.keys(errores).length || ! perfil.user) return 'error';
-        const g = datosDe(perfil.user);
-        const ok = await perfil.apply({ name: g.nombre, phone: g.telefono, locale: g.idioma, email: s.f.correo.trim(), currentPassword: s.f.clave }, opciones());
 
-        if (! ok) return colocar(perfil, { correo: 'email', clave: 'current_password' });
-        Object.assign(s, { f: pasoVacio(), enviado: true });
+        return conCodigo('change_email', async (codigo) => {
+            const g = datosDe(perfil.user);
+            const cuerpo = { ...profileBody({ name: g.nombre, phone: g.telefono, locale: g.idioma, email: s.f.correo.trim() }), code: codigo };
 
-        return 'ok';
+            if (! await perfil.run(() => api.patch('/me', cuerpo), opciones())) return colocarConCodigo(perfil, { correo: 'email' });
+            Object.assign(s, { f: pasoVacio(), codigo: codigoVacio(), errores: {} });
+
+            return 'pendiente';
+        });
     }
 
+    /** «Confirmar el correo»: el código que llegó al buzón NUEVO (`POST /me/pending-email/confirm`, A2b). */
+    async function confirmarCorreo() {
+        s.errores = revisarCodigo(s.f, { enviado: true, textos });
+        s.fallo = '';
+        if (s.errores.codigo) return 'error';
+
+        if (await perfil.run(() => api.post('/me/pending-email/confirm', { code: s.f.codigo.trim() }), opciones())) {
+            // «Hola, Ana» y el aviso de confirmar el correo salen del contexto de cuenta: con otro correo, se relee.
+            contexto.refresh({ api });
+
+            return 'ok';
+        }
+        const r = colocarConCodigo(perfil);
+        // Otra cuenta tomó el correo mientras tanto: su «no» no tiene campo aquí, va arriba.
+        const ocupado = fieldError(perfil.fields, 'email');
+
+        if (ocupado) s.fallo = ocupado;
+
+        return r;
+    }
+
+    /** «Pedir otro código» del correo nuevo: el servidor manda otro (y el enlace de siempre) al buzón nuevo. */
     async function reenviarCorreo() {
-        if (await perfil.resendPending(opciones())) decir(tx('mi_cuenta.correo.reenviado'));
-        else s.fallo = perfil.notice || texto(props.messages, 'errors.try_later');
+        if (await perfil.resendPending(opciones())) {
+            s.codigo = { enviado: true, reenvios: s.codigo.reenvios + 1 };
+            Object.assign(s, { errores: {}, fallo: '' });
+            s.f.codigo = '';
+        } else {
+            s.fallo = perfil.notice || texto(props.messages, 'errors.try_later');
+        }
     }
 
     async function cancelarCorreo() {
-        if (await perfil.cancelPending(opciones())) { s.enviado = false; decir(tx('mi_cuenta.correo.cancelado')); } else s.fallo = perfil.notice || texto(props.messages, 'errors.try_later');
+        if (await perfil.cancelPending(opciones())) {
+            Object.assign(s, { f: pasoVacio(), codigo: codigoVacio(), errores: {} });
+            decir(tx('mi_cuenta.correo.cancelado'));
+        } else {
+            s.fallo = perfil.notice || texto(props.messages, 'errors.try_later');
+        }
+    }
+
+    /** «Pedir otro código» de un paso que confirma: otro código de ESA acción; el nuevo anula el anterior. */
+    const ACCION_DE_PASO = { correo: 'change_email', 'otras-sesiones': 'close_sessions', desvincular: 'unlink_google', borrar: 'delete_account' };
+
+    async function otroCodigo(vista) {
+        const accion = ACCION_DE_PASO[vista];
+
+        if (vista === 'correo' && perfil.user?.pending_email) return reenviarCorreo();
+        if (accion) await pedirCodigo(accion, { otro: true });
+
+        return null;
     }
 
     async function cerrarOtras() {
-        Object.assign(s, { errores: faltaClave(), fallo: '' });
-        if (s.errores.clave) return 'error';
-
-        return (await credenciales.revokeOtherSessions({ currentPassword: s.f.clave }, opciones())) ? 'ok' : colocar(credenciales, { clave: 'current_password' });
+        return conCodigo('close_sessions', async (codigo) => (
+            await credenciales.run(() => api.post('/me/sessions/revoke-others', { code: codigo }), opciones()) ? 'ok' : colocarConCodigo(credenciales)
+        ));
     }
 
     async function desvincular() {
-        Object.assign(s, { errores: faltaClave(), fallo: '' });
-        if (s.errores.clave) return 'error';
+        return conCodigo('unlink_google', async (codigo) => {
+            if (! await credenciales.run(() => api.delete('/me/identities/google', { code: codigo }), opciones())) return colocarConCodigo(credenciales);
+            // La lista, releída (como `unlinkIdentity` del motor): la foto vieja enseñaría el vínculo que se acaba de quitar.
+            credenciales.$patch({ identities: null });
+            await credenciales.ensureIdentities({ api });
 
-        return (await credenciales.unlinkIdentity('google', { currentPassword: s.f.clave }, opciones())) ? 'ok' : colocar(credenciales, { clave: 'current_password' });
+            return 'ok';
+        });
     }
 
     /** «Vincular Google»: la ida la hace el SERVIDOR y vuelve a esta página, a Mi cuenta en «Acceso» (`next`, `SEC-08`). */
@@ -226,16 +306,17 @@ export function useAjustesCuenta({ textos, props, locale, proxima, contexto, dec
      */
     async function borrar() {
         if (! s.f.entiendo) return 'error';
-        Object.assign(s, { errores: faltaClave(), fallo: '' });
-        if (s.errores.clave) return 'error';
 
-        if (await privacidad.deleteAccount({ currentPassword: s.f.clave }, opciones())) {
-            window.location.assign(props.urls?.home || '/');
+        return conCodigo('delete_account', async (codigo) => {
+            // El guardián del motor, con el cuerpo de la isla (`deleteAccount` del store manda la contraseña).
+            if (await runForm(privacidad, () => api.delete('/me', { code: codigo }), opciones())) {
+                window.location.assign(props.urls?.home || '/');
 
-            return 'ok';
-        }
+                return 'ok';
+            }
 
-        return colocar(privacidad, { clave: 'current_password' });
+            return colocarConCodigo(privacidad);
+        });
     }
 
     // ── Privacidad ─────────────────────────────────────────────────────────────────────────────────
@@ -321,7 +402,9 @@ export function useAjustesCuenta({ textos, props, locale, proxima, contexto, dec
     }));
 
     const paso = computed(() => ({
-        f: s.f, errores: s.errores, fallo: s.fallo, enviado: s.enviado,
+        f: s.f, errores: s.errores, fallo: s.fallo,
+        // El código de confirmar: si ya va de camino, cuántos «otro», y a qué correo (el de la cuenta).
+        codigo: { ...s.codigo, correo: String(perfil.user?.email ?? '') },
         correo: perfil.user ? correoDe(perfil.user, { textos, ahora: Date.now() }) : null,
         google: googleDe(credenciales.identities, { puedeVincular: false }),
         reserva: reservaQueImpide(proxima.value, { locale, textos }),
@@ -330,7 +413,7 @@ export function useAjustesCuenta({ textos, props, locale, proxima, contexto, dec
     }));
 
     return {
-        s, bloque, paso, alternar, abrir, empezarPaso, cambiarDato, guardarDatos, guardarClave, enlaceClave, enviarCorreo,
+        s, bloque, paso, alternar, abrir, empezarPaso, cambiarDato, guardarDatos, enviarCorreo, confirmarCorreo, otroCodigo,
         reenviarCorreo, cancelarCorreo, cerrarOtras, desvincular, vincular, borrar, interruptor, descargarDatos, firmar, salir,
         masRecibos: () => cargarRecibos(true),
         cambiarPaso: (campo, valor) => { s.f[campo] = valor; if (s.errores[campo]) s.errores = { ...s.errores, [campo]: '' }; },
