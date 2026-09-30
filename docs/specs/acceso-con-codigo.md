@@ -25,7 +25,8 @@
   alta de hoy (`#31`): la acotan los límites de §4.2.
 - **Estado**: ✅ aprobada (`#848`). **A1 ✅** (29-09, `#853`/`#854`, §4.8) · **A2 ✅** (30-09, `#855`/`#856`, §4.9: reconfirmar
   con un código, cada sesión atada al token y el correo nuevo con su código) · **A3a ✅** (`#857`, §4.10: «Entra» y el alta
-  de la isla con el código; visto por el owner) · **A3b ✅** (los Ajustes de Mi cuenta con el código). Sigue la A4 (SPA).
+  de la isla con el código; visto por el owner) · **A3b ✅** (los Ajustes de Mi cuenta con el código). Sigue la A4 (SPA):
+  al detalle en §4.11 (A4a entrar y alta; A4b Mi cuenta), sin código hasta el ojo del owner.
 - **Invariantes**: `SEC-06` (se amplía al código), `RGPD-01` (la purga borra los códigos), `RGPD-06` (sin cambio de
   forma). Ningún fichero del `CRITICAL_RE`.
 
@@ -245,6 +246,50 @@ pantalla: el nuevo y el código de confirmar (al de ahora); ya pendiente, el có
   callejón. La A5 retira su API. Con ella, sus textos de `lang/*/isla.php`.
 - Pesos: Ajustes 28,50 → 29,03 (techo 30). `sonda-cuenta.mjs` confirma con los códigos de Mailpit —el correo, cambiado de
   verdad y devuelto por tinker; cerrar las otras sesiones; el código de borrar, sin borrar—: 255 a 390 y 1280.
+
+### 4.11 La A4, el cajón — al detalle (medido el 30-09 noche, antes de codificar; del SPA contra `#848`, `#849`, `#857` y `#858`; vetable al ojo)
+**Lo que hoy pide contraseña en el cajón** (medido, `resources/js/sidebar/**`):
+- **La compra** (paso 5, `IdentifyStep`): dos pestañas (`AuthTabset`) —«Inicia sesión» (correo, contraseña, «recuérdame»,
+  «¿olvidaste…?») y «Crea tu cuenta» (nombre, correo, teléfono, cumpleaños, contraseña, descargo, anti-bot)—.
+- **Mi cuenta sin sesión**: las zonas `LOGIN`, `REGISTER` (con sus pestañas, `AuthTabs`) y `FORGOT`, y sus puertas
+  `/login`, `/registro` y `/recuperar-contrasena` (`App\Http\Sidebar\AccountDoor`).
+- **Mi cuenta con sesión**: `PASSWORD` (cambiarla) y, con `current_password`, `SESSIONS` (cerrar las otras y desvincular
+  Google, un solo campo para las dos), `PRIVACY` (borrar la cuenta) y `PROFILE` (el correo nuevo); `NoPasswordHint` en cuatro.
+- **La isla usa del motor, y eso NO cambia de forma** (medido con `grep`): `INVALID_CREDENTIALS` de `login.js`,
+  `submitRegister()` y `enterWith()` del flujo de compra, `registerStandalone`, `resendVerification` y
+  `allowVerificationResend` de `auth`, `ensureIdentities` y `run` de `credentials`, `run`, `cancelPending`, `resendPending` y
+  `profileBody` de `profile`, `runForm`, `fieldError`, `landOnAccount` y `google.js`. `runRegister` sigue mandando el
+  teléfono que traiga el formulario (lo pone la isla). **Servidor y contrato, sin cambios**: todo existe (1.55.0–1.58.0).
+
+**El diseño**, en dos tandas que se verifican solas, como la A3:
+- **A4a · entrar y darse de alta** (la compra y Mi cuenta sin sesión). **UNA puerta, sin pestañas**: Google arriba con su
+  «o» (como hoy), el correo y «Continuar» (`POST /auth/code`). Con `next: code`, en el mismo sitio: «Te hemos enviado un código
+  a …», el código (`one-time-code`, numérico), «Mantener la sesión iniciada en este dispositivo» SIN marcar (`remember`,
+  `#858`), «Entrar», «Pedir otro código» con su espera y «Cambiar el correo»; `POST /auth/login {email, code, remember}` y
+  la compra sigue por `enterWith()` (como hoy tras entrar), Mi cuenta aterriza (`landOnAccount`). El tope del CORREO (`429`
+  con `next: code`) va al código sin error; el de la IP, arriba con su espera. Con `next: register`, el alta SIN contraseña ni
+  teléfono: el correo a la vista con «Cambiar», el nombre, «Tu cumpleaños» (opcional), el descargo (si hay texto), la
+  privacidad, el anti-bot y el señuelo (`purchase` en la compra, `standalone` en Mi cuenta: las dos abren sesión desde
+  `#331`). El teléfono lo pide el paso de pagar cuando el pedido lo exige (`buyer-due.js`, `#787`). Fuera «¿olvidaste…?»,
+  la zona `FORGOT` y `forgot.js`; `/recuperar-contrasena` y `/registro` abren la puerta (la A5 retira la ruta de recuperar).
+- **A4b · Mi cuenta con sesión**: las cuatro acciones con un código **por acción** (el servidor emite un `confirm` sin atarlo
+  a la acción y el correo dice para qué es: se pide para la que se va a hacer). Una pieza, como `CampoCodigoConfirmar` de la
+  isla: el primer toque «Enviarme el código» (`POST /me/confirm-code {action}`), sale el campo con el foco y «Pedir otro
+  código», el segundo hace la acción con `code`. En `SESSIONS`, cada acción con la suya; en `PRIVACY`, el código y después la
+  pregunta de siempre (`ConfirmInline`); en `PROFILE`, el correo nuevo en tres tiempos, como la isla (el código al de ahora →
+  pendiente → el del NUEVO y «Confirmar el correo», `POST /me/pending-email/confirm`). Fuera `PASSWORD` («Cambiar la
+  contraseña», como la isla en la A3b), `NoPasswordHint` y `PasswordInput`; la API la retira la A5.
+- **Dónde vive**: la puerta, entrar y sus «no», sin estado, en el motor (`login.js` pasa a ser la del código y conserva
+  `INVALID_CREDENTIALS`), con su `node --test`; la etapa, el correo y la espera del reenvío, en `stores/auth.js`. Los textos,
+  los que el owner ya vio en la isla, en las claves del cajón (`lang/*/account.php`). La isla sigue con su `acceso.js`.
+
+**Guardas**: `node --test` de cada módulo (la puerta, el código, sus «no», el `429` con `next`, «Pedir otro» con su espera,
+`remember` solo marcado); las pruebas PHP de las zonas re-apuntadas; los árboles congelados de la identificación, el alta y
+su banner REGENERADOS a propósito (`MANIFEST_REFRESH=1`, justificado en el commit: ya no hay segundo motor que los contradiga);
+`SidebarBundleBudgetTest` y `SidebarMountTest` (lo que sale contra lo que entra, medido); un arnés de mutación por tanda; la
+sonda en el navegador (en la local sirve el cajón: sin fila `sidebar.shell`) leyendo los códigos de Mailpit, a 390 y 1280.
+**Por buzón a plataforma**: con la A4 en `main`, la A5 puede retirar la contraseña de los clientes; su `PLEGABLE_DE_ZONA`
+(`isla/cuenta/vista.js`) guarda una entrada `password` que se queda sin zona.
 
 ## 5. Impacto en invariantes
 

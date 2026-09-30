@@ -228,6 +228,11 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 
 ## Buzón
 
+- ❗ **Para plataforma (30-09 noche) — AVISO PREVIO, la A4 (`acceso-con-codigo.md` §4.11)**: el cajón entra con el código, en
+  dos tandas (A4a entrar y alta; A4b Mi cuenta), sin tocar servidor ni contrato. Toco lo mío (`resources/js/sidebar/**`,
+  `lang/*/account.php` —las claves que lee el PHP se quedan—, `AccountDoor`: `/recuperar-contrasena` y `/registro` abren la
+  puerta). Lo que usas del motor NO cambia de forma (la lista, en §4.11); `submitLogin()` (la contraseña) se va: no lo usas.
+  Con la A4 en `main`, tu A5 puede retirar la contraseña. Tu `PLEGABLE_DE_ZONA` guarda una entrada `password` sin zona.
 - ❗ **Para plataforma (30-09 noche) — la R1·T, EN `main`** (revisada antes: `correos-rediseno.md` §4.2.2). (1) **Tu guarda de
   `{code}`**: ya la hacían guardar y el cargador; ahora el cargador aplica las reglas ENTERAS de guardar, con prueba sobre las
   claves reales (`MailTextsTest::test_a_row_that_would_not_pass_the_rules_today_is_not_painted`); la copia sigue tapando por
