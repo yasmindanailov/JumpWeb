@@ -111,23 +111,24 @@ export function propsDeLaIsla({ config, estado, acciones, textos }) {
         ctaVisible: estado.vista.cta,
         // La oferta de la página en sus 3 últimos días (situación `oferta`): la decide la página, que sabe su fecha.
         offer: config.offer ?? null,
-        compact: false,
         homeLabel: config.homeLabel ?? null,
         menuItems: config.menuItems ?? [],
         contact: config.contact ?? { phone: '', whatsapp: '' },
         lang: config.lang ?? '',
-        // La cuenta, en su capa de la isla (T5, `#773`): Mi QR (el carné), Mi cuenta (su inicio) o, sin sesión, entrar. De
-        // dónde viene (`from`: el menú o la acción de la isla) viaja con ella: desde el menú, su flecha vuelve a él.
+        // La cuenta, en su capa de la isla (T5, `#773`): Mi QR (el carné), Mi cuenta (su inicio) o, sin sesión, entrar. Desde
+        // la Z6a la abre el control de la DERECHA de la barra (`from: 'isla'`): con sesión, Tu QR; sin ella, Entrar.
         // Con sesión, lo que el SERVIDOR sabe de la próxima (`config.cuenta`, `Http\Cuenta\AntesDeVenir::paraLaIsla`, T5c):
-        // su primera tarea pendiente —el punto del menú y «Siguiente: …» en Mi cuenta— y si es HOY.
+        // su primera tarea pendiente —el punto de la cuenta y «Siguiente: …» en Mi cuenta— y si es HOY.
         account: config.owner
             ? { state: 'session', pending: Boolean(cuenta?.pending), pendingText: cuenta?.pendingText ?? null,
                 onQr: (x) => acciones.abrirCuenta('card', x?.from), onClick: (x) => acciones.abrirCuenta('home', x?.from) }
             : { state: 'guest', onClick: (x) => acciones.abrirCuenta('login', x?.from) },
-        // «Hoy a las 17:00» (situación 14): manda sobre casi todo y su acción es «Ver mi QR», que abre Tu QR en su capa.
+        // «Hoy a las 17:00» (situación 14): desde la Z6a no manda en la barra; pone el punto LIMA en la cuenta, y la hora
+        // y «Cómo llegar» están en Tu QR.
         bookingToday: cuenta?.bookingToday ? { text: cuenta.bookingToday.text } : null,
-        // La tarea (situación 13): en la portada y en la página de lo reservado, con su acción: un enlace a su sitio o, si
-        // la resuelve una pantalla de la cuenta (`zone`, «Añade a tus hijos», T5d), la cuenta abierta en esa zona.
+        // La tarea (situación 13): desde la Z6a no manda en la barra; pone el punto NARANJA en la cuenta (y su texto, en el
+        // nombre del control para el lector). Su acción: un enlace a su sitio o, si la resuelve una pantalla de la cuenta
+        // (`zone`, «Añade a tus hijos», T5d), la cuenta abierta en esa zona.
         task: cuenta?.task ? { text: cuenta.task.text, product: cuenta.task.product ?? null, action: accionDeTarea(cuenta.task.action, acciones) } : null,
         // El selector de planes (T6a): con él, «Reservar» de la isla lo abre en vez de ir a la página.
         plans: planesDe(config.plans, acciones),

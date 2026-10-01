@@ -2330,7 +2330,7 @@ fuente de cada punto es su `readme.md` (la sección entre comillas) y su compone
 
 | Tanda | Qué | Del readme | Lo más grande |
 |---|---|---|---|
-| Z6a | La isla en **tres huecos** (menú · acción · cuenta), la frase siempre, la acción siempre (a secundaria con un botón de la página a la vista), la cuenta con el QR y su punto, 13/14 fuera de la barra, el menú reordenado, «¿Lo hablamos?», **cristal 82 %** y **morph** en cada cambio, sin `compact` | «La isla · tres huecos, cristal y morph (28-09)» | `ParkIsland.jsx` (822 líneas cambiadas) |
+| Z6a ✅ | La isla en **tres huecos** (menú · acción · cuenta), la frase siempre, la acción siempre (a secundaria con un botón de la página a la vista), la cuenta con el QR y su punto, 13/14 fuera de la barra, el menú reordenado, «¿Lo hablamos?», **cristal 82 %** y **morph** en cada cambio, sin `compact` | «La isla · tres huecos, cristal y morph (28-09)» | `ParkIsland.jsx` (822 líneas cambiadas) |
 | Z6b | **Banners «Da la razón»**: con un botón de la página a la vista, la razón en vez del naranja (razón · vivo · espera · hecho), la compra que no corta al cerrar, el aviso a isla entera, `isla_razon` | «La isla · banners, opción C (29-09)» | `explorations/isla-banners` (las razones de cada página) |
 | Z6c | **Experimento B3** contra la isla de hoy, con `Experiments` (asigna el servidor por visitante; `variante` en los eventos) y las frases cortas de cada página | «Experimento B3 (29-09)» | la cabecera sin botón en la primera pantalla del móvil |
 | Z6d | **La firma** de la cabecera (logo y nota de Google juntos, `--scrim-firma`), las garantías del móvil en lista, `Sticker` y `ProofChip`, el filo del gris (`--edge-subtle`) | «La cabecera · la firma», «Las garantías en el móvil», «Las pegatinas», «La prueba de los cuidados» | `VideoHero`, `ReassuranceBand`, `ProofList` |
@@ -2353,6 +2353,67 @@ la hace el SPA.
 «El precio no abre la página: está a un toque, y entero en su pieza (regla del precio, 30-09; Colegios lo conserva)». Manda
 sobre el readme del zip («titular y precio no ceden nunca», 27-09) y cambia Z6c (B3 contaba con el precio en la cabecera) y
 Z6d (la firma sin cifra grande al lado): se mide en esas tandas.
+
+#### La Z6a al detalle (medido el 01-10, antes de codificar)
+
+**Fuente**: el readme, «La isla · tres huecos, cristal y morph (28-09)», y el diff de `ParkIsland.jsx` entre el zip del 27-09
+(instancia `6a550a3`, el que porta hoy la isla de Vue) y el (6) (`3b0956d`): +604 −218, con la Z6b y la Z6c dentro; aquí, solo
+la Z6a. Lo que el 29-09 corrige del 28-09 manda: la cabecera CONSERVA su botón en móvil (sección «banners») y la nota de Google
+vuelve en la firma (Z6d).
+
+**Lo que cambia, pieza a pieza (Vue)**:
+1. `situacion.js`: fuera las filas `reserva-hoy` (14) y `tarea` (13): ponen el punto en la cuenta y viven en Mi QR. La acción
+   no es nunca `null`: con `ctaVisible` (o `chosen.widgetVisible`) la situación sale con `calm` (secundaria), salvo `locked` y
+   `urgent` (la reserva a medias). `hoy`, antes de abrir y con `closesAt`, dice la frase entera («Hoy abrimos de 16:30 a 21:30.
+   Quedan huecos esta tarde.»). `reparto()` pierde `compact`, `mobileContext`, `lineInButton` y `yielded`: la frase va
+   siempre (encima en móvil, en la fila arriba) y `row = top`.
+2. `useIsla.js`: fuera `useCompacta` (la isla de la página ya pasaba `compact: false`). Lo que trae el scroll se ASIENTA (la
+   frase y la etiqueta, 250 ms; el tono, 200 ms; al momento si está abierta, bloqueada, urge o aún no anima). El relevo nuevo
+   sustituye a `tipoDeCambio`: lo viejo se desenfoca encima (`isla-swap-out`) mientras lo nuevo llega (480 ms). La cuenta es
+   el control de la derecha (sin sesión, «Cuenta» → Entrar; con sesión, «Mi QR» → Tu QR, con `{ from: 'isla' }`) y lleva el
+   punto que sale del menú (lima con `bookingToday`; naranja con `task` o `account.pending`); con una capa abierta, Volver y
+   la X ocupan los dos huecos.
+3. `forma.js`: la isla en cristal (`--surface-glass-ink-float`, 82 %) salvo la capa grande (la compra y Mi cuenta, en
+   `--ink-surface`); la caja con el morph (`--dur-island` si se toca, `--dur-island-calma` si lo trae el scroll, con
+   `--ease-island`), la capa grande en calma; `data-size` sin `compacta`; `data-tono` nuevo.
+4. Las piezas: `BotonAccion` (secundaria con `--t-island-tone`, la etiqueta que nunca se corta —a 15px si no cabe—, entra y
+   sale; fuera `sublabel` y `llega`); `LineaContexto` (entra o se queda quieta; la nota en blanco; a la izquierda también
+   arriba); `MenuIsla` (el nombre con la letra de la marca, las páginas y una fila de iconos: llamar y WhatsApp | idioma y
+   cookies; fuera Mi QR y Mi cuenta); Mi QR con la tarea; «¿Lo hablamos?» (`help.stuck`, pieza nueva); la raya vertical de
+   la frase en la fila de arriba.
+5. `isla.css`: los respaldos del movimiento al zip (6) (`--dur-island` 480 ms, `--ease-island` 1,12) y los nuevos
+   (`--dur-island-calma`, `--t-island-tone`, `--surface-glass-ink-float`), más `isla-swap-out`. En la instancia,
+   `tema/construir-hoja.py` (no se corrió tras el zip (6): faltan `--t-island-tone` y `--dur-island-calma`) y la copia a
+   `public/instancia`.
+6. La instancia: la cabecera de la PORTADA deja de decir [Hoy] (era la única) y la isla lo dice desde la llegada; Visítanos
+   lo conserva y su isla lo dice también; el menú recibe `onLanguage` y `onCookieSettings`.
+
+**Fuera de la Z6a**: `reason`, `waiting` y el aviso a isla entera (Z6b); `variant`, las frases cortas y `fromShort` (Z6c); la
+firma (Z6d); la MEDICIÓN (`isla_accion` con `tono`, `isla_cuenta`): la isla de Vue no emite eventos (medido) y la analítica
+es del SPA (`#735`); las señales de atasco de cada página («por cablear», dice el readme): la isla trae el mecanismo.
+
+**Trampas**: los techos de peso de la isla (la calculadora iba a 0,2 KiB del suyo, `#858`) se miden al terminar con la guarda;
+un techo que suba es una decisión con la medida delante. Tras tocar un `.vue`, `build:ssr` y `build` antes de la suite: sin
+el `build`, la guarda de peso mide el paquete viejo (pasó el 01-10).
+
+**Verificación**: `situacion.test.js` y las pruebas de `forma` con los casos nuevos (la acción nunca falta; con `ctaVisible`,
+secundaria; la tarea y la reserva de hoy no mandan); la suite; `sonda-isla.mjs`, `sonda-primera-pantalla.mjs` y
+`sonda-web.mjs`; y el ojo del owner en vivo, a 390 y a 1280.
+
+**✅ Hecha el 01-10, con el visto bueno del owner en vivo** (390 y 1280; instancia `c35dcef`). Además de lo previsto
+entraron `FraseIsla`, `NotaAyuda` e `IconoMenu` (piezas), `useAsentado.js` y `useCruce.js` (con `asentado-cruce.test.js`),
+`piezas/boton-accion.js` (la lógica de `BotonAccion`, por `CE-6`) y `piezas/iconos-menu.js`: los dos dibujos del menú
+(idioma y cookies) se registran en el trozo del menú, porque en el registro común las calculadoras crecían +0,94 KiB sin
+llevar la isla. **Medido**: los tests de node de la situación, la forma, el asentado y el cruce, con
+`mutar-isla-z6a.sh` 18/18; `sonda-isla` 26/26 a 390 y a 1280; `sonda-portada` 23/23; `sonda-web` 17/17; y, con sus
+reglas puestas a la Z6a, `sonda-visitanos` 26/26 (la isla DICE [Hoy] también), `sonda-normas` 37/37 (el tono por
+`data-tono`: secundaria al llegar y ante el cierre) y `sonda-cuenta` entera (la cuenta por la barra y sin flecha; «Mi QR ·
+Hoy a las…» con el punto lima; la tarea en la etiqueta, con el naranja), con sus arneses `mutar-sonda-visitanos.sh` 8/8
+y `mutar-sonda-normas.sh` 16/16. `sonda-primera-pantalla` (`comparar`): 18 fallos en Kids y Jump, primera visita,
+IDÉNTICOS uno a uno con el JS de la base `5dbe175c`: no son de la Z6a (su causa, sin medir). Los techos de peso suben por
+la feature, con la base `5dbe175c` construida aparte: la compra 166,17 → 171,58 (techo 172) y la isla de la página
+172,62 → 178,01 (179); la calculadora (187,81) y la fiesta (194,27) no suben. **Pendiente**: `sonda-banco-movimiento.mjs`
+conserva los casos del 27-09 (solo cambió la etiqueta «Menú»): se rehace con la Z6a en la verificación final (`#768`).
 
 ## 5. Impacto en invariantes
 

@@ -3,15 +3,17 @@
  * así que cambiar de situación es una transformación, no un salto.
  *
  * Devuelve la caja medida (`box`: ancho, alto y el ancho disponible `cap`), si ya se puede animar (`animate`: no
- * hasta la primera medida), si toca la animación sin rebote (`calmNow`) y `remedirCuando()`, para volver a medir al
- * cambiar de forma.
+ * hasta asentarse la llegada), la calma del HUECO de la página (`calmNow`: con un panel abierto o cerrándose), la calma
+ * de la CAPA GRANDE (`calmaCapa`: la compra y Mi cuenta, que abren y cierran sin rebote; desde la Z6a los paneles ya no:
+ * abren y cierran con el morph) y `remedirCuando()`, para volver a medir al cambiar de forma.
  */
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
-export function useMorfeo({ wrapRef, sizerRef, isOpen, usaAncho = () => true }) {
+export function useMorfeo({ wrapRef, sizerRef, isOpen, inCheckout = ref(false), usaAncho = () => true }) {
     const box = ref({ w: 0, h: 0, cap: 0 });
     const animate = ref(false);
     const calm = ref(false);
+    const calmaCapa = ref(false);
     // El HUECO que la isla ocupa en la página (`#783`): el alto final de cada cambio —no el de cada fotograma—, y
     // congelado mientras un panel está abierto o cerrándose (la calma). Así la isla crece por encima de la página en vez
     // de empujarla: medido en escritorio, abrir el menú bajaba la página 497px y la recolocaba entera en cada fotograma.
@@ -24,6 +26,12 @@ export function useMorfeo({ wrapRef, sizerRef, isOpen, usaAncho = () => true }) 
     watch(isOpen, (abierta, _antes, alLimpiar) => {
         if (abierta) { calm.value = true; return; }
         const reloj = setTimeout(() => { calm.value = false; }, 450);
+        alLimpiar(() => clearTimeout(reloj));
+    }, { immediate: true });
+    // La capa grande, en calma al abrir y un momento después de cerrar: también el cierre va sin rebote (Z6a).
+    watch(inCheckout, (dentro, _antes, alLimpiar) => {
+        if (dentro) { calmaCapa.value = true; return; }
+        const reloj = setTimeout(() => { calmaCapa.value = false; }, 450);
         alLimpiar(() => clearTimeout(reloj));
     }, { immediate: true });
 
@@ -59,10 +67,12 @@ export function useMorfeo({ wrapRef, sizerRef, isOpen, usaAncho = () => true }) 
         if (fotograma) cancelAnimationFrame(fotograma);
     });
 
+    // La llegada, sin transformaciones (zip (6)): la isla toma su estado de llegada —su tono, su alto publicado— sin
+    // animar; los cambios se animan pasado el primer asentamiento (700ms).
     watch(() => box.value.h, (h, _antes, alLimpiar) => {
         if (!h || animate.value) return;
-        const f = requestAnimationFrame(() => { animate.value = true; });
-        alLimpiar(() => cancelAnimationFrame(f));
+        const reloj = setTimeout(() => { animate.value = true; }, 700);
+        alLimpiar(() => clearTimeout(reloj));
     }, { immediate: true });
 
     // Al cambiar de colocación o de forma se vuelve a medir, y otra vez al acabar la entrada del panel nuevo.
@@ -78,5 +88,5 @@ export function useMorfeo({ wrapRef, sizerRef, isOpen, usaAncho = () => true }) 
     // El borde de la isla (1px por lado) va fuera de lo que se mide.
     watch([() => box.value.h, calmNow], ([h, calma]) => { if (h && ! calma) reservado.value = h + 2; }, { immediate: true });
 
-    return { box, animate, calmNow, reservado, remedirCuando };
+    return { box, animate, calmNow, calmaCapa, reservado, remedirCuando };
 }

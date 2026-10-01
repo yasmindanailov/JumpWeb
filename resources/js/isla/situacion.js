@@ -7,8 +7,8 @@
  * el diseño píxel a píxel (`scripts/pixel.mjs`).
  *
  * Se lee de arriba abajo y gana la primera fila con datos: añadir una situación es añadir una fila, nunca tocar
- * el pintado. `action: null` = esta situación no lleva botón; si una fila no habla de la acción, hereda la de
- * la página.
+ * el pintado. Si una fila no habla de la acción, hereda la de la página. La isla lleva siempre frase y acción
+ * (Z6a, zip (6), «tres huecos» del 28-09): ninguna fila la quita.
  */
 import { t, tp } from '../sidebar/i18n.js';
 
@@ -25,8 +25,12 @@ function leerHoy(p, act, m) {
     }
     const antes = hoy.state === 'antes';
     const abierto = hoy.state === 'abierto';
+    // [Hoy] vive en la isla desde la llegada (Z6a): las cabeceras que venden ya no lo dicen, así que antes de abrir, y
+    // con la hora de cierre, la isla dice la frase entera que decía la cabecera.
     const line = antes
-        ? tp(m, hoy.slots ? 'hoy.antes_con_huecos' : 'hoy.antes', { hora: hoy.opensAt })
+        ? (hoy.closesAt
+            ? tp(m, hoy.slots ? 'hoy.antes_de_a_con_huecos' : 'hoy.antes_de_a', { abre: hoy.opensAt, cierra: hoy.closesAt })
+            : tp(m, hoy.slots ? 'hoy.antes_con_huecos' : 'hoy.antes', { hora: hoy.opensAt }))
         : abierto
             ? tp(m, hoy.slots ? 'hoy.abierto_con_huecos' : 'hoy.abierto', { hora: hoy.closesAt })
             : hoy.state === 'completo'
@@ -34,34 +38,31 @@ function leerHoy(p, act, m) {
                 : tp(m, 'hoy.cerrado', { hora: hoy.opensAt });
     const paraHoy = Boolean(hoy.slots) && (antes || abierto);
 
-    // Con la acción cedida (act = null: hay un primario de la página a la vista), «hoy» no puede resucitarla.
-    return { line, tone: paraHoy ? 'live' : 'neutral', action: paraHoy && act ? { ...act, label: t(m, 'accion.reservar_hoy') } : act };
+    return { line, tone: paraHoy ? 'live' : 'neutral', action: paraHoy ? { ...act, label: t(m, 'accion.reservar_hoy') } : act };
 }
 
-/** Situación 13: la tarea sale en la portada y en la página del producto reservado. */
-export const productoDe = (page) => page.product || (page.kind === 'cumpleanos' ? 'cumpleanos' : null);
-
+/*
+ * Las situaciones 13 (tarea) y 14 (reserva hoy) no son filas desde la Z6a: no mandan en la barra. Ponen el punto en la
+ * cuenta (naranja y lima, `useIsla.js`) y viven en Mi QR. En la acción solo mandan la compra y lo que la resuelve (11).
+ */
 const REGLAS = [
     { id: 'compra', when: (p) => p.checkout,
         read: (p) => ({ line: p.checkout.summary, action: p.checkout.action, tone: 'focus', locked: true }) },
-    { id: 'reserva-hoy', when: (p) => p.bookingToday,
-        read: (p, act, m) => ({ line: p.bookingToday.text, note: p.bookingToday.extra, tone: 'live',
-            action: p.account && p.account.onQr
-                ? { label: t(m, 'accion.ver_qr'), onClick: () => p.account.onQr({ from: 'isla' }) }
-                : { label: t(m, 'accion.ver_qr'), panel: 'qr', onClick: p.bookingToday.onQr } }) },
     { id: 'pago-fallido', when: (p) => p.payment === 'failed',
         read: (p, act, m) => ({ line: p.paymentText || t(m, 'pago.no_cobrado'), tone: 'alert', locked: true,
             action: { label: t(m, 'accion.pagar_bizum'), onClick: p.onPayBizum },
             extra: { secondary: { label: t(m, 'accion.reintentar_tarjeta'), onClick: p.onRetry },
                 manual: p.onManual ? { label: t(m, 'accion.manual'), onClick: p.onManual } : null,
                 onDismiss: p.onDismiss || null } }) },
+    // La reserva a medias urge (`urgent`): resuelve algo que ya pasó y no baja a secundaria con el botón de la página.
     { id: 'a-medias', when: (p) => p.resume,
-        read: (p, act, m) => ({ line: p.resume.text, tone: 'alert', action: { label: t(m, 'accion.seguir'), onClick: p.resume.onClick } }) },
-    { id: 'tarea', when: (p) => p.task && (p.page.kind === 'portada' || productoDe(p.page) === (p.task.product || 'cumpleanos')),
-        read: (p) => ({ line: p.task.text, tone: 'alert', action: p.task.action }) },
+        read: (p, act, m) => ({ line: p.resume.text, tone: 'alert', urgent: true, action: { label: t(m, 'accion.seguir'), onClick: p.resume.onClick } }) },
+    // Con el botón del widget a la vista, en secundaria (`calm`): el brief pide no repetirlo, y la isla no se queda
+    // nunca sin acción.
     { id: 'elegido', when: (p) => p.chosen,
         read: (p, act, m) => ({ line: p.chosen.text, note: p.filling ? p.filling.text : null, noteTone: 'live',
-            action: (p.chosen.widgetVisible || p.ctaVisible) ? null : { label: p.chosen.label || t(m, 'accion.pagar_senal'), onClick: p.chosen.onClick } }) },
+            calm: Boolean(p.chosen.widgetVisible || p.ctaVisible),
+            action: { label: p.chosen.label || t(m, 'accion.pagar_senal'), onClick: p.chosen.onClick } }) },
     // Un cálculo con aviso (`quote.alert`) se dice en alerta y no abre el resumen.
     { id: 'calculado', when: (p) => p.quote,
         read: (p, act) => ({ line: p.quote.text, opens: p.quote.alert ? null : 'resumen', tone: p.quote.alert ? 'alert' : 'neutral', action: act }) },
@@ -73,37 +74,29 @@ const REGLAS = [
 /**
  * La situación que manda. `entrada` son las props de la isla; `m`, el grupo `isla` de `lang/`.
  *
- * Con un botón de la página en pantalla, la isla no repite la acción: cede. Solo cede la acción HEREDADA de la
- * página: las situaciones con acción propia y urgente (compra, pago fallido, reserva a medias, reserva de hoy,
- * tarea pendiente) mandan siempre, porque no compiten con vender: resuelven algo que ya pasó.
+ * La acción no se va nunca (Z6a). Con un botón de la página en pantalla (`ctaVisible`), la de la isla baja a
+ * secundaria (`calm`): mismo texto, mismo sitio, y un solo naranja por pantalla. La compra y el pago fallido
+ * (`locked`) y la reserva a medias (`urgent`) no bajan: resuelven algo que ya pasó.
  */
 export function resolverSituacion(entrada, m) {
     const p = { ...entrada, page: entrada.page || {} };
-    const act = p.ctaVisible ? null : (p.page.action || { label: t(m, 'accion.reservar') });
+    const act = p.page.action || { label: t(m, 'accion.reservar') };
     for (const regla of REGLAS) {
         if (!regla.when(p)) continue;
-        return { id: regla.id, tone: 'neutral', action: act, ...(regla.read(p, act, m) || {}) };
+        const s = { id: regla.id, tone: 'neutral', action: act, ...(regla.read(p, act, m) || {}) };
+        if (s.calm === undefined) s.calm = !s.locked && !s.urgent && Boolean(p.ctaVisible);
+        return s;
     }
-    return { id: 'desde', tone: 'neutral', line: p.page.from || '', action: act };
+    return { id: 'desde', tone: 'neutral', line: p.page.from || '', action: act, calm: Boolean(p.ctaVisible) };
 }
 
 /**
- * Cómo se reparte la situación en la isla: dónde va la línea, si se encoge, si es fila o bloque. Son las
- * cuentas del render del diseño, sacadas aquí para que se puedan probar sin pintar.
- *
- * Dato duro (precio u hora): renglón propio a 14px, el brief exige que se lea a la primera. Contexto blando:
- * dentro del botón, una sola fila. Compacta = «línea en vez de botón», nunca «ni una ni otro».
+ * Cómo se reparte la situación en la isla, sacado aquí para probarlo sin pintar. La frase va SIEMPRE (Z6a): en móvil,
+ * en su renglón encima de la fila (nunca dentro del botón); arriba, en la fila. Con el menú abierto, fuera: quien abre
+ * el menú está navegando, y la frase de la sección de detrás ya no le habla. Ya no hay compacta ni isla cedida.
  */
-export function reparto({ s, top, compact, scrolledDown, isOpen, menuOpen, inCheckout, mobileContext, cookies, shownNotice }) {
-    const hardData = /€|\d{1,2}:\d{2}/.test(s.line || '');
-    const softFits = !hardData && (s.line || '').length <= 62 && !s.note;
-    const inside = mobileContext === 'inside' || (mobileContext === 'auto' && softFits);
-    const isCompact = (compact === true || (compact === 'auto' && scrolledDown)) && !isOpen && !s.locked && !cookies && !shownNotice && Boolean(s.action);
-    const lineInButton = !top && !isCompact && mobileContext !== 'row' && inside && Boolean(s.line) && Boolean(s.action) && !menuOpen;
-    const hasLine = Boolean(s.line) && !lineInButton && !isCompact && !inCheckout && !menuOpen;
-    // Sin acción (la cede a un botón de la página a la vista) la isla se encoge a su contenido, también abajo.
-    const yielded = !s.action && !isOpen && !cookies && !shownNotice && !inCheckout;
-    const row = top || yielded;
+export function reparto({ s, top, menuOpen, inCheckout }) {
+    const hasLine = Boolean(s.line) && !inCheckout && !menuOpen;
 
-    return { hardData, softFits, inside, isCompact, lineInButton, hasLine, yielded, row };
+    return { hasLine, row: top };
 }

@@ -1,10 +1,17 @@
 <script setup>
-/** Una fila del menú de la isla (`Row` del diseño): icono, título, nota, dato y flecha. */
+/**
+ * Una fila del menú de la isla (`Row` del diseño): icono, título, nota, dato y flecha. `brand` (Z6a): el nombre del
+ * parque, la primera fila, con la letra de la marca.
+ */
 import { ref } from 'vue';
 import IconoLucide from '../ui/IconoLucide.vue';
 
+const MARCA = { display: 'block', fontFamily: 'var(--font-display)', fontWeight: 'var(--fw-black)', fontSize: '19px', letterSpacing: '-0.02em' };
+const NORMAL = { display: 'block', fontFamily: 'var(--font-ui)', fontWeight: 'var(--fw-bold)', fontSize: '15px', letterSpacing: '-0.01em' };
+
 defineProps({
     icon: { type: String, default: null },
+    brand: { type: Boolean, default: false },
     title: { type: String, required: true },
     note: { type: String, default: null },
     meta: { type: String, default: null },
@@ -40,7 +47,7 @@ const hover = ref(false);
             :color="tone === 'live' ? 'var(--isla-vivo)' : tone === 'alert' ? 'var(--isla-alerta-texto)' : 'currentColor'"
         />
         <span :style="{ flex: 1, minWidth: 0 }">
-            <b :style="{ display: 'block', fontFamily: 'var(--font-ui)', fontWeight: 'var(--fw-bold)', fontSize: '15px', letterSpacing: '-0.01em' }">{{ title }}</b>
+            <b :style="brand ? MARCA : NORMAL">{{ title }}</b>
             <span
                 v-if="note"
                 :style="{ display: 'block', marginTop: '1px', fontFamily: 'var(--font-ui)', fontSize: '12.5px', lineHeight: 1.35, color: tone === 'alert' ? 'var(--isla-alerta-texto)' : 'rgba(255,255,255,0.68)' }"

@@ -34,35 +34,24 @@ export function estiloRaiz({ gutter, top, inCheckout = false, reservado = 0, kb 
     };
 }
 
-const tamanoEn = (dur) => ['width', 'height', 'border-radius'].map((q) => `${q} ${dur} var(--ease-out)`).join(', ');
+const tamanoEn = (dur, curva = 'var(--ease-out)') => ['width', 'height', 'border-radius'].map((q) => `${q} ${dur} ${curva}`).join(', ');
 
 /**
- * **Qué ha cambiado en la píldora** (02c del laboratorio de movimiento, 26-09; `cambioRef` de `ParkIsland.jsx`): si solo
- * cambia la frase (lo normal al leer), `frase`; si llega la acción (la isla la recupera), `llega`; si se va, `sale`; si
- * cambia a otra, `oferta`. Recibe lo de antes y lo de ahora (`{ id, line, acc }`, `acc` = el rótulo de la acción o '').
- * Devuelve `null` si no ha cambiado nada: quien la llama conserva el último cambio (el del diseño, en su `ref`).
+ * La transición de la caja (Z6a, zip (6)). La capa grande (la compra, Mi cuenta) y el pago fallido van en calma, sin
+ * rebote: abrir en `--dur-slow` y cerrar más corto (`--dur-close`), que la página vuelva enseguida. Todo lo demás —los
+ * cambios de la píldora, abrir y cerrar un panel— es el MORPH de la isla con `--ease-island`: rápido (`--dur-island`) si lo
+ * provoca quien la toca, en calma (`--dur-island-calma`) si lo trae el scroll. El fondo cambia en `--dur-slow` (cristal ↔
+ * tinta). Hundida al tocarla, en `--dur-instant`; al soltar, con el muelle.
  */
-export function tipoDeCambio(antes, ahora) {
-    if (antes.id === ahora.id && antes.line === ahora.line && antes.acc === ahora.acc) return null;
-    if (antes.acc === ahora.acc) return 'frase';
-
-    return ! antes.acc ? 'llega' : ! ahora.acc ? 'sale' : 'oferta';
-}
-
-/**
- * La transición de la caja, la del diseño (26-09). Abrir, en calma (`--dur-slow`); cerrar, más corto (`--dur-close`): la
- * página vuelve enseguida. En la píldora: la frase, en calma (`--dur-base`); la acción que se va, en calma (`--dur-slow`);
- * lo que cambia la oferta, con el rebote (`--t-island`). Hundida al tocarla, en `--dur-instant`; al soltar, con el muelle.
- */
-export function transicionIsla({ calm, isOpen, cambio, hundida }) {
-    const tamano = calm ? tamanoEn(isOpen ? 'var(--dur-slow)' : 'var(--dur-close)')
-        : cambio === 'frase' ? tamanoEn('var(--dur-base)')
-            : cambio === 'sale' ? tamanoEn('var(--dur-slow)')
-                : 'var(--t-island)';
+export function transicionIsla({ calm, inCheckout = false, rapido = true, hundida }) {
+    const tamano = calm
+        ? tamanoEn(inCheckout ? 'var(--dur-slow)' : 'var(--dur-close)')
+        : `${tamanoEn(rapido ? 'var(--dur-island)' : 'var(--dur-island-calma)', 'var(--ease-island)')}, transform var(--dur-base) var(--ease-out)`;
 
     return [
         tamano,
         'border-color var(--dur-base) var(--ease-out)',
+        'background-color var(--dur-slow) var(--ease-out)',
         hundida ? 'transform var(--dur-instant) var(--ease-out)' : 'transform 260ms var(--ease-spring)',
     ].join(', ');
 }
@@ -71,8 +60,11 @@ export function transicionIsla({ calm, isOpen, cambio, hundida }) {
  * La isla: anima hasta lo que mide su contenido (`box`); sin transición hasta la primera medida. `nombre` es su
  * `view-transition-name`: entre páginas, la isla se queda y el resto se funde (solo la de la página, que es la que
  * está en las dos; la compra y Mi cuenta no cruzan de página).
+ * **Es cristal** (Z6a): `--surface-glass-ink-float` (82 %) con `--blur-island`, en reposo, abierta, con las cookies, los
+ * avisos y el pago fallido; solo la capa grande (`lee`: la compra y Mi cuenta, formularios largos) va en `--ink-surface`.
+ * Si lo trae el scroll (`rapido` falso), `--dur-island` pasa a la calma también para lo que se cruza dentro.
  */
-export function estiloIsla({ row, box, alert, grown, animate, calm, isOpen = false, cambio = null, hundida = false, nombre = null }) {
+export function estiloIsla({ row, box, alert, grown, animate, calm, lee = false, inCheckout = false, rapido = true, hundida = false, nombre = null }) {
     return {
         pointerEvents: 'auto',
         position: 'relative',
@@ -80,13 +72,14 @@ export function estiloIsla({ row, box, alert, grown, animate, calm, isOpen = fal
         width: row ? (box.w ? `${box.w}px` : 'max-content') : '100%',
         height: box.h ? `${box.h}px` : 'auto',
         maxWidth: '100%',
-        background: 'var(--ink-surface)',
+        '--dur-island': rapido ? undefined : 'var(--dur-island-calma)',
+        background: lee ? 'var(--ink-surface)' : 'var(--surface-glass-ink-float)',
         WebkitBackdropFilter: 'var(--blur-island)',
         backdropFilter: 'var(--blur-island)',
         border: `1px solid ${alert ? 'var(--isla-borde-alerta)' : 'var(--surface-glass-ink-border)'}`,
         borderRadius: grown ? 'var(--r-lg)' : 'var(--r-pill)',
         boxShadow: 'var(--isla-sombra)',
-        transition: animate ? transicionIsla({ calm, isOpen, cambio, hundida }) : 'none',
+        transition: animate ? transicionIsla({ calm, inCheckout, rapido, hundida }) : 'none',
         // Tocar la píldora la hunde (0,97) antes de crecer: el bote empieza en el dedo (02b).
         transform: hundida ? 'scale(var(--scale-press))' : 'none',
         viewTransitionName: nombre || undefined,
@@ -120,12 +113,12 @@ export function altoEnReposo({ fila, linea = null, row }) {
     return h >= 40 ? h : 0;
 }
 
-/** Cuándo publica: en reposo o cedida (píldora). Abierta, en la compra, compacta o con el pago fallido se queda el último. */
-export function publicaAlto({ isOpen, inCheckout, isCompact, extra }) {
-    return ! isOpen && ! inCheckout && ! isCompact && ! extra;
+/** Cuándo publica: en reposo. Abierta, en la compra o con el pago fallido se queda el último (ya no hay compacta, Z6a). */
+export function publicaAlto({ isOpen, inCheckout, extra }) {
+    return ! isOpen && ! inCheckout && ! extra;
 }
 
 /** El `data-size` de la raíz, de más a menos: la compra manda sobre un panel, y un panel sobre el aviso. */
-export function tamano({ inCheckout, isOpen, notice, isCompact }) {
-    return inCheckout ? 'compra' : isOpen ? 'abierta' : notice ? 'aviso' : isCompact ? 'compacta' : 'reposo';
+export function tamano({ inCheckout, isOpen, notice }) {
+    return inCheckout ? 'compra' : isOpen ? 'abierta' : notice ? 'aviso' : 'reposo';
 }

@@ -6,7 +6,6 @@ return [
     'accion' => [
         'reservar' => 'Réserver',
         'reservar_hoy' => 'Réserver pour aujourd’hui',
-        'ver_qr' => 'Voir mon QR',
         'seguir' => 'Reprendre votre réservation',
         'pagar_senal' => 'Réserver et payer l’acompte',
         'pagar_bizum' => 'Payer avec Bizum',
@@ -19,6 +18,8 @@ return [
     'hoy' => [
         'antes' => 'Nous ouvrons aujourd’hui à :hora.',
         'antes_con_huecos' => 'Nous ouvrons aujourd’hui à :hora. Il reste des places cet après-midi.',
+        'antes_de_a' => "Ouvert aujourd’hui de :abre\u{00A0}à\u{00A0}:cierra.",
+        'antes_de_a_con_huecos' => "Ouvert aujourd’hui de :abre\u{00A0}à\u{00A0}:cierra. Il reste des places cet après-midi.",
         'abierto' => 'Ouvert jusqu’à :hora.',
         'abierto_con_huecos' => 'Ouvert jusqu’à :hora. Il reste des places.',
         'completo' => 'Aujourd’hui c’est complet. Voyez demain.',
@@ -29,7 +30,9 @@ return [
         'no_cobrado' => 'Rien n’a été débité.',
     ],
     'control' => [
-        'menu' => 'Menu, compte et Mon QR',
+        'menu' => 'Menu',
+        'cuenta' => 'Compte',
+        'mi_qr' => 'Mon QR',
         'volver' => 'Retour',
         'cerrar' => 'Fermer',
     ],
@@ -44,17 +47,13 @@ return [
         'cookies' => 'Vos cookies',
     ],
     'menu' => [
-        'qr' => 'Mon QR',
-        'qr_nota' => 'Billets, réservations et autorisations',
-        'cuenta' => 'Mon compte',
-        'cuenta_nota' => 'Réservations, factures et données',
-        'entrar' => 'Se connecter ou créer un compte',
-        'entrar_nota' => 'Pour avoir vos réservations et votre QR sous la main',
         'portada' => 'Accueil',
         'whatsapp' => 'WhatsApp',
         'ayuda_en_horario' => 'Nous vous répondons rapidement',
         'ayuda_fuera' => 'Nous vous répondons demain après-midi',
         'cookies' => 'Cookies',
+        'llamar' => 'Appeler le :tel',
+        'idioma' => 'Langue · :idioma',
     ],
     'cookies' => [
         'texto' => 'Nous utilisons des cookies pour faire fonctionner le site et compter les visites. Avec votre accord, aussi pour :para. Vous pouvez les accepter, les refuser ou les configurer.',

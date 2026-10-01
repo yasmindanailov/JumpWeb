@@ -13,6 +13,12 @@
  *       node scripts/sonda-banco-movimiento.mjs [390|1280]
  *
  * El lado A trae React de unpkg: necesita red. Sale con 1 si algo no casa.
+ *
+ * ⚠️ PENDIENTE DE REHACER con la Z6a (zip (6), §4.27, «tres huecos, cristal y morph»): la acción ya no se va ni llega
+ * —baja a secundaria y vuelve con el color (`--t-island-tone`)—, así que los casos «llega» y «sale» de abajo describen un
+ * movimiento que ya no existe; abrir y cerrar un panel es el MORPH (`--dur-island`, ya no la calma); y lo nuevo (el
+ * asentado de lo que trae el scroll, el cruce de la frase y de la etiqueta) no tiene caso. Se rehace en la verificación
+ * final con el mockup (`#768`), con su banco al día del zip (6) (el lado A). El menú ya se llama «Menú».
  */
 import { chromium } from 'playwright-core';
 
@@ -89,11 +95,11 @@ const ESCENAS = [
     // Se va la acción: en calma.
     { nombre: 'sale', situacion: 'hoy-antes-huecos', cambio: { props: { ctaVisible: true } }, caja: 'w' },
     // Abrir el menú: en calma, y sus filas +140ms, 30ms entre ellas.
-    { nombre: 'abrir menú', situacion: 'menu-invitado', cambio: { clic: '[aria-label="Menú, cuenta y Mi QR"]' }, caja: 'h', filas: true },
+    { nombre: 'abrir menú', situacion: 'menu-invitado', cambio: { clic: '[aria-label="Menú"]' }, caja: 'h', filas: true },
     // Cerrarlo: el contenido primero, la caja en `--dur-close`.
-    { nombre: 'cerrar menú', situacion: 'menu-invitado', cambio: { antes: '[aria-label="Menú, cuenta y Mi QR"]', despues: 'Escape' }, caja: 'h', holgura: 90 },
+    { nombre: 'cerrar menú', situacion: 'menu-invitado', cambio: { antes: '[aria-label="Menú"]', despues: 'Escape' }, caja: 'h', holgura: 90 },
     // Hundirse al tocar.
-    { nombre: 'hundirse', situacion: 'hoy-antes-huecos', cambio: { hundir: '[aria-label="Menú, cuenta y Mi QR"]' }, escala: true, ms: 400 },
+    { nombre: 'hundirse', situacion: 'hoy-antes-huecos', cambio: { hundir: '[aria-label="Menú"]' }, escala: true, ms: 400 },
 ];
 
 for (const e of ESCENAS) {

@@ -7,7 +7,6 @@ return [
     'accion' => [
         'reservar' => 'Reservar',
         'reservar_hoy' => 'Reservar para hoy',
-        'ver_qr' => 'Ver mi QR',
         'seguir' => 'Sigue con tu reserva',
         'pagar_senal' => 'Reservar y pagar la señal',
         'pagar_bizum' => 'Pagar con Bizum',
@@ -22,6 +21,9 @@ return [
     'hoy' => [
         'antes' => 'Hoy abrimos a las :hora.',
         'antes_con_huecos' => 'Hoy abrimos a las :hora. Quedan huecos esta tarde.',
+        // [Hoy] vive en la isla desde la llegada (Z6a): antes de abrir, la frase entera que decía la cabecera.
+        'antes_de_a' => "Hoy abrimos de :abre\u{00A0}a\u{00A0}:cierra.",
+        'antes_de_a_con_huecos' => "Hoy abrimos de :abre\u{00A0}a\u{00A0}:cierra. Quedan huecos esta tarde.",
         'abierto' => 'Abierto hasta las :hora.',
         'abierto_con_huecos' => 'Abierto hasta las :hora. Quedan huecos.',
         'completo' => 'Hoy está completo. Mira mañana.',
@@ -33,7 +35,10 @@ return [
         'no_cobrado' => 'No se ha cobrado nada.',
     ],
     'control' => [
-        'menu' => 'Menú, cuenta y Mi QR',
+        'menu' => 'Menú',
+        // La cuenta, el control de la derecha de la barra (Z6a): sin sesión y con sesión.
+        'cuenta' => 'Cuenta',
+        'mi_qr' => 'Mi QR',
         'volver' => 'Volver',
         'cerrar' => 'Cerrar',
     ],
@@ -49,17 +54,14 @@ return [
         'cookies' => 'Tus cookies',
     ],
     'menu' => [
-        'qr' => 'Mi QR',
-        'qr_nota' => 'Entradas, reservas y autorizaciones',
-        'cuenta' => 'Mi cuenta',
-        'cuenta_nota' => 'Reservas, facturas y datos',
-        'entrar' => 'Entrar o crear cuenta',
-        'entrar_nota' => 'Para tener tus reservas y tu QR a mano',
         'portada' => 'Portada',
         'whatsapp' => 'WhatsApp',
         'ayuda_en_horario' => 'Te contestamos en un rato',
         'ayuda_fuera' => 'Te contestamos mañana por la tarde',
         'cookies' => 'Cookies',
+        // Los iconos del pie del menú (Z6a): su nombre para el lector y al pasar el ratón.
+        'llamar' => 'Llamar al :tel',
+        'idioma' => 'Idioma · :idioma',
     ],
     'cookies' => [
         // `#860`: `:para` y `:cortas` son SOLO las finalidades que esta instalación pide (las del `<body>`), unidas en su orden

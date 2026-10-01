@@ -3,7 +3,8 @@
  *
  * El `Icon` del diseño los pedía a jsDelivr en cada visita y pintaba un hueco hasta que llegaban; aquí van
  * dentro del paquete, así que salen a la primera. Son los que la isla y su compra usan, uno a uno: importar el
- * set entero metería 1.865 dibujos en el paquete para pintar treinta y dos. Un icono que falte aquí pinta el
+ * set entero metería 1.865 dibujos en el paquete para pintar treinta y tres (el idioma y las cookies del pie del menú, Z6a,
+ * los registra el menú: `piezas/iconos-menu.js`). Un icono que falte aquí pinta el
  * hueco vacío, como el diseño cuando no encuentra el suyo.
  */
 import { transformar } from './lucide.js';

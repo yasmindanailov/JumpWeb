@@ -6,7 +6,6 @@ return [
     'accion' => [
         'reservar' => 'Book',
         'reservar_hoy' => 'Book for today',
-        'ver_qr' => 'Show my QR',
         'seguir' => 'Continue your booking',
         'pagar_senal' => 'Book and pay the deposit',
         'pagar_bizum' => 'Pay with Bizum',
@@ -19,6 +18,8 @@ return [
     'hoy' => [
         'antes' => 'We open today at :hora.',
         'antes_con_huecos' => 'We open today at :hora. Spots left this afternoon.',
+        'antes_de_a' => "Open today from :abre\u{00A0}to\u{00A0}:cierra.",
+        'antes_de_a_con_huecos' => "Open today from :abre\u{00A0}to\u{00A0}:cierra. Spots left this afternoon.",
         'abierto' => 'Open until :hora.',
         'abierto_con_huecos' => 'Open until :hora. Spots left.',
         'completo' => 'Today is full. Try tomorrow.',
@@ -29,7 +30,9 @@ return [
         'no_cobrado' => 'Nothing has been charged.',
     ],
     'control' => [
-        'menu' => 'Menu, account and My QR',
+        'menu' => 'Menu',
+        'cuenta' => 'Account',
+        'mi_qr' => 'My QR',
         'volver' => 'Back',
         'cerrar' => 'Close',
     ],
@@ -44,17 +47,13 @@ return [
         'cookies' => 'Your cookies',
     ],
     'menu' => [
-        'qr' => 'My QR',
-        'qr_nota' => 'Tickets, bookings and authorisations',
-        'cuenta' => 'My account',
-        'cuenta_nota' => 'Bookings, invoices and details',
-        'entrar' => 'Sign in or create an account',
-        'entrar_nota' => 'To keep your bookings and your QR at hand',
         'portada' => 'Home',
         'whatsapp' => 'WhatsApp',
         'ayuda_en_horario' => 'We will reply shortly',
         'ayuda_fuera' => 'We will reply tomorrow afternoon',
         'cookies' => 'Cookies',
+        'llamar' => 'Call :tel',
+        'idioma' => 'Language · :idioma',
     ],
     'cookies' => [
         'texto' => 'We use cookies to make the site work and to count visits. With your permission, also to :para. You can accept, reject or configure them.',

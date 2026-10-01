@@ -1,6 +1,6 @@
 # JumpWeb — tracker de fases (VIVO)
 
-> Última actualización: **2026-09-30** · Leyenda: ⬜ pendiente · 🟦 en curso · ✅ hecho · ❗ bloqueado.
+> Última actualización: **2026-10-01** · Leyenda: ⬜ pendiente · 🟦 en curso · ✅ hecho · ❗ bloqueado.
 > Regla: **la suite en verde es la red** — ninguna fase se cierra con tests rotos. Los marcadores de cabecera
 > MANDAN sobre cualquier otro documento (`docs-check`, check 7; `DECISIONES #10`). Techo 16 KB (check 10,
 > `#621`): aquí van fases y casillas, no narrativa; el porqué está en la decisión que cita cada línea y en el
@@ -21,13 +21,13 @@ programa «producto e instancias» separa el producto de sus instancias.
 ### PRODUCTO E INSTANCIAS 🟦 — `specs/producto-e-instancias.md` §0 y §4.9 (`#610`→`#621`)
 - [x] F0 · gobierno: spec ✅ owner, `#610`–`#616`, reglas 8 y 9 de `CLAUDE.md` (`d898c76a`)
 - [x] F1 · doc caliente: decisiones por centenas · contador al trailer · §0 en las 46 specs · huella 974/974 · enrutador ≤ 12 KB · carriles y `ESTADO.md` índice · tracker ≤ 16 KB · comprobación 10 (`#617`→`#621`)
-- [x] F2 · capa de agente (`#623`: plugin `jumpweb-agente` en GitHub, instalado en las dos máquinas; reglas `allow` del owner, `#626`) · los cuatro defectos del mapa de frases arreglados el 18-09 (arnés 52/52, mutación 9/9, control con 419 mensajes reales) · **cerrada por el owner el 2026-09-18 (`#633`)**, que dio por revisadas las frases; las tres skills viejas del repo, retiradas
+- [x] F2 · capa de agente (`#623`, `#626`): el plugin `jumpweb-agente` en las dos máquinas · **cerrada por el owner el 2026-09-18 (`#633`)**; el detalle, en `specs/producto-e-instancias.md` §6
 - [x] Análisis estático en el gate (`#625`, `#629`): Larastan nivel 5 con línea base de 459 y ESLint (`flat/essential` de Vue) sobre el cajón con línea base de 12, las dos con trinquete; arnés 20/20 (2026-09-18) · deuda: bajar las dos líneas base (`DEUDA.md`; los 12 del cajón son del carril del SPA)
 - [x] F3 · versión (`#624`): v1.0.0 = `1272cb93` etiquetada, `CHANGELOG.md`, guarda 8 del despliegue con su arnés (9/9) y producción DICE v1.0.0 (`storage/app/version`, 2026-09-17 22:05) · el noveno despliegue (v1.1.0, 18-09) estrenó la escritura y la relectura dentro del script ✓
 - [x] F4 · cajón empaquetable y login por token, contrato 1.1.0 · **CERRADA el 2026-09-19**: el token (`specs/token-bearer.md`, `#630`) y el cajón en cinco tandas (`specs/cajon-empaquetable.md` §4, `#631`→`#637`; su sonda, su juez y el anfitrión mínimo, allí). ⚠️ La compra de la T5, medida y **sin ojo del owner**
 - [ ] F5 · instancia PlayJump y la landing fuera, v2.0.0 · **ABIERTA el 19-09 por el CENSO** (`#639`). Detalle: `specs/instancia-y-landing-fuera.md` §4.1 y §4.6, y `specs/paquete-de-instancia.md`; aquí, los marcadores. **T1→T4 ✅** (`#640`→`#669`) · **la VÍA A y sus cuatro platos ✅** (`#670`→`#674`) · **el CENSO `#675` y sus cuatro hechos ✅** (`#676`, `#677`, contrato 1.17.0): **el menú, COMPLETO** ⚠️ La **T5** (cortar v2.0.0) es el final del programa entero, no de esta fase (`#670`)
 - [ ] Analítica (`specs/analitica.md`): T1 ✅ · T2 🟦 (T2e ⬜) · T3 ✅ · T4 ✅ · T5 🟦 (T5c ⬜) · T6 ✅ · T7 🟦 encuestas (anónimas ✅ `#757`) · **para decidir 🟦** (`#755`: T4 ✅, T5 ✗ `#800`, T6–T8 ⬜)
-- [ ] Landing nueva e isla (`specs/isla-y-landing-nueva.md` §0, `#681`·`#682`): T0→T3 ✅ · **T4 🟦** (§4.12) · **T5 ✅** (§4.13) · Z ✅ (§4.14, §4.16; `Medir` aplazado) · 1.ª pantalla ✅ (§4.15) · T6 ✅ §4.17–25 · `#758` ✅ §4.26
+- [ ] Landing nueva e isla (`specs/isla-y-landing-nueva.md` §0, `#681`·`#682`): T0→T3 ✅ · **T4 🟦** (§4.12) · **T5 ✅** (§4.13) · Z ✅ (§4.14, §4.16; `Medir` aplazado) · 1.ª pantalla ✅ (§4.15) · T6 ✅ §4.17–25 · `#758` ✅ §4.26 · zip (6): Z6a ✅ · Z6b→Z6g ⬜ (§4.27)
 - [ ] Antes de desplegar (`#847`): **entrar con código** (`specs/acceso-con-codigo.md` ✅ `#848`·`#849`: A1 ✅ `#853`·`#854` · A2 ✅ `#855`·`#856` · A3 ✅ `#857` · A4a ✅ `#810`→`#812` · A4b ✅ `#813` · A5→A6 ⬜) · panel (`specs/panel-a-salvo.md`): guard ✅ `#850` · dirección ✅ · authenticator ✅ `#851` · SEO 🟦 · imágenes al compartir ⬜ · textos legales 🟦 (`specs/textos-legales.md`, `#863`) · la lista de invitados (SPA) ✅ `#805`
 - [ ] F6 · app nativa: spec con pila y alcance · pila decidida (`#627`): React Native + Expo en TypeScript, a confirmar con la prueba corta
 

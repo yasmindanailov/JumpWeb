@@ -5,7 +5,8 @@
  *   1. LA PÁGINA: `/normas` la pinta la instancia (sus ocho piezas y el pie, no el tablero del producto), una `h1`, sin
  *      salirse de ancho y sin precio en la cabecera; la nota de Google, la de `/social-proof` (cifra, reseñas y enlace).
  *   2. LA ISLA (situación 15, `kind: 'apoyo'`): su línea, las horas de hoy de `/schedule` (o las de mañana si ya cerró);
- *      CEDE su «Reservar» mientras se ve el de la cabecera o el del cierre, y lo dice entre medias.
+ *      su «Reservar» va en SECUNDARIA mientras se ve el de la cabecera o el del cierre —ya no lo cede: Z6a, zip (6), «la
+ *      acción, siempre»— y en principal entre medias (`data-tono` de la isla).
  *   3. LAS NORMAS, las del PANEL (`GET /rules`, `#842`): por sus momentos y en su orden, las sin momento a lo ancho; cada
  *      tarjeta con su nombre, su descripción y su PORQUÉ, su NIVEL (la clase y la palabra del diseño, `RuleCard.jsx`) y su
  *      ICONO (el dibujo de `resources/icons/lucide/`, el mismo fichero que `Lucide::svg`). El reparto en dos columnas es el
@@ -115,7 +116,7 @@ try {
         : nota === null, JSON.stringify(nota));
     await foto(page, '0-llegada');
 
-    // ── 2 · La isla: [Hoy] de `/schedule`, y cede su «Reservar» al de la página ──────────────────────────────────────
+    // ── 2 · La isla: [Hoy] de `/schedule`, y su «Reservar» en secundaria con el de la página a la vista (Z6a) ───────
     const hoyParque = await page.evaluate((tz) => new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23', weekday: 'short' }).formatToParts(new Date()).reduce((o, p) => ({ ...o, [p.type]: p.value }), {}), schedule.timezone ?? 'Europe/Madrid');
     const fechaHoy = `${hoyParque.year}-${hoyParque.month}-${hoyParque.day}`;
     const ahoraHm = `${hoyParque.hour}:${hoyParque.minute}`;
@@ -128,10 +129,13 @@ try {
     const esperadas = abiertoHoy ? [hoyH.opens_at, hoyH.closes_at] : (mananaH && ! mananaH.closed ? [mananaH.opens_at] : []);
     const islaLlegada = sinEspacios(await texto(page, '[data-isla]'));
     ok('la línea de la isla: las horas de hoy (o la de mañana si ya cerró), de `/schedule`', esperadas.length ? esperadas.every((h) => islaLlegada.includes(h)) : ! /\d{1,2}:\d{2}/.test(islaLlegada), `${esperadas.join('–') || 'sin horario'} · ${islaLlegada.slice(0, 80)}`);
-    ok('al llegar, la isla CEDE su «Reservar» (se ve el de la cabecera)', ! await botonIsla(page).isVisible().catch(() => false));
+    const tonoIsla = () => page.evaluate(() => document.querySelector('[data-isla]')?.dataset.tono ?? '');
+    const tonoLlegada = await tonoIsla();
+    ok('al llegar, la isla tiene su «Reservar» en SECUNDARIA (se ve el de la cabecera; Z6a: ya no lo cede)', await botonIsla(page).isVisible().catch(() => false) && tonoLlegada === 'secundaria', tonoLlegada);
     await ir(page, '#normas');
     await page.waitForTimeout(900);
-    ok('entre medias, la isla dice «Reservar»', await botonIsla(page).isVisible().catch(() => false), sinEspacios(await texto(page, '[data-isla]')).slice(0, 80));
+    const tonoMedias = await tonoIsla();
+    ok('entre medias, la isla dice «Reservar» en principal', await botonIsla(page).isVisible().catch(() => false) && tonoMedias === 'principal', `${tonoMedias} · ${sinEspacios(await texto(page, '[data-isla]')).slice(0, 80)}`);
     await foto(page, '1-normas');
 
     // ── 3 · Las normas del panel ───────────────────────────────────────────────────────────────────────────────────
@@ -245,7 +249,8 @@ try {
     ok('el teléfono y WhatsApp del cierre, del número de `/site`', cierre.includes(`tel:+${digitos}`) && cierre.includes(`https://wa.me/${digitos}`), cierre.join(' · '));
     await ir(page, '#cierre');
     await page.waitForTimeout(900);
-    ok('ante el «Reservar» del cierre, la isla vuelve a ceder el suyo', ! await botonIsla(page).isVisible().catch(() => false));
+    const tonoCierre = await tonoIsla();
+    ok('ante el «Reservar» del cierre, la isla vuelve a SECUNDARIA (el suyo sigue a la vista: Z6a)', await botonIsla(page).isVisible().catch(() => false) && tonoCierre === 'secundaria', tonoCierre);
     await foto(page, '3-cierre');
 
     // ── 8 · La navegación ──────────────────────────────────────────────────────────────────────────────────────────

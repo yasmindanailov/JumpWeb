@@ -100,7 +100,9 @@
     --dur-fast: 150ms;
     --dur-base: 240ms;
     --dur-slow: 380ms;
-    --dur-island: 520ms;
+    /* El morph de la isla (zip (6), Z6a): lo que se toca, 480ms; lo que trae el scroll, en calma (820ms). */
+    --dur-island: 480ms;
+    --dur-island-calma: 820ms;
     --dur-reveal: 700ms;
     /* El movimiento del 26-09 (Z3, `#782`): el bote de lo que empuja, cerrar más corto que abrir y las cifras. */
     --dur-bote: 620ms;
@@ -108,11 +110,13 @@
     --dur-count: 900ms;
     --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
     --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
-    --ease-island: cubic-bezier(0.32, 1.35, 0.3, 1);
+    --ease-island: cubic-bezier(0.3, 1.12, 0.3, 1);
     --ease-spring: cubic-bezier(0.22, 1.2, 0.36, 1);
     --t-hover: all var(--dur-fast) var(--ease-out);
     --t-card: transform var(--dur-base) var(--ease-spring), box-shadow var(--dur-base) var(--ease-out);
     --t-island: width var(--dur-island) var(--ease-island), height var(--dur-island) var(--ease-island), border-radius var(--dur-island) var(--ease-island), transform var(--dur-base) var(--ease-out);
+    /* El tono de la acción que baja a secundaria y vuelve: el mismo tiempo, sin rebote (Z6a). */
+    --t-island-tone: background-color var(--dur-island) var(--ease-in-out), color var(--dur-island) var(--ease-in-out), box-shadow var(--dur-island) var(--ease-in-out);
     --scale-press: 0.97;
     --lift-hover: -3px;
     --blur-island: saturate(160%) blur(20px);
@@ -126,7 +130,11 @@
 
     /* …y color, sobre claro. */
     --ink-surface: rgba(16, 20, 24, 0.94);
+    /* La isla es cristal (Z6a): esta tinta al 82 % con `--blur-island`; solo la capa grande va en `--ink-surface`. */
+    --surface-glass-ink-float: rgba(16, 20, 24, 0.82);
     --surface-glass-ink-border: rgba(255, 255, 255, 0.16);
+    /* La raya vertical de la barra y la del pie del menú (Z6a). */
+    --ink-surface-border: rgba(255, 255, 255, 0.16);
     --surface-card: #ffffff;
     --surface-card-ink: #1d2329;
     --bg-subtle: #f3f5f7;
@@ -239,6 +247,7 @@
         --dur-base: 1ms;
         --dur-slow: 1ms;
         --dur-island: 1ms;
+        --dur-island-calma: 1ms;
         --dur-reveal: 1ms;
         --dur-bote: 1ms;
         --dur-close: 1ms;
@@ -267,6 +276,8 @@
    Los de la bola y el confeti cambian de color con los cuatro roles de fiesta, que el diseño escribía con su paleta. */
 @keyframes isla-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.45; transform: scale(0.78); } }
 @keyframes isla-swap { from { opacity: 0; transform: translateY(5px) scale(0.985); filter: blur(6px); } 55% { filter: blur(0); } to { opacity: 1; transform: none; filter: blur(0); } }
+/* Lo que la isla deja de decir (Z6a, `pj-island-swap-out`): se desenfoca y se va mientras lo nuevo entra con isla-swap. */
+@keyframes isla-swap-out { from { opacity: 1; transform: none; filter: blur(0); } to { opacity: 0; transform: scale(1.03); filter: blur(6px); } }
 @keyframes isla-fade-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes isla-pop { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: scale(1); } }
 @keyframes isla-sheen { from { background-position: -140% 0; } to { background-position: 240% 0; } }

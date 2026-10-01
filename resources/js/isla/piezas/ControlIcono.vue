@@ -1,5 +1,5 @@
 <script setup>
-/** El control redondo de 46px de la isla (`IconControl` del diseño): el menú, Volver y Cerrar. */
+/** El control redondo de 46px de la isla (`IconControl` del diseño): el menú, la cuenta con su punto (Z6a), Volver y Cerrar. */
 import { ref } from 'vue';
 import IconoLucide from '../ui/IconoLucide.vue';
 

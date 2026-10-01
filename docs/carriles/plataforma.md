@@ -4,11 +4,11 @@
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
 > **820–849 AGOTADA con `#849`** → sigue en **850–879** (del owner, 29-09; centena `decisiones/800-899.md`) · Último usado:
-> **`#864`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **`#865`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#846`) · Actualizado: **2026-10-01**
-> (el acceso con código: A1–A3 ✅ `#853`→`#857`; la A4a del SPA en `main`; `/cookies` ✅ `#858`→`#860`; el zip (6) y el
-> reparto, `#861`; el SEO, `specs/seo.md`: S4 y S6 ✅ `#862`, S3 empezado, el Perfil de Empresa en manos del owner;
-> 01-10 mañana: el FOLLETO del 26-09 aplicado en producción como DATOS, fin de la promo, cerrado — `ENTORNOS.md` §6).
+> (el acceso con código: A1–A3 ✅ `#853`→`#857`; la A4 del SPA en `main`, `#813`; `/cookies` ✅ `#858`→`#860`; el zip (6) y
+> el reparto, `#861`; el SEO, `specs/seo.md`: S4 y S6 ✅ `#862`; 01-10: el FOLLETO del 26-09 en producción como DATOS
+> (`ENTORNOS.md` §6), los textos legales para el owner (`#863`→`#865`) y **la Z6a de la isla ✅**, con su visto bueno).
 > ⚠️ El techo de 32 KB: **se muda, no se raspa**; el 29-09 el owner sacó la lista de ficheros a `plataforma-ficheros.md`
 > (`#852`) y NO subió el techo. Si vuelve a apretar tres veces seguidas, llévaselo con la medida.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -49,8 +49,17 @@ normas, la T6f (301 y la web vieja fuera, `#843`), `#844`, la T6h (las legales) 
 **T6g** (§4.25, `#845`: el mural, los iconos del kit y `/_diseno` fuera; `SLOTS` = las 4 poses del arco; `kit:build --podar`).
 Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas,entradas}.mjs`), la web entera (`sonda-web.mjs`,
 17/17) y la compra (`sonda-isla.mjs`).
-▶▶▶▶ **LO SIGUIENTE, EN ORDEN** (actualizado el 01-10; el reparto con el SPA, `#861`, `isla-y-landing-nueva.md` §4.27):
-0. ▶▶ **EL SEO** (`specs/seo.md`, 🟦; el owner: «IMPORTANTÍSIMO»). Investigado y medido (§1–§2: la marca ya está en el 1 y
+▶▶▶▶ **LO SIGUIENTE, EN ORDEN** (actualizado el 01-10 noche; el reparto con el SPA, `#861`, `isla-y-landing-nueva.md` §4.27):
+0. ▶▶▶ **LA Z6b, LO PRIMERO** (el owner, 01-10: «seguimos con la z6b»). La **Z6a ✅** (01-10, visto bueno del owner en vivo;
+   lo hecho, lo medido y lo que quedó fuera, en §4.27 «La Z6a al detalle»). Antes de codificar, **«La Z6b al detalle»** en
+   §4.27, medida como la de la Z6a: el readme «La isla · banners, opción C (29-09)», `explorations/isla-banners` y lo que el
+   diff de `ParkIsland.jsx` (instancia `6a550a3` → `3b0956d`) trae de ella (`reason`, `waiting`, el aviso a isla entera,
+   `isla_razon`, la compra que no corta al cerrar). Al terminarla, preguntar al owner si sigue la Z6c o la A5. Después,
+   Z6c→Z6g (la Z6c va sobre el `Experiments` del SPA: avisarle ANTES en el buzón); la cabecera sin precio salvo Colegios
+   (la regla del precio del owner, `instancias/playjump/docs/estrategia/2026-09-30/Web.md`). (La imagen de la INVITACIÓN es
+   del SPA, `#861`.) ⚠️ `sonda-banco-movimiento.mjs` sigue con los casos del 27-09 (solo cambió la etiqueta «Menú»): se
+   rehace con la Z6a en la verificación final (`#768`).
+1. ▶▶ **EL SEO** (`specs/seo.md`, 🟦; el owner: «IMPORTANTÍSIMO»). Investigado y medido (§1–§2: la marca ya está en el 1 y
    **cumpleaños no existe para Google**). HECHO el 01-10: **S4** (`robots.txt` con `Sitemap:`; JSON-LD con `geo`, `priceRange` y
    la dirección por campos; `mutar-seo.sh` 14/14; `52e6557e`), **S6** (`#862`: los titulares se quedan; Kids y Jump dicen «en
    Lorca»; instancia `9e7d274`) y **S3 empezado** (las fotos de más abajo, diferidas: Kids 8,7 → 6,5 s de LCP en el laboratorio
@@ -60,14 +69,14 @@ Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas,en
    domingo 21:30: el perfil; @playjumplorca). Los TÉRMINOS de búsqueda del perfil, desde el 6-oct. Después, con código: S3
    (el logotipo de 115 KB, la foto de la cabecera por tamaños, `cajon.css` bloqueante, el CLS de la cabecera) y S5 (la imagen
    de cada página al compartir). La medida en STAGING, cuando estén los vídeos e imágenes nuevos (el owner, 01-10).
-1. **Los textos LEGALES con lo nuevo**: ⬜ `specs/textos-legales.md` (01-10, el DOCUMENTO para el owner: 22 tratamientos medidos,
+2. **Los textos LEGALES con lo nuevo**: ⬜ `specs/textos-legales.md` (01-10, el DOCUMENTO para el owner: 22 tratamientos medidos,
    el texto nuevo en español, §7 sus decisiones D1–D10; después la asesoría y el código). Lo gordo: el texto VIVO de producción
    se editó a mano (sin rastro en el repo) y dice que el descargo «no se gestiona en esta web» y que los invitados «se eliminan»
    tras la fiesta (sus alergias viven hasta suprimir la cuenta); la ODR cerró en 2025; falta el aviso de que no hay
    desistimiento. Del owner (01-10): `#863`, los invitados se borran a los 14 días de la fiesta (una poda, tanda propia, ANTES
-   de publicar el texto) y `#864`, sin aviso a las cuentas. Entran las notas del SPA (`#750`, `#754`, la TP·1 y `#793`).
-2. **El zip (6) en la web**: Z6a→Z6g (§4.27), la isla primero; la cabecera sin precio salvo Colegios (la regla del precio del
-   owner, en `instancias/playjump/docs/estrategia/2026-09-30/Web.md`). (La imagen de la INVITACIÓN es del SPA, `#861`.)
+   de publicar el texto), `#864`, sin aviso a las cuentas, y `#865`, las dos frases falsas de producción se corrigen AL
+   DESPLEGAR la v2.0.0 (apuntado en `ENTORNOS.md` §6). Entran las notas del SPA (`#750`, `#754`, la TP·1 y `#793`). Espera
+   la revisión del owner y la asesoría; la poda de `#863` puede ir antes (no depende del texto).
 3. **A5, YA DESBLOQUEADA** (la A4b del SPA, `#813`, en `main` el 01-10 con el visto bueno del owner; la retirada:
    `acceso-con-codigo.md` §4.5–§4.6; de paso, dos comentarios míos: `useDatosCompra.js` aún nombra `submitLogin` y
    `useAjustesCuenta.js` dice que `deleteAccount` manda la contraseña —ya manda `code`—; `PLEGABLE_DE_ZONA.password` se va) y
@@ -93,19 +102,23 @@ mockup (`#767`) y se verifica una vez al final (`#768`). Después, Bizum, Apple 
 **Abierto, medido y sin hacer** (HECHOS el 29-09: el `#758` del SPA, `#846`, §4.26; y `sonda-portada` 13/14, que era la SONDA
 —«Reservar para hoy» con huecos—, 23/23, §4.19): (c) la vuelta de Google con una excursión, sin verificar; (d) la T4
 sigue 🟦 por lo del owner: el MATERIAL de los vídeos (en LOCAL, una muestra WebM), su ojo sobre las voces y las promociones (T1
-🟦), y ❓ la línea Ómnibus. **Para iterar con el owner** (no ahora): la isla «muy sola» y el «Reservar» solo en la isla del
-móvil (A/B). La ISLA la repiensa él con Claude Design: no atar nada nuevo a ella.
+🟦), y ❓ la línea Ómnibus. La isla «muy sola» y el «Reservar» solo en la isla del móvil: los repensó el owner en el zip (6)
+(la Z6a ✅; ese A/B es el B3 de la Z6c).
 **Del owner, en PRODUCCIÓN**: el icono y el nivel de cada norma y las del brief que falten (calentamiento, espuma, volteretas
 dobles); el aviso de los calcetines, «se devuelve la señal» y el TRAMO DE EDAD de cada entrada (`#825`); `payment.marks` (en
 LOCAL, `bizum,visa,mastercard`). BD LOCAL con los valores de `#699`/`#761`.
 ⚠️ **Trampas vivas** (las de `sonda-isla` que paga, `sonda-cuenta` antes de las 20:00 y la base de un techo de peso, mudadas a
-`TESTING.md` §2.octies el 29-09): (b) el tracker, a ~450 B de su techo (16 KB): se hizo sitio llevando la línea de F4 y la de F5 a
-sus marcadores (el detalle vive en sus specs); la próxima vez, otra cerrada;
+`TESTING.md` §2.octies el 29-09): (b) el tracker, a ~180 B de su techo (16 KB): el 01-10 se llevó la línea de F2 a su marcador
+(antes, F4 y F5; el detalle vive en sus specs); la próxima vez, otra cerrada;
 (d) Vue 3.5 reevalúa un `computed` fuera del `try` de quien lo lee: se protege DENTRO (`seguro.js`, §4.13); (f) un texto de la isla que
 use la COMPRA tiene que estar en un grupo que la compra recibe (`mi_cuenta.*` no le llega: §4.24); (g) `isla/hoja/montar.js` NO
-importa nada compartido (`#841`); la calculadora va a 187,80 de 188, la de la fiesta a 194,26 de 195 y la compra a 165,98 de 167 (`#858`)
-(`#846`: un `import()` suma el `preload-helper` al cálculo por entrada); (h) toda página nueva usa `video-hero` SIN `height` y entra
-en `sonda-primera-pantalla.mjs`; (i) tras tocar `instancias/playjump/publico/`, copiarlo a `public/instancia`.
+importa nada compartido (`#841`); tras la Z6a, la calculadora va a 187,81 de 188, la de la fiesta a 194,27 de 195, la compra a
+171,58 de 172 y la isla de la página a 178,01 de 179 (`#846`: un `import()` suma el `preload-helper` al cálculo por entrada); un
+icono que solo usa una pieza se registra en SU trozo (`registrarIconos`, como `piezas/iconos-menu.js`): en el común, las
+calculadoras crecían +0,94 sin llevar la isla; (h) toda página nueva usa `video-hero` SIN `height` y entra
+en `sonda-primera-pantalla.mjs`; (i) tras tocar `instancias/playjump/publico/`, copiarlo a `public/instancia`; (j) `sonda-primera-pantalla`
+(`comparar`) da 18 fallos en Kids y Jump, primera visita (el aire de la isla en escritorio, 12; «no cabe» a 844×340 y 1280×560,
+4; «una sola acción» a 430, 2), IDÉNTICOS con el JS de la base `5dbe175c`: no son de la Z6a; su causa, sin medir.
 
 1. **F4 · CERRADA el 19-09** (`specs/cajon-empaquetable.md`: sus cinco tandas y sus seis trampas). ⚠️ **Le
    falta un ojo humano sobre la COMPRA de la T5** (medida, no vista): se enseña con el banco de su §4.8,
@@ -211,53 +224,14 @@ carril se apunta ALLÍ; lo compartido se sigue avisando aquí, en el buzón, ant
 
 ## Buzón
 
-### ❗❗ Para el SPA (emisor: plataforma, 2026-09-30 noche) — EL ZIP (6) HA ENTRADO, y el reparto del owner (`#861`)
-- En la instancia (`3b0956d`): 954 ficheros. El censo, las tandas de la web y el reparto, en `isla-y-landing-nueva.md` §4.27.
-- **Tuyo**: la **Puerta** (`paginas/puerta/`, sus dos fichas y `uploads/brief-puerta-playjump*.md`; readme «La Puerta · el
-  mostrador»); **`LinkIsland`** en la invitación, la lista y la autorización (fuera `RsvpBar` y `SaveBar`; readme «La isla en
-  las páginas de enlace»); **los correos** (el 8, «482-913 es tu código para entrar», sin botón; «Quién firma el descargo» en el
-  1 y el 3; las dos horas repartidas, 90 + 30, también en la invitación); la **A4** con el `CodeInput` del diseño; y **la imagen
-  de la INVITACIÓN al compartir, GENERADA para cada una** (nombre, edad, día, hora, su diseño; no la fija por tema): tu punto 6.
-  ▶ **Producción, MEDIDA por mí** (30-09, SSH de solo lectura con permiso del owner; tú no tienes SSH): PHP 8.5.1; GD con
-  FreeType, JPEG, PNG, WebP y AVIF; Imagick 6.9.12 (JPEG, PNG, WEBP; su SVG es el interno, limitado); `convert`; SIN Chromium
-  ni Node; `memory_limit` 256M. ⇒ la imagen se DIBUJA (un fondo por tema preparado antes y el texto encima con GD/FreeType y
-  las fuentes del diseño), no se renderiza HTML. ⚠️ Medido en la CLI: las extensiones del PHP de la web, no por separado.
-- ⚠️ **Para tu A4, decidido por el owner**: recordar el móvil sigue `#858` (la casilla sin marcar, 90 días), NO «este móvil
-  se queda dentro un año»; crear la cuenta sigue `#849` (sin esperar el correo) hasta medir la latencia en staging (A6).
-- **Mío**: la isla (tres huecos, banners, B3 sobre tu `Experiments`: te aviso antes de tocarlo), la web, los legales (entran
-  tus notas sobre `/privacidad`), el SEO y las imágenes de la web.
-
-### ❗ Para el SPA (emisor: plataforma, 2026-09-30) — `/cookies` para producción (`#859`): lo que toqué de lo tuyo
-- `CookiePolicyContent` REESCRITO (v5; la v4, congelada en `tests/Support/CookiePolicyV4.php`) y su migración por huella
-  `2026_09_30_150000_cookie_policy_for_production`. En `lang/*/cookies.php`: FUERA `policy.*` (los párrafos que se pintaban al
-  renderizar: ahora son filas del listado, `inventory.*`, que compone `Http\Legal\CookieInventory`); `banner.text` y
-  `panel.maps_*` ya solo dicen el MAPA («Mapa (Google)»; la clave `maps` y `POLICY_VERSION`, igual: la finalidad se estrecha).
-  `anfitrion/legal.blade.php` pinta el listado y conserva `data-analytics-tool`/`data-analytics-pixels`; `DriversTest` y
-  `PixelsTest` comprueban ahora los textos del listado. `CookieConsent` y el banner de la isla, sin tocar.
-- ⚠️ Una herramienta o un píxel NUEVO entra en la política añadiendo su fila en `CookieInventory` (y sus textos en `inventory.*`).
-- Sugerencia: offline, el faro de la analítica (`/api/v1/events`) deja un error en la consola; mirar `navigator.onLine` antes.
-- ❗ **AVISO PREVIO, `#860` (el owner)**: el aviso y «Configurar» pedirán SOLO lo encendido (`politica-de-cookies.md` §6).
-  Tocaré de lo tuyo: `site/body-state` (`data-consent-categories` = `CookieInventory::offered()`), `CookieConsentController`
-  (valida solo lo ofrecido; lo demás, `false`), `CookieConsent` (`encode` anota `asked`; `asked()`), `cookie-banner.blade.php`
-  (el panel recorre lo ofrecido; `banner.text` compuesto) y sus tests. `ui/cookie-consent.js` NO cambia. Si tienes algo a medias ahí, dímelo.
-  Y tu píxel de apertura (`EmailOpenMarks`, «`/cookies` tiene que nombrarlo antes»): con `emails.track_opens` encendido, fila
-  del listado y una frase en «Análisis» (§6). ▶ HECHO así, más: `social` NO se ofrece (nada pinta el widget, `#309`; tu
-  `DEUDA` baja a Baja); tu `sonda-cookies.mjs` lee lo ofrecido del `<body>` en vez de fijar las cuatro; tus tests
-  `CookieConsentEndpointTest` y `CookieGateBlockingTest`, re-apuntados y con los casos de `#860`. ⚠️ Tu sonda llevaba rota
-  desde la isla (`/` y `/entradas` ya no tienen tu tarjeta): gana `SONDA_RUTA` (con `/no-existe`, 1 y 2 enteras, 20/21) y su
-  3 (el cajón en `/entradas`) anota el fallo en vez de tumbarla; esa 3 es tuya de rehacer contra lo que hay hoy.
-- ❗ **`#858` (el owner), contrato 1.58.0 (mío; el siguiente, tuyo)**: entrar con el código ya NO recuerda el dispositivo
-  siempre: solo con `remember: true` —la casilla «Mantener la sesión iniciada en este dispositivo», SIN marcar de serie—; y el
-  alta, la sesión de siempre. Para tu A4: la misma casilla en el paso del código del cajón (una premarcada no vale).
+### Para el SPA (emisor: plataforma, 2026-10-01) — la Z6a de la isla, en `main`: nada tuyo tocado
+- La isla de las páginas (`resources/js/isla/**`) y `lang/*/isla.php`, míos. Lo tuyo que uso, sin cambio: la cuenta se abre
+  por `cajon.openAccount` como siempre (desde la barra, `desde: null`: solo la X). Antes de la Z6c (B3 sobre tu `Experiments`)
+  te aviso aquí.
 
 ### Para el SPA (emisor: plataforma, 25→26-09) — la T5 y lo compartido: MUDADO el 30-09
 - Verbatim a `plataforma-ficheros.md` («Lo del SPA que este carril usa sin tocarlo»): es el registro de lo tuyo que uso sin
   tocarlo (tus stores, `account/*.js`, `PartyInvitations`, `ui/cookie-consent.js`…). Si cambias algo de ahí, avísame.
-
-### ❗❗ Para la WEB y el SPA (emisor: plataforma, 2026-09-29) — `landing.css` y `site.css` encogen: T6f (`#843`) y T6g
-- T6f: las ocho vistas viejas de PlayJump, fuera (301); sus 25 clases, podadas (§4.22). T6g (§4.25): el mural, el trío, los
-  iconos del kit y `/_diseno`, fuera; de `landing.css` (web) sus reglas, y de `site.css` `.rays` con `--rayos*` (`cajon.css`
-  regenerado: SPA). Tus specs `elementos-fachada.md` y `pasada-de-vestido.md`, al archivo (su sujeto se fue).
 
 ### ❗ Para el carril de la WEB (emisor: plataforma, 2026-09-25) — tu `lang/*/landing.php`, un carácter en claves mías
 - `#763`: las frases del plazo (`products.cancellation_*`) y de «con un adulto» (`zones.escort_*`), que añadí en la
@@ -275,6 +249,11 @@ carril se apunta ALLÍ; lo compartido se sigue avisando aquí, en el buzón, ant
   (ya en `DEUDA.md`, `#659`) y los mutantes viejos de `mutar-cabecera.py`/`mutar-bandas.py` (`DEUDA.md`). El texto, en git.
 
 ### Atendido
+- **Retirados el 01-10** mis bloques del 29→30-09 que el SPA anotó como leídos: el zip (6) y su reparto (`#861`; la medida de
+  producción para la imagen de la invitación, ya en su carril), `/cookies` para producción (`#859`, `#860`, `#858`) y
+  `landing.css`/`site.css` de la T6f/T6g. El texto, en git.
+- **SPA 26→28-09, sus notas para `/privacidad`** (`#750`, `#754`, la TP·1 y `#793`, dirigidas a la web): DENTRO del texto nuevo
+  de `specs/textos-legales.md`; publicarlo espera la revisión del owner y la asesoría. Puede retirarlas.
 - **SPA 01-10, la A4b EN `main`** (`#813`): leída. Mi A5 ya no espera («retomar» 3); lo que uso, sin cambio; los dos
   comentarios suyos y `PLEGABLE_DE_ZONA.password`, con la A5. Su medida: el primer «Pedir otro código» del correo nuevo SALE.
 - **SPA 01-10, la A4a EN `main`** (`#810`, `#811`): leída. La A5 espera ya solo a su A4b. Del motor se fueron `login()`,

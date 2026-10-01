@@ -3,7 +3,8 @@
 # `scripts/sonda-normas.mjs` —la página en un navegador, cada dato contra su hecho de la API—, y cada mutación rompe UN
 # mecanismo de la T6e: que `seguridad` OCUPE `/normas`, las normas del PANEL (todas, por sus momentos y en su orden, con su
 # porqué, su nivel y su icono), el reparto `rgSplit` del diseño, la hoja con el descargo VIGENTE (su versión, y Esc que la
-# cierra), el «Reservar» de la cabecera que abre el selector y la isla que le cede el suyo, la nota de Google, las alturas y
+# cierra), el «Reservar» de la cabecera que abre el selector y la isla que baja el suyo a SECUNDARIA (Z6a: ya no lo cede),
+# la nota de Google, las alturas y
 # los calcetines de los hechos, y Normas como la página actual del pie.
 #
 # ⚠️ Muta la INSTANCIA (`../instancias/playjump`, montada en el contenedor: el producto lee sus vistas, su modelo, sus
@@ -128,7 +129,7 @@ mutar "el «Reservar» de la cabecera no abre el selector (baja a la portada)" "
   "'#reparto']\" cta-planes" \
   "'#reparto']\""
 
-mutar "la isla no cede (la cabecera pierde su marca)" "$HERO" \
+mutar "la isla no baja a secundaria (la cabecera pierde su marca)" "$HERO" \
   ":href=\"\$ctaPrimary['href']\" data-isla-cta data-isla-planes>" \
   ":href=\"\$ctaPrimary['href']\" data-isla-planes>"
 

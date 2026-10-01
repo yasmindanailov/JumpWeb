@@ -1,18 +1,22 @@
 /**
- * EL ESTADO DE LA ISLA: compone sus comportamientos (colocación, pila de paneles, morfeo, compacta, aviso) con la
+ * EL ESTADO DE LA ISLA: compone sus comportamientos (colocación, pila de paneles, morph, asentado, cruce, aviso) con la
  * situación que resuelve `situacion.js`, y devuelve exactamente lo que pinta `IslaFlotante.vue` (`CE-6`: el
  * componente pinta; esto decide). Sigue el orden de `ParkIsland.jsx` bloque a bloque: cuando el diseño cambie, se
  * compara este fichero —y los `use*` que llama— con el suyo.
  *
+ * **Z6a** (zip (6), «tres huecos, cristal y morph», `isla-y-landing-nueva.md` §4.27): la barra tiene tres huecos fijos —el
+ * menú, la acción y la cuenta—; la frase va siempre y la acción también (con un botón de la página a la vista, en
+ * secundaria); la tarea y la reserva de hoy ya no mandan en la barra: ponen el punto en la cuenta.
+ *
  * ⚠️ El orden de las llamadas NO es cosmético. Los `onMounted` corren en el orden en que se registran (el ancho,
- * luego la primera medida, luego el scroll, luego `isla:abrir`) y los `watch` también: es el orden del port de una
- * pieza, y el banco de la isla lo midió así (52/52 a 0 px).
+ * luego la primera medida, luego `isla:abrir`) y los `watch` también: es el orden del port de una pieza, y el banco de
+ * la isla lo midió así (52/52 a 0 px).
  */
-import { computed, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { resolverSituacion, reparto } from './situacion.js';
 import { t as texto } from '../sidebar/i18n.js';
-import { estiloIsla, estiloMedida, estiloRaiz, tamano, tipoDeCambio } from './forma.js';
-import { useAncho, useCompacta } from './useColocacion.js';
+import { estiloIsla, estiloMedida, estiloRaiz, tamano } from './forma.js';
+import { useAncho } from './useColocacion.js';
 import { useMorfeo } from './useMorfeo.js';
 import { useAviso } from './useAviso.js';
 import { useCapa, usePila } from './usePaneles.js';
@@ -20,6 +24,8 @@ import { useCompraCapa } from './useCompraCapa.js';
 import { useRelevo } from './useRelevo.js';
 import { useAltoIsla } from './useAltoIsla.js';
 import { useTeclado } from './useTeclado.js';
+import { useAsentado } from './useAsentado.js';
+import { useCruce } from './useCruce.js';
 import { dejarVuelo } from './relevo.js';
 import { salidaDePanel, vueloDesde } from './movimiento.js';
 
@@ -29,7 +35,7 @@ export function useIsla(props, { wrapRef, islandRef, sizerRef, panelRef, rowRef,
     const pila = usePila();
     const { stack, view, plansFromToday, alternarPanel } = pila;
 
-    // Con el menú abierto, el velo tapa la página: su botón ya no se ve, así que la isla no cede la acción.
+    // Con el menú abierto, el velo tapa la página: su botón ya no se ve, así que la acción de la isla va en principal.
     const entrada = (ctaVisible) => ({
         page: props.page, today: props.today, offer: props.offer, reassurance: props.reassurance, quote: props.quote,
         chosen: props.chosen, filling: props.filling, task: props.task, resume: props.resume, payment: props.payment,
@@ -38,17 +44,30 @@ export function useIsla(props, { wrapRef, islandRef, sizerRef, panelRef, rowRef,
     });
     const s0 = computed(() => resolverSituacion(entrada(props.ctaVisible), props.textos));
     const menuOpen = computed(() => view.value !== null && view.value !== s0.value.opens);
-    const s = computed(() => (menuOpen.value && props.ctaVisible ? resolverSituacion(entrada(false), props.textos) : s0.value));
-    const inCheckout = computed(() => s.value.id === 'compra');
+    const sRaw = computed(() => (menuOpen.value && props.ctaVisible ? resolverSituacion(entrada(false), props.textos) : s0.value));
+    const inCheckout = computed(() => sRaw.value.id === 'compra');
     const isOpen = computed(() => view.value !== null || inCheckout.value);
     const top = computed(() => props.placement === 'top' || (props.placement === 'auto' && wide.value));
+
+    // `usaAncho`: el ancho medido solo manda en fila (`r`, más abajo; se lee al medir, ya montada).
+    const { box, animate, calmaCapa, reservado, remedirCuando } = useMorfeo({ wrapRef, sizerRef, isOpen, inCheckout, usaAncho: () => r.value.row });
+
+    // Lo que trae el scroll espera a ASENTARSE (Z6a): la frase y la etiqueta, 250ms; el tono de la acción, 200ms. Bajando
+    // deprisa, la isla no parpadea entre situaciones: salta a la última. Lo que provoca la persona (abrir, la compra, el
+    // pago fallido, la reserva a medias) va al momento, y la llegada también (aún no anima).
+    const inmediato = () => ! animate.value || isOpen.value || Boolean(sRaw.value.locked) || Boolean(sRaw.value.urgent);
+    const sBase = useAsentado(
+        () => sRaw.value,
+        () => `${sRaw.value.id}|${sRaw.value.line || ''}|${sRaw.value.note || ''}|${sRaw.value.action ? sRaw.value.action.label : ''}`,
+        () => (inmediato() ? 0 : 250),
+    );
+    const calmA = useAsentado(() => Boolean(sRaw.value.calm), () => (sRaw.value.calm ? '1' : '0'), () => (inmediato() ? 0 : 200));
+    const s = computed(() => ({ ...sBase.value, calm: calmA.value }));
+
     // Un panel abierto por la acción (el selector, Mi QR): mientras está abierto, el botón de acción desaparece.
     const actionView = computed(() => view.value !== null && (view.value === 'plans' || Boolean(s.value.action && s.value.action.panel === view.value)));
     const titleInRow = computed(() => actionView.value && view.value !== null);
 
-    // `usaAncho`: el ancho medido solo manda en fila (`r`, más abajo; se lee al medir, ya montada).
-    const { box, animate, calmNow, reservado, remedirCuando } = useMorfeo({ wrapRef, sizerRef, isOpen, usaAncho: () => r.value.row });
-    const scrolledDown = useCompacta(props, wrapRef);
     const shownNotice = useAviso(props, isOpen);
     const { alTeclear } = useCapa({ islandRef, panelRef, isOpen, inCheckout, checkout: () => props.checkout, pila });
     const { anuncio } = useCompraCapa({
@@ -63,41 +82,62 @@ export function useIsla(props, { wrapRef, islandRef, sizerRef, panelRef, rowRef,
         salidaDePanel(pn, () => { if (abortado() && pn) pn.getAnimations().forEach((a) => a.cancel()); hecho(); });
     });
 
-    // Qué ha cambiado en la píldora (02c, `tipoDeCambio`): decide si la caja rebota o cambia en calma, si la frase entra
-    // con retraso y si la acción llega con bote. Síncrono: tiene que saberse ANTES de pintar el cambio.
-    const accionKey = computed(() => (s.value.action && !actionView.value ? String(s.value.action.label || '') : ''));
-    const cambio = ref('otro');
-    let previo = null;
-    watch(() => ({ id: s.value.id, line: s.value.line, acc: accionKey.value }), (ahora) => {
-        const c = previo ? tipoDeCambio(previo, ahora) : null;
-        if (c) cambio.value = c;
-        if (c || ! previo) previo = ahora;
-    }, { flush: 'sync', immediate: true });
+    // El CRUCE (Z6a): cuando cambia lo que dice o lo que ofrece, lo viejo se desenfoca encima mientras lo nuevo llega.
+    const accionKey = computed(() => (s.value.action && ! actionView.value ? String(s.value.action.label || '') : ''));
+    const cruce = useCruce({ s, accionKey, animate });
 
     // Tocar la píldora la hunde (0,97) antes de crecer: el bote empieza en el dedo (02b). Solo cerrada.
     const hundida = ref(false);
     const hundir = (e) => { if (!isOpen.value && !inCheckout.value && e.target.closest && e.target.closest('button, a')) hundida.value = true; };
     const soltar = () => { hundida.value = false; };
 
-    // ── Reparto de la línea de situación ──
-    const r = computed(() => reparto({
-        s: s.value, top: top.value, compact: props.compact, scrolledDown: scrolledDown.value, isOpen: isOpen.value,
-        menuOpen: menuOpen.value, inCheckout: inCheckout.value, mobileContext: props.mobileContext,
-        cookies: props.cookies, shownNotice: shownNotice.value,
-    }));
+    // DOS VELOCIDADES (zip (6)): lo que provoca quien la toca —o con un panel abierto—, rápido (`--dur-island`); lo que trae
+    // el scroll, en calma (`--dur-island-calma`). El toque cuenta 1,2s.
+    const tocado = ref(false);
+    let relojToque = null;
+    const tocar = () => { tocado.value = true; clearTimeout(relojToque); relojToque = setTimeout(() => { tocado.value = false; }, 1200); };
+    onBeforeUnmount(() => clearTimeout(relojToque));
+    const rapido = computed(() => isOpen.value || tocado.value);
+
+    // ── Reparto de la frase: siempre (Z6a) ──
+    const r = computed(() => reparto({ s: s.value, top: top.value, menuOpen: menuOpen.value, inCheckout: inCheckout.value }));
     remedirCuando([top, () => r.value.row, inCheckout, isOpen, () => s.value.id, view, () => stack.value.length]);
     // El teclado del móvil en la capa grande (§4.16): la raíz se ciñe a lo que se ve y la capa mide ese alto.
     const { kb } = useTeclado(() => inCheckout.value && ! top.value);
     // La primera pantalla (zip del 27-09): el alto en reposo, publicado para la cabecera (`--island-h`).
     useAltoIsla({
         rowRef, lineRowRef,
-        estado: () => ({ isOpen: isOpen.value, inCheckout: inCheckout.value, isCompact: r.value.isCompact, extra: s.value.extra, row: r.value.row, top: top.value }),
+        estado: () => ({ isOpen: isOpen.value, inCheckout: inCheckout.value, extra: s.value.extra, row: r.value.row, top: top.value }),
     });
 
     const grown = computed(() => isOpen.value || Boolean(props.cookies) || Boolean(shownNotice.value) || (r.value.hasLine && !r.value.row) || box.value.h > 70);
     const openRow = computed(() => isOpen.value && !inCheckout.value);
     const stretch = computed(() => (openRow.value || Boolean(s.value.extra) || Boolean(shownNotice.value) || Boolean(props.cookies)) && !(r.value.row && r.value.hasLine));
-    const pendiente = computed(() => Boolean(props.account.pending) || Boolean(props.bookingToday));
+    // En calma, sin rebote: la capa grande y el pago fallido. Lo demás —también abrir y cerrar un panel— es el morph.
+    const calmaCaja = computed(() => inCheckout.value || calmaCapa.value || s.value.id === 'pago-fallido');
+
+    // LA CUENTA (Z6a): el control de la derecha, siempre. Sin sesión, la silueta («Cuenta», abre Entrar); con sesión, el QR
+    // («Mi QR», abre Tu QR). El punto usa el código de la frase: lima, reserva hoy (situación 14); naranja, algo que hacer
+    // (situación 13 o `account.pending`). Con una capa abierta, su sitio es de la X: se cierra tocando donde se abrió.
+    const sesion = computed(() => props.account.state === 'session');
+    const avisoCuenta = computed(() => (props.bookingToday
+        ? { color: 'var(--isla-vivo)', texto: props.bookingToday.text + (props.bookingToday.extra ? ` · ${props.bookingToday.extra}` : '') }
+        : props.task || props.account.pending
+            ? { color: 'var(--isla-alerta)', texto: (props.task && props.task.text) || props.account.pendingText || '' }
+            : null));
+    const cuenta = computed(() => ({
+        label: (sesion.value ? t('control.mi_qr') : t('control.cuenta')) + (avisoCuenta.value && avisoCuenta.value.texto ? ` · ${avisoCuenta.value.texto}` : ''),
+        icon: sesion.value ? 'qr-code' : 'user-round',
+        dot: avisoCuenta.value && ! isOpen.value ? avisoCuenta.value.color : null,
+    }));
+    function pulsarCuenta(e) {
+        const capa = sesion.value ? props.account.onQr : props.account.onClick;
+        if (capa) { pila.poner([]); capa({ from: 'isla' }); return; }
+        alternarPanel(sesion.value ? 'qr' : 'cuenta', e);
+    }
+    // «¿Lo hablamos?» (situación 12 en la barra): cuando la página ve que se atasca, una nota bajo la frase que abre la
+    // ayuda. No añade un control ni quita la acción.
+    const ayudaEnFrase = computed(() => Boolean(props.help && props.help.stuck && ! isOpen.value));
 
     const panelTitle = computed(() => (inCheckout.value ? null
         : view.value === 'menu' ? t('panel.menu')
@@ -129,27 +169,27 @@ export function useIsla(props, { wrapRef, islandRef, sizerRef, panelRef, rowRef,
 
     // Del selector a la compra, el nombre del plan viajará a la cabecera del paso (02b): lo toma la isla de la compra.
     const elegirPlan = (o, e) => { dejarVuelo(vueloDesde(e?.currentTarget, o.title)); pila.poner([]); if (o.onClick) o.onClick({ fromToday: plansFromToday.value }); };
-    const abrirCapa = (fn) => { pila.poner([]); fn({ from: 'menu' }); };
     const navegar = (it, e) => { pila.poner([]); if (props.onNavigate) props.onNavigate(it, e); };
 
     const panelProps = computed(() => ({
         vista: view.value, titulo: panelTitle.value, tituloEnFila: titleInRow.value, top: top.value,
-        menuItems: props.menuItems, homeLabel: props.homeLabel, contact: props.contact, lang: props.lang,
-        account: props.account, bookingToday: props.bookingToday, help: props.help, cookies: props.cookies,
+        menuItems: props.menuItems, homeLabel: props.homeLabel, contact: props.contact, lang: props.lang, onLanguage: props.onLanguage,
+        account: props.account, help: props.help, cookies: props.cookies,
         preferencias: props.cookiePrefs, plans: props.plans, plansFromToday: plansFromToday.value, quote: props.quote,
     }));
 
     return {
-        t, s, stack, view, top, r, isOpen, inCheckout, openRow, stretch, pendiente, titleInRow, panelTitle, shownNotice,
+        t, s, stack, view, top, r, isOpen, inCheckout, openRow, stretch, titleInRow, panelTitle, shownNotice,
         hayLinea, lineaAbre, accion, accionHref, accionAbierta, pulsarAccion, alTeclear, alternarPanel, panelProps, anuncio,
-        cerrar: pila.cerrar, atras: pila.atras, apilarPanel: pila.apilarPanel, elegirPlan, abrirCapa, navegar,
-        cambio, hundir, soltar, veloSaliente, kb,
-        tamano: computed(() => tamano({ inCheckout: inCheckout.value, isOpen: isOpen.value, notice: shownNotice.value, isCompact: r.value.isCompact })),
+        cerrar: pila.cerrar, atras: pila.atras, apilarPanel: pila.apilarPanel, elegirPlan, navegar,
+        cruce, cuenta, pulsarCuenta, ayudaEnFrase, tocar, hundir, soltar, veloSaliente, kb,
+        tono: computed(() => (s.value.calm && ! isOpen.value ? 'secundaria' : 'principal')),
+        tamano: computed(() => tamano({ inCheckout: inCheckout.value, isOpen: isOpen.value, notice: shownNotice.value })),
         estiloRaiz: computed(() => estiloRaiz({ gutter: props.gutter, top: top.value, inCheckout: inCheckout.value, reservado: reservado.value, kb: kb.value })),
         // Entre páginas, la isla de la página se queda (`view-transition-name`); la compra y Mi cuenta no cruzan de página.
         estiloIsla: computed(() => estiloIsla({
-            row: r.value.row, box: box.value, alert: s.value.tone === 'alert', grown: grown.value, animate: animate.value, calm: calmNow.value,
-            isOpen: isOpen.value, cambio: cambio.value, hundida: hundida.value, nombre: inCheckout.value ? null : 'isla',
+            row: r.value.row, box: box.value, alert: s.value.tone === 'alert', grown: grown.value, animate: animate.value, calm: calmaCaja.value,
+            lee: inCheckout.value, inCheckout: inCheckout.value, rapido: rapido.value, hundida: hundida.value, nombre: inCheckout.value ? null : 'isla',
         })),
         estiloMedida: computed(() => estiloMedida({ row: r.value.row, top: top.value, isOpen: isOpen.value, cap: box.value.cap, maxWidth: props.maxWidth, inCheckout: inCheckout.value })),
     };

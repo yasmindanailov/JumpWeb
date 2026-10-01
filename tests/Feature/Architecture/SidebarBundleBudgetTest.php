@@ -983,7 +983,14 @@ class SidebarBundleBudgetTest extends TestCase
     // sus «no» viajan con los pasos (`acceso.js`, pedido con `import()` del trozo ya descargado); dentro medía 166,46.
     // `#858` (el owner): «Mantener la sesión iniciada» —su estado y pasarlo al entrar—: 165,90 → 165,98 (base: el `HEAD`
     // `1436ea60`, construido aparte). El techo, a 167: a 166 quedaban 0,02, un cable trampa.
-    private const ISLA_COMPRA_CHUNK_MAX_KB = 167;
+    // Z6a (zip (6), `isla-y-landing-nueva.md` §4.27): los TRES HUECOS —la cuenta en la barra con su punto—, la frase siempre
+    // con su cruce (`useCruce.js`), lo que trae el scroll asentado (`useAsentado.js`), la acción en secundaria con su giro
+    // de tono y la etiqueta que no se corta, el menú con su fila de iconos y «¿Lo hablamos?»: viajan con `IslaFlotante`.
+    // Los dos dibujos del menú, en `piezas/iconos-menu.js`: en el registro común, las calculadoras crecían +0,94 sin llevar
+    // la isla. Medido 166,17 → 171,58 (base: el `HEAD` `5dbe175c` construido aparte en un `git worktree`, el mismo
+    // cálculo; 0,20 son el módulo de la acción, `piezas/boton-accion.js`, que la regla `CE-6` saca del componente). El
+    // techo, a 172.
+    private const ISLA_COMPRA_CHUNK_MAX_KB = 172;
 
     // T4d·4 (`specs/isla-y-landing-nueva.md` §4.12): la CALCULADORA de una página, entrada propia que la página pide
     // (`scripts` de `<x-pagina>`) y se monta al acercarse su pieza. Su DESCARGA entera, como la mide el navegador que
@@ -1041,7 +1048,10 @@ class SidebarBundleBudgetTest extends TestCase
     // `#822`: el teclado del móvil de la capa grande (`teclado.js`, `useTeclado.js`), que viaja con `IslaFlotante` y su
     // `CompraIsla` aunque la isla en reposo no entre en la compra. Medido 168,94 → 171,50 (base: el `HEAD` de `#821`).
     // El techo, a 173.
-    private const ISLA_PAGINA_MAX_KB = 173;
+    // Z6a (zip (6), §4.27): lo mismo que la compra, que comparte `IslaFlotante` y sus piezas —los tres huecos, la frase
+    // siempre con su cruce, el asentado, la secundaria, el menú con sus iconos, «¿Lo hablamos?»—. Medido 172,62 → 178,01
+    // (base: el `HEAD` `5dbe175c` construido aparte en un `git worktree`, el mismo cálculo). El techo, a 179.
+    private const ISLA_PAGINA_MAX_KB = 179;
 
     // T3e·3 (`#694`): las pantallas de después de la pantalla 0, en su trozo (`isla/compra/pasos-diferidos.js`), que la
     // compra pide al montarse. Medido 36,92 KiB. T3e·4 (`#695`): «Entra» con sus eventos y la «G» de Google, 37,66.

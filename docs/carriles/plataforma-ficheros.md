@@ -26,9 +26,12 @@ A2b** (`#856`): `Identity\Contracts\EmailChangeOutcome`, `Notifications\Support\
 `cookie_policy_for_production`, `tests/Support/CookiePolicyV4.php`, `Content\CookieInventoryTest`,
 `scripts/{sonda-inventario-cookies.mjs,mutar-politica-cookies.sh}` y `inventory.*` de `lang/*/cookies.php` (y, AVISANDO, del
 SPA: `CookiePolicyContent`, el resto de `cookies.php`, `CookieConsent` y sus tests) ·
+**LOS TEXTOS LEGALES** (`#863`→`#865`): `specs/textos-legales.md` (el código, tras la asesoría: su §4.3) ·
 **LA ISLA Y LA LANDING NUEVA** (`#681`, `#682`): la spec, la isla `resources/js/isla/**`, sus bancos y sondas
 (`scripts/banco-{isla,piezas,compra}*`, `scripts/pixel.mjs`, `scripts/sonda-{embudo,isla,cuenta,movimiento,isla-movimiento,banco-movimiento,isla-rendimiento,compra-directa,demanda}.mjs`,
-`scripts/sonda-cuenta-datos.php`, `scripts/mutar-{t5f,hijos-de-producto,demanda-isla}.sh`), `sidebar/reanudar.js`,
+`scripts/sonda-cuenta-datos.php`, `scripts/mutar-{t5f,hijos-de-producto,demanda-isla,isla-z6a}.sh`; las de las PÁGINAS:
+`scripts/sonda-{primera-pantalla,calculadora,visor,conversion,portada,cumpleanos,colegios,visitanos,normas,entradas,web}.mjs`
+y `scripts/mutar-sonda-{colegios,entradas,normas,visitanos,web}.sh`), `sidebar/reanudar.js`,
 `sidebar/marca-compra.js`, `app/Http/Sidebar/PurchaseResume.php` y
 las vistas nuevas de `instancias/playjump/web/`; ⚠️ **el motor del cajón es del SPA**: se le avisa ANTES de tocarlo ·
 `StaticAnalysisGateTest` · `Tests\TestCase::be()` · **el token y el cajón empaquetado**, cuyos ficheros

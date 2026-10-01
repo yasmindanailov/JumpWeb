@@ -1,23 +1,24 @@
 /**
  * **LA SONDA DE MI CUENTA EN LA ISLA, en vivo** (T5a de `specs/isla-y-landing-nueva.md` §4.13, `DECISIONES #773`): la
  * página de verdad (`/kids`), el cajón, el motor y la API de verdad, en un navegador, a 1280 y a 390. Comprueba:
- *   1. sin sesión, «Entrar o crear cuenta» del menú abre ENTRA en la capa de la isla —no el lateral—, con la flecha que
- *      vuelve al menú; «Crea tu cuenta» es un paso de la capa y su flecha vuelve a Entra; y la puerta de completar el
+ *   1. sin sesión, «Cuenta» de la BARRA (Z6a: la cuenta es el control de la derecha) abre ENTRA en la capa de la isla —no
+ *      el lateral—, sin flecha: la cierra su X; «Crea tu cuenta» es un paso de la capa y su flecha vuelve a Entra; y la puerta de completar el
  *      alta de Google (`/registro/google`) abre su paso en la isla (sin perfil pendiente, su desenlace «caducado»);
  *   2. entrar recarga la MISMA página en Mi cuenta (`#mi-cuenta`): «Hola, …» y Tu QR compacto con la PNG del servidor;
  *   3. «Enseñar mi QR» abre Tu QR (el QR grande, el código en grupos de cuatro, «Guardar en el móvil» con su descarga) y
  *      su flecha vuelve a Mi cuenta; «Renovar mi QR» pregunta, renueva y lo confirma arriba con el código nuevo;
- *   4. la X cierra la capa y deja la dirección sin `#mi-cuenta`; «Mi QR» del menú abre Tu QR directamente;
+ *   4. la X cierra la capa y deja la dirección sin `#mi-cuenta`; «Mi QR» de la barra abre Tu QR directamente, sin flecha;
  *   5. las puertas: `/mi-cuenta` abre Mi cuenta en la isla, y `#mi-cuenta/qr`, Tu QR;
  *   6. LAS RESERVAS (T5b, `DECISIONES #775`), con las de `sonda-cuenta-datos.php` (un Jump en plazo y un cumpleaños con
  *      señal): «Tu próxima reserva» con su plazo, «Ver el pago» del libro, «Cambiar o cancelar» (lo que se puede, el
  *      mensaje escrito, «Llamar» y WhatsApp con el teléfono del parque), «Otras reservas» → «Tu reserva» con la señal
  *      pagada, lo del día y la promesa de devolverla; y el historial con «Ver más»;
- *   7. HOY (si da tiempo, antes de las 20:00 del parque): en la página, la isla con «Hoy a las …» y «Ver mi QR»; en Mi
+ *   7. HOY (si da tiempo, antes de las 20:00 del parque): en la página, la cuenta de la barra con el punto VIVO y «Hoy a
+ *      las …» en su nombre (Z6a: la reserva de hoy ya no manda en la barra, que conserva su acción); en Mi
  *      cuenta, el QR grande de entrada, los calcetines con el aviso escrito en el panel, el plazo ya pasado (y su aviso en
  *      «Cambiar o cancelar») y «Cómo llegar» en Tu QR;
- *   8. ANTES DE VENIR (T5c, `DECISIONES #776`), con el cumpleaños como próxima: en la página, el punto de alerta y
- *      «Siguiente: …» en el menú; en Mi cuenta, el chip que baja al bloque, la siguiente tarea entera, la invitación en
+ *   8. ANTES DE VENIR (T5c, `DECISIONES #776`), con el cumpleaños como próxima: en la página, el punto de alerta en la
+ *      cuenta de la barra y la tarea en su nombre (Z6a); en Mi cuenta, el chip que baja al bloque, la siguiente tarea entera, la invitación en
  *      fila (que se comparte por WhatsApp con el mensaje de la lista), las autorizaciones y los extras con sus enlaces, y
  *      la siguiente, que lleva a la lista de invitados de esa fiesta;
  *   9. LOS HIJOS (T5d, `DECISIONES #777`): con un Jump como próxima (puede entrar un adulto, `#825`), ni «Siguiente» ni
@@ -152,7 +153,12 @@ async function recorrer(navegador, ventana, informe) {
     const titular = async () => (await capa().locator('h1').first().textContent({ timeout: 4000 }).catch(() => '')).trim();
     const lateralAbierto = () => pagina.evaluate(() => Boolean(document.querySelector('.sidecart.is-open, .sidecart[aria-hidden="false"]')));
     const captura = (paso) => pagina.screenshot({ path: `storage/app/audit/sonda-cuenta-${ancho}-${paso}.png` });
-    const abrirMenu = async () => { await pagina.getByRole('button', { name: 'Menú, cuenta y Mi QR' }).first().click(); await pagina.waitForTimeout(300); };
+    // La cuenta, el control de la DERECHA de la barra (Z6a): «Cuenta» sin sesión, «Mi QR» con ella; su nombre para el lector
+    // lleva lo pendiente («Mi QR · …», el punto lima o naranja). Abre la capa con `from: 'isla'`: sin flecha, con su X.
+    const cuentaBarra = () => pagina.locator('[data-isla] button[aria-label^="Cuenta"], [data-isla] button[aria-label^="Mi QR"]').first();
+    const pulsarCuenta = async () => { await cuentaBarra().click(); await pagina.waitForTimeout(300); };
+    const nombreCuenta = async () => (await cuentaBarra().getAttribute('aria-label').catch(() => '')) ?? '';
+    const sinFlecha = async () => ! (await capa().getByRole('button', { name: 'Volver' }).isVisible().catch(() => false));
     // El texto de un trozo, en una línea (`\s` ya incluye los espacios duros que `Intl` pone en los importes).
     const texto = async (loc) => ((await loc.innerText({ timeout: 4000 }).catch(() => '')) ?? '').replace(/\s+/g, ' ').trim();
     const volver = async () => { await capa().getByRole('button', { name: 'Volver' }).click(); await pagina.waitForTimeout(500); };
@@ -172,11 +178,10 @@ async function recorrer(navegador, ventana, informe) {
     const rechazar = pagina.getByRole('button', { name: 'Rechazar' }).first();
     if (await rechazar.isVisible().catch(() => false)) { await rechazar.click(); await pagina.waitForTimeout(400); }
 
-    await abrirMenu();
-    await pagina.getByText('Entrar o crear cuenta').first().click();
+    await pulsarCuenta();
     await capa().waitFor({ timeout: 8000 }).catch(() => {});
-    check('sin sesión, el menú abre «Entra» en la capa de la isla, no el lateral', (await titular()) === 'Entra' && ! (await lateralAbierto()), `titular «${await titular()}»`);
-    check('abierta desde el menú, lleva la flecha', await capa().getByRole('button', { name: 'Volver' }).isVisible());
+    check('sin sesión, «Cuenta» de la barra abre «Entra» en la capa de la isla, no el lateral', (await titular()) === 'Entra' && ! (await lateralAbierto()), `titular «${await titular()}»`);
+    check('abierta desde la barra, sin flecha y con su X (Z6a: se cierra donde se abrió)', await sinFlecha() && await capa().getByRole('button', { name: 'Cerrar', exact: true }).isVisible());
     await captura('1-entra');
 
     await capa().getByText('Crea tu cuenta').click();
@@ -187,9 +192,9 @@ async function recorrer(navegador, ventana, informe) {
     await pagina.waitForTimeout(400);
     check('su flecha vuelve a «Entra»', (await titular()) === 'Entra');
 
-    await capa().getByRole('button', { name: 'Volver' }).click();
+    await capa().getByRole('button', { name: 'Cerrar', exact: true }).click();
     await pagina.waitForTimeout(500);
-    check('la flecha de «Entra» cierra la capa y abre el menú de la isla', ! (await capa().isVisible().catch(() => false)) && await pagina.getByText('Entrar o crear cuenta').first().isVisible());
+    check('la X de «Entra» cierra la capa y la barra vuelve a «Cuenta»', ! (await capa().isVisible().catch(() => false)) && (await nombreCuenta()).startsWith('Cuenta'), await nombreCuenta());
 
     // La puerta de completar el alta de Google (`/registro/google`): en la isla, con las piezas del sistema (`#773`·d). Sin
     // un viaje de verdad a Google no hay perfil esperando: sale su desenlace «ya no hay nada que completar».
@@ -201,10 +206,9 @@ async function recorrer(navegador, ventana, informe) {
     await captura('0-alta-google');
     await pagina.goto(`${base}/kids`, { waitUntil: 'load' });
     await pagina.waitForTimeout(500);
-    await abrirMenu();
 
     // ── 2 · Entrar ────────────────────────────────────────────────────────────────────────────────────
-    await pagina.getByText('Entrar o crear cuenta').first().click();
+    await pulsarCuenta();
     await capa().waitFor({ timeout: 8000 });
     limitadoresACero();
     // Entra con un código al correo (A3, `#849`): el correo con cuenta pasa a pedir el código, que llega al buzón.
@@ -264,16 +268,15 @@ async function recorrer(navegador, ventana, informe) {
     await pagina.waitForTimeout(500);
     check('desde Mi cuenta, la flecha de Tu QR vuelve a Mi cuenta', (await banda()) === 'Mi cuenta');
 
-    // ── 4 · La X y Mi QR del menú ────────────────────────────────────────────────────────────────────
+    // ── 4 · La X y Mi QR de la barra (Z6a)───────────────────────────────────────────────────────────
     // `exact`: desde la T5e, Ajustes trae «Cerrar sesión» y «Cerrar sesión en otros dispositivos» (su «Cerrar»).
     await capa().getByRole('button', { name: 'Cerrar', exact: true }).click();
     await pagina.waitForTimeout(500);
     check('la X cierra la capa y la dirección pierde `#mi-cuenta`', ! (await capa().isVisible().catch(() => false)) && ! pagina.url().includes('#'), pagina.url());
-    await abrirMenu();
-    await pagina.getByText('Mi QR', { exact: true }).first().click();
+    await pulsarCuenta();
     await capa().waitFor({ timeout: 8000 }).catch(() => {});
     await pagina.waitForTimeout(500);
-    check('«Mi QR» del menú abre Tu QR, con la flecha que vuelve al menú', (await banda()) === 'Tu QR' && await capa().getByRole('button', { name: 'Volver' }).isVisible(), `banda «${await banda()}»`);
+    check('«Mi QR» de la barra abre Tu QR, sin flecha (se cierra donde se abrió)', (await banda()) === 'Tu QR' && await sinFlecha(), `banda «${await banda()}»`);
     check('llegando de fuera, Tu QR ofrece «Ir a mi cuenta»', await capa().getByText('Ir a mi cuenta').isVisible());
 
     // ── 5 · Las puertas ──────────────────────────────────────────────────────────────────────────────
@@ -370,13 +373,14 @@ async function recorrer(navegador, ventana, informe) {
         console.log(`· ${ventana} · pasadas las 20:00 del parque no hay «hoy» que montar: el paso 7 no se ha comprobado`);
     } else {
         limitadoresACero();
-        // La isla de la PÁGINA (T5c): «Hoy a las…» manda, con «Ver mi QR» y el punto «vivo» en el menú.
+        // La isla de la PÁGINA (Z6a): la reserva de hoy ya no manda en la barra —que conserva su frase y su acción—: pone el
+        // punto VIVO en la cuenta, y «Hoy a las…» va en su nombre (y la hora, en Tu QR).
         await cargar('/kids');
         await pagina.waitForTimeout(700);
-        const islaHoy = pagina.locator('[data-situation="reserva-hoy"]');
-        check('en la página, la isla dice «Hoy a las …» con «Ver mi QR» y el punto vivo en su menú',
-            /Hoy a las \d{2}:\d{2}/.test(await texto(islaHoy)) && await islaHoy.getByRole('button', { name: 'Ver mi QR' }).isVisible() && await islaHoy.locator('[style*="--isla-vivo"]').count() > 0,
-            await texto(islaHoy));
+        check('en la página, la cuenta de la barra lleva el punto vivo y «Hoy a las …» en su nombre; la barra no pasa a «Ver mi QR»',
+            /^Mi QR · Hoy a las \d{2}:\d{2}/.test(await nombreCuenta()) && await cuentaBarra().locator('[style*="--isla-vivo"]').count() > 0
+                && await pagina.locator('[data-situation="reserva-hoy"]').count() === 0,
+            await nombreCuenta());
         await captura('10a-isla-hoy');
         await cargar('/kids#mi-cuenta');
         await proxima.waitFor({ timeout: 15000 }).catch(() => {});
@@ -411,12 +415,11 @@ async function recorrer(navegador, ventana, informe) {
     const lista = `${base}/reserva/${fiesta}/datos-invitados`;
     limitadoresACero();
 
-    // En la página: el punto de alerta en el menú y, dentro, la nota de «Mi cuenta».
+    // En la página (Z6a): el punto de alerta en la CUENTA de la barra y, en su nombre, la tarea.
     await cargar('/kids');
     await pagina.waitForTimeout(700);
-    check('en la página, con una tarea pendiente, el punto de alerta en el menú de la isla', await pagina.locator('[data-situation] [style*="--isla-alerta"]').count() > 0);
-    await abrirMenu();
-    check('y en su menú, «Mi cuenta» dice «Siguiente: Formulario de invitados»', await pagina.getByText('Siguiente: Formulario de invitados').first().isVisible());
+    check('en la página, con una tarea pendiente, el punto de alerta en la cuenta de la barra', await cuentaBarra().locator('[style*="--isla-alerta"]').count() > 0);
+    check('y su nombre dice la tarea: el formulario de invitados', /^Mi QR · .*invitados/i.test(await nombreCuenta()), await nombreCuenta());
     await captura('12-isla-tarea');
 
     await cargar('/kids#mi-cuenta');
@@ -474,8 +477,7 @@ async function recorrer(navegador, ventana, informe) {
     limitadoresACero();
     await cargar('/kids');
     await pagina.waitForTimeout(700);
-    await abrirMenu();
-    check('`#825`: con un Jump (puede entrar un adulto), la página NO dice «Siguiente: Añade a tus hijos»', ! (await pagina.getByText('Siguiente: Añade a tus hijos').first().isVisible().catch(() => false)));
+    check('`#825`: con un Jump (puede entrar un adulto), la cuenta de la barra NO dice «Añade a tus hijos»', ! /hijos/i.test(await nombreCuenta()), await nombreCuenta());
     await cargar('/kids#mi-cuenta');
     const antesH = capa().locator('#antes');
     const quien = capa().locator('#quien');
@@ -495,8 +497,8 @@ async function recorrer(navegador, ventana, informe) {
     limitadoresACero();
     await cargar('/kids');
     await pagina.waitForTimeout(700);
-    await abrirMenu();
-    check('en la página, con unas Kids y sin hijos, «Mi cuenta» dice «Siguiente: Añade a tus hijos»', await pagina.getByText('Siguiente: Añade a tus hijos').first().isVisible());
+    check('en la página, con unas Kids y sin hijos, la cuenta de la barra dice «Añade a tus hijos», con su punto de alerta',
+        /hijos/i.test(await nombreCuenta()) && await cuentaBarra().locator('[style*="--isla-alerta"]').count() > 0, await nombreCuenta());
 
     await cargar('/kids#mi-cuenta');
     await antesH.waitFor({ timeout: 15000 }).catch(() => {});
@@ -946,11 +948,10 @@ async function recorrer(navegador, ventana, informe) {
         await pagina.waitForLoadState('load');
         await pagina.goto(`${base}/kids`, { waitUntil: 'load' });
         await pagina.waitForTimeout(600);
-        await abrirMenu();
-        check('«Cerrar sesión» sale a la portada, y la página ya no tiene sesión', await pagina.getByText('Entrar o crear cuenta').first().isVisible(), pagina.url());
+        check('«Cerrar sesión» sale a la portada, y la página ya no tiene sesión: la barra dice «Cuenta»', (await nombreCuenta()).startsWith('Cuenta'), `${pagina.url()} · ${await nombreCuenta()}`);
 
         // Sin sesión, «Sin conexión» también sale (T5f): sus textos viajan para todos (`mi_cuenta_alta`).
-        await pagina.getByText('Entrar o crear cuenta').first().click();
+        await pulsarCuenta();
         await capa().waitFor({ timeout: 8000 }).catch(() => {});
         await contexto.setOffline(true);
         sinRed.activo = true;

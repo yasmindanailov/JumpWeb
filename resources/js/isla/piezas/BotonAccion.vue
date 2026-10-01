@@ -1,57 +1,19 @@
 <script setup>
 /**
- * La acción de la isla (`ActionButton` del diseño): una sola, naranja, en la fila. En móvil puede llevar la
- * línea de situación dentro (`sublabel`). `loading` la bloquea y pone la bola pequeña delante del texto; si es
- * un texto, es lo que se espera («Comprobando tus datos y guardando tu hora»), para el lector de pantalla.
- * `llega`: la isla recupera la acción (el botón de la página salió de pantalla) y entra con el bote del sistema (Z3) y,
- * tras el salto, UN brillo que la cruza —el del primario que llega—: lo pidió el owner el 26-09 (`#783`); el mockup solo
- * botaba. Mismo reloj que el primario (el brillo, 520ms después de empezar el bote), aquí con los 120ms del bote de la isla.
+ * La acción de la isla (`ActionButton` del diseño), en la fila. Pinta (`CE-6`): su lógica —la secundaria con su giro de
+ * tono, la etiqueta que nunca se corta y el cruce, Z6a— vive en `boton-accion.js`.
  */
-import { computed, ref } from 'vue';
 import CargaRebote from '../ui/CargaRebote.vue';
-import { BRILLO_BOTON } from '../ui/estilos.js';
+import { ENTRA, PROPS_BOTON, SALE, useBotonAccion } from './boton-accion.js';
 
-const BRILLO = { ...BRILLO_BOTON, animation: 'isla-sheen 900ms var(--ease-in-out) 640ms 1 both' };
-
-const props = defineProps({
-    top: { type: Boolean, default: false },
-    label: { type: String, required: true },
-    sublabel: { type: String, default: null },
-    href: { type: String, default: undefined },
-    pulsar: { type: Function, default: null },
-    expanded: { type: Boolean, default: undefined },
-    big: { type: Boolean, default: false },
-    disabled: { type: Boolean, default: false },
-    loading: { type: [Boolean, String], default: false },
-    llega: { type: Boolean, default: false },
-});
-
-const hover = ref(false);
-const press = ref(false);
-const ring = ref(false);
-const bloqueado = computed(() => props.disabled || Boolean(props.loading));
-
-const estilo = computed(() => ({
-    position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1px',
-    flex: props.top ? '0 0 auto' : '1 1 auto', minWidth: 0, minHeight: props.big ? '54px' : '46px', padding: props.top ? '0 24px' : '5px 14px',
-    border: 'none', borderRadius: 'var(--r-pill)',
-    background: hover.value && !bloqueado.value ? 'var(--action-bg-hover)' : 'var(--action-bg)', color: 'var(--action-fg)',
-    fontFamily: 'var(--font-ui)', fontWeight: 'var(--fw-bold)', fontSize: props.top ? '15px' : props.big ? '17px' : '16px',
-    letterSpacing: '-0.01em', textDecoration: 'none', cursor: bloqueado.value ? 'not-allowed' : 'pointer', overflow: 'hidden', opacity: bloqueado.value ? 0.42 : 1,
-    transform: press.value ? 'scale(var(--scale-press))' : 'none',
-    boxShadow: ring.value ? 'inset 0 0 0 2px var(--isla-tinta)' : hover.value ? 'var(--shadow-cta)' : 'none',
-    transition: 'var(--t-hover)',
-    animation: props.llega ? 'isla-bote var(--dur-bote) linear 120ms both' : undefined,
-}));
-
-function click(e) {
-    if (!bloqueado.value && props.pulsar) props.pulsar(e);
-}
+const props = defineProps(PROPS_BOTON);
+const { hover, press, ring, bloqueado, apretada, tagRef, lblRef, estilo, click } = useBotonAccion(props);
 </script>
 
 <template>
     <component
         :is="href ? 'a' : 'button'"
+        ref="tagRef"
         :href="href"
         :type="href ? undefined : 'button'"
         :aria-expanded="expanded"
@@ -68,21 +30,19 @@ function click(e) {
         @blur="ring = false"
     >
         <span
+            ref="lblRef"
             :key="label"
-            :style="{ display: 'inline-flex', alignItems: 'center', gap: '10px', whiteSpace: 'nowrap', animation: 'isla-swap var(--dur-base) var(--ease-island) both' }"
+            :style="{ display: 'inline-flex', alignItems: 'center', gap: '10px', whiteSpace: 'nowrap', fontSize: apretada ? '15px' : undefined, animation: entra ? ENTRA : 'none' }"
         ><CargaRebote
             v-if="loading"
             size="sm"
             :label="loading === true ? label : loading"
         />{{ label }}</span>
-        <small
-            v-if="sublabel"
-            :style="{ maxWidth: '100%', fontSize: '11px', lineHeight: 1.2, fontWeight: 'var(--fw-semibold)', textAlign: 'center', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }"
-        >{{ sublabel }}</small>
         <span
-            v-if="llega"
+            v-if="sale && sale !== label"
+            :key="`sale|${sale}`"
             aria-hidden="true"
-            :style="BRILLO"
-        />
+            :style="{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', whiteSpace: 'nowrap', pointerEvents: 'none', animation: SALE }"
+        >{{ sale }}</span>
     </component>
 </template>

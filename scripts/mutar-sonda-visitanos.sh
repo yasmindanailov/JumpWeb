@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Arnés de mutación de VISÍTANOS (T6d de `specs/isla-y-landing-nueva.md` §4.20): la guarda es `scripts/sonda-visitanos.mjs`
 # —la página de apoyo en un navegador, cada dato contra su hecho de la API—, y cada mutación rompe UN mecanismo de la T6d:
-# la isla que calla [Hoy] (la marca en el envoltorio), [Hoy] de la cabecera, las fechas especiales (solo las que cambian),
+# la isla que dice [Hoy] TAMBIÉN (sin la marca en el envoltorio: Z6a, zip (6); el 27-09 callaba), [Hoy] de la cabecera,
+# las fechas especiales (solo las que cambian),
 # la foto de la cafetería del panel, «aquí» que abre el selector, el correo del sitio, Visítanos como página actual y el
 # plazo de los cumpleaños del PRODUCTO (no los «5 días» del brief).
 #
@@ -76,9 +77,9 @@ mutar() {
 }
 
 # ── [Hoy] y la isla ───────────────────────────────────────────────────────────────────────────────────────────────
-mutar "la marca de [Hoy] se pierde del envoltorio (la isla lo repite)" "$HERO" \
-  '<div class="pj-vh__hoy-grande" data-hoy-linea>' \
-  '<div class="pj-vh__hoy-grande">'
+mutar "la marca de [Hoy] vuelve al envoltorio (la isla calla, como el 27-09; Z6a: lo dice también)" "$HERO" \
+  '<div class="pj-vh__hoy-grande">' \
+  '<div class="pj-vh__hoy-grande" data-hoy-linea>'
 
 mutar "la cabecera no dice [Hoy]" "$MODELO" \
   "'hoy' => \$hoy," \

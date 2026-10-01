@@ -25,8 +25,8 @@ const props = defineProps({
     homeLabel: { type: String, default: null },
     contact: { type: Object, default: () => ({}) },
     lang: { type: String, default: '' },
+    onLanguage: { type: Function, default: null },
     account: { type: Object, default: () => ({ state: 'guest' }) },
-    bookingToday: { type: Object, default: null },
     help: { type: Object, default: null },
     cookies: { type: Object, default: null },
     preferencias: { type: Object, default: null },
@@ -34,7 +34,7 @@ const props = defineProps({
     plansFromToday: { type: Boolean, default: false },
     quote: { type: Object, default: null },
 });
-const emit = defineEmits(['abrir', 'capa', 'navegar', 'elegir']);
+const emit = defineEmits(['abrir', 'navegar', 'elegir']);
 
 const raiz = ref(null);
 defineExpose({ enfocar: () => raiz.value && raiz.value.focus({ preventScroll: true }), elemento: () => raiz.value });
@@ -63,13 +63,11 @@ onMounted(() => entradaPorFilas(raiz.value, props.top));
             :home-label="homeLabel"
             :contact="contact"
             :lang="lang"
-            :account="account"
-            :booking-today="bookingToday"
+            :on-language="onLanguage"
             :help="help"
             :cookies="cookies"
             :preferencias="preferencias"
             @abrir="(id) => emit('abrir', id)"
-            @capa="(fn) => emit('capa', fn)"
             @navegar="(it, e) => emit('navegar', it, e)"
         />
         <SelectorPlan

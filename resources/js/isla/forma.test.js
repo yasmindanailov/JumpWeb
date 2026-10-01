@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { altoEnReposo, estiloIsla, estiloMedida, estiloRaiz, publicaAlto, tamano, tipoDeCambio, transicionIsla } from './forma.js';
+import { altoEnReposo, estiloIsla, estiloMedida, estiloRaiz, publicaAlto, tamano, transicionIsla } from './forma.js';
 
 const caja = (w, h, cap = 0) => ({ w, h, cap });
 
@@ -13,37 +13,40 @@ test('la isla no anima hasta la primera medida: el primer tamaño no es una tran
     const medida = estiloIsla({ row: true, box: caja(312.5, 64), alert: false, grown: false, animate: true, calm: false });
     assert.equal(medida.width, '312.5px');
     assert.equal(medida.height, '64px');
-    assert.match(medida.transition, /^var\(--t-island\)/);
+    assert.match(medida.transition, /^width var\(--dur-island\) var\(--ease-island\)/, 'el morph de la isla');
 });
 
-test('abrir o cerrar un panel va sin rebote, y una isla en columna ocupa el ancho entero', () => {
-    const abierta = estiloIsla({ row: false, box: caja(300, 400), alert: false, grown: true, animate: true, calm: true });
-    assert.equal(abierta.width, '100%');
-    assert.equal(abierta.borderRadius, 'var(--r-lg)');
-    assert.doesNotMatch(abierta.transition, /--t-island/);
+test('la capa grande va sin rebote, y una isla en columna ocupa el ancho entero', () => {
+    const capa = estiloIsla({ row: false, box: caja(300, 400), alert: false, grown: true, animate: true, calm: true, inCheckout: true });
+    assert.equal(capa.width, '100%');
+    assert.equal(capa.borderRadius, 'var(--r-lg)');
+    assert.doesNotMatch(capa.transition, /--ease-island/);
 });
 
-test('qué ha cambiado en la píldora (02c): la frase, la acción que llega, la que se va, otra oferta; o nada', () => {
-    const hoy = { id: 'hoy', line: 'Abierto hasta las 21:30.', acc: 'Reservar' };
-    assert.equal(tipoDeCambio(hoy, { ...hoy }), null);
-    assert.equal(tipoDeCambio(hoy, { ...hoy, line: 'Abierto hasta las 21:30. Quedan huecos.' }), 'frase');
-    assert.equal(tipoDeCambio(hoy, { ...hoy, id: 'oferta' }), 'frase', 'otra situación con la misma acción: solo cambia lo que dice');
-    assert.equal(tipoDeCambio({ ...hoy, acc: '' }, hoy), 'llega');
-    assert.equal(tipoDeCambio(hoy, { ...hoy, acc: '' }), 'sale');
-    assert.equal(tipoDeCambio(hoy, { ...hoy, acc: 'Reservar para hoy' }), 'oferta');
+test('es cristal (Z6a): `--surface-glass-ink-float` en reposo y con un panel; solo la capa grande va en tinta', () => {
+    const base = { row: true, box: caja(300, 64), alert: false, grown: false, animate: true, calm: false };
+    assert.equal(estiloIsla(base).background, 'var(--surface-glass-ink-float)');
+    assert.equal(estiloIsla({ ...base, grown: true }).background, 'var(--surface-glass-ink-float)', 'abierta, también cristal');
+    assert.equal(estiloIsla({ ...base, lee: true }).background, 'var(--ink-surface)');
+    assert.equal(estiloIsla(base).backdropFilter, 'var(--blur-island)');
 });
 
-test('la caja se mueve según lo que cambia: la frase y la acción que se va, en calma; lo que se ofrece, con rebote', () => {
-    assert.match(transicionIsla({ calm: false, cambio: 'frase' }), /^width var\(--dur-base\) var\(--ease-out\), height var\(--dur-base\)/);
-    assert.match(transicionIsla({ calm: false, cambio: 'sale' }), /^width var\(--dur-slow\) var\(--ease-out\)/);
-    assert.match(transicionIsla({ calm: false, cambio: 'llega' }), /^var\(--t-island\)/);
-    assert.match(transicionIsla({ calm: false, cambio: 'oferta' }), /^var\(--t-island\)/);
-    // Abrir en calma; cerrar, más corto: la página vuelve enseguida.
-    assert.match(transicionIsla({ calm: true, isOpen: true }), /^width var\(--dur-slow\) var\(--ease-out\)/);
-    assert.match(transicionIsla({ calm: true, isOpen: false }), /^width var\(--dur-close\) var\(--ease-out\)/);
+test('dos velocidades (Z6a): lo que se toca, `--dur-island`; lo que trae el scroll, en calma también para lo que se cruza dentro', () => {
+    const base = { row: true, box: caja(300, 64), alert: false, grown: false, animate: true, calm: false };
+    assert.equal(estiloIsla({ ...base, rapido: true })['--dur-island'], undefined);
+    assert.equal(estiloIsla({ ...base, rapido: false })['--dur-island'], 'var(--dur-island-calma)');
+    assert.match(transicionIsla({ calm: false, rapido: true }), /^width var\(--dur-island\) var\(--ease-island\), height var\(--dur-island\) var\(--ease-island\)/);
+    assert.match(transicionIsla({ calm: false, rapido: false }), /^width var\(--dur-island-calma\) var\(--ease-island\)/);
+});
+
+test('la caja: la capa grande abre en calma y cierra más corto; el fondo cambia en `--dur-slow`; hundida, en un instante', () => {
+    // Abrir la capa en calma; cerrarla, más corto: la página vuelve enseguida.
+    assert.match(transicionIsla({ calm: true, inCheckout: true }), /^width var\(--dur-slow\) var\(--ease-out\)/);
+    assert.match(transicionIsla({ calm: true, inCheckout: false }), /^width var\(--dur-close\) var\(--ease-out\)/);
+    assert.match(transicionIsla({ calm: false }), /background-color var\(--dur-slow\) var\(--ease-out\)/);
     // Hundida en un instante; al soltar, con el muelle (y el último `transform` de la lista es el que vale).
-    assert.match(transicionIsla({ calm: false, cambio: 'llega', hundida: true }), /transform var\(--dur-instant\) var\(--ease-out\)$/);
-    assert.match(transicionIsla({ calm: false, cambio: 'llega', hundida: false }), /transform 260ms var\(--ease-spring\)$/);
+    assert.match(transicionIsla({ calm: false, hundida: true }), /transform var\(--dur-instant\) var\(--ease-out\)$/);
+    assert.match(transicionIsla({ calm: false, hundida: false }), /transform 260ms var\(--ease-spring\)$/);
 });
 
 test('hundida, la isla escala a `--scale-press`; y el nombre de la transición entre páginas solo si lo lleva', () => {
@@ -134,12 +137,11 @@ test('el alto en reposo que publica: la fila, desde la línea si va encima, más
     assert.equal(altoEnReposo({ fila: { top: 0, bottom: 0 }, row: true }), 0);
 });
 
-test('publica en reposo y cedida; abierta, en la compra, compacta o con el pago fallido, no', () => {
-    const reposo = { isOpen: false, inCheckout: false, isCompact: false, extra: null };
+test('publica en reposo; abierta, en la compra o con el pago fallido, no (ya no hay compacta, Z6a)', () => {
+    const reposo = { isOpen: false, inCheckout: false, extra: null };
     assert.equal(publicaAlto(reposo), true);
     assert.equal(publicaAlto({ ...reposo, isOpen: true }), false);
     assert.equal(publicaAlto({ ...reposo, inCheckout: true }), false);
-    assert.equal(publicaAlto({ ...reposo, isCompact: true }), false);
     assert.equal(publicaAlto({ ...reposo, extra: { kind: 'fallo' } }), false);
 });
 
@@ -148,10 +150,9 @@ test('en la compra el medidor mide 600px como mucho arriba y el ancho entero aba
     assert.equal(estiloMedida({ row: false, top: false, isOpen: true, cap: 390, maxWidth: 760, inCheckout: true }).width, '100%');
 });
 
-test('el tamaño que declara la raíz, de más a menos: compra, panel, aviso, compacta, reposo', () => {
-    assert.equal(tamano({ inCheckout: true, isOpen: true, notice: 'x', isCompact: true }), 'compra');
-    assert.equal(tamano({ inCheckout: false, isOpen: true, notice: 'x', isCompact: true }), 'abierta');
-    assert.equal(tamano({ inCheckout: false, isOpen: false, notice: 'x', isCompact: true }), 'aviso');
-    assert.equal(tamano({ inCheckout: false, isOpen: false, notice: null, isCompact: true }), 'compacta');
-    assert.equal(tamano({ inCheckout: false, isOpen: false, notice: null, isCompact: false }), 'reposo');
+test('el tamaño que declara la raíz, de más a menos: compra, panel, aviso, reposo', () => {
+    assert.equal(tamano({ inCheckout: true, isOpen: true, notice: 'x' }), 'compra');
+    assert.equal(tamano({ inCheckout: false, isOpen: true, notice: 'x' }), 'abierta');
+    assert.equal(tamano({ inCheckout: false, isOpen: false, notice: 'x' }), 'aviso');
+    assert.equal(tamano({ inCheckout: false, isOpen: false, notice: null }), 'reposo');
 });

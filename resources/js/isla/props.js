@@ -7,10 +7,8 @@ export const PROPS_ISLA = {
     /** El grupo `isla` de `lang/` del idioma activo. */
     textos: { type: Object, default: () => ({}) },
     placement: { type: String, default: 'auto' },
-    compact: { type: [String, Boolean], default: 'auto' },
     /** El margen de la PÁGINA (zip del 27-09): en móvil, los bordes de la isla son los de la cabecera y los de cada bloque. */
     gutter: { type: String, default: 'var(--gutter)' },
-    mobileContext: { type: String, default: 'auto' },
     maxWidth: { type: Number, default: 760 },
     scrim: { type: Boolean, default: true },
     ctaVisible: { type: Boolean, default: false },
@@ -34,13 +32,20 @@ export const PROPS_ISLA = {
      * (`ui/scroll-lock.js`), y dos escritores sobre la página es el fallo que ese dueño existe para evitar.
      */
     bloqueaPagina: { type: Boolean, default: true },
+    /** La ayuda por WhatsApp (situación 12). `stuck`: la página ve que se atasca y la isla pone «¿Lo hablamos?» bajo la frase (Z6a). */
     help: { type: Object, default: null },
     notice: { type: String, default: null },
+    /**
+     * La cuenta, el control de la DERECHA de la barra (Z6a): sin sesión, «Cuenta» (`onClick`, Entrar); con sesión, «Mi QR»
+     * (`onQr`, Tu QR). Las dos reciben `{ from: 'isla' }`. El punto: lima con `bookingToday`; naranja con `task` o `pending`.
+     */
     account: { type: Object, default: () => ({ state: 'guest', pending: false }) },
     menuItems: { type: Array, default: () => [] },
     homeLabel: { type: String, default: null },
     contact: { type: Object, default: () => ({ phone: '', whatsapp: '' }) },
     lang: { type: String, default: '' },
+    /** El idioma, en el pie del menú: su icono lo abre. Sin él, el icono solo se lee (el diseño, mientras la web habla uno). */
+    onLanguage: { type: Function, default: null },
     plans: { type: Object, default: null },
     cookies: { type: Object, default: null },
     /**

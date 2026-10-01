@@ -3,8 +3,9 @@
  * instancia, en un navegador. Cada dato que pinta se compara con SU hecho de la API, no con una cifra escrita aquí:
  *   1. LA PÁGINA: una `h1`, sin salirse de ancho, sin primario en la cabecera (la acción es de la isla) y «Cómo llegar» a la
  *      ruta del sitio (`/site`), en otra pestaña.
- *   2. [HOY]: la línea de la cabecera dice las horas de HOY (o las de mañana si ya cerró) de `/schedule`; la isla la CALLA
- *      mientras se ve y la dice al bajar (`[data-hoy-linea] > p`).
+ *   2. [HOY]: la línea de la cabecera dice las horas de HOY (o las de mañana si ya cerró) de `/schedule`, y la isla lo dice
+ *      TAMBIÉN desde la llegada (Z6a, zip (6): «Visítanos conserva su [Hoy] grande… y su isla lo dice también: sin él, se
+ *      quedaría sin frase»; con el zip del 27-09 la isla callaba mientras se veía, por la marca `[data-hoy-linea]`).
  *   3. EL HORARIO: sus franjas son las de la semana de `/schedule`; las FECHAS ESPECIALES son las próximas cerradas o con
  *      otro horario que la fila de los festivos (tres como mucho).
  *   4. QUÉ TRAER y QUIÉN NECESITA UN ADULTO: el precio de los calcetines es el de la calculadora de Kids (su ficha), y las
@@ -75,16 +76,16 @@ try {
     ok('«Cómo llegar» abre la ruta del sitio, en otra pestaña', ruta === site.address?.maps_url, ruta);
     await foto(page, '0-llegada');
 
-    // ── 2 · [Hoy]: el horario de hoy de `/schedule`, y la isla que calla mientras se ve ─────────────────────────────
+    // ── 2 · [Hoy]: el horario de hoy de `/schedule`, y la isla que lo dice también (Z6a) ────────────────────────────
     const hoyParque = await page.evaluate((tz) => new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23', weekday: 'short' }).formatToParts(new Date()).reduce((o, p) => ({ ...o, [p.type]: p.value }), {}), schedule.timezone ?? 'Europe/Madrid');
     const fechaHoy = `${hoyParque.year}-${hoyParque.month}-${hoyParque.day}`;
     const ahoraHm = `${hoyParque.hour}:${hoyParque.minute}`;
     const dia = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(hoyParque.weekday);
     const horarioDe = (fecha, d) => (schedule.special_days ?? []).find((x) => x.date === fecha) ?? (schedule.weekly ?? []).find((x) => x.weekday === d);
     const hoyH = horarioDe(fechaHoy, dia);
-    // La línea se lee por SÍ MISMA (la de la cabecera), no por la marca: sin marca, «calla» no puede quedarse vacía.
+    // La línea se lee por SÍ MISMA (la de la cabecera), no por la marca.
     const lineaCabecera = sinEspacios(await texto(page, '.pj-vh .pj-oh__hoy'));
-    ok('la línea de la cabecera lleva la marca que calla a la isla (`[data-hoy-linea] > p`)', ! lineaCabecera || await page.evaluate(() => document.querySelector('[data-hoy-linea] > p') === document.querySelector('.pj-vh .pj-oh__hoy')));
+    ok('la línea de la cabecera NO lleva la marca que callaría a la isla (`[data-hoy-linea] > p`, Z6a)', ! lineaCabecera || await page.evaluate(() => document.querySelector('[data-hoy-linea] > p') !== document.querySelector('.pj-vh .pj-oh__hoy')));
     const abiertoHoy = hoyH && ! hoyH.closed && ahoraHm < hoyH.closes_at;
     const manana = new Date(`${fechaHoy}T12:00:00Z`); manana.setUTCDate(manana.getUTCDate() + 1);
     const mananaH = horarioDe(manana.toISOString().slice(0, 10), (dia + 1) % 7);
@@ -92,7 +93,7 @@ try {
         ? lineaCabecera.includes(hoyH.opens_at) && lineaCabecera.includes(hoyH.closes_at)
         : (! mananaH || mananaH.closed ? lineaCabecera === '' : lineaCabecera.includes(mananaH.opens_at)), lineaCabecera || '(sin línea)');
     const islaLlegada = await texto(page, '[data-jw-isla]');
-    ok('al llegar, la isla CALLA [Hoy] (la cabecera ya lo dice)', ! lineaCabecera || ! /\d{1,2}:\d{2}/.test(islaLlegada), islaLlegada.slice(0, 80));
+    ok('al llegar, la isla DICE [Hoy] también (Z6a: sin él se quedaría sin frase)', ! lineaCabecera || /\d{1,2}:\d{2}/.test(islaLlegada), islaLlegada.slice(0, 80));
     await ir(page, '#traer');
     await page.waitForTimeout(900);
     const islaAbajo = await texto(page, '[data-jw-isla]');
