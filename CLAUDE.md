@@ -78,11 +78,10 @@ contador de la suite va en el trailer del commit** (`#618`). Si no salta: `git c
 | Menores a cargo · asignar una entrada a un menor · apellidos y relación | `docs/specs/menores-a-cargo.md` §0 |
 | Carné QR · pantalla de puerta · «Mi carné» · rotar carné | `docs/specs/identidad-qr-puerta.md` §0 |
 | JumpPoints / vales / lealtad | `docs/specs/lealtad-jumppoints.md` §0 |
-| CMS público (servicios) | `docs/sistemas/SERVICIOS-CMS.md` |
 | Reseñas de Google · Business Profile | `docs/specs/google-business-profile.md` §0 · `docs/specs/google-reviews.md` §0 |
 | Contenido y copys · festivos · jerga de la web | `docs/specs/contenido-y-copys.md` §0 |
 | Diseño previo a implementación (spec) | `docs/specs/PLANTILLA.md` · `docs/CONVENCIONES.md` §5 |
-| Cookies · consentimiento · `/cookies` | `docs/specs/politica-de-cookies.md` §0 · `docs/sistemas/COOKIES.md` |
+| Cookies · `/cookies` · textos legales: privacidad y condiciones | `docs/specs/politica-de-cookies.md` §0 · `docs/specs/textos-legales.md` §0 · `docs/sistemas/COOKIES.md` |
 | SEO · la imagen al compartir | `docs/specs/seo.md` §0 |
 | Panel admin / puerta / operación diaria · entrar al panel | `docs/PANEL-ADMIN.md` · `docs/OPERATIVA-SECTOR-ORIGEN.md` · `docs/specs/panel-a-salvo.md` §0 |
 | El asistente de «Crear pedido» · pasos · carrito · desenlace | `docs/specs/asistente-crear-pedido.md` §0 |

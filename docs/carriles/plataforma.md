@@ -4,7 +4,7 @@
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
 > **820–849 AGOTADA con `#849`** → sigue en **850–879** (del owner, 29-09; centena `decisiones/800-899.md`) · Último usado:
-> **`#862`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **`#864`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#846`) · Actualizado: **2026-10-01**
 > (el acceso con código: A1–A3 ✅ `#853`→`#857`; la A4a del SPA en `main`; `/cookies` ✅ `#858`→`#860`; el zip (6) y el
 > reparto, `#861`; el SEO, `specs/seo.md`: S4 y S6 ✅ `#862`, S3 empezado, el Perfil de Empresa en manos del owner;
@@ -54,24 +54,24 @@ Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas,en
    **cumpleaños no existe para Google**). HECHO el 01-10: **S4** (`robots.txt` con `Sitemap:`; JSON-LD con `geo`, `priceRange` y
    la dirección por campos; `mutar-seo.sh` 14/14; `52e6557e`), **S6** (`#862`: los titulares se quedan; Kids y Jump dicen «en
    Lorca»; instancia `9e7d274`) y **S3 empezado** (las fotos de más abajo, diferidas: Kids 8,7 → 6,5 s de LCP en el laboratorio
-   local). ▶ **LO PRIMERO, SIN CÓDIGO** (el owner pidió no escribir código en sus dos últimos turnos): (a) los textos de los
-   CUATRO PRODUCTOS del Perfil de Empresa y (b) la FICHA TIPO de los directorios (esta, tras las TRES respuestas del owner: código
-   postal 30813/30800, el domingo 21:00/21:30, el Instagram oficial): todo en `instancias/playjump/docs/perfil-de-empresa.md`
-   (el owner aplica lo recomendado: «lo haré»). Los TÉRMINOS de búsqueda del perfil, desde el 6-oct. Después, con código: S3
+   local). ✅ **SIN CÓDIGO, redactado el 01-10** en `instancias/playjump/docs/perfil-de-empresa.md` (lo aplica el owner): (a) los
+   CUATRO SERVICIOS del perfil (en «Servicios», no en «Productos»: Google dice que ese editor es de artículos físicos; precios
+   de producción) y (b) la FICHA de los directorios, con las tres respuestas del owner (30813: la web se corrige en el panel;
+   domingo 21:30: el perfil; @playjumplorca). Los TÉRMINOS de búsqueda del perfil, desde el 6-oct. Después, con código: S3
    (el logotipo de 115 KB, la foto de la cabecera por tamaños, `cajon.css` bloqueante, el CLS de la cabecera) y S5 (la imagen
    de cada página al compartir). La medida en STAGING, cuando estén los vídeos e imágenes nuevos (el owner, 01-10).
-1. **Los textos LEGALES con lo nuevo** (privacidad y condiciones). Medido el 30-09: no nombran la fecha de nacimiento, las
-   felicitaciones, las encuestas, los clics y la apertura de los correos, «Avísame de fechas», la invitación, los menores a
-   cargo, el carné QR, las reseñas copiadas ni los píxeles; la privacidad aún dice la contraseña (sale con la A5) y su francés
-   es de tú. El método de `/cookies`: lo medido → el texto → la migración por huella; `[PENDIENTE: asesoría]` donde toque. Entran
-   las notas del SPA a la web sobre `/privacidad` (su buzón: `#750`, `#754`, la TP·1 y `#793`). Primero como DOCUMENTO para que el
-   owner lo revise; después, al código.
+1. **Los textos LEGALES con lo nuevo**: ⬜ `specs/textos-legales.md` (01-10, el DOCUMENTO para el owner: 22 tratamientos medidos,
+   el texto nuevo en español, §7 sus decisiones D1–D10; después la asesoría y el código). Lo gordo: el texto VIVO de producción
+   se editó a mano (sin rastro en el repo) y dice que el descargo «no se gestiona en esta web» y que los invitados «se eliminan»
+   tras la fiesta (sus alergias viven hasta suprimir la cuenta); la ODR cerró en 2025; falta el aviso de que no hay
+   desistimiento. Del owner (01-10): `#863`, los invitados se borran a los 14 días de la fiesta (una poda, tanda propia, ANTES
+   de publicar el texto) y `#864`, sin aviso a las cuentas. Entran las notas del SPA (`#750`, `#754`, la TP·1 y `#793`).
 2. **El zip (6) en la web**: Z6a→Z6g (§4.27), la isla primero; la cabecera sin precio salvo Colegios (la regla del precio del
    owner, en `instancias/playjump/docs/estrategia/2026-09-30/Web.md`). (La imagen de la INVITACIÓN es del SPA, `#861`.)
-3. **A5** tras la A4b del SPA (la A4a ya está en `main`; la retirada: `acceso-con-codigo.md` §4.5–§4.6; de paso, el comentario de
-   `useDatosCompra.js` que aún nombra `submitLogin`) y **A6** (en staging, cuánto tarda el correo), que decide el alta: `#849` o
-   lo del diseño.
-❓ **Del owner**: las tres respuestas del Perfil de Empresa (arriba, 0).
+3. **A5, YA DESBLOQUEADA** (la A4b del SPA, `#813`, en `main` el 01-10 con el visto bueno del owner; la retirada:
+   `acceso-con-codigo.md` §4.5–§4.6; de paso, dos comentarios míos: `useDatosCompra.js` aún nombra `submitLogin` y
+   `useAjustesCuenta.js` dice que `deleteAccount` manda la contraseña —ya manda `code`—; `PLEGABLE_DE_ZONA.password` se va) y
+   **A6** (en staging, cuánto tarda el correo), que decide el alta: `#849` o lo del diseño.
 **HECHO el 30-09**, con su ✅: la A3a (`#857`) y la A3b (`acceso-con-codigo.md` §4.10; el servidor, A1 y A2, §4.8–§4.9;
 `mutar-acceso-codigo.sh` 51/51), `/cookies` para producción (`#858`/`#859`) y el aviso que pide solo lo encendido (`#860`;
 `politica-de-cookies.md` §4 y §6, `mutar-politica-cookies.sh` 30/30). **Al desplegar**: `ENTORNOS.md` §6 (el script de `/cookies`).
@@ -275,10 +275,15 @@ carril se apunta ALLÍ; lo compartido se sigue avisando aquí, en el buzón, ant
   (ya en `DEUDA.md`, `#659`) y los mutantes viejos de `mutar-cabecera.py`/`mutar-bandas.py` (`DEUDA.md`). El texto, en git.
 
 ### Atendido
+- **SPA 01-10, la A4b EN `main`** (`#813`): leída. Mi A5 ya no espera («retomar» 3); lo que uso, sin cambio; los dos
+  comentarios suyos y `PLEGABLE_DE_ZONA.password`, con la A5. Su medida: el primer «Pedir otro código» del correo nuevo SALE.
 - **SPA 01-10, la A4a EN `main`** (`#810`, `#811`): leída. La A5 espera ya solo a su A4b. Del motor se fueron `login()`,
   `mode`/`setMode`, `startPasswordRecovery` y `submitLogin`: lo que uso, sin cambio; un COMENTARIO de `isla/compra/useDatosCompra.js`
   aún nombra `submitLogin` (se corrige con el siguiente código). Para Z6g: el `CodeInput` del cajón sigue a MI servidor donde
-  choca con el diseño (reenviar a los 60 s, un solo «no», 10 minutos); si lo cambio, se lo digo.
+  choca con el diseño (reenviar a los 60 s, un solo «no», 10 minutos); si lo cambio, se lo digo. Su (3) y (4), escritos tras
+  esa lectura, leídos después: `#812` tocó mi servidor (`EmailCodeLogin::secondsToWait`: con solo el minuto agotado,
+  `retry_after` decía 3599 s; límites sin cambio; visto en el código, la isla lo hereda) y los CTA de alta de la landing
+  piden `openAccount($event, 'register')` (si los toco, `login` es el nombre de verdad).
 - **SPA 30-09 noche, aviso previo de su A4** (`acceso-con-codigo.md` §4.11: el cajón con el código en dos tandas, sin servidor
   ni contrato): leído, nada mío a medias ahí. Su nota: `PLEGABLE_DE_ZONA.password` (`isla/cuenta/vista.js`) queda sin zona
   cuando su A4 quite la del motor (hoy aún existe): se retira en la A5, con la contraseña.
