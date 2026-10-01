@@ -220,6 +220,22 @@ que devuelve las rutas listas para la prop `hojas` de `<x-pagina>`:
 - Descartada la convención «si existe `public/instancia/css/fiesta.css`, se carga»: el producto nombraría un fichero
   de la instancia y no admitiría una segunda hoja sin `@import` en cadena.
 
+**Las FUENTES de un uso del servidor** (`#815`, 2026-10-01; lo pidió el SPA para la imagen de la invitación al compartir,
+`fiesta-sistema-nuevo.md` §4.19, y plataforma lo leyó y lo dio por bueno): los TTF FIJOS con los que el producto DIBUJA,
+por ROL. GD no elige el peso de una fuente variable (dibuja el de por defecto, medido), así que no valen las WOFF2 de
+`hojas`:
+
+    "fuentes": { "imagen": { "titular": "fuentes/imagen/archivo-900.ttf", "texto": "…", "etiqueta": "…" } }
+    InstanceViews::fuentes('imagen')  →  ['titular' => '/…/public/instancia/fuentes/imagen/archivo-900.ttf', …]
+
+- **Devuelve la ruta del DISCO** (absoluta), no la de `public/` como `hojas`: GD abre el fichero y el navegador no lo pide.
+- Las MISMAS puertas que `hojas`, en una sola función (`InstanceViews::rutaValidada`, la extensión por parámetro): solo
+  `.ttf`/`.otf`, relativas a `public/instancia/`, que existan, sin `..` ni enlaces que salgan; un rol que no es un nombre,
+  fuera. Lo vigilan `InstanceFontsTest` y los mutantes de `scripts/mutar-imagen-invitacion.sh` (las dos extensiones, `..`
+  y el enlace, para `hojas` y `fuentes`).
+- **`CONTRATO` no sube** (aditivo) y la plantilla del producto lleva la clave vacía (`"fuentes": {}`). Sin el kit entero
+  (`titular`, `texto`, `etiqueta`), la imagen de la invitación no se genera y sale la de antes.
+
 ### 4.6.bis La PORTADA declarada (`[DECIDIDO]` 2026-09-27, `#827`; T6a de `isla-y-landing-nueva.md` §4.17)
 
 Una página del `paginas.php` del paquete puede marcarse `'portada' => true`: no tiene ruta propia y la pintan `/` y sus puertas

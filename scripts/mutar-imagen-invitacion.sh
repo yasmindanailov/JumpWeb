@@ -72,16 +72,18 @@ VARIABLES=app/Http/Instancia/VariablesDeHoja.php
 COBERTURA=app/Http/Fiesta/CoberturaDeFuente.php
 IMAGEN=app/Http/Fiesta/ImagenInvitacion.php
 
-# ── I1 · el contrato de las fuentes ──────────────────────────────────────────────────────────────────────
+# ── I1 · el contrato de las fuentes (y el de las hojas: las mismas puertas, `rutaValidada`) ────────────────
 mutar "I1 · una fuente web (WOFF2) pasa por una del servidor" "$VISTAS" \
-  '\.(?:ttf|otf)$#' '\.(?:ttf|otf|woff2)$#'
-mutar "I1 · una fuente con «..» en su ruta pasa" "$VISTAS" \
-  "\\.(?:ttf|otf)\$#', \$ruta) === 1
-                && ! str_contains(\$ruta, '..');" "\\.(?:ttf|otf)\$#', \$ruta) === 1;"
-mutar "I1 · un enlace que sale de public/instancia pasa por fuente" "$VISTAS" \
-  "if (\$real === false || ! is_file(\$real) || ! str_starts_with(\$real, \$base.DIRECTORY_SEPARATOR)) {
-                Log::warning('instancia: una fuente" "if (\$real === false || ! is_file(\$real)) {
-                Log::warning('instancia: una fuente"
+  "self::rutaValidada(\$ruta, \$base, 'ttf|otf')" "self::rutaValidada(\$ruta, \$base, 'ttf|otf|woff2')"
+mutar "I1 · una hoja que no es .css pasa" "$VISTAS" \
+  "self::rutaValidada(\$ruta, \$base, 'css')" "self::rutaValidada(\$ruta, \$base, 'css|txt')"
+mutar "I1 · una ruta con «..» pasa (hojas y fuentes)" "$VISTAS" \
+  "            && ! str_contains(\$ruta, '..');
+        \$real = \$valida ?" "            ;
+        \$real = \$valida ?"
+mutar "I1 · un enlace que sale de public/instancia pasa (hojas y fuentes)" "$VISTAS" \
+  'return $real !== false && is_file($real) && str_starts_with($real, $base.DIRECTORY_SEPARATOR) ? $real : null;' \
+  'return $real !== false && is_file($real) ? $real : null;'
 
 # ── I1 · las variables de las hojas ──────────────────────────────────────────────────────────────────────
 mutar "I1 · el neutro de :where(:root) le gana al :root de la instalación" "$VARIABLES" \

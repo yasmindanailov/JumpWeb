@@ -356,17 +356,13 @@ class InstanceViews
 
         $hojas = [];
         foreach ($declaradas as $ruta) {
-            $valida = is_string($ruta)
-                && preg_match('#^[A-Za-z0-9_-]+(?:/[A-Za-z0-9_.-]+)*\.css$#', $ruta) === 1
-                && ! str_contains($ruta, '..');
-            $real = $valida ? realpath($base.DIRECTORY_SEPARATOR.$ruta) : false;
-
-            if ($real === false || ! is_file($real) || ! str_starts_with($real, $base.DIRECTORY_SEPARATOR)) {
+            if (self::rutaValidada($ruta, $base, 'css') === null) {
                 Log::warning('instancia: una hoja declarada no vale y se queda fuera', ['superficie' => $superficie, 'hoja' => $ruta]);
 
                 continue;
             }
 
+            /** @var string $ruta validada arriba */
             $hojas[] = self::PUBLICO.'/'.$ruta;
         }
 
@@ -374,20 +370,23 @@ class InstanceViews
     }
 
     /**
-     * **LAS FUENTES DE UN USO DEL SERVIDOR** (`#815`; lo pidió el SPA para la imagen de la invitación al compartir,
-     * `fiesta-sistema-nuevo.md` §4.19): los TTF FIJOS con los que el producto DIBUJA, declarados por la instancia con su ROL.
-     * GD no elige el peso de una fuente variable —dibuja el de por defecto, medido—, así que no valen las WOFF2 de `hojas`.
+     * **LAS FUENTES DE UN USO DEL SERVIDOR, con su RUTA DEL DISCO** (`#815`; lo pidió el SPA para la imagen de la invitación
+     * al compartir, `fiesta-sistema-nuevo.md` §4.19): los TTF FIJOS con los que el producto DIBUJA, declarados por la
+     * instancia con su ROL. GD no elige el peso de una fuente variable —dibuja el de por defecto, medido—, así que no valen
+     * las WOFF2 de `hojas`.
      *
      *     "fuentes": { "imagen": { "titular": "fuentes/imagen/archivo-900.ttf", "texto": "…", "etiqueta": "…" } }
      *     InstanceViews::fuentes('imagen')  →  ['titular' => '/…/public/instancia/fuentes/imagen/archivo-900.ttf', …]
      *
-     * ⚠️ Con las MISMAS puertas que {@see hojas}: dentro de `public/instancia/`, resueltas con `realpath`, nada absoluto,
-     * nada con `..`, nada que salga por un enlace, y solo `.ttf`/`.otf`; lo que no cuadra se queda fuera con aviso y el
-     * resto sigue. Rutas ABSOLUTAS: las lee el servidor, no el navegador. Sin paquete, sin la clave o sin el uso: vacío.
+     * ⚠️⚠️ **Devuelve la ruta del DISCO** (absoluta, `realpath`), NO la de `public/` como {@see hojas}: GD abre el fichero,
+     * el navegador no lo pide nunca.
+     * ⚠️ Con las MISMAS puertas que `hojas` ({@see rutaValidada}, una sola función): dentro de `public/instancia/`, nada
+     * absoluto, nada con `..`, nada que salga por un enlace, y solo `.ttf`/`.otf`; lo que no cuadra se queda fuera con aviso
+     * y el resto sigue. Sin paquete, sin la clave o sin el uso: vacío.
      *
      * ⚠️ **Y `CONTRATO` NO sube**: es aditivo, como `hojas`; un paquete sin `fuentes` sigue exactamente igual.
      *
-     * @return array<string, string> rol => ruta absoluta
+     * @return array<string, string> rol => ruta del disco
      */
     public static function fuentes(string $uso): array
     {
@@ -406,13 +405,9 @@ class InstanceViews
 
         $fuentes = [];
         foreach ($declaradas as $rol => $ruta) {
-            $valida = is_string($rol) && preg_match('/^[a-z][a-z0-9-]*$/', $rol) === 1
-                && is_string($ruta)
-                && preg_match('#^[A-Za-z0-9_-]+(?:/[A-Za-z0-9_.-]+)*\.(?:ttf|otf)$#', $ruta) === 1
-                && ! str_contains($ruta, '..');
-            $real = $valida ? realpath($base.DIRECTORY_SEPARATOR.$ruta) : false;
+            $real = is_string($rol) && preg_match('/^[a-z][a-z0-9-]*$/', $rol) === 1 ? self::rutaValidada($ruta, $base, 'ttf|otf') : null;
 
-            if ($real === false || ! is_file($real) || ! str_starts_with($real, $base.DIRECTORY_SEPARATOR)) {
+            if ($real === null) {
                 Log::warning('instancia: una fuente declarada no vale y se queda fuera', ['uso' => $uso, 'rol' => $rol, 'fuente' => $ruta]);
 
                 continue;
@@ -422,6 +417,24 @@ class InstanceViews
         }
 
         return $fuentes;
+    }
+
+    /**
+     * **Las puertas de un fichero que la instancia declara** (`hojas` y `fuentes`, una sola función: lo pidió plataforma al
+     * leer `#815`): una ruta RELATIVA a `public/instancia/` con una de esas extensiones, sin `..`, que EXISTA y que, resuelta
+     * con `realpath` —también un enlace—, siga dentro. Devuelve la ruta del DISCO, o `null` si no vale.
+     *
+     * @param  string  $base  `public/instancia/`, ya resuelta
+     * @param  string  $extensiones  alternativas de una expresión regular: `css`, `ttf|otf`
+     */
+    private static function rutaValidada(mixed $ruta, string $base, string $extensiones): ?string
+    {
+        $valida = is_string($ruta)
+            && preg_match('#^[A-Za-z0-9_-]+(?:/[A-Za-z0-9_.-]+)*\.(?:'.$extensiones.')$#', $ruta) === 1
+            && ! str_contains($ruta, '..');
+        $real = $valida ? realpath($base.DIRECTORY_SEPARATOR.$ruta) : false;
+
+        return $real !== false && is_file($real) && str_starts_with($real, $base.DIRECTORY_SEPARATOR) ? $real : null;
     }
 
     /** El manifiesto del paquete (`instancia.json`), o `null` si no hay o no se lee: no es un error (spec §4.3). */

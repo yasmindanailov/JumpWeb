@@ -1142,7 +1142,16 @@ el nombre de un menor: se dibuja en cada petición. ✱ **Instrumento medido**: 
 mutante que guarda la imagen (otras pruebas escribían el mismo fichero antes): la clase lleva su disco en una carpeta propia
 y compara `storage/app` entero; y en una prueba la aplicación se reutiliza entre peticiones (el idioma de una se queda en la
 siguiente). El censo de `FocusedPagesAreCookieFreeTest` sube a 18: la ruta nueva tampoco acuña la cookie del visitante (su
-robot es un chat). Arnés **8/8** más (`SOLO=I2`). ⚠️ El mutante que guardaba la imagen, antes del arreglo, dejó
+robot es un chat). Arnés **8/8** más (`SOLO=I2`).
+
+**I3 · el kit de PlayJump, hecha** (01-10 noche, en `wip/imagen-i3`; la instancia, commit LOCAL sin empujar hasta el visto
+bueno): los tres TTF fijos en `publico/instancia/fuentes/imagen/` de la instancia (Archivo 900, Figtree 700 y 800, de la API
+de Google Fonts; llevan el aviso de la OFL en sus metadatos, medido) y `fuentes.imagen` en su `instancia.json`. Las tres
+notas de plataforma al leer `#815`: las puertas de `hojas()` y `fuentes()` en UNA función (`InstanceViews::rutaValidada`, la
+extensión por parámetro; sus mutantes, versionados para las dos), `fuentes()` dice que devuelve la ruta del DISCO, y la clave
+en `paquete-de-instancia.md` §4.6.bis y vacía en `plantilla/instancia.json`. Sonda `sonda-imagen-invitacion.mjs` (sin
+navegador: el robot de WhatsApp no ejecuta JavaScript) **16/16** con tres invitaciones de la local, una por tema. Arnés
+entero **33/33**. ⚠️ **No verificado**: que WhatsApp la enseñe (se mide en un móvil, con producción desplegada). ⚠️ El mutante que guardaba la imagen, antes del arreglo, dejó
 `storage/app/private/invitaciones/1.jpg` (datos de prueba; ignorado por git): su borrado, pendiente del owner.
 
 ## 5. Impacto en invariantes
