@@ -42,4 +42,32 @@ class MapsEmbed
             ? $value
             : null;
     }
+
+    /**
+     * **Las coordenadas del sitio, sacadas de la misma inserción** (`docs/specs/seo.md` §4, S4): el `geo` del JSON-LD
+     * de negocio local, que Google recomienda con al menos 5 decimales.
+     *
+     * La inserción que da Google al «Compartir → Insertar un mapa» de una ficha lleva su centro en el parámetro `pb`:
+     * `!2d<longitud>!3d<latitud>` (medido en la de PlayJump: `!2d-1.7144879!3d37.6527252`, el parque). Sin las dos, con
+     * menos de 5 decimales o fuera de rango, `null`: mejor sin `geo` que con uno que Google no puede usar. La forma
+     * `embed/v1/place?key=…` no las lleva: tampoco hay `geo`.
+     *
+     * @return array{latitude: float, longitude: float}|null
+     */
+    public static function coordinates(?string $value): ?array
+    {
+        $url = self::clean($value);
+        if ($url === null
+            || ! preg_match('/!2d(-?\d{1,3}\.\d{5,})/', $url, $lng)
+            || ! preg_match('/!3d(-?\d{1,2}\.\d{5,})/', $url, $lat)) {
+            return null;
+        }
+
+        $latitude = (float) $lat[1];
+        $longitude = (float) $lng[1];
+
+        return abs($latitude) <= 90 && abs($longitude) <= 180
+            ? ['latitude' => $latitude, 'longitude' => $longitude]
+            : null;
+    }
 }

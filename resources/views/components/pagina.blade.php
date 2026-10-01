@@ -113,7 +113,7 @@
     <meta property="og:image" content="{{ $imagenOg }}">
     <meta name="twitter:card" content="summary_large_image">
 
-    <x-site.json-ld :site="$site" />
+    <x-site.json-ld :site="$site" :desde="$ctaMinPriceLabel ?? null" />
 
     {{-- Con el cajón, SU hoja (`#636`: el paquete son dos líneas, la hoja y el cargador): la cuenta se abre en el lateral
          hasta la T5, y sin ella el lateral salía sin estilo al pie de la página (medido, T4e·2). La hoja no toca la página

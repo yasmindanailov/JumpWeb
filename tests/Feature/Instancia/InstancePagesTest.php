@@ -21,6 +21,7 @@ use App\Http\Instancia\InstancePages;
 use App\Http\Instancia\InstanceViews;
 use App\Http\Middleware\RedirectToInstancePage;
 use App\Http\Sidebar\SidebarEntry;
+use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\File;
@@ -418,6 +419,24 @@ BLADE);
 
         $this->get('/entradas')->assertOk()->assertSee('La portada nueva')->assertSee($canonica(route('home')), false);
         $this->get('/otra')->assertOk()->assertSee($canonica(route('instancia.otra')), false);
+    }
+
+    /**
+     * `seo.md` S4 — **una página declarada (`<x-pagina>`) publica el JSON-LD de negocio local con su `priceRange`**: el
+     * «desde» del composer llega por las dos puertas del componente, la de la instancia y la de `<x-layout>` (`SeoTest`).
+     */
+    public function test_a_declared_page_serves_the_business_json_ld_with_its_price_from(): void
+    {
+        $this->seed(LandingContentSeeder::class);
+        File::put($this->paquete.'/web/portada.blade.php', '<x-pagina titulo="Portada"><p>La portada nueva</p></x-pagina>');
+        $this->declarar(['inicio' => ['vista' => 'portada', 'hechos' => [], 'portada' => true]]);
+
+        $html = (string) $this->get('/')->assertOk()->assertSee('La portada nueva')->getContent();
+        preg_match('#<script type="application/ld\+json">(.*?)</script>#s', $html, $m);
+        $negocio = collect(json_decode($m[1] ?? '{}', true)['@graph'] ?? [])->firstWhere('@type', 'AmusementPark');
+
+        $this->assertNotNull($negocio, 'la página declarada no publica el negocio local');
+        $this->assertStringStartsWith('Desde ', (string) ($negocio['priceRange'] ?? ''), 'sin el «desde» de la instalación en el JSON-LD de <x-pagina>');
     }
 
     /**

@@ -48,4 +48,32 @@ final class VenueAddress
 
         return $partes === [] ? null : implode(', ', $partes);
     }
+
+    /**
+     * **La misma dirección, POR CAMPOS**, para quien la necesita así: el `PostalAddress` del JSON-LD, que Google
+     * recomienda con calle, código postal, localidad y provincia por separado (`docs/specs/seo.md` §4, S4). Vive aquí,
+     * junto a {@see written()}, por la razón de esta clase: que nadie más componga ni parta una dirección.
+     *
+     * La segunda línea del panel se teclea en la forma española «30800 Lorca, Murcia»: si casa (cinco cifras, la
+     * localidad y, tras una coma, la provincia), la calle es la PRIMERA línea y lo demás va a su campo. Si no casa —otra
+     * forma, otro país—, la calle es la dirección escrita entera y los demás campos quedan en `null`: lo de siempre,
+     * nunca un campo inventado.
+     *
+     * @return array{street: ?string, postalCode: ?string, locality: ?string, region: ?string}
+     */
+    public static function parts(?string $line1, ?string $line2): array
+    {
+        $calle = trim((string) $line1);
+
+        if ($calle !== '' && preg_match('/^(\d{5})\s+([^,]+?)\s*(?:,\s*(.+?))?\s*$/u', trim((string) $line2), $m)) {
+            return [
+                'street' => $calle,
+                'postalCode' => $m[1],
+                'locality' => $m[2],
+                'region' => ($m[3] ?? '') !== '' ? $m[3] : null,
+            ];
+        }
+
+        return ['street' => self::written($line1, $line2), 'postalCode' => null, 'locality' => null, 'region' => null];
+    }
 }

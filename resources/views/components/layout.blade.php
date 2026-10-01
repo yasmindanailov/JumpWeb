@@ -42,7 +42,7 @@
     {{-- Datos estructurados (JSON-LD): marca + negocio local (dirección, teléfono, horario) para
          los resultados enriquecidos de buscadores. Invisible para el visitante; defensivo ante
          campos `[PENDIENTE]`/vacíos (ver App\Domain\Content\Services\StructuredData). --}}
-    <x-site.json-ld :site="$site" />
+    <x-site.json-ld :site="$site" :desde="$ctaMinPriceLabel ?? null" />
 
     <link rel="preconnect" href="https://fonts.bunny.net">
     {{-- Las familias son de la INSTALACIÓN (`config/theme.php` → `THEME_FONTS`); el host NO,

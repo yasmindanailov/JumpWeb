@@ -4,7 +4,7 @@
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
 > **820–849 AGOTADA con `#849`** → sigue en **850–879** (del owner, 29-09; centena `decisiones/800-899.md`) · Último usado:
-> **`#861`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **`#862`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#846`) · Actualizado: **2026-09-30**
 > (el acceso con código: A1 ✅ `#853`/`#854`, A2 ✅ `#855`/`#856` y A3 ✅ `#857`, `specs/acceso-con-codigo.md` §4.8–§4.10;
 > sigue la A4 del SPA; `/cookies` ✅ `#858`→`#860`; el zip (6) y el reparto, `#861`: legales → SEO → el zip en la web).

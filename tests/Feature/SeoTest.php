@@ -31,6 +31,23 @@ class SeoTest extends TestCase
         }
     }
 
+    /**
+     * `seo.md` S4 — el `robots.txt` lo escribe el producto: deja rastrear todo menos la API y anuncia el sitemap con la URL
+     * ENTERA de ESTA instalación (el protocolo no admite una relativa, y un fichero estático no sabe el dominio).
+     */
+    public function test_robots_txt_allows_crawling_and_announces_the_sitemap(): void
+    {
+        $res = $this->get('/robots.txt')->assertOk();
+
+        $this->assertStringStartsWith('text/plain', (string) $res->headers->get('Content-Type'));
+        $texto = (string) $res->getContent();
+        $this->assertStringContainsString("User-agent: *\nDisallow: /api/\n", $texto);
+        $this->assertStringContainsString('Sitemap: '.url('/sitemap.xml'), $texto);
+        // Nunca cerrado entero: eso lo pone el DESPLIEGUE en staging, con su propio fichero (la guarda 4).
+        $this->assertDoesNotMatchRegularExpression('#^Disallow: /$#m', $texto);
+        $this->assertFileDoesNotExist(public_path('robots.txt'), 'un fichero en public/ taparía esta ruta');
+    }
+
     public function test_pages_expose_canonical_and_og(): void
     {
         $this->get('/precios')
@@ -74,6 +91,18 @@ class SeoTest extends TestCase
         $this->assertStringContainsString('"@type":"PostalAddress"', $html);
         // address.line1 del fixture (LandingContentSeeder).
         $this->assertStringContainsString('Avenida de los Saltos, 22', $html);
+    }
+
+    /** `seo.md` S4: el «desde» del composer llega al JSON-LD de la página servida como su `priceRange`. */
+    public function test_the_served_json_ld_carries_the_installation_price_from(): void
+    {
+        $html = (string) $this->get('/')->assertOk()->getContent();
+        preg_match('#<script type="application/ld\+json">(.*?)</script>#s', $html, $m);
+        $grafo = json_decode($m[1] ?? '{}', true);
+        $negocio = collect($grafo['@graph'] ?? [])->firstWhere('@type', 'AmusementPark');
+
+        $this->assertNotNull($negocio);
+        $this->assertMatchesRegularExpression('/^Desde \d+,\d{2}\x{00A0}?\s?€$/u', (string) ($negocio['priceRange'] ?? ''), 'sin el «desde» de la instalación en el JSON-LD');
     }
 
     public function test_all_json_ld_blocks_are_valid_json(): void

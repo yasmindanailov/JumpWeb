@@ -32,6 +32,7 @@ use App\Http\Controllers\PaqueteDelCajonController;
 use App\Http\Controllers\Payments\RedsysReturnController;
 use App\Http\Controllers\PricingController;
 use App\Http\Controllers\ReviewPhotoController;
+use App\Http\Controllers\RobotsController;
 use App\Http\Controllers\ServicesController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\SurveyPageController;
@@ -485,8 +486,9 @@ Route::withoutMiddleware([ResolveVisitor::class.':'.ResolveVisitor::MINT])->grou
 });
 // ═══ fin de las páginas enfocadas de la fiesta ════════════════════════════════════════════════════
 
-// SEO: mapa del sitio para buscadores.
+// SEO: mapa del sitio para buscadores, y el `robots.txt` que lo anuncia con la URL entera (`seo.md`, S4).
 Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
+Route::get('/robots.txt', RobotsController::class)->name('robots');
 
 Route::get('/lang/{locale}', function (string $locale) {
     if (in_array($locale, SetLocale::SUPPORTED, true)) {

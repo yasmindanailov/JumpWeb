@@ -69,4 +69,29 @@ class MapsEmbedTest extends TestCase
         $this->assertNull(MapsEmbed::clean('   '));
         $this->assertNull(MapsEmbed::clean(null));
     }
+
+    /**
+     * `seo.md` S4: el `geo` del JSON-LD sale de la misma inserción. `!2d` es la LONGITUD y `!3d` la LATITUD (la de
+     * PlayJump, medida: el parque en Lorca); al revés, el negocio caería en el océano Índico.
+     */
+    public function test_reads_the_coordinates_of_a_place_embed(): void
+    {
+        $url = 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3000!2d-1.7144879!3d37.6527252!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1';
+
+        $this->assertSame(['latitude' => 37.6527252, 'longitude' => -1.7144879], MapsEmbed::coordinates($url));
+        // Pegada como `<iframe>` entero, igual: se limpia antes.
+        $this->assertSame(['latitude' => 37.6527252, 'longitude' => -1.7144879], MapsEmbed::coordinates('<iframe src="'.$url.'" width="600"></iframe>'));
+    }
+
+    /** Sin las dos, con menos de 5 decimales (Google pide al menos 5) o fuera de rango: sin `geo`. */
+    public function test_without_usable_coordinates_there_is_no_geo(): void
+    {
+        $this->assertNull(MapsEmbed::coordinates(self::URL));
+        $this->assertNull(MapsEmbed::coordinates('https://www.google.com/maps/embed/v1/place?key=ABC123&q=Murcia'));
+        $this->assertNull(MapsEmbed::coordinates('https://www.google.com/maps/embed?pb=!2d-1.7144!3d37.6527'));
+        $this->assertNull(MapsEmbed::coordinates('https://www.google.com/maps/embed?pb=!2d-1.7144879'));
+        $this->assertNull(MapsEmbed::coordinates('https://www.google.com/maps/embed?pb=!2d-1.7144879!3d97.6527252'));
+        $this->assertNull(MapsEmbed::coordinates('https://evil.example.com/maps/embed?pb=!2d-1.7144879!3d37.6527252'));
+        $this->assertNull(MapsEmbed::coordinates(null));
+    }
 }

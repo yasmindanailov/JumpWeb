@@ -74,6 +74,46 @@ class StructuredDataTest extends TestCase
         $this->assertStringContainsString('og-image.jpg', $biz['image']);
     }
 
+    /**
+     * `seo.md` S4 — lo que Google recomienda para un negocio local y faltaba: `geo` (de la inserción del mapa, con sus 7
+     * decimales), `hasMap`, `priceRange` (el «desde» de la instalación) y la dirección por campos.
+     */
+    public function test_business_graph_carries_geo_map_price_range_and_the_address_by_fields(): void
+    {
+        $graph = StructuredData::businessGraph([
+            'name' => 'SaltoPark',
+            'address1' => 'Pol. Ind. Los Peñones, Ctra. de Granada, km 163',
+            'address2' => '30800 Lorca, Murcia',
+            'city' => 'Lorca',
+            'maps' => 'https://maps.app.goo.gl/abc123',
+            'maps_embed' => 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3000!2d-1.7144879!3d37.6527252!2m3!1f0',
+        ], '6,40 €');
+
+        [, $biz] = $graph['@graph'];
+
+        $this->assertSame(['@type' => 'GeoCoordinates', 'latitude' => 37.6527252, 'longitude' => -1.7144879], $biz['geo']);
+        $this->assertSame('https://maps.app.goo.gl/abc123', $biz['hasMap']);
+        $this->assertSame('Desde 6,40 €', $biz['priceRange']);
+        $this->assertSame([
+            '@type' => 'PostalAddress',
+            'streetAddress' => 'Pol. Ind. Los Peñones, Ctra. de Granada, km 163',
+            'postalCode' => '30800',
+            'addressLocality' => 'Lorca',
+            'addressRegion' => 'Murcia',
+            'addressCountry' => 'ES',
+        ], $biz['address']);
+    }
+
+    /** Sin inserción, sin enlace al mapa (el `#` del composer) y sin precio: ni `geo`, ni `hasMap`, ni `priceRange`. */
+    public function test_business_graph_omits_geo_map_and_price_range_without_data(): void
+    {
+        [, $biz] = StructuredData::businessGraph(['name' => 'SaltoPark', 'maps' => '#', 'maps_embed' => null])['@graph'];
+
+        $this->assertArrayNotHasKey('geo', $biz);
+        $this->assertArrayNotHasKey('hasMap', $biz);
+        $this->assertArrayNotHasKey('priceRange', $biz);
+    }
+
     public function test_to_json_escapes_script_breakout(): void
     {
         $payload = 'Hack</script><script>alert(1)</script>';

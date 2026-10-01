@@ -15,8 +15,9 @@
 #     `symfony/*`). Con 8.3 `composer install` aborta a medias — `#103(f)`.
 #   · **NUNCA sube el `.env`**: lo lee y lo VALIDA. Ningún secreto vive en el repo
 #     (`ENTORNOS.md` §1), y subir el local tumbaría cuatro guardas de golpe.
-#   · **`robots.txt`**: el del repo PERMITE indexar a propósito (una instalación de
-#     cliente debe indexarse), así que cada `rsync` tumba la guarda 4. Se repone y se
+#   · **`robots.txt`**: el del producto PERMITE indexar a propósito (una instalación de
+#     cliente debe indexarse; desde `seo.md` S4 lo escribe la ruta `/robots.txt`, con su
+#     `Sitemap:`, y no hay fichero en `public/`), así que cada `rsync` tumba la guarda 4. Se repone y se
 #     verifica **por HTTP y comparando CONTENIDO, no tamaño**: medido el 2026-08-19,
 #     el servido (26 B) y el del repo (25 B) pesan casi igual.
 #   · **`public/hot`**: si existe, Vite reescribe TODOS los assets a `localhost:5274`
@@ -564,8 +565,9 @@ info "public/hot borrado en destino"
 # =============================================================================
 step "6/9 · Reponiendo el robots.txt (guarda 4)"
 
-# El del repo dice `Disallow:` (vacío = permitir TODO) porque la instalación de un cliente
-# DEBE indexarse. Cada rsync lo pisa, así que esto no es opcional ni una sola vez.
+# El del producto (la ruta `/robots.txt`, `seo.md` S4) permite rastrear porque la instalación de un cliente DEBE
+# indexarse. En staging se escribe un FICHERO, que el servidor sirve antes de llegar a Laravel; el `rsync --delete`
+# lo borra en cada despliegue, así que esto no es opcional ni una sola vez.
 if [[ "${DEPLOY_PRODUCTION:-0}" == "1" ]]; then
     info "PRODUCCIÓN: se conserva el robots.txt permisivo del repo (la instalación DEBE indexarse)"
 else

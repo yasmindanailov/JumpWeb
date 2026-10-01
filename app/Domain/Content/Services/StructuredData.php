@@ -6,6 +6,7 @@ use App\Domain\Booking\Contracts\OperatingCalendar;
 use App\Domain\Content\Models\Faq;
 use App\Domain\Platform\Services\VenueAddress;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 /**
  * Construye los datos estructurados JSON-LD (schema.org) del sitio: marca (`Organization`),
@@ -35,10 +36,16 @@ class StructuredData
     /**
      * Grafo global marca + negocio local, a partir del array `$site` del composer.
      *
+     * Con lo que Google recomienda para un negocio local (`docs/specs/seo.md` §1 y S4): `geo` (las coordenadas de la
+     * inserción del mapa, {@see MapsEmbed::coordinates()}), `priceRange` (el «desde» de la instalación, el mismo de sus
+     * llamadas a reservar) y la dirección por campos ({@see VenueAddress::parts()}). Sin reseñas: Google no da estrellas
+     * a quien marca las suyas propias.
+     *
      * @param  array<string,mixed>  $site
+     * @param  string|null  $minPriceLabel  el «desde» ya escrito (`ctaMinPriceLabel` del composer, «6,40 €»)
      * @return array<string,mixed>
      */
-    public static function businessGraph(array $site): array
+    public static function businessGraph(array $site, ?string $minPriceLabel = null): array
     {
         $url = url('/');
         $name = self::clean($site['name'] ?? null) ?? config('app.name');
@@ -71,6 +78,9 @@ class StructuredData
             'telephone' => self::clean($site['phone_tel'] ?? null) ?? self::clean($site['phone'] ?? null),
             'email' => self::clean($site['email'] ?? null),
             'address' => self::postalAddress($site),
+            'geo' => self::geo($site),
+            'hasMap' => self::externalUrl($site['maps'] ?? null),
+            'priceRange' => self::priceRange($minPriceLabel),
             'openingHoursSpecification' => self::openingHours(),
             'sameAs' => $sameAs,
             'parentOrganization' => ['@id' => $url.'#organization'],
@@ -91,23 +101,46 @@ class StructuredData
      */
     private static function postalAddress(array $site): ?array
     {
-        // ⚠️ La regla de cómo se escribe una dirección de dos líneas vive en UN sitio (`#650`): aquí
-        // estaba su segunda copia, y con un filtro distinto al de la página. Una divergencia entre las
-        // dos habría puesto en el JSON-LD una dirección distinta de la que lee el visitante.
-        $street = VenueAddress::written(
+        // ⚠️ La regla de cómo se escribe —y ahora también de cómo se PARTE— una dirección de dos líneas vive en UN sitio
+        // (`#650`): aquí estaba su segunda copia, y con un filtro distinto al de la página. Una divergencia entre las dos
+        // habría puesto en el JSON-LD una dirección distinta de la que lee el visitante.
+        $partes = VenueAddress::parts(
             self::clean($site['address1'] ?? null),
             self::clean($site['address2'] ?? null),
         );
 
         $address = self::prune([
             '@type' => 'PostalAddress',
-            'streetAddress' => $street,
-            'addressLocality' => self::clean($site['city'] ?? null),
+            'streetAddress' => $partes['street'],
+            'postalCode' => $partes['postalCode'],
+            'addressLocality' => $partes['locality'] ?? self::clean($site['city'] ?? null),
+            'addressRegion' => $partes['region'],
             'addressCountry' => 'ES',
         ]);
 
         // `@type` + `addressCountry` están siempre; exige al menos un dato real más (calle o ciudad).
         return count($address) > 2 ? $address : null;
+    }
+
+    /**
+     * Las coordenadas, de la inserción del mapa que el operador pegó en el panel. Sin ellas, nada.
+     *
+     * @param  array<string,mixed>  $site
+     * @return array<string,mixed>|null
+     */
+    private static function geo(array $site): ?array
+    {
+        $c = MapsEmbed::coordinates(is_string($site['maps_embed'] ?? null) ? $site['maps_embed'] : null);
+
+        return $c === null ? null : ['@type' => 'GeoCoordinates', 'latitude' => $c['latitude'], 'longitude' => $c['longitude']];
+    }
+
+    /** «Desde 6,40 €»: el «desde» de la instalación con el texto de sus llamadas a reservar (Google: < 100 caracteres). */
+    private static function priceRange(?string $minPriceLabel): ?string
+    {
+        $label = trim((string) $minPriceLabel);
+
+        return $label === '' ? null : Str::ucfirst((string) __('landing.nav.cta_buy_from', ['amount' => $label]));
     }
 
     /**
