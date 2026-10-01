@@ -12,7 +12,8 @@
  *  · el MORPH: la caja mide lo que lleva dentro y el alto se anima; y el RELEVO al cambiar de cara (`cara()`): lo que se va
  *    se desenfoca encima mientras lo nuevo entra;
  *  · confirma y se va: el AVISO (`aviso()`, la barra lima que se vacía) y lo que ya está hecho (`data-isla-hecho`).
- * Las reglas, sin DOM y con su `node --test`, en `logica.js` (`islaSale`, `asoma`, `huecoIsla`, `caraDeLaLista`).
+ * Las reglas, sin DOM y con su `node --test`, en `logica.js` (`islaSale`, `asoma`, `huecoIsla`, `caraDeLaLista`,
+ * `faltaParaFirmar`).
  */
 import { asoma, huecoIsla, islaSale } from './logica.js';
 

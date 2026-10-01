@@ -4,7 +4,8 @@
      * El desplegable nativo con estilo del sistema (`forms/Select.jsx`), con sus estilos EN LÍNEA como el JSX; el foco
      * (que el diseño lleva en estado de React) va por `:focus` en `.pz-selector` (`fiesta.css`). Cada opción es una
      * cadena o `['value', 'label', 'disabled', 'attrs' => [...]]`: `attrs` son atributos `data-*` de la opción (el
-     * selector de menores a cargo los usa para rellenar la ficha). El error se dice con palabras.
+     * selector de menores a cargo los usa para rellenar la ficha). El error se dice con palabras (`data-pz-error`: la
+     * firma lo quita al corregir, `fiesta/comun.js::firma`).
      */
     $fid = $id ?: 's-'.strtolower((string) preg_replace('/\s+/', '-', $label !== '' ? $label : 'select'));
     $alto = $size === 'lg' ? 'var(--control-lg)' : 'var(--control-md)';
@@ -18,5 +19,5 @@
     $od = is_array($o) && (bool) ($o['disabled'] ?? false);
     $oa = is_array($o) ? (array) ($o['attrs'] ?? []) : [];
 @endphp<option value="{{ $ov }}" @selected((string) $value === $ov) @disabled($od) @foreach ($oa as $ak => $av) {{ $ak }}="{{ $av }}" @endforeach>{{ $ol }}</option>@endforeach</select><x-lucide name="chevron-down" :size="18" color="var(--text-muted)" style="position: absolute; right: 16px; pointer-events: none;" /></div>
-@if ($error !== '')<span style="font-family: var(--font-ui); font-size: var(--fs-caption); color: var(--text-danger);">{{ $error }}</span>@elseif ($hint !== '')<span style="font-family: var(--font-ui); font-size: var(--fs-caption); color: var(--text-muted);">{{ $hint }}</span>@endif
+@if ($error !== '')<span style="font-family: var(--font-ui); font-size: var(--fs-caption); color: var(--text-danger);" data-pz-error>{{ $error }}</span>@elseif ($hint !== '')<span style="font-family: var(--font-ui); font-size: var(--fs-caption); color: var(--text-muted);">{{ $hint }}</span>@endif
 </div>

@@ -20,8 +20,8 @@ use Tests\TestCase;
  * La PIEL de la autorización del menor invitado, desde la T3 del sistema nuevo (`specs/fiesta-sistema-nuevo.md` §4.2;
  * antes, la de `celebracion-e-invitacion.md` §4.3 con sus grietas J-01…J-08, que esta guarda vigilaba en `site.css`).
  *
- * ▶ Lo que sigue vigilando, con la piel nueva: que «Firmar» sea la única acción y cierre el formulario (no una barra
- * pegada con párrafos dentro: medido en la T2, 401 px de 844); que el descargo se lea ENTERO y en el flujo
+ * ▶ Lo que sigue vigilando, con la piel nueva: que «Firmar» sea la única acción —desde la L3, la isla, con su línea de
+ * lo que falta y no una barra con párrafos dentro (la piel vieja: medido en la T2, 401 px de 844)—; que el descargo se lea ENTERO y en el flujo
  * (`waiver-probatorio.md` §4.4); que cada desenlace tenga su tono y su título; que la hora sea la de la visita y no
  * el fin de la franja (`#426`); lo opcional marcado y nunca un asterisco; y que el anti-robot se declare como el tercero
  * que es. Y lo que decidió `#745`: el adulto en UNA casilla, el teléfono obligatorio, nacimiento y relación se quedan.
@@ -46,14 +46,21 @@ class GuardianSkinTest extends TestCase
         ]);
     }
 
-    public function test_signing_is_the_only_action_and_it_closes_the_form(): void
+    /**
+     * Desde la L3 de la isla (`fiesta-sistema-nuevo.md` §4.18, `#814`), «Firmar» es la ISLA: el formulario no pinta el suyo
+     * (había dos, y el cliente pidió uno) y la isla es su botón de enviar por `form`, justo después de él —sin JavaScript,
+     * en el flujo, y firma igual—. La privacidad cierra el formulario, justo encima.
+     */
+    public function test_signing_is_the_only_action_and_it_is_the_island(): void
     {
         $html = $this->sheet();
 
-        $this->assertSame(1, preg_match('#<form[^>]*data-firma[^>]*>(.*?)</form>#s', $html, $form), 'la firma es un formulario de verdad');
-        $this->assertSame(1, preg_match('#<div style="display: grid;"><button type="submit"[^>]*data-firma-boton[^>]*>\s*Firmar\s*</button></div>\s*$#s', $form[1]), '«Firmar», a todo el ancho, cierra el formulario: nada después');
+        $this->assertSame(1, preg_match('#<form[^>]*id="aut-form"[^>]*data-firma[^>]*>(.*?)</form>(.*)$#s', $html, $form), 'la firma es un formulario de verdad, con su id');
+        $this->assertSame(0, substr_count($form[1], 'type="submit"'), 'el formulario no pinta su «Firmar»: lo es la isla');
+        $this->assertSame(1, substr_count($html, 'type="submit"'), 'una sola acción en la página');
+        $this->assertMatchesRegularExpression('#^\s*<div role="region" aria-label="Firmar"[^>]*data-isla-enlace[^>]*>.*?<button type="submit" form="aut-form" class="fi-isla-barra fi-isla-barra--primary"[^>]*><span class="fi-isla-barra-texto"><b data-isla-label>Firmar</b>#s', $form[2], '«Firmar» es la isla, justo después del formulario, y envía ESE formulario');
+        $this->assertMatchesRegularExpression('#data-guardian-privacy>.*?</p>\s*$#s', $form[1], 'la privacidad cierra el formulario, justo encima de la isla');
         $this->assertStringNotContainsString('gf-savebar', $html, 'volvió la barra pegada de la piel vieja');
-        $this->assertSame(1, substr_count($form[1], 'type="submit"'), 'una sola acción');
     }
 
     public function test_the_waiver_is_read_whole_and_in_the_flow(): void
@@ -105,6 +112,7 @@ class GuardianSkinTest extends TestCase
         $this->assertMatchesRegularExpression('#<div class="aut-fin" id="aut-listo" tabindex="-1" role="status" data-guardian-outcome="signed">#', $html);
         $this->assertStringContainsString('<p class="aut-quien">Ana Gómez<span>Marta Ruiz · 600111222</span></p>', $html);
         $this->assertStringNotContainsString('data-firma', $html, 'firmada, el formulario no se vuelve a pintar');
+        $this->assertStringNotContainsString('data-isla-enlace', $html, 'firmada, la isla se fue (regla 5: confirma y se va)');
     }
 
     public function test_the_hour_is_the_effective_duration_and_not_the_end_of_the_slot(): void

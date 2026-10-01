@@ -56,8 +56,8 @@
    visto bueno del owner. La red: `mutar-cajon-a4a.sh`/`-a4b.sh` y `sonda-cajon-a4a.mjs`/`-a4b.mjs`. ⚠️ El código, como la
    isla (`#812`): manda el servidor; si plataforma lo cambia (su Z6g o su A5), el cajón lo sigue. ▶ Lo siguiente, el 1b.
 1b. ▶▶ **Lo del zip (6) que el owner repartió al SPA** (`#861`; `isla-y-landing-nueva.md` §4.27), en este orden (`#814`):
-   **`LinkIsland`** (`fiesta-sistema-nuevo.md` §4.18): 🟦 **L1 (la invitación) y L2 (la lista), hechas en
-   `wip/isla-enlace-l2` (sobre `-l1`), al ojo del owner** (fotos mandadas); sigue **L3 la autorización**, con
+   **`LinkIsland`** (`fiesta-sistema-nuevo.md` §4.18): 🟦 **L1, L2 y L3 hechas en `wip/isla-enlace-l3` (sobre `-l2` y
+   `-l1`), al ojo del owner** (fotos mandadas); con su visto bueno, rebase, re-medir y a `main`; la red,
    `mutar-isla-enlace.sh` y `sonda-isla-enlace.mjs`. Después, **la imagen de la invitación al compartir, GENERADA para cada una** (nombre, edad, día,
    hora, su diseño) y **la Puerta** (el mostrador, `paginas/puerta/` y su brief). Producción, medida por plataforma: GD con FreeType, sin Chromium ni Node → la imagen se
    DIBUJA (fondo por tema + texto con GD), no se renderiza HTML. Cada una, «al detalle» medido en su spec antes de código.

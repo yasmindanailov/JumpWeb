@@ -71,8 +71,16 @@ return [
     ],
     // El formato de «Sábado 26 de septiembre» (Carbon `isoFormat`, en el idioma de la petición).
     'fecha' => ['larga' => 'dddd D [de] MMMM'],
-    // La isla de las páginas de enlace (`#814`, §4.18): su nombre para el lector de pantalla (el del diseño, `InvIsla`).
-    'isla' => ['respuesta' => 'Tu respuesta'],
+    // La isla de las páginas de enlace (`#814`, §4.18): su nombre para el lector de pantalla (el del diseño, `InvIsla`) y,
+    // en la autorización (L3), lo que falta para firmar por su nombre (`autorizacion/isla.jsx`; `nacimiento` y `relacion`,
+    // los campos que el producto pide y el diseño no, `#745`). `:a`, `:b` y `:n` los pone `logica.js::faltaParaFirmar`.
+    'isla' => [
+        'respuesta' => 'Tu respuesta',
+        'falta' => [
+            'campos' => ['ninoNombre' => 'su nombre', 'ninoApellidos' => 'sus apellidos', 'nacimiento' => 'su fecha de nacimiento', 'nombre' => 'tu nombre', 'relacion' => 'la relación', 'telefono' => 'tu teléfono', 'casilla' => 'la casilla'],
+            'uno' => 'Falta :a', 'dos' => 'Faltan :a y :b', 'varios' => 'Faltan :n datos', 'varios_casilla' => 'Faltan :n datos y la casilla', 'listo' => 'Todo listo',
+        ],
+    ],
     // LA PÁGINA de la lista de invitados: los textos del brief (`datos.js → T`) y los propios aprobados el 24-09 (`P`).
     'lista' => [
         'titulo_pagina' => 'Los invitados',

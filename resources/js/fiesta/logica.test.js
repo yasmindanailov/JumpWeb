@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { asoma, caducaEn, capitalizar, caraDeLaLista, choice, clave, cubrir, deLaFiesta, estadoFicha, euros, huecoIsla, importe, islaSale, limpiar, misRespuestas, racionesTarta, soloEdad, sugerirCorreo, vistaInvitacion } from './logica.js';
+import { asoma, caducaEn, capitalizar, caraDeLaLista, faltaParaFirmar, choice, clave, cubrir, deLaFiesta, estadoFicha, euros, huecoIsla, importe, islaSale, limpiar, misRespuestas, racionesTarta, soloEdad, sugerirCorreo, vistaInvitacion } from './logica.js';
 
 // F9 (§4.15, el zip tercero `#780`): el correo mal escrito, como `forms/Field.jsx` del diseño.
 test('el correo mal escrito se corrige: una letra, dos cambiadas, la terminación que no existe, el punto que falta', () => {
@@ -232,6 +232,20 @@ test('guardando, el Guardar ocupado; sin nada que guardar, enviar si aún no sal
     assert.deepEqual(caraDeLaLista({ abiertas: true, compartida: true }, TX_LISTA), { cara: null }, 'ya salió: nada que hacer, se va');
     assert.deepEqual(caraDeLaLista({ abiertas: false, compartida: false }, TX_LISTA), { cara: null }, 'fuera de plazo no se envía');
     assert.deepEqual(caraDeLaLista({}, TX_LISTA), { cara: null });
+});
+
+// L3 · la autorización: el único «Firmar», con lo que falta por su nombre.
+const TX_FIRMA = {
+    campos: { ninoNombre: 'su nombre', telefono: 'tu teléfono', casilla: 'la casilla', nombre: 'tu nombre' },
+    uno: 'Falta :a', dos: 'Faltan :a y :b', varios: 'Faltan :n datos', varios_casilla: 'Faltan :n datos y la casilla', listo: 'Todo listo',
+};
+
+test('lo que falta para firmar, por su nombre, hasta «Todo listo»', () => {
+    assert.equal(faltaParaFirmar([], TX_FIRMA), 'Todo listo');
+    assert.equal(faltaParaFirmar(['casilla'], TX_FIRMA), 'Falta la casilla');
+    assert.equal(faltaParaFirmar(['telefono', 'casilla'], TX_FIRMA), 'Faltan tu teléfono y la casilla', 'dos: los dos, por su nombre y en su orden');
+    assert.equal(faltaParaFirmar(['ninoNombre', 'nombre', 'telefono', 'casilla'], TX_FIRMA), 'Faltan 3 datos y la casilla', 'más de dos: los datos se cuentan y la casilla se nombra');
+    assert.equal(faltaParaFirmar(['ninoNombre', 'nombre', 'telefono'], TX_FIRMA), 'Faltan 3 datos', 'sin la casilla, no se nombra');
 });
 
 test('el hueco al pie: el alto de la isla, su borde y el aire de debajo; sin nada que hacer, nada', () => {

@@ -300,5 +300,13 @@ return [
         ],
         'privacidad' => ['texto' => 'Lucía verá el nombre de tu hijo y que su autorización está firmada; el parque, tus datos para atenderle.', 'datos' => 'Los datos que escribes aquí los declaras tú y no los comprobamos con ningún documento. Se conservan como prueba de esta autorización.', 'politica' => 'Política de privacidad', 'enlace' => '#privacidad'],
         'turnstile' => ['activo' => false, 'clave' => '', 'rotulo' => ''],
+        // La isla (L3, `paginas/autorizacion/isla.jsx`): el único «Firmar» y lo que falta, por su nombre.
+        'isla' => [
+            'firmar' => 'Firmar', 'firmando' => 'Firmando',
+            'falta' => [
+                'campos' => ['ninoNombre' => 'su nombre', 'ninoApellidos' => 'sus apellidos', 'nacimiento' => 'su fecha de nacimiento', 'nombre' => 'tu nombre', 'relacion' => 'la relación', 'telefono' => 'tu teléfono', 'casilla' => 'la casilla'],
+                'uno' => 'Falta :a', 'dos' => 'Faltan :a y :b', 'varios' => 'Faltan :n datos', 'varios_casilla' => 'Faltan :n datos y la casilla', 'listo' => 'Todo listo',
+            ],
+        ],
     ],
 ];

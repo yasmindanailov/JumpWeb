@@ -13,6 +13,14 @@
  *   3. Pasado el plazo: la línea, sin respuesta (una fiesta de HOY que la sonda monta y quita, `JW-SONDA-ISLA-C`).
  *   4. La consola, limpia, y ninguna respuesta en rojo.
  *
+ * ── L2 · LA LISTA ── el único Guardar (naranja con algo que guardar, con lo exacto), el aviso, la línea al pie y «Enviar
+ *   por WhatsApp» (con su propia lista sin enviar, `JW-SONDA-ISLA-E`); F8, solo para mirar.
+ *
+ * ── L3 · LA AUTORIZACIÓN ── la de `JW-SONDA-ISLA-E`: el único «Firmar», con lo que falta por su nombre hasta «Todo listo»;
+ *   tocada con algo pendiente, el servidor lo marca y el foco va al primero (sin escribir nada); firmando, ocupada y sin
+ *   doble envío (el envío se RETIENE y se aborta: una firma es una prueba encadenada que no se borra); sin JavaScript, en
+ *   el flujo justo tras el formulario.
+ *
  * ⚠️ SOLO EN LOCAL. Las respuestas que crea («Sonda Isla …», en `JW-OJO-F8`) se BORRAN al terminar (y al empezar, las de una
  *    corrida cortada). Fotos: `storage/app/audit/sonda-isla-enlace-<ancho>-<paso>.png`.
  *
@@ -66,6 +74,8 @@ const montarLista = () => tinker(`URL::forceRootUrl('${BASE}'); $h = App\\Domain
     + ` $r = $o->items()->whereNull('parent_item_id')->firstOrFail(); $sv = app(App\\Domain\\Booking\\Services\\PartyInvitations::class); $i = $sv->forReservation($r);`
     + ` $sv->personalize($i, ['honoree_name' => 'Noa', 'honoree_age' => 6, 'theme' => 'confeti', 'host_line' => 'Te invita la familia de Noa']); echo $r->fresh()->guestFormSignedUrl();`).split('\n').pop();
 const compartidaLista = () => tinker(`$o = App\\Domain\\Booking\\Models\\Order::where('code', '${CODIGO_LISTA}')->first(); $r = $o?->items()->whereNull('parent_item_id')->first(); echo $r && App\\Domain\\Booking\\Models\\PartyInvitation::where('order_item_id', $r->id)->whereNotNull('shared_at')->exists() ? '1' : '0';`);
+/** L3: la autorización de la fiesta de la sonda (la de la lista), con el host de dentro del contenedor. */
+const autorizacion = () => tinker(`URL::forceRootUrl('${BASE}'); echo App\\Domain\\Booking\\Models\\Order::where('code', '${CODIGO_LISTA}')->firstOrFail()->items()->whereNull('parent_item_id')->firstOrFail()->guardianAuthorizationSignedUrl();`).split('\n').pop();
 /** La lista de `JW-OJO-F8` (enviada, con una respuesta por repasar), solo para MIRAR: la sonda no guarda en ella. */
 const listaF8 = () => tinker(`URL::forceRootUrl('${BASE}'); echo App\\Domain\\Booking\\Models\\Order::where('code', 'JW-OJO-F8')->firstOrFail()->items()->whereNull('parent_item_id')->firstOrFail()->guestFormSignedUrl();`).split('\n').pop();
 
@@ -181,6 +191,7 @@ async function recorrer(navegador, ventana, informe, cerrada, lista) {
         await page.waitForTimeout(900);
         const calendario = page.locator('[data-receipt-island-calendar]');
         check('en el recibo, con la tarjeta enseñando el calendario, la isla NO lo repite', (await calendario.count()) === 1 && (await islaEn(page))?.sale === '1');
+        check('el recibo CONSERVA su «Firmar» (L3: allí la isla lleva el calendario)', (await page.locator('form[data-receipt-firma] [data-firma-boton]').count()) === 1);
         await foto(page, '2-recibo');
         const enlaces = await page.evaluate(() => document.querySelector('[data-receipt] .inv-enlaces')?.getBoundingClientRect().bottom ?? 0);
         await page.evaluate((y) => window.scrollTo(0, y + 40), enlaces);
@@ -284,6 +295,101 @@ async function recorrer(navegador, ventana, informe, cerrada, lista) {
         await contexto.close();
     }
 
+    // ── L3 · La autorización: el único «Firmar», con lo que falta por su nombre ─────────────────────────────────
+    // ⚠️ La sonda NO firma: una firma es una prueba encadenada (`waiver_signatures`) que no se borra. El envío que falla por
+    //    un campo no escribe nada (se mira en la base); el último envío se RETIENE para ver «Firmando» y se aborta.
+    const subFirma = (page) => texto(page.locator('[data-aut-isla] [data-isla-sub-texto]'));
+    {
+        const { contexto, page } = await nueva();
+        await page.goto(lista.aut, { waitUntil: 'domcontentloaded' });
+        await page.waitForSelector('html.js', { timeout: 10000 }).catch(() => {});
+        await cookies(page);
+        await page.waitForTimeout(700);
+        const firmar = page.locator('[data-aut-isla] button[type="submit"][form="aut-form"]');
+        const llegada = await islaEn(page);
+        check('autorización: la isla es el ÚNICO «Firmar» —fija abajo, en naranja— y el formulario no pinta el suyo',
+            llegada?.sale === '0' && llegada.pos === 'fixed' && (await firmar.count()) === 1 && (await firmar.evaluate((b) => b.classList.contains('fi-isla-barra--primary')))
+                && (await page.locator('#aut-form button[type="submit"]').count()) === 0 && (await page.locator('button[type="submit"]:visible').count()) === 1, JSON.stringify(llegada));
+        check('vacía: «Faltan 6 datos y la casilla»', (await subFirma(page)) === 'Faltan 6 datos y la casilla', await subFirma(page));
+        await foto(page, '5-autorizacion');
+
+        const sufijo = `${width} ${Date.now()}`;
+        await page.locator('#aut-ninoNombre').fill('Sonda Isla');
+        await page.waitForTimeout(400);
+        check('escribiendo en la firma, la isla se aparta', (await islaEn(page))?.sale === '1');
+        await page.locator('#aut-ninoApellidos').fill(sufijo);
+        await page.locator('#aut-nacimiento').fill('2019-05-04');
+        await page.locator('#aut-nombre').fill('Ana Sonda');
+        await page.evaluate(() => document.activeElement?.blur());
+        await page.waitForTimeout(700);
+        check('con lo del niño y tu nombre: «Faltan 2 datos y la casilla» (la relación y el teléfono)', (await islaEn(page))?.sale === '0' && (await subFirma(page)) === 'Faltan 2 datos y la casilla', await subFirma(page));
+        await foto(page, '5b-faltan');
+
+        // Tocarla con algo pendiente: el servidor lo marca con palabras, el foco va al primero y no se escribe nada.
+        await Promise.all([page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {}), firmar.click()]);
+        await page.waitForSelector('html.js', { timeout: 10000 }).catch(() => {});
+        await page.waitForTimeout(700);
+        const marcado = await page.evaluate(() => ({ relacion: Boolean(document.querySelector('.pz-selector--error #aut-relacion')), telefono: Boolean(document.querySelector('.pz-campo--error #aut-telefono')), foco: document.activeElement?.id ?? '', nino: document.querySelector('#aut-ninoNombre')?.value ?? '' }));
+        const escritas = tinker(`echo App\\Domain\\Identity\\Models\\GuardianAuthorization::where('minor_surname', '${sufijo}')->count();`);
+        check('tocada con lo pendiente: lo marca, el foco va al primero (la relación), lo escrito sigue y NO se firma nada',
+            marcado.relacion && marcado.telefono && marcado.foco === 'aut-relacion' && marcado.nino === 'Sonda Isla' && escritas === '0', `${JSON.stringify(marcado)} · firmas ${escritas}`);
+        await foto(page, '5c-marcado');
+        const relacion = await page.locator('#aut-relacion option').nth(1).getAttribute('value');
+        await page.locator('#aut-relacion').selectOption(relacion);
+        await page.evaluate(() => document.activeElement?.blur());
+        await page.waitForTimeout(700);
+        const selector = await page.evaluate(() => { const s = document.querySelector('#aut-relacion'); const caja = s.closest('.pz-selector'); // ⚠️ El borde de un campo de texto es el de su CAJA (`.pz-campo__caja`): el `input` no lleva (medido).
+            const borde = (el) => getComputedStyle(el).borderTopColor;
+            return { rojo: caja.classList.contains('pz-selector--error'), texto: Boolean(caja.querySelector('[data-pz-error]')), borde: borde(s), sano: borde(document.querySelector('#aut-correo').closest('.pz-campo__caja')), enRojo: borde(document.querySelector('#aut-telefono').closest('.pz-campo__caja')) }; });
+        check('elegida la relación, su error se va (su borde, el de un campo sano) y la isla: «Faltan tu teléfono y la casilla»',
+            ! selector.rojo && ! selector.texto && selector.borde === selector.sano && selector.borde !== selector.enRojo && (await subFirma(page)) === 'Faltan tu teléfono y la casilla', `${await subFirma(page)} · ${JSON.stringify(selector)}`);
+        await foto(page, '5c2-faltan-dos');
+
+        await page.locator('#aut-telefono').fill('611204118');
+        await page.locator('#aut-telefono').blur();
+        await page.waitForTimeout(500);
+        const errorDe = (sel) => page.evaluate((s) => { const el = document.querySelector(s); const caja = el?.closest('.pz-campo, .pz-casilla'); return { rojo: Boolean(caja?.matches('.pz-campo--error, .pz-casilla--error')), texto: Boolean(caja?.querySelector('.pz-campo__error, .pz-casilla__error')), invalido: el?.getAttribute('aria-invalid') ?? '' }; }, sel);
+        const casillaAntes = await errorDe('#aut-casilla');
+        const telefono = await errorDe('#aut-telefono');
+        check('con el teléfono: «Falta la casilla», y el error del teléfono se va (el de la casilla, aún no)',
+            (await subFirma(page)) === 'Falta la casilla' && ! telefono.rojo && ! telefono.texto && telefono.invalido === '' && casillaAntes.rojo && casillaAntes.texto, `${await subFirma(page)} · ${JSON.stringify({ telefono, casillaAntes })}`);
+        await page.locator('#aut-casilla').check({ force: true });
+        await page.waitForTimeout(500);
+        const casilla = await errorDe('#aut-casilla');
+        check('marcada la casilla, su error se va', ! casilla.rojo && ! casilla.texto, JSON.stringify(casilla));
+        const punto = await page.evaluate(() => { const p = document.querySelector('[data-aut-isla] [data-isla-punto]'); return p && ! p.hidden ? getComputedStyle(p).backgroundColor : ''; });
+        check('todo puesto: «Todo listo», con el punto lima', (await subFirma(page)) === 'Todo listo' && punto !== '' && punto !== 'rgba(0, 0, 0, 0)', `${await subFirma(page)} · ${punto}`);
+        await foto(page, '5d-todo-listo');
+
+        // El envío, CANCELADO desde la página DESPUÉS de que actúe la firma (un `submit` en `window` corre tras los del
+        // formulario): cuenta los que la página dejó salir. ⚠️ Retener el POST con `page.route` no sirve: con una navegación
+        // pendiente, Playwright no evalúa nada en la página (medido: se cuelga hasta el tiempo límite).
+        await page.evaluate(() => {
+            window.sondaEnvios = 0;
+            window.addEventListener('submit', (e) => { if (! e.defaultPrevented) window.sondaEnvios += 1; e.preventDefault(); });
+        });
+        await firmar.click();
+        await page.waitForTimeout(300);
+        await firmar.click({ force: true });
+        await page.waitForTimeout(400);
+        const ocupada = await firmar.evaluate((b) => ({ ocupada: b.classList.contains('fi-isla-barra--ocupada'), busy: b.getAttribute('aria-busy'), envios: window.sondaEnvios }));
+        check('firmando: «Firmando», ocupada, y un segundo toque no envía otra vez',
+            (await texto(firmar.locator('[data-isla-label]'))) === 'Firmando' && ocupada.ocupada && ocupada.busy === 'true' && ocupada.envios === 1, `${await texto(firmar)} · ${JSON.stringify(ocupada)}`);
+        await foto(page, '5e-firmando');
+        await contexto.close();
+    }
+    {
+        const { contexto, page } = await nueva({ javaScriptEnabled: false });
+        await page.goto(lista.aut, { waitUntil: 'domcontentloaded' });
+        const sin = await islaEn(page);
+        const tras = await page.evaluate(() => document.querySelector('#aut-form')?.nextElementSibling?.hasAttribute('data-isla-enlace') ?? false);
+        check('autorización sin JavaScript: la isla en el flujo, JUSTO tras el formulario, con su «Firmar» que lo envía, y sin hueco',
+            sin !== null && sin.pos !== 'fixed' && sin.hueco === 0 && tras && (await page.locator('[data-aut-isla] button[type="submit"][form="aut-form"]').count()) === 1, JSON.stringify(sin));
+        await page.locator('[data-aut-isla]').scrollIntoViewIfNeeded();
+        await foto(page, '5f-sin-js');
+        await contexto.close();
+    }
+
     check('la consola, limpia', errores.length === 0, errores.slice(0, 5).join(' | '));
     check('ninguna respuesta en rojo', malas.length === 0, malas.slice(0, 5).join(' | '));
 }
@@ -292,6 +398,7 @@ await mkdir(SALIDA, { recursive: true });
 borrarLasDeLaSonda();
 const cerrada = montarCerrada();
 const lista = { e: montarLista(), f8: listaF8() };
+lista.aut = autorizacion();
 
 const informe = { cuando: new Date().toISOString(), anchos: [] };
 const navegador = await chromium.launch();
@@ -304,6 +411,7 @@ try {
         // La lista de la sonda vuelve a estar SIN ENVIAR para el ancho siguiente (el paso de enviar la marca enviada).
         desmontar(CODIGO_LISTA);
         lista.e = montarLista();
+        lista.aut = autorizacion();
     }
 } finally {
     await navegador.close();

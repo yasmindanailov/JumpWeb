@@ -64,7 +64,13 @@ return [
         'label' => 'Save',
     ],
     'fecha' => ['larga' => 'dddd D MMMM'],
-    'isla' => ['respuesta' => 'Your reply'],
+    'isla' => [
+        'respuesta' => 'Your reply',
+        'falta' => [
+            'campos' => ['ninoNombre' => 'their first name', 'ninoApellidos' => 'their last name', 'nacimiento' => 'their date of birth', 'nombre' => 'your name', 'relacion' => 'the relationship', 'telefono' => 'your phone', 'casilla' => 'the box'],
+            'uno' => 'Missing :a', 'dos' => 'Missing :a and :b', 'varios' => ':n details to go', 'varios_casilla' => ':n details and the box to go', 'listo' => 'All set',
+        ],
+    ],
     'lista' => [
         'titulo_pagina' => 'The guests',
         'titular' => ':n’s guests',

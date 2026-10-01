@@ -300,6 +300,24 @@ export function caraDeLaLista({ cambios = 0, repasar = 0, recuperado = false, ta
     return { cara: null };
 }
 
+/**
+ * LO QUE FALTA PARA FIRMAR, por su nombre (L3 de §4.18; `paginas/autorizacion/isla.jsx`, `cuenta`): uno, «Falta tu
+ * teléfono»; dos, «Faltan tu teléfono y la casilla»; más, «Faltan 4 datos y la casilla» (los datos se cuentan, la casilla se
+ * nombra); nada, «Todo listo». Nunca «tienes cosas pendientes». `falta`: las claves de `tx.campos`, en el orden del formulario.
+ *
+ * @param {string[]} falta
+ * @param {{campos: Record<string, string>, uno: string, dos: string, varios: string, varios_casilla: string, listo: string}} tx
+ */
+export function faltaParaFirmar(falta, tx) {
+    const nombre = (k) => tx.campos?.[k] ?? k;
+    if (falta.length === 0) return tx.listo;
+    if (falta.length === 1) return tx.uno.replace(':a', nombre(falta[0]));
+    if (falta.length === 2) return tx.dos.replace(':a', nombre(falta[0])).replace(':b', nombre(falta[1]));
+    const datos = falta.filter((k) => k !== 'casilla').length;
+
+    return (falta.includes('casilla') ? tx.varios_casilla : tx.varios).replace(':n', String(datos));
+}
+
 /*
  * EL CORREO MAL ESCRITO (F9): la regla vive en `ui/correo.js`, movida tal cual el 27-09 (plataforma, §4.16 de
  * `isla-y-landing-nueva.md`) porque también la usan los campos de correo de la isla, y desde aquí se llevaban este módulo

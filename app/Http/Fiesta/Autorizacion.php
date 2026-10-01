@@ -103,6 +103,12 @@ final class Autorizacion
                 'clave' => Turnstile::enabled() ? Turnstile::siteKey() : '',
                 'rotulo' => __('guardian.antibot_label'),
             ],
+            // La isla (L3 de §4.18, `#814`): el ÚNICO «Firmar», con lo que falta por su nombre (lo cuenta `autorizacion.js`).
+            'isla' => [
+                'firmar' => __('fiesta.firma.firmar'),
+                'firmando' => __('fiesta.firma.firmando'),
+                'falta' => (array) __('fiesta.isla.falta'),
+            ],
         ];
     }
 

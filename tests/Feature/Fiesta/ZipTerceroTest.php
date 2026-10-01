@@ -47,7 +47,12 @@ class ZipTerceroTest extends TestCase
         }
     }
 
-    public function test_the_authorization_page_suggests_the_email_and_its_sign_button_arrives(): void
+    /**
+     * Desde la L3 de la isla (§4.18, `#814`), el «Firmar» de esta página es la ISLA: va sobre tinta, donde el primario no
+     * «llega» (`llegadas()` la salta), y lo que llega es la isla entera. El del recibo, que conserva su botón, sí llega
+     * (`InvitationReceiptTest`).
+     */
+    public function test_the_authorization_page_suggests_the_email_and_its_sign_button_is_the_island(): void
     {
         ['reservation' => $r] = $this->mountParty();
 
@@ -55,6 +60,8 @@ class ZipTerceroTest extends TestCase
 
         $this->assertSame(1, preg_match('#<input id="([^"]+)" type="email" name="guardian_email"#', $html, $m), 'el correo del adulto');
         $this->assertStringContainsString('data-sugerencia="'.$m[1].'"', $html, 'su sugerencia, atada a él');
-        $this->assertMatchesRegularExpression('#<button type="submit"[^>]*data-llega[^>]*data-firma-boton#', $html, '«Firmar» llega');
+        $this->assertStringNotContainsString('data-firma-boton', $html, 'el botón de la firma no se pinta en esta página');
+        $this->assertSame(1, preg_match('#<button type="submit" form="aut-form"[^>]*>#', $html, $boton), '«Firmar» es la isla');
+        $this->assertStringNotContainsString('data-llega', $boton[0], 'sobre tinta no llega: llega la isla');
     }
 }

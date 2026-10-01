@@ -80,6 +80,29 @@ class AutorizacionPaginaTest extends TestCase
         $this->assertStringContainsString('data-guardian-outcome="signed"', $html);
         $this->assertStringContainsString('<p class="aut-quien">Ana Gómez Ruiz<span>Marta Ruiz Díaz · 600111222</span></p>', $html);
         $this->assertStringNotContainsString('data-firma', $html);
+        $this->assertStringNotContainsString('data-isla-enlace', $html, 'firmada, la isla se fue');
+    }
+
+    /**
+     * LA ISLA (L3 de §4.18, `#814`): el único «Firmar», que envía `aut-form`, y los textos con los que `autorizacion.js`
+     * dice lo que falta por su nombre (`faltaParaFirmar`), en el idioma de la página: un nombre por cada campo que la
+     * firma exige, y nada para el correo, que es opcional.
+     */
+    public function test_signing_is_the_island_with_the_words_for_what_is_missing(): void
+    {
+        ['reservation' => $reservation] = $this->mountParty();
+
+        $html = (string) $this->get($reservation->guardianAuthorizationSignedUrl())->assertOk()->getContent();
+
+        $this->assertSame(1, preg_match('#<div role="region" aria-label="Firmar"[^>]*data-isla-enlace[^>]*>#', $html, $isla), 'la isla, con su nombre');
+        $this->assertStringContainsString('data-firmando="Firmando"', $isla[0]);
+        $this->assertSame(1, preg_match('#data-falta="([^"]+)"#', $isla[0], $m), 'con los textos de lo que falta');
+        $falta = json_decode(html_entity_decode($m[1]), true);
+        $this->assertSame(['ninoNombre', 'ninoApellidos', 'nacimiento', 'nombre', 'relacion', 'telefono', 'casilla'], array_keys($falta['campos']), 'un nombre por campo exigido; el correo es opcional');
+        $this->assertSame('tu teléfono', $falta['campos']['telefono']);
+        $this->assertSame(['Falta :a', 'Faltan :a y :b', 'Faltan :n datos', 'Faltan :n datos y la casilla', 'Todo listo'], [$falta['uno'], $falta['dos'], $falta['varios'], $falta['varios_casilla'], $falta['listo']]);
+        $this->assertMatchesRegularExpression('#<button type="submit" form="aut-form" class="fi-isla-barra fi-isla-barra--primary"#', $html, 'en naranja: es la acción de la página');
+        $this->assertStringContainsString('data-isla-hueco', $html, 'su hueco, al final del contenido');
     }
 
     public function test_without_a_phone_nothing_is_written_and_the_error_has_the_briefs_words(): void
@@ -124,5 +147,6 @@ class AutorizacionPaginaTest extends TestCase
         $this->assertStringContainsString('data-guardian-blocked="not_paid"', $html);
         $this->assertStringContainsString(__('guardian.blocked.not_paid'), $html);
         $this->assertStringNotContainsString('data-firma', $html, 'bloqueada, no hay formulario que enviar');
+        $this->assertStringNotContainsString('data-isla-enlace', $html, 'ni isla: con el enlace que no vale, no hay nada que firmar');
     }
 }

@@ -3,14 +3,16 @@
 # L1 · la invitación: las reglas de la isla (`logica.js`: cuándo se aparta, si la página ya enseña lo que diría, su hueco),
 # la respuesta DENTRO de la isla como cara suya y tras el confeti, la línea pasado el plazo, su hueco al final del contenido
 # y, en el recibo de un «sí», «Añadir al calendario» con la fecha corta, que se esconde mientras la tarjeta lo enseña, se va
-# al tocarlo y no sale sin JavaScript. (L2, la lista, y L3, la autorización, se añaden aquí con su tanda.)
+# al tocarlo y no sale sin JavaScript. L2 · la lista: el único Guardar, el aviso y enviar. L3 · la autorización: el único
+# «Firmar» (la isla, que envía `aut-form`), lo que falta por su nombre (`faltaParaFirmar`) y el recibo con su botón.
 #
 # Reglas de la casa dentro: verde antes de mutar · veredicto por código de salida · comprobar que la mutación SE APLICÓ y que
 # su ancla es ÚNICA · restaurar por COPIA DE SEGURIDAD y `touch`, no con `git checkout` (`#181`) · copia por RUTA.
 #
 # ⚠️ Lo que NO juzga (es navegador; lo mira `scripts/sonda-isla-enlace.mjs`, a 390 y 1280): `fiesta/isla.js` —fija abajo, el
 # hueco medido, llegar tras el confeti, apartarse al escribir o con el vídeo abierto, esconderse con lo que diría a la vista,
-# irse al tocar el calendario— y la hoja (`.fi-isla*`, sin JavaScript en el flujo).
+# irse al tocar el calendario—, la hoja (`.fi-isla*`, sin JavaScript en el flujo), y en la autorización `autorizacion.js`
+# (contar lo que falta en el formulario, «Firmando», sin doble envío) y `comun.js::firma` (el error se va al corregir).
 #
 #   bash scripts/mutar-isla-enlace.sh                   (todas)
 #   SOLO='calendario' bash scripts/mutar-isla-enlace.sh (las que llevan eso en su nombre)
@@ -19,7 +21,7 @@ cd "$(git rev-parse --show-toplevel)"
 
 EXEC="docker compose exec -u sail -T laravel.test"
 JS="$EXEC node --test resources/js/fiesta/logica.test.js"
-PHP='InvitacionPaginaTest|FiestaModeloTest|ListaDeInvitadosTest|ExtrasDeLaFiestaListaTest|GuestFormManyGuestsTest|GuestFormTest'
+PHP='InvitacionPaginaTest|FiestaModeloTest|ListaDeInvitadosTest|ExtrasDeLaFiestaListaTest|GuestFormManyGuestsTest|GuestFormTest|AutorizacionPaginaTest|GuardianSkinTest|ZipTerceroTest|InvitationReceiptTest|ClavesDeIdiomaTest'
 
 TMP="$(mktemp -d)"
 FICHEROS=(
@@ -33,6 +35,10 @@ FICHEROS=(
     resources/views/fiesta/lista.blade.php
     resources/views/fiesta/lista/zona-5.blade.php
     resources/views/fiesta/lista/avisos.blade.php
+    resources/views/fiesta/autorizacion.blade.php
+    app/Http/Fiesta/Autorizacion.php
+    resources/views/components/fiesta/firma.blade.php
+    lang/es/fiesta.php
 )
 copia() { echo "$TMP/${1//\//__}"; }
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$(copia "$f")" "$f"; touch "$f"; done; $EXEC php artisan view:clear >/dev/null 2>&1; }
@@ -159,6 +165,34 @@ mutar php "«Formulario guardado» se dice dos veces con JavaScript (arriba y en
   "\$aviso('success', '', [__('guestform.saved')], 'status', true);" "\$aviso('success', '', [__('guestform.saved')], 'status', false);"
 mutar php "el aviso solo-sin-JavaScript pierde su marca" "$AVISOS" \
   " :data-aviso-sin-js=\"\$aviso['sin_js'] ? '1' : null\"" ""
+
+# ── L3 · la autorización: el único «Firmar», con lo que falta por su nombre ──────────────────────────────
+PAUT=resources/views/fiesta/autorizacion.blade.php
+MAUT=app/Http/Fiesta/Autorizacion.php
+FIRMA=resources/views/components/fiesta/firma.blade.php
+LANG_ES=lang/es/fiesta.php
+mutar js "L3 · con nada pendiente, la isla no dice «Todo listo»" "$LOGICA" \
+  "    if (falta.length === 0) return tx.listo;" ""
+mutar js "L3 · con dos pendientes, no se nombran los dos" "$LOGICA" \
+  "    if (falta.length === 2) return tx.dos" "    if (false) return tx.dos"
+mutar js "L3 · la casilla se cuenta como un dato más" "$LOGICA" \
+  "    const datos = falta.filter((k) => k !== 'casilla').length;" "    const datos = falta.length;"
+mutar js "L3 · sin la casilla pendiente, se dice «y la casilla»" "$LOGICA" \
+  "(falta.includes('casilla') ? tx.varios_casilla : tx.varios)" "tx.varios_casilla"
+mutar php "L3 · la firma de la página vuelve a pintar su botón (dos «Firmar»)" "$PAUT" \
+  ' :boton="false"' ''
+mutar php "L3 · el «Firmar» de la isla no envía el formulario (sin JavaScript no firma)" "$PAUT" \
+  ':label="$m['"'"'isla'"'"']['"'"'firmar'"'"']" primary form="aut-form" />' ':label="$m['"'"'isla'"'"']['"'"'firmar'"'"']" primary />'
+mutar php "L3 · el «Firmar» de la isla no va en naranja" "$PAUT" \
+  '" primary form="aut-form"' '" form="aut-form"'
+mutar php "L3 · la autorización pierde el hueco de la isla" "$PAUT" \
+  "            <x-fiesta.isla-hueco />" ""
+mutar php "L3 · la isla no recibe los textos de lo que falta" "$MAUT" \
+  "                'falta' => (array) __('fiesta.isla.falta')," "                'falta' => [],"
+mutar php "L3 · a la isla le falta el nombre de un campo exigido" "$LANG_ES" \
+  "'nacimiento' => 'su fecha de nacimiento', " ""
+mutar php "L3 · el recibo pierde su «Firmar» (allí la isla lleva el calendario)" "$FIRMA" \
+  '@if ($boton)<div style="display: grid;">' '@if (false)<div style="display: grid;">'
 
 echo
 echo "$muerden/$total muerden"

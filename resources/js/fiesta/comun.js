@@ -41,7 +41,11 @@ export function menores() {
     });
 }
 
-/** Firmar: el botón dice «Firmando» y se bloquea mientras el formulario viaja; con errores del servidor, el foco al primero. */
+/**
+ * Firmar: el botón dice «Firmando» y se bloquea mientras el formulario viaja; con errores del servidor, el foco al primero,
+ * y cada error se va al corregir su campo. (En la página de la autorización, desde la L3, el botón es la isla:
+ * `autorizacion.js`.)
+ */
 export function firma() {
     const form = q('[data-firma]');
     if (!form) return;
@@ -53,6 +57,22 @@ export function firma() {
         const texto = form.dataset.firmando || '';
         if (texto) boton.textContent = texto;
     });
+    // Corregido, SU error se va (el diseño, `AuthForm`: al cambiar un campo se borra su error): el rojo del servidor ya no
+    // dice la verdad, y la isla de la autorización (L3) ya puede decir «Todo listo». Solo lo que se ve: lo que vale lo
+    // vuelve a decir el servidor al enviar.
+    const limpia = (e) => {
+        const el = e.target;
+        const caja = el instanceof Element ? el.closest('.pz-campo--error, .pz-selector--error, .pz-casilla--error') : null;
+        if (!caja || !form.contains(caja)) return;
+        caja.classList.remove('pz-campo--error', 'pz-selector--error', 'pz-casilla--error');
+        qa('.pz-campo__error, .pz-casilla__error, [data-pz-error]', caja).forEach((m) => m.remove());
+        el.removeAttribute('aria-invalid');
+        const descrito = el.getAttribute('aria-describedby');
+        if (descrito && !document.getElementById(descrito)) el.removeAttribute('aria-describedby');
+        if (el.tagName === 'SELECT') el.style.borderColor = 'var(--control-border)';
+    };
+    form.addEventListener('input', limpia);
+    form.addEventListener('change', limpia);
     const primero = qa('.pz-campo--error input, .pz-selector--error select, .pz-casilla--error input', form)[0];
     if (!primero) return;
     const enfoca = () => primero.focus({ preventScroll: false });

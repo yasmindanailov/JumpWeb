@@ -64,7 +64,13 @@ return [
         'label' => 'Enregistrer',
     ],
     'fecha' => ['larga' => 'dddd D MMMM'],
-    'isla' => ['respuesta' => 'Votre réponse'],
+    'isla' => [
+        'respuesta' => 'Votre réponse',
+        'falta' => [
+            'campos' => ['ninoNombre' => 'son prénom', 'ninoApellidos' => 'son nom', 'nacimiento' => 'sa date de naissance', 'nombre' => 'votre nom', 'relacion' => 'le lien', 'telefono' => 'votre téléphone', 'casilla' => 'la case'],
+            'uno' => 'Il manque :a', 'dos' => 'Il manque :a et :b', 'varios' => 'Il manque :n infos', 'varios_casilla' => 'Il manque :n infos et la case', 'listo' => 'Tout est prêt',
+        ],
+    ],
     'lista' => [
         'titulo_pagina' => 'Les invités',
         'titular' => 'Les invités de :n',

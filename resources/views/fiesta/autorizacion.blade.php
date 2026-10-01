@@ -5,8 +5,9 @@
     autorización; debajo, la firma (`x-fiesta.firma`). Lee SOLO el modelo `$m` (`App\Http\Fiesta\Autorizacion`).
 
     ❗❗ HOJA EN BLANCO: no lista ni un dato de las autorizaciones ya firmadas y el niño nunca viene puesto.
-    ⚠️ Sin JavaScript firma igual: el formulario es un POST normal; el JS añade el selector de menores a cargo (rellena,
-       no envía), «Firmando» y el foco en el primer error.
+    ⚠️ Sin JavaScript firma igual: el formulario es un POST normal y «Firmar» (la isla, L3) su botón de enviar; el JS
+       añade el selector de menores a cargo (rellena, no envía), lo que falta en la isla, «Firmando» y el foco en el
+       primer error.
     ⚠️ Lo que el diseño no dibuja (sin A): el bloqueo (no pagada, pasada, llena) con la forma del «enlace que no vale»;
        los desenlaces que no son el Listo; el texto del descargo en el flujo; el selector de menores a cargo.
     ⚠️ `$m['diagnostico']` lo pone SOLO el banco (`scripts/banco-fiesta.php`): omite lo que el producto pide y el brief no
@@ -59,7 +60,7 @@
                             {{-- Lo que escribió en la invitación se ENSEÑA, no se prerrellena (`#706`): lo reparte él. --}}
                             <p class="inv-nota" data-from-invitation>{{ __('guardian.minor.from_invitation', ['name' => $f['desde_invitacion']]) }}</p>
                         @endif
-                        <x-fiesta.firma child idPrefix="aut" :action="$f['accion']" :valores="$f['valores']" :fallos="$f['fallos']" :labels="['box' => $f['casilla']]">
+                        <x-fiesta.firma child idPrefix="aut" id="aut-form" :boton="false" :action="$f['accion']" :valores="$f['valores']" :fallos="$f['fallos']" :labels="['box' => $f['casilla']]">
                             <x-slot:oculto>@if ($f['respuesta_id'] !== null)<input type="hidden" name="invitation_reply_id" value="{{ $f['respuesta_id'] }}">@endif<input type="hidden" name="document_id" value="{{ $f['documento_id'] }}"><div class="pz-sr" aria-hidden="true"><label for="contact_ref">Ref</label><input type="text" id="contact_ref" name="contact_ref" tabindex="-1" autocomplete="off"></div></x-slot:oculto>
                             @unless ($diagnostico)<x-slot:nino><x-pieza.campo id="aut-nacimiento" name="minor_born_on" type="date" :label="$f['nacimiento']['label']" :hint="$f['nacimiento']['hint']" :value="$f['nacimiento']['value']" :error="$f['nacimiento']['error']" data-campo-producto /></x-slot:nino>{{ '' }}@endunless
                             @unless ($diagnostico)<x-slot:adulto><x-pieza.selector id="aut-relacion" name="guardian_relationship" :label="$f['relacion']['label']" :options="$f['relacion']['opciones']" :value="$f['relacion']['value']" :error="$f['relacion']['error']" data-campo-producto /></x-slot:adulto>{{ '' }}@endunless
@@ -67,10 +68,19 @@
                             <x-slot:legal><p class="inv-legal" data-guardian-privacy>{{ $m['privacidad']['texto'] }}@unless ($diagnostico) <span data-solo-producto>{{ $m['privacidad']['datos'] }}</span>@endunless <x-pieza.enlace size="sm" underline="always" :href="$m['privacidad']['enlace']">{{ $m['privacidad']['politica'] }}</x-pieza.enlace></p></x-slot:legal>
                             @if ($m['turnstile']['activo'])<x-slot:tercero><div class="inv-tercero"><span class="inv-tercero-rotulo">{{ $m['turnstile']['rotulo'] }}</span><div class="cf-turnstile" data-sitekey="{{ $m['turnstile']['clave'] }}"></div></div><script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script></x-slot:tercero>{{ '' }}@endif
                         </x-fiesta.firma>
+                        {{-- LA ISLA (L3 de §4.18, `#814`): el ÚNICO «Firmar», el botón de enviar de `aut-form` por su `form`.
+                             Sin JavaScript va en el flujo, aquí debajo, y firma igual. Lo que falta, por su nombre, lo cuenta
+                             `autorizacion.js` (`faltaParaFirmar`) hasta «Todo listo». Firmada o con el enlace que no vale, no
+                             hay formulario y no hay isla. --}}
+                        <x-fiesta.isla class="aut-isla" :label="$m['isla']['firmar']" data-aut-isla :data-falta="json_encode($m['isla']['falta'], JSON_UNESCAPED_UNICODE)" :data-firmando="$m['isla']['firmando']">
+                            <x-fiesta.isla-barra :label="$m['isla']['firmar']" primary form="aut-form" />
+                        </x-fiesta.isla>
                     </section>
                 @endif
             @endif
             @include('fiesta.invitacion.idiomas')
+            {{-- El hueco de la isla de enlace (`#814`), al final del contenido: al final del scroll, nada queda bajo ella. --}}
+            <x-fiesta.isla-hueco />
         </main>
     </div>
 </x-pagina-enfocada>

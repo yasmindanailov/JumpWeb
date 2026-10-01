@@ -1030,6 +1030,20 @@ guardar se decía DOS veces (el aviso verde de arriba y el de la isla); con Java
 web (+2,68 KiB al motor del cajón, ocho techos de `SidebarBundleBudgetTest` en rojo, sin una línea más del cajón;
 determinista); acotado por partes, `isla.js` los define dentro y el reparto vuelve (298,46).
 
+**L3 · la autorización, hecha** (01-10, en `wip/isla-enlace-l3`, sobre la L2; al ojo del owner): `x-fiesta.firma
+:boton="false"` no pinta su «Firmar» y la isla lo es (`x-fiesta.isla-barra primary form="aut-form"`, justo tras el
+formulario: sin JavaScript, en el flujo, y firma igual); el del recibo conserva su botón. Lo que falta, por su nombre y en el
+orden del formulario, `logica.js::faltaParaFirmar` con los textos del diseño en `fiesta.isla.falta` (es/en/fr) más los dos
+campos que el producto pide y el diseño no (`#745`: «su fecha de nacimiento», «la relación»; por aprobar): vacía, «Faltan 6
+datos y la casilla»; «Faltan tu teléfono y la casilla»; «Todo listo» con el punto lima. Tocarla con algo pendiente envía: el
+servidor lo marca con palabras y el foco va al primero (como antes, sin validar en el cliente). Firmando, ocupada y sin doble
+envío; firmada o con el enlace que no vale, sin isla. ✱ **Medido por la sonda y arreglado**: el rojo del servidor se quedaba
+tras corregir el campo y contradecía «Todo listo»; como el `AuthForm` del diseño, `comun.js::firma` lo quita al corregir (también
+en el recibo; el desplegable lleva su gancho, `data-pz-error`). Arnés **11/11** (`SOLO=L3`); sonda **+13 puntos** a 390 y
+1280 (la autorización de `JW-SONDA-ISLA-E`; **no firma**: una firma es una prueba encadenada que no se borra), con el CONTROL
+de sus dos guardas de navegador (sin la del doble envío, 2 envíos; sin el borde, rojo). ⚠️ No verificado en navegador: el
+selector de menores a cargo (con sesión) actualizando la cuenta (lo escucha `change` en `document`).
+
 ## 5. Impacto en invariantes
 
 | ID | Cómo |
