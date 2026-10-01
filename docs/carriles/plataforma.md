@@ -7,7 +7,8 @@
 > **`#862`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#846`) · Actualizado: **2026-10-01**
 > (el acceso con código: A1–A3 ✅ `#853`→`#857`; la A4a del SPA en `main`; `/cookies` ✅ `#858`→`#860`; el zip (6) y el
-> reparto, `#861`; el SEO, `specs/seo.md`: S4 y S6 ✅ `#862`, S3 empezado, el Perfil de Empresa en manos del owner).
+> reparto, `#861`; el SEO, `specs/seo.md`: S4 y S6 ✅ `#862`, S3 empezado, el Perfil de Empresa en manos del owner;
+> 01-10 mañana: el FOLLETO del 26-09 aplicado en producción como DATOS, fin de la promo, cerrado — `ENTORNOS.md` §6).
 > ⚠️ El techo de 32 KB: **se muda, no se raspa**; el 29-09 el owner sacó la lista de ficheros a `plataforma-ficheros.md`
 > (`#852`) y NO subió el techo. Si vuelve a apretar tres veces seguidas, llévaselo con la medida.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -159,10 +160,10 @@ en `sonda-primera-pantalla.mjs`; (i) tras tocar `instancias/playjump/publico/`, 
 
 4. **Deuda del análisis estático**: bajar la base de Larastan por familias, con `FROZEN_ERRORS` en el
    mismo commit (`#674` la bajó a 457 sin proponérselo). Los 12 de ESLint los poda quien los arregle.
-5. ~~La promo~~ ✅ terminada el 01-10 (folleto 26-09, `ENTORNOS.md` §6). Para el owner: las 25 fiestas ya vendidas
-   conservan sus calcetines incluidos (y el cono que se les prometió); el Menú 2 sale «Gratis · 0,00 € por invitado»
-   en v1.1.0; la hora extra de las entradas sigue con tope 1 por reserva (¿una sola persona puede quedarse?); el
-   pedido #46 (21-10) pagó 10 € por traer su tarta, que el folleto ya no admite: decide el parque (el panel la quita).
+5. ~~La promo~~ ✅ terminada el 01-10 (folleto 26-09, `ENTORNOS.md` §6). **Cerrado por el owner**: producción se
+   queda así y lo vendido se respeta (las 25 fiestas con calcetines y cono, el pedido #46 con su tarta de fuera).
+   Quedan para cuando él lo saque, sin tocar ahora: la hora extra de las entradas con tope 1 por reserva y «de 4 a
+   8 años» en las entradas Kids en español (en/fr dicen 4 a 7). El Menú 2 sale «Gratis · 0,00 € por invitado» en v1.1.0.
 6. Después, **F6** (app nativa; hereda del token lo que su spec §2 nombra: Google, alta, dispositivos).
 - **Del owner** (27-09 noche, `#789`): la cuenta de Apple Developer (Apple entra en la v2) · aceptar UNA vez la confianza
   de esta carpeta en una terminal (`claude` aquí: sin ella, las `allow` del repo no valen fuera de VSCode) · **para su

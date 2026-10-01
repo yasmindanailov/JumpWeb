@@ -748,7 +748,9 @@ resolvedor del post-form en los dos packs y `/`, `/precios`, `/cumpleanos`, `/no
 invitados conserva el precio pagado (`ItemEditPricing`); MOVER DE FECHA re-tarifica pack y complementos con el
 catálogo de ese día (`#127(d)`, `AddonDateReconciler`; los gratis siguen gratis); CAMBIAR de pack Kids↔Jump se bloquea
 con `orphan_addons` hasta quitar la línea vieja de calcetines (gratis: 0 €) o de «Traemos nuestra tarta»; el post-form
-ya no enseña ni deja quitar esta última (`not_offerable`), el panel sí (cantidad 0).
+ya no enseña ni deja quitar esta última (`not_offerable`), el panel sí (cantidad 0). ▶ **Lo vendido se queda como se
+vendió** (`[DECIDIDO owner]` 2026-10-01): las 25 fiestas con calcetines incluidos y cono prometido, y el pedido #46 con
+su «Traemos nuestra tarta», se respetan; producción no se vuelve a tocar por este folleto.
 
 `jumpweb-prod` es un alias de `~/.ssh/config` (`HostName 51.68.7.199 · User playjump2 · Port 22`,
 clave `jumpweb_staging_ed25519` — la misma que staging, registrada en el panel como «jumpweb-prod»).
