@@ -408,6 +408,8 @@ instalación de un cliente. Si se configura a mano deja de ser una prueba del pr
 > salida redirigida a un fichero) y lo dejó pasar sin redirigir; el `--go` pasó a la primera con la orden del
 > owner en el turno. ▶ Pendiente del carril del SPA: mirar el justificante en producción en móvil y el Turnstile real.
 >
+> ✅ **PROMO TERMINADA el 2026-10-01** con la operación de datos «folleto 26-09» (abajo, tras la de la promo): **no
+> se vuelve a aplicar esta receta**; los precios de hoy salen del folleto, no de los `from` de la promo.
 > ⚠️ **LA RECETA PARA TERMINAR LA PROMO, con sus cifras** (bajada aquí desde `carriles/plataforma.md` en
 > `#675`, que es donde se va a buscar y donde no caduca). Cuando el owner la dé por terminada, **el mismo
 > día**: subir los precios en el panel a los ORIGINALES —los `from` de `audit_logs`: **800, 1000, 1200,
@@ -727,6 +729,22 @@ site, choisissez le jour et l'heure, et économisez 20 %.». Sin las filas, la w
 promo**: subir los precios en el panel (los `from` de `audit_logs`), quitar el badge y BORRAR las cuatro filas el
 mismo día, o el tachado mentiría. Medido en local a 390 y 1280 antes de commitear; ⚠️ en `/precios` a 390 la
 cifra «9,60 €» ya se partía en dos renglones ANTES de este cambio (84 px de celda): no es de esta promo.
+
+**OPERACIÓN DE DATOS · el folleto del 26-09** (`[DECIDIDO owner]` 2026-10-01, 08:48 local con el parque cerrado; DATO
+de la instalación, sin código ni despliegue, sobre v1.1.0). Copia previa `~/backups/playjump2_main_prefolleto-20261001-064752.sql.gz`.
+Mismo patrón que la promo (esperado por fila, transacción, Eloquent, `source` en `audit_logs` = «folleto 26-09…»,
+`cta.min_price_cents` olvidado), más un **ensayo en producción con ROLLBACK** antes de escribir y la segunda pasada
+abortando. Hecho: **fin de la promo** (entradas a 8/10 · 12/15 · 18 · 12/14 · 18/22, los badges de ANTES, las cuatro
+`promo.*` borradas) · packs 15,95/18,95 y 16,95/19,95 · la 3.ª hora de cumpleaños a 2 € por niño · Menú 2 a 0 € · la hora
+extra de las entradas también de lunes a jueves (5 € / 8 €) · regalos del pack = entrada de 1 h + mochilas · fuera el
+«(Oferta valida…)» de las descripciones · tarta «unas 15 raciones» · FAQ 8 y 14 y la norma 12 al folleto (no se trae
+tarta de fuera). ❗ **Los calcetines INCLUIDOS de los packs no se editaron en sitio**: 25 fiestas futuras pagadas los
+llevaban gratis y `OrderItemEditor` (v1.1.0) recalcula lo gratis con el enganche VIVO al editar invitados → les habría
+cobrado 2 €/niño. Se DESENGANCHÓ el #110 de los packs (su línea ya no se re-escala) y se crearon **#126 calcetines
+(2 €) y #127 cono de chuches (1 €)**, post-reserva, `fixed`, plazo 12 h, hasta 100. Desenganchado también «Traemos
+nuestra tarta» (#123; una fiesta del 21-10 lo conserva). Verificado: API de catálogo y de complementos, el
+resolvedor del post-form en los dos packs y `/`, `/precios`, `/cumpleanos`, `/normas`. ⚠️ v1.1.0 pinta el Menú 2 como
+«Gratis · 0,00 € por invitado».
 
 `jumpweb-prod` es un alias de `~/.ssh/config` (`HostName 51.68.7.199 · User playjump2 · Port 22`,
 clave `jumpweb_staging_ed25519` — la misma que staging, registrada en el panel como «jumpweb-prod»).

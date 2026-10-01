@@ -34,8 +34,9 @@
   justificante, la invitación y las analíticas), de noche y con él pendiente. Su motivo: un despliegue
   cuesta ATENCIÓN aunque salga bien, y la quiere para diseñar.
   ⚠️ Consecuencias en «retomar» 2. `#627`: la app en React Native + Expo.
-- **`#628` · la promo «−20 % online» sigue EN PRODUCCIÓN** (cuatro filas `promo.*`; receta de fin en
-  `ENTORNOS.md` §6 y en «retomar» 5).
+- **`#628` · la promo «−20 % online» TERMINADA el 01-10** con la operación de datos «folleto 26-09» en producción
+  (precios, regalos y complementos del folleto; `ENTORNOS.md` §6). ⚠️ El LOCAL y staging NO la llevan: su catálogo
+  sigue siendo el de antes; la v2.0.0 no lo pisa (`post-deploy` solo importa con `zones` vacía).
 
 ## Por dónde retomar, en orden
 
@@ -158,8 +159,9 @@ en `sonda-primera-pantalla.mjs`; (i) tras tocar `instancias/playjump/publico/`, 
 
 4. **Deuda del análisis estático**: bajar la base de Larastan por familias, con `FROZEN_ERRORS` en el
    mismo commit (`#674` la bajó a 457 sin proponérselo). Los 12 de ESLint los poda quien los arregle.
-5. **La promo, cuando el owner la termine** (es suyo el cuándo). La receta y **sus nueve cifras** bajaron a
-   `ENTORNOS.md` §6 en `#675`, junto al despliegue que las escribió. Sin desplegar: son datos.
+5. ~~La promo~~ ✅ terminada el 01-10 (folleto 26-09, `ENTORNOS.md` §6). Para el owner: las 25 fiestas ya vendidas
+   conservan sus calcetines incluidos (y el cono que se les prometió); el Menú 2 sale «Gratis · 0,00 € por invitado»
+   en v1.1.0; la hora extra de las entradas sigue con tope 1 por reserva (¿una sola persona puede quedarse?).
 6. Después, **F6** (app nativa; hereda del token lo que su spec §2 nombra: Google, alta, dispositivos).
 - **Del owner** (27-09 noche, `#789`): la cuenta de Apple Developer (Apple entra en la v2) · aceptar UNA vez la confianza
   de esta carpeta en una terminal (`claude` aquí: sin ella, las `allow` del repo no valen fuera de VSCode) · **para su
@@ -174,8 +176,7 @@ hay formulario (`#839`); pasarlos a la reserva es dato del panel. Y:
   jueves» y las atracciones en el orden del brief (§4.12 ·8b) · revisar el en/fr de Kids y Jump · en su diseño,
   **cumpleaños a 3 días** y no 5 (`#699`), y bajar el zip DESPUÉS del último cambio (`#760`) · pasar a su
   diseño las dos de `#695` («Entra» solo con correo; la «G» de Google) · en el panel de PRODUCCIÓN, el campo del
-  homenajeado de los dos packs a «formulario de invitados» (`#692`; en local ya está) · el **fin de la promo** (es suyo
-  el cuándo) · el **ojo** que le falta a la compra de la T5 de F4 y a las promociones.
+  homenajeado de los dos packs a «formulario de invitados» (`#692`; en local ya está) · el **ojo** que le falta a la compra de la T5 de F4 y a las promociones.
   ▶ Contestadas y retiradas de aquí: la vía A (los platos, 23-09), cuándo se despliega (`#670`), el dinero en la API
   (`#677`), la analítica (`#678`), el modelo de las promociones (`#770`), caras y fotos de las reseñas (`#771`) y, el
   27-09, los `topics` (dato de cada instalación), `/contacto`, la Ómnibus, `Medir` y el reparto (`#789`); el 28-09, «Tus
