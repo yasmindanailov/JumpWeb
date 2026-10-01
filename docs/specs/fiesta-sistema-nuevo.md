@@ -1044,6 +1044,50 @@ en el recibo; el desplegable lleva su gancho, `data-pz-error`). Arnés **11/11**
 de sus dos guardas de navegador (sin la del doble envío, 2 envíos; sin el borde, rojo). ⚠️ No verificado en navegador: el
 selector de menores a cargo (con sesión) actualizando la cuenta (lo escucha `change` en `document`).
 
+**La pasada ligera de las tres páginas (`#768`), al cerrar L1–L3** (01-10, el banco `banco-fiesta.php` contra el zip (6)).
+Lo que señaló y se arregló, cada cosa medida antes y después:
+- **La línea** (invitación cerrada, 15,6 % de la ventana): con `flex-wrap`, «Llamar» caía debajo del texto; como el `Line` del
+  diseño, una fila (el texto se parte), alto mínimo 52 y relleno `4px 5px 4px 18px`, sin el relleno del formulario.
+- **El hueco** (recibo, 112 + 14 px de más): en el diseño, con lo que la isla diría ya a la vista, la isla NO tiene cara y su
+  hueco es 0 (solo lo conserva al apartarse); y va FUERA de `main` (dentro, la rejilla le sumaba su separación de 14 px).
+  `isla.js` da 0 también con `vista`; en la lista, el diseño lo pone en la zona 5 y aquí sigue tras el formulario (sin medir:
+  ese par está desfasado, ver abajo).
+- **El botón del sistema** (`x-pieza.boton`), en dos cosas que no se ven y se notan: (1) el `Button` del diseño va SIEMPRE
+  recortado (`position: relative; overflow: hidden`, desde el zip tercero, por el brillo de «llega») y el nuestro solo al
+  llegar; con el recorte, Chromium pinta distinto el contenido (sin él, ±1 de color en el trazo de los iconos: las piezas
+  `botones`, `anadir`, `filas` y `fila-omitir`, y el «Añadir al calendario» del recibo); (2) el icono y el texto van dentro
+  de un `span` interior centrado en el alto del interlineado: sin él, el teléfono de «Llamar» caía en y = 784,50 y en el
+  diseño en 784,48, un píxel más abajo al pintarse (medido con la caja de cada uno). Para (2) hizo falta además que el botón
+  heredara el interlineado del diseño: la línea ponía 1,35 a todo su `div`; ahora, como el `Line`, solo al texto. Guarda:
+  `PiezaBotonTest`.
+Lo que era del instrumento o de los datos, no de la página: firmada, el diseño monta su isla SIN cara y Chromium pinta todo el
+texto de A en gris (B, sin isla, en subpíxel: 6,6 %); el diagnóstico la esconde en A y da 0 (imitarla en B con una capa
+invisible no cambió nada). «90 minutos saltando… y luego merienda» (las dos horas del zip (6)) es la DESCRIPCIÓN del pack,
+dato del panel: cambia el modelo del banco, y en la instancia lo escribe el parque. El banco, al día con el zip (6): las
+rutas de `invitacion|autorizacion|lista-invitados/isla.jsx`, el montaje de la lista tras `pliCargar` y fuera la pieza
+`barra` (`SaveBar` se fue con la L2). **Resultado: 58 de 68 pares idénticos**; TODOS los de diagnóstico a 0 (la invitación
+abierta y cerrada, el recibo y la autorización, a 390 y 1280) y todas las piezas a 0; los 8 que no son 0 son pares
+«reales» con sus desvíos decididos (la privacidad, el idioma `#748`, nacimiento y relación `#745`), que es para lo que están
+sus diagnósticos. ✱ **Deuda medida**: el diagnóstico de la lista guardada no recoge `#805` ni K1/K2 (no es la isla:
+`DEUDA.md`).
+
+### 4.19 La imagen de la invitación al compartir, GENERADA para cada una (`#861`) — ⬜ por medir al detalle
+
+Del reparto del zip (6): la hace el SPA y, por decisión del owner, se GENERA para cada invitación (nombre, edad, día, hora,
+su diseño), no la fija por tema del diseño. Lo ya medido (01-10), antes de escribir el «al detalle»:
+- **Hoy**: `og:image` es el logotipo del cliente (`client-logo@4x.png`, o `og-image.jpg`, o la del panel:
+  `InvitationPageController::previewImage`), y `og:title` / `og:description` ya llevan nombre, edad, día y hora: la imagen
+  no sacaría a WhatsApp nada que hoy no salga. La página: `noindex`, `no-store`, `no-referrer`.
+- **El diseño**: `InviteCard variant="thumb"`, 1,91:1, la banda del tema con su adorno y el logotipo en una caja blanca, SIN
+  datos (readme, «La miniatura de WhatsApp»). WhatsApp: 1200 × 630, JPG, menos de 300 KB (`seo.md` §1, no oficial).
+- **Producción** (medida por plataforma el 30-09): GD con FreeType, JPEG/PNG/WebP/AVIF, Imagick; SIN Chromium ni Node;
+  `memory_limit` 256M ⇒ la imagen se DIBUJA, no se renderiza HTML.
+- **Las fuentes**: la instancia las trae en WOFF2 y VARIABLES (Archivo 400–900, Figtree 300–800). La GD local las lee
+  (FreeType con brotli), pero dibuja el peso POR DEFECTO de una variable: el 900 del nombre necesita su TTF fijo. En
+  producción, sin medir.
+- **Los colores**: los temas son ROLES (`App\Http\Fiesta\Temas`: `--fiesta-agua-500`…) que la instancia resuelve en dos hojas
+  (`fiesta.css` → `saltia.css` → hex): la imagen necesita el hex, de la instancia (marca blanca).
+
 ## 5. Impacto en invariantes
 
 | ID | Cómo |

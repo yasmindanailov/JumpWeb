@@ -973,3 +973,14 @@ dicen «NO APLICA» en vez de medir. Se midió al mudar la landing a la instanci
 no se mueve desde el 13-09; con la T6f (`#843`) la web vieja se retiró, así que parte de su sujeto ya no existe.
 **Qué hacer**: re-apuntar cada mutante a su código de hoy o retirarlo, y retirar el arnés entero si su sujeto se fue
 (`CONVENCIONES §3.quater`).
+
+## ▶ Baja · el par de DIAGNÓSTICO de la lista guardada del banco de la fiesta no recoge `#805` ni K1/K2 (medido el 01-10)
+
+`scripts/banco-fiesta.php` → `lista-guardado-*-diagnostico` tiene que dar 0 y no mide lo mismo (390: A 4114 px de alto, B 4085;
+1280: A 3392, B 3196). Medido en la pasada ligera de la isla (`#768`, `fiesta-sistema-nuevo.md` §4.18), y NO es la isla (en
+reposo no se ve a ningún lado): son desvíos DECIDIDOS y aprobados que el par nunca escondió — sin cifras, sin firmas por fila
+ni recordatorio (`#805`), la tarta en tarjetas con cantidad y «Sin tarta» en casilla y «Para los niños / Para los adultos»
+(K1/K2, `#806`→`#808`) — y el modelo del banco con la invitación sin enviar donde el diseño la tiene enviada. «Invitar a
+alguien más» del diseño frente a «Invitar a más» del producto, sin medir si es un desvío decidido.
+**Qué hacer**: ajustar el modelo del banco (`banco-fiesta/modelos.php → lista('guardado')`) y esconder a cada lado lo
+decidido, hasta dar 0; después, la pasada ligera de la lista con la isla.

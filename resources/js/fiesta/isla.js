@@ -4,7 +4,8 @@
  * enviar de verdad, y las otras caras como PLANTILLAS (`<template data-isla-plantilla>`): sin JavaScript va en el flujo y
  * la página funciona igual. Aquí solo se mueve:
  *  · FIJA abajo (la clase `js` de la página la saca del flujo) y su HUECO al final del contenido, con su alto
- *    (`--link-island-space`), que se mantiene mientras se aparta para que la página no salte;
+ *    (`--link-island-space`), que se mantiene mientras se aparta para que la página no salte (y es 0 cuando no tiene nada
+ *    que hacer o la página ya enseña lo que diría, como el diseño);
  *  · llega tras `data-delay` (el confeti de la invitación); si el foco entra antes en ella, llega ya;
  *  · se aparta al escribir en un campo de la página que NO es suyo (el de la respuesta lo es: con el teclado, se queda) y
  *    con una capa `aria-modal` abierta (el vídeo del parque, el descargo);
@@ -43,7 +44,9 @@ export function islaDeEnlace(raiz = document) {
     let ocultaCara = null;
 
     const suya = () => contenedor?.dataset.islaCara === 'respuesta';
-    const hueco = () => de.style.setProperty('--link-island-space', huecoIsla(alto, estado.sin));
+    // Con lo que diría ya a la vista, en el diseño la isla NO tiene cara (`mode = null`) y su hueco es 0; solo al apartarse
+    // (escribir, una capa, antes de llegar) lo conserva. Medido en la pasada ligera (`#768`): el recibo salía 112 px más largo.
+    const hueco = () => de.style.setProperty('--link-island-space', huecoIsla(alto, estado.sin || estado.vista));
     const aplica = () => {
         const sale = islaSale({ ...estado, suya: suya() });
         isla.dataset.sale = sale ? '1' : '0';

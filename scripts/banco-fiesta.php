@@ -133,11 +133,9 @@ $piezas = [
         'blade' => '<div class="box"><ul><x-fiesta.fila-invitado id="e1" name="Nora Jiménez Vidal" age="7" allergies="Frutos secos" state="confirmado" viaInvite signed open omitir last /></ul></div>',
         'ancho' => 520,
     ],
-    'barra' => [
-        'react' => '<div style={{display:"grid",gap:14}}><SaveBar state="dirty" status="2 cambios sin guardar" detail="4 respuestas por repasar · Borrador en este móvil" label="Guardar" buttonType="submit"/><SaveBar state="saved" status="Guardado hoy a las 16:05" label="Guardar"/><SaveBar state="clean" status="Nada que guardar todavía" label="Guardar"/><SaveBar state="conflict" status="Sin guardar" detail="Borrador en este móvil" label="Guardar" notice={<InfoCallout tone="warn" size="sm" role="alert" icon={<Icon name="triangle-alert" size={17}/>} title="La reserva ha cambiado, revísala.">No hemos guardado nada y tu borrador sigue aquí. La fiesta pasa a las 17:30 (antes, a las 17:00). Cuando lo veas, vuelve a guardar.</InfoCallout>}/></div>',
-        'blade' => '<div style="display: grid; gap: 14px;"><x-fiesta.barra-guardar state="dirty" status="2 cambios sin guardar" detail="4 respuestas por repasar · Borrador en este móvil" label="Guardar" buttonType="submit" /><x-fiesta.barra-guardar state="saved" status="Guardado hoy a las 16:05" label="Guardar" /><x-fiesta.barra-guardar state="clean" status="Nada que guardar todavía" label="Guardar" /><x-fiesta.barra-guardar state="conflict" status="Sin guardar" detail="Borrador en este móvil" label="Guardar"><x-slot:aviso><x-pieza.aviso tone="warn" size="sm" role="alert" title="La reserva ha cambiado, revísala."><x-slot:icono><x-lucide name="triangle-alert" :size="17" /></x-slot:icono>{{ \'\' }}No hemos guardado nada y tu borrador sigue aquí. La fiesta pasa a las 17:30 (antes, a las 17:00). Cuando lo veas, vuelve a guardar.</x-pieza.aviso></x-slot:aviso></x-fiesta.barra-guardar></div>',
-        'ancho' => 520,
-    ],
+    // ✱ La pieza `barra` (`SaveBar` contra `x-fiesta.barra-guardar`) se fue con la L2 de la isla (`#814`): la sustituye
+    //   `LinkIsland`, que va FIJA abajo y aquí no tiene marco que la contenga; se juzga en las PÁGINAS (abajo) y en la sonda
+    //   `sonda-isla-enlace.mjs`.
     'botones' => [
         'react' => '<div className="box" style={{display:"grid",gap:12}}>{["primary","secondary","outline","ghost","quiet","volt","inverse"].map((v)=><div key={v} style={{display:"flex",flexWrap:"wrap",gap:10,alignItems:"center"}}><Button variant={v} size="sm" iconLeft={<Icon name="message-circle" size={17}/>}>Reenviar</Button><Button variant={v} size="md">Compartir por WhatsApp</Button><Button variant={v} size="lg" full={false}>Crear la invitación</Button><Button variant={v} size="md" disabled>Guardar</Button></div>)}<Button variant="primary" size="lg" full>Crear la invitación</Button></div>',
         'blade' => '<div class="box" style="display: grid; gap: 12px;">@foreach ([\'primary\', \'secondary\', \'outline\', \'ghost\', \'quiet\', \'volt\', \'inverse\'] as $v)<div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;"><x-pieza.boton :variant="$v" size="sm"><x-slot:izquierda><x-lucide name="message-circle" :size="17" /></x-slot:izquierda>{{ \'\' }}Reenviar</x-pieza.boton><x-pieza.boton :variant="$v" size="md">Compartir por WhatsApp</x-pieza.boton><x-pieza.boton :variant="$v" size="lg">Crear la invitación</x-pieza.boton><x-pieza.boton :variant="$v" size="md" disabled>Guardar</x-pieza.boton></div>@endforeach<x-pieza.boton variant="primary" size="lg" full>Crear la invitación</x-pieza.boton></div>',
@@ -198,7 +196,7 @@ foreach ($piezas as $nombre => $pieza) {
 <style>{$marco}</style>
 </head><body><div id="root"></div>
 <script type="text/babel">
-const { InviteCard, ThemePicker, GuestRow, AddonCard, PlacesMeter, GuestComposer, SaveBar, Button, Link, Badge, Tag, Field, Checkbox, Textarea, QuantityStepper, OptionCards, InfoCallout, MediaFrame, ShareRow, Icon } = window.SaltiaDesignSystem_33397c;
+const { InviteCard, ThemePicker, GuestRow, AddonCard, PlacesMeter, GuestComposer, Button, Link, Badge, Tag, Field, Checkbox, Textarea, QuantityStepper, OptionCards, InfoCallout, MediaFrame, ShareRow, Icon } = window.SaltiaDesignSystem_33397c;
 const W = {$W_JSX};
 const LOGO = "{$LOGO}";
 const TEMAS = [{value:"confeti",label:"Confeti",note:"Por defecto"},{value:"fiesta",label:"Fiesta"},{value:"sereno",label:"Sereno"}];
@@ -256,8 +254,8 @@ foreach (['invitacion-viva' => 'viva', 'invitacion-cerrada' => 'cerrada'] as $no
     }
     // A: la ficha del diseño, tal cual, con sus rutas al diseño enlazado y el montaje de la página en reposo.
     $a = str_replace(
-        ['"../styles.css"', '"invitacion/datos.js"', '"invitacion/invitacion.css"', '"invitacion/vistas.jsx"', '"../components/', '"../_ds_bundle.js"'],
-        ['"../diseno/styles.css"', '"../diseno/paginas/invitacion/datos.js"', '"../diseno/paginas/invitacion/invitacion.css"', '"../diseno/paginas/invitacion/vistas.jsx"', '"../diseno/components/', '"../diseno/_ds_bundle.js"'],
+        ['"../styles.css"', '"invitacion/datos.js"', '"invitacion/invitacion.css"', '"invitacion/vistas.jsx"', '"invitacion/isla.jsx"', '"../components/', '"../_ds_bundle.js"'],
+        ['"../diseno/styles.css"', '"../diseno/paginas/invitacion/datos.js"', '"../diseno/paginas/invitacion/invitacion.css"', '"../diseno/paginas/invitacion/vistas.jsx"', '"../diseno/paginas/invitacion/isla.jsx"', '"../diseno/components/', '"../diseno/_ds_bundle.js"'],
         $card,
     );
     $montaje = 'localStorage.setItem("pj-invitacion-idioma", JSON.stringify("es")); localStorage.removeItem("pj-invitacion-respuestas"); '
@@ -312,8 +310,8 @@ foreach (['recibo-si' => 'si', 'recibo-firmada' => 'firmada'] as $nombre => $est
         continue;
     }
     $a = str_replace(
-        ['"../styles.css"', '"invitacion/datos.js"', '"invitacion/invitacion.css"', '"invitacion/vistas.jsx"', '"../components/', '"../_ds_bundle.js"'],
-        ['"../diseno/styles.css"', '"../diseno/paginas/invitacion/datos.js"', '"../diseno/paginas/invitacion/invitacion.css"', '"../diseno/paginas/invitacion/vistas.jsx"', '"../diseno/components/', '"../diseno/_ds_bundle.js"'],
+        ['"../styles.css"', '"invitacion/datos.js"', '"invitacion/invitacion.css"', '"invitacion/vistas.jsx"', '"invitacion/isla.jsx"', '"../components/', '"../_ds_bundle.js"'],
+        ['"../diseno/styles.css"', '"../diseno/paginas/invitacion/datos.js"', '"../diseno/paginas/invitacion/invitacion.css"', '"../diseno/paginas/invitacion/vistas.jsx"', '"../diseno/paginas/invitacion/isla.jsx"', '"../diseno/components/', '"../diseno/_ds_bundle.js"'],
         $card,
     );
     $montaje = 'localStorage.setItem("pj-invitacion-idioma", JSON.stringify("es")); localStorage.removeItem("pj-invitacion-respuestas"); '
@@ -352,8 +350,8 @@ foreach (['autorizacion-recibo' => 'recibo', 'autorizacion-firmada' => 'firmada'
         continue;
     }
     $a = str_replace(
-        ['"../styles.css"', '"invitacion/datos.js"', '"autorizacion/datos.js"', '"invitacion/invitacion.css"', '"invitacion/vistas.jsx"', '"../components/', '"../_ds_bundle.js"'],
-        ['"../diseno/styles.css"', '"../diseno/paginas/invitacion/datos.js"', '"../diseno/paginas/autorizacion/datos.js"', '"../diseno/paginas/invitacion/invitacion.css"', '"../diseno/paginas/invitacion/vistas.jsx"', '"../diseno/components/', '"../diseno/_ds_bundle.js"'],
+        ['"../styles.css"', '"invitacion/datos.js"', '"autorizacion/datos.js"', '"invitacion/invitacion.css"', '"invitacion/vistas.jsx"', '"autorizacion/isla.jsx"', '"../components/', '"../_ds_bundle.js"'],
+        ['"../diseno/styles.css"', '"../diseno/paginas/invitacion/datos.js"', '"../diseno/paginas/autorizacion/datos.js"', '"../diseno/paginas/invitacion/invitacion.css"', '"../diseno/paginas/invitacion/vistas.jsx"', '"../diseno/paginas/autorizacion/isla.jsx"', '"../diseno/components/', '"../diseno/_ds_bundle.js"'],
         $cardAut,
     );
     $montaje = 'localStorage.setItem("pj-invitacion-idioma", JSON.stringify("es")); '
@@ -366,6 +364,13 @@ foreach (['autorizacion-recibo' => 'recibo', 'autorizacion-firmada' => 'firmada'
     file_put_contents($salida."/a/{$nombre}.html", $a);
     file_put_contents($salida."/a/{$nombre}-diagnostico.html", str_replace('</head>', $sinIdiomaA.'</head>', $a));
 
+    // ⚠️ FIRMADA, el diseño sigue montando su isla (`AutIsla`) SIN cara: invisible, pero Chromium pinta entonces todo el
+    //    texto de A en gris, y B (sin isla: se fue, regla 5) en subpíxel. Medido el 01-10: 6,6 % de la ventana, solo en los
+    //    bordes de las letras; con esa isla escondida en A, 0 a 390 y a 1280. (Imitarla en B con una capa invisible no
+    //    cambió ni un píxel.) El diagnóstico de A la esconde.
+    if ($estado === 'firmada') {
+        file_put_contents($salida."/a/{$nombre}-diagnostico.html", str_replace('</head>', $sinIdiomaA.'<style>[data-link-island]{display:none!important}</style></head>', $a));
+    }
     foreach (['' => false, '-diagnostico' => true] as $variante => $diagnostico) {
         $b = view('fiesta.autorizacion', ['m' => $modelos['autorizacion']($estado, $diagnostico), 'hojas' => $hojas])->render();
         $b = str_replace(rtrim((string) config('app.url'), '/').'/', '../', $b);
@@ -410,14 +415,15 @@ foreach (['lista-recien' => 'recien', 'lista-guardado' => 'guardado'] as $nombre
         continue;
     }
     $a = str_replace(
-        ['"../styles.css"', '"lista-invitados/datos.js"', '"lista-invitados/estado.jsx"', '"lista-invitados/zonas-1-2.jsx"', '"lista-invitados/zonas-3-5.jsx"', '"../_ds_bundle.js"'],
-        ['"../diseno/styles.css"', '"../diseno/paginas/lista-invitados/datos.js"', '"../diseno/paginas/lista-invitados/estado.jsx"', '"../diseno/paginas/lista-invitados/zonas-1-2.jsx"', '"../diseno/paginas/lista-invitados/zonas-3-5.jsx"', '"../diseno/_ds_bundle.js"'],
+        ['"../styles.css"', '"lista-invitados/datos.js"', '"lista-invitados/estado.jsx"', '"lista-invitados/zonas-1-2.jsx"', '"lista-invitados/zonas-3-5.jsx"', '"lista-invitados/isla.jsx"', '"../components/', '"../_ds_bundle.js"'],
+        ['"../diseno/styles.css"', '"../diseno/paginas/lista-invitados/datos.js"', '"../diseno/paginas/lista-invitados/estado.jsx"', '"../diseno/paginas/lista-invitados/zonas-1-2.jsx"', '"../diseno/paginas/lista-invitados/zonas-3-5.jsx"', '"../diseno/paginas/lista-invitados/isla.jsx"', '"../diseno/components/', '"../diseno/_ds_bundle.js"'],
         $cardLista,
     );
-    $montaje = '["pj-lista-v3-servidor-'.$estado.'", "pj-lista-v3-borrador-'.$estado.'"].forEach((k) => localStorage.removeItem(k)); '
+    // ⚠️ Desde el zip (6) la ficha monta tras cargar `LinkIsland` (`pliCargar(...).then(...)`): el montaje va DENTRO.
+    $montaje = '.then(() => { ["pj-lista-v3-servidor-'.$estado.'", "pj-lista-v3-borrador-'.$estado.'"].forEach((k) => localStorage.removeItem(k)); '
         .($estado === 'guardado' ? $ajusteGuardado : '')
-        .'ReactDOM.createRoot(document.getElementById("root")).render(<PliPagina id="'.$estado.'" conflictoRef={{ current: false }} onConflictoUsado={() => {}} pruebaRef={{ current: null }} onPrueba={() => {}} />);';
-    $a = str_replace('ReactDOM.createRoot(document.getElementById("root")).render(<PliBanco />);', $montaje, $a, $n);
+        .'ReactDOM.createRoot(document.getElementById("root")).render(<PliPagina id="'.$estado.'" conflictoRef={{ current: false }} onConflictoUsado={() => {}} pruebaRef={{ current: null }} onPrueba={() => {}} />); });';
+    $a = str_replace('.then(() => ReactDOM.createRoot(document.getElementById("root")).render(<PliBanco />));', $montaje, $a, $n);
     if ($n !== 1) {
         fwrite(STDERR, "la ficha de la lista cambió: no encuentro su montaje\n");
         exit(1);

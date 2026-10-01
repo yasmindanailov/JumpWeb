@@ -79,8 +79,8 @@
                 @endif
             @endif
             @include('fiesta.invitacion.idiomas')
-            {{-- El hueco de la isla de enlace (`#814`), al final del contenido: al final del scroll, nada queda bajo ella. --}}
-            <x-fiesta.isla-hueco />
         </main>
+        {{-- El hueco de la isla de enlace (`#814`): FUERA de `main`, como el diseño (dentro, la rejilla le sumaba 14 px). --}}
+        <x-fiesta.isla-hueco />
     </div>
 </x-pagina-enfocada>

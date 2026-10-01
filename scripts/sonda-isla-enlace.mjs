@@ -57,7 +57,7 @@ const montarCerrada = () => tinker(`$h = App\\Domain\\Identity\\Models\\User::wh
     + ` $o = App\\Domain\\Booking\\Models\\Order::create(['user_id' => $h->id, 'code' => '${CODIGO_CERRADA}', 'status' => App\\Domain\\Booking\\Models\\Order::STATUS_PAID, 'subtotal' => 6 * 1695, 'tax' => 0, 'total' => 6 * 1695, 'currency' => 'EUR', 'paid_at' => now()]);`
     + ` $o->items()->create(['ticket_type_id' => $p->id, 'slot_id' => $s->id, 'quantity' => 6, 'unit_price' => 1695, 'seats' => 6, 'event_data' => ['celebrant' => 'Noa', 'age' => 6]]); }`
     + ` $r = $o->items()->whereNull('parent_item_id')->firstOrFail(); $sv = app(App\\Domain\\Booking\\Services\\PartyInvitations::class); $i = $sv->forReservation($r);`
-    + ` $sv->personalize($i, ['honoree_name' => 'Noa', 'honoree_age' => 6, 'theme' => 'confeti', 'host_line' => 'Te invita la familia de Noa']); echo $i->fresh()->token;`).split('\n').pop();
+    + ` $sv->personalize($i, ['honoree_name' => 'Noa', 'honoree_age' => 6, 'theme' => 'confeti', 'host_line' => 'Te invita la familia de Noa', 'show_host_phone' => true]); echo $i->fresh()->token;`).split('\n').pop();
 
 const desmontar = (codigo) => tinker(`$o = App\\Domain\\Booking\\Models\\Order::where('code', '${codigo}')->first(); if ($o) { foreach ($o->items as $it) { Illuminate\\Support\\Facades\\DB::table('analytics_events')->where('order_id', $o->id)->delete(); App\\Domain\\Booking\\Models\\PartyInvitation::where('order_item_id', $it->id)->each(fn ($i) => $i->replies()->delete() && $i->delete()); } $o->items()->delete(); $o->delete(); } echo 'ok';`);
 
@@ -192,12 +192,14 @@ async function recorrer(navegador, ventana, informe, cerrada, lista) {
         const calendario = page.locator('[data-receipt-island-calendar]');
         check('en el recibo, con la tarjeta enseñando el calendario, la isla NO lo repite', (await calendario.count()) === 1 && (await islaEn(page))?.sale === '1');
         check('el recibo CONSERVA su «Firmar» (L3: allí la isla lleva el calendario)', (await page.locator('form[data-receipt-firma] [data-firma-boton]').count()) === 1);
+        const huecoArriba = (await islaEn(page))?.hueco;
+        check('…y sin cara, su hueco es 0 (como el diseño: la página no se alarga por debajo)', huecoArriba === 0, `hueco ${huecoArriba}`);
         await foto(page, '2-recibo');
         const enlaces = await page.evaluate(() => document.querySelector('[data-receipt] .inv-enlaces')?.getBoundingClientRect().bottom ?? 0);
         await page.evaluate((y) => window.scrollTo(0, y + 40), enlaces);
         await page.waitForTimeout(1200);
-        check('al bajar, «Añadir al calendario · Sáb 3 oct · 17:00», en secundaria',
-            (await islaEn(page))?.sale === '0' && (await texto(calendario.locator('[data-isla-label]'))) === 'Añadir al calendario'
+        check('al bajar, «Añadir al calendario · Sáb 3 oct · 17:00», en secundaria, y su hueco vuelve',
+            (await islaEn(page))?.sale === '0' && (await islaEn(page))?.hueco > 0 && (await texto(calendario.locator('[data-isla-label]'))) === 'Añadir al calendario'
                 && (await texto(calendario.locator('[data-isla-sub-texto]'))) === 'Sáb 3 oct · 17:00' && ! (await calendario.evaluate((el) => el.classList.contains('fi-isla-barra--primary'))),
             `${await texto(calendario)}`);
         await foto(page, '2b-calendario');
@@ -215,6 +217,17 @@ async function recorrer(navegador, ventana, informe, cerrada, lista) {
         await cookies(page);
         const linea = page.locator('[data-isla-enlace] [data-isla-cara="linea"] [role="status"]');
         check('pasado el plazo, la isla es la LÍNEA y no ofrece responder', (await linea.count()) === 1 && ! (await page.locator('[data-rsvp-si]').count()), await texto(linea));
+        // Como el `Line` del diseño: UNA fila; el texto se parte y «Llamar» no baja (medido en la pasada `#768`: con
+        // `flex-wrap`, caía debajo del texto).
+        const fila = await page.evaluate(() => {
+            const l = document.querySelector('[data-isla-enlace] [data-isla-cara="linea"] [role="status"]');
+            const b = l?.querySelector('[data-invitation-call]');
+            const t = b?.previousElementSibling;
+            if (!b || !t) return null;
+            const rb = b.getBoundingClientRect(); const rt = t.getBoundingClientRect(); const rl = l.getBoundingClientRect();
+            return { misma: rb.top + rb.height / 2 > rt.top && rb.top + rb.height / 2 < rt.bottom, dentro: rb.right <= rl.right + 0.5, alto: rl.height };
+        });
+        check('…en UNA fila: «Llamar» a la altura del texto, dentro de la isla', fila?.misma && fila.dentro, JSON.stringify(fila));
         await foto(page, '3-cerrada');
         await contexto.close();
     }

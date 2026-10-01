@@ -21,7 +21,7 @@ cd "$(git rev-parse --show-toplevel)"
 
 EXEC="docker compose exec -u sail -T laravel.test"
 JS="$EXEC node --test resources/js/fiesta/logica.test.js"
-PHP='InvitacionPaginaTest|FiestaModeloTest|ListaDeInvitadosTest|ExtrasDeLaFiestaListaTest|GuestFormManyGuestsTest|GuestFormTest|AutorizacionPaginaTest|GuardianSkinTest|ZipTerceroTest|InvitationReceiptTest|ClavesDeIdiomaTest'
+PHP='InvitacionPaginaTest|FiestaModeloTest|ListaDeInvitadosTest|ExtrasDeLaFiestaListaTest|GuestFormManyGuestsTest|GuestFormTest|AutorizacionPaginaTest|GuardianSkinTest|ZipTerceroTest|InvitationReceiptTest|ClavesDeIdiomaTest|PiezaBotonTest'
 
 TMP="$(mktemp -d)"
 FICHEROS=(
@@ -39,6 +39,8 @@ FICHEROS=(
     app/Http/Fiesta/Autorizacion.php
     resources/views/components/fiesta/firma.blade.php
     lang/es/fiesta.php
+    resources/js/fiesta/fiesta.css
+    resources/views/components/pieza/boton.blade.php
 )
 copia() { echo "$TMP/${1//\//__}"; }
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$(copia "$f")" "$f"; touch "$f"; done; $EXEC php artisan view:clear >/dev/null 2>&1; }
@@ -118,7 +120,7 @@ mutar php "la isla llega sin esperar al confeti" "$INV" \
 mutar php "la isla se queda sin nombre para el lector de pantalla" "$INV" \
   ":label=\"\$m['isla']['respuesta']\"" ":label=\"''\""
 mutar php "la página pierde el hueco de la isla" "$PAGINA" \
-  "            <x-fiesta.isla-hueco />" ""
+  "        <x-fiesta.isla-hueco />" ""
 mutar php "la isla pierde su marca (el JavaScript no la encuentra)" "$ISLA" \
   "data-isla-enlace data-delay=" "data-delay="
 
@@ -186,13 +188,25 @@ mutar php "L3 · el «Firmar» de la isla no envía el formulario (sin JavaScrip
 mutar php "L3 · el «Firmar» de la isla no va en naranja" "$PAUT" \
   '" primary form="aut-form"' '" form="aut-form"'
 mutar php "L3 · la autorización pierde el hueco de la isla" "$PAUT" \
-  "            <x-fiesta.isla-hueco />" ""
+  "        <x-fiesta.isla-hueco />" ""
 mutar php "L3 · la isla no recibe los textos de lo que falta" "$MAUT" \
   "                'falta' => (array) __('fiesta.isla.falta')," "                'falta' => [],"
 mutar php "L3 · a la isla le falta el nombre de un campo exigido" "$LANG_ES" \
   "'nacimiento' => 'su fecha de nacimiento', " ""
 mutar php "L3 · el recibo pierde su «Firmar» (allí la isla lleva el calendario)" "$FIRMA" \
   '@if ($boton)<div style="display: grid;">' '@if (false)<div style="display: grid;">'
+
+# ── La pasada ligera (`#768`): el botón del sistema, como el `Button` del diseño (siempre recortado y con su span) ──────
+HOJA=resources/js/fiesta/fiesta.css
+BOTON=resources/views/components/pieza/boton.blade.php
+mutar php "pasada · el botón solo se recorta al llegar (los iconos, con ±1 de color)" "$HOJA" \
+  'transform: none; opacity: 1; position: relative; overflow: hidden; }' 'transform: none; opacity: 1; }'
+mutar php "pasada · el span interior del botón no es flex (el icono, en otra fracción de píxel)" "$HOJA" \
+  '.pz-boton__dentro { display: inline-flex;' '.pz-boton__dentro { display: inline;'
+mutar php "pasada · el botón pinta icono y texto sueltos, sin su span" "$BOTON" \
+  '{{ $attributes->class($clases) }}><span class="pz-boton__dentro">{{ $izquierda }}{{ $slot }}{{ $derecha }}</span></button>' '{{ $attributes->class($clases) }}>{{ $izquierda }}{{ $slot }}{{ $derecha }}</button>'
+mutar php "pasada · el botón-enlace pinta icono y texto sueltos, sin su span" "$BOTON" \
+  '{{ $attributes->class($clases) }}><span class="pz-boton__dentro">{{ $izquierda }}{{ $slot }}{{ $derecha }}</span></a>' '{{ $attributes->class($clases) }}>{{ $izquierda }}{{ $slot }}{{ $derecha }}</a>'
 
 echo
 echo "$muerden/$total muerden"

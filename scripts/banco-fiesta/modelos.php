@@ -244,7 +244,8 @@ return [
         // Con `opc` encendido en el diseño (desde F1: palabras, pistas, teléfono y merienda son dato).
         'anfitrion' => ['linea' => 'Lucía, la madre de Vera', 'nombre' => 'Lucía', 'telefono' => '655 120 387', 'tel' => 'tel:+34655120387', 'palabras' => 'Traed ganas de saltar', 'pistas' => 'Le encantan los libros de animales'],
         'enlaces' => ['mapa' => 'https://www.google.com/maps/search/?api=1&query=Play+Jump+Park+Lorca', 'calendario' => '#calendario', 'ics' => 'cumple-vera.ics'],
-        'texto' => ['Dos horas saltando en su zona, con monitores, merienda y tarta. Los padres podéis quedaros en la cafetería o venir a recogerlos.'],
+        // El zip (6) reparte las dos horas (90 + 30). En el producto es la DESCRIPCIÓN del pack (dato del panel), no código.
+        'texto' => ['90 minutos saltando en su zona, con monitores, y luego merienda y tarta. Los padres podéis quedaros en la cafetería o venir a recogerlos.'],
         // «Ver el parque» (F1c) con `foto` encendida en el diseño: la foto del diseño, su vídeo, la nota y «Vamos» si se contesta.
         'parque' => [
             'video' => '../assets/media/hero-playjump.mp4', 'poster' => '../assets/media/foto-127-1200.jpg', 'nombre' => 'Play Jump Park',

@@ -145,7 +145,7 @@ class InvitationReceiptTest extends TestCase
         $this->assertStringContainsString('data-guardian-privacy', $html);
         // El del recibo CONSERVA su «Firmar» (L3 de `fiesta-sistema-nuevo.md` §4.18: allí la isla lleva el calendario), al
         // final de su formulario, y llega (F9, `#780`).
-        $this->assertMatchesRegularExpression('#<form[^>]*data-receipt-firma.*?<button type="submit"[^>]*data-llega[^>]*data-firma-boton[^>]*>\s*Firmar\s*</button></div></form>#s', $html, 'el recibo perdió su botón de firmar');
+        $this->assertMatchesRegularExpression('#<form[^>]*data-receipt-firma.*?<button type="submit"[^>]*data-llega[^>]*data-firma-boton[^>]*><span class="pz-boton__dentro">Firmar</span></button></div></form>#s', $html, 'el recibo perdió su botón de firmar');
 
         $this->assertNotNull($reservation->fresh());
     }

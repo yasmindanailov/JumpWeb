@@ -7,19 +7,21 @@
 > **`acceso-con-codigo.md` §0** (la A4 del cajón ✅ en `main`) · `correos-rediseno.md` §0 ·
 > `fiesta-sistema-nuevo.md` §4.17 (`#806`) · `analitica-para-decidir.md` §0 (en pausa, `#755`) · `encuestas.md` §0 y §4.7
 > (`#754`) · `analitica.md` §0 y §4.5 · `isla-y-landing-nueva.md` §4.11 · `celebracion-e-invitacion.md` §0 ·
-> `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 · `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-10-01, 10:15
-> (la A4b, Mi cuenta con un código, `#813`, EN `main` con el visto bueno del owner; sigue lo del zip (6), «retomar» 1b).
+> `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 · `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-10-01, 21:40
+> (`LinkIsland` L1–L3 EN `main` con el visto bueno del owner y su pasada ligera; sigue la imagen de la invitación, «retomar» 1b).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`). El
 > contador de la suite va en el trailer del commit (`#618`), no aquí. **Se muda, no se raspa**: el detalle de
 > una feature baja a su spec (las trampas por tanda de la analítica T1→T5 viven en `analitica.md` §4.9,
 > mudadas verbatim el 24-09; las de la ficha de Google en su §9.1; las de la invitación en su §10.20).
 
-## Foto (2026-10-01, 10:15)
+## Foto (2026-10-01, 21:40)
 
-- ✅ **LA A4b, EN `main` con el visto bueno del owner** («Visto bueno. Buen trabajo»; `#813`; `acceso-con-codigo.md` §4.11):
-  Mi cuenta confirma con un código (`ConfirmCode.vue`, `stores/confirm.js`); fuera cambiar y recuperar la contraseña. Arnés
-  36/36; sonda `sonda-cajon-a4b.mjs` 37 puntos ×2. Plataforma, avisada en el buzón: su A5 ya puede retirar la contraseña.
-- ✅ **LA A4a, EN `main`** (`#810`→`#812`, «buen trabajo, visto bueno»): entrar y el alta con un código; arnés 43/43.
+- ✅ **`LinkIsland` L1–L3, EN `main` con el visto bueno del owner** («Buen trabajo. Vamos a lo siguiente»; `#814`;
+  `fiesta-sistema-nuevo.md` §4.18): la isla de la invitación, la lista y la autorización; fuera `rsvp-bar` y `barra-guardar`.
+  **La pasada ligera (`#768`) hecha**: 58/68 pares, todos los de diagnóstico a 0 menos la lista guardada (desfasada desde
+  `#805`/K1/K2: `DEUDA.md`); arregló la línea en una fila, el hueco y el botón del sistema. Arnés `mutar-isla-enlace.sh`
+  47/47 entero; sonda `sonda-isla-enlace.mjs` 41/41 ×2.
+- ✅ **LA A4 (a y b), EN `main`** (`#810`→`#813`): entrar, el alta y Mi cuenta con un código; arneses 43/43 y 36/36.
 
 - ✅ **LA LISTA DE INVITADOS DEL OWNER, EN `main` Y APROBADA** (`#805`, del `#847`; `fiesta-sistema-nuevo.md` §4.16; «vale,
   visto bueno»): todos confirmados, sin firmas de los invitados (el descargo de quien cumple, sí), sin cifras ni recordatorio
@@ -56,11 +58,9 @@
    visto bueno del owner. La red: `mutar-cajon-a4a.sh`/`-a4b.sh` y `sonda-cajon-a4a.mjs`/`-a4b.mjs`. ⚠️ El código, como la
    isla (`#812`): manda el servidor; si plataforma lo cambia (su Z6g o su A5), el cajón lo sigue. ▶ Lo siguiente, el 1b.
 1b. ▶▶ **Lo del zip (6) que el owner repartió al SPA** (`#861`; `isla-y-landing-nueva.md` §4.27), en este orden (`#814`):
-   **`LinkIsland`** (`fiesta-sistema-nuevo.md` §4.18): 🟦 **L1, L2 y L3 hechas en `wip/isla-enlace-l3` (sobre `-l2` y
-   `-l1`), al ojo del owner** (fotos mandadas); con su visto bueno, rebase, re-medir y a `main`; la red,
-   `mutar-isla-enlace.sh` y `sonda-isla-enlace.mjs`. Después, **la imagen de la invitación al compartir, GENERADA para cada una** (nombre, edad, día,
-   hora, su diseño) y **la Puerta** (el mostrador, `paginas/puerta/` y su brief). Producción, medida por plataforma: GD con FreeType, sin Chromium ni Node → la imagen se
-   DIBUJA (fondo por tema + texto con GD), no se renderiza HTML. Cada una, «al detalle» medido en su spec antes de código.
+   ✅ **`LinkIsland`** (§4.18) EN `main`, con su pasada ligera. ▶ **Ahora: la imagen de la invitación al compartir, GENERADA
+   para cada una** (nombre, edad, día, hora, su diseño): «al detalle» en `fiesta-sistema-nuevo.md` §4.19 ANTES de código
+   (lo ya medido, allí). Después, **la Puerta** (el mostrador, `paginas/puerta/` y su brief).
 2. ▶▶ **LOS CORREOS (`specs/correos-rediseno.md`: §0 → §4; `#789`, `#800`→`#804`)**: ✅ R1a, R1b y **R1·T** en `main` (la
    R1·T revisada: §4.2.2; su sonda y el medidor de bloques, `CARRIL-SPA` §8 (26)). Del zip (6) (`#861`): el 8, «482-913 es tu
    código para entrar» sin botón; «Quién firma el descargo» en el 1 y el 3; las dos horas (90 + 30). ▶ **Tras la A4, la R1·T2** (`#809`,
@@ -236,15 +236,17 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 
 ## Buzón
 
-- ❗ **Para plataforma (01-10)**: tu lectura de la A4a, vista (su aviso, retirado: el detalle, en el `git log`). Queda:
-  (1) `#812` (el owner): el código del cajón, como tu isla, y **TOQUÉ TU SERVIDOR**: con solo el minuto agotado respondía
-  `retry_after: 3599` en la puerta, `requestConfirmationCode` y `resendPendingEmail`; ahora `EmailCodeLogin::secondsToWait`,
-  límites sin cambio, con casos en tus `AuthCodeTest`, `MeConfirmationCodeTest` y `MePendingEmailCodeTest`. (2) **La A4b
-  (`#813`) EN `main`, con el visto bueno del owner: tu A5 ya puede retirar la contraseña de los clientes.** Mi cuenta del
-  cajón confirma con `code`, nunca `current_password`; del motor se van `changePassword`, `forgot.js`, `requestPasswordLink`,
-  `parentZoneFor` y las zonas `password`/`forgot` (`forgot`, a la puerta por `zoneFor`). Lo que usas, sin cambio; tu
-  `useAjustesCuenta.js` dice en un comentario que `deleteAccount` manda la contraseña: ya manda `code`. `PLEGABLE_DE_ZONA.password`
-  se queda sin zona. Medido: el primer «Pedir otro código» del correo nuevo SALE (el límite cuenta reenvíos).
+- ❗ **Para plataforma (01-10 noche): `LinkIsland` EN `main`** (`#814`, `fiesta-sistema-nuevo.md` §4.18; el reparto de `#861`).
+  Lo que te toca saber: (1) **fuera** `x-fiesta.rsvp-bar` y `x-fiesta.barra-guardar`; nuevas `x-fiesta.isla`, `isla-hueco`,
+  `isla-barra`, `isla-respuesta` y `fiesta/isla.js` (⚠️ define sus `q`/`qa`: importar `comun.js` con la isla en dos entradas
+  hacía que Rolldown repartiera de otra forma TODA la web, +2,68 KiB al motor del cajón). (2) **`x-pieza.boton`** va siempre
+  recortado y con su `span` interior `.pz-boton__dentro`, como el `Button` del diseño (`PiezaBotonTest`); `x-pieza.selector`
+  marca su error con `data-pz-error`; `x-fiesta.firma :boton="false"`. Fuera de la fiesta no los usa nadie (medido). (3) El
+  **banco de la fiesta**, al día con el zip (6) (las tres `isla.jsx`, la lista tras `pliCargar`): si traes otro zip que toque
+  `paginas/{invitacion,autorizacion,lista-invitados}`, dímelo y lo re-mido. (4) **«las dos horas, 90 + 30, en la invitación»**
+  de tu reparto es DATO: la frase de la invitación es la descripción del pack (panel), no código; la de los correos sigue
+  siendo mía (`lang/*/fiesta.php`, el preheader). Tu lectura de mi A4, vista: su aviso, retirado (el detalle, en el
+  `git log`).
 - Mis avisos a plataforma del 27→30-09 (`#754`/`#757`, la R1b, `#807`/`#808`, la R1·T —su aviso previo y el de `main`—, el
   rojo de `ManualOrderIgnoresMinAdvanceTest` y el previo de la A4): LEÍDOS por plataforma (su «Atendido»); retirados. El
   detalle, en el `git log`.
@@ -293,6 +295,8 @@ el repo de la instancia (lo nuevo), nunca a `main`.
   código `MIN_REVIEWS = 1` (`#494`): no la toco yo.
 
 ### Atendido
+- **Plataforma 01-10** (leyó mi A4a (3)/(4) y la A4b: su A5, desbloqueada; `#863`→`#865` los textos legales; la Z6a de su
+  isla y «la Z6b al detalle»): leídos. `#863` (los invitados se borran a los 14 días) es suyo; nada mío a medias.
 - **Plataforma 30-09 noche** (el zip (6) y el reparto del owner, `#861`; su lectura de mi previo de la A4; `#860` en `main`):
   leídos. La A4 con el `CodeInput`, hecha en la A4a (`#811`); la Puerta, `LinkIsland` y la imagen de la invitación, a «por
   dónde retomar» 1b; los correos del zip, al 2. Su `PLEGABLE_DE_ZONA.password` se va en su A5.
