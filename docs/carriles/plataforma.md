@@ -5,9 +5,9 @@
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
 > **820–849 AGOTADA con `#849`** → sigue en **850–879** (del owner, 29-09; centena `decisiones/800-899.md`) · Último usado:
 > **`#862`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#846`) · Actualizado: **2026-09-30**
-> (el acceso con código: A1 ✅ `#853`/`#854`, A2 ✅ `#855`/`#856` y A3 ✅ `#857`, `specs/acceso-con-codigo.md` §4.8–§4.10;
-> sigue la A4 del SPA; `/cookies` ✅ `#858`→`#860`; el zip (6) y el reparto, `#861`: legales → SEO → el zip en la web).
+> que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#846`) · Actualizado: **2026-10-01**
+> (el acceso con código: A1–A3 ✅ `#853`→`#857`; la A4a del SPA en `main`; `/cookies` ✅ `#858`→`#860`; el zip (6) y el
+> reparto, `#861`; el SEO, `specs/seo.md`: S4 y S6 ✅ `#862`, S3 empezado, el Perfil de Empresa en manos del owner).
 > ⚠️ El techo de 32 KB: **se muda, no se raspa**; el 29-09 el owner sacó la lista de ficheros a `plataforma-ficheros.md`
 > (`#852`) y NO subió el techo. Si vuelve a apretar tres veces seguidas, llévaselo con la medida.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -47,22 +47,29 @@ normas, la T6f (301 y la web vieja fuera, `#843`), `#844`, la T6h (las legales) 
 **T6g** (§4.25, `#845`: el mural, los iconos del kit y `/_diseno` fuera; `SLOTS` = las 4 poses del arco; `kit:build --podar`).
 Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas,entradas}.mjs`), la web entera (`sonda-web.mjs`,
 17/17) y la compra (`sonda-isla.mjs`).
-▶▶▶▶ **LO SIGUIENTE, EN ORDEN** (`#861`, el owner, 30-09 noche; el censo del zip (6) y el reparto con el SPA, en
-`isla-y-landing-nueva.md` §4.27):
-0. ▶▶ **EL SEO, PRIMERO** (el owner, 30-09: «IMPORTANTÍSIMO»; `specs/seo.md`, ⬜): investigado (Google, con fuentes) y medido
-   (`scripts/sonda-seo.mjs`, Search Console y PageSpeed de campo del owner, en §2). Lo que dicen los datos: la marca ya está en
-   el 1 y **cumpleaños no existe para Google** (27 impresiones en tres meses). Aquí, S3 (no empeorar los Core Web Vitals: la
-   cabecera de Kids y Jump), S4 (`robots`, JSON-LD, largos) y S5 (la imagen de cada página); del owner, S1/S2 (Perfil de
-   Empresa y directorios, con los textos que prepare) y S6 (el H1).
+▶▶▶▶ **LO SIGUIENTE, EN ORDEN** (actualizado el 01-10; el reparto con el SPA, `#861`, `isla-y-landing-nueva.md` §4.27):
+0. ▶▶ **EL SEO** (`specs/seo.md`, 🟦; el owner: «IMPORTANTÍSIMO»). Investigado y medido (§1–§2: la marca ya está en el 1 y
+   **cumpleaños no existe para Google**). HECHO el 01-10: **S4** (`robots.txt` con `Sitemap:`; JSON-LD con `geo`, `priceRange` y
+   la dirección por campos; `mutar-seo.sh` 14/14; `52e6557e`), **S6** (`#862`: los titulares se quedan; Kids y Jump dicen «en
+   Lorca»; instancia `9e7d274`) y **S3 empezado** (las fotos de más abajo, diferidas: Kids 8,7 → 6,5 s de LCP en el laboratorio
+   local). ▶ **LO PRIMERO, SIN CÓDIGO** (el owner pidió no escribir código en sus dos últimos turnos): (a) los textos de los
+   CUATRO PRODUCTOS del Perfil de Empresa y (b) la FICHA TIPO de los directorios (esta, tras las TRES respuestas del owner: código
+   postal 30813/30800, el domingo 21:00/21:30, el Instagram oficial): todo en `instancias/playjump/docs/perfil-de-empresa.md`
+   (el owner aplica lo recomendado: «lo haré»). Los TÉRMINOS de búsqueda del perfil, desde el 6-oct. Después, con código: S3
+   (el logotipo de 115 KB, la foto de la cabecera por tamaños, `cajon.css` bloqueante, el CLS de la cabecera) y S5 (la imagen
+   de cada página al compartir). La medida en STAGING, cuando estén los vídeos e imágenes nuevos (el owner, 01-10).
 1. **Los textos LEGALES con lo nuevo** (privacidad y condiciones). Medido el 30-09: no nombran la fecha de nacimiento, las
    felicitaciones, las encuestas, los clics y la apertura de los correos, «Avísame de fechas», la invitación, los menores a
    cargo, el carné QR, las reseñas copiadas ni los píxeles; la privacidad aún dice la contraseña (sale con la A5) y su francés
    es de tú. El método de `/cookies`: lo medido → el texto → la migración por huella; `[PENDIENTE: asesoría]` donde toque. Entran
-   las notas del SPA a la web sobre `/privacidad` (su buzón: `#750`, `#754`, la TP·1 y `#793`).
-2. **El zip (6) en la web**: Z6a→Z6g (§4.27), la isla primero. (La imagen de la INVITACIÓN es del SPA, `#861`.)
-3. **A5** tras la A4 del SPA (la retirada de la contraseña de los clientes: `acceso-con-codigo.md` §4.5–§4.6) y **A6** (en
-   staging, cuánto tarda el correo), que decide el alta: `#849` o lo del diseño.
-❓ **Del owner**: compartir el documento de Claude de los textos de la cabecera (quitar los precios; choca con el diseño).
+   las notas del SPA a la web sobre `/privacidad` (su buzón: `#750`, `#754`, la TP·1 y `#793`). Primero como DOCUMENTO para que el
+   owner lo revise; después, al código.
+2. **El zip (6) en la web**: Z6a→Z6g (§4.27), la isla primero; la cabecera sin precio salvo Colegios (la regla del precio del
+   owner, en `instancias/playjump/docs/estrategia/2026-09-30/Web.md`). (La imagen de la INVITACIÓN es del SPA, `#861`.)
+3. **A5** tras la A4b del SPA (la A4a ya está en `main`; la retirada: `acceso-con-codigo.md` §4.5–§4.6; de paso, el comentario de
+   `useDatosCompra.js` que aún nombra `submitLogin`) y **A6** (en staging, cuánto tarda el correo), que decide el alta: `#849` o
+   lo del diseño.
+❓ **Del owner**: las tres respuestas del Perfil de Empresa (arriba, 0).
 **HECHO el 30-09**, con su ✅: la A3a (`#857`) y la A3b (`acceso-con-codigo.md` §4.10; el servidor, A1 y A2, §4.8–§4.9;
 `mutar-acceso-codigo.sh` 51/51), `/cookies` para producción (`#858`/`#859`) y el aviso que pide solo lo encendido (`#860`;
 `politica-de-cookies.md` §4 y §6, `mutar-politica-cookies.sh` 30/30). **Al desplegar**: `ENTORNOS.md` §6 (el script de `/cookies`).
@@ -75,10 +82,10 @@ y la landing dicen «incluye calcetines… cono» y «¿Qué menú?».
 (`#846`, §4.26) · `sonda-portada` 23/23 (era la sonda) · la lista del owner (`#847`) · **EL PANEL A SALVO** (`specs/panel-a-salvo.md`
 ✅: guard propio `#850`/`SEC-14`, dirección `PANEL_PATH`, authenticator de administradores `#851` con `panel:quitar-authenticator`;
 `sonda-panel.mjs` 11/11) · la lista de ficheros aparte (`#852`). ⚠️ En LOCAL, el administrador del owner ya pide el authenticator.
-**Después, de `#847`**: (3) el SEO completo (textos de playjump.es; el owner los revisa al final); (4) las imágenes al compartir —la
-web, con la marca; la de la INVITACIÓN, la invitación misma (nombre, edad, día, hora, su diseño), generada para cada una (medir
-antes qué permite producción)—. La lista de invitados es del SPA (su `#805`/`#806`). **Al desplegar la v2.0.0** (`ENTORNOS.md` §6):
-`PANEL_PATH` (la elige el owner, por el chat), favoritos de las tablets, la URI de la ficha de Google y su authenticator.
+**De `#847`**: (3) el SEO y (4) las imágenes de la web al compartir, en marcha en `specs/seo.md` (S5); la de la INVITACIÓN,
+generada para cada una, es del SPA (`#861`; producción medida: GD e Imagick, sin Chromium). La lista de invitados es del SPA
+(su `#805`/`#806`). **Al desplegar la v2.0.0** (`ENTORNOS.md` §6): `PANEL_PATH` (la elige el owner, por el chat), favoritos de
+las tablets, la URI de la ficha de Google y su authenticator.
 ▶▶ **Y los diseños NUEVOS del owner** cuando baje el zip: entra SOLO por `diseno/actualizar.py` (`#760`), el diseño se toma del
 mockup (`#767`) y se verifica una vez al final (`#768`). Después, Bizum, Apple (entra) y el día liberado. Correos y puerta, del SPA.
 **Abierto, medido y sin hacer** (HECHOS el 29-09: el `#758` del SPA, `#846`, §4.26; y `sonda-portada` 13/14, que era la SONDA
