@@ -743,8 +743,12 @@ llevaban gratis y `OrderItemEditor` (v1.1.0) recalcula lo gratis con el enganche
 cobrado 2 €/niño. Se DESENGANCHÓ el #110 de los packs (su línea ya no se re-escala) y se crearon **#126 calcetines
 (2 €) y #127 cono de chuches (1 €)**, post-reserva, `fixed`, plazo 12 h, hasta 100. Desenganchado también «Traemos
 nuestra tarta» (#123; una fiesta del 21-10 lo conserva). Verificado: API de catálogo y de complementos, el
-resolvedor del post-form en los dos packs y `/`, `/precios`, `/cumpleanos`, `/normas`. ⚠️ v1.1.0 pinta el Menú 2 como
-«Gratis · 0,00 € por invitado».
+resolvedor del post-form en los dos packs y `/`, `/precios`, `/cumpleanos`, `/normas` en es/en/fr. ⚠️ v1.1.0 pinta el Menú 2 como
+«Gratis · 0,00 € por invitado». **Lo que pasa con las fiestas YA vendidas** (leído en el código de v1.1.0): editar
+invitados conserva el precio pagado (`ItemEditPricing`); MOVER DE FECHA re-tarifica pack y complementos con el
+catálogo de ese día (`#127(d)`, `AddonDateReconciler`; los gratis siguen gratis); CAMBIAR de pack Kids↔Jump se bloquea
+con `orphan_addons` hasta quitar la línea vieja de calcetines (gratis: 0 €) o de «Traemos nuestra tarta»; el post-form
+ya no enseña ni deja quitar esta última (`not_offerable`), el panel sí (cantidad 0).
 
 `jumpweb-prod` es un alias de `~/.ssh/config` (`HostName 51.68.7.199 · User playjump2 · Port 22`,
 clave `jumpweb_staging_ed25519` — la misma que staging, registrada en el panel como «jumpweb-prod»).

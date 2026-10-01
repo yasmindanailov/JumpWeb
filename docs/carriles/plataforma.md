@@ -161,7 +161,8 @@ en `sonda-primera-pantalla.mjs`; (i) tras tocar `instancias/playjump/publico/`, 
    mismo commit (`#674` la bajó a 457 sin proponérselo). Los 12 de ESLint los poda quien los arregle.
 5. ~~La promo~~ ✅ terminada el 01-10 (folleto 26-09, `ENTORNOS.md` §6). Para el owner: las 25 fiestas ya vendidas
    conservan sus calcetines incluidos (y el cono que se les prometió); el Menú 2 sale «Gratis · 0,00 € por invitado»
-   en v1.1.0; la hora extra de las entradas sigue con tope 1 por reserva (¿una sola persona puede quedarse?).
+   en v1.1.0; la hora extra de las entradas sigue con tope 1 por reserva (¿una sola persona puede quedarse?); el
+   pedido #46 (21-10) pagó 10 € por traer su tarta, que el folleto ya no admite: decide el parque (el panel la quita).
 6. Después, **F6** (app nativa; hereda del token lo que su spec §2 nombra: Google, alta, dispositivos).
 - **Del owner** (27-09 noche, `#789`): la cuenta de Apple Developer (Apple entra en la v2) · aceptar UNA vez la confianza
   de esta carpeta en una terminal (`claude` aquí: sin ella, las `allow` del repo no valen fuera de VSCode) · **para su
