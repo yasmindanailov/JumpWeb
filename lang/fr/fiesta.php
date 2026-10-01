@@ -64,6 +64,7 @@ return [
         'label' => 'Enregistrer',
     ],
     'fecha' => ['larga' => 'dddd D MMMM'],
+    'isla' => ['respuesta' => 'Votre réponse'],
     'lista' => [
         'titulo_pagina' => 'Les invités',
         'titular' => 'Les invités de :n',

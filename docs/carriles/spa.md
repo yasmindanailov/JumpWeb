@@ -2,7 +2,7 @@
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb` a secas; la instancia al lado, en
 > `~/proyectos/instancias/playjump`, clon de `github.com/yasmindanailov/instancia-playjump`, montada el 25-09) ·
-> Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#813`** · La banda está dada de alta en la
+> Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#814`** · La banda está dada de alta en la
 > tabla de `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs:
 > **`acceso-con-codigo.md` §0** (la A4 del cajón ✅ en `main`) · `correos-rediseno.md` §0 ·
 > `fiesta-sistema-nuevo.md` §4.17 (`#806`) · `analitica-para-decidir.md` §0 (en pausa, `#755`) · `encuestas.md` §0 y §4.7
@@ -55,10 +55,11 @@
 1. ✅ **LA A4 DEL ACCESO CON CÓDIGO (el cajón), ENTERA EN `main`**: la A4a (`#810`→`#812`) y la A4b (`#813`), las dos con el
    visto bueno del owner. La red: `mutar-cajon-a4a.sh`/`-a4b.sh` y `sonda-cajon-a4a.mjs`/`-a4b.mjs`. ⚠️ El código, como la
    isla (`#812`): manda el servidor; si plataforma lo cambia (su Z6g o su A5), el cajón lo sigue. ▶ Lo siguiente, el 1b.
-1b. **Lo del zip (6) que el owner repartió al SPA** (`#861`, buzón de plataforma 30-09 noche; `isla-y-landing-nueva.md`
-   §4.27): la **Puerta** (el mostrador, `paginas/puerta/` y su brief), **`LinkIsland`** en la invitación, la lista y la
-   autorización (fuera `RsvpBar` y `SaveBar`) y **la imagen de la invitación al compartir, GENERADA para cada una** (nombre,
-   edad, día, hora, su diseño). Producción, medida por plataforma: GD con FreeType, sin Chromium ni Node → la imagen se
+1b. ▶▶ **Lo del zip (6) que el owner repartió al SPA** (`#861`; `isla-y-landing-nueva.md` §4.27), en este orden (`#814`):
+   **`LinkIsland`** (`fiesta-sistema-nuevo.md` §4.18): 🟦 **L1, la invitación, hecha en `wip/isla-enlace-l1`, al ojo del
+   owner** (fotos mandadas); sigue **L2 la lista** y **L3 la autorización**, con `mutar-isla-enlace.sh` y
+   `sonda-isla-enlace.mjs`. Después, **la imagen de la invitación al compartir, GENERADA para cada una** (nombre, edad, día,
+   hora, su diseño) y **la Puerta** (el mostrador, `paginas/puerta/` y su brief). Producción, medida por plataforma: GD con FreeType, sin Chromium ni Node → la imagen se
    DIBUJA (fondo por tema + texto con GD), no se renderiza HTML. Cada una, «al detalle» medido en su spec antes de código.
 2. ▶▶ **LOS CORREOS (`specs/correos-rediseno.md`: §0 → §4; `#789`, `#800`→`#804`)**: ✅ R1a, R1b y **R1·T** en `main` (la
    R1·T revisada: §4.2.2; su sonda y el medidor de bloques, `CARRIL-SPA` §8 (26)). Del zip (6) (`#861`): el 8, «482-913 es tu

@@ -969,6 +969,51 @@ lista solo configurando, probado en el pack 106 de la local (`ojo-config.php` + 
 - **De paso, también configurables**: calcetines y cono (venta posterior, «para 1», tope ≥ máximo del pack); las tartas, en el
   bloque «La tarta» (K2). ⚠️ Al desenganchar el menú, la isla pinta «¿Qué menú?» vacía hasta el `v-if` de plataforma (avisado).
 
+### 4.18 `LinkIsland` · la isla de las páginas de enlace (`#861`, `#814`) — al detalle, medido antes de codificar (01-10)
+
+La fuente, el zip (6): readme «La isla en las páginas de enlace (29-09) · cerrado», `LinkIsland.prompt.md`, `LinkIsland.jsx`
+y `paginas/{invitacion,lista-invitados,autorizacion}/isla.jsx` (aprobado por el cliente el 29-09; sus textos nuevos, «por
+aprobar»: los ve el owner en vivo). **Sustituye a RsvpBar, a SaveBar y al botón suelto de la firma.** Fotos del antes y del
+diseño: `storage/app/audit/fotos-linkisland/` (`fotos-linkisland.mjs`, fuera de git).
+
+- **Lo que hay** (medido): la invitación, `x-fiesta.rsvp-bar` pegada abajo EN el flujo (sticky) con el plazo, el campo, el
+  anti-robot, el aviso de enlace caducado y, pasado el plazo, la línea con «Llamar» (solo con el teléfono de quien invita);
+  el recibo, sin isla (su «Añadir al calendario» está en la tarjeta). La lista, `x-fiesta.barra-guardar` al pie (zona 5),
+  pegada solo con cambios, pintada por `lista.js::actualiza` («N cambios sin guardar», «Borrador en este móvil», la tarta
+  que cierra); «Enviar por WhatsApp» y el recordatorio, en la cabecera y la zona 1. La autorización, `x-fiesta.firma` con su
+  «Firmar» al final.
+- **La pieza**: `x-fiesta.isla` (Blade, estilos en línea como el JSX: el cristal de tinta, `data-surface="ink"`) con sus
+  caras de servidor `x-fiesta.isla-barra` (la etiqueta, su línea exacta y el círculo; naranja solo si es la principal; con
+  `form`, el botón de enviar de ese formulario) y la respuesta de la invitación (el formulario de hoy, dentro). Abajo y FIJA
+  también en escritorio (centrada, a 560 px), con su hueco al final del contenido. `resources/js/fiesta/isla.js`: llega tras
+  `data-delay`, se aparta al escribir en un campo que no es suyo y con una capa `aria-modal` abierta, se esconde mientras se
+  ve lo que diría (`data-oculta-si`), el morph del alto, el relevo y el aviso (`notice`, con la barra lima). Qué cara toca,
+  en `logica.js` (puro, `node --test`).
+- **El suelo sin JavaScript** (la regla de la fiesta): la isla sale del servidor con su cara de partida y es un formulario o
+  un botón de enviar de verdad; sin JS va en el flujo, al final (`.no-js`), como hoy.
+- **Las tandas**, cada una al ojo del owner con fotos: **L1** la pieza y la invitación (la respuesta; pasado el plazo, la
+  línea y «Llamar»; en el recibo, «Añadir al calendario · Sáb 3 oct · 17:00» en secundaria cuando la tarjeta ya no lo
+  enseña, y añadido se va; tras «No podemos», sin isla; ✱ fuera `rsvp-bar`, que solo la usaba la invitación) · **L2** la lista (el único Guardar, naranja solo con algo que
+  guardar: «2 cambios · borrador en este móvil», «3 respuestas por repasar», «Falta el nombre de un niño»; guardado, el aviso
+  «Guardado hoy a las…»; sin nada que guardar y con la cabecera fuera de la vista, «Compartir por WhatsApp · La invitación de
+  Noa» antes de mandarla o «Escribir el recordatorio · 4 sin contestar»; fuera `barra-guardar`; la línea de lo guardado se
+  queda al pie) · **L3** la autorización (el único «Firmar», que cuenta lo que falta por su nombre hasta «Todo listo»; el del
+  recibo conserva su botón; fuera el botón de esta firma).
+- **No se hace la cara `alert`** («La reserva ha cambiado»): el producto no tiene ese estado; lo más cercano —los complementos
+  cambiaron mientras se editaba (`guest-form-stale`)— vuelve del servidor con su aviso ARRIBA, a la vista (regla 3).
+- **Textos**: los de la invitación y la autorización, con el inglés y el francés del diseño; los de la lista, solo en
+  español en el diseño, traducidos aquí como en F1–F9.
+- **Guardas**: `node --test` de la lógica; las guardas de piel re-apuntadas; arnés `scripts/mutar-isla-enlace.sh` y sonda
+  `scripts/sonda-isla-enlace.mjs` a 390 y 1280, con fotos; al cerrar cada página, su pasada ligera (`#768`).
+
+**L1 · la invitación, hecha** (01-10, en `wip/isla-enlace-l1`; al ojo del owner): `x-fiesta.isla`, `isla-hueco`,
+`isla-barra` y `isla-respuesta`; `fiesta/isla.js`; las reglas `islaSale`, `asoma` y `huecoIsla` en `logica.js`; en el modelo,
+`isla.respuesta` y `isla.calendario` («Sáb 3 oct · 17:00», la regla del resguardo de la lista). Arnés **19/19**; sonda **15
+puntos a 390 y 1280** (con una fiesta de HOY que monta y quita, `JW-SONDA-ISLA-C`, para la línea: ninguna de las del ojo
+estaba en ese punto). ⚠️ Trampas medidas: (1) un `@if` con espacio delante de un atributo deja DOS espacios (otra vez:
+§4.7); (2) un atributo sin valor sale `x="x"` del `ComponentAttributeBag`; (3) la invitación de una fiesta ya celebrada da
+404: la línea solo se ve con el plazo pasado y la fiesta por delante.
+
 ## 5. Impacto en invariantes
 
 | ID | Cómo |

@@ -170,10 +170,72 @@ img, video { display: block; max-width: 100%; }
 @keyframes fiesta-pennant-drop { from { opacity: 0; transform: translateY(-110%); } to { opacity: 1; transform: none; } }
 @keyframes fiesta-bubble-rise { from { opacity: 0; transform: translateY(26px) scale(0.7); } to { opacity: 1; transform: none; } }
 @keyframes fiesta-bubble-in { from { opacity: 0; transform: translateY(8px) scale(0.92); } to { opacity: 1; transform: none; } }
-@keyframes fiesta-bar-rise { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
 @keyframes fiesta-chip-pop { from { opacity: 0; transform: scale(0.4); } 70% { opacity: 1; transform: scale(1.08); } to { opacity: 1; transform: scale(1); } }
 @keyframes fiesta-confetti-fall { from { opacity: 0; transform: translateY(-56px) rotate(calc(var(--r, 0deg) - 140deg)); } 60% { opacity: 1; } to { opacity: 1; transform: translateY(0) rotate(var(--r, 0deg)); } }
+@keyframes fiesta-isla-swap { from { opacity: 0; transform: translateY(5px) scale(0.985); filter: blur(6px); } 55% { filter: blur(0); } to { opacity: 1; transform: none; filter: blur(0); } }
+@keyframes fiesta-isla-swap-out { from { opacity: 1; transform: none; filter: blur(0); } to { opacity: 0; transform: scale(1.03); filter: blur(6px); } }
+@keyframes fiesta-aviso-resto { from { transform: scaleX(1); } to { transform: scaleX(0); } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; } }
+
+/* ══ LA ISLA DE LAS PÁGINAS DE ENLACE (`navigation/LinkIsland.jsx` del zip (6); `fiesta-sistema-nuevo.md` §4.18, `#814`) ══
+   La pieza es `x-fiesta.isla`; lo que la mueve, `fiesta/isla.js`. Los valores, los del JSX.
+   ⚠️ SIN JavaScript (`.no-js`, el suelo de la fiesta) va en el flujo, donde se monta, y su hueco no ocupa nada. CON él va
+      FIJA abajo, a `--island-inset` de los bordes (desde 900 px, centrada a 560 px), y su hueco al final del contenido
+      deja su alto (`--link-island-space`, que mide `isla.js`). `data-sale` la saca por abajo: aún no ha llegado, se escribe
+      en un campo que no es suyo, hay una capa abierta, la página ya enseña lo que diría o no le queda nada que hacer.
+   ⚠️ Respaldos neutros de lo que `isla.css` no trae: el producto no nombra la paleta del cliente (`PaletaNeutraTest`): el
+      lima y la llama del diseño (`--volt-500`, `--flare-500`) son aquí los roles `--fiesta-lima-*` y `--fiesta-llama-*`. */
+:where(:root) {
+    --island-inset: 16px;
+    --t-press: transform 90ms var(--ease-out);
+    --t-island-tone: background-color var(--dur-island) var(--ease-in-out), color var(--dur-island) var(--ease-in-out), box-shadow var(--dur-island) var(--ease-in-out);
+    --surface-glass-ink-border: rgba(255, 255, 255, 0.16);
+}
+:where([data-surface="ink"]) { --ink-surface-border: rgba(255, 255, 255, 0.16); }
+.fi-isla { position: relative; z-index: 40; }
+.fi-isla-hueco { display: none; }
+/* Lo que la isla solo AYUDA a hacer (el calendario del recibo) no sale sin JavaScript: no podría apartarse y repetiría la
+   página (regla 3). */
+.no-js .fi-isla--solo-js { display: none; }
+.fi-isla-caja { position: relative; overflow: hidden; box-sizing: border-box; border-radius: 34px; background: var(--surface-glass-ink-float); -webkit-backdrop-filter: var(--blur-island); backdrop-filter: var(--blur-island); border: 1px solid var(--surface-glass-ink-border); box-shadow: var(--shadow-island-float); color: var(--text-body); transition: height var(--dur-island) var(--ease-island), border-radius var(--dur-island) var(--ease-island); }
+.fi-isla-caja--alta { border-radius: 28px; }
+.fi-isla-dentro { padding: 6px; }
+.js .fi-isla { position: fixed; left: var(--island-inset); right: var(--island-inset); bottom: calc(var(--island-inset) + env(safe-area-inset-bottom, 0px)); transform: none; opacity: 1; transition: transform var(--dur-island) var(--ease-island), opacity var(--dur-base) var(--ease-out); }
+.js .fi-isla[data-sale="1"] { transform: translateY(calc(100% + 40px)); opacity: 0; pointer-events: none; }
+.js .fi-isla-hueco { display: block; flex: none; height: var(--link-island-space, 0px); transition: height var(--dur-island) var(--ease-out); }
+@media (min-width: 900px) {
+    .js .fi-isla { left: 50%; right: auto; width: min(560px, calc(100% - 32px)); transform: translate(-50%, 0); }
+    .js .fi-isla[data-sale="1"] { transform: translate(-50%, calc(100% + 40px)); }
+}
+/* El relevo de ParkIsland: lo nuevo entra y lo que se va se desenfoca encima, sin tocarse. */
+.fi-isla [data-isla-cara].is-entra { animation: fiesta-isla-swap calc(var(--dur-island) * 0.8) var(--ease-out) calc(var(--dur-island) * 0.12) both; }
+.fi-isla-sale { position: absolute; left: 0; right: 0; top: 0; padding: 6px; pointer-events: none; animation: fiesta-isla-swap-out calc(var(--dur-island) * 0.45) var(--ease-out) both; }
+
+/* La cara de BARRA (`Bar`): la etiqueta y su línea exacta; el círculo, naranja solo si es la principal. Se toca entera. */
+.fi-isla-barra { position: relative; display: flex; align-items: center; gap: 10px; width: 100%; min-height: 52px; padding: 4px 5px 4px 18px; box-sizing: border-box; border: 0; border-radius: var(--r-pill); background: var(--control-bg); box-shadow: inset 0 0 0 1px var(--ink-surface-border); color: var(--text-strong); text-align: left; text-decoration: none; font-family: var(--font-ui); cursor: pointer; transform: none; transition: background-color var(--dur-fast) var(--ease-out), var(--t-press); }
+.fi-isla-barra:hover { background: var(--control-bg-hover); color: var(--text-strong); text-decoration: none; }
+.fi-isla-barra:active { transform: scale(var(--scale-press)); }
+.fi-isla-barra[aria-busy="true"] { cursor: progress; }
+.fi-isla-barra-texto { flex: 1 1 auto; min-width: 0; display: grid; gap: 2px; }
+.fi-isla-barra-texto > b { font-size: 15px; font-weight: var(--fw-bold); letter-spacing: -0.01em; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fi-isla-barra-sub { display: flex; align-items: flex-start; gap: 6px; min-width: 0; font-size: 12.5px; font-weight: var(--fw-semibold); line-height: 1.25; color: var(--text-muted); }
+.fi-isla-barra-sub[hidden], .fi-isla-punto[hidden] { display: none; }
+.fi-isla-barra-sub > span:last-child { min-width: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-wrap: pretty; }
+.fi-isla-punto { width: 7px; height: 7px; border-radius: 50%; flex: 0 0 auto; margin-top: 4px; }
+.fi-isla-circulo { flex: 0 0 auto; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: var(--action-quiet-bg); box-shadow: inset 0 0 0 1px var(--action-quiet-border); color: var(--action-quiet-fg); transition: var(--t-island-tone); }
+.fi-isla-barra--primary .fi-isla-circulo { background: var(--action-bg); box-shadow: none; color: var(--action-fg); }
+.fi-isla-barra--primary:hover .fi-isla-circulo { background: var(--action-bg-hover); }
+
+/* El AVISO (`Notice`): lo hecho, un momento, con la barra lima que se vacía; encima se para, un toque lo cierra. */
+.fi-isla-aviso { display: grid; gap: 10px; width: 100%; padding: 8px 8px 2px; border: 0; background: none; color: var(--text-strong); text-align: left; font: inherit; cursor: pointer; }
+.fi-isla-aviso-fila { display: flex; align-items: center; gap: 12px; }
+.fi-isla-aviso-ok { flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: var(--fiesta-lima-400); color: var(--fiesta-tinta-900); animation: fiesta-pop var(--dur-slow) var(--ease-spring) both; }
+.fi-isla-aviso-tx { display: grid; gap: 2px; min-width: 0; font-family: var(--font-ui); }
+.fi-isla-aviso-tx > b { font-size: 15px; font-weight: 700; line-height: 1.3; text-wrap: pretty; }
+.fi-isla-aviso-tx > small { font-size: 13.5px; line-height: 1.35; color: var(--text-muted); text-wrap: pretty; }
+.fi-isla-aviso-barra { display: block; height: 3px; margin: 0 6px 4px; border-radius: 3px; background: var(--control-bg-hover); overflow: hidden; }
+.fi-isla-aviso-barra > span { display: block; height: 100%; border-radius: 3px; background: var(--fiesta-lima-400); transform-origin: left center; animation: fiesta-aviso-resto var(--aviso-ms, 2400ms) linear both; }
+.fi-isla-aviso:hover .fi-isla-aviso-barra > span, .fi-isla-aviso:focus .fi-isla-aviso-barra > span { animation-play-state: paused; }
 
 /* ══ LAS PIEZAS DEL NÚCLEO (`components/pieza/*`): las que tienen estado ═══════════════════════════════════════ */
 
@@ -465,9 +527,8 @@ a.inv-prueba svg{color:var(--fiesta-sol-600)}a.inv-prueba:hover{text-decoration:
 /* F6b: el hueco vacío se queda escondido sin JavaScript (`[hidden]`, arriba); cada chip es un ENLACE a su recibo, con el
    aspecto del `Tag` con `onClick` del diseño (`button.pz-etiqueta`). */
 a.pz-etiqueta{cursor:pointer;text-decoration:none}a.pz-etiqueta:not(.pz-etiqueta--on):hover{background:var(--control-bg-hover)}
-.inv-barra{margin-top:2px}
+.inv-isla{margin-top:2px}
 .inv-caducado{margin:0;font:400 var(--fs-caption)/1.45 var(--font-ui);color:var(--text-body)}
-.inv-llamar{display:inline-flex;align-items:center;gap:5px;min-height:44px;margin-left:6px;font-weight:700;color:var(--text-link)}
 .inv-sec{display:grid;gap:12px;min-width:0;background:var(--surface-card);border-radius:var(--r-xl);box-shadow:inset 0 0 0 1px var(--border-subtle);padding:clamp(16px,4.5vw,24px)}
 .inv-sec-cab{display:flex;align-items:baseline;justify-content:space-between;gap:4px 10px;flex-wrap:wrap}
 .inv-h2{margin:0;font:900 clamp(1.25rem,4.6vw,1.5rem)/1.15 var(--font-display);letter-spacing:-.02em;color:var(--fiesta-tinta-900);text-wrap:balance}

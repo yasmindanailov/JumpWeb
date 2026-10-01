@@ -1,7 +1,7 @@
 {{-- La invitación viva (`InvInvitacion`): la tarjeta con su tema y, dentro, en el orden del brief: cuándo y dónde,
      «Cómo llegar» y «Añadir al calendario», qué es la fiesta (la descripción del pack, `#744`) y la merienda por grupos;
-     debajo, la barra de la respuesta. Pasado el plazo, la tarjeta se ve igual y la barra se queda con su línea y
-     «Llamar» (spec hermana §7.2·R8). Sin dato, sin bloque. --}}
+     debajo, la respuesta, en la isla de enlace (`#814`). Pasado el plazo, la tarjeta se ve igual y la isla se queda con su
+     línea y «Llamar» (spec hermana §7.2·R8). Sin dato, sin bloque. --}}
 @php
     $inv = $m['anfitrion'];
     $conQue = $m['texto'] !== [] || $m['merienda'] !== [];
@@ -13,11 +13,15 @@
     </x-fiesta.invitacion>
 </div>
 @include('fiesta.invitacion.mias')
-<x-fiesta.rsvp-bar class="inv-barra" animate :action="$m['respuestas']['accion']" :deadline="$m['respuestas']['plazo']" :closed="! $m['respuestas']['abiertas']" :error="$m['respuestas']['error']" :value="old('child_name', '')" data-invitation-form>
-    <x-slot:closedNote><span>{{ $m['respuestas']['cerrado'] }}</span>@if ($inv['tel'] !== '')<a class="inv-llamar" href="{{ $inv['tel'] }}" data-invitation-call><x-lucide name="phone" :size="15" />{{ __('fiesta.invitacion_pagina.llamar') }}</a>@endif</x-slot:closedNote>
+{{-- LA RESPUESTA, en la isla de enlace (`#814`, §4.18): llega tras el confeti y el campo es suyo. Pasado el plazo, la línea
+     y «Llamar», si quien invita dejó su teléfono. --}}
+<x-fiesta.isla class="inv-isla" :label="$m['isla']['respuesta']" :delay="1150" :cara="$m['respuestas']['abiertas'] ? 'respuesta' : 'linea'">
+<x-fiesta.isla-respuesta :action="$m['respuestas']['accion']" :deadline="$m['respuestas']['plazo']" :closed="! $m['respuestas']['abiertas']" :error="$m['respuestas']['error']" :value="old('child_name', '')" data-invitation-form>
+    <x-slot:closedNote><span style="flex: 1 1 auto; min-width: 0; text-wrap: pretty;">{{ $m['respuestas']['cerrado'] }}</span>@if ($inv['tel'] !== '')<x-pieza.boton variant="quiet" size="md" :href="$inv['tel']" style="flex: 0 0 auto; white-space: nowrap;" data-invitation-call><x-slot:izquierda><x-lucide name="phone" :size="17" /></x-slot:izquierda>{{ __('fiesta.invitacion_pagina.llamar') }}</x-pieza.boton>@endif</x-slot:closedNote>
     {{-- ⚠️ `{{ '' }}` tras cada `</x-slot>`: pegado a `@endif` compila a `@endslot@endif`, que Blade no ve (spec §4.7). --}}
     @if ($m['aviso'] !== null)<x-slot:notice><p class="inv-caducado" role="{{ $m['aviso']['rol'] }}" data-invitation-outcome>{{ $m['aviso']['texto'] }}</p></x-slot:notice>{{ '' }}@endif
     @if ($m['turnstile']['activo'])<x-slot:tercero><div class="inv-tercero"><span class="inv-tercero-rotulo">{{ $m['turnstile']['rotulo'] }}</span><div class="cf-turnstile" data-sitekey="{{ $m['turnstile']['clave'] }}"></div></div><script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script></x-slot:tercero>{{ '' }}@endif
-</x-fiesta.rsvp-bar>
+</x-fiesta.isla-respuesta>
+</x-fiesta.isla>
 {{-- El AVISO DE PRIVACIDAD (spec hermana §7.2·R7): sin casilla, y dice para qué, quién lo ve y cuándo se borra. --}}
 <p class="inv-legal" data-invitation-privacy>{{ $m['privacidad']['texto'] }} <x-pieza.enlace size="sm" underline="always" :href="$m['privacidad']['enlace']">{{ $m['privacidad']['politica'] }}</x-pieza.enlace></p>

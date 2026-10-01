@@ -9,6 +9,7 @@
 import './fiesta.css';
 import { arranca, enterNoEnvia, firma, llegadas, menores, q, qa, sugerencias } from './comun.js';
 import { caducaEn, deLaFiesta, misRespuestas } from './logica.js';
+import { islaDeEnlace } from './isla.js';
 
 /* ── «TUS RESPUESTAS» (F6b, `InvMias`, spec §4.12): los niños contestados DESDE ESTE MÓVIL, como chips que llevan a cada
    recibo. Solo en el `localStorage` de este teléfono, y cada entrada caduca con la firma de su enlace (24 h). El recibo
@@ -115,7 +116,8 @@ function visor() {
     }
 }
 
-/* ── La barra: Intro cierra el teclado y no contesta; al pulsar, «Enviando» y el otro botón se bloquea. ──────── */
+/* ── La respuesta, en la isla (`#814`): Intro cierra el teclado y no contesta; al pulsar, «Enviando» y el otro botón se
+   bloquea. ──────────────────────────────────────────────────────────────────────────────────────────────────── */
 function barra() {
     const form = q('[data-rsvp]');
     if (!form) return;
@@ -235,5 +237,6 @@ function foco() {
     if (campo) setTimeout(() => campo.focus({ preventScroll: false }), 60);
 }
 
-// La firma dentro del recibo (F6a): el mismo comportamiento que la página de la autorización (`comun.js`).
-arranca(visor, barra, ficha, menores, firma, foco, mias, avisame, sugerencias, llegadas);
+// La firma dentro del recibo (F6a): el mismo comportamiento que la página de la autorización (`comun.js`). La isla de
+// enlace (`#814`): la respuesta en la invitación, «Añadir al calendario» en el recibo.
+arranca(visor, barra, ficha, menores, firma, foco, mias, avisame, sugerencias, llegadas, () => { islaDeEnlace(); });

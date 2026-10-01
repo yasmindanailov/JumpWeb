@@ -64,6 +64,7 @@ return [
         'label' => 'Save',
     ],
     'fecha' => ['larga' => 'dddd D MMMM'],
+    'isla' => ['respuesta' => 'Your reply'],
     'lista' => [
         'titulo_pagina' => 'The guests',
         'titular' => ':n’s guests',

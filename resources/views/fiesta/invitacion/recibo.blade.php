@@ -16,6 +16,14 @@
         @if ($r['si'])<p class="inv-texto fuerte">{{ $r['texto'] }}</p>@if ($m['enlaces']['calendario'] !== '' || $m['enlaces']['mapa'] !== '')<div class="inv-enlaces">@if ($m['enlaces']['calendario'] !== '')<x-pieza.boton variant="quiet" size="sm" :href="$m['enlaces']['calendario']" :download="$m['enlaces']['ics']" data-invitation-calendar><x-slot:izquierda><x-lucide name="calendar-plus" :size="17" /></x-slot:izquierda>{{ __('fiesta.invitacion_pagina.calendario') }}</x-pieza.boton>@endif{{ '' }}@if ($m['enlaces']['mapa'] !== '')<x-pieza.enlace :href="$m['enlaces']['mapa']" target="_blank" rel="noopener noreferrer"><x-slot:icono><x-lucide name="map-pin" :size="16" /></x-slot:icono>{{ __('fiesta.invitacion_pagina.como_llegar') }}</x-pieza.enlace>@endif</div>@endif{{ '' }}@else<p class="inv-texto fuerte">{{ $r['texto'] }}</p>@endif
     </x-fiesta.invitacion>
 </div>
+{{-- «Añadir al calendario · Sáb 3 oct · 17:00», en la isla de enlace (`#814`): en secundaria (la principal del recibo es la
+     firma, en la página), solo cuando la tarjeta ya no lo enseña (regla 3), y añadido, se va. Solo con JavaScript: sin él
+     no podría apartarse y repetiría el botón de la tarjeta. --}}
+@if ($m['isla']['calendario'] !== null)
+<x-fiesta.isla class="fi-isla--solo-js" :label="$m['isla']['respuesta']" ocultaSi="[data-receipt] .inv-enlaces">
+    <x-fiesta.isla-barra :label="__('fiesta.invitacion_pagina.calendario')" :sub="$m['isla']['calendario']['cuando']" icon="calendar-plus" :href="$m['enlaces']['calendario']" :download="$m['enlaces']['ics']" data-isla-hecho data-receipt-island-calendar />
+</x-fiesta.isla>
+@endif
 @include('fiesta.invitacion.mias')
 @if ($r['si'])
     @if ($f['abierta'] && $f['campos'] !== [])

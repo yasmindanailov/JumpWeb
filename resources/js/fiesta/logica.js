@@ -240,6 +240,43 @@ export function importe(cents) {
 }
 
 /*
+ * LA ISLA DE LAS PÁGINAS DE ENLACE (§4.18, `#814`; `navigation/LinkIsland.jsx` del zip (6)): las reglas, sin DOM. Lo que
+ * mide y mueve, en `isla.js`.
+ */
+
+/**
+ * ¿Se aparta la isla (sale por abajo)? Mientras no ha llegado (tras el confeti), si la página ya enseña lo que diría (regla
+ * 3), si no le queda nada que hacer (regla 5) o con una capa abierta encima (el descargo, el vídeo); y al escribir en un
+ * campo de la página que NO es suyo (regla 4). El de la respuesta SÍ es suyo: con el teclado abierto, se queda.
+ */
+export function islaSale({ llegada = true, vista = false, sin = false, capa = false, escribiendo = false, suya = false } = {}) {
+    return !llegada || vista || sin || capa || (escribiendo && !suya);
+}
+
+/**
+ * ¿Se ve ya en pantalla lo que la isla diría? Alguno de esos rectángulos asoma por encima de su franja (los últimos 96 px
+ * de la ventana) y no está escondido (alto 0). Es `LinkIsland.useOnScreen` del diseño.
+ *
+ * @param {{top: number, bottom: number, height: number}[]} rects
+ * @param {number} alto  el alto de la ventana
+ */
+export function asoma(rects, alto) {
+    const franja = alto - 96;
+
+    return rects.some((r) => r.height > 0 && r.bottom > 8 && r.top < franja);
+}
+
+/**
+ * El hueco que la isla deja al final del contenido (`--link-island-space`): su alto (con el borde) y el aire de debajo, así
+ * al final del scroll nada queda bajo ella. Se mantiene mientras se aparta —la página no salta—; sin nada que hacer, nada.
+ */
+export function huecoIsla(alto, sin = false) {
+    return sin || alto === null || alto === undefined
+        ? '0px'
+        : `calc(${alto + 2}px + var(--island-inset) * 2 + env(safe-area-inset-bottom, 0px))`;
+}
+
+/*
  * EL CORREO MAL ESCRITO (F9): la regla vive en `ui/correo.js`, movida tal cual el 27-09 (plataforma, §4.16 de
  * `isla-y-landing-nueva.md`) porque también la usan los campos de correo de la isla, y desde aquí se llevaban este módulo
  * entero. Se reexporta: quien la importaba de aquí no cambia.

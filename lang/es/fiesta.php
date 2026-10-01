@@ -71,6 +71,8 @@ return [
     ],
     // El formato de «Sábado 26 de septiembre» (Carbon `isoFormat`, en el idioma de la petición).
     'fecha' => ['larga' => 'dddd D [de] MMMM'],
+    // La isla de las páginas de enlace (`#814`, §4.18): su nombre para el lector de pantalla (el del diseño, `InvIsla`).
+    'isla' => ['respuesta' => 'Tu respuesta'],
     // LA PÁGINA de la lista de invitados: los textos del brief (`datos.js → T`) y los propios aprobados el 24-09 (`P`).
     'lista' => [
         'titulo_pagina' => 'Los invitados',

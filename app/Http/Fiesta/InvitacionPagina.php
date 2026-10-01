@@ -126,6 +126,15 @@ final class InvitacionPagina
                 'enlace' => route('legal.privacidad'),
             ],
             'recibo' => $recibo,
+            // La isla de enlace (`#814`, §4.18): su nombre para el lector de pantalla y, en el recibo de un «sí» con
+            // calendario, «Añadir al calendario» con la fecha corta («Sáb 3 oct · 17:00», la misma regla que el resguardo
+            // de la lista).
+            'isla' => [
+                'respuesta' => __('fiesta.isla.respuesta'),
+                'calendario' => $recibo !== null && $recibo['si'] && (string) ($v['calendarUrl'] ?? '') !== '' && $date !== null
+                    ? ['cuando' => trim(str_replace('.', '', DisplayTime::dayLabel($date)).($hora !== '' ? ' · '.$hora : ''))]
+                    : null,
+            ],
             // «Tus respuestas» (F6b, §4.12): de qué fiesta es el hueco (el id, no el token) y, en el recibo, qué guardar.
             'mias' => [
                 'fiesta' => (string) $inv->getKey(),

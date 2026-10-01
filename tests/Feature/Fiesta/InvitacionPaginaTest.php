@@ -8,6 +8,7 @@ use App\Domain\Booking\Services\GuestCountPolicy;
 use App\Domain\Booking\Services\PartyInvitations;
 use App\Domain\Content\Services\CopiedRating;
 use App\Domain\Platform\Models\Setting;
+use App\Domain\Platform\Services\DisplayTime;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Support\MountsAParty;
 use Tests\TestCase;
@@ -45,6 +46,12 @@ class InvitacionPaginaTest extends TestCase
         $this->assertStringContainsString('name="attending" value="1"', $html);
         $this->assertStringContainsString('name="attending" value="0"', $html);
         $this->assertStringContainsString('Confirma antes del', $html, 'el plazo, escrito en la barra');
+        // La respuesta vive DENTRO de la isla de enlace (`#814`, §4.18): su región con nombre, que llega tras el confeti,
+        // cuyo campo es suyo; y su hueco al final del contenido.
+        $this->assertMatchesRegularExpression('/role="region" aria-label="Tu respuesta" class="fi-isla inv-isla" data-isla-enlace data-delay="1150"/', $html);
+        $this->assertStringContainsString('<div data-isla-cara="respuesta"><form method="post"', $html, 'la respuesta, dentro de la isla y como cara SUYA');
+        $this->assertStringContainsString('data-isla-hueco', $html);
+        $this->assertStringNotContainsString('data-receipt-island-calendar', $html, 'el calendario de la isla es del recibo');
         $this->assertIdiomaAbajo($html, 'es', 'data-invitation-privacy');
         // Quien organiza, por su nombre de pila (`#744`); y la hoja en blanco: ni un invitado.
         $this->assertStringContainsString('Marta verá el nombre de tu hijo', $html);
@@ -72,7 +79,7 @@ class InvitacionPaginaTest extends TestCase
 
     public function test_saying_yes_lands_on_the_receipt_with_the_card_the_sheet_and_the_offer(): void
     {
-        ['invitation' => $invitation] = $this->mountParty();
+        ['reservation' => $reservation, 'invitation' => $invitation] = $this->mountParty();
 
         $vuelta = $this->post(route('invitation.reply', ['token' => $invitation->token]), ['child_name' => 'Hugo Ruiz', 'attending' => '1']);
         $vuelta->assertRedirectContains('/invitacion/recibo/');
@@ -83,6 +90,12 @@ class InvitacionPaginaTest extends TestCase
         $this->assertStringContainsString('¡Contamos con vosotros!', $html, 'el titular de la tarjeta');
         $this->assertStringContainsString('Nos vemos el', $html, 'cuándo, en la frase del recibo');
         $this->assertStringContainsString('data-invitation-calendar', $html, 'tras el sí, el calendario a la vista');
+        // Y en la isla (`#814`): «Añadir al calendario» con la fecha corta, que se esconde mientras la tarjeta lo enseña,
+        // se va al tocarlo y no sale sin JavaScript (no podría apartarse y lo repetiría).
+        $corto = str_replace('.', '', DisplayTime::dayLabel($reservation->slot->date));
+        $this->assertStringContainsString('class="fi-isla fi-isla--solo-js" data-isla-enlace data-delay="0" data-oculta-si="[data-receipt] .inv-enlaces"', $html);
+        $this->assertMatchesRegularExpression('/<a href="[^"]+" download="[^"]+\.ics" class="fi-isla-barra" data-isla-hecho="data-isla-hecho" data-receipt-island-calendar="data-receipt-island-calendar" data-cara="barra">/', $html, 'en secundaria (sin `--primary`), y tocado se va');
+        $this->assertStringContainsString('<span data-isla-sub-texto>'.$corto.' · ', $html, 'la fecha corta del diseño («Sáb 3 oct · 17:00»)');
         // «Su ficha», opcional: las columnas del pack menos el nombre, contra la MISMA URL firmada.
         $this->assertStringContainsString('data-receipt-fields', $html);
         $this->assertStringContainsString('name="guest_data[', $html);
@@ -117,6 +130,7 @@ class InvitacionPaginaTest extends TestCase
         $this->assertStringNotContainsString('data-receipt-fields', $html, 'tras un «no» no hay ficha que dejar');
         $this->assertStringNotContainsString('data-receipt-authorization', $html, 'ni autorización que ofrecer');
         $this->assertStringContainsString('data-receipt-after', $html, 'la línea de después sí');
+        $this->assertStringNotContainsString('data-isla-enlace', $html, 'tras un «no», la isla se va (regla 5)');
     }
 
     public function test_the_sheet_saves_by_fetch_and_answers_json(): void
@@ -150,6 +164,8 @@ class InvitacionPaginaTest extends TestCase
         $this->assertStringContainsString('data-invitation-call', $html, 'y «Llamar», con el teléfono de la cuenta');
         $this->assertStringContainsString('href="tel:600111222"', $html);
         $this->assertStringNotContainsString('name="child_name"', $html, 'cerrada, la barra no tiene campo');
+        $this->assertStringContainsString('<div data-isla-cara="linea">', $html, 'en la isla, la LÍNEA (`#814`)');
+        $this->assertMatchesRegularExpression('/data-isla-cara="linea">.*data-invitation-call/s', $html, '«Llamar», dentro de la línea');
         $this->assertStringContainsString('data-invitation-card', $html, 'la tarjeta se ve igual (§7.2·R8)');
     }
 

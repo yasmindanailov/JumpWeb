@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { caducaEn, capitalizar, choice, clave, cubrir, deLaFiesta, estadoFicha, euros, importe, limpiar, misRespuestas, racionesTarta, soloEdad, sugerirCorreo, vistaInvitacion } from './logica.js';
+import { asoma, caducaEn, capitalizar, choice, clave, cubrir, deLaFiesta, estadoFicha, euros, huecoIsla, importe, islaSale, limpiar, misRespuestas, racionesTarta, soloEdad, sugerirCorreo, vistaInvitacion } from './logica.js';
 
 // F9 (§4.15, el zip tercero `#780`): el correo mal escrito, como `forms/Field.jsx` del diseño.
 test('el correo mal escrito se corrige: una letra, dos cambiadas, la terminación que no existe, el punto que falta', () => {
@@ -183,4 +183,35 @@ test('sin quien invita ni palabras no hay figura, y la inicial cae en quien cump
     const soloPalabras = vistaInvitacion({ nombre: 'álvaro', invita: '', palabras: 'Hola' }, TEXTOS);
     assert.equal(soloPalabras.inicial, 'Á', 'la inicial de quien cumple, con su tilde');
     assert.deepEqual([soloPalabras.pieCon, soloPalabras.pieSin], [false, false], 'sin quien invita no hay pie');
+});
+
+// La isla de las páginas de enlace (§4.18, `#814`; `LinkIsland.jsx` del zip (6)): sus cinco reglas, sin DOM.
+test('la isla está a la vista cuando ha llegado, tiene algo que hacer y nada la tapa', () => {
+    assert.equal(islaSale({}), false, 'por defecto, a la vista');
+    assert.equal(islaSale({ llegada: false }), true, 'antes de que caiga el confeti, aún no');
+    assert.equal(islaSale({ vista: true }), true, 'la página ya enseña lo que diría (regla 3)');
+    assert.equal(islaSale({ sin: true }), true, 'nada que hacer: se va (regla 5)');
+    assert.equal(islaSale({ capa: true }), true, 'con el vídeo o el descargo abiertos, no va encima');
+});
+
+test('al escribir en un campo de la página se aparta; si el campo es SUYO (la respuesta), se queda (regla 4)', () => {
+    assert.equal(islaSale({ escribiendo: true }), true);
+    assert.equal(islaSale({ escribiendo: true, suya: true }), false);
+    assert.equal(islaSale({ escribiendo: true, suya: true, capa: true }), true, 'una capa manda aunque el campo sea suyo');
+});
+
+test('«se ve ya» cuenta solo lo que asoma por ENCIMA de la franja de la isla y no está escondido', () => {
+    const alto = 844;
+    assert.equal(asoma([{ top: 100, bottom: 140, height: 40 }], alto), true, 'arriba de la pantalla: se ve');
+    assert.equal(asoma([{ top: 760, bottom: 800, height: 40 }], alto), false, 'en la franja de la isla (los últimos 96 px): no cuenta');
+    assert.equal(asoma([{ top: -60, bottom: 4, height: 64 }], alto), false, 'pasado por arriba: ya no se ve');
+    assert.equal(asoma([{ top: 100, bottom: 100, height: 0 }], alto), false, 'escondido (alto 0): no cuenta');
+    assert.equal(asoma([{ top: 900, bottom: 940, height: 40 }, { top: 300, bottom: 340, height: 40 }], alto), true, 'basta uno');
+    assert.equal(asoma([], alto), false);
+});
+
+test('el hueco al pie: el alto de la isla, su borde y el aire de debajo; sin nada que hacer, nada', () => {
+    assert.equal(huecoIsla(140), 'calc(142px + var(--island-inset) * 2 + env(safe-area-inset-bottom, 0px))');
+    assert.equal(huecoIsla(140, true), '0px');
+    assert.equal(huecoIsla(null), '0px', 'sin medir todavía, nada');
 });

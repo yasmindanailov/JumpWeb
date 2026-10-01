@@ -263,6 +263,8 @@ return [
         'og' => ['sitio' => 'Play Jump Park', 'title' => '', 'description' => '', 'image' => null, 'width' => null, 'height' => null],
         'privacidad' => ['texto' => 'Lucía verá el nombre de tu hijo, su edad y sus alergias para organizar la fiesta; el parque, para atenderle. Lo borramos a los 14 días de la fiesta.', 'politica' => 'Política de privacidad', 'enlace' => '#privacidad'],
         'recibo' => $recibo === null ? null : $RECIBO($recibo),
+        // La isla de enlace (`#814`): su nombre y, en el recibo (siempre de un «sí»), el calendario con la fecha del diseño.
+        'isla' => ['respuesta' => 'Tu respuesta', 'calendario' => $recibo === null ? null : ['cuando' => 'Sáb 26 sep · 17:00']],
         // «Tus respuestas» (F6b): el hueco, vacío en el banco (el móvil no tiene nada guardado, como A sin `localStorage`).
         'mias' => ['fiesta' => '1', 'mia' => $recibo === null ? null : ['id' => 1, 'nombre' => 'Hugo']],
     ],
