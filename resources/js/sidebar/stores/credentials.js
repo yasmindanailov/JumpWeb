@@ -3,19 +3,15 @@ import { api as httpClient } from '../api.js';
 import { formState, resetForm, runForm } from '../account/form-run.js';
 
 /**
- * **El estado de las dos gestiones de credenciales** (`specs/area-cliente.md` §9, tanda 2 · paso 6b).
+ * **El estado de las gestiones del acceso de «Sesiones»** (`specs/area-cliente.md` §9, tanda 2 · paso 6b): cerrar la
+ * sesión en los demás dispositivos y las cuentas vinculadas.
  *
  * Guarda lo que la pantalla enseña —qué está en vuelo, qué campo falló, qué aviso general hay— y
- * llama a la API. La traducción de la respuesta vive en `account/credentials.js`, con `node --test`.
+ * llama a la API. La traducción de la respuesta vive en `account/form-outcome.js`, con `node --test`.
  *
- * ⚠️ **Un solo store para las dos**, y no dos: comparten forma —reconfirmar la contraseña, un
- * veredicto, los mismos tres modos de fallo— y el estado nunca convive, porque son dos zonas
- * distintas y solo hay una visible. Dos stores habrían duplicado `busy`, `notice`, `fields` y su
- * limpieza, que es donde estas cosas divergen.
- *
- * ⚠️ **RGPD/seguridad**: aquí no se guarda ninguna contraseña. Los valores viven en el formulario del
- * componente mientras se escriben y se limpian al salir; persistir cualquiera de los dos —ni siquiera
- * en memoria compartida— sería regalar una credencial a cualquier cosa que inspeccione el store.
+ * ⚠️ **Se confirman con un CÓDIGO al correo, no con la contraseña** (A4b de `acceso-con-codigo.md` §4.11, `#813`): el
+ * código lo pide y lo guarda `stores/confirm.js`, y aquí solo viaja. «Cambiar la contraseña» se fue con la zona: en el
+ * cajón ya nadie entra con ella (`#848`), como en la isla desde su A3b.
  */
 export const useCredentialsStore = defineStore('credentials', {
     state: () => ({
@@ -34,24 +30,10 @@ export const useCredentialsStore = defineStore('credentials', {
             resetForm(this);
         },
 
-        /**
-         * Cambia la contraseña. Devuelve si salió.
-         *
-         * ⚠️ **No se envía `password_confirmation`**: repetir la contraseña es cosa de este formulario
-         * y el contrato no lo pide (`PasswordPolicy` tampoco lo incluye). Que las dos coincidan lo
-         * comprueba la pantalla antes de llamar.
-         */
-        async changePassword({ currentPassword, password }, { api = httpClient, messages = {}, auth = {} } = {}) {
+        /** Cierra la sesión en los demás dispositivos, con el código que lo confirma. La actual sobrevive. */
+        async revokeOtherSessions({ code }, { api = httpClient, messages = {}, auth = {} } = {}) {
             return this.run(
-                () => api.put('/me/password', { current_password: currentPassword, password }),
-                { messages, auth },
-            );
-        },
-
-        /** Cierra la sesión en los demás dispositivos. La actual sobrevive. */
-        async revokeOtherSessions({ currentPassword }, { api = httpClient, messages = {}, auth = {} } = {}) {
-            return this.run(
-                () => api.post('/me/sessions/revoke-others', { current_password: currentPassword }),
+                () => api.post('/me/sessions/revoke-others', { code }),
                 { messages, auth },
             );
         },
@@ -75,9 +57,9 @@ export const useCredentialsStore = defineStore('credentials', {
          * ⚠️ Al salir bien se RELEE la lista: dejarla con la foto vieja enseñaría un vínculo que el
          * titular acaba de quitar, que es justo lo que esta pantalla existe para poder hacer.
          */
-        async unlinkIdentity(provider, { currentPassword }, { api = httpClient, messages = {}, auth = {} } = {}) {
+        async unlinkIdentity(provider, { code }, { api = httpClient, messages = {}, auth = {} } = {}) {
             const ok = await this.run(
-                () => api.delete('/me/identities/' + provider, { current_password: currentPassword }),
+                () => api.delete('/me/identities/' + provider, { code }),
                 { messages, auth },
             );
 

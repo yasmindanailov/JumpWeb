@@ -8,13 +8,11 @@ import AccountHomeZone from '../account/zones/AccountHomeZone.vue';
 import OrdersZone from '../account/zones/OrdersZone.vue';
 import PurchasesZone from '../account/zones/PurchasesZone.vue';
 import ProfileZone from '../account/zones/ProfileZone.vue';
-import PasswordZone from '../account/zones/PasswordZone.vue';
 import SessionsZone from '../account/zones/SessionsZone.vue';
 import PrivacyZone from '../account/zones/PrivacyZone.vue';
 import DependentsZone from '../account/zones/DependentsZone.vue';
 import CardZone from '../account/zones/CardZone.vue';
 import LoginZone from '../account/zones/LoginZone.vue';
-import ForgotZone from '../account/zones/ForgotZone.vue';
 /**
  * ⚠️⚠️ **La ÚNICA zona en carga diferida, y el motivo es una medición** (`#343`): entera pesa
  * **~6,2 KiB** del chunk del cajón, que se descarga en la PRIMERA apertura —o sea, tiempo de espera
@@ -136,12 +134,6 @@ const signIn = () => store.go(ZONES.LOGIN);
             :locales="locales"
             :ui="ui" />
 
-        <PasswordZone
-            v-else-if="store.zone === ZONES.PASSWORD"
-            :messages="messages"
-            :auth="auth"
-            :account="account" />
-
         <SessionsZone
             v-else-if="store.zone === ZONES.SESSIONS"
             :messages="messages"
@@ -213,8 +205,8 @@ const signIn = () => store.go(ZONES.LOGIN);
              pintan SIN sesión, así que leerlas juntas dice de un vistazo dónde está esa frontera.
 
              ⚠️ **Sin pestañas desde la A4a** (`acceso-con-codigo.md` §4.11, `#849`): entrar y crear cuenta son UNA puerta
-             —el correo decide— y `LoginZone` pinta sus tres caras (el correo, el código y el alta). `FORGOT` sigue hasta
-             la A4b: se llega desde el aviso de quien no tiene contraseña en las acciones que aún la piden. -->
+             —el correo decide— y `LoginZone` pinta sus tres caras (el correo, el código y el alta). Recuperar la
+             contraseña se fue en la A4b (`#813`): en el cajón ya nadie entra con ella. -->
         <LoginZone
             v-if="store.zone === ZONES.LOGIN"
             :account="account"
@@ -222,14 +214,8 @@ const signIn = () => store.go(ZONES.LOGIN);
             :auth="auth"
             :urls="urls" />
 
-        <ForgotZone
-            v-else-if="store.zone === ZONES.FORGOT"
-            :account="account"
-            :messages="messages"
-            :auth="auth" />
-
         <!-- La otra pantalla de auth: completar un alta que viene de Google. No es una cara de la puerta —se llega
-             volviendo de Google—, y por eso es su propia zona, como `FORGOT`. -->
+             volviendo de Google—, y por eso es su propia zona. -->
         <GoogleSignupZone
             v-else-if="store.zone === ZONES.GOOGLE_SIGNUP"
             :account="account"

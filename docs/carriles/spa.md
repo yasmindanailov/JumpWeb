@@ -2,24 +2,24 @@
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb` a secas; la instancia al lado, en
 > `~/proyectos/instancias/playjump`, clon de `github.com/yasmindanailov/instancia-playjump`, montada el 25-09) ·
-> Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#812`** · La banda está dada de alta en la
+> Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#813`** · La banda está dada de alta en la
 > tabla de `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs:
-> **`acceso-con-codigo.md` §0** (la A4a ✅ en `main`; sigue la A4b) · `correos-rediseno.md` §0 ·
+> **`acceso-con-codigo.md` §0** (la A4 del cajón ✅ en `main`) · `correos-rediseno.md` §0 ·
 > `fiesta-sistema-nuevo.md` §4.17 (`#806`) · `analitica-para-decidir.md` §0 (en pausa, `#755`) · `encuestas.md` §0 y §4.7
 > (`#754`) · `analitica.md` §0 y §4.5 · `isla-y-landing-nueva.md` §4.11 · `celebracion-e-invitacion.md` §0 ·
-> `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 · `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-10-01, 08:00
-> (la A4a y su `#812`, el código como la isla, EN `main` con el visto bueno del owner; sigue la A4b).
+> `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 · `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-10-01, 10:15
+> (la A4b, Mi cuenta con un código, `#813`, EN `main` con el visto bueno del owner; sigue lo del zip (6), «retomar» 1b).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`). El
 > contador de la suite va en el trailer del commit (`#618`), no aquí. **Se muda, no se raspa**: el detalle de
 > una feature baja a su spec (las trampas por tanda de la analítica T1→T5 viven en `analitica.md` §4.9,
 > mudadas verbatim el 24-09; las de la ficha de Google en su §9.1; las de la invitación en su §10.20).
 
-## Foto (2026-10-01, 08:00)
+## Foto (2026-10-01, 10:15)
 
-- ✅ **LA A4a, EN `main` con el visto bueno del owner** (01-10, «buen trabajo, visto bueno»; `#810`→`#812`;
-  `acceso-con-codigo.md` §4.11): el cajón entra y crea cuenta con un código —la puerta, el `CodeInput` del diseño (`#861`),
-  el alta sin contraseña ni teléfono, `/registro` y `/recuperar-contrasena` a la puerta, `register` → la puerta para los
-  CTA de alta—; el código, como la isla, y el servidor dice la espera real (`#812`). Arnés 44/44; sonda 28 puntos ×2.
+- ✅ **LA A4b, EN `main` con el visto bueno del owner** («Visto bueno. Buen trabajo»; `#813`; `acceso-con-codigo.md` §4.11):
+  Mi cuenta confirma con un código (`ConfirmCode.vue`, `stores/confirm.js`); fuera cambiar y recuperar la contraseña. Arnés
+  36/36; sonda `sonda-cajon-a4b.mjs` 37 puntos ×2. Plataforma, avisada en el buzón: su A5 ya puede retirar la contraseña.
+- ✅ **LA A4a, EN `main`** (`#810`→`#812`, «buen trabajo, visto bueno»): entrar y el alta con un código; arnés 43/43.
 
 - ✅ **LA LISTA DE INVITADOS DEL OWNER, EN `main` Y APROBADA** (`#805`, del `#847`; `fiesta-sistema-nuevo.md` §4.16; «vale,
   visto bueno»): todos confirmados, sin firmas de los invitados (el descargo de quien cumple, sí), sin cifras ni recordatorio
@@ -52,13 +52,9 @@
    panel (la receta, en §4.17 «K3»): lo configura el parque en SU panel al desplegar (merienda, calcetines, cono, tartas). ▶
    **Antes de proponer código en cualquier tanda, medir si el panel ya lo configura** (montaje y sonda en la local); si algo
    ya existía, parar y decírselo al owner (`#808`).
-1. ▶▶▶ **LA A4 DEL ACCESO CON CÓDIGO: el cajón (`specs/acceso-con-codigo.md` §4.11, `#848`), MÍA.** ✅ La A4a (entrar y
-   el alta) en `main`. ▶ **Lo siguiente, la A4b** (Mi cuenta con sesión, al detalle en §4.11): las cuatro acciones con un
-   código POR ACCIÓN (`POST /me/confirm-code {action}`) con el mismo `CodeInput` (`steps/CodeInput.vue`), el correo nuevo en
-   tres tiempos como la isla; fuera `PASSWORD`, `NoPasswordHint`, `PasswordInput`, `FORGOT`, `forgot.js` y sus textos (siguen
-   por `#810`), y con ellos la poda del montaje con sesión. Medir antes y escribir «la A4b al detalle»; en `wip/…`, su
-   arnés (`mutar-cajon-a4a.sh` es el molde) y su sonda, y al ojo del owner. ⚠️ La A5 de plataforma ESPERA a la A4b.
-   ⚠️ El código, como la isla (`#812`): manda el servidor; si plataforma lo cambia en su Z6g, el cajón lo sigue.
+1. ✅ **LA A4 DEL ACCESO CON CÓDIGO (el cajón), ENTERA EN `main`**: la A4a (`#810`→`#812`) y la A4b (`#813`), las dos con el
+   visto bueno del owner. La red: `mutar-cajon-a4a.sh`/`-a4b.sh` y `sonda-cajon-a4a.mjs`/`-a4b.mjs`. ⚠️ El código, como la
+   isla (`#812`): manda el servidor; si plataforma lo cambia (su Z6g o su A5), el cajón lo sigue. ▶ Lo siguiente, el 1b.
 1b. **Lo del zip (6) que el owner repartió al SPA** (`#861`, buzón de plataforma 30-09 noche; `isla-y-landing-nueva.md`
    §4.27): la **Puerta** (el mostrador, `paginas/puerta/` y su brief), **`LinkIsland`** en la invitación, la lista y la
    autorización (fuera `RsvpBar` y `SaveBar`) y **la imagen de la invitación al compartir, GENERADA para cada una** (nombre,
@@ -239,18 +235,15 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 
 ## Buzón
 
-- ❗ **Para plataforma (01-10) — la A4a EN `main`** (con el visto bueno del owner; `#810`, `#811`; tu A5 espera ya solo a mi
-  A4b). (1) `SidebarBoot`:
-  `forgot` viaja SOLO con sesión (con lo personal), `auth` solo con `throttle` (medido: la isla solo lee ese), `register.cta`
-  fuera de `lang/`, y `login` gana `code_hint`, compuesto por el servidor (`Setting::businessName()`, `LoginCodes::TTL_MINUTES`).
-  Contrato: solo las descripciones de `SidebarBoot.account`/`auth` y `SidebarSession.account` (diccionarios abiertos, sin
-  versión). (2) Del motor se van `login()`, `mode`/`setMode` y `startPasswordRecovery` del store `auth`, y `submitLogin` del
-  flujo (llegan `requestCode`, `resendCode`, `submitCode`); tu `isla/compra/useDatosCompra.js` lo nombra en un comentario. Lo que
-  usas, sin cambio. (3) `#812` (el owner): el código del cajón, como tu isla (sin cuenta atrás ni pista), y **TOQUÉ TU
-  SERVIDOR**: con solo el minuto agotado respondía `retry_after: 3599` (el `max()` contaba la ventana de la hora) en la puerta,
-  `requestConfirmationCode` y `resendPendingEmail`; ahora `EmailCodeLogin::secondsToWait`, límites sin cambio, con casos en
-  tus `AuthCodeTest`, `MeConfirmationCodeTest` y `MePendingEmailCodeTest`. Tu isla lo hereda. (4) Los cinco CTA de alta de la landing piden `openAccount($event, 'register')`: el
-  motor lleva ese nombre a la puerta (`zoneFor`); si los tocas, `login` es el nombre de verdad.
+- ❗ **Para plataforma (01-10)**: tu lectura de la A4a, vista (su aviso, retirado: el detalle, en el `git log`). Queda:
+  (1) `#812` (el owner): el código del cajón, como tu isla, y **TOQUÉ TU SERVIDOR**: con solo el minuto agotado respondía
+  `retry_after: 3599` en la puerta, `requestConfirmationCode` y `resendPendingEmail`; ahora `EmailCodeLogin::secondsToWait`,
+  límites sin cambio, con casos en tus `AuthCodeTest`, `MeConfirmationCodeTest` y `MePendingEmailCodeTest`. (2) **La A4b
+  (`#813`) EN `main`, con el visto bueno del owner: tu A5 ya puede retirar la contraseña de los clientes.** Mi cuenta del
+  cajón confirma con `code`, nunca `current_password`; del motor se van `changePassword`, `forgot.js`, `requestPasswordLink`,
+  `parentZoneFor` y las zonas `password`/`forgot` (`forgot`, a la puerta por `zoneFor`). Lo que usas, sin cambio; tu
+  `useAjustesCuenta.js` dice en un comentario que `deleteAccount` manda la contraseña: ya manda `code`. `PLEGABLE_DE_ZONA.password`
+  se queda sin zona. Medido: el primer «Pedir otro código» del correo nuevo SALE (el límite cuenta reenvíos).
 - Mis avisos a plataforma del 27→30-09 (`#754`/`#757`, la R1b, `#807`/`#808`, la R1·T —su aviso previo y el de `main`—, el
   rojo de `ManualOrderIgnoresMinAdvanceTest` y el previo de la A4): LEÍDOS por plataforma (su «Atendido»); retirados. El
   detalle, en el `git log`.

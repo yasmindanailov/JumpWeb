@@ -4,19 +4,19 @@ import ConfirmInline from '../ConfirmInline.vue';
 import { usePrivacyStore } from '../../stores/privacy.js';
 import { useWaiverStore } from '../../stores/waiver.js';
 import { useAccountContextStore } from '../../stores/accountContext.js';
+import { useConfirmStore } from '../../stores/confirm.js';
 import ZoneLoading from '../ZoneLoading.vue';
 import { consentRows } from '../privacy.js';
 import { waiverNeedsSignature, waiverStatusKey } from '../waiver.js';
-import { fieldError } from '../form-outcome.js';
+import { CONFIRM_ACTIONS } from '../confirm-code.js';
 import { t as translate, tp as translateWith } from '../../i18n.js';
-import PasswordInput from '../../steps/PasswordInput.vue';
-import NoPasswordHint from '../NoPasswordHint.vue';
+import ConfirmCode from '../ConfirmCode.vue';
 import WaiverDoc from '../../WaiverDoc.vue';
 
 /**
  * **Privacidad y datos**: los dos derechos RGPD del titular (`specs/area-cliente.md` §9, paso 8).
  *
- * **Pinta y recoge; no decide nada.** Componer el documento, comprobar la contraseña y purgar la
+ * **Pinta y recoge; no decide nada.** Componer el documento, comprobar el código y purgar la
  * cuenta es del SERVIDOR; `stores/privacy.js` coloca lo que responda.
  *
  * ⚠️ **La confirmación nativa antes de borrar no es adorno**: es la ÚNICA acción irreversible del
@@ -28,10 +28,10 @@ import WaiverDoc from '../../WaiverDoc.vue';
  * cesta) habla de una cuenta que acaba de dejar de existir. La web hace lo mismo (`redirect('/')`) y
  * el aviso de despedida lo deja el servidor en la sesión nueva, así que los dos caminos acaban igual.
  *
- * ⚠️ **Y el campo NO se vacía al rechazar**, igual que en las otras tres pantallas que reconfirman
- * contraseña: quien se equivoca escribiendo tiene que poder corregir, no volver a teclear. La primera
- * versión lo vaciaba y el recorrido de navegador lo cazó (`V10`) — vaciarlo solo tiene sentido al
- * SALIR bien, y aquí salir bien significa que esta página deja de existir.
+ * ⚠️ **Se confirma con un CÓDIGO al correo y después con la pregunta** (A4b de `acceso-con-codigo.md` §4.11, `#813`;
+ * antes, la contraseña): el primer toque pide el código; con las seis cifras —el botón o la sexta—, la pregunta de
+ * siempre. La sexta NO borra sola: es lo único irreversible del producto. Un código que no vale vuelve bajo las casillas,
+ * vacío (`stores/confirm.js`).
  */
 const props = defineProps({
     account: { type: Object, default: () => ({}) },
@@ -56,11 +56,13 @@ const consents = computed(() => consentRows(store.consents, { revokedWord: a('ac
 // de componentes manda, y esto es una pantalla que PINTA—; de dónde sale, en su getter.
 store.ensureMarketing();
 
-const current = ref('');
+// El código que confirma el borrado (A4b, `#813`); el correo al que irá lo pone la pieza, del perfil que
+// `ensureMarketing()` ya pide.
+const confirm = useConfirmStore();
 
 const a = (key) => translate(props.account, key);
 
-const ctx = () => ({ messages: props.messages, auth: props.auth });
+const ctx = () => ({ messages: props.messages, auth: props.auth, account: props.account });
 
 /**
  * **BORRAR LA CUENTA — la única acción irreversible del producto** (`#565`, grieta 09).
@@ -70,12 +72,12 @@ const ctx = () => ({ messages: props.messages, auth: props.auth });
  * pantalla que estabas usando deja de ser tuya. Hoy la pregunta se hace dentro, con la pieza que ya
  * existía en «renovar mi QR» y el botón de confirmar en el rojo de error.
  *
- * ⚠️ El formulario deja de enviar directamente: su `submit` ABRE la pregunta. La contraseña se sigue
- * validando donde se validaba —en el servidor—, y lo que cambia es que entre teclearla y perder la
- * cuenta hay un gesto más, que es lo que esta pantalla necesitaba.
+ * ⚠️ El formulario deja de enviar directamente: su `submit` ABRE la pregunta. El código se sigue
+ * validando en el servidor, y lo que cambia es que entre escribirlo y perder la cuenta hay un gesto
+ * más, que es lo que esta pantalla necesitaba.
  */
 async function remove() {
-    if (await store.deleteAccount({ currentPassword: current.value }, ctx())) window.location.assign('/');
+    if (await confirm.act(CONFIRM_ACTIONS.DELETE_ACCOUNT, store, (code) => store.deleteAccount({ code }, ctx()), ctx())) window.location.assign('/');
 }
 
 /**
@@ -253,10 +255,10 @@ async function sign() {
             <p class="account__card-sub">{{ a('account.privacy.delete_intro') }}</p>
 
             <!-- ⚠️⚠️ **Aquí el disparador es el FORMULARIO ENTERO** (`#565`), no un botón: se envía
-                 con su botón y también con la tecla Intro desde el campo de la contraseña, y las dos
-                 vías tienen que preguntar. Al abrirse, el formulario desaparece y la pregunta ocupa
-                 su sitio —que es lo que la pieza hace con cualquier disparador—; la contraseña
-                 tecleada **sobrevive**, porque vive en el estado de la zona y no en el DOM.
+                 con su botón y también con la tecla Intro desde el código —y con la sexta cifra—, y las
+                 vías tienen que preguntar. Al abrirse, el formulario desaparece y la pregunta ocupa su
+                 sitio —que es lo que la pieza hace con cualquier disparador—; el código escrito
+                 **sobrevive**, porque vive en `stores/confirm.js` y no en el DOM.
                  ▶ Y de paso la pregunta no compite con el campo: lo único en pantalla es la decisión. -->
             <ConfirmInline id="acct-delete-q"
                            :question="a('account.privacy.delete_confirm')"
@@ -265,17 +267,19 @@ async function sign() {
                            :busy-label="a('account.privacy.deleting')"
                            :busy="store.busy" danger
                            @confirm="remove">
+                <!-- Sin el código pedido, el formulario lo pide; con las seis cifras, la pregunta (`confirm.ask`). -->
                 <template #trigger="{ ask }">
-                    <form class="form auth__form" novalidate @submit.prevent="ask">
-                        <div class="form__field">
-                            <label class="form__label" for="acct-delete-password">{{ a('account.privacy.delete_password') }}</label>
-                            <PasswordInput :id="'acct-delete-password'" v-model="current" autocomplete="current-password" />
-                            <span v-if="fieldError(store.fields, 'current_password')" class="form__error">{{ fieldError(store.fields, 'current_password') }}</span>
-                            <NoPasswordHint :account="account" />
-                        </div>
+                    <form class="form auth__form" novalidate @submit.prevent="confirm.ask(CONFIRM_ACTIONS.DELETE_ACCOUNT, ask, ctx())">
+                        <div v-if="confirm.notice" class="auth__errors" role="alert"><p>{{ confirm.notice }}</p></div>
 
-                        <button type="submit" class="btn account__delete-btn" :disabled="store.busy">
-                            {{ store.busy ? a('account.privacy.deleting') : a('account.privacy.delete_btn') }}
+                        <ConfirmCode id="acct-delete-code" v-model="confirm.code" :account="account"
+                                     :shown="confirm.isShown(CONFIRM_ACTIONS.DELETE_ACCOUNT)" :resends="confirm.resends"
+                                     :error="confirm.error" :disabled="store.busy || confirm.busy"
+                                     @complete="confirm.ask(CONFIRM_ACTIONS.DELETE_ACCOUNT, ask, ctx())" @resend="confirm.again(ctx())" />
+
+                        <button type="submit" class="btn account__delete-btn"
+                                :disabled="store.busy || confirm.busy || (confirm.isShown(CONFIRM_ACTIONS.DELETE_ACCOUNT) && ! confirm.ready)">
+                            {{ store.busy ? a('account.privacy.deleting') : confirm.isShown(CONFIRM_ACTIONS.DELETE_ACCOUNT) ? a('account.privacy.delete_btn') : a('account.confirm.send') }}
                         </button>
                     </form>
                 </template>

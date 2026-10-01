@@ -5,7 +5,8 @@
 # espera del limitador), «Pedir otro código» siempre a mano como la isla (`#812`: antes del minuto, la espera del servidor y
 # nada más), la cara en el store («Cambiar el correo», salir de la pantalla como PII), las seis casillas del `CodeInput`, el
 # alta sin contraseña, las puertas por URL (`/registro` y `/recuperar-contrasena` abren la puerta), lo que viaja en el
-# montaje (recuperar solo con sesión, `auth` podado) y los árboles congelados de la puerta y del alta.
+# montaje (recuperar, nunca sin sesión; desde la A4b, ni con ella: lo vigila `mutar-cajon-a4b.sh`; `auth` podado) y los
+# árboles congelados de la puerta y del alta.
 #
 # Reglas de la casa dentro: verde antes de mutar · veredicto por código de salida · comprobar que la mutación SE APLICÓ y que
 # su ancla es ÚNICA · restaurar por COPIA DE SEGURIDAD y `touch`, no con `git checkout` (`#181`) · copia por RUTA · al salir,
@@ -160,12 +161,12 @@ mutar js "el mismo código completo vuelve a avisar" "$REGLA" \
 mutar js "el alta vuelve a mandar la contraseña" "$REG" \
   $'        ...bornOnField(form),\n' $'        ...bornOnField(form),\n        password: form?.password ?? \'\',\n'
 mutar js "crear cuenta vuelve a ser una zona" "$NAV" \
-  "    FORGOT: 'forgot'," $'    FORGOT: \'forgot\',\n    REGISTER: \'register\','
+  "    LOGIN: 'login'," $'    LOGIN: \'login\',\n    REGISTER: \'register\','
 # Los cinco CTA de alta de la landing piden `register` desde fuera: sin el alias, un invitado cae en el índice en blanco.
 mutar js "el nombre register ya no lleva a la puerta" "$NAV" \
-  "const RETIRED_ZONES = { register: ZONES.LOGIN };" "const RETIRED_ZONES = {};"
+  "const RETIRED_ZONES = { register: ZONES.LOGIN, forgot: ZONES.LOGIN };" "const RETIRED_ZONES = { forgot: ZONES.LOGIN };"
 mutar js "abrir desde fuera se salta el alias de las zonas retiradas" "$CUENTA" \
-  "            const target = zoneFor(zone);" "            const target = zone;"
+  "            this.enter(zoneFor(zone));" "            this.enter(zone);"
 
 # ── Las puertas por URL y lo que viaja en el montaje (PHP) ─────────────────────────────────────────
 mutar php "/recuperar-contrasena vuelve a abrir la zona de recuperar" "$DOOR" \
@@ -175,8 +176,6 @@ mutar php "/registro abre una zona que ya no existe" "$DOOR" \
 mutar php "recuperar la contraseña vuelve a viajar sin sesión" "$BOOT" \
   "                ...(\$withGoogleSignup ? ['google' => __('account.google')] : [])," \
   "                'forgot' => __('account.forgot'), ...(\$withGoogleSignup ? ['google' => __('account.google')] : []),"
-mutar php "con sesión no viajan los textos de recuperar" "$BOOT" \
-  "                'forgot' => __('account.forgot')," ""
 mutar php "auth vuelve a viajar entero" "$BOOT" \
   "            'auth' => Arr::only(__('auth'), ['throttle'])," "            'auth' => __('auth'),"
 mutar php "el alta vuelve a llevar la contraseña en el montaje" "$BOOT" \

@@ -16,8 +16,8 @@ import { saveExport } from '../account/privacy.js';
  * de borrar tiene que estar bloqueado igual: el documento que se está componiendo es de una cuenta
  * que dejaría de existir a mitad, y no hay manera de explicarle eso al titular después.
  *
- * ⚠️ **RGPD/seguridad**: ni la contraseña ni el documento se guardan aquí. La contraseña vive en el
- * formulario mientras se escribe; el documento se entrega como fichero y **no se retiene** —guardarlo
+ * ⚠️ **RGPD/seguridad**: ni el código que confirma el borrado ni el documento se guardan aquí. El código vive en
+ * `stores/confirm.js` (A4b, `#813`); el documento se entrega como fichero y **no se retiene** —guardarlo
  * en un store dejaría la PII más densa del producto colgando de cualquier cosa que inspeccione el
  * estado, que es la misma regla por la que la cesta no persiste las respuestas del evento—.
  */
@@ -187,17 +187,17 @@ export const usePrivacyStore = defineStore('privacy', {
         },
 
         /**
-         * Borra la cuenta. Devuelve si salió.
+         * Borra la cuenta, con el código que lo confirma (A4b, `#813`; antes, la contraseña). Devuelve si salió.
          *
          * ⚠️ **Al volver `true` la sesión YA NO VALE**: el servidor revoca todas las credenciales del
          * titular, incluida la de esta petición. Quien llama tiene que sacar al cliente de la página
          * —todo lo que hay pintado alrededor habla de una cuenta que ya no existe—, y por eso esta
          * acción no intenta releer nada después.
          */
-        async deleteAccount({ currentPassword }, { api = httpClient, messages = {}, auth = {} } = {}) {
+        async deleteAccount({ code }, { api = httpClient, messages = {}, auth = {} } = {}) {
             return runForm(
                 this,
-                () => api.delete('/me', { current_password: currentPassword }),
+                () => api.delete('/me', { code }),
                 { messages, auth },
             );
         },

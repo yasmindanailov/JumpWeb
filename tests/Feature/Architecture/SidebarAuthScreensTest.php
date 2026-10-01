@@ -96,9 +96,10 @@ class SidebarAuthScreensTest extends TestCase
 
         $rutas = array_map(fn (string $r): string => str_replace(base_path().'/', '', $r), $plantillas);
 
-        // La puerta (A4a, `acceso-con-codigo.md` §4.11) en lugar del login con contraseña.
+        // La puerta (A4a, `acceso-con-codigo.md` §4.11) en lugar del login con contraseña, y la pieza que confirma con un
+        // código en Mi cuenta (A4b, `#813`) en lugar de recuperarla.
         $this->assertContains('resources/js/sidebar/steps/EntryForm.vue', $rutas);
-        $this->assertContains('resources/js/sidebar/account/zones/ForgotZone.vue', $rutas);
+        $this->assertContains('resources/js/sidebar/account/ConfirmCode.vue', $rutas);
     }
 
     /** Los dos antetítulos de la WEB siguen vivos y con quien los pinta. */

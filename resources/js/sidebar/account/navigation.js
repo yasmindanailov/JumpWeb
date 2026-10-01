@@ -23,20 +23,16 @@
  * en `lang/`, que es donde vive: renombrar la zona a `reservations` la confundiría con
  * `GET /me/reservations`, que es otra cosa —las PRÓXIMAS— y alimenta el índice.
  *
- * ⚠️ **Se añaden cuando existe su pantalla, no antes.** `PASSWORD` y `SESSIONS` entraron con el paso
- * 6b, `PROFILE` con el 7b y `PRIVACY` con el 8, cada una **después** de que su endpoint existiera.
- * Declarar una zona vacía «para dejarlo preparado» es el error que `#119` evitó a propósito.
- * ▶ Y el modelo no se ha tocado para añadirlas: entran en `ZONES` con su rótulo, que es exactamente
- * lo que §4.2 prometía. Con `PRIVACY` la tanda 2 queda cerrada y son **cinco zonas**.
+ * ⚠️ **Se añaden cuando existe su pantalla, no antes.** `SESSIONS` entró con el paso 6b, `PROFILE` con el 7b y
+ * `PRIVACY` con el 8, cada una **después** de que su endpoint existiera. Declarar una zona vacía «para dejarlo
+ * preparado» es el error que `#119` evitó a propósito. ▶ Y se van con su pantalla: `PASSWORD` (cambiar la contraseña) y
+ * `FORGOT` (recuperarla) salieron en la A4b (`acceso-con-codigo.md` §4.11, `#813`): en el cajón ya nadie entra con ella.
  */
 export const ZONES = {
     /** El índice: quién eres, tu próxima reserva y los accesos. Espeja `/mi-cuenta` + el bloque `.acct`. */
     HOME: 'home',
     /** «Mis reservas»: el historial con su detalle y el reintento. Espeja `/mi-cuenta/pedidos`. */
     ORDERS: 'orders',
-
-    /** Cambiar la contraseña (tanda 2 · paso 6b). Espeja el bloque de `/mi-cuenta`. */
-    PASSWORD: 'password',
 
     /** Cerrar sesión en los demás dispositivos. */
     SESSIONS: 'sessions',
@@ -76,16 +72,13 @@ export const ZONES = {
      */
     LOGIN: 'login',
 
-    /** Pedir el enlace para restablecer la contraseña (hasta la A4b: se llega desde las acciones que aún la piden). */
-    FORGOT: 'forgot',
-
     /**
      * **Completar un alta que viene de Google** (`specs/auth-con-google.md` §7).
      *
      * ⚠️ Es la única zona a la que **NO se llega desde otra**: se entra por su puerta
      * (`/registro/google`), que es donde aterriza el retorno de Google cuando no hay cuenta. Por eso
      * no está en `HOME_ENTRIES` ni en `ZONE_PARENTS` — su alcanzabilidad la da `GUEST_ZONES`, como
-     * las otras tres de auth.
+     * la puerta.
      */
     GOOGLE_SIGNUP: 'google-signup',
 
@@ -133,14 +126,12 @@ export const DEFAULT_ZONE = ZONES.HOME;
 export const ZONE_TITLE_KEYS = {
     [ZONES.HOME]: 'account.title',
     [ZONES.ORDERS]: 'orders.title',
-    [ZONES.PASSWORD]: 'account.password.title',
     [ZONES.SESSIONS]: 'account.sessions.title',
     [ZONES.PROFILE]: 'account.profile.title',
     [ZONES.PRIVACY]: 'account.privacy.title',
     [ZONES.DEPENDENTS]: 'account.dependents.title',
     [ZONES.CARD]: 'account.card.title',
     [ZONES.LOGIN]: 'login.title',
-    [ZONES.FORGOT]: 'forgot.title',
     [ZONES.GOOGLE_SIGNUP]: 'google.title',
     [ZONES.ORDERS_HISTORY]: 'orders.history.title',
     [ZONES.PURCHASES]: 'purchases.title',
@@ -171,46 +162,21 @@ export const ZONE_PARENTS = {
  *
  * ⚠️⚠️ Hasta el 2026-08-23 la guarda de alcanzabilidad decía que **toda** zona tenía que estar en
  * `HOME_ENTRIES`, porque «dentro del cajón no hay URL, así que el índice es la única puerta». Con las
- * tres de auth **eso deja de ser cierto**: se llega a ellas por RUTA —las puertas de
- * `Http\Sidebar\AccountDoor`— y entre sí, y **ninguna puede estar en el índice**, que solo lo ve
- * quien ya tiene sesión.
+ * de auth **eso deja de ser cierto**: se llega a ellas por RUTA —las puertas de
+ * `Http\Sidebar\AccountDoor`—, y **ninguna puede estar en el índice**, que solo lo ve quien ya tiene sesión.
  *
  * ▶ La guarda no se relaja: cambia de forma. Toda zona sigue teniendo que ser alcanzable, y ahora hay
  * **dos** puertas declaradas en vez de una. Sin esta lista, «alcanzable» se habría convertido en una
  * excepción escrita a mano en el test, que es donde se acaba metiendo cualquier cosa.
+ *
+ * ▶ Desde la A4b son dos: la puerta y el alta que vuelve de Google. Recuperar la contraseña se fue con ella (`#813`), y con
+ * su zona la SIEMBRA de «entrar» debajo (`parentZoneFor`, `DECISIONES #125`): era la única pantalla que la pedía.
  */
-export const GUEST_ZONES = [ZONES.LOGIN, ZONES.FORGOT, ZONES.GOOGLE_SIGNUP];
+export const GUEST_ZONES = [ZONES.LOGIN, ZONES.GOOGLE_SIGNUP];
 
 /** ¿Esta zona la ve alguien SIN sesión? Lo pregunta la sección para decidir por dónde entrar. */
 export function isGuestZone(value) {
     return GUEST_ZONES.includes(value);
-}
-
-/**
- * **La zona que debe quedar DEBAJO al entrar de fuera, o `null` si no hay ninguna.**
- *
- * ⚠️⚠️ Existe porque «volver» tiene que significar lo correcto desde los **tres** sitios por los que
- * se llega a recuperar contraseña, y no son el mismo caso:
- *
- *  · **desde la pantalla de entrar** — hay historia de verdad: `go()` la apila y «volver» la deshace;
- *  · **desde una PUERTA por URL** (`/recuperar-contrasena`) — el cliente llega en frío, sin historia
- *    dentro del cajón. Sin nada debajo, «volver a iniciar sesión» le sacaría al catálogo de compra, y
- *    ése no es el sitio que el rótulo promete. Se siembra `LOGIN`, que es la portada del invitado
- *    igual que `HOME` lo es de quien tiene sesión;
- *  · **desde el PASO 5 del embudo** — aquí lo correcto es justo lo contrario: no hay zona a la que
- *    volver, porque de donde viene **no es una zona**. Con la pila vacía, «volver» sale de la sección
- *    y devuelve la compra donde estaba, con su cesta. Por eso quien entra así **no siembra nada**, y
- *    por eso esta decisión es del que llama y no de `enter()`.
- *
- * ⚠️⚠️ **Solo recuperar contraseña siembra** (`DECISIONES #125`, decisión del owner): crear cuenta no es una pantalla
- * aparte sino una cara de la puerta —hasta la A4a lo era de una barra de pestañas; desde ella, del correo que decide—, así
- * que «Volver» desde ella no puede cambiar de cara: sale. Recuperar contraseña **sí** es una pantalla aparte.
- * ▶ **Desde la A4a ninguno de los orígenes de arriba llega ya a ella** (`acceso-con-codigo.md` §4.11): entrar no pide
- * contraseña y `/recuperar-contrasena` abre la puerta. Solo la abre, CON sesión, el aviso de las cuatro acciones que aún
- * la piden (`NoPasswordHint`), con `go()` y su historia. La siembra queda sin quien la pida y se va con la zona en la A4b.
- */
-export function parentZoneFor(zone) {
-    return zone === ZONES.FORGOT ? ZONES.LOGIN : null;
 }
 
 /**
@@ -222,7 +188,7 @@ export function parentZoneFor(zone) {
  */
 // ⚠️ «Mi carné» va TERCERO, tras las dos entradas de reservas y pedidos y antes de los ajustes: es lo
 // que el cliente enseña en la puerta, no algo que configura (§9.6 B·2).
-export const HOME_ENTRIES = [ZONES.ORDERS, ZONES.PURCHASES, ZONES.CARD, ZONES.PROFILE, ZONES.DEPENDENTS, ZONES.PASSWORD, ZONES.SESSIONS, ZONES.PRIVACY];
+export const HOME_ENTRIES = [ZONES.ORDERS, ZONES.PURCHASES, ZONES.CARD, ZONES.PROFILE, ZONES.DEPENDENTS, ZONES.SESSIONS, ZONES.PRIVACY];
 
 /**
  * **Las zonas que traen su PROPIO encabezado**, y por tanto no llevan el del armazón.
@@ -242,7 +208,7 @@ export const HOME_ENTRIES = [ZONES.ORDERS, ZONES.PURCHASES, ZONES.CARD, ZONES.PR
  *
  * @var {string[]}
  */
-const ZONES_WITH_OWN_HEADING = [ZONES.LOGIN, ZONES.FORGOT, ZONES.GOOGLE_SIGNUP];
+const ZONES_WITH_OWN_HEADING = [ZONES.LOGIN, ZONES.GOOGLE_SIGNUP];
 
 /** ¿Esta zona pinta ya su encabezado, y el armazón debe callarse? */
 export function bringsOwnHeading(zone) {
@@ -268,8 +234,10 @@ export function isZone(value) {
  * —la landing de una instancia— y dentro: los CINCO CTA de alta de la landing piden `register` (`AccountDoorWiringTest`).
  * Sin esto caerían en el índice (`DEFAULT_ZONE`), que un invitado ve con los rótulos EN BLANCO: los del área viajan solo
  * con sesión. Crear cuenta es desde la A4a una cara de la puerta: el correo decide.
+ * ▶ `forgot` sale en la A4b (`#813`) y lleva a la puerta por lo mismo, aunque hoy nadie la pida (medido: ni el producto
+ * ni la instancia); `password` no necesita entrada: cae en el índice, que es donde ya iba a parar quien tenía sesión.
  */
-const RETIRED_ZONES = { register: ZONES.LOGIN };
+const RETIRED_ZONES = { register: ZONES.LOGIN, forgot: ZONES.LOGIN };
 
 /** La zona a la que lleva un nombre pedido desde fuera: una retirada, a su sucesora; el resto, tal cual. */
 export function zoneFor(requested) {
@@ -346,15 +314,11 @@ export function createNavigation({ zone = DEFAULT_ZONE } = {}) {
          *
          * Lo llama quien ENTRA al área: la pila se vacía al salir (`specs/area-cliente.md` §4.2), de
          * modo que quien vuelve a entrar no arrastra el recorrido de la visita anterior — que ya no
-         * describe nada de lo que tiene delante.
+         * describe nada de lo que tiene delante. Sin nada debajo: desde fuera, «volver» SALE del área
+         * (hasta la A4b, recuperar la contraseña sembraba «entrar» debajo; se fue con ella, `#813`).
          */
-        reset(next = DEFAULT_ZONE, under = null) {
-            const target = isZone(next) ? next : DEFAULT_ZONE;
-
-            // ⚠️ `under` deja UNA zona debajo, para que «volver» signifique algo dentro del área en
-            // vez de salir de ella. Quién lo pide y por qué, en `parentZoneFor()`. Se ignora si no es
-            // una zona o si es la misma —una pila `[x, x]` haría que «volver» no se moviera—.
-            trail = isZone(under) && under !== target ? [under, target] : [target];
+        reset(next = DEFAULT_ZONE) {
+            trail = [isZone(next) ? next : DEFAULT_ZONE];
         },
     };
 }

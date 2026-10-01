@@ -33,40 +33,38 @@ return [
         'title' => 'Mi cuenta',
         'subtitle' => 'Gestiona tus datos, tu acceso y tu privacidad.',
         'wrong_password' => 'La contraseña actual no es correcta.',
-        // La salida de quien entró con Google y no tiene contraseña (art. 12.2, `#344`).
-        'no_password' => '¿Entraste con Google y no tienes contraseña? Créala y podrás hacer esto: te enviamos un enlace a tu correo.',
+        // Confirmar lo sensible de Mi cuenta con un código al correo (A4b del acceso con código, `#813`; antes, la
+        // contraseña): los textos que el owner ya vio en la isla (`isla.mi_cuenta.codigo`). La pista, el «no», «Pedir otro
+        // código» y su espera son los de `login.*`.
+        'confirm' => [
+            'for' => 'Para confirmarlo, te enviaremos un código a :email.',
+            'send' => 'Enviarme el código',
+        ],
         'profile' => [
             'title' => 'Tus datos',
-            'intro' => 'Actualiza tu nombre, teléfono e idioma. Si cambias el email, te enviaremos un enlace al nuevo buzón: el cambio se aplica al confirmarlo desde ahí.',
+            'intro' => 'Actualiza tu nombre, teléfono e idioma. Si cambias el correo, primero confirmas que eres tú con un código a tu correo de ahora; después, el nuevo con el suyo.',
             'name' => 'Nombre y apellidos',
             'email' => 'Email',
             'phone' => 'Teléfono',
             'locale' => 'Idioma',
-            'current_password' => 'Contraseña actual',
-            'email_change_hint' => 'Solo necesaria si cambias el email. El cambio NO se aplica hasta que lo confirmes desde el nuevo buzón (te enviaremos un enlace).',
             'save' => 'Guardar cambios',
             'saving' => 'Guardando…',
             'pending_email_title' => 'Cambio de email pendiente',
-            'pending_email_msg' => 'Te hemos enviado un enlace de confirmación a :email. Caduca en :minutes min. Mientras tanto, sigues usando :current.',
-            'pending_email_resend' => 'Reenviar enlace',
+            'pending_email_msg' => 'Falta confirmar :email con el código que le hemos enviado. El cambio caduca en :minutes min; hasta entonces sigues entrando con :current.',
+            'pending_email_confirm' => 'Confirmar el correo',
             'pending_email_cancel' => 'Cancelar cambio',
         ],
+        // Solo los dos de «ver la contraseña» del campo de la WEB (`components/ui/password-input`): cambiarla salió del cajón
+        // en la A4b (`#813`), como de la isla en su A3b.
         'password' => [
-            'title' => 'Cambiar contraseña',
-            'intro' => 'Usa una contraseña larga y única.',
-            'current' => 'Contraseña actual',
-            'new' => 'Nueva contraseña',
-            'confirm' => 'Repite la nueva contraseña',
-            'save' => 'Actualizar contraseña',
-            'saving' => 'Guardando…',
             'show' => 'Mostrar contraseña',
             'hide' => 'Ocultar contraseña',
         ],
         'sessions' => [
             'title' => 'Sesiones',
             'intro' => 'Si crees que alguien más usa tu cuenta, cierra la sesión en el resto de dispositivos.',
-            'current_password' => 'Contraseña actual',
-            'logout_others' => 'Cerrar sesión en los demás dispositivos',
+            // El de la isla (A4b, `#813`): el largo no cabía en el botón a 390 px (medido en la sonda de la A4b).
+            'logout_others' => 'Cerrar las otras sesiones',
             'working' => 'Cerrando…',
             // Las cuentas externas vinculadas y su salida (`specs/auth-con-google.md` §8).
             'identities_title' => 'Cuentas vinculadas',
@@ -104,7 +102,6 @@ return [
             'analytics_hint' => 'Solo si además aceptas «análisis» en el aviso de cookies. Al apagarlo desvinculamos lo registrado y pedimos su borrado a la herramienta de análisis, si la hay.',
             'delete_title' => 'Eliminar mi cuenta',
             'delete_intro' => 'Borraremos tu nombre, email, teléfono y contraseña de forma permanente, y cerraremos tu sesión. Por ley, conservamos los datos mínimos de tus pedidos (sin tu identidad) para la facturación. Esta acción no se puede deshacer.',
-            'delete_password' => 'Contraseña actual',
             'delete_confirm' => '¿Seguro que quieres eliminar tu cuenta? Esta acción es permanente.',
             // La pregunta de borrar la cuenta pasa a hacerse DENTRO del cajón (`#565`).
             'delete_confirm_yes' => 'Sí, eliminar',
@@ -263,17 +260,6 @@ return [
         'change_email' => 'Cambiar el correo',
         'submit' => 'Entrar',
         'submitting' => 'Entrando…',
-    ],
-
-    'forgot' => [
-        'title' => 'Recupera tu contraseña',
-        'intro' => 'Escribe tu email y te enviaremos un enlace para crear una nueva contraseña.',
-        'email' => 'Email',
-        'submit' => 'Enviar enlace',
-        'submitting' => 'Enviando…',
-        'back_to_login' => 'Volver a iniciar sesión',
-        'sent_title' => 'Revisa tu correo',
-        'sent_msg' => 'Si existe una cuenta con ese email, te hemos enviado un enlace para restablecer la contraseña. Revisa también la carpeta de spam.',
     ],
 
     'reset' => [

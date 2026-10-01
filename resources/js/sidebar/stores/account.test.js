@@ -5,6 +5,7 @@ import { ZONES, createNavigation } from '../account/navigation.js';
 import { SECTIONS } from '../section.js';
 import { useAccountStore } from './account.js';
 import { useSectionStore } from './section.js';
+import { useConfirmStore } from './confirm.js';
 
 /**
  * La red del store del área de cliente.
@@ -130,5 +131,40 @@ describe('entrar y salir', () => {
 
         assert.equal(store.zone, ZONES.LOGIN);
         assert.equal(section.active, SECTIONS.ACCOUNT);
+    });
+
+    test('y `forgot`, retirada en la A4b (`#813`), también a la puerta, sin nada debajo', () => {
+        const store = arranca();
+
+        store.openZone('forgot');
+
+        assert.equal(store.zone, ZONES.LOGIN);
+        assert.equal(store.canBack, false, 'desde fuera, «volver» sale del área');
+    });
+});
+
+describe('el código que confirma una acción (A4b, `#813`)', () => {
+    beforeEach(() => setActivePinia(createPinia()));
+
+    /** Es de la pantalla donde se pidió: en otra, ofrecería escribir un código que nadie pidió allí. */
+    test('se vacía al CAMBIAR de zona', () => {
+        const store = arranca(ZONES.SESSIONS);
+        const confirm = useConfirmStore();
+        Object.assign(confirm, { action: 'close_sessions', shown: true, code: '4829' });
+
+        store.go(ZONES.PRIVACY);
+
+        assert.equal(confirm.isShown('close_sessions'), false);
+        assert.equal(confirm.code, '');
+    });
+
+    test('y no al quedarse en la misma (lo escrito sigue ahí)', () => {
+        const store = arranca(ZONES.SESSIONS);
+        const confirm = useConfirmStore();
+        Object.assign(confirm, { action: 'close_sessions', shown: true, code: '4829' });
+
+        store.go(ZONES.SESSIONS);
+
+        assert.equal(confirm.code, '4829');
     });
 });

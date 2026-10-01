@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia';
 import { NEXT_CODE, NEXT_REGISTER, runCodeLogin, runDoor, runResend } from '../login.js';
 import { runRegister, CONTEXT_STANDALONE } from '../register.js';
-import { runForgot } from '../forgot.js';
 import { MAX_RESENDS, RESEND_COOLDOWN_SECONDS, nextSecond, resendGate } from '../account/verify.js';
 import { useWaiverStore } from './waiver.js';
 
@@ -17,8 +16,8 @@ export const STAGE_REGISTER = 'register';
  * El estado del paso 5 — **IDENTIFICARSE sin salir del cajón** (reorganización del SPA, 2026-08-22).
  *
  * ⚠️ **Ninguna regla de auth vive aquí.** A dónde lleva la puerta, qué «no» se enseña y si un alta
- * consiguió sesión lo deciden `login.js` (la puerta y el código, desde la A4a), `register.js` y `forgot.js`
- * —módulos planos con sus casos de `node --test`—; y los literales que el servidor manda los fijan
+ * consiguió sesión lo deciden `login.js` (la puerta y el código, desde la A4a) y `register.js` —módulos planos con sus
+ * casos de `node --test`; recuperar la contraseña se fue en la A4b—; y los literales que el servidor manda los fijan
  * `Api\V1\AuthCodeTest`, `AuthSessionTest` y `AuthRegistrationTest`. Este store guarda los campos, los avisos
  * del último intento y la CARA de la puerta (el correo, el código o el alta), y ofrece las secuencias de petición.
  *
@@ -55,26 +54,14 @@ const emptyForm = () => ({
 
 const NO_LOGIN_ERROR = () => ({ global: '', fields: {} });
 const NO_REGISTER_ERROR = () => ({ summary: [], fields: {} });
-const NO_FORGOT_ERROR = () => ({ global: '', fields: {} });
 
 export const useAuthStore = defineStore('auth', {
     state: () => ({
         form: emptyForm(),
 
-        /** Lo que enseña cada formulario del último intento (`login.js` · `register.js` · `forgot.js`). */
+        /** Lo que enseña cada formulario del último intento (`login.js` · `register.js`). */
         loginError: NO_LOGIN_ERROR(),
         registerError: NO_REGISTER_ERROR(),
-        forgotError: NO_FORGOT_ERROR(),
-
-        /**
-         * El enlace de recuperación **ya se pidió**: la pantalla pasa a «revisa tu correo».
-         *
-         * ⚠️ **Es lo único que separa las dos caras de esa zona, y tiene que seguir siéndolo.** El
-         * servidor responde 202 exista o no la cuenta (`SEC-06`), así que cualquier condición extra
-         * que se cuele aquí reconstruiría en el cliente el oráculo de enumeración que el servidor se
-         * cuida de no dar. Lo explica `forgot.js` y lo vigila su `node --test`.
-         */
-        forgotSent: false,
 
         /**
          * El correo del alta que está **esperando verificación**, y la pantalla que lo pinta.
@@ -161,14 +148,12 @@ export const useAuthStore = defineStore('auth', {
          *
          * ⚠️ Es lo que pide la zona de la puerta al montarse, y la diferencia con `reset()` importa: quien escribe su correo,
          * se va y vuelve **no tiene que escribirlo otra vez**. Lo que no puede sobrevivir a un cambio de pantalla es un aviso
-         * —que describiría un intento que ya no se ve—, el «ya te hemos enviado el enlace» ni el correo al que fue un código
-         * (PII): sin él, la puerta vuelve a su primera cara, y el código escrito se va con ella.
+         * —que describiría un intento que ya no se ve— ni el correo al que fue un código (PII): sin él, la puerta vuelve a su
+         * primera cara, y el código escrito se va con ella.
          */
         clearNotices() {
             this.loginError = NO_LOGIN_ERROR();
             this.registerError = NO_REGISTER_ERROR();
-            this.forgotError = NO_FORGOT_ERROR();
-            this.forgotSent = false;
             this.pendingEmail = '';
             this.resendsLeft = 0;
             this.resendSeconds = 0;
@@ -355,13 +340,7 @@ export const useAuthStore = defineStore('auth', {
             this.signupSiteKey = key || '';
         },
 
-        /**
-         * Deja la puerta y el alta en blanco, y en su primera cara. El código no se queda en memoria de más.
-         *
-         * ⚠️ **`forgotSent` también se limpia, y no es simetría gratuita**: es lo que impide que quien
-         * abra la pantalla de recuperar se encuentre el «revisa tu correo» de la visita anterior —o
-         * del cliente anterior, en una tablet compartida— sin haber pedido nada.
-         */
+        /** Deja la puerta y el alta en blanco, y en su primera cara. El código no se queda en memoria de más. */
         reset() {
             this.form = emptyForm();
             this.clearNotices();
@@ -493,33 +472,6 @@ export const useAuthStore = defineStore('auth', {
                 : await api.post('/me/email/resend', {});
 
             return { ok: response.ok === true, response };
-        },
-
-        /**
-         * Pide el enlace de recuperación. Devuelve el resultado tal cual lo compone `forgot.js`.
-         *
-         * ⚠️ Sigue hasta la A4b (`acceso-con-codigo.md` §4.11): la zona de recuperar ya solo se abre CON sesión, desde el
-         * aviso de quien no tiene contraseña en las cuatro acciones que aún la piden (`/recuperar-contrasena` abre la puerta).
-         * La guarda de reentrada es la MISMA `busy` que la de la puerta: dos peticiones de auth a la vez desde el mismo cajón
-         * no es un estado que nadie quiera razonar.
-         */
-        async requestPasswordLink({ api, messages, auth }) {
-            if (this.busy) {
-                return { ok: false, skipped: true };
-            }
-
-            this.busy = true;
-
-            try {
-                const result = await runForgot({ email: this.form.email, api, messages, auth });
-
-                this.forgotError = result.errors;
-                this.forgotSent = result.sent;
-
-                return result;
-            } finally {
-                this.busy = false;
-            }
         },
     },
 });

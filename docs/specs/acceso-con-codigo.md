@@ -1,14 +1,14 @@
 # [SPEC] Entrar con un código al correo — la contraseña del cliente se retira
 
 > Estado: ✅ aprobada (29-09: el owner contestó el §7) → **A1 ✅** (§4.8) · **A2 ✅** (§4.9) · **A3 ✅** (§4.10) · **A4a ✅**
-> (SPA, §4.11), sigue la A4b · Última actualización: 2026-10-01 ·
+> (SPA, §4.11) · **A4b ✅** (vista por el owner) · sigue la A5 (plataforma) · Última actualización: 2026-10-01 ·
 > Decisiones: `#847` (el owner: código al correo y Google; fuera la contraseña) · `#848` (el §7: una sola puerta, borrar
 > las contraseñas, 90 días, solo el código) · `#849` (corrige el 1: el registro NO espera al código, hay cola en la puerta) ·
 > `#853`/`#854` (la A1: el código en el servidor; el dispositivo recordado y `RGPD-06`) · `#855` (la A2a: reconfirmar con
 > un código; cada sesión atada al token) · `#856` (la A2b: el correo nuevo con su código, y a su buzón) · `#857` (la A3,
 > con las piezas de la isla: el owner) · `#810` (la A4a: recuperar sigue hasta la A4b, solo con sesión; `register` lleva a
 > la puerta) · `#811` (el `CodeInput` del diseño en el cajón) · `#812` (el código del cajón, como la isla; el servidor dice
-> la espera de verdad: el owner) ·
+> la espera de verdad: el owner) · `#813` (la A4b: Mi cuenta del cajón confirma con el `CodeInput`) ·
 > Carril: plataforma (el servidor, el contrato y la isla); el cajón, del SPA por buzón.
 
 ## §0 · Antes de tocar
@@ -27,9 +27,9 @@
   alta de hoy (`#31`): la acotan los límites de §4.2.
 - **Estado**: ✅ aprobada (`#848`). **A1 ✅** (29-09, `#853`/`#854`, §4.8) · **A2 ✅** (30-09, `#855`/`#856`, §4.9: reconfirmar
   con un código, cada sesión atada al token y el correo nuevo con su código) · **A3a ✅** (`#857`, §4.10: «Entra» y el alta
-  de la isla con el código; visto por el owner) · **A3b ✅** (los Ajustes de Mi cuenta con el código). La A4 (SPA), al
-  detalle en §4.11: **A4a ✅** (01-10, vista por el owner: entrar y alta en el cajón, con el `CodeInput` del diseño y
-  «Pedir otro código» como la isla; `#810`→`#812`); sigue la A4b (Mi cuenta con sesión).
+  de la isla con el código; visto por el owner) · **A3b ✅** (los Ajustes de Mi cuenta con el código). La A4 (SPA, §4.11),
+  vista por el owner: **A4a ✅** (entrar y el alta en el cajón, `#810`→`#812`) · **A4b ✅** (Mi cuenta confirma con un
+  código, `#813`). Sigue la A5 (plataforma): retirar la contraseña de los clientes.
 - **Invariantes**: `SEC-06` (se amplía al código), `RGPD-01` (la purga borra los códigos), `RGPD-06` (sin cambio de
   forma). Ningún fichero del `CRITICAL_RE`.
 
@@ -333,6 +333,54 @@ sonda en el navegador (en la local sirve el cajón: sin fila `sidebar.shell`) le
   sobre `site.css` no mordía por eso. (2) La casilla del descargo del alta llega con `GET /legal/waiver`, después de
   pintarse: mirarla al rellenar es una carrera (la perdió una corrida de tres a 390); la sonda lo sabe por el servidor.
   (3) La cuenta de pruebas tiene menores: tras entrar en la compra vuelve al carrito a asignarlos (`#202`), no a «Pagar».
+
+**La A4b al detalle** — `[DECIDIDO]` 2026-10-01 (`#813`; medido antes de codificar; vetable al ojo, como la A4a):
+- **Lo que hay** (medido): `PasswordZone` (cambiarla); `SessionsZone`, UN campo de contraseña para cerrar las otras y para
+  desvincular; `PrivacyZone`, la contraseña antes de la pregunta; `ProfileZone`, la contraseña si cambia el correo y el
+  pendiente con «Reenviar enlace»; `NoPasswordHint` en las cuatro lleva a `ForgotZone` (`forgot.js` y su parte de
+  `stores/auth.js`). Nadie de fuera abre `password` ni `forgot` (ni el producto ni la instancia). La isla llama del motor
+  `apply`, `run`, `resendPending`, `cancelPending`, `ensureIdentities` y `profileBody`, que no cambian de forma.
+- **La pieza** (`account/ConfirmCode.vue`): sin pedir, «Para confirmarlo, te enviaremos un código a …»; pedido, el
+  `CodeInput` de la A4a (diferido, el mismo trozo) con «Te hemos enviado un código de 6 cifras a …» («otro» al repetir), su
+  «no» y «Pedir otro código» siempre a mano, con la espera del servidor bajo el código si es pronto (`#812`). La petición,
+  pura en `account/confirm-code.js`; el estado (la acción, pedido, reenvíos, el código, su «no»), en `stores/confirm.js`:
+  uno para el área, que se vacía al CAMBIAR de zona (`stores/account.js::sync`); pedir el de otra acción anula el anterior,
+  como el servidor.
+- **El botón**: el principal de su formulario dice «Enviarme el código» hasta pedirlo y después la acción, apagado hasta
+  las seis cifras; la sexta la hace sola, como en la puerta (el `CodeInput`, `#861`). **SESSIONS**: «Cerrar las otras
+  sesiones» (✱ el de la isla: «Cerrar sesión en los demás dispositivos» no cabía en el botón a 390, medido en la sonda) con
+  el suyo; «Desvincular» de la fila conserva su nombre (es la fila), pide el suyo y lo escribe bajo la lista. **PRIVACY**: el código y después la pregunta de siempre (`ConfirmInline`): la sexta abre la pregunta, no
+  borra. **PROFILE**: con el correo cambiado, la pieza bajo el correo (al de AHORA) y «Guardar cambios» lo usa; pendiente,
+  el código del NUEVO en su aviso, «Confirmar el correo», «Pedir otro código» (`resendPending`) y «Cancelar cambio»;
+  confirmado, se relee el contexto de cuenta.
+- **Fuera**: `PASSWORD` (zona, icono, entrada del índice, textos, `changePassword`), `FORGOT` (zona, `forgot.js`, lo suyo
+  de `stores/auth.js`, la siembra de `parentZoneFor`, textos), `NoPasswordHint` y `PasswordInput`; del montaje con sesión,
+  `no_password`, `password`, `forgot` y los rótulos de contraseña de las tres zonas. `password` y `forgot` pedidos por su
+  nombre llevan al índice y a la puerta (`zoneFor`, como `register`). Los stores mandan `code` (la API la retira la A5).
+- **Textos**: los de la isla que el owner ya vio (`isla.mi_cuenta.codigo` y `.correo`), en las claves del cajón; la pista,
+  el «no», «Pedir otro código» y su espera, los de `login.*`, que ya viajan.
+- **Guardas**: `node --test` de `confirm-code.js`, `stores/confirm.js` y los stores re-apuntados; `SidebarMountTest` y
+  `SidebarBundleBudgetTest` (lo que sale contra lo que entra); arnés `scripts/mutar-cajon-a4b.sh` y sonda
+  `scripts/sonda-cajon-a4b.mjs`, con los códigos de Mailpit a 390 y 1280. ✱ Sin árbol congelado de la pieza: el contrato del
+  DOM renderiza los pasos de la COMPRA (`scripts/render-sidebar.mjs`) y ninguna zona de cuenta ha estado nunca bajo él;
+  meterlas es ampliar ese arnés, otra tarea. Las casillas ya están congeladas en la cara del código de la puerta.
+
+**La A4b ✅** (01-10; el owner la vio en vivo: «Visto bueno. Buen trabajo»):
+- **Lo nuevo**: `account/ConfirmCode.vue` (toma el correo del perfil si no se le da), `account/confirm-code.js`,
+  `stores/confirm.js` (`request`, `again`, `act` —pide o usa—, `ask` —pide o pregunta, para borrar—, `showNewEmail`) y, en el
+  perfil, `confirmPending` y `refresh`. Las tres zonas, reescritas sobre ellos (ninguna pasa de su techo de 40 líneas).
+- **Pesos**: el motor, 301,79 → 298,46 KiB (techo 302 → 299); el montaje con sesión, 10.926 → 9.867 B (techo 11.000 →
+  10.000); el anónimo no cambia (2.457 B).
+- **Guardas**: 133 casos de `node --test` en lo tocado (1.636 en total, JS); arnés `mutar-cajon-a4b.sh` **36/36** (un
+  mutante equivalente —añadía a la lista de privacidad claves que ya estaban— se cambió por el de los rótulos de sesiones);
+  el de la A4a, re-anclado, **43/43**; `sonda-cajon-a4b.mjs` **37 puntos a 390 y a 1280**, dos corridas seguidas limpias:
+  cerrar las otras con un SEGUNDO dispositivo que queda fuera (`/me` 401), desvincular una identidad sembrada, la pregunta
+  de borrar sin borrar, borrar DE VERDAD una cuenta desechable, y el correo cambiado de punta a punta (devuelto por tinker).
+  El punto «el texto cabe en el botón», con su control (con el texto largo, falla a 390).
+- ⚠️ **Medido por la sonda**: (1) «Pedir otro código» del correo NUEVO sale a la primera —el servidor cuenta los reenvíos, no
+  el código que salió con el cambio— y anula el anterior; el segundo, enseguida, espera. (2) El lector del buzón acepta lo
+  llegado hasta 2 s antes de pedirlo: con dos códigos seguidos al mismo buzón hay que esperar a uno DISTINTO. (3) La zona
+  pide las vinculadas una vez (`ensureIdentities`): una identidad sembrada a mitad no se ve sin recargar.
 
 ## 5. Impacto en invariantes
 

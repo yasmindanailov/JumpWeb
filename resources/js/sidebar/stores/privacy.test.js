@@ -107,42 +107,41 @@ describe('descargar mis datos', () => {
     });
 });
 
-describe('borrar la cuenta', () => {
+describe('borrar la cuenta (con un código: A4b, `#813`)', () => {
     beforeEach(() => setActivePinia(createPinia()));
 
-    test('manda la contraseña en el CUERPO del DELETE, y nada más', async () => {
+    test('manda el código en el CUERPO del DELETE, y nada más: ni rastro de la contraseña', async () => {
         const store = usePrivacyStore();
         const api = fakeApi({ '/me': { ok: true, status: 204, data: null, error: null } });
 
-        const ok = await store.deleteAccount({ currentPassword: 'la-mia' }, ctx(api));
+        const ok = await store.deleteAccount({ code: '482913' }, ctx(api));
 
         assert.equal(ok, true);
         assert.equal(api.llamadas[0].method, 'DELETE');
         assert.equal(api.llamadas[0].url, '/me');
-        // ⚠️ En el cuerpo y no en la URL: una contraseña por query acaba en los logs del servidor y
-        // en el historial del navegador.
-        assert.deepEqual(api.llamadas[0].body, { current_password: 'la-mia' });
+        // ⚠️ En el cuerpo y no en la URL: un código por query acaba en los logs del servidor y en el historial del navegador.
+        assert.deepEqual(api.llamadas[0].body, { code: '482913' });
     });
 
-    test('la contraseña equivocada vuelve por su campo, y la cuenta sigue ahí', async () => {
+    test('el código que no vale vuelve por su campo, y la cuenta sigue ahí', async () => {
         const store = usePrivacyStore();
 
-        const ok = await store.deleteAccount({ currentPassword: 'no-es' }, ctx(fakeApi({
+        const ok = await store.deleteAccount({ code: '000000' }, ctx(fakeApi({
             '/me': {
                 ok: false, status: 422, data: null, offline: false,
-                error: { code: 'validation_failed', message: '', fields: { current_password: ['No es correcta.'] } },
+                error: { code: 'validation_failed', message: '', fields: { code: ['El código no es correcto o ha caducado. Pide otro.'] } },
             },
         })));
 
         assert.equal(ok, false);
         assert.equal(store.done, false);
-        assert.deepEqual(store.fields, { current_password: ['No es correcta.'] });
+        assert.deepEqual(store.fields, { code: ['El código no es correcto o ha caducado. Pide otro.'] });
     });
 
     test('el límite se enseña con el MISMO texto que el login, no con uno nuevo', async () => {
         const store = usePrivacyStore();
 
-        await store.deleteAccount({ currentPassword: 'x' }, ctx(fakeApi({
+        await store.deleteAccount({ code: '482913' }, ctx(fakeApi({
             '/me': {
                 ok: false, status: 429, data: null, offline: false,
                 error: { code: 'too_many_requests', message: '', params: { retry_after: 42 } },
@@ -150,16 +149,6 @@ describe('borrar la cuenta', () => {
         })));
 
         assert.equal(store.notice, 'Espera 42 segundos.');
-    });
-
-    /** Ni la contraseña de reconfirmación se queda en el estado: vive en el formulario y se va con él. */
-    test('la contraseña no se guarda en el store', async () => {
-        const store = usePrivacyStore();
-
-        await store.deleteAccount({ currentPassword: 'secreto-larguísimo' },
-            ctx(fakeApi({ '/me': { ok: true, status: 204, data: null, error: null } })));
-
-        assert.equal(JSON.stringify(store.$state).includes('secreto-larguísimo'), false);
     });
 });
 

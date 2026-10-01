@@ -150,8 +150,12 @@ class SidebarBootTest extends ApiTestCase
             ->assertOk()
             ->assertValidResponse(200)
             ->assertJsonPath('userId', $holder->id)
-            // `forgot` viaja AQUÍ desde la A4a: la zona de recuperar se abre desde las cuatro que aún piden contraseña.
-            ->assertJsonStructure(['account' => ['account' => ['title', 'password', 'privacy', 'dependents', 'card'], 'orders', 'purchases', 'forgot'], 'locales', 'accountContext']);
+            // `confirm` desde la A4b (`#813`): lo sensible de Mi cuenta se confirma con un código al correo. Con él se fueron
+            // la contraseña (`password`), su aviso (`no_password`) y recuperarla (`forgot`).
+            ->assertJsonStructure(['account' => ['account' => ['title', 'confirm', 'privacy', 'dependents', 'card'], 'orders', 'purchases'], 'locales', 'accountContext'])
+            ->assertJsonMissingPath('account.forgot')
+            ->assertJsonMissingPath('account.account.password')
+            ->assertJsonMissingPath('account.account.no_password');
     }
 
     /**

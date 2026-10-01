@@ -346,22 +346,14 @@ final class SidebarBoot
             'account' => auth()->check() ? [
                 'account' => [
                     'title' => __('account.account.title'),
-                    // La salida de quien entró con Google y no tiene contraseña (`#344`): la pintan
-                    // las CUATRO pantallas que exigen contraseña. Va aquí —con sesión— porque ninguna
-                    // se ve sin haber entrado. El rótulo de su botón se reutiliza de `forgot.title`,
-                    // que con sesión viaja aquí mismo (desde la A4a, ya no para todos).
-                    'no_password' => __('account.account.no_password'),
+                    // Confirmar con un código al correo lo sensible de las tres zonas (A4b de `acceso-con-codigo.md`
+                    // §4.11, `#813`): la frase de antes de pedirlo y «Enviarme el código». La pista, el «no» y «Pedir
+                    // otro código» son los de `login`, que ya viajan para todos. Con él se fueron la contraseña
+                    // (`password`), su aviso para quien no la tiene (`no_password`) y recuperarla (`forgot`).
+                    'confirm' => __('account.account.confirm'),
                     // ⚠️ Los dos subgrupos que pintan las zonas de la tanda 2, ENTEROS y no podados
-                    // clave a clave: son 9 y 4 rótulos que la pantalla usa todos —etiqueta, ayuda,
-                    // botón y su estado «guardando»—, así que recortarlos sería trabajo de
-                    // mantenimiento sin ahorro.
-                    // ⚠️ El aviso de «no coinciden» se compone AQUÍ y no en el cliente: es
-                    // `validation.confirmed` de Laravel con su atributo interpolado, así que dice
-                    // exactamente lo mismo que la página web para el mismo caso. Componerlo en JS
-                    // habría sido una segunda redacción.
-                    'password' => __('account.account.password') + [
-                        'mismatch' => __('validation.confirmed', ['attribute' => __('account.account.password.new')]),
-                    ],
+                    // clave a clave: son rótulos que la pantalla usa todos —etiqueta, ayuda, botón y
+                    // su estado «guardando»—, así que recortarlos sería trabajo de mantenimiento sin ahorro.
                     'sessions' => __('account.account.sessions'),
                     'profile' => __('account.account.profile'),
                     // ⚠️ Privacidad SÍ va podado clave a clave, al revés que los tres de arriba: el
@@ -376,7 +368,7 @@ final class SidebarBoot
                     // «leer el texto» van en `register`, que ya viaja.
                     'privacy' => Arr::only(__('account.account.privacy'), [
                         'title', 'intro', 'consents_title', 'no_consents', 'export_btn',
-                        'delete_title', 'delete_intro', 'delete_password',
+                        'delete_title', 'delete_intro',
                         // ⚠️ **Los dos rótulos de la pregunta entran en `#565`**, cuando borrar la
                         // cuenta dejó de confirmarse con `window.confirm`. Sin ellos aquí la clave
                         // EXISTE en `lang/` y el botón sale MUDO — `t()` devuelve cadena vacía en
@@ -430,10 +422,6 @@ final class SidebarBoot
                 // `account/navigation.js`, y por el mismo motivo: la ruta `/mi-cuenta/pedidos` es un
                 // contrato que no se puede reasignar.
                 'purchases' => __('account.purchases'),
-                // Recuperar la contraseña, SOLO con sesión desde la A4a (`acceso-con-codigo.md` §4.11): la salida del aviso
-                // «¿no tienes contraseña?» de las cuatro acciones que aún la piden lleva a esa zona, y sin sesión ya no se
-                // llega a ella (se entra con un código). Se va con la zona en la A4b.
-                'forgot' => __('account.forgot'),
             ] : [],
             // Los idiomas que el selector del perfil ofrece, con su nombre nativo. Van solo CON
             // SESIÓN, como el resto de lo que solo pinta el área de cliente.

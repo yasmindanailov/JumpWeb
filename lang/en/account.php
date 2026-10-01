@@ -31,40 +31,34 @@ return [
         'title' => 'My account',
         'subtitle' => 'Manage your details, your access and your privacy.',
         'wrong_password' => 'Your current password is incorrect.',
-        // La salida de quien entró con Google y no tiene contraseña (art. 12.2, `#344`).
-        'no_password' => 'Signed in with Google and have no password? Create one and you will be able to do this: we send a link to your email.',
+        // Confirmar lo sensible de Mi cuenta con un código al correo (A4b, `#813`): los textos de la isla.
+        'confirm' => [
+            'for' => 'To confirm it, we’ll send a code to :email.',
+            'send' => 'Send me the code',
+        ],
         'profile' => [
             'title' => 'Your details',
-            'intro' => 'Update your name, phone and language. If you change your email, we will send a link to the new mailbox: the change is applied when you confirm it from there.',
+            'intro' => 'Update your name, phone and language. If you change your email, first you confirm it’s you with a code to your current email; then the new one with its own.',
             'name' => 'Full name',
             'email' => 'Email',
             'phone' => 'Phone',
             'locale' => 'Language',
-            'current_password' => 'Current password',
-            'email_change_hint' => 'Only needed if you change your email. The change does NOT apply until you confirm it from the new mailbox (we will send you a link).',
             'save' => 'Save changes',
             'saving' => 'Saving…',
             'pending_email_title' => 'Email change pending',
-            'pending_email_msg' => 'We sent a confirmation link to :email. It expires in :minutes min. In the meantime your account still uses :current.',
-            'pending_email_resend' => 'Resend link',
+            'pending_email_msg' => ':email still needs confirming with the code we sent it. The change expires in :minutes min; until then you keep signing in with :current.',
+            'pending_email_confirm' => 'Confirm the email',
             'pending_email_cancel' => 'Cancel change',
         ],
+        // Solo «ver la contraseña» del campo de la WEB: cambiarla salió del cajón en la A4b (`#813`).
         'password' => [
-            'title' => 'Change password',
-            'intro' => 'Use a long, unique password.',
-            'current' => 'Current password',
-            'new' => 'New password',
-            'confirm' => 'Repeat new password',
-            'save' => 'Update password',
-            'saving' => 'Saving…',
             'show' => 'Show password',
             'hide' => 'Hide password',
         ],
         'sessions' => [
             'title' => 'Sessions',
             'intro' => 'If you think someone else is using your account, log out on all other devices.',
-            'current_password' => 'Current password',
-            'logout_others' => 'Log out on other devices',
+            'logout_others' => 'Sign out the other sessions',
             'working' => 'Logging out…',
             // Las cuentas externas vinculadas y su salida (`specs/auth-con-google.md` §8).
             'identities_title' => 'Linked accounts',
@@ -93,7 +87,6 @@ return [
             'analytics_hint' => 'Only if you also allow «analytics» in the cookie notice. When you switch it off we unlink what was recorded and ask the analytics tool, if any, to delete it.',
             'delete_title' => 'Delete my account',
             'delete_intro' => 'We will permanently delete your name, email, phone and password, and log you out. By law we keep the minimum order data (without your identity) for invoicing. This cannot be undone.',
-            'delete_password' => 'Current password',
             'delete_confirm' => 'Are you sure you want to delete your account? This is permanent.',
             'delete_confirm_yes' => 'Yes, delete',
             'delete_confirm_no' => 'Cancel',
@@ -213,17 +206,6 @@ return [
         'change_email' => 'Change the email',
         'submit' => 'Sign in',
         'submitting' => 'Signing in…',
-    ],
-
-    'forgot' => [
-        'title' => 'Reset your password',
-        'intro' => 'Enter your email and we will send you a link to set a new password.',
-        'email' => 'Email',
-        'submit' => 'Send link',
-        'submitting' => 'Sending…',
-        'back_to_login' => 'Back to log in',
-        'sent_title' => 'Check your email',
-        'sent_msg' => 'If an account exists for that email, we have sent a link to reset the password. Check your spam folder too.',
     ],
 
     'reset' => [

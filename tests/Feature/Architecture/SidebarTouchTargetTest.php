@@ -62,7 +62,6 @@ class SidebarTouchTargetTest extends TestCase
         'addons__moreinfo' => '24 px: el «más info» de un complemento, dentro de una fila ya apretada',
         'auth__link' => '21 px: «¿olvidaste tu contraseña?», un botón con piel de enlace',
         'orders__gate-toggle' => '21 px: el desplegable de la puerta en «Mis pagos»',
-        'pwd-input__toggle' => '32 px: el ojo de la contraseña, ANCLADO dentro del campo — crecerlo toca su posicionamiento',
         'timestrip__nav timestrip__nav--next' => '32 px: la flecha de la tira de horas',
         'timestrip__nav timestrip__nav--prev' => 'hermana de la anterior, misma regla',
         'daystrip__nav daystrip__nav--next' => '32 px: la flecha de la tira de días',

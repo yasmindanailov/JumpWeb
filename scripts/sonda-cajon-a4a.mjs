@@ -15,8 +15,7 @@
  *      cinco cifras.
  *   3. Un código que no es se comprueba SOLO con la sexta cifra → su «no» bajo las casillas, y el código se vacía. El bueno →
  *      Mi cuenta. Sin la casilla, NINGUNA cookie de recuerdo.
- *   4. Con esa sesión, «Cambiar contraseña» → el aviso de quien no tiene una → «Recupera tu contraseña», con sus textos
- *      (desde la A4a viajan solo con sesión).
+ *   4. Con esa sesión, el índice ya no ofrece «Cambiar contraseña» (desde la A4b, `#813`: lo recorre `sonda-cajon-a4b.mjs`).
  *   5. `/recuperar-contrasena` y `/registro`, sin sesión, abren la PUERTA.
  *   6. La compra: `/entradas` → producto, día, hora y a la cesta → «ir a pagar» → la puerta en el paso 5; con la casilla
  *      MARCADA → la compra sigue (la cuenta de pruebas tiene menores: vuelve al carrito a asignarlos, `#202`), y queda la
@@ -239,15 +238,11 @@ async function recorrer(navegador, ventana, informe) {
         check('sin la casilla, NINGUNA cookie de recuerdo (`#858`)', ! galletas.some((c) => c.name.startsWith('remember_web_')), galletas.map((c) => c.name).join(', '));
         await captura(page, '3b-cuenta');
 
-        await page.locator('.acc-tile', { hasText: 'Cambiar contraseña' }).first().click();
-        const salida = puerta.locator('.form__hint button', { hasText: 'Recupera tu contraseña' });
-        await salida.waitFor({ timeout: 8000 }).catch(() => {});
-        await salida.click().catch(() => {});
-        await puerta.locator('#forgot-email').waitFor({ timeout: 8000 }).catch(() => {});
-        const recuperar = await texto(puerta.locator('.auth__title').first());
-        check('con sesión, el aviso de quien no tiene contraseña abre «Recupera tu contraseña» CON sus textos',
-            recuperar === 'Recupera tu contraseña' && (await texto(puerta.locator('.auth__submit'))) === 'Enviar enlace', `«${recuperar}»`);
-        await captura(page, '4-recuperar');
+        // Desde la A4b (`#813`) ni cambiar ni recuperar la contraseña: lo sensible de Mi cuenta se confirma con un código
+        // (lo recorre `sonda-cajon-a4b.mjs`).
+        const tarjetas = await page.locator('.acc-tile').allInnerTexts();
+        check('con sesión, el índice ya no ofrece «Cambiar contraseña» (A4b)', tarjetas.length > 0 && ! tarjetas.some((t) => /contraseña/i.test(t)),
+            tarjetas.map((t) => t.split('\n')[0]).join(' · '));
         await contexto.close();
     }
 

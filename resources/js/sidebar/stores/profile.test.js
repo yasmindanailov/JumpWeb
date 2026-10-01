@@ -50,25 +50,26 @@ describe('cargar el perfil', () => {
 describe('guardar el perfil', () => {
     beforeEach(() => setActivePinia(createPinia()));
 
-    test('⚠️ sin cambio de correo NO manda la contraseña', async () => {
+    test('⚠️ sin cambio de correo NO manda código', async () => {
         const store = useProfileStore();
         const api = fakeApi({ 'PATCH /me': ok(PERFIL) });
 
-        await store.apply({ name: 'Ana', email: 'ana@x.test', phone: '611', locale: 'es', currentPassword: '' }, ctx(api));
+        await store.apply({ name: 'Ana', email: 'ana@x.test', phone: '611', locale: 'es', code: '' }, ctx(api));
 
-        // El contrato la declara opcional porque solo hace falta al cambiar el correo; mandarla vacía
-        // la convertiría en un 422 por un campo que el cliente no tenía por qué rellenar.
+        // Solo hace falta al cambiar el correo; mandarlo vacío lo convertiría en un 422 por un campo que el cliente no tenía
+        // por qué rellenar.
         assert.deepEqual(api.llamadas[0].body, { name: 'Ana', phone: '611', locale: 'es', email: 'ana@x.test' });
         assert.equal(api.llamadas[0].method, 'PATCH');
     });
 
-    test('con cambio de correo SÍ la manda', async () => {
+    test('con cambio de correo SÍ manda el código, y nunca la contraseña (A4b, `#813`)', async () => {
         const store = useProfileStore();
         const api = fakeApi({ 'PATCH /me': ok(PERFIL) });
 
-        await store.apply({ name: 'Ana', email: 'nueva@x.test', phone: '600', locale: 'es', currentPassword: 'secreta' }, ctx(api));
+        await store.apply({ name: 'Ana', email: 'nueva@x.test', phone: '600', locale: 'es', code: '482913', currentPassword: 'vieja' }, ctx(api));
 
-        assert.equal(api.llamadas[0].body.current_password, 'secreta');
+        assert.equal(api.llamadas[0].body.code, '482913');
+        assert.equal('current_password' in api.llamadas[0].body, false);
     });
 
     test('⚠️ la respuesta REEMPLAZA el perfil: pedir un cambio de correo no cuesta otra petición', async () => {
@@ -76,25 +77,25 @@ describe('guardar el perfil', () => {
         const conPendiente = { ...PERFIL, pending_email: 'nueva@x.test', pending_email_expires_at: '2026-08-22T11:00:00Z' };
         const api = fakeApi({ 'PATCH /me': ok(conPendiente) });
 
-        await store.apply({ name: 'Ana', email: 'nueva@x.test', phone: '600', locale: 'es', currentPassword: 'secreta' }, ctx(api));
+        await store.apply({ name: 'Ana', email: 'nueva@x.test', phone: '600', locale: 'es', code: '482913' }, ctx(api));
 
         assert.equal(store.user.pending_email, 'nueva@x.test');
         assert.equal(api.llamadas.length, 1, 'ha hecho una segunda petición para enterarse de lo que ya sabía');
     });
 
-    test('la contraseña equivocada llega al campo y el perfil NO se toca', async () => {
+    test('el código que no vale llega a su campo y el perfil NO se toca', async () => {
         const store = useProfileStore();
         const api = fakeApi({ '/me': ok(PERFIL) });
         await store.ensure(ctx(api));
 
         api.patch = async () => ({
             ok: false, status: 422, data: null, offline: false,
-            error: { code: 'validation_failed', message: '', fields: { current_password: ['No es correcta.'] } },
+            error: { code: 'validation_failed', message: '', fields: { code: ['El código no es correcto o ha caducado. Pide otro.'] } },
         });
 
-        await store.apply({ name: 'Otro', email: 'nueva@x.test', phone: '600', locale: 'es', currentPassword: 'mal' }, ctx(api));
+        await store.apply({ name: 'Otro', email: 'nueva@x.test', phone: '600', locale: 'es', code: '000000' }, ctx(api));
 
-        assert.equal(store.fields.current_password[0], 'No es correcta.');
+        assert.equal(store.fields.code[0], 'El código no es correcto o ha caducado. Pide otro.');
         assert.equal(store.user.name, 'Ana', 'el perfil de pantalla se ha movido con un guardado que falló');
     });
 });
@@ -102,7 +103,7 @@ describe('guardar el perfil', () => {
 describe('la fecha de nacimiento al guardar (TP·1, `#792`)', () => {
     beforeEach(() => setActivePinia(createPinia()));
 
-    const FORM = { name: 'Ana', email: 'ana@x.test', phone: '611', locale: 'es', currentPassword: '' };
+    const FORM = { name: 'Ana', email: 'ana@x.test', phone: '611', locale: 'es' };
 
     async function sent(form) {
         const api = fakeApi({ 'PATCH /me': ok(PERFIL) });
@@ -173,6 +174,61 @@ describe('el ciclo del correo pendiente', () => {
         await store.resendPending(ctx(api));
 
         assert.equal(store.notice, 'Espera 42 segundos.');
+    });
+
+    test('`refresh()` relee el perfil aunque ya lo tenga (pedir otro código resella la caducidad)', async () => {
+        const store = useProfileStore();
+        const api = fakeApi({ '/me': ok({ ...PERFIL, pending_email: 'nueva@x.test', pending_email_expires_at: '2026-08-22T11:00:00Z' }) });
+
+        await store.ensure(ctx(api));
+        api.get = async () => ok({ ...PERFIL, pending_email: 'nueva@x.test', pending_email_expires_at: '2026-08-22T12:00:00Z' });
+        await store.refresh(ctx(api));
+
+        assert.equal(store.user.pending_email_expires_at, '2026-08-22T12:00:00Z');
+    });
+});
+
+describe('confirmar el correo NUEVO con su código (A2b; en el cajón, la A4b)', () => {
+    beforeEach(() => setActivePinia(createPinia()));
+
+    test('manda el código al endpoint del correo nuevo y coloca el perfil que devuelve', async () => {
+        const store = useProfileStore();
+        const cambiado = { ...PERFIL, email: 'nueva@x.test' };
+        const api = fakeApi({ 'POST /me/pending-email/confirm': ok(cambiado), 'GET /me/account-context': ok({ data: {} }) });
+
+        const done = await store.confirmPending('482913', ctx(api));
+
+        assert.equal(done, true);
+        assert.deepEqual(api.llamadas[0], { method: 'POST', url: '/me/pending-email/confirm', body: { code: '482913' } });
+        assert.equal(store.user.email, 'nueva@x.test');
+    });
+
+    test('el código que no vale vuelve por su campo', async () => {
+        const store = useProfileStore();
+        const api = fakeApi({ 'POST /me/pending-email/confirm': {
+            ok: false, status: 422, data: null, offline: false,
+            error: { code: 'validation_failed', message: '', fields: { code: ['El código no es correcto o ha caducado. Pide otro.'] } },
+        } });
+
+        assert.equal(await store.confirmPending('000000', ctx(api)), false);
+        assert.equal(store.fields.code[0], 'El código no es correcto o ha caducado. Pide otro.');
+    });
+
+    /**
+     * ⚠️ **Otra cuenta tomó el correo mientras tanto**: el «no» llega sobre `email`, que en «Tus datos» es el campo del correo
+     * de AHORA; bajo él diría que el tuyo está ocupado. Va arriba, como la isla.
+     */
+    test('el correo ya ocupado por otra cuenta va ARRIBA, no bajo el correo de ahora', async () => {
+        const store = useProfileStore();
+        const api = fakeApi({ 'POST /me/pending-email/confirm': {
+            ok: false, status: 422, data: null, offline: false,
+            error: { code: 'validation_failed', message: '', fields: { email: ['Ese email ya está en uso.'] } },
+        } });
+
+        await store.confirmPending('482913', ctx(api));
+
+        assert.equal(store.notice, 'Ese email ya está en uso.');
+        assert.equal(store.fields.email, undefined);
     });
 });
 

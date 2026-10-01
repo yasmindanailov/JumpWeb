@@ -603,9 +603,8 @@ class SidebarMountTest extends TestCase
         // revés que `orders`: son 8 rótulos y la pantalla los usa todos, así que podarlo clave a
         // clave sería mantenimiento sin ahorro. Que esté en esta lista es lo que impide que crezca
         // en silencio hasta ser el `__('account.orders')` de conveniencia que esta guarda persigue.
-        // ▶ `forgot` va AL FINAL desde la A4a: con sesión viaja con lo personal (la salida de las acciones que aún piden
-        // contraseña), y `array_replace` añade detrás lo que el anónimo ya no trae.
-        $this->assertSame(['close', 'login', 'register', 'nav', 'sidecart', 'account', 'verify', 'orders', 'purchases', 'forgot'], array_keys($boot['account'] ?? []));
+        // ▶ Sin `forgot` desde la A4b (`#813`): con la contraseña se fue recuperarla, también con sesión.
+        $this->assertSame(['close', 'login', 'register', 'nav', 'sidecart', 'account', 'verify', 'orders', 'purchases'], array_keys($boot['account'] ?? []));
         // ⚠️ `guest_minors` entra con la T3 del justificante (`#337`) y **la pantalla lo pinta**:
         // `GuestMinorsPanel.vue` usa sus cinco rótulos —el contador, la capacidad, los dos estados de
         // excepción y la frase del enlace—. Esta guarda es justo la que obliga a comprobarlo: crecer
@@ -615,7 +614,12 @@ class SidebarMountTest extends TestCase
             array_keys($boot['account']['purchases'] ?? []),
             'el grupo de «Mis pedidos» ha crecido: si la pantalla no pinta lo nuevo, hay que podarlo'
         );
-        $this->assertSame(['title', 'no_password', 'password', 'sessions', 'profile', 'privacy', 'dependents', 'card'], array_keys($boot['account']['account'] ?? []));
+        // ▶ `confirm` (la frase y «Enviarme el código») en lugar de `no_password` y `password` desde la A4b (`#813`).
+        $this->assertSame(['title', 'confirm', 'sessions', 'profile', 'privacy', 'dependents', 'card'], array_keys($boot['account']['account'] ?? []));
+        $this->assertSame(['for', 'send'], array_keys($boot['account']['account']['confirm'] ?? []));
+        // Y de las zonas, ni un rótulo de contraseña: la reconfirmación es un código (`login.*` pone la pista y el «no»).
+        $this->assertArrayNotHasKey('current_password', $boot['account']['account']['sessions'] ?? []);
+        $this->assertArrayNotHasKey('current_password', $boot['account']['account']['profile'] ?? []);
 
         // ⚠️ **Menores a cargo** (Fase 6 · C, `DECISIONES #199`) va ENTERO: 17 rótulos que la zona y
         // sus tarjetas pintan todos. La lista exacta es lo que impide que crezca en silencio — y lo
@@ -693,7 +697,7 @@ class SidebarMountTest extends TestCase
                 // T3 de las encuestas (`specs/encuestas.md` §4.3): el tercer interruptor de «Privacidad».
                 'surveys_label', 'surveys_hint',
                 'analytics_label', 'analytics_hint',
-                'delete_title', 'delete_intro', 'delete_password',
+                'delete_title', 'delete_intro',
                 // ⚠️ Los dos rótulos de la PREGUNTA entran en `#565`, cuando borrar la cuenta dejó de
                 // confirmarse con `window.confirm`. Sin ellos aquí el botón que borra la cuenta sale
                 // MUDO: `t()` devuelve cadena vacía en silencio (`#333`).
@@ -715,9 +719,6 @@ class SidebarMountTest extends TestCase
             'el cajón ha empezado a llevar su propia tabla de rótulos de consentimiento'
         );
 
-        // ⚠️ El aviso de «no coinciden» lo compone el SERVIDOR con `validation.confirmed`, para que
-        // diga lo mismo que la página web. Si desaparece, el cajón lo pintaría VACÍO y nada avisaría.
-        $this->assertNotSame('', (string) ($boot['account']['account']['password']['mismatch'] ?? ''));
         // ⚠️ `sidecart` ya NO es «solo el contador»: desde el 2026-08-23 lleva los rótulos del bloque
         // de cuenta y viaja **sin sesión también**, así que su contenido se asevera arriba, en el caso
         // del montaje anónimo. Aquí solo se comprueba que con sesión no ha crecido de más.
@@ -1017,8 +1018,11 @@ class SidebarMountTest extends TestCase
         // mismos textos que en el montaje anónimo, y por lo mismo: viajan para todos. La poda que falta es la de la A4b
         // (`forgot`, 410 B, más `account.password` y el aviso). **11.100 deja 73 B.**
         // ▶ **11.100 → 11.000 el 01-10, y BAJA**, por lo mismo que el anónimo (`#812`): medido **11.027 → 10.926 B**. **Deja 74.**
+        // ▶ **11.000 → 10.000 con la A4b (`#813`), la poda prometida**: fuera `forgot`, `account.password` y su aviso, y los
+        // rótulos de contraseña de las tres zonas; entra `confirm` (dos), y «Cerrar las otras sesiones» (el de la isla: el largo
+        // no cabía en el botón a 390). Medido **10.926 → 9.867 B (−1.059)**. **Deja 133.**
         $this->assertLessThan(
-            11000, $bytes,
+            10000, $bytes,
             "Los textos del montaje con sesión pesan {$bytes} B. Poda antes de subir el techo: el ".
             'grupo `account` entero son 9,6 kB, y la diferencia la paga cada página que el cliente abre.'
         );

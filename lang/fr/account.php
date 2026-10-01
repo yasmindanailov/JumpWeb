@@ -31,40 +31,34 @@ return [
         'title' => 'Mon compte',
         'subtitle' => 'Gérez vos informations, votre accès et votre confidentialité.',
         'wrong_password' => 'Votre mot de passe actuel est incorrect.',
-        // La salida de quien entró con Google y no tiene contraseña (art. 12.2, `#344`).
-        'no_password' => "Tu t'es connecté avec Google et tu n'as pas de mot de passe ? Crées-en un et tu pourras le faire : nous t'envoyons un lien par e-mail.",
+        // Confirmar lo sensible de Mi cuenta con un código al correo (A4b, `#813`): los textos de la isla.
+        'confirm' => [
+            'for' => 'Pour le confirmer, nous vous enverrons un code à :email.',
+            'send' => 'M’envoyer le code',
+        ],
         'profile' => [
             'title' => 'Vos informations',
-            'intro' => "Mettez à jour votre nom, téléphone et langue. Si vous changez d'e-mail, nous enverrons un lien à la nouvelle boîte : le changement est appliqué quand vous le confirmez depuis là-bas.",
+            'intro' => 'Mettez à jour votre nom, téléphone et langue. Si vous changez d’e-mail, vous confirmez d’abord que c’est vous avec un code à votre adresse actuelle ; ensuite, la nouvelle avec le sien.',
             'name' => 'Nom et prénom',
             'email' => 'E-mail',
             'phone' => 'Téléphone',
             'locale' => 'Langue',
-            'current_password' => 'Mot de passe actuel',
-            'email_change_hint' => "Nécessaire uniquement si vous changez d'e-mail. Le changement n'est PAS appliqué tant que vous ne le confirmez pas depuis la nouvelle boîte (nous vous enverrons un lien).",
             'save' => 'Enregistrer les modifications',
             'saving' => 'Enregistrement…',
             'pending_email_title' => "Changement d'e-mail en attente",
-            'pending_email_msg' => 'Nous avons envoyé un lien de confirmation à :email. Il expire dans :minutes min. En attendant, votre compte utilise toujours :current.',
-            'pending_email_resend' => 'Renvoyer le lien',
+            'pending_email_msg' => 'Il reste à confirmer :email avec le code que nous lui avons envoyé. Le changement expire dans :minutes min ; d’ici là, vous continuez à vous connecter avec :current.',
+            'pending_email_confirm' => 'Confirmer l’e-mail',
             'pending_email_cancel' => 'Annuler le changement',
         ],
+        // Solo «ver la contraseña» del campo de la WEB: cambiarla salió del cajón en la A4b (`#813`).
         'password' => [
-            'title' => 'Changer le mot de passe',
-            'intro' => 'Utilisez un mot de passe long et unique.',
-            'current' => 'Mot de passe actuel',
-            'new' => 'Nouveau mot de passe',
-            'confirm' => 'Répétez le nouveau mot de passe',
-            'save' => 'Mettre à jour le mot de passe',
-            'saving' => 'Enregistrement…',
             'show' => 'Afficher le mot de passe',
             'hide' => 'Masquer le mot de passe',
         ],
         'sessions' => [
             'title' => 'Sessions',
             'intro' => "Si vous pensez que quelqu'un d'autre utilise votre compte, déconnectez-vous sur les autres appareils.",
-            'current_password' => 'Mot de passe actuel',
-            'logout_others' => 'Se déconnecter des autres appareils',
+            'logout_others' => 'Déconnecter les autres sessions',
             'working' => 'Déconnexion…',
             // Las cuentas externas vinculadas y su salida (`specs/auth-con-google.md` §8).
             'identities_title' => 'Comptes liés',
@@ -93,7 +87,6 @@ return [
             'analytics_hint' => "Seulement si tu acceptes aussi «analyse» dans l'avis sur les cookies. Quand tu l'éteins, nous délions ce qui a été enregistré et demandons sa suppression à l'outil d'analyse, s'il y en a un.",
             'delete_title' => 'Supprimer mon compte',
             'delete_intro' => 'Nous supprimons définitivement votre nom, e-mail, téléphone et mot de passe, et vous déconnectons. Par obligation légale, nous conservons les données minimales de vos commandes (sans votre identité) pour la facturation. Cette action est irréversible.',
-            'delete_password' => 'Mot de passe actuel',
             'delete_confirm' => 'Voulez-vous vraiment supprimer votre compte ? Action définitive.',
             'delete_confirm_yes' => 'Oui, supprimer',
             'delete_confirm_no' => 'Annuler',
@@ -214,17 +207,6 @@ return [
         'change_email' => "Changer l'e-mail",
         'submit' => 'Se connecter',
         'submitting' => 'Connexion…',
-    ],
-
-    'forgot' => [
-        'title' => 'Réinitialisez votre mot de passe',
-        'intro' => 'Saisissez votre e-mail et nous vous enverrons un lien pour créer un nouveau mot de passe.',
-        'email' => 'E-mail',
-        'submit' => 'Envoyer le lien',
-        'submitting' => 'Envoi…',
-        'back_to_login' => 'Retour à la connexion',
-        'sent_title' => 'Vérifiez votre e-mail',
-        'sent_msg' => 'Si un compte existe pour cet e-mail, nous avons envoyé un lien pour réinitialiser le mot de passe. Vérifiez aussi vos spams.',
     ],
 
     'reset' => [

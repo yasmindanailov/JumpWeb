@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia';
 import { api as httpClient } from '../api.js';
 import { formState, runForm } from '../account/form-run.js';
+import { fieldError } from '../account/form-outcome.js';
+import { useAccountContextStore } from './accountContext.js';
 
 /**
  * El cuerpo de `PATCH /me` a partir de lo que el formulario trae.
@@ -12,15 +14,15 @@ import { formState, runForm } from '../account/form-run.js';
  * ⚠️ Vive AQUÍ y no en `account/profile.js`, medido: importarla de allí metía ese módulo entero en la descarga del motor
  * (+0,77 kB, `SidebarBundleBudgetTest`). Es una función pura y tiene sus casos en `profile.test.js`, sin Pinia.
  *
- * ⚠️ **`current_password` solo se manda si de verdad hay algo escrito.** El contrato la declara opcional porque solo hace
- * falta al cambiar el correo; mandarla vacía cuando no toca la convertiría en un 422 por un campo que no tocaba.
+ * ⚠️ **El `code` que confirma el cambio de correo solo viaja si lo hay** (A4b, `#813`; antes, `current_password`): solo
+ * hace falta al cambiar el correo, y mandarlo vacío cuando no toca sería un 422 por un campo que no tocaba.
  */
 export function profileBody(form) {
     const body = { name: form?.name, phone: form?.phone, locale: form?.locale, email: form?.email };
 
     if (form && 'born_on' in form) body.born_on = String(form.born_on ?? '').trim() || null;
 
-    if (form?.currentPassword) body.current_password = form.currentPassword;
+    if (form?.code) body.code = form.code;
 
     return body;
 }
@@ -36,8 +38,7 @@ export function profileBody(form) {
  * `pending_email` y su caducidad, así que pedir un cambio de correo **no cuesta una segunda
  * petición** y la pantalla se entera sola de que hay algo pendiente.
  *
- * ⚠️ **RGPD/seguridad**: la contraseña de reconfirmación no se guarda aquí. Vive en el formulario del
- * componente mientras se escribe y se limpia al salir bien.
+ * ⚠️ El código que confirma el cambio de correo no se guarda aquí: vive en `stores/confirm.js`, que lo vacía al salir.
  */
 export const useProfileStore = defineStore('profile', {
     state: () => ({
@@ -68,12 +69,40 @@ export const useProfileStore = defineStore('profile', {
             }
         },
 
+        /** Relee el perfil aunque ya lo tenga: pedir otro código del correo nuevo resella la caducidad del cambio. */
+        async refresh({ api = httpClient } = {}) {
+            const response = await api.get('/me');
+
+            if (response.ok) this.user = response.data;
+        },
+
         /**
-         * Guarda el perfil. Devuelve si salió. Qué viaja lo decide {@link profileBody}: la contraseña solo si hay algo
-         * escrito, y la fecha de nacimiento solo si el formulario la trae.
+         * Guarda el perfil. Devuelve si salió. Qué viaja lo decide {@link profileBody}: el código solo si lo hay, y la
+         * fecha de nacimiento solo si el formulario la trae.
          */
         async apply(form, { api = httpClient, messages = {}, auth = {} } = {}) {
             return this.run(() => api.patch('/me', profileBody(form)), { api, messages, auth });
+        },
+
+        /**
+         * **Confirma el correo NUEVO con su código** (`POST /me/pending-email/confirm`, A2b): el servidor devuelve el perfil
+         * ya con el correo cambiado. Devuelve si salió.
+         *
+         * ⚠️ Si otra cuenta tomó ese correo mientras tanto, el «no» llega sobre `email`, que en este formulario es el campo del
+         * correo de AHORA: allí diría algo falso, así que va arriba (como la isla). Al salir bien se relee el contexto de
+         * cuenta, que dice si el correo está confirmado.
+         */
+        async confirmPending(code, { api = httpClient, messages = {}, auth = {} } = {}) {
+            const done = await this.run(() => api.post('/me/pending-email/confirm', { code }), { api, messages, auth });
+
+            if (! done && this.fields?.email) {
+                this.notice = fieldError(this.fields, 'email');
+                this.fields = { ...this.fields, email: undefined };
+            }
+
+            if (done) useAccountContextStore().refresh({ api });
+
+            return done;
         },
 
         /** Cancela el cambio de correo pedido. */

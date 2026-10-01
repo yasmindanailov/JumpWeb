@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { DEFAULT_ZONE, GUEST_ZONES, HOME_ENTRIES, ZONES, ZONE_PARENTS, ZONE_TITLE_KEYS, bringsOwnHeading, createNavigation, isGuestZone, isZone, parentZoneFor, titleKeyOf, zoneFor } from './navigation.js';
+import { DEFAULT_ZONE, GUEST_ZONES, HOME_ENTRIES, ZONES, ZONE_PARENTS, ZONE_TITLE_KEYS, bringsOwnHeading, createNavigation, isGuestZone, isZone, titleKeyOf, zoneFor } from './navigation.js';
 import { FUNNEL_STEPS, FUNNEL_TRANSITIONS } from '../machine.js';
 
 /**
@@ -143,19 +143,17 @@ describe('el índice', () => {
     });
 });
 
-describe('qué significa «volver» según por dónde se entró', () => {
+describe('las zonas retiradas y «volver» desde fuera', () => {
     /**
-     * ⚠️⚠️ **Los tres orígenes de «recuperar contraseña» necesitan cosas distintas, y por eso esta
-     * regla existe** (`specs/auth-en-cajon.md` §3.4):
-     *  · desde la pantalla de ENTRAR hay historia de verdad y `go()` la apila;
-     *  · desde una PUERTA por URL el cliente llega en frío: sin nada debajo, «volver a iniciar
-     *    sesión» le sacaría al catálogo de compra, que no es lo que el rótulo promete;
-     *  · desde el PASO 5 del EMBUDO es al revés: de donde viene **no es una zona**, así que la pila
-     *    tiene que quedar vacía para que «volver» salga de la sección y devuelva la compra donde
-     *    estaba, con su cesta.
+     * ⚠️⚠️ **Cambiar y recuperar la contraseña ya NO son zonas** (A4b de `acceso-con-codigo.md` §4.11, `#813`): en el cajón
+     * ya nadie entra con ella. Con recuperar se fue la única pantalla que sembraba «entrar» debajo (`#125`).
      */
-    test('recuperar contraseña se siembra CON entrar debajo', () => {
-        assert.equal(parentZoneFor(ZONES.FORGOT), ZONES.LOGIN);
+    test('cambiar y recuperar la contraseña ya no son zonas', () => {
+        assert.equal('PASSWORD' in ZONES, false);
+        assert.equal('FORGOT' in ZONES, false);
+        assert.equal(isZone('password'), false);
+        assert.equal(isZone('forgot'), false);
+        assert.equal(HOME_ENTRIES.includes('password'), false, 'el índice ofrecería una pantalla que no existe');
     });
 
     /**
@@ -176,51 +174,20 @@ describe('qué significa «volver» según por dónde se entró', () => {
      */
     test('el nombre de una zona retirada lleva a su sucesora, y el resto pasa tal cual', () => {
         assert.equal(zoneFor('register'), ZONES.LOGIN);
+        assert.equal(zoneFor('forgot'), ZONES.LOGIN, 'recuperar, a la puerta: un invitado no ve el índice en blanco');
         assert.equal(zoneFor(ZONES.ORDERS), ZONES.ORDERS);
         assert.equal(zoneFor('no-existe'), 'no-existe');
     });
 
-    test('entrar no se siembra a sí misma', () => {
-        assert.equal(parentZoneFor(ZONES.LOGIN), null, 'una pila `[login, login]` dejaría «volver» sin efecto');
-    });
-
-    test('las zonas de la CUENTA no siembran nada: su portada es el índice', () => {
-        for (const zona of HOME_ENTRIES) {
-            assert.equal(parentZoneFor(zona), null, `«${zona}» no puede colgar de la pantalla de entrar`);
-        }
-    });
-
-    test('sembrar deja UNA zona debajo, y «volver» la alcanza', () => {
+    /** ⚠️ Desde fuera no queda nada debajo: «volver» NO se mueve dentro del área, y eso es lo que la hace salir. */
+    test('entrar de fuera deja la pila con una sola zona, y «volver» significa SALIR', () => {
         const nav = createNavigation();
-        nav.reset(ZONES.FORGOT, ZONES.LOGIN);
+        nav.go(ZONES.ORDERS);
+        nav.reset(ZONES.LOGIN);
 
-        assert.deepEqual(nav.trail, [ZONES.LOGIN, ZONES.FORGOT]);
-        assert.equal(nav.canBack, true);
-        assert.equal(nav.back(), true);
-        assert.equal(nav.zone, ZONES.LOGIN);
-    });
-
-    /** ⚠️ Sin sembrar, «volver» NO se mueve dentro del área — y eso es lo que la hace salir. */
-    test('sin sembrar, la pila queda vacía y «volver» significa SALIR', () => {
-        const nav = createNavigation();
-        nav.reset(ZONES.FORGOT);
-
-        assert.deepEqual(nav.trail, [ZONES.FORGOT]);
+        assert.deepEqual(nav.trail, [ZONES.LOGIN]);
         assert.equal(nav.canBack, false);
         assert.equal(nav.back(), false, '`false` es lo que el store traduce en salir a la compra');
-    });
-
-    test('sembrar la misma zona, o una que no existe, no ensucia la pila', () => {
-        const nav = createNavigation();
-
-        nav.reset(ZONES.LOGIN, ZONES.LOGIN);
-        assert.deepEqual(nav.trail, [ZONES.LOGIN], 'una pila `[x, x]` dejaría «volver» sin efecto visible');
-
-        nav.reset(ZONES.FORGOT, 'inventada');
-        assert.deepEqual(nav.trail, [ZONES.FORGOT]);
-
-        nav.reset(ZONES.FORGOT, null);
-        assert.deepEqual(nav.trail, [ZONES.FORGOT]);
     });
 });
 
@@ -351,26 +318,25 @@ describe('el encabezado propio de una zona', () => {
      * del paso 5 del embudo —que trae su propio `auth__title` porque allí no hay armazón— y la
      * sección ponía además el de la zona, con el MISMO literal.
      */
-    test('lo traen exactamente las pantallas de auth: la puerta, recuperar y el alta de Google', () => {
+    test('lo traen exactamente las pantallas de auth: la puerta y el alta de Google', () => {
         assert.equal(bringsOwnHeading(ZONES.LOGIN), true);
-        assert.equal(bringsOwnHeading(ZONES.FORGOT), true);
         assert.equal(bringsOwnHeading(ZONES.GOOGLE_SIGNUP), true);
     });
 
     /** Y ninguna otra: las zonas con sesión dependen del armazón para tener título. */
     test('ninguna zona con sesión lo trae', () => {
-        for (const zone of [ZONES.HOME, ZONES.ORDERS, ZONES.PROFILE, ZONES.PASSWORD, ZONES.SESSIONS, ZONES.PRIVACY]) {
+        for (const zone of HOME_ENTRIES.concat(ZONES.HOME)) {
             assert.equal(bringsOwnHeading(zone), false, `${zone} se quedaría SIN título`);
         }
     });
 
     /**
-     * ⚠️ **`titleKeyOf()` sigue devolviendo su clave para las tres**, y a propósito: el rótulo se usa
+     * ⚠️ **`titleKeyOf()` sigue devolviendo su clave para las dos**, y a propósito: el rótulo se usa
      * en más sitios que el encabezado. Atar las dos cosas dejaría sin nombre a quien solo quiere el
      * rótulo.
      */
     test('pero su rótulo sigue existiendo', () => {
-        for (const zone of [ZONES.LOGIN, ZONES.FORGOT]) {
+        for (const zone of [ZONES.LOGIN, ZONES.GOOGLE_SIGNUP]) {
             assert.ok(titleKeyOf(zone), `${zone} perdió su clave de rótulo`);
         }
     });

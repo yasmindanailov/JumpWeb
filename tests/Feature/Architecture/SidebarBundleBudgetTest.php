@@ -906,7 +906,10 @@ class SidebarBundleBudgetTest extends TestCase
     // techo, a 303.
     // ▶ **303 → 302 el 01-10, y BAJA**: el código, como la isla (`#812`, el owner): fuera la cuenta atrás de pedir otro (y su
     // formato), entra el «espera N segundos» del servidor. Medido 302,08 → 301,79.
-    private const SIDEBAR_CHUNK_MAX_KB = 302;
+    // ▶ **302 → 299 con la A4b (`#813`), y BAJA**: Mi cuenta confirma con un código —la pieza `account/ConfirmCode.vue`, su
+    // store y su petición; el `CodeInput` sigue bajando aparte, el mismo trozo que la puerta—, y salen cambiar y recuperar
+    // la contraseña (dos zonas, `forgot.js`, el aviso y `PasswordInput`). Medido 301,79 → 298,46.
+    private const SIDEBAR_CHUNK_MAX_KB = 299;
 
     // T3e·2: la compra de la isla, chunk diferido del motor que solo trae una instalación con la isla. Medido 93,36 KiB
     // (la sección, la pantalla 0, la isla y sus piezas); su hoja va aparte (7,2 KiB).

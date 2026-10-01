@@ -187,9 +187,8 @@ function runAction(action) {
  * reservas» y el resto, y no existe una pantalla de una sola reserva a la que mandar.
  *
  * ⚠️ **`openZone()` y no `showAccount()` + `go()`**: aquélla existe justo para «abrir el área EN una
- * zona viniendo de fuera de ella», y siembra la vuelta — sin ella, «volver» sacaría de la sección en
- * vez de llevar al índice de la cuenta. Escribirlo aquí a mano sería el tercer sitio donde recordar
- * que hay que sembrar `under`.
+ * zona viniendo de fuera de ella» —vacía la historia de la visita anterior y conmuta de sección—, y
+ * escribirlo aquí a mano sería el tercer sitio donde recordarlo.
  *
  * ⚠️ **El desenlace NO se barre**: si el cliente vuelve a la compra, su reserva creada sigue ahí. Eso
  * lo hace `addAnother()`, que es el gesto que dice «empiezo otra».

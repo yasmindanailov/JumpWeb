@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
-import { DEFAULT_ZONE, createNavigation, parentZoneFor, zoneFor } from '../account/navigation.js';
+import { DEFAULT_ZONE, createNavigation, zoneFor } from '../account/navigation.js';
 import { useSectionStore } from './section.js';
+import { useConfirmStore } from './confirm.js';
 
 /**
  * **La navegación del ÁREA DE CLIENTE**: en qué zona está y cómo se vuelve
@@ -41,8 +42,14 @@ export const useAccountStore = defineStore('account', {
             this.sync();
         },
 
-        /** Copia al estado lo que la navegación acaba de decidir. El único sitio que la lee. */
+        /**
+         * Copia al estado lo que la navegación acaba de decidir. El único sitio que la lee.
+         *
+         * ⚠️ Y al CAMBIAR de zona vacía el código que confirma una acción (A4b, `#813`): es de la pantalla donde se pidió, y
+         * enseñarlo en otra sería ofrecer escribir allí un código que nadie pidió.
+         */
         sync() {
+            if (this.zone !== this.nav.zone) useConfirmStore().reset();
             this.zone = this.nav.zone;
             this.canBack = this.nav.canBack;
         },
@@ -80,40 +87,29 @@ export const useAccountStore = defineStore('account', {
          * Entra al área por una zona, **vaciando la historia de la visita anterior**.
          *
          * Un recorrido de hace media hora no describe nada de lo que el cliente tiene delante ahora,
-         * y dejarlo haría que «volver» le llevara a una pantalla que no pidió (§4.2).
-         *
-         * ⚠️ **`under` deja una zona DEBAJO**, y quién lo pide lo decide `parentZoneFor()`: quien
-         * llega por una PUERTA a recuperar contraseña necesita que «volver» le lleve a entrar, y
-         * quien llega desde el paso 5 del embudo necesita justo lo contrario —salir de la sección y
-         * encontrarse la compra donde la dejó—. Con la pila vacía, «volver» sale.
+         * y dejarlo haría que «volver» le llevara a una pantalla que no pidió (§4.2). Con la pila vacía, «volver» sale: quien
+         * llega desde el paso 5 del embudo se encuentra la compra donde la dejó.
          */
-        enter(zone = DEFAULT_ZONE, { under = null } = {}) {
-            this.nav.reset(zone, under);
+        enter(zone = DEFAULT_ZONE) {
+            this.nav.reset(zone);
             this.sync();
         },
 
         /**
-         * **Abrir el área EN una zona, viniendo de fuera de ella** — sembrando su vuelta y conmutando
-         * de sección de una vez.
+         * **Abrir el área EN una zona, viniendo de fuera de ella** — y conmutando de sección de una vez.
          *
          * ⚠️ **Existe para que haya UNA implementación y no dos.** Lo piden dos sitios que llegan por
          * caminos distintos y necesitan exactamente lo mismo: el `showAccount()` que `index.js`
          * expone hacia fuera —las puertas por URL y los botones de la cabecera— y el **bloque de
          * cuenta del panel**, que desde el 2026-08-23 lo pinta Vue dentro del propio cajón
-         * (`specs/account-context-vue.md` §4.9). Escribirlo dos veces dejaría dos sitios donde
-         * recordar que hay que sembrar `under`, y olvidarlo en uno saca al cliente de la sección al
-         * pulsar «volver».
+         * (`specs/account-context-vue.md` §4.9).
          *
-         * ⚠️ **Siembra siempre**, porque quien llega así **no tiene historia dentro del área**: la
-         * regla y sus tres casos viven en `account/navigation.js::parentZoneFor()`.
-         *
-         * ⚠️ Y el nombre pedido pasa antes por `zoneFor()`: una zona retirada (`register`, desde la A4a) sigue llegando
-         * desde fuera —los CTA de alta, la API del paquete— y lleva a su sucesora, no al índice.
+         * ⚠️ Y el nombre pedido pasa antes por `zoneFor()`: una zona retirada (`register` desde la A4a, `forgot` desde la A4b)
+         * sigue llegando desde fuera —los CTA de alta, la API del paquete— y lleva a su sucesora, no al índice. Hasta la A4b
+         * además sembraba «entrar» debajo de recuperar la contraseña (`parentZoneFor`); se fue con esa zona (`#813`).
          */
         openZone(zone = DEFAULT_ZONE) {
-            const target = zoneFor(zone);
-
-            this.enter(target, { under: parentZoneFor(target) });
+            this.enter(zoneFor(zone));
 
             return useSectionStore().showAccount();
         },
