@@ -219,8 +219,27 @@ class MePendingEmailCodeTest extends ApiTestCase
             $this->travel(61)->seconds();
         }
 
-        $this->actingAs($user)->postJson(self::ROOT.'/me/pending-email/resend')->assertStatus(429);
+        $limit = $this->actingAs($user)->postJson(self::ROOT.'/me/pending-email/resend')->assertStatus(429);
+        $this->assertGreaterThan(60, (int) $limit->headers->get('Retry-After'), 'con los cinco de la hora gastados, la espera es la de la hora');
         Notification::assertSentToTimes($user, VerifyPendingEmail::class, EmailCodeLogin::MAX_PER_EMAIL_PER_HOUR);
+    }
+
+    /**
+     * ⚠️ Y reenviar dos veces seguidas dice la espera de SU ventana, no la de la hora, que corre con 1 de 5 y decía 3.599 s
+     * (`EmailCodeLogin::secondsToWait`, medido el 01-10).
+     */
+    public function test_resending_twice_in_a_row_says_the_short_wait_not_the_hour(): void
+    {
+        Notification::fake();
+        $user = $this->holder();
+        $user->forceFill(['pending_email' => self::NEW, 'pending_email_sent_at' => now()])->save();
+
+        $this->actingAs($user)->postJson(self::ROOT.'/me/pending-email/resend')->assertNoContent();
+        $limit = $this->actingAs($user)->postJson(self::ROOT.'/me/pending-email/resend')->assertStatus(429)->assertHeader('Retry-After');
+
+        $wait = (int) $limit->headers->get('Retry-After');
+        $this->assertGreaterThan(0, $wait);
+        $this->assertLessThanOrEqual(60, $wait, "reenviar enseguida dice que esperes {$wait} s (su ventana es de 60 s)");
     }
 
     /** La copia del registro de correos no guarda el código (`HidesSecretsInCopy`); el buzón nuevo lo recibe entero. */

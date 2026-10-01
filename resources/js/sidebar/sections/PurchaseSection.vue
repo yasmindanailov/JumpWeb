@@ -321,7 +321,6 @@ function goBack() {
             :privacy-url="urls.privacy ?? ''"
             :sent-to="authStore.codeSentTo"
             :resent="authStore.codeResent"
-            :wait="authStore.codeWait"
             @continue="requestCode"
             @enter="submitCode"
             @resend="resendCode"

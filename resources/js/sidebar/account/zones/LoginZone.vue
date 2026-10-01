@@ -62,7 +62,6 @@ async function enter() {
         :google-url="urls.google ?? ''"
         :sent-to="store.codeSentTo"
         :resent="store.codeResent"
-        :wait="store.codeWait"
         @continue="store.requestCode(texts())"
         @enter="enter"
         @resend="store.resendCode(texts())"

@@ -9,9 +9,10 @@
  *   1. `/login` sin sesión → la puerta en su primera cara: «Entra», el correo y «Continuar»; ni pestañas ni contraseña.
  *      Una errata («gmial.com») propone el correo bueno al salir del campo, y aceptarla lo escribe.
  *   2. «Continuar» con la cuenta de pruebas → la cara del código, con el `CodeInput` del diseño (`#861`): «Te hemos enviado
- *      un código de 6 cifras a …» con «Cambiar el correo» al lado, el foco en el campo, seis casillas con su guion, la pista
- *      con el negocio y los minutos de verdad, «Mantener la sesión iniciada…» SIN marcar, «Reenviar el código en m:ss» como
- *      texto y BAJANDO, y «Entrar» apagado con cinco cifras.
+ *      un código de 6 cifras a …» con «Cambiar el correo» al lado, el foco en el campo, seis casillas con su guion y sin decir
+ *      cuánto dura, «Mantener la sesión iniciada…» SIN marcar, «Pedir otro código» a mano desde el primer momento —como la
+ *      isla, `#812`: pulsado enseguida, «Espera N segundos…» bajo el código y el aviso sin «otro»— y «Entrar» apagado con
+ *      cinco cifras.
  *   3. Un código que no es se comprueba SOLO con la sexta cifra → su «no» bajo las casillas, y el código se vacía. El bueno →
  *      Mi cuenta. Sin la casilla, NINGUNA cookie de recuerdo.
  *   4. Con esa sesión, «Cambiar contraseña» → el aviso de quien no tiene una → «Recupera tu contraseña», con sus textos
@@ -54,10 +55,6 @@ if (tinker('echo App\\Domain\\Content\\Services\\ShellSettings::shell();') !== '
 
 /** Las cuentas de la sonda, fuera, con la purga del producto (no con un borrado a mano). Devuelve cuántas. */
 const anonimizarLasDeLaSonda = () => Number(tinker(`echo App\\Domain\\Identity\\Models\\User::where('email', 'like', 'sonda-a4a-%@jumpweb.test')->get()->each(fn ($u) => $u->anonymize())->count();`));
-
-/** Quién manda el correo del código y cuánto dura: la pista del `CodeInput` los dice, y los sabe el servidor. */
-const NEGOCIO = tinker('echo App\\Domain\\Platform\\Models\\Setting::businessName();');
-const MINUTOS = tinker('echo App\\Domain\\Identity\\Services\\LoginCodes::TTL_MINUTES;');
 
 /** El limitador de la API por IP (60 por minuto): la sonda hace muchas peticiones seguidas, y no puede decidir un 429. */
 const apiACero = () => tinker(`Illuminate\\Support\\Facades\\RateLimiter::clear(md5('api'.'ip:127.0.0.1'));`);
@@ -131,8 +128,9 @@ async function recorrer(navegador, ventana, informe) {
     const check = (nombre, ok, detalle = '') => informe.checks.push({ nombre, ok: Boolean(ok), detalle: String(detalle) });
     const errores = [];
     const malas = [];
-    // El «no» BUSCADO del código que no es (paso 3): se descuenta una vez.
+    // Los «no» BUSCADOS: el del código que no es (paso 3) y el del servidor al pedir otro antes del minuto (paso 2).
     let codigoMalo = 0;
+    let limitado = 0;
 
     const nueva = async () => {
         const contexto = await navegador.newContext({ viewport: { width, height }, ...tacto, locale: 'es-ES' });
@@ -148,6 +146,7 @@ async function recorrer(navegador, ventana, informe) {
             if (url.origin !== new URL(BASE).origin || ! url.pathname.startsWith('/api/') || r.status() < 400) return;
             if (r.status() === 401 && /^\/api\/v1\/me(\/[a-z-]+)?$/.test(url.pathname)) return;
             if ([401, 422].includes(r.status()) && url.pathname === '/api/v1/auth/login' && codigoMalo > 0) { codigoMalo -= 1; return; }
+            if (r.status() === 429 && url.pathname === '/api/v1/auth/code' && limitado > 0) { limitado -= 1; return; }
             malas.push(`${r.status()} ${r.request().method()} ${url.pathname}`);
         });
 
@@ -193,20 +192,24 @@ async function recorrer(navegador, ventana, informe) {
         check('con cuenta, la cara del código: el aviso con su correo, y el código en el buzón',
             enviado === `Te hemos enviado un código de 6 cifras a ${CLIENTE}.` && codigo !== null, `«${enviado}» · ${codigo ?? 'sin código en Mailpit'}`);
         check('el foco va al campo del código', await page.evaluate(() => document.activeElement?.id === 'login-code'));
-        const pista = await texto(puerta.locator('.code-input .form__hint'));
-        check('el `CodeInput` del diseño: seis casillas con su guion, y la pista con el negocio y lo que dura DE VERDAD el código',
+        check('el `CodeInput` del diseño: seis casillas con su guion, y sin decir cuánto dura el código (como la isla, `#812`)',
             (await puerta.locator('.code-input__box').count()) === 6 && (await puerta.locator('.code-input__dash').count()) === 1
-                && pista === `Te llega de ${NEGOCIO}. Caduca en ${MINUTOS} minutos; si no lo ves, mira en correo no deseado.`, `«${pista}»`);
+                && ! (await puerta.locator('.code-input .form__hint').count()));
         check('«Mantener la sesión iniciada en este dispositivo» nace SIN marcar (`#858`)',
             (await texto(puerta.locator('.auth__row'))) === 'Mantener la sesión iniciada en este dispositivo' && ! (await puerta.locator('.auth__row input[type="checkbox"]').isChecked()));
-        const espera = puerta.locator('.code-input .auth__switch');
-        const antes = await texto(espera);
-        await page.waitForTimeout(2200);
-        const despues = await texto(espera);
-        const segundos = (t) => { const m = /en (\d+):(\d{2})$/.exec(t); return m ? Number(m[1]) * 60 + Number(m[2]) : Number.NaN; };
-        check('«Reenviar el código» espera como TEXTO, en m:ss, y la cuenta BAJA',
-            ! (await espera.locator('button').count()) && segundos(antes) <= 60 && segundos(despues) < segundos(antes), `«${antes}» → «${despues}»`);
         check('y «Cambiar el correo» está junto al aviso', (await texto(puerta.locator('.auth__sent .auth__link'))) === 'Cambiar el correo');
+        // «Pedir otro código», siempre a mano como la isla: pulsado nada más llegar, el servidor dice que aún no (uno por minuto
+        // y correo), y el cajón lo dice bajo el código SIN dar por enviado otro.
+        const otro = puerta.locator('.code-input .auth__switch button');
+        check('«Pedir otro código» está a mano desde el primer momento', (await texto(otro)) === 'Pedir otro código' && await otro.isEnabled());
+        limitado += 1;
+        await otro.click();
+        const espera = puerta.locator('.code-input .form__error');
+        await espera.waitFor({ timeout: 8000 }).catch(() => {});
+        const segundos = Number(/^Espera (\d+) segundos para pedir otro código\.$/.exec(await texto(espera))?.[1] ?? Number.NaN);
+        check('pedido antes del minuto: «Espera N segundos…» bajo el código, y el aviso NO dice «otro»',
+            limitado === 0 && segundos > 0 && segundos <= 60
+                && (await texto(puerta.locator('.auth__sent [role="status"]'))) === `Te hemos enviado un código de 6 cifras a ${CLIENTE}.`, await texto(espera));
         await puerta.locator('#login-code').fill('48291');
         check('«Entrar» sigue apagado con cinco cifras', await puerta.locator('.auth__submit').isDisabled());
         await captura(page, '2-codigo');

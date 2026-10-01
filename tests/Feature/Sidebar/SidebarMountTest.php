@@ -8,8 +8,6 @@ use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\CustomerAccountContext;
-use App\Domain\Identity\Services\LoginCodes;
-use App\Domain\Platform\Models\Setting;
 use App\Http\Middleware\SetLocale;
 use App\Http\Sidebar\SidebarEntry;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -231,7 +229,7 @@ class SidebarMountTest extends TestCase
         // caras (el correo y el código) que pinta `EntryForm`.
         foreach ([
             'cta', 'title', 'intro', 'email', 'continue', 'sending', 'suggest',
-            'code', 'code_hint', 'code_sent', 'code_resent', 'code_again', 'code_again_in', 'code_wrong',
+            'code', 'code_sent', 'code_resent', 'code_again', 'code_wait', 'code_wrong',
             'remember', 'change_email', 'submit', 'submitting',
         ] as $key) {
             $this->assertNotSame(
@@ -240,16 +238,6 @@ class SidebarMountTest extends TestCase
                 '`i18n.js` devuelve cadena vacía cuando falta una clave, y nada avisa.'
             );
         }
-
-        // ⚠️ **La pista del código viaja YA COMPUESTA** (el `CodeInput` del diseño, `#861`): quién manda el correo y cuánto
-        // dura el código los sabe el servidor. Sin componer, el cajón pintaría «Te llega de :site» tal cual.
-        Setting::updateOrCreate(['key' => 'business.name'], ['value' => 'Parque Prueba', 'group' => 'business']);
-        Setting::flushMemo();
-        $hint = (string) ($this->bootPayload()['account']['login']['code_hint'] ?? '');
-        $this->assertStringContainsString('Parque Prueba', $hint, 'la pista no nombra al negocio que manda el correo');
-        $this->assertStringContainsString((string) LoginCodes::TTL_MINUTES.' minutos', $hint, 'la pista no dice lo que dura el código de verdad');
-        $this->assertStringNotContainsString(':', $hint, 'la pista viaja con un marcador sin sustituir');
-
         // ▶ Del grupo `auth`, solo la espera del limitador desde la A4a: `failed` era el «no» de la contraseña (el del
         // código es `login.code_wrong`) y `password` no lo leía nadie.
         $this->assertSame(['throttle'], array_keys($boot['auth'] ?? []), 'el grupo `auth` ha dejado de estar podado a lo que el cajón pinta');
@@ -587,8 +575,10 @@ class SidebarMountTest extends TestCase
         // diseño («Código de 6 cifras», «Reenviar el código», «El anterior ya no vale»). ⚠️ **Se buscó poda y no la hay**: la
         // puerta y el alta tienen que viajar para todos —la sesión que caduca con el cajón abierto vuelve a la puerta SIN
         // recargar (`AccountSection::signIn`)—. **2.650 deja 92**, la holgura de siempre.
+        // ▶ **2.650 → 2.550 el 01-10, y BAJA: el código, como la isla** (`#812`, el owner): fuera la pista de cuánto dura y la
+        // cuenta atrás de pedir otro (entra la espera que dice el servidor). Medido **2.558 → 2.457 B**: **2.550 deja 93**.
         $this->assertLessThan(
-            2650, $anonBytes,
+            2550, $anonBytes,
             "Los textos de auth del montaje anónimo pesan {$anonBytes} B. Es un presupuesto, no un ".
             'objetivo: si hace falta subirlo, súbelo a propósito sabiendo que viaja en cada página.'
         );
@@ -1026,8 +1016,9 @@ class SidebarMountTest extends TestCase
         // ▶ **10.900 → 11.100 con el `CodeInput` del diseño** (`#861`, la misma A4a): medido **10.889 → 11.027 B (+138)**, los
         // mismos textos que en el montaje anónimo, y por lo mismo: viajan para todos. La poda que falta es la de la A4b
         // (`forgot`, 410 B, más `account.password` y el aviso). **11.100 deja 73 B.**
+        // ▶ **11.100 → 11.000 el 01-10, y BAJA**, por lo mismo que el anónimo (`#812`): medido **11.027 → 10.926 B**. **Deja 74.**
         $this->assertLessThan(
-            11100, $bytes,
+            11000, $bytes,
             "Los textos del montaje con sesión pesan {$bytes} B. Poda antes de subir el techo: el ".
             'grupo `account` entero son 9,6 kB, y la diferencia la paga cada página que el cliente abre.'
         );

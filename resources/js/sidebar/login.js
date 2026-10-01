@@ -106,6 +106,31 @@ export async function runDoor({ email, api, messages = {}, auth = {}, account = 
 }
 
 /**
+ * «PEDIR OTRO CÓDIGO», al mismo correo: la puerta otra vez. Siempre a mano, como en la isla (`#812`): no hay cuenta atrás.
+ *
+ * ⚠️⚠️ **Aquí el tope del correo SÍ es un «no»**, al revés que en la puerta: allí `429` con `next: code` quiere decir «hay uno
+ * recién enviado, escríbelo»; aquí quiere decir que NO ha salido ninguno nuevo, y decir «te hemos enviado otro» mentiría.
+ * Dice cuánto esperar, bajo el código (el servidor admite uno por minuto y correo, `EmailCodeLogin`).
+ *
+ * @returns {Promise<{next: ?string, sent: boolean, response: object, errors: DoorErrors}>} `sent`: salió un código nuevo
+ */
+export async function runResend({ email, api, messages = {}, auth = {}, account = {} }) {
+    const door = await runDoor({ email, api, messages, auth, account });
+
+    if (door.response.ok) {
+        return { ...door, sent: door.next === NEXT_CODE };
+    }
+
+    if (door.response.error?.code === TOO_MANY_REQUESTS) {
+        const seconds = door.response.error?.params?.retry_after ?? 60;
+
+        return { next: null, sent: false, response: door.response, errors: { global: '', fields: { code: tp(account, 'login.code_wait', { n: seconds }) } } };
+    }
+
+    return { ...door, next: null, sent: false };
+}
+
+/**
  * ENTRAR con el código: el servidor abre la sesión y devuelve el perfil con la forma de `GET /me` (quien llama lo pasa por
  * la misma tubería de identidad, sin una petición más). El dispositivo queda RECORDADO solo con `remember` —la casilla
  * «Mantener la sesión iniciada en este dispositivo», SIN marcar de serie (`#858`)—: una cookie de autenticación

@@ -69,10 +69,15 @@ class MeConfirmationCodeTest extends ApiTestCase
 
         $this->actingAs($user)->postJson(self::ROOT.'/me/confirm-code', ['action' => 'close_sessions'])->assertStatus(202);
 
-        $this->actingAs($user)->postJson(self::ROOT.'/me/confirm-code', ['action' => 'close_sessions'])
+        $limit = $this->actingAs($user)->postJson(self::ROOT.'/me/confirm-code', ['action' => 'close_sessions'])
             ->assertStatus(429)
             ->assertValidResponse(429)
             ->assertHeader('Retry-After');
+
+        // ⚠️ La espera del MINUTO, el único límite agotado (`EmailCodeLogin::secondsToWait`): decía la de la hora, 3.599 s.
+        $wait = (int) $limit->headers->get('Retry-After');
+        $this->assertGreaterThan(0, $wait);
+        $this->assertLessThanOrEqual(60, $wait, "pedir otro antes del minuto dice que esperes {$wait} s");
 
         Notification::assertSentToTimes($user, ConfirmationCode::class, 1);
     }

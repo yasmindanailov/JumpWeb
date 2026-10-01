@@ -534,19 +534,19 @@ class SidebarDomContractTest extends TestCase
 
     /**
      * **La PUERTA, en su cara del CÓDIGO** (A4a): «Te hemos enviado un código a …» (`role="status"`: lo anuncia el lector
-     * sin robar el foco), el campo, «Mantener la sesión iniciada» sin marcar, «Entrar» y la fila de «Pedir otro código» —aquí
-     * DESHABILITADO, con la espera corriendo— y «Cambiar el correo». Sin Google: el correo ya está elegido. ⚠️ El caso le
-     * pasa la ida a Google A PROPÓSITO: sin ella el botón no se pinta en ninguna cara, y esconderlo aquí no se vería.
+     * sin robar el foco) con «Cambiar el correo», las seis casillas del `CodeInput` con «Pedir otro código» siempre a mano
+     * (como la isla, `#812`), «Mantener la sesión iniciada» sin marcar y «Entrar», apagado sin las seis cifras. Sin Google:
+     * el correo ya está elegido. ⚠️ El caso le pasa la ida a Google A PROPÓSITO: sin ella el botón no se pinta en ninguna
+     * cara, y esconderlo aquí no se vería.
      */
     public function test_the_code_face_of_the_door_emits_its_tree(): void
     {
-        $props = ['sentTo' => 'ana@example.com', 'wait' => 42, 'googleUrl' => 'https://example.test/auth/google'] + $this->identifyProps('code');
+        $props = ['sentTo' => 'ana@example.com', 'googleUrl' => 'https://example.test/auth/google'] + $this->identifyProps('code');
         $vue = $this->vueTree(5, $props, 'wiz__title', withSiblings: true);
 
         $this->assertTree(__FUNCTION__, $vue,
             "El árbol de la cara del CÓDIGO ha cambiado.\n".
-            'Ojo al `role="status"` del aviso y al `disabled` de «Pedir otro código» mientras corre la espera: son contrato '.
-            "(el servidor admite un código por minuto).\n\n"
+            'Ojo al `role="status"` del aviso y al `disabled` de «Entrar» sin las seis cifras: son contrato.'."\n\n"
         );
     }
 

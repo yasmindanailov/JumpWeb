@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { doorErrors, runCodeLogin, runDoor, INVALID_CREDENTIALS, NEXT_CODE, NEXT_REGISTER } from './login.js';
+import { doorErrors, runCodeLogin, runDoor, runResend, INVALID_CREDENTIALS, NEXT_CODE, NEXT_REGISTER } from './login.js';
 
 /**
  * La red de ENTRAR CON UN CÓDIGO en el cajón (A4a de `docs/specs/acceso-con-codigo.md` §4.11): la puerta, el código y el
@@ -12,7 +12,10 @@ const MESSAGES = { errors: { try_later: 'Espera un minuto y vuelve a intentarlo.
 
 const AUTH = { throttle: 'Demasiados intentos. Inténtalo de nuevo en :seconds segundos.' };
 
-const ACCOUNT = { login: { code_wrong: 'El código no es correcto o ha caducado. Pide otro.' } };
+const ACCOUNT = { login: {
+    code_wrong: 'El código no es correcto o ha caducado. Pide otro.',
+    code_wait: 'Espera :n segundos para pedir otro código.',
+} };
 
 const TEXTS = { messages: MESSAGES, auth: AUTH, account: ACCOUNT };
 
@@ -83,6 +86,44 @@ describe('la puerta: el correo decide', () => {
         const r = await runDoor({ email: 'ana@correo.es', api: fakeApi(offline()), ...TEXTS });
 
         assert.equal(r.next, null);
+        assert.equal(r.errors.global, MESSAGES.errors.try_later);
+    });
+});
+
+describe('pedir otro código (siempre a mano, como la isla: `#812`)', () => {
+    test('salió uno nuevo: `sent`, sin aviso, y al MISMO correo, recortado', async () => {
+        const api = fakeApi(ok({ next: 'code' }));
+
+        const r = await runResend({ email: ' ana@correo.es ', api, ...TEXTS });
+
+        assert.equal(r.sent, true);
+        assert.deepEqual(r.errors, { global: '', fields: {} });
+        assert.deepEqual(api.calls, [{ url: '/auth/code', body: { email: 'ana@correo.es' } }]);
+    });
+
+    /**
+     * ⚠️⚠️ **El tope del correo, AQUÍ, es un «no»**: en la puerta el `429` con `next: code` lleva al código sin aviso (hay uno
+     * recién enviado), pero al pedir OTRO no ha salido ninguno. Darlo por enviado haría esperar un correo que no llega.
+     */
+    test('antes del minuto (429 con `next: code`) NO se da por enviado: dice cuánto esperar, bajo el código', async () => {
+        const r = await runResend({ email: 'ana@correo.es', api: fakeApi(fail(429, { code: 'too_many_requests', params: { retry_after: 41, next: 'code' } })), ...TEXTS });
+
+        assert.equal(r.sent, false);
+        assert.equal(r.next, null);
+        assert.deepEqual(r.errors, { global: '', fields: { code: 'Espera 41 segundos para pedir otro código.' } });
+    });
+
+    test('la cuenta se borró entre los dos correos: no sale código, lleva al alta', async () => {
+        const r = await runResend({ email: 'ana@correo.es', api: fakeApi(ok({ next: 'register' })), ...TEXTS });
+
+        assert.equal(r.sent, false);
+        assert.equal(r.next, NEXT_REGISTER);
+    });
+
+    test('sin conexión: no salió nada, el genérico arriba', async () => {
+        const r = await runResend({ email: 'ana@correo.es', api: fakeApi(offline()), ...TEXTS });
+
+        assert.equal(r.sent, false);
         assert.equal(r.errors.global, MESSAGES.errors.try_later);
     });
 });

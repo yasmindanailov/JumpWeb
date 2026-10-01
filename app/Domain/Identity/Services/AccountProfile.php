@@ -207,7 +207,7 @@ class AccountProfile
         $hourKey = 'pending-email-resend-hour:'.$user->id;
 
         if (RateLimiter::tooManyAttempts($key, 1) || RateLimiter::tooManyAttempts($hourKey, EmailCodeLogin::MAX_PER_EMAIL_PER_HOUR)) {
-            return ResendResult::throttled(max(RateLimiter::availableIn($key), RateLimiter::availableIn($hourKey)));
+            return ResendResult::throttled(EmailCodeLogin::secondsToWait([$key => 1, $hourKey => EmailCodeLogin::MAX_PER_EMAIL_PER_HOUR]));
         }
 
         RateLimiter::hit($key, self::RESEND_WINDOW);

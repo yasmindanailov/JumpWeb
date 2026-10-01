@@ -904,7 +904,9 @@ class SidebarBundleBudgetTest extends TestCase
     // 302,08 (+0,27, lo que queda en el motor: la regla y la cara que lo usa). El componente (2,23 KiB) baja con SU cara
     // (`defineAsyncComponent`), tras «Continuar», que ya es una ida y vuelta al servidor; dentro del motor eran 304,01. El
     // techo, a 303.
-    private const SIDEBAR_CHUNK_MAX_KB = 303;
+    // ▶ **303 → 302 el 01-10, y BAJA**: el código, como la isla (`#812`, el owner): fuera la cuenta atrás de pedir otro (y su
+    // formato), entra el «espera N segundos» del servidor. Medido 302,08 → 301,79.
+    private const SIDEBAR_CHUNK_MAX_KB = 302;
 
     // T3e·2: la compra de la isla, chunk diferido del motor que solo trae una instalación con la isla. Medido 93,36 KiB
     // (la sección, la pantalla 0, la isla y sus piezas); su hoja va aparte (7,2 KiB).

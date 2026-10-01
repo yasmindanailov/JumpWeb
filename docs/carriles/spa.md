@@ -2,24 +2,24 @@
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb` a secas; la instancia al lado, en
 > `~/proyectos/instancias/playjump`, clon de `github.com/yasmindanailov/instancia-playjump`, montada el 25-09) ·
-> Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#811`** · La banda está dada de alta en la
+> Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#812`** · La banda está dada de alta en la
 > tabla de `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs:
 > **`acceso-con-codigo.md` §0** (la A4a ✅ en `main`; sigue la A4b) · `correos-rediseno.md` §0 ·
 > `fiesta-sistema-nuevo.md` §4.17 (`#806`) · `analitica-para-decidir.md` §0 (en pausa, `#755`) · `encuestas.md` §0 y §4.7
 > (`#754`) · `analitica.md` §0 y §4.5 · `isla-y-landing-nueva.md` §4.11 · `celebracion-e-invitacion.md` §0 ·
-> `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 · `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-10-01, 02:30
-> (la A4a, con el `CodeInput` del diseño, EN `main` con el visto bueno del owner; sigue la A4b).
+> `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 · `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-10-01, 08:00
+> (la A4a y su `#812`, el código como la isla, EN `main` con el visto bueno del owner; sigue la A4b).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`). El
 > contador de la suite va en el trailer del commit (`#618`), no aquí. **Se muda, no se raspa**: el detalle de
 > una feature baja a su spec (las trampas por tanda de la analítica T1→T5 viven en `analitica.md` §4.9,
 > mudadas verbatim el 24-09; las de la ficha de Google en su §9.1; las de la invitación en su §10.20).
 
-## Foto (2026-10-01, 02:00)
+## Foto (2026-10-01, 08:00)
 
-- ✅ **LA A4a, EN `main` con el visto bueno del owner** (01-10, «buen trabajo, visto bueno»; `#810`, `#811`;
+- ✅ **LA A4a, EN `main` con el visto bueno del owner** (01-10, «buen trabajo, visto bueno»; `#810`→`#812`;
   `acceso-con-codigo.md` §4.11): el cajón entra y crea cuenta con un código —la puerta, el `CodeInput` del diseño (`#861`),
   el alta sin contraseña ni teléfono, `/registro` y `/recuperar-contrasena` a la puerta, `register` → la puerta para los
-  CTA de alta—. Arnés `mutar-cajon-a4a.sh` 44/44; sonda `sonda-cajon-a4a.mjs` 27 puntos a 390 y 1280.
+  CTA de alta—; el código, como la isla, y el servidor dice la espera real (`#812`). Arnés 44/44; sonda 28 puntos ×2.
 
 - ✅ **LA LISTA DE INVITADOS DEL OWNER, EN `main` Y APROBADA** (`#805`, del `#847`; `fiesta-sistema-nuevo.md` §4.16; «vale,
   visto bueno»): todos confirmados, sin firmas de los invitados (el descargo de quien cumple, sí), sin cifras ni recordatorio
@@ -58,7 +58,7 @@
    tres tiempos como la isla; fuera `PASSWORD`, `NoPasswordHint`, `PasswordInput`, `FORGOT`, `forgot.js` y sus textos (siguen
    por `#810`), y con ellos la poda del montaje con sesión. Medir antes y escribir «la A4b al detalle»; en `wip/…`, su
    arnés (`mutar-cajon-a4a.sh` es el molde) y su sonda, y al ojo del owner. ⚠️ La A5 de plataforma ESPERA a la A4b.
-   ⚠️ Donde el diseño choca con el servidor manda el servidor (`#811`); si plataforma lo cambia en su Z6g, el cajón lo sigue.
+   ⚠️ El código, como la isla (`#812`): manda el servidor; si plataforma lo cambia en su Z6g, el cajón lo sigue.
 1b. **Lo del zip (6) que el owner repartió al SPA** (`#861`, buzón de plataforma 30-09 noche; `isla-y-landing-nueva.md`
    §4.27): la **Puerta** (el mostrador, `paginas/puerta/` y su brief), **`LinkIsland`** en la invitación, la lista y la
    autorización (fuera `RsvpBar` y `SaveBar`) y **la imagen de la invitación al compartir, GENERADA para cada una** (nombre,
@@ -198,7 +198,7 @@ el repo de la instancia (lo nuevo), nunca a `main`.
   node_modules/playwright-core/cli.js install chromium` (con `npx` cae en otra caché); `npm install` poda `playwright-core`.
 - `SidebarDomContractTest` renderiza el BUNDLE: `npm run build:ssr` antes de la suite, también tras traer
   commits del cajón, tras un arnés de mutación (restaura el árbol, no el bundle) **y siempre que toques un
-  `.vue`** (si no, 36 rojos que no son tuyos). Techo del chunk del motor **303** (la A4a, 01-10: 302,08).
+  `.vue`** (si no, 36 rojos que no son tuyos). Techo del chunk del motor **302** (`#812`, 01-10: 301,79).
 - ⚠️⚠️ **Un filtro que no ejecuta nada también sale ≠ 0**, y **Pint DESTROZA los nombres de método con
   palabras en MAYÚSCULAS** (`_UN_` → `_u_n_`): así se rompe un arnés **en silencio**. Los tests se nombran
   **sin mayúsculas**, y una mutación se cree tras ver el MISMO filtro en verde ejecutando su caso. Aseverar
@@ -246,8 +246,10 @@ el repo de la instancia (lo nuevo), nunca a `main`.
   Contrato: solo las descripciones de `SidebarBoot.account`/`auth` y `SidebarSession.account` (diccionarios abiertos, sin
   versión). (2) Del motor se van `login()`, `mode`/`setMode` y `startPasswordRecovery` del store `auth`, y `submitLogin` del
   flujo (llegan `requestCode`, `resendCode`, `submitCode`); tu `isla/compra/useDatosCompra.js` lo nombra en un comentario. Lo que
-  usas, sin cambio. (3) El `CodeInput` del cajón sigue al del zip salvo en tres cosas de TU servidor (`#811`: 60 s, un «no», 10
-  min); si las cambias en Z6g, avísame. (4) Los cinco CTA de alta de la landing piden `openAccount($event, 'register')`: el
+  usas, sin cambio. (3) `#812` (el owner): el código del cajón, como tu isla (sin cuenta atrás ni pista), y **TOQUÉ TU
+  SERVIDOR**: con solo el minuto agotado respondía `retry_after: 3599` (el `max()` contaba la ventana de la hora) en la puerta,
+  `requestConfirmationCode` y `resendPendingEmail`; ahora `EmailCodeLogin::secondsToWait`, límites sin cambio, con casos en
+  tus `AuthCodeTest`, `MeConfirmationCodeTest` y `MePendingEmailCodeTest`. Tu isla lo hereda. (4) Los cinco CTA de alta de la landing piden `openAccount($event, 'register')`: el
   motor lleva ese nombre a la puerta (`zoneFor`); si los tocas, `login` es el nombre de verdad.
 - Mis avisos a plataforma del 27→30-09 (`#754`/`#757`, la R1b, `#807`/`#808`, la R1·T —su aviso previo y el de `main`—, el
   rojo de `ManualOrderIgnoresMinAdvanceTest` y el previo de la A4): LEÍDOS por plataforma (su «Atendido»); retirados. El

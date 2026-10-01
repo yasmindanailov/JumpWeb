@@ -1,7 +1,7 @@
 <script setup>
 import { computed, defineAsyncComponent, ref } from 'vue';
 import { t as translate, tp as translateWith } from '../i18n.js';
-import { CODE_LENGTH, codeDigits, formatWait } from '../code-input.js';
+import { CODE_LENGTH, codeDigits } from '../code-input.js';
 import GoogleButton from './GoogleButton.vue';
 
 // El `CodeInput` baja con SU cara y no con el motor, que se descarga entero en la primera apertura
@@ -11,14 +11,14 @@ const CodeInput = defineAsyncComponent(() => import('./CodeInput.vue'));
 /**
  * **LA PUERTA del cajón, con un código al correo** (A4a de `docs/specs/acceso-con-codigo.md` §4.11, `#848`/`#849`): la
  * pintan el paso 5 de la compra y la zona de entrar de Mi cuenta, y sustituye a las dos pestañas de entrar y crear cuenta.
- * **Pinta y recoge; no decide nada**: a dónde lleva el correo, el «no» y la espera de «Reenviar el código» son de
- * `login.js` y `stores/auth.js`, con su `node --test`. La tercera cara —el alta, si el correo es nuevo— es `RegisterForm`.
+ * **Pinta y recoge; no decide nada**: a dónde lleva el correo, el «no» y «Pedir otro código» son de `login.js` y
+ * `stores/auth.js`, con su `node --test`. La tercera cara —el alta, si el correo es nuevo— es `RegisterForm`.
  *
  * ⚠️ **Dos caras en el MISMO sitio, sin pestañas** (`#849`): el correo y «Continuar»; con cuenta, «Te hemos enviado un
  * código de 6 cifras a …» con «Cambiar el correo» al lado, el `CodeInput` del diseño (`#861`: seis casillas, se comprueba
- * solo con la sexta, la pista, «Reenviar el código» con su espera), «Mantener la sesión iniciada en este dispositivo» SIN
- * marcar (`#858`) y «Entrar», apagado hasta tener las seis. Los textos del código, los del diseño; los de la puerta, los de
- * la isla que el owner ya vio (A3a, `#857`: «Continuar», porque un correo nuevo no recibe código, `#849`).
+ * solo con la sexta), «Pedir otro código» siempre a mano y sin decir cuánto dura el código —como la isla, `#812`—,
+ * «Mantener la sesión iniciada en este dispositivo» SIN marcar (`#858`) y «Entrar», apagado hasta tener las seis. Los de la
+ * puerta, los textos de la isla que el owner ya vio (A3a, `#857`: «Continuar», porque un correo nuevo no recibe código).
  *
  * ⚠️ Google va ARRIBA con su «o» (T8·d, `#350`), y solo en la primera cara: en la del código el correo ya está elegido.
  * ⚠️ «¿Querías decir…?» al salir del campo (`ui/correo.js`, la regla de todo el sistema): el correo de la puerta es el de la
@@ -40,8 +40,6 @@ const props = defineProps({
     /** El correo al que se mandó el código, y si ya fue OTRO. */
     sentTo: { type: String, default: '' },
     resent: { type: Boolean, default: false },
-    /** Segundos hasta poder pedir otro código (el servidor admite uno por minuto). */
-    wait: { type: Number, default: 0 },
 });
 
 const emit = defineEmits(['continue', 'enter', 'resend', 'change-email']);
@@ -90,11 +88,10 @@ const accept = () => { email.value = suggestion.value; suggestion.value = null; 
                     <button type="button" class="auth__link" @click="$emit('change-email')">{{ a('login.change_email') }}</button>
                 </p>
 
-                <!-- El `CodeInput` del diseño (`#861`): con la sexta cifra se comprueba solo; «Reenviar el código», dentro. -->
-                <CodeInput id="login-code" v-model="code" :label="a('login.code')" :hint="a('login.code_hint')"
-                           :error="fieldErrors.code ?? ''" :disabled="submitting" :wait="wait"
-                           :wait-label="translateWith(account, 'login.code_again_in', { t: formatWait(wait) })"
-                           :resend-label="a('login.code_again')" @complete="$emit('enter')" @resend="$emit('resend')" />
+                <!-- El `CodeInput` del diseño (`#861`): con la sexta cifra se comprueba solo; «Pedir otro código», dentro. -->
+                <CodeInput id="login-code" v-model="code" :label="a('login.code')" :error="fieldErrors.code ?? ''"
+                           :disabled="submitting" :resend-label="a('login.code_again')"
+                           @complete="$emit('enter')" @resend="$emit('resend')" />
 
                 <div class="auth__row">
                     <label class="check check--opt">

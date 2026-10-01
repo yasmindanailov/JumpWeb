@@ -4,9 +4,7 @@ namespace App\Http\Sidebar;
 
 use App\Domain\Content\Services\ShellSettings;
 use App\Domain\Identity\Services\GoogleAuth;
-use App\Domain\Identity\Services\LoginCodes;
 use App\Domain\Payments\Services\MarcasDePago;
-use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\Analytics\Experiments;
 use App\Domain\Platform\Services\SiteLocales;
 use Illuminate\Support\Arr;
@@ -128,13 +126,9 @@ final class SidebarBoot
                 // landing no tiene de dónde sacar el nombre accesible del botón de cerrar. Son 7 bytes y el
                 // camino es el de `lang/` (`account.close`), como el resto.
                 'close' => __('account.close'),
-                // La puerta y el código (A4a, `acceso-con-codigo.md` §4.11): el grupo entero, que `EntryForm` pinta todo. ⚠️ Y
-                // `code_hint` viaja YA compuesto, por lo mismo que `terms_link`: quién manda el correo y cuánto dura el código
-                // los sabe el servidor (`Setting::businessName()`, `LoginCodes::TTL_MINUTES`), y el cajón no tiene de dónde
-                // sacarlos. Escritos en `lang/` serían una segunda copia que mentiría al primer cambio.
-                'login' => array_replace(__('account.login'), [
-                    'code_hint' => __('account.login.code_hint', ['site' => Setting::businessName(), 'minutes' => LoginCodes::TTL_MINUTES]),
-                ]),
+                // La puerta y el código (A4a, `acceso-con-codigo.md` §4.11): el grupo entero, que `EntryForm` pinta todo. Sin
+                // decir cuánto dura el código, como la isla (`#812`).
+                'login' => __('account.login'),
                 // ⚠️ El texto de privacidad lleva un `<a href>` dentro y viaja **ya interpolado**: la
                 // URL la compone `route()`, y partirlo en «texto + enlace» obligaría al cliente a
                 // recomponer una frase traducida —que en francés y en inglés no ordena igual—. El

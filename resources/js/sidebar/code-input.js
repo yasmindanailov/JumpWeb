@@ -22,10 +22,3 @@ export function codeDigits(raw) {
 export function isNewlyComplete(digits, lastAnnounced) {
     return digits.length === CODE_LENGTH && digits !== lastAnnounced;
 }
-
-/** La espera de «Reenviar el código», como la dice el diseño: «0:58», «1:00». */
-export function formatWait(seconds) {
-    const s = Math.max(0, Math.floor(Number(seconds) || 0));
-
-    return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
-}

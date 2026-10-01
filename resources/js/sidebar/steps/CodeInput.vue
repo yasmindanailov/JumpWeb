@@ -11,7 +11,8 @@ import { CODE_LENGTH, codeDigits, isNewlyComplete } from '../code-input.js';
  * ⚠️ Con la sexta cifra avisa (`complete`), una vez por código. Si quien lo usa lo VACÍA (tras un «no»), vuelve a avisar.
  * ⚠️ Sin `maxlength`: el navegador cortaría lo pegado ANTES de quitar el guion, y «482-913» se quedaría en cinco cifras.
  * ⚠️ El campo va a 16 px aunque no se vea: por debajo, iOS amplía la página al enfocarlo.
- * «Reenviar el código» vive DENTRO, con su espera (`wait`, del store), para que no haya dos maneras de pedir otro.
+ * «Pedir otro código» vive DENTRO, para que no haya dos maneras de pedir otro; siempre a mano, como en la isla (`#812`): si
+ * es pronto, el servidor lo dice y su espera sale bajo las casillas, como cualquier «no».
  */
 const props = defineProps({
     id: { type: String, required: true },
@@ -20,9 +21,7 @@ const props = defineProps({
     hint: { type: String, default: '' },
     error: { type: String, default: '' },
     disabled: { type: Boolean, default: false },
-    /** Segundos hasta poder pedir otro; con ellos, `waitLabel`; a cero, el botón `resendLabel`. */
-    wait: { type: Number, default: 0 },
-    waitLabel: { type: String, default: '' },
+    /** El rótulo de «Pedir otro código»; sin él, no hay fila. */
     resendLabel: { type: String, default: '' },
 });
 
@@ -65,8 +64,7 @@ function write(event) {
         <span v-if="error" :id="message" class="form__error" role="alert">{{ error }}</span>
         <span v-else-if="hint" :id="message" class="form__hint">{{ hint }}</span>
         <p v-if="resendLabel" class="auth__switch">
-            <span v-if="wait > 0">{{ waitLabel }}</span>
-            <button v-else type="button" @click="emit('resend')">{{ resendLabel }}</button>
+            <button type="button" :disabled="disabled" @click="emit('resend')">{{ resendLabel }}</button>
         </p>
     </div>
 </template>

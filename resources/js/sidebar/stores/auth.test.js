@@ -15,7 +15,10 @@ import { MAX_RESENDS, RESEND_COOLDOWN_SECONDS, resendGate } from '../account/ver
 const MENSAJES = { errors: { try_later: 'Espera un minuto.' } };
 
 /** Los textos del cajón que la puerta pinta en sus «no». */
-const CUENTA = { login: { code_wrong: 'El código no es correcto o ha caducado. Pide otro.' } };
+const CUENTA = { login: {
+    code_wrong: 'El código no es correcto o ha caducado. Pide otro.',
+    code_wait: 'Espera :n segundos para pedir otro código.',
+} };
 
 const TEXTOS = { messages: MENSAJES, auth: {}, account: CUENTA };
 
@@ -38,8 +41,6 @@ function store() {
 
 afterEach(() => {
     ultimoStore?.stopResendCountdown?.();
-    // Y el de «Pedir otro código» (A4a), por lo mismo: un reloj vivo deja `node --test` colgado.
-    ultimoStore?.stopCodeWait?.();
     ultimoStore = null;
 });
 
@@ -134,7 +135,6 @@ describe('el store de identificarse', () => {
         assert.equal(a.form.email, '');
         assert.equal(a.stage, STAGE_EMAIL);
         assert.equal(a.codeSentTo, '');
-        assert.equal(a.codeWait, 0, 'y su reloj, parado');
         assert.equal(a.loginError.global, '');
     });
 
@@ -184,7 +184,7 @@ describe('el CONTEXTO del alta, que decide quien llama', () => {
 describe('la PUERTA: el correo decide (A4a, `#849`)', () => {
     const CODIGO = { '/auth/code': { ok: true, status: 200, data: { next: 'code' }, error: null } };
 
-    test('con cuenta: la cara del código, para el correo al que fue y con la espera de «Pedir otro» llena', async () => {
+    test('con cuenta: la cara del código, para el correo al que fue', async () => {
         const a = store();
         a.form.email = '  ana@correo.es ';
         const api = fakeApi(CODIGO);
@@ -195,7 +195,6 @@ describe('la PUERTA: el correo decide (A4a, `#849`)', () => {
         assert.equal(a.stage, STAGE_CODE);
         assert.equal(a.codeSentTo, 'ana@correo.es', 'el correo recortado: es el que se pinta y al que se entra');
         assert.equal(a.codeResent, false);
-        assert.equal(a.codeWait, RESEND_COOLDOWN_SECONDS, 'el servidor admite uno por minuto: antes, sería ofrecer un 429');
         assert.deepEqual(api.llamadas[0], { url: '/auth/code', body: { email: 'ana@correo.es' } });
     });
 
@@ -207,7 +206,6 @@ describe('la PUERTA: el correo decide (A4a, `#849`)', () => {
 
         assert.equal(a.stage, STAGE_REGISTER);
         assert.equal(a.codeSentTo, '');
-        assert.equal(a.codeWait, 0);
     });
 
     test('el tope del CORREO (429 con `next: code`) lleva al código SIN aviso: hay uno recién enviado', async () => {
@@ -284,22 +282,37 @@ describe('la PUERTA: el correo decide (A4a, `#849`)', () => {
         assert.equal(a.form.code, '482913', 'volver a pulsar «Entrar» tiene que bastar');
     });
 
-    test('«Pedir otro código»: solo con la espera a cero, al MISMO correo, y dice «otro»', async () => {
+    test('«Pedir otro código», siempre a mano (como la isla, `#812`): al MISMO correo, y dice «otro»', async () => {
         const a = store();
         a.showCode('ana@correo.es', false);
         a.form.email = 'cambiado@correo.es';
+        a.form.code = '48';
         const api = fakeApi(CODIGO);
 
-        assert.deepEqual(await a.resendCode({ api, ...TEXTOS }), { next: null, skipped: true }, 'con la espera corriendo, no');
-        assert.equal(api.llamadas.length, 0);
-
-        a.stopCodeWait();
         await a.resendCode({ api, ...TEXTOS });
 
         assert.deepEqual(api.llamadas[0].body, { email: 'ana@correo.es' });
         assert.equal(a.codeResent, true);
-        assert.equal(a.codeWait, RESEND_COOLDOWN_SECONDS, 'y la espera vuelve a empezar');
         assert.equal(a.form.code, '', 'el código anterior ya no vale: el campo, vacío');
+    });
+
+    /**
+     * ⚠️⚠️ **Antes del minuto NO ha salido ninguno**, y el servidor lo dice con un `429` que trae `next: code`. Con la regla de
+     * la PUERTA eso es «ve a escribirlo»; aquí sería decir «te hemos enviado otro» sin haberlo enviado.
+     */
+    test('pedirlo antes del minuto NO dice «otro»: dice cuánto esperar, bajo el código, y deja lo escrito', async () => {
+        const a = store();
+        a.showCode('ana@correo.es', false);
+        a.form.code = '48';
+        const limite = { ok: false, status: 429, data: null, error: { code: 'too_many_requests', params: { retry_after: 41, next: 'code' } } };
+
+        await a.resendCode({ api: fakeApi({ '/auth/code': limite }), ...TEXTOS });
+
+        assert.equal(a.codeResent, false);
+        assert.deepEqual(a.loginError, { global: '', fields: { code: 'Espera 41 segundos para pedir otro código.' } });
+        assert.equal(a.form.code, '48');
+        assert.equal(a.stage, STAGE_CODE);
+        assert.equal(a.busy, false);
     });
 
     test('«Cambiar el correo» vuelve a la primera cara y se lleva el código y el correo al que fue', () => {
@@ -315,7 +328,6 @@ describe('la PUERTA: el correo decide (A4a, `#849`)', () => {
         assert.equal(a.codeSentTo, '');
         assert.equal(a.codeResent, false);
         assert.equal(a.form.code, '');
-        assert.equal(a.codeWait, 0);
         assert.deepEqual(a.loginError, { global: '', fields: {} });
         assert.equal(a.form.email, 'ana@correo.es', 'el correo se queda escrito para corregirlo');
     });
@@ -334,7 +346,6 @@ describe('la PUERTA: el correo decide (A4a, `#849`)', () => {
 
         assert.equal(a.stage, STAGE_EMAIL);
         assert.equal(a.codeSentTo, '');
-        assert.equal(a.codeWait, 0);
         assert.equal(a.form.code, '', 'el código a medio escribir no sobrevive a un cambio de pantalla');
         assert.equal(a.form.email, 'ana@correo.es', 'el correo ESCRITO sí: quien vuelve no tiene que teclearlo otra vez');
     });

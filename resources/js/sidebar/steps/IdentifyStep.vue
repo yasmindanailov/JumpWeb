@@ -45,10 +45,9 @@ const props = defineProps({
     /** La política de privacidad, para la fila del alta (`#566`). */
     privacyUrl: { type: String, default: '' },
 
-    /** El correo al que fue el código, si ya fue OTRO y la espera de «Pedir otro código» (`stores/auth.js`). */
+    /** El correo al que fue el código, y si ya fue OTRO (`stores/auth.js`). */
     sentTo: { type: String, default: '' },
     resent: { type: Boolean, default: false },
-    wait: { type: Number, default: 0 },
 });
 
 // ⚠️ Sin `back`: el «Volver» de esta pantalla lo trae la banda desde `#555`.
@@ -97,7 +96,6 @@ const t = (key) => translate(props.messages, key);
         :google-url="googleUrl"
         :sent-to="sentTo"
         :resent="resent"
-        :wait="wait"
         @continue="$emit('continue')"
         @enter="$emit('enter')"
         @resend="$emit('resend')"

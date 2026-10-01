@@ -131,12 +131,18 @@ class AuthCodeTest extends ApiTestCase
 
         $this->postJson(self::ROOT.'/auth/code', ['email' => self::EMAIL])->assertOk();
 
-        $this->postJson(self::ROOT.'/auth/code', ['email' => self::EMAIL])
+        $limit = $this->postJson(self::ROOT.'/auth/code', ['email' => self::EMAIL])
             ->assertStatus(429)
             ->assertValidResponse(429)
             ->assertHeader('Retry-After')
             ->assertJsonPath('error.code', 'too_many_requests')
             ->assertJsonPath('error.params.next', 'code');
+
+        // ⚠️ La espera es la del MINUTO, el único límite agotado: la ventana de la hora corre con 1 de 5 y decía «espera una
+        // hora» (3.599 s; medido en la sonda del cajón el 01-10, `EmailCodeLogin::secondsToWait`).
+        $wait = (int) $limit->json('error.params.retry_after');
+        $this->assertGreaterThan(0, $wait);
+        $this->assertLessThanOrEqual(60, $wait, "pedir otro antes del minuto dice que esperes {$wait} s");
 
         Notification::assertSentToTimes($user, LoginCodeMail::class, 1);
 
@@ -156,9 +162,12 @@ class AuthCodeTest extends ApiTestCase
             $this->travel(61)->seconds();
         }
 
-        $this->postJson(self::ROOT.'/auth/code', ['email' => self::EMAIL])
+        $limit = $this->postJson(self::ROOT.'/auth/code', ['email' => self::EMAIL])
             ->assertStatus(429)
             ->assertJsonPath('error.params.next', 'code');
+
+        // Y con la HORA agotada, la de la hora: más de un minuto.
+        $this->assertGreaterThan(60, (int) $limit->json('error.params.retry_after'), 'con los cinco de la hora gastados, la espera es la de la hora');
 
         Notification::assertSentToTimes($user, LoginCodeMail::class, EmailCodeLogin::MAX_PER_EMAIL_PER_HOUR);
     }

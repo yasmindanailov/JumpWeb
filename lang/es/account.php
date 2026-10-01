@@ -250,14 +250,13 @@ return [
         'continue' => 'Continuar',
         'sending' => 'Enviando el código…',
         'suggest' => '¿Querías decir :email?',
-        // Los del CÓDIGO, del `CodeInput` del diseño (zip (6), `#861`). `:site` y `:minutes` los pone el servidor al montar el
-        // cajón (`SidebarBoot`, con el nombre del negocio y la vida del código): el diseño dice «15 minutos» y el código dura 10.
+        // Los del CÓDIGO: las casillas, del `CodeInput` del diseño (`#861`); pedir otro y su espera, como la isla (`#812`,
+        // los mismos textos que `isla.compra.datos`): siempre a mano, y si es pronto, lo que diga el servidor.
         'code' => 'Código de 6 cifras',
-        'code_hint' => 'Te llega de :site. Caduca en :minutes minutos; si no lo ves, mira en correo no deseado.',
         'code_sent' => 'Te hemos enviado un código de 6 cifras a :email.',
-        'code_resent' => 'Te hemos enviado otro a :email. El anterior ya no vale.',
-        'code_again' => 'Reenviar el código',
-        'code_again_in' => 'Reenviar el código en :t',
+        'code_resent' => 'Te hemos enviado otro código a :email.',
+        'code_again' => 'Pedir otro código',
+        'code_wait' => 'Espera :n segundos para pedir otro código.',
         'code_wrong' => 'El código no es correcto o ha caducado. Pide otro.',
         // `#858`: la casilla, SIN marcar de serie; los 90 días y la cookie los explica `/cookies`.
         'remember' => 'Mantener la sesión iniciada en este dispositivo',

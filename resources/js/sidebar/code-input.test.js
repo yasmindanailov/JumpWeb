@@ -1,10 +1,10 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { CODE_LENGTH, codeDigits, formatWait, isNewlyComplete } from './code-input.js';
+import { CODE_LENGTH, codeDigits, isNewlyComplete } from './code-input.js';
 
 /**
- * La red del `CodeInput` del cajón (A4a de `docs/specs/acceso-con-codigo.md` §4.11): lo que se queda de lo escrito, cuándo
- * avisa de que está completo y cómo dice la espera. La pieza que lo pinta no decide nada de esto.
+ * La red del `CodeInput` del cajón (A4a de `docs/specs/acceso-con-codigo.md` §4.11): lo que se queda de lo escrito y cuándo
+ * avisa de que está completo. La pieza que lo pinta no decide nada de esto.
  */
 describe('lo escrito o pegado', () => {
     test('pegar el código como lo trae el correo —con espacio o con guion— vale igual', () => {
@@ -38,19 +38,5 @@ describe('avisar de que está completo', () => {
     test('el MISMO código completo no vuelve a avisar; otro distinto, sí', () => {
         assert.equal(isNewlyComplete('482913', '482913'), false, 'cada aviso de más gasta uno de los cinco intentos');
         assert.equal(isNewlyComplete('482914', '482913'), true);
-    });
-});
-
-describe('la espera de «Reenviar el código»', () => {
-    test('en minutos y segundos, como el diseño', () => {
-        assert.equal(formatWait(58), '0:58');
-        assert.equal(formatWait(60), '1:00');
-        assert.equal(formatWait(5), '0:05');
-    });
-
-    test('sin espera, o con una rara, cero', () => {
-        assert.equal(formatWait(0), '0:00');
-        assert.equal(formatWait(-3), '0:00');
-        assert.equal(formatWait(undefined), '0:00');
     });
 });

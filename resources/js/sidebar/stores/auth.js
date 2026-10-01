@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { NEXT_CODE, NEXT_REGISTER, runCodeLogin, runDoor } from '../login.js';
+import { NEXT_CODE, NEXT_REGISTER, runCodeLogin, runDoor, runResend } from '../login.js';
 import { runRegister, CONTEXT_STANDALONE } from '../register.js';
 import { runForgot } from '../forgot.js';
 import { MAX_RESENDS, RESEND_COOLDOWN_SECONDS, nextSecond, resendGate } from '../account/verify.js';
@@ -129,14 +129,6 @@ export const useAuthStore = defineStore('auth', {
         codeResent: false,
 
         /**
-         * Segundos hasta poder «Pedir otro código», y su reloj. El servidor admite uno por minuto y correo: ofrecerlo antes
-         * sería ofrecer un 429. El reloj vive aquí y no en la pantalla por lo mismo que el del reenvío de la verificación
-         * (`SidebarComponentBudgetTest`, `#120(r)`): la secuencia se prueba con `node --test`.
-         */
-        codeWait: 0,
-        codeTicker: null,
-
-        /**
          * ¿El alta exige captcha en esta instalación? Sale de `GET /config` (`turnstile_site_key`).
          *
          * ⚠️ **No nulo ⟺ el anti-bot está ACTIVO**, y esa equivalencia costó un arreglo del contrato:
@@ -185,7 +177,6 @@ export const useAuthStore = defineStore('auth', {
             this.codeSentTo = '';
             this.codeResent = false;
             this.form.code = '';
-            this.stopCodeWait();
         },
 
         /**
@@ -222,11 +213,12 @@ export const useAuthStore = defineStore('auth', {
         },
 
         /**
-         * «Pedir otro código», al MISMO correo: la puerta otra vez. Solo cuando la espera llegó a cero —el servidor admite
-         * uno por minuto y correo—, y el rótulo pasa a «Te hemos enviado otro código a …».
+         * «Pedir otro código», al MISMO correo, siempre a mano como en la isla (`#812`): sin cuenta atrás. Si salió uno nuevo,
+         * el rótulo pasa a «Te hemos enviado otro código a …»; si el servidor dice que aún no (uno por minuto y correo), su
+         * espera bajo el código y NADA más cambia: no ha salido ninguno (`login.js::runResend`).
          */
         async resendCode({ api, messages, auth, account }) {
-            if (this.busy || this.codeWait > 0 || this.codeSentTo === '') {
+            if (this.busy || this.codeSentTo === '') {
                 return { next: null, skipped: true };
             }
 
@@ -234,10 +226,10 @@ export const useAuthStore = defineStore('auth', {
 
             try {
                 const email = this.codeSentTo;
-                const result = await runDoor({ email, api, messages, auth, account });
+                const result = await runResend({ email, api, messages, auth, account });
 
                 this.loginError = result.errors;
-                if (result.next === NEXT_CODE) {
+                if (result.sent) {
                     this.showCode(email, true);
                 } else if (result.next === NEXT_REGISTER) {
                     // La cuenta dejó de existir entre los dos correos (se borró): lo que queda es darse de alta.
@@ -276,13 +268,12 @@ export const useAuthStore = defineStore('auth', {
             }
         },
 
-        /** La cara del código para ese correo, con la espera de «Pedir otro código» llena. */
+        /** La cara del código para ese correo: el código anterior ya no vale, así que el campo, vacío. */
         showCode(email, resent) {
             this.stage = STAGE_CODE;
             this.codeSentTo = email;
             this.codeResent = resent;
             this.form.code = '';
-            this.startCodeWait();
         },
 
         /**
@@ -296,23 +287,6 @@ export const useAuthStore = defineStore('auth', {
             this.form.code = '';
             this.loginError = NO_LOGIN_ERROR();
             this.registerError = NO_REGISTER_ERROR();
-            this.stopCodeWait();
-        },
-
-        /** Arranca (o reinicia) la espera de «Pedir otro código». Siempre para la anterior: dos relojes la gastarían al doble. */
-        startCodeWait() {
-            this.stopCodeWait();
-            this.codeWait = RESEND_COOLDOWN_SECONDS;
-            this.codeTicker = setInterval(() => { this.codeWait = nextSecond(this.codeWait); }, 1000);
-        },
-
-        /** Para el reloj de la espera. Un temporizador huérfano no muere solo (y deja `node --test` colgado). */
-        stopCodeWait() {
-            if (this.codeTicker !== null) {
-                clearInterval(this.codeTicker);
-                this.codeTicker = null;
-            }
-            this.codeWait = 0;
         },
 
         /**

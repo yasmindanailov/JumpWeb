@@ -45,6 +45,29 @@ class EmailCodeLogin
     ) {}
 
     /**
+     * **Cuánto esperar, de los límites que de verdad están AGOTADOS** (`[clave => máximo]`). Lo usan también el código de
+     * confirmar ({@see AccountCredentials}) y el reenvío del correo nuevo ({@see AccountProfile}): los mismos dos techos.
+     *
+     * ⚠️⚠️ `RateLimiter::availableIn()` devuelve lo que le queda a la VENTANA de una clave aunque no esté agotada: tras un código,
+     * la de la hora tiene 3.599 s por delante con solo 1 de 5. El `max()` de las dos —lo que se hacía— decía «espera una hora»
+     * a quien solo tenía que esperar el minuto (medido el 01-10 en la sonda del cajón al pedir otro código; la isla, igual).
+     *
+     * @param  array<string, int>  $limits
+     */
+    public static function secondsToWait(array $limits): int
+    {
+        $waits = [0];
+
+        foreach ($limits as $key => $max) {
+            if (RateLimiter::tooManyAttempts($key, $max)) {
+                $waits[] = RateLimiter::availableIn($key);
+            }
+        }
+
+        return max($waits);
+    }
+
+    /**
      * LA PUERTA: ¿tiene cuenta este correo? Con cuenta, se le envía un código (tras la respuesta); sin ella, al alta.
      */
     public function request(string $email, string $ip): CodeRequestResult
@@ -73,7 +96,7 @@ class EmailCodeLogin
             Log::info('auth.code_request_email_throttled', ['ip' => $ip]);
 
             return CodeRequestResult::rateLimited(
-                max(RateLimiter::availableIn($minuteKey), RateLimiter::availableIn($hourKey)),
+                self::secondsToWait([$minuteKey => self::MAX_PER_EMAIL_PER_MINUTE, $hourKey => self::MAX_PER_EMAIL_PER_HOUR]),
                 CodeRequestResult::CODE,
             );
         }

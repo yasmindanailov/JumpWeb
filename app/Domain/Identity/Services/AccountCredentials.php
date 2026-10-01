@@ -107,7 +107,9 @@ class AccountCredentials
 
         if (RateLimiter::tooManyAttempts($minuteKey, EmailCodeLogin::MAX_PER_EMAIL_PER_MINUTE)
             || RateLimiter::tooManyAttempts($hourKey, EmailCodeLogin::MAX_PER_EMAIL_PER_HOUR)) {
-            return ResendResult::throttled(max(RateLimiter::availableIn($minuteKey), RateLimiter::availableIn($hourKey)));
+            return ResendResult::throttled(EmailCodeLogin::secondsToWait([
+                $minuteKey => EmailCodeLogin::MAX_PER_EMAIL_PER_MINUTE, $hourKey => EmailCodeLogin::MAX_PER_EMAIL_PER_HOUR,
+            ]));
         }
         RateLimiter::hit($minuteKey, 60);
         RateLimiter::hit($hourKey, 3600);
