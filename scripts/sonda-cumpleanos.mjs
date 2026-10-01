@@ -8,7 +8,8 @@
  *      espera a la hora.
  *   3. UN DÍA CON HUECO, pulsado, queda elegido en la calculadora; y la ISLA pide lo que falta, la edad, con su ancla.
  *   4. ELIGIENDO (la edad mayor, el día, la primera hora libre, el menú de pago y la hora extra si cabe): el total, la
- *      señal y el resto que se ven son los que el SERVIDOR da a esa misma selección (`PAY-12`), y la isla lo resume.
+ *      señal y el resto que se ven son los que el SERVIDOR da a esa misma selección (`PAY-12`), y la isla lo resume sin el
+ *      botón de la calculadora a la vista; con él, no lo repite: dice la razón de la pieza (Z6b, opción C).
  *   5. «RESERVAR Y PAGAR LA SEÑAL» valida la línea con la edad, el menú y la hora extra, y abre la compra de la isla.
  * Sin pagar: no deja pedidos (sin sesión se para en «Tus datos»). Sale con 1 si algo falla; las fotos, en
  * `storage/app/audit/cumpleanos-<ancho>-*.png`.
@@ -56,6 +57,33 @@ async function pagina() {
 }
 const texto = (page, sel) => page.evaluate((s) => (document.querySelector(s)?.innerText ?? '').replace(/\s+/g, ' ').trim(), sel);
 const foto = (page, nombre) => page.screenshot({ path: `${SALIDA}/cumpleanos-${ANCHO}-${nombre}.png` });
+/**
+ * Lo que la isla enseña (Z6b): su banner (el título de la razón), su frase y si hay un botón de la página a la vista, con la
+ * geometría de `pagina.js` (`medirVista`: fuera de la franja de la isla y sin lo que la llegada esconde).
+ */
+const islaAhora = (page) => page.evaluate(() => {
+    const isla = document.querySelector('[data-situation]');
+    const caja = isla?.getBoundingClientRect();
+    const alto = window.innerHeight;
+    let arriba = 0;
+    let abajo = alto;
+    if (caja && caja.height) { if (caja.top > alto / 2) abajo = caja.top; else arriba = caja.bottom; }
+    const ve = (el) => { if (el.closest('[data-llegada="oculto"]')) return false; const r = el.getBoundingClientRect(); return r.height > 0 && r.bottom > arriba && r.top < abajo; };
+    const frases = Array.from(isla?.querySelectorAll('[aria-live="polite"]') ?? []).map((n) => n.textContent.replace(/\s+/g, ' ').trim()).filter(Boolean);
+
+    return { cta: Array.from(document.querySelectorAll('[data-isla-cta]')).some(ve), banner: isla?.querySelector('[data-isla-razon] b')?.textContent.trim() ?? null, frase: frases[0] ?? null };
+});
+/** Baja desde arriba hasta un sitio sin ningún botón de la página a la vista, y espera a que la isla se asiente. */
+async function sinBotonALaVista(page) {
+    const total = await page.evaluate(() => document.documentElement.scrollHeight);
+    for (let y = 0; y < total; y += 250) {
+        await page.evaluate((top) => window.scrollTo({ top, behavior: 'instant' }), y);
+        await page.waitForTimeout(350);
+        if (! (await islaAhora(page)).cta) { await page.waitForTimeout(1200); return true; }
+    }
+
+    return false;
+}
 
 try {
     // ── 1 · La página, con sus hechos ─────────────────────────────────────────────────────────────────────────────
@@ -139,8 +167,16 @@ try {
     ok('el TOTAL que se ve es el del servidor para esa selección (`PAY-12`)', iso !== null && centimos(total) === linea?.total_cents, `${total} · servidor ${linea?.total_cents} · ${diaElegido} ${hora}`);
     ok('la señal y el resto, también', centimos(hoy) === linea?.deposit_cents && centimos(resto) === linea?.gate_remainder_cents, `${hoy} / ${resto}`);
     ok('la hora extra, si cabe, entra en la línea', ! conExtra || (linea?.addons ?? []).some((x) => x.product_id === ext.id && x.quantity > 0));
-    const islaElegido = await texto(b.page, '[data-jw-isla]');
-    ok('la isla resume lo elegido con el total', total && islaElegido.includes(total.replace(/\s/g, ' ')), islaElegido.slice(0, 120));
+    // Z6b (opción C «Da la razón», zip (6)): con el botón de la calculadora a la vista, la isla no lo repite: dice la RAZÓN de
+    // la pieza (la que la página declara para `calcula`), sin frase. Apartado el botón, resume lo elegido con el total.
+    await b.page.evaluate(() => document.querySelector('[data-jw-calculadora-lado] [data-isla-cta]').scrollIntoView({ block: 'center' }));
+    await b.page.waitForTimeout(1600);
+    const razonCalcula = await b.page.evaluate(() => JSON.parse(document.getElementById('jw-isla-pagina').textContent).config.razones?.calcula?.text ?? null);
+    const conBoton = await islaAhora(b.page);
+    ok('con el botón de la calculadora a la vista, la isla dice la razón de la pieza y no lo repite', conBoton.cta && conBoton.banner === razonCalcula && conBoton.frase === null, JSON.stringify(conBoton));
+    const apartado = await sinBotonALaVista(b.page);
+    const sinBoton = await islaAhora(b.page);
+    ok('sin el botón a la vista, la isla resume lo elegido con el total', apartado && total && (sinBoton.frase ?? '').includes(total.replace(/\s/g, ' ')), JSON.stringify(sinBoton));
     await b.page.evaluate(() => document.querySelector('[data-jw-calculadora-lado]').scrollIntoView({ block: 'start' }));
     await b.page.waitForTimeout(400);
     await foto(b.page, '2-elegido');

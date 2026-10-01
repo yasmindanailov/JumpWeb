@@ -48,6 +48,10 @@ function leerHoy(p, act, m) {
 const REGLAS = [
     { id: 'compra', when: (p) => p.checkout,
         read: (p) => ({ line: p.checkout.summary, action: p.checkout.action, tone: 'focus', locked: true }) },
+    // Un proceso que sigue con la capa cerrada (Z6b·3, `waiting`): «Confirmando tu pago», y después «¡Reservado!». Es un
+    // banner en el sitio de la acción (`bn`), sin acción: se toca y vuelve a abrir lo suyo.
+    { id: 'espera', when: (p) => p.waiting,
+        read: (p) => ({ line: null, bn: { type: 'espera', ...p.waiting }, locked: true, action: null }) },
     { id: 'pago-fallido', when: (p) => p.payment === 'failed',
         read: (p, act, m) => ({ line: p.paymentText || t(m, 'pago.no_cobrado'), tone: 'alert', locked: true,
             action: { label: t(m, 'accion.pagar_bizum'), onClick: p.onPayBizum },
@@ -68,15 +72,29 @@ const REGLAS = [
         read: (p, act) => ({ line: p.quote.text, opens: p.quote.alert ? null : 'resumen', tone: p.quote.alert ? 'alert' : 'neutral', action: act }) },
     { id: 'hoy', when: (p) => p.today, read: leerHoy },
     { id: 'oferta', when: (p) => p.offer, read: (p) => ({ line: p.offer }) },
+    // La frase que quita el miedo de la pieza que se lee (situación 5, `#866`): la página la declara por zona y llega aquí
+    // ya REPARTIDA (`razon.js`: una por visita salvo las de decisión).
     { id: 'miedo', when: (p) => p.reassurance, read: (p) => ({ line: p.reassurance }) },
 ];
+
+/**
+ * **La razón en lugar del botón repetido** (Z6b, opción C «Da la razón»): con un botón de la página a la vista (`calm`),
+ * la isla no lo repite en secundaria; pone un banner con el dato que quita la duda de esa pieza (`bn`). Lo bloqueado (la
+ * compra, el pago fallido) y lo que ya tiene banner no la llevan; sin razón, secundaria como antes.
+ */
+function conRazon(s, p) {
+    if (s.calm && p.reason && ! s.locked && ! s.bn) s.bn = { type: 'razon', ...p.reason };
+
+    return s;
+}
 
 /**
  * La situación que manda. `entrada` son las props de la isla; `m`, el grupo `isla` de `lang/`.
  *
  * La acción no se va nunca (Z6a). Con un botón de la página en pantalla (`ctaVisible`), la de la isla baja a
- * secundaria (`calm`): mismo texto, mismo sitio, y un solo naranja por pantalla. La compra y el pago fallido
- * (`locked`) y la reserva a medias (`urgent`) no bajan: resuelven algo que ya pasó.
+ * secundaria (`calm`): mismo texto, mismo sitio, y un solo naranja por pantalla; y si la página da la razón de la pieza
+ * (`reason`, Z6b), el banner de la razón ocupa su sitio. La compra y el pago fallido (`locked`) y la reserva a medias
+ * (`urgent`) no bajan: resuelven algo que ya pasó.
  */
 export function resolverSituacion(entrada, m) {
     const p = { ...entrada, page: entrada.page || {} };
@@ -85,18 +103,19 @@ export function resolverSituacion(entrada, m) {
         if (!regla.when(p)) continue;
         const s = { id: regla.id, tone: 'neutral', action: act, ...(regla.read(p, act, m) || {}) };
         if (s.calm === undefined) s.calm = !s.locked && !s.urgent && Boolean(p.ctaVisible);
-        return s;
+        return conRazon(s, p);
     }
-    return { id: 'desde', tone: 'neutral', line: p.page.from || '', action: act, calm: Boolean(p.ctaVisible) };
+    return conRazon({ id: 'desde', tone: 'neutral', line: p.page.from || '', action: act, calm: Boolean(p.ctaVisible) }, p);
 }
 
 /**
  * Cómo se reparte la situación en la isla, sacado aquí para probarlo sin pintar. La frase va SIEMPRE (Z6a): en móvil,
  * en su renglón encima de la fila (nunca dentro del botón); arriba, en la fila. Con el menú abierto, fuera: quien abre
  * el menú está navegando, y la frase de la sección de detrás ya no le habla. Ya no hay compacta ni isla cedida.
+ * **Una sola voz** (Z6b): con el banner a la vista (la isla cerrada), no hay frase, tampoco arriba.
  */
-export function reparto({ s, top, menuOpen, inCheckout }) {
-    const hasLine = Boolean(s.line) && !inCheckout && !menuOpen;
+export function reparto({ s, top, menuOpen, inCheckout, isOpen = false }) {
+    const hasLine = Boolean(s.line) && !inCheckout && !menuOpen && !(s.bn && !isOpen);
 
     return { hasLine, row: top };
 }

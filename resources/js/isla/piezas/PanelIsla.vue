@@ -11,6 +11,7 @@ import CabeceraPanel from './CabeceraPanel.vue';
 import MenuIsla from './MenuIsla.vue';
 import SelectorPlan from './SelectorPlan.vue';
 import HojasIsla from './HojasIsla.vue';
+import HojaRazon from './HojaRazon.vue';
 
 // «Tus cookies» se abre poco: diferida, ni la isla en reposo ni la compra pagan sus interruptores (medido, +4,2 y
 // +5,9 KiB estáticas).
@@ -33,6 +34,8 @@ const props = defineProps({
     plans: { type: Object, default: null },
     plansFromToday: { type: Boolean, default: false },
     quote: { type: Object, default: null },
+    /** La razón abierta (la sexta vista, Z6b): la que el banner decía al tocarlo. */
+    razon: { type: Object, default: null },
 });
 const emit = defineEmits(['abrir', 'navegar', 'elegir']);
 
@@ -46,7 +49,7 @@ onMounted(() => entradaPorFilas(raiz.value, props.top));
         ref="raiz"
         tabindex="-1"
         role="dialog"
-        :aria-label="titulo || undefined"
+        :aria-label="titulo || (vista === 'razon' && razon ? razon.title || razon.text : undefined)"
         :style="{
             outline: 'none', boxShadow: 'none', padding: top ? '10px 2px 2px' : '2px 2px 10px',
             maxHeight: 'min(62vh, 520px)', overflowY: 'auto', overscrollBehavior: 'contain',
@@ -86,6 +89,10 @@ onMounted(() => entradaPorFilas(raiz.value, props.top));
             :quote="quote"
             :account="account"
             :help="help"
+        />
+        <HojaRazon
+            v-else-if="vista === 'razon' && razon"
+            :bn="razon"
         />
     </div>
 </template>

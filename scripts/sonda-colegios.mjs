@@ -79,6 +79,33 @@ async function colegios(page, consulta = '') {
 const texto = (page, sel) => page.evaluate((s) => (document.querySelector(s)?.innerText ?? '').replace(/\s+/g, ' ').trim(), sel);
 const foto = (page, nombre) => page.screenshot({ path: `${SALIDA}/colegios-${ANCHO}-${nombre}.png` });
 const cifraDe = (page) => page.locator('[data-jw-calculadora] input[inputmode="numeric"]');
+/**
+ * Lo que la isla enseña (Z6b): su banner (el título de la razón), su frase y si hay un botón de la página a la vista, con la
+ * geometría de `pagina.js` (`medirVista`: fuera de la franja de la isla y sin lo que la llegada esconde).
+ */
+const islaAhora = (page) => page.evaluate(() => {
+    const isla = document.querySelector('[data-situation]');
+    const caja = isla?.getBoundingClientRect();
+    const alto = window.innerHeight;
+    let arriba = 0;
+    let abajo = alto;
+    if (caja && caja.height) { if (caja.top > alto / 2) abajo = caja.top; else arriba = caja.bottom; }
+    const ve = (el) => { if (el.closest('[data-llegada="oculto"]')) return false; const r = el.getBoundingClientRect(); return r.height > 0 && r.bottom > arriba && r.top < abajo; };
+    const frases = Array.from(isla?.querySelectorAll('[aria-live="polite"]') ?? []).map((n) => n.textContent.replace(/\s+/g, ' ').trim()).filter(Boolean);
+
+    return { cta: Array.from(document.querySelectorAll('[data-isla-cta]')).some(ve), banner: isla?.querySelector('[data-isla-razon] b')?.textContent.trim() ?? null, frase: frases[0] ?? null };
+});
+/** Baja desde arriba hasta un sitio sin ningún botón de la página a la vista, y espera a que la isla se asiente. */
+async function sinBotonALaVista(page) {
+    const total = await page.evaluate(() => document.documentElement.scrollHeight);
+    for (let y = 0; y < total; y += 250) {
+        await page.evaluate((top) => window.scrollTo({ top, behavior: 'instant' }), y);
+        await page.waitForTimeout(350);
+        if (! (await islaAhora(page)).cta) { await page.waitForTimeout(1200); return true; }
+    }
+
+    return false;
+}
 async function escribir(page, n) {
     const cifra = cifraDe(page);
     await cifra.click();
@@ -229,8 +256,16 @@ try {
     ok('el TOTAL que se ve es el del servidor para esa selección (`PAY-12`)', centimos(r.total) === linea?.total_cents, `${r.total} · servidor ${linea?.total_cents} · ${n1} el ${dia} a las ${sinHora(hora)}`);
     ok('la señal y el resto, también', centimos(r.hoy) === linea?.deposit_cents && centimos(r.resto) === linea?.gate_remainder_cents, `${r.hoy} / ${r.resto}`);
     ok('la señal de antes de elegir era la del servidor', centimos(senalAlLlegar) === linea?.deposit_cents, senalAlLlegar);
-    const isla = await texto(a.page, '[data-jw-isla]');
-    ok('la isla de la página dice lo elegido con su total', isla.includes(`${n1} `) && Boolean(r.total) && isla.includes(r.total), isla.slice(0, 120));
+    // Z6b (opción C «Da la razón», zip (6)): con el botón de la calculadora a la vista, la isla no lo repite: dice la RAZÓN de
+    // la pieza (la que la página declara para `calcula`), sin frase. Apartado el botón, dice lo elegido con su total.
+    await a.page.locator('[data-jw-calculadora-lado] [data-isla-cta]').scrollIntoViewIfNeeded();
+    await a.page.waitForTimeout(1600);
+    const razonCalcula = await a.page.evaluate(() => JSON.parse(document.getElementById('jw-isla-pagina').textContent).config.razones?.calcula?.text ?? null);
+    const conBoton = await islaAhora(a.page);
+    ok('con el botón de la calculadora a la vista, la isla dice la razón de la pieza y no lo repite', conBoton.cta && conBoton.banner === razonCalcula && conBoton.frase === null, JSON.stringify(conBoton));
+    const apartado = await sinBotonALaVista(a.page);
+    const isla = (await islaAhora(a.page)).frase ?? '';
+    ok('sin el botón a la vista, la isla de la página dice lo elegido con su total', apartado && isla.includes(`${n1} `) && Boolean(r.total) && isla.includes(r.total), isla.slice(0, 120));
     // Con día, la escalera marca la CELDA de su tarifa (la del día en la API), y su precio es el por persona del servidor.
     const rateDelDia = await a.page.evaluate(async (q) => (await (await fetch(`/api/v1/availability/${q.id}/dates`, { headers: { Accept: 'application/json' } })).json()).data.find((x) => x.date === q.dia)?.rate_key, { id: fila.id, dia });
     esc = await escaleraVista(a.page);
@@ -318,7 +353,9 @@ try {
     await d.page.waitForTimeout(2000);
     const rd = await recibo(d.page, textos);
     ok('del enlace: la gente y el total del servidor', Number(await cifraDe(d.page).inputValue()) === n1 && centimos(rd.total) === linea?.total_cents, rd.total);
-    const islaD = await texto(d.page, '[data-jw-isla]');
+    // Sin el botón de la calculadora a la vista (con él, la razón de la pieza: Z6b).
+    await sinBotonALaVista(d.page);
+    const islaD = (await islaAhora(d.page)).frase ?? '';
     ok('la isla lo dice como suyo', islaD.includes(textos.tuya.trim()) && Boolean(rd.total) && islaD.includes(rd.total), islaD.slice(0, 90));
     const wa = decodeURIComponent(await d.page.locator('[data-jw-calculadora-lado] a[href*="wa.me"]').first().getAttribute('href') ?? '');
     ok('el WhatsApp comparte el enlace con el cálculo dentro', wa.includes(`/colegios?c=${encodeURIComponent(codigo(n1, hora))}#${calc.ancla}`), wa.slice(-60));

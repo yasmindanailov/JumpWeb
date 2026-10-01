@@ -13,9 +13,18 @@ export const PROPS_ISLA = {
     scrim: { type: Boolean, default: true },
     ctaVisible: { type: Boolean, default: false },
     page: { type: Object, default: () => ({ kind: 'portada', from: '' }) },
+    /**
+     * La razón de la pieza que se lee (Z6b, opción C «Da la razón»): con un botón de la página a la vista, la isla la dice
+     * en un banner en vez de repetirlo. `{ type: 'razon'|'vivo', icon, svg, text, sub, title, detail, decision }`: `svg`, el
+     * dibujo que manda el servidor (`Lucide::svg`); `title` y `detail`, lo que se lee al abrirla. Pasa por `useSinSaturar`.
+     */
+    reason: { type: Object, default: null },
+    /** Lo que sigue con la capa cerrada (Z6b·3): «Confirmando tu pago», «¡Reservado!». `{ type, text, sub, onClick }`. */
+    waiting: { type: Object, default: null },
     today: { type: Object, default: null },
     offer: { type: String, default: null },
-    reassurance: { type: String, default: null },
+    /** La frase que quita el miedo de la pieza que se lee (situación 5, `#866`): un texto o `{ text, decision }`. */
+    reassurance: { type: [String, Object], default: null },
     quote: { type: Object, default: null },
     chosen: { type: Object, default: null },
     filling: { type: Object, default: null },

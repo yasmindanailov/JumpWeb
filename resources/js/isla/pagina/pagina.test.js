@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { avisoDeCookies, cajaSiVisible, medirVista, preferenciasDeCookies, propsDeLaIsla } from './pagina.js';
+import { avisoDeCookies, cajaSiVisible, fraseDe, medirVista, preferenciasDeCookies, propsDeLaIsla, razonDe, zonaEnMedio } from './pagina.js';
 import { paginaConSelector } from './con-selector.js';
 
 /**
@@ -146,6 +146,49 @@ describe('las props de la isla', () => {
         assert.equal(invitado.bookingToday, null);
         assert.equal(invitado.task, null);
         assert.equal(invitado.account.pending, undefined);
+    });
+});
+
+describe('lo que la isla dice de la pieza que se lee (Z6b, `#866`)', () => {
+    const alto = 800;
+    const razones = {
+        llegada: { type: 'razon', icon: 'shield-check', svg: '<svg/>', text: 'Su zona, a su medida', decision: false },
+        precio: { type: 'razon', icon: 'ticket', text: 'Tú no pagas entrada', decision: true },
+    };
+    const frases = { calcula: { text: 'Solo pagas los niños que vengan.', decision: true } };
+
+    test('la pieza que se lee es la que cruza la línea media; ninguna, arriba del todo o entre piezas sin zona', () => {
+        const piezas = [{ zona: 'precio', top: -200, bottom: 300 }, { zona: 'cierre', top: 500, bottom: 900 }];
+        assert.equal(zonaEnMedio(piezas, alto), '', 'la mitad (400) cae entre las dos');
+        assert.equal(zonaEnMedio([{ zona: 'precio', top: -200, bottom: 450 }, piezas[1]], alto), 'precio');
+        assert.equal(zonaEnMedio([{ zona: 'cierre', top: 400, bottom: 900 }], alto), 'cierre', 'su borde de arriba justo en la mitad cuenta');
+        assert.equal(zonaEnMedio([{ zona: 'precio', top: 0, bottom: 400 }], alto), '', 'su borde de abajo en la mitad, ya no');
+        assert.equal(zonaEnMedio([], alto), '');
+    });
+
+    test('la razón: la de su zona o, sin la suya, la de la llegada; y solo con un botón de la página a la vista', () => {
+        assert.equal(razonDe(razones, 'precio', true).text, 'Tú no pagas entrada');
+        assert.equal(razonDe(razones, 'dudas', true).text, 'Su zona, a su medida', 'una pieza sin razón dice la de la llegada');
+        assert.equal(razonDe(razones, '', true).svg, '<svg/>', 'arriba del todo, la de la llegada, con su dibujo');
+        assert.equal(razonDe(razones, 'precio', false), null, 'sin botón a la vista no hay nada que repetir');
+        assert.equal(razonDe(null, 'precio', true), null, 'una página sin razones no dice ninguna');
+        assert.equal(razonDe({ precio: razones.precio }, 'cierre', true), null, 'ni la llegada: nada');
+    });
+
+    test('la frase: solo la de su pieza, con o sin botón a la vista', () => {
+        assert.deepEqual(fraseDe(frases, 'calcula'), frases.calcula);
+        assert.equal(fraseDe(frases, 'cierre'), null);
+        assert.equal(fraseDe(null, 'calcula'), null);
+    });
+
+    test('a la isla le llegan la razón y la frase de la pieza que se lee', () => {
+        const p = (zona, cta) => propsDeLaIsla({ config: { ...config, razones, frases }, estado: estado({ zona, vista: { cta, hoy: false } }), acciones, textos });
+        assert.equal(p('precio', true).reason.text, 'Tú no pagas entrada');
+        assert.equal(p('precio', false).reason, null);
+        assert.equal(p('calcula', false).reassurance.text, 'Solo pagas los niños que vengan.');
+        assert.equal(p('calcula', true).reason.text, 'Su zona, a su medida', 'calcular sin razón propia: la de la llegada');
+        assert.equal(props({}).reason, null, 'sin razones en la página, ninguna');
+        assert.equal(props({}).reassurance, null);
     });
 });
 

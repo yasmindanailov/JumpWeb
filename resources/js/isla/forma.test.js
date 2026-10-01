@@ -11,9 +11,18 @@ test('la isla no anima hasta la primera medida: el primer tamaño no es una tran
     assert.equal(antes.height, 'auto');
 
     const medida = estiloIsla({ row: true, box: caja(312.5, 64), alert: false, grown: false, animate: true, calm: false });
-    assert.equal(medida.width, '312.5px');
-    assert.equal(medida.height, '64px');
+    assert.equal(medida.width, '314.5px', 'lo medido más el borde (1px por lado): con `border-box`, sin él se recortaban 2px');
+    assert.equal(medida.height, '66px');
     assert.match(medida.transition, /^width var\(--dur-island\) var\(--ease-island\)/, 'el morph de la isla');
+});
+
+test('el aire de dentro, igual en los cuatro lados (Z6b, el owner): 7px del medidor y 1 de borde, fuera de lo medido', () => {
+    const medidor = estiloMedida({ row: true, top: true, isOpen: false, cap: 1200, maxWidth: 760 });
+    assert.equal(medidor.padding, '7px');
+    // La caja de fuera mide lo de siempre: el contenido, 7 + 7 de aire y 1 + 1 de borde (antes, 8 + 8 y el borde DENTRO).
+    const contenido = 300;
+    const isla = estiloIsla({ row: true, box: caja(contenido + 14, 46 + 14), alert: false, grown: false, animate: true, calm: false });
+    assert.deepEqual([isla.width, isla.height], [`${contenido + 16}px`, `${46 + 16}px`]);
 });
 
 test('la capa grande va sin rebote, y una isla en columna ocupa el ancho entero', () => {

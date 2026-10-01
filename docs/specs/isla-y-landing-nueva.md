@@ -266,7 +266,9 @@ marcado es nuestro, así que el contrato es **declarativo en el HTML** (el «kit
 aplazó; ahora tiene cliente):
 
 - `data-isla-pagina` en el `<body>`: tipo, producto, acción y «desde» (situación 2).
-- `data-isla-frase="…"` en cada sección que quita un miedo (situación 5).
+- `data-isla-frase="…"` en cada sección que quita un miedo (situación 5). ▶ **Hecho de otra forma en la Z6b·1** (§4.27,
+  `#866`): cada pieza lleva su `data-zona`, y lo que la isla dice de ella va en lo que la página le da —`razones` (con su
+  icono, que dibuja el servidor) y `frases`, por zona—; la isla mira cuál cruza la línea media.
 - `data-isla-cta` en cada botón principal: con uno a la vista, la isla cede su acción (regla 1 del diseño).
 - `data-isla-widget` donde va la calculadora de la página (§4.4).
 - Un evento para abrir la isla desde la página (el `pj-island:open` del prototipo).
@@ -2447,8 +2449,8 @@ completo. `[DECIDIDO owner]` 2026-10-01 (`#866`): entra también la frase de cad
 
 **Lo que se hace, en tres tandas**, cada una medida y con el ojo del owner:
 - **Z6b·1 · la razón y la frase de cada pieza.** (a) `situacion.js`: con un botón de la página a la vista, una razón y nada
-  bloqueado, la acción se vuelve el banner de la razón (`conRazon`); la fila `miedo`, con la frase de la zona. (b) `razon.js`
-  (nuevo, puro): el reparto «sin saturar» de las dos. Nada hasta el primer desplazamiento (40 px). Las piezas de decisión
+  bloqueado, la acción se vuelve el banner de la razón (`conRazon`); la fila `miedo`, con la frase de la zona. (b) `useSinSaturar.js`
+  (nuevo, sin DOM): el reparto «sin saturar» de las dos. Nada hasta el primer desplazamiento (40 px). Las piezas de decisión
   (`decision`) y lo elegido (`chosen`), siempre: a los 1,2 s (lo elegido, 0,6 s). El resto, un banner y una frase por visita,
   sin volver a lo visto y con 6 s de calma entre cambios. (c) `reparto()`: una sola voz, y con el banner no hay frase.
   (d) Las piezas: `BannerRazon` (delante, el icono lima, el punto que late, la bola de carga o el check; título y matiz, que
@@ -2463,8 +2465,12 @@ completo. `[DECIDIDO owner]` 2026-10-01 (`#866`): entra también la frase de cad
   frase) y la barra lima de lo que le queda (4,2 s). La barra se para con el ratón, con el foco o con un panel abierto
   (WCAG 2.2.1), y el aviso se quita al tocarlo; con «reducir movimiento», sin barra. Con un panel abierto o con las cookies
   sigue la tira de hoy.
-- **Z6b·3 · la compra no corta al cerrar.** `useSeccionCompra.js` publica lo que queda al cerrar la capa (`isla:compra`), y la
-  isla de la página lo dice:
+- ~~**Z6b·3 · la compra no corta al cerrar.**~~ `[DECIDIDO owner]` 2026-10-01 (`#867`): **no se hace** —con Redsys el
+  pago es una redirección y el desenlace llega con la vuelta del banco, casi siempre al momento—. Los banners sirven en tres
+  usos aceptados por el owner, tras la Z6b·2: «Sigue con tu reserva» (cerrada a medias, antes de pagar), «Preparando tu
+  reserva» (espera: el primer toque, mientras baja la compra) y «¡Reservado! · Toca para ver tu QR» (hecho: al cerrar el
+  Listo, el resto de la visita). Lo que se había planeado, por si vuelve:
+  `useSeccionCompra.js` publicaría lo que queda al cerrar la capa (`isla:compra`), y la isla de la página lo diría:
   - Esperando al banco: «Confirmando tu pago · Te escribimos al terminar»; al tocarlo, se reabre.
   - Pagado con la capa cerrada: el aviso «Reservado: :día a las :hora» · «Te lo hemos enviado a :correo», y después el banner
     «¡Reservado!» (en una fiesta, «¡Fiesta reservada!») · «Toca para ver tu QR», hasta abrir el Listo o cambiar de página.
@@ -2485,6 +2491,28 @@ acción de la isla tras desplazarse encontrarán un banner: se miden una a una.
 del aviso; un test PHP del dibujo; el arnés `mutar-isla-z6b.sh`; las sondas (`isla`, `entradas`, `cumpleanos`, `colegios`,
 `portada`, `web`, `primera-pantalla`) y una nueva de la razón (aparece, se abre y no se repite); y el ojo del owner en
 vivo, a 390 y a 1280.
+
+**Z6b·1, en el árbol (01-10)**: `situacion.js` (`conRazon`, la fila `espera`, una sola voz en `reparto`),
+`useSinSaturar.js` (el reparto, con `sin-saturar.test.js`), `useHueco.js` y `piezas/HuecoAccion.vue` (el relevo),
+`piezas/BannerRazon.vue` con su `banner-razon.js` (`CE-6`), `piezas/HojaRazon.vue` (la sexta vista, en `PanelIsla`),
+`pagina.js` (`zonaEnMedio`, `razonDe`, `fraseDe`) y `App\Http\Instancia\RazonesDeIsla` (el dibujo, desde
+`components/pagina.blade.php`). En la instancia, `web/components/razones-isla.php` (la mano de las cinco páginas), sus
+textos en es/en/fr y la `data-zona` de la pieza 7 de Cumpleaños; Visítanos, Normas y las legales vacían las suyas (reutilizan
+la isla de la portada). **Lo que difiere del diseño, a propósito**: la razón VIVA también se abre al tocarla (en
+`ParkIsland` solo la de tipo `razon`: tocar la viva no hacía nada); y en Jump, «2 horas, desde :precio» con el ahorro
+CALCULADO (el mockup, «por 18 €», es de una sola tarifa). **Medido**: los recorridos de Kids y Cumpleaños, a 390 y a
+1280, cumplen las reglas una a una (nada al llegar; la de decisión vuelve con su botón; de las demás, una por visita; las
+frases de decisión, siempre). Los techos de peso suben por la pieza, con la base construida aparte: la compra 171,58 →
+178,82 (techo 179) y la isla de la página 178,01 → 185,77 (186); diferidos el banner y la hoja ahorraban 3,1 pero subían
+las calculadoras +0,31. ⚠️ Las sondas que miraban «lo elegido» con el botón de la calculadora a la vista (`cumpleanos`,
+`colegios`) miden ahora las dos caras: la razón con el botón, el total sin él.
+**Visto bueno del owner en vivo (01-10), con un arreglo que pidió**: «los márgenes no son perfectos». Medido: en escritorio
+el banner quedaba a 24 px del menú y a 8 de la cuenta —el relleno de la fila sin frase, que con una sola voz salía siempre;
+el mockup lo tiene igual—, y la isla entera tenía 9 px de aire arriba y a la izquierda y 7 abajo y a la derecha: la hoja
+del sistema pone `border-box` a todo (`tokens/base.css`) y la caja, del tamaño exacto de su medidor, recortaba 2 px (también
+en el mockup y desde la T2). Arreglado: sin relleno con el banner, y el borde FUERA de lo medido (`forma.js`: la caja suma
+2 px y el medidor pasa de 8 a 7 de aire). La caja de fuera mide lo mismo que antes (el `--island-h` no cambia) y el aire es
+de 8 px en los cuatro lados, también en la compra y en los paneles.
 
 ## 5. Impacto en invariantes
 

@@ -4,11 +4,12 @@
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
 > **820–849 AGOTADA con `#849`** → sigue en **850–879** (del owner, 29-09; centena `decisiones/800-899.md`) · Último usado:
-> **`#866`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **`#867`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#846`) · Actualizado: **2026-10-01**
 > (el acceso con código: A1–A3 ✅ `#853`→`#857`; la A4 del SPA en `main`, `#813`; `/cookies` ✅ `#858`→`#860`; el zip (6) y
 > el reparto, `#861`; el SEO, `specs/seo.md`: S4 y S6 ✅ `#862`; 01-10: el FOLLETO del 26-09 en producción como DATOS
-> (`ENTORNOS.md` §6), los textos legales para el owner (`#863`→`#865`) y **la Z6a de la isla ✅**, con su visto bueno).
+> (`ENTORNOS.md` §6), los textos legales para el owner (`#863`→`#865`), **la Z6a de la isla ✅** y, por la noche, la
+> **Z6b·1 ✅** (`#866`), las dos con su visto bueno).
 > ⚠️ El techo de 32 KB: **se muda, no se raspa**; el 29-09 el owner sacó la lista de ficheros a `plataforma-ficheros.md`
 > (`#852`) y NO subió el techo. Si vuelve a apretar tres veces seguidas, llévaselo con la medida.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -52,9 +53,19 @@ Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas,en
 ▶▶▶▶ **LO SIGUIENTE, EN ORDEN** (actualizado el 01-10 noche; el reparto con el SPA, `#861`, `isla-y-landing-nueva.md` §4.27):
 0. ▶▶▶ **LA Z6b, LO PRIMERO** (el owner, 01-10: «seguimos con la z6b»). La **Z6a ✅** (01-10, visto bueno del owner en vivo;
    lo hecho, lo medido y lo que quedó fuera, en §4.27 «La Z6a al detalle»). **«La Z6b al detalle», ESCRITA y medida** (§4.27,
-   01-10): Z6b·1 la razón y la frase de cada pieza (`#866`, del owner: la situación 5 entra, con datos de verdad), Z6b·2 el
-   aviso a isla entera, Z6b·3 la compra que no corta al cerrar; `isla_razon`, del SPA. Al terminarla, preguntar al owner si
-   sigue la Z6c o la A5. Después,
+   01-10): **Z6b·1 ✅** (01-10 noche, visto bueno del owner en vivo; la razón y la frase de cada pieza, `#866`; y, al verla,
+   el aire de la isla igual en los cuatro lados: §4.27 «Z6b·1, en el árbol»). **Sigue la Z6b·2** (el aviso a isla entera,
+   plan en §4.27), que CIERRA la Z6b: la Z6b·3 no se hace (`#867`, del owner); `isla_razon`, del SPA (buzón). ⚠️
+   `sonda-cuenta` no se pasó tras la Z6b·1 (monta «hoy» antes de las 20:00): lo primero de la próxima sesión, antes de esa
+   hora. **El ORDEN del owner (`#867`)**: Z6b·2 → **Z6c (el B3)** → **A5** (fuera la contraseña) → el acceso con código (su
+   página, crear cuenta, «XXX-XXX» en el asunto, continuar al escribir el último dígito, también en el authenticator del
+   panel; mucho de ello es la Z6g) → los retoques del zip (6) (Z6d–Z6f, colores, secciones) → la isla en un móvil de verdad,
+   **en STAGING al terminarlo todo** (el owner, 01-10). **El B3, como lo fijó el owner**: con el vídeo de verdad, `isla_accion`
+   por visita en móvil primero y las reservas de control, 50/50 y dos semanas como mínimo (sobre el `Experiments` del SPA:
+   avisarle antes). **Tras la Z6b·2, los TRES usos de los banners que el owner aceptó (`#867`)**: «Sigue con tu reserva» al
+   cerrar la compra a medias antes de pagar (la fila `a-medias`, sin «hora guardada»: no la hay antes de pagar, `#688`),
+   «Preparando tu reserva» (espera) mientras baja la compra en el primer toque, y «¡Reservado! · Toca para ver tu QR» (hecho)
+   al cerrar el Listo, el resto de esa visita. Tocan `useSeccionCompra.js` y el puente con la isla de la página. Después,
    Z6c→Z6g (la Z6c va sobre el `Experiments` del SPA: avisarle ANTES en el buzón); la cabecera sin precio salvo Colegios
    (la regla del precio del owner, `instancias/playjump/docs/estrategia/2026-09-30/Web.md`). (La imagen de la INVITACIÓN es
    del SPA, `#861`.) ⚠️ `sonda-banco-movimiento.mjs` sigue con los casos del 27-09 (solo cambió la etiqueta «Menú»): se
@@ -224,6 +235,12 @@ carril se apunta ALLÍ; lo compartido se sigue avisando aquí, en el buzón, ant
 
 ## Buzón
 
+### Para el SPA (emisor: plataforma, 2026-10-01 noche) — la Z6b·1 de la isla: la RAZÓN de cada pieza; `isla_razon` es tuya
+- La isla de las páginas dice, con un botón de la página a la vista, la razón de la pieza que se lee (un banner en el sitio de
+  la acción: `[data-isla-razon]` con `data-tipo` razon|vivo) y, sin botón, la frase de esa pieza (`#866`). Nada tuyo tocado.
+- La MEDICIÓN del zip (6) —`isla_razon` (situación, tipo, razón, página) al tocar el banner, y `variante` en todos los
+  eventos— no la emite la isla de Vue (medido en la Z6a) y es de la analítica, tuya (`#735`): las marcas están en el DOM.
+
 ### Para el SPA (emisor: plataforma, 2026-10-01) — la Z6a de la isla, en `main`: nada tuyo tocado
 - La isla de las páginas (`resources/js/isla/**`) y `lang/*/isla.php`, míos. Lo tuyo que uso, sin cambio: la cuenta se abre
   por `cajon.openAccount` como siempre (desde la barra, `desde: null`: solo la X). Antes de la Z6c (B3 sobre tu `Experiments`)
@@ -249,6 +266,9 @@ carril se apunta ALLÍ; lo compartido se sigue avisando aquí, en el buzón, ant
   (ya en `DEUDA.md`, `#659`) y los mutantes viejos de `mutar-cabecera.py`/`mutar-bandas.py` (`DEUDA.md`). El texto, en git.
 
 ### Atendido
+- **SPA 01-10 noche, `LinkIsland` EN `main`** (`#814`): leído. Nada mío lo usa: `x-pieza.boton` y `x-pieza.selector`, solo en
+  la fiesta (medido con `grep`), y nada en `resources/js/isla`. Si traigo otro zip que toque `paginas/{invitacion,autorizacion,
+  lista-invitados}`, se lo digo; «90 + 30» es la descripción del pack (panel).
 - **Retirados el 01-10** mis bloques del 29→30-09 que el SPA anotó como leídos: el zip (6) y su reparto (`#861`; la medida de
   producción para la imagen de la invitación, ya en su carril), `/cookies` para producción (`#859`, `#860`, `#858`) y
   `landing.css`/`site.css` de la T6f/T6g. El texto, en git.

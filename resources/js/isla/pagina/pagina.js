@@ -61,6 +61,33 @@ export function medirVista({ ctas = [], hoyLinea = null, isla = null, alto }) {
 }
 
 /**
+ * **La pieza que se LEE** (Z6b; `usePjZona` de `paginas/entradas/pagina.jsx` y la geometría de `cumpleanos.card.html` del
+ * diseño): la `[data-zona]` cuyo rectángulo cruza la línea media de la ventana. Ninguna —arriba del todo, o entre piezas sin
+ * zona— es `''`, y la página dice ahí lo de su LLEGADA. Recibe `{ zona, top, bottom }` y el alto de la ventana.
+ */
+export function zonaEnMedio(secciones = [], alto) {
+    const media = alto / 2;
+
+    return secciones.find((s) => s && s.top <= media && s.bottom > media)?.zona ?? '';
+}
+
+/**
+ * **La RAZÓN de la pieza** (Z6b, opción C «Da la razón»): la que la página declara para esa zona (`config.razones`, con
+ * su dibujo ya hecho por el servidor) o, sin la suya, la de la llegada. Solo con un botón de la página a la vista: sin él,
+ * la isla tiene su acción y no hay nada que repetir.
+ */
+export function razonDe(razones, zona, conBoton) {
+    if (! conBoton || ! razones) return null;
+
+    return razones[zona] ?? razones.llegada ?? null;
+}
+
+/** **La FRASE de la pieza** (situación 5, `#866`): solo la suya; una pieza sin frase deja la de siempre (el «desde»). */
+export function fraseDe(frases, zona) {
+    return (frases && frases[zona]) || null;
+}
+
+/**
  * **El SELECTOR DE PLANES** (T6a de §4.17; el diseño: «un solo selector de plan en toda la web, el de la isla»), o `null`
  * si la página no lo trae. Lo compone la PÁGINA (`config.plans`: sus opciones ya escritas con los hechos —título, nota,
  * «desde», oferta, foto, `featured`, `today`—) y cada opción lleva la INTENCIÓN de la compra (`intent`, la de
@@ -109,6 +136,10 @@ export function propsDeLaIsla({ config, estado, acciones, textos }) {
         today: conHoy ? { ...config.today, slots: huecos } : null,
         chosen: calculo?.elegido ? { text: calculo.elegido, label: calculo.boton, widgetVisible: estado.vista.cta, onClick: acciones.irAlResumen } : null,
         ctaVisible: estado.vista.cta,
+        // Lo que la isla dice de la pieza que se lee (Z6b): su razón, con un botón de la página a la vista, y su frase. La
+        // isla las reparte (`useSinSaturar`): aquí solo se eligen.
+        reason: razonDe(config.razones, estado.zona ?? '', estado.vista.cta),
+        reassurance: fraseDe(config.frases, estado.zona ?? ''),
         // La oferta de la página en sus 3 últimos días (situación `oferta`): la decide la página, que sabe su fecha.
         offer: config.offer ?? null,
         homeLabel: config.homeLabel ?? null,

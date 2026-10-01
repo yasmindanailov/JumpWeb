@@ -18,7 +18,7 @@
  */
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, watch } from 'vue';
 import { createCookiesStore } from '../../ui/cookie-consent.js';
-import { cajaSiVisible, medirVista, preferenciasDeCookies, propsDeLaIsla } from './pagina.js';
+import { cajaSiVisible, medirVista, preferenciasDeCookies, propsDeLaIsla, zonaEnMedio } from './pagina.js';
 import { loTomaUnaCapa, tomarAvisoDelServidor } from './aviso-servidor.js';
 import { precargarCompra } from './precarga.js';
 
@@ -26,7 +26,7 @@ import { precargarCompra } from './precarga.js';
 export const ESPERA_RELEVO = 2500;
 
 export function usePaginaIsla({ config, textos, doc = document, win = window }) {
-    const e = reactive({ vista: { cta: false, hoy: false }, calculo: null, compraAbierta: false, aviso: null });
+    const e = reactive({ vista: { cta: false, hoy: false }, zona: '', calculo: null, compraAbierta: false, aviso: null });
     const cookies = reactive(createCookiesStore({ doc, win, purchase: () => ({ isOpen: e.compraAbierta }) }));
 
     // «Guardado»: el aviso de la isla, que se enseña al CAMBIAR su texto (por eso se vacía antes).
@@ -45,6 +45,8 @@ export function usePaginaIsla({ config, textos, doc = document, win = window }) 
     };
 
     let ctas = [];
+    // Las piezas de la página con su zona (`data-zona`, Z6b): la que cruza la línea media es la que se lee.
+    let zonas = [];
     let fotograma = 0;
     // La franja de la isla cambia de alto sin que la página se mueva —el aviso de cookies que se va, un aviso que crece—
     // y lo que se ve cambia con ella: se vuelve a medir (Z3, `#782`). Medido: rechazadas las cookies arriba del todo, la
@@ -59,6 +61,7 @@ export function usePaginaIsla({ config, textos, doc = document, win = window }) 
         if (ro) ro.observe(el);
     };
     const rect = (el) => (el ? el.getBoundingClientRect() : null);
+    const cajaDe = (el) => { const r = el.getBoundingClientRect(); return { top: r.top, bottom: r.bottom }; };
     const medir = () => {
         fotograma = 0;
         if (! ctas.length || ctas.some((el) => ! el.isConnected)) ctas = Array.from(doc.querySelectorAll('[data-isla-cta]'));
@@ -72,6 +75,10 @@ export function usePaginaIsla({ config, textos, doc = document, win = window }) 
         // Solo si CAMBIA (`#783`): un objeto nuevo en cada fotograma de scroll repintaba la isla entera en cada uno
         // (medido con la CPU ×4: 788 cambios de su estilo en 265 fotogramas de desplazarse, sin que cambiara nada).
         if (vista.cta !== e.vista.cta || vista.hoy !== e.vista.hoy) e.vista = vista;
+        // La pieza que se lee (Z6b), en el mismo fotograma y con la misma regla: solo si cambia.
+        if (! zonas.length || zonas.some((el) => ! el.isConnected)) zonas = Array.from(doc.querySelectorAll('[data-zona]'));
+        const zona = zonaEnMedio(zonas.map((el) => ({ zona: el.dataset.zona, ...cajaDe(el) })), win.innerHeight);
+        if (zona !== e.zona) e.zona = zona;
     };
     const mover = () => { if (! fotograma) fotograma = win.requestAnimationFrame(medir); };
 
@@ -145,7 +152,7 @@ export function usePaginaIsla({ config, textos, doc = document, win = window }) 
 
     const props = computed(() => propsDeLaIsla({
         config, textos, acciones,
-        estado: { vista: e.vista, calculo: e.calculo, cookies: cookies.showing, categorias: cookies.categories, preferencias: preferencias.value, aviso: e.aviso },
+        estado: { vista: e.vista, zona: e.zona, calculo: e.calculo, cookies: cookies.showing, categorias: cookies.categories, preferencias: preferencias.value, aviso: e.aviso },
     }));
 
     // El hecho `consent_shown`, una vez por página y cuando el aviso se enseña de verdad (como el banner de siempre).

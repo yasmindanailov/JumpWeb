@@ -139,6 +139,42 @@ describe('qué dice la isla', () => {
         assert.notEqual(conHoy.action.label, 'Ver mi QR');
     });
 
+    test('Z6b: con un botón de la página a la vista y su razón, la acción se vuelve el banner de la razón', () => {
+        const reason = { icon: 'wallet', text: 'Hoy solo pagas 50 €', sub: 'El resto, el día de la fiesta', decision: true };
+        const s = resolverSituacion({ page: pagina, ctaVisible: true, reason }, m);
+        assert.deepEqual(s.bn, { type: 'razon', ...reason });
+        assert.deepEqual(s.action, pagina.action, 'la acción sigue ahí: vuelve en cuanto el botón sale');
+        assert.equal(s.calm, true);
+        // Una razón viva conserva su tipo (el punto que late).
+        assert.equal(resolverSituacion({ page: pagina, ctaVisible: true, reason: { type: 'vivo', text: 'Sáb 3 y dom 4, libres' } }, m).bn.type, 'vivo');
+        // Sin botón a la vista no hay nada que repetir: la acción, en principal, y sin banner.
+        const sinBoton = resolverSituacion({ page: pagina, reason }, m);
+        assert.deepEqual([sinBoton.bn, sinBoton.calm], [undefined, false]);
+        // Sin razón, secundaria como antes (Z6a).
+        assert.equal(resolverSituacion({ page: pagina, ctaVisible: true }, m).bn, undefined);
+        // También en las filas que bajan a secundaria: hoy y lo elegido con el botón del widget a la vista.
+        assert.equal(resolverSituacion({ page: pagina, today: hoy('antes'), ctaVisible: true, reason }, m).bn.text, 'Hoy solo pagas 50 €');
+        assert.equal(resolverSituacion({ page: pagina, chosen: { text: 'c', widgetVisible: true }, reason }, m).bn.text, 'Hoy solo pagas 50 €');
+    });
+
+    test('Z6b: lo que resuelve algo que ya pasó no lleva razón, aunque haya un botón a la vista', () => {
+        const reason = { text: 'Hoy solo pagas 50 €' };
+        assert.equal(resolverSituacion({ page: pagina, payment: 'failed', ctaVisible: true, reason }, m).bn, undefined);
+        assert.equal(resolverSituacion({ page: pagina, resume: { text: 'r' }, ctaVisible: true, reason }, m).bn, undefined);
+        assert.equal(resolverSituacion({ page: pagina, checkout: { summary: 'c', action: { label: 'Pagar' } }, ctaVisible: true, reason }, m).bn, undefined);
+    });
+
+    test('Z6b: lo que sigue con la capa cerrada (`waiting`) es un banner sin acción, y manda sobre todo menos la compra', () => {
+        const onClick = () => {};
+        const s = resolverSituacion({ page: pagina, waiting: { text: 'Confirmando tu pago', sub: 'Te escribimos al terminar', onClick }, ctaVisible: true, reason: { text: 'x' } }, m);
+        assert.equal(s.id, 'espera');
+        assert.deepEqual(s.bn, { type: 'espera', text: 'Confirmando tu pago', sub: 'Te escribimos al terminar', onClick });
+        assert.deepEqual([s.action, s.locked, s.line], [null, true, null]);
+        assert.equal(resolverSituacion({ page: pagina, waiting: { type: 'hecho', text: '¡Reservado!' } }, m).bn.type, 'hecho', 'lo hecho conserva su tipo');
+        assert.equal(resolverSituacion({ page: pagina, waiting: { text: 'w' }, payment: 'failed' }, m).id, 'espera');
+        assert.equal(resolverSituacion({ page: pagina, waiting: { text: 'w' }, checkout: { summary: 'c', action: { label: 'Pagar' } } }, m).id, 'compra');
+    });
+
     test('elegido: con el botón del widget a la vista, la acción se queda en secundaria; si no, pagar la señal en principal', () => {
         const visto = resolverSituacion({ page: pagina, chosen: { text: 'c', widgetVisible: true } }, m);
         assert.deepEqual([visto.action.label, visto.calm], ['Reservar y pagar la señal', true]);
@@ -174,5 +210,12 @@ describe('cómo se reparte la frase (Z6a: siempre)', () => {
         const s = { line: 'Reservas', action: { label: 'Reservar' } };
         assert.equal(reparto({ ...base, s, menuOpen: true }).hasLine, false);
         assert.equal(reparto({ ...base, s, inCheckout: true }).hasLine, false);
+    });
+
+    test('Z6b, una sola voz: con el banner a la vista no hay frase, abajo ni arriba; abierta la isla, el banner no está', () => {
+        const s = { line: 'Desde 8 €', action: { label: 'Reservar' }, bn: { type: 'razon', text: 'Tú no pagas entrada' } };
+        assert.equal(reparto({ ...base, s }).hasLine, false);
+        assert.equal(reparto({ ...base, s, top: true }).hasLine, false);
+        assert.equal(reparto({ ...base, s, isOpen: true }).hasLine, true);
     });
 });

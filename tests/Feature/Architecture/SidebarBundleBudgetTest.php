@@ -990,7 +990,13 @@ class SidebarBundleBudgetTest extends TestCase
     // la isla. Medido 166,17 → 171,58 (base: el `HEAD` `5dbe175c` construido aparte en un `git worktree`, el mismo
     // cálculo; 0,20 son el módulo de la acción, `piezas/boton-accion.js`, que la regla `CE-6` saca del componente). El
     // techo, a 172.
-    private const ISLA_COMPRA_CHUNK_MAX_KB = 172;
+    // Z6b·1 (§4.27, opción C «Da la razón»): el BANNER en el sitio de la acción y la razón abierta (`BannerRazon`,
+    // `HojaRazon`, ~3,1), y el reparto «sin saturar», el relevo del hueco y la tabla (`useSinSaturar`, `useHueco`,
+    // `HuecoAccion`, ~4,1). Viajan con `IslaFlotante`, que comparte con la isla de la página aunque la compra no diga
+    // razones. Medido 171,58 → 178,82 (base: el `HEAD` `cac9a9fd` construido aparte en un `git worktree`, el mismo
+    // cálculo). Diferir el banner y la hoja ahorraba 3,08 aquí, pero hacía crecer las dos calculadoras +0,31 (la de
+    // entradas, sobre su techo) y el primer banner esperaba a su descarga. El techo, a 179.
+    private const ISLA_COMPRA_CHUNK_MAX_KB = 179;
 
     // T4d·4 (`specs/isla-y-landing-nueva.md` §4.12): la CALCULADORA de una página, entrada propia que la página pide
     // (`scripts` de `<x-pagina>`) y se monta al acercarse su pieza. Su DESCARGA entera, como la mide el navegador que
@@ -1051,7 +1057,11 @@ class SidebarBundleBudgetTest extends TestCase
     // Z6a (zip (6), §4.27): lo mismo que la compra, que comparte `IslaFlotante` y sus piezas —los tres huecos, la frase
     // siempre con su cruce, el asentado, la secundaria, el menú con sus iconos, «¿Lo hablamos?»—. Medido 172,62 → 178,01
     // (base: el `HEAD` `5dbe175c` construido aparte en un `git worktree`, el mismo cálculo). El techo, a 179.
-    private const ISLA_PAGINA_MAX_KB = 179;
+    // Z6b·1 (§4.27): lo mismo que la compra —el banner, la razón abierta, el reparto y el relevo— y, de la página, la pieza
+    // que se lee y su razón y su frase (`pagina.js`: `zonaEnMedio`, `razonDe`, `fraseDe`). Los iconos de las razones, CERO:
+    // los dibuja el servidor (`RazonesDeIsla`). Medido 178,01 → 185,77 (base: el `HEAD` `cac9a9fd`, aparte; diferidos el
+    // banner y la hoja, 182,61, con las calculadoras +0,31). El techo, a 186.
+    private const ISLA_PAGINA_MAX_KB = 186;
 
     // T3e·3 (`#694`): las pantallas de después de la pantalla 0, en su trozo (`isla/compra/pasos-diferidos.js`), que la
     // compra pide al montarse. Medido 36,92 KiB. T3e·4 (`#695`): «Entra» con sus eventos y la «G» de Google, 37,66.

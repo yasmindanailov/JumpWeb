@@ -63,14 +63,19 @@ export function transicionIsla({ calm, inCheckout = false, rapido = true, hundid
  * **Es cristal** (Z6a): `--surface-glass-ink-float` (82 %) con `--blur-island`, en reposo, abierta, con las cookies, los
  * avisos y el pago fallido; solo la capa grande (`lee`: la compra y Mi cuenta, formularios largos) va en `--ink-surface`.
  * Si lo trae el scroll (`rapido` falso), `--dur-island` pasa a la calma también para lo que se cruza dentro.
+ * ⚠️ **El borde (1px por lado) va FUERA de lo medido** (el owner, 01-10, Z6b: «los márgenes no son perfectos»): la hoja
+ * del sistema pone `box-sizing: border-box` a todo (`tokens/base.css` del diseño), así que una isla del tamaño exacto de
+ * su medidor recortaba 2px su contenido —9px de aire arriba y a la izquierda, 7 abajo y a la derecha (medido), igual en
+ * el mockup—. Se suma el borde aquí (`useMorfeo` ya reservaba su hueco con él, `h + 2`) y el medidor lleva 7px de aire
+ * (`estiloMedida`): la caja de fuera mide lo mismo que antes y el aire, 8px en los cuatro lados.
  */
 export function estiloIsla({ row, box, alert, grown, animate, calm, lee = false, inCheckout = false, rapido = true, hundida = false, nombre = null }) {
     return {
         pointerEvents: 'auto',
         position: 'relative',
         overflow: 'hidden',
-        width: row ? (box.w ? `${box.w}px` : 'max-content') : '100%',
-        height: box.h ? `${box.h}px` : 'auto',
+        width: row ? (box.w ? `${box.w + 2}px` : 'max-content') : '100%',
+        height: box.h ? `${box.h + 2}px` : 'auto',
         maxWidth: '100%',
         '--dur-island': rapido ? undefined : 'var(--dur-island-calma)',
         background: lee ? 'var(--ink-surface)' : 'var(--surface-glass-ink-float)',
@@ -87,11 +92,14 @@ export function estiloIsla({ row, box, alert, grown, animate, calm, lee = false,
     };
 }
 
-/** El medidor: el bloque cuyo tamaño persigue la isla. En la compra, 600px arriba y el ancho entero abajo. */
+/**
+ * El medidor: el bloque cuyo tamaño persigue la isla. En la compra, 600px arriba y el ancho entero abajo. Su aire, 7px: con
+ * el borde de la isla (1px, fuera de lo medido: `estiloIsla`), los 8px del diseño, iguales en los cuatro lados.
+ */
 export function estiloMedida({ row, top, isOpen, cap, maxWidth, inCheckout = false }) {
     return {
         boxSizing: 'border-box',
-        padding: '8px',
+        padding: '7px',
         width: inCheckout ? (top ? 'min(600px, calc(100vw - 32px))' : '100%') : row ? 'max-content' : '100%',
         // Abierta en escritorio la isla se ensancha hasta un mínimo cómodo. En píxeles, nunca en %: un % se mide
         // contra la isla, que es quien se anima, y los dos se perseguían 2px por fotograma.
@@ -102,7 +110,8 @@ export function estiloMedida({ row, top, isOpen, cap, maxWidth, inCheckout = fal
 
 /**
  * **El alto en reposo que la isla publica** (`--island-h`, zip del 27-09, §4.15): su fila y, si la línea va encima de
- * ella (abajo, en móvil), desde la línea; más el aire de su medidor (8px arriba y 8 abajo). La cabecera mide con él. Las
+ * ella (abajo, en móvil), desde la línea; más el aire de su medidor y su borde (7 + 1 arriba y 7 + 1 abajo: el alto de la
+ * caja entera). La cabecera mide con él. Las
  * cookies y los avisos son de paso y no cuentan. `0` = no hay nada que publicar (sin fila, o una medida absurda).
  */
 export function altoEnReposo({ fila, linea = null, row }) {

@@ -118,6 +118,8 @@
     /* El tono de la acción que baja a secundaria y vuelve: el mismo tiempo, sin rebote (Z6a). */
     --t-island-tone: background-color var(--dur-island) var(--ease-in-out), color var(--dur-island) var(--ease-in-out), box-shadow var(--dur-island) var(--ease-in-out);
     --scale-press: 0.97;
+    /* Lo que se hunde al tocarlo: el banner de la razón (Z6b). */
+    --t-press: transform var(--dur-instant) var(--ease-out);
     --lift-hover: -3px;
     --blur-island: saturate(160%) blur(20px);
     --blur-veil: saturate(120%) blur(8px);

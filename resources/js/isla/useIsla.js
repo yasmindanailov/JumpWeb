@@ -26,6 +26,8 @@ import { useAltoIsla } from './useAltoIsla.js';
 import { useTeclado } from './useTeclado.js';
 import { useAsentado } from './useAsentado.js';
 import { useCruce } from './useCruce.js';
+import { useSinSaturar } from './useSinSaturar.js';
+import { useHueco } from './useHueco.js';
 import { dejarVuelo } from './relevo.js';
 import { salidaDePanel, vueloDesde } from './movimiento.js';
 
@@ -35,11 +37,16 @@ export function useIsla(props, { wrapRef, islandRef, sizerRef, panelRef, rowRef,
     const pila = usePila();
     const { stack, view, plansFromToday, alternarPanel } = pila;
 
+    // SIN SATURAR (Z6b): la razón de la pieza que se lee y la frase que quita su miedo, repartidas por prioridad (nada al
+    // llegar, las de decisión siempre, el resto una por visita y con 6 s de calma). La tabla recibe lo que toca decir YA.
+    const sinSaturar = useSinSaturar({ reason: () => props.reason, reassurance: () => props.reassurance, chosen: () => props.chosen });
+
     // Con el menú abierto, el velo tapa la página: su botón ya no se ve, así que la acción de la isla va en principal.
     const entrada = (ctaVisible) => ({
-        page: props.page, today: props.today, offer: props.offer, reassurance: props.reassurance, quote: props.quote,
+        page: props.page, today: props.today, offer: props.offer, reassurance: sinSaturar.frase.value, quote: props.quote,
         chosen: props.chosen, filling: props.filling, task: props.task, resume: props.resume, payment: props.payment,
         paymentText: props.paymentText, bookingToday: props.bookingToday, checkout: props.checkout, ctaVisible,
+        reason: sinSaturar.razon.value, waiting: props.waiting,
         onRetry: props.onRetry, onPayBizum: props.onPayBizum, onManual: props.onManual, onDismiss: props.onDismiss,
     });
     const s0 = computed(() => resolverSituacion(entrada(props.ctaVisible), props.textos));
@@ -99,8 +106,8 @@ export function useIsla(props, { wrapRef, islandRef, sizerRef, panelRef, rowRef,
     onBeforeUnmount(() => clearTimeout(relojToque));
     const rapido = computed(() => isOpen.value || tocado.value);
 
-    // ── Reparto de la frase: siempre (Z6a) ──
-    const r = computed(() => reparto({ s: s.value, top: top.value, menuOpen: menuOpen.value, inCheckout: inCheckout.value }));
+    // ── Reparto de la frase: siempre (Z6a), salvo con el banner a la vista: una sola voz (Z6b) ──
+    const r = computed(() => reparto({ s: s.value, top: top.value, menuOpen: menuOpen.value, inCheckout: inCheckout.value, isOpen: isOpen.value }));
     remedirCuando([top, () => r.value.row, inCheckout, isOpen, () => s.value.id, view, () => stack.value.length]);
     // El teclado del móvil en la capa grande (§4.16): la raíz se ciñe a lo que se ve y la capa mide ese alto.
     const { kb } = useTeclado(() => inCheckout.value && ! top.value);
@@ -139,7 +146,8 @@ export function useIsla(props, { wrapRef, islandRef, sizerRef, panelRef, rowRef,
     // ayuda. No añade un control ni quita la acción.
     const ayudaEnFrase = computed(() => Boolean(props.help && props.help.stuck && ! isOpen.value));
 
-    const panelTitle = computed(() => (inCheckout.value ? null
+    // La sexta vista, la RAZÓN abierta (Z6b): sin título en su cabecera —el sobretítulo va dentro—, como el diseño.
+    const panelTitle = computed(() => (inCheckout.value || view.value === 'razon' ? null
         : view.value === 'menu' ? t('panel.menu')
             : view.value === 'plans' ? (props.plans && props.plans.title) || t('panel.planes')
                 : view.value === 'resumen' ? t('panel.calculo')
@@ -171,10 +179,30 @@ export function useIsla(props, { wrapRef, islandRef, sizerRef, panelRef, rowRef,
     const elegirPlan = (o, e) => { dejarVuelo(vueloDesde(e?.currentTarget, o.title)); pila.poner([]); if (o.onClick) o.onClick({ fromToday: plansFromToday.value }); };
     const navegar = (it, e) => { pila.poner([]); if (props.onNavigate) props.onNavigate(it, e); };
 
+    // EL BANNER (Z6b) en el sitio de la acción: la razón (con un botón de la página a la vista), la espera o lo hecho. Con
+    // la isla abierta, no: el velo tapa el botón de la página y la acción vuelve, en naranja.
+    const banner = computed(() => (s.value.bn && ! isOpen.value ? s.value.bn : null));
+    // Se toca entero. Lo que trae su propio destino (la espera, lo hecho: `onClick`) va a él; una razón se ABRE en su vista,
+    // que la recuerda mientras está abierta (abierta, la isla ya no la tiene). ⚠️ También la VIVA («Sáb 3 y dom 4,
+    // libres»): en el diseño solo se abría la de tipo `razon`, y tocar la viva no hacía nada (`bnClick` de `ParkIsland`).
+    const razonAbierta = ref(null);
+    function pulsarBanner(e) {
+        const bn = banner.value;
+        if (! bn) return;
+        if (bn.onClick) { bn.onClick(e); return; }
+        razonAbierta.value = bn;
+        alternarPanel('razon', e);
+    }
+    // El relevo del hueco: acción ⇄ banner, o un banner por otro (`useHueco.js`).
+    const hueco = computed(() => (banner.value
+        ? { clave: `bn|${banner.value.type}|${banner.value.text}`, bn: banner.value }
+        : accion.value ? { clave: 'act', accion: { label: accion.value.label, calm: Boolean(s.value.calm) && ! isOpen.value } } : null));
+    const huecoSale = useHueco(() => hueco.value);
+
     const panelProps = computed(() => ({
         vista: view.value, titulo: panelTitle.value, tituloEnFila: titleInRow.value, top: top.value,
         menuItems: props.menuItems, homeLabel: props.homeLabel, contact: props.contact, lang: props.lang, onLanguage: props.onLanguage,
-        account: props.account, help: props.help, cookies: props.cookies,
+        account: props.account, help: props.help, cookies: props.cookies, razon: razonAbierta.value,
         preferencias: props.cookiePrefs, plans: props.plans, plansFromToday: plansFromToday.value, quote: props.quote,
     }));
 
@@ -182,6 +210,7 @@ export function useIsla(props, { wrapRef, islandRef, sizerRef, panelRef, rowRef,
         t, s, stack, view, top, r, isOpen, inCheckout, openRow, stretch, titleInRow, panelTitle, shownNotice,
         hayLinea, lineaAbre, accion, accionHref, accionAbierta, pulsarAccion, alTeclear, alternarPanel, panelProps, anuncio,
         cerrar: pila.cerrar, atras: pila.atras, apilarPanel: pila.apilarPanel, elegirPlan, navegar,
+        banner, pulsarBanner, hueco, huecoSale,
         cruce, cuenta, pulsarCuenta, ayudaEnFrase, tocar, hundir, soltar, veloSaliente, kb,
         tono: computed(() => (s.value.calm && ! isOpen.value ? 'secundaria' : 'principal')),
         tamano: computed(() => tamano({ inCheckout: inCheckout.value, isOpen: isOpen.value, notice: shownNotice.value })),

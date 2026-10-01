@@ -44,7 +44,8 @@
             // `precargar` (`#783`): los trozos de la compra que la isla pide en segundo plano con la página quieta, para
             // que la primera apertura no los espere (medido en 4G: 2s). Solo si la compra se abre en la isla y se carga
             // el cajón.
-            'config' => $isla + [
+            // Las RAZONES de cada pieza (Z6b) llegan con su icono ya dibujado (`RazonesDeIsla`): cero bytes en el paquete.
+            'config' => \App\Http\Instancia\RazonesDeIsla::conDibujos($isla) + [
                 'owner' => auth()->id(), 'cookiesUrl' => route('legal.cookies'), 'cookiesPanel' => \App\Http\Legal\CookieInventory::panel(),
                 'cuenta' => app(\App\Http\Cuenta\AntesDeVenir::class)->paraLaIsla(auth()->user()),
                 'aviso' => app(\App\Http\Cuenta\AvisoDeSesion::class)->paraLaIsla(session('status')),

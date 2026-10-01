@@ -22,6 +22,8 @@ import { CLAVE_TEXTOS } from './piezas/textos.js';
 import FraseIsla from './piezas/FraseIsla.vue';
 import ControlIcono from './piezas/ControlIcono.vue';
 import BotonAccion from './piezas/BotonAccion.vue';
+import BannerRazon from './piezas/BannerRazon.vue';
+import HuecoAccion from './piezas/HuecoAccion.vue';
 import PanelIsla from './piezas/PanelIsla.vue';
 import BloqueCookies from './piezas/BloqueCookies.vue';
 import BloqueAviso from './piezas/BloqueAviso.vue';
@@ -44,7 +46,7 @@ const {
     t, s, stack, view, top, r, isOpen, inCheckout, openRow, stretch, titleInRow, panelTitle, shownNotice,
     hayLinea, lineaAbre, accion, accionHref, accionAbierta, pulsarAccion, alTeclear, alternarPanel, panelProps, anuncio,
     cerrar, atras, apilarPanel, elegirPlan, navegar, cruce, cuenta, pulsarCuenta, ayudaEnFrase, tocar, hundir, soltar,
-    veloSaliente, kb, tono, tamano, estiloRaiz, estiloIsla, estiloMedida,
+    veloSaliente, kb, tono, tamano, estiloRaiz, estiloIsla, estiloMedida, banner, pulsarBanner, hueco, huecoSale,
 } = useIsla(props, { wrapRef, islandRef, sizerRef, panelRef, rowRef, lineRowRef });
 // El velo: entra fundido y se va fundido (`isla-velo-sale`, en `isla.css`; Z3, `#782`). Sin `<Transition>` de Vue, a
 // propósito: su maquinaria pesaba 10–14 KiB en cada trozo de la isla (medido); el que se va es otro nodo, que se quita solo.
@@ -194,21 +196,50 @@ const raya = { flex: '0 0 auto', alignSelf: 'center', width: '1px', height: '24p
                                 />
                             </div>
                         </template>
+                        <!-- Con el banner en el hueco no hay relleno (el owner, Z6b): con él, el banner quedaba a 24px del menú y a 8 de la cuenta. -->
                         <span
-                            v-if="(top || openRow) && !hayLinea && !inCheckout && !(stretch && accion) && !titleInRow"
+                            v-if="(top || openRow) && !hayLinea && !inCheckout && !(stretch && accion) && !titleInRow && !banner"
                             :style="{ flex: '1 1 auto', minWidth: '8px' }"
                         />
-                        <BotonAccion
-                            v-if="accion"
-                            :top="stretch ? false : top"
-                            :label="accion.label"
-                            :href="accionHref"
-                            :expanded="accionAbierta"
-                            :pulsar="pulsarAccion"
-                            :calm="Boolean(s.calm) && !isOpen"
-                            :entra="cruce.nA > 0"
-                            :sale="cruce.accSale"
-                        />
+                        <!-- El hueco de la acción (Z6b): la acción o, en su sitio, el banner; y lo que se va, encima. -->
+                        <HuecoAccion
+                            v-if="hueco"
+                            :clave="hueco.clave"
+                            :crece="!top || isOpen || stretch"
+                            :saliendo="Boolean(huecoSale)"
+                        >
+                            <BannerRazon
+                                v-if="banner"
+                                :bn="banner"
+                                :top="top"
+                                @pulsar="pulsarBanner"
+                            />
+                            <BotonAccion
+                                v-else
+                                :top="stretch ? false : top"
+                                :label="accion.label"
+                                :href="accionHref"
+                                :expanded="accionAbierta"
+                                :pulsar="pulsarAccion"
+                                :calm="Boolean(s.calm) && !isOpen"
+                                :entra="cruce.nA > 0"
+                                :sale="cruce.accSale"
+                            />
+                            <template #sale>
+                                <BannerRazon
+                                    v-if="huecoSale && huecoSale.bn"
+                                    :bn="huecoSale.bn"
+                                    :top="top"
+                                    quieto
+                                />
+                                <BotonAccion
+                                    v-else-if="huecoSale && huecoSale.accion"
+                                    :top="stretch ? false : top"
+                                    :label="huecoSale.accion.label"
+                                    :calm="huecoSale.accion.calm"
+                                />
+                            </template>
+                        </HuecoAccion>
                         <ControlIcono
                             v-if="openRow"
                             :label="t('control.cerrar')"
