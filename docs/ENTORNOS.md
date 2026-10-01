@@ -518,6 +518,10 @@ instalación de un cliente. Si se configura a mano deja de ser una prueba del pr
 > (del `storage/app/` del owner; se sube a `~/contenido/` y se ejecuta desde `~/public_html`, como el de `#592`): comprueba
 > la huella ESPERADA de cada idioma, sustituye en una transacción y, pasado otra vez, ABORTA (probado en local). Luego, a
 > ojo: `/cookies` con su listado en tarjetas.
+> ❗ **Los TEXTOS LEGALES de producción** (`specs/textos-legales.md`, `#863`→`#865`): la privacidad y las condiciones de
+> PlayJump se editaron a mano y publican dos frases FALSAS (el descargo «no se gestiona en esta web»; los invitados «se
+> eliminan» tras la fiesta): se corrigen AQUÍ, en la v2.0.0 (`#865`), con un script por huella como el de `/cookies`
+> (futuro, spec §4.3·4) y SOLO si la poda de `#863` va en la misma versión.
 > ❗❗❗ **El tercero se paró en la GUARDA 1 y dejó el sitio 3 minutos en 503** (`#594`): el owner había
 > pasado Redsys a `live` a las 17:29. Se levantó con `artisan up` y se completaron a mano las franjas,
 > `artisan optimize` y la salud. Desde `#594`, en producción la guarda admite `test` o `live`.

@@ -331,5 +331,8 @@ Solo cambia su francés (de «vous»). Su español no dice nada falso medido hoy
   las excursiones, con 5 días: te devolvemos la señal a la tarjeta o cambiamos la fecha» — contra los «3 días» de las
   condiciones vivas y de `#699`: va a la REVISIÓN FINAL del owner con el dueño (ya estaba en su lista), no bloquea esto.
 
+- **D11 · Las dos frases falsas que producción publica HOY** (§1.3, 1 y 2): `[DECIDIDO owner]` 2026-10-01 (`#865`) — se
+  corrigen al desplegar la v2.0.0, con el script de §4.3·4 (descartado: corregirlas ya en el panel).
+
 **Lo que valida la asesoría**: cada `[PENDIENTE: asesoría]` de §4.2 y §4.4, las bases jurídicas propuestas, los plazos
 y el aviso de desistimiento.
