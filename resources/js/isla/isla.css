@@ -306,6 +306,9 @@
 @keyframes isla-baja { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
 @keyframes isla-tachar { from { background-size: 0 2px; } to { background-size: 100% 2px; } }
 @keyframes isla-fade-out { to { opacity: 0; } }
+/* La barra del aviso a isla entera (Z6b·2, `pj-aviso-resto`): lo que le queda, de llena a vacía. Con «reducir movimiento» no
+   se pinta (`piezas/aviso-isla.js`): con la regla de arriba se vaciaría al instante. */
+@keyframes isla-aviso-resto { from { transform: scaleX(1); } to { transform: scaleX(0); } }
 /* Lo que se VE del número que rueda (`NumeroRodante`): las diez cifras de cada columna y sus símbolos, en contenido
    generado —se ve igual y no es texto: ni el lector de pantalla, ni quien copia, leen «0 1 2 3…»—. */
 :where([data-isla-rueda])::before { content: attr(data-isla-rueda); white-space: pre; }

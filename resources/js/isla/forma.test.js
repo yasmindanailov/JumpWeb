@@ -146,12 +146,15 @@ test('el alto en reposo que publica: la fila, desde la línea si va encima, más
     assert.equal(altoEnReposo({ fila: { top: 0, bottom: 0 }, row: true }), 0);
 });
 
-test('publica en reposo; abierta, en la compra o con el pago fallido, no (ya no hay compacta, Z6a)', () => {
+test('publica en reposo; abierta, en la compra, con el pago fallido o con el aviso a isla entera, no (Z6a, Z6b·2)', () => {
     const reposo = { isOpen: false, inCheckout: false, extra: null };
     assert.equal(publicaAlto(reposo), true);
     assert.equal(publicaAlto({ ...reposo, isOpen: true }), false);
     assert.equal(publicaAlto({ ...reposo, inCheckout: true }), false);
     assert.equal(publicaAlto({ ...reposo, extra: { kind: 'fallo' } }), false);
+    // El aviso entero esconde la fila: es de paso, como las cookies, y la cabecera no se mueve por él.
+    assert.equal(publicaAlto({ ...reposo, aviso: true }), false);
+    assert.equal(publicaAlto({ ...reposo, aviso: false }), true);
 });
 
 test('en la compra el medidor mide 600px como mucho arriba y el ancho entero abajo, aunque sea fila', () => {

@@ -122,9 +122,13 @@ export function altoEnReposo({ fila, linea = null, row }) {
     return h >= 40 ? h : 0;
 }
 
-/** Cuándo publica: en reposo. Abierta, en la compra o con el pago fallido se queda el último (ya no hay compacta, Z6a). */
-export function publicaAlto({ isOpen, inCheckout, extra }) {
-    return ! isOpen && ! inCheckout && ! extra;
+/**
+ * Cuándo publica: en reposo. Abierta, en la compra o con el pago fallido se queda el último (ya no hay compacta, Z6a); y
+ * con el aviso a isla entera (Z6b·2), que esconde la fila: es de paso, como las cookies. El diseño no lo dice y no lo
+ * publicaba porque la fila escondida mide 16 (< 40); aquí, por su nombre.
+ */
+export function publicaAlto({ isOpen, inCheckout, extra, aviso = false }) {
+    return ! isOpen && ! inCheckout && ! extra && ! aviso;
 }
 
 /** El `data-size` de la raíz, de más a menos: la compra manda sobre un panel, y un panel sobre el aviso. */

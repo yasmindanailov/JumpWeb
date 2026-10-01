@@ -6,7 +6,8 @@
  * Desde la Z6a (zip (6), «tres huecos, cristal y morph», §4.27): TRES huecos fijos, en móvil y en escritorio —el menú a la
  * izquierda, la acción en el centro y la cuenta a la derecha, los dos solo icono—, y la frase SIEMPRE: encima en móvil,
  * en la fila arriba (tras el menú y una línea vertical). Teléfono, WhatsApp, idioma y cookies viven dentro del menú. Es
- * cristal, y cada cambio es un morph: lo viejo se desenfoca y se va mientras lo nuevo llega.
+ * cristal, y cada cambio es un morph: lo viejo se desenfoca y se va mientras lo nuevo llega. Desde la Z6b·2, un aviso sin
+ * panel ni cookies ocupa la isla entera (`piezas/AvisoIsla.vue`) y la fila se esconde mientras dura.
  *
  * ⚠️ Es un PORT, y por eso sigue el orden del diseño bloque a bloque: cuando el diseño cambie, se compara
  * fichero con fichero. Se juzga contra él píxel a píxel (`scripts/pixel.mjs`, banco de la isla). Este fichero
@@ -27,6 +28,7 @@ import HuecoAccion from './piezas/HuecoAccion.vue';
 import PanelIsla from './piezas/PanelIsla.vue';
 import BloqueCookies from './piezas/BloqueCookies.vue';
 import BloqueAviso from './piezas/BloqueAviso.vue';
+import AvisoIsla from './piezas/AvisoIsla.vue';
 import BloqueFallo from './piezas/BloqueFallo.vue';
 import CompraIsla from './piezas/CompraIsla.vue';
 
@@ -44,7 +46,7 @@ const lineRowRef = ref(null);
 
 const {
     t, s, stack, view, top, r, isOpen, inCheckout, openRow, stretch, titleInRow, panelTitle, shownNotice,
-    hayLinea, lineaAbre, accion, accionHref, accionAbierta, pulsarAccion, alTeclear, alternarPanel, panelProps, anuncio,
+    avisoEntero, avisoPausa, avisoTranscurrido, quitarAviso, pausarAviso, hayLinea, lineaAbre, accion, accionHref, accionAbierta, pulsarAccion, alTeclear, alternarPanel, panelProps, anuncio,
     cerrar, atras, apilarPanel, elegirPlan, navegar, cruce, cuenta, pulsarCuenta, ayudaEnFrase, tocar, hundir, soltar,
     veloSaliente, kb, tono, tamano, estiloRaiz, estiloIsla, estiloMedida, banner, pulsarBanner, hueco, huecoSale,
 } = useIsla(props, { wrapRef, islandRef, sizerRef, panelRef, rowRef, lineRowRef });
@@ -93,11 +95,12 @@ const raya = { flex: '0 0 auto', alignSelf: 'center', width: '1px', height: '24p
             @pointercancel.capture="soltar"
             @pointerleave="soltar"
         >
+            <!-- Fuera de la compra dice el aviso (Z6b·2): llega sin foco y sin esto no lo oye quien no lo ve (WCAG 4.1.3). -->
             <span
                 role="status"
                 aria-live="polite"
                 :style="{ position: 'absolute', width: '1px', height: '1px', overflow: 'hidden', clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap' }"
-            >{{ inCheckout ? anuncio : '' }}</span>
+            >{{ inCheckout ? anuncio : shownNotice || '' }}</span>
             <div
                 ref="sizerRef"
                 :style="estiloMedida"
@@ -130,13 +133,13 @@ const raya = { flex: '0 0 auto', alignSelf: 'center', width: '1px', height: '24p
                         @elegir="elegirPlan"
                     />
                     <BloqueAviso
-                        v-if="!top && shownNotice"
+                        v-if="!top && shownNotice && !avisoEntero"
                         :texto="shownNotice"
                         :top="top"
                     />
                     <!-- La frase (Z6a): siempre. En móvil, en su renglón encima de la fila, nunca dentro del botón. -->
                     <div
-                        v-if="!r.row && hayLinea"
+                        v-if="!r.row && hayLinea && !avisoEntero"
                         ref="lineRowRef"
                         :style="{ padding: '2px 4px 7px', display: 'flex', alignItems: 'flex-start', gap: '6px' }"
                     >
@@ -157,10 +160,22 @@ const raya = { flex: '0 0 auto', alignSelf: 'center', width: '1px', height: '24p
                         :top="top"
                     />
 
+                    <!-- El aviso a isla entera (Z6b·2): sin panel ni cookies ocupa la isla, y la fila se esconde sin desmontarse. -->
+                    <AvisoIsla
+                        v-if="avisoEntero"
+                        :key="shownNotice"
+                        :texto="shownNotice"
+                        :etiqueta="`${shownNotice} · ${t('control.cerrar_aviso')}`"
+                        :top="top"
+                        :pausado="avisoPausa"
+                        :transcurrido="avisoTranscurrido"
+                        @quitar="quitarAviso"
+                        @pausa="pausarAviso"
+                    />
                     <!-- Los tres huecos: el menú (o Volver), la acción y la cuenta (o la X). -->
                     <div
                         ref="rowRef"
-                        :style="{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }"
+                        :style="{ display: avisoEntero ? 'none' : 'flex', alignItems: 'center', gap: '8px', width: '100%' }"
                     >
                         <ControlIcono
                             v-if="openRow && stack.length > 1"
@@ -267,7 +282,7 @@ const raya = { flex: '0 0 auto', alignSelf: 'center', width: '1px', height: '24p
                         :top="top"
                     />
                     <BloqueAviso
-                        v-if="top && shownNotice"
+                        v-if="top && shownNotice && !avisoEntero"
                         :texto="shownNotice"
                         :top="top"
                     />

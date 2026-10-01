@@ -41,6 +41,8 @@ return [
         'mi_qr' => 'Mi QR',
         'volver' => 'Volver',
         'cerrar' => 'Cerrar',
+        // El aviso a isla entera (Z6b·2) se quita al tocarlo: lo que se lee con el foco en él, tras el aviso.
+        'cerrar_aviso' => 'Toca para cerrar',
     ],
     'panel' => [
         'menu' => 'Menú',

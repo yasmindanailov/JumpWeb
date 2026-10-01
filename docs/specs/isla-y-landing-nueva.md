@@ -2333,7 +2333,7 @@ fuente de cada punto es su `readme.md` (la sección entre comillas) y su compone
 | Tanda | Qué | Del readme | Lo más grande |
 |---|---|---|---|
 | Z6a ✅ | La isla en **tres huecos** (menú · acción · cuenta), la frase siempre, la acción siempre (a secundaria con un botón de la página a la vista), la cuenta con el QR y su punto, 13/14 fuera de la barra, el menú reordenado, «¿Lo hablamos?», **cristal 82 %** y **morph** en cada cambio, sin `compact` | «La isla · tres huecos, cristal y morph (28-09)» | `ParkIsland.jsx` (822 líneas cambiadas) |
-| Z6b | **Banners «Da la razón»**: con un botón de la página a la vista, la razón en vez del naranja (razón · vivo · espera · hecho), la compra que no corta al cerrar, el aviso a isla entera, `isla_razon`; y la frase de cada pieza (`#866`) | «La isla · banners, opción C (29-09)» | `explorations/isla-banners` (las razones de cada página) |
+| Z6b ✅ | **Banners «Da la razón»**: con un botón de la página a la vista, la razón en vez del naranja (razón · vivo · espera · hecho), la compra que no corta al cerrar, el aviso a isla entera, `isla_razon`; y la frase de cada pieza (`#866`) | «La isla · banners, opción C (29-09)» | `explorations/isla-banners` (las razones de cada página) |
 | Z6c | **Experimento B3** contra la isla de hoy, con `Experiments` (asigna el servidor por visitante; `variante` en los eventos) y las frases cortas de cada página | «Experimento B3 (29-09)» | la cabecera sin botón en la primera pantalla del móvil |
 | Z6d | **La firma** de la cabecera (logo y nota de Google juntos, `--scrim-firma`), las garantías del móvil en lista, `Sticker` y `ProofChip`, el filo del gris (`--edge-subtle`) | «La cabecera · la firma», «Las garantías en el móvil», «Las pegatinas», «La prueba de los cuidados» | `VideoHero`, `ReassuranceBand`, `ProofList` |
 | Z6e | Cumpleaños **«Todo resuelto» (6a)** y **las dos horas repartidas** (90 min saltando y 30 de merienda: la cabecera, la pieza 3, el selector, las dudas, la hora extra) | «Rehecha el 29-09», «Las dos horas, repartidas (28-09)» | `IncludedList`, `AfterBookingPanel` |
@@ -2513,6 +2513,18 @@ del sistema pone `border-box` a todo (`tokens/base.css`) y la caja, del tamaño 
 en el mockup y desde la T2). Arreglado: sin relleno con el banner, y el borde FUERA de lo medido (`forma.js`: la caja suma
 2 px y el medidor pasa de 8 a 7 de aire). La caja de fuera mide lo mismo que antes (el `--island-h` no cambia) y el aire es
 de 8 px en los cuatro lados, también en la compra y en los paneles.
+
+**Z6b·2 ✅, con el visto bueno del owner en vivo (01-10 noche)**: `useAviso.js` (el reloj: 4,2 s que se paran con un panel, el
+ratón o el foco y SIGUEN DONDE IBAN; `entero`, sin panel, compra ni cookies; la pausa se olvida si el aviso deja de verse) y
+`piezas/AvisoIsla.vue` con `aviso-isla.js` (`CE-6`: el check con `isla-pop`, el hecho y el matiz, la barra con
+`isla-aviso-resto`). Con él la fila se esconde sin desmontarse y `--island-h` no se publica (`publicaAlto`, por su nombre).
+**Difiere del diseño, a propósito**: la barra empieza en lo ya corrido cuando el aviso vuelve tras un panel o las cookies (en
+`ParkIsland` volvía llena y se iba a medias); el hecho se corta también en «!» y «?», y sin `lookbehind` (Safari < 16.4 no lo
+entiende y rompía el módulo entero); con «reducir movimiento», sin barra; el aviso se anuncia en el `role="status"` de la isla
+(WCAG 4.1.3) y, cerrado con el teclado, el foco pasa al menú. **Medido**: `aviso.test.js` (8 casos) con tres mutantes a mano,
+3/3 (sin arnés: `DEUDA.md`); el peso, la compra 178,83 → 182,37 (techo 183) y la isla de la página 185,78 → 189,33 (190), con
+la base `9af637fb` construida antes de tocar el JS. Sin sondas ni capturas: el owner lo revisó en vivo en una página temporal,
+ya borrada. **Con esto se cierra la Z6b**; siguen los tres usos de `#867`.
 
 ## 5. Impacto en invariantes
 

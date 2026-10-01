@@ -12,7 +12,7 @@
  * luego la primera medida, luego `isla:abrir`) y los `watch` también: es el orden del port de una pieza, y el banco de
  * la isla lo midió así (52/52 a 0 px).
  */
-import { computed, onBeforeUnmount, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import { resolverSituacion, reparto } from './situacion.js';
 import { t as texto } from '../sidebar/i18n.js';
 import { estiloIsla, estiloMedida, estiloRaiz, tamano } from './forma.js';
@@ -75,7 +75,15 @@ export function useIsla(props, { wrapRef, islandRef, sizerRef, panelRef, rowRef,
     const actionView = computed(() => view.value !== null && (view.value === 'plans' || Boolean(s.value.action && s.value.action.panel === view.value)));
     const titleInRow = computed(() => actionView.value && view.value !== null);
 
-    const shownNotice = useAviso(props, isOpen);
+    // EL AVISO (Z6b·2): a isla entera sin panel ni cookies, con su barra; su reloj se para y sigue donde iba.
+    const aviso = useAviso(props, { isOpen, inCheckout });
+    const shownNotice = aviso.shownNotice;
+    // Tocado con el foco dentro (el teclado), el foco no se pierde con él: pasa al primer control de la barra, que vuelve.
+    function quitarAviso(e) {
+        const conFoco = Boolean(e && e.currentTarget && e.currentTarget.contains(document.activeElement));
+        aviso.quitar();
+        if (conFoco) nextTick(() => rowRef.value?.querySelector('button, a')?.focus());
+    }
     const { alTeclear } = useCapa({ islandRef, panelRef, isOpen, inCheckout, checkout: () => props.checkout, pila });
     const { anuncio } = useCompraCapa({
         islandRef, inCheckout, clave: computed(() => (inCheckout.value && props.checkout ? props.checkout.key : null)), bloquea: () => props.bloqueaPagina,
@@ -114,7 +122,7 @@ export function useIsla(props, { wrapRef, islandRef, sizerRef, panelRef, rowRef,
     // La primera pantalla (zip del 27-09): el alto en reposo, publicado para la cabecera (`--island-h`).
     useAltoIsla({
         rowRef, lineRowRef,
-        estado: () => ({ isOpen: isOpen.value, inCheckout: inCheckout.value, extra: s.value.extra, row: r.value.row, top: top.value }),
+        estado: () => ({ isOpen: isOpen.value, inCheckout: inCheckout.value, extra: s.value.extra, aviso: aviso.entero.value, row: r.value.row, top: top.value }),
     });
 
     const grown = computed(() => isOpen.value || Boolean(props.cookies) || Boolean(shownNotice.value) || (r.value.hasLine && !r.value.row) || box.value.h > 70);
@@ -208,6 +216,8 @@ export function useIsla(props, { wrapRef, islandRef, sizerRef, panelRef, rowRef,
 
     return {
         t, s, stack, view, top, r, isOpen, inCheckout, openRow, stretch, titleInRow, panelTitle, shownNotice,
+        avisoEntero: aviso.entero, avisoPausa: aviso.pausa, avisoTranscurrido: aviso.transcurrido, quitarAviso,
+        pausarAviso: (v) => { aviso.pausa.value = v; },
         hayLinea, lineaAbre, accion, accionHref, accionAbierta, pulsarAccion, alTeclear, alternarPanel, panelProps, anuncio,
         cerrar: pila.cerrar, atras: pila.atras, apilarPanel: pila.apilarPanel, elegirPlan, navegar,
         banner, pulsarBanner, hueco, huecoSale,

@@ -996,7 +996,11 @@ class SidebarBundleBudgetTest extends TestCase
     // razones. Medido 171,58 → 178,82 (base: el `HEAD` `cac9a9fd` construido aparte en un `git worktree`, el mismo
     // cálculo). Diferir el banner y la hoja ahorraba 3,08 aquí, pero hacía crecer las dos calculadoras +0,31 (la de
     // entradas, sobre su techo) y el primer banner esperaba a su descarga. El techo, a 179.
-    private const ISLA_COMPRA_CHUNK_MAX_KB = 179;
+    // Z6b·2 (§4.27): el AVISO A ISLA ENTERA (`AvisoIsla`, `aviso-isla.js`: el check, el hecho y el matiz, la barra de lo que
+    // le queda) y su reloj, que se para y sigue donde iba (`useAviso`). Viaja con `IslaFlotante`, como la Z6b·1, aunque la
+    // compra no avise. Medido 178,83 → 182,37 (base: el `HEAD` `9af637fb` construido en el mismo árbol ANTES de tocar el
+    // JS, el mismo cálculo); casi todo son estilos en línea, como pinta la isla. El techo, a 183.
+    private const ISLA_COMPRA_CHUNK_MAX_KB = 183;
 
     // T4d·4 (`specs/isla-y-landing-nueva.md` §4.12): la CALCULADORA de una página, entrada propia que la página pide
     // (`scripts` de `<x-pagina>`) y se monta al acercarse su pieza. Su DESCARGA entera, como la mide el navegador que
@@ -1061,7 +1065,10 @@ class SidebarBundleBudgetTest extends TestCase
     // que se lee y su razón y su frase (`pagina.js`: `zonaEnMedio`, `razonDe`, `fraseDe`). Los iconos de las razones, CERO:
     // los dibuja el servidor (`RazonesDeIsla`). Medido 178,01 → 185,77 (base: el `HEAD` `cac9a9fd`, aparte; diferidos el
     // banner y la hoja, 182,61, con las calculadoras +0,31). El techo, a 186.
-    private const ISLA_PAGINA_MAX_KB = 186;
+    // Z6b·2 (§4.27): lo mismo que la compra —el aviso a isla entera y su reloj—, que en la página es el que dice lo que dejó
+    // el servidor al volver (`aviso-servidor.js`). Medido 185,78 → 189,33 (base: el `HEAD` `9af637fb` construido en el
+    // mismo árbol ANTES de tocar el JS); las calculadoras, sin cambio (187,81 y 194,27). El techo, a 190.
+    private const ISLA_PAGINA_MAX_KB = 190;
 
     // T3e·3 (`#694`): las pantallas de después de la pantalla 0, en su trozo (`isla/compra/pasos-diferidos.js`), que la
     // compra pide al montarse. Medido 36,92 KiB. T3e·4 (`#695`): «Entra» con sus eventos y la «G» de Google, 37,66.

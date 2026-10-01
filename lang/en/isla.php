@@ -35,6 +35,7 @@ return [
         'mi_qr' => 'My QR',
         'volver' => 'Back',
         'cerrar' => 'Close',
+        'cerrar_aviso' => 'Tap to close',
     ],
     'panel' => [
         'menu' => 'Menu',
