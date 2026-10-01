@@ -373,6 +373,57 @@ class InstanceViews
         return array_values(array_unique($hojas));
     }
 
+    /**
+     * **LAS FUENTES DE UN USO DEL SERVIDOR** (`#815`; lo pidió el SPA para la imagen de la invitación al compartir,
+     * `fiesta-sistema-nuevo.md` §4.19): los TTF FIJOS con los que el producto DIBUJA, declarados por la instancia con su ROL.
+     * GD no elige el peso de una fuente variable —dibuja el de por defecto, medido—, así que no valen las WOFF2 de `hojas`.
+     *
+     *     "fuentes": { "imagen": { "titular": "fuentes/imagen/archivo-900.ttf", "texto": "…", "etiqueta": "…" } }
+     *     InstanceViews::fuentes('imagen')  →  ['titular' => '/…/public/instancia/fuentes/imagen/archivo-900.ttf', …]
+     *
+     * ⚠️ Con las MISMAS puertas que {@see hojas}: dentro de `public/instancia/`, resueltas con `realpath`, nada absoluto,
+     * nada con `..`, nada que salga por un enlace, y solo `.ttf`/`.otf`; lo que no cuadra se queda fuera con aviso y el
+     * resto sigue. Rutas ABSOLUTAS: las lee el servidor, no el navegador. Sin paquete, sin la clave o sin el uso: vacío.
+     *
+     * ⚠️ **Y `CONTRATO` NO sube**: es aditivo, como `hojas`; un paquete sin `fuentes` sigue exactamente igual.
+     *
+     * @return array<string, string> rol => ruta absoluta
+     */
+    public static function fuentes(string $uso): array
+    {
+        $raiz = self::rutaDelPaquete();
+
+        if ($raiz === null || preg_match('/^[a-z][a-z0-9-]*$/', $uso) !== 1) {
+            return [];
+        }
+
+        $declaradas = self::manifiesto($raiz)['fuentes'][$uso] ?? [];
+        $base = realpath(public_path(self::PUBLICO));
+
+        if (! is_array($declaradas) || $base === false) {
+            return [];
+        }
+
+        $fuentes = [];
+        foreach ($declaradas as $rol => $ruta) {
+            $valida = is_string($rol) && preg_match('/^[a-z][a-z0-9-]*$/', $rol) === 1
+                && is_string($ruta)
+                && preg_match('#^[A-Za-z0-9_-]+(?:/[A-Za-z0-9_.-]+)*\.(?:ttf|otf)$#', $ruta) === 1
+                && ! str_contains($ruta, '..');
+            $real = $valida ? realpath($base.DIRECTORY_SEPARATOR.$ruta) : false;
+
+            if ($real === false || ! is_file($real) || ! str_starts_with($real, $base.DIRECTORY_SEPARATOR)) {
+                Log::warning('instancia: una fuente declarada no vale y se queda fuera', ['uso' => $uso, 'rol' => $rol, 'fuente' => $ruta]);
+
+                continue;
+            }
+
+            $fuentes[$rol] = $real;
+        }
+
+        return $fuentes;
+    }
+
     /** El manifiesto del paquete (`instancia.json`), o `null` si no hay o no se lee: no es un error (spec §4.3). */
     private static function manifiesto(string $raiz): ?array
     {

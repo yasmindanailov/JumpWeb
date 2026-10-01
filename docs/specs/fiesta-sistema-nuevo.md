@@ -1125,6 +1125,14 @@ fuera); de ruta (200 con su token, 404 igual que la página, `noindex`, la `og:i
 - **I3 · el kit de PlayJump**: los tres TTF en la instancia y `fuentes.imagen` en su `instancia.json` (aviso a plataforma),
   la sonda de la `og:image` de una invitación real y la prueba en un móvil de verdad (el owner).
 
+**I1 · el dibujo, hecha** (01-10 noche, en `wip/imagen-i1`; al ojo del owner): `InstanceViews::fuentes()`,
+`App\Http\Instancia\VariablesDeHoja`, `App\Http\Fiesta\CoberturaDeFuente` (la `cmap`, formatos 12 y 4) y
+`App\Http\Fiesta\ImagenInvitacion` (`estilo()` y `dibujar()`). ✱ **Medido y arreglado**: la hoja del producto declara sus
+neutros en `:where(:root)` (pesa cero) y un lector solo de `:root` daba CERO variables; ahora lee los dos y `:root` gana
+siempre. ✱ Un mutante del `.notdef` habría sido equivalente con DejaVu (ninguno de sus caracteres apunta al glifo 0): las
+pruebas de la `cmap` usan FUENTES SINTÉTICAS (los bytes mínimos). Arnés `mutar-imagen-invitacion.sh` **24/24**; las seis
+fotos del ojo (los tres temas, un nombre largo en dos líneas, sin edad, con emoji), con las fuentes del prototipo.
+
 ## 5. Impacto en invariantes
 
 | ID | Cómo |

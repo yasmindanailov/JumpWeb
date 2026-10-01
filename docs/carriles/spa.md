@@ -55,8 +55,8 @@
 1b. ▶▶ **Lo del zip (6) que el owner repartió al SPA** (`#861`; `isla-y-landing-nueva.md` §4.27), en este orden (`#814`):
    ✅ **`LinkIsland`** (§4.18) EN `main`, con su pasada ligera. ▶ **Ahora: la imagen de la invitación al compartir, GENERADA
    para cada una** (nombre, edad, día, hora, su diseño): **la B, `[DECIDIDO owner]` `#815`** (`fiesta-sistema-nuevo.md`
-   §4.19, con su prototipo GD fuera de git). ▶ Las tandas I1 el dibujo → I2 la ruta y la `og:image` → I3 el kit de PlayJump y
-   la sonda, cada una en `wip/…` al ojo del owner; plataforma, avisada (buzón). Después, **la Puerta**.
+   §4.19, con su prototipo GD fuera de git). ▶ 🟦 **I1 hecha en `wip/imagen-i1`**, al ojo del owner; después I2 la ruta y la
+   `og:image` → I3 el kit de PlayJump y la sonda; plataforma, avisada (buzón). Después, **la Puerta**.
 2. ▶▶ **LOS CORREOS (`specs/correos-rediseno.md`: §0 → §4; `#789`, `#800`→`#804`)**: ✅ R1a, R1b y **R1·T** en `main` (la
    R1·T revisada: §4.2.2; su sonda y el medidor de bloques, `CARRIL-SPA` §8 (26)). Del zip (6) (`#861`): el 8, «482-913 es tu
    código para entrar» sin botón; «Quién firma el descargo» en el 1 y el 3; las dos horas (90 + 30). ▶ **Tras la A4, la R1·T2** (`#809`,
