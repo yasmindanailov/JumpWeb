@@ -4,7 +4,7 @@
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
 > **820–849 AGOTADA con `#849`** → sigue en **850–879** (del owner, 29-09; centena `decisiones/800-899.md`) · Último usado:
-> **`#865`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **`#866`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#846`) · Actualizado: **2026-10-01**
 > (el acceso con código: A1–A3 ✅ `#853`→`#857`; la A4 del SPA en `main`, `#813`; `/cookies` ✅ `#858`→`#860`; el zip (6) y
 > el reparto, `#861`; el SEO, `specs/seo.md`: S4 y S6 ✅ `#862`; 01-10: el FOLLETO del 26-09 en producción como DATOS
@@ -51,10 +51,10 @@ Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas,en
 17/17) y la compra (`sonda-isla.mjs`).
 ▶▶▶▶ **LO SIGUIENTE, EN ORDEN** (actualizado el 01-10 noche; el reparto con el SPA, `#861`, `isla-y-landing-nueva.md` §4.27):
 0. ▶▶▶ **LA Z6b, LO PRIMERO** (el owner, 01-10: «seguimos con la z6b»). La **Z6a ✅** (01-10, visto bueno del owner en vivo;
-   lo hecho, lo medido y lo que quedó fuera, en §4.27 «La Z6a al detalle»). Antes de codificar, **«La Z6b al detalle»** en
-   §4.27, medida como la de la Z6a: el readme «La isla · banners, opción C (29-09)», `explorations/isla-banners` y lo que el
-   diff de `ParkIsland.jsx` (instancia `6a550a3` → `3b0956d`) trae de ella (`reason`, `waiting`, el aviso a isla entera,
-   `isla_razon`, la compra que no corta al cerrar). Al terminarla, preguntar al owner si sigue la Z6c o la A5. Después,
+   lo hecho, lo medido y lo que quedó fuera, en §4.27 «La Z6a al detalle»). **«La Z6b al detalle», ESCRITA y medida** (§4.27,
+   01-10): Z6b·1 la razón y la frase de cada pieza (`#866`, del owner: la situación 5 entra, con datos de verdad), Z6b·2 el
+   aviso a isla entera, Z6b·3 la compra que no corta al cerrar; `isla_razon`, del SPA. Al terminarla, preguntar al owner si
+   sigue la Z6c o la A5. Después,
    Z6c→Z6g (la Z6c va sobre el `Experiments` del SPA: avisarle ANTES en el buzón); la cabecera sin precio salvo Colegios
    (la regla del precio del owner, `instancias/playjump/docs/estrategia/2026-09-30/Web.md`). (La imagen de la INVITACIÓN es
    del SPA, `#861`.) ⚠️ `sonda-banco-movimiento.mjs` sigue con los casos del 27-09 (solo cambió la etiqueta «Menú»): se

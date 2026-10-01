@@ -2331,7 +2331,7 @@ fuente de cada punto es su `readme.md` (la sección entre comillas) y su compone
 | Tanda | Qué | Del readme | Lo más grande |
 |---|---|---|---|
 | Z6a ✅ | La isla en **tres huecos** (menú · acción · cuenta), la frase siempre, la acción siempre (a secundaria con un botón de la página a la vista), la cuenta con el QR y su punto, 13/14 fuera de la barra, el menú reordenado, «¿Lo hablamos?», **cristal 82 %** y **morph** en cada cambio, sin `compact` | «La isla · tres huecos, cristal y morph (28-09)» | `ParkIsland.jsx` (822 líneas cambiadas) |
-| Z6b | **Banners «Da la razón»**: con un botón de la página a la vista, la razón en vez del naranja (razón · vivo · espera · hecho), la compra que no corta al cerrar, el aviso a isla entera, `isla_razon` | «La isla · banners, opción C (29-09)» | `explorations/isla-banners` (las razones de cada página) |
+| Z6b | **Banners «Da la razón»**: con un botón de la página a la vista, la razón en vez del naranja (razón · vivo · espera · hecho), la compra que no corta al cerrar, el aviso a isla entera, `isla_razon`; y la frase de cada pieza (`#866`) | «La isla · banners, opción C (29-09)» | `explorations/isla-banners` (las razones de cada página) |
 | Z6c | **Experimento B3** contra la isla de hoy, con `Experiments` (asigna el servidor por visitante; `variante` en los eventos) y las frases cortas de cada página | «Experimento B3 (29-09)» | la cabecera sin botón en la primera pantalla del móvil |
 | Z6d | **La firma** de la cabecera (logo y nota de Google juntos, `--scrim-firma`), las garantías del móvil en lista, `Sticker` y `ProofChip`, el filo del gris (`--edge-subtle`) | «La cabecera · la firma», «Las garantías en el móvil», «Las pegatinas», «La prueba de los cuidados» | `VideoHero`, `ReassuranceBand`, `ProofList` |
 | Z6e | Cumpleaños **«Todo resuelto» (6a)** y **las dos horas repartidas** (90 min saltando y 30 de merienda: la cabecera, la pieza 3, el selector, las dudas, la hora extra) | «Rehecha el 29-09», «Las dos horas, repartidas (28-09)» | `IncludedList`, `AfterBookingPanel` |
@@ -2414,6 +2414,77 @@ IDÉNTICOS uno a uno con el JS de la base `5dbe175c`: no son de la Z6a (su causa
 la feature, con la base `5dbe175c` construida aparte: la compra 166,17 → 171,58 (techo 172) y la isla de la página
 172,62 → 178,01 (179); la calculadora (187,81) y la fiesta (194,27) no suben. **Pendiente**: `sonda-banco-movimiento.mjs`
 conserva los casos del 27-09 (solo cambió la etiqueta «Menú»): se rehace con la Z6a en la verificación final (`#768`).
+
+#### La Z6b al detalle (medido el 01-10, antes de codificar)
+
+**Fuente**: el readme, «La isla · banners, opción C «Da la razón» (29-09)»; `ParkIsland.prompt.md` («Banners · opción C»); las
+razones de cada pieza, en `explorations/isla-banners/datos.js`, y cuál dice cada página, en sus mockups
+(`paginas/entradas/pagina.jsx`, `paginas/colegios/pagina.jsx`, `cumpleanos.card.html`, `portada.card.html`); la compra
+cerrada, en `paginas/compra/compra.jsx` (`usePjcCompra`: `espera`, `aviso`, `caducar`); y del diff de `ParkIsland.jsx`
+(`6a550a3` → `3b0956d`), `reason`, `waiting`, el reparto «sin saturar», `ReasonBanner`, `ReasonSheet`, `SlotSwap` y el aviso
+completo. `[DECIDIDO owner]` 2026-10-01 (`#866`): entra también la frase de cada pieza (situación 5), con los datos de verdad.
+
+**Lo medido del producto**:
+1. La isla de la página recibe de la página su tipo, su acción, su «desde», hoy, la oferta, el menú y el contacto
+   (`pagina.js::propsDeLaIsla`). Nunca tuvo la frase de cada pieza: `data-isla-frase` (§4.3) no se hizo, y la fila `miedo`
+   de `situacion.js` no la alimenta nadie. Tampoco `resume`, `payment` ni `waiting`: la compra es otra app (`SeccionCompra.vue`,
+   en el motor) y las dos solo se hablan por `jw:cajon:open`/`close`.
+2. Las piezas YA llevan `data-zona` en la instancia: entradas (`precio`, `zona`, `tranquilidad`, `dudas`, `cierre`), Cumpleaños
+   (`resuelto`, `calcula`, `dudas`, `cierre`; la pieza 7, sin su `donde`), Colegios (`centro`, `calcula`, `dudas`, `cierre`) y la
+   portada (`reparto`, `miralo`, `fiesta`, `para-ti`, `cierre`).
+3. Lo «vivo» ya es un hecho: `availability_weekends` (Cumpleaños), `availability_days` (Colegios) y `availability_today`; los
+   modelos de la instancia ya los leen para su pieza 7 y para [Hoy].
+4. Los iconos de las razones (`wallet`, `send`, `umbrella`, `gift`, `ticket`, `eye`, `timer`, `zap`…) son DATO de cada
+   instalación, y la isla mete en su paquete cada dibujo que pinta (`ui/iconos.js`, 33). `Lucide::svg()` valida el nombre y lo
+   dibuja en el servidor: la página lo manda ya dibujado, con cero bytes en el paquete y cualquier icono del set.
+5. Con la capa cerrada el motor sigue montado y el sondeo del banco también (`usePurchaseFlow::poll`, mientras `VERIFYING`).
+   Solo acaba en pagado (→ `CONFIRMED`) o caducado (→ `CATALOG` con `errors.retry_expired`, «Tu reserva caducó mientras
+   esperábamos el pago…», que NO dice «no se ha cobrado nada»). El «no autorizado» solo llega con la vuelta del banco, con la
+   capa abierta.
+6. El asunto del correo de la reserva: «Reserva confirmada · :day · :code». No hay Bizum (llega con la v2.0.0): el pago no
+   completado de la compra ofrece «Volver a intentar con tarjeta».
+7. La isla de la página pesa 178,01 de sus 179 KiB.
+
+**Lo que se hace, en tres tandas**, cada una medida y con el ojo del owner:
+- **Z6b·1 · la razón y la frase de cada pieza.** (a) `situacion.js`: con un botón de la página a la vista, una razón y nada
+  bloqueado, la acción se vuelve el banner de la razón (`conRazon`); la fila `miedo`, con la frase de la zona. (b) `razon.js`
+  (nuevo, puro): el reparto «sin saturar» de las dos. Nada hasta el primer desplazamiento (40 px). Las piezas de decisión
+  (`decision`) y lo elegido (`chosen`), siempre: a los 1,2 s (lo elegido, 0,6 s). El resto, un banner y una frase por visita,
+  sin volver a lo visto y con 6 s de calma entre cambios. (c) `reparto()`: una sola voz, y con el banner no hay frase.
+  (d) Las piezas: `BannerRazon` (delante, el icono lima, el punto que late, la bola de carga o el check; título y matiz, que
+  nunca se cortan, en dos renglones en el móvil; la flecha en escritorio), la sexta vista `razon` (`HojaRazon`: sobretítulo,
+  dato y detalle, con la acción de la página en naranja en la fila) y el relevo acción ⇄ banner (`SlotSwap`). (e) El contrato
+  (§4.3): `config.razones` y `config.frases`, por zona (`llegada` = arriba o sin zona). La zona de la página es la `[data-zona]`
+  que cruza la línea media (`pagina.js`, medida en el mismo fotograma que los botones). `components/pagina.blade.php` dibuja
+  el icono de cada razón (`Lucide::svg`). (f) La instancia: razones y frases de Kids, Jump, Cumpleaños, Colegios y la portada,
+  con las cifras de sus hechos y los textos en `lang/{es,en,fr}/paginas.php`. Lo que no es verdad no se dice (3 días y no 5; un
+  profesor por cada 15; las excursiones, sin plazo). Lo «vivo» lleva su plan B, y la pieza 7 de Cumpleaños, su `data-zona`.
+- **Z6b·2 · el aviso a isla entera.** `AvisoIsla`: el check con su `isla-pop`, el hecho y el matiz (partidos en la primera
+  frase) y la barra lima de lo que le queda (4,2 s). La barra se para con el ratón, con el foco o con un panel abierto
+  (WCAG 2.2.1), y el aviso se quita al tocarlo; con «reducir movimiento», sin barra. Con un panel abierto o con las cookies
+  sigue la tira de hoy.
+- **Z6b·3 · la compra no corta al cerrar.** `useSeccionCompra.js` publica lo que queda al cerrar la capa (`isla:compra`), y la
+  isla de la página lo dice:
+  - Esperando al banco: «Confirmando tu pago · Te escribimos al terminar»; al tocarlo, se reabre.
+  - Pagado con la capa cerrada: el aviso «Reservado: :día a las :hora» · «Te lo hemos enviado a :correo», y después el banner
+    «¡Reservado!» (en una fiesta, «¡Fiesta reservada!») · «Toca para ver tu QR», hasta abrir el Listo o cambiar de página.
+  - Cerrada en el pago no completado: la situación 11, la única que crece sola y sin rebote, con «Volver a intentar con
+    tarjeta» (Bizum, solo si existe) y su X.
+  - Cerrada a medias: «Sigue con tu reserva», con «Tu hora queda guardada hasta…» solo donde es verdad (`#688`: hay pedido).
+  - Pasado ese plazo: «Tu hora se ha liberado. No se ha cobrado nada.» con «Volver a reservarla».
+  - Caducado esperando al banco: el texto del producto, que no promete lo que no sabe.
+
+**Fuera de la Z6b**: `isla_razon` y `variante` (la isla de Vue no emite eventos y la analítica es del SPA, `#735`: se le avisa
+en el buzón); el experimento B3 y las frases cortas (Z6c); la firma (Z6d).
+
+**Trampas**: el techo de peso de la isla de la página (a 1 KiB): el banner, la hoja y el reparto van en su trozo; un techo
+que suba, con la medida delante. Tras tocar un `.vue`, `build:ssr` y `build` antes de la suite. Las sondas que pulsan la
+acción de la isla tras desplazarse encontrarán un banner: se miden una a una.
+
+**Verificación**: `node --test` de la situación, el reparto con relojes falsos, la zona y la razón de la página y la pausa
+del aviso; un test PHP del dibujo; el arnés `mutar-isla-z6b.sh`; las sondas (`isla`, `entradas`, `cumpleanos`, `colegios`,
+`portada`, `web`, `primera-pantalla`) y una nueva de la razón (aparece, se abre y no se repite); y el ojo del owner en
+vivo, a 390 y a 1280.
 
 ## 5. Impacto en invariantes
 
