@@ -1105,10 +1105,10 @@ y `proto-invitacion-B-*.jpg`):
 
 **4 · El mecanismo** (técnico, se decide con su `#`): un servicio del producto dibuja con GD desde la invitación y un **kit de la
 instancia** (los TTF fijos y el logotipo, declarados en `instancia.json`: contrato de plataforma, `#769`, por buzón; los colores,
-de `hojas.fiesta`). Ruta propia con el token y una huella de lo que se pinta (`/invitacion/{token}/imagen.jpg?v=…`, futuro):
-la huella cambia al personalizar o al mover la fiesta y WhatsApp la vuelve a pedir. Caché en disco PRIVADO, borrada con la
-invitación; `noindex` y sin abrir excepción a `no-store` (`RGPD-04`). Sin kit en la instancia, lo de hoy. El texto, en el idioma
-del `og:title`.
+de `hojas.fiesta`). Ruta propia con el token y una huella de lo que se pinta (`/invitacion/{token}/imagen.jpg?l=…&v=…`):
+la huella cambia al personalizar o al mover la fiesta y WhatsApp la vuelve a pedir. **Sin caché** (`#816`, que modifica
+`#815`): se dibuja en cada petición y no se guarda. `noindex` y sin abrir excepción a `no-store` (`RGPD-04`). Sin kit en la
+instancia, lo de hoy. El texto, en el idioma del `og:title` (el `l` de la URL: el robot del chat no trae sesión).
 
 **5 · Guardas.** Unidad (1200 × 630, JPEG, < 300 KB, el color de cada tema en puntos fijos, el nombre que no cabe, el emoji
 fuera); de ruta (200 con su token, 404 igual que la página, `noindex`, la `og:image` con 1200 × 630); arnés; sonda (la
@@ -1120,8 +1120,8 @@ fuera); de ruta (200 con su token, 404 igual que la página, `noindex`, la `og:i
   orden, sin `@media`, con las cadenas de `var()` resueltas hasta un hex); el dibujo de la B con GD (al doble y reducida),
   el nombre que se ajusta, lo que la fuente no tiene, fuera; sin edad, sin chapa y «te invita a saltar». Pruebas con DejaVu
   Sans de la Sail (las fuentes del cliente no entran en el producto).
-- **I2 · la ruta y la `og:image`**: la ruta con el token y la huella (lo que se pinta + la versión del dibujo), la caché en
-  disco privado (la vieja se borra al pintar la nueva, y todo con la invitación), `og:image` con 1200 × 630; sin kit, la de hoy.
+- **I2 · la ruta y la `og:image`**: la ruta con el token, el idioma y la huella (lo que se pinta + la versión del dibujo),
+  dibujada en cada petición y sin guardar nada (`#816`), `og:image` con 1200 × 630; sin kit, la de hoy.
 - **I3 · el kit de PlayJump**: los tres TTF en la instancia y `fuentes.imagen` en su `instancia.json` (aviso a plataforma),
   la sonda de la `og:image` de una invitación real y la prueba en un móvil de verdad (el owner).
 
@@ -1132,6 +1132,18 @@ neutros en `:where(:root)` (pesa cero) y un lector solo de `:root` daba CERO var
 siempre. ✱ Un mutante del `.notdef` habría sido equivalente con DejaVu (ninguno de sus caracteres apunta al glifo 0): las
 pruebas de la `cmap` usan FUENTES SINTÉTICAS (los bytes mínimos). Arnés `mutar-imagen-invitacion.sh` **24/24**; las seis
 fotos del ojo (los tres temas, un nombre largo en dos líneas, sin edad, con emoji), con las fuentes del prototipo.
+
+**I2 · la ruta y la `og:image`, hecha** (01-10 noche, en `wip/imagen-i2`, sobre la I1): `invitation.image`
+(`InvitationPageController::image`, el portero y el 404 de la página, `throttle:30,1`, `no-store`, `noindex`),
+`ImagenInvitacion::datosDe()` (el día como la página, con su idioma) y `huella()`, y `previewImage()`, que apunta la
+`og:image` a la generada con 1200 × 630 cuando hay kit y un nombre que escribir. ✱ **Medido y decidido** (`#816`): una
+invitación se borra con consultas a la tabla (`User::anonymize`) que no disparan eventos, así que una caché se quedaría con
+el nombre de un menor: se dibuja en cada petición. ✱ **Instrumento medido**: contar ficheros de `storage/app` no veía al
+mutante que guarda la imagen (otras pruebas escribían el mismo fichero antes): la clase lleva su disco en una carpeta propia
+y compara `storage/app` entero; y en una prueba la aplicación se reutiliza entre peticiones (el idioma de una se queda en la
+siguiente). El censo de `FocusedPagesAreCookieFreeTest` sube a 18: la ruta nueva tampoco acuña la cookie del visitante (su
+robot es un chat). Arnés **8/8** más (`SOLO=I2`). ⚠️ El mutante que guardaba la imagen, antes del arreglo, dejó
+`storage/app/private/invitaciones/1.jpg` (datos de prueba; ignorado por git): su borrado, pendiente del owner.
 
 ## 5. Impacto en invariantes
 

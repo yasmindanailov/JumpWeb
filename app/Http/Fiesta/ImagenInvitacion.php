@@ -2,10 +2,14 @@
 
 namespace App\Http\Fiesta;
 
+use App\Domain\Booking\Models\OrderItem;
+use App\Domain\Booking\Models\PartyInvitation;
 use App\Http\Instancia\InstanceViews;
 use App\Http\Instancia\VariablesDeHoja;
+use Carbon\CarbonImmutable;
 use GdImage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 /**
  * **LA IMAGEN DE LA INVITACIÓN AL COMPARTIR**, dibujada con GD para cada una (`#815`, la composición B del owner;
@@ -95,6 +99,52 @@ final class ImagenInvitacion
             'fuentes' => $fuentes,
             'logo' => is_file($logo) ? $logo : null,
         ];
+    }
+
+    /**
+     * Lo que la imagen escribe de UNA invitación, en el idioma de la petición: el nombre y la edad de quien cumple, la frase
+     * de la tarjeta y el día con la hora como los dice la página. `null` si no hay un nombre que la fuente del kit pueda
+     * escribir (sin nombre, o solo emojis): entonces no hay imagen, y la `og:image` de antes.
+     *
+     * @param  array{fuentes: array<string, string>}  $estilo
+     * @return array{nombre: string, edad: ?string, frase: string, cuando: string, unidad: string}|null
+     */
+    public static function datosDe(PartyInvitation $invitacion, OrderItem $reserva, array $estilo): ?array
+    {
+        $nombre = trim((string) $invitacion->honoree_name);
+        if ($nombre === '' || self::limpiar($nombre, $estilo['fuentes']['titular']) === '') {
+            return null;
+        }
+
+        $edad = $invitacion->honoree_age === null ? null : (string) (int) $invitacion->honoree_age;
+        $fecha = $reserva->slot?->date;
+        $dia = $fecha === null ? '' : Str::ucfirst(CarbonImmutable::instance($fecha)->locale(app()->getLocale())->isoFormat(__('fiesta.fecha.larga')));
+        $hora = substr((string) ($reserva->slot->start_time ?? ''), 0, 5);
+
+        return [
+            'nombre' => $nombre,
+            'edad' => $edad,
+            'frase' => ltrim($edad === null ? (string) __('fiesta.invitacion.rest_sin_edad') : (string) __('fiesta.invitacion.rest', ['age' => $edad])),
+            'cuando' => implode(' · ', array_filter([$dia, $hora], static fn (string $parte): bool => $parte !== '')),
+            'unidad' => (string) __('fiesta.invitacion.unit'),
+        ];
+    }
+
+    /**
+     * La HUELLA de lo que se pinta (`#816`): cambia con los datos, el tema, el kit (sus ficheros) o la versión del dibujo, y
+     * va en la URL de la `og:image` para que WhatsApp la vuelva a pedir cuando cambie. No lleva nada legible.
+     *
+     * @param  array{nombre: string, edad: ?string, frase: string, cuando: string, unidad: string}  $datos
+     * @param  array{colores: array<string, mixed>, decor: string, fuentes: array<string, string>, logo: ?string}  $estilo
+     */
+    public static function huella(array $datos, array $estilo): string
+    {
+        $fichero = static fn (string $ruta): array => [basename($ruta), (int) @filesize($ruta), (int) @filemtime($ruta)];
+
+        return substr(hash('sha256', (string) json_encode([
+            self::VERSION, $datos, $estilo['colores'], $estilo['decor'],
+            array_map($fichero, $estilo['fuentes']), $estilo['logo'] === null ? null : $fichero($estilo['logo']),
+        ])), 0, 16);
     }
 
     /**

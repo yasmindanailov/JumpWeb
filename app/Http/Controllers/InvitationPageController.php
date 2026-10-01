@@ -14,9 +14,11 @@ use App\Domain\Identity\Services\WaiverSettings;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\CalendarFile;
 use App\Domain\Platform\Services\DisplayTime;
+use App\Domain\Platform\Services\SiteLocales;
 use App\Domain\Platform\Services\Turnstile;
 use App\Http\Concerns\ComposesGuardianForm;
 use App\Http\Concerns\RecordsPartyFacts;
+use App\Http\Fiesta\ImagenInvitacion;
 use App\Http\Fiesta\InvitacionPagina;
 use App\Http\Fiesta\Sitio;
 use App\Http\Instancia\InstanceViews;
@@ -424,6 +426,43 @@ class InvitationPageController extends Controller
     }
 
     /**
+     * **La imagen al compartir** (`#815`, `#816`; `fiesta-sistema-nuevo.md` §4.19, la I2): la B dibujada con el kit de la
+     * instancia, en el idioma de la URL (`l`: el del `og:title` que la enlazó, porque el robot del chat no trae sesión).
+     *
+     * ⚠️ Mismo portero y mismo 404 que la página: una ruta que distinguiera un token caducado de uno inventado sería la
+     * rendija que §4.5·12 cerró. Sin kit o sin un nombre que la fuente pueda escribir, también 404 —y la `og:image` no
+     * apunta aquí—. Se DIBUJA en cada petición y no se guarda (`#816`): una invitación se borra con consultas a la tabla
+     * (`User::anonymize`) que no disparan eventos, y una caché se quedaría con el nombre de un menor. `no-store` como la
+     * página (`RGPD-04`) y `noindex`: lleva el nombre y la edad de un menor.
+     */
+    public function image(Request $request, string $token): Response
+    {
+        $invitation = $this->invitations->resolvePublic($token);
+
+        abort_if($invitation === null, 404);
+
+        $reservation = $invitation->reservation;
+
+        abort_if($reservation === null, 404);
+
+        $idioma = $request->query('l');
+        if (is_string($idioma) && in_array($idioma, SiteLocales::SUPPORTED, true)) {
+            app()->setLocale($idioma);
+        }
+
+        $estilo = ImagenInvitacion::estilo($invitation->safeTheme());
+        $datos = $estilo === null ? null : ImagenInvitacion::datosDe($invitation, $reservation, $estilo);
+
+        abort_if($estilo === null || $datos === null, 404);
+
+        return response(ImagenInvitacion::dibujar($datos, $estilo), 200, [
+            'Content-Type' => 'image/jpeg',
+            'X-Robots-Tag' => 'noindex',
+            'Referrer-Policy' => 'no-referrer',
+        ]);
+    }
+
+    /**
      * El PRINCIPIO y el FIN de la fiesta como instantes, o `null` si falta alguno.
      *
      * ⚠️⚠️ La duración es la EFECTIVA (`occupiedMinutes()`: base + hora extra), no la del producto —la
@@ -465,7 +504,8 @@ class InvitationPageController extends Controller
     /**
      * Lo que se ve al pegar el enlace (§4.6): título, descripción e imagen.
      *
-     * ⚠️ La imagen es la del TEMA de la instalación si la hay —el mismo PNG que usan los correos,
+     * ⚠️ La imagen, desde `#815`, es la GENERADA para esta invitación si la instancia trae el kit
+     * ({@see previewImage}); si no, la del TEMA de la instalación —el mismo PNG que usan los correos,
      * porque un SVG no vale para Open Graph— y si no, la del sitio. Las medidas se declaran **solo
      * cuando el fichero es nuestro y se puede medir**: inventarlas para una URL externa sería afirmar
      * algo que no sabemos.
@@ -493,13 +533,28 @@ class InvitationPageController extends Controller
             'description' => $hora === ''
                 ? __('invitation.og.description_no_time', ['business' => $negocio])
                 : __('invitation.og.description', ['time' => $hora, 'business' => $negocio]),
-            ...$this->previewImage(),
+            ...$this->previewImage($invitation, $reservation),
         ];
     }
 
-    /** @return array{image: ?string, width: ?int, height: ?int} */
-    private function previewImage(): array
+    /**
+     * La imagen de la vista previa: la GENERADA para esta invitación (`#815`) si la instancia trae el kit y hay un nombre que
+     * escribir —con su idioma y su huella en la URL (`#816`), y sus medidas, que son nuestras—; si no, la de siempre.
+     *
+     * @return array{image: ?string, width: ?int, height: ?int}
+     */
+    private function previewImage(PartyInvitation $invitation, OrderItem $reservation): array
     {
+        $estilo = ImagenInvitacion::estilo($invitation->safeTheme());
+        $datos = $estilo === null ? null : ImagenInvitacion::datosDe($invitation, $reservation, $estilo);
+        if ($estilo !== null && $datos !== null) {
+            return [
+                'image' => route('invitation.image', ['token' => $invitation->token, 'l' => app()->getLocale(), 'v' => ImagenInvitacion::huella($datos, $estilo)]),
+                'width' => ImagenInvitacion::ANCHO,
+                'height' => ImagenInvitacion::ALTO,
+            ];
+        }
+
         foreach (['img/client-logo@4x.png', 'og-image.jpg'] as $candidato) {
             $ruta = public_path($candidato);
             if (! is_file($ruta)) {

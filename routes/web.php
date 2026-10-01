@@ -421,6 +421,14 @@ Route::withoutMiddleware([ResolveVisitor::class.':'.ResolveVisitor::MINT])->grou
         ->middleware(['throttle:60,1', 'no-store'])
         ->name('invitation.calendar');
 
+    // La IMAGEN al compartir (`#815`, `#816`; `fiesta-sistema-nuevo.md` §4.19): la `og:image` de la invitación, dibujada
+    // para cada una con el kit de la instancia. ⚠️ Mismo portero y mismo 404 que la página; se dibuja en cada petición
+    // (nada en disco: lleva el nombre de un menor) y por eso su propio techo por IP; `no-store` como la página.
+    Route::get('/invitacion/{token}/imagen.jpg', [InvitationPageController::class, 'image'])
+        ->where('token', '[A-Za-z0-9]{12}')
+        ->middleware(['throttle:30,1', 'no-store'])
+        ->name('invitation.image');
+
     // ── LA ENCUESTA POR CORREO (`specs/encuestas.md` §4.3, T3; `#740`) ──
     // El token de 40 caracteres es la credencial entera (como en la invitación): sin sesión, sin cookie de
     // medición (este grupo), `no-store` (`RGPD-04`) y UN solo 404 para lo inventado, lo contestado y lo apagado.

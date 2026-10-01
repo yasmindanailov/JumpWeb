@@ -15,7 +15,7 @@ set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
 EXEC="docker compose exec -u sail -T laravel.test"
-PHP='InstanceFontsTest|InstanceSheetsTest|VariablesDeHojaTest|ImagenInvitacionTest|CoberturaDeFuenteTest'
+PHP='InstanceFontsTest|InstanceSheetsTest|VariablesDeHojaTest|ImagenInvitacionTest|CoberturaDeFuenteTest|ImagenInvitacionRutaTest|InvitacionPaginaTest'
 
 TMP="$(mktemp -d)"
 FICHEROS=(
@@ -23,6 +23,7 @@ FICHEROS=(
     app/Http/Instancia/VariablesDeHoja.php
     app/Http/Fiesta/CoberturaDeFuente.php
     app/Http/Fiesta/ImagenInvitacion.php
+    app/Http/Controllers/InvitationPageController.php
 )
 copia() { echo "$TMP/${1//\//__}"; }
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$(copia "$f")" "$f"; touch "$f"; done; }
@@ -138,6 +139,29 @@ mutar "I1 · un color que no llega a hex, imagen igual" "$IMAGEN" \
 mutar "I1 · sin los neutros del producto debajo" "$IMAGEN" \
   "\$hojas = [resource_path('js/fiesta/fiesta.css'), ...array_map(public_path(...), InstanceViews::hojas('fiesta'))];" \
   "\$hojas = array_map(public_path(...), InstanceViews::hojas('fiesta'));"
+
+# ── I2 · la ruta y la og:image ───────────────────────────────────────────────────────────────────────────
+# ⚠️ No hay mutante del `no-store` de la ruta: lo pone también el middleware GLOBAL (`RGPD-04`), sería equivalente.
+CONTROL=app/Http/Controllers/InvitationPageController.php
+mutar "I2 · sin un nombre que escribir, la ruta intenta dibujar (un 500)" "$CONTROL" \
+  'abort_if($estilo === null || $datos === null, 404);' 'abort_if($estilo === null, 404);'
+mutar "I2 · la imagen sale sin noindex" "$CONTROL" \
+  "            'X-Robots-Tag' => 'noindex',
+" ""
+mutar "I2 · el idioma de la URL no manda" "$CONTROL" \
+  "            app()->setLocale(\$idioma);
+" ""
+mutar "I2 · un idioma que no está se usa igual" "$CONTROL" \
+  "if (is_string(\$idioma) && in_array(\$idioma, SiteLocales::SUPPORTED, true)) {" "if (is_string(\$idioma)) {"
+mutar "I2 · la og:image sin el idioma en su URL" "$CONTROL" \
+  "'l' => app()->getLocale(), 'v' =>" "'v' =>"
+mutar "I2 · la imagen se guarda en disco" "$CONTROL" \
+  "        return response(ImagenInvitacion::dibujar(\$datos, \$estilo), 200, [" "        \\Illuminate\\Support\\Facades\\Storage::put('invitaciones/'.\$invitation->getKey().'.jpg', ImagenInvitacion::dibujar(\$datos, \$estilo));
+        return response(ImagenInvitacion::dibujar(\$datos, \$estilo), 200, ["
+mutar "I2 · la huella no cambia con los datos" "$IMAGEN" \
+  'self::VERSION, $datos, $estilo' 'self::VERSION, $estilo'
+mutar "I2 · un nombre que la fuente no escribe da imagen igual" "$IMAGEN" \
+  "if (\$nombre === '' || self::limpiar(\$nombre, \$estilo['fuentes']['titular']) === '') {" "if (\$nombre === '') {"
 
 echo
 echo "$muerden/$total muerden"
