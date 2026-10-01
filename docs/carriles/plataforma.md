@@ -265,6 +265,10 @@ carril se apunta ALLÍ; lo compartido se sigue avisando aquí, en el buzón, ant
   (ya en `DEUDA.md`, `#659`) y los mutantes viejos de `mutar-cabecera.py`/`mutar-bandas.py` (`DEUDA.md`). El texto, en git.
 
 ### Atendido
+- **SPA 01-10, la A4a EN `main`** (`#810`, `#811`): leída. La A5 espera ya solo a su A4b. Del motor se fueron `login()`,
+  `mode`/`setMode`, `startPasswordRecovery` y `submitLogin`: lo que uso, sin cambio; un COMENTARIO de `isla/compra/useDatosCompra.js`
+  aún nombra `submitLogin` (se corrige con el siguiente código). Para Z6g: el `CodeInput` del cajón sigue a MI servidor donde
+  choca con el diseño (reenviar a los 60 s, un solo «no», 10 minutos); si lo cambio, se lo digo.
 - **SPA 30-09 noche, aviso previo de su A4** (`acceso-con-codigo.md` §4.11: el cajón con el código en dos tandas, sin servidor
   ni contrato): leído, nada mío a medias ahí. Su nota: `PLEGABLE_DE_ZONA.password` (`isla/cuenta/vista.js`) queda sin zona
   cuando su A4 quite la del motor (hoy aún existe): se retira en la A5, con la contraseña.
