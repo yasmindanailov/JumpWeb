@@ -59,8 +59,9 @@
    isla (`#812`): manda el servidor; si plataforma lo cambia (su Z6g o su A5), el cajón lo sigue. ▶ Lo siguiente, el 1b.
 1b. ▶▶ **Lo del zip (6) que el owner repartió al SPA** (`#861`; `isla-y-landing-nueva.md` §4.27), en este orden (`#814`):
    ✅ **`LinkIsland`** (§4.18) EN `main`, con su pasada ligera. ▶ **Ahora: la imagen de la invitación al compartir, GENERADA
-   para cada una** (nombre, edad, día, hora, su diseño): «al detalle» en `fiesta-sistema-nuevo.md` §4.19 ANTES de código
-   (lo ya medido, allí). Después, **la Puerta** (el mostrador, `paginas/puerta/` y su brief).
+   para cada una** (nombre, edad, día, hora, su diseño): «al detalle» ESCRITO en `fiesta-sistema-nuevo.md` §4.19 (01-10 noche,
+   con prototipo GD fuera de git y sus 6 renders), ⬜ esperando del owner **A o B** (recomendada B). Con la respuesta: su `#`
+   (banda 790–819), el contrato del kit de la instancia con plataforma (buzón) y las tandas. Después, **la Puerta**.
 2. ▶▶ **LOS CORREOS (`specs/correos-rediseno.md`: §0 → §4; `#789`, `#800`→`#804`)**: ✅ R1a, R1b y **R1·T** en `main` (la
    R1·T revisada: §4.2.2; su sonda y el medidor de bloques, `CARRIL-SPA` §8 (26)). Del zip (6) (`#861`): el 8, «482-913 es tu
    código para entrar» sin botón; «Quién firma el descargo» en el 1 y el 3; las dos horas (90 + 30). ▶ **Tras la A4, la R1·T2** (`#809`,

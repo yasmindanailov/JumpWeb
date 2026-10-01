@@ -1071,22 +1071,50 @@ abierta y cerrada, el recibo y la autorización, a 390 y 1280) y todas las pieza
 sus diagnósticos. ✱ **Deuda medida**: el diagnóstico de la lista guardada no recoge `#805` ni K1/K2 (no es la isla:
 `DEUDA.md`).
 
-### 4.19 La imagen de la invitación al compartir, GENERADA para cada una (`#861`) — ⬜ por medir al detalle
+### 4.19 La imagen de la invitación al compartir, GENERADA para cada una (`#861`) — ⬜ al detalle, esperando al owner
 
 Del reparto del zip (6): la hace el SPA y, por decisión del owner, se GENERA para cada invitación (nombre, edad, día, hora,
-su diseño), no la fija por tema del diseño. Lo ya medido (01-10), antes de escribir el «al detalle»:
-- **Hoy**: `og:image` es el logotipo del cliente (`client-logo@4x.png`, o `og-image.jpg`, o la del panel:
-  `InvitationPageController::previewImage`), y `og:title` / `og:description` ya llevan nombre, edad, día y hora: la imagen
-  no sacaría a WhatsApp nada que hoy no salga. La página: `noindex`, `no-store`, `no-referrer`.
-- **El diseño**: `InviteCard variant="thumb"`, 1,91:1, la banda del tema con su adorno y el logotipo en una caja blanca, SIN
-  datos (readme, «La miniatura de WhatsApp»). WhatsApp: 1200 × 630, JPG, menos de 300 KB (`seo.md` §1, no oficial).
-- **Producción** (medida por plataforma el 30-09): GD con FreeType, JPEG/PNG/WebP/AVIF, Imagick; SIN Chromium ni Node;
-  `memory_limit` 256M ⇒ la imagen se DIBUJA, no se renderiza HTML.
-- **Las fuentes**: la instancia las trae en WOFF2 y VARIABLES (Archivo 400–900, Figtree 300–800). La GD local las lee
-  (FreeType con brotli), pero dibuja el peso POR DEFECTO de una variable: el 900 del nombre necesita su TTF fijo. En
-  producción, sin medir.
-- **Los colores**: los temas son ROLES (`App\Http\Fiesta\Temas`: `--fiesta-agua-500`…) que la instancia resuelve en dos hojas
-  (`fiesta.css` → `saltia.css` → hex): la imagen necesita el hex, de la instancia (marca blanca).
+su diseño), no la fija por tema del diseño. **Todo lo de aquí está medido el 01-10**; lo que no, lo dice.
+
+**1 · Lo que hay.** `og:image` es el logotipo del cliente (`client-logo@4x.png`, o `og-image.jpg`, o la del panel:
+`InvitationPageController::previewImage`), y `og:title` / `og:description` ya llevan nombre, edad, día y hora («Lucía cumple 8
+· sábado 4 de octubre», «A las 17:00 en…»): la imagen NO saca a WhatsApp nada que hoy no salga (`RGPD-01`; nunca una foto del
+menor, como la tarjeta). La página: `noindex`, `no-store`, `no-referrer`. El diseño: `InviteCard variant="thumb"`, 1,91:1, la
+banda del tema con su adorno y el logotipo en una caja blanca, SIN datos. WhatsApp: 1200 × 630, JPG, < 300 KB (`seo.md` §1).
+
+**2 · Con qué se dibuja.** Producción (plataforma, 30-09): GD con FreeType, sin Chromium ni Node ⇒ se DIBUJA con GD. Medido aquí
+con un prototipo en PHP, fuera de git (en la carpeta de auditoría de esta máquina, `proto-imagen-invitacion.php`):
+- **Las fuentes**: las de la instancia son WOFF2 VARIABLES y GD dibuja su peso POR DEFECTO (Archivo sale grueso sin control,
+  Figtree fina, unos 300). Hacen falta TTF FIJOS de cada peso: la API de Google Fonts los da por peso (Archivo 900; Figtree
+  500/700/800), pero la anchura la redondea a la más cercana con nombre (100 o 112,5): el `wdth 104` de la chapa sale a 100.
+- **El interletraje**: GD no lo aplica; se dibuja glifo a glifo con su AVANCE («|g|» − «||»: la caja de tinta de un glifo suelto
+  arrastra sus márgenes y separaba las letras). Sin los pares de kerning (GPOS): a este tamaño, no se ve en «Vera».
+- **Los colores**: los temas son ROLES (`Temas::MAPA`) que la instancia resuelve en dos hojas (`fiesta.css` → `saltia.css` →
+  hex): la imagen lee el hex de ahí.
+- **Coste**: 50–69 KB por imagen (JPEG 86) y unos 100 ms al dibujarla (dibujada al doble y reducida: GD no suaviza círculos).
+- **Riesgos**: un nombre largo no cabe («Valentina Martínez-Ortega», 1643 px a 116 px para 1080 de hueco: se reduce hasta un
+  mínimo y después se parte en dos líneas); un emoji sale como basura («ð» y cajas: GD no decodifica los caracteres de 4
+  bytes): se quita lo que la fuente no tiene ANTES de dibujar.
+
+**3 · Las dos composiciones** (los tres temas de cada una, en la carpeta de auditoría de esta máquina, `proto-invitacion-A-*.jpg`
+y `proto-invitacion-B-*.jpg`):
+- **A · la tarjeta de cerca**: la banda arriba con sus ondas, la chapa en su borde, y debajo el nombre en grande en el color del
+  tema, la frase y el día con la hora; el logotipo en una caja blanca arriba a la derecha.
+- **B · la miniatura del diseño, con los datos** (recomendada: es el menor desvío): la banda a sangre con su adorno y, encima,
+  la tarjeta blanca con la chapa, el nombre, la frase, el día con la hora y el logotipo.
+
+**4 · El mecanismo** (técnico, se decide con su `#`): un servicio del producto dibuja con GD desde la invitación y un **kit de la
+instancia** (los TTF fijos y el logotipo, declarados en `instancia.json`: contrato de plataforma, `#769`, por buzón; los colores,
+de `hojas.fiesta`). Ruta propia con el token y una huella de lo que se pinta (`/invitacion/{token}/imagen.jpg?v=…`, futuro):
+la huella cambia al personalizar o al mover la fiesta y WhatsApp la vuelve a pedir. Caché en disco PRIVADO, borrada con la
+invitación; `noindex` y sin abrir excepción a `no-store` (`RGPD-04`). Sin kit en la instancia, lo de hoy. El texto, en el idioma
+del `og:title`.
+
+**5 · Guardas.** Unidad (1200 × 630, JPEG, < 300 KB, el color de cada tema en puntos fijos, el nombre que no cabe, el emoji
+fuera); de ruta (200 con su token, 404 igual que la página, `noindex`, la `og:image` con 1200 × 630); arnés; sonda (la
+`og:image` de la página real). **No verificado**: que WhatsApp la enseñe con `no-store` (se mide en un móvil de verdad).
+
+**6 · Para el owner** (una pregunta): **¿A o B?** (o ninguna, y la fija del diseño).
 
 ## 5. Impacto en invariantes
 
