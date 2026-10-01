@@ -124,6 +124,8 @@ final class ListaDeInvitados
             'guardar' => [
                 'estado' => $status === 'guest-form-saved' || $guardadoEn !== null ? 'saved' : 'clean',
                 'guardado' => $guardadoEn === null ? __('fiesta.lista.guardar.guardado') : __('fiesta.lista.guardar.guardado_el', ['cuando' => self::cuandoFue($guardadoEn)]),
+                // Recién guardado (vuelve del Guardar): la isla lo confirma un momento (L2 de §4.18, `#814`).
+                'recien' => $status === 'guest-form-saved',
             ],
             'plazos' => [
                 'respuestas' => (bool) ($invitacion['replies_open'] ?? false),
@@ -740,18 +742,21 @@ final class ListaDeInvitados
      * Lo que se DICE arriba: el guardado, los rechazos del número y de los extras, la fiesta mixta, las edades
      * congeladas y las edades sin producto. Cada uno con su tono; el texto es el de siempre (`guestform.php`).
      *
+     * `sin_js`: el aviso solo hace falta SIN JavaScript. El del guardado lo confirma, con él, la isla de enlace («Guardado hoy
+     * a las…», L2 de `fiesta-sistema-nuevo.md` §4.18, `#814`): los dos a la vez decían lo mismo dos veces (regla 3).
+     *
      * @param  array<string, mixed>  $v
-     * @return list<array{tono: string, titulo: string, lineas: list<string>, rol: string}>
+     * @return list<array{tono: string, titulo: string, lineas: list<string>, rol: string, sin_js: bool}>
      */
     private static function avisos(array $v, ?string $status, TicketType $type, string $cumple = ''): array
     {
         $out = [];
-        $aviso = static function (string $tono, string $titulo, array $lineas, string $rol = 'status') use (&$out): void {
-            $out[] = ['tono' => $tono, 'titulo' => $titulo, 'lineas' => array_values(array_filter($lineas, static fn (string $l): bool => $l !== '')), 'rol' => $rol];
+        $aviso = static function (string $tono, string $titulo, array $lineas, string $rol = 'status', bool $sinJs = false) use (&$out): void {
+            $out[] = ['tono' => $tono, 'titulo' => $titulo, 'lineas' => array_values(array_filter($lineas, static fn (string $l): bool => $l !== '')), 'rol' => $rol, 'sin_js' => $sinJs];
         };
 
         if ($status === 'guest-form-saved') {
-            $aviso('success', '', [__('guestform.saved')]);
+            $aviso('success', '', [__('guestform.saved')], 'status', true);
         }
         // El descargo de quien cumple, firmado desde su fila (F7b, `#752`): el panel se va, el aviso lo dice.
         if ($status === 'cumple-firmado') {

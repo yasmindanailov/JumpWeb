@@ -1,7 +1,7 @@
 {{-- Lo que se DICE arriba (el guardado, los rechazos, la fiesta mixta, las edades…): con las piezas del sistema; el
      diseño no lo dibuja y se juzga sin A (spec §1.4). --}}
 @foreach ($m['avisos'] as $aviso)
-    <x-pieza.aviso :tone="$aviso['tono']" :title="$aviso['titulo']" :role="$aviso['rol']" size="sm">
+    <x-pieza.aviso :tone="$aviso['tono']" :title="$aviso['titulo']" :role="$aviso['rol']" size="sm" :data-aviso-sin-js="$aviso['sin_js'] ? '1' : null">
         <x-slot:icono><x-lucide :name="['success' => 'circle-check', 'warn' => 'triangle-alert', 'danger' => 'circle-alert'][$aviso['tono']] ?? 'info'" :size="17" /></x-slot:icono>
         {{ '' }}@foreach ($aviso['lineas'] as $linea)<p style="margin: 0;">{{ $linea }}</p>@endforeach
     </x-pieza.aviso>

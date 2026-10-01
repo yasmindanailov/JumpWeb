@@ -107,7 +107,7 @@ class GuestFormManyGuestsTest extends TestCase
         // ▶ Desde `#743` (la lista del sistema nuevo): la barra de Guardar, el panel de «Pegar una lista» y la
         // entrada de Vite de la página; en solo lectura, ni barra ni panel.
         $editable = $this->actingAs($user)->get(route('reservation.guests', ['reservation' => $item]))->assertOk()->getContent();
-        $this->assertStringContainsString('data-barra', $editable, 'la barra de Guardar');
+        $this->assertStringContainsString('data-lista-isla', $editable, 'el Guardar, en la isla de enlace (`#814`)');
         $this->assertStringContainsString('data-panel="pegar"', $editable, 'el panel de pegar');
         $this->assertMatchesRegularExpression('#<script type="module" src="[^"]*/build/assets/lista-[^"]+\.js"#', $editable, 'la página carga su entrada de Vite');
 
@@ -116,7 +116,7 @@ class GuestFormManyGuestsTest extends TestCase
 
         // ⚠️ Se buscan los ELEMENTOS (sus marcas `data-*`) y no nombres de clase sueltos: una subcadena sobre la
         // página entera daba la solo lectura por rota con la página sana (la trampa de `#553`).
-        $this->assertStringNotContainsString('data-barra', $readonly, 'en solo lectura no hay nada que guardar');
+        $this->assertStringNotContainsString('data-lista-isla', $readonly, 'en solo lectura no hay nada que guardar');
         $this->assertStringNotContainsString('data-panel="pegar"', $readonly, 'en solo lectura no se pega nada');
         $this->assertStringContainsString(__('guestform.readonly_notice'), $readonly);
     }

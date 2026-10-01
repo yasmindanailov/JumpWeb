@@ -4,8 +4,9 @@
  * El port a JavaScript plano de lo que `paginas/lista-invitados/estado.jsx` y las zonas hacen con React, sobre el
  * formulario POSICIONAL de siempre: el borrador en este móvil (sobrevive a cerrar la pestaña, se vacía al guardar),
  * las fichas que se abren y cierran, «Añadir a mano» y «Pegar una lista» (rellenan las fichas vacías, una detrás de
- * otra), «Quitar» con deshacer, el número con «Cambiar», los − y + de las cantidades, la barra de Guardar que dice en
- * qué punto está, copiar el enlace y avisar de que la invitación salió (F8). La lógica pura vive en `logica.js`.
+ * otra), «Quitar» con deshacer, el número con «Cambiar», los − y + de las cantidades, el Guardar de la isla de enlace que
+ * dice en qué punto está (`#814`), copiar el enlace y avisar de que la invitación salió (F8). La lógica pura vive en
+ * `logica.js`.
  *
  * ⚠️ Nada de esto ESCRIBE la lista: escribe el único Guardar, y lo que escribe es el formulario (el aviso de envío es
  * una medida, por su propio POST). Sin JavaScript el documento se
@@ -14,7 +15,8 @@
  */
 import './fiesta.css';
 import { llegadas } from './comun.js';
-import { NBSP, capitalizar, choice, clave, cubrir, euros, importe, limpiar, racionesTarta, soloEdad, vistaInvitacion } from './logica.js';
+import { NBSP, capitalizar, caraDeLaLista, choice, clave, cubrir, euros, importe, limpiar, racionesTarta, soloEdad, vistaInvitacion } from './logica.js';
+import { islaDeEnlace } from './isla.js';
 
 const de = document.documentElement;
 const q = (sel, raiz = document) => raiz.querySelector(sel);
@@ -102,11 +104,10 @@ function primero(form) {
 function lista(form) {
     const codigo = form.dataset.reserva || location.pathname;
     const claveBorrador = `fiesta-lista-${codigo}`;
-    const barra = q('[data-barra]', form);
     const filas = () => qa('[data-fila]', form);
     const camposDe = (fila) => ({ name: q('[data-campo="name"]', fila), age: q('[data-campo="age"]', fila), allergies: q('[data-campo="allergies"]', fila) });
 
-    // Lo que había al abrir: para saber qué cambió (el punto en la inicial, la cuenta de la barra) y para deshacer.
+    // Lo que había al abrir: para saber qué cambió (el punto en la inicial, la cuenta de la isla) y para deshacer.
     const inicial = new Map();
     const campos = () => qa('input:not([type=hidden]):not([type=submit]), textarea, select, input[type=hidden][name^="guests["]', form)
         .filter((el) => el.name && !['_token', 'expected_version', 'reply', 'with_names'].includes(el.name) && el.form === form);
@@ -466,7 +467,7 @@ function lista(form) {
     // Lo pedido de cada tarta: lo tecleado en las abiertas y lo pedido en las cerradas.
     const pedidoTarta = (c) => { const campo = q('[data-cantidad-campo]', c); return campo ? (parseInt(campo.value, 10) || 0) : Number(c.dataset.pedido || 0); };
     const tartasPedidas = () => (tarta ? qa('[data-variante]', tarta).reduce((suma, c) => suma + pedidoTarta(c), 0) : 0);
-    // ¿Cambió alguna tarta desde que se abrió? (la barra dice «La tarta se guarda hasta…» con una pedida y sin guardar).
+    // ¿Cambió alguna tarta desde que se abrió? (la isla dice «La tarta se guarda hasta…» con una pedida y sin guardar).
     const tartaCambiada = () => camposTarta().some((el) => inicial.has(el) && inicial.get(el) !== valorDe(el));
     // Cuántos sois (el `sois` del diseño): el número elegido, o la lista si lo supera.
     // Sin el campo del número (cerrado), el que dio el servidor: en la tarta o, sin tarta, en «Para los niños» (K1).
@@ -663,50 +664,50 @@ function lista(form) {
         });
     }
 
-    // ── La barra de Guardar: en qué punto está lo tecleado ──
+    // ── La isla de enlace (L2 de §4.18, `#814`): el ÚNICO Guardar, con lo exacto; qué cara toca lo decide
+    //    `logica.js::caraDeLaLista`. Guardado, el aviso; sin nada que guardar, enviar la invitación si aún no salió (fuera de la
+    //    vista de la zona 1, que ya lo ofrece) o nada. ──
     const repasar = Number(q('[data-repasar-n]', form)?.textContent || 0);
-    const iconos = q('[data-barra-iconos]', barra || form);
-    const pintaBarra = (estado, status, detalle) => {
-        if (!barra) return;
-        barra.dataset.estado = estado;
-        const st = q('[data-barra-estado]', barra); if (st) st.textContent = status;
-        let det = q('[data-barra-detalle]', barra);
-        if (detalle && !det) { det = document.createElement('span'); det.dataset.barraDetalle = ''; det.style.cssText = 'font: var(--type-mono); font-size: 12px; color: var(--text-muted);'; st?.after(det); }
-        if (det) { det.textContent = detalle; det.hidden = !detalle; }
-        const boton = q('[data-barra-boton]', barra);
-        const nada = estado === 'clean' || estado === 'saved';
-        if (boton) { boton.disabled = nada; boton.classList.toggle('pz-boton--primary', !nada); boton.classList.toggle('pz-boton--quiet', nada); }
-        const icono = q('[data-barra-icono]', barra);
-        const nuevo = iconos?.content.querySelector(`[data-icono="${estado}"]`);
-        if (icono && nuevo) { icono.style.color = nuevo.style.color; icono.innerHTML = nuevo.innerHTML; }
-        const pegada = estado === 'dirty';
-        barra.style.position = pegada ? 'sticky' : 'relative';
-        barra.style.bottom = pegada ? 'calc(12px + env(safe-area-inset-bottom, 0px))' : '';
-        barra.style.background = pegada ? 'var(--surface-glass-ink-float)' : 'var(--ink-surface)';
-        barra.style.boxShadow = pegada ? 'var(--shadow-island-float)' : 'inset 0 1px 0 rgba(255, 255, 255, 0.14)';
+    const isla = islaDeEnlace(form);
+    const datosIsla = q('[data-lista-isla]', form);
+    const textosIsla = {
+        corto: (n) => choice(t('guardar.corto', ':count cambios'), n),
+        respuestas: (n) => choice(t('guardar.respuestas', ':count respuestas por repasar'), n),
+        movil: t('guardar.movil_corto', 'borrador en este móvil'),
+        recuperado: t('guardar.recuperado_corto', 'borrador recuperado'),
     };
+    // Lo que la isla está diciendo ahora: el aviso de lo guardado no se pisa hasta que acaba, y enviar no vuelve tras pulsarlo.
+    const islaEstado = { avisando: false, enviada: false, guardando: false };
+    // «Guardar», de su plantilla (es `fiesta.barra.label`, que no viaja en los textos de la lista): guardando, la isla dice
+    // «Guardando la lista», y al volver tiene que decir otra vez lo suyo.
+    const rotuloGuardar = q('template[data-isla-plantilla="guardar"]', form)?.content.querySelector('[data-isla-label]')?.textContent || '';
     let recuperado = false;
+    const pintaIsla = () => {
+        if (!isla || islaEstado.avisando) return;
+        const n = cambios();
+        // F5/K2: con alguna tarta PEDIDA y sin guardar, y su plazo cerrando hoy o mañana, la isla lo dice (`guardarTarta`).
+        const tartaTexto = tarta?.dataset.pronto === '1' && tartasPedidas() > 0 && tartaCambiada() ? (tarta.dataset.guardarTexto || '') : '';
+        const r = caraDeLaLista({
+            cambios: n, repasar, recuperado, tarta: tartaTexto, guardando: islaEstado.guardando,
+            abiertas: Boolean(q('template[data-isla-plantilla="enviar"]', form)), compartida: islaEstado.enviada,
+        }, textosIsla);
+        if (r.cara === 'guardar') isla.cara('guardar', { primary: r.primary, ocupada: r.ocupada, sub: r.sub, label: r.ocupada ? t('guardar.guardando', 'Guardando la lista') : rotuloGuardar });
+        else if (r.cara === 'enviar') isla.cara('enviar', { ocultaSi: '[data-zona="1"]' });
+        else isla.cara(null);
+    };
+    // Al pulsar enviar desde la isla, la invitación salió: la isla se va y no vuelve en esta visita.
+    q('[data-lista-isla]', form)?.addEventListener('click', (e) => { if (e.target.closest('a[data-envio="whatsapp"]')) islaEstado.enviada = true; });
     const actualiza = () => {
         marcaUltimas();
         pintaNumero();
         pintaExtras();
-        const n = cambios();
-        if (n > 0 || repasar > 0) {
-            const status = n > 0 ? choice(t('guardar.cambios', ':count cambios sin guardar'), n) : choice(t('guardar.respuestas', ':count respuestas por repasar'), repasar);
-            let detalle = n > 0
-                ? [repasar ? choice(t('guardar.respuestas', ''), repasar) : '', recuperado ? t('guardar.recuperado', 'Borrador recuperado de este móvil') : t('guardar.movil', 'Borrador en este móvil')].filter(Boolean).join(' · ')
-                : t('guardar.entran', 'Entran en la lista al guardar');
-            // F5/K2: con alguna tarta PEDIDA y sin guardar, y su plazo cerrando hoy o mañana, la barra lo dice (`guardarTarta`).
-            if (tarta?.dataset.pronto === '1' && tartasPedidas() > 0 && tartaCambiada() && tarta.dataset.guardarTexto) detalle = tarta.dataset.guardarTexto;
-            pintaBarra('dirty', status, detalle);
-        } else if (barra?.dataset.estado === 'saved' || barra?.dataset.estadoInicial === 'saved') {
-            // «Guardado hoy a las 16:05» (F5c): el del servidor, no un «Guardado» a secas.
-            pintaBarra('saved', barra?.dataset.guardado || t('guardar.guardado', 'Guardado'), '');
-        } else {
-            pintaBarra('clean', t('guardar.nada', 'Nada que guardar todavía'), '');
-        }
+        pintaIsla();
     };
-    if (barra) barra.dataset.estadoInicial = barra.dataset.estado;
+    // Recién guardado: el aviso «Guardado hoy a las 16:05», un momento, y después lo que toque.
+    if (isla && datosIsla?.dataset.recien === '1' && datosIsla.dataset.guardado) {
+        islaEstado.avisando = true;
+        isla.aviso(datosIsla.dataset.guardado).then(() => { islaEstado.avisando = false; pintaIsla(); });
+    }
 
     // ── El borrador, en este móvil: se guarda con cada cambio y se vacía al guardar ──
     const guardaBorrador = () => {
@@ -750,7 +751,9 @@ function lista(form) {
             return;
         }
         try { localStorage.removeItem(claveBorrador); } catch { /* nada */ }
-        pintaBarra('saving', t('guardar.guardando', 'Guardando la lista'), '');
+        islaEstado.guardando = true;
+        islaEstado.avisando = false;
+        pintaIsla();
     });
 
     // ── Las cantidades de los extras: el importe de cada tarjeta, anticipado (el que vale lo dice el servidor) ──
@@ -780,10 +783,14 @@ function lista(form) {
         datos.append('where', where);
         try { navigator.sendBeacon(envioUrl, datos); } catch { /* sin aviso: el envío sigue */ }
     };
-    qa('a[data-envio="whatsapp"]', form).forEach((a) => a.addEventListener('click', () => avisaEnvio('whatsapp', a.dataset.envioDonde || 'invitation')));
+    // ⚠️ Por DELEGACIÓN: el «Enviar por WhatsApp» de la isla (`#814`) nace de su plantilla después de arrancar.
+    form.addEventListener('click', (e) => {
+        const a = e.target.closest('a[data-envio="whatsapp"]');
+        if (a && form.contains(a)) avisaEnvio('whatsapp', a.dataset.envioDonde || 'invitation');
+    });
     qa('[data-envio="copy"] [data-kind="copy"]', form).forEach((b) => b.addEventListener('click', () => avisaEnvio('copy', b.closest('[data-envio]')?.dataset.envioDonde || 'invitation')));
 
-    // ── Arranque: el borrador, las filas, la primera pendiente abierta, la barra ──
+    // ── Arranque: el borrador, las filas, la primera pendiente abierta, la isla ──
     recuperaBorrador();
     filas().forEach((f) => { pintaFila(f); abre(f, false); });
     const primeraPendiente = filas().find((f) => f.dataset.completa === '0' && !f.classList.contains('fi-fila--vacia') && f.dataset.respuesta !== 'no' && camposDe(f).name);
@@ -800,7 +807,7 @@ function lista(form) {
 
 /* ── El descargo de QUIEN CUMPLE (F7b, §4.13, `#752`): «Otro, que no está en mi cuenta» enseña los campos de su hijo nuevo.
    Sin JavaScript se ven siempre y el servidor solo los lee con «Otro». Sus campos van a `fiesta-cumple` (`form=`), así
-   que la barra de Guardar no los cuenta. ───────────────────────────────────────────────────────────────────────── */
+   que el Guardar de la isla no los cuenta. ───────────────────────────────────────────────────────────────────────── */
 function firmaCumple() {
     const hijo = q('select[data-cumple-hijo]');
     const nuevo = q('[data-cumple-nuevo]');

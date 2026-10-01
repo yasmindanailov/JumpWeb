@@ -15,6 +15,8 @@
      *    queda donde estaba la barra de antes y el orden de lectura no cambia.
      * ⚠️ Es una pieza CON estado (sale, entra, crece): sus estilos van por clases (`.fi-isla*` en `fiesta.css`), no en línea.
      * `cara`: `respuesta` (el radio de 28 de la cara alta) o `barra`/`linea` (34, la píldora).
+     * `plantillas`: las OTRAS caras que la página pone con JavaScript (`isla.js::cara`), como `<template data-isla-plantilla>`;
+     * la del AVISO («Guardado hoy a las 16:05», con su barra lima que se vacía) va siempre: confirmar es de cualquier isla.
      */
 @endphp
-<div role="region" aria-label="{{ $label }}" {{ $attributes->class(['fi-isla']) }} data-isla-enlace data-delay="{{ (int) $delay }}"@if ($ocultaSi !== '') data-oculta-si="{{ $ocultaSi }}"@endif><div class="fi-isla-caja {{ $cara === 'respuesta' ? 'fi-isla-caja--alta' : '' }}" data-surface="ink" data-isla-caja><div class="fi-isla-dentro" data-isla-dentro><div data-isla-cara="{{ $cara }}">{{ $slot }}</div></div></div></div>
+<div role="region" aria-label="{{ $label }}" {{ $attributes->class(['fi-isla']) }} data-isla-enlace data-delay="{{ (int) $delay }}"@if ($ocultaSi !== '') data-oculta-si="{{ $ocultaSi }}"@endif><div class="fi-isla-caja {{ $cara === 'respuesta' ? 'fi-isla-caja--alta' : '' }}" data-surface="ink" data-isla-caja><div class="fi-isla-dentro" data-isla-dentro><div data-isla-cara="{{ $cara }}">{{ $slot }}</div></div></div>{{ $plantillas ?? '' }}<template data-isla-plantilla="aviso"><div role="status"><button type="button" class="fi-isla-aviso" data-isla-aviso><span class="fi-isla-aviso-fila"><span class="fi-isla-aviso-ok" aria-hidden="true"><x-lucide name="check" :size="20" /></span><span class="fi-isla-aviso-tx"><b data-isla-label></b><small hidden data-isla-sub><span data-isla-sub-texto></span></small></span></span><span class="fi-isla-aviso-barra" aria-hidden="true"><span data-isla-resto></span></span></button></div></template></div>

@@ -276,6 +276,30 @@ export function huecoIsla(alto, sin = false) {
         : `calc(${alto + 2}px + var(--island-inset) * 2 + env(safe-area-inset-bottom, 0px))`;
 }
 
+/**
+ * QUÉ CARA LLEVA LA ISLA DE LA LISTA (L2 de §4.18; `paginas/lista-invitados/isla.jsx`): el ÚNICO Guardar, en naranja y solo
+ * con algo que guardar, con lo exacto —la tarta que cierra (si se pidió y cambió), cuántos cambios y si el borrador es de
+ * este móvil o recuperado, las respuestas por repasar—; guardando, ocupada; sin nada que guardar, «Enviar por WhatsApp» si
+ * la invitación aún no salió y se puede contestar; si no, nada (se va). Sin el recordatorio del diseño: la lista no tiene
+ * «sin contestar» desde `#805`.
+ *
+ * @param {{cambios?: number, repasar?: number, recuperado?: boolean, tarta?: string, guardando?: boolean, abiertas?: boolean, compartida?: boolean}} estado
+ * @param {{corto: (n: number) => string, respuestas: (n: number) => string, movil: string, recuperado: string}} tx
+ * @returns {{cara: ?string, primary?: boolean, ocupada?: boolean, sub?: string}}
+ */
+export function caraDeLaLista({ cambios = 0, repasar = 0, recuperado = false, tarta = '', guardando = false, abiertas = false, compartida = false } = {}, tx) {
+    if (guardando) return { cara: 'guardar', primary: true, ocupada: true, sub: '' };
+    if (cambios > 0 || repasar > 0) {
+        let sub = tx.respuestas(repasar);
+        if (cambios > 0) sub = `${tx.corto(cambios)} · ${repasar > 0 ? tx.respuestas(repasar) : (recuperado ? tx.recuperado : tx.movil)}`;
+
+        return { cara: 'guardar', primary: true, ocupada: false, sub: tarta || sub };
+    }
+    if (abiertas && ! compartida) return { cara: 'enviar' };
+
+    return { cara: null };
+}
+
 /*
  * EL CORREO MAL ESCRITO (F9): la regla vive en `ui/correo.js`, movida tal cual el 27-09 (plataforma, §4.16 de
  * `isla-y-landing-nueva.md`) porque también la usan los campos de correo de la isla, y desde aquí se llevaban este módulo

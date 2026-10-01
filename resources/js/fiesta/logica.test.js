@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { asoma, caducaEn, capitalizar, choice, clave, cubrir, deLaFiesta, estadoFicha, euros, huecoIsla, importe, islaSale, limpiar, misRespuestas, racionesTarta, soloEdad, sugerirCorreo, vistaInvitacion } from './logica.js';
+import { asoma, caducaEn, capitalizar, caraDeLaLista, choice, clave, cubrir, deLaFiesta, estadoFicha, euros, huecoIsla, importe, islaSale, limpiar, misRespuestas, racionesTarta, soloEdad, sugerirCorreo, vistaInvitacion } from './logica.js';
 
 // F9 (§4.15, el zip tercero `#780`): el correo mal escrito, como `forms/Field.jsx` del diseño.
 test('el correo mal escrito se corrige: una letra, dos cambiadas, la terminación que no existe, el punto que falta', () => {
@@ -208,6 +208,30 @@ test('«se ve ya» cuenta solo lo que asoma por ENCIMA de la franja de la isla y
     assert.equal(asoma([{ top: 100, bottom: 100, height: 0 }], alto), false, 'escondido (alto 0): no cuenta');
     assert.equal(asoma([{ top: 900, bottom: 940, height: 40 }, { top: 300, bottom: 340, height: 40 }], alto), true, 'basta uno');
     assert.equal(asoma([], alto), false);
+});
+
+// L2 · la isla de la lista: el único Guardar y lo que dice.
+const TX_LISTA = {
+    corto: (n) => (n === 1 ? '1 cambio' : `${n} cambios`),
+    respuestas: (n) => (n === 1 ? '1 respuesta por repasar' : `${n} respuestas por repasar`),
+    movil: 'borrador en este móvil',
+    recuperado: 'borrador recuperado',
+};
+
+test('con algo que guardar, el Guardar en naranja con lo EXACTO', () => {
+    assert.deepEqual(caraDeLaLista({ cambios: 2 }, TX_LISTA), { cara: 'guardar', primary: true, ocupada: false, sub: '2 cambios · borrador en este móvil' });
+    assert.equal(caraDeLaLista({ cambios: 1, recuperado: true }, TX_LISTA).sub, '1 cambio · borrador recuperado');
+    assert.equal(caraDeLaLista({ cambios: 1, repasar: 3 }, TX_LISTA).sub, '1 cambio · 3 respuestas por repasar', 'con respuestas que repasar, eso en vez del borrador');
+    assert.equal(caraDeLaLista({ repasar: 1 }, TX_LISTA).sub, '1 respuesta por repasar', 'sin cambios, solo lo que hay que repasar');
+    assert.equal(caraDeLaLista({ cambios: 1, tarta: 'La tarta se guarda hasta hoy a las 17:00' }, TX_LISTA).sub, 'La tarta se guarda hasta hoy a las 17:00', 'la tarta que cierra manda');
+});
+
+test('guardando, el Guardar ocupado; sin nada que guardar, enviar si aún no salió, y si no, nada', () => {
+    assert.deepEqual(caraDeLaLista({ cambios: 2, guardando: true }, TX_LISTA), { cara: 'guardar', primary: true, ocupada: true, sub: '' });
+    assert.deepEqual(caraDeLaLista({ abiertas: true, compartida: false }, TX_LISTA), { cara: 'enviar' });
+    assert.deepEqual(caraDeLaLista({ abiertas: true, compartida: true }, TX_LISTA), { cara: null }, 'ya salió: nada que hacer, se va');
+    assert.deepEqual(caraDeLaLista({ abiertas: false, compartida: false }, TX_LISTA), { cara: null }, 'fuera de plazo no se envía');
+    assert.deepEqual(caraDeLaLista({}, TX_LISTA), { cara: null });
 });
 
 test('el hueco al pie: el alto de la isla, su borde y el aire de debajo; sin nada que hacer, nada', () => {

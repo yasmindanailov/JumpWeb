@@ -228,7 +228,7 @@ class GuestFormTest extends TestCase
         $this->actingAs($user)->get(route('reservation.guests', ['reservation' => $reservation]))
             ->assertOk()
             ->assertSee(__('guestform.readonly_notice'))
-            ->assertDontSee('data-barra', false);  // la barra de Guardar (la única acción que escribe) no se pinta
+            ->assertDontSee('data-lista-isla', false);  // el Guardar de la isla (la única acción que escribe) no se pinta
     }
 
     public function test_store_on_finished_reservation_does_not_save(): void

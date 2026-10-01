@@ -83,6 +83,8 @@ return [
         'ha_cambiado' => 'Ha cambiado',
         // F8 (`#753`): una acción por tarea. Enviar, siempre el mismo rótulo. (Las cifras y «recordar», fuera con `#805`.)
         'enviar' => 'Enviar por WhatsApp',
+        // La isla de la lista (L2 de §4.18, `#814`): «Enviar por WhatsApp · La invitación de Noa» (`P.isla.deQuien`).
+        'isla' => ['de_quien' => 'La invitación de :n'],
         'copiar' => 'Copiar el enlace',
         'personalizar' => 'Personalizar',
         'pers' => ['tema' => 'Tema', 'quien' => 'Quién cumple', 'edad' => 'Su edad', 'invita' => 'Te invita', 'palabras' => 'Unas palabras de la familia', 'pistas' => 'Pistas para el regalo', 'telefono' => 'Enseñar mi teléfono'],
@@ -256,11 +258,11 @@ return [
         'guardar' => [
             'guardado_el' => 'Guardado :cuando',
             'nada' => 'Nada que guardar todavía',
-            'cambios' => '{1} 1 cambio sin guardar|[2,*] :count cambios sin guardar',
+            // La línea de la isla (L2 de §4.18, `#814`; `P.guardar` del diseño): corta, cabe a 360 px.
+            'corto' => '{1} 1 cambio|[2,*] :count cambios',
             'respuestas' => '{1} 1 respuesta por repasar|[2,*] :count respuestas por repasar',
-            'movil' => 'Borrador en este móvil',
-            'recuperado' => 'Borrador recuperado de este móvil',
-            'entran' => 'Entran en la lista al guardar',
+            'movil_corto' => 'borrador en este móvil',
+            'recuperado_corto' => 'borrador recuperado',
             'guardado' => 'Guardado',
             'guardando' => 'Guardando la lista',
             'sin_guardar' => 'Sin guardar',

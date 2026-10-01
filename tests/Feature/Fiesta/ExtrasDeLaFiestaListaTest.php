@@ -177,13 +177,23 @@ class ExtrasDeLaFiestaListaTest extends TestCase
         ['reservation' => $r, 'host' => $host] = $this->mountParty();
         $this->extra($this->tipo($r), 'Cubo', 1600);
 
-        $this->assertStringContainsString('Nada que guardar todavía', $this->barra($this->pagina($r, $host)));
+        $antes = $this->pagina($r, $host);
+        $this->assertStringContainsString('Nada que guardar todavía', $this->barra($antes));
+        $this->assertStringNotContainsString('data-aviso-sin-js', $antes, 'sin guardar, ningún aviso de guardado');
+        // El Guardar vive en la isla de enlace (`#814`): su cara de SERVIDOR es el botón de enviar de la lista (sin JavaScript
+        // guarda igual), la isla no está recién guardada y la página deja su hueco al final.
+        $this->assertStringContainsString('<div data-isla-cara="barra"><button type="submit" form="fiesta-form" class="fi-isla-barra"', $antes);
+        $this->assertStringContainsString('data-recien="0"', $antes);
+        $this->assertStringContainsString('data-isla-hueco', $antes);
 
         $this->guardar($r, $host, []);
         $hora = now()->setTimezone(DisplayTime::timezone())->format('H:i');
-        $barra = $this->barra($this->pagina($r, $host));
-        $this->assertStringContainsString('data-estado="saved"', $barra);
-        $this->assertStringContainsString('Guardado hoy a las '.$hora, $barra);
+        $html = $this->pagina($r, $host);
+        $this->assertStringContainsString('Guardado hoy a las '.$hora, $this->barra($html));
+        // Y al volver del Guardar, la isla lo confirma un momento con el MISMO texto (L2 de la isla de enlace, `#814`).
+        $this->assertStringContainsString('data-recien="1" data-guardado="Guardado hoy a las '.$hora.'"', $html);
+        // …y el aviso de arriba, el de siempre, queda SOLO para sin JavaScript (con él lo dice la isla: regla 3).
+        $this->assertMatchesRegularExpression('/<aside role="status" [^>]*data-aviso-sin-js="1"[^>]*>.*?Formulario guardado/s', $html);
 
         // Lo que guarda el parque no es «Guardado» del titular: la hora no se mueve.
         $this->travel(2)->hours();
@@ -315,13 +325,15 @@ class ExtrasDeLaFiestaListaTest extends TestCase
         return substr($html, $desde, (int) strpos($html, '</section>', $desde) - $desde);
     }
 
-    /** El estado y el texto de la barra: «saved · Guardado hoy a las 16:05» (acotado a sus marcas, no a una ventana de texto). */
+    /**
+     * La LÍNEA de lo guardado, al pie de la zona 5 (desde la L2 de la isla de enlace, `#814`, el Guardar vive en la isla):
+     * «Guardado hoy a las 16:05» o «Nada que guardar todavía», acotada a su marca, no a una ventana de texto.
+     */
     private function barra(string $html): string
     {
-        $this->assertSame(1, preg_match('#data-barra data-estado="([a-z]+)"#', $html, $estado), 'sin barra');
-        $this->assertSame(1, preg_match('#data-barra-estado>([^<]*)<#', $html, $texto));
+        $this->assertSame(1, preg_match('#<p class="pli-guardado" data-guardado-linea>(.*?)</p>#s', $html, $linea), 'sin la línea de lo guardado');
 
-        return 'data-estado="'.$estado[1].'" · '.$texto[1];
+        return trim(strip_tags($linea[1]));
     }
 
     /** El pack con los dos campos generales del post-form de PlayJump: los adultos (de tipo `adults`) y las observaciones. */

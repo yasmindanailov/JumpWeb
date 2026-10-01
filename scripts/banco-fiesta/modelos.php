@@ -223,7 +223,8 @@ return [
             'avisos' => [],
             'progreso' => ['done' => $guardado ? $confirmados + 1 : 0, 'total' => $RESERVA['reservados']],
             // `guardadoEn: "hoy a las 12:40"` del diseño en `guardado` (F5c).
-            'guardar' => $guardado ? ['estado' => 'saved', 'guardado' => 'Guardado hoy a las 12:40'] : ['estado' => 'clean', 'guardado' => 'Guardado'],
+            // `recien`: el banco pinta la página en reposo, no al volver del Guardar (L2 de la isla, `#814`).
+            'guardar' => $guardado ? ['estado' => 'saved', 'guardado' => 'Guardado hoy a las 12:40', 'recien' => false] : ['estado' => 'clean', 'guardado' => 'Guardado', 'recien' => false],
             'plazos' => ['respuestas' => true, 'numero' => true, 'extras' => true],
             'privacidad' => '#privacidad',
         ];

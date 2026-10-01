@@ -1014,6 +1014,22 @@ estaba en ese punto). ⚠️ Trampas medidas: (1) un `@if` con espacio delante d
 §4.7); (2) un atributo sin valor sale `x="x"` del `ComponentAttributeBag`; (3) la invitación de una fiesta ya celebrada da
 404: la línea solo se ve con el plazo pasado y la fiesta por delante.
 
+**L2 · la lista, hecha** (01-10, en `wip/isla-enlace-l2`, sobre la L1; al ojo del owner): el Guardar vive en la isla
+(`zona-5`, cara de servidor = el botón de enviar de `fiesta-form`; sin JavaScript, en el flujo y guarda igual); qué cara
+toca, `logica.js::caraDeLaLista` («1 cambio · borrador en este móvil», «… · borrador recuperado», «N respuestas por
+repasar», la tarta que cierra; guardando, ocupada); recién guardado, el AVISO de la isla («Guardado hoy a las 12:42», con su
+barra lima); sin nada que guardar y la invitación sin enviar, «Enviar por WhatsApp · La invitación de Noa» con la zona 1 fuera
+de la vista (mismo aviso de envío, `where=invitation`), y enviada, nada. Al pie, la LÍNEA de lo guardado (`.pli-guardado`).
+Fuera `x-fiesta.barra-guardar` y los textos que solo ella usaba. ✱ **No se hacen** del diseño: el recordatorio
+(«Escribir el recordatorio · 4 sin contestar»: la lista no tiene «sin contestar» desde `#805`) y «Falta el nombre de un niño»
+(el guardado de la lista no da errores por campo: sanea y avisa arriba). ✱ **Medido por la sonda y arreglado**: al volver de
+guardar se decía DOS veces (el aviso verde de arriba y el de la isla); con JavaScript, el de arriba se esconde
+(`sin_js`, `.js [data-aviso-sin-js]`) y confirma la isla; sin él, se queda. Arnés **32/32**; sonda **26 puntos a 390 y 1280**
+(con su propia lista sin enviar, `JW-SONDA-ISLA-E`, que monta y quita; F8 solo se mira). ⚠️⚠️ **Trampa medida**: con
+`isla.js` en DOS entradas, importar `q`/`qa` de `comun.js` hacía que Rolldown repartiera de otra forma los trozos de TODA la
+web (+2,68 KiB al motor del cajón, ocho techos de `SidebarBundleBudgetTest` en rojo, sin una línea más del cajón;
+determinista); acotado por partes, `isla.js` los define dentro y el reparto vuelve (298,46).
+
 ## 5. Impacto en invariantes
 
 | ID | Cómo |

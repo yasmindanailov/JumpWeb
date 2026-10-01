@@ -64,7 +64,14 @@ class ListaDeInvitadosTest extends TestCase
         $html = fn (): string => $this->actingAs($host)->get(route('reservation.guests', ['reservation' => $reservation]))->assertOk()->getContent();
 
         foreach (['antes de enviar' => $html(), 'enviada' => ($invitation->forceFill(['shared_at' => now()])->save() ? $html() : '')] as $cuando => $pagina) {
-            $this->assertSame(1, substr_count($pagina, 'data-envio="whatsapp" data-envio-donde="invitation"'), "{$cuando}: enviar, un botón");
+            // Un solo «Enviar» A LA VISTA (`#753`): el de la isla de enlace (`#814`) es una PLANTILLA que su JavaScript pone
+            // solo con la zona 1 fuera de la vista, y solo mientras la invitación no ha salido.
+            $visible = (string) preg_replace('#<template\b[^>]*>.*?</template>#s', '', $pagina);
+            $this->assertSame(1, substr_count($visible, 'data-envio="whatsapp" data-envio-donde="invitation"'), "{$cuando}: enviar, un botón");
+            $this->assertSame($cuando === 'antes de enviar' ? 1 : 0, substr_count($pagina, '<template data-isla-plantilla="enviar">'), "{$cuando}: la isla ofrece enviar SOLO antes de enviar");
+            if ($cuando === 'antes de enviar') {
+                $this->assertMatchesRegularExpression('#<template data-isla-plantilla="enviar">.*?<span data-isla-sub-texto>La invitación de Lucía</span>#s', $pagina, 'con la línea exacta: de quién es la invitación');
+            }
             // ⚠️ El MARCADO se mira en el HTML y el TEXTO en lo que se lee (sin etiquetas): la pieza de la fila le pasa a su
             // JS TODOS sus rótulos en un atributo —«Sin contestar» incluido, porque es un port del diseño—, y ese JSON no lo
             // lee nadie. Medido al escribir este caso: la aguja casaba ahí con la página correcta.

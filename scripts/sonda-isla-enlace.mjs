@@ -51,7 +51,23 @@ const montarCerrada = () => tinker(`$h = App\\Domain\\Identity\\Models\\User::wh
     + ` $r = $o->items()->whereNull('parent_item_id')->firstOrFail(); $sv = app(App\\Domain\\Booking\\Services\\PartyInvitations::class); $i = $sv->forReservation($r);`
     + ` $sv->personalize($i, ['honoree_name' => 'Noa', 'honoree_age' => 6, 'theme' => 'confeti', 'host_line' => 'Te invita la familia de Noa']); echo $i->fresh()->token;`).split('\n').pop();
 
-const desmontarCerrada = () => tinker(`$o = App\\Domain\\Booking\\Models\\Order::where('code', '${CODIGO_CERRADA}')->first(); if ($o) { foreach ($o->items as $it) { App\\Domain\\Booking\\Models\\PartyInvitation::where('order_item_id', $it->id)->each(fn ($i) => $i->replies()->delete() && $i->delete()); } $o->items()->delete(); $o->delete(); } echo 'ok';`);
+const desmontar = (codigo) => tinker(`$o = App\\Domain\\Booking\\Models\\Order::where('code', '${codigo}')->first(); if ($o) { foreach ($o->items as $it) { Illuminate\\Support\\Facades\\DB::table('analytics_events')->where('order_id', $o->id)->delete(); App\\Domain\\Booking\\Models\\PartyInvitation::where('order_item_id', $it->id)->each(fn ($i) => $i->replies()->delete() && $i->delete()); } $o->items()->delete(); $o->delete(); } echo 'ok';`);
+
+/**
+ * L2: una fiesta de dentro de 5 días con la invitación PERSONALIZADA y SIN ENVIAR (la isla ofrece enviarla) y tres niños en
+ * la lista. Devuelve el enlace firmado de su lista, con el host de dentro del contenedor.
+ */
+const CODIGO_LISTA = 'JW-SONDA-ISLA-E';
+const montarLista = () => tinker(`URL::forceRootUrl('${BASE}'); $h = App\\Domain\\Identity\\Models\\User::where('email', 'probe-card@jumpweb.test')->firstOrFail(); $p = App\\Domain\\Booking\\Models\\TicketType::findOrFail(105);`
+    + ` $o = App\\Domain\\Booking\\Models\\Order::where('code', '${CODIGO_LISTA}')->first();`
+    + ` if ($o === null) { $s = App\\Domain\\Booking\\Models\\Slot::firstOrCreate(['zone_id' => $p->zone_id, 'date' => App\\Domain\\Platform\\Services\\DisplayTime::today()->addDays(5)->toDateString(), 'start_time' => '18:00:00'], ['end_time' => '20:00:00', 'capacity' => 200, 'online_capacity' => 200]);`
+    + ` $o = App\\Domain\\Booking\\Models\\Order::create(['user_id' => $h->id, 'code' => '${CODIGO_LISTA}', 'status' => App\\Domain\\Booking\\Models\\Order::STATUS_PAID, 'subtotal' => 8 * 1695, 'tax' => 0, 'total' => 8 * 1695, 'currency' => 'EUR', 'paid_at' => now()]);`
+    + ` $o->items()->create(['ticket_type_id' => $p->id, 'slot_id' => $s->id, 'quantity' => 8, 'unit_price' => 1695, 'seats' => 8, 'event_data' => ['celebrant' => 'Noa', 'age' => 6], 'guest_data' => [['name' => 'Mateo'], ['name' => 'Ana'], ['name' => 'Hugo']]]); }`
+    + ` $r = $o->items()->whereNull('parent_item_id')->firstOrFail(); $sv = app(App\\Domain\\Booking\\Services\\PartyInvitations::class); $i = $sv->forReservation($r);`
+    + ` $sv->personalize($i, ['honoree_name' => 'Noa', 'honoree_age' => 6, 'theme' => 'confeti', 'host_line' => 'Te invita la familia de Noa']); echo $r->fresh()->guestFormSignedUrl();`).split('\n').pop();
+const compartidaLista = () => tinker(`$o = App\\Domain\\Booking\\Models\\Order::where('code', '${CODIGO_LISTA}')->first(); $r = $o?->items()->whereNull('parent_item_id')->first(); echo $r && App\\Domain\\Booking\\Models\\PartyInvitation::where('order_item_id', $r->id)->whereNotNull('shared_at')->exists() ? '1' : '0';`);
+/** La lista de `JW-OJO-F8` (enviada, con una respuesta por repasar), solo para MIRAR: la sonda no guarda en ella. */
+const listaF8 = () => tinker(`URL::forceRootUrl('${BASE}'); echo App\\Domain\\Booking\\Models\\Order::where('code', 'JW-OJO-F8')->firstOrFail()->items()->whereNull('parent_item_id')->firstOrFail()->guestFormSignedUrl();`).split('\n').pop();
 
 const texto = async (loc) => ((await loc.innerText({ timeout: 4000 }).catch(() => '')) ?? '').replace(/\s+/g, ' ').trim();
 
@@ -70,7 +86,7 @@ const islaEn = (page) => page.evaluate(() => {
     return { top: r.top, bottom: r.bottom, left: r.left, width: r.width, pos: getComputedStyle(isla).position, sale: isla.dataset.sale ?? '', vw: window.innerWidth, vh: window.innerHeight, hueco: hueco ? hueco.getBoundingClientRect().height : -1 };
 });
 
-async function recorrer(navegador, ventana, informe, cerrada) {
+async function recorrer(navegador, ventana, informe, cerrada, lista) {
     const { width, height, ...tacto } = ventana;
     const check = (nombre, ok, detalle = '') => informe.checks.push({ nombre, ok: Boolean(ok), detalle: String(detalle) });
     const errores = [];
@@ -192,6 +208,82 @@ async function recorrer(navegador, ventana, informe, cerrada) {
         await contexto.close();
     }
 
+    // ── L2 · La lista: el único Guardar, el aviso, la línea de lo guardado y «Enviar por WhatsApp» ─────────
+    const cara = (page) => page.evaluate(() => document.querySelector('[data-lista-isla] [data-isla-cara]')?.dataset.islaCara ?? '');
+    const subIsla = (page) => texto(page.locator('[data-lista-isla] [data-isla-cara] [data-isla-sub-texto]'));
+    {
+        const { contexto, page } = await nueva();
+        await page.route('https://wa.me/**', (r) => r.abort());
+        await page.goto(lista.e, { waitUntil: 'domcontentloaded' });
+        await page.waitForSelector('html.js', { timeout: 10000 }).catch(() => {});
+        await cookies(page);
+        await page.waitForTimeout(900);
+        check('lista sin enviar, arriba (la zona 1 ya ofrece enviar): la isla NO lo repite', (await islaEn(page))?.sale === '1', await cara(page));
+        await foto(page, '4-lista-arriba');
+        await page.evaluate(() => window.scrollTo(0, document.scrollingElement.scrollHeight));
+        await page.waitForTimeout(1300);
+        const enviar = page.locator('[data-lista-isla] [data-isla-cara="enviar"] a[data-envio="whatsapp"]');
+        check('al bajar, sin nada que guardar: «Enviar por WhatsApp · La invitación de Noa», en secundaria',
+            (await islaEn(page))?.sale === '0' && (await enviar.count()) === 1 && (await subIsla(page)) === 'La invitación de Noa'
+                && ! (await enviar.evaluate((a) => a.classList.contains('fi-isla-barra--primary'))), `${await cara(page)} · ${await subIsla(page)}`);
+        await foto(page, '4b-lista-enviar');
+
+        // Un cambio: la edad de la ficha abierta. Escribiendo, la isla se aparta; al salir, el Guardar en naranja con lo exacto.
+        const edad = page.locator('input[id$="-edad"]:visible').first();
+        await edad.fill('7');
+        await page.waitForTimeout(500);
+        check('escribiendo en un campo de la página, la isla se aparta', (await islaEn(page))?.sale === '1');
+        await edad.blur();
+        await page.waitForTimeout(800);
+        const guardar = page.locator('[data-lista-isla] [data-isla-cara="guardar"] button[type="submit"][form="fiesta-form"]');
+        check('al salir del campo: el ÚNICO Guardar, en naranja, con «1 cambio · borrador en este móvil»',
+            (await islaEn(page))?.sale === '0' && (await guardar.count()) === 1 && (await guardar.evaluate((b) => b.classList.contains('fi-isla-barra--primary')))
+                && (await subIsla(page)) === '1 cambio · borrador en este móvil', `${await cara(page)} · ${await subIsla(page)}`);
+        await foto(page, '4c-lista-guardar');
+
+        await Promise.all([page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {}), guardar.click()]);
+        await page.waitForSelector('html.js', { timeout: 10000 }).catch(() => {});
+        await page.waitForTimeout(500);
+        const aviso = await texto(page.locator('[data-lista-isla] [data-isla-cara="aviso"] [data-isla-label]'));
+        check('guardado: el aviso «Guardado hoy a las…» en la isla, un momento', /^Guardado hoy a las \d{2}:\d{2}$/.test(aviso), aviso);
+        check('…y NO también arriba: «Formulario guardado» queda solo para sin JavaScript (regla 3)',
+            (await page.locator('[data-aviso-sin-js]').count()) === 1 && ! (await page.locator('[data-aviso-sin-js]').isVisible()));
+        await foto(page, '4d-lista-guardado');
+        await page.waitForTimeout(3200);
+        check('y después, el aviso se va (sin nada que guardar ni nada que ofrecer a la vista, la isla se aparta)', (await cara(page)) !== 'aviso', await cara(page));
+        check('al pie, la línea de lo guardado', /^Guardado hoy a las \d{2}:\d{2}$/.test(await texto(page.locator('[data-guardado-linea]'))), await texto(page.locator('[data-guardado-linea]')));
+        // En la BASE (el primer campo de edad de la página recargada no tiene por qué ser el de la ficha editada).
+        const edades = tinker(`$o = App\\Domain\\Booking\\Models\\Order::where('code', '${CODIGO_LISTA}')->first(); echo json_encode(array_column((array) $o?->items()->whereNull('parent_item_id')->first()?->guest_data, 'age'));`);
+        check('y lo guardado es de verdad: la edad está en la lista guardada', /"7"|\b7\b/.test(edades), edades);
+
+        await page.evaluate(() => window.scrollTo(0, document.scrollingElement.scrollHeight));
+        await page.waitForTimeout(1300);
+        await enviar.click().catch(() => {});
+        await page.waitForTimeout(900);
+        check('«Enviar por WhatsApp» desde la isla: la isla se va y la invitación queda ENVIADA', (await islaEn(page))?.sale === '1' && compartidaLista() === '1', `compartida ${compartidaLista()}`);
+        await contexto.close();
+    }
+    {
+        const { contexto, page } = await nueva({ javaScriptEnabled: false });
+        await page.goto(lista.e, { waitUntil: 'domcontentloaded' });
+        const sin = await islaEn(page);
+        check('lista sin JavaScript: la isla en el flujo, con su Guardar de enviar, y sin hueco',
+            sin !== null && sin.pos !== 'fixed' && sin.hueco === 0 && (await page.locator('[data-lista-isla] button[type="submit"][form="fiesta-form"]').count()) === 1, JSON.stringify(sin));
+        await contexto.close();
+    }
+    {
+        const { contexto, page } = await nueva();
+        await page.goto(lista.f8, { waitUntil: 'domcontentloaded' });
+        await page.waitForSelector('html.js', { timeout: 10000 }).catch(() => {});
+        await cookies(page);
+        await page.waitForTimeout(900);
+        const repasar = Number(await texto(page.locator('[data-repasar-n]')) || 0);
+        const esperado = repasar === 1 ? '1 respuesta por repasar' : `${repasar} respuestas por repasar`;
+        check('con respuestas por repasar (F8, enviada): el Guardar en naranja lo dice, sin tocar nada', repasar > 0 && (await cara(page)) === 'guardar' && (await subIsla(page)) === esperado, `${repasar} · ${await subIsla(page)}`);
+        await foto(page, '4e-lista-repasar');
+        await contexto.close();
+    }
+
     check('la consola, limpia', errores.length === 0, errores.slice(0, 5).join(' | '));
     check('ninguna respuesta en rojo', malas.length === 0, malas.slice(0, 5).join(' | '));
 }
@@ -199,6 +291,7 @@ async function recorrer(navegador, ventana, informe, cerrada) {
 await mkdir(SALIDA, { recursive: true });
 borrarLasDeLaSonda();
 const cerrada = montarCerrada();
+const lista = { e: montarLista(), f8: listaF8() };
 
 const informe = { cuando: new Date().toISOString(), anchos: [] };
 const navegador = await chromium.launch();
@@ -207,12 +300,16 @@ try {
     for (const ventana of VENTANAS) {
         const ancho = { ancho: ventana.width, checks: [] };
         informe.anchos.push(ancho);
-        await recorrer(navegador, ventana, ancho, cerrada).catch((e) => ancho.checks.push({ nombre: 'el recorrido no se cortó', ok: false, detalle: e.message.split('\n')[0] }));
+        await recorrer(navegador, ventana, ancho, cerrada, lista).catch((e) => ancho.checks.push({ nombre: 'el recorrido no se cortó', ok: false, detalle: e.message.split('\n')[0] }));
+        // La lista de la sonda vuelve a estar SIN ENVIAR para el ancho siguiente (el paso de enviar la marca enviada).
+        desmontar(CODIGO_LISTA);
+        lista.e = montarLista();
     }
 } finally {
     await navegador.close();
     informe.borradas = borrarLasDeLaSonda();
-    desmontarCerrada();
+    desmontar(CODIGO_CERRADA);
+    desmontar(CODIGO_LISTA);
 }
 
 await writeFile(`${SALIDA}/sonda-isla-enlace.json`, `${JSON.stringify(informe, null, 2)}\n`);

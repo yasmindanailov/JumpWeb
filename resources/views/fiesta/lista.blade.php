@@ -40,5 +40,7 @@
         @endif
         @include('fiesta.lista.zona-5')
     </form>
+    {{-- El hueco de la isla de enlace (`#814`), al final del contenido: al final del scroll, nada queda bajo ella. --}}
+    <x-fiesta.isla-hueco />
 @endif
 </x-pagina-enfocada>

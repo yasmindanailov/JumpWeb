@@ -19,7 +19,7 @@ cd "$(git rev-parse --show-toplevel)"
 
 EXEC="docker compose exec -u sail -T laravel.test"
 JS="$EXEC node --test resources/js/fiesta/logica.test.js"
-PHP='InvitacionPaginaTest|FiestaModeloTest'
+PHP='InvitacionPaginaTest|FiestaModeloTest|ListaDeInvitadosTest|ExtrasDeLaFiestaListaTest|GuestFormManyGuestsTest|GuestFormTest'
 
 TMP="$(mktemp -d)"
 FICHEROS=(
@@ -29,6 +29,10 @@ FICHEROS=(
     resources/views/fiesta/invitacion/invitacion.blade.php
     resources/views/fiesta/invitacion/recibo.blade.php
     resources/views/components/fiesta/isla.blade.php
+    app/Http/Fiesta/ListaDeInvitados.php
+    resources/views/fiesta/lista.blade.php
+    resources/views/fiesta/lista/zona-5.blade.php
+    resources/views/fiesta/lista/avisos.blade.php
 )
 copia() { echo "$TMP/${1//\//__}"; }
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$(copia "$f")" "$f"; touch "$f"; done; $EXEC php artisan view:clear >/dev/null 2>&1; }
@@ -123,6 +127,38 @@ mutar php "el calendario de la isla sale sin JavaScript (y repetiría la tarjeta
   'class="fi-isla--solo-js"' 'class=""'
 mutar php "el calendario de la isla no se va al tocarlo" "$RECIBO" \
   ' data-isla-hecho data-receipt-island-calendar' ' data-receipt-island-calendar'
+
+# ── L2 · la lista: el único Guardar, el aviso, enviar si aún no salió ────────────────────────────────────
+MLISTA=app/Http/Fiesta/ListaDeInvitados.php
+PLISTA=resources/views/fiesta/lista.blade.php
+Z5=resources/views/fiesta/lista/zona-5.blade.php
+AVISOS=resources/views/fiesta/lista/avisos.blade.php
+mutar js "guardando, el Guardar no se ocupa" "$LOGICA" \
+  "    if (guardando) return { cara: 'guardar', primary: true, ocupada: true, sub: '' };" ""
+mutar js "con algo que guardar, el Guardar no va en naranja" "$LOGICA" \
+  "return { cara: 'guardar', primary: true, ocupada: false, sub: tarta || sub };" "return { cara: 'guardar', primary: false, ocupada: false, sub: tarta || sub };"
+mutar js "la tarta que cierra no manda en la línea" "$LOGICA" \
+  "sub: tarta || sub };" "sub: sub };"
+mutar js "el borrador recuperado se dice como si fuera de este móvil" "$LOGICA" \
+  "(recuperado ? tx.recuperado : tx.movil)" "tx.movil"
+mutar js "con cambios, las respuestas por repasar no se dicen" "$LOGICA" \
+  "repasar > 0 ? tx.respuestas(repasar) : (recuperado" "false ? tx.respuestas(repasar) : (recuperado"
+mutar js "la isla ofrece enviar una invitación que ya salió" "$LOGICA" \
+  "    if (abiertas && ! compartida) return { cara: 'enviar' };" "    if (abiertas) return { cara: 'enviar' };"
+mutar php "el Guardar de la isla no es el botón de enviar de la lista (sin JavaScript no guarda)" "$Z5" \
+  $'            <x-fiesta.isla-barra :label="__(\'fiesta.barra.label\')" form="fiesta-form" />\n' $'            <x-fiesta.isla-barra :label="__(\'fiesta.barra.label\')" />\n'
+mutar php "la isla ofrece enviar también cuando la invitación ya salió" "$Z5" \
+  "\$enviar = \$inv !== null && \$inv['respuestas_abiertas'] && ! \$inv['compartida'];" "\$enviar = \$inv !== null && \$inv['respuestas_abiertas'];"
+mutar php "enviar no dice de quién es la invitación" "$Z5" \
+  ":sub=\"\$nombre === '' ? '' : __('fiesta.lista.isla.de_quien', ['n' => \$nombre])\"" ":sub=\"''\""
+mutar php "la lista pierde el hueco de la isla" "$PLISTA" \
+  "    <x-fiesta.isla-hueco />" ""
+mutar php "la isla cree que acaba de guardar siempre" "$MLISTA" \
+  "                'recien' => \$status === 'guest-form-saved'," "                'recien' => true,"
+mutar php "«Formulario guardado» se dice dos veces con JavaScript (arriba y en la isla)" "$MLISTA" \
+  "\$aviso('success', '', [__('guestform.saved')], 'status', true);" "\$aviso('success', '', [__('guestform.saved')], 'status', false);"
+mutar php "el aviso solo-sin-JavaScript pierde su marca" "$AVISOS" \
+  " :data-aviso-sin-js=\"\$aviso['sin_js'] ? '1' : null\"" ""
 
 echo
 echo "$muerden/$total muerden"
