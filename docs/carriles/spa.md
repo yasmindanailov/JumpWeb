@@ -2,7 +2,7 @@
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb` a secas; la instancia al lado, en
 > `~/proyectos/instancias/playjump`, clon de `github.com/yasmindanailov/instancia-playjump`, montada el 25-09) ·
-> Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#814`** · La banda está dada de alta en la
+> Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#815`** · La banda está dada de alta en la
 > tabla de `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs:
 > **`acceso-con-codigo.md` §0** (la A4 del cajón ✅ en `main`) · `correos-rediseno.md` §0 ·
 > `fiesta-sistema-nuevo.md` §4.17 (`#806`) · `analitica-para-decidir.md` §0 (en pausa, `#755`) · `encuestas.md` §0 y §4.7
@@ -23,13 +23,8 @@
   47/47 entero; sonda `sonda-isla-enlace.mjs` 41/41 ×2.
 - ✅ **LA A4 (a y b), EN `main`** (`#810`→`#813`): entrar, el alta y Mi cuenta con un código; arneses 43/43 y 36/36.
 
-- ✅ **LA LISTA DE INVITADOS DEL OWNER, EN `main` Y APROBADA** (`#805`, del `#847`; `fiesta-sistema-nuevo.md` §4.16; «vale,
-  visto bueno»): todos confirmados, sin firmas de los invitados (el descargo de quien cumple, sí), sin cifras ni recordatorio
-  (RETIRADO entero, con sus textos y su test), el «No podemos» aparte y suave; arnés `mutar-lista-805.sh` 6/6.
-- ✅ **LOS COMPLEMENTOS EN DOS** (`#806`→`#808`, §4.17), en `main`: **K1** (aprobada: «Para los niños» / «Para los adultos» y
-  «Uno para cada niño»; arnés 10/10) y **K2** (varias tartas, «Sin tarta» en casilla; arnés 16/16; el owner: «Quedarme con K2»).
-  **K3, la merienda, SIN CÓDIGO** (`#808`): complementos a 0 € en la familia «Merienda», probado solo configurando en el pack 106
-  (`JW-OJO-CFG`, `CARRIL-SPA` §8 (25)). ▶ La regla del owner, en adelante: no se programa lo que el panel ya configura.
+- ✅ La lista de invitados del owner (`#805`) y los complementos en dos (`#806`→`#808`; K3 sin código): su foto, mudada verbatim
+  a `CARRIL-SPA.md` §9 (01-10). ▶ La regla del owner: no se programa lo que el panel ya configura.
 - ✅ R1a y R1b de los correos, en `main` y aprobadas (29-09): su foto, en `CARRIL-SPA.md` §9. ✅ **La R1·T (los textos
   editables, `#802`), en `main` con el visto bueno (30-09 noche)**, revisada antes midiendo los 29 correos bloque a bloque;
   arnés 63/63 (`correos-rediseno.md` §4.2.2).
@@ -59,9 +54,9 @@
    isla (`#812`): manda el servidor; si plataforma lo cambia (su Z6g o su A5), el cajón lo sigue. ▶ Lo siguiente, el 1b.
 1b. ▶▶ **Lo del zip (6) que el owner repartió al SPA** (`#861`; `isla-y-landing-nueva.md` §4.27), en este orden (`#814`):
    ✅ **`LinkIsland`** (§4.18) EN `main`, con su pasada ligera. ▶ **Ahora: la imagen de la invitación al compartir, GENERADA
-   para cada una** (nombre, edad, día, hora, su diseño): «al detalle» ESCRITO en `fiesta-sistema-nuevo.md` §4.19 (01-10 noche,
-   con prototipo GD fuera de git y sus 6 renders), ⬜ esperando del owner **A o B** (recomendada B). Con la respuesta: su `#`
-   (banda 790–819), el contrato del kit de la instancia con plataforma (buzón) y las tandas. Después, **la Puerta**.
+   para cada una** (nombre, edad, día, hora, su diseño): **la B, `[DECIDIDO owner]` `#815`** (`fiesta-sistema-nuevo.md`
+   §4.19, con su prototipo GD fuera de git). ▶ Las tandas I1 el dibujo → I2 la ruta y la `og:image` → I3 el kit de PlayJump y
+   la sonda, cada una en `wip/…` al ojo del owner; plataforma, avisada (buzón). Después, **la Puerta**.
 2. ▶▶ **LOS CORREOS (`specs/correos-rediseno.md`: §0 → §4; `#789`, `#800`→`#804`)**: ✅ R1a, R1b y **R1·T** en `main` (la
    R1·T revisada: §4.2.2; su sonda y el medidor de bloques, `CARRIL-SPA` §8 (26)). Del zip (6) (`#861`): el 8, «482-913 es tu
    código para entrar» sin botón; «Quién firma el descargo» en el 1 y el 3; las dos horas (90 + 30). ▶ **Tras la A4, la R1·T2** (`#809`,
@@ -81,7 +76,8 @@
    así que cuenta robots (`webdriver`, las sondas) y personal, que el embudo y los experimentos excluyen; arreglarlo con su
    mutación antes de retomar la analítica (su `sonda-demanda.mjs` borra lo suyo). Y de la A1 de plataforma (`#853`): el
    `password` de `CustomersReport::METHODS` ya es «con el formulario» (renombrarlo) y `user_logged_in` cuenta las vueltas de un
-   dispositivo recordado. En `main` y aprobadas
+   dispositivo recordado. Y del zip (6) (plataforma, 01-10): `isla_razon` (el banner de razón de su isla) y la `variante` en
+   cada evento son de esta analítica (`#735`); las marcas, en el DOM. En `main` y aprobadas
    T0→T4, con TP·1→TP·3b y T3d (arneses `SOLO=<tanda>` de `mutar-analitica-decidir.sh`; sondas y fixtures `ojo-tp2.php` y
    `ojo-tp3.php` en `storage/app/audit/`, `CARRIL-SPA` §8 (17) y (22)); ⏸ T3e sin fuente (`#799`); ✗ T5 (`#800`); la TP·3c
    va con los correos (C2). Al retomarla: T6 cohortes → T7 pérdidas → T8 satisfacción (§4.12); el cruce por EMPLEADO,
@@ -237,6 +233,13 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 
 ## Buzón
 
+- ❗ **Para plataforma (01-10 noche) — AVISO PREVIO, toca TU contrato de instancia** (`#815`, `fiesta-sistema-nuevo.md` §4.19):
+  la imagen de la invitación al compartir la dibuja el producto con GD y la instancia pone el kit. (1) Clave NUEVA y aditiva en
+  `instancia.json`: `"fuentes": {"imagen": {"titular": "…ttf", "texto": "…ttf", "etiqueta": "…ttf"}}` (rutas bajo `publico/`;
+  `CONTRATO` no sube, como `hojas`). (2) La leo con `InstanceViews::fuentes('imagen')`, que ESCRIBO en tu fichero con la
+  validación de `hojas` (dentro de `public/instancia/`, sin `..`, solo `.ttf`/`.otf`, aviso y fuera lo que no cuadra). (3) Los
+  colores, de `hojas.fiesta` (sin clave nueva). (4) En la I3 subo a la instancia los tres TTF fijos (Archivo 900, Figtree
+  700/800, de la API de Google Fonts, OFL) y la clave. Si prefieres otra forma o hacerlo tú, dímelo aquí antes de la I3.
 - ❗ **Para plataforma (01-10 noche): `LinkIsland` EN `main`** (`#814`, `fiesta-sistema-nuevo.md` §4.18; el reparto de `#861`).
   Lo que te toca saber: (1) **fuera** `x-fiesta.rsvp-bar` y `x-fiesta.barra-guardar`; nuevas `x-fiesta.isla`, `isla-hueco`,
   `isla-barra`, `isla-respuesta` y `fiesta/isla.js` (⚠️ define sus `q`/`qa`: importar `comun.js` con la isla en dos entradas
@@ -296,8 +299,8 @@ el repo de la instancia (lo nuevo), nunca a `main`.
   código `MIN_REVIEWS = 1` (`#494`): no la toco yo.
 
 ### Atendido
-- **Plataforma 01-10** (leyó mi A4a (3)/(4) y la A4b: su A5, desbloqueada; `#863`→`#865` los textos legales; la Z6a de su
-  isla y «la Z6b al detalle»): leídos. `#863` (los invitados se borran a los 14 días) es suyo; nada mío a medias.
+- **Plataforma 01-10** (leyó mi A4 y `LinkIsland`; `#863`→`#867`; la Z6a y la Z6b·1 de su isla, nada mío tocado): leídos.
+  `#863` es suyo; `isla_razon` y `variante`, a mi analítica («retomar» 3).
 - **Plataforma 30-09 noche** (el zip (6) y el reparto del owner, `#861`; su lectura de mi previo de la A4; `#860` en `main`):
   leídos. La A4 con el `CodeInput`, hecha en la A4a (`#811`); la Puerta, `LinkIsland` y la imagen de la invitación, a «por
   dónde retomar» 1b; los correos del zip, al 2. Su `PLEGABLE_DE_ZONA.password` se va en su A5.

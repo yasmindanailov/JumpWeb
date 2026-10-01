@@ -1071,7 +1071,7 @@ abierta y cerrada, el recibo y la autorización, a 390 y 1280) y todas las pieza
 sus diagnósticos. ✱ **Deuda medida**: el diagnóstico de la lista guardada no recoge `#805` ni K1/K2 (no es la isla:
 `DEUDA.md`).
 
-### 4.19 La imagen de la invitación al compartir, GENERADA para cada una (`#861`) — ⬜ al detalle, esperando al owner
+### 4.19 La imagen de la invitación al compartir, GENERADA para cada una (`#861`, `#815`) — 🟦 la B, en tandas
 
 Del reparto del zip (6): la hace el SPA y, por decisión del owner, se GENERA para cada invitación (nombre, edad, día, hora,
 su diseño), no la fija por tema del diseño. **Todo lo de aquí está medido el 01-10**; lo que no, lo dice.
@@ -1114,7 +1114,16 @@ del `og:title`.
 fuera); de ruta (200 con su token, 404 igual que la página, `noindex`, la `og:image` con 1200 × 630); arnés; sonda (la
 `og:image` de la página real). **No verificado**: que WhatsApp la enseñe con `no-store` (se mide en un móvil de verdad).
 
-**6 · Para el owner** (una pregunta): **¿A o B?** (o ninguna, y la fija del diseño).
+**6 · `[DECIDIDO owner]` 01-10: la B** (`#815`). Las tandas, cada una al ojo del owner con su foto:
+- **I1 · el dibujo**: `InstanceViews::fuentes('imagen')` (los TTF de `fuentes.imagen`, validados como `hojas`: dentro de
+  `public/instancia/`, sin `..`, solo `.ttf`/`.otf`); el lector de los roles de `hojas.fiesta` (los `:root` de cada hoja en su
+  orden, sin `@media`, con las cadenas de `var()` resueltas hasta un hex); el dibujo de la B con GD (al doble y reducida),
+  el nombre que se ajusta, lo que la fuente no tiene, fuera; sin edad, sin chapa y «te invita a saltar». Pruebas con DejaVu
+  Sans de la Sail (las fuentes del cliente no entran en el producto).
+- **I2 · la ruta y la `og:image`**: la ruta con el token y la huella (lo que se pinta + la versión del dibujo), la caché en
+  disco privado (la vieja se borra al pintar la nueva, y todo con la invitación), `og:image` con 1200 × 630; sin kit, la de hoy.
+- **I3 · el kit de PlayJump**: los tres TTF en la instancia y `fuentes.imagen` en su `instancia.json` (aviso a plataforma),
+  la sonda de la `og:image` de una invitación real y la prueba en un móvil de verdad (el owner).
 
 ## 5. Impacto en invariantes
 
