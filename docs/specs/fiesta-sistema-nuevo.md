@@ -1236,8 +1236,16 @@ con tarjetas impares, la última a lo ancho (la A, elegida con la B y la C rende
   abre en venta posterior las reglas 2, 3 y 4 de `ProductAddon::postFormProblem()` SOLO para un grupo «hay que elegir uno»;
   (c) ⚠️ una fiesta vendida con el Menú al reservar (producción hasta la v2.0.0) ya eligió: no puede ver «falta elegir» ni
   recibir el correo de P4 (la regla, a medir en su «al detalle»).
-- **P4 · el correo** «Falta elegir…», el día antes del plazo (cada hora con su marca, como la víspera), editable (R1·T) y en
-  `EmailUtm`.
+- 🟦 **P4 · el correo «Falta elegir…» — HECHA (02-10 noche, en `wip/p3-grupos-de-opciones`; falta el ojo del owner en Mailpit)**:
+  `ChoiceReminderNotice` + `reservations:choice-reminder`, cada hora con su marca (`order_items.choice_reminder_at`, por
+  `toBase()`, como la víspera). Sale en la ventana de las 24 h antes de que cierre la lista, una vez, si a la fiesta le falta un
+  grupo con «hay que elegir» (`unansweredRequiredGroups()`, lo mismo que el parque ve «sin elegir»); no sale a una fiesta
+  vendida DENTRO de esa ventana (acaba de recibir sus correos con el enlace) ni, al enviarlo, si se eligió mientras esperaba
+  en la cola (`shouldSend()`). Dice cuándo cierra, qué falta (el título de cada grupo, en el idioma de quien lo recibe), que si
+  no se elige lo decide el parque, y el botón a la lista. Editable (R1·T, `MailTextCatalog`), con su vista previa, recibido en
+  `EmailTiming` y en los censos; una tarea más del planificador (`deploy.sh`: 13, medido con `schedule:list`).
+  Verificación: `ChoiceReminderNoticeTest` 6 (la ventana por los dos lados, una vez aunque corra cada hora, vendida dentro,
+  elegida u opcional, el correo, la cola), cada uno con su control; suite entera 6871; Larastan, Pint, docs-check.
 
 ### 4.21 P3 al detalle · los GRUPOS DE OPCIONES, genéricos (`[DECIDIDO owner]` `#914`, 02-10, 21:40: «A» y «No se les pide»)
 

@@ -59,7 +59,8 @@ filas 4 y 8), ANTES que la R1c («tus puntos primero»).
 - ▶ **Del owner (02-10 noche, `#912`/`#913`; `fiesta-sistema-nuevo.md` §4.20)**: 🟦 P1 UN plazo para toda la lista y 🟦 P2 la
   impar a lo ancho y 🟦 P1·b sin el aviso de la tarta, HECHAS en `wip/ta-altas-por-origen` (falta su OJO; la verificación, en la
   spec) → P3 los grupos de opciones (`#914`, §4.21; en `wip/p3-grupos-de-opciones`: 🟦 P3·1→P3·4 (dominio, panel, lista,
-  el parque y la API 1.62.0) HECHAS, al ojo del owner (`ojo-p3.php`); rebasadas sobre `main` el 02-10 noche) → P4 el correo «Falta elegir…».
+  el parque y la API 1.62.0) y 🟦 P4 el correo «Falta elegir…» HECHAS, al ojo del owner (`ojo-p3.php`; el correo, en Mailpit);
+  rebasadas sobre `main` el 02-10 noche) → con su visto bueno, a `main` (gate entero y, con su permiso, los verificadores).
 
 0. ✅ Los complementos de la fiesta (K1–K3, `#806`→`#808`): su punto, mudado verbatim a `CARRIL-SPA.md` §9 (02-10). ▶ **Antes de
    proponer código, medir si el panel ya lo configura**; si algo ya existía, parar y decírselo al owner (`#808`).

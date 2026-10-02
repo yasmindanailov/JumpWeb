@@ -235,6 +235,19 @@ Schedule::command('reservations:eve-notice')
     ->withoutOverlapping();
 
 /*
+ * P4 de `specs/fiesta-sistema-nuevo.md` §4.20 (`[DECIDIDO owner]` `#913`, `#914`) — «FALTA ELEGIR…», el día antes de que se
+ * cierre la lista de una fiesta a la que le falta contestar un grupo de opciones obligatorio (la merienda).
+ *
+ * ⚠️ CADA HORA y la ventana la decide el COMANDO, por las razones de `reservations:eve-notice`: es la del PLAZO de cada
+ * fiesta (un ajuste que se resuelve al correr), y una hora de cron caído no se lleva el aviso — la marca
+ * `order_items.choice_reminder_at` impide el segundo. ⚠️ `withoutOverlapping` porque manda correos.
+ * ❗ En staging el scheduler no corre (`#115`): allí, a mano. ❗ Una tarea MÁS: las «esperadas» de `deploy.sh` suben a 13.
+ */
+Schedule::command('reservations:choice-reminder')
+    ->hourly()
+    ->withoutOverlapping();
+
+/*
  * T3 de `specs/encuestas.md` (§4.3, `DECISIONES #740`) — LA ENCUESTA DEL DÍA SIGUIENTE, por correo, a quien
  * acreditó su visita AYER (el escaneo del carné la acredita, `#741`).
  *

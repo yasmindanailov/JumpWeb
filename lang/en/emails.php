@@ -193,6 +193,17 @@ return [
         'outro' => 'See you tomorrow!',
     ],
 
+    'choice_reminder' => [
+        'subject' => 'Still to choose on your list · :code',
+        'preheader' => 'Your guest list closes tomorrow: one tap and it’s chosen.',
+        'badge' => 'Still to choose',
+        'headline' => 'You still have something to choose',
+        'intro' => 'The guest list for your party closes on :day at :hora, and there is still something to answer:',
+        'park_decides' => 'If nothing is chosen by then, the park will decide on the day of the party.',
+        'action' => 'Choose on my list',
+        'outro' => 'See you very soon!',
+    ],
+
     'order_after_expiration' => [
         'subject' => 'Your payment came through · :code',
         'preheader' => "We'll call within 24 h to rebook your visit or refund you.",

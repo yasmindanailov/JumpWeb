@@ -48,6 +48,8 @@ final class MailTextCatalog
         'guardian_authorization_request' => [N\GuardianAuthorizationRequest::class, 'fiesta', ['emails.guardian_request']],
         'guardian_authorization_signed' => [N\GuardianAuthorizationSigned::class, 'fiesta', ['emails.guardian_authorization']],
         'post_form_addons_changed' => [N\PostFormAddonsChanged::class, 'fiesta', ['emails.postform_addons']],
+        // P4 (`#913`, `#914`): «Falta elegir…», el día antes de que se cierre la lista.
+        'choice_reminder_notice' => [N\ChoiceReminderNotice::class, 'fiesta', ['emails.choice_reminder']],
         'mixed_party_surcharge_changed' => [N\MixedPartySurchargeChanged::class, 'fiesta', ['emails.mixed_party_surcharge']],
         'birthday_coming_notice' => [N\BirthdayComingNotice::class, 'fiesta', ['fiesta.cumple_mail']],
         // ── Los cambios que hace el parque ──

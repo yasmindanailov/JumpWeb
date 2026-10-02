@@ -184,6 +184,11 @@ final class MailPreviews
 
                 return new N\VisitEveNotice($f, new PendingWork(6, 10, 2, 1, 11950, true));
             }),
+            // P4 (`#914`): los grupos de opciones de su producto (los títulos los pone el parque); sin ninguno, sin líneas de en medio.
+            'choice_reminder_notice' => $conFiesta(static fn (OrderItem $f): Notification => new N\ChoiceReminderNotice(
+                $f,
+                $f->ticketType?->choiceGroups()->pluck('key')->all() ?? [],
+            )),
             'order_payment_declined' => $conPedido(static fn (Order $o) => new N\OrderPaymentDeclined($o, '0190')),
             'order_expired_without_payment' => $conPedido(static fn (Order $o) => new N\OrderExpiredWithoutPayment($o)),
             'order_processed_after_expiration' => $conPedido(static fn (Order $o) => new N\OrderProcessedAfterExpiration($o)),

@@ -194,6 +194,17 @@ return [
         'outro' => 'À demain !',
     ],
 
+    'choice_reminder' => [
+        'subject' => 'Il reste à choisir sur ta liste · :code',
+        'preheader' => 'Ta liste d’invités se ferme demain : un geste et c’est choisi.',
+        'badge' => 'À choisir',
+        'headline' => 'Il te reste à choisir sur ta liste',
+        'intro' => 'La liste d’invités de ta fête se ferme le :day à :hora, et il reste encore à répondre :',
+        'park_decides' => 'Si rien n’est choisi d’ici là, le parc décidera le jour de la fête.',
+        'action' => 'Choisir sur ma liste',
+        'outro' => 'À très bientôt !',
+    ],
+
     'order_after_expiration' => [
         'subject' => 'Ton paiement est bien arrivé · :code',
         'preheader' => "On t'appelle sous 24 h pour reprogrammer ta visite ou te rembourser.",

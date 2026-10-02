@@ -718,7 +718,8 @@ tasks=$(remote_php "artisan schedule:list" 2>/dev/null | grep -c 'artisan' || tr
 # Son 10 desde `#750`: `birthday-reminders:send` («Avísame de fechas», el correo antes del cumple).
 # Son 11 desde `#754`: `surveys:resolve-returns` (las encuestas anónimas: ¿volvió quien puntuó?, y su sello se borra).
 # Son 12 desde `#794`: `email-sends:trim` (la copia de cada correo enviado se borra a los seis meses).
-check "scheduler: $tasks tareas REGISTRADAS en la app (esperadas 12)" "$([[ "$tasks" == "12" ]] && echo 0 || echo 1)"
+# Son 13 desde `#914`: `reservations:choice-reminder` («Falta elegir…», el día antes de que se cierre la lista).
+check "scheduler: $tasks tareas REGISTRADAS en la app (esperadas 13)" "$([[ "$tasks" == "13" ]] && echo 0 || echo 1)"
 
 migr=$(remote_php "artisan migrate:status" 2>/dev/null | grep -c 'Pending' || true)
 check "migraciones pendientes: $migr (esperadas 0)" "$([[ "$migr" == "0" ]] && echo 0 || echo 1)"

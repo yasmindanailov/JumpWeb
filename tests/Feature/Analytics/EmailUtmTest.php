@@ -52,8 +52,9 @@ class EmailUtmTest extends TestCase
         // encuestas (`SurveyInvitation`, el correo del día siguiente); 28 desde «Avísame de fechas» (`#750`,
         // `BirthdayComingNotice`, el correo semanas antes del cumple); 29 desde el acceso con código (`#853`, `LoginCode`);
         // 30 con el código de confirmar (`#855`, `ConfirmationCode`); 31 con la contraseña del panel (A5a, `#870`,
-        // `PanelPasswordLink`, al personal); y 30 otra vez sin el de restablecer la del cliente (A5b, `#869`, `PasswordReset`).
-        $this->assertCount(30, EmailUtm::keys());
+        // `PanelPasswordLink`, al personal); y 30 otra vez sin el de restablecer la del cliente (A5b, `#869`, `PasswordReset`);
+        // 31 con «Falta elegir…» (P4, `#914`, `ChoiceReminderNotice`, el día antes de que se cierre la lista).
+        $this->assertCount(31, EmailUtm::keys());
     }
 
     public function test_the_tag_only_touches_our_own_links_and_keeps_the_fragment(): void

@@ -91,6 +91,9 @@ class OrderItem extends Model
         // constructor de consultas, nunca por el modelo: `updated_at` es el testigo del post-form
         // (§1.3·2) y mandar un correo no puede dejar obsoleta la página del cliente.
         'eve_notice_at' => 'datetime',
+        // Cuándo salió el correo «Falta elegir…» de esta reserva (P4, `#913`/`#914`). Por el constructor de consultas, como
+        // el de la víspera, y por lo mismo.
+        'choice_reminder_at' => 'datetime',
     ];
 
     /**

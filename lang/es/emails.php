@@ -233,6 +233,20 @@ return [
         'outro' => '¡Nos vemos mañana!',
     ],
 
+    // P4 de `fiesta-sistema-nuevo.md` §4.20 (`#913`, `#914`): «Falta elegir…», el día antes de que se cierre la lista. Las
+    // líneas de en medio son los TÍTULOS de los grupos que faltan (los pone el parque en el panel).
+    'choice_reminder' => [
+        'subject' => 'Falta elegir en tu lista · :code',
+        // ⚠️ Sin datos variables y sin repetir el asunto (`#506`).
+        'preheader' => 'Mañana se cierra la lista de invitados: con un toque lo dejas elegido.',
+        'badge' => 'Falta elegir',
+        'headline' => 'Te falta elegir en tu lista',
+        'intro' => 'La lista de invitados de tu fiesta se cierra el :day a las :hora, y todavía falta por contestar:',
+        'park_decides' => 'Si no se elige antes, lo decide el parque el día de la fiesta.',
+        'action' => 'Elegir en mi lista',
+        'outro' => '¡Nos vemos muy pronto!',
+    ],
+
     'order_after_expiration' => [
         'subject' => 'Tu pago llegó bien · :code',
         'preheader' => 'Te llamamos en 24 h para reagendar tu visita o devolverte el importe.',

@@ -57,6 +57,8 @@ final class EmailTiming
         'order_item_refunded',
         'order_refunded',
         'visit_eve_notice',
+        // P4 (`#914`): «Falta elegir…», a una hora, el día antes de que se cierre la lista.
+        'choice_reminder_notice',
         'analytics_link_notice',
         // Sin marca ni píxel (sin cuenta; la encuesta es anónima): clasificados para que el censo cierre, nunca darán datos.
         'birthday_coming_notice',

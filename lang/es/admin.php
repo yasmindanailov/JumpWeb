@@ -5057,6 +5057,7 @@ return [
             'verify_email_for_purchase' => 'Verificar el correo (compra)',
             'verify_pending_email' => 'Confirmar el correo nuevo',
             'visit_eve_notice' => 'Aviso de la víspera',
+            'choice_reminder_notice' => 'Falta elegir (la lista se cierra mañana)',
             // Los dos del acceso con código (A1/A2a de plataforma, `#853`/`#855`): sin nombre aquí salían con su clave cruda.
             'login_code' => 'Código para entrar',
             'confirmation_code' => 'Código para confirmar un cambio',
@@ -5216,6 +5217,7 @@ return [
         'descripciones' => [
             'order_confirmation' => 'Al pagar: la reserva hecha, con su resguardo.',
             'visit_eve_notice' => 'La víspera de la fiesta, con lo que falta por hacer.',
+            'choice_reminder_notice' => 'El día antes de que se cierre la lista, si falta contestar un grupo con «Hay que elegir» (la merienda).',
             'order_payment_declined' => 'Cuando el banco rechaza el pago.',
             'order_expired_without_payment' => 'Cuando una reserva caduca sin pagarse.',
             'order_processed_after_expiration' => 'Cuando un pago llega después de caducar la reserva.',
@@ -5268,11 +5270,12 @@ return [
             'card_attached' => 'Carné adjunto', 'email_label' => 'Correo', 'how_to_enter' => 'Cómo entrar', 'it_was_me' => 'Si fuiste tú',
             'it_was_not_me' => 'Si no fuiste tú', 'not_you' => 'Si no fuiste tú', 'not_serious' => 'No es grave', 'not_verified' => 'Sin verificar',
             'promoted' => 'Correo verificado por Google', 'desde' => 'Desde', 'pronto' => 'Se llena pronto',
+            'park_decides' => 'Si no se elige',
         ],
         // Lo que significa cada variable, debajo de cada bloque.
         'variables' => [
             'action' => '(lo que se confirma)', 'amount' => '(el importe)', 'code' => '(el código)', 'count' => '(cuántos)',
-            'day' => '(el día)', 'done' => '(las hechas)', 'edad' => '(la edad)', 'mes' => '(el mes)',
+            'day' => '(el día)', 'done' => '(las hechas)', 'edad' => '(la edad)', 'hora' => '(la hora)', 'mes' => '(el mes)',
             'minutes' => '(los minutos)', 'name' => '(el nombre)', 'new' => '(lo nuevo)', 'nombre' => '(el nombre del niño)',
             'old' => '(lo de antes)', 'park' => '(el nombre del parque)', 'precio' => '(el precio)', 'product' => '(el producto)',
             'provider' => '(Google)', 'qty' => '(la cantidad)', 'total' => '(el total)', 'when' => '(cuándo)',

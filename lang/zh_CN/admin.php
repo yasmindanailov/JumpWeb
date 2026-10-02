@@ -4132,6 +4132,7 @@ return [
             'verify_email_for_purchase' => '验证邮箱（购买）',
             'verify_pending_email' => '确认新邮箱',
             'visit_eve_notice' => '前一天提醒',
+            'choice_reminder_notice' => '尚未选择（名单明天截止）',
             'login_code' => '登录验证码',
             'confirmation_code' => '确认更改的验证码',
         ],
@@ -4285,6 +4286,7 @@ return [
         'descripciones' => [
             'order_confirmation' => '付款后：预订完成，附预订凭证。',
             'visit_eve_notice' => '派对前一天，附待办事项。',
+            'choice_reminder_notice' => '名单截止前一天：如果有「必须选择」的选项组（例如下午茶点心）尚未回答。',
             'order_payment_declined' => '银行拒绝付款时。',
             'order_expired_without_payment' => '预订未付款而过期时。',
             'order_processed_after_expiration' => '预订过期后才收到付款时。',
@@ -4336,10 +4338,11 @@ return [
             'card_attached' => '会员卡附件', 'email_label' => '邮箱', 'how_to_enter' => '如何登录', 'it_was_me' => '如果是你本人',
             'it_was_not_me' => '如果不是你本人', 'not_you' => '如果不是你本人', 'not_serious' => '不严重', 'not_verified' => '未验证',
             'promoted' => '邮箱已由 Google 验证', 'desde' => '起价', 'pronto' => '很快订满',
+            'park_decides' => '若未选择',
         ],
         'variables' => [
             'action' => '（要确认的操作）', 'amount' => '（金额）', 'code' => '（代码）', 'count' => '（数量）',
-            'day' => '（日期）', 'done' => '（已完成的）', 'edad' => '（年龄）', 'mes' => '（月份）',
+            'day' => '（日期）', 'done' => '（已完成的）', 'edad' => '（年龄）', 'hora' => '（时间）', 'mes' => '（月份）',
             'minutes' => '（分钟）', 'name' => '（名字）', 'new' => '（新的）', 'nombre' => '（孩子的名字）',
             'old' => '（原来的）', 'park' => '（乐园名称）', 'precio' => '（价格）', 'product' => '（产品）',
             'provider' => '（Google）', 'qty' => '（数量）', 'total' => '（总数）', 'when' => '（时间）',
