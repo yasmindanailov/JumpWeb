@@ -1356,7 +1356,8 @@ P1, P1·b y P2. Al fusionar:
   en dos. Antes de mutar se escribieron los dos que faltaban: lo comprado AL RESERVAR hace el grupo del parque y, tras cambiar,
   lo elegido es la nueva (`PostFormChoiceGroupsTest`, 17).
 - `postform:verify-concurrency` (12 procesos): `addons` (una línea y un hecho) y `cross` (cero interbloqueos), verdes; el
-  `--control` ve 6 interbloqueos. `AddonResolver` solo cambia en la venta posterior: al reservar devuelve lo mismo.
+  `--control` ve 6 interbloqueos. `AddonResolver` solo cambia en la venta posterior: al reservar devuelve lo mismo. Y
+  `audit-clock.sh` sobre las clases de P3 y P4 (50 casos), verde en sus 10 fronteras (2 min 46 s).
 - **La receta de producción, DATO del panel (con la v2.0.0)**: en cada pack de cumpleaños, «Grupos de opciones» → la clave
   `merienda`, la pregunta «¿Qué merienda?» (es/en/fr) y «Hay que elegir»; en «Complementos», cada merienda en venta posterior,
   con el grupo `merienda`, «Incluido» y «Una por invitado» (sin tope: la regla 8 no se lo pide a lo que va por niño). Lo vendido

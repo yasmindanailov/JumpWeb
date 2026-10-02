@@ -89,7 +89,8 @@ portada y no cuenta nada hasta la v2.0.0.
    `password` de `CustomersReport::METHODS` ya es «con el formulario» (renombrarlo) y `user_logged_in` cuenta las vueltas de un
    dispositivo recordado. Y (02-10) el ancla de `mutar-analitica-decidir.sh:880` (A5): busca `$data['current_password']` y la
    línea dice hoy `$emailChanges ? $data['code'] : null`: re-apuntarla antes de la siguiente pasada. El faro de `/api/v1/events`
-   sin conexión deja un error en la consola (plataforma, 30-09: mirar `navigator.onLine`). ✅ **La Z6c·3, la medida del B3, EN `main` con el visto bueno del owner** (02-10; `analitica.md` §4.4:
+   sin conexión deja un error en la consola (plataforma, 30-09: mirar `navigator.onLine`). Y de la L2 de plataforma (`#878`,
+   02-10): medir si la isla emite `line_added` en sus líneas y, si hace falta, la prop de origen (`otra_zona` | `otra_entrada`). ✅ **La Z6c·3, la medida del B3, EN `main` con el visto bueno del owner** (02-10; `analitica.md` §4.4:
    los tres `isla_*` al contrato, 1.60.0; `isla_accion` por visita en móvil en el informe; arnés `SOLO=B3` 10/10; los datos de
    prueba, desmontados). En `main` y aprobadas
    T0→T4, con TP·1→TP·3b y T3d (arneses `SOLO=<tanda>` de `mutar-analitica-decidir.sh`; sondas y fixtures `ojo-tp2.php` y
