@@ -1021,12 +1021,6 @@ parameters:
 			path: app/Domain/Identity/Models/WaiverSignature.php
 
 		-
-			message: '#^Call to function method_exists\(\) with Illuminate\\Auth\\SessionGuard and ''logoutOtherDevices'' will always evaluate to true\.$#'
-			identifier: function.alreadyNarrowedType
-			count: 1
-			path: app/Domain/Identity/Services/AccountCredentials.php
-
-		-
 			message: '#^Cannot call method toDateString\(\) on string\.$#'
 			identifier: method.nonObject
 			count: 1

@@ -1,7 +1,7 @@
 # [SPEC] Entrar con un código al correo — la contraseña del cliente se retira
 
 > Estado: ✅ aprobada (29-09: el owner contestó el §7) → **A1 ✅** (§4.8) · **A2 ✅** (§4.9) · **A3 ✅** (§4.10) · **A4a ✅**
-> (SPA, §4.11) · **A4b ✅** (vista por el owner) · **A5** (§4.12, plataforma): **A5a ✅** · Última actualización: 2026-10-02 ·
+> (SPA, §4.11) · **A4b ✅** (vista por el owner) · **A5** (§4.12, plataforma): **A5a ✅** · **A5b ✅** · Última actualización: 2026-10-02 ·
 > Decisiones: `#847` (el owner: código al correo y Google; fuera la contraseña) · `#848` (el §7: una sola puerta, borrar
 > las contraseñas, 90 días, solo el código) · `#849` (corrige el 1: el registro NO espera al código, hay cola en la puerta) ·
 > `#853`/`#854` (la A1: el código en el servidor; el dispositivo recordado y `RGPD-06`) · `#855` (la A2a: reconfirmar con
@@ -18,19 +18,16 @@
   el código; nuevo, sus datos y dentro, SIN código —el registro no espera a ningún correo: en la puerta hay cola (`#849`)—,
   y el correo se confirma después, sin frenar. El personal del panel NO cambia (su contraseña, y el authenticator de los
   administradores, `#847`).
-- **Empieza por** §1 (lo que hoy pide contraseña: sus rutas, 21 pantallas y 35 ficheros de pruebas) → §4 (el diseño) →
-  §7 (lo que decidió el owner).
+- **Empieza por** §4.12 (la A5: lo que queda, medido) → §7 (lo que decidió el owner). §1 es la medida del 29-09.
 - **Trampas**: (1) la cola sale por el cron CADA MINUTO en producción (`ENTORNOS.md` §6): un código encolado puede tardar
-  60 s; se envía en la misma petición, tras la respuesta (§4.3). (2) La reconfirmación de las acciones sensibles
-  (`SEGURIDAD.md` §3: borrar la cuenta, cambiar el correo, desvincular Google) hoy es la contraseña: pasa a un código
-  (§4.4). (3) Las cuentas de Google llevan hoy una contraseña aleatoria (0 nulas de 53 en local). (4) Los limitadores
-  son de DOMINIO (`SEC-06`): ningún controlador los reimplementa. (5) La puerta dice si un correo tiene cuenta, como el
-  alta de hoy (`#31`): la acotan los límites de §4.2.
-- **Estado**: ✅ aprobada (`#848`). **A1 ✅** (29-09, `#853`/`#854`, §4.8) · **A2 ✅** (30-09, `#855`/`#856`, §4.9: reconfirmar
-  con un código, cada sesión atada al token y el correo nuevo con su código) · **A3a ✅** (`#857`, §4.10: «Entra» y el alta
-  de la isla con el código; visto por el owner) · **A3b ✅** (los Ajustes de Mi cuenta con el código). La A4 (SPA, §4.11),
-  vista por el owner: **A4a ✅** (entrar y el alta en el cajón, `#810`→`#812`) · **A4b ✅** (Mi cuenta confirma con un
-  código, `#813`). La A5 (plataforma, §4.12, `#869`/`#870`): **A5a ✅** (la contraseña del personal); sigue la A5b.
+  60 s; se envía en la misma petición, tras la respuesta (§4.3). (2) Reconfirmar las acciones sensibles (`SEGURIDAD.md`
+  §3) es SOLO el código (§4.4). (3) Las cuentas de Google nacen sin contraseña desde la A5b; las de antes llevan una
+  aleatoria hasta la A5d. (4) Los limitadores son de DOMINIO (`SEC-06`): ningún controlador los reimplementa. (5) La
+  puerta dice si un correo tiene cuenta, como el alta de hoy (`#31`): la acotan los límites de §4.2.
+- **Estado**: ✅ aprobada (`#848`). **A1–A4 ✅** (29-09→01-10, `#853`→`#857`, `#810`→`#813`, §4.8–§4.11: el código en el
+  servidor, reconfirmar con él, la isla y el cajón; vistos por el owner). La A5 (plataforma, §4.12, `#869`/`#870`):
+  **A5a ✅** (la contraseña del personal) · **A5b ✅** (el servidor y el contrato 1.59.0, sin la del cliente); siguen la A5c
+  (los correos y los textos) y la A5d (las contraseñas que ya existen).
 - **Invariantes**: `SEC-06` (se amplía al código), `RGPD-01` (la purga borra los códigos), `RGPD-06` (sin cambio de
   forma). Ningún fichero del `CRITICAL_RE`.
 
@@ -456,6 +453,25 @@ SPA: quiere decir «con el formulario del correo», `SelfSignup`); la tabla `pas
   dominio, el minuto, la firma, una vez, la política, el token de un cliente) y `CreateAdminTest` (`puerta`); arnés
   `scripts/mutar-contrasena-panel.sh` **14/14** (el primer ancla cayó en el botón de los roles: `access.manage` sale tres
   veces en la ficha). El contador de correos, 31 (`EmailUtmTest`).
+
+**La A5b ✅** (02-10; nada que ver al ojo: el servidor, el contrato y los restos de la isla):
+- **Fuera**: `PasswordLogin`, `PasswordRecovery` (con `PasswordResetResult` y su controlador de la API), `Reconfirmation`,
+  `EmailChangeController`, `PasswordResetController` y `Livewire\Auth\ResetPassword` (con sus dos vistas, `password-input`
+  y los dos ojos), el correo `PasswordReset`, `PasswordPolicy::optionalRules` y los `WRONG_PASSWORD`. `AccountCredentials`
+  verifica el código y cierra las demás sesiones; nada más. El contrato, **1.59.0**: fuera `/auth/password/{forgot,reset}`
+  y `/me/password`; `PasswordConfirmation` pasa a `CodeConfirmation`; `code`, obligatorio. Las altas de Google y la
+  propia nacen sin contraseña (`NULL`); una que llegue a `auth/register` no se guarda.
+- ✱ **El mostrador pasa a la A5c**: `CustomerRegistrar` fabrica la contraseña para MANDARLA en su correo; quitarla es
+  reescribir ese correo, que el owner veta al ojo.
+- **La isla**: sin sus tres restos (y sus dos iconos: 31); la de la página, 195,66 → 194,64 KiB, y la de compra, 187,44 →
+  186,42. `site.css` pierde `.pwd-input*` y `.auth--page` (huérfanas, `LandingCssHasNoOrphansTest`); `cajon.css`, regenerado.
+- **Guardas**: `CustomerPasswordRetiredTest` (las puertas de la API, 404; las dos direcciones web, 301 a `/login`; el
+  enlace del correo nuevo, 404; los nombres de ruta, fuera, con su control); `PasswordLoginTest` pasa a `LoginGateTest`
+  (los dos cubos, por el código); de las tres pruebas que mueren con su sujeto sobrevive una regla, la firma del descargo
+  al confirmar el correo nuevo (a `MePendingEmailCodeTest`), y el testigo de `.btn__loading` pasa a `EntryForm.vue`.
+  Arneses: `mutar-acceso-codigo.sh` **51/51**, `mutar-token-bearer.sh` **14/14** (su «verificar abre sesión», ahora sobre
+  `EmailCodeLogin`) y `mutar-correos-framework.py` **5/5** (queda uno del marco, `VerifyEmailAddress`; su mutación del
+  molde salía «NO APLICADA» desde `#678` y nadie lo vio: re-anclada). Correos: 30 (`EmailUtmTest`).
 
 ## 5. Impacto en invariantes
 

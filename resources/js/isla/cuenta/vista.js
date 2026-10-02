@@ -23,8 +23,8 @@ function diaConMayuscula(iso, locale) {
 /**
  * Las vistas de la capa: las de la T5a; desde la T5b, Tu reserva y Cambiar o cancelar; desde la T5d, Añade a tus hijos,
  * su «Guardado» y la ficha de un hijo (firmar por él, quitarlo); desde la T5e, los pasos de Ajustes —lo que «necesita más
- * de un campo o una confirmación» (el diseño)—: la contraseña, el correo, cerrar las otras sesiones, desvincular Google,
- * firmar tu descargo y borrar la cuenta.
+ * de un campo o una confirmación» (el diseño)—: el correo, cerrar las otras sesiones, desvincular Google, firmar tu
+ * descargo y borrar la cuenta (la contraseña salió en la A3b, `#857`).
  */
 export const VISTA = {
     INICIO: 'inicio',
@@ -45,11 +45,12 @@ export const VISTA = {
 };
 
 /**
- * Las zonas del cajón que en la isla son un PLEGABLE de Ajustes (T5e): quien abre la cuenta en «Tus datos», la
- * contraseña, las sesiones o la privacidad llega a Mi cuenta con ese plegable abierto. Y el enlace
- * `#mi-cuenta/<plegable>` hace lo mismo (la vuelta de vincular Google es `#mi-cuenta/acceso`).
+ * Las zonas del cajón que en la isla son un PLEGABLE de Ajustes (T5e): quien abre la cuenta en «Tus datos», las
+ * sesiones o la privacidad llega a Mi cuenta con ese plegable abierto. Y el enlace `#mi-cuenta/<plegable>` hace lo
+ * mismo (la vuelta de vincular Google es `#mi-cuenta/acceso`). Sin `password` desde la A5 (`#869`): el motor ya no tiene
+ * esa zona (la A4b, `#813`), y pedirla abre el inicio, como cualquier otra que no lo sea.
  */
-const PLEGABLE_DE_ZONA = { profile: 'datos', password: 'acceso', sessions: 'acceso', privacy: 'privacidad' };
+const PLEGABLE_DE_ZONA = { profile: 'datos', sessions: 'acceso', privacy: 'privacidad' };
 const PLEGABLES_DE_ENLACE = ['datos', 'acceso', 'privacidad', 'recibos'];
 
 /**
@@ -57,8 +58,8 @@ const PLEGABLES_DE_ENLACE = ['datos', 'acceso', 'privacidad', 'recibos'];
  * `Http\Sidebar\AccountDoor`; el menú de la isla; el enlace `#mi-cuenta/<bloque>`) y si hay sesión.
  *
  * ⚠️ Completar el alta que vuelve de Google (`google-signup`) va ANTES que la sesión: a esa puerta se llega sin ella, y
- *    es la única que lo hace a propósito. Sin sesión, todo lo demás es Entrar; «¿olvidaste tu contraseña?» también:
- *    desde la A3 del acceso con código (`#849`) se entra con un código al correo, sin contraseña que olvidar.
+ *    es la única que lo hace a propósito. Sin sesión, todo lo demás es Entrar: desde la A3 del acceso con código
+ *    (`#849`) se entra con un código al correo, sin contraseña que olvidar.
  *
  * @param {string} zona  la del motor (`account/navigation.js::ZONES`)
  * @param {{sesion: boolean, bloque?: string}} contexto

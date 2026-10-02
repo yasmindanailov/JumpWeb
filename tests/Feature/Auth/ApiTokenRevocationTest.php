@@ -4,30 +4,30 @@ namespace Tests\Feature\Auth;
 
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
-use App\Livewire\Auth\ResetPassword;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Password;
 use Laravel\Sanctum\Sanctum;
-use Livewire\Livewire;
+use Tests\Support\IssuesCodes;
 use Tests\TestCase;
 
 /**
  * Fase 3 · paso 3a — **un token de API no sobrevive a nada que eche al usuario**.
  *
- * Hasta ahora toda la invalidación del proyecto era de SESIÓN: `User::anonymize()`, el cambio de
+ * Hasta entonces toda la invalidación del proyecto era de SESIÓN: `User::anonymize()`, el cambio de
  * contraseña, «cerrar otras sesiones» y el reset borraban filas de `sessions`, y ninguna tocaba
  * `personal_access_tokens` — sencillamente porque cuando se escribieron no existían. Con un emisor
  * de Bearer (Fase 6) eso serían cuatro puertas abiertas, incluida la supresión del art. 17.
  *
- * Se cierra AHORA, con el sistema todavía sin emisor, porque el momento de acordarse es este y no
- * el día que se añada `POST auth/tokens`. Cada vía tiene aquí su testigo, y `AccessRevocationTest`
- * impide que aparezca una quinta que se olvide de hacerlo.
+ * Se cerró ANTES de que hubiera emisor, porque el momento de acordarse era ése y no el día que se
+ * añadiera `POST auth/tokens`. Cada vía tiene aquí su testigo, y `AccessRevocationTest` impide que
+ * aparezca otra que se olvide de hacerlo. ▶ Desde la A5 (`#869`) quedan la supresión y «cerrar las
+ * demás»: el cambio y el reset de la contraseña del cliente se fueron con ella.
  */
 class ApiTokenRevocationTest extends TestCase
 {
+    use IssuesCodes;
     use RefreshDatabase;
 
     private function userWithTokens(int $count = 2): User
@@ -76,31 +76,14 @@ class ApiTokenRevocationTest extends TestCase
         $user->roles()->attach(Role::where('name', 'customer')->value('id'));
 
         $this->actingAs($user)
-            ->deleteJson('/api/v1/me', ['current_password' => 'password'])
+            ->deleteJson('/api/v1/me', ['code' => $this->confirmCodeFor($user)])
             ->assertNoContent();
 
         $this->assertSame(0, $this->tokenCountFor($user->fresh()));
     }
 
-    /**
-     * Cambiar la contraseña por sospecha de robo no sirve de nada si el atacante conserva un
-     * Bearer. Por sesión caen TODOS: `currentAccessToken()` no devuelve un token persistido cuando
-     * la petición viene por cookie, y quien cambia su contraseña desde el navegador espera que
-     * cualquier app conectada deje de estarlo.
-     */
-    public function test_changing_the_password_revokes_every_api_token(): void
-    {
-        $user = $this->userWithTokens();
-
-        $this->actingAs($user)
-            ->putJson('/api/v1/me/password', [
-                'current_password' => 'password',
-                'password' => 'un-secreto-muy-largo-2026',
-            ])
-            ->assertNoContent();
-
-        $this->assertSame(0, $this->tokenCountFor($user->fresh()));
-    }
+    // ▶ Dos vías se fueron con la contraseña del cliente (A5 de `specs/acceso-con-codigo.md`, `#869`): CAMBIARLA (`PUT
+    //   /me/password`) y RESTABLECERLA (la página de la web). Sus casos se retiraron con ellas; las que quedan, aquí.
 
     /** «Cerrar sesión en los demás dispositivos» alcanza a la app: para el titular es otro más. */
     public function test_logging_out_other_devices_revokes_every_api_token(): void
@@ -108,25 +91,8 @@ class ApiTokenRevocationTest extends TestCase
         $user = $this->userWithTokens();
 
         $this->actingAs($user)
-            ->postJson('/api/v1/me/sessions/revoke-others', ['current_password' => 'password'])
+            ->postJson('/api/v1/me/sessions/revoke-others', ['code' => $this->confirmCodeFor($user)])
             ->assertNoContent();
-
-        $this->assertSame(0, $this->tokenCountFor($user->fresh()));
-    }
-
-    /**
-     * El reset no autentica, así que no hay credencial en curso que preservar: se van todas. Es el
-     * caso de la víctima que ha perdido el control de su cuenta.
-     */
-    public function test_resetting_the_password_revokes_every_api_token(): void
-    {
-        $user = $this->userWithTokens();
-        $token = Password::createToken($user);
-
-        Livewire::test(ResetPassword::class, ['token' => $token, 'email' => $user->email])
-            ->set('password', 'otro-secreto-muy-largo-2026')
-            ->set('password_confirmation', 'otro-secreto-muy-largo-2026')
-            ->call('resetPassword');
 
         $this->assertSame(0, $this->tokenCountFor($user->fresh()));
     }

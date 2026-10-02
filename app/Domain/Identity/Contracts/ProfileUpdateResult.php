@@ -15,10 +15,7 @@ namespace App\Domain\Identity\Contracts;
  */
 final readonly class ProfileUpdateResult
 {
-    /** La contraseña de reconfirmación no es la que se ha escrito. */
-    public const WRONG_PASSWORD = 'wrong_password';
-
-    /** El código de confirmar no casa, caducó o ya se usó (A2a, `#855`). */
+    /** El código de confirmar no casa, caducó o ya se usó (A2a, `#855`; el único desde la A5, `#869`). */
     public const WRONG_CODE = 'wrong_code';
 
     /** Demasiados intentos fallidos de reconfirmación. */
@@ -43,11 +40,6 @@ final readonly class ProfileUpdateResult
     public static function saved(bool $emailChangeRequested = false): self
     {
         return new self(true, $emailChangeRequested);
-    }
-
-    public static function wrongPassword(): self
-    {
-        return new self(false, reason: self::WRONG_PASSWORD);
     }
 
     public static function wrongCode(): self

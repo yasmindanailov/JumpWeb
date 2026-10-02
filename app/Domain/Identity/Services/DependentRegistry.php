@@ -21,7 +21,7 @@ use LogicException;
 /**
  * Fase 6 · menores a cargo — el ÚNICO escritor de `dependents` (`docs/specs/menores-a-cargo.md`
  * §4.2, §4.4, §4.5, §4.9). La capa de entrega valida la FORMA de la petición; las reglas viven aquí,
- * que es donde este proyecto las pone siempre (`SelfSignup`, `PasswordLogin`, `WaiverSigner`):
+ * que es donde este proyecto las pone siempre (`SelfSignup`, `EmailCodeLogin`, `WaiverSigner`):
  *
  *  · **Solo menores** (§4.1): quien hoy tiene 18 o más firma su propio waiver.
  *  · **El tope es de SERVIDOR** (§4.5, `PAY-12`) y se aplica bajo el lock de la fila del titular:

@@ -45,19 +45,16 @@ final readonly class AccountDoor
 
         // ── Las puertas de AUTH (`specs/auth-en-cajon.md` §4.4) ──────────────────────────────
         //
-        // ⚠️⚠️ **Las tres rutas sobreviven, y `login` no es opcional**: es el destino al que Laravel
-        // redirige desde el middleware `auth`, así que borrarla rompería `/mi-cuenta` y toda ruta
-        // autenticada. Las otras dos se conservan por lo mismo que las de arriba: son enlaces que ya
-        // están escritos fuera de este repo.
+        // ⚠️⚠️ **`login` no es opcional**: es el destino al que Laravel redirige desde el middleware
+        // `auth`, así que borrarla rompería `/mi-cuenta` y toda ruta autenticada. `registro` se conserva
+        // por lo mismo que las de arriba: es un enlace que ya está escrito fuera de este repo.
         // ▶ Y no nace un segundo mapa para ellas **a propósito**: un `AuthDoor` aparte sería otro
         // sitio donde equivocarse, y este ya lo cruza `AccountAccessTest` contra las zonas del cajón.
-        // ⚠️ Desde la A4a (`acceso-con-codigo.md` §4.11, `#849`) `/registro` y `/recuperar-contrasena` abren la PUERTA,
-        // como `/login`: el correo decide si se entra con un código o se crea la cuenta (ya no una zona, sino una cara de
-        // ésta), y sin contraseña para entrar no hay nada que recuperar. La zona de recuperar sigue hasta la A4b, pero solo
-        // CON sesión: la abre el aviso de las cuatro acciones que aún piden contraseña.
+        // ⚠️ Desde la A4a (`acceso-con-codigo.md` §4.11, `#849`) `/registro` abre la PUERTA, como `/login`: el correo
+        // decide si se entra con un código o se crea la cuenta. `/recuperar-contrasena` ya no es una puerta: desde la A5
+        // (`#869`) responde 301 a `/login` (`routes/web.php`).
         'registro' => 'login',
         'login' => 'login',
-        'password.request' => 'login',
 
         // La CUARTA puerta de auth (`specs/auth-con-google.md` §7): aquí aterriza quien vuelve de
         // Google **sin cuenta**, y el cajón abre la pantalla que completa el alta.
@@ -75,7 +72,7 @@ final readonly class AccountDoor
      *
      * @var list<string>
      */
-    public const GUEST_ROUTES = ['registro', 'login', 'password.request', 'registro.google'];
+    public const GUEST_ROUTES = ['registro', 'login', 'registro.google'];
 
     /**
      * La zona con la que abrir el cajón en la petición actual, o `''` si esta ruta no es una puerta.

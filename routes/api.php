@@ -40,7 +40,6 @@ use App\Http\Controllers\Api\V1\OrderGuestMinorsController;
 use App\Http\Controllers\Api\V1\OrderPaymentController;
 use App\Http\Controllers\Api\V1\OrderPaymentStatusController;
 use App\Http\Controllers\Api\V1\OrdersController;
-use App\Http\Controllers\Api\V1\PasswordRecoveryController;
 use App\Http\Controllers\Api\V1\PricesFactsController;
 use App\Http\Controllers\Api\V1\PromotionsFactsController;
 use App\Http\Controllers\Api\V1\QuoteController;
@@ -89,10 +88,10 @@ Route::name('api.v1.')->group(function (): void {
     // monta `EnsureFrontendRequestsAreStateful` para los orígenes declarados *stateful*, así que
     // aquí no se declara nada al respecto — y por eso el login NO puede vivir fuera del grupo `api`.
     //
-    // El limitador de `SEC-06` (por email+IP y por IP sola) está DENTRO de
-    // `Identity\Services\PasswordLogin`, no en la ruta: es la misma protección que aplica la web,
-    // no una copia con otros números. El `throttle:api` del grupo cuenta además cada intento,
-    // porque esta ruta es pública (spec §10, punto 2).
+    // Se entra con el CÓDIGO al correo (la contraseña del cliente se retiró en la A5, `#869`). El
+    // limitador de `SEC-06` (por email+IP y por IP sola) está DENTRO de `Identity\Services\LoginGate`,
+    // no en la ruta: el mismo para esta puerta y para la emisión de tokens, no una copia con otros
+    // números. El `throttle:api` del grupo cuenta además cada intento, porque esta ruta es pública.
     Route::post('/auth/login', [AuthSessionController::class, 'login'])->name('auth.login');
 
     // ── La PUERTA del acceso con código (A1 de `specs/acceso-con-codigo.md`, `#848`/`#849`) — PÚBLICA ─────────────
@@ -108,31 +107,29 @@ Route::name('api.v1.')->group(function (): void {
 
     // ── Tokens Bearer (F4, `docs/specs/token-bearer.md`) — la puerta del cliente NATIVO ───────
     // Emitir es PÚBLICO y no pide sesión ni CSRF: es para quien no es un navegador de primera
-    // parte. No es una segunda puerta para un atacante: `PasswordLogin::verify()` comparte con el
+    // parte. No es una segunda puerta para un atacante: `EmailCodeLogin::verify()` comparte con el
     // login los dos limitadores de `SEC-06` y sus claves. `no-store` porque la respuesta lleva una
     // credencial y `NoStoreWhenAuthenticated` no la ve (todavía no hay nadie autenticado).
     Route::post('/auth/tokens', [AuthTokenController::class, 'issue'])
         ->middleware('no-store')
         ->name('auth.tokens.issue');
-    // Rotar no pasa por los limitadores del login —no hay contraseña que adivinar— pero sí por uno
+    // Rotar no pasa por los limitadores del login —no hay código que adivinar— pero sí por uno
     // propio: cada llamada escribe y borra una credencial.
     Route::post('/auth/tokens/rotate', [AuthTokenController::class, 'rotate'])
         ->middleware(['auth:sanctum', $tokenAbility, 'throttle:6,1', 'no-store'])
         ->name('auth.tokens.rotate');
 
-    // ── Alta y contraseña (paso 3c) — PÚBLICO ────────────────────────────────────────────────
+    // ── Alta (paso 3c) — PÚBLICO ─────────────────────────────────────────────────────────────
     // Las cuatro capas de defensa del alta (honeypot, límite por IP, límite por correo y Turnstile)
-    // y los limitadores de la recuperación viven en los servicios de Identity, no en la ruta: son
-    // los MISMOS que aplica la web, no una copia con otros números. El `throttle:api` del grupo se
-    // suma como suelo genérico, y está bien que se sume.
+    // viven en `Identity\Services\SelfSignup`, no en la ruta. El `throttle:api` del grupo se suma
+    // como suelo genérico, y está bien que se sume. Sin `auth/password/{forgot,reset}` desde la A5
+    // (`#869`): el cliente no tiene contraseña que recuperar; el personal recibe la suya del panel.
     //
     // `email/resend` es público a propósito: quien acaba de darse de alta suelta todavía no tiene
     // sesión, y es justo cuando necesita pedir el reenvío. Lo que impide que sea un cañón de
     // correos hacia un buzón ajeno son sus dos cooldowns —por IP y por correo destinatario—.
     Route::post('/auth/register', [AuthRegistrationController::class, 'register'])->name('auth.register');
     Route::post('/auth/email/resend', [AuthRegistrationController::class, 'resendVerification'])->name('auth.email.resend');
-    Route::post('/auth/password/forgot', [PasswordRecoveryController::class, 'sendLink'])->name('auth.password.forgot');
-    Route::post('/auth/password/reset', [PasswordRecoveryController::class, 'reset'])->name('auth.password.reset');
 
     // ── Completar el alta que viene de GOOGLE (`specs/auth-con-google.md` §7) — PÚBLICO ───────
     // Públicas porque quien las usa **todavía no tiene cuenta**: acaba de volver de Google y le falta
@@ -475,27 +472,27 @@ Route::name('api.v1.')->group(function (): void {
         // sin haber verificado** y ahí el área de cuenta necesita ofrecer la salida: quien aceptó la
         // exención en el alta la tiene retenida hasta que verifique.
         //
-        // ⚠️ **No se aflojó el público en su lugar**: su cuerpo es el `EmailRequest` del contrato,
-        // compartido con `auth/password/forgot`. Y la sesión identifica mejor que un correo escrito
-        // en el cuerpo. Es el mismo patrón que `/me/pending-email/resend`, justo encima.
+        // ⚠️ **No se aflojó el público en su lugar**: su cuerpo es el `EmailRequest` del contrato. Y la
+        // sesión identifica mejor que un correo escrito en el cuerpo. Es el mismo patrón que
+        // `/me/pending-email/resend`, justo encima.
         Route::post('/me/email/resend', [MeProfileController::class, 'resendVerification'])
             ->middleware('throttle:6,1,verification-resend')
             ->name('me.email.resend');
 
-        Route::put('/me/password', [MeCredentialsController::class, 'updatePassword'])->name('me.password.update');
+        // Sin `PUT /me/password` desde la A5 (`specs/acceso-con-codigo.md` §4.12, `#869`): el cliente no tiene contraseña.
         Route::post('/me/sessions/revoke-others', [MeCredentialsController::class, 'revokeOtherSessions'])
             ->name('me.sessions.revoke-others');
 
         // El código para CONFIRMAR una acción sensible (A2a de `specs/acceso-con-codigo.md` §4.9, `#855`): al correo de la
-        // cuenta. Borrar la cuenta, cambiar el correo, desvincular Google y cerrar las demás sesiones lo aceptan en vez de
-        // la contraseña. Su techo (1/min, 5/h por cuenta) vive en `AccountCredentials`, no aquí.
+        // cuenta. Borrar la cuenta, cambiar el correo, desvincular Google y cerrar las demás sesiones se confirman con él (el
+        // único desde la A5). Su techo (1/min, 5/h por cuenta) vive en `AccountCredentials`, no aquí.
         Route::post('/me/confirm-code', [MeCredentialsController::class, 'requestConfirmationCode'])->name('me.confirm-code');
 
         // ── Las identidades EXTERNAS del titular (`specs/auth-con-google.md` §8) ──────────────────
         // ⚠️⚠️ Desvincular es el **contrapeso** del aviso de vinculación: el vínculo se crea solo y se
         // avisa por correo, y ese aviso solo sirve si quien lo recibe puede deshacerlo. Sin esto, la
         // única salida de un vínculo no pedido era borrar la cuenta.
-        // ⚠️ Exige la contraseña (`[DECIDIDO owner]`) y comparte el limitador de `PUT /me/password`:
+        // ⚠️ Exige reconfirmar (`[DECIDIDO owner]`) con el limitador de todas las reconfirmaciones:
         // un segundo contador serían cinco intentos más por endpoint, que es como se afloja `SEC-06`.
         Route::get('/me/identities', [MeCredentialsController::class, 'identities'])->name('me.identities.index');
         Route::delete('/me/identities/{provider}', [MeCredentialsController::class, 'unlinkIdentity'])
@@ -504,7 +501,7 @@ Route::name('api.v1.')->group(function (): void {
 
         // ── Los dos derechos RGPD (tanda 2 · paso 8, `specs/area-cliente.md` §9.3) ─────────────
         // ⚠️ `DELETE /me` **no borra la fila**: anonimiza (`RGPD-01`). La factura sigue vinculada y
-        // sin PII. Exige reconfirmar la contraseña y comparte el limitador de `PUT /me/password`,
+        // sin PII. Exige reconfirmar con un código y comparte el limitador de las reconfirmaciones,
         // así que tampoco lleva `throttle` de ruta —contaría también los aciertos—.
         // ⚠️ `GET /me/export` es el cuerpo con más PII del producto; sale con `no-store` por el
         // middleware del grupo (`RGPD-04`), no por una cabecera escrita aquí.
@@ -515,16 +512,16 @@ Route::name('api.v1.')->group(function (): void {
         // art. 7.1. NO publica la IP — eso viaja en el export, que es un acto explícito.
         Route::get('/me/consents', [MePrivacyController::class, 'consents'])->name('me.consents.index');
         // ⚠️⚠️ **RETIRAR el consentimiento de marketing** (art. 7.3, `#344`), que hasta hoy no se podía
-        // por ninguna superficie. **Sin `current_password` a propósito**: la ley exige que retirarlo
+        // por ninguna superficie. **Sin reconfirmar a propósito**: la ley exige que retirarlo
         // sea *tan fácil como darlo*, y pedir fricción solo para la retirada sería incumplirlo por
         // otra puerta. Lo que sí queda es la PRUEBA: el dominio sella la fila en vez de borrarla.
         Route::put('/me/marketing', [MePrivacyController::class, 'marketing'])->name('me.marketing.update');
         // ⚠️ **OPONERSE a que la navegación se vincule a la cuenta** (art. 21, `specs/analitica.md` §4.3, T3a·3),
-        // o volver a permitirlo. Sin `current_password` por la misma razón que el marketing: retirar es tan
+        // o volver a permitirlo. Sin reconfirmar, por la misma razón que el marketing: retirar es tan
         // fácil como dar. Retirar desvincula, sella la prueba y dispara el olvido en el driver.
         Route::put('/me/analytics', [MePrivacyController::class, 'analytics'])->name('me.analytics.update');
         // T3 de las encuestas (`specs/encuestas.md` §4.3): recibir la encuesta del día siguiente, o no. Correo de
-        // servicio: sin `current_password` y sin consentimiento que sellar. 204 siempre.
+        // servicio: sin reconfirmar y sin consentimiento que sellar. 204 siempre.
         Route::put('/me/surveys', [MePrivacyController::class, 'surveys'])->name('me.surveys.update');
         // T3a·4 · despedir el aviso de que la navegación puede vincularse a la cuenta (viaja en el contexto de
         // cuenta mientras está pendiente). 204 siempre.

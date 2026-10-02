@@ -78,15 +78,15 @@ class MailTextCatalogTest extends TestCase
             'emails.order_item_cancelled.product_fallback', 'emails.mixed_party_surcharge.amount_discount',
             'emails.mixed_party_surcharge.amount_surcharge',
             'emails.order_confirmation.greeting', 'emails.order_declined.reason_prefix', // lo que no se pinta
-            'emails.verify_pending_email.subject', 'emails.verify_pending_email.expires', // la versión sin código, que ya no sale
+            'emails.verify_pending_email.action', // el botón del correo nuevo, que se fue con su enlace (A5, `#869`)
         ] as $clave) {
             $this->assertFalse(MailTextCatalog::esEditable($clave), $clave);
         }
-        // CONTROL: lo de al lado, sí (la frase que recibe los importes; el botón que el correo nuevo sigue llevando).
+        // CONTROL: lo de al lado, sí (la frase que recibe los importes; el «si no fuiste tú» que el correo nuevo conserva).
         $this->assertTrue(MailTextCatalog::esEditable('fiesta.cumple_mail.linea'));
         $this->assertTrue(MailTextCatalog::esEditable('surveys.mail.line1'));
         $this->assertTrue(MailTextCatalog::esEditable('emails.mixed_party_surcharge.changed_direction'));
-        $this->assertTrue(MailTextCatalog::esEditable('emails.verify_pending_email.action'));
+        $this->assertTrue(MailTextCatalog::esEditable('emails.verify_pending_email.ignore'));
         $this->assertTrue(MailTextCatalog::esEditable('emails.verify_pending_email_code.headline'));
         // Ningún texto editable es un plural ni ninguno de fábrica cambia de variables entre idiomas.
         $mal = [];

@@ -5,7 +5,6 @@ namespace App\Domain\Identity\Services;
 use App\Domain\Booking\Contracts\CustomerOrderHistory;
 use App\Domain\Booking\Contracts\CustomerReservations;
 use App\Domain\Identity\Contracts\CredentialChangeResult;
-use App\Domain\Identity\Contracts\Reconfirmation;
 use App\Domain\Identity\Exceptions\AccountHasUpcomingReservationsException;
 use App\Domain\Identity\Models\Consent;
 use App\Domain\Identity\Models\Dependent;
@@ -28,12 +27,12 @@ use Illuminate\Support\Facades\Log;
  * {@see AccountProfile}: la lógica vivía dentro de las superficies web —`Livewire\Account\
  * DeleteAccount` y `Http\Controllers\Account\AccountController::export`— y exponerla por API sin
  * bajarla al dominio la habría **duplicado**. Aquí no se reimplementa nada: la purga es
- * {@see User::anonymize()} (`RGPD-01`) y la reconfirmación de contraseña es
- * {@see AccountCredentials::verify()}, con su limitador.
+ * {@see User::anonymize()} (`RGPD-01`) y la reconfirmación —un código `confirm` al correo desde la
+ * A5 (`#869`)— es {@see AccountCredentials::verify()}, con su limitador.
  *
  * ⚠️ **Y ése es el efecto que justifica el paso, más allá de abrir dos rutas**: al pasar el borrado
- * por aquí, la web hereda el limitador de `current_password` **sin tocar la web**. Eran cuatro los
- * sitios que reconfirman contraseña y no lo tenían (`DECISIONES #120(o)`); con éste quedan **cero**.
+ * por aquí, cada superficie hereda el limitador de la reconfirmación **sin tocarla**. Eran cuatro los
+ * sitios que reconfirmaban y no lo tenían (`DECISIONES #120(o)`); con éste quedaron **cero**.
  *
  * **Qué NO hace, a propósito** —igual que `AccountCredentials`—: tocar la sesión en curso ni decidir
  * a dónde va el titular después. Eso es de quien atiende la petición: la web redirige a la home con
@@ -61,7 +60,7 @@ class AccountPrivacy
     ) {}
 
     /**
-     * **Ejerce el derecho de supresión** (art. 17), previa reconfirmación de la contraseña.
+     * **Ejerce el derecho de supresión** (art. 17), previa reconfirmación con un código `confirm`.
      *
      * ⚠️ **Se llama `anonymize()` y no `delete()`, y no es capricho.** Por un lado es lo que de
      * verdad ocurre —la fila de `users` sobrevive con datos neutros para que las facturas sigan
@@ -71,25 +70,25 @@ class AccountPrivacy
      * `apply()` (`DECISIONES #120(q)`): un nombre que provoca la confusión cada vez que alguien lo
      * llama desde un controlador se cambia, no se le declara una excepción a la guarda.
      *
-     * ⚠️ **La reconfirmación es obligatoria aquí y esto es irreversible**: es la única de las cinco
-     * gestiones que el titular no puede deshacer, así que la contraseña se pide siempre —no «solo
-     * si cambia algo sensible», como en el perfil—.
+     * ⚠️ **La reconfirmación es obligatoria aquí y esto es irreversible**: es la única de las
+     * gestiones que el titular no puede deshacer, así que el código se pide siempre —no «solo si
+     * cambia algo sensible», como en el perfil—.
      *
      * ⚠️⚠️ **Con una reserva POR CELEBRAR, la supresión NO se ejecuta** (T5 · D8, `#284`,
      * `cumple-mixto.md` §25.4): se lanza {@see AccountHasUpcomingReservationsException} y la
      * superficie se lo explica al titular (la API con un `409`). La puerta va DESPUÉS de
-     * `verify()` —que la existencia de reservas no se filtre a quien no tiene la contraseña, y el
+     * `verify()` —que la existencia de reservas no se filtre a quien no tiene el código, y el
      * limitador siga mandando— y aquí y no en `User::anonymize()`: metería Booking en un modelo de
      * Identity y arrastraría el censo y la idempotencia de `AnonymizeCoversEveryUserColumnTest`.
      * El panel aplica la MISMA puerta por su lado (las tres vías, `[DECIDIDO owner]` §25.9 Q2);
-     * una cuenta ya anónima no llega hasta aquí (su contraseña es inservible → `verify()` falla).
+     * una cuenta ya anónima no llega hasta aquí (sin sesión ni código para su correo → `verify()` falla).
      *
      * @throws AccountHasUpcomingReservationsException
      */
-    public function anonymize(User $user, Reconfirmation $with, string $ip): CredentialChangeResult
+    public function anonymize(User $user, string $code, string $ip): CredentialChangeResult
     {
-        // Con la contraseña o con un código `confirm` al correo de la cuenta (A2a, `#855`).
-        $verdict = $this->credentials->verify($user, $with, $ip);
+        // Con un código `confirm` al correo de la cuenta (A2a, `#855`; el único desde la A5, `#869`).
+        $verdict = $this->credentials->verify($user, $code, $ip);
 
         if ($verdict->failed()) {
             return $verdict;

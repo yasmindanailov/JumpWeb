@@ -16,7 +16,7 @@
  *   · ▶ **Lo sensible se confirma con un CÓDIGO al correo** (A3b de `specs/acceso-con-codigo.md` §4.10, `#857`): el primer
  *     toque de la acción manda el código (`POST /me/confirm-code`) y enseña su campo; el segundo lo usa. Viaja por los
  *     GUARDIANES públicos de los stores del motor (`run`, `runForm`: limpian, llaman y colocan el veredicto) con el cuerpo
- *     de la isla: los stores siguen sin tocarse, y su `current_password` se queda para el cajón hasta su A4.
+ *     de la isla: los stores siguen sin tocarse (desde la A4b del cajón, `#813`, también mandan el código).
  */
 import { computed, reactive, watch } from 'vue';
 import { api } from '../../sidebar/api.js';
@@ -308,7 +308,7 @@ export function useAjustesCuenta({ textos, props, locale, proxima, contexto, dec
         if (! s.f.entiendo) return 'error';
 
         return conCodigo('delete_account', async (codigo) => {
-            // El guardián del motor, con el cuerpo de la isla (`deleteAccount` del store manda la contraseña).
+            // El guardián del motor, con el cuerpo de la isla: el código (como `deleteAccount` del store desde la A4b).
             if (await runForm(privacidad, () => api.delete('/me', { code: codigo }), opciones())) {
                 window.location.assign(props.urls?.home || '/');
 

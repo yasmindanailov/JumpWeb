@@ -239,8 +239,9 @@ describe('los Ajustes (T5e)', () => {
 
     test('las zonas del cajón que son un plegable abren Mi cuenta en Ajustes, con ese plegable abierto', () => {
         assert.deepEqual(vistaDeApertura('profile', { sesion: true }), { vista: VISTA.INICIO, bloque: 'ajustes', plegable: 'datos' });
-        assert.deepEqual(vistaDeApertura('password', { sesion: true }), { vista: VISTA.INICIO, bloque: 'ajustes', plegable: 'acceso' });
         assert.deepEqual(vistaDeApertura('sessions', { sesion: true }), { vista: VISTA.INICIO, bloque: 'ajustes', plegable: 'acceso' });
+        // Sin la zona de la contraseña (A5, `#869`; el motor la quitó en la A4b): pedirla abre el inicio, sin plegable.
+        assert.deepEqual(vistaDeApertura('password', { sesion: true }), { vista: VISTA.INICIO, bloque: '', plegable: '' });
         assert.deepEqual(vistaDeApertura('privacy', { sesion: true }), { vista: VISTA.INICIO, bloque: 'ajustes', plegable: 'privacidad' });
         assert.equal(vistaDeApertura('privacy', { sesion: false }).vista, VISTA.ENTRAR);
     });

@@ -135,8 +135,6 @@ return [
     // Lo que las piezas del sistema de diseño escribían a mano (T3b): el campo, las horas, la cantidad, el
     // resumen, la carga, entrar con Google o Apple y el QR.
     'pieza' => [
-        'mostrar_clave' => 'Mostrar la contraseña',
-        'ocultar_clave' => 'Ocultar la contraseña',
         'opcional' => 'opcional',
         // «¿Querías decir …?», bajo un campo de correo mal escrito (el correo propuesto va en medio, en negrita).
         'sugerencia_antes' => '¿Querías decir ',

@@ -114,8 +114,6 @@ return [
         'whatsapp' => 'Message us on WhatsApp',
     ],
     'pieza' => [
-        'mostrar_clave' => 'Show password',
-        'ocultar_clave' => 'Hide password',
         'opcional' => 'optional',
         'sugerencia_antes' => 'Did you mean ',
         'sugerencia_despues' => '?',

@@ -15,7 +15,6 @@ use App\Domain\Platform\Models\SurveyParticipation;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Domain\Platform\Services\Surveys\SurveySeals;
-use App\Notifications\PasswordReset;
 use App\Notifications\Support\ChoosesRecipient;
 use App\Notifications\VerifyEmailAddress;
 use Carbon\CarbonImmutable;
@@ -202,21 +201,18 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
     }
 
     /**
-     * ❗❗ LOS DOS CORREOS DEL FRAMEWORK, AL MOLDE DEL PRODUCTO (`DECISIONES #508`).
+     * ❗❗ EL CORREO DEL FRAMEWORK, AL MOLDE DEL PRODUCTO (`DECISIONES #508`).
      *
-     * Hasta esta tanda salían los de `Illuminate\Auth\Notifications` tal cual: vestidos —pasan por
-     * el mismo layout— pero **sin cabecera y sin línea de adelanto**, así que en la bandeja se
-     * anunciaban con «¡Hola!», que es el defecto que abrió este carril. **No estaban en el
-     * inventario de 23** porque el artboard contó carpetas y éstos no viven en ninguna.
+     * Hasta esa tanda salía el de `Illuminate\Auth\Notifications` tal cual: vestido —pasa por el mismo
+     * layout— pero **sin cabecera y sin línea de adelanto**, así que en la bandeja se anunciaba con
+     * «¡Hola!». **No estaba en el inventario de 23** porque el artboard contó carpetas y éste no vive
+     * en ninguna. La subclase solo cambia `buildMailMessage($url)`: la firma y la caducidad las sigue
+     * generando el framework. Aquí solo se dice **cuál** se manda.
      *
-     * ⚠️ Las subclases solo cambian `buildMailMessage($url)`: el token, la firma, la caducidad y la
-     * ruta los sigue generando el framework. Aquí solo se dice **cuál** se manda.
+     * ▶ Eran DOS hasta la A5 (`#869`): el de restablecer la contraseña se fue con la del cliente. La del
+     * personal llega por `PanelPasswordLinks`, con su propio correo y un callback al broker: el aviso por
+     * defecto del framework (`sendPasswordResetNotification`) no lo usa nadie, y su ruta ya no existe.
      */
-    public function sendPasswordResetNotification($token): void
-    {
-        $this->notify(new PasswordReset($token));
-    }
-
     public function sendEmailVerificationNotification(): void
     {
         $this->notify(new VerifyEmailAddress);

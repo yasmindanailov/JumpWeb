@@ -71,21 +71,20 @@ class AccountAccessTest extends TestCase
     }
 
     /**
-     * **Las TRES rutas de auth son puertas igual que las de «Mi cuenta»** (`specs/auth-en-cajon.md`
-     * §4.4, 2026-08-23).
+     * **Las rutas de auth son puertas igual que las de «Mi cuenta»** (`specs/auth-en-cajon.md` §4.4, 2026-08-23).
      *
      * ⚠️ Antes servían la home con un `data-auth-modal` que despertaba el modal de la cabecera. Ahora
      * abren el cajón en su zona, que es el mismo mecanismo de `/entradas` y de `/mi-cuenta/…` — y el
      * que permite retirar el modal sin convertir estas URL en páginas que no hacen nada.
-     * ▶ Desde la A4a (`acceso-con-codigo.md` §4.11) `/registro` y `/recuperar-contrasena` abren la PUERTA, como `/login`:
-     * crear cuenta es una cara de ella (el correo decide), no una zona —ya no existe en el cajón (`navigation.test.js`)—,
-     * y sin contraseña para entrar no hay nada que recuperar (la zona sigue, solo con sesión, hasta la A4b).
+     * ▶ Desde la A4a (`acceso-con-codigo.md` §4.11) `/registro` abre la PUERTA, como `/login`: crear cuenta es una cara de
+     * ella (el correo decide), no una zona. `/recuperar-contrasena` era la tercera hasta la A5 (`#869`): hoy es un 301 a
+     * `/login` (`CustomerPasswordRetiredTest`).
      */
     public function test_the_auth_routes_are_doors_too(): void
     {
         $this->seed(LandingContentSeeder::class);
 
-        foreach (['/login' => 'login', '/registro' => 'login', '/recuperar-contrasena' => 'login'] as $path => $zone) {
+        foreach (['/login' => 'login', '/registro' => 'login'] as $path => $zone) {
             $html = (string) $this->get($path)->assertOk()->getContent();
 
             $this->assertStringContainsString('data-purchase-open="1"', $html, "«{$path}» no abre el cajón");
@@ -109,7 +108,7 @@ class AccountAccessTest extends TestCase
         $this->seed(LandingContentSeeder::class);
         $user = User::factory()->create(['email_verified_at' => now()]);
 
-        foreach (['/login', '/registro', '/recuperar-contrasena'] as $path) {
+        foreach (['/login', '/registro'] as $path) {
             $html = (string) $this->actingAs($user)->get($path)->assertOk()->getContent();
 
             $this->assertStringContainsString(

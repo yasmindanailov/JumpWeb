@@ -24,7 +24,7 @@ class StaticAnalysisGateTest extends TestCase
      * el número aquí en el mismo commit. Si el test te pide SUBIRLO, has metido un error nuevo en la
      * línea base en vez de arreglarlo.
      */
-    private const FROZEN_ERRORS = 442;   // A2b (`#856`): las dos del cambio de correo se fueron al bajarlo al dominio (el `previous_email` en memoria y la caducidad sin tipo)
+    private const FROZEN_ERRORS = 441;   // A5b (`#869`): el `method_exists()` del rehash de `logoutOtherDevices()`, que se fue con la contraseña del cliente
 
     private function config(): string
     {

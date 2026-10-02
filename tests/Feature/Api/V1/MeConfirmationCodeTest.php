@@ -17,8 +17,8 @@ use Tests\Feature\Api\ApiTestCase;
  * demás sesiones.
  *
  * Lo que se prueba: que el código se pida con techo y diga PARA QUÉ es; que cada una de las cuatro acciones lo acepte, y
- * con el código malo no haga NADA (422 sobre `code`); que un código de ENTRAR no confirme; y que la contraseña y el código
- * compartan el limitador (titular, IP). Que «cerrar las demás» cierre también las SESIONES vivas es `SessionBindingTest`.
+ * con el código malo no haga NADA (422 sobre `code`); que un código de ENTRAR no confirme; y, desde la A5 (`#869`), que
+ * sea la ÚNICA reconfirmación. Que «cerrar las demás» cierre también las SESIONES vivas es `SessionBindingTest`.
  * Arnés: `scripts/mutar-acceso-codigo.sh`.
  */
 class MeConfirmationCodeTest extends ApiTestCase
@@ -121,8 +121,7 @@ class MeConfirmationCodeTest extends ApiTestCase
             ->deleteJson(self::ROOT.'/me', ['code' => $this->wrong($code)])
             ->assertStatus(422)
             ->assertValidResponse(422)
-            ->assertJsonPath('error.fields.code.0', __('api.confirm.wrong_code'))
-            ->assertJsonMissingPath('error.fields.current_password');
+            ->assertJsonPath('error.fields.code.0', __('api.confirm.wrong_code'));
 
         $this->assertFalse($user->fresh()->isAnonymized());
     }
@@ -203,33 +202,20 @@ class MeConfirmationCodeTest extends ApiTestCase
         $this->actingAs($user)->postJson(self::ROOT.'/me/sessions/revoke-others', ['code' => $code])->assertStatus(422);
     }
 
-    public function test_the_password_and_the_code_never_come_together_nor_are_both_missing(): void
-    {
-        $user = $this->holder();
-
-        $this->actingAs($user)->deleteJson(self::ROOT.'/me', ['current_password' => 'password', 'code' => '123456'])->assertStatus(422);
-        $this->actingAs($user)->deleteJson(self::ROOT.'/me', [])->assertStatus(422);
-
-        $this->assertFalse($user->fresh()->isAnonymized());
-    }
-
     /**
-     * ⚠️⚠️ La contraseña y el código son la MISMA puerta: cuatro contraseñas malas y un código malo agotan el limitador
-     * (titular, IP), y el código BUENO ya no borra la cuenta hasta que pase el minuto.
+     * Desde la A5 (`#869`) el código es la ÚNICA reconfirmación: la contraseña de antes ya no es una alternativa (un
+     * cliente viejo que la mande recibe el 422 del código que falta), y sin nada tampoco se borra nada. El caso «la
+     * contraseña y el código comparten el limitador» se fue con la contraseña: el limitador, con códigos, es de
+     * `MePrivacyTest` y `MeCredentialsTest`.
      */
-    public function test_the_password_and_the_code_share_the_same_limiter(): void
+    public function test_the_code_is_the_only_way_to_confirm(): void
     {
         $user = $this->holder();
-        $code = $this->confirmCode();
 
-        foreach (range(1, AccountCredentials::MAX_ATTEMPTS - 1) as $ignored) {
-            $this->actingAs($user)->deleteJson(self::ROOT.'/me', ['current_password' => 'no-es-esta'])->assertStatus(422);
-        }
-        $this->actingAs($user)->deleteJson(self::ROOT.'/me', ['code' => $this->wrong($code)])->assertStatus(422);
-
-        $this->actingAs($user)->deleteJson(self::ROOT.'/me', ['code' => $code])
-            ->assertStatus(429)
-            ->assertValidResponse(429);
+        $this->actingAs($user)->deleteJson(self::ROOT.'/me', ['current_password' => 'password'])
+            ->assertStatus(422)
+            ->assertJsonStructure(['error' => ['fields' => ['code']]]);
+        $this->actingAs($user)->deleteJson(self::ROOT.'/me', [])->assertStatus(422);
 
         $this->assertFalse($user->fresh()->isAnonymized());
     }

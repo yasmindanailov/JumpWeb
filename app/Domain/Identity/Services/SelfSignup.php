@@ -38,7 +38,7 @@ use Throwable;
  *
  * **Qué NO hace, a propósito**: iniciar sesión. En la compra («pay-first») el alta va seguida de
  * un `Auth::login()`, pero eso es un efecto de la sesión del llamante — spec §4.6.3, mismo criterio
- * que en `PasswordLogin`. El servicio devuelve el usuario y quien atiende decide.
+ * que en `EmailCodeLogin`. El servicio devuelve el usuario y quien atiende decide.
  */
 class SelfSignup
 {
@@ -76,7 +76,7 @@ class SelfSignup
     public const RESEND_EMAIL_COOLDOWN_SECONDS = 60;
 
     /**
-     * @param  array{name:string,email:string,phone:?string,born_on?:?string,password?:?string,waiver?:array{document?:LegalDocumentVersion,channel?:string,user_agent?:?string}|null}  $data  ya validado por el llamante (el teléfono, opcional desde `#787`; la fecha de nacimiento, opcional, TP·1; la contraseña, opcional desde el acceso con código, `#848`; el descargo aceptado, si lo hay)
+     * @param  array{name:string,email:string,phone:?string,born_on?:?string,waiver?:array{document?:LegalDocumentVersion,channel?:string,user_agent?:?string}|null}  $data  ya validado por el llamante (el teléfono, opcional desde `#787`; la fecha de nacimiento, opcional, TP·1; el descargo aceptado, si lo hay). Sin contraseña desde la A5 (`#869`)
      * @param  bool  $notifyByEmail  `false` en la compra: pay-first no manda verificación (`DECISIONES` del 2026-06-14 —
      *                               el pago la sustituye, y un bot no paga)
      * @param  string  $honeypot  campo señuelo; si llega con algo, es un bot
@@ -209,7 +209,7 @@ class SelfSignup
     }
 
     /**
-     * @param  array{name:string,email:string,phone:?string,born_on?:?string,password?:?string,waiver?:array{document?:LegalDocumentVersion,channel?:string,user_agent?:?string}|null}  $data
+     * @param  array{name:string,email:string,phone:?string,born_on?:?string,waiver?:array{document?:LegalDocumentVersion,channel?:string,user_agent?:?string}|null}  $data
      */
     private function createAccount(array $data, string $email, string $ip): User
     {
@@ -224,9 +224,9 @@ class SelfSignup
                 'phone' => is_string($data['phone'] ?? null) && trim($data['phone']) !== '' ? trim($data['phone']) : null,
                 // TP·1 (`#792`): opcional; la valida el llamante con `BirthDatePolicy::rules()`.
                 'born_on' => BirthDatePolicy::normalize($data['born_on'] ?? null),
-                // Sin ella, la cuenta nace SIN contraseña (`NULL`, A1 de `specs/acceso-con-codigo.md`): entra con un código
-                // al correo o con Google, y ninguna contraseña la abre (el proveedor no valida contra `NULL`).
-                'password' => $data['password'] ?? null,
+                // SIN contraseña (`NULL`; A1 de `specs/acceso-con-codigo.md`, y desde la A5, `#869`, ni siquiera opcional):
+                // entra con un código al correo o con Google, y ninguna contraseña la abre.
+                'password' => null,
                 'locale' => app()->getLocale(),
                 // ⚠️ **El marketing NO se pide en el alta** (`[DECIDIDO owner, 2026-09-02]`, T8·c): se
                 // ofrece con su interruptor en «Mi cuenta → Privacidad», donde además se puede retirar

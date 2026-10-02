@@ -28,7 +28,7 @@ use Illuminate\Support\Facades\Log;
  * ⚠️ **Aquí no vive ninguna regla de identidad.** Este controlador hace lo que le toca a la capa de
  * entrega —el reto, la sesión, el destino de vuelta y el desenlace visible— y le pregunta a
  * {@see SocialLogin} a quién corresponde la afirmación. Es la misma frontera que hay entre
- * `AuthSessionController` y `PasswordLogin`.
+ * `AuthSessionController` y `EmailCodeLogin`.
  *
  * ⚠️⚠️ **Sin las dos claves configuradas, las dos rutas responden 404** — no un 500 ni una pantalla
  * de error. El hueco falla hacia invisible, como los demás huecos por instalación: una instalación

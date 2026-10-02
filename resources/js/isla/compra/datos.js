@@ -2,8 +2,8 @@
  * **«TUS DATOS» DE LA COMPRA DE LA ISLA, sin estado** (T3e·3 de `docs/specs/isla-y-landing-nueva.md` §4.10,
  * `DECISIONES #692`).
  *
- * ⚠️⚠️ **Aquí solo se mira que cada campo ESTÉ**, con las frases del diseño: el formato del correo, la política de
- * la contraseña o lo que valga como teléfono lo decide el SERVIDOR, y su «no» se enseña bajo el campo con su propio
+ * ⚠️⚠️ **Aquí solo se mira que cada campo ESTÉ**, con las frases del diseño: el formato del correo o lo que valga
+ * como teléfono lo decide el SERVIDOR, y su «no» se enseña bajo el campo con su propio
  * mensaje (ya traducido). Un navegador más estricto que el servidor bloquearía datos buenos —el «son 9 cifras» del
  * diseño es de un teléfono español, y el producto no es de un país—, y uno más laxo solo gasta una petición.
  */
@@ -132,12 +132,12 @@ export function firmaPendiente({ cuenta, contexto = null, documento = null }) {
 }
 
 /**
- * El formulario de la isla, en el del alta del motor (`stores/auth.js`). La fecha, en `Y-m-d` o vacía (`#792`). ⚠️ La
- * contraseña va VACÍA (A3, `#849`): el alta ya no la pide (`POST /auth/register` 1.55.0) y el servidor la guarda `NULL`.
+ * El formulario de la isla, en el del alta del motor (`stores/auth.js`). La fecha, en `Y-m-d` o vacía (`#792`). Sin
+ * contraseña: el alta no la pide desde la A3 (`#849`) y la API ya no la acepta desde la A5 (`#869`, contrato 1.59.0).
  */
 export function formularioDeAlta(f) {
     return {
         name: f.nombre.trim(), email: f.correo.trim(), phone: f.telefono.trim(), born_on: nacimientoDeAlta(f.nacimiento) ?? '',
-        password: '', accept_waiver: f.descargo === true,
+        accept_waiver: f.descargo === true,
     };
 }

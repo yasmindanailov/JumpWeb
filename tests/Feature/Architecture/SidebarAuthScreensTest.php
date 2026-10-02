@@ -31,15 +31,14 @@ use Tests\TestCase;
 class SidebarAuthScreensTest extends TestCase
 {
     /**
-     * Las dos claves de antetítulo que SOBREVIVEN, y quién las pinta.
+     * La clave de antetítulo que SOBREVIVE, y quién la pinta.
      *
-     * ⚠️⚠️ **No son un descuido de la limpieza: son de la WEB.** `reset` lo pinta la página de
-     * restablecer contraseña y `orders` la de reintentar el pago, las dos con `<x-site.page-head>`,
-     * que es del carril de la web y SÍ usa antetítulo — es una página, no una pantalla del cajón.
-     * Quien «termine el trabajo» borrándolas deja dos páginas con el rótulo vacío.
+     * ⚠️⚠️ **No es un descuido de la limpieza: es de la WEB.** `orders` la pinta la página de reintentar el pago con
+     * `<x-site.page-head>`, que SÍ usa antetítulo — es una página, no una pantalla del cajón. Quien «termine el trabajo»
+     * borrándola deja la página con el rótulo vacío. (Eran dos: `reset`, la de restablecer la contraseña, se fue con ella
+     * en la A5, `#869`.)
      */
     private const ANTETITULOS_DE_LA_WEB = [
-        'reset' => 'resources/views/auth/reset-password.blade.php',
         'orders' => 'resources/views/payments/retry-redirect.blade.php',
     ];
 
@@ -102,8 +101,8 @@ class SidebarAuthScreensTest extends TestCase
         $this->assertContains('resources/js/sidebar/account/ConfirmCode.vue', $rutas);
     }
 
-    /** Los dos antetítulos de la WEB siguen vivos y con quien los pinta. */
-    public function test_the_two_web_eyebrows_survive_with_their_painter(): void
+    /** El antetítulo de la WEB sigue vivo y con quien lo pinta. */
+    public function test_the_web_eyebrow_survives_with_its_painter(): void
     {
         foreach (self::ANTETITULOS_DE_LA_WEB as $grupo => $vista) {
             foreach (['es', 'en', 'fr'] as $idioma) {

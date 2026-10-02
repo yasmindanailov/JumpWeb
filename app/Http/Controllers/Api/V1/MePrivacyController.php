@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Domain\Identity\Contracts\Reconfirmation;
 use App\Domain\Identity\Exceptions\AccountHasUpcomingReservationsException;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\AccountAnalytics;
@@ -37,8 +36,8 @@ class MePrivacyController extends Controller
      * valores neutros y la historia contable se conserva **sin PII**. Para el titular el efecto es el
      * mismo —login imposible, datos personales fuera— y su email queda libre para re-registrarse.
      *
-     * ⚠️ **Exige reconfirmar la contraseña**, con el mismo limitador que `PUT me/password`: es la
-     * única gestión irreversible de las cinco.
+     * ⚠️ **Exige reconfirmar** con un código `confirm` (el único desde la A5, `#869`), con el limitador de
+     * todas las reconfirmaciones: es la única gestión irreversible.
      *
      * ⚠️ **`409` con una reserva por celebrar** (T5 · D8, `cumple-mixto.md` §25.4): la supresión
      * espera a que pase o se cancele, y el mensaje se lo explica — el cajón lo pinta tal cual
@@ -46,14 +45,13 @@ class MePrivacyController extends Controller
      */
     public function destroy(Request $request, AccountPrivacy $privacy): JsonResponse
     {
-        // La contraseña o un código `confirm` (A2a, `#855`).
         $data = $request->validate($this->reconfirmationRules());
 
         /** @var User $user */
         $user = $request->user();
 
         try {
-            $result = $privacy->anonymize($user, Reconfirmation::from($data), (string) $request->ip());
+            $result = $privacy->anonymize($user, $data['code'], (string) $request->ip());
         } catch (AccountHasUpcomingReservationsException) {
             return ApiErrorResponse::make(ApiErrorCode::AccountHasUpcomingReservations, 409);
         }

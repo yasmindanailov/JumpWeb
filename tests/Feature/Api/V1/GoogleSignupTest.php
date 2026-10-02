@@ -9,7 +9,6 @@ use App\Domain\Identity\Models\UserIdentity;
 use App\Domain\Identity\Models\WaiverSignature;
 use App\Domain\Identity\Services\LegalDocumentPublisher;
 use App\Domain\Platform\Models\Setting;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Testing\TestResponse;
 use Tests\Feature\Api\ApiTestCase;
 use Tests\Support\DrivesGoogleAuth;
@@ -114,11 +113,11 @@ class GoogleSignupTest extends ApiTestCase
     }
 
     /**
-     * ⚠️⚠️ **La contraseña nace INSERVIBLE y esto lo comprueba de verdad.** Nadie la conoce —ni
-     * siquiera nosotros—, así que la cuenta no se puede tomar por esa puerta; quien quiera una la pide
-     * con «he olvidado mi contraseña», que es lo que hace que esta cuenta no dependa de Google.
+     * ⚠️⚠️ **La cuenta nace SIN contraseña** (A5 de `specs/acceso-con-codigo.md`, `#869`; antes, una aleatoria e
+     * inservible): ningún cliente tiene, y una que nadie conoce era un hash que solo servía a quien robara la base. La
+     * cuenta no depende de Google para siempre porque su correo puede recibir el código para entrar.
      */
-    public function test_the_account_is_born_with_an_unusable_password(): void
+    public function test_the_account_is_born_without_a_password(): void
     {
         $this->arriveFromGoogle();
 
@@ -126,9 +125,7 @@ class GoogleSignupTest extends ApiTestCase
 
         $user = User::where('email', self::GOOGLE_EMAIL)->firstOrFail();
 
-        foreach (['', 'password', '12345678', self::GOOGLE_EMAIL] as $guess) {
-            $this->assertFalse(Hash::check($guess, (string) $user->password));
-        }
+        $this->assertNull($user->getRawOriginal('password'));
     }
 
     /**

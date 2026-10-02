@@ -32,7 +32,6 @@ return [
     'account' => [
         'title' => 'Mi cuenta',
         'subtitle' => 'Gestiona tus datos, tu acceso y tu privacidad.',
-        'wrong_password' => 'La contraseña actual no es correcta.',
         // Confirmar lo sensible de Mi cuenta con un código al correo (A4b del acceso con código, `#813`; antes, la
         // contraseña): los textos que el owner ya vio en la isla (`isla.mi_cuenta.codigo`). La pista, el «no», «Pedir otro
         // código» y su espera son los de `login.*`.
@@ -53,12 +52,6 @@ return [
             'pending_email_msg' => 'Falta confirmar :email con el código que le hemos enviado. El cambio caduca en :minutes min; hasta entonces sigues entrando con :current.',
             'pending_email_confirm' => 'Confirmar el correo',
             'pending_email_cancel' => 'Cancelar cambio',
-        ],
-        // Solo los dos de «ver la contraseña» del campo de la WEB (`components/ui/password-input`): cambiarla salió del cajón
-        // en la A4b (`#813`), como de la isla en su A3b.
-        'password' => [
-            'show' => 'Mostrar contraseña',
-            'hide' => 'Ocultar contraseña',
         ],
         'sessions' => [
             'title' => 'Sesiones',
@@ -262,17 +255,6 @@ return [
         'submitting' => 'Entrando…',
     ],
 
-    'reset' => [
-        'eyebrow' => 'Nueva contraseña',
-        'title' => 'Crea una nueva contraseña',
-        'intro' => 'Elige una contraseña nueva para tu cuenta.',
-        'email' => 'Email',
-        'password' => 'Nueva contraseña',
-        'password_confirmation' => 'Repite la contraseña',
-        'submit' => 'Guardar contraseña',
-        'submitting' => 'Guardando…',
-    ],
-
     'register' => [
         'title' => 'Crea tu cuenta',
         // Desde la A4a el alta es la cara de la puerta para un correo NUEVO: lo dice (la nota de la isla, `#857`).
@@ -292,8 +274,6 @@ return [
         // `validation.attributes.born_on` («fecha de nacimiento»), no con esto.
         'born_on' => 'Tu cumpleaños',
         'born_on_hint' => 'Opcional',
-        'password' => 'Contraseña',
-        'password_hint' => 'Mínimo 8 caracteres. Evita contraseñas comunes o filtradas.',
         'must_accept' => 'Debes aceptar esta condición para continuar.',
         'accept_waiver' => 'He leído y acepto el descargo de responsabilidad.',
         // Qué es el descargo, dicho junto a la casilla (`#588`, contenido T5): la casilla sola pedía
@@ -354,13 +334,8 @@ return [
         'email-already-verified' => 'Tu email ya estaba confirmado.',
         'verification-link-sent' => 'Te hemos reenviado el correo de verificación. Revisa tu bandeja (y la carpeta de spam).',
         'verification-resend-throttled' => 'Acabamos de enviarte el correo. Espera un minuto antes de pedir otro.',
-        'password-reset' => 'Contraseña actualizada. Ya puedes iniciar sesión.',
         'profile-updated' => 'Datos actualizados.',
-        'password-updated' => 'Contraseña actualizada. Hemos cerrado tus demás sesiones por seguridad.',
         'email-change-requested' => 'Hemos enviado un enlace al nuevo email para confirmar el cambio. Mientras tanto, tu cuenta sigue usando el email actual.',
-        'email-change-confirmed' => 'Email confirmado. Ya puedes usarlo para iniciar sesión.',
-        'email-change-expired' => 'El enlace para confirmar el cambio de email ha caducado. Vuelve a solicitarlo si todavía quieres cambiarlo.',
-        'email-change-taken' => 'Ese email lo ha registrado otra cuenta mientras esperabas la confirmación. Hemos cancelado el cambio; prueba con otro email.',
         'email-change-cancelled' => 'Cambio de email cancelado.',
         'email-change-resent' => 'Te hemos reenviado el enlace al nuevo email.',
         'logged-out-others' => 'Has cerrado la sesión en los demás dispositivos.',

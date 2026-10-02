@@ -6,7 +6,6 @@ use App\Domain\Identity\Contracts\SignupResult;
 use App\Domain\Identity\Models\WaiverSignature;
 use App\Domain\Identity\Services\BirthDatePolicy;
 use App\Domain\Identity\Services\LegalDocuments;
-use App\Domain\Identity\Services\PasswordPolicy;
 use App\Domain\Identity\Services\SelfSignup;
 use App\Domain\Identity\Services\WaiverAcceptance;
 use App\Domain\Identity\Services\WaiverSettings;
@@ -68,9 +67,8 @@ class AuthRegistrationController extends Controller
             'phone' => ['nullable', 'string', 'max:30'],
             // TP·1 (`#792`, `[DECIDIDO owner]`): entera y opcional; sin menores ni erratas (la política, una para las cuatro puertas).
             'born_on' => BirthDatePolicy::rules(),
-            // OPCIONAL desde la A1 del acceso con código (`#848`/`#849`): la cuenta nace sin contraseña y se entra con un
-            // código al correo. Quien aún la manda, con la misma exigencia; la A5 la retira del alta.
-            'password' => PasswordPolicy::optionalRules(),
+            // ⚠️ SIN contraseña (A5 de `specs/acceso-con-codigo.md`, `#869`): la cuenta nace sin ella y se entra con un código
+            // al correo. Una `password` que aún llegue no se valida, así que no viaja al dominio ni se guarda.
             // ⚠️⚠️ **Aquí NO hay casillas legales, desde la T8·c** (`[DECIDIDO owner, 2026-09-02]`,
             // spec §21.4.3). La privacidad se INFORMA con un enlace visible —el art. 13 no pide que
             // se acepte— y las condiciones se aceptan **en el momento del contrato**, que es donde
@@ -138,7 +136,6 @@ class AuthRegistrationController extends Controller
             'phone' => __('account.register.phone'),
             // ⚠️ El rótulo es «Tu cumpleaños» (`#792`), que en un aviso dice mal: «El campo tu cumpleaños no corresponde…».
             'born_on' => __('validation.attributes.born_on'),
-            'password' => __('account.register.password'),
         ];
     }
 
@@ -190,7 +187,6 @@ class AuthRegistrationController extends Controller
                 // Opcional (`#787`): sin él, la cuenta nace sin teléfono y se le pide al reservar un pack.
                 'phone' => $data['phone'] ?? null,
                 'born_on' => $data['born_on'] ?? null,
-                'password' => $data['password'] ?? null,
                 'waiver' => $waiver,
             ],
             (string) $request->ip(),
@@ -250,9 +246,9 @@ class AuthRegistrationController extends Controller
     public function resendVerification(Request $request, SelfSignup $signup): Response
     {
         // ⚠️ **Este endpoint sigue exigiendo el correo, y no se aflojó a propósito** (`#329`): su
-        // cuerpo es el `EmailRequest` del contrato, COMPARTIDO con `auth/password/forgot`, así que
-        // hacer el campo opcional aquí lo haría opcional también allí. Quien tiene sesión usa su
-        // hermano autenticado `POST /me/email/resend`, que no necesita decir quién es.
+        // cuerpo es el `EmailRequest` del contrato (lo compartía con `auth/password/forgot`, retirado
+        // en la A5). Quien tiene sesión usa su hermano autenticado `POST /me/email/resend`, que no
+        // necesita decir quién es.
         $data = $request->validate([
             'email' => ['required', 'string', 'email'],
         ]);

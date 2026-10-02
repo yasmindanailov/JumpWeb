@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.58.0
+  version: 1.59.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -84,26 +84,24 @@ paths:
       operationId: login
       summary: Abrir sesión
       description: |
-        Autentica con correo y contraseña **o con correo y código** y devuelve el perfil, con la misma
-        forma que `GET /me`: quien acaba de identificarse necesita justo eso, y devolverlo ahorra una
-        segunda petición.
+        Autentica con correo y **código** y devuelve el perfil, con la misma forma que `GET /me`: quien
+        acaba de identificarse necesita justo eso, y devolverlo ahorra una segunda petición.
 
         **1.55.0** (`specs/acceso-con-codigo.md`, A1): el `code` es el de seis cifras que `POST /auth/code`
-        envía al correo —vale 10 minutos, una sola vez y 5 intentos—. Se manda `password` o `code`, nunca
-        los dos. Si su correo no estaba confirmado, queda confirmado. La contraseña del cliente se retira
-        en una versión posterior.
+        envía al correo —vale 10 minutos, una sola vez y 5 intentos—. Si su correo no estaba confirmado,
+        queda confirmado. **1.59.0** (A5, `#869`): es la ÚNICA credencial; la contraseña del cliente se
+        retiró (antes, `password` o `code`). El personal entra al panel por su propia puerta.
 
         **1.58.0** (`#858`): con el código, el dispositivo queda **recordado 90 días sin uso** SOLO si se
         manda `remember: true` (la casilla «Mantener la sesión iniciada en este dispositivo», sin marcar de
         serie): una cookie de autenticación persistente no está exenta de consentimiento. Sin él, la sesión
         de siempre. Antes (1.55.0–1.57.0) el código recordaba siempre.
 
-        **Anti-enumeración** (`SEC-06`): unas credenciales que no casan devuelven siempre
-        `invalid_credentials`, sin distinguir si el correo existe. Lo que sí se distingue es el
-        limitador, que no revela nada de la cuenta y sí le dice a un cliente legítimo cuánto
-        esperar: hay un tope por (correo, IP) y otro por IP sola —este último es el que corta un
-        barrido de muchas cuentas desde el mismo origen—. **La contraseña y el código comparten los dos**:
-        los fallos con uno cuentan para el otro, aquí y en `POST /auth/tokens`.
+        **Anti-enumeración** (`SEC-06`): un código que no casa devuelve siempre `invalid_credentials`,
+        sin distinguir si el correo existe. Lo que sí se distingue es el limitador, que no revela nada
+        de la cuenta y sí le dice a un cliente legítimo cuánto esperar: hay un tope por (correo, IP) y
+        otro por IP sola —este último es el que corta un barrido de muchas cuentas desde el mismo
+        origen—. **Los comparte con `POST /auth/tokens`**: los fallos en una puerta cuentan en la otra.
       requestBody:
         required: true
         content:
@@ -183,10 +181,10 @@ paths:
       operationId: issueToken
       summary: Emitir un token (cliente nativo)
       description: |
-        La puerta de quien NO es un navegador de primera parte: autentica con correo y contraseña (o,
-        desde **1.55.0**, con correo y el código que envía `POST /auth/code`) y devuelve un token Bearer,
-        sin abrir sesión ni pedir CSRF. El cajón de la web no la usa: vive en el mismo dominio y sigue
-        con la cookie de sesión.
+        La puerta de quien NO es un navegador de primera parte: autentica con correo y el código que
+        envía `POST /auth/code` (desde **1.55.0**; desde **1.59.0**, A5, la única credencial: la
+        contraseña del cliente se retiró) y devuelve un token Bearer, sin abrir sesión ni pedir CSRF.
+        El cajón de la web no la usa: vive en el mismo dominio y sigue con la cookie de sesión.
 
         **Es la misma puerta que `POST /auth/login` a efectos de ataque** (`SEC-06`): mismas
         credenciales genéricas (`invalid_credentials`, sin distinguir si el correo existe) y los
@@ -194,9 +192,9 @@ paths:
         intentos fallidos en una cuentan en la otra.
 
         El token caduca (`expires_at`) y se renueva con `POST /auth/tokens/rotate`. Muere además por
-        `POST /auth/logout` (solo ese), «cerrar las demás sesiones», el cambio o el
-        restablecimiento de contraseña y la supresión de la cuenta. Cada cuenta conserva un máximo
-        de diez tokens vivos: al emitir el undécimo se retira el que lleva más tiempo sin usarse.
+        `POST /auth/logout` (solo ese), «cerrar las demás sesiones» y la supresión de la cuenta. Cada
+        cuenta conserva un máximo de diez tokens vivos: al emitir el undécimo se retira el que lleva
+        más tiempo sin usarse.
 
         La respuesta lleva `Cache-Control: no-store`: transporta una credencial.
       requestBody:
@@ -233,7 +231,7 @@ paths:
       description: |
         Emite un token nuevo con el mismo nombre de dispositivo y **revoca el de esta petición**, en
         una sola operación. El cliente lo llama al arrancar si su token tiene más de siete días: así
-        quien usa la app no vuelve a teclear la contraseña y un token olvidado caduca solo.
+        quien usa la app no vuelve a pedir un código y un token olvidado caduca solo.
 
         Solo tiene sentido con Bearer: una petición con cookie de sesión no trae ningún token que
         rotar y recibe `bad_request`.
@@ -348,7 +346,7 @@ paths:
       summary: Completar el alta con Google
       description: |
         Crea la cuenta con lo que Google **no** puede dar —el nombre corregido y el descargo— y **abre
-        sesión**: quien llega acaba de demostrar su identidad ante Google y no tiene contraseña que
+        sesión**: quien llega acaba de demostrar su identidad ante Google y no tiene nada más que
         teclear (es la misma decisión que el alta suelta desde `#331`).
 
         En la misma operación se escriben el sello de privacidad y su fila de `consents`, el vínculo
@@ -436,57 +434,8 @@ paths:
         '503':
           $ref: '#/components/responses/Maintenance'
 
-  /auth/password/forgot:
-    post:
-      tags: [Sesión]
-      operationId: requestPasswordReset
-      summary: Pedir el enlace de recuperación
-      description: |
-        Responde **202 exista o no la cuenta**. Aquí la anti-enumeración es estricta, al contrario
-        que en el alta: en el registro hay alguien intentando comprar y esconderlo cuesta la venta;
-        aquí no se gana nada diciéndolo y sí se regala un oráculo.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/EmailRequest'
-      responses:
-        '202':
-          description: Petición aceptada. No dice si esa cuenta existe.
-        '422':
-          $ref: '#/components/responses/ValidationFailed'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-        '503':
-          $ref: '#/components/responses/Maintenance'
-
-  /auth/password/reset:
-    post:
-      tags: [Sesión]
-      operationId: resetPassword
-      summary: Fijar la nueva contraseña
-      description: |
-        Con el token del correo. Al conseguirlo se invalidan **todas** las credenciales anteriores
-        del titular —sesiones y tokens de API—: es el caso de uso de quien ha perdido el control de
-        su cuenta.
-
-        Un token inválido, uno caducado y un correo inexistente devuelven el **mismo** 422.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PasswordResetRequest'
-      responses:
-        '204':
-          description: Contraseña cambiada. Toda credencial anterior deja de valer.
-        '422':
-          $ref: '#/components/responses/ValidationFailed'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-        '503':
-          $ref: '#/components/responses/Maintenance'
+  # Sin `POST /auth/password/forgot` ni `POST /auth/password/reset` desde 1.59.0 (A5 de
+  # `specs/acceso-con-codigo.md`, `#869`): el cliente no tiene contraseña que recuperar.
 
   /auth/logout:
     post:
@@ -2514,16 +2463,17 @@ paths:
         Nombre, teléfono, idioma y —si cambia— **solicitud** de cambio de correo.
 
         ⚠️⚠️ **El correo NO se cambia aquí: se SOLICITA.** El vigente sigue intacto y el nuevo espera
-        en `pending_email` hasta que el titular abra el enlace que se le manda **al buzón nuevo**. Esa
-        es la defensa de fondo: si alguien entra en una sesión ajena y pide el cambio, el dueño **no
-        pierde el acceso** — y además recibe un aviso al buzón viejo, con la dirección nueva
-        enmascarada.
+        en `pending_email` hasta que el titular escribe el código que se le manda **al buzón nuevo**
+        (`POST /me/pending-email/confirm`). Esa es la defensa de fondo: si alguien entra en una sesión
+        ajena y pide el cambio, el dueño **no pierde el acceso** — y además recibe un aviso al buzón
+        viejo, con la dirección nueva enmascarada.
 
-        **1.56.0**: se reconfirma con la contraseña o con un código de `POST /me/confirm-code` (`action: change_email`).
+        Se reconfirma con un código de `POST /me/confirm-code` (`action: change_email`; desde **1.56.0**,
+        y desde **1.59.0**, A5, el único: la contraseña del cliente se retiró).
 
-        ⚠️ **Reconfirmar la contraseña solo hace falta si el correo cambia.** Pedirla para corregir
-        una errata en el teléfono no defiende nada y hace que el titular evite la pantalla. Cuando se
-        pide, cuenta para el **mismo limitador** que `PUT /me/password`.
+        ⚠️ **Reconfirmar solo hace falta si el correo cambia.** Pedirlo para corregir una errata en el
+        teléfono no defiende nada y hace que el titular evite la pantalla. Cuando se pide, cuenta para
+        el **mismo limitador** que las demás reconfirmaciones.
 
         La respuesta trae el perfil ya actualizado: su `email` sigue siendo **el viejo** —que es lo
         que el cliente necesita ver para no creer que el cambio ya está hecho— y `pending_email` dice
@@ -2561,15 +2511,15 @@ paths:
         Ejerce el **art. 17** del RGPD sobre la cuenta de quien hace la petición.
 
         ⚠️⚠️ **NO borra la fila: la ANONIMIZA.** La identidad se sobrescribe con valores neutros
-        —nombre, correo, teléfono y contraseña— y se purga la PII de terceros de sus pedidos
+        —nombre, correo y teléfono— y se purga la PII de terceros de sus pedidos
         (nombres y alergias de los invitados). Lo que **se conserva** es la historia contable
         —códigos, importes y fechas, ya sin identidad—, porque la ley fiscal obliga a guardar la
         factura ≥4 años. Para el titular el efecto es el mismo: no puede volver a entrar, sus datos
         personales han salido, y su correo queda **libre** para registrarse de nuevo.
 
-        ⚠️ **Es irreversible, y por eso exige reconfirmar la contraseña actual** — con el mismo
-        limitador por (titular, IP) que `PUT /me/password`: cinco fallos seguidos y responde `429`. Desde **1.56.0**,
-        la contraseña o un código de `POST /me/confirm-code` (`action: delete_account`).
+        ⚠️ **Es irreversible, y por eso exige reconfirmar** con un código de `POST /me/confirm-code`
+        (`action: delete_account`; el único desde **1.59.0**, A5) — con el limitador por (titular, IP)
+        de todas las reconfirmaciones: cinco fallos seguidos y responde `429`.
 
         ⚠️ **Todas las credenciales del titular dejan de valer**, incluida la de esta petición: en el
         art. 17 no hay ninguna que conservar. Un cliente por Bearer debe dar su token por muerto tras
@@ -2577,7 +2527,7 @@ paths:
 
         ⚠️ La petición lleva CUERPO, que en `DELETE` es legal pero poco común: un cliente que use una
         capa HTTP que no lo permita tendrá que enviarlo igualmente — no hay variante por query, y no
-        la hay a propósito (una contraseña en la URL acabaría en los logs del servidor).
+        la hay a propósito (un código en la URL acabaría en los logs del servidor).
 
         ⚠️ **`409 account_has_upcoming_reservations` con una reserva POR CELEBRAR** (pagada, no
         cancelada y cuya franja no ha terminado): la supresión espera a que pase o se cancele, y el
@@ -2590,7 +2540,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PasswordConfirmation'
+              $ref: '#/components/schemas/CodeConfirmation'
       responses:
         '204':
           description: La cuenta ha quedado anonimizada y todas sus credenciales revocadas.
@@ -2679,17 +2629,18 @@ paths:
       operationId: resendMyEmailChange
       summary: Reenviar la confirmación del cambio de correo
       description: |
-        Vuelve a mandar el enlace al buzón nuevo y **resella la ventana de validez**: cuenta desde el
-        último envío, no desde el primero — si no, el enlace reenviado caducaría antes de llegar.
+        Vuelve a mandar el código al buzón nuevo y **resella la ventana del cambio**: cuenta desde el
+        último envío, no desde el primero — si no, el código reenviado serviría para un cambio que
+        caduca antes.
 
-        ⚠️ **Un reenvío por minuto.** Este limitador es aparte del de la contraseña: aquí no se está
+        ⚠️ **Un reenvío por minuto.** Este limitador es aparte del de reconfirmar: aquí no se está
         adivinando nada, se está mandando correo, y lo que se protege es el buzón del destinatario.
 
         ⚠️ Si no hay nada pendiente responde `204`, por lo mismo que la cancelación.
 
-        **1.57.0**: el correo lleva además un **código de seis cifras** para `POST /me/pending-email/confirm` (cada
+        **1.57.0**: el correo lleva un **código de seis cifras** para `POST /me/pending-email/confirm` (cada
         reenvío anula el anterior), y sale al buzón NUEVO de verdad —hasta esta versión salía al viejo—. También cinco
-        reenvíos por hora.
+        reenvíos por hora. **1.59.0** (A5, `#869`): solo el código; el enlace de antes se retiró.
       security:
         - sessionCookie: []
         - bearerAuth: []
@@ -2709,8 +2660,8 @@ paths:
       description: |
         **1.57.0** (`specs/acceso-con-codigo.md`, A2b). Completa el cambio de correo pedido en `PATCH /me` con el código
         que llegó al buzón NUEVO: el correo nuevo pasa a ser el de la cuenta, verificado, y el viejo recibe el aviso. Es
-        la prueba de que el buzón es de quien pidió el cambio, escrita en el mismo dispositivo. El enlace del correo sigue
-        valiendo mientras tanto.
+        la prueba de que el buzón es de quien pidió el cambio, escrita en el mismo dispositivo. Desde **1.59.0** (A5) es
+        la única: el enlace del correo se retiró.
 
         Devuelve el perfil, ya con el correo nuevo. Lo que no sale bien es un `422` por campo: `code` si el código no
         casa, la solicitud caducó o no hay nada pendiente; `email` si otra cuenta se quedó ese correo entretanto. El código
@@ -2754,8 +2705,8 @@ paths:
         alta la tiene retenida hasta que verifique, así que reenviarse el correo es lo único que
         desbloquea su firma.
 
-        ⚠️ El público NO se aflojó para esto: su cuerpo es el `EmailRequest` compartido con
-        `auth/password/forgot`, y hacer el campo opcional lo habría aflojado también allí.
+        ⚠️ El público NO se aflojó para esto: su cuerpo es el `EmailRequest` (que compartía con
+        `auth/password/forgot`, retirado en 1.59.0), y la sesión identifica mejor que un correo escrito.
 
         ⚠️ Hereda los dos cooldowns del reenvío —por IP y por buzón destinatario— y responde `204`
         también cuando el correo ya estaba verificado: ahí es un no-op.
@@ -2772,44 +2723,7 @@ paths:
         '503':
           $ref: '#/components/responses/Maintenance'
 
-  /me/password:
-    put:
-      tags: [Cuenta]
-      operationId: updateMyPassword
-      summary: Cambiar mi contraseña
-      description: |
-        Exige **reconfirmar la contraseña actual** y, al conseguirlo, **cierra las demás credenciales**
-        del titular —sesiones y tokens— conservando la que hace la petición. Es el caso de uso de quien
-        sospecha que alguien más entró: cambiar la contraseña sin revocar lo anterior no serviría de
-        nada si el intruso conserva una cookie viva o un Bearer.
-
-        ⚠️ **La contraseña nueva no se envía repetida.** Confirmar el campo es cosa de un formulario,
-        no del contrato: la web lo pide y un cliente nativo no tiene por qué.
-
-        ⚠️ **Los fallos están LIMITADOS** por (titular, IP): cinco seguidos y responde `429` con
-        `Retry-After`. El contador cuenta **solo los fallos** y se limpia al acertar, así que
-        equivocarse una vez no penaliza. Sin él, una sesión secuestrada permitiría probar contraseñas
-        sin techo antes de cambiarla.
-      security:
-        - sessionCookie: []
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PasswordChangeRequest'
-      responses:
-        '204':
-          description: Contraseña cambiada y demás credenciales revocadas.
-        '401':
-          $ref: '#/components/responses/Unauthenticated'
-        '422':
-          $ref: '#/components/responses/ValidationFailed'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-        '503':
-          $ref: '#/components/responses/Maintenance'
+  # Sin `PUT /me/password` desde 1.59.0 (A5 de `specs/acceso-con-codigo.md`, `#869`): el cliente no tiene contraseña.
 
   /me/sessions/revoke-others:
     post:
@@ -2820,9 +2734,10 @@ paths:
         Cierra las demás sesiones del titular y revoca sus demás tokens; **la credencial en curso
         sobrevive**, para que no se autoexpulse al defenderse.
 
-        Exige reconfirmar —la contraseña actual o, desde **1.56.0**, un código de `POST /me/confirm-code`—, con el
-        **mismo limitador** que `PUT /me/password`. Desde 1.56.0 cierra también las SESIONES vivas de los demás
-        dispositivos con cualquier almacén de sesiones: en su próxima petición dejan de estar dentro.
+        Exige reconfirmar con un código de `POST /me/confirm-code` (`action: close_sessions`; desde **1.56.0**, y el
+        único desde **1.59.0**, A5), con el **mismo limitador** que las demás reconfirmaciones. Desde 1.56.0 cierra
+        también las SESIONES vivas de los demás dispositivos con cualquier almacén de sesiones: en su próxima petición
+        dejan de estar dentro.
       security:
         - sessionCookie: []
         - bearerAuth: []
@@ -2831,7 +2746,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PasswordConfirmation'
+              $ref: '#/components/schemas/CodeConfirmation'
       responses:
         '204':
           description: Las demás credenciales han dejado de valer.
@@ -2852,8 +2767,8 @@ paths:
       description: |
         **1.56.0** (`specs/acceso-con-codigo.md`, A2a). Envía un código de seis cifras al correo de la cuenta para
         confirmar `action`: borrar la cuenta (`DELETE /me`), cambiar el correo (`PATCH /me`), desvincular Google
-        (`DELETE /me/identities/{provider}`) o cerrar las demás sesiones. Esas cuatro lo aceptan como `code` en vez de
-        `current_password`. Vale 10 minutos, una sola vez y 5 intentos; pedir otro anula el anterior.
+        (`DELETE /me/identities/{provider}`) o cerrar las demás sesiones. Esas cuatro lo piden como `code` (desde
+        **1.59.0**, A5, sin alternativa). Vale 10 minutos, una sola vez y 5 intentos; pedir otro anula el anterior.
 
         El correo dice para qué es: solo se pide con la sesión abierta, así que quien lo recibe sin haberlo pedido sabe
         que alguien la tiene. Un código por minuto y cinco por hora.
@@ -2886,7 +2801,7 @@ paths:
       description: |
         Enciende o apaga las comunicaciones comerciales (**art. 7.3**).
 
-        ⚠️⚠️ **NO pide contraseña, y es una decisión legal, no una omisión**: el art. 7.3 exige que
+        ⚠️⚠️ **NO pide reconfirmar, y es una decisión legal, no una omisión**: el art. 7.3 exige que
         retirar un consentimiento sea *tan fácil como darlo*, y ponerle fricción solo a la retirada
         sería incumplirlo por otra puerta.
 
@@ -2925,7 +2840,7 @@ paths:
       summary: Recibir la encuesta del día siguiente, o no
       description: |
         Enciende o apaga la encuesta que llega por correo al día siguiente de una visita (1.28.0,
-        `specs/encuestas.md` §4.3, `#740`). Es un correo de SERVICIO, no marketing: sin contraseña (apagarlo es
+        `specs/encuestas.md` §4.3, `#740`). Es un correo de SERVICIO, no marketing: sin reconfirmar (apagarlo es
         tan fácil como encenderlo) y sin consentimiento que sellar, solo la preferencia. El estado actual se lee
         en `GET /me` (`surveys_opt_out`). El propio correo lleva la baja de un toque, que escribe lo mismo.
 
@@ -2960,7 +2875,7 @@ paths:
         **Oponerse** (art. 21) a que la navegación se vincule a la cuenta, o volver a permitirlo
         (`docs/specs/analitica.md` §4.3, T3a·3). El consentimiento es la categoría «análisis» del aviso
         de cookies; esto es la puerta de la CUENTA para retirarlo, tan fácil como darlo (art. 7.3): sin
-        contraseña.
+        reconfirmar.
 
         `accepted: false` **desvincula** lo registrado (sesiones y hechos vuelven al agregado), **sella**
         la prueba (`consents` de tipo `analytics`, `revoked_at`) y pide el **olvido** en la herramienta
@@ -3026,7 +2941,7 @@ paths:
         consentimientos, roles y el historial de pedidos con su detalle de líneas, complementos,
         datos de evento y entradas emitidas.
 
-        ⚠️ **No exige reconfirmar la contraseña**, y es coherente con la web: descargarse los datos
+        ⚠️ **No exige reconfirmar**, y es coherente con la web: descargarse los datos
         propios no destruye ni cede nada, y poner fricción a un derecho que la ley quiere fácil de
         ejercer solo consigue que no se ejerza.
 
@@ -3112,11 +3027,10 @@ paths:
         se crea solo al entrar con un correo que ya tenía cuenta, se avisa por correo, y ese aviso
         solo sirve de algo si quien lo recibe **puede deshacerlo**.
 
-        ⚠️ **Exige la contraseña actual** y comparte el limitador de `PUT /me/password` — cinco
-        intentos por titular e IP—. No es una contradicción con el art. 12.2: la contraseña es lo que
-        impide que alguien se cierre a sí mismo la única puerta que tenía. Quien entró con Google y no
-        tiene ninguna la crea con «he olvidado mi contraseña». Desde **1.56.0**, en vez de la contraseña, un código de
-        `POST /me/confirm-code` (`action: unlink_google`): sin Google, se entra con un código al correo.
+        ⚠️ **Exige reconfirmar** con un código de `POST /me/confirm-code` (`action: unlink_google`;
+        desde **1.56.0**, y el único desde **1.59.0**, A5) y comparte el limitador de las demás
+        reconfirmaciones — cinco intentos por titular e IP—. Nadie se cierra la puerta al desvincular:
+        sin Google, se entra con un código al correo.
 
         ⚠️ **Idempotente**: desvincular lo que ya no está responde 204 igual. El titular pide un
         estado, no una transición.
@@ -3135,7 +3049,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PasswordConfirmation'
+              $ref: '#/components/schemas/CodeConfirmation'
       responses:
         '204':
           description: El vínculo ya no existe.
@@ -3899,8 +3813,8 @@ components:
       scheme: bearer
       description: |
         Modo cliente nativo. Token emitido por `POST /auth/tokens`, con caducidad, renovable con
-        `POST /auth/tokens/rotate` y revocable desde el borrado RGPD, el cambio y el
-        restablecimiento de contraseña, «cerrar otras sesiones» y `POST /auth/logout`.
+        `POST /auth/tokens/rotate` y revocable desde el borrado RGPD, «cerrar otras sesiones» y
+        `POST /auth/logout`.
 
   parameters:
     SidebarLang:
@@ -4975,8 +4889,8 @@ components:
           type: object
           additionalProperties: true
           description: |
-            Los rótulos de entrar (la puerta con código), darse de alta y el bloque de cuenta. Los de recuperar la
-            contraseña ya no viajan aquí: con sesión van en `SidebarSession.account`.
+            Los rótulos de entrar (la puerta con código), darse de alta y el bloque de cuenta. Los del área de
+            cliente, con sesión, van en `SidebarSession.account`.
         auth:
           type: object
           additionalProperties: true
@@ -5031,7 +4945,7 @@ components:
         account:
           type: object
           additionalProperties: true
-          description: Los rótulos del área de cliente (y los de recuperar la contraseña). Vacío sin sesión.
+          description: Los rótulos del área de cliente. Vacío sin sesión.
         locales:
           type: array
           description: Los idiomas que ofrece el selector del perfil. Lista vacía sin sesión.
@@ -5304,8 +5218,8 @@ components:
     ProfileUpdateRequest:
       type: object
       description: |
-        Los cuatro campos del perfil y, opcional, la fecha de nacimiento (1.49.0). `current_password` **solo hace falta
-        si `email` cambia**.
+        Los cuatro campos del perfil y, opcional, la fecha de nacimiento (1.49.0). `code` **solo hace falta si `email`
+        cambia**.
       required: [name, phone, locale, email]
       additionalProperties: false
       properties:
@@ -5332,32 +5246,26 @@ components:
           description: |
             El correo deseado. Si difiere del actual, **se solicita el cambio** y este valor NO pasa a
             ser el email del titular hasta que confirme desde el buzón nuevo.
-        current_password:
-          type: string
-          format: password
-          description: |
-            Obligatoria **solo** cuando `email` cambia —ella o `code` (1.56.0), una de las dos—.
         code:
           type: string
           maxLength: 16
-          description: '**1.56.0**. El código de `POST /me/confirm-code` (`action: change_email`), en vez de la contraseña.'
+          description: |
+            El código de `POST /me/confirm-code` (`action: change_email`), obligatorio **solo** cuando `email` cambia
+            (**1.56.0**; desde **1.59.0**, A5, sin la contraseña como alternativa: `current_password` ya no existe).
 
-    PasswordConfirmation:
+    CodeConfirmation:
       type: object
       description: |
-        Con qué reconfirma el titular una acción sensible: la contraseña actual o, desde **1.56.0**, el código de
-        `POST /me/confirm-code` —**una de las dos**; con las dos, o sin ninguna, `422`—. Si falla, el `422` va sobre el
-        campo que se mandó. **No se envía junto a ningún identificador**: quién la manda lo dice la credencial de la
-        petición.
+        Con qué reconfirma el titular una acción sensible: el código de seis cifras de `POST /me/confirm-code` (desde
+        **1.56.0**; el único desde **1.59.0**, A5 —antes, `PasswordConfirmation`, con la contraseña actual como
+        alternativa—). Si falla, `422` sobre `code`. **No se envía junto a ningún identificador**: quién lo manda lo dice
+        la credencial de la petición.
+      required: [code]
       additionalProperties: false
       properties:
-        current_password:
-          type: string
-          format: password
         code:
           type: string
           maxLength: 16
-          description: '**1.56.0**. El código de seis cifras de `POST /me/confirm-code`.'
 
     NewEmailConfirmation:
       type: object
@@ -5379,21 +5287,6 @@ components:
         action:
           type: string
           enum: [delete_account, change_email, unlink_google, close_sessions]
-    PasswordChangeRequest:
-      type: object
-      description: 'La contraseña actual —para reconfirmar— y la nueva.'
-      required: [current_password, password]
-      additionalProperties: false
-      properties:
-        current_password:
-          type: string
-          format: password
-        password:
-          type: string
-          format: password
-          description: |
-            La nueva. Debe cumplir la política del producto —mínimo 8 caracteres y no aparecer en el
-            corpus de filtraciones—, que vive en un solo sitio (`Identity\Services\PasswordPolicy`).
 
     PersonalDataExport:
       type: object
@@ -9372,17 +9265,14 @@ components:
     LoginRequest:
       type: object
       description: |
-        Credenciales de acceso: el correo y **`password` o `code`, uno de los dos** (con los dos, o sin
-        ninguno, `422`). El correo se normaliza en servidor (minúsculas y sin espacios).
-      required: [email]
+        Credenciales de acceso: el correo y el **código** (**1.59.0**, A5: el único; antes, `password` o
+        `code`). El correo se normaliza en servidor (minúsculas y sin espacios).
+      required: [email, code]
       additionalProperties: false
       properties:
         email:
           type: string
           format: email
-        password:
-          type: string
-          format: password
         code:
           type: string
           maxLength: 16
@@ -9392,9 +9282,9 @@ components:
         remember:
           type: boolean
           description: |
-            Mantener la sesión abierta más allá del cierre del navegador: con `code`, 90 días sin uso en
-            este dispositivo (**1.58.0**, `#858`: antes el código recordaba siempre); con `password`, lo de
-            siempre. Solo si la persona lo pide: nunca marcado de serie.
+            Mantener la sesión abierta más allá del cierre del navegador: 90 días sin uso en este
+            dispositivo (**1.58.0**, `#858`: antes el código recordaba siempre). Solo si la persona lo
+            pide: nunca marcado de serie.
 
     CodeRequest:
       type: object
@@ -9423,16 +9313,13 @@ components:
       type: object
       description: |
         Credenciales más el nombre del dispositivo, que es lo que el titular verá si algún día se listan.
-        **`password` o `code`, uno de los dos** (1.55.0), como en `LoginRequest`.
-      required: [email, device_name]
+        El correo y el **código**, como en `LoginRequest` (**1.59.0**, A5: el único; antes, `password` o `code`).
+      required: [email, code, device_name]
       additionalProperties: false
       properties:
         email:
           type: string
           format: email
-        password:
-          type: string
-          format: password
         code:
           type: string
           maxLength: 16
@@ -9596,10 +9483,10 @@ components:
 
         La única casilla que queda es la del descargo (`accept_waiver`).
 
-        **1.55.0** (`specs/acceso-con-codigo.md`, A1): la contraseña es **opcional**. Sin ella, la cuenta nace
-        sin contraseña y se entra con un código al correo (`POST /auth/code`). **1.58.0** (`#858`): con sesión,
-        el alta entra con la sesión de siempre, NO recordada (antes, 90 días): recordar el dispositivo solo se
-        pide al entrar con el código (`remember`).
+        **1.55.0** (`specs/acceso-con-codigo.md`, A1): la cuenta nace sin contraseña y se entra con un código
+        al correo (`POST /auth/code`); **1.59.0** (A5, `#869`): `password` ya no existe (era opcional).
+        **1.58.0** (`#858`): con sesión, el alta entra con la sesión de siempre, NO recordada (antes, 90 días):
+        recordar el dispositivo solo se pide al entrar con el código (`remember`).
       required: [name, email]
       additionalProperties: false
       properties:
@@ -9624,14 +9511,6 @@ components:
           description: |
             La fecha de nacimiento, **opcional** (1.49.0, `DECISIONES #792`), `Y-m-d`. No se admite futura, de menos de 18
             años ni de más de 120 (422 sobre `born_on`). Sin ella, la cuenta nace sin fecha.
-        password:
-          type: string
-          format: password
-          nullable: true
-          minLength: 8
-          description: |
-            **Opcional desde 1.55.0**. Si llega, mínimo 8 caracteres y no puede aparecer en filtraciones
-            conocidas.
         context:
           type: string
           enum: [standalone, purchase]
@@ -9981,29 +9860,10 @@ components:
 
     EmailRequest:
       type: object
-      description: Solo el correo. Se usa para pedir el enlace de recuperación y para reenviar la verificación.
+      description: Solo el correo. Se usa para reenviar la verificación (hasta 1.59.0, también para pedir el enlace de recuperación).
       required: [email]
       additionalProperties: false
       properties:
         email:
           type: string
           format: email
-
-    PasswordResetRequest:
-      type: object
-      description: Token del correo más la contraseña nueva, confirmada.
-      required: [token, email, password, password_confirmation]
-      additionalProperties: false
-      properties:
-        token:
-          type: string
-        email:
-          type: string
-          format: email
-        password:
-          type: string
-          format: password
-          minLength: 8
-        password_confirmation:
-          type: string
-          format: password

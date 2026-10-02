@@ -14,7 +14,7 @@ set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
 SAIL="docker compose exec -u sail -T laravel.test"
-TESTS="$SAIL php artisan test --filter=AuthCodeTest|LoginCodesTest|RememberedDeviceTest|MeConfirmationCodeTest|SessionBindingTest|MePendingEmailCodeTest|EmailChangeRecipientsTest|EmailChangeConfirmTest"
+TESTS="$SAIL php artisan test --filter=AuthCodeTest|LoginCodesTest|RememberedDeviceTest|MeConfirmationCodeTest|SessionBindingTest|MePendingEmailCodeTest|EmailChangeRecipientsTest|MeCredentialsTest|MePrivacyTest"
 
 CODES=app/Domain/Identity/Services/LoginCodes.php
 LOGIN=app/Domain/Identity/Services/EmailCodeLogin.php
@@ -137,7 +137,7 @@ mutar "el correo espera a la cola (hasta 60 s en producción)" "$CODEMAIL" \
   "\$user->notifyNow(\$mail);" \
   "\$user->notify(\$mail);"
 
-mutar "verificar con cubos propios (intentos gratis además de los de la contraseña)" "$LOGIN" \
+mutar "verificar con cubos propios (intentos gratis además de los de la puerta)" "$LOGIN" \
   "\$result = \$this->gate->guarded(\$email, \$ip, 'auth.code_login', function (string \$email) use (\$code): ?User {" \
   "\$result = (static fn (string \$email, \\Closure \$check): LoginResult => (\$u = \$check(Str::lower(trim(\$email)))) ? LoginResult::success(\$u) : LoginResult::invalidCredentials())(\$email, function (string \$email) use (\$code): ?User {"
 
@@ -200,12 +200,12 @@ mutar "salir deja la cookie de recuerdo en la petición (y se vuelve a entrar co
 
 # `#858` (el owner): recordado SOLO si se pide —la casilla «Mantener la sesión iniciada»—; el alta, nunca.
 mutar "con la casilla, entrar con el código no recuerda el dispositivo" "$SESSION" \
-  "Auth::guard('web')->login(\$result->user, remember: (bool) (\$credentials['remember'] ?? false));" \
-  "Auth::guard('web')->login(\$result->user, remember: false);"
+  "Auth::guard('web')->login(\$user, remember: (bool) (\$credentials['remember'] ?? false));" \
+  "Auth::guard('web')->login(\$user, remember: false);"
 
 mutar "sin pedirlo, entrar con el código recuerda igual (la cookie persistente sin consentimiento)" "$SESSION" \
-  "Auth::guard('web')->login(\$result->user, remember: (bool) (\$credentials['remember'] ?? false));" \
-  "Auth::guard('web')->login(\$result->user, remember: true);"
+  "Auth::guard('web')->login(\$user, remember: (bool) (\$credentials['remember'] ?? false));" \
+  "Auth::guard('web')->login(\$user, remember: true);"
 
 mutar "el alta recuerda el dispositivo sin que nadie lo pida" "$SIGNUP" \
   "            Auth::login(\$result->user);
@@ -213,20 +213,16 @@ mutar "el alta recuerda el dispositivo sin que nadie lo pida" "$SIGNUP" \
   "            Auth::login(\$result->user, remember: true);
             \$request->session()->regenerate();"
 
-# ── A2a · reconfirmar con un código (`#855`) ────────────────────────────────────────────────────
+# ── A2a · reconfirmar con un código (`#855`; desde la A5, `#869`, la única forma) ───────────────
 mutar "un código de ENTRAR confirma acciones sensibles" "$CREDS" \
-  "? \$this->codes->consume((string) \$user->email, LoginCode::PURPOSE_CONFIRM, (string) \$with->code)" \
-  "? \$this->codes->consume((string) \$user->email, LoginCode::PURPOSE_LOGIN, (string) \$with->code)"
+  "if (! \$this->codes->consume((string) \$user->email, LoginCode::PURPOSE_CONFIRM, \$code)) {" \
+  "if (! \$this->codes->consume((string) \$user->email, LoginCode::PURPOSE_LOGIN, \$code)) {"
 
-mutar "un código fallido no cuenta en el limitador de la contraseña (intentos gratis)" "$CREDS" \
+mutar "un código fallido no cuenta en el limitador (intentos gratis sobre una sesión robada)" "$CREDS" \
   "            RateLimiter::hit(\$key, self::WINDOW);
 
-            return \$with->isCode()" \
-  "            if (! \$with->isCode()) {
-                RateLimiter::hit(\$key, self::WINDOW);
-            }
-
-            return \$with->isCode()"
+            return CredentialChangeResult::wrongCode();" \
+  "            return CredentialChangeResult::wrongCode();"
 
 mutar "el código de confirmar no tiene techo (el buzón del dueño, lleno)" "$CREDS" \
   "        if (RateLimiter::tooManyAttempts(\$minuteKey, EmailCodeLogin::MAX_PER_EMAIL_PER_MINUTE)
@@ -237,9 +233,9 @@ mutar "el correo del código no dice para qué es" "$CONFIRMMAIL" \
   "            ->line(__('emails.confirmation_code.for', ['action' => __('emails.confirmation_code.actions.'.\$this->action)]))
 " ""
 
-mutar "el 422 de un código malo va sobre la contraseña" "$VERDICTS" \
-  "            fields: \$result->wasWrongCode()" \
-  "            fields: false"
+mutar "el 422 de un código malo no va sobre \`code\` (la pantalla no sabe dónde pintarlo)" "$VERDICTS" \
+  "fields: ['code' => [__('api.confirm.wrong_code')]]" \
+  "fields: ['current_password' => [__('api.confirm.wrong_code')]]"
 
 # ── A2a · la revocación que no depende del driver (`RGPD-06`) ───────────────────────────────────
 mutar "la sesión no se ata al entrar" "$PROVIDER" \
@@ -306,14 +302,13 @@ mutar "el código del correo nuevo espera a la cola" "$PROFILE" \
 mutar "reenviar no manda un código nuevo" "$PROFILE" \
   "        \$user->forceFill(['pending_email_sent_at' => now()])->save();
         \$this->sendNewEmailCode(\$user, \$ip);" \
-  "        \$user->forceFill(['pending_email_sent_at' => now()])->save();
-        \$user->notify(new VerifyPendingEmail);"
+  "        \$user->forceFill(['pending_email_sent_at' => now()])->save();"
 
 mutar "reenviar no tiene techo por hora (el buzón de un tercero, lleno)" "$PROFILE" \
   " || RateLimiter::tooManyAttempts(\$hourKey, EmailCodeLogin::MAX_PER_EMAIL_PER_HOUR)" ""
 
 mutar "la copia del registro guarda el código del correo nuevo" "$PENDINGMAIL" \
-  "        return \$this->code === null ? [] : [\$this->shown()];" \
+  "        return [\$this->shown()];" \
   "        return [];"
 
 echo

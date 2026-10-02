@@ -151,11 +151,10 @@ final class SidebarBoot
                 // de `privacy_notice`, y desde `#566` el enlace vive en su propia fila (`privacy_read`)
                 // con la URL viajando suelta en `urls.privacy`.
                 'register' => Arr::only(__('account.register'), [
-                    // ⚠️ Sin `password`, `password_hint`, `phone` ni `phone_hint` desde la A4a (`acceso-con-codigo.md`
-                    // §4.11): el alta del cajón ya no pide contraseña (se entra con un código) ni teléfono (lo pide el paso
-                    // de pagar cuando el pedido lo exige, `#787`). Las claves siguen en `lang/`: las leen el servidor
-                    // (los nombres de campo del alta) y la página de restablecer, hasta la A5. Y sin `cta`: era el rótulo
-                    // de la pestaña «Crea tu cuenta», y las pestañas se fueron con ella.
+                    // ⚠️ Sin `phone` ni `phone_hint` desde la A4a (`acceso-con-codigo.md` §4.11): el teléfono lo pide el paso
+                    // de pagar cuando el pedido lo exige (`#787`); sus claves siguen en `lang/` porque las lee el servidor
+                    // (los nombres de campo del alta). La contraseña y su pista se fueron de `lang/` con la A5 (`#869`).
+                    // Y sin `cta`: era el rótulo de la pestaña «Crea tu cuenta», y las pestañas se fueron con ella.
                     'title', 'subtitle', 'name', 'email',
                     'accept_waiver', 'waiver_read', 'privacy_notice',
                     // TP·1 (`#792`): la fecha de nacimiento y su pista (para qué se pide). Las pintan el alta, la

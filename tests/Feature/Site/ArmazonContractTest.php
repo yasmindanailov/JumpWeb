@@ -44,7 +44,7 @@ class ArmazonContractTest extends TestCase
      * que se olvide del armazón se queda sin navegación y nadie se entera.
      */
     private const VIEWS_WITH_ARMAZON = [
-        'auth/reset-password',
+        // (`auth/reset-password` se fue con la contraseña del cliente, A5, `#869`.)
         'auth/verify-email',
         'errors/404',
         'errors/page-maintenance',

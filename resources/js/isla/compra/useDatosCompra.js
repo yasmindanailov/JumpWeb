@@ -3,7 +3,7 @@
  * `DECISIONES #692`).
  *
  * El alta, el acceso y lo que se debe antes de pagar son los del motor (`usePurchaseFlow`: `submitRegister()` con
- * el contexto `purchase` —pay-first—, `submitLogin()`, `buyerDue`), y el descargo, su store. Lo que es de la isla
+ * el contexto `purchase` —pay-first—, `enterWith()` tras entrar con el código, `buyerDue`), y el descargo, su store. Lo que es de la isla
  * vive aquí: el formulario del diseño (un solo paso para quien no tiene cuenta, «ya existe» al ENVIAR, `#688`), qué
  * pedir con sesión y a dónde llevar cada «no». Las reglas sin estado, en `datos.js` con su `node --test`.
  *

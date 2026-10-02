@@ -8,29 +8,26 @@ use App\Http\Api\ApiErrorResponse;
 use Illuminate\Http\JsonResponse;
 
 /**
- * **El veredicto de una reconfirmación de contraseña, traducido a HTTP** — una sola vez.
+ * **El veredicto de una reconfirmación, traducido a HTTP** — una sola vez.
  *
- * Lo comparten los endpoints de `/api/v1` que exigen reconfirmar la contraseña actual: `PUT
- * me/password`, `POST me/sessions/revoke-others` (tanda 2 · paso 6) y `DELETE me` (paso 8). Nace al
- * aparecer la **segunda** copia, que es la regla que esta tanda ha aplicado cinco veces ya —el
- * rótulo de día, la política de contraseñas, el campo de contraseña, `form-outcome.js` y la lista de
- * idiomas—: se extrae antes de la segunda copia, no después de la cuarta (`DECISIONES #120(r)`).
+ * Lo comparten los endpoints de `/api/v1` que exigen reconfirmar con un código `confirm` (desde la A5 de
+ * `specs/acceso-con-codigo.md`, `#869`, el único: la contraseña del cliente se retiró): `POST me/sessions/revoke-others`,
+ * `DELETE me/identities/{provider}` y `DELETE me`. Nace al aparecer la **segunda** copia (`DECISIONES #120(r)`): se
+ * extrae antes de la segunda copia, no después de la cuarta.
  *
- * ⚠️ **Lo que de verdad protege que esté en un solo sitio** son las dos decisiones de abajo. Una
- * copia que devolviera 401 en vez de 422, o que se olvidara del `Retry-After`, no rompería ningún
- * test del OTRO endpoint — y por eso divergiría sin que nadie lo viera.
+ * ⚠️ **Lo que de verdad protege que esté en un solo sitio** son las dos decisiones de abajo. Una copia que devolviera 401
+ * en vez de 422, o que se olvidara del `Retry-After`, no rompería ningún test del OTRO endpoint — y por eso divergiría sin
+ * que nadie lo viera.
  */
 trait TranslatesCredentialVerdicts
 {
     /**
-     * ⚠️ **La contraseña equivocada es un 422 POR CAMPO, no un 401**, y la diferencia con el login no
-     * es cosmética: aquí el cliente **sí está autenticado**, así que un 401 le diría «tu sesión no
-     * vale» cuando lo que pasa es que se ha equivocado escribiendo. El 422 por campo es además lo
-     * que la interfaz necesita para pintarlo bajo su input — mismo criterio que el registro cuando el
-     * correo ya existe.
+     * ⚠️ **El código equivocado es un 422 POR CAMPO, no un 401**, y la diferencia con la puerta no es cosmética: aquí el
+     * cliente **sí está autenticado**, así que un 401 le diría «tu sesión no vale» cuando lo que pasa es que se ha
+     * equivocado escribiendo. El 422 sobre `code` es además lo que la interfaz necesita para pintarlo bajo su campo.
      *
-     * ⚠️ **El 429 lleva `Retry-After`**: sin él, el cliente no sabe cuándo volver y lo único que
-     * puede hacer es reintentar en bucle, que es exactamente lo que el limitador quiere evitar.
+     * ⚠️ **El 429 lleva `Retry-After`**: sin él, el cliente no sabe cuándo volver y lo único que puede hacer es reintentar
+     * en bucle, que es exactamente lo que el limitador quiere evitar.
      */
     private function credentialDenial(CredentialChangeResult $result): JsonResponse
     {
@@ -43,27 +40,16 @@ trait TranslatesCredentialVerdicts
             );
         }
 
-        // Sobre el campo que se mandó (A2a de `specs/acceso-con-codigo.md`, `#855`): el código, o la contraseña.
-        return ApiErrorResponse::make(
-            ApiErrorCode::ValidationFailed,
-            422,
-            fields: $result->wasWrongCode()
-                ? ['code' => [__('api.confirm.wrong_code')]]
-                : ['current_password' => [__('account.account.wrong_password')]],
-        );
+        return ApiErrorResponse::make(ApiErrorCode::ValidationFailed, 422, fields: ['code' => [__('api.confirm.wrong_code')]]);
     }
 
     /**
-     * Las reglas de la reconfirmación: la contraseña actual **o** un código `confirm` (A2a, `#855`), uno de los dos. La
-     * contraseña del cliente se retira en la A5 y el código pasará a ser el único.
+     * Las reglas de la reconfirmación: un código `confirm` (A2a, `#855`), el que pide `POST /me/confirm-code`.
      *
      * @return array<string, array<int, string>>
      */
     private function reconfirmationRules(): array
     {
-        return [
-            'current_password' => ['required_without:code', 'prohibits:code', 'string'],
-            'code' => ['required_without:current_password', 'string', 'max:16'],
-        ];
+        return ['code' => ['required', 'string', 'max:16']];
     }
 }

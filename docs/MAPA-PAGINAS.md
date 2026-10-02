@@ -77,13 +77,11 @@ de datos.
 |---|---|---|
 | `/registro` | Alta: datos mínimos + aceptar privacidad, términos y **waiver**. ⚠️ **PUERTA desde `#122`**: sirve la home y abre el cajón en su zona de alta | 🌐 · 🪟 zona del cajón |
 | `/login` · `POST /logout` | Iniciar / cerrar sesión. ⚠️ **PUERTA desde `#122`**; la ruta no es opcional: es el destino del middleware `auth` de Laravel | 🌐 · 🪟 zona del cajón |
-| `/recuperar-contrasena` | Petición de recuperación (nombre de ruta `password.request`). ⚠️ **PUERTA desde `#122`** | 🌐 · 🪟 zona del cajón |
-| `/restablecer-contrasena/{token}` | Form de reset desde el email. | enlace email · 📄 |
+| `/recuperar-contrasena` · `/restablecer-contrasena/{token}` | ⚠️ **301 a `/login` desde la A5** (`#869`): el cliente no tiene contraseña; un marcador o un correo viejo llegan a la puerta | 🌐 · 301 |
 | `/email/verificar` (+ `/{id}/{hash}` + `POST …/reenviar`) | Verificación de email. | 🔑 · 📄 |
 | `/mi-cuenta` | Resumen del área privada (mínima). | 🔑 · 📄 |
 | `/mi-cuenta/pedidos` | **«Mis pedidos»** — unifica las «entradas» y «reservas» de la v1 (QR incluidos). `POST /mi-cuenta/pedidos/{code}/reintentar-pago` = reintento de pago. | 🔑 · 📄 |
 | `/mi-cuenta/exportar` | Export JSON de portabilidad RGPD. | 🔑 · 📄 |
-| `/mi-cuenta/email/confirmar/{id}/{hash}` | Confirmación de cambio de email (enlace firmado). | enlace email · 📄 |
 
 > **(v1):** «editar mis datos» (`/mi-cuenta/datos`) es un **modal Livewire sin URL propia**.
 
@@ -96,6 +94,7 @@ español — otra entrada para la decisión de slugs de Fase 1.
 | Ruta real | Qué es (ruta v1) |
 |---|---|
 | `/admin` · `/admin/login` · `POST /admin/logout` | Dashboard: ventas, próximas reservas, ocupación. |
+| `/admin/contrasena` | Crear la contraseña del panel, por el enlace FIRMADO que un administrador envía desde la ficha (`#870`, sin sesión). |
 | `/admin/calendario` | **Calendario unificado** (FullCalendar), color por zona + estado «preparado». Feed JSON `/admin/calendario/eventos`; PDF resumen del día `/admin/calendario/resumen-dia`. Permiso `calendar.view`. |
 | `/admin/crear-pedido` | Pedido manual de back-office: efectivo/datáfono + alta por invitación. Permiso `orders.create_manual`. |
 | `/admin/users` | Gestión de usuarios *(v1: `/admin/usuarios`)*. |

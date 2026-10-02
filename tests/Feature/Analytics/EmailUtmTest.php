@@ -14,7 +14,6 @@ use App\Notifications\AccountAlreadyExists;
 use App\Notifications\CustomerAccountCreated;
 use App\Notifications\EmailChangeRequested;
 use App\Notifications\GoogleBusinessLocationChanged;
-use App\Notifications\PasswordReset;
 use App\Notifications\SocialIdentityLinked;
 use App\Notifications\VerifyEmailAddress;
 use App\Notifications\VerifyEmailForPurchase;
@@ -53,8 +52,8 @@ class EmailUtmTest extends TestCase
         // encuestas (`SurveyInvitation`, el correo del día siguiente); 28 desde «Avísame de fechas» (`#750`,
         // `BirthdayComingNotice`, el correo semanas antes del cumple); 29 desde el acceso con código (`#853`, `LoginCode`);
         // 30 con el código de confirmar (`#855`, `ConfirmationCode`); 31 con la contraseña del panel (A5a, `#870`,
-        // `PanelPasswordLink`, al personal).
-        $this->assertCount(31, EmailUtm::keys());
+        // `PanelPasswordLink`, al personal); y 30 otra vez sin el de restablecer la del cliente (A5b, `#869`, `PasswordReset`).
+        $this->assertCount(30, EmailUtm::keys());
     }
 
     public function test_the_tag_only_touches_our_own_links_and_keeps_the_fragment(): void
@@ -110,11 +109,11 @@ class EmailUtmTest extends TestCase
         $user = User::factory()->create(['email_verified_at' => null]);
         $user->forceFill(['pending_email' => 'nuevo@example.com'])->save();
 
+        // (Sin `PasswordReset` desde la A5, `#869`: el correo de restablecer la contraseña se retiró con ella.)
         $correos = [
-            new PasswordReset('tok-de-prueba'),
             new VerifyEmailAddress,
             new VerifyEmailForPurchase('R-ABC123'),
-            new VerifyPendingEmail,
+            new VerifyPendingEmail('482913'),
             new AccountAlreadyExists,
             new CustomerAccountCreated('temporal'),
             new SocialIdentityLinked('google'),
@@ -156,7 +155,8 @@ class EmailUtmTest extends TestCase
         $user = User::factory()->create(['email_verified_at' => null]);
         $user->forceFill(['pending_email' => 'nuevo@example.com'])->save();
 
-        foreach ([new VerifyEmailAddress, new VerifyPendingEmail] as $notificacion) {
+        // (El enlace firmado del correo nuevo, `VerifyPendingEmail`, se retiró en la A5, `#869`: hoy lleva solo el código.)
+        foreach ([new VerifyEmailAddress] as $notificacion) {
             $url = (string) $notificacion->toMail($user)->actionUrl;
 
             $this->assertTrue(URL::hasValidSignature(Request::create($url), true, EmailUtm::IGNORED_QUERY), "$url no valida ignorando la atribución");
@@ -185,14 +185,7 @@ class EmailUtmTest extends TestCase
         $this->assertNotSame(403, $this->get(EmailUtm::tag($verificacion, 'verify_email_address'))->status());
         $this->assertTrue($user->fresh()->hasVerifiedEmail(), 'el enlace con UTM verificó de verdad');
         $this->get($verificacion.'&foo=1')->assertForbidden();
-
-        $otro = User::factory()->create();
-        // `pending_email_sent_at` es lo que el controlador exige además de la firma (anti-enumeración): sin él, 403.
-        $otro->forceFill(['pending_email' => 'cambio@example.com', 'pending_email_sent_at' => now()])->save();
-        $confirmacion = (string) (new VerifyPendingEmail)->toMail($otro)->actionUrl;
-
-        $this->assertStringContainsString('utm_medium=verify_pending_email', $confirmacion);
-        $this->assertNotSame(403, $this->get($confirmacion)->status());
+        // (La segunda ruta firmada que se probaba aquí, la del cambio de correo, se retiró en la A5, `#869`.)
     }
 
     public function test_email_sent_is_recorded_with_its_key_and_only_for_customers(): void

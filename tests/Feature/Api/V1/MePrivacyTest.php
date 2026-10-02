@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Tests\Feature\Api\ApiTestCase;
+use Tests\Support\IssuesCodes;
 
 /**
  * **Tanda 2 · paso 8** — `DELETE /api/v1/me` (art. 17) y `GET /api/v1/me/export` (art. 20)
@@ -33,14 +34,17 @@ use Tests\Feature\Api\ApiTestCase;
  *  - que la purga alcance la **PII de terceros** —nombres y alergias de menores— y **todas** las
  *    credenciales, incluida la de la petición (`RGPD-01`, `RGPD-06`). Una superficie que hubiera
  *    reimplementado el borrado habría hecho lo obvio y se habría dejado eso;
- *  - que la reconfirmación esté **LIMITADA** y comparta contador con `PUT /me/password`: dos
- *    limitadores distintos serían cinco intentos por cada endpoint, o sea diez;
+ *  - que la reconfirmación esté **LIMITADA** y comparta contador con las demás (cerrar las otras
+ *    sesiones): dos limitadores distintos serían cinco intentos por cada endpoint, o sea diez;
  *  - y que el export sirva **exactamente el mismo documento** que la descarga de la web. Ésa es la
  *    guarda que se pondría roja el día que alguien reescribiera uno de los dos.
+ *
+ * ▶ Desde la A5 (`specs/acceso-con-codigo.md` §4.12, `#869`) se reconfirma solo con un CÓDIGO `confirm`: la contraseña
+ * era el intermediario de estas guardas, no su sujeto, y se re-apuntaron al código (`CONVENCIONES` §3.quater).
  */
 class MePrivacyTest extends ApiTestCase
 {
-    private const PASSWORD = 'contrasena-actual-9';
+    use IssuesCodes;
 
     protected function setUp(): void
     {
@@ -54,7 +58,6 @@ class MePrivacyTest extends ApiTestCase
         $user = new User;
         $user->name = 'Titular';
         $user->email = 'titular@ejemplo.test';
-        $user->password = self::PASSWORD;
         $user->phone = '600111222';
         $user->locale = 'es';
         $user->email_verified_at = now();
@@ -132,7 +135,7 @@ class MePrivacyTest extends ApiTestCase
         $this->orderFor($user);
 
         $this->actingAs($user)
-            ->deleteJson(self::ROOT.'/me', ['current_password' => self::PASSWORD])
+            ->deleteJson(self::ROOT.'/me', ['code' => $this->confirmCodeFor($user)])
             ->assertNoContent();
 
         $fresh = User::find($user->id);
@@ -163,7 +166,7 @@ class MePrivacyTest extends ApiTestCase
         [$mine, $theirs] = [$this->sesionAtada($user->id), $this->sesionAtada($other->id)];
         $event = AnalyticsEvent::query()->create(['event_id' => Visitor::mint(), 'session_id' => $mine->id, 'visitor_id' => $mine->visitor_id, 'user_id' => $user->id, 'name' => 'order_paid', 'occurred_at' => now(), 'received_at' => now()]);
 
-        $this->actingAs($user)->deleteJson(self::ROOT.'/me', ['current_password' => self::PASSWORD])->assertNoContent();
+        $this->actingAs($user)->deleteJson(self::ROOT.'/me', ['code' => $this->confirmCodeFor($user)])->assertNoContent();
 
         $this->assertNull($mine->fresh()->user_id, 'la sesión del titular sigue atada a él');
         $this->assertNull($event->fresh()->user_id, 'el hecho del titular sigue atado a él');
@@ -206,7 +209,7 @@ class MePrivacyTest extends ApiTestCase
         $line = $order->items()->whereNull('parent_item_id')->firstOrFail();
 
         $this->actingAs($user)
-            ->deleteJson(self::ROOT.'/me', ['current_password' => self::PASSWORD])
+            ->deleteJson(self::ROOT.'/me', ['code' => $this->confirmCodeFor($user)])
             ->assertStatus(409)
             ->assertValidResponse(409)
             ->assertJsonPath('error.code', 'account_has_upcoming_reservations');
@@ -228,7 +231,7 @@ class MePrivacyTest extends ApiTestCase
             ->forceFill(['cancelled_at' => now()])->save();
 
         $this->actingAs($user)
-            ->deleteJson(self::ROOT.'/me', ['current_password' => self::PASSWORD])
+            ->deleteJson(self::ROOT.'/me', ['code' => $this->confirmCodeFor($user)])
             ->assertNoContent();
 
         $this->assertTrue(User::find($user->id)->isAnonymized());
@@ -258,7 +261,7 @@ class MePrivacyTest extends ApiTestCase
         ]);
 
         $this->actingAs($user)
-            ->deleteJson(self::ROOT.'/me', ['current_password' => self::PASSWORD])
+            ->deleteJson(self::ROOT.'/me', ['code' => $this->confirmCodeFor($user)])
             ->assertNoContent();
 
         $this->assertTrue(User::find($user->id)->isAnonymized());
@@ -272,7 +275,7 @@ class MePrivacyTest extends ApiTestCase
         $order->forceFill(['status' => Order::STATUS_PENDING, 'paid_at' => null])->save();
 
         $this->actingAs($user)
-            ->deleteJson(self::ROOT.'/me', ['current_password' => self::PASSWORD])
+            ->deleteJson(self::ROOT.'/me', ['code' => $this->confirmCodeFor($user)])
             ->assertNoContent();
 
         $this->assertTrue(User::find($user->id)->isAnonymized());
@@ -290,7 +293,7 @@ class MePrivacyTest extends ApiTestCase
         $line = $order->items()->whereNull('parent_item_id')->firstOrFail();
 
         $this->actingAs($user)
-            ->deleteJson(self::ROOT.'/me', ['current_password' => self::PASSWORD])
+            ->deleteJson(self::ROOT.'/me', ['code' => $this->confirmCodeFor($user)])
             ->assertNoContent();
 
         $line->refresh();
@@ -310,7 +313,7 @@ class MePrivacyTest extends ApiTestCase
         $user->createToken('tablet');
 
         $this->actingAs($user)
-            ->deleteJson(self::ROOT.'/me', ['current_password' => self::PASSWORD])
+            ->deleteJson(self::ROOT.'/me', ['code' => $this->confirmCodeFor($user)])
             ->assertNoContent();
 
         $this->assertSame(
@@ -319,17 +322,17 @@ class MePrivacyTest extends ApiTestCase
         );
     }
 
-    public function test_a_wrong_password_is_a_422_on_its_field_and_deletes_nothing(): void
+    public function test_a_wrong_code_is_a_422_on_its_field_and_deletes_nothing(): void
     {
         $user = $this->holder();
 
         $response = $this->actingAs($user)
-            ->deleteJson(self::ROOT.'/me', ['current_password' => 'no-es-esta']);
+            ->deleteJson(self::ROOT.'/me', ['code' => $this->wrongCode($this->confirmCodeFor($user))]);
 
         $response->assertStatus(422)->assertValidResponse(422);
-        $this->assertNotEmpty($response->json('error.fields.current_password'));
+        $this->assertNotEmpty($response->json('error.fields.code'));
 
-        $this->assertFalse(User::find($user->id)->isAnonymized(), 'se ha borrado la cuenta sin la contraseña');
+        $this->assertFalse(User::find($user->id)->isAnonymized(), 'se ha borrado la cuenta sin el código');
     }
 
     public function test_it_blocks_after_five_wrong_attempts_and_says_how_long(): void
@@ -338,41 +341,42 @@ class MePrivacyTest extends ApiTestCase
 
         for ($i = 0; $i < AccountCredentials::MAX_ATTEMPTS; $i++) {
             $this->actingAs($user)
-                ->deleteJson(self::ROOT.'/me', ['current_password' => 'mal-'.$i])
+                ->deleteJson(self::ROOT.'/me', ['code' => '000000'])
                 ->assertStatus(422);
         }
 
-        $blocked = $this->actingAs($user)->deleteJson(self::ROOT.'/me', ['current_password' => 'mal-otra']);
+        $blocked = $this->actingAs($user)->deleteJson(self::ROOT.'/me', ['code' => '000000']);
 
         $blocked->assertStatus(429)->assertValidResponse(429);
         $this->assertNotEmpty($blocked->headers->get('Retry-After'));
 
-        // ⚠️ Y con la BUENA también corta: el techo es del intento, no del acierto. Si se levantara
-        // al acertar, quien va probando podría seguir indefinidamente el día que diera con ella.
+        // ⚠️ Y con el BUENO también corta: el techo es del intento, no del acierto. Si se levantara
+        // al acertar, quien va probando podría seguir indefinidamente el día que diera con él.
         $this->actingAs($user)
-            ->deleteJson(self::ROOT.'/me', ['current_password' => self::PASSWORD])
+            ->deleteJson(self::ROOT.'/me', ['code' => $this->confirmCodeFor($user)])
             ->assertStatus(429);
 
         $this->assertFalse(User::find($user->id)->isAnonymized());
     }
 
     /**
-     * ⚠️ **El limitador es el MISMO que el del cambio de contraseña, y eso es la decisión.** Un
+     * ⚠️ **El limitador es el MISMO que el de las demás reconfirmaciones, y eso es la decisión.** Un
      * contador propio por endpoint daría cinco intentos aquí *más* cinco allí sobre la misma cuenta
-     * y la misma IP: el techo real sería el doble sin que nadie lo hubiera decidido.
+     * y la misma IP: el techo real sería el doble sin que nadie lo hubiera decidido. (Hasta la A5, el
+     * otro lado de esta prueba era `PUT /me/password`; hoy, cerrar las demás sesiones.)
      */
-    public function test_it_shares_the_limiter_with_the_password_change(): void
+    public function test_it_shares_the_limiter_with_the_other_reconfirmations(): void
     {
         $user = $this->holder();
 
         for ($i = 0; $i < AccountCredentials::MAX_ATTEMPTS; $i++) {
             $this->actingAs($user)
-                ->putJson(self::ROOT.'/me/password', ['current_password' => 'mal-'.$i, 'password' => 'Rd8!zqLm4-Vt7wXe'])
+                ->postJson(self::ROOT.'/me/sessions/revoke-others', ['code' => '000000'])
                 ->assertStatus(422);
         }
 
         $this->actingAs($user)
-            ->deleteJson(self::ROOT.'/me', ['current_password' => self::PASSWORD])
+            ->deleteJson(self::ROOT.'/me', ['code' => $this->confirmCodeFor($user)])
             ->assertStatus(429);
     }
 
@@ -396,7 +400,7 @@ class MePrivacyTest extends ApiTestCase
         // opcional en el código.
         $this->actingAs($user)
             ->withHeader('Origin', (string) config('app.url'))
-            ->deleteJson(self::ROOT.'/me', ['current_password' => self::PASSWORD])
+            ->deleteJson(self::ROOT.'/me', ['code' => $this->confirmCodeFor($user)])
             ->assertNoContent()
             ->assertSessionHas('status', AccountPrivacy::FAREWELL_STATUS);
 
@@ -411,10 +415,10 @@ class MePrivacyTest extends ApiTestCase
 
     public function test_deleting_rejects_an_anonymous_request(): void
     {
-        $this->deleteJson(self::ROOT.'/me', ['current_password' => 'x'])->assertStatus(401);
+        $this->deleteJson(self::ROOT.'/me', ['code' => '123456'])->assertStatus(401);
     }
 
-    public function test_the_current_password_is_required_to_delete(): void
+    public function test_the_code_is_required_to_delete(): void
     {
         $this->actingAs($this->holder())->deleteJson(self::ROOT.'/me', [])->assertStatus(422);
     }
@@ -562,11 +566,11 @@ class MePrivacyTest extends ApiTestCase
     }
 
     /**
-     * ⚠️⚠️ **NO pide contraseña, y es una decisión legal**: el art. 7.3 exige que retirar sea *tan
+     * ⚠️⚠️ **NO pide reconfirmar, y es una decisión legal**: el art. 7.3 exige que retirar sea *tan
      * fácil como dar*. Este caso lo fija para que nadie «endurezca» la retirada creyendo que mejora
      * la seguridad — endurecerla es incumplir.
      */
-    public function test_withdrawing_does_not_ask_for_the_password(): void
+    public function test_withdrawing_does_not_ask_to_reconfirm(): void
     {
         $user = $this->holder();
         $user->forceFill(['marketing_opt_in' => true])->save();
@@ -880,7 +884,7 @@ class MePrivacyTest extends ApiTestCase
         $this->orderFor($user);
 
         $this->actingAs($user)
-            ->deleteJson(self::ROOT.'/me', ['current_password' => self::PASSWORD])
+            ->deleteJson(self::ROOT.'/me', ['code' => $this->confirmCodeFor($user)])
             ->assertNoContent();
 
         $response = $this->actingAs(User::find($user->id))->getJson(self::ROOT.'/me/export');

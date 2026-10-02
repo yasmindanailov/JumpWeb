@@ -172,9 +172,9 @@ describe('«Tus datos», solo si falta algo (`#785`)', () => {
     });
 });
 
-test('el formulario del alta del motor, sin espacios de más y con la contraseña VACÍA (A3: el alta ya no la pide)', () => {
+test('el formulario del alta del motor, sin espacios de más y SIN contraseña (la API ya no la acepta: A5, `#869`)', () => {
     assert.deepEqual(formularioDeAlta({ ...lleno, nombre: ' Ana García ', correo: ' ana@correo.es ' }), {
-        name: 'Ana García', email: 'ana@correo.es', phone: '612345214', born_on: '', password: '', accept_waiver: true,
+        name: 'Ana García', email: 'ana@correo.es', phone: '612345214', born_on: '', accept_waiver: true,
     });
 });
 

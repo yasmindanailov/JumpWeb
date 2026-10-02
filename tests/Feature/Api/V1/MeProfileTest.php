@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Validator;
 use Tests\Feature\Api\ApiTestCase;
+use Tests\Support\IssuesCodes;
 
 /**
  * **Tanda 2 · paso 7** — `PATCH /api/v1/me` y el ciclo del cambio de correo
@@ -19,14 +20,17 @@ use Tests\Feature\Api\ApiTestCase;
  * Lo que estas guardas protegen, más allá de «guarda el nombre»:
  *  - que **el correo NO cambie al guardar**: se solicita, y el vigente sigue valiendo. Es lo que
  *    impide que quien entre en una sesión ajena deje al dueño fuera de su propia cuenta;
- *  - que salgan **DOS** avisos —al buzón nuevo con el enlace y al viejo para delatar el intento— y
+ *  - que salgan **DOS** avisos —al buzón nuevo con su código y al viejo para delatar el intento— y
  *    que el segundo lleve la dirección **enmascarada**;
  *  - que la doble comprobación de unicidad mire también el `pending_email` **de otros**;
  *  - y que el reenvío tenga su cooldown, que protege un buzón ajeno.
+ *
+ * ▶ Desde la A5 (`#869`) el cambio de correo se reconfirma solo con un CÓDIGO `confirm`: estas pruebas mandaban la
+ * contraseña como intermediario y se re-apuntaron (`CONVENCIONES` §3.quater).
  */
 class MeProfileTest extends ApiTestCase
 {
-    private const PASSWORD = 'contrasena-actual-9';
+    use IssuesCodes;
 
     protected function setUp(): void
     {
@@ -42,7 +46,6 @@ class MeProfileTest extends ApiTestCase
         $user->email = $email;
         $user->phone = '600000000';
         $user->locale = 'es';
-        $user->password = self::PASSWORD;
         $user->email_verified_at = now();
         $user->save();
 
@@ -65,7 +68,7 @@ class MeProfileTest extends ApiTestCase
 
     // ── Sin tocar el correo ───────────────────────────────────────────────────────────────────
 
-    public function test_it_saves_the_plain_fields_without_asking_for_the_password(): void
+    public function test_it_saves_the_plain_fields_without_asking_to_reconfirm(): void
     {
         $user = $this->holder();
 
@@ -94,7 +97,7 @@ class MeProfileTest extends ApiTestCase
         $this->actingAs($user)
             ->patchJson(self::ROOT.'/me', $this->payload($user, [
                 'email' => 'nueva@ejemplo.test',
-                'current_password' => self::PASSWORD,
+                'code' => $this->confirmCodeFor($user),
             ]))
             ->assertOk()
             ->assertJsonPath('email', 'titular@ejemplo.test')
@@ -114,7 +117,7 @@ class MeProfileTest extends ApiTestCase
         $this->actingAs($user)
             ->patchJson(self::ROOT.'/me', $this->payload($user, [
                 'email' => 'nueva@ejemplo.test',
-                'current_password' => self::PASSWORD,
+                'code' => $this->confirmCodeFor($user),
             ]))
             ->assertOk();
 
@@ -135,11 +138,11 @@ class MeProfileTest extends ApiTestCase
         });
     }
 
-    public function test_changing_the_email_needs_the_password_and_a_wrong_one_changes_nothing(): void
+    public function test_changing_the_email_needs_the_code_and_a_wrong_one_changes_nothing(): void
     {
         $user = $this->holder();
 
-        // Sin contraseña: el cuerpo ni siquiera es válido.
+        // Sin código: el cuerpo ni siquiera es válido.
         $this->actingAs($user)
             ->patchJson(self::ROOT.'/me', $this->payload($user, ['email' => 'nueva@ejemplo.test']))
             ->assertStatus(422);
@@ -148,17 +151,17 @@ class MeProfileTest extends ApiTestCase
             ->patchJson(self::ROOT.'/me', $this->payload($user, [
                 'email' => 'nueva@ejemplo.test',
                 'name' => 'Cambiado',
-                'current_password' => 'no-es-esta',
+                'code' => $this->wrongCode($this->confirmCodeFor($user)),
             ]));
 
         $response->assertStatus(422)->assertValidResponse(422);
-        $this->assertNotEmpty($response->json('error.fields.current_password'));
+        $this->assertNotEmpty($response->json('error.fields.code'));
 
         $user->refresh();
         $this->assertNull($user->pending_email);
         // ⚠️ **Y tampoco se guarda el nombre**: la reconfirmación protege la petición ENTERA, no solo
         // el correo. Si los campos «inocentes» se aplicaran igual, bastaría con adjuntar un cambio de
-        // correo fallido para editar el perfil ajeno sin saber la contraseña.
+        // correo fallido para editar el perfil ajeno sin el código.
         $this->assertSame('Titular', $user->name);
     }
 
@@ -175,7 +178,7 @@ class MeProfileTest extends ApiTestCase
             $response = $this->actingAs($user)
                 ->patchJson(self::ROOT.'/me', $this->payload($user, [
                     'email' => $taken,
-                    'current_password' => self::PASSWORD,
+                    'code' => $this->confirmCodeFor($user),
                 ]));
 
             $response->assertStatus(422);
@@ -224,7 +227,7 @@ class MeProfileTest extends ApiTestCase
         $this->actingAs($user)
             ->patchJson(self::ROOT.'/me', $this->payload($user, [
                 'email' => 'nueva@ejemplo.test',
-                'current_password' => self::PASSWORD,
+                'code' => $this->confirmCodeFor($user),
             ]))
             ->assertOk();
     }

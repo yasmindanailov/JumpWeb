@@ -1,10 +1,9 @@
 <script setup>
 /**
  * El campo de texto del sistema de diseño (`Field.jsx`): etiqueta, ayuda y error, 48px como mínimo. Sirve igual
- * sobre claro y sobre tinta: solo usa tokens de control. Con `type="password"` lleva «ver» dentro, porque en el
- * móvil escribir a ciegas es lo que hace que alguien se equivoque dos veces y lo deje. Los atributos del campo
- * (`autocomplete`, `inputmode`, `placeholder`…) van al `<input>`; el `style`, a la envoltura, como en el diseño.
- * El valor, con `v-model`.
+ * sobre claro y sobre tinta: solo usa tokens de control. Los atributos del campo (`autocomplete`, `inputmode`,
+ * `placeholder`…) van al `<input>`; el `style`, a la envoltura, como en el diseño. El valor, con `v-model`.
+ * ▶ Sin el «ver» de `type="password"` desde la A5 (`#869`): la isla ya no pide ninguna contraseña.
  * **«¿Querías decir…?»** (`suggest` del zip del 26-09, §4.16): con `type="email"`, al salir del campo propone el correo
  * bien escrito —el QR, el recibo y la invitación llegan por correo: un «gmial.com» no da error, da una reserva que no
  * llega—, y un toque lo escribe. La regla es la MISMA de la fiesta del SPA (`ui/correo.js::sugerirCorreo`, que
@@ -14,7 +13,6 @@ import { computed, ref, useAttrs } from 'vue';
 import { idDeCampo } from './piezas.js';
 import { useTextos } from '../piezas/textos.js';
 import { sugerirCorreo } from '../../ui/correo.js';
-import IconoLucide from './IconoLucide.vue';
 
 defineOptions({ inheritAttrs: false });
 
@@ -36,10 +34,8 @@ const attrs = useAttrs();
 const { t } = useTextos();
 
 const foco = ref(false);
-const ver = ref(false);
 const fid = computed(() => idDeCampo(props.id, props.label, props.type));
 const mensaje = computed(() => (props.error || props.hint ? `${fid.value}-m` : undefined));
-const clave = computed(() => props.type === 'password');
 const sugerencia = computed(() => (props.type === 'email' && props.suggest && ! foco.value ? sugerirCorreo(String(props.modelValue ?? '')) : null));
 const delCampo = computed(() => Object.fromEntries(Object.entries(attrs).filter(([k]) => k !== 'style' && k !== 'class')));
 </script>
@@ -57,14 +53,14 @@ const delCampo = computed(() => Object.fromEntries(Object.entries(attrs).filter(
             v-if="optional && !required"
             :style="{ marginLeft: '8px', fontFamily: 'var(--font-ui)', fontSize: 'var(--fs-caption)', fontWeight: 'var(--fw-regular)', color: 'var(--text-muted)' }"
         >{{ t('pieza.opcional') }}</span></label>
-        <div :style="{ display: 'flex', alignItems: 'center', gap: '10px', height: size === 'lg' ? 'var(--control-lg)' : 'var(--control-md)', padding: clave ? '0 4px 0 16px' : '0 16px', background: 'var(--control-bg)', border: `1px solid ${error ? 'var(--border-danger)' : foco ? 'var(--control-border-strong)' : 'var(--control-border)'}`, borderRadius: 'var(--r-md)', boxShadow: foco ? 'var(--ring)' : 'none', transition: 'var(--t-hover)' }">
+        <div :style="{ display: 'flex', alignItems: 'center', gap: '10px', height: size === 'lg' ? 'var(--control-lg)' : 'var(--control-md)', padding: '0 16px', background: 'var(--control-bg)', border: `1px solid ${error ? 'var(--border-danger)' : foco ? 'var(--control-border-strong)' : 'var(--control-border)'}`, borderRadius: 'var(--r-md)', boxShadow: foco ? 'var(--ring)' : 'none', transition: 'var(--t-hover)' }">
             <span
                 v-if="$slots.prefijo"
                 :style="{ display: 'flex', color: 'var(--text-muted)' }"
             ><slot name="prefijo" /></span>
             <input
                 :id="fid"
-                :type="clave && ver ? 'text' : type"
+                :type="type"
                 :required="required"
                 :aria-invalid="error ? 'true' : undefined"
                 :aria-describedby="mensaje"
@@ -75,19 +71,6 @@ const delCampo = computed(() => Object.fromEntries(Object.entries(attrs).filter(
                 @blur="foco = false"
                 @input="emit('update:modelValue', $event.target.value)"
             >
-            <button
-                v-if="clave"
-                type="button"
-                :aria-label="ver ? t('pieza.ocultar_clave') : t('pieza.mostrar_clave')"
-                :aria-pressed="ver"
-                :style="{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto', width: '44px', height: '40px', border: 'none', borderRadius: 'var(--r-sm)', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer' }"
-                @click="ver = !ver"
-            >
-                <IconoLucide
-                    :name="ver ? 'eye-off' : 'eye'"
-                    :size="19"
-                />
-            </button>
             <span
                 v-if="$slots.sufijo"
                 :style="{ display: 'flex', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: 'var(--fs-caption)' }"

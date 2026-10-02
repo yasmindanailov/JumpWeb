@@ -1772,8 +1772,8 @@ class SidebarBundleBudgetTest extends TestCase
         // `node --test`; lo que esto dice es que sigue CABLEADO al clic de «Ir a pagar».
         '/me/reservation-eligibility' => 'preguntar si el titular puede reservar antes de llevarlo a pagar',
         // ⚠️ 4.4a·2: identificarse sin salir del cajón. La comprobación de credenciales y los dos
-        // limitadores de `SEC-06` viven en `Identity\Services\PasswordLogin`, que es el MISMO servicio
-        // que usa el modal de la web: el cajón no puede tener su propia copia de nada de eso.
+        // limitadores de `SEC-06` viven en el dominio (`EmailCodeLogin` sobre `LoginGate`, desde la A5
+        // la única puerta): el cajón no puede tener su propia copia de nada de eso.
         '/auth/login' => 'identificar al cliente contra el servicio que también usa la web',
         // ⚠️⚠️ **Aquí el centinela era `logged-in`, y CAMBIÓ el 2026-08-23**
         // (`specs/account-context-vue.md` §4.6): ese evento murió con el componente Livewire que lo

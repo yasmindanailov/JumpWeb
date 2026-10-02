@@ -15,13 +15,15 @@ guardas 8, 9 y 10) · `scripts/mutar-guarda8.sh` · `CHANGELOG.md` · `phpstan.n
 **EL ACCESO CON CÓDIGO, la A1** (`#853`/`#854`): `Identity\Models\LoginCode`, `Identity\Services\{LoginCodes,EmailCodeLogin,LoginGate,RememberedDevice}`,
 `Identity\Contracts\CodeRequestResult`, `Platform\Contracts\HidesSecretsInCopy`, `Notifications\LoginCode`, `AuthCodeController`,
 `RefreshRememberedDevice`, sus dos migraciones, `{LoginCodes,RememberedDevice}Test`, `Api\V1\AuthCodeTest` y `scripts/mutar-acceso-codigo.sh`
-(y, AVISANDO, del SPA: `RecordEmailSend`, `EmailTiming`) · **y la A2a** (`#855`): `Identity\Contracts\Reconfirmation`,
+(y, AVISANDO, del SPA: `RecordEmailSend`, `EmailTiming`) · **y la A2a** (`#855`):
 `Identity\Services\{CodeMail,SessionBinding}`, `Identity\Listeners\BindSessionOnLogin`, `EnsureSessionIsCurrent`,
 `Notifications\ConfirmationCode`, `Auth\LogoutController`, `Api\V1\MeConfirmationCodeTest` y `Auth\SessionBindingTest` · **y la
-A2b** (`#856`): `Identity\Contracts\EmailChangeOutcome`, `Notifications\Support\ChoosesRecipient`, `Account\EmailChangeController`,
+A2b** (`#856`): `Identity\Contracts\EmailChangeOutcome`, `Notifications\Support\ChoosesRecipient`,
 `Api\V1\MePendingEmailCodeTest` y `Account\EmailChangeRecipientsTest` · **y la A3b** (`#857`): `isla/cuenta/CampoCodigoConfirmar.vue` ·
 **y la A5a** (`#870`): `Identity\Services\PanelPasswordLinks`, `Notifications\PanelPasswordLink`, `App\Filament\Auth\PanelPassword`,
 `Admin\Users\SendPanelPasswordActionTest` y `scripts/mutar-contrasena-panel.sh` (y, AVISANDO, del SPA: `EmailUtm`, `MailTextCatalogTest`) ·
+**y la A5b** (`#869`; retiró `Reconfirmation`, `EmailChangeController` y lo de la contraseña del cliente): `tests/Support/IssuesCodes.php`
+y `Auth\{LoginGate,CustomerPasswordRetired}Test` ·
 **EL SEO** (`specs/seo.md`): la spec, `scripts/{sonda-seo.mjs,mutar-seo.sh}`, `RobotsController`, `MapsEmbed::coordinates()`,
 `VenueAddress::parts()` y el grafo de `StructuredData` (y, AVISANDO, `components/{pagina,layout}.blade.php` y `deploy.sh`) ·
 **LA POLÍTICA DE COOKIES de producción** (`#858`/`#859`): su spec, `App\Http\Legal\CookieInventory`, la migración

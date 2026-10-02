@@ -36,21 +36,6 @@ return [
         'badge' => 'Cuenta creada',
         'headline' => 'Tu cuenta ya está lista',
     ],
-    /*
-     * LOS DOS CORREOS DEL FRAMEWORK (`#508`) — el enlace de restablecer contraseña y el de verificar
-     * el correo de una cuenta nueva. No estaban en el inventario de 23 porque el artboard contó
-     * carpetas y éstos salían de `Illuminate\Auth\Notifications`.
-     *
-     * ⚠️ Aquí SOLO viven las tres piezas del molde —chapa, titular y línea de adelanto— más el
-     * asunto. El CUERPO sigue saliendo de las cadenas del framework, ya traducidas en `lang/es.json`
-     * y `lang/fr.json`: esta tanda no cambia ni una palabra de lo que el cliente venía leyendo.
-     */
-    'password_reset' => [
-        'subject' => 'Restablece tu contraseña',
-        'preheader' => 'Si no lo has pedido tú no tienes que hacer nada: el enlace caduca solo.',
-        'badge' => 'Falta un paso',
-        'headline' => 'Restablece tu contraseña',
-    ],
     // La contraseña del PANEL (A5a de `specs/acceso-con-codigo.md` §4.12, `#870`): la envía un administrador desde la ficha
     // de una cuenta del panel. Va al EQUIPO, no a un cliente: sin UTM y fuera de lo editable.
     'panel_password_link' => [
@@ -63,6 +48,14 @@ return [
         'expires' => 'El enlace vale :minutes minutos y una sola vez.',
         'ignore' => 'Si no lo esperabas, ignora este correo: tu contraseña no cambia.',
     ],
+    /*
+     * EL CORREO DEL FRAMEWORK (`#508`): el de verificar el correo de una cuenta nueva (eran dos; el de restablecer la
+     * contraseña se retiró en la A5, `#869`). No estaba en el inventario de 23 porque el artboard contó carpetas y éste
+     * salía de `Illuminate\Auth\Notifications`.
+     *
+     * ⚠️ Aquí SOLO viven las tres piezas del molde —chapa, titular y línea de adelanto— más el asunto. El CUERPO sigue
+     * saliendo de las cadenas del framework, ya traducidas en `lang/es.json` y `lang/fr.json`.
+     */
     'verify_email' => [
         'subject' => 'Verifica tu email',
         'preheader' => 'Un clic y tu cuenta queda lista. Si no la has creado tú, ignora este correo.',
@@ -112,25 +105,18 @@ return [
         'badge' => 'Falta confirmar',
         'headline' => 'Confirma tu email para seguir',
     ],
+    // De la versión con ENLACE (retirada en la A5, `#869`) queda solo «si no fuiste tú», que el correo del código reutiliza.
     'verify_pending_email' => [
-        'subject' => 'Confirma tu nuevo email',
-        'preheader' => 'El enlace caduca en 60 minutos. Si no has pedido el cambio, ignora este correo.',
-        'greeting' => '¡Hola!',
-        'intro' => 'Has pedido cambiar el email de tu cuenta a este. Para confirmarlo, pulsa el botón.',
-        'action' => 'Confirmar mi nuevo email',
-        'expires' => 'Este enlace caduca en 60 minutos.',
         'ignore' => 'Si no has pedido este cambio, puedes ignorar este correo: tu cuenta seguirá usando el email anterior.',
-        'badge' => 'Falta confirmar',
-        'headline' => 'Confirma tu nuevo email',
     ],
-    // El mismo correo, con el CÓDIGO (A2b, `#856`): el código es el titular; el botón sigue hasta la A5.
+    // El mismo correo, con el CÓDIGO (A2b, `#856`): el código es el titular. Sin botón desde la A5.
     'verify_pending_email_code' => [
         'subject' => ':code es el código de tu nuevo email',
         'preheader' => 'Escríbelo donde pediste el cambio. Si no lo has pedido tú, ignora este correo.',
         'badge' => 'Confirma tu nuevo email',
         'headline' => ':code',
         'intro' => 'Has pedido cambiar el email de tu cuenta a este. Escribe el código en la pantalla donde lo pediste.',
-        'validity' => 'El código vale :minutes minutos y una sola vez. También puedes confirmarlo con el botón.',
+        'validity' => 'El código vale :minutes minutos y una sola vez.',
     ],
     'email_change_requested' => [
         'subject' => 'Se ha pedido cambiar tu email',

@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Domain\Identity\Contracts\LoginResult;
+use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\EmailCodeLogin;
-use App\Domain\Identity\Services\PasswordLogin;
 use App\Domain\Identity\Services\RememberedDevice;
 use App\Http\Api\ApiErrorCode;
 use App\Http\Api\ApiErrorResponse;
@@ -26,9 +26,9 @@ use Illuminate\Support\Facades\Auth;
  * para las peticiones que vienen de un origen declarado *stateful*.
  *
  * El controlador **no comprueba credenciales ni cuenta intentos**: eso es
- * `Identity\Services\PasswordLogin`, el mismo servicio que usa el modal de la web desde este paso.
- * Si lo hiciera aquí, la API tendría su propia copia de los dos limitadores de `SEC-06` y bastaría
- * con que una de las dos se dejara el de IP-sola para reabrir el credential-stuffing distribuido.
+ * `Identity\Services\EmailCodeLogin`, sobre los dos limitadores de `SEC-06` (`LoginGate`), los mismos
+ * que la emisión de tokens. Si lo hiciera aquí, la API tendría su propia copia y bastaría con que una
+ * de las dos se dejara el de IP-sola para reabrir el barrido distribuido.
  *
  * ⚠️ **La EMISIÓN de tokens Bearer no vive aquí**: viaja a Fase 6 con la app que los consuma
  * (`DECISIONES #29`). `logout` sí contempla ya esa vía —revoca el token de la petición si lo hay—
@@ -42,15 +42,15 @@ class AuthSessionController extends Controller
      * Abre sesión y devuelve el perfil, la misma forma que `GET me`: quien acaba de identificarse
      * necesita justo eso, y devolverlo evita una segunda petición para pintar la pantalla.
      *
-     * ▶ **Con la contraseña o con el CÓDIGO al correo** (A1 de `specs/acceso-con-codigo.md`, `#848`): uno de los dos,
-     * nunca los dos. El código lo pide antes `POST /auth/code`. La contraseña se retira en la A5.
+     * ▶ **Con el CÓDIGO al correo** (A1 de `specs/acceso-con-codigo.md`, `#848`), que pide antes `POST /auth/code`. La
+     * contraseña del cliente se retiró en la A5 (`#869`): el personal entra al panel por su propia puerta (`SEC-14`).
      *
      * ⚠️ **Recordado 90 días sin uso SOLO si lo pide** (`remember`, la casilla «Mantener la sesión iniciada»; `#858`,
      * `[DECIDIDO owner]`, corrige el «siempre» de `#848`·3): una cookie de autenticación PERSISTENTE no está exenta de
      * consentimiento (GT29, dictamen 4/2012, §3.2; la guía de la AEPD exime solo las «de sesión»), y la casilla sin marcar
      * es la forma de que la pida quien la quiere. Sin ella, la sesión de siempre.
      */
-    public function login(Request $request, PasswordLogin $passwordLogin, EmailCodeLogin $codeLogin): UserResource|JsonResponse
+    public function login(Request $request, EmailCodeLogin $codeLogin): UserResource|JsonResponse
     {
         // Sin sesión no hay dónde abrirla (ver `RequiresStatefulSession`). Se comprueba ANTES de
         // validar y de tocar el limitador: no tiene sentido gastarle intentos a quien no puede
@@ -62,34 +62,24 @@ class AuthSessionController extends Controller
 
         $credentials = $request->validate([
             'email' => ['required', 'string', 'email'],
-            'password' => ['required_without:code', 'prohibits:code', 'string'],
-            'code' => ['required_without:password', 'string', 'max:16'],
+            'code' => ['required', 'string', 'max:16'],
             'remember' => ['sometimes', 'boolean'],
         ]);
 
         // ⚠️ Quién estaba en esta sesión ANTES de autenticar. Se lee aquí porque dentro de un
-        // instante `Auth::attempt()` lo habrá sustituido; para qué sirve, más abajo.
+        // instante el `login()` lo habrá sustituido; para qué sirve, más abajo.
         $previousId = Auth::id();
 
-        if (isset($credentials['code'])) {
-            // El servicio solo verifica (sirve también al token); abrir la sesión —recordada si lo pidió— es de aquí.
-            $result = $codeLogin->verify($credentials['email'], $credentials['code'], (string) $request->ip());
-
-            if ($result->user !== null) {
-                Auth::guard('web')->login($result->user, remember: (bool) ($credentials['remember'] ?? false));
-            }
-        } else {
-            $result = $passwordLogin->attempt(
-                $credentials['email'],
-                $credentials['password'],
-                (bool) ($credentials['remember'] ?? false),
-                (string) $request->ip(),
-            );
-        }
+        // El servicio solo verifica (sirve también al token); abrir la sesión —recordada si lo pidió— es de aquí.
+        $result = $codeLogin->verify($credentials['email'], $credentials['code'], (string) $request->ip());
 
         if ($result->failed()) {
             return $this->denial($result);
         }
+
+        /** @var User $user */
+        $user = $result->user;
+        Auth::guard('web')->login($user, remember: (bool) ($credentials['remember'] ?? false));
 
         // Regenerar el identificador de sesión tras autenticar cierra la fijación de sesión. Es
         // efecto de la sesión web y por eso lo pone el llamante, no el servicio (spec §4.6.3).
@@ -112,11 +102,11 @@ class AuthSessionController extends Controller
         //
         // ⚠️ Solo si es OTRA: a quien vuelve a identificarse en mitad de su propio flujo no se le
         // puede borrar la confirmación de su compra, que es justo lo que `SidebarEntry` conserva.
-        if ($previousId !== null && (int) $previousId !== (int) $result->user->getKey()) {
+        if ($previousId !== null && (int) $previousId !== (int) $user->getKey()) {
             SidebarEntry::clear();
         }
 
-        return new UserResource($result->user);
+        return new UserResource($user);
     }
 
     /**

@@ -181,24 +181,17 @@ class ApiContractTest extends TestCase
         // opcionales. `remember` por defecto es `false`, y exigirlo obligaría a todo cliente a
         // enviarlo. Lo que sigue mordiendo aquí es `additionalProperties: false`, que es lo que
         // impide colar un campo que el servidor ignoraría en silencio.
-        // ▶ Y desde 1.55.0 (A1 de `specs/acceso-con-codigo.md`, `#853`) la CREDENCIAL es una de dos —`password` o `code`,
-        // excluyentes—: OpenAPI 3.0 sin `oneOf` no sabe decir «exactamente uno», así que lo decide el servidor
-        // (`required_without` + `prohibits`, 422). La contraseña se retira en la A5 y `code` pasará a obligatorio.
-        'LoginRequest' => ['remember', 'password', 'code'],
-        // El mismo caso en la emisión de tokens (la app entra con el código, `specs/acceso-con-codigo.md` §4.4).
-        'TokenRequest' => ['password', 'code'],
-        // Cuerpo de PETICIÓN, y aquí la opcionalidad es CONDICIONAL: `current_password` solo hace
-        // falta si `email` cambia (tanda 2 · paso 7). Exigirla siempre obligaría a reconfirmar la
-        // contraseña para corregir una errata en el teléfono —que no defiende nada y hace que el
-        // titular acabe evitando la pantalla—, y OpenAPI 3.0 no sabe expresar «obligatorio si otro
-        // campo cambia»: quien lo decide es el servidor, que la exige cuando toca.
+        // ▶ Desde 1.59.0 (A5 de `specs/acceso-con-codigo.md`, `#869`) la CREDENCIAL es solo `code`, obligatorio: ya no
+        // hay `password` con el que excluirse (entre 1.55.0 y 1.58.0 eran opcionales los dos y decidía el servidor).
+        'LoginRequest' => ['remember'],
+        // Cuerpo de PETICIÓN, y aquí la opcionalidad es CONDICIONAL: el `code` de confirmar solo hace
+        // falta si `email` cambia (tanda 2 · paso 7). Exigirlo siempre obligaría a reconfirmar para
+        // corregir una errata en el teléfono —que no defiende nada y hace que el titular acabe
+        // evitando la pantalla—, y OpenAPI 3.0 no sabe expresar «obligatorio si otro campo cambia»:
+        // quien lo decide es el servidor, que lo exige cuando toca.
         // ▶ Y la FECHA DE NACIMIENTO (TP·1, `#792`, 1.49.0): opcional de verdad y con semántica propia —AUSENTE no cambia
         // nada, `null` la borra—. La isla guarda Mi cuenta sin ella: exigirla borraría o rechazaría cada guardado suyo.
-        // ▶ Y el CÓDIGO de confirmar (1.56.0, A2a de `specs/acceso-con-codigo.md`, `#855`), la alternativa a la contraseña.
-        'ProfileUpdateRequest' => ['current_password', 'code', 'born_on'],
-        // La reconfirmación de las acciones sensibles (1.56.0, `#855`): la contraseña O el código, excluyentes. OpenAPI 3.0
-        // sin `oneOf` no sabe decir «exactamente uno»: lo decide el servidor (`required_without` + `prohibits`, 422).
-        'PasswordConfirmation' => ['current_password', 'code'],
+        'ProfileUpdateRequest' => ['code', 'born_on'],
         // Cuerpo de PETICIÓN, y la opcionalidad vuelve a ser CONDICIONAL (`#349`): las condiciones
         // solo se envían si esta instalación las publica **y** este titular no tiene aceptada la
         // versión vigente; el teléfono, solo si la cuenta no lo tiene. Exigir los dos siempre
@@ -227,8 +220,8 @@ class ApiContractTest extends TestCase
         // pide, lo pide el interruptor de «Mi cuenta → Privacidad» (`PUT /me/marketing`).
         // Y desde `#787` (27-09) el TELÉFONO: obligatorio solo para reservar un pack, y eso lo exige `POST /orders`.
         // Y la FECHA DE NACIMIENTO (TP·1, `#792` `[DECIDIDO owner]`: «entera y OPCIONAL»): sin ella la cuenta nace igual.
-        // Y la CONTRASEÑA desde 1.55.0 (`#848`/`#849`): la cuenta nace sin ella y se entra con un código al correo.
-        'RegisterRequest' => ['phone', 'born_on', 'password', 'context', 'website', 'turnstile_token', 'accept_waiver', 'waiver_document_id'],
+        // (La CONTRASEÑA, opcional de 1.55.0 a 1.58.0, ya no existe desde la A5, `#869`.)
+        'RegisterRequest' => ['phone', 'born_on', 'context', 'website', 'turnstile_token', 'accept_waiver', 'waiver_document_id'],
         // Cuerpo de PETICIÓN del alta con Google (`specs/auth-con-google.md` §7). Las dos claves del
         // descargo son opcionales por la MISMA razón que arriba y una más: en una instalación en modo
         // externo —o sin versión publicada— **no hay texto que aceptar**, así que exigirlas convertiría

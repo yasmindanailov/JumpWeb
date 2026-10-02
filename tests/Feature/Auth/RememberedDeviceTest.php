@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
 use Tests\Feature\Api\ApiTestCase;
+use Tests\Support\IssuesCodes;
 
 /**
  * A1 de `docs/specs/acceso-con-codigo.md` (§4.4, `DECISIONES #848`·3 y `#853`) — **el dispositivo RECORDADO 90 días sin
@@ -24,6 +25,8 @@ use Tests\Feature\Api\ApiTestCase;
  */
 class RememberedDeviceTest extends ApiTestCase
 {
+    use IssuesCodes;
+
     private function recallerName(): string
     {
         return Auth::guard('web')->getRecallerName();
@@ -110,7 +113,7 @@ class RememberedDeviceTest extends ApiTestCase
         $old = $this->cookieOf($user);
 
         $response = $this->device($old)
-            ->postJson(self::ROOT.'/me/sessions/revoke-others', ['current_password' => 'password'])
+            ->postJson(self::ROOT.'/me/sessions/revoke-others', ['code' => $this->confirmCodeFor($user)])
             ->assertSuccessful();
 
         $mine = $response->getCookie($this->recallerName())?->getValue();

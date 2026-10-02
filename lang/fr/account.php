@@ -30,7 +30,6 @@ return [
     'account' => [
         'title' => 'Mon compte',
         'subtitle' => 'Gérez vos informations, votre accès et votre confidentialité.',
-        'wrong_password' => 'Votre mot de passe actuel est incorrect.',
         // Confirmar lo sensible de Mi cuenta con un código al correo (A4b, `#813`): los textos de la isla.
         'confirm' => [
             'for' => 'Pour le confirmer, nous vous enverrons un code à :email.',
@@ -49,11 +48,6 @@ return [
             'pending_email_msg' => 'Il reste à confirmer :email avec le code que nous lui avons envoyé. Le changement expire dans :minutes min ; d’ici là, vous continuez à vous connecter avec :current.',
             'pending_email_confirm' => 'Confirmer l’e-mail',
             'pending_email_cancel' => 'Annuler le changement',
-        ],
-        // Solo «ver la contraseña» del campo de la WEB: cambiarla salió del cajón en la A4b (`#813`).
-        'password' => [
-            'show' => 'Afficher le mot de passe',
-            'hide' => 'Masquer le mot de passe',
         ],
         'sessions' => [
             'title' => 'Sessions',
@@ -209,17 +203,6 @@ return [
         'submitting' => 'Connexion…',
     ],
 
-    'reset' => [
-        'eyebrow' => 'Nouveau mot de passe',
-        'title' => 'Créez un nouveau mot de passe',
-        'intro' => 'Choisissez un nouveau mot de passe pour votre compte.',
-        'email' => 'E-mail',
-        'password' => 'Nouveau mot de passe',
-        'password_confirmation' => 'Répétez le mot de passe',
-        'submit' => 'Enregistrer',
-        'submitting' => 'Enregistrement…',
-    ],
-
     'register' => [
         'title' => 'Créez votre compte',
         'subtitle' => "Il n'y a pas encore de compte avec cet e-mail : remplissez vos coordonnées et vous êtes connecté tout de suite.",
@@ -230,8 +213,6 @@ return [
         'phone_hint' => "Pour t'appeler à propos de ta réservation, quoi qu'il arrive.",
         'born_on' => 'Ton anniversaire',
         'born_on_hint' => 'Facultatif',
-        'password' => 'Mot de passe',
-        'password_hint' => 'Au moins 8 caractères. Évitez les mots de passe courants ou compromis.',
         'must_accept' => 'Vous devez accepter cette condition pour continuer.',
         'accept_waiver' => "J'ai lu et j'accepte la décharge de responsabilité.",
         'waiver_hint' => 'C’est le document que signe toute personne qui saute : règles de sécurité et responsabilité. Sans elle, on ne peut pas entrer dans le parc.',
@@ -270,13 +251,8 @@ return [
         'email-already-verified' => 'Votre e-mail était déjà confirmé.',
         'verification-link-sent' => "Nous vous avons renvoyé l'e-mail de vérification. Vérifiez votre boîte de réception (et vos spams).",
         'verification-resend-throttled' => "Nous venons de vous envoyer l'e-mail. Attendez une minute avant d'en demander un autre.",
-        'password-reset' => 'Mot de passe mis à jour. Vous pouvez vous connecter.',
         'profile-updated' => 'Informations mises à jour.',
-        'password-updated' => 'Mot de passe mis à jour. Nous avons déconnecté vos autres sessions par sécurité.',
         'email-change-requested' => "Nous avons envoyé un lien au nouvel e-mail pour confirmer le changement. En attendant, votre compte continue d'utiliser l'e-mail actuel.",
-        'email-change-confirmed' => 'E-mail confirmé. Vous pouvez maintenant l’utiliser pour vous connecter.',
-        'email-change-expired' => 'Le lien pour confirmer le changement d’e-mail a expiré. Demandez-le à nouveau si vous voulez encore le changer.',
-        'email-change-taken' => "Cet e-mail a été enregistré par un autre compte pendant l'attente de la confirmation. Nous avons annulé le changement ; essayez un autre e-mail.",
         'email-change-cancelled' => 'Changement d’e-mail annulé.',
         'email-change-resent' => 'Nous avons renvoyé le lien de confirmation au nouvel e-mail.',
         'logged-out-others' => 'Vous êtes déconnecté des autres appareils.',

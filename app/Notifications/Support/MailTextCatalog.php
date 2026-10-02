@@ -32,7 +32,7 @@ final class MailTextCatalog
 
     /**
      * clave del correo → [clase, tipo, tramos de idioma]. El orden, el de la pantalla dentro de cada tipo. Un tramo puede ser
-     * UN texto (`emails.verify_pending_email.action`): el correo usa ese y no sus hermanos, que son de una versión que ya no sale.
+     * UN texto (`emails.verify_pending_email.ignore`): el correo usa ese y no sus hermanos.
      *
      * @var array<string, array{0: class-string, 1: string, 2: list<string>}>
      */
@@ -62,9 +62,8 @@ final class MailTextCatalog
         'verify_email_for_purchase' => [N\VerifyEmailForPurchase::class, 'cuenta', ['emails.verify_purchase']],
         'login_code' => [N\LoginCode::class, 'cuenta', ['emails.login_code']],
         'confirmation_code' => [N\ConfirmationCode::class, 'cuenta', ['emails.confirmation_code']],
-        'password_reset' => [N\PasswordReset::class, 'cuenta', ['emails.password_reset']],
-        // El que sale lleva el CÓDIGO (`#856`): sus bloques y, de la versión de antes, solo el botón y «si no fuiste tú».
-        'verify_pending_email' => [N\VerifyPendingEmail::class, 'cuenta', ['emails.verify_pending_email_code', 'emails.verify_pending_email.action', 'emails.verify_pending_email.ignore']],
+        // Lleva solo el CÓDIGO (`#856`; sin el enlace desde la A5, `#869`): sus bloques y, de la versión de antes, «si no fuiste tú».
+        'verify_pending_email' => [N\VerifyPendingEmail::class, 'cuenta', ['emails.verify_pending_email_code', 'emails.verify_pending_email.ignore']],
         'email_change_requested' => [N\EmailChangeRequested::class, 'cuenta', ['emails.email_change_requested']],
         'email_change_completed' => [N\EmailChangeCompleted::class, 'cuenta', ['emails.email_change_completed']],
         'account_already_exists' => [N\AccountAlreadyExists::class, 'cuenta', ['account.exists_mail']],

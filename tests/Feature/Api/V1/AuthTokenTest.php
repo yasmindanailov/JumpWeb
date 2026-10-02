@@ -5,7 +5,7 @@ namespace Tests\Feature\Api\V1;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\ApiTokenIssuer;
-use App\Domain\Identity\Services\PasswordLogin;
+use App\Domain\Identity\Services\LoginGate;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -13,13 +13,15 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Testing\TestResponse;
 use Laravel\Sanctum\PersonalAccessToken;
 use Tests\Feature\Api\ApiTestCase;
+use Tests\Support\IssuesCodes;
 
 /**
  * F4 del programa — `POST /api/v1/auth/tokens` y `auth/tokens/rotate` (`docs/specs/token-bearer.md`,
  * `DECISIONES #630`).
  *
  * Lo que se comprueba aquí es lo que un token AÑADE al sistema, no lo que ya estaba: la revocación
- * por las cinco vías es de `ApiTokenRevocationTest` y los limitadores en sí de `PasswordLoginTest`.
+ * por sus vías es de `ApiTokenRevocationTest` y los limitadores en sí de `LoginGateTest`.
+ * ▶ Desde la A5 (`#869`) la app entra solo con el CÓDIGO: estos casos entraban con la contraseña y se re-apuntaron.
  * Aquí: que la puerta nueva **comparte cubos** con el login (no es una segunda oportunidad para un
  * atacante), que un token nace acotado (una ability, caducidad propia, tope por cuenta), que no
  * abre lo que no debe (el panel) y que rota sin dejar vivo al anterior.
@@ -32,19 +34,25 @@ use Tests\Feature\Api\ApiTestCase;
  */
 class AuthTokenTest extends ApiTestCase
 {
+    use IssuesCodes;
+
     private function customer(string $email = 'cliente@jumpweb.test'): User
     {
-        return User::factory()->create(['email' => $email, 'email_verified_at' => now()]);
+        return User::factory()->create(['email' => $email, 'email_verified_at' => now(), 'password' => null]);
     }
 
-    /** @param array<string, mixed> $overrides */
+    /**
+     * La emisión, con un código BUENO recién emitido para `$user` salvo que `$overrides` diga otra cosa.
+     *
+     * @param  array<string, mixed>  $overrides
+     */
     private function issue(User $user, array $overrides = []): TestResponse
     {
         Auth::forgetGuards();
 
         return $this->postJson(self::ROOT.'/auth/tokens', $overrides + [
             'email' => $user->email,
-            'password' => 'password',
+            'code' => $this->loginCodeFor($user),
             'device_name' => 'iPhone de prueba',
         ]);
     }
@@ -105,29 +113,28 @@ class AuthTokenTest extends ApiTestCase
         $this->assertTrue($expiresAt->isAfter(now()->addDay()), 'Sin configuración, la caducidad de reserva son 30 días, no cero.');
     }
 
-    public function test_an_unknown_email_and_a_wrong_password_are_indistinguishable(): void
+    public function test_an_unknown_email_and_a_wrong_code_are_indistinguishable(): void
     {
         $user = $this->customer();
 
-        $wrongPassword = $this->issue($user, ['password' => 'no-es-esta'])->assertUnauthorized()->assertValidResponse(401);
+        $wrongCode = $this->issue($user, ['code' => $this->wrongCode($this->loginCodeFor($user))])->assertUnauthorized()->assertValidResponse(401);
         $unknownEmail = $this->issue($user, ['email' => 'nadie@jumpweb.test'])->assertUnauthorized();
 
-        $this->assertSame($wrongPassword->getContent(), $unknownEmail->getContent(), '`SEC-06`: la respuesta no puede decir si el correo existe.');
+        $this->assertSame($wrongCode->getContent(), $unknownEmail->getContent(), '`SEC-06`: la respuesta no puede decir si el correo existe.');
         $this->assertSame(0, PersonalAccessToken::query()->count());
     }
 
     /**
-     * ⚠️⚠️ **El caso por el que existe `PasswordLogin::verify()`**: si la emisión de tokens llevara
-     * sus propios cubos, un atacante tendría el DOBLE de intentos —cinco por el login y cinco por
-     * aquí— contra la misma cuenta.
+     * ⚠️⚠️ **El caso por el que las dos puertas comparten `LoginGate`**: si la emisión de tokens llevara sus propios cubos,
+     * un atacante tendría el DOBLE de intentos —cinco por el login y cinco por aquí— contra la misma cuenta.
      */
     public function test_failures_at_the_login_door_lock_the_token_door(): void
     {
         $user = $this->customer();
 
-        for ($i = 0; $i < PasswordLogin::MAX_ATTEMPTS; $i++) {
+        for ($i = 0; $i < LoginGate::MAX_ATTEMPTS; $i++) {
             $this->withHeader('Origin', (string) config('app.url'))
-                ->postJson(self::ROOT.'/auth/login', ['email' => $user->email, 'password' => 'mala'])
+                ->postJson(self::ROOT.'/auth/login', ['email' => $user->email, 'code' => '000000'])
                 ->assertUnauthorized();
         }
 
@@ -136,19 +143,19 @@ class AuthTokenTest extends ApiTestCase
             ->assertValidResponse(429)
             ->assertHeader('Retry-After');
 
-        $this->assertSame(0, PersonalAccessToken::query()->count(), 'Bloqueada, la puerta no emite ni con la contraseña buena.');
+        $this->assertSame(0, PersonalAccessToken::query()->count(), 'Bloqueada, la puerta no emite ni con el código bueno.');
     }
 
     public function test_failures_at_the_token_door_lock_the_login_door(): void
     {
         $user = $this->customer();
 
-        for ($i = 0; $i < PasswordLogin::MAX_ATTEMPTS; $i++) {
-            $this->issue($user, ['password' => 'mala'])->assertUnauthorized();
+        for ($i = 0; $i < LoginGate::MAX_ATTEMPTS; $i++) {
+            $this->issue($user, ['code' => '000000'])->assertUnauthorized();
         }
 
         $this->withHeader('Origin', (string) config('app.url'))
-            ->postJson(self::ROOT.'/auth/login', ['email' => $user->email, 'password' => 'password'])
+            ->postJson(self::ROOT.'/auth/login', ['email' => $user->email, 'code' => $this->loginCodeFor($user)])
             ->assertStatus(429);
     }
 
@@ -157,7 +164,7 @@ class AuthTokenTest extends ApiTestCase
     {
         $user = $this->customer();
 
-        for ($i = 0; $i < PasswordLogin::MAX_ATTEMPTS_PER_IP; $i++) {
+        for ($i = 0; $i < LoginGate::MAX_ATTEMPTS_PER_IP; $i++) {
             $this->issue($user, ['email' => "barrido{$i}@jumpweb.test"])->assertUnauthorized();
         }
 
@@ -298,11 +305,11 @@ class AuthTokenTest extends ApiTestCase
         $tablet = $this->issue($user, ['device_name' => 'tablet'])->json('token');
 
         // «Cerrar las demás» desde el móvil: él sigue, la tablet cae.
-        $this->asBearer($phone)->postJson(self::ROOT.'/me/sessions/revoke-others', ['current_password' => 'password'])->assertSuccessful();
+        $this->asBearer($phone)->postJson(self::ROOT.'/me/sessions/revoke-others', ['code' => $this->confirmCodeFor($user)])->assertSuccessful();
         $this->asBearer($tablet)->getJson(self::ROOT.'/me')->assertUnauthorized();
         $this->asBearer($phone)->getJson(self::ROOT.'/me')->assertOk();
 
-        // La palanca de «me han entrado» (reset de contraseña, supresión): cae también el que pedía.
+        // La palanca de «me han entrado» (la supresión, la toma de una cuenta sin verificar): cae también el que pedía.
         $user->revokeAllAccess();
         $this->asBearer($phone)->getJson(self::ROOT.'/me')->assertUnauthorized();
     }

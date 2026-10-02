@@ -32,12 +32,6 @@ return [
      * The two FRAMEWORK mails (`#508`). Only the mould pieces live here — the body still comes from
      * the framework's own strings, so not a word of what the customer was reading changes.
      */
-    'password_reset' => [
-        'subject' => 'Reset your password',
-        'preheader' => "If you didn't ask for this you don't need to do anything: the link expires.",
-        'badge' => 'One step left',
-        'headline' => 'Reset your password',
-    ],
     'panel_password_link' => [
         'subject' => 'Your panel password',
         'preheader' => "If you weren't expecting this, you don't need to do anything: the link expires.",
@@ -89,15 +83,7 @@ return [
         'headline' => 'Confirm your email to continue',
     ],
     'verify_pending_email' => [
-        'subject' => 'Confirm your new email',
-        'preheader' => "This link expires in 60 minutes. If you didn't ask for the change, ignore it.",
-        'greeting' => 'Hi!',
-        'intro' => 'You asked to change your account email to this one. To confirm it, click the button.',
-        'action' => 'Confirm my new email',
-        'expires' => 'This link expires in 60 minutes.',
         'ignore' => 'If you didn’t request this change, you can ignore this email: your account will keep using the previous email.',
-        'badge' => 'One step left',
-        'headline' => 'Confirm your new email',
     ],
     'verify_pending_email_code' => [
         'subject' => ':code is the code for your new email',
@@ -105,7 +91,7 @@ return [
         'badge' => 'Confirm your new email',
         'headline' => ':code',
         'intro' => 'You asked to change the email of your account to this one. Type the code on the screen where you asked for it.',
-        'validity' => 'The code works for :minutes minutes and only once. You can also confirm with the button.',
+        'validity' => 'The code works for :minutes minutes and only once.',
     ],
     'email_change_requested' => [
         'subject' => 'Someone asked to change your email',

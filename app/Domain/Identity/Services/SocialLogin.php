@@ -13,17 +13,16 @@ use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 use Throwable;
 
 /**
  * Entrar con una identidad EXTERNA ya verificada (`docs/specs/auth-con-google.md` §5).
  *
- * Hermano de {@see PasswordLogin}: recibe una afirmación **ya comprobada** —solo
+ * Hermano de {@see EmailCodeLogin}: recibe una afirmación **ya comprobada** —solo
  * {@see GoogleOAuth} sabe fabricar un {@see SocialProfile}— y decide a qué cuenta corresponde.
- * Autentica cuando corresponde, igual que aquél con `Auth::attempt()`.
+ * Autentica cuando corresponde (la otra puerta solo verifica: la sesión la abre quien la atiende).
  *
- * **Qué NO hace, a propósito** (misma frontera que `PasswordLogin`): regenerar la sesión, limpiar el
+ * **Qué NO hace, a propósito** (misma frontera que la puerta del código): regenerar la sesión, limpiar el
  * desenlace de pago del cajón ni decidir a dónde va nadie después. Eso son efectos de la sesión WEB
  * y los pone quien atiende la petición (§6.5).
  *
@@ -285,13 +284,14 @@ final class SocialLogin
 
             // La toma de una cuenta sin verificar (P12). Las TRES cosas van juntas o no vale ninguna:
             // promover sin expulsar dejaría dentro a quien tuviera la contraseña; expulsar sin
-            // invalidarla le dejaría volver a entrar con ella.
+            // invalidarla le dejaría volver a entrar con ella. Desde la A5 (`#869`) se BORRA —antes,
+            // una aleatoria—: ningún cliente tiene contraseña, y la de quien sembró la cuenta tampoco.
             $promoted = $locked->email_verified_at === null;
 
             if ($promoted) {
                 $locked->forceFill([
                     'email_verified_at' => now(),
-                    'password' => Str::random(60),
+                    'password' => null,
                 ])->save();
 
                 $locked->revokeAllAccess(CustomerCard::REASON_REVOKED);
@@ -327,9 +327,9 @@ final class SocialLogin
     }
 
     /**
-     * Autentica y sella la entrada, exactamente lo que hace {@see PasswordLogin} tras acertar la
-     * contraseña: sin esto, quien entra con Google no aparecería en «último acceso» del panel ni en
-     * su propio export, y el log de accesos tendría un agujero con forma de Google.
+     * Autentica y sella la entrada, exactamente lo que hace `LoginGate` tras acertar el código: sin
+     * esto, quien entra con Google no aparecería en «último acceso» del panel ni en su propio export,
+     * y el log de accesos tendría un agujero con forma de Google.
      */
     private function signIn(User $user, string $ip, string $provider): void
     {

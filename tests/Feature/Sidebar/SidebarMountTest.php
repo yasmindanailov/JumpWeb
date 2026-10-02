@@ -423,11 +423,10 @@ class SidebarMountTest extends TestCase
         $this->assertArrayHasKey('expired', $atDoor['account']['google'] ?? []);
 
         // ⚠️⚠️ **Y, desde la A4a, RECUPERAR la contraseña no viaja sin sesión en NINGUNA página** (`acceso-con-codigo.md`
-        // §4.11), ni en la que fue su puerta: `/recuperar-contrasena` abre la puerta del código. Su CONTROL, con sesión, en
+        // §4.11). La que fue su puerta, `/recuperar-contrasena`, es desde la A5 (`#869`) un 301 a `/login`
+        // (`CustomerPasswordRetiredTest`). Su CONTROL, con sesión, en
         // `test_the_mount_payload_of_a_signed_in_customer_is_pruned_key_by_key` (la lista de claves la lleva).
         $this->assertArrayNotHasKey('forgot', $boot['account'] ?? [], 'recuperar la contraseña viaja sin sesión, y sin sesión ya no se ofrece');
-        $atOldDoor = $this->bootPayload((string) $this->get('/recuperar-contrasena')->assertOk()->getContent());
-        $this->assertArrayNotHasKey('forgot', $atOldDoor['account'] ?? [], '`/recuperar-contrasena` sigue mandando los textos de una zona que ya no abre');
 
         // ⚠️⚠️ **`account.title` viaja SIN sesión, y es el rótulo de uno de los botones del
         // bloque.** Sin él, quien entra en el paso 5 y vuelve al catálogo vería ese botón **en

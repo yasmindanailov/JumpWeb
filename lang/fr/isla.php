@@ -114,8 +114,6 @@ return [
         'whatsapp' => 'Écrire sur WhatsApp',
     ],
     'pieza' => [
-        'mostrar_clave' => 'Afficher le mot de passe',
-        'ocultar_clave' => 'Masquer le mot de passe',
         'opcional' => 'facultatif',
         'sugerencia_antes' => 'Vouliez-vous dire ',
         'sugerencia_despues' => ' ?',

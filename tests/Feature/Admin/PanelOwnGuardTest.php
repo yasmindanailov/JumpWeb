@@ -2,8 +2,10 @@
 
 namespace Tests\Feature\Admin;
 
+use App\Domain\Identity\Models\LoginCode;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Services\LoginCodes;
 use App\Domain\Platform\Models\Setting;
 use Database\Seeders\LandingContentSeeder;
 use Database\Seeders\PermissionSeeder;
@@ -55,9 +57,11 @@ class PanelOwnGuardTest extends TestCase
     {
         $admin = $this->admin();
 
-        // La entrada REAL de la web (la del cajón y la isla), con su sesión.
+        // La entrada REAL de la web (la del cajón y la isla), con su sesión: con el código al correo (desde la A5, `#869`,
+        // la única; antes, también la contraseña).
+        $code = app(LoginCodes::class)->issue($admin->email, LoginCode::PURPOSE_LOGIN, '127.0.0.1');
         $this->withHeader('Origin', (string) config('app.url'))
-            ->postJson('/api/v1/auth/login', ['email' => $admin->email, 'password' => 'password'])
+            ->postJson('/api/v1/auth/login', ['email' => $admin->email, 'code' => $code])
             ->assertOk();
         $this->assertTrue(Auth::guard('web')->check(), 'control: la web sí ha entrado');
 

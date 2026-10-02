@@ -85,14 +85,13 @@ class PageHeadTest extends TestCase
     /**
      * **Una pantalla de SERVICIO se nombra a sí misma y NO escribe su URL.**
      *
-     * ⚠️⚠️ Y en una de ellas no es estilo: la de restablecer la contraseña lleva el TOKEN en la ruta,
-     * así que un rótulo derivado de la URL lo imprimiría en pantalla. La de mantenimiento sustituye a
-     * la página caída, y escribir su ruta anunciaría un destino que ahora mismo no está.
+     * ⚠️⚠️ No es estilo: la de mantenimiento sustituye a la página caída, y escribir su ruta anunciaría un destino que
+     * ahora mismo no está. (La que llevaba un TOKEN en la ruta, la de restablecer la contraseña, se retiró en la A5,
+     * `#869`; la regla sigue para la próxima que lo lleve.)
      */
     public function test_a_service_screen_names_itself_and_never_writes_its_url(): void
     {
         $pantallas = [
-            '/restablecer-contrasena/token-de-prueba' => [200, 'account.reset.eyebrow'],
             '/email/verificar' => [200, 'account.verify.eyebrow'],
         ];
 

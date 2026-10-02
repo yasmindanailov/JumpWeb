@@ -3,11 +3,9 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Domain\Identity\Contracts\CredentialChangeResult;
-use App\Domain\Identity\Contracts\Reconfirmation;
 use App\Domain\Identity\Contracts\ResendResult;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\AccountCredentials;
-use App\Domain\Identity\Services\PasswordPolicy;
 use App\Domain\Identity\Services\SocialIdentities;
 use App\Http\Api\ApiCollection;
 use App\Http\Api\ApiErrorCode;
@@ -23,42 +21,17 @@ use Illuminate\Validation\Rule;
 /**
  * **Las gestiones de credenciales del titular** (`specs/area-cliente.md` §9.3, tanda 2 · paso 6).
  *
- * Cambiar la contraseña y cerrar sesión en los demás dispositivos. Las dos exigen **reconfirmar la
- * contraseña actual** y las dos delegan en `Identity\Services\AccountCredentials`, que es donde vive
- * el limitador y el cierre por sus dos vías. Aquí solo se traduce el veredicto a HTTP.
+ * Cerrar sesión en los demás dispositivos, las cuentas externas vinculadas y el código para confirmar. Lo que exige
+ * **reconfirmar** lo hace con un código `confirm` (desde la A5 de `specs/acceso-con-codigo.md`, `#869`, el único: con la
+ * contraseña del cliente se fue también cambiarla) y delega en `Identity\Services\AccountCredentials`, donde vive el
+ * limitador. Aquí solo se traduce el veredicto a HTTP.
  *
- * ⚠️ **NO exige sesión de cookie**, al revés que el login. Un cliente por token también puede
- * cambiar su contraseña, y ahí el cierre de las demás credenciales lo hace `revokeOtherAccess()` —
- * que es justamente la vía que más importa con un Bearer vivo (`RGPD-06`).
+ * ⚠️ **NO exige sesión de cookie**, al revés que el login. Un cliente por token también puede cerrar las demás, y ahí lo
+ * hace `revokeOtherAccess()` —que es justamente la vía que más importa con un Bearer vivo (`RGPD-06`)—.
  */
 class MeCredentialsController extends Controller
 {
     use TranslatesCredentialVerdicts;
-
-    /**
-     * `PUT /me/password`.
-     *
-     * ⚠️ **El formato se valida ANTES de llamar al servicio**, y ese orden es el mismo que aplica la
-     * web: una contraseña nueva que no cumple la política no es un intento de adivinar la actual, así
-     * que no debe gastar uno de los cinco del limitador.
-     *
-     * ⚠️ Y **`confirmed` no se pide aquí**: repetir la contraseña es cosa de un formulario, no del
-     * contrato. La misma decisión que en el registro (`PasswordPolicy` no lo incluye).
-     */
-    public function updatePassword(Request $request, AccountCredentials $credentials): JsonResponse
-    {
-        $data = $request->validate([
-            'current_password' => ['required', 'string'],
-            'password' => PasswordPolicy::rules(),
-        ]);
-
-        /** @var User $user */
-        $user = $request->user();
-
-        return $this->respond($credentials->changePassword(
-            $user, $data['current_password'], $data['password'], (string) $request->ip(),
-        ));
-    }
 
     /**
      * `GET /me/identities` — las cuentas de un proveedor externo vinculadas a ésta.
@@ -81,20 +54,17 @@ class MeCredentialsController extends Controller
      * ⚠️⚠️ **Es el contrapeso del aviso de vinculación** (`specs/auth-con-google.md` §5.2): el vínculo
      * se crea solo y se avisa por correo, y ese aviso solo sirve si quien lo recibe puede deshacerlo.
      *
-     * ⚠️ **Exige la contraseña** (`[DECIDIDO owner]`) y comparte el limitador con el cambio de
-     * contraseña. Quien entró con Google y no tiene ninguna la crea con «he olvidado mi contraseña»:
-     * es lo que impide que alguien se cierre a sí mismo la única puerta que tenía.
+     * ⚠️ **Exige reconfirmar** (`[DECIDIDO owner]`) con un código `confirm`, con el limitador de todas las
+     * reconfirmaciones. Nadie se queda sin puerta al desvincular: el correo de la cuenta siempre recibe el código.
      */
     public function unlinkIdentity(Request $request, string $provider, SocialIdentities $identities): JsonResponse
     {
-        // La contraseña o un código `confirm` (A2a, `#855`): quien entró con Google y no tiene contraseña ya no se queda
-        // sin puerta al desvincular —entra con un código al correo—.
         $data = $request->validate($this->reconfirmationRules());
 
         /** @var User $user */
         $user = $request->user();
 
-        return $this->respond($identities->unlink($user, $provider, Reconfirmation::from($data), (string) $request->ip()));
+        return $this->respond($identities->unlink($user, $provider, $data['code'], (string) $request->ip()));
     }
 
     /**
@@ -105,15 +75,12 @@ class MeCredentialsController extends Controller
      */
     public function revokeOtherSessions(Request $request, AccountCredentials $credentials): JsonResponse
     {
-        // La contraseña o un código `confirm` (A2a, `#855`).
         $data = $request->validate($this->reconfirmationRules());
 
         /** @var User $user */
         $user = $request->user();
 
-        return $this->respond($credentials->revokeOtherSessions(
-            $user, Reconfirmation::from($data), (string) $request->ip(),
-        ));
+        return $this->respond($credentials->revokeOtherSessions($user, $data['code'], (string) $request->ip()));
     }
 
     /**

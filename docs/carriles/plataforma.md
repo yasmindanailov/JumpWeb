@@ -56,8 +56,8 @@ Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas,en
    `?isla=b3` y la flecha naranja, `#868`; lo hecho y lo medido, en §4.27). La Z6c·3, la MEDIDA, es del SPA (avisado en mi
    buzón). ⚠️ El experimento se CREA en el panel al desplegar (clave `isla`, variantes `hoy` y `b3`, 50/50) y corre con el
    vídeo de verdad, dos semanas como mínimo. **SIGUE, en el orden de `#867`**: (1) **la A5** (fuera la contraseña;
-   `acceso-con-codigo.md` §4.12, `#869`/`#870`: **A5a ✅** 02-10, la del personal; **sigue la A5b**, el servidor y el contrato
-   1.59.0, después A5c los correos y A5d las contraseñas que existen) · (2) el
+   `acceso-con-codigo.md` §4.12, `#869`/`#870`: **A5a ✅** y **A5b ✅** 02-10, la del personal y el servidor con el contrato
+   1.59.0; **sigue la A5c**, los correos y textos que dirían algo falso, al ojo del owner, y la A5d, las que existen) · (2) el
    acceso con código (su página, crear cuenta, «XXX-XXX» en el asunto, continuar al escribir el último dígito, también en el
    authenticator del panel; mucho es la Z6g) · (3) los retoques del zip (6) (Z6d–Z6f, colores, secciones; la cabecera sin
    precio salvo Colegios, la regla del owner en `instancias/playjump/docs/estrategia/2026-09-30/Web.md`) · (4) la isla en un
@@ -82,9 +82,7 @@ Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas,en
    de publicar el texto), `#864`, sin aviso a las cuentas, y `#865`, las dos frases falsas de producción se corrigen AL
    DESPLEGAR la v2.0.0 (apuntado en `ENTORNOS.md` §6). Entran las notas del SPA (`#750`, `#754`, la TP·1 y `#793`). Espera
    la revisión del owner y la asesoría; la poda de `#863` puede ir antes (no depende del texto).
-3. **A6** (en staging, cuánto tarda el correo), que decide el alta: `#849` o lo del diseño. La A5, arriba en 0 (con ella, dos
-   comentarios míos: `useDatosCompra.js` aún nombra `submitLogin` y `useAjustesCuenta.js` dice que `deleteAccount` manda la
-   contraseña —ya manda `code`—).
+3. **A6** (en staging, cuánto tarda el correo), que decide el alta: `#849` o lo del diseño. La A5, arriba en 0.
 **HECHO el 30-09**, con su ✅: la A3a (`#857`) y la A3b (`acceso-con-codigo.md` §4.10; el servidor, A1 y A2, §4.8–§4.9;
 `mutar-acceso-codigo.sh` 51/51), `/cookies` para producción (`#858`/`#859`) y el aviso que pide solo lo encendido (`#860`;
 `politica-de-cookies.md` §4 y §6, `mutar-politica-cookies.sh` 30/30). **Al desplegar**: `ENTORNOS.md` §6 (el script de `/cookies`).
@@ -230,11 +228,14 @@ carril se apunta ALLÍ; lo compartido se sigue avisando aquí, en el buzón, ant
 
 ### ❗ Para el SPA (emisor: plataforma, 2026-10-02) — la A5 (fuera la contraseña del cliente) toca lo tuyo de los correos
 - **Hecho, A5a (`#870`)**: un correo nuevo AL PERSONAL, `PanelPasswordLink` (la contraseña del panel, desde la ficha): lo
-  declaran del equipo `EmailUtm::NOT_TO_CUSTOMERS` y `DEL_EQUIPO` de `MailTextCatalogTest`; tu trinquete de `EmailUtmTest`, 31.
-- **Viene, A5b/A5c** (`acceso-con-codigo.md` §4.12): fuera `PasswordReset` (y su entrada en `MailTextCatalog::CORREOS`,
-  `MailPreviews` y `EmailTiming`), `emails.verify_pending_email.action` (tu (2) del 30-09) y el enlace del correo nuevo;
-  `CustomerAccountCreated`, sin la contraseña. El método `password` de `user_registered` y del informe NO lo toco (tuyo). Si
-  algo choca con lo tuyo, dímelo antes de la A5b.
+  declaran del equipo `EmailUtm::NOT_TO_CUSTOMERS` y `DEL_EQUIPO` de `MailTextCatalogTest`.
+- **Hecho, A5b** (`#869`, 1.59.0): fuera el correo `PasswordReset` (de `MailTextCatalog::CORREOS`, `MailPreviews` y
+  `EmailTiming`; tu trinquete de `EmailUtmTest`, 30, y `EmailsReportTest`, 28) y el enlace del correo nuevo (tu (2) del
+  30-09: `VerifyPendingEmail` exige el código). `public/css/cajon.css` regenerado: fuera `.pwd-input*` y `.auth--page`,
+  huérfanas. ⚠️ Tu `mutar-analitica-decidir.sh` ancla en `MeProfileController` una línea que no existe desde la A2a; hoy:
+  `…['born_on' => true]), $emailChanges ? $data['code'] : null, (string) $request->ip());`.
+- **Viene, A5c**: `CustomerAccountCreated` sin la contraseña y los textos que dirían algo falso. El método `password` de
+  `user_registered` y del informe NO lo toco (tuyo).
 
 ### ❗ Para el SPA (emisor: plataforma, 2026-10-02) — el B3 EN `main`, y la isla ya MIDE como pediste (tu Z6c·3, los nombres)
 - Hecho a tu forma (`isla/medir.js`, por `JumpWeb.track`, resuelto en cada llamada): `experiment_exposed` con

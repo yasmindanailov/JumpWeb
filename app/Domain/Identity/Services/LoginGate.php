@@ -12,16 +12,15 @@ use Illuminate\Support\Str;
 
 /**
  * **La puerta común de TODA entrada de cliente con un secreto** (`SEC-06`): los dos limitadores, el veredicto, el sello
- * de la última entrada y el rastro. La usan la contraseña ({@see PasswordLogin}: el login y la emisión de tokens) y el
- * código al correo ({@see EmailCodeLogin}: igual, las dos superficies).
+ * de la última entrada y el rastro. La usa el código al correo ({@see EmailCodeLogin}) en sus dos superficies: el login
+ * (`POST /auth/login`) y la emisión de tokens (`POST /auth/tokens`).
  *
  * ▶ **Salió de `PasswordLogin` TAL CUAL** (A1 de `docs/specs/acceso-con-codigo.md`, `DECISIONES #853`): era su núcleo
- * privado `guarded()`. El código al correo tenía que compartirlo —no copiarlo— y la contraseña de los clientes se retira
- * en la A5: el núcleo sobrevive a su primer dueño.
+ * privado `guarded()`, y el código al correo tenía que compartirlo —no copiarlo—. La contraseña de los clientes se retiró
+ * en la A5 (`#869`) y `PasswordLogin` con ella: el núcleo sobrevive a su primer dueño.
  *
- * ⚠️⚠️ **Compartir los cubos ES la regla, no un ahorro**: cinco fallos con la contraseña bloquean también el código, y al
- * revés, en el login y en la emisión de tokens. Con cubos propios, cada puerta nueva sería otra tanda de intentos gratis
- * contra la misma cuenta.
+ * ⚠️⚠️ **Compartir los cubos ES la regla, no un ahorro**: cinco fallos en el login bloquean también la emisión de tokens,
+ * y al revés. Con cubos propios, cada puerta nueva sería otra tanda de intentos gratis contra la misma cuenta.
  */
 class LoginGate
 {

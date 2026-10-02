@@ -246,10 +246,12 @@ class SingleButtonFamilyTest extends TestCase
             'el estado de carga del botón (`.btn__loading`) ha desaparecido de site.css.',
         );
 
+        // El consumidor de referencia era la página de restablecer la contraseña, retirada en la A5 (`#869`); el estado
+        // sigue teniendo los botones del cajón, y la puerta (`EntryForm.vue`) es el testigo ahora.
         $this->assertStringContainsString(
             'btn__loading',
-            (string) file_get_contents(base_path('resources/views/livewire/auth/reset-password.blade.php')),
-            'el consumidor real de `.btn__loading` (restablecer contraseña) ya no lo usa: si el '.
+            (string) file_get_contents(base_path('resources/js/sidebar/steps/EntryForm.vue')),
+            'el consumidor real de `.btn__loading` (la puerta del cajón) ya no lo usa: si el '.
             'estado se queda sin consumidor, retíralo con él en vez de dejarlo muerto (regla de `#287`).',
         );
     }

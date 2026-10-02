@@ -117,21 +117,6 @@ class SessionBindingTest extends ApiTestCase
         $this->device($phone)->get('/mi-cuenta/exportar')->assertOk();
     }
 
-    /** Y con la contraseña (hasta la A5), igual. */
-    public function test_closing_the_other_sessions_with_the_password_closes_them_too(): void
-    {
-        $user = $this->customer();
-        $laptop = $this->signIn($user);
-        $phone = $this->signIn($user);
-
-        $this->device($phone)
-            ->postJson(self::ROOT.'/me/sessions/revoke-others', ['current_password' => 'password'])
-            ->assertNoContent();
-
-        $this->me($laptop)->assertStatus(401);
-        $this->me($phone)->assertOk();
-    }
-
     public function test_the_emergency_lever_closes_every_live_session(): void
     {
         $user = $this->customer();

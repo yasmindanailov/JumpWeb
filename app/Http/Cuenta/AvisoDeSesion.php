@@ -20,17 +20,20 @@ use Illuminate\Support\Facades\Lang;
  */
 final readonly class AvisoDeSesion
 {
-    /** Lo que dice que algo SALIÓ. */
+    /**
+     * Lo que dice que algo SALIÓ. Sin `password-reset` ni `password-updated` (la contraseña del cliente), ni los tres del
+     * enlace del correo nuevo (`email-change-confirmed`, `-expired`, `-taken`) desde la A5 (`#869`): nadie los pone ya.
+     */
     public const BIEN = [
-        'email-verified', 'email-already-verified', 'verification-link-sent', 'password-reset', 'profile-updated',
-        'password-updated', 'email-change-requested', 'email-change-confirmed', 'email-change-cancelled',
+        'email-verified', 'email-already-verified', 'verification-link-sent', 'profile-updated',
+        'email-change-requested', 'email-change-cancelled',
         'email-change-resent', 'logged-out-others', 'account-deleted', 'guest-form-saved', 'google-linked',
         'google-already-linked',
     ];
 
     /** Lo que dice que algo NO salió, y qué hacer. */
     public const MAL = [
-        'email-change-expired', 'email-change-taken', 'order-retry-unavailable', 'order-retry-failed',
+        'order-retry-unavailable', 'order-retry-failed',
         'order-retry-throttled', 'order-retry-paused', 'google-failed', 'google-email-unverified', 'google-anonymized',
         'google-provider-conflict', 'google-provider-taken', 'google-link-session-changed',
     ];

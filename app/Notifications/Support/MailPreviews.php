@@ -155,9 +155,7 @@ final class MailPreviews
             'verify_email_for_purchase' => static fn (): Notification => new N\VerifyEmailForPurchase('R-ABC123'),
             'login_code' => static fn (): Notification => new N\LoginCode('482913'),
             'confirmation_code' => static fn (): Notification => new N\ConfirmationCode('482913', 'change_email'),
-            'password_reset' => static fn (): Notification => new N\PasswordReset('token-de-ejemplo'),
-            // El que sale: con su código (`#856`, `AccountProfile::sendNewEmailCode`). Sin él es la versión de antes, que ya no
-            // se envía (y sus bloques no son editables: `MailTextCatalog`).
+            // Con su código (`#856`, `AccountProfile::sendNewEmailCode`): desde la A5 (`#869`) no hay otra versión.
             'verify_pending_email' => static fn (): Notification => new N\VerifyPendingEmail('482913'),
             'email_change_requested' => static fn (): Notification => new N\EmailChangeRequested('n***@example.com'),
             'email_change_completed' => static fn (): Notification => new N\EmailChangeCompleted('n***@example.com'),

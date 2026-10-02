@@ -13,7 +13,8 @@ use Illuminate\Support\Facades\Lang;
  * EL ENLACE PARA VERIFICAR EL CORREO DE UNA CUENTA NUEVA, con el molde del producto (`#508`).
  *
  * ❗❗❗ **Tampoco estaba en el inventario de 23**, por el mismo motivo que su hermano
- * (`PasswordReset`): el artboard contó carpetas y éste salía de `Illuminate\Auth\Notifications`.
+ * (`PasswordReset`, retirado con la contraseña del cliente en la A5, `#869`): el artboard contó
+ * carpetas y éste salía de `Illuminate\Auth\Notifications`.
  * Lo recibe **toda cuenta nueva** (`Identity\Services\SelfSignup`) y cada reenvío desde
  * `/email/verificar`, así que es de los que más salen del producto.
  *

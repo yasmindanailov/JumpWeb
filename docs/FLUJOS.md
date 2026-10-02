@@ -24,7 +24,8 @@ redirección a Redsys**.
    recuperar la contraseña son ahora **zonas del cajón**, de modo que la gestión del cliente vive en
    un solo sitio (`#66`). La ruta `/registro` sobrevive como **puerta**: sirve la home y abre el
    cajón ahí. Lo que se rellena y lo que se guarda **no cambia**.
-2. Rellena lo mínimo: **nombre, email, teléfono y contraseña** (los cuatro obligatorios).
+2. Rellena lo mínimo: **nombre y email**, sin contraseña (desde la A5, `#869`: se entra con un código al correo o con
+   Google, Flujo 2).
 3. Marca las casillas obligatorias: **acepto privacidad**, **acepto términos**, **acepto el
    waiver** (cada una enlaza a su 📄 página legal; textos = contenido gestionado en BD,
    entidad `LegalContent`). Sin marcarlas no se puede continuar.
@@ -36,18 +37,17 @@ redirección a Redsys**.
 > Si el waiver/términos cambian de versión, se pide aceptar la nueva versión la próxima vez
 > que el usuario entre.
 
-## Flujo 2 — Iniciar sesión / recuperar contraseña
+## Flujo 2 — Entrar (con un código al correo o con Google)
 
-1. "Entrar" → 🪟 **el CAJÓN, en su zona de identificarse** (email + contraseña). Rutas puerta:
-   `/login` — que además es el destino del middleware `auth` de Laravel, así que no es opcional.
-2. "¿Olvidaste tu contraseña?" → 🪟 **zona de recuperar** del mismo cajón: pide email → ✉️ enlace.
-   ⚠️ **Y el PASO 5 del embudo de compra también lo ofrece desde `#122`**: hasta entonces, quien
-   estaba comprando y no recordaba su contraseña tenía que abandonar el cajón —y perdía de vista su
-   cesta—. «Volver» le devuelve a la compra donde estaba.
-3. El enlace del correo lleva a `/restablecer-contrasena/{token}`, que **sí es una 📄 página**: trae
-   un token en la URL y el cajón no es direccionable. Lo mismo `/email/verificar`.
+1. "Entrar" → 🪟 **la puerta del cajón o de la isla**: el correo. Con cuenta, ✉️ un **código de un solo uso** que se
+   escribe en la misma pantalla; nuevo, el alta del Flujo 1; o **Google**. Ruta puerta: `/login` — que además es el
+   destino del middleware `auth` de Laravel, así que no es opcional (`specs/acceso-con-codigo.md`).
+2. **No hay contraseña que recuperar** desde la A5 (`#869`): `/recuperar-contrasena` y `/restablecer-contrasena/{token}`
+   responden 301 a `/login`. Las acciones sensibles se reconfirman con otro código (`SEGURIDAD.md` §3). El personal del
+   panel sí la tiene: se la envía un administrador desde su ficha (`#870`).
+3. `/email/verificar` sí es una 📄 página: trae un enlace firmado y el cajón no es direccionable.
 
-> ⚠️ **Las tres pantallas eran modales sobre la home hasta el 2026-08-23** (`DECISIONES #122`). Sus
+> ⚠️ **Las pantallas de entrar y del alta eran modales sobre la home hasta el 2026-08-23** (`DECISIONES #122`). Sus
 > rutas sobreviven como **puertas** (`Http\Sidebar\AccountDoor`): sirven la home y abren el cajón en
 > la zona que toque, igual que `/entradas` y `/mi-cuenta/…`.
 

@@ -30,6 +30,10 @@ tras varios intentos fallidos. Motivo: el producto trata **datos personales** (R
 ## Reglas (qué debe cumplir el código)
 
 ### 1. Contraseñas — NIST 800-63B
+- ▶ **Desde la A5 (`specs/acceso-con-codigo.md` §4.12, `#869`) son SOLO del PERSONAL**: la del panel. El cliente entra con
+  un código al correo o con Google y no tiene contraseña (las que había se borran al desplegar, A5d). La del personal la
+  crea él en una página del panel, por el enlace que le envía un administrador desde su ficha (`#870`), o la pone
+  `app:create-admin`; las dos con `PasswordPolicy`.
 - Mínimo **8** caracteres; permitir contraseñas **largas / frases**; sin reglas de composición absurdas.
 - ❌ ~~**Rechazar contraseñas filtradas**~~ — **RETIRADO el 2026-09-02** (`[DECIDIDO owner]`,
   `DECISIONES #351`). Hasta esa fecha la política llevaba `->uncompromised()` (consulta por
@@ -38,7 +42,8 @@ tras varios intentos fallidos. Motivo: el producto trata **datos personales** (R
   sabe cómo arreglar. ⚠️ **El coste está asumido y dicho: `12345678` es hoy una contraseña válida.**
   Se le ofreció la vía intermedia —`uncompromised(500)`, que rechaza solo las muy comunes— y la
   descartó. ▶ Lo que sostiene la defensa ahora son los **límites de la sección 2**, la
-  reconfirmación de contraseña de la 4 y `RGPD-06`.
+  reconfirmación de la 3 y `RGPD-06` (y, desde la A5, que la contraseña solo abra el panel, cuyos
+  administradores piden además el código de su app, `#851`).
   ⚠️ La cita de superficies ya estaba caducada: los tres componentes Livewire que nombraba se
   retiraron con el modal (`#122`); desde `#144` la política vive en **`Identity\Services\PasswordPolicy`**,
   fuente única, y lo vigila `PasswordPolicySingleSourceTest` —que desde `#351` asevera **lo contrario**,
@@ -46,22 +51,23 @@ tras varios intentos fallidos. Motivo: el producto trata **datos personales** (R
 - Hash **bcrypt 12** (o `argon2id` si el hosting lo soporta).
 
 ### 2. Fuerza bruta y enumeración — OWASP A07 / ASVS V2.2
-- **Límite de intentos** en login, registro, reset y reenvío de verificación.
+- **Límite de intentos** en la puerta del código (pedirlo y verificarlo), registro, reconfirmación y reenvío de
+  verificación; en el panel, su login (Filament) y la página de su contraseña.
 - **Bloqueo temporal** de la cuenta tras N fallos seguidos *(Reforzado)*.
 - **Mensajes genéricos**: nunca revelar si un email existe ("credenciales incorrectas"; "si la
   cuenta existe, te hemos enviado un correo"). ⚠️ **Excepción DECIDIDA en el alta**
   (`DECISIONES #31a`): el registro sí dice que un correo ya tiene cuenta —decisión de producto de la
   clienta, prima la conversión—, y la API replica esa política a propósito. Lo que acota la
-  enumeración ahí es el límite de 3 altas/hora por correo, no el mensaje. En la recuperación de
-  contraseña la no-enumeración es **estricta**.
+  enumeración ahí es el límite de 3 altas/hora por correo, no el mensaje. (La recuperación de contraseña, con su
+  no-enumeración estricta, se retiró con la contraseña del cliente en la A5, `#869`.)
 - **Dónde vive** (Fase 3 · paso 3, `DECISIONES #29`–`#31`): los limitadores y las reglas son de
-  DOMINIO y los consumen por igual la web y `/api/v1` —`Identity\Services\PasswordLogin` (los DOS
-  limitadores: por email+IP y por IP sola, anti-spraying), `SelfSignup` (señuelo + límite por IP +
-  límite por correo + anti-bot) y `PasswordRecovery`—. Ningún controlador ni componente los
+  DOMINIO y los consumen por igual el cajón, la isla y `/api/v1` —`Identity\Services\LoginGate` (los DOS
+  limitadores: por email+IP y por IP sola, anti-spraying; salió de `PasswordLogin`, retirado en la A5) y
+  `SelfSignup` (señuelo + límite por IP + límite por correo + anti-bot)—. Ningún controlador ni componente los
   reimplementa: si alguno lo hiciera, la puerta floja sería la que se olvidara del segundo.
 - **El código al correo** (`specs/acceso-con-codigo.md`, A1, `#853`): la puerta (`POST /auth/code`) dice si un correo tiene
   cuenta, como el alta (`#849`), acotada a 10 peticiones/min por IP; el código, 1/min y 5/h por correo, 10 minutos y 5
-  intentos. Verificarlo pasa por `Identity\Services\LoginGate`, los MISMOS dos cubos que la contraseña.
+  intentos. Verificarlo pasa por `Identity\Services\LoginGate`, los mismos dos cubos en `auth/login` y en `auth/tokens`.
 
 ### 3. Sesión — ASVS V3
 - **Regenerar** el ID de sesión al iniciar sesión; invalidar al cerrar.
@@ -70,11 +76,12 @@ tras varios intentos fallidos. Motivo: el producto trata **datos personales** (R
   uso; salir cierra ESTE dispositivo; «cerrar las demás» rota el `remember_token` y la palanca de `RGPD-06` lo vacía.
   ⚠️ **Solo si se pide** (`#858`): la casilla «Mantener la sesión iniciada», sin marcar, al entrar con el código.
 - Cookies: `http_only` (ok), `same_site=lax` (ok), **`secure=true` en producción**, valorar `encrypt=true`.
-- **Reconfirmar contraseña** antes de acciones sensibles (cambiar email, borrar cuenta). Desde la A2a (`#855`), **o un
-  código** al correo de la cuenta (`POST /me/confirm-code`, que dice para qué es), bajo el mismo limitador.
+- **Reconfirmar con un CÓDIGO** al correo de la cuenta antes de acciones sensibles (cambiar el correo, borrar la cuenta,
+  desvincular Google, cerrar las demás sesiones): `POST /me/confirm-code`, que dice para qué es, bajo un limitador por
+  (titular, IP). Desde la A2a (`#855`) era la alternativa a la contraseña; desde la A5 (`#869`), la única.
 - **El cambio de correo prueba el buzón NUEVO** (`#856`): se pide reconfirmando, el viejo recibe el aviso de que se ha
-  pedido, y se completa con el código que llega al nuevo (o su enlace, hasta la A5); al completarse, el viejo recibe el
-  aviso de que ha cambiado. ⚠️ Hasta el 30-09 esos dos correos salían al buzón contrario (medido).
+  pedido, y se completa con el código que llega al nuevo (el enlace firmado de antes se retiró en la A5); al completarse,
+  el viejo recibe el aviso de que ha cambiado. ⚠️ Hasta el 30-09 esos dos correos salían al buzón contrario (medido).
 - **Cerrar las demás sesiones no depende del driver** (`#855`): cada sesión de la web va atada al `remember_token` de la
   cuenta (`SessionBinding`) y la que ya no casa se cierra en su próxima petición, también con `redis`.
 - **El PANEL, aparte** (`specs/panel-a-salvo.md`, 29-09): su PROPIO inicio de sesión (guard `admin`, `SEC-14`: una sesión
@@ -102,19 +109,21 @@ tras varios intentos fallidos. Motivo: el producto trata **datos personales** (R
 - **Exportar** y **borrar** la propia cuenta. Borrado = **real (hard delete)** mientras no haya
   pagos del usuario; **anonimización** cuando existan pagos (conservar facturas) — decisión
   heredada del origen (#53).
-- **Anonimización desde el panel:** el admin puede anonimizar a un cliente (`User::anonymize()`)
-  y enviarle un enlace de cambio de contraseña, **solo sobre cuentas de cliente** (no
-  admin/staff, no uno mismo, no ya-anonimizada). El **audit de la anonimización NO reintroduce
-  PII**: guarda el email como **sha256** (`email_hash`) + el motivo + conteos (consents/roles),
-  nunca el dato en claro; el reset usa `logSensitive` (email solo como hash). El formulario de
-  contacto es **email-only** (no persiste datos personales en BD). (Decisión origen #180.)
+- **Anonimización desde el panel:** el admin puede anonimizar a un cliente (`User::anonymize()`),
+  **solo sobre cuentas de cliente** (no admin/staff, no uno mismo, no ya-anonimizada). El **audit de
+  la anonimización NO reintroduce PII**: guarda el email como **sha256** (`email_hash`) + el motivo +
+  conteos (consents/roles), nunca el dato en claro. El formulario de contacto es **email-only** (no
+  persiste datos personales en BD). (Decisión origen #180.) ▶ El enlace de contraseña de la ficha era
+  para clientes; desde la A5a (`#870`) es para cuentas DEL PANEL, lo envía quien tiene `access.manage` y
+  se audita con `logSensitive` (email solo como hash).
 - Teléfono **en claro**: se busca por él en **puerta** (vocabulario del sector origen; su
   generalización se decide en `00-REFACTOR.md` Fase 1/2 — ver
   `OPERATIVA-SECTOR-ORIGEN.md`); se protege con **control de acceso por rol**, no con cifrado.
 
 ### 8. Auditoría / logging *(Reforzado)*
-- Registrar eventos: login correcto/fallido, bloqueo, reset, cambio de email/contraseña,
-  borrado de cuenta. Sin datos sensibles en el log (hash en vez de email → `logSensitive`).
+- Registrar eventos: login correcto/fallido, bloqueo, códigos pedidos, cambio de email, el enlace
+  de la contraseña del panel, borrado de cuenta. Sin datos sensibles en el log (hash en vez de
+  email → `logSensitive`).
 
 ### 9. Cabeceras HTTP — OWASP Secure Headers
 Implementación real heredada: middleware **`app/Http/Middleware/SecurityHeaders.php`**

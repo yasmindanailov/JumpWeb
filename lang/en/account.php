@@ -30,7 +30,6 @@ return [
     'account' => [
         'title' => 'My account',
         'subtitle' => 'Manage your details, your access and your privacy.',
-        'wrong_password' => 'Your current password is incorrect.',
         // Confirmar lo sensible de Mi cuenta con un código al correo (A4b, `#813`): los textos de la isla.
         'confirm' => [
             'for' => 'To confirm it, we’ll send a code to :email.',
@@ -49,11 +48,6 @@ return [
             'pending_email_msg' => ':email still needs confirming with the code we sent it. The change expires in :minutes min; until then you keep signing in with :current.',
             'pending_email_confirm' => 'Confirm the email',
             'pending_email_cancel' => 'Cancel change',
-        ],
-        // Solo «ver la contraseña» del campo de la WEB: cambiarla salió del cajón en la A4b (`#813`).
-        'password' => [
-            'show' => 'Show password',
-            'hide' => 'Hide password',
         ],
         'sessions' => [
             'title' => 'Sessions',
@@ -208,17 +202,6 @@ return [
         'submitting' => 'Signing in…',
     ],
 
-    'reset' => [
-        'eyebrow' => 'New password',
-        'title' => 'Create a new password',
-        'intro' => 'Choose a new password for your account.',
-        'email' => 'Email',
-        'password' => 'New password',
-        'password_confirmation' => 'Repeat password',
-        'submit' => 'Save password',
-        'submitting' => 'Saving…',
-    ],
-
     'register' => [
         'title' => 'Create your account',
         'subtitle' => 'There is no account with that email yet: fill in your details and you are in right away.',
@@ -230,8 +213,6 @@ return [
         'phone_hint' => 'So we can call you about anything to do with your booking.',
         'born_on' => 'Your birthday',
         'born_on_hint' => 'Optional',
-        'password' => 'Password',
-        'password_hint' => 'At least 8 characters. Avoid common or breached passwords.',
         'must_accept' => 'You must accept this to continue.',
         'accept_waiver' => 'I have read and accept the liability waiver.',
         'waiver_hint' => 'It is the form everyone who jumps signs: safety rules and responsibility. Without it you cannot enter the park.',
@@ -270,13 +251,8 @@ return [
         'email-already-verified' => 'Your email was already confirmed.',
         'verification-link-sent' => 'We have resent your verification email. Check your inbox (and your spam folder).',
         'verification-resend-throttled' => 'We just sent you the email. Please wait a minute before requesting another.',
-        'password-reset' => 'Password updated. You can now log in.',
         'profile-updated' => 'Details updated.',
-        'password-updated' => 'Password updated. We have logged out your other sessions for your safety.',
         'email-change-requested' => 'We have sent a link to your new email to confirm the change. In the meantime your account keeps using the current email.',
-        'email-change-confirmed' => 'Email confirmed. You can now use it to log in.',
-        'email-change-expired' => 'The link to confirm the email change has expired. Request it again if you still want to change it.',
-        'email-change-taken' => 'That email was registered by another account while you were waiting to confirm. We have cancelled the change; try another email.',
         'email-change-cancelled' => 'Email change cancelled.',
         'email-change-resent' => 'We have resent the confirmation link to the new email.',
         'logged-out-others' => 'You have logged out on all other devices.',

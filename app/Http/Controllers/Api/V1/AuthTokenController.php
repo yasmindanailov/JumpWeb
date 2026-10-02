@@ -6,7 +6,6 @@ use App\Domain\Identity\Contracts\LoginResult;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\ApiTokenIssuer;
 use App\Domain\Identity\Services\EmailCodeLogin;
-use App\Domain\Identity\Services\PasswordLogin;
 use App\Http\Api\ApiErrorCode;
 use App\Http\Api\ApiErrorResponse;
 use App\Http\Controllers\Controller;
@@ -22,9 +21,9 @@ use Laravel\Sanctum\NewAccessToken;
  * vive en el mismo dominio que la API y sigue con cookie de sesión + CSRF ({@see AuthSessionController}).
  *
  * Como su hermano, **no comprueba credenciales ni cuenta intentos**: eso es
- * `Identity\Services\PasswordLogin::verify()`, que comparte con el login los DOS limitadores de
- * `SEC-06` y sus claves. Ni decide con qué nace un token ni lo retira: eso es `ApiTokenIssuer` y
- * `User`. Aquí solo se valida la forma, se llama y se responde.
+ * `Identity\Services\EmailCodeLogin::verify()`, que comparte con el login los DOS limitadores de
+ * `SEC-06` y sus claves (`LoginGate`). Ni decide con qué nace un token ni lo retira: eso es
+ * `ApiTokenIssuer` y `User`. Aquí solo se valida la forma, se llama y se responde.
  *
  * ⚠️ **No usa `requireSession`**, al revés que `auth/login`: esta puerta existe justo para quien no
  * tiene sesión ni puede tenerla.
@@ -32,22 +31,19 @@ use Laravel\Sanctum\NewAccessToken;
 class AuthTokenController extends Controller
 {
     /**
-     * ▶ Con la contraseña o con el CÓDIGO al correo (A1 de `specs/acceso-con-codigo.md` §4.4: «la app, `POST
-     * /auth/tokens` con correo + código»), uno de los dos. Los dos pasan por los MISMOS cubos de `SEC-06`
-     * (`LoginGate`): los fallos con uno cuentan para el otro, aquí y en `auth/login`.
+     * ▶ Con el CÓDIGO al correo (A1 de `specs/acceso-con-codigo.md` §4.4: «la app, `POST /auth/tokens` con correo +
+     * código»; la contraseña se retiró en la A5, `#869`). Pasa por los MISMOS cubos de `SEC-06` que `auth/login`
+     * (`LoginGate`): los fallos en una puerta cuentan en la otra.
      */
-    public function issue(Request $request, PasswordLogin $passwordLogin, EmailCodeLogin $codeLogin, ApiTokenIssuer $issuer): JsonResponse
+    public function issue(Request $request, EmailCodeLogin $codeLogin, ApiTokenIssuer $issuer): JsonResponse
     {
         $data = $request->validate([
             'email' => ['required', 'string', 'email'],
-            'password' => ['required_without:code', 'prohibits:code', 'string'],
-            'code' => ['required_without:password', 'string', 'max:16'],
+            'code' => ['required', 'string', 'max:16'],
             'device_name' => ['required', 'string', 'min:1', 'max:60'],
         ]);
 
-        $result = isset($data['code'])
-            ? $codeLogin->verify($data['email'], $data['code'], (string) $request->ip())
-            : $passwordLogin->verify($data['email'], $data['password'], (string) $request->ip());
+        $result = $codeLogin->verify($data['email'], $data['code'], (string) $request->ip());
 
         if ($result->failed()) {
             return $this->denial($result);

@@ -15,9 +15,10 @@
   contrato (30 menciones) y 35 de 59 rutas tras `auth:sanctum`. **Falta el emisor** y lo que lo rodea.
 - **El cajón NO usa token**: vive en el mismo dominio que la API y sigue con cookie de sesión + CSRF. El token
   es para el cliente nativo (F6). Sin token en `localStorage`, nunca.
-- **Trampa medida**: `PasswordLogin::attempt()` autentica con `Auth::attempt()` sobre el guard de SESIÓN. El
-  emisor no puede llamarlo: necesita verificar SIN abrir sesión, por un camino del mismo servicio que comparta
-  limitadores (§4.2). Una segunda copia de los limitadores es el defecto que `SEC-06` describe.
+- **Trampa medida**: verificar NO abre sesión. `EmailCodeLogin::verify()` devuelve el titular y la sesión la
+  abre el controlador web; el emisor llama al MISMO `verify()` (los limitadores de `LoginGate`, §4.2). Una
+  segunda copia de los limitadores es el defecto que `SEC-06` describe. (Hasta la A5 la puerta era
+  `PasswordLogin`, que abría sesión con `Auth::attempt()`: retirada con la contraseña del cliente, `#869`.)
 - **Un Bearer no abre el panel**: el único guard es `web`; Filament no mira `sanctum`. Se fija con un test (§6).
 - **Empieza por** §4.1 (contrato) → §4.2 (servicio) → §4.3 (controlador). El contrato se cambia ANTES que el
   código (`#21`). Ningún fichero casa con el `CRITICAL_RE` (medido); no pide `VERIFY_CONC`.

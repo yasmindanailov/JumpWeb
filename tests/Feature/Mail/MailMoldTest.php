@@ -3,10 +3,8 @@
 namespace Tests\Feature\Mail;
 
 use App\Domain\Identity\Models\User;
-use App\Notifications\PasswordReset;
 use App\Notifications\Support\BrandedMailMessage;
 use App\Notifications\VerifyEmailAddress;
-use Illuminate\Auth\Notifications\ResetPassword as FrameworkResetPassword;
 use Illuminate\Auth\Notifications\VerifyEmail as FrameworkVerifyEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
@@ -70,46 +68,42 @@ class MailMoldTest extends TestCase
     }
 
     /**
-     * ❗❗❗ **LOS DOS DEL FRAMEWORK SE SIGUEN MANDANDO DESDE `User`**, y sin este caso volverían a
-     * salir los de Laravel **sin que nada fallara**: las subclases seguirían existiendo —así que
-     * `test_every_customer_facing_mail_declares_its_hero` pasaría en verde— y simplemente no las
-     * usaría nadie. Es el modo de fallo exacto que dejó estos dos correos fuera del carril durante
-     * todo `#500`→`#507`.
+     * ❗❗❗ **EL DEL FRAMEWORK SE SIGUE MANDANDO DESDE `User`**, y sin este caso volvería a salir el de
+     * Laravel **sin que nada fallara**: la subclase seguiría existiendo —así que
+     * `test_every_customer_facing_mail_declares_its_hero` pasaría en verde— y simplemente no la usaría
+     * nadie. Es el modo de fallo exacto que dejó estos correos fuera del carril durante todo `#500`→`#507`.
+     * (Eran dos: el de restablecer la contraseña se retiró con ella en la A5, `#869`.)
      *
      * ⚠️ Se comprueba por CONDUCTA —qué notificación se encola— y no leyendo `User.php`: que el
      * método esté escrito no es que mande la nuestra.
      */
-    public function test_the_two_framework_mails_are_sent_in_our_own_shape(): void
+    public function test_the_framework_mail_is_sent_in_our_own_shape(): void
     {
         Notification::fake();
 
         $user = User::factory()->create();
-        $user->sendPasswordResetNotification('tok');
         $user->sendEmailVerificationNotification();
 
-        Notification::assertSentTo($user, PasswordReset::class);
         Notification::assertSentTo($user, VerifyEmailAddress::class);
 
-        // …y NO las del framework, que es la otra mitad: sin esto, mandar las dos pasaría igual.
-        Notification::assertNotSentTo($user, FrameworkResetPassword::class);
+        // …y NO la del framework, que es la otra mitad: sin esto, mandar las dos pasaría igual.
         Notification::assertNotSentTo($user, FrameworkVerifyEmail::class);
     }
 
     /**
-     * ❗❗❗ **Y LOS DOS SE RENDERIZAN DE VERDAD.** Este fichero lee FUENTES —es exhaustivo y por eso
-     * vale— pero *que un correo declare la cabecera no es que la pinte*, que es la trampa ya fichada
-     * del carril. Aquí sí se rinden los dos, y hace falta: la mutación que sustituye
-     * `BrandedMailMessage` por un `MailMessage` pelado **sobrevivía**, porque el escaneo de fuentes
-     * no ejecuta nada y **ningún otro caso de la suite renderizaba estos dos**.
+     * ❗❗❗ **Y SE RENDERIZA DE VERDAD.** Este fichero lee FUENTES —es exhaustivo y por eso vale— pero
+     * *que un correo declare la cabecera no es que la pinte*, que es la trampa ya fichada del carril.
+     * Aquí sí se rinde, y hace falta: la mutación que sustituye `BrandedMailMessage` por un
+     * `MailMessage` pelado **sobrevivía**, porque el escaneo de fuentes no ejecuta nada.
      *
-     * ⚠️ Con la URL dentro de la aserción: es lo único que esta tanda no podía tocar, y un
+     * ⚠️ Con la URL dentro de la aserción: es lo único que esa tanda no podía tocar, y un
      * `buildMailMessage` que se dejara el `$url` saldría con un botón que no lleva a ninguna parte.
      */
-    public function test_the_two_framework_mails_actually_render(): void
+    public function test_the_framework_mail_actually_renders(): void
     {
         $user = User::factory()->create();
 
-        foreach ([new PasswordReset('tok-de-prueba'), new VerifyEmailAddress] as $notificacion) {
+        foreach ([new VerifyEmailAddress] as $notificacion) {
             $mail = $notificacion->toMail($user);
             $html = (string) $mail->render();
             $clase = class_basename($notificacion);

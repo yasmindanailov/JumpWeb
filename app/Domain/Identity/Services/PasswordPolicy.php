@@ -7,16 +7,18 @@ use Illuminate\Validation\Rules\Password;
 /**
  * **La política de contraseñas del producto, en UN solo sitio** (`specs/area-cliente.md` §9).
  *
- * ⚠️⚠️ **Nace de un hallazgo, no de una preferencia** (2026-08-22). `Password::min(8)->uncompromised()`
- * estaba escrito a mano en **seis** superficies: el registro (web y API), el restablecimiento (web y
- * API), el cambio de contraseña de «Mi cuenta» y la contraseña explícita de `app:create-admin`. Es la
- * misma familia que `DisplayTime::dayLabel()` —una regla copiada— con un agravante: **esto es
- * seguridad**. El día que la política suba a diez caracteres habrá que tocar seis sitios, y olvidar
- * uno no rompe nada visible: deja una puerta más floja que las demás, en silencio.
+ * ▶ **Desde la A5 de `specs/acceso-con-codigo.md` (`#869`) es la del PERSONAL**: los clientes entran con un código al
+ * correo y no tienen contraseña. La aplican la página del panel donde el personal crea la suya
+ * (`App\Filament\Auth\PanelPassword`, `#870`) y la contraseña explícita de `app:create-admin`.
  *
- * ⚠️ **Lo que NO entra aquí, y es deliberado.** `confirmed` (repetir la contraseña) es del
- * FORMULARIO, no de la política: la API de registro no lo pide y la web sí, y las dos están en lo
- * cierto. Meterlo aquí obligaría a una de las dos a saltarse la fuente única.
+ * ⚠️⚠️ **Nace de un hallazgo, no de una preferencia** (2026-08-22). `Password::min(8)->uncompromised()`
+ * estaba escrito a mano en **seis** superficies (el registro, el restablecimiento y el cambio de «Mi cuenta», en la web
+ * y en la API, y `app:create-admin`). Es la misma familia que `DisplayTime::dayLabel()` —una regla copiada— con un
+ * agravante: **esto es seguridad**. El día que la política suba a diez caracteres habrá que tocar un solo sitio; con
+ * copias, olvidar una no rompe nada visible: deja una puerta más floja que las demás, en silencio.
+ *
+ * ⚠️ **Lo que NO entra aquí, y es deliberado.** `confirmed` (repetir la contraseña) es del FORMULARIO, no de la
+ * política: la página del panel lo pide con su segundo campo, y el comando no.
  *
  * ⚠️ Y la contraseña **generada** de `app:create-admin` sigue fuera a propósito: son 24 caracteres
  * aleatorios, que entran en la política por construcción, y comprobarlos contra Have I Been Pwned
@@ -48,25 +50,14 @@ final class PasswordPolicy
      * solo las MUY comunes y deja pasar el resto— y eligió retirarla entera. *Queda escrito para que
      * quien la reponga sepa que revierte una decisión, no que arregla un descuido.*
      *
-     * ⚠️ **Lo que NO se toca**: el mínimo de 8, el limitador del login, el de altas por IP y por
-     * correo, y que las cuatro acciones irreversibles sigan pidiendo la contraseña actual. La defensa
-     * contra el relleno de credenciales pasa a apoyarse en ésos.
+     * ⚠️ **Lo que NO se toca**: el mínimo de 8 y los limitadores. La defensa contra el relleno de
+     * credenciales pasa a apoyarse en ésos (desde la A5, `#869`, solo queda la contraseña del panel:
+     * su login limita los intentos y los administradores piden además el código de su app, `#851`).
      *
      * @return list<string|Password>
      */
     public static function rules(): array
     {
         return ['required', 'string', Password::min(self::MIN_LENGTH)];
-    }
-
-    /**
-     * La misma regla, pero OPCIONAL: el alta del cliente ya no la pide (A1 de `specs/acceso-con-codigo.md`, `#848`/`#849`;
-     * entra con un código al correo). Quien todavía la manda la manda con la misma exigencia; la A5 la retira del alta.
-     *
-     * @return array<int, mixed>
-     */
-    public static function optionalRules(): array
-    {
-        return ['nullable', 'string', Password::min(self::MIN_LENGTH)];
     }
 }

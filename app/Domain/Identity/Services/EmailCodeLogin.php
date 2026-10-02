@@ -16,7 +16,8 @@ use Illuminate\Support\Str;
  * **Entrar con un código al correo** (A1 de `docs/specs/acceso-con-codigo.md` §4.2–§4.4, `DECISIONES #848`/`#849`): la
  * PUERTA —el correo decide si va al código o al alta— y VERIFICAR el código. Sirve a las dos superficies, la sesión del
  * navegador (`POST /auth/login`) y el token de la app (`POST /auth/tokens`); lo que cada una hace después —abrir la
- * sesión recordada o emitir el token— es de quien atiende la petición, como en {@see PasswordLogin}.
+ * sesión recordada o emitir el token— es de quien atiende la petición. Desde la A5 (`#869`) es la ÚNICA entrada del
+ * cliente con un secreto: la contraseña se retiró.
  *
  * Las defensas (`SEC-06`, de DOMINIO: ningún controlador las reimplementa):
  *  - **pedir**: un techo por IP para el rociado y la enumeración (la puerta dice si un correo tiene cuenta, `#849`), y

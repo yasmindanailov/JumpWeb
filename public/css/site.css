@@ -928,29 +928,7 @@
     font-family: var(--font-body); color: var(--fg);
 }
 
-/* ---------- input de contraseña con toggle mostrar/ocultar (R-04) ----------
-   El botón vive DENTRO del input, alineado a la derecha (position absolute). El input
-   reserva padding-right para que el texto no se solape con el icono. Patrón estándar
-   en formularios modernos (GitHub, Stripe). El botón hereda tabindex=-1: el usuario de
-   teclado tabula al input, no al toggle (es una ayuda visual, el campo sigue siendo
-   funcional con type=password si JS no carga). */
-.pwd-input { position: relative; display: block; }
-.pwd-input input { padding-right: 44px; }
-.pwd-input__toggle {
-    position: absolute; top: 50%; right: 6px;
-    transform: translateY(-50%);
-    width: 32px; height: 32px;
-    display: inline-flex; align-items: center; justify-content: center;
-    border: 0; background: transparent;
-    color: var(--fg-mute); cursor: pointer; border-radius: 6px;
-    transition: color var(--dur-toque) var(--ease-sale), background var(--dur-toque) var(--ease-sale);
-}
-.pwd-input__toggle:hover { color: var(--fg); background: color-mix(in srgb, var(--fg) 6%, transparent); }
-.pwd-input__toggle:focus-visible {
-    outline: var(--focus-outline);
-    outline-offset: 2px;
-}
-.pwd-input__icon { display: block; }
+/* (El campo de contraseña con «ver», `.pwd-input`, se fue con la contraseña del cliente: A5, `#869`.) */
 
 /* ====================================================================
    Autenticación (Fase 4): botón de cuenta, modal, formulario y avisos.
@@ -1075,9 +1053,6 @@
     font-family: var(--font-body); font-size: var(--fs-button); color: var(--interactive);
     font-weight: 600; text-decoration: underline; white-space: nowrap;
 }
-
-/* formulario de auth cuando va en una página (no modal), p. ej. restablecer contraseña */
-.auth--page { max-width: 480px; margin-top: var(--sp-8); }
 
 /* cambiar entre login/registro dentro del modal */
 .auth__switch {

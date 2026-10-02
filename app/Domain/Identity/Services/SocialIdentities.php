@@ -3,7 +3,6 @@
 namespace App\Domain\Identity\Services;
 
 use App\Domain\Identity\Contracts\CredentialChangeResult;
-use App\Domain\Identity\Contracts\Reconfirmation;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Models\UserIdentity;
 use App\Domain\Platform\Services\AuditLogger;
@@ -19,13 +18,11 @@ use Illuminate\Support\Facades\Log;
  * lo recibe **puede deshacerlo**. Sin esta pieza, la única salida de un vínculo no pedido era borrar
  * la cuenta.
  *
- * ⚠️ **Exige la contraseña** (`[DECIDIDO owner]`, §8) y eso NO es una contradicción con el art. 12.2:
- * lo que aquella regla protege es poder ejercer los derechos, y aquí la contraseña es lo que impide
- * **quedarse fuera** — quien desvincula su única forma de entrar sin tener otra se cierra la puerta a
- * sí mismo. Quien entró con Google y no tiene contraseña la crea con «he olvidado mi contraseña»,
- * que es un paso y no un muro: la misma salida que el owner eligió para las otras cuatro acciones.
+ * ⚠️ **Exige reconfirmar** (`[DECIDIDO owner]`, §8): hoy, con un código `confirm` al correo de la cuenta (A2a, `#855`;
+ * el único desde la A5, `#869`). Desvincular ya no deja a nadie fuera: el correo de la cuenta siempre puede recibir el
+ * código para entrar —la contraseña que había que crear antes con «he olvidado mi contraseña» ya no existe—.
  *
- * ⚠️ **El limitador es el MISMO** que el del cambio de contraseña ({@see AccountCredentials::verify}):
+ * ⚠️ **El limitador es el MISMO** que el de las demás reconfirmaciones ({@see AccountCredentials::verify}):
  * cinco intentos por titular e IP. Un segundo contador aquí serían cinco intentos más por cada
  * endpoint que reconfirme, que es como se afloja `SEC-06` sin que se note.
  */
@@ -50,10 +47,9 @@ final class SocialIdentities
      * un ESTADO —«que no haya vínculo con Google»—, y dos clics seguidos no pueden dar respuestas
      * distintas ni dejar dos entradas de auditoría de un solo acto.
      */
-    public function unlink(User $user, string $provider, Reconfirmation $with, string $ip): CredentialChangeResult
+    public function unlink(User $user, string $provider, string $code, string $ip): CredentialChangeResult
     {
-        // Con la contraseña o con un código `confirm` al correo de la cuenta (A2a, `#855`).
-        $verdict = $this->credentials->verify($user, $with, $ip);
+        $verdict = $this->credentials->verify($user, $code, $ip);
 
         if ($verdict->failed()) {
             return $verdict;

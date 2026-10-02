@@ -76,7 +76,8 @@ class SectionHeadlineTest extends TestCase
         // la instancia y el producto sirve su anfitrión mínimo. El centinela se re-apunta a uno de ellos,
         // que es la página pública que el producto SÍ tiene.
         $this->assertArrayHasKey('anfitrion/servicios.blade.php', $vistas, 'falta una página pública');
-        $this->assertArrayNotHasKey('auth/reset-password.blade.php', $vistas, 'se ha colado una pantalla de servicio');
+        // El centinela de «pantalla de servicio» era la de restablecer la contraseña, retirada en la A5 (`#869`).
+        $this->assertArrayNotHasKey('auth/verify-email.blade.php', $vistas, 'se ha colado una pantalla de servicio');
 
         $this->assertGreaterThan(15, count($vistas), 'el corpus es sospechosamente corto');
     }

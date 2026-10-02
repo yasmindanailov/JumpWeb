@@ -297,14 +297,8 @@ class SidebarIconParityTest extends TestCase
             }
         }
 
-        // Los dos ojos del campo de contraseña viven INLINE en `<x-ui.password-input>`, no en
-        // `components/icons/`, y el cajón los copia igual: sin esto saldrían como huérfanos.
-        $pwd = Blade::render('<x-ui.password-input id="p" model="p" />');
-        preg_match_all('/<svg\b[^>]*class="pwd-input__icon"[^>]*>(.*?)<\/svg>/s', $pwd, $ojos, PREG_SET_ORDER);
-
-        foreach ($ojos as $i => $ojo) {
-            $out['pwd-eye-'.$i] = $this->canonical($ojo[1]);
-        }
+        // (Los dos ojos del campo de contraseña de la web, `<x-ui.password-input>`, se fueron con él en la A5, `#869`; la
+        // copia del cajón, `PasswordInput.vue`, en su A4b, `#813`.)
 
         $this->assertNotEmpty($out, 'no se ha podido renderizar ningún icono del sistema de diseño');
 

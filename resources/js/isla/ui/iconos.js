@@ -3,8 +3,8 @@
  *
  * El `Icon` del diseño los pedía a jsDelivr en cada visita y pintaba un hueco hasta que llegaban; aquí van
  * dentro del paquete, así que salen a la primera. Son los que la isla y su compra usan, uno a uno: importar el
- * set entero metería 1.865 dibujos en el paquete para pintar treinta y tres (el idioma y las cookies del pie del menú, Z6a,
- * los registra el menú: `piezas/iconos-menu.js`). Un icono que falte aquí pinta el
+ * set entero metería 1.865 dibujos en el paquete para pintar treinta y uno (el idioma y las cookies del pie del menú, Z6a,
+ * los registra el menú: `piezas/iconos-menu.js`; los dos ojos de «ver la contraseña» salieron con ella, A5). Un icono que falte aquí pinta el
  * hueco vacío, como el diseño cuando no encuentra el suyo.
  */
 import { transformar } from './lucide.js';
@@ -22,8 +22,6 @@ import circleUserRound from '../../../icons/lucide/icons/circle-user-round.svg?r
 import clock from '../../../icons/lucide/icons/clock.svg?raw';
 import clockAlert from '../../../icons/lucide/icons/clock-alert.svg?raw';
 import download from '../../../icons/lucide/icons/download.svg?raw';
-import eye from '../../../icons/lucide/icons/eye.svg?raw';
-import eyeOff from '../../../icons/lucide/icons/eye-off.svg?raw';
 import footprints from '../../../icons/lucide/icons/footprints.svg?raw';
 import house from '../../../icons/lucide/icons/house.svg?raw';
 import lock from '../../../icons/lucide/icons/lock.svg?raw';
@@ -57,8 +55,6 @@ const SVG = {
     clock,
     'clock-alert': clockAlert,
     download,
-    eye,
-    'eye-off': eyeOff,
     footprints,
     house,
     lock,

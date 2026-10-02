@@ -192,7 +192,6 @@ class HolderBirthDateTest extends ApiTestCase
         return $this->withHeader('Origin', (string) config('app.url'))->postJson(self::ROOT.'/auth/register', [
             'name' => 'Ana Pérez',
             'email' => $email,
-            'password' => 'un-secreto-muy-largo-2026',
         ] + $extra);
     }
 

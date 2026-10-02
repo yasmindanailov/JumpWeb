@@ -65,7 +65,6 @@ class AuthRegistrationTest extends ApiTestCase
             'name' => 'Ana Pérez',
             'email' => 'nuevo@jumpweb.test',
             'phone' => '600111222',
-            'password' => 'un-secreto-muy-largo-2026',
         ], $overrides);
     }
 
@@ -173,11 +172,16 @@ class AuthRegistrationTest extends ApiTestCase
         $this->assertNotContains('marketing', $user->consents->pluck('type')->all());
     }
 
-    public function test_a_weak_password_is_rejected(): void
+    /**
+     * Desde la A5 (`specs/acceso-con-codigo.md` §4.12, `#869`) el alta no tiene contraseña, ni opcional: una que aún llegue
+     * (un cliente viejo) no se valida, no viaja al dominio y NO se guarda —minimización: un hash que no abre nada solo le
+     * serviría a quien robara la base—. Antes, aquí se probaba que una contraseña débil se rechazaba.
+     */
+    public function test_a_password_that_still_arrives_is_not_stored(): void
     {
-        $this->register(['password' => 'corta'])
-            ->assertStatus(422)
-            ->assertJsonStructure(['error' => ['fields' => ['password']]]);
+        $this->register(['password' => 'un-secreto-muy-largo-2026'])->assertCreated();
+
+        $this->assertNull(User::where('email', 'nuevo@jumpweb.test')->firstOrFail()->getRawOriginal('password'));
     }
 
     /**

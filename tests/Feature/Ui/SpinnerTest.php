@@ -2,11 +2,9 @@
 
 namespace Tests\Feature\Ui;
 
-use App\Livewire\Auth\ResetPassword;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Blade;
-use Livewire\Livewire;
 use Tests\TestCase;
 
 /**
@@ -64,24 +62,9 @@ class SpinnerTest extends TestCase
             ->assertSee('css/spinner.css', false);
     }
 
-    /**
-     * **Un botón de Livewire pinta su spinner apuntando a SU acción.**
-     *
-     * ⚠️ **Conducía `Auth\Login` y se re-apuntó el 2026-08-23** (`DECISIONES #122`): aquel componente
-     * se retiró con el modal, pero el sujeto de este caso —que el `wire:target` señale la acción que
-     * de verdad tarda— **sobrevive intacto**. `Auth\ResetPassword` sigue siendo una página, se llega a
-     * ella desde un correo y tiene exactamente la misma forma, así que es el sucesor natural
-     * (`CONVENCIONES §3.quater`: se clasifica por el sujeto, no por el fichero).
-     *
-     * ⚠️ El `wire:target` importa y no es decoración: sin él, `wire:loading` se dispara con
-     * **cualquier** petición del componente y el botón parpadearía en operaciones que no son la suya.
-     */
-    public function test_a_livewire_button_shows_a_spinner_targeting_its_own_action(): void
-    {
-        Livewire::test(ResetPassword::class, ['token' => 'tok', 'email' => 'cliente@jumpweb.test'])
-            ->assertSeeHtml('wire:target="resetPassword"')
-            ->assertSeeHtml('jj-spinner');
-    }
+    // ▶ «Un botón de Livewire pinta su spinner apuntando a SU acción» se retiró con su último sujeto, la página de
+    //   restablecer la contraseña (A5 de `specs/acceso-con-codigo.md`, `#869`): en la web ya no queda ningún formulario de
+    //   Livewire con `x-ui.spinner` (la Puerta del panel cambia el texto del botón, `validar.blade.php`).
 
     /**
      * ⚠️ **El cajón se abre antes de que exista su motor, y ese hueco se ve.**

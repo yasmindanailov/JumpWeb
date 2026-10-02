@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
-"""Arnés de mutación de `#508` — los dos correos del framework, al molde del producto.
+"""Arnés de mutación de `#508` — el correo del framework, al molde del producto.
 
-La mutación 1 reproduce **el defecto que los tuvo fuera del carril entero**: que `User` deje de
-mandar la nuestra. Sin su caso, eso pasa en verde —las subclases siguen existiendo, así que el
+La mutación 1 reproduce **el defecto que lo tuvo fuera del carril entero**: que `User` deje de
+mandar el nuestro. Sin su caso, eso pasa en verde —la subclase sigue existiendo, así que el
 censo del molde no se entera— y el cliente vuelve a recibir un correo que se anuncia con «¡Hola!».
+
+▶ Eran DOS correos y siete mutaciones: el de restablecer la contraseña se retiró con ella (A5 de
+`docs/specs/acceso-con-codigo.md`, `#869`) y sus tres mutaciones con él; la de la cola (`PAY-14`) se
+re-ancló al de verificar. Y la del molde salía «NO APLICADA» desde `#678` (el molde recibe `$this`
+para las UTM): re-anclada en la misma tanda, al correrlo.
 
 ⚠️ Las reglas pagadas: exigir VERDE y ÁRBOL LIMPIO antes de mutar, restaurar siempre, y
 **verificar que cada mutación se aplicó** antes de correr un solo caso (`#506`).
@@ -16,7 +21,6 @@ RAIZ = Path(__file__).resolve().parent.parent
 FILTRO = 'MailMoldTest|MailInboxLineTest|QueuedEmailsTest'
 FICHEROS = [
     'app/Domain/Identity/Models/User.php',
-    'app/Notifications/PasswordReset.php',
     'app/Notifications/VerifyEmailAddress.php',
     'lang/es/emails.php',
 ]
@@ -27,25 +31,15 @@ MUTACIONES = [
      "        $this->notify(new VerifyEmailAddress);",
      "        $this->notify(new \\Illuminate\\Auth\\Notifications\\VerifyEmail);"),
 
-    ("…y lo mismo con el enlace de contraseña",
-     'app/Domain/Identity/Models/User.php',
-     "        $this->notify(new PasswordReset($token));",
-     "        $this->notify(new \\Illuminate\\Auth\\Notifications\\ResetPassword($token));"),
-
     ("el correo de verificación pierde su cabecera",
      'app/Notifications/VerifyEmailAddress.php',
      "            ->hero('emails.verify_email', 'warn')\n",
      ""),
 
-    ("el enlace de contraseña pierde su cabecera",
-     'app/Notifications/PasswordReset.php',
-     "            ->hero('emails.password_reset', 'warn')\n",
-     ""),
-
-    ("uno de los dos deja de encolarse, contra PAY-14",
-     'app/Notifications/PasswordReset.php',
-     "class PasswordReset extends ResetPassword implements ShouldQueue",
-     "class PasswordReset extends ResetPassword"),
+    ("deja de encolarse, contra PAY-14",
+     'app/Notifications/VerifyEmailAddress.php',
+     "class VerifyEmailAddress extends VerifyEmail implements ShouldQueue",
+     "class VerifyEmailAddress extends VerifyEmail"),
 
     ("se queda sin línea de adelanto en español",
      'lang/es/emails.php',
@@ -54,7 +48,7 @@ MUTACIONES = [
 
     ("vuelve a construir el mensaje fuera del molde",
      'app/Notifications/VerifyEmailAddress.php',
-     "        return (new BrandedMailMessage)",
+     "        return (new BrandedMailMessage($this))",
      "        return (new \\Illuminate\\Notifications\\Messages\\MailMessage)"),
 ]
 

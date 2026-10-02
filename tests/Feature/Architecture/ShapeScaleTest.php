@@ -73,7 +73,7 @@ class ShapeScaleTest extends TestCase
         // ⚠️ `.bd-proc__cube` (y su variante dentro de un `@media`) SE RETIRÓ en `#528` con el paso
         // a paso de la página vieja de `/cumpleanos`: la excepción se va con su sujeto.
         '.catalog-acc__icon' => [30, 9.0],
-        '.pwd-input__toggle' => [32, 6.0],
+        // ⚠️ `.pwd-input__toggle` SE RETIRÓ con la contraseña del cliente (A5, `#869`): la excepción se va con su sujeto.
     ];
 
     /**

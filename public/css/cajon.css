@@ -1,7 +1,7 @@
 /* GENERADO por scripts/hoja-del-cajon.py desde public/css/{site,landing,spinner}.css. NO se edita a mano:
  * se toca la regla en su fuente y se vuelve a generar. `HojaDelCajonTest` vigila que no se separen.
  * Qué entra y por qué: la cabecera de ese guion y `specs/cajon-empaquetable.md` §4.3.
- * FUENTES landing.css:0e3f25655c5c spinner.css:8270bcfe03ab site.css:81f435d3c425 */
+ * FUENTES landing.css:0e3f25655c5c spinner.css:8270bcfe03ab site.css:ad13458c25a4 */
 /* La BASE del paquete: lo que el cajón heredaba del `<body>` del producto y ahora se da
  * a sí mismo, para no tocar el documento del anfitrión. Ver la cabecera del generador. */
 :where(.sidecart), :where(.sidecart) * {
@@ -1054,31 +1054,6 @@
 .form__error {
     color: var(--err); font-size: var(--fs-12); font-style: normal; margin-top: var(--sp-2);
 }
-.pwd-input {
-    position: relative; display: block;
-}
-.pwd-input input {
-    padding-right: 44px;
-}
-.pwd-input__toggle {
-    position: absolute; top: 50%; right: 6px;
-    transform: translateY(-50%);
-    width: 32px; height: 32px;
-    display: inline-flex; align-items: center; justify-content: center;
-    border: 0; background: transparent;
-    color: var(--fg-mute); cursor: pointer; border-radius: 6px;
-    transition: color var(--dur-toque) var(--ease-sale), background var(--dur-toque) var(--ease-sale);
-}
-.pwd-input__toggle:hover {
-    color: var(--fg); background: color-mix(in srgb, var(--fg) 6%, transparent);
-}
-.pwd-input__toggle:focus-visible {
-    outline: var(--focus-outline);
-    outline-offset: 2px;
-}
-.pwd-input__icon {
-    display: block;
-}
 .qr-frame {
     display: flex; flex-direction: column; align-items: center; gap: var(--sp-14);
 }
@@ -1132,9 +1107,6 @@
     background: none; border: none; cursor: pointer; padding: 0;
     font-family: var(--font-body); font-size: var(--fs-button); color: var(--interactive);
     font-weight: 600; text-decoration: underline; white-space: nowrap;
-}
-.auth--page {
-    max-width: 480px; margin-top: var(--sp-8);
 }
 .auth__switch {
     margin: var(--sp-16) 0 0; text-align: center;

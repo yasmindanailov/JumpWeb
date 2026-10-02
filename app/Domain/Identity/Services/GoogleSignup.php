@@ -14,7 +14,6 @@ use App\Domain\Platform\Services\Analytics\Recorder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 
 /**
  * **El alta que nace de una identidad de Google** (`docs/specs/auth-con-google.md` §5.3, tanda T2).
@@ -77,10 +76,10 @@ final class GoogleSignup
                 // checkout, que es donde hace falta. La cuenta nace sin él —un estado que el producto
                 // ya admite por la puerta del alta de mostrador— y `CheckoutDuties` lo reclama antes
                 // de crear el primer pedido.
-                // Contraseña ALEATORIA e inservible, como el alta de mostrador: nadie la conoce y
-                // nadie puede entrar con ella. Quien quiera una la pide con «he olvidado mi
-                // contraseña», que es lo que hace que esta cuenta no dependa de Google para siempre.
-                'password' => Str::random(60),
+                // SIN contraseña (A5 de `specs/acceso-con-codigo.md`, `#869`; antes, una aleatoria e
+                // inservible): la cuenta no depende de Google para siempre porque su correo puede
+                // recibir el código para entrar.
+                'password' => null,
                 // TP·1 (`#792`): Google no la da (pedirla exige un permiso sensible, descartado); la pantalla sí, opcional.
                 'born_on' => BirthDatePolicy::normalize($data['born_on'] ?? null),
                 'locale' => app()->getLocale(),
@@ -93,8 +92,8 @@ final class GoogleSignup
 
             // ⚠️ `email_verified_at` NO es `fillable` a propósito, así que se escribe con `forceFill`
             // igual que hace el alta de mostrador. Y es una DECISIÓN, no un detalle (`[DECIDIDO
-            // owner]` Q1): sostiene la recuperación de contraseña, y sin ella la transacción no podría
-            // firmar el descargo — `WaiverSigner` lee esta columna, no lo que Google afirme.
+            // owner]` Q1): Google ha probado el buzón, y sin ella la transacción no podría firmar el
+            // descargo — `WaiverSigner` lee esta columna, no lo que Google afirme.
             $user->forceFill(['email_verified_at' => $now])->save();
 
             if ($role = Role::where('name', 'customer')->first()) {

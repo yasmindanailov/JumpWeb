@@ -14,9 +14,9 @@ cd "$(git rev-parse --show-toplevel)"
 SAIL="docker compose exec -u sail -T laravel.test"
 TESTS="$SAIL php artisan test --filter=AuthTokenTest|ApiTokenAbilityTest"
 
-LOGIN=app/Domain/Identity/Services/PasswordLogin.php
-# El núcleo de los limitadores salió de `PasswordLogin` TAL CUAL a `LoginGate` (A1 del acceso con código, `#853`): sus dos
-# mutantes se re-apuntan allí con el mismo texto.
+# Desde la A5 (`#869`) el token se emite SOLO con el código al correo (`EmailCodeLogin`): `PasswordLogin` se retiró con la
+# contraseña del cliente. El núcleo de los limitadores ya había salido de él TAL CUAL a `LoginGate` (A1, `#853`).
+LOGIN=app/Domain/Identity/Services/EmailCodeLogin.php
 GATE=app/Domain/Identity/Services/LoginGate.php
 ISSUER=app/Domain/Identity/Services/ApiTokenIssuer.php
 USER=app/Domain/Identity/Models/User.php
@@ -26,9 +26,11 @@ BASE=tests/TestCase.php
 
 TMP="$(mktemp -d)"
 FICHEROS=("$LOGIN" "$GATE" "$ISSUER" "$USER" "$ROUTES" "$BOOT" "$BASE")
-restaurar() { for f in "${FICHEROS[@]}"; do cp "$TMP/$(basename "$f")" "$f"; touch "$f"; done; }
+# Copias por RUTA completa, nunca por nombre: dos ficheros con el mismo nombre se pisarían.
+copia() { echo "$TMP/${1//\//__}"; }
+restaurar() { for f in "${FICHEROS[@]}"; do cp "$(copia "$f")" "$f"; touch "$f"; done; }
 trap 'restaurar; rm -rf "$TMP"' EXIT
-for f in "${FICHEROS[@]}"; do cp "$f" "$TMP/$(basename "$f")"; done
+for f in "${FICHEROS[@]}"; do cp "$f" "$(copia "$f")"; done
 
 verde() { $TESTS >/dev/null 2>&1; }
 
@@ -45,7 +47,7 @@ mutar() {
     total=$((total + 1))
     python3 -c 'import sys; p=sys.argv[1]; s=open(p,encoding="utf-8").read(); open(p,"w",encoding="utf-8").write(s.replace(sys.argv[2], sys.argv[3], 1))' \
         "$fichero" "$buscar" "$poner"
-    if cmp -s "$fichero" "$TMP/$(basename "$fichero")"; then
+    if cmp -s "$fichero" "$(copia "$fichero")"; then
         echo "  ⚠ «$nombre» NO SE APLICÓ (el patrón no casa): el veredicto no vale"
         return
     fi
@@ -56,7 +58,7 @@ mutar() {
         echo "  ✓ muerde:    $nombre"
         muerden=$((muerden + 1))
     fi
-    cp "$TMP/$(basename "$fichero")" "$fichero"; touch "$fichero"
+    cp "$(copia "$fichero")" "$fichero"; touch "$fichero"
 }
 
 # ── La puerta nueva no es una segunda oportunidad (`SEC-06`) ───────────────────────────────────
@@ -68,9 +70,17 @@ mutar "el limitador por IP sola deja de bloquear (el barrido pasa entero)" "$GAT
   "
             || RateLimiter::tooManyAttempts(\$ipKey, self::MAX_ATTEMPTS_PER_IP)" ""
 
-mutar "verificar ABRE sesión (\`attempt\` en vez de \`validate\`)" "$LOGIN" \
-  "Auth::guard('web')->validate(['email' => \$email, 'password' => \$password])" \
-  "Auth::guard('web')->attempt(['email' => \$email, 'password' => \$password])"
+mutar "verificar ABRE sesión (emitir un token entraría también en la web)" "$LOGIN" \
+  "        return \$result;
+    }
+}" \
+  "        if (\$user !== null) {
+            \\Illuminate\\Support\\Facades\\Auth::guard('web')->login(\$user);
+        }
+
+        return \$result;
+    }
+}"
 
 # ── Con qué nace un token ──────────────────────────────────────────────────────────────────────
 mutar "el token nace con el comodín en vez de con su ability" "$ISSUER" \

@@ -3,26 +3,33 @@
 namespace Tests\Feature\Api\V1;
 
 use App\Domain\Identity\Models\User;
-use App\Domain\Identity\Services\PasswordLogin;
+use App\Domain\Identity\Services\LoginGate;
 use App\Http\Sidebar\SidebarEntry;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Testing\TestResponse;
 use Laravel\Sanctum\Sanctum;
 use Tests\Feature\Api\ApiTestCase;
+use Tests\Support\IssuesCodes;
 
 /**
  * Fase 3 · paso 3b — `POST /api/v1/auth/login` y `auth/logout`.
  *
- * La superficie que consumirá la SPA del sidebar. Lo que se comprueba aquí no es que la contraseña
- * se verifique —de eso ya hay tests, y de la regla en sí los de `PasswordLoginTest`— sino que la
- * API **hereda** la protección de `SEC-06` en vez de reimplementarla: los mismos dos limitadores,
- * el mismo mensaje genérico y la misma imposibilidad de averiguar qué correos existen.
+ * La superficie que usan el cajón y la isla. Lo que se comprueba aquí no es que el código se verifique —de la regla en
+ * sí son `LoginGateTest` y `AuthCodeTest`— sino que la API **hereda** la protección de `SEC-06` en vez de
+ * reimplementarla: los mismos dos limitadores, el mismo mensaje genérico y la misma imposibilidad de averiguar qué
+ * correos existen.
+ *
+ * ▶ Desde la A5 (`specs/acceso-con-codigo.md` §4.12, `#869`) se entra solo con el CÓDIGO: estas pruebas entraban con la
+ * contraseña como intermediario de lo que de verdad prueban (la sesión, el desenlace del pago, los cubos), y se
+ * re-apuntaron al código (`CONVENCIONES` §3.quater).
  */
 class AuthSessionTest extends ApiTestCase
 {
+    use IssuesCodes;
+
     private function customer(string $email = 'cliente@jumpweb.test'): User
     {
-        return User::factory()->create(['email' => $email, 'email_verified_at' => now()]);
+        return User::factory()->create(['email' => $email, 'email_verified_at' => now(), 'password' => null]);
     }
 
     /**
@@ -49,7 +56,7 @@ class AuthSessionTest extends ApiTestCase
     {
         $user = $this->customer();
 
-        $this->fromSpa('/auth/login', ['email' => $user->email, 'password' => 'password'])
+        $this->fromSpa('/auth/login', ['email' => $user->email, 'code' => $this->loginCodeFor($user)])
             ->assertOk()
             ->assertValidRequest()
             ->assertValidResponse(200)
@@ -70,13 +77,11 @@ class AuthSessionTest extends ApiTestCase
      * ▶ **Este caso nace de la auditoría de A8** (`specs/auth-en-cajon.md` §8), y lo que destapó es
      * que la defensa vivía SOLO en `Livewire\Auth\Login` —el modal que se retira— y que su único
      * guardián era un test que se va con él. Medido por mutación: desactivarla tumbaba **un** test de
-     * toda la suite. El login de la API, que es el que usa el cajón **desde 4.4a·2**, nunca la tuvo;
-     * el propio controlador lo decía en un comentario («el sidebar Livewire hace lo mismo, más lo
-     * suyo con la cesta») sin que nadie lo leyera como el hueco que era.
+     * toda la suite. El login de la API, que es el que usa el cajón **desde 4.4a·2**, nunca la tuvo.
      *
      * ⚠️ El marcador es **quién estaba autenticado antes**, no la clave de sesión `purchase.user_id`
-     * que usaba el modal: esa clave ya no la lee nadie —su consumidor era el `Purchase.php` que
-     * `#112` retiró— y resucitarla habría sido inventar un segundo estado para decir lo mismo.
+     * que usaba el modal: esa clave ya no la lee nadie y resucitarla habría sido inventar un segundo
+     * estado para decir lo mismo.
      */
     public function test_a_login_by_someone_else_discards_the_previous_payment_outcome(): void
     {
@@ -86,7 +91,7 @@ class AuthSessionTest extends ApiTestCase
         $this->actingAs($alice);
         SidebarEntry::failed('R-DE-ALICE');
 
-        $this->fromSpa('/auth/login', ['email' => $bob->email, 'password' => 'password'])->assertOk();
+        $this->fromSpa('/auth/login', ['email' => $bob->email, 'code' => $this->loginCodeFor($bob)])->assertOk();
 
         $this->assertAuthenticatedAs($bob->fresh());
         $this->assertFalse(
@@ -109,7 +114,7 @@ class AuthSessionTest extends ApiTestCase
         $this->actingAs($alice);
         SidebarEntry::confirmed('R-DE-ALICE');
 
-        $this->fromSpa('/auth/login', ['email' => $alice->email, 'password' => 'password'])->assertOk();
+        $this->fromSpa('/auth/login', ['email' => $alice->email, 'code' => $this->loginCodeFor($alice)])->assertOk();
 
         $this->assertTrue(SidebarEntry::peek()->pending(), 'se ha perdido el desenlace de su propia compra');
     }
@@ -121,7 +126,7 @@ class AuthSessionTest extends ApiTestCase
         // sucia —mayúsculas y espacios, como la escribe un móvil con autocapitalización— entra.
         $user = $this->customer('cliente@jumpweb.test');
 
-        $this->fromSpa('/auth/login', ['email' => '  CLIENTE@jumpweb.TEST ', 'password' => 'password'])
+        $this->fromSpa('/auth/login', ['email' => '  CLIENTE@jumpweb.TEST ', 'code' => $this->loginCodeFor($user)])
             ->assertOk();
 
         $this->assertAuthenticatedAs($user->fresh());
@@ -133,30 +138,29 @@ class AuthSessionTest extends ApiTestCase
         $user = $this->customer();
         $this->assertNull($user->last_login_at);
 
-        $this->fromSpa('/auth/login', ['email' => $user->email, 'password' => 'password'])->assertOk();
+        $this->fromSpa('/auth/login', ['email' => $user->email, 'code' => $this->loginCodeFor($user)])->assertOk();
 
         $this->assertNotNull($user->fresh()->last_login_at);
     }
 
     /**
-     * `SEC-06`: una contraseña incorrecta y un correo que no existe dan **exactamente** la misma
-     * respuesta. Si difirieran —en código, en mensaje o en status—, la API sería un oráculo de qué
-     * correos están registrados, que es justo lo que la web evita desde el origen.
+     * `SEC-06`: un código incorrecto y un correo que no existe dan **exactamente** la misma respuesta. Si difirieran —en
+     * código, en mensaje o en status—, la API sería un oráculo de qué correos están registrados.
      */
-    public function test_wrong_password_and_unknown_email_are_indistinguishable(): void
+    public function test_a_wrong_code_and_an_unknown_email_are_indistinguishable(): void
     {
-        $this->customer();
+        $user = $this->customer();
 
-        $wrongPassword = $this->fromSpa('/auth/login', [
-            'email' => 'cliente@jumpweb.test', 'password' => 'no-es-esta',
+        $wrongCode = $this->fromSpa('/auth/login', [
+            'email' => $user->email, 'code' => $this->wrongCode($this->loginCodeFor($user)),
         ])->assertStatus(401)->assertValidResponse(401);
 
         $unknownEmail = $this->fromSpa('/auth/login', [
-            'email' => 'no-existe@jumpweb.test', 'password' => 'no-es-esta',
+            'email' => 'no-existe@jumpweb.test', 'code' => '123456',
         ])->assertStatus(401);
 
-        $this->assertSame($wrongPassword->json(), $unknownEmail->json());
-        $this->assertSame('invalid_credentials', $wrongPassword->json('error.code'));
+        $this->assertSame($wrongCode->json(), $unknownEmail->json());
+        $this->assertSame('invalid_credentials', $wrongCode->json('error.code'));
         $this->assertGuest();
     }
 
@@ -165,57 +169,50 @@ class AuthSessionTest extends ApiTestCase
         $this->fromSpa('/auth/login', ['email' => 'no-es-un-email'])
             ->assertStatus(422)
             ->assertValidResponse(422)
-            ->assertJsonStructure(['error' => ['fields' => ['email', 'password']]]);
+            ->assertJsonStructure(['error' => ['fields' => ['email', 'code']]]);
     }
 
     /** Un campo que el servidor ignoraría no se acepta en silencio: el contrato lo prohíbe. */
     public function test_an_undeclared_field_breaks_the_contract(): void
     {
         $this->fromSpa('/auth/login', [
-            'email' => 'cliente@jumpweb.test', 'password' => 'password', 'admin' => true,
+            'email' => 'cliente@jumpweb.test', 'code' => '123456', 'admin' => true,
         ])->assertInvalidRequest();
     }
 
     /**
-     * Primer limitador de `SEC-06`, por (correo, IP). Al agotarlo la respuesta es **429 con
-     * `retry_after`**, no otro 401: a un cliente legítimo que se ha equivocado hay que decirle
-     * cuándo puede volver, y eso no revela nada de la cuenta.
+     * Primer limitador de `SEC-06`, por (correo, IP). Al agotarlo la respuesta es **429 con `retry_after`**, no otro 401:
+     * a un cliente legítimo que se ha equivocado hay que decirle cuándo puede volver, y eso no revela nada de la cuenta.
      */
     public function test_repeated_failures_on_one_account_are_rate_limited(): void
     {
-        $this->customer();
+        $user = $this->customer();
 
-        foreach (range(1, PasswordLogin::MAX_ATTEMPTS) as $ignored) {
-            $this->fromSpa('/auth/login', [
-                'email' => 'cliente@jumpweb.test', 'password' => 'no-es-esta',
-            ])->assertStatus(401);
+        foreach (range(1, LoginGate::MAX_ATTEMPTS) as $ignored) {
+            $this->fromSpa('/auth/login', ['email' => $user->email, 'code' => '000000'])->assertStatus(401);
         }
 
         $blocked = $this->fromSpa('/auth/login', [
-            'email' => 'cliente@jumpweb.test', 'password' => 'password',
+            'email' => $user->email, 'code' => $this->loginCodeFor($user),
         ])->assertStatus(429)->assertValidResponse(429);
 
         $this->assertSame('too_many_requests', $blocked->json('error.code'));
         $this->assertGreaterThan(0, $blocked->json('error.params.retry_after'));
-        $this->assertGuest();  // la contraseña correcta tampoco entra mientras dure el bloqueo
+        $this->assertGuest();  // el código bueno tampoco entra mientras dure el bloqueo
     }
 
     /**
-     * Segundo limitador, por IP SOLA (auditoría Fase 1, A5) — el que de verdad frena el
-     * password-spraying: un intento por cuenta nunca acumula 5 en la clave compuesta, así que sin
-     * este un atacante barrería cuentas indefinidamente desde el mismo origen.
+     * Segundo limitador, por IP SOLA (auditoría Fase 1, A5) — el que de verdad frena el barrido: un intento por cuenta
+     * nunca acumula 5 en la clave compuesta, así que sin éste un atacante barrería cuentas indefinidamente desde el mismo
+     * origen.
      */
     public function test_spraying_many_accounts_from_one_ip_is_rate_limited(): void
     {
-        foreach (range(1, PasswordLogin::MAX_ATTEMPTS_PER_IP) as $i) {
-            $this->fromSpa('/auth/login', [
-                'email' => "victima{$i}@jumpweb.test", 'password' => 'probando',
-            ])->assertStatus(401);
+        foreach (range(1, LoginGate::MAX_ATTEMPTS_PER_IP) as $i) {
+            $this->fromSpa('/auth/login', ['email' => "victima{$i}@jumpweb.test", 'code' => '000000'])->assertStatus(401);
         }
 
-        $this->fromSpa('/auth/login', [
-            'email' => 'otra-mas@jumpweb.test', 'password' => 'probando',
-        ])->assertStatus(429);
+        $this->fromSpa('/auth/login', ['email' => 'otra-mas@jumpweb.test', 'code' => '000000'])->assertStatus(429);
     }
 
     // ── Cierre de sesión ──────────────────────────────────────────────────────────────────────

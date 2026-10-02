@@ -2,7 +2,6 @@
 
 use App\Domain\Booking\Services\PartyInvitations;
 use App\Http\Controllers\Account\AccountController;
-use App\Http\Controllers\Account\EmailChangeController;
 use App\Http\Controllers\Admin\AnalyticsExportController;
 use App\Http\Controllers\Admin\CalendarEventsController;
 use App\Http\Controllers\Admin\DailySummaryController;
@@ -14,7 +13,6 @@ use App\Http\Controllers\AttractionsController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\Auth\LogoutController;
-use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\BarController;
 use App\Http\Controllers\BirthdayReminderController;
 use App\Http\Controllers\ContactController;
@@ -64,8 +62,11 @@ Route::get('/registro', HomeController::class)->name('registro');
 // sesión y dejaría dos sitios que pueden discrepar.
 Route::get('/registro/google', HomeController::class)->name('registro.google');
 Route::get('/login', HomeController::class)->name('login');
-Route::get('/recuperar-contrasena', HomeController::class)->name('password.request');
-Route::get('/restablecer-contrasena/{token}', [PasswordResetController::class, 'edit'])->name('password.reset');
+// Sin contraseña de cliente desde la A5 (`specs/acceso-con-codigo.md` §4.12, `#869`): sus dos direcciones llevan a la
+// PUERTA del código, para que un marcador o un correo viejo lleguen a entrar y no a un 404. Sin nombre de ruta: nada las
+// enlaza ya.
+Route::permanentRedirect('/recuperar-contrasena', '/login');
+Route::permanentRedirect('/restablecer-contrasena/{token}', '/login');
 Route::get('/email/verificar', [EmailVerificationController::class, 'notice'])->name('verification.notice');
 Route::get('/email/verificar/{id}/{hash}', [EmailVerificationController::class, 'verify'])
     ->middleware(['signed', 'throttle:6,1'])->name('verification.verify');
@@ -147,10 +148,8 @@ Route::middleware('auth')->group(function () {
         ->name('account.export');
 });
 
-// Confirmación del cambio de email (auditoría 2026-05-26, hallazgo A): enlace firmado del correo
-// enviado al NUEVO email. NO requiere sesión (la firma prueba la titularidad del nuevo buzón).
-Route::get('/mi-cuenta/email/confirmar/{id}/{hash}', [EmailChangeController::class, 'confirm'])
-    ->middleware(['signed', 'throttle:6,1'])->name('account.email.confirm');
+// Sin el ENLACE del cambio de correo desde la A5 (`specs/acceso-con-codigo.md` §4.12, `#869`): el buzón nuevo se prueba
+// con el código que recibe (`POST /api/v1/me/pending-email/confirm`), escrito donde se pidió el cambio.
 
 // Páginas de texto legal (contenido desde la tabla `pages`).
 foreach (['privacidad', 'condiciones', 'waiver', 'cookies', 'aviso-legal'] as $slug) {

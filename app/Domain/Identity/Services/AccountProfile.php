@@ -4,7 +4,6 @@ namespace App\Domain\Identity\Services;
 
 use App\Domain\Identity\Contracts\EmailChangeOutcome;
 use App\Domain\Identity\Contracts\ProfileUpdateResult;
-use App\Domain\Identity\Contracts\Reconfirmation;
 use App\Domain\Identity\Contracts\ResendResult;
 use App\Domain\Identity\Models\LoginCode;
 use App\Domain\Identity\Models\User;
@@ -29,9 +28,10 @@ use Illuminate\Validation\Rule;
  * Reescribir eso en la API habría sido garantizar que las dos versiones se separaran.
  *
  * ⚠️⚠️ **El correo NO se cambia al guardar: se SOLICITA.** El email vigente sigue intacto y lo nuevo
- * vive en `pending_email` hasta que el titular abre el enlace que se le manda al buzón nuevo. Esa es
- * la defensa de fondo de todo este ciclo: si alguien entra en una sesión ajena y cambia el correo, el
- * dueño **no pierde el acceso** —y además recibe el aviso al buzón viejo—.
+ * vive en `pending_email` hasta que el titular escribe el código que se le manda al buzón nuevo (desde
+ * la A5, `#869`, solo el código: el enlace se retiró). Esa es la defensa de fondo de todo este ciclo:
+ * si alguien entra en una sesión ajena y cambia el correo, el dueño **no pierde el acceso** —y además
+ * recibe el aviso al buzón viejo—.
  */
 class AccountProfile
 {
@@ -39,16 +39,14 @@ class AccountProfile
     private const RESEND_WINDOW = 60;
 
     /**
-     * Cuánto vale el enlace de confirmación del correo nuevo.
+     * Cuánto dura un cambio de correo pendiente: pasado este tiempo, el código del buzón nuevo ya no lo completa.
      *
-     * ⚠️ **Vivía en `Http\Controllers\Account\EmailChangeController` y baja aquí** porque es una
-     * regla de DOMINIO, no de una superficie: la usan el controlador que valida el enlace, la página
-     * que dice los minutos que quedan y ahora la API, que publica la caducidad para que el cliente no
-     * tenga que recomponerla. Tres consumidores y una sola definición.
+     * ⚠️ Es una regla de DOMINIO, no de una superficie (vivía en el controlador del enlace, retirado en la A5): la usan
+     * `completeEmailChange()` y la API, que publica la caducidad para que el cliente no tenga que recomponerla.
      */
     public const PENDING_EMAIL_HOLD_MINUTES = 60;
 
-    /** Cuándo caduca el enlace pendiente de este titular, o `null` si no hay ninguno. */
+    /** Cuándo caduca el cambio de correo pendiente de este titular, o `null` si no hay ninguno. */
     public static function pendingEmailExpiresAt(User $user): ?Carbon
     {
         if (! $user->pending_email || ! $user->pending_email_sent_at) {
@@ -102,28 +100,26 @@ class AccountProfile
      * `update` provoca esa confusión cada vez que alguien lo llama desde un controlador; renombrarlo
      * cuesta una palabra y no debilita la guarda con una excepción.
      *
-     * ⚠️ **La reconfirmación solo se pide si cambia el correo**, igual que en la web: obligar a
-     * escribir la contraseña para corregir una errata en el teléfono no defiende nada y hace que el
-     * titular acabe evitando la pantalla.
+     * ⚠️ **La reconfirmación solo se pide si cambia el correo**: obligar a confirmar para corregir una errata en el
+     * teléfono no defiende nada y hace que el titular acabe evitando la pantalla.
      *
-     * ▶ Desde la A2a (`#855`) se reconfirma con la contraseña **o con un código `confirm`** al correo de la cuenta.
+     * ▶ Se reconfirma con un código `confirm` al correo de la cuenta (A2a, `#855`; el único desde la A5, `#869`).
      *
      * @param  array{name: string, phone: string, born_on?: ?string, locale: string, email: string}  $data  sin `born_on`, la fecha no se toca
+     * @param  string|null  $code  el código de confirmar; solo hace falta si cambia el correo
      */
-    public function apply(User $user, array $data, ?Reconfirmation $with, string $ip): ProfileUpdateResult
+    public function apply(User $user, array $data, ?string $code, string $ip): ProfileUpdateResult
     {
         $email = Str::lower(trim($data['email']));
         $emailChanged = $email !== $user->email;
 
         if ($emailChanged) {
-            $verdict = $this->credentials->verify($user, $with ?? Reconfirmation::password(''), $ip);
+            $verdict = $this->credentials->verify($user, (string) $code, $ip);
 
             if ($verdict->failed()) {
-                return match (true) {
-                    $verdict->wasRateLimited() => ProfileUpdateResult::rateLimited($verdict->retryAfter),
-                    $verdict->wasWrongCode() => ProfileUpdateResult::wrongCode(),
-                    default => ProfileUpdateResult::wrongPassword(),
-                };
+                return $verdict->wasRateLimited()
+                    ? ProfileUpdateResult::rateLimited($verdict->retryAfter)
+                    : ProfileUpdateResult::wrongCode();
             }
         }
 
@@ -155,12 +151,11 @@ class AccountProfile
         }
 
         if ($emailChanged) {
-            // ⚠️ **DOS avisos, y el segundo es la defensa.** El primero va al buzón NUEVO con el
-            // enlace; el segundo al VIEJO, para que el dueño se entere si esto no lo ha pedido él. El
-            // correo nuevo viaja **enmascarado** ahí: un aviso cruzado no puede regalar la dirección
-            // completa de otro buzón a quien lea el primero.
-            // ▶ Desde la A2b (`#856`) el primero lleva además un CÓDIGO y sale tras la respuesta (`CodeMail`): quien lo
-            // pidió lo está esperando en la pantalla.
+            // ⚠️ **DOS avisos, y el segundo es la defensa.** El primero va al buzón NUEVO con su
+            // CÓDIGO (A2b, `#856`; el enlace se retiró en la A5) y sale tras la respuesta (`CodeMail`):
+            // quien lo pidió lo está esperando en la pantalla. El segundo, al VIEJO, para que el dueño se
+            // entere si esto no lo ha pedido él; el correo nuevo viaja **enmascarado** ahí: un aviso
+            // cruzado no puede regalar la dirección completa de otro buzón a quien lea el primero.
             $this->sendNewEmailCode($user, $ip);
             $user->notify(new EmailChangeRequested(self::maskEmail($email)));
 
@@ -213,8 +208,8 @@ class AccountProfile
         RateLimiter::hit($key, self::RESEND_WINDOW);
         RateLimiter::hit($hourKey, 3600);
 
-        // ⚠️ Se **resella** el envío: la ventana de validez del enlace cuenta desde el último, no
-        // desde el primero. Sin esto, reenviar entregaría un enlace que caduca antes de llegar.
+        // ⚠️ Se **resella** el envío: la ventana del cambio pendiente cuenta desde el último, no
+        // desde el primero. Sin esto, reenviar entregaría un código para un cambio que caduca antes.
         $user->forceFill(['pending_email_sent_at' => now()])->save();
         $this->sendNewEmailCode($user, $ip);
 
@@ -251,18 +246,18 @@ class AccountProfile
     }
 
     /**
-     * **Completa el cambio pedido**: el correo nuevo pasa a ser el de la cuenta, verificado. Lo usan el CÓDIGO (arriba) y el
-     * ENLACE firmado (`EmailChangeController`), que antes lo hacía él mismo: bajó aquí TAL CUAL en la A2b (`#856`) para no
-     * tener dos copias. Quien llama ya ha probado el buzón nuevo (el código, o la firma y el hash del enlace).
+     * **Completa el cambio pedido**: el correo nuevo pasa a ser el de la cuenta, verificado. Quien llama ya ha probado el
+     * buzón nuevo con su código (arriba). Bajó aquí del controlador del ENLACE en la A2b (`#856`), y el enlace se retiró en
+     * la A5 (`#869`): queda una sola puerta.
      */
-    public function completeEmailChange(User $user): EmailChangeOutcome
+    private function completeEmailChange(User $user): EmailChangeOutcome
     {
         if (! $user->pending_email || ! $user->pending_email_sent_at) {
             return EmailChangeOutcome::of(EmailChangeOutcome::NOTHING_PENDING);
         }
 
-        // Caducidad de la solicitud (defensa adicional a la firma de la ruta). Por `pendingEmailExpiresAt()`, la MISMA cuenta
-        // que publica la API: dos fórmulas de la ventana serían dos respuestas a «¿sigue valiendo?».
+        // Caducidad de la solicitud. Por `pendingEmailExpiresAt()`, la MISMA cuenta que publica la API: dos fórmulas de la
+        // ventana serían dos respuestas a «¿sigue valiendo?».
         $expiresAt = self::pendingEmailExpiresAt($user);
         if ($expiresAt === null || $expiresAt->lt(now())) {
             $user->forceFill(['pending_email' => null, 'pending_email_sent_at' => null])->save();

@@ -15,8 +15,8 @@ use Laravel\Sanctum\PersonalAccessToken;
  *
  * Llega el último: desde la Fase 3 existían el trait, la caducidad, la poda y —sobre todo— la
  * revocación por las cinco vías de `RGPD-06`, hecha antes de que hubiera un solo token emitido. Lo
- * que faltaba es esto, y es deliberadamente poco: **quién comprueba la contraseña no vive aquí**
- * ({@see PasswordLogin::verify()}, con los dos limitadores de `SEC-06`) y **quién retira un token
+ * que faltaba es esto, y es deliberadamente poco: **quién comprueba la credencial no vive aquí**
+ * ({@see EmailCodeLogin::verify()}, con los dos limitadores de `SEC-06`) y **quién retira un token
  * tampoco** (`User`, el punto único). Aquí solo se decide con qué nace un token.
  *
  * Tres reglas, las tres con su mutación en `scripts/mutar-token-bearer.sh`:

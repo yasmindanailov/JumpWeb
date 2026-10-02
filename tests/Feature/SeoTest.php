@@ -230,13 +230,11 @@ class SeoTest extends TestCase
      */
     public function test_the_auth_doors_are_never_indexable(): void
     {
-        // ⚠️ Las tres primeras lo llevaban ya; las dos últimas **NO** (medido el 2026-08-23:
-        // `index, follow`), y una de ellas es una URL con un TOKEN de restablecimiento dentro. El
-        // `noindex` de auth venía del prop `authModal`, que estas dos páginas ponen a `null`, así que
-        // se quedaban fuera por el mismo efecto lateral que lo daba a las otras.
+        // ⚠️ Las primeras lo llevaban ya; la de verificar el correo **NO** (medido el 2026-08-23: `index, follow`): el
+        // `noindex` de auth venía del prop `authModal`, que esa página pone a `null`. ▶ `/recuperar-contrasena` y
+        // `/restablecer-contrasena/{token}` salieron de la lista con la A5 (`#869`): son un 301 a `/login`, que no se indexa.
         $surfaces = [
-            '/login', '/registro', '/recuperar-contrasena',
-            '/restablecer-contrasena/token-de-prueba', '/email/verificar',
+            '/login', '/registro', '/email/verificar',
         ];
 
         foreach ($surfaces as $surface) {

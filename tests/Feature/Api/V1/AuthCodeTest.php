@@ -252,20 +252,21 @@ class AuthCodeTest extends ApiTestCase
     }
 
     /**
-     * ⚠️⚠️ `SEC-06`: la contraseña y el código son la MISMA puerta a efectos de ataque. Cuatro contraseñas malas y un
-     * código malo agotan el cubo (correo, IP) —cinco fallos—, y el código BUENO ya no entra hasta que pase el minuto.
+     * ⚠️⚠️ `SEC-06`: verificar el código pasa por los cubos de `LoginGate` (no por unos propios). Cinco códigos malos
+     * agotan el cubo (correo, IP), y el código BUENO ya no entra hasta que pase el minuto, ni por el login ni por la app.
+     * (Hasta la A5, `#869`, los fallos venían de la contraseña y del código, que compartían los cubos.)
      */
-    public function test_the_code_and_the_password_share_the_same_buckets(): void
+    public function test_the_code_goes_through_the_shared_buckets(): void
     {
         Notification::fake();
         $user = $this->customer();
         $this->postJson(self::ROOT.'/auth/code', ['email' => self::EMAIL])->assertOk();
         $code = $this->codeSentTo($user);
+        $wrong = $code === '000000' ? '000001' : '000000';
 
-        foreach (range(1, LoginGate::MAX_ATTEMPTS - 1) as $ignored) {
-            $this->fromSpa('/auth/login', ['email' => self::EMAIL, 'password' => 'no-es-esta'])->assertStatus(401);
+        foreach (range(1, LoginGate::MAX_ATTEMPTS) as $ignored) {
+            $this->fromSpa('/auth/login', ['email' => self::EMAIL, 'code' => $wrong])->assertStatus(401);
         }
-        $this->fromSpa('/auth/login', ['email' => self::EMAIL, 'code' => $code === '000000' ? '000001' : '000000'])->assertStatus(401);
 
         $this->fromSpa('/auth/login', ['email' => self::EMAIL, 'code' => $code])
             ->assertStatus(429)
@@ -275,17 +276,21 @@ class AuthCodeTest extends ApiTestCase
             ->assertStatus(429);
     }
 
-    public function test_the_code_and_the_password_never_come_together_nor_are_both_missing(): void
+    /** Desde la A5 (`#869`) el código es la ÚNICA credencial: sin él, 422 —también si llega una contraseña—. */
+    public function test_the_code_is_required_and_a_password_is_no_alternative(): void
     {
         $this->customer();
 
-        $this->fromSpa('/auth/login', ['email' => self::EMAIL, 'password' => 'password', 'code' => '123456'])
+        $this->fromSpa('/auth/login', ['email' => self::EMAIL, 'password' => 'password'])
             ->assertStatus(422)
-            ->assertJsonPath('error.code', 'validation_failed');
+            ->assertJsonPath('error.code', 'validation_failed')
+            ->assertJsonStructure(['error' => ['fields' => ['code']]]);
 
         $this->fromSpa('/auth/login', ['email' => self::EMAIL])
             ->assertStatus(422)
             ->assertJsonPath('error.code', 'validation_failed');
+
+        $this->assertGuest('web');
     }
 
     /** Un código leído en ese buzón prueba que es suyo: confirma el correo que el alta dejó sin confirmar (§4.4). */
@@ -334,9 +339,10 @@ class AuthCodeTest extends ApiTestCase
         $this->assertAuthenticatedAs($user);
         $this->assertNull($response->getCookie($this->recallerName(), false), 'el alta no deja una cookie de recuerdo que nadie pidió');
 
+        // Y ninguna contraseña la abre: desde la A5 (`#869`) ni siquiera es una credencial que la puerta acepte.
         Auth::forgetGuards();
         $this->fromSpa('/auth/login', ['email' => 'sin.clave@example.test', 'password' => 'password'])
-            ->assertStatus(401, 'ninguna contraseña abre una cuenta sin contraseña');
+            ->assertStatus(422);
     }
 
     // ── Lo que NO se guarda ─────────────────────────────────────────────────────────────────────

@@ -32,12 +32,6 @@ return [
      * Les deux e-mails du FRAMEWORK (`#508`). Seules les pièces du moule vivent ici — le corps vient
      * toujours des chaînes du framework, donc rien de ce que le client lisait ne change.
      */
-    'password_reset' => [
-        'subject' => 'Réinitialise ton mot de passe',
-        'preheader' => "Si tu ne l'as pas demandé, rien à faire : le lien expire tout seul.",
-        'badge' => 'Une étape',
-        'headline' => 'Réinitialise ton mot de passe',
-    ],
     'panel_password_link' => [
         'subject' => "Ton mot de passe du panneau d'administration",
         'preheader' => "Si tu ne l'attendais pas, rien à faire : le lien expire tout seul.",
@@ -89,15 +83,7 @@ return [
         'headline' => 'Confirmez votre e-mail pour continuer',
     ],
     'verify_pending_email' => [
-        'subject' => 'Confirme ta nouvelle adresse',
-        'preheader' => "Ce lien expire dans 60 minutes. Si tu n'as rien demandé, ignore ce message.",
-        'greeting' => 'Bonjour !',
-        'intro' => 'Tu as demandé à changer l’e-mail de ton compte par celui-ci. Pour confirmer, clique sur le bouton.',
-        'action' => 'Confirmer mon nouvel e-mail',
-        'expires' => 'Ce lien expire dans 60 minutes.',
         'ignore' => 'Si tu n’as pas demandé ce changement, ignore cet e-mail : ton compte continuera d’utiliser l’adresse précédente.',
-        'badge' => 'Il reste une étape',
-        'headline' => 'Confirmez votre nouvel e-mail',
     ],
     'verify_pending_email_code' => [
         'subject' => ':code est le code de ton nouvel e-mail',
@@ -105,7 +91,7 @@ return [
         'badge' => 'Confirme ton nouvel e-mail',
         'headline' => ':code',
         'intro' => "Tu as demandé à changer l'e-mail de ton compte pour celui-ci. Saisis le code sur l'écran où tu l'as demandé.",
-        'validity' => 'Le code est valable :minutes minutes et une seule fois. Tu peux aussi confirmer avec le bouton.',
+        'validity' => 'Le code est valable :minutes minutes et une seule fois.',
     ],
     'email_change_requested' => [
         'subject' => "Changement d'e-mail demandé",

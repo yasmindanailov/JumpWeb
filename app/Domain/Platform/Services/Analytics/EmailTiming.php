@@ -28,7 +28,6 @@ final class EmailTiming
         // El código para entrar (`#853`) y el de confirmar (`#855`): los pide y los abre en segundos, con la pantalla esperando.
         'login_code',
         'confirmation_code',
-        'password_reset',
         'social_identity_linked',
         'verify_email_address',
         'verify_email_for_purchase',

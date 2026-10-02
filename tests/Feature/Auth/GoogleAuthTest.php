@@ -395,8 +395,9 @@ class GoogleAuthTest extends TestCase
 
         $this->assertAuthenticatedAs($fresh);
         $this->assertNotNull($fresh->email_verified_at, 'Google acredita el buzón: la cuenta queda verificada.');
-        $this->assertFalse(
-            Hash::check('la-que-puso-el-tercero', (string) $fresh->password),
+        // Desde la A5 (`#869`) se BORRA (antes, una aleatoria): ningún cliente tiene contraseña, y la del ocupante tampoco.
+        $this->assertNull(
+            $fresh->getRawOriginal('password'),
             'La contraseña del ocupante tiene que dejar de servir: si no, vuelve a entrar con ella.'
         );
         $this->assertSame(0, DB::table('personal_access_tokens')->count(), 'Sus credenciales caen con `revokeAllAccess()`.');

@@ -4,10 +4,13 @@ namespace Tests\Feature\Api\V1;
 
 use App\Domain\Identity\Models\LoginCode;
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Models\WaiverSignature;
 use App\Domain\Identity\Services\AccountProfile;
 use App\Domain\Identity\Services\EmailCodeLogin;
+use App\Domain\Identity\Services\LegalDocumentPublisher;
 use App\Domain\Identity\Services\LoginCodes;
 use App\Domain\Platform\Models\EmailSend;
+use App\Domain\Platform\Models\Setting;
 use App\Notifications\EmailChangeCompleted;
 use App\Notifications\VerifyPendingEmail;
 use Illuminate\Notifications\SendQueuedNotifications;
@@ -18,12 +21,13 @@ use Tests\Feature\Api\ApiTestCase;
 /**
  * A2b de `docs/specs/acceso-con-codigo.md` (§4.9, `DECISIONES #856`) — **el correo NUEVO, confirmado con un código enviado a
  * ESE buzón** (`POST /me/pending-email/confirm`): la prueba de que el buzón es de quien pidió el cambio, escrita en el mismo
- * dispositivo. El enlace de siempre sigue valiendo (`EmailChangeConfirmTest`); los dos completan por el mismo dominio.
+ * dispositivo. Desde la A5 (`#869`) es la única: el enlace firmado se retiró, y con él `EmailChangeConfirmTest`, cuyo único
+ * caso que el código no cubría —el descargo pendiente que se firma al verificar— vive ahora aquí.
  *
  * Lo que se prueba: que pedir el cambio y reenviarlo emitan un código al buzón nuevo, tras la respuesta y no por la cola;
- * que con él el cambio se complete —verificado, con el aviso al viejo— y con uno malo no pase NADA; que un código de otro
- * propósito no valga; los desenlaces (caducada, tomada, nada pendiente); el limitador; y que la copia no guarde el código.
- * Arnés: `scripts/mutar-acceso-codigo.sh`.
+ * que con él el cambio se complete —verificado, con el aviso al viejo y el descargo pendiente firmado— y con uno malo no
+ * pase NADA; que un código de otro propósito no valga; los desenlaces (caducada, tomada, nada pendiente); el limitador; y
+ * que la copia no guarde el código. Arnés: `scripts/mutar-acceso-codigo.sh`.
  */
 class MePendingEmailCodeTest extends ApiTestCase
 {
@@ -88,6 +92,26 @@ class MePendingEmailCodeTest extends ApiTestCase
         $this->assertNull($fresh->pending_email);
         $this->assertTrue($fresh->hasVerifiedEmail());
         Notification::assertSentTo($user, EmailChangeCompleted::class);
+    }
+
+    /**
+     * S-5 (`#181`): confirmar el correo NUEVO es verificarlo — la aceptación pendiente del descargo se firma. Era del enlace
+     * (`EmailChangeConfirmTest`, retirado en la A5); la regla vive en el dominio (`completeEmailChange`) y llega por el código.
+     */
+    public function test_confirming_the_new_email_signs_a_pending_waiver_acceptance(): void
+    {
+        Setting::updateOrCreate(['key' => 'waiver.mode'], ['value' => 'interno', 'group' => 'waiver']);
+        $document = app(LegalDocumentPublisher::class)->publish('waiver', [
+            'es' => ['title' => 'Exención', 'body' => [['h' => 'Riesgo', 'p' => 'Acepto el riesgo.']]],
+        ])->first();
+        $user = User::factory()->create(['email' => self::OLD, 'email_verified_at' => null]);
+        $user->forceFill(['waiver_pending_document_id' => $document->id, 'waiver_pending_channel' => 'web'])->save();
+        $code = $this->pending($user);
+
+        $this->actingAs($user)->postJson(self::ROOT.'/me/pending-email/confirm', ['code' => $code])->assertOk();
+
+        $this->assertSame(1, WaiverSignature::where('user_id', $user->id)->count());
+        $this->assertNull($user->fresh()->waiver_pending_document_id);
     }
 
     /** El código sale tras la respuesta, no por la cola: quien pidió el cambio lo está esperando en la pantalla. */
