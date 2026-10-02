@@ -2569,6 +2569,46 @@ mutantes a mano (sin arnés: `DEUDA.md`). El peso, la compra 182,37 → 183,82 (
 192,04 (193), con la base `a4d761d5`. ⚠️ Lo que costó una ronda con el owner: en `/kids` el «Reservar» de la isla lleva a la
 calculadora y NO abre la compra; «Preparando» se ve desde el selector de la portada.
 
+#### La Z6c al detalle: el experimento B3 (medido el 02-10, antes de codificar)
+
+**Fuente**: el readme, «La isla · experimento B3, la primera pantalla para el vídeo (29-09)»; `ParkIsland.prompt.md`
+(«Experimento B3»); `ParkIsland.jsx` (`esB3`, `enCabecera`, `FUNDE`, `SHORT_MAX`, `b2Row`, `fused`, `sinFraseArriba`, la cara de
+barra de `ActionButton` y las frases cortas de `readToday`) y `VideoHero.jsx` (sin su botón y con el texto bajo la tarjeta).
+`[DECIDIDO owner]`: el reparto 50/50 lo hace el servidor por visitante; la medida, `isla_accion` por visita en móvil, con las
+reservas terminadas de control y dos semanas como mínimo (`#867`); y, el 02-10 (`#868`), **la flecha de la barra sigue naranja
+con un botón de la página a la vista**, contra el zip (6), que la ponía en secundaria.
+
+**Lo medido**: (1) Los experimentos son del SPA: `Experiments::forRequest()` reparte por visitante sin guardar nada y la
+variante llega al cajón (`SidebarBoot`), NO a `<x-pagina>`. La exposición es `experiment_exposed` por `JumpWeb.track`, una vez
+por carga y solo si la variante pintó algo (`sidebar/experiments.js`); los `isla_*` no están en el contrato de la analítica
+(`Contract.php`) y la isla de Vue no emite eventos: se mide por MARCAS en el DOM, como `isla_razon` (Z6b). (2) La isla tiene lo
+de hoy (la tabla, el reparto, la secundaria y el banner); le faltan la variante, saber si la cabecera se ve, la cara de barra y
+las frases cortas. (3) La cabecera de la instancia (`video-hero`, un DOM para dos formas, medida por `cabecera.js` antes del
+primer pintado) no lleva `data-pj-hero` ni conoce la variante, y ninguna página tiene frases cortas. (4) El peso: la isla de
+la página, a 192,04 de 193; la compra, a 183,82 de 184.
+
+**El plan, en tres tandas** (cada una con el ojo del owner en `?isla=b3`):
+- **Z6c·1 · la variante y la isla (producto)**: `<x-pagina>` pone en el `<html>`, ANTES de pintar, `data-isla-variante` y, solo
+  si el servidor la asignó (`Experiments::forRequest()['isla']`), `data-isla-experimento`: sin experimento vivo no hay
+  exposición. Vista previa, `?isla=b3`. La isla: la variante, la cabecera a la vista (`IntersectionObserver` sobre
+  `[data-pj-hero]`), el reparto del diseño (la barra solo abajo y en reposo, en `desde`, `hoy`, `oferta` y `miedo`, con frase
+  corta de hasta 22 caracteres o sin frase; mientras se ve la cabecera, el botón grande sin frase), la cara de barra (la
+  etiqueta, la frase corta, el punto del tono y el círculo con la flecha, SIEMPRE naranja, `#868`) y las frases cortas de hoy
+  (`lang/*/isla.php`). Las marcas: `data-variante` en la raíz y `data-cara` (`boton`|`barra`) en la acción.
+- **Z6c·2 · la cabecera y las frases (instancia)**: `data-pj-hero`; con el B3 y por debajo de 900 px, sin su botón y con el
+  texto en claro bajo la tarjeta (dos copias, una `hidden`, como lo cedido), y `cabecera.js` mide así la primera pantalla. Las
+  frases cortas (`page.fromShort`, `offer.short`, `reassurance.short`) de Kids, Jump, Cumpleaños, Colegios y la portada: los
+  textos del readme, que el owner revisa al final.
+- **Z6c·3 · la medida (SPA, avisado en el buzón ANTES)**: `experiment_exposed` al montarse la isla abajo con variante
+  asignada, `isla_accion` (situación, etiqueta, tono, cara, página, variante) y los de control, desde las marcas; y su informe.
+  El experimento lo crea el owner en el panel al desplegar (clave `isla`, variantes `hoy` y `b3`, 50/50): corre en producción,
+  con la v2.0.0 y el vídeo de verdad.
+
+**Fuera**: la regla del precio (la cabecera sin precio salvo Colegios), de la Z6d. **Trampas**: la variante en el `<html>`
+antes de pintar (después, la cabecera saltaría); dos naranjas con el B3, a propósito (`#868`); el peso, otra vez.
+**Verificación**: `node --test` del reparto B3, de la cara de barra y de la variante; la suite; el peso con su base; el
+navegador en `?isla=b3` a 390; y el ojo del owner en vivo.
+
 ## 5. Impacto en invariantes
 
 - `PAY-*`: solo si entra Bizum; entonces `VERIFY_CONC=1` y la lista del `CRITICAL_RE`.

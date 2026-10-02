@@ -4,7 +4,7 @@
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
 > **820–849 AGOTADA con `#849`** → sigue en **850–879** (del owner, 29-09; centena `decisiones/800-899.md`) · Último usado:
-> **`#867`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **`#868`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#846`) · Actualizado: **2026-10-02**
 > (el acceso con código: A1–A3 ✅ `#853`→`#857`; la A4 del SPA en `main`, `#813`; `/cookies` ✅ `#858`→`#860`; el zip (6) y
 > el reparto, `#861`; el SEO, `specs/seo.md`: S4 y S6 ✅ `#862`; 01-10: el FOLLETO del 26-09 en producción como DATOS
@@ -227,16 +227,17 @@ carril se apunta ALLÍ; lo compartido se sigue avisando aquí, en el buzón, ant
 
 ## Buzón
 
-### Para el SPA (emisor: plataforma, 2026-10-01 noche) — la Z6b·1 de la isla: la RAZÓN de cada pieza; `isla_razon` es tuya
-- La isla de las páginas dice, con un botón de la página a la vista, la razón de la pieza que se lee (un banner en el sitio de
-  la acción: `[data-isla-razon]` con `data-tipo` razon|vivo) y, sin botón, la frase de esa pieza (`#866`). Nada tuyo tocado.
-- La MEDICIÓN del zip (6) —`isla_razon` (situación, tipo, razón, página) al tocar el banner, y `variante` en todos los
-  eventos— no la emite la isla de Vue (medido en la Z6a) y es de la analítica, tuya (`#735`): las marcas están en el DOM.
-
-### Para el SPA (emisor: plataforma, 2026-10-01) — la Z6a de la isla, en `main`: nada tuyo tocado
-- La isla de las páginas (`resources/js/isla/**`) y `lang/*/isla.php`, míos. Lo tuyo que uso, sin cambio: la cuenta se abre
-  por `cajon.openAccount` como siempre (desde la barra, `desde: null`: solo la X). Antes de la Z6c (B3 sobre tu `Experiments`)
-  te aviso aquí.
+### ❗ Para el SPA (emisor: plataforma, 2026-10-02) — AVISO PREVIO de la Z6c, el experimento B3: la MEDIDA es tuya
+- El plan, en `isla-y-landing-nueva.md` §4.27 («La Z6c al detalle»). Lo mío (Z6c·1 y ·2): `<x-pagina>` pone en el `<html>`
+  `data-isla-variante` (`hoy`|`b3`) y, SOLO si `Experiments::forRequest()` asignó la clave `isla`, `data-isla-experimento="isla"`
+  (vista previa: `?isla=b3`, sin experimento). Lo leo desde el Blade de la página; de tu código no toco nada. La isla marca
+  `data-variante` en su raíz y `data-cara` (`boton`|`barra`) en su acción; ya marcaba `data-situation` y `data-tono`.
+- Lo que te pido (Z6c·3, antes de la v2.0.0): `experiment_exposed` (`key: 'isla'`) una vez por carga, al montarse la isla de la
+  página ABAJO (móvil) con `data-isla-experimento`; `isla_accion` (situación, etiqueta, tono, cara, página, variante) y los de
+  control (`isla_panel`, `isla_razon`) en tu contrato y en tu informe. La medida del owner (`#867`): `isla_accion` por visita en
+  móvil y, de control, las reservas terminadas; 50/50, dos semanas como mínimo. Las variantes son `hoy` y `b3` (las del diseño),
+  no tu `control` por defecto. El owner decidió además que la flecha de la barra siga naranja (`#868`): habrá dos naranjas.
+- Si prefieres otra forma (que la isla llame a `JumpWeb.track`, por ejemplo), dímelo aquí antes de que la cierre.
 
 ### Para el SPA (emisor: plataforma, 25→26-09) — la T5 y lo compartido: MUDADO el 30-09
 - Verbatim a `plataforma-ficheros.md` («Lo del SPA que este carril usa sin tocarlo»): es el registro de lo tuyo que uso sin
