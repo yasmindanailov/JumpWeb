@@ -98,6 +98,7 @@ class GateReservationsReader implements GateReservations
                     durationMinutes: $item->ticketType === null || $item->ticketType->isUnlimited() ? null : (int) $item->ticketType->duration_min,
                     startTime: $item->slot?->start_time === null ? null : substr((string) $item->slot->start_time, 0, 5),
                     isParty: $item->ticketType?->type === TicketType::TYPE_PACK,
+                    guestAgeMax: $item->ticketType?->guest_age_max === null ? null : (int) $item->ticketType->guest_age_max,
                 );
             })
             ->all();

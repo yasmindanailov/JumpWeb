@@ -111,5 +111,10 @@ final readonly class GateReservation
         public ?string $startTime = null,
         /** ¿Es un pack (un cumpleaños)? La Puerta le pone su etiqueta y no le cuenta nada de lo que se cobra al final. */
         public bool $isParty = false,
+        /**
+         * El tope de edad del producto (`guest_age_max`), o `null` sin tope. La mayoría de edad es de Identity
+         * (`TicketType::onlyGuestsUnder()`): quien lee la fila decide con ella si son «niños» o «personas».
+         */
+        public ?int $guestAgeMax = null,
     ) {}
 }

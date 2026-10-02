@@ -179,18 +179,25 @@ class GateProfileTest extends TestCase
         $kids = Zone::create(['slug' => 'kids', 'name' => ['es' => 'Kids'], 'position' => 2, 'is_active' => true]);
         $unlimited = TicketType::create([
             'name' => ['es' => 'Kids sin límite'], 'type' => TicketType::TYPE_ENTRY, 'zone_id' => $kids->id,
-            'duration_min' => null, 'seats_per_unit' => 1, 'is_sellable' => true, 'is_active' => true, 'position' => 9,
+            'duration_min' => null, 'guest_age_max' => 7, 'seats_per_unit' => 1, 'is_sellable' => true, 'is_active' => true, 'position' => 9,
         ]);
         $holder = $this->holder();
         [, [$entry, $free, $party]] = $this->paidOrder($holder, [[$this->entry, 2, self::TODAY], [$unlimited, 1, self::TODAY], [$this->pack, 8, self::TODAY]]);
         $entry->update(['slot_id' => $this->slotOn(self::TODAY, '17:30:00')->id]);
 
         $rows = collect($this->profile($holder)->today_reservations)->keyBy('order_item_id');
-        $of = fn (OrderItem $item): array => array_intersect_key($rows[$item->id], array_flip(['zone_name', 'zone_slug', 'duration_minutes', 'start_time', 'is_party']));
+        $of = fn (OrderItem $item): array => array_intersect_key($rows[$item->id], array_flip(['zone_name', 'zone_slug', 'duration_minutes', 'start_time', 'is_party', 'minors_only']));
 
-        $this->assertSame(['zone_name' => 'Jump', 'zone_slug' => 'jump', 'duration_minutes' => 60, 'start_time' => '17:30', 'is_party' => false], $of($entry));
-        $this->assertSame(['zone_name' => 'Kids', 'zone_slug' => 'kids', 'duration_minutes' => null, 'start_time' => '10:00', 'is_party' => false], $of($free), 'la ilimitada no tiene duración');
-        $this->assertSame(['zone_name' => 'Jump', 'zone_slug' => 'jump', 'duration_minutes' => 120, 'start_time' => '10:00', 'is_party' => true], $of($party), 'un pack es un cumpleaños');
+        $this->assertSame(['zone_name' => 'Jump', 'zone_slug' => 'jump', 'duration_minutes' => 60, 'start_time' => '17:30', 'is_party' => false, 'minors_only' => false], $of($entry));
+        $this->assertSame(['zone_name' => 'Kids', 'zone_slug' => 'kids', 'duration_minutes' => null, 'start_time' => '10:00', 'is_party' => false, 'minors_only' => true], $of($free), 'la ilimitada no tiene duración; hasta los 7 años, solo menores');
+        $this->assertSame(['zone_name' => 'Jump', 'zone_slug' => 'jump', 'duration_minutes' => 120, 'start_time' => '10:00', 'is_party' => true, 'minors_only' => false], $of($party), 'un pack es un cumpleaños');
+
+        $mayor = TicketType::create([
+            'name' => ['es' => 'Hasta los 18'], 'type' => TicketType::TYPE_ENTRY, 'zone_id' => $kids->id, 'duration_min' => 60,
+            'guest_age_max' => 18, 'seats_per_unit' => 1, 'is_sellable' => true, 'is_active' => true, 'position' => 10,
+        ]);
+        [, [$hasta18]] = $this->paidOrder($otro = $this->holder(), [[$mayor, 1, self::TODAY]]);
+        $this->assertFalse(collect($this->profile($otro)->today_reservations)->firstWhere('order_item_id', $hasta18->id)['minors_only'], 'con tope en la mayoría de edad puede entrar un adulto: «personas»');
     }
 
     public function test_the_window_is_configurable_and_zero_means_only_today(): void

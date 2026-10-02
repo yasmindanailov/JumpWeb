@@ -205,12 +205,10 @@ class ValidarRegistro extends Component
         $type = self::detectInputType($raw);
 
         if ($type === null) {
-            // En invalid_input devolvemos el `query` SOLO si hay algo escrito —
-            // si está vacío, el mensaje genérico "Introduce un email…" basta.
-            //
-            // ⚠️ Y aquí el campo NO se vacía, al revés que abajo: si lo escrito está mal, el
-            // empleado tiene que poder CORREGIRLO en vez de teclearlo entero otra vez.
-            $this->result = ['status' => self::STATUS_INVALID_INPUT, 'query' => $raw];
+            // Sin eco: lo escrito se queda en el CAMPO, que aquí NO se vacía —al revés que abajo—, porque si está mal el
+            // empleado tiene que poder CORREGIRLO en vez de teclearlo entero otra vez (`#234`). La Puerta nueva no repite
+            // debajo lo que ya está en el campo (`specs/puerta-nueva.md` §4.4, la P1).
+            $this->result = ['status' => self::STATUS_INVALID_INPUT];
 
             return;
         }
@@ -259,16 +257,17 @@ class ValidarRegistro extends Component
 
         AuditLogger::logSensitive('registrations.validated', $raw, target: $user);
 
-        // `query` se incluye en cada resultado para que el empleado SIEMPRE vea a qué persona
-        // corresponde la respuesta. Eco del input introducido por el propio empleado, NO dato
-        // extraído del User: cumple RGPD igual (no revela info que no supiera).
+        // `query` va en cada resultado para que el empleado SIEMPRE vea a qué búsqueda corresponde la respuesta: eco de
+        // lo que tecleó él, no un dato sacado del User. ⚠️ ENMASCARADO (`specs/puerta-nueva.md` §4.2·D5): la cola ve la
+        // pantalla, y se hace AQUÍ, en el servidor, porque el estado de Livewire viaja entero al navegador.
+        $echo = $type === self::INPUT_EMAIL ? QueryMask::email(mb_strtolower($raw)) : QueryMask::phone($raw);
         if (! $user) {
-            $this->result = ['status' => self::STATUS_NOT_REGISTERED, 'query' => $raw];
+            $this->result = ['status' => self::STATUS_NOT_REGISTERED, 'query' => $echo];
 
             return;
         }
 
-        $this->result = $this->stateFor($user, $raw);
+        $this->result = $this->stateFor($user, $echo);
 
         // `#756` · **LA BÚSQUEDA POR CORREO O MÓVIL TAMBIÉN ACREDITA** (el owner, 27-09: «hay que medir como que vienen
         // aquellos que también se busquen por correo o número móvil»). Igual que el escaneo: idempotente por (cliente,
@@ -303,7 +302,8 @@ class ValidarRegistro extends Component
             return;
         }
 
-        $this->result = $this->stateFor($card->user, __('admin.puerta.validar.card_query'));
+        // Tras un escaneo, sin «Resultado para» (el mockup): lo dice la ficha, «Abierta por QR».
+        $this->result = $this->stateFor($card->user, null);
 
         // `#741` · **EL ESCANEO ACREDITA LA VISITA.** La persona está delante con su carné: no hay gesto más
         // claro de «ha venido», y entre dos clientes no puede haber ninguno (`#234`). Idempotente por (cliente,
@@ -326,7 +326,7 @@ class ValidarRegistro extends Component
      *
      * @return array<string, mixed>
      */
-    private function stateFor(User $user, string $query): array
+    private function stateFor(User $user, ?string $query): array
     {
         $status = WaiverStatus::for($user);
         if (! $status->isEnabled()) {
@@ -729,9 +729,9 @@ class ValidarRegistro extends Component
 
         return view('livewire.admin.puerta.validar', [
             'canViewProfile' => $this->canViewProfile(),
-            // El semáforo se resuelve FUERA de la plantilla (§9.7 C·5): la vista pinta un callout y
-            // no decide colores. `null` mientras no hay búsqueda.
-            'semaphore' => $this->result === null ? null : GateSemaphore::for($this->result),
+            // El VEREDICTO se resuelve FUERA de la plantilla (`specs/puerta-nueva.md` §4.4, la P1): la vista pinta, no
+            // decide colores ni palabras. Con ficha, manda la ficha (los menores también). `null` sin búsqueda.
+            'verdict' => $this->result === null ? null : GateVerdict::for($this->result, $this->profile),
         ]);
     }
 

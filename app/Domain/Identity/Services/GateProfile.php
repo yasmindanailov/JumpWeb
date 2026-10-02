@@ -136,6 +136,9 @@ final class GateProfile
             'duration_minutes' => $r->durationMinutes,
             'start_time' => $r->startTime,
             'is_party' => $r->isParty,
+            // ¿Solo menores? Con tope por debajo de la mayoría de edad (la regla de «Antes de venir», `#825`): la fila dice
+            // «2 niños» y no «2 personas», y la tarea de añadir a los hijos se apoya en ella.
+            'minors_only' => $r->guestAgeMax !== null && $r->guestAgeMax < Dependent::ADULT_AGE,
         ];
     }
 
