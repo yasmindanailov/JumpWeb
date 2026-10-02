@@ -11,6 +11,11 @@ export const PROPS_ISLA = {
     gutter: { type: String, default: 'var(--gutter)' },
     maxWidth: { type: Number, default: 760 },
     scrim: { type: Boolean, default: true },
+    /**
+     * La cara del experimento B3 (Z6c): `b3` u `hoy`. Sin ella, la del `<html>` (`data-isla-variante`, que pone el servidor
+     * antes de pintar); sin ninguna, la de hoy (`useEnCabecera.js`).
+     */
+    variant: { type: String, default: null },
     ctaVisible: { type: Boolean, default: false },
     page: { type: Object, default: () => ({ kind: 'portada', from: '' }) },
     /**
@@ -22,7 +27,8 @@ export const PROPS_ISLA = {
     /** Lo que sigue con la capa cerrada (Z6b·3): «Confirmando tu pago», «¡Reservado!». `{ type, text, sub, onClick }`. */
     waiting: { type: Object, default: null },
     today: { type: Object, default: null },
-    offer: { type: String, default: null },
+    /** La oferta: un texto, o `{ text, short }` con su frase corta para la barra del B3 (Z6c). */
+    offer: { type: [String, Object], default: null },
     /** La frase que quita el miedo de la pieza que se lee (situación 5, `#866`): un texto o `{ text, decision }`. */
     reassurance: { type: [String, Object], default: null },
     quote: { type: Object, default: null },

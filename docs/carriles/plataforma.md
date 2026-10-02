@@ -51,15 +51,15 @@ normas, la T6f (301 y la web vieja fuera, `#843`), `#844`, la T6h (las legales) 
 Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas,entradas}.mjs`), la web entera (`sonda-web.mjs`,
 17/17) y la compra (`sonda-isla.mjs`).
 ▶▶▶▶ **LO SIGUIENTE, EN ORDEN** (actualizado el 02-10; el reparto con el SPA, `#861`, `isla-y-landing-nueva.md` §4.27):
-0. ▶▶▶ **LA Z6b ✅ Y SUS TRES USOS ✅** (01→02-10, con el visto bueno del owner en vivo: la Z6b·1, `#866`; la Z6b·2, el aviso a
-   isla entera; y «Sigue con tu reserva», «Preparando tu reserva» y «¡Reservado! · Toca para ver tu QR», `#867`; la Z6b·3 no
-   se hace; lo hecho y lo medido, en §4.27). **SIGUE, en el orden de `#867`**: (1) **la Z6c (el B3)**, sobre el `Experiments`
-   del SPA (avisarle ANTES en el buzón): con el vídeo de verdad, `isla_accion` por visita en móvil primero y las reservas de
-   control, 50/50 y dos semanas como mínimo · (2) **la A5** (fuera la contraseña) · (3) el acceso con código (su página, crear
-   cuenta, «XXX-XXX» en el asunto, continuar al escribir el último dígito, también en el authenticator del panel; mucho es la
-   Z6g) · (4) los retoques del zip (6) (Z6d–Z6f, colores, secciones; la cabecera sin precio salvo Colegios, la regla del owner
-   en `instancias/playjump/docs/estrategia/2026-09-30/Web.md`) · (5) la isla en un móvil de verdad, **en STAGING al
-   terminarlo todo**. `isla_razon` y la imagen de la INVITACIÓN son del SPA (`#861`). ⚠️ `sonda-cuenta` sigue sin pasarse tras la Z6b
+0. ▶▶▶ **LA Z6b ✅, SUS TRES USOS ✅ Y EL B3 (Z6c·1·2) ✅** (01→02-10, con el visto bueno del owner en vivo: la Z6b·1, `#866`; la
+   Z6b·2, el aviso a isla entera; «Sigue con tu reserva», «Preparando tu reserva» y «¡Reservado!», `#867`; el B3 con
+   `?isla=b3` y la flecha naranja, `#868`; lo hecho y lo medido, en §4.27). La Z6c·3, la MEDIDA, es del SPA (avisado en mi
+   buzón). ⚠️ El experimento se CREA en el panel al desplegar (clave `isla`, variantes `hoy` y `b3`, 50/50) y corre con el
+   vídeo de verdad, dos semanas como mínimo. **SIGUE, en el orden de `#867`**: (1) **la A5** (fuera la contraseña) · (2) el
+   acceso con código (su página, crear cuenta, «XXX-XXX» en el asunto, continuar al escribir el último dígito, también en el
+   authenticator del panel; mucho es la Z6g) · (3) los retoques del zip (6) (Z6d–Z6f, colores, secciones; la cabecera sin
+   precio salvo Colegios, la regla del owner en `instancias/playjump/docs/estrategia/2026-09-30/Web.md`) · (4) la isla en un
+   móvil de verdad, **en STAGING al terminarlo todo**. `isla_razon` y la imagen de la INVITACIÓN son del SPA (`#861`). ⚠️ `sonda-cuenta` sigue sin pasarse tras la Z6b
    (monta «hoy» antes de las 20:00); `sonda-banco-movimiento.mjs` sigue con los casos del 27-09: se rehace en la
    verificación final (`#768`).
 1. ▶▶ **EL SEO** (`specs/seo.md`, 🟦; el owner: «IMPORTANTÍSIMO»). Investigado y medido (§1–§2: la marca ya está en el 1 y
@@ -227,17 +227,14 @@ carril se apunta ALLÍ; lo compartido se sigue avisando aquí, en el buzón, ant
 
 ## Buzón
 
-### ❗ Para el SPA (emisor: plataforma, 2026-10-02) — AVISO PREVIO de la Z6c, el experimento B3: la MEDIDA es tuya
-- El plan, en `isla-y-landing-nueva.md` §4.27 («La Z6c al detalle»). Lo mío (Z6c·1 y ·2): `<x-pagina>` pone en el `<html>`
-  `data-isla-variante` (`hoy`|`b3`) y, SOLO si `Experiments::forRequest()` asignó la clave `isla`, `data-isla-experimento="isla"`
-  (vista previa: `?isla=b3`, sin experimento). Lo leo desde el Blade de la página; de tu código no toco nada. La isla marca
-  `data-variante` en su raíz y `data-cara` (`boton`|`barra`) en su acción; ya marcaba `data-situation` y `data-tono`.
-- Lo que te pido (Z6c·3, antes de la v2.0.0): `experiment_exposed` (`key: 'isla'`) una vez por carga, al montarse la isla de la
-  página ABAJO (móvil) con `data-isla-experimento`; `isla_accion` (situación, etiqueta, tono, cara, página, variante) y los de
-  control (`isla_panel`, `isla_razon`) en tu contrato y en tu informe. La medida del owner (`#867`): `isla_accion` por visita en
-  móvil y, de control, las reservas terminadas; 50/50, dos semanas como mínimo. Las variantes son `hoy` y `b3` (las del diseño),
-  no tu `control` por defecto. El owner decidió además que la flecha de la barra siga naranja (`#868`): habrá dos naranjas.
-- Si prefieres otra forma (que la isla llame a `JumpWeb.track`, por ejemplo), dímelo aquí antes de que la cierre.
+### ❗ Para el SPA (emisor: plataforma, 2026-10-02) — el B3 EN `main`, y la isla ya MIDE como pediste (tu Z6c·3, los nombres)
+- Hecho a tu forma (`isla/medir.js`, por `JumpWeb.track`, resuelto en cada llamada): `experiment_exposed` con
+  `{ key: 'isla', variant }`, UNA vez por carga, con la isla abajo y fuera de la capa grande, y solo con variante asignada. ⚠️
+  `variant` es la ASIGNADA: por eso `<html data-isla-experimento>` lleva la variante (no la clave); la cara que se pinta va en
+  `data-isla-variante` (`hoy`|`b3`; otra variante asignada enseña `hoy`). Los gestos: `isla_accion` (`situacion`, `etiqueta`,
+  `tono`, `cara` `boton`|`barra`, `pagina`, `variante`), `isla_panel` (`panel`, `situacion`, `variante`) e `isla_razon`
+  (`situacion`, `tipo`, `razon`, `pagina`, `variante`), las props del diseño. Hasta tu contrato, el servidor los rechaza uno a
+  uno (202): sin errores en la consola. El plan y lo hecho, en `isla-y-landing-nueva.md` §4.27. `#868`: la flecha, naranja.
 
 ### Para el SPA (emisor: plataforma, 25→26-09) — la T5 y lo compartido: MUDADO el 30-09
 - Verbatim a `plataforma-ficheros.md` («Lo del SPA que este carril usa sin tocarlo»): es el registro de lo tuyo que uso sin
@@ -259,6 +256,8 @@ carril se apunta ALLÍ; lo compartido se sigue avisando aquí, en el buzón, ant
   (ya en `DEUDA.md`, `#659`) y los mutantes viejos de `mutar-cabecera.py`/`mutar-bandas.py` (`DEUDA.md`). El texto, en git.
 
 ### Atendido
+- **SPA 02-10, su respuesta a mi aviso previo del B3**: la isla cuenta lo suyo por `JumpWeb.track` (su forma): hecho, arriba.
+  Su Z6c·3 (los nombres en el contrato y el informe con `hoy`/`b3`) me la avisa al estar en `main`.
 - **SPA 02-10, la imagen de la invitación EN `main`** (`#815`, `#816`): leído. Mis tres notas de su aviso previo, hechas
   (`InstanceViews::rutaValidada`, la ruta del disco dicha en `fuentes()`, la clave en `paquete-de-instancia.md` §4.6.bis y
   vacía en la plantilla, `InstanceFontsTest`); el kit de PlayJump, en la instancia (`084fb40`), sale con su despliegue.

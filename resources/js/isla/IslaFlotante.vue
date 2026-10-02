@@ -24,6 +24,7 @@ import FraseIsla from './piezas/FraseIsla.vue';
 import ControlIcono from './piezas/ControlIcono.vue';
 import BotonAccion from './piezas/BotonAccion.vue';
 import BannerRazon from './piezas/BannerRazon.vue';
+import IconoLucide from './ui/IconoLucide.vue';
 import HuecoAccion from './piezas/HuecoAccion.vue';
 import PanelIsla from './piezas/PanelIsla.vue';
 import BloqueCookies from './piezas/BloqueCookies.vue';
@@ -48,7 +49,7 @@ const {
     t, s, stack, view, top, r, isOpen, inCheckout, openRow, stretch, titleInRow, panelTitle, shownNotice,
     avisoEntero, avisoPausa, avisoTranscurrido, quitarAviso, pausarAviso, hayLinea, lineaAbre, accion, accionHref, accionAbierta, pulsarAccion, alTeclear, alternarPanel, panelProps, anuncio,
     cerrar, atras, apilarPanel, elegirPlan, navegar, cruce, cuenta, pulsarCuenta, ayudaEnFrase, tocar, hundir, soltar,
-    veloSaliente, kb, tono, tamano, estiloRaiz, estiloIsla, estiloMedida, banner, pulsarBanner, hueco, huecoSale,
+    veloSaliente, kb, tono, tamano, estiloRaiz, estiloIsla, estiloMedida, banner, pulsarBanner, hueco, huecoSale, variante, barra, Barra,
 } = useIsla(props, { wrapRef, islandRef, sizerRef, panelRef, rowRef, lineRowRef });
 // El velo: entra fundido y se va fundido (`isla-velo-sale`, en `isla.css`; Z3, `#782`). Sin `<Transition>` de Vue, a
 // propósito: su maquinaria pesaba 10–14 KiB en cada trozo de la isla (medido); el que se va es otro nodo, que se quita solo.
@@ -64,6 +65,7 @@ const raya = { flex: '0 0 auto', alignSelf: 'center', width: '1px', height: '24p
         :data-situation="s.id"
         :data-size="tamano"
         :data-tono="tono"
+        :data-variante="variante"
         :style="estiloRaiz"
         @pointerdown.capture="tocar"
         @keydown.capture="tocar"
@@ -175,7 +177,7 @@ const raya = { flex: '0 0 auto', alignSelf: 'center', width: '1px', height: '24p
                     <!-- Los tres huecos: el menú (o Volver), la acción y la cuenta (o la X). -->
                     <div
                         ref="rowRef"
-                        :style="{ display: avisoEntero ? 'none' : 'flex', alignItems: 'center', gap: '8px', width: '100%' }"
+                        :style="{ display: avisoEntero ? 'none' : 'flex', alignItems: 'center', gap: r.b2Row ? '6px' : '8px', width: '100%' }"
                     >
                         <ControlIcono
                             v-if="openRow && stack.length > 1"
@@ -227,8 +229,28 @@ const raya = { flex: '0 0 auto', alignSelf: 'center', width: '1px', height: '24p
                                 v-if="banner"
                                 :bn="banner"
                                 :top="top"
+                                :alto="r.b2Row ? 52 : 46"
                                 @pulsar="pulsarBanner"
                             />
+                            <!-- El B3 (Z6c): la frase dentro de la acción, con la flecha naranja siempre (`#868`). Su pieza llega
+                                 en su propio trozo (`Barra`, `useIsla.js`): `barra` solo existe con ella ya cargada. -->
+                            <component
+                                :is="Barra"
+                                v-else-if="barra"
+                                :label="accion.label"
+                                :sub="barra.sub"
+                                :dot="barra.dot"
+                                :live="barra.live"
+                                :href="accionHref"
+                                :expanded="accionAbierta"
+                                :pulsar="pulsarAccion"
+                                :entra="cruce.nA > 0"
+                            >
+                                <IconoLucide
+                                    name="arrow-right"
+                                    :size="19"
+                                />
+                            </component>
                             <BotonAccion
                                 v-else
                                 :top="stretch ? false : top"
@@ -245,8 +267,21 @@ const raya = { flex: '0 0 auto', alignSelf: 'center', width: '1px', height: '24p
                                     v-if="huecoSale && huecoSale.bn"
                                     :bn="huecoSale.bn"
                                     :top="top"
+                                    :alto="r.b2Row ? 52 : 46"
                                     quieto
                                 />
+                                <component
+                                    :is="Barra"
+                                    v-else-if="huecoSale && huecoSale.accion && huecoSale.accion.barra && Barra"
+                                    :label="huecoSale.accion.label"
+                                    :sub="huecoSale.accion.barra.sub"
+                                    :dot="huecoSale.accion.barra.dot"
+                                >
+                                    <IconoLucide
+                                        name="arrow-right"
+                                        :size="19"
+                                    />
+                                </component>
                                 <BotonAccion
                                     v-else-if="huecoSale && huecoSale.accion"
                                     :top="stretch ? false : top"

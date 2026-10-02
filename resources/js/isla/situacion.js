@@ -12,15 +12,20 @@
  */
 import { t, tp } from '../sidebar/i18n.js';
 
-/** «Hoy» (situación 3): la frase y, si quedan huecos, «Reservar para hoy». */
+/**
+ * «Hoy» (situación 3): la frase y, si quedan huecos, «Reservar para hoy». Y su frase CORTA (`short`), la que el B3 pone
+ * dentro de la acción (Z6c): sin las horas que no caben, que van en lo que se abre.
+ */
 function leerHoy(p, act, m) {
     const hoy = p.today;
     // Situación 15 · las páginas que no venden (`kind: 'apoyo'`: Visítanos, Normas): el horario de hoy, entero, y
     // la acción de la página. «Quedan huecos» y «Reservar para hoy» son de la situación 3: aquí el selector ya
     // ofrece «Para hoy» si hay huecos. Cerrado hoy, «Hoy abrimos…» no sería verdad y va la frase de cerrado.
     if (p.page.kind === 'apoyo') {
-        if (hoy.state === 'cerrado') return { line: tp(m, 'hoy.cerrado', { hora: hoy.opensAt }), tone: 'neutral', action: act };
-        return { line: tp(m, 'hoy.apoyo', { abre: hoy.opensAt, cierra: hoy.closesAt }),
+        if (hoy.state === 'cerrado') {
+            return { line: tp(m, 'hoy.cerrado', { hora: hoy.opensAt }), short: tp(m, 'hoy.corta_manana', { hora: hoy.opensAt }), tone: 'neutral', action: act };
+        }
+        return { line: tp(m, 'hoy.apoyo', { abre: hoy.opensAt, cierra: hoy.closesAt }), short: tp(m, 'hoy.corta_de_a', { abre: hoy.opensAt, cierra: hoy.closesAt }),
             tone: hoy.slots && hoy.state !== 'completo' ? 'live' : 'neutral', action: act };
     }
     const antes = hoy.state === 'antes';
@@ -37,8 +42,12 @@ function leerHoy(p, act, m) {
                 ? t(m, 'hoy.completo')
                 : tp(m, 'hoy.cerrado', { hora: hoy.opensAt });
     const paraHoy = Boolean(hoy.slots) && (antes || abierto);
+    const short = paraHoy ? t(m, 'hoy.corta_huecos')
+        : antes ? (hoy.closesAt ? tp(m, 'hoy.corta_de_a', { abre: hoy.opensAt, cierra: hoy.closesAt }) : tp(m, 'hoy.corta_desde', { hora: hoy.opensAt }))
+            : abierto ? tp(m, 'hoy.corta_hasta', { hora: hoy.closesAt })
+                : hoy.state === 'completo' ? t(m, 'hoy.corta_completo') : tp(m, 'hoy.corta_manana', { hora: hoy.opensAt });
 
-    return { line, tone: paraHoy ? 'live' : 'neutral', action: paraHoy ? { ...act, label: t(m, 'accion.reservar_hoy') } : act };
+    return { line, short, tone: paraHoy ? 'live' : 'neutral', action: paraHoy ? { ...act, label: t(m, 'accion.reservar_hoy') } : act };
 }
 
 /*
@@ -71,10 +80,11 @@ const REGLAS = [
     { id: 'calculado', when: (p) => p.quote,
         read: (p, act) => ({ line: p.quote.text, opens: p.quote.alert ? null : 'resumen', tone: p.quote.alert ? 'alert' : 'neutral', action: act }) },
     { id: 'hoy', when: (p) => p.today, read: leerHoy },
-    { id: 'oferta', when: (p) => p.offer, read: (p) => ({ line: p.offer }) },
+    // La oferta: un texto, o `{ text, short }` con su frase corta para el B3 (Z6c).
+    { id: 'oferta', when: (p) => p.offer, read: (p) => (typeof p.offer === 'object' ? { line: p.offer.text, short: p.offer.short || null } : { line: p.offer }) },
     // La frase que quita el miedo de la pieza que se lee (situación 5, `#866`): la página la declara por zona y llega aquí
-    // ya REPARTIDA (`razon.js`: una por visita salvo las de decisión).
-    { id: 'miedo', when: (p) => p.reassurance, read: (p) => ({ line: p.reassurance }) },
+    // ya REPARTIDA (`useSinSaturar.js`: una por visita salvo las de decisión), con su corta para el B3 si la trae.
+    { id: 'miedo', when: (p) => p.reassurance, read: (p) => ({ line: p.reassurance, short: p.reassuranceShort || null }) },
 ];
 
 /**
@@ -105,7 +115,19 @@ export function resolverSituacion(entrada, m) {
         if (s.calm === undefined) s.calm = !s.locked && !s.urgent && Boolean(p.ctaVisible);
         return conRazon(s, p);
     }
-    return conRazon({ id: 'desde', tone: 'neutral', line: p.page.from || '', action: act, calm: Boolean(p.ctaVisible) }, p);
+    return conRazon({ id: 'desde', tone: 'neutral', line: p.page.from || '', short: p.page.fromShort || null, action: act, calm: Boolean(p.ctaVisible) }, p);
+}
+
+/** El B3 (Z6c): las situaciones de LECTURA cuya frase puede ir dentro de la acción (2, 3/15, 4 y 5 del brief). */
+export const FUNDE = { desde: true, hoy: true, oferta: true, miedo: true };
+/** Lo que cabe en el renglón de la barra a 360 px. */
+export const SHORT_MAX = 22;
+
+/** El punto de la frase dentro de la barra, por el tono de la situación (`TONE_DOT` del diseño); neutro, ninguno. */
+const PUNTOS = { live: 'var(--isla-vivo)', alert: 'var(--isla-alerta)', focus: 'var(--isla-foco)' };
+
+export function puntoDelTono(tono) {
+    return PUNTOS[tono] ?? null;
 }
 
 /**
@@ -113,9 +135,21 @@ export function resolverSituacion(entrada, m) {
  * en su renglón encima de la fila (nunca dentro del botón); arriba, en la fila. Con el menú abierto, fuera: quien abre
  * el menú está navegando, y la frase de la sección de detrás ya no le habla. Ya no hay compacta ni isla cedida.
  * **Una sola voz** (Z6b): con el banner a la vista (la isla cerrada), no hay frase, tampoco arriba.
+ *
+ * **El experimento B3** (Z6c, `ParkIsland.jsx` del zip (6); `b3`): abajo, en reposo y sin nada encima (un panel, un aviso,
+ * las cookies, el pago fallido), la fila de 64 px (`b2Row`); en ella, en las situaciones de lectura, la frase va DENTRO de
+ * la acción, en su segundo renglón (`fused`, la cara de barra), si tiene versión corta (`short`, o la frase si cabe en
+ * `SHORT_MAX`) o no tiene frase. Donde la frase se toca, lleva nota, urge, está bloqueada, hay banner o la persona se
+ * atasca, la de hoy. Mientras se ve la cabecera (`enCabecera`), el botón grande SIN su frase: la cabecera ya la dice.
+ * Sin una versión corta, esa situación va como hoy (el diseño lo avisaba en la consola; aquí lo prueba la instancia).
  */
-export function reparto({ s, top, menuOpen, inCheckout, isOpen = false }) {
-    const hasLine = Boolean(s.line) && !inCheckout && !menuOpen && !(s.bn && !isOpen);
+export function reparto({ s, top, menuOpen, inCheckout, isOpen = false, b3 = false, enCabecera = false, aviso = false, cookies = false, atascada = false }) {
+    const b2Row = b3 && !enCabecera && !top && !isOpen && !inCheckout && !s.extra && !aviso && !cookies;
+    const corta = s.short || (s.line && s.line.length <= SHORT_MAX ? s.line : null);
+    const fused = b2Row && Boolean(FUNDE[s.id]) && !s.bn && Boolean(s.action) && !s.opens && !s.note && !s.urgent && !s.locked && !atascada
+        && (Boolean(corta) || !s.line);
+    const sinFraseArriba = b3 && enCabecera && !top && !isOpen;
+    const hasLine = Boolean(s.line) && !inCheckout && !menuOpen && !(s.bn && !isOpen) && !fused && !sinFraseArriba;
 
-    return { hasLine, row: top };
+    return { hasLine, row: top, b2Row, fused, corta: fused ? (corta || '').replace(/\.$/, '') : null };
 }

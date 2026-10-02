@@ -1003,7 +1003,11 @@ class SidebarBundleBudgetTest extends TestCase
     // Los tres usos de los banners (`#867`, §4.27): al cerrarse, la compra dice lo que deja —a medias o hecha— y, si la página
     // va a recargarse, lo deja en la pestaña (`pagina/compra-cerrada.js`, un trozo COMPARTIDO con la isla de la página, que lo
     // lee). Medido 182,37 → 183,82 (base: el `HEAD` `a4d761d5`, con el build del gate). El techo, a 184.
-    private const ISLA_COMPRA_CHUNK_MAX_KB = 184;
+    // Z6c·1 (§4.27, el experimento B3): la variante, la cabecera a la vista (`useEnCabecera.js`), el reparto y las frases
+    // cortas (`situacion.js`). La cara de barra, NO: va en su trozo y solo la baja el B3 (abajo, su techo). Medido 183,82 →
+    // 186,75 (base: el `HEAD` `318fec68`, con el build del gate; con la barra en el trozo común era 190,55). Y LA MEDIDA del
+    // experimento, que la isla cuenta por `JumpWeb.track` (`medir.js`, acordado con el SPA): 187,44. El techo, a 188.
+    private const ISLA_COMPRA_CHUNK_MAX_KB = 188;
 
     // T4d·4 (`specs/isla-y-landing-nueva.md` §4.12): la CALCULADORA de una página, entrada propia que la página pide
     // (`scripts` de `<x-pagina>`) y se monta al acercarse su pieza. Su DESCARGA entera, como la mide el navegador que
@@ -1076,7 +1080,15 @@ class SidebarBundleBudgetTest extends TestCase
     // `compra-cerrada.js` (0,96: quien escribe y quien lee el mismo formato, juntos) y `marca-compra.js` (0,43: la regla de
     // la ruta propia, sin copiarla). Partirlos ahorraba ~0,8 con el formato en dos ficheros. Medido 189,33 → 192,04 (base:
     // el `HEAD` `a4d761d5`, con el build del gate); el motor, la landing y las calculadoras, sin cambio. El techo, a 193.
-    private const ISLA_PAGINA_MAX_KB = 193;
+    // Z6c·1 (§4.27, el experimento B3): lo mismo que la compra —la variante, la cabecera a la vista, el reparto y las frases
+    // cortas—; la cara de barra, en su trozo (abajo). Medido 192,04 → 194,96 (base: el `HEAD` `318fec68`, con el build del
+    // gate; con la barra en el trozo común era 198,76); las calculadoras, sin cambio. Con la medida del experimento
+    // (`medir.js`: la exposición y los gestos por `JumpWeb.track`), 195,66. El techo, a 196.
+    private const ISLA_PAGINA_MAX_KB = 196;
+
+    // Z6c·1: la cara de barra del B3 (`piezas/BarraAccion.vue` y `barra-accion.js`), su trozo propio, que la isla pide solo
+    // con el B3. Medido al nacer: 4,16. El techo, a 5.
+    private const ISLA_BARRA_B3_MAX_KB = 5;
 
     // T3e·3 (`#694`): las pantallas de después de la pantalla 0, en su trozo (`isla/compra/pasos-diferidos.js`), que la
     // compra pide al montarse. Medido 36,92 KiB. T3e·4 (`#695`): «Entra» con sus eventos y la «G» de Google, 37,66.
@@ -1635,6 +1647,28 @@ class SidebarBundleBudgetTest extends TestCase
         $this->assertLessThanOrEqual(self::ISLA_PASOS_CHUNK_MAX_KB, $kb, sprintf(
             'Los pasos de la compra de la isla pesan %.2f kB (techo: %s kB).', $kb, self::ISLA_PASOS_CHUNK_MAX_KB
         ));
+    }
+
+    /**
+     * **La cara de barra del experimento B3 es OTRO trozo, pedido solo con el B3** (Z6c, `isla-y-landing-nueva.md` §4.27): la
+     * isla la pide al crearse si su cara es `b3`. Ni la isla de la página, ni la compra, ni Mi cuenta, ni las calculadoras la
+     * traen de forma estática: en el trozo común, la isla de la página y la compra crecían +3,3 kB sin enseñarla nunca la
+     * compra (medido). Y no importa piezas comunes: con ellas, el empaquetador repartía de otra forma los trozos y las
+     * calculadoras crecían +0,31 sin tocarlas (medido).
+     */
+    public function test_the_b3_bar_is_its_own_deferred_chunk_that_only_b3_downloads(): void
+    {
+        $manifest = $this->manifest();
+        $clave = 'resources/js/isla/piezas/BarraAccion.vue';
+
+        $this->assertArrayHasKey($clave, $manifest, 'La barra del B3 ya no es un trozo propio.');
+        $this->assertTrue($this->llegaPorImportDinamico('resources/js/isla/pagina/montar.js', $clave), 'La isla ya no pide la barra con `import()`.');
+        foreach (['resources/js/isla/pagina/montar.js', 'resources/js/isla/SeccionCompra.vue', 'resources/js/isla/SeccionCuenta.vue', 'resources/js/isla/calculadora/montar.js', 'resources/js/isla/calculadora/montarFiesta.js'] as $entrada) {
+            $this->assertNotContains($clave, $this->alcanceEstatico($entrada), "La barra del B3 viaja con {$entrada}.");
+        }
+
+        $kb = $this->descargaDe($clave, $this->alcanceEstatico('resources/js/isla/pagina/montar.js'));
+        $this->assertLessThanOrEqual(self::ISLA_BARRA_B3_MAX_KB, $kb, sprintf('La barra del B3 pesa %.2f kB (techo: %s kB).', $kb, self::ISLA_BARRA_B3_MAX_KB));
     }
 
     /**

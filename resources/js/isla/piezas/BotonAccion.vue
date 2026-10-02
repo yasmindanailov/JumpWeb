@@ -20,6 +20,7 @@ const { hover, press, ring, bloqueado, apretada, tagRef, lblRef, estilo, click }
         :aria-disabled="bloqueado || undefined"
         :aria-busy="loading ? true : undefined"
         data-isla-accion=""
+        data-cara="boton"
         :style="estilo"
         @click="click"
         @mouseenter="hover = true"

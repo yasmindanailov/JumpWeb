@@ -14,6 +14,7 @@ use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\LegalDocumentPublisher;
 use App\Domain\Payments\Services\MarcasDePago;
 use App\Domain\Payments\Services\RedsysReturnOutcome;
+use App\Domain\Platform\Models\Experiment;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\Analytics\Pixels;
 use App\Http\Controllers\Payments\RedsysReturnController;
@@ -977,6 +978,31 @@ BLADE);
         $this->assertSame(['pending' => false, 'pendingText' => null, 'task' => null, 'bookingToday' => null], $conSesion['cuenta'] ?? null, 'con sesión y sin reservas: la cuenta, sin nada que decir');
 
         $this->assertNull($isla((string) $this->get('/jump')->assertOk()->getContent()), 'Sin pedirla, ni su JSON.');
+    }
+
+    /**
+     * **La cara del experimento B3 va en el `<html>`, ANTES de pintar** (Z6c, `VarianteDeIsla`): la cabecera de la instancia
+     * y la isla la leen a la vez. Sin experimento vivo, la de hoy y SIN la marca del experimento (no hay exposición); con él,
+     * la que asigne el servidor y la marca; la vista previa `?isla=b3`, sin marca. Sin la isla en la página, nada.
+     */
+    public function test_a_page_with_the_isla_says_its_b3_face_on_the_html_before_painting(): void
+    {
+        File::put($this->paquete.'/web/con-isla.blade.php', <<<'BLADE'
+<x-pagina titulo="Kids" :scripts="['isla']" :isla="['page' => ['kind' => 'producto', 'product' => 'kids', 'action' => ['label' => 'Reservar Kids', 'href' => '#precio'], 'from' => 'Desde 8 €']]"><div data-jw-isla></div></x-pagina>
+BLADE);
+        File::put($this->paquete.'/web/sin-isla.blade.php', '<x-pagina titulo="Kids"><p>hola</p></x-pagina>');
+        $this->declarar(['kids' => ['vista' => 'con-isla', 'hechos' => []], 'jump' => ['vista' => 'sin-isla', 'hechos' => []]]);
+        $html = fn (string $url): string => preg_match('#<html\b([^>]*)>#', (string) $this->get($url)->assertOk()->getContent(), $m) === 1 ? $m[1] : '';
+
+        $this->assertStringContainsString('data-isla-variante="hoy"', $html('/kids'));
+        $this->assertStringNotContainsString('data-isla-experimento', $html('/kids'), 'sin experimento vivo, no hay exposición');
+        $this->assertStringContainsString('data-isla-variante="b3"', $html('/kids?isla=b3'));
+        $this->assertStringNotContainsString('data-isla-experimento', $html('/kids?isla=b3'), 'la vista previa no es una exposición');
+        $this->assertStringNotContainsString('data-isla-variante', $html('/jump'), 'sin la isla en la página, nada');
+
+        Experiment::create(['key' => 'isla', 'name' => 'B3', 'variants' => [['key' => 'hoy', 'weight' => 1], ['key' => 'b3', 'weight' => 1]], 'active' => true]);
+        $asignada = $html('/kids');
+        $this->assertMatchesRegularExpression('#data-isla-variante="(hoy|b3)"\s+data-isla-experimento="\1"#', $asignada, 'la que asigne el servidor, y con ella se cuenta la exposición');
     }
 
     /**

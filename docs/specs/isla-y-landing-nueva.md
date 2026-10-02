@@ -2609,6 +2609,25 @@ antes de pintar (después, la cabecera saltaría); dos naranjas con el B3, a pro
 **Verificación**: `node --test` del reparto B3, de la cara de barra y de la variante; la suite; el peso con su base; el
 navegador en `?isla=b3` a 390; y el ojo del owner en vivo.
 
+**Z6c·1 y Z6c·2 ✅, con el visto bueno del owner en vivo (02-10)**: `Http\Instancia\VarianteDeIsla` (la cara y el
+experimento en el `<html>` de `<x-pagina>`), `useEnCabecera.js` (`varianteDe` y la cabecera a la vista), `reparto()` y las
+frases cortas en `situacion.js` (`FUNDE`, `SHORT_MAX`, `puntoDelTono`; las de hoy, `hoy.corta_*`), la cara de barra
+(`piezas/BarraAccion.vue` con `barra-accion.js`), `data-variante` y `data-cara`. En la instancia: `data-pj-hero` y el B3 de
+`video-hero` (sin botón por debajo de 900 px; apilada, el texto debajo en claro, `entradas.css`), `frases_cortas` en
+`razones-isla.php` y el «desde» corto de la portada. **Difiere del diseño, a propósito**: la flecha naranja (`#868`); sin la
+corta de «Profesores, gratis» (es uno por cada 15: esa pieza de Colegios va como la isla de hoy); la barra en su PROPIO trozo,
+pedido solo con el B3 y sin importar piezas comunes (en el trozo común la isla de la página y la compra crecían +6,7; con
+`CargaRebote` e `IconoLucide` dentro, las calculadoras +0,31 sin tocarlas; la flecha le llega por su ranura y sin
+«cargando», que la barra no necesita). **Medido**: `b3.test.js` (17 casos, cuatro mutantes a mano), `VarianteDeIslaTest` y la
+cara en el `<html>` de `InstancePagesTest`, y la guarda nueva del trozo de la barra (vista morder con un `import` estático);
+en Chromium a 390 con `?isla=b3`, `/kids` (el vídeo a 475 px, la isla sin frase al llegar, la barra con la flecha naranja al
+pasar la cabecera, el banner con un botón de la página a la vista) y `/`. **La medida, como la pidió el SPA** (su buzón, 02-10:
+mejor que la isla cuente lo suyo, como el cajón con `expose()`): `isla/medir.js` manda por `JumpWeb.track`
+`experiment_exposed` (`{ key: 'isla', variant }`, una vez por carga, con la isla abajo y fuera de la capa grande, y solo con la
+variante ASIGNADA, que por eso viaja en `data-isla-experimento`) e `isla_accion`, `isla_panel` e `isla_razon` con las props del
+diseño (`medir.test.js`, mutado). El peso final, la isla de la página 192,04 → 195,66 (techo 196), la compra 183,82 → 187,44
+(188), la barra 4,16 aparte (5), con la base `318fec68`. **Queda la Z6c·3, del SPA**: los nombres en su contrato y su informe.
+
 ## 5. Impacto en invariantes
 
 - `PAY-*`: solo si entra Bizum; entonces `VERIFY_CONC=1` y la lista del `CRITICAL_RE`.

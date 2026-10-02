@@ -30,6 +30,14 @@ return [
         'cerrado' => 'Abrimos mañana a las :hora.',
         // Situación 15, las páginas que no venden (Visítanos, Normas): el horario de hoy, entero y sin punto.
         'apoyo' => "Hoy abrimos de :abre\u{00A0}a\u{00A0}:cierra",
+        // Las CORTAS del experimento B3 (Z6c, `readToday` del diseño): van dentro de la acción, en su segundo renglón, y las
+        // horas que no caben, en lo que se abre. Hasta 22 caracteres a 360 px.
+        'corta_huecos' => 'Quedan huecos',
+        'corta_de_a' => 'Hoy, :abre–:cierra',
+        'corta_desde' => 'Hoy, desde las :hora',
+        'corta_hasta' => 'Hasta las :hora',
+        'corta_completo' => 'Hoy, completo',
+        'corta_manana' => 'Mañana, a las :hora',
     ],
     'pago' => [
         'no_cobrado' => 'No se ha cobrado nada.',

@@ -32,7 +32,7 @@ SPA: `CookiePolicyContent`, el resto de `cookies.php`, `CookieConsent` y sus tes
 `scripts/sonda-cuenta-datos.php`, `scripts/mutar-{t5f,hijos-de-producto,demanda-isla,isla-z6a,isla-z6b}.sh`; las de las PÁGINAS:
 `scripts/sonda-{primera-pantalla,calculadora,visor,conversion,portada,cumpleanos,colegios,visitanos,normas,entradas,web,razon}.mjs`
 y `scripts/mutar-sonda-{colegios,entradas,normas,visitanos,web,razon}.sh`), `App\Http\Instancia\RazonesDeIsla` (Z6b·1, con
-`RazonesDeIslaTest`), `sidebar/reanudar.js`,
+`RazonesDeIslaTest`), `App\Http\Instancia\VarianteDeIsla` (el B3, Z6c, con `VarianteDeIslaTest`), `sidebar/reanudar.js`,
 `sidebar/marca-compra.js`, `app/Http/Sidebar/PurchaseResume.php` y
 las vistas nuevas de `instancias/playjump/web/`; ⚠️ **el motor del cajón es del SPA**: se le avisa ANTES de tocarlo ·
 `StaticAnalysisGateTest` · `Tests\TestCase::be()` · **el token y el cajón empaquetado**, cuyos ficheros

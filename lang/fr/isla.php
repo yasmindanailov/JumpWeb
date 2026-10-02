@@ -25,6 +25,12 @@ return [
         'completo' => 'Aujourd’hui c’est complet. Voyez demain.',
         'cerrado' => 'Nous ouvrons demain à :hora.',
         'apoyo' => "Ouvert aujourd’hui de :abre\u{00A0}à\u{00A0}:cierra",
+        'corta_huecos' => 'Il reste des places',
+        'corta_de_a' => 'Auj., :abre–:cierra',
+        'corta_desde' => 'Auj., dès :hora',
+        'corta_hasta' => 'Jusqu’à :hora',
+        'corta_completo' => 'Auj., complet',
+        'corta_manana' => 'Demain, à :hora',
     ],
     'pago' => [
         'no_cobrado' => 'Rien n’a été débité.',

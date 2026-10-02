@@ -12,8 +12,8 @@
  * luego la primera medida, luego `isla:abrir`) y los `watch` también: es el orden del port de una pieza, y el banco de
  * la isla lo midió así (52/52 a 0 px).
  */
-import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
-import { resolverSituacion, reparto } from './situacion.js';
+import { computed, nextTick, onBeforeUnmount, ref, shallowRef, watch } from 'vue';
+import { puntoDelTono, resolverSituacion, reparto } from './situacion.js';
 import { t as texto } from '../sidebar/i18n.js';
 import { estiloIsla, estiloMedida, estiloRaiz, tamano } from './forma.js';
 import { useAncho } from './useColocacion.js';
@@ -28,6 +28,8 @@ import { useAsentado } from './useAsentado.js';
 import { useCruce } from './useCruce.js';
 import { useSinSaturar } from './useSinSaturar.js';
 import { useHueco } from './useHueco.js';
+import { B3, useEnCabecera, varianteDe } from './useEnCabecera.js';
+import { exponerExperimento, medir } from './medir.js';
 import { dejarVuelo } from './relevo.js';
 import { salidaDePanel, vueloDesde } from './movimiento.js';
 
@@ -41,9 +43,15 @@ export function useIsla(props, { wrapRef, islandRef, sizerRef, panelRef, rowRef,
     // llegar, las de decisión siempre, el resto una por visita y con 6 s de calma). La tabla recibe lo que toca decir YA.
     const sinSaturar = useSinSaturar({ reason: () => props.reason, reassurance: () => props.reassurance, chosen: () => props.chosen });
 
+    // EL EXPERIMENTO B3 (Z6c): la cara, del `<html>` o de la prop, y si se ve la cabecera de la página (`useEnCabecera.js`).
+    const variante = varianteDe(props.variant);
+    const enCabecera = useEnCabecera(variante === B3);
+    // La frase corta de la pieza, para la barra del B3: la de la frase que la isla dice ahora.
+    const fraseCorta = () => (sinSaturar.frase.value && props.reassurance && typeof props.reassurance === 'object' ? props.reassurance.short || null : null);
+
     // Con el menú abierto, el velo tapa la página: su botón ya no se ve, así que la acción de la isla va en principal.
     const entrada = (ctaVisible) => ({
-        page: props.page, today: props.today, offer: props.offer, reassurance: sinSaturar.frase.value, quote: props.quote,
+        page: props.page, today: props.today, offer: props.offer, reassurance: sinSaturar.frase.value, reassuranceShort: fraseCorta(), quote: props.quote,
         chosen: props.chosen, filling: props.filling, task: props.task, resume: props.resume, payment: props.payment,
         paymentText: props.paymentText, bookingToday: props.bookingToday, checkout: props.checkout, ctaVisible,
         reason: sinSaturar.razon.value, waiting: props.waiting,
@@ -114,8 +122,13 @@ export function useIsla(props, { wrapRef, islandRef, sizerRef, panelRef, rowRef,
     onBeforeUnmount(() => clearTimeout(relojToque));
     const rapido = computed(() => isOpen.value || tocado.value);
 
-    // ── Reparto de la frase: siempre (Z6a), salvo con el banner a la vista: una sola voz (Z6b) ──
-    const r = computed(() => reparto({ s: s.value, top: top.value, menuOpen: menuOpen.value, inCheckout: inCheckout.value, isOpen: isOpen.value }));
+    // ── Reparto de la frase: siempre (Z6a), salvo con el banner a la vista: una sola voz (Z6b); y con el B3, dentro de la
+    // acción en su fila de 64 px, o fuera mientras se ve la cabecera (Z6c) ──
+    const r = computed(() => reparto({
+        s: s.value, top: top.value, menuOpen: menuOpen.value, inCheckout: inCheckout.value, isOpen: isOpen.value,
+        b3: variante === B3, enCabecera: enCabecera.value, aviso: Boolean(shownNotice.value), cookies: Boolean(props.cookies),
+        atascada: Boolean(props.help && props.help.stuck),
+    }));
     remedirCuando([top, () => r.value.row, inCheckout, isOpen, () => s.value.id, view, () => stack.value.length]);
     // El teclado del móvil en la capa grande (§4.16): la raíz se ciñe a lo que se ve y la capa mide ese alto.
     const { kb } = useTeclado(() => inCheckout.value && ! top.value);
@@ -174,6 +187,8 @@ export function useIsla(props, { wrapRef, islandRef, sizerRef, panelRef, rowRef,
     const accionAbierta = computed(() => view.value === 'plans' || (accion.value && accion.value.panel ? view.value === accion.value.panel : false));
     function pulsarAccion(e) {
         const a = accion.value;
+        // LO QUE SE MIDE (Z6c, `medir.js`): el gesto, con la cara y el tono que se veían.
+        medir('isla_accion', { situacion: s.value.id, etiqueta: a.label, tono: tono.value, cara: barra.value ? 'barra' : 'boton', pagina: props.page?.kind || null, variante });
         if (a.panel) { alternarPanel(a.panel, e); return; }
         if (conSelector.value) {
             plansFromToday.value = s.value.id === 'hoy' && a.label === t('accion.reservar_hoy');
@@ -197,14 +212,31 @@ export function useIsla(props, { wrapRef, islandRef, sizerRef, panelRef, rowRef,
     function pulsarBanner(e) {
         const bn = banner.value;
         if (! bn) return;
+        medir('isla_razon', { situacion: s.value.id, tipo: bn.type || 'razon', razon: bn.text, pagina: props.page?.kind || null, variante });
         if (bn.onClick) { bn.onClick(e); return; }
         razonAbierta.value = bn;
         alternarPanel('razon', e);
     }
-    // El relevo del hueco: acción ⇄ banner, o un banner por otro (`useHueco.js`).
+    // LA CARA DE BARRA (B3, Z6c): la frase corta dentro de la acción, con el punto de su tono (que late si es vivo). `null`,
+    // la cara de botón. Su círculo, siempre naranja (`#868`). ⚠️ Va en su PROPIO trozo: solo la pinta el B3, abajo y pasada
+    // la cabecera, y la compra y Mi cuenta —que comparten esta isla— nunca (medido: en el trozo común, la isla de la página
+    // y la compra crecían igual). Con el B3 se pide al crearse la isla; hasta que llega, la cara de botón: nunca un hueco.
+    const Barra = shallowRef(null);
+    if (variante === B3) import('./piezas/BarraAccion.vue').then((m) => { Barra.value = m.default; }, () => {});
+    const barra = computed(() => (r.value.fused && Barra.value
+        ? { sub: r.value.corta, dot: puntoDelTono(s.value.tone), live: s.value.tone === 'live' }
+        : null));
+    // El tono que se VE (la marca que mide el SPA): con la barra del B3, la flecha es naranja siempre (`#868`).
+    const tono = computed(() => (s.value.calm && ! isOpen.value && ! barra.value ? 'secundaria' : 'principal'));
+    // La MEDIDA (Z6c, `medir.js`): la exposición al experimento, una vez por carga, al estar la isla ABAJO y fuera de la capa
+    // grande (donde el B3 cambia algo); y cada panel que se abre.
+    watch([top, inCheckout], ([arriba, enCompra]) => { if (! arriba && ! enCompra) exponerExperimento(); }, { immediate: true });
+    watch(view, (panel) => { if (panel) medir('isla_panel', { panel, situacion: s.value.id, variante }); });
+    // El relevo del hueco: acción ⇄ banner, o un banner por otro (`useHueco.js`). Botón ⇄ barra no lo es: es la misma
+    // acción con otra cara, y la isla cambia de forma con su morph.
     const hueco = computed(() => (banner.value
         ? { clave: `bn|${banner.value.type}|${banner.value.text}`, bn: banner.value }
-        : accion.value ? { clave: 'act', accion: { label: accion.value.label, calm: Boolean(s.value.calm) && ! isOpen.value } } : null));
+        : accion.value ? { clave: 'act', accion: { label: accion.value.label, calm: Boolean(s.value.calm) && ! isOpen.value, barra: barra.value } } : null));
     const huecoSale = useHueco(() => hueco.value);
 
     const panelProps = computed(() => ({
@@ -220,9 +252,9 @@ export function useIsla(props, { wrapRef, islandRef, sizerRef, panelRef, rowRef,
         pausarAviso: (v) => { aviso.pausa.value = v; },
         hayLinea, lineaAbre, accion, accionHref, accionAbierta, pulsarAccion, alTeclear, alternarPanel, panelProps, anuncio,
         cerrar: pila.cerrar, atras: pila.atras, apilarPanel: pila.apilarPanel, elegirPlan, navegar,
-        banner, pulsarBanner, hueco, huecoSale,
+        banner, pulsarBanner, hueco, huecoSale, variante, barra, Barra,
         cruce, cuenta, pulsarCuenta, ayudaEnFrase, tocar, hundir, soltar, veloSaliente, kb,
-        tono: computed(() => (s.value.calm && ! isOpen.value ? 'secundaria' : 'principal')),
+        tono,
         tamano: computed(() => tamano({ inCheckout: inCheckout.value, isOpen: isOpen.value, notice: shownNotice.value })),
         estiloRaiz: computed(() => estiloRaiz({ gutter: props.gutter, top: top.value, inCheckout: inCheckout.value, reservado: reservado.value, kb: kb.value })),
         // Entre páginas, la isla de la página se queda (`view-transition-name`); la compra y Mi cuenta no cruzan de página.

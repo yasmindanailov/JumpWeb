@@ -82,9 +82,13 @@
         $entradaIsla = app(\Illuminate\Foundation\Vite::class)->asset('resources/js/isla/pagina/montar.js');
         $etiquetasVite = str_replace('<script type="module" src="'.$entradaIsla.'"', '<script type="module" blocking="render" src="'.$entradaIsla.'"', $etiquetasVite);
     }
+    // El experimento B3 de la isla (Z6c, §4.27): su cara, en el `<html>` y ANTES de pintar —la cabecera de la instancia y la
+    // isla la leen a la vez—, y si el servidor la ASIGNÓ, esa variante, con la que la isla cuenta la exposición; sin ella no
+    // hay exposición (`VarianteDeIsla`, `isla/medir.js`).
+    $varianteIsla = \App\Http\Instancia\VarianteDeIsla::paraLaPagina($islaDePagina !== null, request());
 @endphp
 <!doctype html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" @if ($varianteIsla) data-isla-variante="{{ $varianteIsla['variante'] }}" @if ($varianteIsla['experimento'] !== null) data-isla-experimento="{{ $varianteIsla['experimento'] }}" @endif @endif>
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">

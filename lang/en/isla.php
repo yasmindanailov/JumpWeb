@@ -25,6 +25,12 @@ return [
         'completo' => 'Today is full. Try tomorrow.',
         'cerrado' => 'We open tomorrow at :hora.',
         'apoyo' => "Open today from :abre\u{00A0}to\u{00A0}:cierra",
+        'corta_huecos' => 'Spots left',
+        'corta_de_a' => 'Today, :abre–:cierra',
+        'corta_desde' => 'Today, from :hora',
+        'corta_hasta' => 'Until :hora',
+        'corta_completo' => 'Today, full',
+        'corta_manana' => 'Tomorrow, at :hora',
     ],
     'pago' => [
         'no_cobrado' => 'Nothing has been charged.',
