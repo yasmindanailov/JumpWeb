@@ -20,6 +20,8 @@ guardas 8, 9 y 10) · `scripts/mutar-guarda8.sh` · `CHANGELOG.md` · `phpstan.n
 `Notifications\ConfirmationCode`, `Auth\LogoutController`, `Api\V1\MeConfirmationCodeTest` y `Auth\SessionBindingTest` · **y la
 A2b** (`#856`): `Identity\Contracts\EmailChangeOutcome`, `Notifications\Support\ChoosesRecipient`, `Account\EmailChangeController`,
 `Api\V1\MePendingEmailCodeTest` y `Account\EmailChangeRecipientsTest` · **y la A3b** (`#857`): `isla/cuenta/CampoCodigoConfirmar.vue` ·
+**y la A5a** (`#870`): `Identity\Services\PanelPasswordLinks`, `Notifications\PanelPasswordLink`, `App\Filament\Auth\PanelPassword`,
+`Admin\Users\SendPanelPasswordActionTest` y `scripts/mutar-contrasena-panel.sh` (y, AVISANDO, del SPA: `EmailUtm`, `MailTextCatalogTest`) ·
 **EL SEO** (`specs/seo.md`): la spec, `scripts/{sonda-seo.mjs,mutar-seo.sh}`, `RobotsController`, `MapsEmbed::coordinates()`,
 `VenueAddress::parts()` y el grafo de `StructuredData` (y, AVISANDO, `components/{pagina,layout}.blade.php` y `deploy.sh`) ·
 **LA POLÍTICA DE COOKIES de producción** (`#858`/`#859`): su spec, `App\Http\Legal\CookieInventory`, la migración

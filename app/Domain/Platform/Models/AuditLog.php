@@ -252,6 +252,10 @@ class AuditLog extends Model
         // ── Usuarios ───────────────────────────────────────────────────────────────────────
         'users.anonymize_blocked',
         'users.anonymized',
+        // La contraseña del PANEL, enviada desde la ficha (A5a de `specs/acceso-con-codigo.md` §4.12, `#870`).
+        'users.panel_password_link_sent',
+        'users.panel_password_link_blocked',
+        // Las del botón que la mandaba a CLIENTES, retirado en la A5a: ya no se escriben; quedan por las filas viejas.
         'users.password_reset_sent',
         'users.send_reset_blocked',
         'users.rotate_card_blocked',        // «Rotar carné» del panel rechazada entre render y submit (`specs/identidad-qr-puerta.md` §9.6 B·5)

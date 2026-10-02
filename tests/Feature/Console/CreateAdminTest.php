@@ -163,6 +163,19 @@ class CreateAdminTest extends TestCase
         $this->assertTrue($user->canAccessPanel(Filament::getPanel('admin')));
     }
 
+    public function test_it_can_create_a_door_account_too(): void
+    {
+        // Los roles salen de `User::PANEL_ROLES` (A5, `#870`): la copia que vivía en el comando se quedó sin `puerta`
+        // (`#320`) y rechazaba un rol que SÍ abre el panel.
+        $this->artisan('app:create-admin', ['--email' => 'tablet@cliente.tld', '--role' => 'puerta'])
+            ->assertExitCode(0);
+
+        $user = User::whereRaw('LOWER(email) = ?', ['tablet@cliente.tld'])->firstOrFail();
+
+        $this->assertTrue($user->hasRole('puerta'));
+        $this->assertTrue($user->canAccessPanel(Filament::getPanel('admin')));
+    }
+
     // ── Idempotencia: repara el rol, pero NO toca la contraseña ───────────────────────────────────
 
     public function test_rerunning_does_not_duplicate_the_account(): void

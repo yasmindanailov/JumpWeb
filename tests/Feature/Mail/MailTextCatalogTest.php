@@ -16,7 +16,7 @@ use Tests\TestCase;
 class MailTextCatalogTest extends TestCase
 {
     /** Los correos al EQUIPO, fuera del catálogo a propósito (no los lee un cliente). */
-    private const DEL_EQUIPO = ['google_business_location_changed'];
+    private const DEL_EQUIPO = ['google_business_location_changed', 'panel_password_link'];
 
     public function test_each_mail_is_known_by_the_key_of_its_sent_emails(): void
     {

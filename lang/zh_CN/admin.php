@@ -2319,13 +2319,18 @@ return [
         'filter_anonymized_yes' => '仅已匿名化',
         'filter_anonymized_no' => '仅正常',
 
+        'panel_password' => [
+            'title' => '您的后台密码',
+            'submit' => '保存密码',
+        ],
+
         'actions' => [
-            'send_reset' => [
-                'label' => '发送密码链接',
-                'modal_heading' => '发送密码重置链接',
-                'modal_description' => '将向 :email 发送一封邮件,内含让客户设置新密码的链接。',
+            'send_panel_password' => [
+                'label' => '发送后台密码链接',
+                'modal_heading' => '发送其后台密码链接',
+                'modal_description' => '将向 :email 发送一封邮件,内含创建其后台密码的链接。链接 :minutes 分钟内有效;在更改之前,其现有密码仍然有效。',
                 'submit' => '发送链接',
-                'success' => '已向 :email 发送密码重置链接。',
+                'success' => '已向 :email 发送链接。',
                 'throttled' => '刚刚已发送过链接。请稍候一分钟再重试。',
                 'blocked' => '无法向该账户发送链接。',
             ],
@@ -2416,7 +2421,7 @@ return [
             'prices_manage' => '管理费率与价格',
             'content_manage' => '管理内容(区域、游乐设施、常见问题、规则、页面)',
             'settings_manage' => '管理配置与税务信息',
-            'users_manage' => '管理用户(资料、匿名化、密码)',
+            'users_manage' => '管理用户(资料与二维码)',
             'users_anonymize' => '匿名化用户(GDPR)',
             'consents_view' => '查看用户同意记录',
             'waiver_view' => '查看免责声明签署记录(签名与PDF)',

@@ -2805,13 +2805,21 @@ return [
         'filter_anonymized_yes' => 'Solo anonimizadas',
         'filter_anonymized_no' => 'Solo activas',
 
+        // La página del panel a la que lleva ese enlace (`Filament\Auth\PanelPassword`); el resto de sus textos, de Filament.
+        'panel_password' => [
+            'title' => 'Tu contraseña del panel',
+            'submit' => 'Guardar la contraseña',
+        ],
+
         'actions' => [
-            'send_reset' => [
-                'label' => 'Enviar enlace de contraseña',
-                'modal_heading' => 'Enviar enlace de cambio de contraseña',
-                'modal_description' => 'Se enviará un correo a :email con un enlace para que el cliente establezca una nueva contraseña.',
+            // La contraseña del PANEL (A5a de `specs/acceso-con-codigo.md` §4.12, `#870`): solo a una cuenta del panel; los
+            // clientes entran con un código al correo y no tienen contraseña.
+            'send_panel_password' => [
+                'label' => 'Enviar enlace de contraseña del panel',
+                'modal_heading' => 'Enviar el enlace de su contraseña del panel',
+                'modal_description' => 'Se enviará un correo a :email con un enlace para crear su contraseña del panel. Vale :minutes minutos; la que tenga ahora sigue valiendo hasta que la cambie.',
                 'submit' => 'Enviar enlace',
-                'success' => 'Enlace de cambio de contraseña enviado a :email.',
+                'success' => 'Enlace enviado a :email.',
                 'throttled' => 'Ya se envió un enlace hace poco. Espera un minuto antes de volver a enviarlo.',
                 'blocked' => 'No se puede enviar el enlace a esta cuenta.',
             ],
@@ -2922,7 +2930,7 @@ return [
             'prices_manage' => 'Gestionar tarifas y precios',
             'content_manage' => 'Gestionar contenido (zonas, atracciones, FAQ, normas, páginas)',
             'settings_manage' => 'Gestionar configuración y datos fiscales',
-            'users_manage' => 'Gestionar usuarios (ficha, anonimizar, contraseña)',
+            'users_manage' => 'Gestionar usuarios (ficha y QR)',
             'users_anonymize' => 'Anonimizar usuario (RGPD)',
             'consents_view' => 'Ver consentimientos de usuario',
             'waiver_view' => 'Ver el registro probatorio del descargo (firmas y PDF)',

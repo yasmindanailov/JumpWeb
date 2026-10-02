@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Domain\Content\Services\ThemeSettings;
 use App\Domain\Platform\Models\Setting;
+use App\Filament\Auth\PanelPassword;
 use App\Filament\Pages\AdminSettingsHub;
 use App\Filament\Pages\Dashboard;
 use App\Filament\Support\InitialsAvatarProvider;
@@ -34,6 +35,7 @@ use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\Facades\Route;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 /**
@@ -108,6 +110,10 @@ class AdminPanelProvider extends PanelProvider
             // Su PROPIO guard (`docs/specs/panel-a-salvo.md`, `#850`): una sesión de la web no abre el panel.
             ->authGuard('admin')
             ->login()
+            // La contraseña del PERSONAL (A5a de `specs/acceso-con-codigo.md` §4.12, `#870`): la página del enlace que un
+            // administrador envía desde la ficha. Sin sesión, como el login, y con el enlace firmado. NO es
+            // `->passwordReset()`: ése trae además «¿Has olvidado tu contraseña?», y nadie la recupera por su cuenta.
+            ->routes(fn () => Route::get('/contrasena', PanelPassword::class)->middleware('signed')->name('auth.panel-password'))
             // El AUTHENTICATOR (P3, `#851`): obligatorio SOLO para los administradores. Filament decide «obligatorio» al
             // registrar las rutas, sin usuario: se activa para el panel y `RequiresAdminAppAuthentication` ocupa el sitio de
             // su middleware para exigirlo por rol. Recuperable (ocho códigos, con hash); ventana de ±1 min (la de Filament,

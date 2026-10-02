@@ -19,8 +19,12 @@ use Symfony\Component\Console\Output\OutputInterface;
  * instalación recién desplegada **no tiene por dónde entrar al panel**, y por tanto tampoco por dónde
  * configurar las claves de Turnstile, que se leen SOLO de `settings`.
  *
- * ⚠️ **`make:filament-user` NO sirve**: `User::canAccessPanel()` exige `hasRole('admin'|'staff')` y
+ * ⚠️ **`make:filament-user` NO sirve**: `User::canAccessPanel()` exige uno de `User::PANEL_ROLES` y
  * eso vive en la pivote `role_user`, que ese comando no toca. Crearía un usuario que no puede entrar.
+ *
+ * ▶ Desde la A5 (`specs/acceso-con-codigo.md` §4.12) la contraseña del resto del personal llega por el
+ * enlace que un administrador envía desde su ficha (`#870`); este comando sigue siendo la puerta del
+ * PRIMER administrador, y la de quien no tiene a nadie que se la envíe.
  *
  * DISEÑO (las tres decisiones que no son obvias):
  *
@@ -43,12 +47,9 @@ class CreateAdmin extends Command
         {--name= : Nombre para mostrar. Por defecto, «Administrador».}
         {--password= : Contraseña explícita. ⚠️ Queda visible en `ps` y en el historial: por defecto se GENERA una.}
         {--reset-password : Si la cuenta ya existe, rotarle la contraseña (se genera una nueva y se imprime).}
-        {--role=admin : Rol a garantizar. Solo `admin` o `staff` abren el panel.}';
+        {--role=admin : Rol a garantizar: uno de los que abren el panel (`admin`, `staff`, `puerta`).}';
 
     protected $description = 'Crea o repara la cuenta de acceso al panel (primer admin). Idempotente.';
-
-    /** Roles que `User::canAccessPanel()` acepta. Cualquier otro crearía una cuenta que no entra. */
-    private const PANEL_ROLES = ['admin', 'staff'];
 
     public function handle(): int
     {
@@ -69,8 +70,9 @@ class CreateAdmin extends Command
             return self::FAILURE;
         }
 
-        if (! in_array($roleName, self::PANEL_ROLES, true)) {
-            $this->error("El rol «{$roleName}» no abre el panel. Usa: ".implode(' o ', self::PANEL_ROLES).'.');
+        // Los roles que `User::canAccessPanel()` acepta, de su fuente: la copia que vivía aquí se quedó sin `puerta` (`#320`).
+        if (! in_array($roleName, User::PANEL_ROLES, true)) {
+            $this->error("El rol «{$roleName}» no abre el panel. Usa: ".implode(', ', User::PANEL_ROLES).'.');
 
             return self::FAILURE;
         }

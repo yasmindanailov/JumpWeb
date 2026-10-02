@@ -38,6 +38,16 @@ return [
         'badge' => 'Une étape',
         'headline' => 'Réinitialise ton mot de passe',
     ],
+    'panel_password_link' => [
+        'subject' => "Ton mot de passe du panneau d'administration",
+        'preheader' => "Si tu ne l'attendais pas, rien à faire : le lien expire tout seul.",
+        'badge' => "Accès à l'administration",
+        'headline' => 'Crée ton mot de passe du panneau',
+        'intro' => "Voici un lien pour créer le mot de passe avec lequel tu te connectes au panneau d'administration de :park.",
+        'action' => 'Créer le mot de passe',
+        'expires' => 'Le lien est valable :minutes minutes, une seule fois.',
+        'ignore' => "Si tu ne l'attendais pas, ignore cet e-mail : ton mot de passe ne change pas.",
+    ],
     'verify_email' => [
         'subject' => 'Vérifie ton e-mail',
         'preheader' => "Un clic et ton compte est prêt. Si tu ne l'as pas créé, ignore ce message.",

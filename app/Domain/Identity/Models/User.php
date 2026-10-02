@@ -812,6 +812,15 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
      */
     public function canAccessPanel(Panel $panel): bool
     {
+        return $this->isTeamMember();
+    }
+
+    /**
+     * ¿Es una cuenta del EQUIPO —la que entra al panel—? La misma pregunta que `scopeTeamMembers()`, para UNA cuenta. La
+     * hace también quien no es Filament: el enlace de la contraseña del panel solo sale hacia una de éstas (`#870`).
+     */
+    public function isTeamMember(): bool
+    {
         foreach (self::PANEL_ROLES as $role) {
             if ($this->hasRole($role)) {
                 return true;

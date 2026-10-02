@@ -1,14 +1,15 @@
 # [SPEC] Entrar con un código al correo — la contraseña del cliente se retira
 
 > Estado: ✅ aprobada (29-09: el owner contestó el §7) → **A1 ✅** (§4.8) · **A2 ✅** (§4.9) · **A3 ✅** (§4.10) · **A4a ✅**
-> (SPA, §4.11) · **A4b ✅** (vista por el owner) · sigue la A5 (plataforma) · Última actualización: 2026-10-01 ·
+> (SPA, §4.11) · **A4b ✅** (vista por el owner) · **A5** (§4.12, plataforma): **A5a ✅** · Última actualización: 2026-10-02 ·
 > Decisiones: `#847` (el owner: código al correo y Google; fuera la contraseña) · `#848` (el §7: una sola puerta, borrar
 > las contraseñas, 90 días, solo el código) · `#849` (corrige el 1: el registro NO espera al código, hay cola en la puerta) ·
 > `#853`/`#854` (la A1: el código en el servidor; el dispositivo recordado y `RGPD-06`) · `#855` (la A2a: reconfirmar con
 > un código; cada sesión atada al token) · `#856` (la A2b: el correo nuevo con su código, y a su buzón) · `#857` (la A3,
 > con las piezas de la isla: el owner) · `#810` (la A4a: recuperar sigue hasta la A4b, solo con sesión; `register` lleva a
 > la puerta) · `#811` (el `CodeInput` del diseño en el cajón) · `#812` (el código del cajón, como la isla; el servidor dice
-> la espera de verdad: el owner) · `#813` (la A4b: Mi cuenta del cajón confirma con el `CodeInput`) ·
+> la espera de verdad: el owner) · `#813` (la A4b: Mi cuenta del cajón confirma con el `CodeInput`) · `#869` (la A5 se
+> retira en la v1, contrato 1.59.0: el owner) · `#870` (la contraseña del personal, desde su ficha: el owner) ·
 > Carril: plataforma (el servidor, el contrato y la isla); el cajón, del SPA por buzón.
 
 ## §0 · Antes de tocar
@@ -29,7 +30,7 @@
   con un código, cada sesión atada al token y el correo nuevo con su código) · **A3a ✅** (`#857`, §4.10: «Entra» y el alta
   de la isla con el código; visto por el owner) · **A3b ✅** (los Ajustes de Mi cuenta con el código). La A4 (SPA, §4.11),
   vista por el owner: **A4a ✅** (entrar y el alta en el cajón, `#810`→`#812`) · **A4b ✅** (Mi cuenta confirma con un
-  código, `#813`). Sigue la A5 (plataforma): retirar la contraseña de los clientes.
+  código, `#813`). La A5 (plataforma, §4.12, `#869`/`#870`): **A5a ✅** (la contraseña del personal); sigue la A5b.
 - **Invariantes**: `SEC-06` (se amplía al código), `RGPD-01` (la purga borra los códigos), `RGPD-06` (sin cambio de
   forma). Ningún fichero del `CRITICAL_RE`.
 
@@ -381,6 +382,80 @@ sonda en el navegador (en la local sirve el cajón: sin fila `sidebar.shell`) le
   el código que salió con el cambio— y anula el anterior; el segundo, enseguida, espera. (2) El lector del buzón acepta lo
   llegado hasta 2 s antes de pedirlo: con dos códigos seguidos al mismo buzón hay que esperar a uno DISTINTO. (3) La zona
   pide las vinculadas una vez (`ensureIdentities`): una identidad sembrada a mitad no se ve sin recargar.
+
+### 4.12 La A5 al detalle — `[DECIDIDO]` 2026-10-02 (`#869`, `#870`; medido antes de codificar)
+**Lo que aún lleva contraseña** (medido el 02-10, sobre `f0cbff44`):
+- **API** (contrato 1.58.0, 46 líneas): `POST /auth/login` y `/auth/tokens` aceptan `password` o `code` (`PasswordLogin`);
+  `/auth/password/{forgot,reset}` (`PasswordRecovery`); `PUT /me/password` (`AccountCredentials::changePassword`);
+  `current_password` o `code` en `DELETE /me`, `PATCH /me` (el correo), `DELETE /me/identities/{provider}` y
+  `POST /me/sessions/revoke-others` (`Reconfirmation`, `TranslatesCredentialVerdicts`); `password` opcional en
+  `/auth/register` (`PasswordPolicy::optionalRules`, `SelfSignup`).
+- **Web**: `/recuperar-contrasena` (ya abre la puerta, `AccountDoor`) y `/restablecer-contrasena/{token}`
+  (`PasswordResetController`, `Livewire\Auth\ResetPassword`, `components/ui/password-input`, su único uso); el ENLACE del
+  correo nuevo (`/mi-cuenta/email/confirmar/{id}/{hash}`, `EmailChangeController`) y su botón en `VerifyPendingEmail`.
+- **Panel**: «Enviar enlace de contraseña» de la ficha (`ViewUser`), SOLO a clientes (excluye `admin` y `staff`).
+- **Altas que FABRICAN una contraseña**: el mostrador (`CustomerRegistrar`), que además la manda EN CLARO
+  (`CustomerAccountCreated`: viaja por la cola y queda en la copia de `#794`); Google (`GoogleSignup`, `SocialLogin`).
+- **La isla**: `PLEGABLE_DE_ZONA.password`, `password: ''` en el alta (`compra/datos.js`) y el «ver» de `CampoSistema`
+  (nadie pasa `type="password"`). **El cajón**: nada en código (comentarios, y el alias `forgot` → la puerta, que sigue).
+- **Textos que dirían algo falso**: «recupera tu contraseña» (alta repetida), «usa “he olvidado mi contraseña”» (Google
+  vinculado), «entra con tu contraseña» (tres «no» de Google), «borraremos… y contraseña» (borrar la cuenta),
+  `api.auth.invalid_credentials`, y los del alta en el mostrador del panel. Los legales, en `textos-legales.md`.
+- **El personal**: desde la A3b/A4b ninguna pantalla cambia ni recupera su contraseña; queda `app:create-admin
+  --reset-password` por ssh, que no admite `puerta` (copia vieja de los roles). Y una cuenta de cliente a la que se da un
+  rol del panel entra hoy con la contraseña que eligió de cliente: tras §4.6 no tendría ninguna.
+- **Pruebas**: 47 ficheros nombran `password`.
+
+**Lo que decidió el owner** (02-10): `#869`, se retira en la v1 —la isla y el cajón salen con el servidor y la app nativa
+no existe— y el contrato sube a **1.59.0**: `#613` se matiza (la ruptura va a `/api/v2` cuando haya un cliente que no se
+publique con el servidor). `#870`, la contraseña del personal llega por un botón de su ficha: la envía un administrador;
+nadie la recupera por su cuenta.
+
+**Las tandas**, cada una se verifica sola:
+- **A5a · la contraseña del personal, desde su ficha** (`#870`; la primera: la retirada de la web deja sin destino al
+  botón de hoy). El botón pasa a SOLO cuentas del panel (`User::PANEL_ROLES`), no anonimizadas y nunca la propia, con
+  `access.manage` (quien da los roles da la entrada), re-comprobado al ejecutar (`SEC-04`) y auditado sin PII. El token,
+  el del broker (60 min); el correo, uno nuevo con el molde, «Crea tu contraseña del panel»; el enlace, firmado, a una
+  página del PANEL bajo su dirección (`->routes()`, sin sesión): la de Filament (`ResetPassword`: se niega a quien no
+  entra al panel, limita por IP y por correo y rota el `remember_token`), con `PasswordPolicy` y nuestro título. Sin
+  `revokeAllAccess()`: revocaría el carné y desvincularía Google. `app:create-admin` lee `User::PANEL_ROLES`.
+- **A5b · el servidor y el contrato sin la contraseña del cliente** (`#869`, 1.59.0). Fuera `PasswordLogin`,
+  `PasswordRecovery` (con `PasswordResetResult` y su controlador), `PUT /me/password`, `Reconfirmation` (el código pasa
+  como `string`), los `WRONG_PASSWORD` y `PasswordPolicy::optionalRules`; `code` obligatorio en `auth/login`,
+  `auth/tokens` y las cuatro de `/me`; `auth/register` sin `password`. ✱ Corrige «se retiran» de §4.5 para la web:
+  `/recuperar-contrasena` y `/restablecer-contrasena/{token}` responden **301 a `/login`** (un marcador o un correo viejo
+  llegan a la puerta, no a un 404); fuera el controlador, el componente, sus vistas y `password-input`. El enlace del
+  correo nuevo: fuera la ruta, `EmailChangeController` y el botón (`VerifyPendingEmail` exige el código). Las altas de
+  Google y del mostrador, sin contraseña (`NULL`). La isla, sin sus tres restos; `AvisoDeSesion`, sin los `status` que
+  ya nadie pone. Las pruebas, por su sujeto (§3.quater), mutando lo que sobrevive.
+- **A5c · los correos y los textos** de la lista de arriba, vetables al ojo en las vistas previas del panel: la
+  bienvenida del mostrador sin contraseña (se entra con el correo y un código). `MailTextCatalog`, `MailPreviews` y
+  `EmailTiming`, al día.
+- **A5d · las contraseñas que ya existen** (§4.6): una migración pone `NULL` en las cuentas sin rol del panel
+  (`User::customers()`); su `down()` no las devuelve, a propósito. Al desplegar, medido en producción antes y después:
+  las del personal, iguales; las de clientes, a cero.
+
+**Guardas**: las pruebas de cada tanda con su mutación; las que se retiran, clasificadas por su sujeto y mutando lo que
+sobrevive (`SEC-06`: los dos cubos, por el código —`AuthCodeTest`, `LoginCodesTest`—; `RGPD-06`: la palanca, sin el
+cambio de contraseña); `ApiContractTest` (las dos direcciones); `SidebarBundleBudgetTest`. Sin sonda: el owner mira en
+vivo el botón y la página del panel (A5a) y los correos (A5c).
+**Fuera**: los textos legales (su spec); el método `password` del hecho `user_registered` y del informe de clientes (del
+SPA: quiere decir «con el formulario del correo», `SelfSignup`); la tabla `password_reset_tokens` (la usa la A5a).
+
+**La A5a ✅** (02-10; el owner la vio en vivo: «Buen trabajo, visto bueno»):
+- **Lo nuevo**: `User::isTeamMember()` (la pregunta de `canAccessPanel()`, para una cuenta);
+  `Identity\Services\PanelPasswordLinks` (`SENT`/`THROTTLED`/`NOT_ALLOWED`: nunca a un cliente, a una anonimizada ni sin
+  correo —con el correo `NULL`, el broker buscaría `email IS NULL`—); el correo `PanelPasswordLink` (firmado a `/{panel}/contrasena`, el
+  token tapado en la copia, al EQUIPO: `EmailUtm::NOT_TO_CUSTOMERS`); `App\Filament\Auth\PanelPassword` (la página de
+  Filament con `PasswordPolicy` y nuestros rótulos) en `->routes()`, `signed`. En la ficha, «Enviar enlace de contraseña
+  del panel» (`access.manage`, auditado `users.panel_password_link_sent`/`_blocked`); `app:create-admin` acepta `puerta`.
+- ✱ **Medido, sobre `SEC-04`**: re-autorizar AL EJECUTAR ya lo hace el marco —Livewire relee la ficha de la base en cada
+  petición y Filament re-evalúa `visible()` al confirmar—: un rol perdido con el modal abierto no envía nada y la acción ni
+  corre. El «no se puede» queda para lo que solo sabe el dominio (una cuenta del panel sin correo).
+- **Guardas**: `SendPanelPasswordActionTest` (13: a quién, quién, la carrera con el modal abierto por los dos lados, el
+  dominio, el minuto, la firma, una vez, la política, el token de un cliente) y `CreateAdminTest` (`puerta`); arnés
+  `scripts/mutar-contrasena-panel.sh` **14/14** (el primer ancla cayó en el botón de los roles: `access.manage` sale tres
+  veces en la ficha). El contador de correos, 31 (`EmailUtmTest`).
 
 ## 5. Impacto en invariantes
 

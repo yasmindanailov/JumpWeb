@@ -6,8 +6,10 @@ use App\Domain\Booking\Contracts\CustomerReservations;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\CustomerCards;
+use App\Domain\Identity\Services\PanelPasswordLinks;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Filament\Resources\Users\UserResource;
+use App\Notifications\PanelPasswordLink;
 use Filament\Actions\Action;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Textarea;
@@ -16,24 +18,23 @@ use Filament\Resources\Pages\ViewRecord;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Password;
 use Illuminate\Support\HtmlString;
 
 /**
  * Fase 7.5 — Ficha del usuario con acciones RGPD (decisión #180).
  *
- * Dos acciones de cabecera, ambas con defensa en profundidad (patrón #128 reusado
- * de `ViewOrder`): `visible()` (permiso + estado) → re-check con `fresh()` → audit
+ * Las acciones de cabecera van con defensa en profundidad (patrón #128 reusado de
+ * `ViewOrder`): `visible()` (permiso + estado) → re-check con `fresh()` → audit
  * del bloqueo o del éxito → `Notification`.
  *
- *  - **Enviar enlace de contraseña** (`users.manage`): `Password::sendResetLink`
- *    (notificación nativa `ResetPassword`, broker `users`). Audit `logSensitive`
- *    (hashea el email, sin PII en claro).
+ *  - **Enviar enlace de contraseña del panel** (`access.manage`; A5a de `specs/acceso-con-codigo.md`
+ *    §4.12, `#870`): solo a una cuenta DEL PANEL. Hasta la A5 era «Enviar enlace de contraseña» y
+ *    solo a clientes, que ya no tienen contraseña (`#848`). Audit `logSensitive` (sin PII en claro).
  *  - **Anonimizar** (`users.anonymize`): `User::anonymize()` (idempotente, borra
  *    consents + roles + neutraliza PII). Audit `log` con `email_hash` + motivo +
  *    conteos (sin PII en claro). Redirige al listado al terminar.
  *
- * Ambas acciones solo aplican sobre **cuentas de cliente** (no admin/staff), nunca
+ * Anonimizar y renovar el QR solo aplican sobre **cuentas de cliente** (no admin/staff), nunca
  * sobre uno mismo, nunca sobre cuentas ya anonimizadas — ver `isSensitiveActionAllowed`.
  */
 class ViewUser extends ViewRecord
@@ -66,7 +67,7 @@ class ViewUser extends ViewRecord
         return [
             $this->manageRolesAction(),
             $this->waiverProofAction(),
-            $this->sendPasswordResetAction(),
+            $this->sendPanelPasswordAction(),
             $this->rotateCardAction(),
             $this->anonymizeUserAction(),
         ];
@@ -289,52 +290,69 @@ class ViewUser extends ViewRecord
             });
     }
 
-    private function sendPasswordResetAction(): Action
+    /**
+     * **La contraseña del PANEL** (A5a de `specs/acceso-con-codigo.md` §4.12, `#870`): un administrador envía a una cuenta
+     * del panel el enlace para crearla —a quien acaba de recibir un rol y a quien la ha olvidado—; nadie la recupera por su
+     * cuenta. `access.manage`: quien da los roles da la entrada. Lo que se envía y a quién, en `PanelPasswordLinks`, que
+     * tampoco se lo manda a un cliente.
+     */
+    private function sendPanelPasswordAction(): Action
     {
-        return Action::make('sendPasswordReset')
-            ->label(__('admin.users.actions.send_reset.label'))
+        return Action::make('sendPanelPassword')
+            ->label(__('admin.users.actions.send_panel_password.label'))
             ->icon(Heroicon::OutlinedKey)
             ->color('gray')
-            ->visible(fn (User $record): bool => (auth()->user()?->hasPermission('users.manage') ?? false)
-                && $this->isSensitiveActionAllowed($record))
+            ->visible(fn (User $record): bool => $this->canSendPanelPassword($record))
             ->requiresConfirmation()
-            ->modalHeading(__('admin.users.actions.send_reset.modal_heading'))
-            ->modalDescription(fn (User $record): string => __('admin.users.actions.send_reset.modal_description', [
+            ->modalHeading(__('admin.users.actions.send_panel_password.modal_heading'))
+            ->modalDescription(fn (User $record): string => __('admin.users.actions.send_panel_password.modal_description', [
                 'email' => $record->email,
+                'minutes' => PanelPasswordLink::minutes(),
             ]))
-            ->modalSubmitActionLabel(__('admin.users.actions.send_reset.submit'))
+            ->modalSubmitActionLabel(__('admin.users.actions.send_panel_password.submit'))
             ->action(function (User $record): void {
-                $record = $record->fresh();
+                // ⚠️ Re-autorizar al EJECUTAR (`SEC-04`) ya ocurre antes de llegar aquí, y medido: Livewire vuelve a leer la
+                // ficha de la base en cada petición y Filament re-evalúa `visible()` al pulsar —un rol o un permiso
+                // perdidos entre pintar y pulsar no envían nada (`SendPanelPasswordActionTest`)—. Lo que solo sabe el
+                // dominio, lo dice el dominio: una cuenta del panel sin correo no tiene adónde recibirlo.
+                $status = app(PanelPasswordLinks::class)->send($record);
 
-                if (! $this->isSensitiveActionAllowed($record)) {
-                    AuditLogger::log('users.send_reset_blocked', $record, ['reason' => 'not_allowed']);
+                if ($status === PanelPasswordLinks::NOT_ALLOWED) {
+                    AuditLogger::log('users.panel_password_link_blocked', $record, ['reason' => 'not_allowed']);
                     Notification::make()
-                        ->title(__('admin.users.actions.send_reset.blocked'))
+                        ->title(__('admin.users.actions.send_panel_password.blocked'))
                         ->danger()
                         ->send();
 
                     return;
                 }
 
-                $status = Password::sendResetLink(['email' => $record->email]);
-
-                // Audit sensible: el identificador (email) se guarda solo como sha256.
-                AuditLogger::logSensitive('users.password_reset_sent', $record->email, $record);
-
-                if ($status === Password::RESET_LINK_SENT) {
+                if ($status === PanelPasswordLinks::THROTTLED) {
                     Notification::make()
-                        ->title(__('admin.users.actions.send_reset.success', ['email' => $record->email]))
-                        ->success()
+                        ->title(__('admin.users.actions.send_panel_password.throttled'))
+                        ->warning()
                         ->send();
 
                     return;
                 }
 
+                // Audit sensible: el identificador (email) se guarda solo como sha256.
+                AuditLogger::logSensitive('users.panel_password_link_sent', (string) $record->email, $record);
+
                 Notification::make()
-                    ->title(__('admin.users.actions.send_reset.throttled'))
-                    ->warning()
+                    ->title(__('admin.users.actions.send_panel_password.success', ['email' => $record->email]))
+                    ->success()
                     ->send();
             });
+    }
+
+    /** Una cuenta del panel, viva y que no es la propia; y quien pulsa, con `access.manage`. */
+    private function canSendPanelPassword(User $record): bool
+    {
+        return (auth()->user()?->hasPermission('access.manage') ?? false)
+            && $record->isTeamMember()
+            && ! $record->isAnonymized()
+            && $record->getKey() !== auth()->id();
     }
 
     private function anonymizeUserAction(): Action

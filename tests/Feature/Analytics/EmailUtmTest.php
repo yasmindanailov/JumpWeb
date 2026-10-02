@@ -47,12 +47,14 @@ class EmailUtmTest extends TestCase
         $this->assertSame('verify_email_for_purchase', EmailUtm::keyOf(new VerifyEmailForPurchase('R-1')));
         $this->assertTrue(EmailUtm::isCustomerKey('order_confirmation'));
         $this->assertFalse(EmailUtm::isCustomerKey('google_business_location_changed'), 'el aviso al negocio no es audiencia');
+        $this->assertFalse(EmailUtm::isCustomerKey('panel_password_link'), 'la contraseña del panel va al personal');
         $this->assertFalse(EmailUtm::isCustomerKey('lo_que_sea'), 'una clave que no es de un correo no cuenta');
         // 26 desde la T3a·4 (`AnalyticsLinkNotice`, el aviso a las cuentas existentes); 27 desde la T3 de las
         // encuestas (`SurveyInvitation`, el correo del día siguiente); 28 desde «Avísame de fechas» (`#750`,
         // `BirthdayComingNotice`, el correo semanas antes del cumple); 29 desde el acceso con código (`#853`, `LoginCode`);
-        // 30 con el código de confirmar (`#855`, `ConfirmationCode`).
-        $this->assertCount(30, EmailUtm::keys());
+        // 30 con el código de confirmar (`#855`, `ConfirmationCode`); 31 con la contraseña del panel (A5a, `#870`,
+        // `PanelPasswordLink`, al personal).
+        $this->assertCount(31, EmailUtm::keys());
     }
 
     public function test_the_tag_only_touches_our_own_links_and_keeps_the_fragment(): void

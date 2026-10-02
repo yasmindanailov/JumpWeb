@@ -38,6 +38,16 @@ return [
         'badge' => 'One step left',
         'headline' => 'Reset your password',
     ],
+    'panel_password_link' => [
+        'subject' => 'Your panel password',
+        'preheader' => "If you weren't expecting this, you don't need to do anything: the link expires.",
+        'badge' => 'Panel access',
+        'headline' => 'Create your panel password',
+        'intro' => 'Here is a link to create the password you use to sign in to the :park panel.',
+        'action' => 'Create the password',
+        'expires' => 'The link is valid for :minutes minutes and can be used once.',
+        'ignore' => "If you weren't expecting it, ignore this email: your password doesn't change.",
+    ],
     'verify_email' => [
         'subject' => 'Verify your email',
         'preheader' => "One click and your account is ready. If you didn't create it, ignore this.",

@@ -51,6 +51,18 @@ return [
         'badge' => 'Falta un paso',
         'headline' => 'Restablece tu contraseña',
     ],
+    // La contraseña del PANEL (A5a de `specs/acceso-con-codigo.md` §4.12, `#870`): la envía un administrador desde la ficha
+    // de una cuenta del panel. Va al EQUIPO, no a un cliente: sin UTM y fuera de lo editable.
+    'panel_password_link' => [
+        'subject' => 'Tu contraseña del panel',
+        'preheader' => 'Si no lo esperabas, no tienes que hacer nada: el enlace caduca solo.',
+        'badge' => 'Acceso al panel',
+        'headline' => 'Crea tu contraseña del panel',
+        'intro' => 'Te enviamos este enlace para que crees la contraseña con la que entras en el panel de :park.',
+        'action' => 'Crear la contraseña',
+        'expires' => 'El enlace vale :minutes minutos y una sola vez.',
+        'ignore' => 'Si no lo esperabas, ignora este correo: tu contraseña no cambia.',
+    ],
     'verify_email' => [
         'subject' => 'Verifica tu email',
         'preheader' => 'Un clic y tu cuenta queda lista. Si no la has creado tú, ignora este correo.',

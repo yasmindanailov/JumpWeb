@@ -50,11 +50,11 @@ final class EmailUtm
     public const IGNORED_QUERY = [...RouteNormalizer::QUERY_ALLOWLIST, self::MARK];
 
     /**
-     * Correos que NO lee un cliente: sin UTM y sin `email_sent`.
+     * Correos que NO lee un cliente: sin UTM y sin `email_sent`. El de la contraseña del panel (A5a, `#870`) va al personal.
      *
      * @var list<string>
      */
-    public const NOT_TO_CUSTOMERS = ['google_business_location_changed'];
+    public const NOT_TO_CUSTOMERS = ['google_business_location_changed', 'panel_password_link'];
 
     /** La clave de un correo: `OrderConfirmation` → `order_confirmation`. */
     public static function keyOf(Notification|string $notification): string
