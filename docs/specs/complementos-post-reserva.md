@@ -32,6 +32,7 @@
 - **La puerta es `acceptsGuestForm()`, no `isPack()`** (`[owner]`) · dos limitadores (IP y `guest-form`
   por reserva) · orden de locks del subsistema: `orders → order_items → hijas` (el interbloqueo se reprodujo).
 - Tres listas blancas del panel entre el formulario y la fila, y las tres callan al olvidarse (§8).
+- **Desde `#912` el plazo es el de la LISTA**: `postformCutoffHours()` lee su ajuste y `postform_cutoff_hours` queda sin uso.
 - Anexo al final con la fila del enrutador.
 
 ## 0. En una frase
@@ -724,8 +725,9 @@ manual), **D3** (`max_qty` obligatorio) y **D6** (ningún aviso nuevo al parque)
 - **D8** · El correo al cliente lleva el bloque del libro y **voz propia**, **agrupado por ventana**.
 - **D9** *(nueva)* · La puerta del reconciliador es el **hecho de la línea** (`birthValue() === 0`),
   no el eje. Es el cambio más importante que trajo la revisión.
-- **D10** *(nueva)* · `postform_cutoff_hours` es **obligatorio**, no nullable; `0` significa «hasta
-  que empiece». Mata por construcción la herencia del reloj de §4.9.
+- ~~**D10** *(nueva)* · `postform_cutoff_hours` es **obligatorio**, no nullable; `0` significa «hasta
+  que empiece». Mata por construcción la herencia del reloj de §4.9.~~ **Sustituida por `#912` (02-10)**: el plazo es
+  el de la LISTA (`GuestCountPolicy`), que siempre existe y tampoco hereda ese reloj; la columna se queda sin lectores.
 - **D11** *(nueva)* · El servicio toma **`orders` primero**, y el orden `orders → order_items →
   hijas` se declara como regla del subsistema.
 - **D12** *(nueva)* · **No entra anti-bot** (ni Turnstile ni honeypot): para llegar al `POST` hay que

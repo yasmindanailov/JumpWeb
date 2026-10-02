@@ -16,7 +16,6 @@ use App\Domain\Booking\Services\MixedPartySurcharge;
 use App\Domain\Booking\Services\PartyInvitations;
 use App\Domain\Booking\Services\PostFormAddons;
 use App\Domain\Platform\Services\Analytics\EmailUtm;
-use App\Domain\Platform\Services\DisplayTime;
 use App\Domain\Platform\Services\Money;
 use App\Domain\Platform\Services\PublicFreeText;
 use App\Http\Concerns\AuthorizesGuestForm;
@@ -591,7 +590,7 @@ class GuestFormController extends Controller
      * cabe no tiene ficha donde pintarse. Los dos son avisos sobre la lista, no filas de la lista.
      *
      * @param  list<array{id: int, child_name: string, attending: bool, companion: string|null, guest_data: array<string, string>, slot_index: int|null, repeated: bool}>  $proposals
-     * @return array{invitation: PartyInvitation, url: string|null, shareable: bool, replies_open: bool, deadline: string, summary: array{yes: int, no: int, pending: int}, action: string, dismiss: string, share: string, url_wa: string|null, url_copy: string|null, themes: list<string>, declined: list<array{id: int, child_name: string, slot_index: int|null}>, unplaced: int}|null
+     * @return array{invitation: PartyInvitation, url: string|null, shareable: bool, replies_open: bool, summary: array{yes: int, no: int, pending: int}, action: string, dismiss: string, share: string, url_wa: string|null, url_copy: string|null, themes: list<string>, declined: list<array{id: int, child_name: string, slot_index: int|null}>, unplaced: int}|null
      */
     private function invitationView(Request $request, OrderItem $reservation, array $proposals, bool $readonly): ?array
     {
@@ -606,7 +605,6 @@ class GuestFormController extends Controller
             return null;
         }
 
-        $deadline = app(GuestCountPolicy::class)->deadlineFor($reservation);
         $signed = $request->hasValidSignatureWhileIgnoring(EmailUtm::IGNORED_QUERY);
 
         return [
@@ -614,7 +612,7 @@ class GuestFormController extends Controller
             'url' => $invitations->shareUrlFor($invitation),
             'shareable' => $invitations->isShareable($reservation, $invitation),
             'replies_open' => $invitations->repliesOpenFor($reservation),
-            'deadline' => $deadline === null ? '' : DisplayTime::dayLabel($deadline),
+            // Sin fecha aquí (`#912`): el plazo de la lista lo dice su cabecera (`ListaDeInvitados::plazoDeLaLista()`).
             'summary' => $invitations->summaryFor($reservation),
             // La misma regla que `formAction`: quien entró por enlace firmado POSTea firmado, y la
             // firma la compone el DOMINIO para que lleve la versión del enlace (D14).
@@ -734,17 +732,13 @@ class GuestFormController extends Controller
     {
         $policy = app(GuestCountPolicy::class);
         $reason = $policy->lockedReason($reservation);
-        $deadline = $policy->deadlineFor($reservation);
         $max = $policy->maxFor($reservation);
 
+        // Sin fecha (`#912`, `fiesta-sistema-nuevo.md` §4.20): el plazo es el de la lista entera y lo dice su cabecera, una
+        // vez; aquí, solo el techo. Cerrado por el plazo, la cabecera también lo dice: la pista calla.
         $hint = match ($reason) {
-            GuestCountChange::REASON_CUTOFF => __('guestform.count_closed_cutoff'),
-            null => $deadline === null
-                ? ''
-                : __('guestform.count_hint', [
-                    'max' => $max ?? '—',
-                    'when' => DisplayTime::dayLabel($deadline),
-                ]),
+            GuestCountChange::REASON_CUTOFF => '',
+            null => $max === null ? '' : __('guestform.count_hint', ['max' => $max]),
             default => __('guestform.count_closed'),
         };
 

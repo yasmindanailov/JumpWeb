@@ -126,7 +126,7 @@ return [
             'indice' => $i, 'id' => $i + 1, 'nombre' => $nombre, 'linea' => $linea, 'que_lleva' => $linea === '' ? [] : [$linea], 'regalos' => [],
             'precio' => $precio.$NB.'€', 'precio_unidad' => $precio * 100,
             'serves' => $para, 'para' => $paraTexto !== '' ? $paraTexto : ($para === null ? '' : 'Para '.$para.' adultos'), 'foto' => null,
-            'plazo' => 'Hasta el sábado 26', 'cambia' => 'Lo cambias hasta el sábado 26',
+            // Sin plazo en la tarjeta (`#912`): es el de la lista, en la cabecera.
             'cantidad' => $cantidad, 'tope' => 60, 'cerrado' => false, 'motivo' => '',
             'total' => $cantidad > 0 ? ($precio * $cantidad).$NB.'€ en total' : '',
         ];
@@ -163,8 +163,8 @@ return [
             ],
             // K1 de §4.17 (`#806`/`#807`): «Para los niños» lleva la tarta; el diseño no tiene sueltos, así que sin grupos.
             'ninos' => ['grupos' => [], 'sois' => $RESERVA['reservados']],
-            // El pie del diseño, tal cual (el producto compone el suyo con los plazos: «lo de los padres, hasta…»).
-            'pie' => 'Se pagan el día de la fiesta, en el parque. La tarta, hasta el jueves 24; las bebidas y los combos, hasta el mismo día.',
+            // El pie dice cómo se pagan; los plazos se fueron del pie con `#912` (desvío DECIDIDO del mockup): el de la lista, arriba.
+            'pie' => 'Se pagan el día de la fiesta, en el parque.',
             'total' => $guardado ? '83'.$NB.'€' : '', 'elegidos' => $guardado ? 3 : 0, 'alguno_abierto' => true,
             'telefono' => $RESERVA['telefono'], 'tel' => $RESERVA['tel'],
         ];
@@ -177,6 +177,8 @@ return [
             'logo' => $LOGO,
             'reserva' => $RESERVA,
             'cumple' => $cumple,
+            // El plazo de TODA la lista, una vez (`#912`; desvío DECIDIDO del mockup): «hoy es jueves 24» y cierra hoy a las 17:00.
+            'plazo' => ['abierta' => true, 'texto' => 'Puedes cambiar la lista hasta hoy a las 17:00.'],
             'primero' => ! $guardado,
             'invitacion' => [
                 'tema' => $guardado ? 'fiesta' : 'confeti',
@@ -192,7 +194,6 @@ return [
                 'envio' => '',
                 'compartible' => $guardado,
                 'respuestas_abiertas' => true,
-                'plazo' => 'viernes 25 a las 17:00',
                 'compartida' => $guardado,
                 'whatsapp' => 'https://wa.me/?text='.rawurlencode($mensaje),
                 'mensaje' => $mensaje,

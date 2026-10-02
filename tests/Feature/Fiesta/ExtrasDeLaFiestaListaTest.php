@@ -5,10 +5,12 @@ namespace Tests\Feature\Fiesta;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\ProductAddon;
 use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Services\GuestCountPolicy;
+use App\Domain\Booking\Services\PostFormAddons;
 use App\Domain\Identity\Models\User;
+use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\DisplayTime;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
 use Tests\Support\AttachesPartyExtras;
 use Tests\Support\MountsAParty;
 use Tests\TestCase;
@@ -70,7 +72,7 @@ class ExtrasDeLaFiestaListaTest extends TestCase
         $this->assertMatchesRegularExpression('#id="x-'.$chocolate->id.'" name="addons\[\d+\]\[quantity\]" value="1"#', $z4);
         $this->assertStringContainsString('50,00 € en total', $z4);
         $this->assertStringContainsString('28,00 € en total', $z4);
-        $this->assertStringContainsString('Lo cambias hasta', $z4, 'pedida, su plazo dice hasta cuándo se cambia');
+        $this->assertStringNotContainsString('Lo cambias hasta', $z4, 'pedida, la tarjeta no repite el plazo: es el de la lista (`#912`)');
 
         // «Sin tarta» (con las tartas a 0, lo que hace el JS): vuelve marcada.
         $this->guardar($r, $host, ['addons' => [$fila($nata, 0), $fila($chocolate, 0)], 'cake_declined' => '1']);
@@ -78,22 +80,21 @@ class ExtrasDeLaFiestaListaTest extends TestCase
 
         // Cerrado el plazo: solo las PEDIDAS, cerradas y con lo pedido; ni casilla ni campos que se envíen para cambiarlas.
         $this->guardar($r, $host, ['addons' => [$fila($nata, 2)], 'cake_declined' => '0']);
-        DB::table('product_addons')->whereIn('addon_id', [$nata->id, $chocolate->id])->update(['postform_cutoff_hours' => 24 * 30]);
+        $this->plazoDeLaLista(24 * 30);
         $cerrada = $this->zona4($this->pagina($r, $host));
         $this->assertStringContainsString('Tarta de nata', $cerrada);
         $this->assertStringNotContainsString('Tarta de chocolate', $cerrada, 'una tarta que ya no se puede pedir no es una opción');
         $this->assertStringNotContainsString('name="cake_declined"', $cerrada);
         $this->assertStringNotContainsString('id="x-'.$nata->id.'"', $cerrada, 'cerrada, su cantidad no se cambia (viaja oculta, tal cual)');
-        $this->assertStringNotContainsString('El plazo de la tarta pasó.', $cerrada, 'con una pedida, el motivo lo dice su tarjeta');
+        $this->assertStringNotContainsString('pasó', $cerrada, 'que la lista cerró lo dice su cabecera, no la tarta (`#912`)');
 
-        // Cerrada y sin nada pedido: «Sin tarta» (si lo decidió) y el plazo que pasó.
-        $this->guardar($r, $host, []);
-        DB::table('product_addons')->whereIn('addon_id', [$nata->id, $chocolate->id])->update(['postform_cutoff_hours' => 48]);
+        // Cerrada y sin nada pedido: «Sin tarta», sin «pasó» (lo dice la cabecera).
+        $this->plazoDeLaLista(24);
         $this->guardar($r, $host, ['addons' => [$fila($nata, 0)], 'cake_declined' => '1']);
-        DB::table('product_addons')->whereIn('addon_id', [$nata->id, $chocolate->id])->update(['postform_cutoff_hours' => 24 * 30]);
+        $this->plazoDeLaLista(24 * 30);
         $sinNada = $this->zona4($this->pagina($r, $host));
         $this->assertStringContainsString('<p class="pli-tarta-fija">Sin tarta</p>', $sinNada);
-        $this->assertStringContainsString('El plazo de la tarta pasó.', $sinNada);
+        $this->assertStringNotContainsString('pasó', $sinNada);
     }
 
     public function test_the_parents_block_groups_by_family_and_asks_how_many_adults_stay(): void
@@ -121,8 +122,8 @@ class ExtrasDeLaFiestaListaTest extends TestCase
         }
         $this->assertStringContainsString('data-serves="10"', $z4, 'lo que `lista.js` necesita para sugerir');
 
-        // CONTROL: con lo de los padres CERRADO, «¿Cuántos adultos…?» vuelve a los campos generales (sin perderse).
-        DB::table('product_addons')->whereIn('addon_id', [$cafe->id, $picoteo->id, $cubo->id])->update(['postform_cutoff_hours' => 24 * 30]);
+        // CONTROL: con lo de los padres CERRADO (la lista, `#912`), «¿Cuántos adultos…?» vuelve a los campos generales (sin perderse).
+        $this->plazoDeLaLista(24 * 30);
         $html = $this->pagina($r, $host);
         $this->assertSame(1, substr_count($html, 'name="general[adultos]"'));
         $this->assertStringNotContainsString('name="general[adultos]"', $this->zona4($html));
@@ -133,11 +134,11 @@ class ExtrasDeLaFiestaListaTest extends TestCase
         ['reservation' => $r, 'host' => $host] = $this->mountParty();
         $tarta = $this->extra($this->tipo($r), 'Tarta', 2500, ['postform_block' => ProductAddon::BLOCK_CAKE], ['serves' => 12]);
 
-        // CONTROL: la fiesta es dentro de 12 días; la tarta cierra 48 h antes, lejos: sin aviso.
+        // CONTROL: la fiesta es dentro de 12 días; la tarta cierra con la lista (24 h antes, `#912`), lejos: sin aviso.
         $this->assertStringNotContainsString('data-aviso-tarta', $this->pagina($r, $host));
 
-        // Dentro de tres días, cierra MAÑANA: el aviso, arriba.
-        $r->slot?->forceFill(['date' => DisplayTime::today()->addDays(3)->toDateString()])->save();
+        // Dentro de dos días, cierra MAÑANA: el aviso, arriba.
+        $r->slot?->forceFill(['date' => DisplayTime::today()->addDays(2)->toDateString()])->save();
         $html = $this->pagina($r, $host);
         $this->assertStringContainsString('data-aviso-tarta', $html);
         $this->assertStringContainsString('¿La tarta? Se elige hasta mañana a las 17:00.', $html);
@@ -201,17 +202,17 @@ class ExtrasDeLaFiestaListaTest extends TestCase
         $this->assertStringContainsString('Guardado hoy a las '.$hora, $this->barra($this->pagina($r, $host)));
     }
 
-    public function test_the_footer_says_until_when_each_open_block_can_be_changed(): void
+    /** El pie dice CÓMO se pagan y ya no hasta cuándo (`#912`): el plazo es el de la lista y lo dice la cabecera, una vez. */
+    public function test_the_footer_says_how_they_are_paid_and_no_deadline(): void
     {
         ['reservation' => $r, 'host' => $host] = $this->mountParty();
-        $this->extra($this->tipo($r), 'Tarta', 2500, ['postform_block' => ProductAddon::BLOCK_CAKE, 'postform_cutoff_hours' => 48]);
-        $this->extra($this->tipo($r), 'Cubo de 6', 1600, ['postform_block' => ProductAddon::BLOCK_ADULTS, 'postform_cutoff_hours' => 0]);
+        $this->extra($this->tipo($r), 'Tarta', 2500, ['postform_block' => ProductAddon::BLOCK_CAKE]);
+        $this->extra($this->tipo($r), 'Cubo de 6', 1600, ['postform_block' => ProductAddon::BLOCK_ADULTS]);
 
-        $dia = DisplayTime::dayInSentence(DisplayTime::today()->addDays(self::DAYS_BEFORE - 2));
-        $this->assertStringContainsString(
-            'Se pagan el día de la fiesta, en el parque. La tarta, hasta el '.$dia.'; lo de los padres, hasta el mismo día.',
-            $this->zona4($this->pagina($r, $host)),
-        );
+        $z4 = $this->zona4($this->pagina($r, $host));
+        $this->assertStringContainsString('Se pagan el día de la fiesta, en el parque.', $z4);
+        $this->assertStringNotContainsString('La tarta, hasta', $z4);
+        $this->assertStringNotContainsString('lo de los padres, hasta', $z4);
     }
 
     public function test_a_card_without_a_photo_paints_no_photo_placeholder(): void
@@ -291,9 +292,9 @@ class ExtrasDeLaFiestaListaTest extends TestCase
         $this->assertSame(2, preg_match_all('#data-uno-boton(="data-uno-boton")? aria-pressed="false">Uno para cada niño<span class="pz-etiqueta__cuenta">14</span>#', $z4));
         $this->assertSame(2, substr_count($z4, 'data-familia-sug hidden'), 'la familia (dos variantes) y la piñata «para 4» llevan la sugerencia de siempre');
 
-        // CONTROL: cerrado el plazo, «Uno para cada niño» no sale (no hay nada que poner).
-        DB::table('product_addons')->where('addon_id', $calcetines->id)->update(['postform_cutoff_hours' => 24 * 30]);
-        $this->assertSame(1, substr_count($this->zona4($this->pagina($r, $host)), 'data-uno hidden'));
+        // CONTROL: cerrada la lista (`#912`: los dos cierran a la vez), «Uno para cada niño» no sale (no hay nada que poner).
+        $this->plazoDeLaLista(24 * 30);
+        $this->assertSame(0, substr_count($this->zona4($this->pagina($r, $host)), 'data-uno hidden'));
     }
 
     /**
@@ -327,6 +328,59 @@ class ExtrasDeLaFiestaListaTest extends TestCase
         $this->extra($this->tipo($pareja), 'Calcetines', 200, ['max_qty' => 20], ['serves' => 1]);
         $this->extra($this->tipo($pareja), 'Cono de chuches', 150, ['max_qty' => 20], ['serves' => 1]);
         $this->assertStringNotContainsString('pli-fam--ancha', $this->zona4($this->pagina($pareja, $h2)));
+    }
+
+    /**
+     * ❗ P1 de §4.20 (`[DECIDIDO owner]` `#912`: «1 plazo solamente… el plazo es por lista»). Cada complemento se cierra con
+     * la LISTA (`packs.guest_count_cutoff_hours`) diga lo que diga su enganche —la tarta con 48 h y el cono con 0 h, a la
+     * vez—, y el plazo se dice UNA vez, en la cabecera: ninguna tarjeta ni el pie lo repiten. De CONTROL, al mover el ajuste
+     * de la lista se mueven los dos.
+     */
+    public function test_every_extra_closes_with_the_list_and_the_deadline_is_said_once(): void
+    {
+        ['reservation' => $r, 'host' => $host] = $this->mountParty();
+        $tarta = $this->extra($this->tipo($r), 'Tarta', 2500, ['postform_cutoff_hours' => 48]);
+        $cono = $this->extra($this->tipo($r), 'Cono de chuches', 150, ['postform_cutoff_hours' => 0]);
+        $r = $r->fresh(['slot', 'ticketType']) ?? $r;
+        $pivote = fn (TicketType $a): ProductAddon => ProductAddon::query()->where('product_id', $r->ticket_type_id)->where('addon_id', $a->id)->sole();
+        $lista = app(GuestCountPolicy::class)->deadlineFor($r);
+        $this->assertNotNull($lista);
+        foreach ([$tarta, $cono] as $addon) {
+            $this->assertEquals($lista, PostFormAddons::deadlineFor($r, $pivote($addon)), "«{$addon->tr('name')}» cierra con su lista");
+        }
+
+        $html = $this->pagina($r, $host);
+        $this->assertSame(1, substr_count($html, 'data-plazo-lista'), 'el plazo, una vez');
+        $this->assertStringContainsString('Puedes cambiar la lista hasta', $html);
+        $this->assertStringContainsString('a las 17:00', $html, 'la cabecera dice la hora del plazo');
+        $this->assertStringNotContainsString('a las 17:00', $this->zona4($html), 'ninguna tarjeta ni el pie la repiten');
+
+        // CONTROL: el ajuste de la lista mueve el plazo de los dos complementos a la vez.
+        Setting::query()->updateOrCreate(['key' => GuestCountPolicy::SETTING_CUTOFF_HOURS], ['value' => '30', 'group' => 'packs']);
+        Setting::flushMemo();
+        foreach ([$tarta, $cono] as $addon) {
+            $this->assertEquals($lista->copy()->subHours(6), PostFormAddons::deadlineFor($r, $pivote($addon)));
+        }
+    }
+
+    /** Cerrada la lista, la cabecera lo dice y las tarjetas callan (ningún aviso por tarjeta); de CONTROL, un minuto antes, abierta. */
+    public function test_once_the_list_closes_the_header_says_so_and_the_cards_keep_quiet(): void
+    {
+        ['reservation' => $r, 'host' => $host] = $this->mountParty();
+        $this->extra($this->tipo($r), 'Cono de chuches', 150, ['postform_cutoff_hours' => 0]);
+        $cierre = app(GuestCountPolicy::class)->deadlineFor($r->fresh(['slot']) ?? $r);
+        $this->assertNotNull($cierre);
+
+        $this->travelTo($cierre->copy()->addMinute());
+        $html = $this->pagina($r, $host);
+        $this->assertStringContainsString('La lista se cerró', $html);
+        $this->assertStringContainsString('pli-plazo-lista--cerrada', $html);
+        $this->assertSame(1, preg_match('#<article[^>]*data-nombre="Cono de chuches".*?</article>#s', $this->zona4($html), $tarjeta), 'la tarjeta sigue a la vista');
+        $this->assertStringNotContainsString('<aside', $tarjeta[0], 'sin aviso en la tarjeta: lo dice la cabecera');
+
+        // CONTROL: un minuto antes, abierta (el cono con 0 h no la alarga).
+        $this->travelTo($cierre->copy()->subMinute());
+        $this->assertStringContainsString('Puedes cambiar la lista hasta', $this->pagina($r, $host));
     }
 
     // ── Montaje ─────────────────────────────────────────────────────────────────────────────────────

@@ -7,8 +7,8 @@
 > **`acceso-con-codigo.md` §0** (la A4 del cajón ✅ en `main`) · `correos-rediseno.md` §0 ·
 > `fiesta-sistema-nuevo.md` §4.17–§4.19 · `analitica-para-decidir.md` §0 (en pausa, `#755`) · `encuestas.md` §0 y §4.7
 > (`#754`) · `analitica.md` §0 y §4.5 · `isla-y-landing-nueva.md` §4.11 · `celebracion-e-invitacion.md` §0 ·
-> `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 · `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-10-02, 17:50
-> (la lista del owner, `#876`: la fila 4, montada en la local; la 8, por medir; el arnés entero de la Puerta, de noche).
+> `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 · `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-10-02, 20:10
+> (la lista del owner: filas 4 y 8 de `#876` y P1·P2 de `#912`/`#913`, en `wip/` a su ojo; el arnés de la Puerta, de noche).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`). El
 > contador de la suite va en el trailer del commit (`#618`), no aquí. **Se muda, no se raspa**: el detalle de
 > una feature baja a su spec (las trampas por tanda de la analítica T1→T5 viven en `analitica.md` §4.9,
@@ -36,13 +36,11 @@
 - ▶ **La fiesta del sistema nuevo es mía (`#765`)**: la lista, la invitación y la autorización, con «Saltia»
   (`specs/fiesta-sistema-nuevo.md`). ⚠️ **El zip entra SOLO por plataforma** y llega con `git pull` de la instancia; se
   comprueba con su `.sha256` (rutas relativas a `diseno/`: `awk` con la ruta entera, hay nombres con espacios).
-- ✅ F7·F8·F9 (27-09) y la analítica entera T1→T7 (`#735`, 24/25-09): aprobadas; su foto, en `CARRIL-SPA.md` §9.
-- ✅ La fiesta del sistema nuevo, T1a→F6b en `main` (25/26-09): su foto, mudada verbatim a `CARRIL-SPA.md` §9 (29-09).
+- ✅ Lo aprobado de antes —F7·F8·F9, la analítica T1→T7 (`#735`), la fiesta T1a→F6b, la máquina de la fiesta y los correos
+  salientes (`#794`→`#797`; en producción, sus dos interruptores esperan a `/privacidad` y `/cookies`)—: sus fotos, en `CARRIL-SPA.md` §9.
 - ⚠️⚠️ **LO MONTADO EN LA BD LOCAL para el ojo del owner** (ajustes falsos, el experimento `carcasa` vivo, los fixtures
   `probe-ojo-*`, las fiestas `JW-OJO-F1…F8` con sus guiones `OJO=desmontar`, y la ISLA encendida por plataforma —«no
   deshacer sin él»—): el inventario entero, mudado verbatim a `docs/CARRIL-SPA.md` §8 (27-09). Todo reversible.
-- De la foto, mudados verbatim a `CARRIL-SPA.md` §9 (29-09): la máquina montada para la fiesta, lo que tiene su ✅ sin desplegar
-  y ✅ los correos salientes (`#794`→`#797`; en producción, los dos interruptores esperan a `/privacidad` y `/cookies`).
 
 ## Por dónde retomar, en orden
 
@@ -58,9 +56,9 @@ filas 4 y 8), ANTES que la R1c («tus puntos primero»).
   sonda del cartel 10/10, suite verde. ▶ Falta su OJO en «Analítica → Clientes»; después, *fast-forward* a `main`. ⚠️ v1.1.0
   no tiene ni la analítica ni `#mi-cuenta`: un QR impreso hoy abre la portada y no cuenta nada hasta la v2.0.0.
 
-- ▶ **Después, del owner (02-10 noche, `#912`/`#913`; `fiesta-sistema-nuevo.md` §4.20)**: P1 UN plazo para toda la lista (24 h;
-  fuera el de cada complemento; `CRITICAL_RE`) → 🟦 P2 la impar a lo ancho (hecha) → P3 la merienda «hay que elegir uno» →
-  P4 el correo «Falta elegir…» el día antes del plazo.
+- ▶ **Del owner (02-10 noche, `#912`/`#913`; `fiesta-sistema-nuevo.md` §4.20)**: 🟦 P1 UN plazo para toda la lista y 🟦 P2 la
+  impar a lo ancho, HECHAS en `wip/ta-altas-por-origen` (falta su OJO; la verificación, en la spec) → P3 la merienda «hay que
+  elegir uno» (`CRITICAL_RE`) → P4 el correo «Falta elegir…» el día antes del plazo.
 
 0. ✅ Los complementos de la fiesta (K1–K3, `#806`→`#808`): su punto, mudado verbatim a `CARRIL-SPA.md` §9 (02-10). ▶ **Antes de
    proponer código, medir si el panel ya lo configura**; si algo ya existía, parar y decírselo al owner (`#808`).
@@ -192,8 +190,6 @@ el repo de la instancia (lo nuevo), nunca a `main`.
   `/mnt/wsl/docker-desktop/cli-tools` está VACÍO. El CLI de Windows sí llega (`…/DockerDesktop/resources/bin/docker.exe`,
   también `compose` desde la carpeta del repo): un `docker` de una línea que lo llame, en la carpeta de la sesión, delante
   del `PATH`; así corren los guiones y el `pre-push`.
-- 📜 El `laravel.log` local llegó a **1,35 GB** (trazas de 270 KB desde el 12-08); borrado con el sí del owner el
-  25-09 y el `.env` local rota a diario desde entonces (`LOG_STACK=daily`, 14 días).
 - ⏰⏰ **EL RELOJ: el contenedor va en UTC y el parque en Madrid, y entre las dos medianoches NO es el mismo
   día.** `DisplayTime::dayLabel()` **no convierte de zona**; **un test con reloj propio miente dos horas al día**
   (`ScheduleFactsTest`, rojo a las 00:07). ▶ En un test de «ahora», el reloj a **`DisplayTime`, nunca a `Carbon`**;
@@ -208,8 +204,8 @@ el repo de la instancia (lo nuevo), nunca a `main`.
   M aserciones (…)`» EN ESE FORMATO, o cierra con la suite en verde y te da la cifra para que la escribas; (2)
   tras un `--amend` con el otro carril empujando en medio, dice «no puedo calcular el diff contra el remoto»: es
   `git fetch` + `pull --rebase`, no un fallo. Un push cuesta ~5 min (Pint, Larastan, ESLint, build y la suite).
-- Chromium muere al recrear el contenedor SOLO si no vive en `node_modules` (hoy sí): `node
-  node_modules/playwright-core/cli.js install chromium` (con `npx` cae en otra caché); `npm install` poda `playwright-core`.
+- Dos trampas viejas de la máquina (el `laravel.log` de 1,35 GB y Chromium al recrear el contenedor): mudadas verbatim a
+  `CARRIL-SPA.md` §9 (02-10).
 - `SidebarDomContractTest` renderiza el BUNDLE: `npm run build:ssr` antes de la suite, también tras traer
   commits del cajón, tras un arnés de mutación (restaura el árbol, no el bundle) **y siempre que toques un
   `.vue`** (si no, 36 rojos que no son tuyos). ⚠️ **Aunque la tanda solo mute PHP** (02-10, 38 rojos tras `SOLO=TA`): el
@@ -254,6 +250,12 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 
 ## Buzón
 
+- ❗ **Para plataforma (02-10 noche), `#912` (owner): UN plazo para toda la lista de invitados, 24 h** (§4.20 de la fiesta),
+  HECHO en `wip/`: los complementos cierran con la lista (`ProductAddon::postformCutoffHours()` = `packs.guest_count_cutoff_hours`;
+  `PostFormAddons::deadlineFor()` delega en `GuestCountPolicy` y conserva su 2.º parámetro por tu `AntesDeVenir`). Tu
+  `BirthdayComparison` pinta ya el MISMO plazo en cada complemento: dilo una vez o quítalo. La API conserva `closes_at`. En
+  tu `AntesDeVenir`, sin tocar, ya no se alcanzan `muchos_plazos` ni los grupos por día (su comentario nombra la columna, sin
+  lectores: `DEUDA.md`); sus dos casos de `MeReservationBeforeVisitTest`, reescritos por mí al plazo único.
 - ❗ **Para plataforma (02-10 noche), la fila 8 de tu reparto (`#876`), HECHA en `wip/ta-altas-por-origen`** (`analitica-para-decidir.md`
   §4.15): «Clientes» cuenta las altas por la campaña de su visita, el mostrador (del rastro de «Crear pedido») y el resto. Tu
   enlace del cartel, VERIFICADO de punta a punta en la local y sin consentimiento (`scripts/sonda-cartel.mjs`, 10/10). Tus
@@ -273,11 +275,8 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 - Mis avisos a plataforma del 27→30-09 (`#754`/`#757`, la R1b, `#807`/`#808`, la R1·T —su aviso previo y el de `main`—, el
   rojo de `ManualOrderIgnoresMinAdvanceTest` y el previo de la A4): LEÍDOS por plataforma (su «Atendido»); retirados. El
   detalle, en el `git log`.
-- **Para correos (27-09, `#754`)**: `SurveyInvitation` gana UNA línea (el aviso del anonimato, tras la intro) y recibe el
-  token en claro en vez de la fila; tu molde, sin tocar. La marca por envío (`jw_e`) y el píxel, en la T5: aviso antes.
-- **Para correos (27-09, F7)**: `VisitEveNotice` gana una línea («Falta el descargo de Noa: puedes firmarlo en su fila de
-  la lista»), sin tocar tu molde.
-- Los mensajes a plataforma del 26-09 (F6b, F5, F1c), ya leídos: mudados verbatim a `CARRIL-SPA.md` §9.
+- Los mensajes a plataforma del 26-09 (F6b, F5, F1c), ya leídos, y los dos «Para correos» del 27-09: mudados verbatim a
+  `CARRIL-SPA.md` §9.
 
 ### ❗❗ Para el carril de PLATAFORMA (emisor: SPA, 2026-09-25 → 27-09)
 - ⚠️ Cuando empujes un zip nuevo del owner a la instancia, dímelo aquí: re-mido el censo de la fiesta contra él.

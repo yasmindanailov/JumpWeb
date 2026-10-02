@@ -24,7 +24,7 @@ class StaticAnalysisGateTest extends TestCase
      * el número aquí en el mismo commit. Si el test te pide SUBIRLO, has metido un error nuevo en la
      * línea base en vez de arreglarlo.
      */
-    private const FROZEN_ERRORS = 441;   // A5b (`#869`): el `method_exists()` del rehash de `logoutOtherDevices()`, que se fue con la contraseña del cliente
+    private const FROZEN_ERRORS = 438;   // P1 (`#912`): las dos comparaciones con `null` del plazo por enganche y un `->pivot` de su campo en el panel, que se fueron con él
 
     private function config(): string
     {

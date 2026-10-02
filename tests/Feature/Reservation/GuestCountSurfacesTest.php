@@ -155,15 +155,17 @@ class GuestCountSurfacesTest extends TestCase
 
     public function test_the_control_is_not_offered_when_the_deadline_has_passed(): void
     {
-        // ⚠️ El control **no desaparece: se deshabilita con su motivo**. Un control que se esconde sin
-        // explicación es cómo el hueco original estuvo meses sin que nadie lo viera.
+        // ⚠️ El control **no se esconde sin su motivo**: un control que se esconde sin explicación es cómo el hueco
+        // original estuvo meses sin que nadie lo viera. Desde `#912` el motivo se dice UNA vez, en la cabecera: es el
+        // plazo de toda la lista, no el de este control.
         $item = $this->reservation(10);
         $this->travelTo(Carbon::parse($this->date.' 16:00', DisplayTime::timezone())->subDay());
 
         $this->get($item->guestFormSignedUrl())
             ->assertOk()
             ->assertDontSee('name="guest_count"', false)
-            ->assertSee(__('guestform.count_closed_cutoff'));
+            ->assertSee('data-plazo-lista', false)
+            ->assertSee('La lista se cerró');
     }
 
     // ─── F4: la lista que supera la reserva (`fiesta-sistema-nuevo.md` §4.9, `[DECIDIDO owner]` `#747`) ─────────────

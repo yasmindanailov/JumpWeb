@@ -90,10 +90,9 @@
     @if ($noVienen > 0)
         <div class="pli-no" data-no-vienen>
             <p class="pli-no-cab">{{ trans_choice('fiesta.lista.la_lista.no_vienen', $noVienen, ['count' => $noVienen]) }}</p>
-            @if ($sumar && $inv !== null && $inv['plazo'] !== '')
-                {{-- ⚠️ La fecha abreviada termina en punto en es y fr («Vie. 2 oct.») y la frase pone el suyo: sin el
-                     `rtrim`, «…hasta el Vie. 2 oct..» (medido el 29-09; en inglés, «Fri 2 Oct», no cambia). --}}
-                <p class="pli-sub">{{ __('fiesta.lista.la_lista.no_vienen_baja', ['plazo' => rtrim($inv['plazo'], '.')]) }}</p>
+            @if ($sumar && $inv !== null)
+                {{-- Sin fecha (`#912`): el plazo es el de la lista y lo dice la cabecera, una vez. --}}
+                <p class="pli-sub">{{ __('fiesta.lista.la_lista.no_vienen_baja') }}</p>
             @endif
             <ul class="pli-ul">
                 @foreach ($noEmparejados as $k => $n)

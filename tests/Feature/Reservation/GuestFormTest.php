@@ -21,6 +21,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
+use Tests\Support\AttachesPartyExtras;
 use Tests\TestCase;
 
 /**
@@ -30,6 +31,7 @@ use Tests\TestCase;
  */
 class GuestFormTest extends TestCase
 {
+    use AttachesPartyExtras;
     use RefreshDatabase;
 
     private Zone $zone;
@@ -908,10 +910,10 @@ class GuestFormTest extends TestCase
         $this->assertSame(1, substr_count($html, '12 refrescos a elegir · Para toda la mesa'), 'la línea solo la tiene el que lleva algo');
     }
 
-    private function withPostFormAddon(string $name = 'Cubo de refrescos', int $cents = 1200, int $cutoff = 48): array
+    private function withPostFormAddon(string $name = 'Cubo de refrescos', int $cents = 1200): array
     {
         $pack = $this->pack();
-        $addon = $this->attachPostFormAddon($pack, $name, $cents, $cutoff);
+        $addon = $this->attachPostFormAddon($pack, $name, $cents);
 
         static $day = 0;
         $slot = Slot::create([
@@ -927,8 +929,8 @@ class GuestFormTest extends TestCase
         return [$user, $reservation->fresh(['ticketType.addons', 'order', 'slot', 'children']), $addon];
     }
 
-    /** Engancha un complemento de venta posterior al pack, con su tarifa y su tope. */
-    private function attachPostFormAddon(TicketType $pack, string $name, int $cents = 1200, int $cutoff = 48): TicketType
+    /** Engancha un complemento de venta posterior al pack, con su tarifa y su tope. Su plazo es el de la lista (`#912`). */
+    private function attachPostFormAddon(TicketType $pack, string $name, int $cents = 1200): TicketType
     {
         $addon = TicketType::create([
             'name' => ['es' => $name], 'type' => TicketType::TYPE_ADDON,
@@ -944,8 +946,7 @@ class GuestFormTest extends TestCase
         ]);
         $pack->configurableAddons()->attach($addon->id, [
             'position' => 1, 'quantity_mode' => ProductAddon::MODE_FIXED,
-            'stage' => ProductAddon::STAGE_POSTFORM,
-            'postform_cutoff_hours' => $cutoff, 'max_qty' => 10,
+            'stage' => ProductAddon::STAGE_POSTFORM, 'max_qty' => 10,
         ]);
 
         return $addon;
@@ -1062,20 +1063,21 @@ class GuestFormTest extends TestCase
     }
 
     /**
-     * Un extra fuera de plazo se pinta en SOLO LECTURA con su motivo —y con su cantidad en un campo
-     * oculto—, para que un envío normal no lo cancele: es la trampa de los `<input disabled>`, que
-     * no se envían.
+     * Un extra fuera de plazo se pinta en SOLO LECTURA —con su cantidad en un campo oculto—, para que un envío normal
+     * no lo cancele: es la trampa de los `<input disabled>`, que no se envían. Su motivo, desde `#912`, lo dice la
+     * cabecera UNA vez: el plazo es el de la lista.
      */
     public function test_an_addon_out_of_its_window_is_shown_read_only_and_survives_a_normal_save(): void
     {
-        [$user, $reservation, $addon] = $this->withPostFormAddon(cutoff: 2);
+        [$user, $reservation, $addon] = $this->withPostFormAddon();
+        $this->plazoDeLaLista(2);
 
         // Se compra dentro de plazo…
         app(PostFormAddons::class)
             ->reconcile($reservation, [$addon->id => 2], 'account');
 
-        // …y luego la fiesta se acerca hasta pasar su corte, SIN llegar a celebrarse: empieza dentro
-        // de una hora y su corte era de dos, así que venció hace una.
+        // …y luego la fiesta se acerca hasta pasar el corte de la lista, SIN llegar a celebrarse: empieza dentro
+        // de una hora y la lista cierra dos antes, así que cerró hace una.
         $this->moveParty($reservation, startsIn: 1, endsIn: 3);
         $reservation = $reservation->fresh(['ticketType.addons', 'order', 'slot', 'children']);
         $this->assertFalse($reservation->isFinishedInPractice(), 'la fiesta NO se ha celebrado aún');
@@ -1083,7 +1085,7 @@ class GuestFormTest extends TestCase
         $html = $this->actingAs($user)
             ->get(route('reservation.guests', ['reservation' => $reservation]))
             ->assertOk()
-            ->assertSee(__('guestform.extras_closed_cutoff'))
+            ->assertSee('La lista se cerró')
             ->getContent();
 
         // ⚠️⚠️ **La cantidad del cerrado viaja en un campo OCULTO, y eso es el mecanismo entero.**
@@ -1126,7 +1128,7 @@ class GuestFormTest extends TestCase
             ->get(route('reservation.guests', ['reservation' => $reservation]))
             ->assertOk()
             ->assertSee('Cubo de refrescos')
-            ->assertSee(__('guestform.extras_closed_cutoff'));
+            ->assertSee('La lista se cerró');
     }
 
     /**

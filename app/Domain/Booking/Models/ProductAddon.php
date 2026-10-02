@@ -2,6 +2,7 @@
 
 namespace App\Domain\Booking\Models;
 
+use App\Domain\Booking\Services\GuestCountPolicy;
 use App\Domain\Booking\Services\MixedPartySettings;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 
@@ -72,10 +73,8 @@ class ProductAddon extends Pivot
         'show_in_invitation' => 'boolean',
         'max_qty' => 'integer',
         'requires_addon_id' => 'integer',
-        // El plazo de corte del complemento, en HORAS antes del inicio de la franja. `0` es un valor
-        // VÁLIDO («hasta que empiece la fiesta») y distinto de `null` («este enganche no tiene
-        // plazo», que solo es legal en `booking`): casteado para que un `'0'` de SQLite y un `0` de
-        // MySQL no signifiquen cosas distintas — la trampa que `cajon-en-movil.md` §5.2 dejó escrita.
+        // El plazo de corte que tuvo cada complemento, en HORAS. ⚠️ Desde `#912` NO decide nada: el plazo es el de la
+        // lista ({@see postformCutoffHours()}). La columna se queda, sin lectores, hasta una migración propia.
         'postform_cutoff_hours' => 'integer',
     ];
 
@@ -161,12 +160,15 @@ class ProductAddon extends Pivot
         return is_string($block) && in_array($block, self::POSTFORM_BLOCKS, true) ? $block : null;
     }
 
-    /** El plazo de corte en horas antes del inicio de la franja; `null` = no declarado. */
-    public function postformCutoffHours(): ?int
+    /**
+     * Las horas de corte de un complemento de venta posterior: **las de su LISTA de invitados** (`[DECIDIDO owner]` `#912`,
+     * `fiesta-sistema-nuevo.md` §4.20: «1 plazo solamente… el plazo es por lista»), el ajuste `packs.guest_count_cutoff_hours`
+     * que ya gobernaba el número, las fichas y las respuestas. La columna `postform_cutoff_hours` ya no decide: se queda, sin
+     * uso, hasta una migración propia. Quien lo pinta (la landing, el panel) lee lo mismo que lo que cierra.
+     */
+    public function postformCutoffHours(): int
     {
-        $hours = $this->postform_cutoff_hours;
-
-        return $hours === null ? null : max(0, (int) $hours);
+        return app(GuestCountPolicy::class)->cutoffHours();
     }
 
     /**
@@ -201,8 +203,8 @@ class ProductAddon extends Pivot
      *  8. `max_qty` es OBLIGATORIO (D3): el enlace del post-form se reenvía, así que la deuda máxima
      *     que un tercero puede crear tiene que estar declarada por el parque — y el tope de 20 que
      *     parece existir vive en `AddonResolver::viewModel()` como pista de UI, no como autoridad.
-     *  9. El plazo es OBLIGATORIO (D10): `null` significaría «hereda el cierre del post-form», que es
-     *     el predicado con el reloj torcido de §4.9 — y dejaría quitar un extra ya consumido.
+     *  9. ~~El plazo es OBLIGATORIO (D10)~~ — desde `#912` el plazo es el de la LISTA (`postformCutoffHours()`), que siempre
+     *     existe y nunca hereda el cierre torcido de §4.9: ya no hay un plazo por enganche que pueda faltar.
      */
     public static function postFormProblem(self $pivot, ?TicketType $addon): ?string
     {
@@ -223,9 +225,6 @@ class ProductAddon extends Pivot
         }
         if ($pivot->max_qty === null || (int) $pivot->max_qty < 1) {
             return 'missing_max_qty';
-        }
-        if ($pivot->postformCutoffHours() === null) {
-            return 'missing_cutoff';
         }
 
         return null;

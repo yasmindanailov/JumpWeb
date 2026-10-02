@@ -89,7 +89,7 @@ class InvitationHostBlockTest extends TestCase
 
     // ─── Lo que se ve ────────────────────────────────────────────────────────────────
 
-    public function test_the_block_hands_over_the_link_and_the_deadline_as_a_date_without_a_tally(): void
+    public function test_the_block_hands_over_the_link_without_a_tally_and_the_deadline_is_a_date(): void
     {
         $item = $this->reservation(10, ['celebrant' => 'Lucía']);
 
@@ -103,10 +103,11 @@ class InvitationHostBlockTest extends TestCase
         $this->assertStringContainsString('data-kind="copy"', $html, 'falta el atajo de copiar');
         $this->assertStringContainsString('href="https://wa.me/?text=', $html, 'falta compartir por WhatsApp');
 
-        // El PLAZO escrito como fecha (canvas, turno 3a), y no un número de horas que haya que sumar.
+        // El PLAZO escrito como fecha (canvas, turno 3a), y no un número de horas que haya que sumar. Desde `#912` lo dice
+        // la cabecera, una vez, para toda la lista: la invitación cierra con ella.
         $deadline = app(GuestCountPolicy::class)->deadlineFor($item);
         $this->assertNotNull($deadline);
-        $this->assertStringContainsString(DisplayTime::dayLabel($deadline), $html, 'el plazo se escribe como FECHA');
+        $this->assertStringContainsString('hasta el '.DisplayTime::dayInSentence($deadline).' a las', $html, 'el plazo se escribe como FECHA');
 
         // Sin cifras, ni antes ni con respuestas (`[DECIDIDO owner]` `#805`, que retira el resumen de §4.7): el «sí» que
         // llega se ve donde se decide, en «Por repasar», con su nombre.

@@ -8,7 +8,9 @@ use App\Domain\Booking\Models\Price;
 use App\Domain\Booking\Models\ProductAddon;
 use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Services\GuestCountPolicy;
 use App\Domain\Booking\Services\PostFormAddons;
+use App\Domain\Platform\Models\Setting;
 
 /**
  * Los complementos de venta POSTERIOR de una fiesta de prueba (F5 de `fiesta-sistema-nuevo.md` §4.11, `#749`): cada uno
@@ -17,7 +19,7 @@ use App\Domain\Booking\Services\PostFormAddons;
 trait AttachesPartyExtras
 {
     /**
-     * @param  array<string, mixed>  $pivot  del enganche (`postform_block`, `max_qty`, `postform_cutoff_hours`…)
+     * @param  array<string, mixed>  $pivot  del enganche (`postform_block`, `max_qty`…). Su plazo, ya no: es el de la lista (`#912`).
      * @param  array<string, mixed>  $atributos  del complemento (`serves`, `family`, `image`…)
      */
     protected function extra(TicketType $pack, string $nombre, int $centimos, array $pivot = [], array $atributos = []): TicketType
@@ -34,10 +36,20 @@ trait AttachesPartyExtras
         ]);
         $pack->configurableAddons()->attach($addon->id, array_merge([
             'position' => $posicion, 'quantity_mode' => ProductAddon::MODE_FIXED,
-            'stage' => ProductAddon::STAGE_POSTFORM, 'postform_cutoff_hours' => 48, 'max_qty' => 10,
+            'stage' => ProductAddon::STAGE_POSTFORM, 'max_qty' => 10,
         ], $pivot));
 
         return $addon;
+    }
+
+    /**
+     * El PLAZO DE LA LISTA en horas (`#912`): uno para todo —el número, las fichas, las respuestas y los complementos—, el ajuste
+     * `packs.guest_count_cutoff_hours`. Con la fiesta de prueba a 12 días, `24 * 30` la CIERRA y `24` la deja abierta.
+     */
+    protected function plazoDeLaLista(int $horas): void
+    {
+        Setting::query()->updateOrCreate(['key' => GuestCountPolicy::SETTING_CUTOFF_HOURS], ['value' => (string) $horas, 'group' => 'packs']);
+        Setting::flushMemo();
     }
 
     /** @return array<int, PostFormAddonView> por id de complemento */

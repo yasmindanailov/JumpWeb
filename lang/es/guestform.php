@@ -41,7 +41,6 @@ return [
     'saved' => 'Formulario guardado. ¡Gracias! Puedes volver a editarlo cuando quieras.',
     // Los EXTRAS de venta posterior (`specs/complementos-post-reserva.md`, `#413`): lo que se
     // puede añadir DESPUÉS de reservar y se paga en el parque.
-    'extras_closed_cutoff' => 'Ya no se puede cambiar',
     'extras_closed_sold' => 'Lo elegiste al reservar — llámanos para cambiarlo',
     'extras_blocked' => 'Tus datos se han guardado, pero alguno de los extras no se ha podido cambiar: puede que ya haya pasado su plazo. Llámanos si lo necesitas.',
     'extras_stale' => 'Tus datos se han guardado, pero los extras no: la reserva ha cambiado mientras tenías esta página abierta. Vuelve a cargarla y revísalos.',
@@ -49,8 +48,8 @@ return [
     // El cliente cambia sus invitados desde aquí (`specs/invitados-en-post-form.md`, `#444`).
     // ⚠️ Los textos de RECHAZO son cinco y distinguen el remedio: el techo se resuelve llamando, el
     // suelo del pack también, pero «alguien ya tiene esa plaza» se resuelve quitándolo de la lista.
-    'count_hint' => 'Puedes cambiarlo hasta el :when (máximo :max).',
-    'count_closed_cutoff' => 'Ya no se puede cambiar el número de invitados: ha pasado el plazo.',
+    // Sin fecha desde `#912`: el plazo es el de la lista entera y lo dice su cabecera.
+    'count_hint' => 'Máximo :max.',
     'count_closed' => 'El número de invitados ya no se puede cambiar.',
     // ⚠️ La pinta el JS de la lista (`resources/js/fiesta/lista.js`, con `choice()` de `logica.js`): `trans_choice` no
     // existe en el navegador, y la forma «uno|varios» la resuelve él por las fichas que se pierden.

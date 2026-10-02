@@ -42,8 +42,9 @@
                 <input type="hidden" name="cake_declined" value="0">
                 <x-pieza.casilla name="cake_declined" value="1" id="pli-sin-tarta" :checked="$ta['declinada']" :label="__('fiesta.lista.tarta.sin')" />
             @else
-                @if ($ta['declinada'])<p class="pli-tarta-fija">{{ __('fiesta.lista.tarta.sin') }}</p>@endif
-                @if ($ta['tarjetas'] === [])<x-pieza.aviso tone="warn" size="sm"><x-slot:icono><x-lucide name="clock-alert" :size="17" /></x-slot:icono>{{ '' }}{{ __('fiesta.lista.tarta.pasada') }}{!! $llamanos !!}</x-pieza.aviso>@endif
+                {{-- Cerrada, sin «pasó»: el plazo de la lista lo dice su cabecera (`#912`). Lo pedido, en sus tarjetas; sin nada
+                     pedido (o «Sin tarta» decidido), «Sin tarta», que es lo que hay. --}}
+                @if ($ta['declinada'] || $ta['tarjetas'] === [])<p class="pli-tarta-fija">{{ __('fiesta.lista.tarta.sin') }}</p>@endif
             @endif
         </div>
     @endif

@@ -35,7 +35,7 @@ use Tests\Support\MountsAParty;
  *    sea verdad;
  *  · la invitación sigue PENDIENTE hasta que los «sí» llegan al número de invitados (`#776`, el owner: como el mockup), y
  *    se comparte con el MISMO mensaje que la lista de invitados —sin nombre de quien cumple, se ofrece crearla—;
- *  · los extras en plazo, cada uno con el suyo, agrupados por el día en que cierran;
+ *  · los extras en plazo, que cierran con la lista (`#912`): un solo día, el del formulario;
  *  · las autorizaciones sin denominador inventado (`waiver-por-reserva.md` §4.10);
  *  · y una reserva ajena es un 404; una sin pagar, cancelada o celebrada, una lista vacía.
  */
@@ -158,38 +158,46 @@ class MeReservationBeforeVisitTest extends ApiTestCase
         $this->assertSame('Formulario de invitados: quién viene, edades y alergias.', $tareas[0]['text']);
     }
 
-    public function test_the_extras_in_time_are_grouped_by_the_day_they_close(): void
+    /**
+     * Los extras cierran con la LISTA (`#912`): un solo día, el del formulario, y el del ajuste del parque. Pasado, no
+     * hay línea: ningún extra sigue abierto por su cuenta.
+     */
+    public function test_the_extras_close_with_the_list_on_its_single_day(): void
     {
         ['reservation' => $r, 'host' => $host] = $this->mountParty();
-        // En el orden del catálogo, el que cierra el mismo día va PRIMERO: la frase tiene que ordenarlos por cierre.
-        $this->extra($r, 'Cubo', 2);
-        $this->extra($r, 'Tarta', 72);
-        $this->extra($r, 'Combo', 0);
-        // Fuera de plazo (cierra antes de hoy): no se ofrece.
-        $this->extra($r, 'Piñata', 24 * 30);
+        foreach (['Cubo', 'Tarta', 'Combo'] as $nombre) {
+            $this->extra($r, $nombre);
+        }
+        $extras = fn (): ?array => collect($this->tareas($host, $r))->firstWhere('kind', 'extras');
+        $dia = fn (): string => DisplayTime::dayInSentence(app(GuestCountPolicy::class)->deadlineFor($r));
 
-        $extras = collect($this->tareas($host, $r))->firstWhere('kind', 'extras');
-        $tarta = DisplayTime::dayInSentence(Carbon::parse($r->slot?->date?->format('Y-m-d').' 17:00:00', DisplayTime::timezone())->subHours(72));
+        $this->assertSame('optional', $extras()['type']);
+        $this->assertSame("Y si quieres: Cubo, Tarta y Combo, hasta el {$dia()}. Se pagan el día de la fiesta.", $extras()['text']);
+        $this->assertSame("Hasta el {$dia()}", collect($this->tareas($host, $r))->firstWhere('kind', 'guest_form')['note'], 'el MISMO día que el formulario');
+        $this->assertSame(['label' => 'Añadir extras', 'url' => route('reservation.guests', ['reservation' => $r]), 'via' => 'link'], $extras()['action']);
 
-        $this->assertSame('optional', $extras['type']);
-        $this->assertSame("Y si quieres: Tarta, hasta el {$tarta}; Cubo y Combo, hasta el mismo día. Se pagan el día de la fiesta.", $extras['text']);
-        $this->assertSame(['label' => 'Añadir extras', 'url' => route('reservation.guests', ['reservation' => $r]), 'via' => 'link'], $extras['action']);
+        // Control: el día lo mueve el ajuste de la lista, no el complemento.
+        $antes = $dia();
+        Setting::query()->updateOrCreate(['key' => GuestCountPolicy::SETTING_CUTOFF_HOURS], ['value' => '72', 'group' => 'packs']);
+        Setting::flushMemo();
+        $this->assertNotSame($antes, $dia());
+        $this->assertSame("Y si quieres: Cubo, Tarta y Combo, hasta el {$dia()}. Se pagan el día de la fiesta.", $extras()['text']);
+
+        // Y con la lista cerrada, ninguno.
+        Carbon::setTestNow(app(GuestCountPolicy::class)->deadlineFor($r)?->copy()->addMinute());
+        $this->assertNull($extras());
     }
 
-    public function test_with_more_than_three_extras_the_sentence_says_how_many_and_when_the_first_closes(): void
+    public function test_with_more_than_three_extras_the_sentence_says_how_many_and_until_when(): void
     {
         ['reservation' => $r, 'host' => $host] = $this->mountParty();
         foreach (['Tarta', 'Combo', 'Cubo', 'Tapas'] as $nombre) {
-            $this->extra($r, $nombre, 48);
+            $this->extra($r, $nombre);
         }
-        $cierra = fn (int $horas): string => DisplayTime::dayInSentence(Carbon::parse($r->slot?->date?->format('Y-m-d').' 17:00:00', DisplayTime::timezone())->subHours($horas));
-        $texto = fn (): string => collect($this->tareas($host, $r))->firstWhere('kind', 'extras')['text'];
+        $dia = DisplayTime::dayInSentence(app(GuestCountPolicy::class)->deadlineFor($r));
 
-        $this->assertSame("Y si quieres: 4 extras para la fiesta, que se añaden hasta el {$cierra(48)}. Se pagan el día de la fiesta.", $texto());
-
-        // Con plazos distintos, el primero que cierra.
-        $this->extra($r, 'Piñata', 96);
-        $this->assertSame("Y si quieres: 5 extras para la fiesta, cada uno con su plazo; el primero cierra el {$cierra(96)}. Se pagan el día de la fiesta.", $texto());
+        $this->assertSame("Y si quieres: 4 extras para la fiesta, que se añaden hasta el {$dia}. Se pagan el día de la fiesta.",
+            collect($this->tareas($host, $r))->firstWhere('kind', 'extras')['text']);
     }
 
     public function test_the_authorizations_never_invent_a_denominator(): void
@@ -472,18 +480,19 @@ class MeReservationBeforeVisitTest extends ApiTestCase
         return $ficha;
     }
 
-    /** Un extra de venta posterior del pack, con su precio y su plazo en horas antes del inicio. */
-    private function extra(OrderItem $r, string $nombre, int $horas): void
+    /** Un extra de venta posterior del pack, con su precio, en el orden en que se crea. Su plazo es el de la lista (`#912`). */
+    private function extra(OrderItem $r, string $nombre): void
     {
+        static $posicion = 20;
         $normal = RateType::query()->firstOrCreate(['key' => RateType::KEY_NORMAL], ['label' => ['es' => 'Normal'], 'weekdays' => null, 'priority' => 0]);
         $extra = TicketType::create([
             'name' => ['es' => $nombre], 'type' => TicketType::TYPE_ADDON,
-            'seats_per_unit' => 1, 'is_sellable' => true, 'is_active' => true, 'position' => 20 + $horas,
+            'seats_per_unit' => 1, 'is_sellable' => true, 'is_active' => true, 'position' => $posicion++,
         ]);
         Price::create(['priceable_type' => $extra->getMorphClass(), 'priceable_id' => $extra->id, 'rate_type_id' => $normal->id, 'amount_cents' => 1200, 'currency' => 'EUR']);
         $r->ticketType?->configurableAddons()->attach($extra->id, [
             'position' => 1, 'quantity_mode' => ProductAddon::MODE_FIXED,
-            'stage' => ProductAddon::STAGE_POSTFORM, 'postform_cutoff_hours' => $horas, 'max_qty' => 10,
+            'stage' => ProductAddon::STAGE_POSTFORM, 'max_qty' => 10,
         ]);
         $r->ticketType?->refresh();
     }

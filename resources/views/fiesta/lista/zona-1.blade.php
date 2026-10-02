@@ -10,7 +10,7 @@
     {{-- Los avisos de `lista.js` para el lector de pantalla (una respuesta que entra, lo guardado). --}}
     <span class="pli-vivo" role="status" aria-live="polite" data-aviso-vivo></span>
     @if (! $inv['respuestas_abiertas'])
-        <x-pieza.aviso tone="neutral" size="sm"><x-slot:icono><x-lucide name="lock" :size="17" /></x-slot:icono>{{ '' }}{{ __('fiesta.lista.invitacion.cerrada', ['plazo' => $inv['plazo']]) }}</x-pieza.aviso>
+        <x-pieza.aviso tone="neutral" size="sm"><x-slot:icono><x-lucide name="lock" :size="17" /></x-slot:icono>{{ '' }}{{ __('fiesta.lista.invitacion.cerrada') }}</x-pieza.aviso>
     @else
         <div class="pli-inv">
             {{-- LA VISTA PREVIA, EN VIVO (F2): lo que se teclea en «Personalizar» se ve en la tarjeta al momento (`lista.js`).

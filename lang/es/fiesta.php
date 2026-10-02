@@ -98,7 +98,7 @@ return [
         'pers' => ['tema' => 'Tema', 'quien' => 'Quién cumple', 'edad' => 'Su edad', 'invita' => 'Te invita', 'palabras' => 'Unas palabras de la familia', 'pistas' => 'Pistas para el regalo', 'telefono' => 'Enseñar mi teléfono'],
         'invitacion' => [
             'cambios' => 'Tus cambios se ven en la invitación al guardar.',
-            'cerrada' => 'Las respuestas se cerraron el :plazo. Las autorizaciones que falten se firman en la puerta.',
+            'cerrada' => 'Las respuestas están cerradas. Las autorizaciones que falten se firman en la puerta.',
             'listo' => 'Listo',
             'defecto' => 'Por defecto',
             'copiado' => 'Enlace copiado',
@@ -132,7 +132,7 @@ return [
             'vuelve' => 'Al final viene: entra en la lista al guardar.',
             'vuelve_no_cabe' => 'Hemos guardado la lista, pero ya no cabe nadie más: para volver a contar a quien dijo que no, sube el número.',
             'no_vienen' => '{1} No viene|[2,*] No vienen (:count)',
-            'no_vienen_baja' => 'Si no vienen, puedes bajar el número de invitados hasta el :plazo.',
+            'no_vienen_baja' => 'Si no vienen, puedes bajar el número de invitados.',
             'sin_producto' => 'Sin producto para esta edad',
         ],
         'pegar' => [
@@ -172,24 +172,23 @@ return [
             'meter_mas' => ':n en la lista: :extra más que las :plazas plazas de tu reserva, sin confirmar.',
             'confirma' => 'Antes de guardar, confirma el número: hay más niños en la lista que en tu reserva.',
         ],
+        // P1 de `fiesta-sistema-nuevo.md` §4.20 (`[DECIDIDO owner]` `#912`): el plazo de TODA la lista, una vez, en la cabecera.
+        'plazo' => [
+            'abierta' => 'Puedes cambiar la lista hasta :cuando.',
+            'cerrada' => 'La lista se cerró :cuando.',
+        ],
+        // CUÁNDO, como lo lee quien lo lee: el plazo de la cabecera, el aviso de la tarta y «Guardado ayer a las…».
+        'momento' => [
+            'hoy' => 'hoy a las :hora',
+            'manana' => 'mañana a las :hora',
+            'ayer' => 'ayer a las :hora',
+            'el_dia' => 'el :dia a las :hora',
+        ],
         'extras' => [
             'titular' => 'Y si queréis, para redondear la fiesta',
             'pie' => 'Se pagan el día de la fiesta, en el parque.',
-            'hasta' => 'Hasta :cuando',
-            'cambia' => 'Lo cambias hasta :cuando',
-            'hoy' => 'hoy a las :hora',
-            'manana' => 'mañana a las :hora',
-            'el_dia' => 'el :dia a las :hora',
             'total' => ':x en total',
-            'pasado' => 'El plazo pasó.',
             'que_lleva' => 'Qué lleva',
-            // F5 (`#749`): los plazos del pie y el «ayer» de «Guardado». («Para N personas» de la tarjeta suelta, fuera en K1:
-            // los sueltos son de los niños, `ninos.para`.)
-            'pie_tarta' => 'la tarta, hasta :cuando',
-            'pie_padres' => 'lo de los padres, hasta :cuando',
-            'mismo_dia' => 'el mismo día',
-            'dia' => 'el :dia',
-            'ayer' => 'ayer a las :hora',
         ],
         // LA TARTA (F5, `PliZona4` y `PliAvisoTarta`; sin tarta grande: «Añadir otra tarta», `#749`).
         'tarta' => [
@@ -200,7 +199,6 @@ return [
             'raciones' => 'De :n raciones',
             'poca' => 'Sois :n y la tarta es de :r raciones.',
             'poca_varias' => 'Sois :n y :q tartas son :r raciones.',
-            'pasada' => 'El plazo de la tarta pasó.',
             'aviso' => '¿La tarta? Se elige hasta :cuando.',
             'aviso_ir' => 'Elegir la tarta',
             'aviso_elegida' => 'Tarta elegida: se guarda hasta :cuando.',

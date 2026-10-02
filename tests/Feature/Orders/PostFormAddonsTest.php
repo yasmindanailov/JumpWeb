@@ -12,6 +12,7 @@ use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Booking\Services\Balance;
+use App\Domain\Booking\Services\GuestCountPolicy;
 use App\Domain\Booking\Services\LineFacts;
 use App\Domain\Booking\Services\OrderBook;
 use App\Domain\Booking\Services\PostFormAddons;
@@ -23,6 +24,7 @@ use App\Notifications\PostFormAddonsChanged;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Notification;
+use Tests\Support\AttachesPartyExtras;
 use Tests\TestCase;
 
 /**
@@ -40,6 +42,7 @@ use Tests\TestCase;
  */
 class PostFormAddonsTest extends TestCase
 {
+    use AttachesPartyExtras;
     use RefreshDatabase;
 
     private Zone $zone;
@@ -87,13 +90,12 @@ class PostFormAddonsTest extends TestCase
         );
     }
 
-    /** El enganche de venta posterior: con tope y con plazo, que es lo que el guard exige. */
-    private function attach(TicketType $addon, int $cutoffHours = 48, int $maxQty = 10): void
+    /** El enganche de venta posterior: con tope, que es lo que el guard exige. Su plazo es el de la lista (`#912`). */
+    private function attach(TicketType $addon, int $maxQty = 10): void
     {
         $this->pack->configurableAddons()->attach($addon->id, [
             'position' => 1, 'quantity_mode' => ProductAddon::MODE_FIXED,
-            'stage' => ProductAddon::STAGE_POSTFORM,
-            'postform_cutoff_hours' => $cutoffHours, 'max_qty' => $maxQty,
+            'stage' => ProductAddon::STAGE_POSTFORM, 'max_qty' => $maxQty,
         ]);
         $this->pack->refresh();
     }
@@ -330,34 +332,56 @@ class PostFormAddonsTest extends TestCase
     // ── R1 · el plazo, y la trampa de los campos deshabilitados ────────────────────────────────
 
     /**
-     * ⚠️⚠️ **La trampa que se habría construido**: los `<input disabled>` **no se envían**. Con
-     * «tapas 48 h» y «cubo 2 h» sobre la misma reserva, a 24 h el guardado normal llega **sin las
-     * tapas** — y si el estado deseado gobernase todo lo ofrecido, se cancelarían solas, justo lo
-     * contrario de D5. Fuera de plazo no cuenta como ofrecido, así que se CONSERVA.
+     * ⚠️⚠️ **La trampa que se habría construido**: los `<input disabled>` **no se envían**, y un cliente de la API puede
+     * mandar solo lo que cambia. Si el estado deseado gobernase TODO lo ofrecido, lo que el cuerpo omite se cancelaría
+     * solo, justo lo contrario de D5: solo se gobierna lo que llega, y lo omitido se CONSERVA.
      */
-    public function test_an_addon_out_of_its_window_is_preserved_when_the_body_omits_it(): void
+    public function test_an_addon_the_body_omits_is_preserved(): void
     {
         $tapas = $this->addon('Tapas', 2500, 21);
-        $this->attach($this->drinks, cutoffHours: 2);
-        $this->attach($tapas, cutoffHours: 48);
-
-        // La fiesta es dentro de 24 h: el cubo (2 h) sigue abierto, las tapas (48 h) ya no.
-        $item = $this->party(daysAhead: 1);
+        $this->attach($this->drinks);
+        $this->attach($tapas);
+        $item = $this->party();
         $this->service()->reconcile($item, [$this->drinks->id => 1, $tapas->id => 1], 'signed_link');
 
-        // Con las tapas ya cerradas: se sembraron antes de que el plazo pasara.
-        $this->assertNull($this->liveChild($item->fresh(), $tapas), 'las tapas ya no se podían añadir');
-
-        // Y un guardado normal, que llega SIN las tapas, no puede tocar nada suyo.
+        // Un guardado que llega SIN las tapas no puede tocar nada suyo.
         $changes = $this->service()->reconcile($item->fresh(), [$this->drinks->id => 2], 'signed_link');
+
         $this->assertSame(1200, $changes->deltaCents);
+        $this->assertSame(1, (int) $this->liveChild($item, $tapas)?->quantity, 'las tapas siguen como estaban');
         $this->assertBookCloses($item, 'tras el guardado parcial');
+    }
+
+    /**
+     * Desde `#912` cada complemento cierra en el MISMO instante que la lista (`GuestCountPolicy`): ni un segundo antes
+     * ni uno después. Si las dos comparaciones divergieran, la cabecera diría «abierta» con los complementos cerrados.
+     */
+    public function test_an_addon_closes_at_the_same_instant_as_the_list(): void
+    {
+        $this->attach($this->drinks);
+        $item = $this->party();
+        $pivot = $item->ticketType?->addons->firstWhere('id', $this->drinks->id)?->pivot;
+        $this->assertInstanceOf(ProductAddon::class, $pivot);
+        $lista = app(GuestCountPolicy::class);
+        $cierre = $lista->deadlineFor($item);
+        $this->assertNotNull($cierre);
+        $this->assertTrue($cierre->equalTo(PostFormAddons::deadlineFor($item, $pivot)), 'el mismo instante');
+
+        $this->travelTo($cierre->copy()->subSecond());
+        $this->assertTrue($lista->isWithinWindow($item));
+        $this->assertTrue(PostFormAddons::isWithinWindow($item, $pivot), 'un segundo antes, abierto como la lista');
+
+        $this->travelTo($cierre);
+        $this->assertFalse($lista->isWithinWindow($item));
+        $this->assertFalse(PostFormAddons::isWithinWindow($item, $pivot), 'en el instante, cerrado como la lista');
     }
 
     /** Y pedirlo explícitamente fuera de plazo tampoco lo mueve — pero se DICE, no se calla. */
     public function test_asking_for_an_addon_out_of_its_window_is_blocked_and_said(): void
     {
-        $this->attach($this->drinks, cutoffHours: 48);
+        $this->attach($this->drinks);
+        // La fiesta es mañana y la lista cierra 48 h antes: ya cerró, sea la hora que sea.
+        $this->plazoDeLaLista(48);
         $item = $this->party(daysAhead: 1);
 
         $changes = $this->service()->reconcile($item, [$this->drinks->id => 2], 'signed_link');
@@ -383,7 +407,7 @@ class PostFormAddonsTest extends TestCase
         $this->travelTo(Carbon::parse('2026-09-15 09:00:00', 'UTC'));
 
         $parkNow = DisplayTime::now();
-        // El corte (inicio − 2 h) vence hace 10 minutos en hora de pared del parque.
+        // El corte de la lista (inicio − 2 h, con su ajuste a 2) vence hace 10 minutos en hora de pared del parque.
         $start = $parkNow->copy()->addMinutes(110);
 
         $slot = Slot::create([
@@ -391,7 +415,8 @@ class PostFormAddonsTest extends TestCase
             'start_time' => $start->format('H:i:s'), 'end_time' => $start->copy()->addHours(2)->format('H:i:s'),
             'capacity' => 20, 'online_capacity' => 20,
         ]);
-        $this->attach($this->drinks, cutoffHours: 2);
+        $this->attach($this->drinks);
+        $this->plazoDeLaLista(2);
 
         $item = $this->party();
         $item->forceFill(['slot_id' => $slot->id])->save();

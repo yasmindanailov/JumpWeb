@@ -4,6 +4,8 @@ namespace Tests\Feature\Site;
 
 use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Services\GuestCountPolicy;
+use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\Money;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -294,14 +296,15 @@ class BirthdayPageTest extends TestCase
 
     /**
      * **LO QUE SE AÑADE DESPUÉS DE RESERVAR va con su precio y su PLAZO** (nunca al carril de la compra,
-     * que es lo que se vende al reservar, `#413`).
+     * que es lo que se vende al reservar, `#413`). El plazo es el de la LISTA (`#912`): el ajuste del parque, no el
+     * del complemento.
      */
     public function test_after_booking_carries_the_form_and_the_extras_sold_later(): void
     {
         $jump = $this->pack('Cumpleaños Jump');
         $cubo = $this->addon('Cubo de refrescos', 2399, 95);
         $jump->configurableAddons()->attach($cubo->id, [
-            'quantity_mode' => 'fixed', 'stage' => 'postform', 'postform_cutoff_hours' => 48, 'max_qty' => 5, 'position' => 9,
+            'quantity_mode' => 'fixed', 'stage' => 'postform', 'max_qty' => 5, 'position' => 9,
         ]);
 
         $form = $this->datos()['form'];
@@ -315,7 +318,13 @@ class BirthdayPageTest extends TestCase
         $extra = collect($form['extras'])->firstWhere('name', 'Cubo de refrescos');
         $this->assertNotNull($extra, 'el complemento de venta posterior no viaja');
         $this->assertSame("23,99\u{00A0}€", $extra['price']);
-        $this->assertSame('hasta 48 h antes', $extra['cutoff'], 'el plazo de corte no viaja con el complemento');
+        $this->assertSame('hasta 24 h antes', $extra['cutoff'], 'el plazo de la lista no viaja con el complemento');
+
+        // Control: lo mueve el ajuste de la lista.
+        Setting::query()->updateOrCreate(['key' => GuestCountPolicy::SETTING_CUTOFF_HOURS], ['value' => '48', 'group' => 'packs']);
+        Setting::flushMemo();
+        Cache::flush();
+        $this->assertSame('hasta 48 h antes', collect($this->datos()['form']['extras'])->firstWhere('name', 'Cubo de refrescos')['cutoff']);
     }
 
     /** La tarjeta de edades mezcladas necesita DOS packs de la misma familia: si no, no hay fiesta mixta. */

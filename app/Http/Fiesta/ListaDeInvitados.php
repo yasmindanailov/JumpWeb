@@ -8,6 +8,7 @@ use App\Domain\Booking\Models\PartyInvitation;
 use App\Domain\Booking\Models\ProductAddon;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Services\GuestAgeMixReader;
+use App\Domain\Booking\Services\GuestCountPolicy;
 use App\Domain\Booking\Services\ItemEditPricing;
 use App\Domain\Booking\Services\PartyInvitations;
 use App\Domain\Identity\Contracts\HonoreeCoverage;
@@ -104,6 +105,8 @@ final class ListaDeInvitados
             'logo' => self::logo($site),
             'reserva' => $reserva,
             'cumple' => $cumple,
+            // EL PLAZO de la lista (P1 de §4.20, `[DECIDIDO owner]` `#912`): uno para todo y dicho UNA vez, en la cabecera.
+            'plazo' => self::plazoDeLaLista($reservation),
             // La PRIMERA pantalla (spec §1.4, Z1): sin el nombre de quien cumple no hay invitación ni titular.
             'primero' => $inv !== null && ! $readonly && $cumple['nombre'] === '',
             'invitacion' => $inv === null ? null : self::invitacion($invitacion, $inv, $reservation, $cumple, $reserva, $status),
@@ -450,7 +453,6 @@ final class ListaDeInvitados
             'envio' => (string) ($vista['share'] ?? ''),
             'compartible' => (bool) $vista['shareable'],
             'respuestas_abiertas' => (bool) $vista['replies_open'],
-            'plazo' => (string) $vista['deadline'],
             'compartida' => $compartida,
             'whatsapp' => 'https://wa.me/?text='.rawurlencode($mensaje),
             'mensaje' => $mensaje,
@@ -535,11 +537,9 @@ final class ListaDeInvitados
     private static function extras(array $addons, string $total, OrderItem $reservation, TicketType $type, bool $readonly, array $reserva, int $sois): array
     {
         $moneda = $reservation->order->currency ?? 'EUR';
-        $cierre = static fn (PostFormAddonView $a): ?CarbonImmutable => $a->closesAt === null ? null : CarbonImmutable::parse($a->closesAt)->setTimezone(DisplayTime::timezone());
         $i = 0;
-        $tarjeta = static function (PostFormAddonView $addon, string $serves) use (&$i, $cierre, $readonly, $moneda): array {
-            $cierra = $cierre($addon);
-
+        // ⚠️ Sin plazo en la tarjeta (`#912`): es el de la lista y lo dice la cabecera, una vez.
+        $tarjeta = static function (PostFormAddonView $addon, string $serves) use (&$i, $readonly, $moneda): array {
             return [
                 'indice' => $i++,
                 'id' => $addon->productId,
@@ -552,24 +552,15 @@ final class ListaDeInvitados
                 'serves' => $addon->serves,
                 'para' => $serves,
                 'foto' => $addon->imageUrl,
-                'plazo' => $cierra === null ? '' : __('fiesta.lista.extras.hasta', ['cuando' => self::plazoEscrito($cierra)]),
-                'cambia' => $cierra === null ? '' : __('fiesta.lista.extras.cambia', ['cuando' => self::plazoEscrito($cierra)]),
                 'cantidad' => $addon->quantity,
                 'tope' => $addon->maxQuantity,
                 'cerrado' => $addon->closed || $readonly,
-                'motivo' => $addon->closed
-                    ? ($addon->closedReason === PostFormAddonView::REASON_SOLD_AT_BOOKING ? __('guestform.extras_closed_sold') : __('guestform.extras_closed_cutoff'))
-                    : '',
+                // Cerrada por el PLAZO, la tarjeta calla: lo dice la cabecera (`#912`). Solo otro motivo se dice aquí.
+                'motivo' => $addon->closed && $addon->closedReason === PostFormAddonView::REASON_SOLD_AT_BOOKING ? __('guestform.extras_closed_sold') : '',
                 'total' => $addon->quantity > 0 ? __('fiesta.lista.extras.total', ['x' => Money::format($addon->chargedCents, $moneda)]) : '',
             ];
         };
         $abiertos = static fn (array $lote): bool => ! $readonly && collect($lote)->contains(fn (PostFormAddonView $a): bool => ! $a->closed);
-        // El plazo de un bloque: el primero que vence de los que siguen abiertos (o de todos, si ya cerró).
-        $plazoDe = static function (array $lote) use ($cierre): ?CarbonImmutable {
-            $abiertos = array_filter($lote, fn (PostFormAddonView $a): bool => ! $a->closed);
-
-            return collect($abiertos !== [] ? $abiertos : $lote)->map($cierre)->filter()->sort()->first();
-        };
         $porBloque = static fn (?string $bloque): array => array_values(array_filter($addons, fn (PostFormAddonView $a): bool => $a->block === $bloque));
         $sueltos = collect($porBloque(null))->sortBy(fn (PostFormAddonView $a): int => $a->closed ? 1 : 0)->values()->all();
 
@@ -582,7 +573,8 @@ final class ListaDeInvitados
             $pedida = collect($tartas)->contains(fn (PostFormAddonView $a): bool => $a->quantity > 0);
             $declinada = $reservation->cakeDeclined($addons);
             $abierta = $abiertos($tartas);
-            $cierra = $plazoDe($tartas);
+            // El plazo de la tarta ES el de la lista (`#912`): lo usa el aviso de «cierra hoy o mañana», no la tarjeta.
+            $cierra = self::cierreDeLaLista($reservation);
             $cuando = $cierra === null ? '' : self::plazoEscrito($cierra);
             // Fuera de plazo, solo las pedidas (como el diseño): una tarta que ya no se puede pedir no es una opción.
             $visibles = $abierta ? $tartas : array_values(array_filter($tartas, fn (PostFormAddonView $a): bool => $a->quantity > 0));
@@ -664,7 +656,8 @@ final class ListaDeInvitados
             'tarta' => $tarta,
             'padres' => $padres,
             'ninos' => $tarta !== null || $grupos !== [] ? ['grupos' => $grupos, 'sois' => $sois] : null,
-            'pie' => self::pie($tarta !== null && $tarta['abierta'] ? $plazoDe($tartas) : null, $padres !== null && $padres['abierto'] ? $plazoDe($deLosPadres) : null, $reservation),
+            // El pie dice CÓMO se pagan; hasta CUÁNDO, la cabecera (`#912`: un plazo, una vez).
+            'pie' => __('fiesta.lista.extras.pie'),
             'total' => $total,
             'elegidos' => collect($addons)->filter(fn (PostFormAddonView $a): bool => $a->quantity > 0)->count(),
             'alguno_abierto' => collect($addons)->contains(fn (PostFormAddonView $a): bool => ! $a->closed) && ! $readonly,
@@ -674,21 +667,34 @@ final class ListaDeInvitados
     }
 
     /**
-     * El pie de la zona 4: «Se pagan el día de la fiesta, en el parque.» y, con cada bloque abierto, hasta cuándo («La
-     * tarta, hasta el jueves 24; lo de los padres, hasta el mismo día.»).
+     * **El plazo de la lista** (P1 de `fiesta-sistema-nuevo.md` §4.20, `[DECIDIDO owner]` `#912`: «1 plazo solamente… lo
+     * ponemos solo en 1 sitio»): el de `GuestCountPolicy`, que cierra a la vez el número, las fichas, las respuestas y los
+     * complementos. Abierta, hasta cuándo; cerrada, desde cuándo y que se llame. `null` sin franja (no hay plazo que decir).
+     *
+     * @return array{abierta: bool, texto: string}|null
      */
-    private static function pie(?CarbonImmutable $tarta, ?CarbonImmutable $padres, OrderItem $reservation): string
+    private static function plazoDeLaLista(OrderItem $reservation): ?array
     {
-        $fiesta = $reservation->slot?->date;
-        $dia = static fn (CarbonImmutable $c): string => $fiesta !== null && $c->isSameDay($fiesta)
-            ? __('fiesta.lista.extras.mismo_dia')
-            : __('fiesta.lista.extras.dia', ['dia' => DisplayTime::dayInSentence($c)]);
-        $partes = array_values(array_filter([
-            $tarta === null ? '' : __('fiesta.lista.extras.pie_tarta', ['cuando' => $dia($tarta)]),
-            $padres === null ? '' : __('fiesta.lista.extras.pie_padres', ['cuando' => $dia($padres)]),
-        ]));
+        $cierra = self::cierreDeLaLista($reservation);
+        if ($cierra === null) {
+            return null;
+        }
+        $abierta = app(GuestCountPolicy::class)->isWithinWindow($reservation);
 
-        return __('fiesta.lista.extras.pie').($partes === [] ? '' : ' '.Str::ucfirst(implode('; ', $partes)).'.');
+        return [
+            'abierta' => $abierta,
+            'texto' => $abierta
+                ? __('fiesta.lista.plazo.abierta', ['cuando' => self::plazoEscrito($cierra)])
+                : __('fiesta.lista.plazo.cerrada', ['cuando' => self::cuandoFue($cierra)]),
+        ];
+    }
+
+    /** El instante en que se cierra la lista (`GuestCountPolicy`, la fuente que también revalida), en la zona del parque. */
+    private static function cierreDeLaLista(OrderItem $reservation): ?CarbonImmutable
+    {
+        $cierra = app(GuestCountPolicy::class)->deadlineFor($reservation);
+
+        return $cierra === null ? null : CarbonImmutable::instance($cierra)->setTimezone(DisplayTime::timezone());
     }
 
     /** «combos y cubos de bebidas»: una lista escrita, con la «y» del idioma. */
@@ -703,13 +709,13 @@ final class ListaDeInvitados
         $hoy = DisplayTime::today();
         $hora = $fue->format('H:i');
         if ($fue->isSameDay($hoy)) {
-            return __('fiesta.lista.extras.hoy', ['hora' => $hora]);
+            return __('fiesta.lista.momento.hoy', ['hora' => $hora]);
         }
         if ($fue->isSameDay($hoy->copy()->subDay())) {
-            return __('fiesta.lista.extras.ayer', ['hora' => $hora]);
+            return __('fiesta.lista.momento.ayer', ['hora' => $hora]);
         }
 
-        return __('fiesta.lista.extras.el_dia', ['dia' => DisplayTime::dayInSentence($fue), 'hora' => $hora]);
+        return __('fiesta.lista.momento.el_dia', ['dia' => DisplayTime::dayInSentence($fue), 'hora' => $hora]);
     }
 
     /** «hoy a las 17:00», «mañana a las 17:00» o «el jueves 24 a las 17:00», como lo lee quien lo lee. */
@@ -718,13 +724,13 @@ final class ListaDeInvitados
         $hoy = DisplayTime::today();
         $hora = $cierra->format('H:i');
         if ($cierra->isSameDay($hoy)) {
-            return __('fiesta.lista.extras.hoy', ['hora' => $hora]);
+            return __('fiesta.lista.momento.hoy', ['hora' => $hora]);
         }
         if ($cierra->isSameDay($hoy->copy()->addDay())) {
-            return __('fiesta.lista.extras.manana', ['hora' => $hora]);
+            return __('fiesta.lista.momento.manana', ['hora' => $hora]);
         }
 
-        return __('fiesta.lista.extras.el_dia', ['dia' => DisplayTime::dayInSentence($cierra), 'hora' => $hora]);
+        return __('fiesta.lista.momento.el_dia', ['dia' => DisplayTime::dayInSentence($cierra), 'hora' => $hora]);
     }
 
     /**

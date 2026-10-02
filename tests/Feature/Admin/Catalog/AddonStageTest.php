@@ -104,17 +104,19 @@ class AddonStageTest extends TestCase
         return $addon;
     }
 
-    /** Un enganche sano de venta POSTERIOR: con tope y con plazo, que es lo que el guard exige. */
+    /**
+     * Un enganche sano de venta POSTERIOR: con tope, que es lo que el guard exige. Sin plazo propio, y es la guarda de
+     * `#912`: el plazo es el de la LISTA, así que un enganche sin él tiene que guardarse y venderse.
+     */
     private function attachPostForm(TicketType $product, TicketType $addon, array $overrides = []): void
     {
         // ⚠️ `array_merge` y NO el `+` de arrays: la unión conserva el operando IZQUIERDO, así que
-        // con `+` tres de los seis casos del proveedor se habrían ignorado en silencio y el test
+        // con `+` tres de los cinco casos del proveedor se habrían ignorado en silencio y el test
         // habría dicho «el guard no muerde» sobre una configuración que nunca se aplicó.
         $product->configurableAddons()->attach($addon->id, array_merge([
             'position' => 1,
             'quantity_mode' => ProductAddon::MODE_FIXED,
             'stage' => ProductAddon::STAGE_POSTFORM,
-            'postform_cutoff_hours' => 48,
             'max_qty' => 10,
         ], $overrides));
     }
@@ -260,7 +262,7 @@ class AddonStageTest extends TestCase
      * `TicketType::ADDON_PIVOT_COLUMNS`. Una columna que no esté ahí **se cae sin error** y la fila
      * nace `booking`… con el registro de auditoría diciendo `postform`.
      */
-    public function test_attaching_from_the_panel_persists_the_stage_and_its_cutoff(): void
+    public function test_attaching_from_the_panel_persists_the_stage_and_its_cap(): void
     {
         $pack = $this->pack();
         $drinks = $this->addon('Cubo de refrescos');
@@ -269,12 +271,12 @@ class AddonStageTest extends TestCase
             ->test(AddonsRelationManager::class, ['ownerRecord' => $pack, 'pageClass' => EditCatalog::class])
             ->callTableAction('attach', data: [
                 'recordId' => $drinks->id, 'position' => 1, 'quantity_mode' => 'fixed',
-                'stage' => ProductAddon::STAGE_POSTFORM, 'postform_cutoff_hours' => 48, 'max_qty' => 10,
+                'stage' => ProductAddon::STAGE_POSTFORM, 'max_qty' => 10,
             ]);
 
         $this->assertDatabaseHas('product_addons', [
             'product_id' => $pack->id, 'addon_id' => $drinks->id,
-            'stage' => ProductAddon::STAGE_POSTFORM, 'postform_cutoff_hours' => 48, 'max_qty' => 10,
+            'stage' => ProductAddon::STAGE_POSTFORM, 'max_qty' => 10,
         ]);
     }
 
@@ -292,13 +294,13 @@ class AddonStageTest extends TestCase
         Livewire::actingAs($this->admin())
             ->test(AddonsRelationManager::class, ['ownerRecord' => $pack, 'pageClass' => EditCatalog::class])
             ->callTableAction('configure', $cake, data: [
-                'stage' => ProductAddon::STAGE_POSTFORM, 'postform_cutoff_hours' => 24,
+                'stage' => ProductAddon::STAGE_POSTFORM,
                 'quantity_mode' => 'fixed', 'allow_extra' => true, 'max_qty' => 3, 'position' => 0,
             ]);
 
         $this->assertDatabaseHas('product_addons', [
             'product_id' => $pack->id, 'addon_id' => $cake->id,
-            'stage' => ProductAddon::STAGE_POSTFORM, 'postform_cutoff_hours' => 24,
+            'stage' => ProductAddon::STAGE_POSTFORM, 'max_qty' => 3,
         ]);
     }
 
@@ -326,7 +328,7 @@ class AddonStageTest extends TestCase
 
         $this->assertDatabaseHas('product_addons', [
             'product_id' => $pack->id, 'addon_id' => $drinks->id,
-            'stage' => ProductAddon::STAGE_POSTFORM, 'postform_cutoff_hours' => 48, 'position' => 7,
+            'stage' => ProductAddon::STAGE_POSTFORM, 'max_qty' => 10, 'position' => 7,
         ]);
     }
 
@@ -363,8 +365,11 @@ class AddonStageTest extends TestCase
         return array_values(array_unique($m[1]));
     }
 
-    /** La INSIGNIA: el eje que decide si un complemento puede generar deuda tiene que verse en la lista. */
-    public function test_the_list_shows_the_stage_as_a_badge_with_its_cutoff(): void
+    /**
+     * La INSIGNIA: el eje que decide si un complemento puede generar deuda tiene que verse en la lista. Sin plazo
+     * (`#912`): el de todos es el de la lista, y vive en Ajustes; repetirlo en cada fila era el ruido que se quitó.
+     */
+    public function test_the_list_shows_the_stage_as_a_badge_without_a_cutoff(): void
     {
         $pack = $this->pack();
         $drinks = $this->addon('Cubo de refrescos');
@@ -372,7 +377,8 @@ class AddonStageTest extends TestCase
 
         Livewire::actingAs($this->admin())
             ->test(AddonsRelationManager::class, ['ownerRecord' => $pack, 'pageClass' => EditCatalog::class])
-            ->assertSee('Venta posterior · hasta 48 h antes');
+            ->assertSee('Venta posterior')
+            ->assertDontSee('h antes');
     }
 
     // ── 4 · Los guards, en las DOS direcciones ─────────────────────────────────────────────────
@@ -388,12 +394,12 @@ class AddonStageTest extends TestCase
             'por invitado' => [['quantity_mode' => ProductAddon::MODE_PER_GUEST]],
             'de grupo excluyente' => [['choice_group' => 'menu']],
             'sin tope de cantidad' => [['max_qty' => null]],
-            'sin plazo de corte' => [['postform_cutoff_hours' => null]],
         ];
     }
 
     /**
-     * Las seis prohibiciones que se ven desde el pivote, cada una cerrando un agujero concreto de
+     * Las cinco prohibiciones que se ven desde el pivote (la sexta, «sin plazo de corte», cayó con `#912`: el plazo es el
+     * de la lista y siempre existe), cada una cerrando un agujero concreto de
      * §4.3 — de «una deuda que se auto-inyecta sin un clic» a «la deuda máxima que un tercero puede
      * crear tiene que estar declarada por el parque».
      *
@@ -494,7 +500,7 @@ class AddonStageTest extends TestCase
 
         DB::table('product_addons')
             ->where('product_id', $entry->id)->where('addon_id', $socks->id)
-            ->update(['max_qty' => null, 'postform_cutoff_hours' => null]);
+            ->update(['max_qty' => null]);
 
         $this->assertCount(1, AddonResolver::forStage($entry->fresh()->addons, ProductAddon::STAGE_BOOKING));
     }
@@ -516,7 +522,7 @@ class AddonStageTest extends TestCase
             ->test(AddonsRelationManager::class, ['ownerRecord' => $entry, 'pageClass' => EditCatalog::class])
             ->callTableAction('attach', data: [
                 'recordId' => $drinks->id, 'position' => 1, 'quantity_mode' => 'fixed',
-                'stage' => ProductAddon::STAGE_POSTFORM, 'postform_cutoff_hours' => 2, 'max_qty' => 5,
+                'stage' => ProductAddon::STAGE_POSTFORM, 'max_qty' => 5,
             ])
             ->assertNotified();
 

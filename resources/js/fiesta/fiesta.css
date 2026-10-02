@@ -675,6 +675,10 @@ body.fiesta-lista { margin: 0; background: var(--bg-subtle); font-family: var(--
 .pli-aviso-ic{background:var(--fiesta-sol-100, var(--notice-warn-bg));color:var(--fiesta-tinta-900)}
 .pli-aviso-tarta>span:nth-child(2),.pli-padres>span:nth-child(2){flex:1 1 180px;min-width:0}
 .pli-grid2{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr))}
+/* P1 de §4.20 (`#912`): el plazo de TODA la lista, una vez, bajo el resguardo de la cabecera. Cerrada, en el tono del aviso. */
+.pli-plazo-lista{margin:8px 0 0;display:flex;flex-wrap:wrap;align-items:center;gap:6px;font:600 var(--fs-body-sm)/1.4 var(--font-ui);color:var(--text-muted)}
+.pli-plazo-lista svg{flex:0 0 auto}
+.pli-plazo-lista--cerrada{color:var(--text-warn, var(--text-strong))}
 /* P2 de `fiesta-sistema-nuevo.md` §4.20 (`[DECIDIDO owner]` `#913`): en un grupo con tarjetas impares, la última a lo ancho, sin
    hueco al lado; y el suelto que se queda solo en su fila (`pli-fam--ancha`, lo cuenta el servidor). Con una columna, no hace nada. */
 .pli-grid2>article.fi-complemento:last-of-type:nth-of-type(odd),.pli-grupos>.pli-fam--ancha{grid-column:1/-1}

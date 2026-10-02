@@ -158,7 +158,6 @@ class AddonsRelationManager extends RelationManager
                     // (`sanitizePivotData` ⊆ `fillForm`) cierra la familia entera, no solo este campo.
                     ->fillForm(fn (TicketType $record): array => [
                         'stage' => $record->pivot?->saleStage() ?? ProductAddon::STAGE_BOOKING,
-                        'postform_cutoff_hours' => $record->pivot?->postformCutoffHours(),
                         // Tercera lista blanca: sin esta línea, tocar la POSICIÓN de un complemento
                         // apagaría su casilla de la invitación semanas después y sin que nada falle.
                         // ⚠️ Por método y no por propiedad: un acceso dinámico al pivote suma una
@@ -280,17 +279,8 @@ class AddonsRelationManager extends RelationManager
                 ->selectablePlaceholder(false)
                 ->live(),
 
-            // El plazo de corte, OBLIGATORIO en venta posterior (D10): `null` significaría «hereda el
-            // cierre del post-form», que es el predicado con el reloj torcido de §4.9 — y dejaría
-            // quitar un extra ya consumido. `0` es válido: «hasta que empiece la fiesta».
-            TextInput::make('postform_cutoff_hours')
-                ->label(__('admin.catalog.addons.cutoff'))
-                ->helperText(__('admin.catalog.addons.cutoff_hint'))
-                ->numeric()
-                ->minValue(0)
-                ->default(0)
-                ->required($postForm)
-                ->visible($postForm),
+            // ⚠️ Sin plazo por complemento desde `#912` (`fiesta-sistema-nuevo.md` §4.20): el de venta posterior se cierra
+            // con su LISTA de invitados (Ajustes, el plazo de la lista), uno para todo.
 
             // F5 de `fiesta-sistema-nuevo.md` (`#749`): en qué bloque de la LISTA DE INVITADOS va (la pregunta de la
             // tarta, lo de los padres o la rejilla de siempre). Solo en venta posterior: es donde se elige.
@@ -488,12 +478,6 @@ class AddonsRelationManager extends RelationManager
 
         return [
             'stage' => $stage,
-            // El plazo solo significa algo en venta posterior; en `booking` se limpia. ⚠️ `0` es un
-            // valor VÁLIDO y distinto de `null`, así que NO se puede copiar el patrón `>= 1` de
-            // `max_qty`: convertiría «hasta que empiece» en «sin plazo», que es más permisivo.
-            'postform_cutoff_hours' => ($postForm && isset($data['postform_cutoff_hours']) && $data['postform_cutoff_hours'] !== '')
-                ? max(0, (int) $data['postform_cutoff_hours'])
-                : null,
             // D12 (`#574`): «el menú» que la invitación digital enseña. Segunda lista blanca — sin
             // esta línea la casilla del formulario no se escribiría NUNCA, en silencio.
             'show_in_invitation' => (bool) ($data['show_in_invitation'] ?? false),
@@ -539,9 +523,7 @@ class AddonsRelationManager extends RelationManager
         // «Configurar» uno por uno para verlo. ⚠️ Precedente medido: `max_qty` tampoco tiene insignia
         // y hay CERO filas que lo usen — un campo sin insignia es un campo que nadie usa.
         if ($pivot->isPostFormStage()) {
-            $badges[] = $pivot->postformCutoffHours() === null
-                ? __('admin.catalog.addons.badge_postform')
-                : __('admin.catalog.addons.badge_postform_cutoff', ['hours' => $pivot->postformCutoffHours()]);
+            $badges[] = __('admin.catalog.addons.badge_postform');
         }
         if ($pivot->is_included) {
             $badges[] = __('admin.catalog.addons.badge_included');

@@ -272,37 +272,16 @@ final class PostFormAddons
     }
 
     /**
-     * El instante EXACTO en que vence el plazo de este complemento, en la zona del parque. `null` si
-     * la reserva no tiene franja o el enganche no declara plazo (configuración que el cinturón ya
-     * descarta antes de llegar aquí).
+     * El instante EXACTO en que vence el plazo de este complemento, en la zona del parque: **el de su LISTA de invitados**
+     * (`[DECIDIDO owner]` `#912`, `fiesta-sistema-nuevo.md` §4.20: «1 plazo solamente… por lista»), calculado por UNA sola
+     * aritmética, la de `GuestCountPolicy::deadlineFor()`, que ya cierra el número, las fichas y las respuestas. `null` si la
+     * reserva no tiene franja. El enganche ya no decide; el parámetro se queda por quien lo llama (la isla de plataforma).
      */
     public static function deadlineFor(OrderItem $principal, ProductAddon $pivot): ?Carbon
     {
-        $hours = $pivot->postformCutoffHours();
-        $slot = $principal->slot;
-
-        if ($hours === null || $slot === null || $slot->date === null || $slot->start_time === null) {
-            return null;
-        }
-
-        return Carbon::parse(
-            $slot->date->format('Y-m-d').' '.$slot->start_time,
-            DisplayTime::timezone(),
-        )->subHours($hours);
+        return app(GuestCountPolicy::class)->deadlineFor($principal);
     }
 
-    /**
-     * ¿Estamos DENTRO del plazo de este complemento para esta reserva? (§4.6.)
-     *
-     * ⚠️⚠️ **Se mide con `DisplayTime::now()` contra la hora de PARED de la franja**, y no con el
-     * predicado que cierra el post-form: `OrderItem::isFinishedInPractice()` parsea esa hora como UTC
-     * y por eso declara terminada una reserva 1–2 h TARDE (ficha en `DEUDA.md`, §4.9). Heredarlo aquí
-     * dejaría quitar un extra ya consumido — que es exactamente lo que el plazo existe para impedir.
-     *
-     * ⚠️ Y por eso el plazo es OBLIGATORIO en un enganche `postform` (D10): `null` significaría
-     * «hereda el cierre del post-form», o sea heredar el reloj torcido. Sin plazo declarado, no se
-     * ofrece — el cinturón de `AddonResolver::forStage()` ya lo excluye antes de llegar aquí.
-     */
     /**
      * El día con el que se tarifica un extra NUEVO de esta reserva: **el de la VISITA** (`#415`).
      *
@@ -319,6 +298,18 @@ final class PostFormAddons
         return $date !== null ? Carbon::parse($date->toDateString()) : Carbon::today();
     }
 
+    /**
+     * ¿Estamos DENTRO del plazo de este complemento para esta reserva? (§4.6.)
+     *
+     * ⚠️⚠️ **Se mide con `DisplayTime::now()` contra la hora de PARED de la franja**, y no con el
+     * predicado que cierra el post-form: `OrderItem::isFinishedInPractice()` parsea esa hora como UTC
+     * y por eso declara terminada una reserva 1–2 h TARDE (ficha en `DEUDA.md`, §4.9). Heredarlo aquí
+     * dejaría quitar un extra ya consumido — que es exactamente lo que el plazo existe para impedir.
+     *
+     * ⚠️ Desde `#912` el plazo es el de la LISTA ({@see deadlineFor()}): siempre existe con franja y nunca hereda ese reloj
+     * torcido, así que ya no hace falta exigir uno por enganche (era la regla D10). Y se compara igual que
+     * `GuestCountPolicy::isWithinWindow()` (`lt`): la cabecera y cada complemento cierran en el MISMO instante.
+     */
     public static function isWithinWindow(OrderItem $principal, ProductAddon $pivot): bool
     {
         // Un solo sitio calcula el instante del corte ({@see deadlineFor}), y aquí solo se compara:

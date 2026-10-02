@@ -75,7 +75,7 @@ class InvitationDeclinedTest extends TestCase
 
     // ─── Los que no vienen ───────────────────────────────────────────────────────────
 
-    public function test_a_no_shows_in_its_own_group_and_says_until_when_the_count_can_drop(): void
+    public function test_a_no_shows_in_its_own_group_and_the_list_says_once_until_when(): void
     {
         $item = $this->reservation(4, [[], [], [], []]);
         $this->reply($item, 'Pablo Ortiz', attending: false);
@@ -86,18 +86,12 @@ class InvitationDeclinedTest extends TestCase
         // La fila del «no» y la frase de D3 son las de la lista del sistema nuevo (`fiesta.php`): la T4 retiró las
         // claves viejas, que este test mantenía vivas porque su texto coincidía letra a letra con el nuevo.
         $this->assertStringContainsString(__('fiesta.fila.no'), $html);
-        // La frase de D3 lleva la fecha, no un plazo en horas. ⚠️ Sin el punto de la fecha abreviada: la frase pone el suyo
-        // (hasta el 29-09 este caso aseveraba «…hasta el Jue. 8 oct..», el doble punto, y lo tenía CEMENTADO).
+        // Desde `#912` la frase de D3 ya no lleva fecha: el plazo es el de TODA la lista y lo dice la cabecera, una vez.
+        $this->assertStringContainsString(__('fiesta.lista.la_lista.no_vienen_baja'), $html);
         $deadline = app(GuestCountPolicy::class)->deadlineFor($item);
         $this->assertNotNull($deadline);
-        $this->assertStringContainsString(
-            __('fiesta.lista.la_lista.no_vienen_baja', ['plazo' => rtrim(DisplayTime::dayLabel($deadline), '.')]),
-            $html,
-        );
-        // Y la del defecto NO: la fecha con su punto más el de la frase. (Solo tiene sujeto si la fecha acaba en punto —en
-        // español siempre: «Jue. 8 oct.»—; la de arriba, por subcadena, pasaría también con el doble.)
-        $this->assertStringEndsWith('.', DisplayTime::dayLabel($deadline), 'CONTROL: la fecha abreviada acaba en punto');
-        $this->assertStringNotContainsString(__('fiesta.lista.la_lista.no_vienen_baja', ['plazo' => DisplayTime::dayLabel($deadline)]), $html, 'sin doble punto');
+        $this->assertSame(1, substr_count($html, 'data-plazo-lista'), 'el plazo, en un solo sitio');
+        $this->assertStringContainsString('Puedes cambiar la lista hasta el '.DisplayTime::dayInSentence($deadline).' a las 15:00.', $html);
     }
 
     public function test_a_no_that_matches_a_written_card_marks_that_card(): void

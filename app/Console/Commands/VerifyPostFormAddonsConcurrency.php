@@ -159,7 +159,8 @@ class VerifyPostFormAddonsConcurrency extends Command
 
         $pack->configurableAddons()->attach($addon->id, [
             'position' => 1, 'quantity_mode' => ProductAddon::MODE_FIXED,
-            'stage' => ProductAddon::STAGE_POSTFORM, 'postform_cutoff_hours' => 2, 'max_qty' => 10,
+            // Sin plazo propio (`#912`): cierra con la lista (24 h por defecto), y la fiesta va a 10 días.
+            'stage' => ProductAddon::STAGE_POSTFORM, 'max_qty' => 10,
         ]);
 
         $slot = Slot::create([

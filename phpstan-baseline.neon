@@ -793,18 +793,6 @@ parameters:
 			path: app/Domain/Booking/Services/PostFormAddons.php
 
 		-
-			message: '#^Strict comparison using \=\=\= between Carbon\\Carbon and null will always evaluate to false\.$#'
-			identifier: identical.alwaysFalse
-			count: 1
-			path: app/Domain/Booking/Services/PostFormAddons.php
-
-		-
-			message: '#^Strict comparison using \=\=\= between string and null will always evaluate to false\.$#'
-			identifier: identical.alwaysFalse
-			count: 1
-			path: app/Domain/Booking/Services/PostFormAddons.php
-
-		-
 			message: '#^Using nullsafe property access "\?\-\>currency" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 1
@@ -1359,7 +1347,7 @@ parameters:
 		-
 			message: '#^Access to an undefined property App\\Domain\\Booking\\Models\\TicketType\:\:\$pivot\.$#'
 			identifier: property.notFound
-			count: 8
+			count: 7
 			path: app/Filament/Resources/Catalog/RelationManagers/AddonsRelationManager.php
 
 		-

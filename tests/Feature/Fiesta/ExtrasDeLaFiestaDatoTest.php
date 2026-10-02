@@ -214,8 +214,9 @@ class ExtrasDeLaFiestaDatoTest extends TestCase
         ['reservation' => $reservation, 'host' => $host] = $this->mountParty();
         $type = $reservation->ticketType;
         $this->assertNotNull($type);
-        // La fiesta es dentro de 12 días: un plazo de 30 días ya venció.
-        $tarta = $this->extra($type, 'Tarta', 2500, ['postform_block' => ProductAddon::BLOCK_CAKE, 'postform_cutoff_hours' => 24 * 30]);
+        // La fiesta es dentro de 12 días: con un plazo de LA LISTA de 30 días (`#912`), ya venció.
+        $tarta = $this->extra($type, 'Tarta', 2500, ['postform_block' => ProductAddon::BLOCK_CAKE]);
+        $this->plazoDeLaLista(24 * 30);
 
         $this->actingAs($host)->post(route('reservation.guests.store', ['reservation' => $reservation]), [
             'addons' => [['product_id' => $tarta->id, 'quantity' => 1]], 'cake_declined' => '1',
@@ -243,7 +244,7 @@ class ExtrasDeLaFiestaDatoTest extends TestCase
         $gestor = Livewire::actingAs($this->admin())->test(AddonsRelationManager::class, ['ownerRecord' => $pack, 'pageClass' => EditCatalog::class]);
         $gestor->callTableAction('attach', data: [
             'recordId' => $combo->id, 'position' => 1, 'quantity_mode' => 'fixed',
-            'stage' => ProductAddon::STAGE_POSTFORM, 'postform_cutoff_hours' => 48, 'max_qty' => 5,
+            'stage' => ProductAddon::STAGE_POSTFORM, 'max_qty' => 5,
             'postform_block' => ProductAddon::BLOCK_ADULTS,
         ]);
         $this->assertDatabaseHas('product_addons', ['product_id' => $pack->id, 'addon_id' => $combo->id, 'postform_block' => ProductAddon::BLOCK_ADULTS]);

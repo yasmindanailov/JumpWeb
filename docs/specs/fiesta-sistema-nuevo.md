@@ -1175,7 +1175,7 @@ UNA opción y obligatoria —un grupo «hay que elegir uno», genérico desde el
 elegir»; un correo el día antes del plazo si sigue sin elegir; cono y calcetines, complementos aparte (`#913`); (3) en un grupo
 con tarjetas impares, la última a lo ancho (la A, elegida con la B y la C renderizadas: `storage/app/audit/medir-extras/`).
 
-**Medido (02-10, 20:40)**:
+**Medido (02-10, ~19:00)**:
 1. **La lista YA tiene un plazo**: `GuestCountPolicy` (el ajuste `packs.guest_count_cutoff_hours`, 24 h por defecto) gobierna el
    número de invitados, sus fichas (`GuestFormController`) y las respuestas a la invitación (`PartyInvitations::repliesOpenFor()`).
    La API lo publica (`guest_count_cutoff_hours` y `OrderItem.guest_count_deadline`, desde 1.25.0).
@@ -1193,9 +1193,16 @@ con tarjetas impares, la última a lo ancho (la A, elegida con la B y la C rende
    (comercial). Ninguno llega antes del plazo con margen: el de la merienda es un correo nuevo.
 
 **Las tandas** (cada una en `wip/`, con su «al detalle» y al ojo del owner):
-- **P1 · un plazo** (`CRITICAL_RE`: `PostFormAddons`, `ProductAddon`; `VERIFY_CONC=1` con sus verificadores): el plazo de cada
-  complemento ES el de la lista (`GuestCountPolicy::deadlineFor()`); fuera `missing_cutoff` y el campo del panel (la columna se
-  queda sin uso hasta una migración propia); la lista dice el plazo UNA vez, junto al número de invitados; la API, igual de forma.
+- 🟦 **P1 · un plazo — HECHA (02-10 noche, en `wip/`; falta el ojo del owner)** (`CRITICAL_RE`: `PostFormAddons`, `ProductAddon`;
+  `VERIFY_CONC=1` con sus verificadores): el plazo de cada complemento ES el de la lista (`PostFormAddons::deadlineFor()` y
+  `ProductAddon::postformCutoffHours()` delegan en `GuestCountPolicy`, que compara igual, `lt`: cierran en el MISMO instante);
+  fuera `missing_cutoff`, el campo y la insignia del panel (la columna, sin lectores: `DEUDA.md`); la lista dice el plazo UNA
+  vez, en la cabecera (`data-plazo-lista`: «Puedes cambiar la lista hasta…» / «La lista se cerró…» con «Llámanos»), y ninguna
+  tarjeta, pie, tarta, invitación ni «no vienen» lo repite; el ajuste se llama ya «Plazo de la lista de invitados»; la API,
+  igual de forma. Verificación: `ExtrasDeLaFiestaListaTest` (todo cierra con la lista; cerrada, la cabecera lo dice y las
+  tarjetas callan), `PostFormAddonsTest::test_an_addon_closes_at_the_same_instant_as_the_list`; arnés
+  `scripts/mutar-plazo-unico.sh` **8/8** con su control; `postform:verify-concurrency` `addons` y `cross` verdes (y el
+  `--control` ve sus 4 interbloqueos); suite 6828.
 - 🟦 **P2 · la impar a lo ancho — HECHA (02-10 noche, en `wip/`; falta el ojo del owner)**: en la hoja (`fiesta.css`), la última
   tarjeta impar de un grupo (`.pli-grid2`), a lo ancho; y el suelto que se queda solo en su fila entre dos grupos con título lo
   marca el servidor (`ListaDeInvitados::extras()`, `ancha` → `pli-fam--ancha`), porque la hoja no sabe contar rachas. Con una

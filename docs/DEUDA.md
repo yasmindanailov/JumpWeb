@@ -1008,3 +1008,12 @@ panel sin el estado «traducida» (`TestimonialResourceTest`). No hay guion que 
 Dos mutantes A MANO, 2/2 y restaurados por copia (`sha256sum`): la tarjeta de «¡Reservado!» sin la condición de la firma
 dentro (`pasos.test.js`) y la pista de la casilla sin su segunda frase (`datos.test.js`). **Qué hacer**: llevarlos a
 `scripts/mutar-isla-z6b.sh` (o a uno propio de la compra) con los de arriba, la próxima vez que se toque «Listo».
+
+## ▶ Baja · la columna `product_addons.postform_cutoff_hours` se quedó SIN lectores (02-10, `#912`)
+
+Desde P1 el plazo de un complemento de venta posterior es el de la lista (`GuestCountPolicy`): el panel ya no la escribe y
+nada la lee (la tumba `scripts/mutar-plazo-unico.sh` si alguien vuelve a leerla). Sigue en `TicketType::ADDON_PIVOT_COLUMNS`
+y con su cast en `ProductAddon`, con los valores que tenía (en producción, calcetines y cono 12 h). No se borró en la tanda
+porque retirar una columna con datos es decisión del owner (`CONVENCIONES §9`). **Qué hacer**: con su visto bueno, una
+migración que la retire (y su `down()`), sacarla de `ADDON_PIVOT_COLUMNS` y del cast, y el comentario de `AntesDeVenir`
+(plataforma) que la nombra.

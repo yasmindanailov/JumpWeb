@@ -575,6 +575,12 @@ De «por dónde retomar», mudado VERBATIM el 2026-09-30 al empezar la R1·T (el
        261/261; spec §4.4). ▶ El arnés ENTERO, DE NOCHE (bloquea la local 45 min; parado a 22/129, muerden);
        la Puerta, entera (`mutar-puerta-p1.sh` sin `SOLO`; su resultado, en la spec §4.4 y aquí).
 
+- Mudadas VERBATIM de las «Trampas vivas» de `carriles/spa.md` el 2026-10-02, noche (su techo):
+  - 📜 El `laravel.log` local llegó a **1,35 GB** (trazas de 270 KB desde el 12-08); borrado con el sí del owner el
+    25-09 y el `.env` local rota a diario desde entonces (`LOG_STACK=daily`, 14 días).
+  - Chromium muere al recrear el contenedor SOLO si no vive en `node_modules` (hoy sí): `node
+    node_modules/playwright-core/cli.js install chromium` (con `npx` cae en otra caché); `npm install` poda `playwright-core`.
+
 - Mudado VERBATIM de «por dónde retomar» 0 de `carriles/spa.md` el 2026-10-02, noche (su techo), al llegar `#912`/`#913`:
   0. ✅ **LOS COMPLEMENTOS DE LA FIESTA** (`#806`→`#808`, `fiesta-sistema-nuevo.md` §4.17): K1 y K2 en `main`; K3 es DATO del
      panel (la receta, en §4.17 «K3»): lo configura el parque en SU panel al desplegar (merienda, calcetines, cono, tartas). ▶
@@ -663,6 +669,13 @@ De «por dónde retomar», mudado VERBATIM el 2026-09-30 al empezar la R1·T (el
   (`#734`): `public/css/landing.css` (el bloque `.rev*`), `lang/{es,en,fr}/landing.php` (`reviews.*`),
   `ReviewCardTest`, `public/css/cajon.css` regenerada. ❗ `google-reviews.md` dice «umbral de 10 reseñas» y el
   código `MIN_REVIEWS = 1` (`#494`): no la toco yo.
+
+- Mudados VERBATIM del buzón de `carriles/spa.md` el 2026-10-02, noche (su techo): los dos avisos al carril de CORREOS del
+  27-09, que desde `#789` son de este carril:
+- **Para correos (27-09, `#754`)**: `SurveyInvitation` gana UNA línea (el aviso del anonimato, tras la intro) y recibe el
+  token en claro en vez de la fila; tu molde, sin tocar. La marca por envío (`jw_e`) y el píxel, en la T5: aviso antes.
+- **Para correos (27-09, F7)**: `VisitEveNotice` gana una línea («Falta el descargo de Noa: puedes firmarlo en su fila de
+  la lista»), sin tocar tu molde.
 
 ## Anexo · La fila del enrutador, mudada el 2026-09-16
 
