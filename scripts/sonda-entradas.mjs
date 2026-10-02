@@ -254,8 +254,11 @@ try {
         ok(`${Z} · los calcetines, al precio de su ficha (${calcetin ? euros(calcetin.price_cents) : 'sin precio'})`, calcetin ? dudas.includes(`${euros(calcetin.price_cents)} el par`) : ! /€ el par/.test(dudas));
         const plazoCorto = base.cancellation?.cutoff_hours == null ? null : base.cancellation.cutoff_hours < 48 ? `${base.cancellation.cutoff_hours} h antes` : `${base.cancellation.cutoff_hours / 24} días antes`;
         ok(`${Z} · el plazo, el de sus entradas (y en corto en su pista: ${plazoCorto})`, dudas.includes(`Sí, ${sinEspacios(plazo)}.`) && dudas.includes(plazoCorto), plazo);
-        const letra = { 1: 'una hora', 2: 'dos horas', 3: 'tres horas' };
-        ok(`${Z} · el cumpleaños: el «desde» y la duración de su pack (\`/catalog\`)`, Boolean(pack) && dudas.includes(`desde ${euros(pack.from_price_cents)} por niño`) && dudas.includes(`${letra[pack.duration_min / 60]}, merienda`), pack ? `${pack.id}: ${euros(pack.from_price_cents)}, ${pack.duration_min} min` : 'sin pack');
+        // El reparto de la fiesta (Z6e, `#873`): los minutos de saltar, de la duración del pack; la merienda, 30 al final, es
+        // de la instancia (`components/merienda.php`). La cifra, TECLEADA: una guarda que la leyera del código se compararía
+        // consigo misma.
+        const merienda = 30;
+        ok(`${Z} · el cumpleaños: el «desde» y el reparto de su pack (\`/catalog\` y la merienda de la instancia)`, Boolean(pack) && dudas.includes(`desde ${euros(pack.from_price_cents)} por niño`) && dudas.includes(`${pack.duration_min - merienda} minutos saltando, merienda`), pack ? `${pack.id}: ${euros(pack.from_price_cents)}, ${pack.duration_min} min` : 'sin pack');
         ok(`${Z} · los días especiales: la etiqueta del panel`, dudas.includes(`${especial.label} tienen tarifa especial`));
         const puertas = await page.$$eval('#dudas a', (as) => as.map((a) => new URL(a.href).pathname + new URL(a.href).hash));
         ok(`${Z} · sus puertas: ${zona === 'kids' ? 'a Jump, ' : ''}al cumpleaños y «aquí» al precio`, (zona !== 'kids' || puertas.includes('/jump')) && puertas.includes('/cumpleanos') && puertas.some((p) => p.endsWith('#precio')), puertas.join(' '));

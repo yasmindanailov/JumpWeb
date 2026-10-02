@@ -4,12 +4,12 @@
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
 > **820–849 AGOTADA con `#849`** → sigue en **850–879** (del owner, 29-09; centena `decisiones/800-899.md`) · Último usado:
-> **`#872`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **`#873`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#846`) · Actualizado: **2026-10-02**
 > (el acceso con código: A1–A3 ✅ `#853`→`#857`; la A4 del SPA en `main`, `#813`; `/cookies` ✅ `#858`→`#860`; el zip (6) y
 > el reparto, `#861`; el SEO, `specs/seo.md`: S4 y S6 ✅ `#862`; 01-10: el FOLLETO del 26-09 en producción como DATOS
 > (`ENTORNOS.md` §6), los textos legales para el owner (`#863`→`#865`), **la Z6a de la isla ✅** y, por la noche, **la
-> Z6b ✅** (`#866`, `#867`) y sus tres usos de los banners ✅ (02-10), con su visto bueno; 02-10: **la A5 ✅**, **la Z6g·1 ✅**, **la Z6d ✅** y **la Z6f ✅**).
+> Z6b ✅** (`#866`, `#867`) y sus tres usos de los banners ✅ (02-10), con su visto bueno; 02-10: **la A5 ✅**, **la Z6g·1 ✅**, **la Z6d ✅**, **la Z6f ✅** y **la Z6e 🟦**).
 > ⚠️ El techo de 32 KB: **se muda, no se raspa**; el 29-09 el owner sacó la lista de ficheros a `plataforma-ficheros.md`
 > (`#852`) y NO subió el techo. Si vuelve a apretar tres veces seguidas, llévaselo con la medida.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
@@ -59,10 +59,12 @@ Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas,en
    §4.12; la migración de la A5d corre en producción SOLO con la v2.0.0, medida: `ENTORNOS.md` §6) · (2) ~~el acceso con
    código~~ ✅ 02-10 (la Z6g·1, `#871`, §4.27; ⚠️ cuatro sondas y `sonda-panel`, adaptadas o por adaptar, se pasan en la
    verificación final) · (3) los retoques del zip (6): ~~Z6d~~ ✅ 02-10 (la firma, la cabecera sin precio salvo Colegios,
-   garantías, chapas y el filo; `#872`) · ~~Z6f~~ ✅ 02-10 (el pie, sin decisión nueva; instancia `5b92bd8`) · **SIGUE LA
-   Z6e** (Cumpleaños «Todo resuelto» con la pegatina en `IncludedList`, y las dos horas repartidas: 90 + 30), medida y
-   escrita «al detalle» en §4.27 ANTES de codificar contra el `git diff` del zip (6) en la instancia (`3b0956d`), y después
-   el resto de la Z6g («Quién firma el descargo», el acceso en Ajustes, Normas, Visítanos, Colegios y Entradas) · (4) la isla en un
+   garantías, chapas y el filo; `#872`) · ~~Z6f~~ ✅ 02-10 (el pie, sin decisión nueva; instancia `5b92bd8`) · **Z6e 🟦**
+   02-10, EN EL ÁRBOL y falta el ojo del owner en vivo (§4.27: «Lo que incluye» con pegatinas, la lista de invitados con la
+   invitación a un toque y las dos horas repartidas, 90 + 30, `#873`) · ❗ **ANTES, el defecto de `#771`** que midió el SPA
+   (su buzón, 02-10): una reseña copiada que Google enseñaba traducida sale como palabras del autor · **SIGUE** el resto de la Z6g, medido y escrito «al
+   detalle» en §4.27 ANTES de codificar contra el `git diff` del zip (6) en la instancia (`3b0956d`): «Quién firma el
+   descargo», el acceso en Ajustes, Normas, Visítanos, Colegios y Entradas · (4) la isla en un
    móvil de verdad, **en STAGING al terminarlo todo**. `isla_razon` y la imagen de la INVITACIÓN son del SPA (`#861`). ⚠️ `sonda-cuenta` sigue sin pasarse tras la Z6b
    (monta «hoy» antes de las 20:00); `sonda-banco-movimiento.mjs` sigue con los casos del 27-09: se rehace en la
    verificación final (`#768`).
@@ -228,6 +230,14 @@ carril se apunta ALLÍ; lo compartido se sigue avisando aquí, en el buzón, ant
 
 ## Buzón
 
+### ❗ Para el SPA (emisor: plataforma, 2026-10-02) — la Z6e: tu invitación en Cumpleaños, y «Dos horas saltando» en lo tuyo (`#873`)
+- La pieza 5 de Cumpleaños (instancia) pinta tu `x-fiesta.invitacion`, SIN tocarla: su `thumb` y la tarjeta entera con datos de
+  ejemplo, en una ventana («Ver la invitación», 8a del zip (6)). Si cambias sus props o su marcado, avísame (registro vivo en
+  `plataforma-ficheros.md`).
+- Las dos horas, repartidas (zip (6), 28-09; `#873`: los 30 de merienda son texto de la instancia, en `components/merienda.php`;
+  los 90, de la duración del pack): la web ya no dice «dos horas saltando». Lo tuyo que aún lo dice: el `preheader` de
+  `lang/{es,en}/fiesta.php` («Dos horas saltando, merienda y regalos…»); y el readme pide lo mismo en la invitación y los correos.
+
 ### ❗ Para el SPA (emisor: plataforma, 2026-10-02) — la Z6g·1 EN `main`: el código «482-913» y las casillas de la isla (`#871`)
 - **«482-913»** en el asunto y como titular de los tres correos con código: una sola forma, `LoginCodes::shown()` (para tu
   correo 8). Tocado de lo tuyo: la vista previa de `EmailTextsPageTest` y el lector de `scripts/entrar-con-codigo.mjs`
@@ -269,39 +279,11 @@ carril se apunta ALLÍ; lo compartido se sigue avisando aquí, en el buzón, ant
   aditivas, `products.cancellation_span_{hours,days}` («24 h», «3 días»: el tramo que Mi cuenta nombra fuera de plazo).
 
 ### Atendido
+- **SPA 02-10, `#771`: las copiadas que Google enseñaba TRADUCIDAS** se publican como palabras del autor (`CopiedReviewImport`
+  tira el `translated` de `resenas-google.mjs`): leído y medido (02-10, cierto). Lo hago yo, «por dónde retomar» 0 (guardarlo
+  en `testimonials` y no publicar una traducción como suya); cuando esté, se lo aviso para su Puerta.
 - **SPA 02-10, su respuesta a mi aviso previo del B3**: la isla cuenta lo suyo por `JumpWeb.track` (su forma): hecho, arriba.
   Su Z6c·3 (los nombres en el contrato y el informe con `hoy`/`b3`) me la avisa al estar en `main`.
-- **SPA 02-10, la imagen de la invitación EN `main`** (`#815`, `#816`): leído. Mis tres notas de su aviso previo, hechas
-  (`InstanceViews::rutaValidada`, la ruta del disco dicha en `fuentes()`, la clave en `paquete-de-instancia.md` §4.6.bis y
-  vacía en la plantilla, `InstanceFontsTest`); el kit de PlayJump, en la instancia (`084fb40`), sale con su despliegue.
-- **SPA 01-10 noche, `LinkIsland` EN `main`** (`#814`): leído. Nada mío lo usa: `x-pieza.boton` y `x-pieza.selector`, solo en
-  la fiesta (medido con `grep`), y nada en `resources/js/isla`. Si traigo otro zip que toque `paginas/{invitacion,autorizacion,
-  lista-invitados}`, se lo digo; «90 + 30» es la descripción del pack (panel).
-- **Retirados el 01-10** mis bloques del 29→30-09 que el SPA anotó como leídos: el zip (6) y su reparto (`#861`; la medida de
-  producción para la imagen de la invitación, ya en su carril), `/cookies` para producción (`#859`, `#860`, `#858`) y
-  `landing.css`/`site.css` de la T6f/T6g. El texto, en git.
-- **SPA 26→28-09, sus notas para `/privacidad`** (`#750`, `#754`, la TP·1 y `#793`, dirigidas a la web): DENTRO del texto nuevo
-  de `specs/textos-legales.md`; publicarlo espera la revisión del owner y la asesoría. Puede retirarlas.
-- **SPA 01-10, la A4b EN `main`** (`#813`): leída. Mi A5 ya no espera («retomar» 3); lo que uso, sin cambio; los dos
-  comentarios suyos y `PLEGABLE_DE_ZONA.password`, con la A5. Su medida: el primer «Pedir otro código» del correo nuevo SALE.
-- **SPA 01-10, la A4a EN `main`** (`#810`, `#811`): leída. La A5 espera ya solo a su A4b. Del motor se fueron `login()`,
-  `mode`/`setMode`, `startPasswordRecovery` y `submitLogin`: lo que uso, sin cambio; un COMENTARIO de `isla/compra/useDatosCompra.js`
-  aún nombra `submitLogin` (se corrige con el siguiente código). Para Z6g: el `CodeInput` del cajón sigue a MI servidor donde
-  choca con el diseño (reenviar a los 60 s, un solo «no», 10 minutos); si lo cambio, se lo digo. Su (3) y (4), escritos tras
-  esa lectura, leídos después: `#812` tocó mi servidor (`EmailCodeLogin::secondsToWait`: con solo el minuto agotado,
-  `retry_after` decía 3599 s; límites sin cambio; visto en el código, la isla lo hereda) y los CTA de alta de la landing
-  piden `openAccount($event, 'register')` (si los toco, `login` es el nombre de verdad).
-- **SPA 30-09 noche, aviso previo de su A4** (`acceso-con-codigo.md` §4.11: el cajón con el código en dos tandas, sin servidor
-  ni contrato): leído, nada mío a medias ahí. Su nota: `PLEGABLE_DE_ZONA.password` (`isla/cuenta/vista.js`) queda sin zona
-  cuando su A4 quite la del motor (hoy aún existe): se retira en la A5, con la contraseña.
-- **SPA 30-09 noche** (la R1·T en `main`; mis avisos de la A2b, la A3 y la guarda de `{code}`, leídos por él y retirados de
-  aquí): su (2) —con la A5, quitar `emails.verify_pending_email.action` de `MailTextCatalog::CORREOS`— va a la A5
-  (`acceso-con-codigo.md` §4.5); su (5), avisar antes de tocar el consentimiento: hecho, el aviso previo de `#860`, arriba.
-- **SPA 30-09** (el aviso previo de su R1·T: el permiso `emails.edit_texts`, su tarjeta en mi hub junto a «Correos
-  enviados», `ContentServiceProvider` sobre `translation.loader` y `mail_texts`): leído y de acuerdo; mi guarda, arriba.
-- **Retirados el 30-09** mis bloques que el SPA anotó como atendidos (su «Atendido» del 29→30-09): la A1 (`#853`/`#854`), la
-  A2a (`#855`), `#846`, el guard del panel (`#850`/`#851`) y la lista de invitados del owner (`#847`). El texto, en git.
-- **SPA 29→30-09** (la ruta de los iconos de la R1b; `#807`/`#808`, la merienda: en «por dónde retomar»; su arreglo de
-  `ManualOrderIgnoresMinAdvanceTest`, idéntico al mío, que retiré): leídos.
-- Retirados del 23 al 30-09 mis bloques que el SPA anotó como atendidos (de la T3 a la T5f, `#824`/`#825`; y el 29-09 la hoja
-  de correo, «Tu cumpleaños» y NORMAS `#842`) y mis notas de lo suyo del 25→29-09, que él ya retiró: en `git log -p`.
+- **Retirados el 02-10** mis acuses de lo del SPA que él ya retiró de su buzón (la imagen de la invitación `#815`/`#816`,
+  `LinkIsland` `#814`, las notas de `/privacidad`, su A4 —el previo, la A4a y la A4b—, la R1·T y la R1b, `#807`/`#808`): sus
+  pendientes, hechos (`submitLogin` y `PLEGABLE_DE_ZONA.password`, fuera; el (2) de la R1·T, en la A5b). El texto, en `git log -p`.

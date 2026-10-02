@@ -2712,6 +2712,42 @@ Todo en la INSTANCIA (`site-footer`, `opening-hours`, `entradas.css`); el produc
 el owner en vivo. `sonda-compra-directa` fotografiaba `.pj-pie__base` (ya no existe): ahora `.pj-pie__letra` (SIN correr:
 en la verificación final). **Hecho (02-10)**: instancia `5b92bd8`; las ocho páginas con pie, 200 en local.
 
+#### La Z6e al detalle — `[DECIDIDO owner]` 2026-10-02, `#873` (medido el 02-10, antes de codificar, contra el `git diff` del zip (6) en la instancia, `3b0956d`)
+Todo en la INSTANCIA (`web/`, `lang/`, `publico/instancia/{css,js}`); el producto no cambia: usa la invitación del SPA
+(`x-fiesta.invitacion`, `#743`) sin tocarla. Fuente: el readme («Todo resuelto», «Rehecha el 29-09 (variante 6a)», «Las dos
+horas, repartidas (28-09)»), `IncludedList`, `AfterBookingPanel`, `Sticker`, `piezas-1-4.jsx`, `piezas-5-6.jsx`,
+`cumpleanos.card.html`, `entradas/contenido.js` y `portada.card.html`.
+**Lo medido**: (1) «Lo que incluye» y la lista de invitados siguen con la cara del 27-09: la marca en cada cosa, la muestra
+grande de la invitación (dibujada, con botones de mentira) y los iconos en lima, el color del regalo. (2) Lo que incluye son
+TEXTOS del panel (`features`; los regalos, promociones), SIN icono. (3) La invitación de verdad ya existe en el producto, con
+su miniatura (`variant="thumb"`); pinta con los roles `--fiesta-*` (`css/fiesta.css` de la instancia, 1,9 KB), que
+Cumpleaños no carga. (4) «Dos horas saltando», «a vuestro ritmo» y «a repartir como queráis» salen en Cumpleaños (cabecera,
+pieza 3, lo que incluye, la hora extra, la razón de la isla sin días), en «¿Hacéis cumpleaños?» de Kids y Jump y en el
+selector de planes (portada y Visítanos), en es/en/fr; en el producto, en el `preheader` de `lang/*/fiesta.php` (del SPA).
+(5) Los 30 de merienda no son un dato de ningún sitio.
+**Lo que se hace** (una tanda; el owner la mira en vivo):
+- **Las dos horas, repartidas**: `web/components/merienda.php`, el ÚNICO sitio de los 30 minutos (`#873`); los 90 salen de
+  la duración del pack (`:saltando` y `:merienda`, junto a `:pack_duracion` en los tres modelos). Los textos del zip: la
+  cabecera, la pieza 3 («Primero saltan. Luego, la merienda.» y su porqué), la nota de lo que incluye, la hora extra sin «a
+  repartir», la duda de Kids y Jump, el selector y la razón de la isla sin días (el orden, sin cifras). Si la duración no da
+  para repartir, lo de antes sin la promesa: `texto_sin`, `nota_sin` y el `a_sin` de las dudas (nunca un marcador suelto).
+- **«Lo que incluye» con pegatinas** (6a): `included-list` con `sticker` (el producto, cian y a 48; lo demás, a 40 y del color
+  de su puesto; el regalo, en su caja lima y fuera de la rejilla) y una rejilla SIN huérfana (4, 2 × 2 o 1; 200 px por cosa):
+  qué columnas valen para `n` lo dice el servidor y `@container` elige por el ancho. Los iconos los pone la instancia sobre los
+  textos del panel, por palabra (`comun.iconos_incluye`, en cada idioma); sin palabra, la marca. También en Colegios.
+- **La lista de invitados** (6a): el titular sin icono y al tamaño de los otros, los caminos uno debajo de otro, los iconos en
+  cian, el relleno por su ancho; y **la invitación a un toque** (8a): su miniatura y «Ver la invitación», que abre la de verdad
+  con datos de ejemplo (Lía, 7 años, el próximo sábado de 17:00 a lo que dure el pack, quién invita, unas palabras y las
+  pistas del regalo) en un `<dialog>` NATIVO: la capa superior, por encima de la isla sin pelear `z-index`, con el resto
+  inerte; Esc, la X y el fondo lo cierran. Solo con la invitación encendida en todos los packs (`#835`).
+- **La pieza 5**: lo que incluye y la lista, lado a lado desde 980 px; los pasos, debajo y a lo ancho.
+**Fuera**: el `preheader` de la fiesta y los correos (del SPA, en el buzón). **Verificación**: las páginas que lo pintan
+(Cumpleaños, Kids, Jump, Colegios, la portada y Visítanos), 200 en local y lo nuevo en su HTML; el ojo del owner, en vivo.
+**En el árbol (02-10)**, instancia `b359e30`: lo de arriba, en es/en/fr y sin marcadores sueltos (la rama sin reparto, medida
+con un pack de 30 min); además, los regalos llevan también su icono por palabra (en local, calcetines y cono son REGALOS del
+pack, no «lo que incluye»: salen en su caja lima). `sonda-entradas` mira ya «90 minutos saltando» (la merienda, tecleada).
+Falta el ojo del owner en vivo.
+
 ## 5. Impacto en invariantes
 
 - `PAY-*`: solo si entra Bizum; entonces `VERIFY_CONC=1` y la lista del `CRITICAL_RE`.

@@ -70,6 +70,9 @@ dueño es el carril de la web/reseñas—) ·
 > Mudado VERBATIM del buzón del carril el 30-09 (`#861`: el carril no cabía en sus 32 KB). Era el aviso al SPA del 25→26-09
 > y es un registro vivo: si el SPA cambia algo de aquí, avisa. (Su «Mapa y reseñas (Google)» ya dice «Mapa (Google)»: `#859`.)
 
+- Z6e (`#873`): la INVITACIÓN DE VERDAD en la pieza 5 de Cumpleaños de la instancia, `x-fiesta.invitacion` (su `thumb` con el
+  logo, y la tarjeta entera con `name`, `age`, `date`, `time`, `place`, `host`, `words` y `gifts` de ejemplo, en una ventana),
+  con los roles `--fiesta-*` de la `fiesta.css` de la instancia. Si cambian sus props o su marcado, avísame.
 - Z6g·1 (`#871`): la regla de las casillas del código, `sidebar/code-input.js` (la isla la importa; mismo código, dos carcasas).
 - `#773`: Mi cuenta en la isla (spec `isla-y-landing-nueva.md` §4.13: cada tanda dice lo tocado). De lo tuyo:
   `Sidebar.vue` (+3 líneas: con la isla monta `isla/SeccionCuenta.vue`) y `carcasa.js::superficieDe`; tus stores y
