@@ -1239,7 +1239,10 @@ con tarjetas impares, la última a lo ancho (la A, elegida con la B y la C rende
 - **P4 · el correo** «Falta elegir…», el día antes del plazo (cada hora con su marca, como la víspera), editable (R1·T) y en
   `EmailUtm`.
 
-### 4.21 P3 al detalle · los GRUPOS DE OPCIONES, genéricos (`[PENDIENTE: owner]`, 02-10, 21:35) — medido, sin código
+### 4.21 P3 al detalle · los GRUPOS DE OPCIONES, genéricos (`[DECIDIDO owner]` `#914`, 02-10, 21:40: «A» y «No se les pide»)
+
+▶ **Lo decidido**: la propuesta A tal cual, y las fiestas vendidas ANTES de crear el grupo no lo ven en su lista (ni pregunta,
+ni «falta elegir», ni correo): lo vendido se rige por la configuración con la que se vendió, y lo lleva el parque.
 
 **El encargo** (owner, 02-10): «esa config debe ser profesional y escalable… no sé si ya tenemos configurable por familia
 seleccionar una opción de complemento incluido o no, también puede ser de pago… lo de obligatorio sí que es nuevo… nada
