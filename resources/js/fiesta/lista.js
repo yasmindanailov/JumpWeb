@@ -114,8 +114,11 @@ function lista(form) {
     const valorDe = (el) => (el.type === 'checkbox' || el.type === 'radio' ? (el.checked ? el.value : '') : el.value);
     campos().forEach((el) => inicial.set(el, valorDe(el)));
     // Cada «Al final viene» pendiente de guardar (su `rejoin[]`) es un cambio más. Desde K2 (`#807`) cada tarta es un campo
-    // como cualquier complemento, y «Sin tarta» una casilla: cuentan como los demás.
-    const cambios = () => campos().filter((el) => inicial.has(el) && inicial.get(el) !== valorDe(el)).length
+    // como cualquier complemento, y «Sin tarta» una casilla: cuentan como los demás. Una PREGUNTA de radios (un grupo de
+    // opciones, `#914`) es UN cambio aunque se muevan dos: la que se marca y la que se desmarca.
+    const cambios = () => new Set(campos()
+        .filter((el) => inicial.has(el) && inicial.get(el) !== valorDe(el))
+        .map((el) => (el.type === 'radio' ? `radio:${el.name}` : el))).size
         + qa('input[type="hidden"][name="rejoin[]"]', form).length;
 
     // ── Cada fila: abrir y cerrar, el resumen que se reescribe al teclear, Listo, Quitar con deshacer ──

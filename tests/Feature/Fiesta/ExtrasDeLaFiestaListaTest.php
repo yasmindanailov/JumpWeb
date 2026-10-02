@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Fiesta;
 
+use App\Domain\Booking\Models\AddonChoiceGroup;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\ProductAddon;
 use App\Domain\Booking\Models\TicketType;
@@ -379,7 +380,82 @@ class ExtrasDeLaFiestaListaTest extends TestCase
         $this->assertStringContainsString('Puedes cambiar la lista hasta', $this->pagina($r, $host));
     }
 
+    // ── `#914` (P3·3 de §4.21): un GRUPO DE OPCIONES es UNA pregunta de una respuesta ─────────────────────────────────────
+
+    public function test_a_choice_group_is_one_question_with_one_answer_and_says_what_is_missing(): void
+    {
+        ['reservation' => $r, 'host' => $host] = $this->mountParty();
+        [$sandwich, $pizza] = $this->merienda($r, required: true);
+
+        $z4 = $this->zona4($this->pagina($r, $host));
+        $this->assertSame(1, preg_match('#<div class="pli-pregunta" data-pregunta="merienda"[^>]*>(.*?)</fieldset>#s', $z4, $pregunta), 'la pregunta');
+        $this->assertStringContainsString('¿Qué merienda?', $pregunta[1]);
+        $this->assertSame(2, substr_count($pregunta[1], 'name="choices[merienda]"'), 'una respuesta entre dos opciones');
+        $this->assertStringContainsString('Falta elegir', $pregunta[1]);
+        $this->assertStringContainsString('Uno para cada niño (6).', $pregunta[1]);
+        $this->assertStringContainsString('Incluido', $pregunta[1], 'no «0,00 €» ni su tarifa');
+        $this->assertStringNotContainsString('No, gracias', $pregunta[1], 'hay que elegir: sin «ninguna»');
+        $this->assertStringNotContainsString('value="'.$sandwich->id.'" checked', $pregunta[1], 'sin marcada de serie');
+        foreach ([$sandwich, $pizza] as $opcion) {
+            $this->assertDoesNotMatchRegularExpression('#name="addons\[\d+\]\[product_id\]" value="'.$opcion->id.'"#', $z4, 'no se pinta también como tarjeta');
+        }
+
+        // Se elige desde la página: la línea, una para cada niño; y ya no falta nada.
+        $this->guardar($r, $host, ['choices' => ['merienda' => (string) $pizza->id]]);
+        $this->assertSame(6, $this->cantidades($r)[$pizza->id] ?? null);
+        $z4 = $this->zona4($this->pagina($r, $host));
+        $this->assertMatchesRegularExpression('#value="'.$pizza->id.'" checked#', $z4);
+        $this->assertStringNotContainsString('Falta elegir', $z4);
+
+        // Y cambiar de opción es la otra respuesta: la de antes se va.
+        $this->guardar($r, $host, ['choices' => ['merienda' => (string) $sandwich->id]]);
+        $this->assertSame(6, $this->cantidades($r)[$sandwich->id] ?? null);
+        $this->assertSame(0, $this->cantidades($r)[$pizza->id] ?? null);
+    }
+
+    public function test_an_optional_group_offers_no_thanks_marked_by_default(): void
+    {
+        ['reservation' => $r, 'host' => $host] = $this->mountParty();
+        $this->merienda($r, required: false);
+
+        $z4 = $this->zona4($this->pagina($r, $host));
+
+        $this->assertMatchesRegularExpression('#value="none" checked#', $z4, '«No, gracias», la de serie');
+        $this->assertStringContainsString('No, gracias', $z4);
+        $this->assertStringNotContainsString('Falta elegir', $z4, 'no hay que elegir');
+    }
+
+    public function test_closed_without_a_choice_the_question_says_the_park_decides(): void
+    {
+        ['reservation' => $r, 'host' => $host] = $this->mountParty();
+        $this->merienda($r, required: true);
+        $this->plazoDeLaLista(24 * 30);
+
+        $z4 = $this->zona4($this->pagina($r, $host));
+
+        $this->assertStringContainsString('Sin elegir: lo decide el parque.', $z4);
+        $this->assertStringNotContainsString('Falta elegir', $z4, 'cerrada, ya no se pide');
+        $this->assertSame(2, preg_match_all('#name="choices\[merienda\]"[^>]* disabled#', $z4), 'los radios, deshabilitados: no se envían');
+    }
+
     // ── Montaje ─────────────────────────────────────────────────────────────────────────────────────
+
+    /**
+     * La merienda como GRUPO DE OPCIONES (`#914`): «¿Qué merienda?», Sándwich y Pizza, incluidas y una por niño.
+     *
+     * @return array{0: TicketType, 1: TicketType}
+     */
+    private function merienda(OrderItem $r, bool $required): array
+    {
+        $tipo = $this->tipo($r);
+        AddonChoiceGroup::create(['product_id' => $tipo->id, 'key' => 'merienda', 'title' => ['es' => '¿Qué merienda?'], 'is_required' => $required]);
+        $opcion = ['choice_group' => 'merienda', 'quantity_mode' => ProductAddon::MODE_PER_GUEST, 'is_included' => true];
+
+        return [
+            $this->extra($tipo, 'Sándwich', 250, $opcion, ['family' => ['es' => 'Merienda']]),
+            $this->extra($tipo, 'Pizza', 250, $opcion, ['family' => ['es' => 'Merienda']]),
+        ];
+    }
 
     private function tipo(OrderItem $r): TicketType
     {

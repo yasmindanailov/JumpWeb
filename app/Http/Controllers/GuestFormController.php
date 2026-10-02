@@ -293,13 +293,16 @@ class GuestFormController extends Controller
         // LA TARTA (K2 de `fiesta-sistema-nuevo.md` §4.17, `#807`): cada tarta viaja en `addons[]` como cualquier complemento
         // —varias a la vez— y el reconciliador sigue siendo el único que toca el dinero (R1, R2, escrituras asimétricas).
         $desired = $this->submittedGuestFormArray($request, 'addons');
+        // LOS GRUPOS DE OPCIONES (`[DECIDIDO owner]` `#914`): cada pregunta viaja como `choices[<clave>]` —el id elegido o
+        // `none`— y aquí se traduce a cantidades (la elegida 1, las demás 0) para el MISMO reconciliador, que es quien decide.
+        $choices = $this->submittedGuestFormArray($request, 'choices');
         $cakeDeclined = $this->cakeDeclinedAnswer($request, $reservation);
         $extrasCents = 0;
-        if ($desired !== null) {
+        if ($desired !== null || $choices !== null) {
             $fresh = $reservation->fresh(['ticketType.addons', 'order', 'slot', 'children']);
             $changes = app(PostFormAddons::class)->reconcile(
                 $fresh,
-                self::desiredQuantities($desired),
+                self::desiredQuantities($desired ?? []) + self::choiceQuantities($fresh, $choices ?? []),
                 $this->guestFormVia($request),
                 null,
                 $this->addonsExpectedVersion(
@@ -692,6 +695,38 @@ class GuestFormController extends Controller
         foreach ($rows as $row) {
             if (is_array($row) && isset($row['product_id'], $row['quantity'])) {
                 $out[(int) $row['product_id']] = (int) $row['quantity'];
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * Las respuestas a los GRUPOS DE OPCIONES (`#914`), en cantidades: de cada grupo que la página manda, la elegida a 1 y
+     * las demás a 0; `none`, todas a 0. Un grupo que no viene no se toca (D5), y una respuesta que no es de sus opciones
+     * deja el grupo como estaba. Lo que esto NO decide —«elige una», si hay que elegir, el sello— lo decide el reconciliador.
+     *
+     * @param  array<mixed>  $choices
+     * @return array<int, int>
+     */
+    private static function choiceQuantities(?OrderItem $reservation, array $choices): array
+    {
+        if ($reservation === null || $choices === []) {
+            return [];
+        }
+
+        $out = [];
+        foreach (app(PostFormAddons::class)->choiceGroupsFor($reservation) as $group) {
+            $answer = $choices[$group->key] ?? null;
+            if (! is_scalar($answer)) {
+                continue;
+            }
+            $chosen = (string) $answer === 'none' ? null : (int) $answer;
+            if ($chosen !== null && ! in_array($chosen, $group->addonIds, true)) {
+                continue;
+            }
+            foreach ($group->addonIds as $id) {
+                $out[$id] = $id === $chosen ? 1 : 0;
             }
         }
 

@@ -21,6 +21,10 @@
     @if ($ni !== null)
     <div class="pli-ninos-g" id="pli-extras-ninos" data-ninos data-sois="{{ $ni['sois'] }}">
     <h3 class="pli-h3">{{ __('fiesta.lista.ninos.titulo') }}</h3>
+    {{-- Los GRUPOS DE OPCIONES (`#914`), arriba: son lo que hay que DECIDIR (la merienda), antes de lo que se añade. --}}
+    @foreach ($ni['preguntas'] as $p)
+        @include('fiesta.lista.pregunta-grupo', ['p' => $p])
+    @endforeach
     @if ($ta !== null)
         {{-- Sin aviso ni texto de plazo propio (`#912`, P1·b): la hora de la lista la dice la cabecera, siempre. --}}
         <div class="pli-tarta" id="pli-tarta" data-tarta data-sois="{{ $ta['sois'] }}">
@@ -66,6 +70,9 @@
                 <h3 class="pli-h3">{{ __('fiesta.lista.padres.titulo') }}</h3>
                 <p class="pli-sub">{{ __('fiesta.lista.padres.sub') }}</p>
             </div>
+            @foreach ($pa['preguntas'] as $p)
+                @include('fiesta.lista.pregunta-grupo', ['p' => $p])
+            @endforeach
             @if ($pa['adultos'] !== null)
                 <div class="pli-adultos" data-adultos>
                     <span class="pli-adultos-t"><strong>{{ __('fiesta.lista.padres.adultos') }}</strong><span>{{ __('fiesta.lista.padres.adultos_hint') }}</span></span>

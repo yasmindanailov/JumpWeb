@@ -190,6 +190,14 @@ return [
             'total' => ':x en total',
             'que_lleva' => 'Qué lleva',
         ],
+        // `#914` (§4.21, P3·3): la pregunta de un GRUPO DE OPCIONES («¿Qué merienda?»): elige una.
+        'grupo' => [
+            'ninguna' => 'No, gracias',
+            'falta' => 'Falta elegir',
+            'para_cada' => 'Uno para cada niño (:n).',
+            'precio_por_nino' => ':precio por niño',
+            'sin_elegir' => 'Sin elegir: lo decide el parque.',
+        ],
         // LA TARTA (F5, `PliZona4` y `PliAvisoTarta`; sin tarta grande: «Añadir otra tarta», `#749`).
         'tarta' => [
             // K2 (§4.17, `#807`): varias a la vez, una tarjeta por tarta («De 12 raciones»); debajo, sus raciones contra los niños

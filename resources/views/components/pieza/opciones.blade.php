@@ -1,10 +1,11 @@
-@props(['name', 'items' => [], 'value' => null, 'label' => '', 'hint' => '', 'error' => '', 'columns' => 'auto', 'size' => 'md'])
+@props(['name', 'items' => [], 'value' => null, 'label' => '', 'hint' => '', 'error' => '', 'columns' => 'auto', 'size' => 'md', 'badge' => '', 'badgeTone' => 'warn'])
 @php
     /*
      * El grupo de radios en forma de tarjeta (`forms/OptionCards.jsx`). Radio nativo debajo: el teclado y los lectores
      * de pantalla funcionan solos; el elegido y el `hover` los lee el CSS (`.pz-opciones` en `fiesta.css`). Con un
      * número de columnas: N o una, nunca un paso intermedio (la fórmula del diseño). Cada `item`: `value`, `title`,
-     * `description`, `price`, `was`, `includes[]`, `note`, `highlight`, `image`, `imageAlt`, `disabled`.
+     * `description`, `price`, `was`, `includes[]`, `note`, `highlight`, `image`, `imageAlt`, `disabled`. `badge`: una chapa
+     * junto al título (`#914`: «Falta elegir» en un grupo de opciones obligatorio); vacía, no se pinta.
      */
     $n = (int) $columns ?: 2;
     $cols = $columns === 'auto'
@@ -13,7 +14,7 @@
     $clases = 'pz-opciones'.($hint !== '' ? ' pz-opciones--pista' : '').($size === 'lg' ? ' pz-opciones--lg' : '').($error !== '' ? ' pz-opciones--error' : '');
 @endphp
 <fieldset {{ $attributes->class($clases) }}>
-@if ($label !== '')<legend class="pz-opciones__legend">{{ $label }}</legend>@endif
+@if ($label !== '')<legend class="pz-opciones__legend">{{ $label }}@if ($badge !== '')<span class="pz-opciones__chapa"><x-pieza.chapa :tone="$badgeTone" size="sm">{{ $badge }}</x-pieza.chapa></span>@endif</legend>@endif
 @if ($hint !== '')<p class="pz-opciones__pista">{{ $hint }}</p>@endif
 <div class="pz-opciones__rejilla" style="grid-template-columns: {{ $cols }};">
 @foreach ($items as $it)

@@ -1303,6 +1303,18 @@ apagan (el formulario y el saneo). Tres acciones de auditoría nuevas, catalogad
 sus controles: suelta no se incluye, la clave no se repite ni se mueve, sin opciones sí se borra); 501 del catálogo, la lista y
 el post-form; Larastan y Pint. Dos casos viejos re-apuntados: el grupo se crea antes de elegirlo.
 
+**🟦 P3·3 · la lista — HECHA (02-10 noche, en su rama; falta el ojo del owner)**. Cada grupo es UNA pregunta de una respuesta
+(`fiesta/lista/pregunta-grupo`, con las `OptionCards` del sistema, `x-pieza.opciones`, que gana una chapa junto al título):
+arriba de su sección (la de los niños, o la de los adultos si sus opciones son de ese bloque), con el título del grupo, cada
+opción con su foto, «Qué lleva» y «Incluido» (o su precio, «por niño» si va por niño), «Uno para cada niño (14).» si todas lo
+son, sin marcada de serie y «Falta elegir» si hay que elegir, «No, gracias» marcado si no; cerrada, los radios deshabilitados y,
+sin elegir, «Sin elegir: lo decide el parque.». Sus opciones salen de las tarjetas (no se pintan dos veces). Viaja como
+`choices[<clave>]` y `GuestFormController::choiceQuantities()` lo traduce a cantidades para el MISMO reconciliador. En `lista.js`,
+una pregunta es UN cambio en la isla aunque se muevan dos radios. Verificación: `ExtrasDeLaFiestaListaTest` +3 (la pregunta,
+elegir y cambiar desde la página; la opcional con «No, gracias»; cerrada sin elegir); 894 vecinos; ESLint, `node --test`,
+Larastan, Pint. En la local, `ojo-p3.php` (en la carpeta de auditoría, fuera de git; con `OJO=desmontar`): el grupo en el KIDS y el JUMP, fechado el
+01-09 para que lo vean sus fiestas de prueba —en producción, lo vendido antes NO lo ve—.
+
 ## 5. Impacto en invariantes
 
 | ID | Cómo |

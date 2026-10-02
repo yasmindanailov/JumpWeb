@@ -11,6 +11,7 @@ use App\Domain\Booking\Services\GuestAgeMixReader;
 use App\Domain\Booking\Services\GuestCountPolicy;
 use App\Domain\Booking\Services\ItemEditPricing;
 use App\Domain\Booking\Services\PartyInvitations;
+use App\Domain\Booking\Services\PostFormAddons;
 use App\Domain\Identity\Contracts\HonoreeCoverage;
 use App\Domain\Identity\Models\Dependent;
 use App\Domain\Identity\Models\User;
@@ -561,7 +562,10 @@ final class ListaDeInvitados
             ];
         };
         $abiertos = static fn (array $lote): bool => ! $readonly && collect($lote)->contains(fn (PostFormAddonView $a): bool => ! $a->closed);
-        $porBloque = static fn (?string $bloque): array => array_values(array_filter($addons, fn (PostFormAddonView $a): bool => $a->block === $bloque));
+        $preguntas = self::preguntas($addons, $reservation, $readonly, $sois);
+        // Las opciones de un GRUPO van en su pregunta, no en tarjetas: fuera de los bloques, o se pintarían dos veces.
+        $sueltasDeGrupo = array_values(array_filter($addons, fn (PostFormAddonView $a): bool => $a->group === null));
+        $porBloque = static fn (?string $bloque): array => array_values(array_filter($sueltasDeGrupo, fn (PostFormAddonView $a): bool => $a->block === $bloque));
         $sueltos = collect($porBloque(null))->sortBy(fn (PostFormAddonView $a): int => $a->closed ? 1 : 0)->values()->all();
 
         // ── LA TARTA (K2 de §4.17, `#806`/`#807`): VARIAS A LA VEZ. Una tarjeta por tarta del panel (su foto, «De 12
@@ -586,7 +590,7 @@ final class ListaDeInvitados
         // ── PARA LOS PADRES ──
         $deLosPadres = $porBloque(ProductAddon::BLOCK_ADULTS);
         $padres = null;
-        if ($deLosPadres !== []) {
+        if ($deLosPadres !== [] || $preguntas['padres'] !== []) {
             $abierto = $abiertos($deLosPadres);
             $clave = $type->adultsFieldKey();
             $familias = [];
@@ -602,8 +606,10 @@ final class ListaDeInvitados
                     'valor' => (int) ($reservation->event_data[$clave] ?? 0),
                 ] : null,
                 'familias' => array_map(fn (string $f, array $t): array => ['titulo' => $f, 'tarjetas' => $t], array_keys($familias), array_values($familias)),
-                // «¿Algo para los padres mientras saltan?» (zona 3): abierto y nada de los padres GUARDADO.
-                'nada_guardado' => ! collect($deLosPadres)->contains(fn (PostFormAddonView $a): bool => $a->quantity > 0),
+                // `#914`: sus grupos de opciones, una pregunta cada uno, arriba.
+                'preguntas' => $preguntas['padres'],
+                // «¿Algo para los padres mientras saltan?» (zona 3): abierto y nada de los padres GUARDADO (de grupo o no).
+                'nada_guardado' => ! collect($addons)->contains(fn (PostFormAddonView $a): bool => $a->block === ProductAddon::BLOCK_ADULTS && $a->quantity > 0),
                 'ver' => $titulos !== []
                     ? __('fiesta.lista.padres.ver', ['familias' => self::enumera(array_map(fn (string $f): string => Str::lower($f), $titulos))])
                     : __('fiesta.lista.padres.ver_generico'),
@@ -646,7 +652,9 @@ final class ListaDeInvitados
             'hay' => $addons !== [],
             'tarta' => $tarta,
             'padres' => $padres,
-            'ninos' => $tarta !== null || $grupos !== [] ? ['grupos' => $grupos, 'sois' => $sois] : null,
+            'ninos' => $tarta !== null || $grupos !== [] || $preguntas['ninos'] !== []
+                ? ['grupos' => $grupos, 'sois' => $sois, 'preguntas' => $preguntas['ninos']]
+                : null,
             // El pie dice CÓMO se pagan; hasta CUÁNDO, la cabecera (`#912`: un plazo, una vez).
             'pie' => __('fiesta.lista.extras.pie'),
             'total' => $total,
@@ -686,6 +694,60 @@ final class ListaDeInvitados
         $cierra = app(GuestCountPolicy::class)->deadlineFor($reservation);
 
         return $cierra === null ? null : CarbonImmutable::instance($cierra)->setTimezone(DisplayTime::timezone());
+    }
+
+    /**
+     * LOS GRUPOS DE OPCIONES de la zona 4 (`[DECIDIDO owner]` `#914`, P3·3 de §4.21): «elige una», una PREGUNTA de una
+     * respuesta (`x-pieza.opciones`, las `OptionCards` del sistema: radio nativo, sin JavaScript también se elige) en vez de
+     * tarjetas con cantidad, en la sección de sus opciones (lo de los padres si son de ese bloque; si no, lo de los niños).
+     * Viaja como `choices[<clave>]` —el id elegido o `none`— y el servidor lo traduce a cantidades: quien decide es el
+     * reconciliador (`PostFormAddons::settleChoices()`). Sin marcada de serie si hay que elegir («Falta elegir», chapa); si no,
+     * «No, gracias» marcado. Cerrada, los radios van deshabilitados —no se envían: el grupo no se toca— y lo elegido se ve.
+     *
+     * @param  list<PostFormAddonView>  $addons
+     * @return array{ninos: list<array<string, mixed>>, padres: list<array<string, mixed>>}
+     */
+    private static function preguntas(array $addons, OrderItem $reservation, bool $readonly, int $sois): array
+    {
+        $out = ['ninos' => [], 'padres' => []];
+        $porId = collect($addons)->keyBy('productId');
+        foreach (app(PostFormAddons::class)->choiceGroupsFor($reservation, $addons) as $grupo) {
+            /** @var list<PostFormAddonView> $opciones */
+            $opciones = array_values(array_filter(array_map(fn (int $id): ?PostFormAddonView => $porId->get($id), $grupo->addonIds)));
+            if ($opciones === []) {
+                continue;
+            }
+            $abierta = $grupo->open && ! $readonly;
+            $items = array_map(fn (PostFormAddonView $o): array => [
+                'value' => (string) $o->productId,
+                'title' => $o->productName,
+                // Incluida, «Incluido»; de pago y por niño, su precio POR NIÑO; si no, su precio.
+                'price' => ! $o->included && $o->perGuest ? __('fiesta.lista.grupo.precio_por_nino', ['precio' => $o->note]) : $o->note,
+                'includes' => $o->features,
+                'image' => $o->imageUrl,
+                'disabled' => ! $abierta || $o->closed,
+            ], $opciones);
+            if (! $grupo->required) {
+                $items[] = ['value' => 'none', 'title' => __('fiesta.lista.grupo.ninguna'), 'disabled' => ! $abierta];
+            }
+            $primera = $opciones[0];
+            $out[$primera->block === ProductAddon::BLOCK_ADULTS ? 'padres' : 'ninos'][] = [
+                'clave' => $grupo->key,
+                'name' => 'choices['.$grupo->key.']',
+                'titulo' => $grupo->title !== '' ? $grupo->title : ($primera->family !== '' ? $primera->family : $primera->productName),
+                'valor' => $grupo->chosenAddonId !== null ? (string) $grupo->chosenAddonId : ($grupo->required ? null : 'none'),
+                'opciones' => $items,
+                'chapa' => $abierta && $grupo->pending() ? __('fiesta.lista.grupo.falta') : '',
+                // Cerrada sin elegir, lo que pasa ahora; si no, cuántas son (todas por niño: una para cada niño de la fiesta).
+                'pista' => match (true) {
+                    ! $abierta && $grupo->pending() => __('fiesta.lista.grupo.sin_elegir'),
+                    collect($opciones)->every(fn (PostFormAddonView $o): bool => $o->perGuest) => __('fiesta.lista.grupo.para_cada', ['n' => $sois]),
+                    default => '',
+                },
+            ];
+        }
+
+        return $out;
     }
 
     /** «combos y cubos de bebidas»: una lista escrita, con la «y» del idioma. */

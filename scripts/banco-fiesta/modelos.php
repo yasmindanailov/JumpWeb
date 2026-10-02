@@ -157,9 +157,12 @@ return [
                 ],
                 'nada_guardado' => ! $guardado,
                 'ver' => 'Ver combos y cubos',
+                // `#914`: el diseño no tiene grupos de opciones; sin preguntas.
+                'preguntas' => [],
             ],
-            // K1 de §4.17 (`#806`/`#807`): «Para los niños» lleva la tarta; el diseño no tiene sueltos, así que sin grupos.
-            'ninos' => ['grupos' => [], 'sois' => $RESERVA['reservados']],
+            // K1 de §4.17 (`#806`/`#807`): «Para los niños» lleva la tarta; el diseño no tiene sueltos, así que sin grupos (ni
+            // preguntas de grupos de opciones, `#914`).
+            'ninos' => ['grupos' => [], 'sois' => $RESERVA['reservados'], 'preguntas' => []],
             // El pie dice cómo se pagan; los plazos se fueron del pie con `#912` (desvío DECIDIDO del mockup): el de la lista, arriba.
             'pie' => 'Se pagan el día de la fiesta, en el parque.',
             'total' => $guardado ? '83'.$NB.'€' : '', 'elegidos' => $guardado ? 3 : 0, 'alguno_abierto' => true,

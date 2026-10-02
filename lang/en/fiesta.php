@@ -174,6 +174,13 @@ return [
             'total' => ':x in total',
             'que_lleva' => 'What’s included',
         ],
+        'grupo' => [
+            'ninguna' => 'No, thanks',
+            'falta' => 'Still to choose',
+            'para_cada' => 'One for each child (:n).',
+            'precio_por_nino' => ':precio per child',
+            'sin_elegir' => 'Not chosen: the park will decide.',
+        ],
         'tarta' => [
             'pregunta' => 'The cake?',
             'sin' => 'No cake',
