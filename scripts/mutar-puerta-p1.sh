@@ -351,6 +351,8 @@ mutar "reseña · sin bajar a las copiadas" "$DIA" \
   "return \$delPerfil !== [] ? \$delPerfil : self::filterMatching(\$palabras, \$this->copied(\$hoy));" "return \$delPerfil;"
 mutar "reseña · la copiada apagada sale" "$DIA" \
   "->where('is_active', true)" "->whereNotNull('id')"
+mutar "reseña · la copiada traducida sale (#874)" "$DIA" \
+  "            ->untranslated()" "            ->whereNotNull('id')"
 mutar "reseña · las opiniones propias salen" "$DIA" \
   "->where('origin', Testimonial::ORIGIN_GOOGLE)" "->whereNotNull('origin')"
 mutar "reseña · la copiada sin el mínimo" "$DIA" \

@@ -168,6 +168,8 @@ final class GateReviewOfTheDay
         return Testimonial::query()
             ->where('origin', Testimonial::ORIGIN_GOOGLE)
             ->where('is_active', true)
+            // La que Google enseñaba TRADUCIDA no son palabras de su autor (`#874`), como la ambigua del Perfil.
+            ->untranslated()
             // ⚠️ `whereDate` y no `where`: la columna es una FECHA, y SQLite la guarda como texto con su hora
             // («2026-09-02 00:00:00»), mayor que «2026-09-02» comparada como texto; el día del borde entraba con `>` y con
             // `>=` por igual en la suite, y en MySQL no (lo destapó el arnés, 02-10). Así los dos motores comparan días.

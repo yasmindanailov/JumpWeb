@@ -27,7 +27,7 @@ programa «producto e instancias» separa el producto de sus instancias.
 - [x] F4 · cajón empaquetable y login por token, contrato 1.1.0 · **CERRADA el 2026-09-19**: el token (`specs/token-bearer.md`, `#630`) y el cajón en cinco tandas (`specs/cajon-empaquetable.md` §4, `#631`→`#637`; su sonda, su juez y el anfitrión mínimo, allí). ⚠️ La compra de la T5, medida y **sin ojo del owner**
 - [ ] F5 · instancia PlayJump y la landing fuera, v2.0.0 · **ABIERTA el 19-09 por el CENSO** (`#639`). Detalle: `specs/instancia-y-landing-fuera.md` §4.1 y §4.6, y `specs/paquete-de-instancia.md`; aquí, los marcadores. **T1→T4 ✅** (`#640`→`#669`) · **la VÍA A y sus cuatro platos ✅** (`#670`→`#674`) · **el CENSO `#675` y sus cuatro hechos ✅** (`#676`, `#677`, contrato 1.17.0): **el menú, COMPLETO** ⚠️ La **T5** (cortar v2.0.0) es el final del programa entero, no de esta fase (`#670`)
 - [ ] Analítica (`specs/analitica.md`): T1 ✅ · T2 🟦 (T2e ⬜) · T3 ✅ · T4 ✅ · T5 🟦 (T5c ⬜) · T6 ✅ · T7 🟦 encuestas (anónimas ✅ `#757`) · **para decidir 🟦** (`#755`: T4 ✅, T5 ✗ `#800`, T6–T8 ⬜)
-- [ ] Landing nueva e isla (`specs/isla-y-landing-nueva.md` §0, `#681`·`#682`): T0→T3 ✅ · **T4 🟦** (§4.12) · **T5 ✅** (§4.13) · Z ✅ (§4.14, §4.16; `Medir` aplazado) · 1.ª pantalla ✅ (§4.15) · T6 ✅ §4.17–25 · `#758` ✅ §4.26 · zip (6): Z6a ✅ · Z6b ✅ (`#866`, `#867`) · los usos de `#867` ✅ · Z6c 🟦 (·1·2 ✅, ·3 SPA) · Z6d ✅ `#872` · Z6e ✅ `#873` · Z6f ✅ · Z6g ✅ (`#871`, `#875`) (§4.27)
+- [ ] Landing nueva e isla (`specs/isla-y-landing-nueva.md` §0, `#681`·`#682`): T0→T3 ✅ · **T4 🟦** (§4.12) · **T5 ✅** (§4.13) · Z ✅ (§4.14, §4.16; `Medir` aplazado) · 1.ª pantalla ✅ (§4.15) · T6 ✅ §4.17–25 · `#758` ✅ §4.26 · zip (6): Z6a ✅ · Z6b ✅ (`#866`, `#867`) · los usos de `#867` ✅ · Z6c 🟦 (·1·2 ✅, ·3 ✅; de punta a punta sin medir) · Z6d ✅ `#872` · Z6e ✅ `#873` · Z6f ✅ · Z6g ✅ (`#871`, `#875`) (§4.27)
 - [ ] Antes de desplegar (`#847`): **entrar con código** (`specs/acceso-con-codigo.md` ✅ `#848`·`#849`: A1 ✅ `#853`·`#854` · A2 ✅ `#855`·`#856` · A3 ✅ `#857` · A4a ✅ `#810`→`#812` · A4b ✅ `#813` · A5 ✅ `#869`·`#870` · A6 ⬜) · panel (`specs/panel-a-salvo.md`): guard ✅ `#850` · dirección ✅ · authenticator ✅ `#851` · SEO 🟦 · imágenes al compartir ⬜ · textos legales 🟦 (`specs/textos-legales.md`, `#863`) · la lista de invitados (SPA) ✅ `#805`
 - [ ] F6 · app nativa: spec con pila y alcance · pila decidida (`#627`): React Native + Expo en TypeScript, a confirmar con la prueba corta
 
@@ -98,7 +98,7 @@ programa «producto e instancias» separa el producto de sus instancias.
 - [x] El carril entero: 25 correos, molde, remitente, modo oscuro, bandeja, fiesta mixta y los dos del framework.
 - [ ] Los cuatro ámbar (§16) y el OJO del owner en Gmail y Outlook.
 - [ ] ▶ El REDISEÑO (`specs/correos-rediseno.md`, `#800`→`#804`): ✅ R1a la plantilla y R1b iconos (29-09) · ✅ R1·T textos
-  editables (30-09, revisada antes de `main`, con el visto bueno del owner) · R1·T2 (`#809`, tras la A4) · R1c · reserva · comerciales.
+  editables (30-09, revisada antes de `main`, con el visto bueno del owner) · ✅ R1·T2 (`#809`, 02-10) · R1c · reserva · comerciales.
 
 ### EL CAJÓN · FASE 4 DEL DISEÑO 🟦 — `carriles/spa.md` (`#550`→`#572`, el otro ordenador)
 - [x] Las 25 pantallas construidas (`#550`→`#568`) · T1 y T2 de `specs/celebracion-e-invitacion.md` (`#570`, `#571`).
@@ -111,6 +111,7 @@ programa «producto e instancias» separa el producto de sus instancias.
 - [ ] ▶ **LA FIESTA DEL SISTEMA NUEVO** (`specs/fiesta-sistema-nuevo.md` ✅ `#743`): T0→T4 y F1→F9 ✅ (`#747`→`#753`) · la
   lista del owner ✅ (`#805`, 29-09) · ✅ los complementos en dos (`#806`→`#808`, §4.17: K1 y K2 en código; K3, dato del panel).
 - [ ] El OJO del owner en un teléfono de verdad · el cuaderno de entrega del cajón · el botón del sistema.
+- [ ] La Puerta (`specs/puerta-nueva.md`): P1→P3 ✅ · el arnés entero, de noche.
 
 ### El PANEL: la exención del menor y el ROL DE PUERTA ✅ código — `#320`
 - [x] La exención del menor solo se rotula cuando es excepción; nace el rol `puerta`; «Puerta» sale del menú del admin.

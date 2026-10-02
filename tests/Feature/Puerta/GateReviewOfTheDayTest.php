@@ -113,6 +113,16 @@ class GateReviewOfTheDayTest extends TestCase
         $this->assertSame($apagada->id, $this->today()['id']);
     }
 
+    /** Una copiada que Google enseñaba TRADUCIDA no sale nunca, aunque esté activa (`#874`); quitada la marca, sí. */
+    public function test_a_copied_one_that_google_showed_translated_never_reaches_the_gate(): void
+    {
+        $traducida = $this->copied('Los monitores, un diez.', '2026-09-29', ['translated' => true]);
+        $this->assertNull($this->today());
+
+        $traducida->update(['translated' => false]);
+        $this->assertSame($traducida->id, $this->today()['id']);
+    }
+
     public function test_the_window_starts_at_the_park_midnight_thirty_days_ago(): void
     {
         $justo = $this->profile('Los monitores, un diez.', '2026-09-01 21:59:59');

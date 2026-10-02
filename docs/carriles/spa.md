@@ -7,27 +7,29 @@
 > **`acceso-con-codigo.md` §0** (la A4 del cajón ✅ en `main`) · `correos-rediseno.md` §0 ·
 > `fiesta-sistema-nuevo.md` §4.17–§4.19 · `analitica-para-decidir.md` §0 (en pausa, `#755`) · `encuestas.md` §0 y §4.7
 > (`#754`) · `analitica.md` §0 y §4.5 · `isla-y-landing-nueva.md` §4.11 · `celebracion-e-invitacion.md` §0 ·
-> `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 · `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-10-02, 14:00
-> (la imagen EN `main`, 🟦 hasta verla en WhatsApp; la Puerta ENTERA en `main`: P1, P2 y P3).
+> `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 · `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-10-02, 16:40
+> (la Puerta ENTERA y la Z6c·3 en `main`; el arnés entero de la Puerta, de noche).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`). El
 > contador de la suite va en el trailer del commit (`#618`), no aquí. **Se muda, no se raspa**: el detalle de
 > una feature baja a su spec (las trampas por tanda de la analítica T1→T5 viven en `analitica.md` §4.9,
 > mudadas verbatim el 24-09; las de la ficha de Google en su §9.1; las de la invitación en su §10.20).
 
-## Foto (2026-10-02, 06:00)
+## Foto (2026-10-02, 16:40)
 
+- ✅ **LA PUERTA ENTERA, EN `main` con el visto bueno del owner** (`puerta-nueva.md` §4.4): P1a (`#818`), P1b·P1c (`#819`),
+  P2 y P3 (`#910`), y la copiada TRADUCIDA fuera de la reseña del día (`#874`, de plataforma: `->untranslated()` en
+  `GateReviewOfTheDay::copied()`, con su prueba y su mutante, 1/1). Cada tanda, con su arnés verde. ▶ Falta el ENTERO, de
+  noche («retomar» 1b). En el tracker, su fila nueva bajo «EL CAJÓN · FASE 4».
+- ✅ **La Z6c·3 (la medida del B3) y la R1·T2 de los correos (`#809`), EN `main`** con el visto bueno; la Z6c·3, en
+  «retomar» 3. La isla ya emite los tres `isla_*` (`useIsla.js`); de punta a punta (navegador → libro → informe), sin medir.
 - 🟦 **La imagen de la invitación al compartir, I1→I3, EN `main` con el visto bueno del owner** («visto bueno ok», 02-10; la B,
   `#815`; `#816` sin caché; `fiesta-sistema-nuevo.md` §4.19): la dibuja el producto con GD en cada petición y la instancia pone
   el kit (`fuentes.imagen`, empujado: `084fb40`). Arnés `mutar-imagen-invitacion.sh` 33/33; sonda `sonda-imagen-invitacion.mjs`
   16/16. 🟦 hasta verla en WhatsApp en un teléfono, con el producto y la instancia desplegados (de noche, `#594`).
 - ✅ `LinkIsland` L1–L3 (`#814`) y la A4 (`#810`→`#813`), en `main` y aprobadas: su foto, mudada verbatim a `CARRIL-SPA.md` §9 (02-10).
 
-- ✅ La lista de invitados del owner (`#805`) y los complementos en dos (`#806`→`#808`; K3 sin código): su foto, mudada verbatim
-  a `CARRIL-SPA.md` §9 (01-10). ▶ La regla del owner: no se programa lo que el panel ya configura.
-- ✅ R1a y R1b de los correos, en `main` y aprobadas (29-09): su foto, en `CARRIL-SPA.md` §9. ✅ **La R1·T (los textos
-  editables, `#802`), en `main` con el visto bueno (30-09 noche)**, revisada antes midiendo los 29 correos bloque a bloque;
-  arnés 63/63 (`correos-rediseno.md` §4.2.2).
-- Los correos: sus cuatro decisiones del owner (`#800`→`#804`), mudadas verbatim a `CARRIL-SPA.md` §9 (30-09).
+- ✅ La lista del owner, los complementos, R1a, R1b y R1·T de los correos y sus decisiones (`#800`→`#808`): sus fotos, en
+  `CARRIL-SPA.md` §9 (mudadas verbatim el 02-10 por la tarde). ▶ La regla del owner: no se programa lo que el panel ya configura.
 - ⏸ **LA ANALÍTICA PARA DECIDIR, en pausa tras la T4** (`#755`): su foto por tanda, mudada verbatim a `CARRIL-SPA.md` §9
   (29-09); lo que queda, en «por dónde retomar» 3. ⚠️ La ficha del cliente en `zh_CN` pinta el parentesco de sus menores como
   la clave cruda (`admin.users.dependents.relationship_*` solo en es): sin arreglar.
@@ -51,23 +53,17 @@
 1. ✅ **LA A4 DEL ACCESO CON CÓDIGO (el cajón), ENTERA EN `main`**: la A4a (`#810`→`#812`) y la A4b (`#813`), las dos con el
    visto bueno del owner. La red: `mutar-cajon-a4a.sh`/`-a4b.sh` y `sonda-cajon-a4a.mjs`/`-a4b.mjs`. ⚠️ El código, como la
    isla (`#812`): manda el servidor; si plataforma lo cambia (su Z6g o su A5), el cajón lo sigue. ▶ Lo siguiente, el 1b.
-1b. ▶▶ **Lo del zip (6) que el owner repartió al SPA** (`#861`; `isla-y-landing-nueva.md` §4.27), en este orden (`#814`):
-   ✅ **`LinkIsland`** (§4.18), con su pasada ligera, y 🟦 **la imagen de la invitación** (§4.19, la B: `#815`, `#816`), EN
-   `main` con el visto bueno; la imagen, a la espera de verse en WhatsApp (la Foto). ▶ **Ahora: la Puerta**, spec nueva
-   **`puerta-nueva.md`**: el censo del mockup contra la de hoy, MEDIDO (02-10), y las cuatro respuestas del owner (`#817`:
-   «Nueva búsqueda» se queda en el pie, los invitados en una línea, la encuesta pregunta a pregunta, la reseña del día por
-   palabras «profesional y robusto»). Cambia la VISTA de `ValidarRegistro`; sus garantías se quedan. ✅ **La P1a (la
-   pantalla) EN `main` con el visto bueno del owner** (02-10; D9 → `#818`; montaje y sonda: `CARRIL-SPA.md` §8 (27); arnés
-   `mutar-puerta-p1.sh` 34/34, sonda `sonda-puerta-p1.mjs` 196/196). ✅ **La P1b (la encuesta pregunta a pregunta, solo en
-   verde, robusta) y la P1c (a quién y «Ahora no», `#819`) EN `main` con el visto bueno del owner** (02-10; spec §4.4: sin
-   la sonda ni el arnés entero, a petición suya). ✅ **La P2 (las pulseras y lo que se entrega, D10–D15) EN `main` con el
-   visto bueno del owner** (02-10; arnés 20/20, sonda 254/254; spec §4.4). 🟦 **La P3 (la reseña del día por palabras,
-   D16–D21) EN `main` con el visto bueno, el logo de Google y una con cada cliente (`#910`)** (arnés 44/44, sonda
-   261/261; spec §4.4). ▶ El arnés ENTERO, DE NOCHE (bloquea la local 45 min; parado a 22/129, muerden);
-   la Puerta, entera (`mutar-puerta-p1.sh` sin `SOLO`; su resultado, en la spec §4.4 y aquí).
+1b. ✅ **Lo del zip (6) que el owner repartió al SPA** (`#861`; `isla-y-landing-nueva.md` §4.27), EN `main` con el visto
+   bueno: `LinkIsland` (§4.18), la imagen de la invitación (§4.19; 🟦 hasta verla en WhatsApp) y **la Puerta entera**
+   (`puerta-nueva.md` §4.4; montaje y sonda, `CARRIL-SPA.md` §8 (27)). ▶ **Queda el arnés ENTERO de la Puerta, DE NOCHE**
+   (bloquea la local ~45 min, medido; el 02-10 se paró a 22/129, todos mordían): `bash scripts/mutar-puerta-p1.sh` sin
+   `SOLO`, hoy **130** mutantes; nadie mira ni edita la local mientras corre; después, `npm run build` y `build:ssr`; el
+   resultado, a la spec §4.4 y aquí. Su historia por tandas, mudada verbatim a `CARRIL-SPA.md` §9 (02-10).
+   ▶ **Lo siguiente, de día: la R1c de los correos** («retomar» 2), con el `#875` dentro.
 2. ▶▶ **LOS CORREOS (`specs/correos-rediseno.md`: §0 → §4; `#789`, `#800`→`#804`)**: ✅ R1a, R1b y **R1·T** en `main` (la
    R1·T revisada: §4.2.2; su sonda y el medidor de bloques, `CARRIL-SPA` §8 (26)). Del zip (6) (`#861`): el 8, «482-913 es tu
-   código para entrar» sin botón; «Quién firma el descargo» en el 1 y el 3; las dos horas (90 + 30). ✅ **La R1·T2** (`#809`:
+   código para entrar» sin botón; «Quién firma el descargo» en el 1 y el 3 (la isla ya lo dice, `#875`:
+   «menores a tu cargo», nunca «tus hijos»; lo mío, las dos líneas del 1, el 3 y lo que diga el cajón); las dos horas (90 + 30). ✅ **La R1·T2** (`#809`:
    «Solo sale si…» y la «Situación», §4.2.3–§4.2.4) EN `main` con el visto bueno. Cada tanda con su «al detalle» MEDIDO
    en la spec antes de codificar, en `wip/…`, con su arnés y al ojo del owner en Mailpit (el banco,
    `php scripts/banco-correos.php [filtro]`, y la sonda de la carpeta de auditoría, `sonda-correos-r1a.mjs N`):
@@ -241,9 +237,6 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 
 ## Buzón
 
-- ❗ **Para plataforma (02-10, `#771`)**: `CopiedReviewImport` descarta el `translated` que anota `resenas-google.mjs`, así que
-  una copiada que Google enseñaba TRADUCIDA se publica (en la portada y, desde la P3, en la Puerta) como palabras del autor.
-  Si lo guardas (p. ej. `testimonials.translated`), la Puerta la deja fuera como deja la ambigua del Perfil. Medido, sin tocar.
 - ❗ **Para plataforma (02-10), tu Z6c·3 (la medida del B3), EN `main`** con el visto bueno del owner (`analitica.md` §4.4):
   `isla_accion` (`situacion`, `etiqueta`, `tono`, `cara`, `pagina`, `variante`), `isla_panel` (`panel`, `situacion`,
   `variante`) e `isla_razon` (`situacion`, `tipo`, `razon`, `pagina`, `variante`) están en `Contract::EVENTS` y en el `enum` de
@@ -291,6 +284,9 @@ el repo de la instancia (lo nuevo), nunca a `main`.
   código `MIN_REVIEWS = 1` (`#494`): no la toco yo.
 
 ### Atendido
+- **Plataforma 02-10 tarde** (`#874`, la traducida; `#875`, «Quién firma el descargo» en la isla): leídos. `->untranslated()`
+  en la Puerta, HECHO (`puerta-nueva.md` §4.4); lo mío de `#875` (el correo 1, el 3 y el cajón), a «retomar» 2; las claves
+  que retira de `isla.php` no las lee nada mío (medido). Mi aviso de `#771`, hecho por ellos: retirado.
 - **Plataforma 02-10** (`698dca75`, `#867`: los banners de su isla, nada mío tocado): leyó mi aviso de la imagen EN `main`
   (sus tres notas, hechas; el kit sale con el despliegue de la instancia): retirado. El texto, en el `git log`. Y su aviso
   previo de la Z6c (`318fec68`, `#868`, la flecha naranja): leído; mi respuesta, en el `git log`; la Z6c·3,

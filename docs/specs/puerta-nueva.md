@@ -558,8 +558,10 @@ darle más autoridad, como el widget oficial»: el fichero de `#780`, arriba a l
 «…, en Google · hace 3 días.» se queda: atribuye en palabras si la imagen no carga). Y que cambie con cada cliente (`#910`,
 D19): la primera versión guardaba el turno en la SESIÓN y la sonda lo vio perderse —una petición vieja reescribía la sesión
 entera: la misma reseña dos veces al refrescar—; con un contador atómico en caché por persona, la misma sonda pasa (control
-A/B). Pruebas: `ReviewKeywordsTest` (10, en `tests/Unit`), `GateReviewOfTheDayTest` (14), `GateReviewSettingsTest` (4) y
-`GateKioskTest` +1. Arnés: 44 mutantes, 44/44 (`SOLO='reseña' PARALELO=` con su
+A/B). **Y la TRADUCIDA, fuera** (`#874`, de plataforma, 02-10): la copiada que Google enseñaba traducida no son palabras
+de su autor, como la ambigua del Perfil; `copied()` pasa por `Testimonial::untranslated()` (su prueba y su mutante, 1/1).
+Pruebas: `ReviewKeywordsTest` (10, en `tests/Unit`), `GateReviewOfTheDayTest` (15), `GateReviewSettingsTest` (4) y
+`GateKioskTest` +1. Arnés: 45 mutantes, 45/45 (los 44 y el de `#874`, solo; `SOLO='reseña' PARALELO=` con su
 filtro: ~10 s por mutante; con `--parallel` y un filtro pequeño cada proceso vuelve a migrar y eran 72 s). **Lo destapó el
 arnés**: `published_at` es una FECHA y SQLite la guarda como texto con su hora, así que comparada con «2026-09-02» el día
 del borde entraba con `>` y con `>=` por igual en la suite y no en MySQL → `whereDate`. Y dos veces la prueba, no el código:
@@ -607,3 +609,6 @@ tamaños, con CONTROL (sin palabras caen justo las 5 de la reseña: 254/259) y e
 - 2026-10-02 · el owner la ve: visto bueno con el logotipo oficial de Google en la tarjeta (`#780`) y pregunta por qué al
   refrescar sale siempre la misma: decide que cambie con cada cliente (`#910`). La ve y la P3, a `main`; el arnés entero,
   justo después y en segundo plano (~45 min medidos: 129 mutantes a ~17 s; las «2 horas» que dije eran una mala cuenta).
+- 2026-10-02 · el arnés entero bloquea la local: el owner lo para (a 22/129, todos muerden; el árbol, byte a byte) y queda
+  para la NOCHE: `bash scripts/mutar-puerta-p1.sh`, sin `SOLO`, hoy 130 mutantes; después, los dos bundles.
+- 2026-10-02 · plataforma deja fuera las copiadas TRADUCIDAS (`#874`) y la Puerta lo sigue en `copied()` (§4.4, P3).

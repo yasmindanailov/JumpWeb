@@ -542,6 +542,30 @@ De «por dónde retomar», mudado VERBATIM el 2026-09-30 al empezar la R1·T (el
     47/47 entero; sonda `sonda-isla-enlace.mjs` 41/41 ×2.
   - ✅ **LA A4 (a y b), EN `main`** (`#810`→`#813`): entrar, el alta y Mi cuenta con un código; arneses 43/43 y 36/36.
 
+- Mudados VERBATIM de `carriles/spa.md` el 2026-10-02 por la tarde (su techo), al cerrar la Puerta entera:
+  - De la foto:
+    - ✅ La lista de invitados del owner (`#805`) y los complementos en dos (`#806`→`#808`; K3 sin código): su foto, mudada verbatim
+      a `CARRIL-SPA.md` §9 (01-10). ▶ La regla del owner: no se programa lo que el panel ya configura.
+    - ✅ R1a y R1b de los correos, en `main` y aprobadas (29-09): su foto, en `CARRIL-SPA.md` §9. ✅ **La R1·T (los textos
+      editables, `#802`), en `main` con el visto bueno (30-09 noche)**, revisada antes midiendo los 29 correos bloque a bloque;
+      arnés 63/63 (`correos-rediseno.md` §4.2.2).
+    - Los correos: sus cuatro decisiones del owner (`#800`→`#804`), mudadas verbatim a `CARRIL-SPA.md` §9 (30-09).
+  - De «por dónde retomar» 1b:
+    1b. ▶▶ **Lo del zip (6) que el owner repartió al SPA** (`#861`; `isla-y-landing-nueva.md` §4.27), en este orden (`#814`):
+       ✅ **`LinkIsland`** (§4.18), con su pasada ligera, y 🟦 **la imagen de la invitación** (§4.19, la B: `#815`, `#816`), EN
+       `main` con el visto bueno; la imagen, a la espera de verse en WhatsApp (la Foto). ▶ **Ahora: la Puerta**, spec nueva
+       **`puerta-nueva.md`**: el censo del mockup contra la de hoy, MEDIDO (02-10), y las cuatro respuestas del owner (`#817`:
+       «Nueva búsqueda» se queda en el pie, los invitados en una línea, la encuesta pregunta a pregunta, la reseña del día por
+       palabras «profesional y robusto»). Cambia la VISTA de `ValidarRegistro`; sus garantías se quedan. ✅ **La P1a (la
+       pantalla) EN `main` con el visto bueno del owner** (02-10; D9 → `#818`; montaje y sonda: `CARRIL-SPA.md` §8 (27); arnés
+       `mutar-puerta-p1.sh` 34/34, sonda `sonda-puerta-p1.mjs` 196/196). ✅ **La P1b (la encuesta pregunta a pregunta, solo en
+       verde, robusta) y la P1c (a quién y «Ahora no», `#819`) EN `main` con el visto bueno del owner** (02-10; spec §4.4: sin
+       la sonda ni el arnés entero, a petición suya). ✅ **La P2 (las pulseras y lo que se entrega, D10–D15) EN `main` con el
+       visto bueno del owner** (02-10; arnés 20/20, sonda 254/254; spec §4.4). 🟦 **La P3 (la reseña del día por palabras,
+       D16–D21) EN `main` con el visto bueno, el logo de Google y una con cada cliente (`#910`)** (arnés 44/44, sonda
+       261/261; spec §4.4). ▶ El arnés ENTERO, DE NOCHE (bloquea la local 45 min; parado a 22/129, muerden);
+       la Puerta, entera (`mutar-puerta-p1.sh` sin `SOLO`; su resultado, en la spec §4.4 y aquí).
+
 - Mudados VERBATIM del buzón de `carriles/spa.md` el 2026-09-30 (su techo): los dos avisos al carril de CORREOS, que desde
   `#789` son de este carril:
 
