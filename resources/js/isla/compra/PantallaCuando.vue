@@ -3,7 +3,8 @@
  * La pantalla 0 de la compra, «Cuándo y cuántos», para entradas (`PjcCuando` del diseño,
  * `paginas/compra/pantalla-0.jsx`). Solo cuando la compra abre sin hora («Reservar para hoy», el selector de plan
  * o «Añadir otra entrada»): es el widget de la página dentro de la isla, en el orden del brief —la zona si hay que
- * elegirla, día (hoy elegido), horas libres, cuánto tiempo, cantidad, calcetines, [Hora extra] y la otra zona—.
+ * elegirla, día (hoy elegido), horas libres, cuánto tiempo, cantidad, calcetines, [Hora extra] y la otra zona—. En el
+ * hueco de la [Hora extra], desde `#880`, todos los demás complementos que se venden al reservar (`ComplementosCompra`).
  * Al cambiar de día, mientras llegan las horas, su hueco exacto (`EsqueletoCarga`), para que nada salte.
  *
  * Pinta y avisa (`cambiar(campo, valor)`, `otra`, `quitarOtra`): qué días, horas y tiempos hay, y sus precios,
@@ -24,7 +25,7 @@ import SelectorHoras from '../ui/SelectorHoras.vue';
 import TarjetasOpcion from '../ui/TarjetasOpcion.vue';
 import EsqueletoCarga from '../ui/EsqueletoCarga.vue';
 import AvisoDestacado from '../ui/AvisoDestacado.vue';
-import DatosReserva from './datos-reserva.js';
+import DatosReserva, { ComplementosCompra } from './datos-reserva.js';
 
 defineProps({
     titulo: { type: String, required: true },
@@ -45,7 +46,8 @@ defineProps({
     fila: { type: String, default: null },
     cuantos: { type: Object, default: null },
     calcetines: { type: Object, default: null },
-    horaExtra: { type: Boolean, default: false },
+    // Los demás complementos que se venden al reservar (`#880`), hechos por `complementos.js`.
+    complementos: { type: Array, default: () => [] },
     otra: { type: Object, default: null },
     // Con el motor (T3e·2), de los DATOS: `cuantos.min`/`max`, `calcetines.max`, el umbral de «quedan» (el aviso de
     // «casi llena» del panel) y si hay otra zona que ofrecer. Sin ellos, los valores del diseño (el banco).
@@ -176,10 +178,12 @@ const { t } = useTextos();
                     @update:model-value="emit('cambiar', 'cal', $event)"
                 />
             </PreguntaCompra>
-            <!-- [Hora extra], en las entradas de 2 horas: el diseño deja su hueco rayado; aquí va el control. -->
-            <slot
-                v-if="horaExtra"
-                name="hora-extra"
+            <!-- [Hora extra]: el diseño deja su hueco rayado tras los calcetines; aquí van TODOS los demás complementos que
+                 se venden al reservar (`#880`), la hora extra entre ellos. -->
+            <ComplementosCompra
+                v-if="!otraEntrada && complementos.length"
+                :items="complementos"
+                @cambiar="(id, n) => emit('cambiar', 'extra', { id, n })"
             />
             <!-- Lo que un PACK pide al reservar (`#839`: el centro y su responsable de una excursión), con las etiquetas del
                  panel: `preguntas.datos` trae su título y sus campos. El diseño no dibuja este paso: es el campo del sistema. -->

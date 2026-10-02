@@ -1,8 +1,9 @@
 <script setup>
 /**
  * La pantalla 0 de la compra para una fiesta (`PjcCuandoCumple` del diseño): las cinco preguntas del widget de
- * cumpleaños, en su orden —la edad (que decide el pack), los niños, el día, la hora y el menú—. Sin día elegido de
- * salida: una fiesta no se reserva para hoy. Las preguntas, el pack, los mínimos y los menús son de la instalación
+ * cumpleaños, en su orden —la edad (que decide el pack), los niños, el día, la hora y el menú— y, desde `#880`, lo que se
+ * vende al reservar el pack: los calcetines y la lista de complementos (la hora extra). Sin día elegido de salida: una
+ * fiesta no se reserva para hoy. Las preguntas, el pack, los mínimos, los menús y los complementos son de la instalación
  * y llegan hechos; `horas` es `null` hasta que hay día.
  */
 import PasoCompra from './PasoCompra.vue';
@@ -10,6 +11,7 @@ import PreguntaCompra from './PreguntaCompra.vue';
 import DatoFijo from './DatoFijo.vue';
 import CantidadCompra from './CantidadCompra.vue';
 import DiasCompra from './DiasCompra.vue';
+import { ComplementosCompra } from './datos-reserva.js';
 import SelectorHoras from '../ui/SelectorHoras.vue';
 import TarjetasOpcion from '../ui/TarjetasOpcion.vue';
 import AvisoDestacado from '../ui/AvisoDestacado.vue';
@@ -33,6 +35,9 @@ defineProps({
     hora: { type: String, default: null },
     menus: { type: Array, required: true },
     menu: { type: String, default: null },
+    // `#880`: los calcetines del pack (su pregunta, la de las entradas) y los demás complementos que se venden al reservar.
+    calcetines: { type: Object, default: null },
+    complementos: { type: Array, default: () => [] },
     // `#876`·7: «Los invitados y los detalles de la fiesta, después…», si el pack lleva la lista; si no, nada.
     despues: { type: String, default: '' },
 });
@@ -125,6 +130,28 @@ const emit = defineEmits(['cambiar']);
                 @update:model-value="emit('cambiar', 'menu', $event)"
             />
         </PreguntaCompra>
+        <!-- `#880`: lo que se vende al reservar el pack, «los que sean» —los calcetines, con la pregunta de las entradas, y
+             los demás (la hora extra)—; lo de la lista de invitados, en ella. -->
+        <PreguntaCompra
+            v-if="calcetines"
+            id="pjc-q-calcetines"
+            :titulo="calcetines.titulo"
+            :pista="calcetines.pista"
+        >
+            <CantidadCompra
+                :model-value="calcetines.n"
+                :min="0"
+                :max="calcetines.max ?? 40"
+                :uno="calcetines.uno"
+                :varios="calcetines.varios"
+                @update:model-value="emit('cambiar', 'cal', $event)"
+            />
+        </PreguntaCompra>
+        <ComplementosCompra
+            v-if="complementos.length"
+            :items="complementos"
+            @cambiar="(id, n) => emit('cambiar', 'extra', { id, n })"
+        />
         <p
             v-if="despues"
             :style="PASO.pista"

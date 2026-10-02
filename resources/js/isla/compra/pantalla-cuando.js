@@ -55,14 +55,32 @@ export const datosCompletos = (datos) => datos.every((d) => ! d.required || d.va
 export const respuestasDe = (datos) => Object.fromEntries(datos.filter((d) => d.valor.trim() !== '').map((d) => [d.key, d.valor.trim()]));
 
 /**
+ * La pregunta de los CALCETINES (el complemento por cantidad, `oferta.js::calcetinDe`): de una entrada y, desde `#880`,
+ * de una fiesta. Sin él, `null`, y la pantalla no pregunta. El precio del par, el de su ficha.
+ */
+export function preguntaCalcetines(calcetin, n, { textos = {}, locale = 'es' } = {}) {
+    if (! calcetin) return null;
+
+    return {
+        titulo: texto(textos, 'compra.cuando.pregunta_calcetines'),
+        n: n ?? 0,
+        uno: texto(textos, 'compra.cuando.par'),
+        varios: texto(textos, 'compra.cuando.pares'),
+        pista: textoCon(textos, 'compra.cuando.pista_calcetines', { precio: euros(calcetin.price_cents, locale) }),
+        max: calcetin.max_quantity ?? 40,
+    };
+}
+
+/**
  * La PANTALLA 0 de las entradas, «Cuándo y cuántos» (`PjcCuando`): sus props y la descripción del paso.
  *
  * @param {object} e  el estado, todo plano:
- *   `borrador` ({ zona, elegirZona, dia, hora, fila, n, cal, otra, evento }) · `productos` (el catálogo tal cual) ·
+ *   `borrador` ({ zona, elegirZona, dia, hora, fila, n, cal, extras, otra, evento }) · `productos` (el catálogo tal cual) ·
  *   `precios` ({ [id]: días ofrecidos }) · `horas` (las ofrecidas de la fila y el día) · `cargandoHoras` ·
  *   `maximo` (lo que cabe a esa hora, o `null`) · `minimo` · `umbral` (el «casi llena» del panel) ·
- *   `calcetin` (el complemento por cantidad de la fila, o `null`) · `ficha` (la de la fila: su tope y lo que pide al
- *   reservar) · `linea` (la que resolvió el servidor) · `textos` · `locale` · `hoy`.
+ *   `calcetin` (el complemento por cantidad de la fila, o `null`) · `complementos` (las filas de los demás, hechas:
+ *   `complementos.js`) · `ficha` (la de la fila: su tope y lo que pide al reservar) · `linea` (la que resolvió el
+ *   servidor) · `textos` · `locale` · `hoy`.
  */
 export function pantallaCuando(e) {
     const { borrador: b, textos, locale } = e;
@@ -125,14 +143,10 @@ export function pantallaCuando(e) {
         }),
         fila: fila ? String(fila.id) : null,
         cuantos: { n: b.n, ...unidad, min: e.minimo ?? 1, max: e.maximo ?? (esPack ? e.ficha?.max_quantity : null) ?? 20 },
-        calcetines: e.calcetin ? {
-            n: b.cal,
-            uno: t('compra.cuando.par'),
-            varios: t('compra.cuando.pares'),
-            pista: tp('compra.cuando.pista_calcetines', { precio: euros(e.calcetin.price_cents, locale) }),
-            max: e.calcetin.max_quantity ?? 40,
-        } : null,
-        horaExtra: false,
+        calcetines: preguntaCalcetines(e.calcetin, b.cal, { textos, locale }),
+        // Los demás complementos que se venden al reservar (`#880`; la hora extra, en el hueco que el diseño le dejó):
+        // llegan hechos de `complementos.js`.
+        complementos: e.complementos ?? [],
         otra: null,
         umbral: e.umbral || 6,
         otraZona: false,

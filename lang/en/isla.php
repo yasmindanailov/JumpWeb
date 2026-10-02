@@ -219,6 +219,11 @@ return [
             'pack_desde' => ':pack, from :min years',
             'menu_incluido' => ':menu, included',
             'menu_mas' => ':menu, :precio more per child',
+            'extra_sin_hora' => 'Choose the time to see if it fits.',
+            'extra_no' => 'It cannot be added that day at :hora.',
+            'extra_requiere' => 'Requires :nombre.',
+            'unidad' => 'unit',
+            'unidades' => 'units',
         ],
         'datos' => [
             'banda' => 'Your details',

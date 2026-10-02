@@ -219,6 +219,11 @@ return [
             'pack_desde' => ':pack, à partir de :min ans',
             'menu_incluido' => ':menu, inclus',
             'menu_mas' => ':menu, :precio de plus par enfant',
+            'extra_sin_hora' => 'Choisissez l’heure pour savoir si ça rentre.',
+            'extra_no' => 'Ce jour-là, à :hora, on ne peut pas l’ajouter.',
+            'extra_requiere' => 'Nécessite :nombre.',
+            'unidad' => 'unité',
+            'unidades' => 'unités',
         ],
         'datos' => [
             'banda' => 'Vos coordonnées',

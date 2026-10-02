@@ -174,7 +174,15 @@ describe('la pantalla 0 de las entradas', () => {
 
         assert.deepEqual(props.cuantos, { n: 2, uno: 'entrada', varios: 'entradas', min: 1, max: 12 });
         assert.equal(props.umbral, 8);
-        assert.deepEqual(props.calcetines, { n: 0, uno: 'par', varios: 'pares', pista: '2 € el par. Si ya los tenéis, traedlos.', max: 40 });
+        assert.deepEqual(props.calcetines, { titulo: '¿Calcetines antideslizantes?', n: 0, uno: 'par', varios: 'pares', pista: '2 € el par. Si ya los tenéis, traedlos.', max: 40 });
+    });
+
+    test('los demás complementos llegan hechos y pasan tal cual; sin ellos, una lista vacía (`#880`)', () => {
+        const fila = { id: 139, forma: 'si-no', titulo: 'Una hora más en Kids', disponible: false };
+
+        assert.deepEqual(pantallaCuando(estado({ complementos: [fila] })).props.complementos, [fila]);
+        assert.deepEqual(pantallaCuando(estado()).props.complementos, []);
+        assert.equal('horaExtra' in pantallaCuando(estado()).props, false, 'el hueco de la hora extra ya no es un interruptor apagado');
     });
 
     test('sin complemento por cantidad en la entrada, no hay pregunta de calcetines', () => {

@@ -84,7 +84,9 @@ function cuando(c, ofertas) {
             fila: c.fila,
             cuantos: { n: c.n, uno: Z.uno, varios: Z.varios },
             calcetines: { n: c.cal, uno: P.par, varios: P.pares, pista: Z.calcetines },
-            horaExtra: fila.horas === 2,
+            // [Hora extra]: en el diseño, un hueco rayado en las de 2 h; la compra real pone ahí su lista (`#880`), que el
+            // banco no tiene: vacía, como pintaba el hueco sin control.
+            complementos: [],
             otra: Z2 ? { titulo: `${Z2.nombre} · ${Z2.filas[0].label}`, precio: `${D.eur(precio(Z2.filas[0]))} por ${Z2.uno}`, n: c.otra.n, uno: Z2.uno, varios: Z2.varios } : null,
         },
         extraZona: fila.horas === 2,

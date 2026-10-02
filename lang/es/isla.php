@@ -261,6 +261,13 @@ return [
             'pack_desde' => ':pack, desde :min años',
             'menu_incluido' => ':menu, incluido',
             'menu_mas' => ':menu, :precio más por niño',
+            // `#880`: los complementos que se venden al reservar, todos. Su nombre y su precio llegan del servidor; aquí, por
+            // qué uno está apagado y la unidad de lo que se suma.
+            'extra_sin_hora' => 'Elige la hora para saber si cabe.',
+            'extra_no' => 'Ese día, a las :hora, no se puede añadir.',
+            'extra_requiere' => 'Requiere :nombre.',
+            'unidad' => 'unidad',
+            'unidades' => 'unidades',
         ],
         'datos' => [
             'banda' => 'Tus datos',

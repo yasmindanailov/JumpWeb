@@ -3,8 +3,10 @@
  *
  * `PjcCuandoCumple` del diseño con los datos del motor: la EDAD elige el pack de su tramo (`guest_age_min`–
  * `guest_age_max` de cada ficha; sin máximo, abierto), después los niños (el mínimo y el máximo del pack), el día, la
- * hora y el MENÚ —el grupo de elección que resuelve el servidor, con sus platos—. Del resto de complementos, nada
- * aquí: van al formulario de invitados (`#692`·4, cero fricción antes de pagar).
+ * hora y el MENÚ —el grupo de elección que resuelve el servidor, con sus platos—. Y, desde `#880` (que modifica
+ * `#692`·4), TODOS los complementos que se venden al reservar el pack —los calcetines, la hora extra…—, hechos fuera
+ * (`complementos.js` y `pantalla-cuando.js::preguntaCalcetines`, solo de la compra: este módulo viaja también con la
+ * calculadora de la fiesta); los de la lista de invitados (`stage = postform`), en su formulario.
  *
  * ⚠️⚠️ **Aquí no se calcula dinero** (`PAY-12`): el total, la señal y el precio de cada menú llegan hechos (la línea
  * que resuelve el servidor, el precio publicado de la opción) y solo se escriben.
@@ -132,6 +134,9 @@ export function pantallaCuandoFiesta(e) {
         hora: horaCorta(b.hora),
         menus: menusDe(e.grupos, { textos, locale }),
         menu: b.menu,
+        // `#880`: los calcetines y los demás complementos que se venden al reservar, ya hechos por quien llama.
+        calcetines: e.calcetines ?? null,
+        complementos: e.complementos ?? [],
         // `#876`·7: lo que queda para después, solo si su reserva lleva la lista de invitados (`guest_form` de la ficha).
         despues: base?.guest_form ? t('fiesta_despues') : '',
     };

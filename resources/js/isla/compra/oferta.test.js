@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { calcetinDe, cargarDiasDeFilas, cargarFichas, cargarGrupos, horaDelMotor, horaQueCabe, primerDia } from './oferta.js';
+import { calcetinDe, cargarDiasDeFilas, cargarFichas, horaDelMotor, horaQueCabe, primerDia } from './oferta.js';
 import { borradorDeIntencion, sigueSola } from './intencion.js';
 
 /**
@@ -50,6 +50,14 @@ describe('el complemento por cantidad de una entrada', () => {
         assert.equal(calcetinDe({ addons: [{ ...calcetines, mandatory: true }] }), null);
         assert.equal(calcetinDe({ addons: [{ ...calcetines, allow_extra: false }] }), null);
         assert.equal(calcetinDe(null), null);
+    });
+
+    test('con TOPE 1 no se suma: la hora extra no es «los calcetines» aunque vaya delante en el panel (`#880`)', () => {
+        const horaExtra = { ...calcetines, id: 139, price_cents: 500, max_quantity: 1 };
+
+        assert.equal(calcetinDe({ addons: [horaExtra] }), null);
+        assert.deepEqual(calcetinDe({ addons: [horaExtra, calcetines] }), { id: 110, price_cents: 200, max_quantity: null });
+        assert.deepEqual(calcetinDe({ addons: [{ ...calcetines, max_quantity: 4 }] }), { id: 110, price_cents: 200, max_quantity: 4 }, 'con tope mayor que 1, sí se suma');
     });
 });
 
@@ -134,15 +142,7 @@ describe('lo que la fiesta pide al motor (T3e·5)', () => {
         assert.deepEqual(await cargarFichas({ api: a, ids: [105, 106, 105] }), { 105: { id: 105 } });
         assert.equal(a.llamadas.length, 2, 'sin repetir');
     });
-
-    test('los menús SIN día ni hora: el cuerpo no los lleva (el servidor rechaza `null` en ellos)', async () => {
-        const a = api({ '/catalog/products/105/addons': { ok: true, data: { groups: [{ key: 'menu', options: [] }] } } });
-
-        assert.deepEqual(await cargarGrupos({ api: a, productId: 105, quantity: 8 }), [{ key: 'menu', options: [] }]);
-        assert.deepEqual(a.llamadas[0][2], { quantity: 8, addons: [], choices: [] });
-        assert.equal('date' in a.llamadas[0][2] || 'time' in a.llamadas[0][2], false);
-        assert.deepEqual(await cargarGrupos({ api: api({}), productId: 105, quantity: 8 }), [], 'un fallo, sin menús: no revienta');
-    });
+    // Los menús SIN día ni hora viajan ahora con los sueltos en UNA llamada: `complementos.js::cargarSinHora` (`#880`).
 });
 
 describe('la hora que se elige', () => {

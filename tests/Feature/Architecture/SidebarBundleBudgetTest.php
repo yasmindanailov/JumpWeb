@@ -1007,7 +1007,13 @@ class SidebarBundleBudgetTest extends TestCase
     // cortas (`situacion.js`). La cara de barra, NO: va en su trozo y solo la baja el B3 (abajo, su techo). Medido 183,82 →
     // 186,75 (base: el `HEAD` `318fec68`, con el build del gate; con la barra en el trozo común era 190,55). Y LA MEDIDA del
     // experimento, que la isla cuenta por `JumpWeb.track` (`medir.js`, acordado con el SPA): 187,44. El techo, a 188.
-    private const ISLA_COMPRA_CHUNK_MAX_KB = 188;
+    // M1 de `#880` (§4.29, el owner: los complementos que se venden al reservar, «los que sean»): las filas de la lista
+    // (`compra/complementos.js`), su sitio en el borrador y en la línea, y la pregunta de los calcetines también en la
+    // fiesta. La lista y su fila de la mejora van DIFERIDAS en el trozo de los pasos: dentro de la pantalla 0 la compra pesaba
+    // 194,66 (`FilaMejora` arrastraba el trozo que comparte con la calculadora de la fiesta). Medido 187,17 → 190,66 (base:
+    // el `HEAD` `351870b9`, construido en este árbol con mis ficheros devueltos a `HEAD`, el mismo cálculo). El techo, a 191.
+    // ⚠️ La compra viaja con la isla en CADA página: su peso es el primer sitio que mira la M4 (la carga, `#880`).
+    private const ISLA_COMPRA_CHUNK_MAX_KB = 191;
 
     // T4d·4 (`specs/isla-y-landing-nueva.md` §4.12): la CALCULADORA de una página, entrada propia que la página pide
     // (`scripts` de `<x-pagina>`) y se monta al acercarse su pieza. Su DESCARGA entera, como la mide el navegador que
@@ -1114,7 +1120,11 @@ class SidebarBundleBudgetTest extends TestCase
     // del diseño (sin la nota de antes), todo en el trozo común con Mi cuenta (26,79 → 31,47); `sidebar/code-input.js` ya
     // viaja con el motor. Medido 45,87 → 50,66 (base: el `HEAD` `c912d4de`, construido aparte en un `git worktree`). El
     // techo, a 52: a 51 quedaban 0,34, un cable trampa.
-    private const ISLA_PASOS_CHUNK_MAX_KB = 52;
+    // M1 de `#880` (§4.29, el owner: los complementos que se venden al reservar, «los que sean»): la lista de la pantalla 0
+    // (`ComplementosCompra.vue`) con la fila de la mejora de la calculadora de la fiesta (`ui/FilaMejora.vue`, la hora
+    // extra), diferidas aquí como «Datos de la reserva». Medido 50,79 → 55,15 (base: el `HEAD` `351870b9`, construido en
+    // este árbol con mis ficheros devueltos a `HEAD`, el mismo cálculo). El techo, a 56.
+    private const ISLA_PASOS_CHUNK_MAX_KB = 56;
 
     // T5b (`#775`): MI CUENTA de la isla, trozo diferido del motor que se pide a la primera apertura de la cuenta. Su
     // descarga, sobre lo que ya tiene quien la abre (el motor y la compra, que la isla monta con el motor). Medido el

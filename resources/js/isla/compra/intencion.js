@@ -7,8 +7,11 @@
  * calculadora de entradas por encima de su techo, `SidebarBundleBudgetTest`, sin tocarla).
  */
 
-/** El borrador de la pantalla 0 en blanco: sin zona, una persona y sin calcetines (`startCuando` del diseño). */
-export const borradorVacio = () => ({ modo: 'nuevo', zona: null, elegirZona: false, dia: null, hora: null, fila: null, n: 1, cal: 0, otra: null });
+/**
+ * El borrador de la pantalla 0 en blanco: sin zona, una persona, sin calcetines (`startCuando` del diseño) y sin ningún
+ * otro complemento (`extras`, la lista de `complementos.js`, `#880`).
+ */
+export const borradorVacio = () => ({ modo: 'nuevo', zona: null, elegirZona: false, dia: null, hora: null, fila: null, n: 1, cal: 0, extras: [], otra: null });
 
 /**
  * El de una FIESTA (T3e·5, `fiesta.js`): sin edad, sin día —una fiesta no nace «para hoy»—, los niños en el mínimo del

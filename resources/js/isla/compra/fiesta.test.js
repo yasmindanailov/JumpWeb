@@ -156,6 +156,17 @@ describe('la pantalla 0 de una fiesta', () => {
         assert.deepEqual(pantallaCuandoFiesta({ ...base, grupos: [], borrador: b }).props.menus, [], 'La pantalla no pinta la pregunta con la lista vacía.');
     });
 
+    /** `#880`: lo que se vende al reservar el pack se ve en la pantalla —los calcetines y la lista—, hecho fuera. */
+    test('los calcetines y los demás complementos llegan hechos y pasan tal cual; sin ellos, nada', () => {
+        const b = { edad: null, n: 8, dia: null, hora: null, menu: null, fila: 105 };
+        const calcetines = { titulo: '¿Calcetines antideslizantes?', n: 0, uno: 'par', varios: 'pares', pista: '', max: 40 };
+        const complementos = [{ id: 317, forma: 'si-no', titulo: 'Hora extra de cumpleaños (Kids)', disponible: false }];
+        const { props } = pantallaCuandoFiesta({ ...base, borrador: b, calcetines, complementos });
+
+        assert.deepEqual([props.calcetines, props.complementos], [calcetines, complementos]);
+        assert.deepEqual([pantallaCuandoFiesta({ ...base, borrador: b }).props.calcetines, pantallaCuandoFiesta({ ...base, borrador: b }).props.complementos], [null, []]);
+    });
+
     /** El owner, 28-09: la capa va a lo que falta para continuar (`ir-a.js`). */
     test('lo PRIMERO que falta, por su id: la edad, el día y la hora; lista, nada', () => {
         const falta = (b) => pantallaCuandoFiesta({ ...base, linea: { total_cents: 1 }, borrador: { edad: 5, n: 10, dia: '2026-09-25', hora: '17:00:00', menu: null, fila: 105, ...b } }).falta;

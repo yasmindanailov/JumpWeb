@@ -27,16 +27,19 @@ export async function cargarDiasDeFilas({ api, ids }) {
 }
 
 /**
- * El complemento POR CANTIDAD de una entrada (los calcetines, en PlayJump): opcional, que se suma por unidades, ni
- * por invitado ni de un grupo de elección. Se reconoce por su FORMA y no por su nombre (`CE-4`): otra instalación
- * lo llamará de otra manera. Con varios, el primero; sin ninguno, `null`, y la pantalla no pregunta.
+ * El complemento POR CANTIDAD de una entrada o de una fiesta (los calcetines, en PlayJump): opcional, que se suma por
+ * unidades, ni por invitado ni de un grupo de elección. Se reconoce por su FORMA y no por su nombre (`CE-4`): otra
+ * instalación lo llamará de otra manera. Con varios, el primero; sin ninguno, `null`, y la pantalla no pregunta.
+ * ⚠️ Con TOPE 1 no se suma nada: es un sí o un no (la hora extra, que tiene la misma forma salvo el tope) y lo pinta la
+ * lista de complementos (`complementos.js`). Antes ganaba el primero por `position`: con la hora extra delante en el
+ * panel, la isla preguntaba cuántos «pares» de hora extra (`#880`, medido en la ficha de la 101).
  *
  * @param {{addons?: Array<object>}|null} producto  la ficha (`GET /catalog/products/{id}`)
  * @returns {{id: number, price_cents: number, max_quantity: number|null}|null}
  */
 export function calcetinDe(producto) {
     const a = (producto?.addons ?? []).find((x) => x.allow_extra === true && ! x.per_guest && ! x.choice_group
-        && ! x.mandatory && ! x.included && ! x.requires_addon_id);
+        && ! x.mandatory && ! x.included && ! x.requires_addon_id && x.max_quantity !== 1);
 
     return a ? { id: a.id, price_cents: a.price_cents, max_quantity: a.max_quantity ?? null } : null;
 }
@@ -57,18 +60,8 @@ export async function cargarFichas({ api, ids }) {
     return Object.fromEntries(unicos.flatMap((id, i) => (respuestas[i].ok ? [[id, respuestas[i].data]] : [])));
 }
 
-/**
- * Los grupos de ELECCIÓN de un pack (el menú) resueltos por el servidor ANTES de tener hora: el endpoint de
- * complementos los da sin día ni hora, pero rechaza `null` en ellos, y el store del motor siempre los manda
- * (`selection.js::loadAddons`). Sin línea: el dinero llega cuando hay hora.
- *
- * @returns {Promise<Array<object>>}
- */
-export async function cargarGrupos({ api, productId, quantity, choices = [] }) {
-    const r = await api.post(`/catalog/products/${productId}/addons`, { quantity, addons: [], choices });
-
-    return r.ok ? (r.data?.groups ?? []) : [];
-}
+// Los grupos de elección (el menú) resueltos ANTES de tener hora viajan con los sueltos en UNA llamada, y solo los usa la
+// compra: `complementos.js::cargarSinHora` (`#880`).
 
 /** El primer día que se vende de una fila, o `null`. Es el día con el que la pantalla 0 nace elegida. */
 export function primerDia(dias) {

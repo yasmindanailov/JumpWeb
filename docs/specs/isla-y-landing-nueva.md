@@ -2869,6 +2869,26 @@ la L2 (`otra-zona.md`) → **M4** el pulido con el S3 de `seo.md`, cuando las pa
 pulen dos veces) → lo demás, como en `#876` y `#789`. M1 no toca el servidor: el precio y el aforo los pone él, por el mismo
 camino que ya usa la calculadora (`CE-4`, `PAY-12`); ningún fichero del `CRITICAL_RE`. Cada tanda se enseña en vivo antes del commit.
 
+**M1, hecha (02-10 noche; modifica `#692`·4).** La pantalla 0 de la isla —entradas y fiesta— enseña TODO complemento que la ficha
+publica (solo `stage = booking`; los de la lista de invitados no llegan), menos los grupos de elección (el menú) y el de por
+cantidad, que tiene su pregunta (los calcetines; ahora también en la fiesta). Cada fila con la forma de sus datos
+(`compra/complementos.js`): `si-no` (tope 1 o por invitado: la hora extra, con `ui/FilaMejora.vue`, la fila de la calculadora),
+`cantidad` (− / +) y `fijo` (incluido u obligatorio que no se amplía: se enseña). El precio y si se ofrece, del SERVIDOR: la
+nota de lo resuelto con día y hora o, mientras no hay hora, sin ellos (`cargarSinHora`, que trae también el menú en UNA
+llamada; `oferta.js::cargarGrupos`, fuera). Sin hora, lo de sí o no espera («Elige la hora para saber si cabe»); con hora y
+no ofrecido, la fila sigue, apagada y diciendo por qué. Lo elegido viaja en el borrador (`extras`) y en la línea; al cambiar de
+fila o de pack se queda lo que el nuevo también vende. ⚠️ `calcetinDe` cogía el PRIMERO con su forma: la hora extra de entrada
+la comparte salvo el tope (1) y ganaba si el panel la ponía delante; ahora un tope de 1 no es «por cantidad». La lista va
+DIFERIDA en el trozo de los pasos (`datos-reserva.js`): dentro, la compra pesaba 194,66 kB. **Medido**: `complementos.test.js`
+(10) y las de `oferta`, `vista` y `fiesta` (1.729 de JS en verde); dos mutaciones vistas morder (el tope de `calcetinDe` y «con
+hora y no ofrecida»); `SidebarBundleBudgetTest` con los techos subidos y su base (la compra 187,17 → 190,66, a 191; los pasos
+50,79 → 55,15, a 56; `HEAD` `351870b9`); una sonda desechable a 390 y 1280, 12/12 (la fiesta: los calcetines, la hora extra
+apagada sin hora y con su precio después, 135,60 → 140,60 €, y de vuelta; la entrada de 2 h un sábado, 12 → 17 €; con la hora
+extra, «Continuar» guarda la línea con `317 × 1` y «Tus datos» dice 140,60 €; sin errores de consola). **Visto por el owner en
+vivo** (02-10 noche: «Visto bueno»). ⚠️ **Sin pintar todavía**: un grupo de ELECCIÓN («esto o aquello», como Menú 1 o Menú 2)
+en una ENTRADA, o un segundo grupo en un pack: la isla solo pinta el menú del pack, y el servidor deja elegido el de por
+defecto. Ningún dato lo usa hoy (medido en la BD local, 02-10).
+
 ## 5. Impacto en invariantes
 
 - `PAY-*`: solo si entra Bizum; entonces `VERIFY_CONC=1` y la lista del `CRITICAL_RE`.

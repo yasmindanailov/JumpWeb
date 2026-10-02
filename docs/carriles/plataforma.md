@@ -60,11 +60,11 @@ Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas,en
    su §5), las cuatro de la Z6g·1 y `sonda-panel`, `sonda-banco-movimiento` (casos del 27-09) y `sonda-entradas` (ya lee «90
    minutos saltando»). **Queda de la isla**: probarla en un móvil de verdad, en STAGING al terminarlo todo; `isla_razon` y la
    imagen de la INVITACIÓN son del SPA (`#861`).
-   ▶▶▶ **SIGUE AQUÍ, en el 1**: la lista nueva del owner (M1→M3) y, después, el código de la L2 (el 2).
+   ▶▶▶ **SIGUE AQUÍ, en el 1**: la lista nueva del owner (M1 ✅; M2→M3) y, después, el código de la L2 (el 2).
 1. ▶▶▶ **LA LISTA DEL OWNER DEL 02-10 (noche)** (`#880`; su censo, medido, en `isla-y-landing-nueva.md` §4.29), en este orden:
-   ⬜ **M1** la compra de la isla enseña TODOS los complementos que se venden al reservar el producto, «los que sean» (los de la
-   lista de invitados, no), del mismo `POST /catalog/products/{id}/addons` que el cajón: hoy faltan la hora extra de las entradas
-   de 2 h, los calcetines de los packs y la hora extra de sala (y `calcetinDe` coge el PRIMERO con su forma: frágil) → ⬜ **M2**
+   ✅ **M1** la compra de la isla enseña TODOS los complementos que se venden al reservar el producto, «los que sean» (los de la
+   lista de invitados, no; visto por el owner, §4.29: `compra/complementos.js`, la lista diferida, `calcetinDe` con tope, los
+   techos de peso subidos con su base). ⚠️ Sin pintar: un grupo de elección en una ENTRADA o un segundo en un pack (§4.29) → ⬜ **M2**
    «Continuar» sin estar listo dice qué falta, donde falta; ningún botón apagado sin decir por qué → ⬜ **M3** sin sesión, el
    correo primero: «Entra o crea tu cuenta» tras el producto, con el texto del owner (§4.29); solo un correo sin cuenta rellena
    el resto (`PantallaEntrar` con `cuenta` y `PantallaDatos` con `nueva` ya existen) → el código de la L2 (el 2) → ⬜ **M4** el
@@ -119,7 +119,7 @@ sigue 🟦 por lo del owner: el MATERIAL de los vídeos (en LOCAL, una muestra W
 dobles); el aviso de los calcetines, «se devuelve la señal» y el TRAMO DE EDAD de cada entrada (`#825`); `payment.marks` (en
 LOCAL, `bizum,visa,mastercard`). BD LOCAL con los valores de `#699`/`#761`.
 ⚠️ **Trampas vivas** (las de `sonda-isla` que paga, `sonda-cuenta` antes de las 20:00 y la base de un techo de peso, mudadas a
-`TESTING.md` §2.octies el 29-09): (b) el tracker, a 13 B de su techo (16 KB, 02-10 noche, tras `#880`; la portada 📜 ya en una línea): el detalle de una línea cerrada se MUDA
+`TESTING.md` §2.octies el 29-09): (b) el tracker, a 8 B de su techo (16 KB, 02-10 noche, tras la M1 de `#880`; la portada 📜 ya en una línea): el detalle de una línea cerrada se MUDA
 a su spec (el 02-10, F3 a `producto-e-instancias.md` §4.6; antes, F2, F4 y F5); la próxima vez, otra cerrada;
 (d) Vue 3.5 reevalúa un `computed` fuera del `try` de quien lo lee: se protege DENTRO (`seguro.js`, §4.13); (f) un texto de la isla que
 use la COMPRA tiene que estar en un grupo que la compra recibe (`mi_cuenta.*` no le llega: §4.24); (g) `isla/hoja/montar.js` NO

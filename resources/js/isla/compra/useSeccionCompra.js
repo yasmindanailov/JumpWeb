@@ -63,8 +63,9 @@ export function useSeccionCompra(props) {
      * primera visita»), y la flecha de la pantalla 0 vuelve a ella; o el SELECTOR de planes (`#831`), y la flecha lo
      * reabre —`desdeHoy`: tal como se abrió, desde «Reservar para hoy» o no—.
      */
+    // `sueltos`: los complementos del producto resueltos SIN día ni hora, con su nota (`complementos.js`, `#880`).
     const compra = reactive({
-        borrador: borradorDeIntencion(null, []), precios: {}, llegaron: [], fichas: {}, grupos: [], cargandoHoras: false, intencion: null,
+        borrador: borradorDeIntencion(null, []), precios: {}, llegaron: [], fichas: {}, grupos: [], sueltos: [], cargandoHoras: false, intencion: null,
         paso: 'cuando', aviso: '', ocupado: null, pedido: null, pagado: null, dir: null, cercanas: [], horaNueva: null,
         preparando: false, sinDatos: false, alEntrar: false, desde: null, desdeHoy: false,
     });
