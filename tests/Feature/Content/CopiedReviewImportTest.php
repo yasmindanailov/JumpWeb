@@ -56,7 +56,7 @@ class CopiedReviewImportTest extends TestCase
     {
         $cuenta = app(CopiedReviewImport::class)->import($this->copia([$this->resena(), $this->resena(['id' => 'SoloEstrellas', 'text' => ''])]));
 
-        $this->assertSame(['nuevas' => 1, 'actualizadas' => 0, 'sin_texto' => 1, 'imagenes' => 2, 'nota' => false], $cuenta);
+        $this->assertSame(['nuevas' => 1, 'actualizadas' => 0, 'sin_texto' => 1, 'imagenes' => 2, 'traducidas' => 0, 'nota' => false], $cuenta);
         $o = Testimonial::firstOrFail();
         $this->assertSame([Testimonial::ORIGIN_GOOGLE, 'ChdDSUhN', false, null], [$o->origin, $o->source_ref, $o->is_active, $o->tags], 'nueva: de Google, apagada y en ninguna página');
         $this->assertSame(['es' => 'Mis hijos de 5 y 7 años disfrutaron muchísimo en Kids.'], $o->text);
@@ -81,6 +81,32 @@ class CopiedReviewImportTest extends TestCase
         $this->assertSame([true, ['kids'], 3], [$o->is_active, $o->tags, $o->position], 'lo que eligió el parque se queda');
         $this->assertSame([['es' => 'Texto editado por su autora.'], 4], [$o->text, $o->rating]);
         $this->assertSame('2026-07-26', $o->published_at?->toDateString(), 'la primera fecha, la más precisa, se conserva');
+    }
+
+    /**
+     * **Una que Google enseñaba TRADUCIDA** (`#874`; el defecto lo midió el SPA sobre `#771`): entra marcada y no se
+     * publica nunca —ni con la elección del fichero, activa y con su página—, en ninguna superficie; reimportar refresca
+     * la marca con lo que diga Google, como el texto.
+     */
+    public function test_a_review_google_showed_translated_is_marked_and_never_published(): void
+    {
+        $importador = app(CopiedReviewImport::class);
+        $cuenta = $importador->import($this->copia([
+            $this->resena(['translated' => true, 'active' => true, 'tags' => ['portada']]),
+            $this->resena(['id' => 'SusPalabras', 'author' => 'Ana', 'text' => 'Muy bien todo.', 'translated' => false, 'active' => true, 'tags' => ['portada']]),
+        ]));
+
+        $this->assertSame(1, $cuenta['traducidas']);
+        $traducida = Testimonial::query()->where('source_ref', 'ChdDSUhN')->firstOrFail();
+        $this->assertSame([true, true, ['portada']], [$traducida->translated, $traducida->is_active, $traducida->tags], 'marcada, aunque venga elegida');
+        $this->assertSame(['Ana'], Testimonial::query()->published()->pluck('author')->all(), 'no son sus palabras: no se publica');
+        $this->assertSame(['Ana'], app(CmsSocialProof::class)->testimonials()->pluck('author')->all(), 'tampoco en la portada de siempre');
+        $this->assertSame(['Lucía Pérez', 'Ana'], Testimonial::query()->orderBy('id')->pluck('author')->all(), 'se importa igual: el panel la enseña');
+
+        $importador->import($this->copia([$this->resena(['text' => 'Ya en el idioma en que la escribió.'])]));
+
+        $this->assertFalse($traducida->refresh()->translated, 'reimportar refresca la marca con lo que diga Google');
+        $this->assertContains('Lucía Pérez', Testimonial::query()->published()->pluck('author')->all());
     }
 
     public function test_images_come_only_from_google_hosts(): void

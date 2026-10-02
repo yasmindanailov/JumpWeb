@@ -995,3 +995,10 @@ hecho que no cede ante otra compra elegida (`trasLaCompra`). Y `b3.test.js` con 
 la barra con la cabecera a la vista y la barra que se come el banner (`situacion.js`, `barra-accion.js`); la guarda del trozo
 de la barra (`SidebarBundleBudgetTest`), vista morder con un `import` estático. No hay guion que lo repita. **Qué hacer**: llevarlos a
 `scripts/mutar-isla-z6b.sh` (sus tests en su `NODE`; sus ficheros en `FICHEROS`) la próxima vez que se toque, y correrlo entero.
+
+## ▶ Baja · las reseñas TRADUCIDAS que no se publican (`#874`) muerden, pero sin arnés versionado (02-10, modo ligero)
+
+Tres mutantes A MANO, 3/3 y restaurados por copia (el árbol, igual por `sha256sum`): `published()` sin `untranslated()`
+(caen `ReviewsFactsTest` y `CopiedReviewImportTest`), el importador sin la marca (`CopiedReviewImportTest`) y el listado del
+panel sin el estado «traducida» (`TestimonialResourceTest`). No hay guion que lo repita. **Qué hacer**: un
+`scripts/mutar-resenas-traducidas.sh` con esos tres, la próxima vez que se toquen las opiniones.

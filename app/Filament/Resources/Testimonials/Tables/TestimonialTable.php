@@ -40,13 +40,18 @@ class TestimonialTable
                     ->badge()
                     ->placeholder(__('admin.testimonials.tags_none')),
 
+                // Lo que de verdad pasa con ella: una copiada que Google enseñaba TRADUCIDA no se publica aunque esté
+                // activa (`#874`), y la columna lo dice en vez de prometer un «Activa» que no sale en ninguna página.
                 TextColumn::make('is_active')
                     ->label(__('admin.testimonials.col_active'))
                     ->badge()
-                    ->formatStateUsing(fn (bool $state): string => $state
-                        ? __('admin.testimonials.active_yes')
-                        : __('admin.testimonials.active_no'))
-                    ->color(fn (bool $state): string => $state ? 'success' : 'gray'),
+                    ->getStateUsing(fn (Testimonial $record): string => $record->translated ? 'translated' : ($record->is_active ? 'yes' : 'no'))
+                    ->formatStateUsing(fn (string $state): string => __('admin.testimonials.active_'.$state))
+                    ->color(fn (string $state): string => match ($state) {
+                        'yes' => 'success',
+                        'translated' => 'warning',
+                        default => 'gray',
+                    }),
             ])
             ->defaultSort('position')
             ->reorderable('position')

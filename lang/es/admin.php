@@ -4459,6 +4459,8 @@ return [
         'col_active' => 'Activa',
         'active_yes' => 'Activa',
         'active_no' => 'Inactiva',
+        // Una copiada que Google enseñaba traducida (`#874`): no se publica aunque esté activa.
+        'active_translated' => 'Traducida: no se publica',
         // `#771`: las copiadas de la ficha de Google y en qué páginas sale cada una.
         'col_origin' => 'De dónde',
         'col_tags' => 'Páginas',
@@ -4486,6 +4488,8 @@ return [
         'field_origin' => 'Origen',
         'field_source_url' => 'Enlace a la ficha en Google',
         'field_source_url_hint' => 'Adónde lleva «Ver en Google». Lo pone solo el importador.',
+        'field_translated' => 'Traducida por Google',
+        'field_translated_hint' => 'Google la enseñaba traducida: el texto no son las palabras de su autor. Mientras esté marcada, no se publica aunque esté activa. Desmárcala solo si pones sus palabras de verdad; al reimportar, la marca vuelve a la que diga Google.',
         'section_reply' => 'Respuesta del parque',
         'field_reply' => 'Respuesta (opcional)',
         'field_reply_hint' => 'La que contestaste en Google, tal cual. Se pinta debajo de la reseña.',

@@ -528,6 +528,11 @@ Sin esto no puede llegar a ✅ (`/dod` §3.bis).
   APAGADA y sin páginas; reimportar actualiza lo de Google y conserva lo que eligió el parque; sin texto no entra; la
   fecha relativa se guarda como día. Las imágenes, con las reglas de `GoogleReviewImages` (hosts exactos, sin
   redirecciones, tope, tipo por bytes), al disco `uploads` (`resenas/`); se borran cuando ninguna fila las usa.
+  ▶ `[DECIDIDO owner]` 2026-10-02 (`#874`; el defecto lo midió el SPA): una que Google enseñaba TRADUCIDA (`translated`
+  de la copia, su «Ver original») entra marcada y **no se publica nunca**, ni en las páginas ni en la Puerta, aunque esté
+  activa: no son las palabras de su autor (§4.7 obligaba a AVISAR la traducción de las de Places; de las copiadas, el
+  owner prefirió no publicarla a avisarla). El panel lo dice («Traducida: no se publica») y deja quitar la marca a quien
+  ponga sus palabras; reimportar la refresca.
 - **Publicar**: «Ajustes → Web → Opiniones»: activarla y darle páginas («kids», «jump»…) y orden. `GET /api/v1/reviews`
   (1.31.0, hecho de página `reviews`) sirve las publicadas con sus páginas; Kids y Jump pintan las tres primeras de su
   zona en el panel de la nota (`review-card`, el `ReviewCard` del mockup), firmadas «Nombre I.».

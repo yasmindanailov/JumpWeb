@@ -15,6 +15,9 @@ use InvalidArgumentException;
  * que viene de Google —texto, estrellas, autor, imágenes, respuesta— y **conserva lo que decidió el parque**: si está
  * publicada, en qué páginas y en qué orden. Una nueva entra APAGADA y sin páginas: publicar es una elección.
  * ▶ Una reseña sin texto (solo estrellas) no se importa: no hay nada que enseñar en una tarjeta.
+ * ▶ Una que Google enseñaba TRADUCIDA (`translated` de la copia: su botón «Ver original») entra MARCADA (`#874`): su
+ *   texto no son las palabras de su autor, así que no se publica nunca aunque el parque la active. Reimportar refresca la
+ *   marca con lo que diga Google, como el texto.
  * ⚠️ Google dice la fecha en relativo («Hace 2 meses»): se guarda el día que eso significa desde el momento de la copia,
  * y la página vuelve a escribirla en relativo, así envejece bien. En una reseña que ya estaba se conserva la primera,
  * que es la más precisa.
@@ -30,7 +33,7 @@ final class CopiedReviewImport
      * como se lleva a otro servidor la misma selección que se hizo en local; en una que ya estaba no se toca.
      *
      * @param  array<string, mixed>  $copia  el JSON de la herramienta de copia
-     * @return array{nuevas: int, actualizadas: int, sin_texto: int, imagenes: int, nota: bool}
+     * @return array{nuevas: int, actualizadas: int, sin_texto: int, imagenes: int, traducidas: int, nota: bool}
      */
     public function import(array $copia): array
     {
@@ -41,7 +44,7 @@ final class CopiedReviewImport
 
         $momento = isset($copia['copied_at']) ? Carbon::parse((string) $copia['copied_at']) : now();
         $ficha = self::url($copia['place_url'] ?? $copia['source'] ?? null);
-        $cuenta = ['nuevas' => 0, 'actualizadas' => 0, 'sin_texto' => 0, 'imagenes' => 0, 'nota' => false];
+        $cuenta = ['nuevas' => 0, 'actualizadas' => 0, 'sin_texto' => 0, 'imagenes' => 0, 'traducidas' => 0, 'nota' => false];
 
         $media = (float) str_replace(',', '.', (string) ($copia['rating']['value'] ?? 0));
         $total = (int) ($copia['rating']['count'] ?? $copia['total'] ?? 0);
@@ -73,7 +76,9 @@ final class CopiedReviewImport
                 'rating' => isset($r['rating']) && (int) $r['rating'] >= 1 && (int) $r['rating'] <= 5 ? (int) $r['rating'] : null,
                 'text' => ['es' => $texto],
                 'reply' => ($respuesta = trim((string) ($r['reply'] ?? ''))) === '' ? null : $respuesta,
+                'translated' => ($r['translated'] ?? false) === true,
             ];
+            $cuenta['traducidas'] += $datos['translated'] ? 1 : 0;
 
             DB::transaction(function () use ($id, $datos, $r, $momento, &$cuenta): void {
                 $opinion = Testimonial::query()->where('source_ref', $id)->lockForUpdate()->first();

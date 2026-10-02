@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\Storage;
  * Empresa viven en su propio modelo; ésta es un DATO del parque, que decide cuáles se publican y dónde (`tags`).
  * ⚠️ Sus imágenes (`avatar`, `photos`) son rutas NUESTRAS del disco `uploads`: se descargan al importar, así que la
  * página no le pide nada a un tercero.
+ * ⚠️ Una copiada que Google enseñaba TRADUCIDA (`translated`, `#874`) no son las palabras de su autor: no se publica
+ * nunca, aunque esté activa ({@see scopePublished()}, {@see scopeUntranslated()}).
  */
 class Testimonial extends Model
 {
@@ -33,6 +35,7 @@ class Testimonial extends Model
 
     protected $attributes = [
         'origin' => self::ORIGIN_OWN,
+        'translated' => false,
     ];
 
     protected $casts = [
@@ -42,6 +45,7 @@ class Testimonial extends Model
         'rating' => 'integer',
         'published_at' => 'date',
         'is_active' => 'boolean',
+        'translated' => 'boolean',
     ];
 
     protected static function booted(): void
@@ -85,7 +89,8 @@ class Testimonial extends Model
     }
 
     /**
-     * Las publicadas en una página: activas y con esa etiqueta, en el orden del panel.
+     * Las publicadas en una página: activas, con sus palabras ({@see scopeUntranslated()}) y con esa etiqueta, en el orden
+     * del panel.
      *
      * ⚠️ La etiqueta se busca en PHP y no con `whereJsonContains`: la suite corre en SQLite y producción en MySQL, y la
      * lista es corta (decenas), así que no merece dos dialectos.
@@ -95,7 +100,19 @@ class Testimonial extends Model
      */
     public function scopePublished(Builder $query): Builder
     {
-        return $query->where('is_active', true)->orderBy('position')->orderByDesc('published_at')->orderBy('id');
+        return $query->where('is_active', true)->untranslated()->orderBy('position')->orderByDesc('published_at')->orderBy('id');
+    }
+
+    /**
+     * Las que dicen las palabras de su autor: fuera las copiadas que Google enseñaba TRADUCIDAS (`#874`). Toda superficie
+     * que publique una opinión pasa por aquí (la Puerta también).
+     *
+     * @param  Builder<Testimonial>  $query
+     * @return Builder<Testimonial>
+     */
+    public function scopeUntranslated(Builder $query): Builder
+    {
+        return $query->where('translated', false);
     }
 
     /** ¿Sale en esta página? */

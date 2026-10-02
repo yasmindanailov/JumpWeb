@@ -34,8 +34,8 @@ class ImportCopiedReviews extends Command
         $cuenta = $importador->import($json);
 
         $this->line(sprintf(
-            'Nuevas %d · actualizadas %d · sin texto (no se importan) %d · imágenes traídas %d · nota de la ficha %s.',
-            $cuenta['nuevas'], $cuenta['actualizadas'], $cuenta['sin_texto'], $cuenta['imagenes'], $cuenta['nota'] ? 'guardada' : 'no venía',
+            'Nuevas %d · actualizadas %d · sin texto (no se importan) %d · traducidas por Google (no se publican, #874) %d · imágenes traídas %d · nota de la ficha %s.',
+            $cuenta['nuevas'], $cuenta['actualizadas'], $cuenta['sin_texto'], $cuenta['traducidas'], $cuenta['imagenes'], $cuenta['nota'] ? 'guardada' : 'no venía',
         ));
 
         return self::SUCCESS;

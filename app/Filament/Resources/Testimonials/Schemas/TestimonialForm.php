@@ -101,6 +101,14 @@ class TestimonialForm
                             ->url()
                             ->maxLength(500)
                             ->visible(fn (Get $get): bool => $get('origin') === Testimonial::ORIGIN_GOOGLE),
+                        /*
+                         * TRADUCIDA POR GOOGLE (`#874`): la marca el importador y, mientras siga, la opinión no se publica
+                         * aunque esté activa (no son las palabras de su autor). Se desmarca solo si se ponen sus palabras.
+                         */
+                        Toggle::make('translated')
+                            ->label(__('admin.testimonials.field_translated'))
+                            ->helperText(__('admin.testimonials.field_translated_hint'))
+                            ->visible(fn (Get $get): bool => $get('origin') === Testimonial::ORIGIN_GOOGLE),
                     ]),
 
                 Section::make(__('admin.testimonials.section_classification'))

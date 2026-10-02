@@ -32,6 +32,15 @@ class ReviewsFactsTest extends ApiTestCase
         $this->assertSame([['kids', 'portada'], ['jump']], array_column($opiniones, 'tags'));
     }
 
+    /** Una copiada que Google enseñaba TRADUCIDA (`#874`) no viaja aunque esté activa y con página: no son sus palabras. */
+    public function test_a_copy_google_showed_translated_does_not_travel_even_if_chosen(): void
+    {
+        Testimonial::create(['origin' => Testimonial::ORIGIN_GOOGLE, 'author' => 'Traducida', 'text' => ['es' => 'T'], 'is_active' => true, 'position' => 1, 'tags' => ['kids'], 'translated' => true]);
+        Testimonial::create(['origin' => Testimonial::ORIGIN_GOOGLE, 'author' => 'Suya', 'text' => ['es' => 'S'], 'is_active' => true, 'position' => 2, 'tags' => ['kids']]);
+
+        $this->assertSame(['Suya'], array_column($this->opiniones(), 'author'));
+    }
+
     public function test_a_google_copy_carries_its_mark_link_images_and_reply_and_an_own_one_does_not(): void
     {
         Testimonial::create([

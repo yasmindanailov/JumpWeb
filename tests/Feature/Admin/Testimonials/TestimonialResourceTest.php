@@ -88,4 +88,34 @@ class TestimonialResourceTest extends TestCase
             ->assertCanSeeTableRecords([$copia])
             ->assertSee(__('admin.testimonials.origins.google'));
     }
+
+    /**
+     * Una copiada que Google enseñaba TRADUCIDA (`#874`): el listado dice que no se publica —no un «Activa» que no sale
+     * en ninguna página— y la ficha deja quitar la marca a quien pone sus palabras; una escrita aquí no tiene la marca.
+     */
+    public function test_a_translated_copy_says_it_is_not_published_and_can_be_unmarked(): void
+    {
+        $copia = Testimonial::create([
+            'origin' => Testimonial::ORIGIN_GOOGLE, 'source_ref' => 'Trad', 'author' => 'Hugo M.', 'text' => ['es' => 'Traducido.'],
+            'is_active' => true, 'translated' => true,
+        ]);
+
+        Livewire::actingAs($this->admin())
+            ->test(ListTestimonials::class)
+            ->assertCanSeeTableRecords([$copia])
+            ->assertSee(__('admin.testimonials.active_translated'));
+
+        Livewire::actingAs($this->admin())
+            ->test(EditTestimonial::class, ['record' => $copia->id])
+            ->assertFormFieldVisible('translated')
+            ->fillForm(['text' => ['es' => 'Sus palabras.'], 'translated' => false])
+            ->call('save')
+            ->assertHasNoFormErrors();
+        $this->assertFalse($copia->refresh()->translated);
+
+        Livewire::actingAs($this->admin())
+            ->test(CreateTestimonial::class)
+            ->fillForm(['origin' => Testimonial::ORIGIN_OWN])
+            ->assertFormFieldHidden('translated');
+    }
 }

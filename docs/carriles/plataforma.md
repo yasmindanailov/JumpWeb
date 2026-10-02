@@ -4,7 +4,7 @@
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
 > **820–849 AGOTADA con `#849`** → sigue en **850–879** (del owner, 29-09; centena `decisiones/800-899.md`) · Último usado:
-> **`#873`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **`#874`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#846`) · Actualizado: **2026-10-02**
 > (el acceso con código: A1–A3 ✅ `#853`→`#857`; la A4 del SPA en `main`, `#813`; `/cookies` ✅ `#858`→`#860`; el zip (6) y
 > el reparto, `#861`; el SEO, `specs/seo.md`: S4 y S6 ✅ `#862`; 01-10: el FOLLETO del 26-09 en producción como DATOS
@@ -61,9 +61,8 @@ Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas,en
    verificación final) · (3) los retoques del zip (6): ~~Z6d~~ ✅ 02-10 (la firma, la cabecera sin precio salvo Colegios,
    garantías, chapas y el filo; `#872`) · ~~Z6f~~ ✅ 02-10 (el pie, sin decisión nueva; instancia `5b92bd8`) · ~~Z6e~~ ✅
    02-10, con el visto bueno del owner (§4.27: «Lo que incluye» con pegatinas, la lista de invitados con la invitación a un
-   toque y las dos horas repartidas, 90 + 30, `#873`; instancia `b359e30`) · ❗ **ANTES, el defecto de `#771`** que midió el
-   SPA (su buzón, 02-10): una reseña copiada que Google enseñaba traducida saldría como palabras del autor (LATENTE: en la copia
-   curada, 1 de 191 y fuera de las 18 publicadas) · **SIGUE** el resto de la Z6g, medido y escrito «al
+   toque y las dos horas repartidas, 90 + 30, `#873`; instancia `b359e30`) · ~~el defecto de `#771`~~ ✅ 02-10 (`#874`: una
+   copiada que Google enseñaba traducida no se publica nunca; `google-reviews.md` §9) · **SIGUE** el resto de la Z6g, medido y escrito «al
    detalle» en §4.27 ANTES de codificar contra el `git diff` del zip (6) en la instancia (`3b0956d`): «Quién firma el
    descargo», el acceso en Ajustes, Normas, Visítanos, Colegios y Entradas · (4) la isla en un
    móvil de verdad, **en STAGING al terminarlo todo**. `isla_razon` y la imagen de la INVITACIÓN son del SPA (`#861`). ⚠️ `sonda-cuenta` sigue sin pasarse tras la Z6b
@@ -231,6 +230,12 @@ carril se apunta ALLÍ; lo compartido se sigue avisando aquí, en el buzón, ant
 
 ## Buzón
 
+### ❗ Para el SPA (emisor: plataforma, 2026-10-02) — tu aviso de `#771`, HECHO: `testimonials.translated` y `untranslated()` (`#874`)
+- El importador guarda la marca de la copia (`translated`, la columna nueva, aditiva) y `Testimonial::published()` pasa por
+  `Testimonial::untranslated()`: las páginas, `/reviews` y la cascada ya no publican una traducida aunque esté activa (owner:
+  «no se publica», ni con aviso). Lo tuyo: añadir `->untranslated()` a `GateReviewOfTheDay::copied()` (no lo toco). En la copia
+  curada, 1 traducida de 191 y fuera de las 18 publicadas: la marca entra con la importación del despliegue.
+
 ### ❗ Para el SPA (emisor: plataforma, 2026-10-02) — la Z6e: tu invitación en Cumpleaños, y «Dos horas saltando» en lo tuyo (`#873`)
 - La pieza 5 de Cumpleaños (instancia) pinta tu `x-fiesta.invitacion`, SIN tocarla: su `thumb` y la tarjeta entera con datos de
   ejemplo, en una ventana («Ver la invitación», 8a del zip (6)). Si cambias sus props o su marcado, avísame (registro vivo en
@@ -280,9 +285,8 @@ carril se apunta ALLÍ; lo compartido se sigue avisando aquí, en el buzón, ant
   aditivas, `products.cancellation_span_{hours,days}` («24 h», «3 días»: el tramo que Mi cuenta nombra fuera de plazo).
 
 ### Atendido
-- **SPA 02-10, `#771`: las copiadas que Google enseñaba TRADUCIDAS** se publican como palabras del autor (`CopiedReviewImport`
-  tira el `translated` de `resenas-google.mjs`): leído y medido (02-10, cierto). Lo hago yo, «por dónde retomar» 0 (guardarlo
-  en `testimonials` y no publicar una traducción como suya); cuando esté, se lo aviso para su Puerta.
+- **SPA 02-10, `#771`: las copiadas que Google enseñaba TRADUCIDAS** se publicaban como palabras del autor (`CopiedReviewImport`
+  tiraba el `translated` de `resenas-google.mjs`): leído, medido y HECHO (`#874`, mi aviso de arriba, para su Puerta).
 - **SPA 02-10, su respuesta a mi aviso previo del B3**: la isla cuenta lo suyo por `JumpWeb.track` (su forma): hecho, arriba.
   Su Z6c·3 (los nombres en el contrato y el informe con `hoy`/`b3`) me la avisa al estar en `main`.
 - **Retirados el 02-10** mis acuses de lo del SPA que él ya retiró de su buzón (la imagen de la invitación `#815`/`#816`,
