@@ -414,6 +414,14 @@ el MISMO enganche que tiene en el 106 (copiado fila a fila); las tartas siguen e
 de la isla; su control, la fiesta `JW-OJO-CFG`. ⚠️ Quitar un complemento en la lista CANCELA su línea (`cancelled_at`), no la
 borra: se mide con `cancelled_at IS NULL`.
 
+(30) **La merienda como GRUPO DE OPCIONES (02-10, P3 de `#914`, `fiesta-sistema-nuevo.md` §4.21)**: `ojo-p3.php` (en la carpeta
+de auditoría) va ENCIMA de `ojo-kids.php` y `ojo-config.php`: en los packs 105 (KIDS) y 106 (JUMP), el grupo `merienda` («¿Qué
+merienda?», «Hay que elegir») con las tres opciones de K3 dentro (Sándwich, Pizza y Perrito: 364, 365 y 366), INCLUIDAS y UNA
+POR NIÑO, por el MODELO (las guardas de `ProductAddon` validan lo montado). ⚠️ El grupo va fechado el 01-09 para que lo vean
+las fiestas de prueba (`JW-OJO-KIDS`, `JW-OJO-CFG`), anteriores a hoy; en producción, lo vendido antes NO lo ve (`#914`). Lo de
+antes, en `ojo-p3-antes.json`. `OJO=desmontar` lo deja como estaba: ⚠️ **desmontar este el PRIMERO** (antes que los de (29) y
+(25)). Sigue montado tras el visto bueno del owner (02-10 noche).
+
 ## 9 · La foto vieja del carril (mudada VERBATIM de `carriles/spa.md` el 2026-09-29, su techo)
 
 - ✅ **27-09, TODO EN `main` Y APROBADO POR EL OWNER**: **F7** (`#752`, la exención de quien cumple: la lista y su
@@ -690,6 +698,26 @@ De «por dónde retomar», mudado VERBATIM el 2026-09-30 al empezar la R1·T (el
   token en claro en vez de la fila; tu molde, sin tocar. La marca por envío (`jw_e`) y el píxel, en la T5: aviso antes.
 - **Para correos (27-09, F7)**: `VisitEveNotice` gana una línea («Falta el descargo de Noa: puedes firmarlo en su fila de
   la lista»), sin tocar tu molde.
+
+### La lista del owner del 02-10, su «por dónde retomar» (mudado VERBATIM de `carriles/spa.md` el 2026-10-02, 23:30, al fusionarla en `main`)
+
+▶▶▶ **AHORA, LA LISTA DEL OWNER DEL 02-10 (tarde)**: lo que plataforma me pasó (`#876`; `isla-y-landing-nueva.md` §4.28,
+filas 4 y 8), ANTES que la R1c («tus puntos primero»).
+- 🟦 **Fila 4, los complementos y las opciones del menú en la lista**: SIN CÓDIGO (K3, `#808`): el JUMP (106) ya lo tenía en la
+  local; el owner eligió (02-10) el KIDS (105) igual, montado con `ojo-kids.php` y medido con su sonda a 390 y 1280 (`CARRIL-SPA`
+  §8 (29)). ▶ Falta su OJO en vivo. En producción, con la v2.0.0: la receta, `fiesta-sistema-nuevo.md` §4.17 «K3». ✅ El DEFECTO
+  que vio el owner (la invitación pintaba complementos CANCELADOS, `PartyInvitations::menuFor()`, §4.17), ARREGLADO en la misma
+  rama: su test (visto rojo), arnés `mutar-menu-cancelados.sh` 2/2 y las dos invitaciones medidas.
+- 🟦 **Fila 8, las altas en casa y en el parque** (la TA, `analitica-para-decidir.md` §4.15): HECHA en `wip/ta-altas-por-origen`
+  con la TA·0 (los robots fuera de la demanda sin hueco); `#911` decidida por el owner («como el pedido»); arnés `SOLO=TA` 18/18,
+  sonda del cartel 10/10, suite verde. ▶ Falta su OJO en «Analítica → Clientes»; después, *fast-forward* a `main`. ⚠️ v1.1.0
+  no tiene ni la analítica ni `#mi-cuenta`: un QR impreso hoy abre la portada y no cuenta nada hasta la v2.0.0.
+
+- ▶ **Del owner (02-10 noche, `#912`/`#913`; `fiesta-sistema-nuevo.md` §4.20)**: 🟦 P1 UN plazo para toda la lista y 🟦 P2 la
+  impar a lo ancho y 🟦 P1·b sin el aviso de la tarta, HECHAS en `wip/ta-altas-por-origen` (falta su OJO; la verificación, en la
+  spec) → P3 los grupos de opciones (`#914`, §4.21; en `wip/p3-grupos-de-opciones`: 🟦 P3·1→P3·4 (dominio, panel, lista,
+  el parque y la API 1.62.0) y 🟦 P4 el correo «Falta elegir…» HECHAS, al ojo del owner (`ojo-p3.php`; el correo, en Mailpit);
+  rebasadas sobre `main` el 02-10 noche) → con su visto bueno, a `main` (gate entero y, con su permiso, los verificadores).
 
 ## Anexo · La fila del enrutador, mudada el 2026-09-16
 

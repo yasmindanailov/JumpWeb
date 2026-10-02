@@ -115,13 +115,22 @@ class ChoiceReminderNoticeTest extends TestCase
     {
         $item = $this->party();
         app(PostFormAddons::class)->reconcile($item, [$this->pizza->id => 1], 'signed_link');
-        $optional = $this->party(code: 'JJ-OPT01');
-        $this->group->forceFill(['is_required' => false])->save();
         Notification::fake();
 
+        // Elegida, con «hay que elegir»: no le falta nada, y TAMPOCO se marca —si el parque le quita la merienda dentro de la
+        // ventana, el aviso le tiene que llegar—. (El arnés lo vio: sin el «nada pendiente», `shouldSend()` frenaba el correo
+        // y la marca quedaba puesta igual.)
         $this->travelTo($this->at('2026-10-18 18:00'));
         $this->artisan('reservations:choice-reminder')->assertSuccessful();
+        Notification::assertNothingSent();
+        $this->assertNull($item->fresh()?->choice_reminder_at, 'sin aviso no hay marca');
 
+        // Sin elegir, con el grupo opcional: «ninguna» es una respuesta. Vendida antes de la ventana, como la de arriba.
+        $this->travelTo($this->at('2026-10-10 12:00'));
+        $optional = $this->party(code: 'JJ-OPT01');
+        $this->group->forceFill(['is_required' => false])->save();
+        $this->travelTo($this->at('2026-10-18 18:00'));
+        $this->artisan('reservations:choice-reminder')->assertSuccessful();
         Notification::assertNothingSent();
         $this->assertNull($optional->fresh()?->choice_reminder_at, 'sin aviso no hay marca');
     }

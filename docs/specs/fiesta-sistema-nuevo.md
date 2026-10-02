@@ -3,7 +3,8 @@
 > Estado: ✅ **APROBADA por el owner el 2026-09-25 con sus ocho respuestas (`#743`)** · en ejecución: T0 ✅, sigue
 > la T1 · Última actualización: 2026-10-02 · Decisiones: `#765` (el traspaso) · **`#743`** (la aprobación y las ocho
 > respuestas de §7) · `#805` (la lista del owner, §4.16) · `#806`, `#807` y `#808` (los complementos en dos, §4.17) ·
-> `#814` (`LinkIsland`, §4.18) · `#815` y `#816` (la imagen al compartir, §4.19).
+> `#814` (`LinkIsland`, §4.18) · `#815` y `#816` (la imagen al compartir, §4.19) · `#912`→`#914` (un plazo, la impar y los
+> grupos de opciones, §4.20–§4.21).
 > Carril: 🧩 **SPA** (banda 730–759). Fuente del diseño: `instancias/playjump/diseno/playjump-design-system/`
 > (el zip de Claude Design, `#760`): `paginas/lista-invitados.card.html`, `paginas/invitacion.card.html`,
 > `paginas/autorizacion.card.html`, `components/invitados/*`, `components/forms/SaveBar.jsx`, el `readme.md`
@@ -1193,7 +1194,7 @@ con tarjetas impares, la última a lo ancho (la A, elegida con la B y la C rende
    (comercial). Ninguno llega antes del plazo con margen: el de la merienda es un correo nuevo.
 
 **Las tandas** (cada una en `wip/`, con su «al detalle» y al ojo del owner):
-- 🟦 **P1 · un plazo — HECHA (02-10 noche, en `wip/`; falta el ojo del owner)** (`CRITICAL_RE`: `PostFormAddons`, `ProductAddon`;
+- ✅ **P1 · un plazo — EN `main` (02-10, 23:30) con el visto bueno del owner** (`CRITICAL_RE`: `PostFormAddons`, `ProductAddon`;
   `VERIFY_CONC=1` con sus verificadores): el plazo de cada complemento ES el de la lista (`PostFormAddons::deadlineFor()` y
   `ProductAddon::postformCutoffHours()` delegan en `GuestCountPolicy`, que compara igual, `lt`: cierran en el MISMO instante);
   fuera `missing_cutoff`, el campo y la insignia del panel (la columna, sin lectores: `DEUDA.md`); la lista dice el plazo UNA
@@ -1203,14 +1204,14 @@ con tarjetas impares, la última a lo ancho (la A, elegida con la B y la C rende
   tarjetas callan), `PostFormAddonsTest::test_an_addon_closes_at_the_same_instant_as_the_list`; arnés
   `scripts/mutar-plazo-unico.sh` **8/8** con su control; `postform:verify-concurrency` `addons` y `cross` verdes (y el
   `--control` ve sus 4 interbloqueos); suite 6828.
-- 🟦 **P2 · la impar a lo ancho — HECHA (02-10 noche, en `wip/`; falta el ojo del owner)**: en la hoja (`fiesta.css`), la última
+- ✅ **P2 · la impar a lo ancho — EN `main` (02-10, 23:30) con el visto bueno del owner**: en la hoja (`fiesta.css`), la última
   tarjeta impar de un grupo (`.pli-grid2`), a lo ancho; y el suelto que se queda solo en su fila entre dos grupos con título lo
   marca el servidor (`ListaDeInvitados::extras()`, `ancha` → `pli-fam--ancha`), porque la hoja no sabe contar rachas. Con una
   columna no hace nada. Verificación: `ExtrasDeLaFiestaListaTest::test_a_loose_extra_left_alone_in_its_row_takes_the_whole_width`
   (rojo sin el servidor; la racha de tres marca el ÚLTIMO; de control, la pareja sin marca); arnés `scripts/mutar-lista-huecos.sh`
   **5/5** con su control; `scripts/sonda-lista-huecos.mjs` sin huecos en el KIDS y el JUMP a 1280 y 390, y su `--control` (la regla
   anulada en la página) ve los 4 huecos de antes.
-- 🟦 **P1·b · el aviso de la tarta, fuera — HECHA (02-10 noche, en `wip/`; falta el ojo del owner)**. Verificación (modo ligero):
+- ✅ **P1·b · el aviso de la tarta, fuera — EN `main` (02-10, 23:30) con el visto bueno del owner**. Verificación (modo ligero):
   `ExtrasDeLaFiestaListaTest::test_the_cake_has_no_notice_nor_deadline_of_its_own_even_closing_tomorrow` (el caso que antes
   aseveraba el aviso en ese escenario y pasaba) y, de paso, la tarta cerrada con una pedida ya no puede decir «Sin tarta»;
   `caraDeLaLista` sin texto de tarta (`node --test` 27/27); 551 tests del módulo, Larastan, ESLint. Los arneses NO se corrieron
@@ -1223,7 +1224,8 @@ con tarjetas impares, la última a lo ancho (la A, elegida con la B y la C rende
   `ExtrasDeLaFiestaListaTest::test_the_cake_notice_shows_only_while_undecided_and_closing_soon` (re-apuntado: nunca hay aviso)
   y 5 mutaciones de `mutar-extras-fiesta.sh` y `mutar-complementos-k2.sh`, retiradas con su sujeto (§3.quater). En esta rama,
   antes de fusionar.
-- **P3 · la merienda: «hay que elegir uno», INCLUIDA y POR NIÑO** (`CRITICAL_RE`; el owner, 02-10: «la merienda incluida por
+- ✅ **P3 · la merienda: «hay que elegir uno», INCLUIDA y POR NIÑO — EN `main` con el visto bueno; al detalle, construida y
+  verificada en §4.21** (`CRITICAL_RE`; el owner, 02-10: «la merienda incluida por
   niño… seleccionable y obligatoria, 1 solo»): una sola opción para la fiesta, la misma para todos los niños. El grupo excluyente
   de venta posterior SIN marcado de serie, con su marca en el panel (distinta de `is_mandatory`); en la lista, una pregunta de
   UNA respuesta, «Incluida · una para cada niño» y «Falta elegir…»; «sin elegir» en el panel, la ficha de la reserva
@@ -1236,7 +1238,7 @@ con tarjetas impares, la última a lo ancho (la A, elegida con la B y la C rende
   abre en venta posterior las reglas 2, 3 y 4 de `ProductAddon::postFormProblem()` SOLO para un grupo «hay que elegir uno»;
   (c) ⚠️ una fiesta vendida con el Menú al reservar (producción hasta la v2.0.0) ya eligió: no puede ver «falta elegir» ni
   recibir el correo de P4 (la regla, a medir en su «al detalle»).
-- 🟦 **P4 · el correo «Falta elegir…» — HECHA (02-10 noche, en `wip/p3-grupos-de-opciones`; falta el ojo del owner en Mailpit)**:
+- ✅ **P4 · el correo «Falta elegir…» — EN `main` (02-10, 23:30) con el visto bueno del owner**:
   `ChoiceReminderNotice` + `reservations:choice-reminder`, cada hora con su marca (`order_items.choice_reminder_at`, por
   `toBase()`, como la víspera). Sale en la ventana de las 24 h antes de que cierre la lista, una vez, si a la fiesta le falta un
   grupo con «hay que elegir» (`unansweredRequiredGroups()`, lo mismo que el parque ve «sin elegir»); no sale a una fiesta
@@ -1334,6 +1336,32 @@ bajo las líneas de la reserva. La API, **1.62.0**: `PostFormAddon` gana `includ
 Verificación: `ChoiceGroupsParkTest` 3 y `Api\V1\GuestFormTest` +1 (contra el contrato, ida y vuelta), con sus controles;
 1937 vecinos; Larastan, Pint. Medido en el camino: sin la tarifa BASE de la instalación, `RateResolver` lanza (404 en la API):
 en una instalación real siempre existe; el fixture la crea.
+
+**✅ P3 y P4, EN `main` (02-10, 23:30) con el visto bueno del owner** («Visto bueno, buen trabajo. Procede con rigor…»), con
+P1, P1·b y P2. Al fusionar:
+- **La hoja A4 del MES** (el owner: «revisa que en la hoja a4 pdf que se imprime para el MES salga la merienda elegida y la
+  tarta»): SÍ. Lo fija `ChoiceGroupsParkTest::test_the_month_sheet_prints_the_chosen_snack_and_the_cake` (el resumen del mes
+  con «Todo» y su PDF: las dos en la MISMA fila). En la local, el PDF de octubre: «Sándwich» y «Menú Pizza + bebida» en
+  «Merienda», «¿Qué merienda?: sin elegir» donde falta y «Tarta» en una fiesta del KIDS. ⚠️ Dos cosas de DATOS, no de código
+  (avisadas a plataforma, dueño de `#879`): con «Solo cumpleaños» el mes sale VACÍO en la local —los packs 105 y 106 preguntan
+  la edad con un campo de tipo número y no «Edad de quien cumple», que es como `DailyReservationsSummary` reconoce un
+  cumpleaños; `ProductionSeeder` lo siembra igual; producción, sin medir—; y las tartas del JUMP (106) no están en el bloque
+  «La tarta»: salen en la línea del producto («+ 2 × Tarta»), no en su columna.
+- **El arnés** `scripts/mutar-grupos-de-opciones.sh`: **24/24** con su control (2 min 53 s; cada mutación, solo sus casos):
+  «elige una» (quitar las demás, dos a la vez, la obligatoria, lo comprado al reservar), lo elegido por la línea VIVA, «No se
+  les pide» en la lista y en el parque, las reglas 2–4 y 8, la fase única, el borrado, «sin elegir» en el resumen y en el
+  panel, la lista (`choices[]`, las opciones fuera de las tarjetas), la API y el correo. La primera pasada dio 23/24: a una
+  fiesta sin nada pendiente, `shouldSend()` le frenaba el correo pero la MARCA quedaba puesta (y con ella no le llegaría el
+  aviso si el parque le quitara la merienda dentro de la ventana): su caso mezclaba dos escenarios y no lo miraba; partido
+  en dos. Antes de mutar se escribieron los dos que faltaban: lo comprado AL RESERVAR hace el grupo del parque y, tras cambiar,
+  lo elegido es la nueva (`PostFormChoiceGroupsTest`, 17).
+- `postform:verify-concurrency` (12 procesos): `addons` (una línea y un hecho) y `cross` (cero interbloqueos), verdes; el
+  `--control` ve 6 interbloqueos. `AddonResolver` solo cambia en la venta posterior: al reservar devuelve lo mismo.
+- **La receta de producción, DATO del panel (con la v2.0.0)**: en cada pack de cumpleaños, «Grupos de opciones» → la clave
+  `merienda`, la pregunta «¿Qué merienda?» (es/en/fr) y «Hay que elegir»; en «Complementos», cada merienda en venta posterior,
+  con el grupo `merienda`, «Incluido» y «Una por invitado» (sin tope: la regla 8 no se lo pide a lo que va por niño). Lo vendido
+  ANTES de crear el grupo no lo ve (`#914`): lo decide el parque, como hasta hoy. En la local lo monta `ojo-p3.php`
+  (`CARRIL-SPA.md` §8 (30)).
 
 ## 5. Impacto en invariantes
 

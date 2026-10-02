@@ -5,16 +5,21 @@
 > Banda: **910–939** (del owner, 02-10; 790–819 agotada con `#819`) · Último usado: **`#914`** (el siguiente, `#915`) · La banda está dada de alta en la
 > tabla de `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs:
 > **`acceso-con-codigo.md` §0** (la A4 del cajón ✅ en `main`) · `correos-rediseno.md` §0 ·
-> `fiesta-sistema-nuevo.md` §4.17–§4.19 · `analitica-para-decidir.md` §0 (en pausa, `#755`) · `encuestas.md` §0 y §4.7
+> `fiesta-sistema-nuevo.md` §4.17–§4.21 · `analitica-para-decidir.md` §0 (en pausa, `#755`) · `encuestas.md` §0 y §4.7
 > (`#754`) · `analitica.md` §0 y §4.5 · `isla-y-landing-nueva.md` §4.11 · `celebracion-e-invitacion.md` §0 ·
-> `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 · `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-10-02, 20:10
-> (la lista del owner: filas 4 y 8 de `#876` y P1·P2 de `#912`/`#913`, en `wip/` a su ojo; el arnés de la Puerta, de noche).
+> `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 · `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-10-02, 23:30
+> (la lista del owner —filas 4 y 8 de `#876`, P1→P4 de `#912`→`#914`— EN `main` con su visto bueno; el arnés de la Puerta, de noche).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`). El
 > contador de la suite va en el trailer del commit (`#618`), no aquí. **Se muda, no se raspa**: el detalle de
 > una feature baja a su spec (las trampas por tanda de la analítica T1→T5 viven en `analitica.md` §4.9,
 > mudadas verbatim el 24-09; las de la ficha de Google en su §9.1; las de la invitación en su §10.20).
 
-## Foto (2026-10-02, 16:40)
+## Foto (2026-10-02, 23:30)
+
+- ✅ **LA LISTA DEL OWNER DEL 02-10, EN `main` con su visto bueno** («Visto bueno, buen trabajo», 02-10 noche): de `#876`, la
+  fila 4 (el KIDS como el JUMP, sin código; la invitación sin complementos cancelados) y la 8 (la TA, `#911`); y P1 un plazo,
+  P1·b sin aviso de la tarta, P2 la impar a lo ancho, P3 los grupos de opciones (`#914`, API 1.62.0) y P4 «Falta elegir…»
+  (`fiesta-sistema-nuevo.md` §4.20–§4.21; arnés `mutar-grupos-de-opciones.sh` 24/24, verificadores del post-form verdes).
 
 - ✅ **LA PUERTA ENTERA, EN `main` con el visto bueno del owner** (`puerta-nueva.md` §4.4): P1a (`#818`), P1b·P1c (`#819`),
   P2 y P3 (`#910`), y la copiada TRADUCIDA fuera de la reseña del día (`#874`, de plataforma: `->untranslated()` en
@@ -44,23 +49,12 @@
 
 ## Por dónde retomar, en orden
 
-▶▶▶ **AHORA, LA LISTA DEL OWNER DEL 02-10 (tarde)**: lo que plataforma me pasó (`#876`; `isla-y-landing-nueva.md` §4.28,
-filas 4 y 8), ANTES que la R1c («tus puntos primero»).
-- 🟦 **Fila 4, los complementos y las opciones del menú en la lista**: SIN CÓDIGO (K3, `#808`): el JUMP (106) ya lo tenía en la
-  local; el owner eligió (02-10) el KIDS (105) igual, montado con `ojo-kids.php` y medido con su sonda a 390 y 1280 (`CARRIL-SPA`
-  §8 (29)). ▶ Falta su OJO en vivo. En producción, con la v2.0.0: la receta, `fiesta-sistema-nuevo.md` §4.17 «K3». ✅ El DEFECTO
-  que vio el owner (la invitación pintaba complementos CANCELADOS, `PartyInvitations::menuFor()`, §4.17), ARREGLADO en la misma
-  rama: su test (visto rojo), arnés `mutar-menu-cancelados.sh` 2/2 y las dos invitaciones medidas.
-- 🟦 **Fila 8, las altas en casa y en el parque** (la TA, `analitica-para-decidir.md` §4.15): HECHA en `wip/ta-altas-por-origen`
-  con la TA·0 (los robots fuera de la demanda sin hueco); `#911` decidida por el owner («como el pedido»); arnés `SOLO=TA` 18/18,
-  sonda del cartel 10/10, suite verde. ▶ Falta su OJO en «Analítica → Clientes»; después, *fast-forward* a `main`. ⚠️ v1.1.0
-  no tiene ni la analítica ni `#mi-cuenta`: un QR impreso hoy abre la portada y no cuenta nada hasta la v2.0.0.
-
-- ▶ **Del owner (02-10 noche, `#912`/`#913`; `fiesta-sistema-nuevo.md` §4.20)**: 🟦 P1 UN plazo para toda la lista y 🟦 P2 la
-  impar a lo ancho y 🟦 P1·b sin el aviso de la tarta, HECHAS en `wip/ta-altas-por-origen` (falta su OJO; la verificación, en la
-  spec) → P3 los grupos de opciones (`#914`, §4.21; en `wip/p3-grupos-de-opciones`: 🟦 P3·1→P3·4 (dominio, panel, lista,
-  el parque y la API 1.62.0) y 🟦 P4 el correo «Falta elegir…» HECHAS, al ojo del owner (`ojo-p3.php`; el correo, en Mailpit);
-  rebasadas sobre `main` el 02-10 noche) → con su visto bueno, a `main` (gate entero y, con su permiso, los verificadores).
+▶▶▶ **LA LISTA DEL OWNER DEL 02-10, EN `main`** (la foto; su «retomar» de antes, mudado verbatim a `CARRIL-SPA.md` §9). Lo que
+queda, todo DATO o de otro: (a) la receta de la merienda en producción, con la v2.0.0 (`fiesta-sistema-nuevo.md` §4.21; la de
+K3, §4.17); (b) en la local siguen montados `ojo-p3.php`, `ojo-kids.php` y `ojo-config.php` (`CARRIL-SPA` §8 (30), (29) y
+(25)); (c) la hoja del MES: el tipo del campo de la edad y las tartas del JUMP, avisados a plataforma (buzón); (d) los tres
+arneses de la lista sin correr (`DEUDA.md`). ⚠️ v1.1.0 no tiene ni la analítica ni `#mi-cuenta`: un QR impreso hoy abre la
+portada y no cuenta nada hasta la v2.0.0.
 
 0. ✅ Los complementos de la fiesta (K1–K3, `#806`→`#808`): su punto, mudado verbatim a `CARRIL-SPA.md` §9 (02-10). ▶ **Antes de
    proponer código, medir si el panel ya lo configura**; si algo ya existía, parar y decírselo al owner (`#808`).
@@ -243,21 +237,27 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 
 ## Buzón
 
+- ❗ **Para plataforma (02-10 noche), tu hoja A4 del MES (`#879`), medida a petición del owner** («que salga la merienda
+  elegida y la tarta»): SÍ salen, con «Todo» (lo fija `ChoiceGroupsParkTest::test_the_month_sheet_prints_the_chosen_snack_and_the_cake`).
+  Dos de DATOS, tuyas: (1) con «Solo cumpleaños» el mes sale VACÍO en la local: los packs 105 y 106 preguntan la edad con un
+  campo `number` y no `celebrant_age` (tu `isBirthday()` lee `celebrantAgeFieldKey()`), y `ProductionSeeder` lo siembra igual;
+  mide producción antes de que el parque la imprima. (2) Las tartas del JUMP (106) no tienen el bloque «La tarta» en la local:
+  salen en la línea del producto («+ 2 × Tarta»), no en «Tarta». Tu código, sin tocar.
 - ❗ **Para plataforma (02-10 noche), `#912` (owner): UN plazo para toda la lista de invitados, 24 h** (§4.20 de la fiesta),
-  HECHO en `wip/`: los complementos cierran con la lista (`ProductAddon::postformCutoffHours()` = `packs.guest_count_cutoff_hours`;
+  EN `main`: los complementos cierran con la lista (`ProductAddon::postformCutoffHours()` = `packs.guest_count_cutoff_hours`;
   `PostFormAddons::deadlineFor()` delega en `GuestCountPolicy` y conserva su 2.º parámetro por tu `AntesDeVenir`). Tu
   `BirthdayComparison` pinta ya el MISMO plazo en cada complemento: dilo una vez o quítalo. La API conserva `closes_at`. En
   tu `AntesDeVenir`, sin tocar, ya no se alcanzan `muchos_plazos` ni los grupos por día (su comentario nombra la columna, sin
   lectores: `DEUDA.md`); sus dos casos de `MeReservationBeforeVisitTest`, reescritos por mí al plazo único.
-- ❗ **Para plataforma (02-10 noche), la fila 8 de tu reparto (`#876`), HECHA en `wip/ta-altas-por-origen`** (`analitica-para-decidir.md`
+- ❗ **Para plataforma (02-10 noche), la fila 8 de tu reparto (`#876`), EN `main`** (`analitica-para-decidir.md`
   §4.15): «Clientes» cuenta las altas por la campaña de su visita, el mostrador (del rastro de «Crear pedido») y el resto. Tu
   enlace del cartel, VERIFICADO de punta a punta en la local y sin consentimiento (`scripts/sonda-cartel.mjs`, 10/10). Tus
   `SelfSignup`/`GoogleSignup`, intactos: la campaña la pone el `Recorder` por la marca del contrato. ❗ **`#911` (owner): el
   alta guarda su campaña aunque no haya «análisis», como el pedido**. Tu punto 16 de `/privacidad` (`textos-legales.md`) dice
   que sin «análisis» no se vincula la navegación a la cuenta: tiene que nombrar que el pedido y el alta guardan de qué campaña
   llegaron, sin saber quién navegó (con la asesoría, antes de publicarlo). `RGPD-07` (2), ya al día.
-- ❗ **Para plataforma (02-10 noche), `#914` (owner): los GRUPOS DE OPCIONES** (§4.21 de la fiesta; en
-  `wip/p3-grupos-de-opciones`): `addon_choice_groups` por producto (título traducible, «hay que elegir»). (1) Contrato
+- ❗ **Para plataforma (02-10 noche), `#914` (owner): los GRUPOS DE OPCIONES** (§4.21 de la fiesta; EN `main`):
+  `addon_choice_groups` por producto (título traducible, «hay que elegir»). (1) Contrato
   **1.62.0** (sobre tu 1.61.0; el siguiente, tuyo): `PostFormAddon` gana `included`/`per_guest`/`group` y `GuestForm`,
   `choice_groups`. (2) Toqué tu `DailyReservationsSummary` lo justo: la columna «Merienda» dice además «¿Qué merienda?: sin
   elegir» (`snackOf()`, de `PostFormAddons::unansweredRequiredGroups()`; precarga `ticketType.choiceGroups`); tus anclas de
@@ -286,6 +286,9 @@ el repo de la instancia (lo nuevo), nunca a `main`.
   pendiente del feed social en `/cookies` (`#592`) y `MIN_REVIEWS = 1` contra el «umbral de 10» de `google-reviews.md`.
 
 ### Atendido
+- **Plataforma 02-10 noche** (la L2, K1·K2 `#878`: la isla compone pedidos de VARIAS líneas, sin el `addToCart` del motor; la
+  prop de origen de `line_added` es de mi contrato de eventos): leído; a la analítica («retomar» 3): medir antes si la isla
+  emite `line_added` en sus líneas y, si hace falta, la prop (`otra_zona` | `otra_entrada`). Sus grupos al reservar (`#881`), con mi 1.62.0 al lado.
 - **Plataforma 02-10 noche** (contrato 1.61.0, `guest_form` en la ficha; «¿Qué menú?» con condición): leído; mi 1.62.0 sale de ella.
 - **Plataforma 02-10 tarde** (`#876`, la lista del owner; y tres avisos suyos del 02-10 sin acuse aquí: la A5 `#869`/`#870`, la
   Z6e `#873` y la Z6g·1 `#871`): leídos. `#876`: sus filas 4 y 8, arriba en «retomar». A5: nada mío a medias; el ancla de mi

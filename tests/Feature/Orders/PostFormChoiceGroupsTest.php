@@ -33,6 +33,7 @@ use Tests\TestCase;
  *  · elegir una escribe su línea —por niño, una para cada niño— y una incluida no mueve dinero;
  *  · cambiar de opción cancela una y crea otra en el MISMO guardado, y el libro cierra;
  *  · dos a la vez no mueven nada, y un grupo con «hay que elegir» no se vacía;
+ *  · con una opción comprada al reservar, el grupo es del parque;
  *  · una opción de pago por niño se paga en el parque y sigue al número de niños;
  *  · un grupo creado DESPUÉS de vender la fiesta no se le pide («No se les pide»).
  */
@@ -178,6 +179,7 @@ class PostFormChoiceGroupsTest extends TestCase
         $this->assertSame(6, (int) $this->liveChild($item, $this->pizza)?->quantity);
         $this->assertSame(0, $changes->deltaCents);
         $this->assertCount(2, $changes->moves, 'dos gestos: quitar una y poner la otra');
+        $this->assertSame($this->pizza->id, $this->service()->choiceGroupsFor($item->fresh())[0]->chosenAddonId, 'lo elegido es la nueva, no la cancelada');
         $this->assertBookCloses($item, 'tras cambiar de opción');
     }
 
@@ -208,6 +210,32 @@ class PostFormChoiceGroupsTest extends TestCase
         $this->assertFalse($changes->changed());
         $this->assertSame([['addon_id' => $this->sandwich->id, 'reason' => 'choice_required']], $changes->blocked);
         $this->assertNotNull($this->liveChild($item, $this->sandwich), 'sigue elegida');
+    }
+
+    /**
+     * Con una opción comprada AL RESERVAR —el grupo era de la compra y el parque lo pasó a la lista—, el grupo es del parque
+     * (R0): elegir otra dejaría DOS meriendas, la cobrada y la nueva, porque la primera el cliente no la puede quitar.
+     */
+    public function test_a_group_with_an_option_sold_at_booking_is_the_parks(): void
+    {
+        $this->group('merienda');
+        $item = $this->party(qty: 4);
+        $item->children()->create([
+            'order_id' => $item->order_id, 'ticket_type_id' => $this->sandwich->id, 'slot_id' => null,
+            'quantity' => 4, 'free_quantity' => 0, 'unit_price' => 250, 'seats' => 0,
+        ]);
+        Order::whereKey($item->order_id)->update(['total' => 11000, 'subtotal' => 11000]);
+        Payment::where('payable_id', $item->order_id)->update(['amount' => 11000]);
+        $this->option($this->sandwich);
+        $this->option($this->pizza, ['position' => 2]);
+
+        $changes = $this->service()->reconcile($item->fresh(['children']), [$this->pizza->id => 1], 'signed_link');
+
+        $this->assertFalse($changes->changed());
+        $this->assertSame([['addon_id' => $this->pizza->id, 'reason' => 'sold_at_booking']], $changes->blocked);
+        $this->assertNull($this->liveChild($item, $this->pizza), 'ni una segunda merienda');
+        $this->assertNotNull($this->liveChild($item, $this->sandwich), 'la cobrada sigue');
+        $this->assertBookCloses($item, 'tras el intento bloqueado');
     }
 
     public function test_an_optional_group_can_go_back_to_none(): void
