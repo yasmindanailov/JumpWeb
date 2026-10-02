@@ -39,6 +39,10 @@ class PostFormAddonResource extends JsonResource
             'family' => $view->family !== '' ? $view->family : null,
             'block' => $view->block,
             'image_url' => $view->imageUrl,
+            // Los GRUPOS DE OPCIONES (1.62.0, `#914`): incluida, una por niño y la clave de su grupo (`null` = suelta).
+            'included' => $view->included,
+            'per_guest' => $view->perGuest,
+            'group' => $view->group,
         ];
     }
 }

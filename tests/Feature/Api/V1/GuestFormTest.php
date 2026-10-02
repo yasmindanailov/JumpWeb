@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Api\V1;
 
+use App\Domain\Booking\Models\AddonChoiceGroup;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\Price;
@@ -672,6 +673,28 @@ class GuestFormTest extends ApiTestCase
      * del que la hora extra deduce que «la franja siguiente» es única— y dos reservas en el mismo
      * caso reventarían con una violación de integridad que parece un defecto del producto.
      */
+    /**
+     * Una opción de la merienda (`#914`): venta posterior, incluida, una por niño y del grupo «merienda». Sin tarifa propia
+     * (incluida, gratis), pero con la tarifa BASE de la instalación, que siempre existe (`RateResolver` la exige).
+     */
+    private function groupOption(TicketType $pack, string $name): TicketType
+    {
+        RateType::firstOrCreate(
+            ['key' => RateType::KEY_NORMAL],
+            ['label' => ['es' => 'Normal'], 'weekdays' => null, 'priority' => 0, 'is_active' => true],
+        );
+        $addon = TicketType::create([
+            'name' => ['es' => $name], 'type' => TicketType::TYPE_ADDON,
+            'seats_per_unit' => 1, 'tax_rate' => 21, 'is_sellable' => true, 'is_active' => true, 'position' => 40,
+        ]);
+        $pack->configurableAddons()->attach($addon->id, [
+            'position' => 1, 'quantity_mode' => ProductAddon::MODE_PER_GUEST, 'is_included' => true,
+            'stage' => ProductAddon::STAGE_POSTFORM, 'choice_group' => 'merienda',
+        ]);
+
+        return $addon;
+    }
+
     private function futureSlot(): Slot
     {
         static $day = 0;
@@ -806,6 +829,40 @@ class GuestFormTest extends ApiTestCase
         $this->assertSame(2400, $reservation->fresh(['children'])->children->sum(
             fn ($c) => $c->chargedSubtotalCents()
         ));
+    }
+
+    /**
+     * **Los GRUPOS DE OPCIONES por la API** (1.62.0, `DECISIONES #914`): el formulario publica «¿Qué merienda?» con sus
+     * opciones (incluidas, una por niño, con su grupo) y si falta elegir; al guardar, elegir una es mandar su cantidad, y el
+     * servidor quita las demás del grupo. Contra el CONTRATO, ida y vuelta.
+     */
+    public function test_the_form_publishes_its_choice_groups_and_saving_one_option_chooses_it(): void
+    {
+        $user = User::factory()->create();
+        $pack = $this->pack();
+        AddonChoiceGroup::create(['product_id' => $pack->id, 'key' => 'merienda', 'title' => ['es' => '¿Qué merienda?'], 'is_required' => true]);
+        $sandwich = $this->groupOption($pack, 'Sándwich');
+        $pizza = $this->groupOption($pack, 'Pizza');
+        $reservation = $this->reservation($this->paidOrder($user, $pack, 2, $this->futureSlot()));
+
+        $shown = $this->getJson($reservation->guestFormApiUrls()['show'])->assertOk()->assertValidResponse(200)
+            ->assertJsonPath('choice_groups.0.key', 'merienda')
+            ->assertJsonPath('choice_groups.0.title', '¿Qué merienda?')
+            ->assertJsonPath('choice_groups.0.required', true)
+            ->assertJsonPath('choice_groups.0.chosen_product_id', null)
+            ->assertJsonPath('choice_groups.0.product_ids', [$sandwich->id, $pizza->id])
+            ->assertJsonPath('choice_groups.0.pending', true)
+            ->assertJsonPath('addons.0.included', true)
+            ->assertJsonPath('addons.0.per_guest', true)
+            ->assertJsonPath('addons.0.group', 'merienda')
+            ->assertJsonPath('addons.0.note', 'Incluido');
+
+        $this->putJson($shown->json('save_url'), ['addons' => [['product_id' => $pizza->id, 'quantity' => 1]]])
+            ->assertOk()->assertValidRequest()->assertValidResponse(200)
+            ->assertJsonPath('choice_groups.0.chosen_product_id', $pizza->id)
+            ->assertJsonPath('choice_groups.0.pending', false)
+            ->assertJsonPath('addons.1.quantity', 2)
+            ->assertJsonPath('addons.1.charged_cents', 0);
     }
 
     /**

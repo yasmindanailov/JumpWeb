@@ -514,6 +514,22 @@
                 </ul>
             @endif
 
+            {{-- Lo que falta por ELEGIR de un grupo de opciones con «hay que elegir» (`#914`; `#913`: «el parque la ve "sin
+                 elegir"»): «¿Qué merienda?: sin elegir». ⚠️ Forma de BLOQUE a propósito: aquí arriba no puede ir la forma con
+                 paréntesis (el extractor de bloques de Blade, ver el aviso de más abajo). --}}
+            @php
+                $sinElegir = \App\Domain\Booking\Services\PostFormAddons::unansweredRequiredGroups($item);
+            @endphp
+            @if ($sinElegir !== [])
+                <ul class="mt-2 ml-6 space-y-1 pl-3" data-sin-elegir>
+                    @foreach ($sinElegir as $grupo)
+                        <li class="flex flex-wrap items-center gap-2 text-sm">
+                            <span class="inline-flex items-center rounded-md px-1.5 py-0.5 text-[11px] font-semibold ring-1 ring-inset bg-amber-100 text-amber-800 ring-amber-600/30 dark:bg-amber-400/15 dark:text-amber-300 dark:ring-amber-400/40">{{ __('admin.orders.choice_unanswered', ['group' => $grupo->displayTitle()]) }}</span>
+                        </li>
+                    @endforeach
+                </ul>
+            @endif
+
             {{-- Sección "Totales del producto" (sub-fase 7.2e.1bis2,
                  feedback 2026-05-30): bloque agregado abajo del item con:
                   • Línea Producto: importe del principal.

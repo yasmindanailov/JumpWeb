@@ -2565,6 +2565,8 @@ return [
         // en las dos direcciones, así que el texto **no puede prometer una salida**: dice el HECHO y
         // deja la vía al operador, que es quien ve si el control está disponible.
         'addon_unit_diverges' => 'Vendido con otra unidad',
+        // `#914`: un grupo de opciones con «hay que elegir» que la fiesta no ha contestado (panel, ficha y resumen del día).
+        'choice_unanswered' => ':group: sin elegir',
         'addon_unit_diverges_hint' => 'Este complemento se vendió con una unidad distinta de la que tiene ahora el catálogo, así que conserva la suya y su cantidad no se ajusta a la configuración actual.',
 
         // Sub-fase 7.2e.1bis5 (decisión #158, punto 4 feedback): bloque

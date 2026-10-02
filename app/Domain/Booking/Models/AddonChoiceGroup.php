@@ -69,6 +69,14 @@ class AddonChoiceGroup extends Model
         return $this->belongsTo(TicketType::class, 'product_id');
     }
 
+    /** Su título en el idioma activo, o su clave si el panel no lo puso: lo que se lee donde el grupo se NOMBRA. */
+    public function displayTitle(): string
+    {
+        $title = trim((string) ($this->tr('title') ?? ''));
+
+        return $title !== '' ? $title : $this->key;
+    }
+
     /** Cuántos enganches de su producto llevan su clave. */
     public function memberCount(): int
     {

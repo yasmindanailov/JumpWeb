@@ -83,7 +83,8 @@ final class DailyReservationsSummary
             // día— era invisible justo en la hoja con la que se abre la jornada. Y los ENGANCHES del pack
             // (`configurableAddons`, también los que ya no se venden): dicen qué complemento es la merienda y
             // cuál la tarta (`#879`).
-            ->with(['ticketType.zone', 'ticketType.configurableAddons', 'slot', 'order.user', 'children.ticketType']);
+            // Y sus GRUPOS DE OPCIONES (`#914`, del SPA): uno con «hay que elegir» sin contestar sale «sin elegir».
+            ->with(['ticketType.zone', 'ticketType.configurableAddons', 'ticketType.choiceGroups', 'slot', 'order.user', 'children.ticketType']);
 
         if ($type === self::TYPE_ENTRY) {
             $query->whereHas('ticketType', fn ($q) => $q->where('type', TicketType::TYPE_ENTRY));
@@ -200,8 +201,8 @@ final class DailyReservationsSummary
                     : trans_choice('admin.orders.slip.entries_count', (int) $item->quantity, ['count' => (int) $item->quantity]),
                 'celebrant' => $isPack ? self::celebrantOf($item) : null,
                 'age' => $isPack ? self::ageOf($item) : null,
-                // La merienda que será: lo elegido del menú (`#879`).
-                'snack' => $merienda->isEmpty() ? null : $merienda->map(fn (OrderItem $c): string => (string) ($c->ticketType?->tr('name') ?? '—'))->implode(' · '),
+                // La merienda que será: lo elegido del menú (`#879`); y lo que falta por elegir (`#914`).
+                'snack' => self::snackOf($merienda, $item),
                 // La tarta: lo pedido de su bloque de la lista de invitados («2 × …» si son varias), o «Sin tarta» si el
                 // titular lo contestó así (`cake_declined_at`); si no ha contestado, nada.
                 'cake' => $tarta->isNotEmpty()
@@ -217,6 +218,23 @@ final class DailyReservationsSummary
                     ->all(),
             ];
         })->all();
+    }
+
+    /**
+     * La columna MERIENDA: lo elegido (`#879`) y, del SPA (`[DECIDIDO owner]` `#914`), cada GRUPO DE OPCIONES con «hay que
+     * elegir» que la fiesta no ha contestado, con su título: «¿Qué merienda?: sin elegir» (`#913`: «el parque la ve "sin
+     * elegir"», y decide). Lo pendiente lo dice el dominio (`PostFormAddons::unansweredRequiredGroups()`), con lo ya cargado.
+     *
+     * @param  Collection<int, OrderItem>  $merienda
+     */
+    private static function snackOf(Collection $merienda, OrderItem $item): ?string
+    {
+        $partes = $merienda->map(fn (OrderItem $c): string => (string) ($c->ticketType?->tr('name') ?? '—'))->values()->all();
+        foreach (PostFormAddons::unansweredRequiredGroups($item) as $grupo) {
+            $partes[] = __('admin.orders.choice_unanswered', ['group' => $grupo->displayTitle()]);
+        }
+
+        return $partes === [] ? null : implode(' · ', $partes);
     }
 
     /** El ENGANCHE de un complemento de la reserva con su pack (`product_addons`), o `null` si ya no está enganchado. */

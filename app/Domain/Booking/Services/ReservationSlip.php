@@ -2,6 +2,7 @@
 
 namespace App\Domain\Booking\Services;
 
+use App\Domain\Booking\Models\AddonChoiceGroup;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Platform\Services\Duration;
@@ -379,6 +380,21 @@ final class ReservationSlip
             ])
             ->values()
             ->all();
+    }
+
+    /**
+     * Los GRUPOS DE OPCIONES con «hay que elegir» que esta fiesta no ha contestado (`[DECIDIDO owner]` `#914`; `#913`: «el
+     * parque la ve "sin elegir"»), ya escritos: «¿Qué merienda?: sin elegir». Van con los complementos: es lo que el parque
+     * prepara, y aquí decide él.
+     *
+     * @return list<string>
+     */
+    public function unansweredChoices(): array
+    {
+        return array_map(
+            static fn (AddonChoiceGroup $grupo): string => __('admin.orders.choice_unanswered', ['group' => $grupo->displayTitle()]),
+            PostFormAddons::unansweredRequiredGroups($this->item),
+        );
     }
 
     // ─── Datos de la reserva (cliente + datos del evento) ─────────────────────

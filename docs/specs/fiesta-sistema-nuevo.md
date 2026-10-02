@@ -1315,6 +1315,18 @@ elegir y cambiar desde la página; la opcional con «No, gracias»; cerrada sin 
 Larastan, Pint. En la local, `ojo-p3.php` (en la carpeta de auditoría, fuera de git; con `OJO=desmontar`): el grupo en el KIDS y el JUMP, fechado el
 01-09 para que lo vean sus fiestas de prueba —en producción, lo vendido antes NO lo ve—.
 
+**🟦 P3·4 · el parque y la API — HECHA (02-10 noche, en su rama, rebasada sobre `main` con lo de plataforma)**. «Contestado»
+tiene UN sitio (`PostFormAddons::chosenByGroup()`: la LÍNEA viva de una opción, también de una que el parque apagó después) y
+lo leen la lista y `unansweredRequiredGroups()` —obligatorio, con opciones en la lista, creado antes de vender, sin elegida—,
+ligero (lo cargado, sin tarifas) porque el resumen de un mes lo pregunta por cada fiesta. Lo dicen, con el título del grupo
+(«¿Qué merienda?: sin elegir», `AddonChoiceGroup::displayTitle()`): la columna «Merienda» del resumen del día de plataforma
+(`DailyReservationsSummary::snackOf()`, `#879`), la ficha de la reserva (`ReservationSlip::unansweredChoices()`) y el panel,
+bajo las líneas de la reserva. La API, **1.62.0**: `PostFormAddon` gana `included`, `per_guest` y `group`; `GuestForm`,
+`choice_groups` (`PostFormChoiceGroup`); y tres descripciones viejas de P1 (`closed`, `closes_at`, `charged_cents`), al día.
+Verificación: `ChoiceGroupsParkTest` 3 y `Api\V1\GuestFormTest` +1 (contra el contrato, ida y vuelta), con sus controles;
+1937 vecinos; Larastan, Pint. Medido en el camino: sin la tarifa BASE de la instalación, `RateResolver` lanza (404 en la API):
+en una instalación real siempre existe; el fixture la crea.
+
 ## 5. Impacto en invariantes
 
 | ID | Cómo |

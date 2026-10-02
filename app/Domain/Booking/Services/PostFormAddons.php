@@ -200,24 +200,102 @@ final class PostFormAddons
             return [];
         }
 
+        $chosen = self::chosenByGroup($principal);
         $groups = [];
         foreach ($this->groupsOf($principal) as $key => $group) {
             $options = $members[$key] ?? [];
             if ($options === []) {
                 continue;
             }
-            $chosen = collect($options)->first(fn (PostFormAddonView $o): bool => $o->quantity > 0);
             $groups[] = new PostFormChoiceGroupView(
                 key: $key,
                 title: trim((string) ($group->tr('title') ?? '')),
                 required: $group->is_required,
-                chosenAddonId: $chosen?->productId,
+                chosenAddonId: $chosen[$key] ?? null,
                 addonIds: array_map(static fn (PostFormAddonView $o): int => $o->productId, $options),
                 open: collect($options)->contains(fn (PostFormAddonView $o): bool => ! $o->closed),
             );
         }
 
         return $groups;
+    }
+
+    /**
+     * Los GRUPOS que esta reserva TIENE que contestar y no ha contestado (`[DECIDIDO owner]` `#914`; `#913`: «el parque la ve
+     * "sin elegir"»): con «hay que elegir», con opciones en la lista, creados ANTES de venderla («No se les pide») y sin
+     * ninguna elegida. Lo leen el panel, la ficha de la reserva y el resumen del día.
+     *
+     * ⚠️ LIGERO a propósito: lee lo cargado (los enganches del pack, sus grupos, las hijas), sin tarifas ni la vista entera
+     * —el resumen de un MES lo pregunta por cada fiesta—. Y «contestado» sale del MISMO sitio que en la lista
+     * ({@see chosenByGroup()}): las dos superficies no pueden discrepar.
+     *
+     * @return list<AddonChoiceGroup>
+     */
+    public static function unansweredRequiredGroups(OrderItem $item): array
+    {
+        $type = $item->ticketType;
+        if ($type === null || ! $item->acceptsGuestForm()) {
+            return [];
+        }
+        $required = $type->loadMissing('choiceGroups')->choiceGroups->filter(fn (AddonChoiceGroup $g): bool => $g->is_required);
+        if ($required->isEmpty()) {
+            return [];
+        }
+
+        $withOptions = array_flip(array_values(self::postFormGroupOf($type)));
+        $chosen = self::chosenByGroup($item);
+        $soldAt = $item->order?->created_at;
+
+        return $required
+            ->filter(fn (AddonChoiceGroup $g): bool => isset($withOptions[$g->key]) && ! isset($chosen[$g->key]) && $g->appliesToSaleAt($soldAt))
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Lo ELEGIDO de cada grupo de esta reserva: clave → el complemento con línea VIVA. Punto ÚNICO de «¿está contestado?»
+     * (`#914`): se mide por la LÍNEA —también la de una opción que el parque desactivó después—, nunca por lo que hoy se
+     * ofrece, o la lista diría «falta elegir» con la merienda ya pedida.
+     *
+     * @return array<string, int>
+     */
+    private static function chosenByGroup(OrderItem $item): array
+    {
+        $type = $item->ticketType;
+        $groupOf = $type === null ? [] : self::postFormGroupOf($type);
+        if ($groupOf === []) {
+            return [];
+        }
+
+        $chosen = [];
+        foreach ($item->loadMissing('children')->children as $child) {
+            $key = $groupOf[(int) $child->ticket_type_id] ?? null;
+            if ($key !== null && ! $child->isCancelled() && (int) $child->quantity > 0) {
+                $chosen[$key] ??= (int) $child->ticket_type_id;
+            }
+        }
+
+        return $chosen;
+    }
+
+    /**
+     * Las opciones de venta posterior del pack con grupo: complemento → clave. De TODOS sus enganches (`configurableAddons`,
+     * también los que ya no se venden), porque una línea viva lo sigue siendo aunque su opción se apague.
+     *
+     * @return array<int, string>
+     */
+    private static function postFormGroupOf(TicketType $type): array
+    {
+        $groupOf = [];
+        foreach ($type->loadMissing('configurableAddons')->configurableAddons as $addon) {
+            $pivot = $addon->addonPivot();
+            $key = $pivot?->choiceGroup();
+            if ($pivot !== null && $key !== null && $pivot->isPostFormStage()) {
+                $groupOf[(int) $addon->getKey()] = $key;
+            }
+        }
+
+        return $groupOf;
     }
 
     /**

@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.61.0
+  version: 1.62.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -7156,6 +7156,7 @@ components:
         - general
         - save_url
         - addons
+        - choice_groups
         - cake_declined
         - saved_at
         - version
@@ -7287,6 +7288,14 @@ components:
             nada online (`DECISIONES #244`).
           items:
             $ref: '#/components/schemas/PostFormAddon'
+        choice_groups:
+          type: array
+          description: |
+            **1.62.0** (`DECISIONES #914`). Los GRUPOS DE OPCIONES de la reserva («¿Qué merienda?»): de cada uno se elige UNA
+            de sus opciones de `addons`. Lista vacía sin grupos. Un grupo creado después de vender la reserva no viaja: no
+            se le pide.
+          items:
+            $ref: '#/components/schemas/PostFormChoiceGroup'
         cake_declined:
           type: boolean
           description: |
@@ -8865,6 +8874,9 @@ components:
         - family
         - block
         - image_url
+        - included
+        - per_guest
+        - group
       additionalProperties: false
       properties:
         product_id:
@@ -8909,13 +8921,14 @@ components:
             que alguien puede crear la decide el parque y no una constante del código.
         charged_cents:
           type: integer
-          description: Lo que suman las unidades actuales (`quantity × unit_price_cents`).
+          description: |
+            Lo que se cobra de las unidades actuales, con lo GRATIS descontado: una opción `included` vale 0 aunque tenga
+            tarifa (**1.62.0**; antes, `quantity × unit_price_cents`, que coincide cuando nada es gratis).
         closed:
           type: boolean
           description: |
-            `true` cuando su PLAZO ya venció: entonces no se puede añadir **ni quitar**. ⚠️ El estado
-            es **por complemento**, no por formulario: con «tapas 48 h» y «cubo 2 h» sobre la misma
-            fiesta, a 24 h uno está cerrado y el otro abierto.
+            `true` cuando ya no se puede añadir **ni quitar**: cerró la LISTA (desde `DECISIONES #912` su plazo es UNO
+            para todo, `guest_count_deadline`) o se compró al reservar (`closed_reason`).
         closed_reason:
           type: string
           nullable: true
@@ -8928,7 +8941,9 @@ components:
           type: string
           format: date-time
           nullable: true
-          description: Cuándo vence su plazo, para poder decírselo al cliente antes de que pase.
+          description: |
+            Cuándo vence su plazo, para poder decírselo al cliente antes de que pase. Desde `DECISIONES #912`, el de la LISTA:
+            el mismo en todos los complementos y en `guest_count_deadline`.
         serves:
           type: integer
           nullable: true
@@ -8955,6 +8970,58 @@ components:
           format: uri
           nullable: true
           description: '**1.39.0**. Su foto, URL absoluta; `null` si no tiene.'
+        included:
+          type: boolean
+          description: |
+            **1.62.0** (`DECISIONES #914`). INCLUIDA en la reserva: sus unidades son gratis (`note` dice «Incluido», no su
+            tarifa). Solo puede serlo una opción de un grupo (`group`).
+        per_guest:
+          type: boolean
+          description: |
+            **1.62.0**. Una por NIÑO: su cantidad es la de la reserva —no la elige nadie— y sigue al número de invitados.
+            Al guardar, cualquier `quantity` mayor que 0 la ELIGE y 0 la quita.
+        group:
+          type: string
+          nullable: true
+          description: |
+            **1.62.0**. La clave de su GRUPO DE OPCIONES (`choice_groups` del formulario): de un grupo se elige UNA. Al
+            guardar, elegir una quita las demás del grupo aunque no se manden. `null` = suelta.
+
+    PostFormChoiceGroup:
+      type: object
+      description: |
+        **1.62.0** (`DECISIONES #914`). Un GRUPO DE OPCIONES de venta posterior de la reserva: «¿Qué merienda?», de cuyas
+        opciones (complementos de `addons` con su `group`) se elige UNA. Si `required`, no se puede dejar sin elegir —y,
+        cerrada la lista sin elegir, el parque decide—; si no, «ninguna» es una respuesta. Las reglas las aplica el servidor
+        al guardar: dos a la vez se rechazan (`choice_conflict`) y una obligatoria no se vacía (`choice_required`).
+      required: [key, title, required, chosen_product_id, product_ids, open, pending]
+      additionalProperties: false
+      properties:
+        key:
+          type: string
+        title:
+          type: string
+          description: La pregunta, traducida («¿Qué merienda?»); cadena vacía si el parque no la puso.
+        required:
+          type: boolean
+          description: «Hay que elegir».
+        chosen_product_id:
+          type: integer
+          format: int64
+          nullable: true
+          description: La opción elegida, o `null` si ninguna.
+        product_ids:
+          type: array
+          description: Sus opciones, en el orden en que se enseñan (los `product_id` de `addons`).
+          items:
+            type: integer
+            format: int64
+        open:
+          type: boolean
+          description: '`true` si aún se puede elegir o cambiar.'
+        pending:
+          type: boolean
+          description: '`required` y sin elegir: lo que la lista dice «Falta elegir».'
 
     AddonQuantity:
       type: object

@@ -127,6 +127,8 @@
         .mixed-note { font-size: 9px; color: #92400e; font-weight: bold; margin-top: 3px; }
         .struck { text-decoration: line-through; color: #9ca3af; }
         .tag-cancel { font-size: 9px; color: #991b1b; font-weight: bold; }
+        /* `#914`: un grupo con «hay que elegir» sin contestar — lo decide el parque, y tiene que verse. */
+        .unanswered { color: #92400e; font-weight: bold; }
 
         /* Badge INCLUIDO/GRATIS del complemento (verde sutil). */
         .badge-inc {
@@ -461,9 +463,10 @@
         </div>
     @endif
 
-    {{-- Complementos (pulseras de zona, calcetines, tarta, …). --}}
-    @php $addons = $slip->addons(); @endphp
-    @if (count($addons) > 0)
+    {{-- Complementos (pulseras de zona, calcetines, tarta, …). Y lo que falta por elegir de un grupo de opciones con «hay
+         que elegir» (`#914`): «¿Qué merienda?: sin elegir» — lo decide el parque. --}}
+    @php $addons = $slip->addons(); $sinElegir = $slip->unansweredChoices(); @endphp
+    @if (count($addons) > 0 || $sinElegir !== [])
         <div class="sec">
             <div class="sec-title">{{ __('admin.orders.slip.addons_heading') }}</div>
             <ul class="addons">
@@ -477,6 +480,9 @@
                             <span class="tag-cancel">· {{ __('admin.orders.item_status.cancelled') }}</span>
                         @endif
                     </li>
+                @endforeach
+                @foreach ($sinElegir as $falta)
+                    <li class="unanswered" data-sin-elegir>{{ $falta }}</li>
                 @endforeach
             </ul>
         </div>

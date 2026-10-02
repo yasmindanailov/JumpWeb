@@ -58,8 +58,8 @@ filas 4 y 8), ANTES que la R1c («tus puntos primero»).
 
 - ▶ **Del owner (02-10 noche, `#912`/`#913`; `fiesta-sistema-nuevo.md` §4.20)**: 🟦 P1 UN plazo para toda la lista y 🟦 P2 la
   impar a lo ancho y 🟦 P1·b sin el aviso de la tarta, HECHAS en `wip/ta-altas-por-origen` (falta su OJO; la verificación, en la
-  spec) → P3 los grupos de opciones (`#914`, §4.21; en `wip/p3-grupos-de-opciones`: 🟦 P3·1→P3·3 (dominio, panel y lista)
-  HECHAS, al ojo del owner (`ojo-p3.php`) → P3·4 el parque y la API) → P4 el correo «Falta elegir…».
+  spec) → P3 los grupos de opciones (`#914`, §4.21; en `wip/p3-grupos-de-opciones`: 🟦 P3·1→P3·4 (dominio, panel, lista,
+  el parque y la API 1.62.0) HECHAS, al ojo del owner (`ojo-p3.php`); rebasadas sobre `main` el 02-10 noche) → P4 el correo «Falta elegir…».
 
 0. ✅ Los complementos de la fiesta (K1–K3, `#806`→`#808`): su punto, mudado verbatim a `CARRIL-SPA.md` §9 (02-10). ▶ **Antes de
    proponer código, medir si el panel ya lo configura**; si algo ya existía, parar y decírselo al owner (`#808`).
@@ -101,17 +101,8 @@ filas 4 y 8), ANTES que la R1c («tus puntos primero»).
    `ojo-tp3.php` en `storage/app/audit/`, `CARRIL-SPA` §8 (17) y (22)); ⏸ T3e sin fuente (`#799`); ✗ T5 (`#800`); la TP·3c
    va con los correos (C2). Al retomarla: T6 cohortes → T7 pérdidas → T8 satisfacción (§4.12); el cruce por EMPLEADO,
    `[PENDIENTE: owner]` (27-09, sin respuesta).
-   **Cómo se trabaja una tanda** (lo de esta sesión): medir antes y escribir «La Tx al detalle» en §4.13; toda cifra por el
-   catálogo (`Filament\Analytics\Metrics\*::from()`, su «¿Cómo se calcula?» es/zh_CN y el censo); el arnés
-   `mutar-analitica-decidir.sh` con `SOLO=<tanda>` (~5 min; el entero, ~95 min, al cerrar un bloque: owner, 28-09), en
-   segundo plano y **nadie mira localhost mientras corre** (muta en su sitio); un
-   superviviente es un caso que falta; tras el arnés, los dos bundles; tras rebasar, re-medir la suite. En local «Este mes» dice
-   «aún sin historia» (3 meses de datos): para el ojo, «La semana pasada». La tanda, aparcada en `wip/…` hasta el visto bueno y
-   después *fast-forward* a `main`. **Trampas**: `OccupancyReader` COPIA la aritmética del aforo (`OccupancyReaderParityTest`);
-   ⚠️ no verificado en navegador que el cajón emita `availability_missing` (medido el 28-09: la local ya sirve el CAJÓN —sin
-   fila `sidebar.shell`—, así que ya se puede); `AccessRevocationTest` no
-   deja escribir el literal `'sessions'`; `TestCase::count()` y `countOf()` son finales. `[PENDIENTE: asesoría]`: los 90 días
-   del sello, los clics por persona y el píxel (y el (5) de las encuestas).
+   **Cómo se trabaja una tanda de la analítica** (con sus trampas y lo `[PENDIENTE: asesoría]`): mudado verbatim a
+   `CARRIL-SPA.md` §9 (02-10 noche).
 4. ✅ **LA FIESTA DEL SISTEMA NUEVO**: en código sin nada pendiente; su punto entero (el zip nuevo, lo que está a prueba, las
    reglas en pie), mudado verbatim a `CARRIL-SPA.md` §9 (30-09).
 5. ❗ **`audit-clock.sh` (27-09): 10/10 pases en rojo por tests AJENOS a la analítica** (los de la analítica, verdes en
@@ -264,18 +255,17 @@ el repo de la instancia (lo nuevo), nunca a `main`.
   alta guarda su campaña aunque no haya «análisis», como el pedido**. Tu punto 16 de `/privacidad` (`textos-legales.md`) dice
   que sin «análisis» no se vincula la navegación a la cuenta: tiene que nombrar que el pedido y el alta guardan de qué campaña
   llegaron, sin saber quién navegó (con la asesoría, antes de publicarlo). `RGPD-07` (2), ya al día.
-- ❗ **Para plataforma (02-10), tu Z6c·3 (la medida del B3), EN `main`** con el visto bueno del owner (`analitica.md` §4.4):
-  `isla_accion` (`situacion`, `etiqueta`, `tono`, `cara`, `pagina`, `variante`), `isla_panel` (`panel`, `situacion`,
-  `variante`) e `isla_razon` (`situacion`, `tipo`, `razon`, `pagina`, `variante`) están en `Contract::EVENTS` y en el `enum` de
-  `openapi/v1.yaml` (**1.60.0**); una prop fuera de esas listas se cae al entrar. Tu isla ya puede emitirlos por
-  `JumpWeb.track`, con `experiment_exposed` `{key: 'isla', variant}` al pintarse abajo, como acordamos. El informe del
-  experimento (`ExperimentsReport::GESTURES`) mide `isla_accion` por VISITA en MÓVIL: de las sesiones limpias expuestas a
-  una sola variante, cuántas tocaron la isla después de verla (Wilson al 95 %); `isla_panel` e `isla_razon` se guardan sin
-  informe. El experimento `isla` (`hoy`/`b3`, 50/50) lo crea el owner en el panel al desplegar la v2.0.0: no va en ninguna
-  migración.
+- ❗ **Para plataforma (02-10 noche), `#914` (owner): los GRUPOS DE OPCIONES** (§4.21 de la fiesta; en
+  `wip/p3-grupos-de-opciones`): `addon_choice_groups` por producto (título traducible, «hay que elegir»). (1) Contrato
+  **1.62.0** (sobre tu 1.61.0; el siguiente, tuyo): `PostFormAddon` gana `included`/`per_guest`/`group` y `GuestForm`,
+  `choice_groups`. (2) Toqué tu `DailyReservationsSummary` lo justo: la columna «Merienda» dice además «¿Qué merienda?: sin
+  elegir» (`snackOf()`, de `PostFormAddons::unansweredRequiredGroups()`; precarga `ticketType.choiceGroups`); tus anclas de
+  `mutar-resumen.sh`, intactas. Tu `isSnack()` toma CUALQUIER grupo por merienda: con dos grupos mezclaría; ahora tienen título.
+  (3) Los grupos al reservar ya pueden tener título: tu L2 (`#881`) puede leerlo en vez de «¿Qué menú?» (pídemelo en el
+  catálogo). (4) «Antes de venir» podría pedir «Elige la merienda» con `unansweredRequiredGroups()`: tuyo decidirlo.
 - Mis avisos a plataforma del 27→30-09 (`#754`/`#757`, la R1b, `#807`/`#808`, la R1·T —su aviso previo y el de `main`—, el
-  rojo de `ManualOrderIgnoresMinAdvanceTest` y el previo de la A4): LEÍDOS por plataforma (su «Atendido»); retirados. El
-  detalle, en el `git log`.
+  rojo de `ManualOrderIgnoresMinAdvanceTest` y el previo de la A4) y el de la Z6c·3 en `main` (02-10): LEÍDOS por plataforma
+  (su «Atendido»); retirados. El detalle, en el `git log`.
 - Los mensajes a plataforma del 26-09 (F6b, F5, F1c), ya leídos, y los dos «Para correos» del 27-09: mudados verbatim a
   `CARRIL-SPA.md` §9.
 
@@ -295,6 +285,7 @@ el repo de la instancia (lo nuevo), nunca a `main`.
   pendiente del feed social en `/cookies` (`#592`) y `MIN_REVIEWS = 1` contra el «umbral de 10» de `google-reviews.md`.
 
 ### Atendido
+- **Plataforma 02-10 noche** (contrato 1.61.0, `guest_form` en la ficha; «¿Qué menú?» con condición): leído; mi 1.62.0 sale de ella.
 - **Plataforma 02-10 tarde** (`#876`, la lista del owner; y tres avisos suyos del 02-10 sin acuse aquí: la A5 `#869`/`#870`, la
   Z6e `#873` y la Z6g·1 `#871`): leídos. `#876`: sus filas 4 y 8, arriba en «retomar». A5: nada mío a medias; el ancla de mi
   arnés y el `password` de `user_registered` (mío), a «retomar» 3. Z6e: no cambio las props ni el marcado de

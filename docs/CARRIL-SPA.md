@@ -670,6 +670,20 @@ De «por dónde retomar», mudado VERBATIM el 2026-09-30 al empezar la R1·T (el
   `ReviewCardTest`, `public/css/cajon.css` regenerada. ❗ `google-reviews.md` dice «umbral de 10 reseñas» y el
   código `MIN_REVIEWS = 1` (`#494`): no la toco yo.
 
+- Mudado VERBATIM de «por dónde retomar» 3 (la analítica en pausa) de `carriles/spa.md` el 2026-10-02, noche (su techo):
+
+   **Cómo se trabaja una tanda** (lo de esta sesión): medir antes y escribir «La Tx al detalle» en §4.13; toda cifra por el
+   catálogo (`Filament\Analytics\Metrics\*::from()`, su «¿Cómo se calcula?» es/zh_CN y el censo); el arnés
+   `mutar-analitica-decidir.sh` con `SOLO=<tanda>` (~5 min; el entero, ~95 min, al cerrar un bloque: owner, 28-09), en
+   segundo plano y **nadie mira localhost mientras corre** (muta en su sitio); un
+   superviviente es un caso que falta; tras el arnés, los dos bundles; tras rebasar, re-medir la suite. En local «Este mes» dice
+   «aún sin historia» (3 meses de datos): para el ojo, «La semana pasada». La tanda, aparcada en `wip/…` hasta el visto bueno y
+   después *fast-forward* a `main`. **Trampas**: `OccupancyReader` COPIA la aritmética del aforo (`OccupancyReaderParityTest`);
+   ⚠️ no verificado en navegador que el cajón emita `availability_missing` (medido el 28-09: la local ya sirve el CAJÓN —sin
+   fila `sidebar.shell`—, así que ya se puede); `AccessRevocationTest` no
+   deja escribir el literal `'sessions'`; `TestCase::count()` y `countOf()` son finales. `[PENDIENTE: asesoría]`: los 90 días
+   del sello, los clics por persona y el píxel (y el (5) de las encuestas).
+
 - Mudados VERBATIM del buzón de `carriles/spa.md` el 2026-10-02, noche (su techo): los dos avisos al carril de CORREOS del
   27-09, que desde `#789` son de este carril:
 - **Para correos (27-09, `#754`)**: `SurveyInvitation` gana UNA línea (el aviso del anonimato, tras la intro) y recibe el

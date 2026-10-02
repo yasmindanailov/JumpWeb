@@ -82,6 +82,8 @@ class GuestFormResource extends JsonResource
             // ⚠️ Viajan también los CERRADOS con su motivo: ocultarlos haría creer al cliente que lo
             // que pidió se ha perdido.
             'addons' => PostFormAddonResource::collection($addons = app(PostFormAddons::class)->viewFor($item))->resolve($request),
+            // Los GRUPOS DE OPCIONES (1.62.0, `#914`): de cada uno, una de sus opciones de `addons`. Con las MISMAS filas.
+            'choice_groups' => PostFormChoiceGroupResource::collection(app(PostFormAddons::class)->choiceGroupsFor($item, $addons))->resolve($request),
             // F5 (1.39.0, `#749`): «Sin tarta» contestado, y la última vez que el titular guardó.
             'cake_declined' => $item->cakeDeclined($addons),
             'saved_at' => $item->guest_form_saved_at?->toIso8601String(),
