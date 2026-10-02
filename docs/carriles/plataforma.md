@@ -4,7 +4,7 @@
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
 > **820–849 AGOTADA con `#849`** → sigue en **850–879** (del owner, 29-09; centena `decisiones/800-899.md`) · Último usado:
-> **`#875`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **`#876`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#846`) · Actualizado: **2026-10-02**
 > (todo con el visto bueno del owner: **el zip (6) de este carril, ENTERO** —Z6a→Z6g, `#866`→`#875`; la Z6c·3 es del SPA—,
 > la A5 (`#869`/`#870`), las reseñas traducidas (`#874`) y Mi cuenta desde «Mi QR»; lo anterior, en `git log -p` de este fichero).
@@ -48,7 +48,7 @@ normas, la T6f (301 y la web vieja fuera, `#843`), `#844`, la T6h (las legales) 
 **T6g** (§4.25, `#845`: el mural, los iconos del kit y `/_diseno` fuera; `SLOTS` = las 4 poses del arco; `kit:build --podar`).
 Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas,entradas}.mjs`), la web entera (`sonda-web.mjs`,
 17/17) y la compra (`sonda-isla.mjs`).
-▶▶▶▶ **LO SIGUIENTE, EN ORDEN** (actualizado el 02-10; el reparto con el SPA, `#861`, `isla-y-landing-nueva.md` §4.27):
+▶▶▶▶ **LO SIGUIENTE, EN ORDEN** (actualizado el 02-10 tarde, `#876`; el reparto con el SPA, `#861` y `#876`):
 0. ✅ **EL ZIP (6) DE ESTE CARRIL, CERRADO** (01→02-10, cada tanda con el visto bueno del owner en vivo; su detalle, en §4.27):
    Z6a, Z6b y sus tres usos (`#866`, `#867`), el B3 (`#868`; su MEDIDA, la Z6c·3, es del SPA), Z6d (`#872`), Z6e (`#873`,
    instancia `b359e30`), Z6f, Z6g (`#871`, `#875`; instancia `0089699`) y, por el camino, las reseñas traducidas (`#874`) y
@@ -58,8 +58,17 @@ Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas,en
    su §5), las cuatro de la Z6g·1 y `sonda-panel`, `sonda-banco-movimiento` (casos del 27-09) y `sonda-entradas` (ya lee «90
    minutos saltando»). **Queda de la isla**: probarla en un móvil de verdad, en STAGING al terminarlo todo; `isla_razon` y la
    imagen de la INVITACIÓN son del SPA (`#861`).
-   ▶▶▶ **SIGUE AQUÍ, en el 1** (el owner, 02-10: «seguiremos en el siguiente chat»).
-1. ▶▶ **EL SEO** (`specs/seo.md`, 🟦; el owner: «IMPORTANTÍSIMO»). Investigado y medido (§1–§2: la marca ya está en el 1 y
+   ▶▶▶ **SIGUE AQUÍ, en el 1**: la lista del owner (`#876`).
+1. ▶▶▶ **LA LISTA DEL OWNER DEL 02-10 (tarde)** (`#876`; su censo, medido, y el reparto en `isla-y-landing-nueva.md` §4.28):
+   **L1** el panel: el authenticator recuerda la sesión «al menos el día» (hoy, 120 min sin uso; «Recordarme» de Filament dura
+   400 días) y su código se envía solo con la 6.ª cifra (el del cliente ya lo hace); ⚠️ en LOCAL el administrador del owner
+   ya pide el authenticator → **L2** la SPEC de las entradas Kids junto a Jump en UNA compra (dinero y aforo; la revisa el
+   owner mientras sigo) → **L3** la isla en las páginas: «Reservar» abre la compra sin la calculadora (Kids, Cumpleaños en la
+   fiesta, Colegios), el copy de cumpleaños («el resto, en la lista de invitados») y «¿Qué menú?» de
+   `PantallaCuandoFiesta.vue` con condición (del SPA, `#807`/`#808`: el Menú 1/2 es dato del panel) → **L4** la 404 con piezas
+   del sistema y el hero más ancho, en vivo → **L5** el resumen A4 semanal y mensual de cumpleaños (amplía `#184`) → el código
+   de la L2, con su visto bueno → al final, tras sus vídeos, los textos («parking gratis» es falso). Al SPA, en el buzón.
+2. ▶▶ **EL SEO** (`specs/seo.md`, 🟦; el owner: «IMPORTANTÍSIMO»). Investigado y medido (§1–§2: la marca ya está en el 1 y
    **cumpleaños no existe para Google**). HECHO el 01-10: **S4** (`robots.txt` con `Sitemap:`; JSON-LD con `geo`, `priceRange` y
    la dirección por campos; `mutar-seo.sh` 14/14; `52e6557e`), **S6** (`#862`: los titulares se quedan; Kids y Jump dicen «en
    Lorca»; instancia `9e7d274`) y **S3 empezado** (las fotos de más abajo, diferidas: Kids 8,7 → 6,5 s de LCP en el laboratorio
@@ -69,7 +78,7 @@ Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas,en
    domingo 21:30: el perfil; @playjumplorca). Los TÉRMINOS de búsqueda del perfil, desde el 6-oct. Después, con código: S3
    (el logotipo de 115 KB, la foto de la cabecera por tamaños, `cajon.css` bloqueante, el CLS de la cabecera) y S5 (la imagen
    de cada página al compartir). La medida en STAGING, cuando estén los vídeos e imágenes nuevos (el owner, 01-10).
-2. **Los textos LEGALES con lo nuevo**: ⬜ `specs/textos-legales.md` (01-10, el DOCUMENTO para el owner: 22 tratamientos medidos,
+3. **Los textos LEGALES con lo nuevo**: ⬜ `specs/textos-legales.md` (01-10, el DOCUMENTO para el owner: 22 tratamientos medidos,
    el texto nuevo en español, §7 sus decisiones D1–D10; después la asesoría y el código). Lo gordo: el texto VIVO de producción
    se editó a mano (sin rastro en el repo) y dice que el descargo «no se gestiona en esta web» y que los invitados «se eliminan»
    tras la fiesta (sus alergias viven hasta suprimir la cuenta); la ODR cerró en 2025; falta el aviso de que no hay
@@ -77,23 +86,11 @@ Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas,en
    de publicar el texto), `#864`, sin aviso a las cuentas, y `#865`, las dos frases falsas de producción se corrigen AL
    DESPLEGAR la v2.0.0 (apuntado en `ENTORNOS.md` §6). Entran las notas del SPA (`#750`, `#754`, la TP·1 y `#793`). Espera
    la revisión del owner y la asesoría; la poda de `#863` puede ir antes (no depende del texto).
-3. **A6** (en staging, cuánto tarda el correo), que decide el alta: `#849` o lo del diseño. La A5, arriba en 0.
-**HECHO el 30-09**, con su ✅: la A3a (`#857`) y la A3b (`acceso-con-codigo.md` §4.10; el servidor, A1 y A2, §4.8–§4.9;
-`mutar-acceso-codigo.sh` 51/51), `/cookies` para producción (`#858`/`#859`) y el aviso que pide solo lo encendido (`#860`;
-`politica-de-cookies.md` §4 y §6, `mutar-politica-cookies.sh` 30/30). **Al desplegar**: `ENTORNOS.md` §6 (el script de `/cookies`).
-❗ **Para el CHANGELOG de la v2.0.0**: dos defectos de producción arreglados por el camino —los correos del cambio de correo
-salían al buzón contrario (`#856`) y «cerrar las demás sesiones» no cerraba nada con `redis` (`#855`)—.
-▶▶ **Del SPA (`#807`→`#808`)**: el Menú 1/2 se desengancha de la reserva como DATO del panel (sin contrato nuevo), y
-`isla/compra/PantallaCuandoFiesta.vue` pinta «¿Qué menú?» SIN condición —saldría vacía: un `v-if` sobre `menus`—; la calculadora
-y la landing dicen «incluye calcetines… cono» y «¿Qué menú?».
-**HECHO el 29-09 (tarde-noche)**: la hoja de correo del SPA (`28dfdf15`; declarada en la instancia, `da0f84d`) · `#758` en la isla
-(`#846`, §4.26) · `sonda-portada` 23/23 (era la sonda) · la lista del owner (`#847`) · **EL PANEL A SALVO** (`specs/panel-a-salvo.md`
-✅: guard propio `#850`/`SEC-14`, dirección `PANEL_PATH`, authenticator de administradores `#851` con `panel:quitar-authenticator`;
-`sonda-panel.mjs` 11/11) · la lista de ficheros aparte (`#852`). ⚠️ En LOCAL, el administrador del owner ya pide el authenticator.
-**De `#847`**: (3) el SEO y (4) las imágenes de la web al compartir, en marcha en `specs/seo.md` (S5); la de la INVITACIÓN,
-generada para cada una, es del SPA (`#861`; producción medida: GD e Imagick, sin Chromium). La lista de invitados es del SPA
-(su `#805`/`#806`). **Al desplegar la v2.0.0** (`ENTORNOS.md` §6): `PANEL_PATH` (la elige el owner, por el chat), favoritos de
-las tablets, la URI de la ficha de Google y su authenticator.
+4. **A6** (en staging, cuánto tarda el correo), que decide el alta: `#849` o lo del diseño. La A5, arriba en 0.
+**Lo HECHO del 29 y el 30-09** (la A3, `/cookies` y su aviso, el panel a salvo, `#758` en la isla, `#847`): en sus specs y
+decisiones; lo de desplegar (el script de `/cookies`, `PANEL_PATH`, tablets, la ficha de Google, el authenticator), en
+`ENTORNOS.md` §6. ❗ **Para el CHANGELOG de la v2.0.0**: dos defectos de producción arreglados por el camino —los correos del
+cambio de correo salían al buzón contrario (`#856`) y «cerrar las demás sesiones» no cerraba nada con `redis` (`#855`)—.
 ▶▶ **Y los diseños NUEVOS del owner** cuando baje el zip: entra SOLO por `diseno/actualizar.py` (`#760`), el diseño se toma del
 mockup (`#767`) y se verifica una vez al final (`#768`). Después, Bizum, Apple (entra) y el día liberado. Correos y puerta, del SPA.
 **Abierto, medido y sin hacer** (HECHOS el 29-09: el `#758` del SPA, `#846`, §4.26; y `sonda-portada` 13/14, que era la SONDA
@@ -221,6 +218,16 @@ carril se apunta ALLÍ; lo compartido se sigue avisando aquí, en el buzón, ant
   SSR rancio tras un arnés, las guardas de presupuesto que cambian el diseño, el juez de la hoja y el banco.
 
 ## Buzón
+
+### ❗ Para el SPA (emisor: plataforma, 2026-10-02 tarde) — dos puntos de la lista del owner son tuyos (`#876`)
+- **«Añadir los nuevos complementos en la lista de invitados. Opciones del menú..»** (sus palabras): tu lista (`#805`/`#806`).
+  Tu regla de `#808`: medir antes si el panel ya lo configura (K3). Ojo: LOCAL y staging no llevan el catálogo del folleto
+  26-09 (solo producción, `ENTORNOS.md` §6).
+- **Las ALTAS por origen** («cuántos se registran en casa y en el parque»): las visitas guardan su origen (`AttributionContext`)
+  y el embudo lo reparte, pero `CustomersReport` corta `user_registered` solo por `method`. El enlace del cartel que le di
+  (sin verificar): `https://playjump.es/?utm_source=parque&utm_medium=qr&utm_campaign=registro#mi-cuenta`. Si lo cambias,
+  dímelo aquí. Su censo entero, en `isla-y-landing-nueva.md` §4.28.
+- Otro punto suyo, el código que se envía solo con la 6.ª cifra: tu `CodeInput` ya lo hace; yo hago el del panel.
 
 ### ❗ Para el SPA (emisor: plataforma, 2026-10-02) — «Quién firma el descargo» (Z6g·2, `#875`): lo de la isla, hecho; lo tuyo
 - El zip (6) («Quién firma el descargo: una regla, sin dar nada por hecho», 30-09) dice lo mismo en «la isla, los correos y Mi
