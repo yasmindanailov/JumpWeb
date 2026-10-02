@@ -160,6 +160,16 @@ class GateKioskTest extends TestCase
         $this->declara('.ppu-cant.clara', 'color: var(--color-white);');
     }
 
+    /**
+     * La P3: la reseña del día es texto de un desconocido en letra de 26–32 px; una palabra larga (un enlace pegado) se parte
+     * antes que desbordar la tarjeta en un móvil, y la tarjeta no pasa del ancho del mockup.
+     */
+    public function test_p3_the_review_quote_breaks_a_long_word_and_the_card_keeps_its_width(): void
+    {
+        $this->declara('.ppu-resena__cita', 'overflow-wrap: anywhere;', 'una palabra larga desborda la tarjeta');
+        $this->declara('.ppu-resena', 'width: min(100%, 780px);');
+    }
+
     /** ▶ **La doble lectura** del lector (el mockup): el mismo código en menos de 3 s se corta ANTES que el `wire:submit`. */
     public function test_a_double_read_is_cut_before_livewire_sees_it(): void
     {

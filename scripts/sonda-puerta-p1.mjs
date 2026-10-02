@@ -75,10 +75,35 @@ const tocables = () => page.evaluate(() => [...document.querySelectorAll('.ppu b
     .filter((el) => { const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0 && getComputedStyle(el).visibility !== 'hidden'; })
     .map((el) => ({ que: (el.textContent || el.getAttribute('placeholder') || el.tagName).trim().slice(0, 30), alto: Math.round(el.getBoundingClientRect().height) })));
 
+// La P3: con el campo vacío, una de las dos reseñas de prueba del montaje (la del mockup y la de Marcos, con las palabras de
+// prueba) en lugar del lector, entera dentro de la pantalla y sin desplazarla. Y por TURNO (`#910`): cada vez que la pantalla
+// vuelve a quedar vacía —abrir o refrescar, «Nueva búsqueda»— sale la otra.
+const RESENAS = {
+    '«Los monitores, un diez: Irene estuvo pendiente de los peques toda la tarde.»': 'Laura M., en Google · hace 3 días.',
+    '«Un equipo de diez: nos ayudaron con todo y los peques salieron felices y agotados.»': 'Marcos P., en Google · hace 5 días.',
+};
+const vistas = [];
+const resenaVacia = () => page.evaluate(() => {
+    const r = document.querySelector('[data-gate-empty] [data-gate-review]');
+    if (! r) return null;
+    const caja = r.getBoundingClientRect();
+    return {
+        cita: r.querySelector('blockquote')?.textContent.trim(), autor: r.querySelector('.ppu-resena__a')?.textContent.trim(),
+        dentro: caja.left >= 0 && caja.right <= window.innerWidth + 0.5 && caja.top >= 0 && caja.bottom <= window.innerHeight + 0.5,
+        // La marca oficial de Google (`#780`): el fichero CARGADO y a su alto, dentro de la tarjeta.
+        marca: (() => { const m = r.querySelector('[data-gate-review-brand]'); const b = m?.getBoundingClientRect(); return Boolean(m && m.complete && m.naturalWidth > 0 && Math.round(b.height) === 24 && b.right <= caja.right); })(),
+        lector: document.querySelectorAll('[data-gate-empty] .ppu-vacio__ico').length,
+    };
+});
+
 for (const [ancho, alto] of TAMANOS) {
     await page.setViewportSize({ width: ancho, height: alto });
     await abrir();
     check(`${ancho}: la página no se desplaza como documento`, await page.evaluate(() => document.documentElement.scrollHeight <= window.innerHeight + 1), await page.evaluate(() => `${document.documentElement.scrollHeight} de ${window.innerHeight}`));
+    const vacia = await resenaVacia();
+    check(`${ancho}: con el campo vacío, la reseña del día (cita, autor y la marca de Google) en lugar del lector, entera en pantalla`, vacia !== null && RESENAS[vacia.cita] === vacia.autor && vacia.marca && vacia.dentro && vacia.lector === 0, JSON.stringify(vacia));
+    vistas.push(vacia?.cita ?? null);
+    await page.screenshot({ path: `${OUT}/sonda-puerta-p1-vacio-${ancho}.png` });
 
     for (const [ficha, token] of Object.entries(tokens)) {
         await escanear(token);
@@ -106,6 +131,8 @@ for (const [ancho, alto] of TAMANOS) {
         await page.screenshot({ path: `${OUT}/sonda-puerta-p1-${ficha}-${ancho}.png` });
     }
 }
+// `#910`: cada tamaño ABRE la pantalla de nuevo (como un refresco), así que las dos reseñas se turnan de una a la siguiente.
+check('reseña · al refrescar sale la siguiente: las dos se turnan', vistas.every((c, i) => c !== null && (i === 0 || c !== vistas[i - 1])) && new Set(vistas).size === 2, JSON.stringify(vistas));
 
 // La encuesta PREGUNTA A PREGUNTA (la P1b), con Elena —verde y sin participación—: la PRIMERA con el aviso del anonimato y
 // «1 de N»; un toque pasa a la siguiente SIN REHACER LA FICHA (los mismos nodos, sin pitido y sin que el veredicto vuelva a
@@ -259,7 +286,22 @@ const velo = await page.locator('[data-gate-veil]').evaluate((el) => {
     return { visible: el.getBoundingClientRect().height > 0, opacidad: s.opacity, alfa: fondo.length === 4 ? Number(fondo[3]) : 1 };
 }).catch(() => ({ visible: false }));
 check('a los 60 s, el velo tapa la ficha, OPACO (la cola no lee nada detrás)', velo.visible && velo.opacidad === '1' && velo.alfa === 1, JSON.stringify(velo));
+// La P3: bajo la píldora del velo, la reseña del día, visible; y una sola vez en la página (nunca en la ficha).
+const enVelo = await page.evaluate(() => ({
+    enVelo: document.querySelectorAll('[data-gate-veil] [data-gate-review]').length,
+    total: document.querySelectorAll('[data-gate-review]').length,
+    alto: Math.round(document.querySelector('[data-gate-veil] [data-gate-review]')?.getBoundingClientRect().height ?? 0),
+}));
+check('el velo lleva la reseña del día bajo su píldora, y la ficha no', enVelo.enVelo === 1 && enVelo.total === 1 && enVelo.alto > 0, JSON.stringify(enVelo));
 await page.screenshot({ path: `${OUT}/sonda-puerta-p1-velo-1080.png` });
+// `#910`: «Nueva búsqueda» vacía la pantalla y sale la SIGUIENTE (la ficha abierta no movió el turno: su velo enseñaba la de antes).
+const enElVelo = await page.locator('[data-gate-veil] blockquote').textContent().catch(() => null);
+await page.locator('[data-gate-veil]').click();
+await page.getByRole('button', { name: 'Nueva búsqueda' }).click();
+await page.waitForLoadState('networkidle');
+await page.waitForTimeout(450);
+const trasVaciar = await page.locator('[data-gate-empty] blockquote').textContent().catch(() => null);
+check('reseña · con «Nueva búsqueda» sale la siguiente', enElVelo !== null && trasVaciar !== null && enElVelo.trim() !== trasVaciar.trim() && Object.hasOwn(RESENAS, trasVaciar.trim()), `${enElVelo?.trim()} → ${trasVaciar?.trim()}`);
 
 for (const [que, entrada, palabra] of [['no-encontrado', 'nadie-ojo-puerta@correo.es', 'No encontrado'], ['mal-escrito', 'ana@correo', 'Escribe un correo o un teléfono válido']]) {
     await escanear(entrada);

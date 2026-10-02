@@ -1,8 +1,9 @@
 # [SPEC] La Puerta nueva — el mostrador del zip (6), sobre las garantías de la de hoy
 
 > Estado: 🟦 **la P1 y la P2 EN `main` con el visto bueno del owner** (02-10): la pantalla (P1a), la encuesta (P1b), a quién
-> y «Ahora no» (P1c) y las pulseras y lo que se entrega (P2); queda la P3 (la reseña del día) · Última actualización:
-> 2026-10-02 · Decisiones: `#817`, `#818`, `#819` ·
+> y «Ahora no» (P1c), las pulseras y lo que se entrega (P2) y la reseña del día (P3): la Puerta ENTERA · Última
+> actualización:
+> 2026-10-02 · Decisiones: `#817`, `#818`, `#819`, `#910` ·
 > Carril: 🧩 **SPA** (`#861`, el reparto del zip (6), `isla-y-landing-nueva.md` §4.27) · Fuente: `instancias/playjump/diseno/playjump-design-system/paginas/puerta/`
 > y la sección «La Puerta · el mostrador (27-09)» de su `readme.md` (manda el mockup, `#767`); referencia, el brief
 > COMPLETO `uploads/brief-puerta-playjump (1).md` · La pantalla de hoy y sus garantías: `identidad-qr-puerta.md`.
@@ -22,7 +23,8 @@
   encuesta pregunta a pregunta y la reseña del día por palabras. Tandas en §4.4: cada una en `wip/…`, con su «al
   detalle» medido aquí ANTES del código, su arnés, su sonda a 1080 × 810 y el ojo del owner en la tablet.
 - **Estado (02-10)**: la P1 y la P2 EN `main` con el visto bueno del owner (la pantalla, la encuesta, `#818`, `#819`; las
-  pulseras y lo que se entrega, D10–D15, §4.4). Sigue la P3 (la reseña del día), con su «al detalle» medido ANTES del código.
+  pulseras y lo que se entrega, D10–D15, §4.4) y la P3 (la reseña del día, D16–D21 y `#910`: las copiadas de la ficha hoy
+  y el Perfil de Empresa cuando conecte, una con cada cliente). Tras subir, el arnés ENTERO.
 - No toca el `CRITICAL_RE` (medido). Sí RGPD (lo que ve la cola): `INVARIANTES.md` §3 antes de la P1.
 
 ## 1. Contexto y problema (medido el 2026-10-02)
@@ -157,8 +159,8 @@ HAY = el producto ya lo sabe (dónde) · FALTA = hay que construirlo · CHOCA = 
    (si la sabe, se lee de ahí); si no, un campo del pack. Mientras, la fila dice el nombre de su zona.
 4. **La reseña del día, por palabras** (`#817`: «profesional y robusto»). Lo que se propone, a medir en el «al detalle» de
    la P3 antes del código:
-   - **La fuente** es la tabla de reseñas del producto (`google_business_reviews`): la llenan las reseñas copiadas hoy y la
-     pasada de Google cuando llegue, así que el filtro no cambia con la fuente. Las candidatas, las que ya puede enseñar
+   - **La fuente** —⚠️ corregido al medir la P3 (§4.4, D16): son DOS, las copiadas de la ficha (`testimonials`, `#771`) y
+     el Perfil de Empresa cuando conecte, en el orden de la portada; el filtro no cambia con la fuente—. Las candidatas, las que ya puede enseñar
      la portada (≥ el mínimo de estrellas del panel, con texto, sin ocultar y dentro del plazo, `withinRetention()`), de los
      últimos 30 días contados con el reloj del parque (`DisplayTime`), y sobre el texto ORIGINAL del autor (`comment`).
    - **Las palabras, en el panel** (ajuste de la Puerta, futuro): una por línea («monitor», «equipo», «atentos» o el nombre
@@ -472,6 +474,98 @@ PlayJump montada en la local (`ojo-puerta.php`: sus colores, la rueda desde las 
 su zona y los calcetines) y dos cumpleaños nuevos, Sofía (KIDS) y Javier (JUMP); su `escanear()` espera ahora a que la ficha
 de antes desaparezca (una respuesta lenta le dejó leer la de Jorge como la de Irene).
 
+#### La P3 al detalle: la reseña del día, por palabras (medido el 02-10, antes del código; §4.3·4)
+
+**Lo medido.**
+- **El mockup** (`puerta.jsx`, `datos.js`, `puerta.css`): `PpuResena` lleva «Lo que dicen de vosotros.», la reseña entre «»
+  cortada a 190 caracteres en el último espacio con «…», y «Laura, en Google · hace 3 días.». Sale con el campo vacío (en
+  lugar del icono del lector, que se queda si no hay reseña) y en el velo, bajo su píldora; nunca en la ficha. Tarjeta de
+  780 px como mucho; la cita a 32 px (26 px por debajo de 880 px). «De los últimos 30 días y que habla del equipo».
+- **Las fuentes son DOS, y §4.3·4 se equivocaba** («la tabla de reseñas, que llenan las copiadas y la pasada»): las
+  «reseñas actuales» del owner son las COPIADAS de su ficha (`#771`), que viven en «Opiniones» (`testimonials` con
+  `origin = google`, activas o no, con sus páginas en `tags`, su nota y la fecha deducida al copiar «Hace 3 semanas»); son
+  las que enseña hoy la portada, detrás de la cascada (`CmsSocialProof`). El Perfil de Empresa (`google_business_reviews`)
+  va delante en esa cascada (`#732`) y está VACÍO en producción hasta que la ficha conecte (finales de octubre, `#719`). En la
+  local: 0 copiadas, y 7 del Perfil (las del doble de la T2, vistas el 21-09: 5 de los últimos 30 días, sin autor pintable).
+- **El Perfil**: solo guarda CANDIDATAS (con texto, con el mínimo de estrellas QUE HABÍA al pasar —la lectura no lo
+  reaplica—, no ocultas, como mucho 12); «Ocultar» borra la fila al momento (`GoogleReviewSuppressions::hide()`); el plazo
+  se aplica al leer (`withinRetention()`, 29 días) y el autor solo con una pasada de los últimos 3 (`publishableAuthor()`);
+  `text_ambiguous` marca un texto que puede llevar la traducción de Google. **Las copiadas**: el parque elige cuáles publica
+  (`is_active`) y su autor firma «Nombre I.»; la herramienta de copia anota si Google enseñaba una TRADUCCIÓN
+  (`translated`), pero `CopiedReviewImport` lo descarta: ni la portada ni la Puerta pueden saberlo (de plataforma, `#771`).
+- **Normalizar**: la casa ya tiene convención (`PersonNameKey`: `Str::ascii` + `mb_strtolower`, con respaldo si se vacía).
+  Medido: `Str::ascii` pliega tildes, ñ, ß, cirílico, «ª» y la tilde DESCOMPUESTA; el chino, el tailandés, el hebreo y los
+  emoji salen VACÍOS. `intl` no la exige `composer.json` (el código la guarda con `class_exists`): nada puede depender de
+  ella. Plegar carácter a carácter (por grafema, respaldo = el carácter tal cual) cuesta 28 ms con 12 textos de 3.762
+  caracteres, y menos de 1 ms con lo realista. Quitar las marcas combinantes al respaldo le quitaba las vocales al tailandés:
+  no se quitan.
+- **La Puerta de hoy**: con el campo vacío, el icono del lector (`data-gate-empty`); el velo, una píldora OPACA
+  (`data-gate-veil`, la sonda mide la opacidad). `render()` calcula el veredicto y la ficha, nada más.
+- **Los ajustes** guardan TEXTO y `save()` ya limpia algunas claves (el WhatsApp, a dígitos): una lista se limpia ahí.
+  Content puede leer Platform (`ModuleBoundariesTest::ALLOWED`).
+
+**Lo que se decide aquí** (contra los objetivos: «profesional y robusto», manda el mockup, todo dato del panel):
+- **D16 · De dónde sale, en el orden de la portada** (`#732`): primero el Perfil de Empresa (dentro de su plazo,
+  `withinRetention()`, y sin `text_ambiguous`: en la Puerta es UNA cita en grande, y una palabra podría casar con la
+  traducción de Google y atribuirle al autor lo que escribió una máquina); si ninguna de allí casa, las COPIADAS que el
+  parque tiene ACTIVAS (las etiquetas son de páginas web, no de la Puerta, y marcarlas a mano lo descartó Q4). Nunca las
+  opiniones escritas en el panel: la línea dice «en Google». En las dos, escritas en los últimos 30 días contados desde la
+  medianoche del parque (`DisplayTime`; la copiada, con su fecha deducida) y con las estrellas del mínimo VIGENTE del panel
+  (`reviews.min_stars`, reaplicado al leer; una copiada sin nota no entra): la palabra elige reseñas que HABLAN del equipo,
+  no que lo alaben, y el mínimo es lo que impide que salga «los monitores, fatal». Una oculta o apagada no sale.
+- **D17 · Las palabras**, una por línea en «Ajustes → Avanzado → Puerta» (`puerta.review_keywords`), guardadas limpias: sin
+  espacios de sobra, sin líneas vacías ni repetidas por su forma plegada; 40 como mucho, de 60 caracteres. Sin palabras, no
+  sale ninguna (Q4 descartó «cualquiera reciente»).
+- **D18 · Cómo casan**: las dos partes se pliegan igual (minúsculas y cada carácter por `Str::ascii`, o tal cual si se vacía).
+  Por PRINCIPIO de palabra: sin una letra ni un número delante, y la última palabra puede seguir («monitor» casa «monitora»
+  y «monitores»; no «desmonitor»). Varias palabras, seguidas, con cualquier espacio entre ellas. En una escritura sin espacios
+  entre palabras (chino, japonés, tailandés…), dentro del texto: allí no hay principio de palabra que buscar.
+- **D19 · Cuál sale: por turno, una con cada cliente** — `[DECIDIDO owner]` `#910` (02-10, al ver la P3: «¿por qué solo
+  sale una al refrescar?»; el «al detalle» decía una al día)—: de la fuente que gana, las que casan, la más nueva primero (a
+  igualdad, la de menor id), y la siguiente cada vez que la pantalla vuelve a quedar vacía (abrir o refrescar, «Nueva
+  búsqueda», el cierre a los 5 min); una ficha abierta no la mueve. El turno, un contador atómico en caché por persona.
+- **D20 · Cómo se pinta** (el mockup): «Lo que dicen de vosotros.», el texto sin tocar entre «» (los saltos de línea, un
+  espacio), cortado a 190 caracteres en el último espacio con «…» (sin espacio, en el 190), con `dir="auto"`; «Laura, en
+  Google · hace 3 días.» con el autor que pinta la portada (del Perfil, `publishableAuthor()`; de una copiada, su firma) y
+  `RelativeAge`; sin nombre, «En Google · hace 3 días.». Con el campo vacío (en lugar del icono) y en el velo, bajo su
+  píldora; nunca en la ficha ni con un veredicto sin ficha.
+- **D21 · El panel lo dice**: bajo las palabras, cuántas de las reseñas de Google de los últimos 30 días casan ahora y cuál
+  sale hoy (su autor y su comienzo), de la MISMA consulta que la Puerta. Sin caché: apagar u ocultar una la quita de la
+  Puerta en la pantalla siguiente. (Una marca en «Opiniones» y en «Ficha de Google», si el owner la pide.)
+
+**Lo que cambia**: en Content, `ReviewKeywords` (la lista plegada y el «¿casa?», puro: `tests/Unit`) y `GateReviewOfTheDay`
+(las dos fuentes, el turno y lo que se pinta); `ValidarRegistro::render()` pasa la reseña con el campo vacío o con ficha; la
+vista y su hoja (`.ppu-resena`); el ajuste, su limpieza y su ayuda; los textos `es` y `zh_CN`. **Lo que no**: las dos tablas
+de reseñas, la pasada, la importación, la portada, la ficha, el veredicto ni la encuesta.
+
+**Pruebas, cada guarda con su mutación**: tildes y mayúsculas; el principio de palabra (y su negativo); la palabra que sigue;
+la frase de varias (y separadas por otra: no); la escritura sin espacios; sin palabras; el orden de las fuentes (el Perfil
+gana; sin nada que case allí, la copiada); la copiada apagada, la opinión propia y la copiada sin nota (no); el borde de los
+30 días a la medianoche del parque; el plazo del Perfil (vista hace 29,5 días: no); el mínimo vigente; la ambigua; la oculta;
+el turno (el mismo día la misma, al siguiente otra, en N días todas); el autor (del Perfil sin confirmar: sin nombre; de la
+copiada: su firma); el corte (con y sin espacio); la vista (campo vacío, velo, nunca en la ficha); el guardado limpio; la
+ayuda del panel; el presupuesto de consultas con el campo vacío. La sonda, con una copiada de prueba montada en la local
+(`ojo-puerta.php`: la del mockup, «Los monitores, un diez: Irene…») y unas palabras de prueba; las de verdad las pone el
+parque en su panel.
+
+**P3 · la reseña del día, HECHA y EN `main`** (02-10, con el visto bueno del owner): `ReviewKeywords` y `GateReviewOfTheDay` en
+Content; `ValidarRegistro::render()` pasa la reseña con el campo vacío o con ficha; el parcial `puerta/resena.blade.php` (con
+el campo vacío, como región; en el velo, sin ella: el velo entero es un botón) y su hoja; el ajuste «Reseña del día: sus
+palabras» en «Ajustes → Avanzado → Puerta», guardado limpio, con sus topes en el formulario y una ayuda que dice, al salir
+del campo y sin guardar, lo que haría la Puerta. Sin migración. Cuesta UNA consulta si el Perfil da la reseña y DOS si hay
+que bajar a las copiadas; ninguna sin palabras. Al verla, el owner pidió el logotipo OFICIAL de Google en la tarjeta «para
+darle más autoridad, como el widget oficial»: el fichero de `#780`, arriba a la derecha, solo y fuera de la frase (la línea
+«…, en Google · hace 3 días.» se queda: atribuye en palabras si la imagen no carga). Y que cambie con cada cliente (`#910`,
+D19): la primera versión guardaba el turno en la SESIÓN y la sonda lo vio perderse —una petición vieja reescribía la sesión
+entera: la misma reseña dos veces al refrescar—; con un contador atómico en caché por persona, la misma sonda pasa (control
+A/B). Pruebas: `ReviewKeywordsTest` (10, en `tests/Unit`), `GateReviewOfTheDayTest` (14), `GateReviewSettingsTest` (4) y
+`GateKioskTest` +1. Arnés: 44 mutantes, 44/44 (`SOLO='reseña' PARALELO=` con su
+filtro: ~10 s por mutante; con `--parallel` y un filtro pequeño cada proceso vuelve a migrar y eran 72 s). **Lo destapó el
+arnés**: `published_at` es una FECHA y SQLite la guarda como texto con su hora, así que comparada con «2026-09-02» el día
+del borde entraba con `>` y con `>=` por igual en la suite y no en MySQL → `whereDate`. Y dos veces la prueba, no el código:
+«atentas» no empieza por «atentos», y «palabra4» casa «palabra41» por su principio (como debe). Sonda 261/261 en los cuatro
+tamaños, con CONTROL (sin palabras caen justo las 5 de la reseña: 254/259) y el turno al refrescar y con «Nueva búsqueda».
+
 ## 5. Impacto en invariantes
 
 - **RGPD** (`INVARIANTES.md` §3, lo que ve la cola): más estricto, con «Resultado para» enmascarado; sin apellidos de menores
@@ -508,3 +602,8 @@ de antes desaparezca (una respuesta lenta le dejó leer la de Jorge como la de I
 - 2026-10-02 · la P2 (las pulseras y lo que se entrega), medida (§4.4, «La P2 al detalle», D10–D15), hecha y en vivo para el
   owner, en `wip/puerta-p2`.
 - 2026-10-02 · el owner la ve en vivo: «Buen trabajo. visto bueno. continua.» La P2, a `main`. Sigue la P3.
+- 2026-10-02 · la P3 (la reseña del día), medida (§4.4, «La P3 al detalle», D16–D21: la medición corrigió §4.3·4, las
+  fuentes son dos), hecha y en vivo para el owner, en `wip/puerta-p3`.
+- 2026-10-02 · el owner la ve: visto bueno con el logotipo oficial de Google en la tarjeta (`#780`) y pregunta por qué al
+  refrescar sale siempre la misma: decide que cambie con cada cliente (`#910`). La ve y la P3, a `main`; el arnés entero,
+  justo después y en segundo plano (~45 min medidos: 129 mutantes a ~17 s; las «2 horas» que dije eran una mala cuenta).

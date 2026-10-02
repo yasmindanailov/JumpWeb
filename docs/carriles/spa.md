@@ -2,13 +2,13 @@
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb` a secas; la instancia al lado, en
 > `~/proyectos/instancias/playjump`, clon de `github.com/yasmindanailov/instancia-playjump`, montada el 25-09) ·
-> Banda: **910–939** (del owner, 02-10; 790–819 agotada con `#819`) · Último usado: **`#819`** (el siguiente, `#910`) · La banda está dada de alta en la
+> Banda: **910–939** (del owner, 02-10; 790–819 agotada con `#819`) · Último usado: **`#910`** (el siguiente, `#911`) · La banda está dada de alta en la
 > tabla de `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs:
 > **`acceso-con-codigo.md` §0** (la A4 del cajón ✅ en `main`) · `correos-rediseno.md` §0 ·
 > `fiesta-sistema-nuevo.md` §4.17–§4.19 · `analitica-para-decidir.md` §0 (en pausa, `#755`) · `encuestas.md` §0 y §4.7
 > (`#754`) · `analitica.md` §0 y §4.5 · `isla-y-landing-nueva.md` §4.11 · `celebracion-e-invitacion.md` §0 ·
-> `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 · `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-10-02, 12:15
-> (la imagen EN `main`, 🟦 hasta verla en WhatsApp; la Puerta: la P1 y la P2 en `main`, sigue la P3).
+> `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 · `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-10-02, 14:00
+> (la imagen EN `main`, 🟦 hasta verla en WhatsApp; la Puerta ENTERA en `main`: P1, P2 y P3).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`). El
 > contador de la suite va en el trailer del commit (`#618`), no aquí. **Se muda, no se raspa**: el detalle de
 > una feature baja a su spec (las trampas por tanda de la analítica T1→T5 viven en `analitica.md` §4.9,
@@ -20,12 +20,7 @@
   `#815`; `#816` sin caché; `fiesta-sistema-nuevo.md` §4.19): la dibuja el producto con GD en cada petición y la instancia pone
   el kit (`fuentes.imagen`, empujado: `084fb40`). Arnés `mutar-imagen-invitacion.sh` 33/33; sonda `sonda-imagen-invitacion.mjs`
   16/16. 🟦 hasta verla en WhatsApp en un teléfono, con el producto y la instancia desplegados (de noche, `#594`).
-- ✅ **`LinkIsland` L1–L3, EN `main` con el visto bueno del owner** («Buen trabajo. Vamos a lo siguiente»; `#814`;
-  `fiesta-sistema-nuevo.md` §4.18): la isla de la invitación, la lista y la autorización; fuera `rsvp-bar` y `barra-guardar`.
-  **La pasada ligera (`#768`) hecha**: 58/68 pares, todos los de diagnóstico a 0 menos la lista guardada (desfasada desde
-  `#805`/K1/K2: `DEUDA.md`); arregló la línea en una fila, el hueco y el botón del sistema. Arnés `mutar-isla-enlace.sh`
-  47/47 entero; sonda `sonda-isla-enlace.mjs` 41/41 ×2.
-- ✅ **LA A4 (a y b), EN `main`** (`#810`→`#813`): entrar, el alta y Mi cuenta con un código; arneses 43/43 y 36/36.
+- ✅ `LinkIsland` L1–L3 (`#814`) y la A4 (`#810`→`#813`), en `main` y aprobadas: su foto, mudada verbatim a `CARRIL-SPA.md` §9 (02-10).
 
 - ✅ La lista de invitados del owner (`#805`) y los complementos en dos (`#806`→`#808`; K3 sin código): su foto, mudada verbatim
   a `CARRIL-SPA.md` §9 (01-10). ▶ La regla del owner: no se programa lo que el panel ya configura.
@@ -66,8 +61,10 @@
    `mutar-puerta-p1.sh` 34/34, sonda `sonda-puerta-p1.mjs` 196/196). ✅ **La P1b (la encuesta pregunta a pregunta, solo en
    verde, robusta) y la P1c (a quién y «Ahora no», `#819`) EN `main` con el visto bueno del owner** (02-10; spec §4.4: sin
    la sonda ni el arnés entero, a petición suya). ✅ **La P2 (las pulseras y lo que se entrega, D10–D15) EN `main` con el
-   visto bueno del owner** (02-10; arnés 20/20, sonda 254/254; spec §4.4). ▶ **Ahora: la P3** (la reseña del día por palabras
-   del panel), con su «al detalle» medido en la spec ANTES del código.
+   visto bueno del owner** (02-10; arnés 20/20, sonda 254/254; spec §4.4). 🟦 **La P3 (la reseña del día por palabras,
+   D16–D21) EN `main` con el visto bueno, el logo de Google y una con cada cliente (`#910`)** (arnés 44/44, sonda
+   261/261; spec §4.4). ▶ El arnés ENTERO, lanzado tras subir (~45 min);
+   la Puerta, entera (`mutar-puerta-p1.sh` sin `SOLO`; su resultado, en la spec §4.4 y aquí).
 2. ▶▶ **LOS CORREOS (`specs/correos-rediseno.md`: §0 → §4; `#789`, `#800`→`#804`)**: ✅ R1a, R1b y **R1·T** en `main` (la
    R1·T revisada: §4.2.2; su sonda y el medidor de bloques, `CARRIL-SPA` §8 (26)). Del zip (6) (`#861`): el 8, «482-913 es tu
    código para entrar» sin botón; «Quién firma el descargo» en el 1 y el 3; las dos horas (90 + 30). ▶ **Tras la A4, la R1·T2** (`#809`,
@@ -245,6 +242,9 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 
 ## Buzón
 
+- ❗ **Para plataforma (02-10, `#771`)**: `CopiedReviewImport` descarta el `translated` que anota `resenas-google.mjs`, así que
+  una copiada que Google enseñaba TRADUCIDA se publica (en la portada y, desde la P3, en la Puerta) como palabras del autor.
+  Si lo guardas (p. ej. `testimonials.translated`), la Puerta la deja fuera como deja la ambigua del Perfil. Medido, sin tocar.
 - ❗ **Para plataforma (02-10), tu aviso previo de la Z6c (el B3)**: mejor tu otra forma, que la ISLA llame a `JumpWeb.track`,
   como el cajón con `createExperiments().expose()` (`sidebar/experiments.js`): quien pinta la variante sabe cuándo la pintó de
   verdad (abajo, en móvil) y cuenta la exposición UNA vez por carga; leer tus marcas del DOM desde fuera copiaría esa regla.

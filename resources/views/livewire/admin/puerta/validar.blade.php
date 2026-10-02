@@ -85,9 +85,13 @@
     </header>
 
     @if ($verdict === null)
-        {{-- Entre dos clientes: el campo vacío y el lector (la reseña del día llega en la P3). --}}
+        {{-- Entre dos clientes: el campo vacío y la reseña del día (la P3); sin reseña, el lector. --}}
         <div class="ppu-vacio" data-gate-empty>
-            <x-filament::icon :icon="Heroicon::OutlinedQrCode" class="ppu-vacio__ico" />
+            @if ($resena !== null)
+                @include('livewire.admin.puerta.resena', ['resena' => $resena, 'region' => true])
+            @else
+                <x-filament::icon :icon="Heroicon::OutlinedQrCode" class="ppu-vacio__ico" />
+            @endif
         </div>
     @elseif ($verdict['notice'])
         {{-- Los avisos de la BÚSQUEDA, en gris y sin nombre: no hablan del cliente. La clave lleva la LECTURA (`$lectura`): cada
@@ -383,9 +387,13 @@
                 </div>
             </div>
 
-            {{-- El velo a los 60 s: OPACO, tapa la ficha entera; el campo de búsqueda queda libre. --}}
+            {{-- El velo a los 60 s: OPACO, tapa la ficha entera; el campo de búsqueda queda libre. Bajo su píldora, la reseña
+                 del día (la P3): no habla del cliente de la ficha. --}}
             <div x-show="veiled" x-cloak class="ppu-velo" data-gate-veil role="button" tabindex="0" x-on:click="arm()">
                 <p class="ppu-velo__t"><x-filament::icon :icon="Heroicon::OutlinedEyeSlash" />{{ __('admin.puerta.ficha.velo') }}</p>
+                @if ($resena !== null)
+                    @include('livewire.admin.puerta.resena', ['resena' => $resena, 'region' => false])
+                @endif
             </div>
         </section>
     @endif

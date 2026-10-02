@@ -6,7 +6,10 @@ use App\Domain\Booking\Services\AvailabilitySettings;
 use App\Domain\Booking\Services\CatalogSettings;
 use App\Domain\Booking\Services\GuestCountPolicy;
 use App\Domain\Booking\Services\WristbandWheel;
+use App\Domain\Content\Services\GateReviewOfTheDay;
+use App\Domain\Content\Services\GoogleReviewFilter;
 use App\Domain\Content\Services\MapsEmbed;
+use App\Domain\Content\Services\ReviewKeywords;
 use App\Domain\Content\Services\ShellSettings;
 use App\Domain\Content\Services\SocialEmbed;
 use App\Domain\Identity\Services\BirthdayReminders;
@@ -24,6 +27,7 @@ use App\Domain\Platform\Services\Analytics\Pixels;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Domain\Platform\Services\Surveys\SurveySettings;
 use BackedEnum;
+use Closure;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\Select;
@@ -38,6 +42,7 @@ use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 
 /**
  * Fase 7.10 (iter. 1) — Configuración del negocio desde el panel.
@@ -206,6 +211,8 @@ class Settings extends Page
         // La rueda de las pulseras (`specs/puerta-nueva.md` §4.4, la P2): la hora del primer color y el paso. Vacío = sin rueda.
         WristbandWheel::KEY_START => 'puerta',
         WristbandWheel::KEY_STEP => 'puerta',
+        // La reseña del día de la Puerta (`specs/puerta-nueva.md` §4.4, la P3): sus palabras, una por línea. Vacío = ninguna.
+        ReviewKeywords::KEY => 'puerta',
         // T3 de las encuestas (`specs/encuestas.md` §4.3): el plazo entre dos correos de encuesta a la misma persona.
         'surveys.cooldown_days' => 'puerta',
         // Fase 6 · waiver (`DECISIONES #142`): el MODO sustituye al interruptor de #216 —externo (el
@@ -456,6 +463,12 @@ class Settings extends Page
             // enlace `https://wa.me/{digits}` sin ambigüedad de formato (espacios, guiones, '+').
             if ($key === 'contact.whatsapp' && $value !== '') {
                 $value = preg_replace('/\D/', '', $value) ?? '';
+            }
+
+            // Las palabras de la reseña del día (la P3, D17): LIMPIAS, una por línea, sin vacías ni repetidas por su forma
+            // plegada («Monitor» y «monitor » son una). El tope y el largo ya los paró el formulario.
+            if ($key === ReviewKeywords::KEY) {
+                $value = ReviewKeywords::clean($value);
             }
 
             $old = (string) (Setting::value($key) ?? '');
@@ -1144,6 +1157,32 @@ class Settings extends Page
     }
 
     /** Puerta (técnico): freno anti-abuso de validaciones, modo y conservación del waiver, tope de menores a cargo. Colapsada. */
+    /**
+     * **La ayuda de las palabras de la reseña del día** (`specs/puerta-nueva.md` §4.4, la P3, D21): qué son y, debajo, lo que
+     * la Puerta haría con las escritas, de la MISMA consulta que la Puerta (`GateReviewOfTheDay::summary()`). Es texto
+     * plano: Filament lo escapa, y lleva el comienzo de una reseña que escribió un desconocido.
+     */
+    private static function reviewKeywordsHelp(string $raw): string
+    {
+        $ayuda = __('admin.settings.puerta_review_keywords_hint', ['estrellas' => GoogleReviewFilter::fromSettings()->minStars]);
+        $palabras = ReviewKeywords::from($raw);
+        if ($palabras->isEmpty()) {
+            return $ayuda.' '.__('admin.settings.puerta_review_keywords_none');
+        }
+
+        $resumen = app(GateReviewOfTheDay::class)->summary($palabras);
+        if ($resumen['primera'] === null) {
+            return $ayuda.' '.__($resumen['hay'] ? 'admin.settings.puerta_review_keywords_no_match' : 'admin.settings.puerta_review_keywords_no_reviews');
+        }
+
+        return $ayuda.' '.trans_choice('admin.settings.puerta_review_keywords_today', $resumen['casan'], [
+            'n' => $resumen['casan'],
+            'autor' => $resumen['primera']['autor'] ?? __('admin.settings.puerta_review_keywords_anonymous'),
+            // Su comienzo, cortado en una palabra entera y con «…», como la cita de la Puerta.
+            'inicio' => Str::limit($resumen['primera']['texto'], 60, '…', true),
+        ]);
+    }
+
     private function doorSection(): Section
     {
         return Section::make(__('admin.settings.section_door'))
@@ -1192,6 +1231,22 @@ class Settings extends Page
                     ->integer()
                     ->minValue(WristbandWheel::STEP_MIN)
                     ->maxValue(WristbandWheel::STEP_MAX),
+                // La RESEÑA DEL DÍA (`specs/puerta-nueva.md` §4.4, la P3; D17 y D21): las palabras, una por línea, y debajo lo
+                // que la Puerta haría con ellas —de la MISMA consulta que la Puerta—, al salir del campo y sin guardar.
+                Textarea::make(ReviewKeywords::KEY)
+                    ->label(__('admin.settings.puerta_review_keywords'))
+                    ->helperText(fn (?string $state): string => self::reviewKeywordsHelp((string) $state))
+                    ->rows(5)
+                    ->live(onBlur: true)
+                    ->rule(static fn (): Closure => static function (string $attribute, mixed $value, Closure $fail): void {
+                        $raw = (string) $value;
+                        if (ReviewKeywords::tooMany($raw)) {
+                            $fail(__('admin.settings.puerta_review_keywords_too_many', ['max' => ReviewKeywords::MAX_ENTRIES]));
+                        } elseif (($larga = ReviewKeywords::tooLong($raw)) !== null) {
+                            $fail(__('admin.settings.puerta_review_keywords_too_long', ['max' => ReviewKeywords::MAX_LENGTH, 'entrada' => Str::limit($larga, 24)]));
+                        }
+                    })
+                    ->columnSpanFull(),
                 // T3 de las encuestas (`specs/encuestas.md` §4.3): la encuesta por correo nace de la visita
                 // acreditada aquí, y este es el plazo entre dos correos a la misma persona. Vacío = 30.
                 TextInput::make(SurveySettings::KEY_COOLDOWN_DAYS)

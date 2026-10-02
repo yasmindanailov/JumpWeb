@@ -11,11 +11,15 @@
 #
 #   bash scripts/mutar-puerta-p1.sh                  (todas)
 #   SOLO='veredicto' bash scripts/mutar-puerta-p1.sh (las que llevan eso en su nombre)
+#   SOLO='reseña' PARALELO= FILTRO='ReviewKeywordsTest|GateReviewOfTheDayTest|GateReviewSettingsTest|GateKioskTest' bash scripts/mutar-puerta-p1.sh
+#     (una tanda con SOLO las pruebas que la guardan: un filtro más estrecho solo puede dejar un mutante VIVO de más, nunca
+#     darlo por muerto sin serlo; el entero, sin `FILTRO`, al cerrar la Puerta. `PARALELO=` vacío corre sin `--parallel`:
+#     con un filtro pequeño, cada proceso paralelo vuelve a migrar su base y un mutante pasaba de ~15 s a 72 s, medido el 02-10)
 set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
 EXEC="docker compose exec -u sail -T laravel.test"
-PHP='Puerta|GateKioskTest|GateVerdictTest|QueryMaskTest|FichaPuertaTest|WaiverGateTest|MixedPartyParkSurfacesTest|PanelSecretPathTest|SurveyInPersonStepsTest|QuestionSchemaTest|SurveyVisitFactsTest|SurveysReportTest|SurveySendTest|SurveyResourceTest'
+PHP="${FILTRO:-Puerta|GateKioskTest|GateVerdictTest|QueryMaskTest|FichaPuertaTest|WaiverGateTest|MixedPartyParkSurfacesTest|PanelSecretPathTest|SurveyInPersonStepsTest|QuestionSchemaTest|SurveyVisitFactsTest|SurveysReportTest|SurveySendTest|SurveyResourceTest|ReviewKeywordsTest}"
 
 TMP="$(mktemp -d)"
 FICHEROS=(
@@ -38,13 +42,16 @@ FICHEROS=(
     app/Filament/Resources/WristbandColors/WristbandColorResource.php
     app/Filament/Resources/WristbandColors/Pages/CreateWristbandColor.php
     app/Filament/Pages/Settings.php
+    app/Domain/Content/Services/ReviewKeywords.php
+    app/Domain/Content/Services/GateReviewOfTheDay.php
+    resources/views/livewire/admin/puerta/resena.blade.php
 )
 copia() { echo "$TMP/${1//\//__}"; }
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$(copia "$f")" "$f"; touch "$f"; done; }
 trap 'restaurar; rm -rf "$TMP"' EXIT
 for f in "${FICHEROS[@]}"; do cp -p "$f" "$(copia "$f")"; done
 
-verde_php() { $EXEC php artisan test --parallel --filter="$PHP" >/dev/null 2>&1; }
+verde_php() { $EXEC php artisan test ${PARALELO---parallel} --filter="$PHP" >/dev/null 2>&1; }
 
 if ! verde_php; then
     echo '✗ la base NO está verde antes de mutar: el veredicto de abajo no valdría nada.' >&2
@@ -310,6 +317,103 @@ mutar "hoja · los dibujos se rellenan de negro" "$HOJA" \
     stroke-width: 1.6;" "    fill: currentColor;
     stroke: currentColor;
     stroke-width: 1.6;"
+
+# ── La P3: la reseña del día, por palabras (`specs/puerta-nueva.md` §4.4, «La P3 al detalle») ────────────────────────────
+PALABRAS=app/Domain/Content/Services/ReviewKeywords.php
+DIA=app/Domain/Content/Services/GateReviewOfTheDay.php
+AJUSTES=app/Filament/Pages/Settings.php
+TARJETA=resources/views/livewire/admin/puerta/resena.blade.php
+mutar "reseña · sin plegar con ascii" "$PALABRAS" \
+  "\$ascii = Str::ascii(\$grafema);" "\$ascii = '';"
+mutar "reseña · sin minúsculas" "$PALABRAS" \
+  "        \$text = mb_strtolower(\$text);" "        \$text = \$text;"
+mutar "reseña · lo que ascii vacía se pierde" "$PALABRAS" \
+  "return \$ascii !== '' ? strtolower(\$ascii) : \$grafema;" "return strtolower(\$ascii);"
+mutar "reseña · dentro de otra palabra" "$PALABRAS" \
+  ": '/(?<![\p{L}\p{N}])'.\$frase.'/u';" ": '/'.\$frase.'/u';"
+mutar "reseña · la palabra no puede seguir" "$PALABRAS" \
+  ": '/(?<![\p{L}\p{N}])'.\$frase.'/u';" ": '/(?<![\p{L}\p{N}])'.\$frase.'(?![\p{L}\p{N}])/u';"
+mutar "reseña · varias palabras sueltas" "$PALABRAS" \
+  "\$frase = implode('\s+', array_map(" "\$frase = implode('.*', array_map("
+mutar "reseña · sin escrituras sin espacios" "$PALABRAS" \
+  "\$patrones[] = preg_match(self::SIN_ESPACIOS, \$plegada) === 1" "\$patrones[] = false"
+mutar "reseña · repetidas por su forma plegada" "$PALABRAS" \
+  "            \$clave = self::fold(\$entrada);" "            \$clave = \$entrada;"
+mutar "reseña · sin tope al leer" "$PALABRAS" \
+  "return array_slice(\$entradas, 0, self::MAX_ENTRIES);" "return \$entradas;"
+mutar "reseña · el tope del formulario se pasa" "$PALABRAS" \
+  ")) > self::MAX_ENTRIES;" ")) >= self::MAX_ENTRIES;"
+mutar "reseña · el largo del formulario se pasa" "$PALABRAS" \
+  "if (mb_strlen(\$entrada) > self::MAX_LENGTH) {" "if (mb_strlen(\$entrada) >= self::MAX_LENGTH) {"
+mutar "reseña · el Perfil no va delante" "$DIA" \
+  "\$delPerfil = self::filterMatching(\$palabras, \$this->profile(\$hoy));" "\$delPerfil = [];"
+mutar "reseña · sin bajar a las copiadas" "$DIA" \
+  "return \$delPerfil !== [] ? \$delPerfil : self::filterMatching(\$palabras, \$this->copied(\$hoy));" "return \$delPerfil;"
+mutar "reseña · la copiada apagada sale" "$DIA" \
+  "->where('is_active', true)" "->whereNotNull('id')"
+mutar "reseña · las opiniones propias salen" "$DIA" \
+  "->where('origin', Testimonial::ORIGIN_GOOGLE)" "->whereNotNull('origin')"
+mutar "reseña · la copiada sin el mínimo" "$DIA" \
+  "->where('rating', '>=', GoogleReviewFilter::fromSettings()->minStars)" "->whereNotNull('id')"
+mutar "reseña · el Perfil sin el mínimo vigente" "$DIA" \
+  "->where('star_rating', '>=', GoogleReviewFilter::fromSettings()->minStars)" "->whereNotNull('id')"
+mutar "reseña · el Perfil sin su plazo" "$DIA" \
+  "            ->withinRetention()" "            ->whereNotNull('id')"
+mutar "reseña · el Perfil con la ambigua" "$DIA" \
+  "->where('text_ambiguous', false)" "->whereNotNull('id')"
+mutar "reseña · la medianoche del parque leída como UTC" "$DIA" \
+  "self::windowStart(\$hoy)->utc())" "self::windowStart(\$hoy))"
+mutar "reseña · la ventana de un día más" "$DIA" \
+  "->subDays(self::WINDOW_DAYS);" "->subDays(self::WINDOW_DAYS + 1);"
+mutar "reseña · la copiada del primer día fuera" "$DIA" \
+  "->whereDate('published_at', '>=', " "->whereDate('published_at', '>', "
+mutar "reseña · siempre la primera" "$DIA" \
+  "return \$casan[abs(\$turno) % count(\$casan)];" "return \$casan[0];"
+mutar "reseña · la ayuda nombra otra que la primera" "$DIA" \
+  "\$primera = self::pick(\$casan, 0);" "\$primera = self::pick(\$casan, 1);"
+mutar "reseña · al vaciar no avanza el turno" "$COMPONENTE" \
+  "        // La pantalla vuelve a quedar vacía: la siguiente reseña (\`#910\`).
+        \$this->nextReview();" "        // La pantalla vuelve a quedar vacía: la siguiente reseña (\`#910\`)."
+mutar "reseña · al abrir no avanza el turno" "$COMPONENTE" \
+  "        // Abrir (o refrescar) la Puerta es volver a la pantalla vacía: la siguiente reseña (\`#910\`).
+        \$this->nextReview();" "        // Abrir (o refrescar) la Puerta es volver a la pantalla vacía: la siguiente reseña (\`#910\`)."
+mutar "reseña · el turno no empieza en la más nueva" "$COMPONENTE" \
+  "Cache::add(\$clave, 0, now()->addDay())" "Cache::add(\$clave, 1, now()->addDay())"
+mutar "reseña · el contador no sube" "$COMPONENTE" \
+  "            Cache::increment(\$clave);" ""
+mutar "reseña · el turno de otra persona" "$COMPONENTE" \
+  "return (int) Cache::get(self::REVIEW_TURN.(int) Auth::id(), 0);" "return (int) Cache::get(self::REVIEW_TURN.'0', 0);"
+mutar "reseña · sin cortar" "$DIA" \
+  "if (mb_strlen(\$texto) <= self::CUT) {" "if (true) {"
+mutar "reseña · cortar sin buscar el espacio" "$DIA" \
+  "\$cabeza = \$espacio === false || \$espacio === 0 ? mb_substr(\$texto, 0, self::CUT) : mb_substr(\$texto, 0, \$espacio);" "\$cabeza = mb_substr(\$texto, 0, self::CUT);"
+mutar "reseña · el autor del Perfil sin su plazo" "$DIA" \
+  "'autor' => \$r->publishableAuthor()," "'autor' => \$r->author_name,"
+mutar "reseña · la ayuda: siempre hay reseñas" "$DIA" \
+  "'hay' => \$casan !== [] || \$this->profile(\$hoy) !== [] || \$this->copied(\$hoy) !== []," "'hay' => true,"
+mutar "reseña · el componente no la pide" "$COMPONENTE" \
+  "'resena' => \$this->result === null || \$this->profile !== null ? app(GateReviewOfTheDay::class)->forGate(\$this->reviewTurn()) : null," "'resena' => null,"
+mutar "reseña · el campo vacío sin la reseña" "$VISTA" \
+  "@include('livewire.admin.puerta.resena', ['resena' => \$resena, 'region' => true])" ""
+mutar "reseña · el velo sin la reseña" "$VISTA" \
+  "@include('livewire.admin.puerta.resena', ['resena' => \$resena, 'region' => false])" ""
+mutar "reseña · una región dentro del velo" "$VISTA" \
+  "'region' => false])" "'region' => true])"
+mutar "reseña · el autor sin pintar" "$TARJETA" \
+  "{{ __('admin.puerta.resena.autor_cuando', ['autor' => \$resena['autor'], 'cuando' => \$resena['cuando']]) }}" "{{ __('admin.puerta.resena.anonima_cuando', ['cuando' => \$resena['cuando']]) }}"
+mutar "reseña · sin la marca de Google" "$TARJETA" \
+  "<img class=\"ppu-resena__marca\" src=\"{{ asset('images/providers/google-logo.svg') }}\" alt=\"Google\" width=\"74\" height=\"24\" data-gate-review-brand>" ""
+mutar "reseña · el panel guarda sin limpiar" "$AJUSTES" \
+  "                \$value = ReviewKeywords::clean(\$value);" "                \$value = \$value;"
+mutar "reseña · el panel sin tope" "$AJUSTES" \
+  "if (ReviewKeywords::tooMany(\$raw)) {" "if (false) {"
+mutar "reseña · el panel sin largo" "$AJUSTES" \
+  "} elseif ((\$larga = ReviewKeywords::tooLong(\$raw)) !== null) {" "} elseif (false) {"
+mutar "reseña · la ayuda lee lo guardado" "$AJUSTES" \
+  "self::reviewKeywordsHelp((string) \$state))" "self::reviewKeywordsHelp((string) Setting::value(ReviewKeywords::KEY)))"
+mutar "reseña · hoja: la cita no se parte" "$HOJA" \
+  "    overflow-wrap: anywhere;
+" ""
 
 echo
 echo "$muerden/$total muerden"

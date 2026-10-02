@@ -992,7 +992,7 @@
     margin-top: 2px;
 }
 
-/* ─── Entre dos clientes: el lector (la reseña del día llega en la P3) ─────────── */
+/* ─── Entre dos clientes: la reseña del día (la P3) o, sin ella, el lector ────── */
 
 .ppu-vacio {
     display: grid;
@@ -1006,6 +1006,63 @@
 .ppu-vacio__ico {
     width: 120px;
     height: 120px;
+}
+
+/* La reseña del día (el mockup `PpuResena`): con el campo vacío y en el velo, nunca en la ficha. La cita, grande y en su
+   tinta; una palabra larga (un enlace) se parte antes que desbordar la tarjeta en un móvil. */
+.ppu-resena {
+    display: grid;
+    gap: 16px;
+    width: min(100%, 780px);
+    padding: 34px 40px 32px;
+    box-shadow: 0 12px 32px color-mix(in oklab, var(--gray-950) 10%, transparent);
+    color: var(--ppu-tinta);
+    text-align: left;
+    animation: ppu-in 420ms ease-out;
+}
+
+.ppu-resena .ppu-over {
+    margin: 0 !important;
+    color: var(--primary-700);
+}
+
+/* «Lo que dicen de vosotros.» a la izquierda y el logotipo de Google a la derecha (`#780`): su fichero, con el alto por CSS
+   y el ancho en proporción; nunca se recolorea. */
+.ppu-resena__cab {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.ppu-resena__marca {
+    flex: none;
+    width: auto;
+    height: 24px;
+}
+
+.ppu-resena__cita {
+    margin: 0;
+    font: 800 32px/1.2 var(--ppu-letra);
+    letter-spacing: -0.02em;
+    color: var(--ppu-tinta);
+    text-wrap: balance;
+    overflow-wrap: anywhere;
+}
+
+.ppu-resena__a {
+    font: 600 16px/1.3 var(--ppu-letra);
+    color: var(--ppu-texto);
+}
+
+@container (max-width: 880px) {
+    .ppu-resena {
+        padding: 26px;
+    }
+
+    .ppu-resena__cita {
+        font-size: 26px;
+    }
 }
 
 /* ─── Bloque 7: el pie y el velo ─────────────────────────────────────────────── */

@@ -137,6 +137,15 @@ return [
             'ahora_no' => 'Ahora no',
             'guardado' => 'Guardado.',
         ],
+        // LA RESEÑA DEL DÍA (`specs/puerta-nueva.md` §4.4, la P3, D20; el mockup `PpuResena`): con el campo vacío y en el
+        // velo. Siempre de Google: la del Perfil de Empresa o una copiada de la ficha (`#771`), nunca una opinión propia.
+        'resena' => [
+            'titulo' => 'Lo que dicen de vosotros.',
+            'autor_cuando' => ':autor, en Google · :cuando.',
+            'autor' => ':autor, en Google.',
+            'anonima_cuando' => 'En Google · :cuando.',
+            'anonima' => 'En Google.',
+        ],
         'validar' => [
             'title' => 'Validar registro',
             'intro' => 'Introduce el email o el teléfono del cliente para comprobar si está registrado y si ha firmado el descargo.',
@@ -3761,6 +3770,16 @@ return [
         'puerta_wheel_start_hint' => 'La rueda reparte los colores «En la rueda» (Ajustes → Pulseras) por la hora de inicio de cada reserva, desde esta hora y vuelta a empezar. Vacío = sin rueda.',
         'puerta_wheel_step' => 'Pulseras: cada cuántos minutos cambia',
         'puerta_wheel_step_hint' => 'Vacío = 30.',
+        // La reseña del día (`specs/puerta-nueva.md` §4.4, la P3): sus palabras y lo que la Puerta haría con ellas.
+        'puerta_review_keywords' => 'Reseña del día: sus palabras',
+        'puerta_review_keywords_hint' => 'Una palabra o frase por línea («monitor», «equipo», el nombre de quien atiende). Con el campo vacío y en el velo, la Puerta enseña una reseña de Google de los últimos 30 días, de :estrellas estrellas o más, que diga alguna; si la dicen varias, salen por turno, una con cada cliente. Casa sin mayúsculas ni tildes y por el principio de la palabra: «monitor» vale para «monitora» y «monitores».',
+        'puerta_review_keywords_none' => 'Sin palabras, la Puerta no enseña ninguna reseña.',
+        'puerta_review_keywords_no_reviews' => 'Ahora no hay reseñas de Google de los últimos 30 días: la Puerta enseña el lector.',
+        'puerta_review_keywords_no_match' => 'Ahora ninguna reseña de Google de los últimos 30 días dice estas palabras: la Puerta enseña el lector.',
+        'puerta_review_keywords_today' => '{1} Ahora las dice :n reseña, la de :autor: «:inicio».|[2,*] Ahora las dicen :n reseñas, que salen por turno; la más nueva, la de :autor: «:inicio».',
+        'puerta_review_keywords_anonymous' => 'una persona sin nombre',
+        'puerta_review_keywords_too_many' => 'Como mucho :max palabras o frases, una por línea.',
+        'puerta_review_keywords_too_long' => 'Cada línea, como mucho :max caracteres: «:entrada» pasa.',
         'puerta_waiver_check' => 'Comprobar el descargo en la puerta',
         'puerta_waiver_check_hint' => 'Activado: la puerta muestra si el cliente firmó el descargo (3 estados). Desactivado: solo muestra si está registrado (2 estados), útil si el descargo lo gestiona vuestro sistema externo.',
         'tax_rate' => 'IVA por defecto (%)',

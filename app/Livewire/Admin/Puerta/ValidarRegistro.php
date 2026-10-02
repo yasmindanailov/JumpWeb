@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin\Puerta;
 
+use App\Domain\Content\Services\GateReviewOfTheDay;
 use App\Domain\Identity\Exceptions\WaiverDocumentStaleException;
 use App\Domain\Identity\Models\CustomerVisit;
 use App\Domain\Identity\Models\User;
@@ -21,6 +22,7 @@ use App\Domain\Platform\Services\Surveys\SurveyResponses;
 use Filament\Facades\Filament;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
@@ -61,6 +63,9 @@ use Livewire\Component;
 #[Layout('layouts.puerta')]
 class ValidarRegistro extends Component
 {
+    /** El prefijo de la clave de CACHÉ del turno de la reseña del día (`#910`), por persona: ver {@see nextReview()}. */
+    public const REVIEW_TURN = 'puerta:resena_turno:';
+
     public const STATUS_REGISTERED_WITH_WAIVER = 'registered_with_waiver';
 
     public const STATUS_REGISTERED_NO_WAIVER = 'registered_no_waiver';
@@ -187,6 +192,31 @@ class ValidarRegistro extends Component
     public function mount(): void
     {
         $this->authorizeAccess();
+        // Abrir (o refrescar) la Puerta es volver a la pantalla vacía: la siguiente reseña (`#910`).
+        $this->nextReview();
+    }
+
+    /**
+     * **El turno de la reseña del día** (`#910`, el owner: «con cada cliente»): avanza uno cada vez que la pantalla vuelve a
+     * quedar VACÍA —al abrir o refrescar, y con `clear()`: «Nueva búsqueda» o el cierre a los 5 min—. Empieza en 0, la más
+     * nueva; una ficha abierta no lo mueve (su velo enseña la misma que había).
+     * ⚠️⚠️ **Un contador ATÓMICO en caché, por persona, y no la sesión** (medido con la sonda el 02-10): la sesión se guarda
+     * ENTERA al final de cada petición, y una que salió antes —la del panel del que venía el navegador— la escribió después
+     * con su copia vieja: el turno se perdía y la misma reseña salía dos veces. `add` + `increment` no se pisan. Un día sin
+     * usarse, vuelve a empezar.
+     */
+    private function nextReview(): void
+    {
+        $clave = self::REVIEW_TURN.(int) Auth::id();
+        if (! Cache::add($clave, 0, now()->addDay())) {
+            Cache::increment($clave);
+        }
+    }
+
+    /** El turno de la reseña del día de quien está en la puerta (`#910`). */
+    private function reviewTurn(): int
+    {
+        return (int) Cache::get(self::REVIEW_TURN.(int) Auth::id(), 0);
     }
 
     /**
@@ -796,6 +826,8 @@ class ValidarRegistro extends Component
         $this->profileUserId = null;
         $this->profileExpiresAt = null;
         $this->forgetSurvey();
+        // La pantalla vuelve a quedar vacía: la siguiente reseña (`#910`).
+        $this->nextReview();
         // «Nueva búsqueda» se pulsa con el dedo y el foco se quedaba en el botón (medido con la sonda, T2 de
         // las encuestas): el siguiente escaneo no escribía en el campo. El mismo aviso que tras buscar.
         $this->releaseReader();
@@ -812,6 +844,9 @@ class ValidarRegistro extends Component
             'verdict' => $this->result === null ? null : GateVerdict::for($this->result, $this->profile),
             // Lo que se PINTA de la ficha, compuesto fuera de la plantilla con la hora del parque (`FichaPuerta`).
             'ficha' => $this->profile === null ? null : FichaPuerta::de($this->profile, DisplayTime::now()),
+            // La reseña del día (la P3, D20): con el campo vacío y en el velo de una ficha; nunca con un veredicto sin ficha
+            // ni con un aviso. Se calcula en cada pintado y no viaja en el estado: apagar una la quita en el siguiente.
+            'resena' => $this->result === null || $this->profile !== null ? app(GateReviewOfTheDay::class)->forGate($this->reviewTurn()) : null,
         ]);
     }
 

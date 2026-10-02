@@ -391,7 +391,12 @@ además la CONFIGURACIÓN de PlayJump como dato de la local, y `OJO=desmontar` N
 los ocho colores del mockup en `wristband_colors`, la rueda (`puerta.wristband_wheel_start` 11:00, paso 30), la ilimitada
 (102) gris, los packs 105 y 106 rojos con su zona de salto (Kids y Jump) y los calcetines (110) que se entregan en la puerta,
 con su rótulo. Y dos fichas más, `sofia` (cumpleaños KIDS, con su tarta) y `javier` (JUMP); los calcetines van en las seis
-fichas con `tareas` de `datos.js` (ana, mostrador, carlos, marta, tomas y david). Fotos: `fotos-pulseras.mjs`.
+fichas con `tareas` de `datos.js` (ana, mostrador, carlos, marta, tomas y david). Fotos: `fotos-pulseras.mjs`. **Desde la
+P3**: dos reseñas COPIADAS de prueba (`testimonials`, `source_ref` `ojo-puerta-resena-1` y `-2`: «Los monitores, un diez:
+Irene…», Laura M., hace 3 días, y «Un equipo de diez…», Marcos P., hace 5; sin etiquetas: no salen en la portada; dos para
+ver el turno de `#910` al refrescar), que `OJO=desmontar` quita; y las palabras `puerta.review_keywords`
+«Irene» y «equipo», que se quedan (`firstOrCreate`: no pisa lo que escriba el owner). ⚠️ El Perfil de Empresa de la local
+tiene las 7 reseñas FALSAS del doble de la T2, y va delante: con «monitor» sale la suya («Celebramos aquí…», sin autor).
 
 ## 9 · La foto vieja del carril (mudada VERBATIM de `carriles/spa.md` el 2026-09-29, su techo)
 
@@ -521,6 +526,14 @@ De «por dónde retomar», mudado VERBATIM el 2026-09-30 al empezar la R1·T (el
     «Uno para cada niño»; arnés 10/10) y **K2** (varias tartas, «Sin tarta» en casilla; arnés 16/16; el owner: «Quedarme con K2»).
     **K3, la merienda, SIN CÓDIGO** (`#808`): complementos a 0 € en la familia «Merienda», probado solo configurando en el pack 106
     (`JW-OJO-CFG`, `CARRIL-SPA` §8 (25)). ▶ La regla del owner, en adelante: no se programa lo que el panel ya configura.
+
+- Mudados VERBATIM de la foto de `carriles/spa.md` el 2026-10-02 (su techo), dos tandas ya cerradas:
+  - ✅ **`LinkIsland` L1–L3, EN `main` con el visto bueno del owner** («Buen trabajo. Vamos a lo siguiente»; `#814`;
+    `fiesta-sistema-nuevo.md` §4.18): la isla de la invitación, la lista y la autorización; fuera `rsvp-bar` y `barra-guardar`.
+    **La pasada ligera (`#768`) hecha**: 58/68 pares, todos los de diagnóstico a 0 menos la lista guardada (desfasada desde
+    `#805`/K1/K2: `DEUDA.md`); arregló la línea en una fila, el hueco y el botón del sistema. Arnés `mutar-isla-enlace.sh`
+    47/47 entero; sonda `sonda-isla-enlace.mjs` 41/41 ×2.
+  - ✅ **LA A4 (a y b), EN `main`** (`#810`→`#813`): entrar, el alta y Mi cuenta con un código; arneses 43/43 y 36/36.
 
 - Mudados VERBATIM del buzón de `carriles/spa.md` el 2026-09-30 (su techo): los dos avisos al carril de CORREOS, que desde
   `#789` son de este carril:
