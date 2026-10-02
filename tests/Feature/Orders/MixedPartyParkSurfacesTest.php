@@ -16,7 +16,7 @@ use App\Domain\Booking\Services\ReservationSlip;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\GateProfile;
 use App\Domain\Payments\Models\Payment;
-use App\Domain\Platform\Services\Money;
+use App\Livewire\Admin\Puerta\FichaPuerta;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -293,45 +293,27 @@ class MixedPartyParkSurfacesTest extends TestCase
         );
     }
 
-    public function test_the_gate_card_paints_the_lines_between_product_and_pending(): void
+    /**
+     * ▶ La Puerta nueva (`specs/puerta-nueva.md` §4.2·D6, el mockup): un cumpleaños se cobra AL FINAL, fuera de la Puerta,
+     * así que su fila ya no pinta el suplemento escrito ni el saldo. El DATO sigue viajando en la ficha, intacto, para las
+     * superficies que cobran (el caso de arriba lo lee del contrato).
+     */
+    public function test_the_gate_paints_no_money_for_a_party_and_the_written_surcharge_still_travels(): void
     {
         $item = $this->party([4, 8, 9]);
 
-        $profile = app(GateProfile::class)->for(
-            $item->order->user, CarbonImmutable::parse(self::DAY), 0,
-        );
-        $row = $profile->today_reservations[0] ?? null;
+        $profile = app(GateProfile::class)->for($item->order->user, CarbonImmutable::parse(self::DAY), 0)->toArray();
+        $row = $profile['today_reservations'][0] ?? null;
         $this->assertNotNull($row, 'la ficha tiene que traer la reserva del día');
+        $this->assertSame(1400, $row['mixed_party_surcharge_cents'], 'lo escrito sigue en la ficha');
 
-        $html = view('livewire.admin.puerta.partials.reservation', ['r' => $row])->render();
+        $res = FichaPuerta::de($profile, CarbonImmutable::parse(self::DAY.' 10:00'))['filas'][0]['reservas'][0];
+        $this->assertTrue($res['fiesta']);
+        $this->assertNull($res['dinero'], 'la Puerta no cuenta el dinero de un cumpleaños');
+        $this->assertNull($res['pagado']);
 
-        $line = __('admin.puerta.validar.profile.mixed_party_line', [
-            'count' => 2, 'name' => 'Cumpleaños Jump', 'unit' => Money::amount(700),
-        ]);
-        $total = __('admin.puerta.validar.profile.mixed_party_total', ['amount' => Money::amount(1400)]);
-        $this->assertStringContainsString($line, $html);
-        $this->assertStringContainsString($total, $html);
-
-        // Bajo el producto y ENCIMA del pendiente (§23.2): el orden en el documento es la spec.
-        $product = mb_strpos($html, 'Cumpleaños Kids');
-        $mixed = mb_strpos($html, $line);
-        $pending = mb_strpos($html, 'data-gate-pending');
-        $this->assertNotFalse($product);
-        $this->assertNotFalse($pending);
-        $this->assertTrue($product < $mixed && $mixed < $pending, 'el bloque va bajo el producto y encima del pendiente');
-    }
-
-    public function test_without_a_written_surcharge_the_gate_card_paints_nothing(): void
-    {
-        // Control: fiesta sin mezcla → ni el bloque ni un total de 0,00 €.
-        $item = $this->party([4, 5, 6]);
-
-        $profile = app(GateProfile::class)->for(
-            $item->order->user, CarbonImmutable::parse(self::DAY), 0,
-        );
-        $html = view('livewire.admin.puerta.partials.reservation', ['r' => $profile->today_reservations[0]])->render();
-
-        $this->assertStringNotContainsString('data-gate-mixed-party', $html);
+        $sinMezcla = app(GateProfile::class)->for($this->party([4, 5, 6])->order->user, CarbonImmutable::parse(self::DAY), 0)->toArray();
+        $this->assertSame(0, $sinMezcla['today_reservations'][0]['mixed_party_surcharge_cents'], 'control: sin mezcla, nada escrito');
     }
 
     public function test_the_gate_profile_query_budget_does_not_grow_with_the_rows(): void

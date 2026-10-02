@@ -7,7 +7,7 @@ use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\AuditLog;
 use App\Domain\Platform\Models\Setting;
-use App\Livewire\Admin\Puerta\GateSemaphore;
+use App\Livewire\Admin\Puerta\GateVerdict;
 use App\Livewire\Admin\Puerta\ValidarRegistro;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
@@ -118,14 +118,16 @@ class ValidarRegistroTest extends TestCase
                 continue;
             }
 
-            $esperado = GateSemaphore::for(['status' => $status, 'date' => '05/09/2026']);
+            // ▶ La Puerta nueva (`specs/puerta-nueva.md` §4.4, la P1): el VEREDICTO sustituye al semáforo y la guarda sigue
+            // siendo la misma —que su texto y su línea LLEGUEN a la pantalla—, ahora contra `GateVerdict`.
+            $esperado = GateVerdict::for(['status' => $status, 'date' => '05/09/2026'], null);
 
             $html = Livewire::actingAs($this->staff())
                 ->test(ValidarRegistro::class)
-                ->set('result', ['status' => $status, 'query' => 'ana@example.com', 'date' => '05/09/2026'])
+                ->set('result', ['status' => $status, 'query' => 'an•••@example.com', 'date' => '05/09/2026'])
                 ->html();
 
-            foreach (['heading', 'body'] as $parte) {
+            foreach (['text', 'sub'] as $parte) {
                 if ($esperado[$parte] !== null && ! str_contains($html, e($esperado[$parte]))) {
                     $mudos[] = "{$status} · {$parte}: «{$esperado[$parte]}»";
                 }
@@ -134,9 +136,8 @@ class ValidarRegistroTest extends TestCase
 
         $this->assertSame(
             [], $mudos,
-            "Hay estados del semáforo cuyo texto NO llega a la pantalla:\n  ".implode("\n  ", $mudos)."\n\n".
-            '⚠️ El empleado ve un color y un icono, y no sabe qué hacer. Comprueba que el cuerpo va por '.
-            'una propiedad que el componente IMPRIMA (`description`), no por su slot por defecto.'
+            "Hay estados del veredicto cuyo texto NO llega a la pantalla:\n  ".implode("\n  ", $mudos)."\n\n".
+            '⚠️ El empleado ve un color y un icono, y no sabe qué hacer.'
         );
     }
 
@@ -152,7 +153,10 @@ class ValidarRegistroTest extends TestCase
             ->set('input', 'cliente@example.com')
             ->call('search')
             ->assertSet('result.status', ValidarRegistro::STATUS_REGISTERED_WITH_WAIVER)
-            ->assertSee($cliente->waiver_accepted_at->setTimezone('Europe/Madrid')->format('d/m/Y'));
+            // La fecha sigue en el resultado; la Puerta nueva no la pinta con la ficha abierta (el mockup), y sí en el
+            // veredicto de quien solo tiene el semáforo (`GateVerdictTest`).
+            ->assertSet('result.date', $cliente->waiver_accepted_at->setTimezone('Europe/Madrid')->format('d/m/Y'))
+            ->assertSee('Listos para saltar');
     }
 
     public function test_state_registered_no_waiver(): void
@@ -415,7 +419,7 @@ class ValidarRegistroTest extends TestCase
             ->get(route('admin.puerta.validar'))
             ->assertOk()
             ->assertSeeText('验证注册')     // título
-            ->assertSeeText('电子邮件或电话') // placeholder
+            ->assertSee('扫描客户的二维码') // el campo de la Puerta nueva (con la ficha: escanear o teclear)
             ->assertDontSeeText('Validar registro');
     }
 
@@ -434,6 +438,8 @@ class ValidarRegistroTest extends TestCase
     // ─── UX: el query buscado se devuelve con el resultado ───────────────
     // Evita el caso "empleado teclea otra búsqueda sin pulsar Buscar y confunde
     // el resultado anterior con la nueva consulta".
+    // ▶ ENMASCARADO desde la Puerta nueva (`specs/puerta-nueva.md` §4.2·D5): la cola ve la pantalla, así que el eco
+    // dice lo justo para reconocer la búsqueda y el dato ENTERO no llega ni al estado ni al HTML.
 
     public function test_result_includes_query_for_registered_with_waiver(): void
     {
@@ -445,8 +451,9 @@ class ValidarRegistroTest extends TestCase
             ->set('input', $email)
             ->call('search')
             ->assertSet('result.status', ValidarRegistro::STATUS_REGISTERED_WITH_WAIVER)
-            ->assertSet('result.query', $email)
-            ->assertSee($email);
+            ->assertSet('result.query', 'cl•••@example.com')
+            ->assertSee('cl•••@example.com')
+            ->assertDontSee($email);
     }
 
     public function test_result_includes_query_for_registered_no_waiver(): void
@@ -458,20 +465,22 @@ class ValidarRegistroTest extends TestCase
             ->test(ValidarRegistro::class)
             ->set('input', $email)
             ->call('search')
-            ->assertSet('result.query', $email)
-            ->assertSee($email);
+            ->assertSet('result.query', 'si•••@example.com')
+            ->assertSee('si•••@example.com')
+            ->assertDontSee($email);
     }
 
     public function test_result_includes_query_for_not_registered(): void
     {
-        $email = 'desconocido@example.com';
+        $email = 'Desconocido@Example.com';
 
         Livewire::actingAs($this->staff())
             ->test(ValidarRegistro::class)
             ->set('input', $email)
             ->call('search')
-            ->assertSet('result.query', $email)
-            ->assertSee($email);
+            ->assertSet('result.query', 'de•••@example.com')   // en minúsculas, como se busca
+            ->assertSee('de•••@example.com')
+            ->assertDontSee('desconocido@example.com');
     }
 
     public function test_result_includes_query_for_phone_searches(): void
@@ -484,7 +493,8 @@ class ValidarRegistroTest extends TestCase
             ->set('input', '34600112233')   // formato distinto al guardado
             ->call('search')
             ->assertSet('result.status', ValidarRegistro::STATUS_REGISTERED_WITH_WAIVER)
-            ->assertSet('result.query', '34600112233')   // se devuelve lo que tecleó el empleado
-            ->assertSee('34600112233');
+            ->assertSet('result.query', '••• ••• 233')   // las tres últimas cifras de lo que tecleó el empleado
+            ->assertSee('••• ••• 233')
+            ->assertDontSee('34600112233');
     }
 }

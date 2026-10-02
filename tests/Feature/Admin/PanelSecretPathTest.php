@@ -107,9 +107,10 @@ class PanelSecretPathTest extends TestCase
         $this->app['auth']->shouldUse('web');
         $this->get('/')->assertOk()->assertSee(url('/'.self::SECRETA.'/configuracion/maintenance'), false);
 
-        // La vuelta de la puerta al panel.
+        // La Puerta nueva NO vuelve al panel (`specs/puerta-nueva.md` §4.2·D4: es una pantalla única; quien tiene el rol
+        // `puerta` entra directamente). Sigue sirviéndose bajo la dirección secreta, y no enlaza a `/admin`.
         $this->actingAs($admin, 'admin')->get('/'.self::SECRETA.'/puerta/validar')->assertOk()
-            ->assertSee('href="'.url('/'.self::SECRETA).'"', false);
+            ->assertDontSee('href="'.url('/admin').'"', false);
     }
 
     /**

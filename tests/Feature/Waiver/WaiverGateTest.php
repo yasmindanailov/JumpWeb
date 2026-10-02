@@ -71,10 +71,13 @@ class WaiverGateTest extends TestCase
         app(WaiverSigner::class)->sign($holder, $this->publish(), WaiverSignatureRequest::web('10.0.0.1', 'test'));
         $this->travelBack();
 
+        // ▶ La Puerta nueva (`specs/puerta-nueva.md` §4.4, la P1): con la ficha abierta la fecha no se pinta (el mockup);
+        // viaja en el resultado, y lo leído del registro firmado se ve en el veredicto y en la marca del descargo.
         $this->search('firmado@example.com')
             ->assertSet('result.status', ValidarRegistro::STATUS_REGISTERED_WITH_WAIVER)
             ->assertSet('result.outdated', false)
-            ->assertSee('20/08/2026')
+            ->assertSet('result.date', '20/08/2026')
+            ->assertSee('data-gate-waiver="current"', false)
             ->assertDontSee(__('admin.waiver.gate_outdated'));
 
         $status = WaiverStatus::for($holder->fresh());

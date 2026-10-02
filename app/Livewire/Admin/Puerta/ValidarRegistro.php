@@ -732,6 +732,8 @@ class ValidarRegistro extends Component
             // El VEREDICTO se resuelve FUERA de la plantilla (`specs/puerta-nueva.md` §4.4, la P1): la vista pinta, no
             // decide colores ni palabras. Con ficha, manda la ficha (los menores también). `null` sin búsqueda.
             'verdict' => $this->result === null ? null : GateVerdict::for($this->result, $this->profile),
+            // Lo que se PINTA de la ficha, compuesto fuera de la plantilla con la hora del parque (`FichaPuerta`).
+            'ficha' => $this->profile === null ? null : FichaPuerta::de($this->profile, DisplayTime::now()),
         ]);
     }
 

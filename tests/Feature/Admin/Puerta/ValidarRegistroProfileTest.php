@@ -177,8 +177,9 @@ class ValidarRegistroProfileTest extends TestCase
             // `#320`: en la PASTILLA solo entra la excepción. A Vilma le falta la firma y el operador
             // tiene que verlo; la de Lucas está vigente y no se anuncia. El dato sigue en el `data-`
             // de arriba, así que esto es presentación y no una pérdida de información.
+            // ▶ La Puerta nueva (`specs/puerta-nueva.md` §4.4, la P1) la rotula «sin descargo», escrito a mano (`#734`).
             ->assertDontSee(__('admin.puerta.validar.profile.minor_waiver_current'))
-            ->assertSee(__('admin.puerta.validar.profile.minor_waiver_missing'))
+            ->assertSee('sin descargo')
             // `#236`: el NOMBRE se ve —es lo que resuelve «¿a cuál le falta la firma?»— y los
             // APELLIDOS no llegan a la pantalla.
             ->assertSee('Lucas')
@@ -551,17 +552,27 @@ class ValidarRegistroProfileTest extends TestCase
 
         $page = Livewire::actingAs($this->staff())->test(ValidarRegistro::class)->set('input', $token)->call('search');
 
-        $page->set('profile.window', [[
-            'order_code' => 'R-MANANA1', 'order_item_id' => 99, 'date' => '2026-09-06', 'time_window' => '11:00–12:00',
+        // ▶ La Puerta nueva (`specs/puerta-nueva.md` §4.4, la P1): el DINERO va en su línea ámbar bajo la fila de HOY, con la
+        // voz del mockup; y el «otro día», solo si hoy no hay nada (el brief, bloque 4), en una frase.
+        $fila = [
+            'order_code' => 'R-HOY1', 'order_item_id' => 98, 'date' => '2026-09-05', 'time_window' => '11:00–12:00',
             'product' => 'Entrada 1h', 'is_entry' => true, 'quantity' => 2, 'addons' => ['Calcetines'],
             'paid_cents' => 500, 'balance_kind' => 'pay_at_park', 'balance_cents' => 1500, 'charge_method' => 'redsys',
             'paid_at' => null, 'created_at' => '2026-09-01 09:00:00', 'minors' => [],
-        ]]);
+            'zone_name' => 'Jump', 'zone_slug' => 'jump', 'duration_minutes' => 60, 'start_time' => '11:00', 'is_party' => false, 'minors_only' => false,
+        ];
+        $page->set('profile.today_reservations', [$fila])->set('profile.window', [['order_code' => 'R-MANANA1', 'date' => '2026-09-06'] + $fila]);
+
+        $page->assertSee('data-gate-reservation="R-HOY1"', false)
+            ->assertSee('data-gate-pending', false)
+            ->assertSee('Falta pagar 15'."\u{00A0}".'€: avisa al encargado.')
+            ->assertDontSee('data-gate-window', false);
+
+        $page->set('profile.today_reservations', []);
 
         $page->assertSee('data-gate-window', false)
-            ->assertSee('data-gate-reservation="R-MANANA1"', false)
-            ->assertSee('data-gate-pending', false)
-            ->assertSee('15,00');
+            ->assertSee('Tiene reserva, pero otro día:')
+            ->assertSee('Entrada 1h · 2 personas');
     }
 
     public function test_the_page_still_renders_in_zh_with_the_profile_strings(): void
@@ -572,7 +583,8 @@ class ValidarRegistroProfileTest extends TestCase
         // `Livewire::test` no pasa por la ruta ni por `SetAdminLocale`: se fija el idioma como haría el middleware.
         app()->setLocale('zh_CN');
 
+        // La Puerta nueva no tiene el antetítulo «入口档案»: lo que dice cómo se abrió la ficha, en zh.
         Livewire::actingAs($staff)->test(ValidarRegistro::class)->set('input', $token)->call('search')
-            ->assertSee('入口档案');
+            ->assertSee('通过二维码打开');
     }
 }

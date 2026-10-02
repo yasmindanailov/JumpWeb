@@ -25,6 +25,7 @@ use App\Domain\Identity\Services\WaiverSignatureRequest;
 use App\Domain\Identity\Services\WaiverSigner;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Platform\Models\Setting;
+use App\Livewire\Admin\Puerta\FichaPuerta;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -272,12 +273,12 @@ class GateProfileTest extends TestCase
         $this->assertSame(Balance::KIND_REFUND_AT_PARK, $row['balance_kind'], 'hay visita por delante: se devuelve EN el parque');
         $this->assertSame(-1000, $row['balance_cents'], 'el saldo viaja con su signo');
 
-        $html = view('livewire.admin.puerta.partials.reservation', ['r' => $row])->render();
+        // ▶ La Puerta nueva (`specs/puerta-nueva.md` §4.4, la P1): la línea del dinero la compone `FichaPuerta`, con la voz
+        // del mockup, escrita aquí a mano (`#734`).
+        app()->setLocale('es');
+        $res = FichaPuerta::de($this->profile($holder)->toArray(), CarbonImmutable::parse(self::TODAY.' 09:00', 'Europe/Madrid'))['filas'][0]['reservas'][0];
 
-        $this->assertStringContainsString('data-gate-refund', $html);
-        $this->assertStringContainsString(__('admin.puerta.validar.profile.refund_at_gate', ['amount' => '10,00']), $html);
-        $this->assertStringNotContainsString(__('admin.puerta.validar.profile.nothing_pending'), $html);
-        $this->assertStringNotContainsString('data-gate-pending', $html, 'no es dinero a COBRAR');
+        $this->assertSame(['clase' => 'refund', 'texto' => "Hay que devolverle 10\u{00A0}€: avisa al encargado."], $res['dinero'], 'no es dinero a COBRAR');
     }
 
     /**
@@ -295,11 +296,11 @@ class GateProfileTest extends TestCase
         $row = $this->profile($holder)->today_reservations[0];
         $this->assertSame(Balance::KIND_UNDER_REVIEW, $row['balance_kind']);
 
-        $html = view('livewire.admin.puerta.partials.reservation', ['r' => $row])->render();
+        app()->setLocale('es');
+        $res = FichaPuerta::de($this->profile($holder)->toArray(), CarbonImmutable::parse(self::TODAY.' 09:00', 'Europe/Madrid'))['filas'][0]['reservas'][0];
 
-        $this->assertStringContainsString('data-gate-under-review', $html);
-        $this->assertStringContainsString(__('admin.puerta.validar.profile.under_review'), $html);
-        $this->assertStringNotContainsString(__('admin.puerta.validar.profile.nothing_pending'), $html);
+        $this->assertSame(['clase' => 'under-review', 'texto' => 'El dinero de esta reserva no cuadra: avisa al encargado.'], $res['dinero']);
+        $this->assertNull($res['pagado'], 'un libro que no cuadra nunca dice «Pagado» (D-T3·8)');
     }
 
     // ─── Menores: NOMBRE de pila, edad y exención — JAMÁS los apellidos (§4.6, A·7 · `#236`) ──

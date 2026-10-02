@@ -1,0 +1,1028 @@
+/* ─── LA PUERTA NUEVA (`docs/specs/puerta-nueva.md` §4.4, la P1) ─────────────────────────────────────────────────
+ *
+ * El mockup del zip (6) (`paginas/puerta/puerta.css`, prefijo `ppu-`) portado a los TOKENS DEL PANEL, que ya siguen la
+ * marca de la instalación (`theme.brand`, los emite `@filamentStyles` desde `layouts/puerta.blade.php`): los colores
+ * del mockup son ROLES —verde `--success-*`, ámbar `--warning-*`, rojo `--danger-*`, neutro y gris `--gray-*`, el
+ * acento y «Cumpleaños» `--primary-*`— y la letra, la del panel (`--font-family`). Ni un valor de PlayJump: la tinta del
+ * mockup (su `rgba(11,46,74,…)`) es aquí `color-mix` del gris del panel. Solo modo claro (D3).
+ *
+ * La pieza se mide contra su CAJA (container queries, como el mockup): la misma sirve en la tablet horizontal
+ * (1080 × 810, la referencia; 1194 × 834; 1366 × 1024), en vertical y en escritorio.
+ * Tres alturas: el buscador (blanco), el cuerpo (gris claro, con tarjetas) y, con una búsqueda, el pie. */
+
+.gate-shell {
+    width: 100%;
+    height: 100dvh;
+}
+
+.ppu {
+    --ppu-tinta: var(--gray-950);
+    --ppu-texto: var(--gray-700);
+    --ppu-suave: var(--gray-500);
+    --ppu-fondo: var(--gray-100);
+    --ppu-blanco: var(--color-white);
+    --ppu-borde: color-mix(in oklab, var(--gray-950) 11%, transparent);
+    --ppu-borde-fuerte: color-mix(in oklab, var(--gray-950) 24%, transparent);
+    --ppu-letra: var(--font-family), ui-sans-serif, system-ui, sans-serif;
+    --ppu-mono: var(--mono-font-family), ui-monospace, monospace;
+
+    container-type: size;
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    background: var(--ppu-fondo);
+    font-family: var(--ppu-letra);
+    color: var(--ppu-texto);
+    overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.ppu *,
+.ppu *::before,
+.ppu *::after {
+    box-sizing: border-box;
+}
+
+.ppu p,
+.ppu h1,
+.ppu h2,
+.ppu ul {
+    margin: 0;
+}
+
+.ppu ul {
+    padding: 0;
+    list-style: none;
+}
+
+/* ─── Bloque 0: el buscador ─────────────────────────────────────────────────── */
+
+.ppu-cab {
+    z-index: 6;
+    display: flex;
+    align-items: flex-start;
+    gap: 18px;
+    padding: 12px 24px;
+    background: var(--ppu-blanco);
+    border-bottom: 1px solid var(--ppu-borde);
+}
+
+.ppu-marca {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 16px;
+    min-height: 58px;
+}
+
+.ppu-logo {
+    display: block;
+    width: auto;
+    height: 34px;
+}
+
+.ppu-logo--texto {
+    height: auto;
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--ppu-tinta);
+}
+
+.ppu-sep {
+    width: 1px;
+    height: 28px;
+    background: var(--ppu-borde);
+}
+
+.ppu-titulo {
+    font-size: 24px;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: var(--ppu-tinta);
+}
+
+.ppu-busca {
+    display: grid;
+    flex: 1;
+    gap: 6px;
+    min-width: 0;
+}
+
+.ppu-fila {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.ppu-campo {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+}
+
+.ppu-campo__ico {
+    position: absolute;
+    top: 50%;
+    left: 18px;
+    width: 22px;
+    height: 22px;
+    color: var(--ppu-tinta);
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+.ppu-campo__input {
+    width: 100%;
+    height: 58px;
+    padding: 0 16px 0 52px;
+    border: 2px solid var(--ppu-borde-fuerte);
+    border-radius: 12px;
+    background: var(--ppu-blanco);
+    font: 500 17px/1 var(--ppu-letra);
+    color: var(--ppu-tinta);
+    outline: none;
+    caret-color: var(--primary-600);
+}
+
+.ppu-campo__input::placeholder {
+    color: var(--ppu-suave);
+    opacity: 1;
+}
+
+.ppu-campo__input:focus {
+    border-color: var(--primary-600);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--primary-600) 22%, transparent);
+}
+
+.ppu-resultado {
+    padding-left: 4px;
+    font: 500 14px/1.3 var(--ppu-letra);
+    color: var(--ppu-suave);
+}
+
+.ppu-resultado b {
+    font-weight: 600;
+    color: var(--ppu-tinta);
+}
+
+/* ─── Botones: ≥ 44 px a CUALQUIER ancho (un dedo es un dedo; lo mide la sonda) ─── */
+
+.ppu-boton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0 18px;
+    border: 1px solid var(--ppu-borde-fuerte);
+    border-radius: 12px;
+    background: var(--ppu-blanco);
+    font: 700 16px/1.1 var(--ppu-letra);
+    color: var(--ppu-tinta);
+    cursor: pointer;
+}
+
+.ppu-boton:active {
+    transform: scale(0.98);
+}
+
+.ppu-boton:focus-visible {
+    outline: 3px solid var(--primary-500);
+    outline-offset: 2px;
+}
+
+.ppu-boton[disabled] {
+    opacity: 0.6;
+    cursor: progress;
+}
+
+.ppu-boton--buscar {
+    min-height: 58px;
+    padding: 0 26px;
+    font-size: 17px;
+}
+
+.ppu-boton--primario {
+    border-color: var(--primary-600);
+    background: var(--primary-600);
+    color: var(--color-white);
+}
+
+.ppu-boton--quieto {
+    border-color: transparent;
+    background: transparent;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+/* ─── El cuerpo: a la izquierda lo que se hace; a la derecha, el contexto ─────── */
+
+.ppu-ficha {
+    position: relative;
+    display: grid;
+    min-height: 0;
+    animation: ppu-in 220ms ease-out;
+}
+
+/* Nunca datos del anterior: mientras llega otra búsqueda, la ficha abierta se APAGA. */
+.ppu-ficha.sale {
+    opacity: 0.18;
+    filter: grayscale(1);
+    transition: opacity 60ms linear;
+    animation: none;
+}
+
+.ppu-cuerpo {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    gap: 20px;
+    min-height: 0;
+    padding: 20px 24px 0;
+}
+
+.ppu-cuerpo.solo {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.ppu-cuerpo.solo > .ppu-col {
+    max-width: 720px;
+}
+
+.ppu-cuerpo.centro {
+    grid-template-columns: minmax(0, 720px);
+    justify-content: center;
+    align-content: center;
+    padding-bottom: 40px;
+}
+
+.ppu-cuerpo.centro > * {
+    max-width: none;
+}
+
+.ppu-col {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-height: 0;
+    padding-bottom: 20px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-width: thin;
+}
+
+.ppu-col > * {
+    flex: none;
+}
+
+.ppu-card {
+    border: 1px solid var(--ppu-borde);
+    border-radius: 16px;
+    background: var(--ppu-blanco);
+    box-shadow: 0 1px 2px color-mix(in oklab, var(--gray-950) 6%, transparent);
+}
+
+.ppu-card.pad {
+    padding: 16px 18px;
+}
+
+.ppu-over {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px !important;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ppu-suave);
+}
+
+.ppu-over svg {
+    width: 18px;
+    height: 18px;
+    color: var(--primary-600);
+}
+
+/* ─── Bloque 1: el veredicto, una tarjeta de color lleno con el nombre dentro ─── */
+
+.ppu-ver {
+    display: grid;
+    flex: none;
+    gap: 6px;
+    padding: 16px 22px 17px;
+    border-radius: 20px;
+    box-shadow: 0 1px 3px color-mix(in oklab, var(--gray-950) 10%, transparent);
+    transform-origin: 50% 0;
+    animation: ppu-pop 420ms cubic-bezier(0.34, 1.56, 0.64, 1), ppu-flash 700ms ease-out;
+}
+
+.ppu-ver__top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.ppu-ver__ico {
+    display: grid;
+    flex: none;
+    width: 44px;
+    height: 44px;
+    place-items: center;
+    border-radius: 50%;
+    background: rgb(255 255 255 / 0.4);
+}
+
+.ppu-ver__ico svg {
+    width: 28px;
+    height: 28px;
+}
+
+.t-rojo .ppu-ver__ico,
+.t-gris .ppu-ver__ico {
+    background: rgb(255 255 255 / 0.18);
+}
+
+.ppu-ver__txt {
+    font-size: 30px;
+    font-weight: 800;
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+}
+
+.ppu-ver__sub {
+    padding-left: 56px;
+    font: 600 18px/1.35 var(--ppu-letra);
+}
+
+.ppu-ver__nombre {
+    display: grid;
+    gap: 4px;
+    margin-top: 6px;
+    padding-top: 10px;
+    border-top: 1px solid color-mix(in oklab, var(--gray-950) 16%, transparent);
+}
+
+.t-rojo .ppu-ver__nombre,
+.t-gris .ppu-ver__nombre {
+    border-top-color: rgb(255 255 255 / 0.24);
+}
+
+.ppu-ver__nombre h2 {
+    font-size: 46px;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    text-wrap: balance;
+}
+
+.ppu-ver__nombre > span {
+    font: 600 14px/1.3 var(--ppu-letra);
+}
+
+/* El color NUNCA va solo: cada tono lleva su palabra. */
+.t-verde {
+    background: var(--success-500);
+    color: var(--gray-950);
+}
+
+.t-ambar {
+    background: var(--warning-400);
+    color: var(--gray-950);
+}
+
+.t-rojo {
+    background: var(--danger-600);
+    color: var(--color-white);
+}
+
+.t-gris {
+    background: var(--gray-500);
+    color: var(--color-white);
+}
+
+/* Sin ficha, el veredicto sale grande y centrado. */
+.ppu-ver.grande {
+    gap: 10px;
+    padding: 28px 30px 30px;
+}
+
+.ppu-ver.grande .ppu-ver__txt {
+    font-size: 40px;
+}
+
+.ppu-ver.grande .ppu-ver__ico {
+    width: 56px;
+    height: 56px;
+}
+
+.ppu-ver.grande .ppu-ver__ico svg {
+    width: 34px;
+    height: 34px;
+}
+
+.ppu-ver.grande .ppu-ver__sub {
+    padding-left: 68px;
+    font-size: 21px;
+}
+
+@keyframes ppu-in {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+}
+
+/* Se nota el cambio de cliente: cada ficha nueva entra con un bote y un pulso alrededor del veredicto. */
+@keyframes ppu-pop {
+    0% {
+        opacity: 0.3;
+        transform: scale(0.96);
+    }
+
+    60% {
+        opacity: 1;
+        transform: scale(1.01);
+    }
+
+    100% {
+        transform: none;
+    }
+}
+
+@keyframes ppu-flash {
+    0% {
+        box-shadow: 0 0 0 0 color-mix(in oklab, var(--gray-950) 45%, transparent);
+    }
+
+    100% {
+        box-shadow: 0 0 0 18px color-mix(in oklab, var(--gray-950) 0%, transparent);
+    }
+}
+
+/* ─── Bloque 2: lo que hay que hacer ─────────────────────────────────────────── */
+
+.ppu-tareas {
+    display: flex;
+    flex-direction: column;
+}
+
+.ppu-tarea {
+    display: grid;
+    grid-template-columns: 60px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px 16px;
+    min-height: 74px;
+    padding: 11px 18px;
+    border-bottom: 1px solid var(--ppu-borde);
+}
+
+.ppu-tareas > :last-child,
+.ppu-tareas > [data-gate-today]:last-child > :last-child {
+    border-bottom: 0;
+}
+
+.ppu-ico,
+.ppu-cant {
+    display: grid;
+    flex: none;
+    justify-self: center;
+    place-items: center;
+    border-radius: 12px;
+}
+
+.ppu-ico {
+    width: 52px;
+    height: 52px;
+    background: var(--gray-100);
+    color: var(--ppu-tinta);
+}
+
+.ppu-ico svg,
+.ppu-cant svg {
+    width: 26px;
+    height: 26px;
+}
+
+.ppu-ico.aviso {
+    background: var(--warning-100);
+    color: var(--warning-800);
+}
+
+.ppu-cant {
+    width: 60px;
+    height: 60px;
+    background: var(--gray-100);
+    font-size: 34px;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: var(--ppu-tinta);
+}
+
+.ppu-cant.neutro {
+    background: var(--gray-100);
+}
+
+.ppu-cant.aviso {
+    background: var(--warning-400);
+    color: var(--gray-950);
+}
+
+.ppu-tt {
+    font: 600 20px/1.3 var(--ppu-letra);
+    color: var(--ppu-tinta);
+    text-wrap: pretty;
+}
+
+.ppu-tt small {
+    display: block;
+    margin-top: 3px;
+    font: 400 16px/1.45 var(--ppu-letra);
+    color: var(--ppu-texto);
+}
+
+.ppu-tt__aviso {
+    margin-top: 6px !important;
+    font: 500 15px/1.4 var(--ppu-letra);
+    color: var(--warning-800);
+}
+
+.ppu-acc {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* El dinero, en su línea ámbar justo bajo su fila: con el veredicto en verde no puede quedarse en letra pequeña. */
+.ppu-pago {
+    background: var(--warning-50);
+}
+
+/* Una fila por zona y hora: la cifra primero, y debajo cada reserva que la lleva. */
+.ppu-ent {
+    display: grid;
+    grid-template-columns: 60px minmax(0, 1fr);
+    align-items: start;
+    gap: 10px 16px;
+    padding: 11px 18px 12px;
+    border-bottom: 1px solid var(--ppu-borde);
+}
+
+.ppu-ent__main {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+}
+
+.ppu-ent__t {
+    padding-top: 2px;
+}
+
+.ppu-zona {
+    font-size: 28px;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+    color: var(--ppu-tinta);
+}
+
+.ppu-ent__r {
+    display: grid;
+    gap: 3px;
+    margin-top: 4px;
+}
+
+.ppu-ent__r + .ppu-ent__r {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--ppu-borde);
+}
+
+.ppu-l1 {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+    font: 600 16px/1.3 var(--ppu-letra);
+    color: var(--ppu-tinta);
+}
+
+.ppu-ent__p {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px 12px;
+    font: 500 14px/1.35 var(--ppu-letra);
+    color: var(--ppu-texto);
+}
+
+.ppu-ent__p > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.ppu-ent__p svg {
+    width: 16px;
+    height: 16px;
+}
+
+.ppu-ent__p .ok {
+    font-weight: 600;
+    color: var(--success-700);
+}
+
+.ppu-ent__p code {
+    font: 500 13px/1.3 var(--ppu-mono);
+    color: var(--ppu-suave);
+}
+
+/* «Dar por firmado»: la confirmación DENTRO de la ficha, sin ventana que tape el lector. */
+.ppu-conf {
+    grid-column: 2 / -1;
+    padding: 14px 16px;
+    border: 1px solid var(--warning-300);
+    border-radius: 12px;
+    background: var(--warning-50);
+    font: 600 17px/1.4 var(--ppu-letra);
+    color: var(--ppu-tinta);
+    animation: ppu-in 220ms ease-out;
+}
+
+.ppu-conf__botones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+/* ─── Las etiquetas ──────────────────────────────────────────────────────────── */
+
+.ppu-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 9px;
+    border-radius: 999px;
+    font: 700 13px/1.2 var(--ppu-letra);
+}
+
+.ppu-badge--cumple {
+    background: var(--primary-600);
+    color: var(--color-white);
+}
+
+.ppu-badge--cumple-suave {
+    background: var(--primary-50);
+    color: var(--primary-700);
+}
+
+.ppu-badge--aviso {
+    background: var(--warning-400);
+    color: var(--gray-950);
+}
+
+/* ─── Bloque 3: «Sus hijos», los invitados y la fiesta ─────────────────────── */
+
+.ppu-gente {
+    display: flex;
+    flex-direction: column;
+}
+
+.ppu-persona {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 10px;
+    min-height: 46px;
+    padding: 6px 0;
+    border-top: 1px solid var(--ppu-borde);
+}
+
+.ppu-persona:first-child {
+    border-top: 0;
+}
+
+.ppu-persona b {
+    font: 700 18px/1.2 var(--ppu-letra);
+    color: var(--ppu-tinta);
+}
+
+.ppu-persona > span:not(.ppu-badge) {
+    font: 400 16px/1.2 var(--ppu-letra);
+    color: var(--ppu-texto);
+}
+
+.ppu-persona .ppu-badge--aviso {
+    margin-left: auto;
+}
+
+.ppu-fiesta {
+    font: 600 18px/1.3 var(--ppu-letra);
+    color: var(--ppu-tinta);
+}
+
+/* ─── Bloque 6: la encuesta interna (`specs/encuestas.md` §4.2; pregunta a pregunta, en la P1b) ─── */
+
+.ppu-enc {
+    display: grid;
+    gap: 10px;
+    border-color: color-mix(in oklab, var(--primary-600) 40%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--primary-600) 12%, transparent);
+}
+
+.ppu-enc .ppu-over {
+    margin: 0 !important;
+    color: var(--primary-700);
+}
+
+.ppu-enc__intro {
+    font: 500 15px/1.4 var(--ppu-letra);
+    color: var(--ppu-texto);
+}
+
+.ppu-guardado {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font: 700 17px/1.2 var(--ppu-letra);
+    color: var(--success-700);
+}
+
+.ppu-guardado svg {
+    width: 22px;
+    height: 22px;
+}
+
+.gate-hint {
+    font: 500 14px/1.4 var(--ppu-letra);
+    color: var(--ppu-suave);
+}
+
+.gate-survey__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.gate-survey__form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.gate-q {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.gate-q__label {
+    display: block;
+    margin-bottom: 8px;
+    font: 600 16px/1.3 var(--ppu-letra);
+    color: var(--ppu-tinta);
+}
+
+.gate-q__required {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--ppu-suave);
+}
+
+.gate-q__options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* El control de verdad, fuera de la vista pero no del teclado ni del lector de pantalla. */
+.gate-q__input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.gate-q__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 48px;
+    padding: 8px 14px;
+    border: 1px solid var(--ppu-borde-fuerte);
+    border-radius: 10px;
+    background: var(--ppu-blanco);
+    font: 600 15px/1.25 var(--ppu-letra);
+    color: var(--ppu-tinta);
+    cursor: pointer;
+    user-select: none;
+}
+
+.gate-q__btn--scale {
+    min-width: 3.5rem;
+    font-size: 1.25rem;
+}
+
+.gate-q__input:checked + .gate-q__btn {
+    border-color: var(--primary-600);
+    background: var(--primary-600);
+    color: var(--color-white);
+}
+
+.gate-q__input:focus-visible + .gate-q__btn {
+    outline: 2px solid var(--primary-500);
+    outline-offset: 2px;
+}
+
+.gate-q__text {
+    width: 100%;
+    min-height: 44px;
+    padding: 8px 12px;
+    border: 1px solid var(--ppu-borde-fuerte);
+    border-radius: 10px;
+    background: var(--ppu-blanco);
+    font: 400 16px/1.3 var(--ppu-letra);
+    color: var(--ppu-tinta);
+}
+
+.gate-q__text:focus {
+    outline: 2px solid var(--primary-500);
+    outline-offset: -1px;
+}
+
+.gate-q__error {
+    margin-top: 4px;
+    font-size: 0.8125rem;
+    color: var(--danger-600);
+}
+
+/* ─── Los avisos de la búsqueda, en gris y sin nombre ─────────────────────────── */
+
+.ppu-aviso {
+    display: flex;
+    align-items: flex-start;
+    align-self: start;
+    gap: 12px;
+    max-width: 720px;
+    padding: 18px 20px;
+    border: 1px solid var(--ppu-borde);
+    border-radius: 16px;
+    background: var(--gray-200);
+    font: 600 19px/1.4 var(--ppu-letra);
+    color: var(--ppu-tinta);
+    text-wrap: pretty;
+    animation: ppu-in 220ms ease-out;
+}
+
+.ppu-aviso__ico {
+    flex: none;
+    width: 22px;
+    height: 22px;
+    margin-top: 2px;
+}
+
+/* ─── Entre dos clientes: el lector (la reseña del día llega en la P3) ─────────── */
+
+.ppu-vacio {
+    display: grid;
+    min-height: 0;
+    padding: 24px;
+    place-items: center;
+    overflow: hidden;
+    color: var(--gray-300);
+}
+
+.ppu-vacio__ico {
+    width: 120px;
+    height: 120px;
+}
+
+/* ─── Bloque 7: el pie y el velo ─────────────────────────────────────────────── */
+
+.ppu-pie {
+    z-index: 6;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 10px 24px;
+    border-top: 1px solid var(--ppu-borde);
+    background: var(--ppu-blanco);
+}
+
+.ppu-pie > p {
+    font: 500 14px/1.3 var(--ppu-letra);
+    color: var(--ppu-suave);
+}
+
+.ppu-pie > .ppu-boton {
+    margin-left: auto;
+}
+
+/* El velo a los 60 s: OPACO, tapa la ficha entera; el campo de búsqueda queda libre. */
+.ppu-velo {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    display: grid;
+    gap: 22px;
+    padding: 24px;
+    place-items: center;
+    align-content: center;
+    background: var(--ppu-fondo);
+    color: var(--ppu-tinta);
+    cursor: pointer;
+    animation: ppu-in 420ms ease-out;
+}
+
+.ppu-velo__t {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 52px;
+    padding: 6px 20px 6px 14px;
+    border-radius: 999px;
+    background: var(--gray-900);
+    font: 700 18px/1.3 var(--ppu-letra);
+    color: var(--color-white);
+}
+
+.ppu-velo__t svg {
+    width: 24px;
+    height: 24px;
+}
+
+/* ─── La pieza contra su caja ────────────────────────────────────────────────── */
+
+@container (max-width: 880px) {
+    .ppu-cab {
+        flex-wrap: wrap;
+        gap: 10px 16px;
+    }
+
+    .ppu-marca {
+        min-height: 40px;
+    }
+
+    .ppu-busca {
+        flex-basis: 100%;
+    }
+
+    .ppu-cuerpo {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 14px;
+        overflow: auto;
+    }
+
+    .ppu-col {
+        overflow: visible;
+        padding-bottom: 0;
+    }
+
+    .ppu-col:last-child {
+        padding-bottom: 20px;
+    }
+
+    .ppu-ver__nombre h2 {
+        font-size: 40px;
+    }
+
+    .ppu-ver__txt {
+        font-size: 27px;
+    }
+}
+
+@container (min-width: 1300px) {
+    .ppu-cab,
+    .ppu-cuerpo,
+    .ppu-pie {
+        padding-right: 36px;
+        padding-left: 36px;
+    }
+
+    .ppu-cuerpo {
+        gap: 28px;
+    }
+
+    .ppu-ver__nombre h2 {
+        font-size: 54px;
+    }
+
+    .ppu-ver__txt {
+        font-size: 34px;
+    }
+}

@@ -176,7 +176,11 @@ class GateHonoreeTest extends TestCase
         $this->assertSame('unresolved', $this->profile($host)->guestMinors[0]['entry']);
     }
 
-    public function test_the_door_screen_marks_the_honoree(): void
+    /**
+     * ▶ La Puerta nueva (`specs/puerta-nueva.md` §4.4, la P1; `#817`): la fiesta va en UNA línea sin nombres, y quien
+     * cumple sale en «Sus hijos», el primero y con «su cumple», cuando es un menor a cargo del anfitrión que lo cubre.
+     */
+    public function test_the_door_screen_tells_the_party_in_one_line_and_marks_the_honoree_among_the_children(): void
     {
         $this->seed(RoleSeeder::class);
         $this->seed(PermissionSeeder::class);
@@ -187,8 +191,19 @@ class GateHonoreeTest extends TestCase
 
         $html = Livewire::actingAs($staff)->test(ValidarRegistro::class)->set('input', $host->email)->call('search')->html();
 
-        $this->assertSame(1, substr_count($html, 'data-gate-guest-minor-honoree'), 'solo su fila');
-        $this->assertStringContainsString(__('admin.puerta.validar.profile.guest_honoree'), $html);
+        $this->assertSame(1, substr_count($html, 'data-gate-guest-minors-count'), 'la fiesta, en una línea');
+        $this->assertStringNotContainsString('data-gate-guest-minor-name="Mateo"', $html, 'los niños de la fiesta no salen con nombre');
+        $this->assertStringNotContainsString('su cumple', $html, 'sin un menor a cargo que cumpla, no se marca a nadie');
+
+        // Ahora quien cumple es Noa, menor a cargo del anfitrión, y la cubre.
+        $this->assertTrue(app(DependentAssigner::class)->assignHonoree($host, $r->order_id, $r->id, $this->hijo($host, 'Noa')->id)->ok());
+        RateLimiter::clear("puerta:lookup:user:{$staff->id}");
+
+        $html = Livewire::actingAs($staff)->test(ValidarRegistro::class)->set('input', $host->email)->call('search')->html();
+
+        $this->assertSame(1, substr_count($html, 'su cumple'), 'solo quien cumple');
+        // Entre la lista y su primera fila, Livewire mete sus comentarios de bloque (`<!--[if BLOCK]>…`).
+        $this->assertMatchesRegularExpression('/data-gate-minors>(?:\s|<!--.*?-->)*<li[^>]*data-gate-minor-name="Noa"/s', $html, 'el primero de «Sus hijos»');
     }
 
     // ── Montaje ─────────────────────────────────────────────────────────────────────────────────────

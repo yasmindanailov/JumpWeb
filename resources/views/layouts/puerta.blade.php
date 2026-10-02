@@ -46,18 +46,45 @@
 
     @livewireStyles
 
-    {{-- Mismo modo claro/oscuro que el panel, con SU misma clave de `localStorage` (`theme`): el
-         empleado llega aquí desde la barra lateral del panel y la pantalla no puede cambiarle el
-         tema por el camino. Copiado de `filament/filament/resources/views/components/layout/base.blade.php`
-         (el panel usa `defaultThemeMode = System`), sin el conmutador: aquí no hay dónde ponerlo. --}}
-    <script>
-        (() => {
-            const theme = localStorage.getItem('theme') ?? 'system'
+    {{-- ⚠️ SOLO MODO CLARO (`specs/puerta-nueva.md` §4.2·D3, el mockup: «solo modo claro por ahora»): la Puerta ya no
+         sigue el modo oscuro del panel. Sin la clase `dark` en el `<html>`, `@filamentStyles` pinta los tokens claros.
 
-            if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                document.documentElement.classList.add('dark')
-            }
-        })()
+         Lo del NAVEGADOR de la Puerta, en un componente de Alpine (`puertaPantalla`, en la raíz de la vista):
+         · el SONIDO (Web Audio, el del mockup): dos notas que suben en verde, dos iguales en ámbar, una grave en rojo; el
+           primer toque de la pantalla lo desbloquea (el navegador no deja sonar sin un gesto);
+         · la DOBLE LECTURA: el mismo código en menos de 3 s no reabre la ficha ni vuelve a sonar. --}}
+    <script>
+        document.addEventListener('alpine:init', () => {
+            window.Alpine.data('puertaPantalla', () => ({
+                ctx: null,
+                previo: { v: '', t: 0 },
+                desbloquear() {
+                    try {
+                        this.ctx = this.ctx || new (window.AudioContext || window.webkitAudioContext)()
+                        if (this.ctx.state === 'suspended') this.ctx.resume()
+                    } catch (e) {}
+                },
+                sonar(tono) {
+                    const notas = { verde: [[880, 0, .09, 'sine'], [1320, .1, .14, 'sine']], ambar: [[660, 0, .1, 'triangle'], [660, .16, .1, 'triangle']], rojo: [[196, 0, .32, 'sawtooth']] }[tono]
+                    if (! notas) return
+                    try {
+                        this.desbloquear()
+                        notas.forEach(([f, t0, d, w]) => {
+                            const o = this.ctx.createOscillator(), g = this.ctx.createGain(), t = this.ctx.currentTime + t0
+                            o.type = w; o.frequency.value = f
+                            g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(w === 'sawtooth' ? .08 : .22, t + .01); g.gain.exponentialRampToValueAtTime(0.0001, t + d)
+                            o.connect(g).connect(this.ctx.destination); o.start(t); o.stop(t + d + .02)
+                        })
+                    } catch (e) {}
+                },
+                doble(valor) {
+                    const v = (valor || '').trim(), ahora = Date.now()
+                    if (v !== '' && v === this.previo.v && ahora - this.previo.t < 3000) { this.previo.t = ahora; return true }
+                    this.previo = { v, t: ahora }
+                    return false
+                },
+            }))
+        })
     </script>
 </head>
 {{-- `.fi-body` ya pinta fondo, color de texto, `min-h-dvh` y el antialiasing en los dos modos: las

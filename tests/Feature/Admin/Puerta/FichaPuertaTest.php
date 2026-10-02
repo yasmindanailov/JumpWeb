@@ -53,21 +53,21 @@ class FichaPuertaTest extends TestCase
             $this->fila(['order_code' => 'R-JUMP', 'zone_name' => 'Jump', 'zone_slug' => 'jump', 'quantity' => 1, 'minors_only' => false, 'product' => 'Jump · 1 hora']),
             $this->fila(['order_code' => 'R-K1', 'minors' => [['name' => 'Vera', 'age' => 6, 'waiver' => 'current'], ['name' => 'Leo', 'age' => 3, 'waiver' => 'current']], 'addons' => ['1 × Tarta', '2 × Calcetines']]),
             $this->fila(['order_code' => 'R-K2', 'quantity' => 1]),
-            $this->fila(['order_code' => 'R-FIESTA', 'is_party' => true, 'quantity' => 10, 'duration_minutes' => 120, 'minors_only' => false, 'paid_cents' => 10000, 'balance_kind' => 'pay_at_park', 'balance_cents' => 9000]),
+            $this->fila(['order_code' => 'R-FIESTA', 'product' => 'Pack Cumpleaños KIDS', 'is_party' => true, 'quantity' => 10, 'duration_minutes' => 120, 'minors_only' => false, 'paid_cents' => 10000, 'balance_kind' => 'pay_at_park', 'balance_cents' => 9000]),
         ]), $this->now());
 
         $this->assertSame([['Kids', 3, false], ['Jump', 1, false], ['Kids', 10, true]], array_map(fn (array $g): array => [$g['zona'], $g['cifra'], $g['fiesta']], $f['filas']), 'Kids primero; el cumpleaños, su propia fila aunque coincida en zona y hora');
 
         $kids = $f['filas'][0]['reservas'];
         $this->assertSame(['R-K1', 'R-K2'], array_column($kids, 'codigo'));
-        $this->assertSame('Entrada 1 hora · 2 niños', $kids[0]['linea']);
+        $this->assertSame('Kids · 1 hora · 2 niños', $kids[0]['linea'], 'el producto nombrado entero, como lo nombra el catálogo');
         $this->assertSame('Vera · Leo', $kids[0]['quien']);
         $this->assertSame('+ 1 × Tarta · + 2 × Calcetines', $kids[0]['complementos']);
         $this->assertNull($kids[1]['quien'], 'sin menores asignados, sin «quién»');
-        $this->assertSame('Entrada 1 hora · 1 persona', $f['filas'][1]['reservas'][0]['linea'], 'con adultos: «personas»');
+        $this->assertSame('Jump · 1 hora · 1 persona', $f['filas'][1]['reservas'][0]['linea'], 'con adultos: «personas»');
 
         $fiesta = $f['filas'][2]['reservas'][0];
-        $this->assertSame('Cumpleaños 2 horas · 10 niños', $fiesta['linea']);
+        $this->assertSame('Pack Cumpleaños KIDS · 10 niños', $fiesta['linea'], 'un cumpleaños cuenta niños');
         $this->assertNull($fiesta['pagado'], 'un cumpleaños no cuenta su dinero en la Puerta (D6)');
         $this->assertNull($fiesta['dinero']);
     }
@@ -82,8 +82,7 @@ class FichaPuertaTest extends TestCase
         $this->assertSame('Hoy a las 18:00 · empieza en 2 h', $hora(['start_time' => '18:00'], '16:00'));
         $this->assertSame('Hoy a las 17:00 · empieza ahora', $hora([], '17:00'));
         $this->assertSame('Hoy, cuando llegue', $hora(['duration_minutes' => null], '16:55'), 'la ilimitada');
-        $this->assertSame('Entrada ilimitada · 1 persona', FichaPuerta::linea($this->fila(['duration_minutes' => null, 'quantity' => 1, 'minors_only' => false])));
-        $this->assertSame('Entrada 90 min · 2 niños', FichaPuerta::linea($this->fila(['duration_minutes' => 90])));
+        $this->assertSame('Hoy a las 17:00 · empieza en 5 min', $hora(['duration_minutes' => null, 'is_party' => true], '16:55'), 'un cumpleaños sin duración sigue teniendo su hora');
     }
 
     public function test_money_is_one_line_per_class_and_a_book_that_does_not_add_up_never_says_paid(): void
@@ -136,9 +135,9 @@ class FichaPuertaTest extends TestCase
         ]), $this->now());
 
         $this->assertSame([
-            ['nombre' => 'Vera', 'edad' => '6 años', 'excepcion' => null, 'cumple' => true],
-            ['nombre' => 'Leo', 'edad' => '3 años', 'excepcion' => 'sin descargo', 'cumple' => false],
-            ['nombre' => 'Hugo', 'edad' => '1 año', 'excepcion' => 'descargo antiguo', 'cumple' => false],
+            ['nombre' => 'Vera', 'edad' => '6 años', 'anios' => 6, 'descargo' => 'current', 'excepcion' => null, 'cumple' => true],
+            ['nombre' => 'Leo', 'edad' => '3 años', 'anios' => 3, 'descargo' => 'missing', 'excepcion' => 'sin descargo', 'cumple' => false],
+            ['nombre' => 'Hugo', 'edad' => '1 año', 'anios' => 1, 'descargo' => 'outdated', 'excepcion' => 'descargo antiguo', 'cumple' => false],
         ], $f['hijos'], 'solo la excepción (#320); el mayor de edad no es un hijo a cargo en la puerta');
     }
 
@@ -162,7 +161,7 @@ class FichaPuertaTest extends TestCase
         $f = FichaPuerta::de($this->ficha([], ['window' => [$this->fila(['date' => '2026-09-26'])]]), $this->now());
 
         $this->assertTrue($f['sin_reserva']);
-        $this->assertSame(['Sábado 26 a las 17:00 · Entrada 1 hora · 2 niños'], $f['otros_dias']);
+        $this->assertSame(['Sábado 26 a las 17:00 · Kids · 1 hora · 2 niños'], $f['otros_dias']);
         $this->assertSame([], FichaPuerta::de($this->ficha([$this->fila()], ['window' => [$this->fila(['date' => '2026-09-26'])]]), $this->now())['otros_dias'], 'con reserva hoy, el otro día no se cuenta');
     }
 }

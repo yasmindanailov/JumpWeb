@@ -41,7 +41,7 @@ final class FichaPuerta
      *     sin_reserva: bool,
      *     otros_dias: list<string>,
      *     firmar: list<string>,
-     *     hijos: list<array{nombre: string, edad: string, excepcion: ?string, cumple: bool}>,
+     *     hijos: list<array{nombre: string, edad: string, anios: int, descargo: string, excepcion: ?string, cumple: bool}>,
      *     invitados: list<array{nombre: string, edad: ?string, excepcion: ?string}>,
      *     fiesta: ?string
      * }
@@ -132,22 +132,18 @@ final class FichaPuerta
         ];
     }
 
-    /** «Entrada 1 hora · 2 niños», «Entrada ilimitada · 1 persona», «Cumpleaños 2 horas · 10 niños». */
+    /**
+     * «Kids · 1 hora · 2 niños», «Pack Cumpleaños KIDS · 10 niños»: el producto NOMBRADO ENTERO, como lo nombra el catálogo
+     * de la instalación (el readme del mockup: «el producto se nombra entero en la tarjeta de la reserva»), y cuántos.
+     * «Niños» si son solo menores o es un cumpleaños; si puede entrar un adulto, «personas».
+     */
     public static function linea(array $r): string
     {
         $fiesta = (bool) ($r['is_party'] ?? false);
         $n = (int) ($r['quantity'] ?? 0);
-        $minutos = $r['duration_minutes'] ?? null;
-
-        $tipo = __(self::T.($fiesta ? 'cumpleanos' : 'entrada'));
-        $duracion = match (true) {
-            $minutos === null => $fiesta ? '' : ' '.__(self::T.'ilimitada'),
-            (int) $minutos % 60 === 0 => ' '.trans_choice(self::T.'horas', intdiv((int) $minutos, 60), ['n' => intdiv((int) $minutos, 60)]),
-            default => ' '.__(self::T.'minutos', ['n' => (int) $minutos]),
-        };
         $quien = trans_choice(self::T.($fiesta || ($r['minors_only'] ?? false) ? 'ninos' : 'personas'), $n, ['n' => $n]);
 
-        return $tipo.$duracion.' · '.$quien;
+        return trim((string) ($r['product'] ?? '')).' · '.$quien;
     }
 
     /** «Hoy a las 17:00 · empieza en 5 min» · «… empezó hace 12 min» · «Hoy, cuando llegue» (la ilimitada) · «Hoy». */
@@ -263,7 +259,7 @@ final class FichaPuerta
      * Quien cumple hoy, el primero y con «su cumple».
      *
      * @param  list<array{name: string, age: ?int}>  $honorees
-     * @return list<array{nombre: string, edad: string, excepcion: ?string, cumple: bool}>
+     * @return list<array{nombre: string, edad: string, anios: int, descargo: string, excepcion: ?string, cumple: bool}>
      */
     private static function hijos(array $profile, array $honorees): array
     {
@@ -277,6 +273,9 @@ final class FichaPuerta
             $hijos[] = [
                 'nombre' => $nombre,
                 'edad' => trans_choice(self::T.'edad', $edad, ['n' => $edad]),
+                // Crudos, para las marcas `data-gate-minor-*` que leen las pruebas y la sonda.
+                'anios' => $edad,
+                'descargo' => is_string($m['waiver'] ?? null) ? $m['waiver'] : 'unknown',
                 'excepcion' => self::excepcion($m['waiver'] ?? null),
                 // Solo para PINTARLO: quién lo cubre lo dice la atadura (`GuardianPlaces`), nunca este cruce.
                 'cumple' => in_array(['name' => $nombre, 'age' => $edad], $honorees, true),
