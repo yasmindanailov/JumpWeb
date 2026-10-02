@@ -26,7 +26,7 @@ A2b** (`#856`): `Identity\Contracts\EmailChangeOutcome`, `Notifications\Support\
 y `Auth\{LoginGate,CustomerPasswordRetired}Test` · **y la A5d** (`#869`): la migración `erase_customer_passwords`,
 `Auth\CustomerPasswordsErasedMigrationTest` y `scripts/mutar-contrasenas-clientes.sh` · **y la Z6g·1** (`#871`):
 `App\Filament\Auth\PanelAppAuthentication`, `isla/ui/{CampoCodigo.vue,codigo.js,TextoConCorreo.vue}` y
-`scripts/mutar-codigo-isla.sh` ·
+`scripts/mutar-codigo-isla.sh` · **y la P4** (`#877`): `App\Filament\Auth\PanelLogin` ·
 **EL SEO** (`specs/seo.md`): la spec, `scripts/{sonda-seo.mjs,mutar-seo.sh}`, `RobotsController`, `MapsEmbed::coordinates()`,
 `VenueAddress::parts()` y el grafo de `StructuredData` (y, AVISANDO, `components/{pagina,layout}.blade.php` y `deploy.sh`) ·
 **LA POLÍTICA DE COOKIES de producción** (`#858`/`#859`): su spec, `App\Http\Legal\CookieInventory`, la migración

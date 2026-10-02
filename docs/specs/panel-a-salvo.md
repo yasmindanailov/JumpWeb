@@ -1,8 +1,8 @@
 # [SPEC] El panel, a salvo — su propia puerta, una dirección secreta y el authenticator de los administradores
 
-> Estado: ✅ técnica del agente (`#630`) dentro de lo que el owner aprobó en `#847` · Última actualización: 2026-09-29 ·
+> Estado: ✅ técnica del agente (`#630`) dentro de lo que el owner aprobó en `#847` · Última actualización: 2026-10-02 ·
 > Decisiones: `#847` (el owner: dirección secreta, authenticator solo para administradores) · `#850` (el guard propio) ·
-> Carril: plataforma.
+> `#877` (el owner: recordar un día) · Carril: plataforma.
 
 ## §0 · Antes de tocar
 
@@ -16,7 +16,8 @@
   (`auth:admin`). (2) `EnsureSiteAvailable` (`SEC-02`) excluye el panel POR RUTA y deja al personal ver la web: los dos,
   a la dirección y al guard. (3) Las pruebas: `TestCase::be()` sin guard autentica los dos (§4.1). (4) La dirección
   secreta no sale en ninguna página pública, ni en el repo: vive en el `.env` de producción.
-- **Estado**: **P1 ✅** (§4.1, `SEC-14`) · **P2 ✅** (§4.2) · **P3 ✅** (§4.3, `#851`), 29-09. Al desplegar: `ENTORNOS.md` §6.
+- **Estado**: **P1 ✅** (§4.1, `SEC-14`) · **P2 ✅** (§4.2) · **P3 ✅** (§4.3, `#851`), 29-09 · **P4 ✅** recordar un día (§4.4,
+  `#877`), 02-10, con el ojo del owner. Al desplegar: `ENTORNOS.md` §6.
 - **Invariantes**: `SEC-01`, `SEC-02` (a la dirección configurada), `SEC-04`; nace la del guard propio (§5).
 
 ## 1. Contexto — medido el 29-09
@@ -114,6 +115,27 @@ administrador de secreto conocido (la sonda calcula el TOTP) y otro sin él: **1
 entra; con el código, sí; sin authenticator, a `/admin/multi-factor-authentication/set-up`—, y tres pasadas seguidas tras
 limpiar el limitador del login de Filament (sin eso, la segunda dio 9/11). ⚠️ **En local**, el administrador del owner
 también lo configurará en su próximo inicio de sesión.
+
+### 4.4 P4 · El panel recuerda UN día (`#877`, `[DECIDIDO owner]` 2026-10-02) — ✅ con el ojo del owner en vivo
+El owner (la L1 de `#876`): «que al poner el código del authenticator recuerde la sesión al menos el día»; con tres opciones
+delante, «un día, para todos». **Medido antes** (02-10): la sesión del panel muere a los 120 min sin uso (`SESSION_LIFETIME`,
+compartida con la web) y el login de Filament traía «Recordarme» SIN marcar; marcada, su cookie era la del framework, **400
+días**, en los que ni contraseña ni código de la app (el recuerdo vuelve a entrar sin pasar por el login).
+**Hecho**: `App\Filament\Auth\PanelLogin` (el de Filament con «Recordarme» marcada de serie; `->login(PanelLogin::class)`) y
+el guard `admin` con `'remember' => PanelLogin::REMEMBER_MINUTES` (24 h) en `config/auth.php`. El día cuenta desde que se
+entra y NO se alarga con el uso (a diferencia del dispositivo recordado de la web, `RememberedDevice`); desmarcada, ninguna
+cookie: la sesión de siempre. Para todos los roles del panel.
+**Lo que ya estaba**: el código de la app se envía con la sexta cifra desde `#867` (§4.3): el owner lo pidió otra vez en su
+lista y `sonda-panel` lo vio en el navegador antes de tocar nada.
+**Pruebas**: `PanelAppAuthenticationTest` prueba el login que REGISTRA el panel (`getLoginRouteAction()`): marcada de serie y
+la cookie en cola con un día (también tras el código de la app), y desmarcada, sin cookie. Arnés `mutar-panel-authenticator.sh`
+**14/14** (los tres nuevos: el panel vuelve al login de Filament, la casilla sin marcar, el guard sin su día). **En navegador**,
+`sonda-panel.mjs` **14/14 a 1280 y a 390**, dos pasadas seguidas: la casilla marcada, la cookie de 24,00 h y, sin la cookie
+de la sesión, el panel sigue dentro.
+**Trampas**: (1) el `remember_token` es UNO por cuenta y lo comparten los dos guards: salir del panel lo rota y deja sin valor
+el dispositivo recordado de la web de esa cuenta, y al revés (solo afecta al personal que también es cliente). (2) La sonda
+suelta el limitador del login por el nombre de la CLASE del login: lo lee del panel, no de Filament (con el suyo dejó de casar).
+(3) `clearCookies` de Playwright con un nombre vacío borra TODAS las cookies.
 
 ## 5. Impacto en invariantes
 

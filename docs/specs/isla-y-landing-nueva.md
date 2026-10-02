@@ -2800,7 +2800,7 @@ carril y la 404 compuesta con el sistema. Medido en el código ANTES de repartir
 | # | El punto (resumido) | Lo medido | De quién |
 |---|---|---|---|
 | 1 | El authenticator del panel recuerda la sesión «al menos el día» | La sesión (guard `admin`, `#850`) muere a los `SESSION_LIFETIME` = 120 min sin uso (LOCAL) y el login pide contraseña y código otra vez (`#851`). Filament trae «Recordarme» con la cookie de recuerdo de Laravel (400 días): demasiado para un administrador | plataforma · L1 |
-| 2 | El código «se autoacepta y continúa» | El del CLIENTE ya se envía con la 6.ª cifra: `isla/ui/CampoCodigo.vue` (`isNewlyComplete` → `completo` → `alCompletar`) y `sidebar/steps/CodeInput.vue` (`complete` → `enter`). El del panel no: Filament pide «Verificar» | plataforma (el del panel) · L1 |
+| 2 | El código «se autoacepta y continúa» | El del CLIENTE ya se envía con la 6.ª cifra: `isla/ui/CampoCodigo.vue` (`isNewlyComplete` → `completo` → `alCompletar`) y `sidebar/steps/CodeInput.vue` (`complete` → `enter`). ❗ **Y el del panel TAMBIÉN**, desde `#867` (`PanelAppAuthentication`): esta fila decía lo contrario sin haberlo medido; `sonda-panel` lo vio en el navegador el 02-10 («entra al escribir la última cifra») | ya hecho (`#867`) |
 | 3 | «Reservar» desde la isla en Kids, Cumpleaños y Colegios, sin bajar a la calculadora (en Cumpleaños, en la fiesta); la calculadora, opcional | `propsDeLaIsla` (`isla/pagina/pagina.js`): la acción es la de la página, un ancla a su pieza de precio (`#calcula` en Cumpleaños, `#precio` en Kids y Jump), y con calculadora a medias, «Elige el día/la hora/la edad» | plataforma · L3 |
 | 4 | «Añadir los nuevos complementos en la lista de invitados. Opciones del menú..» | La lista es del SPA (`#805`; los complementos en dos, `#806`→`#808`; K3 es dato del panel) | SPA (buzón) |
 | 5 | Página 404 | `errors/404.blade.php` es la de la web VIEJA (`x-site.nav`, `#216`/`#218`); el mockup no trae 404 | plataforma · L4 |
@@ -2811,8 +2811,8 @@ carril y la 404 compuesta con el sistema. Medido en el código ANTES de repartir
 | 10 | Pulir textos; «no hay parking gratis»; al final, tras los vídeos e imágenes | «Parking gratis» en `instancias/playjump/lang/{es,en,fr}/paginas.php` (Kids, Jump, Visítanos, su duda y su SEO); la web de producción no lo dice | plataforma · al final |
 | 11 | El hero, más ancho en escritorio | Se mide al empezar | plataforma · L4 |
 
-**Las tandas**: **L1** el panel (1 y 2; antes, `SEGURIDAD.md` e `INVARIANTES` §3–§4) → **L2** la spec de 6, que el owner
-revisa mientras sigue el resto → **L3** la isla en las páginas (3 y 7) → **L4** la 404 y el hero, con opciones EN VIVO →
+**Las tandas**: **L1** el panel (el 1, `#877`: «un día, para todos», `panel-a-salvo.md` §4.4; el 2 ya estaba) → **L2** la spec de 6 (✅ `#878`,
+`otra-zona.md`) → **L3** la isla en las páginas (3 y 7) → **L4** la 404 y el hero, con opciones EN VIVO →
 **L5** el resumen A4 → el código de 6, tras su visto bueno → al final, el 10. La 404 se compone con piezas del sistema, no
 de un brief (`#767`). Después sigue el SEO (S3 y S5, `seo.md`).
 

@@ -88,6 +88,8 @@ tras varios intentos fallidos. Motivo: el producto trata **datos personales** (R
   de la web no lo abre), una dirección SECRETA (`PANEL_PATH`; `/admin` → 404; guarda 10 del despliegue) y el
   **authenticator obligatorio para los administradores** (`#851`: TOTP de Filament, ±1 min, ocho códigos de recuperación;
   mostrador y puerta sin él, `#847`). Quien pierde móvil y códigos: `php artisan panel:quitar-authenticator <email>` por SSH.
+  Su «Recordarme» viene **marcada y dura UN día** (`#877`, `PanelLogin` y `guards.admin.remember`): contraseña y código
+  una vez al día por dispositivo, sin alargarse con el uso; desmarcada (un ordenador compartido), la sesión de siempre.
 
 ### 4. Verificación de email — ASVS V2.5
 - Enlace **firmado y caduco** (~60 min). **Re-verificar** si el usuario cambia su email.

@@ -7,7 +7,7 @@
 ## ▶ Para continuar el proyecto (handoff)
 0. Skill **`/carril`** (del plugin: `CAPA-DE-AGENTE.md` §4) → base verde VERIFICADA (árbol, push, hook, stack, gates). Obligatorio tras un cierre abrupto.
 1. **`docs/ESTADO.md`** (índice de carriles) → **tu `docs/carriles/<carril>.md`** (foto, por dónde retomar, buzón).
-2. **`docs/00-REFACTOR.md`** → tracker de fases (marcadores y casillas; sus marcadores mandan).
+2. **`docs/00-REFACTOR.md`** → tracker de fases (sus marcadores mandan).
 3. Para tu tarea: **solo su fila** de la tabla de abajo → el **§0** de esa spec. El resto de la spec, por secciones.
 4. Decisiones y su porqué: `docs/DECISIONES.md` (índice) → `docs/decisiones/` (una parte por centena), **por número**.
 
@@ -19,7 +19,7 @@
 ## Stack
 Laravel 13 + MySQL · Blade SSR (landing) · Vue 3 + Pinia (el cajón, contra `/api/v1`) · Filament (panel) · Vite ·
 Redsys (primer driver de pago). **Local:** Sail/WSL2 en `~/proyectos/jumpweb/producto`, instancias al lado
-(`#648`); web `localhost:8081` · MySQL `3308` · Mailpit `8028` (`.env`, no versionado).
+(`#648`); web `localhost:8081` · MySQL `3308` · Mailpit `8028` (`.env`).
 
 ## Momentos → skill (`docs/sistemas/CAPA-DE-AGENTE.md`)
 arrancar o retomar → **`/carril`** · cerrar → **`/handoff`** · decidir → `/decision` · ir rápido → `/ligero` ·
@@ -53,7 +53,7 @@ contador de la suite va en el trailer del commit** (`#618`). Si no salta: `git c
 | Secuencia de compra (admitir → crear → cobrar) | `docs/specs/checkout-orquestado.md` §0 |
 | Excursiones de colegio · horario por zona · precio por tramo | `docs/specs/precio-por-tramo.md` §0 · `docs/specs/horario-por-zona.md` §0 |
 | Aforo · franjas · la rejilla · disponibilidad · calendario · `SlotOffer` | `docs/sistemas/AFORO-FRANJAS.md` · `docs/INVARIANTES.md` §2 |
-| Compra / carrito / catálogo de productos | `docs/sistemas/COMPRA-PRODUCTOS.md` · `docs/FLUJOS.md` · `docs/MODELO-DATOS.md` §1 |
+| Compra / carrito / catálogo · la otra zona | `docs/sistemas/COMPRA-PRODUCTOS.md` · `docs/specs/otra-zona.md` §0 · `docs/FLUJOS.md` · `docs/MODELO-DATOS.md` §1 |
 | Google: entrar, registrarse, vincular · el `sub` | `docs/specs/auth-con-google.md` §0 |
 | Auth / cuentas / RGPD · entrar con código al correo | `docs/specs/acceso-con-codigo.md` §0 · `docs/SEGURIDAD.md` · `docs/INVARIANTES.md` §3 + §4 · `docs/FLUJOS.md` |
 | El teléfono del cliente · cuenta de Google sin número · pedido manual | `docs/specs/telefono-del-cliente.md` §0 |

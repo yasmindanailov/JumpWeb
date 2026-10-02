@@ -4,7 +4,7 @@
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669 AGOTADA con `#669`** → **670–699 AGOTADA con `#699`** → **760–789 AGOTADA con `#789`** → sigue en
 > **820–849 AGOTADA con `#849`** → sigue en **850–879** (del owner, 29-09; centena `decisiones/800-899.md`) · Último usado:
-> **`#876`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **`#878`** (quedan `#879`: pedir banda al owner) · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, **`docs/specs/isla-y-landing-nueva.md`** (⬜ borrador; `#681`→`#699`, `#760`→`#789`, `#820`→`#846`) · Actualizado: **2026-10-02**
 > (todo con el visto bueno del owner: **el zip (6) de este carril, ENTERO** —Z6a→Z6g, `#866`→`#875`; la Z6c·3 es del SPA—,
 > la A5 (`#869`/`#870`), las reseñas traducidas (`#874`) y Mi cuenta desde «Mi QR»; lo anterior, en `git log -p` de este fichero).
@@ -60,10 +60,10 @@ Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas,en
    imagen de la INVITACIÓN son del SPA (`#861`).
    ▶▶▶ **SIGUE AQUÍ, en el 1**: la lista del owner (`#876`).
 1. ▶▶▶ **LA LISTA DEL OWNER DEL 02-10 (tarde)** (`#876`; su censo, medido, y el reparto en `isla-y-landing-nueva.md` §4.28):
-   **L1** el panel: el authenticator recuerda la sesión «al menos el día» (hoy, 120 min sin uso; «Recordarme» de Filament dura
-   400 días) y su código se envía solo con la 6.ª cifra (el del cliente ya lo hace); ⚠️ en LOCAL el administrador del owner
-   ya pide el authenticator → **L2** la SPEC de las entradas Kids junto a Jump en UNA compra (dinero y aforo; la revisa el
-   owner mientras sigo) → **L3** la isla en las páginas: «Reservar» abre la compra sin la calculadora (Kids, Cumpleaños en la
+   ✅ **L1** el panel recuerda UN día a todos (`#877`, `panel-a-salvo.md` §4.4: «Recordarme» marcada, 24 h; arnés 14/14,
+   `sonda-panel` 14/14 a 1280 y 390; visto por el owner). El código ya se enviaba solo (`#867`, medido) → ✅ **L2** la
+   SPEC aprobada, `specs/otra-zona.md` (`#878`: un día y una hora para todo, «Quitar», la zona por su nombre); su código,
+   K1→K4, va tras la L5 → **L3** la isla en las páginas: «Reservar» abre la compra sin la calculadora (Kids, Cumpleaños en la
    fiesta, Colegios), el copy de cumpleaños («el resto, en la lista de invitados») y «¿Qué menú?» de
    `PantallaCuandoFiesta.vue` con condición (del SPA, `#807`/`#808`: el Menú 1/2 es dato del panel) → **L4** la 404 con piezas
    del sistema y el hero más ancho, en vivo → **L5** el resumen A4 semanal y mensual de cumpleaños (amplía `#184`) → el código
@@ -102,7 +102,7 @@ sigue 🟦 por lo del owner: el MATERIAL de los vídeos (en LOCAL, una muestra W
 dobles); el aviso de los calcetines, «se devuelve la señal» y el TRAMO DE EDAD de cada entrada (`#825`); `payment.marks` (en
 LOCAL, `bizum,visa,mastercard`). BD LOCAL con los valores de `#699`/`#761`.
 ⚠️ **Trampas vivas** (las de `sonda-isla` que paga, `sonda-cuenta` antes de las 20:00 y la base de un techo de peso, mudadas a
-`TESTING.md` §2.octies el 29-09): (b) el tracker, a ~140 B de su techo (16 KB, 02-10): el detalle de una línea cerrada se MUDA
+`TESTING.md` §2.octies el 29-09): (b) el tracker, a 15 B de su techo (16 KB, 02-10 tarde; la portada 📜 ya en una línea): el detalle de una línea cerrada se MUDA
 a su spec (el 02-10, F3 a `producto-e-instancias.md` §4.6; antes, F2, F4 y F5); la próxima vez, otra cerrada;
 (d) Vue 3.5 reevalúa un `computed` fuera del `try` de quien lo lee: se protege DENTRO (`seguro.js`, §4.13); (f) un texto de la isla que
 use la COMPRA tiene que estar en un grupo que la compra recibe (`mi_cuenta.*` no le llega: §4.24); (g) `isla/hoja/montar.js` NO
@@ -227,7 +227,7 @@ carril se apunta ALLÍ; lo compartido se sigue avisando aquí, en el buzón, ant
   y el embudo lo reparte, pero `CustomersReport` corta `user_registered` solo por `method`. El enlace del cartel que le di
   (sin verificar): `https://playjump.es/?utm_source=parque&utm_medium=qr&utm_campaign=registro#mi-cuenta`. Si lo cambias,
   dímelo aquí. Su censo entero, en `isla-y-landing-nueva.md` §4.28.
-- Otro punto suyo, el código que se envía solo con la 6.ª cifra: tu `CodeInput` ya lo hace; yo hago el del panel.
+- Otro punto suyo, el código que se envía solo con la 6.ª cifra: tu `CodeInput` ya lo hace, y el del panel también (`#867`).
 
 ### ❗ Para el SPA (emisor: plataforma, 2026-10-02) — «Quién firma el descargo» (Z6g·2, `#875`): lo de la isla, hecho; lo tuyo
 - El zip (6) («Quién firma el descargo: una regla, sin dar nada por hecho», 30-09) dice lo mismo en «la isla, los correos y Mi
@@ -292,6 +292,9 @@ carril se apunta ALLÍ; lo compartido se sigue avisando aquí, en el buzón, ant
   aditivas, `products.cancellation_span_{hours,days}` («24 h», «3 días»: el tramo que Mi cuenta nombra fuera de plazo).
 
 ### Atendido
+- **SPA 02-10, su Z6c·3 EN `main`** (`ccf692d8`, contrato 1.60.0): los gestos de la isla en `Contract::EVENTS` y su informe
+  (`isla_accion` por visita en móvil). La isla ya los emitía (`isla/medir.js`): nada que tocar. El experimento `isla` lo crea
+  el owner en el panel al desplegar (ya en «retomar» 0).
 - **SPA 02-10, `#771`: las copiadas que Google enseñaba TRADUCIDAS** se publicaban como palabras del autor (`CopiedReviewImport`
   tiraba el `translated` de `resenas-google.mjs`): leído, medido y HECHO (`#874`, mi aviso de arriba, para su Puerta).
 - **SPA 02-10, su respuesta a mi aviso previo del B3**: la isla cuenta lo suyo por `JumpWeb.track` (su forma): hecho, arriba.

@@ -9,7 +9,11 @@
  *   5. en otro navegador, entrar por la WEB (`POST /api/v1/auth/login`) con la misma cuenta NO abre el panel;
  *   6. con dirección secreta (P2), `/admin` y los suyos dan 404;
  *   7. EL AUTHENTICATOR (P3, `#851`): el login de un administrador con él pide el código de su app (la sonda lo calcula,
- *      TOTP de 6 cifras y 30 s, y sin él no entra); uno SIN él acaba, tras su contraseña, en la página de configurarlo.
+ *      TOTP de 6 cifras y 30 s, y sin él no entra); uno SIN él acaba, tras su contraseña, en la página de configurarlo;
+ *   8. EL LOGIN QUE RECUERDA UN DÍA (§4.4, `#877`): «Recordarme» viene marcada, deja la cookie del panel con UN día y, sin
+ *      la cookie de la sesión (lo que hacen las dos horas sin uso), el panel sigue dentro sin pedir contraseña ni código.
+ * El control del 5 entra en la web con un código al correo (`POST /auth/code` y el buzón de Mailpit): desde la A5 (`#869`)
+ * la web no admite contraseñas.
  * Monta sus administradores temporales (`sonda-panel@` con un secreto conocido, `sonda-panel-sin@` sin él; contraseñas
  * aleatorias) y los BORRA al terminar. Solo en LOCAL. Sale con 1 si algo falla.
  *
@@ -22,6 +26,7 @@ import { Buffer } from 'node:buffer';
 import { createHmac, randomBytes } from 'node:crypto';
 import { chromium } from 'playwright-core';
 import { execFileSync } from 'node:child_process';
+import { codigoDelBuzon, limitadoresACero } from './entrar-con-codigo.mjs';
 
 const BASE = process.env.SONDA_BASE ?? 'http://localhost';
 const ANCHO = Number(process.argv[2] ?? 1280);
@@ -47,15 +52,17 @@ function totp(secreto, ahora = Date.now()) {
 
 if (tinker('echo app()->environment();') !== 'local') { console.error('✗ solo en LOCAL'); process.exit(1); }
 const PANEL = tinker("echo trim((string) (config('panel.path') ?? 'admin'), '/');") || 'admin';
+const COOKIE_SESION = tinker("echo config('session.cookie');");
 const montar = (email, conSecreto) => tinker(`$u = App\\Domain\\Identity\\Models\\User::firstOrNew(['email' => '${email}']);
     $u->forceFill(['name' => 'Sonda del panel', 'password' => '${CLAVE}', 'email_verified_at' => now()])->save();
     $u->roles()->sync([App\\Domain\\Identity\\Models\\Role::where('name', 'admin')->value('id')]);
     $s = ${conSecreto ? 'app(PragmaRX\\Google2FA\\Google2FA::class)->generateSecretKey()' : 'null'};
     $u->saveAppAuthenticationSecret($s);
-    foreach (['login-ip|127.0.0.1', md5('api'.'ip:127.0.0.1'), 'livewire-rate-limiter:'.sha1(Filament\\Auth\\Pages\\Login::class.'|authenticate|127.0.0.1')] as $k) { Illuminate\\Support\\Facades\\RateLimiter::clear($k); }
+    foreach (['login-ip|127.0.0.1', md5('api'.'ip:127.0.0.1'), 'livewire-rate-limiter:'.sha1(Filament\\Facades\\Filament::getPanel('admin')->getLoginRouteAction().'|authenticate|127.0.0.1')] as $k) { Illuminate\\Support\\Facades\\RateLimiter::clear($k); }
     echo $s ?? '';`);
 // ⚠️ La última clave es el limitador del login de Filament (5 por minuto e IP): dos pasadas seguidas lo agotaban (medido: la
-// segunda, a 390 justo tras la de 1280, dio 9/11).
+// segunda, a 390 justo tras la de 1280, dio 9/11). Lleva el nombre de la CLASE del login, la que registra el panel
+// (`PanelLogin` desde `#877`): con el de Filament escrito a mano, la clave dejó de casar y volvió a agotarse.
 const SECRETO = montar(EMAIL, true);
 montar(EMAIL_SIN, false);
 const CONFIGURAR = new URL(tinker("echo Filament\\Facades\\Filament::getPanel('admin')->getSetUpRequiredMultiFactorAuthenticationUrl();")).pathname;
@@ -89,6 +96,7 @@ try {
     // ── 1 · El login del panel —con el reto del authenticator—, y su sesión no abre la web ──────────────────────────
     const a = await contexto();
     await a.page.goto(`${BASE}/${PANEL}/login`, { waitUntil: 'networkidle' });
+    ok('`#877`: «Recordarme» viene marcada', await a.page.locator('input[type="checkbox"]').first().isChecked());
     await a.page.fill('input[type="email"]', EMAIL);
     await a.page.fill('input[type="password"]', CLAVE);
     await a.page.click('button[type="submit"]');
@@ -100,6 +108,18 @@ try {
     ok('y con el código de su app, entra al escribir la última cifra', new URL(a.page.url()).pathname.startsWith(`/${PANEL}`) && ! a.page.url().endsWith('/login'), a.page.url());
     const me = await a.page.evaluate(async () => (await fetch('/api/v1/me', { headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })).status);
     ok('su sesión NO abre la web (`/api/v1/me`)', me === 401, `HTTP ${me}`);
+
+    // ── 8 · `#877`: la cookie «recuérdame» del panel dura UN día, y sostiene la entrada sin la sesión ─────────────────
+    const galletas = await a.ctx.cookies();
+    const recuerdo = galletas.find((g) => g.name.startsWith('remember_admin_'));
+    const horas = recuerdo ? (recuerdo.expires - Date.now() / 1000) / 3600 : null;
+    ok('`#877`: deja la cookie «recuérdame» del panel, de UN día', horas !== null && Math.abs(horas - 24) < 0.1, horas === null ? 'sin cookie' : `${horas.toFixed(2)} h`);
+    // ⚠️ Por su nombre de la configuración (aquí, `jumpweb-session`), y sin nombre no se borra nada: `clearCookies` con un
+    // nombre vacío las borra TODAS, también la del recuerdo (medido: la sonda salía al login por su culpa).
+    const sesion = galletas.find((g) => g.name === COOKIE_SESION);
+    if (sesion) await a.ctx.clearCookies({ name: sesion.name });
+    await a.page.goto(`${BASE}/${PANEL}`, { waitUntil: 'networkidle' });
+    ok('y sin la cookie de la sesión (las dos horas sin uso), sigue dentro: ni contraseña ni código', Boolean(sesion) && ! new URL(a.page.url()).pathname.endsWith('/login'), `${sesion?.name ?? 'sin sesión'} → ${a.page.url()}`);
 
     // ── 2 · Una pantalla de Filament con Livewire ─────────────────────────────────────────────────────────────────
     await a.page.goto(`${BASE}/${PANEL}/orders`, { waitUntil: 'networkidle' });
@@ -124,18 +144,24 @@ try {
     // ── 5 · Entrar por la WEB no abre el panel ───────────────────────────────────────────────────────────────────
     const b = await contexto();
     await b.page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' });
-    const web = await b.page.evaluate(async ({ email, password }) => {
+    // La web entra con un código al correo (la A5, `#869`): se pide, se lee del buzón y se escribe en `auth/login`.
+    const pedir = (ruta, cuerpo) => b.page.evaluate(async ({ ruta, cuerpo }) => {
         await fetch('/sanctum/csrf-cookie', { credentials: 'same-origin' });
         const xsrf = decodeURIComponent((document.cookie.match(/XSRF-TOKEN=([^;]+)/) ?? [])[1] ?? '');
-        const r = await fetch('/api/v1/auth/login', {
+        const r = await fetch(ruta, {
             method: 'POST', credentials: 'same-origin',
             headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-XSRF-TOKEN': xsrf },
-            body: JSON.stringify({ email, password }),
+            body: JSON.stringify(cuerpo),
         });
 
         return r.status;
-    }, { email: EMAIL, password: CLAVE });
-    ok('control: la misma cuenta entra por la web', web === 200, `HTTP ${web}`);
+    }, { ruta, cuerpo });
+    limitadoresACero(EMAIL);
+    const desde = Date.now();
+    const pedido = await pedir('/api/v1/auth/code', { email: EMAIL });
+    const codigoWeb = await codigoDelBuzon(EMAIL, desde);
+    const web = codigoWeb ? await pedir('/api/v1/auth/login', { email: EMAIL, code: codigoWeb }) : null;
+    ok('control: la misma cuenta entra por la web (con un código al correo)', web === 200, `código pedido: HTTP ${pedido} · ${codigoWeb ? `entrar: HTTP ${web}` : 'no llegó al buzón'}`);
     await b.page.goto(`${BASE}/${PANEL}`, { waitUntil: 'networkidle' });
     ok('y esa sesión de la web NO abre el panel (va a su login)', new URL(b.page.url()).pathname === `/${PANEL}/login`, b.page.url());
 

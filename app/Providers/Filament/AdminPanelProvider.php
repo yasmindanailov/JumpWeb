@@ -5,6 +5,7 @@ namespace App\Providers\Filament;
 use App\Domain\Content\Services\ThemeSettings;
 use App\Domain\Platform\Models\Setting;
 use App\Filament\Auth\PanelAppAuthentication;
+use App\Filament\Auth\PanelLogin;
 use App\Filament\Auth\PanelPassword;
 use App\Filament\Pages\AdminSettingsHub;
 use App\Filament\Pages\Dashboard;
@@ -109,7 +110,8 @@ class AdminPanelProvider extends PanelProvider
             ->viteTheme('resources/css/filament/admin/theme.css')
             // Su PROPIO guard (`docs/specs/panel-a-salvo.md`, `#850`): una sesión de la web no abre el panel.
             ->authGuard('admin')
-            ->login()
+            // El de Filament con «Recordarme» marcada: el dispositivo queda dentro UN día (`#877`; el día lo pone el guard).
+            ->login(PanelLogin::class)
             // La contraseña del PERSONAL (A5a de `specs/acceso-con-codigo.md` §4.12, `#870`): la página del enlace que un
             // administrador envía desde la ficha. Sin sesión, como el login, y con el enlace firmado. NO es
             // `->passwordReset()`: ése trae además «¿Has olvidado tu contraseña?», y nadie la recupera por su cuenta.

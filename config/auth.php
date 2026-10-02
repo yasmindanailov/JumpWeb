@@ -2,6 +2,7 @@
 
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\RememberedDevice;
+use App\Filament\Auth\PanelLogin;
 
 return [
 
@@ -52,6 +53,9 @@ return [
         'admin' => [
             'driver' => 'session',
             'provider' => 'users',
+            // UN DÍA (`docs/specs/panel-a-salvo.md` §4.4, `DECISIONES #877`): su «Recordarme», marcada de serie. Sin esta
+            // línea, los 400 días del framework, y en todos ellos ni contraseña ni el código de la app.
+            'remember' => PanelLogin::REMEMBER_MINUTES,
         ],
     ],
 

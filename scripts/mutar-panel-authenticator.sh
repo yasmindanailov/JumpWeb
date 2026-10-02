@@ -2,7 +2,8 @@
 # Arnés de mutación de EL AUTHENTICATOR DE LOS ADMINISTRADORES (P3 de `docs/specs/panel-a-salvo.md` §4.3, `#851`):
 # `PanelAppAuthenticationTest` y el censo de RGPD-01 (`AnonymizeCoversEveryUserColumnTest`) contra el panel (obligatorio y
 # con NUESTRO middleware), el middleware (solo `admin`), las rutas del personal (`panel_mfa`), el modelo (cifrado, oculto,
-# borrado al anonimizar) y el comando de emergencia (su rastro).
+# borrado al anonimizar) y el comando de emergencia (su rastro). Y desde `#877` (§4.4), el login que recuerda UN día: su
+# página (`PanelLogin`, «Recordarme» marcada) y el día del guard `admin` (`config/auth.php`).
 #
 # Reglas de la casa dentro: verde antes de mutar · veredicto por código de salida · comprobar que la mutación SE APLICÓ y
 # que su ancla está UNA vez · restaurar por COPIA DE SEGURIDAD (por RUTA) y `touch`, nunca con `git checkout`.
@@ -17,7 +18,9 @@ RUTAS=routes/web.php
 USER=app/Domain/Identity/Models/User.php
 CMD=app/Console/Commands/RemovePanelAuthenticator.php
 MFA=app/Filament/Auth/PanelAppAuthentication.php
-FICHEROS=("$PANEL" "$MW" "$RUTAS" "$USER" "$CMD" "$MFA")
+LOGIN=app/Filament/Auth/PanelLogin.php
+AUTH=config/auth.php
+FICHEROS=("$PANEL" "$MW" "$RUTAS" "$USER" "$CMD" "$MFA" "$LOGIN" "$AUTH")
 
 TMP="$(mktemp -d)"
 copia() { echo "$TMP/${1//\//__}"; }
@@ -101,6 +104,19 @@ mutar "el secreto, a la vista (toArray)" "$USER" \
 
 mutar "el comando de emergencia no deja rastro" "$CMD" \
   "AuditLogger::logSystem('panel.app_authentication_removed', \$user);" \
+  ""
+
+# `#877`: el login que recuerda UN día.
+mutar "el panel vuelve al login de Filament («Recordarme» sin marcar)" "$PANEL" \
+  "->login(PanelLogin::class)" \
+  "->login()"
+
+mutar "«Recordarme» sin marcar de serie" "$LOGIN" \
+  "\$remember->default(true);" \
+  ""
+
+mutar "el guard del panel sin su día (los 400 del framework)" "$AUTH" \
+  "'remember' => PanelLogin::REMEMBER_MINUTES," \
   ""
 
 echo "$muerden/$total muerden"

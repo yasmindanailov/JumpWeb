@@ -512,6 +512,9 @@ instalación de un cliente. Si se configura a mano deja de ser una prueba del pr
 > owner configurarlo (una app en el móvil: Google Authenticator, Authy…) y le da OCHO códigos de recuperación, que tiene que
 > guardar fuera del móvil. Si pierde móvil y códigos: `php artisan panel:quitar-authenticator <su correo>` por SSH, y en su
 > siguiente inicio de sesión lo configura de nuevo. Mostrador y puerta, sin cambios.
+> ❗ **El panel recuerda UN día** (`#877`, `specs/panel-a-salvo.md` §4.4): «Recordarme» viene marcada y dura 24 h desde que se
+> entra, para TODOS (administradores, mostrador y puerta): el personal entra una vez al día en cada dispositivo, también en
+> las tablets de la puerta. Avisarlo con el cambio de dirección; en un ordenador compartido, desmarcarla.
 > ❗ **La POLÍTICA DE COOKIES de producción** (`#859`, `specs/politica-de-cookies.md` §4): el `migrate` de la v2.0.0 pasa al
 > texto nuevo SOLO el francés (el español y el inglés llevan la edición de `#592`, y el registro dirá
 > `cookies.policy_not_updated` con `es`/`en`: esperado). Después, el script gitignorado `aplicar-produccion-cookies.php`
