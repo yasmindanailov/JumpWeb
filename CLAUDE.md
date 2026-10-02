@@ -76,7 +76,7 @@ contador de la suite va en el trailer del commit** (`#618`). Si no salta: `git c
 | Justificante de un menor invitado (waiver offshore) · activación · plazas | `docs/specs/waiver-por-reserva.md` §0 |
 | Waiver (firma, prueba, PDF, versiones del texto) · la firma en la puerta | `docs/specs/waiver-probatorio.md` §0 |
 | Menores a cargo · asignar una entrada a un menor · apellidos y relación | `docs/specs/menores-a-cargo.md` §0 |
-| Carné QR · pantalla de puerta · «Mi carné» · rotar carné | `docs/specs/identidad-qr-puerta.md` §0 |
+| Carné QR · la Puerta | `docs/specs/identidad-qr-puerta.md` §0 · `docs/specs/puerta-nueva.md` §0 |
 | JumpPoints / vales / lealtad | `docs/specs/lealtad-jumppoints.md` §0 |
 | Reseñas de Google · Business Profile | `docs/specs/google-business-profile.md` §0 · `docs/specs/google-reviews.md` §0 |
 | Contenido y copys · festivos · jerga de la web | `docs/specs/contenido-y-copys.md` §0 |

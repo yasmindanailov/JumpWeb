@@ -39,6 +39,8 @@ Subsistema **A** de la visión de Fase 6. Va **después** de `waiver-probatorio.
   distinto); sin rasterizador el QR sale LISO, **nunca con el icono del producto** (fuga white-label). Toda
   degradación deja RASTRO (`#445`, §9.9).
 - La pantalla de puerta necesita `@filamentStyles` o su paleta computa VACÍA (§9.7.1).
+- **La Puerta del zip (6)** (el mostrador rediseñado, `#861`): `puerta-nueva.md`. Cambia la vista; las garantías de
+  esta spec se quedan.
 - Anexo al final con la fila del enrutador.
 
 ## 1. Contexto y problema

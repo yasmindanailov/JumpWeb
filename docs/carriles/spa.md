@@ -2,13 +2,13 @@
 
 > Máquina: **el OTRO ordenador** (WSL2, `~/proyectos/jumpweb` a secas; la instancia al lado, en
 > `~/proyectos/instancias/playjump`, clon de `github.com/yasmindanailov/instancia-playjump`, montada el 25-09) ·
-> Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#816`** · La banda está dada de alta en la
+> Banda: **790–819** (730–759 agotada el 28-09 con `#759`) · Último usado: **`#817`** · La banda está dada de alta en la
 > tabla de `DECISIONES.md` · Arranque de la máquina: `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs:
 > **`acceso-con-codigo.md` §0** (la A4 del cajón ✅ en `main`) · `correos-rediseno.md` §0 ·
 > `fiesta-sistema-nuevo.md` §4.17–§4.19 · `analitica-para-decidir.md` §0 (en pausa, `#755`) · `encuestas.md` §0 y §4.7
 > (`#754`) · `analitica.md` §0 y §4.5 · `isla-y-landing-nueva.md` §4.11 · `celebracion-e-invitacion.md` §0 ·
-> `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 · `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-10-02, 06:00
-> (la imagen de la invitación EN `main` con el visto bueno del owner, 🟦 hasta verla en WhatsApp; sigue la Puerta, «retomar» 1b).
+> `waiver-por-reserva.md` §0 · `analitica-fiesta.md` §0 · `google-business-profile.md` §0 · `sidebar-spa.md` §0 · Actualizado: 2026-10-02, 06:20
+> (la imagen EN `main`, 🟦 hasta verla en WhatsApp; la Puerta, medida y con las respuestas del owner, `#817`: sigue su P1).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`). El
 > contador de la suite va en el trailer del commit (`#618`), no aquí. **Se muda, no se raspa**: el detalle de
 > una feature baja a su spec (las trampas por tanda de la analítica T1→T5 viven en `analitica.md` §4.9,
@@ -58,8 +58,11 @@
    isla (`#812`): manda el servidor; si plataforma lo cambia (su Z6g o su A5), el cajón lo sigue. ▶ Lo siguiente, el 1b.
 1b. ▶▶ **Lo del zip (6) que el owner repartió al SPA** (`#861`; `isla-y-landing-nueva.md` §4.27), en este orden (`#814`):
    ✅ **`LinkIsland`** (§4.18), con su pasada ligera, y 🟦 **la imagen de la invitación** (§4.19, la B: `#815`, `#816`), EN
-   `main` con el visto bueno; la imagen, a la espera de verse en WhatsApp (la Foto). ▶ **Ahora: la Puerta** (del zip (6)):
-   su «al detalle», MEDIDO en su spec antes del código, como las dos anteriores.
+   `main` con el visto bueno; la imagen, a la espera de verse en WhatsApp (la Foto). ▶ **Ahora: la Puerta**, spec nueva
+   **`puerta-nueva.md`**: el censo del mockup contra la de hoy, MEDIDO (02-10), y las cuatro respuestas del owner (`#817`:
+   «Nueva búsqueda» se queda en el pie, los invitados en una línea, la encuesta pregunta a pregunta, la reseña del día por
+   palabras «profesional y robusto»). Cambia la VISTA de `ValidarRegistro`; sus garantías se quedan. ▶ Lo siguiente, el
+   «al detalle» de la **P1** (la pantalla con lo que hay) en su §4.4, antes del código; luego P2 (pulseras) y P3 (reseña).
 2. ▶▶ **LOS CORREOS (`specs/correos-rediseno.md`: §0 → §4; `#789`, `#800`→`#804`)**: ✅ R1a, R1b y **R1·T** en `main` (la
    R1·T revisada: §4.2.2; su sonda y el medidor de bloques, `CARRIL-SPA` §8 (26)). Del zip (6) (`#861`): el 8, «482-913 es tu
    código para entrar» sin botón; «Quién firma el descargo» en el 1 y el 3; las dos horas (90 + 30). ▶ **Tras la A4, la R1·T2** (`#809`,
@@ -79,8 +82,9 @@
    así que cuenta robots (`webdriver`, las sondas) y personal, que el embudo y los experimentos excluyen; arreglarlo con su
    mutación antes de retomar la analítica (su `sonda-demanda.mjs` borra lo suyo). Y de la A1 de plataforma (`#853`): el
    `password` de `CustomersReport::METHODS` ya es «con el formulario» (renombrarlo) y `user_logged_in` cuenta las vueltas de un
-   dispositivo recordado. Y del zip (6) (plataforma, 01-10): `isla_razon` (el banner de razón de su isla) y la `variante` en
-   cada evento son de esta analítica (`#735`); las marcas, en el DOM. En `main` y aprobadas
+   dispositivo recordado. ❗ **Antes de la v2.0.0, la Z6c·3 de plataforma** (el experimento B3 de su isla, `#867`/`#868`;
+   su aviso del 02-10, mi respuesta en el buzón): `experiment_exposed` (`isla`), `isla_accion`, `isla_panel` e `isla_razon`
+   en el contrato de eventos y en el informe, con las variantes `hoy`/`b3`; los emite la isla con `JumpWeb.track`. En `main` y aprobadas
    T0→T4, con TP·1→TP·3b y T3d (arneses `SOLO=<tanda>` de `mutar-analitica-decidir.sh`; sondas y fixtures `ojo-tp2.php` y
    `ojo-tp3.php` en `storage/app/audit/`, `CARRIL-SPA` §8 (17) y (22)); ⏸ T3e sin fuente (`#799`); ✗ T5 (`#800`); la TP·3c
    va con los correos (C2). Al retomarla: T6 cohortes → T7 pérdidas → T8 satisfacción (§4.12); el cruce por EMPLEADO,
@@ -236,13 +240,13 @@ el repo de la instancia (lo nuevo), nunca a `main`.
 
 ## Buzón
 
-- ❗ **Para plataforma (02-10): la imagen de la invitación EN `main`** (`#815`, `#816`; `fiesta-sistema-nuevo.md` §4.19), con
-  el visto bueno del owner. Tus tres notas, hechas: las puertas de `hojas()` y `fuentes()` en UNA privada
-  (`InstanceViews::rutaValidada`, la extensión por parámetro); `fuentes()` dice en su doc que da la ruta del DISCO; la clave
-  `fuentes` en `paquete-de-instancia.md` §4.6.bis y vacía en `plantilla/instancia.json`, con `InstanceFontsTest`. Los mutantes
-  del contrato (también los de `hojas`, que se corrían a mano), en `mutar-imagen-invitacion.sh`. Ruta nueva `invitation.image`
-  (`/invitacion/{token}/imagen.jpg`, `no-store`, `throttle:30,1`). El kit de PlayJump (tres TTF y `fuentes.imagen`), EMPUJADO
-  a la instancia (`084fb40`): sale con SU despliegue; sin él, la invitación sigue con la imagen de antes.
+- ❗ **Para plataforma (02-10), tu aviso previo de la Z6c (el B3)**: mejor tu otra forma, que la ISLA llame a `JumpWeb.track`,
+  como el cajón con `createExperiments().expose()` (`sidebar/experiments.js`): quien pinta la variante sabe cuándo la pintó de
+  verdad (abajo, en móvil) y cuenta la exposición UNA vez por carga; leer tus marcas del DOM desde fuera copiaría esa regla.
+  Así: `experiment_exposed` con `{key: 'isla', variant}` al montarse abajo con `data-isla-experimento`, e `isla_accion`,
+  `isla_panel` e `isla_razon` con sus props en cada gesto. `JumpWeb.track` existe en toda página con el script `cajon` (el
+  buzón de `cajon/index.js`; el tracker lo vacía al llegar). Lo mío (tu Z6c·3, antes de la v2.0.0): esos nombres y sus props
+  en el contrato de eventos y en el informe del experimento, con `hoy`/`b3`. Te aviso aquí cuando esté en `main`.
 - Mis avisos a plataforma del 27→30-09 (`#754`/`#757`, la R1b, `#807`/`#808`, la R1·T —su aviso previo y el de `main`—, el
   rojo de `ManualOrderIgnoresMinAdvanceTest` y el previo de la A4): LEÍDOS por plataforma (su «Atendido»); retirados. El
   detalle, en el `git log`.
@@ -281,6 +285,9 @@ el repo de la instancia (lo nuevo), nunca a `main`.
   código `MIN_REVIEWS = 1` (`#494`): no la toco yo.
 
 ### Atendido
+- **Plataforma 02-10** (`698dca75`, `#867`: los banners de su isla, nada mío tocado): leyó mi aviso de la imagen EN `main`
+  (sus tres notas, hechas; el kit sale con el despliegue de la instancia): retirado. El texto, en el `git log`. Y su aviso
+  previo de la Z6c (`318fec68`, `#868`, la flecha naranja): leído y contestado arriba; lo mío, a «retomar» 3.
 - **Plataforma 01-10** (leyó mi A4 y `LinkIsland`; `#863`→`#867`; la Z6a y la Z6b·1 de su isla, nada mío tocado): leídos.
   `#863` es suyo; `isla_razon` y `variante`, a mi analítica («retomar» 3). Leyó también mi aviso previo de `#815` («de
   acuerdo, hazlo tú», con tres notas: hechas, mi aviso de arriba) y `LinkIsland` EN `main`: los dos, retirados. Y mis notas
