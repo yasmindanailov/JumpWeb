@@ -3,11 +3,14 @@
  * (`docs/specs/isla-y-landing-nueva.md` §4.16, `DECISIONES #822`). Recorre, sin sesión y con la cuenta de pruebas:
  *   1. LA HORA SE LLENA AL CONTINUAR de la pantalla 0 (la sonda llena esa franja en la BD justo cuando la compra pregunta
  *      por ella, en `POST /cart/validate-line`): «Paso 1 de 2 · Tus datos», «Esa hora ya no está libre.», «Estas sí:»
- *      —SIN «No se ha cobrado nada»: no se ha pedido nada—, las horas cercanas, «Elegir esta hora» apagado hasta elegir,
- *      la flecha a la pantalla 0 y, debajo, lo que se estaba eligiendo; al elegir, a «Tus datos» con la hora nueva;
- *   2. «¿QUERÍAS DECIR…?»: un correo mal escrito propone el bueno al salir del campo, y un toque lo escribe;
- *   3. EL INTRO: el teclado dice «Siguiente» e «Ir» (`enterkeyhint`), Intro pasa al campo siguiente y en el último hace la
- *      acción del paso;
+ *      —SIN «No se ha cobrado nada»: no se ha pedido nada—, las horas cercanas, «Elegir esta hora» sin apagarse y el pie
+ *      diciendo qué falta (M2, `#881`), la flecha a la pantalla 0 y, debajo, lo que se estaba eligiendo; al elegir, a «Tus
+ *      datos» con la hora nueva;
+ *   2. «¿QUERÍAS DECIR…?»: en el correo de la PUERTA (M3 de `#880`: «Tus datos» empieza en ella), un correo mal escrito
+ *      propone el bueno al salir del campo, y un toque lo escribe;
+ *   3. EL INTRO: en la puerta, su único campo dice «Ir» e Intro hace su acción (un correo sin cuenta pasa al formulario con
+ *      él puesto); en el formulario, «Siguiente» entre campos e «Ir» en el último (`enterkeyhint`), Intro pasa al siguiente y
+ *      en el último hace la acción del paso;
  *   4. EL TECLADO DEL MÓVIL (solo por debajo de 900px): con `visualViewport` encogido —la sonda lo sustituye antes de que
  *      cargue nada, porque un Chromium sin cabeza no abre teclado—, la capa mide lo que se ve, la acción queda encima y el
  *      pie se queda en ella; al cerrarlo, vuelve el resumen;
@@ -143,7 +146,7 @@ try {
     ok('«Esa hora ya no está libre.» y «Estas sí:», SIN «No se ha cobrado nada»', /Estas sí:/.test(texto) && ! /No se ha cobrado nada/.test(texto), texto.slice(0, 120));
     ok('las horas cercanas del día (hasta cuatro, sin la llena)', cercanas.length > 0 && cercanas.length <= 4 && ! cercanas.some((h) => h.startsWith(llena?.hora ?? '--')), `${llena?.hora} → ${cercanas.map((h) => h.slice(0, 5)).join(', ')}`);
     // M2 de `#880` (`#881`): sin hora elegida el botón NO se apaga; el pie dice qué falta (y, al pulsar, se marca).
-    ok('«Elegir esta hora» sin hora: no se apaga y el pie dice qué falta', ! await accion(/^Elegir esta hora$/).isDisabled() && /Elige una de estas horas/.test(await page.locator('[data-isla] button[aria-live="polite"]').innerText().catch(() => '')));
+    ok('«Elegir esta hora» sin hora: no se apaga y el pie dice qué falta', ! await accion(/^Elegir esta hora$/).isDisabled() && /Elige una de estas horas/.test(await page.locator('[data-isla] [role="status"] button').innerText().catch(() => '')));
     ok('con su flecha a la pantalla 0', (await page.locator('[data-isla] button[aria-label="Volver"]').count()) === 1);
     ok('debajo, lo que se estaba eligiendo', /entrada/.test(await debajo()), await debajo());
     await foto('1-hora-llena-al-continuar');
@@ -157,18 +160,24 @@ try {
     await quieta();
     ok('«Elegir esta hora» → «Tus datos», con la línea a la hora nueva', (await debajo()).includes(nueva), `${nueva} · ${await debajo()}`);
 
-    // ── 2. «¿Querías decir…?» ───────────────────────────────────────────────────────────────────────────
-    await page.fill('#pjc-correo', 'sonda@gmial.com');
-    await page.locator('#pjc-correo').blur();
+    // ── 2. «¿Querías decir…?», en el correo de la PUERTA (M3 de `#880`) ──────────────────────────────────
+    ok('sin sesión, «Tus datos» empieza en la puerta: «Entra o crea tu cuenta»', (await page.locator('[data-isla-scroll] h1').innerText()) === 'Entra o crea tu cuenta' && await page.locator('#pjc-ent').count() === 1);
+    await page.fill('#pjc-ent', 'sonda@gmial.com');
+    await page.locator('#pjc-ent').blur();
     const sugerencia = page.locator('[data-isla-scroll] button', { hasText: '¿Querías decir' });
     await sugerencia.waitFor({ timeout: 5000 }).catch(() => {});
     ok('un correo mal escrito, al salir del campo: «¿Querías decir sonda@gmail.com?»', (await sugerencia.innerText().catch(() => '')).includes('sonda@gmail.com'), await sugerencia.innerText().catch(() => '(no sale)'));
     await sugerencia.click().catch(() => {});
     await page.waitForTimeout(200);
-    ok('un toque lo escribe, y la propuesta se va', (await page.inputValue('#pjc-correo')) === 'sonda@gmail.com' && (await sugerencia.count()) === 0, await page.inputValue('#pjc-correo'));
+    ok('un toque lo escribe, y la propuesta se va', (await page.inputValue('#pjc-ent')) === 'sonda@gmail.com' && (await sugerencia.count()) === 0, await page.inputValue('#pjc-ent'));
     await foto('2-sugerencia');
 
-    // ── 3. El Intro ─────────────────────────────────────────────────────────────────────────────────────
+    // ── 3. El Intro: en la puerta, su único campo hace la acción; en el formulario, pasa al siguiente ──────
+    ok('en la puerta, su único campo dice «Ir»', (await page.$eval('#pjc-ent', (e) => e.getAttribute('enterkeyhint'))) === 'go');
+    await page.focus('#pjc-ent');
+    await page.keyboard.press('Enter');
+    await enElCuerpo(/No hay ninguna cuenta con/).catch(() => {});
+    ok('Intro en la puerta hace su acción: un correo sin cuenta, al formulario con ese correo puesto', /No hay ninguna cuenta con sonda@gmail\.com/.test(await cuerpo()) && await page.locator('#pjc-correo').count() === 0, (await cuerpo()).slice(0, 90));
     const pistas = await page.$$eval('[data-isla-scroll] input:not([type=hidden]):not([type=checkbox]):not([type=radio])', (els) => els.map((e) => [e.id, e.getAttribute('enterkeyhint')]));
     ok('el teclado dice «Siguiente» entre campos e «Ir» en el último', pistas.length > 1 && pistas.slice(0, -1).every(([, p]) => p === 'next') && pistas.at(-1)[1] === 'go', JSON.stringify(pistas));
     await page.focus(`#${pistas[0][0]}`);
@@ -202,14 +211,17 @@ try {
     }
 
     // ── 5. La política al final del recibo de «Pagar» ───────────────────────────────────────────────────
-    await page.locator('[data-isla-scroll] a, [data-isla-scroll] button', { hasText: /^Entra$/ }).first().click();
+    // Desde el formulario de un correo nuevo (M3 de `#880`), «Entra con ese» vuelve a la puerta para entrar con otro.
+    await page.locator('[data-isla-scroll] a, [data-isla-scroll] button', { hasText: /^Entra( con ese)?$/ }).first().click();
     await page.fill('#pjc-ent', CLIENTE.email);
     // Con un código al correo (A3 del acceso con código, `#849`).
     const desde = Date.now();
     await accion(/^Continuar$/).click();
     await page.waitForSelector('#pjc-ent-codigo', { timeout: 15000 });
     await page.fill('#pjc-ent-codigo', (await codigoDelBuzon(desde)) ?? '');
-    await accion(/^Entrar$/).click();
+    // La sexta cifra ya entra SOLA (Z6g·1, `#867`): «Entrar», solo si sigue ahí.
+    await page.waitForTimeout(800);
+    if (await page.locator('[data-isla] button', { hasText: /^Entrar$/ }).count()) await accion(/^Entrar$/).click();
     await espera(() => /^Hola/.test(document.querySelector('[data-isla-scroll] h1')?.textContent ?? '') || (document.querySelector('#isla-compra-paso')?.textContent ?? '').trim().endsWith('Pagar'));
     if (/Tus datos/.test(await paso())) {
         if (await page.locator('#pjc-tel').count()) await page.fill('#pjc-tel', '600000000');

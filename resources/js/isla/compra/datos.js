@@ -106,6 +106,29 @@ export function hayQuePedir({ identificado, pedirTelefono = false, firma = false
     return ! identificado || pedirTelefono || firma;
 }
 
+/**
+ * **El correo primero** (M3 de `docs/specs/isla-y-landing-nueva.md` §4.29, `#880`; el owner: «Entra o crea tu cuenta» tras
+ * elegir el producto): la vista con la que se llega a «Tus datos». Sin sesión, la PUERTA (`entrar`: Google o el correo; con
+ * cuenta, su código; sin ella, el resto de datos con ese correo ya puesto, `nueva`, `#849`). Con sesión, o con el alta de
+ * Google a medias (`#785`: su correo ya es el de Google), el formulario de siempre (`null`).
+ */
+export const vistaInicial = ({ identificado, google = false }) => (identificado || google ? null : 'entrar');
+
+/**
+ * **La flecha dentro de «Tus datos»** (la regla del diseño, `#831`: un paso atrás dentro de la misma capa). Del código, a su
+ * correo (`id`); de la puerta, fuera, a la pantalla 0 (`cuando`): es el primer paso; de los datos de un correo NUEVO, a la
+ * puerta con ese correo (`puerta`); del descargo, a los datos (`datos`); del formulario de siempre, a la pantalla 0.
+ *
+ * @param {{vista: string|null, pasoEntrada: string, nueva: string}} e
+ * @returns {'id'|'cuando'|'puerta'|'datos'}
+ */
+export function atras({ vista, pasoEntrada, nueva }) {
+    if (vista === 'entrar') return pasoEntrada === 'codigo' ? 'id' : 'cuando';
+    if (vista === 'descargo') return 'datos';
+
+    return nueva ? 'puerta' : 'cuando';
+}
+
 /** El campo de la isla que corresponde a cada campo del alta. Lo que no está aquí va arriba, al resumen. */
 const CAMPOS = { name: 'nombre', email: 'correo', phone: 'telefono', born_on: 'nacimiento', code: 'codigo', accept_waiver: 'descargo', waiver_document_id: 'descargo' };
 

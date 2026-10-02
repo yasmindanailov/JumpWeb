@@ -11,6 +11,9 @@
  * ⚠️ **Solo CORREO** (`#695`, `[DECIDIDO owner]`), con su texto del `lang` y `type="email"`. Google y Apple ARRIBA, con
  * «— o —» antes del correo (`#857`, el owner), aunque el zip (6) los dibuje debajo. La casilla de recordar, `#858` (el
  * owner), y no el «un año» del diseño. Con el motor (T3e·4), `social`, `apple` y `marcaGoogle` como en «Tus datos».
+ * ▶ **La puerta de la compra** (M3 de `#880`): sin sesión, «Tus datos» empieza aquí, como Mi cuenta (`cuenta`): «Entra o
+ * crea tu cuenta» y el texto del owner («…Si no tienes cuenta, la creas en 1 minuto…»). `aviso`, el «no» que traiga la
+ * compra (una vuelta de Google que no salió), arriba, como en «Tus datos».
  */
 import { useTextos } from '../piezas/textos.js';
 import { PASO } from './estilos.js';
@@ -21,6 +24,8 @@ import CasillaSistema from '../ui/CasillaSistema.vue';
 import EnlaceSistema from '../ui/EnlaceSistema.vue';
 import AccesoSocial from '../ui/AccesoSocial.vue';
 import TextoConCorreo from '../ui/TextoConCorreo.vue';
+import AvisoDestacado from '../ui/AvisoDestacado.vue';
+import IconoLucide from '../ui/IconoLucide.vue';
 
 defineProps({
     paso: { type: String, default: 'id' },
@@ -39,6 +44,7 @@ defineProps({
     social: { type: Boolean, default: true },
     apple: { type: Boolean, default: true },
     marcaGoogle: { type: String, default: '' },
+    aviso: { type: String, default: '' },
 });
 const emit = defineEmits(['cambiar', 'otro', 'proveedor', 'completo', 'correo']);
 const { t } = useTextos();
@@ -46,6 +52,18 @@ const { t } = useTextos();
 
 <template>
     <PasoCompra :titulo="t(paso === 'codigo' ? 'compra.entrar.codigo_titular' : cuenta ? 'compra.entrar.titular_cuenta' : 'compra.entrar.titular')">
+        <AvisoDestacado
+            v-if="aviso"
+            tone="danger"
+            size="sm"
+            role="alert"
+            :title="aviso"
+        >
+            <template #icono><IconoLucide
+                name="circle-alert"
+                :size="18"
+            /></template>
+        </AvisoDestacado>
         <template v-if="paso === 'codigo'">
             <p :style="PASO.cuerpo"><TextoConCorreo
                 :texto="t(reenvios ? 'compra.entrar.codigo_otro' : 'compra.entrar.codigo_texto')"
@@ -89,7 +107,7 @@ const { t } = useTextos();
                 @google="emit('proveedor', 'google')"
                 @apple="emit('proveedor', 'apple')"
             />
-            <p :style="PASO.cuerpo">{{ t('compra.entrar.texto') }}</p>
+            <p :style="PASO.cuerpo">{{ t(cuenta ? 'compra.entrar.texto_cuenta' : 'compra.entrar.texto') }}</p>
             <CampoSistema
                 id="pjc-ent"
                 :label="t('compra.entrar.correo')"

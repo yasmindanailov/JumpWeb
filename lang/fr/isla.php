@@ -286,6 +286,7 @@ return [
             'titular' => 'Connectez-vous',
             'titular_cuenta' => 'Connectez-vous ou créez votre compte',
             'texto' => 'Vous vous connectez avec un code envoyé à votre e-mail. Sans mot de passe.',
+            'texto_cuenta' => 'Vous vous connectez avec un code envoyé à votre e-mail. Sans mot de passe. Pas encore de compte ? Créez-le en 1 minute avec l’e-mail que vous saisissez ici.',
             'correo' => 'Votre e-mail',
             'continuar' => 'Continuer',
             'codigo_titular' => 'Vérifiez votre e-mail',

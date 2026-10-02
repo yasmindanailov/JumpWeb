@@ -31,12 +31,13 @@ export function pasoDelMotor(step) {
 }
 
 /**
- * El orden de los pasos, del diseño: avanzar entra por la derecha y volver, por la izquierda. Dentro de «Tus datos»,
- * sus vistas (el descargo, «Entra») van detrás, y el código de «Entra» (A3, `#849`), un poco más.
+ * El orden de los pasos, del diseño: avanzar entra por la derecha y volver, por la izquierda. Dentro de «Tus datos», desde
+ * la M3 de `#880`, la PUERTA va primero («Entra o crea tu cuenta»: el correo, y su código un poco más allá —A3, `#849`—),
+ * después el formulario y, detrás de él, el descargo.
  */
 export function rango(paso, vista = null, pasoEntrada = null) {
     if (paso === 'cuando') return 0;
-    if (paso === 'datos') return vista ? 1.5 + (vista === 'entrar' && pasoEntrada === 'codigo' ? 0.2 : 0) : 1;
+    if (paso === 'datos') return vista === 'entrar' ? 1 + (pasoEntrada === 'codigo' ? 0.2 : 0) : vista === 'descargo' ? 1.7 : 1.5;
     if (paso === 'pagar') return 2;
     if (paso === 'listo') return 4;
 

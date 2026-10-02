@@ -344,6 +344,8 @@ return [
             // `#695` `[DECIDIDO owner]`: solo correo. ⚠️ El diseño dice «Te enviamos un código a tu correo»; con `#849` un correo
             // nuevo no recibe ninguno (va a crear la cuenta), así que se dice cómo se entra, con las palabras de Ajustes.
             'texto' => 'Entras con un código a tu correo. Sin contraseña.',
+            // La PUERTA, «Entra o crea tu cuenta» (la compra desde la M3 de `#880`, y Mi cuenta): el texto del owner.
+            'texto_cuenta' => 'Entras con un código a tu correo. Sin contraseña. Si no tienes cuenta, la creas en 1 minuto con el correo que pongas aquí.',
             'correo' => 'Tu correo',
             'continuar' => 'Continuar',
             // Con el código (A3, `#849`): con el correo se pide; con el código, se entra. Su paso, del zip (6) (Z6g·1): a

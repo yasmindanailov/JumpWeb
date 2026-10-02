@@ -1,8 +1,8 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-    cuentaQueYaExiste, datosVacios, entradaVacia, erroresDelServidor, firmaPendiente, formularioDeAlta, hayQuePedir,
-    nacimientoDeAlta, pistaDelDescargo, revisarDatos,
+    atras, cuentaQueYaExiste, datosVacios, entradaVacia, erroresDelServidor, firmaPendiente, formularioDeAlta, hayQuePedir,
+    nacimientoDeAlta, pistaDelDescargo, revisarDatos, vistaInicial,
 } from './datos.js';
 import { t as texto } from '../../sidebar/i18n.js';
 import { entrar, errorDeEntrar, erroresDelCodigo, esNoDelCodigo } from './acceso.js';
@@ -181,6 +181,22 @@ describe('«Tus datos», solo si falta algo (`#785`)', () => {
         assert.deepEqual(revisarDatos({ ...google, nombre: 'Ana García', descargo: true }, { firmaPendiente: true, textos }), {});
         assert.deepEqual(revisarDatos({ ...google, nombre: 'Ana García' }, { textos }), {}, 'sin descargo que firmar, basta el nombre');
         assert.deepEqual(Object.keys(revisarDatos({ ...google, nombre: 'Ana García' }, { pedirTelefono: true, textos })), ['telefono'], 'en una fiesta, su teléfono (`#787`)');
+    });
+});
+
+describe('el correo primero (M3, `#880`)', () => {
+    test('sin sesión se llega a la PUERTA; con sesión o con el alta de Google a medias, al formulario', () => {
+        assert.equal(vistaInicial({ identificado: false }), 'entrar');
+        assert.equal(vistaInicial({ identificado: true }), null);
+        assert.equal(vistaInicial({ identificado: false, google: true }), null, 'su correo ya es el de Google: completa su alta');
+    });
+
+    test('la flecha: del código a su correo; de la puerta, fuera; de los datos de un correo nuevo, a la puerta', () => {
+        assert.equal(atras({ vista: 'entrar', pasoEntrada: 'codigo', nueva: '' }), 'id');
+        assert.equal(atras({ vista: 'entrar', pasoEntrada: 'id', nueva: '' }), 'cuando', 'la puerta es el primer paso');
+        assert.equal(atras({ vista: null, pasoEntrada: 'id', nueva: 'ana@correo.es' }), 'puerta', 'para cambiar de correo');
+        assert.equal(atras({ vista: 'descargo', pasoEntrada: 'id', nueva: 'ana@correo.es' }), 'datos');
+        assert.equal(atras({ vista: null, pasoEntrada: 'id', nueva: '' }), 'cuando', 'con sesión (el «Hola»), a la pantalla 0');
     });
 });
 

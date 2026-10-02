@@ -1016,7 +1016,10 @@ class SidebarBundleBudgetTest extends TestCase
     // M2 de `#880` (`#881`, el owner): lo que falta para continuar, dicho —la frase de cada cosa y su marca
     // (`compra/falta.js`), la marca en la compra y en `PreguntaCompra`, y la nota del pie que se toca (`CompraIsla`)—.
     // Medido 190,66 → 192,50 (base: la medida de la M1, `4f3a6fee`; `7292089d` es solo doc). El techo, a 193.
-    private const ISLA_COMPRA_CHUNK_MAX_KB = 193;
+    // M3 de `#880` (el owner: el correo primero): la vista con que se llega a «Tus datos» y la flecha dentro de él
+    // (`datos.js::vistaInicial` y `atras`) y su cableado. Medido 192,50 → 193,11 (base: la medida de la M2, `79ff2fb9`). El
+    // techo, a 194. ⚠️ De la M1 a la M3, +5,94 kB (187,17 → 193,11): la primera cuenta de la M4.
+    private const ISLA_COMPRA_CHUNK_MAX_KB = 194;
 
     // T4d·4 (`specs/isla-y-landing-nueva.md` §4.12): la CALCULADORA de una página, entrada propia que la página pide
     // (`scripts` de `<x-pagina>`) y se monta al acercarse su pieza. Su DESCARGA entera, como la mide el navegador que

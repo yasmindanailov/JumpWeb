@@ -286,6 +286,7 @@ return [
             'titular' => 'Sign in',
             'titular_cuenta' => 'Sign in or create your account',
             'texto' => 'You sign in with a code sent to your email. No password.',
+            'texto_cuenta' => 'You sign in with a code sent to your email. No password. No account yet? Create one in 1 minute with the email you enter here.',
             'correo' => 'Your email',
             'continuar' => 'Continue',
             'codigo_titular' => 'Check your email',

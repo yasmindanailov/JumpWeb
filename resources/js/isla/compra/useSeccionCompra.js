@@ -203,6 +203,8 @@ export function useSeccionCompra(props) {
     async function trasAdmitir() {
         const pedir = await datos.faltaAlgo();
 
+        // Sin sesión, «Tus datos» empieza en la puerta, el correo primero (M3, `#880`).
+        if (pedir) datos.alLlegar();
         Object.assign(compra, { paso: pedir ? 'datos' : 'pagar', sinDatos: ! pedir });
     }
 
@@ -425,6 +427,7 @@ export function useSeccionCompra(props) {
 
         if (ahora === STEPS.IDENTIFY && antes === STEPS.DECLINED) {
             datos.preparar();
+            datos.alLlegar();
             Object.assign(compra, { paso: 'datos', sinDatos: false });
         }
     });
@@ -539,10 +542,11 @@ export function useSeccionCompra(props) {
                 acciones: {
                     cerrar,
                     // De «Pagar» a «Tus datos» si falta algo de la cuenta; si no (`#785`, `#857`), a la pantalla 0. De
-                    // la hora llena al continuar (`#822`), a la pantalla 0 sin tocar la cesta.
+                    // la hora llena al continuar (`#822`), a la pantalla 0 sin tocar la cesta. Dentro de «Tus datos», un
+                    // paso atrás (`datos.js::atras`): de la puerta, que es el primero (M3, `#880`), a la pantalla 0.
                     volver: paso.value === 'pagar' ? (compra.sinDatos ? aCuando : () => { compra.paso = 'datos'; })
                         : paso.value === 'perdida' && compra.alEntrar ? volverDeLaPerdida
-                            : datos.estado.vista ? datos.volver : aCuando,
+                            : datos.haciaAtras() === 'cuando' ? aCuando : datos.volver,
                     continuar: continuarDatos, entrar: entrarDatos,
                     pagar: pago.pagar, salir: pago.salir, reintentar: pago.reintentar, elegirHora, miQr: pago.miQr,
                 },
@@ -580,12 +584,16 @@ export function useSeccionCompra(props) {
 
     /**
      * «Entra» (`PjcEntrar`): solo correo (`#695`), luego su código (A3 del acceso con código, `#849`) con «Mantener la
-     * sesión iniciada» (`#858`), y Google.
+     * sesión iniciada» (`#858`), y Google. Desde la M3 de `#880` es la PUERTA de «Tus datos» sin sesión: «Entra o crea tu
+     * cuenta», como en Mi cuenta (`cuenta`), y arriba el aviso que traiga la compra (una vuelta de Google que no salió).
      */
     const pantallaEntrar = computed(() => {
         const { paso: pasoEntrada, valor, codigo, recordar, error, reenvios } = datos.estado.ent;
 
-        return { paso: pasoEntrada, valor, codigo, recordar, error, reenvios, ocupado: compra.ocupado === 'entrar', ...social.value };
+        return {
+            paso: pasoEntrada, valor, codigo, recordar, error, reenvios, ocupado: compra.ocupado === 'entrar', cuenta: true,
+            aviso: datos.estado.aviso, ...social.value,
+        };
     });
 
     const listo = computed(() => pantallaListo({

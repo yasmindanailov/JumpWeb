@@ -123,7 +123,7 @@ const volverDelBanco = async (ruta) => {
 };
 
 /**
- * Hasta «Pagar», con la sesión que haya. Sin sesión, «Tus datos» y su «Entra» con la cuenta de pruebas; con ella y nada
+ * Hasta «Pagar», con la sesión que haya. Sin sesión, la puerta de «Tus datos» con la cuenta de pruebas; con ella y nada
  * que pedir, «Pagar» directamente (`#785`), y si falta algo (el teléfono, el descargo), se da en «Tus datos». Devuelve si
  * entró con el código.
  */
@@ -135,7 +135,8 @@ async function hastaPagar() {
     await quieta();
     if (await page.evaluate(enDatos) && ! /^Hola/.test(await page.locator('[data-isla-scroll] h1').innerText().catch(() => ''))) {
         entro = true;
-        await page.locator('[data-isla-scroll] a, [data-isla-scroll] button', { hasText: /^Entra$/ }).first().click();
+        // M3 de `#880`: sin sesión, «Tus datos» ya EMPIEZA en la puerta («Entra o crea tu cuenta»); el enlace, solo si no.
+        if (await page.locator('#pjc-ent').count() === 0) await page.locator('[data-isla-scroll] a, [data-isla-scroll] button', { hasText: /^Entra$/ }).first().click();
         await page.fill('#pjc-ent', CLIENTE.email);
         // Entra con un código al correo (A3, `#849`): el correo pide el código, y el del buzón entra.
         const desde = Date.now();
@@ -144,8 +145,10 @@ async function hastaPagar() {
         const codigo = await codigoDelBuzon(desde);
         ok('«Entra»: el correo con cuenta pide el código, y llega al buzón', codigo !== null, codigo ?? 'sin código en Mailpit');
         await page.fill('#pjc-ent-codigo', codigo ?? '');
-        // Sin marcar «Mantener la sesión iniciada» (`#858`): la sesión de siempre, SIN cookie de recuerdo (abajo).
-        await accion(/^Entrar$/).click();
+        // Sin marcar «Mantener la sesión iniciada» (`#858`): la sesión de siempre, SIN cookie de recuerdo (abajo). Y la sexta
+        // cifra ya entra SOLA (Z6g·1, `#867`): «Entrar», solo si sigue ahí.
+        await page.waitForTimeout(800);
+        if (await page.locator('[data-isla] button', { hasText: /^Entrar$/ }).count()) await accion(/^Entrar$/).click();
         await espera(() => /^Hola/.test(document.querySelector('[data-isla-scroll] h1')?.textContent ?? '') || (document.querySelector('#isla-compra-paso')?.textContent ?? '').trim().endsWith('Pagar'), null, 20000);
     }
     // Lo que la cuenta aún deba (el teléfono, el descargo) se da aquí mismo.

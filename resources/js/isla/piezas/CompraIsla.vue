@@ -105,18 +105,23 @@ const { alIntro } = useIntro({ cajaRef, accion: () => props.ck.action, kb: () =>
                 </span>
             </div>
             <!-- La nota, con su icono (el reloj, de serie). Con `onNote` es LO QUE FALTA (M2, `#881`): se toca y hace lo mismo
-                 que el botón, como el «Elige la hora para ver el total» de la calculadora de la página. -->
-            <component
-                :is="ck.onNote ? 'button' : 'div'"
+                 que el botón, como el «Elige la hora para ver el total» de la calculadora de la página. Se anuncia con
+                 `role="status"` en su envoltorio, y NO con `aria-live` en ella: el botón sigue siendo botón, y lo de debajo
+                 que leen las sondas (`[aria-live="polite"]`, el último) sigue siendo el resumen. -->
+            <div
                 v-if="ck.note && !kb"
-                :type="ck.onNote ? 'button' : undefined"
-                aria-live="polite"
-                :style="{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0, padding: '0 6px', border: 0, background: 'none', textAlign: 'left', fontFamily: 'var(--font-ui)', fontSize: '14px', fontWeight: 'var(--fw-semibold)', color: 'var(--isla-foco)', cursor: ck.onNote ? 'pointer' : 'auto' }"
-                @click="ck.onNote?.()"
-            ><IconoLucide
-                :name="ck.noteIcon || 'clock'"
-                :size="16"
-            />{{ ck.note }}</component>
+                role="status"
+            >
+                <component
+                    :is="ck.onNote ? 'button' : 'div'"
+                    :type="ck.onNote ? 'button' : undefined"
+                    :style="{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0, padding: '0 6px', border: 0, background: 'none', textAlign: 'left', fontFamily: 'var(--font-ui)', fontSize: '14px', fontWeight: 'var(--fw-semibold)', color: 'var(--isla-foco)', cursor: ck.onNote ? 'pointer' : 'auto' }"
+                    @click="ck.onNote?.()"
+                ><IconoLucide
+                    :name="ck.noteIcon || 'clock'"
+                    :size="16"
+                />{{ ck.note }}</component>
+            </div>
             <BotonAccion
                 v-if="ck.action"
                 big

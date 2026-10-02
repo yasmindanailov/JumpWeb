@@ -2910,6 +2910,23 @@ componentes y textos; una sonda desechable a 390 y 1280, 13/13 (la nota, el bot�
 de la isla oscura— y su fin al contestar; la nota que se toca; «Entra» sin correo; sin errores de consola). La hora llena,
 solo por sus pruebas: provocarla en el navegador exige llenar una franja. **Visto por el owner en vivo** (02-10 noche: «me vale»).
 
+**M3, hecha (02-10 noche; el correo primero).** Sin sesión, «Tus datos» EMPIEZA en la puerta (`PantallaEntrar` en modo
+`cuenta`: «Entra o crea tu cuenta», Google · o · el correo, y el texto del owner, `compra.entrar.texto_cuenta`); con cuenta, su
+código; sin ella, el formulario con ese correo ya puesto (`nueva`, `#849`: nombre, teléfono en un pack, fecha y la casilla).
+Con sesión, o con el alta de Google a medias (`#785`), el formulario de siempre. Las dos reglas, puras en `datos.js`:
+`vistaInicial` (la vista con que se llega, la aplica `useDatosCompra::alLlegar` desde `trasAdmitir` y tras un pago no
+completado que vuelve a identificar) y `atras` (la flecha: del código a su correo; de la puerta, que es el primer paso, a la
+pantalla 0; de los datos de un correo nuevo, a la puerta con él; del descargo, a los datos). La puerta gana su `aviso` arriba
+(el de una vuelta de Google que no salió; antes lo pintaba «Tus datos») y se borra al entrar. `pasos.js::rango`: la puerta va
+antes que el formulario (las direcciones de las animaciones). Mi cuenta usa la misma puerta: su texto también es el nuevo. ⚠️
+De paso, dos cosas de las sondas: la nota del pie de la M2 llevaba `aria-live` y se colaba como «lo de debajo» de siete sondas
+—ahora se anuncia con un envoltorio `role="status"`—; y `sonda-isla` y `sonda-conversion` pulsaban «Entrar» tras escribir el
+código, que entra solo desde la Z6g·1 (`#867`). **Medido**: `datos.test.js` y `pasos.test.js` (1.740 de JS); las guardas;
+`SidebarBundleBudgetTest` (la compra 192,50 → 193,11, a 194); `sonda-conversion` 22/22 a 390 (adaptada: el «¿Querías
+decir…?» y el Intro, en la puerta) y dos sondas desechables a 390 y 1280 (la M2, 13/13; la M3, 11/11: la puerta, su flecha,
+el correo nuevo con el suyo puesto y su vuelta, el que tiene cuenta a su código). **Visto por el owner en vivo** (02-10 noche:
+«Perfecto. aprobado»).
+
 ## 5. Impacto en invariantes
 
 - `PAY-*`: solo si entra Bizum; entonces `VERIFY_CONC=1` y la lista del `CRITICAL_RE`.

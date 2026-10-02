@@ -4,8 +4,11 @@
  *
  * El alta, el acceso y lo que se debe antes de pagar son los del motor (`usePurchaseFlow`: `submitRegister()` con
  * el contexto `purchase` —pay-first—, `enterWith()` tras entrar con el código, `buyerDue`), y el descargo, su store. Lo que es de la isla
- * vive aquí: el formulario del diseño (un solo paso para quien no tiene cuenta, «ya existe» al ENVIAR, `#688`), qué
- * pedir con sesión y a dónde llevar cada «no». Las reglas sin estado, en `datos.js` con su `node --test`.
+ * vive aquí: el formulario del diseño, qué pedir con sesión y a dónde llevar cada «no». Las reglas sin estado, en `datos.js`
+ * con su `node --test`.
+ * ▶ **El correo primero** (M3 de `#880`, el owner): sin sesión, «Tus datos» empieza en la PUERTA —«Entra o crea tu cuenta»—;
+ * con cuenta, su código; sin ella, el formulario con ese correo ya puesto (`nueva`). «Ya existe» al enviar (`#688`) queda
+ * para lo raro: otra pestaña creó la cuenta entre la puerta y el alta.
  *
  * ⚠️⚠️ **Con sesión, solo si falta algo** (`#785`, el owner: una pantalla que solo decía «Hola, Ana» era fricción):
  * `faltaAlgo()` decide si se enseña —el teléfono que ese pedido exige, la casilla que esa cuenta nunca firmó— y, si no,
@@ -19,8 +22,8 @@ import { t } from '../../sidebar/i18n.js';
 import { useWaiverStore } from '../../sidebar/stores/waiver.js';
 import { useAccountContextStore } from '../../sidebar/stores/accountContext.js';
 import {
-    cuentaQueYaExiste, datosVacios, entradaVacia, erroresDelServidor, firmaPendiente, formularioDeAlta, hayQuePedir,
-    nacimientoDeAlta, revisarDatos,
+    atras, cuentaQueYaExiste, datosVacios, entradaVacia, erroresDelServidor, firmaPendiente, formularioDeAlta, hayQuePedir,
+    nacimientoDeAlta, revisarDatos, vistaInicial,
 } from './datos.js';
 
 /** La marca de «la cuenta nace en esta compra», que sobrevive al viaje al banco (misma pestaña) y no lleva datos. */
@@ -375,16 +378,38 @@ export function useDatosCompra({ flow, props, textos, esFiesta = () => false }) 
             return false;
         }
 
-        Object.assign(estado, { vista: null, ent: entradaVacia(), nueva: '' });
+        // Dentro: sin el aviso de la puerta (una vuelta de Google que no salió ya no viene a cuento con sesión).
+        Object.assign(estado, { vista: null, ent: entradaVacia(), nueva: '', aviso: '' });
         await trasIdentificarse();
 
         return true;
     }
 
-    /** La flecha dentro del paso: del código de «Entra», a su correo; de lo demás, a «Tus datos». */
+    /**
+     * **Al llegar a «Tus datos»** (`trasAdmitir`): sin sesión, la puerta primero —«Entra o crea tu cuenta» (M3, `#880`)—; con
+     * ella, o con el alta de Google a medias, el formulario (`datos.js::vistaInicial`).
+     */
+    function alLlegar() {
+        if (vistaInicial({ identificado: store.step === STEPS.PAY, google: Boolean(estado.google) }) === 'entrar') {
+            Object.assign(estado, { vista: 'entrar', ent: entradaVacia(estado.f.correo.trim()) });
+        }
+    }
+
+    /** A dónde lleva la flecha (`datos.js::atras`): `cuando` sale del paso, y eso lo hace quien lleva la compra. */
+    const haciaAtras = () => atras({ vista: estado.vista, pasoEntrada: estado.ent.paso, nueva: estado.nueva });
+
+    /** La flecha dentro del paso: del código, a su correo; de los datos de un correo NUEVO, a la puerta con él; del descargo, a los datos. */
     function volver() {
-        if (estado.vista === 'entrar' && estado.ent.paso === 'codigo') {
+        const a = haciaAtras();
+
+        if (a === 'id') {
             Object.assign(estado.ent, { paso: 'id', codigo: '', error: '' });
+
+            return;
+        }
+        // Para cambiar de correo: la puerta con el que se escribió, y sin el «No hay ninguna cuenta con…» de antes.
+        if (a === 'puerta') {
+            Object.assign(estado, { vista: 'entrar', ent: entradaVacia(estado.nueva), nueva: '', errores: {}, aviso: '' });
 
             return;
         }
@@ -407,7 +432,7 @@ export function useDatosCompra({ flow, props, textos, esFiesta = () => false }) 
 
     return {
         estado, cuenta, firma, pedirTelefono, contexto, waiverStore,
-        preparar, cambiar, continuar, otroCodigo, abrirEntrar, cambiarEntrada, continuarEntrada, volver, cuentaNueva,
-        faltaAlgo, altaGooglePendiente,
+        preparar, alLlegar, cambiar, continuar, otroCodigo, abrirEntrar, cambiarEntrada, continuarEntrada, volver, haciaAtras,
+        cuentaNueva, faltaAlgo, altaGooglePendiente,
     };
 }

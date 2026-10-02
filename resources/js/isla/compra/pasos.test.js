@@ -51,6 +51,11 @@ test('la dirección: avanzar entra por la derecha, volver por la izquierda, y la
     assert.equal(direccion(rango('datos'), rango('datos', 'descargo')), 'fwd');
     assert.equal(direccion(rango('datos', 'entrar', 'id'), rango('datos', 'entrar', 'codigo')), 'fwd', 'el código, detrás del correo de «Entra»');
     assert.equal(direccion(rango('datos', 'entrar', 'codigo'), rango('datos', 'entrar', 'id')), 'back');
+    // M3 de `#880`: la puerta va PRIMERO; el formulario, después (de un correo nuevo, o con sesión tras el código).
+    assert.equal(direccion(rango('cuando'), rango('datos', 'entrar', 'id')), 'fwd', 'de la pantalla 0 a la puerta');
+    assert.equal(direccion(rango('datos', 'entrar', 'id'), rango('datos')), 'fwd', 'del correo nuevo a sus datos');
+    assert.equal(direccion(rango('datos', 'entrar', 'codigo'), rango('datos')), 'fwd', 'del código al «Hola» que aún pide algo');
+    assert.equal(direccion(rango('datos'), rango('datos', 'entrar', 'id')), 'back', 'de los datos, a cambiar de correo');
     assert.equal(direccion(rango('pagar'), rango('datos')), 'back');
     assert.equal(direccion(rango('pagar'), rango('banco')), 'fwd');
     assert.equal(direccion(rango('fallido'), rango('listo')), 'fwd');

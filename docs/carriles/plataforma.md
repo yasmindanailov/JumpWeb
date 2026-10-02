@@ -60,13 +60,15 @@ Sondas: una por página (`sonda-{portada,cumpleanos,colegios,visitanos,normas,en
    su §5), las cuatro de la Z6g·1 y `sonda-panel`, `sonda-banco-movimiento` (casos del 27-09) y `sonda-entradas` (ya lee «90
    minutos saltando»). **Queda de la isla**: probarla en un móvil de verdad, en STAGING al terminarlo todo; `isla_razon` y la
    imagen de la INVITACIÓN son del SPA (`#861`).
-   ▶▶▶ **SIGUE AQUÍ, en el 1**: la lista nueva del owner (M1 y M2 ✅; sigue la M3) y, después, el código de la L2 (el 2).
+   ▶▶▶ **SIGUE AQUÍ, en el 2**: el código de la L2 (`otra-zona.md`, K1→K4, con los grupos de `#881`); la lista nueva del
+   owner (el 1), con M1→M3 ✅, espera solo a su M4 (después de la L2).
 1. ▶▶▶ **LA LISTA DEL OWNER DEL 02-10 (noche)** (`#880`; su censo, medido, en `isla-y-landing-nueva.md` §4.29), en este orden:
    ✅ **M1** la compra de la isla enseña TODOS los complementos que se venden al reservar el producto, «los que sean» (los de la
    lista de invitados, no; visto por el owner, §4.29: `compra/complementos.js`, la lista diferida, `calcetinDe` con tope, los
    techos de peso subidos con su base). ⚠️ Sin pintar: un grupo de elección en una ENTRADA o un segundo en un pack: va con la
    L2 (`#881`, en `otra-zona.md` §4.6) → ✅ **M2** (`#881`) lo que falta, ENCIMA del botón mientras falte (la nota del pie, que
-   se toca) y, al pulsar, en rojo en su pregunta (§4.29, `compra/falta.js`; visto por el owner) → ⬜ **M3** sin sesión, el
+   se toca) y, al pulsar, en rojo en su pregunta (§4.29, `compra/falta.js`; visto por el owner) → ✅ **M3** (§4.29:
+   `datos.js::vistaInicial` y `atras`, la puerta con su aviso; visto por el owner). Era: sin sesión, el
    correo primero: «Entra o crea tu cuenta» tras el producto, con el texto del owner (§4.29); solo un correo sin cuenta rellena
    el resto (`PantallaEntrar` con `cuenta` y `PantallaDatos` con `nueva` ya existen) → el código de la L2 (el 2) → ⬜ **M4** el
    pulido: la carga (sobre todo la isla), las transiciones sin saltos y el HERO (en ordenador, la portada: al bajar y volver a
